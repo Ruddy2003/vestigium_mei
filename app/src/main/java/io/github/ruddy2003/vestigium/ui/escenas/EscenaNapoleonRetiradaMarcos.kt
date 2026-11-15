@@ -72,8 +72,12 @@ internal object MarcosRetirada {
     /** El espejo de la salida, plantado en el suelo del gato. */
     val ESPEJO: Offset get() = S_ESPEJO.pie
 
-    /** La casa quemada: la esquina de delante de la pared que da al camino (sus ejes, los del mundo: x a la derecha, z al fondo). */
-    private val S_CASA = PiezasNapoleon.sitio(MIRADA, RetiradaCamino.w(-3.1f, 9.2f), 0f)
+    /**
+     * La isba quemada: la esquina de delante de la pared que da al camino (sus ejes, los del mundo: x a la derecha, z al
+     * fondo). La casa está a la orilla izquierda del camino, con esa pared un poco dentro de él, como en los pueblos de
+     * camino: si estuviera más a la izquierda, a esta distancia quedaría fuera del cuadro.
+     */
+    private val S_CASA = PiezasNapoleon.sitio(MIRADA, RetiradaCamino.w(-2.2f, 10f), 0f)
     /** El cuadro tirado y el candelabro, en el camino, delante de la casa. */
     private val S_CUADRO = PiezasNapoleon.sitio(MIRADA, Offset(150f, 258f), 0.5f)
     private val S_CANDELABRO = PiezasNapoleon.sitio(MIRADA, Offset(186f, 268f), -0.3f)
@@ -96,7 +100,7 @@ internal object MarcosRetirada {
     /** El sitio alto del gato, en lo alto del marco de hoy. */
     fun mirador(mc: Marco): Offset = when (mc) {
         Marco.CARROZA, Marco.TIENDA -> carrozaDe(0f).let { c -> c.s.p(c.t(V3(c.w, 1.75f, 0.8f))) }
-        Marco.CASA -> S_CASA.p(0.05f, 1.72f, 5.0f)
+        Marco.CASA -> S_CASA.p((ESTUFA_X0 + ESTUFA_X1) / 2f, ESTUFA_ALTO, (ESTUFA_Z0 + ESTUFA_Z1) / 2f)
         Marco.CANON -> S_CANON.p(Vec.girarZ(V3(0f, 1.2f, 0.1f), LADEO_CANON))
         Marco.METRALLA -> S_CAJON.p(-0.9f, 0.9f, 0.6f)
         Marco.MADERA -> S_PILA.p(-0.25f, 1.15f, 0.4f)
@@ -122,8 +126,9 @@ internal object MarcosRetirada {
             }
             Marco.TIENDA -> add(RetiradaLuz.Sombra(S_TIENDA.pie, silueta(S_TIENDA, 1.4f, 2.6f)))
             Marco.CASA -> {
-                add(RetiradaLuz.Sombra(S_CASA.p(0f, 0f, 3.5f), poligono(listOf(S_CASA.p(0f, 0f, 0f), S_CASA.p(0f, 0f, 7f)) + PERFIL_CASA.reversed().map { (z, h) -> S_CASA.p(0f, h, z) })))
-                add(RetiradaLuz.Sombra(S_CASA.p(-0.9f, 0f, 4.5f), poligono(S_CASA.p(-1.18f, 0f, 4.5f), S_CASA.p(-0.62f, 0f, 4.5f), S_CASA.p(-0.62f, 4.6f, 4.5f), S_CASA.p(-1.18f, 4.6f, 4.5f))))
+                add(RetiradaLuz.Sombra(S_CASA.p(0f, 0f, 3.2f), siluetaDePared(PARED_CAMINO)))
+                val zc = (ESTUFA_Z0 + ESTUFA_Z1) / 2f
+                add(RetiradaLuz.Sombra(S_CASA.p(ESTUFA_X1, 0f, zc), poligono(listOf(S_CASA.p(ESTUFA_X0, 0f, zc), S_CASA.p(ESTUFA_X1, 0f, zc), S_CASA.p(ESTUFA_X1, ESTUFA_ALTO, zc), S_CASA.p(CHIMENEA_X1, CHIMENEA_ALTO, zc), S_CASA.p(CHIMENEA_X0, CHIMENEA_ALTO, zc), S_CASA.p(ESTUFA_X0, ESTUFA_ALTO, zc)))))
             }
             Marco.CANON -> {
                 add(RetiradaLuz.Sombra(S_CANON.pie, silueta(S_CANON, 1.0f, 1.3f)))
@@ -198,7 +203,7 @@ internal object MarcosRetirada {
             val honda = mc == Marco.PINO
             // Solo lo de arriba: más abajo, el tronco es el de la corteza en escamas ([troncoDelPino]), que así se ve.
             clipRect(-60f, -60f, ANCHO + 60f, 42f) {
-                pino(a, PIE_DEL_PINO, 760f, 430f, v.nieve, Azar(AZ_PINO), 0f, 1f, false, hastaY = 30f, caidaPropia = 0.17f + 0.12f * v.nieve + (if (honda) 0.08f else 0f), grande = true)
+                pino(a, PIE_DEL_PINO, 760f, 430f, v.nieve, Azar(AZ_PINO), 0f, 1f, false, hastaY = 30f, caidaPropia = 0.17f + 0.12f * v.nieve + (if (honda) 0.24f else 0f), grande = true)
             }
         }
         if (mc == Marco.METRALLA) {
@@ -213,10 +218,15 @@ internal object MarcosRetirada {
 
     fun DrawScope.vivo(v: VistaNapoleon, reloj: Float) {
         when (marcoDe(v)) {
-            // La casa todavía humea por dentro: dos hilos de humo de entre los troncos caídos.
-            Marco.CASA -> {
-                humo(v.l, S_CASA.p(-1.6f, 0.6f, 2.4f), 70f, 7f, reloj, v.m.viento + 0.2f, 0.4f, 0.4f, 71, 6, 0.4f)
-                humo(v.l, S_CASA.p(-0.8f, 0.4f, 6.2f), 50f, 5f, reloj, v.m.viento + 0.2f, 0.4f, 0.4f, 72, 5, 0.3f)
+            // Los días de las brasas, la casa humea por las vigas y laten las brasas; luego ya está fría.
+            Marco.CASA -> if (brasasEnLaCasa(v.m)) {
+                for ((i, vg) in VIGAS.withIndex()) {
+                    val c = S_CASA.p((vg.first + vg.second) * 0.5f)
+                    humo(v.l, c, 70f, 7f, reloj, v.m.viento + 0.2f, 0.4f, 0.4f, 71 + i, 6, 0.45f)
+                    val az = Azar(Semilla.de("napoleon", "brasasCasa", i))
+                    repeat(7) { j -> val q = S_CASA.p(vg.second + (vg.first - vg.second) * az.entre(0.05f, 0.95f)) + Offset(0f, az.entre(0f, 1.5f)); val al = (0.45f + 0.45f * sin(reloj * 1.6f + j * 2.1f + i)).coerceIn(0f, 1f)
+                        drawCircle(Color(0xFFFF6A22).copy(alpha = al), az.entre(0.6f, 1.1f), q) }
+                }
             }
             // El cajón reventado todavía echa un hilo de humo negro.
             Marco.METRALLA -> humo(v.l, S_CAJON.p(0.1f, 0.3f, 0f), 60f, 6f, reloj, v.m.viento + 0.2f, 0.5f, 0.3f, 73, 6, 0.4f)
@@ -288,138 +298,340 @@ internal object MarcosRetirada {
 
     // ================================================================= La casa quemada
 
-    /** Lo que queda de la pared que da al camino: su alto (en metros) a lo largo del fondo (z), comida por el fuego desde arriba. */
-    private val PERFIL_CASA = listOf(0f to 2.5f, 0.45f to 2.3f, 0.9f to 1.7f, 1.6f to 1.45f, 2.4f to 1.05f, 3.3f to 0.9f, 4.1f to 1.25f, 4.9f to 1.7f, 5.6f to 1.85f, 6.3f to 1.6f, 7f to 2.05f)
+    /**
+     * Las paredes de la isba quemada, en los ejes de [S_CASA] (x hacia el camino, z hacia el fondo): de dónde a dónde y
+     * lo que queda de cada una (su alto, en metros, a lo largo), comidas por el fuego desde arriba. La que da al camino
+     * queda alta en las dos esquinas y en el tramo de la ventana; la de delante, la que mira a quien mira, se quemó casi
+     * entera (por eso se ve dentro la estufa); la del fondo se ve por dentro, negra.
+     */
+    private val PARED_CAMINO = Triple(V3(0f, 0f, 0f), V3(0f, 0f, 6.5f), listOf(0f to 2.25f, 0.05f to 2.05f, 0.14f to 1.3f, 0.25f to 0.6f, 0.37f to 0.45f, 0.48f to 0.8f, 0.58f to 1.5f, 0.66f to 1.95f, 0.83f to 2.0f, 0.92f to 1.85f, 1f to 2.15f))
+    private val PARED_DELANTE = Triple(V3(0f, 0f, 0f), V3(-5.5f, 0f, 0f), listOf(0f to 2.25f, 0.025f to 2.0f, 0.04f to 0.62f, 0.1f to 0.42f, 0.2f to 0.3f, 0.45f to 0.45f, 0.64f to 0.28f, 1f to 0.55f))
+    private val PARED_FONDO = Triple(V3(0f, 0f, 6.5f), V3(-5.5f, 0f, 6.5f), listOf(0f to 2.15f, 0.11f to 1.8f, 0.29f to 2.3f, 0.51f to 1.5f, 0.73f to 2.0f, 1f to 1.2f))
 
-    private fun altoDeLaPared(z: Float): Float {
-        val p = PERFIL_CASA
-        for (i in 0 until p.size - 1) if (z <= p[i + 1].first) { val t = (z - p[i].first) / (p[i + 1].first - p[i].first); return p[i].second + (p[i + 1].second - p[i].second) * t }
-        return p.last().second
+    /** La estufa rusa y su chimenea (de x0 a x1, de z0 a z1, su alto) y la boca del horno, en la cara que mira a quien mira. */
+    private const val ESTUFA_X0 = -1.4f; private const val ESTUFA_X1 = -0.2f; private const val ESTUFA_Z0 = 0.9f; private const val ESTUFA_Z1 = 2.5f; private const val ESTUFA_ALTO = 1.95f
+    private const val CHIMENEA_X0 = -0.95f; private const val CHIMENEA_X1 = -0.4f; private const val CHIMENEA_Z0 = 1.4f; private const val CHIMENEA_Z1 = 1.95f; private const val CHIMENEA_ALTO = 4.5f
+
+    /** Las vigas caídas: de lo alto de la pared del camino al camino, y de la estufa al suelo de dentro. */
+    private val VIGAS = listOf(V3(0.05f, 1.5f, 3.8f) to V3(1.6f, 0.1f, 0.4f), V3(-0.25f, 1.92f, 2.2f) to V3(-2.6f, 0.1f, 4.0f))
+
+    /**
+     * Si las vigas tienen todavía brasas: el día de Maloyaroslavets y el siguiente («pasan junto al pueblo, que arde»)
+     * **[Aproximación]**: los demás días del camino viejo, los pueblos se quemaron al venir, hace dos meses, y están fríos.
+     */
+    fun brasasEnLaCasa(m: Momento): Boolean = EscenaNapoleon.tramo(m) == EscenaNapoleon.Tramo.MALOYAROSLAVETS && m.ficha.dia.substring(5) <= "10-25"
+
+    /** La silueta de lo que queda de una pared (para su sombra). */
+    private fun siluetaDePared(p: Triple<V3, V3, List<Pair<Float, Float>>>): Path {
+        val (p0, p1, perfil) = p; val s = S_CASA
+        return poligono(listOf(s.p(p0), s.p(p1)) + perfil.reversed().map { (t, h) -> s.p(p0 + (p1 - p0) * t + V3(0f, h, 0f)) })
     }
 
     /**
-     * Lo que queda de una casa de madera quemada junto al camino, de cerca: la pared que da al camino, de troncos
-     * redondos, cada uno con su lado de luz y su junta, comida por el fuego desde arriba (negra y cuarteada en el borde,
-     * con lenguas de hollín que bajan), con el hueco de la ventana; las cabezas de los troncos en la esquina; por encima
-     * de lo que queda, la estufa encalada y su chimenea de ladrillo, en pie y tiznada; un cabio del tejado que sigue en
-     * pie, roto; la viga del caballete caída de la pared al camino, y troncos quemados por el suelo. Sin nieve (es el
-     * camino viejo de antes de la nieve) salvo la primera nevada, que blanquea lo de arriba.
+     * Lo que queda de una isba de madera quemada junto al camino, de cerca, para que se lea de un vistazo: las paredes de
+     * troncos con lo de arriba carbonizado (negro, cuarteado en escamas con su brillo de carbón y su ceniza gris), la
+     * esquina de troncos ensamblados que asoman, la estufa rusa de ladrillo encalado en pie con su boca y su chimenea (lo
+     * único que no arde: la imagen de los pueblos quemados), el marco tallado de una ventana con su postigo colgando de
+     * un gozne, las vigas caídas en diagonal (con brasas rojas los primeros días, [brasasEnLaCasa]), las tablas del tejado
+     * y la paja quemada por el suelo, y al pie de la pared las cosas de la casa: un banco volcado, el caldero de hierro y
+     * la rueca. De noche, las brasas dan una segunda lumbre, débil.
      */
     private fun DrawScope.casa(v: VistaNapoleon) {
-        val s = S_CASA; val az = Azar(Semilla.de("napoleon", "casa"))
-        val a = v.en(s.p(0f, 0f, 3f))
+        val s = S_CASA; val az = Azar(Semilla.de("napoleon", "isba"))
+        val a = v.en(s.p(0f, 0f, 2f))
         val nieve = v.nieve
-        // ---- La estufa y la chimenea, detrás de la pared (dentro de la casa).
-        val cal = lerp(C.LONA, C.NIEVE, 0.35f)
-        val estufa = caja(s, a, -2.3f, -0.45f, 0f, 1.85f, 3.4f, 5.1f, cal)
-        for ((c3, f) in estufa) clipPath(f) {
-            mancha(s.p(c3.en(0.5f, 0.95f)), 0.5f * s.k, 0.2f * s.k, a.cara(C.CENIZA, s.normal(c3.n), s.p(c3.centro)), 0.6f)
-            if (!c3.arriba) mancha(s.p(c3.en(0.45f, 0.45f)), 0.22f * s.k, 0.18f * s.k, a.cara(C.CENIZA, s.normal(c3.n), s.p(c3.centro)), 0.85f)
-        }
-        val ladrillo = lerp(C.ROJO, C.MADERA, 0.45f)
-        val chim = caja(s, a, -1.18f, -0.62f, 1.85f, 4.6f, 4.22f, 4.78f, ladrillo, arriba = C.CENIZA)
-        for ((c3, f) in chim) clipPath(f) {
-            if (c3.arriba) return@clipPath
-            val col = a.cara(ladrillo, s.normal(c3.n), s.p(c3.centro))
-            // Las hiladas de ladrillo, con la llaga a tresbolillo; el encalado que queda abajo; el hollín arriba.
-            for (j in 0 until 38) {
-                val vv = j / 38f; linea(s, c3, 0f, vv, 1f, vv, mult(col, C.SOMBRA, 0.4f), (0.012f * s.k).coerceAtLeast(0.25f))
-                for (u in listOf(0.25f, 0.75f)) { val uu = if (j % 2 == 0) u else u - 0.25f; linea(s, c3, uu, vv, uu, vv + 1f / 38f, mult(col, C.SOMBRA, 0.4f), (0.01f * s.k).coerceAtLeast(0.2f)) }
-            }
-            val y0 = s.p(c3.en(0.5f, 0f)).y; val y1 = s.p(c3.en(0.5f, 1f)).y
-            drawRect(Brush.verticalGradient(0f to a.cara(C.CENIZA, s.normal(c3.n), s.p(c3.centro)), 0.35f to Color.Transparent, 0.7f to Color.Transparent, 1f to a.cara(cal, s.normal(c3.n), s.p(c3.centro)).copy(alpha = 0.7f), startY = y1, endY = y0), Offset(-10f, y1), Size(300f, y0 - y1))
-            mancha(s.p(c3.en(0.3f, 0.2f)), 0.08f * s.k, 0.3f * s.k, a.cara(cal, s.normal(c3.n), s.p(c3.centro)), 0.5f)
-        }
-        if (nieve > 0.1f) nieveEncima(a, listOf(s.p(-2.3f, 1.85f, 3.4f), s.p(-1.4f, 1.85f, 3.4f), s.p(-0.45f, 1.85f, 3.4f)).sortedBy { it.x }, (0.1f * s.k * nieve).coerceAtMost(4f), az)
-        // ---- El cabio que sigue en pie al fondo, roto, y el otro, caído hacia dentro.
+        val brasas = brasasEnLaCasa(v.m)
+        // ---- La pared del fondo, vista por dentro: casi toda negra.
+        paredQuemada(v, PARED_FONDO, V3(0f, 0f, -1f), true, az)
+        // ---- La estufa rusa, de ladrillo encalado, y su chimenea.
+        estufa(v, az)
+        // ---- La viga que cayó dentro, apoyada en la estufa.
+        viga(v, VIGAS[1].first, VIGAS[1].second, 0.12f, brasas, az)
+        // ---- La pared de delante, quemada casi hasta el suelo, y la del camino, con la ventana.
+        paredQuemada(v, PARED_DELANTE, V3(0f, 0f, -1f), false, az)
+        paredQuemada(v, PARED_CAMINO, V3(1f, 0f, 0f), false, az, ventana = 0.68f to 0.81f)
+        postigo(v, 0.68f * 6.5f)
+        // ---- La esquina de troncos ensamblados: las cabezas de unos y otros, a hilos alternos, que asoman.
+        esquina(v, az)
+        // ---- El cabio que sigue en pie al fondo, roto y astillado.
         run {
-            val q0 = s.p(0f, 2.0f, 6.85f); val q1 = s.p(-1.35f, 3.25f, 6.85f)
-            drawLine(a.plano(lerp(C.CENIZA, C.MADERA_OSC, 0.3f), q0, -0.5f), q0, q1, (0.13f * s.escala(0f, 6.85f)).coerceAtLeast(1f), StrokeCap.Round)
-            drawLine(a.plano(lerp(C.CENIZA, C.MADERA, 0.3f), q0, 0.7f), q0 + Offset(0.6f, -0.4f), q1 + Offset(0.6f, -0.4f), (0.04f * s.escala(0f, 6.85f)).coerceAtLeast(0.4f), StrokeCap.Round)
-            // La punta quemada, astillada.
-            for (j in 0 until 3) { val d = Offset(az.entre(-2.5f, 0.5f), az.entre(-4f, -1.5f)); drawLine(a.plano(C.CENIZA, q1, 0f), q1, q1 + d, 0.8f, StrokeCap.Round) }
-            val r0 = s.p(-0.2f, 1.6f, 6.4f); val r1 = s.p(-1.9f, 0.3f, 6.0f)
-            drawLine(a.plano(C.CENIZA, r0, 0f), r0, r1, (0.12f * s.escala(0f, 6.2f)).coerceAtLeast(1f), StrokeCap.Round)
+            val q0 = s.p(0f, 2.1f, 6.45f); val q1 = s.p(-1.2f, 3.35f, 6.45f); val g = (0.13f * s.escala(0f, 6.45f)).coerceAtLeast(1f)
+            drawLine(a.plano(lerp(C.CENIZA, Color.Black, 0.2f), q0, -0.5f), q0, q1, g, StrokeCap.Round)
+            drawLine(lerp(C.CENIZA, C.LONA, 0.4f).copy(alpha = 0.6f), q0 + Offset(g * 0.3f, -g * 0.2f), q1 + Offset(g * 0.3f, -g * 0.2f), g * 0.25f, StrokeCap.Round)
+            for (j in 0 until 4) { val d = Offset(az.entre(-3f, 1f), az.entre(-5f, -1.5f)); drawLine(C.CENIZA, q1, q1 + d, 0.8f, StrokeCap.Round) }
         }
-        // ---- La pared que da al camino.
-        val base0 = s.p(0f, 0f, 0f); val base1 = s.p(0f, 0f, 7f)
-        val borde = PERFIL_CASA.map { (z, h) -> s.p(0f, h, z) }
-        val forma = poligono(listOf(base0) + borde + listOf(base1))
-        val madera = lerp(C.MADERA_GRIS, C.MADERA, 0.25f)
-        val nPared = V3(1f, 0f, 0f)
-        drawPath(forma, a.cara(madera, s.normal(nPared), centroDe(borde)))
+        // ---- Las tablas del tejado y la paja quemada, por el suelo, entre la pared y el camino.
+        repeat(14) {
+            val x = az.entre(0.25f, 2.1f); val z = az.entre(-0.3f, 4.6f); val ang = az.entre(0f, 3.14f); val l = az.entre(0.35f, 0.7f); val w = 0.12f
+            val e = V3(cos(ang), 0f, sin(ang)); val n = V3(-sin(ang), 0f, cos(ang))
+            val q = listOf(V3(x, 0.02f, z), V3(x, 0.02f, z) + e * l, V3(x, 0.02f, z) + e * l + n * w, V3(x, 0.02f, z) + n * w)
+            cara(s, a, q, V3(0f, 1f, 0f), lerp(C.CENIZA, C.MADERA_GRIS, az.entre(0.1f, 0.5f)))
+        }
+        repeat(30) {
+            val q = s.p(az.entre(0.15f, 1.4f), 0.02f, az.entre(-0.2f, 5f)); val ang = az.entre(-0.6f, 0.6f); val l = az.entre(2f, 5f)
+            drawLine(lerp(C.CENIZA, C.HOJA, az.entre(0f, 0.5f)).copy(alpha = 0.8f), q, q + Offset(cos(ang) * l, sin(ang) * l * 0.4f), 0.5f)
+        }
+        // ---- La viga caída de la pared al camino.
+        viga(v, VIGAS[0].first, VIGAS[0].second, 0.14f, brasas, az)
+        // ---- Las cosas de la casa, al pie de la pared: la rueca apoyada, el banco volcado, el caldero tumbado.
+        rueca(v, V3(0.22f, 0f, 3.1f))
+        banco(v, az)
+        caldero(v, V3(1.25f, 0.17f, 0.15f))
+        // ---- La primera nevada, si la hay, en lo de arriba.
+        if (nieve > 0.1f) for (p in listOf(PARED_CAMINO, PARED_DELANTE)) nieveEncima(a, p.third.map { (t, h) -> s.p(p.first + (p.second - p.first) * t + V3(0f, h, 0f)) }.sortedBy { it.x }, (0.08f * s.escala(0f, 2f) * nieve).coerceAtMost(4f), az)
+        // ---- De noche, la segunda lumbre: lo que todavía arde en las vigas alumbra un poco lo de alrededor.
+        if (brasas && v.noche > 0.2f) for ((p0, p1) in VIGAS) {
+            val c = s.p((p0 + p1) * 0.5f)
+            drawCircle(Brush.radialGradient(listOf(C.LUMBRE.copy(alpha = 0.22f * v.noche), Color.Transparent), c, 0.9f * s.k), 0.9f * s.k, c, blendMode = BlendMode.Plus)
+        }
+    }
+
+    /**
+     * Una pared de troncos quemada: [p] (de dónde a dónde y su perfil), con la normal [n] de la cara que se ve. Cada
+     * tronco con su lado de luz arriba y su junta oscura; lo de arriba, carbonizado: negro que se apaga hacia abajo, y en
+     * el filo el carbón en escamas con su brillo plateado y su ceniza; [dentro]: la cara de dentro, negra casi entera.
+     * [ventana]: de qué parte a qué parte de la pared está el hueco de la ventana, con su marco tallado y el postigo.
+     */
+    private fun DrawScope.paredQuemada(v: VistaNapoleon, p: Triple<V3, V3, List<Pair<Float, Float>>>, n: V3, dentro: Boolean, az: Azar, ventana: Pair<Float, Float>? = null) {
+        val s = S_CASA; val (p0, p1, perfil) = p
+        fun q(t: Float, h: Float) = s.p(p0 + (p1 - p0) * t + V3(0f, h, 0f))
+        val a = v.en(q(0.5f, 0f))
+        val borde = perfil.map { (t, h) -> q(t, h) }
+        val forma = poligono(listOf(q(0f, 0f), q(1f, 0f)) + borde.reversed())
+        val madera = if (dentro) lerp(C.CENIZA, C.MADERA_GRIS, 0.3f) else lerp(C.MADERA_GRIS, C.MADERA, 0.22f)
+        val negro = a.cara(lerp(C.CENIZA, Color.Black, 0.35f), s.normal(n), centroDe(borde))
+        drawPath(forma, a.cara(madera, s.normal(n), centroDe(borde)))
         clipPath(forma) {
-            // Los troncos redondos, uno sobre otro (0.24 m): la mitad de arriba mira al cielo, la de abajo al suelo.
-            val dz = 0.24f
-            var y = 0f; var i = 0
-            while (y < 2.6f) {
-                val arribaLog = (0..14).map { j -> s.p(0f, y + dz, 7f * j / 14f) }
-                val medioLog = (0..14).map { j -> s.p(0f, y + dz * 0.5f, 7f * j / 14f) }
-                val abajoLog = (0..14).map { j -> s.p(0f, y, 7f * j / 14f) }
-                val tinte = lerp(madera, C.MADERA_GRIS, 0.15f * ((i * 7) % 3))
-                drawPath(poligono(arribaLog + medioLog.reversed()), a.cara(tinte, s.normal(Vec.unidad(V3(1f, 0.65f, 0f))), medioLog[7]))
-                drawPath(poligono(medioLog + abajoLog.reversed()), a.cara(tinte, s.normal(Vec.unidad(V3(1f, -0.55f, 0f))), medioLog[7]))
-                // La junta oscura entre tronco y tronco, con su musgo de calafatear.
-                drawPath(curva(abajoLog), mult(a.cara(madera, s.normal(nPared), abajoLog[7]), C.SOMBRA, 0.6f), style = Stroke((0.03f * s.escala(0f, 3f)).coerceAtLeast(0.5f)))
-                drawPath(curva(medioLog.map { it + Offset(0f, -0.06f * s.escala(0f, 3f)) }), lerp(a.cara(tinte, s.normal(Vec.unidad(V3(1f, 0.8f, 0f))), medioLog[7]), Color.White, 0.12f).copy(alpha = 0.55f), style = Stroke((0.012f * s.escala(0f, 3f)).coerceAtLeast(0.3f)))
-                // Las grietas de la madera seca, a lo largo.
-                repeat(3) { val z0 = az.entre(0.2f, 6.4f); val q0 = s.p(0f, y + dz * az.entre(0.35f, 0.75f), z0); val q1 = s.p(0f, y + dz * az.entre(0.35f, 0.75f), z0 + az.entre(0.3f, 0.8f)); drawLine(mult(a.cara(tinte, s.normal(nPared), q0), C.SOMBRA, 0.45f), q0, q1, 0.5f) }
+            // Los troncos: la mitad de arriba mira al cielo, la de abajo al suelo; la junta, oscura.
+            val dz = 0.24f; var y = 0f; var i = 0
+            while (y < 2.5f) {
+                val arriba = (0..16).map { j -> q(j / 16f, y + dz) }; val medio = (0..16).map { j -> q(j / 16f, y + dz * 0.5f) }; val abajo = (0..16).map { j -> q(j / 16f, y) }
+                val tinte = lerp(madera, C.MADERA_GRIS, 0.12f * ((i * 7) % 3))
+                drawPath(poligono(arriba + medio.reversed()), a.cara(tinte, s.normal(Vec.unidad(n + V3(0f, 0.65f, 0f))), medio[8]))
+                drawPath(poligono(medio + abajo.reversed()), a.cara(tinte, s.normal(Vec.unidad(n + V3(0f, -0.55f, 0f))), medio[8]))
+                drawPath(curva(abajo), mult(a.cara(madera, s.normal(n), abajo[8]), C.SOMBRA, 0.6f), style = Stroke((0.03f * s.escala(0f, 3f)).coerceAtLeast(0.5f)))
+                repeat(3) { val t0 = az.entre(0.03f, 0.9f); val hh = y + dz * az.entre(0.35f, 0.75f); drawLine(mult(a.cara(tinte, s.normal(n), q(t0, hh)), C.SOMBRA, 0.45f), q(t0, hh), q(t0 + az.entre(0.04f, 0.1f), hh), 0.5f) }
                 y += dz; i++
             }
-            // El hueco de la ventana, con su marco quemado (los tablones de alrededor), y lo negro de dentro.
-            val vq = listOf(s.p(0f, 0.85f, 5.25f), s.p(0f, 0.85f, 6.0f), s.p(0f, 1.5f, 6.0f), s.p(0f, 1.5f, 5.25f))
-            drawPath(poligono(vq), a.plano(lerp(C.CENIZA, Color.Black, 0.3f), centroDe(vq), 0f))
-            drawPath(poligono(vq), a.cara(lerp(C.CENIZA, C.MADERA_GRIS, 0.4f), s.normal(nPared), centroDe(vq)), style = Stroke((0.06f * s.escala(0f, 5.6f)).coerceAtLeast(0.8f)))
-            // Lo quemado: desde el borde de arriba, el negro que se apaga hacia abajo (el hollín), tramo a tramo, y en el
-            // filo el carbón cuarteado en escamas; algún tronco quemado de parte a parte, más abajo.
-            val negro = a.cara(lerp(C.CENIZA, Color.Black, 0.3f), s.normal(nPared), centroDe(borde))
-            val hondo = 0.75f
-            for (j in 0 until PERFIL_CASA.size - 1) {
-                val (z0, h0) = PERFIL_CASA[j]; val (z1, h1) = PERFIL_CASA[j + 1]
-                val t0 = s.p(0f, h0, z0); val t1 = s.p(0f, h1, z1); val b0 = s.p(0f, h0 - hondo, z0); val b1 = s.p(0f, h1 - hondo, z1)
-                val y0 = minOf(t0.y, t1.y); val y1 = maxOf(b0.y, b1.y)
-                drawPath(poligono(t0, t1, b1, b0), Brush.verticalGradient(0f to negro, 0.35f to negro.copy(alpha = 0.85f), 1f to negro.copy(alpha = 0f), startY = y0, endY = y1))
+            // La ventana: el hueco negro, el marco tallado con su frontón, chamuscado, y el postigo que cuelga de un gozne.
+            if (ventana != null) {
+                val (u0, u1) = ventana; val y0 = 0.85f; val y1 = 1.6f
+                val hueco = listOf(q(u0, y0), q(u1, y0), q(u1, y1), q(u0, y1))
+                drawPath(poligono(hueco), a.plano(lerp(C.CENIZA, Color.Black, 0.5f), centroDe(hueco), 0f))
+                val marco = a.cara(lerp(C.LONA, C.MADERA_GRIS, 0.55f), s.normal(n), centroDe(hueco))
+                val g = (0.05f * s.escala(0f, 5f)).coerceAtLeast(0.8f)
+                drawPath(poligono(hueco), marco, style = Stroke(g))
+                // El frontón tallado de encima, en pico, y el alféizar.
+                val c = (u0 + u1) / 2f
+                drawPath(poligono(q(u0 - 0.02f, y1 + 0.04f), q(c, y1 + 0.22f), q(u1 + 0.02f, y1 + 0.04f)), marco, style = Stroke(g * 0.8f))
+                for (k in 1..3) { val t = u0 + (u1 - u0) * k / 4f; drawCircle(marco, g * 0.35f, q(t, y1 + 0.1f)) }
+                drawLine(marco, q(u0 - 0.03f, y0 - 0.03f), q(u1 + 0.03f, y0 - 0.03f), g)
+                drawPath(poligono(hueco), lerp(C.CENIZA, Color.Black, 0.3f).copy(alpha = 0.55f), style = Stroke(g * 0.4f))
             }
-            val carbon = poligono(borde + borde.reversed().mapIndexed { j, q -> val z = PERFIL_CASA[PERFIL_CASA.size - 1 - j].first; q + Offset(0f, 0.3f * s.escala(0f, z)) })
-            clipPath(carbon) {
-                // El carbón en escamas: cuadritos con su filo gris, como la madera quemada.
-                repeat(160) {
-                    val z = az.entre(0f, 7f); val h = altoDeLaPared(z) - az.entre(0.02f, 0.6f); val kk = s.escala(0f, z)
-                    val q = s.p(0f, h, z); val w = az.entre(0.05f, 0.12f) * kk; val hh = w * az.entre(0.5f, 0.8f)
-                    drawRect(lerp(negro, C.CENIZA, 0.5f).copy(alpha = 0.7f), Offset(q.x - w / 2f, q.y - hh / 2f), Size(w, hh), style = Stroke(0.35f))
-                }
+            // Lo carbonizado: desde el filo, el negro que se apaga hacia abajo, tramo a tramo.
+            val hondo = if (dentro) 2.4f else 0.8f
+            for (j in 0 until perfil.size - 1) {
+                val (t0, h0) = perfil[j]; val (t1, h1) = perfil[j + 1]
+                val a0 = q(t0, h0); val a1 = q(t1, h1); val b0 = q(t0, h0 - hondo); val b1 = q(t1, h1 - hondo)
+                drawPath(poligono(a0, a1, b1, b0), Brush.verticalGradient(0f to negro, 0.4f to negro.copy(alpha = 0.88f), 1f to negro.copy(alpha = 0f), startY = minOf(a0.y, a1.y), endY = maxOf(b0.y, b1.y)))
+            }
+            // El carbón en escamas, pegado al filo: cuadritos apenas más negros, con su canto plateado (el brillo del carbón).
+            val brillo = lerp(C.CENIZA, C.LONA, 0.6f)
+            repeat(if (dentro) 30 else 70) {
+                val t = az.entre(0f, 1f); val hTop = perfil.zipWithNext().first { (x0, x1) -> t <= x1.first }.let { (x0, x1) -> x0.second + (x1.second - x0.second) * (t - x0.first) / (x1.first - x0.first) }
+                val h = hTop - az.entre(0.03f, 0.3f)
+                if (h < 0.05f) return@repeat
+                val c = q(t, h); val w = az.entre(0.05f, 0.1f) * s.escala(0f, 3f); val hh = w * az.entre(0.45f, 0.7f)
+                drawRect(lerp(negro, Color.Black, 0.2f).copy(alpha = 0.7f), Offset(c.x - w / 2f, c.y - hh / 2f), Size(w, hh))
+                drawLine(brillo.copy(alpha = 0.45f * (0.4f + 0.6f * v.r.dia)), Offset(c.x - w / 2f, c.y - hh / 2f), Offset(c.x + w * 0.3f, c.y - hh / 2f), 0.4f)
             }
         }
-        // Las brasas que quedan en lo alto de la pared, de noche, que laten (en la parte quieta, apenas).
-        if (v.noche > 0.4f) repeat(6) { val z = az.entre(0.5f, 6.8f); val q = s.p(0f, altoDeLaPared(z) - 0.05f, z); drawCircle(a.brasa(0.4f).copy(alpha = 0.6f), 0.8f, q) }
-        // Las cabezas de los troncos en la esquina de delante: el ensamble, con sus anillos.
-        for (j in 0 until 11) {
-            val h = 0.12f + j * 0.24f; if (h > PERFIL_CASA.first().second - 0.05f) break
-            val c = s.p(0.06f, h, -0.12f); val r = 0.13f * s.k
-            drawCircle(mult(a.cara(madera, V3(0f, 0f, -1f), c), C.SOMBRA, 0.35f), r * 1.08f, c + Offset(0.6f, 0.6f))
-            drawCircle(a.cara(lerp(C.LONA, C.MADERA_GRIS, 0.55f), V3(0f, 0f, -1f), c), r, c)
-            drawCircle(mult(a.cara(C.MADERA, V3(0f, 0f, -1f), c), C.SOMBRA, 0.3f), r * 0.6f, c, style = Stroke(0.5f))
-            drawCircle(mult(a.cara(C.MADERA, V3(0f, 0f, -1f), c), C.SOMBRA, 0.3f), r * 0.28f, c, style = Stroke(0.4f))
-            // Lo quemado de la cabeza: los de arriba, negros.
-            if (h > PERFIL_CASA.first().second - 0.8f) drawCircle(lerp(C.CENIZA, Color.Black, 0.2f).copy(alpha = 0.75f), r, c)
+        // La ceniza posada en el filo, y el filo mismo, roto, con alguna astilla quemada.
+        drawPath(curva(borde), lerp(C.CENIZA, C.LONA, 0.35f).copy(alpha = 0.7f), style = Stroke((0.025f * s.escala(0f, 3f)).coerceAtLeast(0.5f), cap = StrokeCap.Round))
+        for (b in borde.drop(1).dropLast(1)) if (az.real() < 0.5f) drawLine(lerp(C.CENIZA, Color.Black, 0.2f), b, b + Offset(az.entre(-1.5f, 1.5f), -az.entre(1.5f, 4f)), 0.8f, StrokeCap.Round)
+    }
+
+    /**
+     * El postigo de la ventana, colgando de un solo gozne: abierto hacia el camino y caído de lado, de tablas con su
+     * remate tallado y la pintura azul desvaída, chamuscado por el canto de arriba.
+     */
+    private fun DrawScope.postigo(v: VistaNapoleon, z0: Float) {
+        val s = S_CASA; val a = v.en(s.p(0.2f, 1.2f, z0))
+        val d = Vec.unidad(V3(0.9f, 0f, -0.42f))
+        val gozne = V3(0.03f, 1.58f, z0)
+        val ancho = 0.42f
+        // Caído: el canto de abajo se ha ido hacia fuera y hacia abajo (el gozne de abajo saltó).
+        val q = listOf(gozne, gozne + d * ancho + V3(0f, -0.2f, 0f), gozne + d * (ancho + 0.12f) + V3(0f, -0.92f, 0f), gozne + d * 0.12f + V3(0f, -0.74f, 0f))
+        val n = Vec.unidad(Vec.cruz(q[1] - q[0], q[3] - q[0])).let { if (s.seVe(q[0], it)) it else it * -1f }
+        val pintura = lerp(C.AZUL, C.LONA, 0.45f)
+        val f = cara(s, a, q, n, pintura) ?: return
+        clipPath(f) {
+            // Las tablas, de arriba abajo, y el travesaño; la pintura saltada; lo chamuscado de arriba.
+            for (t in listOf(0.33f, 0.66f)) drawLine(mult(a.cara(pintura, s.normal(n), s.p(q[0])), C.SOMBRA, 0.5f), s.p(q[0] + (q[1] - q[0]) * t), s.p(q[3] + (q[2] - q[3]) * t), 0.5f)
+            drawLine(a.cara(lerp(pintura, C.MADERA_GRIS, 0.5f), s.normal(n), s.p(q[0])), s.p(q[0] + (q[3] - q[0]) * 0.5f), s.p(q[1] + (q[2] - q[1]) * 0.5f), 1.2f)
+            mancha(s.p(q[0] + (q[2] - q[0]) * 0.6f), 3f, 2f, a.cara(C.MADERA_GRIS, s.normal(n), s.p(q[0])), 0.6f)
+            val yTop = minOf(s.p(q[0]).y, s.p(q[1]).y)
+            drawRect(Brush.verticalGradient(0f to lerp(C.CENIZA, Color.Black, 0.3f), 1f to Color.Transparent, startY = yTop, endY = yTop + 6f), Offset(s.p(q[0]).x - 20f, yTop - 1f), Size(60f, 7f))
         }
-        if (nieve > 0.1f) nieveEncima(a, borde.sortedBy { it.x }, (0.08f * s.escala(0f, 3f) * nieve).coerceAtMost(4f), az)
-        // ---- La viga del caballete, caída de lo alto de la pared al camino, quemada, con su punta astillada.
-        val v0 = V3(0.15f, 1.62f, 5.2f); val v1 = V3(2.6f, 0.1f, 1.5f)
-        val carbonOsc = lerp(C.CENIZA, Color.Black, 0.3f)
-        val sil = cilindro(s, a, v1, v0 - v1, 0.14f, 0.12f, Vec.largo(v0 - v1), carbonOsc, lerp(C.CENIZA, C.MADERA, 0.35f), 12)
+        // El gozne que queda, de hierro.
+        drawCircle(a.plano(C.HIERRO, s.p(gozne), 0f), 0.9f, s.p(gozne))
+    }
+
+    /** La esquina de delante: las cabezas de los troncos de las dos paredes, a hilos alternos, carbonizadas por arriba. */
+    private fun DrawScope.esquina(v: VistaNapoleon, az: Azar) {
+        val s = S_CASA; val a = v.en(s.pie)
+        val alto = PARED_CAMINO.third.first().second
+        for (j in 0 until 10) {
+            val camino = j % 2 == 0
+            val h = 0.12f + j * 0.12f * 2f / 2f + (if (camino) 0f else 0.12f)
+            if (h > alto - 0.06f) break
+            // Las del camino asoman hacia quien mira (la testa mira a −z); las de delante, hacia el camino (+x).
+            val c3 = if (camino) V3(0f, h, -0.16f) else V3(0.16f, h, 0f)
+            val eje = if (camino) V3(0f, 0f, 1f) else V3(1f, 0f, 0f)
+            val r = 0.12f
+            val testa = PiezasNapoleon.circulo(s, c3, eje, r, 16)
+            val quemada = h > alto - 1.1f
+            val mira = if (camino) V3(0f, 0f, -1f) else V3(1f, 0f, 0f)
+            val col = a.cara(if (quemada) lerp(C.CENIZA, Color.Black, 0.35f) else lerp(lerp(C.LONA, C.MADERA_GRIS, 0.6f), C.MADERA, 0.2f), mira, s.p(c3))
+            drawPath(poligono(testa.map { it + Offset(0.7f, 0.7f) }), mult(col, C.SOMBRA, 0.4f))
+            drawPath(poligono(testa), col)
+            val cp = s.p(c3)
+            if (quemada) {
+                // El brillo del carbón: un arco plateado arriba, y las grietas.
+                drawPath(curva(testa.subList(9, 14)), lerp(C.CENIZA, C.LONA, 0.6f).copy(alpha = 0.7f), style = Stroke(0.6f))
+                repeat(3) { val ang = az.entre(0f, 6.28f); drawLine(lerp(C.CENIZA, C.LONA, 0.3f).copy(alpha = 0.5f), cp, cp + Offset(cos(ang), sin(ang)) * (r * s.k * 0.8f), 0.4f) }
+            } else {
+                for (f in listOf(0.65f, 0.35f)) drawPath(poligono(PiezasNapoleon.circulo(s, c3 + mira * 0.001f, eje, r * f, 12)), mult(col, C.SOMBRA, 0.3f), style = Stroke(0.4f))
+            }
+        }
+    }
+
+    /**
+     * La estufa rusa: el bloque de ladrillo encalado, con el encalado saltado a trozos (asoma el ladrillo), el tizne
+     * sobre la boca del horno, la boca en arco con su poyo, el hueco chico de secar, y la chimenea de ladrillo, más
+     * negra cuanto más arriba.
+     */
+    private fun DrawScope.estufa(v: VistaNapoleon, az: Azar) {
+        val s = S_CASA; val a = v.en(s.p(-0.8f, 0f, 1.7f))
+        val cal = lerp(C.LONA, C.NIEVE, 0.4f); val ladrillo = lerp(C.ROJO, C.MADERA, 0.45f)
+        val caras = caja(s, a, ESTUFA_X0, ESTUFA_X1, 0f, ESTUFA_ALTO, ESTUFA_Z0, ESTUFA_Z1, cal, arriba = lerp(cal, C.CENIZA, 0.3f))
+        for ((c3, f) in caras) clipPath(f) {
+            val nn = s.normal(c3.n); val en = s.p(c3.centro)
+            if (c3.arriba) { mancha(s.p(c3.en(0.5f, 0.5f)), 0.5f * s.k, 0.25f * s.k, a.cara(C.CENIZA, nn, en), 0.6f); return@clipPath }
+            // La cornisa de arriba (una moldura, más oscura) y el zócalo tiznado de abajo; las grietas del encalado.
+            linea(s, c3, 0f, 0.93f, 1f, 0.93f, mult(a.cara(cal, nn, en), C.SOMBRA, 0.35f), (0.04f * s.k).coerceAtLeast(0.8f))
+            linea(s, c3, 0f, 0.97f, 1f, 0.97f, lerp(a.cara(cal, nn, en), Color.White, 0.2f), (0.02f * s.k).coerceAtLeast(0.4f))
+            val y0 = s.p(c3.en(0.5f, 0f)).y; val y1 = s.p(c3.en(0.5f, 0.25f)).y
+            drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to a.cara(C.CENIZA, nn, en).copy(alpha = 0.55f), startY = y1, endY = y0), Offset(-10f, y1), Size(300f, y0 - y1))
+            repeat(4) { val u = az.entre(0.1f, 0.9f); val vv = az.entre(0.2f, 0.85f); drawPath(curva(listOf(s.p(c3.en(u, vv)), s.p(c3.en(u + az.entre(-0.06f, 0.06f), vv - 0.08f)), s.p(c3.en(u + az.entre(-0.08f, 0.08f), vv - 0.16f)))), mult(a.cara(cal, nn, en), C.SOMBRA, 0.45f), style = Stroke(0.4f)) }
+            // Donde se saltó el encalado: asoma el ladrillo con sus hiladas.
+            repeat(5) {
+                val u = az.entre(0.05f, 0.9f); val w = az.entre(0.08f, 0.22f); val vv = az.entre(0.1f, 0.85f)
+                val trozo = poligono(s.p(c3.en(u, vv)), s.p(c3.en(u + w, vv + az.entre(-0.03f, 0.03f))), s.p(c3.en(u + w * 0.9f, vv + 0.12f)), s.p(c3.en(u + w * 0.1f, vv + 0.1f)))
+                drawPath(trozo, a.cara(ladrillo, nn, en))
+                clipPath(trozo) { for (k in 0 until 4) { val hv = vv + k * 0.03f; linea(s, c3, u, hv, u + w, hv, mult(a.cara(ladrillo, nn, en), C.SOMBRA, 0.4f), 0.35f) } }
+            }
+            // La cara que mira a quien mira: la boca del horno en arco, negra, con el tizne que sube y el poyo debajo.
+            if (c3.n.z < -0.5f) {
+                val boca = (0..12).map { k -> val ang = PI.toFloat() * k / 12f; c3.en(0.5f - 0.2f * cos(ang), 0.42f + 0.2f * sin(ang)) } + listOf(c3.en(0.7f, 0.36f), c3.en(0.3f, 0.36f))
+                val bp = boca.map { s.p(it) }
+                // El tizne que sube de la boca, en lengua, y la boca negra en arco.
+                val sobre = s.p(c3.en(0.5f, 0.75f)); val k = s.escala(ESTUFA_X1, ESTUFA_Z0)
+                mancha(sobre, 0.28f * k, 0.32f * k, a.cara(C.CENIZA, nn, en), 0.55f)
+                mancha(s.p(c3.en(0.5f, 0.66f)), 0.18f * k, 0.16f * k, a.cara(C.CENIZA, nn, en), 0.6f)
+                drawPath(poligono(bp), lerp(C.CENIZA, Color.Black, 0.6f))
+                drawPath(poligono(bp), a.cara(lerp(cal, C.CENIZA, 0.35f), nn, en), style = Stroke((0.03f * k).coerceAtLeast(0.6f)))
+                linea(s, c3, 0.22f, 0.36f, 0.78f, 0.36f, a.cara(lerp(cal, C.CENIZA, 0.2f), nn, en), (0.05f * s.k).coerceAtLeast(1f))
+                val nicho = listOf(c3.en(0.8f, 0.68f), c3.en(0.9f, 0.68f), c3.en(0.9f, 0.78f), c3.en(0.8f, 0.78f)).map { s.p(it) }
+                drawPath(poligono(nicho), lerp(C.CENIZA, Color.Black, 0.4f))
+            }
+        }
+        // La chimenea, de ladrillo con lo encalado abajo y el hollín arriba.
+        val chim = caja(s, a, CHIMENEA_X0, CHIMENEA_X1, ESTUFA_ALTO, CHIMENEA_ALTO, CHIMENEA_Z0, CHIMENEA_Z1, ladrillo, arriba = C.CENIZA)
+        for ((c3, f) in chim) clipPath(f) {
+            if (c3.arriba) return@clipPath
+            val nn = s.normal(c3.n); val en = s.p(c3.centro); val col = a.cara(ladrillo, nn, en)
+            for (j in 0 until 34) {
+                val vv = j / 34f; linea(s, c3, 0f, vv, 1f, vv, mult(col, C.SOMBRA, 0.4f), (0.012f * s.k).coerceAtLeast(0.25f))
+                for (u in listOf(0.25f, 0.75f)) { val uu = if (j % 2 == 0) u else u - 0.25f; linea(s, c3, uu, vv, uu, vv + 1f / 34f, mult(col, C.SOMBRA, 0.4f), (0.01f * s.k).coerceAtLeast(0.2f)) }
+            }
+            val y0 = s.p(c3.en(0.5f, 0f)).y; val y1 = s.p(c3.en(0.5f, 1f)).y
+            drawRect(Brush.verticalGradient(0f to a.cara(C.CENIZA, nn, en), 0.4f to Color.Transparent, 0.75f to Color.Transparent, 1f to a.cara(cal, nn, en).copy(alpha = 0.85f), startY = y1, endY = y0), Offset(-10f, y1), Size(300f, y0 - y1))
+        }
+        if (v.nieve > 0.1f) nieveEncima(a, listOf(s.p(ESTUFA_X0, ESTUFA_ALTO, ESTUFA_Z0), s.p((ESTUFA_X0 + ESTUFA_X1) / 2f, ESTUFA_ALTO, ESTUFA_Z0), s.p(ESTUFA_X1, ESTUFA_ALTO, ESTUFA_Z0)).sortedBy { it.x }, (0.08f * s.k * v.nieve).coerceAtMost(4f), az)
+    }
+
+    /** Una viga caída, quemada: negra, cuarteada de través con su canto de ceniza; con [brasas], rojas en las grietas. */
+    private fun DrawScope.viga(v: VistaNapoleon, p0: V3, p1: V3, r: Float, brasas: Boolean, az: Azar) {
+        val s = S_CASA; val a = v.en(s.p((p0 + p1) * 0.5f))
+        val negro = lerp(C.CENIZA, Color.Black, 0.3f)
+        val sil = cilindro(s, a, p1, p0 - p1, r, r * 0.85f, Vec.largo(p0 - p1), negro, lerp(C.CENIZA, C.MADERA, 0.35f), 12)
         clipPath(sil) {
-            // La madera quemada en cuadros: grietas de través, con su canto gris de ceniza.
-            for (j in 0 until 26) { val t = j / 26f; val q = s.p(v1 + (v0 - v1) * t + V3(0f, 0.13f, 0f)); drawLine(lerp(C.CENIZA, C.LONA, 0.25f).copy(alpha = 0.45f), q + Offset(-1.5f, -0.6f), q + Offset(1.4f, 2.4f), 0.5f) }
+            for (j in 0 until 30) {
+                val t = j / 30f; val q = s.p(p1 + (p0 - p1) * t + V3(0f, r * 0.9f, 0f))
+                drawLine(lerp(C.CENIZA, C.LONA, 0.3f).copy(alpha = 0.45f), q + Offset(-1.6f, -0.6f), q + Offset(1.4f, 2.6f), 0.5f)
+                if (brasas && az.real() < 0.45f) drawLine(a.brasa(az.entre(0.3f, 0.8f)), q + Offset(-0.6f, 0.8f), q + Offset(0.6f, 2.2f), 0.7f)
+            }
         }
-        if (nieve > 0.1f) nieveEncima(a, (0..6).map { s.p(v1 + (v0 - v1) * (it / 6f) + V3(0f, 0.14f, 0f)) }.sortedBy { it.x }, (0.05f * s.k * nieve).coerceAtMost(3f), az)
-        // ---- Troncos quemados por el suelo, entre la pared y el camino.
-        for (j in 0 until 5) {
-            val x0 = az.entre(0.3f, 2.2f); val z0 = az.entre(0.4f, 3.6f); val ang = az.entre(-0.9f, 0.9f); val l = az.entre(0.9f, 2.0f)
-            val p0 = V3(x0, 0.1f, z0); val e = V3(sin(ang), 0f, cos(ang))
-            val tronco = cilindro(s, a, p0, e, 0.11f, 0.1f, l, lerp(carbonOsc, C.MADERA_OSC, az.entre(0f, 0.2f)), lerp(C.CENIZA, C.MADERA, 0.3f), 10)
-            clipPath(tronco) { for (k in 0 until 9) { val q = s.p(p0 + e * (l * k / 9f) + V3(0f, 0.1f, 0f)); drawLine(lerp(C.CENIZA, C.LONA, 0.25f).copy(alpha = 0.4f), q + Offset(-1f, -0.6f), q + Offset(1f, 1.8f), 0.45f) } }
+        // La punta astillada, quemada.
+        val pp = s.p(p0)
+        for (j in 0 until 3) drawLine(negro, pp, pp + Offset(az.entre(-3f, 3f), az.entre(-3f, 1f)), 1f, StrokeCap.Round)
+        if (brasas) repeat(6) { val q = s.p(p1 + (p0 - p1) * az.entre(0.05f, 0.95f)); drawCircle(a.brasa(az.entre(0.4f, 0.9f)), az.entre(0.6f, 1.2f), q + Offset(0f, az.entre(0f, 1.5f))) }
+    }
+
+    /**
+     * La rueca de la casa, apoyada en la pared, sin quemar del todo: la pala tallada de pie (ancha arriba, con sus
+     * orejas, el cuello estrecho), sobre su asiento, pintada de rojo desvaído, con el filo de arriba chamuscado.
+     */
+    private fun DrawScope.rueca(v: VistaNapoleon, en: V3) {
+        val s = S_CASA; val a = v.en(s.p(en))
+        val madera = lerp(C.MADERA, C.LONA, 0.25f); val pintura = lerp(C.ROJO, C.MADERA, 0.4f)
+        // El asiento: una tabla en el suelo, hacia el camino.
+        cara(s, a, listOf(en + V3(0f, 0.04f, -0.12f), en + V3(0.75f, 0.04f, -0.12f), en + V3(0.75f, 0.04f, 0.12f), en + V3(0f, 0.04f, 0.12f)), V3(0f, 1f, 0f), madera)
+        // La pala, de pie y un poco recostada en la pared (mira al camino).
+        val inc = V3(-0.14f, 1f, 0f)
+        fun pt(w: Float, h: Float) = en + V3(0.05f, 0.04f, 0f) + Vec.unidad(inc) * (h * 1.2f) + V3(0f, 0f, w * 1.2f)
+        val contorno = listOf(pt(-0.07f, 0f), pt(-0.05f, 0.35f), pt(-0.12f, 0.48f), pt(-0.16f, 0.78f), pt(-0.2f, 0.84f), pt(-0.14f, 0.9f), pt(-0.08f, 0.86f), pt(0f, 0.92f), pt(0.08f, 0.86f), pt(0.14f, 0.9f), pt(0.2f, 0.84f), pt(0.16f, 0.78f), pt(0.12f, 0.48f), pt(0.05f, 0.35f), pt(0.07f, 0f))
+        val f = cara(s, a, contorno, Vec.unidad(V3(1f, 0.14f, 0f)), madera) ?: return
+        clipPath(f) {
+            // La pintura: un sol de rosetas y unas rayas, desvaídas; lo de arriba, negro del fuego.
+            val c = s.p(pt(0f, 0.66f)); val k = s.escala(en.x, en.z)
+            drawCircle(a.cara(pintura, V3(1f, 0.1f, 0f), c), 0.08f * k, c, style = Stroke(0.8f))
+            drawCircle(a.cara(pintura, V3(1f, 0.1f, 0f), c), 0.03f * k, c)
+            for (h in listOf(0.5f, 0.54f)) drawLine(a.cara(pintura, V3(1f, 0.1f, 0f), c), s.p(pt(-0.12f, h)), s.p(pt(0.12f, h)), 0.6f)
+            val yTop = s.p(pt(0f, 0.92f)).y
+            drawRect(Brush.verticalGradient(0f to lerp(C.CENIZA, Color.Black, 0.3f), 1f to Color.Transparent, startY = yTop, endY = yTop + 0.25f * k), Offset(c.x - 30f, yTop - 1f), Size(60f, 0.25f * k + 2f))
         }
+    }
+
+    /** El banco de la casa, volcado al pie de la pared: el tablón de canto y las dos patas al aire, una rota. */
+    private fun DrawScope.banco(v: VistaNapoleon, az: Azar) {
+        val s = S_CASA; val a = v.en(s.p(0.75f, 0f, 1.1f))
+        val madera = lerp(C.MADERA, C.MADERA_GRIS, 0.35f)
+        // El tablón, de canto en el suelo, a lo largo de la pared.
+        caja(s, a, 0.62f, 0.68f, 0f, 0.3f, 0.3f, 1.9f, madera)
+        // Las patas, que salen del tablón hacia el camino, al aire.
+        for ((z, l) in listOf(0.5f to 0.42f, 1.65f to 0.22f)) {
+            caja(s, a, 0.68f, 0.68f + l, 0.1f, 0.18f, z - 0.04f, z + 0.04f, lerp(madera, C.CENIZA, 0.15f))
+            if (l < 0.3f) { val pp = s.p(0.68f + l, 0.14f, z); drawLine(lerp(C.LONA, C.MADERA, 0.4f), pp, pp + Offset(1.5f, -1.5f), 0.7f) }
+        }
+        // Lo chamuscado de un extremo.
+        mancha(s.p(0.65f, 0.15f, 1.85f), 0.12f * s.k, 0.1f * s.k, lerp(C.CENIZA, Color.Black, 0.3f), 0.7f)
+    }
+
+    /** El caldero de hierro de la casa, tumbado en el suelo con la boca hacia quien mira, con su asa y su tizne. */
+    private fun DrawScope.caldero(v: VistaNapoleon, en: V3) {
+        val s = S_CASA; val a = v.en(s.p(en))
+        val eje = Vec.unidad(V3(0.35f, 0.15f, 1f))
+        val base = en + eje * 0.18f
+        drawOval(v.p.sombra(C.BARRO).copy(alpha = 0.45f), Offset(s.p(en).x - 0.25f * s.k, s.p(en).y + 0.08f * s.k), Size(0.5f * s.k, 0.1f * s.k))
+        cilindro(s, a, base, eje * -1f, 0.13f, 0.18f, 0.32f, C.HIERRO, null, 16, tapaAbajo = C.HIERRO)
+        // La boca, negra por dentro, con su borde de luz.
+        val boca = PiezasNapoleon.circulo(s, en - eje * 0.14f, eje, 0.18f, 18)
+        drawPath(poligono(boca), lerp(C.CENIZA, Color.Black, 0.5f))
+        drawPath(TrazosValle.cerrada(boca), a.plano(lerp(C.HIERRO, C.PLATA, 0.3f), s.p(en), 0.4f), style = Stroke(0.8f))
+        // El asa, de alambre, caída.
+        val q0 = boca[2]; val q1 = boca[9]; drawPath(curva(listOf(q0, (q0 + q1) / 2f + Offset(0f, 0.15f * s.k), q1)), a.plano(C.HIERRO, s.p(en), 0f), style = Stroke(0.6f))
     }
 
     /**
@@ -495,6 +707,15 @@ internal object MarcosRetirada {
             drawPath(astilla, a.plano(viva, b, if (j < 4) -0.5f else 0.6f, 0f, 0.6f))
             drawLine(a.plano(lerp(viva, C.MADERA_OSC, 0.4f), b, 0f), b + Offset(-1.6f, 0f), t, 0.5f)
         }
+        // La astilla grande, la que quedó en pie: larga, clara, de madera viva, con su sombra al lado y la corteza en el canto.
+        run {
+            val b = Offset(p.x + 3f, ROTURA.y + 8f); val t = Offset(p.x + 9f, ROTURA.y - 38f)
+            val astilla = poligono(b + Offset(-4f, 0f), b + Offset(-1f, -14f), t, b + Offset(4.5f, -10f), b + Offset(5f, 0f))
+            drawPath(astilla, a.plano(lerp(C.LONA, C.MADERA, 0.2f), b, 0.6f, 0f, 0.7f))
+            drawLine(a.plano(lerp(C.LONA, C.MADERA, 0.5f), b, -0.6f), b + Offset(-3f, 0f), t, 1.2f, StrokeCap.Round)
+            drawLine(lerp(a.plano(C.LONA, b, 0.8f), Color.White, 0.35f).copy(alpha = 0.8f * (0.3f + 0.7f * v.r.dia)), b + Offset(2.5f, -2f), t + Offset(0.5f, 3f), 0.8f, StrokeCap.Round)
+            drawLine(a.plano(C.MADERA_OSC, b, 0f), b + Offset(4.5f, -1f), b + Offset(4f, -10f), 1.2f)
+        }
         // La herida de la otra bala, en el costado: la corteza arrancada y la madera viva.
         val herida = TrazosValle.blando(Offset(p.x + 9f, 150f), 6f, 11f, az, 9, 0.3f, 0.6f)
         drawPath(herida, a.plano(viva, Offset(p.x + 9f, 150f), 0.6f, 0f, 0.5f))
@@ -544,10 +765,17 @@ internal object MarcosRetirada {
         val s = S_CAJON; val a = v.en(s.pie); val az = Azar(Semilla.de("napoleon", "cajon"))
         val verde = lerp(C.PINO_LUZ, C.CAPOTE, 0.35f)
         val negro = lerp(C.CENIZA, Color.Black, 0.3f)
-        // La quemadura en la nieve: negra en medio, gris hacia fuera, con salpicones.
-        mancha(s.p(0f, 0f, 0.1f), 1.8f * s.k, 0.5f * s.k, lerp(C.CENIZA, C.NIEVE_SUCIA, 0.45f), 0.7f)
-        mancha(s.p(0.1f, 0f, 0f), 1.0f * s.k, 0.26f * s.k, C.CENIZA, 0.85f)
-        repeat(14) { val q = s.p(az.entre(-1.8f, 1.8f), 0f, az.entre(-1f, 0.8f)); mancha(q, az.entre(1f, 2.6f), az.entre(0.5f, 1f), C.CENIZA, 0.6f) }
+        // La quemadura en la nieve: negra en medio, y alrededor el abanico de tierra que levantó la explosión, en rayos.
+        val tierra = lerp(C.BARRO, C.CENIZA, 0.45f)
+        for (j in 0 until 26) {
+            val ang = 2f * PI.toFloat() * j / 26f + az.entre(-0.1f, 0.1f); val l = az.entre(1.1f, 2.6f)
+            val p0 = V3(cos(ang) * 0.5f, 0.01f, sin(ang) * 0.35f); val p1 = V3(cos(ang) * l, 0.01f, sin(ang) * l * 0.7f)
+            val q0 = s.p(p0); val q1 = s.p(p1)
+            drawLine(tierra.copy(alpha = 0.55f), q0, q1, az.entre(1.5f, 3.5f), StrokeCap.Round)
+            repeat(3) { val t = az.entre(0.4f, 1.15f); mancha(q0 + (q1 - q0) * t, az.entre(1f, 2.4f), az.entre(0.5f, 1.1f), tierra, 0.7f) }
+        }
+        mancha(s.p(0f, 0f, 0.05f), 1.25f * s.k, 0.4f * s.k, lerp(C.CENIZA, C.BARRO, 0.3f), 0.85f)
+        mancha(s.p(0.1f, 0f, 0f), 0.85f * s.k, 0.24f * s.k, lerp(C.CENIZA, Color.Black, 0.3f), 0.9f)
         // La rueda de detrás, de pie, ladeada, con dos rayos rotos.
         rueda(s, a, V3(-0.78f, 0.56f, 0.42f), 0.56f, Vec.unidad(V3(1f, 0.08f, 0.2f)), 0.07f, 12, 2, C.MADERA_GRIS, 0f, 0.4f, v.nieve)
         // El cajón: verde, sin tapa; dentro, negro.
@@ -570,9 +798,17 @@ internal object MarcosRetirada {
             Triple(V3(-0.35f, 0.5f, -0.33f), V3(-0.25f, 0.7f, -0.66f), V3(1f, 0f, 0f)), Triple(V3(0.05f, 0.5f, -0.33f), V3(0.1f, 0.85f, -0.5f), V3(1f, 0f, 0f)),
             Triple(V3(0.42f, 0.5f, -0.33f), V3(0.45f, 0.4f, -0.9f), V3(1f, 0f, 0f)), Triple(V3(0.6f, 0.5f, -0.05f), V3(0.8f, 0.75f, 0.1f), V3(0f, 0f, 1f)),
             Triple(V3(0.6f, 0.5f, 0.2f), V3(0.9f, 0.3f, 0.3f), V3(0f, 0f, 1f)), Triple(V3(-0.6f, 0.5f, 0.0f), V3(-0.85f, 0.85f, 0.05f), V3(0f, 0f, 1f)),
+            Triple(V3(-0.15f, 0.5f, -0.33f), V3(-0.1f, 0.95f, -0.25f), V3(1f, 0f, 0f)), Triple(V3(0.25f, 0.5f, -0.33f), V3(0.35f, 0.9f, -0.35f), V3(1f, 0f, 0f)),
+            Triple(V3(-0.6f, 0.5f, -0.2f), V3(-0.95f, 0.45f, -0.3f), V3(0f, 0f, 1f)), Triple(V3(0.6f, 0.5f, -0.25f), V3(0.95f, 0.65f, -0.4f), V3(0f, 0f, 1f)),
         )
+        // Las tablas que volaron y cayeron en la nieve, alrededor.
+        repeat(7) {
+            val x = az.entre(-1.9f, 2.1f); val z = az.entre(-1.3f, 0.9f); val ang = az.entre(0f, 3.1f); val l = az.entre(0.35f, 0.7f)
+            val e = V3(cos(ang), 0f, sin(ang)); val nn = V3(-sin(ang), 0f, cos(ang))
+            cara(s, a, listOf(V3(x, 0.02f, z), V3(x, 0.02f, z) + e * l, V3(x, 0.02f, z) + e * l + nn * 0.08f, V3(x, 0.02f, z) + nn * 0.08f), V3(0f, 1f, 0f), lerp(verde, C.LONA, az.entre(0.05f, 0.3f)))
+        }
         for ((p0, d0, e) in tablas) {
-            val d = Vec.unidad(d0); val l = az.entre(0.32f, 0.55f); val w = 0.09f
+            val d = Vec.unidad(d0); val l = az.entre(0.42f, 0.75f); val w = 0.09f
             val q = listOf(p0 - e * (w / 2f), p0 + e * (w / 2f), p0 + e * (w / 2f) + d * l, p0 - e * (w / 2f) + d * l)
             val nrm = Vec.unidad(Vec.cruz(e, d)).let { if (s.seVe(p0, it)) it else it * -1f }
             cara(s, a, q, nrm, lerp(verde, C.LONA, 0.15f))
@@ -584,9 +820,12 @@ internal object MarcosRetirada {
         cara(s, a, listOf(V3(0.8f, 0f, -0.75f), V3(1.65f, 0.04f, -0.45f), V3(1.6f, 0.34f, -0.4f), V3(0.78f, 0.3f, -0.7f)), Vec.unidad(V3(-0.25f, 0.3f, -1f)), verde)
         // La rueda de delante, tumbada.
         rueda(s, a, V3(-1.3f, 0.06f, -0.55f), 0.52f, Vec.unidad(V3(0.12f, 1f, -0.3f)), 0.07f, 12, 4, C.MADERA_GRIS, 0f, 1.1f, v.nieve)
-        // Las balas de cañón, sueltas: negras, con su brillo y su sombra; y los cartuchos de papel.
-        repeat(8) {
-            val q = s.p(az.entre(-1.4f, 1.8f), 0.06f, az.entre(-1.1f, 0.3f)); val r = 0.065f * s.k
+        // Las balas de cañón, sueltas, que rodaron: cada una con su surco en la nieve desde el cajón, negras, con su brillo y su sombra.
+        repeat(9) {
+            val bx = az.entre(-1.6f, 2.1f); val bz = az.entre(-1.3f, 0.4f)
+            val q = s.p(bx, 0.06f, bz); val r = 0.065f * s.k
+            val desde = s.p(bx * 0.35f, 0.01f, bz * 0.35f)
+            drawLine(a.plano(C.NIEVE_SOMBRA, q, 0f).copy(alpha = 0.6f), desde, q, (0.08f * s.k).coerceAtLeast(1f), StrokeCap.Round)
             drawOval(v.p.sombra(C.NIEVE_SOMBRA).copy(alpha = 0.5f), Offset(q.x - r * 1.2f, q.y + r * 0.4f), Size(r * 2.6f, r * 0.8f))
             drawCircle(a.plano(C.HIERRO, q, 0f), r, q)
             drawCircle(lerp(a.arriba(C.HIERRO, q), Color.White, 0.3f), r * 0.35f, q + Offset(-r * 0.35f, -r * 0.4f))
@@ -668,6 +907,36 @@ internal object MarcosRetirada {
 
     // ================================================================= El final
 
+    /** La esquina de una caja de munición enterrada en la nieve: dos caras de tablas verdes, el fleje, la tapa con su nieve. */
+    private fun DrawScope.cajaEnterrada(v: VistaNapoleon, c: Offset) {
+        val a = v.en(c); val verde = lerp(C.PINO_LUZ, C.CAPOTE, 0.4f)
+        val frente = poligono(c + Offset(-14f, 0f), c + Offset(2f, 3f), c + Offset(2f, -9f), c + Offset(-14f, -12f))
+        val lado = poligono(c + Offset(2f, 3f), c + Offset(13f, -2f), c + Offset(13f, -13f), c + Offset(2f, -9f))
+        val tapa = poligono(c + Offset(-14f, -12f), c + Offset(2f, -9f), c + Offset(13f, -13f), c + Offset(-3f, -16f))
+        drawPath(frente, a.cara(verde, V3(0f, 0f, -1f), c)); drawPath(lado, a.cara(verde, V3(1f, 0f, -0.2f), c)); drawPath(tapa, a.arriba(lerp(verde, C.NIEVE, 0.15f), c))
+        drawLine(a.cara(C.HIERRO, V3(0f, 0f, -1f), c), c + Offset(-9f, 1f), c + Offset(-9f, -11f), 1.1f)
+        drawLine(mult(a.cara(verde, V3(0f, 0f, -1f), c), C.SOMBRA, 0.45f), c + Offset(-14f, -6f), c + Offset(2f, -3f), 0.5f)
+        if (v.nieve > 0.3f) drawPath(TrazosValle.blando(c + Offset(-1f, -14f), 13f, 3.2f, Azar(Semilla.de("napoleon", "caja", "nieve")), 8, 0.2f, 0.5f), a.arriba(C.NIEVE, c))
+    }
+
+    /** Un chacó medio enterrado, ladeado en la nieve: el fieltro negro, la placa de latón del águila, la escarapela y la borla roja. */
+    private fun DrawScope.chacoEnterrado(v: VistaNapoleon, c: Offset) {
+        val a = v.en(c); val fieltro = lerp(C.CENIZA, C.AZUL, 0.18f)
+        // El cuerpo, ladeado: más ancho arriba que abajo.
+        val cuerpo = poligono(c + Offset(-6f, 2f), c + Offset(4f, 4f), c + Offset(9f, -9f), c + Offset(-3f, -12f))
+        drawPath(cuerpo, a.plano(fieltro, c, 0.3f))
+        drawLine(lerp(a.plano(fieltro, c, 0.8f), Color.White, 0.15f), c + Offset(4f, 4f), c + Offset(9f, -9f), 0.8f)
+        // La copa, una elipse arriba, con su ribete.
+        drawOval(a.arriba(lerp(fieltro, C.CENIZA, 0.2f), c), Offset(c.x - 4.5f, c.y - 14.5f), Size(14f, 5f))
+        drawOval(a.plano(C.LATON, c, 0f), Offset(c.x - 4.5f, c.y - 14.5f), Size(14f, 5f), style = Stroke(0.6f))
+        // La placa en rombo, la escarapela y la borla.
+        val pl = c + Offset(1.5f, -4f)
+        drawPath(poligono(pl + Offset(0f, -3.2f), pl + Offset(2.4f, 0f), pl + Offset(0f, 3.2f), pl + Offset(-2.4f, 0f)), a.plano(C.LATON, pl, 0.4f))
+        drawCircle(C.ROJO.let { a.plano(it, pl, 0f) }, 1.4f, pl + Offset(1f, -7f)); drawCircle(a.plano(C.NIEVE, pl, 0f), 0.7f, pl + Offset(1f, -7f))
+        drawCircle(a.plano(C.ROJO, pl, 0.4f), 1.8f, c + Offset(4f, -15f))
+        if (v.nieve > 0.3f) drawPath(TrazosValle.blando(c + Offset(3f, -15.5f), 6f, 1.6f, Azar(Semilla.de("napoleon", "chaco", "nieve")), 7, 0.2f, 0.5f), a.arriba(C.NIEVE, c))
+    }
+
     /**
      * La nieve honda al pie del pino grande: un ventisquero largo que el viento ha tallado en olas, cada una con su
      * cornisa que cuelga hacia el camino, su sombra azul debajo y su filo encendido; las estrías del viento encima; una
@@ -690,7 +959,10 @@ internal object MarcosRetirada {
             if (i == 1) {
                 // Dos abetos jóvenes enterrados hasta media altura, que asoman cargados entre la primera ola y la segunda.
                 for ((pie, alto) in listOf(Offset(58f, 240f) to 70f, Offset(136f, 266f) to 44f)) pino(v.en(pie), pie, alto, alto * 0.72f, 1f, Azar(Semilla.de("napoleon", "abetito", pie.x.toInt())), 0f, 0.85f, caidaPropia = 0.62f)
+                // La esquina de una caja de munición que asoma, con su fleje y su nieve encima.
+                cajaEnterrada(v, Offset(160f, 250f))
             }
+            if (i == 2) chacoEnterrado(v, Offset(40f, 264f))
             val forma = TrazosValle.cerrada(cresta + listOf(cresta.last() + Offset(0f, 12f), Offset(-10f, 300f)))
             val y0 = cresta.first().y; val y1 = cresta.first().y + 60f
             // La cara que mira a quien mira: del filo, que coge la luz, a lo hondo, azul.

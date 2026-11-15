@@ -128,62 +128,80 @@ internal object RetiradaLejos {
         if (v.nieve > 0.4f) repeat(40) { val x = az.entre(250f, ANCHO); mancha(Offset(x, H - az.entre(1f, 4f)), 1.4f, 0.4f, p.arriba(C.NIEVE, 0.75f), 0.6f) }
         drawRect(Brush.verticalGradient(listOf(Color.Transparent, l.bruma.copy(alpha = 0.55f)), H - 6f, H + 1f), Offset(0f, H - 6f), Size(ANCHO, 7f))
         when (TramosRetirada.lejania(if (v.vivac) null else v.tramo)) {
-            TramosRetirada.Lejania.COLINAS -> colinas(v)
+            TramosRetirada.Lejania.COLINAS -> Unit                           // la colina va después de la bruma ([colinas])
             TramosRetirada.Lejania.BOSQUE -> bosqueDelFondo(v)
             TramosRetirada.Lejania.CAMPOS -> if (TramosRetirada.moscu(v.m)) moscu(v)
             TramosRetirada.Lejania.QUEMADOS, TramosRetirada.Lejania.LLANO, TramosRetirada.Lejania.RIO -> Unit
         }
     }
 
-    /** La cresta de la colina de Krasnoi, a la derecha del camino: de dónde a dónde y su cumbre. */
+    /** La cresta de la colina de Krasnoi, a la derecha del camino, cerca: de dónde a dónde y su cumbre. */
     private val COLINA: List<Offset> by lazy {
         val az = Azar(Semilla.de("napoleon", "colina"))
-        (0..20).map { i -> val x = 228f + 170f * i / 20f; val u = i / 20f
-            Offset(x, H - 31f * (sin(PI.toFloat() * (0.15f + 0.85f * u)).coerceAtLeast(0f) * (0.75f + 0.25f * sin(u * 9f))) - az.entre(0f, 1.2f) + 1f) }
+        (0..24).map { i -> val x = 212f + 190f * i / 24f; val u = i / 24f
+            Offset(x, H - 46f * (sin(PI.toFloat() * (0.12f + 0.88f * u)).coerceAtLeast(0f) * (0.78f + 0.22f * sin(u * 8f))) - az.entre(0f, 1.2f) + 1f) }
     }
 
+    /** Dónde están los cañones de la batería en la cresta, y hacia dónde miran sus bocas (hacia el camino). */
+    private val BATERIA = listOf(268f, 290f, 313f, 337f, 362f)
+
+    private fun enLaCresta(x: Float): Offset { val i = COLINA.indexOfFirst { it.x >= x }.coerceIn(1, COLINA.size - 1); val a = COLINA[i - 1]; val b = COLINA[i]; val t = (x - a.x) / (b.x - a.x); return a + (b - a) * t }
+
+    /** La boca de cada cañón de la batería: de donde salen el fogonazo y el humo. */
+    fun bocas(): List<Offset> = BATERIA.map { x -> enLaCresta(x) + Offset(-8.5f, -4.4f) }
+
     /**
-     * Las colinas de Krasnoi, «junto al camino»: una loma grande y blanca a la derecha, con sus bosques como manchas y
-     * su lado de sombra, y en la cresta las baterías: los cañones, chicos, contra el cielo (sin nadie: el cuento dice
-     * «con cañones y cosacos»; los cosacos no se pintan) y, de día, el humo blanco de los disparos.
+     * Las colinas de Krasnoi, «junto al camino»: una loma grande y blanca a la derecha, cerca, con sus bosques como
+     * manchas y su lado de sombra, y en la cresta la batería: cinco cañones en sus cureñas, contra el cielo, con la boca
+     * hacia el camino (sin nadie: el cuento dice «con cañones y cosacos»; los cosacos no se pintan), y, de día, el humo
+     * blanco de los disparos, que se queda colgado y baja por la ladera; los fogonazos van en la parte viva. Se pinta
+     * después de la bruma de lejos, con la suya propia más suave, para que se lea también con lluvia o nieve.
      */
-    private fun DrawScope.colinas(v: VistaNapoleon) {
+    fun DrawScope.colinas(v: VistaNapoleon) {
         val l = v.l; val p = v.p; val az = Azar(Semilla.de("napoleon", "colina", "manchas"))
         val tierra = lerp(lerp(C.HOJA, C.BARRO, 0.35f), C.NIEVE, v.nieve)
+        val lejos = 0.38f
         val forma = curva(COLINA, H + 3f)
-        drawPath(forma, p.medio(tierra, 0.5f))
+        drawPath(forma, p.medio(tierra, lejos))
         val lado = if (p.solALaDerecha) 1f else -1f
         clipPath(forma) {
             // La ladera de sombra (la que no mira al sol) y la luz rasante en la cresta.
             val cumbre = COLINA.minByOrNull { it.y }!!
-            drawRect(Brush.horizontalGradient(if (lado > 0f) listOf(p.sombra(tierra, 0.5f).copy(alpha = 0.55f), Color.Transparent) else listOf(Color.Transparent, p.sombra(tierra, 0.5f).copy(alpha = 0.55f)), cumbre.x - 50f, cumbre.x + 50f), Offset(220f, H - 40f), Size(180f, 44f))
+            drawRect(Brush.horizontalGradient(if (lado > 0f) listOf(p.sombra(tierra, lejos).copy(alpha = 0.6f), Color.Transparent) else listOf(Color.Transparent, p.sombra(tierra, lejos).copy(alpha = 0.6f)), cumbre.x - 60f, cumbre.x + 60f), Offset(205f, H - 52f), Size(200f, 56f))
             // Los bosques de la ladera, como manchas de pinos chicos.
-            repeat(9) {
-                val cx = az.entre(236f, 392f); val y = H - az.entre(1f, 14f); val ancho = az.entre(10f, 30f)
-                val n = (ancho / 2.4f).toInt()
+            repeat(10) {
+                val cx = az.entre(222f, 396f); val y = H - az.entre(1f, 20f); val ancho = az.entre(10f, 32f)
+                val n = (ancho / 2.6f).toInt()
                 for (i in 0 until n) {
-                    val x = cx - ancho / 2f + ancho * i / n + az.entre(-0.8f, 0.8f); val h = az.entre(2.6f, 5.2f)
-                    drawPath(poligono(Offset(x - h * 0.28f, y), Offset(x - h * 0.12f, y - h * 0.55f), Offset(x, y - h), Offset(x + h * 0.12f, y - h * 0.6f), Offset(x + h * 0.28f, y)), if (i % 3 == 0) p.lado(C.PINO, 0.5f) else p.medio(C.PINO_OSC, 0.5f))
+                    val x = cx - ancho / 2f + ancho * i / n + az.entre(-0.8f, 0.8f); val h = az.entre(3f, 6f)
+                    drawPath(poligono(Offset(x - h * 0.28f, y), Offset(x - h * 0.12f, y - h * 0.55f), Offset(x, y - h), Offset(x + h * 0.12f, y - h * 0.6f), Offset(x + h * 0.28f, y)), if (i % 3 == 0) p.lado(C.PINO, lejos) else p.medio(C.PINO_OSC, lejos))
+                    if (v.nieve > 0.4f) drawLine(p.arriba(C.NIEVE, lejos), Offset(x - h * 0.18f, y - h * 0.5f), Offset(x + h * 0.05f, y - h * 0.55f), 0.5f)
                 }
             }
-            // Las rodadas y los surcos que bajan de la batería, y la nieve pisada en la cresta.
-            for (j in 0 until 4) { val x0 = az.entre(270f, 360f); drawLine(p.medio(lerp(C.NIEVE_SUCIA, C.CENIZA, 0.3f), 0.5f).copy(alpha = 0.5f), Offset(x0, H - 22f), Offset(x0 - 18f + j * 6f, H + 2f), 0.6f) }
+            // Las rodadas que suben a la batería, y la nieve pisada y tiznada bajo los cañones.
+            for (j in 0 until 4) { val x0 = az.entre(262f, 362f); val c = enLaCresta(x0); drawLine(p.medio(lerp(C.NIEVE_SUCIA, C.CENIZA, 0.35f), lejos).copy(alpha = 0.55f), c + Offset(0f, 3f), Offset(x0 - 22f + j * 7f, H + 2f), 0.7f) }
+            for (x in BATERIA) mancha(enLaCresta(x) + Offset(-3f, 2.5f), 10f, 2.6f, p.medio(lerp(C.CENIZA, C.NIEVE_SUCIA, 0.5f), lejos), 0.6f)
         }
-        drawPath(curva(COLINA), lerp(p.arriba(C.NIEVE, 0.5f), Color.White, 0.3f).copy(alpha = 0.6f * (0.3f + 0.7f * v.r.dia)), style = Stroke(0.8f))
-        // Los cañones de la batería en la cresta, contra el cielo: el tubo y las dos ruedas.
-        for (x in listOf(286f, 304f, 322f, 344f)) {
-            val c = COLINA.minByOrNull { kotlin.math.abs(it.x - x) }!!
-            val col = p.medio(lerp(C.CENIZA, C.MADERA_OSC, 0.3f), 0.55f)
-            drawCircle(col, 1.6f, c + Offset(-1.2f, -1.4f)); drawCircle(col, 1.6f, c + Offset(1.6f, -1.4f))
-            drawLine(col, c + Offset(0f, -2.2f), c + Offset(-5f, -3.2f), 1.1f, StrokeCap.Round)
+        drawPath(curva(COLINA), lerp(p.arriba(C.NIEVE, lejos), Color.White, 0.3f).copy(alpha = 0.6f * (0.3f + 0.7f * v.r.dia)), style = Stroke(0.9f))
+        // La batería en la cresta, contra el cielo: cada cañón con sus dos ruedas de rayos, la cureña que baja a la
+        // contera y el tubo, con la boca hacia el camino; detrás, el armón.
+        for ((i, x) in BATERIA.withIndex()) {
+            val c = enLaCresta(x)
+            val col = p.medio(lerp(C.CENIZA, C.MADERA_OSC, 0.35f), lejos - 0.1f)
+            val bronce = p.lado(C.BRONCE, lejos - 0.1f, false)
+            drawLine(col, c + Offset(1f, -2.2f), c + Offset(6.5f, 0.2f), 1.4f, StrokeCap.Round)                      // la cureña, a la contera
+            drawLine(bronce, c + Offset(0.5f, -3.4f), c + Offset(-8.5f, -4.4f), 1.6f, StrokeCap.Round)                // el tubo
+            for (dx in listOf(-0.8f, 1.6f)) { val r = c + Offset(dx, -2.4f); drawCircle(col, 2.6f, r, style = Stroke(0.7f)); drawLine(col, r + Offset(-2.4f, 0f), r + Offset(2.4f, 0f), 0.4f); drawLine(col, r + Offset(0f, -2.4f), r + Offset(0f, 2.4f), 0.4f) }
+            if (i % 2 == 0) { val ar = c + Offset(12f, 0.5f); drawRect(col, Offset(ar.x - 2.6f, ar.y - 4f), Size(5.2f, 2.6f)); drawCircle(col, 1.8f, ar + Offset(0f, -1.6f), style = Stroke(0.6f)) }
         }
-        // El humo blanco de los disparos, de día, que se queda colgado sobre la cresta.
+        // El humo blanco de los disparos, de día: colgado sobre la cresta y bajando por la ladera, más ralo abajo.
         if (EscenaNapoleon.canonesEnLasColinas(v.m)) {
             val ak = Azar(Semilla.de("napoleon", "krasnoi", v.m.hora.toInt()))
-            for (i in 0 until 8) {
-                val c = COLINA[ak.entero(8) + 6]; val q = c + Offset(ak.entre(-6f, 6f), -ak.entre(3f, 9f))
-                mancha(q, ak.entre(6f, 13f), ak.entre(3f, 6f), lerp(l.tono(C.NIEVE), Color.White, 0.2f), 0.8f)
-                mancha(q + Offset(4f, -3f), ak.entre(5f, 10f), ak.entre(2.5f, 5f), l.tono(lerp(C.NIEVE, C.CAPOTE, 0.3f)), 0.55f)
+            for ((i, b) in bocas().withIndex()) {
+                val q = b + Offset(-ak.entre(2f, 8f), -ak.entre(0f, 4f))
+                mancha(q, ak.entre(8f, 14f), ak.entre(4f, 7f), lerp(l.tono(C.NIEVE), Color.White, 0.25f), 0.85f)
+                mancha(q + Offset(5f, -3f), ak.entre(6f, 11f), ak.entre(3f, 6f), l.tono(lerp(C.NIEVE, C.CAPOTE, 0.25f)), 0.6f)
+                for (j in 1..3) mancha(q + Offset(-6f * j + ak.entre(-3f, 3f), 5f * j), ak.entre(8f, 14f) * (1f + 0.25f * j), ak.entre(3f, 5f), lerp(l.tono(C.NIEVE), l.bruma, 0.3f), 0.5f - 0.1f * j)
             }
         }
     }
@@ -440,7 +458,17 @@ internal object RetiradaLejos {
         // El humo del puente que arde, del otro lado: una columna oscura a lo lejos.
         if (EscenaNapoleon.humoDelPuente(v.m)) humo(l, Offset(206f, H - 2f), 96f, 16f, reloj, 0.35f, 0.75f, 0.35f, 63, 10, 0.9f)
         // Krasnoi: el humo de los cañones, que deriva.
-        if (EscenaNapoleon.canonesEnLasColinas(v.m)) for (i in 0 until 3) humo(l, Offset(180f + i * 70f, H - 8f), 22f, 6f, reloj, 0.5f, 0.1f, 0.6f, 64 + i, 5, 0.5f)
+        // Krasnoi: los fogonazos de la batería, cada cañón a su ritmo, y el humo que sale de las bocas y deriva.
+        if (EscenaNapoleon.canonesEnLasColinas(v.m)) for ((i, b) in bocas().withIndex()) {
+            humo(l, b, 26f, 6f, reloj, 0.5f, 0.1f, 0.6f, 64 + i, 5, 0.5f)
+            val fase = ((reloj * 0.23f + i * 0.37f) % 1f)
+            if (fase < 0.07f) {
+                val k = 1f - fase / 0.07f
+                resplandor(b, 9f * k, 0.6f * k)
+                drawOval(Color(0xFFFFE6A8).copy(alpha = (0.95f * k).coerceIn(0f, 1f)), Offset(b.x - 4.5f * k, b.y - 1.6f * k), Size(9f * k, 3.2f * k))
+                drawCircle(Color(0xFFFF9A40).copy(alpha = (0.8f * k).coerceIn(0f, 1f)), 2f * k, b + Offset(-3f * k, 0f))
+            }
+        }
         // Las fogatas del Berezina.
         if (v.tramo == Tramo.BEREZINA) for ((i, q) in fogatas().withIndex()) {
             val kk = k(RetiradaCamino.zEn(q.y))

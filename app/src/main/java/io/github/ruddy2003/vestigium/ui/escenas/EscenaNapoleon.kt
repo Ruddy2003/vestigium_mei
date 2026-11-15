@@ -65,6 +65,7 @@ internal object ColorNapoleon {
  * 1. **La retirada** ([RetiradaNapoleon], `EscenaNapoleonRetirada*.kt`), del 19 de octubre al 13 de diciembre de 1812
  *    (2026, el avance, y 2027): de pie en la cuneta, mirando camino adelante, hacia el oeste. El camino, largo, entre
  *    bosques negros; lo que el ejército va dejando; y un solo fuego. Es el primer cuadro con la nieve de protagonista.
+ *    Se mueve con la marcha, en seis tramos ([tramo]), con una base que no cambia ([TramosRetirada]).
  * 2. **El vivac** ([VivacNapoleon], `EscenaNapoleonVivac.kt`), el resto de la campaña. **Todavía es provisional:** el
  *    alto del camino de la retirada, sin nieve ni lo abandonado, con la tienda de oficial. Lo hará otro agente cuando
  *    el autor vea la retirada.
@@ -79,8 +80,8 @@ internal object ColorNapoleon {
  *
  * Lo que cuenta, igual que el cuento (todo sale de la ficha; ver el comentario de su calendario en `AnioG5.kt`). Los
  * sucesos se cuentan «desde su día» con la misma cuenta que usa el cuento ([paso]):
- * - **Dónde está** ([lugar], [cuadro], [provisional]) y, en la retirada, **el tramo** ([tramo]: antes de la nieve,
- *   nevado, el Berezina).
+ * - **Dónde está** ([lugar], [cuadro], [provisional]) y, en la retirada, **el tramo** ([tramo]: la salida de Moscú,
+ *   Maloyaroslavets y el camino viejo, la nieve, Krasnoi, el Berezina y el final, hacia el Niemen).
  * - **La nieve** ([nieve], [helada], [nieveMojada]), con su regla propia, porque el calendario no tiene arco de nieve.
  * - **La compañía y sus fuegos** ([compania], [fuegos]), con los cortes del cuento (0.8 y 0.5 del arco `compania`).
  * - **El horario** («Un día suyo»): la fase del día ([fase]: la marcha, el alto de la comida, el vivac, el sueño), el
