@@ -891,6 +891,8 @@ Todos heredan las 13 animaciones comunes y la reacción al ánimo. Lo propio de 
 
 ### 10d. Arcontes (`arcontes`)
 
+**Estado (15 nov 2026): programado** en la rama de los temas nuevos, todo menos el cuadro (va en la fila de escenas, después de S19). Guía: `docs/diseno/temas/arcontes.md`; fuentes y lo que queda por comprobar: `docs/diseno/temas/fuentes_arcontes.md` (sección 13). La otra vida es Eleazar, con las cinco temporadas escritas.
+
 **Concepto.** Galilea hacia el año 30, vivida por un iniciado que cree el mito gnóstico como verdad:
 - el mundo visible es una cárcel hecha por un dios menor, **Yaldabaoth**, el Demiurgo;
 - siete **arcontes** con caras de animal guardan las esferas del cielo;

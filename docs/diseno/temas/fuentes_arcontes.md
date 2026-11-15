@@ -284,3 +284,19 @@ Para repetirlo.
 - **Nisán:** el primer mes del año juliano cuyo día 15 cae en el equinoccio o después (equinoccios de PyEphem: 22 mar en 28, 29, 30 y 32; 23 mar en 31).
 - **Lunas nuevas de nisán** (tiempo universal): 15 mar 28 a las 0:28; 2 abr 29 a las 17:32; 22 mar 30 a las 17:49; 11 mar 31 a las 22:21; 29 mar 32 a las 20:02; 19 mar 33 a las 10:41.
 - Los programas quedaron fuera del repositorio, en la carpeta temporal de la sesión, como pide `CLAUDE.md`.
+
+## 13. Pendiente del tema ya programado (15 nov 2026)
+
+Lo que queda por comprobar cuando la red de la sesión deje abrir los textos completos (Wikisource, sacred-texts, gnosis.org, newadvent, earlychristianwritings; ya están en la lista del entorno, pero en esta sesión no respondían).
+
+- **Citas textuales del cuento de Eleazar** (`vidas/piezas/PiezasIniciado.kt` y `EspecialesIniciadoT2.kt` a `T5.kt`). Hoy van en estilo indirecto con la cita al lado. Las que más valdría poner tal cual, de la Reina-Valera 1909:
+  - temporada 1: Lucas 3:1–3; Marcos 1:7–20, 1:24, 1:38, 1:40–42; Marcos 6:17–18; Lucas 8:2–3; Levítico 16;
+  - temporada 2: Marcos 4:39–41, 5:41, 6:50, 8:29–33; Mateo 11:3–7; Juan 6:63, 7:34, 7:37–38, 10:34;
+  - temporada 3: Juan 19:30 (la más importante), 20:17, 21:12; Marcos 11:17, 12:17; Lucas 19:40; Hechos 1:11, 2:17;
+  - temporada 4: Hechos 3:6, 4:19–20, 5:29, 5:38–39; Ester 4:14; Levítico 16:2;
+  - temporada 5: Hechos 7:48, 7:56, 7:60, 8:10 («la gran virtud de Dios», sin verificar), 8:20, 8:30–31, 9:2; Isaías 53:7; Génesis 28:12.
+  - En traducción propia (sin versión de dominio público): Evangelio de María (la pregunta de Pedro y la respuesta de Leví), Primer Apocalipsis de Santiago, Apocalipsis de Pedro («alegre y riendo»).
+- **Datos del cuento escritos de memoria** (van como lo que «dicen los viejos» o con su cita): en Kipur, la gente que se postra al oír el Nombre (Misná, Yoma 6:2) y la cinta roja que se vuelve blanca (Yoma 6:8); en Sucot, las mechas hechas con ropa de los sacerdotes (Misná, Sucá 5:3); la lectura «Magdala» de Mateo 15:39 en el texto que sigue la Reina-Valera; Leviatán con la cola en la boca, citado como Pistis Sofía (comprobado solo en parte).
+- **Copto de los rótulos** (`Libros.kt`, `Reportes.kt`, `Tema.kt`): ϫⲱⲱⲙⲉ «libro», ⲡⲉϩⲟⲟⲩ «el día», ⲣⲁⲥⲟⲩ «sueño», ⲁⲓⲛⲉϩⲥⲉ «desperté». Coinciden con el sahídico que conocemos; falta comprobarlos en un diccionario (Crum).
+- **Las frases del día** (`ui/Frases.kt`, `ARCONTES`) son traducción propia del sentido comprobado en Wikipedia; cuando se pueda, cotejar con el texto copto, griego o la Reina-Valera.
+- **Marcas del calendario:** el versículo de 1 Enoc 72 sobre los solsticios y equinoccios.
