@@ -2983,7 +2983,7 @@ def rio_galia(im, P, o, perfil_):
         y = int(y0 + 1 + rnd.random() * (y1 - y0 - 1))
         col = P["rio_luz"] if rnd.random() < 0.5 else P["rio_osc"]
         for k in range(rnd.randint(1, 3)):
-            pon(px, x + k, y, col, 0.4 if not o else 0.35)
+            pon(px, x + k, y, col, 0.4 if not o else 0.16)
     for x in range(124, W, 2):                                             # juncos de la otra orilla
         if (x * 7) % 11 < 5:
             h_ = 1 + (x * 3) % 3
@@ -3167,6 +3167,11 @@ def fondo_galia(t):
             luz(im, hx_, hy_, 16, P["llama_halo"], 0.22, 4, ry=8)
         luz(im, 244, 23, 8, P["llama"][1], 0.4, 3, ry=5)
         luz(im, 244, 13, 12, P["llama_halo"], 0.18, 3, ry=6)
+        # El reflejo de la luna en el río, quebrado.
+        for y in range(int(arriba[GAL_LUNA[0]]) + 1, int(abajo[GAL_LUNA[0]])):
+            for dx in range(-2, 3):
+                if (y + dx) % 2 == 0 and abs(dx) < 2 + (y % 3 == 0):
+                    pon(px, GAL_LUNA[0] + dx + int(1.2 * math.sin(y * 1.7)), y, P["luna_halo"], 0.35 if abs(dx) else 0.55)
         # El cerco romano: su resplandor en el llano.
         luz(im, 375, 42, 30, P["roma"][0], 0.08, 3, ry=4)
         # El fuego del camino: alumbra el roble, el caldero y el suelo.
@@ -3196,6 +3201,11 @@ def fondo_galia(t):
     caen = [(70, 20, 1, 0.0, 14), (104, 22, 1, 0.45, 10), (40, 24, 2, 0.2, 9), (380, 12, 1, 0.7, -8)]
     # Jirones de niebla que pasan despacio: (x, y, largo, desfase).
     jirones = [(140, 45, 22, 0.0), (300, 43, 26, 0.5), (60, 49, 18, 0.25)]
+    ondas_ = []
+    for _ in range(26):
+        x = rnd.randrange(130, W - 6); y = rnd.randint(int(arriba[x]) + 2, int(abajo[x]) - 1)
+        if es_rio(x, y) and es_rio(x + 5, y):
+            ondas_.append((x, y, rnd.randint(2, 4), rnd.uniform(0, 6.3)))
     roma_ = [(x + (hash((x, y)) % 3) - 1, y) for y in (40, 42) for x in range(356, 396, 4)
              if not (373 <= x <= 377) and hash((x, y, 1)) % 5] + [(375, 41)] + \
             [(x, 45 + (352 - x) // 26) for x in range(304, 352, 6)]
@@ -3223,6 +3233,15 @@ def fondo_galia(t):
         for (x, y, per, ph) in destellos:
             if (tk + ph) % per < per // 4:
                 pon(p_, x, y, P["rio_luz"]); pon(p_, x + 1, y, P["rio_luz"], 0.5)
+        for (x, y, largo, ph) in ondas_:                                   # las ondas que van y vienen
+            dx = round(1.4 * math.sin(fase(tk, k=2) + ph))
+            for k in range(largo):
+                pon(p_, x + dx + k, y, P["rio_luz"] if not o else P["luna_halo"], 0.45 if not o else 0.22)
+        if o:                                                              # el reflejo de la luna tiembla
+            lx_ = GAL_LUNA[0]
+            for y in range(int(arriba[lx_]) + 1, int(abajo[lx_])):
+                if (y + tk // 4) % 3 == 0:
+                    pon(p_, lx_ + int(1.6 * math.sin(y * 1.7 + fase(tk, k=4))), y, P["luna"], 0.6)
         # La niebla que pasa (aparece y se va: el bucle cierra sin salto).
         for (x0, y0, largo, ph) in jirones:
             ff = (tk / BUCLE + ph) % 1.0
@@ -3259,7 +3278,21 @@ def fondo_galia(t):
         for k in range(-4, 5, 2):
             pon(p_, fx + k, fy + 1, P["ascua"][rnd2.randrange(2)])
         if not o:
+            # Dos cuervos que cruzan el cielo, aleteando.
+            for j in range(2):
+                ff = (tk / BUCLE + j * 0.035) % 1.0
+                x = -12 + ff * (W + 24); y = 15 + 2.5 * math.sin(ff * 7 + j) + j * 3
+                arriba_ = (tk // 3 + j) % 2 == 0
+                for (dx, dy) in ((-2, -1 if arriba_ else 1), (-1, 0), (0, 0), (1, 0), (2, -1 if arriba_ else 1), (1, -1)):
+                    pon(p_, x + dx, y + dy, P["figura"][0])
             return
+        # Chispas que suben del fuego del camino y de las hogueras.
+        for j in range(6):
+            ff = (tk / 40 + j / 6) % 1.0
+            x0_, y0_ = (fx, fy - 3) if j < 4 else hogueras[j - 4]
+            alto_c = 12 if j < 4 else 6
+            pon(p_, x0_ + (j % 3 - 1) * 1.5 + 2.5 * ff * (1 if j % 2 else -0.6) + 0.8 * math.sin(ff * 9 + j), y0_ - 2 - ff * alto_c,
+                P["llama"][0] if ff < 0.4 else P["llama"][1], 1.0 if ff < 0.7 else 0.5)
         # Las hogueras del oppidum, la de la puerta y las del cerco romano.
         for j, (hx_, hy_) in enumerate(hogueras):
             for k in (-1, 0, 1):
