@@ -42,16 +42,15 @@ object TrazosFrente {
      * derecha y por él sale una pizca de la chispa: es la señal que se escapa del canal.
      */
     fun DrawScope.emblemaRed(c: Offset, r: Float, color: Color, grosor: Float) {
-        drawArc(color, -20f, 300f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(grosor, cap = StrokeCap.Butt))
-        val s = r * 0.6f
-        val rayo = Path().apply {
-            moveTo(c.x + s * 0.34f, c.y - s); lineTo(c.x - s * 0.4f, c.y + s * 0.1f)
-            lineTo(c.x + s * 0.4f, c.y - s * 0.1f); lineTo(c.x - s * 0.34f, c.y + s)
+        // El aro, roto arriba a la derecha (el hueco mira a −50°).
+        drawArc(color, -20f, 300f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(grosor, cap = StrokeCap.Round))
+        // La célula, en el centro, y la chispa: tres trazos que salen de ella y se escapan por el hueco.
+        drawCircle(color, grosor * 1.05f, c)
+        listOf(-66.0 to 1.16f, -50.0 to 1.42f, -34.0 to 1.16f).forEach { (g, largo) ->
+            val a = Math.toRadians(g)
+            drawLine(color, Offset(c.x + (r * 0.34f * cos(a)).toFloat(), c.y + (r * 0.34f * sin(a)).toFloat()),
+                Offset(c.x + (r * largo * cos(a)).toFloat(), c.y + (r * largo * sin(a)).toFloat()), grosor * 1.15f, StrokeCap.Round)
         }
-        drawPath(rayo, color, style = Stroke(grosor * 1.15f, cap = StrokeCap.Square, join = StrokeJoin.Miter))
-        val a = Math.toRadians(-50.0)
-        drawLine(color, Offset(c.x + (r * 1.12f * cos(a)).toFloat(), c.y + (r * 1.12f * sin(a)).toFloat()),
-            Offset(c.x + (r * 1.36f * cos(a)).toFloat(), c.y + (r * 1.36f * sin(a)).toFloat()), grosor * 0.8f, StrokeCap.Square)
     }
 
     /**

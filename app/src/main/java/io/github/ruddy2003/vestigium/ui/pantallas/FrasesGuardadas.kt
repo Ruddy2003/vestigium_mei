@@ -201,9 +201,13 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
         TemaId.FRENTE -> {
             val col = if (lleno) color else color.copy(alpha = 0.7f)
             drawArc(col, -22f, 304f, false, p(2.5f, 2.5f), Size(19f * u, 19f * u), style = Stroke((if (lleno) 2.6f else 1.6f) * u))
-            val rayo = Path().apply { moveTo(14.2f * u, 5.6f * u); lineTo(9.4f * u, 12.6f * u); lineTo(14.6f * u, 11.4f * u); lineTo(9.8f * u, 18.4f * u) }
-            drawPath(rayo, col, style = Stroke((if (lleno) 2.4f else 1.6f) * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
-            if (lleno) drawLine(col, p(18.8f, 3.9f), p(20.6f, 1.8f), 1.6f * u, StrokeCap.Round)
+            // La célula en el centro y la chispa: tres trazos que salen de ella por el hueco del aro (arriba a la derecha).
+            drawCircle(col, (if (lleno) 1.9f else 1.4f) * u, p(12f, 12f))
+            listOf(-66.0 to 0.86f, -50.0 to (if (lleno) 1.16f else 1.0f), -34.0 to 0.86f).forEach { (g, largo) ->
+                val a = Math.toRadians(g)
+                drawLine(col, p(12f + 3.2f * Math.cos(a).toFloat(), 12f + 3.2f * Math.sin(a).toFloat()),
+                    p(12f + 9.5f * largo * Math.cos(a).toFloat(), 12f + 9.5f * largo * Math.sin(a).toFloat()), (if (lleno) 2.2f else 1.5f) * u, StrokeCap.Round)
+            }
         }
         // Estrella atómica de los cincuenta: rayos largos y cortos alternados.
         TemaId.REFUGIO -> pinta(Path().apply {

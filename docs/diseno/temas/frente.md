@@ -62,7 +62,7 @@ Seca, operativa y en clave, como un radiooperador que no quiere que lo oigan. Fr
 
 ## Los motivos de las figuras
 
-- **El emblema:** una chispa de tres trazos dentro de un círculo roto. Es la señal y la célula: el círculo es el canal, roto porque se escapa.
+- **El emblema:** un círculo roto arriba a la derecha (el hueco mira a −50°), con un punto en el centro, la célula, del que salen tres trazos rectos que se abren y se escapan por el hueco: la señal. No es un rayo en zigzag (eso sería el signo de la electricidad). Lo dibuja `TrazosFrente.emblemaRed` (`ui/FrenteTrazos.kt`).
 - **La pantalla redonda** con retícula y barrido de radar, que es el fondo vivo.
 - **La consola:** curva, con su fila de interruptores, sus pilotos y su perilla.
 - **El cartucho de datos:** la libreta; un bloque con etiqueta y muesca.

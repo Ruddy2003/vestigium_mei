@@ -1235,15 +1235,16 @@ private fun DrawScope.chispaCanal(c: Offset, r: Float, canal: Color, chispa: Col
         val al = (sin(PI * f).toFloat() * (if (oscuro) 0.9f else 0.75f)).coerceIn(0f, 1f)
         drawArc(senal.copy(alpha = al), hueco - 20f, 40f, false, Offset(c.x - ro, c.y - ro), Size(ro * 2, ro * 2), style = Stroke(r * 0.06f, cap = StrokeCap.Round))
     }
-    // La chispa: tres trazos en zigzag, que destella dos veces seguidas por vuelta.
+    // La chispa: la célula en el centro y tres trazos que salen de ella por la rotura; destella dos veces seguidas por vuelta.
     fun pulso(t0: Float) = (1f - abs(t - t0) / 0.03f).coerceIn(0f, 1f)
     val destello = maxOf(pulso(0.08f), pulso(0.16f))
     if (destello > 0f) drawCircle(Brush.radialGradient(listOf(canal.copy(alpha = 0.45f * destello), Color.Transparent), center = c, radius = r * 0.62f), r * 0.62f, c)
-    val rayo = Path().apply {
-        moveTo(c.x + r * 0.17f, c.y - r * 0.46f); lineTo(c.x - r * 0.13f, c.y + r * 0.03f)
-        lineTo(c.x + r * 0.13f, c.y - r * 0.03f); lineTo(c.x - r * 0.17f, c.y + r * 0.46f)
+    val tinta = lerp(chispa, canal, destello)
+    drawCircle(tinta, r * 0.1f, c)
+    listOf(-16f to 0.86f, 0f to 1.04f, 16f to 0.86f).forEach { (d, largo) ->
+        val a = rad((hueco + d).toDouble())
+        drawLine(tinta, c.mas(r * 0.24f, a), c.mas(r * largo, a), r * 0.1f, StrokeCap.Round)
     }
-    drawPath(rayo, lerp(chispa, canal, destello), style = Stroke(r * 0.12f, cap = StrokeCap.Round, join = StrokeJoin.Round))
     // Los dos pilotos engastados en el aro, abajo a la izquierda: el rojo parpadea, el ámbar queda fijo.
     listOf(128.0 to Color(0xFFD9372B), 152.0 to Color(0xFFF2A33A)).forEachIndexed { i, (g, luz) ->
         val p = c.mas(radio, rad(g))
