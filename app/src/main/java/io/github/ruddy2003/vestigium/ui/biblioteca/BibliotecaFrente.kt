@@ -50,18 +50,20 @@ import kotlin.math.sqrt
 // =====================================================================
 
 /**
- * Frente exterior: el archivo de despachos de la red, en la sala de control. El estante es de chapa color hueso, con el
- * fondo perforado como los paneles acústicos de la sala; los costados son montantes de canto redondo con un piloto ámbar y
- * su placa grabada en cada nivel (a la izquierda) o una palanca de baquelita (a la derecha). Arriba, la consola curva de la
- * sala: el tubo de luz del techo, los mazos de cable, la pantalla redonda de radar con su retícula y su barrido, la fila de
+ * Frente exterior: el archivo de despachos de la red, en la base escondida en ruinas. El estante es de chapa color hueso,
+ * abierto por detrás: se ve el muro de sillares viejos, con su humedad y su musgo, un panel de vidrio grabado empotrado en
+ * cada repisa y las raíces que asoman bajo las tablas y bajan por la piedra. Los costados son montantes de canto redondo con
+ * un piloto ámbar y su placa grabada en cada nivel (a la izquierda) o una palanca de baquelita (a la derecha). Arriba, bajo
+ * la losa de hormigón de donde cuelgan las raíces, la consola curva: el tubo de luz, los mazos de cable, la pantalla redonda
+ * de radar con su retícula y su barrido, la fila de
  * pilotos y de palancas, la pantalla de segmentos de la frecuencia con su perilla, la placa grabada del archivo, la rejilla
  * del altavoz y los cascos colgados de su gancho, con el cable rizado que cae por delante. Las tablas son chapa doblada en un
  * labio redondo, con la pintura saltada, y cada ciclo va en una placa de baquelita grabada. Abajo, el zócalo con sus
- * rejillas y el piso de goma con la cinta del teletipo enrollada. Cada entrada es uno de tres objetos del archivo: el dosier
+ * rejillas y el piso de hormigón con la franja de peligro, el cable grueso y la cinta del teletipo enrollada. Cada entrada es uno de tres objetos del archivo: el dosier
  * de lona acero con su rótulo ámbar y la foto engrapada que asoma, la carpeta de despacho de cartón hueso con su correa de
  * baquelita y la cinta perforada que sale por arriba, o el cartucho de datos de baquelita con su muesca, su pestaña ámbar y
  * su etiqueta rotulada; de noche, la luna en lugar del sello. De noche el tubo del techo se apaga y quedan el resplandor
- * verde del radar y los pilotos. Distinto del Ideario, que son las latas de microfilm del panel falso de la sala de radar.
+ * verde del radar, del vidrio y de los pilotos, en la penumbra verdosa de la base. Distinto del Ideario, que son las latas de microfilm del panel falso de la sala de radar.
  * La tapa del diario es el dosier del día, de frente, con la foto engrapada, el rótulo ámbar y la hoja de texto en claro
  * pegada; al abrirse, la tapa gira sobre el lomo y deja ver la hoja de despacho cifrado.
  */
@@ -815,7 +817,8 @@ object EstanteFrente : DisenoBiblioteca {
     }
 
     /**
-     * La consola curva de la sala sobre el archivo: el techo con su tubo de luz (de noche, apagado) y los mazos de cable; el
+     * La consola curva sobre el archivo: la losa del techo, con sus manchas de humedad, su tubo de luz (de noche, apagado), los
+     * mazos de cable y las raíces que cuelgan por las orillas; el
      * frente curvo de la consola, color hueso, con la pantalla redonda de radar al centro; a la izquierda, la fila de pilotos,
      * la de palancas y la pantalla de segmentos de la frecuencia con su perilla; a la derecha, la placa grabada del archivo y la
      * rejilla del altavoz; colgados del canto, los cascos con su cable rizado que cae por delante del estante.
@@ -1419,15 +1422,18 @@ object EstanteFrente : DisenoBiblioteca {
     }
 
     /**
-     * La consola de la sala de radar, de noche o de día. En la pared de paneles perforados: la pantalla redonda de radar, los
-     * dos relojes (el de la capital y el de aquí), la carta estelar impresa clavada con sus chinchetas, con sus mundos y las
-     * rutas de salto punteadas, y los cascos colgados de su gancho. Abajo, el panel alto de la consola con sus palancas, sus
-     * pilotos, la frecuencia en segmentos y la perilla; sobre la mesa curva, la libreta de claves de un solo uso con su lápiz,
+     * El puesto de radar de la base escondida en ruinas, de noche o de día. Contra el muro de sillares, bajo la losa con su tubo
+     * de cobre y las raíces que cuelgan: la torre de consola oscura con la pantalla redonda de radar y su fila de botones
+     * cuadrados, la consola oscura de los dos relojes (el de la capital y el de aquí) con su botonera, la carta estelar grabada
+     * en un panel de vidrio iluminado por el canto, con sus mundos, la ruta de salto y el blanco, y los cascos colgados de su
+     * gancho. Abajo, el panel de la consola oscura con sus palancas, sus pilotos, la frecuencia en segmentos y la perilla; sobre
+     * la mesa de la consola blanca curva, la lámpara de cúpula, la libreta de claves de un solo uso con su lápiz,
      * los cartuchos de repuesto (más cuantos más bloques) y el cartucho de la célula: baquelita negra, la muesca de lectura,
      * la pestaña ámbar contra escritura, las estrías, la placa de cromo y la etiqueta hueso rotulada «CARTUCHO K-7» con la
      * cuenta. Engorda con los bloques. Al abrirse, la tapa se levanta sobre la bisagra de atrás y deja ver los dos carretes,
-     * la cinta (más cuanto más bloques) que corre por delante y la tarjeta del índice. En oscuro, la sala se hunde y quedan el
-     * verde del radar y el ámbar de los pilotos sobre la mesa.
+     * la cinta (más cuanto más bloques) que corre por delante y la tarjeta del índice. El frente de la mesa son molduras
+     * redondas, como un mostrador anillado, con la franja de peligro al pie. En oscuro, la base se hunde en su penumbra
+     * verdosa y quedan el verde del radar y del vidrio, la lámpara y el ámbar de los pilotos sobre la mesa.
      */
     override fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density

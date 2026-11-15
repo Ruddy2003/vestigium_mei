@@ -56,7 +56,7 @@ private fun DrawScope.sombraConsola(x0: Float, x1: Float, oscuro: Boolean, y: Fl
 /**
  * La geometría de la sala: el lienzo ([w] × [h], en píxeles, con [u] píxeles por dp) se parte en [n] franjas de ancho [paso],
  * una por columna de trofeos, con el trofeo al centro de la suya ([cx]). Las torres de la sala van en los bordes de las
- * franjas ([borde]), con medio ancho [pil], que siempre queda libre entre dos pedestales; arriba, la viga de alto [friso];
+ * franjas ([borde]), con medio ancho [pil], que siempre queda libre entre dos pedestales; arriba, la losa de alto [friso];
  * abajo, el piso desde [suelo]. Lo que se repite por filas usa [modulo] (≈ 230 dp, el alto de una fila del hall).
  */
 private class GeoSala(val w: Float, val h: Float, val u: Float, columnas: Int) {

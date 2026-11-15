@@ -864,7 +864,20 @@ Todos heredan las 13 animaciones comunes y la reacción al ánimo. Lo propio de 
 **Tadeo viaja mucho y su cuadro es la cabina de su nave** (pedido del autor del 15 nov 2026). La primera versión de su vida (Tadeo, «Cobre», ladrón de piezas del puerto de Halde, ya escrita en `AnioG9.kt` y `PiezasTadeo.kt`) casi no salía de su puerto. Se rehace así:
 - **Su oficio:** de ladrón de piezas pasa a **piloto correo de la red**, en un carguero viejo. Viaja de mundo en mundo casi todo el año, y cada temporada recorre varias rutas. Se conservan los hechos grandes de sus cinco temporadas: el reclutamiento, las primeras misiones, la caída de Odila, la fuga del Hondo y el golpe contra la estación de radar.
 - **El cuadro:** el interior de la cabina, con los controles (consolas, palancas, pilotos, pantallas redondas) y un **parabrisas muy amplio**, casi de pared a pared, por el que se ve el mundo donde está o al que llega ese día. Funciona como el camino de la Ruta de la Seda, que cambia de paisaje según el arco `ruta`: aquí la ficha del día dice en qué mundo está (un estado o un arco por mundo), y el parabrisas lo pinta.
-- **Los mundos, muy distintos entre sí:** el puerto minero de ladrillo de Halde; un mundo océano con plataformas; un desierto de dunas con ciudades excavadas; una luna de hielo; un mundo de selva; una estación en órbita de un gigante gaseoso; la capital de mármol y bronce del Directorio (Albar); un mundo volcánico; y las ruinas de piedra con raíces donde se esconde la base de la red. De noche, el mismo mundo con sus luces, y en el salto, el espacio entre estrellas.
+- **Los mundos, muy distintos entre sí.** El autor pidió inspirarse en la variedad de mundos de Star Wars sin copiarlos: los tipos de mundo son del género, y cada uno lleva su forma propia.
+  - **Un planeta ciudad**, con aire cyberpunk: una ciudad que cubre el planeta entero, torres hasta el horizonte, carriles de naves en capas, letreros encendidos y la niebla de abajo. Se distingue de Ciudad neón (que es un callejón a ras de suelo) porque se ve desde la cabina, desde arriba y de lejos.
+  - **Un planeta desierto:** dunas, roca rojiza, poblados de adobe con cúpulas bajas, torres que recogen la humedad del aire y un sol grande y blanco.
+  - El puerto minero de ladrillo de Halde, de donde sale Tadeo.
+  - Un mundo océano, con ciudades sobre pilotes y plataformas.
+  - Una luna de hielo.
+  - Un mundo de selva, o de árboles gigantes.
+  - Un pantano con niebla.
+  - Una ciudad colgada entre las nubes de un gigante gaseoso, sobre plataformas.
+  - Un mundo volcánico.
+  - La capital de mármol y bronce del Directorio (Albar).
+  - Las ruinas de piedra con raíces donde se esconde la base de la red.
+  - De noche, el mismo mundo con sus luces, y en el salto, el espacio entre estrellas.
+  - **Lo que no se copia:** ni los nombres ni las formas reconocibles de la saga. Nada de soles gemelos, ni de la ciudad de las nubes con su forma de platillo, ni de la cúpula del senado.
 - **Cuándo:** queda anotado para considerarlo; no se hace ahora. La historia se rehace junto con su cuadro, cuando le toque en la fila de escenas (después de S19), o antes si el autor lo pide.
 
 **Se distingue de:**

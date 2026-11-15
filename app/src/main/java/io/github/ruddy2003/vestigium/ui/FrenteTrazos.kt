@@ -113,7 +113,7 @@ object TrazosFrente {
      * hacia [apagado]) y su brillo arriba; con [halo] más de 0, el resplandor de la luz encendida en la penumbra.
      */
     fun DrawScope.botonCuadrado(c: Offset, lado: Float, color: Color, encendido: Boolean, apagado: Color = CONSOLA_OSCURA, halo: Float = 0f) {
-        if (encendido && halo > 0f) drawCircle(color.copy(alpha = 0.2f * halo), lado * 1.3f, c)
+        if (encendido && halo > 0f) drawCircle(Brush.radialGradient(listOf(color.copy(alpha = 0.32f * halo), color.copy(alpha = 0f)), c, lado * 1.7f), lado * 1.7f, c)
         val b = lado * 0.16f
         drawRect(Color.Black.copy(alpha = 0.6f), Offset(c.x - lado / 2 - b, c.y - lado / 2 - b), Size(lado + 2 * b, lado + 2 * b))
         drawRect(if (encendido) color else lerp(color, apagado, 0.8f), Offset(c.x - lado / 2, c.y - lado / 2), Size(lado, lado))
