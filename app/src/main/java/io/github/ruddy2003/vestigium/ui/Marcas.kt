@@ -791,7 +791,7 @@ object Marcas {
             Forma.ARCOIRIS -> {
                 // La onda de tinta de arcoíris bajo la palabra, que se adelgaza al final y acaba en una burbuja.
                 val y = baja - 0.4f * u; val x0 = rr.left - 1f * u; val x1 = rr.right + 1f * u
-                val tinta = TrazosPsicodelia.arcoiris(Offset(x0, y), Offset(x1, y), 0.9f)
+                val tinta = TrazosPsicodelia.arcoiris(Offset(x0, y), Offset(x1, y), 0.9f, c.luminance() > 0.25f)
                 drawPath(TrazosPsicodelia.onda(x0, x1, y, minOf(1.1f * u, h * 0.08f), 9f * u), tinta, style = Stroke(1.5f * u, cap = StrokeCap.Round))
                 drawCircle(c.copy(alpha = 0.7f), 1.5f * u, Offset(x1 + 2.4f * u, y - 1.4f * u), style = Stroke(0.7f * u))
             }

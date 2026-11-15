@@ -65,6 +65,7 @@ import io.github.ruddy2003.vestigium.ui.TrazosArcontes
 import io.github.ruddy2003.vestigium.ui.TrazosFrente
 import io.github.ruddy2003.vestigium.ui.TrazosGalia
 import io.github.ruddy2003.vestigium.ui.TrazosNouveau
+import io.github.ruddy2003.vestigium.ui.TrazosPsicodelia
 import io.github.ruddy2003.vestigium.ui.numeralMaya
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.Dispatchers
@@ -114,8 +115,10 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Distopía: gris de expediente, sin color.
         TemaId.DISTOPIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
-        TemaId.PSICODELIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
-            else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
+        // Psicodelia: de día, el plano en el papel del cartel, cálido y con color; de noche, la misma ciudad bajo la luz negra:
+        // el negro violeta con las calles en verde limón.
+        TemaId.PSICODELIA -> if (oscuro) { m.setSaturation(0.3f); m.postConcat(invertir); m.postConcat(tinte(0.72f, 0.82f, 0.66f, 12f, 2f, 22f)) }
+            else { m.setSaturation(0.6f); m.postConcat(tinte(1.02f, 0.94f, 0.9f, 8f, 2f, 2f)) }
         // Art nouveau: de día, el plano impreso en papel crema con un poco del verde salvia; de noche, la misma París con el
         // azul negro de la calle y el oro de la luz eléctrica en las avenidas.
         TemaId.NOUVEAU -> if (oscuro) { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.84f, 0.78f, 0.6f, 4f, 4f, 10f)) }
@@ -286,7 +289,16 @@ internal object Formas {
             TemaId.TEMPLARIO -> figura(x, y, r, -0.82f, -0.9f, 0.82f, -0.9f, 0.8f, -0.1f, 0.58f, 0.5f, 0f, 1.05f, -0.58f, 0.5f, -0.8f, -0.1f)
             // El ojo que todo lo ve.
             TemaId.DISTOPIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
-            TemaId.PSICODELIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
+            // Una flor de seis pétalos redondos, como un botón de solapa.
+            TemaId.PSICODELIA -> {
+                p.reset()
+                for (k in 0..72) {
+                    val a = k * 2 * Math.PI / 72; val rr = r * (0.88f + 0.2f * kotlin.math.cos(a * 6).toFloat())
+                    val px = x + rr * kotlin.math.cos(a).toFloat(); val py = y + rr * kotlin.math.sin(a).toFloat()
+                    if (k == 0) p.moveTo(px, py) else p.lineTo(px, py)
+                }
+                p.close()
+            }
             // El farol de la entrada de metro: el globo en forma de pera.
             TemaId.NOUVEAU -> {
                 p.reset(); p.moveTo(x, y - r * 1.25f)
@@ -390,7 +402,7 @@ internal object Formas {
             TemaId.TEMPLARIO -> { raya(c, x, y, r, 0f, -0.65f, 0f, 0.55f, d); raya(c, x, y, r, -0.52f, -0.15f, 0.52f, -0.15f, d)
                 raya(c, x, y, r, -0.62f, -0.75f, 0.62f, -0.75f, d) }   // la cruz del escudo y su jefe
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
-            TemaId.PSICODELIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
+            TemaId.PSICODELIA -> { c.drawCircle(x, y, r * 0.32f, d); c.drawCircle(x, y, r * 0.08f, d) }   // el centro de la flor y su punto
             TemaId.NOUVEAU -> { raya(c, x, y, r, -0.42f, -0.92f, 0.42f, -0.92f, d); raya(c, x, y, r, 0f, -0.55f, 0f, 0.55f, d) }   // el collar y el filamento
             TemaId.GALIA -> { raya(c, x, y, r, 0f, -0.95f, 0f, 0.95f, d); c.drawOval(x - r * 0.26f, y - r * 0.36f, x + r * 0.26f, y + r * 0.36f, d) }   // la espina y el umbo
             TemaId.ARCONTES -> { c.drawCircle(x + r * 0.72f, y - r * 0.92f, r * 0.1f, d); c.drawCircle(x, y, r * 0.2f, d) }   // el ojo de la serpiente y la chispa del centro
@@ -913,14 +925,19 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
             }
         }
         TemaId.PSICODELIA -> {
-            filete(5 * u, tinta.copy(alpha = 0.45f), 1 * u)
-            drawCircle(acento, 3.5f * u, Offset(16 * u, 16 * u))
-            drawRect(tinta.copy(alpha = 0.6f), Offset(23 * u, 14 * u), Size(18 * u, 4 * u))
-            var x = 10 * u; var i = 0
-            while (x < w - 10 * u) {
-                val l = if (i % 5 == 0) 6 * u else 3 * u
-                drawLine(tinta.copy(alpha = 0.5f), Offset(x, h - 5 * u), Offset(x, h - 5 * u - l), 1 * u)
-                x += 6 * u; i++
+            // El borde de un cartel de la sala de baile: arriba y abajo, una onda doble que vibra (el color de acento y, corrida,
+            // su segunda tinta); a los lados, el filete; en cada esquina, una flor que vibra en sus dos colores.
+            filete(4 * u, tinta.copy(alpha = 0.35f), 0.8f * u)
+            listOf(9 * u, h - 9 * u).forEach { y0 ->
+                listOf(0f to acento.copy(alpha = 0.75f), 1.2f * u to tinta.copy(alpha = 0.25f)).forEach { (dy, col) ->
+                    drawPath(Path().apply {
+                        var x = 22 * u; moveTo(x, y0 + dy)
+                        while (x < w - 30 * u) { quadraticTo(x + 4 * u, y0 + dy - 3 * u, x + 8 * u, y0 + dy); quadraticTo(x + 12 * u, y0 + dy + 3 * u, x + 16 * u, y0 + dy); x += 16 * u }
+                    }, col, style = Stroke(1.4f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                }
+            }
+            esquinas(12 * u) { o, _, _ ->
+                with(TrazosPsicodelia) { flor(o, 7 * u, acento, lerp(acento, tinta, 0.5f).copy(alpha = 0.7f), 6, 0.5f) }
             }
         }
         TemaId.NOUVEAU -> {
@@ -1335,10 +1352,23 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
         }
         TemaId.PSICODELIA -> {
-            punta(n, r * 0.98f, r * 0.1f, acento)
-            val ojo = Path().apply { moveTo(c.x - r * 0.8f, c.y); quadraticTo(c.x, c.y - r * 0.75f, c.x + r * 0.8f, c.y); quadraticTo(c.x, c.y + r * 0.75f, c.x - r * 0.8f, c.y); close() }
-            drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))
-            drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
+            // La rosa como el sol de un cartel: dieciséis rayos de punta redonda que se alternan en dos colores que vibran (el
+            // del norte, el más largo, con una bolita en la punta) y, en el centro, los aros de colores de un botón de solapa.
+            fun rayo(g: Double, largo: Float, ancho: Float, color: Color) {
+                val q = c + rumbo(g) * largo; val b = c + rumbo(g) * (r * 0.3f)
+                val s1 = b + rumbo(g + 90.0) * ancho; val s2 = b + rumbo(g - 90.0) * ancho
+                val m1 = c + rumbo(g + 4.0) * (largo * 0.7f); val m2 = c + rumbo(g - 4.0) * (largo * 0.7f)
+                val ray = Path().apply { moveTo(s1.x, s1.y); quadraticTo(m1.x, m1.y, q.x, q.y); quadraticTo(m2.x, m2.y, s2.x, s2.y); close() }
+                drawPath(ray, color)
+            }
+            for (i in 0 until 16) {
+                val g = n + 22.5 * i
+                rayo(g, when { i == 0 -> r * 1f; i % 4 == 0 -> r * 0.8f; i % 2 == 0 -> r * 0.64f; else -> r * 0.52f }, r * (if (i % 2 == 0) 0.09f else 0.06f),
+                    when { i == 0 -> acento; i % 2 == 0 -> tenue.copy(alpha = 0.7f); else -> secundario.copy(alpha = 0.75f) })
+            }
+            drawCircle(acento, r * 0.07f, c + rumbo(n) * r)
+            listOf(0.3f to acento, 0.22f to fondo, 0.15f to secundario, 0.07f to fondo).forEach { (k, col) -> drawCircle(col, r * k, c) }
+            drawCircle(tinta.copy(alpha = 0.5f), r * 0.3f, c, style = Stroke(0.7f * u))
         }
         TemaId.NOUVEAU -> {
             // La rosa como una flor: cuatro pétalos grandes en los rumbos (el del norte en el color de acento), cuatro hojas de

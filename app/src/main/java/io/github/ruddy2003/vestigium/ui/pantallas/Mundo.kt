@@ -224,7 +224,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.TEMPLARIO -> LaminaRascar(0xFF2E3338.toInt(), 0xFF7E868E.toInt(), 0xFFDCE2E6.toInt())
     // Gris de ministerio: chapa sin brillo.
     TemaId.DISTOPIA -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
-    TemaId.PSICODELIA -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
+    // La lámina de arcoíris de las calcomanías: del violeta hondo al magenta y al amarillo, como la tinta del tintero partido.
+    TemaId.PSICODELIA -> LaminaRascar(0xFF3A1F5C.toInt(), 0xFFC0508E.toInt(), 0xFFFFD98A.toInt())
     // El vidrio de Nancy: del violeta hondo al ámbar, con su brillo.
     TemaId.NOUVEAU -> LaminaRascar(0xFF4A3466.toInt(), 0xFFB08A4E.toInt(), 0xFFF2E2B0.toInt())
     TemaId.GALIA -> LaminaRascar(0xFF2E2A1C.toInt(), 0xFF9A6A3A.toInt(), 0xFFE2B87E.toInt())   // el bronce del caldero
@@ -421,11 +422,17 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
             c.drawCircle(x, y, s * 0.42f, relleno)
         }
-        TemaId.PSICODELIA -> tresbolillo { x, y ->
-            // El ojo que todo lo mira.
-            val s = l * 0.15f
-            c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
-            c.drawCircle(x, y, s * 0.42f, relleno)
+        TemaId.PSICODELIA -> {
+            // La flor de pétalos redondos al tresbolillo, con su centro lleno, y entre una y otra, la onda que ondula.
+            tresbolillo { x, y ->
+                val s = l * 0.11f
+                for (k in 0 until 6) { val a = k * Math.PI / 3; c.drawCircle(x + s * 0.62f * Math.cos(a).toFloat(), y + s * 0.62f * Math.sin(a).toFloat(), s * 0.38f, linea) }
+                c.drawCircle(x, y, s * 0.3f, relleno)
+            }
+            for ((x, y) in listOf(l / 2 to 0f, l / 2 to l, 0f to l / 2, l to l / 2)) {
+                val s = l * 0.09f
+                c.drawPath(Path().apply { moveTo(x - s * 1.5f, y); quadTo(x - s * 0.75f, y - s * 0.7f, x, y); quadTo(x + s * 0.75f, y + s * 0.7f, x + s * 1.5f, y) }, linea)
+            }
         }
         TemaId.NOUVEAU -> {
             // El vidrio grabado: un iris al tresbolillo (las hojas de espada, el tallo y la flor) y, entre uno y otro, la línea de

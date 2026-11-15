@@ -114,8 +114,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
             p(st = fino) { m(10.5f, 21.5f); t(10.5f, 17.5f); q(12f, 15.5f, 13.5f, 17.5f); t(13.5f, 21.5f) }
             l(12f, 6f, 12f, 1.6f, 1.1f); p(relleno = true) { m(12f, 1.6f); t(16.5f, 2.8f); t(12f, 4.1f); close() } }                           // torre del homenaje con su pendón
         TemaId.DISTOPIA -> { p { m(2.5f, 12f); q(12f, 3f, 21.5f, 12f); q(12f, 21f, 2.5f, 12f); close() }; ci(12f, 12f, 3.3f, relleno = true) } // ojo
-        TemaId.PSICODELIA -> { ci(12f, 12f, 9.6f); ci(12f, 12f, 2.6f); arco(5f, 5f, 14f, 14f, 205f, 55f, fino); arco(5f, 5f, 14f, 14f, 25f, 55f, fino)
-            arco(7.6f, 7.6f, 8.8f, 8.8f, 300f, 45f, fino) } // el disco del día, con su etiqueta y el brillo en los surcos
+        TemaId.PSICODELIA -> { ci(12f, 12f, 9.6f); ci(12f, 12f, 2.6f); arco(5f, 5f, 14f, 14f, 205f, 55f, fino); arco(5f, 5f, 14f, 14f, 25f, 55f, fino) } // el disco del día, con su etiqueta y el brillo en los surcos
         TemaId.NOUVEAU -> { r(4.5f, 4f, 15f, 17.5f, 1.4f); ci(9f, 3.6f, 1.1f, relleno = true); ci(15f, 3.6f, 1.1f, relleno = true); l(4.5f, 8f, 19.5f, 8f, 1.1f)
             l(12f, 18.6f, 12f, 13.4f, 1.1f); hoja(12f, 11f, 4.4f, 1.5f, -90f); hoja(10.1f, 12f, 3.8f, 1.2f, -145f); hoja(13.9f, 12f, 3.8f, 1.2f, -35f)
             hoja(10.4f, 16.6f, 3.4f, 1f, 205f) } // la página del almanaque, con la flor del día
@@ -252,8 +251,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.TEMPLARIO -> { p(relleno = true) { m(12f, 1.8f); t(13.4f, 4f); t(13.1f, 15.5f); t(10.9f, 15.5f); t(10.6f, 4f); close() }; l(7f, 16.2f, 17f, 16.2f, 2f)
             l(12f, 16.2f, 12f, 20f, 1.8f); ci(12f, 21.2f, 1.3f, relleno = true) }                                                               // la espada en alto
         TemaId.DISTOPIA -> { p { m(2.5f, 12f); q(12f, 3f, 21.5f, 12f); q(12f, 21f, 2.5f, 12f); close() }; ci(12f, 12f, 3.3f, relleno = true) }  // ojo
-        TemaId.PSICODELIA -> { s.drawPath(TrazosPsicodelia.petalos(o(12f, 12f), 9.8f * u, 6, -1.5708f, 0.33f, 0.24f), c, style = grueso)
-            ci(12f, 12f, 2.3f, relleno = true) } // la margarita de pétalos redondos
+        TemaId.PSICODELIA -> { s.drawPath(TrazosPsicodelia.petalos(o(12f, 12f), 9.8f * u, 6, -1.5708f, 0.33f, 0f, unidos = true), c, style = grueso)
+            ci(12f, 12f, 2.6f); ci(12f, 12f, 0.8f, relleno = true) } // la margarita de pétalos redondos
         TemaId.NOUVEAU -> { hoja(12f, 5.4f, 7f, 2.5f, -90f); hoja(9f, 7.4f, 5.2f, 1.7f, -132f); hoja(15f, 7.4f, 5.2f, 1.7f, -48f)
             hoja(8.4f, 11.4f, 5.4f, 1.9f, 150f); hoja(15.6f, 11.4f, 5.4f, 1.9f, 30f)
             l(12f, 10.5f, 12f, 21.5f, 1.4f); p(relleno = true) { m(12.6f, 21.5f); q(15.6f, 18f, 17.6f, 13f); q(16f, 18.4f, 13.6f, 21.5f); close() } } // el iris, con su hoja de espada

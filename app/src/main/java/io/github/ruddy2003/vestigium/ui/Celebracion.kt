@@ -392,33 +392,42 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             drawCircle(cs.primary.copy(alpha = 0.12f), m * 0.36f, c, style = Stroke(1.5f * u))
         }
         TemaId.PSICODELIA -> with(TrazosPsicodelia) {
-            // El caleidoscopio: un gajo de treinta grados con una gota de tinta, una margarita, una burbuja y unas motas que se
-            // mueven dentro de él, repetido doce veces en espejo alrededor del logro; todo gira despacio (una sexta de vuelta
-            // por cada vuelta del motivo, así cierra sin salto). Por fuera, un aro de pétalos en dos colores opuestos que
-            // gira al revés.
+            // El caleidoscopio: un gajo de treinta grados con una gota de tinta (con su borde en el color opuesto, que vibra),
+            // una margarita, una burbuja y unas motas que se mueven dentro de él, repetido doce veces en espejo alrededor del
+            // logro; en el centro, una roseta de pétalos finos, y por fuera, una onda y un aro de pétalos que giran al revés.
+            // Todo da una sexta de vuelta por cada vuelta del motivo, así cierra sin salto.
             val fondo = cs.background
-            fun tinta(col: Color, k: Float) = androidx.compose.ui.graphics.lerp(fondo, col, k)
-            val k = if (oscuro) 0.5f else 0.36f
+            fun tinta(col: Color, k: Float) = androidx.compose.ui.graphics.lerp(fondo, col, k.coerceIn(0f, 1f))
+            val k = if (oscuro) 0.55f else 0.38f
             val colores = if (oscuro) listOf(LIMON, FLUOR_MAGENTA, FLUOR_VIOLETA, FLUOR_NARANJA) else listOf(MAGENTA, NARANJA, VERDE, AZUL)
             val f = giro / 360f
             val ola = sin(2 * PI * f).toFloat(); val ola2 = cos(4 * PI * f).toFloat()
             val radio = m * 0.44f
             rotate(giro / 6f, c) {
+                drawPath(petalos(c, radio * 0.3f, 12, 0f, 0.2f, 0.1f), tinta(colores[2], k * 0.7f))
+                drawPath(petalos(c, radio * 0.18f, 6, PI.toFloat() / 6, 0.34f, 0.1f), tinta(colores[0], k))
                 for (g in 0 until 12) {
                     val espejo = g % 2 == 1
                     fun lugar(rf: Float, af: Float): Offset = pt(radio * rf, Math.toRadians(g * 30.0 + (if (espejo) 30.0 * (1f - af) else 30.0 * af)))
-                    val q = lugar(0.66f + 0.06f * ola, 0.48f + 0.1f * ola2)
-                    drawPath(gota(q, m * 0.06f * (1f + 0.12f * ola2), f * 2f, 0.16f, 3, 32), tinta(colores[1], k))
-                    margarita(lugar(0.34f + 0.07f * ola2, 0.55f - 0.12f * ola), m * 0.034f, tinta(colores[0], k * 1.1f), tinta(colores[3], k * 0.8f), 6)
-                    burbuja(lugar(0.9f - 0.06f * ola, 0.3f), m * 0.022f, tinta(colores[2], 1f), k * 1.4f)
-                    drawCircle(tinta(colores[3], k), m * 0.011f, lugar(0.52f, 0.12f + 0.08f * ola))
-                    drawCircle(tinta(colores[2], k), m * 0.008f, lugar(0.18f + 0.04f * ola, 0.5f))
+                    val q = lugar(0.68f + 0.05f * ola, 0.5f + 0.12f * ola2)
+                    val rg = m * 0.045f * (1f + 0.12f * ola2)
+                    drawPath(gota(q + Offset(rg * 0.12f, rg * 0.1f), rg * 1.14f, f * 2f, 0.16f, 3, 32), tinta(complementario(colores[1]), k * 0.8f))
+                    drawPath(gota(q, rg, f * 2f, 0.16f, 3, 32), tinta(colores[1], k * 1.1f))
+                    margarita(lugar(0.42f + 0.07f * ola2, 0.55f - 0.12f * ola), m * 0.03f, tinta(colores[0], k * 1.15f), tinta(colores[3], k * 0.9f), 6)
+                    burbuja(lugar(0.92f - 0.05f * ola, 0.3f), m * 0.02f, tinta(colores[2], 1f), k * 1.5f)
+                    drawCircle(tinta(colores[3], k), m * 0.01f, lugar(0.56f, 0.1f + 0.08f * ola))
+                    drawCircle(tinta(colores[2], k), m * 0.008f, lugar(0.26f + 0.04f * ola, 0.5f))
                 }
             }
             rotate(-giro / 6f, c) {
+                drawPath(Path().apply {
+                    for (q in 0..144) { val a = 2 * PI * q / 144; val rr = radio * (1.04f + 0.025f * sin(12 * a).toFloat())
+                        val p = pt(rr, a); if (q == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y) }
+                    close()
+                }, tinta(colores[2], k * 0.8f), style = Stroke(1.6f * u))
                 for (g in 0 until 24) {
-                    val a = Math.toRadians(g * 15.0)
-                    drawPath(petalos(pt(radio * 1.12f, a), m * 0.03f, 1, a.toFloat() + PI.toFloat(), 0.4f, 0.1f), tinta(if (g % 2 == 0) colores[0] else colores[2], k))
+                    val a = Math.toRadians(g * 15.0 + 7.5)
+                    drawPath(petalos(pt(radio * 1.1f, a), m * 0.045f, 1, a.toFloat(), 0.36f, 0.08f), tinta(if (g % 2 == 0) colores[0] else colores[3], k))
                 }
             }
         }

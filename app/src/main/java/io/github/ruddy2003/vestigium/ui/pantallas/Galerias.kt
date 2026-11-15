@@ -136,9 +136,18 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
     }
+    // El símbolo de la paz (Holtom, 1958; de dominio público): el aro y las tres barras de la versión de una sola línea.
     TemaId.PSICODELIA -> {
-        val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
-        mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
+        val g = r * 0.17f
+        fun barra(desde: Offset, hasta: Offset): Path {
+            val d = hasta - desde; val l = d.getDistance(); val n = Offset(-d.y / l, d.x / l) * (g / 2)
+            return Path().apply { moveTo(desde.x + n.x, desde.y + n.y); lineTo(hasta.x + n.x, hasta.y + n.y); lineTo(hasta.x - n.x, hasta.y - n.y); lineTo(desde.x - n.x, desde.y - n.y); close() }
+        }
+        val ri = r * 0.92f - g
+        val aro = menos(circulo(c, r * 0.92f), circulo(c, ri))
+        val a = PI / 4
+        val barras = mas(mas(barra(Offset(c.x, c.y - ri - g * 0.3f), Offset(c.x, c.y + ri + g * 0.3f)), barra(c, c + dir(PI / 2 + a) * (ri + g * 0.3f))), barra(c, c + dir(PI / 2 - a) * (ri + g * 0.3f)))
+        mas(aro, barras)
     }
     // La libélula del emblema, vista desde arriba: las cuatro alas, el cuerpo largo y la cabeza.
     TemaId.NOUVEAU -> {

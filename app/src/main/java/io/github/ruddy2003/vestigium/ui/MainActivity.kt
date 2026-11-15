@@ -263,8 +263,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.TEMPLARIO -> BloqueoMarco(TextosBloqueo("La puerta de la encomienda", "☩ El rastrillo está echado: solo un hermano de la casa lo levanta.", "Levantar el rastrillo"), arriba = 18, reintentar = reintentar) { cs -> bloqueoRastrillo(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
             listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
-        TemaId.PSICODELIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
-            listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
+        // La puerta de la sala de baile, cerrada: el sello bajo el arco de arcoíris, entre margaritas y luces líquidas, y el disco del día abajo.
+        TemaId.PSICODELIA -> BloqueoSala(TextosBloqueo("La sala está cerrada", "☮ Hoy hay baile, pero la puerta solo se abre con tu huella.", "Mostrar mi entrada"), reintentar)
         // La entrada del metro, de noche o antes de abrir: el sello entre los dos candelabros de fundición, bajo el letrero,
         // con la barandilla delante; abajo, la página del almanaque.
         TemaId.NOUVEAU -> BloqueoMetro(TextosBloqueo("L'atelier est fermé", "La piedra está entintada, pero la prensa solo corre con tu mano.", "Abrir el taller"), reintentar)
@@ -546,6 +546,57 @@ private fun DrawScope.bloqueoMetro(cs: ColorScheme) {
         // Los dos candelabros, que se doblan hacia dentro con su farol, delante del letrero.
         candelabro(Offset(w * 0.1f, h), alto, 1f, hierro, if (oscuro) 1f else 0f)
         candelabro(Offset(w * 0.9f, h), alto, -1f, hierro, if (oscuro) 1f else 0f)
+    }
+}
+
+/**
+ * Psicodelia: la puerta de la sala de baile, cerrada. Arriba, el título como en un cartel; en medio, el sello bajo el arco
+ * de tinta de arcoíris, entre dos margaritas con su tallo y con las luces líquidas detrás (de noche, en luz negra); luego
+ * la banda, el lema y el botón; y al pie, el disco del día, con su lado y su pista.
+ */
+@Composable
+private fun BloqueoSala(tx: TextosBloqueo, reintentar: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val hoy = remember { runCatching { io.github.ruddy2003.vestigium.data.Fechas.diaLogico() }.getOrElse { java.time.LocalDate.now().toString() } }
+    Column(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 34.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Text(tx.titulo, style = MaterialTheme.typography.headlineMedium, color = cs.primary, textAlign = TextAlign.Center)
+        Meandro(Modifier.padding(horizontal = 40.dp, vertical = 8.dp))
+        Box(Modifier.padding(vertical = 14.dp).size(260.dp, 240.dp).drawBehind { bloqueoSala(cs) }, contentAlignment = Alignment.Center) {
+            SelloHuella(Modifier.padding(top = 30.dp).size(132.dp))
+        }
+        LemaBloqueo(tx.lema)
+        BotonPrincipal(tx.boton, Modifier.padding(top = 20.dp)) { reintentar() }
+        Text(Psicodelia.fecha(hoy), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 18.dp))
+    }
+}
+
+/**
+ * Psicodelia: lo que rodea al sello en la puerta de la sala. Detrás, las luces líquidas; sobre el sello, el arco de tinta de
+ * arcoíris del tintero partido; a los lados, dos margaritas que vibran, con su tallo y una hoja redonda; y unas burbujas.
+ */
+private fun DrawScope.bloqueoSala(cs: ColorScheme) {
+    val w = size.width; val h = size.height; val u = 1.dp.toPx(); val cx = w / 2
+    val oscuro = cs.background.luminance() < 0.5f
+    with(TrazosPsicodelia) {
+        fun suave(c: Color, k: Float) = androidx.compose.ui.graphics.lerp(cs.background, c, k)
+        lucesLiquidas(Size(w * 0.8f, h * 0.7f), 0.35f, if (oscuro) listOf(LIMON, FLUOR_MAGENTA, FLUOR_VIOLETA) else listOf(MAGENTA, NARANJA, AZUL), if (oscuro) 0.4f else 0.25f, Offset(w * 0.1f, h * 0.12f))
+        val centro = Offset(cx, h / 2 + 15 * u)
+        val tintas = if (oscuro) ARCOIRIS_NOCHE else ARCOIRIS.take(5)
+        tintas.forEachIndexed { k, t ->
+            val r = 76 * u + k * 6.5f * u
+            drawArc(suave(t, if (oscuro) 0.7f else 0.6f), 192f, 156f, false, Offset(centro.x - r, centro.y - r), Size(2 * r, 2 * r), style = Stroke(5 * u, cap = StrokeCap.Round))
+        }
+        for (lado in listOf(-1f, 1f)) {
+            val pie = Offset(cx + lado * 92 * u, h)
+            val cabeza = Offset(cx + lado * 104 * u, h - 78 * u)
+            val tallo = suave(if (oscuro) LIMON else VERDE, 0.8f)
+            drawPath(Path().apply { moveTo(pie.x, pie.y); quadraticTo(cx + lado * 86 * u, h - 40 * u, cabeza.x, cabeza.y) }, tallo, style = Stroke(2.2f * u, cap = StrokeCap.Round))
+            drawPath(petalos(Offset(cx + lado * 89 * u, h - 26 * u), 16 * u, 1, if (lado < 0f) -2.4f else -0.74f, 0.4f, 0.05f), tallo)
+            flor(cabeza, 18 * u, if (lado < 0f) MAGENTA else NARANJA, if (lado < 0f) VERDE else AZUL, 8, 0.5f)
+            drawCircle(AMARILLO, 5 * u, cabeza)
+            burbuja(Offset(cx + lado * 70 * u, h - 112 * u), 5 * u, if (oscuro) FLUOR_VIOLETA else AZUL, 0.9f)
+            burbuja(Offset(cx + lado * 120 * u, h - 128 * u), 3 * u, if (oscuro) LIMON else MAGENTA, 0.9f)
+        }
     }
 }
 
@@ -1275,7 +1326,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> false
-    TemaId.PSICODELIA -> false
+    TemaId.PSICODELIA -> true         // la gota de tinta, llena
     TemaId.NOUVEAU -> false           // las dos líneas de látigo que abrazan el ícono, en trazo
     TemaId.GALIA -> false             // el torques alrededor del ícono, en trazo
     TemaId.ARCONTES -> false          // el nicho de piedra, en trazo
@@ -1319,7 +1370,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> true
-    TemaId.PSICODELIA -> true
+    TemaId.PSICODELIA -> true         // el botón de solapa, lleno
     TemaId.NOUVEAU -> true            // el cabujón de esmalte en su aro de látigo, lleno
     TemaId.GALIA -> true              // el estátero de oro, lleno
     TemaId.ARCONTES -> true           // el amuleto de oro, lleno
@@ -1430,9 +1481,20 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
             drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
             drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
         }
-        TemaId.PSICODELIA -> girar(-5f, Offset(cx, cy)) {
-            drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
-            drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
+        // Una gota de tinta llena detrás del ícono, blanda, con su sombra corrida en el color opuesto; crece al aparecer.
+        TemaId.PSICODELIA -> {
+            val r = 14f * u * (0.55f + 0.45f * p)
+            fun mancha(o: Offset) = Path().apply {
+                for (k in 0..48) {
+                    val a = 2 * Math.PI * k / 48
+                    val x = o.x + r * 1.55f * (1f + 0.06f * kotlin.math.sin(3 * a + 0.8).toFloat()) * kotlin.math.cos(a).toFloat()
+                    val y = o.y + r * (1f + 0.08f * kotlin.math.cos(2 * a + 0.3).toFloat()) * kotlin.math.sin(a).toFloat()
+                    if (k == 0) moveTo(x, y) else lineTo(x, y)
+                }
+                close()
+            }
+            drawPath(mancha(Offset(cx + 1.6f * u, cy + 1.4f * u)), TrazosPsicodelia.opuesto(cs.primary).copy(alpha = 0.45f * p))
+            drawPath(mancha(Offset(cx, cy)), c)
         }
         // Dos líneas de látigo que nacen juntas bajo el ícono, lo abrazan por los lados y se enroscan arriba, cada una hacia
         // fuera; crecen al aparecer.
@@ -1728,9 +1790,22 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
             drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
         }
-        TemaId.PSICODELIA -> girar(-4f, Offset(cx, cy)) {
-            drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
-            drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
+        // Un botón de solapa del color del tema: la orla de franjas torcidas en el color opuesto y la cúpula con su brillo.
+        TemaId.PSICODELIA -> {
+            val o = Offset(cx, cy); val ro = 25 * u; val ri = 20.5f * u; val n = 14
+            drawCircle(Color.Black.copy(alpha = 0.18f), ro, o + Offset(0.8f * u, 1.2f * u))
+            drawCircle(cs.secondary, ro, o)
+            for (k in 0 until n) {
+                val a0 = 2 * Math.PI * k / n; val paso = 2 * Math.PI / n
+                fun q(rr: Float, a: Double) = Offset(cx + rr * kotlin.math.cos(a).toFloat(), cy + rr * kotlin.math.sin(a).toFloat())
+                val p1 = q(ri, a0); val p2 = q(ro, a0 + paso * 0.8); val p3 = q(ro, a0 + paso * 1.3); val p4 = q(ri, a0 + paso * 0.5)
+                drawPath(Path().apply { moveTo(p1.x, p1.y); lineTo(p2.x, p2.y); lineTo(p3.x, p3.y); lineTo(p4.x, p4.y); close() }, c)
+            }
+            drawCircle(androidx.compose.ui.graphics.Brush.radialGradient(listOf(androidx.compose.ui.graphics.lerp(c, Color.White, 0.25f), c, androidx.compose.ui.graphics.lerp(c, Color.Black, 0.2f)),
+                Offset(cx - ri * 0.35f, cy - ri * 0.4f), ri * 1.5f), ri, o)
+            drawCircle(Color.Black.copy(alpha = 0.25f), ri, o, style = Stroke(0.8f * u))
+            drawCircle(Color.Black.copy(alpha = 0.2f), ro, o, style = Stroke(0.8f * u))
+            drawArc(Color.White.copy(alpha = 0.35f), 200f, 60f, false, Offset(cx - ri * 0.76f, cy - ri * 0.76f), Size(ri * 1.52f, ri * 1.52f), style = Stroke(2f * u, cap = StrokeCap.Round))
         }
         // Un cabujón de esmalte del color del tema, con su reflejo de vidrio, dentro del aro de látigo de oro del sello.
         TemaId.NOUVEAU -> with(TrazosNouveau) {
@@ -2001,7 +2076,9 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         }
         // Barra gruesa de cartel.
         TemaId.DISTOPIA -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
-        TemaId.PSICODELIA -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
+        // El filete y, debajo, una franja fina de tinta de arcoíris que ondula de punta a punta.
+        TemaId.PSICODELIA -> { filete()
+            drawPath(TrazosPsicodelia.onda(0f, w, 3.2f * u, 0.8f * u, 40f * u), TrazosPsicodelia.arcoiris(Offset(0f, 0f), Offset(w, 0f), 0.6f, cs.background.luminance() < 0.5f), style = Stroke(1.4f * u)) }
         // El filete y, debajo, una línea de látigo de punta a punta: una sola onda larga, que se enrosca en cada extremo.
         TemaId.NOUVEAU -> with(TrazosNouveau) {
             filete()
@@ -2447,7 +2524,7 @@ private fun origenTransicion(tema: TemaId, atras: Boolean): Alignment = when (te
     TemaId.MEDIEVAL -> Alignment.TopStart
     TemaId.TEMPLARIO -> Alignment.TopStart
     TemaId.DISTOPIA -> Alignment.TopStart
-    TemaId.PSICODELIA -> Alignment.TopStart
+    TemaId.PSICODELIA -> Alignment.TopCenter                                   // las luces se funden desde el centro
     TemaId.NOUVEAU -> if (atras) Alignment.TopEnd else Alignment.TopStart                // la hoja se posa desde su esquina
     TemaId.GALIA -> Alignment.TopCenter                                        // la pantalla sale de la niebla desde el centro
     TemaId.ARCONTES -> Alignment.TopCenter                                     // el velo se abre desde el centro
@@ -2519,7 +2596,13 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
             (scaleOut(t(240), targetScale = 0.97f) + fadeOut(t(200)))
         // Cajón de archivo: cae de golpe desde arriba.
         TemaId.DISTOPIA -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
-        TemaId.PSICODELIA -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
+        // Las luces que se funden: la pantalla nueva llega apenas más grande y se asienta blanda mientras se aclara sobre la
+        // anterior, que se apaga despacio, como dos imágenes de proyector que se mezclan.
+        TemaId.PSICODELIA -> {
+            val blanda = androidx.compose.animation.core.CubicBezierEasing(0.25f, 0.1f, 0.25f, 1f)
+            (scaleIn(tween(440, 0, blanda), initialScale = 1.03f, transformOrigin = TransformOrigin(0.5f, 0.3f)) + fadeIn(t(400))) togetherWith
+                (fadeOut(t(360)) + scaleOut(t(360), targetScale = 0.985f, transformOrigin = TransformOrigin(0.5f, 0.3f)))
+        }
         // La hoja que sale de la piedra litográfica: la pantalla nueva se posa desde su esquina de arriba, bajando un poco en
         // una curva suave, y se aclara como la tinta al secarse; la de antes se aparta despacio.
         TemaId.NOUVEAU -> {

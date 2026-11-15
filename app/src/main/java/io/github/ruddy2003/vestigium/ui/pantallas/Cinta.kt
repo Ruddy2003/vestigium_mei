@@ -71,7 +71,7 @@ private class Cosa(val pista: Int, val a: Long, val b: Long?, val color: Color, 
 private class PistaCinta(val nombre: String, val icono: String)
 
 /** Lo que se pinta dentro de un bloque de la cinta. */
-private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA, PERFORADA, PAPIRO, CUADROS, VIDRIO }
+private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA, PERFORADA, PAPIRO, CUADROS, VIDRIO, GOTAS }
 
 /**
  * Cómo se ve la cinta en cada tema: la esquina de los bloques ([radio] en dp; [cortado], en chaflán), lo que llevan dentro,
@@ -99,7 +99,9 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.TEMPLARIO -> PielCinta(2.5f, true, RellenoCinta.FILETE, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Sello rayado del expediente.
     TemaId.DISTOPIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
-    TemaId.PSICODELIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
+    // Las luces líquidas: tramos de burbuja, muy redondos, con gotas claras que flotan dentro; las horas menores en punto y
+    // raya, como un compás de pandero.
+    TemaId.PSICODELIA -> PielCinta(11f, false, RellenoCinta.GOTAS, floatArrayOf(0.1f, 3f, 3f, 3f), StrokeCap.Round)
     // El vidrio de Nancy: tramos de esquinas muy redondas, con la luz que pasa de un lado al otro y un tallo grabado que sube y
     // se curva; las horas menores, en punto y raya larga, como la pluma del cartel.
     TemaId.NOUVEAU -> PielCinta(9f, false, RellenoCinta.VIDRIO, floatArrayOf(0.1f, 2.4f, 7f, 2.4f), StrokeCap.Round)
@@ -228,6 +230,18 @@ private fun DrawScope.bloqueCinta(p: PielCinta, color: Color, a: Offset, t: Size
                 while (x < der) { drawRect(oscuro.copy(alpha = 0.16f), Offset(x, a.y), Size(4f * d, t.height)); drawLine(claro.copy(alpha = 0.4f), Offset(x + 6.5f * d, a.y), Offset(x + 6.5f * d, abajo), 0.6f * d); x += 11f * d }
                 var y = a.y + 2f * d
                 while (y < abajo) { drawRect(oscuro.copy(alpha = 0.16f), Offset(a.x, y), Size(t.width, 4f * d)); drawLine(claro.copy(alpha = 0.4f), Offset(a.x, y + 6.5f * d), Offset(der, y + 6.5f * d), 0.6f * d); y += 11f * d }
+            }
+            RellenoCinta.GOTAS -> {
+                // Las gotas de aceite y tinta que flotan en la luz: blandas, claras, de tamaños distintos, arriba y abajo.
+                val cy = a.y + t.height / 2
+                var x = a.x + 4f * d; var k = 0
+                while (x < der) {
+                    val r = minOf(t.height * (0.18f + 0.1f * (k % 3)), 4.2f * d)
+                    val o = Offset(x, cy + (if (k % 2 == 0) -1f else 1f) * t.height * 0.16f)
+                    drawPath(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia.gota(o, r, k * 0.27f, 0.14f), claro.copy(alpha = 0.32f))
+                    x += (8f + 3f * (k % 2)) * d; k++
+                }
+                drawLine(oscuro.copy(alpha = 0.3f), Offset(a.x + 3f * d, abajo - 1f * d), Offset(der - 3f * d, abajo - 1f * d), 0.9f * d, StrokeCap.Round)
             }
         }
     }

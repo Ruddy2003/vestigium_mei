@@ -137,7 +137,8 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     // El anuario de la ciudad: tu año, con el año de la fundación al lado, como en las placas.
     TemaId.URBE -> "IL TUO ANNO A ROMA · $anio · AUC ${io.github.ruddy2003.vestigium.ui.Romano.de(io.github.ruddy2003.vestigium.ui.Urbe.auc(anio))}"
     TemaId.DISTOPIA -> "INFORME ANUAL DEL CIUDADANO · $anio"
-    TemaId.PSICODELIA -> "INFORME ANUAL DEL CIUDADANO · $anio"
+    // El año como un disco recopilatorio: lo mejor de los doce álbumes del año.
+    TemaId.PSICODELIA -> "Grandes éxitos de $anio"
     // El almanaque ilustrado del año, como los que se vendían en los quioscos de París.
     TemaId.NOUVEAU -> "Almanach illustré de $anio"
     // Los galos cuentan el tiempo por noches (César 6.18); el año va en números romanos, como los días del bronce de Coligny.

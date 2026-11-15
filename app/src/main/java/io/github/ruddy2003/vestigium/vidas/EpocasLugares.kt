@@ -107,5 +107,13 @@ val LUGARES: Map<String, LugarDeVida> = mapOf(
     // mismos de Pierre y de la lavandera; sus épocas no se tocan con la suya (1868 a 1928).
     "litografa" to LugarDeVida(setOf("Q90", "Q142", "Q70802", "Q50716", "Q753646", "Q186115"), // París, Francia, Tercera República Francesa, Metro de París, Exposición Universal de París (1900), Montmartre
         listOf("París", "Francia", "Montmartre", "Tercera República", "Metro de París", "parisino", "parisina", "parisinos", "francés", "francesa", "franceses")),
+    // David, el dibujante de carteles de Psicodelia (lote 10). Los identificadores salen de Wikidata, por el título de cada
+    // página de Wikipedia en español (el `wgWikibaseItemId` de la página, 15 nov 2026). Sin Estados Unidos: a David le
+    // toca lo de su ciudad y de su estado, no lo de todo el país **[Diseño propio]**. «San Francisco de Asís» y los demás
+    // santos no son su ciudad, ni la Baja California ni el golfo de California, que son de México; «Monterrey», con dos
+    // erres, es la de Rosa.
+    "cartelista" to LugarDeVida(setOf("Q62", "Q99", "Q1027700", "Q635559", "Q932701"), // San Francisco (California), California, Haight-Ashbury, Golden Gate Park, Verano del Amor
+        listOf("San Francisco", "California", "Haight-Ashbury", "Haight", "Golden Gate", "Berkeley", "Monterey", "Verano del Amor", "californiano", "californiana", "californianos"),
+        listOf("San Francisco de Asís", "San Francisco Javier", "San Francisco de Sales", "San Francisco de Borja", "San Francisco de Paula", "San Francisco de Quito", "San Francisco de Macorís", "Baja California", "Golfo de California", "golfo de California")),
     // Tom (escribiente) y Carmen (operadora) no tienen cuento, así que no hace falta su lugar.
 )

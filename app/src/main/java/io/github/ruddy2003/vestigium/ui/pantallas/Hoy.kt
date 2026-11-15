@@ -456,19 +456,21 @@ fun FraseDelDia(fecha: String) {
                 }
             }
         }
-        TemaId.PSICODELIA -> Surface(color = cs.onBackground, shape = RectangleShape, modifier = arriba) {
-            Row(Modifier.height(IntrinsicSize.Min)) {
-                Box(Modifier.width(8.dp).fillMaxHeight().background(cs.primary))
-                Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                    Text(rotulo, style = ty.labelMedium, color = cs.primary)
-                    f.original?.let { Text(it, style = ty.bodySmall, fontStyle = FontStyle.Italic, color = cs.background.copy(alpha = 0.72f)) }
-                    Text(f.texto.uppercase(), style = ty.titleLarge, color = cs.background, modifier = Modifier.padding(vertical = 2.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("— ${f.autor}", style = ty.labelSmall, color = cs.background.copy(alpha = 0.7f), modifier = Modifier.weight(1f))
-                        CorazonFrase(f, cs.primary, fecha = fecha)
-                    }
-                }
+        // El cartel de la semana: la burbuja de esquinas muy redondas con la franja de arcoíris del tintero partido arriba,
+        // el contorno que vibra (el color y, corrido, su segunda tinta) y una flor que asoma por la esquina de abajo.
+        TemaId.PSICODELIA -> Box(arriba.drawBehind {
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            val g = minOf(18 * u, h * 0.3f)
+            val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(androidx.compose.ui.geometry.Rect(0f, 0f, w, h), CornerRadius(g))) }
+            drawPath(forma, androidx.compose.ui.graphics.lerp(cs.surface, cs.primaryContainer, 0.3f))
+            clipPath(forma) {
+                drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia.ARCOIRIS.map { it.copy(alpha = 0.85f) }, 0f, w), Offset.Zero, Size(w, 5 * u))
+                with(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia) { flor(Offset(w - 4 * u, h - 2 * u), 22 * u, cs.primary.copy(alpha = 0.85f), cs.secondary.copy(alpha = 0.85f), 7, 0.6f) }
             }
+            drawPath(Path().apply { addPath(forma, Offset(1.4f * u, 1.2f * u)) }, cs.secondary.copy(alpha = 0.6f), style = Stroke(1.2f * u))
+            drawPath(forma, cs.primary.copy(alpha = 0.8f), style = Stroke(1.4f * u))
+        }.padding(start = 16.dp, end = 34.dp, top = 16.dp, bottom = 12.dp)) {
+            CuerpoFrase(f, fecha, rotulo, "✿ ", " ✿")
         }
         // La página de la revista ilustrada: la cartulina con dos esquinas muy redondas y dos casi rectas, el filete de dentro, un
         // iris que sube por el margen izquierdo y una línea de látigo que se enrosca en la esquina de arriba; la frase en francés
@@ -1039,7 +1041,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
         TemaId.TEMPLARIO -> c(LetraExtra.regla, FontWeight.Bold, 22f, 0.3f, "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
-        TemaId.PSICODELIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
+        TemaId.PSICODELIA -> c(LetraExtra.modak, FontWeight.Normal, 25f, 0.4f)   // las cifras infladas de los carteles
         TemaId.NOUVEAU -> c(LetraExtra.dellaRespira, FontWeight.Normal, 25f, 0.8f, "lnum")   // las cifras altas y finas de los carteles
         TemaId.GALIA -> c(LetraExtra.ysabeau, FontWeight.SemiBold, 23f, 0.5f, "lnum")   // las cifras humanistas de los rótulos
         TemaId.ARCONTES -> c(LetraExtra.caudex, FontWeight.Bold, 23f, 0.4f)   // las cifras de la letra de los códices
@@ -1338,11 +1340,25 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             var y = top + k + 4 * u
                             while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
                         }
+                        // Una columna blanda que se derrite: los costados ondulan como la cera de la lámpara y arriba la cabeza
+                        // redonda de una gota; con color, el brillo de la gota y una burbuja que sube.
                         TemaId.PSICODELIA -> {
-                            val k = minOf(w * 0.35f, barH * 0.2f)
-                            pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
-                            var y = top + k + 4 * u
-                            while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
+                            val rc = w * 0.32f
+                            val cab = minOf(rc, barH / 2)
+                            pinta(Path().apply {
+                                moveTo(w * 0.5f - rc, h)
+                                var y = h; var k = 0
+                                while (y > top + cab && k < 200) { val ny = maxOf(y - 6 * u, top + cab); quadraticTo(w * 0.5f - rc - (if (k % 2 == 0) 1.6f else -1.6f) * u, (y + ny) / 2, w * 0.5f - rc, ny); y = ny; k++ }
+                                arcTo(Rect(w * 0.5f - rc, top, w * 0.5f + rc, top + 2 * cab), 180f, 180f, false)
+                                y = top + cab; k = 0
+                                while (y < h && k < 200) { val ny = minOf(y + 6 * u, h); quadraticTo(w * 0.5f + rc + (if (k % 2 == 0) 1.6f else -1.6f) * u, (y + ny) / 2, w * 0.5f + rc, ny); y = ny; k++ }
+                                close()
+                            })
+                            if (color != null) {
+                                drawCircle(Color.White.copy(alpha = 0.4f), cab * 0.28f, Offset(w * 0.5f - rc * 0.35f, top + cab * 0.7f))
+                                if (barH > 4 * cab) drawCircle(color, rc * 0.42f, Offset(w * 0.5f + rc * 0.1f, top - rc * 0.6f))
+                            }
+                            sello = cs.secondary
                         }
                         // Cada día, un tallo que sube y abre su capullo, más alto cuanto más dormiste, con una hoja que sale de lado; el
                         // sello de arriba, en el violeta del iris.

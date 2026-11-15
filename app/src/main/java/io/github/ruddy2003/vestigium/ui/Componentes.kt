@@ -231,10 +231,9 @@ private fun BandaArcoiris(modifier: Modifier) {
 
 private fun DrawScope.bandaArcoiris(oscuro: Boolean) {
     val u = 1.dp.toPx(); val w = size.width; val cy = size.height / 2
-    val tintas = if (oscuro) listOf(TrazosPsicodelia.FLUOR_MAGENTA, TrazosPsicodelia.FLUOR_NARANJA, TrazosPsicodelia.LIMON, TrazosPsicodelia.FLUOR_VIOLETA)
-        else TrazosPsicodelia.ARCOIRIS
+    val tintas = if (oscuro) TrazosPsicodelia.ARCOIRIS_NOCHE else TrazosPsicodelia.ARCOIRIS
     val pincel = Brush.horizontalGradient(tintas + tintas.reversed().drop(1), 0f, w)
-    val amp = 2.2f * u; val periodo = 34f * u; val grueso = 3.4f * u
+    val amp = 2.2f * u; val periodo = 34f * u; val grueso = 4f * u
     val medio = w / 2; val hueco = 11f * u
     fun tramo(x0: Float, x1: Float) {
         if (x1 - x0 < 6f * u) return
@@ -1530,9 +1529,10 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             Text(nombre, style = estilo.copy(shadow = androidx.compose.ui.graphics.Shadow(TrazosPsicodelia.opuesto(e.primary).copy(alpha = 0.5f), Offset(corrida, corrida), 0f)),
                 color = e.primary, modifier = peso.drawBehind {
                     val g = 1.dp.toPx(); val y = size.height - 2.4f * g; val fin = size.width * 0.8f
-                    drawPath(TrazosPsicodelia.onda(1f * g, fin, y, 1.2f * g, 24f * g), TrazosPsicodelia.arcoiris(Offset(0f, y), Offset(fin, y), 0.75f),
-                        style = Stroke(1.8f * g, cap = StrokeCap.Round))
-                    drawCircle(TrazosPsicodelia.arcoiris(Offset(0f, y), Offset(fin, y), 0.75f), 1.5f * g, Offset(fin + 3.5f * g, y))
+                    val noche = e.background.luminance() < 0.5f
+                    val tinta = TrazosPsicodelia.arcoiris(Offset(0f, y), Offset(fin, y), 0.75f, noche)
+                    drawPath(TrazosPsicodelia.onda(1f * g, fin, y, 1.2f * g, 24f * g), tinta, style = Stroke(1.8f * g, cap = StrokeCap.Round))
+                    drawCircle(tinta, 1.5f * g, Offset(fin + 3.5f * g, y))
                 }.padding(bottom = 7.dp))
         }
         // Debajo, la línea de látigo: nace de una yema a la izquierda, ondula apenas y se enrosca al final.
@@ -2406,7 +2406,7 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
             margarita(Offset(m * 2.8f, h / 2), m * 0.95f, c, null, 6)
             drawCircle(c, m * 0.5f, Offset(w - m * 2.6f, h / 2 - m * 0.3f), style = Stroke(fino))
             drawCircle(c, m * 0.3f, Offset(w - m * 1.8f, h / 2 + m * 0.6f), style = Stroke(fino * 0.8f))
-            drawPath(onda(w * 0.3f, w * 0.7f, h - m * 0.85f, fino * 0.9f, m * 2.4f), c, style = Stroke(fino, cap = StrokeCap.Round))
+            drawPath(onda(w * 0.32f, w * 0.68f, h - m * 1.5f, fino * 0.9f, m * 2.4f), c, style = Stroke(fino, cap = StrokeCap.Round))
         }
         // A cada lado, un rizo de látigo que se abre en una línea fina por el canto de abajo, hacia el medio.
         TemaId.NOUVEAU -> with(TrazosNouveau) {

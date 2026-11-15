@@ -13,8 +13,9 @@ import java.time.LocalDate
 /**
  * Los cuentos del grupo 9, los de los temas del lote 10: el de Tadeo, el agente de la red de Frente exterior, que es
  * ficción; el de Eleazar, el iniciado de Arcontes, una persona inventada en la Galilea real; el de Segomaros, el aprendiz
- * de los druidas de Galia, una persona inventada en la Galia real, y el de Marguerite, la aprendiz de litografía de Art
- * nouveau, una persona inventada en el París real (los tres, al final). Las pruebas generales (forma, largo, repeticiones, certeza) están en [CuentoPrueba] y corren
+ * de los druidas de Galia, una persona inventada en la Galia real; el de Marguerite, la aprendiz de litografía de Art
+ * nouveau, una persona inventada en el París real, y el de David, el dibujante de carteles de Psicodelia, una persona
+ * inventada en el San Francisco real (los cuatro, al final). Las pruebas generales (forma, largo, repeticiones, certeza) están en [CuentoPrueba] y corren
  * solas sobre todas las piezas registradas; aquí va lo propio de su historia: que nadie aparezca antes ni después de
  * tiempo, que la red no salga antes de que lo recluten y que los estados se noten.
  */
@@ -617,5 +618,167 @@ class CuentoG9Prueba {
         assertEquals("Zola publica «J'accuse…!» en L'Aurore, y en el taller no se habla de otra cosa", zola.titulo)
         assertTrue("«la vérité est en marche, et rien ne l'arrêtera» (Zola, J'accuse…!)" in zola.parrafos[Parrafo.GENTE.ordinal])
         assertEquals(CertezaDia.HISTORICO, zola.notas.first().certeza)
+    }
+
+    // ================================================================= David, el dibujante de carteles de Psicodelia
+
+    private val dv = "cartelista"
+    private val piezaD get() = TodasLasPiezas.de(dv)!!
+    private val calD get() = Calendarios.de(dv)!!
+    private val david get() = OtrasVidas.porId(dv)!!
+    private fun cuentoD(dia: String, hora: Double = 10.0) = Cuento.de(FichaDelDia.de(dia, david, calD), david, calD, piezaD, hora)
+    private val diaEnteroD = HashMap<String, String>()
+    /** Todo lo que dice su cuento ese día, a una hora de cada tramo de «Un día suyo». */
+    private fun todoElDiaD(dia: String) = diaEnteroD.getOrPut(dia) { listOf(6.0, 12.5, 15.0, 18.5, 19.5, 22.0, 3.0).flatMap { cuentoD(dia, it).parrafos }.joinToString(" ") }
+    private val normalesD = HashMap<String, Boolean>()
+    private fun normalesD(desde: String, hasta: String) = dias(desde, hasta).filter { d -> normalesD.getOrPut(d) { !cuentoD(d).especial } }
+    private fun nuncaD(desde: String, hasta: String, texto: String) =
+        normalesD(desde, hasta).forEach { assertFalse("$it: «$texto» fuera de tiempo", texto in todoElDiaD(it)) }
+    private fun algunaD(desde: String, hasta: String, texto: String) =
+        assertTrue("«$texto» no sale entre $desde y $hasta", normalesD(desde, hasta).any { texto in todoElDiaD(it) })
+    private fun soloEntreD(desde: String, hasta: String, texto: String) {
+        if (desde > "2027-01-01") nuncaD("2027-01-01", LocalDate.parse(desde).minusDays(1).toString(), texto)
+        if (hasta < "2031-12-31") nuncaD(LocalDate.parse(hasta).plusDays(1).toString(), "2031-12-31", texto)
+        algunaD(desde, hasta, texto)
+    }
+    private fun textosDeD(lugar: Parrafo, estado: String) =
+        piezaD.variantes.getValue(lugar).filter { it.estado == estado }.map { Cuento.llenar(it.texto, mapOf("nombre" to david.nombre), piezaD.genero) }.toSet()
+
+    @Test fun estanLasPiezasDeDavid() {
+        assertEquals(dv, piezaD.vida)
+        assertEquals("Solo la temporada 1 está escrita", setOf(1), piezaD.temporadasEscritas)
+        assertEquals(emptyList<String>(), piezaD.problemas(calD))
+        assertEquals(Genero.MASCULINO, piezaD.genero)
+        // No es ficción: es una persona inventada en un mundo real.
+        assertEquals(Cuento.NOTA_HISTORICA, cuentoD("2027-04-04").nota)
+        assertTrue(piezaD.textos().count { "{nombre}" in it } > 40)
+        listOf("2027-03-03", "2029-05-10", "2030-09-09", "2031-11-11").forEach { d -> assertTrue(d, "David" in todoElDiaD(d)) }
+        // Los días especiales de la temporada 1, todos, y solo ellos.
+        assertEquals(calD.temporadas[0].dias.map { it.id }.toSet(), piezaD.especiales.keys)
+        // Unas 60 a 80 variantes de todos los días, más las de los tres días de Monterey.
+        val variantes = piezaD.variantes.values.flatten()
+        assertTrue("${variantes.count { it.estado == null }} variantes", variantes.count { it.estado == null } in 60..110)
+        assertTrue(variantes.count { it.estado == "monterey" } >= 10)
+    }
+
+    @Test fun nadaDeDrogasEnElCuento() {
+        // La regla del tema, la más importante: ninguna palabra de la lista, en ningún texto, ni en los cuentos ya armados.
+        piezaD.textos().forEach { t -> JERGA_DE_DROGAS.forEach { r -> assertFalse("«${r.find(t)?.value}» en «${t.take(70)}…»", r.containsMatchIn(t)) } }
+        (dias("2027-01-01", "2027-12-31") + dias("2029-06-01", "2029-06-30")).forEach { d ->
+            val c = cuentoD(d, 22.0)
+            (c.parrafos + c.titulo).forEach { t -> JERGA_DE_DROGAS.forEach { r -> assertFalse("$d: «${r.find(t)?.value}» en «${t.take(70)}…»", r.containsMatchIn(t)) } }
+        }
+        // Ni las marcas de las salas, la radio, el festival o el periódico (corrección 6), ni el nombre de 1978 de las casas.
+        piezaD.textos().forEach { t -> MARCAS_DE_PSICODELIA.forEach { r -> assertFalse("«${r.find(t)?.value}» en «${t.take(70)}…»", r.containsMatchIn(t)) } }
+        // Las casas, casi todas grises (corrección 1): nada de calles enteras de colores.
+        piezaD.textos().forEach { t -> assertFalse(t, Regex("""(?i)calles? enteras?|todas las casas (son|están) (pintadas|de colores)""").containsMatchIn(t)) }
+        assertTrue(piezaD.textos().any { "Casi todas son grises" in it })
+    }
+
+    /**
+     * Las frases que el cuento copia tal cual, en inglés, cada una con su autor y su obra al lado y su español después. Son
+     * de las 33 que `docs/diseno/temas/fuentes_psicodelia.md` (sección 10) comprobó letra por letra en Wikisource: la 18
+     * (Thoreau), la 14 (Whitman) y la 26 (Gibran).
+     */
+    private val FRASES_D = mapOf(
+        "If a man does not keep pace with his companions, perhaps it is because he hears a different drummer." to "Thoreau, Walden",
+        "I sound my barbaric yawp over the roofs of the world." to "Whitman, Leaves of Grass",
+        "Work is love made visible." to "Gibran, The Prophet",
+    )
+
+    @Test fun loQueVaTalCualEstaComprobadoYLoDemasEnEstiloIndirectoEnElCuentoDeDavid() {
+        val comillas = Regex("""«([^«»]+)»(?: \(([^()]+)\))?""")
+        var textuales = 0
+        piezaD.textos().forEach { t ->
+            assertFalse("Comillas inglesas en «${t.take(60)}…»", '"' in t || '“' in t || '”' in t)
+            comillas.findAll(t).forEach { x ->
+                val (dentro, fuente) = x.destructured
+                assertTrue("«$dentro»: no es una frase comprobada", dentro in FRASES_D)
+                assertEquals("«$dentro» sin su autor y su obra al lado", FRASES_D.getValue(dentro), fuente)
+                textuales++
+            }
+        }
+        assertEquals(3, textuales)
+        // Cada una lleva su español al lado (principio 7), en estilo indirecto.
+        val todo = piezaD.textos().joinToString(" ")
+        listOf("quizá oye otro tambor", "lanza su grito bárbaro sobre los tejados del mundo", "el trabajo es el amor hecho visible").forEach { assertTrue(it, it in todo) }
+        // Sin nombres de bandas ni de canciones: las dos canciones de la radio se describen.
+        assertTrue(piezaD.especiales.getValue("distorsion").dias[0].values.any { "una canción nueva con una guitarra" in it })
+        assertTrue(piezaD.especiales.getValue("sitar").dias[0].values.any { "un sitar, un instrumento de la India" in it })
+    }
+
+    @Test fun nadieApareceAntesNiDespuesDeTiempoEnElCuentoDeDavid() {
+        // El trabajo: la imprenta hasta su primer cartel; el cartel de la semana desde entonces; las tintas fluorescentes y los pinceles de Sal.
+        soloEntreD("2027-01-11", "2028-05-06", "trabaja en la imprenta del señor Okada")
+        soloEntreD("2028-05-07", "2031-12-31", "dibuja el cartel de la semana")
+        soloEntreD("2029-05-27", "2031-12-31", "pensando en las tintas fluorescentes")
+        soloEntreD("2031-02-22", "2031-12-31", "pinta con los pinceles del viejo Sal")
+        // Las noches: el sótano de la calle Page, la sala de la calle Sutter, el auditorio de Geary, la FM del 106.9, el tocadiscos.
+        soloEntreD("2027-04-24", "2028-02-18", "baja al sótano de la calle Page")
+        soloEntreD("2028-02-19", "2031-01-24", "está en la sala de la calle Sutter")
+        soloEntreD("2028-05-07", "2030-07-05", "está en el auditorio de Geary")
+        soloEntreD("2031-01-25", "2031-12-31", "va a las salas que quedan")
+        soloEntreD("2029-02-12", "2031-12-31", "A esta hora oye el 106.9")
+        soloEntreD("2027-10-02", "2031-12-31", "pone un disco en el tocadiscos de maleta")
+        // El pasaje: quince centavos hasta el 15 de marzo de 1969; veinte desde entonces.
+        soloEntreD("2027-01-01", "2031-03-14", "echa sus quince centavos")
+        soloEntreD("2031-03-15", "2031-12-31", "los veinte centavos que cuesta ahora el pasaje")
+        // El periódico del barrio y el guiso de los Diggers, mientras existen.
+        soloEntreD("2028-09-20", "2030-02-09", "venden en la calle el periódico del barrio")
+        soloEntreD("2029-05-13", "2030-10-11", "lo que sobró del guiso de los Diggers")
+        // Su gente: Nora, Gil y su órgano, Sal y su retiro, el señor Okada, Ellen.
+        soloEntreD("2027-01-01", "2030-01-19", "Nora, la otra del departamento")
+        soloEntreD("2027-01-01", "2031-04-04", "Gil Ortega comparte el departamento")
+        soloEntreD("2028-01-15", "2031-04-04", "Gil ensaya en la sala")
+        soloEntreD("2027-02-15", "2031-02-21", "El viejo Sal es rotulista")
+        soloEntreD("2031-02-22", "2031-12-31", "El viejo Sal ya no tiene taller")
+        soloEntreD("2027-01-11", "2031-12-31", "El señor Okada, el impresor")
+        nuncaD("2027-01-01", "2028-06-17", "Ellen")
+        soloEntreD("2028-06-18", "2029-02-18", "Ellen trabaja en las luces de las salas")
+        soloEntreD("2029-02-19", "2030-03-01", "Ellen y él salen juntos")
+        soloEntreD("2030-03-02", "2031-12-31", "Ellen vive ahora en el departamento")
+        soloEntreD("2030-03-02", "2031-12-31", "duerme junto a Ellen")
+        // La luz negra de su ventana y la casa turquesa.
+        soloEntreD("2030-04-13", "2031-12-31", "la ventana de su cuarto brilla de un violeta raro")
+        soloEntreD("2031-05-10", "2031-12-31", "La casa de la señora Petrakis es ahora turquesa")
+        // Los carteles de los postes (el arco `carteles`): ninguno, alguno, llenos y cubiertos.
+        soloEntreD("2027-01-01", "2028-02-18", "solo hay avisos de cuartos en alquiler")
+        // Llenos del todo solo en el verano del amor: del 2 de mayo, cuando el arco pasa de 0.9, al entierro del 6 de octubre.
+        nuncaD("2027-01-01", "2029-05-01", "como una enredadera de colores"); nuncaD("2029-10-06", "2031-12-31", "como una enredadera de colores")
+        algunaD("2029-06-01", "2029-10-05", "como una enredadera de colores")
+    }
+
+    @Test fun enMontereySeNotaElEstadoYEnLaCalleNo() {
+        val manana = textosDeD(Parrafo.MANANA, "monterey"); val trabajo = textosDeD(Parrafo.TRABAJO, "monterey")
+        val pueblo = textosDeD(Parrafo.PUEBLO, "monterey"); val anochecer = textosDeD(Parrafo.ANOCHECER, "monterey")
+        listOf("2029-06-16", "2029-06-17", "2029-06-18").forEach { dia ->
+            val c = cuentoD(dia, 15.0)
+            assertEquals(dia, "monterey", c.ficha.estado)
+            // Mientras la temporada 3 no tenga sus especiales, todo lo que no sea del día sale de las variantes del festival.
+            assertTrue("$dia: la mañana es la de siempre", c.parrafos[Parrafo.MANANA.ordinal] in manana)
+            assertTrue("$dia: el pueblo es el de siempre", c.parrafos[Parrafo.PUEBLO.ordinal] in pueblo)
+            assertTrue("$dia: el anochecer es el de siempre", c.parrafos[Parrafo.ANOCHECER.ordinal] in anochecer)
+            listOf(5.0, 12.5, 15.0, 19.5, 22.0, 3.0).forEach { h -> assertTrue("$dia, $h h: el trabajo es el de siempre", cuentoD(dia, h).parrafos[Parrafo.TRABAJO.ordinal] in trabajo) }
+        }
+        // Y fuera del festival no sale ninguna.
+        val deEstado = piezaD.variantes.values.flatten().filter { it.estado == "monterey" }.map { Cuento.llenar(it.texto, mapOf("nombre" to david.nombre), piezaD.genero) }.toSet()
+        (normalesD("2029-05-01", "2029-06-15") + normalesD("2029-06-19", "2029-08-31")).forEach { d -> cuentoD(d, 15.0).parrafos.forEach { assertFalse("$d: Monterey en casa", it in deEstado) } }
+    }
+
+    @Test fun noDibujaEnNavidadNiEnAccionDeGraciasYLlegaElPrimerDia() {
+        (2027..2031).forEach { y -> listOf(5.0, 15.0, 22.0).forEach { h ->
+            assertTrue("$y-12-25, $h h", "Hoy no dibuja: es Navidad" in cuentoD("$y-12-25", h).parrafos[Parrafo.TRABAJO.ordinal])
+        } }
+        listOf("2027-11-25", "2028-11-24", "2029-11-23", "2030-11-28", "2031-11-27").forEach { d ->
+            assertTrue(d, "Hoy no dibuja: es el día de Acción de Gracias" in cuentoD(d, 15.0).parrafos[Parrafo.TRABAJO.ordinal])
+        }
+        // El primer día llega a la ciudad; el día del baile de Graham, la gente real sale de lejos y con su fuente.
+        val llega = cuentoD("2027-01-01", 15.0)
+        assertEquals("Llega a San Francisco en el autobús de Stockton, con una maleta y una carpeta de dibujos", llega.titulo)
+        assertTrue("Hoy no trabaja: busca dónde vivir" in llega.parrafos[Parrafo.TRABAJO.ordinal])
+        val graham = cuentoD("2027-12-10")
+        assertEquals(CertezaDia.HISTORICO, graham.notas.first().certeza)
+        assertEquals("https://en.wikipedia.org/wiki/Bill_Graham_(promoter)", graham.notas.first().fuente!!.second)
+        assertTrue("un tal Bill Graham" in graham.parrafos[Parrafo.GENTE.ordinal])
     }
 }

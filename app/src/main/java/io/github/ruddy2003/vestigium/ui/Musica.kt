@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -507,18 +508,34 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
         }
     }
-    TemaId.PSICODELIA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "EXP. " + t.nombre.uppercase(), "TOQUE PARA ACUSAR RECIBO",
-        comillas = "“" to "”", emblema = 88.dp, arriba = 52.dp, abajo = 70.dp) { e ->
+    // El cartel de la sala de baile: la burbuja del marco con su contorno que vibra (el color y, corrida, su segunda tinta),
+    // la franja de arcoíris del tintero partido arriba, las luces líquidas muy tenues en el fondo, una flor que vibra en cada
+    // esquina y, abajo, la banda de letras infladas que se derriten. El emblema arriba, como la imagen del cartel.
+    TemaId.PSICODELIA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre, "Toca y que suene el lado A",
+        comillas = "✿ " to " ✿", emblema = 124.dp, arriba = 66.dp, abajo = 74.dp) { e ->
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
-        val c = e.onSurface.copy(alpha = 0.55f)
-        drawPath(Path().apply { moveTo(0f, u * 18); lineTo(u * 10, 0f); lineTo(u * 110, 0f); lineTo(u * 120, u * 18) }, c, style = Stroke(u * 1.3f))
-        drawRect(c, Offset(0f, u * 18), Size(w, h - u * 18), style = Stroke(u * 1.3f))
-        for (i in 0 until 14) drawRect(c, Offset(w - u * 84 + i * u * 5, u * 26), Size(u * (if (i % 3 == 0) 2.4f else 1.2f), u * 14))
-        val centro = Offset(w - u * 62, h - u * 36)
-        rotate(-12f, centro) {
-            drawRect(e.primary.copy(alpha = 0.7f), Offset(centro.x - u * 46, centro.y - u * 17), Size(u * 92, u * 34), style = Stroke(u * 2.2f))
-            drawRect(e.primary.copy(alpha = 0.5f), Offset(centro.x - u * 41, centro.y - u * 12), Size(u * 82, u * 24), style = Stroke(u))
-            drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
+        val g = u * 34
+        fun marco(m: Float) = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(androidx.compose.ui.geometry.Rect(m, m, w - m, h - m), CornerRadius(maxOf(g - m, u)))) }
+        with(TrazosPsicodelia) { lucesLiquidas(Size(w, h), 0.3f, listOf(e.primary, e.tertiary, e.secondary), 0.22f) }
+        clipPath(marco(u * 2)) {
+            drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(TrazosPsicodelia.ARCOIRIS.map { it.copy(alpha = 0.8f) }, 0f, w), Offset.Zero, Size(w, u * 9))
+            // Las letras infladas de abajo: bloques blandos que llenan la banda y gotean hacia arriba del borde.
+            var x = u * 40; var k = 0
+            while (x < w - u * 40) {
+                val a = u * (16f + (k * 7) % 3 * 6f)
+                drawRoundRect(e.primary.copy(alpha = 0.5f), Offset(x, h - u * 28), Size(a, u * 16), CornerRadius(u * 7))
+                drawRoundRect(e.surface.copy(alpha = 0.6f), Offset(x + a * 0.38f, h - u * 24), Size(a * 0.24f, u * 7), CornerRadius(u * 3))
+                if (k % 2 == 0) { drawRect(e.primary.copy(alpha = 0.5f), Offset(x + a * 0.6f, h - u * 34), Size(u * 3, u * 7)); drawCircle(e.primary.copy(alpha = 0.5f), u * 2.6f, Offset(x + a * 0.6f + u * 1.5f, h - u * 34)) }
+                x += a + u * 3; k++
+            }
+        }
+        drawPath(Path().apply { addPath(marco(u * 2), Offset(u * 2, u * 1.6f)) }, e.secondary.copy(alpha = 0.6f), style = Stroke(u * 1.8f))
+        drawPath(marco(u * 2), e.primary.copy(alpha = 0.85f), style = Stroke(u * 2.2f))
+        drawPath(marco(u * 9), e.primary.copy(alpha = 0.3f), style = Stroke(u * 0.8f))
+        with(TrazosPsicodelia) {
+            listOf(Offset(u * 18, u * 20), Offset(w - u * 18, u * 20), Offset(u * 18, h - u * 18), Offset(w - u * 18, h - u * 18)).forEachIndexed { i, o ->
+                flor(o, u * 15, if (i % 2 == 0) e.primary else e.secondary, if (i % 2 == 0) e.secondary else e.primary, 6, 0.6f, i * 0.4f)
+            }
         }
     }
     // El cartel del taller recién impreso: el marco con dos esquinas muy redondas y dos casi rectas, el filete de dentro, dos

@@ -801,7 +801,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
         }
         VivoTema.TALLOS -> tallosVivo(t, false, e, fuerza)
         VivoTema.LAMPARAS -> tallosVivo(t, true, e, fuerza)
-        VivoTema.LUCES -> with(TrazosPsicodelia) { lucesSala(t, oscuro, fuerza * (if (oscuro) 0.6f else 0.5f)) }
+        VivoTema.LUCES -> with(TrazosPsicodelia) { lucesSala(t, oscuro, fuerza * (if (oscuro) 0.45f else 0.4f)) }
         VivoTema.CENIZA -> motas.take(24).forEach { m ->
             // Pavesas irregulares de papel quemado que caen dando tumbos; de noche, alguna conserva una brasa.
             val k = vueltas(m)

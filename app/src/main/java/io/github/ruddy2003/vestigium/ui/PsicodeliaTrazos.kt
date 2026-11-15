@@ -59,6 +59,8 @@ object TrazosPsicodelia {
 
     /** La tinta de arcoíris del tintero partido: del magenta al amarillo y al azul en una sola pasada. */
     val ARCOIRIS = listOf(MAGENTA, NARANJA, AMARILLO, VERDE, AZUL, VIOLETA)
+    /** El mismo arcoíris bajo la luz negra: del violeta al magenta, al naranja y al verde limón (sin pasar por el gris). */
+    val ARCOIRIS_NOCHE = listOf(FLUOR_VIOLETA, FLUOR_MAGENTA, FLUOR_NARANJA, LIMON)
 
     /** El complementario de cada color de la paleta de dibujo (para que la figura vibre). */
     fun complementario(c: Color): Color = when (c) {
@@ -92,9 +94,9 @@ object TrazosPsicodelia {
         return Color((r + m).coerceIn(0f, 1f), (g + m).coerceIn(0f, 1f), (b + m).coerceIn(0f, 1f), c.alpha)
     }
 
-    /** La tinta de arcoíris del tintero partido, de [desde] a [hasta], con la opacidad [alfa]. */
-    fun arcoiris(desde: Offset, hasta: Offset, alfa: Float = 1f): Brush =
-        Brush.linearGradient(ARCOIRIS.map { it.copy(alpha = alfa) }, desde, hasta)
+    /** La tinta de arcoíris del tintero partido, de [desde] a [hasta], con la opacidad [alfa]; con [noche], la de la luz negra. */
+    fun arcoiris(desde: Offset, hasta: Offset, alfa: Float = 1f, noche: Boolean = false): Brush =
+        Brush.linearGradient((if (noche) ARCOIRIS_NOCHE else ARCOIRIS).map { it.copy(alpha = alfa) }, desde, hasta)
 
     // ------------------------------------------------------------------------------------------------ figuras
 
@@ -126,9 +128,16 @@ object TrazosPsicodelia {
     /**
      * Los pétalos redondos de una margarita, juntos en un solo trazo: [n] pétalos de punta redonda que nacen cerca del
      * centro ([desde], en fracción de [r]) y se ensanchan hasta su punta, a [r]. [ancho] es el radio de la punta, en
-     * fracción de [r]; [giro], en radianes.
+     * fracción de [r]; [giro], en radianes. Con [unidos], un solo contorno (para trazarlo sin que se crucen por dentro).
      */
-    fun petalos(c: Offset, r: Float, n: Int = 6, giro: Float = 0f, ancho: Float = 0.34f, desde: Float = 0.12f): Path = Path().apply {
+    fun petalos(c: Offset, r: Float, n: Int = 6, giro: Float = 0f, ancho: Float = 0.34f, desde: Float = 0.12f, unidos: Boolean = false): Path {
+        if (unidos) return (0 until n).fold(Path()) { p, i ->
+            Path.combine(androidx.compose.ui.graphics.PathOperation.Union, p, petalos(c, r, 1, giro + 2f * PI.toFloat() * i / n, ancho, desde))
+        }
+        return petalosSueltos(c, r, n, giro, ancho, desde)
+    }
+
+    private fun petalosSueltos(c: Offset, r: Float, n: Int, giro: Float, ancho: Float, desde: Float): Path = Path().apply {
         val rp = r * ancho
         for (i in 0 until n) {
             val a = 2f * PI.toFloat() * i / n + giro
@@ -201,14 +210,14 @@ object TrazosPsicodelia {
         val dos = 2f * PI.toFloat()
         val colores = if (oscuro) listOf(LIMON, FLUOR_MAGENTA, FLUOR_VIOLETA, FLUOR_NARANJA, FLUOR_MAGENTA)
             else listOf(MAGENTA, NARANJA, VERDE, AZUL, AMARILLO)
-        val k = (if (oscuro) 0.62f else 0.4f) * fuerza
+        val k = (if (oscuro) 0.5f else 0.3f) * fuerza
         val modo = if (oscuro) BlendMode.Screen else BlendMode.Multiply
         // Cada mancha: dónde anda (en fracción del ancho y del alto), cuánto se aleja, su tamaño y su fase. Las vueltas de
         // cada una son enteras, así el ciclo cierra.
         val manchas = listOf(
-            floatArrayOf(0.18f, 0.2f, 0.16f, 0.12f, 0.62f, 0f), floatArrayOf(0.85f, 0.36f, 0.14f, 0.16f, 0.5f, 0.23f),
-            floatArrayOf(0.28f, 0.72f, 0.18f, 0.1f, 0.58f, 0.47f), floatArrayOf(0.78f, 0.86f, 0.12f, 0.12f, 0.46f, 0.71f),
-            floatArrayOf(0.52f, 0.5f, 0.22f, 0.2f, 0.34f, 0.9f),
+            floatArrayOf(0.14f, 0.16f, 0.12f, 0.1f, 0.48f, 0f), floatArrayOf(0.88f, 0.38f, 0.1f, 0.14f, 0.4f, 0.23f),
+            floatArrayOf(0.22f, 0.74f, 0.14f, 0.08f, 0.44f, 0.47f), floatArrayOf(0.8f, 0.9f, 0.1f, 0.08f, 0.38f, 0.71f),
+            floatArrayOf(0.55f, 0.52f, 0.2f, 0.18f, 0.26f, 0.9f),
         )
         manchas.forEachIndexed { i, f ->
             val a = (t + f[5]) * dos

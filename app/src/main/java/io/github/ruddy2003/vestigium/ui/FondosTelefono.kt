@@ -436,7 +436,7 @@ private fun DrawScope.marcoPsicodelia(e: androidx.compose.material3.ColorScheme,
         fun suave(c: Color, k: Float) = lerp(e.background, c, k)
         // El arco de arcoíris detrás del emblema.
         val centro = Offset(cx, size.height * 0.41f - 40 * u)
-        val tintas = if (claro) ARCOIRIS.take(5) else listOf(FLUOR_MAGENTA, FLUOR_NARANJA, LIMON, FLUOR_VIOLETA)
+        val tintas = if (claro) ARCOIRIS.take(5) else ARCOIRIS_NOCHE
         tintas.forEachIndexed { k, t ->
             val r = 106 * u + k * 7 * u
             drawArc(suave(t, if (claro) 0.42f else 0.5f), 196f, 148f, false, Offset(centro.x - r, centro.y - r), Size(2 * r, 2 * r), style = Stroke(5.4f * u, cap = StrokeCap.Round))

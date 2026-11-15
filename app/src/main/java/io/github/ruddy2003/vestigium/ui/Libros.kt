@@ -121,7 +121,7 @@ import kotlin.math.sqrt
 // =====================================================================
 
 /** En qué se escribe el diario en cada tema (lo usan las cartas para su papelería; el dibujo de cada objeto va por tema). */
-enum class Soporte { ROLLO, LIBRO, SOBRE, CARPETA, PANTALLA, DOSIER, CODICE, TABLILLAS, REVISTA }
+enum class Soporte { ROLLO, LIBRO, SOBRE, CARPETA, PANTALLA, DOSIER, CODICE, TABLILLAS, REVISTA, DISCO }
 
 fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.ROMANO -> Soporte.ROLLO
@@ -154,7 +154,7 @@ fun soporte(t: TemaId): Soporte = when (t) {
     TemaId.DECO -> Soporte.SOBRE
     TemaId.NAVIDAD -> Soporte.SOBRE
     TemaId.DISTOPIA -> Soporte.CARPETA
-    TemaId.PSICODELIA -> Soporte.CARPETA
+    TemaId.PSICODELIA -> Soporte.DISCO       // el disco de larga duración en su funda, con la funda interior de papel de periódico
     TemaId.NOUVEAU -> Soporte.REVISTA      // el tomo encuadernado de la revista ilustrada del taller
     TemaId.GALIA -> Soporte.TABLILLAS     // el haz de tablillas enceradas, atado con su correa (recurso: César no dice el material)
     TemaId.ARCONTES -> Soporte.CODICE      // el códice de papiro con tapa de cuero, solapa y lazo, como los de Nag Hammadi
@@ -212,7 +212,9 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.DECO -> Materia(c(0xFFF3EAD4), c(0xFFC9B48A), c(0xFFFBF6EA), c(0xFFB8952E), c(0xFF1F6B57), c(0xFFF6F0E1), c(0xFF16130E), extra = c(0xFFB5523B))
     TemaId.NAVIDAD -> Materia(c(0xFFB71C1C), c(0xFF7A1010), c(0xFFD84343), c(0xFFC9A227), c(0xFF1B5E20), c(0xFFFBF6EC), c(0xFF1E2A22), extra = c(0xFFFF5252), textoCuerpo = c(0xFFFBF6EC))
     TemaId.DISTOPIA -> Materia(c(0xFFD8C08A), c(0xFFA88F58), c(0xFFE8D4A4), c(0xFFC8102E), c(0xFF141414), c(0xFFF2EFE6), c(0xFF141414))
-    TemaId.PSICODELIA -> Materia(c(0xFFD8C08A), c(0xFFA88F58), c(0xFFE8D4A4), c(0xFFC8102E), c(0xFF141414), c(0xFFF2EFE6), c(0xFF141414))
+    // El disco en su funda: el magenta del cartel, su sombra y su brillo, el verde que vibra a su lado, el naranja de la etiqueta,
+    // el papel de periódico de la funda interior, la tinta, el negro del vinilo y la crema de las letras.
+    TemaId.PSICODELIA -> Materia(c(0xFFE0218A), c(0xFF8E1258), c(0xFFF06AB0), c(0xFF2FBF71), c(0xFFFF7A1A), c(0xFFEFE7D6), c(0xFF2A1C32), extra = c(0xFF17131A), textoCuerpo = c(0xFFFFF8EC))
     // El tomo de la revista ilustrada: tela verde salvia, el verde de hierro en sombra, el oro de las letras, el violeta del iris,
     // el papel crema, la tinta de la prensa y la malva de la cinta del registro.
     TemaId.NOUVEAU -> Materia(c(0xFF5E7A58), c(0xFF3D5A48), c(0xFF8FA67E), c(0xFFD9BE7A), c(0xFF6D4C82), c(0xFFEFE8D6), c(0xFF2A2530), extra = c(0xFFB48AB0), textoCuerpo = c(0xFFF7F2E6))
@@ -273,7 +275,8 @@ private fun nocheDe(t: TemaId): NocheTema = when (t) {
     TemaId.TEMPLARIO -> NocheTema(c(0xFF0F1117), c(0xFFF0A040), 0.62f, 0.8f, c(0xFFEEE7D8))
     // Apagón bajo el reflector.
     TemaId.DISTOPIA -> NocheTema(c(0xFF15171A), c(0xFFD8DEE4), 0.74f, 0.88f, c(0xFFDDE2E6))
-    TemaId.PSICODELIA -> NocheTema(c(0xFF15171A), c(0xFFD8DEE4), 0.74f, 0.88f, c(0xFFDDE2E6))
+    // El cuarto bajo la luz negra: el negro violeta y el violeta del tubo.
+    TemaId.PSICODELIA -> NocheTema(c(0xFF120A1C), c(0xFFAE91FF), 0.76f, 0.88f, c(0xFFF2EAF7))
     // La calle de París de noche, azul negro, y la luz cálida de la lámpara de vidrio de colores.
     TemaId.NOUVEAU -> NocheTema(c(0xFF121519), c(0xFFF5D488), 0.68f, 0.84f, c(0xFFECE5D6))
     // El robledal de noche, verde negro, y la luz de la hoguera de la casa grande.
@@ -360,7 +363,8 @@ fun materiaNoche(t: TemaId): Materia {
         TemaId.MEDIEVAL -> materiaTenida(m, n)
         TemaId.TEMPLARIO -> materiaTenida(m, n)
         TemaId.DISTOPIA -> materiaTenida(m, n)
-        TemaId.PSICODELIA -> materiaTenida(m, n)
+        // El disco bajo la luz negra: la funda casi negra y lo que brilla, el verde limón, el magenta y el violeta.
+        TemaId.PSICODELIA -> Materia(c(0xFF2A1638), c(0xFF14091E), c(0xFF3E2452), c(0xFFC9F04A), c(0xFFFF5CBE), c(0xFF2A2035), c(0xFFF2EAF7), extra = c(0xFFAE91FF), textoCuerpo = c(0xFFF2EAF7))
         // El tomo a la luz de la lámpara: la tela casi negra, el oro encendido, el violeta de la lámpara y el verde de los cafés.
         TemaId.NOUVEAU -> Materia(c(0xFF1E2A24), c(0xFF101612), c(0xFF2E3C34), c(0xFFF5D488), c(0xFFBFA6DE), c(0xFF23282C), c(0xFFECE5D6), extra = c(0xFF8CCBA4), textoCuerpo = c(0xFFECE5D6))
         // El haz a la luz del fuego: el roble casi negro, la hoguera por acento y el roble bajo la luna.
@@ -416,7 +420,8 @@ fun paginaNoche(t: TemaId): Pagina {
         TemaId.MEDIEVAL -> paginaTenida(p, n)
         TemaId.TEMPLARIO -> paginaTenida(p, n)
         TemaId.DISTOPIA -> paginaTenida(p, n)
-        TemaId.PSICODELIA -> paginaTenida(p, n)
+        // La funda interior bajo la luz negra: negro violeta, la tinta clara, el verde limón y el magenta que brillan.
+        TemaId.PSICODELIA -> Pagina(p.fondo, c(0xFF1A1126), c(0xFFF2EAF7), c(0xFFB4A7C4), c(0xFFC9F04A), c(0xFFFF5CBE), p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
         // El papel de cartel bajo la lámpara: azul de noche, la tinta clara, el oro de la luz eléctrica y el violeta de la lámpara.
         TemaId.NOUVEAU -> Pagina(p.fondo, c(0xFF1E2230), c(0xFFECE5D6), c(0xFFADA79A), c(0xFFE8C46E), c(0xFFBFA6DE), p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
         // La cera a la luz de la hoguera: verde negro, la tinta clara, el fuego por acento y el roble bajo la luna.
@@ -462,7 +467,7 @@ fun rotuloSueno(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Visión de la noche"
     TemaId.TEMPLARIO -> "Lo soñado en la vigilia"
     TemaId.DISTOPIA -> "INFORME DE ACTIVIDAD ONÍRICA"
-    TemaId.PSICODELIA -> "INFORME DE ACTIVIDAD ONÍRICA"
+    TemaId.PSICODELIA -> "Lo que soñé con la radio de noche"
     TemaId.NOUVEAU -> "Rêverie sous la lampe"
     TemaId.GALIA -> "Lo que trajo la noche"
     TemaId.ARCONTES -> "חלום · lo que vi de noche"
@@ -506,7 +511,7 @@ fun colofonSueno(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Y en esto desperté."
     TemaId.TEMPLARIO -> "Y tocaron a maitines."
     TemaId.DISTOPIA -> "FIN DEL INFORME NOCTURNO"
-    TemaId.PSICODELIA -> "FIN DEL INFORME NOCTURNO"
+    TemaId.PSICODELIA -> "— sube la aguja y entra la niebla: amanece —"
     TemaId.NOUVEAU -> "— pasa el primer metro: amanece —"
     TemaId.GALIA -> "— y la hoguera se hizo brasa: amaneció —"
     TemaId.ARCONTES -> "ⲁⲓⲛⲉϩⲥⲉ · y desperté; la lámpara seguía encendida"
@@ -631,7 +636,15 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
             TemaId.MEDIEVAL -> asterisco(o, r * 1.7f, col, 6, 0.36f * u)
             TemaId.TEMPLARIO -> drawPath(cruzPatada(o, r * 1.8f), col)
             TemaId.DISTOPIA -> drawCircle(col.copy(alpha = col.alpha * 0.45f), r * 0.8f, o)
-            TemaId.PSICODELIA -> drawCircle(col.copy(alpha = col.alpha * 0.45f), r * 0.8f, o)
+            // Sobre la sala de luz negra, puntitos de tinta fluorescente y, de tanto en tanto, una florecita que brilla.
+            TemaId.PSICODELIA -> {
+                val tinte = listOf(TrazosPsicodelia.LIMON, TrazosPsicodelia.FLUOR_MAGENTA, TrazosPsicodelia.FLUOR_VIOLETA, TrazosPsicodelia.FLUOR_NARANJA)[i % 4].copy(alpha = col.alpha)
+                if (i % 6 == 0) {
+                    drawCircle(tinte.copy(alpha = col.alpha * 0.22f), r * 3f, o)
+                    for (k in 0 until 5) drawCircle(tinte, r * 0.7f, o + polarLibro(r * 1.25f, 2 * PI * k / 5))
+                    drawCircle(col, r * 0.5f, o)
+                } else drawCircle(tinte.copy(alpha = col.alpha * 0.7f), r * 0.7f, o)
+            }
             // Sobre los tejados, estrellas finas y, de tanto en tanto, una luz eléctrica lejana: una florecita de cuatro pétalos.
             TemaId.NOUVEAU -> if (i % 8 == 0) {
                 val luz = TrazosNouveau.LUZ.copy(alpha = col.alpha)
@@ -770,9 +783,24 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
             drawCircle(luna.copy(alpha = 0.75f), r, ce)
             if (!sola) drawPath(Path().apply { moveTo(ce.x - r * 2.2f, ce.y + r * 2.6f); lineTo(ce.x - r * 0.2f, ce.y - r * 1.4f); lineTo(ce.x + r * 0.8f, ce.y - r * 1.2f); close() }, luna.copy(alpha = 0.16f))
         }
+        // La luna llena sobre los tejados, con su halo de anillos ondulados como en un cartel; al lado, el frontón de una casa
+        // victoriana con la ventana de luz negra de un departamento.
         TemaId.PSICODELIA -> {
-            drawCircle(luna.copy(alpha = 0.75f), r, ce)
-            if (!sola) drawPath(Path().apply { moveTo(ce.x - r * 2.2f, ce.y + r * 2.6f); lineTo(ce.x - r * 0.2f, ce.y - r * 1.4f); lineTo(ce.x + r * 0.8f, ce.y - r * 1.2f); close() }, luna.copy(alpha = 0.16f))
+            val halos = listOf(TrazosPsicodelia.FLUOR_VIOLETA, TrazosPsicodelia.FLUOR_MAGENTA, TrazosPsicodelia.LIMON)
+            for (k in 3 downTo 1) drawPath(TrazosPsicodelia.gota(ce, r * (0.95f + 0.3f * k), 0.2f * k, 0.05f, 7), halos[k - 1].copy(alpha = 0.3f), style = Stroke(0.5f * u))
+            drawCircle(luna.copy(alpha = 0.16f), r * 1.25f, ce)
+            drawCircle(luna, r * 0.85f, ce)
+            if (!sola) {
+                val b = ce + Offset(-r * 3.6f, r * 2.7f)
+                val casa = lerp(n.cielo, Color.Black, 0.35f)
+                drawPath(Path().apply {
+                    moveTo(b.x - r * 1.1f, b.y); lineTo(b.x - r * 1.1f, b.y - r * 1.2f); lineTo(b.x, b.y - r * 2.1f)
+                    lineTo(b.x + r * 1.1f, b.y - r * 1.2f); lineTo(b.x + r * 1.1f, b.y); close()
+                }, casa)
+                drawCircle(TrazosPsicodelia.FLUOR_VIOLETA.copy(alpha = 0.22f), r * 0.8f, Offset(b.x, b.y - r * 0.75f))
+                drawRect(TrazosPsicodelia.FLUOR_VIOLETA.copy(alpha = 0.9f), Offset(b.x - r * 0.28f, b.y - r * 1.05f), Size(r * 0.56f, r * 0.6f))
+                drawLine(casa, Offset(b.x, b.y - r * 1.05f), Offset(b.x, b.y - r * 0.45f), 0.5f * u)
+            }
         }
         // La luna creciente sobre París y, al lado, un candelabro de fundición de una entrada de metro (desde 1901), con su tallo
         // que se curva y su farol encendido.
@@ -1044,7 +1072,7 @@ fun textoGuardar(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "rubricar"
     TemaId.TEMPLARIO -> "inscribir en el rol"
     TemaId.DISTOPIA -> "ARCHIVAR"
-    TemaId.PSICODELIA -> "ARCHIVAR"
+    TemaId.PSICODELIA -> "Prensar el disco"
     TemaId.NOUVEAU -> "Pasar por la prensa"
     TemaId.GALIA -> "Rayar en la cera"
     TemaId.ARCONTES -> "Copiar al códice"
@@ -1088,7 +1116,7 @@ fun colofon(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Aquí se acaba el folio."
     TemaId.TEMPLARIO -> "Non nobis, Domine: aquí acaba la jornada."
     TemaId.DISTOPIA -> "FIN DE LA DECLARACIÓN"
-    TemaId.PSICODELIA -> "FIN DE LA DECLARACIÓN"
+    TemaId.PSICODELIA -> "— fin de la cara: dale la vuelta al disco —"
     TemaId.NOUVEAU -> "— fin de la livraison —"
     TemaId.GALIA -> "Lo que no se escribe, se recuerda."
     // Como el título al final de los tratados de los códices (recurso): «el libro del día».
@@ -1133,7 +1161,7 @@ private fun pistaDia(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "toca para abrir el códice"
     TemaId.TEMPLARIO -> "toca para abrir la regla"
     TemaId.DISTOPIA -> "TOCA PARA ABRIR EL EXPEDIENTE"
-    TemaId.PSICODELIA -> "TOCA PARA ABRIR EL EXPEDIENTE"
+    TemaId.PSICODELIA -> "toca para sacar el disco de su funda"
     TemaId.NOUVEAU -> "toca para abrir el tomo del día"
     TemaId.GALIA -> "toca para soltar la fíbula y abrir la tablilla"
     TemaId.ARCONTES -> "toca para soltar el lazo y abrir el códice"
@@ -1177,7 +1205,7 @@ private fun pistaNoche(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "toca para asentar la visión de la noche"
     TemaId.TEMPLARIO -> "toca para inscribir lo soñado en la vigilia"
     TemaId.DISTOPIA -> "TOCA PARA DECLARAR LO SOÑADO"
-    TemaId.PSICODELIA -> "TOCA PARA DECLARAR LO SOÑADO"
+    TemaId.PSICODELIA -> "toca para escribir lo que soñaste con la radio de noche"
     TemaId.NOUVEAU -> "toca para escribir lo que soñaste bajo la lámpara"
     TemaId.GALIA -> "toca para rayar en la cera lo que trajo la noche"
     TemaId.ARCONTES -> "toca para escribir lo que viste de noche"
@@ -1221,7 +1249,7 @@ private fun textoVacio(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Folio en blanco: nada se asentó este día."
     TemaId.TEMPLARIO -> "Guardia sin parte: nada se inscribió esta jornada."
     TemaId.DISTOPIA -> "SIN DECLARACIÓN REGISTRADA PARA ESTA JORNADA."
-    TemaId.PSICODELIA -> "SIN DECLARACIÓN REGISTRADA PARA ESTA JORNADA."
+    TemaId.PSICODELIA -> "Funda vacía: ese día no se grabó nada."
     TemaId.NOUVEAU -> "Página en blanco: ese día no pasó nada por la prensa."
     TemaId.GALIA -> "Cera lisa: ese día no se rayó nada en la tablilla."
     TemaId.ARCONTES -> "Hoja en blanco: ese día no se copió nada en el códice."
@@ -1265,7 +1293,7 @@ private fun textoSinSueno(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Ninguna visión se asentó esa noche."
     TemaId.TEMPLARIO -> "Ningún sueño se inscribió en esa vigilia."
     TemaId.DISTOPIA -> "SIN ACTIVIDAD ONÍRICA DECLARADA."
-    TemaId.PSICODELIA -> "SIN ACTIVIDAD ONÍRICA DECLARADA."
+    TemaId.PSICODELIA -> "Esa noche no quedó ningún sueño en la funda; solo sonó la radio."
     TemaId.NOUVEAU -> "Esa noche no quedó ningún sueño en el papel; solo la lámpara encendida."
     TemaId.GALIA -> "Esa noche no dejó nada en la cera; solo ardió la hoguera."
     TemaId.ARCONTES -> "Esa noche no quedó ningún sueño escrito; la lámpara ardió sola."
@@ -1309,7 +1337,7 @@ private fun mejorPeor(t: TemaId): Pair<String, String> = when (t) {
     TemaId.MEDIEVAL -> "Lo bueno del día — " to "Lo amargo del día — "
     TemaId.TEMPLARIO -> "Lo ganado en la jornada — " to "Lo perdido en la jornada — "
     TemaId.DISTOPIA -> "MÉRITO — " to "FALTA — "
-    TemaId.PSICODELIA -> "MÉRITO — " to "FALTA — "
+    TemaId.PSICODELIA -> "Lo que sonó bien — " to "Lo que desafinó — "
     TemaId.NOUVEAU -> "Lo que florece — " to "Lo que se marchita — "
     TemaId.GALIA -> "Para el canto del bardo — " to "Para el reproche del bardo — "
     TemaId.ARCONTES -> "Lo que vino de la luz — " to "Lo que vino de abajo — "
@@ -1353,7 +1381,7 @@ private fun pistaEscribir(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Asiéntese aquí lo acontecido en este día…"
     TemaId.TEMPLARIO -> "Inscribe, hermano, lo que pasó en esta guardia…"
     TemaId.DISTOPIA -> "DECLARE LAS ACTIVIDADES DE LA JORNADA."
-    TemaId.PSICODELIA -> "DECLARE LAS ACTIVIDADES DE LA JORNADA."
+    TemaId.PSICODELIA -> "¿Qué pasó hoy en la calle y en el departamento? Escríbelo…"
     TemaId.NOUVEAU -> "¿Qué pasó hoy en el taller y en la calle? Escríbelo…"
     TemaId.GALIA -> "¿Qué pasó hoy en el oppidum? Ráyalo en la cera…"
     TemaId.ARCONTES -> "Escribe lo que viste hoy, y lo que hubo detrás…"
@@ -1397,7 +1425,7 @@ private fun pistaSonar(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Asiéntese la visión de la noche…"
     TemaId.TEMPLARIO -> "Inscribe lo que soñaste entre vigilia y vigilia…"
     TemaId.DISTOPIA -> "DECLARE LA ACTIVIDAD ONÍRICA."
-    TemaId.PSICODELIA -> "DECLARE LA ACTIVIDAD ONÍRICA."
+    TemaId.PSICODELIA -> "¿Qué soñaste? Escríbelo antes de que se apague la radio."
     TemaId.NOUVEAU -> "¿Qué soñaste? Escríbelo antes de que se apague la lámpara."
     TemaId.GALIA -> "¿Qué trajo la noche? Ráyalo antes de que se apague la hoguera."
     TemaId.ARCONTES -> "¿Qué viste de noche? Escríbelo a la luz de la lámpara."
@@ -1574,7 +1602,9 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.NAVIDAD -> Pagina(R.drawable.papel_navidad, c(0xFFFBF6EC), c(0xFF1E2A22), c(0xFF5E6B62), c(0xFFB71C1C), c(0xFF1B5E20), LetraExtra.italianno, 27f, 32f, false, Rayas.NADA, LetraExtra.cinzelDeco)
     // La declaración, tecleada.
     TemaId.DISTOPIA -> Pagina(R.drawable.papel_distopia, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.terminal, 15.5f, 24f, false, Rayas.RENGLONES)
-    TemaId.PSICODELIA -> Pagina(R.drawable.papel_psicodelia, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.terminal, 15.5f, 24f, false, Rayas.RENGLONES)
+    // La funda interior, en papel de periódico con la trama de arcoíris arriba: se lee en Fredoka, con la tinta violeta negra,
+    // el magenta y el verde de los carteles, y la capitular en las letras infladas de los títulos.
+    TemaId.PSICODELIA -> Pagina(R.drawable.papel_psicodelia, c(0xFFEFE7D6), c(0xFF2A1C32), c(0xFF61546A), c(0xFFB0246A), c(0xFF2E7344), LetraExtra.fredoka, 16.5f, 26f, false, Rayas.NADA, LetraExtra.modak)
     // El papel de cartel crema con su cenefa de tallos, la tinta de la prensa, el verde salvia y el violeta del iris; se lee en
     // Brygada 1918 y la capitular va en la letra del cartel.
     TemaId.NOUVEAU -> Pagina(R.drawable.papel_nouveau, c(0xFFEFE8D6), c(0xFF2A2530), c(0xFF5E5662), c(0xFF4B6A4E), c(0xFF6D4C82), LetraExtra.brygada, 17f, 27f, false, Rayas.NADA, LetraExtra.federant)
@@ -1675,7 +1705,7 @@ private fun rotuloPagina(t: TemaId, fecha: String): String {
         TemaId.MEDIEVAL -> "Aquí comiença el folio ${Temas.copista(nDia)}"
         TemaId.TEMPLARIO -> "Parte de la jornada ${Temas.puntos(nDia)}"
         TemaId.DISTOPIA -> "EXPEDIENTE Nº %04d · DECLARACIÓN DIARIA".format((fecha.hashCode() and 0x7fffffff) % 10000)
-        TemaId.PSICODELIA -> "EXPEDIENTE Nº %04d · DECLARACIÓN DIARIA".format((fecha.hashCode() and 0x7fffffff) % 10000)
+        TemaId.PSICODELIA -> "Funda interior · notas del disco " + Psicodelia.numero(nDia)
         TemaId.NOUVEAU -> "L'Atelier · revue illustrée"
         // Lo de todos los días sí se escribía, con letras griegas; lo sagrado, no (César 6.14).
         TemaId.GALIA -> "Lo de todos los días, rayado en la cera"

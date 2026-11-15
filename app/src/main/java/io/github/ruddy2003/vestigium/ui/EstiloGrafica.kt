@@ -179,6 +179,8 @@ enum class FormaPunto {
     TORQUES,
     /** Art nouveau: el capullo de iris, cerrado y en punta, con sus dos sépalos abajo. */
     CAPULLO,
+    /** Psicodelia: la margarita de seis pétalos redondos, con su botón calado. */
+    MARGARITA,
 }
 
 /** Lo que acompaña al trazo de una serie. */
@@ -262,8 +264,11 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Expediente: el ojo, trazo grueso, renglones de registro en bandas, eje duro con marcas y barras rectas.
     TemaId.DISTOPIA -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
         Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
-    TemaId.PSICODELIA -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
-        Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
+    // Psicodelia: cada dato, una margarita; la serie, un trazo redondo y grueso con su copia corrida, como dos tintas de
+    // cartel que no casan; la meta, en burbujas; la rejilla, ondas blandas; las barras, de puntas redondas, como letras de
+    // burbuja; las cifras, en Fredoka.
+    TemaId.PSICODELIA -> EstiloGrafica(FormaPunto.MARGARITA, 2.4f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.SOMBRA, listOf(0.1f, 3.4f),
+        Rejilla.ONDAS, 0.45f, Eje.LINEA, FormaBarra.REDONDA, R.font.fredoka_semibold, FontWeight.SemiBold, "tnum", 0.02f, 1.04f)
     // Art nouveau: cada dato, un capullo de iris; la serie, un trazo de pluma de cartel, redondo y con su segundo hilo
     // corrido; la meta, en raya larga y punto, como un tallo dibujado a lápiz; la rejilla en filetes finos; el eje rematado
     // en florón; las barras, arcos de herradura como los de las entradas de metro; las cifras, en la letra de los rótulos.
@@ -591,6 +596,11 @@ fun DrawScope.puntoGrafica(e: EstiloGrafica, centro: Offset, radio: Float, color
                 moveTo(c.x, c.y + r * 0.95f); quadraticTo(c.x + s * r * 0.95f, c.y + r * 0.65f, c.x + s * r * 0.85f, c.y - r * 0.15f)
                 quadraticTo(c.x + s * r * 0.4f, c.y + r * 0.4f, c.x, c.y + r * 0.95f); close()
             }, color)
+        }
+        // La margarita: seis pétalos redondos y el botón claro (hueca, el contorno de los pétalos y el botón lleno).
+        FormaPunto.MARGARITA -> {
+            figura(TrazosPsicodelia.petalos(c, r * 1.3f, 6, -PI.toFloat() / 2, 0.34f, 0.14f))
+            if (!hueco) drawCircle(androidx.compose.ui.graphics.lerp(color, Color.White, 0.5f), r * 0.34f, c) else drawCircle(color, r * 0.28f, c)
         }
         // El torques: el aro abierto por abajo, con un disco en cada punta.
         FormaPunto.TORQUES -> {

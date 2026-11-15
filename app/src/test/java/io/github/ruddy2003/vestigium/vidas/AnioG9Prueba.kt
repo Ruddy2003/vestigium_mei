@@ -15,8 +15,9 @@ import java.time.LocalDate
 /**
  * Los calendarios del grupo 9, los de los temas del lote 10: el de Tadeo, el agente de la red de Frente exterior, que es
  * ficción; el de Eleazar, el iniciado de Arcontes, una persona inventada en la Galilea real del 28 al 32, y el de
- * Segomaros, el aprendiz de los druidas de Galia, una persona inventada en la Galia real del 54 al 50 a. C., y el de
- * Marguerite, la aprendiz de litografía de Art nouveau, una persona inventada en el París real de 1898 a 1902. Las pruebas
+ * Segomaros, el aprendiz de los druidas de Galia, una persona inventada en la Galia real del 54 al 50 a. C.; el de
+ * Marguerite, la aprendiz de litografía de Art nouveau, una persona inventada en el París real de 1898 a 1902, y el de
+ * David, el dibujante de carteles de Psicodelia, una persona inventada en el San Francisco real de 1965 a 1969. Las pruebas
  * generales (forma, certeza, continuidad) están en [AnioPilotoPrueba] y corren solas sobre todo lo registrado en
  * [Calendarios]; aquí va lo propio de cada historia y lo que su cuadro va a leer.
  */
@@ -37,7 +38,7 @@ class AnioG9Prueba {
         generateSequence(LocalDate.of(anio, 1, 1)) { it.plusDays(1) }.takeWhile { it.year == anio }.count { ficha(it.toString()).estado == clave }
 
     @Test fun estaTadeoConSuTemaYEsFiccion() {
-        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida", "litografa"), AnioG9.TODOS.map { it.vida })
+        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida", "litografa", "cartelista"), AnioG9.TODOS.map { it.vida })
         assertTrue("No está en el registro", Calendarios.de(c.vida) === c)
         val q = OtrasVidas.porId(c.vida)!!
         assertEquals("frente", q.tema); assertEquals("tema", q.dibujo); assertEquals("Tadeo", q.nombre); assertEquals(32, q.edad)
@@ -311,7 +312,7 @@ class AnioG9Prueba {
         generateSequence(LocalDate.of(anio, 1, 1)) { it.plusDays(1) }.takeWhile { it.year == anio }.count { fichaS(it.toString()).estado == clave }
 
     @Test fun estaSegomarosConSuTemaYEsUnaPersonaInventada() {
-        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida", "litografa"), AnioG9.TODOS.map { it.vida })
+        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida", "litografa", "cartelista"), AnioG9.TODOS.map { it.vida })
         assertTrue("No está en el registro", Calendarios.de(apr.vida) === apr)
         val q = segomaros
         assertEquals("galia", q.tema); assertEquals("tema", q.dibujo); assertEquals("Segomaros", q.nombre); assertEquals(19, q.edad); assertEquals(-54, q.anio)
@@ -450,7 +451,7 @@ class AnioG9Prueba {
         generateSequence(LocalDate.of(anio, 1, 1)) { it.plusDays(1) }.takeWhile { it.year == anio }.count { fichaM(it.toString()).estado == clave }
 
     @Test fun estaMargueriteConSuTemaYEsUnaPersonaInventada() {
-        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida", "litografa"), AnioG9.TODOS.map { it.vida })
+        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida", "litografa", "cartelista"), AnioG9.TODOS.map { it.vida })
         assertTrue("No está en el registro", Calendarios.de(lit.vida) === lit)
         val q = marguerite
         assertEquals("nouveau", q.tema); assertEquals("tema", q.dibujo); assertEquals("Marguerite", q.nombre); assertEquals("Aprendiz de un taller de litografía", q.rol)
@@ -585,4 +586,210 @@ class AnioG9Prueba {
         // La visita a Auteuil (el invernadero del cuadro) vuelve cada año.
         assertEquals(5, lit.temporadas.count { t -> t.dias.any { it.id == "auteuil" } })
     }
+
+    // ================================================================= David, el dibujante de carteles de Psicodelia
+
+    private val car = AnioG9.CARTELISTA
+    private val david get() = OtrasVidas.porId(car.vida)!!
+    private fun fichaD(dia: String) = FichaDelDia.de(dia, david, car)
+    private fun fechasD(id: String) = car.temporadas.map { t -> t.dias.firstOrNull { it.id == id }?.fecha }
+    private fun diaD(id: String) = car.temporadas.flatMap { it.dias }.first { it.id == id }
+    private fun arcoD(dia: String, id: String) = fichaD(dia).arcos.getValue(id)
+    private fun diasEnD(clave: String, anio: Int) =
+        generateSequence(LocalDate.of(anio, 1, 1)) { it.plusDays(1) }.takeWhile { it.year == anio }.count { fichaD(it.toString()).estado == clave }
+    /** Todo lo que el calendario y «Su vida» dicen con palabras (sin los enlaces). */
+    private val textosD get() = car.temporadas.flatMap { t -> listOf(t.cuando, t.resumen) + t.dias.flatMap { listOfNotNull(it.titulo, it.fuente?.first) } } +
+        david.historia + listOf(david.nombre, david.rol, david.lugar, david.cuando, david.inspiracion) + david.dia.map { it.texto } + david.datos.values.map { it.nota }
+
+    @Test fun estaDavidConSuTemaYEsUnaPersonaInventada() {
+        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida", "litografa", "cartelista"), AnioG9.TODOS.map { it.vida })
+        assertTrue("No está en el registro", Calendarios.de(car.vida) === car)
+        val q = david
+        assertEquals("psicodelia", q.tema); assertEquals("tema", q.dibujo); assertEquals("Dibujante de carteles de conciertos", q.rol)
+        // Su nombre es uno de los de la ficha (PLAN_TEMAS, 10g; corrección 19) y no es el de nadie de la escena.
+        assertTrue(q.nombre in setOf("David", "Richard", "Thomas", "Ronald", "Michael"))
+        assertTrue(q.nombre !in setOf("Wes", "Rick", "Stanley", "Alton", "Victor", "Bonnie", "Bill", "Chet", "Larry", "Tom", "Allen"))
+        assertTrue(q.historia[0].startsWith("David Hale"))
+        // La ficha dice «24 años en 1967»: la temporada 1 es el 1965, y tiene 22.
+        assertEquals(22, q.edad); assertEquals(1965, q.anio)
+        // No es ficción: es una persona inventada en un mundo real (PLAN_TEMAS, 10a), con sus números reconstruidos.
+        assertFalse(q.ficticia)
+        assertEquals("Persona inventada. Inspirado en los dibujantes de carteles de las salas de baile de San Francisco en 1966 y 1967; las cifras son reconstrucciones.", q.inspiracion)
+        assertEquals(OtrasVidas.MEDIDAS.map { it.id }.toSet(), q.datos.keys)
+        assertTrue(q.datos.values.all { it.c == OtrasVidas.Certeza.RECONSTRUIDO })
+        assertEquals("No bebe: la regla del tema", 0.0, q.datos.getValue("alcohol").v, 0.0)
+        assertEquals(3, q.historia.size); assertTrue(q.fuentes.isNotEmpty() && q.fuentes.all { it.second.startsWith("https://en.wikipedia.org/wiki/") })
+        // Su agenda es la de la ficha del tema (PLAN_TEMAS, 10g), y cubre las 24 horas.
+        val f = fichaD("2027-04-04")
+        listOf(5.0 to OtrasVidas.Hacer.DORMIR, 12.5 to OtrasVidas.Hacer.COMER, 15.0 to OtrasVidas.Hacer.TRABAJO, 18.5 to OtrasVidas.Hacer.COMER, 19.5 to OtrasVidas.Hacer.CAMINO,
+            22.0 to OtrasVidas.Hacer.GENTE, 1.0 to OtrasVidas.Hacer.GENTE, 3.0 to OtrasVidas.Hacer.LIBRE).forEach { (h, que) -> assertEquals("$h h", que, f.tramo(h)!!.que) }
+        assertEquals(24.0, q.dia.sumOf { (if (it.hasta > it.desde) it.hasta else it.hasta + 24) - it.desde }, 1e-9)
+        assertEquals("dibujar el cartel de la semana", f.tramo(15.0)!!.texto)
+        assertEquals("en la cocina del departamento compartido", f.tramo(18.5)!!.texto)
+        assertEquals("música en el departamento", f.tramo(3.0)!!.texto)
+        // Los bailes son de jueves a sábado, y el día de la agenda es uno de esos (corrección 17): lo dicen la agenda y la historia.
+        assertTrue(f.tramo(22.0)!!.texto.contains("de jueves a sábado")); assertTrue(q.historia[1].contains("de jueves a sábado"))
+        // Las salas y la radio, por su calle o su frecuencia (corrección 6).
+        assertTrue(f.tramo(22.0)!!.texto.contains("la sala de la calle Sutter") && f.tramo(22.0)!!.texto.contains("el auditorio de Geary"))
+        // Tiene época (1965, más o menos treinta) y avanza un año con cada temporada: de 1965 a 1969.
+        assertEquals(1935..1995, Epocas.de(q))
+        assertEquals((1965..1969).map { "$it" }, car.temporadas.map { it.cuando })
+        assertEquals(1965, fichaD("2027-03-03").anioHistorico); assertEquals(1967, fichaD("2029-03-03").anioHistorico); assertEquals(1969, fichaD("2031-03-03").anioHistorico)
+        assertEquals(24, fichaD("2029-03-03").edad); assertEquals(26, fichaD("2031-03-03").edad)
+        // Su lugar, para «Hoy en la historia»: su ciudad y su estado, no todo el país.
+        assertEquals(setOf("Q62", "Q99", "Q1027700", "Q635559", "Q932701"), LUGARES.getValue("cartelista").wikidata)
+        assertFalse("Q30" in LUGARES.getValue("cartelista").wikidata)
+    }
+
+    @Test fun nadaDeDrogasEnSuVidaNiEnSuCalendario() {
+        // La regla del tema, la más importante (PLAN_TEMAS, 10g; `fuentes_psicodelia.md`, sección 9): ni de lejos ni en jerga.
+        textosD.forEach { s -> JERGA_DE_DROGAS.forEach { r -> assertFalse("«${r.find(s)?.value}» en «${s.take(70)}…»", r.containsMatchIn(s)) } }
+        // Lo de la sección 9 no está en el calendario: ni la primera tienda de Haight, ni la clínica gratuita (7 de junio de 1967).
+        assertTrue(car.temporadas[2].dias.none { it.fecha == "06-07" }); assertTrue(car.temporadas[1].dias.none { it.fecha == "01-03" })
+        // Ni marcas de las salas, la radio o el festival (corrección 6), ni el nombre de las casas, que es de 1978 (corrección 1).
+        textosD.forEach { s -> MARCAS_DE_PSICODELIA.forEach { r -> assertFalse("«${r.find(s)?.value}» en «${s.take(70)}…»", r.containsMatchIn(s)) } }
+        // Del 6 de octubre de 1967, solo el entierro de mentira.
+        assertEquals("En Buena Vista Park, el entierro de mentira del hippie, con un ataúd en hombros", diaD("entierro_hippie").titulo)
+        // Del 14 de enero, solo los poetas, las bandas y la gente en el pasto.
+        assertEquals("En los Polo Fields del parque, miles de personas en el pasto oyen a poetas y bandas", diaD("encuentro_parque").titulo)
+    }
+
+    @Test fun unosVeinteDiasPorTemporadaYLaHistoriaAvanzaHastaElVeranoDelAmor() {
+        assertEquals(listOf("barrio", "salas", "verano", "despues", "cambio"), car.temporadas.map { it.mundo })
+        car.temporadas.forEachIndexed { i, t ->
+            assertTrue("Temporada ${i + 1}: ${t.dias.size} días", t.dias.size in 18..23)
+            assertTrue("Temporada ${i + 1}: pocos días con fuente", t.dias.count { it.fuente != null } >= 5)
+            assertTrue("Temporada ${i + 1}: pocos sucesos de su vida", t.dias.count { it.tipo == TipoDia.SUCESO } >= 6)
+        }
+        // Llega (1), las salas y su primer cartel (2), el verano del amor (3), el año de después (4) y el barrio que cambia (5).
+        assertEquals(listOf("01-01", null, null, null, null), fechasD("llega"))
+        assertEquals(listOf("12-10", null, null, null, null), fechasD("baile_geary"))
+        assertEquals(listOf(null, "05-07", null, null, null), fechasD("primer_cartel"))
+        assertEquals(listOf(null, "09-02", null, null, null), fechasD("un_numero"))
+        assertEquals(listOf(null, "09-20", null, null, null), fechasD("periodico"))
+        assertEquals(listOf(null, "09-23", null, null, null), fechasD("sala_grande"))
+        assertEquals(listOf(null, "12-17", null, null, null), fechasD("entierro_dinero"))
+        assertEquals(listOf(null, null, "01-14", null, null), fechasD("encuentro_parque"))
+        assertEquals(listOf(null, null, "01-29", null, null), fechasD("baile_krishna"))
+        assertEquals(listOf(null, null, "02-12", null, null), fechasD("fm_noche"))
+        assertEquals(listOf(null, null, "04-15", null, null), fechasD("marcha"))
+        assertEquals(listOf(null, null, "06-10", null, null), fechasD("tamalpais"))
+        assertEquals(listOf(null, null, "06-16", null, null), fechasD("monterey"))
+        assertEquals(listOf(null, null, "07-07", null, null), fechasD("portada_time"))
+        assertEquals(listOf(null, null, "08-06", null, null), fechasD("fm_todo_el_dia"))
+        assertEquals(listOf(null, null, "09-01", null, null), fechasD("life"))
+        assertEquals(listOf(null, null, "10-06", null, null), fechasD("entierro_hippie"))
+        assertEquals(listOf(null, null, null, "03-18", null), fechasD("huelga_fm"))
+        assertEquals(listOf(null, null, null, null, "03-15"), fechasD("pasaje"))
+        // La comida gratis del Panhandle, en el verano del amor; los Diggers se acaban en el 68.
+        assertEquals(listOf(null, null, "05-13", null, null), fechasD("comida_panhandle"))
+        assertTrue(MesDia.indice(diaD("comida_panhandle").fecha) < MesDia.indice(diaD("monterey").fecha))
+        assertEquals(listOf(null, null, null, "10-12", null), fechasD("diggers_fin"))
+        assertEquals(2, diaD("tamalpais").duracion); assertEquals(3, diaD("monterey").duracion)
+        // Lo que vuelve cada año comparte el id, el texto y la fecha; Acción de Gracias es el cuarto jueves de noviembre.
+        listOf("niebla_verano", "calor_septiembre", "accion_gracias", "navidad").forEach { id -> assertTrue(id, fechasD(id).all { it != null }) }
+        assertEquals(List(5) { "06-02" }, fechasD("niebla_verano")); assertEquals(List(5) { "09-18" }, fechasD("calor_septiembre")); assertEquals(List(5) { "12-25" }, fechasD("navidad"))
+        (1965..1969).forEachIndexed { i, y ->
+            val cuarto = generateSequence(LocalDate.of(y, 11, 1)) { it.plusDays(1) }.filter { it.dayOfWeek == java.time.DayOfWeek.THURSDAY }.drop(3).first()
+            assertEquals("$y", "%02d-%02d".format(cuarto.monthValue, cuarto.dayOfMonth), fechasD("accion_gracias")[i])
+        }
+        // Su gente llega y se va en orden: Ellen (2, 3 y 4), Nora (4), Gil y Sal (5).
+        val orden = listOf("conoce_ellen", "ellen_luces", "ellen_novia", "nora_se_va", "ellen_se_muda", "sal_retira", "gil_se_va", "estudio")
+        val lugares = orden.map { id -> car.temporadas.indexOfFirst { t -> t.dias.any { it.id == id } } * 365 + MesDia.indice(diaD(id).fecha) }
+        assertEquals(lugares.sorted(), lugares)
+    }
+
+    @Test fun lasFechasSonLasDeLasFuentesYSusCorrecciones() {
+        // «Histórico», solo lo que `fuentes_psicodelia.md` da con día; lo que solo tiene año, mes o estación, «aproximado» con su fuente.
+        val historicos = car.temporadas.flatMap { it.dias }.filter { it.certeza == CertezaDia.HISTORICO }.map { it.id }.toSet()
+        assertEquals(setOf("baile_geary", "un_numero", "periodico", "sala_grande", "entierro_dinero", "encuentro_parque", "baile_krishna", "fm_noche", "marcha",
+            "tamalpais", "monterey", "portada_time", "fm_todo_el_dia", "life", "entierro_hippie", "huelga_fm"), historicos)
+        car.temporadas.flatMap { it.dias }.forEach { d ->
+            if (d.certeza == CertezaDia.INVENTADO) assertNull(d.id, d.fuente) else assertNotNull(d.id, d.fuente)
+            d.fuente?.let { assertTrue(d.id, it.second.startsWith("https://en.wikipedia.org/wiki/")) }
+        }
+        // La niebla y el calor son los del clima de hoy (corrección 21): aproximados, y con su tiempo.
+        assertEquals(CertezaDia.APROXIMADO, diaD("niebla_verano").certeza); assertEquals(Clima.NIEBLA, diaD("niebla_verano").clima)
+        assertEquals(CertezaDia.APROXIMADO, diaD("calor_septiembre").certeza); assertEquals(Clima.DESPEJADO, diaD("calor_septiembre").clima)
+        assertEquals("https://en.wikipedia.org/wiki/San_Francisco#Climate", diaD("niebla_verano").fuente!!.second)
+        // La FM, en el 106.9: de medianoche a las seis el 12 de febrero, a toda hora el 6 de agosto.
+        assertEquals("https://en.wikipedia.org/wiki/KFRC-FM", diaD("fm_noche").fuente!!.second)
+        assertTrue("106.9" in diaD("fm_noche").titulo && "medianoche a las seis" in diaD("fm_noche").titulo)
+        // Monterey, con su precio (corrección 8), y la sala de la calle Sutter con los dos dólares del 29 de enero.
+        assertTrue("de tres a seis dólares y medio" in diaD("monterey").titulo); assertTrue("dos dólares" in diaD("baile_krishna").titulo)
+        // Los cuatro años sin cronología de 1967 llevan solo lo que el archivo trae: lo que no está, no se inventa como hecho.
+        listOf(0, 1, 3, 4).forEach { i -> car.temporadas[i].dias.filter { it.tipo != TipoDia.SUCESO && it.certeza == CertezaDia.INVENTADO }.forEach { d ->
+            assertTrue("${d.id}: inventado que no es de su vida", d.id in setOf("accion_gracias", "navidad", "lluvia_enero", "pintan_casa", "tienda_cerrada"))
+        } }
+        // Las casas: casi todas grises. En su calle, una pintada desde marzo de 1965, dos desde abril de 1969, y la suya en mayo de 1969.
+        assertEquals(0.0, arcoD("2027-03-28", "calle"), 0.0); assertEquals(0.1, arcoD("2027-03-29", "calle"), 0.0)
+        assertEquals(0.1, arcoD("2031-04-18", "calle"), 0.0); assertEquals(0.25, arcoD("2031-04-19", "calle"), 0.0)
+    }
+
+    @Test fun enMontereyTresDiasYEnLaTemporadaCincoLoFijoNoSeMueve() {
+        assertEquals(null, fichaD("2029-06-15").estado)
+        listOf("2029-06-16", "2029-06-17", "2029-06-18").forEach { assertEquals(it, "monterey", fichaD(it).estado) }
+        assertEquals(null, fichaD("2029-06-19").estado)
+        assertEquals(3, diasEnD("monterey", 2029))
+        listOf(2027, 2028, 2030, 2031, 2032).forEach { y -> assertEquals("$y", 0, diasEnD("monterey", y)) }
+        // En la temporada 5, que desde 2032 se repite, lo que no debe moverse no es un suceso, y no hay cadenas.
+        listOf("niebla_verano", "calor_septiembre", "accion_gracias", "navidad", "cierra_sutter", "pasaje", "colores_calle", "pintan_casa", "tienda_cerrada", "lluvia_enero").forEach {
+            assertNotEquals(it, TipoDia.SUCESO, diaD(it).tipo)
+        }
+        assertTrue(car.temporadas[4].dias.none { it.cadena != null })
+        // La casa se pinta en tres días, el mismo día en los dos: la escena y el arco no se separan aunque se repita.
+        (2031..2036).forEach { y ->
+            assertEquals("$y", "pintura", fichaD("$y-05-10").escena); assertEquals("$y", 0.3, arcoD("$y-05-10", "casa"), 0.0)
+            assertEquals("$y", 1.0, arcoD("$y-05-12", "casa"), 0.0)
+        }
+    }
+
+    @Test fun elCuadroDePsicodeliaPuedeContarLoMismoQueElCuento() {
+        // La casa de la señora Petrakis: gris hasta el 9 de mayo de 1969; turquesa desde el 12.
+        assertEquals(0.0, arcoD("2027-01-01", "casa"), 0.0); assertEquals(0.0, arcoD("2031-05-09", "casa"), 0.0)
+        assertEquals(0.6, arcoD("2031-05-11", "casa"), 0.0); assertEquals(1.0, arcoD("2031-12-31", "casa"), 0.0)
+        // Los carteles de los postes: ninguno hasta los bailes de la calle Sutter; llenos en el verano del amor; menos después.
+        assertEquals(0.0, arcoD("2028-02-18", "carteles"), 0.0); assertEquals(0.2, arcoD("2028-02-19", "carteles"), 0.0)
+        (0..120).forEach { assertEquals(1.0, arcoD(LocalDate.of(2029, 6, 1).plusDays(it.toLong()).toString(), "carteles"), 0.0) }
+        assertEquals(0.75, arcoD("2029-10-06", "carteles"), 0.0); assertTrue(arcoD("2031-06-01", "carteles") < 0.5)
+        // Los días que cambian lo que se ve.
+        assertEquals("rotulo", fichaD("2027-06-26").escena); assertEquals("carteles", fichaD("2028-02-19").escena); assertEquals("carteles", fichaD("2028-05-07").escena)
+        assertEquals("parque", fichaD("2029-01-14").escena); assertEquals("radio", fichaD("2029-02-12").escena); assertEquals("radio", fichaD("2029-08-06").escena)
+        assertEquals("carteles", fichaD("2029-09-01").escena); assertEquals("mudanza", fichaD("2030-01-20").escena); assertEquals("mudanza", fichaD("2030-03-02").escena)
+        assertEquals("luz_negra", fichaD("2030-04-13").escena); assertEquals("cerrado", fichaD("2031-08-30").escena)
+        assertEquals("fiesta", fichaD("2027-12-25").escena); assertEquals("fiesta", fichaD("2029-11-23").escena)
+        // El tiempo de San Francisco: niebla en verano, nunca nieve; la niebla del 2 de junio, cada año.
+        (2027..2031).forEach { y -> assertEquals("$y", Clima.NIEBLA, fichaD("$y-06-02").clima); assertEquals("$y", Clima.DESPEJADO, fichaD("$y-09-18").clima) }
+        assertTrue(car.clima.none { Clima.NIEVE in it || Clima.TORMENTA in it || Clima.POLVO in it })
+        assertTrue(car.clima.subList(5, 8).all { m -> m.getValue(Clima.NIEBLA) == m.values.max() })
+        assertEquals(Clima.LLUVIA, fichaD("2031-01-10").clima)
+    }
 }
+
+/**
+ * Lo que el tema Psicodelia no dice nunca (PLAN_TEMAS, 10g; `docs/diseno/temas/psicodelia.md`; `fuentes_psicodelia.md`,
+ * sección 9): las drogas, ni de lejos ni en jerga, ni el alcohol, ni el tabaco, ni lo que toca el seguimiento privado. Cada
+ * entrada es una palabra entera o el principio de una («viaj» quita «viaje», «viajar» y «viajeros»), sin contar
+ * mayúsculas. Algunas son palabras corrientes con otro sentido en la jerga («hierba», «hielo», «raya», «coca», «aguja»,
+ * «grifo», «volado», «colocar»): el cuento no las usa nunca, aunque fuera con su sentido de siempre. La usan
+ * [AnioG9Prueba] y [CuentoG9Prueba].
+ */
+internal val JERGA_DE_DROGAS: List<Regex> = listOf(
+    "drog\\w*", "viaj\\w*", "[áa]cid\\w*", "coloc\\w*", "porro\\w*", "marihuana", "mariguana", "cannabis", "hach[íi]s", "mota", "hierba\\w*", "yerba", "lsd",
+    "alucin\\w*", "psicod\\w*", "psiqued\\w*", "trip\\w*", "flip\\w*", "subid[óo]n", "volad[oa]s?", "pachec\\w*", "grif[oa]s?", "fum\\w*", "cigarr\\w*",
+    "tabaco", "pipas?", "hongos?", "peyote", "mescalin\\w*", "hero[íi]na", "coca\\w*", "anfetamin\\w*", "speed", "dealer", "camell\\w*", "pastill\\w*",
+    "dosis", "sobredosis", "sustancia\\w*", "jering\\w*", "aguja\\w*", "inyec\\w*", "liar", "mona", "polvo\\w*", "cristal\\w*", "hielo", "nieve", "perico",
+    "raya\\w*", "alcohol\\w*", "cervez\\w*", "vinos?", "whisky", "licor\\w*", "borrach\\w*", "trago\\w*", "copas?", "bebid\\w*", "embriag\\w*", "resaca",
+    "expand\\w*", "percepci\\w*", "conciencia", "cl[íi]nica\\w*", "reca[íi]d\\w*", "racha\\w*", "impulso\\w*", "high", "stoned", "kesey", "leary", "huxley",
+    "head shop",
+).map { Regex("""(?iU)(?<![\p{L}\p{N}])(?:$it)(?![\p{L}\p{N}])""") }
+
+/**
+ * Los nombres que el tema no usa (corrección 6 y 1 de `fuentes_psicodelia.md`): las salas, la radio, el festival y el
+ * periódico van por su calle, su frecuencia o su lugar, y las casas pintadas no se llaman por el nombre que les dio un libro
+ * de 1978. Tampoco la lámpara de cera con su marca.
+ */
+internal val MARCAS_DE_PSICODELIA: List<Regex> = listOf(
+    "fillmore", "avalon", "family dog", "monterey pop", "kmpx", "winterland", "oracle", "red dog", "painted lad\\w*", "l[áa]mparas? de lava", "day-glo", "acid rock",
+    "bill graham presents", "trip without a ticket",
+).map { Regex("""(?iU)(?<![\p{L}\p{N}])(?:$it)(?![\p{L}\p{N}])""") }

@@ -263,7 +263,20 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     }, 7.dp, 0.dp, true, 1.4.dp)
     // Hoja de expediente: recta y con borde grueso.
     TemaId.DISTOPIA -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
-    TemaId.PSICODELIA -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
+    // La burbuja de un cartel: las esquinas muy redondas y los cuatro cantos que ondulan apenas, como algo blando.
+    TemaId.PSICODELIA -> PielDialogo(FormaDp { w, h, d ->
+        val r = 24 * d; val a = 2.2f * d
+        fun ola(f: Float, largo: Float) = a * sin(f * maxOf(largo / (80 * d), 1f) * 2f * PI.toFloat()) * sin(PI.toFloat() * f)
+        moveTo(r, a)
+        for (k in 1..32) { val f = k / 32f; lineTo(r + (w - 2 * r) * f, a - ola(f, w)) }
+        quadraticTo(w - a, a, w - a, r)
+        for (k in 1..32) { val f = k / 32f; lineTo(w - a + ola(f, h), r + (h - 2 * r) * f) }
+        quadraticTo(w - a, h - a, w - r, h - a)
+        for (k in 1..32) { val f = k / 32f; lineTo(w - r - (w - 2 * r) * f, h - a + ola(f, w)) }
+        quadraticTo(a, h - a, a, h - r)
+        for (k in 1..32) { val f = k / 32f; lineTo(a - ola(f, h), h - r - (h - 2 * r) * f) }
+        quadraticTo(a, a, r, a); close()
+    }, 3.dp, 3.dp, true, 1.6.dp)
     // El cartel enmarcado: el canto de arriba sube en medio en una curva suave, como el letrero de las entradas de metro, la
     // esquina de arriba a la izquierda y la de abajo a la derecha muy redondas, y las otras dos casi rectas.
     TemaId.NOUVEAU -> PielDialogo(FormaDp { w, h, d ->
@@ -514,18 +527,21 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
                 drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 13 * d), Offset(o.x + 30 * d, o.y + 13 * d), 2 * d)
             }
         }
-        TemaId.PSICODELIA -> {
-            // Dos perforaciones de archivador y un sello de goma ladeado abajo a la izquierda.
-            listOf(0.3f, 0.7f).forEach { fy ->
-                drawCircle(e.onSurface.copy(alpha = 0.18f), 3.5f * d, Offset(11 * d, h * fy))
-                drawCircle(e.onSurface.copy(alpha = 0.5f), 3.5f * d, Offset(11 * d, h * fy), style = Stroke(d))
-            }
-            val o = Offset(14 * d, h - 34 * d)
-            rotate(-8f, Offset(o.x + 26 * d, o.y + 10 * d)) {
-                drawRect(e.primary.copy(alpha = 0.55f), o, Size(52 * d, 20 * d), style = Stroke(1.6f * d))
-                drawRect(e.primary.copy(alpha = 0.55f), Offset(o.x + 3 * d, o.y + 3 * d), Size(46 * d, 14 * d), style = Stroke(0.7f * d))
-                drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 8 * d), Offset(o.x + 40 * d, o.y + 8 * d), 2 * d)
-                drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 13 * d), Offset(o.x + 30 * d, o.y + 13 * d), 2 * d)
+        TemaId.PSICODELIA -> with(TrazosPsicodelia) {
+            // Por dentro del canto de arriba, una onda de tinta de arcoíris; abajo a la izquierda, una margarita que vibra, con
+            // su tallo y una hoja redonda; arriba a la derecha, tres burbujas del show de luces que suben.
+            val oscuro = e.background.luminance() < 0.5f
+            val fondo = e.surface
+            fun tenue(c: Color, k: Float) = androidx.compose.ui.graphics.lerp(fondo, c, k)
+            drawPath(onda(30 * d, w - 30 * d, 12 * d, 1.5f * d, 44 * d), arcoiris(Offset(30 * d, 0f), Offset(w - 30 * d, 0f), if (oscuro) 0.5f else 0.42f, oscuro),
+                style = Stroke(2f * d, cap = StrokeCap.Round))
+            val pie = Offset(18 * d, h - 5 * d); val cabeza = Offset(30 * d, h - 38 * d)
+            drawPath(Path().apply { moveTo(pie.x, pie.y); quadraticTo(15 * d, h - 22 * d, cabeza.x, cabeza.y) }, tenue(if (oscuro) LIMON else VERDE, 0.55f), style = Stroke(1.6f * d, cap = StrokeCap.Round))
+            drawPath(petalos(Offset(19 * d, h - 16 * d), 9 * d, 1, -0.4f, 0.42f, 0.05f), tenue(if (oscuro) LIMON else VERDE, 0.45f))
+            flor(cabeza, 10 * d, tenue(if (oscuro) FLUOR_MAGENTA else MAGENTA, 0.7f), tenue(if (oscuro) LIMON else VERDE, 0.6f), 8, 0.5f)
+            drawCircle(tenue(AMARILLO, 0.8f), 3 * d, cabeza)
+            listOf(Triple(26f, 30f, 3.6f), Triple(16f, 22f, 2.4f), Triple(30f, 18f, 1.6f)).forEach { (dx, dy, rr) ->
+                burbuja(Offset(w - dx * d, dy * d), rr * d, if (oscuro) FLUOR_VIOLETA else e.tertiary, 0.8f)
             }
         }
         TemaId.NOUVEAU -> with(TrazosNouveau) {
@@ -924,9 +940,14 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             drawRect(e.onSurface, Offset(0f, cy - 3 * d), Size(w, 3 * d))
             drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
         }
-        TemaId.PSICODELIA -> {
-            drawRect(e.onSurface, Offset(0f, cy - 3 * d), Size(w, 3 * d))
-            drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
+        TemaId.PSICODELIA -> with(TrazosPsicodelia) {
+            // Dos ondas de tinta de arcoíris que llegan desde las puntas y, en medio, una margarita que vibra.
+            val oscuro = e.background.luminance() < 0.5f
+            val tinta = arcoiris(Offset(4 * d, cy), Offset(w - 4 * d, cy), 0.75f, oscuro)
+            drawPath(onda(4 * d, w / 2 - 12 * d, cy, 1.4f * d, 18 * d), tinta, style = Stroke(1.6f * d, cap = StrokeCap.Round))
+            drawPath(onda(w / 2 + 12 * d, w - 4 * d, cy, 1.4f * d, 18 * d, 0.5f), tinta, style = Stroke(1.6f * d, cap = StrokeCap.Round))
+            flor(Offset(w / 2, cy), 7 * d, if (oscuro) FLUOR_MAGENTA else MAGENTA, if (oscuro) LIMON else VERDE, 8, 0.4f)
+            drawCircle(AMARILLO, 2 * d, Offset(w / 2, cy))
         }
         TemaId.NOUVEAU -> with(TrazosNouveau) {
             // Dos líneas de látigo que llegan desde las puntas y se enroscan antes del medio, donde se posa una libélula.
@@ -1356,9 +1377,15 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
         }
         TemaId.PSICODELIA -> {
-            if (x > 0f) drawRect(activo, Offset(0f, cy - g / 2), Size(x, g))
-            drawRect(inactivo, Offset(0f, cy - g / 2), Size(w, g), style = Stroke(maxOf(g * 0.15f, 0.8f * d)))
-            for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
+            // Lo que falta, un hilo fino; lo recorrido, la onda de la radio, que acaba en una burbuja con su brillo.
+            linea(inactivo, x, w, maxOf(g * 0.24f, 0.7f * d), cap = StrokeCap.Round)
+            if (x > 0f) {
+                val amp = g * 0.42f; val periodo = maxOf(g * 4f, 12f * d)
+                drawPath(TrazosPsicodelia.onda(0f, x, cy, amp, periodo), activo, style = Stroke(maxOf(g * 0.5f, 1.2f * d), cap = StrokeCap.Round))
+                val fin = Offset(x, cy + amp * sin(2f * PI.toFloat() * x / periodo))
+                drawCircle(activo, maxOf(g * 0.75f, 2f * d), fin)
+                drawCircle(Color.White.copy(alpha = 0.45f), maxOf(g * 0.22f, 0.7f * d), fin + Offset(-g * 0.25f, -g * 0.25f))
+            }
         }
         TemaId.NOUVEAU -> with(TrazosNouveau) {
             // Lo que falta, un hilo fino; lo recorrido, un tallo que crece hasta donde va, echando hojas alternas, con su
@@ -1692,8 +1719,11 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
         }
         TemaId.PSICODELIA -> {
-            drawPath(Path().apply { moveTo(c.x - r * 0.7f, c.y - r * 0.9f); lineTo(c.x + r * 0.7f, c.y - r * 0.9f); lineTo(c.x, c.y + r * 0.1f); close() }, color)
-            drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
+            // Un botón de solapa: el disco con una margarita calada y su botón, y el brillo de la cúpula.
+            drawCircle(color, r * 0.92f, c)
+            drawPath(TrazosPsicodelia.petalos(c, r * 0.7f, 6, -PI.toFloat() / 2, 0.33f, 0.22f), hueco.copy(alpha = 0.55f))
+            drawCircle(color, r * 0.2f, c)
+            drawArc(Color.White.copy(alpha = 0.35f), 200f, 60f, false, Offset(c.x - r * 0.7f, c.y - r * 0.7f), Size(r * 1.4f, r * 1.4f), style = Stroke(r * 0.1f, cap = StrokeCap.Round))
         }
         TemaId.NOUVEAU -> {
             // Un cabujón de vidrio de Nancy: el disco con su reflejo arriba a la izquierda y, calado en medio, un capullo.

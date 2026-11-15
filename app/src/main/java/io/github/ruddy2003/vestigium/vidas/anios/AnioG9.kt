@@ -1200,8 +1200,8 @@ internal object AnioG9 {
     // de la esquina con tablas) y fiesta (luces en las ventanas). Nunca personas.
     //
     // Arcos: casa (la casa de la señora Petrakis: 0 = gris; de 0.3 a 1, pintada de turquesa con molduras amarillas, en los
-    // tres días de `pintan_casa`), calle (las otras casas pintadas de la calle: 0.1 es una sola, la de azules y verdes; desde
-    // `colores_calle`, 0.25: dos) y carteles (lo llenos que están los postes de carteles de baile: ninguno hasta los bailes de
+    // tres días de `pintan_casa`), calle (las otras casas pintadas de la calle: ninguna hasta `casa_pintada`; 0.1 es una sola, la de
+    // azules y verdes; desde `colores_calle`, 0.25: dos) y carteles (lo llenos que están los postes de carteles de baile: ninguno hasta los bailes de
     // la calle Sutter, en febrero de 1966; llenos en el verano de 1967; menos después del entierro de octubre). Estado:
     // «monterey» (temporada 3, los tres días del festival): no está en la ciudad. En la temporada 5, que desde 2032 se
     // repite, lo que no debe moverse es fiesta o suceso del mundo, y sus sucesos personales no forman cadenas.
@@ -1388,8 +1388,11 @@ internal object AnioG9 {
             Arco("casa", TipoArco.OBRA, listOf(
                 p(1, "01-01", 0.0), p(5, "05-09", 0.0), p(5, "05-10", 0.3, salto = true), p(5, "05-11", 0.6, salto = true), p(5, "05-12", 1.0, salto = true), p(5, "12-31", 1.0),
             )),
-            // Las otras casas pintadas de la calle: una sola (0.1) hasta abril de 1969, y luego dos (0.25). Casi todas, grises.
-            Arco("calle", TipoArco.ADORNOS, listOf(p(1, "01-01", 0.1), p(5, "04-18", 0.1), p(5, "04-19", 0.25, salto = true), p(5, "12-31", 0.25))),
+            // Las otras casas pintadas de la calle: ninguna hasta `casa_pintada` (marzo de 1965), una sola (0.1) hasta abril de
+            // 1969, y luego dos (0.25). Casi todas, grises.
+            Arco("calle", TipoArco.ADORNOS, listOf(
+                p(1, "01-01", 0.0), p(1, "03-28", 0.0), p(1, "03-29", 0.1, salto = true), p(5, "04-18", 0.1), p(5, "04-19", 0.25, salto = true), p(5, "12-31", 0.25),
+            )),
             // Los carteles de baile en los postes: ninguno hasta febrero de 1966; llenos en el verano de 1967; menos después.
             Arco("carteles", TipoArco.ADORNOS, listOf(
                 p(1, "01-01", 0.0), p(2, "02-18", 0.0), p(2, "02-19", 0.2, salto = true), p(2, "12-31", 0.5), p(3, "06-01", 1.0), p(3, "10-05", 1.0),

@@ -208,11 +208,14 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
             drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
         }
+        // Un disco de larga duración en su funda, de canto: la funda del color con la franja de arcoíris del lomo, una flor y
+        // el disco que asoma por el lado abierto.
         TemaId.PSICODELIA -> {
-            drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), o, s)
-            drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), Offset(x0 + w * 0.1f, y0 - h * 0.18f), Size(w * 0.3f, h * 0.2f))
-            drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
-            drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
+            drawCircle(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia.VINILO, h * 0.46f, Offset(x0 + w * 0.9f, cy))
+            drawRoundRect(lerp(c, Color(0xFFE0218A), 0.2f), o, Size(w * 0.9f, h), CornerRadius(1 * d))
+            io.github.ruddy2003.vestigium.ui.TrazosPsicodelia.ARCOIRIS.forEachIndexed { i, k -> drawRect(k, Offset(x0 + w * 0.05f + i * w * 0.018f, y0), Size(w * 0.018f, h)) }
+            with(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia) { flor(Offset(x0 + w * 0.6f, cy), h * 0.3f, claro, oscuro, 5) }
+            drawRoundRect(oscuro.copy(alpha = 0.5f), o, Size(w * 0.9f, h), CornerRadius(1 * d), style = Stroke(0.6f * d))
         }
         // La revista ilustrada encuadernada: la tela salvia con su filete de oro que se curva en látigo, el lomo con sus dos
         // nervios dorados a la izquierda y el canto crema de las hojas abajo.
@@ -770,10 +773,14 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
             drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
         }
+        // Un botón de solapa con el canto en forma de flor, el aro de dentro y su brillo.
         TemaId.PSICODELIA -> {
-            drawRect(relleno, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r))
-            drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
-            drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
+            lleno(Path().apply {
+                for (k in 0..96) { val a = k * 2 * PI / 96; val p = polarCosa(c, r * (0.93f + 0.07f * kotlin.math.cos(a * 12).toFloat()), a); if (k == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y) }
+                close()
+            })
+            drawCircle(borde.copy(alpha = 0.45f), r * 0.78f, c, style = fino)
+            drawArc(Color.White.copy(alpha = 0.35f), 200f, 60f, false, Offset(x - r * 0.68f, y - r * 0.68f), Size(r * 1.36f, r * 1.36f), style = Stroke(1.1f * d, cap = StrokeCap.Round))
         }
         // La etiqueta de la vitrina: dos esquinas muy redondas y dos casi rectas, con su filete de dentro.
         TemaId.NOUVEAU -> {
@@ -1162,22 +1169,24 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             else -> return false
         }
         TemaId.PSICODELIA -> when (forma) {
-            // El ojo que vigila.
+            // El botón de solapa con el símbolo de la paz.
             "alfiler" -> {
-                drawPath(Path().apply { moveTo(x - r, y); quadraticTo(x, y - r * 0.9f, x + r, y); quadraticTo(x, y + r * 0.9f, x - r, y); close() }, col)
-                drawCircle(fondo, r * 0.4f, c); drawCircle(col, r * 0.2f, c)
+                drawCircle(col, r * 0.9f, c)
+                with(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia) { paz(c, r * 0.58f, fondo, r * 0.12f) }
             }
-            // Expediente con pestaña y franja roja.
+            // La postal con una calcomanía de flor y las líneas de la dirección.
             "sobre" -> {
-                drawRect(col, Offset(x - r, y - r * 0.5f), Size(2 * r, r * 1.2f))
-                drawRect(col, Offset(x - r, y - r * 0.75f), Size(r * 0.8f, r * 0.3f))
-                drawRect(Color(0xFFC8102E), Offset(x - r, y + r * 0.35f), Size(2 * r, r * 0.2f))
+                drawRoundRect(col, Offset(x - r, y - r * 0.66f), Size(2 * r, r * 1.32f), CornerRadius(r * 0.14f))
+                with(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia) { flor(Offset(x - r * 0.48f, y), r * 0.36f, fondo, col, 6) }
+                drawLine(fondo, Offset(x + r * 0.05f, y - r * 0.45f), Offset(x + r * 0.05f, y + r * 0.45f), 0.8f * d)
+                listOf(-0.1f, 0.14f, 0.38f).forEach { f -> drawLine(fondo, Offset(x + r * 0.22f, y + f * r), Offset(x + r * 0.82f, y + f * r), 0.7f * d) }
             }
-            // Lata de ración.
+            // El tazón de barro hecho a mano, con su asa y una flor pintada.
             "taza" -> {
-                drawRect(col, Offset(x - r * 0.55f, y - r * 0.75f), Size(r * 1.1f, r * 1.5f))
-                listOf(-0.5f, 0.5f).forEach { f -> drawLine(fondo, Offset(x - r * 0.55f, y + f * r), Offset(x + r * 0.55f, y + f * r), 0.7f * d) }
-                drawRect(fondo, Offset(x - r * 0.38f, y - r * 0.2f), Size(r * 0.76f, r * 0.4f))
+                drawArc(col, -70f, 140f, false, Offset(x + r * 0.38f, y - r * 0.3f), Size(r * 0.5f, r * 0.6f), style = Stroke(1.3f * d))
+                drawPath(Path().apply { moveTo(x - r * 0.62f, y - r * 0.6f); lineTo(x + r * 0.62f, y - r * 0.6f); quadraticTo(x + r * 0.7f, y + r * 0.7f, x + r * 0.42f, y + r * 0.75f); lineTo(x - r * 0.42f, y + r * 0.75f); quadraticTo(x - r * 0.7f, y + r * 0.7f, x - r * 0.62f, y - r * 0.6f); close() }, col)
+                with(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia) { flor(Offset(x, y + r * 0.08f), r * 0.32f, fondo, col, 5) }
+                drawOval(fondo, Offset(x - r * 0.5f, y - r * 0.66f), Size(r, r * 0.14f))
             }
             else -> return false
         }

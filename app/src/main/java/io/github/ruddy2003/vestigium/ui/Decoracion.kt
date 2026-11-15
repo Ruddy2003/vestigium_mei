@@ -2225,7 +2225,7 @@ private fun fondoPsicodelia(w: Float, h: Float, u: Float, oscuro: Boolean, linea
         while (r < lejos && k < 40) {
             val n = 96
             for (i in 0..n) {
-                val a = (PI * 0.5 + PI * 0.75 * i / n).toFloat()
+                val a = (PI * 0.3 + PI * 1.05 * i / n).toFloat()
                 val rr = r * (1f + 0.05f * sin(a * (5 + k % 3) + k * 1.3f) + 0.03f * sin(a * 11f - k))
                 val x = o.x + rr * cos(a); val y = o.y + rr * sin(a)
                 if (i == 0) fibras.moveTo(x, y) else fibras.lineTo(x, y)
@@ -4174,14 +4174,16 @@ fun CapaFiesta(fijo: Float? = null) {
                         drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y - s * 0.15f), Offset(pos.x + s * 0.5f, pos.y - s * 0.15f), s * 0.1f)
                         drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y + s * 0.15f), Offset(pos.x + s * 0.2f, pos.y + s * 0.15f), s * 0.1f) }
                     // Un caleidoscopio que se abre: cada figura (una margarita, una gota de tinta o una burbuja del show de luces)
-                    // se repite seis veces alrededor del centro, en espejo, como en el tubo, y el dibujo entero gira despacio.
-                    TemaId.PSICODELIA -> rotate(-p.giro * t, pos) {
+                    // se repite doce veces alrededor del centro, en espejo, como en el tubo, y el dibujo entero gira despacio.
+                    TemaId.PSICODELIA -> if (p.retraso < 0.12f) rotate(-p.giro * t, pos) {
+                        // Cada figura se pliega en un gajo de treinta grados y se repite en espejo: así se ve la simetría.
                         val centro = Offset(size.width / 2, size.height * 0.42f)
-                        val d = pos - origen
-                        val lejos = d.getDistance() * 0.85f; val angulo = atan2(d.y, d.x)
+                        val lejos = p.vel * alcance * t * 0.95f
+                        val gajo = (((p.ang % (PI / 3).toFloat()) + (PI / 3).toFloat()) % (PI / 3).toFloat())
+                        val angulo = abs(gajo - (PI / 6).toFloat())
                         val vuelta = rad(40.0 * t)
-                        for (k in 0 until 6) {
-                            val g = rad(60.0 * k) + (if (k % 2 == 0) angulo else -angulo) + vuelta
+                        for (k in 0 until 12) {
+                            val g = rad(30.0 * k) + (if (k % 2 == 0) angulo else (PI / 6).toFloat() - angulo) + vuelta
                             val q = Offset(centro.x + lejos * cos(g), centro.y + lejos * sin(g))
                             with(TrazosPsicodelia) {
                                 when (p.tono) {
@@ -4192,7 +4194,7 @@ fun CapaFiesta(fijo: Float? = null) {
                                 }
                             }
                         }
-                    }
+                    } else Unit
                     // Pétalos de iris con su lengua amarilla, hojas de sauce con su nervio y rizos de oro, como los de los marcos.
                     TemaId.NOUVEAU -> with(TrazosNouveau) {
                         val noche = e.background.luminance() < 0.5f

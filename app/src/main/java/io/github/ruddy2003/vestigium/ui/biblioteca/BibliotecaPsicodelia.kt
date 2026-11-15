@@ -238,7 +238,7 @@ object EstantePsicodelia : DisenoBiblioteca {
         }
         val o = Offset(r.center.x - capa.size.width / 2f, r.center.y - capa.size.height / 2f)
         if (borde != null) drawText(capa, color = borde, topLeft = o, drawStyle = Stroke(maxOf(1f, 0.16f * estilo.fontSize.value * density), join = StrokeJoin.Round))
-        drawText(capa, brush = Brush.horizontalGradient(colores, o.x, o.x + capa.size.width), topLeft = o)
+        drawText(capa, brush = Brush.horizontalGradient(colores, 0f, capa.size.width.toFloat()), topLeft = o)
     }
 
     /** El mes para un lomo: solo su nombre («Álbum de noviembre» se vuelve «noviembre»). */
@@ -291,7 +291,7 @@ object EstantePsicodelia : DisenoBiblioteca {
             vetas(r, mezcla(base, Color.White, 0.3f).copy(alpha = 0.22f), semilla + 5, 0.5f, vertical, 0.6f, 0.7f)
             repeat(nudos) { k ->
                 val c = Offset(r.left + r.width * (0.1f + 0.8f * azar(semilla, k + 70)), r.top + r.height * (0.25f + 0.5f * azar(semilla, k + 80)))
-                val rr = minOf(r.width, r.height) * (0.16f + 0.1f * azar(semilla, k + 90))
+                val rr = minOf(minOf(r.width, r.height) * (0.16f + 0.1f * azar(semilla, k + 90)), (3.5f + 2f * azar(semilla, k + 91)) * u)
                 val s = if (vertical) Size(rr * 1.2f, rr * 2f) else Size(rr * 2.2f, rr * 1.1f)
                 drawOval(mezcla(base, NUDO, 0.35f).copy(alpha = 0.5f), Offset(c.x - s.width, c.y - s.height), Size(s.width * 2, s.height * 2))
                 drawOval(NUDO.copy(alpha = 0.7f), Offset(c.x - s.width / 2, c.y - s.height / 2), s)
@@ -394,9 +394,9 @@ object EstantePsicodelia : DisenoBiblioteca {
         val tablas = listOf(Rect(0f, arriba, w, d.corona.bottom)) + d.tablas
         tablas.forEachIndexed { k, r -> tablon(Rect(1 * u, r.top, w - 1 * u, r.bottom), 71 + k * 7, oscuro, noche) }
         // Sobre la tabla de arriba: la lámpara de cera, el frasco de margaritas y el tocadiscos de maleta.
-        val lampara = Offset(w * 0.17f, arriba)
+        val lampara = Offset(w * 0.115f, arriba)
         lamparaCera(lampara, d.corona.height * 0.4f, oscuro, noche)
-        margaritas(Offset(w * 0.4f, arriba), d.corona.height * 0.26f, oscuro, noche)
+        margaritas(Offset(w * 0.455f, arriba), d.corona.height * 0.26f, oscuro, noche)
         tocadiscos(Rect(w * 0.53f, arriba - d.corona.height * 0.36f, w * 0.93f, arriba), oscuro, noche, 0f)
         // El rótulo de cada mes: una calcomanía de arcoíris pegada en el canto de la tabla.
         d.placas.forEach { p -> calcomaniaMes(p.r, p.texto, medidor, oscuro, noche) }
@@ -476,12 +476,27 @@ object EstantePsicodelia : DisenoBiblioteca {
         }
         listOf(tubo.left - 2 * u, tubo.right + 2 * u).forEach { x -> drawRect(c(Color(0xFF8E8A84)), Offset(x - 1.5f * u, tubo.top - 2 * u), Size(3 * u, tubo.height + 4 * u)) }
         // El cartel del baile de la semana, clavado con chinchetas y un poco torcido.
-        val ca = Rect(r.left + r.width * 0.1f, ym + hh * 0.12f, r.left + r.width * 0.1f + hh * 0.46f, ym + hh * 0.12f + hh * 0.62f)
+        val ca = Rect(r.left + r.width * 0.15f, ym + hh * 0.1f, r.left + r.width * 0.15f + hh * 0.46f, ym + hh * 0.1f + hh * 0.6f)
         rotate(-2.5f, ca.center) {
             drawRect(Color.Black.copy(alpha = if (oscuro) 0.4f else 0.22f), ca.topLeft + Offset(3 * u, 4 * u), ca.size)
             cartel(ca, medidor, oscuro, noche)
             listOf(ca.topLeft + Offset(4 * u, 4 * u), ca.topRight + Offset(-4 * u, 4 * u), ca.bottomLeft + Offset(4 * u, -4 * u), ca.bottomRight + Offset(-4 * u, -4 * u))
                 .forEachIndexed { i, q -> chincheta(q, 2.3f * u, listOf(NARANJA, AZUL, VERDE, MAGENTA)[i], oscuro) }
+        }
+        // Junto al tocadiscos, un volante del barrio pegado con cinta y una postal clavada.
+        val vo = Rect(r.left + r.width * 0.6f, ym + hh * 0.22f, r.left + r.width * 0.6f + hh * 0.2f, ym + hh * 0.22f + hh * 0.27f)
+        rotate(3f, vo.center) {
+            drawRect(Color.Black.copy(alpha = 0.2f), vo.topLeft + Offset(2 * u, 3 * u), vo.size)
+            drawRect(if (oscuro) Color(0xFF3A3152) else c(PAPEL), vo.topLeft, vo.size)
+            tramaArcoiris(Rect(vo.left + 2 * u, vo.top + 2 * u, vo.right - 2 * u, vo.top + 9 * u), oscuro, 0.8f)
+            with(TrazosPsicodelia) { flor(Offset(vo.center.x, vo.top + vo.height * 0.48f), vo.width * 0.2f, fluor(MAGENTA, oscuro), fluor(VERDE, oscuro), 6, 0.3f) }
+            for (k in 0 until 4) drawLine((if (oscuro) TENUE_NOCHE else TINTA).copy(alpha = 0.35f), Offset(vo.left + 4 * u, vo.top + vo.height * (0.72f + k * 0.07f)), Offset(vo.right - 4 * u - (k % 2) * 6 * u, vo.top + vo.height * (0.72f + k * 0.07f)), 0.8f * u)
+            drawRect((if (oscuro) Color(0xFF4E4672) else Color(0xFFEFE2BC)).copy(alpha = 0.85f), Offset(vo.center.x - 7 * u, vo.top - 3 * u), Size(14 * u, 6 * u))
+        }
+        val po = Rect(r.left + r.width * 0.77f, ym + hh * 0.2f, r.left + r.width * 0.77f + hh * 0.24f, ym + hh * 0.2f + hh * 0.24f / 1.45f)
+        rotate(-4f, Offset(po.center.x, po.top)) {
+            postalChica(po, 2, oscuro, false)
+            chincheta(Offset(po.center.x, po.top + 3 * u), 2 * u, AMARILLO, oscuro)
         }
         return cristal.center
     }
@@ -591,8 +606,7 @@ object EstantePsicodelia : DisenoBiblioteca {
                 val a = 2 * PI * k / 10
                 drawOval(c(Color(0xFFFBF8F0)), Offset(cf.x + (rp * 1.2f * cos(a)).toFloat() - rp * 0.5f, cf.y + (rp * 1.2f * sin(a)).toFloat() - rp * 0.5f), Size(rp, rp))
             }
-            drawCircle(if (oscuro) LIMON else c(Color(0xFFF2C14E)), rp * 0.75f, cf)
-            if (oscuro) drawCircle(LIMON.copy(alpha = 0.25f), rp * 1.6f, cf)
+            drawCircle(c(Color(0xFFF2C14E)), rp * 0.75f, cf)
         }
         // El frasco, con el agua y el brillo del vidrio.
         drawOval(Color.Black.copy(alpha = 0.25f), Offset(fr.left - 1 * u, fr.bottom - 2 * u), Size(fr.width + 2 * u, 4 * u))
@@ -888,8 +902,14 @@ object EstantePsicodelia : DisenoBiblioteca {
         letrero(medidor, v.dia, fr.deflate(1.5f * u), TITULO, numero, 17f, luce = oscuro, minimo = 6f)
         // El mes, de arriba abajo.
         val mes = Rect(1 * u, fr.bottom + 4 * u, w - 1 * u, h * 0.8f)
-        if (mes.height > 18 * u) letrero(medidor, mesCorto(v.mes), mes, ROTULO, if (oscuro) fluor(b0, true).copy(alpha = 0.85f) else t(PAPEL_CLARO, false, noche), 8.5f,
-            luce = oscuro, vertical = true, espaciado = 0.6f, minimo = 4f)
+        val tintaMes = when {
+            oscuro -> fluor(b0, true).copy(alpha = 0.85f)
+            !noche && esClaro(a0) -> t(TINTA, false, false)
+            else -> t(PAPEL_CLARO, false, noche)
+        }
+        if (mes.height > 18 * u) letrero(medidor, mesCorto(v.mes), mes, ROTULO, tintaMes, 8.5f, luce = oscuro, vertical = true, espaciado = 0.6f, minimo = 4f)
+        // Los filos del lomo, donde se dobla el cartón de la funda.
+        listOf(1.2f * u, w - 1.2f * u).forEach { x -> drawLine(t(PAPEL_CLARO, oscuro, noche).copy(alpha = 0.35f), Offset(x, fr.bottom + 3 * u), Offset(x, h * 0.84f), 0.5f * u) }
         // Al pie, la flor, la paz o, de noche, la luna.
         val pc = Offset(w / 2, h * 0.89f)
         val rr = minOf(w * 0.3f, 5.5f * u)
@@ -903,6 +923,9 @@ object EstantePsicodelia : DisenoBiblioteca {
         puntoAnimo(Offset(w * 0.5f, h * 0.06f + minOf(w * 1.2f, h * 0.26f) + 10 * u), minOf(w * 0.24f, 4 * u), v.tono, oscuro)
         drawRect(Color.Black.copy(alpha = 0.3f), r.topLeft, r.size, style = Stroke(0.5f * u))
     }
+
+    /** Si un color es claro (para escribir encima con tinta oscura). */
+    private fun esClaro(c: Color): Boolean = c.red * 0.299f + c.green * 0.587f + c.blue * 0.114f > 0.65f
 
     /** Una luna chica (la de los discos de los sueños): el creciente sobre [fondo]. */
     private fun DrawScope.lunita(c: Offset, r: Float, color: Color, fondo: Color) {
@@ -1066,7 +1089,6 @@ object EstantePsicodelia : DisenoBiblioteca {
         drawRect(papel(oscuro, e.noche), interior.topLeft, interior.size)
         drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.2f), Color.Transparent), interior.left, interior.left + 40 * u), interior.topLeft, Size(40 * u, interior.height))
         tramaArcoiris(Rect(interior.left + 26 * u, interior.top + 3 * u, interior.right - 4 * u, interior.top + 18 * u), oscuro || e.noche, if (oscuro) 0.9f else 0.8f)
-        drawLine(Color.Black.copy(alpha = 0.12f), Offset(interior.left, interior.top + interior.height * 0.5f), Offset(interior.right, interior.top + interior.height * 0.5f), 0.6f * u)
         drawRect(Color.Black.copy(alpha = 0.18f), interior.topLeft, interior.size, style = Stroke(0.6f * u))
         val pie = listOf(if (e.vacio) "sin estrenar" else palabrasTapa(e.palabras), ladoPista).filter { it.isNotBlank() }.joinToString(" · ")
         aIzquierda(medidor, pie, Rect(w * cajaTapa.left, h * 0.83f, interior.right - 6 * u, h * 0.91f), ROTULO, acento(oscuro), 8.5f, espaciado = 0.3f, minimo = 5f)
@@ -1086,6 +1108,7 @@ object EstantePsicodelia : DisenoBiblioteca {
         val u = density
         drawCircle(Color.Black.copy(alpha = 0.3f), r, c + Offset(2 * u, 3 * u))
         drawCircle(VINILO, r, c)
+        if (oscuro) drawCircle(FVIOLETA.copy(alpha = 0.4f), r, c, style = Stroke(1.2f * u))
         var k = 0.96f
         while (k > 0.4f) { drawCircle(Color.White.copy(alpha = 0.06f), r * k, c, style = Stroke(0.5f * u)); k -= 0.035f }
         val g = giro * 360f
@@ -1122,6 +1145,7 @@ object EstantePsicodelia : DisenoBiblioteca {
                 val rr = r.width * (1.05f - k * 0.1f)
                 val p = TrazosPsicodelia.gota(centro, rr, 0.12f * k, 0.035f, 7)
                 drawPath(p, t(if (k % 2 == 0) cb else ca, oscuro, false))
+                if (!oscuro) drawPath(p, (if (e.noche) Color(0xFF8C6CE0) else AMARILLO).copy(alpha = 0.7f), style = Stroke(1.1f * u))
                 if (oscuro) drawPath(p, fluor(if (k % 2 == 0) b0 else a0, true).copy(alpha = 0.7f), style = Stroke(0.9f * u))
             }
             // El sol crema (de noche, la luna) donde va el número.
@@ -1271,7 +1295,15 @@ object EstantePsicodelia : DisenoBiblioteca {
                 center = Offset(w * 0.5f, h * 0.3f), radius = maxOf(w, h) * 0.9f))
         }
         if (noche) {
-            with(TrazosPsicodelia) { lucesLiquidas(Size(w * 0.8f, h * 0.3f), 0.35f, listOf(FMAGENTA, LIMON, FVIOLETA), 0.16f, Offset(w * 0.2f, h * 0.66f)) }
+            // Las burbujas de aceite y tinta del show de luces, abajo a la izquierda, con su filo de color.
+            for (k in 0 until 9) {
+                val bc = Offset(w * (0.06f + 0.4f * azar(911, k)), h * (0.72f + 0.22f * azar(913, k)))
+                val br = (6f + 16f * azar(915, k)) * u
+                val col = listOf(FMAGENTA, LIMON, FVIOLETA)[k % 3]
+                drawPath(TrazosPsicodelia.gota(bc, br, azar(917, k), 0.08f, 3), col.copy(alpha = 0.07f))
+                drawPath(TrazosPsicodelia.gota(bc, br, azar(917, k), 0.08f, 3), col.copy(alpha = 0.3f), style = Stroke(1 * u))
+                drawCircle(Color.White.copy(alpha = 0.15f), br * 0.18f, Offset(bc.x - br * 0.4f, bc.y - br * 0.4f))
+            }
             val l = Offset(w - 40 * u, h - 96 * u)
             resplandor(l, 46 * u, LIMON, 0.35f)
             lunita(l, 12 * u, LIMON.copy(alpha = 0.6f), p.color)
@@ -1333,14 +1365,14 @@ object EstantePsicodelia : DisenoBiblioteca {
         clipRect(r.left, r.top, r.right, r.bottom) {
             if (oscuro) drawRect(Brush.verticalGradient(listOf(Color(0xFF1A1230), Color(0xFF2A1F44)), r.top, r.bottom), r.topLeft, r.size)
             else drawRect(Brush.verticalGradient(listOf(NIEBLA, Color(0xFFF3E6D6), TrazosPsicodelia.CIELO_TARDE), r.top, r.bottom), r.topLeft, r.size)
-            val base = r.bottom + r.height * 0.06f
-            val ancho = r.width * 0.36f
+            val base = r.bottom + r.height * 0.04f
+            val ancho = r.width * 0.3f
             val colores = listOf(TrazosPsicodelia.CASA_GRIS, TrazosPsicodelia.CASA_TURQUESA, mezcla(TrazosPsicodelia.CASA_GRIS, TrazosPsicodelia.CASA_BLANCA, 0.4f))
             colores.forEachIndexed { i, col ->
-                val cx = r.left + ancho * (0.42f + i * 0.98f)
+                val cx = r.left + r.width * 0.05f + ancho * (0.5f + i * 1.12f)
                 val ventanas = if (oscuro) (if (i == 1) FVIOLETA else Color(0xFFFFC46A)) else Color(0xFF5E6B78)
                 val madera = if (oscuro) mezcla(col, SALA, 0.78f) else col
-                with(TrazosPsicodelia) { casaVictoriana(Offset(cx, base), ancho * 0.94f, r.height * 0.86f, madera, if (oscuro) mezcla(TrazosPsicodelia.CASA_BLANCA, SALA, 0.7f) else TrazosPsicodelia.CASA_BLANCA, ventanas) }
+                with(TrazosPsicodelia) { casaVictoriana(Offset(cx, base), ancho * 0.94f, r.height * 0.7f, madera, if (oscuro) mezcla(TrazosPsicodelia.CASA_BLANCA, SALA, 0.7f) else TrazosPsicodelia.CASA_BLANCA, ventanas) }
                 if (oscuro && i == 1) resplandor(Offset(cx - ancho * 0.1f, base - r.height * 0.45f), ancho * 0.6f, FVIOLETA, 0.6f)
             }
             // La niebla que entra en bancos.
@@ -1456,6 +1488,12 @@ object EstantePsicodelia : DisenoBiblioteca {
                 k * 7 * u, cc, style = Stroke(3.5f * u))
             for (k in 0 until 6) drawLine(Color.Black.copy(alpha = 0.12f), Offset(ven.right - 6 * u + k * 5 * u, ven.top), Offset(ven.right - 2 * u + k * 5 * u, mesaY), 1.6f * u)
         }
+        // A la derecha, una postal clavada en la pared.
+        val po = Rect(w * 0.8f, h * 0.1f, w * 0.8f + w * 0.12f, h * 0.1f + w * 0.12f / 1.45f)
+        rotate(5f, Offset(po.center.x, po.top)) {
+            postalChica(po, 0, oscuro, false)
+            chincheta(Offset(po.center.x, po.top + 3 * u), 2 * u, MAGENTA, oscuro)
+        }
         // El tubo de luz negra sobre la ventana.
         val tubo = Rect(ven.left + ven.width * 0.15f, ven.top - 9 * u, ven.right - ven.width * 0.15f, ven.top - 5 * u)
         drawRoundRect(if (oscuro) FVIOLETA else c(Color(0xFF3A2F64)), tubo.topLeft, tubo.size, CornerRadius(2 * u))
@@ -1567,3 +1605,708 @@ object EstantePsicodelia : DisenoBiblioteca {
         }
         letrero(medidor, texto, Rect(w / 2 - largo / 2, 0f, w / 2 + largo / 2, h), TITULO, tinta(oscuro), tam, luce = oscuro, minimo = 8f)
     }
+
+    // =================================================================
+    //  Las cartas: postales de 1967 con calcomanías
+    // =================================================================
+
+    /**
+     * Una calcomanía redonda con el símbolo de la paz, en [c]: el borde blanco troquelado, el disco de [color] y la paz encima,
+     * con el brillo del plástico.
+     */
+    private fun DrawScope.calcomaniaPaz(c: Offset, r: Float, color: Color, oscuro: Boolean) {
+        drawCircle(Color.Black.copy(alpha = 0.28f), r, c + Offset(r * 0.08f, r * 0.12f))
+        drawCircle(if (oscuro) Color(0xFFD9D2E8) else Color(0xFFFFFBF2), r, c)
+        val col = fluor(color, oscuro)
+        if (oscuro) drawCircle(col.copy(alpha = 0.3f), r * 1.2f, c)
+        drawCircle(col, r * 0.8f, c)
+        with(TrazosPsicodelia) { paz(c, r * 0.55f, Color(0xFFFFFBF2), r * 0.11f) }
+        drawArc(Color.White.copy(alpha = 0.45f), 200f, 60f, false, Offset(c.x - r * 0.7f, c.y - r * 0.7f), Size(r * 1.4f, r * 1.4f), style = Stroke(r * 0.09f, cap = StrokeCap.Round))
+    }
+
+    /**
+     * El anverso de una postal en [r]: la ilustración propia a todo color con su borde blanco (según [variante]: la calle con
+     * niebla y sus casas victorianas en la cuesta, la flor que vibra sobre sus rayos, o el parque con su colina, los árboles y
+     * una cometa), las calcomanías pegadas encima (la flor y la paz) y abajo la franja donde se escribe, con [linea1] y [linea2].
+     */
+    private fun DrawScope.anverso(r: Rect, variante: Int, semilla: Int, linea1: String, linea2: String, medidor: TextMeasurer, oscuro: Boolean, k: Float) {
+        val u = density
+        fun c(x: Color) = if (oscuro) mezcla(x, SALA, 0.62f) else x
+        drawRect(c(Color(0xFFFBF6EC)), r.topLeft, r.size)
+        val franja = r.top + r.height * 0.74f
+        val il = Rect(r.left + r.width * 0.045f, r.top + r.height * 0.06f, r.right - r.width * 0.045f, franja)
+        clipRect(il.left, il.top, il.right, il.bottom) {
+            when (variante) {
+                0 -> {
+                    // La calle en la cuesta, con la niebla de la mañana: casas grises y una rosa, escalonadas.
+                    drawRect(Brush.verticalGradient(listOf(c(NIEBLA), c(TrazosPsicodelia.CIELO_TARDE)), il.top, il.bottom), il.topLeft, il.size)
+                    val anchoC = il.width * 0.3f
+                    listOf(TrazosPsicodelia.CASA_GRIS, TrazosPsicodelia.CASA_ROSA, mezcla(TrazosPsicodelia.CASA_GRIS, TrazosPsicodelia.CASA_BLANCA, 0.35f), TrazosPsicodelia.CASA_GRIS).forEachIndexed { i, col ->
+                        val base = Offset(il.left + anchoC * (0.45f + i * 0.98f), il.bottom - il.height * 0.08f + i * il.height * 0.07f)
+                        with(TrazosPsicodelia) { casaVictoriana(base, anchoC * 0.95f, il.height * 0.82f, c(col), c(TrazosPsicodelia.CASA_BLANCA), c(Color(0xFF5E6B78))) }
+                    }
+                    // La acera en cuesta y la niebla.
+                    drawPath(Path().apply { moveTo(il.left, il.bottom - il.height * 0.08f); lineTo(il.right, il.bottom + il.height * 0.2f); lineTo(il.right, il.bottom); lineTo(il.left, il.bottom); close() }, c(Color(0xFF9A948A)))
+                    for (j in 0 until 3) drawOval((if (oscuro) FVIOLETA.copy(alpha = 0.12f) else Color.White.copy(alpha = 0.38f)), Offset(il.left - il.width * 0.2f + j * il.width * 0.3f, il.top + il.height * (0.3f + 0.18f * j)), Size(il.width * 0.8f, il.height * 0.12f))
+                }
+                1 -> {
+                    // La flor grande que vibra sobre sus rayos, como un cartel.
+                    val (a0, b0) = PARES[Math.floorMod(semilla / 3, PARES.size)]
+                    drawRect(c(a0), il.topLeft, il.size)
+                    val cc = il.center
+                    for (j in 0 until 20) {
+                        val a1 = 2 * PI * j / 20; val a2 = 2 * PI * (j + 1) / 20
+                        val rr = il.width
+                        if (j % 2 == 0) drawPath(Path().apply { moveTo(cc.x, cc.y); lineTo(cc.x + rr * cos(a1).toFloat(), cc.y + rr * sin(a1).toFloat()); lineTo(cc.x + rr * cos(a2).toFloat(), cc.y + rr * sin(a2).toFloat()); close() }, c(b0))
+                    }
+                    with(TrazosPsicodelia) { flor(cc, il.height * 0.42f, c(AMARILLO), c(VIOLETA), 8, 0.6f) }
+                }
+                else -> {
+                    // El parque: el cielo, el sol de rayos ondulados, la colina con sus árboles y una cometa con su cola de colores.
+                    drawRect(Brush.verticalGradient(listOf(c(Color(0xFF8FC3E8)), c(Color(0xFFF7E3B6))), il.top, il.bottom), il.topLeft, il.size)
+                    val sc = Offset(il.left + il.width * 0.22f, il.top + il.height * 0.3f)
+                    for (j in 0 until 12) {
+                        val a = 2 * PI * j / 12
+                        drawPath(onda(Offset(sc.x + (il.height * 0.16f * cos(a)).toFloat(), sc.y + (il.height * 0.16f * sin(a)).toFloat()),
+                            Offset(sc.x + (il.height * 0.3f * cos(a)).toFloat(), sc.y + (il.height * 0.3f * sin(a)).toFloat()), 1.5f, 0.8f * u * k), c(NARANJA), style = Stroke(1.2f * u * k, cap = StrokeCap.Round))
+                    }
+                    drawCircle(c(AMARILLO), il.height * 0.13f, sc)
+                    val colina = Path().apply { moveTo(il.left, il.bottom); lineTo(il.left, il.bottom - il.height * 0.22f); cubicTo(il.left + il.width * 0.3f, il.bottom - il.height * 0.45f, il.left + il.width * 0.7f, il.bottom - il.height * 0.4f, il.right, il.bottom - il.height * 0.18f); lineTo(il.right, il.bottom); close() }
+                    drawPath(colina, c(Color(0xFF5FA654)))
+                    listOf(0.62f to 0.5f, 0.78f to 0.46f, 0.9f to 0.38f).forEach { (fx, fh) ->
+                        val x = il.left + il.width * fx
+                        val pie = il.bottom - il.height * 0.3f
+                        drawLine(c(Color(0xFF5A3E26)), Offset(x, pie), Offset(x, pie - il.height * fh * 0.4f), 1.4f * u * k)
+                        drawOval(c(Color(0xFF2F6E3E)), Offset(x - il.height * 0.12f, pie - il.height * fh), Size(il.height * 0.24f, il.height * fh * 0.75f))
+                    }
+                    val ko = Offset(il.left + il.width * 0.5f, il.top + il.height * 0.22f)
+                    drawPath(Path().apply { moveTo(ko.x, ko.y - 7 * u * k); lineTo(ko.x + 5 * u * k, ko.y); lineTo(ko.x, ko.y + 8 * u * k); lineTo(ko.x - 5 * u * k, ko.y); close() }, c(MAGENTA))
+                    drawPath(onda(Offset(ko.x, ko.y + 8 * u * k), Offset(ko.x + 4 * u * k, ko.y + 26 * u * k), 2f, 2 * u * k), c(NARANJA), style = Stroke(1f * u * k))
+                    drawLine(c(Color(0xFF6E6A64)), ko, Offset(il.left + il.width * 0.4f, il.bottom), 0.4f * u)
+                }
+            }
+        }
+        drawRect(Color.Black.copy(alpha = 0.18f), il.topLeft, il.size, style = Stroke(0.5f * u))
+        // Las calcomanías pegadas encima.
+        val esq = Math.floorMod(semilla, 4)
+        val p1 = if (esq % 2 == 0) Offset(il.right - il.width * 0.08f, il.top + il.height * 0.14f) else Offset(il.left + il.width * 0.1f, il.bottom - il.height * 0.12f)
+        val p2 = if (esq < 2) Offset(il.left + il.width * 0.12f, il.top + il.height * 0.16f) else Offset(il.right - il.width * 0.12f, il.bottom - il.height * 0.1f)
+        calcomaniaPsicodelia(p1, minOf(il.width, il.height) * 0.14f, fluor(if (variante == 1) NARANJA else MAGENTA, oscuro), 1f, 0.2f * esq)
+        calcomaniaPaz(p2, minOf(il.width, il.height) * 0.11f, if (variante == 2) VIOLETA else VERDE, oscuro)
+        // La franja de abajo, con lo que se escribió.
+        val fr = Rect(r.left + r.width * 0.05f, franja + 2 * u, r.right - r.width * 0.17f, r.bottom - 2 * u)
+        if (linea1.isNotBlank()) letrero(medidor, linea1, Rect(fr.left, fr.top, fr.right, fr.top + fr.height * 0.55f), ROTULO, tinta(oscuro), 10f * k, minimo = 5f)
+        if (linea2.isNotBlank()) letrero(medidor, linea2, Rect(fr.left, fr.top + fr.height * 0.52f, fr.right, fr.bottom), TEXTO, tenue(oscuro), 8f * k, minimo = 4.5f)
+    }
+
+    /**
+     * El reverso de una postal en [r], el lado dividido: «Post Card» arriba, la raya del medio, a la izquierda los renglones
+     * para lo que se escribe (en [renglones]), a la derecha la estampilla de cuatro centavos con el puente (propia, sin copiar
+     * ninguna), el matasellos de San Francisco con sus ondas y las líneas de la dirección, con [linea1] y [linea2].
+     */
+    private fun DrawScope.reverso(r: Rect, linea1: String, linea2: String, hoja: Color, renglones: Color, escrito: Float, medidor: TextMeasurer, oscuro: Boolean, k: Float) {
+        val u = density
+        fun c(x: Color) = t(x, oscuro, false)
+        drawRect(mezcla(c(Color(0xFFFBF6EC)), hoja, 0.2f), r.topLeft, r.size)
+        val tintaC = tinta(oscuro)
+        textoEn(medidor, "Post Card", Rect(r.left, r.top + r.height * 0.03f, r.right, r.top + r.height * 0.16f), ROTULO, tintaC.copy(alpha = 0.8f), 10f * k, espaciado = 1.4f, minimo = 5f)
+        val medio = r.left + r.width * 0.52f
+        drawLine(tintaC.copy(alpha = 0.5f), Offset(medio, r.top + r.height * 0.22f), Offset(medio, r.bottom - r.height * 0.06f), 0.7f * u)
+        // Lo que se escribe: renglones (y, al abrirse, el trazo de lo escrito).
+        var y = r.top + r.height * 0.32f; var j = 0
+        while (y < r.bottom - r.height * 0.08f) {
+            drawLine(renglones, Offset(r.left + r.width * 0.06f, y), Offset(medio - r.width * 0.05f, y), 0.5f * u)
+            if (escrito > 0f && j < 6) {
+                val largo = (medio - r.width * 0.11f - r.left - r.width * 0.06f) * (0.6f + 0.35f * azar(j, 3)) * escrito.coerceIn(0f, 1f)
+                drawLine(tintaC.copy(alpha = 0.18f), Offset(r.left + r.width * 0.06f, y - 2.5f * u * k), Offset(r.left + r.width * 0.06f + largo, y - 2.5f * u * k), 1f * u * k, StrokeCap.Round)
+            }
+            y += 9 * u * k; j++
+        }
+        // La estampilla: el puente con sus dos torres sobre la niebla, «U.S.» y «4c».
+        val st = Rect(r.right - r.width * 0.2f, r.top + r.height * 0.17f, r.right - r.width * 0.05f, r.top + r.height * 0.17f + r.width * 0.18f)
+        drawRect(c(Color(0xFFFBF6EC)), st.topLeft, st.size)
+        var x = st.left
+        while (x <= st.right) { drawCircle(mezcla(c(Color(0xFFFBF6EC)), hoja, 0.2f), 0.9f * u * k, Offset(x, st.top)); drawCircle(mezcla(c(Color(0xFFFBF6EC)), hoja, 0.2f), 0.9f * u * k, Offset(x, st.bottom)); x += 2.4f * u * k }
+        val dentro = st.deflate(2 * u * k)
+        drawRect(c(Color(0xFF6E4AA8)), dentro.topLeft, dentro.size)
+        clipRect(dentro.left, dentro.top, dentro.right, dentro.bottom) {
+            drawRect(c(Color(0xFFB9A6DE)), Offset(dentro.left, dentro.bottom - dentro.height * 0.28f), Size(dentro.width, dentro.height * 0.28f))
+            val claro = c(Color(0xFFF4EEF8))
+            listOf(0.3f, 0.72f).forEach { f -> drawRect(claro, Offset(dentro.left + dentro.width * f - 0.8f * u, dentro.top + dentro.height * 0.3f), Size(1.6f * u, dentro.height * 0.55f)) }
+            drawPath(Path().apply { moveTo(dentro.left, dentro.top + dentro.height * 0.6f); quadraticTo(dentro.left + dentro.width * 0.3f, dentro.top + dentro.height * 0.62f, dentro.left + dentro.width * 0.3f, dentro.top + dentro.height * 0.32f)
+                quadraticTo(dentro.left + dentro.width * 0.51f, dentro.top + dentro.height * 0.66f, dentro.left + dentro.width * 0.72f, dentro.top + dentro.height * 0.32f)
+                quadraticTo(dentro.left + dentro.width * 0.72f, dentro.top + dentro.height * 0.62f, dentro.right, dentro.top + dentro.height * 0.6f) }, claro, style = Stroke(0.5f * u))
+            drawLine(claro, Offset(dentro.left, dentro.top + dentro.height * 0.66f), Offset(dentro.right, dentro.top + dentro.height * 0.66f), 1 * u)
+        }
+        textoEn(medidor, "U.S.", Rect(dentro.left, dentro.top, dentro.left + dentro.width * 0.6f, dentro.top + dentro.height * 0.28f), ROTULO, c(Color(0xFFF4EEF8)), 5.5f * k, minimo = 3f)
+        textoEn(medidor, "4c", Rect(dentro.right - dentro.width * 0.45f, dentro.bottom - dentro.height * 0.3f, dentro.right, dentro.bottom), ROTULO, c(Color(0xFFF4EEF8)), 6f * k, minimo = 3f)
+        // El matasellos de San Francisco, con sus ondas.
+        val ms = Offset(st.left - r.width * 0.03f, st.center.y + st.height * 0.12f)
+        val mr = st.width * 0.5f
+        val tintaM = c(Color(0xFF2E2440)).copy(alpha = 0.6f)
+        drawCircle(tintaM, mr, ms, style = Stroke(0.8f * u * k))
+        drawCircle(tintaM, mr * 0.7f, ms, style = Stroke(0.4f * u * k))
+        textoEn(medidor, "San Francisco", Rect(ms.x - mr * 0.66f, ms.y - mr * 0.5f, ms.x + mr * 0.66f, ms.y - mr * 0.02f), ROTULO, tintaM, 5f * k, minimo = 2.5f)
+        textoEn(medidor, "Calif.", Rect(ms.x - mr * 0.6f, ms.y + mr * 0.02f, ms.x + mr * 0.6f, ms.y + mr * 0.45f), ROTULO, tintaM, 5f * k, minimo = 2.5f)
+        for (i in 0 until 5) {
+            val yo = ms.y - mr * 0.5f + i * mr * 0.25f
+            drawPath(onda(Offset(ms.x + mr * 1.05f, yo), Offset(ms.x + mr * 2.7f, yo), 2f, 1.4f * u * k), tintaM, style = Stroke(0.7f * u * k))
+        }
+        // Las líneas de la dirección.
+        val dir = Rect(medio + r.width * 0.05f, r.top + r.height * 0.52f, r.right - r.width * 0.05f, r.bottom - r.height * 0.08f)
+        listOf(0.33f, 0.66f, 1f).forEach { f -> drawLine(renglones, Offset(dir.left, dir.top + dir.height * f), Offset(dir.right, dir.top + dir.height * f), 0.5f * u) }
+        if (linea1.isNotBlank()) aIzquierda(medidor, linea1, Rect(dir.left, dir.top, dir.right, dir.top + dir.height * 0.33f), TEXTO, tintaC.copy(alpha = 0.85f), 8.5f * k, minimo = 4.5f)
+        if (linea2.isNotBlank()) aIzquierda(medidor, linea2, Rect(dir.left, dir.top + dir.height * 0.33f, dir.right, dir.top + dir.height * 0.66f), TEXTO, tenue(oscuro), 7.5f * k, minimo = 4f)
+    }
+
+    /**
+     * La cinta para la frente, tejida, de [desde] a [hasta] y de ancho [g]: naranja con su greca de rombos turquesa y magenta y
+     * las orillas oscuras.
+     */
+    private fun DrawScope.cintaFrente(desde: Offset, hasta: Offset, g: Float, oscuro: Boolean) {
+        val u = density
+        val largo = (hasta - desde).getDistance()
+        if (largo < 1f) return
+        val ang = Math.toDegrees(kotlin.math.atan2((hasta.y - desde.y).toDouble(), (hasta.x - desde.x).toDouble())).toFloat()
+        rotate(ang, desde) {
+            val r = Rect(desde.x, desde.y - g / 2, desde.x + largo, desde.y + g / 2)
+            drawRect(Color.Black.copy(alpha = 0.22f), r.topLeft + Offset(0.8f * u, 1.2f * u), r.size)
+            drawRect(fluor(NARANJA, oscuro).let { if (oscuro) mezcla(it, SALA, 0.2f) else it }, r.topLeft, r.size)
+            clipRect(r.left, r.top, r.right, r.bottom) {
+                var x = r.left; var k = 0
+                while (x < r.right) {
+                    val cx = x + g * 0.5f
+                    drawPath(Path().apply { moveTo(cx, r.top + g * 0.2f); lineTo(cx + g * 0.32f, r.center.y); lineTo(cx, r.bottom - g * 0.2f); lineTo(cx - g * 0.32f, r.center.y); close() },
+                        fluor(if (k % 2 == 0) MAGENTA else AZUL, oscuro).let { if (oscuro) it else if (k % 2 == 0) it else TrazosPsicodelia.CASA_TURQUESA })
+                    x += g; k++
+                }
+            }
+            drawLine(Color(0xFF3A2414).copy(alpha = 0.7f), Offset(r.left, r.top + 0.6f * u), Offset(r.right, r.top + 0.6f * u), 0.8f * u)
+            drawLine(Color(0xFF3A2414).copy(alpha = 0.7f), Offset(r.left, r.bottom - 0.6f * u), Offset(r.right, r.bottom - 0.6f * u), 0.8f * u)
+        }
+    }
+
+    /**
+     * La carta es una postal de 1967, en su montón: debajo, dos postales más; encima, la del día, con el anverso ilustrado y sus
+     * calcomanías (y en su franja, a quién va y cuándo). Las cartas al futuro, «postales para otro verano», van atadas con una
+     * cinta para la frente, tejida, y en el nudo una calcomanía de flor hace de sello; la que ya se puede abrir brilla. Al
+     * abrirla, la calcomanía se rompe, la postal se da vuelta (se ve el reverso dividido, con la estampilla y el matasellos de
+     * San Francisco) y sube.
+     */
+    override fun DrawScope.sobre(e: EstadoCarta, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val cu = e.cuerpo
+        val s = Rect(cu.left + 6 * u, cu.top + 4 * u, cu.right - 6 * u, cu.bottom - 6 * u)
+        val cw = s.width * 0.92f
+        val ch = minOf(s.height * 0.92f, cw / 1.45f)
+        val k = (cw / (134f * u)).coerceIn(0.8f, 2.4f)
+        val alza = e.subir.coerceIn(0f, 1f) * cu.top * 0.9f
+        val base = Rect(s.center.x - cw / 2, s.center.y - ch / 2, s.center.x + cw / 2, s.center.y + ch / 2)
+        val carta = base.translate(0f, -alza)
+        val variante = Math.floorMod(e.semilla, 3)
+        // Las postales de debajo, un poco torcidas, con un poco de su color.
+        listOf(-6f to TrazosPsicodelia.CASA_TURQUESA, 5f to NARANJA).forEachIndexed { i, (g, col) ->
+            rotate(g, base.center) {
+                val q = base.translate(if (i == 0) -3 * u else 3 * u, if (i == 0) 3 * u else 1 * u)
+                drawRect(Color.Black.copy(alpha = 0.22f), q.topLeft + Offset(1.5f * u, 2.5f * u), q.size)
+                drawRect(t(Color(0xFFF6F0E4), oscuro, false), q.topLeft, q.size)
+                val il = Rect(q.left + q.width * 0.045f, q.top + q.height * 0.06f, q.right - q.width * 0.045f, q.top + q.height * 0.74f)
+                drawRect(t(col, oscuro, false).copy(alpha = 0.8f), il.topLeft, il.size)
+                drawRect(Color.Black.copy(alpha = 0.15f), q.topLeft, q.size, style = Stroke(0.5f * u))
+            }
+        }
+        // El brillo de la que ya se puede abrir.
+        if (e.brillo > 0f) drawRoundRect((if (oscuro) LIMON else AMARILLO).copy(alpha = 0.4f * e.brillo), carta.inflate(5 * u).topLeft, carta.inflate(5 * u).size, CornerRadius(6 * u))
+        // La postal de encima, que se da vuelta al abrirse.
+        val giro = cos(PI * e.abrir.coerceIn(0f, 1f)).toFloat()
+        val ancho = carta.width * abs(giro).coerceAtLeast(0.02f)
+        val vista = Rect(carta.center.x - ancho / 2, carta.top, carta.center.x + ancho / 2, carta.bottom)
+        drawRect(Color.Black.copy(alpha = 0.28f), vista.topLeft + Offset(2 * u, 3 * u), vista.size)
+        withTransform({ scale(abs(giro).coerceAtLeast(0.02f), 1f, carta.center) }) {
+            if (giro >= 0f) anverso(carta, variante, e.semilla, e.linea1, e.linea2, medidor, oscuro, k)
+            else reverso(carta, e.linea1, e.linea2, e.hoja, e.renglones, (e.subir * 2f).coerceIn(0f, 1f), medidor, oscuro, k)
+            drawRect(Color.Black.copy(alpha = 0.25f), carta.topLeft, carta.size, style = Stroke(0.6f * u))
+        }
+        if (giro < 0.98f) drawRect(Color.Black.copy(alpha = 0.25f * (1f - abs(giro))), vista.topLeft, vista.size)
+        if (giro < 0f) return
+        // La cinta para la frente que ata el montón: una vuelta de arriba abajo y otra de lado a lado, y el nudo con sus puntas.
+        val cruce = Offset(carta.left + carta.width * 0.9f, carta.top + carta.height * 0.42f)
+        val g = 5f * u * k
+        if (e.cordon > 0f) {
+            val f = e.cordon.coerceIn(0f, 1f)
+            val v1 = (f * 2f).coerceAtMost(1f)
+            cintaFrente(Offset(cruce.x, carta.top - 2 * u), Offset(cruce.x, carta.top - 2 * u + (carta.height + 4 * u) * v1), g, oscuro)
+            if (f > 0.5f) {
+                val v2 = ((f - 0.5f) * 2f).coerceIn(0f, 1f)
+                cintaFrente(Offset(carta.left - 2 * u, cruce.y), Offset(carta.left - 2 * u + (carta.width + 4 * u) * v2, cruce.y), g, oscuro)
+            }
+            if (f >= 1f) {
+                // Las dos puntas del nudo, con sus flecos.
+                listOf(-1f, 1f).forEach { sg ->
+                    val fin = cruce + Offset(sg * 9 * u * k, 18 * u * k)
+                    cintaFrente(cruce, fin, g * 0.85f, oscuro)
+                    for (j in -2..2) drawLine(fluor(NARANJA, oscuro), fin + Offset(j * g * 0.16f, 0f), fin + Offset(j * g * 0.2f + sg * 1.5f * u, 4 * u * k), 0.6f * u)
+                }
+            }
+        }
+        // La calcomanía del nudo: entera (y, al sellar, cayendo desde grande), o rota en dos.
+        val ro = minOf(carta.width, carta.height) * 0.14f
+        val tinte = fluor(if (e.alFuturo) MAGENTA else NARANJA, oscuro)
+        if (e.romper <= 0f) {
+            if (e.brillo > 0f) drawCircle(Brush.radialGradient(listOf((if (oscuro) LIMON else AMARILLO).copy(alpha = 0.6f * e.brillo), Color.Transparent), center = cruce, radius = ro * 2.6f), ro * 2.6f, cruce)
+            if (e.alfaSello > 0f) withTransform({ scale(e.escalaSello, e.escalaSello, cruce) }) { calcomaniaPsicodelia(cruce, ro, tinte, e.alfaSello, 0.4f) }
+        } else {
+            val rr = e.romper.coerceIn(0f, 1f)
+            val corte = Path().apply {
+                moveTo(cruce.x - ro * 0.1f, cruce.y - ro * 1.2f); lineTo(cruce.x + ro * 0.12f, cruce.y - ro * 0.4f); lineTo(cruce.x - ro * 0.08f, cruce.y + ro * 0.2f)
+                lineTo(cruce.x + ro * 0.1f, cruce.y + ro * 1.2f)
+            }
+            val izq = Path().apply { addPath(corte); lineTo(cruce.x - ro * 1.3f, cruce.y + ro * 1.2f); lineTo(cruce.x - ro * 1.3f, cruce.y - ro * 1.2f); close() }
+            val der = Path().apply { addPath(corte); lineTo(cruce.x + ro * 1.3f, cruce.y + ro * 1.2f); lineTo(cruce.x + ro * 1.3f, cruce.y - ro * 1.2f); close() }
+            withTransform({ translate(-3 * u * rr, 1 * u * rr); rotate(-8f * rr, cruce) }) { clipPath(izq) { calcomaniaPsicodelia(cruce, ro, tinte, 1f, 0.4f) } }
+            withTransform({ translate(3 * u * rr, 2 * u * rr); rotate(9f * rr, cruce) }) { clipPath(der) { calcomaniaPsicodelia(cruce, ro, tinte, 1f, 0.4f) } }
+        }
+    }
+
+    // La postal que sube, dada vuelta: lo escrito va en la mitad izquierda del reverso, bajo «Post Card».
+    override val cajaPrevia = Rect(0.13f, 0.36f, 0.49f, 0.7f)
+
+    override val altoBuzon: Dp = 210.dp
+
+    /** Una postal chica clavada en el corcho, en [q]: el borde blanco, un poco de su ilustración y su calcomanía. */
+    private fun DrawScope.postalChica(q: Rect, i: Int, oscuro: Boolean, brillo: Boolean) {
+        val u = density
+        drawRect(Color.Black.copy(alpha = 0.25f), q.topLeft + Offset(1 * u, 1.6f * u), q.size)
+        drawRect(if (brillo && oscuro) Color(0xFFE6E0F2) else t(Color(0xFFFBF6EC), oscuro, false), q.topLeft, q.size)
+        val il = Rect(q.left + q.width * 0.07f, q.top + q.height * 0.09f, q.right - q.width * 0.07f, q.top + q.height * 0.72f)
+        val col = listOf(TrazosPsicodelia.CIELO_TARDE, MAGENTA, Color(0xFF8FC3E8), NARANJA, TrazosPsicodelia.CASA_TURQUESA)[i % 5]
+        drawRect(t(col, oscuro, false), il.topLeft, il.size)
+        when (i % 3) {
+            0 -> with(TrazosPsicodelia) { casaVictoriana(Offset(il.center.x, il.bottom), il.width * 0.5f, il.height * 0.9f, t(TrazosPsicodelia.CASA_GRIS, oscuro, false), t(TrazosPsicodelia.CASA_BLANCA, oscuro, false), t(Color(0xFF5E6B78), oscuro, false)) }
+            1 -> with(TrazosPsicodelia) { flor(il.center, il.height * 0.38f, fluor(AMARILLO, oscuro), fluor(VIOLETA, oscuro), 6, 0.3f) }
+            else -> drawPath(Path().apply { moveTo(il.left, il.bottom); cubicTo(il.left + il.width * 0.3f, il.bottom - il.height * 0.5f, il.right - il.width * 0.3f, il.bottom - il.height * 0.4f, il.right, il.bottom - il.height * 0.2f); lineTo(il.right, il.bottom); close() }, t(Color(0xFF5FA654), oscuro, false))
+        }
+        drawRect(Color.Black.copy(alpha = 0.18f), q.topLeft, q.size, style = Stroke(0.5f * u))
+    }
+
+    /** Un trozo de cinta de pintor pegado en [r], con lo que dice escrito a plumón. */
+    private fun DrawScope.cintaPintor(r: Rect, texto: String, medidor: TextMeasurer, oscuro: Boolean, tam: Float, giro: Float) {
+        val u = density
+        rotate(giro, r.center) {
+            drawRect(Color.Black.copy(alpha = 0.18f), r.topLeft + Offset(0.6f * u, 1 * u), r.size)
+            drawRect(if (oscuro) Color(0xFF4E4672) else Color(0xFFF2E6C2), r.topLeft, r.size)
+            if (oscuro) drawRect(FVIOLETA.copy(alpha = 0.12f), r.inflate(1.5f * u).topLeft, r.inflate(1.5f * u).size)
+            // Las puntas rotas de la cinta.
+            listOf(r.left, r.right).forEach { x -> var y = r.top; var k = 0; while (y < r.bottom) { drawCircle(if (oscuro) Color(0xFF241A30) else t(Color(0xFFB98A55), false, false), 0.7f * u, Offset(x, y)); y += 2 * u; k++ } }
+            textoEn(medidor, texto, r.deflate(2 * u), TEXTO, if (oscuro) TINTA_NOCHE else TINTA, tam, minimo = 5f)
+        }
+    }
+
+    /**
+     * El correo del departamento: un tablero de corcho en la pared de la cocina, con su marco de pino y un trozo de cinta de
+     * pintor arriba que dice «Correo»; tres montones de postales clavadas con chinchetas, cada uno con su cinta escrita a
+     * plumón: las que ya se pueden abrir (que brillan), las postales para otro verano (atadas con la cinta para la frente y su
+     * calcomanía) y las leídas. Caben seis por montón; si hay más, se dice cuántas más. De noche, la luz negra hace brillar
+     * las chinchetas y las calcomanías.
+     */
+    override fun DrawScope.buzon(e: EstadoBuzon, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        fun c(x: Color) = t(x, oscuro, false)
+        drawRect(c(PARED))
+        if (!oscuro) drawRect(Brush.horizontalGradient(listOf(SOL.copy(alpha = 0.16f), Color.Transparent, Color.Black.copy(alpha = 0.06f)), 0f, w), Offset.Zero, Size(w, h))
+        // El tablero: marco de pino y corcho.
+        val tab = Rect(w * 0.04f, h * 0.05f, w * 0.96f, h * 0.95f)
+        drawRect(Color.Black.copy(alpha = 0.25f), tab.topLeft + Offset(2 * u, 4 * u), tab.size)
+        pino(tab, c(PINO), 601, nudos = 2)
+        val corcho = tab.deflate(6 * u)
+        drawRect(c(Color(0xFFB98A55)), corcho.topLeft, corcho.size)
+        clipRect(corcho.left, corcho.top, corcho.right, corcho.bottom) {
+            for (k in 0 until 260) drawCircle((if (k % 3 == 0) Color(0xFF7A5230) else if (k % 3 == 1) Color(0xFFD9AE78) else Color(0xFF5E3E22)).let { c(it) }.copy(alpha = 0.5f),
+                (0.4f + 0.8f * azar(603, k)) * u, Offset(corcho.left + corcho.width * azar(605, k), corcho.top + corcho.height * azar(607, k)))
+            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.25f), Color.Transparent), corcho.top, corcho.top + 10 * u), corcho.topLeft, Size(corcho.width, 10 * u))
+        }
+        drawRect(Color.Black.copy(alpha = 0.3f), corcho.topLeft, corcho.size, style = Stroke(0.8f * u))
+        cintaPintor(Rect(w / 2 - 34 * u, tab.top - 3 * u, w / 2 + 34 * u, tab.top + 13 * u), "Correo", medidor, oscuro, 11f, -2f)
+        // Los tres montones.
+        val cuentas = listOf(e.listas, e.selladas, e.abiertas)
+        val nombres = listOf("Para leer · ${e.listas}", "Para otro verano · ${e.selladas}", "Leídas · ${e.abiertas}")
+        val zona = (corcho.width - 12 * u) / 3f
+        for (j in 0 until 3) {
+            val zx = corcho.left + 6 * u + j * zona
+            val n = cuentas[j].coerceAtMost(6)
+            val qa = zona * 0.8f; val qh = qa / 1.45f
+            val base = Offset(zx + zona / 2, corcho.top + corcho.height * 0.47f)
+            if (j == 0 && n > 0) resplandor(base, zona * 0.6f, if (oscuro) LIMON else AMARILLO, if (oscuro) 0.9f else 0.6f)
+            for (i in 0 until n) {
+                val gq = (i - (n - 1) / 2f) * 7f + (azar(j * 13 + i, 2) - 0.5f) * 4f
+                val q = Rect(base.x - qa / 2 + (i - (n - 1) / 2f) * 3 * u, base.y - qh / 2 - i * 2.5f * u, base.x + qa / 2 + (i - (n - 1) / 2f) * 3 * u, base.y + qh / 2 - i * 2.5f * u)
+                rotate(gq, Offset(q.center.x, q.top)) {
+                    postalChica(q, i + j, oscuro, j == 0)
+                    if (i == n - 1) chincheta(Offset(q.center.x, q.top + 3 * u), 2.2f * u, listOf(MAGENTA, NARANJA, AZUL)[j], oscuro)
+                }
+            }
+            if (j == 1 && n > 0) {
+                val top = base.y - qh / 2 - (n - 1) * 2.5f * u
+                cintaFrente(Offset(base.x + qa * 0.25f, top - 3 * u), Offset(base.x + qa * 0.25f, base.y + qh / 2 + 2 * u), 4 * u, oscuro)
+                calcomaniaPsicodelia(Offset(base.x + qa * 0.25f, base.y), 6 * u, fluor(MAGENTA, oscuro))
+            }
+            cintaPintor(Rect(zx + 4 * u, corcho.bottom - 22 * u, zx + zona - 4 * u, corcho.bottom - 6 * u), nombres[j], medidor, oscuro, 8.5f, if (j == 1) 1.5f else -1f)
+            if (cuentas[j] > 6) {
+                val pc = Offset(zx + zona - 12 * u, corcho.bottom - 34 * u)
+                drawCircle(Color.Black.copy(alpha = 0.25f), 10 * u, pc + Offset(0.8f * u, 1.2f * u))
+                drawCircle(fluor(VERDE, oscuro), 10 * u, pc)
+                textoEn(medidor, "+${cuentas[j] - 6}", Rect(pc.x - 9 * u, pc.y - 7 * u, pc.x + 9 * u, pc.y + 7 * u), TITULO, if (oscuro) Color(0xFF1C2600) else PAPEL_CLARO, 11f, minimo = 6f)
+            }
+        }
+        if (oscuro) drawRect(Brush.radialGradient(0f to FVIOLETA.copy(alpha = 0.05f), 0.4f to Color.Transparent, 1f to SALA.copy(alpha = 0.5f), center = Offset(w * 0.5f, 0f), radius = w), Offset.Zero, Size(w, h))
+    }
+
+    // =================================================================
+    //  Lo de alrededor: las pestañas, el buscador, las obras y los recuerdos
+    // =================================================================
+
+    override val altoPestanas: Dp = 78.dp
+
+    /**
+     * El emblema de cada biblioteca, como trazo dentro de [r]: 0, el diario (el disco de larga duración); 1, los momentos (el
+     * periódico con su cabecera); 2, los sueños (la luna y una estrella); 3, el ideario (el sencillo, con su agujero grande);
+     * 4, las cartas (la postal con su estampilla).
+     */
+    private fun iconoBiblioteca(k: Int, r: Rect): Path = Path().apply {
+        val w = r.width; val h = r.height; val x = r.left; val y = r.top
+        val c = r.center
+        when (k) {
+            0 -> {
+                addOval(Rect(c, minOf(w, h) * 0.48f))
+                addOval(Rect(c, minOf(w, h) * 0.18f))
+                addArc(Rect(c, minOf(w, h) * 0.34f), 200f, 60f)
+            }
+            1 -> {
+                addRect(Rect(x + w * 0.08f, y + h * 0.1f, x + w * 0.92f, y + h * 0.9f))
+                moveTo(x + w * 0.2f, y + h * 0.28f); lineTo(x + w * 0.8f, y + h * 0.28f)
+                moveTo(x + w * 0.2f, y + h * 0.48f); lineTo(x + w * 0.46f, y + h * 0.48f)
+                moveTo(x + w * 0.2f, y + h * 0.64f); lineTo(x + w * 0.46f, y + h * 0.64f)
+                addOval(Rect(Offset(x + w * 0.66f, y + h * 0.6f), w * 0.13f))
+            }
+            2 -> {
+                addArc(Rect(c.x - w * 0.38f, c.y - w * 0.38f, c.x + w * 0.38f, c.y + w * 0.38f), 60f, 240f)
+                addArc(Rect(c.x - w * 0.14f, c.y - w * 0.36f, c.x + w * 0.3f, c.y + w * 0.36f), 270f, -180f)
+                moveTo(c.x + w * 0.38f, c.y - h * 0.42f); lineTo(c.x + w * 0.38f, c.y - h * 0.22f)
+                moveTo(c.x + w * 0.28f, c.y - h * 0.32f); lineTo(c.x + w * 0.48f, c.y - h * 0.32f)
+            }
+            3 -> {
+                addOval(Rect(c, minOf(w, h) * 0.42f))
+                addOval(Rect(c, minOf(w, h) * 0.2f))
+                moveTo(c.x - minOf(w, h) * 0.08f, c.y); lineTo(c.x + minOf(w, h) * 0.08f, c.y)
+            }
+            else -> {
+                addRect(Rect(x + w * 0.02f, y + h * 0.2f, x + w * 0.98f, y + h * 0.8f))
+                addRect(Rect(x + w * 0.66f, y + h * 0.28f, x + w * 0.88f, y + h * 0.5f))
+                moveTo(c.x, y + h * 0.3f); lineTo(c.x, y + h * 0.72f)
+                moveTo(x + w * 0.1f, y + h * 0.5f); lineTo(x + w * 0.4f, y + h * 0.5f)
+                moveTo(x + w * 0.1f, y + h * 0.62f); lineTo(x + w * 0.36f, y + h * 0.62f)
+            }
+        }
+    }
+
+    /**
+     * Las pestañas son los cinco separadores de cartulina de una caja de discos, como los de las tiendas: asoman entre las
+     * fundas, cada uno de un color de cartel, con su emblema, su nombre y su cuenta; el elegido sube y se imprime dos veces,
+     * con su complementario corrido detrás. Abajo, la tablilla de la caja de fruta.
+     */
+    override fun DrawScope.pestanas(e: EstadoPestanas, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val canto = Rect(0f, h - 15 * u, w, h)
+        val colores = listOf(MAGENTA_CARTEL, Color(0xFF2456C9), VERDE_CARTEL, NARANJA_CARTEL, Color(0xFF6A34B8))
+        val contras = listOf(VERDE, NARANJA, MAGENTA, AZUL, AMARILLO)
+        // Las fundas de la caja, que asoman detrás de los separadores.
+        var x = 2 * u; var i = 0
+        while (x < w - 2 * u) {
+            val alto = 16 * u + 6 * u * azar(i, 5)
+            drawRect(t(listOf(CARTON, Color(0xFF3A3040), MAGENTA, Color(0xFFE9E2D2), AZUL)[i % 5], oscuro, false), Offset(x, canto.top - alto), Size(3.6f * u, alto))
+            drawLine(Color.Black.copy(alpha = 0.3f), Offset(x + 3.6f * u, canto.top - alto), Offset(x + 3.6f * u, canto.top), 0.5f * u)
+            x += 4.2f * u; i++
+        }
+        for (k in 0 until 5) {
+            val q0 = quinta(k, w, 0f, h)
+            val sel = k == e.actual
+            val sube = if (sel) 0f else 7 * u
+            val r = Rect(q0.left + 3 * u, 2 * u + sube, q0.right - 3 * u, canto.top + 4 * u)
+            val forma = Path().apply {
+                moveTo(r.left, r.bottom); lineTo(r.left, r.top + 11 * u)
+                quadraticTo(r.left, r.top, r.left + 11 * u, r.top)
+                lineTo(r.right - 11 * u, r.top)
+                quadraticTo(r.right, r.top, r.right, r.top + 11 * u)
+                lineTo(r.right, r.bottom); close()
+            }
+            val col = if (oscuro) (if (sel) fluor(colores[k], true).let { mezcla(it, SALA, 0.35f) } else t(colores[k], true, false)) else colores[k]
+            translate(1 * u, 2 * u) { drawPath(forma, Color.Black.copy(alpha = 0.3f)) }
+            if (sel) translate(2.2f * u, 1.6f * u) { drawPath(forma, fluor(contras[k], oscuro)) }
+            drawPath(forma, col)
+            clipPath(forma) {
+                drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = if (sel) 0.22f else 0.1f), Color.Transparent, Color.Black.copy(alpha = 0.22f)), r.top, r.bottom), r.topLeft, r.size)
+                // La cartulina: un poco de fibra.
+                for (n in 0 until 8) drawLine(Color.White.copy(alpha = 0.06f), Offset(r.left, r.top + r.height * azar(k, n)), Offset(r.right, r.top + r.height * azar(k, n) + 2 * u), 0.5f * u)
+            }
+            if (sel && oscuro) brilla(forma, fluor(colores[k], true).copy(alpha = 0.5f), 1.4f * u)
+            val texto = if (oscuro && !sel) TINTA_NOCHE.copy(alpha = 0.8f) else PAPEL_CLARO
+            val ic = Rect(r.center.x - 8 * u, r.top + 6 * u, r.center.x + 8 * u, r.top + 21 * u)
+            drawPath(iconoBiblioteca(k, ic), if (sel) (if (oscuro) LIMON else AMARILLO) else texto, style = Stroke(1.3f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            letrero(medidor, e.nombres.getOrElse(k) { "" }, Rect(r.left + 2 * u, r.top + 23 * u, r.right - 2 * u, r.top + 37 * u), ROTULO, texto, 10f, luce = sel && oscuro, minimo = 5f)
+            textoEn(medidor, Psicodelia.numero(e.cuentas.getOrElse(k) { 0 }), Rect(r.left + 2 * u, r.top + 37 * u, r.right - 2 * u, r.top + 49 * u), ROTULO, if (sel) (if (oscuro) LIMON else AMARILLO) else texto, 9.5f, minimo = 5f)
+        }
+        // La tablilla de la caja de fruta, al frente.
+        drawRect(Color.Black.copy(alpha = 0.3f), Offset(canto.left, canto.top - 2 * u), Size(canto.width, 2 * u))
+        pino(canto, t(PINO, oscuro, false), 701, nudos = 2)
+        drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = if (oscuro) 0.04f else 0.24f), Color.Transparent, Color.Black.copy(alpha = 0.3f)), canto.top, canto.bottom), canto.topLeft, canto.size)
+        listOf(canto.left + 6 * u, canto.right - 6 * u).forEach { xx -> drawCircle(Color.Black.copy(alpha = 0.4f), 0.9f * u, Offset(xx, canto.center.y)) }
+    }
+
+    // ---------------------------------------------------------------- el buscador
+
+    override val altoCampo: Dp = 52.dp
+    override val cajaCampo = Rect(0.17f, 0.24f, 0.83f, 0.8f)
+    override val letraCampo: FontFamily = TEXTO
+    override fun tintaCampo(oscuro: Boolean): Color = tinta(oscuro)
+
+    /**
+     * El buscador es el dial de la radio de válvulas: el mueble de madera, el vidrio del dial con las rayitas de la escala de
+     * la FM arriba y la aguja, y las dos perillas a los lados. Con el foco, el dial se enciende con su luz tibia y la aguja
+     * se va al 106.9, la FM de noche.
+     */
+    override fun DrawScope.campo(e: EstadoCampo, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val r = Rect(2 * u, 3 * u, w - 2 * u, h - 3 * u)
+        val rad = CornerRadius(12 * u)
+        // El mueble de madera de la radio.
+        drawRoundRect(Color.Black.copy(alpha = 0.25f), r.topLeft + Offset(1 * u, 2 * u), r.size, rad)
+        drawRoundRect(Brush.verticalGradient(listOf(t(Color(0xFF9A6438), oscuro, false), t(Color(0xFF6E4024), oscuro, false)), r.top, r.bottom), r.topLeft, r.size, rad)
+        clipPath(Path().apply { addRoundRect(RoundRect(r, rad)) }) { vetas(r, Color.Black.copy(alpha = 0.18f), 801, 0.8f, false, 0.5f, 0.4f) }
+        drawRoundRect(Color.White.copy(alpha = if (oscuro) 0.04f else 0.14f), Offset(r.left + 6 * u, r.top + 1.5f * u), Size(r.width - 12 * u, 3 * u), CornerRadius(1.5f * u))
+        // El vidrio del dial.
+        val dial = Rect(w * 0.14f, h * 0.16f, w * 0.86f, h * 0.84f)
+        val dradio = CornerRadius(dial.height / 2f)
+        val vidrio = when {
+            oscuro && e.enfocado -> Color(0xFF3A2A40)
+            oscuro -> Color(0xFF241A30)
+            e.enfocado -> Color(0xFFFFEDC4)
+            else -> Color(0xFFF4EAD2)
+        }
+        if (e.enfocado) drawRoundRect(Color(0xFFFFB24A).copy(alpha = if (oscuro) 0.3f else 0.35f), dial.inflate(3 * u).topLeft, dial.inflate(3 * u).size, CornerRadius(dradio.x + 3 * u))
+        drawRoundRect(vidrio, dial.topLeft, dial.size, dradio)
+        if (e.enfocado) drawRoundRect(Brush.verticalGradient(listOf(Color(0xFFFFC870).copy(alpha = if (oscuro) 0.18f else 0.3f), Color.Transparent), dial.top, dial.bottom), dial.topLeft, dial.size, dradio)
+        // La escala: rayitas de la FM a lo largo del borde de arriba.
+        val escala = if (oscuro) TENUE_NOCHE.copy(alpha = 0.55f) else Color(0xFF5A4630).copy(alpha = 0.5f)
+        val x0 = dial.left + dial.height * 0.45f; val x1 = dial.right - dial.height * 0.45f
+        for (i in 0..40) {
+            val xx = x0 + (x1 - x0) * i / 40f
+            drawLine(escala, Offset(xx, dial.top + 2 * u), Offset(xx, dial.top + (if (i % 5 == 0) 6f else 4f) * u), (if (i % 5 == 0) 0.7f else 0.4f) * u)
+        }
+        textoEn(medidor, "FM", Rect(dial.left + 3 * u, dial.top + 1 * u, dial.left + dial.height * 0.5f, dial.top + 9 * u), ROTULO, escala, 6f, minimo = 3f)
+        // La aguja: arriba, como una flecha corta; con el foco, en el 106.9.
+        val f = if (e.enfocado) (106.9f - 88f) / 20f else 0.18f
+        val ax = x0 + (x1 - x0) * f
+        drawLine(Color(0xFFC0392B), Offset(ax, dial.top + 1.5f * u), Offset(ax, dial.top + dial.height * 0.32f), 1.2f * u, StrokeCap.Round)
+        drawRoundRect(Color(0xFF5A4630).copy(alpha = 0.5f), dial.topLeft, dial.size, dradio, style = Stroke(0.8f * u))
+        // Las perillas, de baquelita, con su raya; la de sintonía gira con el foco.
+        listOf(Offset(w * 0.075f, h / 2), Offset(w * 0.925f, h / 2)).forEachIndexed { i, kc ->
+            val kr = minOf(h * 0.3f, w * 0.05f)
+            drawCircle(Color.Black.copy(alpha = 0.3f), kr, kc + Offset(0.6f * u, 1 * u))
+            drawCircle(Brush.radialGradient(listOf(t(Color(0xFF5A3A22), oscuro, false), t(Color(0xFF2A1A10), oscuro, false)), center = kc - Offset(kr * 0.3f, kr * 0.3f), radius = kr * 1.3f), kr, kc)
+            for (j in 0 until 12) { val a = 2 * PI * j / 12; drawLine(Color.Black.copy(alpha = 0.3f), Offset(kc.x + (kr * 0.8f * cos(a)).toFloat(), kc.y + (kr * 0.8f * sin(a)).toFloat()), Offset(kc.x + (kr * cos(a)).toFloat(), kc.y + (kr * sin(a)).toFloat()), 0.6f * u) }
+            val ang = if (i == 1 && e.enfocado) 0.9 else -PI / 2
+            drawLine(t(Color(0xFFEFE2C0), oscuro, false), kc, Offset(kc.x + (kr * 0.7f * cos(ang)).toFloat(), kc.y + (kr * 0.7f * sin(ang)).toFloat()), 1 * u, StrokeCap.Round)
+        }
+        if (e.vacio) aIzquierda(medidor, e.pista, Rect(w * cajaCampo.left, h * cajaCampo.top, w * cajaCampo.right, h * cajaCampo.bottom), TEXTO,
+            tinta(oscuro).copy(alpha = if (oscuro) 0.6f else 0.48f), 14f, minimo = 9f)
+    }
+
+    // ---------------------------------------------------------------- las obras
+
+    /**
+     * Las obras se apoyan en la vidriera de la tienda de carteles y discos de Haight: detrás del vidrio, la pared del local con
+     * tres carteles propios y una guirnalda de flores de papel; el vidrio refleja, apenas, las casas de enfrente; abajo, el
+     * antepecho de madera pintado a mano con las franjas del arcoíris. De noche, la tienda bajo la luz negra: los carteles
+     * brillan.
+     */
+    override fun DrawScope.repisaObras(medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        fun c(x: Color) = t(x, oscuro, false)
+        drawRect(Brush.verticalGradient(listOf(c(Color(0xFF6A5040)), c(Color(0xFF4A3628))), 0f, h), Offset.Zero, Size(w, h))
+        // Los carteles de la pared del local.
+        val n = 4
+        for (k in 0 until n) {
+            val cw = w / n * 0.66f; val chh = h * 0.42f
+            val q = Rect(w * (k + 0.5f) / n - cw / 2, h * 0.12f + (k % 2) * 6 * u, w * (k + 0.5f) / n + cw / 2, h * 0.12f + (k % 2) * 6 * u + chh)
+            val (a0, b0) = PARES[(k * 2 + 1) % PARES.size]
+            rotate(if (k % 2 == 0) -2f else 1.5f, q.center) {
+                drawRect(Color.Black.copy(alpha = 0.3f), q.topLeft + Offset(2 * u, 3 * u), q.size)
+                drawRect(if (oscuro) Color(0xFF1C0F26) else a0, q.topLeft, q.size)
+                clipRect(q.left, q.top, q.right, q.bottom) {
+                    for (j in 0 until 5) drawPath(TrazosPsicodelia.gota(Offset(q.center.x, q.top + q.height * 0.42f), q.width * (0.9f - j * 0.17f), 0.2f * j + k, 0.05f, 5),
+                        if (j % 2 == 0) fluor(b0, oscuro) else (if (oscuro) Color(0xFF1C0F26) else a0))
+                    with(TrazosPsicodelia) { flor(Offset(q.center.x, q.top + q.height * 0.42f), q.width * 0.2f, fluor(AMARILLO, oscuro), fluor(VIOLETA, oscuro), 6, 0.4f) }
+                    drawRect(fluor(b0, oscuro), Offset(q.left, q.bottom - q.height * 0.16f), Size(q.width, q.height * 0.16f))
+                }
+                if (oscuro) resplandor(q.center, q.width, fluor(b0, true), 0.5f)
+            }
+        }
+        // La guirnalda de flores de papel, colgada de lado a lado.
+        val g = onda(Offset(0f, h * 0.06f), Offset(w, h * 0.06f), 2f, 5 * u)
+        drawPath(g, c(Color(0xFF3A2A20)), style = Stroke(0.7f * u))
+        for (k in 0 until 12) {
+            val x = w * (k + 0.5f) / 12f
+            val y = h * 0.06f + 5 * u * sin((k + 0.5f) / 12f * 2f * 2f * PI.toFloat())
+            with(TrazosPsicodelia) { flor(Offset(x, y), 4 * u, fluor(listOf(MAGENTA, NARANJA, AMARILLO, VERDE)[k % 4], oscuro).let { if (oscuro) it else it }, c(PAPEL_CLARO), 5, 0.2f) }
+        }
+        // El reflejo del vidrio: las casas de enfrente, apenas, y dos rayas de brillo.
+        if (!oscuro) {
+            for (k in 0 until 3) with(TrazosPsicodelia) { casaVictoriana(Offset(w * (0.2f + k * 0.32f), h * 0.86f), w * 0.26f, h * 0.7f, Color.White.copy(alpha = 0.06f), Color.White.copy(alpha = 0.08f), Color.White.copy(alpha = 0.05f)) }
+            listOf(0.18f, 0.62f).forEach { f -> drawPath(Path().apply { moveTo(w * f, 0f); lineTo(w * (f + 0.08f), 0f); lineTo(w * (f - 0.06f), h); lineTo(w * (f - 0.14f), h); close() }, Color.White.copy(alpha = 0.08f)) }
+        } else resplandor(Offset(w / 2, 0f), w * 0.6f, FVIOLETA, 0.7f)
+        // El antepecho pintado a mano con las franjas del arcoíris.
+        val y0 = h - 22 * u
+        drawRect(Color.Black.copy(alpha = 0.35f), Offset(0f, y0 - 3 * u), Size(w, 3 * u))
+        val cols = if (oscuro) ARCOIRIS_FLUOR else ARCOIRIS
+        val franja = (h - y0) / cols.size
+        cols.forEachIndexed { i, col -> drawRect(if (oscuro) col.copy(alpha = 0.85f) else col, Offset(0f, y0 + i * franja), Size(w, franja + 0.5f)) }
+        drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = if (oscuro) 0.05f else 0.25f), Color.Transparent, Color.Black.copy(alpha = 0.3f)), y0, h), Offset(0f, y0), Size(w, h - y0))
+        if (oscuro) drawRect(Brush.horizontalGradient(ARCOIRIS_FLUOR.map { it.copy(alpha = 0.2f) }, 0f, w), Offset(0f, y0 - 6 * u), Size(w, 6 * u))
+    }
+
+    /** Un título partido por palabras en a lo más tres renglones que caben en [r], impreso dos veces como en los carteles. */
+    private fun DrawScope.tituloEn(medidor: TextMeasurer, titulo: String, r: Rect, letra: FontFamily, color: Color, contra: Color, tam: Float) {
+        val palabras = titulo.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
+        if (palabras.isEmpty()) return
+        val lineas = mutableListOf<String>()
+        var actual = ""
+        palabras.forEach { p ->
+            val prueba = if (actual.isEmpty()) p else "$actual $p"
+            if (actual.isNotEmpty() && anchoTx(medidor, prueba, letra, tam) > r.width && lineas.size < 2) { lineas.add(actual); actual = p }
+            else { actual = prueba }
+        }
+        lineas.add(actual)
+        val alto = r.height / 3f
+        var y = r.center.y - alto * lineas.size / 2f
+        lineas.forEach { s ->
+            vibra(medidor, s, Rect(r.left, y, r.right, y + alto), letra, color, contra, tam, minimo = tam * 0.45f)
+            y += alto
+        }
+    }
+
+    /** Cuál de [n] variantes le toca a una obra según su [semilla], que puede venir negativa. */
+    private fun variante(semilla: Int, n: Int): Int = Math.floorMod(semilla, n.coerceAtLeast(1))
+
+    /**
+     * La portada de una obra es un cartel de concierto propio: el fondo de un color de cartel con anillos ondulados de su
+     * complementario, el marco ondulado, el tipo arriba en una franja, el título en letras infladas impresas dos veces (crema,
+     * con el complementario corrido detrás), la flor que vibra y, en una burbuja, el autor y el año. De noche, impreso en tinta
+     * fluorescente sobre negro. En miniatura, solo la inicial en su burbuja.
+     */
+    override fun DrawScope.portadaObra(e: EstadoPortada, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val s = w / u
+        val (a0, b0) = PARES[variante(e.semilla, PARES.size)]
+        val fondo = if (oscuro) Color(0xFF1C0F26) else a0
+        val contra = fluor(b0, oscuro)
+        val g = maxOf(0.5f * u, w * 0.006f)
+        drawRect(fondo, Offset.Zero, Size(w, h))
+        if (e.mini) {
+            drawCircle(contra, w * 0.42f, Offset(w / 2, h / 2), style = Stroke(maxOf(1f * u, w * 0.05f)))
+            vibra(medidor, e.titulo.trim().take(1).uppercase().ifEmpty { "·" }, Rect(0f, h * 0.25f, w, h * 0.75f), TITULO, if (oscuro) LIMON else PAPEL_CLARO, contra, s * 0.5f, minimo = 5f)
+            return
+        }
+        clipRect(0f, 0f, w, h) {
+            for (j in 0 until 6) drawPath(TrazosPsicodelia.gota(Offset(w / 2, h * 0.66f), w * (1.1f - j * 0.17f), 0.15f * j, 0.04f, 6),
+                if (j % 2 == 0) contra.copy(alpha = if (oscuro) 0.5f else 0.55f) else fondo)
+        }
+        // El marco ondulado.
+        val m = Rect(w * 0.05f, h * 0.035f, w * 0.95f, h * 0.965f)
+        drawRoundRect(contra, m.topLeft, m.size, CornerRadius(w * 0.08f), style = Stroke(w * 0.025f))
+        listOf(m.top + w * 0.05f, m.bottom - w * 0.05f).forEach { y -> drawPath(onda(Offset(m.left + w * 0.08f, y), Offset(m.right - w * 0.08f, y), 6f, w * 0.012f), contra, style = Stroke(g)) }
+        // El tipo, arriba, en su franja.
+        val tipo = Rect(m.left + w * 0.12f, m.top + h * 0.06f, m.right - w * 0.12f, m.top + h * 0.13f)
+        drawRoundRect(contra, tipo.topLeft, tipo.size, CornerRadius(tipo.height / 2f))
+        textoEn(medidor, e.tipo, tipo.deflate(w * 0.01f), ROTULO, if (oscuro) Color(0xFF1C0F26) else fondo, s * 0.07f, espaciado = s * 0.01f, minimo = 3.5f)
+        // El título.
+        tituloEn(medidor, e.titulo, Rect(m.left + w * 0.06f, tipo.bottom + h * 0.03f, m.right - w * 0.06f, tipo.bottom + h * 0.38f), TITULO, if (oscuro) LIMON else PAPEL_CLARO,
+            if (oscuro) FMAGENTA else mezcla(b0, Color.Black, 0.2f), s * 0.13f)
+        // La flor que vibra.
+        with(TrazosPsicodelia) { flor(Offset(w / 2, h * 0.69f), w * 0.15f, fluor(AMARILLO, oscuro), fluor(VIOLETA, oscuro), 8, 0.5f) }
+        // El autor y el año, en su burbuja.
+        val pie = listOf(e.autor, e.anio).filter { it.isNotBlank() }.joinToString(" · ")
+        if (pie.isNotEmpty()) {
+            val ca = Rect(m.left + w * 0.07f, h * 0.83f, m.right - w * 0.07f, h * 0.91f)
+            drawRoundRect(if (oscuro) Color(0xFF2B2140) else PAPEL_CLARO, ca.topLeft, ca.size, CornerRadius(ca.height / 2f))
+            textoEn(medidor, pie, ca.deflate(w * 0.03f), TEXTO, if (oscuro) TINTA_NOCHE else TINTA, s * 0.065f, minimo = 3.5f)
+        }
+        drawRect(Color.Black.copy(alpha = 0.3f), Offset.Zero, Size(w, h), style = Stroke(g))
+        if (!oscuro) drawRect(Brush.linearGradient(listOf(Color.White.copy(alpha = 0.12f), Color.Transparent), Offset.Zero, Offset(w, h)), Offset.Zero, Size(w, h))
+    }
+
+    // ---------------------------------------------------------------- los recuerdos
+
+    override val margenRecuerdo: Dp = 14.dp
+    override val altoRotuloRecuerdo: Dp = 50.dp
+    override fun tintaRecuerdo(oscuro: Boolean): Color = tinta(oscuro)
+
+    /** «Hace un año» o «Hace N años». */
+    private fun haceAnios(n: Int): String = if (n == 1) "Hace un año" else "Hace $n años"
+
+    /** El clima sin su signo (☀ ☂ ❄), que las letras del tema no traen. */
+    private fun sinSigno(clima: String): String = clima.dropWhile { !it.isLetterOrDigit() }.trim()
+
+    /**
+     * El recuerdo es un volante del barrio, tirado en mimeógrafo con su tinta violeta: el papel un poco gris, la trama de
+     * arcoíris arriba, sujeto con un trozo de cinta; en la cabecera, una calcomanía de flor con los años, «Hace N años» en
+     * letras infladas y la fecha con el clima; debajo, una onda violeta; a la derecha, la calcomanía del ánimo y, abajo, una
+     * flor dibujada a mano.
+     */
+    override fun DrawScope.recuerdo(e: EstadoRecuerdo, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val fondo = if (oscuro) Color(0xFF241A30) else Color(0xFFF4F0EE)
+        val tinta = tintaRecuerdo(oscuro)
+        val mimeo = if (oscuro) FVIOLETA else Color(0xFF5B3F9E)
+        val cab = altoRotuloRecuerdo.toPx()
+        val forma = Path().apply { addRoundRect(RoundRect(Rect(0f, 0f, w, h), CornerRadius(8 * u))) }
+        clipPath(forma) {
+            drawRect(fondo)
+            // El mimeógrafo: manchas violeta pálidas y el corrimiento de la tinta.
+            for (k in 0 until 7) drawCircle(mimeo.copy(alpha = 0.04f), (6f + 12f * azar(e.semilla, k)) * u, Offset(w * azar(e.semilla, k + 5), h * azar(e.semilla, k + 11)))
+            tramaArcoiris(Rect(0f, 0f, w, 9 * u), oscuro, 0.75f)
+            // La flor dibujada a mano, abajo a la derecha.
+            if (h > cab + 40 * u) {
+                val pie = Offset(w - 34 * u, h - 6 * u)
+                val alto = (h - cab - 16 * u).coerceAtMost(70 * u)
+                val tallo = Path().apply { moveTo(pie.x, pie.y); cubicTo(pie.x - 6 * u, pie.y - alto * 0.4f, pie.x + 8 * u, pie.y - alto * 0.6f, pie.x, pie.y - alto * 0.78f) }
+                drawPath(tallo, mimeo.copy(alpha = 0.45f), style = Stroke(1.2f * u, cap = StrokeCap.Round))
+                drawPath(Path().apply { moveTo(pie.x - 1 * u, pie.y - alto * 0.35f); quadraticTo(pie.x - 14 * u, pie.y - alto * 0.5f, pie.x - 16 * u, pie.y - alto * 0.38f); quadraticTo(pie.x - 8 * u, pie.y - alto * 0.32f, pie.x - 1 * u, pie.y - alto * 0.35f); close() }, mimeo.copy(alpha = 0.3f))
+                val fc = Offset(pie.x, pie.y - alto * 0.78f)
+                for (k in 0 until 6) { val a = 2 * PI * k / 6; drawCircle(mimeo.copy(alpha = 0.45f), 4.5f * u, Offset(fc.x + (6 * u * cos(a)).toFloat(), fc.y + (6 * u * sin(a)).toFloat()), style = Stroke(1 * u)) }
+                drawCircle(mimeo.copy(alpha = 0.5f), 2.5f * u, fc)
+            }
+        }
+        drawPath(forma, Color.Black.copy(alpha = 0.22f), style = Stroke(1f * u))
+        // El trozo de cinta que lo sujeta, arriba.
+        rotate(-4f, Offset(w * 0.5f, 2 * u)) { drawRect((if (oscuro) Color(0xFF4E4672) else Color(0xFFEFE2BC)).copy(alpha = 0.85f), Offset(w * 0.5f - 18 * u, -4 * u), Size(36 * u, 11 * u)) }
+        // La onda violeta bajo la cabecera.
+        drawPath(onda(Offset(14 * u, cab - 2 * u), Offset(w - 40 * u, cab - 2 * u), 6f, 1.4f * u), mimeo.copy(alpha = 0.6f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
+        // La calcomanía de flor con los años.
+        val tc = Offset(28 * u, cab / 2f + 3 * u)
+        calcomaniaPsicodelia(tc, 16 * u, fluor(NARANJA, oscuro), 1f, 0.15f)
+        drawCircle(if (oscuro) Color(0xFF241A30) else PAPEL_CLARO, 8.5f * u, tc)
+        textoEn(medidor, "${e.anios.coerceAtLeast(1)}", Rect(tc.x - 8 * u, tc.y - 7 * u, tc.x + 8 * u, tc.y + 7 * u), TITULO, if (oscuro) LIMON else TINTA, 12f, minimo = 6f)
+        val col = Rect(52 * u, 8 * u, w - 34 * u, cab - 6 * u)
+        aIzquierda(medidor, haceAnios(e.anios), Rect(col.left, col.top, col.right, col.top + col.height * 0.55f), TITULO, mimeo, 15f, minimo = 7f)
+        val clima = sinSigno(e.clima)
+        aIzquierda(medidor, if (clima.isEmpty()) e.fecha else e.fecha + " · " + clima, Rect(col.left, col.top + col.height * 0.55f, col.right, col.bottom), TEXTO, tinta, 10.5f, minimo = 6.5f)
+        // La calcomanía del ánimo, a la derecha.
+        puntoAnimo(Offset(w - 18 * u, 20 * u), 7 * u, e.animo, oscuro)
+    }
+}

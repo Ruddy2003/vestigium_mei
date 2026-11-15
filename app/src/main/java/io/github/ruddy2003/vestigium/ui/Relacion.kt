@@ -96,7 +96,13 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     // El escudo: recto arriba y redondo abajo.
     TemaId.TEMPLARIO -> MarcoRecuadro(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 16.dp), 12.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
-    TemaId.PSICODELIA -> MarcoRecuadro(RectangleShape, 12.dp)
+    // Una burbuja de cartel: los cantos de arriba y de abajo ondulan apenas, en contra, y las esquinas son muy redondas.
+    TemaId.PSICODELIA -> MarcoRecuadro(androidx.compose.foundation.shape.GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val r = minOf(h * 0.3f, w * 0.18f); val k = minOf(h * 0.05f, w * 0.03f)
+        moveTo(r, k); cubicTo(w * 0.36f, -k * 0.5f, w * 0.64f, k * 2.2f, w - r, k); quadraticTo(w, k, w, r)
+        lineTo(w, h - r); quadraticTo(w, h - k, w - r, h - k); cubicTo(w * 0.64f, h - k * 2.2f, w * 0.36f, h + k * 0.5f, r, h - k)
+        quadraticTo(0f, h - k, 0f, h - r); lineTo(0f, r); quadraticTo(0f, k, r, k); close()
+    }, 13.dp)
     // La placa de una entrada de metro: el canto de arriba sube en medio en una curva suave, como el letrero de Guimard, y
     // las esquinas de abajo son redondas.
     TemaId.NOUVEAU -> MarcoRecuadro(androidx.compose.foundation.shape.GenericShape { s, _ ->
@@ -308,13 +314,17 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 x += 12 * u
             }
         }
+        // Una cadena de margaritas, como las que se trenzaban en el parque: el tallo que ondula de recuadro a recuadro y, cada
+        // tanto, una flor con su botón calado; más gruesa cuanto más fuerte el lazo.
         TemaId.PSICODELIA -> {
-            drawLine(col, Offset(0f, y), Offset(w, y), grosor * 0.7f + 0.6f * u, pathEffect = punteado)
-            val b = 2.5f * u + grosor * 0.35f
-            var x = 9 * u
-            while (x < w - 6 * u) {
-                drawLine(col, Offset(x - b, y - b), Offset(x + b, y + b), 1.1f * u); drawLine(col, Offset(x - b, y + b), Offset(x + b, y - b), 1.1f * u)
-                x += 12 * u
+            val m = 6 * u; val a = 2.2f * u
+            drawPath(TrazosPsicodelia.onda(m, w - m, y, a, 16f * u), col, style = Stroke(grosor * 0.5f + 0.8f * u, cap = StrokeCap.Round, pathEffect = punteado))
+            val rf = 3.2f * u + grosor * 0.35f
+            var x = 11f * u; var k = 0
+            while (x < w - 8 * u) {
+                val q = Offset(x, y + a * sin(2f * PI.toFloat() * (x - m) / (16f * u)))
+                with(TrazosPsicodelia) { margarita(q, rf, col, fondo, 6, k * 0.5f) }
+                x += 15f * u; k++
             }
         }
         // Una línea de látigo de recuadro a recuadro: una sola S que se enrosca en cada punta (abajo a la izquierda y arriba a la
