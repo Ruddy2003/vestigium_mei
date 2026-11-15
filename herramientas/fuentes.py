@@ -491,6 +491,9 @@ def hacer(origen, ejes, salida, nombre, letras, cache):
     if salida in CON_SIGNOS_NOTO:
         anadir_escritura(f, "notosanssymbols2/NotoSansSymbols2-Regular.ttf", SIGNOS_NOTO_2, None, cache, "ns2", solo_faltan=True)
         anadir_escritura(f, "notosanssymbols/NotoSansSymbols[wght].ttf", SIGNOS_NOTO_1, {"wght": CON_SIGNOS_NOTO[salida]}, cache, "ns1", solo_faltan=True)
+        if salida == "burbuja_titulo":
+            # Las cifras de Modak se confunden en tamaño chico (el 8 parece una S): las de Fredoka en negrita y ancha.
+            anadir_escritura(f, "fredoka/Fredoka[wdth,wght].ttf", [ord(c) for c in "0123456789"], {"wght": 700, "wdth": 118}, cache, "fre")
     if salida in CON_SIGNOS_BRYGADA:
         anadir_escritura(f, "brygada1918/Brygada1918[wght].ttf", SIGNOS_BRYGADA, {"wght": CON_SIGNOS_BRYGADA[salida]}, cache, "bry", solo_faltan=True)
     if salida in CON_HEBREO_COPTO:
