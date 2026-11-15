@@ -1147,7 +1147,7 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
 
 ### 10f. Art nouveau (`nouveau`)
 
-**Estado (15 nov 2026): en curso** en la rama de los temas nuevos. Hechos: la guía (`docs/diseno/temas/nouveau.md`), la base en el código (paleta, Federant, Brygada 1918 y Della Respira, la fecha con la flor del día de La Tour y la hora de París, la voz, las 21 frases comprobadas), los sonidos, el ícono, el sello, el papel, los widgets y el gato. En curso: las superficies y la otra vida. Decisiones a confirmar por el autor: el contorno del gato (línea curva de pluma, no el borde de un píxel de los demás gatos); la lista de flores sale de la lectura automática de Wikisource, sin cotejar con el impreso.
+**Estado (15 nov 2026): programado** en la rama de los temas nuevos, todo menos el cuadro (va en la fila de escenas, después de S19). Guía: `docs/diseno/temas/nouveau.md`; fuentes: `docs/diseno/temas/fuentes_nouveau.md`. La otra vida es Marguerite, aprendiz de litógrafa, con su calendario de 1898 a 1902 (la Exposición y el metro con sus fechas comprobadas) y el cuento de la temporada 1. Decisiones a confirmar por el autor: el contorno del gato (línea curva de pluma, no el borde de un píxel de los demás gatos); la lista de flores sale de la lectura automática de Wikisource, sin cotejar con el impreso; el nombre (Marguerite; otras: Jeanne, Louise, Suzanne).
 
 **Fuentes comprobadas** (15 nov 2026): `docs/diseno/temas/fuentes_nouveau.md`, con 20 correcciones, ya puestas aquí.
 
