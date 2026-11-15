@@ -35,8 +35,10 @@ import io.github.ruddy2003.vestigium.vidas.TextoEspecial
  * - Sejano: el 18 de octubre (`sejano_31`) lo cuenta el narrador, porque en Galilea nadie lo sabe; la noticia llega el
  *   12 de diciembre (`noticia_sejano_31`). Solo se afirma lo comprobado (la carta de Tiberio, el templo de la Concordia,
  *   la condena esa misma tarde); lo demás va como lo que se dice en el mercado. Nada de Pilato y Sejano (sección 7).
- * - Los días de la semana del año 31 no se nombran (como en la temporada 1): con la tabla de la sección 6, el 31 de
- *   marzo (el consejo), el 7 de abril, el 15 y el 29 de septiembre caen en sábado, y no hay que decirlo.
+ * - Los días de la semana del año 31 no se nombran (como en la temporada 1): contados en juliano, caen en sábado el
+ *   31 de marzo (el consejo), el 7 de abril (el último día de bajada), el 15 de septiembre (la cuesta de Jericó), el 22
+ *   (la cárcel) y el 29 (la salida de Jerusalén), y los textos no lo dicen.
+ * - El 29 de marzo (`cojo_31`) es el 16 de nisán, el día de la primera gavilla, y el texto lo usa.
  */
 internal val ESPECIALES_INICIADO_T4 = EspecialesIniciado(temporada = 4, escrita = true, textos = with(EspecialesIniciado) { mapOf(
 
