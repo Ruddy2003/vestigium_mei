@@ -30,12 +30,15 @@ internal object TramosRetirada {
      *   plata hace días».
      * - [CANON] (la nieve): un cañón abandonado con su armón, medio hundidos, al pie del pino grande: «cañones
      *   abandonados».
-     * - [METRALLA] (Krasnoi): el pino grande tronchado por una bala, con la copa caída en la nieve, y un cajón de
-     *   munición reventado, con las balas sueltas: «en la nieve, bajo la metralla» **[Diseño propio]**.
+     * - [METRALLA] (Krasnoi): el pino grande tronchado por una bala, con sus astillas y sus ramas rotas al pie (la copa
+     *   cayó hacia atrás, fuera del cuadro), la rama del pino de al lado que entra por arriba, y un cajón de munición
+     *   reventado, con las tablas saltadas, las ruedas y las balas sueltas: «en la nieve, bajo la metralla» **[Diseño
+     *   propio]**.
      * - [MADERA] (el Berezina): la madera que sobró a los pontoneros, vigas y tablas apiladas y un caballete de repuesto
      *   **[Diseño propio]**: «Los pontoneros… construir dos puentes de madera».
-     * - [PINO] (el final): el pino grande solo, cargado, con la nieve honda amontonada al pie y una rama rota por el peso:
-     *   «la nieve, que le llega a las rodillas».
+     * - [PINO] (el final): el pino grande solo, cargado, con la nieve honda al pie en olas talladas por el viento, dos
+     *   abetos jóvenes enterrados hasta media altura, el arco de la rueda de un carro enterrado y una rama rota por el
+     *   peso: «la nieve, que le llega a las rodillas».
      * - [TIENDA]: en el vivac provisional (no es de la retirada), la tienda de oficial al pie del pino grande.
      */
     enum class Marco { CARROZA, CASA, CANON, METRALLA, MADERA, PINO, TIENDA }

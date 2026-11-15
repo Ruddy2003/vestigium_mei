@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaNapoleon.Fase
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.Carroza
@@ -31,6 +31,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.tienda
 import io.github.ruddy2003.vestigium.ui.escenas.RetiradaNapoleon.MIRADA
 import io.github.ruddy2003.vestigium.ui.escenas.TramosRetirada.Marco
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.humo
@@ -41,7 +42,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
 import kotlin.math.PI
-import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -196,7 +196,10 @@ internal object MarcosRetirada {
         val a = v.en(Offset(80f, 40f))
         if (TramosRetirada.conPinoGrande(mc)) {
             val honda = mc == Marco.PINO
-            pino(a, PIE_DEL_PINO, 760f, 430f, v.nieve, Azar(AZ_PINO), 0f, 1f, false, hastaY = 30f, caidaPropia = 0.17f + 0.12f * v.nieve + (if (honda) 0.08f else 0f), grande = true)
+            // Solo lo de arriba: más abajo, el tronco es el de la corteza en escamas ([troncoDelPino]), que así se ve.
+            clipRect(-60f, -60f, ANCHO + 60f, 42f) {
+                pino(a, PIE_DEL_PINO, 760f, 430f, v.nieve, Azar(AZ_PINO), 0f, 1f, false, hastaY = 30f, caidaPropia = 0.17f + 0.12f * v.nieve + (if (honda) 0.08f else 0f), grande = true)
+            }
         }
         if (mc == Marco.METRALLA) {
             val az = Azar(Semilla.de("napoleon", "pino", "vecino"))
@@ -532,38 +535,64 @@ internal object MarcosRetirada {
     }
 
     /**
-     * Un cajón de munición reventado: lo que queda de la caja verde, abierta y astillada, la tapa arrancada a un lado, la
-     * rueda del armón suelta, las balas de cañón por el suelo y la nieve tiznada de negro alrededor.
+     * Un cajón de munición reventado: la caja verde, de pie, con lo de arriba abierto y negro por dentro, las tablas de la
+     * tapa y del frente saltadas hacia fuera, astilladas; los flejes de hierro; el hollín que sube por los costados; una
+     * rueda de pie detrás y otra tumbada delante; la tapa, tirada; las balas de cañón y los cartuchos de papel por el
+     * suelo, y la nieve tiznada de negro alrededor.
      */
     private fun DrawScope.cajonReventado(v: VistaNapoleon) {
         val s = S_CAJON; val a = v.en(s.pie); val az = Azar(Semilla.de("napoleon", "cajon"))
         val verde = lerp(C.PINO_LUZ, C.CAPOTE, 0.35f)
-        // La quemadura en la nieve: negra en medio, gris hacia fuera.
-        mancha(s.p(0f, 0f, 0.1f), 1.5f * s.k, 0.4f * s.k, lerp(C.CENIZA, C.NIEVE_SUCIA, 0.4f), 0.7f)
-        mancha(s.p(0.1f, 0f, 0f), 0.8f * s.k, 0.22f * s.k, C.CENIZA, 0.8f)
-        // La rueda de detrás, tirada y medio hundida.
-        rueda(s, a, V3(-0.9f, 0.25f, 0.6f), 0.58f, Vec.unidad(V3(0.25f, 1f, -0.2f)), 0.07f, 12, 3, C.MADERA_GRIS, 0f, 0.4f, v.nieve)
-        // El cajón: el fondo y dos costados, sin tapa, con los bordes rotos.
-        caja(s, a, -0.55f, 0.55f, 0.02f, 0.12f, -0.32f, 0.32f, verde)
-        for ((p0, p1, n) in listOf(Triple(V3(-0.55f, 0f, -0.32f), V3(0.55f, 0f, -0.32f), V3(0f, 0f, -1f)), Triple(V3(0.55f, 0f, -0.32f), V3(0.55f, 0f, 0.32f), V3(1f, 0f, 0f)))) {
-            val alto = { t: Float -> 0.42f * (0.45f + 0.55f * sin(t * 7f + p0.x).let { it * it }) }
-            val q = (0..6).map { i -> val t = i / 6f; p0 + (p1 - p0) * t + V3(0f, alto(t), 0f) }
-            val f = cara(s, a, listOf(p0, p1) + q.reversed(), n, verde) ?: continue
-            clipPath(f) { for (t in listOf(0.33f, 0.66f)) { val r0 = s.p(p0 + (p1 - p0) * t); drawLine(mult(a.cara(verde, s.normal(n), r0), C.SOMBRA, 0.5f), r0, r0 + Offset(0f, -0.5f * s.k), 0.6f) } }
-            // Las astillas del borde roto, y lo negro de la explosión.
-            for (pt in q) drawLine(a.cara(lerp(verde, C.LONA, 0.3f), s.normal(n), s.p(pt)), s.p(pt), s.p(pt) + Offset(az.entre(-1.5f, 1.5f), -az.entre(1f, 4f)), 0.6f)
-            drawPath(poligono(q.map { s.p(it) } + q.reversed().map { s.p(it) + Offset(0f, 0.12f * s.k) }), C.CENIZA.copy(alpha = 0.6f))
+        val negro = lerp(C.CENIZA, Color.Black, 0.3f)
+        // La quemadura en la nieve: negra en medio, gris hacia fuera, con salpicones.
+        mancha(s.p(0f, 0f, 0.1f), 1.8f * s.k, 0.5f * s.k, lerp(C.CENIZA, C.NIEVE_SUCIA, 0.45f), 0.7f)
+        mancha(s.p(0.1f, 0f, 0f), 1.0f * s.k, 0.26f * s.k, C.CENIZA, 0.85f)
+        repeat(14) { val q = s.p(az.entre(-1.8f, 1.8f), 0f, az.entre(-1f, 0.8f)); mancha(q, az.entre(1f, 2.6f), az.entre(0.5f, 1f), C.CENIZA, 0.6f) }
+        // La rueda de detrás, de pie, ladeada, con dos rayos rotos.
+        rueda(s, a, V3(-0.78f, 0.56f, 0.42f), 0.56f, Vec.unidad(V3(1f, 0.08f, 0.2f)), 0.07f, 12, 2, C.MADERA_GRIS, 0f, 0.4f, v.nieve)
+        // El cajón: verde, sin tapa; dentro, negro.
+        val caras = caja(s, a, -0.6f, 0.6f, 0f, 0.5f, -0.33f, 0.33f, verde, arriba = negro)
+        for ((c3, f) in caras) clipPath(f) {
+            val n = s.normal(c3.n); val en = s.p(c3.centro)
+            if (c3.arriba) {
+                // Lo de dentro: los cartuchos quemados, rollos de papel negros con su canto gris.
+                repeat(8) { val q = s.p(az.entre(-0.5f, 0.5f), 0.5f, az.entre(-0.25f, 0.25f)); drawLine(lerp(C.CENIZA, C.LONA, 0.3f), q, q + Offset(2.5f, 0.6f), 1.4f, StrokeCap.Round) }
+                return@clipPath
+            }
+            // Las tablas del costado, los flejes de hierro y el hollín que sube desde arriba.
+            for (u in listOf(0.33f, 0.66f)) linea(s, c3, u, 0f, u, 1f, mult(a.cara(verde, n, en), C.SOMBRA, 0.45f), (0.008f * s.k).coerceAtLeast(0.3f))
+            for (u in listOf(0.1f, 0.9f)) linea(s, c3, u, 0f, u, 1f, a.cara(C.HIERRO, n, en), (0.03f * s.k).coerceAtLeast(0.6f))
+            val yTop = s.p(c3.en(0.5f, 1f)).y; val yBot = s.p(c3.en(0.5f, 0f)).y
+            drawRect(Brush.verticalGradient(0f to negro.copy(alpha = 0.9f), 0.55f to negro.copy(alpha = 0.25f), 1f to Color.Transparent, startY = yTop, endY = yBot), Offset(-10f, yTop - 2f), Size(400f, yBot - yTop + 4f))
+        }
+        // Las tablas saltadas: de los bordes de arriba, hacia fuera y hacia arriba, astilladas en la punta.
+        val tablas = listOf(
+            Triple(V3(-0.35f, 0.5f, -0.33f), V3(-0.25f, 0.7f, -0.66f), V3(1f, 0f, 0f)), Triple(V3(0.05f, 0.5f, -0.33f), V3(0.1f, 0.85f, -0.5f), V3(1f, 0f, 0f)),
+            Triple(V3(0.42f, 0.5f, -0.33f), V3(0.45f, 0.4f, -0.9f), V3(1f, 0f, 0f)), Triple(V3(0.6f, 0.5f, -0.05f), V3(0.8f, 0.75f, 0.1f), V3(0f, 0f, 1f)),
+            Triple(V3(0.6f, 0.5f, 0.2f), V3(0.9f, 0.3f, 0.3f), V3(0f, 0f, 1f)), Triple(V3(-0.6f, 0.5f, 0.0f), V3(-0.85f, 0.85f, 0.05f), V3(0f, 0f, 1f)),
+        )
+        for ((p0, d0, e) in tablas) {
+            val d = Vec.unidad(d0); val l = az.entre(0.32f, 0.55f); val w = 0.09f
+            val q = listOf(p0 - e * (w / 2f), p0 + e * (w / 2f), p0 + e * (w / 2f) + d * l, p0 - e * (w / 2f) + d * l)
+            val nrm = Vec.unidad(Vec.cruz(e, d)).let { if (s.seVe(p0, it)) it else it * -1f }
+            cara(s, a, q, nrm, lerp(verde, C.LONA, 0.15f))
+            // La punta astillada, clara, y lo quemado del arranque.
+            val punta = s.p(p0 + d * l); drawLine(a.plano(lerp(C.LONA, C.MADERA, 0.4f), punta, 0.5f), punta, punta + Offset(az.entre(-2f, 2f), -az.entre(1.5f, 3f)), 0.7f)
+            drawLine(negro, s.p(p0 - e * (w / 2f)), s.p(p0 + e * (w / 2f)), (0.04f * s.k).coerceAtLeast(0.8f))
         }
         // La tapa, arrancada, de lado en la nieve.
-        cara(s, a, listOf(V3(0.7f, 0f, -0.6f), V3(1.5f, 0.05f, -0.35f), V3(1.45f, 0.35f, -0.3f), V3(0.68f, 0.3f, -0.55f)), Vec.unidad(V3(-0.2f, 0.3f, -1f)), verde)
-        // Las balas de cañón, sueltas: negras, con su brillo y su sombra.
-        repeat(7) {
-            val q = s.p(az.entre(-1.2f, 1.6f), 0.06f, az.entre(-0.9f, 0.4f)); val r = 0.06f * s.k
+        cara(s, a, listOf(V3(0.8f, 0f, -0.75f), V3(1.65f, 0.04f, -0.45f), V3(1.6f, 0.34f, -0.4f), V3(0.78f, 0.3f, -0.7f)), Vec.unidad(V3(-0.25f, 0.3f, -1f)), verde)
+        // La rueda de delante, tumbada.
+        rueda(s, a, V3(-1.3f, 0.06f, -0.55f), 0.52f, Vec.unidad(V3(0.12f, 1f, -0.3f)), 0.07f, 12, 4, C.MADERA_GRIS, 0f, 1.1f, v.nieve)
+        // Las balas de cañón, sueltas: negras, con su brillo y su sombra; y los cartuchos de papel.
+        repeat(8) {
+            val q = s.p(az.entre(-1.4f, 1.8f), 0.06f, az.entre(-1.1f, 0.3f)); val r = 0.065f * s.k
             drawOval(v.p.sombra(C.NIEVE_SOMBRA).copy(alpha = 0.5f), Offset(q.x - r * 1.2f, q.y + r * 0.4f), Size(r * 2.6f, r * 0.8f))
             drawCircle(a.plano(C.HIERRO, q, 0f), r, q)
             drawCircle(lerp(a.arriba(C.HIERRO, q), Color.White, 0.3f), r * 0.35f, q + Offset(-r * 0.35f, -r * 0.4f))
         }
-        if (v.nieve > 0.3f) nieveEncima(a, listOf(s.p(-0.9f, 0.85f, 0.6f), s.p(-0.7f, 0.82f, 0.62f), s.p(-0.5f, 0.75f, 0.62f)).sortedBy { it.x }, (0.04f * s.k * v.nieve), az)
+        repeat(10) { val q = s.p(az.entre(-1.6f, 1.9f), 0.02f, az.entre(-1.2f, 0.6f)); val ang = az.entre(0f, 3.1f); drawLine(a.arriba(C.LONA, q), q, q + Offset(cos(ang), sin(ang) * 0.4f) * 3f, 1.4f, StrokeCap.Round) }
+        if (v.nieve > 0.3f) nieveEncima(a, listOf(s.p(-0.6f, 0.5f, 0.33f), s.p(-0.3f, 0.5f, 0.33f), s.p(0f, 0.5f, 0.33f)).sortedBy { it.x }, (0.03f * s.k * v.nieve), az)
     }
 
     // ================================================================= El Berezina
@@ -658,6 +687,10 @@ internal object MarcosRetirada {
             listOf(Offset(-10f, 258f), Offset(18f, 259f), Offset(48f, 265f), Offset(80f, 274f), Offset(104f, 284f), Offset(118f, 296f)),
         )
         for ((i, cresta) in olas.withIndex()) {
+            if (i == 1) {
+                // Dos abetos jóvenes enterrados hasta media altura, que asoman cargados entre la primera ola y la segunda.
+                for ((pie, alto) in listOf(Offset(58f, 240f) to 70f, Offset(136f, 266f) to 44f)) pino(v.en(pie), pie, alto, alto * 0.72f, 1f, Azar(Semilla.de("napoleon", "abetito", pie.x.toInt())), 0f, 0.85f, caidaPropia = 0.62f)
+            }
             val forma = TrazosValle.cerrada(cresta + listOf(cresta.last() + Offset(0f, 12f), Offset(-10f, 300f)))
             val y0 = cresta.first().y; val y1 = cresta.first().y + 60f
             // La cara que mira a quien mira: del filo, que coge la luz, a lo hondo, azul.
