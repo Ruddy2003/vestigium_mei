@@ -131,11 +131,18 @@ internal object ValleCerro {
         val hierba = lerp(lerp(C.ESTEPA, C.CUERO, 0.3f), lerp(C.VERDE, C.ESTEPA, 0.35f), 0.45f * pasto)
         // La cima, detrás: un poco más azulada.
         val cima = poligono(CRESTA + PIE.reversed() + listOf(Offset(-6f, 230f)))
+        // La hora azul: el resplandor que queda en el horizonte recorta la cresta y el ovoo.
+        with(ValleLuz) { haloDeLaHoraAzul(m, p.l, CRESTA) }
         plano(p, sol, nieve, pasto, cima, CRESTA, CIMA, PENAS_CIMA, hierba, 0.13f, fijo("cima"))
-        // El ovoo, recortado contra el cielo, con su sombra en la cima.
+        // Con el sol raso, lo alto es lo último (o lo primero) que alumbra: la cima se dora.
+        val dorado = ValleLuz.sol(p.l) * ValleLuz.bajo(p.l)
+        if (dorado > 0.05f) clipPath(cima) { drawRect(Brush.verticalGradient(0f to lerp(p.l.solColor, Color(0xFFFFC98A), 0.4f).copy(alpha = 0.16f * dorado), 1f to Color.Transparent, startY = 52f, endY = 112f), Offset(0f, 50f), Size(330f, 62f), blendMode = BlendMode.Plus) }
+        // El ovoo, recortado contra el cielo, con su sombra en la cima (la del sol o la de la luna); sus cintas se encienden
+        // con el sol.
         val alto = 24f
-        capaSombra(sol.r) { c -> sombraArrojada(sol.r, PiezasMongol.siluetaDeOvoo(OVOO, alto), OVOO, c, OVOO.y + 0.6f, OVOO.y + 0.6f) }
-        ovoo(p, OVOO, alto, EscenaMongol.cintasDelOvoo(m), Azar(Semilla.de("mongol", "ovoo")), 0.12f, nieve, m.viento)
+        val so = ValleLuz.solDeSombras(sol, p.l)
+        capaSombra(so.r) { c -> sombraArrojada(so.r, PiezasMongol.siluetaDeOvoo(OVOO, alto), OVOO, c, OVOO.y + 0.6f, OVOO.y + 0.6f) }
+        ovoo(ValleLuz.alSol(p, 1.3f), OVOO, alto, EscenaMongol.cintasDelOvoo(m), Azar(Semilla.de("mongol", "ovoo")), 0.12f, nieve, m.viento)
         // «La última luz del día se queda un momento en lo alto del cerro, sobre el ovoo.»
         val l = p.l
         if (l.solAltura in -0.05f..0.25f && l.noche < 0.6f) mancha(OVOO + Offset(0f, -2f), 60f, 9f, l.solColor, 0.28f * (1f - l.noche))
@@ -210,10 +217,13 @@ internal object ValleCerro {
             // motas de nieve sueltas: el paso de la nieve a la hierba seca.
             if (nieve > 0.08f) {
                 val motas = ArrayList<Offset>()
+                val luna = ValleLuz.luna(l)
                 fun ventisquero(forma: Path, contorno: List<Offset>, t: Float, abajo: Float) {
                     drawPath(forma, p.sombra(lerp(C.NIEVE, C.HIELO, 0.25f), lejos))
                     // El lomo: la misma forma, un poco más arriba, sin tapar el vientre de abajo.
                     clipPath(forma) { drawPath(forma.let { val q = Path(); q.addPath(it, Offset(0f, -abajo)); q }, p.por(C.NIEVE, t + 0.15f, lejos)) }
+                    // De noche, la nieve que mira a la luna se platea.
+                    if (luna > 0.02f) drawPath(forma, ValleLuz.LUNA.copy(alpha = (0.16f * luna * (t + 0.5f)).coerceIn(0f, 1f)), blendMode = BlendMode.Plus)
                     for (q in contorno) if (az.real() < 0.6f) repeat(2) { motas += q + Offset(az.entre(-4f, 4f), az.entre(-3.5f, 1f)) }
                 }
                 val talla = if (cerca) 1f else 0.7f

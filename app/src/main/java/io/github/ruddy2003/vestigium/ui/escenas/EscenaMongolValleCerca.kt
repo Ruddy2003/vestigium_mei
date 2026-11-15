@@ -66,7 +66,7 @@ internal object ValleCerca {
     private val C = ColorMongol
 
     /** El borde de la terraza (el talud que baja al campamento), puesto a mano. */
-    private val TALUD = pts(140f, 214f, 152f, 210.6f, 164f, 209f, 176f, 207f, 188f, 205.4f, 200f, 204.8f, 212f, 202.6f, 222f, 201.4f, 232f, 202.4f, 244f, 200.6f,
+    val TALUD = pts(140f, 214f, 152f, 210.6f, 164f, 209f, 176f, 207f, 188f, 205.4f, 200f, 204.8f, 212f, 202.6f, 222f, 201.4f, 232f, 202.4f, 244f, 200.6f,
         254f, 201.8f, 264f, 202.6f, 274f, 205.4f, 284f, 207.6f, 296f, 209.8f, 308f, 213f, 320f, 213.6f, 334f, 214.2f, 348f, 216.8f, 362f, 216.2f, 376f, 218f, 392f, 219.4f)
 
     /** El hogar de fuera, retirado del paso del gato y apartado del caballo atado. */
@@ -96,6 +96,12 @@ internal object ValleCerca {
     private val MURO_CORRAL = listOf(Offset(3.4f, 0.5f), Offset(0f, 0f), Offset(-0.2f, 1.1f), Offset(-0.42f, 2.2f), Offset(-0.6f, 3.2f), Offset(3.2f, 2.8f))
     private const val ALTO_CORRAL = 0.74f
 
+    /** Donde pisa la tienda de Bat junto a la puerta (para saber si le da el sol). */
+    private val PIE_DE_BAT = Offset(150f, 262f)
+
+    /** La silueta de la tienda de Bat: la sombra grande de la tarde le sube desde abajo (ver `ValleLuz`). */
+    fun siluetaDeBat(m: Momento, nieve: Float): Path = PiezasMongol.silueta(bat(m, nieve))
+
     /** La tienda de Bat. */
     private fun bat(m: Momento, nieve: Float) = Ger(SITIO_BAT, Semilla.de("mongol", "tienda", "BAT"), 0.45f, EscenaMongol.puerta(m), EscenaMongol.fuegoDentro(m), nieve, EscenaMongol.armado(m), radio = 3f)
 
@@ -110,6 +116,11 @@ internal object ValleCerca {
         val g = bat(m, nieve)
         val calida = luzDeLaPuerta(m, g, l)
         terraza(m, p, sol, nieve, az)
+        // De noche, la luna platea la terraza; delante de la puerta manda la lumbre (su charco va después, encima).
+        with(ValleLuz) { plata(poligono(TALUD + listOf(Offset(392f, ALTO + 2f), Offset(60f, ALTO + 2f), Offset(60f, 230f))), l, nieve, 0.9f) }
+        // Lo pintado se enciende donde le da el sol: la puerta y la tienda por la mañana; el cofre cuando la sombra grande
+        // no lo tapa (ver `ValleLuz`).
+        val sv = ValleLuz.sombraDelValle(l)
         // El corral de delante: el estiércol pisado de dentro.
         val dentro = poligono(MURO_CORRAL.map { SITIO_CORRAL.p(it.x, 0f, it.y) })
         drawPath(dentro, p.arriba(lerp(C.ESTIERCOL, C.NIEVE, nieve * 0.3f), 0.02f))
@@ -125,31 +136,45 @@ internal object ValleCerca {
         val cosas = ArrayList<Pair<Float, DrawScope.() -> Unit>>()
         cosas += parte(HOGAR.y) { hogar(p.con(calida * 0.35f), HOGAR, 60f, EscenaMongol.fuegoFuera(m), Azar(Semilla.de("mongol", "hogar")), 0f, true, nieve); ceniza(m, p, nieve) }
         // El cofre, y encima el objeto del día, alumbrado por la puerta de noche.
-        cosas += parte(COFRE.y) { cofre(m, p.con(calida * 0.85f), sol, nieve); with(ObjetosMongol) { sobreElSoporte(m, p.con(calida * 0.85f), SITIO_COFRE.p(0f, COFRE_H, 0f), 1.35f) } }
+        val pCofre = if (calida > 0.05f) p.con(calida * 0.85f) else ValleLuz.alSol(p, sv, COFRE, arriba = true)
+        cosas += parte(COFRE.y) { cofre(m, pCofre, sol, nieve); with(ObjetosMongol) { sobreElSoporte(m, pCofre, SITIO_COFRE.p(0f, COFRE_H, 0f), 1.35f) } }
         cosas += parte(ARGAL.y) { argal(p, ARGAL, 46f, Azar(Semilla.de("mongol", "argal")), 0f, nieve) }
         cosas += parte(POSTE.y) { poste(p, sol, negro || ajeno) }
         // El Negro, de noche, descansa atado junto a la puerta: la cabeza baja, una pata de atrás doblada, y la luz de la
         // puerta le saca un filo cálido del lado de ella.
         val umbral = g.umbral.x
-        if (negro) cosas += parte(NEGRO.y) { caballo(p.con((0.3f * calida + 0.08f * l.noche).coerceAtMost(1f)), NEGRO, ALTO_NEGRO, -1f, PiezasMongol.NEGRO, postura = Postura.DESCANSO, lumbreX = umbral) }
-        if (ajeno) cosas += parte(NEGRO.y - (if (negro) 6f else 0f)) { caballo(p.con(0.4f * calida), ajenoEn(negro), if (negro) 34f else 38f, -1f, PiezasMongol.ALAZAN, silla = true, cintas = ValleMongol.cintasAzules(m), postura = Postura.DE_PIE, lumbreX = umbral) }
+        // De noche, a dos luces: la lumbre de la puerta por su lado y la luna, plata, por el otro; y su aliento con frío.
+        val frio = ValleLuz.frio(m, l)
+        if (negro) cosas += parte(NEGRO.y) {
+            caballo(p.con((0.3f * calida + 0.08f * l.noche).coerceAtMost(1f)), NEGRO, ALTO_NEGRO, -1f, PiezasMongol.NEGRO, postura = Postura.DESCANSO, lumbreX = umbral)
+            with(ValleLuz) {
+                filoDeLuna(PiezasMongol.siluetaDeCaballo(NEGRO, ALTO_NEGRO, -1f, postura = Postura.DESCANSO), l, 0.9f, 0.85f)
+                aliento(l, PiezasMongol.hocicoDe(NEGRO, ALTO_NEGRO, -1f, Postura.DESCANSO), -1f, 4f, frio)
+            }
+        }
+        if (ajeno) cosas += parte(NEGRO.y - (if (negro) 6f else 0f)) {
+            caballo(p.con(0.4f * calida), ajenoEn(negro), if (negro) 34f else 38f, -1f, PiezasMongol.ALAZAN, silla = true, cintas = ValleMongol.cintasAzules(m), postura = Postura.DE_PIE, lumbreX = umbral)
+            with(ValleLuz) { filoDeLuna(PiezasMongol.siluetaDeCaballo(ajenoEn(negro), if (negro) 34f else 38f, -1f), l, 1f) }
+        }
         if (grande != null) cosas += parte(grande.pie.y) { grande.pintar(this) }
         if (ValleMongol.cuencoEnLaNieve(m)) cosas += parte(270f) { cuenco(p.con(calida), Offset(132f, 271f)) }
         if (ValleMongol.corderos(m) > 0) cosas += parte(268f) { corderos(p, az) }
         if (ValleMongol.pielDeCiervo(m)) cosas += parte(HOGAR.y + 6f) { cuernos(p, HOGAR + Offset(40f, 8f)) }
         // Las sombras en el suelo: la tienda, el corral, el hogar, el cofre, el argal, los caballos, el poste y la pértiga.
-        capaSombra(sol.r) { c ->
-            sombra(PiezasMongol.sombraDeGer(g, sol), c)
-            sombraDeMuro(SITIO_CORRAL, MURO_CORRAL.take(5), ALTO_CORRAL, sol, c)
-            sombraDeCaja(SITIO_COFRE, COFRE_W, COFRE_H, COFRE_D, sol, c)
-            sombraArrojada(sol.r, poligono(HOGAR + Offset(-22f, 0f), HOGAR + Offset(22f, 0f), HOGAR + Offset(20f, -42f), HOGAR + Offset(-20f, -42f)), HOGAR, c, 200f, 200f)
-            sombraArrojada(sol.r, poligono(ARGAL + Offset(-27f, 0f), ARGAL + Offset(48f, 0f), ARGAL + Offset(46f, -34f), ARGAL + Offset(-2f, -28f)), ARGAL, c, 200f, 200f)
-            sombraArrojada(sol.r, poligono(POSTE + Offset(-1.2f, 0f), POSTE + Offset(1.2f, 0f), POSTE + Offset(1f, -30f), POSTE + Offset(-1f, -30f)), POSTE, c, 200f, 200f)
-            if (negro) sombraArrojada(sol.r, PiezasMongol.siluetaDeCaballo(NEGRO, ALTO_NEGRO, -1f, postura = Postura.DESCANSO), NEGRO, c, 200f, 200f)
-            if (ajeno) { val q = ajenoEn(negro); sombraArrojada(sol.r, PiezasMongol.siluetaDeCaballo(q, if (negro) 34f else 38f, -1f), q, c, 200f, 200f) }
+        // Las sombras arrojadas: las del sol o, de noche, las de la luna (frías, hacia el otro lado).
+        val so = ValleLuz.solDeSombras(sol, l)
+        capaSombra(so.r) { c ->
+            sombra(PiezasMongol.sombraDeGer(g, so), c)
+            sombraDeMuro(SITIO_CORRAL, MURO_CORRAL.take(5), ALTO_CORRAL, so, c)
+            sombraDeCaja(SITIO_COFRE, COFRE_W, COFRE_H, COFRE_D, so, c)
+            sombraArrojada(so.r, poligono(HOGAR + Offset(-22f, 0f), HOGAR + Offset(22f, 0f), HOGAR + Offset(20f, -42f), HOGAR + Offset(-20f, -42f)), HOGAR, c, 200f, 200f)
+            sombraArrojada(so.r, poligono(ARGAL + Offset(-27f, 0f), ARGAL + Offset(48f, 0f), ARGAL + Offset(46f, -34f), ARGAL + Offset(-2f, -28f)), ARGAL, c, 200f, 200f)
+            sombraArrojada(so.r, poligono(POSTE + Offset(-1.2f, 0f), POSTE + Offset(1.2f, 0f), POSTE + Offset(1f, -30f), POSTE + Offset(-1f, -30f)), POSTE, c, 200f, 200f)
+            if (negro) sombraArrojada(so.r, PiezasMongol.siluetaDeCaballo(NEGRO, ALTO_NEGRO, -1f, postura = Postura.DESCANSO), NEGRO, c, 200f, 200f)
+            if (ajeno) { val q = ajenoEn(negro); sombraArrojada(so.r, PiezasMongol.siluetaDeCaballo(q, if (negro) 34f else 38f, -1f), q, c, 200f, 200f) }
             // La del objeto grande: en el suelo y, lo que alcance, subida a la pared de la tienda en la que se apoya.
-            if (grande != null) sombraArrojada(sol.r, grande.forma, grande.pie, c, (grande.pie.y - 5f).coerceIn(130f, ALTO), 124f, 0f, 150f)
-            if (!hoyEsElLazo(m)) sombraDePertiga(sol, c)
+            if (grande != null) sombraArrojada(so.r, grande.forma, grande.pie, c, (grande.pie.y - 5f).coerceIn(130f, ALTO), 124f, 0f, 150f)
+            if (!hoyEsElLazo(m)) sombraDePertiga(so, c)
         }
         // La luz de la puerta en el suelo (de noche) y el resplandor del hogar.
         luzDePuerta(g, l.noche * g.dentro * 1.1f, 4.2f)
@@ -159,10 +184,12 @@ internal object ValleCerca {
         else if (l.noche > 0.3f) resplandor(HOGAR + Offset(0f, -2f), 16f, 0.5f * l.noche * ValleMongol.rescoldo(m), C.LUMBRE)
         if (ValleMongol.antorchas(m)) resplandor(ANTORCHA + Offset(0f, -26f), 60f, 0.6f * l.noche, C.LUMBRE)
         // La tienda, con su fieltro gastado y lo que cuelga de su pared, y la sombra que eso echa en el fieltro.
-        ger(g, p, sol)
-        if (g.fieltro >= 0.999f) { fieltro(g, p, sol, nieve, az); puertaDeBat(m, g, p, sol); colgado(m, g, p.con(calida * 0.5f), sol); cintasDePuerta(m, g, p) }
+        val pBat = ValleLuz.alSol(p, sv, PIE_DE_BAT, arriba = true)
+        ger(g, pBat, sol)
+        if (g.fieltro >= 0.999f) { fieltro(g, pBat, sol, nieve, az); puertaDeBat(m, g, ValleLuz.alSol(p, (1f - ValleLuz.sombraEn(sv, PIE_DE_BAT, arriba = true)) * 1.6f), sol); colgado(m, g, p.con(calida * 0.5f), sol); cintasDePuerta(m, g, p) }
         // El corral de delante y lo que hay en él.
         corral(corral, p, sol)
+        with(ValleLuz) { filoDelMuro(MURO_CORRAL.take(5).map { SITIO_CORRAL.p(it.x, ALTO_CORRAL, it.y) }, l, 1f) }
         cosas += rincon(m, p, sol)
         for ((_, pintar) in cosas.sortedBy { it.first }) pintar()
     }

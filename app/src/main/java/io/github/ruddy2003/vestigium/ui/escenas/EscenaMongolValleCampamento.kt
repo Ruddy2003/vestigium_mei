@@ -43,6 +43,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombra
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
 import kotlin.math.sqrt
@@ -125,25 +126,35 @@ internal object ValleCampamento {
         val corral = Corral(SITIO_CORRAL, MURO_CORRAL, Semilla.de("mongol", "corral", "medio"), 1.1f, 0.6f, abierto = 3, nieve = nieve, lejos = 0.2f, detalle = true)
         val carreta = Carreta(SITIO_CARRETA, Semilla.de("mongol", "carreta", "valle"), EscenaMongol.carretasCargadas(m), EscenaMongol.cuna(m), lejos = 0.08f)
         val caballos = caballosDelCorral(m)
-        capaSombra(sol.r) { c ->
-            for (g in tiendas) sombra(PiezasMongol.sombraDeGer(g, sol), c)
-            sombraDeCarreta(carreta, sol, c)
-            sombraDeMuro(SITIO_CORRAL, MURO_CORRAL, 1.1f, sol, c)
-            if (ValleMongol.carneColgada(m)) sombraDeVaras(sol, c)
+        // De noche, la luna platea la nieve y el hielo del fondo del valle; sus sombras, después, lo cortan en azul hondo.
+        with(ValleLuz) { plata(fondo(), l, nieve) }
+        // Las sombras arrojadas: las del sol o, de noche, las de la luna.
+        val so = ValleLuz.solDeSombras(sol, l)
+        capaSombra(so.r) { c ->
+            for (g in tiendas) sombra(PiezasMongol.sombraDeGer(g, so), c)
+            sombraDeCarreta(carreta, so, c)
+            sombraDeMuro(SITIO_CORRAL, MURO_CORRAL, 1.1f, so, c)
+            if (ValleMongol.carneColgada(m)) sombraDeVaras(so, c)
         }
         // La luz de las puertas abiertas en la nieve, de noche.
         for (g in tiendas) if (g.puerta != Puerta.CERRADA && g.puertaSeVe) luzDePuerta(g, l.noche * g.dentro * 0.9f, 2.6f)
         // De atrás adelante: el corral con las ovejas, las tiendas, los caballos, la carreta.
         corral(corral, p, sol)
+        with(ValleLuz) { filoDelMuro(MURO_CORRAL.map { SITIO_CORRAL.p(it.x, 1.1f, it.y) }, l, 0.6f, 0.8f) }
         val enCorral = ValleMongol.ovejasEnElCorral(m)
         // La mancha del rebaño crece con las ovejas que hay: pocas se juntan en un rincón, en varias hileras que se tapan;
         // nunca una sola fila larga contra el muro del fondo.
         if (enCorral > 0) {
             val rx = (2.3f * sqrt(enCorral.toFloat())).coerceIn(5f, 19f); val ry = (rx * 0.3f).coerceIn(2.4f, 4.4f)
             rebanoApretado(p, sol, Offset(303f + (19f - rx) * 0.3f, 167f - ry * 0.25f), rx, ry, enCorral, { y -> 3.4f + (y - 160f) * 0.08f }, az, 0.16f, pastan = 0.25f, corderos = (ValleMongol.corderos(m) * 0.7f).toInt())
+            // El aliento del rebaño con frío: un vaho bajo encima de los lomos.
+            val frio = ValleLuz.frio(m, l)
+            if (frio > 0.05f) for (j in 0 until 5) mancha(Offset(303f + (19f - rx) * 0.3f + (j - 2f) * rx * 0.4f, 162f - ry * 0.4f), 3.4f, 1.5f, lerp(l.tono(C.NIEVE), ValleLuz.LUNA, 0.3f * l.noche), 0.3f * frio)
         }
         if (ValleMongol.antorchas(m)) for (q in ANTORCHAS) resplandor(q + Offset(0f, -10f), 34f, 0.55f * l.noche, C.LUMBRE)
-        for (g in tiendas.sortedBy { it.s.pie.y }) ger(g, p, sol)
+        // Cada tienda con su luz: la que está en la franja de sol se calienta; las del fondo, en la sombra, no.
+        val sv = ValleLuz.sombraDelValle(l)
+        for (g in tiendas.sortedBy { it.s.pie.y }) ger(g, ValleLuz.alSol(p, sv, g.s.pie), sol)
         // Con el cielo muy cubierto las luces se encienden antes: el fuego de dentro asoma por el aro y por la rendija de
         // la puerta.
         val cub = ValleMongol.cubierto(l)
@@ -153,11 +164,17 @@ internal object ValleCampamento {
             if (g.puertaSeVe) drawLine(C.LUMBRE.copy(alpha = (0.9f * f).coerceIn(0f, 1f)), g.pared(-g.mediaPuerta, 0.05f), g.pared(-g.mediaPuerta, g.altoPuerta), (0.05f * g.s.k).coerceIn(0.4f, 1.2f), blendMode = BlendMode.Plus)
         }
         // Los caballos del campamento, con la grupa al viento; el potro blanco desde que nació.
-        for ((j, h) in caballos.withIndex()) caballoLejano(p, sol, h.first, 9.6f + (h.first.y - 172f) * 0.12f, if (j % 3 == 0) 1f else -1f, h.second, 0.14f, pasta = j % 2 == 0)
+        for ((j, h) in caballos.withIndex()) {
+            val alto = 9.6f + (h.first.y - 172f) * 0.12f; val mira = if (j % 3 == 0) 1f else -1f
+            caballoLejano(p, sol, h.first, alto, mira, h.second, 0.14f, pasta = j % 2 == 0)
+            // El lomo plateado por la luna (a este tamaño basta una raya en el lomo).
+            with(ValleLuz) { lomoDeLuna(h.first, alto, mira, j % 2 == 0, l) }
+        }
         visitas(m, p, sol)
         muertos(m, p, nieve)
         if (ValleMongol.bueyes(m)) { val buey = lerp(C.CUERO, C.HOLLIN, 0.35f); bovino(p, Offset(246f, 197f), 15f, 1f, buey, yak = false, lejos = 0.08f); bovino(p, Offset(225f, 201f), 15.5f, -1f, lerp(buey, C.FIELTRO, 0.3f), yak = false, pasta = true, lejos = 0.08f) }
         carreta(carreta, p, sol)
+        with(ValleLuz) { filoDeRueda(carreta, l, 0.7f) }
         if (ValleMongol.carneColgada(m)) carne(m, p, sol)
         if (EscenaMongol.pielDeLobo(m)) pielTendida(p, SITIO_CARRETA.p(0f, carreta.tabla + 0.75f, 0.3f), 16f, lerp(C.PIEDRA, C.HOLLIN, 0.3f))
     }
@@ -283,6 +300,9 @@ internal object ValleCampamento {
             if (u.tienda !in hay) continue
             val g = gerDe(m, u, 0f)
             humo(l, g.humero, 40f + u.k * 2f, 2f + u.k * 0.4f, reloj, m.viento, 0.2f, 0.2f, j + 5, 7, 0.3f + 0.4f * g.dentro)
+            // A contraluz, el sol raso enciende el humo que sale del aro.
+            val enc = ValleLuz.sol(l) * ValleLuz.bajo(l)
+            if (enc > 0.05f) resplandor(g.humero + Offset(0f, -6f - u.k * 0.8f), 5f + u.k * 1.3f, 0.32f * enc, lerp(l.solColor, Color(0xFFFFC98A), 0.4f))
         }
     }
 

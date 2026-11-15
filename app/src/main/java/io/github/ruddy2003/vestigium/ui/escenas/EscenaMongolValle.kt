@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
@@ -139,6 +140,9 @@ internal object ValleMongol {
     fun DrawScope.cuadro(m: Momento) {
         val l = EscenaMongol.luces(m); val r = Rayo(l); val sol = Sol3(r); val p = Pincel(l, r)
         val nieve = EscenaMongol.nieve(m)
+        // La sombra grande del valle con su franja de sol (ver `ValleLuz`): la de la mañana tapa solo el fondo del valle
+        // (va antes de la terraza, que está más alta y ya tiene sol); la de la tarde, todo lo que queda bajo el cerro.
+        val sv = ValleLuz.sombraDelValle(l)
         with(ValleLejos) { lejos(m, p, sol, nieve) }
         with(ValleRio) { suelo(m, p, sol, nieve); rio(m, p, sol, nieve) }
         with(ValleLejos) { monjeEnLaOrilla(m, p, sol) }
@@ -146,8 +150,13 @@ internal object ValleMongol {
         with(ValleCerro) { cerro(m, p, sol, nieve) }
         velo(m, l, 0.4f, 60f, 200f)
         with(ValleCampamento) { campamento(m, p, sol, nieve) }
+        with(ValleLuz) {
+            if (sv.manana) { val fondo = fondo(); sombraGrande(sv, r, fondo, null); luzDeLaFranja(sv, l, fondo) }
+            vaho(m, l, sv)
+        }
         velo(m, l, 0.22f, 140f, 222f)
         with(ValleCerca) { primerPlano(m, p, sol, nieve); marco(m, p, sol) }
+        if (!sv.manana) with(ValleLuz) { val todo = todo(); sombraGrande(sv, r, todo, ValleCerca.siluetaDeBat(m, nieve)); luzDeLaFranja(sv, l, todo) }
         tiempoQuieto(l, m.ficha.clima, H, m.semilla("tiempo"))
         grano(Azar(Semilla.de("mongol", "grano", "valle")), 0.6f + 0.4f * r.dia)
     }
@@ -193,7 +202,18 @@ internal object ValleMongol {
 
     // ---------------------------------------------------------------- El gato
 
-    fun luzDelGato(m: Momento, en: Offset): LuzGato { val l = EscenaMongol.luces(m); return LuzGato(Rayo(l), l.noche) { l.tono(it) } }
+    /**
+     * La luz del gato: la del momento y, si está en la sombra grande del valle (la tarde la tiende sobre la terraza), sin
+     * sol que le tumbe sombra y con el color enfriado como lo demás.
+     */
+    fun luzDelGato(m: Momento, en: Offset): LuzGato {
+        val l = EscenaMongol.luces(m); val r = Rayo(l)
+        val k = ValleLuz.sombraEn(ValleLuz.sombraDelValle(l), en, arriba = true)
+        if (k <= 0.02f) return LuzGato(r, l.noche) { l.tono(it) }
+        val r2 = Rayo(r.dia, r.lat, r.cot, r.tan, r.ax, r.ay, r.fuerza * (1f - k), r.color, r.contraste * (1f - 0.5f * k))
+        val frio = lerp(r.color, Color.White, 0.14f)
+        return LuzGato(r2, l.noche) { c -> l.tono(c).let { t -> lerp(t, Color(t.red * frio.red, t.green * frio.green, t.blue * frio.blue, t.alpha), 0.82f * k) } }
+    }
 
     /**
      * Lo plantado en el suelo del gato: el cofre, el hogar y el argal quedan detrás de su paso; en la parición, los
