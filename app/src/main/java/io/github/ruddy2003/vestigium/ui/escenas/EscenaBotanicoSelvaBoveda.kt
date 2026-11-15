@@ -42,14 +42,20 @@ internal object BovedaSelva {
     class Hoja3(val desde: V3, val base: V3, val punta: V3, val ancho: Float, val caida: Float, val vuelta: Float, val rasgado: Float, val seca: Float, val semilla: Long) {
         fun nervio(s: Float): V3 = base + (punta - base) * s + V3(0f, -caida * 4f * s * (1f - s), 0f)
         private val lado: V3 = (punta - base).let { d -> val n = sqrt(d.x * d.x + d.z * d.z).coerceAtLeast(0.001f); V3(-d.z / n, 0f, d.x / n) }
+        private fun media(s: Float) = ancho * 0.5f * sin(PI.toFloat() * s).coerceAtLeast(0f).let { sqrt(it) } * 0.85f
+
+        /** El borde de la hoja en [s] (de 0, la base, a 1, la punta), del lado [l] (−1 o 1), en metros. */
+        fun borde(s: Float, l: Float): V3 = nervio(s) + lado * (l * media(s) * (0.6f + 0.4f * (l * vuelta).coerceAtLeast(0f)))
 
         /** El contorno de la hoja (un lado de ida y el otro de vuelta), en metros: para su sombra. */
         fun contorno(pasos: Int = 8): List<V3> {
-            fun media(s: Float) = ancho * 0.5f * sin(PI.toFloat() * s).coerceAtLeast(0f).let { sqrt(it) } * 0.85f
-            val ida = (0..pasos).map { i -> val s = i / pasos.toFloat(); nervio(s) + lado * (media(s) * (0.6f + 0.4f * vuelta.coerceAtLeast(0f))) }
-            val vuelta2 = (pasos downTo 0).map { i -> val s = i / pasos.toFloat(); nervio(s) - lado * (media(s) * (0.6f + 0.4f * (-vuelta).coerceAtLeast(0f))) }
+            val ida = (0..pasos).map { i -> borde(i / pasos.toFloat(), 1f) }
+            val vuelta2 = (pasos downTo 0).map { i -> borde(i / pasos.toFloat(), -1f) }
             return ida + vuelta2
         }
+
+        /** Dónde está rota la hoja (de 0 a 1 a lo largo del nervio): los rasgones que dejan pasar el sol en su sombra. */
+        val rasgones: List<Float> by lazy { val az = Azar(semilla + 7L); val r = ArrayList<Float>(); var s = 0.14f + az.entre(0f, 0.08f); while (s < 0.9f) { if (az.real() < rasgado) r += s; s += az.entre(0.08f, 0.17f) }; r }
 
         /** El punto medio de la hoja: para ordenar de atrás adelante. */
         val medio: V3 get() = nervio(0.5f)
@@ -71,11 +77,12 @@ internal object BovedaSelva {
             Hoja3(c, base, t, az.entre(0.5f, 0.66f), az.entre(0.08f, 0.3f) + (if (t.y < 2.6f) 0.25f else 0f), az.entre(-0.6f, 0.6f), az.entre(0.35f, 0.85f), if (desde + i == 6) 0.8f else az.entre(0f, 0.25f), Semilla.de("botanico", "hoja boveda", desde + i))
         }
         mata(PLATANO_CIMA, listOf(
-            V3(0.75f, 3.25f, 4.85f), V3(-0.25f, 3.65f, 4.75f), V3(-1.25f, 3.5f, 5.05f), V3(1.05f, 2.45f, 5.7f),
-            V3(-2.75f, 3.05f, 5.7f), V3(-0.45f, 2.35f, 4.45f), V3(-2.15f, 1.95f, 7.7f), V3(0.2f, 3.9f, 6.2f),
+            // (las de en medio, altas: dejan ver el árbol grande y el helecho por debajo)
+            V3(0.75f, 3.35f, 4.85f), V3(-0.25f, 3.65f, 4.75f), V3(-1.25f, 3.5f, 5.05f), V3(1.25f, 3.15f, 5.7f),
+            V3(-2.75f, 3.05f, 5.7f), V3(-0.55f, 3.05f, 4.45f), V3(-2.15f, 1.95f, 7.7f), V3(0.2f, 3.9f, 6.2f),
         ), 0) + mata(ESQUINA_CIMA, listOf(
             // (ninguna baja por delante de la luna ni del sol, que salen por el claro de la derecha)
-            V3(-0.35f, 2.5f, 3.95f), V3(0.35f, 3.05f, 3.25f), V3(1.0f, 2.95f, 4.2f), V3(0.9f, 3.5f, 2.45f), V3(1.8f, 3.7f, 3.4f),
+            V3(-0.35f, 2.95f, 3.95f), V3(0.35f, 3.05f, 3.25f), V3(1.0f, 2.95f, 4.2f), V3(0.9f, 3.5f, 2.45f), V3(1.8f, 3.7f, 3.4f),
             // Las que se tienden por encima de quien mira (fuera del cuadro, por arriba): dan la luz rota en las tablas de delante.
             V3(0.55f, 3.15f, 1.55f), V3(1.3f, 3.0f, 1.15f), V3(-0.45f, 2.95f, 2.2f), V3(0.15f, 3.45f, 1.95f), V3(-1.1f, 3.1f, 2.7f),
             // Las bajas del otro lado de la mata (fuera del cuadro, a la derecha): con el sol bajo tienden su sombra por el tablado.
@@ -121,7 +128,7 @@ internal object BovedaSelva {
         val d = t - b; val l = d.getDistance().coerceAtLeast(0.01f); val n = Offset(-d.y / l, d.x / l)
         val curva = ((mid - (b + t) * 0.5f).let { it.x * n.x + it.y * n.y })
         val zm = h.medio.z
-        val pin = LuzSelva.pincelEn(luz, mid, LuzSelva.alumbrado(luz, h.medio.x, h.medio.y + 0.4f, h.medio.z), alcance = 150f)
+        val pin = LuzSelva.pincelEn(luz, mid, LuzSelva.alumbrado(luz, h.medio.x, h.medio.y + 0.4f, h.medio.z), alcance = 45f)
         // El pecíolo, de la cima de la mata a la hoja.
         val desde = pc(h.desde)
         drawLine(pin.medio(lerp(C.HOJA, C.ARENA, 0.2f)), desde, b, (0.05f * k(h.desde.z)).coerceAtLeast(0.6f))
@@ -134,6 +141,8 @@ internal object BovedaSelva {
         with(PiezasBotanico) {
             hojaDePlatano(pinH, b, t, h.ancho * k(zm), curva, h.vuelta, h.rasgado, h.seca, t0.coerceIn(-1f, 1f), az, 0f, cl)
         }
+        // De noche, la lámpara la enciende por debajo.
+        with(LuzSelva) { lamparaEnLaHoja(luz, h.contorno(7).let { it.subList(0, 8) + it.subList(9, it.size - 1) }.map { pc(it) }, zm) }
         // Mojada, la hoja brilla: dos filos de luz a lo largo de la lámina, y la gota que cuelga de la punta.
         if (SelvaBotanico.mojado(m)) {
             val brillo = lerp(luz.l.alto, Color.White, 0.5f).copy(alpha = 0.35f); val w = h.ancho * k(zm) * 0.25f

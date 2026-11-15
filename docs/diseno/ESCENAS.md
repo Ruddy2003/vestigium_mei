@@ -4,7 +4,7 @@ _Creada el 11 nov 2026, al cerrar la tanda P4a. Recoge lo que el autor decidió 
 
 ## 0. Cómo se usa
 
-- **La vara de calidad es el cuadro de Helénico** (`ui/escenas/EscenaHeleno.kt`), tal como está en el código.
+- **La vara de calidad es el cuadro de Helénico** (`ui/escenas/EscenaHeleno.kt`), tal como está en el código, **como piso, no como techo** (el autor, 15 nov 2026): una escena nueva no puede verse más pobre que Helénico en ningún punto, pero Helénico «se queda corto en algunas cosas que los otros temas hacen muy bien». **El nivel a alcanzar en cada aspecto es el del cuadro aprobado que mejor lo hace** (sección 2 bis).
   - Su imagen de referencia: `docs/diseno/escenas/referencia_heleno.jpg` (5 de mayo de 2027 a las 7:00, las 13:00 y las 21:00, dibujado con el arnés).
   - **Aprobadas también por el autor** (12 nov 2026), y por eso ejemplos válidos de su tipo: Gótico, otro exterior con sol (`referencia_gotico.jpg`, 10 de mayo de 2027), y Ciudad neón, la escena siempre de noche (`referencia_neon.jpg`: arriba Amaru el 5 de mayo de 2027 a las 7:00, 13:00 y 21:00; abajo Kei el 6 de mayo a las 7:00, 17:00 y 21:00). La vara sigue siendo Helénico.
   - Una escena nueva está terminada cuando, puesta al lado de esa imagen, **no se ve más pobre en ningún punto**: ni más vacía, ni más lisa, ni más plana, ni con las cosas más chicas.
@@ -148,6 +148,39 @@ Sin agua, ver la sección 5: la regla pasa a la superficie más grande que tenga
 - El terreno no es plano: lomas suaves, bancales, un olivar.
 - `luces.tono(color, lejos)` hace el resto: cuanto más lejos, más bruma.
 
+## 2 bis. Lo mejor de cada escena y la lógica de la luz
+
+Decisión del autor del 15 nov 2026: **Helénico es el piso, no el techo.** En varias cosas otros cuadros aprobados lo superan, y esos son el nivel a alcanzar en cada aspecto. Antes de dibujar un aspecto se abren el código y la imagen del cuadro que mejor lo hace y se mira **cómo** lo consigue (qué capas, en qué orden, qué piezas de `paisaje/`, qué colores), no solo que existe. Las imágenes están en `docs/diseno/escenas/referencia_<tema>.jpg`; el código, en `ui/escenas/`.
+
+| Aspecto | Quién lo hace mejor | Qué mirar |
+|---|---|---|
+| **La luz que entra y se posa** (el autor: «la iluminación de los frescos … es impresionante») | La capilla de Roma (`EscenaUrbeCapilla.kt`, `EscenaUrbeFresco.kt`, `EscenaUrbeObra.kt`; `referencia_urbe_capilla.jpg`); Scriptorium y Renacimiento (`EscenaMedieval*.kt`, `EscenaRenacimiento*.kt`, con `paisaje/Estancia.kt`: `solQueEntra`, `manchaDeSol`, `hazDeSol`) | La mancha de sol que cruza el suelo y sube por la pared según la hora; el haz en el aire con su polvo; cómo la luz enciende lo pintado (los frescos suben donde les da) y deja lo demás en penumbra de color, nunca gris |
+| **La noche con luces propias** | Renacimiento (la lámpara con su halo en la pared y el brasero), la capilla (las velas del altar), Revolución francesa (las ventanas reflejadas en el río), Ciudad neón, Prehistoria (la hoguera), Vapor victoriano | Cada lumbre tiñe lo cercano con su color, tumba sombras y deja el otro lado en azul violeta; reflejos en lo mojado |
+| **La luz cálida de dentro contra la luz fría de la luna** (el autor: «la luz cálida del interior con la luz fría de la luna queda bellísimo») | Renacimiento de noche (`referencia_renacimiento.jpg`, tercera hora) | Dos luces a la vez, de colores opuestos: la lámpara y el brasero, naranja, con su halo en la pared y su charco en el suelo; la luna, azul plata, que entra por la ventana y deja su mancha fría en el piso. Cada cosa recibe una por un lado y otra por el otro. Fuera, azul hondo con ventanas encendidas |
+| **Un sitio de trabajo lleno y creíble** | Renacimiento, Scriptorium, Espacio, Egipto, Mesoamérica | Muchas cosas del oficio, grandes, a profundidades distintas, tapándose; cada una reconocible; nada genérico |
+| **Imágenes dentro de la imagen** | La capilla (los frescos), Renacimiento (el retablo, los dibujos clavados en la pared), Scriptorium (los libros abiertos) | Superficies que llevan dibujo propio y lo enseñan con la luz |
+| **Perspectiva y fuga** | Distopía, Vapor victoriano, Espacio, la capilla (el damero del suelo) | Un punto de fuga claro; el suelo con dibujo que lo marca; cuerpos en tres cuartos |
+| **Vegetación** | Ciudad verde (`EscenaRuinas*.kt`), Al-Ándalus (el naranjo), la azotea de Roma (el pino, el limonero, el arco de rosas), Mesoamérica | Masa oscura detrás, hojas una por una, fruta, flores, sombra rota |
+| **Agua** | Helénico, Pirata, Revolución francesa | Honda lejos y clara cerca, reflejos rotos de todo lo que la toca, estela, luces de noche |
+| **Bruma y mal tiempo por capas** | Horror cósmico (`EscenaArcano*.kt`) | La niebla va entre los planos, no encima |
+| **Animales** | Ruta de la Seda (los camellos), Mongol (los caballos) | Anatomía, capa, postura, sombra |
+| **Lejanía construida** | La azotea de Roma, Revolución francesa, Helénico, Gótico | Varias filas, luz y sombra, algo delante y algo detrás, ventanas que se encienden |
+
+**La lógica de la luz** (por qué funciona en la capilla, Scriptorium y Renacimiento). Son interiores: en un exterior no se copia la escena, se copia la lógica.
+
+1. **La luz tiene forma y cae sobre penumbra.** No está todo alumbrado: hay una zona en sombra de color (azul violeta, nunca gris) y dentro de ella una mancha de luz con borde reconocible (la del hueco por donde entra). Lo que se ve es el contraste entre las dos.
+2. **La mancha camina con la hora.** A las 7:00, a las 13:00 y al atardecer está en sitios distintos, con otra forma y otro color.
+3. **La luz se ve en el aire:** un haz con polvo o humo entre el hueco y la mancha.
+4. **La luz enciende lo pintado.** Donde cae, los colores de las cosas (un fresco, un libro, un paño) suben; fuera, quedan apagados. Lo más bonito del cuadro está donde da la luz. Se hace con el `Pincel`, no con un velo encima.
+5. **De noche hay dos luces de color opuesto a la vez:** la lumbre, naranja, con su halo en la pared y su charco en el suelo, y la luna, azul plata, con su propia mancha fría. Cada cosa recibe una por un lado y otra por el otro, y cada luz tumba su sombra.
+
+**Cómo se lleva a un exterior.** Hay tres ejemplos hechos el 15 nov 2026, en Mongol y Botánico (falta que el autor los apruebe):
+- **La sombra grande con su mancha de sol.** Un cerro, un alero o las copas dejan una zona en penumbra, y el sol entra en una franja o en manchas que caminan con la hora: la sombra del cerro con su franja de sol sobre la nieve en el valle de Mongol (`EscenaMongolValleLuz.kt`); las sombras de las nubes del día sobre la estepa en su verano (`EscenaMongolVeranoLuz.kt`); la sombra de las velas, de la amurada y de la jarcia sobre la cubierta del bergantín de Botánico (`EscenaBotanicoBarcoCubierta.kt`); el moteado de sol entre las hojas, con sus claros redondos, y los haces entre las copas en su selva (`EscenaBotanicoSelvaLuz.kt`). Si no es la sombra real, se marca **[Aproximación]**.
+- **Un hueco que hace de ventana.** El aro de la tienda de Mongol es la ventana de una estancia redonda: por la puerta se ve la mancha de sol del aro, que camina con la hora (`PiezasMongol.luzDelAro`, con `solQueEntra`). En el bergantín, la claraboya de la cabina es una luz que sube desde abajo.
+- **La luz en el aire:** el humo de los aros a contraluz, el vaho de la helada, la bruma del río al alba, el polvo de las manadas, los haces entre las copas.
+- **Lo pintado al sol:** las puertas, los cofres, las cintas, las láminas y las hojas de herbario suben donde les da y bajan en la sombra.
+- **La noche a dos luces:** la puerta, el aro, el farol o la lámpara de la mesa, naranja, contra la luna, que platea los techos, las velas, la nieve o el agua y tumba sombras frías y suaves; cada cosa del primer plano, un lado de cada color. En la hora azul, el resplandor del horizonte recorta las crestas.
+
 ## 3. El orden de las capas
 
 Es el de `EscenaHeleno.quieta`. Una escena nueva lo sigue, cambiando lo que no tenga.
@@ -197,7 +230,7 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 
 **Por tipo de escena:**
 
-- **Exterior con sol** (casi todos los temas). Se aplica todo tal cual. Un ejemplo de selva y ciudad de piedra es Mesoamérica (S9): `EscenaMeso.kt` y sus archivos; su imagen, `referencia_meso.jpg`. De patio de castillo con el paisaje lejos, por encima del muro, Templario (S11): `EscenaTemplario.kt` y sus archivos; su imagen, `referencia_templario.jpg`. Visto desde debajo de un alero, con el alero y dos postes de marco, Japón Edo (S11): `EscenaEdo.kt` y sus archivos; su imagen, `referencia_edo.jpg`. **Falta que el autor apruebe los dos.**
+- **Exterior con sol** (casi todos los temas). Se aplica todo tal cual. Un ejemplo de selva y ciudad de piedra es Mesoamérica (S9): `EscenaMeso.kt` y sus archivos; su imagen, `referencia_meso.jpg`. De patio de castillo con el paisaje lejos, por encima del muro, Templario (S11): `EscenaTemplario.kt` y sus archivos; su imagen, `referencia_templario.jpg`. Visto desde debajo de un alero, con el alero y dos postes de marco, Japón Edo (S11): `EscenaEdo.kt` y sus archivos; su imagen, `referencia_edo.jpg`. **Falta que el autor apruebe los dos.** La selva de Botánico (S13), **un invernadero sin vidrio**: la galería de una casa, mirada a lo largo, con las plantas en el centro (la colección viva en macetas, cestos colgados y una caja de vidrio), la selva detrás y la bahía al fondo; `EscenaBotanicoSelva*.kt` y su imagen, `referencia_botanico_selva.jpg`. **Falta que el autor la apruebe.**
   - Cambian la paleta local, la flora, las casas y **el marco**, que tiene que ser de ese lugar: una parra, un alero, un toldo, un arco, una palmera, una vela con su jarcia, el borde de una tienda, una viga, una rama.
   - El cielo de `HITOS` es de todos y **no se retoca para un tema:** cambiaría Helénico. Si el lugar pide otro cielo (polvo del desierto, gris del norte, un cielo que no es de la Tierra), la escena tiñe las `Luces` que le da el momento en una función propia, como hace Helénico con su eclipse (`luces(m)`).
 - **Sin agua** (desierto, estepa, montaña, ciudad). No se inventa un río para cumplir la regla 4. El primer cuadro de desierto es el camino de la Ruta de la Seda (S7, aprobado por el autor el 14 nov 2026): `EscenaSedaPaisajes.kt` y `EscenaSedaCampamento.kt`; sus imágenes, `referencia_seda.jpg` y `referencia_seda_changan.jpg`. De ciudad con humo, Vapor victoriano (S8, aprobado ese día): `EscenaVapor.kt` y sus archivos, y `referencia_vapor.jpg`. De aldea en el desierto con el río lejos, Egipto (S9): `EscenaEgipto.kt` y sus archivos, y `referencia_egipto.jpg`; ahí la regla 4 la cumplen el Nilo lejano, que cambia con la crecida, y el piso de barro de la azotea. De estepa con río y en dos lugares, Mongol (S12): `EscenaMongol.kt` y sus archivos (el valle de invierno, `EscenaMongolValle*.kt`, y el campamento de verano, `EscenaMongolVerano*.kt`); sus imágenes, `referencia_mongol.jpg` y `referencia_mongol_verano.jpg`. La tabla de abajo lo ponía «sin agua», pero el cuento pone el río delante de los dos sitios, así que **el río sí se dibuja**: helado la mitad del año en el valle, ancho y lento en el verano; la otra superficie grande es la nieve del valle o la hierba del llano. **Falta que el autor lo apruebe.**
@@ -205,7 +238,9 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
   - Nieve: ventisqueros, huellas, sombras azules largas.
   - Hierba: rachas que la peinan, senderos, matas, cambio de color de lejos a cerca.
   - Empedrado o asfalto: losas, juntas, charcos después de la lluvia con su `reflejoRoto`.
-- **A bordo de un barco** (Pirata, hecho en S2 y aprobado por el autor el 13 nov 2026: `EscenaPirata.kt` y sus archivos son el ejemplo; sus imágenes, `referencia_pirata.jpg`, `referencia_pirata_cayo.jpg` y `referencia_pirata_nassau.jpg`; Revolución francesa con su barco-lavadero, hecho en S8 y aprobado por el autor el 14 nov 2026: `EscenaRevolucion.kt` y sus archivos, y `referencia_revolucion.jpg`; Botánico, Abismo). El agua lo rodea todo: es la protagonista. El primer plano es la cubierta y el marco es la jarcia, una vela o un toldo.
+- **A bordo de un barco** (Pirata, hecho en S2 y aprobado por el autor el 13 nov 2026: `EscenaPirata.kt` y sus archivos son el ejemplo; sus imágenes, `referencia_pirata.jpg`, `referencia_pirata_cayo.jpg` y `referencia_pirata_nassau.jpg`; Revolución francesa con su barco-lavadero, hecho en S8 y aprobado por el autor el 14 nov 2026: `EscenaRevolucion.kt` y sus archivos, y `referencia_revolucion.jpg`; Botánico, hecho en S13: `EscenaBotanicoBarco*.kt`; sus imágenes, `referencia_botanico.jpg`, navegando, y `referencia_botanico_puerto.jpg`, fondeado, **falta que el autor lo apruebe**; Abismo). El agua lo rodea todo: es la protagonista. El primer plano es la cubierta y el marco es la jarcia, una vela o un toldo.
+  - **Visto a lo largo** (Botánico): de pie en la popa, junto al timón, mirando hacia proa por una banda. La cubierta se aleja en fuga hacia un lado y el mar queda al otro, y la mesa de trabajo, los cajones y los aparejos son el sitio del primer plano.
+  - **Con costas por tramos:** si el barco viaja, lo que se ve en el horizonte va por tramos del viaje (mar abierto, costa tropical, islas volcánicas, la Patagonia, los Andes…), iguales todos los días del tramo; fondeado, el puerto de cerca, con sus luces de noche.
 - **Siempre de noche** (Ciudad neón, hecha en P4b: `EscenaNeon.kt` es el ejemplo). `Rayo(luces)` no da sombras de noche, así que la regla 1 se cumple con las luces del lugar, con las piezas de `paisaje/Focos.kt`:
   - la escena arma la lista de focos encendidos en ese momento y con ella un `Alumbrado`; cada cosa le pide su color (`Alumbrado.en`) en vez de pedírselo a `luces.tono`;
   - la sombra de cada cosa la tumba el foco que más la alumbra (`rayoDeFoco`, dentro de una `capaSombra`); para una sola luz que manda, `rayoFijo`;
@@ -243,7 +278,6 @@ Antes de dar una hoja por buena, revisa que no esté ninguno.
 | Tema | Personaje y lugar | Tipo | Marco posible | Superficie grande |
 |---|---|---|---|---|
 | Napoleónico | Jean-Baptiste, la campaña de Rusia | Exterior; nieve al final | Un abedul, un fusil en pabellón | El llano; la nieve |
-| Botánico | El naturalista, un bergantín | A bordo | La jarcia | El mar |
 | Abismo | Nikos, un barco esponjero | A bordo | El pescante, un toldo | El mar |
 | Art déco | Lou, Nueva York | Ciudad, de noche tiene mucho que decir | Una escalera de incendios, un rótulo | La calle o la azotea |
 | Soviético | Liudmila, Moscú | Ciudad con nieve | El marco de una ventana, un abedul | El patio entre bloques |
@@ -304,6 +338,8 @@ Se copia al informe de la tanda, una por escena. Todas tienen que quedar en «s�
 - [ ] No aparece ninguno de los errores de la sección 4.
 - [ ] Con lluvia o niebla el cuadro no queda plano.
 - [ ] Puesta al lado de la referencia de Helénico, no se ve más pobre en ningún punto.
+- [ ] Comparada con el cuadro que mejor hace cada aspecto (sección 2 bis), no se queda corta.
+- [ ] De noche hay dos luces de color opuesto y cada una tumba su sombra.
 - [ ] El objeto del día se ve a las tres horas, en todos sus dibujos.
 - [ ] Lo que el cuento cambia ese día se ve, y una prueba lo vigila.
 - [ ] El autor la vio junto a Helénico.
