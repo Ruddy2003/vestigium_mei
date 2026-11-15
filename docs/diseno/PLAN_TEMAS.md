@@ -1049,7 +1049,7 @@ Junto al mito están las creencias del siglo I: **los Vigilantes** de Enoc, **Be
 
 ### 10e. Galia (`galia`)
 
-**Estado (16 nov 2026): programado** en la rama de los temas nuevos, todo menos el cuadro (va en la fila de escenas, después de S19). Guía: `docs/diseno/temas/galia.md`; fuentes: `docs/diseno/temas/fuentes_galia.md`. La otra vida es Segomaros, con su calendario del 54 al 50 a. C. y el cuento de la temporada 1. Decisiones a confirmar por el autor: el nombre (Segomaros; otras: Korisios, Esugenos) y Samonios = noviembre (recurso; la otra propuesta lo pone en mayo o junio).
+**Estado (15 nov 2026): programado** en la rama de los temas nuevos, todo menos el cuadro (va en la fila de escenas, después de S19). Guía: `docs/diseno/temas/galia.md`; fuentes: `docs/diseno/temas/fuentes_galia.md`. La otra vida es Segomaros, con su calendario del 54 al 50 a. C. y el cuento de la temporada 1. Decisiones a confirmar por el autor: el nombre (Segomaros; otras: Korisios, Esugenos) y Samonios = noviembre (recurso; la otra propuesta lo pone en mayo o junio).
 
 **Fuentes comprobadas** (15 nov 2026): `docs/diseno/temas/fuentes_galia.md`, con la cronología del levantamiento y 20 correcciones, ya puestas aquí.
 
@@ -1147,7 +1147,9 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
 
 ### 10f. Art nouveau (`nouveau`)
 
-**Fuentes comprobadas** (16 nov 2026): `docs/diseno/temas/fuentes_nouveau.md`, con 20 correcciones, ya puestas aquí.
+**Estado (15 nov 2026): en curso** en la rama de los temas nuevos. Hechos: la guía (`docs/diseno/temas/nouveau.md`), la base en el código (paleta, Federant, Brygada 1918 y Della Respira, la fecha con la flor del día de La Tour y la hora de París, la voz, las 21 frases comprobadas), los sonidos, el ícono, el sello, el papel, los widgets y el gato. En curso: las superficies y la otra vida. Decisiones a confirmar por el autor: el contorno del gato (línea curva de pluma, no el borde de un píxel de los demás gatos); la lista de flores sale de la lectura automática de Wikisource, sin cotejar con el impreso.
+
+**Fuentes comprobadas** (15 nov 2026): `docs/diseno/temas/fuentes_nouveau.md`, con 20 correcciones, ya puestas aquí.
 
 **Concepto.** París hacia 1900, cuando el hierro, el vidrio y la luz eléctrica aprendieron a parecer plantas. Entradas de metro, invernaderos, vitrales de casa, carteles litográficos, cafés y la Exposición Universal de 1900.
 
