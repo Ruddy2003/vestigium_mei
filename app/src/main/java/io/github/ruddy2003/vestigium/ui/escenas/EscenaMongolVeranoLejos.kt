@@ -133,6 +133,7 @@ internal object LejosVerano {
         val fondo = SIERRA
         monte(l, fondo, H + 2f, lerp(C.MONTE, C.NIEVE, 0.06f), 0.64f)
         nieveVieja(l, fondo, H + 2f, 85f, 0.64f, Azar(Semilla.de("mongol", "verano", "nieve")))
+        with(LuzVerano) { filoDelOcaso(curva(fondo.map { it + Offset(0f, 0.25f) }), l, 0.7f * recorte(l)) }
         mancha(Offset(250f, H - 4f), 190f, 4f, lerp(l.bruma, Color.White, 0.2f), 0.45f * (1f - 0.6f * l.noche))
         val medio = perfil(fijo, -40f, 300f, H, 16f, 0.65f, 34, isla = true)
         monte(l, medio, H + 3f, lerp(C.MONTE, C.SOMBRA, 0.36f), 0.52f)
@@ -217,6 +218,12 @@ internal object LejosVerano {
             repeat(30) { val x = az.entre(0f, 140f); val y = cresta(x) + az.entre(2f, 18f); drawOval(l.tono(lerp(propio, C.VERDE, 0.5f), 0.38f).copy(alpha = 0.5f), Offset(x, y), Size(az.entre(1.2f, 3f), 0.7f)) }
         }
         ovoo(p, CIMA + Offset(0f, 0.3f), 8.6f, EscenaMongol.cintasDelOvoo(m), Azar(Semilla.de("mongol", "ovoo")), 0.32f, 0f, m.viento, EscenaMongol.diaDelOvoo(m))
+        // La hora azul: el resplandor del ocaso que queda en el horizonte recorta la cresta y el ovoo (LuzVerano.recorte).
+        val k = LuzVerano.recorte(l)
+        if (k > 0.02f) with(LuzVerano) {
+            filoDelOcaso(curva(CERRO.map { it + Offset(0f, 0.25f) }), l, k)
+            filoDelOcaso(PiezasMongol.siluetaDeOvoo(CIMA + Offset(0f, 0.3f), 8.6f), l, 0.8f * k)
+        }
     }
 
     /**
@@ -250,6 +257,8 @@ internal object LejosVerano {
      */
     private fun DrawScope.lomas(m: Momento, p: Pincel, sol: Sol3, verde: Color) {
         val l = p.l
+        // El sol raso (LuzVerano.rasante): la cara de sombra de cada lomo se alarga y la cresta se enciende, dorada.
+        val ras = LuzVerano.rasante(m); val polvo = LuzVerano.polvoDorado(m)
         val crestas = listOf(
             Triple(H + 1.8f, 3.2f, 0.56f), Triple(H + 5.4f, 4.6f, 0.47f), Triple(H + 9.6f, 5.6f, 0.38f), Triple(H + 14.2f, 6.4f, 0.3f),
         )
@@ -269,8 +278,9 @@ internal object LejosVerano {
                     val q = cresta[i]
                     if (q.y <= cresta[i - 1].y && q.y < cresta[i + 1].y) {
                         val cae = if (p.solALaDerecha) -1f else 1f
-                        drawPath(poligono(q, q + Offset(cae * (14f + 4f * j), 7f + 2f * j), q + Offset(cae * 2f, 9f + 2f * j)), p.sombra(hondo, lejos).copy(alpha = 0.32f * (0.4f + 0.6f * sol.r.dia)))
-                        drawPath(poligono(q, q + Offset(-cae * (12f + 3f * j), 6f + 2f * j), q + Offset(-cae * 1f, 8f + 2f * j)), p.luz(claro, lejos).copy(alpha = 0.25f * sol.r.dia))
+                        val largo = 1f + 1.8f * ras
+                        drawPath(poligono(q, q + Offset(cae * (14f + 4f * j) * largo, (7f + 2f * j) * (1f + 0.4f * ras)), q + Offset(cae * 2f, (9f + 2f * j) * (1f + 0.5f * ras))), p.sombra(hondo, lejos).copy(alpha = (0.32f * (0.4f + 0.6f * sol.r.dia) + 0.3f * ras).coerceIn(0f, 1f)))
+                        drawPath(poligono(q, q + Offset(-cae * (12f + 3f * j), 6f + 2f * j), q + Offset(-cae * 1f, 8f + 2f * j)), p.luz(lerp(claro, C.ORO, 0.4f * ras), lejos).copy(alpha = (0.25f * sol.r.dia + 0.25f * ras).coerceIn(0f, 1f)))
                     }
                 }
                 // Las rachas del viento: pinceladas largas y claras, tendidas, y las calvas de tierra en los lomos.
@@ -285,12 +295,17 @@ internal object LejosVerano {
                 repeat(14 + 8 * j) { val q = Offset(az.entre(x0, x1), az.entre(arriba + 1f, arriba + alto + 10f)); drawOval(p.sombra(lerp(verde, C.MONTE, 0.3f), lejos).copy(alpha = 0.45f), Offset(q.x, q.y), Size(az.entre(0.8f, 2.4f), 0.5f + 0.1f * j)) }
             }
             // El filo de luz de la cresta.
-            drawPath(curva(cresta), p.luz(lerp(claro, C.FIELTRO, 0.3f), lejos).copy(alpha = 0.5f * (0.3f + 0.7f * sol.r.dia)), style = Stroke(0.5f))
+            drawPath(curva(cresta), p.luz(lerp(lerp(claro, C.FIELTRO, 0.3f), C.ORO, 0.45f * ras), lejos).copy(alpha = (0.5f * (0.3f + 0.7f * sol.r.dia) + 0.4f * ras).coerceIn(0f, 1f)), style = Stroke(0.5f + 0.5f * ras))
             // Las manadas de los otros campamentos, en los lomos de esta loma: caballos y ovejas, con su sombra corta.
             val manadas = Azar(Semilla.de("mongol", "verano", "manadas", j, m.ficha.dia.substring(5, 7)))
             repeat(if (j == 0) 1 else 2) {
                 val c0 = Offset(manadas.entre(x0 + 30f, x1 - 30f), 0f); val y = cresta.minByOrNull { kotlin.math.abs(it.x - c0.x) }!!.y + 2f + j * 0.8f
                 val caballos = manadas.real() < 0.45f
+                // Por la tarde, el polvo que levantan, dorado a contraluz (LuzVerano.polvoDorado).
+                if (caballos && polvo > 0.02f) {
+                    val pz = Azar(Semilla.de("mongol", "verano", "polvo", j, it))
+                    repeat(5) { k -> mancha(Offset(c0.x + pz.entre(-10f, 10f) * (1f + 0.3f * j), y - 1.5f - k * 0.8f - pz.entre(0f, 1.5f)), pz.entre(6f, 13f) * (1f + 0.2f * j), pz.entre(1.6f, 3f), lerp(p.luz(lerp(C.ESTEPA, C.FIELTRO, 0.3f), lejos), l.solColor, 0.5f), (0.3f - 0.04f * k) * polvo) }
+                }
                 repeat(4 + manadas.entero(6)) {
                     val q = Offset(c0.x + manadas.entre(-8f, 8f) * (1f + 0.3f * j), y + manadas.entre(-0.6f, 1.2f))
                     if (caballos) caballoLejano(p, sol, q, 1.4f + 0.45f * j, if (manadas.real() < 0.5f) 1f else -1f, if (it % 3 == 0) PiezasMongol.TORDO else PiezasMongol.BAYO, lejos, pasta = it % 2 == 0)

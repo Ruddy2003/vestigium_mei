@@ -105,12 +105,13 @@ internal object CampamentoVerano {
 
         // Con lluvia, una franja de bruma entre el río y el campamento despega los planos.
         if (VeranoMongol.rioTurbio(m)) { mancha(Offset(170f, 141f), 240f, 5f, lerp(l.bruma, l.medio, 0.4f), 0.5f); mancha(Offset(250f, 116f), 200f, 4f, lerp(l.bruma, l.medio, 0.3f), 0.45f) }
-        // Las sombras de las tiendas y de las carretas, en una sola capa.
+        // Las sombras de las tiendas y de las carretas, en una sola capa: de día las del sol, de noche las de la luna.
         val bueyes = if (llegada && armado < 1f) BUEYES else emptyList()
-        capaSombra(sol.r) { c ->
-            for ((g, _) in tiendas) sombra(PiezasMongol.sombraDeGer(g, sol), c)
-            sombraDeCarreta(otra, sol, c); if (segunda != null) sombraDeCarreta(segunda, sol, c)
-            for ((q, mira) in bueyes) sombraArrojada(sol.r, PiezasMongol.siluetaDeBovino(q, altoDeBuey(q), mira), q, c, 150f, 150f)
+        val rs = LuzVerano.rayoDeSombras(l); val ss = Sol3(rs)
+        capaSombra(rs) { c ->
+            for ((g, _) in tiendas) sombra(PiezasMongol.sombraDeGer(g, ss), c)
+            sombraDeCarreta(otra, ss, c); if (segunda != null) sombraDeCarreta(segunda, ss, c)
+            for ((q, mira) in bueyes) sombraArrojada(rs, PiezasMongol.siluetaDeBovino(q, altoDeBuey(q), mira), q, c, 150f, 150f)
         }
 
         // El rebaño de día, junto al río: bebe en la playa y pace en la orilla, en el hueco del pasillo.
