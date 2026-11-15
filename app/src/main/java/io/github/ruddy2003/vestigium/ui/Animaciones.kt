@@ -402,9 +402,6 @@ private fun DrawScope.resplandorVivo(color: Color, centro: Offset, radio: Float,
     withTransform({ translate(centro.x, centro.y); scale(radio, radio, Offset.Zero) }) { drawCircle(b, 1f, Offset.Zero, alpha = a) }
 }
 
-/** La estela del barrido del radar, una por color: transparente casi toda la vuelta y encendida en el último cuarto de vuelta. */
-private val PINCELES_RADAR = HashMap<Long, Brush>()
-
 /**
  * Dibuja un instante [t] (0 a 1, una vuelta del [VivoTema.periodo]) del fondo vivo. Los movimientos dan vueltas enteras
  * por periodo, así el ciclo vuelve a empezar sin salto. [fuerza] multiplica la opacidad (el teléfono, sin nada encima, va más visible).
@@ -526,62 +523,53 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
             }
         }
         VivoTema.RADAR -> {
-            // La pantalla del radar: anillos de distancia, la cruz, la escala de grados en el tercer anillo, la estela del
-            // barrido (dos vueltas por periodo) con su línea de frente y los ecos, que se encienden cuando la línea pasa
-            // sobre ellos y se apagan a lo largo de la vuelta.
-            val trazoRadar = if (oscuro) Color(0xFF9FD8A8) else e.tertiary
-            val c = Offset(w * 0.5f, h * 0.44f)
-            val radio = maxOf(w, h) * 0.62f
-            val anillo = 92f * u
-            val reticula = al(trazoRadar, if (oscuro) 0.05f else 0.06f)
-            var rr = anillo
-            while (rr < radio) { drawCircle(reticula, rr, c, style = Stroke(0.8f * u)); rr += anillo }
-            drawLine(reticula, Offset(c.x - radio, c.y), Offset(c.x + radio, c.y), 0.8f * u)
-            drawLine(reticula, Offset(c.x, c.y - radio), Offset(c.x, c.y + radio), 0.8f * u)
-            for (i in 0 until 72) {
-                val a = i * PI / 36; val largo = (if (i % 6 == 0) 9f else 4f) * u; val r0 = anillo * 3
-                drawLine(reticula, Offset(c.x + (r0 * cos(a)).toFloat(), c.y + (r0 * sin(a)).toFloat()),
-                    Offset(c.x + ((r0 + largo) * cos(a)).toFloat(), c.y + ((r0 + largo) * sin(a)).toFloat()), 0.8f * u)
-            }
-            val giro = fraccionVivo(t * 2f) * 360f
-            val base = trazoRadar.copy(alpha = 1f)
-            val estela = PINCELES_RADAR.getOrPut(base.value.toLong()) {
-                Brush.sweepGradient(0f to Color.Transparent, 0.74f to Color.Transparent, 1f to base, center = Offset.Zero)
-            }
-            withTransform({ translate(c.x, c.y); rotate(giro, Offset.Zero) }) {
-                drawCircle(estela, radio, Offset.Zero, alpha = ((if (oscuro) 0.07f else 0.075f) * fuerza).coerceIn(0f, 1f))
-                drawLine(al(trazoRadar, if (oscuro) 0.16f else 0.14f), Offset.Zero, Offset(radio, 0f), 1.2f * u)
-            }
-            motas.take(12).forEach { m ->
-                val ang = m.x * 360f
-                val dist = (0.12f + 0.8f * m.y) * radio
-                val p = Offset(c.x + dist * cos(Math.toRadians(ang.toDouble())).toFloat(), c.y + dist * sin(Math.toRadians(ang.toDouble())).toFloat())
-                val pasado = fraccionVivo((giro - ang) / 360f)
-                val luz = (1f - pasado).let { it * it * it }
-                if (luz > 0.02f) {
-                    resplandorVivo(trazoRadar, p, 9f * u * m.tam, (if (oscuro) 0.22f else 0.16f) * luz * fuerza)
-                    drawCircle(al(trazoRadar, (if (oscuro) 0.45f else 0.4f) * luz), 1.8f * u * m.tam, p)
+            // El panel de vidrio grabado de la base, iluminado por el canto: rectas largas que lo cruzan en ángulos distintos,
+            // tres órbitas abiertas y una espiral de anillos que se cierran hacia un punto. Por cada recta corre despacio un
+            // pulso de luz, y en cada órbita gira su marca. De noche el vidrio brilla más, como en la penumbra de la sala.
+            val vidrio = if (oscuro) Color(0xFF8FF0D2) else e.tertiary
+            val base = if (oscuro) 0.07f else 0.06f
+            val halo = if (oscuro) 0.05f else 0.03f
+            // Las rectas: entran por un borde y salen por el otro; su ángulo y su altura salen de las motas (fijas por tema).
+            motas.take(7).forEachIndexed { k, m ->
+                val ang = Math.toRadians((if (k % 2 == 0) -1 else 1) * (16.0 + 58.0 * m.x))
+                val y0 = (0.05f + 0.9f * m.y) * h
+                val dx = cos(ang).toFloat(); val dy = sin(ang).toFloat()
+                val largo = (w + h) * 1.2f
+                val a = Offset(w * 0.5f - dx * largo / 2, y0 - dy * largo / 2); val b = Offset(w * 0.5f + dx * largo / 2, y0 + dy * largo / 2)
+                drawLine(al(vidrio, halo), a, b, 5f * u)
+                drawLine(al(vidrio, base), a, b, 1f * u)
+                // El pulso de luz que corre por el grabado: un tramo corto que se apaga hacia atrás.
+                val f = fraccionVivo(t * (0.5f + 0.5f * m.tam) + m.fase)
+                for (q in 0 until 6) {
+                    val f0 = f - q * 0.012f; val f1 = f0 - 0.012f
+                    if (f1 < 0f) break
+                    val p0 = Offset(a.x + (b.x - a.x) * f0, a.y + (b.y - a.y) * f0); val p1 = Offset(a.x + (b.x - a.x) * f1, a.y + (b.y - a.y) * f1)
+                    drawLine(al(vidrio, (if (oscuro) 0.32f else 0.2f) * (1f - q / 6f)), p0, p1, 1.6f * u, StrokeCap.Round)
                 }
             }
+            // Las órbitas abiertas, centradas a la derecha, y la marca que gira en cada una.
+            val c = Offset(w * 0.64f, h * 0.38f)
+            for (k in 0 until 3) {
+                val rx = (0.3f + 0.17f * k) * w; val ry = rx * (0.62f + 0.08f * k)
+                val inicio = -150f + 40f * k; val barrido = 250f - 30f * k
+                drawArc(al(vidrio, halo), inicio, barrido, false, Offset(c.x - rx, c.y - ry), Size(2 * rx, 2 * ry), style = Stroke(5f * u))
+                drawArc(al(vidrio, base), inicio, barrido, false, Offset(c.x - rx, c.y - ry), Size(2 * rx, 2 * ry), style = Stroke(1f * u))
+                val g = Math.toRadians((inicio + barrido * fraccionVivo(t * (1 + k) + 0.3f * k)).toDouble())
+                val pm = Offset(c.x + rx * cos(g).toFloat(), c.y + ry * sin(g).toFloat())
+                resplandorVivo(vidrio, pm, 10f * u, (if (oscuro) 0.25f else 0.14f) * fuerza)
+                drawCircle(al(vidrio, (if (oscuro) 0.55f else 0.35f)), 1.8f * u, pm)
+            }
+            // La espiral: anillos que se achican y se corren hacia un punto, como un rumbo que se cierra sobre el blanco.
+            val ce = Offset(w * 0.3f, h * 0.7f)
+            for (k in 0 until 6) {
+                val r = (64f - k * 9.5f) * u; val o = Offset(ce.x + k * 4f * u, ce.y + k * 2.5f * u)
+                drawCircle(al(vidrio, base * (0.6f + 0.08f * k)), r, o, style = Stroke(0.9f * u))
+            }
+            // Los cantos del panel: el marco de abajo, oscuro, y la luz que entra por el borde de arriba.
+            drawLine(al(vidrio, (if (oscuro) 0.12f else 0.08f)), Offset(0f, 2f * u), Offset(w, 2f * u), 2f * u)
             if (oscuro) {
-                // La antena de la estación, abajo a la derecha: torre de celosía con su dipolo y la luz roja de aviso.
-                val sil = al(Color(0xFFE7E1D4), 0.06f)
-                val pie = h * 1.0f; val x0 = w * 0.86f; val alto = 150f * u; val ancho = 22f * u
-                val cima = Offset(x0, pie - alto)
-                drawLine(sil, Offset(x0 - ancho / 2, pie), cima, 1.4f * u)
-                drawLine(sil, Offset(x0 + ancho / 2, pie), cima, 1.4f * u)
-                for (k in 1..6) {
-                    val f0 = 1f - (k - 1) / 7f; val f1 = 1f - k / 7f
-                    val y0 = pie - alto * (1f - f0); val y1 = pie - alto * (1f - f1)
-                    drawLine(sil, Offset(x0 - ancho / 2 * f0, y0), Offset(x0 + ancho / 2 * f1, y1), 0.9f * u)
-                    drawLine(sil, Offset(x0 - ancho / 2 * f1, y1), Offset(x0 + ancho / 2 * f1, y1), 0.9f * u)
-                }
-                drawLine(sil, Offset(x0 - 14f * u, cima.y + 10f * u), Offset(x0 + 14f * u, cima.y + 10f * u), 1.2f * u)
-                drawLine(sil, cima, Offset(x0, cima.y - 12f * u), 1.2f * u)
-                val luzRoja = Offset(x0, cima.y - 13f * u)
-                val enciende = if (fraccionVivo(t * 12f) < 0.14f) 1f else 0.15f
-                resplandorVivo(Color(0xFFD9372B), luzRoja, 16f * u, 0.35f * enciende * fuerza)
-                drawCircle(al(Color(0xFFFF5A48), 0.85f * enciende), 1.8f * u, luzRoja)
+                // La lámpara de cúpula de la esquina, encendida: su charco de luz cálida.
+                resplandorVivo(Color(0xFFF2D7A6), Offset(w * 0.9f, h * 0.06f), 120f * u, 0.07f * fuerza)
             }
         }
         VivoTema.CENIZA -> motas.take(24).forEach { m ->
