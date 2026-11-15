@@ -1049,6 +1049,8 @@ Junto al mito están las creencias del siglo I: **los Vigilantes** de Enoc, **Be
 
 ### 10e. Galia (`galia`)
 
+**Fuentes comprobadas** (15 nov 2026): `docs/diseno/temas/fuentes_galia.md`, con la cronología del levantamiento y 20 correcciones, ya puestas aquí.
+
 **Concepto.** La Galia del 52 a. C., el año del levantamiento de Vercingétorix. Es **mitad y mitad**:
 - el bosque sagrado y los druidas en la vida diaria;
 - la guerra en la campaña, los trofeos y los avisos.
@@ -1070,38 +1072,38 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
 - **Oscuro:** el mismo bosque de noche, con luna, hogueras y, en el horizonte, las hogueras del campamento romano.
 
 **Fecha y números.**
-- **«Noche N»:** César dice que los galos cuentan el tiempo por noches porque descienden del dios de la noche (*Guerra de las Galias* 6.18).
-- **Meses del calendario de Coligny** (Samonios, Giamonios…), cada uno marcado **mat** (bueno) o **anmat** (no bueno). El calendario es del siglo II d. C.: es un desfase pequeño y se anota.
-- **Números con los ordinales galos de las cuentas de La Graufesenque** (*cintux*, *allos*, *tritos*, *petuar*…; a comprobar la lista).
-- **Palabras galas con letras griegas,** como escribían los galos (César 1.29). Hay que vigilar que no se parezca a Helénico.
+- **«Noche N»:** César dice que los galos se tienen por descendientes de Dis Pater (el dios romano del mundo de abajo; la traducción de Goya dice «Plutón») y que por eso cuentan el tiempo por noches (*Guerra de las Galias* 6.18).
+- **Meses del calendario de Coligny** (Samonios, Dumannios, Riuros, Anagantios, Ogronios, Cutios, Giamonios, Simiuisonnos, Equos, Elembiu, Aedrinios, Cantlos), cada uno marcado **mat** o **anmat**. Que signifique «bueno / no bueno» se discute (puede ser «completo / incompleto»): la app dice solo la marca. El bronce es de finales del siglo II d. C. y en letras latinas, aunque copia un calendario más antiguo: usarlo en el 52 a. C. es un **recurso** y se anota.
+- **Números con los ordinales galos de las cuentas de La Graufesenque**, del 1 al 10: cintus o cintuxos, allos, tri[tios], petuar[ios], pinpetos, suexos, sextametos, oxtumeto[s], namet[os], decametos (lo de los corchetes está reconstruido; son del siglo I d. C.). Por encima de 10, números romanos, como en Coligny.
+- **Palabras galas con letras griegas,** como escribían los galos (César 1.29; inscripciones galo-griegas). Para que no se parezca a Helénico: en mayúsculas, sin acentos ni espíritus, con la sigma en forma de luna (Ϲ) y ΟΥ para la *u*; siempre letras griegas, no cirílicas.
 
 **Superficies.**
 - **Emblema:** el caballo de las monedas galas.
-- **Libreta:** tablillas de cera escritas con letras griegas. Lo sagrado no se escribe (César 6.14).
+- **Libreta:** tablillas escritas con letras griegas (que fueran de cera es **recurso**: César no dice el material). Lo sagrado no se escribe (César 6.14).
 - **Cartas:** mensajes de oppidum en oppidum.
-- **Avisos:** **el grito que corre de campo en campo**. César cuenta que la noticia de Cenabum llegó así a los arvernos antes del anochecer (7.3).
+- **Avisos:** **el grito que corre de campo en campo**. César cuenta que la noticia de Cenabum, al amanecer, llegó así a los arvernos, a unas 160 millas, antes de acabar la primera guardia de la noche (7.3).
 - **Campaña:** el levantamiento, en este orden:
   1. Cenabum (el inicio);
   2. Gergovia (Vercingétorix toma el mando);
   3. Avárico (el cerco perdido);
   4. Gergovia (la victoria gala);
-  5. Bibracte (la asamblea de toda la Galia lo confirma);
+  5. Bibracte (la asamblea de los galos lo confirma; faltaron los remos, los lingones y los tréveros, 7.63);
   6. Alesia.
 
-  **Termina en Alesia, con la entrega de Vercingétorix como victoria de honra** (decisión del autor; César 7.89; Plutarco y Floro narran la escena).
-- **Trofeos (9):** torques, la moneda del caballo, el carnyx (la trompeta de guerra con cabeza de jabalí, como las de Tintignac), la hoz de oro, el caldero, el estandarte del jabalí, el huevo de serpiente, el casco y la espada.
+  **Termina en Alesia, con la entrega de Vercingétorix como victoria de honra** (decisión del autor; César 7.89; Plutarco, *César* 27, narra la escena; Floro la pone por error en Gergovia y Dion Casio la cuenta sin honra).
+- **Trofeos (9):** torques, la moneda del caballo, el carnyx (la trompeta de guerra con cabeza de jabalí, como las de Tintignac), la hoz de oro, el caldero, el jabalí de bronce (que fuera estandarte en la Galia está sin verificar), el huevo de serpiente, el casco y la espada.
 - **Fondo vivo:** hojas y niebla en el robledal; de noche, el humo y la luz de las hogueras.
 - **Sonido:** el carnyx para los logros, la lira de los bardos (Diodoro 5.31), el viento en el bosque y el golpe de la herrería.
 - **Fuente:** a escoger (OFL), con aire de inscripción en bronce. No debe repetir la de Templario ni la de Romano.
 
 **Gato.**
-- **Pelaje y material:** gato montés europeo, en repujado de plata como el caldero de Gundestrup.
+- **Pelaje y material:** gato montés europeo, en repujado de plata como el caldero de Gundestrup (**recurso** de material: el caldero se halló en Dinamarca y su técnica es tracia; no se presenta como galo).
 - **Accesorio:** un torques.
 - **Fondo:** el oppidum en la colina con niebla de mañana; de noche, el mismo con hogueras y el cerco romano al fondo.
 - **Acciones:** se esconde entre el muérdago de un roble · le bufa a un casco romano tirado en el río.
 
 **Otra vida** (`aprendiz_druida`, persona inventada en un mundo real, `ficticia = false`, certeza `r`).
-- **Quién:** un joven arverno de 19 años, aprendiz de los druidas, que deja el bosque para seguir el levantamiento. Su nombre se escoge entre los atestiguados en inscripciones galas, sin usar el de ningún personaje histórico.
+- **Quién:** un joven arverno de 19 años, aprendiz de los druidas, que **deja la escuela** para seguir el levantamiento (los druidas no iban a la guerra, César 6.14). Su nombre, de los atestiguados en inscripciones galo-griegas: **Segomaros** (propuesta; otras: Korisios, Esugenos), sin usar el de ningún personaje del libro 7.
 - **Historia (3 párrafos):** el bosque y los versos de memoria; el levantamiento y Gergovia; Alesia y la entrega.
 - **Agenda (`dia`):**
   - 21–5 dormir «junto al fuego de la casa grande»
@@ -1133,11 +1135,12 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
 |---|---|
 | César, *Guerra de las Galias* 1.29, 6.13–6.18 y libro 7 | Escritura con letras griegas; druidas, asamblea de los carnutos, el alma que no muere, la cuenta por noches; el levantamiento completo |
 | Plinio, *Historia natural* 16.249–16.251 y 29.52 | El muérdago, la hoz de oro, el sexto día de la luna, los toros blancos; el huevo de serpiente |
-| Lucano, *Farsalia* 1.444–1.462 | Teutates, Esus y Taranis; la muerte como «la mitad de una larga vida» |
+| Lucano, *Farsalia* 1.444–1.462 | Teutates, Esus y Taranis; la muerte como lo que está «en medio de una larga vida» |
+| Plutarco, *César* 25–27; Floro 1.45; Dion Casio 40.41 y 43.19 | Las otras versiones del levantamiento y de la entrega |
 | Diodoro Sículo 5.28–5.31; Estrabón 4.4 | Bardos, banquetes, cabezas de los enemigos |
 | Calendario de Coligny | Meses, mat y anmat |
 | Grafitos de La Graufesenque | Ordinales galos |
-| Caldero de Gundestrup, pilar de los barqueros de París, inscripciones | Cernunnos, Epona, Sucellus, Belenus, Lugus |
+| Caldero de Gundestrup, pilar de los barqueros de París, inscripciones | Cernunnos, Epona, Sucellus, Belenus, Lugus: casi todos de época romana (ver `fuentes_galia.md`, corrección 7). Para la voz del 52 a. C. van los dioses de Lucano y los que César nombra a la romana; del tiempo de la guerra solo hay una dedicatoria galo-griega a Taranis (Orgon) |
 | Santuario de las fuentes del Sena; Entremont y Roquepertuse; Tintignac | Ofrendas de madera a Sequana; culto a las cabezas; carnyx |
 
 ### 10f. Art nouveau (`nouveau`)
