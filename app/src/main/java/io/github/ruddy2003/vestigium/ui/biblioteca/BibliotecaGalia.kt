@@ -71,8 +71,8 @@ internal fun DrawScope.selloGalia(c: Offset, r: Float, barro: Color, alfa: Float
     drawCircle(mezcla(base, Color.White, 0.25f).copy(alpha = 0.4f * a), r * 0.8f, c + Offset(r * 0.03f, r * 0.04f), style = Stroke(r * 0.04f))
     val hondo = mezcla(base, Color.Black, 0.48f).copy(alpha = a)
     val labio = mezcla(base, Color.White, 0.3f).copy(alpha = 0.7f * a)
-    caballoGalia(c + Offset(r * 0.04f, r * 0.05f), r * 0.56f, labio)
-    caballoGalia(c, r * 0.56f, hondo)
+    caballoGalia(c + Offset(r * 0.04f, r * 0.05f), r * 0.66f, labio)
+    caballoGalia(c, r * 0.66f, hondo)
 }
 
 /**
@@ -488,8 +488,8 @@ object EstanteGalia : DisenoBiblioteca {
         drawCircle(Color.Black.copy(alpha = 0.3f), r, c + Offset(r * 0.1f, r * 0.14f))
         drawCircle(Brush.radialGradient(listOf(ORO_BRILLO, oro, mezcla(oro, Color.Black, 0.35f)), center = c - Offset(r * 0.35f, r * 0.4f), radius = r * 1.5f), r, c)
         drawCircle(mezcla(oro, Color.Black, 0.4f), r, c, style = Stroke(r * 0.07f))
-        caballoGalia(c + Offset(r * 0.03f, r * 0.04f), r * 0.66f, ORO_BRILLO.copy(alpha = 0.7f))
-        caballoGalia(c, r * 0.66f, mezcla(oro, Color.Black, 0.45f))
+        caballoGalia(c + Offset(r * 0.03f, r * 0.04f), r * 0.74f, ORO_BRILLO.copy(alpha = 0.7f))
+        caballoGalia(c, r * 0.74f, mezcla(oro, Color.Black, 0.45f))
     }
 
     /** El torques de las figuras compartidas ([TrazosGalia.torques]). */
@@ -539,21 +539,43 @@ object EstanteGalia : DisenoBiblioteca {
         return q
     }
 
-    /** Renglones escritos con el estilo en la cera, dentro de [r]: trazos cortos, de grueso [g], cada [paso]. */
-    private fun DrawScope.renglones(r: Rect, color: Color, semilla: Int, paso: Float, g: Float, margen: Float = 0f) {
-        val u = density
-        var y = r.top + paso * 0.7f; var k = 0
-        while (y < r.bottom - paso * 0.2f) {
-            var x = r.left + margen
-            val fin = r.right - margen - r.width * 0.2f * azar(semilla, k)
+    /**
+     * Lo de todos los días, rayado en la cera con letras griegas, como escribían los galos (César 6.14): renglones de
+     * mayúsculas sin acentos, de alto [alto], con sus espacios. Es la textura de lo escrito, no se lee.
+     */
+    private fun DrawScope.letrasGriegas(r: Rect, color: Color, semilla: Int, alto: Float, g: Float) {
+        val ancho = alto * 0.9f
+        var y = r.top + alto * 0.3f; var k = 0
+        while (y + alto <= r.bottom) {
+            var x = r.left
+            val fin = r.right - r.width * 0.25f * azar(semilla, k)
             var j = 0
-            while (x < fin) {
-                val l = (2.5f + 9f * azar(semilla + k, j)) * u
-                val x2 = minOf(x + l, fin)
-                drawLine(color, Offset(x, y + (azar(semilla + 3, j + k) - 0.5f) * 0.5f * u), Offset(x2, y), g, StrokeCap.Round)
-                x = x2 + 2.4f * u; j++
+            while (x + ancho <= fin) {
+                val q = Rect(x, y + alto * 0.1f * (azar(semilla + 3, j + k) - 0.5f), x + ancho * 0.7f, y + alto)
+                letraGriega(Math.floorMod((azar(semilla + k * 7, j) * 10).toInt(), 10), q, color, g)
+                x += ancho
+                if (azar(semilla + 11 + k, j) > 0.8f) x += ancho * 0.9f
+                j++
             }
-            y += paso; k++
+            y += alto * 1.9f; k++
+        }
+    }
+
+    /** Una mayúscula griega rayada dentro de [q], según [tipo]: Λ, Δ, Π, Θ, Ξ, Γ, Φ, Ϲ (la sigma de luna), Ο o Η. */
+    private fun DrawScope.letraGriega(tipo: Int, q: Rect, color: Color, g: Float) {
+        val l = q.left; val t = q.top; val d = q.right; val b = q.bottom; val cx = q.center.x; val cy = q.center.y
+        fun ln(x0: Float, y0: Float, x1: Float, y1: Float) = drawLine(color, Offset(x0, y0), Offset(x1, y1), g, StrokeCap.Round)
+        when (tipo) {
+            0 -> { ln(l, b, cx, t); ln(cx, t, d, b) }
+            1 -> { ln(l, b, cx, t); ln(cx, t, d, b); ln(l, b, d, b) }
+            2 -> { ln(l, t, d, t); ln(l + q.width * 0.12f, t, l + q.width * 0.12f, b); ln(d - q.width * 0.12f, t, d - q.width * 0.12f, b) }
+            3 -> { drawOval(color, q.topLeft, q.size, style = Stroke(g)); ln(l + q.width * 0.25f, cy, d - q.width * 0.25f, cy) }
+            4 -> { ln(l, t, d, t); ln(l + q.width * 0.15f, cy, d - q.width * 0.15f, cy); ln(l, b, d, b) }
+            5 -> { ln(l + q.width * 0.2f, b, l + q.width * 0.2f, t); ln(l + q.width * 0.2f, t, d, t) }
+            6 -> { drawOval(color, Offset(l, t + q.height * 0.2f), Size(q.width, q.height * 0.6f), style = Stroke(g)); ln(cx, t, cx, b) }
+            7 -> drawArc(color, 50f, 260f, false, q.topLeft, q.size, style = Stroke(g, cap = StrokeCap.Round))
+            8 -> drawOval(color, q.topLeft, q.size, style = Stroke(g))
+            else -> { ln(l, t, l, b); ln(d, t, d, b); ln(l, cy, d, cy) }
         }
     }
 
@@ -1090,7 +1112,7 @@ object EstanteGalia : DisenoBiblioteca {
         val gal = numeroGalo(v.dia)
         val corte = if (gal.isEmpty()) 1f else 0.64f
         textoEn(medidor, v.dia, Rect(r.left, r.top, r.right, r.top + r.height * corte), TITULO, tinta(oscuro), 15f, peso = GRUESO, minimo = 7f)
-        if (gal.isNotEmpty()) textoEn(medidor, gal, Rect(r.left + 0.5f * u, r.top + r.height * 0.6f, r.right - 0.5f * u, r.bottom), ROTULO, oro(oscuro), 7.5f, peso = FontWeight.SemiBold, minimo = 3.4f)
+        if (gal.isNotEmpty()) textoEn(medidor, gal, Rect(r.left + 0.5f * u, r.top + r.height * 0.6f, r.right - 0.5f * u, r.bottom), ROTULO, oro(oscuro), 7.5f, peso = FontWeight.SemiBold, minimo = 2.8f)
         if (v.noche) {
             val l = Offset(r.right - 3.4f * u, r.top + 3.4f * u)
             drawCircle(tinta(oscuro).copy(alpha = 0.7f), 1.7f * u, l)
@@ -1350,7 +1372,7 @@ object EstanteGalia : DisenoBiblioteca {
         val fondo = cera(oscuro, e.noche, 0.6f)
         val q = tablilla(r, c(mezcla(TABLA, VETA, 0.3f)), fondo, e.semilla + 9, 11 * u, 0f)
         val medio = q.left + q.width * 0.55f
-        renglones(Rect(q.left + 8 * u, q.top + 4 * u, medio - 8 * u, q.bottom - 4 * u), tinta(oscuro).copy(alpha = 0.45f), e.semilla, 9 * u, 1.2f * u)
+        letrasGriegas(Rect(q.left + 8 * u, q.top + 5 * u, medio - 8 * u, q.bottom - 4 * u), tinta(oscuro).copy(alpha = 0.42f), e.semilla, 4.6f * u, 0.7f * u)
         drawLine(Color.Black.copy(alpha = 0.18f), Offset(medio, q.top + 6 * u), Offset(medio, q.bottom - 6 * u), 0.7f * u)
         drawLine(Color.White.copy(alpha = 0.18f), Offset(medio + 0.8f * u, q.top + 6 * u), Offset(medio + 0.8f * u, q.bottom - 6 * u), 0.5f * u)
         val lisa = Rect(medio + 8 * u, q.top + 4 * u, q.right - 8 * u, q.bottom - 4 * u)
@@ -1432,10 +1454,10 @@ object EstanteGalia : DisenoBiblioteca {
             drawRect(Brush.horizontalGradient(listOf(Color.Transparent, NOCHE.copy(alpha = 0.35f)), w - 18 * u, w), Offset(w - 18 * u, 0f), Size(18 * u, h))
         }
         if (noche) {
-            val l = Offset(w - 34 * u, 48 * u)
+            val l = Offset(w - 30 * u, h - 84 * u)
             mancha(l, 40 * u, LUNA.copy(alpha = 0.1f))
             clipPath(Path().apply { addOval(Rect(l, 11 * u)) }) {
-                drawCircle(LUNA.copy(alpha = 0.55f), 11 * u, l)
+                drawCircle(LUNA.copy(alpha = 0.4f), 11 * u, l)
                 drawCircle(p.color.copy(alpha = 0.85f), 11 * u, l + Offset(-7.5f * u, -1 * u))
             }
             ramita(Offset(18 * u, h * 0.22f), 36 * u, 165f, p.detalle.copy(alpha = 0.35f), LUNA.copy(alpha = 0.5f))
@@ -1604,7 +1626,7 @@ object EstanteGalia : DisenoBiblioteca {
                 val r = Rect(caja.left + cw * 0.08f + dx, caja.top - subir - g * 0.25f * k / 2f - k * 16 * u * alzar, caja.right - cw * 0.08f + dx, caja.top + ch * 0.6f)
                 val q = tablilla(r, j(mezcla(TABLA, VETA, 0.1f * k)), cera(oscuro, false, 0.5f), e.semilla + k, 4 * u, 0.3f)
                 if (k == 2) ramita(Offset(q.left + q.width * 0.4f, q.top + 7 * u), minOf(q.width * 0.4f, 26 * u), 75f, j(MUERDAGO), j(BAYA))
-                else renglones(Rect(q.left + 3 * u, q.top + 2 * u, q.right - 3 * u, q.top + subir * 0.8f), tinta(oscuro).copy(alpha = 0.4f), e.semilla + k, 6 * u, 0.9f * u)
+                else letrasGriegas(Rect(q.left + 3 * u, q.top + 3 * u, q.right - 3 * u, q.top + subir * 0.8f), tinta(oscuro).copy(alpha = 0.5f), e.semilla + k, 3.6f * u, 0.6f * u)
             }
         }
         // La cara del estuche: el cuero con su grano, el filete tallado y la falera de bronce.
@@ -1922,7 +1944,7 @@ object EstanteGalia : DisenoBiblioteca {
                         }
                         else -> {
                             val q = tablilla(r, luz(TABLA_LUZ, oscuro, false, 0.4f), cera(oscuro, false, 0.4f), jj + 3, 2 * u, 0.3f)
-                            renglones(q, tinta(oscuro).copy(alpha = 0.35f), jj, 3.2f * u, 0.6f * u)
+                            letrasGriegas(q.deflate(1 * u), tinta(oscuro).copy(alpha = 0.45f), jj, 2.4f * u, 0.45f * u)
                         }
                     }
                 }

@@ -287,7 +287,7 @@ object ContenedoresMas {
                 val az = java.util.Random(31)
                 repeat(7) {
                     val y = size.height * az.nextFloat()
-                    drawLine(Color.White.copy(alpha = if (oscuro) 0.03f else 0.12f), Offset(0f, y), Offset(size.width, y + (az.nextFloat() - 0.5f) * 40 * d), (6f + 10f * az.nextFloat()) * d)
+                    drawLine(Color.White.copy(alpha = if (oscuro) 0.025f else 0.07f), Offset(0f, y), Offset(size.width, y + (az.nextFloat() - 0.5f) * 40 * d), (6f + 10f * az.nextFloat()) * d)
                 }
                 repeat(14) {
                     val x = margen + (size.width - margen) * 0.8f * az.nextFloat(); val y = 110 * d + (size.height - 200 * d).coerceAtLeast(1f) * az.nextFloat()
@@ -303,10 +303,10 @@ object ContenedoresMas {
                 }
                 drawPath(onda, oro.copy(alpha = 0.55f), style = Stroke(0.9f * d, cap = StrokeCap.Round))
                 var yy = 96 * d; var k = 0
+                val xm = margen - 12 * d
                 while (yy < size.height - 16 * d) {
-                    val xm = margen - 14 * d + (k % 5) * 2.2f * d
-                    if (k % 5 == 4) drawLine(tinta.copy(alpha = 0.22f), Offset(margen - 15.5f * d, yy - renglon * 0.2f), Offset(margen - 5 * d, yy - renglon * 0.55f), 0.8f * d, StrokeCap.Round)
-                    else drawLine(tinta.copy(alpha = 0.22f), Offset(xm, yy - renglon * 0.6f), Offset(xm, yy - renglon * 0.15f), 0.8f * d, StrokeCap.Round)
+                    if (k % 5 == 4) drawLine(tinta.copy(alpha = 0.24f), Offset(xm - 4 * d, yy - renglon * 4.3f), Offset(xm + 4 * d, yy - renglon * 0.3f), 0.9f * d, StrokeCap.Round)
+                    else drawLine(tinta.copy(alpha = 0.24f), Offset(xm - 2.5f * d, yy - renglon * 0.5f), Offset(xm + 2.5f * d, yy - renglon * 0.5f), 0.9f * d, StrokeCap.Round)
                     yy += maxOf(renglon, 1f); k++
                 }
                 val lisa = Offset(size.width - 46 * d, size.height - 46 * d)

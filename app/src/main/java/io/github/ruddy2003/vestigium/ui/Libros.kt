@@ -749,16 +749,24 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
         TemaId.GALIA -> {
             drawCircle(luna.copy(alpha = 0.14f), r * 1.45f, ce)
             val disco = Path().apply { addOval(Rect(ce, r * 0.9f)) }
-            val sombra = Path().apply { addOval(Rect(Offset(ce.x - r * 0.46f, ce.y - r * 0.04f), r * 0.86f)) }
+            val sombra = Path().apply { addOval(Rect(Offset(ce.x - r * 0.72f, ce.y - r * 0.05f), r * 0.94f)) }
             drawPath(Path.combine(androidx.compose.ui.graphics.PathOperation.Difference, disco, sombra), luna)
             if (!sola) {
                 val base = ce.y + r * 2.3f; val x0 = ce.x - r * 4.4f; val x1 = ce.x - r * 0.9f
+                val medio = (x0 + x1) / 2; val mitad = (x1 - x0) / 2
                 val colina = Path().apply { moveTo(x0, base); cubicTo(x0 + r * 0.8f, base - r * 1.5f, x1 - r * 0.9f, base - r * 1.6f, x1, base); close() }
                 drawPath(colina, lerp(n.cielo, luna, 0.16f))
-                var x = x0 + r * 0.9f
-                while (x < x1 - r * 0.7f) { drawLine(lerp(n.cielo, luna, 0.34f), Offset(x, base - r * 1.1f), Offset(x, base - r * 1.42f), 0.4f * u); x += r * 0.22f }
-                drawCircle(n.luz.copy(alpha = 0.3f), r * 0.32f, Offset(x1 - r * 1.5f, base - r * 1.25f))
-                drawCircle(n.luz, r * 0.1f, Offset(x1 - r * 1.5f, base - r * 1.25f))
+                // La empalizada sigue la cresta de la colina.
+                var x = medio - mitad * 0.62f
+                while (x < medio + mitad * 0.62f) {
+                    val f = (x - medio) / mitad
+                    val cima = base - r * 1.17f * (1f - f * f)
+                    drawLine(lerp(n.cielo, luna, 0.34f), Offset(x, cima + r * 0.1f), Offset(x, cima - r * 0.32f), 0.4f * u)
+                    x += r * 0.22f
+                }
+                val fuego = Offset(medio + mitad * 0.2f, base - r * 1.17f * (1f - 0.04f) - r * 0.08f)
+                drawCircle(n.luz.copy(alpha = 0.3f), r * 0.32f, fuego)
+                drawCircle(n.luz, r * 0.1f, fuego)
             }
         }
         // La luna en la primera de las siete esferas: el creciente y, alrededor, los arcos finos de las esferas de arriba; al
@@ -1601,7 +1609,8 @@ private fun rotuloPagina(t: TemaId, fecha: String): String {
         TemaId.MEDIEVAL -> "Aquí comiença el folio ${Temas.copista(nDia)}"
         TemaId.TEMPLARIO -> "Parte de la jornada ${Temas.puntos(nDia)}"
         TemaId.DISTOPIA -> "EXPEDIENTE Nº %04d · DECLARACIÓN DIARIA".format((fecha.hashCode() and 0x7fffffff) % 10000)
-        TemaId.GALIA -> "La tablilla de la noche $nDia"
+        // Lo de todos los días sí se escribía, con letras griegas; lo sagrado, no (César 6.14).
+        TemaId.GALIA -> "Lo de todos los días, rayado en la cera"
         TemaId.ARCONTES -> "ⲡϫⲱⲱⲙⲉ · el códice del día"
         TemaId.FRENTE -> "DESPACHO CIFRADO Nº ${Frente.contador(nDia)}" + (dia?.let { " · VENTANA ${Frente.ventana(it)}" } ?: "")
         TemaId.REFUGIO -> "BITÁCORA PERSONAL · TERMINAL 03"
