@@ -287,33 +287,39 @@ object Frases {
         f("La visibilité est un piège.", "La visibilidad es una trampa.", "Michel Foucault, Vigilar y castigar, 1975"),
     )
 
+    /**
+     * Art nouveau: lo que se leía en París hacia 1900. Solo las frases que `docs/diseno/temas/fuentes_nouveau.md` (sección
+     * 11) comprobó letra por letra en el texto de la obra, en Wikisource, con su edición y su página; las de Baudelaire son
+     * anteriores (1857), pero se leían. Las traducciones son propias; todos los autores son de dominio público.
+     */
     val NOUVEAU = listOf(
-        f("Quis custodiet ipsos custodes?", "¿Quién vigilará a los vigilantes?", "Juvenal, Sátira VI"),
-        f("Duas tantum res anxius optat, panem et circenses.", "El pueblo ya solo ansía dos cosas: pan y juegos de circo.", "Juvenal, Sátira X"),
-        f("Ubi solitudinem faciunt, pacem appellant.", "Donde crean un desierto, lo llaman paz.", "Tácito, Agrícola 30"),
-        f("Corruptissima re publica plurimae leges.", "Cuanto más corrupto el Estado, más numerosas las leyes.", "Tácito, Anales III, 27"),
-        f("Finis ergo reipublicae revera libertas est.", "El verdadero fin del Estado es, pues, la libertad.", "Spinoza, Tratado teológico-político XX, 1670"),
-        f("Il n'y a point de plus cruelle tyrannie que celle que l'on exerce à l'ombre des lois et avec les couleurs de la justice.",
-            "No hay tiranía más cruel que la que se ejerce a la sombra de las leyes y con los colores de la justicia.", "Montesquieu, Consideraciones sobre los romanos XIV, 1734"),
-        f("L'homme est né libre, et partout il est dans les fers.", "El hombre nació libre, y en todas partes está encadenado.", "Rousseau, El contrato social I, 1762"),
-        f("Habe Muth, dich deines eigenen Verstandes zu bedienen!", "¡Ten el valor de servirte de tu propio entendimiento!", "Immanuel Kant, ¿Qué es la Ilustración?, 1784"),
-        f("A new mode of obtaining power of mind over mind, in a quantity hitherto without example.",
-            "Un nuevo modo de obtener poder de la mente sobre la mente, en una cantidad sin precedentes.", "Jeremy Bentham, El panóptico, 1791"),
-        f("Those who would give up essential Liberty, to purchase a little temporary Safety, deserve neither Liberty nor Safety.",
-            "Quienes renuncian a la libertad esencial para obtener un poco de seguridad pasajera no merecen ni libertad ni seguridad.", "Benjamin Franklin, 1755"),
-        f("I have sworn upon the altar of God eternal hostility against every form of tyranny over the mind of man.",
-            "He jurado sobre el altar de Dios hostilidad eterna contra toda forma de tiranía sobre la mente humana.", "Thomas Jefferson, carta a Benjamin Rush, 1800"),
-        f("Soyez résolus de ne servir plus, et vous voilà libres.", "Decídanse a no servir más, y serán libres.", "Étienne de La Boétie, Discurso de la servidumbre voluntaria"),
-        f("Il ne brise pas les volontés, mais il les amollit, les plie et les dirige.", "No quiebra las voluntades: las ablanda, las doblega y las dirige.", "Alexis de Tocqueville, La democracia en América II, 1840"),
-        f("Over himself, over his own body and mind, the individual is sovereign.", "Sobre sí mismo, sobre su propio cuerpo y su propia mente, el individuo es soberano.", "John Stuart Mill, Sobre la libertad, 1859"),
-        f("Power tends to corrupt, and absolute power corrupts absolutely.", "El poder tiende a corromper, y el poder absoluto corrompe absolutamente.", "Lord Acton, carta a Mandell Creighton, 1887"),
-        f("The right to be let alone.", "El derecho a que lo dejen a uno en paz.", "Samuel Warren y Louis Brandeis, «The Right to Privacy», 1890"),
-        f("Sunlight is said to be the best of disinfectants.", "Se dice que la luz del sol es el mejor de los desinfectantes.", "Louis Brandeis, 1914"),
-        f(null, "Les juro, señores, que tener demasiada conciencia es una enfermedad, una verdadera enfermedad.", "Fiódor Dostoievski, Memorias del subsuelo, 1864"),
-        f("Ein Käfig ging einen Vogel suchen.", "Una jaula salió a buscar un pájaro.", "Franz Kafka, aforismos de Zürau, 1918"),
-        f(null, "Alguien debió de calumniar a Josef K., porque sin haber hecho nada malo fue detenido una mañana.", "Franz Kafka, El proceso, 1925"),
-        f("La visibilité est un piège.", "La visibilidad es una trampa.", "Michel Foucault, Vigilar y castigar, 1975"),
+        f("La vérité est en marche, et rien ne l'arrêtera.", "La verdad está en marcha, y nada la detendrá.", "Émile Zola, «M. Scheurer-Kestner», Le Figaro, 1897"),
+        f("Le monde est fait pour aboutir à un beau livre.", "El mundo está hecho para acabar en un hermoso libro.", "Stéphane Mallarmé, a Jules Huret, Encuesta sobre la evolución literaria, 1891"),
+        f("Je dis : une fleur ! et […] musicalement se lève, idée rieuse ou altière, l'absente de tous bouquets.",
+            "Digo: ¡una flor!, y […] se levanta, musical, idea risueña o altiva, la ausente de todos los ramos.", "Stéphane Mallarmé, prólogo al Tratado del verbo de René Ghil, 1886"),
+        f("La chair est triste, hélas ! et j'ai lu tous les livres.", "La carne es triste, ¡ay!, y he leído todos los libros.", "Stéphane Mallarmé, «Brisa marina», 1866"),
+        f("De la musique avant toute chose.", "La música antes que nada.", "Paul Verlaine, «Arte poética», Jadis et Naguère, 1884"),
+        f("Car nous voulons la Nuance encor, / Pas la Couleur, rien que la nuance !", "Porque aún queremos el Matiz, / ¡no el Color, nada más que el matiz!", "Paul Verlaine, «Arte poética», 1884"),
+        f("De la musique encore et toujours !", "¡Música, otra vez y siempre!", "Paul Verlaine, «Arte poética», 1884"),
+        f("Le désir fleurit, la possession flétrit toutes choses.", "El deseo hace florecer todas las cosas; la posesión las marchita.", "Marcel Proust, Los placeres y los días, 1896"),
+        f("Il vaut mieux rêver sa vie que la vivre.", "Más vale soñar la vida que vivirla.", "Marcel Proust, Los placeres y los días, 1896"),
+        f("Pour une famille vraiment vivante où chacun pense, aime et agit, avoir un jardin est une douce chose.",
+            "Para una familia de verdad viva, donde cada uno piensa, ama y obra, tener un jardín es una cosa dulce.", "Marcel Proust, Los placeres y los días, 1896"),
+        f("Au jardin des Tuileries, ce matin, le soleil s'est endormi tour à tour sur toutes les marches de pierre.",
+            "En el jardín de las Tullerías, esta mañana, el sol se ha dormido por turnos en todos los escalones de piedra.", "Marcel Proust, Los placeres y los días, 1896"),
+        f("Les paradoxes d'aujourd'hui sont les préjugés de demain.", "Las paradojas de hoy son los prejuicios de mañana.", "Marcel Proust, Los placeres y los días, 1896"),
+        f("La flatterie n'est parfois que l'épanchement de la tendresse.", "La adulación a veces no es más que el desahogo de la ternura.", "Marcel Proust, Los placeres y los días, 1896"),
+        f("J'ai décidé d'être admirable, en tout, pour tout !", "¡He decidido ser admirable, en todo, para todo!", "Edmond Rostand, Cyrano de Bergerac, acto I, 1897"),
+        f("Ci-gît Hercule-Savinien / De Cyrano de Bergerac / Qui fut tout, et qui ne fut rien.",
+            "Aquí yace Hercule-Savinien / de Cyrano de Bergerac, / que lo fue todo, y no fue nada.", "Edmond Rostand, Cyrano de Bergerac, acto V, 1897"),
+        f("Quand même.", "A pesar de todo.", "Sarah Bernhardt, su divisa, en Mi doble vida, 1907"),
+        f("Tout le monde m'avait donné des conseils. Personne ne m'avait donné un conseil.", "Todo el mundo me había dado consejos. Nadie me había dado un consejo.", "Sarah Bernhardt, Mi doble vida, 1907"),
+        f("Là, tout n'est qu'ordre et beauté, / Luxe, calme et volupté.", "Allí, todo es orden y belleza, / lujo, calma y voluptuosidad.", "Charles Baudelaire, «La invitación al viaje», Las flores del mal, 1857"),
+        f("Les plus rares fleurs / Mêlant leurs odeurs / Aux vagues senteurs de l'ambre", "Las flores más raras, / mezclando sus olores / con los vagos aromas del ámbar", "Charles Baudelaire, «La invitación al viaje», 1857"),
+        f("La Nature est un temple où de vivants piliers / Laissent parfois sortir de confuses paroles", "La Naturaleza es un templo donde pilares vivos / dejan a veces salir confusas palabras", "Charles Baudelaire, «Correspondencias», Las flores del mal, 1857"),
+        f("Les parfums, les couleurs et les sons se répondent.", "Los perfumes, los colores y los sonidos se responden.", "Charles Baudelaire, «Correspondencias», 1857"),
     )
+
 
     /**
      * Galia: lo que los antiguos contaron de los galos. César, en la traducción de José Goya y Muniain (1798; edición de
@@ -1246,7 +1252,7 @@ object Frases {
         TemaId.MEDIEVAL -> "Sentencia del día"
         TemaId.TEMPLARIO -> "Lectura del refectorio"
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"
-        TemaId.NOUVEAU -> "CONSIGNA DEL DÍA"
+        TemaId.NOUVEAU -> "Lo que se leía en París"
         TemaId.GALIA -> "Lo que contaron de los galos"
         TemaId.ARCONTES -> "Palabras escondidas"
         TemaId.FRENTE -> "PALABRA DE LA RED"

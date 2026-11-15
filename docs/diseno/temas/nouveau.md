@@ -63,8 +63,8 @@ Paleta corta: crema, salvia, violeta y oro; de noche, el azul negro con el oro d
 
 ## La fecha y los números
 
-- **La página del almanaque con la flor del día:** «jeudi 19 juillet · l'iris : message». La flor y su significado salen de *Le Langage des fleurs* (1819), firmado «Charlotte de La Tour» (seudónimo; se atribuye a Louise Cortambert o a Louis-Aimé Martin), según la lista comprobada de `fuentes_nouveau.md` (sección 13). **Recurso:** el libro no trae una flor para cada día; la app las reparte por el año (ahí se dice cómo) y siempre da la misma flor al mismo día.
-- **La hora de París:** el día de hoy lleva además la hora, a la francesa: «· 9 h 41 du matin, heure de Paris». La hora de París fue la hora legal de toda Francia desde la ley del 14 de marzo de 1891 hasta la del 9 de marzo de 1911. **Recurso:** la app pone la hora del teléfono.
+- **La página del almanaque con la flor del día:** «samedi 17 octobre · Taminier — soyez mon appui». La flor y su significado salen de *Le Langage des fleurs*, firmado «Charlotte de La Tour» (seudónimo; se atribuye a Louise Cortambert o a Louis-Aimé Martin), del «Dictionnaire des plantes avec leurs emblèmes» de su 11.ª edición: 275 plantas, en francés y con la grafía del libro (lista, lectura y reservas en `fuentes_nouveau.md`, sección 3). **Recurso:** el libro no trae una flor para cada día; el día N del año toma la flor (N − 1) · 97 de la lista, así que el mismo día tiene siempre la misma flor y las 275 salen una vez antes de repetirse (`Nouveau.flor`).
+- **La hora de París:** el día de hoy lleva además la hora, a la francesa: «· 9 h 41 du matin, heure de Paris» (de las 0 a las 5, «de la nuit»; de las 6 a las 11, «du matin»; de las 12 a las 17, «de l'après-midi»; lo demás, «du soir»). La hora de París fue la hora legal de toda Francia desde la ley del 14 de marzo de 1891 hasta la del 9 de marzo de 1911. **Recurso:** la app pone la hora del teléfono.
 - **El mes:** «Almanach de juillet», y con el año, «Almanach de juillet 2026».
 - **Números:** como el folio de una revista ilustrada, entre rayas cortas: «– 17 –». Los años, tal cual.
 - **Títulos en francés,** que van solos según el principio 7 (el francés se parece al español). Lo demás, en español.
@@ -74,7 +74,7 @@ Paleta corta: crema, salvia, violeta y oro; de noche, el azul negro con el oro d
 Delicada, curiosa y un poco teatral, de taller y de café: la de alguien que dibuja y que mira. Tutea. Habla de lo que se ve (la luz por el vidrio, el tallo, la piedra que se entinta, la lluvia en la marquesina) y de las flores como de un idioma.
 - **Ejemplos:** «La piedra está entintada», «Florece», «Se enciende la vitrina», «Pasa el metro nuevo», «Una flor por día».
 - **Títulos en francés** donde suenan a cartel: «L'Atelier», «Le Salon», «Almanach», «Carnet de croquis».
-- **Las frases del día:** las comprobadas en `fuentes_nouveau.md` (autores de la época, con su obra y su año), en francés con su español al lado.
+- **Las frases del día:** las 21 que `fuentes_nouveau.md` (sección 11) comprobó letra por letra en el texto de la obra (Zola, Mallarmé, Verlaine, Proust, Rostand, Sarah Bernhardt y cuatro de Baudelaire, anteriores al periodo), en francés con su español al lado. Las que solo sostiene Wikipedia (Gallé, Guimard, Huysmans, Rodin, Renard) no se usan hasta comprobarlas.
 - **Lo que nunca dice:** nada del Art déco ni de los años 20, nada de cabaré de película, nada de «la Belle Époque» como postal (la palabra es de después de 1914).
 
 ## Los motivos de las figuras
