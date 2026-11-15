@@ -271,9 +271,9 @@ object LogrosFrente : DisenoLogros {
         clipPath(forma) {
             for (k in 0 until cuantas) {
                 val y = y0 + k * alto
-                drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = if (oscuro) 0.08f else 0.45f), Color.Transparent,
-                    Color.Black.copy(alpha = if (oscuro) 0.3f else 0.16f)), y, y + alto), Offset(r.left, y), Size(r.width, alto))
-                drawLine(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.24f), Offset(r.left, y + alto), Offset(r.right, y + alto), maxOf(alto * 0.12f, 0.3f * u))
+                drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = if (oscuro) 0.1f else 0.6f), Color.Transparent,
+                    Color.Black.copy(alpha = if (oscuro) 0.34f else 0.22f)), y, y + alto), Offset(r.left, y), Size(r.width, alto))
+                drawLine(Color.Black.copy(alpha = if (oscuro) 0.5f else 0.3f), Offset(r.left, y + alto), Offset(r.right, y + alto), maxOf(alto * 0.14f, 0.35f * u))
             }
         }
     }
@@ -305,7 +305,7 @@ object LogrosFrente : DisenoLogros {
         // El frente blanco y curvo.
         drawPath(frente, t(HUESO, oscuro))
         luzConsola(frente, rf, oscuro)
-        if (fino) molduras(frente, rf, rf.top + rf.height * 0.72f, rf.height * 0.13f, 2, oscuro)
+        if (fino) molduras(frente, rf, rf.top + rf.height * 0.64f, rf.height * 0.12f, 3, oscuro)
         drawPath(frente, t(HUESO_SOMBRA, oscuro), style = Stroke(lw))
         if (fino) {
             // La ranura grabada bajo el canto.
