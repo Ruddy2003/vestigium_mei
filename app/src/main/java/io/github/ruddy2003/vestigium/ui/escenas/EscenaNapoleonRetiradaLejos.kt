@@ -14,6 +14,8 @@ import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaNapoleon.Tramo
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.casaQuemada
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.hoguera
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.pino
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.pinoAlbar
 import io.github.ruddy2003.vestigium.ui.escenas.RetiradaCamino.RUMBO
 import io.github.ruddy2003.vestigium.ui.escenas.RetiradaCamino.k
 import io.github.ruddy2003.vestigium.ui.escenas.RetiradaCamino.w
@@ -147,6 +149,15 @@ internal object RetiradaLejos {
             if (i > 0 && az.real() < 0.6f) { val r = estacas[i - 1]; drawLine(v.en(q).plano(C.MADERA_GRIS, q, 0f, 0.5f), q + Offset(0f, -alto * 0.6f), r + Offset(0f, -alto * 0.55f), (0.06f * kk).coerceIn(0.3f, 1.4f)) }
         }
         casaQuemada(GRANJA, v.en(GRANJA.pie), 6f, 5f, 17L, v.nieve, arde, lejos0)
+        // Más casas del pueblo quemado, más allá, y el bosquecillo de pinos de detrás.
+        for ((i, q) in listOf(w(27f, 150f) to 0.8f, w(9f, 190f) to -0.6f, w(38f, 240f) to 0.3f).withIndex()) {
+            val s = PiezasNapoleon.sitio(MIRADA, q.first, q.second); casaQuemada(s, v.en(s.pie), 5f, 4f, 40L + i, v.nieve, arde, 0.75f + 0.05f * i)
+        }
+        for (pn in RetiradaCamino.bosquecillo()) {
+            val q = pn.pie; val lejos = (pn.z / 180f).coerceIn(0f, 0.85f)
+            if (pn.albar) pinoAlbar(v.en(q), q, pn.altoL, pn.anchoL, v.nieve * 0.7f, Azar(pn.semilla), lejos, (pn.k / 24f).coerceIn(0.2f, 1f))
+            else pino(v.en(q), q, pn.altoL, pn.anchoL, v.nieve * 0.6f, Azar(pn.semilla), lejos, (pn.k / 24f).coerceIn(0.2f, 1f))
+        }
         // Un fuego apagado junto a la granja, de los que pasaron antes.
         hoguera(PiezasNapoleon.sitio(MIRADA, w(11f, 46f)), v.en(w(11f, 46f)), 0f, v.nieve, 99L, 0.5f)
     }

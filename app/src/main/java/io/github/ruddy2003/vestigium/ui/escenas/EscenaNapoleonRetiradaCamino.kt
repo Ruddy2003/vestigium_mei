@@ -18,6 +18,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.canon
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.carro
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.hoguera
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.pino
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.pinoAlbar
 import io.github.ruddy2003.vestigium.ui.escenas.RetiradaNapoleon.FUGA
 import io.github.ruddy2003.vestigium.ui.escenas.RetiradaNapoleon.H
 import io.github.ruddy2003.vestigium.ui.escenas.RetiradaNapoleon.MIRADA
@@ -94,15 +95,24 @@ internal object RetiradaCamino {
     // ---------------------------------------------------------------- Los pinos del bosque
 
     /** Un pino del bosque, en metros: dónde pisa ([x], [z]), lo alto, lo ancho de las ramas de abajo, si tiene la punta rota. */
-    class Pino(val x: Float, val z: Float, val alto: Float, val ancho: Float, val semilla: Long, val roto: Boolean, val fila: Int) {
+    class Pino(val x: Float, val z: Float, val alto: Float, val ancho: Float, val semilla: Long, val roto: Boolean, val fila: Int, val albar: Boolean = false) {
         val pie: Offset get() = w(x, z)
         val k: Float get() = k(z)
         val altoL: Float get() = alto * k
         val anchoL: Float get() = ancho * k
 
-        /** Su silueta en el lienzo (el tronco y la copa en pisos, dentada), para la sombra que tumba. */
+        /** Su silueta en el lienzo (el tronco y la copa en pisos, dentada; el pino albar, el tronco alto y la copa arriba), para la sombra que tumba. */
         fun silueta(): List<Offset> {
             val p = pie; val az = Azar(semilla + 7)
+            if (albar) {
+                // El tronco desnudo hasta casi dos tercios y la copa, una nube irregular.
+                val tr = 0.2f * k; val copa = altoL * PiezasNapoleon.COPA_ALBAR; val w = anchoL * 0.5f
+                val izq = listOf(p + Offset(-tr, 0f), Offset(p.x - tr * 0.7f, p.y - copa), Offset(p.x - w * az.entre(0.6f, 0.9f), p.y - copa - altoL * 0.06f),
+                    Offset(p.x - w, p.y - copa - altoL * 0.16f), Offset(p.x - w * 0.6f, p.y - altoL * 0.82f), Offset(p.x - w * 0.7f, p.y - altoL * 0.9f))
+                val der = listOf(p + Offset(tr, 0f), Offset(p.x + tr * 0.7f, p.y - copa), Offset(p.x + w * az.entre(0.6f, 0.9f), p.y - copa - altoL * 0.04f),
+                    Offset(p.x + w, p.y - copa - altoL * 0.18f), Offset(p.x + w * 0.7f, p.y - altoL * 0.84f), Offset(p.x + w * 0.4f, p.y - altoL * 0.94f))
+                return izq + listOf(Offset(p.x, p.y - altoL)) + der.reversed()
+            }
             val limpio = 1.2f * k; val tr = 0.22f * k
             val izq = ArrayList<Offset>(); val der = ArrayList<Offset>()
             izq += p + Offset(-tr, 0f); der += p + Offset(tr, 0f)
@@ -126,7 +136,8 @@ internal object RetiradaCamino {
             while (z < 520f) {
                 val x = pieDelBosque(z) - fila * az.entre(1.6f, 3.8f) + (if (fila == 0) az.entre(-0.8f, 2.6f) else az.entre(-1.2f, 1.2f))
                 val alto = az.entre(9f, 17f) * (if (fila == 0 && az.real() < 0.25f) az.entre(0.45f, 0.75f) else 1f)
-                lista += Pino(x, z, alto, alto * az.entre(0.26f, 0.44f), az.entero(1_000_000).toLong(), az.real() < 0.14f, fila)
+                val albar = fila == 0 && az.real() < 0.32f
+                lista += Pino(x, z, if (albar) alto * 1.15f else alto, alto * (if (albar) az.entre(0.3f, 0.4f) else az.entre(0.26f, 0.44f)), az.entero(1_000_000).toLong(), az.real() < 0.14f, fila, albar)
                 z *= az.entre(1.05f, 1.42f)
             }
         }
@@ -141,15 +152,27 @@ internal object RetiradaCamino {
 
     private val DERECHA: List<Pino> by lazy {
         val az = Azar(Semilla.de("napoleon", "bosque", "derecha")); val lista = ArrayList<Pino>()
-        var z = 3.6f
-        while (z < 140f) {
+        // Los de fuera del cuadro, cerca: pinos albares, de tronco alto y desnudo, que tienden franjas de sombra.
+        var z = 4.2f
+        while (z < 30f) {
             val x = z * 0.42f + az.entre(1.2f, 3.4f)
-            val alto = az.entre(9f, 15f)
-            lista += Pino(x, z, alto, alto * az.entre(0.34f, 0.46f), az.entero(1_000_000).toLong(), false, 0)
-            z *= az.entre(1.22f, 1.42f)
+            val alto = az.entre(13f, 19f)
+            lista += Pino(x, z, alto, alto * az.entre(0.28f, 0.36f), az.entero(1_000_000).toLong(), false, 0, albar = true)
+            z *= az.entre(1.3f, 1.6f)
+        }
+        // El bosquecillo de la derecha, que se ve: pinos albares y algún abeto, más allá de la granja.
+        z = 72f
+        while (z < 170f) {
+            val xl = az.entre(336f, 404f); val x = (xl - MIRADA.centro) * z / MIRADA.focal
+            val albar = az.real() < 0.7f; val alto = az.entre(11f, 17f)
+            lista += Pino(x, z, alto, alto * (if (albar) az.entre(0.3f, 0.38f) else az.entre(0.3f, 0.4f)), az.entero(1_000_000).toLong(), false, 0, albar)
+            z *= az.entre(1.1f, 1.25f)
         }
         lista
     }
+
+    /** El bosquecillo de la derecha que se ve (de lejos a cerca). */
+    fun bosquecillo(): List<Pino> = DERECHA.filter { it.z >= 70f }.sortedByDescending { it.z }
 
     // ---------------------------------------------------------------- El suelo
 
@@ -226,7 +249,7 @@ internal object RetiradaCamino {
             drawPath(lomo, a.arriba(C.NIEVE, q, lejos).copy(alpha = k0))
             // La cara de sombra, del lado contrario al sol, y la cresta encendida.
             clipPath(lomo) {
-                mancha(q + Offset(-lado * largo * 0.28f, alto * 0.15f), largo * 0.4f, alto * 0.9f, a.plano(C.NIEVE_SOMBRA, q, -lado, lejos), 0.75f * k0)
+                mancha(q + Offset(-lado * largo * 0.3f, alto * 0.3f), largo * 0.36f, alto * 0.7f, a.plano(C.NIEVE_SOMBRA, q, -lado, lejos), 0.42f * k0)
                 drawLine(lerp(a.arriba(C.NIEVE, q, lejos), Color.White, 0.5f).copy(alpha = 0.8f * k0 * (0.3f + 0.7f * v.r.dia)), q + Offset(-largo * 0.35f + lado * largo * 0.1f, -alto * 1.1f), q + Offset(largo * 0.35f + lado * largo * 0.1f, -alto * 1.05f), (alto * 0.25f).coerceIn(0.3f, 2.5f), StrokeCap.Round)
             }
         }
@@ -337,7 +360,8 @@ internal object RetiradaCamino {
             val det = (pn.k / 24f).coerceIn(0.15f, 1f) * (1f - 0.3f * pn.fila)
             val q = pn.pie
             if (q.x < -pn.anchoL || q.x > ANCHO + pn.anchoL) continue
-            pino(v.en(q), q, pn.altoL, pn.anchoL, v.nieve * (if (pn.fila == 0) 0.62f else 0.45f), Azar(pn.semilla), lejos.coerceAtMost(0.92f), det, pn.roto)
+            if (pn.albar) pinoAlbar(v.en(q), q, pn.altoL, pn.anchoL, v.nieve * 0.7f, Azar(pn.semilla), lejos.coerceAtMost(0.92f), det)
+            else pino(v.en(q), q, pn.altoL, pn.anchoL, v.nieve * (if (pn.fila == 0) 0.62f else 0.45f), Azar(pn.semilla), lejos.coerceAtMost(0.92f), det, pn.roto)
         }
         // El pie del bosque: la nieve amontonada contra los troncos, con su canto azul, y la sombra honda de dentro.
         val pie = BOSQUE

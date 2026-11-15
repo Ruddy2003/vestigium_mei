@@ -75,7 +75,7 @@ internal object RetiradaCerca {
     private val S_COFRE = PiezasNapoleon.sitio(MIRADA, Offset(150f, 250f), -0.42f)
     private val S_ESPEJO = PiezasNapoleon.sitio(MIRADA, Offset(194f, 271f), 0.25f)
     private val S_RUEDA = PiezasNapoleon.sitio(MIRADA, Offset(74f, 292f), 0f)
-    private val S_CARROZA = PiezasNapoleon.sitio(MIRADA, Offset(30f, 216f), -1.28f)
+    private val S_CARROZA = PiezasNapoleon.sitio(MIRADA, Offset(22f, 212f), -0.98f)
     private val S_TIENDA = PiezasNapoleon.sitio(MIRADA, Offset(30f, 214f), -0.5f)
 
     /** El pino grande: su pie, cortado por el borde de la izquierda. */
@@ -86,7 +86,7 @@ internal object RetiradaCerca {
     val ESPEJO: Offset get() = S_ESPEJO.pie
 
     /** El pabellón de los fusiles. */
-    private val PABELLON = Pabellon(S_PABELLON, Semilla.de("napoleon", "pabellon"), 3, 2, true)
+    private val PABELLON = Pabellon(S_PABELLON, Semilla.de("napoleon", "pabellon"), 4, 2, true)
 
     /** La carroza volcada. */
     private fun carrozaDe(nieve: Float) = Carroza(S_CARROZA, nieve)
@@ -115,7 +115,7 @@ internal object RetiradaCerca {
         add(RetiradaLuz.Sombra(S_SOPORTE.pie, siluetaCaja(S_SOPORTE, 0.22f, 0.46f)))
         add(RetiradaLuz.Sombra(S_MOCHILA3.pie, siluetaCaja(S_MOCHILA3, 0.22f, 0.46f)))
         add(RetiradaLuz.Sombra(S_TAMBOR.pie, siluetaCaja(S_TAMBOR, 0.22f, 0.44f)))
-        val pa = puntaAsta(); add(RetiradaLuz.Sombra(PIE_ASTA, poligono(PIE_ASTA + Offset(-ts, 0f), PIE_ASTA + Offset(ts, 0f), pa + Offset(ts * 2f, 0f), pa + Offset(-ts * 2f, 0f))))
+        if (EscenaNapoleon.pabellon(v.m)) { val pa = puntaAsta(); add(RetiradaLuz.Sombra(PIE_ASTA, poligono(PIE_ASTA + Offset(-ts, 0f), PIE_ASTA + Offset(ts, 0f), pa + Offset(ts * 2f, 0f), pa + Offset(-ts * 2f, 0f)))) }
         if (EscenaNapoleon.marmita(v.m) == Marmita.AL_FUEGO) add(RetiradaLuz.Sombra(FUEGO, siluetaCaja(S_FUEGO, 0.55f, 0.95f)))
     }
 
@@ -168,10 +168,9 @@ internal object RetiradaCerca {
         }
         // El tambor, cortado por el borde.
         cosas += parte(S_TAMBOR.pie.y) { tambor(S_TAMBOR, v.en(S_TAMBOR.pie), false, 0f, nieve) }
-        // El asta del águila, apoyada en el pabellón (o, si no está, tumbada contra la mochila).
-        cosas += parte(PIE_ASTA.y) {
-            val punta = if (EscenaNapoleon.pabellon(m)) puntaAsta() else Offset(250f, 214f)
-            aguila(v.en(PIE_ASTA), PIE_ASTA, punta, 0.034f * S_SOPORTE.k, EscenaNapoleon.aguilaEnvuelta(m), EscenaNapoleon.luto(m), Azar(57L), 0f, nieve)
+        // El asta del águila, apoyada en el pabellón: está mientras está la compañía (de marcha, va con ella).
+        if (EscenaNapoleon.pabellon(m)) cosas += parte(PIE_ASTA.y) {
+            aguila(v.en(PIE_ASTA), PIE_ASTA, puntaAsta(), 0.034f * S_SOPORTE.k, EscenaNapoleon.aguilaEnvuelta(m), EscenaNapoleon.luto(m), Azar(57L), 0f, nieve)
         }
         // El objeto grande del día, apoyado en el pabellón (o en la mochila).
         ObjetosNapoleon.grande(m, v.p.con(v.a.calor(Offset(282f, 250f))), Offset(282f, 252f), Offset(270f, 176f), 1.1f)?.let { g -> cosas += parte(g.pie.y) { g.pintar(this) } }
@@ -232,13 +231,7 @@ internal object RetiradaCerca {
      */
     fun DrawScope.marco(v: VistaNapoleon) {
         val a = v.en(Offset(80f, 40f)); val p = PIE_DEL_PINO
-        pino(a, p, 760f, 430f, v.nieve, Azar(AZ_PINO), 0f, 1f, false, hastaY = 36f, caidaPropia = 0.1f + 0.1f * v.nieve, grande = true)
-        // La luz del fuego por debajo de las ramas y en el tronco, de noche.
-        val k = v.lumbre * v.l.noche
-        if (k > 0.05f) {
-            drawRect(Brush.verticalGradient(listOf(Color.Transparent, C.LUMBRE.copy(alpha = 0.1f * k)), 10f, 90f), Offset(20f, 10f), androidx.compose.ui.geometry.Size(180f, 80f), blendMode = BlendMode.Plus)
-            drawRect(Brush.horizontalGradient(listOf(Color.Transparent, C.LUMBRE.copy(alpha = 0.16f * k)), p.x - 10f, p.x + 28f), Offset(p.x - 10f, 60f), androidx.compose.ui.geometry.Size(38f, p.y - 60f), blendMode = BlendMode.Plus)
-        }
+        pino(a, p, 760f, 430f, v.nieve, Azar(AZ_PINO), 0f, 1f, false, hastaY = 30f, caidaPropia = 0.17f + 0.12f * v.nieve, grande = true)
     }
 
     // ---------------------------------------------------------------- Lo que se mueve
@@ -248,7 +241,7 @@ internal object RetiradaCerca {
         if (f > 0.02f) {
             resplandor(LUZ_DEL_FUEGO, (70f + 60f * f) * (0.6f + 0.4f * v.noche), (0.25f + 0.75f * v.noche) * f * (0.92f + 0.08f * sin(reloj * 7f)))
             if (f >= 0.45f) {
-                for ((dx, h) in listOf(-0.14f to 0.55f, 0.05f to 0.78f, 0.18f to 0.5f, -0.02f to 0.4f)) llama(FUEGO + Offset(dx * k, -0.12f * k), h * k * f, reloj, (dx * 100f).toInt() + 3)
+                for ((dx, h) in listOf(-0.14f to 0.4f, 0.05f to 0.56f, 0.18f to 0.36f, -0.02f to 0.3f)) llama(FUEGO + Offset(dx * k, -0.12f * k), h * k * f * (0.5f + 0.5f * v.noche), reloj, (dx * 100f).toInt() + 3)
             } else {
                 // El rescoldo: alguna llama chica que asoma y las brasas que laten.
                 brasas(l, FUEGO + Offset(0f, -2f), 0.5f * k, reloj)
