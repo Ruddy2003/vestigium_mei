@@ -95,7 +95,9 @@ object MapasMas {
         TemaId.BASICO -> listOf(Offset(0.08f, 0.8f), Offset(0.22f, 0.66f), Offset(0.36f, 0.7f), Offset(0.5f, 0.5f), Offset(0.64f, 0.4f), Offset(0.78f, 0.44f), Offset(0.92f, 0.24f))
         // Los puntos de control: piso por piso, de la ventanilla de abajo al Ministerio en lo alto.
         TemaId.DISTOPIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
-        TemaId.ARCONTES -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
+        // El ascenso del alma: cada parada cae en su esfera, de la Luna (la más cercana a la tierra, abajo a la izquierda) a
+        // Saturno, en zigzag hacia la derecha, donde está la Ogdóada. [fondoMas] dibuja los círculos por estos mismos puntos.
+        TemaId.ARCONTES -> listOf(Offset(0.17f, 0.78f), Offset(0.28f, 0.42f), Offset(0.4f, 0.72f), Offset(0.52f, 0.34f), Offset(0.64f, 0.66f), Offset(0.77f, 0.3f), Offset(0.9f, 0.5f))
         // La ruta de salto de la célula en la carta estelar, de mundo en mundo: Hollín (el puerto de ladrillo, abajo a la
         // izquierda), Escoria, Vigía, Luna Ocre, El Anillo, Cantera y Albar, la capital del Directorio, arriba a la derecha.
         TemaId.FRENTE -> listOf(Offset(0.08f, 0.8f), Offset(0.22f, 0.54f), Offset(0.36f, 0.76f), Offset(0.5f, 0.42f), Offset(0.63f, 0.66f), Offset(0.77f, 0.4f), Offset(0.9f, 0.18f))
@@ -293,14 +295,71 @@ object MapasMas {
                 drawRect(Color(0xFFC8102E).copy(alpha = 0.6f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.02f))
             }
             TemaId.ARCONTES -> {
-                // Pisos de un edificio de oficinas en corte, con sus ventanillas; a la derecha, la torre del Ministerio.
-                val linea = cs.onSurface.copy(alpha = if (oscuro) 0.18f else 0.14f)
-                for (k in 1 until 6) { val y = h * k / 6f; drawLine(linea, Offset(0f, y), Offset(w * 0.8f, y), 1f * d) }
-                val az = java.util.Random(17)
-                for (k in 0 until 6) for (j in 0 until 10) if (az.nextInt(3) > 0) drawRect(linea, Offset(w * (0.03f + j * 0.075f), h * (k / 6f + 0.04f)), Size(w * 0.035f, h * 0.07f))
-                drawRect(cs.onSurface.copy(alpha = if (oscuro) 0.22f else 0.16f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.96f))
-                for (k in 0 until 9) drawRect(Color(0xFFC8102E).copy(alpha = 0.25f + 0.5f * avance), Offset(w * 0.86f, h * (0.12f + k * 0.09f)), Size(w * 0.06f, h * 0.03f))
-                drawRect(Color(0xFFC8102E).copy(alpha = 0.6f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.02f))
+                // El ascenso del alma por las siete esferas, dibujado como el diagrama de los ofitas (recurso): abajo a la
+                // izquierda la tierra con su lago; alrededor, los siete círculos de los planetas, cada uno con su astro y con la
+                // puerta abierta donde cae su parada (las paradas de [puntos] marcan los radios); en las puertas se adivinan las
+                // sombras de los guardianes con cara de animal y, más allá del séptimo, la luz de la Ogdóada con sus estrellas
+                // fijas y la grieta. Las esferas ya cruzadas se encienden con la luz de la lámpara. De día es el diagrama en
+                // tinta sobre papiro; de noche, el mismo sobre el cielo antiguo.
+                val e = Offset(w * 0.07f, h * 0.6f)
+                val pts = puntos(tema).map { Offset(it.x * w, it.y * h) }
+                val linea = if (oscuro) TrazosArcontes.ESFERA.copy(alpha = 0.75f) else cs.onSurface.copy(alpha = 0.32f)
+                val encendida = if (oscuro) TrazosArcontes.LLAMA.copy(alpha = 0.7f) else Color(0xFF87590F).copy(alpha = 0.55f)
+                val az = java.util.Random(7)
+                if (oscuro) drawRect(TrazosArcontes.CIELO_ANTIGUO.copy(alpha = 0.6f), Offset.Zero, size)
+                else {
+                    drawRect(Color(0xFFE4D3A8).copy(alpha = 0.32f), Offset.Zero, size)
+                    var y = 2 * d; while (y < h) { drawLine(Color(0xFF8A6A3A).copy(alpha = 0.05f + 0.04f * az.nextFloat()), Offset(0f, y), Offset(w, y + (az.nextFloat() - 0.5f) * d), 0.6f * d); y += (2.2f + az.nextFloat() * 1.6f) * d }
+                }
+                repeat(if (oscuro) 70 else 30) { drawCircle((if (oscuro) TrazosArcontes.LINO else cs.onSurface).copy(alpha = 0.1f + 0.3f * az.nextFloat()), (0.4f + 0.7f * az.nextFloat()) * d, Offset(az.nextFloat() * w, az.nextFloat() * h)) }
+                // La Ogdóada: la luz de más allá del séptimo círculo, sus estrellas fijas y la grieta.
+                val ultimo = (pts[6] - e).getDistance()
+                val o8 = Offset(w * 1.04f, h * 0.45f)
+                drawCircle(Brush.radialGradient(listOf(TrazosArcontes.GRIETA_HALO.copy(alpha = if (oscuro) 0.32f else 0.2f), Color.Transparent), o8, w * 0.2f), w * 0.2f, o8)
+                repeat(14) {
+                    val q = Offset(w * (0.9f + az.nextFloat() * 0.1f), az.nextFloat() * h)
+                    if ((q - e).getDistance() > ultimo + 6 * d) {
+                        val l = (1.2f + az.nextFloat() * 1.4f) * d; val col = (if (oscuro) TrazosArcontes.GRIETA else TrazosArcontes.GRIETA_HALO).copy(alpha = 0.75f)
+                        drawLine(col, Offset(q.x - l, q.y), Offset(q.x + l, q.y), 0.6f * d); drawLine(col, Offset(q.x, q.y - l), Offset(q.x, q.y + l), 0.6f * d)
+                    }
+                }
+                with(TrazosArcontes) { grieta(Offset(w * 0.975f, h * 0.12f), Offset(w * 0.985f, h * 0.36f), 0.9f * d, if (oscuro) 1f else 0.7f, 9) }
+                // Los siete círculos, con la puerta abierta en su parada y los dos postes de la puerta.
+                val cruzadas = (avance * 7f + 0.01f).toInt()
+                val astros = listOf(-38f, 30f, -24f, 22f, -16f, 12f, -10f)
+                pts.forEachIndexed { i, q ->
+                    val rr = (q - e).getDistance()
+                    val ang = Math.toDegrees(kotlin.math.atan2((q.y - e.y).toDouble(), (q.x - e.x).toDouble())).toFloat()
+                    val medio = Math.toDegrees((10.5f * d / rr).toDouble()).toFloat()
+                    val col = if (i < cruzadas) encendida else linea
+                    if (i < cruzadas && oscuro) drawArc(TrazosArcontes.LLAMA_HALO.copy(alpha = 0.12f), ang + medio, 360f - 2 * medio, false, Offset(e.x - rr, e.y - rr), Size(2 * rr, 2 * rr), style = Stroke(4 * d))
+                    drawArc(col, ang + medio, 360f - 2 * medio, false, Offset(e.x - rr, e.y - rr), Size(2 * rr, 2 * rr), style = Stroke((if (i < cruzadas) 1.3f else 0.9f) * d))
+                    listOf(-1f, 1f).forEach { s ->
+                        val a = Math.toRadians((ang + s * medio).toDouble())
+                        val dir = Offset(cos(a).toFloat(), sin(a).toFloat())
+                        drawLine(col, e + dir * (rr - 3.5f * d), e + dir * (rr + 3.5f * d), 1.3f * d, StrokeCap.Round)
+                    }
+                    // El astro de la esfera: la Luna en creciente, el Sol en el oro de abajo, Marte rojizo; los demás, puntos.
+                    val b = Math.toRadians((ang + astros[i]).toDouble())
+                    val a = Offset(e.x + rr * cos(b).toFloat(), e.y + rr * sin(b).toFloat())
+                    if (a.y in 4 * d..h - 4 * d && a.x < w - 4 * d) when (i) {
+                        0 -> { drawCircle(linea.copy(alpha = 0.9f), 3 * d, a); drawCircle(if (oscuro) TrazosArcontes.CIELO_ANTIGUO else Color(0xFFEFE3C2), 2.6f * d, a + Offset(1.4f * d, -0.8f * d)) }
+                        3 -> { drawCircle(TrazosArcontes.ORO_DEMIURGO, 2.6f * d, a); for (k in 0 until 8) { val g = k * PI / 4; drawLine(TrazosArcontes.ORO_DEMIURGO, a + Offset(cos(g).toFloat(), sin(g).toFloat()) * (3.6f * d), a + Offset(cos(g).toFloat(), sin(g).toFloat()) * (5.4f * d), 0.8f * d) } }
+                        4 -> drawCircle(TrazosArcontes.JASPE_ROJO.copy(alpha = 0.85f), 2.2f * d, a)
+                        else -> drawCircle(linea.copy(alpha = 0.9f), (1.5f + 0.15f * i) * d, a)
+                    }
+                }
+                // Las sombras de los guardianes junto a algunas puertas: solo se adivinan, con los hombros que se pierden.
+                listOf(1 to 1f, 3 to -1f, 5 to 1f).forEach { (i, lado) ->
+                    val q = pts[i]; val cabeza = Offset(q.x + lado * 15 * d, q.y + (if (q.y < h * 0.5f) 3f else -11f) * d)
+                    val color = if (oscuro) lerp(TrazosArcontes.SOMBRA, TrazosArcontes.GRIETA_HALO, 0.22f).copy(alpha = 0.9f) else TrazosArcontes.SOMBRA.copy(alpha = 0.18f)
+                    with(TrazosArcontes) { sombraArconte(cabeza, 5.5f * d, color, -lado, desvanece = true) }
+                }
+                // La tierra, el mundo de abajo: el disco de caliza con el lago y su orilla.
+                val rt = h * 0.12f
+                drawCircle(if (oscuro) lerp(TrazosArcontes.CALIZA_SOMBRA, Color.Black, 0.45f) else TrazosArcontes.CALIZA, rt, e)
+                drawOval(if (oscuro) TrazosArcontes.LAGO_HONDO else TrazosArcontes.LAGO.copy(alpha = 0.8f), Offset(e.x - rt * 0.32f, e.y - rt * 0.55f), Size(rt * 0.5f, rt * 0.85f))
+                drawCircle(linea, rt, e, style = Stroke(1 * d))
             }
             TemaId.FRENTE -> {
                 // La carta estelar impresa: la cuadrícula de sectores con sus rótulos y sus marcas de borde, las estrellas en
@@ -832,7 +891,15 @@ object MapasMas {
             TemaId.BASICO -> drawPath(p, cs.primary.copy(alpha = 0.8f), style = Stroke(2.4f * d, cap = StrokeCap.Round))
             // La línea roja del trámite, como cinta de señalización.
             TemaId.DISTOPIA -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
-            TemaId.ARCONTES -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
+            // El camino del alma: un hilo de luz de la grieta, blanco violeta de noche y violeta de día, con su halo y una
+            // chispa a trechos.
+            TemaId.ARCONTES -> {
+                val oscuro = cs.background.luminance() < 0.5f
+                val luz = if (oscuro) TrazosArcontes.GRIETA else cs.tertiary
+                drawPath(p, TrazosArcontes.GRIETA_HALO.copy(alpha = if (oscuro) 0.24f else 0.16f), style = Stroke(5 * d, cap = StrokeCap.Round))
+                drawPath(p, luz.copy(alpha = 0.9f), style = Stroke(1.3f * d, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(7 * d, 2.5f * d, 0.1f * d, 2.5f * d))))
+                aLoLargo(p, 34 * d, 17 * d) { o, _ -> drawCircle(TrazosArcontes.GRIETA_HALO.copy(alpha = 0.35f), 2.6f * d, o); drawCircle(luz, 1.1f * d, o) }
+            }
             // La ruta de salto impresa en la carta: la franja tenue del corredor, los puntos ámbar del trazado y, cada tanto,
             // el ángulo del vector de salto que dice hacia dónde se va.
             TemaId.FRENTE -> {
@@ -995,7 +1062,19 @@ object MapasMas {
             }
             // Una ventanilla de control: caseta cuadrada con su número.
             TemaId.DISTOPIA -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
-            TemaId.ARCONTES -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
+            // Cada parada es la puerta de una esfera: el disco con el aro de su círculo, abierto arriba; la meta es la
+            // Ogdóada, con su halo y los ocho puntos de luz alrededor.
+            TemaId.ARCONTES -> {
+                val oscuro = cs.background.luminance() < 0.5f
+                val tinta = cs.onSurface.copy(alpha = 0.6f)
+                if (meta) {
+                    drawCircle(Brush.radialGradient(listOf(TrazosArcontes.GRIETA_HALO.copy(alpha = 0.4f), Color.Transparent), c, r * 2.3f), r * 2.3f, c)
+                    for (k in 0 until 8) { val a = k * PI / 4 - PI / 2; drawCircle(if (oscuro) TrazosArcontes.GRIETA else cs.tertiary, r * 0.13f, Offset(c.x + r * 1.5f * cos(a).toFloat(), c.y + r * 1.5f * sin(a).toFloat())) }
+                }
+                drawCircle(col, r * 0.82f, c)
+                drawCircle(tinta, r * 0.82f, c, style = Stroke(0.7f * d))
+                drawArc(tinta, -60f, 300f, false, Offset(c.x - r * 1.18f, c.y - r * 1.18f), Size(r * 2.36f, r * 2.36f), style = Stroke(0.9f * d))
+            }
             // Cada parada es un mundo impreso en la carta, con su lado de noche y la mira de llegada alrededor; la meta es Albar,
             // la capital del Directorio, en mármol con su anillo de bronce.
             TemaId.FRENTE -> {

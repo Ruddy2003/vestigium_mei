@@ -50,6 +50,7 @@ import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.TrazosArcontes
 import kotlin.math.PI
 import kotlin.math.ceil
 import kotlin.math.cos
@@ -207,11 +208,16 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
             drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
         }
+        // El códice de cuero tumbado en la pila: las hojas de papiro asomando por el canto, la tapa en el color del libro, la
+        // solapa en punta doblada encima y la correa que le da la vuelta.
         TemaId.ARCONTES -> {
-            drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), o, s)
-            drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), Offset(x0 + w * 0.1f, y0 - h * 0.18f), Size(w * 0.3f, h * 0.2f))
-            drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
-            drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
+            val cuero = lerp(TrazosArcontes.CUERO, c, 0.35f)
+            drawRect(lerp(Color(0xFFDCC594), c, 0.1f), Offset(x0 + w * 0.06f, y0 + h * 0.14f), Size(w * 0.92f, h * 0.72f))
+            drawRect(cuero, o, Size(w * 0.9f, h))
+            drawPath(Path().apply { moveTo(x0 + w * 0.9f, y0); lineTo(x0 + w * 0.64f, cy); lineTo(x0 + w * 0.9f, y0 + h); close() }, lerp(cuero, Color.Black, 0.22f))
+            drawLine(TrazosArcontes.CORREA, Offset(x0, cy), Offset(x0 + w * 0.64f, cy), 1.2f * d)
+            drawLine(TrazosArcontes.CORREA, Offset(x0, cy), Offset(x0 - w * 0.04f, cy + h * 0.55f), 1f * d, StrokeCap.Round)
+            drawRect(oscuro, o, Size(w * 0.9f, h), style = Stroke(0.6f * d))
         }
         // El cartucho de datos de la red, apilado de canto: el bloque con la esquina cortada, la etiqueta hueso escrita y la
         // ventanilla con sus dos carretes.
@@ -737,10 +743,15 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
             drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
         }
+        // Un nicho en arco tallado en la caliza, como los de las lámparas, con su repisa abajo.
         TemaId.ARCONTES -> {
-            drawRect(relleno, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r))
-            drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
-            drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
+            lleno(Path().apply {
+                moveTo(x - r * 0.85f, y + r); lineTo(x - r * 0.85f, y - r * 0.15f)
+                arcTo(androidx.compose.ui.geometry.Rect(x - r * 0.85f, y - r, x + r * 0.85f, y + r * 0.7f), 180f, 180f, false)
+                lineTo(x + r * 0.85f, y + r); close()
+            })
+            drawArc(borde.copy(alpha = 0.35f), 180f, 180f, false, Offset(x - r * 0.68f, y - r * 0.83f), Size(r * 1.36f, r * 1.36f), style = fino)
+            drawLine(borde, Offset(x - r, y + r), Offset(x + r, y + r), 1.8f * d)
         }
         // La tecla de consola: el marco de esquinas muy redondas, la tecla hundida dentro y su piloto ámbar en la esquina.
         TemaId.FRENTE -> {
@@ -1107,22 +1118,21 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             else -> return false
         }
         TemaId.ARCONTES -> when (forma) {
-            // El ojo que vigila.
-            "alfiler" -> {
-                drawPath(Path().apply { moveTo(x - r, y); quadraticTo(x, y - r * 0.9f, x + r, y); quadraticTo(x, y + r * 0.9f, x - r, y); close() }, col)
-                drawCircle(fondo, r * 0.4f, c); drawCircle(col, r * 0.2f, c)
-            }
-            // Expediente con pestaña y franja roja.
+            // La lámpara de aceite de barro, encendida.
+            "alfiler" -> with(TrazosArcontes) { lampara(Offset(x - r * 0.08f, y + r * 0.2f), r * 1.9f, col, 1f) }
+            // La carta de papiro doblada en tira, atada con su cordel y sellada con un terrón de barro.
             "sobre" -> {
-                drawRect(col, Offset(x - r, y - r * 0.5f), Size(2 * r, r * 1.2f))
-                drawRect(col, Offset(x - r, y - r * 0.75f), Size(r * 0.8f, r * 0.3f))
-                drawRect(Color(0xFFC8102E), Offset(x - r, y + r * 0.35f), Size(2 * r, r * 0.2f))
+                drawRect(col, Offset(x - r, y - r * 0.42f), Size(2 * r, r * 0.84f))
+                listOf(-0.5f, 0.45f).forEach { f -> drawLine(fondo, Offset(x + f * r, y - r * 0.42f), Offset(x + f * r + r * 0.08f, y + r * 0.42f), 0.9f * d) }
+                drawCircle(TrazosArcontes.BARRO, r * 0.24f, Offset(x + r * 0.49f, y))
             }
-            // Lata de ración.
+            // El jarro de barro, con su asa.
             "taza" -> {
-                drawRect(col, Offset(x - r * 0.55f, y - r * 0.75f), Size(r * 1.1f, r * 1.5f))
-                listOf(-0.5f, 0.5f).forEach { f -> drawLine(fondo, Offset(x - r * 0.55f, y + f * r), Offset(x + r * 0.55f, y + f * r), 0.7f * d) }
-                drawRect(fondo, Offset(x - r * 0.38f, y - r * 0.2f), Size(r * 0.76f, r * 0.4f))
+                drawArc(col, -80f, 160f, false, Offset(x + r * 0.15f, y - r * 0.55f), Size(r * 0.62f, r * 0.7f), style = Stroke(1.5f * d))
+                drawOval(col, Offset(x - r * 0.58f, y - r * 0.36f), Size(r * 1.16f, r * 1.2f))
+                drawRect(col, Offset(x - r * 0.24f, y - r * 0.74f), Size(r * 0.48f, r * 0.5f))
+                drawRect(col, Offset(x - r * 0.34f, y - r * 0.84f), Size(r * 0.68f, r * 0.14f))
+                drawLine(fondo.copy(alpha = 0.5f), Offset(x - r * 0.5f, y + r * 0.05f), Offset(x + r * 0.5f, y + r * 0.05f), 0.8f * d)
             }
             else -> return false
         }

@@ -61,6 +61,7 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.TrazosArcontes
 import io.github.ruddy2003.vestigium.ui.TrazosFrente
 import io.github.ruddy2003.vestigium.ui.numeralMaya
 import androidx.compose.ui.geometry.Offset
@@ -111,8 +112,10 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Distopía: gris de expediente, sin color.
         TemaId.DISTOPIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
-        TemaId.ARCONTES -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
-            else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
+        // Arcontes: de día, el plano en caliza al sol, con un poco del azul del lago; de noche, el mismo plano bajo el cielo
+        // antiguo, azul negro con un tinte violeta.
+        TemaId.ARCONTES -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.62f, 0.84f, 2f, 3f, 16f)) }
+            else { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.95f, 0.83f, 5f, 3f, -5f)) }
         // Frente exterior: de día, el plano impreso sobre el hueso de la consola, casi sin color; de noche, el mismo plano
         // en la pantalla de la sala, con el verde apagado del radar sobre el petróleo.
         TemaId.FRENTE -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.5f, 0.68f, 0.62f, 2f, 8f, 8f)) }
@@ -272,7 +275,11 @@ internal object Formas {
             TemaId.TEMPLARIO -> figura(x, y, r, -0.82f, -0.9f, 0.82f, -0.9f, 0.8f, -0.1f, 0.58f, 0.5f, 0f, 1.05f, -0.58f, 0.5f, -0.8f, -0.1f)
             // El ojo que todo lo ve.
             TemaId.DISTOPIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
-            TemaId.ARCONTES -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
+            // El ouroboros: el aro de la serpiente con la cabeza que muerde la cola, arriba a la derecha.
+            TemaId.ARCONTES -> {
+                p.reset(); p.addCircle(x, y, r, horario); p.addCircle(x, y, r * 0.58f, antihorario)
+                p.addOval(android.graphics.RectF(x + r * 0.32f, y - r * 1.22f, x + r * 1.02f, y - r * 0.55f), horario)
+            }
             // El círculo roto del emblema de la red: el aro grueso con su hueco arriba a la derecha.
             TemaId.FRENTE -> {
                 p.reset()
@@ -362,7 +369,7 @@ internal object Formas {
             TemaId.TEMPLARIO -> { raya(c, x, y, r, 0f, -0.65f, 0f, 0.55f, d); raya(c, x, y, r, -0.52f, -0.15f, 0.52f, -0.15f, d)
                 raya(c, x, y, r, -0.62f, -0.75f, 0.62f, -0.75f, d) }   // la cruz del escudo y su jefe
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
-            TemaId.ARCONTES -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
+            TemaId.ARCONTES -> { c.drawCircle(x + r * 0.72f, y - r * 0.92f, r * 0.1f, d); c.drawCircle(x, y, r * 0.2f, d) }   // el ojo de la serpiente y la chispa del centro
             // La célula en el centro y la chispa: tres trazos que salen de ella por el hueco del aro, arriba a la derecha.
             TemaId.FRENTE -> { c.drawCircle(x, y, r * 0.14f, d); raya(c, x, y, r, 0.13f, -0.32f, 0.47f, -1.16f, d); raya(c, x, y, r, 0.23f, -0.27f, 0.93f, -1.11f, d); raya(c, x, y, r, 0.3f, -0.19f, 1.06f, -0.66f, d) }
             TemaId.REFUGIO -> { poligono(x, y, r * 0.55f, 3, 90.0); c.drawPath(p, d) }
@@ -881,15 +888,24 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                 x += 6 * u; i++
             }
         }
+        // La hoja del códice: el doble filete de tinta con las esquinas en arco de nicho, los siete círculos que asoman en la
+        // esquina de arriba, la lámpara encendida abajo a la izquierda y, en el canto derecho, una grieta de luz finísima.
         TemaId.ARCONTES -> {
-            filete(5 * u, tinta.copy(alpha = 0.45f), 1 * u)
-            drawCircle(acento, 3.5f * u, Offset(16 * u, 16 * u))
-            drawRect(tinta.copy(alpha = 0.6f), Offset(23 * u, 14 * u), Size(18 * u, 4 * u))
-            var x = 10 * u; var i = 0
-            while (x < w - 10 * u) {
-                val l = if (i % 5 == 0) 6 * u else 3 * u
-                drawLine(tinta.copy(alpha = 0.5f), Offset(x, h - 5 * u), Offset(x, h - 5 * u - l), 1 * u)
-                x += 6 * u; i++
+            val k = 12 * u
+            listOf(4 * u to 0.5f, 8 * u to 0.25f).forEach { (m, al) ->
+                val e = k - (m - 4 * u)
+                drawPath(Path().apply {
+                    moveTo(m + e, m); lineTo(w - m - e, m); arcTo(androidx.compose.ui.geometry.Rect(w - m - 2 * e, m, w - m, m + 2 * e), -90f, 90f, false)
+                    lineTo(w - m, h - m - e); arcTo(androidx.compose.ui.geometry.Rect(w - m - 2 * e, h - m - 2 * e, w - m, h - m), 0f, 90f, false)
+                    lineTo(m + e, h - m); arcTo(androidx.compose.ui.geometry.Rect(m, h - m - 2 * e, m + 2 * e, h - m), 90f, 90f, false)
+                    lineTo(m, m + e); arcTo(androidx.compose.ui.geometry.Rect(m, m, m + 2 * e, m + 2 * e), 180f, 90f, false); close()
+                }, tinta.copy(alpha = al), style = Stroke((if (al > 0.4f) 1.2f else 0.8f) * u))
+            }
+            for (i in 0 until 7) drawArc(tinta.copy(alpha = 0.32f - i * 0.03f), 0f, 90f, false, Offset(8 * u - (10 + i * 5) * u, 8 * u - (10 + i * 5) * u), Size((20 + i * 10) * u, (20 + i * 10) * u), style = Stroke(0.7f * u))
+            drawCircle(acento, 2.6f * u, Offset(8 * u, 8 * u))
+            with(TrazosArcontes) {
+                lampara(Offset(26 * u, h - 17 * u), 22 * u, if (fondo.red + fondo.green + fondo.blue < 1.5f) BARRO_CLARO else BARRO, 1f)
+                grieta(Offset(w - 6 * u, h * 0.42f), Offset(w - 5 * u, h * 0.42f + 34 * u), 0.8f * u, 0.8f, 4)
             }
         }
         // El bisel de la pantalla de la sala de mando: el marco de esquinas muy redondas con su doble filo, un tornillo en
@@ -1248,11 +1264,16 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))
             drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
         }
+        // El ouroboros con las siete esferas adentro: la serpiente que se muerde la cola rodea los círculos de los
+        // planetas, con la tierra al centro y la aguja del norte, fina, que sale hacia la luz.
         TemaId.ARCONTES -> {
-            punta(n, r * 0.98f, r * 0.1f, acento)
-            val ojo = Path().apply { moveTo(c.x - r * 0.8f, c.y); quadraticTo(c.x, c.y - r * 0.75f, c.x + r * 0.8f, c.y); quadraticTo(c.x, c.y + r * 0.75f, c.x - r * 0.8f, c.y); close() }
-            drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))
-            drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
+            with(TrazosArcontes) {
+                esferas(c, r * 0.66f, tenue.copy(alpha = 0.45f), 0.7f * u)
+                ouroboros(c, r * 0.84f, r * 0.13f, tenue, -60f, fondo.copy(alpha = 0.6f))
+            }
+            punta(n, r * 0.98f, r * 0.08f, acento)
+            punta(n + 180.0, r * 0.5f, r * 0.06f, tinta.copy(alpha = 0.5f))
+            drawCircle(secundario, r * 0.12f, c); drawCircle(tinta.copy(alpha = 0.7f), r * 0.12f, c, style = Stroke(0.8f * u))
         }
         // La retícula de navegación de la consola: la pantalla redonda con sus anillos, la cruz y las marcas de cada diez
         // grados, el barrido verde que gira con su eco y, en el borde, el norte marcado con un ángulo ámbar.

@@ -173,6 +173,8 @@ enum class FormaPunto {
     ENGRANE,
     /** Frente exterior: el eco del radar, con su anillo de distancia y la estela corta del barrido. */
     ECO,
+    /** Arcontes: la raja de luz, una almendra fina de pie, con el halo de su esfera alrededor. */
+    RAJA,
 }
 
 /** Lo que acompaña al trazo de una serie. */
@@ -256,8 +258,11 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Expediente: el ojo, trazo grueso, renglones de registro en bandas, eje duro con marcas y barras rectas.
     TemaId.DISTOPIA -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
         Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
-    TemaId.ARCONTES -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
-        Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
+    // Arcontes: cada dato, una raja de luz en su esfera; la serie, un hilo con su filete claro por dentro, como la grieta; la
+    // rejilla, los lechos de la caliza en ondas; el eje con sus marcas; las barras, nichos de arco; las cifras, en la letra de
+    // los códices.
+    TemaId.ARCONTES -> EstiloGrafica(FormaPunto.RAJA, 1.9f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.FILETE, listOf(1f, 2.5f, 6f, 2.5f),
+        Rejilla.ONDAS, 0.4f, Eje.MARCAS, FormaBarra.ARCO, R.font.codice_regular, FontWeight.Normal, "lnum, tnum", 0.02f, 1.08f)
     // Frente exterior: los ecos del radar, la traza de fósforo con su resplandor, la rejilla en raya y punto como el Morse,
     // el eje con sus marcas de consola y las barras del medidor de segmentos; las cifras, en la mono de los rótulos grabados.
     TemaId.FRENTE -> EstiloGrafica(FormaPunto.ECO, 2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.HALO, listOf(6f, 2f, 1.5f, 2f),
@@ -551,6 +556,13 @@ fun DrawScope.puntoGrafica(e: EstiloGrafica, centro: Offset, radio: Float, color
             if (!hueco) drawArc(color.copy(alpha = color.alpha * 0.3f), 200f, 60f, true, Offset(c.x - r * 1.3f, c.y - r * 1.3f), Size(r * 2.6f, r * 2.6f))
             drawCircle(color.copy(alpha = color.alpha * 0.6f), r * 1.05f, c, style = Stroke(g * 0.5f))
             if (hueco) drawCircle(color, r * 0.5f, c, style = Stroke(g * 0.7f)) else drawCircle(color, r * 0.58f, c)
+        }
+        // La raja: una almendra de pie, con el anillo tenue de su esfera alrededor.
+        FormaPunto.RAJA -> {
+            figura(Path().apply {
+                moveTo(c.x, c.y - r * 1.25f); quadraticTo(c.x + r * 0.7f, c.y, c.x, c.y + r * 1.25f); quadraticTo(c.x - r * 0.7f, c.y, c.x, c.y - r * 1.25f); close()
+            })
+            drawCircle(color.copy(alpha = color.alpha * 0.4f), r * 1.15f, c, style = Stroke(g * 0.45f))
         }
     }
 }

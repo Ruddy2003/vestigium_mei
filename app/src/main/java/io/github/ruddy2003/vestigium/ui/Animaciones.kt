@@ -86,6 +86,8 @@ private enum class BarridoTema {
     BOCANADA,
     /** Frente exterior: la pantalla redonda del radar que se enciende desde el toque, con sus anillos de distancia por delante. */
     RADAR,
+    /** Arcontes: el velo que se rasga de arriba abajo por donde tocaste, y la raja se abre con los bordes deshilachados. */
+    VELO,
 }
 
 /**
@@ -122,7 +124,9 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.TEMPLARIO -> MatizMovimiento(BarridoTema.CRUZ, 820, CubicBezierEasing(0.55f, 0f, 0.3f, 1f), 0f, -12f, 1.02f, 420, 55, FastOutSlowInEasing, 1.15f, 0.95f, 1600f)
     // El ojo que se abre; los expedientes entran de lado y el sello cae seco.
     TemaId.DISTOPIA -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
-    TemaId.ARCONTES -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
+    // El velo que se rasga de arriba abajo y deja ver lo de detrás; las secciones suben apenas y se aclaran despacio, como
+    // la luz de una lámpara que se aviva, y los botones ceden blandos, sin rebote.
+    TemaId.ARCONTES -> MatizMovimiento(BarridoTema.VELO, 940, CubicBezierEasing(0.45f, 0f, 0.25f, 1f), 0f, 8f, 0.99f, 540, 70, LinearOutSlowInEasing, 0.9f, 0.85f, 650f)
     // La pantalla del radar que se enciende desde el toque; las secciones bajan un poco y asientan como la imagen de un
     // tubo que se estabiliza, y los botones hacen clic seco, como un interruptor de palanca.
     TemaId.FRENTE -> MatizMovimiento(BarridoTema.RADAR, 760, CubicBezierEasing(0.4f, 0f, 0.2f, 1f), 0f, -10f, 1f, 360, 50, LinearOutSlowInEasing, 1.25f, 0.85f, 2200f)
@@ -261,6 +265,13 @@ internal enum class VivoTema(val periodo: Int) {
      * el mismo barrido con menos luz y la antena de la estación, con su luz roja que parpadea.
      */
     RADAR(24000),
+    /** Arcontes de día: el polvo dorado que flota en el rayo de sol de una ventana alta. */
+    POLVO_DORADO(36000),
+    /**
+     * Arcontes de noche: los círculos de las siete esferas que giran despacio, una sombra que cruza sin verse entera y, muy de
+     * vez en cuando, la grieta que late.
+     */
+    ESFERAS(180000),
     /** Básico: nada se mueve detrás (no se dibuja ni se anima). */
     NINGUNO(60000),
 }
@@ -276,7 +287,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.MEDIEVAL -> VivoTema.RAYO_ORO         // un rayo de luz con polvo de oro suspendido
     TemaId.TEMPLARIO -> VivoTema.ANTORCHAS        // la muralla almenada con antorchas que tiemblan y sueltan pavesas
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
-    TemaId.ARCONTES -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
+    TemaId.ARCONTES -> if (oscuro) VivoTema.ESFERAS else VivoTema.POLVO_DORADO   // de día, el polvo en el rayo de sol; de noche, las esferas
     TemaId.FRENTE -> VivoTema.RADAR            // el barrido lento del radar; de noche, además, la antena que parpadea
     TemaId.REFUGIO -> VivoTema.VAPOR             // vapor que sube, de día y de noche
     TemaId.ORDEN -> VivoTema.FRAGUA              // chispas de fragua en parábola
@@ -573,6 +584,65 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 // La lámpara de cúpula de la esquina, encendida: su charco de luz cálida.
                 resplandorVivo(Color(0xFFF2D7A6), Offset(w * 0.9f, h * 0.06f), 120f * u, 0.07f * fuerza)
             }
+        }
+        VivoTema.POLVO_DORADO -> {
+            // El rayo de sol que entra por una ventana alta de la casa, de arriba a la derecha hacia abajo a la izquierda, con su
+            // borde suave; dentro, el polvo dorado flota y da vueltas, y cada mota brilla cuando gira de cara a la luz. Las que
+            // quedan fuera del rayo apenas se ven.
+            val oro = TrazosArcontes.ORO_DEMIURGO
+            val calido = Color(0xFFFFE6A6)
+            val respira = 0.85f + 0.15f * senoVuelta(t * 2)
+            fun haz(abre: Float) = Path().apply {
+                moveTo((0.58f - abre) * w, -2f * u); lineTo((0.86f + abre) * w, -2f * u); lineTo((0.38f + abre * 2) * w, h); lineTo((-0.1f - abre * 2) * w, h); close()
+            }
+            drawPath(haz(0.06f), Brush.verticalGradient(listOf(al(calido, (if (oscuro) 0.03f else 0.07f) * respira), al(calido, 0.012f)), 0f, h))
+            drawPath(haz(0f), Brush.verticalGradient(listOf(al(calido, (if (oscuro) 0.05f else 0.11f) * respira), al(calido, 0.02f)), 0f, h))
+            motas.forEach { m ->
+                val k = vueltas(m)
+                val y = (m.y + 0.02f * senoVuelta(t * k + m.fase) + 0.01f * senoVuelta(t * (k + 2) + m.fase * 3)) * h
+                val s = (y / h).coerceIn(0f, 1f)
+                val xi = (0.58f - 0.68f * s) * w; val xd = (0.86f - 0.48f * s) * w
+                val l = m.x * 1.5f - 0.25f + 0.05f * senoVuelta(t * (k + 1) + m.fase * 5)
+                val luz = if (l in 0f..1f) 1f - abs(l - 0.5f) * 0.8f else 0.12f
+                val gira = (0.5f + 0.5f * senoVuelta(t * k * 4 + m.fase * 7)).let { it * it }
+                val p = Offset(xi + (xd - xi) * l, y)
+                drawCircle(al(oro, (0.12f + 0.7f * luz * gira) * (if (oscuro) 0.4f else 0.6f)), 0.9f * u * m.tam, p)
+                if (luz * gira > 0.65f) resplandorVivo(calido, p, 4.5f * u * m.tam, 0.3f * luz * gira * fuerza)
+            }
+        }
+        VivoTema.ESFERAS -> {
+            // De noche, sobre la casa: los círculos de las siete esferas (recurso: el diagrama de los ofitas) giran despacio, cada
+            // uno con su marca, la de dentro más deprisa; entre ellos titila alguna estrella. A ratos una sombra de arconte cruza
+            // por arriba sin verse entera, tapando los círculos, y muy de vez en cuando la grieta de abajo late con su luz.
+            val esfera = TrazosArcontes.ESFERA
+            val c = Offset(w * 0.82f, h * 0.16f)
+            val rMax = maxOf(w, h) * 0.95f
+            for (i in 0 until 7) {
+                val ri = rMax * (0.14f + 0.86f * i / 6f)
+                drawCircle(al(esfera, 0.1f - i * 0.007f), ri, c, style = Stroke(0.8f * u))
+                val a = 2 * PI * fraccionVivo(t * (7 - i) + i * 0.137f)
+                val p = Offset(c.x + ri * cos(a).toFloat(), c.y + ri * sin(a).toFloat())
+                resplandorVivo(Color(0xFF8E88D0), p, 7f * u, 0.16f * fuerza)
+                drawCircle(al(Color(0xFFC9C4F0), 0.42f), 1.4f * u, p)
+            }
+            motas.take(18).forEach { m ->
+                val brillo = 0.5f + 0.5f * senoVuelta(t * vueltas(m) * 9 + m.fase)
+                drawCircle(al(TrazosArcontes.GRIETA, 0.08f + 0.2f * brillo), 0.7f * u * m.tam, Offset(m.x * w, m.y * h))
+            }
+            // La sombra: entra por la izquierda, cruza por arriba y se va; se ve solo a medias, contra los círculos.
+            val f = (t - 0.45f) / 0.3f
+            if (f in 0f..1f) {
+                val vis = sin(PI * f).toFloat()
+                val cab = Offset(-0.35f * w + 1.7f * w * f, h * 0.05f)
+                val alto = h * 0.17f
+                with(TrazosArcontes) {
+                    sombraArconte(cab, alto * 1.04f, al(TrazosArcontes.GRIETA_HALO, 0.04f * vis), desvanece = true)
+                    for (k in 0..2) sombraArconte(cab, alto * (1f - k * 0.025f), al(TrazosArcontes.CIELO_ANTIGUO, 0.32f * vis), desvanece = true)
+                }
+            }
+            // La grieta que late: una vez por vuelta, breve.
+            val g = (1f - abs(t - 0.9f) / 0.04f).coerceIn(0f, 1f)
+            if (g > 0f) with(TrazosArcontes) { grieta(Offset(w * 0.1f, h * 0.98f), Offset(w * 0.3f, h * 0.8f), 1.1f * u, (g * 0.5f * fuerza).coerceAtMost(1f), 23) }
         }
         VivoTema.CENIZA -> motas.take(24).forEach { m ->
             // Pavesas irregulares de papel quemado que caen dando tumbos; de noche, alguna conserva una brasa.
@@ -1472,6 +1542,27 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
             listOf(Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f), Offset(0f, -1f)).forEach { d ->
                 val a = c + d * (r * 1.38f); val b = c + d * (r * 1.56f)
                 ruta.addRect(Rect(minOf(a.x, b.x) - g, minOf(a.y, b.y) - g, maxOf(a.x, b.x) + g, maxOf(a.y, b.y) + g))
+            }
+        }
+        BarridoTema.VELO -> {
+            // El velo que se rasga de arriba abajo (Marcos 15:38): una raja vertical por el toque, que primero se alarga y
+            // luego se abre, con los bordes deshilachados (fijos, para que no tiemblen).
+            if (p >= 0.985f) ruta.addRect(Rect(0f, 0f, w, h))
+            else if (p > 0f) {
+                val alto = h * 1.1f * minOf(1f, p * 2.2f)
+                val abre = ((p - 0.15f) / 0.85f).coerceIn(0f, 1f)
+                val ancho = r0 * 1.15f * abre * abre + 6f * u * minOf(1f, p * 6f)
+                val n = 30
+                fun borde(k: Int, lado: Float): Offset {
+                    val y = c.y - alto + 2 * alto * k / n
+                    val q = ((y - c.y) / alto)
+                    val env = sqrt((1f - q * q).coerceAtLeast(0f))
+                    val fleco = 1f + 0.2f * sin(k * 2.7f + (if (lado > 0f) 1.3f else 4.1f))
+                    return Offset(c.x + lado * ancho * env * fleco, y)
+                }
+                for (k in 0..n) { val b = borde(k, 1f); if (k == 0) ruta.moveTo(b.x, b.y) else ruta.lineTo(b.x, b.y) }
+                for (k in n downTo 0) { val b = borde(k, -1f); ruta.lineTo(b.x, b.y) }
+                ruta.close()
             }
         }
         BarridoTema.SELLO -> {

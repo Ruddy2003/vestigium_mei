@@ -16,7 +16,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
@@ -134,6 +136,10 @@ object Marcas {
         PANTALLA,
         /** Frente exterior: la traza del osciloscopio bajo la palabra, plana hasta que da el pulso de un eco. */
         TRAZA,
+        /** Arcontes: la palabra grabada en un cabujón de jaspe, con sus motas rojas y su bisel de oro, como un amuleto. */
+        GEMA,
+        /** Arcontes: una raja de luz bajo la palabra, con su halo, que se quiebra apenas y suelta una rama al final. */
+        RAJA,
     }
 
     /** Cómo se ve una marca: color de la letra, el trazo detrás y si va en negrita o cursiva. */
@@ -163,7 +169,8 @@ object Marcas {
                 else Aspecto(s, s, Forma.CALDERON, cursiva = true)
             TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
-            TemaId.ARCONTES -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
+            // La @persona, grabada en su amuleto de jaspe; el #tema, sobre la raja de luz violeta de la grieta.
+            TemaId.ARCONTES -> if (persona) Aspecto(TrazosArcontes.LINO, TrazosArcontes.JASPE_VERDE, Forma.GEMA, negrita = true) else Aspecto(t, t, Forma.RAJA)
             // La @persona, como un indicativo en la pantalla de fósforo (verde de radar sobre el vidrio oscuro); el #tema, sobre la
             // traza del osciloscopio que da su eco al final.
             TemaId.FRENTE -> if (persona) Aspecto(Color(0xFF9FD8A8), Color(0xFF0F1A16), Forma.PANTALLA, negrita = true) else Aspecto(t, t, Forma.TRAZA)
@@ -229,6 +236,8 @@ object Marcas {
         Forma.ABEJA -> c.copy(alpha = 0.14f)
         Forma.PANTALLA -> c
         Forma.TRAZA -> Color.Unspecified
+        Forma.GEMA -> c
+        Forma.RAJA -> Color.Unspecified
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
@@ -250,6 +259,8 @@ object Marcas {
         Forma.CALDERON, Forma.ROTULADORA, Forma.PROMPT, Forma.ABEJA -> false
         Forma.PANTALLA -> false
         Forma.TRAZA -> true
+        Forma.GEMA -> false
+        Forma.RAJA -> true
     }
 
     /** El estilo de letra de la marca. Con [conFondo], lo que no se puede dibujar (en un campo de texto) va como fondo de la letra. */
@@ -648,6 +659,26 @@ object Marcas {
                 }
                 drawCircle(c.copy(alpha = 0.9f), 0.9f * u, Offset(rr.right + 1.4f * u, y - 0.9f * u))
                 drawCircle(c.copy(alpha = 0.9f), 0.9f * u, Offset(rr.right + 1.8f * u, y + 1f * u))
+            }
+            Forma.GEMA -> {
+                // El cabujón: la piedra verde con la luz arriba, sus motas rojas, el bisel de oro y un brillo a lo largo.
+                val t = rr.top + h * 0.04f; val b = rr.bottom - h * 0.02f; val iz = rr.left - 5 * u; val de = rr.right + 5 * u
+                val radio = CornerRadius((b - t) / 2, (b - t) / 2)
+                drawRoundRect(Brush.verticalGradient(listOf(lerp(c, Color.White, 0.18f), c, lerp(c, Color.Black, 0.32f)), t, b), Offset(iz, t), Size(de - iz, b - t), radio)
+                var k = 0; var x = iz + 4 * u
+                while (x < de - 4 * u && k < 200) {
+                    drawCircle(TrazosArcontes.JASPE_ROJO.copy(alpha = 0.6f), (0.45f + (k * 37 % 5) * 0.12f) * u, Offset(x, t + (b - t) * (0.22f + (k * 53 % 7) / 10f)))
+                    x += (5f + (k * 29 % 4)) * u; k++
+                }
+                drawRoundRect(TrazosArcontes.ORO_DEMIURGO.copy(alpha = 0.9f), Offset(iz, t), Size(de - iz, b - t), radio, style = Stroke(1.1f * u))
+                drawLine(Color.White.copy(alpha = 0.25f), Offset(iz + (b - t) * 0.5f, t + 1.8f * u), Offset(de - (b - t) * 0.5f, t + 1.8f * u), 0.8f * u, StrokeCap.Round)
+            }
+            Forma.RAJA -> {
+                val y = rr.bottom - h * 0.08f
+                val raja = tramo(rr.left, rr.right, 3.2f * u) { x, nx, k -> if (k == 0) moveTo(x, y); lineTo(nx, y + (if (k % 3 == 1) -0.9f else if (k % 3 == 2) 0.6f else 0f) * u) }
+                drawPath(raja, c.copy(alpha = 0.18f), style = Stroke(3.6f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawPath(raja, c.copy(alpha = 0.9f), style = Stroke(1f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawLine(c.copy(alpha = 0.7f), Offset(rr.right - 4 * u, y), Offset(rr.right - 1 * u, y + 2.2f * u), 0.7f * u, StrokeCap.Round)
             }
             Forma.PANTALLA -> {
                 // El vidrio oscuro con su bisel de cromo, tres líneas de barrido tenues y, delante, el piloto ámbar con su halo.

@@ -224,7 +224,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.TEMPLARIO -> LaminaRascar(0xFF2E3338.toInt(), 0xFF7E868E.toInt(), 0xFFDCE2E6.toInt())
     // Gris de ministerio: chapa sin brillo.
     TemaId.DISTOPIA -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
-    TemaId.ARCONTES -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
+    // El oro de más del mundo de abajo, el del Demiurgo, con la sombra violeta de lo que hay debajo.
+    TemaId.ARCONTES -> LaminaRascar(0xFF3A2A40.toInt(), 0xFFD4A62A.toInt(), 0xFFFFF0B8.toInt())
     // La chapa esmaltada color hueso de la consola, con el filo gastado hasta el metal.
     TemaId.FRENTE -> LaminaRascar(0xFF5C5446.toInt(), 0xFFB8AD96.toInt(), 0xFFEFE7D6.toInt())
     // Chapa galvanizada, azulada.
@@ -416,11 +417,19 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
             c.drawCircle(x, y, s * 0.42f, relleno)
         }
-        TemaId.ARCONTES -> tresbolillo { x, y ->
-            // El ojo que todo lo mira.
-            val s = l * 0.15f
-            c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
-            c.drawCircle(x, y, s * 0.42f, relleno)
+        TemaId.ARCONTES -> {
+            // El ouroboros al tresbolillo, con la cabeza que muerde la cola, y entre uno y otro las siete esferas, chiquitas.
+            tresbolillo { x, y ->
+                val s = l * 0.15f
+                c.drawArc(RectF(x - s, y - s, x + s, y + s), -48f, 336f, false, linea)
+                val a = Math.toRadians(-60.0)
+                c.drawCircle(x + s * Math.cos(a).toFloat(), y + s * Math.sin(a).toFloat(), l * 0.034f, relleno)
+            }
+            val fino = Paint(linea).apply { strokeWidth = l * 0.014f }
+            for ((x, y) in listOf(l / 2 to 0f, l / 2 to l, 0f to l / 2, l to l / 2)) {
+                for (k in 1..3) c.drawCircle(x, y, l * 0.024f * k, fino)
+                c.drawCircle(x, y, l * 0.012f, relleno)
+            }
         }
         TemaId.FRENTE -> {
             // El emblema de la red al tresbolillo (el círculo roto con la chispa de tres trazos) y, entre uno y otro, los

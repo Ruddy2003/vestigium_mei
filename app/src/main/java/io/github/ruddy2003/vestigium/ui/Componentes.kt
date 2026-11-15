@@ -128,7 +128,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.MEDIEVAL -> Zarcillo(modifier)
         TemaId.TEMPLARIO -> Adarve(modifier)
         TemaId.DISTOPIA -> BandaExpediente(modifier)
-        TemaId.ARCONTES -> BandaExpediente(modifier)
+        TemaId.ARCONTES -> BandaArcontes(modifier)
         TemaId.FRENTE -> BandaConsola(modifier)
         TemaId.REFUGIO -> Destellos(modifier)
         TemaId.ORDEN -> Galones(modifier)
@@ -238,6 +238,51 @@ private fun BandaExpediente(modifier: Modifier) {
             k++
         }
     }
+}
+
+/**
+ * Arcontes: el camino del alma en una línea. Al principio, el ouroboros que encierra el mundo; luego el hilo que pasa por las
+ * siete esferas, una tras otra, cada una un poco mayor; al final, la chispa que vuelve a la luz.
+ */
+@Composable
+private fun BandaArcontes(modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    val oscuro = esOscuro()
+    Canvas(modifier.fillMaxWidth().height(13.dp)) { bandaArcontes(e.primary, e.tertiary, oscuro) }
+}
+
+private fun DrawScope.bandaArcontes(oro: Color, luz: Color, oscuro: Boolean) {
+    val u = 1.dp.toPx(); val w = size.width; val cy = size.height / 2
+    val hilo = oro.copy(alpha = 0.55f)
+    with(TrazosArcontes) { ouroboros(Offset(6.2f * u, cy), 4.4f * u, 1.8f * u, oro, -90f) }
+    val x0 = 13 * u; val x1 = w - 13 * u
+    val paso = (x1 - x0) / 8f
+    var x = x0
+    for (k in 1..7) {
+        val c = Offset(x0 + paso * k, cy); val r = (2f + 0.25f * k) * u
+        drawLine(hilo, Offset(x, cy), Offset(c.x - r, cy), 0.8f * u)
+        drawCircle(oro.copy(alpha = 0.8f), r, c, style = Stroke(0.9f * u))
+        drawCircle(oro.copy(alpha = 0.8f), 0.7f * u, c)
+        x = c.x + r
+    }
+    drawLine(hilo, Offset(x, cy), Offset(x1 + 1.5f * u, cy), 0.8f * u)
+    with(TrazosArcontes) {
+        if (oscuro) chispa(Offset(w - 6 * u, cy), 4.6f * u, 1f) else chispa(Offset(w - 6 * u, cy), 4.6f * u, 1f, luz, luz.copy(alpha = 0.5f))
+    }
+}
+
+/** Arcontes: la llama de la lámpara delante de un título, con su halo de noche y el corazón claro. [g] es 1 dp. */
+private fun DrawScope.llamaTitulo(c: Offset, g: Float, color: Color, oscuro: Boolean) {
+    if (oscuro) drawCircle(Brush.radialGradient(listOf(color.copy(alpha = 0.4f), Color.Transparent), c, 8 * g), 8 * g, c)
+    val llama = Path().apply {
+        moveTo(c.x - 2.6f * g, c.y + 3.6f * g); quadraticTo(c.x - 3.2f * g, c.y - 0.4f * g, c.x + 0.5f * g, c.y - 5.4f * g)
+        quadraticTo(c.x + 3.4f * g, c.y - 0.6f * g, c.x + 2.6f * g, c.y + 3.6f * g); close()
+    }
+    drawPath(llama, color)
+    drawPath(Path().apply {
+        moveTo(c.x - 1.1f * g, c.y + 3.2f * g); quadraticTo(c.x - 1.5f * g, c.y + 0.6f * g, c.x + 0.3f * g, c.y - 1.8f * g)
+        quadraticTo(c.x + 1.7f * g, c.y + 0.6f * g, c.x + 1.1f * g, c.y + 3.2f * g); close()
+    }, if (oscuro) Color(0xFFFFF0C8) else Color.White.copy(alpha = 0.55f))
 }
 
 /**
@@ -1148,10 +1193,12 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "⚠", igual = "| ", nulo = "SIN DATO", elegido = "☒", riel = RolColor.TINTA, quitar = "✖", listaVacia = "[ EXPEDIENTE VACÍO ]", flecha = "►",
         sufijo = ":", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.NINGUNO,
         guiones = floatArrayOf(2.5f, 1f), tamBoton = 14, letraBoton = null, borde = RolColor.TINTA, grosor = 2f)
-    TemaId.ARCONTES -> PielComponentes(sep = " ▪ ", cerrada = "▶", abierta = "▼", numeral = RolColor.TINTA, centrar = true, rellena = false,
-        aviso = "⚠", igual = "| ", nulo = "SIN DATO", elegido = "☒", riel = RolColor.TINTA, quitar = "✖", listaVacia = "[ EXPEDIENTE VACÍO ]", flecha = "►",
-        sufijo = ":", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.NINGUNO,
-        guiones = floatArrayOf(2.5f, 1f), tamBoton = 14, letraBoton = null, borde = RolColor.TINTA, grosor = 2f)
+    // La letra de los códices: el triple punto de los copistas entre número y título, la referencia ※ por elegido, la hoja de
+    // papiro con sus fibras por renglones, el violeta de la grieta en el interruptor y el recuadro de «vacío» en punto y raya.
+    TemaId.ARCONTES -> PielComponentes(sep = "  ∴  ", cerrada = "→", abierta = "↓", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
+        aviso = "⁂", igual = " · ", nulo = "aún en blanco", elegido = "※", riel = RolColor.TERCIARIO, quitar = "×", listaVacia = "( la hoja sigue en blanco )", flecha = "→",
+        sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.5f, colorPrefijo = RolColor.TERCIARIO, renglones = true, margen = MargenEditor.NINGUNO,
+        guiones = floatArrayOf(1f, 2f, 5f, 2f), tamBoton = 15, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1.2f)
     // Rótulos de consola en mayúsculas espaciadas, la cifra en ámbar de piloto, la barra rota del canal entre número y
     // título, y el recuadro de «vacío» en raya y punto, como el Morse.
     TemaId.FRENTE -> PielComponentes(sep = " ¦ ", cerrada = "+", abierta = "−", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
@@ -1316,7 +1363,12 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             }.padding(bottom = 5.dp))
         // Rótulo de expediente: blanco sobre negro.
         TemaId.DISTOPIA -> Text(nombre, style = estilo, color = e.background, modifier = peso.background(e.onBackground).padding(horizontal = 6.dp, vertical = 1.dp))
-        TemaId.ARCONTES -> Text(nombre, style = estilo, color = e.background, modifier = peso.background(e.onBackground).padding(horizontal = 6.dp, vertical = 1.dp))
+        // La llama de la lámpara delante y, debajo, un filete que se apaga hacia la derecha, como la luz que no llega lejos.
+        TemaId.ARCONTES -> Text(nombre, style = estilo, modifier = peso.drawBehind {
+            val g = 1.dp.toPx(); val y = size.height - 1.2f * g
+            llamaTitulo(Offset(5 * g, (size.height - 4 * g) / 2), g, e.primary, e.background.luminance() < 0.5f)
+            drawLine(Brush.horizontalGradient(listOf(e.primary.copy(alpha = 0.75f), e.primary.copy(alpha = 0f)), startX = 0f, endX = size.width), Offset(0f, y), Offset(size.width, y), 0.9f * g)
+        }.padding(start = 15.dp, bottom = 5.dp))
         // El rótulo de la consola: un piloto ámbar delante y, debajo, la regla con su escala de segmentos.
         TemaId.FRENTE -> Text(nombre, style = estilo.copy(letterSpacing = 1.2.sp), modifier = peso.drawBehind {
             val g = 1.dp.toPx(); val cy = (size.height - 5 * g) / 2; val y = size.height - 1.2f * g
@@ -1489,7 +1541,11 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         moveTo(0f, 0f); lineTo(w, 0f); lineTo(w - h * 0.22f, h / 2); lineTo(w, h); lineTo(0f, h); close()
     }
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.ARCONTES -> RectangleShape
+    // El dintel de un nicho tallado en la caliza: un arco rebajado de lado a lado, sobre pies rectos.
+    TemaId.ARCONTES -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val a = minOf(h * 0.14f, w * 0.06f)
+        moveTo(0f, h); lineTo(0f, a); quadraticTo(w / 2, -a, w, a); lineTo(w, h); close()
+    }
     // La tecla de la consola: la cara de arriba apenas arqueada, como el mueble curvo, y el pie redondeado.
     TemaId.FRENTE -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
@@ -1606,7 +1662,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.MEDIEVAL -> "pluma y tintero · $es"
         TemaId.TEMPLARIO -> "rol de la casa · $es"
         TemaId.DISTOPIA -> "FORMULARIO 7-B · ${es.uppercase()}"
-        TemaId.ARCONTES -> "FORMULARIO 7-B · ${es.uppercase()}"
+        TemaId.ARCONTES -> "hoja de papiro · $es"
         TemaId.FRENTE -> "transmisión cifrada · $es"
         TemaId.REFUGIO -> "BITÁCORA DEL REFUGIO > $es"
         TemaId.ORDEN -> "CRÓNICA DE LA ORDEN · ${es.uppercase()}"
@@ -1738,11 +1794,13 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawRect(e.primary.copy(alpha = 0.8f), Offset(w - i - u * 1.1f, h - i - u * 1.1f), Size(u * 1.1f, u * 1.1f), style = Stroke(fino * 1.6f))
         }
         TemaId.ARCONTES -> {
-            // Un clip de expediente que asoma por arriba y un sello rojo abajo a la derecha.
-            val x = i + u * 1.2f
-            drawRoundRect(e.onSurface.copy(alpha = 0.7f), Offset(x, -u * 0.6f), Size(u * 0.9f, u * 2.8f), CornerRadius(u * 0.45f), style = Stroke(fino * 1.3f))
-            drawLine(e.onSurface.copy(alpha = 0.7f), Offset(x + u * 0.45f, -u * 0.2f), Offset(x + u * 0.45f, u * 1.6f), fino * 1.1f)
-            drawRect(e.primary.copy(alpha = 0.8f), Offset(w - i - u * 1.1f, h - i - u * 1.1f), Size(u * 1.1f, u * 1.1f), style = Stroke(fino * 1.6f))
+            // Arriba a la izquierda, la chispa; abajo a la derecha, tres de las siete esferas, que asoman desde la esquina.
+            val luz = e.tertiary.copy(alpha = 0.85f); val q = Offset(i + u * 0.55f, i + u * 0.55f)
+            drawPath(Path().apply { moveTo(q.x, q.y - u * 0.55f); quadraticTo(q.x, q.y, q.x + u * 0.38f, q.y); quadraticTo(q.x, q.y, q.x, q.y + u * 0.55f)
+                quadraticTo(q.x, q.y, q.x - u * 0.38f, q.y); quadraticTo(q.x, q.y, q.x, q.y - u * 0.55f); close() }, luz)
+            val o = Offset(w - i + u * 0.2f, h - i + u * 0.2f)
+            for (k in 1..3) drawArc(e.primary.copy(alpha = 0.5f - k * 0.08f), 180f, 90f, false, Offset(o.x - u * 0.75f * k, o.y - u * 0.75f * k), Size(u * 1.5f * k, u * 1.5f * k), style = Stroke(fino))
+            drawCircle(e.primary.copy(alpha = 0.6f), fino * 1.1f, Offset(o.x - u * 1.06f, o.y - u * 1.06f))
         }
         TemaId.FRENTE -> {
             // Arriba a la izquierda, la fila de pilotos de estado (rojo, ámbar y verde de radar) con su bisel; abajo a la
@@ -1945,7 +2003,11 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
         TemaId.MEDIEVAL -> drawCircle(c, d * 0.8f, Offset(w / 2, d * 1.4f))
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(w / 2, d * 1.6f), d * 1.2f), c)
         TemaId.DISTOPIA -> drawRect(c, Offset.Zero, Size(w, d))
-        TemaId.ARCONTES -> drawRect(c, Offset.Zero, Size(w, d))
+        // La llama de una lámpara, que sube desde el borde de abajo.
+        TemaId.ARCONTES -> drawPath(Path().apply {
+            moveTo(w / 2, h - d * 2.4f); quadraticTo(w / 2 + d * 1.1f, h - d * 0.9f, w / 2 + d * 0.6f, h)
+            lineTo(w / 2 - d * 0.6f, h); quadraticTo(w / 2 - d * 1.1f, h - d * 0.9f, w / 2, h - d * 2.4f); close()
+        }, c)
         // El barrido de radar que entra por la esquina de abajo, con su anillo de distancia.
         TemaId.FRENTE -> {
             drawArc(c, 200f, 50f, true, Offset(w - d * 3f, h - d * 3f), Size(d * 6f, d * 6f))
@@ -2073,9 +2135,13 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
             drawRect(c, Offset(m * 0.7f, m * 0.7f), Size(w - m * 1.4f, h - m * 1.4f), style = Stroke(fino))
             drawRect(c, Offset(m * 1.4f, m * 1.4f), Size(w - m * 2.8f, h - m * 2.8f), style = Stroke(fino * 0.6f))
         }
+        // El arco del nicho, repetido por dentro, y la chispa a la izquierda.
         TemaId.ARCONTES -> {
-            drawRect(c, Offset(m * 0.7f, m * 0.7f), Size(w - m * 1.4f, h - m * 1.4f), style = Stroke(fino))
-            drawRect(c, Offset(m * 1.4f, m * 1.4f), Size(w - m * 2.8f, h - m * 2.8f), style = Stroke(fino * 0.6f))
+            val a = minOf(h * 0.14f, w * 0.06f)
+            drawPath(Path().apply { moveTo(m * 1.2f, a + m * 0.9f); quadraticTo(w / 2, -a + m * 1.6f, w - m * 1.2f, a + m * 0.9f) }, c, style = Stroke(fino * 0.8f))
+            val q = Offset(m * 2.6f, h / 2 + m * 0.2f)
+            drawPath(Path().apply { moveTo(q.x, q.y - m * 0.95f); quadraticTo(q.x, q.y, q.x + m * 0.6f, q.y); quadraticTo(q.x, q.y, q.x, q.y + m * 0.95f)
+                quadraticTo(q.x, q.y, q.x - m * 0.6f, q.y); quadraticTo(q.x, q.y, q.x, q.y - m * 0.95f); close() }, c)
         }
         // La tecla grande de la consola: un piloto con su aro a la izquierda y la rejilla de ventilación a la derecha.
         TemaId.FRENTE -> {
@@ -2275,10 +2341,12 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawRect(a, Offset(f(0.14f), f(0.6f)), Size(f(0.72f), f(0.28f)))
         }
         TemaId.ARCONTES -> {
-            // Sello de goma.
-            drawCircle(l, f(0.16f), Offset(f(0.5f), f(0.2f)))
-            drawRect(l, Offset(f(0.44f), f(0.3f)), Size(f(0.12f), f(0.3f)))
-            drawRect(a, Offset(f(0.14f), f(0.6f)), Size(f(0.72f), f(0.28f)))
+            // El cálamo de caña, con la punta hendida, y el tintero de barro con su tinta negra.
+            drawPath(Path().apply { moveTo(f(0.1f), f(0.62f)); lineTo(f(0.12f), f(0.94f)); lineTo(f(0.44f), f(0.94f)); lineTo(f(0.46f), f(0.62f)); close() }, l, style = tr)
+            drawOval(a.copy(alpha = 0.55f), Offset(f(0.13f), f(0.58f)), Size(f(0.3f), f(0.1f)))
+            drawLine(a, Offset(f(0.34f), f(0.66f)), Offset(f(0.9f), f(0.08f)), tr.width * 1.7f, StrokeCap.Round)
+            listOf(0.52f, 0.7f).forEach { k -> drawLine(l, Offset(f(k - 0.04f), f(1.0f - k - 0.04f)), Offset(f(k + 0.05f), f(1.0f - k + 0.05f)), tr.width * 0.8f) }
+            drawLine(l, Offset(f(0.34f), f(0.66f)), Offset(f(0.42f), f(0.58f)), tr.width * 0.6f)
         }
         TemaId.FRENTE -> {
             // El manipulador de Morse: la base, la palanca con su eje y la perilla, y una raya, un punto y una raya encima.

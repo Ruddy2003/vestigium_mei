@@ -670,13 +670,17 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
             }
         }
+        // El ascenso por las siete esferas: el hilo fino del camino con los siete aros, uno por esfera; lo recorrido, en el
+        // color del tema, con los aros que ya se cruzaron llenos, y en la punta, la chispa que sube.
         TemaId.ARCONTES -> {
-            drawRect(color.copy(alpha = 0.4f), Offset(0.5f * d, 0.5f * d), Size(w - d, h - d), style = Stroke(d))
-            if (fw > 0f) {
-                drawRect(color.copy(alpha = 0.35f), Offset.Zero, Size(fw, h))
-                clipRect(right = fw) { var x = -h; while (x < fw) { drawLine(color, Offset(x, h), Offset(x + h, 0f), 1.6f * d); x += 3.2f * d } }
-                drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
+            drawLine(color.copy(alpha = 0.3f), Offset(0f, h / 2), Offset(w, h / 2), 0.8f * d)
+            if (fw > 0f) drawLine(color, Offset(0f, h / 2), Offset(fw, h / 2), h * 0.28f, StrokeCap.Round)
+            for (k in 0 until 7) {
+                val x = w * (k + 0.5f) / 7f; val rr = h * 0.36f
+                if (x <= fw) drawCircle(color, rr, Offset(x, h / 2)) else drawCircle(pista.copy(alpha = 0.6f), rr, Offset(x, h / 2))
+                drawCircle(color.copy(alpha = if (x <= fw) 1f else 0.45f), rr, Offset(x, h / 2), style = Stroke(0.8f * d))
             }
+            if (fw > 0f) with(io.github.ruddy2003.vestigium.ui.TrazosArcontes) { chispa(Offset(fw, h / 2), h * 0.7f, 1f, GRIETA, GRIETA_HALO) }
         }
         // El dial de sintonía de la radio de maleta: la escala con sus marcas, la franja de lo recorrido y la aguja roja
         // donde llega.
@@ -1090,11 +1094,18 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)
             marcas(24, 4f * d, 2.2f * d, tinta.copy(alpha = 0.6f))
         }
+        // Las siete esferas al centro, con la tierra en medio, y en el canto las horas; las de la noche, partidas en las
+        // cuatro vigilias de Marcos 13:35 (la tarde, la medianoche, el canto del gallo y la mañana), cada una con su llamita en
+        // medio.
         TemaId.ARCONTES -> {
-            val l = rc * 0.7f
-            drawPath(Path().apply { moveTo(c.x - l, c.y); quadraticTo(c.x, c.y - l * 0.9f, c.x + l, c.y); quadraticTo(c.x, c.y + l * 0.9f, c.x - l, c.y); close() }, tinta.copy(alpha = 0.5f), style = Stroke(1.5f * d))
-            drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)
-            marcas(24, 4f * d, 2.2f * d, tinta.copy(alpha = 0.6f))
+            with(io.github.ruddy2003.vestigium.ui.TrazosArcontes) { esferas(c, rc * 0.82f, linea.copy(alpha = 0.45f), 0.8f * d) }
+            drawCircle(io.github.ruddy2003.vestigium.ui.TrazosArcontes.LAGO.copy(alpha = 0.6f), rc * 0.12f, c)
+            marcas(24, 2f * d, 0.8f * d, linea)
+            listOf(19.5f, 22.5f, 1.5f, 4.5f).forEach { hora ->
+                val p = polarFig(c, ro + 5f * d, hora * 15f - 90f)
+                drawPath(Path().apply { moveTo(p.x - 1.6f * d, p.y + 1.8f * d); quadraticTo(p.x - 2f * d, p.y - 0.6f * d, p.x, p.y - 3.2f * d); quadraticTo(p.x + 2f * d, p.y - 0.6f * d, p.x + 1.6f * d, p.y + 1.8f * d); close() },
+                    io.github.ruddy2003.vestigium.ui.TrazosArcontes.LLAMA)
+            }
         }
         // El reloj de la sala de mando: el emblema de la red al centro, el anillo punteado de bronce de la hora de la capital,
         // un piloto ámbar cada seis horas y, en el canto, la ventana de transmisión de hoy marcada en ámbar.

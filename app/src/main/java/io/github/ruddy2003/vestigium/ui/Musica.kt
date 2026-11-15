@@ -495,18 +495,33 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
         }
     }
-    TemaId.ARCONTES -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "EXP. " + t.nombre.uppercase(), "TOQUE PARA ACUSAR RECIBO",
-        comillas = "“" to "”", emblema = 88.dp, arriba = 52.dp, abajo = 70.dp) { e ->
+    // La entrada de la sala escondida: el arco rebajado tallado en la caliza, con su dovela clave y el doble filo; dentro
+    // del arco, los siete círculos de las esferas apenas trazados; una grieta finísima en la jamba de la derecha y, al pie,
+    // dos lámparas encendidas a los lados del umbral. El amuleto va abajo, como un sello; los títulos, en voz baja.
+    TemaId.ARCONTES -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ABAJO, false, t.nombre, "∴  toca, y que la lámpara no se apague",
+        emblema = 112.dp, arriba = 86.dp, abajo = 74.dp) { e ->
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
-        val c = e.onSurface.copy(alpha = 0.55f)
-        drawPath(Path().apply { moveTo(0f, u * 18); lineTo(u * 10, 0f); lineTo(u * 110, 0f); lineTo(u * 120, u * 18) }, c, style = Stroke(u * 1.3f))
-        drawRect(c, Offset(0f, u * 18), Size(w, h - u * 18), style = Stroke(u * 1.3f))
-        for (i in 0 until 14) drawRect(c, Offset(w - u * 84 + i * u * 5, u * 26), Size(u * (if (i % 3 == 0) 2.4f else 1.2f), u * 14))
-        val centro = Offset(w - u * 62, h - u * 36)
-        rotate(-12f, centro) {
-            drawRect(e.primary.copy(alpha = 0.7f), Offset(centro.x - u * 46, centro.y - u * 17), Size(u * 92, u * 34), style = Stroke(u * 2.2f))
-            drawRect(e.primary.copy(alpha = 0.5f), Offset(centro.x - u * 41, centro.y - u * 12), Size(u * 82, u * 24), style = Stroke(u))
-            drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
+        val c = e.tertiary.copy(alpha = 0.7f); val l = u * 1.4f
+        val flecha = u * 52
+        val arco = Path().apply {
+            moveTo(u * 8, h - u * 6); lineTo(u * 8, flecha)
+            quadraticTo(w / 2, -flecha * 0.55f, w - u * 8, flecha)
+            lineTo(w - u * 8, h - u * 6)
+        }
+        drawPath(arco, c, style = Stroke(l))
+        drawPath(Path().apply { moveTo(u * 16, h - u * 6); lineTo(u * 16, flecha + u * 6); quadraticTo(w / 2, -flecha * 0.38f, w - u * 16, flecha + u * 6); lineTo(w - u * 16, h - u * 6) },
+            c.copy(alpha = 0.3f), style = Stroke(u * 0.8f))
+        // La dovela clave, arriba en el centro.
+        drawPath(Path().apply { moveTo(w / 2 - u * 9, u * 6); lineTo(w / 2 + u * 9, u * 6); lineTo(w / 2 + u * 6, u * 26); lineTo(w / 2 - u * 6, u * 26); close() }, c, style = Stroke(l))
+        // Las siete esferas, que asoman por debajo de la clave.
+        for (i in 0 until 7) drawArc(c.copy(alpha = 0.32f - i * 0.03f), 20f, 140f, false, Offset(w / 2 - (14 + i * 9) * u, u * 26 - (14 + i * 9) * u), Size((28 + i * 18) * u, (28 + i * 18) * u), style = Stroke(u * 0.8f))
+        // El umbral y las dos lámparas.
+        drawLine(c, Offset(0f, h - u * 6), Offset(w, h - u * 6), l)
+        drawLine(c.copy(alpha = 0.4f), Offset(u * 4, h - u * 2), Offset(w - u * 4, h - u * 2), u * 0.8f)
+        with(TrazosArcontes) {
+            lampara(Offset(u * 34, h - u * 14), u * 30, BARRO_CLARO, 1f)
+            lampara(Offset(w - u * 38, h - u * 14), u * 30, BARRO_CLARO, 1f)
+            grieta(Offset(w - u * 12, h * 0.42f), Offset(w - u * 11, h * 0.42f + u * 44), u * 0.9f, 0.85f, 6)
         }
     }
     // La pantalla redonda de la sala de mando: el emblema en el centro de la retícula, con el barrido verde que gira, el

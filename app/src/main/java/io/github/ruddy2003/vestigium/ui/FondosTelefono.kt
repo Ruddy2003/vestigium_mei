@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.rememberGraphicsLayer
 import androidx.compose.ui.graphics.toArgb
@@ -218,7 +219,7 @@ object FondosTelefono {
         TemaId.MEDIEVAL -> "Liber vestigii mei"
         TemaId.TEMPLARIO -> "Non nobis, Domine · Vestigium"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
-        TemaId.ARCONTES -> "EXPEDIENTE PERSONAL"
+        TemaId.ARCONTES -> "Códice de Magdala · Vestigium"
         TemaId.FRENTE -> "CÉLULA K-7 · VESTIGIUM"
         TemaId.REFUGIO -> "VESTIGIUM-MEI OS"
         TemaId.ORDEN -> "ORDO · VESTIGII"
@@ -280,6 +281,45 @@ fun FondoTelefonoVista(tema: TemaId, oscuro: Boolean, modifier: Modifier = Modif
             }
         }
     }
+}
+
+/**
+ * Arcontes: el nicho tallado en la caliza de la casa. El marco sube recto y cierra arriba en un arco, con un filete por dentro;
+ * en la clave, el ouroboros con la chispa; a los lados, las siete esferas en hilera, que suben; abajo, la lámpara encendida
+ * sobre su repisa; y de noche, por una grieta del lado derecho, la luz blanca y violeta.
+ */
+private fun DrawScope.marcoArcontes(e: androidx.compose.material3.ColorScheme, izq: Float, der: Float, arr: Float, aba: Float, col: Color, tenue: Color, claro: Boolean) {
+    val u = 1.dp.toPx(); val cx = (izq + der) / 2; val flecha = (der - izq) * 0.32f
+    fun nicho(d: Float) = Path().apply {
+        moveTo(izq + d, aba - d); lineTo(izq + d, arr + flecha)
+        cubicTo(izq + d, arr + d + flecha * 0.1f, cx - (der - izq) * 0.2f, arr + d, cx, arr + d)
+        cubicTo(cx + (der - izq) * 0.2f, arr + d, der - d, arr + d + flecha * 0.1f, der - d, arr + flecha)
+        lineTo(der - d, aba - d); close()
+    }
+    drawPath(nicho(0f), col, style = Stroke(1.6f * u))
+    drawPath(nicho(7 * u), tenue, style = Stroke(0.7f * u))
+    // La clave del arco: el ouroboros con la chispa dentro.
+    val clave = Offset(cx, arr + 3.5f * u)
+    drawCircle(e.background, 17 * u, clave)
+    with(TrazosArcontes) {
+        ouroboros(clave, 12 * u, 4.2f * u, e.primary.copy(alpha = 0.75f), -90f, e.background)
+        if (claro) chispa(clave, 6 * u, 0.9f, e.tertiary, e.tertiary.copy(alpha = 0.5f)) else chispa(clave, 6 * u, 0.9f)
+    }
+    // Las siete esferas a cada lado, una sobre otra, cada vez mayores hacia arriba.
+    listOf(izq + 15 * u, der - 15 * u).forEach { x ->
+        for (k in 0 until 7) {
+            val y = aba - 70 * u - k * 26 * u
+            if (y < arr + flecha + 10 * u) break
+            drawCircle(tenue, (2.4f + 0.35f * k) * u, Offset(x, y), style = Stroke(0.9f * u))
+        }
+    }
+    // La repisa y la lámpara encendida.
+    val repisa = aba - 16 * u
+    drawLine(col, Offset(cx - 44 * u, repisa), Offset(cx + 44 * u, repisa), 1.4f * u)
+    drawLine(tenue, Offset(cx - 38 * u, repisa + 4 * u), Offset(cx + 38 * u, repisa + 4 * u), 0.8f * u)
+    with(TrazosArcontes) { lampara(Offset(cx - 2 * u, repisa - 8 * u), 50 * u, if (claro) TrazosArcontes.BARRO_CLARO else lerp(TrazosArcontes.BARRO, e.background, 0.25f)) }
+    // De noche, la grieta por el lado derecho.
+    if (!claro) with(TrazosArcontes) { grieta(Offset(der - 3 * u, aba - (aba - arr) * 0.42f), Offset(der - 34 * u, aba - (aba - arr) * 0.3f), 0.9f * u, 0.6f, 11) }
 }
 
 /** Una estrella pequeña de [puntas] puntas, para adornar los marcos. */
@@ -425,17 +465,7 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     drawLine(tenue, c + Offset(0f, sy * 4 * u), c + Offset(0f, sy * 14 * u), 1f * u)
                 }
             }
-            TemaId.ARCONTES -> {
-                // Carpeta de expediente: línea gruesa, dos perforaciones, una franja de «clasificado» y marcas de corte.
-                caja(0f, col, 2f * u)
-                listOf(cy - 40 * u, cy + 40 * u).forEach { y -> drawCircle(tenue, 5 * u, Offset(izq + 16 * u, y), style = Stroke(1.2f * u)) }
-                clipRect(izq, arr, der, aba) { drawLine(e.primary.copy(alpha = 0.3f), Offset(der - 46 * u, arr), Offset(der, arr + 46 * u), 8 * u) }
-                esquinas.forEach { c ->
-                    val sx = if (c.x < size.width / 2) -1f else 1f; val sy = if (c.y < size.height / 2) -1f else 1f
-                    drawLine(tenue, c + Offset(sx * 4 * u, 0f), c + Offset(sx * 14 * u, 0f), 1f * u)
-                    drawLine(tenue, c + Offset(0f, sy * 4 * u), c + Offset(0f, sy * 14 * u), 1f * u)
-                }
-            }
+            TemaId.ARCONTES -> marcoArcontes(e, izq, der, arr, aba, col, tenue, claro)
             TemaId.FRENTE -> {
                 // El bisel de la pantalla grande de la consola: doble marco de esquinas redondas, un tornillo en cada esquina,
                 // la escala grabada por la izquierda, la perilla de sintonía a la derecha, la placa del rótulo arriba y, abajo,

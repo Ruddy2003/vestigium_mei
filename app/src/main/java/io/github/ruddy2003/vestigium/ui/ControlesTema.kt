@@ -71,6 +71,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -262,7 +263,15 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     }, 7.dp, 0.dp, true, 1.4.dp)
     // Hoja de expediente: recta y con borde grueso.
     TemaId.DISTOPIA -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
-    TemaId.ARCONTES -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
+    // La hoja de papiro de un códice: los lados rectos y los cantos de arriba y de abajo rotos, cada uno a su manera.
+    TemaId.ARCONTES -> PielDialogo(FormaDp { w, h, d ->
+        val a = 3.5f * d; val paso = 7 * d
+        moveTo(0f, a); var x = 0f
+        while (x < w) { val nx = minOf(x + paso, w); lineTo(nx, a * (0.5f + 0.5f * sin(nx / d * 0.37f) * cos(nx / d * 0.11f))); x = nx }
+        lineTo(w, h - a); x = w
+        while (x > 0f) { val nx = maxOf(x - paso, 0f); lineTo(nx, h - a * (0.5f + 0.5f * sin(nx / d * 0.29f + 1.7f) * cos(nx / d * 0.13f))); x = nx }
+        close()
+    }, 4.dp, 4.dp, true, 1.2.dp)
     // El monitor de la consola: la cara de arriba arqueada como el mueble curvo, esquinas grandes arriba y pequeñas abajo.
     TemaId.FRENTE -> PielDialogo(FormaDp { w, h, d ->
         val r = 22 * d; val a = 7 * d; val q = 10 * d
@@ -494,17 +503,14 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             }
         }
         TemaId.ARCONTES -> {
-            // Dos perforaciones de archivador y un sello de goma ladeado abajo a la izquierda.
-            listOf(0.3f, 0.7f).forEach { fy ->
-                drawCircle(e.onSurface.copy(alpha = 0.18f), 3.5f * d, Offset(11 * d, h * fy))
-                drawCircle(e.onSurface.copy(alpha = 0.5f), 3.5f * d, Offset(11 * d, h * fy), style = Stroke(d))
-            }
-            val o = Offset(14 * d, h - 34 * d)
-            rotate(-8f, Offset(o.x + 26 * d, o.y + 10 * d)) {
-                drawRect(e.primary.copy(alpha = 0.55f), o, Size(52 * d, 20 * d), style = Stroke(1.6f * d))
-                drawRect(e.primary.copy(alpha = 0.55f), Offset(o.x + 3 * d, o.y + 3 * d), Size(46 * d, 14 * d), style = Stroke(0.7f * d))
-                drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 8 * d), Offset(o.x + 40 * d, o.y + 8 * d), 2 * d)
-                drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 13 * d), Offset(o.x + 30 * d, o.y + 13 * d), 2 * d)
+            // Las fibras del papiro, de través y apenas a lo largo; la chispa arriba a la derecha y el ouroboros abajo a la izquierda.
+            var y = 10 * d
+            while (y < h - 8 * d) { drawLine(e.onSurface.copy(alpha = 0.045f), Offset(4 * d, y), Offset(w - 4 * d, y + (y % 3f) * 0.3f * d), 0.8f * d); y += 4.5f * d }
+            var x = 22 * d
+            while (x < w - 10 * d) { drawLine(e.onSurface.copy(alpha = 0.03f), Offset(x, 6 * d), Offset(x - 1.5f * d, h - 6 * d), 0.7f * d); x += 31 * d }
+            with(TrazosArcontes) {
+                if (e.background.luminance() < 0.5f) chispa(Offset(w - 18 * d, 20 * d), 5 * d, 0.9f) else chispa(Offset(w - 18 * d, 20 * d), 5 * d, 0.9f, e.tertiary, e.tertiary.copy(alpha = 0.4f))
+                ouroboros(Offset(20 * d, h - 20 * d), 7 * d, 2.6f * d, e.primary.copy(alpha = 0.45f), -90f)
             }
         }
         TemaId.FRENTE -> {
@@ -862,8 +868,14 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
         }
         TemaId.ARCONTES -> {
-            drawRect(e.onSurface, Offset(0f, cy - 3 * d), Size(w, 3 * d))
-            drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
+            // Un hilo que se enciende hacia el centro, donde está la chispa entre dos esferas.
+            drawLine(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(e.primary.copy(alpha = 0f), e.primary.copy(alpha = 0.7f), e.primary.copy(alpha = 0f))), Offset(0f, cy), Offset(w, cy), d)
+            drawCircle(e.surface, 9 * d, Offset(w / 2, cy))
+            drawCircle(e.primary.copy(alpha = 0.6f), 8 * d, Offset(w / 2, cy), style = Stroke(0.8f * d))
+            drawCircle(e.primary.copy(alpha = 0.35f), 11 * d, Offset(w / 2, cy), style = Stroke(0.6f * d))
+            val q = Offset(w / 2, cy)
+            drawPath(Path().apply { moveTo(q.x, q.y - 5 * d); quadraticTo(q.x, q.y, q.x + 3.4f * d, q.y); quadraticTo(q.x, q.y, q.x, q.y + 5 * d)
+                quadraticTo(q.x, q.y, q.x - 3.4f * d, q.y); quadraticTo(q.x, q.y, q.x, q.y - 5 * d); close() }, e.tertiary)
         }
         // La regla de la consola con su escala, tres pilotos delante y el tramo ámbar del nivel al final.
         TemaId.FRENTE -> {
@@ -1264,9 +1276,16 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
         }
         TemaId.ARCONTES -> {
-            if (x > 0f) drawRect(activo, Offset(0f, cy - g / 2), Size(x, g))
-            drawRect(inactivo, Offset(0f, cy - g / 2), Size(w, g), style = Stroke(maxOf(g * 0.15f, 0.8f * d)))
-            for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
+            // El hilo que sube por las siete esferas: lo recorrido, una barra de luz con su halo; las esferas que ya pasó, llenas.
+            linea(inactivo, x, w, maxOf(g * 0.22f, 0.7f * d))
+            if (x > 0f) {
+                drawLine(activo.copy(alpha = activo.alpha * 0.25f), Offset(0f, cy), Offset(x, cy), g * 1.3f, cap = StrokeCap.Round)
+                drawLine(activo, Offset(0f, cy), Offset(x, cy), g * 0.55f, cap = StrokeCap.Round)
+            }
+            for (k in 1..7) {
+                val px = w * k / 8f; val r = maxOf(g * 0.42f, 1.6f * d)
+                if (px <= x) drawCircle(activo, r, Offset(px, cy)) else { drawCircle(e.surface, r, Offset(px, cy)); drawCircle(inactivo, r, Offset(px, cy), style = Stroke(maxOf(g * 0.14f, 0.6f * d))) }
+            }
         }
         // El medidor de segmentos de la consola: barritas apagadas por recorrer y encendidas, con su halo, hasta donde va.
         TemaId.FRENTE -> {
@@ -1562,8 +1581,14 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
         }
         TemaId.ARCONTES -> {
-            drawPath(Path().apply { moveTo(c.x - r * 0.7f, c.y - r * 0.9f); lineTo(c.x + r * 0.7f, c.y - r * 0.9f); lineTo(c.x, c.y + r * 0.1f); close() }, color)
-            drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
+            // La llama de la lámpara, con su corazón claro.
+            drawPath(Path().apply {
+                moveTo(c.x, c.y - r * 0.98f); quadraticTo(c.x + r * 0.95f, c.y + r * 0.05f, c.x + r * 0.42f, c.y + r * 0.72f)
+                quadraticTo(c.x, c.y + r * 1.02f, c.x - r * 0.42f, c.y + r * 0.72f); quadraticTo(c.x - r * 0.95f, c.y + r * 0.05f, c.x, c.y - r * 0.98f); close()
+            }, color)
+            drawPath(Path().apply {
+                moveTo(c.x, c.y - r * 0.2f); quadraticTo(c.x + r * 0.4f, c.y + r * 0.35f, c.x, c.y + r * 0.66f); quadraticTo(c.x - r * 0.4f, c.y + r * 0.35f, c.x, c.y - r * 0.2f); close()
+            }, hueco.copy(alpha = 0.6f))
         }
         // La perilla de baquelita: el disco con su canto moleteado y la raya que marca hacia arriba.
         TemaId.FRENTE -> {

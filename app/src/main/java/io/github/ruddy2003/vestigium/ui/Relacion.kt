@@ -96,7 +96,11 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     // El escudo: recto arriba y redondo abajo.
     TemaId.TEMPLARIO -> MarcoRecuadro(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 16.dp), 12.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
-    TemaId.ARCONTES -> MarcoRecuadro(RectangleShape, 12.dp)
+    // El nicho tallado en la caliza: recto a los lados y cerrado arriba por un arco rebajado.
+    TemaId.ARCONTES -> MarcoRecuadro(androidx.compose.foundation.shape.GenericShape { s, _ ->
+        val a = minOf(s.height * 0.14f, s.width * 0.1f)
+        moveTo(0f, s.height); lineTo(0f, a); quadraticTo(s.width / 2, -a, s.width, a); lineTo(s.width, s.height); close()
+    }, 14.dp)
     // La pantalla de la consola, de esquinas muy redondas, como el vidrio de un tubo de los setenta.
     TemaId.FRENTE -> MarcoRecuadro(RoundedCornerShape(22.dp), 11.dp)
     TemaId.REFUGIO -> MarcoRecuadro(RoundedCornerShape(12.dp), 10.dp)
@@ -292,14 +296,19 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 x += 12 * u
             }
         }
+        // La red de pesca del lago: una franja de mallas anudadas, más alta cuanto más fuerte el lazo, y un plomo en cada punta.
         TemaId.ARCONTES -> {
-            drawLine(col, Offset(0f, y), Offset(w, y), grosor * 0.7f + 0.6f * u, pathEffect = punteado)
-            val b = 2.5f * u + grosor * 0.35f
-            var x = 9 * u
-            while (x < w - 6 * u) {
-                drawLine(col, Offset(x - b, y - b), Offset(x + b, y + b), 1.1f * u); drawLine(col, Offset(x - b, y + b), Offset(x + b, y - b), 1.1f * u)
-                x += 12 * u
+            val m = 7 * u; val alto = (2.6f + 4.4f * fuerza) * u; val paso = 6 * u
+            val red = Path(); var x = m
+            while (x + paso <= w - m + 0.1f) {
+                red.moveTo(x, y - alto); red.lineTo(x + paso, y + alto); red.moveTo(x, y + alto); red.lineTo(x + paso, y - alto)
+                x += paso
             }
+            drawPath(red, col, style = Stroke(0.7f * u + grosor * 0.12f, pathEffect = punteado))
+            listOf(y - alto, y + alto).forEach { yy -> drawLine(col, Offset(m - 2 * u, yy), Offset(x + 2 * u, yy), 1f * u + grosor * 0.2f, cap = StrokeCap.Round, pathEffect = punteado) }
+            var n = m + paso / 2
+            while (n < x) { drawCircle(col, 0.8f * u + grosor * 0.12f, Offset(n, y)); n += paso }
+            listOf(m - 3 * u, x + 3 * u).forEach { px -> drawOval(col, Offset(px - 2 * u, y + alto - 1.5f * u), Size(4 * u, 3 * u)) }
         }
         // El enlace de radio entre dos antenas: la portadora va de una a otra y oscila más alto cuanto más fuerte el lazo.
         TemaId.FRENTE -> {

@@ -1572,84 +1572,33 @@ object TrofeosMas {
                 brillo(Offset(c.x - r * 0.6f, c.y - r * 0.55f), Offset(c.x - r * 0.25f, c.y - r * 0.8f), lw * 1.6f, 0.35f)
             }
             "Cuerpo" -> {
-                // El amuleto de Abraxas, como las gemas antiguas: un óvalo de jaspe verde con sus vetas rojas, engastado en el
-                // metal del nivel y grabado con la figura de cabeza de gallo, coraza, piernas de serpiente, el látigo en una mano
-                // y el escudo en la otra. Descansa en dos garras sobre el sillar.
+                // El amuleto de Abraxas, como las gemas antiguas: el cabujón de jaspe verde con sus motas rojas, engastado en el
+                // metal del nivel y grabado con la figura de cabeza de gallo, coraza, piernas de serpiente, el látigo y el
+                // escudo. Cuelga de su argolla y descansa en dos garras sobre el sillar.
                 basa(0.3f, 0.7f); sombraPie(0.36f, 0.64f)
-                listOf(-1f, 1f).forEach { s -> drawLine(p.metal(0.4f, 0.6f), p.o(0.5f + s * 0.09f, 0.7f), p.o(0.5f + s * 0.065f, 0.585f), lw * 1.5f, StrokeCap.Round) }
-                val g = p.o(0.5f, 0.375f); val rx = p.w * 0.2f; val ry = p.h * 0.2f
-                drawCircle(p.metal(0.46f, 0.54f), p.w * 0.04f, p.o(0.5f, 0.135f), style = Stroke(lw * 1.3f))
-                drawOval(p.metal(0.27f, 0.73f), Offset(g.x - rx * 1.13f, g.y - ry * 1.09f), Size(rx * 2.26f, ry * 2.18f))
-                if (p.hecho) drawOval(p.linea, Offset(g.x - rx * 1.13f, g.y - ry * 1.09f), Size(rx * 2.26f, ry * 2.18f), style = Stroke(lw * 0.4f))
-                val gema = Path().apply { addOval(Rect(g.x - rx, g.y - ry, g.x + rx, g.y + ry)) }
-                drawPath(gema, bulto(jaspe, g, rx))
-                if (p.hecho) clipPath(gema) {
-                    val az = java.util.Random(23)
-                    repeat(9) { drawCircle(jaspeRojo.copy(alpha = 0.35f + 0.3f * az.nextFloat()), lw * (0.4f + az.nextFloat() * 0.9f), Offset(g.x + (az.nextFloat() - 0.5f) * rx * 1.8f, g.y + (az.nextFloat() - 0.5f) * ry * 1.8f)) }
-                    drawLine(jaspeRojo.copy(alpha = 0.25f), Offset(g.x - rx, g.y + ry * 0.5f), Offset(g.x + rx, g.y + ry * 0.2f), lw * 0.8f)
-                }
-                // La figura grabada: la talla deja el surco hondo (oscuro, corrido) y la cara de la talla, clara, que coge la luz.
-                val s = ry
-                fun q(fx: Float, fy: Float) = Offset(g.x + fx * s, g.y + fy * s)
-                fun poli(vararg k: Float) = Path().apply { var i = 0; while (i + 1 < k.size) { val o = q(k[i], k[i + 1]); if (i == 0) moveTo(o.x, o.y) else lineTo(o.x, o.y); i += 2 }; close() }
-                val surco = if (p.hecho) lerp(jaspe, Color.Black, 0.55f) else p.sombra
-                val filo = if (p.hecho) lerp(jaspe, Color.White, 0.6f) else p.sombra
-                fun abraxas(col: Color, d: Offset) {
-                    fun mueve(pp: Path) = Path().apply { addPath(pp, d) }
-                    val trazo = Stroke(s * 0.075f, cap = StrokeCap.Round, join = StrokeJoin.Round)
-                    // Las piernas de serpiente, que se abren y terminan en sus cabezas, mirando afuera.
-                    listOf(-1f, 1f).forEach { sx ->
-                        val pierna = Path().apply {
-                            val a = q(sx * 0.06f, 0.0f); val b = q(sx * 0.06f, 0.28f); val c2 = q(sx * 0.4f, 0.14f); val e = q(sx * 0.36f, 0.42f)
-                            moveTo(a.x, a.y); cubicTo(b.x, b.y, c2.x, c2.y, e.x, e.y)
-                        }
-                        drawPath(mueve(pierna), col, style = trazo)
-                        drawOval(col, q(sx * 0.36f - 0.07f + sx * 0.05f, 0.39f) + d, Size(s * 0.14f, s * 0.09f))
-                    }
-                    // La coraza y el faldellín, llenos.
-                    drawPath(mueve(poli(-0.15f, -0.46f, 0.15f, -0.46f, 0.11f, -0.12f, -0.11f, -0.12f)), col)
-                    drawPath(mueve(poli(-0.17f, -0.12f, 0.17f, -0.12f, 0.14f, 0.04f, -0.14f, 0.04f)), col)
-                    // El brazo que alza el látigo, con su tralla, y el brazo del escudo.
-                    drawPath(mueve(Path().apply { val a = q(-0.12f, -0.42f); val b = q(-0.3f, -0.5f); val c2 = q(-0.32f, -0.68f); moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c2.x, c2.y) }), col, style = trazo)
-                    drawPath(mueve(Path().apply { val a = q(-0.32f, -0.66f); val b = q(-0.38f, -0.84f); moveTo(a.x, a.y); lineTo(b.x, b.y) }), col, style = Stroke(s * 0.05f, cap = StrokeCap.Round))
-                    drawPath(mueve(Path().apply { val a = q(-0.38f, -0.84f); val b = q(-0.28f, -0.96f); val c2 = q(-0.1f, -0.92f); val e = q(-0.08f, -0.76f); moveTo(a.x, a.y); cubicTo(b.x, b.y, c2.x, c2.y, e.x, e.y) }), col, style = Stroke(s * 0.03f, cap = StrokeCap.Round))
-                    drawPath(mueve(Path().apply { val a = q(0.12f, -0.42f); val b = q(0.24f, -0.33f); moveTo(a.x, a.y); lineTo(b.x, b.y) }), col, style = trazo)
-                    drawCircle(col, s * 0.17f, q(0.34f, -0.3f) + d, style = Stroke(s * 0.07f))
-                    // La cabeza de gallo de perfil: la cresta, el pico y la barba.
-                    drawPath(mueve(Path().apply { val a = q(-0.04f, -0.46f); val b = q(0.05f, -0.46f); moveTo(a.x, a.y); lineTo(b.x, b.y) }), col, style = trazo)
-                    drawCircle(col, s * 0.12f, q(0.0f, -0.6f) + d)
-                    drawPath(mueve(poli(0.1f, -0.65f, 0.25f, -0.6f, 0.1f, -0.55f)), col)
-                    listOf(-0.06f, 0.0f, 0.06f).forEach { fx -> drawCircle(col, s * 0.045f, q(fx, -0.73f + kotlin.math.abs(fx) * 0.5f) + d) }
-                    drawOval(col, q(0.05f, -0.52f) + d, Size(s * 0.06f, s * 0.1f))
-                }
-                abraxas(surco, Offset(-s * 0.025f, -s * 0.025f))
-                abraxas(filo, Offset.Zero)
+                listOf(-1f, 1f).forEach { s -> drawLine(p.metal(0.4f, 0.6f), p.o(0.5f + s * 0.1f, 0.7f), p.o(0.5f + s * 0.075f, 0.6f), lw * 1.5f, StrokeCap.Round) }
+                val g = p.o(0.5f, 0.39f); val rg = p.w * 0.24f
+                drawCircle(p.metal(0.46f, 0.54f), p.w * 0.04f, Offset(g.x, g.y - rg * 1.22f), style = Stroke(lw * 1.3f))
+                drawCircle(metalBulto(g, rg * 1.12f), rg * 1.12f, g)
                 if (p.hecho) {
-                    // Lo que el grabador marcó adentro: el ojo, el cinto, el umbo del escudo y los ojos de las serpientes.
-                    drawCircle(surco, s * 0.03f, q(0.03f, -0.62f))
-                    drawLine(surco, q(-0.13f, -0.3f), q(0.13f, -0.3f), s * 0.025f)
-                    drawLine(surco, q(-0.115f, -0.12f), q(0.115f, -0.12f), s * 0.03f)
-                    drawCircle(surco, s * 0.045f, q(0.34f, -0.3f))
-                    listOf(-1f, 1f).forEach { sx -> drawCircle(surco, s * 0.015f, q(sx * 0.46f, 0.42f)) }
+                    for (i in 0 until 40) { val a = 2 * PI * i / 40; drawCircle(lerp(p.base, p.brillo, 0.6f), lw * 0.32f, Offset(g.x + rg * 1.06f * cos(a).toFloat(), g.y + rg * 1.06f * sin(a).toFloat())) }
+                    drawCircle(p.oscuro.copy(alpha = 0.6f), rg * 1.12f, g, style = Stroke(lw * 0.35f))
+                    with(TrazosArcontes) {
+                        gemaJaspe(g, rg)
+                        val d = maxOf(rg * 0.012f, 0.6f)
+                        abraxas(Offset(g.x - rg * 0.02f - d, g.y + rg * 0.02f - d), rg * 1.06f, GRABADO_SOMBRA.copy(alpha = 0.7f), GRABADO_SOMBRA.copy(alpha = 0f))
+                        abraxas(Offset(g.x - rg * 0.02f, g.y + rg * 0.02f), rg * 1.06f, GRABADO.copy(alpha = 0.92f), GRABADO_HUECO)
+                    }
+                } else {
+                    drawCircle(p.sombra, rg, g)
+                    with(TrazosArcontes) { abraxas(Offset(g.x - rg * 0.02f, g.y + rg * 0.02f), rg * 1.06f, p.sombra, p.sombra) }
                 }
-                brillo(Offset(g.x - rx * 0.62f, g.y - ry * 0.55f), Offset(g.x - rx * 0.3f, g.y - ry * 0.82f), lw * 1.4f, 0.32f)
             }
             "Mente" -> {
                 // El anillo de Salomón, el que según el Testamento de Salomón mandaba a los demonios: liso, en el metal del
                 // nivel, con su chatón pulido y sin grabar (la estrella del sello es medieval), sobre un cojín de lino. Detrás,
-                // en la pared, una sombra con cabeza de chacal que apenas se adivina.
-                if (p.hecho) {
-                    val sombra = TrazosArcontes.SOMBRA.copy(alpha = 0.09f)
-                    val perfil = Path().apply {
-                        moveTo(p.x(0.98f), p.y(0.62f)); lineTo(p.x(0.98f), p.y(0.3f))
-                        cubicTo(p.x(0.94f), p.y(0.25f), p.x(0.9f), p.y(0.24f), p.x(0.88f), p.y(0.2f))
-                        lineTo(p.x(0.9f), p.y(0.07f)); lineTo(p.x(0.85f), p.y(0.17f)); lineTo(p.x(0.83f), p.y(0.08f)); lineTo(p.x(0.8f), p.y(0.19f))
-                        cubicTo(p.x(0.76f), p.y(0.21f), p.x(0.7f), p.y(0.24f), p.x(0.64f), p.y(0.27f))
-                        lineTo(p.x(0.65f), p.y(0.3f)); cubicTo(p.x(0.72f), p.y(0.3f), p.x(0.77f), p.y(0.3f), p.x(0.8f), p.y(0.33f))
-                        cubicTo(p.x(0.8f), p.y(0.4f), p.x(0.76f), p.y(0.46f), p.x(0.7f), p.y(0.62f)); close()
-                    }
-                    drawPath(perfil, Brush.verticalGradient(listOf(sombra, sombra, Color.Transparent), p.y(0.1f), p.y(0.62f)))
-                }
+                // en la pared, la sombra de un arconte que apenas se adivina.
+                if (p.hecho) with(TrazosArcontes) { sombraArconte(p.o(0.84f, 0.24f), p.h * 0.11f, SOMBRA.copy(alpha = 0.1f), -1f, desvanece = true) }
                 basa(0.27f, 0.73f)
                 val cojin = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(p.r(0.3f, 0.6f, 0.7f, 0.705f), CornerRadius(p.w * 0.05f))) }
                 sombraPie(0.32f, 0.72f, 0.705f)
@@ -1712,7 +1661,7 @@ object TrofeosMas {
                 basa(0.27f, 0.73f); sombraPie(0.36f, 0.66f)
                 val c = p.o(0.47f, 0.395f); val ancho = p.w * 0.52f
                 if (p.hecho) {
-                    val llama = Offset(c.x + ancho * 0.46f, c.y - ancho * 0.34f * 0.32f - ancho * 0.15f)
+                    val llama = Offset(c.x + ancho * 0.39f, c.y - ancho * 0.36f * 0.4f - ancho * 0.12f)
                     drawCircle(Brush.radialGradient(listOf(TrazosArcontes.LLAMA_HALO.copy(alpha = 0.42f), TrazosArcontes.LLAMA_HALO.copy(alpha = 0.12f), Color.Transparent), llama, p.w * 0.42f), p.w * 0.42f, llama)
                 }
                 drawOval(p.metal(0.35f, 0.65f), Offset(p.x(0.35f), p.y(0.672f)), Size(p.x(0.3f), p.y(0.036f)))
@@ -1721,11 +1670,6 @@ object TrofeosMas {
                 drawOval(p.metal(0.31f, 0.69f), Offset(p.x(0.31f), p.y(0.445f)), Size(p.x(0.38f), p.y(0.04f)))
                 if (p.hecho) drawOval(p.oscuro.copy(alpha = 0.5f), Offset(p.x(0.31f), p.y(0.445f)), Size(p.x(0.38f), p.y(0.04f)), style = Stroke(lw * 0.3f))
                 with(TrazosArcontes) { lampara(c, ancho, barroClaro, if (p.hecho) 1f else 0f) }
-                if (p.hecho) {
-                    // La luz de la llama sobre el lomo de la lámpara y el hollín del pico.
-                    drawCircle(lerp(barroClaro, Color.White, 0.35f).copy(alpha = 0.5f), lw * 1.1f, Offset(c.x - ancho * 0.2f, c.y - ancho * 0.34f * 0.62f))
-                    drawCircle(betun.copy(alpha = 0.5f), lw * 0.9f, Offset(c.x + ancho * 0.43f, c.y - ancho * 0.34f * 0.26f))
-                }
             }
             "Constancia" -> {
                 // La laminilla de las contraseñas: la hoja delgada del metal del nivel, grabada con siete renglones (una

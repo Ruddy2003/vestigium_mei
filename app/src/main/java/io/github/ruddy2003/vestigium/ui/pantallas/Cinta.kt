@@ -71,7 +71,7 @@ private class Cosa(val pista: Int, val a: Long, val b: Long?, val color: Color, 
 private class PistaCinta(val nombre: String, val icono: String)
 
 /** Lo que se pinta dentro de un bloque de la cinta. */
-private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA, PERFORADA }
+private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA, PERFORADA, PAPIRO }
 
 /**
  * Cómo se ve la cinta en cada tema: la esquina de los bloques ([radio] en dp; [cortado], en chaflán), lo que llevan dentro,
@@ -99,7 +99,8 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.TEMPLARIO -> PielCinta(2.5f, true, RellenoCinta.FILETE, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Sello rayado del expediente.
     TemaId.DISTOPIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
-    TemaId.ARCONTES -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
+    // Tiras de papiro: las fibras a lo largo, alguna de través, y las horas en raya y punto, como el renglón del copista.
+    TemaId.ARCONTES -> PielCinta(4f, false, RellenoCinta.PAPIRO, floatArrayOf(6f, 2f, 0.1f, 2f), StrokeCap.Round)
     // La cinta perforada del teletipo: tramos de esquinas redondas con la fila de arrastre al centro y los agujeros del
     // mensaje a los lados; las horas, punteadas como en el plóter de la carta estelar.
     TemaId.FRENTE -> PielCinta(5f, false, RellenoCinta.PERFORADA, floatArrayOf(0.1f, 2.6f), StrokeCap.Round)
@@ -195,6 +196,13 @@ private fun DrawScope.bloqueCinta(p: PielCinta, color: Color, a: Offset, t: Size
                     }
                     x += 3.6f * d; k++
                 }
+            }
+            RellenoCinta.PAPIRO -> {
+                // Las fibras de la capa de arriba, a lo largo y desparejas, y alguna de la capa de abajo, de través.
+                var y = a.y + 1.2f * d; var k = 0
+                while (y < abajo) { drawLine(if (k % 3 == 1) oscuro.copy(alpha = 0.14f) else claro.copy(alpha = 0.22f), Offset(a.x, y), Offset(der, y), 0.6f * d); y += (1.6f + (k * 7 % 3) * 0.6f) * d; k++ }
+                var x = a.x + 5f * d
+                while (x < der) { drawLine(oscuro.copy(alpha = 0.12f), Offset(x, a.y), Offset(x, abajo), 0.8f * d); x += 23f * d }
             }
         }
     }

@@ -167,9 +167,23 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
             drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
         }
+        // La lámpara de aceite de barro, llena, con el agujero de llenar calado y la llama sobre el pico.
         TemaId.ARCONTES -> {
-            drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
-            drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
+            drawPath(Path().apply {
+                moveTo(c.x - r * 0.95f, c.y + r * 0.2f)
+                quadraticTo(c.x - r * 0.95f, c.y - r * 0.45f, c.x - r * 0.2f, c.y - r * 0.45f)
+                quadraticTo(c.x + r * 0.2f, c.y - r * 0.45f, c.x + r * 0.35f, c.y - r * 0.2f)
+                lineTo(c.x + r * 0.86f, c.y - r * 0.14f)
+                quadraticTo(c.x + r * 1.02f, c.y, c.x + r * 0.86f, c.y + r * 0.16f)
+                lineTo(c.x + r * 0.3f, c.y + r * 0.32f)
+                quadraticTo(c.x, c.y + r * 0.62f, c.x - r * 0.35f, c.y + r * 0.56f)
+                quadraticTo(c.x - r * 0.95f, c.y + r * 0.5f, c.x - r * 0.95f, c.y + r * 0.2f); close()
+            }, color)
+            drawCircle(hueco.copy(alpha = 0.55f), r * 0.13f, Offset(c.x - r * 0.3f, c.y - r * 0.12f))
+            drawPath(Path().apply {
+                moveTo(c.x + r * 0.68f, c.y - r * 0.24f); quadraticTo(c.x + r * 0.52f, c.y - r * 0.62f, c.x + r * 0.78f, c.y - r * 1.02f)
+                quadraticTo(c.x + r * 1.02f, c.y - r * 0.58f, c.x + r * 0.86f, c.y - r * 0.24f); close()
+            }, color)
         }
         // El emblema de la red: el aro roto arriba a la derecha, la célula en el centro y los tres trazos que se escapan por el hueco.
         TemaId.FRENTE -> with(TrazosFrente) { emblemaRed(Offset(c.x - r * 0.12f, c.y + r * 0.14f), r * 0.7f, color, r * 0.2f) }

@@ -75,6 +75,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import io.github.ruddy2003.vestigium.ui.Letra
 import io.github.ruddy2003.vestigium.ui.LetraExtra
+import io.github.ruddy2003.vestigium.ui.TrazosArcontes
 import io.github.ruddy2003.vestigium.ciencia.Escalas
 import io.github.ruddy2003.vestigium.ciencia.Movilidad
 import io.github.ruddy2003.vestigium.data.Dia
@@ -455,19 +456,19 @@ fun FraseDelDia(fecha: String) {
                 }
             }
         }
-        TemaId.ARCONTES -> Surface(color = cs.onBackground, shape = RectangleShape, modifier = arriba) {
-            Row(Modifier.height(IntrinsicSize.Min)) {
-                Box(Modifier.width(8.dp).fillMaxHeight().background(cs.primary))
-                Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                    Text(rotulo, style = ty.labelMedium, color = cs.primary)
-                    f.original?.let { Text(it, style = ty.bodySmall, fontStyle = FontStyle.Italic, color = cs.background.copy(alpha = 0.72f)) }
-                    Text(f.texto.uppercase(), style = ty.titleLarge, color = cs.background, modifier = Modifier.padding(vertical = 2.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("— ${f.autor}", style = ty.labelSmall, color = cs.background.copy(alpha = 0.7f), modifier = Modifier.weight(1f))
-                        CorazonFrase(f, cs.primary, fecha = fecha)
-                    }
-                }
-            }
+        // La hoja del códice: el papiro con sus fibras, el lomo de cuero cosido a la izquierda, un renglón arriba y otro abajo
+        // y, en la esquina, una grieta finísima por donde entra la luz. La frase va entre comillas; el rótulo, con los tres puntos.
+        TemaId.ARCONTES -> Box(arriba.drawBehind {
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            drawRoundRect(cs.surfaceVariant.copy(alpha = 0.55f), Offset.Zero, size, CornerRadius(5 * u))
+            var y = 5 * u; while (y < h - 2 * u) { drawLine(cs.onSurfaceVariant.copy(alpha = 0.06f), Offset(12 * u, y), Offset(w - 2 * u, y), 0.6f * u); y += 3.2f * u }
+            drawRoundRect(androidx.compose.ui.graphics.lerp(TrazosArcontes.CUERO, cs.surfaceVariant, 0.15f), Offset.Zero, Size(10 * u, h), CornerRadius(5 * u))
+            drawRect(Color.Black.copy(alpha = 0.18f), Offset(8 * u, 0f), Size(2 * u, h))
+            var k = 9 * u; while (k < h - 7 * u) { drawLine(TrazosArcontes.LINO.copy(alpha = 0.75f), Offset(2.5f * u, k), Offset(7 * u, k + 2.5f * u), 0.9f * u); k += 10 * u }
+            listOf(4 * u, h - 4 * u).forEach { yy -> drawLine(cs.primary.copy(alpha = 0.45f), Offset(18 * u, yy), Offset(w - 22 * u, yy), 0.8f * u) }
+            with(TrazosArcontes) { grieta(Offset(w - 13 * u, 3 * u), Offset(w - 9 * u, 24 * u), 0.8f * u, 0.9f, 2) }
+        }.padding(start = 22.dp, end = 18.dp, top = 12.dp, bottom = 12.dp)) {
+            CuerpoFrase(f, fecha, "∴ $rotulo", "«", "»")
         }
         // El despacho recibido en la consola: el panel de esquinas redondas con su bisel, las perforaciones de la cinta del
         // teletipo a la izquierda, el piloto ámbar encendido arriba y la frase entre comillas angulares, con la ventana de
@@ -986,7 +987,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
         TemaId.TEMPLARIO -> c(LetraExtra.regla, FontWeight.Bold, 22f, 0.3f, "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
-        TemaId.ARCONTES -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
+        TemaId.ARCONTES -> c(LetraExtra.caudex, FontWeight.Bold, 23f, 0.4f)   // las cifras de la letra de los códices
         TemaId.FRENTE -> c(LetraExtra.chivoMono, FontWeight.Medium, 23f, 1.4f, "tnum")   // las cifras del contador de la consola
         TemaId.REFUGIO -> c(LetraExtra.vt323, FontWeight.Normal, 30f, 0.4f)
         TemaId.ORDEN -> c(LetraExtra.estarcido, FontWeight.Normal, 23f, 1.2f)
@@ -1282,11 +1283,20 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             var y = top + k + 4 * u
                             while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
                         }
+                        // Jarras de barro, una por día, más altas cuanto más dormiste: el cuerpo, el hombro con su franja pintada,
+                        // el cuello y el borde de la tapa; el sello de arriba, en el violeta de la grieta.
                         TemaId.ARCONTES -> {
-                            val k = minOf(w * 0.35f, barH * 0.2f)
-                            pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
-                            var y = top + k + 4 * u
-                            while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
+                            val cuello = minOf(w * 0.5f, barH * 0.16f); val hombro = top + cuello
+                            pinta(Path().apply {
+                                moveTo(w * 0.34f, h)
+                                cubicTo(w * 0.02f, h - barH * 0.1f, w * 0.0f, hombro + barH * 0.22f, w * 0.18f, hombro + barH * 0.05f)
+                                quadraticTo(w * 0.28f, hombro, w * 0.36f, hombro); lineTo(w * 0.36f, top); lineTo(w * 0.64f, top); lineTo(w * 0.64f, hombro)
+                                quadraticTo(w * 0.72f, hombro, w * 0.82f, hombro + barH * 0.05f)
+                                cubicTo(w * 1f, hombro + barH * 0.22f, w * 0.98f, h - barH * 0.1f, w * 0.66f, h); close()
+                            })
+                            if (color != null && barH > w * 1.4f) drawLine(Color.Black.copy(alpha = 0.22f), Offset(w * 0.16f, hombro + barH * 0.16f), Offset(w * 0.84f, hombro + barH * 0.16f), 1.4f * u)
+                            drawLine(color ?: linea, Offset(w * 0.27f, top), Offset(w * 0.73f, top), 1.8f * u, StrokeCap.Round)
+                            sello = cs.tertiary
                         }
                         // Los deslizadores de la consola: la ranura de esquinas redondas, llena hasta el alto del día, con las
                         // marcas de la escala al lado y, arriba, la perilla de baquelita con su raya hueso.

@@ -137,7 +137,9 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     // El anuario de la ciudad: tu año, con el año de la fundación al lado, como en las placas.
     TemaId.URBE -> "IL TUO ANNO A ROMA · $anio · AUC ${io.github.ruddy2003.vestigium.ui.Romano.de(io.github.ruddy2003.vestigium.ui.Urbe.auc(anio))}"
     TemaId.DISTOPIA -> "INFORME ANUAL DEL CIUDADANO · $anio"
-    TemaId.ARCONTES -> "INFORME ANUAL DEL CIUDADANO · $anio"
+    // Los 365 cielos de Basílides (Ireneo, *Contra las herejías* 1.24.3–7), que Hipólito une a los días del año (*Refutación*
+    // 7.26), y el año hebreo en que cae casi todo el año (recurso: el hebreo empieza en otoño), con letras que valen números.
+    TemaId.ARCONTES -> "Los 365 cielos de $anio · ${io.github.ruddy2003.vestigium.ui.Arcontes.numero(anio + 3760)}"
     // El parte anual que la célula manda cifrado al cerrar el año.
     TemaId.FRENTE -> "PARTE ANUAL K-7 · $anio"   // corto: Michroma es muy ancha
     TemaId.CIBER -> "> cat year_$anio.log"

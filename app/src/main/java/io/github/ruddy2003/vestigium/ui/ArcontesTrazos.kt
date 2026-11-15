@@ -232,66 +232,64 @@ object TrazosArcontes {
     }
 
     /**
-     * La lámpara de aceite de barro, de pico, la de las casas de Galilea, vista de lado: el cuerpo redondo con la luz arriba,
-     * el disco hundido con su agujero de llenar, el pico a la derecha con la mecha y la llama, el asa a la izquierda y el pie.
-     * [w] es el ancho total; [llama] (0 a 1) su tamaño, para que tiemble.
+     * La lámpara de aceite de barro de las casas de Galilea (la «herodiana», hecha al torno), vista de lado: el cuerpo redondo
+     * con la luz arriba, el disco hundido con su agujero de llenar, el pico corto y ancho, recortado a cuchillo, con la mecha y
+     * la llama, y el pie. [c] es el centro del cuerpo; [w], el ancho total; [llama] (0 a 1), su tamaño, para que tiemble.
      */
     fun DrawScope.lampara(c: Offset, w: Float, barro: Color = BARRO_CLARO, llama: Float = 1f) {
-        val h = w * 0.34f
+        val h = w * 0.36f
         val oscuro = lerp(barro, Color.Black, 0.38f)
         val claro = lerp(barro, Color.White, 0.22f)
         val cuerpo = Path().apply {
-            moveTo(c.x - w * 0.42f, c.y)
-            cubicTo(c.x - w * 0.42f, c.y - h * 0.95f, c.x + w * 0.12f, c.y - h * 0.95f, c.x + w * 0.2f, c.y - h * 0.42f)
-            lineTo(c.x + w * 0.46f, c.y - h * 0.3f)
-            quadraticTo(c.x + w * 0.5f, c.y - h * 0.05f, c.x + w * 0.42f, c.y + h * 0.02f)
-            lineTo(c.x + w * 0.16f, c.y + h * 0.18f)
-            cubicTo(c.x + w * 0.04f, c.y + h * 0.5f, c.x - w * 0.36f, c.y + h * 0.48f, c.x - w * 0.42f, c.y)
+            moveTo(c.x - w * 0.4f, c.y)
+            cubicTo(c.x - w * 0.4f, c.y - h * 0.9f, c.x + w * 0.06f, c.y - h * 0.95f, c.x + w * 0.14f, c.y - h * 0.5f)
+            lineTo(c.x + w * 0.36f, c.y - h * 0.44f)
+            quadraticTo(c.x + w * 0.43f, c.y - h * 0.4f, c.x + w * 0.42f, c.y - h * 0.12f)
+            lineTo(c.x + w * 0.14f, c.y + h * 0.14f)
+            cubicTo(c.x + w * 0.04f, c.y + h * 0.5f, c.x - w * 0.36f, c.y + h * 0.48f, c.x - w * 0.4f, c.y)
             close()
         }
-        // El asa, detrás del cuerpo.
-        drawArc(oscuro, 120f, 150f, false, Offset(c.x - w * 0.58f, c.y - h * 0.5f), Size(w * 0.24f, h * 0.9f), style = Stroke(w * 0.05f, cap = StrokeCap.Round))
         drawPath(cuerpo, Brush.verticalGradient(listOf(claro, barro, oscuro), startY = c.y - h * 0.8f, endY = c.y + h * 0.45f))
-        // La luz de arriba sobre el hombro, y la sombra del vientre.
-        drawArc(Color.White.copy(alpha = 0.22f), 200f, 70f, false, Offset(c.x - w * 0.36f, c.y - h * 0.78f), Size(w * 0.5f, h * 1.3f), style = Stroke(w * 0.022f, cap = StrokeCap.Round))
+        // La luz de arriba sobre el hombro.
+        drawArc(Color.White.copy(alpha = 0.22f), 200f, 70f, false, Offset(c.x - w * 0.34f, c.y - h * 0.78f), Size(w * 0.48f, h * 1.3f), style = Stroke(w * 0.022f, cap = StrokeCap.Round))
         // El disco hundido y el agujero de llenar.
         drawOval(oscuro.copy(alpha = 0.45f), Offset(c.x - w * 0.27f, c.y - h * 0.76f), Size(w * 0.3f, h * 0.24f))
-        drawCircle(lerp(barro, Color.Black, 0.62f), w * 0.042f, Offset(c.x - w * 0.12f, c.y - h * 0.64f))
+        drawCircle(lerp(barro, Color.Black, 0.62f), w * 0.04f, Offset(c.x - w * 0.12f, c.y - h * 0.64f))
         // El pie: un aro bajo el vientre.
         drawLine(oscuro, Offset(c.x - w * 0.16f, c.y + h * 0.44f), Offset(c.x + w * 0.04f, c.y + h * 0.42f), w * 0.03f, StrokeCap.Round)
         // La boca del pico, oscura, con la mecha asomando.
-        val base = Offset(c.x + w * 0.46f, c.y - h * 0.32f)
-        drawOval(lerp(barro, Color.Black, 0.6f), Offset(base.x - w * 0.045f, base.y - h * 0.07f), Size(w * 0.075f, h * 0.14f))
+        val base = Offset(c.x + w * 0.39f, c.y - h * 0.4f)
+        drawOval(lerp(barro, Color.Black, 0.6f), Offset(base.x - w * 0.04f, base.y - h * 0.06f), Size(w * 0.07f, h * 0.12f))
         if (llama > 0f) {
-            val alto = w * 0.34f * llama
+            val alto = w * 0.27f * llama
             val cl = Offset(base.x + w * 0.005f, base.y - alto * 0.45f)
-            drawCircle(Brush.radialGradient(listOf(LLAMA_HALO.copy(alpha = 0.42f), LLAMA_HALO.copy(alpha = 0f)), cl, alto * 1.5f), alto * 1.5f, cl)
+            drawCircle(Brush.radialGradient(listOf(LLAMA_HALO.copy(alpha = 0.42f), LLAMA_HALO.copy(alpha = 0f)), cl, alto * 1.4f), alto * 1.4f, cl)
             val fuego = Path().apply {
-                moveTo(base.x - w * 0.045f, base.y)
-                quadraticTo(base.x - w * 0.065f, base.y - alto * 0.55f, base.x + w * 0.012f, base.y - alto)
-                quadraticTo(base.x + w * 0.065f, base.y - alto * 0.5f, base.x + w * 0.042f, base.y)
+                moveTo(base.x - w * 0.04f, base.y)
+                quadraticTo(base.x - w * 0.06f, base.y - alto * 0.55f, base.x + w * 0.012f, base.y - alto)
+                quadraticTo(base.x + w * 0.06f, base.y - alto * 0.5f, base.x + w * 0.038f, base.y)
                 close()
             }
             drawPath(fuego, LLAMA)
             // El corazón claro de la llama.
             val dentro = Path().apply {
-                moveTo(base.x - w * 0.02f, base.y - alto * 0.04f)
-                quadraticTo(base.x - w * 0.028f, base.y - alto * 0.4f, base.x + w * 0.006f, base.y - alto * 0.62f)
-                quadraticTo(base.x + w * 0.032f, base.y - alto * 0.34f, base.x + w * 0.02f, base.y - alto * 0.04f)
+                moveTo(base.x - w * 0.018f, base.y - alto * 0.04f)
+                quadraticTo(base.x - w * 0.026f, base.y - alto * 0.4f, base.x + w * 0.006f, base.y - alto * 0.62f)
+                quadraticTo(base.x + w * 0.03f, base.y - alto * 0.34f, base.x + w * 0.018f, base.y - alto * 0.04f)
                 close()
             }
             drawPath(dentro, LLAMA_HALO)
-            drawCircle(Color.White.copy(alpha = 0.55f), w * 0.012f, Offset(base.x, base.y - alto * 0.18f))
+            drawCircle(Color.White.copy(alpha = 0.55f), w * 0.011f, Offset(base.x, base.y - alto * 0.18f))
         }
     }
 
     /**
      * La chispa: la luz de lo alto que cada uno lleva dentro, como una estrella pequeña de cuatro puntas, blanca, con su halo
-     * violeta. [r] es el largo de las puntas; [luz] (0 a 1), cuánto brilla.
+     * violeta (sobre un fondo claro, con [color] y [halo] del tema). [r] es el largo de las puntas; [luz] (0 a 1), cuánto brilla.
      */
-    fun DrawScope.chispa(c: Offset, r: Float, luz: Float = 1f) {
+    fun DrawScope.chispa(c: Offset, r: Float, luz: Float = 1f, color: Color = GRIETA, halo: Color = GRIETA_HALO) {
         if (luz <= 0f) return
-        drawCircle(Brush.radialGradient(listOf(GRIETA_HALO.copy(alpha = 0.5f * luz), GRIETA_HALO.copy(alpha = 0f)), c, r * 1.6f), r * 1.6f, c)
+        drawCircle(Brush.radialGradient(listOf(halo.copy(alpha = 0.5f * luz), halo.copy(alpha = 0f)), c, r * 1.6f), r * 1.6f, c)
         val estrella = Path()
         for (i in 0 until 8) {
             val rr = if (i % 2 == 0) r else r * 0.2f
@@ -300,8 +298,8 @@ object TrazosArcontes {
             if (i == 0) estrella.moveTo(x, y) else estrella.lineTo(x, y)
         }
         estrella.close()
-        drawPath(estrella, GRIETA.copy(alpha = luz))
-        drawCircle(Color.White.copy(alpha = luz), r * 0.16f, c)
+        drawPath(estrella, color.copy(alpha = luz))
+        drawCircle(lerp(color, Color.White, 0.6f).copy(alpha = luz), r * 0.16f, c)
     }
 
     /**
@@ -484,20 +482,22 @@ object TrazosArcontes {
     /**
      * La sombra de un arconte: una silueta a contraluz, de hombros y cabeza de león de melena revuelta y hocico largo, que
      * mira a la derecha (a la izquierda con [mira] = -1). Nunca se dibuja entera: quien la llama la corta con el borde.
-     * [c] es el centro de la cabeza y [alto], el alto de la cabeza.
+     * [c] es el centro de la cabeza y [alto], el alto de la cabeza. Con [desvanece], los hombros se pierden en la oscuridad
+     * hacia abajo en vez de acabar en un borde.
      */
-    fun DrawScope.sombraArconte(c: Offset, alto: Float, color: Color, mira: Float = 1f) {
+    fun DrawScope.sombraArconte(c: Offset, alto: Float, color: Color, mira: Float = 1f, desvanece: Boolean = false) {
         val a = alto
         fun p(x: Float, y: Float) = Offset(c.x + mira * x * a, c.y + y * a)
         // Los hombros, anchos, que se pierden hacia abajo.
         val hombros = Path().apply {
-            val i = p(-1.6f, 2.2f); moveTo(i.x, i.y)
-            val c1 = p(-1.4f, 0.9f); val q1 = p(-0.55f, 0.55f); quadraticTo(c1.x, c1.y, q1.x, q1.y)
+            val i = p(-1.7f, 3f); moveTo(i.x, i.y)
+            val c1 = p(-1.5f, 0.9f); val q1 = p(-0.55f, 0.55f); quadraticTo(c1.x, c1.y, q1.x, q1.y)
             val q2 = p(0.4f, 0.5f); lineTo(q2.x, q2.y)
-            val c3 = p(1.3f, 0.7f); val q3 = p(1.5f, 2.2f); quadraticTo(c3.x, c3.y, q3.x, q3.y)
+            val c3 = p(1.4f, 0.7f); val q3 = p(1.6f, 3f); quadraticTo(c3.x, c3.y, q3.x, q3.y)
             close()
         }
-        drawPath(hombros, color)
+        if (desvanece) drawPath(hombros, Brush.verticalGradient(listOf(color, color.copy(alpha = 0f)), startY = c.y + 0.4f * a, endY = c.y + 2.8f * a))
+        else drawPath(hombros, color)
         // La melena: un contorno de mechones irregulares alrededor de la cabeza.
         val melena = Path()
         val n = 22

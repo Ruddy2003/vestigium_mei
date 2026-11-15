@@ -136,9 +136,20 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
     }
+    // La lámpara de aceite de barro, de lado: el cuerpo bajo con la ranura de llenar, el pico y la llama encendida; cada
+    // calificación enciende una.
     TemaId.ARCONTES -> {
-        val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
-        mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
+        val cuerpo = ovalo(Offset(c.x - r * 0.25f, c.y + r * 0.22f), r * 0.62f, r * 0.3f)
+        val pico = Path().apply {
+            moveTo(c.x + r * 0.1f, c.y + r * 0.04f); lineTo(c.x + r * 0.62f, c.y + r * 0.02f)
+            quadraticTo(c.x + r * 0.82f, c.y + r * 0.12f, c.x + r * 0.62f, c.y + r * 0.26f); lineTo(c.x + r * 0.1f, c.y + r * 0.38f); close()
+        }
+        val llama = Path().apply {
+            moveTo(c.x + r * 0.52f, c.y - r * 0.1f); quadraticTo(c.x + r * 0.44f, c.y - r * 0.5f, c.x + r * 0.66f, c.y - r * 1f)
+            quadraticTo(c.x + r * 0.84f, c.y - r * 0.5f, c.x + r * 0.72f, c.y - r * 0.1f); close()
+        }
+        val pie = Path().apply { addRect(Rect(c.x - r * 0.46f, c.y + r * 0.46f, c.x - r * 0.04f, c.y + r * 0.6f)) }
+        mas(mas(menos(mas(cuerpo, pico), ovalo(Offset(c.x - r * 0.3f, c.y + r * 0.02f), r * 0.2f, r * 0.06f)), llama), pie)
     }
     // El emblema de la red: el círculo roto, con su hueco arriba a la derecha, y la chispa adentro.
     TemaId.FRENTE -> {
