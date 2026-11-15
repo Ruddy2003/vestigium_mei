@@ -151,7 +151,10 @@ object Campanas {
         TemaId.MEDIEVAL -> listOf("Peregrinación a Compostela", "La copia del códice", "El camino de los monasterios", "La feria de Champaña")
         TemaId.TEMPLARIO -> listOf("La marcha de las atalayas", "Relevo en Montalbar", "La escolta de los peregrinos", "Cabalgada al Pozo del Halcón")
         TemaId.DISTOPIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
-        TemaId.PSICODELIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
+        // De la calle Haight al festival de Monterey, en 1967 (`docs/diseno/temas/fuentes_psicodelia.md`, secciones 2 y 3): del
+        // encuentro de los Polo Fields (14 de enero) al último día del festival (18 de junio), el verano que tomó su nombre esa
+        // primavera y los tres días de junio en el recinto ferial de Monterey.
+        TemaId.PSICODELIA -> listOf("De la calle Haight a Monterey", "Del 14 de enero al 18 de junio", "Hacia el verano del amor", "Tres días de junio en Monterey")
         // La primera línea del metro de París, la «ligne A», abierta al público el 19 de julio de 1900 a la una de la tarde,
         // durante la Exposición, de Porte Maillot a Porte de Vincennes; la segunda clase costaba 15 céntimos, fuera cual fuera
         // el trayecto (`docs/diseno/temas/fuentes_nouveau.md`, sección 5).
@@ -202,7 +205,12 @@ object Campanas {
         // De fortaleza en fortaleza por una frontera inventada, de la costa al castillo de las montañas.
         TemaId.TEMPLARIO -> listOf("Encomienda de la costa", "Atalaya del Alba", "Torre de la Sed", "Pozo del Halcón", "Vado de las Piedras Rojas", "Peña del Cuervo", "Castillo de Montalbar")
         TemaId.DISTOPIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
-        TemaId.PSICODELIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
+        // Las siete paradas de 1967, por fecha (`fuentes_psicodelia.md`, sección 3): el cruce que da nombre al barrio; los Polo
+        // Fields del Golden Gate Park (el encuentro del 14 de enero, con sus poetas y sus bandas); la sala de baile del 1268 de
+        // Sutter (el baile del 29 de enero, a 2 dólares); la FM del 106.9 (la noche del 12 de febrero, de medianoche a las 6);
+        // la oficina del periódico del barrio, abierta las 24 horas; el Panhandle (la comida de cada día a las cuatro) y
+        // Monterey (16 a 18 de junio). Las salas y la radio van por su calle o su frecuencia, no por su nombre de negocio.
+        TemaId.PSICODELIA -> listOf("Haight y Ashbury", "Los Polo Fields", "La sala de la calle Sutter", "La FM del 106.9", "El 1371 de Haight", "El Panhandle", "Monterey")
         // Siete de las ocho estaciones de la línea 1 que abrieron el primer día, el 19 de julio de 1900, de oeste a este y con
         // su nombre de entonces (`fuentes_nouveau.md`, sección 5; la octava, Nation, queda entre las dos últimas).
         TemaId.NOUVEAU -> listOf("Porte Maillot", "Champs-Élysées", "Palais-Royal", "Hôtel de Ville", "Bastille", "Gare de Lyon", "Porte de Vincennes")

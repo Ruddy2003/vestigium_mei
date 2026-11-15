@@ -197,11 +197,22 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
             circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
         }, 1.4f)
-        TemaId.PSICODELIA -> pinta(Path().apply {
-            fillType = PathFillType.EvenOdd
-            moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
-            circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
-        }, 1.4f)
+        // Una margarita de siete pétalos redondos, la flor del verano de 1967; guardada, rellena, con el botón del centro
+        // calado.
+        TemaId.PSICODELIA -> {
+            pinta(Path().apply {
+                fillType = PathFillType.EvenOdd
+                for (i in 0..168) {
+                    val a = 2 * Math.PI * i / 168
+                    val rr = 6.6f + 4.8f * kotlin.math.abs(cos(3.5 * a)).toFloat()
+                    val q = p(12f + rr * sin(a).toFloat(), 12f - rr * cos(a).toFloat())
+                    if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y)
+                }
+                close()
+                circulo(this, 12f, 12f, 3.1f)
+            }, 1.3f)
+            if (lleno) drawCircle(color, 1.7f * u, p(12f, 12f))
+        }
         // La flor de iris: tres pétalos que suben y dos que caen, sobre su tallo; guardada, con las venas de los que caen.
         TemaId.NOUVEAU -> {
             drawLine(if (lleno) color else color.copy(alpha = 0.7f), p(12f, 13f), p(12.6f, 22.5f), 1.4f * u, StrokeCap.Round)

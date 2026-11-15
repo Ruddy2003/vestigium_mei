@@ -158,7 +158,9 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.MEDIEVAL -> listOf("en tinta", "en minio", "en pan de oro", "códice purpúreo")
     TemaId.TEMPLARIO -> listOf("hermano sargento", "freire caballero", "comendador", "maestre del Temple")
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
-    TemaId.PSICODELIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
+    // El cartel de la semana, cada vez más lejos: pegado en un poste, en la vitrina de la tienda, sonando en la radio de
+    // noche y, lo más alto, en el festival de Monterey.
+    TemaId.PSICODELIA -> listOf("cartel en un poste", "en la vitrina de la tienda", "suena en la FM de noche", "en el festival de Monterey")
     // Los pasos de una estampa en el taller: la prueba, el «bueno para imprimir» que firma el artista, la prueba firmada y,
     // lo más alto, el cartel pegado en todas las paredes de París.
     TemaId.NOUVEAU -> listOf("épreuve d'essai", "bon à tirer", "épreuve signée", "sur tous les murs de Paris")
@@ -389,19 +391,36 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             drawPath(Path().apply { moveTo(c.x - a, c.y); quadraticTo(c.x, c.y - k, c.x + a, c.y); quadraticTo(c.x, c.y + k, c.x - a, c.y); close() }, cs.primary.copy(alpha = 0.16f), style = Stroke(2f * u))
             drawCircle(cs.primary.copy(alpha = 0.12f), m * 0.36f, c, style = Stroke(1.5f * u))
         }
-        TemaId.PSICODELIA -> {
-            // Dos reflectores que barren desde abajo y un ojo que lo vigila todo.
-            val haz = cs.onBackground
-            listOf(Offset(0f, size.height) to 1.0, Offset(size.width, size.height) to -1.0).forEach { (o, lado) ->
-                val a = Math.toRadians((if (lado > 0) -60.0 else -120.0) + lado * 22.0 * sin(Math.toRadians(giro * 4.0)))
-                val l = lejos * 1.3f
-                val p1 = Offset(o.x + (l * cos(a - 0.12)).toFloat(), o.y + (l * sin(a - 0.12)).toFloat())
-                val p2 = Offset(o.x + (l * cos(a + 0.12)).toFloat(), o.y + (l * sin(a + 0.12)).toFloat())
-                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y); close() }, Brush.radialGradient(listOf(haz.copy(alpha = 0.10f), Color.Transparent), o, l))
+        TemaId.PSICODELIA -> with(TrazosPsicodelia) {
+            // El caleidoscopio: un gajo de treinta grados con una gota de tinta, una margarita, una burbuja y unas motas que se
+            // mueven dentro de él, repetido doce veces en espejo alrededor del logro; todo gira despacio (una sexta de vuelta
+            // por cada vuelta del motivo, así cierra sin salto). Por fuera, un aro de pétalos en dos colores opuestos que
+            // gira al revés.
+            val fondo = cs.background
+            fun tinta(col: Color, k: Float) = androidx.compose.ui.graphics.lerp(fondo, col, k)
+            val k = if (oscuro) 0.5f else 0.36f
+            val colores = if (oscuro) listOf(LIMON, FLUOR_MAGENTA, FLUOR_VIOLETA, FLUOR_NARANJA) else listOf(MAGENTA, NARANJA, VERDE, AZUL)
+            val f = giro / 360f
+            val ola = sin(2 * PI * f).toFloat(); val ola2 = cos(4 * PI * f).toFloat()
+            val radio = m * 0.44f
+            rotate(giro / 6f, c) {
+                for (g in 0 until 12) {
+                    val espejo = g % 2 == 1
+                    fun lugar(rf: Float, af: Float): Offset = pt(radio * rf, Math.toRadians(g * 30.0 + (if (espejo) 30.0 * (1f - af) else 30.0 * af)))
+                    val q = lugar(0.66f + 0.06f * ola, 0.48f + 0.1f * ola2)
+                    drawPath(gota(q, m * 0.06f * (1f + 0.12f * ola2), f * 2f, 0.16f, 3, 32), tinta(colores[1], k))
+                    margarita(lugar(0.34f + 0.07f * ola2, 0.55f - 0.12f * ola), m * 0.034f, tinta(colores[0], k * 1.1f), tinta(colores[3], k * 0.8f), 6)
+                    burbuja(lugar(0.9f - 0.06f * ola, 0.3f), m * 0.022f, tinta(colores[2], 1f), k * 1.4f)
+                    drawCircle(tinta(colores[3], k), m * 0.011f, lugar(0.52f, 0.12f + 0.08f * ola))
+                    drawCircle(tinta(colores[2], k), m * 0.008f, lugar(0.18f + 0.04f * ola, 0.5f))
+                }
             }
-            val a = m * 0.62f; val k = m * 0.8f
-            drawPath(Path().apply { moveTo(c.x - a, c.y); quadraticTo(c.x, c.y - k, c.x + a, c.y); quadraticTo(c.x, c.y + k, c.x - a, c.y); close() }, cs.primary.copy(alpha = 0.16f), style = Stroke(2f * u))
-            drawCircle(cs.primary.copy(alpha = 0.12f), m * 0.36f, c, style = Stroke(1.5f * u))
+            rotate(-giro / 6f, c) {
+                for (g in 0 until 24) {
+                    val a = Math.toRadians(g * 15.0)
+                    drawPath(petalos(pt(radio * 1.12f, a), m * 0.03f, 1, a.toFloat() + PI.toFloat(), 0.4f, 0.1f), tinta(if (g % 2 == 0) colores[0] else colores[2], k))
+                }
+            }
         }
         TemaId.NOUVEAU -> with(TrazosNouveau) {
             // El aro de látigo del sello, grande y tenue, que gira despacio; por dentro, dos iris que suben desde la yema; y una

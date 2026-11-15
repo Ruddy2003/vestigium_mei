@@ -82,7 +82,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.MEDIEVAL -> 5000
     TemaId.TEMPLARIO -> 4400
     TemaId.DISTOPIA -> 7000
-    TemaId.PSICODELIA -> 7000
+    TemaId.PSICODELIA -> 11200                 // la margarita vibra una vez, la orla gira una franja y un brillo cruza la cúpula
     TemaId.NOUVEAU -> 9400                     // el destello recorre el aro de látigo, del brote al rizo, y el nácar de la libélula tornasola
     TemaId.GALIA -> 8000                       // el brillo da la vuelta al torques y el caballo galopa dos trancos
     TemaId.ARCONTES -> 10500                   // el destello cruza la piedra y las siete estrellas se encienden una tras otra
@@ -152,7 +152,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.MEDIEVAL -> roseton(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.TEMPLARIO -> escudoTemplario(c, r, e.primary, e.secondary, e.tertiary, if (oscuro) Color(0xFFEEE7D8) else Color.White, t)
         TemaId.DISTOPIA -> ojo(c, r, e.onBackground, e.primary, e.background, t)
-        TemaId.PSICODELIA -> ojo(c, r, e.onBackground, e.primary, e.background, t)
+        TemaId.PSICODELIA -> with(TrazosPsicodelia) { emblemaVivo(c, r, t, oscuro) }
         TemaId.NOUVEAU -> with(TrazosNouveau) { medallon(c, r, t, oscuro) }
         TemaId.GALIA -> with(TrazosGalia) { emblema(c, r, t, oscuro) }
         TemaId.ARCONTES -> with(TrazosArcontes) { emblema(c, r, t, e.primary) }
@@ -2190,6 +2190,57 @@ private fun paredGalia(w: Float, h: Float, u: Float, lineas: Path, paja: Path, z
 }
 
 /**
+ * Psicodelia: el fondo del tema. De día ([oscuro] falso), el papel del periódico del barrio: en [puntos], la trama de
+ * imprenta de la mancha de arcoíris, más gruesa en la esquina de arriba a la izquierda y que se apaga hacia dentro; en
+ * [lineas], el doblez de en medio del periódico; en [fibras], las fibras cortas del papel barato. De noche, la pared de la
+ * sala: en [fibras], las ondas blandas que dejan las luces líquidas alrededor de la luz del proyector (arriba a la
+ * derecha), y en [puntos], unas pocas gotas sueltas de pintura fluorescente.
+ */
+private fun fondoPsicodelia(w: Float, h: Float, u: Float, oscuro: Boolean, lineas: Path, puntos: Path, fibras: Path) {
+    val azar = java.util.Random(1967)
+    if (!oscuro) {
+        val p = 9f * u; val lado = minOf(w, 420f * u) * 0.62f
+        var y = 0f; var fila = 0
+        while (y < lado) {
+            var x = if (fila % 2 == 0) 0f else p / 2
+            while (x < lado * 1.6f) {
+                val k = (1f - (x / (lado * 1.6f) + y / lado)).coerceIn(0f, 1f)
+                val rr = p * 0.36f * k * k
+                if (rr > 0.3f * u) puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
+                x += p
+            }
+            y += p * 0.87f; fila++
+        }
+        // El doblez del periódico, con su sombra corta.
+        lineas.moveTo(0f, h * 0.5f); lineas.lineTo(w, h * 0.5f)
+        lineas.moveTo(0f, h * 0.5f + 1.2f * u); lineas.lineTo(w, h * 0.5f + 1.2f * u)
+        repeat(((w * h) / (5200f * u * u)).toInt().coerceIn(40, 420)) {
+            val x = azar.nextFloat() * w; val yy = azar.nextFloat() * h; val l = (1.5f + azar.nextFloat() * 4f) * u; val a = azar.nextFloat() * 6.283f
+            fibras.moveTo(x, yy); fibras.quadraticTo(x + l * 0.5f * cos(a + 0.6f), yy + l * 0.5f * sin(a + 0.6f), x + l * cos(a), yy + l * sin(a))
+        }
+    } else {
+        // Las ondas de las luces líquidas en la pared: contornos blandos que se abren desde la luz del proyector.
+        val o = Offset(w * 0.92f, -h * 0.02f); val lejos = maxOf(w, h) * 1.1f
+        var r = 60f * u; var k = 0
+        while (r < lejos && k < 40) {
+            val n = 96
+            for (i in 0..n) {
+                val a = (PI * 0.5 + PI * 0.75 * i / n).toFloat()
+                val rr = r * (1f + 0.05f * sin(a * (5 + k % 3) + k * 1.3f) + 0.03f * sin(a * 11f - k))
+                val x = o.x + rr * cos(a); val y = o.y + rr * sin(a)
+                if (i == 0) fibras.moveTo(x, y) else fibras.lineTo(x, y)
+            }
+            r *= 1.24f; k++
+        }
+        repeat(((w * h) / (60000f * u * u)).toInt().coerceIn(6, 40)) {
+            val x = azar.nextFloat() * w; val y = azar.nextFloat() * h; val rr = (1f + azar.nextFloat() * 2.4f) * u
+            puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
+            puntos.addOval(Rect(x - rr * 0.45f, y + rr * 1.4f, x + rr * 0.45f, y + rr * 2.3f))
+        }
+    }
+}
+
+/**
  * Una textura muy tenue detrás de todo: vetas de mármol, retícula de terminal, guijarros de Pela, renglones de pergamino,
  * trama de imprenta, papel tapiz atómico o líneas de pantalla antigua, papel milimétrico… Cada tema tiene la suya.
  * Se dibuja una sola vez y se reutiliza.
@@ -2341,17 +2392,26 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
             }
         }
         TemaId.PSICODELIA -> {
-            color2 = esquema.onBackground.copy(alpha = if (oscuro) 0.06f else 0.07f)
-            val p = 13.dp.toPx(); var y = 0f; var fila = 0
-            while (y < h * 0.45f) {
-                var x = if (fila % 2 == 0) 0f else p / 2
-                while (x < w) {
-                    val k = ((x / w) * (1f - y / (h * 0.45f))).coerceIn(0f, 1f)
-                    val rr = p * 0.32f * k
-                    if (rr > 0.25.dp.toPx()) puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
-                    x += p
-                }
-                y += p * 0.87f; fila++
+            // De día, el papel del periódico del barrio: su fibra, el doblez de en medio y, en la esquina de arriba, la mancha
+            // de tinta de arcoíris del tintero partido, con su trama de puntos que se apaga hacia dentro. De noche, la pared
+            // de la sala de baile: la luz del proyector que entra por arriba a la derecha, con sus colores de luz negra, y las
+            // ondas blandas que dejan en el muro las luces líquidas.
+            fondoPsicodelia(w, h, 1.dp.toPx(), oscuro, trazo, puntos, trazo2)
+            if (oscuro) {
+                color2 = TrazosPsicodelia.FLUOR_MAGENTA.copy(alpha = 0.05f)
+                color3 = TrazosPsicodelia.FLUOR_VIOLETA.copy(alpha = 0.07f)
+                grosor = 1.1f
+                luz = Brush.radialGradient(listOf(TrazosPsicodelia.LIMON.copy(alpha = 0.075f), TrazosPsicodelia.FLUOR_MAGENTA.copy(alpha = 0.05f),
+                    TrazosPsicodelia.FLUOR_VIOLETA.copy(alpha = 0.035f), Color.Transparent), Offset(w * 0.92f, -h * 0.02f), maxOf(w, h) * 0.85f)
+            } else {
+                color = esquema.onBackground.copy(alpha = 0.05f)
+                color2 = TrazosPsicodelia.MAGENTA.copy(alpha = 0.075f)
+                color3 = esquema.onBackground.copy(alpha = 0.06f)
+                grosor = 0.6f
+                val a = 0.075f
+                luz = Brush.linearGradient(listOf(TrazosPsicodelia.MAGENTA.copy(alpha = a), TrazosPsicodelia.NARANJA.copy(alpha = a), TrazosPsicodelia.AMARILLO.copy(alpha = a * 0.8f),
+                    TrazosPsicodelia.VERDE.copy(alpha = a * 0.5f), TrazosPsicodelia.AZUL.copy(alpha = a * 0.25f), Color.Transparent),
+                    Offset(0f, 0f), Offset(minOf(w, 420.dp.toPx()) * 0.75f, minOf(w, 420.dp.toPx()) * 0.42f))
             }
         }
         TemaId.NOUVEAU -> {
@@ -3200,7 +3260,17 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.TEMPLARIO -> poligonoBoton(0.12f to 1f, 0.12f to 0.04f, 0.3f to 0.04f, 0.3f to 0.2f, 0.41f to 0.2f, 0.41f to 0.04f, 0.59f to 0.04f,
         0.59f to 0.2f, 0.7f to 0.2f, 0.7f to 0.04f, 0.88f to 0.04f, 0.88f to 1f)
     TemaId.DISTOPIA -> poligonoBoton(0.04f to 0.12f, 0.4f to 0.12f, 0.48f to 0.24f, 0.96f to 0.24f, 0.96f to 0.92f, 0.04f to 0.92f)
-    TemaId.PSICODELIA -> poligonoBoton(0.04f to 0.12f, 0.4f to 0.12f, 0.48f to 0.24f, 0.96f to 0.24f, 0.96f to 0.92f, 0.04f to 0.92f)
+    // Una gota de aceite del show de luces: redonda pero blanda, con cinco lóbulos que no son iguales.
+    TemaId.PSICODELIA -> GenericShape { s, _ ->
+        val cx = s.width / 2; val cy = s.height / 2; val r = minOf(s.width, s.height) * 0.45f; val n = 60
+        for (i in 0..n) {
+            val a = 2 * PI * i / n
+            val rr = r * (1f + 0.07f * sin(5 * a + 0.6).toFloat() + 0.035f * cos(3 * a - 1.1).toFloat())
+            val x = cx + rr * cos(a).toFloat(); val y = cy + rr * sin(a).toFloat()
+            if (i == 0) moveTo(x, y) else lineTo(x, y)
+        }
+        close()
+    }
     // Un jarrón de vidrio de Nancy: el cuello con su labio, los hombros y la panza redonda sobre un pie corto.
     TemaId.NOUVEAU -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
@@ -3345,7 +3415,7 @@ private fun textoMas(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Ítem"
     TemaId.TEMPLARIO -> "Armería"
     TemaId.DISTOPIA -> "Anexo"
-    TemaId.PSICODELIA -> "Anexo"
+    TemaId.PSICODELIA -> "Trastienda"            // lo demás está en la trastienda de la tienda de discos
     TemaId.NOUVEAU -> "L'Atelier"              // lo demás está en el taller de litografía
     TemaId.GALIA -> "Oppidum"                 // lo demás está en el pueblo de la colina
     TemaId.ARCONTES -> "Apócrifo"                // «escondido»: lo que no se lee en voz alta
@@ -3444,8 +3514,13 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // Sol tachado por el censor.
             TemaId.DISTOPIA -> { drawCircle(color, r * 0.62f, c); listOf(-0.3f, 0f, 0.3f).forEach { dy -> drawRect(fondo, Offset(c.x - r, c.y + r * dy - r * 0.05f), Size(r * 2, r * 0.1f)) }
                 drawCircle(color, r * 0.9f, c, style = Stroke(r * 0.08f)) }
-            TemaId.PSICODELIA -> { drawCircle(color, r * 0.62f, c); listOf(-0.3f, 0f, 0.3f).forEach { dy -> drawRect(fondo, Offset(c.x - r, c.y + r * dy - r * 0.05f), Size(r * 2, r * 0.1f)) }
-                drawCircle(color, r * 0.9f, c, style = Stroke(r * 0.08f)) }
+            // El sol de los carteles: el disco y, alrededor, una corona blanda de diez lóbulos, como una gota que hierve.
+            TemaId.PSICODELIA -> { drawCircle(color, r * 0.36f, c)
+                drawPath(Path().apply {
+                    for (i in 0..80) { val a = 2 * PI * i / 80; val rr = r * (0.74f + 0.14f * sin(10 * a).toFloat())
+                        val x = c.x + rr * cos(a).toFloat(); val y = c.y + rr * sin(a).toFloat(); if (i == 0) moveTo(x, y) else lineTo(x, y) }
+                    close()
+                }, color, style = Stroke(r * 0.11f, join = StrokeJoin.Round)) }
             // El sol del cartel: el disco y, alrededor, ocho mechones que ondulan y se enroscan, como un pelo al viento.
             TemaId.NOUVEAU -> { drawCircle(color, r * 0.34f, c)
                 for (i in 0 until 8) {
@@ -3585,7 +3660,13 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
                 drawRect(color, Offset(c.x - r * 0.9f, c.y + r * 0.8f), Size(r * 1.8f, r * 0.16f)) }
             // Luna tras los barrotes.
             TemaId.DISTOPIA -> { luna(); listOf(-0.45f, 0f, 0.45f).forEach { dx -> drawLine(color, Offset(c.x + r * dx, c.y - r * 0.95f), Offset(c.x + r * dx, c.y + r * 0.95f), r * 0.08f) } }
-            TemaId.PSICODELIA -> { luna(); listOf(-0.45f, 0f, 0.45f).forEach { dx -> drawLine(color, Offset(c.x + r * dx, c.y - r * 0.95f), Offset(c.x + r * dx, c.y + r * 0.95f), r * 0.08f) } }
+            // La luna creciente y una corchea: la radio que suena de noche.
+            TemaId.PSICODELIA -> { luna(0.62f, 0.3f, -0.26f, c + Offset(-r * 0.2f, -r * 0.12f))
+                val nota = c + Offset(r * 0.5f, r * 0.62f)
+                drawOval(color, Offset(nota.x - r * 0.2f, nota.y - r * 0.13f), Size(r * 0.34f, r * 0.26f))
+                drawLine(color, Offset(nota.x + r * 0.12f, nota.y - r * 0.02f), Offset(nota.x + r * 0.12f, nota.y - r * 0.72f), r * 0.08f, StrokeCap.Round)
+                drawPath(Path().apply { moveTo(nota.x + r * 0.12f, nota.y - r * 0.72f); quadraticTo(nota.x + r * 0.42f, nota.y - r * 0.55f, nota.x + r * 0.34f, nota.y - r * 0.3f) },
+                    color, style = Stroke(r * 0.08f, cap = StrokeCap.Round)) }
             // La luna creciente y, desde abajo, un tallo que sube hacia ella y se enrosca, con una hoja de sauce.
             TemaId.NOUVEAU -> { luna(0.56f, 0.3f, -0.24f, c + Offset(-r * 0.18f, -r * 0.2f))
                 val pie = c + Offset(r * 0.5f, r * 0.95f)
@@ -3737,8 +3818,11 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
         // Cruz de mira en el cristal.
         TemaId.DISTOPIA -> { lente(); mango()
             drawLine(color, Offset(c.x - lr * 0.6f, c.y), Offset(c.x + lr * 0.6f, c.y), r * 0.05f); drawLine(color, Offset(c.x, c.y - lr * 0.6f), Offset(c.x, c.y + lr * 0.6f), r * 0.05f) }
-        TemaId.PSICODELIA -> { lente(); mango()
-            drawLine(color, Offset(c.x - lr * 0.6f, c.y), Offset(c.x + lr * 0.6f, c.y), r * 0.05f); drawLine(color, Offset(c.x, c.y - lr * 0.6f), Offset(c.x, c.y + lr * 0.6f), r * 0.05f) }
+        // El cristal con una margarita dentro y el mango que acaba en una bolita, como un abalorio.
+        TemaId.PSICODELIA -> { lente(); mango(0.86f, 0.13f)
+            drawCircle(color, r * 0.085f, Offset(r * 0.9f, r * 0.9f))
+            with(TrazosPsicodelia) { margarita(c, lr * 0.6f, color, null, 6) }
+            drawCircle(color, lr * 0.2f, c, style = Stroke(r * 0.035f)) }
         // El aro de la lupa y el mango que es un tallo: baja en curva, echa una hoja y acaba en un rizo.
         TemaId.NOUVEAU -> { lente()
             val a = Offset(r * 0.63f, r * 0.63f); val b = Offset(r * 0.86f, r * 0.9f)
@@ -3970,7 +4054,7 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> false
     TemaId.TEMPLARIO -> false
     TemaId.DISTOPIA -> false
-    TemaId.PSICODELIA -> false
+    TemaId.PSICODELIA -> false         // el caleidoscopio se abre desde el centro: ni sube ni cae
     TemaId.NOUVEAU -> false            // los pétalos de iris, las hojas de sauce y los rizos de oro caen
     TemaId.GALIA -> false             // las hojas de roble, los estáteros y el muérdago caen
     TemaId.ARCONTES -> true            // las chispas vuelven arriba, a la luz de donde vinieron
@@ -4089,9 +4173,26 @@ fun CapaFiesta(fijo: Float? = null) {
                     TemaId.DISTOPIA -> { drawRect(col, Offset(pos.x - s * 0.7f, pos.y - s * 0.45f), Size(s * 1.4f, s * 0.9f))
                         drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y - s * 0.15f), Offset(pos.x + s * 0.5f, pos.y - s * 0.15f), s * 0.1f)
                         drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y + s * 0.15f), Offset(pos.x + s * 0.2f, pos.y + s * 0.15f), s * 0.1f) }
-                    TemaId.PSICODELIA -> { drawRect(col, Offset(pos.x - s * 0.7f, pos.y - s * 0.45f), Size(s * 1.4f, s * 0.9f))
-                        drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y - s * 0.15f), Offset(pos.x + s * 0.5f, pos.y - s * 0.15f), s * 0.1f)
-                        drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y + s * 0.15f), Offset(pos.x + s * 0.2f, pos.y + s * 0.15f), s * 0.1f) }
+                    // Un caleidoscopio que se abre: cada figura (una margarita, una gota de tinta o una burbuja del show de luces)
+                    // se repite seis veces alrededor del centro, en espejo, como en el tubo, y el dibujo entero gira despacio.
+                    TemaId.PSICODELIA -> rotate(-p.giro * t, pos) {
+                        val centro = Offset(size.width / 2, size.height * 0.42f)
+                        val d = pos - origen
+                        val lejos = d.getDistance() * 0.85f; val angulo = atan2(d.y, d.x)
+                        val vuelta = rad(40.0 * t)
+                        for (k in 0 until 6) {
+                            val g = rad(60.0 * k) + (if (k % 2 == 0) angulo else -angulo) + vuelta
+                            val q = Offset(centro.x + lejos * cos(g), centro.y + lejos * sin(g))
+                            with(TrazosPsicodelia) {
+                                when (p.tono) {
+                                    0 -> margarita(q, s * 0.85f, col, e.background.copy(alpha = a * 0.9f), 6, g)
+                                    1 -> { drawPath(gota(q, s * 0.6f, p.retraso * 3f + t, 0.16f, 3, 24), col)
+                                        drawCircle(Color.White.copy(alpha = a * 0.45f), s * 0.14f, q + Offset(-s * 0.2f, -s * 0.2f)) }
+                                    else -> burbuja(q, s * 0.55f, tonos[p.tono], a)
+                                }
+                            }
+                        }
+                    }
                     // Pétalos de iris con su lengua amarilla, hojas de sauce con su nervio y rizos de oro, como los de los marcos.
                     TemaId.NOUVEAU -> with(TrazosNouveau) {
                         val noche = e.background.luminance() < 0.5f

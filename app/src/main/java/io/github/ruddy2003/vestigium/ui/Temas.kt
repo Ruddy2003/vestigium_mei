@@ -593,7 +593,9 @@ object Temas {
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
             TemaId.TEMPLARIO -> mapOf("animo" to "Ánimo del freire", "momento" to "Crónica de la casa", "gasto" to "Tesorería", "sueno" to "Reposo", "habitos" to "La regla", "hoy" to "Guardia", "cifra" to "Recuento", "foto" to "Desde la torre", "enfoque" to "Instrucción")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
-            TemaId.PSICODELIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
+            // Psicodelia: la pregunta de la calle, los destellos, lo que costó, el sueño con la niebla, lo de cada día en el barrio,
+            // el disco del día, su número, la instantánea y el cartel de la semana en la mesa de dibujo.
+            TemaId.PSICODELIA -> mapOf("animo" to "¿Cómo andas?", "momento" to "Destellos de la calle", "gasto" to "Lo que costó", "sueno" to "Bajo la niebla", "habitos" to "Cada día, en el barrio", "hoy" to "El disco de hoy", "cifra" to "El número de hoy", "foto" to "La instantánea", "enfoque" to "Al cartel de la semana")
             // Art nouveau: el ánimo en color, los bocetos, el bolsillo, el sueño bajo el tragaluz del taller, lo de cada mañana, la
             // página del almanaque, el folio de la revista, la placa fotográfica y la mesa de dibujo.
             TemaId.NOUVEAU -> mapOf("animo" to "Tu ánimo, en color", "momento" to "Bocetos", "gasto" to "Del bolsillo", "sueno" to "Bajo el tragaluz", "habitos" to "Lo de cada mañana", "hoy" to "La página de hoy", "cifra" to "El folio", "foto" to "La placa", "enfoque" to "A la mesa de dibujo")
@@ -705,26 +707,26 @@ object Temas {
     /** Psicodelia: la voz del barrio en 1967, con el disco del día, el periódico del barrio, la radio y los carteles. */
     private val PSICODELIA = mapOf(
         "Mundo" to "El mundo, desde la calle Haight", "Patrimonio Mundial" to "Lugares que hay que ver una vez", "Mapa para rascar" to "El mapa que vas pintando",
-        "Ciudades visitadas" to "Ciudades de tus postales", "Biblioteca de sueños" to "Los sueños de colores", "Cartas" to "Postales con calcomanías", "Escribir una carta" to "Mandar una postal",
+        "Ciudades visitadas" to "Ciudades de tu mochila", "Biblioteca de sueños" to "Los sueños de colores", "Cartas" to "Postales con calcomanías", "Escribir una carta" to "Mandar una postal",
         "Carta" to "Postal con calcomanía", "Conocerte" to "Quién eres en la onda", "Brújula política" to "Lo que se discute en el parque", "Mapas" to "Mapas del barrio",
-        "Salud" to "El cuerpo que baila", "Tus apps" to "Lo que te roba las horas", "Otras vidas" to "Otras canciones", "Logros" to "Discos de oro", "Tu año en historias" to "El año en carteles",
+        "Salud" to "El cuerpo que baila", "Tus apps" to "Lo que te roba el día", "Otras vidas" to "Otras canciones", "Logros" to "Discos de oro", "Tu año en historias" to "El año, cartel por cartel",
         "Anoche" to "Lo que sonó anoche", "Selladas" to "Guardadas en la funda", "Listas para abrir" to "Ya se pueden poner", "A otras personas" to "Para tu gente",
         "Del pasado" to "Las que llegan del pasado", "Hoy" to "El disco de hoy", "Línea de tiempo" to "El surco de los días", "Ahora mismo estoy…" to "Ahora mismo, en la calle…",
-        "Entender" to "Ver los colores", "Registros especiales" to "Las caras B", "Apariencia" to "Los colores del cartel", "Avisos y recordatorios" to "El pandero que te llama",
+        "Entender" to "Ver los colores", "Registros especiales" to "Las caras B", "Apariencia" to "Los colores de la funda", "Avisos y recordatorios" to "El pandero que te llama",
         "Llenar el día" to "Llenar el disco del día", "Biblioteca del diario" to "La discoteca del diario", "Entrada" to "Hoja del periódico", "Día" to "El disco del día", "Momentos" to "Destellos de la calle",
         "Gastos" to "Lo que costó", "Explorar" to "Salir a la calle", "Más" to "El departamento", "Hábitos" to "Lo de cada día en el barrio", "Cartas al futuro" to "Postales para otro verano",
         "Experimentos personales" to "Probar algo nuevo", "Cómo leer tus datos" to "Cómo leer tus surcos", "Guía científica" to "Lo que dicen los que saben",
         "Cuestionarios" to "Las preguntas del periódico", "Prueba de reacción" to "La prueba del pandero", "Lugares" to "Esquinas del barrio", "Datos" to "El archivo del departamento",
-        "Permisos y sensores" to "Lo que oye el teléfono", "Ajustes" to "Afinar la guitarra", "Reportes" to "Carteles para pegar", "Bienvenido" to "Pasa, la puerta está abierta",
+        "Permisos y sensores" to "Lo que escucha el teléfono", "Ajustes" to "Afinar la guitarra", "Reportes" to "Carteles para pegar", "Bienvenido" to "Pasa, la puerta está abierta",
         "Calendario" to "Los discos del año", "Obras" to "Discos, libros y películas", "Tu año" to "Tu año en vinilo", "Privacidad" to "Lo que no se pega en la pared",
         "Sueño" to "Dormir con la niebla", "Contexto" to "Lo que suena alrededor", "Hitos" to "Fechas que se recuerdan", "Ánimo y cuerpo" to "Ánimo y cuerpo, en colores",
-        "Diario" to "El periódico del barrio", "Predicción" to "Lo que viene sonando", "Este día hace un año" to "Este disco, hace un año", "Lo que registró el teléfono" to "Lo que anotó el teléfono",
-        "Registrar" to "Anotar", "Las relaciones más marcadas" to "La gente que más suena", "Mapa" to "El mapa de tus calles", "Mapa emocional" to "El ánimo por las calles",
+        "Diario" to "El periódico del barrio", "Predicción" to "Lo que viene sonando", "Este día hace un año" to "Este disco, hace un año", "Lo que registró el teléfono" to "Lo que el teléfono fue apuntando",
+        "Registrar" to "Poner en el periódico", "Las relaciones más marcadas" to "La gente que más suena", "Mapa" to "El mapa de tus calles", "Mapa emocional" to "El ánimo por las calles",
         "Tablero" to "La mesa del departamento", "Tu día" to "Las pistas del día", "Tu día en 24 horas" to "Las pistas del día", "Te falta hoy" to "Lo que falta en el disco",
-        "Datos que faltan" to "Surcos en blanco", "Tema" to "Los colores del cartel", "Recordatorios" to "Lo que la radio te recuerda", "Resumen semanal" to "La semana en un cartel",
+        "Datos que faltan" to "Surcos en blanco", "Tema" to "Los colores de la funda", "Recordatorios" to "Lo que la radio te recuerda", "Resumen semanal" to "La semana en un cartel",
         "Totales" to "La cuenta del departamento", "Gimnasio" to "Mover el cuerpo", "Buscar" to "Buscar en el periódico", "Cifras" to "Los números del barrio", "Fotos del día" to "Las fotos del día",
-        "Medicamentos" to "El botiquín del departamento", "Seguimiento privado" to "Lo que se guarda en el cajón", "Momentos de la semana" to "Destellos de la semana",
-        "Momentos de este día" to "Destellos de este día", "Lo mejor y lo peor" to "Lo que brilla y lo que se apaga", "Personas, temas e hitos" to "Gente, temas y fechas",
+        "Medicamentos" to "El botiquín del departamento", "Seguimiento privado" to "Lo que se guarda en el cajón", "Momentos de la semana" to "Chispazos de la semana",
+        "Momentos de este día" to "Chispazos de este día", "Lo mejor y lo peor" to "Lo que brilla y lo que se apaga", "Personas, temas e hitos" to "Gente, temas y fechas",
         "Respaldo automático" to "Una copia en otra cinta",
     )
 

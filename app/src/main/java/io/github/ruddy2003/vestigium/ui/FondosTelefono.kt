@@ -219,7 +219,7 @@ object FondosTelefono {
         TemaId.MEDIEVAL -> "Liber vestigii mei"
         TemaId.TEMPLARIO -> "Non nobis, Domine · Vestigium"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
-        TemaId.PSICODELIA -> "EXPEDIENTE PERSONAL"
+        TemaId.PSICODELIA -> "Vestigium · disco del día"   // cada día es un disco, y el fondo es su cartel
         TemaId.NOUVEAU -> "Vestigium · estampe du jour"   // la estampa del día, recién salida de la prensa
         TemaId.GALIA -> "Vestigium · noche a noche"     // los galos cuentan por noches (César 6.18)
         TemaId.ARCONTES -> "Códice de Magdala · Vestigium"
@@ -409,6 +409,61 @@ private fun DrawScope.marcoNouveau(e: androidx.compose.material3.ColorScheme, iz
     }
 }
 
+/**
+ * Psicodelia: el marco de un cartel de concierto. El borde es blando y ondula, con un filete por dentro; detrás del
+ * emblema, el arco de tinta de arcoíris del tintero partido; arriba, en las esquinas, dos margaritas que vibran; abajo,
+ * la calle con su hilera de casas victorianas, casi todas grises y una pintada de turquesa. De noche, la misma calle con
+ * las ventanas encendidas en luz negra y, en las esquinas de arriba, las luces líquidas.
+ */
+private fun DrawScope.marcoPsicodelia(e: androidx.compose.material3.ColorScheme, izq: Float, der: Float, arr: Float, aba: Float, col: Color, tenue: Color, claro: Boolean) {
+    val u = 1.dp.toPx(); val cx = (izq + der) / 2
+    fun borde(dentro: Float) = Path().apply {
+        val x0 = izq + dentro; val x1 = der - dentro; val y0 = arr + dentro; val y1 = aba - dentro; val r = 26 * u; val a = 2.6f * u
+        fun lado(desde: Offset, hasta: Offset, primero: Boolean) {
+            val n = 48; val largo = (hasta - desde).getDistance(); val d = (hasta - desde) / largo; val nn = Offset(-d.y, d.x)
+            for (k in 0..n) {
+                val f = k / n.toFloat()
+                val q = desde + d * (largo * f) + nn * (a * sin(f * largo / (58 * u) * 2 * PI.toFloat()) * sin(PI.toFloat() * f))
+                if (primero && k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y)
+            }
+        }
+        lado(Offset(x0 + r, y0), Offset(x1 - r, y0), true); quadraticTo(x1, y0, x1, y0 + r)
+        lado(Offset(x1, y0 + r), Offset(x1, y1 - r), false); quadraticTo(x1, y1, x1 - r, y1)
+        lado(Offset(x1 - r, y1), Offset(x0 + r, y1), false); quadraticTo(x0, y1, x0, y1 - r)
+        lado(Offset(x0, y1 - r), Offset(x0, y0 + r), false); quadraticTo(x0, y0, x0 + r, y0); close()
+    }
+    with(TrazosPsicodelia) {
+        fun suave(c: Color, k: Float) = lerp(e.background, c, k)
+        // El arco de arcoíris detrás del emblema.
+        val centro = Offset(cx, size.height * 0.41f - 40 * u)
+        val tintas = if (claro) ARCOIRIS.take(5) else listOf(FLUOR_MAGENTA, FLUOR_NARANJA, LIMON, FLUOR_VIOLETA)
+        tintas.forEachIndexed { k, t ->
+            val r = 106 * u + k * 7 * u
+            drawArc(suave(t, if (claro) 0.42f else 0.5f), 196f, 148f, false, Offset(centro.x - r, centro.y - r), Size(2 * r, 2 * r), style = Stroke(5.4f * u, cap = StrokeCap.Round))
+        }
+        // De noche, las luces líquidas en las esquinas de arriba.
+        if (!claro) {
+            lucesLiquidas(Size(130 * u, 130 * u), 0.15f, listOf(LIMON, FLUOR_MAGENTA), 0.55f, Offset(izq - 30 * u, arr - 20 * u))
+            lucesLiquidas(Size(130 * u, 130 * u), 0.55f, listOf(FLUOR_VIOLETA, FLUOR_NARANJA), 0.55f, Offset(der - 100 * u, arr - 10 * u))
+        }
+        // La calle: cinco casas victorianas al pie, casi todas grises y una pintada.
+        val ancho = (der - izq - 20 * u) / 5f
+        for (k in 0 until 5) {
+            val pintada = k == 3
+            val alto = ancho * (2.05f + 0.18f * ((k * 7) % 3))
+            val madera = if (pintada) CASA_TURQUESA else if (k % 2 == 0) CASA_GRIS else lerp(CASA_GRIS, CASA_BLANCA, 0.35f)
+            val luz = if (claro) Color(0xFF5E6B78) else if (k % 2 == 0) FLUOR_VIOLETA else LIMON
+            casaVictoriana(Offset(izq + 10 * u + ancho * (k + 0.5f), aba - 6 * u), ancho * 0.94f, alto,
+                suave(madera, if (claro) 0.55f else 0.42f), suave(if (pintada) CASA_AMARILLA else CASA_BLANCA, if (claro) 0.6f else 0.45f), suave(luz, if (claro) 0.5f else 0.75f))
+        }
+        // Las dos margaritas de las esquinas de arriba.
+        flor(Offset(izq + 30 * u, arr + 30 * u), 16 * u, suave(MAGENTA, 0.85f), suave(VERDE, 0.85f), 8, 0.6f)
+        flor(Offset(der - 30 * u, arr + 30 * u), 16 * u, suave(NARANJA, 0.85f), suave(AZUL, 0.85f), 8, 0.6f)
+    }
+    drawPath(borde(0f), col, style = Stroke(1.4f * u))
+    drawPath(borde(7 * u), tenue, style = Stroke(0.8f * u))
+}
+
 /** Una estrella pequeña de [puntas] puntas, para adornar los marcos. */
 private fun DrawScope.estrellaMarco(c: Offset, r: Float, puntas: Int, color: Color) {
     drawPath(Path().apply {
@@ -552,17 +607,7 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     drawLine(tenue, c + Offset(0f, sy * 4 * u), c + Offset(0f, sy * 14 * u), 1f * u)
                 }
             }
-            TemaId.PSICODELIA -> {
-                // Carpeta de expediente: línea gruesa, dos perforaciones, una franja de «clasificado» y marcas de corte.
-                caja(0f, col, 2f * u)
-                listOf(cy - 40 * u, cy + 40 * u).forEach { y -> drawCircle(tenue, 5 * u, Offset(izq + 16 * u, y), style = Stroke(1.2f * u)) }
-                clipRect(izq, arr, der, aba) { drawLine(e.primary.copy(alpha = 0.3f), Offset(der - 46 * u, arr), Offset(der, arr + 46 * u), 8 * u) }
-                esquinas.forEach { c ->
-                    val sx = if (c.x < size.width / 2) -1f else 1f; val sy = if (c.y < size.height / 2) -1f else 1f
-                    drawLine(tenue, c + Offset(sx * 4 * u, 0f), c + Offset(sx * 14 * u, 0f), 1f * u)
-                    drawLine(tenue, c + Offset(0f, sy * 4 * u), c + Offset(0f, sy * 14 * u), 1f * u)
-                }
-            }
+            TemaId.PSICODELIA -> marcoPsicodelia(e, izq, der, arr, aba, col, tenue, claro)
             TemaId.NOUVEAU -> marcoNouveau(e, izq, der, arr, aba, col, tenue, claro)
             TemaId.GALIA -> marcoGalia(e, izq, der, arr, aba, col, tenue, claro)
             TemaId.ARCONTES -> marcoArcontes(e, izq, der, arr, aba, col, tenue, claro)

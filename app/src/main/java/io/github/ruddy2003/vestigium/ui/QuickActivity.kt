@@ -1208,7 +1208,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.MEDIEVAL -> 10.dp
     TemaId.TEMPLARIO -> 9.dp
     TemaId.DISTOPIA -> 12.dp
-    TemaId.PSICODELIA -> 12.dp
+    TemaId.PSICODELIA -> 16.dp
     TemaId.NOUVEAU -> 16.dp
     TemaId.GALIA -> 16.dp
     TemaId.ARCONTES -> 7.dp
@@ -1294,9 +1294,25 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         val p = 12 * u; val a = w * 0.38f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
     }
+    // Una nube de luces líquidas: el borde de arriba sube en cinco gotas blandas de distinto tamaño que se funden entre sí,
+    // como el aceite y la tinta entre los dos vidrios del retroproyector.
     TemaId.PSICODELIA -> formaDp { w, h, u ->
-        val p = 12 * u; val a = w * 0.38f
-        moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+        val p = 16 * u; val k = 2.6f * u
+        // Las gotas, como medias elipses que asoman sobre el borde: dónde está su centro (en fracción del ancho), su medio
+        // ancho y cuánto suben (en dp). Las vecinas se tocan y se funden en un cuello blando.
+        val gotas = listOf(Triple(0.12f, 44f, 6f), Triple(0.3f, 60f, 11f), Triple(0.52f, 74f, 16f), Triple(0.74f, 56f, 11.5f), Triple(0.9f, 36f, 6f))
+        fun alto(x: Float): Float {
+            var suma = 1f
+            for ((cx, a, sube) in gotas) {
+                val d = (x - cx * w) / (a * u); val b = a * 0.6f * u
+                if (d * d < 1f) suma += kotlin.math.exp((sube * u - b + b * kotlin.math.sqrt(1f - d * d)) / k)
+            }
+            return k * kotlin.math.ln(suma)
+    }
+    moveTo(0f, h); lineTo(0f, p - alto(0f))
+    var x = 0f
+    while (x < w) { x = minOf(x + 1.5f * u, w); lineTo(x, p - alto(x)) }
+    lineTo(w, h); close()
     }
     // El arco de un cartel de 1900: sube al centro en la curva larga de la línea de látigo y, en cada pie, el ojo del rizo
     // donde se enrosca.
@@ -1541,7 +1557,26 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     // El escudete: recto arriba y redondeado abajo.
     TemaId.TEMPLARIO -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.PSICODELIA -> RectangleShape
+    // El botón blando de un cartel que se derrite: las esquinas infladas, el canto de arriba apenas combado y, del de abajo,
+    // dos gotas que se escurren.
+    TemaId.PSICODELIA -> formaDp { w, h, u ->
+        val g = minOf(5.5f * u, h * 0.14f); val b = h - g
+        val r = minOf(14 * u, b / 2, w / 4); val f = minOf(1.8f * u, b * 0.05f)
+        fun gota(dx: Float, largo: Float, dw: Float) {
+            val cuello = minOf(dw * 0.8f, largo - dw)
+            lineTo(dx + dw * 1.8f, b); quadraticTo(dx + dw, b, dx + dw, b + cuello)
+            lineTo(dx + dw, b + largo - dw); arcTo(Rect(Offset(dx, b + largo - dw), dw), 0f, 180f, false)
+            lineTo(dx - dw, b + cuello); quadraticTo(dx - dw, b, dx - dw * 1.8f, b)
+    }
+    moveTo(0f, r + f); quadraticTo(0f, f, r, f)
+    quadraticTo(w / 2, -f, w - r, f)
+    quadraticTo(w, f, w, r + f)
+    lineTo(w, b - r); quadraticTo(w, b, w - r, b)
+    gota(w * 0.74f, g, minOf(2.2f * u, g * 0.4f))
+    gota(w * 0.3f, g * 0.62f, minOf(1.6f * u, g * 0.3f))
+    lineTo(r, b); quadraticTo(0f, b, 0f, b - r)
+    close()
+    }
     // El frasco de perfume: los hombros se estrechan en una S hacia el tapón, esquinas suaves abajo.
     TemaId.NOUVEAU -> formaDp { w, h, u ->
         val d = minOf(7 * u, w * 0.1f); val m = h * 0.5f; val r = minOf(4 * u, h / 4)

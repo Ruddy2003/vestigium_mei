@@ -213,12 +213,23 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
             drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
         }
+        // El disco de oro: el disco en el metal del nivel, con sus surcos, los dos brillos que cruzan y la etiqueta con el
+        // canto en forma de flor.
         TemaId.PSICODELIA -> {
-            val hex = figPoligono(c, r * 0.97f, 6)
-            forma(hex)
-            clipPath(hex) { drawRect(if (hecho) Color(0xFFB3261E).copy(alpha = 0.85f) else borde.copy(alpha = 0.25f), Offset(0f, c.y + r * 0.5f), Size(size.width, r * 0.2f)) }
-            drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
-            drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
+            forma(disco(c, r * 0.97f))
+            var k = 0.9f
+            while (k > 0.56f) { drawCircle(sombra.copy(alpha = sombra.alpha * 0.55f), r * k, c, style = Stroke(r * 0.018f)); k -= 0.07f }
+            listOf(-40f, 140f).forEach { a -> drawArc(luz, a, 26f, true, Offset(c.x - r * 0.9f, c.y - r * 0.9f), Size(r * 1.8f, r * 1.8f)) }
+            val etiqueta = Path().apply {
+                for (i in 0..96) {
+                    val a = i * 2 * kotlin.math.PI / 96; val rr = r * (0.47f + 0.045f * kotlin.math.cos(a * 8).toFloat())
+                    val x = c.x + rr * kotlin.math.cos(a).toFloat(); val y = c.y + rr * kotlin.math.sin(a).toFloat()
+                    if (i == 0) moveTo(x, y) else lineTo(x, y)
+                }
+                close()
+            }
+            drawPath(etiqueta, if (hecho) lerp(metal, Color.White, 0.55f) else apagado)
+            drawPath(etiqueta, sombra, style = Stroke(r * 0.03f))
         }
         // La plaqueta de la Exposición de 1900: rectangular y de remate en arco, con el filete de dentro, un iris en relieve
         // con sus hojas y la anilla de arriba.

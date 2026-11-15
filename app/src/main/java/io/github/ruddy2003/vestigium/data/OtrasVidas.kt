@@ -974,6 +974,45 @@ object OtrasVidas {
                 "La Exposición Universal de 1900" to "https://fr.wikipedia.org/wiki/Exposition_universelle_de_1900", "La cromolitografía" to "https://fr.wikipedia.org/wiki/Chromolithographie",
                 "La prensa litográfica" to "https://fr.wikipedia.org/wiki/Presse_lithographique", "Marzo de 1900: la ley del 30 de marzo" to "https://fr.wikipedia.org/wiki/Mars_1900",
                 "El café-concierto" to "https://fr.wikipedia.org/wiki/Caf%C3%A9-concert")),
+        // ------------------------------------------------ lote 10 (docs/diseno/PLAN_TEMAS.md, 10g)
+        // Persona inventada en un mundo real (10a), como Eleazar, Segomaros y Marguerite: no es ficción (`ficticia = false`),
+        // sus cifras son reconstrucciones (`r`) y su calendario lleva días históricos y aproximados con su fuente
+        // (`vidas/anios/AnioG9.kt`). Las fechas están comprobadas en `docs/diseno/temas/fuentes_psicodelia.md`, con sus
+        // correcciones (sección 1): las casas casi todas grises, alguna pintada (1); las salas y la radio por su calle o su
+        // frecuencia (6); los bailes de jueves a sábado, y el día de la agenda es uno de esos (17). Su nombre es uno de los de
+        // la ficha **[Aproximación]** (corrección 19), y no es el de nadie de la escena (David, no Wes, Rick, Stanley, Alton,
+        // Victor, Tom ni Michael); el apellido es inventado. La ficha dice «24 años en 1967»: tiene 22 en la temporada 1, el 1965.
+        // **Regla del tema:** nada de drogas, ni de lejos ni en jerga, y nada de alcohol ni tabaco (PLAN_TEMAS, 10g; sección 9).
+        Vida("cartelista", "David", "Dibujante de carteles de conciertos", "San Francisco, en un departamento compartido del barrio de Haight-Ashbury", "hacia 1967", 1965, "tema", "psicodelia", edad = 22,
+            inspiracion = "Persona inventada. Inspirado en los dibujantes de carteles de las salas de baile de San Francisco en 1966 y 1967; las cifras son reconstrucciones.",
+            historia = listOf(
+                "David Hale llega a San Francisco el primer día de 1965, a los veintidós años, en el autobús que viene de Stockton, con una maleta y una carpeta de dibujos. Alquila un cuarto en un departamento compartido de la calle Page, en una casa victoriana gris dividida en departamentos, como tantas del barrio de Haight-Ashbury, donde los cuartos son baratos. De día trabaja en una imprenta pequeña, y un rotulista viejo le enseña a pintar letras con pincel.",
+                "En 1966 las salas de baile empiezan a pedir un cartel para cada baile de la semana, y él dibuja los suyos: letras de bloque que llenan toda la forma, como las de los carteles de la Secesión de Viena, y colores que vibran uno junto al otro. Los bailes son de jueves a sábado, y un día suyo es uno de esos: dibuja toda la tarde el cartel de la semana, come en la cocina del departamento y se va a la sala de la calle Sutter o al auditorio de Geary, donde las luces líquidas se mueven por las paredes.",
+                "En 1967 llega el verano del amor: los poetas y las bandas en el pasto del parque en enero, la radio FM que de noche pone discos enteros, la comida gratis de las cuatro en el Panhandle y el festival de Monterey en junio. Las casas del barrio son casi todas grises, con alguna pintada de colores fuertes. Los poetas, los músicos, los dibujantes de las salas y los que organizan los bailes son los de la época y salen de lejos; él y su gente son inventados.",
+            ),
+            dia = listOf(t(4.0, 12.0, Hacer.DORMIR, "en su cuarto del departamento, con la cortina cerrada contra la niebla"), t(12.0, 13.0, Hacer.COMER, "café, pan tostado y huevos en la cocina"),
+                t(13.0, 18.0, Hacer.TRABAJO, "dibujar el cartel de la semana"), t(18.0, 19.0, Hacer.COMER, "en la cocina del departamento compartido"),
+                t(19.0, 20.0, Hacer.CAMINO, "en trolebús o en autobús, por quince centavos, hasta la sala de baile"),
+                t(20.0, 2.0, Hacer.GENTE, "el baile y el show de luces, de jueves a sábado, en la sala de la calle Sutter o en el auditorio de Geary"),
+                t(2.0, 4.0, Hacer.LIBRE, "música en el departamento")),
+            datos = mapOf("pasos" to r(9000, "Las cuestas del barrio, la calle Haight, el camino a la sala y horas de pie en el baile."),
+                "km_anio" to r(3000, "Trolebús y autobús por la ciudad; alguna vuelta a Stockton y, en junio de 1967, Monterey."),
+                "kcal" to r(2500, "Comida barata del departamento: arroz, frijoles, pan, huevos y, algunas tardes, el guiso gratis del Panhandle."),
+                "proteina" to r(70, "Huevos, frijoles, leche y, pocas veces, carne."), "azucar" to r(55, "Refrescos, café con azúcar y pan dulce."),
+                "fibra" to r(18, "Pan blanco, arroz y poca fruta."), "alcohol" to r(0, "No bebe."),
+                "sueno" to r(8.0, "De las cuatro de la mañana al mediodía, con la cortina cerrada."), "dormir" to r(28.0),
+                "trabajo" to r(35, "Cinco horas cada tarde, seis días a la semana, y alguna noche entera cuando el cartel no sale."),
+                "aire_libre" to r(2.0, "El camino, la calle y, algunos días, el parque."), "pantalla" to r(0.5, "El televisor en blanco y negro de la cocina, a ratos."),
+                "notificaciones" to r(10, "El teléfono del pasillo, el timbre y los compañeros que lo llaman desde la escalera."),
+                "musica" to r(7.0, "Cuatro horas de baile, la radio de noche y los discos del departamento."),
+                "personas_dia" to r(60, "Los del departamento, los de la imprenta y la gente del baile."), "conocidas" to r(2000),
+                "poblacion" to r(740000, "San Francisco en los años sesenta; la cifra es aproximada."), "lejos" to r(200, "Monterey, al sur, en junio de 1967."),
+                "estatura" to r(177, "Promedio aproximado de los hombres de Estados Unidos nacidos en los años cuarenta."),
+                "vida" to r(63, "Estimación para los nacidos en Estados Unidos hacia 1943."), "vida_adulto" to r(75), "hijos" to r(2.5, "Estimación para Estados Unidos en 1967."),
+                "alfabetizacion" to r(98), "lectura" to r(15, "Libros de bolsillo de segunda mano, sobre todo de poesía, y el periódico del barrio.")),
+            fuentes = listOf("Haight-Ashbury" to "${W}Haight-Ashbury", "El verano del amor" to "${W}Summer_of_Love",
+                "Los carteles de las salas de baile" to "${W}Psychedelic_art", "Las luces líquidas" to "${W}Liquid_light_show",
+                "Las casas victorianas de San Francisco" to "${W}Painted_ladies", "Alfred Roller, de la Secesión de Viena" to "${W}Alfred_Roller")),
     )
 
     /** Las vidas que se ven con el tema [tema]: las doce de todos y la del tema (primero). */

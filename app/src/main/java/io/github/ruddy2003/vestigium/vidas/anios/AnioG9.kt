@@ -9,12 +9,13 @@ import io.github.ruddy2003.vestigium.vidas.TemporadaVida
 import io.github.ruddy2003.vestigium.vidas.TipoArco
 
 /*
- * Los calendarios del grupo 9: las otras vidas de los temas del lote 10 (`docs/diseno/PLAN_TEMAS.md`, 10a a 10g). Por
- * ahora, la de Frente exterior (10c), Tadeo, el ladrón de piezas al que recluta la red; la de Arcontes (10d), Eleazar,
- * el salador de pescado de Magdala; la de Galia (10e), Segomaros, el aprendiz de los druidas de Gergovia, y la de Art
- * nouveau (10f), Marguerite, la aprendiz de un taller de litografía de París. Siguen las reglas de `AnioPiloto.kt`; el de
- * Tadeo, el estilo de los de ficción de `AnioG7.kt`, y los de Eleazar, Segomaros y Marguerite, el de las personas
- * inventadas en mundos reales (Zaynab y Bernat en `AnioG4.kt`).
+ * Los calendarios del grupo 9: las otras vidas de los temas del lote 10 (`docs/diseno/PLAN_TEMAS.md`, 10a a 10g). Son
+ * cinco: la de Frente exterior (10c), Tadeo, el ladrón de piezas al que recluta la red; la de Arcontes (10d), Eleazar,
+ * el salador de pescado de Magdala; la de Galia (10e), Segomaros, el aprendiz de los druidas de Gergovia; la de Art
+ * nouveau (10f), Marguerite, la aprendiz de un taller de litografía de París, y la de Psicodelia (10g), David, el
+ * dibujante de carteles de conciertos de San Francisco. Siguen las reglas de `AnioPiloto.kt`; el de Tadeo, el estilo de
+ * los de ficción de `AnioG7.kt`, y los de Eleazar, Segomaros, Marguerite y David, el de las personas inventadas en mundos
+ * reales (Zaynab y Bernat en `AnioG4.kt`).
  *
  * Lo propio de este grupo:
  *
@@ -34,11 +35,14 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
  *   de 1898 a 1902: entra de aprendiz, la víspera de la Exposición, el año de la Exposición y del metro, los faroles de
  *   las entradas y la jornada de diez horas y media. Lo que vuelve cada año (el Año Nuevo, la visita a Auteuil y el
  *   inventario del taller) comparte su id y su texto.
- * - El otro tema del lote (Psicodelia) también será una persona inventada en un mundo real: cuando llegue, su
- *   calendario podrá tener días históricos con su fuente.
+ * - **Psicodelia también es una persona inventada en un mundo real,** con unos 20 días por temporada. Su historia avanza
+ *   de 1965 a 1969: llega a San Francisco, los primeros carteles de las salas de baile, el verano del amor, el año de
+ *   después y el barrio que cambia. Lo que vuelve cada año (la niebla del verano, el calor de septiembre, Acción de
+ *   Gracias y Navidad) comparte su id y su texto. **Las drogas no aparecen nunca**, ni de lejos ni en jerga (la regla
+ *   propia del tema, PLAN_TEMAS 10g, y la sección 9 de `fuentes_psicodelia.md`).
  */
 internal object AnioG9 {
-    val TODOS: List<Calendario> by lazy { listOf(AGENTE, INICIADO, APRENDIZ, LITOGRAFA) }
+    val TODOS: List<Calendario> by lazy { listOf(AGENTE, INICIADO, APRENDIZ, LITOGRAFA, CARTELISTA) }
 
     /**
      * Días «históricos» sin enlace porque su fecha sale de un cálculo: en la ficción no hay ninguno, y en el calendario de
@@ -1124,5 +1128,275 @@ internal object AnioG9 {
         ),
         objetos = listOf("piedra", "rodillo", "moleta", "lapiz", "cuaderno", "delantal", "peine", "lazo", "postal", "libro_flores", "abanico", "periodico"),
         estados = listOf(Estado("exposicion", "abre_exposicion", "cierra_exposicion")),
+    )
+
+    // =====================================================================
+    //  David, dibujante de carteles de conciertos. San Francisco, de 1965 a 1969.
+    // =====================================================================
+    //
+    // La ficha es la de PLAN_TEMAS, 10g («Otra vida»), con las correcciones de `docs/diseno/temas/fuentes_psicodelia.md`
+    // (sección 1). Lo que allí va como «[sin verificar]» no se afirma aquí. Es una persona inventada en un mundo real
+    // (10a): sus días históricos y aproximados llevan su fuente; lo de su vida es inventado.
+    //
+    // **La regla del tema** (PLAN_TEMAS, 10g, y `docs/diseno/temas/psicodelia.md`): las drogas no aparecen nunca, ni de
+    // lejos, ni en otros personajes, ni insinuadas, ni en jerga. Lo de la sección 9 de las fuentes queda fuera: del encuentro
+    // del parque (14 de enero de 1967) solo salen los poetas, las bandas y la gente en el pasto, sin su lema ni su comida;
+    // no salen la primera tienda de Haight (3 de enero de 1966), la clínica gratuita (7 de junio de 1967), el autobús
+    // pintado de las fiestas de Kesey, el otro nombre de la música ni el artículo de Didion. Del 6 de octubre de 1967, solo el
+    // entierro de mentira. Tampoco hay alcohol ni tabaco. El personaje vive la música, los carteles, las luces, la calle,
+    // el trabajo y la gente.
+    //
+    // Los nombres (corrección 6): las salas y la radio van por su calle o su frecuencia («la sala de la calle Sutter», «el
+    // auditorio de Geary», «la FM del 106.9»), el periódico del barrio sin su título, y el festival como «el festival de
+    // Monterey». Sin nombres de bandas ni de canciones. La gente real (Bill Graham, Rick Griffin, Alfred Roller, los poetas
+    // del parque, los Hare Krishna) sale de lejos, como la cuentan las fuentes. Las casas son casi todas grises, con alguna
+    // pintada (corrección 1): las calles enteras de colores son de los años 70.
+    //
+    // Dónde (recurso): el departamento compartido está en el primer piso de una casa victoriana gris de la calle Page, a
+    // una cuadra del Panhandle y otra de Haight. La dueña, la señora Petrakis, viuda, vive en la planta baja. La imprenta
+    // del señor Okada está cerca de Market; el taller de rótulos del viejo Sal, en la calle Valencia. A las salas va en
+    // trolebús o en autobús, por quince centavos hasta que el pasaje sube a veinte, en 1969 (`fuentes`, sección 4).
+    //
+    // Su gente (toda inventada): su madre, en Stockton, que le escribe y lo llama por Navidad; la señora Petrakis; Gil
+    // Ortega, que comparte el departamento y toca el órgano de transistores en una banda del barrio (desde `gil_banda`, 2)
+    // hasta que se va a Los Ángeles (`gil_se_va`, 5); Nora, que cose ropa para las tiendas de Haight y se vuelve a Portland
+    // (`nora_se_va`, 4); el señor Okada, el impresor; el viejo Sal, el rotulista que le enseña las letras (de `rotulista`, 1,
+    // a `sal_retira`, 5); Ellen, que mueve las luces líquidas en las salas: la conoce en la 2, salen juntos en la 3 y se
+    // muda al departamento en la 4; su primo Eddie, que pasa con él el verano de 1967, y el muchacho que, en la 5, le pide
+    // que le enseñe las letras.
+    //
+    // Las temporadas, de 1965 a 1969 (las de la propuesta, sin cambios):
+    // 1. **1965, la llegada.** Llega el primer día del año; la imprenta; el viejo Sal y las letras de pincel; la autopista
+    //    que iba a cruzar el Panhandle; el sótano de la calle Page; el poder de las flores; el primer baile benéfico de Bill
+    //    Graham (10 de diciembre); el sitar en la radio.
+    // 2. **1966, las salas.** Los bailes de cada semana en la calle Sutter; las letras que se derriten; las luces del
+    //    auditorio de Geary; su primer cartel; Ellen; el periódico del barrio (2 y 20 de septiembre); la sala grande de
+    //    Graham (23 de septiembre); el entierro del dinero (17 de diciembre).
+    // 3. **1967, el verano del amor.** El encuentro del parque (14 de enero), el baile de los Hare Krishna (29 de enero), la
+    //    FM de medianoche (12 de febrero) y a toda hora (6 de agosto), la marcha (15 de abril), la comida de las cuatro en el
+    //    Panhandle, el monte Tamalpais (10 y 11 de junio), Monterey (16 a 18 de junio), la portada de Time (7 de julio), la de
+    //    Life sobre los carteles (1 de septiembre) y el entierro de mentira del hippie (6 de octubre).
+    // 4. **1968, el año de después.** El último número del periódico; la huelga de la FM (18 de marzo); Graham deja el
+    //    auditorio de Geary; los Diggers se acaban; el símbolo de la paz en todas partes; Ellen en el departamento.
+    // 5. **1969, el barrio cambia; él sigue dibujando.** Cierra la sala de la calle Sutter; el pasaje sube a veinte
+    //    centavos; otras casas se pintan, y la de la señora Petrakis también; Sal se retira; Gil se va; su cartel número
+    //    cien; un aprendiz.
+    //
+    // Las fechas:
+    // - «Histórico», solo las que `fuentes_psicodelia.md` da con día (sección 2 y la tabla de las salas). Lo que solo tiene
+    //   año, mes o estación (la autopista, las casas pintadas, el sótano de Page, el éxito de la distorsión, las luces, el
+    //   poder de las flores, el sitar en el pop, las salas de 1966, la comida del Panhandle, el último periódico, la salida
+    //   de Graham, el fin de los Diggers, el símbolo de la paz, el cierre de la sala de Sutter y el pasaje) va «aproximado»,
+    //   con el día elegido dentro. La niebla del verano y el calor de septiembre son los del clima de hoy (corrección 21):
+    //   «aproximado», y su día, elegido.
+    // - **No se usan** hechos que el archivo de fuentes no trae, aunque sean de esos años: ni los asesinatos de 1968, ni la
+    //   llegada a la Luna, ni otros festivales de 1969. Las fuentes no dicen hasta cuándo daban de comer los Diggers en el
+    //   Panhandle: el cuento deja de contarlo cuando el grupo se acaba (`diggers_fin`, «aproximado»).
+    //
+    // Claves de escena: carteles (un cartel nuevo en el poste de la esquina), rotulo (el escaparate de la lavandería con
+    // sus letras nuevas), radio (la ventana encendida a deshoras, con la radio en el alféizar), parque (banderines y flores
+    // en la calle, camino del parque), mudanza (cajas en la escalera de la entrada), luz_negra (la ventana de su cuarto con
+    // el brillo violeta de la luz negra), pintura (escaleras, andamio y latas en la fachada de su casa), cerrado (la tienda
+    // de la esquina con tablas) y fiesta (luces en las ventanas). Nunca personas.
+    //
+    // Arcos: casa (la casa de la señora Petrakis: 0 = gris; de 0.3 a 1, pintada de turquesa con molduras amarillas, en los
+    // tres días de `pintan_casa`), calle (las otras casas pintadas de la calle: 0.1 es una sola, la de azules y verdes; desde
+    // `colores_calle`, 0.25: dos) y carteles (lo llenos que están los postes de carteles de baile: ninguno hasta los bailes de
+    // la calle Sutter, en febrero de 1966; llenos en el verano de 1967; menos después del entierro de octubre). Estado:
+    // «monterey» (temporada 3, los tres días del festival): no está en la ciudad. En la temporada 5, que desde 2032 se
+    // repite, lo que no debe moverse es fiesta o suceso del mundo, y sus sucesos personales no forman cadenas.
+    //
+    // Lo que el cuadro tiene que mostrar para contar lo mismo que el cuento (el cuadro de Psicodelia va después de la tanda
+    // S19; la ficha del tema, PLAN_TEMAS 10g, pide la calle de casas al atardecer con niebla y la sala de baile con las luces
+    // líquidas):
+    // - **La calle Page (lugar principal):** una calle en cuesta de casas victorianas casi todas grises o desteñidas, con la
+    //   niebla que entra al atardecer; las pintadas según `calle`; la de la señora Petrakis según `casa` (gris, y desde mayo
+    //   de 1969, turquesa con molduras amarillas); los postes con carteles según `carteles`; en el primer piso, la ventana de
+    //   su cuarto con la mesa de dibujo, encendida de tarde, y a oscuras durante «monterey». Al fondo, los árboles del
+    //   Panhandle. Con los claves de escena del día.
+    // - **La sala de baile (de noche):** las luces líquidas proyectadas, aceite y tinta entre dos vidrios del retroproyector
+    //   (corrección 22), en el tramo del baile (de 20 a 2). Vuelve cada semana, así que, según la decisión 21, pide su
+    //   cuadro; si va como cuadro propio o como la ventana de la sala vista desde la calle lo decide la tanda que lo dibuje.
+
+    private val FN_HAIGHT = "Haight-Ashbury" to "${W}Haight-Ashbury"
+    private val FN_PINTADAS = "Las casas victorianas pintadas de San Francisco" to "${W}Painted_ladies"
+    private val FN_PAGE = "Las sesiones del sótano de la calle Page" to "${W}Chet_Helms"
+    private val FN_DISTORSION = "La guitarra con distorsión" to "${W}Distortion_(music)"
+    private val FN_CLIMA = "El clima de San Francisco" to "${W}San_Francisco#Climate"
+    private val FN_LUCES = "Las luces líquidas" to "${W}Liquid_light_show"
+    private val FN_FLORES = "El poder de las flores" to "${W}Flower_power"
+    private val FN_GRAHAM = "Bill Graham" to "${W}Bill_Graham_(promoter)"
+    private val FN_SITAR = "El sitar en la música pop" to "${W}Raga_rock"
+    private val FN_SUTTER = "La sala de la calle Sutter" to "${W}Avalon_Ballroom"
+    private val FN_GEARY = "El auditorio de Geary" to "${W}The_Fillmore"
+    private val FN_LETRAS = "Wes Wilson y las letras que se derriten" to "${W}Wes_Wilson"
+    private val FN_PERIODICO = "El periódico del barrio" to "${W}San_Francisco_Oracle"
+    private val FN_SALA_GRANDE = "La sala grande de Graham" to "${W}Winterland_Ballroom"
+    private val FN_DIGGERS = "Los Diggers" to "${W}Diggers_(theater)"
+    private val FN_PARQUE = "El encuentro del parque" to "${W}Human_Be-In"
+    private val FN_KRISHNA = "El baile de los Hare Krishna en la calle Sutter" to "${W}Mantra-Rock_Dance"
+    private val FN_VERANO = "El verano del amor" to "${W}Summer_of_Love"
+    private val FN_FM = "La FM del 106.9" to "${W}KFRC-FM"
+    private val FN_MONTEREY = "El festival de Monterey" to "${W}Monterey_International_Pop_Festival"
+    private val FN_CARTELES = "Los carteles de las salas de baile" to "${W}Psychedelic_art"
+    private val FN_GRIFFIN = "Rick Griffin" to "${W}Rick_Griffin"
+    private val FN_PAZ = "El símbolo de la paz" to "${W}Peace_symbols"
+    private val FN_MUNI = "Los autobuses de la ciudad" to "${W}San_Francisco_Municipal_Railway"
+
+    /** Lo que vuelve cada año: los mismos ids, el mismo texto. Acción de Gracias es el cuarto jueves de noviembre. */
+    private val NIEBLA_VERANO = mundo("niebla_verano", "06-02", "Entra la niebla del verano por el Golden Gate y se queda días sobre la ciudad", certeza = A, fuente = FN_CLIMA, clima = Clima.NIEBLA)
+    private val CALOR = mundo("calor_septiembre", "09-18", "El calor de septiembre, el mes más cálido del año en la ciudad", certeza = A, fuente = FN_CLIMA, clima = Clima.DESPEJADO)
+    private fun accionDeGracias(fecha: String) = fiesta("accion_gracias", fecha, "Acción de Gracias en la cocina del departamento: un pavo para ocho", certeza = INV)
+    private val NAVIDAD = fiesta("navidad", "12-25", "Navidad en el departamento, y su madre llama de larga distancia desde Stockton", certeza = INV)
+
+    val CARTELISTA = Calendario(
+        vida = "cartelista",
+        estaciones = Calendario.TEMPLADO_NORTE,
+        // San Francisco: inviernos templados con las lluvias; primavera clara y con viento; un verano fresco y de niebla, que
+        // entra por el Golden Gate; septiembre y octubre, los meses más cálidos y despejados. Nunca nieva (`fuentes`,
+        // sección 4; son promedios de hoy). [Aproximación]
+        clima = listOf(
+            mes(despejado = 8, nubes = 9, lluvia = 9, niebla = 3, viento = 1), mes(despejado = 8, nubes = 9, lluvia = 8, niebla = 3, viento = 2),
+            mes(despejado = 10, nubes = 9, lluvia = 7, niebla = 3, viento = 2), mes(despejado = 12, nubes = 8, lluvia = 4, niebla = 4, viento = 3),
+            mes(despejado = 12, nubes = 7, lluvia = 1, niebla = 7, viento = 3), mes(despejado = 10, nubes = 5, niebla = 12, viento = 4),
+            mes(despejado = 8, nubes = 4, niebla = 15, viento = 4), mes(despejado = 8, nubes = 4, niebla = 15, viento = 3),
+            mes(despejado = 16, nubes = 4, niebla = 7, viento = 2), mes(despejado = 15, nubes = 6, lluvia = 2, niebla = 5, viento = 2),
+            mes(despejado = 10, nubes = 9, lluvia = 7, niebla = 3, viento = 2), mes(despejado = 8, nubes = 9, lluvia = 9, niebla = 3, viento = 1),
+        ),
+        temporadas = listOf(
+            TemporadaVida("1965", "barrio",
+                "David llega a San Francisco el primer día del año y alquila un cuarto en un departamento compartido de la calle Page. Entra en la imprenta del señor Okada, y el viejo Sal, un rotulista, le enseña a pintar letras con pincel y le enseña los carteles de Viena de Alfred Roller. En el barrio se habla de la autopista del Panhandle, en un sótano de la calle Page se toca música por cincuenta centavos y, en la calle, una casa pintada de azules y verdes destaca entre las grises. En la radio suenan la guitarra con distorsión y, en diciembre, un sitar. Pinta su primer escaparate, compra un tocadiscos y va al primer baile benéfico de Bill Graham en el auditorio de Geary.",
+                listOf(
+                    suceso("llega", "01-01", "Llega a San Francisco en el autobús de Stockton, con una maleta y una carpeta de dibujos"),
+                    suceso("imprenta", "01-11", "Entra a trabajar en la imprenta pequeña del señor Okada, cerca de Market"),
+                    mundo("autopista", "01-28", "Dicen que una autopista cruzará el Panhandle, y por eso los cuartos del barrio son baratos", certeza = A, fuente = FN_HAIGHT),
+                    suceso("rotulista", "02-15", "Conoce al viejo Sal, el rotulista que pinta letras de oro en los escaparates"),
+                    suceso("primeras_letras", "03-08", "Sal le enseña a pintar una letra con el pincel, de una sola pasada"),
+                    mundo("casa_pintada", "03-29", "En la calle, entre las casas grises, una victoriana pintada de azules y verdes", certeza = A, fuente = FN_PINTADAS),
+                    mundo("sotano_page", "04-24", "En un sótano de la calle Page se junta gente a tocar: la entrada, cincuenta centavos", certeza = A, fuente = FN_PAGE),
+                    mundo("distorsion", "05-15", "En la radio suena un éxito con la guitarra rasposa de un pedal de distorsión", certeza = A, fuente = FN_DISTORSION),
+                    NIEBLA_VERANO,
+                    suceso("vitrina", "06-26", "Pinta solo su primer escaparate: el nombre de la lavandería de la esquina", escena = "rotulo"),
+                    mundo("luces", "07-20", "Oye hablar de unas luces de colores que se proyectan sobre las bandas mientras tocan", certeza = A, fuente = FN_LUCES),
+                    suceso("libro_viena", "08-14", "Sal le enseña un libro viejo con los carteles de Viena de Alfred Roller"),
+                    CALOR,
+                    suceso("tocadiscos", "10-02", "Compra en la calle Haight un tocadiscos de maleta, de segunda mano"),
+                    mundo("flores", "10-16", "En Berkeley, contra la guerra, un poeta empieza a hablar del poder de las flores", certeza = A, fuente = FN_FLORES),
+                    suceso("menu_cafe", "11-06", "Le pinta a un café del barrio el pizarrón del menú, con letras que se curvan"),
+                    accionDeGracias("11-25"),
+                    mundo("baile_geary", "12-10", "Va al primer baile benéfico que organiza Bill Graham, en el auditorio de Geary", certeza = H, fuente = FN_GRAHAM),
+                    mundo("sitar", "12-18", "En la radio suena por primera vez una canción pop con un sitar", certeza = A, fuente = FN_SITAR),
+                    NAVIDAD,
+                )),
+            TemporadaVida("1966", "salas",
+                "En la calle Sutter empiezan los bailes de cada semana, cada uno con su cartel, y en los postes aparecen las letras que se derriten. Gil entra a tocar el órgano en una banda del barrio. En el auditorio de Geary montan luces y cine en las paredes, y Bill Graham pelea su permiso de sala de baile. David dibuja su primer cartel para un baile de la calle Sutter y conoce a Ellen, que mueve las luces líquidas. Lo declaran no apto para el servicio militar por la vista. Se cancela la autopista del Panhandle. En septiembre sale el periódico del barrio, y Graham alquila una sala grande. En diciembre, unos con máscaras pasean por Haight un ataúd lleno de dinero falso.",
+                listOf(
+                    suceso("gil_banda", "01-15", "Gil, su compañero de departamento, entra a tocar el órgano en una banda del barrio"),
+                    mundo("sutter", "02-19", "En la calle Sutter empiezan los bailes de cada semana, cada uno con su cartel", certeza = A, fuente = FN_SUTTER, escena = "carteles"),
+                    mundo("letras_derretidas", "03-12", "En los postes aparecen carteles con letras que se doblan como si se derritieran", certeza = A, fuente = FN_LETRAS),
+                    mundo("permiso", "04-20", "Bill Graham pelea con la ciudad el permiso de sala de baile del auditorio de Geary", certeza = A, fuente = FN_GRAHAM),
+                    suceso("primer_cartel", "05-07", "Dibuja su primer cartel para un baile de la calle Sutter", escena = "carteles"),
+                    mundo("luces_geary", "05-21", "En el auditorio de Geary montan estroboscopios, diapositivas y cine en las paredes", certeza = A, fuente = FN_GEARY),
+                    NIEBLA_VERANO,
+                    suceso("conoce_ellen", "06-18", "Conoce a Ellen, que mueve las luces líquidas de la sala con las manos manchadas"),
+                    suceso("servicio_militar", "07-12", "Lo citan al examen médico del servicio militar, y lo declaran no apto por la vista"),
+                    mundo("autopista_no", "08-06", "Se cancela la autopista del Panhandle: el parque largo se queda como está", certeza = A, fuente = FN_HAIGHT),
+                    mundo("un_numero", "09-02", "Sale un periódico del barrio de un solo número, hecho en un local de la calle Frederick", certeza = H, fuente = FN_PERIODICO),
+                    CALOR,
+                    mundo("periodico", "09-20", "Sale el primer número del periódico del barrio, que se vende en la calle", certeza = H, fuente = FN_PERIODICO),
+                    mundo("sala_grande", "09-23", "Bill Graham alquila una sala de más de cinco mil plazas para los conciertos grandes", certeza = H, fuente = FN_SALA_GRANDE),
+                    suceso("cartel_arrancado", "10-15", "Alguien arranca de un poste su cartel de la semana para llevárselo a casa"),
+                    mundo("periodico_nuevo", "11-08", "El periódico del barrio sale con otra cara: su número tres, rediseñado", certeza = A, fuente = FN_PERIODICO),
+                    accionDeGracias("11-24"),
+                    suceso("ellen_luces", "12-03", "Ellen lo deja mover las luces una noche, y se le quedan las manos de colores"),
+                    mundo("entierro_dinero", "12-17", "Gente con máscaras de animales pasea por Haight un ataúd lleno de dinero falso", certeza = H, fuente = FN_DIGGERS),
+                    NAVIDAD,
+                )),
+            TemporadaVida("1967", "verano",
+                "El verano del amor. En enero, miles de personas oyen a poetas y bandas en los Polo Fields del parque, y los Hare Krishna cantan en un baile de la calle Sutter. Desde febrero, el 106.9 pone discos enteros de medianoche a las seis, y desde agosto, a todas horas. Ellen y él salen juntos. El periódico del barrio abre su oficina en Haight, y una tienda de carteles vende reimpresos de uno suyo. Marcha contra la guerra; a las cuatro, comida gratis en el Panhandle; sus primeras tintas fluorescentes. En junio, el monte Tamalpais y tres días en Monterey. Su primo Eddie pasa con él el verano. Time pone a los hippies en portada, y Life, los carteles. En octubre, el entierro de mentira del hippie.",
+                listOf(
+                    mundo("encuentro_parque", "01-14", "En los Polo Fields del parque, miles de personas en el pasto oyen a poetas y bandas", certeza = H, fuente = FN_PARQUE, escena = "parque"),
+                    mundo("baile_krishna", "01-29", "Un baile en la sala de la calle Sutter, a dos dólares, con los cantos de los Hare Krishna", certeza = H, fuente = FN_KRISHNA),
+                    mundo("fm_noche", "02-12", "En el 106.9, de medianoche a las seis, un locutor empieza a poner discos enteros", certeza = H, fuente = FN_FM, escena = "radio"),
+                    suceso("ellen_novia", "02-19", "Ellen y él suben a Buena Vista Park a ver entrar la niebla, y se toman de la mano"),
+                    mundo("oficina_haight", "02-25", "El periódico del barrio abre su oficina en Haight, cerca de Masonic, de día y de noche", certeza = A, fuente = FN_PERIODICO),
+                    suceso("tienda_carteles", "03-26", "Una tienda de carteles de Haight vende reimpresos de uno de sus carteles"),
+                    mundo("marcha", "04-15", "Marcha contra la guerra de Vietnam, de Market y la calle Second al estadio Kezar", certeza = H, fuente = FN_VERANO),
+                    mundo("comida_panhandle", "05-13", "A las cuatro, en el Panhandle, cruza el gran marco amarillo y le sirven guiso gratis", certeza = A, fuente = FN_DIGGERS),
+                    suceso("fluorescente", "05-27", "El señor Okada le imprime por primera vez un cartel con tintas fluorescentes"),
+                    NIEBLA_VERANO,
+                    mundo("tamalpais", "06-10", "Dos días de música al aire libre en el monte Tamalpais, al otro lado del puente", 2, certeza = H, fuente = FN_MONTEREY),
+                    mundo("monterey", "06-16", "Tres días en el festival de Monterey, en el recinto ferial: de tres a seis dólares y medio", 3, certeza = H, fuente = FN_MONTEREY),
+                    mundo("portada_time", "07-07", "La revista Time pone en su portada a los hippies", certeza = H, fuente = FN_HAIGHT),
+                    suceso("primo", "07-15", "Llega de Stockton su primo Eddie a pasar el verano, y duerme en el sofá"),
+                    mundo("fm_todo_el_dia", "08-06", "El 106.9 pone rock a todas horas: se acaban sus programas en otros idiomas", certeza = H, fuente = FN_FM, escena = "radio"),
+                    suceso("tres_carteles", "08-19", "Dibuja tres carteles en una semana y casi no ve la luz del día"),
+                    mundo("life", "09-01", "La revista Life dedica su portada a los carteles de las salas de baile", certeza = H, fuente = FN_CARTELES, escena = "carteles"),
+                    suceso("recorte", "09-09", "Su madre le manda desde Stockton la página de una revista con carteles como los suyos"),
+                    CALOR,
+                    mundo("entierro_hippie", "10-06", "En Buena Vista Park, el entierro de mentira del hippie, con un ataúd en hombros", certeza = H, fuente = FN_HAIGHT),
+                    accionDeGracias("11-23"),
+                    NAVIDAD,
+                )),
+            TemporadaVida("1968", "despues",
+                "El año de después. Nora vuelve a Portland y Ellen se muda al departamento, con su retroproyector y sus frascos de tinta. Sale el último número del periódico del barrio, Rick Griffin empieza a dibujar para Graham y los locutores del 106.9 se declaran en huelga. David dibuja un cartel para luz negra. La señora Petrakis se rompe la muñeca y se repone. La banda de Gil graba un disco pequeño, y él le dibuja la funda. Graham deja el auditorio de Geary. Tres carteles suyos se cuelgan en una galería. Los Diggers dejan de juntarse, y el símbolo de la paz está en todas partes. Su madre viene a ver la ciudad.",
+                listOf(
+                    suceso("nora_se_va", "01-20", "Nora deja el departamento y vuelve a Portland con su máquina de coser", escena = "mudanza"),
+                    mundo("ultimo_periodico", "02-10", "Sale el último número del periódico del barrio, el doce", certeza = A, fuente = FN_PERIODICO),
+                    mundo("griffin", "02-17", "Rick Griffin, uno de los grandes de los carteles, empieza a dibujar para Graham", certeza = A, fuente = FN_GRIFFIN),
+                    suceso("ellen_se_muda", "03-02", "Ellen se muda al departamento con su retroproyector y sus frascos de tinta", escena = "mudanza"),
+                    mundo("huelga_fm", "03-18", "Los locutores del 106.9 se declaran en huelga y se van a otra emisora", certeza = H, fuente = FN_FM),
+                    suceso("luz_negra", "04-13", "Dibuja un cartel para luz negra: tinta fluorescente sobre un fondo negro de terciopelo", escena = "luz_negra"),
+                    suceso("petrakis_cae", "05-04", "La señora Petrakis se cae en la escalera de la entrada y se rompe la muñeca", cadena = "petrakis"),
+                    suceso("petrakis_vuelve", "05-25", "La señora Petrakis vuelve a regar sus geranios, con la muñeca todavía vendada", cadena = "petrakis"),
+                    NIEBLA_VERANO,
+                    suceso("disco_gil", "06-22", "La banda de Gil graba un disco pequeño, y él le dibuja la funda"),
+                    mundo("graham_se_va", "07-06", "Bill Graham deja el auditorio de Geary, y se acaban sus bailes en esa esquina", certeza = A, fuente = FN_GEARY),
+                    suceso("galeria", "08-17", "Cuelgan tres carteles suyos en una galería pequeña del centro"),
+                    CALOR,
+                    mundo("diggers_fin", "10-12", "Los Diggers, los del guiso gratis de las cuatro, dejan de juntarse", certeza = A, fuente = FN_DIGGERS),
+                    mundo("simbolo_paz", "11-09", "El símbolo de la paz se ve ya en todas partes: en botones, en paredes y en carteles", certeza = A, fuente = FN_PAZ),
+                    accionDeGracias("11-28"),
+                    suceso("madre_visita", "12-07", "Su madre viene de Stockton a ver la ciudad, y él le enseña la sala de baile vacía"),
+                    NAVIDAD,
+                )),
+            TemporadaVida("1969", "cambio",
+                "El barrio cambia, y él sigue dibujando. Una semana de lluvia despega los carteles. Cierra la sala de la calle Sutter, la de su primer cartel, y el pasaje del autobús sube a veinte centavos. El viejo Sal cierra su taller y le regala sus pinceles. La señora Petrakis cumple ochenta años. Gil se va a Los Ángeles con su banda. En la calle pintan otra casa de colores, y en mayo la señora Petrakis deja pintar la suya: turquesa, con las molduras amarillas. David termina su cartel número cien. Ellen y él arman un estudio en el cuarto de atrás. Cierra la tienda de carteles de la esquina. Un muchacho le pide que le enseñe las letras. En diciembre dibuja el cartel de un baile de fin de año.",
+                listOf(
+                    mundo("lluvia_enero", "01-10", "Llueve una semana entera, y el agua despega los carteles de los postes", certeza = INV, clima = Clima.LLUVIA),
+                    mundo("cierra_sutter", "01-25", "Cierra la sala de la calle Sutter, la de su primer cartel", certeza = A, fuente = FN_SUTTER),
+                    suceso("sal_retira", "02-22", "El viejo Sal cierra su taller de rótulos y le regala sus pinceles"),
+                    mundo("pasaje", "03-15", "El pasaje del autobús sube de quince a veinte centavos", certeza = A, fuente = FN_MUNI),
+                    suceso("petrakis_cumple", "03-29", "La señora Petrakis cumple ochenta años, y él le dibuja un cartel de felicitación"),
+                    suceso("gil_se_va", "04-05", "Gil se va a Los Ángeles con su banda y deja el órgano en la sala"),
+                    mundo("colores_calle", "04-19", "En la calle pintan otra casa de colores, como se va haciendo en toda la ciudad", certeza = A, fuente = FN_PINTADAS),
+                    mundo("pintan_casa", "05-10", "Pintan la casa de la señora Petrakis: turquesa, con las molduras amarillas", 3, certeza = INV, escena = "pintura"),
+                    NIEBLA_VERANO,
+                    suceso("cartel_cien", "06-21", "Termina su cartel número cien y lo cuelga en la pared de la cocina"),
+                    suceso("estudio", "07-12", "Ellen y él arman un estudio en el cuarto de atrás: él dibuja y ella proyecta luces"),
+                    mundo("se_venden", "08-09", "Los carteles como los suyos se venden ya en tiendas de todo el país", certeza = A, fuente = FN_LETRAS),
+                    mundo("tienda_cerrada", "08-30", "Cierra la tienda de carteles de la esquina, con tablas en el escaparate", certeza = INV, escena = "cerrado"),
+                    CALOR,
+                    suceso("aprendiz", "10-11", "Un muchacho recién llegado le pide que le enseñe a pintar letras, como Sal a él"),
+                    accionDeGracias("11-27"),
+                    suceso("fin_de_anio", "12-06", "Dibuja el cartel de un baile de fin de año en una sala nueva"),
+                    NAVIDAD,
+                )),
+        ),
+        arcos = listOf(
+            // La casa de la señora Petrakis: gris hasta mayo de 1969, y en tres días, turquesa con molduras amarillas.
+            Arco("casa", TipoArco.OBRA, listOf(
+                p(1, "01-01", 0.0), p(5, "05-09", 0.0), p(5, "05-10", 0.3, salto = true), p(5, "05-11", 0.6, salto = true), p(5, "05-12", 1.0, salto = true), p(5, "12-31", 1.0),
+            )),
+            // Las otras casas pintadas de la calle: una sola (0.1) hasta abril de 1969, y luego dos (0.25). Casi todas, grises.
+            Arco("calle", TipoArco.ADORNOS, listOf(p(1, "01-01", 0.1), p(5, "04-18", 0.1), p(5, "04-19", 0.25, salto = true), p(5, "12-31", 0.25))),
+            // Los carteles de baile en los postes: ninguno hasta febrero de 1966; llenos en el verano de 1967; menos después.
+            Arco("carteles", TipoArco.ADORNOS, listOf(
+                p(1, "01-01", 0.0), p(2, "02-18", 0.0), p(2, "02-19", 0.2, salto = true), p(2, "12-31", 0.5), p(3, "06-01", 1.0), p(3, "10-05", 1.0),
+                p(3, "10-06", 0.75, salto = true), p(4, "12-31", 0.6), p(5, "01-09", 0.6), p(5, "01-10", 0.3, salto = true), p(5, "12-31", 0.45),
+            )),
+        ),
+        objetos = listOf("pincel", "tinta", "regla", "carpeta", "cuaderno", "gafas", "tocadiscos", "radio", "disco", "boton", "cinta", "flor"),
+        estados = listOf(Estado("monterey", "monterey")),
     )
 }

@@ -339,13 +339,15 @@ object Avisos {
             "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
             "CONDECORACIÓN", "condecoraciones nuevas",
             "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
-        TemaId.PSICODELIA -> Voz("DECLARE SU ESTADO ACTUAL", "Dos toques obligatorios: agrado y energía.",
-            "REPORTE ONÍRICO PENDIENTE", "Declare lo soñado antes de levantarse. El recuerdo caduca en minutos.",
-            "DECLARACIÓN NOCTURNA", "Complete el parte del día. En jornada difícil se acepta un solo número.",
-            "Jornada difícil: un número", "INTERROGATORIO PENDIENTE:",
-            "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
-            "CONDECORACIÓN", "condecoraciones nuevas",
-            "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
+        // Psicodelia: el pandero que llama, la FM de la madrugada que se despide a las seis, la niebla que entra por el puente,
+        // la edición del periódico del barrio que se cierra de noche, la postal con calcomanías, los discos de oro y el cartel.
+        TemaId.PSICODELIA -> Voz("♪ Suena el pandero: ¿cómo andas ahora?", "Dos golpecitos, como en el pandero: cuánto agrado y cuánta energía.",
+            "♪ Se despide la FM de la madrugada · ¿qué soñaste?", "Anótalo antes de levantarte: se esfuma como la niebla cuando sale el sol sobre el puente.",
+            "✿ Se cierra la edición del barrio: ¿cómo te fue hoy?", "Escribe tu día para el periódico. Si fue de niebla espesa, basta con un número.",
+            "Día de niebla espesa: un número", "Las preguntas del periódico, hoy:",
+            "✿ Llegó una postal con calcomanías de tu yo de antes", "Es el día que escogiste para abrirla. Toca para leer lo que te dejaste dicho.",
+            "¡Disco de oro!", "discos de oro nuevos",
+            "Sale el cartel de tu %d", "Todo tu año en un cartel de concierto: lo que más sonó, lo único, lo curioso. Toca para verlo.")
         // Art nouveau: la campanilla de cristal del taller, la piedra litográfica que se moja antes de entintar, las vitrinas
         // que se encienden de noche, la postal ilustrada, las medallas de la Exposición y el cartel recién salido de la prensa.
         TemaId.NOUVEAU -> Voz("Suena la campanilla de cristal: ¿cómo estás ahora?", "Dos toques, como dos golpes de pincel: cuánto agrado y cuánta energía.",
@@ -579,7 +581,9 @@ object Avisos {
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste", "Explicit: llegaste a la meta")
         TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida", "Llegaste al castillo: meta cumplida")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
-        TemaId.PSICODELIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
+        // Psicodelia: el descanso es darle la vuelta al disco; la mesa de dibujo, la niebla que cruza el puente, el cartel que
+        // va a la imprenta y la flor que se abre en la esfera.
+        TemaId.PSICODELIA -> VozEnfoque("Intermedio: dale la vuelta al disco", "Suelta la plumilla, asómate a la ventana y bebe un vaso de agua.", "Suena el otro lado: de vuelta a la mesa", "La niebla ya cruzó el puente: hora de despertar", "Cartel listo para la imprenta: terminaste", "Se abrió la flor del disco: llegaste a la meta")
         // Art nouveau: el respiro en la terraza del café, la mesa de dibujo, la luz del tragaluz, la piedra entintada y el iris
         // que se abre en la esfera del reloj.
         TemaId.NOUVEAU -> VozEnfoque("Un respiro en la terraza", "Deja el lápiz, sal a la calle un momento y bebe un vaso de agua.", "De vuelta a la mesa de dibujo", "Entra la luz por el tragaluz: hora de despertar", "La piedra está entintada: terminaste", "Se abre el iris: llegaste a la meta")
