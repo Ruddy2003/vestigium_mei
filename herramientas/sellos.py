@@ -1350,7 +1350,7 @@ def galia(tam):
     dentro_px = (rf - rr) * c
     moneda = np.clip(dentro_px / (1.0 * k) + 0.5, 0, 1)
     # El reverso de los estáteros galos es cóncavo: el campo baja hacia el centro como un cuenco poco hondo.
-    alto_cospel = np.clip(dentro_px / (19 * k), 0, 1) ** 0.5 - 0.3 * np.clip(1 - (rr / 0.93) ** 2, 0, 1) ** 1.5
+    alto_cospel = np.clip(dentro_px / (19 * k), 0, 1) ** 0.5 - 1.4 * np.clip(1 - (rr / 0.93) ** 2, 0, 1) ** 1.5
     # --- Lo que va en relieve (sin la huella), dibujado a la escala del lienzo.
     g = Image.new('L', (S, S), 0); d = ImageDraw.Draw(g)
     rg = np.random.default_rng(611)
@@ -1381,8 +1381,19 @@ def galia(tam):
         x, y = rg.random() * S, rg.random() * S; r_ = (1 + rg.random() * 3) * k
         dm.ellipse([x - r_, y - r_, x + r_, y + r_], fill=int(80 + rg.random() * 120))
     golpes = suavizar(np.asarray(marcas, np.float32) / 255, 0.7 * k)
+    # Una grieta del cospel en el canto, abajo a la derecha, como las que abre el golpe del cuño en el metal frío.
+    grieta = Image.new('L', (S, S), 0); dg = ImageDraw.Draw(grieta)
+    a0 = math.radians(38); x, y = c + 0.97 * c * math.cos(a0), c + 0.97 * c * math.sin(a0); pts = [(x, y)]
+    rumbo = a0 + math.pi
+    for i in range(8):
+        rumbo += rg.normal(0, 0.18); l = (5 + rg.random() * 4) * k
+        x += l * math.cos(rumbo); y += l * math.sin(rumbo); pts.append((x, y))
+    for i in range(len(pts) - 1):
+        dg.line([pts[i], pts[i + 1]], fill=255, width=max(1, int((4.6 - 3.8 * i / len(pts)) * k)))
+    grieta = suavizar(np.asarray(grieta, np.float32) / 255, 0.5 * k)
+    moneda = moneda * (1 - np.clip(grieta * 1.6, 0, 1) * np.clip(1 - dentro_px / (9 * k), 0, 1))     # la boca de la grieta en el canto
     alto = alto_cospel * 0.9 + alto_rel * 0.8 - golpes * 0.025 + suavizar(rg.standard_normal((S, S)).astype(np.float32), 1.2 * k) * 0.006
-    alto = alto * np.clip(moneda * 1.2, 0, 1)
+    alto = (alto - grieta * 0.35) * np.clip(moneda * 1.2, 0, 1)
     color = oro_relieve(suavizar(alto, 0.5 * k), 24.0 * k, 612, tonos=ELECTRO, grano=0.02, ambiente=0.75, plano=0.34)
     # El roce: lo más alto del relieve, pulido por las manos, más claro.
     color = mezcla(color, col('#F0D684'), np.clip(alto_rel * 1.6 - 0.45, 0, 1) * 0.3)
@@ -1394,6 +1405,7 @@ def galia(tam):
     color = mezcla(color, col('#6B3A16'), hueco * 0.42)
     color = mezcla(color, col('#6B3A16'), np.clip(1 - dentro_px / (34 * k), 0, 1) * np.clip(dentro_px / (6 * k), 0, 1) * 0.18)
     color = color * (0.93 + 0.07 * np.clip(alto_rel * 2, 0, 1))[..., None]
+    color = mezcla(color, col('#2E1C08'), np.clip(grieta * 1.6, 0, 1) * 0.85)
     # El campo, con la pátina de siglos: más pardo y apagado que lo alto, con manchas rojizas.
     campo = 1 - np.clip(alto_rel * 3, 0, 1)
     color = mezcla(color, col('#6E4A16'), campo * 0.22)

@@ -595,7 +595,9 @@ def hacer_galia():
         kw_llamada = dict(kw, perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)]))
         lira = lambda f, d: lira_bardo(f, d, 0.45, 0.996, al_aire=al_aire)
         notif = mezclar((0, yunque(hz(T + 12), 0.6, 0.5), 0.2), (0.05, notificacion(T, lira, [7, 10, 12], 0.13, 1.1, 1.3), 1.0))
-        P['galia'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw_llamada), notif)
+        # La presentación, con la mezcla apenas domada (los golpes de las cuerdas y del escudo coinciden en el uno): así llega
+        # al volumen de las de los otros temas sin recortar nada.
+        P['galia'] = (domar(obra(T, pz, ac, mel, **kw), 0.5, 2.0), llamada(T, pz, ac, mel, **kw_llamada), notif)
         # En «Tu año» la música sube un tono dos vueltas: sin el carnyx ni el choque de las armas, que no subirían con ella.
         ARGS['galia'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
 

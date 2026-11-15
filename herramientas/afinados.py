@@ -1677,7 +1677,8 @@ def galia():
             aviso=reverb(mezclar((0, rueda([T - 5, T + 7], 1.0, 0.04), 0.3), (0.1, grito(T, 0.85), 0.7),
                                  (0.75, lejos(grito(T, 0.8), 1.0), 0.45), (1.4, lejos(grito(T, 0.8), 2.0), 0.28)), 1.3, 0.24),
             # Lo solemne: la asamblea alrededor del hogar murmura la tónica y la quinta, el bardo canta con la lira y, al
-            # final, la asamblea aprueba golpeando las armas (como cuenta César que hacían) y un carnyx responde a lo lejos.
+            # final, la asamblea aprueba golpeando las armas (César 7.21, de memoria: no está en fuentes_galia.md, [sin verificar])
+            # y un carnyx responde a lo lejos.
             solemne=reverb(mezclar(
                 (0, asamblea(hz(T - 12), 7.2, 'o', 5), 0.4), (0.3, asamblea(hz(T - 5), 6.6, 'o', 4), 0.24), (0, fuego(7.6, 5), 0.1),
                 *[(0.5 + 0.48 * i, domar(lir(T + n, 1.3 if i < 8 else 2.4, 0.4)), 0.5) for i, n in enumerate([7, 8, 7, 3, 5, 3, 2, -2, 0])],
