@@ -192,43 +192,49 @@ object TrazosArcontes {
     }
 
     /**
-     * La grieta de luz: una raja fina entre [desde] y [hasta] que quiebra apenas su camino (nunca en zigzag de rayo) y suelta
-     * una rama corta a media altura; blanca, más ancha en medio, con su halo violeta. [luz] (0 a 1) la abre y la cierra.
+     * La grieta de luz: una rendija en forma de huso entre [desde] y [hasta], afilada en las dos puntas y más abierta en medio
+     * (allí mide [ancho] y algo más), que se curva apenas, con una o dos inflexiones suaves y ningún quiebre: luz que sale por
+     * una raja en la piedra o en el velo, nunca un rayo. Blanca, con su halo violeta alrededor. [luz] (0 a 1) la abre y la
+     * cierra; [semilla] elige su curva.
      */
     fun DrawScope.grieta(desde: Offset, hasta: Offset, ancho: Float, luz: Float = 1f, semilla: Int = 7) {
         if (luz <= 0f) return
         val rnd = java.util.Random(semilla.toLong())
-        val tramos = 7
         val dx = hasta.x - desde.x
         val dy = hasta.y - desde.y
         val largo = sqrt(dx * dx + dy * dy).coerceAtLeast(1f)
         val nx = -dy / largo
         val ny = dx / largo
-        val nudos = ArrayList<Offset>(tramos + 1)
-        nudos.add(desde)
-        for (k in 1 until tramos) {
-            val t = k / tramos.toFloat()
-            val lado = (rnd.nextFloat() - 0.5f) * largo * 0.07f
-            nudos.add(Offset(desde.x + dx * t + nx * lado, desde.y + dy * t + ny * lado))
+        // La curva: una comba suave y, a veces, una segunda inflexión más leve.
+        val a1 = (rnd.nextFloat() - 0.5f) * 0.09f
+        val a2 = (rnd.nextFloat() - 0.5f) * 0.04f
+        val n = 40
+        fun centro(t: Float): Offset {
+            val lado = largo * (a1 * sin(PI * t).toFloat() + a2 * sin(2 * PI * t).toFloat())
+            return Offset(desde.x + dx * t + nx * lado, desde.y + dy * t + ny * lado)
         }
-        nudos.add(hasta)
-        val camino = Path().apply { moveTo(desde.x, desde.y); for (k in 1 until nudos.size) lineTo(nudos[k].x, nudos[k].y) }
-        // La rama: sale de un nudo de en medio, hacia un lado, y se acaba.
-        val de = nudos[3 + rnd.nextInt(2)]
-        val lado = if (rnd.nextBoolean()) 1f else -1f
-        val rl = largo * (0.16f + rnd.nextFloat() * 0.1f)
-        val fin = Offset(de.x + (dx / largo * 0.55f + nx * lado * 0.85f) * rl, de.y + (dy / largo * 0.55f + ny * lado * 0.85f) * rl)
-        val medio = Offset((de.x + fin.x) / 2 + nx * lado * rl * 0.08f, (de.y + fin.y) / 2 + ny * lado * rl * 0.08f)
-        val rama = Path().apply { moveTo(de.x, de.y); lineTo(medio.x, medio.y); lineTo(fin.x, fin.y) }
-        val tr = { w: Float -> Stroke(w, cap = StrokeCap.Round, join = StrokeJoin.Round) }
-        drawPath(camino, GRIETA_HALO.copy(alpha = 0.16f * luz), style = tr(ancho * 9f))
-        drawPath(camino, GRIETA_HALO.copy(alpha = 0.3f * luz), style = tr(ancho * 4f))
-        drawPath(rama, GRIETA_HALO.copy(alpha = 0.22f * luz), style = tr(ancho * 3f))
-        drawPath(rama, GRIETA.copy(alpha = 0.75f * luz), style = tr(ancho * 0.45f))
-        drawPath(camino, GRIETA.copy(alpha = luz), style = tr(ancho * 0.7f))
-        // Más ancha en medio: el tramo central se abre un poco más.
-        val centro = Path().apply { moveTo(nudos[2].x, nudos[2].y); for (k in 3..5) lineTo(nudos[k].x, nudos[k].y) }
-        drawPath(centro, GRIETA.copy(alpha = luz), style = tr(ancho * 1.15f))
+        fun huso(abre: Float): Path {
+            val izq = ArrayList<Offset>(n + 1); val der = ArrayList<Offset>(n + 1)
+            for (k in 0..n) {
+                val t = k / n.toFloat()
+                val p = centro(t)
+                val m = abre * sin(PI * t).toFloat().pow(0.85f) / 2
+                izq.add(Offset(p.x + nx * m, p.y + ny * m)); der.add(Offset(p.x - nx * m, p.y - ny * m))
+            }
+            return Path().apply {
+                moveTo(izq[0].x, izq[0].y); for (k in 1..n) lineTo(izq[k].x, izq[k].y)
+                for (k in n downTo 0) lineTo(der[k].x, der[k].y)
+                close()
+            }
+        }
+        val eje = Path().apply { val p0 = centro(0f); moveTo(p0.x, p0.y); for (k in 1..n) { val p = centro(k / n.toFloat()); lineTo(p.x, p.y) } }
+        // El halo violeta, suave: un trazo ancho y tenue a lo largo y dos husos cada vez más abiertos.
+        drawPath(eje, GRIETA_HALO.copy(alpha = 0.1f * luz), style = Stroke(ancho * 10f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        drawPath(huso(ancho * 7f), GRIETA_HALO.copy(alpha = 0.16f * luz))
+        drawPath(huso(ancho * 3.6f), GRIETA_HALO.copy(alpha = 0.3f * luz))
+        // La rendija: blanca, y más clara aún por dentro.
+        drawPath(huso(ancho * 1.5f), GRIETA.copy(alpha = luz))
+        drawPath(huso(ancho * 0.6f), Color.White.copy(alpha = luz))
     }
 
     /**

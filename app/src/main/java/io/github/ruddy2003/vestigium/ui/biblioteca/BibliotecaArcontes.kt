@@ -193,6 +193,9 @@ object EstanteArcontes : DisenoBiblioteca {
         textoEn(medidor, texto.substring(i + 3).trim(), Rect(r.left, mitad, r.right, r.bottom), letra, color, tam * k, minimo = tam * 0.42f)
     }
 
+    /** El mes para un lomo angosto: solo su ordinal («Mes undécimo» se vuelve «undécimo»). */
+    private fun mesCorto(mes: String): String = mes.removePrefix("Mes ").substringBefore(" · ")
+
     /** El número de un día con letras hebreas («12» → «י״ב»); si no es un número, nada. */
     private fun hebreo(dia: String): String = dia.trim().toIntOrNull()?.let { Arcontes.numero(it) } ?: ""
 
@@ -255,7 +258,8 @@ object EstanteArcontes : DisenoBiblioteca {
             mancha(fuego, w * 1.3f, LLAMA_HALO.copy(alpha = 0.3f))
         }
         drawOval(Color.Black.copy(alpha = 0.28f), Offset(c.x - w * 0.42f, c.y + w * 0.08f), Size(w * 0.86f, w * 0.12f))
-        with(TrazosArcontes) { lampara(c, w, t(BARRO_CLARO, oscuro && !encendida, noche && !encendida), if (encendida) llama else 0f) }
+        val barro = if (encendida) mezcla(t(BARRO_CLARO, oscuro, noche), LLAMA, 0.18f) else t(BARRO_CLARO, oscuro, noche)
+        with(TrazosArcontes) { lampara(c, w, barro, if (encendida) llama else 0f) }
         // De día, apagada: el pico ennegrecido de tantas noches.
         if (!encendida) drawCircle(Color.Black.copy(alpha = 0.35f), w * 0.05f, Offset(c.x + w * 0.45f, c.y - w * 0.32f))
     }
@@ -310,13 +314,14 @@ object EstanteArcontes : DisenoBiblioteca {
         val u = density
         var y = r.top + paso * 0.5f; var k = 0
         while (y < r.bottom) {
-            drawLine(color.copy(alpha = color.alpha * (0.35f + 0.65f * azar(semilla, k))), Offset(r.left, y), Offset(r.right, y + (azar(semilla + 1, k) - 0.5f) * u), 0.45f * u)
+            val x0 = r.left + r.width * 0.3f * azar(semilla + 6, k)
+            drawLine(color.copy(alpha = color.alpha * (0.2f + 0.8f * azar(semilla, k))), Offset(x0, y), Offset(r.right - r.width * 0.25f * azar(semilla + 7, k), y + (azar(semilla + 1, k) - 0.5f) * u), 0.45f * u)
             y += paso * (0.7f + 0.6f * azar(semilla + 2, k)); k++
         }
-        var x = r.left + paso * 2; k = 0
+        var x = r.left + paso * 4 * azar(semilla + 4, 0); k = 0
         while (x < r.right) {
-            drawLine(color.copy(alpha = color.alpha * 0.3f), Offset(x, r.top), Offset(x, r.bottom), 0.6f * u)
-            x += paso * (3f + 3f * azar(semilla + 3, k)); k++
+            drawLine(color.copy(alpha = color.alpha * 0.12f * (0.4f + azar(semilla + 5, k))), Offset(x, r.top), Offset(x, r.bottom), 0.7f * u)
+            x += paso * (5f + 9f * azar(semilla + 3, k)); k++
         }
     }
 
@@ -435,33 +440,6 @@ object EstanteArcontes : DisenoBiblioteca {
         }
     }
 
-    /**
-     * La sombra de un arconte que se asoma por la orilla de la lumbrera: una cabeza de león, apenas más clara que el cielo, que
-     * tapa las estrellas que tiene detrás. Nunca entera: solo el perfil de la melena y del hocico.
-     */
-    private fun DrawScope.sombraArconte(o: Offset, r: Float, cielo: Color) {
-        val p = Path().apply {
-            moveTo(o.x, o.y + r * 1.4f)
-            cubicTo(o.x - r * 0.1f, o.y + r * 0.6f, o.x - r * 0.5f, o.y + r * 0.2f, o.x - r * 0.35f, o.y - r * 0.3f)
-            // La melena, en mechones.
-            for (k in 0 until 5) {
-                val a = PI * (1.15 + 0.17 * k)
-                val q = Offset(o.x + r * 0.55f * cos(a).toFloat(), o.y - r * 0.2f + r * 0.6f * sin(a).toFloat())
-                lineTo(q.x - r * 0.12f, q.y - r * 0.08f); lineTo(q.x, q.y)
-            }
-            // El hocico, hacia la derecha, y la mandíbula.
-            lineTo(o.x + r * 0.3f, o.y - r * 0.55f)
-            lineTo(o.x + r * 0.42f, o.y - r * 0.2f)
-            lineTo(o.x + r * 0.62f, o.y - r * 0.05f)
-            lineTo(o.x + r * 0.5f, o.y + r * 0.2f)
-            lineTo(o.x + r * 0.62f, o.y + r * 0.4f)
-            cubicTo(o.x + r * 0.5f, o.y + r * 0.8f, o.x + r * 0.7f, o.y + r * 1.1f, o.x + r * 0.9f, o.y + r * 1.4f)
-            close()
-        }
-        drawPath(p, mezcla(SOMBRA, cielo, 0.25f))
-        drawCircle(GRIETA_HALO.copy(alpha = 0.18f), r * 0.05f, Offset(o.x + r * 0.32f, o.y - r * 0.18f))
-    }
-
     /** Un cántaro de barro con su asa, parado en [pie] (el centro de la base), de alto [alto]. */
     private fun DrawScope.cantaro(pie: Offset, alto: Float, barro: Color) {
         val u = density
@@ -541,7 +519,7 @@ object EstanteArcontes : DisenoBiblioteca {
                 when (k % 3) {
                     0 -> lamparaRoca(Offset(r.right - 24 * u, r.bottom - 5 * u), 26 * u, oscuro, noche, lampara)
                     1 -> cantaro(Offset(r.left + 20 * u, r.bottom), 34 * u, c(BARRO_CLARO))
-                    else -> grietaLuz(Offset(r.left + r.width * 0.74f, r.top + 16 * u), Offset(r.left + r.width * 0.79f, r.bottom - 14 * u), 1f * u, if (lampara) 0.85f else 0.4f, 13 + k)
+                    else -> grietaLuz(Offset(r.left + r.width * 0.76f, r.top + 26 * u), Offset(r.left + r.width * 0.79f, r.top + r.height * 0.62f), 0.9f * u, if (lampara) 0.6f else 0.32f, 13 + k)
                 }
             }
             drawPath(forma, Color.Black.copy(alpha = 0.22f), style = Stroke(0.8f * u))
@@ -551,11 +529,10 @@ object EstanteArcontes : DisenoBiblioteca {
             val p = Offset(d.izquierda.center.x, rep.top + rep.height * 0.3f)
             if (k % 2 == 1) {
                 cordel(Path().apply { moveTo(p.x, p.y); quadraticTo(p.x - 3 * u, p.y + 9 * u, p.x, p.y + 15 * u) }, c(CORDEL), 0.9f * u)
-                val g = Offset(p.x, p.y + 18 * u)
-                drawOval(Color.Black.copy(alpha = 0.3f), Offset(g.x - 3.6f * u, g.y - 3 * u), Size(8 * u, 7 * u))
-                drawOval(c(if (k % 4 == 1) TrazosArcontes.JASPE_VERDE else TrazosArcontes.JASPE_ROJO), Offset(g.x - 4 * u, g.y - 3.4f * u), Size(8 * u, 6.8f * u))
-                drawCircle(Color.White.copy(alpha = 0.3f), 1.2f * u, Offset(g.x - 1.6f * u, g.y - 1.6f * u))
-                ouro(g, 2.2f * u, 0.7f * u, Color.Black.copy(alpha = 0.35f))
+                val g = Offset(p.x, p.y + 19 * u)
+                drawCircle(Color.Black.copy(alpha = 0.3f), 4.4f * u, g + Offset(0.8f * u, 1.2f * u))
+                with(TrazosArcontes) { gemaJaspe(g, 4.2f * u, semilla = 51 + k) }
+                if (oscuro || noche) drawCircle(PENUMBRA.copy(alpha = 0.45f), 4.2f * u, g)
             }
             drawCircle(Color.Black.copy(alpha = 0.3f), 2.4f * u, p + Offset(0.6f * u, 0.8f * u))
             drawCircle(c(OLIVO_VETA), 2.2f * u, p)
@@ -653,13 +630,16 @@ object EstanteArcontes : DisenoBiblioteca {
                 }
                 val ce = Offset(lu.center.x - lu.width * 0.1f, lu.bottom + lu.height * 0.15f)
                 for (i in 0 until 7) drawCircle(ESFERA.copy(alpha = 0.55f - i * 0.05f), lu.height * (0.25f + 0.13f * i), ce, style = Stroke(0.6f * u))
-                sombraArconte(Offset(lu.right - lu.width * 0.08f, lu.top + lu.height * 0.42f), lu.width * 0.4f, CIELO)
+                // La sombra de un arconte que se asoma por la orilla, cortada por la roca.
+                with(TrazosArcontes) { sombraArconte(Offset(lu.right - lu.width * 0.06f, lu.top + lu.height * 0.5f), lu.width * 0.5f, mezcla(SOMBRA, CIELO, 0.15f), mira = -1f, desvanece = true) }
             } else {
                 drawRect(Brush.verticalGradient(listOf(Color(0xFFFBF1D2), Color(0xFFEAD7A2)), lu.top, lu.bottom), lu.topLeft, lu.size)
-                val sol = Offset(lu.left + lu.width * 0.2f, lu.top + lu.height * 0.18f)
-                mancha(sol, lu.width * 0.9f, Color.White.copy(alpha = 0.8f))
-                drawCircle(ORO.copy(alpha = 0.9f), lu.width * 0.28f, sol - Offset(lu.width * 0.15f, lu.width * 0.15f))
-                drawCircle(Color.White.copy(alpha = 0.55f), lu.width * 0.2f, sol - Offset(lu.width * 0.15f, lu.width * 0.15f))
+                // El sol, el oro de más del mundo visible, casi entero en lo alto de la lumbrera, con su resplandor.
+                val sol = Offset(lu.left + lu.width * 0.36f, lu.top + lu.height * 0.3f)
+                mancha(sol, lu.width * 1.1f, Color.White.copy(alpha = 0.85f))
+                mancha(sol, lu.width * 0.55f, ORO.copy(alpha = 0.55f))
+                drawCircle(ORO, lu.width * 0.2f, sol)
+                drawCircle(Color(0xFFFFF4D0).copy(alpha = 0.7f), lu.width * 0.13f, sol - Offset(lu.width * 0.03f, lu.width * 0.03f))
             }
             drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.3f)), lu.right - 4 * u, lu.right), Offset(lu.right - 4 * u, lu.top), Size(4 * u, lu.height))
         }
@@ -676,7 +656,7 @@ object EstanteArcontes : DisenoBiblioteca {
             if (k == 0) lamparaRoca(Offset(rep.center.x, rep.top - 32 * u * 0.17f), 32 * u, oscuro, noche, lampara)
             else {
                 cantaro(Offset(rep.center.x, rep.top), 36 * u, c(BARRO_CLARO))
-                grietaLuz(Offset(rep.center.x + ancho * 0.18f, clave + hh * 0.18f), Offset(rep.center.x - ancho * 0.08f, rep.top - 44 * u), 1.1f * u, if (lampara) 0.95f else 0.45f, 3)
+                grietaLuz(Offset(rep.center.x + ancho * 0.16f, clave + hh * 0.2f), Offset(rep.center.x + ancho * 0.02f, rep.top - 46 * u), 1f * u, if (lampara) 0.8f else 0.4f, 3)
             }
         }
     }
@@ -809,8 +789,8 @@ object EstanteArcontes : DisenoBiblioteca {
         // El mes, grabado en seco a lo largo del lomo.
         val mes = Rect(w * 0.2f, y0 + 22 * u, w * 0.8f, h - 4 * u)
         if (mes.height > 12 * u) {
-            textoEn(medidor, v.mes, mes.translate(0.4f * u, 0.4f * u), TITULO, Color.White.copy(alpha = 0.14f), 7.5f, vertical = true, minimo = 4f)
-            textoEn(medidor, v.mes, mes, TITULO, mezcla(cuero, Color.Black, 0.45f), 7.5f, vertical = true, minimo = 4f)
+            textoEn(medidor, mesCorto(v.mes), mes.translate(0.4f * u, 0.4f * u), TITULO, Color.White.copy(alpha = 0.14f), 7.5f, vertical = true, minimo = 4f)
+            textoEn(medidor, mesCorto(v.mes), mes, TITULO, mezcla(cuero, Color.Black, 0.45f), 7.5f, vertical = true, minimo = 4f)
         }
     }
 
@@ -861,7 +841,7 @@ object EstanteArcontes : DisenoBiblioteca {
         if (tira.height > 14 * u) tiraDia(tira, v, medidor, oscuro)
         // Abajo, el mes grabado.
         val mes = Rect(w * 0.18f, y1 + 13 * u, w * 0.82f, h - 4 * u)
-        if (mes.height > 10 * u) textoEn(medidor, v.mes, mes, TITULO, mezcla(cuero, Color.White, 0.3f), 7f, vertical = true, minimo = 4f)
+        if (mes.height > 10 * u) textoEn(medidor, mesCorto(v.mes), mes, TITULO, mezcla(cuero, Color.White, 0.3f), 7f, vertical = true, minimo = 4f)
     }
 
     /**
@@ -1121,7 +1101,7 @@ object EstanteArcontes : DisenoBiblioteca {
         if (noche) {
             val o = Offset(w * 1.02f, h * 1.02f)
             for (i in 0 until 7) drawCircle(p.detalle.copy(alpha = 0.09f - i * 0.007f), w * (0.25f + 0.17f * i), o, style = Stroke(0.8f * u))
-            grietaLuz(Offset(w - 9 * u, h * 0.16f), Offset(w - 12 * u, h * 0.44f), 0.7f * u, 0.35f, 29)
+            grietaLuz(Offset(w - 9 * u, h * 0.2f), Offset(w - 11 * u, h * 0.3f), 0.6f * u, 0.3f, 29)
         }
     }
 
@@ -1198,7 +1178,7 @@ object EstanteArcontes : DisenoBiblioteca {
         translate(0.7f * u, 0.7f * u) { drawPath(nicho(ni.inflate(5 * u)), Color.White.copy(alpha = if (oscuro) 0.06f else 0.25f), style = Stroke(0.7f * u)) }
         drawPath(nicho(ni.inflate(5 * u)), c(CALIZA_SOMBRA), style = Stroke(0.8f * u))
         // La grieta de la pared, que se enciende más al abrirse la jarra.
-        grietaLuz(Offset(w * 0.83f, h * 0.04f), Offset(w * 0.88f, h * 0.27f), 1.1f * u, ((if (oscuro) 0.85f else 0.4f) + 0.4f * alzar).coerceAtMost(1f), 21)
+        grietaLuz(Offset(w * 0.86f, h * 0.05f), Offset(w * 0.88f, h * 0.2f), 1f * u, ((if (oscuro) 0.7f else 0.35f) + 0.4f * alzar).coerceAtMost(1f), 21)
         // El suelo de tierra.
         val suelo = h * 0.86f
         drawRect(Brush.verticalGradient(listOf(c(mezcla(TIERRA, Color.Black, 0.3f)), c(TIERRA)), suelo, h), Offset(0f, suelo), Size(w, h - suelo))
@@ -1213,10 +1193,10 @@ object EstanteArcontes : DisenoBiblioteca {
         lamparaRoca(Offset(rep.center.x, rep.top - 30 * u * 0.17f), 30 * u, oscuro, false, oscuro)
         // Los códices que ya salieron de la jarra, en el suelo: más cuantas más hojas.
         val n = (1 + e.hojas / 15).coerceIn(1, 4)
-        val g = ((4f + 1.3f * sqrt(e.hojas.coerceAtLeast(0).toFloat())) / n).coerceIn(4.5f, 12f) * u
+        val g = ((6f + 1.6f * sqrt(e.hojas.coerceAtLeast(0).toFloat())) / n).coerceIn(7f, 14f) * u
         var y = h * 0.95f
         for (j in 0 until n) {
-            val x0 = w * (0.63f + 0.02f * azar(e.semilla, j)); val x1 = x0 + w * 0.27f
+            val x0 = w * (0.6f + 0.03f * azar(e.semilla, j)); val x1 = x0 + w * 0.3f
             val r = Rect(x0, y - g, x1, y)
             drawRect(Color.Black.copy(alpha = 0.3f), Offset(r.left + 2 * u, r.top + 2 * u), r.size)
             val cuero = c(CUEROS[Math.floorMod(e.semilla + j, CUEROS.size)])
@@ -1226,16 +1206,20 @@ object EstanteArcontes : DisenoBiblioteca {
             var yy = hojas.top + 1 * u
             while (yy < hojas.bottom) { drawLine(FIBRA.copy(alpha = 0.3f), Offset(hojas.left, yy), Offset(hojas.right, yy), 0.4f * u); yy += 1.1f * u }
             drawLine(Color.White.copy(alpha = 0.15f), Offset(r.left, r.top + 0.4f * u), Offset(r.right, r.top + 0.4f * u), 0.5f * u)
+            // El lazo que ata cada códice, con su cabo.
+            val xl = r.left + r.width * (0.3f + 0.3f * azar(e.semilla + 2, j))
+            drawLine(c(CORREA), Offset(xl, r.top - 0.5f * u), Offset(xl, r.bottom + 0.5f * u), 2.2f * u)
+            if (j == n - 1) cordel(Path().apply { moveTo(xl, r.top); quadraticTo(xl + 6 * u, r.top - 5 * u, xl + 12 * u, r.top - 1 * u) }, c(CORREA), 1.4f * u)
             y -= g + 0.6f * u
         }
         // La jarra.
         val jc = w * 0.34f
         val pie = h * 0.92f
-        val alto = h * 0.72f
-        val hw = minOf(w * 0.15f, alto * 0.31f)
-        val cuello = hw * 0.42f
+        val alto = h * 0.7f
+        val hw = minOf(w * 0.115f, alto * 0.25f)
+        val cuello = hw * 0.5f
         val bocaY = pie - alto
-        val barro = c(BARRO_CLARO)
+        val barro = c(mezcla(BARRO_CLARO, CALIZA_SOMBRA, 0.22f))
         drawOval(Color.Black.copy(alpha = 0.35f), Offset(jc - hw * 1.05f, pie - 4 * u), Size(hw * 2.4f, 9 * u))
         val cuerpo = Path().apply {
             moveTo(jc - hw * 0.3f, pie)
@@ -1314,8 +1298,10 @@ object EstanteArcontes : DisenoBiblioteca {
                 while (x < jc + cuello * 1.45f) { lineTo(x, bocaY + (5f + 2.5f * azar(161, j)) * u); x += 3 * u; j++ }
                 lineTo(jc + cuello * 1.45f, bocaY + 5 * u); lineTo(jc + cuello * 1.3f, bocaY - 2 * u); lineTo(jc - cuello * 1.3f, bocaY - 2 * u); close()
             }
-            drawPath(sello, Brush.horizontalGradient(listOf(c(mezcla(BARRO, Color.White, 0.08f)), c(BARRO), c(mezcla(BARRO, Color.Black, 0.3f))), jc - cuello * 1.45f, jc + cuello * 1.45f))
-            for (k in 0 until 10) drawLine(Color.Black.copy(alpha = 0.15f), Offset(jc - cuello * 1.3f + k * cuello * 0.27f, bocaY - 1 * u), Offset(jc - cuello * 1.25f + k * cuello * 0.27f, bocaY + 4 * u), 0.5f * u)
+            // El sello de barro oscuro, apretado a mano alrededor de la tapa, con las marcas de los dedos.
+            val selloCol = c(mezcla(BARRO, Color(0xFF2E2620), 0.45f))
+            drawPath(sello, Brush.horizontalGradient(listOf(mezcla(selloCol, Color.White, 0.12f), selloCol, mezcla(selloCol, Color.Black, 0.35f)), jc - cuello * 1.45f, jc + cuello * 1.45f))
+            for (k in 0 until 4) drawOval(Color.White.copy(alpha = 0.08f), Offset(jc - cuello * 1.1f + k * cuello * 0.6f, bocaY - 0.5f * u), Size(cuello * 0.4f, 3 * u))
             val tapa = Path().apply {
                 moveTo(jc - cuello * 1.5f, bocaY - 1 * u)
                 cubicTo(jc - cuello * 1.45f, bocaY - cuello * 1.25f, jc + cuello * 1.45f, bocaY - cuello * 1.25f, jc + cuello * 1.5f, bocaY - 1 * u)
@@ -1482,7 +1468,12 @@ object EstanteArcontes : DisenoBiblioteca {
         textoEn(medidor, e.linea2, Rect(dir.left, dir.top + dir.height * 0.6f, dir.right, dir.bottom), TEXTO, TINTA.copy(alpha = 0.85f), 9.5f, minimo = 5.5f)
         if (cerrada) solapa(bis, ab) { tapaSolapa(it) }
         // La luz que se escapa por la juntura de la carta que ya se puede abrir.
-        if (e.brillo > 0f && cerrada) grietaLuz(Offset(s.left + w * 0.06f, borde + 0.5f * u), Offset(s.right - w * 0.06f, borde - 0.5f * u), 1f * u, e.brillo * 0.85f, e.semilla)
+        if (e.brillo > 0f && cerrada) {
+            val a0 = Offset(s.left + w * 0.04f, borde + 0.6f * u); val a1 = Offset(s.right - w * 0.04f, borde + 0.6f * u)
+            drawLine(GRIETA_HALO.copy(alpha = 0.18f * e.brillo), a0, a1, 7 * u, StrokeCap.Round)
+            drawLine(GRIETA_HALO.copy(alpha = 0.35f * e.brillo), a0, a1, 3 * u, StrokeCap.Round)
+            drawLine(GRIETA.copy(alpha = 0.9f * e.brillo), a0, a1, 0.8f * u, StrokeCap.Round)
+        }
         // El cordel de pelo de cabra: se va atando en dos vueltas; abierta la carta, queda suelto al pie.
         if (e.cordon > 0f && cerrada) {
             val f = e.cordon.coerceIn(0f, 1f)
@@ -1611,12 +1602,13 @@ object EstanteArcontes : DisenoBiblioteca {
                 moveTo(x + w * 0.56f, y + h * 0.5f); lineTo(x - w * 0.02f, y + h * 0.5f)
             }
             1 -> {
-                moveTo(x + w * 0.38f, y + h * 0.96f)
-                cubicTo(x + w * 0.04f, y + h * 0.82f, x + w * 0.06f, y + h * 0.38f, x + w * 0.34f, y + h * 0.3f)
-                lineTo(x + w * 0.66f, y + h * 0.3f)
-                cubicTo(x + w * 0.94f, y + h * 0.38f, x + w * 0.96f, y + h * 0.82f, x + w * 0.62f, y + h * 0.96f)
+                moveTo(x + w * 0.42f, y + h * 0.98f)
+                cubicTo(x + w * 0.14f, y + h * 0.86f, x + w * 0.16f, y + h * 0.38f, x + w * 0.38f, y + h * 0.28f)
+                lineTo(x + w * 0.62f, y + h * 0.28f)
+                cubicTo(x + w * 0.84f, y + h * 0.38f, x + w * 0.86f, y + h * 0.86f, x + w * 0.58f, y + h * 0.98f)
                 close()
-                addArc(Rect(x + w * 0.26f, y + h * 0.06f, x + w * 0.74f, y + h * 0.5f), 180f, 180f)
+                addArc(Rect(x + w * 0.32f, y + h * 0.06f, x + w * 0.68f, y + h * 0.42f), 180f, 180f)
+                moveTo(x + w * 0.3f, y + h * 0.24f); lineTo(x + w * 0.7f, y + h * 0.24f)
             }
             2 -> {
                 addOval(Rect(c.x - w * 0.5f, c.y - w * 0.5f, c.x + w * 0.5f, c.y + w * 0.5f))
@@ -1625,9 +1617,8 @@ object EstanteArcontes : DisenoBiblioteca {
                 addArc(Rect(c.x - w * 0.11f, c.y - w * 0.16f, c.x + w * 0.17f, c.y + w * 0.16f), 100f, 160f)
             }
             3 -> {
-                moveTo(c.x, y); quadraticTo(c.x, c.y, x + w, c.y); quadraticTo(c.x, c.y, c.x, y + h)
-                quadraticTo(c.x, c.y, x, c.y); quadraticTo(c.x, c.y, c.x, y); close()
-                addOval(Rect(c.x - w * 0.34f, c.y - w * 0.34f, c.x + w * 0.34f, c.y + w * 0.34f))
+                moveTo(c.x, y); quadraticTo(c.x + w * 0.06f, c.y - h * 0.06f, x + w * 0.85f, c.y); quadraticTo(c.x + w * 0.06f, c.y + h * 0.06f, c.x, y + h)
+                quadraticTo(c.x - w * 0.06f, c.y + h * 0.06f, x + w * 0.15f, c.y); quadraticTo(c.x - w * 0.06f, c.y - h * 0.06f, c.x, y); close()
             }
             else -> {
                 addRect(Rect(x + w * 0.04f, y + h * 0.22f, x + w * 0.96f, y + h * 0.82f))
