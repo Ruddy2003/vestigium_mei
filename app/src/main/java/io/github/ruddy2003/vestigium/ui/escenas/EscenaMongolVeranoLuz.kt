@@ -111,9 +111,10 @@ internal object LuzVerano {
         return nubesDelDia(m).mapIndexed { i, n ->
             val f = ((H - n.y) / H).coerceIn(0.03f, 1f); val g = f.pow(1.15f)
             val cx = n.x + n.ancho / 2f + ax * (10f + 50f * g)
-            val cy = (H + 3f + 120f * g + ay * (2f + 12f * g)).coerceAtLeast(H + 2f)
-            val rx = n.ancho * (0.5f + 1.1f * g) * (1f + 0.15f * abs(ax))
-            SombraDeNube(Offset(cx, cy), rx, rx * (0.06f + 0.3f * g), i)
+            val cy = (H + 3f + 95f * g + ay * (2f + 12f * g)).coerceAtLeast(H + 2f)
+            // Ni tan grandes que oscurezcan el llano entero (entonces no se leen como sombras de nube).
+            val rx = (n.ancho * (0.6f + 1.3f * g) * (1f + 0.15f * abs(ax))).coerceAtMost(72f)
+            SombraDeNube(Offset(cx, cy), rx, (rx * (0.06f + 0.3f * g)).coerceAtMost(9f), i)
         }.filter { it.centro.x + it.rx > -10f && it.centro.x - it.rx < ANCHO + 10f && it.centro.y - it.ry < HASTA }
     }
 
@@ -133,7 +134,13 @@ internal object LuzVerano {
      */
     fun DrawScope.sombrasDeNubes(m: Momento, r: Rayo) {
         val sombras = sombrasDeNube(m); if (sombras.isEmpty()) return
-        capaSombra(r, 0.85f) { c ->
+        // Los días de cúmulos, el sol que se cuela entre las nubes enciende el llano que queda fuera de sus sombras.
+        val l = EscenaMongol.luces(m)
+        if (l.nublado > 0.2f) drawRect(Brush.verticalGradient(0f to Color.Transparent, 0.35f to l.solColor.copy(alpha = 0.12f * l.nublado), 0.75f to l.solColor.copy(alpha = 0.08f * l.nublado), 1f to Color.Transparent, startY = H, endY = HASTA),
+            Offset(-10f, H), androidx.compose.ui.geometry.Size(ANCHO + 20f, HASTA - H), blendMode = BlendMode.Plus)
+        // Más honda que la de las cosas (una nube tapa todo el cielo de un lado): casi la misma con sol fuerte o velado.
+        val honda = 0.4f + 0.3f * (r.fuerza / 0.72f).coerceIn(0f, 1f) + 0.2f * l.nublado
+        capaSombra(r, honda / r.fuerza.coerceAtLeast(0.05f)) { c ->
             clipRect(-10f, H - 1f, ANCHO + 10f, HASTA) {
                 for (s in sombras) {
                     val az = Azar(Semilla.de(m.semilla("cielo"), "sombra", s.semilla))

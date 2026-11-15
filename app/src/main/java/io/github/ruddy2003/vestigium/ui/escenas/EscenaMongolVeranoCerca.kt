@@ -305,11 +305,11 @@ internal object CercaVerano {
                 }
             }
         }
-        if (EscenaMongol.odre(m)) cosas += parte(V.ODRE.y) { odre(p.con(calida(V.ODRE)), V.ODRE, 54f, Azar(Semilla.de("mongol", "odre")), batiendo = V.batido(m)); filoDeLuna(PiezasMongol.siluetaDeOdre(V.ODRE, 54f), l, 1.6f) }
+        if (EscenaMongol.odre(m)) cosas += parte(V.ODRE.y) { odre(p.con(calida(V.ODRE)), V.ODRE, 54f, Azar(Semilla.de("mongol", "odre")), batiendo = V.batido(m)) }
         // El día que llegan, mientras se arma la tienda, los rollos de fieltro esperan en la hierba donde irá el odre.
         if (V.llegada(m) && EscenaMongol.armado(m) < 1f) for ((c, largo) in listOf(Offset(226f, 246f) to 38f, Offset(258f, 252f) to 32f, Offset(240f, 238f) to 30f).sortedBy { it.first.y }) cosas += parte(c.y) { rolloDeFieltro(p, sol, c, largo, 6.4f) }
         if (grande != null) cosas += parte(grande.pie.y) { grande.pintar(this) }
-        if (hayCaballete) cosas += parte(V.CABALLETE.y) { caballete(p.con(calida(V.CABALLETE)), sol, V.CABALLETE, silla); filoDeLuna(siluetaDeCaballete(V.CABALLETE, silla), l, 1.2f) }
+        if (hayCaballete) cosas += parte(V.CABALLETE.y) { caballete(p.con(calida(V.CABALLETE)), sol, V.CABALLETE, silla); filoDeLuna(siluetaDeCaballete(V.CABALLETE, silla), l, 0.7f) }
         // El fieltro de sentarse, con el objeto del día encima; los días de objeto grande, la tabla del queso con su cuchara.
         cosas += parte(V.FIELTRO_OBJETO.y) {
             val pp = p.con(calida(V.FIELTRO_OBJETO))

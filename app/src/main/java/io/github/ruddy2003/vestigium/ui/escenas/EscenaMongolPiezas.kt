@@ -498,7 +498,8 @@ internal object PiezasMongol {
             val h = g.humero; val e = s.escala(0f, 0f); val k = (g.dentro * noche).coerceIn(0f, 1f)
             resplandor(h + Offset(0f, -0.3f * e), 1.3f * e, 0.45f * k, C.LUMBRE)
             // Resplandores blandos, cada vez más anchos y más tenues, a lo largo de la columna (sin borde: es humo).
-            for (i in 0 until 5) resplandor(h + Offset(0f, -(0.35f + 0.42f * i) * e), (0.42f + 0.12f * i) * e, 0.2f * k * (1f - i / 5f), C.LUMBRE)
+            val n = if (e > 12f) 5 else 2
+            for (i in 0 until n) resplandor(h + Offset(0f, -(0.35f + 0.42f * i * 5f / n) * e), (0.42f + 0.12f * i * 5f / n) * e, 0.2f * k * (1f - i / n.toFloat()), C.LUMBRE)
         }
     }
 
@@ -519,19 +520,22 @@ internal object PiezasMongol {
         fun arriba(t: Float, k: Float = 1f) = s.p((g.aro + (g.alero - g.aro) * (1f - k)) * sin(t), g.cumbre - (g.cumbre - yAlero) * (1f - k), -(g.aro + (g.alero - g.aro) * (1f - k)) * cos(t))
         val base = Path().apply { for (c in caras) addPath(poligono(alero(c.t0), alero(c.t1), arriba(c.t1), arriba(c.t0))) }
         drawPath(base, p.medio(color, lejos))
+        // El lado de la luna, azul plata, en cuatro tandas según cuánto mira a la luna (cuatro trazos y no uno por cara).
+        val plata = if (luna > 0.02f) Array(4) { Path() } else null
         for ((i, c) in caras.withIndex()) {
             val forma = poligono(alero(c.t0), alero(c.t1), arriba(c.t1), arriba(c.t0))
             val col = p.por(color, c.luz.coerceIn(-1f, 1f), lejos)
             drawPath(forma, col)
             drawPath(forma, col, style = Stroke(0.5f))
-            // El lado de la luna, azul plata; el que le da la espalda se queda con la noche.
-            if (c.plata > 0f) drawPath(forma, LUNA.copy(alpha = (0.2f * luna * c.plata * (1f - lejos)).coerceIn(0f, 1f)), blendMode = BlendMode.Plus)
+            if (plata != null && c.plata > 0f) plata[(c.plata * 4f).toInt().coerceIn(0, 3)].addPath(forma)
             // El cerco de hollín alrededor del aro, y la mugre del alero.
             val h0 = arriba(c.t0, 0.72f); val h1 = arriba(c.t1, 0.72f)
             drawPath(poligono(h0, h1, arriba(c.t1), arriba(c.t0)), Brush.linearGradient(0f to Color.Transparent, 1f to p.sombra(C.HOLLIN, lejos).copy(alpha = 0.55f + 0.2f * g.desgaste), start = (h0 + h1) / 2f, end = (arriba(c.t0) + arriba(c.t1)) / 2f))
             // Una vara de cada tres se nota bajo el fieltro: el fieltro se hunde un poco entre ellas.
             if (g.detalle && i % 3 == 0) drawLine(p.sombra(color, lejos).copy(alpha = 0.22f), alero(c.t0), arriba(c.t0), (0.02f * s.escala(0f, 0f)).coerceIn(0.3f, 0.9f))
         }
+        // El que le da la espalda a la luna se queda con la noche.
+        if (plata != null) for (j in 0 until 4) if (!plata[j].isEmpty) drawPath(plata[j], LUNA.copy(alpha = (0.2f * luna * (j + 0.5f) / 4f * (1f - lejos)).coerceIn(0f, 1f)), blendMode = BlendMode.Plus)
         if (g.detalle && s.escala(0f, 0f) > 20f) clipPath(base) {
             val e2 = s.escala(0f, 0f); val tz = Azar(Semilla.de(g.semilla, "fieltro", "techo"))
             val (va, vb) = g.visible()
@@ -740,7 +744,7 @@ internal object PiezasMongol {
                 val ra = g.aro * 0.8f; val kk = luz.fuerza
                 val arriba = (0 until 12).map { val a = (2 * PI * it / 12).toFloat(); q(ra * sin(a), g.cumbre, -ra * cos(a)) }
                 val haz = poligono(envolvente(arriba + luz.borde.map { q(it) }))
-                drawPath(haz, Brush.linearGradient(0f to luz.color.copy(alpha = 0.1f * kk), 1f to luz.color.copy(alpha = 0.26f * kk), start = q(0f, g.cumbre, 0f), end = q(luz.centro)), blendMode = BlendMode.Plus)
+                drawPath(haz, Brush.linearGradient(0f to luz.color.copy(alpha = 0.12f * kk), 1f to luz.color.copy(alpha = 0.34f * kk), start = q(0f, g.cumbre, 0f), end = q(luz.centro)), blendMode = BlendMode.Plus)
                 val az = Azar(Semilla.de(g.semilla, "motas"))
                 repeat(26) {
                     val a = az.entre(0f, 6.28f); val u = sqrt(az.real()) * ra; val a0 = V3(u * sin(a), g.cumbre, -u * cos(a))
