@@ -369,7 +369,7 @@ object EstantePsicodelia : DisenoBiblioteca {
         val piso = d.base.top + d.base.height * 0.66f
         // La pared, de arriba hasta el piso, con su yeso.
         drawRect(Brush.verticalGradient(listOf(c(PARED), c(mezcla(PARED, PARED_SOMBRA, 0.35f))), 0f, piso), Offset.Zero, Size(w, piso))
-        for (k in 0 until 90) drawCircle((if (k % 2 == 0) Color.White else Color.Black).copy(alpha = 0.035f), (1f + 4f * azar(301, k)) * u, Offset(w * azar(303, k), piso * azar(305, k)))
+        for (k in 0 until 140) drawCircle((if (k % 2 == 0) Color.White else Color.Black).copy(alpha = 0.04f), (0.6f + 1.6f * azar(301, k)) * u, Offset(w * azar(303, k), piso * azar(305, k)))
         // De día, el sol de la tarde entra por la ventana del mirador y deja en la pared su mancha, cruzada por la sombra del
         // marco; con la niebla del anochecer, apenas.
         if (!oscuro) sol(Rect(0f, 0f, w, piso), if (noche) 0.25f else 1f)
@@ -901,7 +901,9 @@ object EstantePsicodelia : DisenoBiblioteca {
         textoEn(medidor, v.dia, fr.deflate(1.5f * u).translate(1.1f * u, 0.9f * u), TITULO, sombraN, 17f, minimo = 6f)
         letrero(medidor, v.dia, fr.deflate(1.5f * u), TITULO, numero, 17f, luce = oscuro, minimo = 6f)
         // El mes, de arriba abajo.
-        val mes = Rect(1 * u, fr.bottom + 4 * u, w - 1 * u, h * 0.8f)
+        val mes = Rect(1 * u, fr.bottom + (if (v.tono != null) 17f else 4f) * u, w - 1 * u, h * 0.8f)
+        // La franja del pie, del color de la de arriba.
+        drawRect(franja, Offset(0f, h * 0.955f), Size(w, h * 0.045f))
         val tintaMes = when {
             oscuro -> fluor(b0, true).copy(alpha = 0.85f)
             !noche && esClaro(a0) -> t(TINTA, false, false)
@@ -958,7 +960,7 @@ object EstantePsicodelia : DisenoBiblioteca {
             letrero(medidor, v.dia, cinta.deflate(1 * u), TEXTO, if (oscuro) TINTA_NOCHE else t(TINTA, false, noche), 16f, minimo = 6f)
         }
         // El mes, a plumón.
-        val mes = Rect(1 * u, cinta.bottom + 5 * u, w - 1 * u, h * 0.82f)
+        val mes = Rect(1 * u, cinta.bottom + (if (v.tono != null) 18f else 5f) * u, w - 1 * u, h * 0.82f)
         if (mes.height > 18 * u) letrero(medidor, mesCorto(v.mes), mes, TEXTO, if (oscuro) TENUE_NOCHE else t(TINTA, false, noche).copy(alpha = 0.8f), 8.5f, vertical = true, minimo = 4f)
         // La florecita (o la luna) dibujada a plumón al pie.
         val pc = Offset(w / 2, h * 0.9f)
@@ -989,22 +991,23 @@ object EstantePsicodelia : DisenoBiblioteca {
         drawRect(Color.Black.copy(alpha = 0.3f), r.topLeft + Offset(1 * u, 1 * u), r.size)
         drawRect(if (noche) Color(0xFF140C24) else Color(0xFF17121C), r.topLeft, r.size)
         val cols = if (oscuro) ARCOIRIS_FLUOR else listOf(FMAGENTA, FNARANJA, LIMON, Color(0xFF6CF0C8), FVIOLETA)
+        val fr = Rect(0f, r.top + h * 0.05f, w, r.top + h * 0.05f + minOf(w * 1.2f, h * 0.24f))
+        val ondaTop = fr.bottom + (if (v.tono != null) 24f else 12f) * u
         // La onda de arcoíris que baja por el lomo.
         clipRect(r.left, r.top, r.right, r.bottom) {
             val p = Path()
             val pasos = 40
             for (i in 0..pasos) {
                 val f = i / pasos.toFloat()
-                val y = r.top + r.height * (0.36f + 0.5f * f)
+                val y = ondaTop + (r.bottom - r.height * 0.14f - ondaTop) * f
                 val x = w / 2 + w * 0.28f * sin(f * 5f * PI.toFloat() + v.semilla % 7)
                 if (i == 0) p.moveTo(x, y) else p.lineTo(x, y)
             }
-            val brocha = Brush.verticalGradient(cols, r.top + r.height * 0.36f, r.bottom - r.height * 0.14f)
+            val brocha = Brush.verticalGradient(cols, ondaTop, r.bottom - r.height * 0.14f)
             drawPath(p, brocha, style = Stroke(maxOf(1.6f * u, w * 0.12f), cap = StrokeCap.Round))
-            if (oscuro) drawPath(p, Brush.verticalGradient(cols.map { it.copy(alpha = 0.25f) }, r.top + r.height * 0.36f, r.bottom), style = Stroke(maxOf(4f * u, w * 0.3f), cap = StrokeCap.Round))
+            if (oscuro) drawPath(p, Brush.verticalGradient(cols.map { it.copy(alpha = 0.25f) }, ondaTop, r.bottom), style = Stroke(maxOf(4f * u, w * 0.3f), cap = StrokeCap.Round))
         }
         // El número, en verde limón con sombra magenta.
-        val fr = Rect(0f, r.top + h * 0.05f, w, r.top + h * 0.05f + minOf(w * 1.2f, h * 0.24f))
         textoEn(medidor, v.dia, fr.deflate(1.5f * u).translate(1.1f * u, 0.9f * u), TITULO, FMAGENTA.copy(alpha = 0.85f), 17f, minimo = 6f)
         letrero(medidor, v.dia, fr.deflate(1.5f * u), TITULO, LIMON, 17f, luce = oscuro, minimo = 6f)
         // El mes, chico, en violeta claro, bajo el número.

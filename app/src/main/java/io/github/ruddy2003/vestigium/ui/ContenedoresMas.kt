@@ -29,6 +29,15 @@ object ContenedoresMas {
     private val ORO = Color(0xFFD4AF37)
     private val HIERRO = Color(0xFF4A4E54)
     private val CUERO = Color(0xFF5A3A22)
+    /** La tinta de arcoíris del tintero partido del periódico del barrio de Psicodelia, del magenta al violeta. */
+    private val ARCOIRIS = listOf(Color(0xFFE0218A), Color(0xFFFF7A1A), Color(0xFFFFD23F), Color(0xFF2FBF71), Color(0xFF2F6BFF), Color(0xFF7B3FD1))
+
+    /** Un color de [ARCOIRIS], a [f] (de 0 a 1) de un extremo al otro. */
+    private fun arcoiris(f: Float): Color {
+        val x = f.coerceIn(0f, 1f) * (ARCOIRIS.size - 1)
+        val i = x.toInt().coerceAtMost(ARCOIRIS.size - 2)
+        return lerp(ARCOIRIS[i], ARCOIRIS[i + 1], x - i)
+    }
 
     fun papel(c: Contenedor, cs: ColorScheme, oscuro: Boolean): Color {
         val claro = when (c) {
@@ -61,6 +70,8 @@ object ContenedoresMas {
             Contenedor.HAZ -> Color(0xFFEADFC1)
             // El papel de dibujo del carnet de bocetos, crema y de grano grueso.
             Contenedor.BOCETOS -> Color(0xFFF4EEDE)
+            // El papel barato del periódico del barrio, un poco amarillo.
+            Contenedor.PERIODICO -> Color(0xFFEFE7D6)
             Contenedor.CUADERNO -> Color(0xFFFBFCFD)
             Contenedor.VUELO -> Color(0xFFF4F6FA)
             // Papel sintético impermeable, gris verdoso, de las bitácoras que se mojan.
@@ -314,6 +325,35 @@ object ContenedoresMas {
                 val lisa = Offset(size.width - 46 * d, size.height - 46 * d)
                 drawCircle(Color.White.copy(alpha = if (oscuro) 0.03f else 0.14f), 30 * d, lisa)
                 with(TrazosGalia) { hojaRoble(lisa, 26 * d, 30f, Color(0xFF4E6B2E).copy(alpha = if (oscuro) 0.35f else 0.45f), Color(0xFF2E4219).copy(alpha = 0.4f)) }
+            }
+            Contenedor.PERIODICO -> {
+                // El papel de periódico: sus fibras; arriba, la trama de puntos de la tinta de arcoíris (la del tintero partido); bajo
+                // la cabecera, la raya doble de la plana; a la izquierda, la raya de la columna; a media hoja, el doblez, y abajo a la
+                // derecha, una flor impresa.
+                val az = java.util.Random(41)
+                repeat(160) {
+                    val x = az.nextFloat() * size.width; val y = az.nextFloat() * size.height
+                    drawLine(tinta.copy(alpha = 0.04f), Offset(x, y), Offset(x + (2 + 3 * az.nextFloat()) * d, y + (az.nextFloat() - 0.5f) * 2 * d), 0.5f * d)
+                }
+                val paso = 3 * d
+                var fila = 0; var yt = paso / 2
+                while (yt < 16 * d) {
+                    val k = 1f - yt / (16 * d)
+                    var x = if (fila % 2 == 0) 0f else paso / 2
+                    while (x < size.width) { drawCircle(arcoiris(x / size.width).copy(alpha = (if (oscuro) 0.45f else 0.6f) * k), paso * 0.42f * k + 0.2f * d, Offset(x, yt)); x += paso }
+                    yt += paso; fila++
+                }
+                val y0 = 84 * d
+                drawLine(tinta.copy(alpha = 0.55f), Offset(margen - 10 * d, y0), Offset(size.width - 14 * d, y0), 1.6f * d)
+                drawLine(tinta.copy(alpha = 0.4f), Offset(margen - 10 * d, y0 + 3 * d), Offset(size.width - 14 * d, y0 + 3 * d), 0.6f * d)
+                drawLine(tinta.copy(alpha = 0.18f), Offset(margen - 14 * d, y0 + 10 * d), Offset(margen - 14 * d, size.height - 20 * d), 0.6f * d)
+                drawLine(tinta.copy(alpha = 0.06f), Offset(0f, size.height * 0.5f), Offset(size.width, size.height * 0.5f), 1.2f * d)
+                val fc = Offset(size.width - 30 * d, size.height - 30 * d)
+                for (j in 0 until 6) {
+                    val a = 2 * PI * j / 6
+                    drawCircle(arcoiris(j / 5f).copy(alpha = if (oscuro) 0.35f else 0.45f), 4.5f * d, Offset(fc.x + (6 * d * cos(a)).toFloat(), fc.y + (6 * d * sin(a)).toFloat()))
+                }
+                drawCircle(Color(0xFF2FBF71).copy(alpha = if (oscuro) 0.4f else 0.55f), 3.4f * d, fc)
             }
             Contenedor.BOCETOS -> {
                 // El papel de dibujo: su grano, sin renglones; bajo la cabecera, una raya de lápiz que termina en un rizo de látigo;
@@ -626,6 +666,16 @@ object ContenedoresMas {
                     drawLine(tiento, Offset(12 * d, y + 5 * d), Offset(22 * d, y + 14 * d), 1.6f * d, StrokeCap.Round)
                     drawLine(tiento, Offset(12 * d, y + 5 * d), Offset(19 * d, y + 17 * d), 1.6f * d, StrokeCap.Round)
                 }
+            }
+            Contenedor.PERIODICO -> {
+                // El doblez del periódico, a la izquierda: el lomo de papel con su luz y su sombra, los cantos de las hojas de adentro y,
+                // arriba, la tinta de arcoíris que corre hasta el doblez.
+                val papelP = if (oscuro) Color(0xFF2E2742) else Color(0xFFE6DCC6)
+                drawRect(papelP, Offset(6 * d, 0f), Size(14 * d, size.height))
+                for (k in 0 until 4) drawLine(Color.Black.copy(alpha = 0.12f), Offset((8 + k * 3) * d, 0f), Offset((8 + k * 3) * d, size.height), 0.5f * d)
+                drawRect(Brush.horizontalGradient(listOf(Color.White.copy(alpha = if (oscuro) 0.05f else 0.35f), Color.Transparent, Color.Black.copy(alpha = 0.25f)), 6 * d, 20 * d), Offset(6 * d, 0f), Size(14 * d, size.height))
+                drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.2f), Color.Transparent), 20 * d, 34 * d), Offset(20 * d, 0f), Size(14 * d, size.height))
+                ARCOIRIS.forEachIndexed { i, col -> drawRect(col.copy(alpha = if (oscuro) 0.5f else 0.7f), Offset(6 * d + i * 14 * d / 6f, 0f), Size(14 * d / 6f + 0.5f, 10 * d)) }
             }
             Contenedor.BOCETOS -> {
                 // El lomo de tela verde, con la costura de los cuadernillos que asoma, y la cinta de seda malva del registro, que

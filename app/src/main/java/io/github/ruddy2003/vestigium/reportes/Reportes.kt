@@ -108,7 +108,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
     TemaId.TEMPLARIO -> R.font.regla_bold           // la letra de la regla, negrita: cifras firmes
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
-    TemaId.PSICODELIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
+    TemaId.PSICODELIA -> R.font.fredoka_semibold     // Fredoka en negrita, la de los rótulos y las cifras del tema: redonda, de cartel
     TemaId.NOUVEAU -> R.font.vitrina_regular       // Della Respira, la de los rótulos y las cifras del tema: altas y finas, de cartel
     TemaId.GALIA -> R.font.ysabeau_semibold       // Ysabeau, la de los rótulos y las cifras del tema, de trazo humanista
     TemaId.ARCONTES -> R.font.codice_bold           // Caudex, la letra de los códices: cifras de pluma, firmes
@@ -152,7 +152,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.MEDIEVAL -> "Liber vestigii mei"
     TemaId.TEMPLARIO -> "Pauperes commilitones · Vestigium Mei"
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
-    TemaId.PSICODELIA -> "EXPEDIENTE · VESTIGIUM MEI"
+    TemaId.PSICODELIA -> "Vestigium Mei · desde el Haight, con la niebla"
     TemaId.NOUVEAU -> "Vestigium Mei · L'Atelier, revue illustrée"
     TemaId.GALIA -> "ΝΕΜΗΤΟΝ, el bosque sagrado · Vestigium Mei"
     TemaId.ARCONTES -> "ϫⲱⲱⲙⲉ · Vestigium Mei · el códice escondido"
@@ -374,15 +374,40 @@ object Reportes {
                     y += 54f
                 }
                 TemaId.PSICODELIA -> {
-                    // La barra del expediente se abre en el centro para el ojo que lo mira todo.
-                    val yc = yy + 16f
-                    val barra = L.relleno(L.primario)
-                    c.drawRect(M, yc - 4f, cx - 70f, yc + 4f, barra); c.drawRect(cx + 70f, yc - 4f, W - M, yc + 4f, barra)
-                    val ojo = Path().apply { moveTo(cx - 54f, yc); quadTo(cx, yc - 34f, cx + 54f, yc); quadTo(cx, yc + 34f, cx - 54f, yc); close() }
-                    c.drawPath(ojo, L.relleno(L.superficie2))
-                    c.drawPath(ojo, L.trazo(L.tinta, 3f))
-                    c.drawCircle(cx, yc, 10f, barra); c.drawCircle(cx, yc, 4f, L.relleno(L.tinta))
-                    y += 54f
+                    // Dos ondas de tinta de arcoíris (la del tintero partido, cada tramo de un color) llegan desde las orillas hasta la
+                    // flor del centro, que vibra: los pétalos del primario sobre su complementario corrido, el botón y el símbolo de
+                    // la paz.
+                    val yc = yy + 30f
+                    val colores = intArrayOf(0xFFE0218A.toInt(), 0xFFFF7A1A.toInt(), 0xFFE0B020.toInt(), 0xFF2FBF71.toInt(), 0xFF2F6BFF.toInt(), 0xFF7B3FD1.toInt())
+                    for (s0 in listOf(-1f, 1f)) {
+                        val x0 = if (s0 < 0) M else W - M
+                        val x1 = cx + s0 * 36f
+                        val pasos = 48
+                        var xa = x0; var ya = yc
+                        for (i in 1..pasos) {
+                            val f = i / pasos.toFloat()
+                            val xb = x0 + (x1 - x0) * f
+                            val yb = yc + 6f * kotlin.math.sin(f * 4f * Math.PI.toFloat())
+                            val col = colores[((if (s0 < 0) f else 1f - f) * (colores.size - 0.001f)).toInt().coerceIn(0, colores.size - 1)]
+                            c.drawLine(xa, ya, xb, yb, L.trazo(L.mezcla(col, L.fondo, 0.1), 3f))
+                            xa = xb; ya = yb
+                        }
+                    }
+                    val contra = L.relleno(L.secundario); val petalo = L.relleno(L.primario)
+                    for (k in 0 until 6) {
+                        val a = Math.PI * 2 * k / 6
+                        c.drawCircle(cx + 15f * kotlin.math.cos(a).toFloat() + 2f, yc + 15f * kotlin.math.sin(a).toFloat() + 1.5f, 10f, contra)
+                    }
+                    for (k in 0 until 6) {
+                        val a = Math.PI * 2 * k / 6
+                        c.drawCircle(cx + 15f * kotlin.math.cos(a).toFloat(), yc + 15f * kotlin.math.sin(a).toFloat(), 9.5f, petalo)
+                    }
+                    c.drawCircle(cx, yc, 10f, L.relleno(L.terciario))
+                    val paz = L.trazo(L.fondo, 1.6f)
+                    c.drawCircle(cx, yc, 6.5f, paz)
+                    c.drawLine(cx, yc - 6.5f, cx, yc + 6.5f, paz)
+                    c.drawLine(cx, yc, cx - 4.6f, yc + 4.6f, paz); c.drawLine(cx, yc, cx + 4.6f, yc + 4.6f, paz)
+                    y += 64f
                 }
                 TemaId.NOUVEAU -> {
                     // Dos líneas de látigo que llegan desde las orillas en una S tranquila, echan hojas y se enroscan junto al

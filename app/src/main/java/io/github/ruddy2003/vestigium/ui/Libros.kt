@@ -791,15 +791,21 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
             drawCircle(luna.copy(alpha = 0.16f), r * 1.25f, ce)
             drawCircle(luna, r * 0.85f, ce)
             if (!sola) {
-                val b = ce + Offset(-r * 3.6f, r * 2.7f)
-                val casa = lerp(n.cielo, Color.Black, 0.35f)
-                drawPath(Path().apply {
-                    moveTo(b.x - r * 1.1f, b.y); lineTo(b.x - r * 1.1f, b.y - r * 1.2f); lineTo(b.x, b.y - r * 2.1f)
-                    lineTo(b.x + r * 1.1f, b.y - r * 1.2f); lineTo(b.x + r * 1.1f, b.y); close()
-                }, casa)
-                drawCircle(TrazosPsicodelia.FLUOR_VIOLETA.copy(alpha = 0.22f), r * 0.8f, Offset(b.x, b.y - r * 0.75f))
-                drawRect(TrazosPsicodelia.FLUOR_VIOLETA.copy(alpha = 0.9f), Offset(b.x - r * 0.28f, b.y - r * 1.05f), Size(r * 0.56f, r * 0.6f))
-                drawLine(casa, Offset(b.x, b.y - r * 1.05f), Offset(b.x, b.y - r * 0.45f), 0.5f * u)
+                val b = ce + Offset(-r * 3.8f, r * 2.7f)
+                val casa = lerp(n.cielo, Color.Black, 0.4f)
+                val violeta = TrazosPsicodelia.FLUOR_VIOLETA
+                drawCircle(Brush.radialGradient(listOf(violeta.copy(alpha = 0.3f), Color.Transparent), center = Offset(b.x - r * 0.45f, b.y - r * 0.8f), radius = r * 1.6f), r * 1.6f, Offset(b.x - r * 0.45f, b.y - r * 0.8f))
+                val frente = Path().apply {
+                    moveTo(b.x - r * 1.3f, b.y); lineTo(b.x - r * 1.3f, b.y - r * 1.5f); lineTo(b.x, b.y - r * 2.4f)
+                    lineTo(b.x + r * 1.3f, b.y - r * 1.5f); lineTo(b.x + r * 1.3f, b.y); close()
+                }
+                drawPath(frente, casa)
+                drawPath(Path().apply { moveTo(b.x - r * 1.45f, b.y - r * 1.42f); lineTo(b.x, b.y - r * 2.4f); lineTo(b.x + r * 1.45f, b.y - r * 1.42f) }, luna.copy(alpha = 0.3f), style = Stroke(0.5f * u))
+                drawCircle(luna.copy(alpha = 0.3f), r * 0.14f, Offset(b.x, b.y - r * 1.85f))
+                // La ventana de la luz negra de un departamento y, al lado, una de luz tibia.
+                drawRect(violeta.copy(alpha = 0.9f), Offset(b.x - r * 0.8f, b.y - r * 1.2f), Size(r * 0.6f, r * 0.7f))
+                drawRect(Color(0xFFFFC46A).copy(alpha = 0.55f), Offset(b.x + r * 0.2f, b.y - r * 1.2f), Size(r * 0.6f, r * 0.7f))
+                listOf(b.x - r * 0.5f, b.x + r * 0.5f).forEach { x -> drawLine(casa, Offset(x, b.y - r * 1.2f), Offset(x, b.y - r * 0.5f), 0.5f * u) }
             }
         }
         // La luna creciente sobre París y, al lado, un candelabro de fundición de una entrada de metro (desde 1901), con su tallo
