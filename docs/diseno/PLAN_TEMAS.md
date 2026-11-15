@@ -1208,6 +1208,8 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
 
 ### 10g. Psicodelia (`psicodelia`)
 
+**Estado (15 nov 2026): en curso** en la rama de los temas nuevos. Hechos: la guía (`docs/diseno/temas/psicodelia.md`), la base en el código (paleta, Modak y Fredoka, el disco del día, la voz, las 31 frases de dominio público), los sonidos, el ícono, el sello, el papel, los widgets y el gato. En curso: las superficies y la otra vida. Decisiones a confirmar por el autor: la letra de los títulos (Modak, la burbuja; la ficha proponía Shrikhand); el ícono con la flor grande detrás de la huella (lo que más se aparta del lote 1) y su saturación.
+
 **Fuentes comprobadas** (15 nov 2026): `docs/diseno/temas/fuentes_psicodelia.md`, con la cronología de 1967, la campaña con sus lugares, 33 frases de dominio público y 23 correcciones, ya puestas aquí.
 
 **Concepto.** San Francisco en 1967, el verano del amor, vivido en la ciudad: casas victorianas (casi todas grises o desteñidas, con alguna pintada de colores fuertes: la moda empezó en 1963 y las calles enteras de colores son de los 70), departamentos compartidos, tiendas de carteles y de discos (las de discos, recurso), salas de baile con shows de luces líquidas, radio FM de noche y carteles con letras que se derriten. **Movimiento contenido:** el fondo vivo respira, y el caleidoscopio y las letras que se derriten salen solo en momentos (al guardar, en los logros). El resto se lee tranquilo.
