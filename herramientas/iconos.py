@@ -658,17 +658,28 @@ def latigo_puntos(cx, cy, radio, a0=math.radians(116), a1=math.radians(366), cen
         u = i / n; a = a0 + (a1 - a0) * u
         r = radio * (1 + onda * math.sin(u * 2 * math.pi * 1.5 + 0.6))
         pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
-    # El rizo: una espiral que se cierra en el sentido del reloj alrededor de su centro.
-    ac, rc = centro_rizo
-    ccx, ccy = cx + radio * rc * math.cos(ac), cy + radio * rc * math.sin(ac)
+    # El rizo: una espiral que se cierra en el sentido del reloj alrededor de su centro. Sin [centro_rizo], el centro
+    # queda en el mismo radio que la punta del arco, por dentro, y el tallo entra en la espiral sin quiebre: solo se
+    # curva de golpe más cerrado (el chasquido del látigo).
     r0, r1, vueltas = rizo
-    f0 = ac - math.radians(40)                    # la espiral empieza por fuera del centro, del lado de donde viene el tallo
+    if centro_rizo is None:
+        ccx, ccy = pts[-1][0] - radio * r0 * math.cos(a1), pts[-1][1] - radio * r0 * math.sin(a1); f0 = a1
+    else:
+        ac, rc = centro_rizo
+        ccx, ccy = cx + radio * rc * math.cos(ac), cy + radio * rc * math.sin(ac)
+        f0 = ac - math.radians(40)                # la espiral empieza por fuera del centro, del lado de donde viene el tallo
     espiral = []
     m = 360
     for i in range(m + 1):
         t = i / m; f = f0 + vueltas * 2 * math.pi * t
         rr = radio * (r0 + (r1 - r0) * (1 - (1 - t) ** 1.6))
         espiral.append((ccx + rr * math.cos(f), ccy + rr * math.sin(f)))
+    if centro_rizo is None:
+        pts = pts + espiral[1:]
+        largos = [0.0]
+        for i in range(1, len(pts)):
+            largos.append(largos[-1] + math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]))
+        return pts, [x / largos[-1] for x in largos]
     # El paso del arco a la espiral: una curva de Bézier que sigue la tangente de los dos.
     p0 = pts[-1]; t0 = (-math.sin(a1), math.cos(a1))
     p3 = espiral[0]; t3 = (-math.sin(f0), math.cos(f0))
@@ -1036,7 +1047,7 @@ ORO_PALIDO = [(0.0, '#2E2410'), (0.25, '#6A5628'), (0.45, '#A08850'), (0.6, '#C2
               (0.94, '#F2E2B0'), (1.0, '#FFF7DE')]
 
 
-def nacar(alto, fuerza, sem, base='#E6E3EC', luz=(-0.55, -0.7, 1.0)):
+def nacar(alto, fuerza, sem, base='#E6E3EC', luz=(-0.55, -0.7, 1.0), cuanto=0.78):
     """El nácar en relieve a partir de un campo de alturas: blanco perla, con los colores del arco que cambian según hacia
     dónde mira la superficie (rosa, lila, verde de agua, crema) y en manchas grandes; brillo suave arriba a la izquierda."""
     gy, gx = np.gradient(alto)
@@ -1053,7 +1064,7 @@ def nacar(alto, fuerza, sem, base='#E6E3EC', luz=(-0.55, -0.7, 1.0)):
     i0 = np.floor(t).astype(int) % 4; f = (t - np.floor(t))[..., None]
     f = f * f * (3 - 2 * f)
     tinte = np.stack(arco)[i0] * (1 - f) + np.stack(arco)[(i0 + 1) % 4] * f
-    col = rgb(base)[None, None, :] * 0.22 + tinte * 0.78
+    col = rgb(base)[None, None, :] * (1 - cuanto) + tinte * cuanto
     col = col * (0.66 + 0.4 * dif[..., None]) + esp[..., None] * np.array([70, 68, 72], np.float32)
     return col
 

@@ -435,24 +435,27 @@ def collar_lazo(L, C, cab, acc):
     if acc != "lazo":
         return _collar_lazo(L, C, cab, acc)
     e1, e2, j, (ux, uy), (ox, oy) = lazo_pos(C, cab)
-    L.capsula("collar", [e1, e2], 1.35)                                              # la cinta alrededor del cuello
-    k0 = (j[0] + 0.5 * ox, j[1] + 0.5 * oy)
+    L.capsula("collar", [e1, e2], 1.3)                                               # la cinta alrededor del cuello
+    k0 = (j[0] + 0.45 * ox, j[1] + 0.45 * oy)
     # Las dos puntas: caen por su peso desde el nudo, con una curva suave, y acaban en V (no pasan del suelo).
-    for dx, largo, fase_ in ((0.9, 6.6, 0.0), (-0.7, 5.2, 1.6)):
+    for dx, largo, fase_ in ((1.3, 7.0, 0.0), (-1.1, 5.4, 2.0)):
         pts = []
         for q in range(6):
             u = q / 5
-            x = k0[0] + dx * u + 0.9 * math.sin(u * 3.4 + fase_) * u
-            y = min(k0[1] + 0.6 + largo * u, SUELO - 0.9)
+            x = k0[0] + dx * u + 1.0 * math.sin(u * 3.8 + fase_) * u
+            y = min(k0[1] + 0.8 + largo * u, SUELO - 1.1)
             pts.append((x, y))
-        L.curva("capa", pts, [1.5, 1.45, 1.4, 1.35, 1.3, 1.3])
+        L.curva("capa", pts, [2.0, 1.95, 1.9, 1.95, 2.05, 2.1])
         x, y = pts[-1]
-        L.poligono("capa", [(x - 0.95, y - 0.2), (x + 0.95, y - 0.2), (x + 0.75, y + 1.0), (x, y + 0.2), (x - 0.75, y + 1.0)])
-    # Las lazadas: dos óvalos a lo largo del cuello, abiertos hacia afuera; el nudo, encima.
-    for s in (1, -1):
-        cx, cy = k0[0] + s * 2.1 * ux + 0.8 * ox, k0[1] + s * 2.1 * uy + 0.8 * oy
-        L.elipse("capa", cx, cy, 2.5, 1.55, math.degrees(math.atan2(uy, ux)))
-    L.elipse("broche", k0[0] + 0.3 * ox, k0[1] + 0.3 * oy, 1.05, 1.05)
+        L.poligono("capa", [(x - 1.15, y - 0.4), (x + 1.15, y - 0.4), (x + 1.05, y + 1.2), (x, y + 0.25), (x - 1.05, y + 1.2)])
+    # Las dos lazadas, redondas y un poco caídas, a los lados del nudo (una hacia adelante y otra hacia el cuello), con
+    # su hueco en sombra.
+    for dx, dy, ang, rx, ry in ((2.3, -0.5, -8, 2.5, 2.0), (-2.1, -0.6, 14, 2.3, 1.85)):
+        cx, cy = k0[0] + dx, k0[1] + dy
+        L.elipse("capa", cx, cy, rx, ry, ang)
+        sx = 1 if dx > 0 else -1
+        L.elipse("broche", cx + sx * 0.7 * math.cos(math.radians(ang)), cy + sx * 0.7 * math.sin(math.radians(ang)), rx * 0.36, ry * 0.32, ang)
+    L.elipse("broche", k0[0], k0[1], 1.05, 1.2)                                      # el nudo
 
 
 g8.collar = collar_lazo
@@ -465,86 +468,98 @@ g8.collar = collar_lazo
 #  donde una parte pasa por delante de otra (la pata sobre el cuerpo, la cabeza sobre el pecho, el objeto sobre el gato).
 # ---------------------------------------------------------------------
 _rangos_lito = {}
-COLA_ANILLOS_LITO = ((0.42, 0.5), (0.57, 0.65), (0.72, 0.8))
-COLA_PUNTA_LITO = 0.87
+COLA_ANILLOS_LITO = ((0.4, 0.49), (0.56, 0.65), (0.72, 0.8))
+COLA_PUNTA_LITO = 0.88
+PARTES_HR = {"cuerpo": 1, "cola": 2, "colafrente": 2, "pierna": 3, "cabeza": 4, "lejos": 5}
 
 
-def _rayas_lito(out, ch, parte):
+def _rayas_hr(lab, parte):
+    """Las rayas del atigrado sobre el dibujo a 8×: la forma de cada raya es una curva (no una escalera de celdas)."""
     ps, giro = _pose_gal.get("ps"), _pose_gal.get("giro")
-    cola = g8.catmull(ps["cola"]) if ps is not None else (g8.catmull(GIRO_COLA[giro]) if giro in GIRO_COLA else None)
-    if cola is not None:
+    n_ = lab.shape[0]
+    yy, xx = np.mgrid[0:n_, 0:n_].astype(np.float32)
+    X, Y = (xx + 0.5) / g8.R, (yy + 0.5) / g8.R
+    pelo = lab == ord("P")
+    W = np.zeros_like(pelo)
+    cola = g8.catmull(ps["cola"], 24) if ps is not None else (g8.catmull(GIRO_COLA[giro], 24) if giro in GIRO_COLA else None)
+    mc = pelo & (parte == 2)
+    if cola is not None and mc.any():
         C_ = np.array(cola, np.float32)
-        for r in range(N):
-            for c in range(N):
-                if out[r][c] not in "PW" or parte[r][c] not in ("cola", "colafrente"):
-                    continue
-                d2 = (C_[:, 0] - (c + 0.5)) ** 2 + (C_[:, 1] - (r + 0.5)) ** 2
-                u = int(np.argmin(d2)) / (len(C_) - 1)
-                if u >= COLA_PUNTA_LITO or any(a <= u < b for a, b in COLA_ANILLOS_LITO):
-                    out[r][c] = "W"
+        px_, py_ = X[mc], Y[mc]
+        d2 = (C_[None, :, 0] - px_[:, None]) ** 2 + (C_[None, :, 1] - py_[:, None]) ** 2
+        u = np.argmin(d2, 1) / (len(C_) - 1)
+        r_ = (u >= COLA_PUNTA_LITO)
+        for a_, b_ in COLA_ANILLOS_LITO:
+            r_ |= (u >= a_) & (u < b_)
+        W[mc] = r_
+    cu, pi, ca = pelo & (parte == 1), pelo & (parte == 3), pelo & (parte == 4)
     if ps is None:
-        for r in range(N):
-            for c in range(N):
-                if out[r][c] != "P":
-                    continue
-                p_ = parte[r][c]
-                if giro == 1:            # de espaldas: la raya del lomo, las rayas que bajan curvas por los lados y la nuca
-                    dx_ = abs(c + 0.5 - 32)
-                    if (p_ == "cuerpo" and ((dx_ < 1.0 and r >= 32) or (dx_ > 3 and (r + 0.18 * dx_ * dx_) % 5.0 < 1.4))) or \
-                            (p_ == "cabeza" and c in (30, 33) and 21 <= r <= 26):
-                        out[r][c] = "W"
-                elif giro == 0:          # tres cuartos de espaldas: rayas curvas por el flanco
-                    if p_ == "cuerpo" and r < 50 and (c + 0.45 * r + 1.1 * math.sin(r * 0.35)) % 4.8 < 1.4:
-                        out[r][c] = "W"
-                    elif p_ == "pierna" and r % 4 == 1 and r < SUELO - 4:
-                        out[r][c] = "W"
-        return
+        if giro in (0, 1):               # la nuca: dos rayas que bajan de las orejas
+            cx_ = 32.0 if giro == 1 else 41.5
+            W |= ca & (np.abs(np.abs(X - cx_ + 0.4) - 1.7) < 0.5) & (Y > 20.5) & (Y < 27.0)
+        if giro == 1:                    # de espaldas: la raya del lomo y las rayas que bajan curvas por los lados
+            dx_ = np.abs(X - 32)
+            W |= cu & (((dx_ < 0.8) & (Y >= 32)) | ((dx_ > 2.6) & (((Y + 0.16 * dx_ * dx_) % 5.0) < 1.5 - 0.06 * dx_)))
+        elif giro == 0:                  # tres cuartos de espaldas
+            W |= cu & (Y < 50) & (((X + 0.45 * Y + 1.1 * np.sin(Y * 0.35)) % 4.8) < 1.5)
+            W |= pi & (((Y + 0.3 * X) % 4.2) < 1.1) & (Y < SUELO - 4)
+        return np.where(W, ord("W"), lab).astype(np.uint8)
     Hh, C, cab = ps["H"], ps["C"], ps["cab"]
     dx, dy = C[0] - Hh[0], C[1] - Hh[1]; largo = math.hypot(dx, dy) or 1
     ux, uy = dx / largo, dy / largo
     nx, ny = uy, -ux                                                     # hacia el lomo
     if ny > 0:
         nx, ny = -nx, -ny
-    x0, x1 = min(Hh[0], C[0]) - ps["rh"] * 0.3, max(Hh[0], C[0]) + 1.5
-    for c in range(N):                                                   # la raya del lomo
-        if not (x0 <= c + 0.5 <= x1):
-            continue
-        hondo = 0
-        for r in range(N):
-            if parte[r][c] == "cuerpo" and out[r][c] in "PSL":
-                hondo += 1
-                if hondo <= 1 and out[r][c] == "P":
-                    out[r][c] = "W"
-                if hondo >= 1:
-                    break
-            elif hondo:
-                break
-    a = math.radians(ps["inc"]); ca, sa = math.cos(a), math.sin(a)
     rr_ = (ps["rh"] + ps["rc"]) / 2
-    for r in range(N):
-        for c in range(N):
-            if out[r][c] != "P":
-                continue
-            p_ = parte[r][c]
-            x, y = c + 0.5, r + 0.5
-            if p_ == "cuerpo":
-                s_ = (x - Hh[0]) * ux + (y - Hh[1]) * uy
-                v_ = (x - Hh[0]) * nx + (y - Hh[1]) * ny
-                alto_ = (v_ + rr_ * 0.45) / (rr_ * 1.45)                # 0 hacia la panza, 1 en el lomo
-                if alto_ < 0.12 or not (-4.0 < s_ < largo + 3.0):
-                    continue
-                ancho_ = 0.55 + 1.15 * min(1.0, alto_)                   # se afinan hacia la panza
-                if (s_ - 1.6 * math.sin(alto_ * 2.6) + 1.0) % 4.9 < ancho_:
-                    out[r][c] = "W"
-            elif p_ == "pierna" and r % 4 == 1 and r < SUELO - 3.5:
-                out[r][c] = "W"
-            elif p_ == "cabeza":
-                lx = (x - cab[0]) * ca + (y - cab[1]) * sa
-                ly = -(x - cab[0]) * sa + (y - cab[1]) * ca
-                if -6.6 < ly < -3.0 and any(abs(lx - k + 0.25 * (ly + 4.5)) < 0.6 for k in (-0.6, -2.8)):
-                    out[r][c] = "W"                                         # la M de la frente
-                elif 0.9 < ly < 2.0 and -5.4 < lx < -0.6 and abs(ly - 1.45 - 0.12 * (lx + 3)) < 0.55:
-                    out[r][c] = "W"                                         # la raya de la mejilla
+    s_ = (X - Hh[0]) * ux + (Y - Hh[1]) * uy
+    v_ = (X - Hh[0]) * nx + (Y - Hh[1]) * ny
+    alto_ = (v_ + rr_ * 0.45) / (rr_ * 1.45)                              # 0 hacia la panza, 1 en el lomo
+    ancho_ = 0.5 + 1.25 * np.clip(alto_, 0, 1)                           # se afinan hacia la panza
+    W |= cu & (alto_ > 0.1) & (s_ > -4.5) & (s_ < largo + 2.6) & (((s_ - 1.7 * np.sin(alto_ * 2.6) + 1.0) % 5.2) < ancho_)
+    # La raya del lomo: lo más alto del cuerpo, entre la cadera y la cruz.
+    todo_cu = parte == 1
+    hay_ = todo_cu.any(0)
+    arriba = np.where(hay_, np.argmax(todo_cu, 0), n_)
+    x0, x1 = (min(Hh[0], C[0]) - ps["rh"] * 0.35) * g8.R, (max(Hh[0], C[0]) + 1.2) * g8.R
+    col_ok = (np.arange(n_) >= x0) & (np.arange(n_) <= x1)
+    W |= cu & col_ok[None, :] & (yy < arriba[None, :] + 1.25 * g8.R)
+    W |= pi & (((Y + 0.25 * X) % 4.2) < 1.15) & (Y < SUELO - 3.6)          # las barras de las patas
+    a = math.radians(ps["inc"]); ca_, sa_ = math.cos(a), math.sin(a)
+    lx = (X - cab[0]) * ca_ + (Y - cab[1]) * sa_
+    ly = -(X - cab[0]) * sa_ + (Y - cab[1]) * ca_
+    m_ = np.zeros_like(W)
+    for k in (-0.5, -2.7):                                               # la M de la frente
+        m_ |= (ly > -6.8) & (ly < -2.9) & (np.abs(lx - k + 0.3 * (ly + 4.5)) < 0.5 + 0.12 * (ly + 6.8))
+    m_ |= (ly > 0.8) & (lx > -5.6) & (lx < -0.8) & (np.abs(ly - 1.5 - 0.14 * (lx + 3) - 0.08 * (lx + 3) ** 2) < 0.45 + 0.08 * (lx + 5.6))
+    W |= ca & m_
+    return np.where(W, ord("W"), lab).astype(np.uint8)
+
+
+_hr_lito = {}                  # el dibujo a 8× de cada cuadro (letra y rango por pixel), por la cuadrícula acabada
+_ultimo_lienzo = {}
+_rejilla_lienzo = g8.Lienzo.rejilla
+
+
+def _rejilla_guarda(self):
+    _ultimo_lienzo["L"] = self
+    return _rejilla_lienzo(self)
+
+
+g8.Lienzo.rejilla = _rejilla_guarda
+
+
+def _dibujo_hr(Lz):
+    """Las capas del lienzo a su resolución (R pixeles por celda), sin pasar por la cuadrícula: letra y rango por pixel."""
+    lab = np.full((N * g8.R, N * g8.R), ord("."), np.uint8)
+    rk = np.full((N * g8.R, N * g8.R), 255, np.uint8)
+    pa = np.zeros((N * g8.R, N * g8.R), np.uint8)
+    for capa, letra, p_, _u in g8.CAPAS:
+        m = np.asarray(Lz.img[capa]) > 127
+        if m.any():
+            lab[m] = ord(letra if not (capa == "linea" or (capa.startswith(("f_", "b_")) and letra == "K")) else "k")
+            rk[m] = int(round(g8.RANGO.get(p_, 2.0) * 10))
+            pa[m] = PARTES_HR.get(p_, 0)
+    return _rayas_hr(lab, pa), rk
 
 
 _acabar_lito = g8.acabar
@@ -555,13 +570,15 @@ def acabar_lito(ch, parte, estilo):
         return _acabar_lito(ch, parte, estilo)
     out = _acabar_lito(ch, parte, ("ninguno",) + tuple(estilo[1:]))
     out = [f[:] for f in out]
-    _rayas_lito(out, ch, parte)
     rg = np.full((N, N), -1.0, np.float32)
     for r in range(N):
         for c in range(N):
             if out[r][c] != ".":
                 rg[r, c] = g8.RANGO.get(parte[r][c], 2.0) if parte[r][c] is not None else 2.0
-    _rangos_lito["".join("".join(f) for f in out)] = rg
+    clave = "".join("".join(f) for f in out)
+    _rangos_lito[clave] = rg
+    if _ultimo_lienzo.get("L") is not None:
+        _hr_lito[clave] = _dibujo_hr(_ultimo_lienzo.pop("L"))
     return out
 
 
@@ -967,55 +984,36 @@ def pintar_repujado(g, t, cel):
 #  más fina donde da la luz. Las luces son el papel sin tinta; la sombra es una tinta violeta encima; entre una y otra,
 #  el «crachis» (la tinta salpicada con cepillo que usaban los litógrafos para los medios tonos).
 # =====================================================================
-def _subir_celdas(m, s):
-    return np.asarray(m).repeat(s, 0).repeat(s, 1)
-
-
 def pintar_litografia(g, t, cel):
-    """Litografía de cartel. La cuadrícula del gato se suaviza: cada tinta es una mancha de borde curvo (sale de las
-    letras desenfocadas, la que pesa más en cada punto) y la silueta también. Encima: la sombra plana del lado contrario
-    a la luz (del volumen de la silueta), las luces de papel, el crachis en el paso de la luz a la sombra, la línea de
-    contorno de grosor variable, las líneas de adentro donde una parte pasa por delante de otra y el filo del ojo. De
-    noche, la luz de la lámpara deja un filo dorado arriba y la luna uno azul del otro lado. Todo se calcula a 4× y se
-    toma un punto por pixel (sin mezclar colores: cada pixel es una tinta)."""
+    """Litografía de cartel. Las formas salen del dibujo a 8× (no de la cuadrícula), así que el borde es la curva del
+    dibujo; las rayas, que se ponen en la cuadrícula, se suavizan. Encima: la sombra plana del lado contrario a la luz
+    (del volumen de la silueta), las luces de papel, el crachis en el paso de la luz a la sombra, la línea de contorno de
+    grosor variable (más gruesa del lado de la sombra), las líneas de adentro donde una parte pasa por delante de otra y
+    el filo del ojo. De noche, la luz de la lámpara deja un filo dorado arriba y la luna uno azul del otro lado. Todo se
+    calcula a 4× y se toma un punto por pixel (sin mezclar colores: cada pixel es una tinta, como en la prensa)."""
     col = t["col"]
     sub = 4
     s = cel * sub
     A = np.array([list(f) for f in g])
     filas, cols_ = A.shape
-    hay = A != "."
-    pad = np.pad(~hay, 1, constant_values=True)
-    toca = pad[:-2, 1:-1] | pad[2:, 1:-1] | pad[1:-1, :-2] | pad[1:-1, 2:]
-    borde = (A == "K") & toca
-    F = A.copy()
-    F[(A == "K") & ~borde] = "k"                                  # la tinta de adentro (pupila, boca, ojos cerrados)
-    F[borde] = "?"
-    for _ in range(3):                                              # el contorno de la cuadrícula toma la letra de al lado
-        falta = F == "?"
-        if not falta.any():
-            break
-        for dr, dc in ((0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)):
-            vec = np.full_like(F, ".")
-            vec[max(0, -dr):filas + min(0, -dr), max(0, -dc):cols_ + min(0, -dc)] = \
-                F[max(0, dr):filas + min(0, dr), max(0, dc):cols_ + min(0, dc)]
-            ok = (F == "?") & ~np.isin(vec, [".", "?", "k"])
-            F = np.where(ok, vec, F)
-    F[F == "?"] = "k"
-    # --- Rango de cada celda (para las líneas de adentro).
+    _o = lambda cs: [ord(c) for c in cs]
     clave = "".join("".join(f) for f in g)
-    rg = _rangos_lito.get(clave)
-    if rg is None:
-        rg2 = _rangos_lito.get("".join("".join(f[::-1]) for f in g))
-        rg = rg2[:, ::-1] if rg2 is not None else np.where(hay, 2.0, -1.0).astype(np.float32)
-    # --- La silueta suavizada y las manchas de cada tinta.
-    sil = _difuso(_subir_celdas(hay, s).astype(np.float32), 0.42 * s) > 0.5
-    letras = [v for v in np.unique(F) if v != "."]
-    peso = {"k": 1.5, "H": 1.6, "E": 1.25, "N": 1.25, "R": 1.1, "G": 1.2, "Q": 1.15, "W": 1.05}
-    pila = np.stack([_difuso(_subir_celdas(F == v, s).astype(np.float32), 0.4 * s) * peso.get(v, 1.0) for v in letras])
-    Lb = np.array(letras)[np.argmax(pila, 0)]
-    Lb = np.where(sil, Lb, ".")
+    hr = _hr_lito.get(clave)
+    if hr is None:
+        hr2 = _hr_lito.get("".join("".join(f[::-1]) for f in g))
+        if hr2 is not None:
+            hr = (hr2[0][:, ::-1], hr2[1][:, ::-1])
+    if hr is not None:
+        tam = (cols_ * s, filas * s)
+        Lb = np.asarray(Image.fromarray(np.ascontiguousarray(hr[0])).resize(tam, Image.NEAREST)).astype(np.int32)
+        Rk = np.asarray(Image.fromarray(np.ascontiguousarray(hr[1])).resize(tam, Image.NEAREST)).astype(np.int32)
+    else:                                                          # sin el dibujo a 8×: la cuadrícula tal cual
+        F = np.where((A == "K"), "k", A)
+        Lb = np.vectorize(ord)(F).astype(np.int32).repeat(s, 0).repeat(s, 1)
+        Rk = np.where(A != ".", 20, 255).astype(np.int32).repeat(s, 0).repeat(s, 1)
+    sil = Lb != ord(".")
     h, w = Lb.shape
-    luzq = np.isin(Lb, list(t.get("lito_luces", "")))              # lo que es luz: sin contorno ni sombra
+    luzq = np.isin(Lb, _o(t.get("lito_luces", "")))              # lo que es luz: sin contorno ni sombra
     # --- Volumen (para la sombra plana y las luces de papel).
     B2 = _difuso((sil & ~luzq).astype(np.float32), 2.1 * s)
     gy, gx = np.gradient(B2)
@@ -1029,37 +1027,40 @@ def pintar_litografia(g, t, cel):
     luces = dif > u_hi
     tintas = t["lito_tintas"]
     rgb = np.zeros((h, w, 3), np.float32)
-    for v in letras:
-        m = Lb == v
-        if not m.any():
-            continue
+
+    def rampa(v):
         if v in tintas:
-            c0, c1, c2 = (np.array(c, np.float32) for c in tintas[v])
-        else:
-            base = col["K"] if v == "k" else col[v]
-            c1 = np.array(base, np.float32)
-            c0 = np.array(mezcla(base, t["lito_papel"], 0.4), np.float32)
-            c2 = np.array(mezcla(base, t["lito_sombra"], 0.38), np.float32)
+            return [np.array(c, np.float32) for c in tintas[v]]
+        base = col["K"] if v == "k" else col[v]
+        return [np.array(mezcla(base, t["lito_papel"], 0.4), np.float32), np.array(base, np.float32),
+                np.array(mezcla(base, t["lito_sombra"], 0.38), np.float32)]
+    for q in np.unique(Lb):
+        v = chr(q)
+        if v == ".":
+            continue
+        m = Lb == q
+        c0, c1, c2 = rampa(v)
         if v in t["lito_planas"]:
             rgb[m] = c1
-            continue
-        siempre = v in t["lito_en_sombra"]
-        rgb[m] = c1
-        rgb[m & (sombra | siempre)] = c2
-        if v in t["lito_papel_en"]:
-            rgb[m & luces & ~siempre] = c0
+        elif v in t["lito_en_sombra"]:
+            rgb[m] = c2
+        else:
+            rgb[m] = c1
+            rgb[m & sombra] = c2
+            if v in t["lito_papel_en"]:
+                rgb[m & luces] = c0
     # --- El crachis: tinta salpicada en el paso de la luz a la sombra (fijo en el cuadro, un punto por pixel final).
     rng = np.random.default_rng(19)
     salp = rng.random((h // sub + 1, w // sub + 1)).repeat(sub, 0).repeat(sub, 1)[:h, :w]
-    banda = (dif >= u_sh) & (dif < u_sh + t["lito_crachis"]) & np.isin(Lb, list(t["lito_crachis_en"]))
-    prob = np.clip(1 - (dif - u_sh) / t["lito_crachis"], 0, 1) * 0.55
+    ancho_c = t["lito_crachis"]
+    banda = (dif >= u_sh) & (dif < u_sh + ancho_c)
+    prob = np.clip(1 - (dif - u_sh) / ancho_c, 0, 1) ** 1.4 * t.get("lito_crachis_p", 0.4)
     cr = banda & (salp < prob)
-    if cr.any():
-        for v in t["lito_crachis_en"]:
-            m = cr & (Lb == v)
-            if m.any():
-                rgb[m] = np.array(tintas[v][2] if v in tintas else mezcla(col[v], t["lito_sombra"], 0.38), np.float32)
-    # --- La línea de contorno: dentro de la silueta, más gruesa del lado de la sombra (pluma que carga al bajar).
+    for v in t["lito_crachis_en"]:
+        m = cr & (Lb == ord(v))
+        if m.any():
+            rgb[m] = rampa(v)[2]
+    # --- La línea de contorno: dentro de la silueta, más gruesa del lado de la sombra (la pluma carga al bajar).
     sil_c = sil & ~luzq
     sg = 0.5 * s
     Bc = _difuso(sil_c.astype(np.float32), sg)
@@ -1070,31 +1071,26 @@ def pintar_litografia(g, t, cel):
     ancho = (w0 + (w1 - w0) * np.clip(0.5 - 0.6 * cara, 0, 1)) * s
     linea = sil_c & (Bc < 0.5 * (1 + _erf(ancho / sg / math.sqrt(2))))
     # --- Las líneas de adentro: donde una parte de rango mayor pasa por delante de otra (más finas).
-    R_ = _subir_celdas(rg, s).astype(np.float32)
-    rangos = sorted(set(np.unique(rg)) - {-1.0})
-    if len(rangos) > 1:
-        pr = np.stack([_difuso((R_ == q).astype(np.float32), 0.4 * s) for q in rangos])
-        Rb = np.array(rangos, np.float32)[np.argmax(pr, 0)]
-        Rb = np.where(sil, Rb, 99.0)
-        d_ = max(2, int(round(t["lito_pluma_dentro"] * s)))
-        rmin = np.asarray(Image.fromarray(Rb).filter(ImageFilter.MinFilter(2 * d_ + 1)), np.float32)
-        dentro_ = sil & (Rb - rmin > 0.3) & (rmin < 98) & ~luzq
-        for (a_, b_) in t.get("lito_sin_linea", ()):
-            dentro_ &= ~((Rb == a_) & (rmin == b_))
-        linea |= dentro_
+    Rb = np.where(sil, Rk, 255).astype(np.uint8)
+    d_ = max(2, int(round(t["lito_pluma_dentro"] * s)))
+    rmin = np.asarray(Image.fromarray(Rb).filter(ImageFilter.MinFilter(2 * d_ + 1)), np.int32)
+    dentro_ = sil & (Rb.astype(np.int32) - rmin > 2) & ~luzq
+    for (a_, b_) in t.get("lito_sin_linea", ()):
+        dentro_ &= ~((Rb == a_) & (rmin == b_))
+    linea |= dentro_
     # --- El filo del ojo y la tinta de adentro.
-    ojo = Lb == "E"
+    ojo = Lb == ord("E")
     if ojo.any():
         d_ = max(2, int(round(t["lito_pluma_ojo"] * s)))
         cerca = np.asarray(Image.fromarray(ojo.astype(np.uint8) * 255).filter(ImageFilter.MaxFilter(2 * d_ + 1))) > 0
-        linea |= cerca & ~ojo & sil & ~np.isin(Lb, ["H", "k"])
+        linea |= cerca & ~ojo & sil & ~np.isin(Lb, _o("Hk"))
     rgb[linea] = t["lito_tinta"]
-    rgb[Lb == "k"] = t["lito_tinta"]
+    rgb[Lb == ord("k")] = t["lito_tinta"]
     # --- De noche: los filos de luz justo dentro del contorno.
     for (dx_, dy_), c_, u_ in t.get("lito_filos", ()):
         cara2 = (-bx / on) * dx_ + (-by / on) * dy_
-        anillo = sil_c & ~linea & (Bc < 0.5 * (1 + _erf((ancho + t.get("lito_filo_ancho", 0.3) * s) / sg / math.sqrt(2)))) & (cara2 > u_) & (on > 0.002)
-        anillo &= ~np.isin(Lb, ["E", "H", "k", "N"])
+        anillo = sil_c & ~linea & (Bc < 0.5 * (1 + _erf((ancho + t.get("lito_filo_ancho", 0.3) * s) / sg / math.sqrt(2))))
+        anillo &= (cara2 > u_) & (on > 0.002) & ~np.isin(Lb, _o("EHkN"))
         rgb[anillo] = c_
     # --- Un punto por pixel final.
     o = sub // 2
@@ -1260,7 +1256,7 @@ def tema_mio(nombre, oscuro):
         if not oscuro:
             tintas = dict(P=hxs("F7EEDA", "EBD3A3", "C6A9A2"), T=hxs("F7EEDA", "EBD3A3", "C6A9A2"),
                           S=hxs("F7EEDA", "EBD3A3", "C6A9A2"), W=hxs("E2B97E", "CF9A5E", "9E7262"),
-                          L=hxs("FCF7EA", "F6ECD4", "D6C6C2"), D=hxs("D9BE93", "D9BE93", "B39790"),
+                          L=hxs("FCF7EA", "F6ECD4", "D6C6C2"), D=hxs("D9BE93", "D9B48E", "C2A196"),
                           E=hxs("D6DE8E", "B2C064", "8E9A52"), N=hxs("E2B3B8", "C98E99", "A87482"),
                           R=hxs("F0CDBE", "E8BBA9", "CDA29C"), C=hxs("D9BDD4", "B48AB0", "7E5FA6"),
                           A=hxs("DEC4D9", "B48AB0", "7E5FA6"), G=hxs("B48AB0", "8E6AA8", "6D4C82"))
@@ -1268,7 +1264,7 @@ def tema_mio(nombre, oscuro):
         else:
             tintas = dict(P=hxs("E6CC94", "C4AD88", "6F6782"), T=hxs("E6CC94", "C4AD88", "6F6782"),
                           S=hxs("E6CC94", "C4AD88", "6F6782"), W=hxs("CFA064", "9E7954", "594A5F"),
-                          L=hxs("EEDDB6", "D6C9AE", "7E7A93"), D=hxs("A08C78", "A08C78", "5C5672"),
+                          L=hxs("EEDDB6", "D6C9AE", "7E7A93"), D=hxs("A08C78", "8C7A70", "625B76"),
                           E=hxs("ECE290", "D8C96A", "A89C52"), N=hxs("CF9AA2", "A87882", "6E5468"),
                           R=hxs("CFA49A", "B88F88", "7D6A78"), C=hxs("CDB1E0", "9C7BA8", "5A4470"),
                           A=hxs("CDB1E0", "9C7BA8", "5A4470"), G=hxs("9C7BA8", "7A5C96", "4E3A68"))
@@ -1281,13 +1277,13 @@ def tema_mio(nombre, oscuro):
         t = g8.T(col, hx("EFE8D6") if not oscuro else hx("121519"), hx("2A2530") if not oscuro else hx("ECE5D6"),
                  hx("B3A586") if not oscuro else hx("3E4548"), "lito", "litografia", ("lazo", None))
         t.update(lito_tintas=tintas, lito_tinta=tinta, lito_papel=papel, lito_sombra=sombra_,
-                 lito_luz=(-0.55, -0.72, 0.5), lito_umbral=(0.43, 0.87), lito_crachis=0.13, lito_crachis_en="PLWTCA",
+                 lito_luz=(-0.55, -0.72, 0.5), lito_umbral=(0.43, 0.87), lito_crachis=0.1, lito_crachis_en="PLT",
                  lito_planas="Hk", lito_en_sombra="SD", lito_papel_en="PLWCAE", lito_luces="Q",
-                 lito_pluma=(0.36, 0.78), lito_pluma_dentro=0.3, lito_pluma_ojo=0.3)
+                 lito_pluma=(0.5, 1.0), lito_pluma_dentro=0.3, lito_pluma_ojo=0.3)
         t["sombra_col"], t["sombra_a"] = (86, 74, 96), 58
         if oscuro:
-            t.update(lito_filos=[((-0.62, -0.78), hx("F5D488"), 0.5), ((0.93, -0.36), hx("8FA8D8"), 0.62)],
-                     lito_filo_ancho=0.3)
+            t.update(lito_filos=[((-0.62, -0.78), hx("F5D488"), 0.42), ((0.93, -0.36), hx("8FA8D8"), 0.6)],
+                     lito_filo_ancho=0.42, lito_umbral=(0.45, 0.8), lito_crachis_p=0.28)
             t["sombra_col"], t["sombra_a"] = (0, 0, 0), 84
     else:
         raise ValueError(nombre)
