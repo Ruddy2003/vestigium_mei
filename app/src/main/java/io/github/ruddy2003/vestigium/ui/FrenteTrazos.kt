@@ -33,9 +33,21 @@ object TrazosFrente {
     /** El mármol del Directorio y su bronce: solo para lo que es del régimen. */
     val MARMOL = Color(0xFFF3F1EC)
     val BRONCE = Color(0xFF9A7442)
-    /** El hueso de las consolas y el acero pizarra de sus paneles. */
-    val HUESO = Color(0xFFE4DED1)
-    val PIZARRA = Color(0xFF3E4C57)
+    /** La consola blanca, el acero pizarra verdoso de los paneles y el verde casi negro de las consolas oscuras. */
+    val HUESO = Color(0xFFE6E5DD)
+    val PIZARRA = Color(0xFF3A4A44)
+    val CONSOLA_OSCURA = Color(0xFF1E2A26)
+    /** La piedra de las ruinas que esconden la base (a la luz y en sombra) y las raíces que cuelgan de ella. */
+    val PIEDRA = Color(0xFF8C8F84)
+    val PIEDRA_SOMBRA = Color(0xFF3B4440)
+    val RAIZ = Color(0xFF4A4636)
+    /** El vidrio grabado: el trazo iluminado por el canto y el vidrio mismo (en penumbra y a la luz). */
+    val VIDRIO_TRAZO = Color(0xFF8FF0D2)
+    val VIDRIO = Color(0xFF123A33)
+    val VIDRIO_LUZ = Color(0xFF2F6F62)
+    /** El amarillo de las franjas de peligro del suelo y el óxido del sillón de la cabina. */
+    val PELIGRO = Color(0xFFD9A62B)
+    val OXIDO = Color(0xFFA44A1C)
 
     /**
      * El emblema de la red: la chispa de tres trazos dentro del círculo roto. El hueco del círculo queda arriba a la

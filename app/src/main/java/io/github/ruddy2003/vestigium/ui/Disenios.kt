@@ -203,14 +203,14 @@ internal val distopiaOscuro = esquema(true, 0xFF0F1011, 0xFF17191A, 0xFF222527, 
 internal val tipoDistopia = tipografia(LetraExtra.oswald, FontWeight.Bold, 1.05f, 1.4f, LetraExtra.barlow, 1.02f, LetraExtra.barlow, 1.04f)
 
 // ---------------------------------------------------------------------
-//  Frente exterior: la sala de control de una red clandestina, en la ciencia ficción de los años 70. Hueso de consola,
-//  pizarra, ámbar de piloto y el verde de la pantalla de radar. De noche, la misma sala con las luces bajas.
-//  (docs/diseno/temas/frente.md)
+//  Frente exterior: la sala de mando de una red clandestina, escondida en unas ruinas de piedra, en la ciencia ficción de
+//  los años 70. Hormigón y piedra verdosos, consolas blancas y oscuras, el verde turquesa del vidrio grabado y el ámbar
+//  y el óxido de las lámparas y el sillón. De noche, la misma base en penumbra. (docs/diseno/temas/frente.md)
 // ---------------------------------------------------------------------
-internal val frenteClaro = esquema(false, 0xFFE4DED1, 0xFFF0EBE0, 0xFFD4CCBC, 0xFFA69E8E, 0xFF23252A, 0xFF5A5D63,
-    0xFFB85C0F, 0xFFFFF8EE, 0xFFF4DDBF, 0xFF2B1A08, 0xFF3E4C57, 0xFFCBD3D8, 0xFF4F7A5A, 0xFFA8201A)
-internal val frenteOscuro = esquema(true, 0xFF121518, 0xFF1A1F23, 0xFF252B30, 0xFF3A4249, 0xFFE7E1D4, 0xFFA8A49A,
-    0xFFF0A04B, 0xFF2A1600, 0xFF4A2C0C, 0xFFFBE3C4, 0xFF9FB4C0, 0xFF23323B, 0xFF8FC79A, 0xFFFF7A6E)
+internal val frenteClaro = esquema(false, 0xFFDADBD2, 0xFFECEBE4, 0xFFC9CBC1, 0xFF979B91, 0xFF1E2523, 0xFF535B57,
+    0xFFB5561C, 0xFFFFF7EF, 0xFFF1D9C6, 0xFF2E1406, 0xFF2C5A52, 0xFFC6DAD3, 0xFF3E8C76, 0xFFA8201A)
+internal val frenteOscuro = esquema(true, 0xFF0E1614, 0xFF15201D, 0xFF1D2A26, 0xFF33433E, 0xFFDCE5DF, 0xFF92A29B,
+    0xFFEE9A4A, 0xFF2A1300, 0xFF4A2A10, 0xFFFBE2C6, 0xFF86D9C2, 0xFF1E3A33, 0xFF6FD1B4, 0xFFFF7A6E)
 /** Títulos en Michroma, ancha y en mayúsculas: se achica un poco y se abre poco, porque ya es ancha. */
 internal val tipoFrente = tipografia(LetraExtra.michroma, FontWeight.Normal, 0.86f, 0.6f, LetraExtra.chivo, 1.0f, LetraExtra.chivoMono, 0.98f, cifrasAlineadas = true)
 
@@ -466,8 +466,8 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFFC9473B, 0xFF2A2016, 0xFF8DA5E0, 0xFFD5A84A) else listOf(0xFF9E1B1B, 0xFFE5D6B4, 0xFF1F3F8F, 0xFFA97C1E)
     TemaId.TEMPLARIO -> if (oscuro) listOf(0xFFD0453A, 0xFF262219, 0xFF9AA8B4, 0xFFDAAE68) else listOf(0xFFA8181E, 0xFFE2D6BC, 0xFF46525D, 0xFFA2763A)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFFE0262F, 0xFF2A2C2E, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFFB3121B, 0xFFCFCBC0, 0xFF2E3B44, 0xFFB3121B)
-    // Del verde de la pantalla de radar al ámbar del piloto, sobre el panel; fuerte, el ámbar encendido.
-    TemaId.FRENTE -> if (oscuro) listOf(0xFF8FC79A, 0xFF252B30, 0xFFF0A04B, 0xFFF2A33A) else listOf(0xFF4F7A5A, 0xFFD4CCBC, 0xFFB85C0F, 0xFFB85C0F)
+    // Del verde turquesa del vidrio grabado al ámbar de las lámparas, sobre la consola; fuerte, el ámbar encendido.
+    TemaId.FRENTE -> if (oscuro) listOf(0xFF6FD1B4, 0xFF1D2A26, 0xFFEE9A4A, 0xFFF2A33A) else listOf(0xFF3E8C76, 0xFFC9CBC1, 0xFFB5561C, 0xFFB5561C)
     TemaId.REFUGIO -> if (oscuro) listOf(0xFFFFB23F, 0xFF112016, 0xFF3DFF7F, 0xFF3DFF7F) else listOf(0xFFD9572B, 0xFFE6DAB8, 0xFF1C6E6A, 0xFF1C6E6A)
     TemaId.ORDEN -> if (oscuro) listOf(0xFFD0333B, 0xFF262A30, 0xFF8FB3C8, 0xFFD6B25A) else listOf(0xFF9E1B22, 0xFFD3D7DC, 0xFF2F4858, 0xFF7E6219)
     // Del ladrillo (bajo) al cardenillo (alto), pasando por el papel de plano o el hollín; fuerte, el latón.
@@ -508,7 +508,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFF8DA5E0, 0xFFD5A84A, 0xFFC9473B) else listOf(0xFF1F3F8F, 0xFFA97C1E, 0xFF9E1B1B)
     TemaId.TEMPLARIO -> if (oscuro) listOf(0xFF9AA8B4, 0xFFDAAE68, 0xFFE2453B) else listOf(0xFF46525D, 0xFFB98A45, 0xFFB0191F)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFF6D7377, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFF6D7377, 0xFF2E3B44, 0xFFB3121B)
-    TemaId.FRENTE -> if (oscuro) listOf(0xFF5E8A68, 0xFFF0A04B, 0xFFFF7A6E) else listOf(0xFF4F7A5A, 0xFFB85C0F, 0xFFA8201A)   // radar, piloto ámbar, botón rojo
+    TemaId.FRENTE -> if (oscuro) listOf(0xFF4FA88F, 0xFFEE9A4A, 0xFFFF7A6E) else listOf(0xFF3E8C76, 0xFFB5561C, 0xFFA8201A)   // vidrio, lámpara ámbar, botón rojo
     TemaId.REFUGIO -> if (oscuro) listOf(0xFF1E8A45, 0xFF3DFF7F, 0xFFFFB23F) else listOf(0xFF1C6E6A, 0xFFB98A15, 0xFFD9572B)
     TemaId.ORDEN -> if (oscuro) listOf(0xFF8FB3C8, 0xFFD6B25A, 0xFFD0333B) else listOf(0xFF2F4858, 0xFF7E6219, 0xFF9E1B22)
     // Como una caldera que se calienta: cardenillo frío, latón tibio, ladrillo al rojo.
