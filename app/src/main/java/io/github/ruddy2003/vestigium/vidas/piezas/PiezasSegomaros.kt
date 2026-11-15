@@ -131,8 +131,8 @@ internal object PiezasSegomaros {
     private val CIELOS = mapOf(
         Clima.DESPEJADO to listOf(
             "El cielo está limpio y alto, y los montes de lejos se ven como si estuvieran cerca.",
-            "No hay una nube, y la luz pega de lado en las paredes de barro de las casas.",
-            "Hace un día claro, de esos en que se ve el humo de los oppida vecinos.",
+            "No hay una nube, y la luz pega de lado y alarga las sombras.",
+            "Hace un día claro, de esos en que se ve, muy lejos, el humo de otros fuegos.",
         ),
         Clima.NUBES to listOf(
             "El cielo está cubierto de nubes bajas que se arrastran por las cumbres.",
@@ -140,7 +140,7 @@ internal object PiezasSegomaros {
             "Está nublado, con una luz pareja que no deja sombras.",
         ),
         Clima.LLUVIA to listOf(
-            "Llueve, una lluvia fina que gotea de los aleros de paja todo el día.",
+            "Llueve, una lluvia fina que gotea de todo lo que tiene borde.",
             "Cae una lluvia fría, y los caminos de la llanura se vuelven barro.",
             "Llueve a ratos, y entre un chubasco y otro el bosque echa vapor.",
         ),
@@ -149,24 +149,24 @@ internal object PiezasSegomaros {
             "Truena lejos, y luego cerca, y la lluvia cae de golpe, gruesa y caliente.",
         ),
         Clima.NIEVE to listOf(
-            "Nieva, una nieve menuda que cubre los techos de paja y apaga los ruidos.",
-            "Ha nevado en la noche, y la meseta entera está blanca.",
+            "Nieva, una nieve menuda que lo cubre todo y apaga los ruidos.",
+            "Ha nevado en la noche, y todo está blanco hasta donde se ve.",
         ),
         Clima.NIEBLA to listOf(
-            "Hay niebla, una niebla blanca que llena la llanura y deja la meseta como una isla.",
+            "Hay niebla, una niebla blanca que llena los valles y deja las alturas como islas.",
             "La niebla tapa los robles de abajo, y el mundo se acaba a treinta pasos.",
         ),
         Clima.VIENTO to listOf(
-            "Sopla un viento fuerte que levanta los mantos y hace silbar la paja de los techos.",
+            "Sopla un viento fuerte que levanta los mantos y hace silbar la paja y las ramas.",
             "Hace viento, y los robles del bosque crujen como barcas viejas.",
         ),
     )
 
     private val ESTACIONES = mapOf(
         Estacion.PRIMAVERA to listOf(
-            "Es primavera, y el robledal echa sus hojas nuevas, de un verde casi amarillo.",
+            "Es primavera, y los robles echan sus hojas nuevas, de un verde casi amarillo.",
             "En primavera los arroyos bajan llenos de los montes, y el ganado vuelve a los prados.",
-            "Es el tiempo de sembrar, y de que paran las yeguas.",
+            "Es el tiempo de sembrar, y en el que paren las yeguas.",
         ),
         Estacion.VERANO to listOf(
             "Es verano, y el trigo de la llanura se pone amarillo.",
@@ -174,8 +174,8 @@ internal object PiezasSegomaros {
             "Es el tiempo de la siega y de los caminos secos, el tiempo en que se viaja.",
         ),
         Estacion.OTONO to listOf(
-            "Es otoño, y caen las bellotas del robledal: los cerdos bajan a comérselas.",
-            "En otoño la niebla se queda en la llanura hasta tarde.",
+            "Es otoño, y caen las bellotas de los robles: los cerdos andan debajo, comiéndoselas.",
+            "En otoño la niebla se queda en los valles hasta tarde.",
             "Es el tiempo de arar y de sembrar el trigo del año que viene.",
         ),
         Estacion.INVIERNO to listOf(
@@ -396,7 +396,7 @@ internal object PiezasSegomaros {
         ObjetoCuento("fibula", "la fíbula", "una fíbula", "La fíbula",
             "La fíbula es un broche de bronce o de hierro, con un muelle y una aguja, como un imperdible; sujeta el manto al hombro, y las hay sencillas, de herrero, y las hay con un remate de coral rojo que vino del mar del sur."),
         ObjetoCuento("caldero", "el caldero de bronce", "un caldero de bronce", "El caldero de bronce",
-            "El caldero de la casa grande es de bronce, grande como para medio cerdo, y cuelga de una cadena de hierro sobre el fuego del centro; en él se cuece la carne del banquete, y un caldero así pasa de padres a hijos."),
+            "Los calderos de las casas grandes son de bronce, grandes como para medio cerdo, y cuelgan de una cadena de hierro sobre el fuego del centro; en ellos se cuece la carne del banquete, y un caldero así pasa de padres a hijos."),
         ObjetoCuento("cuerno", "el cuerno de beber", "un cuerno de beber", "El cuerno de beber",
             "El cuerno de beber es de buey, con la boca rematada de bronce; se llena de cerveza o, en los días grandes, de vino de Italia, y en el banquete va de mano en mano, y el que lo deja caer paga una ronda de burlas."),
         ObjetoCuento("carnyx", "el carnyx", "un carnyx", "El carnyx",
