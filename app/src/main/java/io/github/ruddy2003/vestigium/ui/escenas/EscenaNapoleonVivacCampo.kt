@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaNapoleon.Fase
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasNapoleon.carro
@@ -260,6 +261,14 @@ internal object VivacCampo {
 
     /** El camino real, con sus rodadas y la tierra de las orillas; con nieve, pisado y sucio. */
     private fun DrawScope.caminoReal(v: VistaVivac) {
+        // El día del Niemen el camino llega a los puentes y sigue del otro lado: no pasa por encima del agua.
+        if (v.fondo == Fondo.NIEMEN) {
+            clipRect(-10f, 142.5f, ANCHO + 10f, ALTO + 10f) { caminoRealSinRio(v) }
+            clipRect(-10f, H - 2f, ANCHO + 10f, 127.2f) { caminoRealSinRio(v) }
+        } else caminoRealSinRio(v)
+    }
+
+    private fun DrawScope.caminoRealSinRio(v: VistaVivac) {
         val p = v.p; val forma = caminoForma()
         val tierra = if (v.nieve > 0.5f) C.NIEVE_SUCIA else if (v.campo == Campo.ARENA) lerp(ARENA, C.LONA, 0.2f) else lerp(TIERRA, C.LONA, 0.28f)
         drawPath(forma, Brush.verticalGradient(listOf(p.arriba(tierra, 0.85f), p.arriba(tierra, 0.4f)), H, 160f))
@@ -346,6 +355,9 @@ internal object VivacCampo {
 
     private fun enElCamino(x: Float, z: Float): Boolean = kotlin.math.abs(x - camino(z)) < CAMINO_ANCHO + 1.2f
 
+    /** El día del Niemen, lo que caería en el agua (de 40 a 122 m): ahí no se pinta campamento, para que se vea el río. */
+    private fun enElRio(v: VistaVivac, z: Float): Boolean = v.fondo == Fondo.NIEMEN && z in 40f..122f
+
     /** Los fuegos lejanos de hoy (los primeros [VivacNapoleon.fuegosDelEjercito], con los huecos de la compañía mermada). */
     fun fuegosDeHoy(m: Momento): List<FuegoLejano> {
         val n = VivacNapoleon.fuegosDelEjercito(m); if (n <= 0) return emptyList()
@@ -388,11 +400,11 @@ internal object VivacCampo {
             for ((fi, f) in FILAS.withIndex()) {
                 var z = f.desde; val az = VivacNapoleon.fijo("pabellonesLejos", fi)
                 val lista = ArrayList<Offset>()
-                while (z < 420f) { val x = VivacCerca.filaEn(z) + f.dx + az.entre(-0.1f, 0.1f); if (!enElCamino(x, z)) lista += w(x, z); z += 1.9f * (1f + z / 120f) }
+                while (z < 420f) { val x = VivacCerca.filaEn(z) + f.dx + az.entre(-0.1f, 0.1f); if (!enElCamino(x, z) && !enElRio(v, z)) lista += w(x, z); z += 1.9f * (1f + z / 120f) }
                 if (enPie) for (q in lista.asReversed()) pabellonLejano(v, q, k(zEn(q.y)))
             }
-            for ((q, kk) in tiendas().sortedBy { it.first.y }) tiendaLejana(v, q, kk)
-            for (s in canones()) canon(s, v.en(s.pie), 0f, v.nieve, VivacNapoleon.lejos(s.z0))
+            for ((q, kk) in tiendas().sortedBy { it.first.y }) if (!enElRio(v, VivacNapoleon.MIRADA.focal / kk)) tiendaLejana(v, q, kk)
+            if (v.fondo != Fondo.NIEMEN) for (s in canones()) canon(s, v.en(s.pie), 0f, v.nieve, VivacNapoleon.lejos(s.z0))
             for (s in carros().sortedBy { it.pie.y }) carro(s, v.en(s.pie), v.nieve, Semilla.de("napoleon", "vivac", "carro", s.pie.x.toInt()), VivacNapoleon.lejos(s.z0), cargado = true)
         }
         // Los fuegos de los otros ranchos de la compañía, a lo largo de la fila.
@@ -408,6 +420,7 @@ internal object VivacCampo {
         if (polvo > 0.02f) polvoDeLaColumna(v, polvo)
         // Los fuegos lejanos encendidos: un punto, su halo y su charco de luz en la hierba.
         for (f in fuegosDeHoy(m).asReversed()) {
+            if (enElRio(v, f.z)) continue
             val kk = k(f.z); val r = (0.28f * kk).coerceIn(0.32f, 2.4f); val brillo = 0.55f + 0.45f * ((f.orden * 7919) % 100) / 100f
             drawOval(C.LUMBRE.copy(alpha = 0.14f * v.noche * brillo), Offset(f.p.x - r * 2.6f, f.p.y - r * 0.5f), Size(r * 5.2f, r * 1.1f), blendMode = BlendMode.Plus)
             drawCircle(Brush.radialGradient(listOf(Color(0xFFFFB45E).copy(alpha = 0.42f * brillo), Color.Transparent), f.p + Offset(0f, -r), r * 2.2f), r * 2.2f, f.p + Offset(0f, -r), blendMode = BlendMode.Plus)
@@ -415,7 +428,7 @@ internal object VivacCampo {
         }
         // De día, los fuegos de los otros campamentos: la ceniza (y, por la mañana, un hilo de humo, en la parte viva).
         if (!noche && conCompania) for (f in FUEGOS_LEJANOS.take(120)) {
-            if (f.z > 160f) continue
+            if (f.z > 160f || enElRio(v, f.z)) continue
             val kk = k(f.z); drawOval(p.arriba(lerp(C.CENIZA, C.BARRO, 0.3f), VivacNapoleon.lejos(f.z)).copy(alpha = 0.75f), Offset(f.p.x - 0.5f * kk, f.p.y - 0.13f * kk), Size(kk, 0.26f * kk))
         }
     }
@@ -527,7 +540,7 @@ internal object VivacCampo {
         val color = lerp(l.tono(lerp(ARENA, C.LONA, 0.3f)), l.solColor, 0.25f + 0.4f * bajo)
         for (i in 0 until 34) {
             val z = 26f * exp(az.entre(0f, 2.7f)); val q = w(camino(z) + az.entre(-2f, 2f), z); val kk = k(z)
-            if (q.x < -30f || q.x > ANCHO + 30f) continue
+            if (q.x < -30f || q.x > ANCHO + 30f || enElRio(v, z)) continue
             mancha(q + Offset(0f, -0.7f * kk), az.entre(1.6f, 3.2f) * kk, az.entre(0.45f, 0.8f) * kk, color, (0.16f + 0.12f * bajo) * k0)
         }
         // La luz del sol en el polvo, del lado del sol: un velo cálido que se levanta un poco más.
@@ -555,6 +568,7 @@ internal object VivacCampo {
         val hilos = if (h in 4f..10f || h >= 17f || h < 4f) 8 else 0
         for ((i, f) in FUEGOS_LEJANOS.take(60).withIndex()) {
             if (i >= hilos) break
+            if (enElRio(v, f.z)) continue
             humo(l, f.p, 18f + 300f / f.z, 1.2f + 30f / f.z, reloj, m.viento + 0.25f, 0.3f, VivacNapoleon.lejos(f.z), i + 60, 4, 0.35f)
         }
         // El polvo que levanta la columna, que pasa.
