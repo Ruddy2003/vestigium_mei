@@ -201,6 +201,8 @@ class EscenaUrssPrueba {
                 if (f == Fase.MANANA && !EscenaUrss.enElSanatorio(m)) assertTrue("$d $h", EscenaUrss.lampara(m))
                 // De día la cocina está sola: a las 7:00 y a las 13:00, nada encendido.
                 if (h == 7.0 || h == 13.0) { assertEquals("$d $h", Fase.SOLA, f); assertFalse("$d $h", EscenaUrss.lampara(m)); assertFalse("$d $h", EscenaUrss.fogon(m)) }
+                // El hervidor solo humea, ya sin fuego, la media hora después de que se va.
+                assertEquals("$d $h", h == 7.0 && !EscenaUrss.enElSanatorio(m), EscenaUrss.hervidorCaliente(m))
             }
         }
         // Las ventanas de enfrente se encienden una a una al caer la tarde: muchas más a las 21:00 que a las 15:00 o a las 3:00.

@@ -239,15 +239,15 @@ internal object PatioUrss {
         }
         bruma(ext, m, caja, H - 16f, H + 12f, 0.8f)
         // El suelo: el descampado de barro (o de nieve) entre los bloques.
-        val suelo = poligono(listOf(Offset(160f, 118f), Offset(250f, 116f), Offset(250f, H + 9f), Offset(330f, H + 9f), Offset(330f, 150f), Offset(160f, 150f)))
+        val suelo = poligono(listOf(Offset(160f, 128f), Offset(262f, 117f), Offset(262f, H + 9f), Offset(330f, H + 9f), Offset(330f, 150f), Offset(160f, 150f)))
         suelo(m, ext, p, suelo, H + 9f, 142f)
         // La otra fila de bloques, más lejos, a la derecha, y el bloque de enfrente.
-        val otro = Fachada(Offset(262f, 94f), Offset(262f, 116f), Offset(336f, 95f), Offset(336f, 113f))
-        with(PiezasFueraUrss) { bloqueNuevo(m, ext, p, otro, 0.5f, nv, 9, 10, 1000) }
-        val f = Fachada(Offset(160f, 88f), Offset(160f, 120f), Offset(250f, 90f), Offset(250f, 116f))
-        with(PiezasFueraUrss) { bloqueNuevo(m, ext, p, f, 0.3f, nv, 9, 12, 2000) }
+        val otro = Fachada(Offset(270f, 92f), Offset(270f, 116f), Offset(336f, 93f), Offset(336f, 113f))
+        with(PiezasFueraUrss) { bloqueNuevo(m, ext, p, otro, 0.5f, nv, 9, 9, 1000) }
+        val f = Fachada(Offset(160f, 64f), Offset(160f, 128f), Offset(262f, 78f), Offset(262f, 117f))
+        with(PiezasFueraUrss) { bloqueNuevo(m, ext, p, f, 0.22f, nv, 9, 10, 2000) }
         if (band == EscenaUrss.Banderas.BALCONES || band == EscenaUrss.Banderas.TODAS) with(PiezasFueraUrss) {
-            for ((piso, col) in listOf(2 to 1, 5 to 10, 7 to 1)) banderaDeBalcon(ext, p, f.q((col + 0.8f) / 12f, (piso + 0.6f) / 9f), f.alto(0.5f) * 0.08f, 0.3f, R.diaNumero(m, "revolucion") == 2)
+            for ((piso, col) in listOf(2 to 1, 5 to 8, 7 to 4, 3 to 6)) banderaDeBalcon(ext, p, f.q((col + 0.8f) / 10f, (piso + 0.6f) / 9f), f.alto((col + 0.8f) / 10f) * 0.08f, 0.22f, R.diaNumero(m, "revolucion") == 2)
         }
         bruma(ext, m, caja, 100f, 124f, 0.5f)
         sombraDeLosBloques(m, ext, f, otro)

@@ -394,6 +394,12 @@ internal object EscenaUrss : EscenaVida {
     /** El samovar eléctrico, enchufado y echando vapor: por la mañana y a la hora del té de la noche. */
     internal fun samovar(m: Momento): Boolean = fase(m) == Fase.NOCHE || (fase(m) == Fase.MANANA && !enElSanatorio(m))
 
+    /**
+     * El hervidor todavía caliente, con su hilo de vapor, la media hora después de que ella se va al metro (de 7:00 a
+     * 7:40): el desayuno recién recogido **[Diseño propio]**.
+     */
+    internal fun hervidorCaliente(m: Momento): Boolean = !enElSanatorio(m) && m.hacer == Hacer.CAMINO && m.hora < 8.0
+
     /** El vaso de té en su portavasos, sobre la mesa: con el samovar y a la vuelta; de día, boca abajo en el escurridor. */
     internal fun te(m: Momento): Boolean = samovar(m) || fase(m) == Fase.VUELTA
 

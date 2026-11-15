@@ -221,7 +221,7 @@ internal object LuzCocinaUrss {
             val color = if (s.deLuna) s.color else lerp(s.color, Color(0xFFFFD49A), 0.35f)
             for (c in Co.cristales(R.ventanaAbierta(m))) for (i in c.indices) {
                 val (x0, y0) = c[i]; val (x1, y1) = c[(i + 1) % c.size]
-                drawPath(poligono(K.p(x0, y0, 0f), K.p(x1, y1, 0f), cae(x1, y1, s).punto, cae(x0, y0, s).punto), color.copy(alpha = 0.03f * s.fuerza), blendMode = BlendMode.Plus)
+                drawPath(poligono(K.p(x0, y0, 0f), K.p(x1, y1, 0f), cae(x1, y1, s).punto, cae(x0, y0, s).punto), color.copy(alpha = 0.022f * s.fuerza), blendMode = BlendMode.Plus)
             }
             val az = Azar(Semilla.de("urss", "polvo"))
             repeat(46) {
@@ -257,7 +257,7 @@ internal object LuzCocinaUrss {
         // El vaho: del samovar (la tetera de encima) y del pico del hervidor.
         val fuentes = buildList {
             if (R.samovar(m)) add(CosasUrss.VAHO_SAMOVAR)
-            if (R.fogon(m)) add(CosasUrss.VAHO_HERVIDOR)
+            if (R.fogon(m) || R.hervidorCaliente(m)) add(CosasUrss.VAHO_HERVIDOR)
         }
         for ((n, f) in fuentes.withIndex()) {
             repeat(9) { i ->

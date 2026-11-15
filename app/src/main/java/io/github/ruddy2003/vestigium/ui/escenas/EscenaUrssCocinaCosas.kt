@@ -167,6 +167,7 @@ internal object CosasUrss {
             if (n > 0) cajasDeLaMudanza(lz, n, Azar(Semilla.de("urss", "cajas")))
             platilloDelGato(lz, 214f, 30f)
             taburete(lz, TAB_X, TAB_T, 34f, 36f)
+            if (R.fase(m) != EscenaUrss.Fase.SOLA) periodico(lz, TAB_X, CocinaUrss.SUELO - 36f, TAB_T)
             // El objeto grande del día: de pie en el linóleo, recostado en el canto de la mesa.
             with(ObjetosUrss) { grande(m, Pincel(lz.l, LuzCocinaUrss.rayoDelSol(lz.sol ?: EscenaUrss.SolDeVentana(1f, 0f, 0f, Color.White), 1f, Co.PIE_GRANDE)), Co.PIE_GRANDE, Co.APOYO_GRANDE, K.s(70f))?.pintar?.invoke(this@delSuelo) }
         }

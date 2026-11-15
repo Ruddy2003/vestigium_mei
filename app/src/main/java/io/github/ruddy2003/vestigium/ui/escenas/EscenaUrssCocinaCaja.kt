@@ -286,19 +286,19 @@ internal object CajaUrss {
         val alto = b.height * (0.2f + 0.4f * cuanta)
         // La capa helada de abajo, lechosa, y unas nubes de escarcha en las esquinas.
         drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to blanco.copy(alpha = 0.32f * cuanta), startY = b.bottom - alto, endY = b.bottom), Offset(b.left, b.bottom - alto), Size(b.width, alto))
-        val esquinas = if (cuanta > 0.7f) listOf(Offset(b.left, b.bottom), Offset(b.right, b.bottom), Offset(b.left, b.top), Offset(b.right, b.top)) else listOf(Offset(b.left, b.bottom), Offset(b.right, b.bottom))
+        val esquinas = if (cuanta > 0.85f) listOf(Offset(b.left, b.bottom), Offset(b.right, b.bottom), Offset(b.left, b.top), Offset(b.right, b.top)) else listOf(Offset(b.left, b.bottom), Offset(b.right, b.bottom))
         for (esq in esquinas) {
             mancha(esq, b.width * 0.22f * cuanta, b.height * 0.16f * cuanta, blanco, 0.35f)
             val dir = Offset(if (esq.x == b.left) 1f else -1f, if (esq.y == b.bottom) -1f else 1f)
             // Los helechos: un tallo curvo con sus barbas, que se acortan hacia la punta.
-            repeat((3 + 5 * cuanta).toInt()) {
-                val ang = az.entre(0.25f, 1.3f); val largo = az.entre(7f, 16f) * (0.6f + 0.6f * cuanta); val curva = az.entre(-0.5f, 0.5f)
+            repeat((6 + 10 * cuanta).toInt()) {
+                val ang = az.entre(0.2f, 1.35f); val largo = az.entre(4f, 13f) * (0.6f + 0.6f * cuanta); val curva = az.entre(-0.9f, 0.9f)
                 val a = esq + Offset(az.entre(0f, 5f) * dir.x, az.entre(0f, 3f) * dir.y)
                 var q = a; var g = ang; val pasos = 7
                 for (i in 0 until pasos) {
                     val paso = largo / pasos; val n = q + Offset(cos(g) * dir.x, sin(g) * dir.y) * paso
                     drawLine(blanco.copy(alpha = 0.5f * (1f - 0.45f * ext.noche)), q, n, 0.45f, StrokeCap.Round)
-                    val r = paso * 1.4f * (1f - i / pasos.toFloat())
+                    val r = paso * 0.9f * (1f - i / pasos.toFloat())
                     for (s in listOf(-1f, 1f)) { val gb = g + s * 1.0f; drawLine(blanco.copy(alpha = 0.38f * (1f - 0.45f * ext.noche)), n, n + Offset(cos(gb) * dir.x, sin(gb) * dir.y) * r, 0.32f, StrokeCap.Round) }
                     q = n; g += curva / pasos
                 }
@@ -417,6 +417,6 @@ internal object CajaUrss {
         drawRect(Brush.verticalGradient(0f to c, 1f to Color.Transparent, startY = 0f, endY = 16f), Offset.Zero, Size(ANCHO, 16f), blendMode = BlendMode.Multiply)
         drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to C.SOMBRA.copy(alpha = 0.22f + 0.12f * lz.noche), startY = 236f, endY = ALTO), Offset(0f, 236f), Size(ANCHO, ALTO - 236f), blendMode = BlendMode.Multiply)
         val centro = if (lz.lampara && lz.noche > 0.4f) Co.BAJO_LA_LAMPARA else Offset(230f, 120f)
-        drawRect(Brush.radialGradient(0f to Color.Transparent, 0.55f to Color.Transparent, 1f to C.SOMBRA.copy(alpha = 0.2f + 0.16f * lz.noche), center = centro, radius = 300f), Offset.Zero, Size(ANCHO, ALTO), blendMode = BlendMode.Multiply)
+        drawRect(Brush.radialGradient(0f to Color.Transparent, 0.55f to Color.Transparent, 1f to C.SOMBRA.copy(alpha = 0.27f + 0.1f * lz.noche), center = centro, radius = 290f), Offset.Zero, Size(ANCHO, ALTO), blendMode = BlendMode.Multiply)
     }
 }

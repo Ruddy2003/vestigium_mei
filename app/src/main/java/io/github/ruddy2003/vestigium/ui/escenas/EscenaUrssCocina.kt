@@ -175,7 +175,7 @@ internal object CocinaUrss {
 
     fun seMueve(m: Momento): Boolean {
         val c = m.ficha.clima
-        return c == Clima.NIEVE || c == Clima.LLUVIA || c == Clima.TORMENTA || R.televisor(m) || R.fogon(m) || R.samovar(m) || R.pelusa(m) > 0.1f
+        return c == Clima.NIEVE || c == Clima.LLUVIA || c == Clima.TORMENTA || R.televisor(m) || R.fogon(m) || R.samovar(m) || R.hervidorCaliente(m) || R.pelusa(m) > 0.1f
     }
 
     fun DrawScope.vivo(m: Momento, reloj: Float) {

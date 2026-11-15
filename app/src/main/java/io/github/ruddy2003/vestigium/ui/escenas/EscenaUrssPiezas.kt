@@ -114,14 +114,19 @@ internal object PiezasUrss {
             lineTo(c1.x, c1.y); close()
         }
         val medio = p((x0 + x1) / 2f, (yTapa + suelo) / 2f, t1)
-        val luzCostado = lz.frente(medio, C.ESMALTE)
-        drawPath(costado, Brush.verticalGradient(0f to lerp(luzCostado, lz.arriba(medio, C.ESMALTE), 0.4f), 0.5f to luzCostado, 1f to lz.sombra(c0, C.ESMALTE, 0.5f), startY = p(x0, yTapa, t1).y, endY = c0.y))
+        // El costado da la espalda a la ventana y a la lámpara: en penumbra, más claro hacia el canto redondeado de la puerta.
+        val luzCostado = lz.frente(medio, C.ESMALTE); val sombraCostado = lz.sombra(medio, C.ESMALTE, 0.5f)
+        drawPath(costado, Brush.horizontalGradient(0f to sombraCostado, 0.55f to lerp(sombraCostado, luzCostado, 0.45f), 0.88f to luzCostado, 1f to lz.der(medio, lerp(C.ESMALTE, Color.White, 0.2f)), startX = c0.x, endX = c1.x))
+        drawPath(costado, Brush.verticalGradient(0f to Color.White.copy(alpha = 0.1f), 0.4f to Color.Transparent, 1f to C.SOMBRA.copy(alpha = 0.3f), startY = p(x0, yTapa, t1).y, endY = c0.y), blendMode = BlendMode.Multiply)
         // El canto redondeado brilla con la luz de la puerta (la ventana o la lámpara están a la derecha).
         val canto = Path().apply { val b = p(x1, yTapa, t1); moveTo(b.x - r * k * 1.4f, b.y + 0.6f); cubicTo(b.x - r * k * 0.4f, b.y + 0.6f, b.x - 0.6f, b.y + r * k * 0.4f, b.x - 0.6f, b.y + r * k * 1.2f) }
         drawPath(canto, lz.der(medio, lerp(C.ESMALTE, Color.White, 0.5f)).copy(alpha = 0.8f), style = Stroke(1.6f * k, cap = StrokeCap.Round))
         clipPath(costado) {
             // El esmalte no es liso: un reflejo largo de la ventana, desconchones y el roce de la cadera junto a la puerta.
-            drawLine(lz.en(medio, Color.White).copy(alpha = 0.18f * lz.dia + 0.05f), p(x1 - 9f, yTapa + 14f, t1), p(x1 - 9f, suelo - 20f, t1), 5f * k)
+            // El canto vertical redondeado, con su brillo; y el reflejo blando de la ventana en el esmalte.
+            val e0 = p(x1, yTapa + r, t1); val e1 = p(x1, suelo, t1)
+            drawRect(Brush.horizontalGradient(0f to Color.Transparent, 0.7f to lz.der(medio, Color.White).copy(alpha = 0.45f), 1f to Color.Transparent, startX = e0.x - 6f * k, endX = e0.x), Offset(e0.x - 6f * k, e0.y), Size(6f * k, e1.y - e0.y))
+            mancha(p(x1 - 14f, yTapa + 40f, t1), 6f * k, 30f * k, lz.en(medio, Color.White), 0.1f * lz.dia + 0.03f)
             for ((u, v) in listOf(0.3f to 0.7f, 0.62f to 0.42f, 0.2f to 0.9f)) {
                 val o = p(x0 + (x1 - x0) * u, yTapa + (suelo - yTapa) * v, t1)
                 drawOval(lz.en(o, C.HIERRO).copy(alpha = 0.55f), o, Size(2.4f * k, 1.6f * k)); drawOval(lz.en(o, C.TIERRA).copy(alpha = 0.4f), o + Offset(0.6f, 0.4f), Size(1.2f * k, 0.8f * k))
@@ -855,7 +860,7 @@ internal object PiezasUrss {
         // La barra y sus soportes.
         drawLine(lz.frente(p(250f, y0, t), C.LATON), p(x0, y0, t), p(x1, y0, t), 1.4f)
         for (x in listOf(x0 + 2f, x1 - 2f)) drawCircle(lz.en(p(x, y0, t), C.LATON), 1.6f, p(x, y0, t))
-        val ancho = if (corrido) 70f else 22f
+        val ancho = if (corrido) 46f else 22f
         val a = p(x0 + 2f, y0, t); val b = p(x0 + 2f + ancho, y0, t); val atado = p(x0 + 6f, 104f, t + 4f); val abajo = p(x0 + 4f, CocinaUrss.VY1 - 2f, t + 6f)
         val tela = Path().apply {
             moveTo(a.x, a.y); lineTo(b.x, b.y)
@@ -865,12 +870,18 @@ internal object PiezasUrss {
         }
         val blanco = lerp(C.PAPEL, Color.White, 0.35f)
         // El visillo deja pasar la luz: más claro a contraluz de día; de noche, tenue.
-        drawPath(tela, lz.en(p(x0 + 10f, 80f, t), blanco).copy(alpha = 0.72f))
+        drawPath(tela, lz.en(p(x0 + 10f, 80f, t), blanco).copy(alpha = if (corrido) 0.42f else 0.62f))
         clipPath(tela) {
-            // El encaje: florecillas y el calado en filas, y los pliegues verticales.
-            var y = y0 + 6f; var fila = 0
-            while (y < CocinaUrss.VY1) { var x = x0 - 4f + (fila % 2) * 4f; while (x < x0 + ancho + 6f) { val q = p(x, y, t); drawCircle(lz.en(q, blanco).copy(alpha = 0.8f), 1.3f, q, style = androidx.compose.ui.graphics.drawscope.Stroke(0.4f)); x += 8f }; y += 9f; fila++ }
-            for (i in 0..6) { val x = x0 + i * ancho / 6f; drawLine(lz.sombra(p(x, 80f, t), blanco, 0.4f).copy(alpha = 0.35f), p(x, y0, t), p(x + 2f, CocinaUrss.VY1, t + 6f), 1.2f) }
+            // Los pliegues verticales, más tupidos donde se recoge; y el encaje: una malla fina con ramitos y la cenefa de abajo.
+            val pliegues = if (corrido) 14 else 8
+            for (i in 0..pliegues) { val x = x0 + i * ancho / pliegues; drawLine(lz.en(p(x, 80f, t), blanco).copy(alpha = 0.35f), p(x, y0, t), p(x + 1.4f, CocinaUrss.VY1, t + 6f), 0.9f); drawLine(lz.sombra(p(x, 80f, t), blanco, 0.4f).copy(alpha = 0.22f), p(x + 1.6f, y0, t), p(x + 3f, CocinaUrss.VY1, t + 6f), 1.1f) }
+            var y = y0 + 8f; var fila = 0
+            while (y < CocinaUrss.VY1 - 4f) {
+                var x = x0 - 2f + (fila % 2) * 7f
+                while (x < x0 + ancho + 6f) { val q = p(x, y, t); for (j in 0..4) { val a = j * 1.2566f; drawCircle(lz.en(q, blanco).copy(alpha = 0.5f), 0.45f, q + Offset(cos(a) * 1.3f, sin(a) * 1.3f)) }; x += 14f }
+                y += 13f; fila++
+            }
+            for (j in 0..2) { val yy = CocinaUrss.VY1 - 10f + j * 2.4f; drawLine(lz.en(p(x0, yy, t), blanco).copy(alpha = 0.45f), p(x0 - 4f, yy, t + 4f), p(x0 + ancho + 6f, yy, t + 4f), 0.5f) }
             // El borde de abajo, de festón.
             drawLine(lz.en(abajo, blanco).copy(alpha = 0.6f), abajo + Offset(-4f, -2f), abajo + Offset(22f, -2f), 1f)
         }
@@ -1061,6 +1072,19 @@ internal object PiezasUrss {
         drawOval(lz.en(c, C.AZUL).copy(alpha = 0.6f), Rect(c.x - 6f * k, c.y - 2f * k, c.x + 6f * k, c.y + 1.4f * k), style = Stroke(0.5f))
     }
 
+    /** El periódico doblado que se dejó en el taburete: papel gris con las columnas (sin letras) y una esquina levantada. */
+    fun DrawScope.periodico(lz: LuzUrss, x: Float, y: Float, t: Float) {
+        val a = p(x - 11f, y - 0.4f, t - 7f); val b = p(x + 9f, y - 0.4f, t - 9f); val c = p(x + 11f, y - 0.4f, t + 6f); val d = p(x - 9f, y - 0.4f, t + 8f)
+        val hoja = poligono(a, b, c, d)
+        drawPath(hoja, lz.arriba(Offset((a.x + c.x) / 2f, a.y), lerp(C.PAPEL, C.HORMIGON, 0.3f)))
+        clipPath(hoja) {
+            for (i in 0..5) { val u = 0.12f + i * 0.15f; val q0 = Offset(a.x + (d.x - a.x) * u, a.y + (d.y - a.y) * u); val q1 = Offset(b.x + (c.x - b.x) * u, b.y + (c.y - b.y) * u); drawLine(lz.sombra(q0, C.TINTA, 0.3f).copy(alpha = 0.3f), q0, Offset(q0.x + (q1.x - q0.x) * 0.45f, q0.y + (q1.y - q0.y) * 0.45f), 0.6f); drawLine(lz.sombra(q0, C.TINTA, 0.3f).copy(alpha = 0.3f), Offset(q0.x + (q1.x - q0.x) * 0.55f, q0.y + (q1.y - q0.y) * 0.55f), q1, 0.6f) }
+            drawRect(lz.en(a, C.HORMIGON).copy(alpha = 0.5f), Offset(a.x + 3f, a.y + 1f), Size(6f, 4f))
+        }
+        drawLine(lz.sombra(a, C.TINTA, 0.3f).copy(alpha = 0.4f), Offset((a.x + b.x) / 2f, (a.y + b.y) / 2f), Offset((c.x + d.x) / 2f, (c.y + d.y) / 2f), 0.5f)
+        drawPath(poligono(c, Offset(c.x - 4f, c.y - 2.4f), Offset(c.x - 6f, c.y + 0.4f)), lz.en(c, lerp(C.PAPEL, Color.White, 0.2f)))
+    }
+
     // @@MAS@@
 }
 
@@ -1095,14 +1119,14 @@ internal object PiezasFueraUrss {
     // ---------------------------------------------------------------- Las ventanas de enfrente
 
     /** Cómo es una ventana de enfrente: sus cortinas, si tiene balcón y qué hay en él. Cada una distinta, con semilla fija. */
-    private class Ventana(val cortina: Color, val luz: Color, val visillo: Boolean, val maceta: Boolean, val pantalla: Boolean)
+    private class Ventana(val cortina: Color, val luz: Color, val visillo: Boolean, val maceta: Boolean, val pantalla: Boolean, val cerrada: Boolean, val ventanillo: Boolean, val ancho: Float)
 
     private val CORTINAS = listOf(C.PAPEL, lerp(C.NARANJA, C.PAPEL, 0.4f), lerp(C.ROJO, C.PAPEL, 0.35f), lerp(C.VERDE, C.PAPEL, 0.4f), lerp(C.AZUL, C.PAPEL, 0.45f), lerp(C.LATON, C.PAPEL, 0.3f), lerp(C.MADERA, C.PAPEL, 0.3f))
     private val LUCES = listOf(C.VENTANA_LUZ, lerp(C.VENTANA_LUZ, C.NARANJA, 0.35f), lerp(C.VENTANA_LUZ, C.PAPEL, 0.4f), lerp(C.VENTANA_LUZ, C.VERDE, 0.25f), lerp(C.VENTANA_LUZ, C.ROJO, 0.2f), lerp(C.TELE, C.PAPEL, 0.3f))
 
     private fun ventana(id: Int): Ventana {
         val az = Azar(Semilla.de("urss", "ventana de enfrente", id))
-        return Ventana(CORTINAS[az.entero(CORTINAS.size)], LUCES[az.entero(LUCES.size)], az.real() < 0.6f, az.real() < 0.3f, az.real() < 0.35f)
+        return Ventana(CORTINAS[az.entero(CORTINAS.size)], LUCES[az.entero(LUCES.size)], az.real() < 0.6f, az.real() < 0.3f, az.real() < 0.35f, az.real() < 0.18f, az.real() < 0.25f, az.entre(0.12f, 0.3f))
     }
 
     /**
@@ -1120,7 +1144,11 @@ internal object PiezasFueraUrss {
         if (w > 2.2f) {
             // Las cortinas a los lados (de su color, o encendidas a contraluz) y el visillo.
             val cor = if (encendida && oscuro > 0.3f) lerp(v.luz, v.cortina, 0.35f).let { lerp(it, C.NARANJA, 0.15f) } else p.medio(v.cortina, lejos)
-            drawRect(cor, a, Size(w * 0.22f, h)); drawRect(cor, Offset(b.x - w * 0.2f, a.y), Size(w * 0.2f, h))
+            if (v.cerrada) {
+                // Las cortinas corridas: un paño de su color, con la raya donde se juntan.
+                drawRect(cor, a, Size(w, h)); drawLine(lerp(cor, C.TINTA, 0.3f), Offset(a.x + w * 0.5f, a.y), Offset(a.x + w * 0.5f, b.y), 0.3f)
+            } else { drawRect(cor, a, Size(w * v.ancho, h)); drawRect(cor, Offset(b.x - w * v.ancho * 0.9f, a.y), Size(w * v.ancho * 0.9f, h)) }
+            if (v.ventanillo && !encendida) drawRect(p.sombra(C.TINTA, lejos).copy(alpha = 0.6f), Offset(b.x - w * 0.36f, a.y + h * 0.04f), Size(w * 0.3f, h * 0.24f))
             if (v.visillo) drawRect((if (encendida) lerp(v.luz, Color.White, 0.3f) else p.medio(C.PAPEL, lejos)).copy(alpha = 0.45f), Offset(a.x + w * 0.22f, a.y), Size(w * 0.58f, h * 0.55f))
             // La pantalla de una lámpara colgada, encendida, que se adivina dentro.
             if (encendida && v.pantalla && oscuro > 0.3f && h > 3f) drawPath(poligono(Offset(a.x + w * 0.42f, a.y + h * 0.18f), Offset(a.x + w * 0.58f, a.y + h * 0.18f), Offset(a.x + w * 0.66f, a.y + h * 0.36f), Offset(a.x + w * 0.34f, a.y + h * 0.36f)), lerp(v.luz, C.NARANJA, 0.5f))
@@ -1251,11 +1279,14 @@ internal object PiezasFueraUrss {
             val a = f.q(s0, if (escalera) v0 + 0.1f / pisos else v0); val b = f.q(s1, v1)
             if (escalera) { drawRect(if (R.farolas(m)) lerp(C.FAROLA, C.PAPEL, 0.3f).copy(alpha = 0.4f + 0.6f * ext.noche) else p.sombra(C.HIERRO, lejos), a, Size(b.x - a.x, b.y - a.y)); continue }
             // Las logias: en las columnas 1 y cols − 2, hundidas, con su barandilla de panel y lo que guarda cada casa.
-            if (i == 1 || i == cols - 2) {
+            if (i == 1 || i == 4 || i == cols - 2) {
                 drawRect(p.sombra(panel, lejos), a, Size(b.x - a.x, b.y - a.y))
                 ventanaDeEnfrente(ext, p, Offset(a.x + (b.x - a.x) * 0.15f, a.y), Offset(b.x - (b.x - a.x) * 0.3f, b.y - (b.y - a.y) * 0.1f), id, R.ventanaEncendida(m, id), lejos + 0.05f, marco)
                 val pr = Offset(a.x - 0.4f, a.y + (b.y - a.y) * 0.55f)
-                drawRect(p.frente(lerp(panel, C.HORMIGON, 0.3f), lejos), pr, Size(b.x - a.x + 0.8f, (b.y - a.y) * 0.5f))
+                // El antepecho de la logia, con las plaquetas de color de cada columna (azul, ladrillo, ocre).
+                val color = when (i) { 1 -> lerp(C.AZUL, panel, 0.35f); 4 -> lerp(C.LATON, panel, 0.35f); else -> lerp(C.LADRILLO, panel, 0.35f) }
+                drawRect(p.frente(color, lejos), pr, Size(b.x - a.x + 0.8f, (b.y - a.y) * 0.5f))
+                drawLine(p.luz(color, lejos), pr, pr + Offset(b.x - a.x + 0.8f, 0f), 0.4f)
                 val q = (piso * 7 + i) % 5
                 when (q) {
                     0 -> for (j in 0..3) drawLine(p.medio(listOf(C.PAPEL, C.ROJO, C.AZUL, C.PAPEL)[j], lejos), Offset(a.x + (b.x - a.x) * (0.2f + j * 0.2f), a.y + 0.6f), Offset(a.x + (b.x - a.x) * (0.2f + j * 0.2f), a.y + (b.y - a.y) * 0.5f), 0.8f)
@@ -1326,19 +1357,26 @@ internal object PiezasFueraUrss {
         for (i in -1..1) rama(cruz, (-PI / 2).toFloat() + i * 0.42f + az.entre(-0.1f, 0.1f), alto * 0.22f, alto * 0.026f, 1)
         // En invierno, la maraña de las ramillas finas se ve como un velo oscuro alrededor de la copa.
         if (hojas < 0.3f) for ((_, b, g) in ramas) if (g < alto * 0.006f && az.real() < 0.5f) mancha(b, alto * 0.05f, alto * 0.04f, p.sombra(tronco, lejos + 0.2f), 0.12f * (1f - hojas))
-        // La masa de las hojas, detrás de las ramas finas.
+        // Primero las ramas gruesas (las finas van después, solo donde no las tapan las hojas).
+        val fina = alto * 0.011f
+        for ((a, b, g) in ramas) if (g >= fina || hojas < 0.05f) { drawLine(p.sombra(tronco, lejos), a, b, g, StrokeCap.Round); if (g > 0.8f) drawLine(p.luz(tronco, lejos).copy(alpha = 0.6f), a + Offset(g * 0.25f, 0f), b + Offset(g * 0.2f, 0f), g * 0.35f, StrokeCap.Round) }
+        // Las hojas: una masa oscura en cada ramillete, hecha de varios bultos, y encima las hojas sueltas, chicas; las
+        // claras, solo arriba y en el borde (del lado del sol). En otoño, amarillas.
         if (hojas > 0.05f) {
             val verde = lerp(lerp(C.VERDE, C.LATON, 0.55f * amarillas), C.ORO, 0.35f * amarillas)
-            val masa = p.sombra(lerp(verde, C.TINTA, 0.2f), lejos); val luz = p.luz(verde, lejos); val medio = p.medio(verde, lejos)
-            val puntas = ramas.filter { it.third < alto * 0.012f }
-            for ((_, b, _) in puntas) if (az.real() < hojas) drawCircle(masa, alto * az.entre(0.05f, 0.08f) * (0.6f + 0.4f * hojas), b)
-            for ((a, b, _) in puntas) if (az.real() < hojas) {
-                // Racimos de hojas a lo largo de la ramilla: las claras del lado del sol y en el borde.
-                repeat(5) { val u = az.real(); val q = lerpO(a, b, u) + Offset(az.entre(-2f, 2f), az.entre(-2f, 2f)) * (alto * 0.02f); drawCircle(if (az.real() < 0.4f) luz else medio, alto * az.entre(0.012f, 0.022f), q) }
+            val masa = p.sombra(lerp(verde, C.TINTA, 0.25f), lejos); val luz = p.luz(lerp(verde, C.PAPEL, 0.1f), lejos); val medio = p.medio(verde, lejos); val honda = p.sombra(lerp(verde, C.TINTA, 0.45f), lejos)
+            val puntas = ramas.filter { it.third < fina }
+            for ((a, b, _) in puntas) if (az.real() < hojas) repeat(3) { val q = lerpO(a, b, az.entre(0.3f, 1f)) + Offset(az.entre(-1f, 1f), az.entre(-1f, 0.6f)) * (alto * 0.03f); drawCircle(if (it == 0) honda else masa, alto * az.entre(0.018f, 0.032f) * (0.6f + 0.4f * hojas), q) }
+            for ((a, b, _) in puntas) if (az.real() < hojas) repeat(9) {
+                val q = lerpO(a, b, az.entre(0.2f, 1.1f)) + Offset(az.entre(-1f, 1f), az.entre(-1f, 1f)) * (alto * 0.035f)
+                val arriba = q.y < b.y - alto * 0.008f
+                val c = if (arriba && az.real() < 0.55f) luz else if (az.real() < 0.3f) honda else medio
+                val r = alto * az.entre(0.005f, 0.009f)
+                drawOval(c, Offset(q.x - r * 1.3f, q.y - r * 0.8f), Size(r * 2.6f, r * 1.6f))
             }
         }
-        // Las ramas y el tronco, con su lado de luz.
-        for ((a, b, g) in ramas) { drawLine(p.sombra(tronco, lejos), a, b, g, StrokeCap.Round); if (g > 0.8f) drawLine(p.luz(tronco, lejos).copy(alpha = 0.6f), a + Offset(g * 0.25f, 0f), b + Offset(g * 0.2f, 0f), g * 0.35f, StrokeCap.Round) }
+        // Las ramillas finas: en invierno, todas; con hojas, solo las que asoman.
+        if (hojas < 0.6f) for ((a, b, g) in ramas) if (g < fina) drawLine(p.sombra(tronco, lejos).copy(alpha = 1f - hojas), a, b, g, StrokeCap.Round)
         val g0 = alto * 0.034f; val g1 = alto * 0.026f
         val tr = Path().apply { moveTo(pie.x - g0, pie.y); cubicTo(pie.x - g0 * 0.8f, pie.y - alto * 0.2f, cruz.x - g1 * 1.1f, cruz.y + alto * 0.05f, cruz.x - g1, cruz.y); lineTo(cruz.x + g1, cruz.y); cubicTo(cruz.x + g1 * 1.1f, cruz.y + alto * 0.05f, pie.x + g0 * 0.8f, pie.y - alto * 0.2f, pie.x + g0, pie.y); close() }
         drawPath(tr, Brush.horizontalGradient(0f to p.luz(tronco, lejos), 0.4f to p.medio(tronco, lejos), 1f to p.sombra(tronco, lejos), startX = pie.x - g0, endX = pie.x + g0))
@@ -1348,7 +1386,7 @@ internal object PiezasFueraUrss {
             var y = pie.y; while (y > cruz.y) { drawLine(p.luz(tronco, lejos).copy(alpha = 0.25f), Offset(pie.x - g0, y), Offset(pie.x - g0 * 0.2f, y - alto * 0.01f), 0.4f); y -= alto * 0.04f }
         }
         // La nieve posada en las ramas gruesas, del lado de arriba.
-        if (nieve > 0.3f && hojas < 0.2f) { val blanco = lerp(p.arriba(C.NIEVE, lejos), C.LUNA, 0.35f * ext.noche); for ((a, b, g) in ramas) if (g > 0.6f && kotlin.math.abs(b.x - a.x) > kotlin.math.abs(b.y - a.y) * 0.3f) drawLine(blanco, a + Offset(0f, -g * 0.4f), b + Offset(0f, -g * 0.4f), g * 0.45f, StrokeCap.Round) }
+        if (nieve > 0.3f && hojas < 0.2f) { val blanco = lerp(p.arriba(C.NIEVE, lejos), C.LUNA, 0.35f * ext.noche); for ((a, b, g) in ramas) if (g > 0.6f && kotlin.math.abs(b.x - a.x) > kotlin.math.abs(b.y - a.y) * 0.8f) drawLine(blanco, a + Offset(0f, -g * 0.42f), b + Offset(0f, -g * 0.42f), (g * 0.28f).coerceAtMost(1.6f), StrokeCap.Round) }
         // El encalado del pie del tronco (se encalan en primavera).
         drawRect(p.medio(C.PAPEL, lejos), Offset(pie.x - alto * 0.05f, pie.y - alto * 0.05f), Size(alto * 0.1f, alto * 0.05f))
     }
