@@ -79,11 +79,11 @@ internal object ValleCampamento {
     val ANTORCHAS = listOf(Offset(279f, 172f), Offset(330f, 175f))
 
     /** El fuego del centro de cada tienda del campamento a esta hora: el de la gente que vive en ella. */
-    private fun fuegoDe(m: Momento, t: Tienda): Float {
+    private fun fuegoDe(m: Momento, tienda: Tienda): Float {
         val junta = EscenaMongol.dondeSeJuntan(m)
-        if (junta != null) return if (junta == t) 1f else 0.2f
+        if (junta != null) return if (junta == tienda) 1f else 0.2f
         val base = EscenaMongol.fuegoDentro(m)
-        return when (t) { Tienda.MADRE -> if (EscenaMongol.madreEnferma(m)) maxOf(base, 0.8f) else base; else -> base * (0.85f + 0.05f * t.ordinal) }.coerceIn(0f, 1f)
+        return when (tienda) { Tienda.MADRE -> if (EscenaMongol.madreEnferma(m)) maxOf(base, 0.8f) else base; else -> base * (0.85f + 0.05f * tienda.ordinal) }.coerceIn(0f, 1f)
     }
 
     private fun puertaDe(m: Momento, t: Tienda): Puerta = when {
