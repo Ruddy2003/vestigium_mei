@@ -48,20 +48,20 @@ import kotlin.math.sqrt
  *   de un travesaño sobre dos horquillas; a cada lado, un banco cubierto con su piel.
  * - Mapas: la mesa del consejo vista desde arriba: tablones de roble con su veta y sus motas, y el cuero de buey tendido
  *   con la forma del animal (el nicho), sujeto con piedras; a la izquierda, la espada larga en su vaina de hierro con el
- *   tahalí, el cuerno de beber con su remate de bronce y la bolsa con los estáteros del caballo; a la derecha, el torques,
- *   la tablilla de cera con su estilo (recurso) y el muérdago. Abajo, el canto de la mesa, los caballetes y el suelo con
- *   paja; de noche, el resplandor del hogar entra por la izquierda.
- * - Otras vidas: el fondo de la casa entre sus postes. Arriba, la paja, la viga con el carnyx tendido en dos clavijas, el
- *   jamón y los ramos que se secan, y el dintel tallado con la «S» de las monedas; cinco tramos de barro alisado entre
- *   postes de roble (el nicho); abajo, el banco corrido con su piel y su manta a cuadros, el balde de duelas con aros de
- *   bronce y el ánfora.
+ *   tahalí de cadena, el cuerno de beber con su remate de bronce, la copa de barro negro y la bolsa con los estáteros del
+ *   caballo; a la derecha, el torques, la tablilla de cera con su estilo (recurso), el muérdago y la hoz de oro. Abajo,
+ *   el canto de la mesa, los caballetes y el suelo con paja; de noche, el resplandor del hogar entra por la izquierda.
+ * - Otras vidas: el fondo de la casa entre sus postes. Arriba, la paja con el carnyx colgado de dos correas y su cabeza
+ *   de jabalí asomando sobre la viga, el jamón y los ramos que se secan, y el dintel tallado con la «S» de las monedas;
+ *   cinco tramos de barro alisado entre postes de roble con sus zapatas (el nicho) y, al pie, el zarzo donde se cayó el
+ *   barro; abajo, el banco corrido con su piel y su manta a cuadros, el balde de duelas con aros de bronce y el ánfora.
  * - Íconos: la puerta del oppidum en su muralla de piedra y vigas (el murus gallicus) con la torre de madera encima; un
  *   cuero ahumado que el estátero del caballo raspa hasta descubrir los ríos de la tierra arverna; y un cuero con el río y
  *   tres alfileres de bronce con su gota de esmalte rojo unidos por el camino.
  * - Notas: el telar de pesas apoyado en la pared: los dos montantes de roble, el enjullo con la tela enrollada y la
  *   cabecera tejida a cuadros, la tela de lana cruda (el nicho), la vara de la calada y los hilos de la urdimbre que bajan
- *   en manojos hasta las pesas de barro. Cada nota es un retazo de cuero curtido prendido a la tela con una fíbula de
- *   bronce; su tipo se ve en la esquina (la hoja de roble, la luna nueva, la rueda o el nudo de lana a cuadros) y, si está
+ *   en manojos hasta las pesas de barro; del montante cuelga el huso y al pie está el cesto de los ovillos. Cada nota es
+ *   un retazo de cuero curtido prendido a la tela con una fíbula de bronce; su tipo se ve en la esquina (la hoja de roble, la luna nueva, la rueda o el nudo de lana a cuadros) y, si está
  *   fijada, la fíbula es de oro con su gota de coral.
  */
 internal object VidaGalia : DisenoVida {
@@ -585,7 +585,7 @@ internal object VidaGalia : DisenoVida {
         val clT = Offset(posteD.center.x, h * 0.27f)
         clavija(clT, o, u, 0.1f)
         with(TrazosGalia) {
-            val oro = lam(ORO, o, 0.3f); val brillo = lam(ORO_BRILLO, o, 0.3f)
+            val oro = lam(ORO, o, 0.12f); val brillo = lam(ORO_BRILLO, o, 0.12f)
             torques(Offset(clT.x, clT.y + 3.4f * u), 3.6f * u, 0.95f * u, oro, brillo)
         }
         olla(Offset(w * 0.872f, h * 0.975f), w * 0.05f, h * 0.12f, o, u, 0.3f)
@@ -1735,6 +1735,9 @@ internal object VidaGalia : DisenoVida {
 
     // ---------------------------------------------------------------- Íconos de los mapas
 
+    /** El color de noche de los íconos: en penumbra, pero con la silueta clara sobre la tarjeta. */
+    private fun ic(c: Color, o: Boolean): Color = if (o) mez(c, NOCHE, 0.32f) else c
+
     override fun DrawScope.iconoMapa(id: String, e: EstadoIcono, oscuro: Boolean) {
         val w = size.width; val h = size.height
         val c = Offset(w / 2, h / 2)
@@ -1749,7 +1752,7 @@ internal object VidaGalia : DisenoVida {
                 val zona = Rect(c.x - s * 1.42f, c.y - s * 0.58f, c.x + s * 0.85f, c.y + s * 0.58f)
                 val cuero = cueroBuey(zona, s * 0.1f, s * 0.06f)
                 translate(p * 2, p * 3) { drawPath(cuero, sombraMueble(0.35f)) }
-                drawPath(cuero, n(Color(0xFF2E2620), o))
+                drawPath(cuero, ic(Color(0xFF2E2620), o))
                 clipPath(cuero) { for (k in 0 until 9) drawCircle(Color(0xFF4A3E34).copy(alpha = 0.35f), s * (0.15f + 0.2f * azar(k, 3)), Offset(zona.left + zona.width * azar(k, 5), zona.top + zona.height * azar(k, 7))) }
                 val raspado = Path().apply {
                     moveTo(zona.left + s * 0.2f, zona.top + s * 0.3f)
@@ -1760,33 +1763,34 @@ internal object VidaGalia : DisenoVida {
                 }
                 clipPath(cuero) {
                     clipPath(raspado) {
-                        drawRect(n(CUERO, o), Offset(zona.left - s, zona.top - s), Size(zona.width + 2 * s, zona.height + 2 * s))
+                        drawRect(ic(CUERO, o), Offset(zona.left - s, zona.top - s), Size(zona.width + 2 * s, zona.height + 2 * s))
                         // El Allier y sus arroyos, y el oppidum en su colina.
                         val rio = suave(listOf(Offset(zona.left + s * 0.5f, zona.bottom + s * 0.2f), Offset(zona.left + s * 0.9f, c.y + s * 0.1f), Offset(zona.left + s * 1.3f, c.y - s * 0.05f), Offset(zona.left + s * 1.7f, c.y - s * 0.3f), Offset(zona.left + s * 2.4f, zona.top - s * 0.1f)))
-                        drawPath(rio, n(RIO, o), style = Stroke(p * 2.2f, cap = StrokeCap.Round))
-                        drawPath(suave(listOf(Offset(zona.left + s * 1.3f, c.y - s * 0.05f), Offset(zona.left + s * 1.2f, c.y - s * 0.4f), Offset(zona.left + s * 1.0f, zona.top))), n(RIO, o), style = Stroke(p * 1.2f, cap = StrokeCap.Round))
-                        drawPath(suave(listOf(Offset(zona.left + s * 1.7f, c.y - s * 0.3f), Offset(zona.left + s * 1.9f, c.y + s * 0.2f), Offset(zona.left + s * 2.1f, zona.bottom))), n(RIO, o), style = Stroke(p * 1.2f, cap = StrokeCap.Round))
+                        drawPath(rio, ic(RIO, o), style = Stroke(p * 2.2f, cap = StrokeCap.Round))
+                        drawPath(suave(listOf(Offset(zona.left + s * 1.3f, c.y - s * 0.05f), Offset(zona.left + s * 1.2f, c.y - s * 0.4f), Offset(zona.left + s * 1.0f, zona.top))), ic(RIO, o), style = Stroke(p * 1.2f, cap = StrokeCap.Round))
+                        drawPath(suave(listOf(Offset(zona.left + s * 1.7f, c.y - s * 0.3f), Offset(zona.left + s * 1.9f, c.y + s * 0.2f), Offset(zona.left + s * 2.1f, zona.bottom))), ic(RIO, o), style = Stroke(p * 1.2f, cap = StrokeCap.Round))
                         val col = Offset(zona.left + s * 1.05f, c.y + s * 0.3f)
-                        drawArc(n(CUERO_OSC, o), 180f, 180f, true, Offset(col.x - s * 0.22f, col.y - s * 0.14f), Size(s * 0.44f, s * 0.28f))
+                        drawArc(ic(CUERO_OSC, o), 180f, 180f, true, Offset(col.x - s * 0.22f, col.y - s * 0.14f), Size(s * 0.44f, s * 0.28f))
                         drawCircle(e.c1, p * 2.2f, Offset(col.x, col.y - s * 0.06f))
                     }
                 }
-                drawPath(raspado, n(Color(0xFF2E2620), o).copy(alpha = 0.5f), style = Stroke(p))
+                drawPath(raspado, ic(Color(0xFF2E2620), o).copy(alpha = 0.5f), style = Stroke(p))
+                drawPath(cuero, ic(CUERO_OSC, o).copy(alpha = 0.8f), style = Stroke(p * 1.4f))
                 // El estátero, inclinado al final del raspado.
                 val mc = Offset(c.x + s * 1.05f, c.y + s * 0.18f)
                 val r = s * 0.66f
                 drawCircle(sombraMueble(0.35f), r, Offset(mc.x + p * 2, mc.y + p * 3))
-                drawOval(n(mez(ORO, Color.Black, 0.35f), o), Offset(mc.x - r, mc.y - r * 0.92f), Size(r * 2, r * 2))
+                drawOval(ic(mez(ORO, Color.Black, 0.35f), o), Offset(mc.x - r, mc.y - r * 0.92f), Size(r * 2, r * 2))
                 val cara = Offset(mc.x, mc.y - r * 0.06f)
-                drawCircle(n(ORO, o), r * 0.94f, cara)
-                drawArc(n(ORO_BRILLO, o), 170f, 100f, false, Offset(cara.x - r * 0.8f, cara.y - r * 0.8f), Size(r * 1.6f, r * 1.6f), style = Stroke(p * 1.4f))
-                val g = n(mez(ORO, Color.Black, 0.45f), o)
+                drawCircle(ic(ORO, o), r * 0.94f, cara)
+                drawArc(ic(ORO_BRILLO, o), 170f, 100f, false, Offset(cara.x - r * 0.8f, cara.y - r * 0.8f), Size(r * 1.6f, r * 1.6f), style = Stroke(p * 1.4f))
+                val g = ic(mez(ORO, Color.Black, 0.45f), o)
                 for (k in 0 until 22) {
                     val a = 2 * PI * k / 22
                     drawCircle(g, p * 0.6f, Offset(cara.x + r * 0.82f * cos(a).toFloat(), cara.y + r * 0.82f * sin(a).toFloat()))
                 }
                 with(TrazosGalia) {
-                    caballo(Offset(cara.x, cara.y - r * 0.12f), r * 1.22f, g, n(ORO, o), mira = 1f, recio = 1.4f)
+                    caballo(Offset(cara.x, cara.y - r * 0.12f), r * 1.22f, g, ic(ORO, o), mira = 1f, recio = 1.4f)
                     rueda(Offset(cara.x - r * 0.02f, cara.y + r * 0.5f), r * 0.14f, g, Color.Transparent)
                 }
             }
@@ -1795,22 +1799,22 @@ internal object VidaGalia : DisenoVida {
                 val zona = Rect(c.x - s * 1.4f, c.y - s * 0.6f, c.x + s * 1.4f, c.y + s * 0.6f)
                 val cuero = cueroBuey(zona, s * 0.1f, s * 0.06f)
                 translate(p * 2, p * 3) { drawPath(cuero, sombraMueble(0.35f)) }
-                drawPath(cuero, n(CUERO, o))
+                drawPath(cuero, ic(CUERO, o))
                 clipPath(cuero) {
-                    drawPath(cuero, n(CUERO_OSC, o), style = Stroke(p * 4f))
+                    drawPath(cuero, ic(CUERO_OSC, o), style = Stroke(p * 4f))
                     val rio = suave(listOf(Offset(zona.left - s * 0.2f, c.y + s * 0.4f), Offset(zona.left + s * 0.8f, c.y + s * 0.2f), Offset(c.x, c.y + s * 0.45f), Offset(zona.right - s * 0.8f, c.y + s * 0.1f), Offset(zona.right + s * 0.2f, c.y + s * 0.3f)))
-                    drawPath(rio, n(RIO, o), style = Stroke(p * 2f, cap = StrokeCap.Round))
+                    drawPath(rio, ic(RIO, o), style = Stroke(p * 2f, cap = StrokeCap.Round))
                     // El robledal: copas pequeñas.
                     listOf(0.25f to -0.35f, 0.35f to -0.42f, 0.78f to -0.3f, 0.86f to -0.4f).forEach { (fx, fy) ->
                         val q = Offset(zona.left + zona.width * fx, c.y + s * fy)
-                        drawCircle(n(ROBLE_HOJA, o), s * 0.11f, q)
-                        drawLine(n(MADERA, o), q, Offset(q.x, q.y + s * 0.16f), p)
+                        drawCircle(ic(ROBLE_HOJA, o), s * 0.11f, q)
+                        drawLine(ic(MADERA, o), q, Offset(q.x, q.y + s * 0.16f), p)
                     }
                 }
                 val pts = listOf(Offset(c.x - s * 1.05f, c.y - s * 0.02f), Offset(c.x + s * 0.05f, c.y - s * 0.2f), Offset(c.x + s * 1.1f, c.y + s * 0.0f))
                 drawPath(Path().apply { moveTo(pts[0].x, pts[0].y); quadraticTo(c.x - s * 0.5f, c.y - s * 0.35f, pts[1].x, pts[1].y); quadraticTo(c.x + s * 0.6f, c.y - s * 0.05f, pts[2].x, pts[2].y) },
-                    n(TINTA, o).copy(alpha = if (o) 0.5f else 0.6f), style = Stroke(p * 1.1f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(p * 2.5f, p * 2f))))
-                listOf(CORAL, e.c1, CORAL).forEachIndexed { k, col -> alfiler(pts[k], s * 0.62f, if (k == 1) col else n(col, o), o, p) }
+                    ic(TINTA, o).copy(alpha = if (o) 0.5f else 0.6f), style = Stroke(p * 1.1f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(p * 2.5f, p * 2f))))
+                listOf(CORAL, e.c1, CORAL).forEachIndexed { k, col -> alfiler(pts[k], s * 0.62f, if (k == 1) col else ic(col, o), o, p) }
             }
         }
     }
@@ -1820,8 +1824,8 @@ internal object VidaGalia : DisenoVida {
         val cabeza = Offset(punta.x + alto * 0.28f, punta.y - alto * 0.62f)
         drawLine(sombraMueble(0.35f), punta, Offset(punta.x + alto * 0.55f, punta.y - alto * 0.1f), p * 1.2f, StrokeCap.Round)
         drawCircle(sombraMueble(0.3f), alto * 0.18f, Offset(punta.x + alto * 0.62f, punta.y - alto * 0.08f))
-        drawLine(n(BRONCE, o), punta, cabeza, p * 1.3f, StrokeCap.Round)
-        drawCircle(n(BRONCE, o), alto * 0.2f, cabeza)
+        drawLine(ic(BRONCE, o), punta, cabeza, p * 1.3f, StrokeCap.Round)
+        drawCircle(ic(BRONCE, o), alto * 0.2f, cabeza)
         drawCircle(esmalte, alto * 0.13f, cabeza)
         drawCircle(luzMueble(if (o) 0.25f else 0.6f), alto * 0.05f, Offset(cabeza.x - alto * 0.05f, cabeza.y - alto * 0.05f))
     }
@@ -1836,17 +1840,17 @@ internal object VidaGalia : DisenoVida {
         val cima = c.y + s * 0.02f
         val muro = Rect(c.x - s * 1.8f, cima, c.x + s * 1.2f, base)
         // El terraplén al pie.
-        drawPath(Path().apply { moveTo(muro.left - s * 0.3f, base); quadraticTo(c.x, base - s * 0.12f, muro.right + s * 0.4f, base); close() }, n(mez(TIERRA, ROBLE_HOJA, 0.3f), o))
+        drawPath(Path().apply { moveTo(muro.left - s * 0.3f, base); quadraticTo(c.x, base - s * 0.12f, muro.right + s * 0.4f, base); close() }, ic(mez(TIERRA, ROBLE_HOJA, 0.3f), o))
         translate(p * 2, p * 2.5f) { drawRect(sombraMueble(0.3f), muro.topLeft, muro.size) }
-        rect(muro, n(PIEDRA, o))
+        rect(muro, ic(PIEDRA, o))
         // Las hiladas de piedra y las cabezas de las vigas en cuadrícula.
         val hilada = s * 0.15f
         var y = muro.top + hilada
         var k = 0
         while (y < muro.bottom) {
-            drawLine(n(PIEDRA_OSC, o), Offset(muro.left, y), Offset(muro.right, y), p * 0.6f)
+            drawLine(ic(PIEDRA_OSC, o), Offset(muro.left, y), Offset(muro.right, y), p * 0.6f)
             var x = muro.left + hilada * (if (k % 2 == 0) 0.6f else 1.2f)
-            while (x < muro.right) { drawLine(n(PIEDRA_OSC, o), Offset(x, y - hilada), Offset(x, y), p * 0.5f); x += hilada * 1.6f }
+            while (x < muro.right) { drawLine(ic(PIEDRA_OSC, o), Offset(x, y - hilada), Offset(x, y), p * 0.5f); x += hilada * 1.6f }
             y += hilada; k++
         }
         var fila = 0
@@ -1854,8 +1858,8 @@ internal object VidaGalia : DisenoVida {
         while (yv < muro.bottom - hilada * 0.3f) {
             var xv = muro.left + s * (if (fila % 2 == 0) 0.2f else 0.45f)
             while (xv < muro.right - s * 0.1f) {
-                drawRect(n(MADERA, o), Offset(xv - p * 1.6f, yv - p * 1.6f), Size(p * 3.2f, p * 3.2f))
-                drawRect(n(TABLA_LUZ, o), Offset(xv - p * 1.6f, yv - p * 1.6f), Size(p * 3.2f, p * 0.8f))
+                drawRect(ic(MADERA, o), Offset(xv - p * 1.6f, yv - p * 1.6f), Size(p * 3.2f, p * 3.2f))
+                drawRect(ic(TABLA_LUZ, o), Offset(xv - p * 1.6f, yv - p * 1.6f), Size(p * 3.2f, p * 0.8f))
                 xv += s * 0.5f
             }
             yv += hilada * 2f; fila++
@@ -1865,45 +1869,45 @@ internal object VidaGalia : DisenoVida {
         var xp = muro.left
         while (xp < muro.right - p) {
             val pp = Path().apply { moveTo(xp, cima); lineTo(xp, cima - s * 0.22f); lineTo(xp + p * 1.8f, cima - s * 0.3f); lineTo(xp + p * 3.6f, cima - s * 0.22f); lineTo(xp + p * 3.6f, cima); close() }
-            drawPath(pp, n(MADERA, o))
-            drawLine(n(TABLA_LUZ, o).copy(alpha = 0.6f), Offset(xp + p * 0.6f, cima - s * 0.2f), Offset(xp + p * 0.6f, cima), p * 0.5f)
+            drawPath(pp, ic(MADERA, o))
+            drawLine(ic(TABLA_LUZ, o).copy(alpha = 0.6f), Offset(xp + p * 0.6f, cima - s * 0.2f), Offset(xp + p * 0.6f, cima), p * 0.5f)
             xp += p * 4f
         }
         // El paso de la puerta, con sus hojas abiertas.
         val paso = Rect(c.x - s * 0.36f, cima + s * 0.12f, c.x + s * 0.36f, base)
-        rect(paso, n(ZARZO_HONDO, o))
+        rect(paso, ic(ZARZO_HONDO, o))
         listOf(-1f, 1f).forEach { sg ->
             val hoja = Path().apply {
                 val x0 = if (sg < 0) paso.left else paso.right
                 moveTo(x0, paso.top); lineTo(x0 - sg * s * 0.2f, paso.top + s * 0.08f); lineTo(x0 - sg * s * 0.2f, base + s * 0.02f); lineTo(x0, base); close()
             }
-            drawPath(hoja, n(TABLA, o))
-            drawPath(hoja, n(VETA, o), style = Stroke(p * 0.6f))
+            drawPath(hoja, ic(TABLA, o))
+            drawPath(hoja, ic(VETA, o), style = Stroke(p * 0.6f))
         }
-        drawRect(n(mez(TIERRA, BARRO_LUZ, 0.4f), o), Offset(paso.left + s * 0.2f, base - s * 0.08f), Size(paso.width - s * 0.4f, s * 0.08f))
+        drawRect(ic(mez(TIERRA, BARRO_LUZ, 0.4f), o), Offset(paso.left + s * 0.2f, base - s * 0.08f), Size(paso.width - s * 0.4f, s * 0.08f))
         // La torre de madera sobre la puerta: los postes, la galería de tablas y el tejado de paja.
         val torre = Rect(c.x - s * 0.55f, c.y - s * 0.62f, c.x + s * 0.55f, cima + s * 0.1f)
-        listOf(torre.left + p, torre.right - p * 3).forEach { x -> drawRect(n(MADERA, o), Offset(x, torre.top), Size(p * 2.2f, torre.height)) }
+        listOf(torre.left + p, torre.right - p * 3).forEach { x -> drawRect(ic(MADERA, o), Offset(x, torre.top), Size(p * 2.2f, torre.height)) }
         val galeria = Rect(torre.left - s * 0.06f, torre.top + s * 0.18f, torre.right + s * 0.06f, torre.top + s * 0.44f)
-        rect(galeria, n(TABLA, o))
+        rect(galeria, ic(TABLA, o))
         var xt = galeria.left + p * 2f
-        while (xt < galeria.right) { drawLine(n(VETA, o), Offset(xt, galeria.top), Offset(xt, galeria.bottom), p * 0.5f); xt += p * 3f }
+        while (xt < galeria.right) { drawLine(ic(VETA, o), Offset(xt, galeria.top), Offset(xt, galeria.bottom), p * 0.5f); xt += p * 3f }
         drawRect(sombraMueble(0.3f), Offset(galeria.left, galeria.bottom), Size(galeria.width, p * 1.6f))
         drawRect(luzMueble(if (o) 0.06f else 0.35f), galeria.topLeft, Size(galeria.width, p))
         val tejado = Path().apply { moveTo(torre.left - s * 0.18f, torre.top + s * 0.08f); lineTo(c.x, torre.top - s * 0.3f); lineTo(torre.right + s * 0.18f, torre.top + s * 0.08f); close() }
-        drawPath(tejado, n(PAJA, o))
+        drawPath(tejado, ic(PAJA, o))
         clipPath(tejado) {
             drawRect(sombraMueble(0.25f), Offset(c.x, torre.top - s), Size(s, s * 2))
-            for (j in -6..6) drawLine(n(PAJA_HUMO, o).copy(alpha = 0.5f), Offset(c.x, torre.top - s * 0.3f), Offset(c.x + j * s * 0.1f, torre.top + s * 0.1f), p * 0.4f)
+            for (j in -6..6) drawLine(ic(PAJA_HUMO, o).copy(alpha = 0.5f), Offset(c.x, torre.top - s * 0.3f), Offset(c.x + j * s * 0.1f, torre.top + s * 0.1f), p * 0.4f)
         }
         // El roble a un lado, con el verde del tema.
         val tr = Offset(c.x + s * 1.55f, base)
-        drawLine(n(MADERA, o), tr, Offset(tr.x, tr.y - s * 0.7f), p * 2.4f)
-        drawLine(n(MADERA, o), Offset(tr.x, tr.y - s * 0.5f), Offset(tr.x - s * 0.18f, tr.y - s * 0.8f), p * 1.4f)
+        drawLine(ic(MADERA, o), tr, Offset(tr.x, tr.y - s * 0.7f), p * 2.4f)
+        drawLine(ic(MADERA, o), Offset(tr.x, tr.y - s * 0.5f), Offset(tr.x - s * 0.18f, tr.y - s * 0.8f), p * 1.4f)
         listOf(Offset(-0.2f, -0.95f), Offset(0.18f, -0.98f), Offset(0f, -1.22f), Offset(-0.02f, -0.82f)).forEachIndexed { j, q ->
-            drawCircle(n(if (j == 2) ROBLE_HOJA else ROBLE_HOJA_SOMBRA, o), s * 0.26f, Offset(tr.x + q.x * s, tr.y + q.y * s))
+            drawCircle(ic(if (j == 2) ROBLE_HOJA else ROBLE_HOJA_SOMBRA, o), s * 0.26f, Offset(tr.x + q.x * s, tr.y + q.y * s))
         }
-        drawCircle(n(mez(ROBLE_HOJA, MUERDAGO, 0.4f), o), s * 0.12f, Offset(tr.x - s * 0.1f, tr.y - s * 1.3f))
+        drawCircle(ic(mez(ROBLE_HOJA, MUERDAGO, 0.4f), o), s * 0.12f, Offset(tr.x - s * 0.1f, tr.y - s * 1.3f))
         // De noche, una antorcha en la torre, con el color del tema.
         if (o) { val t = Offset(c.x + s * 0.42f, c.y - s * 0.5f); halo(t, s * 0.4f, e.c1, 0.8f, 8); drawCircle(e.c1, p * 1.6f, t) }
     }
@@ -2079,7 +2083,7 @@ internal object VidaGalia : DisenoVida {
     private fun nm(c: Color, o: Boolean): Color = if (o) mez(c, NOCHE, 0.3f) else c
 
     /** El cuero de las notas: claro de día; de noche, oscuro y en penumbra, para que se lea la tinta clara. */
-    private fun cueroNota(o: Boolean): Color = if (o) Color(0xFF2F2A21) else Color(0xFFDCC69C)
+    private fun cueroNota(o: Boolean): Color = if (o) Color(0xFF2F2A21) else Color(0xFFD9BD8E)
 
     override fun DrawScope.notaTablero(e: EstadoNota, oscuro: Boolean) {
         val r = e.rect
@@ -2152,12 +2156,12 @@ internal object VidaGalia : DisenoVida {
                 // La luna nueva: la noche, por la que cuentan los galos.
                 val luna = Path().apply {
                     addOval(Rect(q.x - t * 1.2f, q.y - t * 1.2f, q.x + t * 1.2f, q.y + t * 1.2f))
-                    addOval(Rect(q.x - t * 0.6f, q.y - t * 1.4f, q.x + t * 1.6f, q.y + t * 0.9f))
+                    addOval(Rect(q.x - t * 0.45f, q.y - t * 1.55f, q.x + t * 1.75f, q.y + t * 0.75f))
                     fillType = PathFillType.EvenOdd
                 }
-                clipRect(q.x - t * 1.3f, q.y - t * 1.3f, q.x + t * 1.3f, q.y + t * 1.3f) { drawPath(luna, marca) }
-                drawCircle(marca, 0.8f * un, Offset(q.x + t * 1.1f, q.y - t * 1.2f))
-                drawCircle(marca, 0.5f * un, Offset(q.x + t * 1.6f, q.y - t * 0.3f))
+                clipPath(Path().apply { addOval(Rect(q.x - t * 1.2f, q.y - t * 1.2f, q.x + t * 1.2f, q.y + t * 1.2f)) }) { drawPath(luna, marca) }
+                drawCircle(marca, 0.55f * un, Offset(q.x - t * 1.9f, q.y - t * 1.5f))
+                drawCircle(marca, 0.4f * un, Offset(q.x - t * 2.6f, q.y - t * 0.6f))
             }
             "proposito" -> with(TrazosGalia) {
                 // La rueda de las monedas.
@@ -2201,6 +2205,7 @@ internal object VidaGalia : DisenoVida {
         drawLine(hondo, Offset(x1 - largo * 0.22f, c.y + g * 0.3f), Offset(x1, c.y + g * 0.3f), g * 0.4f, StrokeCap.Round)
         // El arco.
         val arco = Path().apply { moveTo(x0 + g, c.y); quadraticTo(c.x - largo * 0.1f, c.y - largo * 0.6f, x1 - g * 0.6f, c.y) }
+        drawPath(arco, hondo, style = Stroke(g * 1.35f, cap = StrokeCap.Round))
         drawPath(arco, metal, style = Stroke(g, cap = StrokeCap.Round))
         drawPath(Path().apply { moveTo(x0 + g * 1.4f, c.y - g * 0.4f); quadraticTo(c.x - largo * 0.12f, c.y - largo * 0.62f, c.x + largo * 0.1f, c.y - largo * 0.26f) }, luz.copy(alpha = 0.8f), style = Stroke(g * 0.3f, cap = StrokeCap.Round))
         // El pie vuelto sobre el arco, con su bolita (de coral si es de oro).
