@@ -925,6 +925,70 @@ def papel_nouveau():
     a = a * (1 - linea[..., None] * (1 - col('#7D8A68') / 255) * 0.62)
     a_img(a).save(os.path.join(OUT, 'papel_nouveau.jpg'), quality=86)
 
+def papel_psicodelia():
+    """Psicodelia: el papel del periódico del barrio, en San Francisco en 1967: papel de diario de pasta mecánica, barato,
+    gris crema, con la formación en nubes, astillitas oscuras de madera, fibras cortas y los bordes un poco más amarillos
+    (el papel ácido se tuesta con la luz). Lo cruza el doblez del periódico, apenas marcado. Arriba, sangrando del borde,
+    la tinta de arcoíris del tintero partido: en el tintero de la prensa se ponen dos o tres tintas lado a lado (aquí el
+    magenta a la izquierda, el amarillo al medio y el azul a la derecha) y los rodillos las funden donde se tocan, así que
+    una sola pasada imprime el degradado (el naranja y el verde salen solos). Se imprime en trama de puntos que se achican
+    hacia abajo hasta desaparecer, con la tinta absorbida desigual por el papel. El centro queda libre para el texto."""
+    W, H = 720, 1280
+    r = np.random.default_rng(1967)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    # --- El papel: crema grisáceo de diario, con la formación en nubes (más espeso aquí, más ralo allá).
+    a = mezcla(col('#EFE7D6'), col('#E3DAC6'), ruido_rect(W, H, 60, 1968) * 0.75)
+    a = mezcla(a, col('#E6DDC9'), np.clip((ruido_rect(W, H, 5, 1969) - 0.5) * 2.4, 0, 1) * 0.45)      # la formación
+    a = mezcla(a, col('#F3ECDD'), np.clip((ruido_rect(W, H, 14, 1970) - 0.55) * 2.0, 0, 1) * 0.3)
+    # Los bordes, tostados por la luz (más arriba y a la derecha, que quedaban por fuera de la pila).
+    borde = np.clip(np.maximum(np.abs(xx - W / 2) / (W / 2), np.abs(yy - H / 2) / (H / 2)) - 0.86, 0, 1) / 0.14
+    tostado = borde ** 1.6 * (0.75 + 0.5 * ruido_rect(W, H, 40, 1971))
+    a = mezcla(a, col('#D9C7A2'), np.clip(tostado, 0, 1) * 0.42)
+    # --- El doblez: el periódico venía doblado en dos; la luz de arriba hace clara una cara del pliegue y oscura la otra.
+    yd = H * 0.535 + 3 * np.sin(xx / W * 2.3 + 0.4)
+    dpl = yy - yd
+    a = a * (1 - 0.045 * np.exp(-((dpl - 1.6) / 1.4) ** 2) + 0.03 * np.exp(-((dpl + 1.4) / 1.6) ** 2)
+             - 0.018 * np.exp(-(dpl / 14) ** 2) * ruido_rect(W, H, 20, 1972))[..., None]
+    img = a_img(a); d = ImageDraw.Draw(img, 'RGBA')
+    for _ in range(900):                                             # fibras cortas, claras y oscuras
+        x, y = r.random() * W, r.random() * H; ang = r.random() * math.pi; l = 2 + r.random() * 6
+        tono = (110, 98, 80, int(10 + r.random() * 16)) if r.random() < 0.65 else (255, 252, 244, int(28 + r.random() * 36))
+        d.line([(x, y), (x + l * math.cos(ang), y + l * math.sin(ang))], fill=tono, width=1)
+    for _ in range(140):                                             # las astillitas de la pasta mecánica: oscuras y cortas
+        x, y = r.random() * W, r.random() * H; ang = r.random() * math.pi; l = 1.5 + r.random() * 4.5
+        d.line([(x, y), (x + l * math.cos(ang), y + l * math.sin(ang))], fill=(70, 58, 44, int(40 + r.random() * 60)), width=1)
+    a = np.asarray(img, np.float32)
+    a = a * (0.985 + 0.028 * ruido_rect(W, H, 0.6, 1973)[..., None])                         # el grano
+    # --- La tinta de arcoíris. Las tres tintas del tintero partido, fundidas donde se tocan (más ancho el paso al azul).
+    u = np.clip(xx / W + 0.05 * (ruido_rect(W, H, 90, 1974) - 0.5), 0, 1)
+    k = 2
+    def tinta(centro, ancho):
+        return np.exp(-((u - centro) / ancho) ** 2)
+    magenta = tinta(-0.08, 0.4); amarillo = tinta(0.48, 0.3); azul = tinta(1.08, 0.42)
+    # Cuánta tinta llega a cada punto: llena junto al borde de arriba y cada vez menos hacia abajo, con el borde de abajo
+    # que ondula (el rodillo no cargaba parejo); se imprime en trama.
+    caida = 80 + 110 * ruido_rect(W, H, 70, 1975)[0:1, :] + 16 * np.sin(xx / W * 7.0 + 1.2)
+    carga = np.clip(1 - yy / caida, 0, 1) ** 1.5
+    mancha = np.clip(carga * (0.85 + 0.3 * ruido_rect(W, H, 16, 1976)), 0, 1)
+    # La trama a 45°, al doble y reducida: el punto crece con la tinta (el punto lleno se junta con el de al lado).
+    Y2, X2 = np.mgrid[0:H * k, 0:W * k].astype(np.float32) / k
+    paso = 5.2
+    tu = (X2 + Y2) / math.sqrt(2) / paso; tv = (X2 - Y2) / math.sqrt(2) / paso
+    dcel = np.sqrt((tu - np.round(tu)) ** 2 + (tv - np.round(tv)) ** 2)
+    carga2 = np.asarray(Image.fromarray(mancha.astype(np.float32), 'F').resize((W * k, H * k), Image.BILINEAR))
+    rad = carga2 ** 0.7 * 0.62
+    punto = np.clip((rad - dcel) * paso * k / 1.3 + 0.5, 0, 1) * np.clip(rad * paso * k / 1.5, 0, 1)
+    punto = np.asarray(Image.fromarray(punto.astype(np.float32), 'F').resize((W, H), Image.LANCZOS), np.float32)
+    punto = np.clip(punto, 0, 1) * (0.78 + 0.22 * ruido_rect(W, H, 1.2, 1977))          # el papel absorbe desigual
+    # Cada tinta resta lo suyo del papel (las tintas de imprenta son transparentes: se multiplican, y donde el amarillo
+    # se monta en el magenta sale naranja, y en el azul, verde). Suave, para que no estorbe el texto.
+    filtro = np.ones((H, W, 3), np.float32)
+    for cobertura, tono in ((magenta, '#E0218A'), (amarillo, '#FFD23F'), (azul, '#2F6BFF')):
+        filtro = filtro * (1 - (1 - col(tono) / 255) * (np.clip(cobertura * 1.25, 0, 1) * 0.5)[..., None])
+    a = a * (1 - punto[..., None] + punto[..., None] * filtro)
+    a_img(a).save(os.path.join(OUT, 'papel_psicodelia.jpg'), quality=86)
+
+
 if __name__ == '__main__':
     OUT = sys.argv[1]
     if len(sys.argv) > 2:
@@ -952,4 +1016,5 @@ if __name__ == '__main__':
     papel_arcontes()
     papel_galia()
     papel_nouveau()
+    papel_psicodelia()
     print('papeles listos')

@@ -67,10 +67,11 @@ object Widgets {
             0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
             intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
             0xFF222527.toInt(), 0xFFFFFFFF.toInt())
+        // La sala de baile con luz negra: el verde limón que brilla, el lila claro a su luz y, en el ánimo, del magenta fluorescente al verde limón.
         TemaId.PSICODELIA -> Colores(R.drawable.widget_fondo_psicodelia, R.drawable.widget_boton_psicodelia, R.drawable.widget_boton_activo_psicodelia, R.drawable.widget_boton_ambar_psicodelia,
-            0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
-            intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
-            0xFF222527.toInt(), 0xFFFFFFFF.toInt())
+            0xFFC9F04A.toInt(), 0xFFF2EAF7.toInt(), 0xFFB4A7C4.toInt(), 0xFF43335A.toInt(),
+            intArrayOf(0xFFFF5CBE.toInt(), 0xFFF48ACF.toInt(), 0xFFE6BCE4.toInt(), 0xFFF2EAF7.toInt(), 0xFFDCEFB4.toInt(), 0xFFCFF07E.toInt(), 0xFFC9F04A.toInt()),
+            0xFF251935.toInt(), 0xFF1C2600.toInt())
         // La misma París de noche: la luz eléctrica, el papel crema a su luz y, en el ánimo, de la amapola al verde de los cafés.
         TemaId.NOUVEAU -> Colores(R.drawable.widget_fondo_nouveau, R.drawable.widget_boton_nouveau, R.drawable.widget_boton_activo_nouveau, R.drawable.widget_boton_ambar_nouveau,
             0xFFE8C46E.toInt(), 0xFFECE5D6.toInt(), 0xFFADA79A.toInt(), 0xFF3E4548.toInt(),

@@ -17,6 +17,7 @@ TAM = 432
 RADIO = 0.29 * TAM         # el anillo y su motivo caben en el círculo seguro (radio 0.333) con aire alrededor
 GROSOR = 2.6               # px a 432 (unos 0.65 dp)
 K = 4                      # el anillo se dibuja al cuádruple y se reduce, para bordes suaves
+RADIO_CHAPA = 0.292        # el botón de Psicodelia, en fracción de TAM: deja ver la mezclilla alrededor
 
 
 def mascara():
@@ -232,6 +233,40 @@ def vidrio_nancy(sem, tam=TAM):  # Art nouveau: vidrio de Nancy, de varias capas
         d.ellipse([*P(x - r * 0.55 - 0.3, y - r * 0.55 - 0.3), *P(x + r * 0.1 - 0.3, y + r * 0.1 - 0.3)], fill=(236, 232, 246, 90))
     img.alpha_composite(capa.resize((tam, tam), Image.LANCZOS))
     return np.asarray(img.convert('RGB'), np.float32) - rgb('#40384F')[None, None, :]
+
+def mezclilla(sem, tam=TAM):  # Psicodelia: la solapa de una chaqueta de mezclilla, donde va prendido el botón. Sarga 3/1: la
+    # urdimbre teñida de índigo (vertical) pasa sobre tres pasadas de la trama cruda y deja ver una, y así se forman las
+    # diagonales que suben hacia la derecha. Cada hilo de urdimbre tiene su tinte (el índigo se queda en la superficie del
+    # hilo y se gasta desparejo: rayas verticales y nudos), la trama asoma en puntos crudos y el uso aclara la tela en nubes
+    # grandes. Devuelve el color menos el del fondo de TEMAS (como el jaspe de Arcontes, en RGB).
+    s = tam / TAM
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32) / s
+    rng = np.random.default_rng(sem)
+    pw, pt = 3.3, 4.4                                       # el paso de la urdimbre y el de la trama, en px a 432
+    xw = xx + nube(sem + 1, 5, tam) * 2.4 + nube(sem + 9, 19, tam) * 0.5      # los hilos no van del todo rectos
+    yw = yy + nube(sem + 2, 6, tam) * 2.0
+    i = np.floor(xw / pw); fx = xw / pw - i
+    j = np.floor(yw / pt); fy = yw / pt - j
+    fase = (j + i) % 4
+    trama = fase == 0                                       # donde asoma la trama: una de cada cuatro, corrida un hilo
+    a_lo_largo = np.clip((fase - 1 + fy) / 3.0, 0, 1)       # dentro del flotante de urdimbre (tres pasadas)
+    cil = np.sin(np.pi * np.clip(fx, 0, 1)) ** 0.6          # el hilo es redondo: claro al medio
+    puntas = np.sin(np.pi * a_lo_largo) ** 0.45             # y se hunde donde entra bajo la trama
+    ncol = int(TAM / pw) + 8
+    hilo = rng.normal(0, 1, ncol)[np.clip(i.astype(int) + 4, 0, ncol - 1)]
+    nudos = np.asarray(Image.fromarray(nube(sem + 3, 90, tam), 'F').resize((max(2, tam // 5), tam), Image.BILINEAR)
+                       .resize((tam, tam), Image.BILINEAR), np.float32)
+    gasto = np.clip(hilo * 0.35 + nudos * 1.1 + nube(sem + 4, 4, tam) * 0.7, -1, 2)
+    indigo, lavado, crudo = rgb('#1F2D4E'), rgb('#4C6491'), rgb('#8E97A8')
+    urd = indigo + (lavado - indigo) * np.clip(0.18 + gasto * 0.3, 0, 1)[..., None]
+    urd = urd * (0.72 + 0.36 * (cil * puntas)[..., None])
+    tra = crudo * (0.5 + 0.3 * np.sin(np.pi * np.clip(fy, 0, 1))[..., None] ** 0.8) * (0.85 + 0.15 * cil[..., None])
+    col = np.where(trama[..., None], tra * 0.55 + urd * 0.45, urd)
+    brillo = np.clip(1 - np.sqrt((xx - TAM * 0.28) ** 2 + (yy - TAM * 0.22) ** 2) / (TAM * 0.8), 0, 1) ** 2
+    caida = np.clip(np.sqrt((xx - TAM * 0.5) ** 2 + (yy - TAM * 0.5) ** 2) / (TAM * 0.72), 0, 1) ** 2
+    col = col * (0.88 + 0.2 * brillo[..., None] - 0.14 * caida[..., None])
+    col = np.asarray(Image.fromarray(np.clip(col, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.45 * s)), np.float32)
+    return col - rgb('#24324F')[None, None, :]
 
 def cuadricula(sem):     # Laboratorio: papel de laboratorio cuadriculado
     fino = ((X % 18 < 1) | (Y % 18 < 1)) * -0.6
@@ -727,6 +762,32 @@ def _latigo(d, c, hueco=(0, 0, 0, 0)):   # Art nouveau: el anillo es la línea d
     latigo(d, TAM / 2 * K, TAM / 2 * K, RADIO * 0.975 * K, 12.5 * K, 5.6 * K, c)
 
 
+def petalo_redondo(P, ang, r0, r1, ancho_punta, ancho_raiz, n=40):
+    """Un pétalo redondo de botón de 1967, de la raíz (a [r0] del centro) a la punta (a [r1]), en la dirección [ang]: se
+    ensancha hacia fuera y termina en medio círculo. [P] lleva del plano de la flor (x, y) a pixeles."""
+    ca, sa = math.cos(ang), math.sin(ang)
+    rc = r1 - ancho_punta / 2
+    lado = [(r0 + (rc - r0) * t, ancho_raiz / 2 + (ancho_punta - ancho_raiz) / 2 * math.sin(t * math.pi / 2) ** 0.75)
+            for t in np.linspace(0, 1, n)]
+    arco = [(rc + ancho_punta / 2 * math.cos(a), ancho_punta / 2 * math.sin(a)) for a in np.linspace(math.pi / 2, -math.pi / 2, 36)]
+    q = lambda u, v: P(u * ca - v * sa, u * sa + v * ca)
+    return [q(u, w) for u, w in lado] + [q(u, v) for u, v in arco] + [q(u, -w) for u, w in lado[::-1]]
+
+
+def margarita(d, c, cx, cy, escala, n=8, r0=0.035, r1=0.305, punta=0.15, raiz=0.035, fase=-math.pi / 2 + math.pi / 8, encoge=0.0):
+    """La margarita de los botones y los carteles de 1967: [n] pétalos redondos alrededor del corazón, medidos en
+    fracciones de [escala] (px) desde (cx, cy). [encoge] la achica por dentro de su contorno: dos margaritas encogidas,
+    una menos la otra, dan el eco (la línea que repite la forma por dentro, como en los carteles)."""
+    P = lambda x, y: (cx + x * escala, cy + y * escala)
+    for k in range(n):
+        a = 2 * math.pi * k / n + fase
+        d.polygon(petalo_redondo(P, a, r0, r1 - encoge, punta - 2 * encoge, max(0.004, raiz - 2 * encoge)), fill=c)
+
+
+def _margarita(d, c, hueco=(0, 0, 0, 0), encoge=0.0):   # Psicodelia: el anillo se vuelve la flor; la huella es su corazón
+    margarita(d, c, TAM / 2 * K, TAM / 2 * K, TAM * K, r1=RADIO_CHAPA, encoge=encoge)
+
+
 def oro_relieve(alto, fuerza, sem, luz=(-0.55, -0.7, 1.0), brillo=40, tonos=None, grano=0.035, ambiente=0.0, plano=None):
     """Metal en relieve a partir de un campo de alturas [alto] (0–1, ya suavizado): la luz viene de arriba a la izquierda;
     lo que mira a la luz brilla, lo plano queda en el oro medio y lo que le da la espalda se hunde en el pardo. [fuerza]
@@ -918,7 +979,8 @@ def _manos(d, c, n=24):                 # Prehistoria: puntos de ocre de tamaño
 # Acabados: 'tinta' (se asienta en el soporte), 'dorado' (brillo metálico leve), 'ferrogalica' (sepia que se aclara
 # donde la pluma tenía menos tinta), 'fosforo' (resplandor de pantalla), 'esmalte' (relieve suave), 'grabado' (talla en
 # hueco sobre piedra pulida, con el anillo: la huella y el motivo son un solo grabado), 'oro' (oro fundido en relieve, con
-# su sombra: el anillo y la huella son una sola pieza).
+# su sombra: el anillo y la huella son una sola pieza), 'nacar' (nácar engastado en oro pálido) y 'chapa' (un botón de
+# solapa: la huella impresa en tintas planas bajo la cúpula de celuloide, con su brillo).
 TEMAS = {
     'romano':       (travertino,    '#E5E1D9', '#6E5424',  10, 6, 'dorado',      _hojitas),
     'urbe':         (revoque,       '#E7C793', '#7A2E1C',  13, 5, 'tinta',       _cupolas),
@@ -933,6 +995,7 @@ TEMAS = {
     'arcontes':     (heliotropo,    '#2B4636', '#D9D6BE',   1, 0, 'grabado',     _ouroboros),
     'galia':        (roble,         '#3A2A1B', '#C9962B',   1, 0, 'oro',         _torques),
     'nouveau':      (vidrio_nancy,  '#40384F', '#D9BE7A',   1, 0, 'nacar',       _latigo),
+    'psicodelia':   (mezclilla,     '#24324F', '#FFF6E6',   1, 0, 'chapa',       _margarita),
     'refugio':      (hormigon,      '#1B1C1A', '#9BE8AE',   8, 5, 'fosforo',     _dientes),
     'orden':        (acero,         '#16171A', '#C2A15E',   9, 5, 'dorado',      _remaches),
     'vapor':        (hollin_plano,  '#E6D9BD', '#7A4E12',  10, 5, 'dorado',      _engrane_manometro),
@@ -1099,6 +1162,83 @@ def nacar_icono(tema, sem):
     return final
 
 
+# Las tintas planas del botón de Psicodelia (los colores de dibujo de la guía: los complementarios que vibran).
+TINTAS_CHAPA = dict(fondo='#2FBF71', petalo='#E0218A', eco='#2FBF71', corazon='#FFD23F', huella='#FFF6E6', filete='#3A1A5C')
+
+
+def mezclar(a, b, t):
+    """Pone el color [b] sobre [a] con la cobertura [t] (0–1, un campo)."""
+    return a * (1 - t[..., None]) + b * t[..., None]
+
+
+def celuloide(tam, radio, alto=15.0, dentro=0.80, reflejo=1.0):
+    """La luz sobre un botón de solapa de [radio] px en un lienzo de [tam] px (centrado): el papel impreso va bajo una
+    lámina de celuloide abombada, casi plana en el centro y que se curva fuerte donde se enrolla en el borde. Devuelve
+    (sombreado, brillo): el sombreado (0–1, cuánto mira a la luz, que viene de arriba a la izquierda) multiplica las
+    tintas; el brillo (0–1) se suma en blanco: la franja curva del reflejo de la ventana, que sigue la cúpula a
+    [dentro] del radio, con un punto nítido, el halo ancho y los dos filos del borde (el de la luz y el de la contraluz)."""
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    dx, dy = xx - tam / 2, yy - tam / 2
+    r = np.sqrt(dx ** 2 + dy ** 2)
+    rn = np.clip(r / radio, 0, 1)
+    h = np.sqrt(np.clip(1 - rn ** 8, 0, 1)) * 0.8 + (1 - rn ** 2) * 0.2
+    gy, gx = np.gradient(h * alto * tam / TAM)
+    nx, ny, nz = -gx, -gy, np.ones_like(h)
+    nn = np.sqrt(nx * nx + ny * ny + nz * nz)
+    L = np.array([-0.5, -0.65, 0.75]); L = L / np.linalg.norm(L)
+    sombreado = np.clip((nx * L[0] + ny * L[1] + nz * L[2]) / nn, 0, 1)
+    u, v = dx / radio, dy / radio
+    ang = np.arctan2(dy, dx)
+    da = np.angle(np.exp(1j * (ang - math.radians(-128))))
+    franja = np.clip(np.exp(-((rn - dentro) / 0.055) ** 2) * np.clip(1 - (da / 0.62) ** 2, 0, 1) ** 1.3 * 1.25, 0, 1)
+    punto = np.exp(-((u + 0.47) ** 2 + (v + 0.6) ** 2) / 0.0035)
+    halo = np.clip(1 - np.sqrt((u + 0.35) ** 2 + (v + 0.42) ** 2) / 0.8, 0, 1) ** 2
+    diag = (dx + dy) / (r + 1)
+    filo_luz = np.exp(-((rn - 0.962) / 0.016) ** 2) * np.clip(-diag * 1.2 + 0.1, 0, 1)
+    filo_contra = np.exp(-((rn - 0.958) / 0.03) ** 2) * np.clip(diag * 1.2 - 0.2, 0, 1)
+    brillo = (franja * 0.62 + punto * 0.5) * reflejo + halo * 0.1 + filo_luz * 0.45 + filo_contra * 0.22
+    return sombreado.astype(np.float32), brillo.astype(np.float32)
+
+
+def chapa_icono(tema, sem):
+    """Psicodelia: un botón de solapa de 1967 prendido en la mezclilla. Bajo el celuloide, el papel impreso en tintas
+    planas: la margarita de pétalos redondos en magenta sobre el verde (dos complementarios del mismo peso, que vibran),
+    cada pétalo con su eco verde por dentro, el corazón amarillo, y la huella en tinta clara con su filete violeta oscuro.
+    Las planchas no casan del todo (el magenta va corrido medio pixel). Encima, la cúpula con su brillo y, en la tela, la
+    sombra del botón. Se calcula al cuádruple y se reduce."""
+    S = TAM * K
+    radio = RADIO_CHAPA * TAM * K
+    yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
+    r = np.sqrt((xx - S / 2) ** 2 + (yy - S / 2) ** 2)
+    disco = np.clip((radio - r) / (1.4 * K), 0, 1)
+    def lapiz(dibujo):
+        im = Image.new('L', (S, S), 0); dibujo(ImageDraw.Draw(im)); return np.asarray(im, np.float32) / 255
+    pet = lapiz(lambda d: _margarita(d, 255))
+    eco = np.clip(lapiz(lambda d: _margarita(d, 255, encoge=0.024)) - lapiz(lambda d: _margarita(d, 255, encoge=0.031)), 0, 1)
+    eco = eco * np.clip((r - 0.155 * TAM * K) / (3 * K), 0, 1)       # el eco no llega al corazón, donde se juntan los pétalos
+    corazon = np.clip((0.083 * TAM * K - r) / (1.2 * K), 0, 1)
+    huella = maestra.mascara(S, S * 0.46)
+    T = {k: rgb(v) for k, v in TINTAS_CHAPA.items()}
+    corrido = lambda m, ox, oy: np.roll(np.roll(m, int(oy * K), 0), int(ox * K), 1)
+    img = np.zeros((S, S, 3), np.float32) + T['fondo']
+    img = mezclar(img, T['petalo'], corrido(pet, 0.6, -0.4))
+    img = mezclar(img, T['eco'], corrido(eco, 0.6, -0.4) * 0.95)
+    img = mezclar(img, T['corazon'], corazon)
+    img = mezclar(img, T['filete'], np.clip(suavizar(huella, 1.7 * K) * 3.6, 0, 1))
+    img = mezclar(img, T['huella'], corrido(huella, -0.3, 0.3) * huella)
+    grano = suavizar(np.random.default_rng(sem).standard_normal((S, S)).astype(np.float32), 0.7 * K)
+    img = img * (1 + grano[..., None] * 0.035)                         # el grano del papel bajo las tintas
+    sombreado, brillo = celuloide(S, radio, reflejo=0.75)
+    img = img * (0.42 + 0.62 * sombreado[..., None]) + brillo[..., None] * 255
+    capa = Image.fromarray(np.dstack([np.clip(img, 0, 255), disco * 255]).astype(np.uint8), 'RGBA')
+    capa = capa.convert('RGBa').resize((TAM, TAM), Image.LANCZOS).convert('RGBA')
+    a = np.asarray(capa, np.float32)[..., 3] / 255
+    final = sombra_de(a, 3.5, 5.5, 5.0, 0.8, '#070A16')
+    final.alpha_composite(sombra_de(a, 1.0, 1.6, 1.2, 0.6, '#070A16'))
+    final.alpha_composite(capa)
+    return final
+
+
 def hacer(tema, salida):
     textura, fondo, tinta, f_fondo, f_huella, acabado, _ = TEMAS[tema]
     sem = sum(map(ord, tema))
@@ -1117,6 +1257,12 @@ def hacer(tema, salida):
     if acabado == 'nacar':
         # Nácar y oro pálido sobre el vidrio de Nancy: el marco de látigo y la huella son una sola joya.
         final = nacar_icono(tema, sem)
+        final = final.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
+        final.save(os.path.join(salida, f'logo_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
+        return
+    if acabado == 'chapa':
+        # Un botón de solapa de celuloide: la flor y la huella impresas en tintas planas, bajo la cúpula con su brillo.
+        final = chapa_icono(tema, sem)
         final = final.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
         final.save(os.path.join(salida, f'logo_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
         return

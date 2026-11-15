@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Una tecla de la sala de baile: una gota blanda en el violeta negro de la luz negra (tres esquinas redondas y una más cerrada, como la gota que cae), con su borde y un reflejo apenas. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#FF1E2123"/>
-            <corners android:radius="0dp"/>
+            <solid android:color="#FF251935"/>
+            <stroke android:width="1dp" android:color="#FF43335A"/>
+            <corners android:topLeftRadius="12dp" android:topRightRadius="12dp" android:bottomRightRadius="12dp" android:bottomLeftRadius="4dp"/>
         </shape>
     </item>
-    <item android:gravity="bottom|fill_horizontal" android:height="1.5dp" android:bottom="0dp">
-        <shape android:shape="rectangle">
-            <solid android:color="#FF3A3D40"/>
-            <corners android:radius="0dp"/>
+    <item android:gravity="top|left" android:width="7dp" android:height="2.2dp" android:top="3dp" android:left="5dp">
+        <shape android:shape="oval">
+            <solid android:color="#22F2EAF7"/>
         </shape>
     </item>
 </layer-list>

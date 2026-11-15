@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- La tecla encendida: la gota de verde limón que brilla con la luz negra, con su reflejo arriba y un halo. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#FFE0262F"/>
-            <corners android:radius="0dp"/>
+            <solid android:color="#FFC9F04A"/>
+            <stroke android:width="1dp" android:color="#88ECFFB8"/>
+            <corners android:topLeftRadius="12dp" android:topRightRadius="12dp" android:bottomRightRadius="12dp" android:bottomLeftRadius="4dp"/>
         </shape>
     </item>
-    <item android:gravity="bottom|fill_horizontal" android:height="1.5dp" android:bottom="0dp">
-        <shape android:shape="rectangle">
-            <solid android:color="#55000000"/>
-            <corners android:radius="0dp"/>
+    <item android:gravity="top|left" android:width="8dp" android:height="2.6dp" android:top="3dp" android:left="5dp">
+        <shape android:shape="oval">
+            <solid android:color="#88FFFFFF"/>
         </shape>
     </item>
 </layer-list>
