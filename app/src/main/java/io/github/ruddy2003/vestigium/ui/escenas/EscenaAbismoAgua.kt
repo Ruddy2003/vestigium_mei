@@ -59,7 +59,7 @@ internal class AguaClara(
     /** La transparencia del agua en la altura [y] del lienzo, de 0 (devuelve el cielo) a 1 (deja ver el fondo), con la claridad y la luz de hoy. */
     fun transparencia(y: Float): Float {
         val a = (y - horizonte) / focal                                          // la tangente de cuánto se mira hacia abajo
-        val t = ((a - 0.16f) / 0.5f).coerceIn(0f, 1f)
+        val t = ((a - 0.12f) / 0.36f).coerceIn(0f, 1f)
         return (t * t * (3f - 2f * t)) * claridad * dia * (1f - 0.35f * l.nublado)
     }
 
@@ -76,7 +76,7 @@ internal class AguaClara(
     fun zDelFondo(y: Float): Float = focal * (ojo + hondo) / (y - horizonte).coerceAtLeast(0.5f)
 
     /** El color propio del fondo de arena visto en la altura [y]: la arena tibia cerca, el verde botella lejos. */
-    fun colorDelFondo(propio: Color, y: Float): Color = l.tono(lerp(lerp(propio, C.MAR_CLARO, 0.22f), C.MAR, 0.05f + absorbe(y) * 0.88f))
+    fun colorDelFondo(propio: Color, y: Float): Color = l.tono(lerp(lerp(propio, lerp(C.MAR_CLARO, C.MAR, 0.35f), 0.3f), C.MAR, 0.08f + absorbe(y) * 0.86f))
 
     // ---------------------------------------------------------------- La parte quieta
 
@@ -88,7 +88,7 @@ internal class AguaClara(
     fun DrawScope.pintar(zona: Rect, semilla: Long, sombras: List<List<Offset>>, semillaDia: Long) {
         // 1. El mar de la biblioteca: lejos es el de siempre.
         agua(l, zona, Azar(semillaDia), propio = C.MAR, viento = viento, hondo = C.MAR_HONDO, orilla = C.MAR_CLARO)
-        val y0 = horizonte + focal * 0.16f
+        val y0 = horizonte + focal * 0.12f
         if (transparencia(zona.bottom) > 0.02f) {
             // 2. El fondo: la arena, con su transparencia en el color (sin capas).
             val paradas = (0..8).map { i -> val y = y0 + (zona.bottom - y0) * i / 8f; (i / 8f) to colorDelFondo(C.ARENA, y).copy(alpha = transparencia(y)) }.toTypedArray()
@@ -237,7 +237,7 @@ internal class AguaClara(
         val alto = y0 + (zona.bottom - y0) * 0.55f
         // El reflejo del cielo que tapa el fondo hacia lejos (solo donde el fondo se veía).
         if (claridad * dia > 0.02f) {
-            drawRect(Brush.verticalGradient(0f to cielo.copy(alpha = 0f), 0.35f to cielo.copy(alpha = 0.22f * claridad * dia), 0.7f to cielo.copy(alpha = 0.1f * claridad * dia), 1f to cielo.copy(alpha = 0f), startY = alto, endY = y0 - 8f), Offset(zona.left, y0 - 8f), Size(zona.width, alto - y0 + 8f))
+            drawRect(Brush.verticalGradient(0f to cielo.copy(alpha = 0f), 0.35f to cielo.copy(alpha = 0.16f * claridad * dia), 0.7f to cielo.copy(alpha = 0.06f * claridad * dia), 1f to cielo.copy(alpha = 0f), startY = alto, endY = y0 - 8f), Offset(zona.left, y0 - 8f), Size(zona.width, alto - y0 + 8f))
         }
         // Los rizos de cerca: trazos curvos, más largos y más separados cuanto más cerca, con su lado de cielo y su lado oscuro.
         val az = Azar(semillaDia * 7 + 3)
@@ -274,19 +274,19 @@ internal class AguaClara(
         val az = Azar(77)
         fun dibujo(ds: DrawScope) = with(ds) {
             // Celdas de luz: anillos torcidos que tiemblan, juntos como las mallas de una red, chatos por la perspectiva.
-            repeat(70) { i ->
+            repeat(150) { i ->
                 val z = zc * Math.pow((zl / zc).toDouble(), az.real().toDouble()).toFloat()
                 val x = az.entre(-0.1f, 1.1f) * z * (limites.right - centro) / focal
                 val c = enElFondo(x, z); val t = transparencia(c.y)
                 if (t < 0.1f) { repeat(6) { az.real() }; return@repeat }
-                val k = focal / z; val rr = k * az.entre(0.45f, 0.8f); val chato = ((ojo + hondo) / z).coerceIn(0.25f, 0.9f)
+                val k = focal / z; val rr = k * az.entre(0.3f, 0.55f); val chato = ((ojo + hondo) / z).coerceIn(0.25f, 0.9f)
                 val fase = az.entre(0f, 6.28f); val vel = az.entre(0.8f, 1.6f)
                 val pts = (0 until 6).map { j ->
                     val a = j * 1.047f + 0.3f * sin(reloj * vel + fase + j)
                     val d = rr * (0.8f + 0.25f * sin(reloj * vel * 1.3f + fase * 2f + j * 2.1f))
                     Offset(c.x + cos(a) * d, c.y + sin(a) * d * chato)
                 }
-                val al = (0.3f * f * t * (0.55f + 0.45f * sin(reloj * 1.7f + i))).coerceIn(0f, 1f)
+                val al = (0.26f * f * t * (0.55f + 0.45f * sin(reloj * 1.7f + i))).coerceIn(0f, 1f)
                 drawPath(lazo(pts), color.copy(alpha = al), style = Stroke((k * 0.06f).coerceIn(0.35f, 1.6f), join = androidx.compose.ui.graphics.StrokeJoin.Round))
             }
         }

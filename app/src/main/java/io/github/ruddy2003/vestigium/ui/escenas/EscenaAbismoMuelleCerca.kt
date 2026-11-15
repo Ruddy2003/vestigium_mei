@@ -115,8 +115,16 @@ internal object CercaMuelle {
         }
         // El costado de esta banda: lo que asoma sobre el borde del muelle.
         val costado = poligono(listOf(M.pm(-20f, REGALA, EJE - MEDIA), M.pm(popaCurva.first(), REGALA, EJE - MEDIA), M.pm(popaCurva.first() + 0.25f, M.AGUA + 0.1f, EJE - MEDIA), M.pm(-20f, M.AGUA, EJE - MEDIA)))
-        drawPath(costado, p.frente(C.BLANCO))
-        clipPath(costado) { drawPath(poligono(listOf(M.pm(-20f, REGALA, EJE - MEDIA), M.pm(popaCurva.first(), REGALA, EJE - MEDIA), M.pm(popaCurva.first(), REGALA - 0.22f, EJE - MEDIA), M.pm(-20f, REGALA - 0.22f, EJE - MEDIA))), p.frente(C.AZUL)) }
+        val xs0 = M.pm(-6f, 0f, EJE - MEDIA).x; val xs1 = M.pm(popaCurva.first(), 0f, EJE - MEDIA).x
+        drawPath(costado, Brush.horizontalGradient(listOf(p.sombra(C.BLANCO), p.frente(C.BLANCO), p.luz(C.BLANCO)), xs0, xs1))
+        clipPath(costado) {
+            drawPath(poligono(listOf(M.pm(-20f, REGALA, EJE - MEDIA), M.pm(popaCurva.first(), REGALA, EJE - MEDIA), M.pm(popaCurva.first(), REGALA - 0.22f, EJE - MEDIA), M.pm(-20f, REGALA - 0.22f, EJE - MEDIA))), p.frente(C.AZUL))
+            // La tablazón, con sus juntas, la cinta de roce y las chorreras de la sal y del óxido.
+            for (h in listOf(-0.08f, -0.3f, -0.52f, -0.74f)) drawLine(p.sombra(C.BLANCO).copy(alpha = 0.55f), M.pm(-20f, h, EJE - MEDIA), M.pm(popaCurva.first(), h, EJE - MEDIA), 0.6f)
+            drawLine(p.por(C.MADERA_GRIS, 0.3f), M.pm(-20f, REGALA - 0.3f, EJE - MEDIA), M.pm(popaCurva.first(), REGALA - 0.3f, EJE - MEDIA), 0.07f * M.k(EJE - MEDIA))
+            val azc = Azar(Semilla.de("abismo", "costado"))
+            repeat(7) { val x = azc.entre(-6f, POPA); val q = M.pm(x, REGALA - 0.35f, EJE - MEDIA); drawLine(p.sombra(lerp(C.BLANCO, C.COBRE_OSC, 0.3f)).copy(alpha = 0.35f), q, M.pm(x, REGALA - azc.entre(0.6f, 1.1f), EJE - MEDIA), 0.5f) }
+        }
         drawLine(p.arriba(C.MADERA_GRIS), M.pm(-20f, REGALA, EJE - MEDIA), M.pm(popaCurva.first(), REGALA, EJE - MEDIA), 0.1f * M.k(EJE - MEDIA))
         // El timón, por fuera del espejo, con su caña.
         val ti0 = M.pm(POPA + 0.42f, REGALA + 0.15f, EJE - 0.1f); val ti1 = M.pm(POPA + 0.5f, M.AGUA, EJE - 0.1f)
