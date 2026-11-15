@@ -108,7 +108,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
     TemaId.TEMPLARIO -> R.font.regla_bold           // la letra de la regla, negrita: cifras firmes
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
-    TemaId.GALIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
+    TemaId.GALIA -> R.font.ysabeau_semibold       // Ysabeau, la de los rótulos y las cifras del tema, de trazo humanista
     TemaId.ARCONTES -> R.font.codice_bold           // Caudex, la letra de los códices: cifras de pluma, firmes
     TemaId.FRENTE -> R.font.chivo_mono_medium     // las cifras grabadas de la consola, como en un contador de segmentos
     TemaId.REFUGIO -> R.font.plex_mono_semibold     // la máquina del refugio: mono, gruesa
@@ -150,7 +150,7 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.MEDIEVAL -> "Liber vestigii mei"
     TemaId.TEMPLARIO -> "Pauperes commilitones · Vestigium Mei"
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
-    TemaId.GALIA -> "EXPEDIENTE · VESTIGIUM MEI"
+    TemaId.GALIA -> "ΝΕΜΗΤΟΝ, el bosque sagrado · Vestigium Mei"
     TemaId.ARCONTES -> "ϫⲱⲱⲙⲉ · Vestigium Mei · el códice escondido"
     TemaId.FRENTE -> "VESTIGIUM MEI · CÉLULA K-7"
     TemaId.REFUGIO -> "REFUGIO · BITÁCORA VESTIGIUM-MEI"
@@ -370,15 +370,41 @@ object Reportes {
                     y += 54f
                 }
                 TemaId.GALIA -> {
-                    // La barra del expediente se abre en el centro para el ojo que lo mira todo.
-                    val yc = yy + 16f
-                    val barra = L.relleno(L.primario)
-                    c.drawRect(M, yc - 4f, cx - 70f, yc + 4f, barra); c.drawRect(cx + 70f, yc - 4f, W - M, yc + 4f, barra)
-                    val ojo = Path().apply { moveTo(cx - 54f, yc); quadTo(cx, yc - 34f, cx + 54f, yc); quadTo(cx, yc + 34f, cx - 54f, yc); close() }
-                    c.drawPath(ojo, L.relleno(L.superficie2))
-                    c.drawPath(ojo, L.trazo(L.tinta, 3f))
-                    c.drawCircle(cx, yc, 10f, barra); c.drawCircle(cx, yc, 4f, L.relleno(L.tinta))
-                    y += 54f
+                    // La onda de La Tène, que suelta un zarcillo con su botón en cada cresta, corre de orilla a orilla y se abre
+                    // en medio para el torques de oro, con la torsión marcada y sus dos remates que se miran.
+                    val yc = yy + 26f
+                    val rr = 24f
+                    val tallo = L.trazo(L.primario, 2.2f)
+                    val boton = L.relleno(L.primario)
+                    val paso = 26f; val alto = 9f
+                    val onda = Path()
+                    var x = M; var arriba = true; var abierto = false
+                    while (x + paso / 2 <= W - M) {
+                        val xm = x + paso / 2
+                        if (abs(x - cx) > rr + 18f && abs(xm - cx) > rr + 18f) {
+                            val s = if (arriba) -1f else 1f
+                            if (!abierto) { onda.moveTo(x, yc); abierto = true }
+                            onda.cubicTo(x + paso * 0.15f, yc + s * alto, x + paso * 0.35f, yc + s * alto, xm, yc)
+                            c.drawCircle(x + paso * 0.3f, yc + s * alto * 0.3f, 2.4f, boton)
+                        } else abierto = false
+                        x = xm; arriba = !arriba
+                    }
+                    c.drawPath(onda, tallo)
+                    val oro = L.secundario
+                    c.drawArc(RectF(cx - rr, yc - rr, cx + rr, yc + rr), 113f, 314f, false, L.trazo(oro, 8f))
+                    val torsion = L.trazo(L.mezcla(oro, L.fondo, 0.45), 1.6f)
+                    var g = 125.0
+                    while (g < 415.0) {
+                        val a = Math.toRadians(g)
+                        val px = cx + rr * Math.cos(a).toFloat(); val py = yc + rr * Math.sin(a).toFloat()
+                        c.drawLine(px - 3f * Math.cos(a + 0.6).toFloat(), py - 3f * Math.sin(a + 0.6).toFloat(), px + 3f * Math.cos(a + 0.6).toFloat(), py + 3f * Math.sin(a + 0.6).toFloat(), torsion)
+                        g += 14.0
+                    }
+                    listOf(113.0, 67.0).forEach { gr ->
+                        val a = Math.toRadians(gr)
+                        c.drawCircle(cx + rr * Math.cos(a).toFloat(), yc + rr * Math.sin(a).toFloat(), 7f, L.relleno(oro))
+                    }
+                    y += 62f
                 }
                 TemaId.ARCONTES -> {
                     // Como el título al final de un tratado del códice: dos filas de diplés que apuntan al centro y, en medio, las

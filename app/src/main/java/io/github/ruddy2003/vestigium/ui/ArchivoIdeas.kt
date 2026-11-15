@@ -53,7 +53,9 @@ fun archivoIdeas(t: TemaId): ArchivoIdeas = when (t) {
     TemaId.RUINAS -> ArchivoIdeas("lata", "latas", "nota", "notas", true, "la estantería rescatada")
     TemaId.NAVIDAD -> ArchivoIdeas("caja de galletas", "cajas de galletas", "tarjeta de felicitación", "tarjetas de felicitación", true, "la alacena de la cocina")
     TemaId.DISTOPIA -> ArchivoIdeas("gaveta", "gavetas", "expediente", "expedientes", true, "el archivo del ministerio")
-    TemaId.GALIA -> ArchivoIdeas("gaveta", "gavetas", "expediente", "expedientes", true, "el archivo del ministerio")
+    // Las ideas, rayadas en tablillas de haya que se guardan en cestas de mimbre, en el granero sobre pilotes del oppidum (las
+    // del diario van en el haz de tablillas de la casa grande).
+    TemaId.GALIA -> ArchivoIdeas("cesta de mimbre", "cestas de mimbre", "tablilla de haya", "tablillas de haya", true, "el granero sobre pilotes")
     // Las ideas sueltas de la comunidad, en hojas de papiro guardadas en arquetas de olivo (como las hojas sueltas que se
     // hallaron metidas en la tapa de un códice de Nag Hammadi), en la cueva donde se reúnen.
     TemaId.ARCONTES -> ArchivoIdeas("arqueta de olivo", "arquetas de olivo", "hoja suelta", "hojas sueltas", true, "la cueva de la reunión escondida")

@@ -68,6 +68,7 @@ import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import io.github.ruddy2003.vestigium.ui.figEstrella
 import io.github.ruddy2003.vestigium.ui.figOndulado
+import io.github.ruddy2003.vestigium.ui.biblioteca.caballoGalia
 import io.github.ruddy2003.vestigium.ui.figPoligono
 import io.github.ruddy2003.vestigium.ui.figuraTema
 import java.time.LocalDate
@@ -255,7 +256,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.MEDIEVAL -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 7.dp, bottomStart = 1.dp)
     TemaId.TEMPLARIO -> CutCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 5.dp, bottomStart = 5.dp)
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.GALIA -> RectangleShape
+    TemaId.GALIA -> RoundedCornerShape(topStart = 2.dp, topEnd = 5.dp, bottomEnd = 5.dp, bottomStart = 5.dp)   // la tablilla de roble, de esquinas gastadas
     TemaId.ARCONTES -> RoundedCornerShape(topStart = 3.dp, topEnd = 12.dp, bottomEnd = 3.dp, bottomStart = 6.dp)   // un sillar de caliza, gastado
     TemaId.FRENTE -> RoundedCornerShape(topStart = 2.dp, topEnd = 10.dp, bottomEnd = 10.dp, bottomStart = 2.dp)   // la tecla curva de la consola
     TemaId.REFUGIO -> RoundedCornerShape(7.dp)
@@ -387,13 +388,18 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 figuraTema(tema, tinta, pc, 2.6f * s, Color.White)
             }
         }
+        // Una tablilla: el marco de roble y, por dentro, el filo de la cera; hoy, el marco se dora y lleva arriba a la derecha las
+        // muescas de la noche. El día sellado lleva el sello de barro con el caballo de las monedas.
         TemaId.GALIA -> {
-            contorno(if (hoy) acento else linea, if (hoy) 1.6f else 0.9f)
-            drawRect(if (hoy) acento else linea, Offset(w * 0.55f, 0f), Size(w * 0.45f, 2.6f * s))
-            if (sellado) rotate(-14f, pc) {
-                val tinta = Color(0xFFB3261E)
-                drawRect(tinta, Offset(pc.x - 5.5f * s, pc.y - 3.6f * s), Size(11f * s, 7.2f * s), style = Stroke(s))
-                figuraTema(tema, tinta, pc, 2.6f * s, Color.White)
+            val g = (if (hoy) 2.4f else 1.8f) * s
+            contorno(if (hoy) oro else linea, if (hoy) 1.4f else 0.9f)
+            drawRect((if (hoy) oro else linea).copy(alpha = 0.4f), Offset(g, g), Size(w - 2 * g, h - 2 * g), style = Stroke(0.6f * s))
+            if (hoy) for (k in 0 until 3) drawLine(oro, Offset(w - (4.5f + k * 1.7f) * s, 2.6f * s), Offset(w - (4.5f + k * 1.7f) * s, 6.6f * s), 0.7f * s)
+            if (sellado) {
+                val barro = Color(0xFFA4704A)
+                drawPath(figOndulado(pc, 5.4f * s, 9, 0.1f), barro)
+                drawCircle(Color.Black.copy(alpha = 0.25f), 5.4f * s, pc, style = Stroke(0.5f * s))
+                caballoGalia(pc, 3.7f * s, Color(0xFF5E3519))
             }
         }
         // Un sillar de caliza: el borde fino y tres marcas del cincel abajo; hoy, la luz de la lámpara entra por la esquina y

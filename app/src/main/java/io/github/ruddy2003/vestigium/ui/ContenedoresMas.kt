@@ -57,6 +57,8 @@ object ContenedoresMas {
             Contenedor.CARTUCHO -> Color(0xFFEDE8DC)
             // El papiro de las hojas del códice que se guarda en la jarra.
             Contenedor.JARRA -> Color(0xFFEDE2C4)
+            // La cera de miel de la tablilla.
+            Contenedor.HAZ -> Color(0xFFEADFC1)
             Contenedor.CUADERNO -> Color(0xFFFBFCFD)
             Contenedor.VUELO -> Color(0xFFF4F6FA)
             // Papel sintético impermeable, gris verdoso, de las bitácoras que se mojan.
@@ -276,6 +278,40 @@ object ContenedoresMas {
                     drawOval(Color.Black.copy(alpha = if (oscuro) 0.4f else 0.12f), Offset(o.x - 4 * d, o.y - 3 * d), Size(8 * d, 6 * d))
                     drawOval(fibra.copy(alpha = 0.35f), Offset(o.x - 4 * d, o.y - 3 * d), Size(8 * d, 6 * d), style = Stroke(0.6f * d))
                 }
+            }
+            Contenedor.HAZ -> {
+                // La cera de la tablilla: las pasadas anchas de la espátula que la alisó, el rastro de lo escrito antes y borrado,
+                // la onda de La Tène bajo la cabecera, una muesca en el margen por cada renglón (de cinco en cinco, la quinta
+                // cruzada: la noche cuenta) y, abajo a la derecha, un trozo que se deja liso, con su hoja de roble.
+                val oro = if (oscuro) Color(0xFFF2A040) else Color(0xFF7E590C)
+                val az = java.util.Random(31)
+                repeat(7) {
+                    val y = size.height * az.nextFloat()
+                    drawLine(Color.White.copy(alpha = if (oscuro) 0.03f else 0.12f), Offset(0f, y), Offset(size.width, y + (az.nextFloat() - 0.5f) * 40 * d), (6f + 10f * az.nextFloat()) * d)
+                }
+                repeat(14) {
+                    val x = margen + (size.width - margen) * 0.8f * az.nextFloat(); val y = 110 * d + (size.height - 200 * d).coerceAtLeast(1f) * az.nextFloat()
+                    drawLine(tinta.copy(alpha = 0.035f), Offset(x, y), Offset(x + (10f + 30f * az.nextFloat()) * d, y + (az.nextFloat() - 0.5f) * 2 * d), 1.2f * d, StrokeCap.Round)
+                }
+                val onda = Path(); var x = margen - 10 * d; var arriba = true
+                onda.moveTo(x, 84 * d)
+                while (x + 8 * d <= size.width - 12 * d) {
+                    val s = if (arriba) -1f else 1f
+                    onda.cubicTo(x + 2.4f * d, 84 * d + s * 3 * d, x + 5.6f * d, 84 * d + s * 3 * d, x + 8 * d, 84 * d)
+                    drawCircle(oro.copy(alpha = 0.5f), 0.9f * d, Offset(x + 2.4f * d, 84 * d + s * 1 * d))
+                    x += 8 * d; arriba = !arriba
+                }
+                drawPath(onda, oro.copy(alpha = 0.55f), style = Stroke(0.9f * d, cap = StrokeCap.Round))
+                var yy = 96 * d; var k = 0
+                while (yy < size.height - 16 * d) {
+                    val xm = margen - 14 * d + (k % 5) * 2.2f * d
+                    if (k % 5 == 4) drawLine(tinta.copy(alpha = 0.22f), Offset(margen - 15.5f * d, yy - renglon * 0.2f), Offset(margen - 5 * d, yy - renglon * 0.55f), 0.8f * d, StrokeCap.Round)
+                    else drawLine(tinta.copy(alpha = 0.22f), Offset(xm, yy - renglon * 0.6f), Offset(xm, yy - renglon * 0.15f), 0.8f * d, StrokeCap.Round)
+                    yy += maxOf(renglon, 1f); k++
+                }
+                val lisa = Offset(size.width - 46 * d, size.height - 46 * d)
+                drawCircle(Color.White.copy(alpha = if (oscuro) 0.03f else 0.14f), 30 * d, lisa)
+                with(TrazosGalia) { hojaRoble(lisa, 26 * d, 30f, Color(0xFF4E6B2E).copy(alpha = if (oscuro) 0.35f else 0.45f), Color(0xFF2E4219).copy(alpha = 0.4f)) }
             }
             Contenedor.CARTUCHO -> {
                 // La lectura del cartucho: la cabecera con la célula y la pista, la franja ámbar del piloto, a la izquierda la
@@ -542,6 +578,24 @@ object ContenedoresMas {
                     listOf(-3.5f, 3.5f).forEach { dy -> drawLine(correa, Offset(8 * d, y + dy * d), Offset(24 * d, y + dy * d), 2 * d, StrokeCap.Round) }
                     drawCircle(correa, 3 * d, Offset(24 * d, y))
                     drawCircle(Color.White.copy(alpha = 0.12f), 1 * d, Offset(23 * d, y - 1 * d))
+                }
+            }
+            Contenedor.HAZ -> {
+                // El canto de roble del marco de la tablilla, con su veta, y las bisagras: un tiento de cuero que entra por dos
+                // agujeros, da la vuelta al canto y se anuda, con los cabos sueltos.
+                val roble = if (oscuro) Color(0xFF3A2C1C) else Color(0xFF8A6A40)
+                drawRect(Brush.horizontalGradient(listOf(lerp(roble, Color.White, 0.12f), roble, lerp(roble, Color.Black, 0.35f)), 2 * d, 16 * d), Offset(2 * d, 0f), Size(14 * d, size.height))
+                var yv = 6 * d; var kv = 0
+                while (yv < size.height) { drawLine(Color.Black.copy(alpha = 0.18f), Offset(4 * d + (kv % 3) * 3 * d, yv), Offset(5 * d + (kv % 3) * 3 * d, yv + 22 * d), 0.6f * d); yv += 9 * d; kv++ }
+                drawLine(Color.Black.copy(alpha = 0.3f), Offset(16 * d, 0f), Offset(16 * d, size.height), 1 * d)
+                val tiento = if (oscuro) Color(0xFF3A2614) else Color(0xFF5A3A22)
+                listOf(0.22f, 0.5f, 0.78f).forEach { f ->
+                    val y = size.height * f
+                    listOf(-5f, 5f).forEach { dy -> drawCircle(Color.Black.copy(alpha = if (oscuro) 0.6f else 0.45f), 1.8f * d, Offset(10 * d, y + dy * d)) }
+                    drawArc(tiento, 90f, 180f, false, Offset(0f, y - 5 * d), Size(20 * d, 10 * d), style = Stroke(2.2f * d, cap = StrokeCap.Round))
+                    drawCircle(tiento, 2.6f * d, Offset(12 * d, y + 5 * d))
+                    drawLine(tiento, Offset(12 * d, y + 5 * d), Offset(22 * d, y + 14 * d), 1.6f * d, StrokeCap.Round)
+                    drawLine(tiento, Offset(12 * d, y + 5 * d), Offset(19 * d, y + 17 * d), 1.6f * d, StrokeCap.Round)
                 }
             }
             Contenedor.CARTUCHO -> {
