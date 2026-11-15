@@ -3076,4 +3076,20 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("fieltro", "2027-09-07", listOf(13.0)),                    // la semana del fieltro: las tiras de fieltro nuevo colgadas
         Triple("temur", "2031-07-28", listOf(13.0, 21.0)),                // vuelve Temür: su tienda junto a la de Bat, y la fiesta de noche junto al fuego
     ),
+    // El joven naturalista (Botánico, tanda S13): dos cuadros, el bergantín (la popa, con la mesa de trabajo y la costa del tramo del viaje) y la selva (la galería de la casa de Botafogo).
+    "naturalista" to listOf(
+        Triple("barco", "2027-03-21", HORAS_CUADRO),                      // a bordo, navegando a lo largo de la costa de Brasil: la mesa, los cajones y, de noche, el farol y la luna
+        Triple("selva", "2027-06-12", HORAS_CUADRO),                      // la galería de Botafogo con la colección viva, la selva y la bahía (decisión 21: 71 días)
+        Triple("puerto", "2027-04-10", listOf(13.0, 21.0)),               // fondeado en Río: el puerto de cerca y, de noche, sus luces
+        Triple("fiesta", "2028-01-01", listOf(13.0, 21.0)),               // el año nuevo: el barco empavesado con banderas de señales
+        Triple("nieve", "2027-12-18", listOf(10.0)),                      // Tierra del Fuego: montañas negras, nieve en las cumbres y escarcha a bordo
+        Triple("cabo_hornos", "2027-12-28", listOf(10.0)),                // la tormenta del cabo de Hornos: velas aferradas y el horizonte inclinado
+        Triple("volcan", "2029-12-01", listOf(21.0)),                     // el volcán de la costa echando fuego en la noche
+        Triple("envio", "2027-08-19", listOf(13.0)),                      // el primer cajón sale hacia Inglaterra: los cajones casi vacíos
+        Triple("ruinas", "2030-03-04", listOf(13.0)),                     // Concepción en ruinas, después del terremoto
+        Triple("calma", "2031-03-10", listOf(13.0)),                      // la calma chicha del Índico: el mar como un plato y las velas caídas
+        Triple("islas", "2030-09-25", listOf(13.0)),                      // las Galápagos, todavía sin cuadro propio: el bergantín fondeado frente a ellas, sin la mesa
+        Triple("botafogo", "2027-04-25", listOf(13.0)),                   // la mudanza a Botafogo: los libros mojados al sol y el bergantín en la bahía
+        Triple("escarabajos", "2027-05-20", listOf(13.0)),                // el día de los escarabajos: el paraguas al revés y los escarabajos en la mesa
+    ),
 )
