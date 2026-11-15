@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.SelvaBotanico.k
 import io.github.ruddy2003.vestigium.ui.escenas.SelvaBotanico.pc
@@ -59,12 +60,10 @@ internal object JardinSelva {
 
     /** El macizo de plátanos, entre el árbol y el helecho: la mata de atrás y la del racimo, delante. */
     private val PLATANOS = listOf(Triple(V3(2.35f, sueloEn(2.35f, 13.6f), 13.6f), 3.5f, false), Triple(V3(1.55f, sueloEn(1.55f, 12.2f), 12.2f), 4.1f, true))
+    private val HOJAS_PLATANOS = listOf(5, 7)
 
     /** Las matas de heliconias: pocas y grandes, para que se lean sus flores. */
     private val HELICONIAS = listOf(Triple(-1.5f, 7.4f, 1.8f), Triple(2.55f, 8.1f, 1.9f), Triple(3.45f, 6.9f, 1.7f))
-
-    /** Lo que es selva en el lienzo (no la bahía): hasta la ladera que baja al agua y la playa. */
-    private val SOLO_SELVA: Path = poligono(listOf(Offset(-10f, -10f), Offset(236f, -10f), Offset(262f, 70f), Offset(300f, 121f), Offset(262f, 148f), Offset(258f, 200f), Offset(-10f, 200f)))
 
     /** El naranjo, a la izquierda, detrás de la mesa. */
     private val NARANJO = V3(-3.3f, sueloEn(-3.3f, 10.5f), 10.5f)
@@ -94,7 +93,7 @@ internal object JardinSelva {
         }
         arroyo(m, luz, az)
         // El velo húmedo entre lo lejano y lo de en medio: la montaña y la linde se van al azul pálido.
-        velo(m, luz, 58f, 160f, 0.8f, 0.36f)
+        velo(m, luz, 58f, 160f, 0.8f, 0.3f)
         // El árbol grande, con sus lianas y sus bromelias y orquídeas en las horquillas: más claro que lo de delante.
         arbol(m, luz)
         // Otro velo, más tenue, entre el árbol y lo de delante.
@@ -103,7 +102,7 @@ internal object JardinSelva {
             // El macizo de plátanos, la mata de atrás primero; la del racimo, de cara.
             for ((i, t) in PLATANOS.withIndex()) {
                 val (q, h, racimo) = t; val pie = pc(q); val (pin, cl) = pinYHaz(luz, q.x, h * 0.6f, q.z)
-                platano(pin, pie, h * k(q.z), Azar(Semilla.de("botanico", "platano jardin", i + 4)), 0.1f, racimo = racimo, hojas = 7, contraluz = maxOf(cl, BovedaSelva.contraluz(luz, pie + Offset(0f, -h * k(q.z) * 0.7f))))
+                platano(pin, pie, h * k(q.z), Azar(Semilla.de("botanico", "platano jardin", i + 4)), 0.1f, racimo = racimo, hojas = HOJAS_PLATANOS[i], contraluz = maxOf(cl, BovedaSelva.contraluz(luz, pie + Offset(0f, -h * k(q.z) * 0.7f))))
             }
             // El helecho arborescente, con su estrella de frondas contra el claro.
             run { val pie = pc(HELECHO); val (pin, cl) = pinYHaz(luz, HELECHO.x, ALTO_HELECHO, HELECHO.z)
@@ -142,8 +141,8 @@ internal object JardinSelva {
         val tiempo = when (m.ficha.clima) { Clima.NIEBLA -> 1f; Clima.LLUVIA, Clima.TORMENTA -> 0.7f; Clima.NIEVE -> 0.6f; else -> base + 0.35f * luz.bruma }
         val k = (tiempo * cuanta).coerceIn(0f, 1f); if (k < 0.02f) return
         val c = luz.l.tono(lerp(lerp(luz.l.bruma, Color(0xFFDCE8EC), 0.45f), luz.l.alto, 0.15f)).let { lerp(it, luz.l.bruma, luz.l.noche * 0.6f) }
-        // Solo sobre la selva: la bahía, al aire libre, queda limpia.
-        clipPath(SOLO_SELVA) {
+        // Solo sobre la montaña y la selva (siguiendo su silueta): el cielo y la bahía, al aire libre, quedan limpios.
+        clipPath(LejosSelva.TIERRA) {
             drawRect(Brush.verticalGradient(listOf(c.copy(alpha = 0f), c.copy(alpha = 0.45f * k), c.copy(alpha = 0.65f * k), c.copy(alpha = 0f)), y0 - 30f, y1), Offset(0f, y0 - 30f), Size(ANCHO, y1 - y0 + 30f))
             val az = Azar(Semilla.de("botanico", "bruma entre", y0))
             repeat(4) { mancha(Offset(az.entre(-20f, 300f), az.entre(y0 + 10f, y1 - 10f)), az.entre(70f, 140f), az.entre(6f, 12f), c, 0.55f * k) }
@@ -161,7 +160,7 @@ internal object JardinSelva {
         // Al sol, el suelo del jardín se enciende a manchas (lo que dejan pasar los plátanos); a la sombra, se ahonda.
         if (luz.directa > 0.2f && !luz.deLuna) repeat(12) { val z = 3.6f + 6f * az.real(); val x = 2.7f + az.entre(0f, 2.6f); val c = pc(x, sueloEn(x, z), z); val e = k(z)
             mancha(c, e * az.entre(0.4f, 0.9f), e * az.entre(0.1f, 0.22f), lerp(luz.color, C.HOJA_LUZ, 0.5f), 0.22f * luz.directa) }
-        repeat(18) { val z = 4.6f + 5.5f * az.real(); val x = 2.7f + az.entre(0f, 2.6f) + (z - 3.4f) * 0.15f; sitios += Triple(V3(x, sueloEn(x, z), z), az.entero(3), az.entre(0.45f, 0.85f)) }
+        repeat(14) { val z = 4.6f + 5.5f * az.real(); val x = 2.7f + az.entre(0f, 2.6f) + (z - 3.4f) * 0.15f; sitios += Triple(V3(x, sueloEn(x, z), z), az.entero(3), az.entre(0.45f, 0.85f)) }
         repeat(5) { val z = 5.6f + 2.5f * az.real(); val x = az.entre(1.5f, 1.85f); sitios += Triple(V3(x, sueloEn(x, z), z), 0, az.entre(0.35f, 0.5f)) }
         for ((q, tipo, tam) in sitios.sortedByDescending { it.first.z }) {
             val c = pc(q); val e = k(q.z) * tam; val p = pinJardin(luz, q.x, q.y + 0.4f, q.z)
@@ -171,7 +170,7 @@ internal object JardinSelva {
                     val claras = ArrayList<Offset>(); val oscuras = ArrayList<Offset>(); val n = 7 + az.entero(4)
                     repeat(n) { j -> val a = -PI.toFloat() / 2f + (j - (n - 1) / 2f) * (2.8f / n) + az.entre(-0.1f, 0.1f); val l = e * az.entre(0.7f, 1.05f)
                         val fin = c + Offset(cos(a) * l, sin(a) * l * 0.55f + l * 0.35f * abs(cos(a))); val ctrl = c + Offset(cos(a) * l * 0.4f, sin(a) * l * 0.8f)
-                        for (s in 1..9) { val t = s / 10f; val u = 1f - t; val qq = c * (u * u) + ctrl * (2f * u * t) + fin * (t * t); val w = l * 0.13f * (1f - t * 0.7f)
+                        for (s in 1..7) { val t = s / 8f; val u = 1f - t; val qq = c * (u * u) + ctrl * (2f * u * t) + fin * (t * t); val w = l * 0.13f * (1f - t * 0.7f)
                             claras += qq; claras += qq + Offset(w * 0.6f, -w * 0.5f); oscuras += qq; oscuras += qq + Offset(-w * 0.6f, -w * 0.3f) } }
                     val verde = if (tipo == 0) lerp(C.HOJA, C.SELVA, 0.35f) else lerp(C.SELVA, C.HOJA, 0.25f)
                     drawPoints(oscuras, PointMode.Lines, p.por(verde, -0.5f, 0.05f), max(0.6f, e * 0.04f), StrokeCap.Round)
@@ -205,7 +204,7 @@ internal object JardinSelva {
         val linde = (0..20).map { val x = -12f + 286f * it / 20f; Offset(x, 140f + 6f * sin(it * 1.7f) + 4f * sin(it * 0.6f) + (if (x > 230f) (x - 230f) * 0.35f else 0f)) }
         drawPath(curva(linde, 190f), Brush.verticalGradient(listOf(l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.6f), 0.2f), l.tono(lerp(C.SELVA_OSC, C.BREA, 0.3f), 0.12f)), 135f, 190f))
         val dabsO = ArrayList<Offset>(); val dabsC = ArrayList<Offset>()
-        repeat(260) { val x = az.entre(-10f, 275f); val y = az.entre(136f, 175f); dabsO += Offset(x, y); if (az.real() < 0.5f) dabsC += Offset(x + 1f, y - 1.4f) }
+        repeat(170) { val x = az.entre(-10f, 275f); val y = az.entre(136f, 175f); dabsO += Offset(x, y); if (az.real() < 0.5f) dabsC += Offset(x + 1f, y - 1.4f) }
         drawPoints(dabsO, PointMode.Points, l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.35f), 0.2f), 3.2f, StrokeCap.Round)
         drawPoints(dabsC, PointMode.Points, l.tono(lerp(C.HOJA, C.HOJA_LUZ, 0.3f), 0.2f).copy(alpha = 0.5f + 0.4f * luz.r.dia), 1.6f, StrokeCap.Round)
         // El suelo del jardín: tierra negra cubierta de helechos bajos, musgo y hojarasca; baja a la playa por la derecha.
@@ -216,11 +215,11 @@ internal object JardinSelva {
             // La orilla de la playa: la arena se mete entre la hierba.
             drawPath(poligono(seca + listOf(Offset(ANCHO + 10f, 200f), Offset(262f, 196f))), Brush.verticalGradient(listOf(l.tono(lerp(C.ARENA, C.HOJA, 0.25f), 0.12f), Color.Transparent), 165f, 200f))
             // El musgo y la hojarasca: manchas blandas, verdes y pardas.
-            repeat(40) { val q = V3(az.entre(-4f, 5f), 0f, az.entre(5.5f, 22f)); val c = pc(q.x, sueloEn(q.x, q.z), q.z); val e = k(q.z)
+            repeat(16) { val q = V3(az.entre(-4f, 5f), 0f, az.entre(5.5f, 22f)); val c = pc(q.x, sueloEn(q.x, q.z), q.z); val e = k(q.z)
                 mancha(c, e * az.entre(0.4f, 1.1f), e * az.entre(0.08f, 0.2f), if (it % 3 == 0) l.tono(lerp(C.CUERO, C.SELVA_OSC, 0.4f), 0.1f) else l.tono(lerp(C.SELVA, C.HOJA, 0.35f), 0.1f), 0.35f) }
             // Los helechos bajos: matas de frondas cortas que se abren en abanico, más grandes cuanto más cerca.
             val oscuras = ArrayList<Offset>(); val claras = ArrayList<Offset>()
-            repeat(150) {
+            repeat(65) {
                 val q = V3(az.entre(-4.5f, 5.5f), 0f, 8.5f + 14f * az.real() * az.real()); val c = pc(q.x, sueloEn(q.x, q.z), q.z); val e = k(q.z) * az.entre(0.25f, 0.42f)
                 repeat(7) { j -> val a = -PI.toFloat() / 2f + (j - 3) * 0.42f + az.entre(-0.15f, 0.15f); val fin = c + Offset(cos(a) * e, sin(a) * e * 0.75f + e * 0.25f * abs(cos(a)))
                     (if (cos(a) * (if (p.solALaDerecha) 1f else -1f) > 0.1f) claras else oscuras).apply { add(c); add(fin) } }
@@ -235,10 +234,11 @@ internal object JardinSelva {
             for ((i, q) in camino.withIndex()) { if (i == 0) continue; val e = ancho[i]; drawOval(p.arriba(lerp(C.ROCA, C.ARENA, 0.3f), 0.1f), Offset(q.x - e * 0.25f, q.y - e * 0.09f), Size(e * 0.5f, e * 0.18f)); drawOval(p.sombra(C.ROCA, 0.1f).copy(alpha = 0.5f), Offset(q.x - e * 0.25f, q.y), Size(e * 0.5f, e * 0.06f)) }
         }
         // Las sombras del jardín: las del árbol grande, los plátanos y los helechos, tumbadas con el sol.
-        capaSombra(luz.r, 0.85f) { col ->
+        // (la capa, recortada al suelo del jardín: no hace falta que cubra el cielo)
+        clipRect(0f, 128f, ANCHO, ALTO) { capaSombra(luz.r, 0.85f) { col ->
             for ((x, z, alto, radio) in listOf(Cuatro(ARBOL.x, ARBOL.z, 9f, 1.6f), Cuatro(1.55f, 12.2f, 4.1f, 1.6f), Cuatro(2.35f, 13.6f, 3.5f, 1.4f), Cuatro(HELECHO.x, HELECHO.z, ALTO_HELECHO, 1.5f), Cuatro(NARANJO.x, NARANJO.z, 3.3f, 1.3f), Cuatro(-1.6f, 6.8f, 3.5f, 1.4f)))
                 sombra(sombraEnElSuelo(luz, V3(x, sueloEn(x, z), z), alto, radio), col)
-        }
+        } }
     }
 
     private data class Cuatro(val a: Float, val b: Float, val c: Float, val d: Float)

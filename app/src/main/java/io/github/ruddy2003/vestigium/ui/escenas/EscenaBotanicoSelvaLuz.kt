@@ -218,9 +218,12 @@ internal object LuzSelva {
      */
     fun DrawScope.luzEnPlano(luz: Luz, zona: Path, hp: Float, extra: List<Path>, fuerza: Float = 1f) {
         if (luz.directa < 0.03f) return
-        val a = ((if (luz.deLuna) 0.62f else 0.47f) * luz.directa * fuerza).coerceIn(0f, 1f)
+        val a = ((if (luz.deLuna) 0.78f else 0.47f) * luz.directa * fuerza).coerceIn(0f, 1f)
+        // La capa, solo del tamaño del plano (no del cuadro entero): cuesta mucho menos.
+        val caja = zona.getBounds().inflate(2f).intersect(Rect(0f, 0f, ANCHO, ALTO))
+        if (caja.isEmpty) return
         drawIntoCanvas { c ->
-            c.saveLayer(Rect(0f, 0f, ANCHO, ALTO), Paint().apply { blendMode = BlendMode.Plus; alpha = a })
+            c.saveLayer(caja, Paint().apply { blendMode = BlendMode.Plus; alpha = a })
             if (luz.deLuna) {
                 // La luna no entra por todas partes: solo por el claro grande de la bóveda sobre el tablado. Su mancha tiene la
                 // forma de ese hueco (con los bocados de las hojas en su orilla), clara y fría, y la reja de hojas la cruza.
@@ -237,17 +240,18 @@ internal object LuzSelva {
                     sombraDeFronda(luz, Fronda(V3(c0.x - 1.35f * r, hp + 0.01f, c0.y + 0.6f * r), V3(c0.x + 0.2f * r, hp + 0.01f, c0.y - 0.7f * r), 0f, 0.32f * r), hp)
                 } }
             } else drawPath(zona, luz.color)
-            // Todo lo demás, dentro del plano: las rayas de sol de los rasgones no se salen de él.
+            // Todo lo demás, dentro del plano: las rayas de sol de los rasgones no se salen de él. (Lo que cae fuera de la
+            // caja del plano ni se traza.)
             clipPath(zona) {
             // Las sombras rectas: el tejado, la casa, el poste y los troncos de los plátanos, con su penumbra.
             for (pol in rectas(luz, hp)) enLienzo(pol, hp)?.let { blanda(it, 1.4f + 0.8f * hp) }
             // Las hojas de la bóveda, con su forma y sus rasgones.
-            for (h in BovedaSelva.HOJAS) sombraDeHoja(luz, h, hp)
+            for (h in BovedaSelva.HOJAS) sombraDeHoja(luz, h, hp, caja)
             // Las frondas de encima, en peine.
             for (f in FRONDAS) sombraDeFronda(luz, f, hp)
             for (s in extra) blanda(s, 1.2f)
             // Los claros redondos: solo se ven donde hay sombra (se pintan por detrás de la luz que ya hay).
-            if (!luz.deLuna) for (g in HUECOS) claro(luz, g, hp)
+            if (!luz.deLuna) for (g in HUECOS) claro(luz, g, hp, caja)
             }
             c.restore()
         }
@@ -276,10 +280,12 @@ internal object LuzSelva {
     }
 
     /** La sombra de una hoja de la bóveda en el plano [hp]: su forma, blanda, y una raya de sol en cada rasgón. */
-    private fun DrawScope.sombraDeHoja(luz: Luz, h: BovedaSelva.Hoja3, hp: Float) {
+    private fun DrawScope.sombraDeHoja(luz: Luz, h: BovedaSelva.Hoja3, hp: Float, caja: Rect? = null) {
         val c = h.contorno(7); val pts = recorta((c.subList(0, 8) + c.subList(9, c.size - 1)).map { cae(luz, it, hp) }, 0.6f)
         if (pts.size < 3) return
-        val s = cerrada(pts.map { pc(it.x, hp, it.y) })
+        val enLienzo = pts.map { pc(it.x, hp, it.y) }
+        if (caja != null && (enLienzo.maxOf { it.x } < caja.left || enLienzo.minOf { it.x } > caja.right || enLienzo.maxOf { it.y } < caja.top || enLienzo.minOf { it.y } > caja.bottom)) return
+        val s = cerrada(enLienzo)
         blanda(s, 1.3f + 0.7f * hp)
         // Los rasgones: del borde hacia el nervio, sesgados hacia la punta; el sol pasa por ellos.
         if (h.rasgones.isEmpty()) return
@@ -341,8 +347,9 @@ internal object LuzSelva {
      * estirada con el sol bajo, de borde blando. Más grande cuanto más lejos está el hueco del plano (como en una cámara
      * oscura). **[Aproximación]**: el tamaño se exagera para que se lea.
      */
-    private fun DrawScope.claro(luz: Luz, g: V3, hp: Float) {
+    private fun DrawScope.claro(luz: Luz, g: V3, hp: Float, caja: Rect) {
         val c = cae(luz, g, hp); if (c.y < 1.0f) return
+        pc(c.x, hp, c.y).let { if (!caja.inflate(12f).contains(it)) return }
         val alto = (g.y - hp).coerceAtLeast(0.3f)
         val r = 0.022f * alto + 0.03f
         val estira = 1f + 0.35f * sqrt(luz.sol.sx * luz.sol.sx + luz.sol.sz * luz.sol.sz).coerceAtMost(2.5f)
@@ -402,20 +409,20 @@ internal object LuzSelva {
      */
     fun DrawScope.rayosEntreCopas(luz: Luz) {
         val haces = hacesDeCopas(luz); if (haces.isEmpty()) return
-        val k = (luz.directa * (0.55f + 0.5f * luz.bruma)).coerceIn(0f, 1f)
+        val k = (luz.directa * (0.85f + 0.45f * luz.bruma)).coerceIn(0f, 1.1f)
         val c = lerp(luz.color, Color(0xFFFFF0C0), 0.3f)
         val az = Azar(Semilla.de("botanico", "polvo de los haces"))
         for (h in haces) {
             val d = h.b - h.a; val l = d.getDistance().coerceAtLeast(1f); val n = Offset(-d.y / l, d.x / l)
             for ((ancho, f) in listOf(1.45f to 0.3f, 1f to 0.5f, 0.5f to 0.85f)) {
                 val p = poligono(h.a - n * (h.w0 * ancho), h.a + n * (h.w0 * ancho), h.b + n * (h.w1 * ancho), h.b - n * (h.w1 * ancho))
-                drawPath(p, Brush.linearGradient(listOf(Color.Transparent, c.copy(alpha = (0.12f * k * f).coerceIn(0f, 1f)), c.copy(alpha = (0.2f * k * f).coerceIn(0f, 1f)), c.copy(alpha = (0.08f * k * f).coerceIn(0f, 1f))), h.a, h.b), blendMode = BlendMode.Plus)
+                drawPath(p, Brush.linearGradient(listOf(Color.Transparent, c.copy(alpha = (0.2f * k * f).coerceIn(0f, 1f)), c.copy(alpha = (0.3f * k * f).coerceIn(0f, 1f)), c.copy(alpha = (0.12f * k * f).coerceIn(0f, 1f))), h.a, h.b), blendMode = BlendMode.Plus)
             }
             val polvo = ArrayList<Offset>()
             repeat(14) { val u = az.entre(0.25f, 0.95f); val v = az.entre(-0.8f, 0.8f); polvo += h.a + d * u + n * (v * (h.w0 + (h.w1 - h.w0) * u)) }
             drawPoints(polvo, PointMode.Points, c.copy(alpha = (0.6f * k).coerceIn(0f, 1f)), 0.7f, StrokeCap.Round, blendMode = BlendMode.Plus)
             // Donde llega: el follaje se enciende en verde amarillo.
-            brillo(h.b - d * 0.04f, h.w1 * 1.5f, h.w1 * 0.55f, lerp(c, ColorBotanico.HOJA_LUZ, 0.35f), (0.32f * k).coerceIn(0f, 1f))
+            brillo(h.b - d * 0.04f, h.w1 * 1.6f, h.w1 * 0.6f, lerp(c, ColorBotanico.HOJA_LUZ, 0.35f), (0.45f * k).coerceIn(0f, 1f))
         }
     }
 
@@ -459,8 +466,8 @@ internal object LuzSelva {
         val f = luz.lampara; if (f < 0.05f || luz.l.noche < 0.25f) return
         val q = CercaSelva.LAMPARA; val alcance = 240f
         if (pts.minOf { (it - q).getDistance() } > alcance) return
-        val calido = lerp(C.LUMBRE, C.NARANJA, 0.6f); val k = (f * (0.5f + 0.5f * luz.l.noche)).coerceIn(0f, 1f)
-        val brocha = Brush.radialGradient(listOf(calido.copy(alpha = 0.95f * k), calido.copy(alpha = 0.62f * k), calido.copy(alpha = 0.24f * k), calido.copy(alpha = 0f)), q, alcance)
+        val calido = lerp(C.LUMBRE, C.NARANJA, 0.55f); val k = (f * (0.75f + 0.25f * luz.l.noche)).coerceIn(0f, 1f)
+        val brocha = Brush.radialGradient(listOf(calido.copy(alpha = k), calido.copy(alpha = 0.82f * k), calido.copy(alpha = 0.36f * k), calido.copy(alpha = 0f)), q, alcance)
         clipPath(cerrada(pts)) { clipPath(sombrasDeLaLampara(z), ClipOp.Difference) { drawCircle(brocha, alcance, q, blendMode = BlendMode.Plus) } }
     }
 

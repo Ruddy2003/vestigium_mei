@@ -112,6 +112,28 @@ class EscenaBotanicoSelvaPrueba {
         }
     }
 
+    /** Con sol hay tres o cuatro haces entre las copas, que cambian de sitio con la hora; de noche y con el cielo cerrado, ninguno. */
+    @Test fun losHacesCambianDeSitioConLaHora() {
+        val manana = LuzSelva.hacesDeCopas(LuzSelva.Luz(momento("2027-06-12", 8.0)))
+        val tarde = LuzSelva.hacesDeCopas(LuzSelva.Luz(momento("2027-06-12", 16.0)))
+        assertTrue(manana.size in 3..4 && tarde.size in 3..4)
+        // Donde llega cada haz se mueve con el sol (más de diez unidades del lienzo entre la mañana y la tarde).
+        for (i in manana.indices) assertTrue("haz $i", (manana[i].b - tarde[i].b).getDistance() > 10f)
+        // Y algo encienden en el jardín (lo que tocan se pinta con la luz del sol).
+        val b = manana.first().b - (manana.first().b - manana.first().a) * 0.3f
+        assertTrue(LuzSelva.enHaz(LuzSelva.Luz(momento("2027-06-12", 8.0)), b) > 0.5f)
+        assertTrue(LuzSelva.hacesDeCopas(LuzSelva.Luz(momento("2027-06-12", 21.0))).isEmpty())
+        assertTrue(LuzSelva.hacesDeCopas(LuzSelva.Luz(conClima("2027-06-12", 10.0, Clima.LLUVIA))).isEmpty())
+    }
+
+    /** La lámpara, baja junto al poste, tumba hacia arriba la sombra del poste y la de su bromelia en las hojas de detrás. */
+    @Test fun laLamparaTumbaSombrasEnLasHojas() {
+        val enLasHojas = LuzSelva.sombrasDeLaLampara(5.5f).getBounds()
+        assertFalse(enLasHojas.isEmpty)
+        // Más grandes que el poste mismo (la lámpara está cerca y las agranda) y más arriba que la llama.
+        assertTrue(enLasHojas.width > 12f && enLasHojas.top < CercaSelva.LAMPARA.y - 30f)
+    }
+
     @Test fun elGatoTieneSuTramoLibre() {
         for (d in listOf("2027-04-25", "2027-05-20", "2027-06-12")) for (h in listOf(7.0, 13.0, 21.0)) {
             val m = momento(d, h); val anclas = EscenaBotanico.anclas(m)

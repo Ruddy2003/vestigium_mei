@@ -54,20 +54,27 @@ internal object GaleriaSelva {
         drawPath(tablado, p.arriba(TABLA))
         clipPath(tablado) {
             // Cada tabla con su tono, de la casa al jardín: unas más grises, otras con el rojizo de la madera nueva.
+            // (las vetas, las juntas, los cantos y los clavos de todas las tablas, juntos: cuatro trazos en vez de cientos)
             var x = S.TABLADO_X0; var i = 0
+            val vetas = ArrayList<Offset>(); val juntas = ArrayList<Offset>(); val cantos = ArrayList<Offset>(); val clavosCerca = ArrayList<Offset>(); val clavosLejos = ArrayList<Offset>()
             while (x < S.TABLADO_X1) {
                 val tono = lerp(TABLA, if (i % 3 == 0) C.MADERA else if (i % 3 == 1) C.ROCA else C.ARENA, az.entre(0.05f, 0.22f))
                 drawPath(poligono(pc(x, 0f, S.TABLADO_Z0), pc(x + 0.16f, 0f, S.TABLADO_Z0), pc(x + 0.16f, 0f, S.TABLADO_Z1), pc(x, 0f, S.TABLADO_Z1)), p.arriba(tono))
                 // La veta, en trazos largos; los nudos.
-                repeat(3) { val u = x + az.entre(0.02f, 0.14f); val z0 = az.entre(1.5f, 4.5f); drawLine(p.sombra(tono).copy(alpha = 0.22f), pc(u, 0f, z0), pc(u + az.entre(-0.01f, 0.01f), 0f, z0 + az.entre(0.4f, 1.2f)), 0.4f) }
+                repeat(3) { val u = x + az.entre(0.02f, 0.14f); val z0 = az.entre(1.5f, 4.5f); vetas += pc(u, 0f, z0); vetas += pc(u + az.entre(-0.01f, 0.01f), 0f, z0 + az.entre(0.4f, 1.2f)) }
                 if (az.real() < 0.3f) { val q = pc(x + 0.08f, 0f, az.entre(2.8f, 5f)); drawOval(p.sombra(tono).copy(alpha = 0.45f), Offset(q.x - 1.4f, q.y - 0.5f), Size(2.8f, 1f)) }
                 // La junta, oscura, y el canto de luz de la tabla de al lado.
-                drawLine(p.sombra(lerp(C.MADERA_OSC, C.BREA, 0.3f)).copy(alpha = 0.75f), pc(x, 0f, S.TABLADO_Z0), pc(x, 0f, S.TABLADO_Z1), 0.7f)
-                drawLine(p.luz(tono).copy(alpha = 0.25f), pc(x + 0.012f, 0f, S.TABLADO_Z0), pc(x + 0.012f, 0f, S.TABLADO_Z1), 0.4f)
+                juntas += pc(x, 0f, S.TABLADO_Z0); juntas += pc(x, 0f, S.TABLADO_Z1)
+                cantos += pc(x + 0.012f, 0f, S.TABLADO_Z0); cantos += pc(x + 0.012f, 0f, S.TABLADO_Z1)
                 // Los clavos, de dos en dos, en cada durmiente.
-                var z = 1.6f; while (z < S.TABLADO_Z1) { for (dx in listOf(0.04f, 0.12f)) if (az.real() < 0.8f) drawCircle(p.sombra(C.HIERRO).copy(alpha = 0.35f), (0.008f * k(z)).coerceIn(0.3f, 0.9f), pc(x + dx, 0f, z + az.entre(-0.03f, 0.03f))); z += 0.62f }
+                var z = 1.6f; while (z < S.TABLADO_Z1) { for (dx in listOf(0.04f, 0.12f)) if (az.real() < 0.8f) (if (z < 3.4f) clavosCerca else clavosLejos) += pc(x + dx, 0f, z + az.entre(-0.03f, 0.03f)); z += 0.62f }
                 x += 0.16f; i++
             }
+            drawPoints(vetas, PointMode.Lines, p.sombra(TABLA).copy(alpha = 0.22f), 0.4f)
+            drawPoints(juntas, PointMode.Lines, p.sombra(lerp(C.MADERA_OSC, C.BREA, 0.3f)).copy(alpha = 0.75f), 0.7f)
+            drawPoints(cantos, PointMode.Lines, p.luz(TABLA).copy(alpha = 0.25f), 0.4f)
+            drawPoints(clavosCerca, PointMode.Points, p.sombra(C.HIERRO).copy(alpha = 0.35f), 1.6f, StrokeCap.Round)
+            drawPoints(clavosLejos, PointMode.Points, p.sombra(C.HIERRO).copy(alpha = 0.35f), 0.9f, StrokeCap.Round)
             // El roce del paso: de la escalera del jardín (a la derecha) hacia la mesa; y el barro de las botas.
             for (j in 0..6) { val t = j / 6f; val q = pc(1.2f - 2.2f * t, 0f, 4.9f - 1.2f * t); mancha(q, 14f + 8f * t, 3.5f + 2f * t, p.luz(lerp(TABLA, C.ARENA, 0.4f)), 0.16f) }
             for (j in 0..7) { val t = j / 7f; val lado = if (j % 2 == 0) -0.09f else 0.09f; val q = V3(1.3f - 2.0f * t + lado, 0f, 5.0f - 1.4f * t)

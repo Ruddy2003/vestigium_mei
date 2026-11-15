@@ -1417,22 +1417,23 @@ internal object PiezasBotanico {
                     nervio(ss) + nn * (lado * anchoEn(ss) * canto * (1f - 0.06f * sin(j * 1.9f + i))) + cae * (j / pasos.toFloat()) * lado.coerceAtLeast(0.3f) }
                 val tira = poligono(dentro + fuera.reversed())
                 drawPath(tira, color)
-                clipPath(tira) {
-                    // A contraluz, la lámina se enciende más hacia el borde de cada tira y el nervio queda oscuro.
-                    if (k > 0.05f) drawPath(Path().apply { val pts = (0..pasos).map { j -> val ss = s0 + (s1 - s0) * j / pasos; val tg = tangente(ss); nervio(ss) + Offset(-tg.y, tg.x) * (lado * anchoEn(ss) * canto * 0.6f) }; moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) },
-                        lerp(translucida, Color(0xFFFFF4C0), 0.4f).copy(alpha = (0.4f * k).coerceIn(0f, 1f)), style = Stroke(ancho * 0.2f * canto, cap = StrokeCap.Round), blendMode = BlendMode.Plus)
-                    // Las venas, paralelas, del nervio al borde, inclinadas hacia la punta.
-                    if (ancho > 5f) {
-                        val venas = ArrayList<Offset>(); var v = s0; val paso = if (ancho > 20f) 0.02f else 0.035f
-                        while (v < s1) { val tg = tangente(v); val nn = Offset(-tg.y, tg.x); val a = nervio(v); val w = anchoEn(v) * canto; venas += a; venas += a + nn * (lado * w) + tg * (w * 0.35f); v += paso }
-                        drawPoints(venas, PointMode.Lines, (if (k > 0.2f) vena else p.sombra(hoja, lejos)).copy(alpha = (0.12f + 0.4f * k).coerceIn(0f, 1f)), if (k > 0.2f) 0.45f else 0.3f)
-                    }
-                    // El brillo del haz, a lo largo, del lado del sol (de frente; a contraluz no se ve).
-                    if (lado * vuelta >= -0.2f && k < 0.5f) drawPath(Path().apply { val pts = (0..6).map { j -> val ss = s0 + (s1 - s0) * j / 6f; val tg = tangente(ss); nervio(ss) + Offset(-tg.y, tg.x) * (lado * anchoEn(ss) * canto * 0.45f) }; moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) },
-                        p.luz(lerp(hoja, C.ARENA, 0.3f), lejos).copy(alpha = 0.3f * p.r.dia * (1f - 2f * k)), style = Stroke(ancho * 0.08f, cap = StrokeCap.Round))
-                    // El borde seco, pardo, en las hojas viejas.
-                    if (seca > 0.02f) drawPath(Path().apply { moveTo(fuera[0]); for (q in fuera.drop(1)) lineTo(q) }, lerp(p.por(verdeSeco, tl - 0.2f, lejos), p.l.tono(lerp(C.LATON, C.ARENA, 0.3f), lejos), 0.6f * k), style = Stroke(ancho * 0.12f * seca * az.entre(0.5f, 1.3f)))
+                // (todo lo de encima se queda dentro de la tira por cómo se traza, sin recortar: así cuesta menos)
+                // A contraluz, la lámina se enciende más hacia el borde de cada tira y el nervio queda oscuro.
+                if (k > 0.05f) drawPath(Path().apply { val pts = (1 until pasos).map { j -> val ss = s0 + (s1 - s0) * j / pasos; val tg = tangente(ss); nervio(ss) + Offset(-tg.y, tg.x) * (lado * anchoEn(ss) * canto * 0.55f) }; moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) },
+                    lerp(translucida, Color(0xFFFFF4C0), 0.4f).copy(alpha = (0.4f * k).coerceIn(0f, 1f)), style = Stroke(ancho * 0.16f * canto), blendMode = BlendMode.Plus)
+                // Las venas, paralelas, del nervio al borde, inclinadas hacia la punta.
+                if (ancho > 5f) {
+                    val venas = ArrayList<Offset>(); var v = s0 + 0.01f; val paso = if (ancho > 20f) 0.02f else 0.035f
+                    while (v < s1 - 0.01f) { val tg = tangente(v); val nn = Offset(-tg.y, tg.x); val a = nervio(v); val w = anchoEn(v) * canto * 0.9f; venas += a; venas += a + nn * (lado * w) + tg * (w * 0.3f); v += paso }
+                    drawPoints(venas, PointMode.Lines, (if (k > 0.2f) vena else p.sombra(hoja, lejos)).copy(alpha = (0.12f + 0.4f * k).coerceIn(0f, 1f)), if (k > 0.2f) 0.45f else 0.3f)
                 }
+                // El brillo del haz, a lo largo, del lado del sol (de frente; a contraluz no se ve).
+                if (lado * vuelta >= -0.2f && k < 0.5f) drawPath(Path().apply { val pts = (1..5).map { j -> val ss = s0 + (s1 - s0) * j / 6f; val tg = tangente(ss); nervio(ss) + Offset(-tg.y, tg.x) * (lado * anchoEn(ss) * canto * 0.45f) }; moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) },
+                    p.luz(lerp(hoja, C.ARENA, 0.3f), lejos).copy(alpha = 0.3f * p.r.dia * (1f - 2f * k)), style = Stroke(ancho * 0.07f))
+                // El borde seco, pardo, en las hojas viejas: por dentro del borde.
+                if (seca > 0.02f) { val sw = ancho * 0.12f * seca * az.entre(0.5f, 1.3f)
+                    drawPath(Path().apply { val pts = fuera.mapIndexed { j, q -> val d0 = dentro[j] - q; val dl = d0.getDistance().coerceAtLeast(0.01f); q + d0 * (sw * 0.5f / dl).coerceAtMost(0.5f) }; moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) },
+                        lerp(p.por(verdeSeco, tl - 0.2f, lejos), p.l.tono(lerp(C.LATON, C.ARENA, 0.3f), lejos), 0.6f * k), style = Stroke(sw)) }
             }
         }
         // El nervio, grueso, con su sombra; a contraluz, una raya oscura con el filo claro.
@@ -1690,7 +1691,7 @@ internal object PiezasBotanico {
         val claro = p.luz(lerp(C.SELVA, C.HOJA, 0.55f), lejos); val brillo = p.luz(lerp(C.HOJA, C.ARENA, 0.4f), lejos)
         val hoja = max(0.6f, alto * 0.034f)
         for (ms in masas.sortedBy { it.alta }) {
-            val cuantas = (ms.rx * ms.ry / (hoja * hoja) * 4.2f).toInt().coerceIn(30, 320)
+            val cuantas = (ms.rx * ms.ry / (hoja * hoja) * 3.1f).toInt().coerceIn(24, 240)
             // El fondo de la masa: hondo, de borde quebrado, con el lado de luz ya algo más claro.
             val borde = (0 until 12).map { j -> val a = (2 * PI * j / 12).toFloat(); val k = az.entre(0.82f, 1.1f); ms.c + Offset(cos(a) * ms.rx * k, sin(a) * ms.ry * k) }
             drawPath(curva(borde + borde.first()).apply { close() }, Brush.linearGradient(listOf(hondo, oscuro), ms.c + Offset(-lado * ms.rx, ms.ry), ms.c + Offset(lado * ms.rx, -ms.ry)))
@@ -1823,7 +1824,7 @@ internal object PiezasBotanico {
         for ((lob, tl) in lobs) {
             drawPath(lob, color(tl))
             // El borde del lóbulo, un poco más oscuro (la lámina se curva hacia abajo).
-            clipPath(lob) { drawPath(lob, p.sombra(verde, lejos).copy(alpha = 0.32f), style = Stroke(max(0.5f, ancho * 0.03f))) }
+            drawPath(lob, p.sombra(verde, lejos).copy(alpha = 0.22f), style = Stroke(max(0.4f, ancho * 0.012f)))
         }
         // El corazón, encima del arranque de los lóbulos.
         val izq = (0..10).map { i -> val s = i / 10f; nervio(0.94f * s) - n * nucleo(s) }; val der = (0..10).map { i -> val s = i / 10f; nervio(0.94f * s) + n * nucleo(s) }
@@ -1978,8 +1979,8 @@ internal object PiezasBotanico {
             repeat(22) { val x = az.entre(-1f, 1f); val t0 = az.entre(0f, 0.9f); val t1 = (t0 + az.entre(0.05f, 0.25f)).coerceAtMost(1f); vetas += eje(t0) + Offset(x * g(t0), 0f); vetas += eje(t1) + Offset(x * g(t1) + az.entre(-1f, 1f), 0f) }
             drawPoints(vetas, PointMode.Lines, p.sombra(lerp(corteza, C.BREA, 0.3f), lejos).copy(alpha = 0.45f), max(0.35f, ancho * 0.03f), StrokeCap.Round)
             // El liquen: manchas pálidas y verdosas, y el musgo del lado de la sombra.
-            repeat(16) { val t = az.entre(0.05f, 0.95f); val q = eje(t) + Offset(az.entre(-0.8f, 0.8f) * g(t), 0f); mancha(q, ancho * az.entre(0.08f, 0.2f), ancho * az.entre(0.06f, 0.14f), if (it % 3 == 0) p.medio(lerp(C.HOJA_LUZ, C.LONA, 0.5f), lejos) else p.luz(lerp(C.LONA, C.ARENA, 0.3f), lejos), 0.45f) }
-            repeat(10) { val t = az.entre(0f, 0.8f); mancha(eje(t) + Offset(-lado * g(t) * az.entre(0.4f, 0.9f), 0f), ancho * 0.18f, ancho * 0.4f, p.medio(lerp(C.SELVA, C.HOJA, 0.35f), lejos), 0.5f) }
+            repeat(9) { val t = az.entre(0.05f, 0.95f); val q = eje(t) + Offset(az.entre(-0.8f, 0.8f) * g(t), 0f); mancha(q, ancho * az.entre(0.08f, 0.2f), ancho * az.entre(0.06f, 0.14f), if (it % 3 == 0) p.medio(lerp(C.HOJA_LUZ, C.LONA, 0.5f), lejos) else p.luz(lerp(C.LONA, C.ARENA, 0.3f), lejos), 0.45f) }
+            repeat(6) { val t = az.entre(0f, 0.8f); mancha(eje(t) + Offset(-lado * g(t) * az.entre(0.4f, 0.9f), 0f), ancho * 0.22f, ancho * 0.45f, p.medio(lerp(C.SELVA, C.HOJA, 0.35f), lejos), 0.5f) }
         }
         // Las raíces de delante, que se abren hacia quien mira.
         for ((dx, dz, k) in raices.filter { it.second >= 0f }) raiz(dx, dz, k)
