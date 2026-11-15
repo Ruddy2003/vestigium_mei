@@ -84,7 +84,7 @@ internal object PiezasMarguerite {
     private val TIEMPO = listOf(
         v("{cielo} {de_estacion} En el faubourg dicen que el tiempo se lee en el humo de las chimeneas: si se queda bajo, va a llover."),
         v("{nombre} mira el cielo por encima de los tejados antes de salir, como lo miran en el taller, donde saben que la humedad estira el papel y descuadra los colores. {cielo} {de_estacion}"),
-        v("{de_estacion} {cielo} En París el cielo cambia tres veces en un día, y nadie se fía de ninguna."),
+        v("{de_estacion} {cielo} En París el cielo cambia tres veces al día, y nadie se fía de ninguna de las tres."),
         v("{cielo} En {estacion}, el Sena baja de otro color, y los muelles huelen distinto: a barro, a polvo o a hojas mojadas."),
         v("{de_estacion} {cielo} Monsieur Ferrand dice que con este tiempo el papel se estira o se encoge, y que un color mal casado se nota a diez pasos."),
         v("Desde la place de la Bastille se ve el trozo de cielo más grande de todo su camino. {cielo} {de_estacion}"),
@@ -178,10 +178,10 @@ internal object PiezasMarguerite {
         v("A esta hora moja la piedra con la esponja, de un lado a otro, para que el agua se quede donde no hay dibujo, y pasa encima el rodillo de cuero cargado de tinta. La tinta se agarra solo a las líneas grasas. Lo hace despacio, como le enseñaron, sin dejar que la piedra se seque.", hacer = Hacer.TRABAJO, desde = "entintar"),
         v("A esta hora mete los pliegos en la prensa, uno por uno, con las dos manos, cuidando que las marcas del papel caigan justo sobre las de la piedra. Si un pliego se tuerce un pelo, el color se sale del dibujo y el cartel no vale. Gustave hace girar el molinete; ella saca la hoja, la mira y la cuelga.", hacer = Hacer.TRABAJO, desde = "registro"),
         v("A esta hora atiende la prensa de vapor, que resopla y traquetea y va mucho más deprisa que la de mano. Hay que darle los pliegos a su ritmo, ni antes ni después, con las manos lejos de los rodillos. Al principio le daba miedo. Ahora le habla en voz baja, como a un caballo.", hacer = Hacer.TRABAJO, desde = "prensa_vapor"),
-        v("A esta hora dibuja letras en una piedra pequeña, al revés, con el lápiz graso, mientras Anselme mira por encima de su hombro. Las letras de ahora se curvan como tallos y terminan en hojas, y cada una tiene que parecer que crece. Anselme le borra una y le dice que vuelva a empezar.", hacer = Hacer.TRABAJO, desde = "primeras_letras"),
+        v("A esta hora dibuja letras en una piedra pequeña, al revés, con el lápiz graso, mientras Anselme mira por encima de su hombro. Las letras de ahora se curvan como tallos y terminan en hojas, y cada una tiene que parecer que crece. Anselme le borra una y le dice que vuelva a empezar.", hacer = Hacer.TRABAJO, desde = "primeras_letras", hasta = "anselme_retira"),
         v("A esta hora prepara ella misma una piedra dibujada: la cubre con goma arábiga y un poco de ácido, la deja reposar, la lava y tira una prueba. Antes se lo hacían otros. Ahora, si sale mal, la culpa es suya, y si sale bien, nadie le dice nada, que es como debe ser.", hacer = Hacer.TRABAJO, desde = "obrera"),
 
-        v("A esta hora ayuda a su madre a poner la sopa, a picar los puerros, a lavar los platos en el barreño. Su padre lee el periódico en voz alta, con la lámpara cerca. Paul hace como que estudia. {nombre} escucha a medias, con las manos en el agua caliente.", hacer = Hacer.CUIDAR),
+        v("A esta hora ayuda a su madre a poner la sopa, a picar los puerros, a lavar los platos en el barreño. Su padre lee el periódico en voz alta, con la lámpara cerca. Paul se duerme en la silla. {nombre} escucha a medias, con las manos en el agua caliente.", hacer = Hacer.CUIDAR),
         v("A esta hora plancha el delantal de mañana con la plancha que se calienta en la cocina, y zurce una media. Su madre cose a su lado, en la máquina de pedal, una blusa que no es para ellas. Las dos hablan de la gente del patio sin levantar la vista.", hacer = Hacer.CUIDAR),
         v("A esta hora sube del patio dos cubos de agua de la fuente, cinco pisos, sin parar en ningún descansillo. Luego saca la ceniza de la cocina y le da al gato de la portera las espinas del pescado. La casa huele a sopa y a cola de carpintero.", hacer = Hacer.CUIDAR),
 
@@ -206,44 +206,44 @@ internal object PiezasMarguerite {
     // =====================================================================
 
     private val PUEBLO = listOf(
-        v("{entorno} El taller de monsieur Ferrand está en el bajo de una casa de cinco pisos, con un escaparate donde se ven los carteles que se tiran dentro. En el patio de atrás se guardan las piedras, de pie, en estantes, como libros enormes y grises."),
-        v("El faubourg Saint-Antoine es un barrio de talleres: ebanistas, torneros, doradores, tapiceros, cada uno en su patio. {entorno} Por la calle van carros de tablones y aprendices con muebles al hombro, y todo huele a madera."),
-        v("{entorno} Cerca del taller está el Palais-Royal, con su jardín y sus galerías de tiendas donde se venden medallas, bastones y soldados de plomo. A veces {nombre} se come allí su pan, en un banco, entre niñeras y jubilados."),
-        v("Las vallas de París están cubiertas de carteles, unos encima de otros: chocolates, bicicletas, teatros, cafés-conciertos, papel de fumar. {entorno} Los pegadores pasan con su cubo de engrudo y su escalera, y en una mañana le cambian la cara a una calle."),
-        v("Cuando cruza el puente a algún recado, ve el Sena lleno de barcazas de carbón y de arena, los muelles con sus libreros y las torres de Notre-Dame. {entorno} A lo lejos, delgada y oscura, asoma la torre de hierro del Campo de Marte."),
-        v("{entorno} En la calle del taller hay de todo: una crémerie donde comen los obreros, un vendedor de vinos, una mercería, una imprenta de libros, una portera que lo ve todo. Los vecinos conocen a {nombre} por el delantal manchado de colores."),
-        v("{entorno} Por la rue de Rivoli pasan carros de mudanzas, fiacres y vendedores ambulantes, bajo los soportales donde se refugia la gente cuando llueve. Los soportales son largos y regulares, y {nombre} los recorre a veces contando los arcos."),
-        v("{entorno} Desde que abrió el metro, delante de la estación hay siempre gente que sube y baja por la escalera, entre la barandilla de fundición verde, que tiene algo de planta y algo de insecto. Los viejos todavía la miran con desconfianza. Los niños quieren bajar a ver.", desde = "abre_metro"),
+        v("{entorno} El taller de monsieur Ferrand está en el bajo de una casa de cinco pisos, con un escaparate de carteles. En el patio de atrás se guardan las piedras, de pie, como libros enormes y grises."),
+        v("El faubourg Saint-Antoine es un barrio de talleres: ebanistas, torneros, doradores, tapiceros. {entorno} Por su calle van carros de tablones y aprendices con muebles al hombro."),
+        v("{entorno} Cerca del taller está el Palais-Royal, con su jardín y sus galerías de tiendas. A veces {nombre} se come allí su pan, en un banco, entre niñeras y jubilados."),
+        v("Las vallas de París están cubiertas de carteles, unos encima de otros: chocolates, bicicletas, teatros, papel de fumar. {entorno} Los pegadores, con su cubo de engrudo, le cambian la cara a una calle en una mañana."),
+        v("Cuando cruza el puente a algún recado, ve el Sena lleno de barcazas y los muelles con sus libreros. {entorno} A lo lejos, delgada y oscura, asoma la torre de hierro del Campo de Marte."),
+        v("{entorno} En la calle del taller hay una crémerie, un vendedor de vinos, una mercería, una imprenta de libros y una portera que lo ve todo. Los vecinos conocen a {nombre} por el delantal manchado."),
+        v("{entorno} Por la rue de Rivoli pasan carros, fiacres y vendedores ambulantes, junto a los soportales donde se refugia la gente cuando llueve. {nombre} los recorre a veces contando los arcos."),
+        v("{entorno} Desde que abrió el metro, por su escalera sube y baja gente todo el día. La barandilla de fundición tiene algo de planta y algo de insecto. Los viejos la miran con desconfianza; los niños quieren bajar.", desde = "abre_metro"),
     )
 
     private val EXPOSICION_PUEBLO = listOf(
-        ex("Este año París está lleno de gente de fuera: provincianos con su ropa de domingo, ingleses, alemanes, americanos, que van con un plano abierto y la cabeza en alto. {entorno} En los escaparates se venden medallas, abanicos y postales de la Exposición."),
-        ex("En todas las vallas, este año, hay carteles de la Exposición y de sus pabellones, unos encima de otros. {entorno} Por la rue de Rivoli bajan coches llenos de visitantes hacia el Sena, y los cocheros cobran lo que quieren."),
-        ex("{entorno} Este año en las calles del centro no se cabe: hay más fiacres, más vendedores, más carteristas, dice la portera, y más luces. Los cafés sacan las mesas a la acera hasta tarde. Hasta el faubourg llegan los ecos de la fiesta."),
-        ex("La Exposición ocupa las dos orillas del Sena, con sus palacios y los pabellones de cuarenta países, y desde los puentes se ven sus cúpulas y sus torrecitas como un pueblo de juguete. {entorno} El puente nuevo, el de Alejandro III, está siempre lleno de gente."),
+        ex("Este año París está lleno de gente de fuera, provincianos, ingleses, alemanes, americanos, con un plano abierto y la cabeza en alto. {entorno} En los escaparates hay postales de la Exposición."),
+        ex("En todas las vallas, este año, hay carteles de la Exposición y de sus pabellones. {entorno} Por la rue de Rivoli bajan coches de visitantes hacia el Sena, y los cocheros cobran lo que quieren."),
+        ex("{entorno} Este año en el centro no se cabe: más fiacres, más vendedores, más carteristas, dice la portera, y más luces. Hasta el faubourg llegan los ecos de la fiesta."),
+        ex("La Exposición ocupa las dos orillas del Sena, con los pabellones de cuarenta países, y desde los puentes se ven sus cúpulas como un pueblo de juguete. {entorno} El puente de Alejandro III está siempre lleno."),
     )
 
     /** La entrada de la estación delante del taller (el arco `metro`): las obras, la barandilla y los faroles. */
     private val ENTORNOS = listOf(
         Entorno("metro", 0.0, 0.05, frases = listOf(
-            "En la calle todavía no se nota nada del metro: solo se habla de él en los periódicos.",
-            "De ese metro que dicen no se ve nada todavía: la calle es la de siempre, de adoquines y de barro.",
+            "Del metro todavía no se ve nada: solo se habla de él en los periódicos.",
+            "La calle es la de siempre, de adoquines y de barro.",
         )),
         Entorno("metro", 0.05, 0.25, frases = listOf(
-            "Al fondo de la calle se ven las vallas de las obras del metro, que todavía no llegan al taller.",
-            "Las obras del metro avanzan por el barrio, y de vez en cuando se oye, lejos, el golpe de los picos.",
+            "Al fondo de la calle se ven las vallas de las obras del metro.",
+            "Las obras del metro avanzan, y se oye, lejos, el golpe de los picos.",
         )),
         Entorno("metro", 0.25, 0.7, frases = listOf(
-            "En la esquina están las vallas de las obras del metro, y detrás, tierra amarilla, tablones y el ruido de los picos.",
-            "Las obras del metro han levantado media calle, y los carros tienen que hacer cola para pasar por lo que queda.",
+            "En la esquina están las vallas del metro, con su tierra amarilla y sus tablones.",
+            "Las obras del metro han levantado media calle, y los carros hacen cola.",
         )),
         Entorno("metro", 0.7, 0.95, frases = listOf(
-            "En la esquina está la entrada de la estación, con su barandilla de fundición verde que se curva como un tallo.",
-            "Delante del taller baja la escalera del metro, entre una barandilla verde que parece crecida del suelo.",
+            "En la esquina baja la entrada del metro, con su barandilla verde que se curva como un tallo.",
+            "Delante del taller, la barandilla del metro parece crecida del suelo.",
         )),
         Entorno("metro", 0.95, 1.0, frases = listOf(
-            "En la entrada del metro, dos candelabros de fundición sostienen sus faroles y el letrero «Métropolitain», con unas letras que se doblan como hojas.",
-            "Junto al taller, la entrada del metro tiene ya sus faroles, que de noche se ven desde lejos, como dos frutos encendidos.",
+            "En la entrada del metro, dos candelabros sostienen sus faroles y el letrero «Métropolitain».",
+            "La entrada del metro tiene ya sus faroles, como dos frutos encendidos.",
         )),
     )
 
@@ -286,29 +286,29 @@ internal object PiezasMarguerite {
 
     private val OBJETOS = listOf(
         ObjetoCuento("piedra", "la piedra litográfica", "una piedra litográfica", "La piedra litográfica",
-            "La piedra litográfica es una losa gruesa, gris y lisa, que se dibuja con lápiz o tinta grasa; luego se moja, y la tinta del rodillo se agarra solo al dibujo, porque el agua y la grasa se rechazan; para un cartel en color hace falta una piedra por cada color."),
+            "La piedra litográfica es una losa gruesa, gris y lisa, que se dibuja con lápiz o tinta grasa; para un cartel en color hace falta una por cada color, y todas pesan como un niño."),
         ObjetoCuento("rodillo", "el rodillo de cuero", "un rodillo de cuero", "El rodillo de cuero",
-            "El rodillo de entintar es un cilindro forrado de cuero, con dos mangos, que se carga de tinta en la losa y se pasa sobre la piedra mojada, de un lado a otro, hasta que el dibujo brilla negro; un rodillo mal cuidado deja rayas, y una raya sale en todos los carteles."),
+            "El rodillo de entintar es un cilindro forrado de cuero, con dos mangos, que se pasa sobre la piedra mojada hasta que el dibujo brilla; si está mal cuidado deja rayas, y la raya sale en todos los carteles."),
         ObjetoCuento("moleta", "la moleta", "una moleta", "La moleta",
-            "La moleta es una piedra de mano, lisa por abajo, con la que se muele la tinta en la losa, el polvo de color con el barniz, en redondo, hasta hacer una pasta tan fina que no cruje; moler bien es lo primero que aprende un aprendiz, y lo que más tarda."),
+            "La moleta es una piedra de mano, lisa por abajo, con la que se muele la tinta en la losa hasta que no cruje; moler bien es lo primero que aprende un aprendiz, y lo que más tarda."),
         ObjetoCuento("lapiz", "el lápiz litográfico", "un lápiz litográfico", "El lápiz litográfico",
             "El lápiz litográfico es negro y graso, y se afila con una navaja; lo que dibuja en la piedra es lo que luego se agarra a la tinta, y por eso la piedra no se toca con los dedos: hasta una huella sale impresa."),
         ObjetoCuento("cuaderno", "el cuaderno de dibujo", "un cuaderno de dibujo", "El cuaderno de dibujo",
-            "El cuaderno de dibujo es de papel barato, cosido a mano, y en él se apunta lo que se ve: un tallo, una mano, una letra, una sombra; Anselme dice que el que no dibuja todos los días, aunque sea una hoja, se olvida de mirar."),
+            "El cuaderno de dibujo es de papel barato, cosido a mano, y en él se apunta lo que se ve; Anselme dice que el que no dibuja todos los días se olvida de mirar."),
         ObjetoCuento("delantal", "el delantal", "un delantal", "El delantal",
-            "El delantal es de tela azul gruesa, largo hasta los tobillos, con un bolsillo para el trapo y otro para el lápiz; al principio era de un solo color y ahora es de todos: cada mancha es de un cartel, y ella sabe de cuál."),
+            "El delantal es de tela azul gruesa, con un bolsillo para el trapo; al principio era de un solo color y ahora es de todos: cada mancha es de un cartel, y ella sabe de cuál."),
         ObjetoCuento("peine", "el peine de carey", "un peine de carey", "El peine de carey",
-            "El peine de carey es de concha de tortuga, de color de miel con manchas oscuras, y sujeta el moño para que el pelo no se enrede en la prensa; fue de su madre, que lo llevó el día de su boda, y tiene un diente roto."),
+            "El peine de carey, de color de miel con manchas oscuras, le sujeta el moño para que el pelo no se enrede en la prensa; fue de su madre, que lo llevó el día de su boda."),
         ObjetoCuento("lazo", "el lazo de seda", "un lazo de seda", "El lazo de seda",
-            "El lazo de seda es violeta, como un iris, y lo compró en una mercería del faubourg con unas monedas ahorradas; solo se lo pone los domingos y para subir a Montmartre, y lo guarda doblado en un papel de seda para que no pierda el brillo."),
+            "El lazo de seda es violeta, como un iris, y lo compró con unas monedas ahorradas; solo se lo pone los domingos y para subir a Montmartre, y lo guarda doblado en papel de seda."),
         ObjetoCuento("postal", "la tarjeta postal", "una tarjeta postal", "La tarjeta postal",
-            "Las tarjetas postales ahora llevan dibujos: vistas de París, flores, mujeres de perfil entre tallos; se escriben con cuatro palabras y se mandan a la otra punta de la ciudad, y ella guarda en una caja de galletas las que tienen flores."),
+            "Las tarjetas postales ahora llevan dibujos, vistas de París, flores, mujeres de perfil entre tallos, y se escriben con cuatro palabras; ella guarda en una caja las que tienen flores."),
         ObjetoCuento("libro_flores", "el libro de las flores", "un libro de flores", "El libro de las flores",
-            "Le Langage des fleurs es el libro viejo de la abuela, donde cada flor quiere decir algo: la violeta, la modestia; el lila, la primera emoción de amor; la amapola, el consuelo; con un ramo bien escogido se puede escribir una carta sin escribir nada."),
+            "Le Langage des fleurs es el libro viejo de la abuela, donde cada flor quiere decir algo: la amapola, el consuelo; el iris, un mensaje; con un ramo se puede escribir una carta sin palabras."),
         ObjetoCuento("abanico", "el abanico de papel", "un abanico de papel", "El abanico de papel",
-            "El abanico es de papel plegado, impreso en el taller, con el anuncio de un chocolate de un lado y un ramo de lirios del otro; se reparten gratis en los teatros y en las tiendas, y en verano todas las mujeres del faubourg llevan uno."),
+            "El abanico es de papel plegado, impreso en el taller, con el anuncio de un chocolate de un lado y un ramo de lirios del otro; en verano lo llevan todas las mujeres del faubourg."),
         ObjetoCuento("periodico", "el periódico", "un periódico", "El periódico",
-            "El periódico que compra su padre trae de todo: la política, los crímenes, los anuncios y, abajo, el folletín, que es lo que lee primero toda la casa; cuando lo ha leído entero, su padre lo dobla en cuatro y lo guarda para encender la cocina."),
+            "El periódico que compra su padre trae la política, los crímenes, los anuncios y, abajo, el folletín, que es lo que lee primero toda la casa; luego sirve para encender la cocina."),
     )
 
     // =====================================================================
@@ -316,43 +316,43 @@ internal object PiezasMarguerite {
     // =====================================================================
 
     private val PENSAMIENTO = listOf(
-        v("{mundo} {nombre} piensa en los colores como en personas: el amarillo, que va primero y no se ve hasta que llegan los demás; el rojo, que manda; el azul, que lo arregla todo al final. Piensa que un cartel es como una familia. Se ríe sola, y Berthe le pregunta de qué."),
+        v("{mundo} {nombre} piensa en los colores como en personas: el amarillo, que va primero y no se ve hasta que llegan los demás; el rojo, que manda; el azul, que lo arregla todo al final. Se ríe sola."),
         v("{nombre} piensa en el libro de la abuela, donde cada flor quiere decir algo: la violeta, la modestia; el lila, la primera emoción de amor; la margarita de los prados, que lo pensará. Piensa que tiene nombre de flor que duda. A sus {edad} años, no le parece mal."),
-        v("{mundo} {nombre} piensa en las mujeres de los carteles, de perfil, con el pelo suelto como tallos y una flor en la mano, que miran la calle desde las vallas. Nadie en el faubourg se parece a ellas. Piensa que a lo mejor esa es la gracia: que no se parezcan a nadie."),
+        v("{mundo} {nombre} piensa en las mujeres de los carteles, de perfil, con el pelo suelto como tallos. Nadie en el faubourg se parece a ellas. Piensa que a lo mejor esa es la gracia."),
         v("{nombre} piensa en lo que dice Anselme: que lo que se dibuja en la piedra sale al revés, y que hay que pensar al revés para que salga derecho. Piensa que con la gente pasa lo mismo, y que su madre lo sabe desde hace mucho."),
-        v("{mundo} {nombre} piensa en París, que cambia cada vez que lo mira: una calle abierta, un palacio que sube, una valla con carteles nuevos encima de los viejos. Piensa que la ciudad es como una piedra que se grania y se vuelve a dibujar. Le gustaría saber qué dibujo viene."),
-        v("{nombre} piensa en un verso que Anselme copió en una prueba de letras y que ella se sabe sin entenderlo del todo: «Les parfums, les couleurs et les sons se répondent.» (Baudelaire, Correspondances). Piensa que en el taller es verdad: la tinta huele, el rojo suena fuerte y el azul, bajito."),
-        v("{mundo} {nombre} piensa en algo que leyó en un libro viejo que alguien dejó en el taller: un poeta que decía que, al decir una flor, se levanta «l'absente de tous bouquets» (Mallarmé, Avant-dire), la ausente de todos los ramos. No lo entendió. Le gustó igual: la flor que no está en ningún ramo."),
-        v("{nombre} piensa en el metro, en toda esa gente que ahora va por debajo de las calles como el agua por las cañerías, sin ver el cielo. Piensa que ella es una de esas gotas. Piensa que París tiene ahora dos pisos, y que el de abajo también es suyo.", desde = "abre_metro"),
+        v("{mundo} {nombre} piensa que París es como una piedra que se grania y se vuelve a dibujar: una calle abierta, un palacio que sube, carteles nuevos sobre los viejos. Le gustaría saber qué dibujo viene."),
+        v("{nombre} piensa en un verso que Anselme copió en una prueba de letras: «Les parfums, les couleurs et les sons se répondent.» (Baudelaire, Correspondances). Piensa que en el taller es verdad: la tinta huele, el rojo suena fuerte y el azul, bajito."),
+        v("{mundo} {nombre} piensa en algo que leyó en un libro viejo del taller: un poeta decía que, al decir una flor, se levanta «l'absente de tous bouquets» (Mallarmé, Avant-dire), la ausente de todos los ramos. No lo entendió. Le gustó igual."),
+        v("{nombre} piensa en toda esa gente que ahora va por debajo de las calles como el agua por las cañerías. Piensa que ella es una de esas gotas, y que París tiene ahora dos pisos.", desde = "abre_metro"),
         v("{nombre} piensa que ya no es aprendiz, y que no se nota tanto como creía: las mismas piedras, la misma prensa, el mismo Gustave gritando. Lo que cambia es que ahora le preguntan. Piensa que eso, para empezar, ya es mucho.", desde = "obrera"),
     )
 
     /** El estado del mundo de cada temporada (una frase para `{mundo}`). Están las cinco, aunque solo la 1 tenga sus especiales. */
     private val MUNDOS = mapOf(
         "obras" to listOf(
-            "Este año París es una ciudad en obras: se levantan palacios para la Exposición, un puente nuevo, y se habla de trenes por debajo de las calles.",
-            "En el taller dicen que vienen años de mucho trabajo, porque París entero se prepara para la Exposición, y una exposición es un mar de carteles.",
-            "Este año en los cafés no se habla de otra cosa que del capitán Dreyfus, y en las casas se discute a gritos.",
+            "Este año París está en obras: palacios para la Exposición, un puente nuevo y, dicen, trenes por debajo.",
+            "En el taller dicen que vienen años de mucho trabajo: una exposición es un mar de carteles.",
+            "Este año en los cafés solo se habla del capitán Dreyfus, y en las casas se discute a gritos.",
         ),
         "vispera" to listOf(
-            "Este año todo París mira hacia la Exposición que viene: se termina, se pinta, se dora, y hay andamios por todas partes.",
-            "En el taller se trabaja más que nunca: todo el mundo quiere su cartel para cuando llegue la gente de fuera.",
-            "Este año las obras del metro avanzan por debajo de la ciudad, y en las calles hay más vallas que nunca.",
+            "Este año todo París mira hacia la Exposición que viene, y hay andamios por todas partes.",
+            "En el taller se trabaja más que nunca: todos quieren su cartel antes de que llegue la gente de fuera.",
+            "Este año las obras del metro avanzan, y en las calles hay más vallas que nunca.",
         ),
         "exposicion" to listOf(
-            "Este año París es el escaparate del mundo, con su Exposición, su metro y sus luces, y hasta en el faubourg se habla de ello como si fuera de cada uno.",
-            "Este año pasan por París millones de visitantes, y todos se llevan a casa un cartel, una postal o un abanico.",
-            "Este año la luz eléctrica es la reina de la Exposición, aunque en las casas del faubourg se siga cosiendo con lámpara de petróleo.",
+            "Este año París es el escaparate del mundo, y hasta en el faubourg se habla de la Exposición como de algo propio.",
+            "Este año pasan por París millones de visitantes, y todos se llevan una postal o un abanico.",
+            "Este año la luz eléctrica es la reina de la Exposición, aunque en el faubourg se cosa con petróleo.",
         ),
         "faroles" to listOf(
-            "Pasada la Exposición, París se queda con sus palacios nuevos, su puente y su metro, como una casa después de la fiesta.",
-            "Este año el estilo nuevo, el de las curvas y los tallos, está en todas partes: en las entradas del metro, en las joyerías, en los cafés.",
-            "Dicen que en Nancy los vidrieros y los ebanistas trabajan juntos, con flores y libélulas, y su padre lo cuenta como si le hubieran ganado una carrera.",
+            "Pasada la Exposición, París se queda con sus palacios y su metro, como una casa después de la fiesta.",
+            "Este año el estilo de las curvas y los tallos está en todas partes: en el metro, en las joyerías, en los cafés.",
+            "Dicen que en Nancy los vidrieros y los ebanistas trabajan juntos, y su padre lo cuenta con orgullo de gremio.",
         ),
         "jornada" to listOf(
-            "Este año la jornada en los talleres con mujeres baja a diez horas y media, y en las casas se hace la cuenta de lo que se gana y de lo que se pierde.",
-            "Este año el metro sigue creciendo por debajo de París, y cada estación nueva es una fiesta pequeña en su barrio.",
-            "Este año en las vallas hay menos carteles de palacios y más de chocolates, bicicletas y teatros, como antes.",
+            "Este año la jornada en los talleres con mujeres baja a diez horas y media, y en las casas se hacen cuentas.",
+            "Este año el metro sigue creciendo, y cada estación nueva es una fiesta pequeña en su barrio.",
+            "Este año en las vallas vuelven los chocolates, las bicicletas y los teatros, como antes.",
         ),
     )
 
@@ -433,7 +433,7 @@ internal object PiezasMarguerite {
             Parrafo.ANOCHECER to "Al caer la tarde vuelve a casa con la mano envuelta en el trapo y una mancha que ya se pone parda. Su madre se la unta con aceite y le hace un vendaje de costurera, apretado y perfecto. Su padre le dice que en su oficio todo el mundo tiene una cicatriz, y le enseña la del formón. {nombre} se siente ya del gremio.",
         ),
         "grand_palais_obras" to unDia(
-            Parrafo.PUEBLO to "Hoy monsieur Ferrand la manda con un rollo de pruebas a un cliente de los Champs-Élysées, y por el camino ve las obras del Grand Palais: un bosque de andamios, montañas de piedra tallada, grúas, y por encima, el esqueleto de hierro de una nave enorme. Cientos de obreros se mueven allí como hormigas.",
+            Parrafo.PUEBLO to "Hoy monsieur Ferrand la manda con un rollo de pruebas a un cliente de los Champs-Élysées, y por el camino ve las obras del Grand Palais: un bosque de andamios, montañas de piedra tallada, grúas y vigas de hierro amontonadas para una nave que dicen que será enorme. Cientos de obreros se mueven allí como hormigas.",
             Parrafo.GENTE to "En la valla de las obras, un vigilante le cuenta con orgullo que el palacio es para la Exposición, y que lo hacen cuatro arquitectos a la vez, porque no hubo manera de decidir cuál era el mejor y les mandaron juntar sus proyectos. {nombre} se ríe. El vigilante también. Luego le dice que circule.",
             Parrafo.PENSAMIENTO to "{nombre} piensa que un palacio de hierro y vidrio es como un invernadero para personas, y se pregunta qué plantas van a poner dentro. Piensa que a lo mejor ninguna, que las plantas serán los cuadros. Piensa que tardará en verlo por dentro. Lo piensa sin pena: hay cosas que se miran mejor desde fuera.",
         ),

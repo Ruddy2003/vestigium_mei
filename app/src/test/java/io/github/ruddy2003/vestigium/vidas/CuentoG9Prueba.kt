@@ -12,8 +12,9 @@ import java.time.LocalDate
 
 /**
  * Los cuentos del grupo 9, los de los temas del lote 10: el de Tadeo, el agente de la red de Frente exterior, que es
- * ficción; el de Eleazar, el iniciado de Arcontes, una persona inventada en la Galilea real, y el de Segomaros, el aprendiz
- * de los druidas de Galia, una persona inventada en la Galia real (los dos, al final). Las pruebas generales (forma, largo, repeticiones, certeza) están en [CuentoPrueba] y corren
+ * ficción; el de Eleazar, el iniciado de Arcontes, una persona inventada en la Galilea real; el de Segomaros, el aprendiz
+ * de los druidas de Galia, una persona inventada en la Galia real, y el de Marguerite, la aprendiz de litografía de Art
+ * nouveau, una persona inventada en el París real (los tres, al final). Las pruebas generales (forma, largo, repeticiones, certeza) están en [CuentoPrueba] y corren
  * solas sobre todas las piezas registradas; aquí va lo propio de su historia: que nadie aparezca antes ni después de
  * tiempo, que la red no salga antes de que lo recluten y que los estados se noten.
  */
@@ -465,5 +466,156 @@ class CuentoG9Prueba {
         // Y fuera de los estados no sale ninguna de sus variantes.
         val deEstado = Parrafo.entries.flatMap { l -> listOf("campana", "alesia", "cautivo").flatMap { textosDeS(l, it) } }.toSet()
         (normalesS("2027-01-01", "2028-12-31") + normalesS("2029-10-13", "2031-12-31")).forEach { d -> cuentoS(d, 9.0).parrafos.forEach { assertFalse("$d: variante de un estado en casa", it in deEstado) } }
+    }
+
+    // ================================================================= Marguerite, la aprendiz de litografía de Art nouveau
+
+    private val m = "litografa"
+    private val piezaM get() = TodasLasPiezas.de(m)!!
+    private val calM get() = Calendarios.de(m)!!
+    private val marguerite get() = OtrasVidas.porId(m)!!
+    private fun cuentoM(dia: String, hora: Double = 10.0) = Cuento.de(FichaDelDia.de(dia, marguerite, calM), marguerite, calM, piezaM, hora)
+    private val diaEnteroM = HashMap<String, String>()
+    /** Todo lo que dice su cuento ese día, a una hora de cada tramo de «Un día suyo». */
+    private fun todoElDiaM(dia: String) = diaEnteroM.getOrPut(dia) { listOf(2.0, 6.5, 7.2, 9.0, 12.5, 15.0, 19.2, 20.0, 22.0).flatMap { cuentoM(dia, it).parrafos }.joinToString(" ") }
+    private val normalesM = HashMap<String, Boolean>()
+    private fun normalesM(desde: String, hasta: String) = dias(desde, hasta).filter { d -> normalesM.getOrPut(d) { !cuentoM(d).especial } }
+    private fun nuncaM(desde: String, hasta: String, texto: String) =
+        normalesM(desde, hasta).forEach { assertFalse("$it: «$texto» fuera de tiempo", texto in todoElDiaM(it)) }
+    private fun algunaM(desde: String, hasta: String, texto: String) =
+        assertTrue("«$texto» no sale entre $desde y $hasta", normalesM(desde, hasta).any { texto in todoElDiaM(it) })
+    private fun soloEntreM(desde: String, hasta: String, texto: String) {
+        if (desde > "2027-01-01") nuncaM("2027-01-01", LocalDate.parse(desde).minusDays(1).toString(), texto)
+        if (hasta < "2031-12-31") nuncaM(LocalDate.parse(hasta).plusDays(1).toString(), "2031-12-31", texto)
+        algunaM(desde, hasta, texto)
+    }
+
+    @Test fun estanLasPiezasDeMarguerite() {
+        assertEquals(m, piezaM.vida)
+        assertEquals("Solo la temporada 1 está escrita", setOf(1), piezaM.temporadasEscritas)
+        assertEquals(emptyList<String>(), piezaM.problemas(calM))
+        assertEquals(Genero.FEMENINO, piezaM.genero)
+        // No es ficción: es una persona inventada en un mundo real.
+        assertEquals(Cuento.NOTA_HISTORICA, cuentoM("2027-04-04").nota)
+        assertTrue(piezaM.textos().count { "{nombre}" in it } > 40)
+        listOf("2027-03-03", "2029-05-10", "2030-09-09", "2031-11-11").forEach { d -> assertTrue(d, "Marguerite" in todoElDiaM(d)) }
+        // Los días especiales de la temporada 1, todos, y solo ellos.
+        assertEquals(calM.temporadas[0].dias.map { it.id }.toSet(), piezaM.especiales.keys)
+    }
+
+    /**
+     * Las frases que el cuento copia tal cual, cada una con el autor y la obra que la llevan al lado. Son de las que
+     * `docs/diseno/temas/fuentes_nouveau.md` (sección 11) comprobó letra por letra en el texto de la obra, en Wikisource:
+     * la 8 (Zola), la 10 (Mallarmé) y la 33 (Baudelaire).
+     */
+    private val FRASES = mapOf(
+        "la vérité est en marche, et rien ne l'arrêtera" to "Zola, J'accuse…!",
+        "l'absente de tous bouquets" to "Mallarmé, Avant-dire",
+        "Les parfums, les couleurs et les sons se répondent." to "Baudelaire, Correspondances",
+    )
+
+    /** Lo que va entre comillas españolas sin ser una cita: el nombre de una cosa, como se escribía. */
+    private val NOMBRES = setOf("Métropolitain")
+
+    @Test fun loQueVaTalCualEstaComprobadoYLoDemasEnEstiloIndirecto() {
+        val comillas = Regex("""«([^«»]+)»(?: \(([^()]+)\))?""")
+        var textuales = 0
+        piezaM.textos().forEach { t ->
+            assertFalse("Comillas inglesas en «${t.take(60)}…»", '"' in t || '“' in t || '”' in t)
+            comillas.findAll(t).forEach { x ->
+                val (dentro, fuente) = x.destructured
+                if (dentro in FRASES) { assertEquals("«$dentro» sin su autor y su obra al lado", FRASES.getValue(dentro), fuente); textuales++ }
+                else assertTrue("«$dentro»: ni es una frase comprobada ni un nombre", dentro in NOMBRES && fuente.isEmpty())
+            }
+        }
+        assertTrue("Hay $textuales citas textuales", textuales in 3..5)
+        // Las flores se dicen como las dice Le Langage des fleurs (sección 3), en estilo indirecto: el lila, la primera
+        // emoción de amor (p. 205); la margarita de los prados, que lo pensará (p. 205); la violeta, la modestia (p. 210).
+        val todo = piezaM.textos().joinToString(" ")
+        listOf("el lila, la primera emoción de amor", "la margarita de los prados, que lo pensará", "la violeta, la modestia", "la amapola, el consuelo", "el iris, un mensaje").forEach { assertTrue(it, it in todo) }
+    }
+
+    @Test fun laVozDelTemaYNadaFueraDeSuTiempoEnElCuentoDeMarguerite() {
+        // Lo que el tema no dice nunca (`docs/diseno/temas/nouveau.md`): el Art déco, la «Belle Époque» de postal, el cabaré de
+        // película, Tiffany; y lo que no es de su París: los frascos de Lalique para Coty, el Trianon-Concert que ardió.
+        val prohibidas = listOf("Belle Époque", "art déco", "déco", "cancán", "Tiffany", "Moulin-Rouge", "Moulin Rouge", "Lautrec", "Coty", "Trianon", "Lalique")
+        piezaM.textos().forEach { t -> prohibidas.forEach { assertFalse("«$it» en «${t.take(60)}…»", Regex("""(?U)\b${Regex.escape(it)}\b""", RegexOption.IGNORE_CASE).containsMatchIn(t)) } }
+        // Le Chat Noir solo como lo que ya cerró; la torre del Campo de Marte, de lejos y una vez.
+        piezaM.textos().filter { "Chat Noir" in it }.forEach { assertTrue(it, "cerró" in it) }
+        assertTrue(piezaM.textos().count { "torre de hierro" in it } <= 1)
+        // Los cafés-conciertos son los que estaban abiertos (corrección 10).
+        assertTrue(piezaM.textos().any { "La Cigale" in it }); assertTrue(piezaM.textos().any { "Divan japonais" in it })
+    }
+
+    @Test fun elMetroSoloDesdeQueAbreYNadieApareceAntesDeTiempo() {
+        // El camino: a pie hasta el 19 de julio de 1900, por las obras desde octubre de 1898, y en el metro desde que abre.
+        soloEntreM("2027-01-01", "2029-07-18", "media hora larga de adoquines")
+        soloEntreM("2027-10-04", "2029-07-18", "pasa junto a las vallas de las obras del metro")
+        soloEntreM("2029-07-19", "2031-12-31", "quince céntimos de segunda")
+        soloEntreM("2029-07-19", "2031-12-31", "sale del metro con los ojos acostumbrados")
+        soloEntreM("2029-07-19", "2031-12-31", "París tiene ahora dos pisos")
+        // La entrada delante del taller (el arco `metro`): nada, las obras al fondo, en la esquina, la barandilla y los faroles.
+        soloEntreM("2027-01-01", "2027-10-03", "Del metro todavía no se ve nada")
+        soloEntreM("2027-10-04", "2028-10-09", "Al fondo de la calle se ven las vallas")
+        soloEntreM("2028-10-10", "2029-07-18", "En la esquina están las vallas del metro")
+        soloEntreM("2029-07-19", "2030-03-17", "barandilla verde que se curva como un tallo")
+        soloEntreM("2030-03-18", "2031-12-31", "dos candelabros sostienen sus faroles")
+        // El oficio, que avanza.
+        soloEntreM("2027-02-21", "2031-12-31", "grania una piedra vieja")
+        soloEntreM("2027-12-10", "2031-12-31", "moja la piedra con la esponja")
+        soloEntreM("2028-02-27", "2031-12-31", "mete los pliegos en la prensa, uno por uno")
+        soloEntreM("2028-08-21", "2031-12-31", "atiende la prensa de vapor")
+        soloEntreM("2030-01-21", "2031-11-17", "dibuja letras en una piedra pequeña")
+        soloEntreM("2031-02-03", "2031-12-31", "prepara ella misma una piedra")
+        soloEntreM("2028-12-05", "2031-12-31", "Desde que tiene el cuaderno de tapas de tela")
+        // Berthe: soltera, con novio, casada y con una niña.
+        soloEntreM("2027-01-01", "2028-03-18", "el pelo rojo y la lengua rápida")
+        soloEntreM("2028-03-19", "2029-02-16", "Berthe tiene novio, Lucien")
+        soloEntreM("2029-02-17", "2031-06-01", "Berthe se casó con Lucien")
+        soloEntreM("2031-06-02", "2031-12-31", "Berthe tiene una niña, Louise")
+        // Paul, en la escuela y luego en el taller de su padre.
+        soloEntreM("2027-01-01", "2029-03-04", "va todavía a la escuela del barrio")
+        soloEntreM("2029-03-05", "2031-12-31", "Paul ha dejado la escuela")
+        // Henri: nadie lo nombra antes de las lilas; luego, el permiso; luego, el sí.
+        nuncaM("2027-01-01", "2030-05-11", "Henri")
+        soloEntreM("2030-05-12", "2030-12-07", "compone libros letra por letra")
+        soloEntreM("2030-12-08", "2031-12-15", "Henri ha pedido permiso a su padre")
+        soloEntreM("2031-12-16", "2031-12-31", "Henri y ella se casarán")
+        // Anselme, en el taller hasta que se retira; el Divan japonais, mientras es café-concierto.
+        soloEntreM("2027-01-01", "2031-11-17", "dibuja las letras de los carteles desde antes")
+        soloEntreM("2031-11-18", "2031-12-31", "Anselme ya no viene al taller")
+        soloEntreM("2028-06-24", "2030-08-09", "Divan japonais de la rue des Martyrs")
+    }
+
+    @Test fun duranteLaExposicionSeNotaYFueraNo() {
+        val pueblo = listOf("París está lleno de gente de fuera", "carteles de la Exposición y de sus pabellones", "en el centro no se cabe", "pabellones de cuarenta países")
+        val anochecer = listOf("amanecer equivocado", "a ver encenderse la Exposición", "París no se acaba de dormir", "plano de la Exposición")
+        val noche = listOf("ver encendida la Exposición", "llenas de extranjeros", "del lado de la Exposición")
+        val vistos = normalesM("2029-04-14", "2029-11-11")
+        assertTrue(vistos.size > 150)
+        vistos.forEach { d ->
+            assertEquals(d, "exposicion", cuentoM(d).ficha.estado)
+            val c = cuentoM(d, 22.0)
+            assertTrue("$d: el pueblo es el de siempre", pueblo.any { it in c.parrafos[Parrafo.PUEBLO.ordinal] })
+            assertTrue("$d: el anochecer es el de siempre", anochecer.any { it in c.parrafos[Parrafo.ANOCHECER.ordinal] })
+            assertTrue("$d: la noche es la de siempre", noche.any { it in c.parrafos[Parrafo.TRABAJO.ordinal] })
+        }
+        // Cambian de un día a otro, y fuera de la Exposición no sale ninguna.
+        assertTrue(vistos.map { cuentoM(it, 22.0).parrafos[Parrafo.PUEBLO.ordinal] }.toSet().size >= 4)
+        (normalesM("2027-01-01", "2029-04-13") + normalesM("2029-11-13", "2031-12-31")).forEach { d ->
+            (pueblo + anochecer + noche).forEach { assertFalse("$d: «$it» fuera de la Exposición", it in todoElDiaM(d)) }
+        }
+    }
+
+    @Test fun noTrabajaElDiaDeAnioNuevoNiTiraElDiaDelInventario() {
+        (2027..2031).forEach { y -> listOf(9.0, 15.0).forEach { h ->
+            assertTrue("$y-01-01, $h h", "Hoy no se trabaja" in cuentoM("$y-01-01", h).parrafos[Parrafo.TRABAJO.ordinal])
+            assertTrue("$y-12-29, $h h", "Hoy no se tira nada" in cuentoM("$y-12-29", h).parrafos[Parrafo.TRABAJO.ordinal])
+        } }
+        // El día de J'accuse…!, la frase de Zola, con su obra.
+        val zola = cuentoM("2027-01-13")
+        assertEquals("Zola publica «J'accuse…!» en L'Aurore, y en el taller no se habla de otra cosa", zola.titulo)
+        assertTrue("«la vérité est en marche, et rien ne l'arrêtera» (Zola, J'accuse…!)" in zola.parrafos[Parrafo.GENTE.ordinal])
+        assertEquals(CertezaDia.HISTORICO, zola.notas.first().certeza)
     }
 }

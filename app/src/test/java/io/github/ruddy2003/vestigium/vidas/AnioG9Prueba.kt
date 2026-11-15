@@ -15,7 +15,8 @@ import java.time.LocalDate
 /**
  * Los calendarios del grupo 9, los de los temas del lote 10: el de Tadeo, el agente de la red de Frente exterior, que es
  * ficción; el de Eleazar, el iniciado de Arcontes, una persona inventada en la Galilea real del 28 al 32, y el de
- * Segomaros, el aprendiz de los druidas de Galia, una persona inventada en la Galia real del 54 al 50 a. C. Las pruebas
+ * Segomaros, el aprendiz de los druidas de Galia, una persona inventada en la Galia real del 54 al 50 a. C., y el de
+ * Marguerite, la aprendiz de litografía de Art nouveau, una persona inventada en el París real de 1898 a 1902. Las pruebas
  * generales (forma, certeza, continuidad) están en [AnioPilotoPrueba] y corren solas sobre todo lo registrado en
  * [Calendarios]; aquí va lo propio de cada historia y lo que su cuadro va a leer.
  */
@@ -36,7 +37,7 @@ class AnioG9Prueba {
         generateSequence(LocalDate.of(anio, 1, 1)) { it.plusDays(1) }.takeWhile { it.year == anio }.count { ficha(it.toString()).estado == clave }
 
     @Test fun estaTadeoConSuTemaYEsFiccion() {
-        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida"), AnioG9.TODOS.map { it.vida })
+        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida", "litografa"), AnioG9.TODOS.map { it.vida })
         assertTrue("No está en el registro", Calendarios.de(c.vida) === c)
         val q = OtrasVidas.porId(c.vida)!!
         assertEquals("frente", q.tema); assertEquals("tema", q.dibujo); assertEquals("Tadeo", q.nombre); assertEquals(32, q.edad)
@@ -310,7 +311,7 @@ class AnioG9Prueba {
         generateSequence(LocalDate.of(anio, 1, 1)) { it.plusDays(1) }.takeWhile { it.year == anio }.count { fichaS(it.toString()).estado == clave }
 
     @Test fun estaSegomarosConSuTemaYEsUnaPersonaInventada() {
-        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida"), AnioG9.TODOS.map { it.vida })
+        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida", "litografa"), AnioG9.TODOS.map { it.vida })
         assertTrue("No está en el registro", Calendarios.de(apr.vida) === apr)
         val q = segomaros
         assertEquals("galia", q.tema); assertEquals("tema", q.dibujo); assertEquals("Segomaros", q.nombre); assertEquals(19, q.edad); assertEquals(-54, q.anio)
@@ -435,5 +436,153 @@ class AnioG9Prueba {
         assertEquals("victoria", fichaS("2029-05-20").escena); assertEquals("socorro", fichaS("2029-09-22").escena)
         assertEquals("entrega", fichaS("2029-09-27").escena); assertEquals("luto", fichaS("2030-08-26").escena)
         assertEquals(Clima.NIEVE, fichaS("2029-02-24").clima); assertEquals(Clima.TORMENTA, fichaS("2027-07-01").clima)
+    }
+
+    // ================================================================= Marguerite, la aprendiz de litografía de Art nouveau
+
+    private val lit = AnioG9.LITOGRAFA
+    private val marguerite get() = OtrasVidas.porId(lit.vida)!!
+    private fun fichaM(dia: String) = FichaDelDia.de(dia, marguerite, lit)
+    private fun fechasM(id: String) = lit.temporadas.map { t -> t.dias.firstOrNull { it.id == id }?.fecha }
+    private fun diaM(id: String) = lit.temporadas.flatMap { it.dias }.first { it.id == id }
+    private fun arcoM(dia: String, id: String) = fichaM(dia).arcos.getValue(id)
+    private fun diasEnM(clave: String, anio: Int) =
+        generateSequence(LocalDate.of(anio, 1, 1)) { it.plusDays(1) }.takeWhile { it.year == anio }.count { fichaM(it.toString()).estado == clave }
+
+    @Test fun estaMargueriteConSuTemaYEsUnaPersonaInventada() {
+        assertEquals(listOf("agente_red", "iniciado", "aprendiz_druida", "litografa"), AnioG9.TODOS.map { it.vida })
+        assertTrue("No está en el registro", Calendarios.de(lit.vida) === lit)
+        val q = marguerite
+        assertEquals("nouveau", q.tema); assertEquals("tema", q.dibujo); assertEquals("Marguerite", q.nombre); assertEquals("Aprendiz de un taller de litografía", q.rol)
+        // La ficha dice «19 años en 1900»: la temporada 1 es el 1898, y tiene 17.
+        assertEquals(17, q.edad); assertEquals(1898, q.anio)
+        // Su nombre es uno de la muestra de `fuentes_nouveau.md` (sección 10), y su apellido sale en la historia.
+        assertTrue(q.nombre in setOf("Marguerite", "Jeanne", "Louise", "Suzanne", "Germaine", "Marie"))
+        assertTrue(q.historia[0].startsWith("Marguerite Fournier"))
+        // No es ficción: es una persona inventada en un mundo real (PLAN_TEMAS, 10a), con sus números reconstruidos.
+        assertFalse(q.ficticia)
+        assertEquals("Persona inventada. Inspirada en los talleres de litografía que imprimían los carteles de París hacia 1900; las cifras son reconstrucciones.", q.inspiracion)
+        assertEquals(OtrasVidas.MEDIDAS.map { it.id }.toSet(), q.datos.keys)
+        assertTrue(q.datos.values.all { it.c == OtrasVidas.Certeza.RECONSTRUIDO })
+        assertEquals(3, q.historia.size); assertTrue(q.fuentes.isNotEmpty() && q.fuentes.all { it.second.startsWith("https://fr.wikipedia.org/wiki/") })
+        // Su agenda es la de la ficha del tema (PLAN_TEMAS, 10f), con las correcciones 8 y 9 de las fuentes.
+        val f = fichaM("2027-04-04")
+        listOf(2.0 to OtrasVidas.Hacer.DORMIR, 6.5 to OtrasVidas.Hacer.COMER, 7.2 to OtrasVidas.Hacer.CAMINO, 9.0 to OtrasVidas.Hacer.TRABAJO, 12.5 to OtrasVidas.Hacer.COMER,
+            15.0 to OtrasVidas.Hacer.TRABAJO, 19.2 to OtrasVidas.Hacer.CAMINO, 20.0 to OtrasVidas.Hacer.CUIDAR, 22.0 to OtrasVidas.Hacer.GENTE).forEach { (h, que) -> assertEquals("$h h", que, f.tramo(h)!!.que) }
+        assertEquals("pasar las piedras de cada color por la prensa", f.tramo(9.0)!!.texto)
+        // El metro solo desde el 19 de julio de 1900 (corrección 8), y a Montmartre, a pie.
+        assertEquals("a casa: a pie y, desde el 19 de julio de 1900, en el metro nuevo", f.tramo(19.2)!!.texto)
+        assertTrue(f.tramo(22.0)!!.texto.contains("Montmartre") && f.tramo(22.0)!!.texto.contains("a pie"))
+        assertTrue(f.tramo(22.0)!!.texto.contains("La Cigale") && !f.tramo(22.0)!!.texto.contains("Chat Noir"))
+        // Diez horas y media de trabajo: por debajo de las 11 de la ley del 30 de marzo de 1900, y lo mismo que pide desde 1902 (corrección 9).
+        val horas = q.dia.filter { it.que == OtrasVidas.Hacer.TRABAJO }.sumOf { it.hasta - it.desde }
+        assertEquals(10.5, horas, 1e-9)
+        // Tiene época (1898, más o menos treinta) y avanza un año con cada temporada: de 1898 a 1902.
+        assertEquals(1868..1928, Epocas.de(q))
+        assertEquals((1898..1902).map { "$it" }, lit.temporadas.map { it.cuando })
+        assertEquals(1898, fichaM("2027-03-03").anioHistorico); assertEquals(1900, fichaM("2029-03-03").anioHistorico); assertEquals(1902, fichaM("2031-03-03").anioHistorico)
+        assertEquals(19, fichaM("2029-03-03").edad); assertEquals(21, fichaM("2031-03-03").edad)
+        assertEquals(LUGARES.getValue("litografa").wikidata, setOf("Q90", "Q142", "Q70802", "Q50716", "Q753646", "Q186115"))
+    }
+
+    @Test fun unosVeinteDiasPorTemporadaYLaHistoriaAvanzaHastaElMetro() {
+        assertEquals(listOf("obras", "vispera", "exposicion", "faroles", "jornada"), lit.temporadas.map { it.mundo })
+        lit.temporadas.forEachIndexed { i, t ->
+            assertTrue("Temporada ${i + 1}: ${t.dias.size} días", t.dias.size in 18..22)
+            assertTrue("Temporada ${i + 1}: pocos días con fuente", t.dias.count { it.fuente != null } >= 6)
+            assertTrue("Temporada ${i + 1}: pocos sucesos de su vida", t.dias.count { it.tipo == TipoDia.SUCESO } >= 6)
+        }
+        // Entra de aprendiz (1), la víspera (2), la Exposición y el metro (3), los faroles (4) y la jornada de diez y media (5).
+        assertEquals(listOf("01-02", null, null, null, null), fechasM("entra_taller"))
+        assertEquals(listOf("01-13", null, null, null, null), fechasM("jaccuse"))
+        assertEquals(listOf("03-30", null, null, null, null), fechasM("seis_lineas"))
+        assertEquals(listOf("10-04", null, null, null, null), fechasM("obras_metro"))
+        assertEquals(listOf(null, "06-10", null, null, null), fechasM("concurso"))
+        assertEquals(listOf(null, null, "03-30", null, null), fechasM("ley_millerand"))
+        assertEquals(listOf(null, null, "04-14", null, null), fechasM("abre_exposicion"))
+        assertEquals(listOf(null, null, "05-01", null, null), fechasM("grand_palais"))
+        assertEquals(listOf(null, null, "06-15", null, null), fechasM("pruebas_metro"))
+        assertEquals(listOf(null, null, "07-19", null, null), fechasM("abre_metro"))
+        assertEquals(listOf(null, null, "08-06", null, null), fechasM("chatelet"))
+        assertEquals(listOf(null, null, "08-13", null, null), fechasM("louvre"))
+        assertEquals(listOf(null, null, "09-01", null, null), fechasM("linea_entera"))
+        assertEquals(listOf(null, null, "10-02", null, null), fechasM("trocadero"))
+        assertEquals(listOf(null, null, "11-12", null, null), fechasM("cierra_exposicion"))
+        assertEquals(listOf(null, null, "12-13", null, null), fechasM("dauphine"))
+        assertEquals(listOf(null, null, null, "02-13", null), fechasM("nancy"))
+        assertEquals(listOf(null, null, null, "03-18", null), fechasM("faroles"))
+        assertEquals(listOf(null, null, null, null, "04-01"), fechasM("jornada"))
+        assertEquals(listOf(null, null, null, null, "10-07"), fechasM("anvers"))
+        assertEquals(listOf(null, null, null, null, "12-11"), fechasM("petit_palais"))
+        // Lo que vuelve cada año comparte el id.
+        listOf("anio_nuevo", "auteuil", "inventario").forEach { id -> assertTrue(id, fechasM(id).all { it != null }) }
+        assertEquals(listOf("01-01", "01-01", "01-01", "01-01", "01-01"), fechasM("anio_nuevo"))
+        assertEquals(listOf("12-29", "12-29", "12-29", "12-29", "12-29"), fechasM("inventario"))
+        // Lo que dice que lo pensará va antes de que diga que sí (la margarita de los prados: «j'y songerai»).
+        assertTrue(MesDia.indice(diaM("lo_pensara").fecha) < MesDia.indice(diaM("dice_si").fecha))
+        // Las estaciones de su camino abren en orden: Palais-Royal y Bastille el primer día; Châtelet y Saint-Paul, y luego Louvre.
+        val orden = listOf("pruebas_metro", "abre_metro", "chatelet", "louvre", "linea_entera", "trocadero", "cierra_exposicion", "dauphine").map { MesDia.indice(diaM(it).fecha) }
+        assertEquals(orden.sorted(), orden)
+    }
+
+    @Test fun lasFechasSonLasDeLasFuentesYSusCorrecciones() {
+        // «Histórico», solo lo que `fuentes_nouveau.md` da con día; lo que solo tiene año o mes, «aproximado» con su fuente.
+        val historicos = lit.temporadas.flatMap { it.dias }.filter { it.certeza == CertezaDia.HISTORICO }.map { it.id }.toSet()
+        assertEquals(setOf("jaccuse", "seis_lineas", "obras_metro", "concurso", "ley_millerand", "abre_exposicion", "grand_palais", "pruebas_metro", "abre_metro",
+            "chatelet", "louvre", "linea_entera", "trocadero", "cierra_exposicion", "nancy", "jornada", "anvers", "petit_palais"), historicos)
+        lit.temporadas.flatMap { it.dias }.forEach { d ->
+            if (d.certeza == CertezaDia.INVENTADO) assertNull(d.id, d.fuente) else assertNotNull(d.id, d.fuente)
+        }
+        // El ramal de Porte Dauphine: el 13 o el 3 de diciembre, según dónde se mire en la página (sección 5).
+        assertEquals(CertezaDia.APROXIMADO, diaM("dauphine").certeza)
+        // La ley de 1900 y su escalón de 1902, con sus páginas.
+        assertEquals("https://fr.wikipedia.org/wiki/Mars_1900", diaM("ley_millerand").fuente!!.second)
+        assertEquals("https://fr.wikipedia.org/wiki/1902_en_France", diaM("jornada").fuente!!.second)
+        assertEquals("https://fr.wikipedia.org/wiki/Ligne_1_du_m%C3%A9tro_de_Paris", diaM("abre_metro").fuente!!.second)
+        // Antes del 19 de julio de 1900 ningún día la lleva en metro (corrección 8); el metro llega a Anvers en 1902.
+        val antes = lit.temporadas.take(2).flatMap { it.dias } + lit.temporadas[2].dias.filter { MesDia.indice(it.fecha) < MesDia.indice("07-19") }
+        antes.forEach { d -> assertFalse(d.titulo, Regex("""(?i)\ben (el )?metro\b|\btren\b""").containsMatchIn(d.titulo)) }
+        // Lo que el tema no usa nunca (`docs/diseno/temas/nouveau.md`) y lo que no había en su París.
+        val prohibidas = listOf("Belle Époque", "art déco", "déco", "cancán", "Tiffany", "Moulin-Rouge", "Moulin Rouge", "Lautrec", "Coty", "Trianon", "14 de julio")
+        val q = marguerite
+        val textos = lit.temporadas.flatMap { t -> listOf(t.cuando, t.resumen) + t.dias.map { it.titulo } } + q.historia + q.dia.map { it.texto } + q.datos.values.map { it.nota }
+        textos.forEach { s -> prohibidas.forEach { assertFalse("«$it» en «${s.take(60)}…»", Regex("""(?U)\b${Regex.escape(it)}\b""", RegexOption.IGNORE_CASE).containsMatchIn(s)) } }
+        // Le Chat Noir solo sale como lo que ya cerró (corrección 10).
+        textos.filter { "Chat Noir" in it }.forEach { assertTrue(it, "cerró" in it) }
+    }
+
+    @Test fun laExposicionDuraLoQueDuroYEnLaTemporadaCincoLoFijoNoSeMueve() {
+        // Del 14 de abril a la víspera del cierre, el 12 de noviembre (el último día ya es especial).
+        assertEquals(null, fichaM("2029-04-13").estado); assertEquals("exposicion", fichaM("2029-04-14").estado)
+        assertEquals("exposicion", fichaM("2029-11-11").estado); assertEquals(null, fichaM("2029-11-12").estado)
+        assertEquals(212, diasEnM("exposicion", 2029))
+        listOf(2027, 2028, 2030, 2031, 2032).forEach { y -> assertEquals("$y", 0, diasEnM("exposicion", y)) }
+        // En la temporada 5, que desde 2032 se repite, lo que no debe moverse no es un suceso, y no hay cadenas.
+        listOf("anio_nuevo", "inventario", "jornada", "anvers", "petit_palais", "pabellon", "letreros").forEach { assertNotEquals(it, TipoDia.SUCESO, diaM(it).tipo) }
+        assertTrue(lit.temporadas[4].dias.none { it.cadena != null })
+        // Lo que dice que sí sigue después de lo que lo pensará, aunque se muevan.
+        (2032..2041).forEach { y ->
+            val inicios = FichaDelDia.inicios(lit, y).associate { it.first.id to it.second }
+            assertTrue("$y", inicios.getValue("lo_pensara") < inicios.getValue("dice_si"))
+        }
+    }
+
+    @Test fun elCuadroDeArtNouveauPuedeContarLoMismoQueElCuento() {
+        // La entrada de metro delante del taller: sin obras, las obras al fondo, en la esquina, la barandilla y los faroles.
+        assertEquals(0.0, arcoM("2027-10-03", "metro"), 0.0); assertEquals(0.1, arcoM("2027-10-04", "metro"), 1e-9)
+        assertTrue(arcoM("2028-10-09", "metro") < 0.25); assertEquals(0.3, arcoM("2028-10-10", "metro"), 1e-9)
+        assertEquals(0.5, arcoM("2029-07-18", "metro"), 1e-9); assertEquals(0.75, arcoM("2029-07-19", "metro"), 0.0)
+        assertEquals(0.75, arcoM("2030-03-17", "metro"), 0.0); assertEquals(1.0, arcoM("2030-03-18", "metro"), 0.0); assertEquals(1.0, arcoM("2031-12-31", "metro"), 0.0)
+        // La valla de enfrente, llena durante la Exposición.
+        assertEquals(1.0, arcoM("2029-06-01", "carteles"), 0.0); assertTrue(arcoM("2029-11-13", "carteles") < 0.6); assertTrue(arcoM("2028-01-01", "carteles") < 0.5)
+        // Los árboles de la calle, cada año: desnudos en enero, llenos en junio.
+        (2027..2031).forEach { y -> assertEquals(0.0, arcoM("$y-01-15", "hojas"), 0.0); assertTrue("$y", arcoM("$y-06-20", "hojas") > 0.95) }
+        // Los días que cambian lo que se ve.
+        assertEquals("obras", fichaM("2027-10-04").escena); assertEquals("carteles", fichaM("2027-11-05").escena)
+        assertEquals("exposicion", fichaM("2029-04-14").escena); assertEquals("luces", fichaM("2029-06-09").escena)
+        assertEquals("metro", fichaM("2029-07-19").escena); assertEquals("faroles", fichaM("2030-03-18").escena); assertEquals("metro", fichaM("2031-10-07").escena)
+        assertEquals(Clima.TORMENTA, fichaM("2028-04-15").clima); assertEquals(Clima.NIEVE, fichaM("2030-01-30").clima); assertEquals(Clima.LLUVIA, fichaM("2030-07-08").clima)
+        // La visita a Auteuil (el invernadero del cuadro) vuelve cada año.
+        assertEquals(5, lit.temporadas.count { t -> t.dias.any { it.id == "auteuil" } })
     }
 }
