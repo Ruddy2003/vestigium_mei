@@ -5,6 +5,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -15,7 +18,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Foco
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Luces
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.capaSombra
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.charcoDeLuz
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
@@ -67,6 +69,20 @@ internal object VivacLuz {
         val bajo = (1f - l.solAltura / 0.6f).coerceIn(0f, 1f) * (1f - l.nublado).coerceIn(0f, 1f)
         return Rayo(r.dia, r.lat, cot, 1f / cot, -r.lat * cot, -0.33f * (1.3f - 0.6f * abs(r.lat)) * cot,
             (r.fuerza * (1f + 0.45f * bajo)).coerceAtMost(0.72f), r.color, r.contraste)
+    }
+
+    /**
+     * Una capa de sombras arrojadas, como `capaSombra` de la biblioteca (lo que se pinta dentro oscurece una sola vez
+     * aunque se encime), pero solo en la franja de [y0] a [y1]: las sombras del vivac caen todas en el campo, y una capa
+     * del tamaño del cuadro entero cuesta el doble.
+     */
+    inline fun DrawScope.capaSombra(r: Rayo, cuanta: Float = 1f, y0: Float = H - 1f, y1: Float = ALTO, crossinline dibujo: DrawScope.(Color) -> Unit) {
+        if (r.fuerza * cuanta <= 0.02f) return
+        drawIntoCanvas { tela ->
+            tela.saveLayer(Rect(-10f, y0, ANCHO + 10f, y1), Paint().apply { blendMode = BlendMode.Multiply; alpha = (r.fuerza * cuanta).coerceIn(0f, 1f) })
+            dibujo(r.color)
+            tela.restore()
+        }
     }
 
     // ================================================================ Las sombras de las nubes
@@ -154,14 +170,14 @@ internal object VivacLuz {
             Offset(-10f, H), Size(ANCHO + 20f, HASTA - H), blendMode = BlendMode.Plus)
         val alto = (l.solAltura / 0.9f).coerceIn(0f, 1f)
         val honda = 0.26f + 0.24f * (r.fuerza / 0.72f).coerceIn(0f, 1f) + 0.22f * alto + 0.14f * l.nublado
-        capaSombra(r, honda / r.fuerza.coerceAtLeast(0.05f)) { c ->
+        capaSombra(r, honda / r.fuerza.coerceAtLeast(0.05f), H - 1f, HASTA + 10f) { c ->
             clipRect(-10f, H - 1f, ANCHO + 10f, HASTA + 10f) {
                 for (s in sombras) {
                     val az = Azar(Semilla.de(v.m.semilla("nubes"), "sombra", s.semilla))
-                    repeat(9) {
-                        val q = s.centro + Offset(az.entre(-0.6f, 0.6f) * s.rx, az.entre(-0.35f, 0.35f) * s.ry)
+                    repeat(6) {
+                        val q = s.centro + Offset(az.entre(-0.55f, 0.55f) * s.rx, az.entre(-0.3f, 0.3f) * s.ry)
                         val baja = (1f - (q.y - 200f) / (HASTA + 10f - 200f)).coerceIn(0f, 1f)
-                        mancha(q, s.rx * az.entre(0.32f, 0.55f), s.ry * az.entre(0.6f, 1f), c, baja)
+                        mancha(q, s.rx * az.entre(0.4f, 0.6f), s.ry * az.entre(0.7f, 1.05f), c, baja)
                     }
                 }
             }

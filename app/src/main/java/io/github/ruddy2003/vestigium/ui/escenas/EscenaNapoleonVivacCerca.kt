@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaNapoleon.Fase
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaNapoleon.Marmita
@@ -222,7 +223,7 @@ internal object VivacCerca {
         val az = VivacNapoleon.fijo("mochilas", i)
         val lado = if (i < 2) 1f else -1f
         val n = if (pz.second < 14f) 2 else 1
-        return (0 until n).map { j -> w(pz.first + lado * (0.9f + j * 0.5f) + az.entre(-0.08f, 0.08f), pz.second + 0.3f + az.entre(-0.35f, 0.35f) + j * 0.4f) }
+        return (0 until n).map { j -> w(pz.first + lado * (0.78f + j * 0.55f) + az.entre(-0.22f, 0.22f), pz.second + 0.3f + az.entre(-0.5f, 0.5f) + j * 0.45f) }
     }
 
     private fun pabellonDe(i: Int, pz: Pair<Float, Float>, nieve: Float): Pabellon {
@@ -247,18 +248,19 @@ internal object VivacCerca {
                 pabellon(pb, v.en(pb.s.pie), lejos)
                 ultimaLuz(v, pb)
             }
-            // Lo de los cuatro al pie del pabellón, cada uno a su modo: mochilas de pie o echadas, con la manta o el capote
-            // enrollado encima (de colores distintos), y algún capote tirado.
+            // Lo de los cuatro al pie del pabellón, cada uno a su modo ([Mochila]): de pie, echada, abierta con lo de dentro
+            // fuera, con el capote echado encima, con la cantimplora colgada o apoyada en la culata; con la manta enrollada
+            // de colores distintos; y algún capote tirado.
             val az = VivacNapoleon.fijo("mochilas", i, "estilo")
             for ((j, q) in mochilasDe(i, pz).withIndex()) {
                 val s = PiezasNapoleon.sitio(MIRADA, q, az.entre(-0.9f, 0.9f) + 0.4f)
-                val tumbada = az.real() < 0.5f
+                val estilo = PRIMERAS.getOrNull(i)?.getOrNull(j) ?: Mochila.entries[(i * 5 + j * 3 + az.entero(6)) % Mochila.entries.size]
                 val rollo = listOf(C.CAPOTE, lerp(C.CAPOTE, C.LONA, 0.3f), lerp(C.CAPOTE, C.MADERA, 0.35f), lerp(C.AZUL, C.CAPOTE, 0.55f))[az.entero(4)]
                 val sem = az.entero(1000).toLong(); val capote = j == 1 && i % 3 == 1
                 val lejos = VivacNapoleon.lejos(pz.second)
                 cosas += parte(q.y) {
                     if (capote) { val kk = k(VivacNapoleon.zEn(q.y)); capote(v.en(q), q, 1.1f * kk, 0.3f * kk, Azar(sem), false, lejos, v.nieve, rollo) }
-                    else mochila(s, v.en(q), sem, tumbada, rollo, lejos, v.nieve)
+                    else mochilaA(v, s, q, estilo, sem, rollo, lejos, if (i % 2 == 0) 1f else -1f)
                 }
             }
         }
@@ -335,6 +337,65 @@ internal object VivacCerca {
             drawLine(c, p0 + n, p1 + n, (0.02f * s.k).coerceIn(0.45f, 1.8f), StrokeCap.Round, blendMode = BlendMode.Plus)
             drawCircle(c.copy(alpha = (0.6f * tarde).coerceIn(0f, 1f)), (0.03f * s.k).coerceIn(0.6f, 2.4f), p1, blendMode = BlendMode.Plus)
         }
+    }
+
+    /** Cómo deja cada uno su mochila al pie del pabellón. */
+    enum class Mochila { DE_PIE, ECHADA, ABIERTA, CON_CAPOTE, CON_CANTIMPLORA, APOYADA }
+
+    /** Las de los primeros pabellones, las que más se ven, puestas a mano para que no se repitan; las demás, al azar. */
+    private val PRIMERAS = listOf(
+        listOf(Mochila.ABIERTA, Mochila.CON_CANTIMPLORA), listOf(Mochila.DE_PIE, Mochila.ECHADA),
+        listOf(Mochila.CON_CAPOTE, Mochila.APOYADA), listOf(Mochila.ECHADA, Mochila.CON_CANTIMPLORA), listOf(Mochila.APOYADA, Mochila.DE_PIE),
+    )
+
+    /**
+     * Una mochila de la fila, a su modo **[Diseño propio]**: la pieza de [mochila] de pie o echada; abierta, con la tapa
+     * vuelta hacia atrás y la camisa y el pan fuera; con el capote echado encima; con la cantimplora de calabaza colgada
+     * de su cordón; o apoyada en la culata, ladeada hacia [lado].
+     */
+    private fun DrawScope.mochilaA(v: VistaVivac, s: Sitio, q: Offset, estilo: Mochila, sem: Long, rollo: Color, lejos: Float, lado: Float) {
+        val a = v.en(q); val kk = s.k
+        when (estilo) {
+            Mochila.DE_PIE -> mochila(s, a, sem, false, rollo, lejos, v.nieve)
+            Mochila.ECHADA -> mochila(s, a, sem, true, rollo, lejos, v.nieve)
+            Mochila.ABIERTA -> {
+                // La tapa vuelta hacia atrás, tendida en la hierba, con su forro más claro.
+                val tapa = listOf(V3(-0.19f, 0.15f, 0.17f), V3(0.19f, 0.15f, 0.17f), V3(0.18f, 0.01f, 0.42f), V3(-0.18f, 0.01f, 0.42f)).map { s.p(it) }
+                drawPath(poligono(tapa), a.cara(lerp(C.PIEL, C.LONA, 0.35f), s.normal(V3(0f, 1f, 0.3f)), centroDe(tapa), lejos))
+                drawPath(poligono(tapa), mult(a.cara(C.PIEL, s.normal(V3(0f, 1f, 0.3f)), centroDe(tapa), lejos), C.SOMBRA, 0.5f).copy(alpha = 0.6f), style = Stroke(0.5f))
+                mochila(s, a, sem, true, rollo, lejos, v.nieve)
+                // Lo de dentro, fuera: la camisa doblada y el pan de munición.
+                val camisa = s.p(V3(-0.08f, 0.02f, -0.3f)); val pan = s.p(V3(0.14f, 0.03f, -0.26f))
+                drawOval(a.arriba(lerp(C.LONA, C.NIEVE, 0.45f), camisa, lejos), Offset(camisa.x - 0.13f * kk, camisa.y - 0.05f * kk), Size(0.26f * kk, 0.07f * kk))
+                drawLine(mult(a.arriba(C.LONA, camisa, lejos), C.SOMBRA, 0.4f).copy(alpha = 0.6f), camisa + Offset(-0.1f * kk, -0.01f * kk), camisa + Offset(0.1f * kk, -0.012f * kk), 0.5f)
+                drawOval(a.plano(lerp(C.MADERA, C.LATON, 0.4f), pan, 0.4f, lejos), Offset(pan.x - 0.07f * kk, pan.y - 0.07f * kk), Size(0.14f * kk, 0.08f * kk))
+                drawOval(a.plano(lerp(C.LATON, C.LONA, 0.3f), pan, 0.9f, lejos).copy(alpha = 0.6f), Offset(pan.x - 0.045f * kk, pan.y - 0.065f * kk), Size(0.07f * kk, 0.03f * kk))
+            }
+            Mochila.CON_CAPOTE -> {
+                mochila(s, a, sem, false, rollo, lejos, v.nieve)
+                capote(a, s.p(V3(0f, 0.36f, 0.02f)), 0.5f * kk, 0.17f * kk, Azar(sem + 7), false, lejos, v.nieve)
+                // Una manga que cuelga por delante.
+                val m0 = s.p(V3(0.1f, 0.34f, -0.08f)); val m1 = s.p(V3(0.14f, 0.1f, -0.1f))
+                drawLine(a.plano(C.CAPOTE, m0, 0.2f, lejos), m0, m1, (0.07f * kk).coerceAtLeast(0.8f), StrokeCap.Round)
+                drawLine(mult(a.plano(C.CAPOTE, m0, 0.2f, lejos), C.SOMBRA, 0.4f), m0 + Offset(0.025f * kk, 0f), m1 + Offset(0.025f * kk, 0f), (0.015f * kk).coerceAtLeast(0.3f), StrokeCap.Round)
+            }
+            Mochila.CON_CANTIMPLORA -> {
+                mochila(s, a, sem, false, rollo, lejos, v.nieve)
+                cantimplora(a, s.p(V3(0.24f, 0.14f, -0.02f)), kk, lejos)
+            }
+            Mochila.APOYADA -> rotate(16f * lado, q) { mochila(s, a, sem, false, rollo, lejos, v.nieve) }
+        }
+    }
+
+    /** Una cantimplora de calabaza colgada de su cordón, con su tapón: [q] es el centro de la panza; [kk], px por metro. */
+    private fun DrawScope.cantimplora(a: Alumbre, q: Offset, kk: Float, lejos: Float) {
+        val r = 0.065f * kk; val color = lerp(C.MADERA, C.LATON, 0.4f)
+        drawLine(a.plano(C.CORREA, q, 0f, lejos), q + Offset(0f, -r * 2.1f), q + Offset(-r * 1.8f, -r * 3.6f), (0.008f * kk).coerceAtLeast(0.3f))
+        drawCircle(a.plano(color, q, 0.3f, lejos), r, q)
+        drawCircle(a.plano(color, q, 0.3f, lejos), r * 0.62f, q + Offset(0f, -r * 1.3f))
+        drawCircle(a.plano(lerp(color, C.LONA, 0.35f), q, 0.9f, lejos).copy(alpha = 0.7f), r * 0.35f, q + Offset(-r * 0.35f, -r * 0.3f))
+        drawCircle(mult(a.plano(color, q, 0f, lejos), C.SOMBRA, 0.5f).copy(alpha = 0.6f), r * 0.55f, q + Offset(r * 0.3f, r * 0.35f))
+        drawLine(a.plano(C.MADERA_OSC, q, 0f, lejos), q + Offset(0f, -r * 1.85f), q + Offset(0f, -r * 2.3f), (0.025f * kk).coerceAtLeast(0.4f), StrokeCap.Round)
     }
 
     // ---------------------------------------------------------------- El suelo de cerca

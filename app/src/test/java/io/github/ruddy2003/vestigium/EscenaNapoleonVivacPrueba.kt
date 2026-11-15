@@ -85,7 +85,11 @@ class EscenaNapoleonVivacPrueba {
         assertEquals(Campo.TRIGO, VivacNapoleon.campo(conClima("2027-07-10", 13.0, Clima.DESPEJADO)))
         assertEquals(Campo.ARENA, VivacNapoleon.campo(conClima("2027-05-25", 13.0, Clima.DESPEJADO)))
         assertEquals(Campo.VINA, VivacNapoleon.campo(conClima("2029-09-01", 13.0, Clima.DESPEJADO)))
-        assertEquals(Campo.RASTROJO, VivacNapoleon.campo(conClima("2028-10-01", 13.0, Clima.DESPEJADO)))
+        assertEquals(Campo.RASTROJO, VivacNapoleon.campo(conClima("2027-09-20", 13.0, Clima.DESPEJADO)))
+        // Cada tierra con lo suyo: Alemania de prado, Francia de viñas, Rusia de trigo.
+        assertEquals(Campo.HIERBA, VivacNapoleon.campo(conClima("2028-06-12", 13.0, Clima.DESPEJADO)))
+        assertEquals(Campo.HIERBA, VivacNapoleon.campo(conClima("2028-10-01", 13.0, Clima.DESPEJADO)))
+        assertEquals(Campo.VINA, VivacNapoleon.campo(conClima("2027-03-20", 13.0, Clima.DESPEJADO)))
         cadaDia { d, m -> assertEquals("$d", EscenaNapoleon.nieve(m) >= 0.5f, VivacNapoleon.campo(m) == Campo.NIEVE) }
     }
 
@@ -190,6 +194,13 @@ class EscenaNapoleonVivacPrueba {
         // «La última luz del día» en los cañones de los fusiles, al atardecer; no a mediodía.
         val tarde = (0 until 15).maxOf { VivacLuz.ultimaLuz(VistaVivac(conClima("2027-07-10", 17.0 + it / 3.0, Clima.DESPEJADO)).l) }
         assertTrue(tarde > 0.2f); assertEquals(0f, VivacLuz.ultimaLuz(VistaVivac(conClima("2027-07-10", 13.0, Clima.DESPEJADO)).l), 0f)
+        // Tres horas, tres cuadros: a las siete las sombras son largas (y con tope), a mediodía cortas; el relente es de
+        // la mañana y no de la tarde ni de los días de lluvia.
+        val siete = VistaVivac(conClima("2027-07-10", 7.0, Clima.DESPEJADO)).r; val una = VistaVivac(conClima("2027-07-10", 13.0, Clima.DESPEJADO)).r
+        assertTrue("${siete.cot} ${una.cot}", siete.cot > 3f * una.cot && siete.cot <= 5.5f && una.cot < 1f)
+        assertTrue(VivacLuz.relente(conClima("2027-07-10", 6.5, Clima.DESPEJADO), VistaVivac(conClima("2027-07-10", 6.5, Clima.DESPEJADO)).l) > 0.5f)
+        assertEquals(0f, VivacLuz.relente(conClima("2027-07-10", 13.0, Clima.DESPEJADO), VistaVivac(conClima("2027-07-10", 13.0, Clima.DESPEJADO)).l), 0f)
+        assertEquals(0f, VivacLuz.relente(conClima("2027-07-10", 6.5, Clima.LLUVIA), VistaVivac(conClima("2027-07-10", 6.5, Clima.LLUVIA)).l), 0f)
     }
 
     private val sePuedeDibujar: Boolean by lazy { runCatching { ImageBitmap(1, 1) }.isSuccess }
