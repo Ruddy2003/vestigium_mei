@@ -146,18 +146,18 @@ object Textos {
     )
 
     private val ARCONTES: Map<String, String> = mapOf(
-        "pestana_dia" to "PARTE",
-        "pestana_diario" to "DECLARAR",
-        "pestana_registrar" to "ANOTAR",
-        "pestana_vida" to "EXPEDIENTE",
-        "pestana_entender" to "INFORMES",
-        "escala_vacia" to "SIN DECLARAR · TOQUE O DESLICE",
-        "lista_anadir" to "+ ANEXAR",
-        "palabras" to "%d PALABRAS DECLARADAS",
-        "widget_animo" to "DECLARE SU ESTADO ACTUAL",
-        "widget_momento" to "EL CIUDADANO SIENTE…",
-        "widget_discreto_animo" to "ESTADO",
-        "widget_discreto_momento" to "DECLARAR",
+        "pestana_dia" to "Hoy",
+        "pestana_diario" to "Códice",
+        "pestana_registrar" to "Escribir",
+        "pestana_vida" to "Lámpara",
+        "pestana_entender" to "Conocer",
+        "escala_vacia" to "Aún sin escribir · toca o desliza",
+        "lista_anadir" to "+ añadir a la hoja",
+        "palabras" to "%d palabras en el códice",
+        "widget_animo" to "¿Cómo está tu alma?",
+        "widget_momento" to "En esta hora siento…",
+        "widget_discreto_animo" to "Alma",
+        "widget_discreto_momento" to "Destello",
     )
 
     private val FRENTE: Map<String, String> = mapOf(

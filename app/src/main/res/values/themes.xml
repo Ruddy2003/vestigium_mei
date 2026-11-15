@@ -78,6 +78,9 @@
     <style name="Theme.Vestigium.Arranque.Frente.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_frente_oscuro</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Arcontes.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_arcontes_oscuro</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Refugio" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_refugio</item>
     </style>

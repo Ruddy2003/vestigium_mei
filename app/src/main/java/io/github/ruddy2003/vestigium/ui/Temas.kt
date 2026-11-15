@@ -242,8 +242,14 @@ object Temas {
     private val MARCAS_DISTOPIA = mapOf("01-01" to "CENSO", "04-15" to "DECLARACIÓN", "05-01" to "CUOTA", "07-01" to "INVENTARIO",
         "10-01" to "PLAN", "11-15" to "REVISIÓN", "12-31" to "CIERRE")
 
-    private val MARCAS_ARCONTES = mapOf("01-01" to "CENSO", "04-15" to "DECLARACIÓN", "05-01" to "CUOTA", "07-01" to "INVENTARIO",
-        "10-01" to "PLAN", "11-15" to "REVISIÓN", "12-31" to "CIERRE")
+    /**
+     * Arcontes: solo fechas fijas reales. La noche del bautismo, que los basilidianos velaban leyendo (Clemente de
+     * Alejandría, *Stromata* 1.21.146: el 11 o el 15 de tybi, el 6 o el 10 de enero); y las cuatro puertas del sol del
+     * libro astronómico de Enoc (1 Enoc 72): el día igual a la noche, el más largo y el más corto. Las fiestas judías no
+     * van aquí porque se mueven con la luna (ver la historia del iniciado).
+     */
+    private val MARCAS_ARCONTES = mapOf("01-06" to "Noche del bautismo", "03-20" to "Día igual a la noche", "06-21" to "El día más largo",
+        "09-22" to "Noche igual al día", "12-21" to "La noche más larga")
 
     /**
      * Frente exterior: los días de la red, todos inventados. El cambio de claves de año nuevo; la noche más corta y la más
@@ -656,26 +662,27 @@ object Temas {
         "Lo mejor y lo peor" to "MÉRITOS Y FALTAS", "Personas, temas e hitos" to "PERSONAS DE INTERÉS", "Respaldo automático" to "COPIA DE SEGURIDAD",
     )
 
+    /** Arcontes: la voz baja de un círculo escondido de Galilea, con la lámpara, el códice, la jarra y los 365 cielos. */
     private val ARCONTES = mapOf(
-        "Mundo" to "DESPLAZAMIENTOS", "Patrimonio Mundial" to "SITIOS AUTORIZADOS", "Mapa para rascar" to "TERRITORIOS VISITADOS", "Ciudades visitadas" to "JURISDICCIONES",
-        "Biblioteca de sueños" to "ARCHIVO ONÍRICO", "Cartas" to "CORRESPONDENCIA", "Escribir una carta" to "REDACTAR CORRESPONDENCIA", "Carta" to "MISIVA", "Conocerte" to "FICHA DEL CIUDADANO", "Brújula política" to "EVALUACIÓN IDEOLÓGICA", "Mapas" to "CARTOGRAFÍA OFICIAL", "Salud" to "INFORME SANITARIO", "Tus apps" to "MONITOREO DE ACTIVIDAD", "Otras vidas" to "EXPEDIENTES HISTÓRICOS", "Logros" to "CONDECORACIONES", "Tu año en historias" to "INFORME ANUAL DEL CIUDADANO", "Anoche" to "ÚLTIMO TURNO NOCTURNO", "Selladas" to "CLASIFICADAS", "Listas para abrir" to "DESCLASIFICADAS", "A otras personas" to "A OTROS CIUDADANOS", "Del pasado" to "ARCHIVO HISTÓRICO",
-        "Hoy" to "DECLARACIÓN DE HOY", "Línea de tiempo" to "REGISTRO CRONOLÓGICO", "Ahora mismo estoy…" to "ESTADO ACTUAL DEL CIUDADANO",
-        "Entender" to "INTELIGENCIA", "Registros especiales" to "REGISTROS ESPECIALES", "Apariencia" to "APARIENCIA", "Avisos y recordatorios" to "CITACIONES",
-        "Llenar el día" to "DECLARACIÓN NOCTURNA", "Biblioteca del diario" to "ARCHIVO DE DECLARACIONES", "Entrada" to "DECLARACIÓN",
-        "Día" to "PARTE DIARIO", "Momentos" to "INCIDENCIAS", "Gastos" to "RACIONAMIENTO", "Explorar" to "VIGILANCIA", "Más" to "MINISTERIOS",
-        "Hábitos" to "CUOTAS", "Cartas al futuro" to "CORRESPONDENCIA SELLADA", "Experimentos personales" to "PRUEBAS AUTORIZADAS",
-        "Cómo leer tus datos" to "DOCTRINA", "Guía científica" to "DOCTRINA", "Cuestionarios" to "INTERROGATORIOS", "Prueba de reacción" to "PRUEBA DE REFLEJOS", "Lugares" to "ZONAS",
-        "Datos" to "ARCHIVO CENTRAL", "Permisos y sensores" to "SENSORES", "Ajustes" to "DIRECTIVAS", "Reportes" to "INFORMES",
-        "Bienvenido" to "ALTA DE CIUDADANO", "Calendario" to "PLAN", "Obras" to "MATERIAL APROBADO", "Tu año" to "BALANCE ANUAL",
-        "Privacidad" to "CLASIFICADO", "Sueño" to "DESCANSO", "Contexto" to "CIRCUNSTANCIAS", "Hitos" to "HECHOS NOTABLES",
-        "Ánimo y cuerpo" to "ESTADO DEL CIUDADANO", "Diario" to "DECLARACIÓN", "Predicción" to "PRONÓSTICO", "Este día hace un año" to "ANTECEDENTES",
-        "Lo que registró el teléfono" to "VIGILANCIA AUTOMÁTICA", "Registrar" to "DECLARAR", "Las relaciones más marcadas" to "CORRELACIONES",
-        "Mapa" to "ZONIFICACIÓN", "Mapa emocional" to "ZONIFICACIÓN", "Tablero" to "INDICADORES", "Tu día" to "SEGUIMIENTO 24 H", "Tu día en 24 horas" to "SEGUIMIENTO 24 H",
-        "Te falta hoy" to "PENDIENTE DE DECLARAR", "Datos que faltan" to "OMISIONES", "Tema" to "APARIENCIA", "Recordatorios" to "CITACIONES",
-        "Resumen semanal" to "INFORME SEMANAL", "Totales" to "ESTADÍSTICA OFICIAL", "Gimnasio" to "ACONDICIONAMIENTO", "Buscar" to "BÚSQUEDA",
-        "Cifras" to "CIFRAS OFICIALES", "Fotos del día" to "EVIDENCIA FOTOGRÁFICA", "Medicamentos" to "SUMINISTRO MÉDICO",
-        "Seguimiento privado" to "EXPEDIENTE RESERVADO", "Momentos de la semana" to "INCIDENCIAS DE LA SEMANA", "Momentos de este día" to "INCIDENCIAS DEL DÍA",
-        "Lo mejor y lo peor" to "MÉRITOS Y FALTAS", "Personas, temas e hitos" to "PERSONAS DE INTERÉS", "Respaldo automático" to "COPIA DE SEGURIDAD",
+        "Mundo" to "Los caminos del mundo", "Patrimonio Mundial" to "Lugares que guardan memoria", "Mapa para rascar" to "La tierra que has pisado", "Ciudades visitadas" to "Ciudades de tu camino",
+        "Biblioteca de sueños" to "Visiones de la noche", "Cartas" to "Cartas entre los escondidos", "Escribir una carta" to "Escribir a los hermanos", "Carta" to "Carta escondida", "Conocerte" to "Conócete a ti mismo", "Brújula política" to "Entre el César y el Templo", "Mapas" to "Mapas de la tierra", "Salud" to "El cuerpo que te viste", "Tus apps" to "Lo que te distrae", "Otras vidas" to "Otras chispas", "Logros" to "Amuletos grabados", "Tu año en historias" to "Lo que trajo el año", "Anoche" to "La vigilia de anoche", "Selladas" to "Selladas en la jarra", "Listas para abrir" to "Listas para romper el sello", "A otras personas" to "A otros que saben", "Del pasado" to "Las que ya hablaron",
+        "Hoy" to "El cielo de hoy", "Línea de tiempo" to "El hilo de los días", "Ahora mismo estoy…" to "En esta hora…",
+        "Entender" to "Conocer", "Registros especiales" to "Lo que se guarda aparte", "Apariencia" to "La vestidura", "Avisos y recordatorios" to "Avisos de la lámpara",
+        "Llenar el día" to "Escribir el día en el códice", "Biblioteca del diario" to "Los códices del diario", "Entrada" to "Hoja del códice",
+        "Día" to "Cielo del día", "Momentos" to "Destellos", "Gastos" to "Las monedas", "Explorar" to "Salir a ver", "Más" to "Lo escondido",
+        "Hábitos" to "Las prácticas", "Cartas al futuro" to "Cartas para los que vendrán", "Experimentos personales" to "Pruebas del alma",
+        "Cómo leer tus datos" to "Cómo leer las señales", "Guía científica" to "Cómo leer las señales", "Cuestionarios" to "Las preguntas de los guardianes", "Prueba de reacción" to "La prueba de los reflejos", "Lugares" to "Lugares de paso",
+        "Datos" to "Lo que se ha escrito", "Permisos y sensores" to "Lo que el teléfono percibe", "Ajustes" to "El taller", "Reportes" to "Relatos para los hermanos",
+        "Bienvenido" to "Entra en la reunión", "Calendario" to "Los 365 cielos", "Obras" to "Libros y cantos", "Tu año" to "La vuelta del año",
+        "Privacidad" to "Bajo sello", "Sueño" to "El sueño del cuerpo", "Contexto" to "Lo que rodea al día", "Hitos" to "Señales en el camino",
+        "Ánimo y cuerpo" to "Alma y cuerpo", "Diario" to "El códice", "Predicción" to "Lo que se adivina", "Este día hace un año" to "Este cielo hace un año",
+        "Lo que registró el teléfono" to "Lo que anotó el teléfono", "Registrar" to "Escribir", "Las relaciones más marcadas" to "Los lazos más fuertes",
+        "Mapa" to "Mapa de tus pasos", "Mapa emocional" to "Mapa del alma", "Tablero" to "La mesa", "Tu día" to "Las horas del día", "Tu día en 24 horas" to "Las horas del día",
+        "Te falta hoy" to "Lo que falta escribir", "Datos que faltan" to "Hojas en blanco", "Tema" to "La vestidura", "Recordatorios" to "Lo que no se olvida",
+        "Resumen semanal" to "La semana de los siete planetas", "Totales" to "La cuenta", "Gimnasio" to "El ejercicio del cuerpo", "Buscar" to "Buscar y hallar",
+        "Cifras" to "Las cuentas", "Fotos del día" to "Imágenes del día", "Medicamentos" to "Remedios",
+        "Seguimiento privado" to "Lo que se lleva en secreto", "Momentos de la semana" to "Destellos de la semana", "Momentos de este día" to "Destellos de este día",
+        "Lo mejor y lo peor" to "Luz y tiniebla", "Personas, temas e hitos" to "Personas, asuntos y señales", "Respaldo automático" to "Copia en la jarra",
     )
 
     /** Frente exterior: la red clandestina habla en clave de radio y de operación, sin palabras de la saga que lo inspira. */
