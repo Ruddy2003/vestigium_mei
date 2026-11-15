@@ -1470,8 +1470,8 @@ def libelula(dd, x0, y0, u, giro=0.0):
     """La libélula de las joyas de 1900, vista desde arriba, con la cabeza hacia −y: los dos ojos grandes, el tórax, el
     abdomen largo en diez anillos y las cuatro alas de esmalte translúcido (nácar) con su nervadura de oro y la mancha del
     pterostigma cerca de la punta. [dd] es un diccionario de lápices: 'oro' (lo que va en oro: los tabiques, las nervaduras,
-    los anillos), 'ala', 'cuerpo', 'ojo' y 'mancha'. Origen en el centro del tórax; [u] px por unidad (mide unas 120 de
-    largo y 140 de envergadura)."""
+    los anillos), 'ala', 'cuerpo', 'ojo' y 'mancha'. Origen en el centro del tórax; [u] px por unidad (mide unas 110 de
+    largo; con las alas echadas hacia delante y hacia atrás, unas 80 de ancho)."""
     P = _rot(x0, y0, u, giro)
     w_hilo = 1.5 * u
     # --- Las alas: las de delante echadas hacia delante y las de atrás hacia atrás, para que quepan junto a la huella.
@@ -1494,9 +1494,8 @@ def libelula(dd, x0, y0, u, giro=0.0):
     # --- El abdomen: diez anillos que se afinan, cada uno con su tabique de oro; al final, los dos apéndices.
     y = 9.0
     for i in range(10):
-        h = 8.6 - i * 0.35; w = 6.4 - i * 0.32 if i else 5.6
-        if i == 0: w = 6.8
-        pts = [P(-w / 2, y), P(w / 2, y), P(w / 2 * 0.86, y + h), P(-w / 2 * 0.86, y + h)]
+        h = 8.6 - i * 0.35; w = 7.6 - i * 0.36
+        if i == 0: w = 8.0
         seg = [P(x_ * w / 2, y + (y_ + 1) / 2 * h) for x_, y_ in
                [(math.cos(t) * (0.93 if abs(math.sin(t)) < 0.9 else 0.8), math.sin(t)) for t in np.linspace(0, 2 * math.pi, 24)[:-1]]]
         dd['cuerpo'].polygon(seg, fill=255)
@@ -1516,9 +1515,10 @@ def libelula(dd, x0, y0, u, giro=0.0):
     dd['cuerpo'].polygon(cara, fill=255); _cerrar(dd['oro'], cara, w_hilo, 255)
 
 
-def petalo(P, raiz, punta, ancho, curva=0.0, n=40, panza=0.55):
+def petalo(P, raiz, punta, ancho, curva=0.0, n=40, panza=0.55, ondula=0.0):
     """El contorno de un pétalo (o de una hoja ancha): de [raiz] a [punta], con el ancho máximo a [panza] del largo y el
-    eje curvado [curva] (fracción del largo, hacia la izquierda del avance)."""
+    eje curvado [curva] (fracción del largo, hacia la izquierda del avance); [ondula] riza el borde, como el de los
+    pétalos del iris."""
     (x0, y0), (x1, y1) = raiz, punta
     l = math.hypot(x1 - x0, y1 - y0); dx, dy = (x1 - x0) / l, (y1 - y0) / l; nx, ny = -dy, dx
     izq, der = [], []
@@ -1527,7 +1527,8 @@ def petalo(P, raiz, punta, ancho, curva=0.0, n=40, panza=0.55):
         cy = y0 + dy * l * t + ny * curva * l * math.sin(math.pi * t)
         w = ancho / 2 * math.sin(math.pi * min(1, (t / panza) * 0.5 if t < panza else 0.5 + (t - panza) / (1 - panza) * 0.5)) ** 0.7
         w = w * (1 - t ** 6) ** 0.4 + 0.3
-        izq.append(P(cx + nx * w, cy + ny * w)); der.append(P(cx - nx * w, cy - ny * w))
+        wi = w * (1 + ondula * math.sin(t * math.pi * 6.0) * t); wd = w * (1 + ondula * math.sin(t * math.pi * 6.0 + 1.9) * t)
+        izq.append(P(cx + nx * wi, cy + ny * wi)); der.append(P(cx - nx * wd, cy - ny * wd))
     return izq + der[::-1]
 
 
@@ -1542,23 +1543,31 @@ def eje_petalo(P, raiz, punta, curva, t0=0.0, t1=1.0, n=30):
 def iris_flor(dd, x0, y0, u, giro=0.0):
     """Un iris barbado de perfil, como adorno: tres pétalos que suben y se cierran arriba (el estandarte), tres que caen
     (las caídas), cada caída con su barba amarilla, y debajo la espata verde. Lápices: 'oro', 'estandarte', 'caida',
-    'barba', 'verde'. Origen donde se juntan los pétalos; mide unas 70 de ancho y 100 de alto."""
+    'vena' (las venas finas, más oscuras), 'barba' y 'verde'. Origen donde se juntan los pétalos; mide unas 70 de ancho y 100 de alto."""
     P = _rot(x0, y0, u, giro)
     w = 1.5 * u
-    # El estandarte: el de atrás, al centro, y los dos de los lados, que se curvan hacia dentro.
-    for raiz, punta, ancho, curva in (((0, -2), (0.5, -46), 26, 0.0), ((-3, -1), (-16, -40), 22, -0.16), ((3, -1), (16, -40), 22, 0.16)):
-        pts = petalo(P, raiz, punta, ancho, curva, panza=0.62)
+    # El estandarte: el de atrás, al centro, y los dos de los lados, que se curvan hacia dentro y se juntan arriba en una
+    # cúpula, con el borde rizado.
+    for raiz, punta, ancho, curva in (((0, -3), (0.5, -48), 28, 0.0), ((-5, -2), (-7, -45), 24, -0.2), ((5, -2), (7, -45), 24, 0.2)):
+        pts = petalo(P, raiz, punta, ancho, curva, panza=0.66, ondula=0.07)
         dd['estandarte'].polygon(pts, fill=255); _cerrar(dd['oro'], pts, w, 255)
+        dd['vena'].line(eje_petalo(P, raiz, punta, curva, 0.2, 0.8), fill=255, width=max(1, int(w * 0.6)))
     # Las caídas: la de delante, que cuelga, y las de los lados, que se abren y bajan.
     for raiz, punta, ancho, curva in (((-4, 2), (-34, 30), 22, 0.22), ((4, 2), (34, 30), 22, -0.22), ((0, 3), (1, 50), 27, 0.04)):
-        pts = petalo(P, raiz, punta, ancho, curva, panza=0.6)
+        pts = petalo(P, raiz, punta, ancho, curva, panza=0.6, ondula=0.05)
         dd['caida'].polygon(pts, fill=255); _cerrar(dd['oro'], pts, w, 255)
-        # las venas finas de la caída, que salen de la barba, y la barba (un trazo grueso, amarillo, en la mitad de arriba)
+        # las venas finas de la caída, que salen de la barba
         (xa, ya), (xb, yb) = raiz, punta
-        for k in (-0.22, 0.0, 0.22):
-            q0 = (xa + (xb - xa) * 0.35, ya + (yb - ya) * 0.35); q1 = (xa + (xb - xa) * 0.8 + k * (yb - ya) * 0.35, ya + (yb - ya) * 0.8 - k * (xb - xa) * 0.35)
+        for kk in (-0.22, 0.0, 0.22):
+            q0 = (xa + (xb - xa) * 0.4, ya + (yb - ya) * 0.4); q1 = (xa + (xb - xa) * 0.82 + kk * (yb - ya) * 0.35, ya + (yb - ya) * 0.82 - kk * (xb - xa) * 0.35)
             dd['vena'].line([P(*q0), P(*q1)], fill=255, width=max(1, int(w * 0.6)))
-        dd['barba'].line([P(xa + (xb - xa) * 0.06, ya + (yb - ya) * 0.06), P(xa + (xb - xa) * 0.42, ya + (yb - ya) * 0.42)], fill=255, width=max(1, int(4.2 * u)), joint='curve')
+        # la barba: una franja de pelillos amarillos sobre el eje de la mitad de arriba, que se afina hacia la punta
+        eje = eje_petalo(P, raiz, punta, curva, 0.05, 0.45, 14)
+        cinta(dd['barba'], eje, 4.6 * u, 1.2 * u, 255)
+        for i, (bx, by) in enumerate(eje[1:-1]):
+            r_ = (1.6 - 0.07 * i) * u
+            for lado in (-1, 1):
+                dd['barba'].ellipse([bx - r_ + lado * 1.6 * u, by - r_, bx + r_ + lado * 1.6 * u, by + r_], fill=255)
     # La espata: dos hojitas verdes que abrazan la base.
     for raiz, punta, curva in (((-1, 30), (-8, 6), 0.1), ((1, 32), (7, 9), -0.12)):
         pts = petalo(P, raiz, punta, 7.5, curva, panza=0.4)
@@ -1592,11 +1601,9 @@ def nouveau(tam):
     anchos = [(6.4 + 15.0 * (1 - a) ** 1.25) * k * min(1.0, 0.3 + a / 0.03) for a in avance]
     cinta_var(dd['tallo'], pts, anchos, 255)
     x, y = pts[-1]; r_ = anchos[-1] * 0.7; dd['tallo'].ellipse([x - r_, y - r_, x + r_, y + r_], fill=255)
-    # La hoja que brota en el pie del tallo.
-    for donde, giro, largo, ancho, curva in ((0.0, math.radians(146), 0.2, 0.06, -0.35),):
-        i = min(len(pts) - 2, int(donde * (len(pts) - 1)))
-        tx, ty = pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]
-        hoja_lanza(dd['tallo'], pts[i][0], pts[i][1], math.atan2(ty, tx) + giro, largo * R_TALLO, ancho * R_TALLO, 255, curva)
+    # La hoja que brota en el pie del tallo, hacia atrás.
+    tx, ty = pts[1][0] - pts[0][0], pts[1][1] - pts[0][1]
+    hoja_lanza(dd['tallo'], pts[0][0], pts[0][1], math.atan2(ty, tx) + math.radians(146), 0.2 * R_TALLO, 0.06 * R_TALLO, 255, -0.35)
     # El bisel.
     dd['oro'].ellipse([c - 0.985 * c, c - 0.985 * c, c + 0.985 * c, c + 0.985 * c], outline=255, width=int(6.5 * k))
     # Del pie del tallo suben las hojas de espada del iris y su vara.
@@ -1625,6 +1632,9 @@ def nouveau(tam):
     tonos = [(0.0, '#58437F'), (0.3, '#46366B'), (0.5, '#3A3058'), (0.64, '#30394A'), (0.78, '#283E34'), (1.0, '#1C2F25')]
     xs = [p for p, _ in tonos]; cs = np.array([col(t) for _, t in tonos])
     campo = np.stack([np.interp(v, xs, cs[:, j]) for j in range(3)], -1)
+    # Arriba a la izquierda, donde la luz atraviesa el esmalte, el violeta se calienta hacia el ámbar (como en el vidrio).
+    ambar = np.clip(1 - np.sqrt((xx - c * 0.45) ** 2 + (yy - c * 0.28) ** 2) / (c * 0.75), 0, 1) ** 1.6
+    campo = mezcla(campo, col('#9A6E58'), ambar * 0.42)
     # El guilloché: ondas concéntricas talladas en el metal, que se ven por debajo del esmalte (más claro en la cresta).
     ondas = np.sin(2 * math.pi * (rr * c / (4.6 * k) + 0.55 * np.sin(ang * 9 + rr * 7)))
     campo = campo * (0.9 + 0.1 * (0.5 + 0.5 * ondas))[..., None]

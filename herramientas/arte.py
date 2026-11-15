@@ -801,6 +801,130 @@ def papel_galia():
     a = mezcla(a, madera, marco)
     a_img(a).save(os.path.join(OUT, 'papel_galia.jpg'), quality=86)
 
+def papel_nouveau():
+    """Art nouveau: el papel crema de un cartel litográfico de 1900, de pasta de madera, liso y un poco amarillento, con su
+    formación en nubes (más espeso aquí, más ralo allá), fibras cortas y un grano fino. A los lados, muy suave, una cenefa
+    impresa como se imprimían los carteles: una piedra para cada color. La de la tinta salvia pone las manchas de los
+    tallos y las hojas, y la malva las del iris y los capullos; encima, la piedra del contorno, en verde oliva, cae un poco
+    corrida (el registro nunca era perfecto). Las manchas de color tienen el punteado del lápiz graso sobre la piedra
+    granulada. A la izquierda, un tallo sube desde abajo, se mece y arriba se enrosca en un rizo, con hojas de lanza y un
+    iris; otro más corto lo acompaña. A la derecha, otro tallo con su rizo y un capullo que se inclina. El centro queda
+    libre para el texto."""
+    W, H = 720, 1280
+    r = np.random.default_rng(211)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    # --- El papel: crema, con la formación en nubes, un viñeteado tibio, fibras y grano.
+    a = mezcla(col('#F2EBDA'), col('#E8DDC4'), ruido_rect(W, H, 55, 212) * 0.7)
+    a = mezcla(a, col('#EADFC6'), np.clip((ruido_rect(W, H, 7, 213) - 0.5) * 2.2, 0, 1) * 0.35)        # la formación
+    a = mezcla(a, col('#F5F0E2'), np.clip((ruido_rect(W, H, 18, 214) - 0.55) * 2.0, 0, 1) * 0.3)
+    borde = np.clip(np.maximum(np.abs(xx - W / 2) / (W / 2), np.abs(yy - H / 2) / (H / 2)) - 0.82, 0, 1) / 0.18
+    a = mezcla(a, col('#DCCDAB'), borde ** 2 * 0.35)
+    img = a_img(a); d = ImageDraw.Draw(img, 'RGBA')
+    for _ in range(650):                                             # fibras cortas de la pasta, claras y oscuras
+        x, y = r.random() * W, r.random() * H; ang = r.random() * math.pi; l = 3 + r.random() * 8
+        tono = (120, 100, 70, int(10 + r.random() * 16)) if r.random() < 0.6 else (255, 252, 240, int(30 + r.random() * 40))
+        d.line([(x, y), (x + l * math.cos(ang), y + l * math.sin(ang))], fill=tono, width=1)
+    for _ in range(5):                                               # unas pocas motas de óxido, chicas
+        x, y = r.random() * W, r.random() * H; s_ = 0.7 + r.random() * 1.4
+        d.ellipse([x - s_, y - s_, x + s_, y + s_], fill=(150, 112, 66, int(30 + r.random() * 35)))
+    a = np.asarray(img, np.float32)
+    a = a * (0.988 + 0.022 * ruido_rect(W, H, 0.6, 215)[..., None])
+    # --- La cenefa, dibujada al doble y reducida. Cada piedra en su capa.
+    k = 2
+    piedras = {n: Image.new('L', (W * k, H * k), 0) for n in ('salvia', 'malva', 'contorno')}
+    pd = {n: ImageDraw.Draw(im) for n, im in piedras.items()}
+    def cinta(dib, pts, anchos, c=255):
+        n = len(pts); izq, der = [], []
+        for i, (x, y) in enumerate(pts):
+            p0 = pts[max(i - 1, 0)]; p1 = pts[min(i + 1, n - 1)]
+            tx, ty = p1[0] - p0[0], p1[1] - p0[1]; l = math.hypot(tx, ty) or 1
+            w = anchos[i] / 2
+            izq.append((x - ty / l * w, y + tx / l * w)); der.append((x + ty / l * w, y - tx / l * w))
+        dib.polygon(izq + der[::-1], fill=c)
+        return izq + der[::-1]
+    def tallo(x, y, rumbo, largo, curvas, n=500):
+        """Un tallo como espiral de Euler: [curvas] da la curvatura (rad/px) en función de cuánto va (0–1)."""
+        pts = [(x, y)]
+        for i in range(n):
+            t = i / n; rumbo += curvas(t) * largo / n
+            x += largo / n * math.cos(rumbo); y += largo / n * math.sin(rumbo); pts.append((x, y))
+        return pts
+    def contorno(pts, w=1.3):
+        pd['contorno'].line([(x * k + 2.4, y * k + 1.6) for x, y in pts] + [(pts[0][0] * k + 2.4, pts[0][1] * k + 1.6)], fill=255, width=int(w * k), joint='curve')
+    def hoja(x, y, rumbo, largo, ancho, curva):
+        eje = tallo(x, y, rumbo, largo, lambda t: curva / largo, 40)
+        anchos = [ancho * math.sin(math.pi * (i / 40) ** 0.7) ** 0.85 + 0.3 for i in range(41)]
+        borde_ = cinta(pd['salvia'], [(px * k, py * k) for px, py in eje], [w_ * k for w_ in anchos])
+        contorno([(px / k, py / k) for px, py in borde_])
+        pd['contorno'].line([(px * k + 2.4, py * k + 1.6) for px, py in eje[3:-8]], fill=150, width=int(0.8 * k))
+    def dibuja_tallo(pts, w0, w1, hojas=(), rizo=True):
+        anchos = [(w0 + (w1 - w0) * i / (len(pts) - 1)) for i in range(len(pts))]
+        borde_ = cinta(pd['salvia'], [(x * k, y * k) for x, y in pts], [w_ * k for w_ in anchos])
+        contorno([(x / k, y / k) for x, y in borde_], 1.1)
+        for donde, lado, largo, ancho, curva in hojas:
+            i = int(donde * (len(pts) - 1)); (x0, y0), (x1, y1) = pts[i], pts[min(i + 3, len(pts) - 1)]
+            rumbo = math.atan2(y1 - y0, x1 - x0) + lado * 0.55
+            hoja(x0, y0, rumbo, largo, ancho, curva * lado)
+    def iris(x, y, s_):
+        """Un iris de perfil en dos tintas, chico (malva los pétalos, con su contorno)."""
+        for (dx0, dy0, dx1, dy1, an) in ((0, 0, 0, -26, 15), (-2, 0, -10, -22, 12), (2, 0, 10, -22, 12),
+                                          (-2, 2, -20, 18, 13), (2, 2, 20, 18, 13), (0, 2, 0, 28, 15)):
+            p0 = (x + dx0 * s_, y + dy0 * s_); p1 = (x + dx1 * s_, y + dy1 * s_)
+            l = math.hypot(p1[0] - p0[0], p1[1] - p0[1]); tx, ty = (p1[0] - p0[0]) / l, (p1[1] - p0[1]) / l
+            eje = [(p0[0] + tx * l * t, p0[1] + ty * l * t) for t in np.linspace(0, 1, 30)]
+            anchos = [an * s_ * math.sin(math.pi * min(1, t * 0.85 + 0.08)) ** 0.7 * (1 - t ** 6) ** 0.4 + 0.3 for t in np.linspace(0, 1, 30)]
+            borde_ = cinta(pd['malva'], [(px * k, py * k) for px, py in eje], [w_ * k for w_ in anchos])
+            contorno([(px / k, py / k) for px, py in borde_], 1.1)
+    def capullo(x, y, rumbo, s_):
+        eje = [(x + math.cos(rumbo) * s_ * t, y + math.sin(rumbo) * s_ * t) for t in np.linspace(0, 1, 30)]
+        anchos = [s_ * 0.42 * math.sin(math.pi * t ** 0.8) ** 0.8 + 0.3 for t in np.linspace(0, 1, 30)]
+        borde_ = cinta(pd['malva'], [(px * k, py * k) for px, py in eje], [w_ * k for w_ in anchos])
+        contorno([(px / k, py / k) for px, py in borde_], 1.1)
+    def tallo_borde(x0, y_arriba, amp, fase, lado, rizo=True, n=420):
+        """Un tallo que sube pegado al borde desde abajo hasta [y_arriba], meciéndose apenas ([amp] px), y arriba, si
+        [rizo], se dobla hacia dentro y se enrosca (el látigo). [lado]: −1 en el borde izquierdo, 1 en el derecho."""
+        pts = [(x0 + amp * math.sin((H + 10 - y) / 190 + fase) * (0.5 + 0.5 * (H - y) / H) - lado * 0.006 * (H - y), y)
+               for y in np.linspace(H + 10, y_arriba, n)]
+        if rizo:
+            (xa, ya), (xb, yb) = pts[-2], pts[-1]
+            rumbo = math.atan2(yb - ya, xb - xa); x, y = xb, yb; largo = 250
+            for i in range(200):
+                t = i / 200
+                rumbo += (-lado) * (0.002 + 0.115 * t ** 2.0) * largo / 200
+                x += largo / 200 * math.cos(rumbo); y += largo / 200 * math.sin(rumbo); pts.append((x, y))
+        return pts
+    # A la izquierda: el tallo largo, que arriba se dobla hacia dentro y se enrosca, y uno corto que se cruza con él y
+    # acaba en el iris; abajo, las hojas de espada del iris.
+    for x_, alto_, curva_ in ((18, 300, 0.25), (40, 230, -0.2), (60, 170, -0.3)):
+        hoja(x_, H + 8, -math.pi / 2 + curva_ * 0.4, alto_, 17, curva_)
+    t1 = tallo_borde(34, 210, 24, 0.3, -1)
+    dibuja_tallo(t1, 6.0, 2.6, hojas=((0.2, 1, 92, 14, -0.35), (0.34, -1, 74, 12, 0.3), (0.5, 1, 70, 11, -0.35), (0.64, -1, 56, 9, 0.3)))
+    t2 = tallo_borde(38, 770, 22, 3.4, -1, rizo=False)
+    dibuja_tallo(t2, 4.6, 3.0, hojas=((0.3, 1, 80, 12, -0.3),))
+    iris(max(64.0, t2[-1][0] + 6), t2[-1][1] - 28, 1.9)
+    i_ = int(0.46 * len(t1)); capullo(t1[i_][0] + 2, t1[i_][1], -math.pi / 2 + 0.85, 30)
+    # A la derecha: el tallo largo con su rizo, uno más corto con un capullo que se inclina, y las hojas de abajo.
+    for x_, alto_, curva_ in ((W - 18, 260, -0.25), (W - 42, 190, 0.22)):
+        hoja(x_, H + 8, -math.pi / 2 + curva_ * 0.4, alto_, 16, curva_)
+    t3 = tallo_borde(W - 34, 260, 24, 1.4, 1)
+    dibuja_tallo(t3, 6.0, 2.6, hojas=((0.24, -1, 84, 13, 0.3), (0.42, 1, 70, 11, -0.3), (0.6, -1, 58, 9, 0.3)))
+    t4 = tallo_borde(W - 38, 580, 22, 4.6, 1, rizo=False)
+    dibuja_tallo(t4, 4.4, 2.4, hojas=((0.3, -1, 70, 11, 0.3),))
+    capullo(t4[-1][0], t4[-1][1], -math.pi / 2 - 0.6, 34)
+    # --- Las tintas, con el punteado del lápiz sobre la piedra granulada, y la mezcla con el papel (como tinta: multiplica).
+    def capa(n, s=1.0):
+        m = np.asarray(piedras[n].filter(ImageFilter.GaussianBlur(0.7 * k)).resize((W, H), Image.LANCZOS), np.float32) / 255
+        return m * s
+    grano = ruido_rect(W, H, 0.55, 216)
+    punteado = 0.55 + 0.45 * np.clip((grano - 0.35) * 3, 0, 1)
+    salvia = capa('salvia') * punteado * (0.85 + 0.3 * ruido_rect(W, H, 30, 217))
+    malva = capa('malva') * punteado * (0.85 + 0.3 * ruido_rect(W, H, 30, 218))
+    linea = capa('contorno')
+    a = a * (1 - salvia[..., None] * (1 - col('#B9C5A6') / 255) * 0.75)
+    a = a * (1 - malva[..., None] * (1 - col('#D3B7CF') / 255) * 0.75)
+    a = a * (1 - linea[..., None] * (1 - col('#7D8A68') / 255) * 0.62)
+    a_img(a).save(os.path.join(OUT, 'papel_nouveau.jpg'), quality=86)
+
 if __name__ == '__main__':
     OUT = sys.argv[1]
     if len(sys.argv) > 2:
@@ -827,4 +951,5 @@ if __name__ == '__main__':
     papel_frente()
     papel_arcontes()
     papel_galia()
+    papel_nouveau()
     print('papeles listos')
