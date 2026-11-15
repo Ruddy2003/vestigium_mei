@@ -4,11 +4,14 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.data.OtrasVidas.Hacer
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Luces
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
@@ -151,12 +154,23 @@ internal object ValleMongol {
         velo(m, l, 0.4f, 60f, 200f)
         with(ValleCampamento) { campamento(m, p, sol, nieve) }
         with(ValleLuz) {
-            if (sv.manana) { val fondo = fondo(); sombraGrande(sv, r, fondo, null); luzDeLaFranja(sv, l, fondo) }
+            if (sv.manana) { val fondo = fondo(); sombraGrande(sv, r, fondo, null, ValleCampamento.cosasAlSol(m, nieve), ValleRio.forma()); luzDeLaFranja(sv, l, fondo) }
             vaho(m, l, sv)
         }
         velo(m, l, 0.22f, 140f, 222f)
         with(ValleCerca) { primerPlano(m, p, sol, nieve); marco(m, p, sol) }
-        if (!sv.manana) with(ValleLuz) { val todo = todo(); sombraGrande(sv, r, todo, ValleCerca.siluetaDeBat(m, nieve)); luzDeLaFranja(sv, l, todo) }
+        with(ValleLuz) {
+            val bat = ValleCerca.siluetaDeBat(m, nieve)
+            if (sv.manana) {
+                // Por la mañana la terraza y la tienda de Bat, más altas, ya tienen sol: claramente cálidas.
+                luzCalida(bat, l, 1f, 30f, ALTO)
+                clipPath(bat, ClipOp.Difference) { luzCalida(ValleCerca.terraza(), l, 0.8f, 200f, ALTO) }
+            } else {
+                val todo = todo()
+                sombraGrande(sv, r, todo, bat, ValleCampamento.cosasAlSol(m, nieve) + ValleCerca.cosasAlSol(m, nieve), ValleRio.forma())
+                luzDeLaFranja(sv, l, todo)
+            }
+        }
         tiempoQuieto(l, m.ficha.clima, H, m.semilla("tiempo"))
         grano(Azar(Semilla.de("mongol", "grano", "valle")), 0.6f + 0.4f * r.dia)
     }

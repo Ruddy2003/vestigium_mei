@@ -71,6 +71,8 @@ internal object ValleLejos {
         sierra(p, SIERRA_BAJA, H + 2f, lerp(lerp(C.MONTE, C.SOMBRA, 0.4f), C.HOLLIN, 0.32f), 0.52f, 0.1f + 0.55f * nieve, fijo("sierra", 1))
         bruma(p, 98f, H + 3f, 0.42f)
         lomas(m, p, sol, nieve)
+        // Por la tarde, con la sombra del cerro sobre el valle, la lejanía del otro lado del río queda dorada.
+        if (p.l.solX <= 0.6f) with(ValleLuz) { luzCalida(poligono(Offset(292f, 88f), Offset(392f, 86f), Offset(392f, 150f), Offset(300f, 136f)), p.l, 1.4f, 88f, 150f) }
     }
 
     private fun DrawScope.bruma(p: Pincel, y0: Float, y1: Float, alfa: Float) {

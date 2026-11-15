@@ -154,7 +154,11 @@ internal object ValleCampamento {
         if (ValleMongol.antorchas(m)) for (q in ANTORCHAS) resplandor(q + Offset(0f, -10f), 34f, 0.55f * l.noche, C.LUMBRE)
         // Cada tienda con su luz: la que está en la franja de sol se calienta; las del fondo, en la sombra, no.
         val sv = ValleLuz.sombraDelValle(l)
-        for (g in tiendas.sortedBy { it.s.pie.y }) ger(g, ValleLuz.alSol(p, sv, g.s.pie), sol)
+        for (g in tiendas.sortedBy { it.s.pie.y }) {
+            // Las más altas sacan el techo por encima de la sombra: el sol raso se lo dora aunque el pie esté en sombra.
+            val luz = if (g.humero.y < TrazosValle.alturaEn(ValleCerro.PIE, g.humero.x) - 2f) 1f else 1f - ValleLuz.sombraEn(sv, g.s.pie)
+            ger(g, ValleLuz.alSol(p, luz), sol)
+        }
         // Con el cielo muy cubierto las luces se encienden antes: el fuego de dentro asoma por el aro y por la rendija de
         // la puerta.
         val cub = ValleMongol.cubierto(l)
@@ -177,6 +181,19 @@ internal object ValleCampamento {
         with(ValleLuz) { filoDeRueda(carreta, l, 0.7f) }
         if (ValleMongol.carneColgada(m)) carne(m, p, sol)
         if (EscenaMongol.pielDeLobo(m)) pielTendida(p, SITIO_CARRETA.p(0f, carreta.tabla + 0.75f, 0.3f), 16f, lerp(C.PIEDRA, C.HOLLIN, 0.3f))
+    }
+
+    /**
+     * Lo que está de pie en el campamento, para la luz (`ValleLuz`): las tiendas con su silueta (la franja de sol se les
+     * monta), la carreta, el muro del corral y los caballos, que echan su sombra larga dentro de la franja.
+     */
+    fun cosasAlSol(m: Momento, nieve: Float): List<ValleLuz.Cosa> = buildList {
+        val hay = EscenaMongol.tiendas(m).toSet()
+        for (u in PUESTOS) if (u.tienda in hay) { val g = gerDe(m, u, nieve); add(ValleLuz.Cosa(g.s.pie, u.radio * u.k * 1.9f, 2.75f * u.k, PiezasMongol.silueta(g))) }
+        // La carreta, sin silueta: es baja y calada (entre las ruedas se ve la nieve); le basta su sombra larga.
+        add(ValleLuz.Cosa(SITIO_CARRETA.pie, 24f, 22f))
+        for (q in MURO_CORRAL) add(ValleLuz.Cosa(SITIO_CORRAL.p(q.x, 0f, q.y), 10f, 7f))
+        for (h in caballosDelCorral(m)) add(ValleLuz.Cosa(h.first, 11f, 10f))
     }
 
     /** Las sendas que se pisan en la nieve (o en la escarcha): de la terraza a las tiendas, al corral y al agujero del agua. */
@@ -302,7 +319,7 @@ internal object ValleCampamento {
             humo(l, g.humero, 40f + u.k * 2f, 2f + u.k * 0.4f, reloj, m.viento, 0.2f, 0.2f, j + 5, 7, 0.3f + 0.4f * g.dentro)
             // A contraluz, el sol raso enciende el humo que sale del aro.
             val enc = ValleLuz.sol(l) * ValleLuz.bajo(l)
-            if (enc > 0.05f) resplandor(g.humero + Offset(0f, -6f - u.k * 0.8f), 5f + u.k * 1.3f, 0.32f * enc, lerp(l.solColor, Color(0xFFFFC98A), 0.4f))
+            if (enc > 0.05f) resplandor(g.humero + Offset(0f, -6f - u.k * 0.8f), 5f + u.k * 1.4f, 0.45f * enc, lerp(l.solColor, Color(0xFFFFC98A), 0.4f))
         }
     }
 

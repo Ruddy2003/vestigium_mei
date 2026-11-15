@@ -92,6 +92,12 @@ internal object ValleLuz {
     /** Cuánto de bajo va el sol, de 0 (de 11:00 a 15:00) a 1 (el sol raso de las 7:00 y de las 19:00); 0 de noche. */
     fun bajo(l: Luces): Float = if (l.solAltura < -0.05f) 0f else ((1.25f - l.solAltura) / 0.8f).coerceIn(0f, 1f)
 
+    /**
+     * Hasta dónde llega la sombra grande, de 0 a 1: toda con el sol raso; todavía se nota a las 9:30 y vuelve a
+     * notarse desde las 16:00; nada de 10:30 a 15:30.
+     */
+    fun alcance(l: Luces): Float = if (l.solAltura < -0.05f) 0f else ((1.15f - l.solAltura) / 0.45f).coerceIn(0f, 1f)
+
     /** El sol que hay, de 0 a 1: nada de noche ni con el cielo cubierto. */
     fun sol(l: Luces): Float = (Rayo(l).fuerza / 0.72f).coerceIn(0f, 1f)
 
@@ -101,17 +107,19 @@ internal object ValleLuz {
      */
     fun sombraDelValle(l: Luces): SombraDelValle {
         val cuanta = sol(l) * ((0.55f - l.nublado) / 0.25f).coerceIn(0f, 1f)
-        val b = bajo(l)
+        val b = alcance(l)
+        // La franja camina con el sol (su sitio en el cielo), no con el alcance de la sombra, que se queda en todo un rato.
         return if (l.solX > 0.6f) {
             // La mañana: la franja baja del collado de la sierra y cruza el río, el corral y la carreta.
-            val u = 1f - b
-            SombraDelValle(cuanta, true, b, Offset(374f, 135f + 6f * u), Offset(228f + 18f * u, 207f + 7f * u), 5f + 4f * u, 13f + 9f * u)
+            val u = ((0.83f - l.solX) / 0.15f).coerceIn(0f, 1f)
+            SombraDelValle(cuanta, true, b, Offset(374f, 134f + 8f * u), Offset(220f + 40f * u, 205f + 9f * u), 5f + 4f * u, 13f + 9f * u)
         } else {
             // La tarde: entra por una vaguada del pie del cerro, que se corre a la izquierda mientras el sol baja.
-            val x = 252f - 54f * b
+            val e = ((0.5f - l.solX) / 0.16f).coerceIn(0f, 1f)
+            val x = 258f - 66f * e
             val a = Offset(x, TrazosValle.alturaEn(ValleCerro.PIE, x) + 2f)
-            val d = Offset(0.32f + 0.24f * b, 1f).let { it / it.getDistance() }
-            SombraDelValle(cuanta, false, b, a, a + d * 150f, 4f + 2f * b, 18f + 14f * b)
+            val d = Offset(0.32f + 0.24f * e, 1f).let { it / it.getDistance() }
+            SombraDelValle(cuanta, false, b, a, a + d * 150f, 4f + 2f * e, 18f + 14f * e)
         }
     }
 
@@ -133,10 +141,36 @@ internal object ValleLuz {
         return s.fuerza * ((s.frente + 12f - s.s(p)) / 24f).coerceIn(0f, 1f) * (1f - enFranja(s, p))
     }
 
-    /** La franja de sol, como forma. */
+    /**
+     * La franja de sol, como forma: no una banda recta sino el sol que cae sobre nieve con relieve, de bordes ondulados
+     * (cada uno con su ritmo) y la punta de arriba redonda. Va con una curva cerrada, sin picos.
+     */
     fun formaDeLaFranja(s: SombraDelValle): Path {
         val ab = s.franjaB - s.franjaA; val u = ab / ab.getDistance(); val n = Offset(-u.y, u.x)
-        return poligono(s.franjaA + n * s.anchoA, s.franjaB + n * s.anchoB, s.franjaB - n * s.anchoB, s.franjaA - n * s.anchoA)
+        val fase = if (s.manana) 1.3f else 2.1f
+        fun ancho(t: Float) = s.anchoA + (s.anchoB - s.anchoA) * t
+        val izq = (0..14).map { i -> val t = i / 14f; s.franjaA + ab * t + n * (ancho(t) * (1f + 0.24f * sin(t * 9.5f + fase) + 0.12f * sin(t * 23f + 2f * fase))) }
+        val der = (0..14).map { i -> val t = i / 14f; s.franjaA + ab * t - n * (ancho(t) * (1f + 0.2f * sin(t * 11f + 3f * fase) + 0.14f * sin(t * 19f + fase))) }
+        return TrazosValle.cerrada(listOf(s.franjaA - u * s.anchoA * 0.8f) + izq + der.reversed())
+    }
+
+    /** Algo que está de pie en el suelo: su [pie], su [ancho] y su [alto] en el lienzo y, si la luz se le monta encima, su [forma]. */
+    class Cosa(val pie: Offset, val ancho: Float, val alto: Float, val forma: Path? = null)
+
+    /** La sombra larga que echa [c] dentro de la franja, hacia donde va la luz (el sol raso la estira). */
+    private fun sombraLarga(s: SombraDelValle, c: Cosa): Path {
+        val ab = s.franjaB - s.franjaA; val u = ab / ab.getDistance()
+        val punta = c.pie + u * (c.alto * 2.6f)
+        val w = c.ancho * 0.5f
+        return poligono(c.pie + Offset(-w, 0.5f), c.pie + Offset(w, 0.5f), punta + Offset(w * 0.55f, 0f), punta + Offset(-w * 0.55f, 0f))
+    }
+
+    /** De qué x a qué x cruza la franja la horizontal de [y] (null si no la cruza). */
+    private fun tramo(s: SombraDelValle, y: Float): Pair<Float, Float>? {
+        val ab = s.franjaB - s.franjaA; if (abs(ab.y) < 0.01f) return null
+        val t = (y - s.franjaA.y) / ab.y; if (t < 0f || t > 1f) return null
+        val x = s.franjaA.x + ab.x * t; val w = (s.anchoA + (s.anchoB - s.anchoA) * t) * 1.25f
+        return (x - w) to (x + w)
     }
 
     /** La orilla de allá del río, de lejos a cerca, hasta el borde del cuadro. */
@@ -152,30 +186,62 @@ internal object ValleLuz {
     private val PIE_DE_BAT = Offset(150f, 262f)
 
     /**
-     * Pinta la sombra grande sobre lo que ya hay en [region]: una capa que multiplica (como `capaSombra`), con el frente
-     * blando y la franja de sol recortada. Si se pasa la [tienda] de Bat (la tarde), la sombra no la toca por donde está
-     * el suelo: le sube desde abajo según la sombra pasa su pie.
+     * Pinta la sombra grande sobre lo que ya hay en [region]: una capa que multiplica (como `capaSombra`), azul violeta
+     * y honda, con el frente blando, y la franja de sol recortada con forma de terreno:
+     * - en el [rio] la franja se hunde (queda corrida hacia abajo respecto de las orillas);
+     * - lo que pisa en ella ([cosas]) echa dentro su sombra larga, hacia donde va la luz;
+     * - lo que tiene silueta (las tiendas, la carreta, el Negro, el cofre, la olla) no se parte en diagonal por el frente
+     *   de la sombra ni por la franja: la sombra le sube desde el pie, y donde la franja le toca el pie la luz se le
+     *   monta en vertical.
+     * La [tienda] de Bat (por la tarde) se trata igual, con su pie junto a la puerta.
      */
-    fun DrawScope.sombraGrande(s: SombraDelValle, r: Rayo, region: Path, tienda: Path?) {
+    fun DrawScope.sombraGrande(s: SombraDelValle, r: Rayo, region: Path, tienda: Path?, cosas: List<Cosa> = emptyList(), rio: Path? = null) {
         val k = s.fuerza
         if (k <= 0.02f) return
-        val c = lerp(r.color, Color.White, 0.14f)
+        val c = lerp(r.color, Color(0xFF5A58A8), 0.4f)
+        val conForma = cosas.filter { it.forma != null } + (if (tienda != null) listOf(Cosa(PIE_DE_BAT, 160f, ALTO, tienda)) else emptyList())
+        val siluetas = if (conForma.isEmpty()) null else union(conForma.map { it.forma!! })
+        val franja = formaDeLaFranja(s)
+        val ab = s.franjaB - s.franjaA; val u = ab / ab.getDistance()
+        fun hueco(f: Path) {
+            drawPath(f, Color.Black, blendMode = BlendMode.DstOut)
+            for ((w, al) in listOf(9f to 0.2f, 5f to 0.28f, 2.2f to 0.42f)) drawPath(f, Color.Black.copy(alpha = al), style = Stroke(w), blendMode = BlendMode.DstOut)
+        }
         drawIntoCanvas { tela ->
-            tela.saveLayer(Rect(0f, 0f, ANCHO, ALTO), Paint().apply { blendMode = BlendMode.Multiply; alpha = (0.82f * k).coerceIn(0f, 1f) })
+            tela.saveLayer(Rect(0f, 0f, ANCHO, ALTO), Paint().apply { blendMode = BlendMode.Multiply; alpha = (0.9f * k).coerceIn(0f, 1f) })
             val a = s.origen + s.hacia * (s.frente - 12f); val b = s.origen + s.hacia * (s.frente + 12f)
             val brocha = Brush.linearGradient(0f to c, 1f to c.copy(alpha = 0f), start = a, end = b)
-            if (tienda != null) {
-                clipPath(tienda, ClipOp.Difference) { drawPath(region, brocha) }
-                val sube = ((s.frente - s.s(PIE_DE_BAT)) / 60f).coerceIn(0f, 1f)
-                if (sube > 0f) {
-                    val y = ALTO + 8f - (ALTO + 24f) * sube
-                    clipPath(tienda) { drawRect(Brush.verticalGradient(0f to c.copy(alpha = 0f), 1f to c, startY = y - 16f, endY = y + 16f), Offset(-10f, y - 16f), Size(220f, ALTO + 26f - y)) }
-                }
-            } else drawPath(region, brocha)
-            // La franja: el sol que el cerro (o el collado) deja pasar, con el borde blando.
-            val franja = formaDeLaFranja(s)
-            drawPath(franja, Color.Black, blendMode = BlendMode.DstOut)
-            for ((w, al) in listOf(10f to 0.22f, 5.5f to 0.3f, 2.4f to 0.45f)) drawPath(franja, Color.Black.copy(alpha = al), style = Stroke(w), blendMode = BlendMode.DstOut)
+            // El suelo, con su frente blando, y la franja recortada (en el río, más abajo: se hunde).
+            fun suelo() {
+                drawPath(region, brocha)
+                if (rio != null) { clipPath(rio, ClipOp.Difference) { hueco(franja) }; clipPath(rio) { translate(u.x * 2f, 3.5f) { hueco(franja) } } } else hueco(franja)
+                // Dentro de la franja, las sombras largas de lo que pisa en ella.
+                clipPath(franja) { for (q in cosas) { val f = enFranja(s, q.pie); if (f > 0.15f) drawPath(sombraLarga(s, q), c.copy(alpha = f)) } }
+            }
+            if (siluetas != null) clipPath(siluetas, ClipOp.Difference) { suelo() } else suelo()
+            // Lo que tiene silueta: la sombra le sube desde el pie; donde la franja le toca el pie, la luz se le monta.
+            // (Las tiendas del campamento, solo dentro de la región: el techo de las altas queda al sol. La de Bat, entera.)
+            for (q in conForma) {
+                val hondo = ((s.frente + 12f - s.s(q.pie)) / 24f).coerceIn(0f, 1f)
+                if (hondo <= 0.02f) continue
+                val y = q.pie.y + 6f - (q.alto * 1.3f + 14f) * hondo
+                val forma = q.forma!!
+                clipPath(if (forma === tienda) forma else region) { clipPath(forma) {
+                        drawRect(Brush.verticalGradient(0f to c.copy(alpha = 0f), 1f to c, startY = y - 12f, endY = y + 12f), Offset(-10f, y - 12f), Size(ANCHO + 20f, ALTO + 20f - y))
+                        val t = tramo(s, q.pie.y)
+                        val x0 = q.pie.x - q.ancho * 0.5f; val x1 = q.pie.x + q.ancho * 0.5f
+                        if (t != null && t.second > x0 && t.first < x1) {
+                            // Lo chico (la olla, el cofre, el Negro) que la franja toca de lleno se enciende entero; en lo
+                            // grande (una tienda) se le monta una tira. Siempre con los cantos blandos, sin cortes duros.
+                            val cubre = (minOf(t.second, x1) - maxOf(t.first, x0)) / (x1 - x0)
+                            val (a0, a1) = if (cubre > 0.4f && q.ancho < 60f) (x0 - 2f) to (x1 + 2f) else t
+                            val top = q.pie.y - q.alto * 1.4f
+                            for (m in listOf(0f, 3f, 6f)) if (a1 - a0 > 2f * m + 1f) {
+                                drawRect(Brush.verticalGradient(0f to Color.Transparent, 0.35f to Color.Black.copy(alpha = 0.5f), startY = top, endY = q.pie.y), Offset(a0 + m, top), Size(a1 - a0 - 2f * m, q.pie.y + 4f - top), blendMode = BlendMode.DstOut)
+                            }
+                        }
+                } }
+            }
             tela.restore()
         }
     }
@@ -190,6 +256,17 @@ internal object ValleLuz {
             drawPath(franja, c.copy(alpha = 0.17f * k), blendMode = BlendMode.Plus)
             for ((w, al) in listOf(9f to 0.025f, 4.5f to 0.035f)) drawPath(franja, c.copy(alpha = al * k), style = Stroke(w), blendMode = BlendMode.Plus)
         }
+    }
+
+    /**
+     * Lo que el sol raso sí toca, claramente cálido: un baño de luz dorada (que se suma) sobre [forma]. [fuerza] lo
+     * gradúa; se apaga a mediodía, de noche y con el cielo cubierto.
+     */
+    fun DrawScope.luzCalida(forma: Path, l: Luces, fuerza: Float, y0: Float = 0f, y1: Float = ALTO) {
+        val k = sol(l) * bajo(l) * ((0.55f - l.nublado) / 0.25f).coerceIn(0f, 1f) * fuerza
+        if (k <= 0.02f) return
+        val c = lerp(l.solColor, Color(0xFFFFB870), 0.45f)
+        drawPath(forma, Brush.verticalGradient(0f to c.copy(alpha = 0.16f * k), 1f to c.copy(alpha = 0.07f * k), startY = y0, endY = y1), blendMode = BlendMode.Plus)
     }
 
     // ---------------------------------------------------------------- La luz enciende lo pintado
@@ -288,7 +365,7 @@ internal object ValleLuz {
     fun rayoDeLuna(l: Luces): Rayo? {
         val k = luna(l); if (k <= 0.02f) return null
         val cruda = ((l.lunaX - 0.5f) * 2.6f).coerceIn(-1f, 1f); val lat = if (abs(cruda) < 0.35f) (if (cruda < 0f) -0.35f else 0.35f) else cruda
-        return rayoFijo(lat, 24f + 30f * l.lunaAltura, 0.52f * k, SOMBRA_DE_LUNA, 0.6f)
+        return rayoFijo(lat, 24f + 30f * l.lunaAltura, 0.72f * k, SOMBRA_DE_LUNA, 0.6f)
     }
 
     /** El sol con que se tumban las sombras arrojadas: de día el de siempre; de noche, el de la luna. */
@@ -298,9 +375,11 @@ internal object ValleLuz {
      * La nieve (o la hierba helada) plateada por la luna en [forma]: más del lado de la luna y menos del otro. Va antes
      * de las sombras de luna, que la cortan en azul hondo.
      */
-    fun DrawScope.plata(forma: Path, l: Luces, nieve: Float, fuerza: Float = 1f) {
+    fun DrawScope.plata(forma: Path, l: Luces, nieve: Float, fuerza: Float = 1f, pareja: Boolean = false) {
         val k = luna(l) * fuerza * (0.4f + 0.6f * nieve)
         if (k <= 0.02f) return
+        // En el primer plano, pareja y clara: lo que se lee es la forma que le recortan las sombras de la luna.
+        if (pareja) { drawPath(forma, LUNA.copy(alpha = (0.26f * k).coerceIn(0f, 1f)), blendMode = BlendMode.Plus); return }
         val derecha = l.lunaX > 0.5f
         val cerca = LUNA.copy(alpha = 0.22f * k); val lejos = LUNA.copy(alpha = 0.05f * k)
         drawPath(forma, Brush.horizontalGradient(0f to (if (derecha) lejos else cerca), 1f to (if (derecha) cerca else lejos), startX = 60f, endX = ANCHO), blendMode = BlendMode.Plus)

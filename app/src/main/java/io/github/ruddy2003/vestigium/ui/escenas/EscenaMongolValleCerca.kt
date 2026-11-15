@@ -99,6 +99,24 @@ internal object ValleCerca {
     /** Donde pisa la tienda de Bat junto a la puerta (para saber si le da el sol). */
     private val PIE_DE_BAT = Offset(150f, 262f)
 
+    /** La terraza (del talud a quien mira), como forma. */
+    fun terraza(): Path = poligono(TALUD + listOf(Offset(392f, ALTO + 2f), Offset(60f, ALTO + 2f), Offset(60f, 230f)))
+
+    /**
+     * Lo que está de pie en la terraza, para la luz (`ValleLuz`): el Negro y el caballo ajeno si están, la olla en su
+     * hogar, el poste y el cofre. Con su silueta: la sombra de la tarde les sube desde el pie, no los parte.
+     */
+    fun cosasAlSol(m: Momento, nieve: Float): List<ValleLuz.Cosa> = buildList {
+        val negro = EscenaMongol.negroAtado(m)
+        if (negro) add(ValleLuz.Cosa(NEGRO, 44f, ALTO_NEGRO, PiezasMongol.siluetaDeCaballo(NEGRO, ALTO_NEGRO, -1f, postura = Postura.DESCANSO)))
+        if (EscenaMongol.caballoAjeno(m)) { val q = ajenoEn(negro); val a = if (negro) 34f else 38f; add(ValleLuz.Cosa(q, a, a, PiezasMongol.siluetaDeCaballo(q, a, -1f))) }
+        add(ValleLuz.Cosa(HOGAR, 44f, 42f, poligono(HOGAR + Offset(-24f, 2f), HOGAR + Offset(24f, 2f), HOGAR + Offset(23f, -44f), HOGAR + Offset(-23f, -44f))))
+        add(ValleLuz.Cosa(POSTE, 4f, 30f, poligono(POSTE + Offset(-2f, 1f), POSTE + Offset(2f, 1f), POSTE + Offset(2f, -31f), POSTE + Offset(-2f, -31f))))
+        val s = SITIO_COFRE
+        val esquinas = listOf(-COFRE_W, COFRE_W).flatMap { x -> listOf(0f, COFRE_H + 0.12f).flatMap { y -> listOf(-COFRE_D, COFRE_D).map { z -> s.p(x, y, z) } } }
+        add(ValleLuz.Cosa(COFRE, 40f, 36f, poligono(envolvente(esquinas))))
+    }
+
     /** La silueta de la tienda de Bat: la sombra grande de la tarde le sube desde abajo (ver `ValleLuz`). */
     fun siluetaDeBat(m: Momento, nieve: Float): Path = PiezasMongol.silueta(bat(m, nieve))
 
@@ -117,7 +135,7 @@ internal object ValleCerca {
         val calida = luzDeLaPuerta(m, g, l)
         terraza(m, p, sol, nieve, az)
         // De noche, la luna platea la terraza; delante de la puerta manda la lumbre (su charco va después, encima).
-        with(ValleLuz) { plata(poligono(TALUD + listOf(Offset(392f, ALTO + 2f), Offset(60f, ALTO + 2f), Offset(60f, 230f))), l, nieve, 0.9f) }
+        with(ValleLuz) { plata(terraza(), l, nieve, 1f, pareja = true) }
         // Lo pintado se enciende donde le da el sol: la puerta y la tienda por la mañana; el cofre cuando la sombra grande
         // no lo tapa (ver `ValleLuz`).
         val sv = ValleLuz.sombraDelValle(l)

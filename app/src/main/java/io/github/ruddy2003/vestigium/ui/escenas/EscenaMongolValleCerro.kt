@@ -135,8 +135,10 @@ internal object ValleCerro {
         with(ValleLuz) { haloDeLaHoraAzul(m, p.l, CRESTA) }
         plano(p, sol, nieve, pasto, cima, CRESTA, CIMA, PENAS_CIMA, hierba, 0.13f, fijo("cima"))
         // Con el sol raso, lo alto es lo último (o lo primero) que alumbra: la cima se dora.
-        val dorado = ValleLuz.sol(p.l) * ValleLuz.bajo(p.l)
-        if (dorado > 0.05f) clipPath(cima) { drawRect(Brush.verticalGradient(0f to lerp(p.l.solColor, Color(0xFFFFC98A), 0.4f).copy(alpha = 0.16f * dorado), 1f to Color.Transparent, startY = 52f, endY = 112f), Offset(0f, 50f), Size(330f, 62f), blendMode = BlendMode.Plus) }
+        // Por la mañana se dora casi todo el cerro (le da de cara); por la tarde, solo lo alto, sobre la sombra del valle.
+        val dorado = ValleLuz.sol(p.l) * ValleLuz.bajo(p.l) * ((0.55f - p.l.nublado) / 0.25f).coerceIn(0f, 1f)
+        val hasta = if (p.l.solX > 0.6f) 150f else 108f
+        if (dorado > 0.05f) clipPath(cima) { drawRect(Brush.verticalGradient(0f to lerp(p.l.solColor, Color(0xFFFFB870), 0.45f).copy(alpha = 0.26f * dorado), 1f to Color.Transparent, startY = 52f, endY = hasta), Offset(0f, 50f), Size(330f, hasta - 50f), blendMode = BlendMode.Plus) }
         // El ovoo, recortado contra el cielo, con su sombra en la cima (la del sol o la de la luna); sus cintas se encienden
         // con el sol.
         val alto = 24f
