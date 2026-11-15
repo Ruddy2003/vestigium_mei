@@ -4,7 +4,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
@@ -20,7 +19,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.grano
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.humo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.llama
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.tiempoQuieto
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.tiempoVivo
 import io.github.ruddy2003.vestigium.vidas.Azar
@@ -112,6 +110,24 @@ internal object ValleMongol {
     /** Los animales muertos de hambre sobre la nieve dura, en el invierno malo (temporada 4, de la costra de hielo al fondo del arco). */
     fun muertosEnLaNieve(m: Momento): Int = if (m.ficha.temporada == 4 && EscenaMongol.paso(m, 4, "02-15") && !EscenaMongol.paso(m, 4, "03-21")) 3 else 0
 
+    /** El día que muere la madre, su tienda «se quemó con sus cosas»: la ceniza fresca, las varas negras y un hilo de humo. */
+    fun cenizaFresca(m: Momento): Boolean = EscenaMongol.hoyEs(m, "muere_madre")
+
+    /**
+     * Cuánto se nota la tierra quemada donde estuvo la tienda de la madre, de 0 a 1: toda el día que muere, menos el resto
+     * de ese invierno y poco desde el año siguiente, cuando la hierba vuelve a crecer **[Diseño propio]**: el cuento dice
+     * solo que «su lugar en el campamento está vacío».
+     */
+    fun quemado(m: Momento): Float = when {
+        !EscenaMongol.sitioDeLaMadre(m) -> 0f
+        cenizaFresca(m) -> 1f
+        m.ficha.temporada == 4 -> 0.6f
+        else -> 0.3f
+    }
+
+    /** El día de la costra de hielo (clave `nieve`): la nieve dura y lisa, que brilla. */
+    fun costra(m: Momento): Boolean = m.con("nieve")
+
     /** El día que nace el potro blanco: está con la yegua baya en el rincón del corral de delante, con paja limpia. */
     fun potroEnElRincon(m: Momento): Boolean = EscenaMongol.hoyEs(m, "potro")
 
@@ -125,6 +141,7 @@ internal object ValleMongol {
         val nieve = EscenaMongol.nieve(m)
         with(ValleLejos) { lejos(m, p, sol, nieve) }
         with(ValleRio) { suelo(m, p, sol, nieve); rio(m, p, sol, nieve) }
+        with(ValleLejos) { monjeEnLaOrilla(m, p, sol) }
         velo(m, l, 0.55f)
         with(ValleCerro) { cerro(m, p, sol, nieve) }
         velo(m, l, 0.3f)
@@ -141,8 +158,8 @@ internal object ValleMongol {
     private fun DrawScope.velo(m: Momento, l: Luces, cuanto: Float) {
         val k = when (m.ficha.clima) { Clima.NIEVE -> 0.62f; Clima.POLVO -> 0.4f; Clima.NUBES -> 0.16f; Clima.LLUVIA -> 0.16f; Clima.VIENTO -> 0.08f; else -> 0f } * cuanto
         if (k <= 0.01f) return
-        val color = if (m.ficha.clima == Clima.POLVO) lerp(l.bruma, Color(0xFFD8C08E), 0.45f) else lerp(l.bruma, l.bajo, 0.4f)
-        drawRect(Brush.verticalGradient(0f to color.copy(alpha = 0.55f * k), 0.45f to color.copy(alpha = k), 1f to color.copy(alpha = 0.25f * k), startY = 40f, endY = 215f), Offset(0f, 40f), Size(ANCHO, 175f))
+        val color = if (m.ficha.clima == Clima.POLVO) lerp(l.bruma, l.tono(C.ESTEPA), 0.45f) else lerp(l.bruma, l.bajo, 0.4f)
+        drawRect(Brush.verticalGradient(0f to color.copy(alpha = 0f), 0.3f to color.copy(alpha = 0.6f * k), 0.55f to color.copy(alpha = k), 1f to color.copy(alpha = 0.25f * k), startY = 10f, endY = 215f), Offset(0f, 10f), Size(ANCHO, 205f))
     }
 
     // ---------------------------------------------------------------- Lo que se mueve
@@ -173,8 +190,11 @@ internal object ValleMongol {
 
     fun luzDelGato(m: Momento, en: Offset): LuzGato { val l = EscenaMongol.luces(m); return LuzGato(Rayo(l), l.noche) { l.tono(it) } }
 
-    /** Lo plantado en el suelo del gato: nada (el cofre, el hogar y el argal quedan detrás de su paso). */
-    fun estorbos(m: Momento): List<Float> = emptyList()
+    /**
+     * Lo plantado en el suelo del gato: el cofre, el hogar y el argal quedan detrás de su paso; en la parición, los
+     * corderos echados junto al hogar, que el gato quieto no debe tapar.
+     */
+    fun estorbos(m: Momento): List<Float> = if (corderos(m) > 0) listOf(ValleCerca.CORDEROS.x) else emptyList()
 
     fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, 150f, PISO_GATO, hasta = 318f))
@@ -226,7 +246,4 @@ internal object TrazosValle {
 
     /** Un azar fijo del valle (lo que no cambia de un día a otro). */
     fun fijo(vararg partes: Any): Azar = Azar(Semilla.de("mongol", "valle", *partes))
-
-    /** Lo mismo que [real], para no importarlo en cada archivo. */
-    fun Azar.u(): Float = real()
 }

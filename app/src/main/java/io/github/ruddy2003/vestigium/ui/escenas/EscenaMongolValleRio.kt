@@ -91,6 +91,11 @@ internal object ValleRio {
                     drawPath(c, p.sombra(C.NIEVE, 0.2f * (1f - k)).copy(alpha = 0.55f * nieve), style = Stroke(0.35f + 0.6f * k, cap = StrokeCap.Round))
                     drawPath(Path().apply { moveTo(Offset(x + 0.4f, y - 0.6f)); cubicTo(Offset(x + w * 0.3f, y - 1.4f * (0.4f + k)), Offset(x + w * 0.7f, y - 1.1f * (0.4f + k)), Offset(x + w - 0.6f, y - 0.3f)) }, p.luz(C.NIEVE).copy(alpha = 0.6f * nieve * (0.4f + 0.6f * p.r.dia)), style = Stroke(0.3f + 0.4f * k, cap = StrokeCap.Round))
                 }
+                // El día de la costra de hielo: la nieve dura y lisa, con brillos largos de cielo, como vidriada.
+                if (ValleMongol.costra(m)) repeat(40) {
+                    val y = az.entre(H + 5f, 224f); val k = ((y - H) / 100f).coerceIn(0f, 1f); val x = az.entre(-10f, 400f); val w = az.entre(6f, 22f) * (0.35f + k)
+                    drawLine(lerp(p.l.medio, Color.White, 0.55f).copy(alpha = 0.55f), Offset(x, y), Offset(x + w, y + 0.2f), 0.4f + 0.7f * k, StrokeCap.Round)
+                }
                 // Los ventisqueros del pie del cerro: lomos blandos de nieve arrimada.
                 for ((c, w) in listOf(Offset(268f, 150f) to 22f, Offset(294f, 136.4f) to 14f, Offset(214f, 186f) to 26f, Offset(166f, 206f) to 18f)) {
                     drawPath(borron(c, w, w * 0.16f, az, 10, 0.18f, 0.4f), p.sombra(C.NIEVE, 0.18f).copy(alpha = 0.5f * nieve))
@@ -102,8 +107,9 @@ internal object ValleRio {
                 val verde = lerp(C.VERDE, C.ESTEPA, 0.25f); val pasto = EscenaMongol.pasto(m)
                 repeat(34) {
                     val y = az.entre(H + 4f, 222f); val k = ((y - H) / 100f).coerceIn(0f, 1f); val c = Offset(az.entre(-10f, 400f), y)
-                    val tinta = when (it % 3) { 0 -> p.luz(lerp(seco, C.ESTEPA, 0.6f), 0.3f * (1f - k)); 1 -> p.sombra(lerp(seco, C.CUERO, 0.3f), 0.3f * (1f - k)); else -> p.por(lerp(seco, verde, pasto), 0f, 0.3f * (1f - k)) }
-                    drawPath(borron(c, az.entre(8f, 26f) * (0.4f + k), az.entre(1f, 3.4f) * (0.4f + k), az, 9, 0.38f), tinta.copy(alpha = 0.45f))
+                    // El pasto que brota: verde primero en las hondonadas (las manchas de este tercio), cuando las lomas aún son rubias.
+                    val tinta = when (it % 3) { 0 -> p.luz(lerp(seco, C.ESTEPA, 0.6f), 0.3f * (1f - k)); 1 -> p.sombra(lerp(seco, C.CUERO, 0.3f), 0.3f * (1f - k)); else -> p.por(lerp(seco, verde, (pasto * 2.5f).coerceAtMost(1f)), 0f, 0.3f * (1f - k)) }
+                    drawPath(borron(c, az.entre(8f, 26f) * (0.4f + k), az.entre(1f, 3.4f) * (0.4f + k), az, 9, 0.38f), tinta.copy(alpha = if (it % 3 == 2) 0.45f + 0.35f * pasto else 0.45f))
                 }
                 // Las matas de hierba, con su bulto y su sombra corta: cada vez más grandes hacia quien mira.
                 repeat(60) {

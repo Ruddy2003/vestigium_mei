@@ -159,12 +159,12 @@ internal object ValleLejos {
             // sombra y la nieve dentro.
             var x = 313f
             while (x < 392f) {
-                val y0 = TrazosValle.alturaEn(LOMA_CERCA, x) + az.entre(3f, 5f); val largo = az.entre(5f, 22f); val w = az.entre(1.4f, 4f); val sesgo = az.entre(-6f, 2f)
-                val canal = rota(listOf(Offset(x, y0), Offset(x + sesgo * 0.5f, y0 + largo * 0.5f), Offset(x + sesgo, y0 + largo)), az, 0.9f, 2)
-                drawPath(poligono(canal + canal.reversed().map { it + Offset(w * az.entre(0.6f, 1.2f), 1f) }), p.por(roca, cara - 0.6f, lejos).copy(alpha = 0.6f))
+                val y0 = TrazosValle.alturaEn(LOMA_CERCA, x) + az.entre(3f, 9f); val largo = az.entre(4f, 16f); val w = az.entre(1.2f, 3.4f); val sesgo = az.entre(-12f, 4f)
+                val canal = rota(listOf(Offset(x, y0), Offset(x + sesgo * 0.5f, y0 + largo * 0.5f), Offset(x + sesgo, y0 + largo)), az, 1.2f, 2)
+                drawPath(poligono(canal + canal.reversed().map { it + Offset(w * az.entre(0.6f, 1.2f), 1f) }), p.por(roca, cara - 0.5f, lejos).copy(alpha = 0.38f))
                 if (az.real() < 0.35f) { val q = canal[canal.size / 2]; drawLine(p.por(roca, cara - 0.6f, lejos).copy(alpha = 0.5f), q, q + Offset(az.entre(3f, 7f), az.entre(4f, 9f)), w * 0.6f, StrokeCap.Round) }
                 if (nieve > 0.1f) drawPath(curva(canal.map { it + Offset(w * 0.4f, 0.8f) }), p.por(C.NIEVE, cara + 0.2f, lejos).copy(alpha = nieve), style = Stroke(w * 0.5f, cap = StrokeCap.Round))
-                x += az.entre(5f, 19f)
+                x += az.entre(7f, 24f)
             }
             // Peñas sueltas al borde.
             repeat(7) { val q = Offset(az.entre(314f, 390f), 0f).let { Offset(it.x, TrazosValle.alturaEn(LOMA_CERCA, it.x) + az.entre(2f, 6f)) }; val w = az.entre(2f, 4f)
@@ -199,17 +199,25 @@ internal object ValleLejos {
         }
         // Y unos caballos, más allá.
         repeat(4) { val q = Offset(az.entre(372f, 388f), 121f + az.entre(-0.5f, 0.6f)); drawOval(p.medio(lerp(C.CUERO, C.HOLLIN, 0.3f), 0.42f), Offset(q.x - 1f, q.y - 1f), Size(2f, 0.9f)); drawLine(p.medio(lerp(C.CUERO, C.HOLLIN, 0.3f), 0.42f), q + Offset(-0.6f, 0f), q + Offset(-0.6f, 0.6f), 0.3f) }
-        // El carro del monje que va a ver al kan, en el vado, lejos.
-        if (EscenaMongol.monjeDePaso(m)) monje(p, Offset(330f, 125.8f))
     }
 
-    /** El carro cubierto del monje chino que cruza el Kerulen, con sus bueyes y su séquito de caballos **[Aproximación]**. */
-    private fun DrawScope.monje(p: Pincel, pie: Offset) {
+    /**
+     * El carro cubierto del monje chino que cruza el Kerulen (temporada 2, 25 de abril), por la otra orilla, con sus
+     * bueyes y los caballos de su escolta **[Aproximación]**: el cuento solo dice que pasa. Va después del río.
+     */
+    fun DrawScope.monjeEnLaOrilla(m: Momento, p: Pincel, sol: Sol3) {
+        if (!EscenaMongol.monjeDePaso(m)) return
+        val pie = Offset(352f, 149.4f); val k = 1.9f; val lejos = 0.2f
+        fun q(x: Float, y: Float) = pie + Offset(x * k, y * k)
         val madera = lerp(C.MADERA, C.HOLLIN, 0.2f); val toldo = lerp(C.ROJO, C.MADERA, 0.3f)
-        drawCircle(p.medio(madera, 0.35f), 1.4f, pie + Offset(-1.2f, -1.4f), style = Stroke(0.35f)); drawCircle(p.medio(madera, 0.35f), 1.4f, pie + Offset(2.6f, -1.4f), style = Stroke(0.35f))
-        drawRect(p.medio(madera, 0.35f), pie + Offset(-2.4f, -3.4f), Size(6.4f, 1.2f))
-        drawPath(poligono(pie + Offset(-2.6f, -3.4f), pie + Offset(4.2f, -3.4f), pie + Offset(3.6f, -6.6f), pie + Offset(1f, -7.4f), pie + Offset(-2f, -6.6f)), p.por(toldo, 0.3f, 0.35f))
-        for (dx in listOf(-6f, -8.6f)) { drawOval(p.medio(lerp(C.CUERO, C.HOLLIN, 0.4f), 0.35f), Offset(pie.x + dx - 1.2f, pie.y - 2.6f), Size(2.6f, 1.4f)) }
-        for (dx in listOf(8f, 10.6f, 13f)) { drawOval(p.medio(lerp(C.CUERO, C.ORO, 0.2f), 0.35f), Offset(pie.x + dx - 1f, pie.y - 2.2f), Size(2f, 1f)); drawLine(p.medio(C.CUERO, 0.35f), Offset(pie.x + dx + 0.8f, pie.y - 2f), Offset(pie.x + dx + 1.4f, pie.y - 3.2f), 0.5f) }
+        drawOval(sol.r.color.copy(alpha = 0.5f * sol.r.fuerza), Offset(q(-10f, 0f).x, pie.y - 0.6f), Size(26f * k, 1.6f * k), blendMode = BlendMode.Multiply)
+        for (dx in listOf(-1.2f, 2.6f)) { drawCircle(p.medio(madera, lejos), 1.4f * k, q(dx, -1.4f), style = Stroke(0.4f * k)); drawLine(p.medio(madera, lejos), q(dx - 1.2f, -1.4f), q(dx + 1.2f, -1.4f), 0.2f * k) }
+        drawRect(p.por(madera, 0.2f, lejos), q(-2.4f, -3.4f), Size(6.4f * k, 1.2f * k))
+        drawPath(poligono(q(-2.6f, -3.4f), q(4.2f, -3.4f), q(3.6f, -6.6f), q(1f, -7.6f), q(-2f, -6.6f)), p.por(toldo, if (p.solALaDerecha) 0.4f else -0.2f, lejos))
+        drawLine(p.luz(C.ORO, lejos), q(-2.2f, -6.4f), q(3.4f, -6.4f), 0.3f * k)
+        // Los bueyes de la vara, y los caballos de la escolta detrás.
+        for (dx in listOf(-6f, -9f)) { drawOval(p.por(lerp(C.CUERO, C.HOLLIN, 0.4f), 0.1f, lejos), Offset(q(dx - 1.3f, -2.8f).x, q(0f, -2.8f).y), Size(2.8f * k, 1.5f * k)); drawLine(p.medio(C.HOLLIN, lejos), q(dx - 1f, -1.4f), q(dx - 1f, 0f), 0.3f * k); drawLine(p.medio(C.HOLLIN, lejos), q(dx + 1f, -1.4f), q(dx + 1f, 0f), 0.3f * k) }
+        drawLine(p.medio(madera, lejos), q(-2.4f, -2.6f), q(-8f, -2.2f), 0.25f * k)
+        for (dx in listOf(8f, 10.8f, 13.4f)) { drawOval(p.por(lerp(C.CUERO, C.ORO, 0.2f), 0.2f, lejos), Offset(q(dx - 1f, -2.4f).x, q(0f, -2.4f).y), Size(2.2f * k, 1.1f * k)); drawLine(p.medio(C.CUERO, lejos), q(dx + 0.9f, -2.2f), q(dx + 1.5f, -3.6f), 0.5f * k); for (pp in listOf(-0.6f, 0.8f)) drawLine(p.medio(C.CUERO, lejos), q(dx + pp, -1.4f), q(dx + pp, 0f), 0.25f * k) }
     }
 }

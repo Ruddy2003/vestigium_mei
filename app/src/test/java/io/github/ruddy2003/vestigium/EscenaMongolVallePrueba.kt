@@ -74,6 +74,12 @@ class EscenaMongolVallePrueba {
             // El invierno malo (temporada 4): los muertos en la nieve dura, de la costra de hielo al fondo del rebaño.
             val malo = d.year == 2030 && md(d) >= "02-15" && md(d) <= "03-20"
             assertEquals("$d: los muertos del invierno malo", malo, ValleMongol.muertosEnLaNieve(m) > 0)
+            assertEquals("$d: la costra de hielo", d.toString() == "2030-02-15", ValleMongol.costra(m))
+            // La tienda de la madre: el día que muere, la ceniza fresca; después, la tierra quemada, cada vez menos.
+            assertEquals("$d: la ceniza fresca", d.toString() == "2030-03-08", ValleMongol.cenizaFresca(m))
+            val quemado = ValleMongol.quemado(m)
+            if (EscenaMongol.sitioDeLaMadre(m)) assertTrue("$d", quemado > 0f) else assertEquals("$d", 0f, quemado, 0f)
+            if (d.year >= 2031) assertTrue("$d: con los años se borra", quemado <= 0.3f)
         }
         assertEquals("un mes blanco de dos días por año", 2 * 7, cuencos)
         assertTrue("el potro nace al menos una vez", potros >= 1)

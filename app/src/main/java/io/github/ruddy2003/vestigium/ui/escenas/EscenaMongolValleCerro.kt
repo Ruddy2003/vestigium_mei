@@ -115,7 +115,7 @@ internal object ValleCerro {
         val hierba = lerp(lerp(C.ESTEPA, C.CUERO, 0.3f), lerp(C.VERDE, C.ESTEPA, 0.35f), 0.45f * pasto)
         // La cima, detrás: un poco más azulada.
         val cima = poligono(CRESTA + PIE.reversed() + listOf(Offset(-6f, 230f)))
-        plano(p, sol, nieve, cima, CRESTA, CIMA, PENAS_CIMA, hierba, 0.13f, fijo("cima"))
+        plano(p, sol, nieve, pasto, cima, CRESTA, CIMA, PENAS_CIMA, hierba, 0.13f, fijo("cima"))
         // El ovoo, recortado contra el cielo, con su sombra en la cima.
         val alto = 24f
         capaSombra(sol.r) { c -> sombraArrojada(sol.r, PiezasMongol.siluetaDeOvoo(OVOO, alto), OVOO, c, OVOO.y + 0.6f, OVOO.y + 0.6f) }
@@ -127,7 +127,7 @@ internal object ValleCerro {
         val hombro = poligono(listOf(Offset(-6f, 92f)) + HOMBRO + PIE.filter { it.x < 279f }.reversed() + listOf(Offset(-6f, 230f)))
         clipPath(cima) { drawPath(poligono(HOMBRO.map { it + Offset(0f, 3f) } + HOMBRO.reversed().map { it + Offset(0f, -18f) }), Brush.verticalGradient(0f to Color.Transparent, 1f to lerp(l.bruma, l.bajo, 0.4f).copy(alpha = 0.3f * (1f - 0.6f * l.noche)), startY = 76f, endY = 138f)) }
         // El hombro, delante: más cálido, con la roca más grande.
-        plano(p, sol, nieve, hombro, HOMBRO, DELANTE, PENAS_DELANTE, lerp(hierba, C.CUERO, 0.12f), 0.03f, fijo("hombro"))
+        plano(p, sol, nieve, pasto, hombro, HOMBRO, DELANTE, PENAS_DELANTE, lerp(hierba, C.CUERO, 0.12f), 0.03f, fijo("hombro"))
         // La nieve arrimada al pie del cerro: un ventisquero de borde roto.
         if (nieve > 0.1f) {
             val az = fijo("pie")
@@ -155,7 +155,7 @@ internal object ValleCerro {
      * Un plano del cerro: su [forma], su [cresta], sus aristas y cárcavas ([lineas], de izquierda a derecha), sus
      * afloramientos de roca, el color de su hierba seca y lo lejos que está.
      */
-    private fun DrawScope.plano(p: Pincel, sol: Sol3, nieve: Float, forma: Path, cresta: List<Offset>, lineas: List<Linea>, penas: List<Pena>, hierba: Color, lejos: Float, az: Azar) {
+    private fun DrawScope.plano(p: Pincel, sol: Sol3, nieve: Float, pasto: Float, forma: Path, cresta: List<Offset>, lineas: List<Linea>, penas: List<Pena>, hierba: Color, lejos: Float, az: Azar) {
         val l = p.l
         val cerca = lejos < 0.08f
         // Las líneas, rotas a mano; cada cara se alarga por abajo (el plano la recorta).
@@ -176,7 +176,7 @@ internal object ValleCerro {
                 drawPath(cara, Brush.linearGradient(0f to p.por(piel, t + claro, lejos), 1f to p.por(piel, t - claro, lejos), start = en(a, 0.25f), end = en(b, 0.25f)))
                 // El manto de nieve de la cara: abajo, con el borde de arriba roto y lenguas que suben. Se queda más en las
                 // caras que miran a la izquierda **[Aproximación]**: las que menos ven el sol del mediodía.
-                if (nieve > 0.08f && n.y < 0.9f) {
+                if (nieve > 0.08f && n.y < 0.9f && i > 0) {
                     val ra = rotas[i]; val rb = rotas[i + 1]
                     val desde = when { n.x < -0.3f -> 0.12f + 0.75f * (1f - nieve); n.x > 0.3f -> 0.5f + 0.6f * (1f - nieve); else -> 0.5f + 0.7f * (1f - nieve) }
                     if (desde < 0.97f) clipPath(cara) {
@@ -202,7 +202,7 @@ internal object ValleCerro {
                 val r = rotas[i]
                 val ancho = if (cerca) 3f else 1.8f
                 val pliegue = poligono(r + r.reversed().mapIndexed { k, q -> q + Offset(hacia * ancho * (0.4f + 0.6f * (r.size - 1 - k) / r.size), 1f) })
-                drawPath(pliegue, p.sombra(lerp(piel, C.TIERRA, 0.5f * (1f - nieve)), lejos).copy(alpha = 0.8f))
+                drawPath(pliegue, p.sombra(lerp(lerp(piel, C.TIERRA, 0.5f * (1f - nieve)), C.VERDE, (1.5f * pasto).coerceAtMost(0.7f)), lejos).copy(alpha = 0.8f))
                 val brote = en(r, az.entre(0.35f, 0.6f)); val rama = rota(listOf(brote, brote + Offset(-hacia * az.entre(5f, 9f), az.entre(-9f, -5f)), brote + Offset(-hacia * az.entre(8f, 14f), az.entre(-16f, -11f))), az, 0.8f, 2)
                 drawPath(Path().apply { moveTo(rama[0]); for (q in rama.drop(1)) lineTo(q) }, p.sombra(piel, lejos).copy(alpha = 0.65f), style = Stroke(ancho * 0.5f, cap = StrokeCap.Round))
                 if (nieve > 0.12f) {
@@ -230,8 +230,17 @@ internal object ValleCerro {
             // Las manchas de la hierba: más rubia en los lomos, más parda en las vaguadas, a pinceladas tendidas.
             repeat(if (cerca) 22 else 16) {
                 val x = az.entre(110f, 316f); val yA = alturaEn(cresta, x) + 3f; val yB = alturaEn(PIE, x) - 3f; if (yB <= yA) return@repeat
-                val q = Offset(x, az.entre(yA, yB)); val w = az.entre(5f, 14f) * (if (cerca) 1.3f else 1f)
-                drawPath(borron(q, w, w * 0.22f, az, 8, 0.35f), (if (it % 2 == 0) p.luz(lerp(piel, C.ESTEPA, 0.6f), lejos) else p.sombra(lerp(piel, C.CUERO, 0.3f), lejos)).copy(alpha = 0.35f * (1f - 0.5f * nieve)))
+                val q = Offset(x, az.entre(yA, yB)); val w = az.entre(6f, 18f) * (if (cerca) 1.3f else 1f)
+                drawPath(borron(q, w, w * 0.24f, az, 9, 0.35f), (if (it % 2 == 0) p.luz(lerp(piel, C.ESTEPA, 0.6f), lejos) else p.por(lerp(piel, C.CUERO, 0.45f), -0.2f, lejos)).copy(alpha = 0.5f * (1f - 0.6f * nieve)))
+            }
+            // Los manchones de matorral: un velo pardo con su punteado de matas, en las vaguadas y al pie de las rocas.
+            repeat(if (cerca) 9 else 7) {
+                val x = az.entre(120f, 312f); val yA = alturaEn(cresta, x) + 6f; val yB = alturaEn(PIE, x) - 4f; if (yB <= yA) return@repeat
+                val q = Offset(x, az.entre(yA, yB)); val w = az.entre(8f, 18f) * (if (cerca) 1.3f else 1f)
+                drawPath(borron(q, w, w * 0.3f, az, 10, 0.4f), p.sombra(lerp(piel, C.CUERO, 0.5f), lejos).copy(alpha = 0.4f * (1f - 0.7f * nieve)))
+                val matas = (0 until (w * 1.4f).toInt()).map { q + Offset(az.entre(-w, w) * 0.85f, az.entre(-w, w) * 0.24f) }
+                drawPoints(matas, PointMode.Points, p.sombra(lerp(C.CUERO, C.HOLLIN, 0.4f), lejos).copy(alpha = 0.75f), if (cerca) 1.5f else 1f, StrokeCap.Round)
+                drawPoints(matas.map { it + Offset(if (p.solALaDerecha) 0.35f else -0.35f, -0.4f) }, PointMode.Points, p.luz(lerp(C.CUERO, C.ESTEPA, 0.5f), lejos).copy(alpha = 0.6f), if (cerca) 0.8f else 0.5f, StrokeCap.Round)
             }
             // Las matas de espino: bultos oscuros con su luz y su sombra en el suelo.
             repeat(if (cerca) 26 else 14) {
@@ -265,23 +274,26 @@ internal object ValleCerro {
             drawPoints(piedras, PointMode.Points, p.sombra(roca, lejos).copy(alpha = 0.6f), 0.6f + w * 0.05f, StrokeCap.Round)
             drawPoints(piedras.map { it + Offset(lado * 0.25f, -0.3f) }, PointMode.Points, p.luz(clara, lejos), 0.4f + w * 0.035f, StrokeCap.Round)
         }
-        // La masa: baja y quebrada, con dos o tres jorobas, hundida en la ladera (sin base plana).
-        val h2 = h * 0.75f
-        val borde = listOf(
-            c + Offset(-w * 0.55f, h2 * 0.15f), c + Offset(-w * 0.5f, -h2 * az.entre(0.3f, 0.5f)), c + Offset(-w * 0.32f, -h2 * az.entre(0.7f, 0.95f)), c + Offset(-w * 0.16f, -h2 * az.entre(0.55f, 0.75f)),
-            c + Offset(w * 0.02f, -h2), c + Offset(w * 0.2f, -h2 * az.entre(0.6f, 0.85f)), c + Offset(w * 0.38f, -h2 * az.entre(0.5f, 0.75f)), c + Offset(w * 0.56f, -h2 * 0.2f), c + Offset(w * 0.5f, h2 * 0.2f),
-            c + Offset(w * 0.1f, h2 * 0.32f), c + Offset(-w * 0.25f, h2 * 0.26f),
-        )
-        // La sombra que echa en la ladera, tendida del lado contrario al sol.
-        drawPath(poligono(listOf(borde[0], borde[8], borde[8] + Offset(-lado * w * 0.5f, h2 * 0.25f), borde[0] + Offset(-lado * w * 0.6f, h2 * 0.35f))), p.r.color.copy(alpha = 0.45f * p.r.fuerza), blendMode = BlendMode.Multiply)
-        drawPath(poligono(borde), p.por(roca, -0.5f, lejos))
-        // La cara del lado del sol: de la joroba más alta hacia ese lado.
-        val luz = if (lado > 0f) poligono(listOf(borde[4], borde[5], borde[6], borde[7], borde[8], c + Offset(w * 0.12f, h2 * 0.3f), c + Offset(w * 0.06f, -h2 * 0.4f))) else poligono(listOf(borde[4], borde[3], borde[2], borde[1], borde[0], c + Offset(-w * 0.2f, h2 * 0.25f), c + Offset(-w * 0.02f, -h2 * 0.4f)))
-        drawPath(luz, p.por(lerp(roca, clara, 0.5f), 0.6f, lejos))
-        // Los estratos: rayas tendidas, cortas y rotas; y las grietas.
-        for (k in 1..2) { val y = -h2 * 0.28f * k; drawLine(p.sombra(C.HOLLIN, lejos).copy(alpha = 0.45f), c + Offset(-w * az.entre(0.3f, 0.45f), y), c + Offset(w * az.entre(0.05f, 0.4f), y + az.entre(-0.4f, 0.4f)), 0.35f + 0.02f * w) }
-        drawLine(p.sombra(C.HOLLIN, lejos).copy(alpha = 0.55f), borde[4], c + Offset(lado * w * 0.08f, h2 * 0.3f), 0.4f)
-        // La nieve: solo en las repisas de arriba, a trozos.
-        if (nieve > 0.15f) for (j in listOf(2, 4, 6)) if (az.real() < 0.75f) { val q = borde[j]; drawPath(borron(q + Offset(0f, w * 0.03f), w * az.entre(0.1f, 0.17f), w * 0.04f + 0.3f, az, 6, 0.3f, 0.6f), p.por(C.NIEVE, 0.5f, lejos).copy(alpha = (0.4f + 0.6f * nieve).coerceAtMost(1f))) }
+        // Un montón de tres o cuatro bolos de roca de distinto tamaño, uno encima de otro (como los berrocales de la
+        // estepa): cada uno con su cara de luz y su cara de sombra, las grietas, y la nieve solo en alguna repisa.
+        val n = 3 + az.entero(2)
+        val bolos = (0 until n).map { k ->
+            val grande = k == 1
+            val r = w * (if (grande) az.entre(0.3f, 0.38f) else az.entre(0.17f, 0.27f))
+            val x = (k - (n - 1) / 2f) * w * 0.3f + az.entre(-0.06f, 0.06f) * w
+            val y = if (grande) -r * 0.55f else -r * az.entre(0.2f, 0.45f)
+            Triple(c + Offset(x, y), r, az.entre(0f, 6.28f))
+        }.sortedBy { it.first.y }
+        // La sombra del montón, tendida del lado contrario al sol.
+        drawPath(borron(c + Offset(-lado * w * 0.3f, h * 0.12f), w * 0.62f, h * 0.22f, az, 8, 0.25f), p.r.color.copy(alpha = 0.45f * p.r.fuerza), blendMode = BlendMode.Multiply)
+        for ((q, r, giro) in bolos) {
+            val puntos = (0 until 7).map { j -> val a = giro + j * 0.8976f; val rr = r * az.entre(0.78f, 1.08f); q + Offset(kotlin.math.cos(a) * rr, kotlin.math.sin(a) * rr * 0.78f).let { if (it.y > q.y + r * 0.45f) Offset(it.x, q.y + r * 0.45f) else it } }
+            drawPath(poligono(puntos), p.por(roca, -0.45f, lejos))
+            // La cara del sol: los puntos de ese lado y el centro, un poco más arriba.
+            val luz = puntos.filter { (it.x - q.x) * lado > -r * 0.15f }.sortedBy { kotlin.math.atan2(it.y - q.y, it.x - q.x) }
+            if (luz.size >= 2) drawPath(poligono(luz + (q + Offset(-lado * r * 0.15f, -r * 0.1f))), p.por(lerp(roca, clara, 0.5f), 0.55f, lejos))
+            drawLine(p.sombra(C.HOLLIN, lejos).copy(alpha = 0.5f), q + Offset(-lado * r * 0.1f, -r * 0.6f), q + Offset(lado * r * 0.05f, r * 0.35f), 0.35f + 0.02f * w)
+            if (nieve > 0.25f && az.real() < 0.5f) drawPath(borron(q + Offset(lado * r * 0.1f, -r * 0.62f), r * 0.45f, r * 0.12f + 0.2f, az, 6, 0.3f, 0.6f), p.por(C.NIEVE, 0.5f, lejos).copy(alpha = (0.3f + 0.6f * nieve).coerceAtMost(1f)))
+        }
     }
 }

@@ -304,11 +304,14 @@ internal object ValleCerca {
 
     /** Los corderos más débiles de la parición, echados junto a la puerta sobre un poco de paja. */
     private fun DrawScope.corderos(p: Pincel, az: Azar) {
-        val a = Azar(Semilla.de("mongol", "corderos", "puerta"))
-        drawPath(borron(Offset(232f, 268f), 20f, 4.4f, a, 10, 0.3f, 0.7f), p.arriba(lerp(C.ESTEPA, C.ORO, 0.25f)).copy(alpha = 0.85f))
-        oveja(p, Offset(224f, 270f), 15f, 1f, a, pasta = true, patas = false)
-        oveja(p, Offset(242f, 268f), 14f, -1f, a, pasta = false, patas = true)
+        val a = Azar(Semilla.de("mongol", "corderos", "puerta")); val c = CORDEROS
+        drawPath(borron(c, 20f, 4.4f, a, 10, 0.3f, 0.7f), p.arriba(lerp(C.ESTEPA, C.ORO, 0.25f)).copy(alpha = 0.85f))
+        oveja(p, c + Offset(-8f, 2f), 15f, 1f, a, pasta = true, patas = false)
+        oveja(p, c + Offset(10f, 0f), 14f, -1f, a, pasta = false, patas = true)
     }
+
+    /** Dónde se echan los corderos más débiles de la parición, sobre su paja, junto al hogar. */
+    val CORDEROS = Offset(232f, 268f)
 
     /** Los cuernos del ciervo de la cacería, junto al hogar. */
     private fun DrawScope.cuernos(p: Pincel, c: Offset) {

@@ -109,10 +109,11 @@ internal object ValleCampamento {
         sendas(m, p, nieve, az)
         // Donde estuvo la tienda de la madre: la tierra quemada, la ceniza y unas varas negras de la celosía.
         if (EscenaMongol.sitioDeLaMadre(m)) {
-            val c = PUESTOS[0].pie
-            drawPath(borron(c, 30f, 6.6f, az, 12, 0.18f, 0.6f), p.medio(lerp(C.HOLLIN, C.TIERRA, 0.35f), 0.1f))
-            drawPath(borron(c + Offset(2f, 0.6f), 18f, 3.6f, az, 10, 0.25f, 0.6f), p.medio(lerp(C.HOLLIN, C.PIEDRA, 0.3f), 0.1f).copy(alpha = 0.8f))
-            repeat(7) { val q = c + Offset(az.entre(-18f, 18f), az.entre(-3f, 3f)); drawLine(p.medio(C.HOLLIN, 0.1f), q, q + Offset(az.entre(-5f, 5f), az.entre(-1.4f, 0.6f)), 0.7f, StrokeCap.Round) }
+            // El día que muere, la ceniza fresca y las varas negras; después, solo el cerco oscuro, que se va borrando.
+            val c = PUESTOS[0].pie; val fresco = ValleMongol.cenizaFresca(m); val k = ValleMongol.quemado(m)
+            drawPath(borron(c, 30f, 6.6f, az, 12, 0.18f, 0.6f), p.medio(lerp(C.HOLLIN, C.TIERRA, 0.35f), 0.1f).copy(alpha = k))
+            drawPath(borron(c + Offset(2f, 0.6f), 18f, 3.6f, az, 10, 0.25f, 0.6f), p.medio(lerp(C.HOLLIN, C.PIEDRA, 0.3f), 0.1f).copy(alpha = 0.8f * k))
+            if (fresco) repeat(7) { val q = c + Offset(az.entre(-18f, 18f), az.entre(-3f, 3f)); drawLine(p.medio(C.HOLLIN, 0.1f), q, q + Offset(az.entre(-5f, 5f), az.entre(-1.4f, 0.6f)), 0.7f, StrokeCap.Round) }
             if (nieve > 0.2f) repeat(5) { val q = c + Offset(az.entre(-22f, 22f), az.entre(-4f, 4f)); drawPath(borron(q, az.entre(2f, 5f), 0.8f, az, 6, 0.3f), p.arriba(C.NIEVE, 0.1f).copy(alpha = 0.7f * nieve)) }
         }
         // El día de la mudanza: la tierra negra del invierno pasado, donde vuelven a ponerse las tiendas.
@@ -144,7 +145,7 @@ internal object ValleCampamento {
         if (ValleMongol.bueyes(m)) { buey(p, sol, Offset(250f, 197f), 13f, 1f); buey(p, sol, Offset(262f, 200f), 14f, -1f) }
         carreta(carreta, p, sol)
         if (ValleMongol.carneColgada(m)) carne(m, p, sol)
-        if (EscenaMongol.pielDeLobo(m)) pielTendida(p, SITIO_CARRETA.p(0f, carreta.tabla + 0.75f, 0.3f), 9f, lerp(C.PIEDRA, C.HOLLIN, 0.3f))
+        if (EscenaMongol.pielDeLobo(m)) pielTendida(p, SITIO_CARRETA.p(0f, carreta.tabla + 0.75f, 0.3f), 16f, lerp(C.PIEDRA, C.HOLLIN, 0.3f))
     }
 
     /** Las sendas que se pisan en la nieve (o en la escarcha): de la terraza a las tiendas, al corral y al agujero del agua. */
@@ -286,6 +287,8 @@ internal object ValleCampamento {
 
     /** El humo de cada tienda armada, «como hilos grises hacia las estrellas». */
     fun DrawScope.humos(m: Momento, l: Luces, reloj: Float) {
+        // El día que se quema la tienda de la madre, un hilo de humo oscuro sube de la ceniza.
+        if (ValleMongol.cenizaFresca(m)) humo(l, PUESTOS[0].pie + Offset(0f, -2f), 46f, 5f, reloj, m.viento, 0.55f, 0.1f, 31, 7, 0.6f)
         if (EscenaMongol.armado(m) < 1f) return
         val hay = EscenaMongol.tiendas(m).toSet()
         for ((j, u) in PUESTOS.withIndex()) {
