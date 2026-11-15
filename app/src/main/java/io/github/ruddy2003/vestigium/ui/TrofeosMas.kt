@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
@@ -1478,97 +1479,199 @@ object TrofeosMas {
      */
     internal fun DrawScope.galia(cat: String, p: TrofeosTema.Pincel) = with(TrofeosTema) {
         val lw = p.w * 0.01f
+        val fino = p.h > 70f * density
         val corteza = p.c(Color(0xFF4A3A28)); val cara = p.c(Color(0xFFC9A46E)); val anillo = p.c(Color(0xFF8A6A40))
         val madera = p.c(TrazosGalia.MADERA); val hierro = p.c(TrazosGalia.HIERRO); val oro = p.c(TrazosGalia.ORO); val oroBrillo = p.c(TrazosGalia.ORO_BRILLO)
         val roble = p.c(TrazosGalia.ROBLE); val muerdago = p.c(TrazosGalia.MUERDAGO); val baya = p.c(TrazosGalia.BAYA)
         val lino = p.c(Color(0xFFEDE8DA)); val coral = p.c(Color(0xFFB8483A)); val tinta = p.c(Color(0xFF2A2218))
+        /** La sombra con color: el pardo del humo de la casa, no el negro. */
+        val umbra = Color(0xFF2A1A0C)
+        /** Cuánto brilla el metal: más en cada nivel. */
+        val lustre = 0.24f + 0.08f * p.nivel
         /** Volumen con la luz desde arriba a la izquierda: el claro, el tono y la sombra, de [x0] a [x1]. */
-        fun vol(c: Color, x0: Float, x1: Float): Brush = if (p.hecho) Brush.horizontalGradient(listOf(lerp(c, Color.White, 0.22f), c, c, lerp(c, Color.Black, 0.45f)), p.x(x0), p.x(x1)) else SolidColor(p.sombra)
+        fun vol(c: Color, x0: Float, x1: Float): Brush = if (p.hecho) Brush.horizontalGradient(listOf(lerp(c, Color.White, 0.22f), c, c, lerp(c, umbra, 0.5f)), p.x(x0), p.x(x1)) else SolidColor(p.sombra)
         /** Volumen redondo: la luz arriba a la izquierda del centro [o]. */
-        fun bulto(c: Color, o: Offset, r: Float): Brush = if (p.hecho) Brush.radialGradient(listOf(lerp(c, Color.White, 0.3f), c, lerp(c, Color.Black, 0.45f)), Offset(o.x - r * 0.35f, o.y - r * 0.4f), r * 1.55f) else SolidColor(p.sombra)
+        fun bulto(c: Color, o: Offset, r: Float): Brush = if (p.hecho) Brush.radialGradient(listOf(lerp(c, Color.White, 0.3f), c, lerp(c, umbra, 0.5f)), Offset(o.x - r * 0.35f, o.y - r * 0.4f), r * 1.55f) else SolidColor(p.sombra)
         /** El metal del nivel en volumen redondo. */
-        fun metalBulto(o: Offset, r: Float): Brush = if (p.hecho) Brush.radialGradient(listOf(p.brillo, p.base, p.oscuro), Offset(o.x - r * 0.35f, o.y - r * 0.4f), r * 1.6f) else SolidColor(p.sombra)
+        fun metalBulto(o: Offset, r: Float): Brush = if (p.hecho) Brush.radialGradient(listOf(lerp(p.brillo, Color.White, 0.2f), p.brillo, p.base, p.oscuro), Offset(o.x - r * 0.35f, o.y - r * 0.4f), r * 1.6f) else SolidColor(p.sombra)
         /** Un brillo en la superficie: un trazo blanco y suave, solo si ya se logró. */
         fun brillo(a: Offset, b: Offset, ancho: Float, alfa: Float = 0.3f) { if (p.hecho) drawLine(Color.White.copy(alpha = alfa), a, b, ancho, StrokeCap.Round) }
-        /** La sombra que la pieza echa sobre el corte del tocón, corrida a la derecha. */
+        /** El destello del metal pulido en [o]: una estrella de cuatro puntas, más grande y más viva en cada nivel. */
+        fun destello(o: Offset, r: Float) {
+            if (!p.hecho || p.nivel < 2) return
+            val t = r * (0.55f + 0.2f * p.nivel); val a = 0.35f + 0.15f * p.nivel
+            drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = a * 0.6f), Color.Transparent), o, t * 0.7f), t * 0.7f, o)
+            drawLine(Color.White.copy(alpha = a), Offset(o.x - t, o.y), Offset(o.x + t, o.y), lw * 0.35f, StrokeCap.Round)
+            drawLine(Color.White.copy(alpha = a), Offset(o.x, o.y - t), Offset(o.x, o.y + t), lw * 0.35f, StrokeCap.Round)
+        }
+        /** El martillado del metal dentro de [forma]: abolladuras chicas, con su sombra abajo a la derecha y su luz arriba. */
+        fun martillado(forma: Path, x0: Float, y0: Float, x1: Float, y1: Float, n: Int, semilla: Long, r: Float = lw * 0.55f) {
+            if (!p.hecho || !fino) return
+            val az = java.util.Random(semilla)
+            clipPath(forma) {
+                repeat(n) {
+                    val q = p.o(x0 + az.nextFloat() * (x1 - x0), y0 + az.nextFloat() * (y1 - y0)); val rr = r * (0.6f + az.nextFloat() * 0.7f)
+                    drawCircle(p.oscuro.copy(alpha = 0.11f), rr, q + Offset(rr * 0.3f, rr * 0.3f))
+                    drawCircle(p.brillo.copy(alpha = 0.2f), rr * 0.55f, q - Offset(rr * 0.3f, rr * 0.3f))
+                }
+            }
+        }
+        /** La luz que rebota del lado de la sombra: un filo cálido por dentro del borde de abajo a la derecha de [forma]. */
+        fun rebote(forma: Path, color: Color, alfa: Float = 0.45f) {
+            if (!p.hecho) return
+            clipPath(forma) { translate(-lw * 0.9f, -lw * 0.9f) { drawPath(forma, color.copy(alpha = alfa), style = Stroke(lw * 1.2f)) } }
+        }
+        /** La sombra de [forma] echada abajo a la derecha, con el color del humo. */
+        fun sombraDe(forma: Path, dx: Float = 1.1f, dy: Float = 1f, alfa: Float = 0.24f) {
+            if (p.hecho) translate(lw * dx, lw * dy) { drawPath(forma, umbra.copy(alpha = alfa)) }
+        }
+        /** Donde la pieza toca el corte del tocón: la sombra de contacto, oscura y corta, y la que se alarga a la derecha. */
         fun sombraPie(x0: Float, x1: Float, y: Float = 0.7f) {
-            if (p.hecho) drawOval(Color.Black.copy(alpha = 0.24f), Offset(p.x(x0 + 0.05f), p.y(y) - p.y(0.012f)), Size(p.x(x1 - x0), p.y(0.024f)))
+            if (!p.hecho) return
+            drawOval(umbra.copy(alpha = 0.2f), Offset(p.x(x0 + 0.04f), p.y(y) - p.y(0.011f)), Size(p.x(x1 - x0 + 0.06f), p.y(0.022f)))
+            val c = p.o((x0 + x1) / 2, y); val r = p.x((x1 - x0) / 2)
+            drawOval(Brush.radialGradient(listOf(umbra.copy(alpha = 0.5f), umbra.copy(alpha = 0f)), c, r), Offset(c.x - r, c.y - p.y(0.008f)), Size(r * 2, p.y(0.016f)))
+        }
+        /** Las vetas de una pieza de madera de pie, de [x0] a [x1] y de [y0] a [y1]: líneas que ondulan y un nudo. */
+        fun veta(x0: Float, y0: Float, x1: Float, y1: Float, semilla: Long) {
+            if (!p.hecho || !fino) return
+            val az = java.util.Random(semilla)
+            for (k in 0 until 3) {
+                val x = x0 + (x1 - x0) * (0.22f + 0.28f * k)
+                val v = Path().apply {
+                    moveTo(p.x(x), p.y(y0)); var y = y0
+                    while (y < y1) { val d = (az.nextFloat() - 0.5f) * (x1 - x0) * 0.35f; quadraticTo(p.x(x + d), p.y(y + 0.04f), p.x(x), p.y(minOf(y + 0.08f, y1))); y += 0.08f }
+                }
+                drawPath(v, umbra.copy(alpha = 0.3f), style = Stroke(lw * 0.3f))
+            }
+            drawLine(Color.White.copy(alpha = 0.22f), p.o(x0 + (x1 - x0) * 0.12f, y0 + 0.01f), p.o(x0 + (x1 - x0) * 0.12f, y1 - 0.01f), lw * 0.4f)
         }
         /**
-         * El tocón de roble: la corteza en surcos, el corte de arriba con sus anillos y sus grietas, y el aro del metal del
-         * nivel que lo ciñe (como el aro de un tonel, que es invento galo).
+         * El tocón de roble: la corteza en placas con sus surcos hondos, más oscura al pie; el corte de arriba con la albura
+         * clara, los anillos que ondulan, los radios plateados del roble y una grieta; y el aro del metal del nivel que lo
+         * ciñe siguiendo la curva del tronco (como el aro de un tonel, que es invento galo).
          */
         fun tocon(x0: Float = 0.27f, x1: Float = 0.73f, y0: Float = 0.7f) {
-            val y1 = 0.775f; val e = 0.022f
+            val y1 = 0.775f; val e = 0.022f; val xm = (x0 + x1) / 2
             val cuerpo = Path().apply {
                 moveTo(p.x(x0), p.y(y0)); lineTo(p.x(x0 + 0.006f), p.y(y1 - e * 0.5f))
-                quadraticTo(p.x((x0 + x1) / 2), p.y(y1 + e * 0.5f), p.x(x1 - 0.006f), p.y(y1 - e * 0.5f)); lineTo(p.x(x1), p.y(y0)); close()
+                quadraticTo(p.x(xm), p.y(y1 + e * 0.5f), p.x(x1 - 0.006f), p.y(y1 - e * 0.5f)); lineTo(p.x(x1), p.y(y0)); close()
             }
+            // La sombra que el tocón echa sobre la tabla, a la derecha.
+            if (p.hecho) drawOval(umbra.copy(alpha = 0.3f), Offset(p.x(x0 + 0.05f), p.y(y1 - 0.016f)), Size(p.x(x1 - x0 + 0.05f), p.y(0.026f)))
             drawPath(cuerpo, vol(corteza, x0, x1))
             if (p.hecho) clipPath(cuerpo) {
-                // Los surcos de la corteza, verticales y quebrados.
-                var x = x0 + 0.02f; var k = 0
-                while (x < x1 - 0.01f) {
-                    val dx = if (k % 2 == 0) 0.008f else -0.006f
-                    drawLine(Color.Black.copy(alpha = 0.35f), p.o(x, y0 + 0.01f), p.o(x + dx, y1), lw * 0.45f)
-                    drawLine(Color.White.copy(alpha = 0.08f), p.o(x + 0.007f, y0 + 0.012f), p.o(x + 0.007f + dx, y1), lw * 0.3f)
-                    x += 0.03f + (k % 3) * 0.006f; k++
+                // Las placas de la corteza: el lomo que da a la luz, el surco hondo entre una y otra y alguna grieta de través.
+                val az = java.util.Random(17)
+                var x = x0 + 0.004f
+                while (x < x1) {
+                    val wd = 0.016f + az.nextFloat() * 0.016f
+                    val luz = 1f - (x - x0) / (x1 - x0)
+                    val dx = (az.nextFloat() - 0.5f) * 0.01f
+                    drawLine(lerp(corteza, cara, 0.45f).copy(alpha = 0.12f + 0.4f * luz), p.o(x + wd * 0.35f, y0 + 0.012f), p.o(x + wd * 0.35f + dx, y1), lw * 0.55f)
+                    drawLine(umbra.copy(alpha = 0.6f), p.o(x + wd, y0 + 0.01f), p.o(x + wd + dx, y1), lw * 0.42f)
+                    if (az.nextFloat() < 0.45f) { val yy = y0 + 0.022f + az.nextFloat() * 0.036f; drawLine(umbra.copy(alpha = 0.45f), p.o(x + 0.002f, yy), p.o(x + wd - 0.002f, yy + 0.004f), lw * 0.3f) }
+                    x += wd
+                }
+                // Más oscuro al pie y bajo el labio del corte.
+                drawRect(Brush.verticalGradient(listOf(Color.Transparent, umbra.copy(alpha = 0.45f)), p.y(y1 - 0.035f), p.y(y1 + 0.01f)), Offset(p.x(x0), p.y(y1 - 0.035f)), Size(p.x(x1 - x0), p.y(0.05f)))
+                drawRect(Brush.verticalGradient(listOf(umbra.copy(alpha = 0.4f), Color.Transparent), p.y(y0), p.y(y0 + 0.026f)), Offset(p.x(x0), p.y(y0)), Size(p.x(x1 - x0), p.y(0.026f)))
+            }
+            // El aro de metal que lo ciñe, curvo como el tronco.
+            val ya = y0 + (y1 - y0) * 0.52f; val hb = 0.013f
+            val aro = Path().apply {
+                moveTo(p.x(x0 - 0.004f), p.y(ya)); quadraticTo(p.x(xm), p.y(ya + e * 0.9f), p.x(x1 + 0.004f), p.y(ya))
+                lineTo(p.x(x1 + 0.004f), p.y(ya + hb)); quadraticTo(p.x(xm), p.y(ya + hb + e * 0.9f), p.x(x0 - 0.004f), p.y(ya + hb)); close()
+            }
+            drawPath(aro, p.metal(x0, x1))
+            if (p.hecho) {
+                drawPath(Path().apply { moveTo(p.x(x0), p.y(ya) + lw * 0.3f); quadraticTo(p.x(xm), p.y(ya + e * 0.9f) + lw * 0.3f, p.x(x1), p.y(ya) + lw * 0.3f) }, p.brillo.copy(alpha = lustre + 0.2f), style = Stroke(lw * 0.35f))
+                drawPath(Path().apply { moveTo(p.x(x0), p.y(ya + hb)); quadraticTo(p.x(xm), p.y(ya + hb + e * 0.9f), p.x(x1), p.y(ya + hb)) }, umbra.copy(alpha = 0.55f), style = Stroke(lw * 0.4f))
+                listOf(x0 + 0.045f, xm, x1 - 0.05f).forEach { xc ->
+                    val t = (xc - x0) / (x1 - x0); val yc = ya + hb * 0.5f + e * 0.9f * 2 * t * (1 - t)
+                    drawCircle(p.oscuro, lw * 0.4f, p.o(xc, yc)); drawCircle(p.brillo.copy(alpha = 0.9f), lw * 0.16f, p.o(xc - 0.002f, yc - 0.002f))
                 }
             }
-            // El aro de metal que lo ciñe.
-            val ya = y0 + (y1 - y0) * 0.55f
-            drawRect(p.metal(x0, x1), Offset(p.x(x0 - 0.004f), p.y(ya)), Size(p.x(x1 - x0 + 0.008f), p.y(0.012f)))
-            if (p.hecho) listOf(x0 + 0.04f, x1 - 0.05f).forEach { xc -> drawCircle(p.oscuro, lw * 0.32f, p.o(xc, ya + 0.006f)) }
-            // El corte de arriba: la madera clara con sus anillos, corridos hacia el lado de la corteza más gruesa, y una grieta.
+            // El corte de arriba: la madera clara, la albura, los anillos corridos hacia el lado de la corteza más gruesa,
+            // los radios del roble, la grieta y la médula.
             val corte = Rect(p.x(x0), p.y(y0 - e), p.x(x1), p.y(y0 + e))
-            drawOval(if (p.hecho) SolidColor(lerp(cara, Color.White, 0.1f)) else SolidColor(p.sombra), corte.topLeft, corte.size)
+            drawOval(if (p.hecho) Brush.radialGradient(listOf(lerp(cara, Color.White, 0.22f), cara, lerp(cara, anillo, 0.55f)), Offset(corte.center.x - corte.width * 0.2f, corte.center.y - corte.height * 0.3f), corte.width * 0.6f) else SolidColor(p.sombra), corte.topLeft, corte.size)
             if (p.hecho) {
-                for (k in 1..4) {
-                    val f = k / 5f
-                    drawOval(anillo.copy(alpha = 0.55f), Offset(corte.center.x - corte.width * 0.5f * f + p.x(0.01f) * f, corte.center.y - corte.height * 0.5f * f), Size(corte.width * f, corte.height * f), style = Stroke(lw * 0.3f))
+                val ce = Offset(corte.center.x + p.x(0.012f), corte.center.y + corte.height * 0.05f)
+                drawOval(lerp(cara, Color.White, 0.3f).copy(alpha = 0.55f), Offset(corte.left + lw * 0.5f, corte.top + lw * 0.3f), Size(corte.width - lw, corte.height - lw * 0.6f), style = Stroke(corte.height * 0.1f))
+                drawOval(anillo.copy(alpha = 0.25f), Offset(ce.x - corte.width * 0.3f, ce.y - corte.height * 0.3f), Size(corte.width * 0.6f, corte.height * 0.6f))
+                for (k in 1..6) {
+                    val f = k / 7f
+                    val ronda = Path().apply {
+                        for (i in 0..36) {
+                            val a = i * 2 * PI / 36; val rr = f * (1f + 0.05f * sin(a * 3 + k).toFloat())
+                            val q = Offset(ce.x + (corte.width * 0.47f * rr * cos(a)).toFloat(), ce.y + (corte.height * 0.47f * rr * sin(a)).toFloat())
+                            if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y)
+                        }
+                        close()
+                    }
+                    drawPath(ronda, anillo.copy(alpha = 0.5f), style = Stroke(lw * (if (k % 2 == 0) 0.32f else 0.22f)))
                 }
-                drawLine(anillo, Offset(corte.center.x + p.x(0.01f), corte.center.y), Offset(corte.right - p.x(0.04f), corte.center.y + corte.height * 0.2f), lw * 0.4f)
-                drawOval(corteza, corte.topLeft, corte.size, style = Stroke(lw * 0.7f))
+                if (fino) for (i in 0 until 16) {
+                    val a = i * 2 * PI / 16 + 0.13 * (i % 3); val f0 = 0.2f + 0.1f * (i % 2); val f1 = 0.62f + 0.2f * ((i * 7) % 3) / 2f
+                    drawLine(lerp(cara, Color.White, 0.55f).copy(alpha = 0.5f), Offset(ce.x + (corte.width * 0.47f * f0 * cos(a)).toFloat(), ce.y + (corte.height * 0.47f * f0 * sin(a)).toFloat()),
+                        Offset(ce.x + (corte.width * 0.47f * f1 * cos(a)).toFloat(), ce.y + (corte.height * 0.47f * f1 * sin(a)).toFloat()), lw * 0.22f)
+                }
+                drawPath(Path().apply { moveTo(corte.right - lw * 0.6f, corte.center.y + corte.height * 0.08f); lineTo(ce.x + p.x(0.02f), ce.y - corte.height * 0.04f); lineTo(corte.right - lw * 0.4f, corte.center.y + corte.height * 0.22f); close() }, umbra.copy(alpha = 0.7f))
+                drawCircle(anillo, lw * 0.35f, ce)
+                drawOval(corteza, corte.topLeft, corte.size, style = Stroke(lw * 0.8f))
+                drawArc(lerp(corteza, cara, 0.5f), 160f, 110f, false, Offset(corte.left + lw * 0.2f, corte.top + lw * 0.1f), Size(corte.width - lw * 0.4f, corte.height - lw * 0.2f), style = Stroke(lw * 0.3f))
             }
         }
         when (cat) {
             "Diario" -> {
                 // El torques de la casa grande, colgado de su clavija en el poste de roble: el aro torcido del metal del nivel, con
                 // sus remates de tope que se miran por abajo, como los de los nobles (Diodoro 5.27).
-                tocon(); sombraPie(0.42f, 0.58f)
+                tocon(); sombraPie(0.45f, 0.55f)
                 caja(p, 0.465f, 0.08f, 0.535f, 0.7f, vol(madera, 0.465f, 0.535f))
-                if (p.hecho) for (k in 0 until 6) drawLine(Color.Black.copy(alpha = 0.18f), p.o(0.48f + (k % 2) * 0.02f, 0.12f + k * 0.1f), p.o(0.49f + (k % 2) * 0.02f, 0.18f + k * 0.1f), lw * 0.35f)
-                drawRect(vol(madera, 0.455f, 0.545f), Offset(p.x(0.455f), p.y(0.07f)), Size(p.x(0.09f), p.y(0.02f)))
+                veta(0.465f, 0.1f, 0.535f, 0.69f, 23)
+                if (p.hecho) drawRect(Brush.verticalGradient(listOf(Color.Transparent, umbra.copy(alpha = 0.35f)), p.y(0.62f), p.y(0.7f)), Offset(p.x(0.465f), p.y(0.62f)), Size(p.x(0.07f), p.y(0.08f)))
+                caja(p, 0.455f, 0.07f, 0.545f, 0.09f, vol(lerp(madera, cara, 0.2f), 0.455f, 0.545f))
+                if (p.hecho) drawLine(umbra.copy(alpha = 0.45f), p.o(0.465f, 0.091f), p.o(0.535f, 0.091f), lw * 0.6f)
                 val c = p.o(0.5f, 0.36f); val r = p.w * 0.25f; val g = p.w * 0.06f
-                // La sombra del aro sobre el poste y la clavija.
-                if (p.hecho) drawArc(Color.Black.copy(alpha = 0.25f), 113f, 314f, false, Offset(c.x - r + lw * 1.2f, c.y - r + lw * 1.4f), Size(r * 2, r * 2), style = Stroke(g, cap = StrokeCap.Round))
-                if (p.hecho) with(TrazosGalia) { torques(c, r, g, p.oscuro, p.brillo) }
-                else drawArc(p.sombra, 113f, 314f, false, Offset(c.x - r, c.y - r), Size(r * 2, r * 2), style = Stroke(g, cap = StrokeCap.Round))
+                val caja0 = Offset(c.x - r, c.y - r); val med = Size(r * 2, r * 2)
+                // La sombra del aro sobre el poste.
+                if (p.hecho) drawArc(umbra.copy(alpha = 0.3f), 113f, 314f, false, Offset(c.x - r + lw * 1.4f, c.y - r + lw * 1.6f), med, style = Stroke(g, cap = StrokeCap.Round))
                 if (p.hecho) {
-                    // El volumen del aro: la luz arriba a la izquierda y la sombra abajo a la derecha.
-                    drawArc(p.base.copy(alpha = 0.85f), 113f, 314f, false, Offset(c.x - r, c.y - r), Size(r * 2, r * 2), style = Stroke(g * 0.62f, cap = StrokeCap.Round))
-                    drawArc(Color.White.copy(alpha = 0.45f), 190f, 70f, false, Offset(c.x - r * 1.02f, c.y - r * 1.02f), Size(r * 2.04f, r * 2.04f), style = Stroke(g * 0.22f, cap = StrokeCap.Round))
-                    drawArc(Color.Black.copy(alpha = 0.22f), 10f, 80f, false, Offset(c.x - r * 0.96f, c.y - r * 0.96f), Size(r * 1.92f, r * 1.92f), style = Stroke(g * 0.3f, cap = StrokeCap.Round))
-                    // La torsión, en trazos en diagonal del claro y la sombra.
-                    var a = 120f
-                    while (a < 420f) {
+                    // El aro en volumen: el tono, la sombra por dentro abajo a la derecha y la luz por fuera arriba a la izquierda.
+                    with(TrazosGalia) { torques(c, r, g, p.oscuro, p.brillo) }
+                    drawArc(p.oscuro, 113f, 314f, false, caja0, med, style = Stroke(g, cap = StrokeCap.Round))
+                    drawArc(p.base, 113f, 314f, false, Offset(caja0.x - g * 0.06f, caja0.y - g * 0.06f), med, style = Stroke(g * 0.78f, cap = StrokeCap.Round))
+                    drawArc(lerp(p.base, p.brillo, 0.6f), 150f, 150f, false, Offset(c.x - r * 1.03f, c.y - r * 1.03f), Size(r * 2.06f, r * 2.06f), style = Stroke(g * 0.32f, cap = StrokeCap.Round))
+                    // La torsión: cada vuelta del cordón, con su luz más viva del lado de la ventana y su surco.
+                    var a = 118f
+                    while (a < 422f) {
                         val rad = Math.toRadians(a.toDouble()); val tan = Offset(-sin(rad).toFloat(), cos(rad).toFloat()); val nor = Offset(cos(rad).toFloat(), sin(rad).toFloat())
-                        val o = Offset(c.x + r * cos(rad).toFloat(), c.y + r * sin(rad).toFloat()); val d = g * 0.38f
-                        drawLine(p.oscuro.copy(alpha = 0.55f), o - nor * d - tan * (d * 0.7f), o + nor * d + tan * (d * 0.7f), g * 0.13f, StrokeCap.Round)
-                        a += 10f
+                        val o = Offset(c.x + r * cos(rad).toFloat(), c.y + r * sin(rad).toFloat()); val d = g * 0.42f
+                        val luz = ((1 + cos(rad - Math.toRadians(225.0))) / 2).toFloat()
+                        drawLine(p.oscuro.copy(alpha = 0.75f), o - nor * d - tan * (d * 0.75f), o + nor * d + tan * (d * 0.75f), g * 0.16f, StrokeCap.Round)
+                        val o2 = o + tan * (g * 0.24f)
+                        drawLine(lerp(p.brillo, Color.White, 0.3f).copy(alpha = 0.15f + (lustre + 0.1f) * luz), o2 - nor * (d * 0.6f) - tan * (d * 0.45f), o2 + nor * (d * 0.6f) + tan * (d * 0.45f), g * 0.1f, StrokeCap.Round)
+                        a += 9f
                     }
-                }
-                // Los remates de tope, con su anillo de perlas repujadas.
+                    drawArc(umbra.copy(alpha = 0.3f), 0f, 100f, false, Offset(c.x - r * 0.93f, c.y - r * 0.93f), Size(r * 1.86f, r * 1.86f), style = Stroke(g * 0.22f, cap = StrokeCap.Round))
+                    drawArc(Color.White.copy(alpha = lustre), 200f, 50f, false, Offset(c.x - r * 1.04f, c.y - r * 1.04f), Size(r * 2.08f, r * 2.08f), style = Stroke(g * 0.14f, cap = StrokeCap.Round))
+                } else drawArc(p.sombra, 113f, 314f, false, caja0, med, style = Stroke(g, cap = StrokeCap.Round))
+                // Los remates de tope: el cuello que se ensancha, el disco con su anillo de perlas repujadas y su brillo.
                 listOf(113f, 427f).forEach { ang ->
                     val rad = Math.toRadians(ang.toDouble())
                     val o = Offset(c.x + r * cos(rad).toFloat(), c.y + r * sin(rad).toFloat())
+                    if (p.hecho) drawCircle(umbra.copy(alpha = 0.3f), g * 1.25f, o + Offset(lw * 1.2f, lw * 1.4f))
                     drawCircle(metalBulto(o, g * 1.25f), g * 1.25f, o)
                     if (p.hecho) {
-                        drawCircle(p.oscuro.copy(alpha = 0.6f), g * 1.25f, o, style = Stroke(lw * 0.4f))
-                        for (k in 0 until 8) { val b = k * PI / 4; drawCircle(p.brillo.copy(alpha = 0.8f), lw * 0.3f, Offset(o.x + g * 0.8f * cos(b).toFloat(), o.y + g * 0.8f * sin(b).toFloat())) }
-                        drawCircle(p.oscuro.copy(alpha = 0.5f), g * 0.32f, o)
+                        drawCircle(p.oscuro.copy(alpha = 0.7f), g * 1.25f, o, style = Stroke(lw * 0.4f))
+                        for (k in 0 until 10) { val b = k * PI / 5; val q = Offset(o.x + g * 0.82f * cos(b).toFloat(), o.y + g * 0.82f * sin(b).toFloat()); drawCircle(p.oscuro.copy(alpha = 0.5f), lw * 0.3f, q + Offset(lw * 0.12f, lw * 0.12f)); drawCircle(p.brillo, lw * 0.26f, q) }
+                        drawCircle(Brush.radialGradient(listOf(p.oscuro.copy(alpha = 0.6f), p.base.copy(alpha = 0f)), o + Offset(lw * 0.2f, lw * 0.2f), g * 0.5f), g * 0.5f, o)
+                        drawCircle(Color.White.copy(alpha = lustre + 0.15f), g * 0.2f, o - Offset(g * 0.5f, g * 0.55f))
                     }
                 }
+                destello(Offset(c.x - r * 0.72f, c.y - r * 0.72f), g * 0.9f)
+                // La clavija de roble de donde cuelga.
                 drawCircle(bulto(madera, p.o(0.5f, 0.11f), lw * 1.6f), lw * 1.6f, p.o(0.5f, 0.11f))
             }
             "Mundo" -> {
@@ -1584,86 +1687,85 @@ object TrofeosMas {
                     }
                     close()
                 }
-                // El canto, que asoma a la derecha por el grueso de la moneda.
-                drawPath(Path().apply { addPath(cospel, Offset(lw * 1.6f, lw * 0.6f)) }, if (p.hecho) SolidColor(p.oscuro) else SolidColor(p.sombra))
+                // La sombra de la moneda en la pared de atrás y el canto, que asoma a la derecha por el grueso.
+                sombraDe(cospel, 3.2f, 2.4f, 0.18f)
+                val canto = Path().apply { addPath(cospel, Offset(lw * 1.8f, lw * 0.7f)) }
+                drawPath(canto, if (p.hecho) Brush.linearGradient(listOf(p.base, p.oscuro, lerp(p.oscuro, umbra, 0.4f)), Offset(c.x - R, c.y - R), Offset(c.x + R, c.y + R)) else SolidColor(p.sombra))
+                if (p.hecho) clipPath(canto) { for (k in 0 until 40) { val a = k * 2 * PI / 40; drawLine(p.oscuro.copy(alpha = 0.5f), Offset(c.x + lw * 1.8f + (R * 0.96f * cos(a)).toFloat(), c.y + lw * 0.7f + (R * 0.96f * sin(a)).toFloat()), Offset(c.x + lw * 1.8f + (R * 1.05f * cos(a)).toFloat(), c.y + lw * 0.7f + (R * 1.05f * sin(a)).toFloat()), lw * 0.25f) } }
                 drawPath(cospel, metalBulto(c, R))
                 if (p.hecho) {
-                    // El campo un poco hundido y las perlas del canto, corridas abajo a la izquierda (el golpe no cayó al centro).
-                    drawCircle(Color.Black.copy(alpha = 0.1f), R * 0.8f, Offset(c.x - R * 0.05f, c.y + R * 0.04f))
+                    // El campo un poco hundido: la sombra arriba a la izquierda y la luz abajo a la derecha, por dentro del borde.
+                    clipPath(cospel) {
+                        drawCircle(Brush.radialGradient(listOf(Color.Transparent, Color.Transparent, umbra.copy(alpha = 0.18f)), Offset(c.x + R * 0.08f, c.y + R * 0.1f), R * 0.86f), R * 0.86f, Offset(c.x + R * 0.08f, c.y + R * 0.1f))
+                        drawArc(p.brillo.copy(alpha = 0.55f), -10f, 110f, false, Offset(c.x - R * 0.82f, c.y - R * 0.82f), Size(R * 1.64f, R * 1.64f), style = Stroke(lw * 0.6f))
+                        drawArc(p.oscuro.copy(alpha = 0.45f), 170f, 110f, false, Offset(c.x - R * 0.82f, c.y - R * 0.82f), Size(R * 1.64f, R * 1.64f), style = Stroke(lw * 0.6f))
+                    }
+                    martillado(cospel, 0.2f, 0.12f, 0.8f, 0.68f, 30, 41, lw * 0.6f)
+                    // Las perlas del canto, corridas abajo a la izquierda (el golpe no cayó al centro).
                     for (i in 0 until 26) {
                         val a = PI * 0.15 + i * PI * 1.25 / 25
                         val o = Offset(c.x - R * 0.08f + (R * 0.86f * cos(a)).toFloat(), c.y + R * 0.08f + (R * 0.86f * sin(a)).toFloat())
-                        drawCircle(p.oscuro.copy(alpha = 0.55f), lw * 0.55f, o + Offset(lw * 0.2f, lw * 0.2f)); drawCircle(p.brillo, lw * 0.45f, o)
+                        drawCircle(p.oscuro.copy(alpha = 0.6f), lw * 0.55f, o + Offset(lw * 0.2f, lw * 0.2f)); drawCircle(p.brillo, lw * 0.45f, o); drawCircle(Color.White.copy(alpha = 0.6f), lw * 0.15f, o - Offset(lw * 0.15f, lw * 0.15f))
                     }
-                    // El caballo en relieve: la sombra del golpe y la luz encima.
+                    // El caballo en relieve: la sombra del golpe, el cuerpo y la luz encima.
                     val ch = Offset(c.x - R * 0.02f, c.y - R * 0.08f)
                     with(TrazosGalia) {
-                        caballo(ch + Offset(lw * 0.4f, lw * 0.4f), R * 1.34f, p.oscuro.copy(alpha = 0.75f), mira = 1f)
-                        caballo(ch, R * 1.34f, lerp(p.base, p.brillo, 0.55f), p.oscuro.copy(alpha = 0.7f), mira = 1f)
+                        caballo(ch + Offset(lw * 0.5f, lw * 0.5f), R * 1.34f, p.oscuro.copy(alpha = 0.8f), mira = 1f)
+                        caballo(ch - Offset(lw * 0.3f, lw * 0.3f), R * 1.34f, lerp(p.brillo, Color.White, 0.4f), mira = 1f)
+                        caballo(ch, R * 1.34f, lerp(p.base, p.brillo, 0.3f), lerp(p.oscuro, umbra, 0.3f), mira = 1f)
                     }
-                    drawPath(cospel, p.oscuro.copy(alpha = 0.6f), style = Stroke(lw * 0.5f))
-                    brillo(Offset(c.x - R * 0.72f, c.y - R * 0.35f), Offset(c.x - R * 0.42f, c.y - R * 0.74f), lw * 1.5f, 0.4f)
+                    // El reflejo que barre la cara en diagonal, más vivo en cada nivel.
+                    clipPath(cospel) {
+                        val banda = Path().apply { moveTo(c.x - R * 1.1f, c.y - R * 0.1f); lineTo(c.x - R * 0.1f, c.y - R * 1.1f); lineTo(c.x + R * 0.15f, c.y - R * 1.1f); lineTo(c.x - R * 1.1f, c.y + R * 0.15f); close() }
+                        drawPath(banda, Color.White.copy(alpha = lustre * 0.3f))
+                    }
+                    drawPath(cospel, p.oscuro.copy(alpha = 0.65f), style = Stroke(lw * 0.5f))
+                    brillo(Offset(c.x - R * 0.72f, c.y - R * 0.35f), Offset(c.x - R * 0.42f, c.y - R * 0.74f), lw * 1.5f, lustre + 0.1f)
+                    destello(Offset(c.x - R * 0.55f, c.y - R * 0.6f), lw * 3f)
                 } else with(TrazosGalia) { caballo(c, R * 1.34f, p.sombra.copy(alpha = p.sombra.alpha * 1.5f), mira = 1f) }
                 // El soporte de roble: una cuña con su ranura, donde la moneda se para de canto.
                 val soporte = Path().apply { moveTo(p.x(0.32f), p.y(0.7f)); lineTo(p.x(0.36f), p.y(0.64f)); lineTo(p.x(0.64f), p.y(0.64f)); lineTo(p.x(0.68f), p.y(0.7f)); close() }
+                sombraDe(soporte, 1.2f, 0.6f, 0.3f)
                 drawPath(soporte, vol(madera, 0.32f, 0.68f))
                 if (p.hecho) {
-                    drawLine(Color.Black.copy(alpha = 0.45f), p.o(0.37f, 0.646f), p.o(0.63f, 0.646f), lw * 0.7f)
-                    drawLine(Color.White.copy(alpha = 0.18f), p.o(0.36f, 0.641f), p.o(0.64f, 0.641f), lw * 0.35f)
+                    clipPath(soporte) { for (k in 0 until 4) drawLine(umbra.copy(alpha = 0.3f), p.o(0.33f, 0.66f + k * 0.012f), p.o(0.67f, 0.655f + k * 0.013f), lw * 0.3f) }
+                    drawLine(lerp(madera, cara, 0.5f), p.o(0.36f, 0.641f), p.o(0.64f, 0.641f), lw * 0.45f)
+                    drawLine(umbra.copy(alpha = 0.7f), p.o(0.37f, 0.647f), p.o(0.63f, 0.647f), lw * 0.8f)
+                    rebote(soporte, cara, 0.35f)
                 }
             }
             "Cuerpo" -> {
-                // El carnyx de Tintignac: el tubo de bronce del metal del nivel, alto sobre la gente, con sus juntas, y arriba la
-                // cabeza de jabalí que mira al frente, con la jeta, la boca abierta, el colmillo, la oreja echada atrás y la cresta;
-                // abajo, la boquilla doblada. Lo sostiene una horquilla de roble.
-                tocon(0.3f, 0.7f); sombraPie(0.36f, 0.62f)
-                // La horquilla de roble que lo sostiene.
-                drawLine(vol(madera, 0.47f, 0.53f), p.o(0.5f, 0.7f), p.o(0.5f, 0.45f), lw * 2.2f, StrokeCap.Round)
-                // El tubo: sube recto y abajo se dobla hacia la boquilla.
-                val tubo = Path().apply {
-                    moveTo(p.x(0.44f), p.y(0.25f)); lineTo(p.x(0.44f), p.y(0.56f))
-                    quadraticTo(p.x(0.44f), p.y(0.65f), p.x(0.53f), p.y(0.65f)); lineTo(p.x(0.62f), p.y(0.65f))
-                }
-                val gt = lw * 4.2f
-                if (p.hecho) drawPath(Path().apply { addPath(tubo, Offset(lw * 1.1f, lw * 0.7f)) }, Color.Black.copy(alpha = 0.2f), style = Stroke(gt, cap = StrokeCap.Round))
-                drawPath(tubo, p.metal(0.4f, 0.48f), style = Stroke(gt, cap = StrokeCap.Round, join = StrokeJoin.Round))
-                if (p.hecho) drawLine(Color.White.copy(alpha = 0.4f), p.o(0.428f, 0.27f), p.o(0.428f, 0.55f), lw * 0.8f)
-                // Las juntas del tubo y la boquilla.
-                listOf(0.31f, 0.39f, 0.47f, 0.55f).forEach { y -> drawRect(metalBulto(p.o(0.44f, y), gt * 0.7f), Offset(p.x(0.44f) - gt * 0.68f, p.y(y)), Size(gt * 1.36f, lw * 1.3f)) }
-                drawRect(metalBulto(p.o(0.63f, 0.65f), lw * 2f), Offset(p.x(0.62f), p.y(0.65f) - lw * 2.6f), Size(lw * 1.6f, lw * 5.2f))
-                listOf(0.455f, 0.56f).forEach { x -> drawLine(madera, p.o(0.5f, 0.455f), p.o(x, 0.39f), lw * 1.5f, StrokeCap.Round) }
-                // La cabeza de jabalí.
-                val cabeza = Path().apply {
-                    moveTo(p.x(0.4f), p.y(0.27f)); lineTo(p.x(0.4f), p.y(0.18f))
-                    quadraticTo(p.x(0.43f), p.y(0.1f), p.x(0.53f), p.y(0.1f))            // la frente
-                    lineTo(p.x(0.79f), p.y(0.145f))                                        // el lomo de la jeta
-                    lineTo(p.x(0.79f), p.y(0.19f))                                         // el disco
-                    lineTo(p.x(0.62f), p.y(0.2f))                                          // el labio de arriba hasta la comisura
-                    lineTo(p.x(0.75f), p.y(0.235f)); lineTo(p.x(0.74f), p.y(0.255f))       // la quijada de abajo, abierta
-                    quadraticTo(p.x(0.58f), p.y(0.275f), p.x(0.48f), p.y(0.275f)); close() // la garganta
-                }
-                drawPath(cabeza, metalBulto(p.o(0.54f, 0.16f), p.w * 0.26f))
-                // La boca por dentro, la lengua y el colmillo.
-                drawPath(Path().apply { moveTo(p.x(0.62f), p.y(0.2f)); lineTo(p.x(0.785f), p.y(0.19f)); lineTo(p.x(0.75f), p.y(0.235f)); close() }, if (p.hecho) SolidColor(lerp(p.oscuro, Color.Black, 0.5f)) else SolidColor(p.sombra))
+                // El carnyx de Tintignac: el tubo de bronce del metal del nivel, alto sobre la gente, con sus anillos, y arriba la
+                // cabeza de jabalí con el hocico truncado, las fauces abiertas, los colmillos y la cresta; abajo, la boquilla
+                // doblada. Va atado con correas a una estaca de roble clavada en el tocón.
+                tocon(0.28f, 0.72f); sombraPie(0.3f, 0.52f)
+                // La estaca de roble, con su corteza y la punta cortada a hacha.
+                val estaca = Path().apply { moveTo(p.x(0.43f), p.y(0.7f)); lineTo(p.x(0.433f), p.y(0.33f)); lineTo(p.x(0.452f), p.y(0.31f)); lineTo(p.x(0.47f), p.y(0.325f)); lineTo(p.x(0.468f), p.y(0.7f)); close() }
+                sombraDe(estaca, 1.6f, 0.8f, 0.25f)
+                drawPath(estaca, vol(lerp(madera, corteza, 0.4f), 0.43f, 0.47f))
                 if (p.hecho) {
-                    drawLine(coral, p.o(0.64f, 0.206f), p.o(0.72f, 0.212f), lw * 0.9f, StrokeCap.Round)
-                    drawPath(Path().apply { moveTo(p.x(0.69f), p.y(0.205f)); quadraticTo(p.x(0.72f), p.y(0.2f), p.x(0.715f), p.y(0.155f)) }, lino, style = Stroke(lw * 0.85f, cap = StrokeCap.Round))
-                    drawPath(cabeza, p.oscuro.copy(alpha = 0.7f), style = Stroke(lw * 0.45f, join = StrokeJoin.Round))
-                    drawOval(p.oscuro.copy(alpha = 0.8f), Offset(p.x(0.775f), p.y(0.147f)), Size(p.x(0.025f), p.y(0.04f)))
-                    drawCircle(p.oscuro, lw * 0.75f, p.o(0.565f, 0.14f)); drawCircle(p.brillo, lw * 0.28f, p.o(0.56f, 0.135f))
-                    // Las arrugas de la jeta y el brillo del lomo.
-                    listOf(0.67f, 0.7f, 0.73f).forEach { x -> drawLine(p.oscuro.copy(alpha = 0.45f), p.o(x, 0.135f + (x - 0.67f) * 0.2f), p.o(x - 0.008f, 0.17f), lw * 0.35f) }
-                    brillo(p.o(0.5f, 0.115f), p.o(0.74f, 0.145f), lw * 0.9f, 0.4f)
+                    clipPath(estaca) { for (k in 0 until 7) drawLine(umbra.copy(alpha = 0.45f), p.o(0.437f + (k % 2) * 0.016f, 0.36f + k * 0.048f), p.o(0.44f + (k % 2) * 0.016f, 0.4f + k * 0.048f), lw * 0.35f) }
+                    drawPath(Path().apply { moveTo(p.x(0.433f), p.y(0.33f)); lineTo(p.x(0.452f), p.y(0.31f)); lineTo(p.x(0.47f), p.y(0.325f)) }, cara, style = Stroke(lw * 0.5f))
                 }
-                // La oreja, echada para atrás.
-                drawPath(Path().apply { moveTo(p.x(0.47f), p.y(0.115f)); quadraticTo(p.x(0.42f), p.y(0.06f), p.x(0.39f), p.y(0.03f)); quadraticTo(p.x(0.47f), p.y(0.05f), p.x(0.54f), p.y(0.11f)); close() },
-                    metalBulto(p.o(0.46f, 0.07f), lw * 4f))
-                // La cresta de cerdas, que baja por la nuca.
-                drawPath(Path().apply {
-                    moveTo(p.x(0.405f), p.y(0.24f))
-                    for (k in 0 until 6) { val y = 0.225f - k * 0.022f; lineTo(p.x(0.36f + k * 0.006f), p.y(y - 0.01f)); lineTo(p.x(0.404f + k * 0.008f), p.y(y - 0.016f)) }
-                    lineTo(p.x(0.46f), p.y(0.11f)); close()
-                }, metalBulto(p.o(0.4f, 0.17f), lw * 4f))
+                // El carnyx.
+                val alto = p.h * 0.645f; val pie = p.o(0.35f, 0.674f)
+                with(TrazosGalia) {
+                    if (p.hecho) {
+                        translate(lw * 1.1f, lw * 0.8f) { carnyx(pie, alto, umbra.copy(alpha = 0.18f)) }
+                        carnyx(pie, alto, p.base, lerp(p.oscuro, umbra, 0.6f), 1f, p.brillo, p.oscuro)
+                    } else carnyx(pie, alto, p.sombra)
+                }
+                // Las correas de cuero que lo atan a la estaca, con la sombra que echan.
+                val cuero = p.c(Color(0xFF5A3A22))
+                listOf(0.4f, 0.56f).forEach { y ->
+                    if (p.hecho) drawLine(umbra.copy(alpha = 0.3f), p.o(0.335f, y + 0.012f), p.o(0.475f, y + 0.02f), lw * 1.3f, StrokeCap.Round)
+                    drawLine(cuero, p.o(0.33f, y), p.o(0.472f, y + 0.008f), lw * 1.3f, StrokeCap.Round)
+                    if (p.hecho) {
+                        drawLine(Color.White.copy(alpha = 0.2f), p.o(0.335f, y - 0.004f), p.o(0.468f, y + 0.004f), lw * 0.35f, StrokeCap.Round)
+                        drawLine(cuero, p.o(0.472f, y + 0.008f), p.o(0.49f, y + 0.045f), lw * 0.8f, StrokeCap.Round)
+                    }
+                }
+                destello(p.o(0.47f, 0.088f), lw * 2.4f)
             }
             "Mente" -> {
                 // La hoz de oro y el muérdago: el manto blanco tendido sobre el tocón, como el que recoge la rama cortada en el
@@ -1677,11 +1779,17 @@ object TrofeosMas {
                     lineTo(p.x(0.43f), p.y(0.8f)); quadraticTo(p.x(0.36f), p.y(0.77f), p.x(0.3f), p.y(0.765f))
                     quadraticTo(p.x(0.31f), p.y(0.73f), p.x(0.25f), p.y(0.69f)); close()
                 }
-                if (p.hecho) drawPath(Path().apply { addPath(manto, Offset(lw * 0.8f, lw * 0.8f)) }, Color.Black.copy(alpha = 0.18f))
-                drawPath(manto, vol(lino, 0.25f, 0.76f))
-                if (p.hecho) {
-                    drawLine(Color.Black.copy(alpha = 0.12f), p.o(0.36f, 0.71f), p.o(0.42f, 0.785f), lw * 1.1f, StrokeCap.Round)
-                    drawLine(Color.White.copy(alpha = 0.6f), p.o(0.3f, 0.69f), p.o(0.6f, 0.675f), lw * 0.4f, StrokeCap.Round)
+                sombraDe(manto, 0.9f, 1f, 0.26f)
+                drawPath(manto, if (p.hecho) Brush.linearGradient(listOf(lerp(lino, Color.White, 0.5f), lino, lerp(lino, Color(0xFF8C8270), 0.45f)), p.o(0.3f, 0.66f), p.o(0.6f, 0.78f)) else SolidColor(p.sombra))
+                if (p.hecho) clipPath(manto) {
+                    // Los pliegues: el valle en sombra fría, el lomo con luz; y la trama del lino.
+                    listOf(0.36f to 0.42f, 0.47f to 0.5f).forEach { (xa, xb) ->
+                        drawLine(Color(0xFF6E6A5C).copy(alpha = 0.3f), p.o(xa, 0.705f), p.o(xb, 0.79f), lw * 1.4f, StrokeCap.Round)
+                        drawLine(Color.White.copy(alpha = 0.55f), p.o(xa - 0.025f, 0.705f), p.o(xb - 0.03f, 0.785f), lw * 0.5f, StrokeCap.Round)
+                    }
+                    for (k in 0 until 14) drawLine(Color(0xFF8C8270).copy(alpha = 0.12f), p.o(0.24f + k * 0.04f, 0.65f), p.o(0.2f + k * 0.04f, 0.8f), lw * 0.2f)
+                    drawLine(Color.White.copy(alpha = 0.7f), p.o(0.3f, 0.682f), p.o(0.6f, 0.668f), lw * 0.45f, StrokeCap.Round)
+                    drawRect(Brush.verticalGradient(listOf(Color.Transparent, umbra.copy(alpha = 0.2f)), p.y(0.74f), p.y(0.8f)), Offset(p.x(0.2f), p.y(0.74f)), Size(p.x(0.6f), p.y(0.06f)))
                 }
                 // La mata de muérdago: tallos que se bifurcan desde el centro, hojas en pares y bayas en las horquillas.
                 fun rama(o: Offset, ang: Double, largo: Float, nivel: Int) {
@@ -1693,11 +1801,15 @@ object TrofeosMas {
                             val e = Offset(f.x + (l * cos(a)).toFloat(), f.y + (l * sin(a)).toFloat())
                             val n = Offset(-sin(a).toFloat(), cos(a).toFloat()) * (l * 0.24f)
                             val hoja = Path().apply { moveTo(f.x, f.y); quadraticTo((f.x + e.x) / 2 + n.x, (f.y + e.y) / 2 + n.y, e.x, e.y); quadraticTo((f.x + e.x) / 2 - n.x, (f.y + e.y) / 2 - n.y, f.x, f.y); close() }
-                            drawPath(hoja, if (p.hecho) Brush.linearGradient(listOf(lerp(muerdago, Color.White, 0.25f), lerp(muerdago, roble, 0.45f)), f, e) else SolidColor(p.sombra))
+                            // La hoja que mira a la luz, más clara; la de abajo, en la sombra del roble.
+                            val aLuz = (sin(a) < 0.2)
+                            drawPath(hoja, if (p.hecho) Brush.linearGradient(listOf(lerp(muerdago, Color.White, if (aLuz) 0.35f else 0.1f), lerp(muerdago, roble, if (aLuz) 0.35f else 0.65f)), f, e) else SolidColor(p.sombra))
+                            if (p.hecho && fino) drawLine(lerp(muerdago, roble, 0.7f).copy(alpha = 0.6f), f, Offset((f.x * 0.25f + e.x * 0.75f), (f.y * 0.25f + e.y * 0.75f)), lw * 0.2f)
                         }
                     } else {
                         rama(f, ang - 0.45, largo * 0.8f, nivel - 1); rama(f, ang + 0.45, largo * 0.8f, nivel - 1)
                         drawCircle(bulto(baya, f, lw * 1.25f), lw * 1.25f, f)
+                        if (p.hecho) drawCircle(Color.White.copy(alpha = 0.85f), lw * 0.35f, f - Offset(lw * 0.4f, lw * 0.4f))
                     }
                 }
                 val m = p.o(0.39f, 0.625f)
@@ -1711,29 +1823,55 @@ object TrofeosMas {
                     cubicTo(p.x(0.33f), p.y(0.175f), p.x(0.4f), p.y(0.16f), p.x(0.46f), p.y(0.17f))
                     cubicTo(p.x(0.58f), p.y(0.19f), p.x(0.61f), p.y(0.36f), p.x(0.565f), p.y(0.5f)); close()
                 }
-                if (p.hecho) drawPath(Path().apply { addPath(hoja, Offset(lw * 1.2f, lw * 1.2f)) }, Color.Black.copy(alpha = 0.2f))
-                drawPath(hoja, if (p.hecho) Brush.linearGradient(listOf(oroBrillo, oro, lerp(oro, Color.Black, 0.35f)), p.o(0.35f, 0.15f), p.o(0.64f, 0.45f)) else SolidColor(p.sombra))
+                sombraDe(hoja, 1.4f, 1.4f, 0.26f)
+                drawPath(hoja, if (p.hecho) Brush.linearGradient(listOf(lerp(oroBrillo, Color.White, 0.2f), oro, lerp(oro, umbra, 0.45f)), p.o(0.35f, 0.15f), p.o(0.64f, 0.45f)) else SolidColor(p.sombra))
                 if (p.hecho) {
-                    drawPath(Path().apply { moveTo(p.x(0.59f), p.y(0.47f)); cubicTo(p.x(0.635f), p.y(0.33f), p.x(0.6f), p.y(0.15f), p.x(0.45f), p.y(0.13f)) }, Color.White.copy(alpha = 0.55f), style = Stroke(lw * 0.45f))
-                    drawPath(hoja, lerp(oro, Color.Black, 0.4f), style = Stroke(lw * 0.35f))
+                    clipPath(hoja) {
+                        // El lomo grueso, más oscuro; el filo, que el afilado dejó claro; y los golpes del martillo.
+                        drawPath(Path().apply { moveTo(p.x(0.605f), p.y(0.5f)); cubicTo(p.x(0.675f), p.y(0.35f), p.x(0.635f), p.y(0.125f), p.x(0.45f), p.y(0.11f)) }, lerp(oro, umbra, 0.5f).copy(alpha = 0.6f), style = Stroke(lw * 1.2f))
+                        drawPath(Path().apply { moveTo(p.x(0.565f), p.y(0.5f)); cubicTo(p.x(0.61f), p.y(0.36f), p.x(0.58f), p.y(0.19f), p.x(0.46f), p.y(0.17f)); cubicTo(p.x(0.4f), p.y(0.16f), p.x(0.33f), p.y(0.175f), p.x(0.29f), p.y(0.22f)) }, lerp(oroBrillo, Color.White, 0.5f).copy(alpha = 0.85f), style = Stroke(lw * 0.9f))
+                    }
+                    martillado(hoja, 0.3f, 0.11f, 0.66f, 0.5f, 22, 59, lw * 0.5f)
+                    drawPath(Path().apply { moveTo(p.x(0.59f), p.y(0.45f)); cubicTo(p.x(0.635f), p.y(0.33f), p.x(0.6f), p.y(0.15f), p.x(0.45f), p.y(0.13f)) }, Color.White.copy(alpha = lustre + 0.15f), style = Stroke(lw * 0.45f, cap = StrokeCap.Round))
+                    drawPath(hoja, lerp(oro, umbra, 0.5f), style = Stroke(lw * 0.35f))
+                    destello(p.o(0.6f, 0.2f), lw * 2.4f)
                 }
+                // El mango de roble, con su veta, y la virola del metal del nivel.
                 drawLine(vol(madera, 0.56f, 0.62f), p.o(0.582f, 0.52f), p.o(0.6f, 0.67f), lw * 2.5f, StrokeCap.Round)
+                if (p.hecho) {
+                    drawLine(Color.White.copy(alpha = 0.25f), p.o(0.576f, 0.53f), p.o(0.592f, 0.66f), lw * 0.4f, StrokeCap.Round)
+                    drawLine(umbra.copy(alpha = 0.4f), p.o(0.589f, 0.53f), p.o(0.606f, 0.665f), lw * 0.4f, StrokeCap.Round)
+                }
                 drawRect(p.metal(0.55f, 0.61f), Offset(p.x(0.555f), p.y(0.49f)), Size(p.x(0.056f), p.y(0.032f)))
+                if (p.hecho) {
+                    drawLine(p.brillo.copy(alpha = lustre + 0.2f), p.o(0.556f, 0.493f), p.o(0.61f, 0.493f), lw * 0.35f)
+                    drawLine(umbra.copy(alpha = 0.5f), p.o(0.556f, 0.521f), p.o(0.61f, 0.521f), lw * 0.4f)
+                }
             }
             "Cultura" -> {
                 // El caldero de bronce del banquete, colgado de su cadena de hierro en las trébedes, con el fuego debajo: la panza
-                // del metal del nivel, la banda de ondas repujadas bajo el borde y las dos argollas.
+                // del metal del nivel, martillada, la banda de ondas repujadas bajo el borde, las dos argollas y el fuego que se
+                // refleja en el fondo.
                 tocon(0.24f, 0.76f)
-                // Las trébedes de hierro.
-                listOf(0.22f to 0.7f, 0.78f to 0.7f).forEach { (x, y) -> drawLine(hierro, p.o(0.5f, 0.07f), p.o(x, y), lw * 1.1f, StrokeCap.Round) }
-                drawLine(lerp(hierro, Color.Black, 0.3f), p.o(0.5f, 0.07f), p.o(0.56f, 0.68f), lw * 0.9f, StrokeCap.Round)
-                drawCircle(hierro, lw * 1.3f, p.o(0.5f, 0.075f))
-                // El fuego debajo.
+                // Las trébedes de hierro, con su luz del lado de la ventana.
+                listOf(0.22f to 0.7f, 0.78f to 0.7f).forEach { (x, y) ->
+                    drawLine(hierro, p.o(0.5f, 0.07f), p.o(x, y), lw * 1.1f, StrokeCap.Round)
+                    if (p.hecho) drawLine(Color.White.copy(alpha = 0.25f), p.o(0.498f, 0.075f), p.o(x - 0.004f, y), lw * 0.3f, StrokeCap.Round)
+                }
+                drawLine(lerp(hierro, umbra, 0.4f), p.o(0.5f, 0.07f), p.o(0.56f, 0.68f), lw * 0.9f, StrokeCap.Round)
+                drawCircle(bulto(hierro, p.o(0.5f, 0.075f), lw * 1.3f), lw * 1.3f, p.o(0.5f, 0.075f))
+                // El fuego debajo, con su luz en el corte del tocón.
+                if (p.hecho) drawOval(Brush.radialGradient(listOf(TrazosGalia.FUEGO_HALO.copy(alpha = 0.45f), Color.Transparent), p.o(0.5f, 0.69f), p.w * 0.22f), Offset(p.x(0.28f), p.y(0.66f)), Size(p.x(0.44f), p.y(0.06f)))
                 with(TrazosGalia) { if (p.hecho) hoguera(p.o(0.5f, 0.69f), p.w * 0.22f, 0.7f, madera) }
-                // La cadena: eslabones en óvalo.
-                for (k in 0 until 6) { val y = 0.09f + k * 0.025f; drawOval(hierro, Offset(p.x(0.5f) - lw * (if (k % 2 == 0) 0.7f else 1.1f), p.y(y)), Size(lw * (if (k % 2 == 0) 1.4f else 2.2f), p.y(0.03f)), style = Stroke(lw * 0.5f)) }
+                // La cadena: eslabones en óvalo, el de canto y el de frente.
+                for (k in 0 until 6) {
+                    val y = 0.09f + k * 0.025f; val ancho = if (k % 2 == 0) 0.7f else 1.1f
+                    drawOval(hierro, Offset(p.x(0.5f) - lw * ancho, p.y(y)), Size(lw * ancho * 2, p.y(0.03f)), style = Stroke(lw * 0.5f))
+                    if (p.hecho && k % 2 == 1) drawArc(Color.White.copy(alpha = 0.3f), 180f, 90f, false, Offset(p.x(0.5f) - lw * ancho, p.y(y)), Size(lw * ancho * 2, p.y(0.03f)), style = Stroke(lw * 0.25f))
+                }
                 // El asa de hierro que va de una argolla a la otra.
                 drawArc(hierro, 200f, 140f, false, Offset(p.x(0.27f), p.y(0.24f)), Size(p.x(0.46f), p.y(0.18f)), style = Stroke(lw * 0.8f))
+                if (p.hecho) drawArc(Color.White.copy(alpha = 0.22f), 205f, 60f, false, Offset(p.x(0.27f), p.y(0.24f) - lw * 0.2f), Size(p.x(0.46f), p.y(0.18f)), style = Stroke(lw * 0.25f))
                 // La panza.
                 val c = p.o(0.5f, 0.44f)
                 val panza = Path().apply {
@@ -1741,35 +1879,52 @@ object TrofeosMas {
                     cubicTo(p.x(0.82f), p.y(0.42f), p.x(0.74f), p.y(0.58f), p.x(0.5f), p.y(0.585f))
                     cubicTo(p.x(0.26f), p.y(0.58f), p.x(0.18f), p.y(0.42f), p.x(0.26f), p.y(0.33f)); close()
                 }
-                drawPath(panza, metalBulto(Offset(c.x - p.w * 0.04f, c.y - p.w * 0.04f), p.w * 0.3f))
+                drawPath(panza, metalBulto(Offset(c.x - p.w * 0.06f, c.y - p.w * 0.06f), p.w * 0.32f))
                 if (p.hecho) {
-                    // La banda de ondas corridas bajo el borde, como el repujado de La Tène.
                     clipPath(panza) {
+                        // La sombra propia, abajo a la derecha, y el fuego que se refleja en el fondo.
+                        drawCircle(Brush.radialGradient(listOf(Color.Transparent, umbra.copy(alpha = 0.35f)), Offset(c.x - p.w * 0.08f, c.y - p.w * 0.08f), p.w * 0.36f), p.w * 0.5f, c)
+                        drawOval(Brush.radialGradient(listOf(TrazosGalia.FUEGO.copy(alpha = 0.55f), TrazosGalia.FUEGO.copy(alpha = 0f)), p.o(0.5f, 0.6f), p.w * 0.24f), Offset(p.x(0.25f), p.y(0.48f)), Size(p.x(0.5f), p.y(0.14f)))
+                        // La banda de ondas corridas bajo el borde, como el repujado de La Tène, con su luz y su sombra.
                         drawRect(p.oscuro.copy(alpha = 0.3f), Offset(p.x(0.2f), p.y(0.355f)), Size(p.x(0.6f), p.y(0.05f)))
                         val onda = Path().apply {
                             var x = 0.24f; moveTo(p.x(x), p.y(0.38f))
                             while (x < 0.78f) { cubicTo(p.x(x + 0.02f), p.y(0.355f), p.x(x + 0.045f), p.y(0.355f), p.x(x + 0.05f), p.y(0.38f)); cubicTo(p.x(x + 0.055f), p.y(0.405f), p.x(x + 0.08f), p.y(0.405f), p.x(x + 0.1f), p.y(0.38f)); x += 0.1f }
                         }
-                        drawPath(onda, p.brillo.copy(alpha = 0.85f), style = Stroke(lw * 0.55f))
-                        drawLine(Color.Black.copy(alpha = 0.18f), p.o(0.2f, 0.53f), p.o(0.8f, 0.53f), lw * 2.6f)
+                        translate(lw * 0.25f, lw * 0.25f) { drawPath(onda, p.oscuro.copy(alpha = 0.8f), style = Stroke(lw * 0.55f)) }
+                        drawPath(onda, p.brillo.copy(alpha = 0.9f), style = Stroke(lw * 0.45f))
+                        // Las costuras de remaches donde se unen las láminas.
+                        listOf(0.38f, 0.62f).forEach { x -> for (k in 0 until 5) { val o = p.o(x + (x - 0.5f) * 0.25f * k / 4f, 0.42f + k * 0.035f); drawCircle(p.oscuro.copy(alpha = 0.6f), lw * 0.35f, o + Offset(lw * 0.12f, lw * 0.12f)); drawCircle(p.brillo.copy(alpha = 0.85f), lw * 0.28f, o) } }
                     }
-                    brillo(p.o(0.31f, 0.43f), p.o(0.34f, 0.5f), lw * 1.6f, 0.35f)
+                    martillado(panza, 0.2f, 0.41f, 0.8f, 0.6f, 60, 67)
+                    rebote(panza, lerp(p.brillo, TrazosGalia.FUEGO, 0.5f), 0.4f)
+                    brillo(p.o(0.31f, 0.43f), p.o(0.34f, 0.5f), lw * 1.8f, lustre)
+                    destello(p.o(0.32f, 0.42f), lw * 2.6f)
                 }
                 // El borde, un óvalo de boca más oscuro por dentro, y las argollas.
                 drawOval(p.metal(0.25f, 0.75f), Offset(p.x(0.245f), p.y(0.315f)), Size(p.x(0.51f), p.y(0.04f)))
-                drawOval(if (p.hecho) SolidColor(lerp(p.oscuro, Color.Black, 0.35f)) else SolidColor(p.sombra), Offset(p.x(0.27f), p.y(0.322f)), Size(p.x(0.46f), p.y(0.024f)))
-                listOf(0.25f, 0.75f).forEach { x -> drawCircle(p.oscuro, lw * 1.5f, p.o(x, 0.345f), style = Stroke(lw * 0.7f)) }
+                drawOval(if (p.hecho) Brush.verticalGradient(listOf(lerp(p.oscuro, umbra, 0.7f), lerp(p.oscuro, umbra, 0.3f)), p.y(0.322f), p.y(0.346f)) else SolidColor(p.sombra), Offset(p.x(0.27f), p.y(0.322f)), Size(p.x(0.46f), p.y(0.024f)))
+                if (p.hecho) drawArc(p.brillo.copy(alpha = lustre + 0.2f), 160f, 120f, false, Offset(p.x(0.247f), p.y(0.316f)), Size(p.x(0.506f), p.y(0.038f)), style = Stroke(lw * 0.3f))
+                listOf(0.25f, 0.75f).forEach { x ->
+                    drawCircle(p.oscuro, lw * 1.5f, p.o(x, 0.345f), style = Stroke(lw * 0.7f))
+                    if (p.hecho) drawArc(p.brillo.copy(alpha = 0.7f), 180f, 90f, false, Offset(p.x(x) - lw * 1.5f, p.y(0.345f) - lw * 1.5f), Size(lw * 3f, lw * 3f), style = Stroke(lw * 0.3f))
+                }
             }
             "Gente" -> {
                 // El jabalí de bronce, de pie sobre su plaquita: el morro largo, la cruz alta con la cresta de cerdas parada, el
                 // anca más baja, las patas cortas, el colmillo, la oreja, la cola enroscada y la espiral grabada en la paletilla.
-                tocon(); sombraPie(0.24f, 0.74f)
+                tocon(); sombraPie(0.22f, 0.78f, 0.69f)
                 drawRect(p.metal(0.22f, 0.78f), Offset(p.x(0.22f), p.y(0.672f)), Size(p.x(0.56f), p.y(0.022f)))
+                if (p.hecho) {
+                    drawLine(p.brillo.copy(alpha = lustre + 0.15f), p.o(0.22f, 0.673f), p.o(0.78f, 0.673f), lw * 0.35f)
+                    // Las sombras de las pezuñas sobre la plaquita.
+                    listOf(0.288f, 0.358f, 0.632f, 0.692f).forEach { x -> drawOval(umbra.copy(alpha = 0.4f), Offset(p.x(x - 0.01f), p.y(0.666f)), Size(p.x(0.05f), p.y(0.008f))) }
+                }
                 // Las patas, cortas y fuertes, con sus pezuñas.
                 listOf(0.3f, 0.37f, 0.62f, 0.68f).forEachIndexed { i, x ->
                     val lejos = i % 2 == 1
-                    drawLine(if (lejos) SolidColor(if (p.hecho) p.oscuro else p.sombra) else p.metal(x - 0.025f, x + 0.025f), p.o(x, 0.55f), p.o(x + (if (i < 2) -0.012f else 0.012f), 0.665f), lw * 2.8f, StrokeCap.Round)
-                    drawLine(if (p.hecho) lerp(p.oscuro, Color.Black, 0.4f) else p.sombra, p.o(x - 0.012f + (if (i < 2) -0.012f else 0.012f), 0.668f), p.o(x + 0.012f + (if (i < 2) -0.012f else 0.012f), 0.668f), lw * 1.2f)
+                    drawLine(if (lejos) SolidColor(if (p.hecho) lerp(p.oscuro, umbra, 0.3f) else p.sombra) else p.metal(x - 0.025f, x + 0.025f), p.o(x, 0.55f), p.o(x + (if (i < 2) -0.012f else 0.012f), 0.665f), lw * 2.8f, StrokeCap.Round)
+                    drawLine(if (p.hecho) lerp(p.oscuro, umbra, 0.5f) else p.sombra, p.o(x - 0.012f + (if (i < 2) -0.012f else 0.012f), 0.668f), p.o(x + 0.012f + (if (i < 2) -0.012f else 0.012f), 0.668f), lw * 1.2f)
                 }
                 // El cuerpo y la cabeza, que mira a la izquierda: la frente sube a la cruz y el lomo baja al anca.
                 val cuerpo = Path().apply {
@@ -1784,8 +1939,7 @@ object TrofeosMas {
                     quadraticTo(p.x(0.26f), p.y(0.575f), p.x(0.2f), p.y(0.525f)) // la quijada
                     close()
                 }
-                if (p.hecho) drawPath(Path().apply { addPath(cuerpo, Offset(lw * 1f, lw * 1f)) }, Color.Black.copy(alpha = 0.2f))
-                drawPath(cuerpo, metalBulto(p.o(0.42f, 0.4f), p.w * 0.4f))
+                sombraDe(cuerpo, 1.2f, 1.2f, 0.24f)
                 // La cresta: cerdas en sierra desde la nuca hasta media espalda, más altas en la cruz.
                 val cresta = Path().apply {
                     moveTo(p.x(0.28f), p.y(0.385f))
@@ -1796,18 +1950,39 @@ object TrofeosMas {
                     }
                     lineTo(p.x(0.68f), p.y(0.4f)); close()
                 }
-                drawPath(cresta, if (p.hecho) Brush.verticalGradient(listOf(p.brillo, p.base, p.oscuro), p.y(0.24f), p.y(0.4f)) else SolidColor(p.sombra))
+                drawPath(cuerpo, metalBulto(p.o(0.4f, 0.38f), p.w * 0.42f))
                 if (p.hecho) {
-                    drawPath(cuerpo, p.oscuro.copy(alpha = 0.6f), style = Stroke(lw * 0.4f))
+                    clipPath(cuerpo) {
+                        // La panza en sombra y la luz que rebota del corte del tocón por debajo.
+                        drawRect(Brush.verticalGradient(listOf(Color.Transparent, umbra.copy(alpha = 0.4f)), p.y(0.46f), p.y(0.6f)), Offset(p.x(0.1f), p.y(0.46f)), Size(p.x(0.72f), p.y(0.14f)))
+                        // El pelo grabado a buril, en mechones cortos que bajan del lomo.
+                        val az = java.util.Random(83)
+                        repeat(if (fino) 44 else 0) {
+                            val x = 0.3f + az.nextFloat() * 0.45f; val y = 0.38f + az.nextFloat() * 0.16f
+                            drawLine(p.oscuro.copy(alpha = 0.22f), p.o(x, y), p.o(x - 0.006f, y + 0.018f), lw * 0.2f, StrokeCap.Round)
+                        }
+                    }
+                    rebote(cuerpo, lerp(p.brillo, cara, 0.4f), 0.5f)
+                    drawPath(cuerpo, p.oscuro.copy(alpha = 0.65f), style = Stroke(lw * 0.4f))
+                }
+                drawPath(cresta, if (p.hecho) Brush.verticalGradient(listOf(lerp(p.brillo, Color.White, 0.2f), p.base, lerp(p.base, p.brillo, 0.3f)), p.y(0.27f), p.y(0.37f)) else SolidColor(p.sombra))
+                if (p.hecho) {
+                    clipPath(cresta) { for (k in 0 until 18) { val x = 0.29f + k * 0.022f; drawLine(p.oscuro.copy(alpha = 0.45f), p.o(x, 0.37f), p.o(x + 0.006f, 0.27f), lw * 0.25f) } }
                     // La espiral de la paletilla, el ojo, la oreja, el colmillo y el disco de la jeta.
                     val es = p.o(0.37f, 0.48f)
-                    drawPath(Path().apply { moveTo(es.x, es.y); for (k in 1..26) { val a = k * 0.42; val rr = lw * 0.22f * k; lineTo(es.x + (rr * cos(a)).toFloat(), es.y + (rr * sin(a)).toFloat()) } }, p.oscuro.copy(alpha = 0.6f), style = Stroke(lw * 0.4f))
-                    drawCircle(p.oscuro, lw * 0.6f, p.o(0.235f, 0.43f))
+                    val espiral = Path().apply { moveTo(es.x, es.y); for (k in 1..26) { val a = k * 0.42; val rr = lw * 0.22f * k; lineTo(es.x + (rr * cos(a)).toFloat(), es.y + (rr * sin(a)).toFloat()) } }
+                    translate(lw * 0.2f, lw * 0.2f) { drawPath(espiral, p.brillo.copy(alpha = 0.5f), style = Stroke(lw * 0.3f)) }
+                    drawPath(espiral, p.oscuro.copy(alpha = 0.7f), style = Stroke(lw * 0.4f))
+                    drawCircle(p.oscuro, lw * 0.65f, p.o(0.235f, 0.43f)); drawCircle(p.brillo, lw * 0.2f, p.o(0.232f, 0.426f))
                     drawPath(Path().apply { moveTo(p.x(0.27f), p.y(0.395f)); lineTo(p.x(0.3f), p.y(0.31f)); lineTo(p.x(0.32f), p.y(0.385f)); close() }, metalBulto(p.o(0.29f, 0.35f), lw * 3f))
+                    drawPath(Path().apply { moveTo(p.x(0.28f), p.y(0.385f)); lineTo(p.x(0.298f), p.y(0.335f)); lineTo(p.x(0.31f), p.y(0.38f)); close() }, p.oscuro.copy(alpha = 0.6f))
                     drawPath(Path().apply { moveTo(p.x(0.18f), p.y(0.5f)); quadraticTo(p.x(0.17f), p.y(0.45f), p.x(0.21f), p.y(0.44f)) }, lino, style = Stroke(lw * 0.95f, cap = StrokeCap.Round))
-                    drawOval(p.oscuro.copy(alpha = 0.7f), Offset(p.x(0.105f), p.y(0.455f)), Size(p.x(0.03f), p.y(0.05f)))
-                    listOf(0.6f, 0.66f).forEach { x -> drawLine(p.oscuro.copy(alpha = 0.3f), p.o(x, 0.45f), p.o(x + 0.02f, 0.53f), lw * 0.4f) }
-                    brillo(p.o(0.4f, 0.345f), p.o(0.58f, 0.365f), lw * 1.3f, 0.35f)
+                    drawOval(p.oscuro.copy(alpha = 0.75f), Offset(p.x(0.105f), p.y(0.455f)), Size(p.x(0.03f), p.y(0.05f)))
+                    drawOval(p.brillo.copy(alpha = 0.6f), Offset(p.x(0.105f), p.y(0.455f)), Size(p.x(0.03f), p.y(0.05f)), style = Stroke(lw * 0.25f))
+                    listOf(0.6f, 0.66f).forEach { x -> drawLine(p.oscuro.copy(alpha = 0.35f), p.o(x, 0.45f), p.o(x + 0.02f, 0.53f), lw * 0.4f) }
+                    brillo(p.o(0.4f, 0.345f), p.o(0.58f, 0.365f), lw * 1.4f, lustre + 0.05f)
+                    brillo(p.o(0.17f, 0.455f), p.o(0.26f, 0.415f), lw * 0.8f, lustre)
+                    destello(p.o(0.44f, 0.345f), lw * 2.6f)
                 }
                 // La cola enroscada.
                 drawPath(Path().apply { moveTo(p.x(0.775f), p.y(0.46f)); quadraticTo(p.x(0.85f), p.y(0.43f), p.x(0.835f), p.y(0.49f)); quadraticTo(p.x(0.81f), p.y(0.52f), p.x(0.8f), p.y(0.48f)) },
@@ -1816,8 +1991,16 @@ object TrofeosMas {
             "Constancia" -> {
                 // El casco del jinete en su poste: la calota con el botón de la cimera, la banda de curvas y los botones de coral,
                 // el guardanuca y las carrilleras con sus tres bollos.
-                tocon(); sombraPie(0.38f, 0.62f)
+                tocon(); sombraPie(0.44f, 0.56f)
                 caja(p, 0.465f, 0.5f, 0.535f, 0.7f, vol(madera, 0.465f, 0.535f))
+                veta(0.465f, 0.5f, 0.535f, 0.69f, 29)
+                if (p.hecho) drawRect(Brush.verticalGradient(listOf(umbra.copy(alpha = 0.5f), Color.Transparent), p.y(0.44f), p.y(0.54f)), Offset(p.x(0.465f), p.y(0.44f)), Size(p.x(0.07f), p.y(0.1f)))
+                // La sombra que el casco echa detrás.
+                val calota = Path().apply {
+                    moveTo(p.x(0.27f), p.y(0.43f)); cubicTo(p.x(0.25f), p.y(0.26f), p.x(0.36f), p.y(0.17f), p.x(0.5f), p.y(0.17f))
+                    cubicTo(p.x(0.64f), p.y(0.17f), p.x(0.75f), p.y(0.26f), p.x(0.73f), p.y(0.43f)); close()
+                }
+                sombraDe(calota, 2.4f, 1.8f, 0.16f)
                 // Las carrilleras, que cuelgan a los lados.
                 listOf(-1f, 1f).forEach { s ->
                     val x0 = 0.5f + s * 0.17f
@@ -1826,40 +2009,56 @@ object TrofeosMas {
                         quadraticTo(p.x(x0 + s * 0.08f), p.y(0.56f), p.x(x0 + s * 0.035f), p.y(0.62f))
                         quadraticTo(p.x(x0 - s * 0.01f), p.y(0.55f), p.x(x0 - s * 0.01f), p.y(0.42f)); close()
                     }
+                    sombraDe(carrillera, 1f, 1f, 0.22f)
                     drawPath(carrillera, p.metal(minOf(x0, x0 + s * 0.09f), maxOf(x0, x0 + s * 0.09f)))
                     if (p.hecho) {
-                        drawPath(carrillera, p.oscuro.copy(alpha = 0.6f), style = Stroke(lw * 0.4f))
+                        if (s > 0) clipPath(carrillera) { drawRect(umbra.copy(alpha = 0.22f), Offset(p.x(0.6f), p.y(0.4f)), Size(p.x(0.3f), p.y(0.25f))) }
+                        martillado(carrillera, minOf(x0, x0 + s * 0.09f), 0.42f, maxOf(x0, x0 + s * 0.09f), 0.62f, 10, 71 + s.toLong())
+                        drawPath(carrillera, p.oscuro.copy(alpha = 0.65f), style = Stroke(lw * 0.4f))
                         listOf(Offset(0.02f, 0.46f), Offset(0.06f, 0.47f), Offset(0.035f, 0.52f)).forEach { (dx, y) ->
-                            val o = p.o(x0 + s * dx, y); drawCircle(metalBulto(o, lw * 1.2f), lw * 1.2f, o); drawCircle(p.oscuro.copy(alpha = 0.5f), lw * 1.2f, o, style = Stroke(lw * 0.25f))
+                            val o = p.o(x0 + s * dx, y)
+                            drawCircle(umbra.copy(alpha = 0.3f), lw * 1.2f, o + Offset(lw * 0.35f, lw * 0.35f))
+                            drawCircle(metalBulto(o, lw * 1.2f), lw * 1.2f, o); drawCircle(p.oscuro.copy(alpha = 0.5f), lw * 1.2f, o, style = Stroke(lw * 0.25f))
+                            drawCircle(Color.White.copy(alpha = lustre + 0.2f), lw * 0.3f, o - Offset(lw * 0.4f, lw * 0.4f))
                         }
                     }
                     drawCircle(hierro, lw * 0.6f, p.o(x0 + s * 0.02f, 0.425f))
                 }
                 // El guardanuca: el ala de atrás, apenas visible por los lados.
-                drawOval(if (p.hecho) SolidColor(p.oscuro) else SolidColor(p.sombra), Offset(p.x(0.24f), p.y(0.395f)), Size(p.x(0.52f), p.y(0.05f)))
+                drawOval(if (p.hecho) Brush.horizontalGradient(listOf(p.base, p.oscuro, lerp(p.oscuro, umbra, 0.5f)), p.x(0.24f), p.x(0.76f)) else SolidColor(p.sombra), Offset(p.x(0.24f), p.y(0.395f)), Size(p.x(0.52f), p.y(0.05f)))
                 // La calota.
-                val calota = Path().apply {
-                    moveTo(p.x(0.27f), p.y(0.43f)); cubicTo(p.x(0.25f), p.y(0.26f), p.x(0.36f), p.y(0.17f), p.x(0.5f), p.y(0.17f))
-                    cubicTo(p.x(0.64f), p.y(0.17f), p.x(0.75f), p.y(0.26f), p.x(0.73f), p.y(0.43f)); close()
-                }
-                drawPath(calota, metalBulto(p.o(0.45f, 0.27f), p.w * 0.3f))
+                drawPath(calota, metalBulto(p.o(0.43f, 0.25f), p.w * 0.32f))
                 if (p.hecho) {
-                    // La banda de abajo, con las ondas grabadas y los botones de coral.
                     clipPath(calota) {
-                        drawRect(p.oscuro.copy(alpha = 0.3f), Offset(p.x(0.25f), p.y(0.37f)), Size(p.x(0.5f), p.y(0.06f)))
+                        // La sombra propia a la derecha, con el reflejo del poste de roble, y la banda de abajo con las ondas
+                        // grabadas y los botones de coral.
+                        drawCircle(Brush.radialGradient(listOf(Color.Transparent, umbra.copy(alpha = 0.3f)), p.o(0.42f, 0.26f), p.w * 0.3f), p.w * 0.5f, p.o(0.5f, 0.3f))
+                        drawRect(p.oscuro.copy(alpha = 0.32f), Offset(p.x(0.25f), p.y(0.37f)), Size(p.x(0.5f), p.y(0.06f)))
+                        drawLine(p.brillo.copy(alpha = 0.6f), p.o(0.25f, 0.371f), p.o(0.75f, 0.371f), lw * 0.3f)
                         val onda = Path().apply {
                             var x = 0.26f; moveTo(p.x(x), p.y(0.4f))
                             while (x < 0.74f) { quadraticTo(p.x(x + 0.03f), p.y(0.375f), p.x(x + 0.06f), p.y(0.4f)); quadraticTo(p.x(x + 0.09f), p.y(0.425f), p.x(x + 0.12f), p.y(0.4f)); x += 0.12f }
                         }
-                        drawPath(onda, p.brillo.copy(alpha = 0.8f), style = Stroke(lw * 0.45f))
+                        translate(lw * 0.22f, lw * 0.22f) { drawPath(onda, p.oscuro.copy(alpha = 0.8f), style = Stroke(lw * 0.45f)) }
+                        drawPath(onda, p.brillo.copy(alpha = 0.9f), style = Stroke(lw * 0.4f))
                     }
-                    listOf(0.32f, 0.41f, 0.5f, 0.59f, 0.68f).forEach { x -> drawCircle(bulto(coral, p.o(x, 0.355f), lw), lw, p.o(x, 0.355f)) }
-                    drawPath(calota, p.oscuro.copy(alpha = 0.6f), style = Stroke(lw * 0.4f))
-                    brillo(p.o(0.34f, 0.3f), p.o(0.4f, 0.21f), lw * 1.6f, 0.45f)
+                    martillado(calota, 0.26f, 0.17f, 0.74f, 0.37f, 40, 73)
+                    rebote(calota, lerp(p.brillo, cara, 0.5f), 0.4f)
+                    listOf(0.32f, 0.41f, 0.5f, 0.59f, 0.68f).forEach { x ->
+                        val o = p.o(x, 0.355f)
+                        drawCircle(umbra.copy(alpha = 0.35f), lw, o + Offset(lw * 0.3f, lw * 0.3f))
+                        drawCircle(bulto(coral, o, lw), lw, o); drawCircle(Color.White.copy(alpha = 0.7f), lw * 0.28f, o - Offset(lw * 0.35f, lw * 0.35f))
+                    }
+                    drawPath(calota, p.oscuro.copy(alpha = 0.65f), style = Stroke(lw * 0.4f))
+                    // El brillo de la calota pulida: una ventana alargada, más viva en cada nivel.
+                    drawOval(Color.White.copy(alpha = lustre * 0.7f), Offset(p.x(0.32f), p.y(0.215f)), Size(p.x(0.07f), p.y(0.1f)))
+                    brillo(p.o(0.34f, 0.3f), p.o(0.4f, 0.21f), lw * 1.2f, lustre + 0.15f)
+                    destello(p.o(0.37f, 0.23f), lw * 2.6f)
                 }
                 // El botón de la cimera.
                 caja(p, 0.485f, 0.13f, 0.515f, 0.175f)
                 drawCircle(metalBulto(p.o(0.5f, 0.12f), lw * 1.8f), lw * 1.8f, p.o(0.5f, 0.12f))
+                if (p.hecho) drawCircle(Color.White.copy(alpha = lustre + 0.2f), lw * 0.45f, p.o(0.493f, 0.113f))
             }
             "Curiosos" -> {
                 // El huevo de serpiente de Plinio (29.52–54): la bola de las culebras enlazadas y su baba, del tamaño de una
@@ -1871,89 +2070,129 @@ object TrofeosMas {
                     moveTo(p.x(0.24f), p.y(0.66f)); quadraticTo(p.x(0.5f), p.y(0.63f), p.x(0.76f), p.y(0.66f))
                     lineTo(p.x(0.74f), p.y(0.765f)); quadraticTo(p.x(0.62f), p.y(0.79f), p.x(0.5f), p.y(0.765f)); quadraticTo(p.x(0.38f), p.y(0.79f), p.x(0.26f), p.y(0.765f)); close()
                 }
+                sombraDe(manto, 1f, 1.2f, 0.28f)
                 drawPath(manto, if (p.hecho) SolidColor(TrazosGalia.LANA_ROJA) else SolidColor(p.sombra))
                 if (p.hecho) clipPath(manto) {
                     var x = 0.25f
                     while (x < 0.76f) { drawRect(TrazosGalia.LANA_VERDE.copy(alpha = 0.7f), Offset(p.x(x), p.y(0.62f)), Size(p.x(0.035f), p.y(0.2f))); drawLine(TrazosGalia.LANA_OCRE, p.o(x + 0.05f, 0.62f), p.o(x + 0.05f, 0.8f), lw * 0.35f); x += 0.09f }
                     listOf(0.68f, 0.73f).forEach { y -> drawRect(TrazosGalia.LANA_VERDE.copy(alpha = 0.55f), Offset(p.x(0.2f), p.y(y)), Size(p.x(0.6f), p.y(0.018f))) }
                     drawLine(TrazosGalia.LANA_OCRE, p.o(0.2f, 0.705f), p.o(0.8f, 0.705f), lw * 0.35f)
-                    drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.3f), Color.Transparent), p.y(0.64f), p.y(0.68f)), Offset(p.x(0.2f), p.y(0.64f)), Size(p.x(0.6f), p.y(0.04f)))
+                    // La lana: el pelo de la trama, el pliegue del doblez y la luz del lado de la ventana.
+                    if (fino) for (k in 0 until 40) drawLine(Color.White.copy(alpha = 0.1f), p.o(0.24f + k * 0.013f, 0.64f), p.o(0.235f + k * 0.013f, 0.79f), lw * 0.18f)
+                    drawRect(Brush.verticalGradient(listOf(umbra.copy(alpha = 0.4f), Color.Transparent), p.y(0.64f), p.y(0.69f)), Offset(p.x(0.2f), p.y(0.64f)), Size(p.x(0.6f), p.y(0.05f)))
+                    drawRect(Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.16f), Color.Transparent, umbra.copy(alpha = 0.3f)), p.x(0.24f), p.x(0.76f)), Offset(p.x(0.2f), p.y(0.62f)), Size(p.x(0.6f), p.y(0.2f)))
+                    listOf(0.5f).forEach { xp -> drawLine(umbra.copy(alpha = 0.35f), p.o(xp, 0.69f), p.o(xp, 0.77f), lw * 1.1f, StrokeCap.Round) }
                 }
                 // La garra: el pie y tres dedos que abrazan el huevo.
+                if (p.hecho) drawOval(umbra.copy(alpha = 0.35f), Offset(p.x(0.41f), p.y(0.645f)), Size(p.x(0.22f), p.y(0.022f)))
                 caja(p, 0.44f, 0.6f, 0.56f, 0.645f)
                 drawOval(p.metal(0.4f, 0.6f), Offset(p.x(0.4f), p.y(0.635f)), Size(p.x(0.2f), p.y(0.025f)))
+                if (p.hecho) drawArc(p.brillo.copy(alpha = lustre + 0.2f), 170f, 120f, false, Offset(p.x(0.4f), p.y(0.635f)), Size(p.x(0.2f), p.y(0.025f)), style = Stroke(lw * 0.3f))
                 val c = p.o(0.5f, 0.43f); val r = p.w * 0.17f
-                if (p.hecho) drawCircle(Color.Black.copy(alpha = 0.2f), r, c + Offset(lw * 1.2f, lw * 1.2f))
+                if (p.hecho) drawCircle(umbra.copy(alpha = 0.22f), r, c + Offset(lw * 1.6f, lw * 1.4f))
                 drawCircle(bulto(Color(0xFFD9DCC4), c, r), r, c)
                 if (p.hecho) clipPath(Path().apply { addOval(Rect(c, r)) }) {
                     // Las culebras enlazadas: vueltas que se cruzan, con su lado en sombra.
                     for (k in 0 until 5) {
                         val y0 = c.y - r + k * r * 0.45f
                         val vuelta = Path().apply { moveTo(c.x - r * 1.1f, y0); cubicTo(c.x - r * 0.4f, y0 - r * 0.5f, c.x + r * 0.3f, y0 + r * 0.6f, c.x + r * 1.1f, y0 + r * 0.05f) }
-                        drawPath(vuelta, Color(0xFF6E7A52).copy(alpha = 0.6f), style = Stroke(lw * 1.3f, cap = StrokeCap.Round))
+                        translate(lw * 0.3f, lw * 0.4f) { drawPath(vuelta, Color(0xFF3E4A2A).copy(alpha = 0.45f), style = Stroke(lw * 1.4f, cap = StrokeCap.Round)) }
+                        drawPath(vuelta, Color(0xFF6E7A52).copy(alpha = 0.65f), style = Stroke(lw * 1.3f, cap = StrokeCap.Round))
                         drawPath(vuelta, Color.White.copy(alpha = 0.35f), style = Stroke(lw * 0.4f, cap = StrokeCap.Round))
                     }
-                    // La baba que lo cubre: burbujas.
+                    // La baba que lo cubre: burbujas con su brillo.
                     val az = java.util.Random(13)
-                    repeat(18) { drawCircle(Color.White.copy(alpha = 0.55f), lw * (0.25f + az.nextFloat() * 0.5f), Offset(c.x + (az.nextFloat() - 0.5f) * r * 1.7f, c.y + (az.nextFloat() - 0.5f) * r * 1.7f), style = Stroke(lw * 0.25f)) }
-                    drawCircle(Brush.radialGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.25f)), c, r), r, c)
+                    repeat(18) {
+                        val o = Offset(c.x + (az.nextFloat() - 0.5f) * r * 1.7f, c.y + (az.nextFloat() - 0.5f) * r * 1.7f); val rb = lw * (0.25f + az.nextFloat() * 0.5f)
+                        drawCircle(Color.White.copy(alpha = 0.55f), rb, o, style = Stroke(lw * 0.25f)); drawCircle(Color.White.copy(alpha = 0.8f), rb * 0.3f, o - Offset(rb * 0.4f, rb * 0.4f))
+                    }
+                    drawCircle(Brush.radialGradient(listOf(Color.Transparent, umbra.copy(alpha = 0.35f)), c - Offset(r * 0.2f, r * 0.2f), r * 1.1f), r, c)
                 }
-                brillo(Offset(c.x - r * 0.55f, c.y - r * 0.3f), Offset(c.x - r * 0.3f, c.y - r * 0.6f), lw * 1.3f, 0.5f)
+                rebote(Path().apply { addOval(Rect(c, r)) }, Color(0xFFE6D9A8), 0.4f)
+                brillo(Offset(c.x - r * 0.55f, c.y - r * 0.3f), Offset(c.x - r * 0.3f, c.y - r * 0.6f), lw * 1.3f, 0.55f)
                 listOf(-1f, 0f, 1f).forEach { s ->
                     val garra = Path().apply { moveTo(c.x + s * r * 0.35f - lw, c.y + r * 1.05f); quadraticTo(c.x + s * r * 0.95f, c.y + r * 0.8f, c.x + s * r * 0.8f, c.y + r * 0.2f); lineTo(c.x + s * r * 0.35f + lw, c.y + r * 1.05f); close() }
-                    if (s != 0f) drawPath(garra, p.metal(0.38f, 0.62f))
+                    if (s != 0f) {
+                        drawPath(garra, p.metal(0.38f, 0.62f))
+                        if (p.hecho) { drawPath(garra, p.oscuro.copy(alpha = 0.6f), style = Stroke(lw * 0.3f)); drawCircle(Color.White.copy(alpha = lustre), lw * 0.4f, Offset(c.x + s * r * 0.8f, c.y + r * 0.24f)) }
+                    }
                 }
                 drawLine(p.metal(0.48f, 0.52f), Offset(c.x, c.y + r * 1.02f), Offset(c.x, c.y + r * 0.72f), lw * 1.2f, StrokeCap.Round)
+                destello(Offset(c.x - r * 0.45f, c.y - r * 0.55f), lw * 2.2f)
                 // La culebra enroscada al pie de la garra, con la cabeza alzada.
                 val verde = p.c(Color(0xFF55663A))
+                if (p.hecho) drawArc(umbra.copy(alpha = 0.3f), 160f, 220f, false, Offset(p.x(0.365f), p.y(0.606f)), Size(p.x(0.28f), p.y(0.06f)), style = Stroke(lw * 1.2f, cap = StrokeCap.Round))
                 drawArc(verde, 160f, 220f, false, Offset(p.x(0.36f), p.y(0.6f)), Size(p.x(0.28f), p.y(0.06f)), style = Stroke(lw * 1.2f, cap = StrokeCap.Round))
+                if (p.hecho) drawArc(Color.White.copy(alpha = 0.3f), 200f, 120f, false, Offset(p.x(0.36f), p.y(0.6f) - lw * 0.3f), Size(p.x(0.28f), p.y(0.06f)), style = Stroke(lw * 0.3f, cap = StrokeCap.Round))
                 drawPath(Path().apply { moveTo(p.x(0.64f), p.y(0.625f)); quadraticTo(p.x(0.7f), p.y(0.6f), p.x(0.69f), p.y(0.56f)) }, verde, style = Stroke(lw * 1.1f, cap = StrokeCap.Round))
-                drawOval(verde, Offset(p.x(0.67f), p.y(0.54f)), Size(p.x(0.045f), p.y(0.025f)))
+                drawOval(bulto(Color(0xFF55663A), p.o(0.692f, 0.552f), p.x(0.025f)), Offset(p.x(0.67f), p.y(0.54f)), Size(p.x(0.045f), p.y(0.025f)))
                 if (p.hecho) drawCircle(tinta, lw * 0.3f, p.o(0.7f, 0.551f))
             }
             else -> {
                 // La espada de La Tène en su vaina, de pie sobre el tocón y sacada un palmo: la empuñadura con su pomo y su guarda
                 // en campana, la hoja de hierro con su nervio, la vaina del metal del nivel con el par de dragones repujado bajo
                 // la boca y la contera calada; de la presilla cuelga la cadena del tahalí.
-                tocon(); sombraPie(0.42f, 0.6f)
+                tocon(); sombraPie(0.43f, 0.57f)
                 val x0 = 0.445f; val x1 = 0.555f
-                // La cadena del tahalí, que cuelga en curva.
+                // La cadena del tahalí, que cuelga en curva, con su sombra.
                 val cadena = Path().apply { moveTo(p.x(x1), p.y(0.3f)); quadraticTo(p.x(0.72f), p.y(0.5f), p.x(0.66f), p.y(0.66f)) }
+                if (p.hecho) translate(lw * 0.8f, lw * 0.8f) { drawPath(cadena, umbra.copy(alpha = 0.25f), style = Stroke(lw * 0.8f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(lw * 1.4f, lw * 0.6f)))) }
                 drawPath(cadena, hierro, style = Stroke(lw * 0.8f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(lw * 1.4f, lw * 0.6f))))
-                // La hoja que asoma.
+                if (p.hecho) drawPath(cadena, Color.White.copy(alpha = 0.3f), style = Stroke(lw * 0.25f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(lw * 0.6f, lw * 1.4f))))
+                // La hoja que asoma, con el nervio y el filo.
                 val hoja = Path().apply { moveTo(p.x(x0 + 0.012f), p.y(0.25f)); lineTo(p.x(x0 + 0.012f), p.y(0.17f)); lineTo(p.x(x1 - 0.012f), p.y(0.17f)); lineTo(p.x(x1 - 0.012f), p.y(0.25f)); close() }
                 drawPath(hoja, vol(lerp(hierro, Color.White, 0.25f), x0, x1))
-                if (p.hecho) drawLine(Color.White.copy(alpha = 0.5f), p.o(0.5f, 0.17f), p.o(0.5f, 0.25f), lw * 0.4f)
+                if (p.hecho) {
+                    drawLine(Color.White.copy(alpha = 0.55f), p.o(0.495f, 0.17f), p.o(0.495f, 0.25f), lw * 0.4f)
+                    drawLine(umbra.copy(alpha = 0.4f), p.o(0.506f, 0.17f), p.o(0.506f, 0.25f), lw * 0.4f)
+                    drawLine(Color.White.copy(alpha = 0.35f), p.o(x0 + 0.014f, 0.17f), p.o(x0 + 0.014f, 0.25f), lw * 0.25f)
+                }
                 // La guarda en campana, la empuñadura y el pomo.
-                drawPath(Path().apply { moveTo(p.x(0.43f), p.y(0.17f)); quadraticTo(p.x(0.5f), p.y(0.14f), p.x(0.57f), p.y(0.17f)); lineTo(p.x(0.53f), p.y(0.145f)); lineTo(p.x(0.47f), p.y(0.145f)); close() }, p.metal(0.43f, 0.57f))
-                caja(p, 0.483f, 0.06f, 0.517f, 0.145f, vol(madera, 0.483f, 0.517f))
-                if (p.hecho) for (k in 0 until 4) drawLine(Color.Black.copy(alpha = 0.3f), p.o(0.483f, 0.075f + k * 0.02f), p.o(0.517f, 0.08f + k * 0.02f), lw * 0.35f)
+                val guarda = Path().apply { moveTo(p.x(0.43f), p.y(0.17f)); quadraticTo(p.x(0.5f), p.y(0.14f), p.x(0.57f), p.y(0.17f)); lineTo(p.x(0.53f), p.y(0.145f)); lineTo(p.x(0.47f), p.y(0.145f)); close() }
+                drawPath(guarda, p.metal(0.43f, 0.57f))
+                caja(p, 0.483f, 0.06f, 0.517f, 0.145f, vol(lerp(madera, corteza, 0.3f), 0.483f, 0.517f))
+                if (p.hecho) for (k in 0 until 5) {
+                    drawLine(umbra.copy(alpha = 0.45f), p.o(0.483f, 0.07f + k * 0.017f), p.o(0.517f, 0.077f + k * 0.017f), lw * 0.35f)
+                    drawLine(Color.White.copy(alpha = 0.18f), p.o(0.483f, 0.074f + k * 0.017f), p.o(0.5f, 0.077f + k * 0.017f), lw * 0.2f)
+                }
                 drawOval(p.metal(0.46f, 0.54f), Offset(p.x(0.46f), p.y(0.04f)), Size(p.x(0.08f), p.y(0.026f)))
                 drawCircle(metalBulto(p.o(0.5f, 0.035f), lw * 1.2f), lw * 1.2f, p.o(0.5f, 0.035f))
+                if (p.hecho) drawCircle(Color.White.copy(alpha = lustre + 0.2f), lw * 0.35f, p.o(0.495f, 0.03f))
                 // La vaina.
                 val vaina = Path().apply {
                     moveTo(p.x(x0), p.y(0.25f)); lineTo(p.x(x1), p.y(0.25f)); lineTo(p.x(x1 - 0.004f), p.y(0.62f))
                     quadraticTo(p.x(0.5f), p.y(0.7f), p.x(x0 + 0.004f), p.y(0.62f)); close()
                 }
-                if (p.hecho) drawPath(Path().apply { addPath(vaina, Offset(lw * 1.1f, lw * 0.8f)) }, Color.Black.copy(alpha = 0.22f))
+                sombraDe(vaina, 1.4f, 0.9f, 0.28f)
                 drawPath(vaina, p.metal(x0, x1))
                 if (p.hecho) {
-                    drawLine(p.oscuro.copy(alpha = 0.5f), p.o(0.5f, 0.33f), p.o(0.5f, 0.6f), lw * 0.4f)
-                    // El par de dragones: dos eses que se miran bajo la boca.
+                    clipPath(vaina) {
+                        // La caña: el lomo del medio con su luz y su sombra; el fondo más oscuro hacia la contera.
+                        drawLine(p.brillo.copy(alpha = 0.6f), p.o(0.497f, 0.33f), p.o(0.497f, 0.6f), lw * 0.35f)
+                        drawLine(p.oscuro.copy(alpha = 0.6f), p.o(0.503f, 0.33f), p.o(0.503f, 0.6f), lw * 0.4f)
+                        drawRect(Brush.verticalGradient(listOf(Color.Transparent, umbra.copy(alpha = 0.3f)), p.y(0.45f), p.y(0.66f)), Offset(p.x(x0), p.y(0.45f)), Size(p.x(x1 - x0), p.y(0.21f)))
+                    }
+                    martillado(vaina, x0, 0.32f, x1, 0.62f, 22, 97, lw * 0.5f)
+                    // El par de dragones: dos eses que se miran bajo la boca, repujadas (la sombra y la luz del relieve).
                     listOf(-1f, 1f).forEach { s ->
-                        drawPath(Path().apply {
+                        val ese = Path().apply {
                             moveTo(p.x(0.5f), p.y(0.27f)); cubicTo(p.x(0.5f + s * 0.05f), p.y(0.26f), p.x(0.5f + s * 0.055f), p.y(0.31f), p.x(0.5f + s * 0.02f), p.y(0.305f))
                             quadraticTo(p.x(0.5f + s * 0.005f), p.y(0.3f), p.x(0.5f + s * 0.018f), p.y(0.29f))
-                        }, p.oscuro.copy(alpha = 0.8f), style = Stroke(lw * 0.45f, cap = StrokeCap.Round))
+                        }
+                        translate(lw * 0.2f, lw * 0.2f) { drawPath(ese, p.oscuro.copy(alpha = 0.85f), style = Stroke(lw * 0.5f, cap = StrokeCap.Round)) }
+                        drawPath(ese, p.brillo, style = Stroke(lw * 0.35f, cap = StrokeCap.Round))
                     }
-                    drawLine(p.oscuro.copy(alpha = 0.6f), p.o(x0, 0.255f), p.o(x1, 0.255f), lw * 0.5f)
-                    brillo(p.o(x0 + 0.015f, 0.34f), p.o(x0 + 0.015f, 0.58f), lw * 0.7f, 0.35f)
+                    drawLine(p.oscuro.copy(alpha = 0.7f), p.o(x0, 0.255f), p.o(x1, 0.255f), lw * 0.5f)
+                    drawLine(p.brillo.copy(alpha = 0.7f), p.o(x0, 0.251f), p.o(x1, 0.251f), lw * 0.25f)
+                    rebote(vaina, lerp(p.brillo, cara, 0.4f), 0.4f)
+                    brillo(p.o(x0 + 0.015f, 0.34f), p.o(x0 + 0.015f, 0.58f), lw * 0.7f, lustre)
+                    destello(p.o(x0 + 0.016f, 0.36f), lw * 2.2f)
                 }
                 // La presilla del tahalí y la contera calada.
                 caja(p, x1 - 0.002f, 0.29f, x1 + 0.018f, 0.31f)
                 drawPath(Path().apply { moveTo(p.x(x0 + 0.004f), p.y(0.6f)); quadraticTo(p.x(0.5f), p.y(0.7f), p.x(x1 - 0.004f), p.y(0.6f)); quadraticTo(p.x(0.5f), p.y(0.64f), p.x(x0 + 0.004f), p.y(0.6f)); close() },
                     if (p.hecho) SolidColor(p.oscuro) else SolidColor(p.sombra))
-                if (p.hecho) listOf(-1f, 1f).forEach { s -> drawCircle(p.brillo.copy(alpha = 0.8f), lw * 0.45f, p.o(0.5f + s * 0.025f, 0.625f)) }
+                if (p.hecho) listOf(-1f, 1f).forEach { s -> drawCircle(umbra.copy(alpha = 0.6f), lw * 0.5f, p.o(0.5f + s * 0.025f, 0.628f)); drawCircle(p.brillo.copy(alpha = 0.85f), lw * 0.4f, p.o(0.5f + s * 0.025f, 0.625f)) }
                 caja(p, 0.49f, 0.66f, 0.51f, 0.7f, if (p.hecho) SolidColor(p.oscuro) else SolidColor(p.sombra))
             }
         }

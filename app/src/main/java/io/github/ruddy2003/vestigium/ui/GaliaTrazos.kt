@@ -501,7 +501,7 @@ object TrazosGalia {
         if (grande) {
             val az = java.util.Random(31)
             clipPath(cabeza) {
-                repeat(70) {
+                repeat(54) {
                     val q = o(6f + az.nextFloat() * 36f, -98f + az.nextFloat() * 23f); val r = (0.5f + az.nextFloat() * 0.6f) * u
                     drawCircle(osc.copy(alpha = 0.12f), r, q + Offset(0.3f * r, 0.3f * r))
                     drawCircle(claro.copy(alpha = 0.14f), r * 0.5f, q - Offset(0.3f * r, 0.3f * r))

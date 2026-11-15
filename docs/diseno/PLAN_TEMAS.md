@@ -1049,6 +1049,8 @@ Junto al mito están las creencias del siglo I: **los Vigilantes** de Enoc, **Be
 
 ### 10e. Galia (`galia`)
 
+**Estado (16 nov 2026): programado** en la rama de los temas nuevos, todo menos el cuadro (va en la fila de escenas, después de S19). Guía: `docs/diseno/temas/galia.md`; fuentes: `docs/diseno/temas/fuentes_galia.md`. La otra vida es Segomaros, con su calendario del 54 al 50 a. C. y el cuento de la temporada 1. Decisiones a confirmar por el autor: el nombre (Segomaros; otras: Korisios, Esugenos) y Samonios = noviembre (recurso; la otra propuesta lo pone en mayo o junio).
+
 **Fuentes comprobadas** (15 nov 2026): `docs/diseno/temas/fuentes_galia.md`, con la cronología del levantamiento y 20 correcciones, ya puestas aquí.
 
 **Concepto.** La Galia del 52 a. C., el año del levantamiento de Vercingétorix. Es **mitad y mitad**:

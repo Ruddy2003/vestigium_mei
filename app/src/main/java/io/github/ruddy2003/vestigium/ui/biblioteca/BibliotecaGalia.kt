@@ -781,43 +781,102 @@ object EstanteGalia : DisenoBiblioteca {
         }
     }
 
-    /** La piel de lobo tendida en el suelo, dentro de [r]: la cabeza con las orejas a la izquierda, las cuatro patas abiertas, la cola y el pelo en mechones. */
-    private fun DrawScope.piel(r: Rect, color: Color, semilla: Int) {
+    /**
+     * La piel de lobo tendida en el suelo, en el escorzo del suelo, dentro de [r]: la cabeza a la izquierda con el hocico, la
+     * trufa y las orejas paradas; las patas de delante tendidas hacia delante junto a la cabeza y las de atrás hacia atrás,
+     * con sus dedos; la cola a la derecha con la punta oscura; el pelo gris pardo en mechones que salen del lomo, más oscuro
+     * por el lomo y más claro por los costados, y el canto de la piel con su sombra.
+     */
+    private fun DrawScope.piel(r: Rect, oscuro: Boolean, noche: Boolean, semilla: Int) {
         val u = density
-        val a = r.width; val b = r.height; val cy = r.center.y; val cx = r.center.x
+        val a = r.width; val b = r.height
+        fun q(x: Float, y: Float) = Offset(r.left + a * x, r.top + b * y)
+        fun c(x: Color) = t(x, oscuro, noche)
+        val pelo = c(Color(0xFF82796C)); val lomo = c(Color(0xFF3B332B)); val costado = c(Color(0xFFC9B595)); val trufa = c(Color(0xFF1C1713))
+        // El contorno, por puntos que se unen con curvas suaves: el hocico, la pata de delante lejana, el costado, la pata de
+        // atrás lejana, la cola, la pata de atrás cercana, el costado cercano, la pata de delante cercana y la quijada.
+        val pts = listOf(
+            0f to 0.52f, 0.04f to 0.42f, 0.1f to 0.31f, 0.15f to 0.33f, 0.18f to 0.36f,
+            0.22f to 0.3f, 0.16f to 0.12f, 0.12f to 0.03f, 0.15f to -0.01f, 0.2f to 0.07f, 0.28f to 0.23f,
+            0.36f to 0.26f, 0.5f to 0.24f, 0.62f to 0.26f,
+            0.68f to 0.24f, 0.78f to 0.1f, 0.84f to 0f, 0.885f to 0.05f, 0.83f to 0.16f, 0.78f to 0.32f,
+            0.82f to 0.4f, 0.88f to 0.44f, 0.95f to 0.45f, 1f to 0.5f, 0.95f to 0.57f, 0.88f to 0.57f, 0.82f to 0.61f,
+            0.78f to 0.68f, 0.84f to 0.86f, 0.89f to 0.96f, 0.85f to 1.01f, 0.78f to 0.9f, 0.68f to 0.77f,
+            0.62f to 0.77f, 0.5f to 0.79f, 0.36f to 0.76f,
+            0.28f to 0.77f, 0.2f to 0.93f, 0.15f to 1.01f, 0.115f to 0.96f, 0.16f to 0.86f, 0.22f to 0.7f,
+            0.18f to 0.66f, 0.15f to 0.69f, 0.1f to 0.72f, 0.04f to 0.62f
+        ).map { (x, y) -> q(x, y) }
+        val n = pts.size
         val forma = Path().apply {
-            moveTo(r.left, cy)
-            lineTo(r.left + a * 0.07f, cy - b * 0.16f)
-            lineTo(r.left + a * 0.09f, cy - b * 0.4f)
-            lineTo(r.left + a * 0.13f, cy - b * 0.22f)
-            lineTo(r.left + a * 0.18f, cy - b * 0.28f)
-            lineTo(r.left + a * 0.25f, cy - b * 0.3f)
-            lineTo(r.left + a * 0.29f, r.top)
-            lineTo(r.left + a * 0.35f, cy - b * 0.28f)
-            quadraticTo(cx, cy - b * 0.4f, r.right - a * 0.3f, cy - b * 0.3f)
-            lineTo(r.right - a * 0.25f, r.top + b * 0.02f)
-            lineTo(r.right - a * 0.19f, cy - b * 0.25f)
-            quadraticTo(r.right - a * 0.07f, cy - b * 0.1f, r.right, cy + b * 0.02f)
-            quadraticTo(r.right - a * 0.09f, cy + b * 0.06f, r.right - a * 0.17f, cy + b * 0.2f)
-            lineTo(r.right - a * 0.21f, r.bottom)
-            lineTo(r.right - a * 0.29f, cy + b * 0.28f)
-            quadraticTo(cx, cy + b * 0.4f, r.left + a * 0.37f, cy + b * 0.28f)
-            lineTo(r.left + a * 0.31f, r.bottom - b * 0.02f)
-            lineTo(r.left + a * 0.25f, cy + b * 0.26f)
-            lineTo(r.left + a * 0.13f, cy + b * 0.18f)
+            val m0 = (pts[n - 1] + pts[0]) / 2f
+            moveTo(m0.x, m0.y)
+            for (k in 0 until n) { val p = pts[k]; val m = (p + pts[(k + 1) % n]) / 2f; quadraticTo(p.x, p.y, m.x, m.y) }
             close()
         }
-        translate(1 * u, 1.5f * u) { drawPath(forma, Color.Black.copy(alpha = 0.32f)) }
-        drawPath(forma, Brush.radialGradient(listOf(mezcla(color, Color.White, 0.18f), color, mezcla(color, Color.Black, 0.3f)), center = Offset(cx - a * 0.1f, cy - b * 0.1f), radius = a * 0.6f))
+        // La sombra corta y el canto de la piel, que asoma por el lado de acá.
+        translate(1.2f * u, 1.6f * u) { drawPath(forma, Color.Black.copy(alpha = 0.34f)) }
+        translate(0f, 0.8f * u) { drawPath(forma, mezcla(pelo, Color.Black, 0.5f)) }
+        drawPath(forma, Brush.linearGradient(listOf(mezcla(pelo, Color.White, 0.12f), pelo, mezcla(pelo, Color.Black, 0.18f)), q(0.1f, 0f), q(0.9f, 1f)))
         clipPath(forma) {
-            for (k in 0 until 140) {
+            // Los costados más claros, el pelo del vientre que quedó a los lados al abrir la piel.
+            drawPath(forma, costado.copy(alpha = 0.36f), style = Stroke(b * 0.24f))
+            drawPath(forma, costado.copy(alpha = 0.26f), style = Stroke(b * 0.1f))
+            // El lomo oscuro, de la nuca a la cola, que se adelgaza hacia atrás.
+            val espina = Path().apply { moveTo(q(0.1f, 0.5f).x, q(0.1f, 0.5f).y); cubicTo(q(0.35f, 0.47f).x, q(0.35f, 0.47f).y, q(0.65f, 0.53f).x, q(0.65f, 0.53f).y, q(0.995f, 0.5f).x, q(0.995f, 0.5f).y) }
+            listOf(0.5f to 0.16f, 0.34f to 0.26f, 0.18f to 0.38f).forEach { (g, al) -> drawPath(espina, lomo.copy(alpha = al), style = Stroke(b * g, cap = StrokeCap.Round)) }
+            drawCircle(lomo.copy(alpha = 0.8f), b * 0.07f, q(0.985f, 0.5f))
+            // La cabeza: el hocico más claro, la frente oscura entre los ojos.
+            drawOval(costado.copy(alpha = 0.55f), Offset(r.left - a * 0.01f, r.top + b * 0.42f), Size(a * 0.07f, b * 0.2f))
+            drawOval(lomo.copy(alpha = 0.35f), Offset(r.left + a * 0.06f, r.top + b * 0.42f), Size(a * 0.08f, b * 0.16f))
+            // Los mechones: trazos cortos que salen del lomo hacia los costados y hacia la cola, claros y oscuros.
+            for (k in 0 until 260) {
                 val o = Offset(r.left + a * azar(semilla, k), r.top + b * azar(semilla + 1, k))
-                val haciaFuera = if (o.y < cy) -1f else 1f
-                drawLine((if (k % 3 == 0) mezcla(color, Color.White, 0.45f) else Color.Black).copy(alpha = 0.22f), o, o + Offset(1.4f * u, 2.4f * u * haciaFuera), 0.6f * u, StrokeCap.Round)
+                val fuera = ((o.y - r.center.y) / (b * 0.5f)).coerceIn(-1f, 1f)
+                val d = Offset(1.6f * u, 2.6f * u * fuera + 0.3f * u)
+                val claro = k % 3 == 0
+                drawLine((if (claro) mezcla(costado, Color.White, 0.2f) else lomo).copy(alpha = if (claro) 0.28f else 0.32f), o, o + d, (if (claro) 0.4f else 0.55f) * u, StrokeCap.Round)
             }
-            drawLine(mezcla(color, Color.Black, 0.45f).copy(alpha = 0.55f), Offset(r.left + a * 0.14f, cy), Offset(r.right - a * 0.12f, cy + b * 0.02f), 3 * u, StrokeCap.Round)
+            // Más oscuro hacia el lado de allá, que queda lejos de la ventana.
+            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.16f), Color.Transparent), r.top, r.top + b * 0.35f), r.topLeft, Size(a, b * 0.35f))
         }
-        drawPath(forma, mezcla(color, Color.Black, 0.4f).copy(alpha = 0.6f), style = Stroke(0.6f * u))
+        // El borde del pelo: mechones sueltos y desparejos que salen hacia fuera y se tienden hacia la cola.
+        for (k in 0 until n) {
+            val p0 = (pts[(k + n - 1) % n] + pts[k]) / 2f; val p1 = (pts[k] + pts[(k + 1) % n]) / 2f
+            val dx = p1.x - p0.x; val dy = p1.y - p0.y; val l = sqrt(dx * dx + dy * dy)
+            if (l < 2f * u) continue
+            val nor = Offset(dy / l, -dx / l)
+            val pasos = (l / (1.7f * u)).toInt().coerceAtLeast(1)
+            for (i in 0 until pasos) {
+                val z = azar(semilla + 7, k * 31 + i)
+                if (z < 0.3f) continue
+                val o = p0 + (p1 - p0) * ((i + azar(semilla + 9, k * 31 + i)) / pasos)
+                val largo = (0.4f + 1.1f * z * z) * u
+                val punta = o + nor * largo + Offset(largo * 0.7f, 0f)
+                drawLine(mezcla(pelo, costado, 0.25f).copy(alpha = 0.65f), o - nor * (0.6f * u), punta, (0.35f + 0.25f * z) * u, StrokeCap.Round)
+            }
+        }
+        drawPath(forma, mezcla(pelo, Color.Black, 0.45f).copy(alpha = 0.35f), style = Stroke(0.5f * u))
+        // Las patas: los dedos con sus uñas oscuras al final de cada una.
+        listOf(Triple(0.135f, 0.02f, -1f), Triple(0.86f, 0.02f, 1f), Triple(0.87f, 0.98f, 1f), Triple(0.135f, 0.98f, -1f)).forEach { (x, y, lado) ->
+            val pa = q(x, y)
+            for (d in 0 until 3) {
+                val o = pa + Offset(lado * (d - 1) * 0.4f * u, (d - 1) * 1.1f * u)
+                drawCircle(mezcla(pelo, Color.Black, 0.25f), 0.85f * u, o)
+                drawLine(trufa, o + Offset(lado * 0.4f * u, 0f), o + Offset(lado * 1.3f * u, 0f), 0.45f * u, StrokeCap.Round)
+            }
+        }
+        // La trufa, los ojos y las orejas paradas, la de allá un poco más chica.
+        drawOval(trufa, Offset(r.left - 0.8f * u, r.center.y - 0.9f * u + b * 0.02f), Size(2.6f * u, 2f * u))
+        drawCircle(Color.White.copy(alpha = 0.35f), 0.35f * u, Offset(r.left + 0.1f * u, r.center.y - 0.3f * u + b * 0.02f))
+        listOf(0.42f, 0.61f).forEach { y -> drawOval(trufa.copy(alpha = 0.85f), q(0.075f, y) - Offset(1f * u, 0.45f * u), Size(2f * u, 0.9f * u)) }
+        listOf(Triple(0.135f, 0.4f, 0.85f), Triple(0.14f, 0.6f, 1f)).forEach { (x, y, t) ->
+            val pie = q(x, y); val alto = 5.6f * u * t; val ancho = 2.4f * u * t
+            val oreja = Path().apply { moveTo(pie.x - ancho, pie.y); quadraticTo(pie.x - ancho * 0.6f, pie.y - alto * 0.6f, pie.x + ancho * 0.2f, pie.y - alto); quadraticTo(pie.x + ancho * 0.9f, pie.y - alto * 0.4f, pie.x + ancho, pie.y); close() }
+            translate(0.6f * u, 0.5f * u) { drawPath(oreja, Color.Black.copy(alpha = 0.25f)) }
+            drawPath(oreja, Brush.verticalGradient(listOf(lomo, mezcla(lomo, pelo, 0.5f)), pie.y - alto, pie.y))
+            drawPath(oreja, Color.Black.copy(alpha = 0.3f), style = Stroke(0.35f * u))
+            drawPath(Path().apply { moveTo(pie.x - ancho * 0.4f, pie.y - 0.3f * u); quadraticTo(pie.x - ancho * 0.25f, pie.y - alto * 0.45f, pie.x + ancho * 0.15f, pie.y - alto * 0.72f); quadraticTo(pie.x + ancho * 0.45f, pie.y - alto * 0.35f, pie.x + ancho * 0.5f, pie.y - 0.3f * u); close() }, mezcla(costado, lomo, 0.35f))
+        }
     }
 
     /** La cesta de mimbre parada en [pie], de ancho [ancho] y alto [alto]: el tejido de varas, el borde trenzado y, si hay, las manzanas dentro. */
@@ -1079,7 +1138,7 @@ object EstanteGalia : DisenoBiblioteca {
             if (k % 3 == 0) drawLine(c(PAJA).copy(alpha = 0.45f), o, o + Offset((3f + 4f * azar(147, k)) * u, (azar(149, k) - 0.5f) * 2 * u), 0.6f * u)
             else drawCircle(mezcla(tierra, if (k % 2 == 0) Color.White else Color.Black, 0.3f).copy(alpha = 0.4f), (0.3f + 0.6f * azar(151, k)) * u, o)
         }
-        piel(Rect(b.left + b.width * 0.08f, suelo.top + suelo.height * 0.18f, b.left + b.width * 0.5f, b.bottom + 3 * u), c(Color(0xFF7D7366)), 153)
+        piel(Rect(b.left + b.width * 0.07f, suelo.top + suelo.height * 0.12f, b.left + b.width * 0.45f, b.bottom - 1.5f * u), oscuro, noche, 153)
         val tronco = Offset(b.left + b.width * 0.58f, suelo.top + suelo.height * 0.62f)
         drawLine(Color.Black.copy(alpha = 0.3f), tronco + Offset(1 * u, 2 * u), tronco + Offset(30 * u, 0f), 7 * u, StrokeCap.Round)
         drawLine(c(MADERA), tronco, tronco + Offset(29 * u, -2 * u), 6.5f * u, StrokeCap.Round)
