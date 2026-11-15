@@ -250,10 +250,12 @@ object TrazosNouveau {
     /**
      * El tallo que crece: sube desde [base] [alto] con una curva suave hacia [lado] (−1 o 1), echa hojas alternas de sauce
      * y, a media altura, un zarcillo que se enrosca. [crecido] (de 0 a 1) dice cuánto ha crecido: las hojas salen conforme
-     * el tallo pasa por ellas y, al final, el capullo de malva se abre en flor. Sirve para los bordes y para el fondo vivo.
+     * el tallo pasa por ellas y, al final, el capullo de malva se abre en flor (con [capullo] en falso, el tallo acaba en su
+     * punta, sin capullo ni flor, para ponerle otra cosa encima; [corazon] es el color del centro de la flor). Sirve para los
+     * bordes y para el fondo vivo.
      */
     fun DrawScope.tallo(base: Offset, alto: Float, crecido: Float = 1f, lado: Float = 1f, grueso: Float = alto * 0.018f,
-                        color: Color = TALLO, sombra: Color = TALLO_SOMBRA, flor: Color = MALVA) {
+                        color: Color = TALLO, sombra: Color = TALLO_SOMBRA, flor: Color = MALVA, capullo: Boolean = true, corazon: Color = IRIS_LENGUA) {
         val k = crecido.coerceIn(0f, 1f)
         if (k <= 0.01f) return
         val todo = bezier(base, Offset(base.x + lado * alto * 0.16f, base.y - alto * 0.32f),
@@ -295,24 +297,25 @@ object TrazosNouveau {
         // Arriba: el capullo que engorda y, al final, se abre en flor.
         val cima = pts.last()
         val d = dir(pts.size - 1)
-        if (k > 0.62f) {
+        if (capullo && k > 0.62f) {
             val a = ((k - 0.62f) / 0.24f).coerceIn(0f, 1f)
             val abre = ((k - 0.86f) / 0.14f).coerceIn(0f, 1f)
-            val rr = alto * 0.06f
+            val rr = alto * 0.048f
             if (abre <= 0f) {
                 val punta = Offset(cima.x + d.x * rr * 2.2f * a, cima.y + d.y * rr * 2.2f * a)
                 drawPath(petalo(cima, punta, rr * 1.15f * a), lerp(flor, sombra, 0.25f))
                 drawPath(hojaLanza(cima, Offset(cima.x + (punta.x - cima.x) * 0.7f - d.y * rr * 0.5f, cima.y + (punta.y - cima.y) * 0.7f + d.x * rr * 0.5f), rr * 0.5f * a, 0.1f), sombra)
-            } else florAbierta(Offset(cima.x + d.x * rr * 0.9f, cima.y + d.y * rr * 0.9f), rr * (1.1f + 0.5f * abre), flor, abre, atan2(d.y, d.x))
+            } else florAbierta(Offset(cima.x + d.x * rr * 0.9f, cima.y + d.y * rr * 0.9f), rr * (1.1f + 0.5f * abre), flor, abre, atan2(d.y, d.x), sombra, corazon)
         }
     }
 
     /**
      * Una flor abierta vista de lado, como las de los carteles: cinco pétalos redondos en abanico (los de atrás más oscuros),
-     * el cáliz verde debajo y el corazón amarillo. [c] es el corazón, [r] el largo de un pétalo, [abre] (0 a 1) cuánto se
+     * el cáliz verde debajo ([caliz]) y el corazón amarillo ([corazon]). [c] es el corazón, [r] el largo de un pétalo, [abre] (0 a 1) cuánto se
      * abre y [mira] hacia dónde, en radianes (−π/2 = hacia arriba).
      */
-    fun DrawScope.florAbierta(c: Offset, r: Float, color: Color = MALVA, abre: Float = 1f, mira: Float = -PI.toFloat() / 2, caliz: Color = TALLO_SOMBRA) {
+    fun DrawScope.florAbierta(c: Offset, r: Float, color: Color = MALVA, abre: Float = 1f, mira: Float = -PI.toFloat() / 2, caliz: Color = TALLO_SOMBRA,
+                             corazon: Color = IRIS_LENGUA) {
         val k = abre.coerceIn(0f, 1f)
         val oscuro = lerp(color, Color.Black, 0.22f); val claro = lerp(color, Color.White, 0.22f)
         // El cáliz: dos sépalos que abrazan la flor por debajo.
@@ -330,7 +333,7 @@ object TrazosNouveau {
         // Las venas del pétalo de delante y el corazón.
         val df = Offset(c.x + cos(mira) * r * 0.7f, c.y + sin(mira) * r * 0.7f)
         drawLine(oscuro.copy(alpha = 0.5f), c, df, max(r * 0.05f, 0.4f), StrokeCap.Round)
-        drawCircle(IRIS_LENGUA, r * 0.17f, Offset(c.x + cos(mira) * r * 0.08f, c.y + sin(mira) * r * 0.08f))
+        drawCircle(corazon, r * 0.17f, Offset(c.x + cos(mira) * r * 0.08f, c.y + sin(mira) * r * 0.08f))
     }
 
     /**
@@ -535,6 +538,29 @@ object TrazosNouveau {
 
     // ------------------------------------------------------------------------------------------------ la luz de noche
 
+    /** La punta del tallo de [tallo] (con los mismos [base], [alto] y [lado]) cuando ya creció del todo. */
+    fun puntaTallo(base: Offset, alto: Float, lado: Float = 1f): Offset = Offset(base.x + lado * alto * 0.1f, base.y - alto)
+
+    /**
+     * Una tulipa de vidrio de Nancy, la flor de una lámpara de tallo: tres pétalos de vidrio que forman la copa, del ámbar
+     * de abajo al violeta de los bordes, con su casquillo. [c] es el casquillo, [r] el alto de la copa y [luz] (0 a 1)
+     * cuánto alumbra: el vidrio se enciende desde dentro y echa su halo.
+     */
+    fun DrawScope.tulipa(c: Offset, r: Float, luz: Float = 0f, abajo: Color = VIDRIO_AMBAR, arriba: Color = VIDRIO_VIOLETA, casquillo: Color = lerp(ORO, Color.Black, 0.3f)) {
+        val e = luz.coerceIn(0f, 1f)
+        val centro = Offset(c.x, c.y - r * 0.55f)
+        if (e > 0f) drawCircle(Brush.radialGradient(listOf(LUZ_HALO.copy(alpha = 0.45f * e), LUZ.copy(alpha = 0.14f * e), Color.Transparent), centro, r * 2.6f), r * 2.6f, centro)
+        val vidrio = Brush.verticalGradient(listOf(lerp(arriba, LUZ, 0.3f * e), lerp(lerp(arriba, abajo, 0.55f), LUZ, 0.4f * e), lerp(abajo, LUZ_HALO, 0.5f * e)), c.y - r, c.y)
+        // Los dos pétalos de los lados y el de delante, que sube más.
+        for (s in listOf(-1f, 1f)) drawPath(petalo(Offset(c.x, c.y - r * 0.05f), Offset(c.x + s * r * 0.55f, c.y - r * 0.95f), r * 0.62f), vidrio)
+        drawPath(petalo(Offset(c.x, c.y), Offset(c.x, c.y - r * 1.05f), r * 0.66f), vidrio)
+        drawPath(petalo(Offset(c.x, c.y), Offset(c.x, c.y - r * 1.05f), r * 0.66f), lerp(arriba, Color.Black, 0.3f).copy(alpha = 0.35f), style = Stroke(r * 0.04f))
+        drawLine(Color.White.copy(alpha = 0.3f + 0.3f * e), Offset(c.x - r * 0.12f, c.y - r * 0.2f), Offset(c.x - r * 0.16f, c.y - r * 0.75f), r * 0.07f, StrokeCap.Round)
+        drawRoundRect(casquillo, Offset(c.x - r * 0.16f, c.y - r * 0.02f), Size(r * 0.32f, r * 0.16f), androidx.compose.ui.geometry.CornerRadius(r * 0.05f))
+        if (e > 0f) drawCircle(Brush.radialGradient(listOf(LUZ_HALO.copy(alpha = 0.4f * e), LUZ.copy(alpha = 0f)), centro, r * 0.5f), r * 0.5f, centro)
+    }
+
+
     /**
      * Una lámpara de vidrio de Nancy, de pantalla de hongo: el pie de vidrio que se ensancha abajo, la pantalla abombada que
      * pasa de [arriba] a [abajo] con un iris grabado, y la virola de bronce. [base] es el pie, [alto] la altura entera y
@@ -603,8 +629,8 @@ object TrazosNouveau {
         drawPath(cinta(pts) { t -> 4.4f * u * (1f - 0.55f * t) }, sombra)
         drawPath(cinta(pts.map { Offset(it.x - 0.8f * u, it.y) }) { t -> 2.1f * u * (1f - 0.55f * t) }, hierro)
         val v = pts[16]
-        drawPath(hojaLanza(Offset(v.x, v.y + 12f * u), Offset(v.x - lado * 1f * u, v.y - 14f * u), 6.5f * u, 0.05f * lado), sombra)
-        drawPath(hojaLanza(Offset(v.x, v.y + 10f * u), Offset(v.x - lado * 1f * u, v.y - 10f * u), 2.6f * u, 0.05f * lado), hierro)
+        drawPath(hojaLanza(Offset(v.x, v.y + 12f * u), Offset(v.x - lado * 0.6f * u, v.y - 16f * u), 4.4f * u, 0.04f * lado), sombra)
+        drawPath(hojaLanza(Offset(v.x, v.y + 10f * u), Offset(v.x - lado * 0.6f * u, v.y - 12f * u), 1.6f * u, 0.04f * lado), lerp(hierro, Color.White, 0.15f))
         // El brote que remata el doblez, con su rizo.
         val cima = pts[40]
         drawPath(linea(puntosRizo(cima, Offset(lado, -0.4f), 3.2f * u, lado < 0f, 1.1f, 18)), sombra, style = Stroke(1.6f * u, cap = StrokeCap.Round))

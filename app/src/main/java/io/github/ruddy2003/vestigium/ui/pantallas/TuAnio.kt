@@ -137,7 +137,8 @@ private fun voz(t: TemaId, anio: Int): String = when (t) {
     // El anuario de la ciudad: tu año, con el año de la fundación al lado, como en las placas.
     TemaId.URBE -> "IL TUO ANNO A ROMA · $anio · AUC ${io.github.ruddy2003.vestigium.ui.Romano.de(io.github.ruddy2003.vestigium.ui.Urbe.auc(anio))}"
     TemaId.DISTOPIA -> "INFORME ANUAL DEL CIUDADANO · $anio"
-    TemaId.NOUVEAU -> "INFORME ANUAL DEL CIUDADANO · $anio"
+    // El almanaque ilustrado del año, como los que se vendían en los quioscos de París.
+    TemaId.NOUVEAU -> "Almanach illustré de $anio"
     // Los galos cuentan el tiempo por noches (César 6.18); el año va en números romanos, como los días del bronce de Coligny.
     TemaId.GALIA -> "Lo que contaron las noches de $anio · ${io.github.ruddy2003.vestigium.ui.Galia.numero(anio)}"
     // Los 365 cielos de Basílides (Ireneo, *Contra las herejías* 1.24.3–7), que Hipólito une a los días del año (*Refutación*

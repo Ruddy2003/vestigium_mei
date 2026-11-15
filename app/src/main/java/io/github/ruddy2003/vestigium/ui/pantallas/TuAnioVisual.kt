@@ -208,11 +208,15 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
             drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
         }
+        // La revista ilustrada encuadernada: la tela salvia con su filete de oro que se curva en látigo, el lomo con sus dos
+        // nervios dorados a la izquierda y el canto crema de las hojas abajo.
         TemaId.NOUVEAU -> {
-            drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), o, s)
-            drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), Offset(x0 + w * 0.1f, y0 - h * 0.18f), Size(w * 0.3f, h * 0.2f))
-            drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
-            drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
+            val tela = lerp(Color(0xFF8FA67E), c, 0.45f)
+            drawRoundRect(Color(0xFFF1E6C8), Offset(x0 + 1.5f * d, y0 + h * 0.55f), Size(w - 2.5f * d, h * 0.45f), CornerRadius(1 * d))
+            drawRoundRect(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(lerp(tela, Color.White, 0.2f), tela, lerp(tela, Color.Black, 0.3f)), y0, y0 + h * 0.85f), o, Size(w, h * 0.85f), CornerRadius(1.5f * d))
+            drawRect(lerp(tela, Color.Black, 0.3f), o, Size(w * 0.16f, h * 0.85f))
+            listOf(0.04f, 0.11f).forEach { f -> drawLine(oro, Offset(x0 + w * f, y0 + 1 * d), Offset(x0 + w * f, y0 + h * 0.85f - 1 * d), 0.7f * d) }
+            drawPath(Path().apply { moveTo(x0 + w * 0.22f, cy); cubicTo(x0 + w * 0.45f, y0 + 1 * d, x0 + w * 0.6f, y0 + h * 0.8f, x0 + w * 0.82f, cy - h * 0.1f); quadraticTo(x0 + w * 0.9f, y0 + h * 0.1f, x0 + w * 0.85f, cy) }, oro, style = Stroke(0.7f * d))
         }
         // Las tablillas de cera atadas, tumbadas en la pila: tres marcos de roble teñidos del color del libro, uno sobre otro,
         // con la correa que los cruza.
@@ -760,10 +764,11 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
             drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
         }
+        // La etiqueta de la vitrina: dos esquinas muy redondas y dos casi rectas, con su filete de dentro.
         TemaId.NOUVEAU -> {
-            drawRect(relleno, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r))
-            drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
-            drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
+            fun etiqueta(k: Float) = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(androidx.compose.ui.geometry.Rect(x - r * k, y - r * 0.86f * k, x + r * k, y + r * 0.86f * k), CornerRadius(r * 0.62f * k), CornerRadius(r * 0.1f), CornerRadius(r * 0.62f * k), CornerRadius(r * 0.1f))) }
+            lleno(etiqueta(1f))
+            drawPath(etiqueta(0.84f), borde.copy(alpha = 0.6f), style = fino)
         }
         // La rodaja de roble: la corteza alrededor y los anillos del tronco.
         TemaId.GALIA -> {
@@ -1146,22 +1151,30 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             else -> return false
         }
         TemaId.NOUVEAU -> when (forma) {
-            // El ojo que vigila.
+            // El alfiler de sombrero con su cabeza en iris.
             "alfiler" -> {
-                drawPath(Path().apply { moveTo(x - r, y); quadraticTo(x, y - r * 0.9f, x + r, y); quadraticTo(x, y + r * 0.9f, x - r, y); close() }, col)
-                drawCircle(fondo, r * 0.4f, c); drawCircle(col, r * 0.2f, c)
+                drawLine(col, Offset(x - r * 0.7f, y + r * 0.85f), Offset(x + r * 0.2f, y - r * 0.15f), 1.2f * d, StrokeCap.Round)
+                val f = Offset(x + r * 0.35f, y - r * 0.35f)
+                listOf(-0.6f, 0f, 0.6f).forEach { a -> drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.petalo(f, Offset(f.x + kotlin.math.sin(a) * r * 0.55f, f.y - kotlin.math.cos(a) * r * 0.6f), r * 0.42f), col) }
+                listOf(-1f, 1f).forEach { s -> drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.petalo(f, Offset(f.x + s * r * 0.6f, f.y + r * 0.35f), r * 0.4f), col) }
+                drawCircle(fondo, r * 0.1f, f)
             }
-            // Expediente con pestaña y franja roja.
+            // La tarjeta postal ilustrada: la estampa a la izquierda, la raya del medio, el sello y los renglones.
             "sobre" -> {
-                drawRect(col, Offset(x - r, y - r * 0.5f), Size(2 * r, r * 1.2f))
-                drawRect(col, Offset(x - r, y - r * 0.75f), Size(r * 0.8f, r * 0.3f))
-                drawRect(Color(0xFFC8102E), Offset(x - r, y + r * 0.35f), Size(2 * r, r * 0.2f))
+                drawRect(col, Offset(x - r, y - r * 0.66f), Size(2 * r, r * 1.32f))
+                drawRect(fondo, Offset(x - r * 0.84f, y - r * 0.5f), Size(r * 0.76f, r))
+                drawCircle(col, r * 0.18f, Offset(x - r * 0.46f, y - r * 0.1f))
+                drawLine(fondo, Offset(x + r * 0.05f, y - r * 0.5f), Offset(x + r * 0.05f, y + r * 0.5f), 0.8f * d)
+                drawRect(fondo, Offset(x + r * 0.5f, y - r * 0.5f), Size(r * 0.32f, r * 0.36f))
+                listOf(0.1f, 0.32f).forEach { f -> drawLine(fondo, Offset(x + r * 0.2f, y + f * r), Offset(x + r * 0.85f, y + f * r), 0.7f * d) }
             }
-            // Lata de ración.
+            // La taza de café con su plato, como en la mesa de mármol del café.
             "taza" -> {
-                drawRect(col, Offset(x - r * 0.55f, y - r * 0.75f), Size(r * 1.1f, r * 1.5f))
-                listOf(-0.5f, 0.5f).forEach { f -> drawLine(fondo, Offset(x - r * 0.55f, y + f * r), Offset(x + r * 0.55f, y + f * r), 0.7f * d) }
-                drawRect(fondo, Offset(x - r * 0.38f, y - r * 0.2f), Size(r * 0.76f, r * 0.4f))
+                drawOval(col, Offset(x - r, y + r * 0.42f), Size(2 * r, r * 0.36f))
+                drawPath(Path().apply { moveTo(x - r * 0.6f, y - r * 0.45f); lineTo(x + r * 0.6f, y - r * 0.45f); quadraticTo(x + r * 0.58f, y + r * 0.45f, x, y + r * 0.5f); quadraticTo(x - r * 0.58f, y + r * 0.45f, x - r * 0.6f, y - r * 0.45f); close() }, col)
+                drawArc(col, -80f, 160f, false, Offset(x + r * 0.42f, y - r * 0.32f), Size(r * 0.46f, r * 0.5f), style = Stroke(1.1f * d))
+                drawOval(fondo, Offset(x - r * 0.5f, y - r * 0.52f), Size(r, r * 0.16f))
+                drawPath(Path().apply { moveTo(x - r * 0.1f, y - r * 0.65f); quadraticTo(x - r * 0.3f, y - r * 0.85f, x - r * 0.05f, y - r * 1.05f) }, col, style = Stroke(0.8f * d, cap = StrokeCap.Round))
             }
             else -> return false
         }

@@ -71,7 +71,7 @@ private class Cosa(val pista: Int, val a: Long, val b: Long?, val color: Color, 
 private class PistaCinta(val nombre: String, val icono: String)
 
 /** Lo que se pinta dentro de un bloque de la cinta. */
-private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA, PERFORADA, PAPIRO, CUADROS }
+private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA, PERFORADA, PAPIRO, CUADROS, VIDRIO }
 
 /**
  * Cómo se ve la cinta en cada tema: la esquina de los bloques ([radio] en dp; [cortado], en chaflán), lo que llevan dentro,
@@ -99,7 +99,9 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.TEMPLARIO -> PielCinta(2.5f, true, RellenoCinta.FILETE, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Sello rayado del expediente.
     TemaId.DISTOPIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
-    TemaId.NOUVEAU -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
+    // El vidrio de Nancy: tramos de esquinas muy redondas, con la luz que pasa de un lado al otro y un tallo grabado que sube y
+    // se curva; las horas menores, en punto y raya larga, como la pluma del cartel.
+    TemaId.NOUVEAU -> PielCinta(9f, false, RellenoCinta.VIDRIO, floatArrayOf(0.1f, 2.4f, 7f, 2.4f), StrokeCap.Round)
     // La lana a cuadros de los mantos, con las horas menores en puntadas de hilo.
     TemaId.GALIA -> PielCinta(3f, false, RellenoCinta.CUADROS, floatArrayOf(5f, 1.5f, 1.5f, 1.5f), StrokeCap.Round)
     // Tiras de papiro: las fibras a lo largo, alguna de través, y las horas en raya y punto, como el renglón del copista.
@@ -206,6 +208,18 @@ private fun DrawScope.bloqueCinta(p: PielCinta, color: Color, a: Offset, t: Size
                 while (y < abajo) { drawLine(if (k % 3 == 1) oscuro.copy(alpha = 0.14f) else claro.copy(alpha = 0.22f), Offset(a.x, y), Offset(der, y), 0.6f * d); y += (1.6f + (k * 7 % 3) * 0.6f) * d; k++ }
                 var x = a.x + 5f * d
                 while (x < der) { drawLine(oscuro.copy(alpha = 0.12f), Offset(x, a.y), Offset(x, abajo), 0.8f * d); x += 23f * d }
+            }
+            RellenoCinta.VIDRIO -> {
+                // La luz del vidrio que se va oscureciendo hacia la derecha, el filo claro de arriba y el tallo grabado en ola.
+                drawRect(Brush.horizontalGradient(listOf(claro, Color.Transparent, oscuro.copy(alpha = 0.18f)), a.x, der), a, t)
+                drawLine(Color.White.copy(alpha = 0.4f), Offset(a.x + 3f * d, a.y + 1.2f * d), Offset(der - 3f * d, a.y + 1.2f * d), 0.8f * d, StrokeCap.Round)
+                if (t.width > 12f * d && t.height > 6f * d) {
+                    val tallo = Path().apply {
+                        var x = a.x + 2f * d; val y = a.y + t.height * 0.62f; moveTo(x, y)
+                        while (x < der) { cubicTo(x + 4f * d, y - t.height * 0.3f, x + 8f * d, y + t.height * 0.25f, x + 12f * d, y); x += 12f * d }
+                    }
+                    drawPath(tallo, oscuro.copy(alpha = 0.3f), style = Stroke(0.8f * d, cap = StrokeCap.Round))
+                }
             }
             RellenoCinta.CUADROS -> {
                 // Los cuadros de la lana: bandas anchas que se cruzan, más oscuras donde se montan, y el hilo fino entre ellas.

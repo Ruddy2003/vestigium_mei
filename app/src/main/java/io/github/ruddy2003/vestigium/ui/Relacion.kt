@@ -96,7 +96,15 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     // El escudo: recto arriba y redondo abajo.
     TemaId.TEMPLARIO -> MarcoRecuadro(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 16.dp), 12.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
-    TemaId.NOUVEAU -> MarcoRecuadro(RectangleShape, 12.dp)
+    // La placa de una entrada de metro: el canto de arriba sube en medio en una curva suave, como el letrero de Guimard, y
+    // las esquinas de abajo son redondas.
+    TemaId.NOUVEAU -> MarcoRecuadro(androidx.compose.foundation.shape.GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val a = minOf(h * 0.12f, w * 0.08f); val r = minOf(h * 0.16f, w * 0.1f)
+        moveTo(0f, a * 1.4f); quadraticTo(0f, a, a * 0.6f, a); lineTo(w * 0.3f, a)
+        cubicTo(w * 0.42f, a, w * 0.42f, 0f, w / 2, 0f); cubicTo(w * 0.58f, 0f, w * 0.58f, a, w * 0.7f, a)
+        lineTo(w - a * 0.6f, a); quadraticTo(w, a, w, a * 1.4f)
+        lineTo(w, h - r); quadraticTo(w, h, w - r, h); lineTo(r, h); quadraticTo(0f, h, 0f, h - r); close()
+    }, 14.dp)
     // La hoja de roble de las esquinas del tema: dos esquinas muy redondas en diagonal y dos casi rectas.
     TemaId.GALIA -> MarcoRecuadro(RoundedCornerShape(topStart = 16.dp, topEnd = 3.dp, bottomEnd = 16.dp, bottomStart = 3.dp), 12.dp)
     // El nicho tallado en la caliza: recto a los lados y cerrado arriba por un arco rebajado.
@@ -299,14 +307,18 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 x += 12 * u
             }
         }
-        TemaId.NOUVEAU -> {
-            drawLine(col, Offset(0f, y), Offset(w, y), grosor * 0.7f + 0.6f * u, pathEffect = punteado)
-            val b = 2.5f * u + grosor * 0.35f
-            var x = 9 * u
-            while (x < w - 6 * u) {
-                drawLine(col, Offset(x - b, y - b), Offset(x + b, y + b), 1.1f * u); drawLine(col, Offset(x - b, y + b), Offset(x + b, y - b), 1.1f * u)
-                x += 12 * u
-            }
+        // Una línea de látigo de recuadro a recuadro: una sola S que se enrosca en cada punta (abajo a la izquierda y arriba a la
+        // derecha), más gruesa cuanto más fuerte el lazo, y en medio, donde cruza, un capullo de iris.
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            val m = 8 * u; val a = 3f * u + grosor * 0.3f
+            val pts = List(41) { k -> val f = k / 40f; Offset(m + (w - 2 * m) * f, y - a * sin(2 * PI.toFloat() * f)) }
+            val ini = pts.first(); val fin = pts.last()
+            val todo = puntosRizo(ini, Offset(ini.x - pts[2].x, ini.y - pts[2].y), 3.2f * u, true, 1.2f, 20).reversed() + pts +
+                puntosRizo(fin, Offset(fin.x - pts[38].x, fin.y - pts[38].y), 3.2f * u, true, 1.2f, 20)
+            drawPath(linea(todo), col, style = Stroke(grosor * 0.6f + 0.7f * u, cap = StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round, pathEffect = punteado))
+            val b = Offset(w / 2, y)
+            drawPath(petalo(b, Offset(b.x + 1.5f * u, b.y - 6.5f * u - grosor * 0.3f), 4f * u + grosor * 0.2f), col)
+            drawPath(hojaLanza(b, Offset(b.x - 4f * u, b.y - 4.5f * u), 1.8f * u, 0.2f), col)
         }
         // La cuerda torcida de un torques: dos hebras de oro que se enroscan una en otra (más gruesa la cuerda cuanto más
         // fuerte el lazo) y, en cada punta, el disco del tampón.

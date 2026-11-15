@@ -167,9 +167,16 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
             drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
         }
+        // La flor del iris en silueta: los tres pétalos que suben y los dos que caen, con la lengua calada en el de en medio.
         TemaId.NOUVEAU -> {
-            drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
-            drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
+            val base = Offset(c.x, c.y + r * 0.12f)
+            drawPath(TrazosNouveau.petalo(base, Offset(c.x, c.y - r), r * 0.72f), color)
+            for (s in listOf(-1f, 1f)) {
+                drawPath(TrazosNouveau.petalo(base, Offset(c.x + s * r * 0.74f, c.y - r * 0.58f), r * 0.5f), color)
+                drawPath(TrazosNouveau.petalo(base, Offset(c.x + s * r * 0.92f, c.y + r * 0.78f), r * 0.6f), color)
+            }
+            drawLine(hueco.copy(alpha = 0.55f), Offset(c.x, c.y - r * 0.22f), Offset(c.x, c.y - r * 0.72f), r * 0.11f, StrokeCap.Round)
+            drawCircle(hueco.copy(alpha = 0.5f), r * 0.13f, base)
         }
         // Un estátero arverno: la moneda de oro con la gráfila de perlas y el caballo al galope, calados.
         TemaId.GALIA -> {

@@ -219,7 +219,7 @@ object FondosTelefono {
         TemaId.MEDIEVAL -> "Liber vestigii mei"
         TemaId.TEMPLARIO -> "Non nobis, Domine · Vestigium"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
-        TemaId.NOUVEAU -> "EXPEDIENTE PERSONAL"
+        TemaId.NOUVEAU -> "Vestigium · estampe du jour"   // la estampa del día, recién salida de la prensa
         TemaId.GALIA -> "Vestigium · noche a noche"     // los galos cuentan por noches (César 6.18)
         TemaId.ARCONTES -> "Códice de Magdala · Vestigium"
         TemaId.FRENTE -> "CÉLULA K-7 · VESTIGIUM"
@@ -373,6 +373,41 @@ private fun DrawScope.marcoGalia(e: androidx.compose.material3.ColorScheme, izq:
     }
 }
 
+/**
+ * Art nouveau: el marco de un cartel litográfico. Doble filete, con el canto de arriba que sube en medio en una curva
+ * suave, como el letrero del metro; dos líneas de látigo que salen de las esquinas de arriba y se enroscan hacia el medio;
+ * abajo a la izquierda, un iris alto que sube por fuera del marco, y a la derecha otro más bajo; de día, una libélula
+ * que pasa arriba a la derecha; de noche, colgada en medio, una lámpara de vidrio encendida.
+ */
+private fun DrawScope.marcoNouveau(e: androidx.compose.material3.ColorScheme, izq: Float, der: Float, arr: Float, aba: Float, col: Color, tenue: Color, claro: Boolean) {
+    val u = 1.dp.toPx(); val cx = (izq + der) / 2
+    fun borde(dentro: Float) = Path().apply {
+        val a = arr + dentro; val sube = 14 * u
+        moveTo(izq + dentro, aba - dentro); lineTo(izq + dentro, a); lineTo(cx - 46 * u, a)
+        cubicTo(cx - 24 * u, a, cx - 22 * u, a - sube, cx, a - sube); cubicTo(cx + 22 * u, a - sube, cx + 24 * u, a, cx + 46 * u, a)
+        lineTo(der - dentro, a); lineTo(der - dentro, aba - dentro); close()
+    }
+    drawPath(borde(0f), col, style = Stroke(1.3f * u))
+    drawPath(borde(6 * u), tenue, style = Stroke(0.7f * u))
+    with(TrazosNouveau) {
+        // Las dos líneas de látigo de arriba: de cada esquina hacia el medio, enroscándose antes de la curva del letrero.
+        latigo(Offset(izq + 10 * u, arr + 16 * u), Offset(cx - 64 * u, arr + 22 * u), 7 * u, 3.2f * u, col, comba = 0.18f, horario = false, sombra = false)
+        latigo(Offset(der - 10 * u, arr + 16 * u), Offset(cx + 64 * u, arr + 22 * u), 7 * u, 3.2f * u, col, comba = -0.18f, horario = true, sombra = false)
+        drawPath(petalo(Offset(cx, arr - 2 * u), Offset(cx, arr - 13 * u), 7 * u), col)
+        fun suave(c: Color, k: Float) = lerp(e.background, c, k)
+        val k = if (claro) 0.55f else 0.42f
+        iris(Offset(izq + 30 * u, aba + 4 * u), 150 * u, suave(IRIS, k), suave(TALLO, k), suave(TALLO_SOMBRA, k))
+        iris(Offset(der - 26 * u, aba + 4 * u), 92 * u, suave(MALVA, k * 0.9f), suave(TALLO, k * 0.9f), suave(TALLO_SOMBRA, k * 0.9f))
+        if (claro) libelula(Offset(der - 54 * u, arr + 92 * u), 40 * u, -118f, 0.1f, suave(LIBELULA, 0.6f), suave(NACAR, 0.75f), suave(ORO, 0.6f))
+        else {
+            // La lámpara colgada de su cadena, encendida: la tulipa boca abajo, con su halo.
+            val cuelga = Offset(cx + 70 * u, arr + 66 * u)
+            drawLine(tenue, Offset(cuelga.x, arr), cuelga, 0.9f * u)
+            rotate(180f, cuelga) { tulipa(cuelga, 22 * u, 1f) }
+        }
+    }
+}
+
 /** Una estrella pequeña de [puntas] puntas, para adornar los marcos. */
 private fun DrawScope.estrellaMarco(c: Offset, r: Float, puntas: Int, color: Color) {
     drawPath(Path().apply {
@@ -516,17 +551,7 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     drawLine(tenue, c + Offset(0f, sy * 4 * u), c + Offset(0f, sy * 14 * u), 1f * u)
                 }
             }
-            TemaId.NOUVEAU -> {
-                // Carpeta de expediente: línea gruesa, dos perforaciones, una franja de «clasificado» y marcas de corte.
-                caja(0f, col, 2f * u)
-                listOf(cy - 40 * u, cy + 40 * u).forEach { y -> drawCircle(tenue, 5 * u, Offset(izq + 16 * u, y), style = Stroke(1.2f * u)) }
-                clipRect(izq, arr, der, aba) { drawLine(e.primary.copy(alpha = 0.3f), Offset(der - 46 * u, arr), Offset(der, arr + 46 * u), 8 * u) }
-                esquinas.forEach { c ->
-                    val sx = if (c.x < size.width / 2) -1f else 1f; val sy = if (c.y < size.height / 2) -1f else 1f
-                    drawLine(tenue, c + Offset(sx * 4 * u, 0f), c + Offset(sx * 14 * u, 0f), 1f * u)
-                    drawLine(tenue, c + Offset(0f, sy * 4 * u), c + Offset(0f, sy * 14 * u), 1f * u)
-                }
-            }
+            TemaId.NOUVEAU -> marcoNouveau(e, izq, der, arr, aba, col, tenue, claro)
             TemaId.GALIA -> marcoGalia(e, izq, der, arr, aba, col, tenue, claro)
             TemaId.ARCONTES -> marcoArcontes(e, izq, der, arr, aba, col, tenue, claro)
             TemaId.FRENTE -> {

@@ -158,7 +158,9 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.MEDIEVAL -> listOf("en tinta", "en minio", "en pan de oro", "códice purpúreo")
     TemaId.TEMPLARIO -> listOf("hermano sargento", "freire caballero", "comendador", "maestre del Temple")
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
-    TemaId.NOUVEAU -> listOf("clase C", "clase B", "clase A", "alto secreto")
+    // Los pasos de una estampa en el taller: la prueba, el «bueno para imprimir» que firma el artista, la prueba firmada y,
+    // lo más alto, el cartel pegado en todas las paredes de París.
+    TemaId.NOUVEAU -> listOf("épreuve d'essai", "bon à tirer", "épreuve signée", "sur tous les murs de Paris")
     // Los torques que se ganan, del metal más humilde al oro; y lo más alto, que los bardos lo canten (Diodoro 5.31).
     TemaId.GALIA -> listOf("torques de bronce", "torques de plata", "torques de oro", "lo cantan los bardos")
     // Las tres clases de personas de los valentinianos, según Ireneo (Contra las herejías 1.7.5), y la Ogdóada, adonde sube el alma.
@@ -386,19 +388,19 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             drawPath(Path().apply { moveTo(c.x - a, c.y); quadraticTo(c.x, c.y - k, c.x + a, c.y); quadraticTo(c.x, c.y + k, c.x - a, c.y); close() }, cs.primary.copy(alpha = 0.16f), style = Stroke(2f * u))
             drawCircle(cs.primary.copy(alpha = 0.12f), m * 0.36f, c, style = Stroke(1.5f * u))
         }
-        TemaId.NOUVEAU -> {
-            // Dos reflectores que barren desde abajo y un ojo que lo vigila todo.
-            val haz = cs.onBackground
-            listOf(Offset(0f, size.height) to 1.0, Offset(size.width, size.height) to -1.0).forEach { (o, lado) ->
-                val a = Math.toRadians((if (lado > 0) -60.0 else -120.0) + lado * 22.0 * sin(Math.toRadians(giro * 4.0)))
-                val l = lejos * 1.3f
-                val p1 = Offset(o.x + (l * cos(a - 0.12)).toFloat(), o.y + (l * sin(a - 0.12)).toFloat())
-                val p2 = Offset(o.x + (l * cos(a + 0.12)).toFloat(), o.y + (l * sin(a + 0.12)).toFloat())
-                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y); close() }, Brush.radialGradient(listOf(haz.copy(alpha = 0.10f), Color.Transparent), o, l))
-            }
-            val a = m * 0.62f; val k = m * 0.8f
-            drawPath(Path().apply { moveTo(c.x - a, c.y); quadraticTo(c.x, c.y - k, c.x + a, c.y); quadraticTo(c.x, c.y + k, c.x - a, c.y); close() }, cs.primary.copy(alpha = 0.16f), style = Stroke(2f * u))
-            drawCircle(cs.primary.copy(alpha = 0.12f), m * 0.36f, c, style = Stroke(1.5f * u))
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            // El aro de látigo del sello, grande y tenue, que gira despacio; por dentro, dos iris que suben desde la yema; y una
+            // libélula que da la vuelta alrededor del logro. De noche, en el centro, la luz de una lámpara de vidrio.
+            val fondo = cs.background
+            fun tenue(col: Color, k: Float) = androidx.compose.ui.graphics.lerp(fondo, col, k)
+            if (oscuro) drawCircle(Brush.radialGradient(listOf(LUZ.copy(alpha = 0.18f), VIDRIO_AMBAR.copy(alpha = 0.06f), Color.Transparent), c, m * 0.44f), m * 0.44f, c)
+            val ra = m * 0.46f
+            val oro = if (oscuro) ORO else androidx.compose.ui.graphics.lerp(ORO, Color(0xFF7A5810), 0.3f)
+            rotate(giro / 8f, c) { anilloLatigo(c, ra, m * 0.03f, tenue(oro, 0.55f), tenue(ORO_BRILLO, 0.5f), sombra = false, filete = false) }
+            iris(Offset(c.x - ra * 0.56f, c.y + ra * 0.94f), ra * 0.95f, tenue(IRIS, 0.38f), tenue(TALLO, 0.38f), tenue(TALLO_SOMBRA, 0.38f))
+            iris(Offset(c.x - ra * 0.28f, c.y + ra * 0.98f), ra * 0.62f, tenue(MALVA, 0.34f), tenue(TALLO, 0.34f), tenue(TALLO_SOMBRA, 0.34f))
+            val p = pt(ra * 0.8f, Math.toRadians(giro.toDouble() - 60.0))
+            libelula(p, m * 0.12f, giro + 120f, 0f, tenue(LIBELULA, 0.5f), tenue(NACAR, 0.6f), tenue(ORO, 0.5f))
         }
         TemaId.GALIA -> with(TrazosGalia) {
             // El torques que se gana: en el centro, la luz de la hoguera; alrededor, una corona de hojas de roble que gira

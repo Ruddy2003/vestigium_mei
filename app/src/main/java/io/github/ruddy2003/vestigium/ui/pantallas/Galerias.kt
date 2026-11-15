@@ -136,9 +136,13 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
     }
+    // La libélula del emblema, vista desde arriba: las cuatro alas, el cuerpo largo y la cabeza.
     TemaId.NOUVEAU -> {
-        val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
-        mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
+        val alas = listOf(Triple(-1f, -0.32f, -0.3f), Triple(1f, -0.32f, -0.3f), Triple(-1f, -0.12f, 0.08f), Triple(1f, -0.12f, 0.08f)).map { (s, dy, sube) ->
+            io.github.ruddy2003.vestigium.ui.TrazosNouveau.petalo(Offset(c.x + s * r * 0.06f, c.y + dy * r), Offset(c.x + s * r * 1.08f, c.y + (dy + sube) * r), r * 0.36f)
+        }
+        val cuerpo = mas(ovalo(Offset(c.x, c.y + r * 0.28f), r * 0.1f, r * 0.72f), circulo(Offset(c.x, c.y - r * 0.5f), r * 0.17f))
+        mas(mas(mas(alas[0], alas[1]), mas(alas[2], alas[3])), cuerpo)
     }
     // La bellota del roble: el cascabillo arriba, con su rabillo, y el fruto debajo, separados por una raya.
     TemaId.GALIA -> {

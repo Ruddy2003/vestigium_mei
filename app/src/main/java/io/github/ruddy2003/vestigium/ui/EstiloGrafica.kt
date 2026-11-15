@@ -177,6 +177,8 @@ enum class FormaPunto {
     RAJA,
     /** Galia: el torques, el aro abierto por abajo con un disco en cada punta. */
     TORQUES,
+    /** Art nouveau: el capullo de iris, cerrado y en punta, con sus dos sépalos abajo. */
+    CAPULLO,
 }
 
 /** Lo que acompaña al trazo de una serie. */
@@ -260,8 +262,11 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Expediente: el ojo, trazo grueso, renglones de registro en bandas, eje duro con marcas y barras rectas.
     TemaId.DISTOPIA -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
         Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
-    TemaId.NOUVEAU -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
-        Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
+    // Art nouveau: cada dato, un capullo de iris; la serie, un trazo de pluma de cartel, redondo y con su segundo hilo
+    // corrido; la meta, en raya larga y punto, como un tallo dibujado a lápiz; la rejilla en filetes finos; el eje rematado
+    // en florón; las barras, arcos de herradura como los de las entradas de metro; las cifras, en la letra de los rótulos.
+    TemaId.NOUVEAU -> EstiloGrafica(FormaPunto.CAPULLO, 2.2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.PLUMA, listOf(9f, 3f, 1f, 3f),
+        Rejilla.FILETES, 0.45f, Eje.FLORON, FormaBarra.HERRADURA, R.font.vitrina_regular, FontWeight.Normal, "lnum", 0.04f, 1.06f)
     // Galia: cada dato, un torques; la serie, una cuerda de oro torcida (las franjas claras de la torsión); la meta, en perlas
     // y rayas, como la gráfila de las monedas; la rejilla, guirnaldas con sus perlas; el eje, una rama que echa brotes; las
     // barras, tablas del tablado; las cifras, en Ysabeau.
@@ -572,6 +577,18 @@ fun DrawScope.puntoGrafica(e: EstiloGrafica, centro: Offset, radio: Float, color
                 moveTo(c.x, c.y - r * 1.25f); quadraticTo(c.x + r * 0.7f, c.y, c.x, c.y + r * 1.25f); quadraticTo(c.x - r * 0.7f, c.y, c.x, c.y - r * 1.25f); close()
             })
             drawCircle(color.copy(alpha = color.alpha * 0.4f), r * 1.15f, c, style = Stroke(g * 0.45f))
+        }
+        // El capullo de iris: cerrado y en punta, con los dos sépalos que lo abrazan abajo.
+        FormaPunto.CAPULLO -> {
+            figura(Path().apply {
+                moveTo(c.x, c.y - r * 1.3f)
+                cubicTo(c.x + r * 0.9f, c.y - r * 0.5f, c.x + r * 0.75f, c.y + r * 0.55f, c.x, c.y + r * 0.6f)
+                cubicTo(c.x - r * 0.75f, c.y + r * 0.55f, c.x - r * 0.9f, c.y - r * 0.5f, c.x, c.y - r * 1.3f); close()
+            })
+            for (s in listOf(-1f, 1f)) drawPath(Path().apply {
+                moveTo(c.x, c.y + r * 0.95f); quadraticTo(c.x + s * r * 0.95f, c.y + r * 0.65f, c.x + s * r * 0.85f, c.y - r * 0.15f)
+                quadraticTo(c.x + s * r * 0.4f, c.y + r * 0.4f, c.x, c.y + r * 0.95f); close()
+            }, color)
         }
         // El torques: el aro abierto por abajo, con un disco en cada punta.
         FormaPunto.TORQUES -> {

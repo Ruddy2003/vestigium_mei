@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import kotlin.math.PI
@@ -96,7 +97,9 @@ object MapasMas {
         TemaId.BASICO -> listOf(Offset(0.08f, 0.8f), Offset(0.22f, 0.66f), Offset(0.36f, 0.7f), Offset(0.5f, 0.5f), Offset(0.64f, 0.4f), Offset(0.78f, 0.44f), Offset(0.92f, 0.24f))
         // Los puntos de control: piso por piso, de la ventanilla de abajo al Ministerio en lo alto.
         TemaId.DISTOPIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
-        TemaId.NOUVEAU -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
+        // La línea 1 del metro, la «ligne A» que se abrió el 19 de julio de 1900 (el norte arriba), con las etapas de `Campanas`:
+        // Porte Maillot, Champs-Élysées, Palais-Royal, Hôtel de Ville, Bastille, Gare de Lyon y Porte de Vincennes.
+        TemaId.NOUVEAU -> geo(listOf(2.2826 to 48.8781, 2.3143 to 48.8676, 2.3364 to 48.8625, 2.3522 to 48.8573, 2.3690 to 48.8531, 2.3730 to 48.8448, 2.4105 to 48.8470), 2.262, 2.426, 48.838, 48.882)
         // El levantamiento del 52 a. C., sobre la Galia (el norte arriba), con las etapas de `Campanas`: Cenabum, donde corre el
         // grito; Gergovia, donde Vercingétorix toma el mando; Avárico, el cerco perdido; Gergovia otra vez, la victoria, en la
         // ladera del sur, frente a los campamentos de César; Bibracte, la asamblea; el cerco de Alesia, sobre su línea de
@@ -302,14 +305,98 @@ object MapasMas {
                 drawRect(Color(0xFFC8102E).copy(alpha = 0.6f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.02f))
             }
             TemaId.NOUVEAU -> {
-                // Pisos de un edificio de oficinas en corte, con sus ventanillas; a la derecha, la torre del Ministerio.
-                val linea = cs.onSurface.copy(alpha = if (oscuro) 0.18f else 0.14f)
-                for (k in 1 until 6) { val y = h * k / 6f; drawLine(linea, Offset(0f, y), Offset(w * 0.8f, y), 1f * d) }
-                val az = java.util.Random(17)
-                for (k in 0 until 6) for (j in 0 until 10) if (az.nextInt(3) > 0) drawRect(linea, Offset(w * (0.03f + j * 0.075f), h * (k / 6f + 0.04f)), Size(w * 0.035f, h * 0.07f))
-                drawRect(cs.onSurface.copy(alpha = if (oscuro) 0.22f else 0.16f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.96f))
-                for (k in 0 until 9) drawRect(Color(0xFFC8102E).copy(alpha = 0.25f + 0.5f * avance), Offset(w * 0.86f, h * (0.12f + k * 0.09f)), Size(w * 0.06f, h * 0.03f))
-                drawRect(Color(0xFFC8102E).copy(alpha = 0.6f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.02f))
+                // El plano de París de 1900 (con la misma proyección que [puntos]): el papel crema del plano impreso, las
+                // fortificaciones con sus bastiones a los dos lados (Porte Maillot y Porte de Vincennes son puertas suyas), el Sena con
+                // la Cité y la isla de San Luis, los bulevares, los jardines de las Tullerías y los bosques, y el recinto de la
+                // Exposición entre el Campo de Marte, el Trocadero y la explanada de los Inválidos, con el Grand Palais. Sobre el
+                // trazado de la línea, sus dieciocho estaciones. De noche, el mismo plano con las calles alumbradas, el Palacio de
+                // la Electricidad encendido y los faroles de las estaciones ya pasadas.
+                fun g(lon: Double, lat: Double) = Offset(w * (0.07f + 0.86f * ((lon - 2.262) / 0.164).toFloat()), h * (0.92f - 0.84f * ((lat - 48.838) / 0.044).toFloat()))
+                fun linea(vararg q: Pair<Double, Double>): Path = Path().apply {
+                    val l = q.map { g(it.first, it.second) }
+                    moveTo(l[0].x, l[0].y)
+                    for (i in 1 until l.size - 1) quadraticTo(l[i].x, l[i].y, (l[i].x + l[i + 1].x) / 2, (l[i].y + l[i + 1].y) / 2)
+                    lineTo(l.last().x, l.last().y)
+                }
+                val tinta = if (oscuro) Color(0xFFECE5D6) else TrazosNouveau.PLUMA
+                val luz = TrazosNouveau.LUZ
+                // El papel del plano.
+                if (oscuro) drawRect(Brush.verticalGradient(listOf(Color(0xFF151A20).copy(alpha = 0.85f), Color(0xFF1B2128).copy(alpha = 0.7f)), 0f, h), Offset.Zero, size)
+                else drawRect(Brush.verticalGradient(listOf(Color(0xFFF1E6C8).copy(alpha = 0.55f), Color(0xFFE8DCBC).copy(alpha = 0.45f)), 0f, h), Offset.Zero, size)
+                // Los bosques de los dos extremos: Boulogne al oeste y Vincennes al sureste, copas redondas.
+                val copa = if (oscuro) TrazosNouveau.TALLO_SOMBRA.copy(alpha = 0.45f) else TrazosNouveau.TALLO.copy(alpha = 0.45f)
+                val az = java.util.Random(19)
+                listOf(Triple(2.262, 48.865, 14), Triple(2.262, 48.848, 12), Triple(2.42, 48.84, 10)).forEach { (lo, la, n) ->
+                    val c0 = g(lo, la)
+                    repeat(n) { val q = c0 + Offset((az.nextFloat() - 0.5f) * 30 * d, (az.nextFloat() - 0.5f) * 22 * d); drawCircle(copa, (2.2f + az.nextFloat() * 1.6f) * d, q) }
+                }
+                // Los jardines: las Tullerías, el Campo de Marte y la explanada de los Inválidos, en salvia.
+                val jardin = if (oscuro) TrazosNouveau.TALLO_SOMBRA.copy(alpha = 0.3f) else TrazosNouveau.TALLO.copy(alpha = 0.28f)
+                fun cuadro(vararg q: Pair<Double, Double>) = Path().apply { q.forEachIndexed { i, (lo, la) -> val o = g(lo, la); if (i == 0) moveTo(o.x, o.y) else lineTo(o.x, o.y) }; close() }
+                drawPath(cuadro(2.3215 to 48.8655, 2.3325 to 48.8625, 2.3315 to 48.8603, 2.3205 to 48.8635), jardin)
+                // El recinto de la Exposición: el Campo de Marte, el Trocadero, el muelle de Orsay, la explanada y los dos palacios.
+                val expo = listOf(
+                    cuadro(2.2935 to 48.8588, 2.2985 to 48.8613, 2.3075 to 48.8545, 2.3025 to 48.8518),
+                    cuadro(2.2845 to 48.8635, 2.2905 to 48.8655, 2.2945 to 48.8618, 2.2885 to 48.8598),
+                    cuadro(2.2985 to 48.8613, 2.3165 to 48.8625, 2.3165 to 48.8605, 2.3005 to 48.8598),
+                    cuadro(2.3115 to 48.8615, 2.3155 to 48.8615, 2.3155 to 48.8555, 2.3115 to 48.8555),
+                    cuadro(2.3105 to 48.8678, 2.3165 to 48.8672, 2.3155 to 48.8640, 2.3100 to 48.8646))
+                val tonoExpo = if (oscuro) TrazosNouveau.IRIS.copy(alpha = 0.32f) else TrazosNouveau.MALVA.copy(alpha = 0.3f)
+                expo.forEach { drawPath(it, tonoExpo); drawPath(it, tonoExpo.copy(alpha = 0.7f), style = Stroke(0.8f * d)) }
+                clipPath(Path().apply { expo.forEach { addPath(it) } }) {
+                    var x = 0f; while (x < w) { drawLine(TrazosNouveau.IRIS.copy(alpha = if (oscuro) 0.25f else 0.22f), Offset(x, 0f), Offset(x - h, h), 0.6f * d); x += 3.5f * d }
+                }
+                // La nave del Grand Palais, su cúpula de vidrio rebajada.
+                val gp = g(2.3128, 48.866); drawArc(tinta.copy(alpha = 0.5f), 180f, 180f, false, Offset(gp.x - 4 * d, gp.y - 3 * d), Size(8 * d, 6 * d), style = Stroke(0.8f * d))
+                // El Palacio de la Electricidad, al fondo del Campo de Marte: de día un rombo de oro, de noche sus lámparas encendidas.
+                val pe = g(2.302, 48.8535)
+                if (oscuro) drawCircle(Brush.radialGradient(listOf(TrazosNouveau.LUZ_HALO.copy(alpha = 0.7f), luz.copy(alpha = 0.25f), Color.Transparent), pe, 18 * d), 18 * d, pe)
+                drawPath(Path().apply { moveTo(pe.x, pe.y - 3.5f * d); lineTo(pe.x + 3 * d, pe.y); lineTo(pe.x, pe.y + 2 * d); lineTo(pe.x - 3 * d, pe.y); close() }, if (oscuro) TrazosNouveau.LUZ else TrazosNouveau.ORO)
+                // El Sena, de este a oeste, con sus dos islas.
+                val sena = linea(2.43 to 48.829, 2.39 to 48.834, 2.376 to 48.8425, 2.366 to 48.848, 2.357 to 48.851, 2.35 to 48.8545, 2.343 to 48.857, 2.333 to 48.8595, 2.325 to 48.8625,
+                    2.318 to 48.864, 2.31 to 48.864, 2.302 to 48.8635, 2.295 to 48.861, 2.288 to 48.857, 2.282 to 48.852, 2.275 to 48.846, 2.262 to 48.838)
+                val agua = if (oscuro) Color(0xFF2C4A6B).copy(alpha = 0.75f) else Color(0xFF8FB0C4).copy(alpha = 0.6f)
+                drawPath(sena, agua, style = Stroke(5 * d, cap = StrokeCap.Round))
+                drawPath(sena, if (oscuro) Color(0xFF6F8FB0).copy(alpha = 0.5f) else Color(0xFF4F7FA0).copy(alpha = 0.55f), style = Stroke(0.7f * d, cap = StrokeCap.Round))
+                if (oscuro) drawPath(sena, luz.copy(alpha = 0.3f), style = Stroke(1f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.5f * d, 6 * d))))
+                listOf(Triple(2.3475, 48.8555, 7f), Triple(2.3565, 48.8518, 4f)).forEach { (lo, la, l) ->
+                    val c = g(lo, la)
+                    rotate(-24f, c) { drawOval(if (oscuro) Color(0xFF23282C) else Color(0xFFEDE3C8), Offset(c.x - l * d, c.y - 1.6f * d), Size(2 * l * d, 3.2f * d)); drawOval(tinta.copy(alpha = 0.4f), Offset(c.x - l * d, c.y - 1.6f * d), Size(2 * l * d, 3.2f * d), style = Stroke(0.6f * d)) }
+                }
+                // Los bulevares y las avenidas: los Grandes Bulevares, Saint-Germain, Sébastopol, Saint-Michel, la Gran Armada,
+                // Kléber e Iéna, la avenida de la Ópera y la Daumesnil.
+                val calles = listOf(
+                    linea(2.3245 to 48.870, 2.3317 to 48.8708, 2.348 to 48.8705, 2.3636 to 48.8675, 2.3665 to 48.861, 2.369 to 48.8531),
+                    linea(2.3205 to 48.8612, 2.3335 to 48.8555, 2.344 to 48.8525, 2.356 to 48.849, 2.36 to 48.846),
+                    linea(2.3495 to 48.858, 2.3515 to 48.8686), linea(2.344 to 48.8535, 2.3405 to 48.838),
+                    linea(2.295 to 48.8738, 2.2915 to 48.8655, 2.2885 to 48.8628), linea(2.295 to 48.8738, 2.2945 to 48.8645),
+                    linea(2.3327 to 48.8712, 2.3364 to 48.8625), linea(2.369 to 48.8531, 2.39 to 48.84, 2.41 to 48.836),
+                    linea(2.3958 to 48.8483, 2.3958 to 48.858), linea(2.3212 to 48.8656, 2.3245 to 48.870))
+                calles.forEach { c ->
+                    drawPath(c, tinta.copy(alpha = if (oscuro) 0.22f else 0.25f), style = Stroke(1.1f * d, cap = StrokeCap.Round))
+                    if (oscuro) drawPath(c, luz.copy(alpha = 0.55f), style = Stroke(1f * d, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.1f, 4f * d))))
+                }
+                // Las fortificaciones de París, con sus bastiones en dientes, a los dos lados.
+                listOf(linea(2.299 to 48.889, 2.2795 to 48.879, 2.2745 to 48.871, 2.2675 to 48.858, 2.2575 to 48.846, 2.26 to 48.834),
+                    linea(2.398 to 48.889, 2.41 to 48.867, 2.411 to 48.853, 2.4125 to 48.844, 2.404 to 48.834)).forEach { f ->
+                    drawPath(f, tinta.copy(alpha = if (oscuro) 0.3f else 0.35f), style = Stroke(1.4f * d))
+                    aLoLargo(f, 7 * d) { o, t -> val n = Offset(-t.y, t.x); drawPath(Path().apply { moveTo(o.x - t.x * 2 * d, o.y - t.y * 2 * d); lineTo(o.x + n.x * 2.4f * d, o.y + n.y * 2.4f * d); lineTo(o.x + t.x * 2 * d, o.y + t.y * 2 * d) }, tinta.copy(alpha = if (oscuro) 0.3f else 0.35f), style = Stroke(0.8f * d)) }
+                }
+                // El trazado de la línea bajo las calles, con las dieciocho estaciones de 1900: una raya fina por cada una.
+                val estaciones = listOf(2.2826 to 48.8781, 2.2895 to 48.8757, 2.295 to 48.8738, 2.3007 to 48.872, 2.3095 to 48.8691, 2.3143 to 48.8676, 2.3212 to 48.8656, 2.3297 to 48.8645, 2.3364 to 48.8625,
+                    2.3409 to 48.8608, 2.347 to 48.8586, 2.3522 to 48.8573, 2.3611 to 48.8551, 2.369 to 48.8531, 2.373 to 48.8448, 2.3871 to 48.8472, 2.3958 to 48.8483, 2.4105 to 48.847)
+                estaciones.forEach { (lo, la) -> val o = g(lo, la); drawCircle(if (oscuro) Color(0xFF1A1E22) else Color(0xFFF7F2E6), 1.6f * d, o); drawCircle(TrazosNouveau.HIERRO.copy(alpha = if (oscuro) 0.9f else 0.7f), 1.6f * d, o, style = Stroke(0.7f * d)) }
+                // Las estaciones ya pasadas: sus dos faroles encendidos.
+                val pts = puntos(tema).map { Offset(it.x * w, it.y * h) }
+                val pasadas = (avance * 7f + 0.01f).toInt().coerceAtMost(7)
+                for (i in 0 until pasadas) listOf(-4f, 4f).forEach { dx ->
+                    val q = pts[i] + Offset(dx * d, -8 * d)
+                    drawCircle(Brush.radialGradient(listOf(TrazosNouveau.FAROL.copy(alpha = if (oscuro) 0.7f else 0.45f), Color.Transparent), q, 5 * d), 5 * d, q)
+                    drawCircle(TrazosNouveau.FAROL, 1.1f * d, q)
+                }
+                // De noche, la luna sobre los tejados.
+                if (oscuro) { val lu = Offset(w * 0.94f, h * 0.16f); drawCircle(Brush.radialGradient(listOf(Color(0xFFE9E4D2).copy(alpha = 0.25f), Color.Transparent), lu, 20 * d), 20 * d, lu); drawCircle(Color(0xFFE9E4D2), 6 * d, lu) }
+                drawRect(tinta.copy(alpha = 0.2f), Offset(2 * d, 2 * d), Size(w - 4 * d, h - 4 * d), style = Stroke(0.6f * d))
             }
             TemaId.GALIA -> {
                 // La Galia del levantamiento, vista desde arriba (con la misma proyección que [puntos]): el Loira, que baja del
@@ -991,7 +1078,14 @@ object MapasMas {
             TemaId.BASICO -> drawPath(p, cs.primary.copy(alpha = 0.8f), style = Stroke(2.4f * d, cap = StrokeCap.Round))
             // La línea roja del trámite, como cinta de señalización.
             TemaId.DISTOPIA -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
-            TemaId.NOUVEAU -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
+            // La línea del metro en el plano: la zanja clara, el trazo de hierro verde y el riel de oro que corre por dentro;
+            // de noche, con su brillo.
+            TemaId.NOUVEAU -> {
+                val oscuro = cs.background.luminance() < 0.5f
+                drawPath(p, (if (oscuro) TrazosNouveau.LUZ else Color.White).copy(alpha = if (oscuro) 0.18f else 0.55f), style = Stroke(7 * d, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawPath(p, if (oscuro) lerp(TrazosNouveau.HIERRO, Color.White, 0.25f) else TrazosNouveau.HIERRO, style = Stroke(3.2f * d, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawPath(p, TrazosNouveau.ORO, style = Stroke(0.9f * d, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6 * d, 3 * d))))
+            }
             // El camino de tierra por donde corre el grito: la huella ancha del barro y, a trechos, las pisadas de los caballos.
             TemaId.GALIA -> {
                 val oscuro = cs.background.luminance() < 0.5f
@@ -1178,7 +1272,24 @@ object MapasMas {
             }
             // Una ventanilla de control: caseta cuadrada con su número.
             TemaId.DISTOPIA -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
-            TemaId.NOUVEAU -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
+            // La estación: el letrero de lava esmaltada en óvalo, con su marco de hierro verde y su rizo; en la meta, sobre él,
+            // los dos faroles rojo anaranjado.
+            TemaId.NOUVEAU -> {
+                val oscuro = cs.background.luminance() < 0.5f
+                val hierro = if (oscuro) lerp(TrazosNouveau.HIERRO, Color.White, 0.3f) else TrazosNouveau.HIERRO
+                drawOval(Color.Black.copy(alpha = if (oscuro) 0.4f else 0.16f), Offset(c.x - r * 1.15f + 0.8f * d, c.y - r * 0.75f + 1.2f * d), Size(r * 2.3f, r * 1.5f))
+                drawOval(col, Offset(c.x - r * 1.15f, c.y - r * 0.75f), Size(r * 2.3f, r * 1.5f))
+                drawOval(hierro, Offset(c.x - r * 1.15f, c.y - r * 0.75f), Size(r * 2.3f, r * 1.5f), style = Stroke(1.2f * d))
+                drawOval(hierro.copy(alpha = 0.5f), Offset(c.x - r * 0.8f, c.y - r * 0.45f), Size(r * 1.6f, r * 0.9f), style = Stroke(0.6f * d))
+                drawLine(hierro, Offset(c.x - r * 0.5f, c.y), Offset(c.x + r * 0.5f, c.y), 0.9f * d, StrokeCap.Round)
+                if (meta) listOf(-1f, 1f).forEach { s ->
+                    val pie = Offset(c.x + s * r * 0.9f, c.y - r * 0.7f)
+                    val farol = Offset(c.x + s * r * 0.75f, c.y - r * 2.1f)
+                    drawPath(Path().apply { moveTo(pie.x, pie.y); quadraticTo(pie.x + s * r * 0.3f, c.y - r * 1.5f, farol.x, farol.y + r * 0.35f) }, hierro, style = Stroke(1.1f * d, cap = StrokeCap.Round))
+                    drawCircle(Brush.radialGradient(listOf(TrazosNouveau.FAROL.copy(alpha = 0.55f), Color.Transparent), farol, r * 1.2f), r * 1.2f, farol)
+                    drawOval(TrazosNouveau.FAROL, Offset(farol.x - r * 0.28f, farol.y - r * 0.38f), Size(r * 0.56f, r * 0.76f))
+                }
+            }
             // El oppidum de cada parada visto desde arriba: la meseta con su muralla en anillo y las estacas de la empalizada; en
             // la meta, más grande, con el torques encima.
             TemaId.GALIA -> {

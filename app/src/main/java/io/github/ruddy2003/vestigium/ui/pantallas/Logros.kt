@@ -213,12 +213,27 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
             drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
         }
+        // La plaqueta de la Exposición de 1900: rectangular y de remate en arco, con el filete de dentro, un iris en relieve
+        // con sus hojas y la anilla de arriba.
         TemaId.NOUVEAU -> {
-            val hex = figPoligono(c, r * 0.97f, 6)
-            forma(hex)
-            clipPath(hex) { drawRect(if (hecho) Color(0xFFB3261E).copy(alpha = 0.85f) else borde.copy(alpha = 0.25f), Offset(0f, c.y + r * 0.5f), Size(size.width, r * 0.2f)) }
-            drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
-            drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
+            val pl = Path().apply {
+                moveTo(c.x - r * 0.66f, c.y + r * 0.95f); lineTo(c.x - r * 0.66f, c.y - r * 0.3f)
+                cubicTo(c.x - r * 0.66f, c.y - r * 0.9f, c.x + r * 0.66f, c.y - r * 0.9f, c.x + r * 0.66f, c.y - r * 0.3f)
+                lineTo(c.x + r * 0.66f, c.y + r * 0.95f); close()
+            }
+            drawCircle(canto, r * 0.12f, c + Offset(0f, -r * 0.86f), style = Stroke(g * 0.8f))
+            forma(pl)
+            drawPath(Path().apply {
+                moveTo(c.x - r * 0.52f, c.y + r * 0.82f); lineTo(c.x - r * 0.52f, c.y - r * 0.26f)
+                cubicTo(c.x - r * 0.52f, c.y - r * 0.72f, c.x + r * 0.52f, c.y - r * 0.72f, c.x + r * 0.52f, c.y - r * 0.26f)
+                lineTo(c.x + r * 0.52f, c.y + r * 0.82f); close()
+            }, luz, style = Stroke(r * 0.035f))
+            val pie = Offset(c.x, c.y + r * 0.72f)
+            listOf(-0.32f to 0.75f, 0.26f to 0.62f).forEach { (dx, alto) -> drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.hojaLanza(pie, Offset(c.x + dx * r, pie.y - alto * r), r * 0.14f, -dx * 0.4f, espada = true), sombra) }
+            val fl = Offset(c.x + r * 0.05f, c.y - r * 0.2f)
+            drawLine(sombra, pie, fl, r * 0.05f)
+            listOf(-0.6f, 0f, 0.6f).forEach { a -> drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.petalo(fl, Offset(fl.x + kotlin.math.sin(a) * r * 0.24f, fl.y - kotlin.math.cos(a) * r * 0.26f), r * 0.18f), luz) }
+            listOf(-0.9f, 0.9f).forEach { a -> drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.petalo(fl, Offset(fl.x + kotlin.math.sin(a) * r * 0.28f, fl.y + kotlin.math.cos(a) * r * 0.26f), r * 0.2f), sombra) }
         }
         // La falera de los arneses: el disco con su anillo de perlas, la onda corrida repujada y los cuatro clavos.
         TemaId.GALIA -> {

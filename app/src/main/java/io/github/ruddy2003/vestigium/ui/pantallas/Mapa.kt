@@ -64,6 +64,7 @@ import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.TrazosArcontes
 import io.github.ruddy2003.vestigium.ui.TrazosFrente
 import io.github.ruddy2003.vestigium.ui.TrazosGalia
+import io.github.ruddy2003.vestigium.ui.TrazosNouveau
 import io.github.ruddy2003.vestigium.ui.numeralMaya
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.Dispatchers
@@ -113,8 +114,10 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Distopía: gris de expediente, sin color.
         TemaId.DISTOPIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
-        TemaId.NOUVEAU -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
-            else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
+        // Art nouveau: de día, el plano impreso en papel crema con un poco del verde salvia; de noche, la misma París con el
+        // azul negro de la calle y el oro de la luz eléctrica en las avenidas.
+        TemaId.NOUVEAU -> if (oscuro) { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.84f, 0.78f, 0.6f, 4f, 4f, 10f)) }
+            else { m.setSaturation(0.3f); m.postConcat(tinte(0.98f, 0.97f, 0.86f, 2f, 6f, -2f)) }
         // Galia: de día, el pasto y la paja al sol, con el verde del roble; de noche, el mismo campo bajo la luna, verde negro.
         TemaId.GALIA -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.72f, 0.6f, 2f, 6f, 2f)) }
             else { m.setSaturation(0.35f); m.postConcat(tinte(0.98f, 0.98f, 0.86f, 4f, 6f, -4f)) }
@@ -281,7 +284,13 @@ internal object Formas {
             TemaId.TEMPLARIO -> figura(x, y, r, -0.82f, -0.9f, 0.82f, -0.9f, 0.8f, -0.1f, 0.58f, 0.5f, 0f, 1.05f, -0.58f, 0.5f, -0.8f, -0.1f)
             // El ojo que todo lo ve.
             TemaId.DISTOPIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
-            TemaId.NOUVEAU -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
+            // El farol de la entrada de metro: el globo en forma de pera.
+            TemaId.NOUVEAU -> {
+                p.reset(); p.moveTo(x, y - r * 1.25f)
+                p.cubicTo(x + r * 0.55f, y - r * 1.1f, x + r * 1.15f, y + r * 0.1f, x + r * 0.72f, y + r * 0.78f)
+                p.quadTo(x, y + r * 1.25f, x - r * 0.72f, y + r * 0.78f)
+                p.cubicTo(x - r * 1.15f, y + r * 0.1f, x - r * 0.55f, y - r * 1.1f, x, y - r * 1.25f); p.close()
+            }
             // El escudo largo de los galos, de tablas, con los cantos redondos.
             TemaId.GALIA -> { p.reset(); p.addRoundRect(x - r * 0.62f, y - r * 1.15f, x + r * 0.62f, y + r * 1.15f, r * 0.55f, r * 0.62f, horario) }
             // El ouroboros: el aro de la serpiente con la cabeza que muerde la cola, arriba a la derecha.
@@ -378,7 +387,7 @@ internal object Formas {
             TemaId.TEMPLARIO -> { raya(c, x, y, r, 0f, -0.65f, 0f, 0.55f, d); raya(c, x, y, r, -0.52f, -0.15f, 0.52f, -0.15f, d)
                 raya(c, x, y, r, -0.62f, -0.75f, 0.62f, -0.75f, d) }   // la cruz del escudo y su jefe
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
-            TemaId.NOUVEAU -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
+            TemaId.NOUVEAU -> { raya(c, x, y, r, -0.42f, -0.92f, 0.42f, -0.92f, d); raya(c, x, y, r, 0f, -0.55f, 0f, 0.55f, d) }   // el collar y el filamento
             TemaId.GALIA -> { raya(c, x, y, r, 0f, -0.95f, 0f, 0.95f, d); c.drawOval(x - r * 0.26f, y - r * 0.36f, x + r * 0.26f, y + r * 0.36f, d) }   // la espina y el umbo
             TemaId.ARCONTES -> { c.drawCircle(x + r * 0.72f, y - r * 0.92f, r * 0.1f, d); c.drawCircle(x, y, r * 0.2f, d) }   // el ojo de la serpiente y la chispa del centro
             // La célula en el centro y la chispa: tres trazos que salen de ella por el hueco del aro, arriba a la derecha.
@@ -900,15 +909,17 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
             }
         }
         TemaId.NOUVEAU -> {
-            filete(5 * u, tinta.copy(alpha = 0.45f), 1 * u)
-            drawCircle(acento, 3.5f * u, Offset(16 * u, 16 * u))
-            drawRect(tinta.copy(alpha = 0.6f), Offset(23 * u, 14 * u), Size(18 * u, 4 * u))
-            var x = 10 * u; var i = 0
-            while (x < w - 10 * u) {
-                val l = if (i % 5 == 0) 6 * u else 3 * u
-                drawLine(tinta.copy(alpha = 0.5f), Offset(x, h - 5 * u), Offset(x, h - 5 * u - l), 1 * u)
-                x += 6 * u; i++
+            // El marco del plano impreso de 1900: el doble filete; en cada esquina, dos líneas de látigo que salen a lo largo de los
+            // bordes y se enroscan, y abajo a la izquierda, un iris.
+            filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u); filete(8 * u, tinta.copy(alpha = 0.3f), 0.7f * u)
+            esquinas(8 * u) { o, sx, sy ->
+                listOf(Offset(o.x + sx * 34 * u, o.y + sy * 2 * u) to (sx * sy > 0), Offset(o.x + sx * 2 * u, o.y + sy * 26 * u) to (sx * sy < 0)).forEach { (hasta, horario) ->
+                    val pts = TrazosNouveau.puntosLatigo(Offset(o.x + sx * 3 * u, o.y + sy * 3 * u), hasta, 3.4f * u, 0.18f, horario)
+                    drawPath(TrazosNouveau.cinta(pts) { k -> u * (2f - 1.4f * k) }, acento.copy(alpha = 0.75f))
+                }
+                drawCircle(acento, 1.8f * u, Offset(o.x + sx * 3 * u, o.y + sy * 3 * u))
             }
+            with(TrazosNouveau) { iris(Offset(26 * u, h - 10 * u), 30 * u, acento.copy(alpha = 0.8f), tinta.copy(alpha = 0.45f), tinta.copy(alpha = 0.6f)) }
         }
         TemaId.GALIA -> {
             // El marco tallado en la viga: dos filetes con la onda corrida de La Tène entre ellos, arriba y abajo; en las esquinas,
@@ -1309,10 +1320,22 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
         }
         TemaId.NOUVEAU -> {
-            punta(n, r * 0.98f, r * 0.1f, acento)
-            val ojo = Path().apply { moveTo(c.x - r * 0.8f, c.y); quadraticTo(c.x, c.y - r * 0.75f, c.x + r * 0.8f, c.y); quadraticTo(c.x, c.y + r * 0.75f, c.x - r * 0.8f, c.y); close() }
-            drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))
-            drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
+            // La rosa como una flor: cuatro pétalos grandes en los rumbos (el del norte en el color de acento), cuatro hojas de
+            // tallo en los rumbos de en medio, el anillo con su rizo y el botón del centro.
+            anillo(r * 0.92f, tenue.copy(alpha = 0.45f), 0.8f * u)
+            for (k in 0 until 4) {
+                val a = n + 90.0 * k + 45.0
+                drawPath(TrazosNouveau.hojaLanza(c + rumbo(a) * (r * 0.12f), c + rumbo(a) * (r * 0.72f), r * 0.2f, 0.15f), secundario.copy(alpha = 0.7f))
+            }
+            for (k in 0 until 4) {
+                val a = n + 90.0 * k
+                val pet = TrazosNouveau.petalo(c, c + rumbo(a) * (r * (if (k == 0) 1f else 0.82f)), r * 0.42f)
+                drawPath(pet, if (k == 0) acento else tenue.copy(alpha = 0.55f))
+                drawPath(pet, tinta.copy(alpha = 0.5f), style = Stroke(0.7f * u))
+            }
+            val pts = TrazosNouveau.puntosLatigo(c + rumbo(n + 200.0) * (r * 0.92f), c + rumbo(n + 150.0) * (r * 0.98f), r * 0.1f, 0.15f, true)
+            drawPath(TrazosNouveau.cinta(pts) { k -> u * (1.4f - 1f * k) }, tenue)
+            drawCircle(fondo, r * 0.14f, c); drawCircle(acento, r * 0.09f, c); drawCircle(tinta.copy(alpha = 0.6f), r * 0.14f, c, style = Stroke(0.8f * u))
         }
         TemaId.GALIA -> {
             // La rueda votiva de bronce (como las que se ofrecían en los santuarios): el aro, los ocho rayos y el cubo, con las perlas

@@ -456,19 +456,23 @@ fun FraseDelDia(fecha: String) {
                 }
             }
         }
-        TemaId.NOUVEAU -> Surface(color = cs.onBackground, shape = RectangleShape, modifier = arriba) {
-            Row(Modifier.height(IntrinsicSize.Min)) {
-                Box(Modifier.width(8.dp).fillMaxHeight().background(cs.primary))
-                Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                    Text(rotulo, style = ty.labelMedium, color = cs.primary)
-                    f.original?.let { Text(it, style = ty.bodySmall, fontStyle = FontStyle.Italic, color = cs.background.copy(alpha = 0.72f)) }
-                    Text(f.texto.uppercase(), style = ty.titleLarge, color = cs.background, modifier = Modifier.padding(vertical = 2.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("— ${f.autor}", style = ty.labelSmall, color = cs.background.copy(alpha = 0.7f), modifier = Modifier.weight(1f))
-                        CorazonFrase(f, cs.primary, fecha = fecha)
-                    }
-                }
+        // La página de la revista ilustrada: la cartulina con dos esquinas muy redondas y dos casi rectas, el filete de dentro, un
+        // iris que sube por el margen izquierdo y una línea de látigo que se enrosca en la esquina de arriba; la frase en francés
+        // y su español, entre comillas francesas.
+        TemaId.NOUVEAU -> Box(arriba.drawBehind {
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            val g = minOf(18 * u, h * 0.3f)
+            fun pagina(m: Float) = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(androidx.compose.ui.geometry.Rect(m, m, w - m, h - m), CornerRadius(g - m), CornerRadius(2 * u), CornerRadius(g - m), CornerRadius(2 * u))) }
+            drawPath(pagina(0f), androidx.compose.ui.graphics.lerp(cs.surface, cs.primaryContainer, 0.25f))
+            drawPath(pagina(0.6f * u), cs.primary.copy(alpha = 0.55f), style = Stroke(1.2f * u))
+            drawPath(pagina(4 * u), cs.primary.copy(alpha = 0.25f), style = Stroke(0.6f * u))
+            with(io.github.ruddy2003.vestigium.ui.TrazosNouveau) {
+                iris(Offset(15 * u, h - 6 * u), minOf(h - 18 * u, 78 * u), cs.secondary, cs.primary.copy(alpha = 0.75f), cs.primary)
+                val pts = puntosLatigo(Offset(w - 60 * u, 6 * u), Offset(w - 14 * u, 12 * u), 4 * u, 0.22f, true)
+                drawPath(cinta(pts) { k -> u * (1.6f - 1.1f * k) }, cs.tertiary.copy(alpha = 0.8f))
             }
+        }.padding(start = 34.dp, end = 16.dp, top = 14.dp, bottom = 12.dp)) {
+            CuerpoFrase(f, fecha, rotulo, "« ", " »")
         }
         // La tablilla de cera en su marco de roble: las vetas del marco, la cera de abeja clara donde va la cita, el cordel que
         // la ata por el agujero de la izquierda y una hoja de roble en la esquina.
@@ -1021,7 +1025,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
         TemaId.TEMPLARIO -> c(LetraExtra.regla, FontWeight.Bold, 22f, 0.3f, "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
-        TemaId.NOUVEAU -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
+        TemaId.NOUVEAU -> c(LetraExtra.dellaRespira, FontWeight.Normal, 25f, 0.8f, "lnum")   // las cifras altas y finas de los carteles
         TemaId.GALIA -> c(LetraExtra.ysabeau, FontWeight.SemiBold, 23f, 0.5f, "lnum")   // las cifras humanistas de los rótulos
         TemaId.ARCONTES -> c(LetraExtra.caudex, FontWeight.Bold, 23f, 0.4f)   // las cifras de la letra de los códices
         TemaId.FRENTE -> c(LetraExtra.chivoMono, FontWeight.Medium, 23f, 1.4f, "tnum")   // las cifras del contador de la consola
@@ -1319,11 +1323,24 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             var y = top + k + 4 * u
                             while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
                         }
+                        // Cada día, un tallo que sube y abre su capullo, más alto cuanto más dormiste, con una hoja que sale de lado; el
+                        // sello de arriba, en el violeta del iris.
                         TemaId.NOUVEAU -> {
-                            val k = minOf(w * 0.35f, barH * 0.2f)
-                            pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
-                            var y = top + k + 4 * u
-                            while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
+                            val bot = minOf(w * 1.3f, barH * 0.32f)
+                            pinta(Path().apply {
+                                moveTo(w * 0.4f, h); lineTo(w * 0.43f, top + bot * 0.8f)
+                                cubicTo(w * 0.02f, top + bot * 0.55f, w * 0.3f, top + bot * 0.12f, w * 0.5f, top)
+                                cubicTo(w * 0.7f, top + bot * 0.12f, w * 0.98f, top + bot * 0.55f, w * 0.57f, top + bot * 0.8f)
+                                lineTo(w * 0.6f, h); close()
+                            })
+                            if (color != null) {
+                                drawLine(Color.White.copy(alpha = 0.35f), Offset(w * 0.5f, top + bot * 0.15f), Offset(w * 0.5f, top + bot * 0.7f), 0.8f * u)
+                                if (barH > bot + 24 * u) {
+                                    val ya = top + bot + (barH - bot) * 0.35f
+                                    drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.hojaLanza(Offset(w * 0.5f, ya + 8 * u), Offset(w * 0.98f, ya - 4 * u), 3.4f * u, 0.2f), color)
+                                }
+                            }
+                            sello = cs.secondary
                         }
                         // Las estacas de la empalizada del oppidum: cada día, un tronco aguzado arriba, con la corteza en vetas y su
                         // atadura de mimbre; el remate, en el oro de los torques.

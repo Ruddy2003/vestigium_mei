@@ -938,6 +938,42 @@ object OtrasVidas {
                 "lectura" to r(0, "Lo que aprende no se escribe: se dice de memoria (César, Guerra de las Galias 6.14).")),
             fuentes = listOf("Los druidas" to "${W}Druid", "Los arvernos" to "${W}Arverni", "Vercingétorix" to "${W}Vercingetorix",
                 "La batalla de Gergovia" to "${W}Battle_of_Gergovia", "El cerco de Alesia" to "${W}Battle_of_Alesia", "La guerra de las Galias" to "${W}Gallic_Wars")),
+        // ------------------------------------------------ lote 10 (docs/diseno/PLAN_TEMAS.md, 10f)
+        // Persona inventada en un mundo real (10a), como Eleazar y Segomaros: no es ficción (`ficticia = false`), sus cifras
+        // son reconstrucciones (`r`) y su calendario lleva días históricos y aproximados con su fuente (`vidas/anios/AnioG9.kt`).
+        // Las fechas están comprobadas en `docs/diseno/temas/fuentes_nouveau.md`, con sus correcciones (sección 1): antes del
+        // 19 de julio de 1900 va a pie (8), la jornada queda por debajo del máximo de la ley de 1900 (9), y el café-concierto
+        // es La Cigale o el Divan japonais, porque Le Chat Noir cerró en 1897 (10). Su nombre es uno de la muestra de la
+        // sección 10 **[Aproximación]**; el apellido, uno francés corriente, inventado. Que el taller y su casa queden cerca de
+        // la línea 1 es **recurso** (corrección 8). La ficha dice «19 años en 1900»: tiene 17 en la temporada 1, el 1898.
+        Vida("litografa", "Marguerite", "Aprendiz de un taller de litografía", "París, en un taller de litografía que imprime carteles en color", "hacia 1900", 1898, "tema", "nouveau", edad = 17,
+            inspiracion = "Persona inventada. Inspirada en los talleres de litografía que imprimían los carteles de París hacia 1900; las cifras son reconstrucciones.",
+            historia = listOf(
+                "Marguerite Fournier entra de aprendiz a los diecisiete años en el taller de litografía de monsieur Ferrand, cerca del Palais-Royal, que imprime carteles en color. Un cartel así se hace con una piedra por cada color: cada piedra se dibuja aparte, con lápiz o tinta grasa, y la misma hoja pasa de una a otra, con marcas de registro para que cada color caiga en su sitio. Todo se basa en que el agua y la grasa se rechazan.",
+                "Vive con sus padres y su hermano en el faubourg Saint-Antoine, cerca de la Bastille: su padre es ebanista y su madre cose en casa. Va y vuelve a pie, por el camino que seguirá la primera línea del metro, cuyas obras empiezan en octubre de 1898. Algunas noches sube a pie con su amiga Berthe a un café-concierto de Montmartre, La Cigale o el Divan japonais; Le Chat Noir ya cerró, en 1897.",
+                "En 1900 París tiene la Exposición Universal, del 14 de abril al 12 de noviembre, y el 19 de julio abre el metro, entre Porte Maillot y Porte de Vincennes: desde entonces vuelve a casa en el tren, de Palais-Royal a Bastille, por quince céntimos en segunda. La ley del 30 de marzo de 1900 pone en once horas el máximo de trabajo en los talleres con mujeres; en el de Ferrand ya se hacen diez y media. Los carteles de las calles, de Mucha o de Chéret, son los de la época; ella y su gente son inventadas.",
+            ),
+            dia = listOf(t(23.0, 6.0, Hacer.DORMIR, "en el cuarto de la casa de sus padres, en el faubourg Saint-Antoine"), t(6.0, 7.0, Hacer.COMER, "café con leche y pan, con su madre"),
+                t(7.0, 7.5, Hacer.CAMINO, "al taller, cerca del Palais-Royal"), t(7.5, 12.0, Hacer.TRABAJO, "pasar las piedras de cada color por la prensa"), t(12.0, 13.0, Hacer.COMER),
+                t(13.0, 19.0, Hacer.TRABAJO, "moler la tinta, mojar las piedras y poner a secar los pliegos"), t(19.0, 19.5, Hacer.CAMINO, "a casa: a pie y, desde el 19 de julio de 1900, en el metro nuevo"),
+                t(19.5, 21.0, Hacer.CUIDAR, "la casa y la ropa, con su madre"), t(21.0, 23.0, Hacer.GENTE, "algunas noches, un café-concierto de Montmartre, La Cigale o el Divan japonais, al que sube a pie")),
+            datos = mapOf("pasos" to r(10000, "Los caminos a pie, el taller de pie todo el día y, algunas noches, la subida a Montmartre."),
+                "km_anio" to r(2200, "A pie casi todo; desde el verano de 1900, a la vuelta, unas estaciones de metro."),
+                "kcal" to r(2300, "Trabajo de pie y de carga ligera: pan, sopa, legumbres y, algunos días, carne."), "proteina" to r(65, "Pan, legumbres, queso y un poco de carne."),
+                "azucar" to r(30, "El azúcar del café con leche y, el domingo, algún dulce."), "fibra" to r(25, "Pan, sopa de verduras y legumbres."),
+                "alcohol" to r(12, "Vino aguado en la comida; un poco más en el café-concierto."), "sueno" to r(7.0, "De las once de la noche a las seis."), "dormir" to r(23.0),
+                "trabajo" to r(63, "Diez horas y media, seis días a la semana: por debajo de las 11 horas que permite la ley del 30 de marzo de 1900. El descanso semanal no fue ley para todos hasta 1906."),
+                "aire_libre" to r(1.5, "Los caminos de ida y vuelta; en el taller, la luz entra por las ventanas."), "pantalla" to r(0),
+                "notificaciones" to r(8, "La campana del taller, los pregones de la calle y los gritos de los vendedores de periódicos."),
+                "musica" to r(1.0, "Lo que se canta en el taller y, algunas noches, el café-concierto."), "personas_dia" to r(40, "El taller, el barrio y la calle."), "conocidas" to r(1200),
+                "poblacion" to r(2700000, "París hacia 1900; la cifra es aproximada."), "lejos" to r(15, "Las afueras de París: nunca ha salido de ellas."),
+                "estatura" to r(155, "Promedio aproximado de las mujeres de Francia nacidas hacia 1880."), "vida" to r(47, "Estimación para Francia hacia 1900: la bajan sobre todo los niños que mueren pequeños."),
+                "vida_adulto" to r(65), "hijos" to r(2.8, "Estimación para Francia hacia 1900."),
+                "alfabetizacion" to r(90, "En París casi todos los jóvenes saben leer."), "lectura" to r(6, "Folletines del periódico y alguna novela por entregas.")),
+            fuentes = listOf("La línea 1 del metro de París" to "https://fr.wikipedia.org/wiki/Ligne_1_du_m%C3%A9tro_de_Paris",
+                "La Exposición Universal de 1900" to "https://fr.wikipedia.org/wiki/Exposition_universelle_de_1900", "La cromolitografía" to "https://fr.wikipedia.org/wiki/Chromolithographie",
+                "La prensa litográfica" to "https://fr.wikipedia.org/wiki/Presse_lithographique", "Marzo de 1900: la ley del 30 de marzo" to "https://fr.wikipedia.org/wiki/Mars_1900",
+                "El café-concierto" to "https://fr.wikipedia.org/wiki/Caf%C3%A9-concert")),
     )
 
     /** Las vidas que se ven con el tema [tema]: las doce de todos y la del tema (primero). */

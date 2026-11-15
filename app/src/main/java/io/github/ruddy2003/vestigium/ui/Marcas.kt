@@ -145,6 +145,13 @@ object Marcas {
         ESTATER,
         /** Galia: un torques que abraza la palabra por debajo: la cuerda de oro torcida que sube a los lados y acaba en sus discos. */
         TORQUES,
+        /**
+         * Art nouveau: la palabra en una placa de lava esmaltada, como la de las entradas de metro: el verde de la fundición,
+         * dos esquinas muy redondas y dos casi rectas, el filete de oro por dentro y un rizo en cada punta.
+         */
+        ESMALTE,
+        /** Art nouveau: una línea de látigo bajo la palabra, que nace de una yema, ondula apenas y se enrosca al final. */
+        LATIGO,
     }
 
     /** Cómo se ve una marca: color de la letra, el trazo detrás y si va en negrita o cursiva. */
@@ -174,7 +181,10 @@ object Marcas {
                 else Aspecto(s, s, Forma.CALDERON, cursiva = true)
             TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
-            TemaId.NOUVEAU -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
+            // La @persona, en la placa esmaltada de una entrada de metro (letras crema sobre el verde de la fundición); el #tema,
+            // sobre una línea de látigo en el violeta del iris.
+            TemaId.NOUVEAU -> if (persona) Aspecto(Color(0xFFF3EAD3), if (cs.background.luminance() < 0.5f) lerp(TrazosNouveau.HIERRO, Color.White, 0.08f) else TrazosNouveau.HIERRO, Forma.ESMALTE, negrita = true)
+                else Aspecto(s, s, Forma.LATIGO)
             // La @persona, acuñada en un estátero de oro; el #tema, abrazado por un torques (de oro de día, de fuego de noche).
             TemaId.GALIA -> if (persona) Aspecto(Color(0xFF2E1F06), TrazosGalia.ORO, Forma.ESTATER, negrita = true)
                 else (if (cs.background.luminance() < 0.5f) p else s).let { Aspecto(it, it, Forma.TORQUES) }
@@ -249,6 +259,8 @@ object Marcas {
         Forma.RAJA -> Color.Unspecified
         Forma.ESTATER -> c
         Forma.TORQUES -> Color.Unspecified
+        Forma.ESMALTE -> c
+        Forma.LATIGO -> Color.Unspecified
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
@@ -274,6 +286,8 @@ object Marcas {
         Forma.RAJA -> true
         Forma.ESTATER -> false
         Forma.TORQUES -> true
+        Forma.ESMALTE -> false
+        Forma.LATIGO -> true
     }
 
     /** El estilo de letra de la marca. Con [conFondo], lo que no se puede dibujar (en un campo de texto) va como fondo de la letra. */
@@ -714,6 +728,36 @@ object Marcas {
                 var x = x0 + sube; var k = 0
                 while (x < x1 - sube && k < 300) { drawLine(lerp(c, Color.White, 0.5f).copy(alpha = 0.8f), Offset(x, y + 0.75f * u), Offset(x + 1f * u, y - 0.75f * u), 0.5f * u); x += 2.2f * u; k++ }
                 drawCircle(c, 1.4f * u, Offset(x0, y - sube)); drawCircle(c, 1.4f * u, Offset(x1, y - sube))
+            }
+            Forma.ESMALTE -> {
+                // La placa de lava esmaltada: el verde de la fundición, con dos esquinas muy redondas y dos casi rectas, la luz
+                // arriba, el filete de oro por dentro y un rizo de oro en cada punta.
+                val t = rr.top + h * 0.04f; val b = rr.bottom - h * 0.02f; val iz = rr.left - 5 * u; val de = rr.right + 5 * u
+                val g = (b - t) * 0.5f; val p = (b - t) * 0.12f
+                val placa = Path().apply {
+                    moveTo(iz + g, t); lineTo(de - p, t); quadraticTo(de, t, de, t + p); lineTo(de, b - g); quadraticTo(de, b, de - g, b)
+                    lineTo(iz + p, b); quadraticTo(iz, b, iz, b - p); lineTo(iz, t + g); quadraticTo(iz, t, iz + g, t); close()
+                }
+                drawPath(placa, Brush.verticalGradient(listOf(lerp(c, Color.White, 0.16f), c, lerp(c, Color.Black, 0.2f)), t, b))
+                val oro = TrazosNouveau.ORO
+                drawPath(placa, lerp(c, Color.Black, 0.35f), style = Stroke(0.8f * u))
+                drawLine(oro.copy(alpha = 0.75f), Offset(iz + g * 0.8f, b - 1.6f * u), Offset(de - g * 0.8f, b - 1.6f * u), 0.6f * u)
+                for (lado in listOf(-1f, 1f)) {
+                    val x = if (lado < 0f) iz + 2.4f * u else de - 2.4f * u
+                    val q = Offset(x, (t + b) / 2 + 0.6f * u)
+                    drawPath(TrazosNouveau.linea(TrazosNouveau.puntosRizo(q, Offset(0f, -1f), minOf(1.6f * u, (b - t) * 0.18f), lado > 0f, 1.1f, 14)), oro.copy(alpha = 0.85f),
+                        style = Stroke(0.7f * u, cap = StrokeCap.Round))
+                }
+            }
+            Forma.LATIGO -> {
+                // La línea de látigo bajo la palabra: nace de una yema, ondula una vez y se enrosca hacia arriba al final.
+                val y = baja - 0.3f * u; val x0 = rr.left - 1f * u; val x1 = rr.right + 1.5f * u
+                val a = minOf(1.3f * u, h * 0.1f)
+                val pts = List(25) { k -> val f = k / 24f; Offset(x0 + (x1 - x0) * f, y + a * kotlin.math.sin(f * 2f * Math.PI.toFloat() + 0.3f) * (1f - 0.5f * f)) }
+                val fin = pts.last(); val antes = pts[pts.size - 3]
+                val todo = pts + TrazosNouveau.puntosRizo(fin, Offset(fin.x - antes.x, fin.y - antes.y), minOf(2.2f * u, h * 0.17f), false, 1.2f, 16)
+                drawPath(TrazosNouveau.cinta(todo) { f -> (1.5f - 0.9f * f) * u }, c.copy(alpha = 0.9f))
+                drawPath(TrazosNouveau.hojaLanza(Offset(x0 + 1f * u, pts[0].y), Offset(x0 - 3.6f * u, pts[0].y + 1f * u), 1.8f * u, -0.12f), c.copy(alpha = 0.9f))
             }
             Forma.PANTALLA -> {
                 // El vidrio oscuro con su bisel de cromo, tres líneas de barrido tenues y, delante, el piloto ámbar con su halo.

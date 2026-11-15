@@ -263,7 +263,15 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     }, 7.dp, 0.dp, true, 1.4.dp)
     // Hoja de expediente: recta y con borde grueso.
     TemaId.DISTOPIA -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
-    TemaId.NOUVEAU -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
+    // El cartel enmarcado: el canto de arriba sube en medio en una curva suave, como el letrero de las entradas de metro, la
+    // esquina de arriba a la izquierda y la de abajo a la derecha muy redondas, y las otras dos casi rectas.
+    TemaId.NOUVEAU -> PielDialogo(FormaDp { w, h, d ->
+        val a = 9 * d; val g = 22 * d; val p = 5 * d
+        moveTo(0f, a + g); quadraticTo(0f, a, g, a); lineTo(w * 0.36f, a)
+        cubicTo(w * 0.45f, a, w * 0.44f, 0f, w / 2, 0f); cubicTo(w * 0.56f, 0f, w * 0.55f, a, w * 0.64f, a)
+        lineTo(w - p, a); quadraticTo(w, a, w, a + p)
+        lineTo(w, h - g); quadraticTo(w, h, w - g, h); lineTo(p, h); quadraticTo(0f, h, 0f, h - p); close()
+    }, 8.dp, 0.dp, false, 1.2.dp)
     // La tablilla en su marco de roble, con las esquinas de hoja del tema: dos muy redondas en diagonal y dos casi rectas.
     TemaId.GALIA -> PielDialogo(RoundedCornerShape(topStart = 22.dp, topEnd = 5.dp, bottomEnd = 22.dp, bottomStart = 5.dp), 0.dp, 0.dp, false, 1.4.dp)
     // La hoja de papiro de un códice: los lados rectos y los cantos de arriba y de abajo rotos, cada uno a su manera.
@@ -505,19 +513,21 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
                 drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 13 * d), Offset(o.x + 30 * d, o.y + 13 * d), 2 * d)
             }
         }
-        TemaId.NOUVEAU -> {
-            // Dos perforaciones de archivador y un sello de goma ladeado abajo a la izquierda.
-            listOf(0.3f, 0.7f).forEach { fy ->
-                drawCircle(e.onSurface.copy(alpha = 0.18f), 3.5f * d, Offset(11 * d, h * fy))
-                drawCircle(e.onSurface.copy(alpha = 0.5f), 3.5f * d, Offset(11 * d, h * fy), style = Stroke(d))
-            }
-            val o = Offset(14 * d, h - 34 * d)
-            rotate(-8f, Offset(o.x + 26 * d, o.y + 10 * d)) {
-                drawRect(e.primary.copy(alpha = 0.55f), o, Size(52 * d, 20 * d), style = Stroke(1.6f * d))
-                drawRect(e.primary.copy(alpha = 0.55f), Offset(o.x + 3 * d, o.y + 3 * d), Size(46 * d, 14 * d), style = Stroke(0.7f * d))
-                drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 8 * d), Offset(o.x + 40 * d, o.y + 8 * d), 2 * d)
-                drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 13 * d), Offset(o.x + 30 * d, o.y + 13 * d), 2 * d)
-            }
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            // El filete de oro del cartel, por dentro y siguiendo la curva de arriba; en la curva, un capullo; abajo a la
+            // izquierda, un iris que sube desde la esquina; y arriba a la derecha, un rizo de látigo.
+            val oro = (if (e.background.luminance() < 0.5f) e.primary else e.tertiary).copy(alpha = 0.45f)
+            val a = 15 * d; val g = 16 * d
+            drawPath(Path().apply {
+                moveTo(6 * d, a + g); quadraticTo(6 * d, a, 6 * d + g, a); lineTo(w * 0.37f, a)
+                cubicTo(w * 0.45f, a, w * 0.44f, 6 * d, w / 2, 6 * d); cubicTo(w * 0.56f, 6 * d, w * 0.55f, a, w * 0.63f, a)
+                lineTo(w - 9 * d, a); lineTo(w - 6 * d, a + 3 * d); lineTo(w - 6 * d, h - 6 * d - g); quadraticTo(w - 6 * d, h - 6 * d, w - 6 * d - g, h - 6 * d)
+                lineTo(9 * d, h - 6 * d); lineTo(6 * d, h - 9 * d); close()
+            }, oro, style = Stroke(0.8f * d))
+            val fondo = e.surface
+            fun tenue(c: Color, k: Float) = androidx.compose.ui.graphics.lerp(fondo, c, k)
+            iris(Offset(22 * d, h - 7 * d), 44 * d, tenue(IRIS, 0.5f), tenue(TALLO, 0.5f), tenue(TALLO_SOMBRA, 0.5f))
+            latigo(Offset(w - 46 * d, a + 6 * d), Offset(w - 20 * d, a + 18 * d), 5 * d, 2.2f * d, oro, comba = 0.22f, horario = true, sombra = false)
         }
         TemaId.GALIA -> {
             // El marco de roble de la tablilla, por dentro; arriba a la derecha, la «S» de las monedas; abajo a la izquierda,
@@ -899,9 +909,16 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             drawRect(e.onSurface, Offset(0f, cy - 3 * d), Size(w, 3 * d))
             drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
         }
-        TemaId.NOUVEAU -> {
-            drawRect(e.onSurface, Offset(0f, cy - 3 * d), Size(w, 3 * d))
-            drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            // Dos líneas de látigo que llegan desde las puntas y se enroscan antes del medio, donde se posa una libélula.
+            val oro = (if (e.background.luminance() < 0.5f) e.primary else e.tertiary).copy(alpha = 0.7f)
+            for (lado in listOf(-1f, 1f)) {
+                val desde = Offset(if (lado < 0f) 4 * d else w - 4 * d, cy)
+                val hasta = Offset(w / 2 + lado * 20 * d, cy - 1.5f * d)
+                val pts = bezier(desde, Offset(desde.x + (hasta.x - desde.x) * 0.35f, cy + 2.6f * d), Offset(desde.x + (hasta.x - desde.x) * 0.7f, cy - 2.6f * d), hasta, 30)
+                drawPath(cinta(pts + puntosRizo(hasta, Offset(-lado, -0.2f), 2.6f * d, lado < 0f, 1.2f, 16)) { t -> (0.5f + 1f * sin(t * PI.toFloat())) * d }, oro)
+            }
+            libelula(Offset(w / 2, cy + 1 * d), 19 * d, 90f, 0f, LIBELULA, androidx.compose.ui.graphics.lerp(NACAR, e.surface, 0.2f), ORO)
         }
         TemaId.GALIA -> {
             // Una raya de oro a cada lado, con su perla en la punta, y en medio un torques pequeño.
@@ -1319,10 +1336,20 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             drawRect(inactivo, Offset(0f, cy - g / 2), Size(w, g), style = Stroke(maxOf(g * 0.15f, 0.8f * d)))
             for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
         }
-        TemaId.NOUVEAU -> {
-            if (x > 0f) drawRect(activo, Offset(0f, cy - g / 2), Size(x, g))
-            drawRect(inactivo, Offset(0f, cy - g / 2), Size(w, g), style = Stroke(maxOf(g * 0.15f, 0.8f * d)))
-            for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            // Lo que falta, un hilo fino; lo recorrido, un tallo que crece hasta donde va, echando hojas alternas, con su
+            // capullo en la punta.
+            linea(inactivo, x, w, maxOf(g * 0.22f, 0.7f * d), cap = StrokeCap.Round)
+            if (x > 0f) {
+                drawLine(activo, Offset(0f, cy), Offset(x, cy), maxOf(g * 0.5f, 1.2f * d), cap = StrokeCap.Round)
+                val paso = maxOf(g * 3.2f, 9f * d); var px = paso * 0.6f; var k = 0
+                while (px < x - g * 1.6f) {
+                    val s = if (k % 2 == 0) -1f else 1f; val l = maxOf(g * 1.3f, 3.6f * d)
+                    drawPath(hojaLanza(Offset(px, cy), Offset(px - l * 0.75f, cy + s * l * 0.7f), l * 0.5f, 0.15f * s), activo)
+                    px += paso; k++
+                }
+                drawPath(petalo(Offset(x - g * 0.2f, cy), Offset(x + maxOf(g * 1.3f, 3.4f * d), cy), maxOf(g * 0.9f, 2.4f * d)), activo)
+            }
         }
         TemaId.GALIA -> {
             // Lo que falta, una hebra fina; lo recorrido, la cuerda de oro de un torques, con los surcos de la torsión, que
@@ -1641,8 +1668,10 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
         }
         TemaId.NOUVEAU -> {
-            drawPath(Path().apply { moveTo(c.x - r * 0.7f, c.y - r * 0.9f); lineTo(c.x + r * 0.7f, c.y - r * 0.9f); lineTo(c.x, c.y + r * 0.1f); close() }, color)
-            drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
+            // Un cabujón de vidrio de Nancy: el disco con su reflejo arriba a la izquierda y, calado en medio, un capullo.
+            drawCircle(color, r * 0.9f, c)
+            drawArc(hueco.copy(alpha = 0.5f), 200f, 70f, false, Offset(c.x - r * 0.62f, c.y - r * 0.62f), Size(r * 1.24f, r * 1.24f), style = Stroke(r * 0.13f, cap = StrokeCap.Round))
+            drawPath(TrazosNouveau.petalo(Offset(c.x, c.y + r * 0.42f), Offset(c.x + r * 0.06f, c.y - r * 0.38f), r * 0.42f), hueco.copy(alpha = 0.65f))
         }
         TemaId.GALIA -> {
             // Un estátero: la moneda con su gráfila de perlas y la perla grande en el centro.

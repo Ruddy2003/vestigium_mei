@@ -90,6 +90,8 @@ private enum class BarridoTema {
     VELO,
     /** Galia: un remolino de hojas de roble que se abre desde el toque, como las que arranca el viento del robledal. */
     ROBLE,
+    /** Art nouveau: el rizo de una línea de látigo que se desenrolla desde el toque, como un helecho que se abre. */
+    RIZO,
 }
 
 /**
@@ -126,7 +128,9 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.TEMPLARIO -> MatizMovimiento(BarridoTema.CRUZ, 820, CubicBezierEasing(0.55f, 0f, 0.3f, 1f), 0f, -12f, 1.02f, 420, 55, FastOutSlowInEasing, 1.15f, 0.95f, 1600f)
     // El ojo que se abre; los expedientes entran de lado y el sello cae seco.
     TemaId.DISTOPIA -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
-    TemaId.NOUVEAU -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
+    // El rizo de la línea de látigo que se desenrolla desde el toque; las secciones suben despacio y se asientan como una
+    // hoja de papel sobre la piedra, y los botones ceden blandos, con un rebote apenas, como un tallo.
+    TemaId.NOUVEAU -> MatizMovimiento(BarridoTema.RIZO, 960, CubicBezierEasing(0.4f, 0f, 0.2f, 1f), 0f, 10f, 0.995f, 560, 75, CubicBezierEasing(0.3f, 0f, 0.2f, 1f), 0.95f, 0.7f, 600f)
     // El remolino de hojas de roble que se abre desde el toque; las secciones bajan de lado, meciéndose como hojas que
     // caen, y los botones ceden como la madera, con un rebote corto.
     TemaId.GALIA -> MatizMovimiento(BarridoTema.ROBLE, 900, CubicBezierEasing(0.35f, 0f, 0.25f, 1f), -10f, 12f, 0.99f, 500, 65, LinearOutSlowInEasing, 1.05f, 0.6f, 750f)
@@ -285,6 +289,10 @@ internal enum class VivoTema(val periodo: Int) {
      * el horizonte, las hogueras del campamento romano.
      */
     HOGUERAS(12000),
+    /** Art nouveau de día: tallos que crecen despacio por los bordes, echan sus hojas y abren su flor; y una libélula que pasa. */
+    TALLOS(64000),
+    /** Art nouveau de noche: los mismos tallos, que en vez de flor llevan una tulipa de vidrio que se enciende, una tras otra. */
+    LAMPARAS(64000),
     /** Básico: nada se mueve detrás (no se dibuja ni se anima). */
     NINGUNO(60000),
 }
@@ -300,7 +308,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.MEDIEVAL -> VivoTema.RAYO_ORO         // un rayo de luz con polvo de oro suspendido
     TemaId.TEMPLARIO -> VivoTema.ANTORCHAS        // la muralla almenada con antorchas que tiemblan y sueltan pavesas
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
-    TemaId.NOUVEAU -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
+    TemaId.NOUVEAU -> if (oscuro) VivoTema.LAMPARAS else VivoTema.TALLOS   // de día, los tallos que florecen; de noche, las lámparas que se encienden
     TemaId.GALIA -> if (oscuro) VivoTema.HOGUERAS else VivoTema.ROBLEDAL   // de día, las hojas y la niebla; de noche, las hogueras
     TemaId.ARCONTES -> if (oscuro) VivoTema.ESFERAS else VivoTema.POLVO_DORADO   // de día, el polvo en el rayo de sol; de noche, las esferas
     TemaId.FRENTE -> VivoTema.RADAR            // el barrido lento del radar; de noche, además, la antena que parpadea
@@ -428,6 +436,56 @@ private fun DrawScope.resplandorVivo(color: Color, centro: Offset, radio: Float,
     val c = color.copy(alpha = 1f)
     val b = PINCELES_RESPLANDOR.getOrPut(c.value.toLong()) { Brush.radialGradient(listOf(c, Color.Transparent), center = Offset.Zero, radius = 1f) }
     withTransform({ translate(centro.x, centro.y); scale(radio, radio, Offset.Zero) }) { drawCircle(b, 1f, Offset.Zero, alpha = a) }
+}
+
+/**
+ * Art nouveau: el fondo vivo. Seis tallos suben desde abajo por los dos bordes, cada uno a su paso: crecen despacio, echan
+ * sus hojas y un zarcillo, abren la flor, la sostienen y se desvanecen para volver a crecer. De día, de vez en cuando cruza
+ * una libélula. De noche, en vez de flor, cada tallo lleva una tulipa de vidrio que se enciende cuando el tallo termina de
+ * crecer, una tras otra. Los colores se mezclan con el fondo (no se transparentan), para que las hojas no se manchen al
+ * cruzarse.
+ */
+private fun DrawScope.tallosVivo(t: Float, noche: Boolean, e: ColorScheme, fuerza: Float) {
+    val w = size.width; val h = size.height; val u = 1.dp.toPx()
+    fun tinte(c: Color, a: Float) = androidx.compose.ui.graphics.lerp(e.background, c, (a * fuerza).coerceIn(0f, 1f))
+    // Cada tallo: dónde nace (fracción del ancho), su alto (fracción del alto), hacia dónde se curva y su fase.
+    val tallos = listOf(
+        floatArrayOf(0.035f, 0.46f, 1f, 0f), floatArrayOf(0.11f, 0.3f, 1f, 0.38f), floatArrayOf(0.2f, 0.17f, -1f, 0.71f),
+        floatArrayOf(0.97f, 0.52f, -1f, 0.2f), floatArrayOf(0.89f, 0.33f, -1f, 0.55f), floatArrayOf(0.8f, 0.19f, 1f, 0.88f),
+    )
+    val a = if (noche) 0.2f else 0.24f
+    for (k in tallos.indices) {
+        val (fx, fa, lado, fase) = tallos[k]
+        val ciclo = fraccionVivo(t + fase)
+        // Crece en la primera mitad (suave al empezar y al llegar), se queda y, al final, se desvanece.
+        val g = (ciclo / 0.5f).coerceIn(0f, 1f); val crecido = g * g * (3f - 2f * g)
+        val queda = if (ciclo > 0.86f) 1f - (ciclo - 0.86f) / 0.14f else 1f
+        val alto = minOf(h * fa, w * 1.1f)
+        val base = Offset(w * fx, h + 4f * u)
+        val al = a * queda
+        with(TrazosNouveau) {
+            tallo(base, alto, crecido, lado, maxOf(alto * 0.014f, 1.6f * u), tinte(if (noche) CAFE else TALLO, al), tinte(if (noche) HIERRO else TALLO_SOMBRA, al * 1.1f),
+                tinte(MALVA, al * 1.2f), capullo = !noche, corazon = tinte(IRIS_LENGUA, al))
+            if (noche && crecido >= 0.999f) {
+                // La tulipa se enciende poco a poco y se apaga con el tallo.
+                val luz = ((ciclo - 0.5f) / 0.08f).coerceIn(0f, 1f) * queda
+                tulipa(puntaTallo(base, alto, lado), maxOf(alto * 0.07f, 9f * u), luz * fuerza * 0.8f,
+                    tinte(VIDRIO_AMBAR, 0.3f + 0.4f * luz), tinte(VIDRIO_VIOLETA, 0.3f + 0.3f * luz), tinte(ORO, 0.35f))
+            }
+        }
+    }
+    // De día, una libélula que cruza despacio por arriba, una vez por vuelta, con su vuelo que sube y baja.
+    if (!noche) {
+        val q = ((fraccionVivo(t + 0.1f) - 0.3f) / 0.32f)
+        if (q in 0f..1f) {
+            val x = -0.08f * w + 1.16f * w * q
+            val y = h * (0.2f + 0.05f * senoVuelta(q * 1.5f)) + 6f * u * senoVuelta(q * 9f)
+            val rumbo = 90f + 12f * cosenoVuelta(q * 1.5f)
+            with(TrazosNouveau) {
+                libelula(Offset(x, y), 30f * u, rumbo, 0.5f + 0.5f * senoVuelta(t * 400f), tinte(LIBELULA, 0.3f), tinte(NACAR, 0.45f), tinte(ORO, 0.3f))
+            }
+        }
+    }
 }
 
 /**
@@ -730,6 +788,8 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 }
             }
         }
+        VivoTema.TALLOS -> tallosVivo(t, false, e, fuerza)
+        VivoTema.LAMPARAS -> tallosVivo(t, true, e, fuerza)
         VivoTema.CENIZA -> motas.take(24).forEach { m ->
             // Pavesas irregulares de papel quemado que caen dando tumbos; de noche, alguna conserva una brasa.
             val k = vueltas(m)
@@ -1712,6 +1772,35 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
                     junto = Path.combine(androidx.compose.ui.graphics.PathOperation.Union, junto, hoja)
                 }
                 ruta.addPath(junto)
+            }
+        }
+        BarridoTema.RIZO -> {
+            // El rizo de una línea de látigo que se desenrolla desde el toque: una cinta en espiral de vuelta y media que gira
+            // al abrirse y engorda hasta cerrarse sobre sí misma, junta con un círculo de radio r en el centro (así, al
+            // llegar a 1, cubre toda la pantalla).
+            if (p >= 0.985f) ruta.addRect(Rect(0f, 0f, w, h))
+            else if (p > 0f) {
+                val vueltas = 1.6f
+                val grande = r * 1.3f + 10f * u
+                val a = grande / (vueltas * 2f * PI.toFloat())
+                val banda = 2f * PI.toFloat() * a * (0.35f + 0.65f * minOf(1f, p * 1.3f))
+                val giro = -2f + 2.6f * p
+                val n = 90
+                val espiral = Path()
+                for (k in 0..n) {
+                    val th = vueltas * 2f * PI.toFloat() * k / n
+                    // La punta de la cinta se afina, como la de un trazo de pluma.
+                    val rr = a * th + banda * minOf(1f, (n - k) / (0.14f * n)).coerceAtLeast(0.05f)
+                    val x = c.x + rr * cos(th + giro); val y = c.y + rr * sin(th + giro)
+                    if (k == 0) espiral.moveTo(x, y) else espiral.lineTo(x, y)
+                }
+                for (k in n downTo 0) {
+                    val th = vueltas * 2f * PI.toFloat() * k / n
+                    val rr = a * th
+                    espiral.lineTo(c.x + rr * cos(th + giro), c.y + rr * sin(th + giro))
+                }
+                espiral.close()
+                ruta.addPath(Path.combine(androidx.compose.ui.graphics.PathOperation.Union, espiral, Path().apply { addOval(Rect(c, r)) }))
             }
         }
         BarridoTema.SELLO -> {

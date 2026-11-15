@@ -263,8 +263,9 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.TEMPLARIO -> BloqueoMarco(TextosBloqueo("La puerta de la encomienda", "☩ El rastrillo está echado: solo un hermano de la casa lo levanta.", "Levantar el rastrillo"), arriba = 18, reintentar = reintentar) { cs -> bloqueoRastrillo(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
             listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
-        TemaId.NOUVEAU -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
-            listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
+        // La entrada del metro, de noche o antes de abrir: el sello entre los dos candelabros de fundición, bajo el letrero,
+        // con la barandilla delante; abajo, la página del almanaque.
+        TemaId.NOUVEAU -> BloqueoMetro(TextosBloqueo("L'atelier est fermé", "La piedra está entintada, pero la prensa solo corre con tu mano.", "Abrir el taller"), reintentar)
         // La puerta de la casa grande, atrancada: el sello dentro del torques, entre ramas de roble, y la noche del año abajo.
         TemaId.GALIA -> BloqueoTorques(TextosBloqueo("La puerta está atrancada", "Lo que no se escribe, se recuerda. La tranca solo la quita la mano de quien vive aquí.",
             "Quitar la tranca"), reintentar)
@@ -483,6 +484,66 @@ private fun BloqueoTorques(tx: TextosBloqueo, reintentar: () -> Unit) {
         LemaBloqueo(tx.lema)
         BotonPrincipal(tx.boton, Modifier.padding(top = 20.dp)) { reintentar() }
         Text(Galia.fecha(hoy), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 18.dp))
+    }
+}
+
+/**
+ * Art nouveau: el taller cerrado, a la entrada del metro. Arriba, el título; en medio, el sello entre los dos candelabros
+ * de fundición de Guimard (con sus faroles, apagados de día y encendidos de noche), bajo el letrero y detrás de la
+ * barandilla; luego la banda, el lema y el botón; y al pie, la página del almanaque del día, con su flor.
+ */
+@Composable
+private fun BloqueoMetro(tx: TextosBloqueo, reintentar: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val hoy = remember { runCatching { io.github.ruddy2003.vestigium.data.Fechas.diaLogico() }.getOrElse { java.time.LocalDate.now().toString() } }
+    Column(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 34.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Text(tx.titulo, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+        Meandro(Modifier.padding(horizontal = 40.dp, vertical = 8.dp))
+        Box(Modifier.padding(vertical = 14.dp).size(260.dp, 250.dp).drawBehind { bloqueoMetro(cs) }, contentAlignment = Alignment.Center) {
+            SelloHuella(Modifier.padding(top = 40.dp).size(132.dp))
+        }
+        LemaBloqueo(tx.lema)
+        BotonPrincipal(tx.boton, Modifier.padding(top = 20.dp)) { reintentar() }
+        Text(Nouveau.fecha(hoy), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 18.dp))
+    }
+}
+
+/**
+ * Art nouveau: la entrada de metro alrededor del sello. Los dos candelabros de fundición suben por los lados y se doblan
+ * hacia dentro con su farol (encendido de noche, con su halo); entre las dos puntas, el letrero esmaltado con su filete de
+ * oro y un rizo en cada extremo; y abajo, la barandilla de fundición, con sus barrotes en S.
+ */
+private fun DrawScope.bloqueoMetro(cs: ColorScheme) {
+    val w = size.width; val h = size.height; val u = 1.dp.toPx(); val cx = w / 2
+    val oscuro = cs.background.luminance() < 0.5f
+    with(TrazosNouveau) {
+        val hierro = if (oscuro) androidx.compose.ui.graphics.lerp(HIERRO, Color.White, 0.12f) else HIERRO
+        if (oscuro) drawCircle(androidx.compose.ui.graphics.Brush.radialGradient(listOf(FAROL.copy(alpha = 0.1f), Color.Transparent), Offset(cx, h * 0.3f), w * 0.48f), w * 0.48f, Offset(cx, h * 0.3f))
+        // La barandilla: el pasamanos y los barrotes en S entre dos postes.
+        val yb = h * 0.84f
+        drawLine(hierro, Offset(w * 0.12f, yb), Offset(w * 0.88f, yb), 2.2f * u, StrokeCap.Round)
+        drawLine(hierro, Offset(w * 0.12f, h - 2f * u), Offset(w * 0.88f, h - 2f * u), 1.6f * u, StrokeCap.Round)
+        var x = w * 0.16f; var k = 0
+        while (x < w * 0.86f) {
+            val s = if (k % 2 == 0) 1f else -1f
+            drawPath(Path().apply { moveTo(x, yb); cubicTo(x + s * 5f * u, yb + (h - yb) * 0.3f, x - s * 5f * u, yb + (h - yb) * 0.7f, x, h - 2f * u) }, hierro.copy(alpha = 0.8f), style = Stroke(1.2f * u))
+            x += 10f * u; k++
+        }
+        val alto = h * 0.92f
+        // El letrero esmaltado entre los dos candelabros (detrás de los faroles): la placa verde de puntas redondas, con su filete de oro y dos rizos.
+        val yl = h - alto * 0.79f
+        val iz = w * 0.12f; val de = w * 0.88f; val al = 15f * u
+        drawRoundRect(androidx.compose.ui.graphics.lerp(hierro, Color.Black, 0.25f), Offset(iz, yl - al / 2), Size(de - iz, al), CornerRadius(al / 2))
+        drawRoundRect(if (oscuro) LUZ.copy(alpha = 0.8f) else ORO, Offset(iz + 2.5f * u, yl - al / 2 + 2.5f * u), Size(de - iz - 5f * u, al - 5f * u), CornerRadius(al / 2), style = Stroke(0.8f * u))
+        val oro = if (oscuro) LUZ else ORO
+        for (lado in listOf(-1f, 1f)) {
+            val q = Offset(cx + lado * (de - iz) * 0.36f, yl + 2.6f * u)
+            drawPath(linea(listOf(Offset(cx + lado * 4f * u, yl + 2.6f * u), q) + puntosRizo(q, Offset(lado, -0.3f), 2.4f * u, lado < 0f, 1.15f, 16)), oro, style = Stroke(1.1f * u, cap = StrokeCap.Round))
+        }
+        drawPath(petalo(Offset(cx, yl + 3.4f * u), Offset(cx, yl - 4.4f * u), 4.6f * u), oro)
+        // Los dos candelabros, que se doblan hacia dentro con su farol, delante del letrero.
+        candelabro(Offset(w * 0.1f, h), alto, 1f, hierro, if (oscuro) 1f else 0f)
+        candelabro(Offset(w * 0.9f, h), alto, -1f, hierro, if (oscuro) 1f else 0f)
     }
 }
 
@@ -1212,7 +1273,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> false
-    TemaId.NOUVEAU -> false
+    TemaId.NOUVEAU -> false           // las dos líneas de látigo que abrazan el ícono, en trazo
     TemaId.GALIA -> false             // el torques alrededor del ícono, en trazo
     TemaId.ARCONTES -> false          // el nicho de piedra, en trazo
     TemaId.FRENTE -> false            // la retícula que fija el blanco, en trazo
@@ -1255,7 +1316,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> true
-    TemaId.NOUVEAU -> true
+    TemaId.NOUVEAU -> true            // el cabujón de esmalte en su aro de látigo, lleno
     TemaId.GALIA -> true              // el estátero de oro, lleno
     TemaId.ARCONTES -> true           // el amuleto de oro, lleno
     TemaId.FRENTE -> true             // el pulsador ámbar de transmitir, encendido
@@ -1365,9 +1426,16 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
             drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
             drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
         }
-        TemaId.NOUVEAU -> girar(-5f, Offset(cx, cy)) {
-            drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
-            drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
+        // Dos líneas de látigo que nacen juntas bajo el ícono, lo abrazan por los lados y se enroscan arriba, cada una hacia
+        // fuera; crecen al aparecer.
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            val pie = Offset(cx, h + 1f * u)
+            for (lado in listOf(-1f, 1f)) {
+                val pts = puntosLatigo(pie, Offset(cx + lado * 15f * u, 5f * u), 3f * u, -lado * 0.2f, lado < 0f)
+                val n = maxOf(2, (pts.size * (0.35f + 0.65f * p)).toInt())
+                drawPath(cinta(pts.subList(0, minOf(n, pts.size))) { t -> (0.6f + 1.2f * kotlin.math.sin(t * Math.PI.toFloat()).coerceAtLeast(0f)) * u }, c)
+            }
+            drawCircle(c, 1.8f * u, pie)
         }
         // Un torques alrededor del ícono, que se cierra al aparecer, con un disco en cada punta del hueco de abajo.
         TemaId.GALIA -> {
@@ -1652,9 +1720,15 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
             drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
         }
-        TemaId.NOUVEAU -> girar(-4f, Offset(cx, cy)) {
-            drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
-            drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
+        // Un cabujón de esmalte del color del tema, con su reflejo de vidrio, dentro del aro de látigo de oro del sello.
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            val o = Offset(cx, cy)
+            val oscuro = cs.background.luminance() < 0.5f
+            drawCircle(Color.Black.copy(alpha = 0.18f), 21.5f * u, o + Offset(0.8f * u, 1.2f * u))
+            drawCircle(androidx.compose.ui.graphics.Brush.linearGradient(listOf(androidx.compose.ui.graphics.lerp(c, Color.White, 0.22f), c, androidx.compose.ui.graphics.lerp(c, Color.Black, 0.28f)),
+                Offset(cx - 21f * u, cy - 21f * u), Offset(cx + 21f * u, cy + 21f * u)), 21.5f * u, o)
+            drawArc(Color.White.copy(alpha = 0.22f), 200f, 70f, false, Offset(cx - 17f * u, cy - 17f * u), Size(34f * u, 34f * u), style = Stroke(2f * u, cap = StrokeCap.Round))
+            anilloLatigo(o, 24f * u, 2.6f * u, if (oscuro) ORO else androidx.compose.ui.graphics.lerp(ORO, Color(0xFF7A5810), 0.25f), ORO_BRILLO)
         }
         // El estátero de oro: el cospel batido a mano, no del todo redondo, con su canto en sombra, la gráfila de perlas
         // por dentro y el brillo del roce arriba a la izquierda.
@@ -1915,7 +1989,14 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         }
         // Barra gruesa de cartel.
         TemaId.DISTOPIA -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
-        TemaId.NOUVEAU -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
+        // El filete y, debajo, una línea de látigo de punta a punta: una sola onda larga, que se enrosca en cada extremo.
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            filete()
+            val pts = List(61) { k -> val f = k / 60f; Offset(10f * u + (w - 20f * u) * f, 3.2f * u + 1f * u * kotlin.math.sin(2 * Math.PI.toFloat() * f)) }
+            val ini = pts.first(); val fin = pts.last()
+            val todo = puntosRizo(ini, Offset(-1f, 0.3f), 1.5f * u, false, 1.1f, 12).reversed() + pts + puntosRizo(fin, Offset(1f, -0.3f), 1.5f * u, false, 1.1f, 12)
+            drawPath(linea(todo), acento, style = Stroke(1f * u, cap = StrokeCap.Round))
+        }
         // El filete y, debajo, la cuerda de oro de un torques, con los surcos de la torsión.
         TemaId.GALIA -> { filete(); drawLine(acento, Offset(0f, 3.2f * u), Offset(w, 3.2f * u), 1.6f * u)
             var x = 0f; while (x < w) { drawLine(cs.surface.copy(alpha = 0.7f), Offset(x, 4f * u), Offset(x + 1.2f * u, 2.4f * u), 0.6f * u); x += 3.2f * u } }
@@ -2353,7 +2434,7 @@ private fun origenTransicion(tema: TemaId, atras: Boolean): Alignment = when (te
     TemaId.MEDIEVAL -> Alignment.TopStart
     TemaId.TEMPLARIO -> Alignment.TopStart
     TemaId.DISTOPIA -> Alignment.TopStart
-    TemaId.NOUVEAU -> Alignment.TopStart
+    TemaId.NOUVEAU -> if (atras) Alignment.TopEnd else Alignment.TopStart                // la hoja se posa desde su esquina
     TemaId.GALIA -> Alignment.TopCenter                                        // la pantalla sale de la niebla desde el centro
     TemaId.ARCONTES -> Alignment.TopCenter                                     // el velo se abre desde el centro
     TemaId.FRENTE -> Alignment.TopCenter                                       // la imagen rueda y se asienta en el tubo, desde el centro
@@ -2424,7 +2505,14 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
             (scaleOut(t(240), targetScale = 0.97f) + fadeOut(t(200)))
         // Cajón de archivo: cae de golpe desde arriba.
         TemaId.DISTOPIA -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
-        TemaId.NOUVEAU -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
+        // La hoja que sale de la piedra litográfica: la pantalla nueva se posa desde su esquina de arriba, bajando un poco en
+        // una curva suave, y se aclara como la tinta al secarse; la de antes se aparta despacio.
+        TemaId.NOUVEAU -> {
+            val posa = androidx.compose.animation.core.CubicBezierEasing(0.3f, 0f, 0.15f, 1f)
+            (slideIn(tween(420, 0, posa)) { androidx.compose.ui.unit.IntOffset(dir * it.width / 18, -it.height / 40) } +
+                scaleIn(tween(420, 0, posa), initialScale = 0.97f, transformOrigin = TransformOrigin(if (atras) 1f else 0f, 0f)) + fadeIn(t(360))) togetherWith
+                (fadeOut(t(260)) + scaleOut(t(260), targetScale = 0.99f))
+        }
         // La niebla del robledal: la pantalla nueva sale de la niebla meciéndose apenas de lado, como una hoja que se asienta,
         // y la de antes se deshace hacia arriba, como el humo.
         TemaId.GALIA -> {

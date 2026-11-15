@@ -670,12 +670,17 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
             }
         }
+        // Una tira de vidrio de Nancy: la pista pálida con su filete; lo lleno, el vidrio que pasa de claro a hondo, con su brillo
+        // arriba, y en la punta un rizo de látigo que se enrosca.
         TemaId.NOUVEAU -> {
-            drawRect(color.copy(alpha = 0.4f), Offset(0.5f * d, 0.5f * d), Size(w - d, h - d), style = Stroke(d))
+            drawRoundRect(pista, Offset.Zero, size, androidx.compose.ui.geometry.CornerRadius(h / 2))
             if (fw > 0f) {
-                drawRect(color.copy(alpha = 0.35f), Offset.Zero, Size(fw, h))
-                clipRect(right = fw) { var x = -h; while (x < fw) { drawLine(color, Offset(x, h), Offset(x + h, 0f), 1.6f * d); x += 3.2f * d } }
-                drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
+                drawRoundRect(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(lerp(color, Color.White, 0.45f), color, lerp(color, Color.Black, 0.25f)), 0f, fw), Offset.Zero, Size(fw, h), androidx.compose.ui.geometry.CornerRadius(h / 2))
+                if (fw > 6f * d) drawLine(claro, Offset(h * 0.5f, h * 0.28f), Offset(fw - h * 0.5f, h * 0.28f), 0.8f * d, StrokeCap.Round)
+                if (fw > 10f * d) {
+                    val pts = io.github.ruddy2003.vestigium.ui.TrazosNouveau.puntosLatigo(Offset(fw - h * 1.6f, h * 0.75f), Offset(fw - h * 0.4f, h * 0.5f), h * 0.22f, 0.2f, false)
+                    drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.cinta(pts) { k -> d * (1f - 0.6f * k) }, oscuro)
+                }
             }
         }
         // La faja de lana a cuadros, tejida: la pista es la urdimbre clara y lo lleno, la lana del color con sus cuadros cruzados
@@ -1118,11 +1123,20 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)
             marcas(24, 4f * d, 2.2f * d, tinta.copy(alpha = 0.6f))
         }
+        // La esfera como un medallón de 1900: la libélula en el centro, el anillo de hojas que la rodea y, por fuera, una hoja
+        // chica en cada hora (las de 0, 6, 12 y 18, más largas).
         TemaId.NOUVEAU -> {
-            val l = rc * 0.7f
-            drawPath(Path().apply { moveTo(c.x - l, c.y); quadraticTo(c.x, c.y - l * 0.9f, c.x + l, c.y); quadraticTo(c.x, c.y + l * 0.9f, c.x - l, c.y); close() }, tinta.copy(alpha = 0.5f), style = Stroke(1.5f * d))
-            drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)
-            marcas(24, 4f * d, 2.2f * d, tinta.copy(alpha = 0.6f))
+            drawCircle(cs.primary.copy(alpha = 0.06f), rc, c)
+            drawCircle(linea.copy(alpha = 0.5f), rc * 0.86f, c, style = Stroke(0.8f * d))
+            for (k in 0 until 12) {
+                val a = k * 30f - 75f
+                drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.hojaLanza(polarFig(c, rc * 0.86f, a - 12f), polarFig(c, rc * 0.9f, a + 12f), rc * 0.08f, 0.3f), cs.primary.copy(alpha = 0.35f))
+            }
+            with(io.github.ruddy2003.vestigium.ui.TrazosNouveau) { libelula(c, rc * 0.95f, -20f, 0f, cs.primary.copy(alpha = 0.75f), cs.surface.copy(alpha = 0.8f), cs.tertiary.copy(alpha = 0.8f)) }
+            for (k in 0 until 24) {
+                val a = k * 15f - 90f; val largo = if (k % 6 == 0) 6f * d else 3f * d
+                drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.hojaLanza(polarFig(c, ro + 1.5f * d, a), polarFig(c, ro + 1.5f * d + largo, a), largo * 0.4f), linea.copy(alpha = if (k % 6 == 0) 0.9f else 0.6f))
+            }
         }
         // La noche antes que el día (César 6.18): la mitad de la noche, de las 18 a las 6, en una banda más oscura con la luna
         // arriba, y en el centro la rueda votiva; la hoguera del banquete a las 20.

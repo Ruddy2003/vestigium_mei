@@ -224,7 +224,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.TEMPLARIO -> LaminaRascar(0xFF2E3338.toInt(), 0xFF7E868E.toInt(), 0xFFDCE2E6.toInt())
     // Gris de ministerio: chapa sin brillo.
     TemaId.DISTOPIA -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
-    TemaId.NOUVEAU -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
+    // El vidrio de Nancy: del violeta hondo al ámbar, con su brillo.
+    TemaId.NOUVEAU -> LaminaRascar(0xFF4A3466.toInt(), 0xFFB08A4E.toInt(), 0xFFF2E2B0.toInt())
     TemaId.GALIA -> LaminaRascar(0xFF2E2A1C.toInt(), 0xFF9A6A3A.toInt(), 0xFFE2B87E.toInt())   // el bronce del caldero
     // El oro de más del mundo de abajo, el del Demiurgo, con la sombra violeta de lo que hay debajo.
     TemaId.ARCONTES -> LaminaRascar(0xFF3A2A40.toInt(), 0xFFD4A62A.toInt(), 0xFFFFF0B8.toInt())
@@ -419,11 +420,23 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
             c.drawCircle(x, y, s * 0.42f, relleno)
         }
-        TemaId.NOUVEAU -> tresbolillo { x, y ->
-            // El ojo que todo lo mira.
-            val s = l * 0.15f
-            c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
-            c.drawCircle(x, y, s * 0.42f, relleno)
+        TemaId.NOUVEAU -> {
+            // El vidrio grabado: un iris al tresbolillo (las hojas de espada, el tallo y la flor) y, entre uno y otro, la línea de
+            // látigo que se enrosca.
+            tresbolillo { x, y ->
+                val s = l * 0.12f
+                c.drawLine(x, y + s * 1.2f, x, y - s * 0.3f, linea)
+                c.drawPath(Path().apply { moveTo(x - s * 0.15f, y + s * 1.2f); quadTo(x - s * 0.9f, y + s * 0.4f, x - s * 0.8f, y - s * 0.2f); quadTo(x - s * 0.4f, y + s * 0.5f, x - s * 0.15f, y + s * 1.2f); close() }, relleno)
+                c.drawPath(Path().apply {
+                    moveTo(x, y - s * 0.3f); quadTo(x - s * 0.5f, y - s * 0.9f, x, y - s * 1.3f); quadTo(x + s * 0.5f, y - s * 0.9f, x, y - s * 0.3f); close()
+                    moveTo(x, y - s * 0.3f); quadTo(x - s * 0.9f, y - s * 0.6f, x - s * 0.8f, y + s * 0.1f); close()
+                    moveTo(x, y - s * 0.3f); quadTo(x + s * 0.9f, y - s * 0.6f, x + s * 0.8f, y + s * 0.1f); close()
+                }, relleno)
+            }
+            for ((x, y) in listOf(l / 2 to 0f, l / 2 to l, 0f to l / 2, l to l / 2)) {
+                val s = l * 0.1f
+                c.drawPath(Path().apply { moveTo(x - s * 1.4f, y + s * 0.4f); cubicTo(x - s * 0.6f, y - s * 0.8f, x + s * 0.6f, y + s * 0.8f, x + s * 0.9f, y - s * 0.2f); quadTo(x + s * 1.1f, y - s * 0.8f, x + s * 0.55f, y - s * 0.7f); quadTo(x + s * 0.35f, y - s * 0.35f, x + s * 0.7f, y - s * 0.3f) }, linea)
+            }
         }
         TemaId.GALIA -> {
             // La rueda votiva al tresbolillo (el aro, los cuatro rayos y el cubo) y, entre una y otra, la onda de La Tène en ese.

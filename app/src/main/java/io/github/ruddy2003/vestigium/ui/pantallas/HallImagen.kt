@@ -116,7 +116,8 @@ object HallImagen {
         TemaId.MEDIEVAL -> "Liber vestigiorum meorum" to "Explicit liber · Deo gratias"
         TemaId.TEMPLARIO -> "Domus Templi · Vestigium Mei" to "Non nobis, Domine, sed nomini tuo da gloriam"
         TemaId.DISTOPIA -> "EXPEDIENTE 07-118 · VESTIGIUM MEI" to "DOCUMENTO REVISADO · ARCHÍVESE"
-        TemaId.NOUVEAU -> "EXPEDIENTE 07-118 · VESTIGIUM MEI" to "DOCUMENTO REVISADO · ARCHÍVESE"
+        // El rótulo de la vitrina en la Exposición de 1900 y, al pie, la mención del jurado para lo que ya no compite.
+        TemaId.NOUVEAU -> "Exposition des souvenirs · Vestigium Mei" to "Médaille d'or, hors concours"
         // Lo que se ofrece, como en la dedicatoria galo-griega de Orgon (ΔΕΔΕ, «dio»), y el canto de los bardos (Diodoro 5.31).
         TemaId.GALIA -> "ΔΕΔΕ («ofreció») · Vestigium Mei" to "Colgado en la casa grande, que lo cante el bardo"
         // Lo que el iniciado guarda en la jarra, y lo que se dice en voz baja al cerrarla.

@@ -11,9 +11,10 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
 /*
  * Los calendarios del grupo 9: las otras vidas de los temas del lote 10 (`docs/diseno/PLAN_TEMAS.md`, 10a a 10g). Por
  * ahora, la de Frente exterior (10c), Tadeo, el ladrón de piezas al que recluta la red; la de Arcontes (10d), Eleazar,
- * el salador de pescado de Magdala, y la de Galia (10e), Segomaros, el aprendiz de los druidas de Gergovia. Siguen las
- * reglas de `AnioPiloto.kt`; el de Tadeo, el estilo de los de ficción de `AnioG7.kt`, y los de Eleazar y Segomaros, el de
- * las personas inventadas en mundos reales (Zaynab y Bernat en `AnioG4.kt`).
+ * el salador de pescado de Magdala; la de Galia (10e), Segomaros, el aprendiz de los druidas de Gergovia, y la de Art
+ * nouveau (10f), Marguerite, la aprendiz de un taller de litografía de París. Siguen las reglas de `AnioPiloto.kt`; el de
+ * Tadeo, el estilo de los de ficción de `AnioG7.kt`, y los de Eleazar, Segomaros y Marguerite, el de las personas
+ * inventadas en mundos reales (Zaynab y Bernat en `AnioG4.kt`).
  *
  * Lo propio de este grupo:
  *
@@ -29,11 +30,15 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
  *   historia avanza del 54 al 50 a. C.: la escuela, la Galia inquieta, el levantamiento, las últimas resistencias y la
  *   Galia conquistada. Lo que vuelve casi cada año (el muérdago, la siembra, la asamblea de los druidas, la siega y
  *   Samonios) comparte su id y su texto; lo que cambia con la guerra lleva otro id.
- * - Los otros dos temas del lote (Art nouveau y Psicodelia) también son personas inventadas en mundos reales:
- *   cuando lleguen, sus calendarios podrán tener días históricos con su fuente.
+ * - **Art nouveau también es una persona inventada en un mundo real,** con unos 20 días por temporada. Su historia avanza
+ *   de 1898 a 1902: entra de aprendiz, la víspera de la Exposición, el año de la Exposición y del metro, los faroles de
+ *   las entradas y la jornada de diez horas y media. Lo que vuelve cada año (el Año Nuevo, la visita a Auteuil y el
+ *   inventario del taller) comparte su id y su texto.
+ * - El otro tema del lote (Psicodelia) también será una persona inventada en un mundo real: cuando llegue, su
+ *   calendario podrá tener días históricos con su fuente.
  */
 internal object AnioG9 {
-    val TODOS: List<Calendario> by lazy { listOf(AGENTE, INICIADO, APRENDIZ) }
+    val TODOS: List<Calendario> by lazy { listOf(AGENTE, INICIADO, APRENDIZ, LITOGRAFA) }
 
     /**
      * Días «históricos» sin enlace porque su fecha sale de un cálculo: en la ficción no hay ninguno, y en el calendario de
@@ -868,5 +873,254 @@ internal object AnioG9 {
             Estado("campana", "se_une", "vuelve_gergovia"), Estado("campana", "a_bibracte", "alesia"),
             Estado("alesia", "alesia", "entrega"), Estado("cautivo", "entrega", "liberados"),
         ),
+    )
+
+    // =====================================================================
+    //  Marguerite, aprendiz de un taller de litografía. París, de 1898 a 1902.
+    // =====================================================================
+    //
+    // La ficha es la de PLAN_TEMAS, 10f («Otra vida»), con las correcciones de `docs/diseno/temas/fuentes_nouveau.md`
+    // (sección 1). Lo que allí va como «[sin verificar]» no se afirma aquí. Es una persona inventada en un mundo real
+    // (10a): sus días históricos y aproximados llevan su fuente; lo de su vida es inventado.
+    //
+    // Dónde (recurso, corrección 8): el taller de monsieur Ferrand está cerca del Palais-Royal, y su casa, en el faubourg
+    // Saint-Antoine, cerca de la Bastille. Las dos estaciones son de la línea 1 y abren el 19 de julio de 1900: desde ese
+    // día vuelve en el metro; antes, a pie. Montmartre, siempre a pie (el metro llega a Anvers el 7 de octubre de 1902).
+    // Las imprentas de verdad (Chaix, Lemercier, Champenois) solo salen de lejos; el taller de Ferrand es inventado. Si un
+    // taller de litografía tomaba muchachas de aprendiz está **[sin verificar]** (`fuentes_nouveau.md`, sección 8).
+    //
+    // Su gente (toda inventada): su padre, ebanista del faubourg; su madre, que cose en casa; Paul, su hermano menor, que
+    // entra de aprendiz con su padre en la 3 y se corta un dedo en la 4; la abuela, a la que visitan el día de Año Nuevo;
+    // el tío Jules, jardinero de los invernaderos del Fleuriste municipal de Auteuil, al que va a ver una vez al año (así no
+    // hace falta saber si los invernaderos se abrían al público: va a verlo a él). En el taller: monsieur Ferrand, el
+    // patrón; Gustave, el prensista; el viejo Anselme, el dibujante de las letras, que le enseña (se le cansan los ojos en
+    // la 4, se retira en la 5), y Berthe, la otra aprendiz, su amiga de las noches de Montmartre, que se casa con Lucien,
+    // un tornero, en la 3 y tiene una niña en la 5. Henri, el cajista de la imprenta de la esquina, le regala lilas en la 4
+    // («Lilas: première émotion d'amour», *Le Langage des fleurs*, p. 205) y le pide que se case con él en la 5; ella le
+    // dice que lo pensará («Marguerite des prés: j'y songerai», p. 205) y, en diciembre, que sí. La gente real (Zola, Mucha,
+    // Sarah Bernhardt, Loubet, Millerand, Guimard, Gallé) sale de lejos: un periódico, un cartel, un nombre, una ley.
+    //
+    // Las temporadas, de 1898 a 1902 (las de la propuesta, sin cambios):
+    // 1. **1898, entra de aprendiz.** Moler la tinta, graniar la piedra, la primera paga; *J'accuse…!* (13 de enero); las
+    //    seis líneas del metro, de utilidad pública (30 de marzo); el Grand Palais y el puente Alejandro III, en obras; las
+    //    obras de la línea 1 (4 de octubre); el cartel de Mucha para *Médée*. Termina entintando su primera piedra.
+    // 2. **1899, la víspera.** Pone los pliegos en sus marcas; el concurso de las entradas del metro (10 de junio); el cartel
+    //    de Mucha para *Hamlet*; el Petit Palais en obras; la prensa de vapor; su primera flor en una piedra; el encargo de
+    //    un cartel para la Exposición; el cuaderno de dibujo.
+    // 3. **1900, la Exposición y el metro.** La ley del 30 de marzo; la Exposición, del 14 de abril al 12 de noviembre; el
+    //    Grand Palais (1 de mayo); el Palacio de la Electricidad; la línea entregada para las pruebas (15 de junio); el metro
+    //    (19 de julio) y sus estaciones (6 y 13 de agosto, 1 de septiembre); los ramales de octubre y diciembre.
+    // 4. **1901, los faroles.** Los candelabros con sus faroles y el letrero «Métropolitain»; la Escuela de Nancy (13 de
+    //    febrero); el Divan japonais se vuelve teatro (agosto); dibuja letras en la piedra; las lilas de Henri.
+    // 5. **1902, la jornada de diez horas y media** (1 de abril). Deja de ser aprendiz; su primera piedra entera; el
+    //    pabellón de la Bastille y los letreros firmados por Guimard; el metro llega a Anvers, al pie de Montmartre (7 de
+    //    octubre); el museo del Petit Palais (11 de diciembre); Henri.
+    //
+    // Las fechas:
+    // - «Histórico», solo las que `fuentes_nouveau.md` da con día: *J'accuse…!* (sección 11, frase 8), el metro y sus
+    //   estaciones (5), la Exposición, el Grand Palais y el puente (6), la ley de 1900 y su escalón de 1902 (8), la Escuela de
+    //   Nancy (7) y el Petit Palais (6). La línea 2 hasta Porte Dauphine va «aproximado», porque la página da el 13 y el 3
+    //   de diciembre. Lo que solo tiene año o mes (los carteles de Mucha, los edificios en obras, los faroles de 1901, el
+    //   pabellón de 1902, el Divan japonais en agosto de 1901) va «aproximado», con el día elegido dentro.
+    // - Antes de abrir sus estaciones, los trenes pasaban sin parar por las que no estaban terminadas (sección 5): el cuento
+    //   lo cuenta en las tardes de finales de julio.
+    // - **No se usan** fechas que el archivo de fuentes no trae (el 14 de julio, la muerte de Zola, el estreno de *Cyrano*),
+    //   ni el Trianon-Concert o el Élysée-Montmartre, que ardieron en 1900 sin día conocido.
+    //
+    // Claves de escena: fiesta, obras (vallas y tierra del metro delante del taller), carteles (la valla de enfrente
+    // llena de carteles nuevos), prensa (un carro con la prensa de vapor delante de la puerta), tormenta, exposicion
+    // (banderas y, de noche, el resplandor de la Exposición en el cielo), luces (el Palacio de la Electricidad), metro (la
+    // entrada recién abierta), faroles (los candelabros recién puestos) y nieve. Nunca personas.
+    //
+    // Arcos: metro (la entrada de la estación de Palais-Royal, delante del taller: 0 = la calle sin obras; de 0.15 a 0.5,
+    // las vallas y la tierra de las obras, que van a más; 0.75 = la barandilla de fundición con su pórtico, abierta el 19 de
+    // julio de 1900; 1 = con los candelabros, sus faroles y el letrero «Métropolitain», desde la primavera de 1901),
+    // carteles (lo llena que está la valla de enfrente: lo más, durante la Exposición) y hojas (los árboles de la calle:
+    // desnudos en invierno, llenos en verano). **[Diseño propio]** el tipo de entrada: de Palais-Royal las fuentes no dicen
+    // si fue barandilla o edículo; se toma la barandilla, que es lo más común (104 y 47 de los 167).
+    //
+    // Estados: «exposicion» (temporada 3, del 14 de abril a la víspera del cierre): la calle llena de visitantes, la
+    // Exposición algunas noches en vez del café-concierto, el resplandor en el cielo. En la temporada 5, que desde 2032 se
+    // repite, lo que no debe moverse es rito, fiesta o suceso del mundo; sus sucesos personales no forman cadenas.
+    //
+    // Lo que el cuadro tiene que mostrar para contar lo mismo que el cuento (el cuadro de Art nouveau va después de la
+    // tanda S19; la ficha del tema, PLAN_TEMAS 10f, pide la entrada de metro bajo la lluvia y un invernadero):
+    // - **La calle del taller (lugar principal):** la esquina con la entrada de metro según `metro` (las obras, la
+    //   barandilla de fundición verde y, desde 1901, los candelabros con sus dos faroles rojo anaranjado y el letrero; el
+    //   color de 1900 es dudoso, corrección 7), de preferencia bajo la lluvia; el escaparate del taller con un cartel a medio
+    //   secar; la valla de enfrente según `carteles`; los árboles según `hojas`. De día, la luz de la calle; de noche, el
+    //   escaparate a oscuras y la luz de la calle mojada. Durante «exposicion», banderas y, de noche, el resplandor de la
+    //   Exposición en el cielo, hacia el oeste.
+    // - **El invernadero de Auteuil (vuelve cada año, decisión 21):** los días `auteuil`, el invernadero de fundición y
+    //   vidrio de Formigé (1895–1898, corrección 18) con la luz que se filtra; que el turquesa de hoy sea el de entonces
+    //   está [sin verificar], así que el cuadro no tiene que pintarlo turquesa.
+
+    private val FR = "https://fr.wikipedia.org/wiki/"
+    private val H = HISTORICO
+    private val FN_JACCUSE = "«J'accuse…!», en L'Aurore" to "${FR}J%27accuse%E2%80%A6%21"
+    private val FN_LINEA1 = "La línea 1 del metro de París" to "${FR}Ligne_1_du_m%C3%A9tro_de_Paris"
+    private val FN_LINEA2 = "La línea 2 del metro de París" to "${FR}Ligne_2_du_m%C3%A9tro_de_Paris"
+    private val FN_LINEA6 = "La línea 6 del metro de París (el ramal de Trocadéro)" to "${FR}Ligne_6_du_m%C3%A9tro_de_Paris"
+    private val FN_ENTRADAS = "Las entradas de metro de Guimard" to "${FR}Entr%C3%A9e_de_m%C3%A9tro_Guimard"
+    private val FN_EXPO = "La Exposición Universal de 1900" to "${FR}Exposition_universelle_de_1900"
+    private val FN_GRAND_PALAIS = "El Grand Palais" to "${FR}Grand_Palais_(Paris)"
+    private val FN_PETIT_PALAIS = "El Petit Palais" to "${FR}Petit_Palais"
+    private val FN_PUENTE = "El puente Alejandro III" to "${FR}Pont_Alexandre-III"
+    private val FN_MUCHA = "Alfons Mucha" to "${W}Alphonse_Mucha"
+    private val FN_CHAIX = "Napoléon Chaix y su imprenta" to "${FR}Napol%C3%A9on_Chaix"
+    private val FN_LANGAGE = "El lenguaje de las flores" to "${FR}Langage_des_fleurs"
+    private val FN_LEY = "Marzo de 1900: la ley del 30 de marzo" to "${FR}Mars_1900"
+    private val FN_1902 = "1902 en Francia: la jornada de diez horas y media" to "${FR}1902_en_France"
+    private val FN_NANCY = "La Escuela de Nancy" to "${W}%C3%89cole_de_Nancy"
+    private val FN_DIVAN = "El Divan japonais (hoy, Le Divan du Monde)" to "${FR}Le_Divan_du_Monde"
+
+    /** Lo que vuelve cada año: los mismos ids, el mismo texto. */
+    private val ANIO_NUEVO = fiesta("anio_nuevo", "01-01", "El día de Año Nuevo: la visita a la abuela, con los botines de los domingos", certeza = INV)
+    private fun auteuil(fecha: String) = suceso("auteuil", fecha, "Va a Auteuil a ver a su tío, jardinero de los invernaderos de la ciudad")
+    private val INVENTARIO = rito("inventario", "12-29", "El inventario de fin de año: se cuentan y se numeran las piedras del taller", certeza = INV)
+
+    val LITOGRAFA = Calendario(
+        vida = "litografa",
+        estaciones = Calendario.TEMPLADO_NORTE,
+        // París: inviernos frescos y grises, con niebla y alguna nevada; lluvia repartida por todo el año; veranos templados,
+        // con tormentas por la tarde. [Aproximación]
+        clima = listOf(
+            mes(despejado = 4, nubes = 12, lluvia = 7, nieve = 2, niebla = 5, viento = 1), mes(despejado = 5, nubes = 11, lluvia = 7, nieve = 2, niebla = 4, viento = 2),
+            mes(despejado = 7, nubes = 10, lluvia = 8, nieve = 1, niebla = 2, viento = 3), mes(despejado = 9, nubes = 10, lluvia = 9, tormenta = 1, niebla = 1, viento = 2),
+            mes(despejado = 11, nubes = 9, lluvia = 8, tormenta = 2, viento = 1), mes(despejado = 13, nubes = 8, lluvia = 6, tormenta = 3, viento = 1),
+            mes(despejado = 15, nubes = 7, lluvia = 5, tormenta = 4), mes(despejado = 14, nubes = 7, lluvia = 5, tormenta = 4, viento = 1),
+            mes(despejado = 12, nubes = 9, lluvia = 6, tormenta = 1, niebla = 2, viento = 1), mes(despejado = 8, nubes = 10, lluvia = 8, niebla = 5, viento = 2),
+            mes(despejado = 5, nubes = 12, lluvia = 9, nieve = 1, niebla = 5, viento = 2), mes(despejado = 4, nubes = 12, lluvia = 8, nieve = 2, niebla = 5, viento = 1),
+        ),
+        temporadas = listOf(
+            TemporadaVida("1898", "obras",
+                "Marguerite entra de aprendiz en el taller de litografía de monsieur Ferrand: muele la tinta, aprende a graniar las piedras y cobra su primera paga. En enero, Zola publica «J'accuse…!». En marzo, las seis primeras líneas del metro se declaran de utilidad pública, y en octubre empiezan las obras de la línea 1. El Grand Palais y el puente Alejandro III van subiendo. Va por primera vez a La Cigale con Berthe, se quema la mano con el ácido, ve en las vallas el cartel de Mucha para Médée y visita a su tío en los invernaderos de Auteuil. En diciembre entinta su primera piedra.",
+                listOf(
+                    ANIO_NUEVO,
+                    suceso("entra_taller", "01-02", "Entra de aprendiz en el taller de litografía de monsieur Ferrand"),
+                    mundo("jaccuse", "01-13", "Zola publica «J'accuse…!» en L'Aurore, y en el taller no se habla de otra cosa", certeza = H, fuente = FN_JACCUSE),
+                    suceso("moler_tinta", "01-27", "Le enseñan a moler la tinta en la losa, con la moleta, hasta que no cruja"),
+                    suceso("primera_paga", "02-05", "Su primera paga: se la da entera a su madre, que le devuelve unas monedas"),
+                    suceso("graniar", "02-21", "Aprende a graniar una piedra: borrar con arena y agua el dibujo del cartel de antes"),
+                    mundo("seis_lineas", "03-30", "Se declaran de utilidad pública las seis primeras líneas del metro", certeza = H, fuente = FN_LINEA1),
+                    suceso("la_cigale", "04-18", "La primera noche en La Cigale, con Berthe, en lo más alto de la sala"),
+                    suceso("acido", "05-16", "Una gota del ácido de preparar la piedra le quema el dorso de la mano"),
+                    mundo("grand_palais_obras", "06-12", "En los Champs-Élysées, entre andamios, va subiendo el Grand Palais", certeza = A, fuente = FN_GRAND_PALAIS),
+                    mundo("calor", "07-20", "Hace tanto calor en el taller que la tinta se ablanda en la losa", certeza = INV, clima = Clima.DESPEJADO),
+                    suceso("bicicletas", "08-24", "El taller tira un cartel de seis piedras para una marca de bicicletas"),
+                    mundo("puente", "09-15", "Desde el muelle ve el puente Alejandro III, que va cruzando el Sena", certeza = A, fuente = FN_PUENTE),
+                    mundo("obras_metro", "10-04", "Empiezan las obras de la línea 1 del metro", certeza = H, fuente = FN_LINEA1, escena = "obras"),
+                    suceso("letras_reves", "10-20", "El viejo Anselme le enseña por qué en la piedra las letras se dibujan al revés"),
+                    mundo("medee", "11-05", "En las vallas, el cartel de Mucha para Médée, con Sarah Bernhardt", certeza = A, fuente = FN_MUCHA, escena = "carteles"),
+                    auteuil("11-26"),
+                    suceso("entintar", "12-10", "Monsieur Ferrand la deja entintar una piedra por primera vez"),
+                    INVENTARIO,
+                )),
+            TemporadaVida("1899", "vispera",
+                "Su padre cae enfermo del pecho y se repone. A Marguerite la dejan meter los pliegos en la prensa, cada uno en sus marcas. Berthe tiene novio. En las vallas sale el cartel de Mucha para Hamlet; la compañía del metro publica el concurso para las entradas de sus estaciones; el Petit Palais sube junto al Grand Palais. Va por primera vez al Divan japonais. Llega al taller una prensa de vapor. Anselme le presta un lápiz graso y dibuja su primera flor en una piedra. Las obras del metro llegan a la esquina. El taller recibe el encargo de un cartel para la Exposición. Su madre le regala un cuaderno de dibujo.",
+                listOf(
+                    ANIO_NUEVO,
+                    suceso("padre_enfermo", "01-18", "Su padre cae con el pecho cargado y no puede ir al banco de ebanista", cadena = "padre"),
+                    suceso("padre_vuelve", "02-08", "Su padre vuelve al banco de ebanista, con la bufanda puesta", cadena = "padre"),
+                    suceso("registro", "02-27", "La dejan meter los pliegos en la prensa: cada hoja, en sus marcas de registro"),
+                    mundo("maitres", "03-04", "En una vitrina, una entrega de Les Maîtres de l'affiche, que edita la imprenta Chaix", certeza = A, fuente = FN_CHAIX),
+                    suceso("berthe_novio", "03-19", "Berthe le cuenta que tiene novio: Lucien, un tornero del faubourg"),
+                    mundo("tormenta_abril", "04-15", "Una tormenta de abril: el agua entra por el techo del taller y moja los pliegos", certeza = INV, escena = "tormenta", clima = Clima.TORMENTA),
+                    auteuil("05-07"),
+                    mundo("hamlet", "05-25", "En las vallas, el cartel de Mucha para Hamlet, con Sarah Bernhardt", certeza = A, fuente = FN_MUCHA, escena = "carteles"),
+                    mundo("concurso", "06-10", "La compañía del metro publica el concurso para las entradas de sus estaciones", certeza = H, fuente = FN_ENTRADAS),
+                    suceso("divan", "06-24", "Va por primera vez al Divan japonais, en la rue des Martyrs"),
+                    mundo("petit_palais_obras", "07-15", "Junto al Grand Palais va subiendo el Petit Palais, para la Exposición", certeza = A, fuente = FN_PETIT_PALAIS),
+                    mundo("prensa_vapor", "08-21", "Llega al taller una prensa de vapor, y hay que tirar un tabique para meterla", certeza = INV, escena = "prensa"),
+                    suceso("primera_flor", "09-12", "Anselme le presta un lápiz graso, y dibuja una flor en una piedra vieja"),
+                    mundo("obras_esquina", "10-10", "Las obras del metro llegan a la esquina del taller: vallas, tierra y carros", certeza = A, fuente = FN_LINEA1, escena = "obras"),
+                    mundo("encargo", "11-14", "El taller recibe el encargo de un cartel para un pabellón de la Exposición", certeza = INV),
+                    mundo("nave", "11-30", "Desde el puente se ve la nave de hierro y vidrio del Grand Palais", certeza = A, fuente = FN_GRAND_PALAIS),
+                    suceso("cuaderno_nuevo", "12-05", "Su madre le regala un cuaderno de dibujo con tapas de tela"),
+                    INVENTARIO,
+                )),
+            TemporadaVida("1900", "exposicion",
+                "En el taller se tira el cartel del pabellón, de ocho piedras. Berthe se casa con Lucien, y Paul entra de aprendiz con su padre. La ley del 30 de marzo pone en once horas el máximo en los talleres con mujeres. El 14 de abril Loubet inaugura la Exposición Universal y el puente Alejandro III, y el 1 de mayo, el Grand Palais. Marguerite ve su cartel en una valla, entra en la Exposición con su padre y ve encenderse el Palacio de la Electricidad. El 19 de julio abre el metro: desde ese día vuelve a casa en el tren, y en agosto y septiembre abren las demás estaciones. En octubre y en diciembre abren los ramales de Étoile. La Exposición cierra el 12 de noviembre.",
+                listOf(
+                    ANIO_NUEVO,
+                    suceso("tirada_expo", "01-24", "En el taller se tira el cartel del pabellón: ocho piedras, ocho colores"),
+                    suceso("boda_berthe", "02-17", "La boda de Berthe y Lucien en la mairie del distrito"),
+                    suceso("paul_aprendiz", "03-05", "Su hermano Paul entra de aprendiz con su padre, en el banco de ebanista"),
+                    mundo("ley_millerand", "03-30", "La ley del 30 de marzo: en los talleres con mujeres, no más de once horas al día", certeza = H, fuente = FN_LEY),
+                    mundo("abre_exposicion", "04-14", "El presidente Loubet inaugura la Exposición Universal y el puente Alejandro III", certeza = H, fuente = FN_EXPO, escena = "exposicion"),
+                    suceso("su_cartel", "04-20", "Ve en una valla el cartel del pabellón que ella pasó por la prensa", escena = "carteles"),
+                    mundo("grand_palais", "05-01", "Se inaugura el Grand Palais, con las bellas artes de cien años", certeza = H, fuente = FN_GRAND_PALAIS),
+                    suceso("visita_expo", "05-13", "Entra por primera vez en la Exposición, con su padre: un franco la entrada"),
+                    suceso("electricidad", "06-09", "Una noche ve encenderse las cinco mil lámparas del Palacio de la Electricidad", escena = "luces"),
+                    mundo("pruebas_metro", "06-15", "La ciudad entrega la línea 1 a la compañía del metro, para las pruebas", certeza = H, fuente = FN_LINEA1),
+                    mundo("abre_metro", "07-19", "Abre el metro, a la una de la tarde, entre Porte Maillot y Porte de Vincennes", certeza = H, fuente = FN_LINEA1, escena = "metro"),
+                    mundo("chatelet", "08-06", "Abren Châtelet y Saint-Paul: el tren para en dos estaciones más de su camino", certeza = H, fuente = FN_LINEA1),
+                    mundo("louvre", "08-13", "Abren Alma, Concorde y Louvre, y el tren ya para en todas las de su camino", certeza = H, fuente = FN_LINEA1),
+                    mundo("linea_entera", "09-01", "Abren Obligado y Étoile: la línea 1 ya está entera", certeza = H, fuente = FN_LINEA1),
+                    mundo("langage_mucha", "09-10", "En una vitrina, el Langage des fleurs de Mucha, como el libro de su abuela", certeza = A, fuente = FN_LANGAGE),
+                    auteuil("09-23"),
+                    mundo("trocadero", "10-02", "Abre el ramal de Étoile a Trocadéro, para la Exposición", certeza = H, fuente = FN_LINEA6),
+                    mundo("cierra_exposicion", "11-12", "Cierra la Exposición Universal, después de doscientos doce días", certeza = H, fuente = FN_EXPO, escena = "exposicion"),
+                    mundo("dauphine", "12-13", "Abre el ramal de Étoile a Porte Dauphine", certeza = A, fuente = FN_LINEA2),
+                    INVENTARIO,
+                )),
+            TemporadaVida("1901", "faroles",
+                "Anselme la deja dibujar en la piedra las letras de un rótulo. Nieva sobre París. En Nancy se funda la Escuela de Nancy. En la entrada del metro ponen los candelabros, con sus faroles y su letrero, y en Saint-Paul, una entrada cubierta. Henri, el cajista de la imprenta de la esquina, le regala lilas. A Anselme se le cansan los ojos y vuelve con anteojos. Ella dibuja en su cuaderno la entrada del metro bajo la lluvia. En agosto el Divan japonais se vuelve teatro. El patrón le sube el jornal. En la Bastille siguen las obras del pabellón del metro. Paul se corta un dedo. Henri pide permiso a su padre para pasearla los domingos.",
+                listOf(
+                    ANIO_NUEVO,
+                    suceso("primeras_letras", "01-21", "Anselme la deja dibujar en la piedra las letras de un rótulo"),
+                    mundo("nieve", "01-30", "Nieva sobre París, y el taller trabaja todo el día con las lámparas encendidas", certeza = INV, escena = "nieve", clima = Clima.NIEVE),
+                    mundo("nancy", "02-13", "En Nancy se funda la Escuela de Nancy: Gallé, Majorelle, Daum y Vallin", certeza = H, fuente = FN_NANCY),
+                    mundo("faroles", "03-18", "En la entrada del metro ponen los candelabros, con sus faroles y su letrero", certeza = A, fuente = FN_ENTRADAS, escena = "faroles"),
+                    auteuil("04-21"),
+                    mundo("edicula_saint_paul", "05-06", "En Saint-Paul levantan una entrada cubierta de hierro, fundición y vidrio", certeza = A, fuente = FN_ENTRADAS),
+                    suceso("lilas", "05-12", "Henri, el cajista de la imprenta de la esquina, le regala un ramo de lilas"),
+                    suceso("anselme_ojos", "06-03", "A Anselme se le cansan los ojos, y se queda unos días en casa", cadena = "anselme"),
+                    suceso("anselme_vuelve", "06-24", "Anselme vuelve al taller con anteojos nuevos y le revisa las letras", cadena = "anselme"),
+                    suceso("dibujo_lluvia", "07-08", "Dibuja en su cuaderno la entrada del metro bajo la lluvia", clima = Clima.LLUVIA),
+                    mundo("divan_teatro", "08-10", "El Divan japonais deja de ser café-concierto y pasa a ser teatro", certeza = A, fuente = FN_DIVAN),
+                    suceso("jornal", "09-16", "Monsieur Ferrand le sube el jornal: ya mete sola los pliegos de seis colores"),
+                    mundo("letrero_metro", "10-08", "En las entradas estrechas del metro ponen letreros que dicen solo «Métro»", certeza = A, fuente = FN_ENTRADAS),
+                    mundo("pabellon_obras", "11-04", "En la Bastille siguen las obras del pabellón del metro, como una estación pequeña", certeza = A, fuente = FN_ENTRADAS),
+                    suceso("paul_dedo", "11-20", "Paul se corta un dedo con el formón, y ella lo lleva corriendo al dispensario"),
+                    suceso("henri_padre", "12-08", "Henri le pide a su padre permiso para pasearla los domingos"),
+                    INVENTARIO,
+                )),
+            TemporadaVida("1902", "jornada",
+                "Marguerite deja de ser aprendiz y dibuja sola su primera piedra entera. Desde el 1 de abril, la jornada en los talleres con mujeres es de diez horas y media. Berthe tiene una niña y la hace madrina. Terminan el pabellón del metro de la Bastille, y en las entradas ponen los letreros esmaltados con la firma de Guimard. Henri le pide que se case con él, y ella le dice que lo pensará. Llegan al taller las primeras planchas de zinc. El 7 de octubre el metro llega a Anvers, al pie de Montmartre. Lleva a su madre a La Cigale. Anselme se retira y le deja sus lápices. Se inaugura el museo del Petit Palais. En diciembre le dice a Henri que sí.",
+                listOf(
+                    ANIO_NUEVO,
+                    mundo("helada", "01-20", "Hiela tanto que el agua de mojar las piedras amanece con una tela de hielo", certeza = INV, clima = Clima.DESPEJADO),
+                    suceso("obrera", "02-03", "Deja de ser aprendiz: monsieur Ferrand la apunta como obrera"),
+                    suceso("primera_piedra", "03-10", "Dibuja sola su primera piedra: la etiqueta de una caja de bombones"),
+                    mundo("jornada", "04-01", "Desde hoy, en los talleres con mujeres, la jornada es de diez horas y media", certeza = H, fuente = FN_1902),
+                    auteuil("05-04"),
+                    mundo("linea2_aviso", "05-20", "Dicen que este otoño el metro llegará al pie de Montmartre", certeza = A, fuente = FN_LINEA2),
+                    suceso("ahijada", "06-02", "Berthe tiene una niña y le pide que sea su madrina"),
+                    mundo("pabellon", "06-20", "Terminan el pabellón del metro de la Bastille, con sus taquillas y su sala de espera", certeza = A, fuente = FN_ENTRADAS),
+                    mundo("letreros", "07-15", "En las entradas ponen letreros esmaltados con la firma de Guimard", certeza = A, fuente = FN_ENTRADAS),
+                    suceso("lo_pensara", "08-21", "Henri le pide que se case con él, y ella le dice que lo pensará"),
+                    mundo("zinc", "09-09", "Llegan al taller las primeras planchas de zinc, más ligeras que las piedras", certeza = INV),
+                    mundo("anvers", "10-07", "Abre el metro de Étoile a Anvers: ya llega al pie de Montmartre", certeza = H, fuente = FN_LINEA2, escena = "metro"),
+                    suceso("madre_cigale", "10-26", "Lleva a su madre por primera vez a La Cigale"),
+                    suceso("anselme_retira", "11-18", "Anselme deja el taller y le regala sus lápices"),
+                    mundo("petit_palais", "12-11", "Se inaugura el museo del Petit Palais", certeza = H, fuente = FN_PETIT_PALAIS),
+                    suceso("dice_si", "12-16", "Le dice a Henri que sí"),
+                    INVENTARIO,
+                )),
+        ),
+        arcos = listOf(
+            // La entrada de la estación de Palais-Royal, delante del taller: las obras, la barandilla y, desde 1901, los faroles.
+            Arco("metro", TipoArco.OBRA, listOf(
+                p(1, "01-01", 0.0), p(1, "10-03", 0.0), p(1, "10-04", 0.15, salto = true), p(3, "07-18", 0.5), p(3, "07-19", 0.75, salto = true),
+                p(4, "03-17", 0.75), p(4, "03-18", 1.0, salto = true), p(5, "12-31", 1.0),
+            )),
+            // La valla de enfrente: cada vez más carteles, y llena durante la Exposición.
+            Arco("carteles", TipoArco.ADORNOS, listOf(p(1, "01-01", 0.3), p(2, "11-14", 0.45), p(3, "04-14", 1.0, salto = true), p(3, "11-13", 0.5, salto = true), p(5, "12-31", 0.6))),
+            // Los árboles de la calle: desnudos en invierno, llenos en verano. [Aproximación]
+            Arco.cadaAnio("hojas", TipoArco.OTRO, "01-01" to 0.0, "03-31" to 0.0, "05-10" to 0.9, "06-10" to 1.0, "09-30" to 0.9, "11-15" to 0.1, "12-01" to 0.0),
+        ),
+        objetos = listOf("piedra", "rodillo", "moleta", "lapiz", "cuaderno", "delantal", "peine", "lazo", "postal", "libro_flores", "abanico", "periodico"),
+        estados = listOf(Estado("exposicion", "abre_exposicion", "cierra_exposicion")),
     )
 }

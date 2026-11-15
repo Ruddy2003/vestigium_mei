@@ -503,19 +503,28 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
         }
     }
-    TemaId.NOUVEAU -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "EXP. " + t.nombre.uppercase(), "TOQUE PARA ACUSAR RECIBO",
-        comillas = "“" to "”", emblema = 88.dp, arriba = 52.dp, abajo = 70.dp) { e ->
+    // El cartel del taller recién impreso: el marco con dos esquinas muy redondas y dos casi rectas, el filete de dentro, dos
+    // líneas de látigo que nacen arriba en medio y se enroscan hacia los lados, un iris que sube por cada margen, la libélula
+    // que pasa y, abajo, la banda de la letra del cartel. El título arriba, como en un cartel; el emblema y la frase, debajo.
+    TemaId.NOUVEAU -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, false, t.nombre, "Toca: la piedra está entintada",
+        comillas = "« " to " »", emblema = 118.dp, arriba = 70.dp, abajo = 64.dp) { e ->
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
-        val c = e.onSurface.copy(alpha = 0.55f)
-        drawPath(Path().apply { moveTo(0f, u * 18); lineTo(u * 10, 0f); lineTo(u * 110, 0f); lineTo(u * 120, u * 18) }, c, style = Stroke(u * 1.3f))
-        drawRect(c, Offset(0f, u * 18), Size(w, h - u * 18), style = Stroke(u * 1.3f))
-        for (i in 0 until 14) drawRect(c, Offset(w - u * 84 + i * u * 5, u * 26), Size(u * (if (i % 3 == 0) 2.4f else 1.2f), u * 14))
-        val centro = Offset(w - u * 62, h - u * 36)
-        rotate(-12f, centro) {
-            drawRect(e.primary.copy(alpha = 0.7f), Offset(centro.x - u * 46, centro.y - u * 17), Size(u * 92, u * 34), style = Stroke(u * 2.2f))
-            drawRect(e.primary.copy(alpha = 0.5f), Offset(centro.x - u * 41, centro.y - u * 12), Size(u * 82, u * 24), style = Stroke(u))
-            drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
+        val g = u * 30
+        fun marco(m: Float) = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(androidx.compose.ui.geometry.Rect(m, m, w - m, h - m), CornerRadius(g - m), CornerRadius(u * 3), CornerRadius(g - m), CornerRadius(u * 3))) }
+        drawPath(marco(u), e.tertiary.copy(alpha = 0.75f), style = Stroke(u * 1.6f))
+        drawPath(marco(u * 7), e.tertiary.copy(alpha = 0.35f), style = Stroke(u * 0.7f))
+        with(TrazosNouveau) {
+            latigo(Offset(w / 2, u * 16), Offset(w * 0.18f, u * 34), u * 7, u * 2.4f, e.primary.copy(alpha = 0.75f), comba = 0.2f, horario = false, sombra = false)
+            latigo(Offset(w / 2, u * 16), Offset(w * 0.82f, u * 34), u * 7, u * 2.4f, e.primary.copy(alpha = 0.75f), comba = -0.2f, horario = true, sombra = false)
+            iris(Offset(u * 24, h - u * 26), minOf(h * 0.4f, u * 190), e.secondary.copy(alpha = 0.8f), e.primary.copy(alpha = 0.55f), e.primary.copy(alpha = 0.75f))
+            iris(Offset(w - u * 26, h - u * 26), minOf(h * 0.32f, u * 150), e.secondary.copy(alpha = 0.7f), e.primary.copy(alpha = 0.55f), e.primary.copy(alpha = 0.75f))
+            libelula(Offset(w - u * 46, u * 70), u * 30, 35f, 0.2f, e.primary.copy(alpha = 0.8f), e.surface.copy(alpha = 0.85f), e.tertiary)
         }
+        drawCircle(e.primary.copy(alpha = 0.75f), u * 3, Offset(w / 2, u * 16))
+        // La banda de la letra del cartel, abajo.
+        drawRect(e.secondary.copy(alpha = 0.18f), Offset(u * 10, h - u * 22), Size(w - u * 20, u * 12))
+        var x = u * 50; var k = 0
+        while (x < w - u * 50) { val a = u * (5f + (k * 7) % 5); drawRect(e.secondary.copy(alpha = 0.45f), Offset(x, h - u * 18), Size(a, u * 4)); x += a + u * 3; k++ }
     }
     // La puerta de la casa grande: los dos postes de roble con su corteza, el dintel con la onda de La Tène tallada y el torques
     // colgado en medio, el umbral de tierra y una hoguera al pie de cada poste. Primero la frase, como la diría el bardo.
