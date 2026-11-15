@@ -6,10 +6,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
@@ -417,43 +419,132 @@ object TrazosGalia {
 
     /**
      * El carnyx: la trompeta de guerra de bronce, alta sobre la gente, con la boca en cabeza de jabalí (como los de
-     * Tintignac): la boquilla abajo, doblada; el tubo largo de pie con sus anillos; y arriba, el cuello que se dobla hacia
-     * delante y la cabeza maciza con la cresta de cerdas, la oreja tiesa, el ojo, el colmillo y el hocico largo y romo,
-     * con las fauces abiertas. [pie] es el extremo de abajo; [alto], su alto; mira a la derecha (a la izquierda con
-     * [mira] = -1). Con [hueco], el ojo y la boca se recortan en ese color.
+     * Tintignac y de Deskford): la boquilla abajo, doblada; el tubo largo de pie con sus anillos; y arriba, el cuello que
+     * se dobla hacia delante y la cabeza en cuña, sin frente marcada, que baja recta hasta el hocico largo y truncado con
+     * el disco de la nariz; las fauces abiertas (por ahí sale el bramido) con la lengua suelta dentro, los colmillos que
+     * se curvan hacia arriba, el ojo chico, las orejas cortas y paradas y la cresta de cerdas por la nuca. [pie] es el
+     * extremo de abajo; [alto], su alto; mira a la derecha (a la izquierda con [mira] = -1). Con [hueco], el ojo y la boca
+     * se recortan en ese color. [brillo] y [sombra] son la luz y la sombra del metal (si no, salen de [color]). Con un
+     * [color] translúcido se dibuja solo la silueta, de una pieza (para su sombra).
      */
-    fun DrawScope.carnyx(pie: Offset, alto: Float, color: Color = BRONCE, hueco: Color? = null, mira: Float = 1f) {
+    fun DrawScope.carnyx(pie: Offset, alto: Float, color: Color = BRONCE, hueco: Color? = null, mira: Float = 1f, brillo: Color? = null, sombra: Color? = null) {
         val u = alto / 100f
         fun o(x: Float, y: Float) = Offset(pie.x + mira * x * u, pie.y + y * u)
-        fun ruta(vararg p: Pair<Float, Float>) = poligono(p.map { o(it.first, it.second) })
-        val sombra = lerp(color, Color.Black, 0.35f)
-        // La boquilla doblada y el tubo, que se ensancha hacia arriba.
-        drawPath(cinta(bezier(o(-9f, 0f), o(-8f, -6f), o(-1f, -6f), o(0f, -14f), 8)) { f -> (3.2f + 0.6f * f) * u }, color)
-        drawPath(cinta(bezier(o(0f, -14f), o(0f, -40f), o(0f, -58f), o(2f, -70f), 16)) { f -> (3.8f + 2.2f * f) * u }, color)
-        // El cuello que se dobla hacia delante y se abre en la cabeza.
-        drawPath(cinta(bezier(o(2f, -69f), o(3f, -78f), o(6f, -83f), o(13f, -84f), 10)) { f -> (6f + 6f * f) * u }, color)
-        for (y in listOf(-28f, -50f)) drawLine(sombra, o(-2.6f, y), o(2.8f, y), 1.6f * u)
-        drawLine(lerp(color, Color.White, 0.4f), o(-3.2f, -30f + 1.2f), o(-3.2f, -48f), 0.8f * u)
-        // La cabeza maciza: la nuca, la frente, el hocico largo y romo, la boca abierta y la quijada.
-        val cabeza = ruta(4f to -86f, 9f to -93f, 17f to -95f, 25f to -93f, 33f to -90.5f, 39f to -89.5f, 41f to -87f, 40.5f to -84.5f,
-            28f to -83.5f, 37f to -79f, 36f to -77f, 26f to -76.5f, 17f to -75f, 10f to -77f)
-        drawPath(cabeza, color)
-        // La cresta de cerdas por la nuca y el lomo del cuello.
-        for (k in 0..4) drawPath(ruta(3f + k * 3f to -89f - k * 1.2f, 1f + k * 3f to -97f - k * 0.8f, 6f + k * 3f to -91f - k * 1.2f), color)
-        // La oreja tiesa, echada atrás.
-        drawPath(ruta(18f to -93f, 15f to -102f, 23f to -95f), color)
-        // El colmillo, que sale de la quijada y se curva hacia arriba.
-        drawPath(ruta(29f to -79.5f, 32f to -86f, 31f to -79f), lerp(color, Color.White, 0.6f))
-        // El hocico: el disco del morro.
-        drawOval(sombra, Offset(o(39.5f, -89.5f).x - u * 1.2f, o(39.5f, -89.5f).y), Size(2.4f * u, 5f * u))
-        if (hueco != null) {
-            drawCircle(hueco, 2.1f * u, o(22f, -89f))
-            drawCircle(color, 1f * u, o(22f, -89f))
-            drawPath(ruta(29f to -83f, 39f to -84.2f, 35f to -79.3f), hueco)
+        fun Path.m(x: Float, y: Float) { val q = o(x, y); moveTo(q.x, q.y) }
+        fun Path.l(x: Float, y: Float) { val q = o(x, y); lineTo(q.x, q.y) }
+        fun Path.q(x1: Float, y1: Float, x: Float, y: Float) { val a = o(x1, y1); val b = o(x, y); quadraticTo(a.x, a.y, b.x, b.y) }
+        fun Path.c(x1: Float, y1: Float, x2: Float, y2: Float, x: Float, y: Float) { val a = o(x1, y1); val b = o(x2, y2); val d = o(x, y); cubicTo(a.x, a.y, b.x, b.y, d.x, d.y) }
+        val claro = brillo ?: lerp(color, Color.White, 0.45f)
+        val osc = sombra ?: lerp(color, Color.Black, 0.42f)
+        // Las piezas de la silueta.
+        val boquilla = cinta(bezier(o(-9f, 0f), o(-8f, -6f), o(-1f, -6f), o(0f, -14f), 8)) { f -> (3.2f + 0.6f * f) * u }
+        val copa = Path().apply { m(-11.4f, 1.2f); l(-6.6f, 1.2f); l(-7.6f, -1f); l(-10.4f, -1f); close() }
+        val tubo = cinta(bezier(o(0f, -14f), o(0f, -40f), o(0f, -58f), o(2f, -70f), 16)) { f -> (3.8f + 2.2f * f) * u }
+        val cuello = cinta(bezier(o(2f, -68f), o(2.4f, -77f), o(4.6f, -82f), o(11f, -85f), 10)) { f -> (6f + 8f * f) * u }
+        // La cabeza en cuña: la nuca, la línea de arriba que baja recta al hocico, el disco, la quijada de arriba hasta la
+        // comisura y la de abajo, abierta, con la papada.
+        val cabeza = Path().apply {
+            m(4.6f, -79f); q(2.6f, -90f, 8.4f, -95.6f); l(13.5f, -98.6f)
+            c(22f, -97.4f, 32f, -93.6f, 40.6f, -91.2f)
+            l(42.4f, -90.8f); q(43.8f, -88.2f, 42.6f, -85.6f)
+            l(40.2f, -85.2f); c(34f, -85.6f, 28.5f, -85.2f, 24.4f, -83.8f)
+            c(29f, -82.4f, 34f, -80.6f, 37.6f, -79f)
+            q(39f, -78.2f, 37.8f, -76.9f)
+            c(31f, -75.4f, 22f, -73.8f, 14f, -74.8f); q(8f, -75.6f, 4.6f, -79f); close()
         }
-        // El brillo del bronce por el lado de la luz.
-        drawPath(cinta(bezier(o(-2f, -16f), o(-2f, -40f), o(-1.6f, -56f), o(-0.4f, -66f), 10)) { 0.9f * u }, lerp(color, Color.White, 0.35f).copy(alpha = 0.6f))
-        drawPath(cinta(bezier(o(8f, -91f), o(14f, -93.5f), o(22f, -93f), o(32f, -90f), 8)) { f -> 1.4f * u * sin(PI.toFloat() * f) }, lerp(color, Color.White, 0.4f).copy(alpha = 0.6f))
+        val boca = Path().apply { m(24.2f, -83.8f); c(28.5f, -85.2f, 34f, -85.6f, 40.4f, -85.2f); l(38.2f, -78.8f); c(34f, -80.6f, 29f, -82.4f, 24.2f, -83.8f); close() }
+        val oreja = Path().apply { m(14.4f, -96.8f); q(12.6f, -100.6f, 12.8f, -103.4f); q(18.4f, -101.8f, 20.6f, -95.8f); close() }
+        val orejaLejos = Path().apply { m(10.8f, -97.6f); q(8.8f, -101f, 8.8f, -103.2f); q(13.8f, -101.8f, 15.6f, -97.2f); close() }
+        // La cresta de cerdas: púas que salen hacia atrás por la nuca y el lomo del cuello.
+        val cresta = Path().apply {
+            val base = bezier(Offset(17f, -98.2f), Offset(9f, -98.6f), Offset(2.4f, -93f), Offset(-0.6f, -81f), 14)
+            val dentro = bezier(Offset(17f, -95f), Offset(10f, -95f), Offset(5.4f, -91f), Offset(3f, -81f), 6)
+            m(base[0].x, base[0].y)
+            for (k in 0 until base.size - 1) {
+                val a = base[k]; val b = base[k + 1]
+                val dx = b.x - a.x; val dy = b.y - a.y; val n = sqrt(dx * dx + dy * dy).coerceAtLeast(0.001f)
+                val largo = 3.2f + 2.6f * sin(PI.toFloat() * (k + 0.5f) / (base.size - 1))
+                val mitad = Offset((a.x + b.x) / 2, (a.y + b.y) / 2)
+                l(mitad.x - dy / n * largo + dx / n * 1.6f, mitad.y + dx / n * largo + dy / n * 1.6f)
+                l(b.x, b.y)
+            }
+            for (k in dentro.size - 1 downTo 0) l(dentro[k].x, dentro[k].y)
+            close()
+        }
+        val colmillo = Path().apply { m(35.6f, -79.6f); c(38.8f, -83.6f, 38f, -89.4f, 33.4f, -93f); c(35.4f, -88.8f, 35.6f, -84.6f, 33.2f, -80.6f); close() }
+        val colmilloArriba = Path().apply { m(32.8f, -85.4f); q(36.2f, -87.2f, 35.6f, -90.2f); q(34.4f, -87.8f, 31.2f, -85.6f); close() }
+        if (color.alpha < 0.99f) {
+            // La silueta sola, de una pieza, para que no se oscurezca donde las piezas se tocan.
+            var todo = Path.combine(PathOperation.Union, boquilla, tubo)
+            for (pieza in listOf(copa, cuello, cabeza, boca, oreja, orejaLejos, cresta, colmillo)) todo = Path.combine(PathOperation.Union, todo, pieza)
+            drawPath(todo, color)
+            return
+        }
+        val grande = alto > 70f * density
+        // El tubo, con la luz a la izquierda.
+        val luzTubo = Brush.horizontalGradient(listOf(lerp(color, claro, 0.6f), color, color, lerp(color, osc, 0.8f)), pie.x - 4.2f * u, pie.x + 4.2f * u)
+        drawPath(orejaLejos, lerp(color, osc, 0.55f))
+        drawPath(copa, luzTubo)
+        drawPath(boquilla, luzTubo)
+        drawPath(tubo, luzTubo)
+        drawPath(cuello, Brush.linearGradient(listOf(lerp(color, claro, 0.45f), color, lerp(color, osc, 0.7f)), o(3f, -86f), o(9f, -74f)))
+        drawPath(cresta, Brush.linearGradient(listOf(lerp(color, claro, 0.3f), lerp(color, osc, 0.5f)), o(6f, -100f), o(8f, -84f)))
+        // La cabeza: la luz arriba a la izquierda y la sombra en la papada.
+        val cc = o(22f, -88f)
+        drawPath(cabeza, Brush.radialGradient(listOf(lerp(color, claro, 0.7f), color, lerp(color, osc, 0.85f)), Offset(cc.x - 7f * u, cc.y - 8f * u), 30f * u))
+        // Las fauces abiertas y la lengua suelta, como la de Deskford.
+        val dentroBoca = hueco ?: lerp(osc, Color.Black, 0.45f)
+        drawPath(boca, dentroBoca)
+        drawPath(Path().apply { m(26f, -83.2f); q(32f, -82.6f, 36.6f, -80.2f); q(37.4f, -78.8f, 35.6f, -79.2f); q(31f, -80.4f, 26f, -82.4f); close() }, lerp(color, osc, 0.35f))
+        drawPath(Path().apply { m(27f, -83.3f); q(32f, -82.8f, 36f, -80.6f) }, claro.copy(alpha = 0.45f), style = Stroke(0.5f * u, cap = StrokeCap.Round))
+        // El metal martillado: las abolladuras chicas del repujado, solo cuando se ve grande.
+        if (grande) {
+            val az = java.util.Random(31)
+            clipPath(cabeza) {
+                repeat(70) {
+                    val q = o(6f + az.nextFloat() * 36f, -98f + az.nextFloat() * 23f); val r = (0.5f + az.nextFloat() * 0.6f) * u
+                    drawCircle(osc.copy(alpha = 0.12f), r, q + Offset(0.3f * r, 0.3f * r))
+                    drawCircle(claro.copy(alpha = 0.14f), r * 0.5f, q - Offset(0.3f * r, 0.3f * r))
+                }
+            }
+            clipPath(tubo) {
+                repeat(28) {
+                    val q = o(-3f + az.nextFloat() * 7f, -16f - az.nextFloat() * 52f); val r = (0.4f + az.nextFloat() * 0.5f) * u
+                    drawCircle(osc.copy(alpha = 0.1f), r, q + Offset(0.3f * r, 0.3f * r))
+                }
+            }
+        }
+        // La sombra bajo la quijada de arriba y la luz que rebota en la papada.
+        drawPath(Path().apply { m(24.6f, -84.2f); c(29f, -85.6f, 34f, -86.1f, 40.4f, -85.7f) }, osc.copy(alpha = 0.7f), style = Stroke(0.8f * u, cap = StrokeCap.Round))
+        drawPath(Path().apply { m(14f, -75.6f); c(22f, -74.7f, 30f, -76.1f, 36.6f, -77.6f) }, claro.copy(alpha = 0.35f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
+        // El hocico: los pliegues de la jeta y el disco de la nariz, de frente, con sus dos ventanas.
+        for (x in listOf(32.5f, 35.2f, 37.8f)) drawPath(Path().apply { m(x - 0.6f, -93.4f + (x - 32f) * 0.28f); q(x + 0.4f, -90.6f + (x - 32f) * 0.2f, x - 0.2f, -88f) }, osc.copy(alpha = 0.55f), style = Stroke(0.55f * u, cap = StrokeCap.Round))
+        val disco = o(42.5f, -88.2f)
+        drawOval(lerp(color, osc, 0.3f), Offset(disco.x - 1.5f * u, disco.y - 2.7f * u), Size(3f * u, 5.4f * u))
+        drawOval(claro.copy(alpha = 0.7f), Offset(disco.x - 1.5f * u, disco.y - 2.7f * u), Size(3f * u, 5.4f * u), style = Stroke(0.45f * u))
+        for (dy in listOf(-1.2f, 1.1f)) drawCircle(hueco ?: osc, 0.55f * u, Offset(disco.x + mira * 0.2f * u, disco.y + dy * u))
+        // El ojo chico, hundido bajo la ceja.
+        drawPath(Path().apply { m(22.2f, -93.6f); q(25.6f, -94.9f, 28.6f, -93f) }, osc.copy(alpha = 0.75f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
+        drawCircle(hueco ?: osc, 1.3f * u, o(25.6f, -91.6f))
+        drawCircle(claro, 0.42f * u, o(25.2f, -92f))
+        // Las orejas cortas y paradas, con su hueco.
+        drawPath(oreja, Brush.linearGradient(listOf(lerp(color, claro, 0.6f), lerp(color, osc, 0.4f)), o(13f, -103f), o(20f, -96f)))
+        drawPath(Path().apply { m(15.6f, -97.2f); q(14.6f, -100f, 14.6f, -101.6f); q(17.8f, -100.4f, 19.2f, -96.8f); close() }, lerp(color, osc, 0.75f))
+        // Los colmillos, curvos hacia arriba, de un tono más claro.
+        val marfil = lerp(color, claro, 0.75f)
+        drawPath(colmilloArriba, lerp(marfil, osc, 0.15f))
+        drawPath(colmillo, Brush.linearGradient(listOf(lerp(marfil, Color.White, 0.2f), marfil, lerp(marfil, osc, 0.45f)), o(33f, -92f), o(38f, -80f)))
+        drawPath(colmillo, osc.copy(alpha = 0.55f), style = Stroke(0.35f * u))
+        // Los anillos del tubo y el collar donde nace el cuello, en relieve.
+        for ((y, ancho) in listOf(-14f to 4.6f, -28f to 5f, -50f to 5.6f, -66f to 7f)) {
+            val x = if (y < -60f) 1.4f else 0f
+            drawRoundRect(lerp(color, osc, 0.5f), o(x - ancho / 2, y - 0.8f) + Offset(if (mira < 0) -ancho * u else 0f, 0f), Size(ancho * u, 2.2f * u), androidx.compose.ui.geometry.CornerRadius(0.8f * u))
+            drawLine(lerp(color, claro, 0.75f), o(x - ancho / 2 + 0.4f, y - 0.4f), o(x + ancho / 2 - 0.4f, y - 0.4f), 0.6f * u, StrokeCap.Round)
+        }
+        // El brillo del bronce por el lado de la luz: el tubo, el lomo de la cabeza y la oreja.
+        drawPath(cinta(bezier(o(-2f, -16f), o(-2f, -40f), o(-1.6f, -56f), o(-0.4f, -66f), 10)) { 0.9f * u }, claro.copy(alpha = 0.7f))
+        drawPath(cinta(bezier(o(10f, -95.6f), o(18f, -97.4f), o(28f, -94.4f), o(39.6f, -91.4f), 10)) { f -> 1.6f * u * sin(PI.toFloat() * f) }, claro.copy(alpha = 0.75f))
+        drawPath(cinta(bezier(o(14.6f, -97f), o(13.6f, -99f), o(13.2f, -101f), o(13.2f, -103f), 6)) { f -> 0.7f * u * sin(PI.toFloat() * f) }, claro.copy(alpha = 0.6f))
     }
 
     /**
