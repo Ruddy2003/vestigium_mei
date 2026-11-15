@@ -127,6 +127,16 @@ internal fun Pincel.por(c: Color, t: Float, lejos: Float = 0f): Color {
     return if (t >= 0f) lerp(propio, luz(c, lejos), t) else lerp(propio, sombra(c, lejos), (-t * 2.2f).coerceAtMost(1f))
 }
 
+/**
+ * La unión de varias formas en una sola. `addPath` no sirve para eso: donde dos formas de distinto sentido se tapan,
+ * la suma de vueltas da cero y queda un agujero (en una sombra, en un recorte).
+ */
+internal fun union(formas: List<Path>): Path {
+    var acc = Path()
+    for (f in formas) { val r = Path(); r.op(acc, f, androidx.compose.ui.graphics.PathOperation.Union); acc = r }
+    return acc
+}
+
 /** La envolvente convexa de unos puntos (para la sombra de un cuerpo en el suelo). */
 internal fun envolvente(puntos: List<Offset>): List<Offset> {
     if (puntos.size < 3) return puntos
@@ -307,6 +317,17 @@ internal object PiezasMongol {
                         drawPath(Path().apply { moveTo(canto[0]); for (q in canto.drop(1)) lineTo(q) }, p.sombra(fieltro, lejos).copy(alpha = 0.45f), style = Stroke(0.025f * s.escala(0f, 0f)))
                         drawPath(Path().apply { moveTo(canto[0] + Offset(0f, -0.6f)); for (q in canto.drop(1)) lineTo(q + Offset(0f, -0.6f)) }, p.luz(lerp(fieltro, Color.White, 0.4f), lejos).copy(alpha = 0.5f), style = Stroke(0.012f * s.escala(0f, 0f)))
                     }
+                    if (s.escala(0f, 0f) > 20f) {
+                        // De cerca el fieltro no es liso: nubes de humo y de lluvia, más claras y más sucias, y el pelo
+                        // del batanado, en trazos cortos que se cruzan.
+                        val e2 = s.escala(0f, 0f); val tz = Azar(Semilla.de(g.semilla, "fieltro", "pared"))
+                        repeat(24) { val th = tz.entre(a, b); val y = tz.entre(0.1f, g.pared - 0.1f); mancha(g.pared(th, y), tz.entre(0.25f, 0.75f) * e2, tz.entre(0.06f, 0.18f) * e2, if (it % 2 == 0) p.luz(lerp(fieltro, Color.White, 0.4f), lejos) else p.sombra(lerp(fieltro, C.TIERRA, 0.45f), lejos), 0.12f + 0.06f * g.desgaste) }
+                        repeat((90 * (e2 / 40f)).toInt().coerceIn(40, 220)) { val th = tz.entre(a, b); val y = tz.entre(0.08f, g.pared - 0.08f); val c = g.pared(th, y); val d = Offset(tz.entre(-1f, 1f), tz.entre(-0.5f, 0.5f)) * (0.035f * e2)
+                            drawLine((if (it % 2 == 0) p.luz(lerp(fieltro, Color.White, 0.35f), lejos) else p.sombra(fieltro, lejos)).copy(alpha = 0.22f), c - d, c + d, (0.006f * e2).coerceIn(0.3f, 0.8f), StrokeCap.Round) }
+                        // Las chorreras de la lluvia que baja del alero, más largas y más sucias junto a la puerta.
+                        repeat(8) { val th = tz.entre(a, b); val l = tz.entre(0.25f, 0.6f) * g.pared; val c0 = g.pared(th, g.pared - 0.2f); val c1 = g.pared(th + tz.entre(-0.01f, 0.01f), g.pared - 0.2f - l)
+                            drawLine(p.sombra(lerp(fieltro, C.HOLLIN, 0.3f), lejos).copy(alpha = 0.16f), c0, c1, (0.05f * e2).coerceIn(0.5f, 3f), StrokeCap.Round) }
+                    }
                     // La textura del fieltro: pelusa en el lado de la luz.
                     val esc = s.escala(0f, 0f)
                     if (esc > 12f) drawPoints((0 until (60 * (esc / 30f)).toInt().coerceAtMost(260)).map { val th = az.entre(a, b); g.pared(th, az.entre(0.1f, g.pared - 0.1f)) }, PointMode.Points, p.luz(lerp(fieltro, Color.White, 0.4f), lejos).copy(alpha = 0.35f), (0.03f * esc).coerceIn(0.4f, 1.6f), StrokeCap.Round)
@@ -346,10 +367,16 @@ internal object PiezasMongol {
             for (y in cinchas) {
                 val y2 = y * g.pared / 1.55f
                 val linea = (0..n).map { g.pared(a + (b - a) * it / n * 0.98f + (b - a) * 0.01f, y2, g.radio + 0.015f) }
-                val grueso = (0.035f * s.escala(0f, 0f)).coerceIn(0.35f, 2.2f)
+                val grueso = (0.05f * s.escala(0f, 0f)).coerceIn(0.4f, 3.2f)
                 val camino = Path().apply { moveTo(linea[0]); for (q in linea.drop(1)) lineTo(q) }
+                // La sombra que la cuerda echa en el fieltro, debajo.
+                if (grueso > 1f) drawPath(Path().apply { addPath(camino, Offset(0f, grueso * 0.6f)) }, p.sombra(lerp(fieltro, C.HOLLIN, 0.3f), lejos).copy(alpha = 0.35f), style = Stroke(grueso * 0.9f, cap = StrokeCap.Round))
                 drawPath(camino, p.sombra(C.CRIN, lejos), style = Stroke(grueso, cap = StrokeCap.Round))
                 if (grueso > 0.8f) drawPath(camino, p.luz(lerp(C.CRIN, C.FIELTRO, 0.4f), lejos).copy(alpha = 0.55f), style = Stroke(grueso * 0.35f, cap = StrokeCap.Round))
+                // Retorcida: las vueltas de los cabos, en trazos cortos inclinados.
+                if (grueso > 1.4f) drawPath(camino, p.luz(lerp(C.CRIN, C.FIELTRO, 0.55f), lejos).copy(alpha = 0.6f), style = Stroke(grueso * 0.8f, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(grueso * 0.35f, grueso * 0.9f))))
+                // Los nudos donde se empalma o se ata a la celosía.
+                if (grueso > 1f && g.detalle) for (k in listOf(0.18f, 0.55f, 0.86f)) { val th = a + (b - a) * k; if (abs(th) < g.mediaPuerta * 2.2f) continue; val c = g.pared(th, y2, g.radio + 0.03f); drawCircle(p.sombra(C.CRIN, lejos), grueso * 0.95f, c); drawCircle(p.luz(lerp(C.CRIN, C.FIELTRO, 0.45f), lejos).copy(alpha = 0.6f), grueso * 0.4f, c + Offset(-grueso * 0.25f, -grueso * 0.3f)); drawLine(p.sombra(C.CRIN, lejos), c, c + Offset(grueso * 0.6f, grueso * 2.8f), grueso * 0.5f, StrokeCap.Round) }
             }
         }
 
@@ -406,6 +433,33 @@ internal object PiezasMongol {
             // Una vara de cada tres se nota bajo el fieltro: el fieltro se hunde un poco entre ellas.
             if (g.detalle && i % 3 == 0) drawLine(p.sombra(color, lejos).copy(alpha = 0.22f), alero(c.t0), arriba(c.t0), (0.02f * s.escala(0f, 0f)).coerceIn(0.3f, 0.9f))
         }
+        if (g.detalle && s.escala(0f, 0f) > 20f) clipPath(base) {
+            val e2 = s.escala(0f, 0f); val tz = Azar(Semilla.de(g.semilla, "fieltro", "techo"))
+            val (va, vb) = g.visible()
+            // Nubes de humo y de sol en el fieltro.
+            repeat(22) { val t = tz.entre(va, vb); val k = tz.entre(0.05f, 0.8f); mancha(arriba(t, k), tz.entre(0.3f, 0.9f) * e2, tz.entre(0.08f, 0.2f) * e2, if (it % 2 == 0) p.luz(lerp(color, Color.White, 0.4f), lejos) else p.sombra(lerp(color, C.TIERRA, 0.4f), lejos), 0.12f + 0.05f * g.desgaste) }
+            // Los paños: dos o tres grandes piezas de fieltro, cuyo canto se monta sobre el de al lado, cosido.
+            for (j in 0 until 3) {
+                val t = va + (vb - va) * (0.22f + 0.28f * j) + tz.entre(-0.1f, 0.1f)
+                val canto = (0..10).map { k -> val kk = k / 10f; arriba(t + 0.18f * kk - 0.05f * kk * kk, 0.92f - 0.92f * kk) }
+                val linea = Path().apply { moveTo(canto[0]); for (c in canto.drop(1)) lineTo(c) }
+                drawPath(Path().apply { addPath(linea, Offset(0.012f * e2, 0.01f * e2)) }, p.sombra(color, lejos).copy(alpha = 0.45f), style = Stroke(0.03f * e2))
+                drawPath(linea, p.luz(lerp(color, Color.White, 0.35f), lejos).copy(alpha = 0.55f), style = Stroke(0.012f * e2))
+                drawPoints(canto.zipWithNext().flatMap { (c0, c1) -> (0 until 4).map { c0 + (c1 - c0) * (it / 4f) + Offset(-0.02f * e2, 0f) } }, PointMode.Points, p.sombra(C.CRIN, lejos).copy(alpha = 0.5f), (0.008f * e2).coerceIn(0.3f, 1f), StrokeCap.Round)
+            }
+            // Las chorreras de la lluvia y del hollín, que bajan del aro.
+            repeat(16) { val t = tz.entre(va, vb); val k0 = tz.entre(0.6f, 0.92f); val k1 = k0 - tz.entre(0.15f, 0.45f); val a0 = arriba(t, k0); val a1 = arriba(t + tz.entre(-0.02f, 0.02f), k1)
+                drawLine(p.sombra(lerp(color, C.HOLLIN, 0.4f), lejos).copy(alpha = 0.1f), a0, a1, (0.04f * e2).coerceIn(0.5f, 2.4f), StrokeCap.Round); drawLine(p.sombra(lerp(color, C.HOLLIN, 0.4f), lejos).copy(alpha = 0.08f), a0, a0 + (a1 - a0) * 0.5f, (0.07f * e2).coerceIn(0.6f, 3.6f), StrokeCap.Round) }
+            // Uno o dos remiendos, con su puntada.
+            repeat((1 + 2 * g.desgaste).toInt()) {
+                val t = tz.entre(va + 0.2f, vb - 0.2f); val k = tz.entre(0.2f, 0.6f); val c = arriba(t, k)
+                val pts = (0 until 7).map { j -> val ang = (2 * PI * j / 7).toFloat(); c + Offset(cos(ang) * tz.entre(0.14f, 0.22f) * e2, sin(ang) * tz.entre(0.06f, 0.1f) * e2) }
+                drawPath(poligono(pts), p.por(lerp(color, if (it % 2 == 0) Color.White else C.TIERRA, 0.25f), 0.2f, lejos).copy(alpha = 0.9f))
+                drawPoints(pts.zipWithNext().flatMap { (c0, c1) -> (0 until 3).map { c0 + (c1 - c0) * (it / 3f) } }, PointMode.Points, p.sombra(C.CRIN, lejos).copy(alpha = 0.55f), (0.008f * e2).coerceIn(0.3f, 1f), StrokeCap.Round)
+            }
+            // El pelo del fieltro.
+            repeat(160) { val t = tz.entre(va, vb); val c = arriba(t, tz.entre(0f, 0.85f)); val d = Offset(tz.entre(-1f, 1f), tz.entre(-0.4f, 0.4f)) * (0.035f * e2); drawLine((if (it % 2 == 0) p.luz(lerp(color, Color.White, 0.35f), lejos) else p.sombra(color, lejos)).copy(alpha = 0.2f), c - d, c + d, (0.006f * e2).coerceIn(0.3f, 0.8f), StrokeCap.Round) }
+        }
         // El borde del alero: la cuerda que sujeta el fieltro del techo.
         val (a, b) = g.visible()
         val borde = (0..30).map { val t = a - 0.08f + (b - a + 0.16f) * it / 30f; alero(t) }
@@ -419,7 +473,11 @@ internal object PiezasMongol {
                 val nl = V3(sin((t0 + t1) / 2f), 0.6f, -cos((t0 + t1) / 2f))
                 if (!s.seVe(V3(g.alero * sin(t1), yAlero, -g.alero * cos(t1)), nl)) continue
                 val medio = arriba((t0 + t1) / 2f, 0.5f)
-                drawPath(Path().apply { moveTo(q0); cubicTo(q0 + (medio - q0) * 0.6f, medio + (q1 - medio) * 0.3f, q1) }, p.sombra(C.CRIN, lejos).copy(alpha = 0.85f), style = Stroke((0.03f * s.escala(0f, 0f)).coerceIn(0.3f, 1.6f), cap = StrokeCap.Round))
+                val cuerda = Path().apply { moveTo(q0); cubicTo(q0 + (medio - q0) * 0.6f, medio + (q1 - medio) * 0.3f, q1) }
+                val gc = (0.045f * s.escala(0f, 0f)).coerceIn(0.35f, 2.6f)
+                if (gc > 1f) drawPath(Path().apply { addPath(cuerda, Offset(gc * 0.5f, gc * 0.6f)) }, p.sombra(color, lejos).copy(alpha = 0.5f), style = Stroke(gc, cap = StrokeCap.Round))
+                drawPath(cuerda, p.sombra(C.CRIN, lejos).copy(alpha = 0.9f), style = Stroke(gc, cap = StrokeCap.Round))
+                if (gc > 1.2f) drawPath(cuerda, p.luz(lerp(C.CRIN, C.FIELTRO, 0.5f), lejos).copy(alpha = 0.55f), style = Stroke(gc * 0.7f, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(gc * 0.3f, gc * 0.85f))))
             }
         }
         // El aro: si se ve desde arriba, el hueco negro de humo con su rueda de madera y el fieltro de taparlo, echado atrás.
@@ -850,67 +908,202 @@ internal object PiezasMongol {
     }
 
     // =================================================================
-    //  Las ovejas
+    //  Las ovejas y las cabras
     // =================================================================
 
+    /** El borde de un vellón: una elipse de [rx] × [ry] con la orilla de arriba en bultos de lana; [az] da los bultos. */
+    private fun vellon(c: Offset, rx: Float, ry: Float, az: Azar, bultos: Int = 9, rizo: Float = 0.16f): Path {
+        val n = bultos * 4
+        val r = FloatArray(bultos) { 1f + az.entre(-rizo, rizo) }
+        val puntos = (0 until n).map { i ->
+            val a = (2 * PI * i / n).toFloat()
+            // Arriba (sen < 0), los bultos se notan; abajo, la barriga es más lisa y plana.
+            val b = r[(i / 4) % bultos]; val arriba = (-sin(a)).coerceAtLeast(0f)
+            val ondula = 1f + (b - 1f) * (0.35f + 0.65f * arriba) + 0.05f * arriba * sin(i * PI.toFloat() / 2f).let { it * it }
+            val plano = if (sin(a) > 0f) 1f - 0.18f * sin(a) * sin(a) else 1f
+            Offset(c.x + cos(a) * rx * ondula, c.y + sin(a) * ry * ondula * plano)
+        }
+        return io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva(puntos + puntos.take(1)).apply { close() }
+    }
+
     /**
-     * Una oveja de cola gorda, la de la estepa: el cuerpo de lana blanca o crema, de bulto desigual, y la cabeza oscura.
-     * Pisa en [pie] y mide [largo] unidades del hocico a la cola; [mira] 1 hacia la derecha, −1 hacia la izquierda.
-     * [pasta]: con la cabeza abajo. [patas]: si se le ven (las de la primera fila). Con [cabra], una cabra: más flaca,
-     * oscura, de cuernos curvos.
+     * Una oveja de cola gorda, la de la estepa: el cuerpo de lana blanca o crema, de bulto desigual, la cola gorda que
+     * le cuelga detrás y la cabeza oscura de orejas caídas. Pisa en [pie] y mide [largo] unidades del hocico a la cola;
+     * [mira] dice hacia qué lado (1 y −1). [pasta]: con la cabeza abajo. [patas]: si se le ven (las de la primera fila).
+     * Con [cabra], una cabra: más flaca y alta, de pelo largo y oscuro, cuernos vueltos y barba. Con [cordero], un
+     * cordero: chico de cuerpo, de patas largas, de lana corta y clara.
+     *
+     * De cerca, el vellón tiene volumen: la luz arriba y del lado del sol, la sombra violeta abajo, los mechones que
+     * hacen rizos y la lana sucia de tierra hacia la barriga. De lejos queda una mancha con su cabeza.
      */
-    fun DrawScope.oveja(p: Pincel, pie: Offset, largo: Float, mira: Float, az: Azar, pasta: Boolean, lejos: Float = 0f, patas: Boolean = true, cabra: Boolean = false, lana: Color = C.LANA, cabeza: Color = C.CABEZA) {
+    fun DrawScope.oveja(p: Pincel, pie: Offset, largo: Float, mira: Float, az: Azar, pasta: Boolean, lejos: Float = 0f, patas: Boolean = true, cabra: Boolean = false, lana: Color = C.LANA, cabeza: Color = C.CABEZA, cordero: Boolean = false) {
         val u = largo; val dir = if (mira >= 0f) 1f else -1f
         fun q(x: Float, y: Float) = Offset(pie.x + x * u * dir, pie.y + y * u)
-        val luzDer = p.solALaDerecha == (dir > 0f)
-        val alto = if (cabra) 0.62f else 0.56f
-        // Las patas: cortas y oscuras.
-        if (patas) for ((x, cerca) in listOf(-0.28f to false, 0.24f to false, -0.2f to true, 0.32f to true)) drawLine(p.medio(if (cerca) cabeza else lerp(cabeza, C.HOLLIN, 0.4f), lejos), q(x, -0.22f), q(x + (if (cerca) 0.02f else -0.02f), 0f), (0.07f * u).coerceAtLeast(0.4f), StrokeCap.Round)
-        // El cuerpo: bultos de lana en dos pisos, el anca con la cola gorda.
-        val cuerpo = Path()
-        val bultos = if (cabra) listOf(Triple(-0.18f, -0.4f, 0.2f), Triple(0.12f, -0.42f, 0.2f), Triple(0.3f, -0.4f, 0.17f), Triple(-0.02f, -0.36f, 0.21f))
-        else listOf(Triple(-0.22f, -0.38f, 0.22f), Triple(0.02f, -0.43f, 0.24f), Triple(0.26f, -0.4f, 0.22f), Triple(-0.1f, -0.5f, 0.17f), Triple(0.16f, -0.52f, 0.17f), Triple(0.38f, -0.3f, 0.15f), Triple(0.0f, -0.3f, 0.24f))
-        for ((x, y, r) in bultos) { val rr = r * az.entre(0.9f, 1.1f); val c = q(x + az.entre(-0.02f, 0.02f), y); cuerpo.addOval(Rect(c, rr * u)) }
-        val col = if (cabra) lerp(lana, C.HOLLIN, az.entre(0.2f, 0.75f)) else lerp(lana, if (az.entero(5) == 0) C.FIELTRO_VIEJO else C.LANA, 0.5f)
-        drawPath(cuerpo, p.por(col, -0.1f, lejos))
-        val arriba = pie.y - (alto + 0.2f) * u
+        val ladoSol = if (p.solALaDerecha) 1f else -1f
+        val detalle = u > 9f; val cerca = u > 18f
+        // ---- Las proporciones de cada una.
+        val piernas = when { cabra -> 0.3f; cordero -> 0.3f; else -> 0.2f }
+        val rx = when { cabra -> 0.32f; cordero -> 0.27f; else -> 0.4f }
+        val ry = when { cabra -> 0.15f; cordero -> 0.16f; else -> 0.21f }
+        val centro = Offset(0.04f, -(piernas + ry * 0.92f))
+        val col = when {
+            cabra -> if (az.entero(4) == 0) lerp(C.FIELTRO, C.LANA, 0.5f) else lerp(lerp(C.CUERO, C.HOLLIN, 0.4f), lana, az.entre(0f, 0.35f))
+            cordero -> lerp(lana, Color.White, 0.3f)
+            else -> lerp(lana, if (az.entero(5) == 0) C.FIELTRO_VIEJO else C.LANA, 0.5f)
+        }
+        // Las de la estepa: unas de cabeza oscura, otras de cara blanca con manchas pardas.
+        val caraBlanca = !cabra && az.entero(3) == 0
+        val cabezaCol = when { cabra -> lerp(col, C.HOLLIN, 0.12f); caraBlanca -> lerp(col, C.FIELTRO_VIEJO, 0.4f); else -> cabeza }
+        val pataCol = if (cabra) lerp(col, C.HOLLIN, 0.3f) else lerp(C.CABEZA, C.TIERRA, 0.25f)
+        // ---- De lejos: una mancha de lana con su cabeza y un asomo de patas.
+        if (!detalle) {
+            val c = q(centro.x, centro.y)
+            if (u > 4f && patas) for (x in listOf(-0.22f, 0.24f)) drawLine(p.medio(pataCol, lejos), q(x, -piernas), q(x, 0f), (0.06f * u).coerceAtLeast(0.35f))
+            drawOval(Brush.verticalGradient(listOf(p.luz(col, lejos), p.por(col, -0.1f, lejos), p.sombra(col, lejos)), c.y - ry * u, c.y + ry * u), Offset(c.x - rx * u, c.y - ry * u), Size(2f * rx * u, 2f * ry * u))
+            val h = if (pasta) q(-rx - 0.06f, -piernas * 0.5f) else q(-rx - 0.05f, centro.y - ry * 0.6f)
+            drawOval(p.por(cabezaCol, 0.1f, lejos), Offset(h.x - 0.09f * u, h.y - 0.06f * u), Size(0.18f * u, 0.13f * u))
+            return
+        }
+        // ---- Las patas, antes que el cuerpo (la lana las tapa arriba): finas, con la rodilla y la pezuña.
+        if (patas) for ((x, delante) in listOf(-0.26f to false, 0.22f to false, -0.2f to true, 0.29f to true)) {
+            val arriba = q(x, -piernas - 0.08f); val rodilla = q(x + (if (x > 0f) 0.025f else -0.01f), -piernas * 0.45f); val abajo = q(x + (if (delante) 0.012f else -0.012f), 0f)
+            val g = ((if (cabra) 0.03f else 0.034f) * u).coerceAtLeast(0.4f)
+            val c = if (delante) p.por(pataCol, if ((x > 0f) == (ladoSol * dir > 0f)) 0.3f else -0.2f, lejos) else p.sombra(lerp(pataCol, C.HOLLIN, 0.3f), lejos)
+            drawLine(c, arriba, rodilla, g * 1.25f, StrokeCap.Round); drawLine(c, rodilla, abajo, g, StrokeCap.Round)
+            drawOval(p.medio(lerp(C.HOLLIN, C.TIERRA, 0.2f), lejos), Offset(abajo.x - g * 0.9f, abajo.y - g * 0.9f), Size(g * 1.9f, g * 1.1f))
+        }
+        // ---- El cuerpo: el vellón con su cola gorda detrás (la cabra, flaca, con el fleco de pelo de la barriga).
+        val cuerpo = if (cabra) Path().apply {
+            val c = q(centro.x, centro.y); val w = rx * u; val h = ry * u
+            moveTo(c + Offset(-w * dir, -h * 0.2f)); cubicTo(c + Offset(-w * 0.8f * dir, -h * 1.15f), c + Offset(w * 0.7f * dir, -h * 1.2f), c + Offset(w * dir, -h * 0.4f))
+            cubicTo(c + Offset(w * 1.08f * dir, h * 0.3f), c + Offset(w * 0.9f * dir, h * 0.9f), c + Offset(w * 0.7f * dir, h * 1.0f))
+            for (k in 0..8) { val t = k / 8f; lineTo(c + Offset((0.7f - 1.55f * t) * w * dir, h * (if (k % 2 == 0) 1.55f else 1.1f))) }
+            cubicTo(c + Offset(-w * 1.0f * dir, h * 0.9f), c + Offset(-w * 1.1f * dir, h * 0.3f), c + Offset(-w * dir, -h * 0.2f)); close()
+        } else vellon(q(centro.x, centro.y), rx * u, ry * u, az, 9, if (cordero) 0.06f else 0.13f).apply {
+            addPath(vellon(q(rx * 0.84f, centro.y + ry * 0.5f), (if (cordero) 0.07f else 0.12f) * u, (if (cordero) 0.1f else 0.15f) * u, az, 5, 0.05f))
+        }
+        val arriba = pie.y + (centro.y - ry * 1.2f) * u; val abajoY = pie.y + (centro.y + ry * 1.5f) * u
+        drawPath(cuerpo, p.por(col, 0f, lejos))
         clipPath(cuerpo) {
-            drawRect(Brush.verticalGradient(0f to p.luz(col, lejos), 0.45f to p.por(col, 0.15f, lejos), 1f to p.sombra(col, lejos), startY = arriba, endY = pie.y - 0.12f * u), Offset(pie.x - u, arriba), Size(2f * u, alto * u + 0.2f * u))
-            val x0 = pie.x - 0.5f * u; val x1 = pie.x + 0.6f * u
-            drawRect(Brush.horizontalGradient(if (luzDer) listOf(p.sombra(col, lejos).copy(alpha = 0.5f), Color.Transparent) else listOf(Color.Transparent, p.sombra(col, lejos).copy(alpha = 0.5f)), x0, x1), Offset(x0, arriba), Size(x1 - x0, alto * u + 0.2f * u))
-            // Los rizos de la lana, en el lado de la luz.
-            if (u > 8f && !cabra) repeat((u * 0.9f).toInt().coerceAtMost(30)) {
-                // Los mechones de lana: toques cortos, claros arriba y del lado del sol, con su hueco oscuro debajo.
-                val c = q(az.entre(-0.38f, 0.44f), az.entre(-0.64f, -0.22f)); val w = az.entre(0.05f, 0.09f) * u
-                drawOval(p.sombra(col, lejos).copy(alpha = 0.25f), Offset(c.x - w, c.y - w * 0.2f), Size(w * 2f, w * 0.9f))
-                drawOval(p.luz(lerp(col, Color.White, 0.25f), lejos).copy(alpha = 0.5f), Offset(c.x - w * 0.9f, c.y - w * 0.55f), Size(w * 1.8f, w * 0.8f))
+            // La luz de arriba y la sombra de abajo; el lado que da la espalda al sol, más frío.
+            drawRect(Brush.verticalGradient(0f to p.luz(col, lejos), 0.4f to p.por(col, 0.15f, lejos), 0.75f to p.por(col, -0.4f, lejos), 1f to p.sombra(lerp(col, C.TIERRA, 0.3f), lejos), startY = arriba, endY = abajoY), Offset(pie.x - u, arriba), Size(2f * u, abajoY - arriba))
+            val x0 = pie.x - 0.5f * u; val x1 = pie.x + 0.55f * u
+            drawRect(Brush.horizontalGradient(if (p.solALaDerecha) listOf(p.sombra(col, lejos).copy(alpha = 0.5f), Color.Transparent, Color.Transparent) else listOf(Color.Transparent, Color.Transparent, p.sombra(col, lejos).copy(alpha = 0.5f)), x0, x1), Offset(x0, arriba), Size(x1 - x0, abajoY - arriba))
+            if (!cabra) {
+                // El vellón en mechones: toques blandos, cada uno con su luz encima y su hueco de sombra debajo, más
+                // grandes en el lomo; la lana de la barriga, sucia de tierra.
+                val n = if (cerca) (if (cordero) 22 else 46) else (if (cordero) 8 else 14)
+                repeat(n) {
+                    val t = az.entre(-0.95f, 0.95f); val v = az.entre(-0.95f, 0.85f) * sqrt((1f - t * t).coerceAtLeast(0f))
+                    val c = q(centro.x + t * rx, centro.y + v * ry)
+                    val w = (if (cordero) 0.04f else 0.055f) * u * az.entre(0.75f, 1.25f)
+                    val alto = (1f - (v + 1f) / 2f).coerceIn(0f, 1f); val lado = t * ladoSol * dir
+                    drawOval(p.sombra(lerp(col, C.TIERRA, 0.3f), lejos).copy(alpha = 0.22f + 0.18f * (1f - alto)), Offset(c.x - w, c.y - w * 0.25f), Size(w * 2f, w * 1.15f))
+                    drawOval(p.luz(lerp(col, Color.White, 0.25f), lejos).copy(alpha = (0.22f + 0.45f * alto + 0.2f * lado).coerceIn(0.05f, 0.85f)), Offset(c.x - w * 0.85f, c.y - w * 0.7f), Size(w * 1.6f, w * 1.0f))
+                }
+                mancha(q(centro.x + 0.06f, centro.y + ry * 0.95f), rx * 0.95f * u, ry * 0.32f * u, p.sombra(lerp(C.TIERRA, C.ESTIERCOL, 0.4f), lejos), 0.4f)
+            } else {
+                // El pelo de la cabra: liso y brillante en el lomo, más oscuro y largo hacia el fleco.
+                drawLine(p.luz(lerp(col, C.FIELTRO, 0.3f), lejos).copy(alpha = 0.45f), q(centro.x - rx * 0.6f, centro.y - ry * 0.8f), q(centro.x + rx * 0.7f, centro.y - ry * 0.75f), (0.03f * u).coerceAtLeast(0.4f), StrokeCap.Round)
+                if (cerca) for (k in 0 until 7) { val t = -0.7f + 1.4f * k / 6f; val a = q(centro.x + t * rx, centro.y + ry * 0.2f); drawLine(p.sombra(col, lejos).copy(alpha = 0.3f), a, a + Offset(0.01f * u * dir, ry * 1.1f * u), (0.012f * u).coerceAtLeast(0.35f), StrokeCap.Round) }
             }
         }
-        // La cabeza: abajo, pastando, o en alto, con las orejas caídas a los lados.
-        val cuello = if (pasta) q(-0.42f, -0.18f) else q(-0.45f, -0.5f)
-        val forma = Path().apply { addOval(Rect(cuello.x - 0.12f * u, cuello.y - 0.1f * u, cuello.x + 0.12f * u, cuello.y + 0.12f * u)) }
-        val hocico = if (pasta) q(-0.54f, -0.02f) else q(-0.63f, -0.42f)
-        forma.addPath(Path().apply { moveTo(cuello + Offset(0f, -0.1f * u)); cubicTo(cuello + Offset(-0.1f * u * dir, -0.13f * u), hocico + Offset(0.02f * u * dir, -0.08f * u), hocico + Offset(0f, -0.02f * u)); cubicTo(hocico + Offset(-0.02f * u * dir, 0.04f * u), hocico + Offset(0.04f * u * dir, 0.07f * u), hocico + Offset(0.08f * u * dir, 0.06f * u)); lineTo(cuello + Offset(0f, 0.11f * u)); close() })
-        drawPath(forma, p.por(if (cabra) lerp(col, C.HOLLIN, 0.2f) else cabeza, if (luzDer) -0.2f else 0.4f, lejos))
-        if (cabra && u > 5f) { drawLine(p.medio(C.PIEDRA, lejos), cuello + Offset(0f, -0.08f * u), cuello + Offset(0.12f * u * dir, -0.24f * u), (0.04f * u).coerceAtLeast(0.4f), StrokeCap.Round) }
-        else drawLine(p.medio(cabeza, lejos), cuello + Offset(0f, -0.04f * u), cuello + Offset(0.14f * u * dir, if (pasta) -0.01f * u else 0.02f * u), (0.05f * u).coerceAtLeast(0.4f), StrokeCap.Round)
-        // La cola gorda, una papada de grasa detrás.
-        if (!cabra) drawOval(p.por(col, -0.3f, lejos), q(0.38f, -0.32f).let { Offset(minOf(it.x, it.x + 0.2f * u * dir), it.y) }, Size(0.2f * u, 0.22f * u))
+        if (cabra) drawLine(p.medio(lerp(col, C.HOLLIN, 0.4f), lejos), q(rx * 0.95f, centro.y - ry * 0.3f), q(rx * 1.08f, centro.y - ry * 1.3f), (0.035f * u).coerceAtLeast(0.4f), StrokeCap.Round)
+        // ---- El cuello de lana (o de pelo) y la cabeza: arriba, o abajo pastando; la frente abombada, la oreja caída, el ojo.
+        val hombro = q(centro.x - rx * 0.72f, centro.y - ry * 0.25f)
+        val hocico = if (pasta) q(-rx - 0.16f, -0.025f) else q(-rx - 0.24f, centro.y - ry * (if (cabra) 1.9f else 1.05f))
+        val largoCabeza = (if (cabra) 0.22f else if (cordero) 0.18f else 0.21f) * u
+        val dc = (hocico - hombro).let { it / it.getDistance().coerceAtLeast(0.01f) }
+        val nuca = hocico - dc * largoCabeza
+        val nrm = Offset(-dc.y, dc.x).let { if (it.y < 0f) it * -1f else it }                // hacia la quijada
+        // El cuello: un vellón más chico, del hombro a la nuca (en la cabra, un cuello liso).
+        val cuello = if (cabra) Path().apply { val a = hombro; val b = nuca; val w0 = 0.1f * u; val w1 = 0.06f * u; moveTo(a - nrm * w0); lineTo(b - nrm * w1); lineTo(b + nrm * w1); lineTo(a + nrm * w0); close() }
+            else vellon((hombro + nuca) * 0.5f, ((hombro - nuca).getDistance() * 0.62f).coerceAtLeast(0.08f * u), (if (cordero) 0.08f else 0.11f) * u, az, 5, 0.08f)
+        drawPath(cuello, Brush.verticalGradient(listOf(p.luz(col, lejos), p.por(col, -0.35f, lejos)), minOf(hombro.y, nuca.y) - 0.1f * u, maxOf(hombro.y, nuca.y) + 0.12f * u))
+        val g = largoCabeza
+        val cabezaForma = Path().apply {
+            moveTo(nuca - nrm * (g * 0.3f)); cubicTo(nuca + dc * (g * 0.45f) - nrm * (g * 0.42f), hocico - dc * (g * 0.3f) - nrm * (g * 0.26f), hocico - nrm * (g * 0.06f))
+            cubicTo(hocico + dc * (g * 0.07f) + nrm * (g * 0.06f), hocico + nrm * (g * 0.22f), hocico - dc * (g * 0.1f) + nrm * (g * 0.25f))
+            cubicTo(nuca + dc * (g * 0.45f) + nrm * (g * 0.34f), nuca + nrm * (g * 0.38f), nuca + nrm * (g * 0.28f)); close()
+        }
+        drawPath(cabezaForma, Brush.linearGradient(listOf(p.por(cabezaCol, 0.55f, lejos), p.por(cabezaCol, -0.5f, lejos)), nuca - nrm * (g * 0.4f), nuca + nrm * (g * 0.4f)))
+        if (caraBlanca) clipPath(cabezaForma) { mancha(hocico - dc * (g * 0.2f), g * 0.3f, g * 0.25f, p.por(lerp(C.CUERO, C.HOLLIN, 0.3f), 0f, lejos), 0.7f) }
+        // La mota de lana de la frente, que tapa la nuca.
+        if (!cabra) drawPath(vellon(nuca - dc * (g * 0.08f) - nrm * (g * 0.06f), g * 0.2f, g * 0.19f, az, 4, 0.1f), p.por(col, 0.35f, lejos))
+        // La oreja caída (la de la cabra, de lado), el ojo y el ollar.
+        val oreja = nuca + dc * (g * 0.06f) - nrm * (g * 0.04f)
+        val caida = (if (cabra) (dc * -0.55f - nrm * 0.45f) else (nrm * 0.6f - dc * 0.8f)).let { it / it.getDistance().coerceAtLeast(0.01f) }
+        val punta = oreja + caida * (g * 0.5f)
+        drawPath(Path().apply { val n2 = Offset(-caida.y, caida.x) * (g * 0.09f); moveTo(oreja + n2); cubicTo(oreja + n2 * 1.6f + caida * (g * 0.3f), punta + n2 * 0.6f, punta); cubicTo(punta - n2 * 0.8f, oreja - n2 * 1.3f + caida * (g * 0.3f), oreja - n2); close() }, p.por(lerp(cabezaCol, C.HOLLIN, 0.15f), -0.3f, lejos))
+        drawCircle(p.medio(C.HOLLIN, lejos), (0.065f * g).coerceAtLeast(0.35f), nuca + dc * (g * 0.36f) - nrm * (g * 0.08f))
+        if (cerca) drawCircle(Color.White.copy(alpha = 0.45f), (0.025f * g).coerceAtLeast(0.2f), nuca + dc * (g * 0.34f) - nrm * (g * 0.1f))
+        drawLine(p.sombra(lerp(cabezaCol, C.HOLLIN, 0.4f), lejos), hocico - dc * (g * 0.05f), hocico - dc * (g * 0.15f) + nrm * (g * 0.06f), (0.05f * g).coerceAtLeast(0.3f), StrokeCap.Round)
+        if (cabra) {
+            // Los cuernos, que se vuelven hacia atrás, y la barba.
+            val raiz = nuca - nrm * (g * 0.28f) + dc * (g * 0.08f)
+            drawPath(Path().apply { moveTo(raiz); cubicTo(raiz - nrm * (g * 0.5f), raiz - nrm * (g * 0.62f) - dc * (g * 0.5f), raiz - nrm * (g * 0.2f) - dc * (g * 0.78f)) }, p.por(lerp(C.PIEDRA, C.CUERO, 0.3f), 0.3f, lejos), style = Stroke((0.09f * g).coerceAtLeast(0.4f), cap = StrokeCap.Round))
+            drawLine(p.medio(lerp(col, C.HOLLIN, 0.3f), lejos), hocico - dc * (g * 0.22f) + nrm * (g * 0.2f), hocico - dc * (g * 0.3f) + nrm * (g * 0.55f), (0.08f * g).coerceAtLeast(0.35f), StrokeCap.Round)
+        }
+        // De noche, la lana clara toma un filo de luna en el lomo.
+        if (p.l.noche > 0.3f && !cabra) clipPath(cuerpo) { drawRect(Brush.verticalGradient(listOf(C.LUNA.copy(alpha = 0.3f * p.l.noche), Color.Transparent), arriba, arriba + ry * u * 0.9f), Offset(pie.x - u, arriba), Size(2f * u, ry * u)) }
+    }
+
+    /** La silueta de una oveja, para su sombra arrojada. */
+    fun siluetaDeOveja(pie: Offset, largo: Float): Path = Path().apply {
+        addOval(androidx.compose.ui.geometry.Rect(pie.x - 0.42f * largo, pie.y - 0.66f * largo, pie.x + 0.46f * largo, pie.y - 0.2f * largo))
+        addPath(poligono(listOf(pie + Offset(-0.3f * largo, -0.22f * largo), pie + Offset(0.3f * largo, -0.22f * largo), pie + Offset(0.3f * largo, 0f), pie + Offset(-0.3f * largo, 0f))))
     }
 
     /**
      * Un rebaño apretado: las ovejas de [sitios] (dónde pisa cada una, de atrás adelante se ordenan solas) con su talla
      * según la profundidad ([talla] de la y). Se tapan unas a otras: lomos que asoman detrás de lomos. Una de cada
-     * [cabras], cabra. Las de detrás no enseñan las patas.
+     * [cabras], cabra. Las de detrás no enseñan las patas. Las chicas (lejos) son manchas con su cabeza y su sombra corta.
      */
     fun DrawScope.rebano(p: Pincel, sitios: List<Offset>, talla: (Float) -> Float, az: Azar, lejos: (Float) -> Float, pastan: Float = 0.5f, cabras: Int = 7) {
         val orden = sitios.sortedBy { it.y }
+        // El suelo pisado bajo el rebaño: un poco más oscuro, para que las ovejas no floten.
+        for (q in orden) { val u = talla(q.y); drawOval(p.sombra(C.TIERRA, lejos(q.y)).copy(alpha = 0.22f), Offset(q.x - 0.5f * u, q.y - 0.08f * u), Size(u, 0.18f * u)) }
         for ((i, q) in orden.withIndex()) {
             val u = talla(q.y); val l = lejos(q.y)
-            drawOval(p.sombra(C.TIERRA, l).copy(alpha = 0.35f), Offset(q.x - 0.4f * u, q.y - 0.06f * u), Size(0.9f * u, 0.14f * u))
+            if (p.r.fuerza > 0.05f) { val d = (p.r.ax * 0.3f * u).coerceIn(-u, u); drawOval(p.r.color.copy(alpha = (0.55f * p.r.fuerza).coerceIn(0f, 1f)), Offset(q.x - 0.42f * u + minOf(0f, d), q.y - 0.06f * u), Size(0.84f * u + abs(d), 0.13f * u), blendMode = BlendMode.Multiply) }
             val delante = orden.drop(i + 1).none { abs(it.x - q.x) < u * 0.5f && it.y - q.y < u * 0.3f && it.y > q.y }
             oveja(p, q, u, if (az.entero(3) == 0) 1f else -1f, az, az.real() < pastan, l, delante, cabra = az.entero(cabras) == 0)
         }
+    }
+
+    /**
+     * Un rebaño muy apretado, como en el corral o a la hora de entrar: [cuantas] ovejas dentro de una elipse de centro
+     * [centro] y radios [rx] × [ry], en hileras que se tapan (de cada una de atrás asoma el lomo y a veces la cabeza),
+     * con su talla según la profundidad. Algunas cabras y, en la parición, [corderos] pegados a las madres de delante.
+     * **[Diseño propio]**: el reparto es un tresbolillo con algo de azar, no una simulación.
+     */
+    fun DrawScope.rebanoApretado(p: Pincel, sol: Sol3, centro: Offset, rx: Float, ry: Float, cuantas: Int, talla: (Float) -> Float, az: Azar, lejos: Float = 0f, pastan: Float = 0.3f, corderos: Int = 0, cabras: Int = 8) {
+        val sitios = ArrayList<Offset>()
+        // Las hileras, de atrás adelante: cada una más grande; dentro, las ovejas se pisan un poco.
+        // El paso entre hileras, para que las que hay llenen la elipse (ni una fila larga ni un hormiguero).
+        val uc = talla(centro.y); val paso = (PI.toFloat() * rx * ry / (cuantas * 0.54f * uc)).coerceIn(0.12f * uc, 0.45f * uc)
+        var y = centro.y - ry; var fila = 0
+        while (sitios.size < cuantas && y <= centro.y + ry) {
+            val u = talla(y); val k = (y - centro.y) / ry; val ancho = rx * sqrt((1f - k * k).coerceAtLeast(0f))
+            var x = centro.x - ancho + (if (fila % 2 == 0) 0f else u * 0.28f) + az.entre(0f, u * 0.2f)
+            while (x <= centro.x + ancho && sitios.size < cuantas) { sitios += Offset(x + az.entre(-u * 0.08f, u * 0.08f), y + az.entre(-u * 0.04f, u * 0.04f)); x += u * az.entre(0.46f, 0.62f) }
+            y += paso * u / uc; fila++
+        }
+        // El suelo pisado, oscuro de estiércol, y la sombra de la masa entera.
+        if (sitios.isNotEmpty()) {
+            val x0 = sitios.minOf { it.x } - talla(centro.y) * 0.5f; val x1 = sitios.maxOf { it.x } + talla(centro.y) * 0.5f
+            val y0 = sitios.minOf { it.y }; val y1 = sitios.maxOf { it.y }
+            drawOval(p.sombra(lerp(C.TIERRA, C.ESTIERCOL, 0.4f), lejos).copy(alpha = 0.4f), Offset(x0, y0 - talla(y0) * 0.1f), Size(x1 - x0, y1 - y0 + talla(y1) * 0.25f))
+        }
+        val orden = sitios.sortedBy { it.y }
+        for ((i, q) in orden.withIndex()) {
+            val u = talla(q.y)
+            val delante = orden.drop(i + 1).none { abs(it.x - q.x) < u * 0.45f && it.y - q.y < u * 0.3f }
+            oveja(p, q, u, if (az.entero(2) == 0) 1f else -1f, az, az.real() < pastan, lejos, delante, cabra = az.entero(cabras) == 0)
+        }
+        // Los corderos, pegados a las madres de la primera fila.
+        val delanteras = orden.takeLast(maxOf(corderos * 2, 1))
+        for (j in 0 until corderos) { val madre = delanteras[(j * 2) % delanteras.size]; val u = talla(madre.y) * 0.62f; oveja(p, madre + Offset(az.entre(-0.3f, 0.3f) * u * 1.6f, u * 0.32f), u, if (j % 2 == 0) 1f else -1f, az, j % 3 == 0, lejos, true, cordero = true) }
     }
 
     // =================================================================
@@ -926,125 +1119,405 @@ internal object PiezasMongol {
     val ISABELINO = lerp(C.ESTEPA, C.CUERO, 0.3f)
 
     /**
-     * Un caballo de la estepa, de lado: pequeño, recio, de patas cortas, cabeza grande y crin espesa. Pisa en [pie] con
-     * [alto] unidades hasta la cruz; [mira] 1 hacia la derecha, −1 hacia la izquierda. [pasta]: con la cabeza baja.
-     * [potro]: de patas largas, cuerpo corto y crin de cepillo. [silla]: con la silla de madera alta y su manta.
-     * [crin]: el color de la crin y la cola (por omisión, el del pelo, más oscuro).
+     * Cómo está un caballo. **[Aproximación]**: las posturas son las de un caballo de la estepa visto de lado, dibujadas
+     * a mano (no salen de un esqueleto).
+     * - [DE_PIE]: cuadrado, con la cabeza a media altura.
+     * - [PASTANDO]: el cuello abajo y el morro en la hierba.
+     * - [MIRANDO_ATRAS]: vuelve la cabeza hacia quien mira y hacia la grupa, por encima del lomo.
+     * - [DESCANSO]: la cabeza baja, las orejas flojas y una pata de atrás doblada, apoyada en la punta del casco: el Negro
+     *   atado junto a la puerta, de noche.
+     * - [ECHADO]: tumbado sobre el pecho, las patas recogidas, el cuello en alto (el potro).
+     * - [MAMANDO]: de pie, con el cuello estirado hacia abajo y el morro hacia arriba, buscando la ubre (el potro; ver
+     *   [parejaMamando]).
      */
-    fun DrawScope.caballo(p: Pincel, pie: Offset, alto: Float, mira: Float, pelo: Color, pasta: Boolean = false, potro: Boolean = false, silla: Boolean = false, crin: Color? = null, lejos: Float = 0f, cintas: Boolean = false) {
-        val dir = if (mira >= 0f) -1f else 1f                                     // el dibujo mira a la izquierda; con −1 se voltea
-        val u = alto / 100f; val piernas = if (potro) 1.32f else 1f; val sube = (piernas - 1f) * 50f
-        // Lo que está por encima del codo sube con las patas largas del potro; las patas se estiran.
-        fun q(x: Float, y: Float) = Offset(pie.x + x * u * dir, pie.y + (if (y < -50f) y - sube else y * piernas) * u)
-        val delSol = p.solALaDerecha == (dir < 0f)                               // la luz le da por la grupa
-        val oscuro = crin ?: lerp(pelo, C.HOLLIN, 0.6f)
-        val luz = p.luz(pelo, lejos); val medio = p.por(pelo, 0.1f, lejos); val sombra = p.sombra(lerp(pelo, oscuro, 0.25f), lejos)
-        val detalle = alto > 22f
-        fun vestir(forma: Path, y0: Float, y1: Float) {
-            drawPath(forma, medio)
-            clipPath(forma) {
-                drawRect(Brush.verticalGradient(0f to luz, 0.38f to luz.copy(alpha = 0f), 0.6f to sombra.copy(alpha = 0f), 1f to sombra, startY = q(0f, y0).y, endY = q(0f, y1).y), Offset(pie.x - 130f * u, q(0f, y0 - 10f).y), Size(260f * u, (y1 - y0 + 20f) * u * 1.5f))
-                val lado = if (delSol) listOf(sombra.copy(alpha = 0.5f), Color.Transparent, luz.copy(alpha = 0.25f)) else listOf(luz.copy(alpha = 0.25f), Color.Transparent, sombra.copy(alpha = 0.5f))
-                drawRect(Brush.horizontalGradient(if (dir > 0f) lado else lado.reversed(), pie.x - 70f * u, pie.x + 70f * u), Offset(pie.x - 130f * u, q(0f, y0 - 10f).y), Size(260f * u, (y1 - y0 + 20f) * u * 1.5f))
-            }
+    enum class Postura { DE_PIE, PASTANDO, MIRANDO_ATRAS, DESCANSO, ECHADO, MAMANDO }
+
+    /** Lo que tiene cada pelo: la crin, las patas oscuras (los bayos y los isabelinos), la raya del lomo, las motas del tordo, el morro claro, el lucero, el brillo. */
+    private class Capa(val pelo: Color, val crin: Color, val patas: Color?, val raya: Boolean, val motas: Boolean, val morro: Color, val lucero: Boolean, val brillo: Color)
+
+    private fun capaDe(pelo: Color, crin: Color?): Capa = when (pelo) {
+        BAYO -> Capa(pelo, crin ?: lerp(C.HOLLIN, C.CUERO, 0.18f), lerp(C.HOLLIN, C.CUERO, 0.25f), true, false, lerp(pelo, C.FIELTRO, 0.45f), false, lerp(pelo, C.ORO, 0.4f))
+        ISABELINO -> Capa(pelo, crin ?: lerp(C.HOLLIN, C.CUERO, 0.35f), lerp(C.HOLLIN, C.CUERO, 0.4f), true, false, lerp(pelo, C.FIELTRO, 0.4f), false, lerp(pelo, C.FIELTRO, 0.35f))
+        TORDO -> Capa(pelo, crin ?: lerp(C.PIEDRA, C.HOLLIN, 0.5f), lerp(pelo, C.HOLLIN, 0.35f), false, true, lerp(C.PIEDRA, C.HOLLIN, 0.4f), false, lerp(pelo, Color.White, 0.4f))
+        NEGRO -> Capa(pelo, crin ?: lerp(C.HOLLIN, C.CUERO, 0.12f), null, false, false, lerp(pelo, C.CUERO, 0.35f), true, lerp(C.SOMBRA, C.FIELTRO, 0.35f))
+        BLANCO -> Capa(pelo, crin ?: lerp(C.FIELTRO, C.PIEDRA, 0.4f), null, false, false, lerp(C.PIEDRA, C.CUERO, 0.3f), false, lerp(pelo, Color.White, 0.5f))
+        ALAZAN -> Capa(pelo, crin ?: lerp(pelo, C.ORO, 0.35f), null, false, false, lerp(pelo, C.HOLLIN, 0.3f), true, lerp(pelo, C.ORO, 0.45f))
+        else -> Capa(pelo, crin ?: lerp(pelo, C.HOLLIN, 0.6f), null, false, false, lerp(pelo, C.HOLLIN, 0.3f), false, lerp(pelo, C.FIELTRO, 0.35f))
+    }
+
+    /**
+     * La forma de un caballo en una postura, en sus propias medidas: [alto] unidades hasta la cruz, de lado, con la
+     * cabeza hacia la izquierda si [mira] es −1 (y hacia la derecha si es 1). Las medidas, en centésimas de la cruz; el
+     * potro es de patas largas, cuerpo corto y cabeza grande.
+     */
+    private class Anatomia(val pie: Offset, val alto: Float, mira: Float, val postura: Postura, val potro: Boolean) {
+        val u = alto / 100f
+        val dir = if (mira >= 0f) -1f else 1f                                        // el dibujo mira a la izquierda; con −1 se voltea
+        private val echado = postura == Postura.ECHADO
+        /** Cuánto baja el cuerpo al echarse: hasta que la barriga toca el suelo. */
+        private val baja = if (echado) -mapa(0f, -42f).y - 3f else 0f
+
+        /** Las proporciones del potro: más corto de cuerpo y de patas más largas (de la cruz al suelo es lo mismo). */
+        fun mapa(x: Float, y: Float): Offset = if (!potro) Offset(x, y) else Offset(x * 0.82f, if (y <= -46f) -100f + (y + 100f) * (40f / 54f) else y * (60f / 46f))
+        /** Un punto del cuerpo (en las medidas del adulto) en el lienzo. */
+        fun c(x: Float, y: Float): Offset { val m = mapa(x, y); return q(m.x, m.y + baja) }
+        /** Un punto ya en las medidas del caballo (sin el mapa del potro) en el lienzo. */
+        fun q(x: Float, y: Float): Offset = Offset(pie.x + x * u * dir, pie.y + y * u)
+
+        // ---- El cuerpo: la cruz, el dorso, la grupa, la nalga, la babilla, la barriga, la cinchera, el codo y el pecho.
+        val cuerpo: Path = Path().apply {
+            moveTo(c(-28f, -101f)); cubicTo(c(-18f, -97f), c(-6f, -93f), c(4f, -93.5f)); cubicTo(c(16f, -94f), c(28f, -100f), c(40f, -100.5f))
+            cubicTo(c(48f, -101f), c(54f, -98f), c(57f, -93f)); cubicTo(c(62f, -86f), c(64f, -76f), c(61f, -66f)); cubicTo(c(59f, -58f), c(56f, -52f), c(53f, -47f))
+            cubicTo(c(46f, -50f), c(40f, -52f), c(34f, -49f)); cubicTo(c(22f, -43f), c(0f, -41f), c(-20f, -44f)); cubicTo(c(-28f, -45f), c(-34f, -47f), c(-38f, -51f))
+            cubicTo(c(-44f, -53f), c(-50f, -60f), c(-53f, -70f)); cubicTo(c(-55f, -78f), c(-50f, -88f), c(-44f, -94f)); cubicTo(c(-40f, -98f), c(-34f, -101f), c(-28f, -101f)); close()
         }
-        // Una pata, de arriba abajo, con su ancho en cada punto: el contorno suave, el menudillo peludo y el casco.
-        fun pata(puntos: List<Triple<Float, Float, Float>>, lejana: Boolean) {
+        /** La línea de arriba del cuerpo (para el filo de la luna). */
+        val lomo: List<Offset> = listOf(c(-30f, -100f), c(-18f, -97f), c(-4f, -93.5f), c(10f, -93.5f), c(24f, -97f), c(38f, -100.5f), c(50f, -99f), c(57f, -93f))
+
+        // ---- El cuello y la cabeza, según la postura.
+        private val base = Offset(-38f, -88f)
+        /** Donde la cabeza se junta con el cuello, la dirección de la cabeza y cuánto se arquea el cuello. */
+        private val junta: Offset; private val haciaCabeza: Offset; private val arco: Float
+        init {
+            val (j, d, a) = when (postura) {
+                Postura.DE_PIE -> Triple(Offset(-64f, -128f), Offset(-0.66f, 0.75f), 5f)
+                Postura.PASTANDO -> Triple(Offset(-70f, -52f), Offset(-0.3f, 0.95f), 4f)
+                Postura.MIRANDO_ATRAS -> Triple(Offset(-36f, -108f), Offset(0.9f, 0.44f), 14f)
+                Postura.DESCANSO -> Triple(Offset(-70f, -110f), Offset(-0.52f, 0.85f), 3f)
+                Postura.ECHADO -> Triple(Offset(-62f, -126f), Offset(-0.6f, 0.8f), 5f)
+                Postura.MAMANDO -> Triple(Offset(-76f, -40f), Offset(-0.86f, -0.5f), -2f)
+            }
+            junta = j; haciaCabeza = d; arco = a
+        }
+        /** La cabeza vuelta hacia atrás (al mirar atrás): se dibuja al revés. */
+        val alReves = postura == Postura.MIRANDO_ATRAS
+        /** El cuello: una línea del medio, y a cada lado la cresta (de donde cae la crin) y la garganta. */
+        val cresta: List<Offset>; val garganta: List<Offset>
+        init {
+            val b = mapa(base.x, base.y) + Offset(0f, baja); val j = mapa(junta.x, junta.y) + Offset(0f, baja)
+            val d = j - b; val l = d.getDistance(); val n0 = Offset(-d.y, d.x) / l              // hacia la cresta
+            val p1 = b + d * 0.33f + n0 * arco; val p2 = b + d * 0.72f + n0 * (arco * 0.6f)
+            val cr = ArrayList<Offset>(); val ga = ArrayList<Offset>()
+            for (i in 0..10) {
+                val t = i / 10f; val s = 1f - t
+                val m = b * (s * s * s) + p1 * (3f * s * s * t) + p2 * (3f * s * t * t) + j * (t * t * t)
+                val tg = (p1 - b) * (3f * s * s) + (p2 - p1) * (6f * s * t) + (j - p2) * (3f * t * t)
+                val nn = Offset(-tg.y, tg.x) / tg.getDistance().coerceAtLeast(0.01f)
+                val ancho = (if (potro) 13f else 16.5f) * (1f - t) + (if (potro) 8f else 9.5f) * t
+                val bulto = 1f + 0.18f * sin(PI.toFloat() * t)
+                cr += m + nn * (ancho * bulto); ga += m - nn * ancho
+            }
+            cresta = cr.map { q(it.x, it.y) }; garganta = ga.map { q(it.x, it.y) }
+        }
+        val cuello: Path = Path().apply { moveTo(cresta[0]); for (k in cresta.drop(1)) lineTo(k); for (k in garganta.reversed()) lineTo(k); close() }
+
+        /** El tamaño de la cabeza: la del potro, más grande para su cuerpo. */
+        private val hs = if (potro) 1.05f else 1f
+        private val jm = mapa(junta.x, junta.y) + Offset(0f, baja)
+        /** Un punto de la cabeza: [hx] hacia el morro, [hy] hacia la quijada, en centésimas. */
+        fun h(hx: Float, hy: Float): Offset {
+            val d = haciaCabeza; val n = if (alReves) Offset(-d.y, d.x) else Offset(d.y, -d.x)
+            val k = if (alReves) 0.82f else 1f                                     // de tres cuartos, se ve más corta
+            return q(jm.x + (d.x * hx * k + n.x * hy) * hs, jm.y + (d.y * hx * k + n.y * hy) * hs)
+        }
+        val cabeza: Path = Path().apply {
+            moveTo(h(-3f, -9f)); cubicTo(h(4f, -11.5f), h(12f, -11.5f), h(20f, -10f)); cubicTo(h(30f, -8.5f), h(40f, -6.5f), h(47f, -4f))
+            cubicTo(h(51f, -2.5f), h(54f, 0f), h(53.5f, 3f)); cubicTo(h(53f, 5f), h(50f, 6.5f), h(47.5f, 7f)); cubicTo(h(47f, 9f), h(45f, 10f), h(42f, 9.5f))
+            cubicTo(h(36f, 10f), h(30f, 11.5f), h(24f, 14f)); cubicTo(h(18f, 16.5f), h(9f, 16f), h(5f, 13f)); cubicTo(h(2f, 11f), h(-1f, 9f), h(-3f, 7f)); close()
+        }
+        /** El hocico, donde llega el morro. */
+        val hocico: Offset get() = h(52f, 2f)
+
+        // ---- Las patas: de arriba abajo, cada punto con su medio ancho; el corvejón (en las de atrás) y cómo pisa el casco.
+        class Pata(val puntos: List<Triple<Float, Float, Float>>, val lejana: Boolean, val trasera: Boolean, val casco: Float = 0f, val directa: Boolean = false)
+        val patas: List<Pata> = when (postura) {
+            Postura.ECHADO -> listOf(
+                Pata(listOf(Triple(-36f, -15f, 6.5f), Triple(-50f, -10f, 5f), Triple(-60f, -7f, 4.4f), Triple(-70f, -4f, 3.2f), Triple(-74f, -2.6f, 3.4f)), true, false, 1.2f, true),
+                Pata(listOf(Triple(50f, -10f, 6f), Triple(58f, -6f, 4.6f), Triple(66f, -3.5f, 3.3f), Triple(70f, -2.6f, 3.4f)), true, true, 1.4f, true),
+                Pata(listOf(Triple(-38f, -18f, 7.5f), Triple(-48f, -10f, 6f), Triple(-56f, -6f, 4.6f), Triple(-50f, -3.6f, 3.4f), Triple(-42f, -3f, 3.2f), Triple(-37f, -2.8f, 3.4f)), false, false, -1.5f, true),
+                Pata(listOf(Triple(30f, -24f, 12f), Triple(44f, -10f, 7f), Triple(52f, -5f, 5f), Triple(42f, -3.4f, 3.4f), Triple(30f, -3f, 3.3f), Triple(24f, -2.8f, 3.5f)), false, true, 1.5f, true),
+            )
+            Postura.DESCANSO -> listOf(
+                Pata(listOf(Triple(-35f, -66f, 9f), Triple(-34f, -52f, 7f), Triple(-33f, -38f, 5f), Triple(-32f, -27f, 4.4f), Triple(-31f, -19f, 3.2f), Triple(-30f, -10f, 3.1f), Triple(-31f, -6f, 3.8f), Triple(-33f, -2.5f, 3.4f)), true, false),
+                Pata(listOf(Triple(34f, -66f, 13f), Triple(41f, -50f, 9f), Triple(44f, -40f, 6.4f), Triple(47f, -30f, 5.2f), Triple(45f, -20f, 3.4f), Triple(44f, -10f, 3.3f), Triple(43f, -6f, 4f), Triple(40f, -2.5f, 3.5f)), true, true),
+                Pata(listOf(Triple(-41f, -66f, 10f), Triple(-40f, -52f, 7.5f), Triple(-39f, -38f, 5.2f), Triple(-39f, -27f, 4.6f), Triple(-39f, -20f, 3.3f), Triple(-39f, -10f, 3.2f), Triple(-40f, -6f, 4f), Triple(-42f, -2.5f, 3.6f)), false, false),
+                // La de atrás de este lado, doblada: la cadera cae, el corvejón se adelanta y el casco apoya de punta.
+                Pata(listOf(Triple(40f, -64f, 15f), Triple(44f, -48f, 10f), Triple(46f, -38f, 7f), Triple(48f, -27f, 5.6f), Triple(43f, -17f, 3.6f), Triple(39f, -9f, 3.4f), Triple(37f, -5.6f, 4f), Triple(35f, -2.4f, 3.5f)), false, true, -2.2f),
+            )
+            Postura.MAMANDO -> listOf(
+                Pata(listOf(Triple(-35f, -66f, 9f), Triple(-35f, -52f, 7f), Triple(-36f, -38f, 5f), Triple(-37f, -27f, 4.4f), Triple(-39f, -19f, 3.2f), Triple(-41f, -10f, 3.1f), Triple(-42f, -6f, 3.8f), Triple(-44f, -2.5f, 3.4f)), true, false),
+                Pata(listOf(Triple(34f, -66f, 13f), Triple(41f, -50f, 9f), Triple(46f, -40f, 6.4f), Triple(50f, -30f, 5.2f), Triple(49f, -20f, 3.4f), Triple(49f, -10f, 3.3f), Triple(49f, -6f, 4f), Triple(47f, -2.5f, 3.5f)), true, true),
+                Pata(listOf(Triple(-41f, -66f, 10f), Triple(-41f, -52f, 7.5f), Triple(-42f, -38f, 5.2f), Triple(-44f, -27f, 4.6f), Triple(-46f, -20f, 3.3f), Triple(-48f, -10f, 3.2f), Triple(-49f, -6f, 4f), Triple(-51f, -2.5f, 3.6f)), false, false),
+                Pata(listOf(Triple(40f, -66f, 15f), Triple(47f, -50f, 10f), Triple(51f, -40f, 7f), Triple(55f, -30f, 5.6f), Triple(54f, -20f, 3.6f), Triple(54f, -10f, 3.4f), Triple(53f, -6f, 4.2f), Triple(51f, -2.5f, 3.7f)), false, true),
+            )
+            else -> listOf(
+                Pata(listOf(Triple(-35f, -66f, 9f), Triple(-34f, -52f, 7f), Triple(-33f, -38f, 5f), Triple(-32f, -27f, 4.4f), Triple(-31f, -19f, 3.2f), Triple(-30f, -10f, 3.1f), Triple(-31f, -6f, 3.8f), Triple(-33f, -2.5f, 3.4f)), true, false),
+                Pata(listOf(Triple(34f, -66f, 13f), Triple(41f, -50f, 9f), Triple(44f, -40f, 6.4f), Triple(47f, -30f, 5.2f), Triple(45f, -20f, 3.4f), Triple(44f, -10f, 3.3f), Triple(43f, -6f, 4f), Triple(40f, -2.5f, 3.5f)), true, true),
+                Pata(listOf(Triple(-41f, -66f, 10f), Triple(-40f, -52f, 7.5f), Triple(-39f, -38f, 5.2f), Triple(-39f, -27f, 4.6f), Triple(-39f, -20f, 3.3f), Triple(-39f, -10f, 3.2f), Triple(-40f, -6f, 4f), Triple(-42f, -2.5f, 3.6f)), false, false),
+                Pata(listOf(Triple(40f, -66f, 15f), Triple(47f, -50f, 10f), Triple(50f, -40f, 7f), Triple(53f, -30f, 5.6f), Triple(51f, -20f, 3.6f), Triple(50f, -10f, 3.4f), Triple(49f, -6f, 4.2f), Triple(46f, -2.5f, 3.7f)), false, true),
+            )
+        }
+        /** Un punto de una pata en el lienzo: las del caballo echado ya están en su sitio; las demás pasan por el mapa del potro. */
+        fun pq(pata: Pata, x: Float, y: Float): Offset = if (pata.directa) q(x * (if (potro) 0.82f else 1f), y) else c(x, y)
+
+        /** La forma de una pata: el contorno suave, con su medio ancho en cada punto. */
+        fun formaDe(pata: Pata): Path {
+            val pts = pata.puntos.map { pq(pata, it.first, it.second) }; val an = pata.puntos.map { it.third * u * (if (potro) 0.85f else 1f) }
             val izq = ArrayList<Offset>(); val der = ArrayList<Offset>()
-            for ((k, t) in puntos.withIndex()) {
-                val a = puntos[maxOf(k - 1, 0)]; val b = puntos[minOf(k + 1, puntos.size - 1)]
-                val d = q(b.first, b.second) - q(a.first, a.second); val l = d.getDistance().coerceAtLeast(0.01f); val nrm = Offset(-d.y, d.x) / l
-                val c = q(t.first, t.second); izq += c + nrm * (t.third * u); der += c - nrm * (t.third * u)
+            for (i in pts.indices) {
+                val a = pts[maxOf(i - 1, 0)]; val b = pts[minOf(i + 1, pts.size - 1)]; val d = b - a; val l = d.getDistance().coerceAtLeast(0.01f); val n = Offset(-d.y, d.x) / l
+                izq += pts[i] + n * an[i]; der += pts[i] - n * an[i]
             }
-            val forma = io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva(izq + der.reversed()).apply { close() }
-            drawPath(forma, if (lejana) p.sombra(lerp(pelo, oscuro, 0.35f), lejos) else medio)
-            clipPath(forma) {
-                drawRect(Brush.verticalGradient(0f to Color.Transparent, 0.55f to p.sombra(lerp(pelo, oscuro, 0.5f), lejos).copy(alpha = 0.5f), 1f to p.sombra(oscuro, lejos), startY = q(0f, -40f).y, endY = q(0f, 0f).y), Offset(pie.x - 130f * u, q(0f, -70f).y), Size(260f * u, 90f * u * piernas))
-                if (!lejana && detalle) { val x = puntos[2]; drawLine(luz.copy(alpha = 0.5f), q(x.first + (if (delSol == (dir > 0f)) -1.6f else 1.6f), x.second - 10f), q(puntos[3].first + (if (delSol == (dir > 0f)) -1f else 1f), puntos[3].second), 1.1f * u, StrokeCap.Round) }
-            }
-            val casco = puntos.last()
-            if (detalle) for (k in -2..2) drawLine(p.medio(lerp(oscuro, C.HOLLIN, 0.3f), lejos).copy(alpha = 0.7f), q(casco.first + k * 1.2f, -9f), q(casco.first + k * 1.6f - 1.4f, -3.5f), 1f * u, StrokeCap.Round)
-            drawPath(poligono(q(casco.first - 3.6f, -4.5f), q(casco.first + 3.6f, -4.5f), q(casco.first + 4.8f, 0f), q(casco.first - 4.8f, 0f)), p.medio(lerp(C.HOLLIN, C.TIERRA, 0.2f), lejos))
+            return io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva(izq + der.reversed() + izq.take(1)).apply { close() }
         }
-        // Las patas del otro lado, más oscuras; las de este lado, debajo del cuerpo.
-        pata(listOf(Triple(-30f, -54f, 6.5f), Triple(-31f, -38f, 5f), Triple(-32f, -24f, 4.2f), Triple(-33f, -14f, 3f), Triple(-34f, -6f, 3.3f), Triple(-35f, -2f, 3.6f)), true)
-        pata(listOf(Triple(34f, -60f, 10f), Triple(40f, -40f, 6f), Triple(45f, -25f, 4.6f), Triple(42f, -14f, 3f), Triple(40f, -6f, 3.3f), Triple(39f, -2f, 3.6f)), true)
-        // La cola, larga y espesa, casi hasta el suelo.
-        val cola = Path().apply { moveTo(q(54f, -95f)); cubicTo(q(68f, -90f), q(70f, -58f), q(66f, -16f)); cubicTo(q(64f, -9f), q(58f, -9f), q(56f, -15f)); cubicTo(q(58f, -46f), q(56f, -78f), q(48f, -90f)); close() }
-        drawPath(cola, p.medio(oscuro, lejos))
-        if (detalle) for (k in 0..5) drawLine(p.luz(lerp(oscuro, pelo, 0.45f), lejos).copy(alpha = 0.35f), q(55f + k * 1.4f, -88f + k * 2f), q(58f + k * 1.3f, -20f + k * 1.6f), 0.6f * u)
-        pata(listOf(Triple(-40f, -56f, 8f), Triple(-41f, -38f, 5.6f), Triple(-42f, -24f, 4.6f), Triple(-43f, -14f, 3.2f), Triple(-44f, -6f, 3.5f), Triple(-45f, -2f, 3.8f)), false)
-        pata(listOf(Triple(42f, -64f, 13f), Triple(48f, -42f, 7f), Triple(53f, -25f, 4.8f), Triple(50f, -14f, 3.2f), Triple(48f, -6f, 3.5f), Triple(47f, -2f, 3.8f)), false)
-        // El cuerpo: la cruz, el dorso que se hunde un poco, la grupa redonda, la nalga, la babilla, el vientre y el pecho.
-        val cuerpo = Path().apply {
-            moveTo(q(-46f, -86f)); cubicTo(q(-40f, -97f), q(-34f, -103f), q(-26f, -102f)); cubicTo(q(-14f, -97f), q(-2f, -92f), q(10f, -93f)); cubicTo(q(24f, -95f), q(34f, -101f), q(44f, -99f))
-            cubicTo(q(56f, -96f), q(63f, -86f), q(62f, -72f)); cubicTo(q(61f, -62f), q(57f, -55f), q(51f, -50f)); cubicTo(q(46f, -47f), q(40f, -50f), q(33f, -50f)); cubicTo(q(18f, -42f), q(-12f, -40f), q(-28f, -45f))
-            cubicTo(q(-38f, -47f), q(-46f, -50f), q(-51f, -58f)); cubicTo(q(-56f, -66f), q(-54f, -78f), q(-46f, -86f)); close()
-        }
-        vestir(cuerpo, -103f, -40f)
-        clipPath(cuerpo) {
-            // La paletilla y el anca: dos bultos con su luz arriba; la sombra del vientre y del costillar.
-            mancha(q(-34f, -80f), 16f * u, 18f * u, luz, 0.5f)
-            mancha(q(40f, -86f), 18f * u, 15f * u, luz, 0.5f)
-            mancha(q(4f, -50f), 34f * u, 8f * u, sombra, 0.45f)
-            if (detalle) { mancha(q(-24f, -60f), 6f * u, 12f * u, sombra, 0.3f); mancha(q(32f, -64f), 7f * u, 13f * u, sombra, 0.3f) }
-        }
-        // El cuello y la cabeza, que bajan al pastar.
-        val giroCabeza = if (pasta) -dir * 62f else 0f
-        withTransformRot(giroCabeza, q(-30f, -92f)) {
-            val cuello = Path().apply { moveTo(q(-22f, -102f)); cubicTo(q(-36f, -111f), q(-50f, -125f), q(-60f, -139f)); lineTo(q(-72f, -128f)); cubicTo(q(-72f, -112f), q(-62f, -96f), q(-52f, -80f)); cubicTo(q(-44f, -82f), q(-32f, -90f), q(-22f, -102f)); close() }
-            vestir(cuello, -140f, -80f)
-            val cabeza = Path().apply {
-                moveTo(q(-60f, -141f)); cubicTo(q(-68f, -145f), q(-78f, -140f), q(-84f, -131f)); cubicTo(q(-92f, -120f), q(-99f, -110f), q(-103f, -102f)); cubicTo(q(-106f, -96f), q(-102f, -90f), q(-95f, -91f))
-                cubicTo(q(-88f, -92f), q(-84f, -98f), q(-78f, -100f)); cubicTo(q(-68f, -102f), q(-62f, -114f), q(-63f, -126f)); cubicTo(q(-63f, -132f), q(-60f, -136f), q(-60f, -141f)); close()
+
+        // ---- La cola: cae de la grupa casi hasta el suelo, espesa, con su peso.
+        fun cola(viento: Float): Path {
+            val v = viento.coerceIn(-1f, 1f) * 10f * dir
+            return if (echado) Path().apply {
+                moveTo(c(54f, -96f)); cubicTo(c(66f, -90f), q(72f, -20f), q(76f, -6f)); cubicTo(q(82f, -2f), q(96f, -1f), q(104f, -2f)); lineTo(q(104f, 0f)); cubicTo(q(90f, 1f), q(76f, 1f), q(70f, -1f)); cubicTo(q(66f, -14f), c(60f, -70f), c(50f, -92f)); close()
+            } else Path().apply {
+                val t0 = c(53f, -98f); val t1 = c(58f, -95f)
+                moveTo(t0); cubicTo(t1 + Offset(6f * u * -dir * -1f, 0f), c(70f, -78f), c(68f + v * 0.3f, -50f)); cubicTo(c(67f + v * 0.6f, -30f), c(64f + v, -14f), c(63f + v, -7f))
+                cubicTo(c(61f + v, -4f), c(56f + v, -4f), c(55f + v, -8f)); cubicTo(c(57f + v * 0.6f, -26f), c(59f + v * 0.3f, -50f), c(56f, -74f)); cubicTo(c(55f, -84f), c(52f, -92f), t0); close()
             }
-            vestir(cabeza, -145f, -90f)
-            clipPath(cabeza) {
-                mancha(q(-72f, -112f), 7f * u, 7f * u, luz, 0.5f)                          // la quijada, redonda
-                mancha(q(-100f, -96f), 7f * u, 5f * u, p.sombra(oscuro, lejos), 0.6f)        // el hocico, más oscuro
-            }
-            if (alto > 14f) {
-                drawCircle(p.medio(C.HOLLIN, lejos), 2f * u, q(-78f, -127f)); drawCircle(Color.White.copy(alpha = 0.4f), 0.7f * u, q(-78.6f, -127.6f))
-                drawLine(p.medio(C.HOLLIN, lejos), q(-99f, -102f), q(-101f, -99f), 1.4f * u, StrokeCap.Round)
-                drawLine(p.sombra(pelo, lejos).copy(alpha = 0.6f), q(-96f, -92f), q(-88f, -95f), 0.8f * u, StrokeCap.Round)
-            }
-            // Las orejas.
-            for (dx in listOf(4f, 0f)) drawPath(poligono(q(-64f + dx, -139f), q(-61f + dx, -152f), q(-57f + dx, -140f)), if (dx > 0f) sombra else medio)
-            // La crin: una masa espesa que cae por este lado del cuello, de borde deshilachado; y el copete.
-            val cresta = (0..9).map { val t = it / 9f; q(-62f + 40f * t, -140f + 38f * t) }
-            val caida = if (potro) 6f else 14f
-            val bajo = cresta.mapIndexed { k, c -> c + Offset((3f + 5f * (1f - k / 9f)) * u * dir, (caida * (0.6f + 0.4f * sin(k * 1.9f).let { it * it })) * u) }
-            val masa = Path().apply { moveTo(cresta[0]); for (c in cresta.drop(1)) lineTo(c); for (k in bajo.indices.reversed()) { lineTo(bajo[k]); if (k > 0) lineTo((bajo[k] + bajo[k - 1]) / 2f + Offset(0f, -3f * u)) }; close() }
-            drawPath(masa, p.medio(lerp(oscuro, C.HOLLIN, 0.15f), lejos))
-            if (detalle) clipPath(masa) { for (k in 0 until 14) { val t = k / 13f; val a = q(-62f + 40f * t, -140f + 38f * t); drawLine(p.luz(lerp(oscuro, pelo, 0.45f), lejos).copy(alpha = 0.4f), a, a + Offset(5f * u * dir, caida * u), 0.7f * u, StrokeCap.Round) } }
-            drawPath(Path().apply { moveTo(q(-62f, -141f)); cubicTo(q(-68f, -138f), q(-72f, -132f), q(-74f, -126f)); lineTo(q(-70f, -128f)); close() }, p.medio(oscuro, lejos))
-            // El ronzal de crin.
-            if (detalle && !potro) { drawLine(p.medio(C.CRIN, lejos), q(-67f, -134f), q(-84f, -103f), 1.2f * u); drawLine(p.medio(C.CRIN, lejos), q(-92f, -108f), q(-76f, -112f), 1.2f * u) }
-            if (cintas) for (k in 0 until 3) drawLine(p.medio(C.AZUL, lejos), q(-56f + 9f * k, -132f + 9f * k), q(-50f + 9f * k, -114f + 9f * k), 1.8f * u, StrokeCap.Round)
-        }
-        // La silla de madera, alta delante y detrás, sobre su manta de fieltro, con el estribo corto.
-        if (silla) {
-            val manta = Path().apply { moveTo(q(-24f, -101f)); cubicTo(q(-12f, -97f), q(4f, -94f), q(14f, -96f)); lineTo(q(16f, -80f)); cubicTo(q(4f, -78f), q(-14f, -80f), q(-26f, -84f)); close() }
-            drawPath(manta, p.por(C.ROJO, 0.1f, lejos)); drawPath(manta, p.luz(C.ORO, lejos).copy(alpha = 0.55f), style = Stroke(1f * u))
-            val asiento = Path().apply { moveTo(q(-21f, -101f)); cubicTo(q(-24f, -112f), q(-20f, -117f), q(-16f, -112f)); cubicTo(q(-12f, -103f), q(0f, -100f), q(6f, -104f)); cubicTo(q(8f, -114f), q(13f, -115f), q(13f, -106f)); lineTo(q(11f, -96f)); cubicTo(q(0f, -94f), q(-12f, -96f), q(-21f, -101f)); close() }
-            drawPath(asiento, p.por(lerp(C.MADERA, C.ROJO, 0.45f), 0.25f, lejos)); drawPath(asiento, p.luz(C.ORO, lejos).copy(alpha = 0.5f), style = Stroke(0.7f * u))
-            drawLine(p.medio(C.CRIN, lejos), q(-4f, -97f), q(-5f, -70f), 0.9f * u); drawPath(poligono(q(-9f, -70f), q(-1f, -70f), q(-2f, -66f), q(-8f, -66f)), p.medio(C.HOLLIN, lejos))
         }
     }
 
-    /** Gira lo que pinta [dibujo] [grados] alrededor de [pivote] (para bajar la cabeza del caballo). */
+    /**
+     * Un caballo de la estepa, de lado: pequeño, recio, de patas cortas, cabeza grande y crin espesa. Pisa en [pie] con
+     * [alto] unidades hasta la cruz; [mira] −1 hacia la izquierda, 1 hacia la derecha. [pasta]: con la cabeza baja (lo
+     * mismo que [postura] `PASTANDO`). [potro]: de patas largas, cuerpo corto y crin de cepillo. [silla]: con la silla de
+     * madera alta y su manta. [crin]: el color de la crin y la cola (por omisión, el de su pelo). [cintas]: cintas azules
+     * en la crin (las carreras). [viento], de −1 a 1: tiende la cola. [lumbreX]: dónde está, en el lienzo, la lumbre que
+     * lo alumbra de noche (con el pincel `con(calida)`); por omisión, del lado de la cabeza.
+     *
+     * Lleva su sombra de contacto debajo (la arrojada va en una `capaSombra`, con [siluetaDeCaballo]). Cada pelo tiene lo
+     * suyo: los bayos y los isabelinos, las patas negras, la raya del lomo y el morro claro; el tordo, las motas; el
+     * negro y el alazán, un lucero; el negro, un brillo frío en el pelo para que no quede una mancha. De noche, el lomo
+     * con la luz de la luna y un filo cálido del lado de la lumbre.
+     */
+    fun DrawScope.caballo(
+        p: Pincel, pie: Offset, alto: Float, mira: Float, pelo: Color, pasta: Boolean = false, potro: Boolean = false, silla: Boolean = false, crin: Color? = null,
+        lejos: Float = 0f, cintas: Boolean = false, postura: Postura = if (pasta) Postura.PASTANDO else Postura.DE_PIE, viento: Float = 0f, lumbreX: Float? = null,
+    ) {
+        val a = Anatomia(pie, alto, mira, postura, potro); val u = a.u; val dir = a.dir
+        val capa = capaDe(pelo, crin)
+        val detalle = alto > 20f; val fino = alto > 40f
+        val noche = p.l.noche
+        val luz = p.luz(lerp(pelo, capa.brillo, 0.35f), lejos); val medio = p.por(pelo, 0.05f, lejos); val sombra = p.sombra(lerp(pelo, capa.crin, 0.25f), lejos)
+        val crinCol = p.medio(capa.crin, lejos); val crinLuz = p.luz(lerp(capa.crin, capa.brillo, 0.5f), lejos)
+        val solDelante = p.solALaDerecha == (dir < 0f)                            // el sol le da por delante (por la cabeza)
+        val ladoSol = if (p.solALaDerecha) 1f else -1f
+        /** Las luces y las sombras de un trozo de cuerpo: arriba la luz, abajo la sombra; el lado del sol, más claro. */
+        fun vestir(forma: Path, y0: Float, y1: Float, x0: Float = pie.x - 110f * u, x1: Float = pie.x + 110f * u) {
+            drawPath(forma, medio)
+            clipPath(forma) {
+                drawRect(Brush.verticalGradient(0f to luz, 0.36f to luz.copy(alpha = 0f), 0.58f to sombra.copy(alpha = 0f), 1f to sombra, startY = y0, endY = y1), Offset(x0, y0 - 2f), Size(x1 - x0, y1 - y0 + 4f))
+                drawRect(Brush.horizontalGradient(if (p.solALaDerecha) listOf(sombra.copy(alpha = 0.55f), Color.Transparent, luz.copy(alpha = 0.22f)) else listOf(luz.copy(alpha = 0.22f), Color.Transparent, sombra.copy(alpha = 0.55f)), x0, x1), Offset(x0, y0 - 2f), Size(x1 - x0, y1 - y0 + 4f))
+            }
+        }
+        // ---- La sombra de contacto: bajo los cascos y la barriga, también sin sol.
+        val sx = a.q(-46f, 0f).x; val sx2 = a.q(58f, 0f).x
+        drawOval(p.sombra(C.TIERRA, lejos).copy(alpha = if (postura == Postura.ECHADO) 0.5f else 0.38f), Offset(minOf(sx, sx2) - 4f * u, pie.y - 3f * u), Size(abs(sx2 - sx) + 8f * u, 5.5f * u))
+
+        // ---- Una pata: el contorno, la sombra que baja, las patas negras de los bayos, el menudillo peludo y el casco.
+        fun pata(pt: Anatomia.Pata) {
+            val forma = a.formaDe(pt)
+            val pts = pt.puntos.map { a.pq(pt, it.first, it.second) }
+            val oscura = capa.patas
+            drawPath(forma, if (pt.lejana) p.sombra(lerp(pelo, capa.crin, 0.4f), lejos) else medio)
+            clipPath(forma) {
+                val y0 = a.c(0f, -66f).y; val y1 = pie.y
+                if (!pt.lejana) drawRect(Brush.verticalGradient(0f to luz.copy(alpha = 0.35f), 0.25f to Color.Transparent, 0.6f to sombra.copy(alpha = 0.35f), 1f to sombra.copy(alpha = 0.7f), startY = y0, endY = y1), Offset(pie.x - 120f * u, y0), Size(240f * u, y1 - y0 + 2f))
+                // Las patas oscuras, de la rodilla o del corvejón para abajo.
+                if (oscura != null) { val desde = pts[minOf(if (pt.trasera) 3 else 3, pts.size - 1)].y - 3f * u; drawRect(Brush.verticalGradient(listOf(p.medio(oscura, lejos).copy(alpha = 0f), p.medio(oscura, lejos), p.sombra(oscura, lejos)), desde - 6f * u, pie.y), Offset(pie.x - 120f * u, desde - 6f * u), Size(240f * u, pie.y - desde + 8f * u)) }
+                if (!pt.lejana && detalle) {
+                    // El filo de luz del lado del sol, y el tendón de la caña.
+                    val k = if ((ladoSol * dir) > 0f) -1f else 1f
+                    for (i in 1 until pts.size - 2) drawLine(luz.copy(alpha = 0.3f), pts[i] + Offset(k * pt.puntos[i].third * u * 0.5f * -dir, 0f), pts[i + 1] + Offset(k * pt.puntos[i + 1].third * u * 0.5f * -dir, 0f), (pt.puntos[i].third * 0.45f) * u, StrokeCap.Round)
+                }
+            }
+            // El menudillo, con su pelo largo que cae sobre el casco.
+            val menudillo = pts[pts.size - 2]; val casco = pts.last()
+            val pelos = p.medio(lerp(oscura ?: capa.crin, C.HOLLIN, 0.2f), lejos)
+            if (detalle) for (k in -2..2) drawLine(pelos.copy(alpha = if (pt.lejana) 0.5f else 0.8f), menudillo + Offset((k * 1.1f + 1.6f) * u * dir, -1.6f * u), casco + Offset((k * 1.3f + 2.4f) * u * dir, 0.4f * u), 0.9f * u, StrokeCap.Round)
+            // El casco: de canto ancho abajo, inclinado; el echado lo tiene de lado.
+            val inclina = pt.casco
+            val ancho = 4.2f * u * (if (potro) 0.85f else 1f)
+            val cascoForma = poligono(listOf(casco + Offset(-ancho * 0.75f * dir, -2.6f * u + inclina * u), casco + Offset(ancho * 0.75f * dir, -2.6f * u - inclina * u), casco + Offset(ancho * 1.05f * dir, 2.3f * u), casco + Offset(-ancho * 1.3f * dir, 2.3f * u)))
+            drawPath(cascoForma, p.por(lerp(C.HOLLIN, C.TIERRA, 0.25f), if (pt.lejana) -0.6f else 0.1f, lejos))
+            if (detalle && !pt.lejana) drawLine(p.luz(lerp(C.HOLLIN, C.PIEDRA, 0.4f), lejos).copy(alpha = 0.6f), casco + Offset(-ancho * 1.2f * dir, 2f * u), casco + Offset(-ancho * 0.6f * dir, -2.4f * u), 0.7f * u)
+        }
+
+        val lejanas = a.patas.filter { it.lejana }; val cercanas = a.patas.filter { !it.lejana }
+        val echado = postura == Postura.ECHADO
+        for (pt in lejanas) pata(pt)
+        if (!echado) for (pt in cercanas) pata(pt)
+        // ---- La cola: una masa espesa con mechones; de noche, el filo de la luna.
+        val cola = a.cola(viento)
+        drawPath(cola, crinCol)
+        if (detalle) clipPath(cola) {
+            val y0 = a.c(0f, -98f).y
+            for (k in 0..9) { val x = 54f + k * 1.6f; drawLine((if (k % 3 == 0) crinLuz else p.sombra(capa.crin, lejos)).copy(alpha = 0.55f), a.c(x - 2f, -96f), a.c(x + 4f + viento * 6f, -6f), 0.8f * u, StrokeCap.Round) }
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.sombra(capa.crin, lejos).copy(alpha = 0.6f)), y0, pie.y), Offset(pie.x - 120f * u, y0), Size(240f * u, pie.y - y0))
+        }
+        // ---- El cuerpo.
+        val yCruz = a.c(0f, -101f).y; val yBarriga = a.c(0f, -42f).y
+        vestir(a.cuerpo, yCruz, yBarriga)
+        clipPath(a.cuerpo) {
+            // La paletilla y el anca, dos masas con su luz arriba; el costillar y la barriga en sombra; el pliegue de la babilla.
+            mancha(a.c(-36f, -82f), 14f * u, 17f * u, luz, 0.45f)
+            mancha(a.c(40f, -88f), 18f * u, 14f * u, luz, 0.5f)
+            mancha(a.c(4f, -46f), 36f * u, 7f * u, sombra, 0.5f)
+            if (detalle) {
+                mancha(a.c(-26f, -58f), 6f * u, 12f * u, sombra, 0.32f)
+                mancha(a.c(46f, -62f), 8f * u, 12f * u, sombra, 0.25f)
+                drawPath(Path().apply { moveTo(a.c(34f, -84f)); cubicTo(a.c(30f, -72f), a.c(32f, -58f), a.c(36f, -50f)) }, sombra.copy(alpha = 0.45f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+                drawPath(Path().apply { moveTo(a.c(-44f, -90f)); cubicTo(a.c(-36f, -80f), a.c(-34f, -66f), a.c(-37f, -54f)) }, sombra.copy(alpha = 0.3f), style = Stroke(1.2f * u, cap = StrokeCap.Round))
+            }
+            // La raya del lomo de los bayos y los isabelinos.
+            if (capa.raya) drawPath(Path().apply { moveTo(a.lomo[0]); for (k in a.lomo.drop(1)) lineTo(k) }, p.medio(capa.crin, lejos).copy(alpha = 0.7f), style = Stroke(2.4f * u, cap = StrokeCap.Round))
+            // Las motas del tordo: anillos claros con el centro algo más oscuro.
+            if (capa.motas && detalle) {
+                val az = Azar(Semilla.de("mongol", "tordo", (pie.x * 13f).toInt()))
+                drawRect(p.sombra(lerp(pelo, C.HOLLIN, 0.2f), lejos).copy(alpha = 0.25f), Offset(pie.x - 120f * u, a.c(0f, -102f).y), Size(240f * u, 60f * u))
+                repeat(if (fino) 40 else 22) { val x = az.entre(-36f, 56f); val c = a.c(x, az.entre(-96f, -60f) + (if (x > 20f) 0f else 6f)); val r = az.entre(3.4f, 5.4f) * u; mancha(c, r, r * 0.85f, p.luz(lerp(pelo, Color.White, 0.45f), lejos), 0.55f) }
+            }
+            // El pelo de invierno: pinceladas cortas que siguen el cuerpo.
+            if (fino) { val az = Azar(Semilla.de("mongol", "pelo", (pie.x * 7f + pie.y).toInt())); repeat(70) { val c = a.c(az.entre(-44f, 58f), az.entre(-98f, -46f)); drawLine((if (it % 3 == 0) luz else sombra).copy(alpha = 0.13f), c, c + Offset(1.2f * u * dir, 2.6f * u), 0.6f * u, StrokeCap.Round) } }
+        }
+        if (echado) for (pt in cercanas) pata(pt)
+        // ---- El cuello y la crin.
+        val yCuello = minOf(a.cresta.minOf { it.y }, a.garganta.minOf { it.y }); val yCuello2 = maxOf(a.cresta.maxOf { it.y }, a.garganta.maxOf { it.y })
+        vestir(a.cuello, yCuello, yCuello2)
+        clipPath(a.cuello) {
+            // El hueco de la garganta y el músculo del cuello, con su luz.
+            val g = a.garganta; mancha((g[3] + a.cresta[3]) / 2f, 6f * u, 10f * u, luz, 0.3f)
+            drawPath(Path().apply { moveTo(g[1]); for (k in g.drop(2)) lineTo(k) }, sombra.copy(alpha = 0.5f), style = Stroke(4f * u))
+        }
+        // La crin: cae de la cresta por este lado, larga y deshilachada; la del potro, corta y tiesa como un cepillo.
+        val cr = a.cresta
+        val caida = cr.mapIndexed { k, c0 ->
+            val t = k / 10f
+            val sigs = cr[minOf(k + 1, 10)] - cr[maxOf(k - 1, 0)]; val n = Offset(sigs.y, -sigs.x) / sigs.getDistance().coerceAtLeast(0.01f)
+            val haciaDentro = if ((n.x * (a.garganta[k].x - c0.x) + n.y * (a.garganta[k].y - c0.y)) > 0f) n else n * -1f
+            val baja = if (potro) haciaDentro * -0.4f + Offset(0f, -0.2f) else (haciaDentro * 0.55f + Offset(0f, 0.75f))
+            val largo = if (potro) 4f else (11f + 6f * sin(PI.toFloat() * t) + 3f * sin(k * 2.3f).let { it * it })
+            c0 + baja / baja.getDistance().coerceAtLeast(0.01f) * (largo * u)
+        }
+        if (cr.size > 2) {
+            val masa = Path().apply {
+                moveTo(cr[1]); for (k in cr.drop(2)) lineTo(k)
+                for (k in caida.indices.reversed()) { if (k < 1) break; lineTo(caida[k]); lineTo((caida[k] + cr[k]) * 0.5f + (caida[k - 1] - cr[k - 1]) * 0.15f) }
+                close()
+            }
+            drawPath(masa, crinCol)
+            if (detalle) clipPath(masa) {
+                for (k in 1 until cr.size) { val c0 = cr[k]; val c1 = caida[k]; drawLine((if (k % 3 == 0) crinLuz else p.sombra(capa.crin, lejos)).copy(alpha = 0.6f), c0, c1, 0.9f * u, StrokeCap.Round); drawLine(crinLuz.copy(alpha = 0.3f), c0 + (c1 - c0) * 0.1f + Offset(1.2f * u, 0f), c1 + Offset(1.6f * u, 0f), 0.6f * u, StrokeCap.Round) }
+            }
+            if (cintas) for (k in listOf(3, 6, 9)) drawLine(p.por(C.AZUL, 0.3f, lejos), cr[k], cr[k] + (caida[k] - cr[k]) * 1.3f, 1.8f * u, StrokeCap.Round)
+        }
+        // ---- De noche, el lomo, la cresta y la grupa con la luz de la luna (antes de la cabeza, que lo tapa si se vuelve).
+        val luna = lerp(C.LUNA, Color.White, 0.25f).copy(alpha = (0.55f * noche).coerceIn(0f, 1f))
+        if (noche > 0.2f && detalle) clipPath(union(listOf(a.cuerpo, a.cuello))) {
+            val lomo = Path().apply { moveTo(a.lomo[0]); for (k in a.lomo.drop(1)) lineTo(k) }; val cresta = Path().apply { moveTo(cr[0]); for (k in cr.drop(1)) lineTo(k) }
+            for ((ancho, k) in listOf(7f to 0.35f, 3f to 0.75f)) { drawPath(lomo, luna.copy(alpha = luna.alpha * k), style = Stroke(ancho * u, cap = StrokeCap.Round)); drawPath(cresta, luna.copy(alpha = luna.alpha * k * 0.8f), style = Stroke(ancho * u, cap = StrokeCap.Round)) }
+        }
+        // ---- La cabeza: la quijada redonda, la cara larga, el morro; el ojo, el ollar, la oreja; el copete.
+        val cab = a.cabeza
+        val yc0 = listOf(a.h(-3f, -9f), a.h(52f, 2f), a.h(20f, 16f)).minOf { it.y } - 4f * u; val yc1 = listOf(a.h(-3f, -9f), a.h(52f, 2f), a.h(20f, 16f)).maxOf { it.y } + 4f * u
+        // La oreja de allá, detrás.
+        val orejaFloja = postura == Postura.DESCANSO
+        fun oreja(dx: Float, cerca: Boolean) {
+            val b0 = a.h(dx, -9.5f); val b1 = a.h(dx + 5f, -10.5f)
+            val tip = if (orejaFloja) a.h(dx - 10f, -15f) else a.h(dx - 4f, -23f)
+            drawPath(Path().apply { moveTo(b0); cubicTo(a.h(dx - 4f, -14f), (b0 + tip) * 0.5f, tip); cubicTo((b1 + tip) * 0.5f + (b1 - b0) * 0.3f, a.h(dx + 6f, -14f), b1); close() }, if (cerca) medio else sombra)
+            if (cerca && detalle) drawLine(p.sombra(capa.crin, lejos).copy(alpha = 0.6f), (b0 + b1) * 0.5f, tip, 0.9f * u, StrokeCap.Round)
+        }
+        oreja(5f, false)
+        vestir(cab, yc0, yc1)
+        clipPath(cab) {
+            mancha(a.h(14f, 6f), 9f * u, 8f * u, luz, 0.45f)                           // la quijada, redonda
+            mancha(a.h(32f, -5f), 12f * u, 3f * u, luz, 0.35f)                          // la caña de la nariz
+            mancha(a.h(48f, 3f), 6f * u, 6f * u, p.por(capa.morro, 0f, lejos), 0.75f)   // el morro
+            drawPath(Path().apply { moveTo(a.h(6f, 14f)); cubicTo(a.h(14f, 6f), a.h(24f, 6f), a.h(32f, 9f)) }, sombra.copy(alpha = 0.45f), style = Stroke(1.3f * u, cap = StrokeCap.Round))
+            if (capa.lucero) drawPath(Path().apply { moveTo(a.h(13f, -9f)); cubicTo(a.h(17f, -11.5f), a.h(22f, -10f), a.h(20f, -7.5f)); cubicTo(a.h(26f, -7.5f), a.h(34f, -6f), a.h(40f, -5f)); lineTo(a.h(40f, -3.5f)); cubicTo(a.h(30f, -5f), a.h(20f, -5.5f), a.h(13f, -7f)); close() }, p.por(lerp(C.FIELTRO, pelo, 0.15f), 0.3f, lejos))
+        }
+        if (alto > 12f) {
+            // El ojo, bajo la ceja, con su brillo; el ollar; la comisura.
+            val ojo = a.h(16f, -4.5f)
+            drawOval(p.medio(lerp(C.HOLLIN, C.CUERO, 0.2f), lejos), Offset(ojo.x - 2.2f * u, ojo.y - 1.5f * u), Size(4.4f * u, 3f * u))
+            drawCircle(Color.White.copy(alpha = 0.5f), 0.7f * u, ojo + Offset(-0.8f * u * dir, -0.6f * u))
+            if (detalle) drawPath(Path().apply { moveTo(a.h(12f, -7.6f)); cubicTo(a.h(15f, -9.4f), a.h(19f, -9f), a.h(21f, -7f)) }, luz.copy(alpha = 0.6f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
+            drawPath(Path().apply { moveTo(a.h(46f, -2f)); cubicTo(a.h(49f, -2.5f), a.h(50.5f, 0f), a.h(49f, 1.6f)) }, p.medio(C.HOLLIN, lejos), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+            if (detalle) drawLine(p.sombra(capa.morro, lejos), a.h(46f, 6.5f), a.h(51f, 5.2f), 0.9f * u, StrokeCap.Round)
+        }
+        oreja(-1f, true)
+        // El copete, que cae sobre la frente.
+        val copete = Path().apply { moveTo(a.h(-4f, -10f)); cubicTo(a.h(4f, -14f), a.h(10f, -10f), a.h(16f, -6.5f)); cubicTo(a.h(11f, -6f), a.h(6f, -5f), a.h(2f, -3f)); cubicTo(a.h(1f, -6f), a.h(-2f, -8f), a.h(-4f, -10f)); close() }
+        drawPath(copete, crinCol)
+        if (detalle) drawLine(crinLuz.copy(alpha = 0.5f), a.h(0f, -10f), a.h(13f, -6.5f), 0.8f * u, StrokeCap.Round)
+        if (cintas) drawLine(p.por(C.AZUL, 0.4f, lejos), a.h(1f, -10f), a.h(9f, -2f), 1.6f * u, StrokeCap.Round)
+        // El ronzal de crin: el cabezal y la cuerda que cuelga.
+        if (detalle && !potro) {
+            val ronzal = p.medio(C.CRIN, lejos)
+            drawLine(ronzal, a.h(2f, -9f), a.h(8f, 14f), 1.2f * u); drawLine(ronzal, a.h(36f, -6f), a.h(36f, 10f), 1.1f * u); drawLine(ronzal, a.h(8f, 9f), a.h(36f, 6f), 1.1f * u)
+            if (postura == Postura.DESCANSO) drawPath(Path().apply { val o = a.h(36f, 10f); moveTo(o); cubicTo(o + Offset(-2f * u * dir, 12f * u), o + Offset(-10f * u * dir, 18f * u), o + Offset(-18f * u * dir, 14f * u)) }, ronzal, style = Stroke(1.1f * u, cap = StrokeCap.Round))
+        }
+        // ---- La silla de madera, alta delante y detrás, sobre su manta de fieltro, con el estribo corto.
+        if (silla && postura != Postura.ECHADO) {
+            val manta = Path().apply { moveTo(a.c(-24f, -101f)); cubicTo(a.c(-12f, -97f), a.c(4f, -94f), a.c(14f, -96f)); lineTo(a.c(16f, -78f)); cubicTo(a.c(4f, -76f), a.c(-14f, -78f), a.c(-26f, -82f)); close() }
+            drawPath(manta, p.por(C.ROJO, 0.1f, lejos)); drawPath(manta, p.luz(C.ORO, lejos).copy(alpha = 0.55f), style = Stroke(1f * u))
+            val asiento = Path().apply { moveTo(a.c(-21f, -101f)); cubicTo(a.c(-24f, -113f), a.c(-20f, -118f), a.c(-16f, -112f)); cubicTo(a.c(-12f, -103f), a.c(0f, -100f), a.c(6f, -104f)); cubicTo(a.c(8f, -114f), a.c(13f, -115f), a.c(13f, -106f)); lineTo(a.c(11f, -96f)); cubicTo(a.c(0f, -94f), a.c(-12f, -96f), a.c(-21f, -101f)); close() }
+            drawPath(asiento, Brush.verticalGradient(listOf(p.luz(lerp(C.MADERA, C.ROJO, 0.45f), lejos), p.por(lerp(C.MADERA, C.ROJO, 0.45f), -0.4f, lejos)), a.c(0f, -116f).y, a.c(0f, -96f).y)); drawPath(asiento, p.luz(C.ORO, lejos).copy(alpha = 0.5f), style = Stroke(0.7f * u))
+            drawLine(p.medio(C.CRIN, lejos), a.c(-4f, -97f), a.c(-5f, -66f), 0.9f * u); drawPath(poligono(a.c(-9f, -66f), a.c(-1f, -66f), a.c(-2f, -62f), a.c(-8f, -62f)), p.medio(C.HOLLIN, lejos))
+            drawLine(p.medio(lerp(C.CUERO, C.HOLLIN, 0.3f), lejos), a.c(-8f, -78f), a.c(-6f, -50f), 1.6f * u)
+        }
+        // ---- De noche: el lomo, la cresta y la grupa con la luz de la luna; un filo cálido del lado de la lumbre.
+        if (noche > 0.2f && detalle && !a.alReves) clipPath(cab) { drawPath(Path().apply { moveTo(a.h(-3f, -9f)); cubicTo(a.h(12f, -12f), a.h(30f, -9f), a.h(47f, -4f)) }, luna.copy(alpha = luna.alpha * 0.5f), style = Stroke(3f * u, cap = StrokeCap.Round)) }
+        if (p.calida > 0.03f) {
+            val desde = lumbreX ?: (pie.x - dir * 200f)
+            val haciaLumbre = if (desde < pie.x) -1f else 1f
+            val x0 = pie.x - 110f * u; val x1 = pie.x + 110f * u
+            val calor = p.lumbre.copy(alpha = (0.55f * p.calida).coerceIn(0f, 1f))
+            val formas = union(listOf(a.cuerpo, a.cuello, cab) + cercanas.map { a.formaDe(it) })
+            clipPath(formas) { drawRect(Brush.horizontalGradient(if (haciaLumbre < 0f) listOf(calor, calor.copy(alpha = calor.alpha * 0.25f), Color.Transparent) else listOf(Color.Transparent, calor.copy(alpha = calor.alpha * 0.25f), calor), x0, x1), Offset(x0, pie.y - 170f * u), Size(x1 - x0, 175f * u), blendMode = BlendMode.Plus) }
+        }
+    }
+
+    /** Gira lo que pinta [dibujo] [grados] alrededor de [pivote]. */
     private inline fun DrawScope.withTransformRot(grados: Float, pivote: Offset, dibujo: DrawScope.() -> Unit) {
         if (grados == 0f) dibujo() else rotate(grados, pivote) { dibujo() }
     }
 
-    /** La silueta de un caballo de [caballo], para su sombra arrojada. */
-    fun siluetaDeCaballo(pie: Offset, alto: Float, mira: Float, pasta: Boolean = false): Path {
-        val dir = if (mira >= 0f) -1f else 1f; val u = alto / 100f
-        fun q(x: Float, y: Float) = Offset(pie.x + x * u * dir, pie.y + y * u)
-        return Path().apply {
-            addPath(poligono(listOf(q(-52f, -80f), q(-26f, -100f), q(20f, -94f), q(52f, -92f), q(60f, -64f), q(48f, -48f), q(46f, 0f), q(40f, 0f), q(36f, -46f), q(-30f, -44f), q(-40f, 0f), q(-46f, 0f), q(-52f, -60f))))
-            if (pasta) addPath(poligono(listOf(q(-30f, -96f), q(-50f, -60f), q(-70f, -20f), q(-80f, -6f), q(-64f, -6f), q(-40f, -60f)))) else addPath(poligono(q(-26f, -100f), q(-66f, -140f), q(-104f, -100f), q(-96f, -90f), q(-52f, -80f)))
-        }
+    /** La silueta de un caballo de [caballo], para su sombra arrojada: el cuerpo, el cuello, la cabeza, las patas y la cola. */
+    fun siluetaDeCaballo(pie: Offset, alto: Float, mira: Float, pasta: Boolean = false, postura: Postura = if (pasta) Postura.PASTANDO else Postura.DE_PIE, potro: Boolean = false): Path {
+        val a = Anatomia(pie, alto, mira, postura, potro)
+        return union(listOf(a.cuerpo, a.cuello, a.cabeza, a.cola(0f)) + a.patas.map { a.formaDe(it) })
+    }
+
+    /** Dónde queda el hocico de un caballo así (para poner el potro mamando o lo que coma). */
+    fun hocicoDe(pie: Offset, alto: Float, mira: Float, postura: Postura = Postura.DE_PIE, potro: Boolean = false): Offset = Anatomia(pie, alto, mira, postura, potro).hocico
+
+    /**
+     * Una yegua con su potro mamando: la yegua de pie (o mirando atrás, hacia el potro, con [vuelve]) en [pie], de [alto]
+     * hasta la cruz, y el potro del lado de quien mira, vuelto al revés, con el morro en la ubre. Pinta los dos en su orden.
+     * Su sombra: [siluetaDeCaballo] de la yegua y la de [potroDe] (que dice dónde pisa el potro).
+     */
+    fun DrawScope.parejaMamando(p: Pincel, pie: Offset, alto: Float, mira: Float, pelo: Color, peloPotro: Color, lejos: Float = 0f, vuelve: Boolean = true, viento: Float = 0f) {
+        caballo(p, pie, alto, mira, pelo, lejos = lejos, postura = if (vuelve) Postura.MIRANDO_ATRAS else Postura.DE_PIE, viento = viento)
+        val (pp, ap) = potroDe(pie, alto, mira)
+        caballo(p, pp, ap, -mira, peloPotro, potro = true, lejos = lejos, postura = Postura.MAMANDO, viento = viento)
+    }
+
+    /** Dónde pisa y cuánto mide el potro que mama de la yegua de [pie], [alto] y [mira]. */
+    fun potroDe(pie: Offset, alto: Float, mira: Float): Pair<Offset, Float> {
+        val ap = alto * 0.62f
+        val yegua = Anatomia(pie, alto, mira, Postura.DE_PIE, false)
+        val ubre = yegua.c(30f, -44f)
+        val prueba = Anatomia(Offset.Zero, ap, -mira, Postura.MAMANDO, true).hocico
+        return Offset(ubre.x - prueba.x, pie.y + alto * 0.05f) to ap
     }
 
     /** Un caballo lejano: una mancha con su cabeza, sus patas y su sombra corta. */
@@ -1057,6 +1530,9 @@ internal object PiezasMongol {
         val cabeza = if (pasta) pie + Offset(7.5f * u * dir, -1.5f * u) else pie + Offset(7f * u * dir, -12f * u)
         drawLine(c, pie + Offset(4f * u * dir, -8f * u), cabeza, 2.2f * u, StrokeCap.Round)
         drawLine(p.medio(lerp(pelo, C.HOLLIN, 0.5f), lejos), pie + Offset(-4.8f * u * dir, -8.6f * u), pie + Offset(-5.6f * u * dir, -3f * u), 1.1f * u, StrokeCap.Round)
+        // La crin oscura y, de noche, un filo de luna en el lomo.
+        drawLine(p.medio(lerp(pelo, C.HOLLIN, 0.55f), lejos), pie + Offset(3.6f * u * dir, -9.4f * u), cabeza + Offset(-0.6f * u * dir, -0.4f * u), 0.8f * u, StrokeCap.Round)
+        if (p.l.noche > 0.3f) drawLine(C.LUNA.copy(alpha = 0.4f * p.l.noche), pie + Offset(-4f * u, -9.6f * u), pie + Offset(4f * u, -9.6f * u), 0.7f * u, StrokeCap.Round)
     }
 
     // =================================================================
@@ -1066,98 +1542,209 @@ internal object PiezasMongol {
     /**
      * El ovoo: «un montón de piedras con palos y cintas azules» en lo alto del cerro. Pisa en [pie] y mide [alto] hasta
      * la punta de los palos. [cintas]: cuántas hay atadas (crecen cada año); [nueva]: el día del ovoo, las de ese día,
-     * vivas. [viento] las tumba hacia un lado. [nieve] se queda en las piedras.
+     * vivas y más. [viento] las tiende hacia un lado. [nieve] se queda en las piedras.
+     *
+     * Las piedras, cada una de su forma, con su cara de luz arriba y del lado del sol y el hueco oscuro entre ellas; el
+     * haz de varas de sauce atado en lo alto, con sus ramas secas; las cintas de seda, unas que cuelgan con su peso y
+     * otras que el viento levanta y retuerce (se ve su cara y su revés). Al pie, una calavera de caballo **[Aproximación]**.
      */
     fun DrawScope.ovoo(p: Pincel, pie: Offset, alto: Float, cintas: Int, az: Azar, lejos: Float, nieve: Float = 0f, viento: Float = 0.3f, nueva: Boolean = false) {
         val u = alto / 10f
-        val monton = alto * 0.48f; val ancho = alto * 0.62f
-        // Los palos, con sus ramas secas, que salen del montón.
-        val palos = listOf(Offset(0f, -10f) to 1.8f, Offset(-1.6f, -8.4f) to 1.2f, Offset(1.8f, -8.8f) to 1.3f, Offset(-0.6f, -9.2f) to 1f)
-        for ((tip, g) in palos) {
-            val a = pie + Offset(tip.x * u * 0.3f, -monton * 0.7f); val b = pie + Offset(tip.x * u, tip.y * u)
-            drawLine(p.medio(C.MADERA_OSC, lejos), a, b, (g * 0.25f * u).coerceAtLeast(0.4f), StrokeCap.Round)
-            drawLine(p.luz(lerp(C.MADERA, C.FIELTRO, 0.3f), lejos).copy(alpha = 0.6f), a + Offset(if (p.solALaDerecha) 0.2f * u else -0.2f * u, 0f), b, (g * 0.08f * u).coerceAtLeast(0.3f), StrokeCap.Round)
-            repeat(3) { val t = az.entre(0.4f, 0.9f); val c = a + (b - a) * t; drawLine(p.medio(C.MADERA_OSC, lejos), c, c + Offset(az.entre(-1.4f, 1.4f) * u, -az.entre(0.6f, 1.4f) * u), (0.12f * u).coerceAtLeast(0.3f), StrokeCap.Round) }
+        val monton = alto * 0.48f; val ancho = alto * 0.66f
+        val L = if (p.solALaDerecha) 1f else -1f
+        val detalle = alto > 16f
+        val roca = lerp(C.PIEDRA, C.HOLLIN, 0.12f)
+        // ---- El haz de varas: detrás del montón, atado en medio, con las puntas que se abren.
+        val cuello = pie + Offset(0f, -monton * 0.92f)
+        val atadura = pie + Offset(0f, -alto * 0.63f)
+        val varas = listOf(Offset(-0.15f, -10f) to 1.6f, Offset(-1.9f, -8.6f) to 1.1f, Offset(1.7f, -9.2f) to 1.2f, Offset(-0.9f, -9.6f) to 1f, Offset(0.9f, -8.2f) to 1f, Offset(2.6f, -7.6f) to 0.8f, Offset(-2.6f, -7.4f) to 0.8f)
+        for ((tip, g) in varas) {
+            val b = pie + Offset(tip.x * u, tip.y * u)
+            val a = cuello + Offset(tip.x * u * 0.12f, 0f)
+            val medio = atadura + Offset(tip.x * u * 0.15f, 0f)
+            drawPath(Path().apply { moveTo(a); lineTo(medio); cubicTo(medio + (b - medio) * 0.4f, b + Offset(-tip.x * u * 0.1f, u * 0.6f), b) }, p.medio(C.MADERA_OSC, lejos), style = Stroke((g * 0.26f * u).coerceAtLeast(0.4f), cap = StrokeCap.Round))
+            if (detalle) drawLine(p.luz(lerp(C.MADERA, C.FIELTRO, 0.35f), lejos).copy(alpha = 0.6f), medio + Offset(L * g * 0.07f * u, 0f), b + Offset(L * g * 0.05f * u, 0f), (g * 0.08f * u).coerceAtLeast(0.3f), StrokeCap.Round)
+            // Las ramitas secas de la punta.
+            // (de lejos no: el haz parecería un árbol seco)
+            if (alto > 34f) repeat(3) { val t = az.entre(0.55f, 0.92f); val c = medio + (b - medio) * t; drawLine(p.medio(C.MADERA_OSC, lejos), c, c + Offset(az.entre(-1.3f, 1.3f) * u, -az.entre(0.5f, 1.3f) * u), (0.1f * u).coerceAtLeast(0.3f), StrokeCap.Round) } else repeat(3) { az.real() }
         }
-        // Las cintas: azules (las del cielo), alguna blanca y alguna desteñida, que el viento tiende.
-        repeat(cintas) {
-            val (tip, _) = palos[it % palos.size]; val t = az.entre(0.45f, 0.95f)
-            val a = pie + Offset(tip.x * u * 0.3f, -monton * 0.7f) + (Offset(tip.x * u, tip.y * u) - Offset(tip.x * u * 0.3f, -monton * 0.7f)) * t
-            val largo = az.entre(1.6f, 3.4f) * u; val vence = (0.4f + viento) * largo
-            val color = when { nueva && it >= cintas - 3 -> C.AZUL; it % 5 == 0 -> C.FIELTRO; it % 3 == 0 -> lerp(C.AZUL, C.FIELTRO, 0.5f); else -> lerp(C.AZUL, C.PIEDRA, az.entre(0f, 0.3f)) }
-            val cinta = Path().apply { moveTo(a); cubicTo(a + Offset(vence * 0.3f, largo * 0.3f), a + Offset(vence * 0.6f, largo * 0.4f), a + Offset(vence, largo * 0.8f)); lineTo(a + Offset(vence + 0.3f * u, largo * 0.78f)); cubicTo(a + Offset(vence * 0.6f + 0.4f * u, largo * 0.3f), a + Offset(vence * 0.3f + 0.4f * u, largo * 0.2f), a + Offset(0.4f * u, 0f)); close() }
-            drawPath(cinta, p.por(color, if (it % 2 == 0) 0.4f else -0.2f, lejos))
+        // ---- Las cintas: atadas al haz; las viejas, desteñidas y deshilachadas; las nuevas, de un azul vivo.
+        val n = cintas + (if (nueva) 6 else 0)
+        class Cinta(val a: Offset, val largo: Float, val ancho: Float, val color: Color, val vuela: Float, val fase: Float)
+        val lista = (0 until n).map {
+            val (tip, _) = varas[it % varas.size]
+            val t = az.entre(0.05f, 0.75f)
+            val medio = atadura + Offset(tip.x * u * 0.15f, 0f)
+            val a = medio + (pie + Offset(tip.x * u, tip.y * u) - medio) * t
+            val nuevaHoy = nueva && it >= n - 6
+            val color = when { nuevaHoy -> lerp(C.AZUL, Color.White, 0.08f); it % 6 == 0 -> lerp(C.FIELTRO, C.PIEDRA, 0.15f); it % 4 == 1 -> lerp(C.AZUL, C.FIELTRO, 0.55f); it % 7 == 3 -> lerp(C.ORO, C.FIELTRO, 0.3f); else -> lerp(C.AZUL, C.PIEDRA, az.entre(0.05f, 0.35f)) }
+            Cinta(a, az.entre(2f, 4.8f) * u * (if (nuevaHoy) 1.15f else 1f) * (if (alto < 30f) 1.25f else 1f), (az.entre(0.36f, 0.52f) * u).coerceAtLeast(0.8f), if (alto < 30f) lerp(color, C.AZUL, 0.35f) else color, (0.12f + viento * az.entre(0.6f, 1.3f) + (if (nuevaHoy) 0.25f else 0f)).coerceIn(0f, 1.2f), az.entre(0f, 6.28f))
         }
-        // El montón de piedras: hiladas de abajo arriba, cada piedra con su lado de luz.
-        val forma = Path().apply { moveTo(pie + Offset(-ancho / 2f, 0f)); cubicTo(pie + Offset(-ancho * 0.42f, -monton * 0.5f), pie + Offset(-ancho * 0.2f, -monton), pie + Offset(0f, -monton)); cubicTo(pie + Offset(ancho * 0.22f, -monton), pie + Offset(ancho * 0.44f, -monton * 0.5f), pie + Offset(ancho / 2f, 0f)); close() }
-        drawPath(forma, Brush.horizontalGradient(if (p.solALaDerecha) listOf(p.sombra(C.PIEDRA, lejos), p.por(C.PIEDRA, 0f, lejos), p.luz(C.PIEDRA, lejos)) else listOf(p.luz(C.PIEDRA, lejos), p.por(C.PIEDRA, 0f, lejos), p.sombra(C.PIEDRA, lejos)), pie.x - ancho / 2f, pie.x + ancho / 2f))
+        fun DrawScope.cinta(c: Cinta) {
+            // La línea de la cinta: cae con su peso y el viento la tiende y la ondula; se retuerce y enseña el revés.
+            val pasos = if (detalle) 14 else 7
+            val sign = if (viento >= 0f) 1f else -1f
+            val pts = (0..pasos).map { k -> val t = k / pasos.toFloat(); c.a + Offset(sign * c.vuela * c.largo * (t * 0.9f) + sin(t * 5f + c.fase) * c.largo * 0.07f * (0.3f + c.vuela), c.largo * t * (1f - 0.75f * c.vuela) + sin(t * 3.4f + c.fase) * c.largo * 0.05f * c.vuela) }
+            val giro = (0..pasos).map { k -> cos(k / pasos.toFloat() * 4.2f + c.fase) }
+            val anchos = (0..pasos).map { k -> c.ancho * (0.2f + 0.8f * abs(giro[k])) * (1f - 0.35f * k / pasos.toFloat()) }
+            val izq = ArrayList<Offset>(); val der = ArrayList<Offset>()
+            for (k in 0..pasos) { val a = pts[maxOf(k - 1, 0)]; val b = pts[minOf(k + 1, pasos)]; val d = b - a; val nn = Offset(-d.y, d.x) / d.getDistance().coerceAtLeast(0.01f); izq += pts[k] + nn * anchos[k]; der += pts[k] - nn * anchos[k] }
+            drawPath(poligono(izq + der.reversed()), p.por(c.color, 0.35f * L, lejos))
+            // El revés, donde la cinta se da la vuelta: más oscuro y frío.
+            var k = 0
+            while (k < pasos) {
+                if (giro[k] >= 0f && giro[k + 1] >= 0f) { k++; continue }
+                val k0 = k; while (k < pasos && (giro[k] < 0f || giro[k + 1] < 0f)) k++
+                drawPath(poligono(izq.subList(k0, k + 1) + der.subList(k0, k + 1).reversed()), p.por(lerp(c.color, C.SOMBRA, 0.2f), -0.6f, lejos))
+            }
+            // Los hilos sueltos de la punta.
+            if (detalle) { val f = pts.last(); for (j in -1..1) drawLine(p.por(c.color, -0.2f, lejos).copy(alpha = 0.7f), f, f + Offset(j * c.ancho * 0.5f, c.ancho * 1.6f), (0.06f * u).coerceAtLeast(0.25f)) }
+        }
+        // Las de detrás del haz, más oscuras, primero.
+        for ((i, c) in lista.withIndex()) if (i % 3 == 2) cinta(Cinta(c.a, c.largo, c.ancho, lerp(c.color, C.SOMBRA, 0.25f), c.vuela, c.fase))
+        // Las guirnaldas: cintas atadas de una vara a otra, que cuelgan en comba con su peso.
+        fun DrawScope.guirnalda(a: Offset, b: Offset, comba: Float, color: Color) {
+            val m = (a + b) * 0.5f + Offset(viento * comba * 0.3f, comba)
+            val arriba = Path().apply { moveTo(a); cubicTo(a + (m - a) * 0.6f + Offset(0f, comba * 0.5f), b + (m - b) * 0.6f + Offset(0f, comba * 0.5f), b) }
+            drawPath(arriba, p.por(color, -0.2f, lejos), style = Stroke((0.42f * u).coerceAtLeast(0.6f), cap = StrokeCap.Round))
+            drawPath(arriba, p.por(color, 0.5f * L, lejos), style = Stroke((0.2f * u).coerceAtLeast(0.35f), cap = StrokeCap.Round))
+        }
+        val gz = Azar(Semilla.de("mongol", "ovoo", "guirnaldas"))
+        for (j in 0 until (n / 4).coerceAtMost(5)) {
+            val (t0, _) = varas[(j * 2 + 1) % varas.size]; val (t1, _) = varas[(j * 2 + 2) % varas.size]
+            val ma = atadura + Offset(t0.x * u * 0.15f, 0f); val mb = atadura + Offset(t1.x * u * 0.15f, 0f)
+            val ta = gz.entre(0.3f, 0.7f); val tb = gz.entre(0.3f, 0.7f)
+            guirnalda(ma + (pie + Offset(t0.x * u, t0.y * u) - ma) * ta, mb + (pie + Offset(t1.x * u, t1.y * u) - mb) * tb, gz.entre(0.8f, 1.8f) * u, if (j % 2 == 0) lerp(C.AZUL, C.PIEDRA, 0.15f) else lerp(C.AZUL, C.FIELTRO, 0.4f))
+        }
+        // ---- El montón de piedras: el hueco oscuro de fondo y las piedras, de abajo arriba, cada una de su forma.
+        val forma = Path().apply {
+            moveTo(pie + Offset(-ancho / 2f, 0.4f * u)); cubicTo(pie + Offset(-ancho * 0.46f, -monton * 0.45f), pie + Offset(-ancho * 0.2f, -monton * 0.98f), pie + Offset(0f, -monton))
+            cubicTo(pie + Offset(ancho * 0.22f, -monton * 0.98f), pie + Offset(ancho * 0.46f, -monton * 0.45f), pie + Offset(ancho / 2f, 0.4f * u)); close()
+        }
+        drawPath(forma, p.sombra(lerp(roca, C.HOLLIN, 0.35f), lejos))
+        val filas = if (detalle) 7 else 4
         clipPath(forma) {
-            val filas = 6
             for (f in 0 until filas) {
-                val y = pie.y - monton * (f + 0.5f) / filas; val w = ancho * (1f - f / filas.toFloat() * 0.8f); val r = (ancho / 9f) * (1f - 0.08f * f)
-                var x = pie.x - w / 2f
-                while (x < pie.x + w / 2f) {
-                    val rr = r * az.entre(0.7f, 1.1f); val col = lerp(C.PIEDRA, if (az.entero(3) == 0) C.TIERRA else C.FIELTRO, az.entre(0f, 0.35f))
-                    val ladoSol = (x - pie.x) / (ancho / 2f) * (if (p.solALaDerecha) 1f else -1f)
-                    drawOval(p.por(col, -0.4f + 0.4f * ladoSol, lejos), Offset(x - rr, y - rr * 0.6f), Size(rr * 2f, rr * 1.25f))
-                    drawOval(p.por(col, 0.3f + 0.5f * ladoSol, lejos), Offset(x - rr * 0.8f + (if (p.solALaDerecha) rr * 0.3f else -rr * 0.3f), y - rr * 0.62f), Size(rr * 1.3f, rr * 0.7f))
-                    if (nieve > 0.1f) drawOval(p.por(C.NIEVE, 0.5f + 0.3f * ladoSol, lejos).copy(alpha = nieve), Offset(x - rr * 0.8f, y - rr * 0.66f), Size(rr * 1.5f, rr * 0.42f))
-                    x += rr * az.entre(1.4f, 1.9f)
+                val v = (f + 0.5f) / filas
+                val y = pie.y - monton * v; val w = ancho * 0.5f * sqrt((1f - v * v * 0.9f).coerceAtLeast(0.05f)) * (1f - 0.25f * v)
+                val r = (ancho / (if (detalle) 10f else 6f)) * (1.15f - 0.4f * v)
+                var x = pie.x - w - r * 0.3f
+                while (x < pie.x + w + r * 0.3f) {
+                    val rr = r * az.entre(0.6f, 1.3f) * (if (f == 0 && az.entero(3) == 0) 1.35f else 1f)
+                    val col = lerp(roca, when (az.entero(4)) { 0 -> C.TIERRA; 1 -> C.FIELTRO; 2 -> C.HOLLIN; else -> C.PIEDRA }, az.entre(0.05f, 0.3f))
+                    val ladoSol = ((x - pie.x) / (ancho / 2f)) * L
+                    // Una piedra: un polígono de seis lados irregular, más ancho que alto.
+                    val yy = y + az.entre(-0.3f, 0.3f) * rr
+                    val pts = (0 until 6).map { k -> val a = (2 * PI * k / 6).toFloat() + az.entre(-0.4f, 0.4f); Offset(x + cos(a) * rr * az.entre(0.7f, 1.15f), yy + sin(a) * rr * 0.6f * az.entre(0.7f, 1.15f)) }
+                    drawPath(poligono(pts), p.por(col, -0.35f + 0.4f * ladoSol, lejos))
+                    // La cara de arriba, que recibe la luz.
+                    val arriba = pts.map { q -> q + (Offset(x, yy - rr * 0.18f) - q) * 0.38f + Offset(L * rr * 0.1f, -rr * 0.1f) }.filterIndexed { k, _ -> k != 1 && k != 2 }
+                    drawPath(poligono(arriba), p.por(col, 0.35f + 0.45f * ladoSol, lejos))
+                    if (nieve > 0.1f) drawOval(p.por(C.NIEVE, 0.5f + 0.3f * ladoSol, lejos).copy(alpha = nieve), Offset(x - rr * 0.75f, y - rr * 0.7f), Size(rr * 1.5f, rr * 0.45f))
+                    x += rr * az.entre(1.3f, 1.9f)
                 }
             }
+            // La sombra del lado contrario al sol, sobre todo el montón.
+            drawRect(Brush.horizontalGradient(if (L > 0f) listOf(p.sombra(C.HOLLIN, lejos).copy(alpha = 0.35f), Color.Transparent) else listOf(Color.Transparent, p.sombra(C.HOLLIN, lejos).copy(alpha = 0.35f)), pie.x - ancho / 2f, pie.x + ancho / 2f), Offset(pie.x - ancho / 2f, pie.y - monton), Size(ancho, monton + u))
         }
+        // Unas piedras sueltas al pie, que rompen el borde.
+        repeat(if (detalle) 5 else 2) { val x = pie.x + az.entre(-0.62f, 0.62f) * ancho; val rr = ancho * az.entre(0.035f, 0.06f); drawOval(p.por(roca, -0.4f, lejos), Offset(x - rr, pie.y - rr * 0.5f), Size(rr * 2f, rr * 1.1f)); drawOval(p.por(roca, 0.5f, lejos), Offset(x - rr * 0.7f, pie.y - rr * 0.6f), Size(rr * 1.4f, rr * 0.5f)) }
+        // ---- La atadura del haz, con las vueltas de cuerda y de seda, y las cintas de delante, encima.
+        drawLine(p.medio(C.CRIN, lejos), atadura + Offset(-0.9f * u, -0.3f * u), atadura + Offset(0.9f * u, 0.3f * u), (0.35f * u).coerceAtLeast(0.5f), StrokeCap.Round)
+        drawLine(p.por(C.AZUL, 0.3f, lejos), atadura + Offset(-0.8f * u, 0.4f * u), atadura + Offset(0.8f * u, 0.7f * u), (0.3f * u).coerceAtLeast(0.4f), StrokeCap.Round)
+        for ((i, c) in lista.withIndex()) if (i % 3 != 2) cinta(c)
         // Una ofrenda al pie: una calavera de caballo, blanca **[Aproximación]**.
-        if (alto > 30f) drawOval(p.por(C.FIELTRO, 0.5f, lejos), Offset(pie.x + ancho * 0.3f, pie.y - 1.2f * u), Size(1.4f * u, 0.9f * u))
+        if (alto > 30f) {
+            val k = ancho / 30f; val c = pie + Offset(ancho * 0.3f, -0.6f * k)
+            drawPath(Path().apply { moveTo(c + Offset(-1.6f * k, 0f)); cubicTo(c + Offset(-1.5f * k, -1.2f * k), c + Offset(0.4f * k, -1.3f * k), c + Offset(1.8f * k, -0.5f * k)); lineTo(c + Offset(1.9f * k, 0.3f * k)); cubicTo(c + Offset(0.4f * k, 0.5f * k), c + Offset(-1.2f * k, 0.5f * k), c + Offset(-1.6f * k, 0f)); close() }, p.por(lerp(C.FIELTRO, C.ESTEPA, 0.2f), 0.4f * L, lejos))
+            drawCircle(p.sombra(C.HOLLIN, lejos), 0.3f * k, c + Offset(-0.6f * k, -0.45f * k))
+        }
     }
 
     /** La silueta del ovoo, para su sombra. */
-    fun siluetaDeOvoo(pie: Offset, alto: Float): Path = poligono(pie + Offset(-alto * 0.31f, 0f), pie + Offset(-alto * 0.1f, -alto * 0.48f), pie + Offset(0f, -alto), pie + Offset(alto * 0.1f, -alto * 0.48f), pie + Offset(alto * 0.31f, 0f))
+    fun siluetaDeOvoo(pie: Offset, alto: Float): Path = poligono(listOf(pie + Offset(-alto * 0.33f, 0f), pie + Offset(-alto * 0.16f, -alto * 0.44f), pie + Offset(-alto * 0.2f, -alto * 0.8f), pie + Offset(0f, -alto), pie + Offset(alto * 0.2f, -alto * 0.8f), pie + Offset(alto * 0.16f, -alto * 0.44f), pie + Offset(alto * 0.33f, 0f)))
 
     /**
-     * El odre grande de cuero para el airag, colgado de su armazón: dos horcones y un travesaño. La bolsa, hinchada y
-     * oscura de grasa, con su costura; el palo de batir que sale por la boca; los cubos de cuero y de madera al pie.
+     * El odre grande de cuero para el airag, colgado de su armazón: dos horcones y un travesaño. La bolsa, de piel de
+     * vaca, cosida con tiento por el lomo y por abajo, hinchada de leche y más ancha abajo; arriba se frunce en la boca,
+     * atada con una cuerda; brilla de grasa donde se toca y está oscura de mojada abajo. Por la boca sale el palo de
+     * batir; la leche que rebosa ha dejado chorreras y una mancha en el suelo. Al pie, un cubo de cuero y uno de madera.
      * [alto]: hasta el travesaño. [batiendo], de 0 a 1: el palo, más o menos hundido.
      */
     fun DrawScope.odre(p: Pincel, pie: Offset, alto: Float, az: Azar, lejos: Float = 0f, batiendo: Float = 0.5f) {
         val u = alto / 100f; fun q(x: Float, y: Float) = pie + Offset(x * u, y * u)
         val madera = lerp(C.MADERA, C.TIERRA, 0.25f)
-        val ladoLuz = if (p.solALaDerecha) 1f else -1f
+        val L = if (p.solALaDerecha) 1f else -1f
+        val detalle = alto > 30f
+        // ---- La mancha de airag en el suelo, bajo la bolsa.
+        mancha(q(2f, -1f), 30f * u, 4f * u, p.sombra(lerp(C.TIERRA, C.HOLLIN, 0.3f), lejos), 0.5f)
+        drawOval(p.por(lerp(C.LANA, C.ESTEPA, 0.2f), 0.2f, lejos).copy(alpha = 0.7f), Offset(q(-6f, 0f).x, q(0f, -1.6f).y), Size(14f * u, 2.4f * u))
+        // ---- El armazón: dos horcones clavados, con su corteza, y el travesaño atado.
         fun horcon(x: Float, inclina: Float) {
             val a = q(x, 0f); val b = q(x + inclina, -100f)
-            drawLine(p.sombra(madera, lejos), a, b, 4.2f * u, StrokeCap.Round); drawLine(p.luz(madera, lejos), a + Offset(ladoLuz * 0.9f * u, 0f), b + Offset(ladoLuz * 0.9f * u, 0f), 1.6f * u, StrokeCap.Round)
+            drawLine(p.sombra(madera, lejos), a, b, 4.4f * u, StrokeCap.Round); drawLine(p.luz(madera, lejos), a + Offset(L * 1f * u, 0f), b + Offset(L * 1f * u, 0f), 1.5f * u, StrokeCap.Round)
+            if (detalle) for (k in 0 until 5) { val y = -15f - k * 18f + az.entre(-4f, 4f); drawLine(p.sombra(C.HOLLIN, lejos).copy(alpha = 0.45f), q(x + inclina * (-y / 100f) - 1.6f, y), q(x + inclina * (-y / 100f) + 1.2f, y + 1f), 0.5f * u) }
             drawLine(p.medio(madera, lejos), b, b + Offset(-5f * u, -9f * u), 2.6f * u, StrokeCap.Round); drawLine(p.medio(madera, lejos), b, b + Offset(5f * u, -8f * u), 2.6f * u, StrokeCap.Round)
         }
         horcon(-38f, 3f); horcon(38f, -3f)
-        val viga = listOf(q(-46f, -102f), q(46f, -101f))
-        drawLine(p.sombra(madera, lejos), viga[0], viga[1], 4.4f * u, StrokeCap.Round); drawLine(p.luz(madera, lejos), viga[0] + Offset(0f, -1.2f * u), viga[1] + Offset(0f, -1.2f * u), 1.6f * u, StrokeCap.Round)
-        // Las correas de las que cuelga.
-        for (x in listOf(-14f, 12f)) drawLine(p.medio(C.CRIN, lejos), q(x * 1.2f, -101f), q(x, -78f), 1.4f * u)
-        // La bolsa: un vientre de cuero que se hunde por abajo.
-        val bolsa = Path().apply { moveTo(q(-16f, -80f)); cubicTo(q(-34f, -74f), q(-38f, -40f), q(-30f, -22f)); cubicTo(q(-22f, -8f), q(20f, -8f), q(28f, -22f)); cubicTo(q(36f, -40f), q(32f, -74f), q(14f, -80f)); cubicTo(q(6f, -86f), q(-8f, -86f), q(-16f, -80f)); close() }
-        drawPath(bolsa, p.por(C.CUERO, -0.1f, lejos))
-        clipPath(bolsa) {
-            drawRect(Brush.horizontalGradient(if (p.solALaDerecha) listOf(p.sombra(C.CUERO, lejos), Color.Transparent, p.luz(lerp(C.CUERO, C.ORO, 0.3f), lejos).copy(alpha = 0.7f)) else listOf(p.luz(lerp(C.CUERO, C.ORO, 0.3f), lejos).copy(alpha = 0.7f), Color.Transparent, p.sombra(C.CUERO, lejos)), q(-36f, 0f).x, q(36f, 0f).x), q(-40f, -90f), Size(80f * u, 84f * u))
-            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.sombra(C.HOLLIN, lejos).copy(alpha = 0.5f)), q(0f, -40f).y, q(0f, -8f).y), q(-40f, -40f), Size(80f * u, 34f * u))
-            // El brillo de la grasa y las manchas de leche que rezuma.
-            drawOval(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.32f), Color.Transparent), q(ladoLuz * 14f, -56f), 12f * u), q(ladoLuz * 14f - 8f, -66f), Size(16f * u, 20f * u))
-            repeat(5) { val c = q(az.entre(-24f, 24f), az.entre(-60f, -20f)); drawOval(p.medio(lerp(C.CUERO, C.FIELTRO, 0.5f), lejos).copy(alpha = 0.3f), Offset(c.x - 2f * u, c.y - 1f * u), Size(4f * u, 6f * u)) }
-            drawPath(Path().apply { moveTo(q(-2f, -84f)); cubicTo(q(4f, -60f), q(0f, -30f), q(-4f, -10f)) }, p.sombra(C.HOLLIN, lejos).copy(alpha = 0.6f), style = Stroke(1.2f * u))
-            for (j in 0..12) { val c = q(-2f + 4f * sin(j * 0.6f) * 0.3f, -82f + j * 6f); drawLine(p.luz(C.FIELTRO, lejos).copy(alpha = 0.45f), c + Offset(-1.5f * u, 0f), c + Offset(1.5f * u, 0f), 0.6f * u) }
+        val viga = listOf(q(-47f, -102f), q(47f, -101f))
+        drawLine(p.sombra(madera, lejos), viga[0], viga[1], 4.6f * u, StrokeCap.Round); drawLine(p.luz(madera, lejos), viga[0] + Offset(0f, -1.3f * u), viga[1] + Offset(0f, -1.3f * u), 1.6f * u, StrokeCap.Round)
+        for (x in listOf(-35f, 35f)) for (k in 0..2) drawLine(p.medio(C.CRIN, lejos), q(x - 3f, -104f + k * 2f), q(x + 3f, -101f + k * 2f), 1f * u)
+        // Las correas de las que cuelga la bolsa.
+        for (x in listOf(-14f, 13f)) { drawLine(p.medio(lerp(C.CUERO, C.HOLLIN, 0.3f), lejos), q(x * 1.25f, -101f), q(x * 0.9f, -80f), 1.6f * u); drawCircle(p.medio(C.CRIN, lejos), 1.4f * u, q(x * 1.25f, -101f), style = Stroke(0.7f * u)) }
+        // ---- La bolsa.
+        val cuero = lerp(C.CUERO, C.HOLLIN, 0.12f)
+        val bolsa = Path().apply {
+            moveTo(q(-9f, -86f)); cubicTo(q(-13f, -82f), q(-20f, -76f), q(-25f, -64f)); cubicTo(q(-33f, -48f), q(-40f, -30f), q(-35f, -15f))
+            cubicTo(q(-30f, -5f), q(-10f, -3f), q(4f, -3.5f)); cubicTo(q(20f, -4f), q(36f, -7f), q(37f, -20f)); cubicTo(q(38f, -36f), q(30f, -54f), q(22f, -68f))
+            cubicTo(q(17f, -78f), q(12f, -83f), q(8f, -86f)); close()
         }
-        // La boca atada y el palo de batir.
-        drawOval(p.medio(lerp(C.CUERO, C.HOLLIN, 0.3f), lejos), q(-8f, -88f), Size(16f * u, 8f * u))
+        drawPath(bolsa, p.por(cuero, -0.15f, lejos))
+        clipPath(bolsa) {
+            // El bulto: la luz de un lado, la sombra del otro y de abajo, que además está mojado y más oscuro.
+            drawRect(Brush.horizontalGradient(if (L > 0f) listOf(p.sombra(cuero, lejos), Color.Transparent, p.luz(lerp(cuero, C.ORO, 0.35f), lejos).copy(alpha = 0.75f)) else listOf(p.luz(lerp(cuero, C.ORO, 0.35f), lejos).copy(alpha = 0.75f), Color.Transparent, p.sombra(cuero, lejos)), q(-36f, 0f).x, q(34f, 0f).x), q(-40f, -90f), Size(80f * u, 86f * u))
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.sombra(C.HOLLIN, lejos).copy(alpha = 0.55f)), q(0f, -38f).y, q(0f, -6f).y), q(-40f, -38f), Size(80f * u, 34f * u))
+            // Las arrugas del cuero bajo la boca, donde se frunce.
+            if (detalle) for (k in -3..3) drawPath(Path().apply { moveTo(q(k * 2.6f, -84f)); cubicTo(q(k * 4.4f, -78f), q(k * 6f, -72f), q(k * 6.6f + 1f, -64f)) }, p.sombra(C.HOLLIN, lejos).copy(alpha = 0.35f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
+            // El brillo de la grasa: ancho y blando, del lado del sol; las manos lo han dejado más claro a media altura.
+            mancha(q(L * 15f, -50f), 9f * u, 16f * u, Color.White, 0.22f * (1f - 0.7f * p.l.noche))
+            mancha(q(L * 18f, -52f), 3f * u, 7f * u, Color.White, 0.35f * (1f - 0.7f * p.l.noche))
+            mancha(q(-L * 6f, -42f), 12f * u, 9f * u, p.sombra(lerp(cuero, C.HOLLIN, 0.4f), lejos), 0.3f)
+            // Un remiendo cosido.
+            if (detalle) { val r = poligono(listOf(q(-22f, -40f), q(-12f, -42f), q(-11f, -30f), q(-21f, -28f))); drawPath(r, p.por(lerp(cuero, C.TIERRA, 0.3f), -0.1f * L, lejos)); drawPath(r, p.sombra(C.HOLLIN, lejos).copy(alpha = 0.6f), style = Stroke(0.6f * u)) }
+            // Las chorreras de leche que rebosó, secas, que bajan de la boca.
+            for ((x, l) in listOf(-4f to 30f, 3f to 18f, 7f to 42f)) drawPath(Path().apply { moveTo(q(x, -84f)); cubicTo(q(x - 1f, -74f), q(x + 1.2f, -66f), q(x + 0.4f, -84f + l)) }, p.luz(C.LANA, lejos).copy(alpha = 0.55f), style = Stroke(1.3f * u, cap = StrokeCap.Round))
+        }
+        // La costura del lomo y la de abajo: tiento crudo en zigzag.
+        if (detalle) {
+            val lomo = (0..14).map { val t = it / 14f; q(-2f + 6f * t + 3f * sin(t * 3f), -84f + 76f * t) }
+            drawPath(Path().apply { moveTo(lomo[0]); for (k in lomo.drop(1)) lineTo(k) }, p.sombra(C.HOLLIN, lejos).copy(alpha = 0.6f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+            for (k in lomo.indices) drawLine(p.luz(lerp(C.CUERO, C.FIELTRO, 0.45f), lejos).copy(alpha = 0.75f), lomo[k] + Offset(-1.8f * u, -0.6f * u), lomo[k] + Offset(1.8f * u, 0.6f * u), 0.6f * u)
+            drawPath(Path().apply { moveTo(q(-26f, -16f)); cubicTo(q(-12f, -10f), q(12f, -10f), q(30f, -16f)) }, p.sombra(C.HOLLIN, lejos).copy(alpha = 0.5f), style = Stroke(1f * u))
+        }
+        // ---- La boca, fruncida y atada con varias vueltas de cuerda.
+        drawPath(Path().apply { moveTo(q(-9f, -86f)); cubicTo(q(-8f, -92f), q(-6f, -95f), q(-4f, -95f)); lineTo(q(5f, -95f)); cubicTo(q(7f, -95f), q(8f, -92f), q(8f, -86f)); close() }, p.por(lerp(cuero, C.HOLLIN, 0.25f), -0.1f * L, lejos))
+        for (k in 0..2) drawLine(p.medio(C.CRIN, lejos), q(-8f, -88f - k * 2f), q(8f, -87.5f - k * 2f), 1.2f * u, StrokeCap.Round)
+        // ---- El palo de batir, que sale por la boca, gastado y claro donde se agarra.
         val hundido = 10f * batiendo
-        drawLine(p.sombra(madera, lejos), q(2f, -84f + hundido), q(14f, -150f + hundido), 2.6f * u, StrokeCap.Round); drawLine(p.luz(lerp(madera, C.FIELTRO, 0.3f), lejos), q(2.6f, -84f + hundido), q(14.6f, -150f + hundido), 1f * u, StrokeCap.Round)
-        // Los cubos al pie: uno de cuero cosido y uno de madera.
-        val cubo = Path().apply { moveTo(q(-58f, -16f)); lineTo(q(-40f, -16f)); lineTo(q(-42f, 0f)); lineTo(q(-56f, 0f)); close() }
-        drawPath(cubo, p.por(C.CUERO, ladoLuz * 0.2f, lejos)); drawOval(p.medio(C.HOLLIN, lejos), q(-58f, -18f), Size(18f * u, 4f * u)); drawOval(p.luz(C.FIELTRO, lejos).copy(alpha = 0.8f), q(-56f, -17.5f), Size(14f * u, 2.6f * u))
-        val cubo2 = Path().apply { moveTo(q(42f, -20f)); lineTo(q(60f, -20f)); lineTo(q(58f, 0f)); lineTo(q(44f, 0f)); close() }
-        drawPath(cubo2, Brush.horizontalGradient(listOf(p.por(madera, -ladoLuz * 0.6f, lejos), p.por(madera, ladoLuz * 0.6f, lejos)), q(42f, 0f).x, q(60f, 0f).x))
-        for (y in listOf(-16f, -5f)) drawLine(p.medio(C.HOLLIN, lejos), q(43f, y), q(59f, y), 1.1f * u)
+        val a = q(1f, -88f + hundido); val b = q(16f, -152f + hundido)
+        drawLine(p.sombra(madera, lejos), a, b, 2.8f * u, StrokeCap.Round); drawLine(p.luz(lerp(madera, C.FIELTRO, 0.35f), lejos), a + Offset(L * 0.7f * u, 0f), b + Offset(L * 0.7f * u, 0f), 1f * u, StrokeCap.Round)
+        drawLine(p.luz(lerp(madera, C.FIELTRO, 0.55f), lejos).copy(alpha = 0.7f), a + (b - a) * 0.6f, a + (b - a) * 0.85f, 2.4f * u, StrokeCap.Round)
+        // ---- Los cubos al pie: uno de cuero cosido, con leche, y uno de madera con sus aros.
+        val cubo = Path().apply { moveTo(q(-60f, -17f)); lineTo(q(-41f, -17f)); lineTo(q(-43f, 0f)); lineTo(q(-58f, 0f)); close() }
+        drawPath(cubo, Brush.horizontalGradient(listOf(p.por(C.CUERO, -0.6f * L, lejos), p.por(C.CUERO, 0.5f * L, lejos)), q(-60f, 0f).x, q(-41f, 0f).x))
+        if (detalle) drawLine(p.sombra(C.HOLLIN, lejos).copy(alpha = 0.6f), q(-51f, -17f), q(-50.5f, 0f), 0.8f * u)
+        drawOval(p.medio(C.HOLLIN, lejos), q(-60f, -19f), Size(19f * u, 4f * u)); drawOval(p.luz(C.LANA, lejos).copy(alpha = 0.85f), q(-58f, -18.4f), Size(15f * u, 2.6f * u))
+        val cubo2 = Path().apply { moveTo(q(42f, -21f)); lineTo(q(60f, -21f)); lineTo(q(58f, 0f)); lineTo(q(44f, 0f)); close() }
+        drawPath(cubo2, Brush.horizontalGradient(listOf(p.por(madera, -0.6f * L, lejos), p.por(madera, 0.6f * L, lejos)), q(42f, 0f).x, q(60f, 0f).x))
+        for (y in listOf(-17f, -5f)) drawLine(p.medio(C.HOLLIN, lejos), q(43f, y), q(59f, y), 1.1f * u)
+        drawOval(p.sombra(lerp(madera, C.HOLLIN, 0.4f), lejos), q(42f, -23f), Size(18f * u, 4f * u))
+        // De noche, con la puerta abierta, la lumbre le saca un filo a la bolsa del lado de la tienda.
+        if (p.calida > 0.05f) clipPath(bolsa) { drawRect(Brush.horizontalGradient(listOf(Color.Transparent, p.lumbre.copy(alpha = (0.5f * p.calida).coerceIn(0f, 1f))), q(10f, 0f).x, q(34f, 0f).x), q(-40f, -90f), Size(80f * u, 86f * u), blendMode = BlendMode.Plus) }
     }
 
     /** La silueta del odre con su armazón, para su sombra. */
-    fun siluetaDeOdre(pie: Offset, alto: Float): Path { val u = alto / 100f; return Path().apply { addRect(Rect(pie.x - 40f * u, pie.y - 104f * u, pie.x + 40f * u, pie.y - 98f * u)); addRect(Rect(pie.x - 40f * u, pie.y - 100f * u, pie.x - 36f * u, pie.y)); addRect(Rect(pie.x + 36f * u, pie.y - 100f * u, pie.x + 40f * u, pie.y)); addOval(Rect(pie.x - 34f * u, pie.y - 84f * u, pie.x + 34f * u, pie.y - 10f * u)) } }
+    fun siluetaDeOdre(pie: Offset, alto: Float): Path { val u = alto / 100f; return Path().apply { addRect(Rect(pie.x - 40f * u, pie.y - 104f * u, pie.x + 40f * u, pie.y - 98f * u)); addRect(Rect(pie.x - 40f * u, pie.y - 100f * u, pie.x - 36f * u, pie.y)); addRect(Rect(pie.x + 36f * u, pie.y - 100f * u, pie.x + 40f * u, pie.y)); addOval(Rect(pie.x - 34f * u, pie.y - 88f * u, pie.x + 34f * u, pie.y - 6f * u)) } }
 
     /**
      * El hogar de fuera **[Diseño propio]**: un corro de piedras ennegrecidas, la ceniza, la trébede de hierro y la olla
@@ -1242,5 +1829,177 @@ internal object PiezasMongol {
 
     private fun DrawScope.drawArcLine(color: Color, c: Offset, r: Float) {
         drawLine(color.copy(alpha = 0.7f), c + Offset(-r * 0.7f, -r * 0.2f), c + Offset(r * 0.6f, -r * 0.24f), (r * 0.12f).coerceAtLeast(0.3f), StrokeCap.Round)
+    }
+
+    // =================================================================
+    //  Los yaks y los bueyes, los camellos lejanos y los perros (piezas nuevas de S12)
+    // =================================================================
+
+    /** Los pelos de los yaks y los bueyes: el yak negro, el pío (negro con la cara y el vientre blancos), el buey pardo. */
+    val YAK = lerp(C.HOLLIN, C.CUERO, 0.28f)
+    val YAK_PIO = lerp(C.HOLLIN, C.CUERO, 0.2f)
+    val BUEY = lerp(C.CUERO, C.ESTEPA, 0.25f)
+    /** El camello de dos jorobas, del color de la estepa seca. */
+    val CAMELLO = lerp(C.ESTEPA, C.CUERO, 0.35f)
+    /** El perro grande de los campamentos: negro, con las cejas y las patas color fuego. */
+    val PERRO = lerp(C.HOLLIN, C.CUERO, 0.15f)
+
+    /**
+     * Un yak (o, con [yak] en false, un buey de los que tiran de las carretas) de lado, mirando a la izquierda si [mira]
+     * es −1. [alto]: unidades hasta lo alto de la cruz. El yak, con su joroba, la falda de pelo largo que le cuelga
+     * casi hasta el suelo, la cola de penacho y los cuernos que se abren hacia arriba; el buey, de pelo corto y más bajo
+     * de cruz. [pasta]: con la cabeza en la hierba. [pio]: negro con la cara y la falda blancas. Lleva su sombra de
+     * contacto; la arrojada, con [siluetaDeBovino].
+     */
+    fun DrawScope.bovino(p: Pincel, pie: Offset, alto: Float, mira: Float, pelo: Color, yak: Boolean = true, pasta: Boolean = false, pio: Boolean = false, lejos: Float = 0f) {
+        val u = alto / 100f; val dir = if (mira >= 0f) -1f else 1f
+        fun q(x: Float, y: Float) = Offset(pie.x + x * u * dir, pie.y + y * u)
+        val detalle = alto > 16f
+        val luz = p.luz(lerp(pelo, C.FIELTRO, 0.25f), lejos); val medio = p.por(pelo, 0f, lejos); val sombra = p.sombra(pelo, lejos)
+        val claro = lerp(C.FIELTRO, C.PIEDRA, 0.2f)
+        drawOval(p.sombra(C.TIERRA, lejos).copy(alpha = 0.4f), Offset(minOf(q(-50f, 0f).x, q(55f, 0f).x), pie.y - 3f * u), Size(105f * u, 6f * u))
+        // Las patas: cortas y gruesas; las de allá, en sombra.
+        for ((x, lejana) in listOf(-30f to true, 36f to true, -38f to false, 44f to false)) {
+            val c = if (lejana) p.sombra(lerp(pelo, C.HOLLIN, 0.3f), lejos) else medio
+            val atras = x > 0f
+            val pts = if (atras) listOf(q(x - 2f, -52f), q(x + 4f, -30f), q(x + 2f, -12f), q(x + 1f, -3f)) else listOf(q(x, -52f), q(x - 1f, -26f), q(x - 1f, -12f), q(x - 2f, -3f))
+            val an = listOf(11f, 6.5f, 4.4f, 4.6f).map { it * u }
+            val izq = pts.indices.map { i -> val d = pts[minOf(i + 1, 3)] - pts[maxOf(i - 1, 0)]; val n = Offset(-d.y, d.x) / d.getDistance().coerceAtLeast(0.01f); pts[i] + n * an[i] }
+            val der = pts.indices.map { i -> val d = pts[minOf(i + 1, 3)] - pts[maxOf(i - 1, 0)]; val n = Offset(-d.y, d.x) / d.getDistance().coerceAtLeast(0.01f); pts[i] - n * an[i] }
+            drawPath(io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva(izq + der.reversed() + izq.take(1)).apply { close() }, c)
+            if (!lejana && detalle) drawLine(luz.copy(alpha = 0.45f), pts[1] + Offset((if (p.solALaDerecha) 1f else -1f) * 3f * u, 0f), pts[2] + Offset((if (p.solALaDerecha) 1f else -1f) * 2.4f * u, 0f), 1.2f * u, StrokeCap.Round)
+            drawPath(poligono(q(x - 4.4f, -4.5f), q(x + 3.6f, -4.5f), q(x + 4.6f, 0.5f), q(x - 5.4f, 0.5f)), p.medio(lerp(C.HOLLIN, C.TIERRA, 0.2f), lejos))
+        }
+        // La cola: un penacho de pelo que cuelga (la del buey, una cola fina con su borla).
+        if (yak) drawPath(Path().apply { moveTo(q(50f, -80f)); cubicTo(q(60f, -70f), q(64f, -40f), q(60f, -16f)); cubicTo(q(57f, -10f), q(50f, -10f), q(50f, -18f)); cubicTo(q(52f, -40f), q(50f, -64f), q(46f, -78f)); close() }, p.medio(lerp(pelo, C.HOLLIN, 0.3f), lejos))
+        else { drawLine(medio, q(50f, -78f), q(54f, -30f), 2f * u, StrokeCap.Round); drawOval(p.medio(lerp(pelo, C.HOLLIN, 0.4f), lejos), q(51f, -32f).let { Offset(it.x - 3f * u, it.y) }, Size(6f * u, 10f * u)) }
+        // El cuerpo: la joroba de la cruz, el lomo que baja a la grupa; el yak, con su falda de pelo largo abajo.
+        val cuerpo = Path().apply {
+            moveTo(q(-46f, -70f)); cubicTo(q(-42f, -92f), q(-26f, if (yak) -104f else -98f), q(-10f, -98f)); cubicTo(q(10f, -92f), q(34f, -88f), q(48f, -84f))
+            cubicTo(q(58f, -80f), q(58f, -58f), q(52f, -46f))
+            if (yak) { lineTo(q(54f, -22f)); for (k in 0..12) { val x = 54f - k * 8.4f; lineTo(q(x, if (k % 2 == 0) -16f else -21f)) }; lineTo(q(-50f, -26f)) }
+            else { cubicTo(q(40f, -42f), q(0f, -38f), q(-30f, -44f)); cubicTo(q(-42f, -48f), q(-48f, -56f), q(-46f, -70f)) }
+            close()
+        }
+        drawPath(cuerpo, medio)
+        clipPath(cuerpo) {
+            drawRect(Brush.verticalGradient(0f to luz, 0.35f to luz.copy(alpha = 0f), 0.65f to sombra.copy(alpha = 0f), 1f to sombra, startY = q(0f, -104f).y, endY = pie.y), Offset(pie.x - 70f * u, q(0f, -106f).y), Size(140f * u, 106f * u))
+            drawRect(Brush.horizontalGradient(if (p.solALaDerecha) listOf(sombra.copy(alpha = 0.5f), Color.Transparent, luz.copy(alpha = 0.2f)) else listOf(luz.copy(alpha = 0.2f), Color.Transparent, sombra.copy(alpha = 0.5f)), pie.x - 60f * u, pie.x + 60f * u), Offset(pie.x - 70f * u, q(0f, -106f).y), Size(140f * u, 106f * u))
+            if (pio) drawPath(Path().apply { moveTo(q(-50f, -40f)); cubicTo(q(-20f, -48f), q(20f, -44f), q(56f, -40f)); lineTo(q(56f, -10f)); lineTo(q(-50f, -10f)); close() }, p.por(claro, 0f, lejos))
+            if (detalle) {
+                // El pelo: largo y en mechones que caen en la falda; corto y ondulado en el lomo.
+                val az = Azar(Semilla.de("mongol", "yak", (pie.x * 11f).toInt()))
+                repeat(if (yak) 40 else 16) { val x = az.entre(-48f, 54f); val y = az.entre(-96f, -30f); val largo = if (yak && y > -60f) az.entre(8f, 18f) else az.entre(3f, 6f); drawLine((if (it % 3 == 0) luz else sombra).copy(alpha = 0.35f), q(x, y), q(x + 0.6f, y + largo), 1.1f * u, StrokeCap.Round) }
+                mancha(q(-28f, -88f), 18f * u, 9f * u, luz, 0.35f)
+            }
+        }
+        // La cabeza: baja y adelantada; al pastar, en la hierba. La frente ancha, el morro, la oreja y los cuernos.
+        val nuca = if (pasta) q(-52f, -48f) else q(-52f, if (yak) -70f else -76f)
+        val morro = if (pasta) q(-70f, -4f) else q(-78f, if (yak) -44f else -54f)
+        val d = (morro - nuca); val l = d.getDistance().coerceAtLeast(0.01f); val dn = d / l; val nn = Offset(dn.y, -dn.x).let { if (it.y > 0f) it else it * -1f }
+        val cabeza = Path().apply {
+            moveTo(nuca - nn * (10f * u)); cubicTo(nuca + dn * (l * 0.4f) - nn * (11f * u), morro - dn * (l * 0.2f) - nn * (8f * u), morro - nn * (5f * u))
+            cubicTo(morro + dn * (3f * u), morro + nn * (4f * u), morro + nn * (6f * u) - dn * (2f * u)); cubicTo(morro - dn * (l * 0.4f) + nn * (9f * u), nuca + nn * (12f * u), nuca + nn * (10f * u)); close()
+        }
+        if (!pasta) drawPath(poligono(q(-44f, -86f), q(-58f, -72f), q(-56f, -50f), q(-40f, -48f)), medio)
+        drawPath(cabeza, Brush.linearGradient(listOf(p.por(if (pio) claro else pelo, 0.5f, lejos), p.por(if (pio) claro else pelo, -0.4f, lejos)), nuca - nn * (10f * u), nuca + nn * (10f * u)))
+        if (alto > 10f) {
+            val ojo = nuca + dn * (l * 0.32f) - nn * (2f * u)
+            drawCircle(p.medio(C.HOLLIN, lejos), 1.6f * u, ojo); drawCircle(Color.White.copy(alpha = 0.4f), 0.5f * u, ojo + Offset(-0.5f * u, -0.5f * u))
+            drawLine(p.sombra(C.HOLLIN, lejos), morro - nn * (2f * u), morro - nn * (2f * u) - dn * (3f * u), 1.2f * u, StrokeCap.Round)
+            drawLine(p.por(lerp(pelo, C.HOLLIN, 0.2f), -0.3f, lejos), nuca + dn * (4f * u), nuca + dn * (4f * u) + nn * (8f * u) + dn * (-4f * u), 3.6f * u, StrokeCap.Round)
+        }
+        // Los cuernos: salen de lo alto de la frente, se abren hacia los lados y suben; claros, con la punta oscura.
+        val cuerno = lerp(C.FIELTRO, C.PIEDRA, 0.4f)
+        for (s in listOf(-1f, 1f)) {
+            val r = nuca + dn * (5f * u) - nn * (9f * u) + Offset(s * 2f * u, 0f)
+            val punta = r + Offset(s * 14f * u, -6f * u) - nn * (8f * u)
+            drawPath(Path().apply { moveTo(r); cubicTo(r + Offset(s * 9f * u, 2f * u), punta + Offset(-s * 2f * u, 6f * u), punta) }, p.por(cuerno, if (s > 0f) 0.4f else -0.3f, lejos), style = Stroke(2.6f * u, cap = StrokeCap.Round))
+            drawCircle(p.medio(C.HOLLIN, lejos), 1.1f * u, punta)
+        }
+        // De noche, el lomo con un filo de luna.
+        if (p.l.noche > 0.3f && detalle) clipPath(cuerpo) { drawPath(Path().apply { moveTo(q(-44f, -86f)); cubicTo(q(-26f, -104f), q(10f, -92f), q(50f, -84f)) }, C.LUNA.copy(alpha = 0.5f * p.l.noche), style = Stroke(4f * u, cap = StrokeCap.Round)) }
+    }
+
+    /** La silueta de un yak o de un buey, para su sombra arrojada. */
+    fun siluetaDeBovino(pie: Offset, alto: Float, mira: Float): Path {
+        val u = alto / 100f; val dir = if (mira >= 0f) -1f else 1f
+        fun q(x: Float, y: Float) = Offset(pie.x + x * u * dir, pie.y + y * u)
+        return poligono(listOf(q(-78f, -44f), q(-52f, -76f), q(-26f, -104f), q(48f, -84f), q(56f, -50f), q(52f, 0f), q(-42f, 0f), q(-50f, -26f)))
+    }
+
+    /**
+     * Un camello de dos jorobas, lejano: el cuerpo con sus jorobas, el cuello largo en S y las patas largas, de un
+     * solo trazo de luz y otro de sombra, y su sombra corta. Pisa en [pie] y mide [alto] hasta lo alto de las jorobas.
+     */
+    fun DrawScope.camelloLejano(p: Pincel, sol: Sol3, pie: Offset, alto: Float, mira: Float, pelo: Color = CAMELLO, lejos: Float = 0f, echado: Boolean = false) {
+        val u = alto / 10f; val dir = if (mira >= 0f) 1f else -1f
+        fun q(x: Float, y: Float) = Offset(pie.x + x * u * dir, pie.y + y * u)
+        if (sol.r.fuerza > 0.05f) { val d = (sol.r.ax * alto * 0.4f).coerceIn(-alto, alto); drawOval(sol.r.color, Offset(pie.x - 6f * u + minOf(0f, d), pie.y - 0.6f * u), Size(12f * u + abs(d), 1.3f * u), alpha = sol.r.fuerza * 0.7f, blendMode = BlendMode.Multiply) }
+        val c = p.por(pelo, 0f, lejos); val o = p.sombra(lerp(pelo, C.HOLLIN, 0.3f), lejos); val l = p.luz(pelo, lejos)
+        val baja = if (echado) 4.6f else 0f
+        if (!echado) for ((x, lejana) in listOf(-3.6f to true, 3f to true, -4.2f to false, 3.6f to false)) drawLine(if (lejana) o else c, q(x, -5.4f), q(x + (if (lejana) 0.3f else 0f), 0f), 0.75f * u, StrokeCap.Round)
+        val cuerpo = Path().apply {
+            moveTo(q(-5f, -5f + baja)); cubicTo(q(-5.4f, -7f + baja), q(-3.6f, -10f + baja), q(-2f, -10f + baja)); cubicTo(q(-1f, -10f + baja), q(-0.6f, -8.6f + baja), q(0f, -8.4f + baja))
+            cubicTo(q(0.8f, -8.6f + baja), q(1.4f, -10f + baja), q(2.6f, -10f + baja)); cubicTo(q(4.2f, -10f + baja), q(5.4f, -7.4f + baja), q(5f, -5f + baja)); cubicTo(q(3f, -4.2f + baja), q(-3f, -4.2f + baja), q(-5f, -5f + baja)); close()
+        }
+        drawPath(cuerpo, Brush.verticalGradient(listOf(l, c, o), q(0f, -10f + baja).y, q(0f, -4.2f + baja).y))
+        drawPath(Path().apply { moveTo(q(-4.4f, -6.4f + baja)); cubicTo(q(-6.4f, -6.6f + baja), q(-7.2f, -8f + baja), q(-7f, -10.2f + baja)); lineTo(q(-8.6f, -10.6f + baja)) }, c, style = Stroke(1.1f * u, cap = StrokeCap.Round))
+        drawLine(o, q(5f, -6.4f + baja), q(5.4f, -4f + baja), 0.4f * u, StrokeCap.Round)
+        if (p.l.noche > 0.3f) drawPath(cuerpo, C.LUNA.copy(alpha = 0.35f * p.l.noche), style = Stroke(0.4f * u))
+    }
+
+    /**
+     * Un perro de los campamentos, grande y peludo: negro, con las cejas, el hocico y las patas color fuego, la cola
+     * en penacho enroscada sobre el lomo y las orejas caídas. Pisa en [pie] y mide [alto] hasta la cruz; [echado]: tumbado
+     * con la cabeza alta, vigilando. De noche, con un filo de luna.
+     */
+    fun DrawScope.perro(p: Pincel, pie: Offset, alto: Float, mira: Float, pelo: Color = PERRO, echado: Boolean = false, lejos: Float = 0f) {
+        val u = alto / 100f; val dir = if (mira >= 0f) -1f else 1f
+        fun q(x: Float, y: Float) = Offset(pie.x + x * u * dir, pie.y + y * u)
+        val fuego = lerp(C.CUERO, C.ORO, 0.35f)
+        val medio = p.por(pelo, 0f, lejos); val luz = p.luz(lerp(pelo, C.LUNA, 0.25f), lejos); val sombra = p.sombra(pelo, lejos)
+        val baja = if (echado) 46f else 0f
+        drawOval(p.sombra(C.TIERRA, lejos).copy(alpha = 0.4f), Offset(minOf(q(-50f, 0f).x, q(55f, 0f).x), pie.y - 3f * u), Size(105f * u, 6f * u))
+        // Las patas (de pie) o las manos tendidas delante (echado), color fuego abajo.
+        if (!echado) for ((x, lejana) in listOf(-26f to true, 30f to true, -32f to false, 36f to false)) {
+            val atras = x > 0f
+            val col = if (lejana) sombra else medio
+            // El muslo ancho (o el brazo), la caña fina, y la pata color fuego con su pelo largo detrás.
+            val a = q(x, -60f); val j = if (atras) q(x + 6f, -30f) else q(x - 1f, -28f); val f = q(x - 2f, -3f)
+            drawPath(poligono(a + Offset(-7f * u, 0f), a + Offset(7f * u, 0f), j + Offset(3.6f * u, 0f), j + Offset(-3.6f * u, 0f)), col)
+            drawLine(col, j, f, 6.4f * u, StrokeCap.Round)
+            drawLine(p.por(fuego, if (lejana) -0.6f else 0.1f, lejos), j + (f - j) * 0.45f, f, 6.6f * u, StrokeCap.Round)
+            drawOval(p.por(fuego, if (lejana) -0.6f else 0.3f, lejos), Offset(f.x - 5f * u, f.y - 2f * u), Size(9f * u, 4.4f * u))
+            for (k in 0..2) drawLine(col, j + Offset(3f * u * dir * (if (atras) -1f else 1f) * -1f, k * 4f * u), j + Offset(7f * u * dir * (if (atras) -1f else 1f) * -1f, k * 4f * u + 6f * u), 1.4f * u, StrokeCap.Round)
+        } else for (y in listOf(-6f, -3f)) drawLine(p.por(fuego, if (y < -5f) -0.5f else 0.2f, lejos), q(-30f, y), q(-60f, y + 1f), 8f * u, StrokeCap.Round)
+        // La cola: un penacho enroscado sobre el lomo.
+        drawPath(Path().apply { moveTo(q(40f, -88f + baja)); cubicTo(q(56f, -104f + baja), q(48f, -126f + baja), q(30f, -114f + baja)); cubicTo(q(40f, -112f + baja), q(44f, -102f + baja), q(34f, -92f + baja)); close() }, medio)
+        // El cuerpo, ancho y peludo, con el pecho hondo; el borde, de mechones.
+        val cuerpo = Path().apply {
+            moveTo(q(-36f, -92f + baja)); cubicTo(q(-20f, -100f + baja), q(20f, -96f + baja), q(44f, -92f + baja)); cubicTo(q(54f, -86f + baja), q(52f, -64f + baja), q(42f, -56f + baja))
+            for (k in 0..8) { val x = 40f - k * 9f; lineTo(q(x, (if (k % 2 == 0) -52f else -48f) + baja)) }
+            cubicTo(q(-44f, -54f + baja), q(-48f, -74f + baja), q(-36f, -92f + baja)); close()
+        }
+        drawPath(cuerpo, medio)
+        clipPath(cuerpo) {
+            drawRect(Brush.verticalGradient(0f to luz, 0.4f to luz.copy(alpha = 0f), 1f to sombra, startY = q(0f, -100f + baja).y, endY = q(0f, -48f + baja).y), Offset(pie.x - 70f * u, q(0f, -102f + baja).y), Size(140f * u, 56f * u))
+            mancha(q(-30f, -66f + baja), 10f * u, 8f * u, p.por(fuego, 0f, lejos), 0.35f)
+        }
+        // La cabeza, ancha, alta y alerta: las cejas color fuego (los «cuatro ojos»), las orejas caídas, el hocico.
+        val c = q(-50f, -104f + baja)
+        scale(1.3f, 1.3f, c + Offset(6f * u * dir, 4f * u)) {
+        val cabeza = Path().apply { moveTo(c + Offset(10f * u * dir, -12f * u)); cubicTo(c + Offset(-4f * u * dir, -16f * u), c + Offset(-16f * u * dir, -12f * u), c + Offset(-26f * u * dir, -2f * u)); cubicTo(c + Offset(-28f * u * dir, 4f * u), c + Offset(-22f * u * dir, 8f * u), c + Offset(-12f * u * dir, 8f * u)); cubicTo(c + Offset(0f, 14f * u), c + Offset(12f * u * dir, 12f * u), c + Offset(14f * u * dir, 2f * u)); close() }
+        // La gorguera: el pelo espeso del cuello, que le da su bulto de oso.
+        val gorguera = Path().apply { val g0 = q(-40f, -84f + baja); for (k in 0 until 24) { val a = (2 * PI * k / 24).toFloat(); val r = (if (k % 2 == 0) 19f else 17f) * u; val pt = g0 + Offset(cos(a) * r * 0.9f, sin(a) * r); if (k == 0) moveTo(pt) else lineTo(pt) }; close() }
+        drawPath(gorguera, Brush.verticalGradient(listOf(luz, medio, sombra), q(0f, -104f + baja).y, q(0f, -66f + baja).y))
+        drawPath(cabeza, Brush.verticalGradient(listOf(luz, medio, sombra), c.y - 16f * u, c.y + 12f * u))
+        drawPath(Path().apply { moveTo(c + Offset(-14f * u * dir, 0f)); cubicTo(c + Offset(-20f * u * dir, -1f * u), c + Offset(-26f * u * dir, 1f * u), c + Offset(-26f * u * dir, 3f * u)); cubicTo(c + Offset(-22f * u * dir, 8f * u), c + Offset(-14f * u * dir, 8f * u), c + Offset(-12f * u * dir, 5f * u)); close() }, p.por(fuego, -0.1f, lejos))
+        drawCircle(p.por(fuego, 0.3f, lejos), 2.2f * u, c + Offset(-8f * u * dir, -8f * u))
+        drawCircle(p.medio(C.HOLLIN, lejos), 1.7f * u, c + Offset(-8f * u * dir, -5f * u)); drawCircle(Color.White.copy(alpha = 0.45f), 0.6f * u, c + Offset(-8.5f * u * dir, -5.6f * u))
+        drawCircle(p.medio(C.HOLLIN, lejos), 2f * u, c + Offset(-26f * u * dir, 1.6f * u))
+        drawPath(Path().apply { moveTo(c + Offset(4f * u * dir, -12f * u)); cubicTo(c + Offset(10f * u * dir, -11f * u), c + Offset(13f * u * dir, 2f * u), c + Offset(8f * u * dir, 9f * u)); cubicTo(c + Offset(3f * u * dir, 4f * u), c + Offset(0f, -6f * u), c + Offset(4f * u * dir, -12f * u)); close() }, sombra)
+        }
+        if (p.l.noche > 0.3f) clipPath(cuerpo) { drawPath(Path().apply { moveTo(q(-36f, -92f + baja)); cubicTo(q(-20f, -100f + baja), q(20f, -96f + baja), q(44f, -92f + baja)) }, C.LUNA.copy(alpha = 0.5f * p.l.noche), style = Stroke(4f * u, cap = StrokeCap.Round)) }
     }
 }

@@ -12,6 +12,8 @@ import io.github.ruddy2003.vestigium.ui.escenas.EscenaMongol.Puerta
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaMongol.Tienda
 import io.github.ruddy2003.vestigium.ui.escenas.Gatuno
 import io.github.ruddy2003.vestigium.ui.escenas.Momento
+import io.github.ruddy2003.vestigium.ui.escenas.ObjetosMongol
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol
 import io.github.ruddy2003.vestigium.ui.escenas.TipoAncla
 import io.github.ruddy2003.vestigium.ui.escenas.gatoQuieto
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
@@ -243,5 +245,28 @@ class EscenaMongolPrueba {
         val a = momento("2029-12-20", 13.0); val b = momento("2029-12-20", 13.0)
         assertEquals(EscenaMongol.lugar(a), EscenaMongol.lugar(b)); assertEquals(EscenaMongol.tiendas(a), EscenaMongol.tiendas(b)); assertEquals(EscenaMongol.nieve(a), EscenaMongol.nieve(b), 0f)
         assertEquals(EscenaMongol.anclas(a).map { it.x to it.y }, EscenaMongol.anclas(b).map { it.x to it.y })
+    }
+
+    /**
+     * Los doce objetos tienen su dibujo y su sitio: los del calendario son los de [ObjetosMongol.TODOS]; siete son de los
+     * grandes (van de pie o apoyados) y cinco de los chicos (van sobre el soporte), y cada día el cuadro sabe cuál le toca.
+     */
+    @Test fun cadaObjetoDelDiaEsGrandeOChicoYTieneSuDibujo() {
+        val delCalendario = sortedSetOf<String>()
+        cadaDia { d, m ->
+            val o = m.ficha.objeto ?: return@cadaDia
+            delCalendario += o
+            assertEquals("$d: $o", o in ObjetosMongol.GRANDES, ObjetosMongol.esGrande(m))
+        }
+        assertEquals(ObjetosMongol.TODOS.toSortedSet(), delCalendario)
+        assertTrue(ObjetosMongol.TODOS.containsAll(ObjetosMongol.GRANDES))
+        assertEquals(setOf("arco", "lazo", "silla", "ger", "morin_khuur", "deel", "argal"), ObjetosMongol.GRANDES)
+        assertEquals(5, ObjetosMongol.TODOS.count { !ObjetosMongol.esGrande(it) })
+        assertFalse(ObjetosMongol.esGrande(null as String?))
+    }
+
+    /** Las posturas del caballo que usan los cuadros siguen ahí (las piden por su nombre). */
+    @Test fun elCaballoTieneSusPosturas() {
+        assertEquals(listOf("DE_PIE", "PASTANDO", "MIRANDO_ATRAS", "DESCANSO", "ECHADO", "MAMANDO"), PiezasMongol.Postura.entries.map { it.name })
     }
 }
