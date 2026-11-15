@@ -1061,7 +1061,7 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
         val p = s.height * 0.08f; val a = s.width * 0.42f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(s.width, p); lineTo(s.width, s.height); lineTo(0f, s.height); close()
     }
-    // La casa redonda del oppidum: arriba, el tejado de paja en punta suave.
+    // La casa del oppidum: arriba, el tejado alto de paja (en la Galia, las casas eran de planta rectangular).
     TemaId.GALIA -> GenericShape { s, _ ->
         val a = s.height * 0.16f
         moveTo(0f, s.height); lineTo(0f, a)
