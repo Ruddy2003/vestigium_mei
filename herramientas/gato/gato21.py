@@ -1,6 +1,6 @@
 """
-Lote 10: los gatos de los cinco temas nuevos. Primera tanda: Frente exterior; segunda tanda: Arcontes, Galia y Art
-nouveau.
+Lote 10: los gatos de los cinco temas nuevos. Primera tanda: Frente exterior; segunda tanda: Arcontes, Galia, Art
+nouveau y Psicodelia.
 
 - Frente exterior (`frente`): gato gris pizarra pintado como un cuadro de concepto de los años 70 (gouache sobre cartón:
   manchas de color opaco con la huella del pincel, luz cálida que entra por arriba y rebote frío abajo, grano del
@@ -61,9 +61,22 @@ nouveau.
   una libélula (se agacha, se alza en dos patas y le tira un zarpazo) y se enrosca mientras una línea de oro sale de la
   punta de su cola y dibuja la línea de látigo, que se dobla sobre sí misma y acaba en un rizo.
 
-El que falta del lote 10 (`psicodelia`) se agrega igual: su rama en
-`tema_mio`, sus colores en `colores_obj`, sus dos acciones en `ESP_MIOS`, su fondo en `FONDOS_MIOS` (y `ETIQ`, `NOCHE`)
-y su nombre en `MIOS`; o en un archivo `gato21b.py` que importe este y registre los suyos de la misma forma.
+- Psicodelia (`psicodelia`): gato atigrado naranja dibujado en tinta fluorescente de imprenta (recurso del dibujo: a la
+  manera de un cartel de las salas de baile de 1967, serigrafiado, sin copiar ninguno): tres tintas planas por color, los
+  complementarios uno junto al otro para que vibren (el naranja con el azul de la cinta, el magenta de las rayas con el
+  verde del ojo, el amarillo de las luces con el violeta de la sombra), el contorno de cartel grueso y parejo, el medio
+  tono en trama de puntos y el registro un poco corrido (la pantalla del color se sale del contorno de un lado). De
+  noche, bajo la luz negra: el naranja y el magenta brillan, la sombra se hunde en el violeta y el tubo deja un filo
+  violeta. Lleva gafas redondas de alambre con el cristal rosa (el ojo se ve a través) y una cinta azul con florecitas
+  en la frente, anudada atrás. Fondo: una calle de San Francisco en el verano de 1967 (la niebla de la mañana, el sol
+  velado, la fila de casas victorianas casi todas grises o desteñidas con dos pintadas, la calle que sube recta la cuesta
+  con sus casas en escalera hasta los eucaliptos de la loma, el poste de madera con los carteles pegados, los cables
+  del trolebús, el árbol que enmarca y dibujos de tiza en la acera); de noche, la misma calle con el farol, las
+  ventanas con luz, un mirador con luz negra (y adentro carteles en verde limón y magenta) y otro con las luces
+  líquidas. Lo que se mueve: jirones de niebla que pasan y se deshacen, los carteles con el viento, una gaviota de día
+  y, de noche, las luces líquidas y dos polillas en el farol. Se queda hipnotizado mirando una lámpara de cera (un
+  frasco recto con cúpula sobre un pie de tambor: no la forma registrada de la lámpara de lava; de noche lo ilumina) ·
+  persigue las burbujas del show de luces (gotas de luz que se le proyectan encima). Nada remite a drogas.
 
 Colores de la guía del tema (docs/diseno/temas/frente.md, «La base escondida en ruinas», y `TrazosFrente` en
 ui/FrenteTrazos.kt): piedra verdosa, consola blanca y oscura, el turquesa del vidrio, el cobre, y el ámbar, el óxido y el
@@ -73,6 +86,9 @@ verde negro, la luna y la hoguera; el rojo de Roma, solo en lo que es de Roma. L
 docs/diseno/temas/nouveau.md (`TrazosNouveau`): crema, salvia, el violeta del iris y la malva, el oro pálido y el verde de
 hierro de Guimard; de noche, el azul negro con la luz eléctrica dorada y el verde de los cafés. Nada de Art déco (ni
 geometría ni zigzag) ni nada copiado de ningún cartel: las curvas son de planta y de látigo.
+Los de Psicodelia, de docs/diseno/temas/psicodelia.md (`TrazosPsicodelia`): los complementarios que vibran, las casas grises
+y desteñidas con las pocas pintadas en turquesa y amarillo, la niebla; de noche, la luz negra (verde limón, magenta y
+violeta sobre el negro violeta). Nada de Ciudad neón (ni letreros ni rejillas): las formas son blandas.
 Importa la cadena (gato18, gato19 y los gato20*) y agrega sus temas sin tocar los demás.
 
 Uso: python3 gato21.py hoja|fondos|bandas [tema…]   (lo deja en salida/, que no se sube)
@@ -1263,7 +1279,7 @@ def pintar_serigrafia(g, t, cel):
     k_ = 7.0 * s
     nx, ny = -gx * k_, -gy * k_
     nn = np.sqrt(nx * nx + ny * ny + 1)
-    lv = np.array(t["lito_luz"], np.float32); lv /= np.linalg.norm(lv)
+    lv = np.array(col.get("_luz", t["lito_luz"]), np.float32); lv /= np.linalg.norm(lv)
     dif = np.clip((nx * lv[0] + ny * lv[1] + lv[2]) / nn, 0, 1)
     u_sh, u_hi = t["lito_umbral"]
     sombra = dif < u_sh
@@ -1283,7 +1299,7 @@ def pintar_serigrafia(g, t, cel):
             continue
         m = Lb == q
         c0, c1, c2 = rampa(v)
-        if v in t["lito_planas"]:
+        if v in t["lito_planas"] + col.get("_planas", ""):
             rgb[m] = c1
         elif v in t["lito_en_sombra"]:
             rgb[m] = c2
@@ -1339,6 +1355,16 @@ def pintar_serigrafia(g, t, cel):
         anillo &= (cara2 > u_) & (on > 0.002) & ~np.isin(Lb, _o("EHkNOUVXQ"))
         rgb[anillo] = c_
     alfa = np.where(sil | fuera, 255.0, 0.0)
+    # --- El halo de lo que da luz (la lámpara de noche): un velo translúcido alrededor, fuera del dibujo.
+    if "_halo" in col:
+        letras_, c_h, r_h, a_h = col["_halo"]
+        fuente_ = np.isin(Lb, _o(letras_)).astype(np.float32)
+        if fuente_.any():
+            hal = _difuso(fuente_, r_h * s) * 3.0
+            zona = ~(sil | fuera) & (hal > 0.06)
+            rgb[zona] = c_h
+            alfa[zona] = np.clip(hal[zona], 0, 1) * a_h
+            alfa[zona] = np.round(alfa[zona] / 24) * 24                # en pasos (como los anillos de luz del fondo)
     # --- La luz proyectada (las gotas del show de luces): sobre el gato se mezcla con su color y lo aclara; fuera de él
     #     es luz que flota, translúcida, con el borde más intenso (el filo de la gota de aceite).
     if luces_obj:
@@ -1417,7 +1443,8 @@ def colores_obj(nombre, oscuro, j):
         c = [dict(U=hx("3E8A94"), V=hx("E8C46E"), X=hx("C9C4DA"), Q=hx("FFF4D6")),
              dict(U=hx("3E8A94"), V=hx("FFE9B8"), X=hx("F5D488"), Q=hx("FFF4D6"))][j]
     if oscuro and nombre == "psicodelia":
-        c = [dict(U=hx("1E8F88"), V=hx("FFC24A"), X=hx("FF5CBE"), Q=hx("FFF4C8"), _filo=((0.9, 0.44), hx("FFC46A"), 0.4)),
+        c = [dict(U=hx("1E8F88"), V=hx("FFC24A"), X=hx("FF4FB4"), Q=hx("FFF4C8"), _filo=((0.9, 0.44), hx("FFC46A"), 0.4),
+                  _planas="VX", _halo=("VX", hx("FFB45A"), 2.4, 150), _luz=(0.75, 0.1, 0.55)),
              dict(U=hx("FF5CBE"), V=hx("FF9F43"), X=hx("C9F04A"), Q=hx("FFFFFF"), _luces="UVXQ")][j]
     if oscuro and nombre == "frente" and j == 1:
         c["Q"] = hx("BFF5E0")
@@ -1597,7 +1624,7 @@ def tema_mio(nombre, oscuro):
         if oscuro:
             t.update(lito_filos=[((-0.25, -0.97), hx("C7B2FF"), 0.45)], lito_filo_ancho=0.45, seri_registro=(0, 0),
                      lito_umbral=(0.36, 0.86), lito_crachis=0.1, lito_crachis_p=0.45,
-                     seri_luz_k=0.55, seri_luz_suma=40, seri_luz_alfa=170)
+                     seri_luz_k=0.55, seri_luz_suma=40, seri_luz_alfa=215)
             t["sombra_col"], t["sombra_a"] = (0, 0, 0), 90
     else:
         raise ValueError(nombre)
@@ -5134,7 +5161,7 @@ PS_BORDILLO = 67              # el borde de la acera de adelante (por donde cami
 PS_POSTE = 24                 # el poste de madera: su borde izquierdo (4 de ancho)
 PS_FAROL = (45, 17)           # la cabeza del farol, colgada del poste
 PS_SOL = (74, 9)              # el sol de la mañana, velado por la niebla (de ahí viene la luz: arriba a la izquierda)
-PS_LUNA = (238, 8)
+PS_LUNA = (281, 12)             # de noche, la luna sale detrás de la loma, al final de la calle que sube
 PS_CASAS = [   # x, ancho, arriba, paleta, lado del mirador, remate, ventana especial
     dict(x=-10, w=40, top=26, pal="gris", bay="der", remate="cornisa", esp=None),
     dict(x=30, w=40, top=24, pal="blanco", bay="izq", remate="fronton", esp="cartel"),
@@ -5270,11 +5297,12 @@ def ps_cielo(im, P, o):
         lx, ly = PS_LUNA
         luz(im, lx, ly + 2, 60, P["luna_halo"], 0.16, 5, ry=30)
         luz(im, lx, ly, 14, P["luna_halo"], 0.3, 3)
-        for y in range(ly - 3, ly + 4):
-            for x in range(lx - 3, lx + 4):
+        for y in range(ly - 4, ly + 5):
+            for x in range(lx - 4, lx + 5):
                 dd = (x - lx) ** 2 + (y - ly) ** 2
-                if dd <= 10:
-                    px[x, y] = P["luna"] if dd <= 5 or (x - lx) < 0 else mezcla(P["luna"], P["luna_halo"], 0.4)
+                if dd <= 17:
+                    px[x, y] = P["luna"] if dd <= 9 or (x - lx) < 0 else mezcla(P["luna"], P["luna_halo"], 0.4)
+        px[lx + 1, ly - 1] = mezcla(P["luna"], P["luna_halo"], 0.25); px[lx - 1, ly + 1] = mezcla(P["luna"], P["luna_halo"], 0.2)
         rnd = random.Random(31)
         for _ in range(34):
             x, y = rnd.randrange(W), rnd.randrange(1, 26)
@@ -5326,10 +5354,6 @@ def ps_cuesta(im, P, o):
                         if 0 <= xx < W and 0 <= yy < H:
                             px[xx, yy] = c_ if xx < int(x + w_) - 1 else mezcla(c_, P["cerro_techo"], 0.3)
                 if rnd.random() < 0.55:                       # techo de dos aguas
-                    for q in range(int(w_ / 2) + 1):
-                        for xx in (int(x) + q, int(x + w_) - 1 - q):
-                            if 0 <= xx < W and 0 <= yb - alto_ - 1 - min(q, w_ // 2 - q) < H:
-                                pass
                     for xx in range(int(x), int(x + w_)):
                         h_ = min(xx - int(x), int(x + w_) - 1 - xx)
                         for yy in range(yb - alto_ - min(2, h_), yb - alto_):
@@ -5371,7 +5395,7 @@ def ps_cruce(im, P, o):
             fondo_ = (1 - t) * 13 + 2.5
             alto_ = (1 - t) * 26 + 4
             col_ = rnd.choice(P["cerro_casas"][:4]) if (i + (s_ > 0)) % 4 else rnd.choice(P["cerro_casas"][4:6])
-            k_ = (0.05 + 0.55 * t * t) if not o else 0.03 + 0.2 * t
+            k_ = (0.05 + 0.55 * t * t) if not o else 0.2 + 0.45 * t
             c_ = mezcla(col_, P["niebla"], k_)
             c_s = mezcla(c_, P["cerro_techo"], 0.3 if (s_ > 0) else 0.12)
             xa, xb = (borde - fondo_, borde) if s_ < 0 else (borde, borde + fondo_)
@@ -5386,7 +5410,7 @@ def ps_cruce(im, P, o):
             for fila in range(1, 4):                              # sus ventanas (en escorzo: angostas)
                 yv = y_ - alto_ * (0.24 * fila + 0.06)
                 hv = max(1, int(alto_ * 0.12))
-                enc_ = o and rnd.random() < 0.3
+                enc_ = o and rnd.random() < 0.5
                 for x in range(int(xa) + 1, int(xb), max(2, int(fondo_ / 3))):
                     if rnd.random() < 0.85:
                         for yy in range(int(yv), int(yv) + hv):
@@ -5401,7 +5425,7 @@ def ps_cruce(im, P, o):
     for y in range(int(yc), yb + 1):
         t = (yb - y) / (yb - yc)
         a_ = ancho(t)
-        k_ = (0.05 + 0.6 * t * t) if not o else 0.05 + 0.25 * t
+        k_ = (0.05 + 0.6 * t * t) if not o else 0.22 + 0.4 * t
         for x in range(int(xc - a_ - 2.5 * (1 - t) - 1), int(xc + a_ + 2.5 * (1 - t) + 2)):
             if not 0 <= x < W:
                 continue
@@ -5412,7 +5436,25 @@ def ps_cruce(im, P, o):
                     c = mezcla(c, hx("E8D9A0"), 0.6)
             else:
                 c = P["acera"][1] if dx_ < a_ + 2.5 * (1 - t) else P["bordillo_s"]
+                if a_ < dx_ < a_ + 1:
+                    c = P["bordillo"]                               # el filo del bordillo, que dibuja la subida
             px[x, y] = mezcla(c, P["niebla"], k_)
+    # Los faroles de la calle que sube (de noche, con su charco de luz y su halo en la niebla).
+    for t in (0.08, 0.3, 0.52, 0.7, 0.84):
+        y_ = yb - (yb - yc) * t
+        for s_ in (-1, 1):
+            if (s_ > 0) == (t in (0.3, 0.7)):
+                continue
+            xl = xc + s_ * (ancho(t) + 1.2 * (1 - t) + 0.5)
+            alto_ = 9 * (1 - t) + 2
+            k_ = (0.05 + 0.6 * t * t) if not o else 0.1 * t
+            for y in range(int(y_ - alto_), int(y_) + 1):
+                pon(px, xl, y, mezcla(P["metal"], P["niebla"], k_))
+            pon(px, xl - s_, y_ - alto_, mezcla(P["metal"], P["niebla"], k_))
+            if o:
+                luz(im, xl - s_, y_ - alto_ + 1, 5 * (1 - t) + 2.5, P["farol_halo"], 0.16, 3)
+                luz(im, xl - s_ * 2, y_ + 0.5, 9 * (1 - t) + 3, P["farol_luz"], 0.3, 3, ry=2 * (1 - t) + 1)
+                pon(px, xl - s_, y_ - alto_ + 1, P["farol_vidrio"])
 
 
 def ps_ventana(im, P, o, x, y, w, h, encendida=False, cortina=None):
@@ -5467,7 +5509,7 @@ def ps_casa(im, P, o, c, n):
     sube los dos pisos (la cara de la izquierda con luz, la de la derecha en sombra, y la sombra que deja en la fachada),
     la puerta con su montante y su tejadillo, la escalera de la entrada con sus barandas, ventanas con guardapolvo y, arriba,
     la cornisa con sus ménsulas o el frontón con escamas de madera."""
-    px = im.load(); d = ImageDraw.Draw(im)
+    px = im.load()
     pal = P["casas"][c["pal"]]
     P["casas_actual"] = pal
     x0, x1, top = c["x"], c["x"] + c["w"], c["top"]
@@ -5484,10 +5526,8 @@ def ps_casa(im, P, o, c, n):
             px[x, y] = mezcla(pal["cuerpo"], pal["sombra"], 0.55)
     for x in range(x0, x1):
         pon(px, x, sotano, pal["moldura"]); pon(px, x, sotano + 1, pal["sombra"], 0.5)
-    for x in range(x0, x1):                                       # la separación entre casas
-        pass
-    pon_linea = lambda xx: [pon(px, xx, y, pal["sombra"], 0.5) for y in range(top, PS_BASE)]
-    pon_linea(x1 - 1)
+    for y in range(top, PS_BASE):                                 # la separación entre casas
+        pon(px, x1 - 1, y, pal["sombra"], 0.5)
     izq = c["bay"] == "izq"
     bw = 15
     bx = x0 + 4 if izq else x1 - 4 - bw
@@ -5544,8 +5584,6 @@ def ps_casa(im, P, o, c, n):
     ventanas.append((dx_p, top + 5, 5, alto_v1, "arriba"))
     if c["w"] >= 40:
         ventanas.append((dx_p + (7 if izq else -7), top + 5, 4, alto_v1, "arriba"))
-    if not izq and c["w"] >= 40:
-        pass
     # Ventanitas del sótano.
     for xx in (bx + 4, bx + 9):
         for y in range(sotano + 3, sotano + 6):
@@ -5603,6 +5641,7 @@ def ps_casa(im, P, o, c, n):
                     q = int((r_ * 1.2 + a_ * 1.3) % 4)
                     pon(px, xx, yy, (P["flores"][0], P["cartel"]["amarillo"], P["cartel"]["azul"], P["cartel"]["naranja"])[q])
         P.setdefault("_luces_ventanas", []).append((xa, ya, wa, ha))
+        P["_luces_ventanas"].append(ventanas[3][:4])
     elif esp == "cartel":
         x, y = ventanas[-1][0], ventanas[-1][1]
         for yy in range(y + 1, y + 8):
@@ -5625,7 +5664,7 @@ def ps_casa(im, P, o, c, n):
         else:                                                      # de noche: el mirador con la luz negra
             P.setdefault("_luz_negra", []).append(ventanas[0][:4])
     elif esp == "flores":
-        x, y, w, h = ventanas[1][:4] if False else ventanas[3][:4]
+        x, y, w, h = ventanas[3][:4]
         for xx in range(x - 1, x + w + 1):                         # la jardinera con geranios
             pon(px, xx, y + h + 1, P["poste"][2] if not o else P["poste"][1])
             pon(px, xx, y + h, P["flores"][3] if xx % 2 else P["flores"][2])
@@ -5923,7 +5962,7 @@ def fondo_psicodelia(t):
     # Los jirones de niebla: aparecen, pasan despacio a la derecha subiendo un poco y se deshacen. Ninguno se ve en el
     # cuadro 0 (así la base no lleva ninguno). Su lugar va de pixel en pixel y su fuerza en cuatro pasos.
     JIRONES = [  # x, y, largo, grosor, de, hasta (fracción del bucle), cuánto avanza
-        (236, 36, 54, 3.8, 0.04, 0.88, 24), (60, 23, 52, 3.0, 0.18, 0.97, 22), (330, 18, 44, 3.0, 0.06, 0.7, 18)]
+        (232, 36, 58, 7.0, 0.04, 0.88, 24), (56, 24, 56, 6.0, 0.18, 0.97, 22), (326, 18, 46, 5.5, 0.06, 0.7, 18)]
 
     def jiron(f, x0, y0, largo, grosor, k):
         p_ = f.load()
@@ -5934,15 +5973,15 @@ def fondo_psicodelia(t):
             u = (x - x0) / largo
             env = math.sin(math.pi * u) ** 0.8
             g_ = grosor * env * (1 + 0.3 * math.sin(u * 9 + x0 * 0.1))
-            yc = y0 + 0.8 * math.sin(u * 5.0)
+            yc = y0 + 1.2 * math.sin(u * 5.0) - 0.8 * env
             for y in range(int(yc - g_ / 2) - 1, int(yc + g_ / 2) + 2):
                 if not 0 <= y < H:
                     continue
                 dd = 1 - abs(y - yc) / max(0.6, g_ / 2 + 0.5)
                 if dd <= 0:
                     continue
-                if tramar(min(1.0, dd * 1.3) * k, x, y):
-                    p_[x, y] = mezcla(p_[x, y], col, 0.7 if dd > 0.45 else 0.45)
+                if tramar(min(1.0, dd * 1.6) * k, x, y):
+                    p_[x, y] = mezcla(p_[x, y], col, 0.55 if dd > 0.5 else 0.32)
 
     def mover(f, tk):
         u_ = tk / BUCLE
