@@ -200,7 +200,8 @@ class EscenaUrssPrueba {
                 if (f == Fase.NOCHE) assertTrue("$d $h", EscenaUrss.lampara(m))
                 if (f == Fase.MANANA && !EscenaUrss.enElSanatorio(m)) assertTrue("$d $h", EscenaUrss.lampara(m))
                 // De día la cocina está sola: a las 7:00 y a las 13:00, nada encendido.
-                if (h == 7.0 || h == 13.0) { assertEquals("$d $h", Fase.SOLA, f); assertFalse("$d $h", EscenaUrss.lampara(m)); assertFalse("$d $h", EscenaUrss.fogon(m)) }
+                // De día la cocina está sola: a las 7:00 y a las 13:00, el gas apagado; la lámpara, solo a mediodía en los días oscuros.
+                if (h == 7.0 || h == 13.0) { assertEquals("$d $h", Fase.SOLA, f); assertEquals("$d $h", h == 13.0 && EscenaUrss.diaOscuro(m) && !EscenaUrss.enElSanatorio(m), EscenaUrss.lampara(m)); assertFalse("$d $h", EscenaUrss.fogon(m)) }
                 // El hervidor solo humea, ya sin fuego, la media hora después de que se va.
                 assertEquals("$d $h", h == 7.0 && !EscenaUrss.enElSanatorio(m), EscenaUrss.hervidorCaliente(m))
             }
@@ -232,6 +233,15 @@ class EscenaUrssPrueba {
         assertTrue(LuzCocinaUrss.rayoDelSol(s17, 1f, pie).ax > LuzCocinaUrss.rayoDelSol(s7, 1f, pie).ax)
         // Con el cielo cubierto no entra el sol.
         assertNull(EscenaUrss.solQueEntra(conClima(dia, 13.0, Clima.LLUVIA))); assertNull(EscenaUrss.solQueEntra(conClima(dia, 13.0, Clima.NIEVE)))
+        // Por la mañana, con el ventanillo abierto para ventilar, su cristal devuelve el sol a los azulejos y al fogón: alto y a
+        // la izquierda a las 7:00, más abajo y a la derecha a las 10:00, y nada a mediodía.
+        val r7 = LuzCocinaUrss.rebote(conClima(dia, 7.0, Clima.DESPEJADO)); val r10 = LuzCocinaUrss.rebote(conClima(dia, 10.0, Clima.DESPEJADO))
+        assertNotNull(r7); assertNotNull(r10); assertTrue(r7!!.centro.y < r10!!.centro.y && r7.centro.x < r10.centro.x)
+        assertNull(LuzCocinaUrss.rebote(conClima(dia, 13.0, Clima.DESPEJADO)))
+        // En invierno, a mediodía, la mancha baja también al linóleo (y se ve en el cuadro).
+        val invierno = EscenaUrss.solQueEntra(conClima("2027-01-20", 13.0, Clima.DESPEJADO))!!
+        val alSuelo = LuzCocinaUrss.cae(200f, 130f, invierno)
+        assertEquals(LuzCocinaUrss.Plano.SUELO, alSuelo.plano); assertTrue(alSuelo.punto.y < ALTO)
         // A mediodía la mancha cae en la mesa (con su cruz) y por la mañana también.
         assertEquals(LuzCocinaUrss.Plano.MESA, LuzCocinaUrss.cae(260f, 120f, s13).plano)
         assertEquals(LuzCocinaUrss.Plano.MESA, LuzCocinaUrss.cae(280f, 140f, s7).plano)

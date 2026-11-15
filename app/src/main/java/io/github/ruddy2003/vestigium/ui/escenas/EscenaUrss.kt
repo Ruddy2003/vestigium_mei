@@ -292,7 +292,10 @@ internal object EscenaUrss : EscenaVida {
     }
 
     /** El ventanillo abierto: en verano casi siempre; en invierno, mientras se cocina (sale el vaho). */
-    internal fun ventanilloAbierto(m: Momento): Boolean = !calefaccion(m) || fogon(m)
+    internal fun ventanilloAbierto(m: Momento): Boolean = !calefaccion(m) || fogon(m) || ventilando(m)
+
+    /** Por la mañana, después del desayuno, se deja el ventanillo abierto para ventilar, hasta las once **[Diseño propio]**. */
+    internal fun ventilando(m: Momento): Boolean = m.hora >= 6.0 && m.hora < 11.0 && !enElSanatorio(m) && !malTiempo(m)
 
     // ---------------------------------------------------------------- Los días señalados
 
@@ -369,12 +372,16 @@ internal object EscenaUrss : EscenaVida {
     /** Si fuera ya está oscuro, o casi: entonces las luces se notan. */
     internal fun oscuro(m: Momento): Boolean = luces(m).noche > 0.22f
 
+    /** Un día oscuro de verdad: nieve que cae, lluvia, tormenta o niebla. */
+    internal fun diaOscuro(m: Momento): Boolean = malTiempo(m)
+
     /** Si nieva, llueve o hay niebla: la lámpara se enciende antes. */
     internal fun malTiempo(m: Momento): Boolean = m.ficha.clima == Clima.NIEVE || m.ficha.clima == Clima.LLUVIA || m.ficha.clima == Clima.TORMENTA || m.ficha.clima == Clima.NIEBLA
 
     /**
      * La lámpara de pantalla: de 6:00 a 7:00 («se levanta a oscuras»); a la vuelta, si ya oscurece o hace mal tiempo; toda
-     * la noche, hasta las 23:00. Por la tarde, si ya está oscuro, la enciende la suegra o Lena, que vuelven antes
+     * la noche, hasta las 23:00. Por la tarde, si ya está oscuro, la enciende la suegra o Lena, que vuelven antes; y en los
+     * días oscuros (nieve, lluvia, niebla) desde el mediodía, la suegra (después, Lena al volver de la escuela)
      * **[Diseño propio]**. En el sanatorio, solo de 20:00 a 23:00 (los de casa, para el té).
      */
     internal fun lampara(m: Momento): Boolean {
@@ -383,7 +390,7 @@ internal object EscenaUrss : EscenaVida {
             Fase.MANANA -> true
             Fase.VUELTA -> oscuro(m) || malTiempo(m) || calefaccion(m)
             Fase.NOCHE -> true
-            Fase.SOLA -> m.hora >= 15.5 && oscuro(m)
+            Fase.SOLA -> (m.hora >= 15.5 && oscuro(m)) || (m.hora >= 12.0 && diaOscuro(m))
             Fase.SUENO -> false
         }
     }
@@ -530,7 +537,8 @@ internal object EscenaUrss : EscenaVida {
     internal fun solQueEntra(m: Momento): SolDeVentana? {
         val l = m.luces(); val r = Rayo(l)
         if (r.fuerza > 0.05f && crepusculo(m) < 0.7f) {
-            val invierno = 1f - 0.5f * (1f - alturaDelSol(m))
+            // A la cocina, el sol de invierno se le baja poco: así a mediodía la mancha llega al linóleo (como en la capilla).
+            val invierno = 1f - 0.12f * (1f - alturaDelSol(m))
             val alto = (8.0 + 50.0 * (l.solAltura * invierno / 1.35f).coerceIn(0f, 1f))
             val baja = tan(Math.toRadians(alto)).toFloat().coerceIn(0.22f, 1.6f)
             val corre = (-(l.solX - 0.56f) * 1.6f).coerceIn(-0.85f, 0.85f)

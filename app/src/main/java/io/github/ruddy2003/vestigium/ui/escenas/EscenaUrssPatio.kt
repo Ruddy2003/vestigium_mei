@@ -115,54 +115,55 @@ internal object PatioUrss {
 
     // ---------------------------------------------------------------- La casa vieja
 
+    /** Los árboles de la casa vieja: dónde pisan y cuánto miden (sus sombras van en [sombraDeLosBloques]). */
+    private val ARBOLES_VIEJOS = listOf(Triple(190f, 162f, 172f), Triple(228f, 118f, 66f), Triple(330f, 104f, 34f))
+
     private fun DrawScope.casaVieja(m: Momento, ext: Luces, p: Pincel, caja: Rect) {
         val nv = R.nieve(m); val hojas = R.hojas(m); val amar = R.amarillas(m); val noche = ext.noche; val band = R.banderas(m)
-        val az = Azar(Semilla.de("urss", "patio viejo"))
         with(PiezasFueraUrss) {
-            // Lo lejano, en capas: los bloques del fondo, la central con su vapor, la fábrica con el cartel del plan, el Kremlin.
-            filaDeBloques(m, ext, p, 236f, 330f, H + 1.6f, 9f, 0.88f, Azar(Semilla.de("urss", "fondo viejo 1")), nuevos = false)
-            ostankino(ext, p, Offset(226f, H + 1f), 64f, 0.8f, luzRoja = noche > 0.3f || ext.nublado > 0.6f)
-            chimeneaConVapor(ext, p, Offset(286f, H + 1.6f), 44f, 0.82f, R.frio(m), m.viento)
-            estrellaDelKremlin(ext, Offset(306f, H - 4f))
-            bruma(ext, m, caja, H - 30f, H + 6f, 1f)
-            fabrica(ext, p, Offset(258f, H + 3.6f), 36f, 0.7f, R.plan(m), humo = true, az = Azar(Semilla.de("urss", "fabrica")))
-            filaDeBloques(m, ext, p, 296f, 330f, H + 5f, 12f, 0.66f, Azar(Semilla.de("urss", "fondo viejo 2")), nuevos = false)
+            // Lo lejano, en capas y recortado contra el cielo: los bloques del fondo, la torre de Ostánkino, la central con su
+            // vapor, la torre del Kremlin con su estrella y la fábrica con el cartel del plan.
+            filaDeBloques(m, ext, p, 240f, 330f, H + 1.6f, 9f, 0.88f, Azar(Semilla.de("urss", "fondo viejo 1")), nuevos = false)
+            ostankino(ext, p, Offset(264f, H + 1f), 60f, 0.5f, luzRoja = noche > 0.3f || ext.nublado > 0.6f)
+            torreDelKremlin(ext, p, Offset(288f, H + 2f), 26f, 0.55f)
+            chimeneaConVapor(ext, p, Offset(318f, H + 2f), 54f, 0.78f, R.frio(m), m.viento)
+            bruma(ext, m, caja, H - 30f, H + 6f, 0.9f)
+            fabrica(ext, p, Offset(248f, H + 4f), 48f, 0.6f, R.plan(m), humo = true, az = Azar(Semilla.de("urss", "fabrica")))
         }
-        bruma(ext, m, caja, H - 20f, H + 14f, 0.8f)
-        // El suelo del patio, de la base de los bloques a la ventana.
-        val suelo = poligono(listOf(Offset(160f, 125f), Offset(262f, 114f), Offset(262f, H + 6f), Offset(330f, H + 6f), Offset(330f, 150f), Offset(160f, 150f)))
-        suelo(m, ext, p, suelo, H + 6f, 142f)
-        // El bloque de al lado, lejos, a la derecha del hueco.
-        val otro = Fachada(Offset(296f, 78f), Offset(296f, 110f), Offset(336f, 81f), Offset(336f, 108f))
+        bruma(ext, m, caja, H - 14f, H + 10f, 0.7f)
+        // El suelo del patio, de la base de los bloques a la ventana: ocupa casi la mitad de abajo del hueco.
+        val suelo = poligono(listOf(Offset(160f, 103f), Offset(250f, 96f), Offset(250f, H + 6f), Offset(336f, H + 6f), Offset(336f, 150f), Offset(160f, 150f)))
+        suelo(m, ext, p, suelo, H + 4f, 142f)
+        // El bloque de al lado, lejos, a la derecha del hueco, y el de enfrente.
+        val otro = Fachada(Offset(300f, 72f), Offset(300f, 97f), Offset(336f, 75f), Offset(336f, 95f))
         with(PiezasFueraUrss) { bloqueViejo(m, ext, p, otro, 0.45f, nv) }
-        // El bloque de enfrente.
-        val f = Fachada(Offset(160f, 56f), Offset(160f, 125f), Offset(262f, 70f), Offset(262f, 114f))
+        val f = Fachada(Offset(160f, 42f), Offset(160f, 103f), Offset(250f, 57f), Offset(250f, 96f))
         with(PiezasFueraUrss) { bloqueViejo(m, ext, p, f, 0.22f, nv) }
         if (band == EscenaUrss.Banderas.BALCONES || band == EscenaUrss.Banderas.TODAS) banderasEnLaFachada(m, ext, p, f, 0.22f)
-        bruma(ext, m, caja, 100f, 128f, 0.5f)
+        bruma(ext, m, caja, 90f, 112f, 0.4f)
         // La sombra grande de los bloques en el patio, con la franja de sol que entra por el hueco.
-        sombraDeLosBloques(m, ext, f, otro)
-        // El patio: la pista de hielo, el arenero, el columpio, el banco del portal, las farolas y las sendas.
+        sombraDeLosBloques(m, ext, f, otro, ARBOLES_VIEJOS)
+        // El patio, cerca y grande: la pista de hielo, el arenero, el columpio, el banco del portal, las farolas y las sendas.
+        sendas(m, ext, p)
         with(PiezasFueraUrss) {
             if (R.pista(m)) {
-                val pz = Path().apply { moveTo(222f, 126f); cubicTo(240f, 121f, 286f, 119f, 304f, 123f); cubicTo(314f, 127f, 306f, 135f, 290f, 136f); cubicTo(262f, 138f, 230f, 137f, 220f, 132f); cubicTo(214f, 129f, 216f, 127f, 222f, 126f); close() }
-                pista(ext, p, pz, Rect(214f, 119f, 314f, 138f), 0.1f, Azar(Semilla.de("urss", "pista")))
+                val pz = Path().apply { moveTo(214f, 112f); cubicTo(236f, 106f, 290f, 104f, 306f, 110f); cubicTo(318f, 115f, 310f, 126f, 290f, 128f); cubicTo(258f, 131f, 224f, 130f, 212f, 123f); cubicTo(204f, 118f, 206f, 114f, 214f, 112f); close() }
+                pista(ext, p, pz, Rect(206f, 104f, 314f, 130f), 0.06f, Azar(Semilla.de("urss", "pista")))
             }
-            arenero(ext, p, Offset(286f, 112f), 10f, nv, 0.3f)
-            columpio(ext, p, Offset(312f, 114f), 10f, nv, 0.32f)
-            banco(ext, p, Offset(198f, 122f), 10f, nv, 0.2f, patines = R.pista(m))
-            farola(ext, p, Offset(246f, 118f), 24f, R.farolas(m), nv, 0.25f, band == EscenaUrss.Banderas.FAROLAS || band == EscenaUrss.Banderas.TODAS)
-            farola(ext, p, Offset(300f, 140f), 40f, R.farolas(m), nv, 0.05f, band == EscenaUrss.Banderas.FAROLAS || band == EscenaUrss.Banderas.TODAS)
+            banco(ext, p, Offset(192f, 106f), 15f, nv, 0.18f, patines = R.pista(m))
+            arenero(ext, p, Offset(178f, 128f), 22f, nv, 0.08f)
+            columpio(ext, p, Offset(312f, 122f), 20f, nv, 0.12f)
+            farola(ext, p, Offset(238f, 104f), 30f, R.farolas(m), nv, 0.15f, band == EscenaUrss.Banderas.FAROLAS || band == EscenaUrss.Banderas.TODAS)
+            farola(ext, p, Offset(304f, 141f), 54f, R.farolas(m), nv, 0.02f, band == EscenaUrss.Banderas.FAROLAS || band == EscenaUrss.Banderas.TODAS)
         }
-        sendas(m, ext, p)
         // Los árboles grandes del patio: el de la izquierda, muy cerca, sube por todo el hueco; los otros, delante del bloque.
         with(PiezasFueraUrss) {
-            arbolViejo(ext, p, Offset(276f, 128f), 64f, hojas, amar, nv, Azar(Semilla.de("urss", "arbol 2")), 0.25f)
-            arbolViejo(ext, p, Offset(318f, 112f), 34f, hojas, amar, nv, Azar(Semilla.de("urss", "arbol 3")), 0.4f)
-            arbolViejo(ext, p, Offset(196f, 156f), 168f, hojas, amar, nv, Azar(Semilla.de("urss", "arbol 1")), 0.05f)
+            arbolViejo(ext, p, Offset(ARBOLES_VIEJOS[1].first, ARBOLES_VIEJOS[1].second), ARBOLES_VIEJOS[1].third, hojas, amar, nv, Azar(Semilla.de("urss", "arbol 2")), 0.15f)
+            arbolViejo(ext, p, Offset(ARBOLES_VIEJOS[2].first, ARBOLES_VIEJOS[2].second), ARBOLES_VIEJOS[2].third, hojas, amar, nv, Azar(Semilla.de("urss", "arbol 3")), 0.35f)
+            arbolViejo(ext, p, Offset(ARBOLES_VIEJOS[0].first, ARBOLES_VIEJOS[0].second), ARBOLES_VIEJOS[0].third, hojas, amar, nv, Azar(Semilla.de("urss", "arbol 1")), 0.02f)
         }
         // De noche, la luz de las farolas en la nieve y en el aire.
-        if (R.farolas(m)) with(PiezasFueraUrss) { luzDeFarola(ext, Offset(246f, 118f), 24f, nv, 0.6f); luzDeFarola(ext, Offset(300f, 140f), 40f, nv, 0.8f) }
+        if (R.farolas(m)) with(PiezasFueraUrss) { luzDeFarola(ext, Offset(238f, 104f), 30f, nv, 0.65f); luzDeFarola(ext, Offset(304f, 141f), 54f, nv, 0.8f) }
         nocheAzul(m, ext, caja)
     }
 
@@ -188,7 +189,7 @@ internal object PatioUrss {
      * las sombras salen del pie de cada bloque hacia quien mira, por las rectas que vienen del sol en el horizonte; por el
      * hueco entre los dos bloques entra la franja de sol. Larga con el sol bajo; corta a mediodía de verano.
      */
-    private fun DrawScope.sombraDeLosBloques(m: Momento, ext: Luces, f: Fachada, otro: Fachada) {
+    private fun DrawScope.sombraDeLosBloques(m: Momento, ext: Luces, f: Fachada, otro: Fachada, arboles: List<Triple<Float, Float, Float>>) {
         val r = Rayo(ext); if (r.fuerza < 0.05f) return
         val sol = solEnLaVentana(ext); val fuga = Offset(sol.x, H)
         // Cuánto se alarga la sombra hacia quien mira: con el sol bajo, más allá de la ventana.
@@ -200,7 +201,7 @@ internal object PatioUrss {
                 drawPath(poligono(a0, a1, hacia(a1, largo), hacia(a0, largo)), c)
             }
             // Los árboles: sus troncos dejan rayas largas en la nieve.
-            for ((x, y, h) in listOf(Triple(196f, 156f, 168f), Triple(276f, 128f, 64f), Triple(318f, 112f, 34f))) { val a = Offset(x, y); drawLine(c, a, hacia(a, largo * h / 120f), 1.6f, StrokeCap.Round) }
+            for ((x, y, h) in arboles) { val a = Offset(x, y); drawLine(c, a, hacia(a, largo * h / 120f), (h * 0.02f).coerceIn(0.8f, 3f), StrokeCap.Round) }
         }
     }
 
@@ -208,11 +209,12 @@ internal object PatioUrss {
     private fun DrawScope.sendas(m: Momento, ext: Luces, p: Pincel) {
         val nv = R.nieve(m); if (nv < 0.4f) return
         val pisada = p.sombra(lerp(C.NIEVE, C.HORMIGON, 0.35f), 0.2f)
-        val senda = Path().apply { moveTo(214f, 122f); cubicTo(220f, 128f, 200f, 134f, 182f, 146f) }
-        drawPath(senda, pisada, style = Stroke(2.4f, cap = StrokeCap.Round))
-        drawPath(senda, p.luz(C.NIEVE).copy(alpha = 0.5f), style = Stroke(0.5f))
-        val otra = Path().apply { moveTo(214f, 121f); cubicTo(240f, 120f, 270f, 117f, 330f, 116f) }
-        drawPath(otra, pisada, style = Stroke(1.4f, cap = StrokeCap.Round))
+        // Del portal hacia quien mira, y otra a lo largo del bloque; con su borde de nieve amontonada y las huellas.
+        for ((senda, ancho) in listOf(Path().apply { moveTo(206f, 101f); cubicTo(204f, 116f, 196f, 128f, 210f, 148f) } to 4.2f, Path().apply { moveTo(206f, 101f); cubicTo(236f, 100f, 280f, 99f, 340f, 98f) } to 2.2f, Path().apply { moveTo(318f, 150f); cubicTo(314f, 136f, 322f, 124f, 336f, 116f) } to 3.4f)) {
+            drawPath(senda, p.luz(C.NIEVE).copy(alpha = 0.6f), style = Stroke(ancho + 1.4f, cap = StrokeCap.Round))
+            drawPath(senda, pisada, style = Stroke(ancho, cap = StrokeCap.Round))
+            drawPath(senda, p.sombra(lerp(C.NIEVE, C.TIERRA, 0.3f), 0.1f).copy(alpha = 0.5f), style = Stroke(ancho * 0.3f, cap = StrokeCap.Round))
+        }
     }
 
     /** De noche, el azul de la nieve y de la luna sobre todo lo de fuera; las farolas y las ventanas destacan en naranja. */
@@ -226,46 +228,48 @@ internal object PatioUrss {
     private fun DrawScope.casaNueva(m: Momento, ext: Luces, p: Pincel, caja: Rect) {
         val nv = R.nieve(m); val hojas = R.hojas(m); val noche = ext.noche; val band = R.banderas(m)
         with(PiezasFueraUrss) {
-            // Lo lejano: tres filas de bloques blancos, las grúas, la central, la fábrica, la torre y el Kremlin.
-            filaDeBloques(m, ext, p, 166f, 330f, H + 1f, 7f, 0.92f, Azar(Semilla.de("urss", "fondo nuevo 1")), nuevos = true)
-            ostankino(ext, p, Offset(252f, H + 0.6f), 46f, 0.85f, luzRoja = noche > 0.3f || ext.nublado > 0.6f)
-            estrellaDelKremlin(ext, Offset(290f, H - 2.4f))
-            chimeneaConVapor(ext, p, Offset(306f, H + 1f), 32f, 0.86f, R.frio(m), m.viento)
-            bruma(ext, m, caja, H - 26f, H + 4f, 1f)
-            grua(ext, p, Offset(206f, H + 4f), 30f, 0.72f, 1f)
-            fabrica(ext, p, Offset(222f, H + 4.6f), 26f, 0.74f, R.plan(m), humo = true, az = Azar(Semilla.de("urss", "fabrica")))
-            filaDeBloques(m, ext, p, 170f, 330f, H + 5f, 11f, 0.72f, Azar(Semilla.de("urss", "fondo nuevo 2")), nuevos = true)
-            grua(ext, p, Offset(296f, H + 7f), 36f, 0.55f, 0.8f)
+            // Lo lejano: filas de bloques a distintas distancias, una torre de dieciséis pisos, las grúas, la central, la
+            // fábrica, la torre de Ostánkino y la del Kremlin, recortadas contra el cielo, que desde el noveno se ve grande.
+            filaDeBloques(m, ext, p, 166f, 336f, H + 1f, 7f, 0.92f, Azar(Semilla.de("urss", "fondo nuevo 1")), nuevos = true)
+            ostankino(ext, p, Offset(232f, H + 1f), 62f, 0.5f, luzRoja = noche > 0.3f || ext.nublado > 0.6f)
+            torreDelKremlin(ext, p, Offset(304f, H + 1.6f), 22f, 0.6f)
+            chimeneaConVapor(ext, p, Offset(300f, H + 1f), 40f, 0.82f, R.frio(m), m.viento)
+            bruma(ext, m, caja, H - 26f, H + 4f, 0.9f)
+            grua(ext, p, Offset(208f, H + 5f), 36f, 0.66f, 1f)
+            fabrica(ext, p, Offset(254f, H + 5f), 34f, 0.66f, R.plan(m), humo = true, az = Azar(Semilla.de("urss", "fabrica")))
+            filaDeBloques(m, ext, p, 170f, 336f, H + 6f, 12f, 0.7f, Azar(Semilla.de("urss", "fondo nuevo 2")), nuevos = true)
+            torreDeBloques(m, ext, p, Offset(262f, H + 7f), 14f, 48f, 0.55f)
+            grua(ext, p, Offset(326f, H + 9f), 44f, 0.5f, 0.8f)
         }
-        bruma(ext, m, caja, H - 16f, H + 12f, 0.8f)
+        bruma(ext, m, caja, H - 14f, H + 14f, 0.7f)
         // El suelo: el descampado de barro (o de nieve) entre los bloques.
-        val suelo = poligono(listOf(Offset(160f, 128f), Offset(262f, 117f), Offset(262f, H + 9f), Offset(330f, H + 9f), Offset(330f, 150f), Offset(160f, 150f)))
-        suelo(m, ext, p, suelo, H + 9f, 142f)
-        // La otra fila de bloques, más lejos, a la derecha, y el bloque de enfrente.
-        val otro = Fachada(Offset(270f, 92f), Offset(270f, 116f), Offset(336f, 93f), Offset(336f, 113f))
-        with(PiezasFueraUrss) { bloqueNuevo(m, ext, p, otro, 0.5f, nv, 9, 9, 1000) }
-        val f = Fachada(Offset(160f, 64f), Offset(160f, 128f), Offset(262f, 78f), Offset(262f, 117f))
-        with(PiezasFueraUrss) { bloqueNuevo(m, ext, p, f, 0.22f, nv, 9, 10, 2000) }
+        val suelo = poligono(listOf(Offset(160f, 124f), Offset(284f, 113f), Offset(284f, H + 12f), Offset(336f, H + 12f), Offset(336f, 150f), Offset(160f, 150f)))
+        suelo(m, ext, p, suelo, H + 12f, 142f)
+        // La otra fila, más lejos y más baja, a la derecha; el bloque de enfrente, con su testero en sombra a la izquierda.
+        val otro = Fachada(Offset(290f, 90f), Offset(290f, 112f), Offset(336f, 92f), Offset(336f, 110f))
+        with(PiezasFueraUrss) { bloqueNuevo(m, ext, p, otro, 0.48f, nv, 9, 7, 1000) }
+        val f = Fachada(Offset(192f, 62f), Offset(192f, 124f), Offset(284f, 74f), Offset(284f, 113f))
+        with(PiezasFueraUrss) { testero(ext, p, Offset(168f, 66f), Offset(168f, 128f), f.tl, f.bl, 0.22f, nv); bloqueNuevo(m, ext, p, f, 0.22f, nv, 9, 9, 2000) }
         if (band == EscenaUrss.Banderas.BALCONES || band == EscenaUrss.Banderas.TODAS) with(PiezasFueraUrss) {
-            for ((piso, col) in listOf(2 to 1, 5 to 8, 7 to 4, 3 to 6)) banderaDeBalcon(ext, p, f.q((col + 0.8f) / 10f, (piso + 0.6f) / 9f), f.alto((col + 0.8f) / 10f) * 0.08f, 0.22f, R.diaNumero(m, "revolucion") == 2)
+            for ((piso, col) in listOf(2 to 1, 5 to 7, 7 to 4, 3 to 4)) banderaDeBalcon(ext, p, f.q((col + 0.8f) / 9f, (piso + 0.6f) / 9f), f.alto((col + 0.8f) / 9f) * 0.08f, 0.22f, R.diaNumero(m, "revolucion") == 2)
         }
-        bruma(ext, m, caja, 100f, 124f, 0.5f)
-        sombraDeLosBloques(m, ext, f, otro)
+        bruma(ext, m, caja, 96f, 120f, 0.4f)
+        sombraDeLosBloques(m, ext, f, otro, emptyList())
         // El descampado: los palos recién plantados en fila, la zanja con los tubos, las losas de hormigón, un banco nuevo.
-        with(PiezasFueraUrss) {
-            val az = Azar(Semilla.de("urss", "palos"))
-            for (i in 0..7) { val x = 176f + i * 18f + az.entre(-2f, 2f); arbolJoven(ext, p, Offset(x, 128f + (i % 2) * 1.4f), 9f + az.entre(-1f, 1f), hojas, nv, 0.2f) }
-            for (i in 0..4) { val x = 190f + i * 28f; arbolJoven(ext, p, Offset(x, 140f), 15f, hojas, nv, 0.05f) }
-            banco(ext, p, Offset(266f, 124f), 9f, nv, 0.2f)
-            farola(ext, p, Offset(232f, 124f), 22f, R.farolas(m), nv, 0.2f, band == EscenaUrss.Banderas.FAROLAS || band == EscenaUrss.Banderas.TODAS)
-            farola(ext, p, Offset(312f, 138f), 34f, R.farolas(m), nv, 0.05f, band == EscenaUrss.Banderas.FAROLAS || band == EscenaUrss.Banderas.TODAS)
-        }
         obra(m, ext, p)
         if (R.pista(m)) with(PiezasFueraUrss) {
-            val pz = Path().apply { moveTo(272f, 128f); cubicTo(290f, 125f, 318f, 126f, 322f, 130f); cubicTo(324f, 134f, 300f, 136f, 282f, 135f); cubicTo(268f, 134f, 264f, 130f, 272f, 128f); close() }
-            pista(ext, p, pz, Rect(264f, 125f, 324f, 136f), 0.1f, Azar(Semilla.de("urss", "pista nueva")))
+            val pz = Path().apply { moveTo(266f, 126f); cubicTo(286f, 121f, 326f, 122f, 332f, 127f); cubicTo(336f, 132f, 306f, 136f, 282f, 135f); cubicTo(264f, 134f, 258f, 129f, 266f, 126f); close() }
+            pista(ext, p, pz, Rect(258f, 121f, 336f, 136f), 0.06f, Azar(Semilla.de("urss", "pista nueva")))
         }
-        if (R.farolas(m)) with(PiezasFueraUrss) { luzDeFarola(ext, Offset(232f, 124f), 22f, nv, 0.6f); luzDeFarola(ext, Offset(312f, 138f), 34f, nv, 0.8f) }
+        with(PiezasFueraUrss) {
+            val az = Azar(Semilla.de("urss", "palos"))
+            for (i in 0..6) { val x = 180f + i * 16f + az.entre(-2f, 2f); arbolJoven(ext, p, Offset(x, 127f + (i % 2) * 1.4f), 13f + az.entre(-1.5f, 1.5f), hojas, nv, 0.12f) }
+            for (i in 0..3) { val x = 196f + i * 34f; arbolJoven(ext, p, Offset(x, 142f), 21f, hojas, nv, 0.02f) }
+            banco(ext, p, Offset(236f, 126f), 14f, nv, 0.1f)
+            farola(ext, p, Offset(254f, 122f), 30f, R.farolas(m), nv, 0.12f, band == EscenaUrss.Banderas.FAROLAS || band == EscenaUrss.Banderas.TODAS)
+            farola(ext, p, Offset(316f, 141f), 48f, R.farolas(m), nv, 0.02f, band == EscenaUrss.Banderas.FAROLAS || band == EscenaUrss.Banderas.TODAS)
+        }
+        if (R.farolas(m)) with(PiezasFueraUrss) { luzDeFarola(ext, Offset(254f, 122f), 30f, nv, 0.6f); luzDeFarola(ext, Offset(316f, 141f), 48f, nv, 0.8f) }
         nocheAzul(m, ext, caja)
     }
 
@@ -273,11 +277,12 @@ internal object PatioUrss {
     private fun DrawScope.obra(m: Momento, ext: Luces, p: Pincel) {
         val nv = R.nieve(m); val blanco = lerp(p.arriba(C.NIEVE, 0.1f), C.LUNA, 0.3f * ext.noche)
         // Las losas apiladas.
-        for (i in 0..2) { val y = 132f - i * 2f; drawRect(p.frente(C.HORMIGON, 0.1f), Offset(186f + i * 0.6f, y), Size(16f, 2f)); drawRect(p.arriba(C.HORMIGON, 0.1f), Offset(186f + i * 0.6f, y - 0.6f), Size(16f, 0.6f)) }
-        if (nv > 0.3f) drawRect(blanco, Offset(187f, 127f), Size(15f, 1f))
+        for (i in 0..2) { val y = 138f - i * 3f; drawRect(p.frente(C.HORMIGON, 0.05f), Offset(170f + i * 0.8f, y), Size(24f, 3f)); drawRect(p.arriba(C.HORMIGON, 0.05f), Offset(170f + i * 0.8f, y - 0.8f), Size(24f, 0.8f)); drawLine(p.sombra(C.HORMIGON, 0.05f), Offset(170f + i * 0.8f + 12f, y), Offset(170f + i * 0.8f + 12f, y + 3f), 0.4f) }
+        if (nv > 0.3f) drawRect(blanco, Offset(171.6f, 131f), Size(23f, 1.4f))
         // Los tubos grandes, tumbados.
-        for (i in 0..2) { val c = Offset(214f + i * 4.2f, 135f); drawCircle(p.sombra(C.HIERRO, 0.1f), 2f, c); drawCircle(p.medio(lerp(C.HIERRO, C.LADRILLO, 0.3f), 0.1f), 1.6f, c); drawCircle(p.sombra(C.TINTA, 0.1f), 0.9f, c) }
-        // La zanja, en diagonal.
-        drawPath(poligono(Offset(240f, 132f), Offset(262f, 128f), Offset(264f, 130f), Offset(242f, 134.4f)), p.sombra(C.TIERRA, 0.1f))
+        for (i in 0..2) { val c = Offset(206f + i * 6f, 140f); drawCircle(p.sombra(C.HIERRO, 0.05f), 3f, c); drawCircle(p.medio(lerp(C.HIERRO, C.LADRILLO, 0.3f), 0.05f), 2.4f, c); drawCircle(p.sombra(C.TINTA, 0.05f), 1.4f, c) }
+        // La zanja, en diagonal, con su montón de tierra.
+        drawPath(poligono(Offset(226f, 136f), Offset(258f, 130f), Offset(261f, 133f), Offset(229f, 139.4f)), p.sombra(C.TIERRA, 0.05f))
+        drawPath(Path().apply { moveTo(232f, 134f); cubicTo(240f, 129f, 250f, 128f, 258f, 129f); lineTo(232f, 134f); close() }, if (nv > 0.3f) blanco else p.arriba(C.TIERRA, 0.05f))
     }
 }

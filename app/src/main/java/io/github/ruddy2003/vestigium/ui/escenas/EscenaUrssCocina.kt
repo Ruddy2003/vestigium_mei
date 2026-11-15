@@ -141,9 +141,11 @@ internal object CocinaUrss {
      */
     internal fun focos(m: Momento): List<Foco> = buildList {
         val l = R.luces(m); val dia = (1f - l.noche).coerceIn(0f, 1f); val nv = R.nieve(m)
-        val cielo = lerp(lerp(l.medio, Color.White, 0.5f), C.LUNA, l.noche)
+        // En verano, en la casa vieja, la luz de la ventana pasa por los árboles: verdea.
+        val verde = if (R.casaNueva(m)) 0.08f * R.hojas(m) else 0.3f * R.hojas(m)
+        val cielo = lerp(lerp(lerp(l.medio, Color.White, 0.5f), lerp(C.VERDE, C.PAPEL, 0.35f), verde), C.LUNA, l.noche)
         val abre = if (R.visilloCorrido(m)) 0.75f else 1f
-        add(Foco(LUZ_VENTANA, cielo, (0.36f * dia * (1f - 0.3f * l.nublado) * (1f + 0.3f * nv) + (0.14f + 0.08f * nv) * l.noche) * abre, 120f, suelo = SUELO))
+        add(Foco(LUZ_VENTANA, cielo, (0.36f * dia * (1f - 0.3f * l.nublado) * (1f + 0.3f * nv) + (0.14f + 0.08f * nv) * l.noche) * abre, 100f, suelo = SUELO))
         R.solQueEntra(m)?.let { s -> add(Foco(LuzCocinaUrss.centroDeLaMancha(s), s.color, (if (s.deLuna) 0.2f else 0.3f) * s.fuerza, 80f, suelo = SUELO)) }
         if (R.lampara(m)) add(Foco(BOMBILLA, C.LAMPARA, 0.45f + 0.75f * l.noche, 78f, suelo = BAJO_LA_LAMPARA.y))
         if (R.fogon(m)) add(Foco(LUZ_GAS, lerp(C.AZUL, C.LAMPARA, 0.5f), 0.18f + 0.25f * l.noche, 34f, suelo = LUZ_GAS.y + 2f))
@@ -153,7 +155,9 @@ internal object CocinaUrss {
     /** El color de cada cosa de la cocina con sus luces. */
     internal fun luz(m: Momento): LuzUrss {
         val ld = R.lucesDentro(m); val f = focos(m); val l = R.luces(m)
-        return LuzUrss(ld, Alumbrado(ld, f), (1f - l.noche).coerceIn(0f, 1f), l.noche, R.solQueEntra(m), R.lampara(m))
+        // Las paredes reciben menos la lámpara (la pantalla la echa hacia abajo): su halo se pinta aparte, con la sombra de los flecos.
+        val enParedes = f.map { if (it.p == BOMBILLA) Foco(it.p, it.color, it.fuerza * 0.4f, it.alcance, it.suelo) else it }
+        return LuzUrss(ld, Alumbrado(ld, f), (1f - l.noche).coerceIn(0f, 1f), l.noche, R.solQueEntra(m), R.lampara(m), Alumbrado(ld, enParedes))
     }
 
     // ---------------------------------------------------------------- El cuadro
@@ -206,7 +210,7 @@ internal object CocinaUrss {
     }
 
     fun estorbos(m: Momento): List<Float> = buildList {
-        add(CosasUrss.TABURETE.x)
+        add(CosasUrss.TABURETE.x); add(CosasUrss.CUBO.x); add(CosasUrss.CHANCLOS.x)
         if (R.cajas(m) > 0) add(CosasUrss.CAJAS_SUELO.x)
     }
 

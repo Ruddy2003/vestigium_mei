@@ -57,18 +57,22 @@ internal object CajaUrss {
         val oleo = if (nueva) lerp(C.OLEO, C.AZUL, 0.22f) else C.OLEO
         val cal = if (nueva) lerp(C.PARED, Color.White, 0.12f) else C.PARED
         // El techo, una franja arriba.
-        planoH(lz.a, K.formaDelTecho(), 0f, ANCHO, 2f, C.CAL)
+        planoH(lz.aPared, K.formaDelTecho(), 0f, ANCHO, 2f, C.CAL)
         // La pared del fondo y las dos de los lados, con la cal arriba y el óleo abajo.
         val fondo = K.formaDelFondo(); val izq = K.formaIzquierda(); val der = K.formaDerecha()
-        planoH(lz.a, fondo, K.x0, K.x1, 60f, cal)
-        planoH(lz.a, izq, 0f, K.x0, 60f, lerp(cal, C.TINTA, 0.06f), mira = 1f)
-        planoH(lz.a, der, K.x1, ANCHO, 60f, lerp(cal, C.TINTA, 0.04f), mira = -1f)
+        planoH(lz.aPared, fondo, K.x0, K.x1, 60f, cal)
+        planoH(lz.aPared, izq, 0f, K.x0, 60f, lerp(cal, C.TINTA, 0.06f), mira = 1f)
+        planoH(lz.aPared, der, K.x1, ANCHO, 60f, lerp(cal, C.TINTA, 0.04f), mira = -1f)
         val zf = poligono(p(K.x0, ZOCALO), p(K.x1, ZOCALO), p(K.x1, Co.SUELO), p(K.x0, Co.SUELO))
-        planoH(lz.a, zf, K.x0, K.x1, 160f, oleo)
+        planoH(lz.aPared, zf, K.x0, K.x1, 160f, oleo)
         val zi = poligono(p(K.x0, ZOCALO), p(K.x0, Co.SUELO), p(K.x0, Co.SUELO, K.cerca), p(K.x0, ZOCALO, K.cerca))
-        planoH(lz.a, zi, 0f, K.x0, 160f, lerp(oleo, C.TINTA, 0.1f), mira = 1f)
+        planoH(lz.aPared, zi, 0f, K.x0, 160f, lerp(oleo, C.TINTA, 0.1f), mira = 1f)
         val zd = poligono(p(K.x1, ZOCALO), p(K.x1, Co.SUELO), p(K.x1, Co.SUELO, K.cerca), p(K.x1, ZOCALO, K.cerca))
-        planoH(lz.a, zd, K.x1, ANCHO, 160f, lerp(oleo, C.TINTA, 0.06f), mira = -1f)
+        planoH(lz.aPared, zd, K.x1, ANCHO, 160f, lerp(oleo, C.TINTA, 0.06f), mira = -1f)
+        // De noche, la nieve del patio devuelve su luz fría al techo y a lo alto de la pared, sobre la ventana.
+        if (lz.noche > 0.3f) { val nv = R.nieve(m); mancha(p(250f, 6f), 150f, 22f, C.LUNA, (0.1f + 0.14f * nv) * lz.noche); clipPath(K.formaDelTecho()) { drawRect(C.LUNA.copy(alpha = (0.1f + 0.14f * nv) * lz.noche), Offset.Zero, Size(ANCHO, 12f)) } }
+        // El halo de la lámpara en las paredes, con la sombra festoneada de los flecos.
+        with(LuzCocinaUrss) { haloEnLaPared(m, lz) }
         // La raya de color oscuro que separa el óleo de la cal, pintada a pulso.
         val raya = lerp(oleo, C.TINTA, 0.45f)
         drawLine(lz.en(p(200f, ZOCALO), raya), p(K.x0, ZOCALO), p(K.x1, ZOCALO), 1.1f)
@@ -139,9 +143,18 @@ internal object CajaUrss {
             drawLine(lz.en(p(90f, Co.SUELO, 50f), lerp(C.LINOLEO, C.PAPEL, 0.4f)).copy(alpha = 0.5f), p(70f, Co.SUELO, 52f), p(108f, Co.SUELO, 52f), 0.7f)
             // La alfombrilla de tiras, de la puerta a la ventana.
             alfombrilla(lz) { c, o -> lz.en(o, c) }
-            // El brillo del linóleo: la ventana se refleja bajo el radiador, alargada hacia quien mira.
-            val brillo = lz.dia * (1f - 0.3f * lz.l.nublado)
-            for ((x, w) in listOf(212f to 30f, 290f to 26f)) { val o = p(x, Co.SUELO, 18f); mancha(o, w * 0.5f, 18f, lz.en(o, Color.White), 0.1f * brillo) }
+            // El desgaste donde se está de pie: delante del fogón y delante de la mesa, el dibujo borrado y el linóleo más claro.
+            for ((o, rx) in listOf(p(132f, Co.SUELO, 46f) to 26f, p(226f, Co.SUELO, 70f) to 30f, p(176f, Co.SUELO, 60f) to 18f)) {
+                mancha(o, rx, rx * 0.22f, lz.en(o, lerp(C.LINOLEO, C.PAPEL, 0.32f)), 0.3f)
+                repeat(6) { val q = o + Offset(az.entre(-rx, rx), az.entre(-rx * 0.15f, rx * 0.15f)); drawLine(lz.en(q, lerp(C.LINOLEO, C.PAPEL, 0.45f)).copy(alpha = 0.4f), q, q + Offset(az.entre(2f, 6f), az.entre(-0.4f, 0.4f)), 0.5f) }
+            }
+            // El brillo del linóleo: los cristales de abajo de la ventana se reflejan en él, alargados hacia quien mira y
+            // cada vez más borrosos; de noche, la lámpara.
+            val brillo = (lz.dia * (1f - 0.3f * lz.l.nublado)).coerceIn(0f, 1f)
+            if (brillo > 0.05f) for ((xa, xb) in listOf((Co.VX0 + 6f) to (Co.MONTANTE - 4f), (Co.MONTANTE + 4f) to (Co.VX1 - 6f))) {
+                val q0 = p(xa, Co.SUELO, 4f); val q1 = p(xb, Co.SUELO, 4f); val q2 = p(xb, Co.SUELO, 60f); val q3 = p(xa, Co.SUELO, 60f)
+                drawPath(poligono(q0, q1, q2, q3), Brush.verticalGradient(0f to lerp(lz.l.bajo, Color.White, 0.5f).copy(alpha = 0.2f * brillo), 1f to Color.Transparent, startY = q0.y, endY = q2.y))
+            }
             if (lz.lampara) { val o = p(Co.LX, Co.SUELO, Co.LT + 6f); mancha(o, 26f, 9f, C.LAMPARA, 0.12f + 0.12f * lz.noche) }
             // La sombra de contacto de la pared del fondo.
             drawRect(Brush.verticalGradient(0f to C.SOMBRA.copy(alpha = 0.32f), 1f to Color.Transparent, startY = Co.SUELO, endY = Co.SUELO + 14f), Offset(0f, Co.SUELO), Size(ANCHO, 14f), blendMode = BlendMode.Multiply)
@@ -220,6 +233,13 @@ internal object CajaUrss {
         drawRect(c, F.topLeft, Size(3f, F.height)); drawRect(c, Offset(F.right - 3f, F.top), Size(3f, F.height))
         drawRect(c, Offset(q(Co.MONTANTE, 0f).x - 1.4f, F.top), Size(2.8f, F.height))
         drawRect(c, Offset(F.left, q(0f, Co.TRAVESANO).y - 1.2f), Size(F.width, 2.4f))
+        // Con lluvia, el alféizar de fuera de chapa, mojado: oscuro, con el cielo reflejado y las gotas que salpican.
+        val mojado = m.ficha.clima == Clima.LLUVIA || m.ficha.clima == Clima.TORMENTA || R.nieveMojada(m)
+        if (mojado) {
+            drawRect(lerp(ext.tono(C.HIERRO), ext.medio, 0.25f), Offset(F.left, F.bottom - 3.4f), Size(F.width, 3.4f))
+            drawLine(lerp(ext.medio, Color.White, 0.4f).copy(alpha = 0.6f), Offset(F.left, F.bottom - 3.2f), Offset(F.right, F.bottom - 3.2f), 0.6f)
+            val az = m.azar("alfeizar mojado"); repeat(9) { val x = az.entre(F.left + 2f, F.right - 2f); drawCircle(lerp(ext.medio, Color.White, 0.5f).copy(alpha = 0.6f), 0.5f, Offset(x, F.bottom - 2f)) }
+        }
         // La nieve que se junta en el alféizar de fuera.
         val nv = R.nieve(m)
         if (nv > 0.2f) {
@@ -269,9 +289,17 @@ internal object CajaUrss {
                     // Y, más tenue, la mesa con su hule y el bulto del samovar.
                     if (b.bottom > 101f) drawRect(lerp(C.LAMPARA, C.PAPEL, 0.4f).copy(alpha = 0.06f * lz.noche), Offset(b.left, maxOf(100f, b.top)), Size(b.width, b.bottom - maxOf(100f, b.top)))
                 }
-                // El brillo del cristal: dos rayas en diagonal y el polvo de abajo.
-                drawLine(Color.White.copy(alpha = 0.06f + 0.04f * lz.dia), Offset(b.left + b.width * 0.2f, b.bottom), Offset(b.left + b.width * 0.55f, b.top), b.width * 0.07f)
-                drawLine(Color.White.copy(alpha = 0.04f), Offset(b.left + b.width * 0.36f, b.bottom), Offset(b.left + b.width * 0.68f, b.top), b.width * 0.025f)
+                // Con lluvia: las gotas en el cristal, cada una con su brillo, y los regueros que bajan.
+                val mojado = clima == Clima.LLUVIA || clima == Clima.TORMENTA
+                if (mojado) {
+                    val az = Azar(Semilla.de("urss", "gotas", i))
+                    repeat(26) { val q = Offset(az.entre(b.left, b.right), az.entre(b.top, b.bottom)); val r = az.entre(0.5f, 1.3f); drawCircle(lerp(ext.medio, C.HIERRO, 0.3f).copy(alpha = 0.35f), r, q); drawCircle(Color.White.copy(alpha = 0.55f), r * 0.4f, q + Offset(-r * 0.3f, -r * 0.3f)) }
+                    repeat(5) { val x = az.entre(b.left + 2f, b.right - 2f); var y = az.entre(b.top, b.top + b.height * 0.4f); val pth = Path().apply { moveTo(x, y) }; var xx = x; while (y < b.bottom) { y += 4f; xx += az.entre(-0.8f, 0.8f); pth.lineTo(xx, y) }; drawPath(pth, Color.White.copy(alpha = 0.22f), style = Stroke(0.7f)) }
+                }
+                // El brillo del cristal: dos rayas en diagonal (más con el día gris y la lluvia, que lo vuelven espejo).
+                val brillo = if (mojado || clima == Clima.NIEBLA) 1.8f else 1f
+                drawLine(Color.White.copy(alpha = (0.06f + 0.04f * lz.dia) * brillo), Offset(b.left + b.width * 0.2f, b.bottom), Offset(b.left + b.width * 0.55f, b.top), b.width * 0.07f)
+                drawLine(Color.White.copy(alpha = 0.04f * brillo), Offset(b.left + b.width * 0.36f, b.bottom), Offset(b.left + b.width * 0.68f, b.top), b.width * 0.025f)
             }
         }
     }

@@ -161,6 +161,7 @@ internal object LuzCocinaUrss {
                     with(CajaUrss) { dibujoDelLinoleo(lz) { c, q -> encendido(lz, s, c, q) }; alfombrilla(lz) { c, q -> encendido(lz, s, c, q) } }
                 }
                 brillo(enSuelo, s, 1f)
+                moteado(m, s, enSuelo, 1.4f)
             }
         }
         for ((plano, forma) in listOf(Plano.IZQUIERDA to K.formaIzquierda(), Plano.DERECHA to K.formaDerecha())) {
@@ -181,7 +182,78 @@ internal object LuzCocinaUrss {
                 with(PiezasUrss) { dibujoDelHule(Co.MX0, Co.MX1, Co.MT0, Co.MT1, Co.MY) { c, q -> encendido(lz, s, c, q) } }
             }
             brillo(enMesa, s, 1.2f)
+            moteado(m, s, enMesa, 1f)
         }
+    }
+
+    /**
+     * En verano, en la casa vieja, el sol pasa por la copa del árbol del patio antes de entrar: la mancha queda rota en
+     * claros y sombras de hojas (una sola forma, para que no se oscurezca dos veces donde se pisan). Se mueve un poco con
+     * la hora.
+     */
+    private fun DrawScope.moteado(m: Momento, s: SolDeVentana, mancha: Path, escala: Float) {
+        val hojas = R.hojas(m); if (s.deLuna || hojas < 0.3f || R.casaNueva(m)) return
+        val az = Azar(Semilla.de("urss", "moteado")); val corre = s.corre * 30f
+        val forma = Path()
+        val b = mancha.getBounds()
+        repeat((40 * hojas).toInt()) {
+            val c = Offset(b.left + az.real() * b.width + corre, b.top + az.real() * b.height); val r = az.entre(2f, 6f) * escala
+            forma.addOval(Rect(c.x - r * 1.4f, c.y - r * 0.6f, c.x + r * 1.4f, c.y + r * 0.6f))
+        }
+        clipPath(mancha) { drawPath(forma, lerp(C.SOMBRA, C.VERDE, 0.35f).copy(alpha = 0.32f * s.fuerza * hojas), blendMode = BlendMode.Multiply) }
+    }
+
+    // ---------------------------------------------------------------- El rebote del ventanillo, por la mañana
+
+    /** El sol que rebota en el cristal del ventanillo abierto: dónde cae (su centro, en el cuadro), su tamaño y su fuerza. */
+    internal class Rebote(val centro: Offset, val ancho: Float, val alto: Float, val fuerza: Float)
+
+    /**
+     * Por la mañana, con el ventanillo abierto para ventilar y el sol a la derecha, el cristal del ventanillo devuelve el
+     * sol hacia dentro y deja un cuadro de luz en los azulejos y en el fogón: alto y a la izquierda a primera hora, más
+     * abajo y más a la derecha según sube el sol, y nada desde media mañana **[Aproximación]**: no es el ángulo real de
+     * ese cristal; es la mancha de la mañana que en la capilla sube por la pared de enfrente.
+     */
+    internal fun rebote(m: Momento): Rebote? {
+        val s = R.solQueEntra(m) ?: return null
+        if (s.deLuna || !R.ventanilloAbierto(m)) return null
+        val u = ((m.luces().solX - 0.6f) / 0.22f); if (u <= 0.02f) return null
+        val k = u.coerceIn(0f, 1f)
+        return Rebote(Offset(104f + 34f * (1f - k), 116f + 58f * (1f - k)), 26f + 8f * (1f - k), 20f + 6f * (1f - k), (s.fuerza * (0.45f + 0.55f * k)).coerceIn(0f, 1f))
+    }
+
+    /** El cuadro de luz del rebote, con la sombra del marquito del ventanillo y el borde blando. */
+    private fun DrawScope.dibujaRebote(r: Rebote, color: Color) {
+        val c = r.centro; val w = r.ancho / 2f; val h = r.alto / 2f; val sesgo = 5f
+        val q = poligono(c + Offset(-w + sesgo, -h), c + Offset(w + sesgo, -h), c + Offset(w - sesgo, h), c + Offset(-w - sesgo, h))
+        for (ancho in listOf(6f, 3f)) drawPath(q, color.copy(alpha = 0.05f * r.fuerza), style = Stroke(ancho), blendMode = BlendMode.Plus)
+        drawPath(q, color.copy(alpha = 0.34f * r.fuerza), blendMode = BlendMode.Plus); drawPath(q, C.SOMBRA.copy(alpha = 0.12f * r.fuerza), style = Stroke(0.6f))
+        // La sombra del marquito y de la falleba del ventanillo, dentro del cuadro.
+        drawLine(C.SOMBRA.copy(alpha = 0.25f * r.fuerza), c + Offset(-w + sesgo * 0.3f, -h * 0.1f), c + Offset(w + sesgo * 0.3f, -h * 0.1f), 1.4f, blendMode = BlendMode.Multiply)
+    }
+
+    // ---------------------------------------------------------------- El halo de la lámpara en las paredes
+
+    /**
+     * La luz de la lámpara en las paredes: la pantalla la echa hacia abajo, así que la pared de la derecha y la del fondo
+     * quedan oscuras por arriba y claras por debajo de una línea festoneada, que es la sombra del borde de la pantalla
+     * con sus flecos. Va con las paredes, antes de la ventana y de las cosas.
+     */
+    fun DrawScope.haloEnLaPared(m: Momento, lz: LuzUrss) {
+        if (!lz.lampara || R.bombillaDesnuda(m)) return
+        val f = lz.a.focos.firstOrNull { it.p == Co.BOMBILLA } ?: return
+        val k = (0.4f + 0.6f * lz.noche) * f.fuerza.coerceAtMost(1.2f)
+        // La línea de la sombra: baja desde la lámpara hacia la pared de la derecha y el fondo.
+        val borde = Path(); val y0 = 58f
+        for ((n, x) in (0..24).map { 300f + it * 3.4f }.withIndex()) { val y = y0 + (x - 300f) * 0.18f + (if (n % 2 == 0) 0f else 2.2f); if (n == 0) borde.moveTo(x, y) else borde.lineTo(x, y) }
+        val debajo = Path().apply { addPath(borde); lineTo(ANCHO, 230f); lineTo(296f, 230f); close() }
+        clipPath(K.formaDerecha()) {
+            clipPath(debajo) { charcoDeLuz(f, Offset(360f, 110f), 46f, 70f, C.PARED, 0.55f * k) }
+            // Los flecos: una franja de rayitas de sombra pegada al borde.
+            for (i in 0..24) { val x = 300f + i * 3.4f; val y = y0 + (x - 300f) * 0.18f; drawLine(C.SOMBRA.copy(alpha = 0.3f * k), Offset(x, y + 1f), Offset(x + 0.4f, y + 6f + (i % 3)), 0.8f, blendMode = BlendMode.Multiply) }
+        }
+        // Lo alto de la pared, encima del borde, queda en penumbra.
+        drawRect(Brush.verticalGradient(0f to C.SOMBRA.copy(alpha = 0.22f * k), 1f to Color.Transparent, startY = 0f, endY = 60f), Offset(286f, 0f), Size(94f, 60f), blendMode = BlendMode.Multiply)
     }
 
     /** Lo que la mancha de la mesa deja ver: su forma, para recortar las sombras de lo que hay encima. */
@@ -230,20 +302,28 @@ internal object LuzCocinaUrss {
                 drawCircle(color.copy(alpha = (0.55f * s.fuerza * az.real()).coerceIn(0f, 1f)), az.entre(0.3f, 0.7f), a + (b - a) * u)
             }
         }
+        rebote(m)?.let { r -> lz.sol?.let { s -> dibujaRebote(r, lerp(s.color, Color(0xFFFFC266), 0.6f)) } }
         if (lz.lampara) {
             val b = Co.BOMBILLA
-            mancha(b + Offset(0f, 14f), 46f, 30f, C.LAMPARA, 0.03f + 0.06f * lz.noche)
             haloDeBruma(b + Offset(0f, 10f), 30f, 18f, C.LAMPARA, 0.3f + 0.4f * lz.noche)
-            // El cono de luz en el aire, de la boca de la pantalla a la mesa: muy tenue.
-            val a0 = b + Offset(-34f, 8f); val a1 = b + Offset(34f, 8f)
-            drawPath(poligono(a0, a1, Co.BAJO_LA_LAMPARA + Offset(70f, 6f), Co.BAJO_LA_LAMPARA + Offset(-86f, 6f)), C.LAMPARA.copy(alpha = 0.018f * lz.noche), blendMode = BlendMode.Plus)
+            // El cono de luz en el aire, de la boca de la pantalla al círculo del hule: con su borde.
+            if (!R.bombillaDesnuda(m)) {
+                val boca = K.s(Co.LT) * 29f; val a0 = Offset(b.x - boca, b.y + 4f); val a1 = Offset(b.x + boca, b.y + 4f)
+                val c0 = Co.BAJO_LA_LAMPARA + Offset(-84f, -2f); val c1 = Co.BAJO_LA_LAMPARA + Offset(72f, -2f)
+                val cono = poligono(a0, a1, c1, c0)
+                drawPath(cono, C.LAMPARA.copy(alpha = 0.035f * lz.noche), blendMode = BlendMode.Plus)
+                for ((u, v) in listOf(a0 to c0, a1 to c1)) drawLine(C.LAMPARA.copy(alpha = 0.07f * lz.noche), u, v, 0.8f, blendMode = BlendMode.Plus)
+            }
         }
         if (R.televisor(m)) {
-            // La claridad azul de la puerta del cuarto, en el suelo y en el marco (su parpadeo va en la parte viva).
-            val q = K.p(K.x1, Co.SUELO, 40f)
-            mancha(q + Offset(-6f, -4f), 30f, 9f, C.TELE, 0.12f * (0.4f + lz.noche))
+            // La claridad azul que sale de la puerta del cuarto y cae en el linóleo (su parpadeo va en la parte viva).
+            val puerta = K.p(K.x1, Co.SUELO, (Co.PT0 + Co.PT1) / 2f)
+            drawPath(luzDeLaTele(), Brush.radialGradient(listOf(C.TELE.copy(alpha = 0.03f + 0.06f * lz.noche), Color.Transparent), puerta, 90f), blendMode = BlendMode.Plus)
         }
     }
+
+    /** El trozo de linóleo que alumbra la tele por la puerta: se abre hacia la izquierda y hacia quien mira. */
+    internal fun luzDeLaTele(): Path = poligono(K.p(K.x1, Co.SUELO, Co.PT0 + 2f), K.p(K.x1, Co.SUELO, Co.PT1), K.p(K.x1 - 80f, Co.SUELO, Co.PT1 + 40f), K.p(K.x1 - 64f, Co.SUELO, Co.PT0 + 10f))
 
     // ---------------------------------------------------------------- Lo que se mueve
 
@@ -277,13 +357,12 @@ internal object LuzCocinaUrss {
             val k = (0.65f + 0.2f * sin(reloj * 3.1f) + 0.15f * sin(reloj * 7.7f + 1f) + (if (sin(reloj * 0.9f) > 0.85f) 0.25f else 0f)).coerceIn(0.3f, 1.2f)
             val hueco = CosasUrss.huecoDeLaPuerta()
             drawPath(hueco, C.TELE.copy(alpha = (0.1f * k).coerceIn(0f, 1f)), blendMode = BlendMode.Plus)
-            val suelo = poligono(K.p(K.x1, Co.SUELO, Co.PT0 + 2f), K.p(K.x1, Co.SUELO, Co.PT1), K.p(K.x1 - 46f, Co.SUELO, Co.PT1 + 20f), K.p(K.x1 - 40f, Co.SUELO, Co.PT0 + 6f))
-            drawPath(suelo, C.TELE.copy(alpha = (0.07f * k * (0.5f + l.noche)).coerceIn(0f, 1f)), blendMode = BlendMode.Plus)
+            drawPath(luzDeLaTele(), Brush.radialGradient(listOf(C.TELE.copy(alpha = (0.07f * k * (0.5f + l.noche)).coerceIn(0f, 1f)), Color.Transparent), K.p(K.x1, Co.SUELO, (Co.PT0 + Co.PT1) / 2f), 90f), blendMode = BlendMode.Plus)
         }
         // La pelusa de los álamos que entra por la ventana abierta.
         if (R.pelusa(m) > 0.1f && R.ventanaAbierta(m)) {
             val az = m.azar("pelusa dentro")
-            repeat(8) { val x = (az.entre(150f, 300f) + reloj * az.entre(4f, 10f)) % 380f; val y = az.entre(60f, 200f) + sin(reloj * 0.7f + it) * 8f; drawCircle(C.PAPEL.copy(alpha = 0.7f), 0.9f, Offset(x, y)) }
+            repeat(22) { val x = (az.entre(150f, 330f) - reloj * az.entre(3f, 9f) + 760f) % 380f; val y = az.entre(40f, 230f) + sin(reloj * 0.7f + it) * 8f + reloj * 1.5f % 20f; drawCircle(C.PAPEL.copy(alpha = 0.75f), az.entre(0.7f, 1.3f), Offset(x, y)); drawCircle(C.PAPEL.copy(alpha = 0.25f), 2f, Offset(x, y)) }
         }
     }
 

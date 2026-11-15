@@ -42,7 +42,7 @@ internal fun DrawScope.drawOval(brush: Brush, r: Rect) = drawOval(brush, r.topLe
  * la claridad ([arriba]); lo que mira a un lado recibe los focos de ese lado ([izq], [der]). Nunca se oscurece con gris:
  * la sombra es violeta ([sombra]).
  */
-internal class LuzUrss(val l: Luces, val a: Alumbrado, val dia: Float, val noche: Float, val sol: EscenaUrss.SolDeVentana?, val lampara: Boolean) {
+internal class LuzUrss(val l: Luces, val a: Alumbrado, val dia: Float, val noche: Float, val sol: EscenaUrss.SolDeVentana?, val lampara: Boolean, val aPared: Alumbrado = a) {
     fun en(p: Offset, c: Color, mira: Float = 0f): Color = a.en(p, c, mira)
     fun frente(p: Offset, c: Color): Color { val b = a.en(p, c); return lerp(b, mult(b, ColorUrss.SOMBRA, 1f), 0.24f * dia + 0.08f) }
     fun arriba(p: Offset, c: Color): Color { val b = a.en(p, c); return lerp(b, a.en(p, lerp(c, Color(0xFFFFF4DC), 0.4f)), 0.15f + 0.25f * dia) }
@@ -132,6 +132,12 @@ internal object PiezasUrss {
                 drawOval(lz.en(o, C.HIERRO).copy(alpha = 0.55f), o, Size(2.4f * k, 1.6f * k)); drawOval(lz.en(o, C.TIERRA).copy(alpha = 0.4f), o + Offset(0.6f, 0.4f), Size(1.2f * k, 0.8f * k))
             }
             mancha(p(x1 - 14f, yTapa + 60f, t1), 10f * k, 18f * k, lz.sombra(medio, C.ESMALTE, 0.3f), 0.18f)
+            // El reflejo de la ventana en el esmalte: un rectángulo claro con la sombra de la cruz, que sube y baja con la luz.
+            val rv = p(x0 + (x1 - x0) * 0.6f, yTapa + 22f, t1)
+            mancha(rv + Offset(0f, 14f * k), 5f * k, 16f * k, Color.White, 0.14f * lz.dia + 0.04f)
+            mancha(rv + Offset(0f, 14f * k), 1.2f * k, 13f * k, lz.sombra(medio, C.ESMALTE, 0.3f), 0.12f * lz.dia)
+            // Más desconchones abajo, donde se roza con el cubo y la escoba, con su óxido.
+            for ((u, v) in listOf(0.18f to 0.86f, 0.4f to 0.93f, 0.7f to 0.8f, 0.85f to 0.95f)) { val o = p(x0 + (x1 - x0) * u, yTapa + (suelo - yTapa) * v, t1); mancha(o + Offset(1.6f * k, 1f * k), 3f * k, 2f * k, lz.en(o, lerp(C.LADRILLO, C.TIERRA, 0.4f)), 0.4f); drawOval(lz.en(o, C.HIERRO), o, Size(2.8f * k, 1.8f * k)) }
             // La rejilla de la ventilación, abajo.
             for (i in 0..4) { val y = suelo - 6f - i * 2.4f; drawLine(lz.sombra(medio, C.HIERRO, 0.4f).copy(alpha = 0.55f), p(x0 + 4f, y, t1), p(x1 - 6f, y, t1), 0.9f * k) }
             // La sombra que la pared y el suelo le dejan abajo.
@@ -146,8 +152,11 @@ internal object PiezasUrss {
         // El burlete de goma alrededor de la puerta, y la insignia cromada sin letras.
         drawLine(lz.sombra(mp, C.TINTA, 0.5f).copy(alpha = 0.6f), p(x1, yTapa + r, t1 - 2f), p(x1, suelo - 4f, t1 - 2f), 0.8f)
         val ins = p(x1, yTapa + 18f, t0 + (t1 - t0) * 0.45f)
-        drawLine(lz.der(ins, C.CROMO), ins + Offset(-4f, -1.4f), ins + Offset(4.6f, 1.6f), 1.8f, StrokeCap.Round)
-        drawCircle(lz.der(ins, C.ROJO), 0.9f, ins + Offset(-4.4f, -1.5f))
+        // La moldura cromada a lo largo de la puerta y el emblema ovalado: cromo con su fondo rojo y una estrella, sin letras.
+        drawLine(lz.der(ins, C.CROMO), p(x1 + 0.3f, yTapa + 18f, t0 + 3f), p(x1 + 0.3f, yTapa + 18f, t1 - 3f), 1.2f)
+        drawOval(lz.der(ins, C.CROMO), Offset(ins.x - 3.6f, ins.y - 2.6f), Size(7.2f, 5.2f))
+        drawOval(lz.der(ins, C.ROJO), Offset(ins.x - 2.6f, ins.y - 1.8f), Size(5.2f, 3.6f))
+        drawCircle(lz.der(ins, C.ORO), 0.8f, ins)
         // El tirador cromado: una palanca gruesa que sobresale de la puerta, junto al canto de delante.
         val t0p = p(x1 + 3f, yTapa + 34f, t1 - 5f); val t1p = p(x1 + 3f, yTapa + 52f, t1 - 5f)
         drawLine(lz.sombra(t0p, C.TINTA, 0.5f).copy(alpha = 0.5f), t0p + Offset(1.6f, 2f), t1p + Offset(1.6f, 2f), 3f * k, StrokeCap.Round)
@@ -155,6 +164,13 @@ internal object PiezasUrss {
         drawLine(lz.der(t0p, Color.White).copy(alpha = 0.7f), t0p + Offset(-0.6f * k, 1f), t1p + Offset(-0.6f * k, -1f), 1f * k, StrokeCap.Round)
         drawLine(lz.der(t0p, lerp(C.CROMO, Color.White, 0.3f)), p(x1, yTapa + 34f, t1 - 5f), t0p, 2f * k)
         drawLine(lz.der(t0p, lerp(C.CROMO, Color.White, 0.3f)), p(x1, yTapa + 52f, t1 - 5f), t1p, 2f * k)
+        // El paño de cocina colgado del tirador, de cuadros rojos.
+        val pt = p(x1 + 3f, yTapa + 40f, t1 - 5f)
+        val panoT = Path().apply { moveTo(pt.x - 1f, pt.y - 1f); lineTo(pt.x + 5f * k, pt.y - 1f); cubicTo(pt.x + 6f * k, pt.y + 12f * k, pt.x + 4f * k, pt.y + 22f * k, pt.x + 5f * k, pt.y + 30f * k); lineTo(pt.x - 2f * k, pt.y + 31f * k); cubicTo(pt.x - 1f * k, pt.y + 20f * k, pt.x - 2f * k, pt.y + 10f * k, pt.x - 1f, pt.y - 1f); close() }
+        drawPath(panoT, lz.der(pt, C.PAPEL))
+        clipPath(panoT) { for (i in 0..4) drawLine(lz.der(pt, C.ROJO).copy(alpha = 0.6f), Offset(pt.x - 2f * k + i * 1.8f * k, pt.y), Offset(pt.x - 2f * k + i * 1.8f * k, pt.y + 32f * k), 0.7f); for (j in 0..7) drawLine(lz.der(pt, C.ROJO).copy(alpha = 0.5f), Offset(pt.x - 3f * k, pt.y + j * 4f * k), Offset(pt.x + 7f * k, pt.y + j * 4f * k), 0.6f) }
+        // Las patitas y la sombra en el linóleo.
+        for (x in listOf(x0 + 4f, x1 - 4f)) { val q = p(x, suelo, t1 - 3f); drawRect(lz.sombra(q, C.TINTA, 0.4f), Offset(q.x - 1.4f * k, q.y - 2f * k), Size(2.8f * k, 2f * k)) }
         // La tapa, con su tapete de ganchillo que cae por el costado.
         val tapa = poligono(p(x0, yTapa, t0), p(x1 - r * 0.3f, yTapa, t0), p(x1 - r * 0.3f, yTapa, t1 - r * 0.4f), p(x0, yTapa, t1 - r * 0.4f))
         drawPath(tapa, lz.arriba(p((x0 + x1) / 2f, yTapa, (t0 + t1) / 2f), C.ESMALTE))
@@ -177,27 +193,85 @@ internal object PiezasUrss {
 
     private fun lerp2(a: Offset, b: Offset, u: Float) = Offset(a.x + (b.x - a.x) * u, a.y + (b.y - a.y) * u)
 
-    /** La alacena de madera que había antes de la nevera, en el mismo sitio: dos puertas abajo, cristales arriba con platos. */
+    /**
+     * La alacena de madera que había antes de la nevera, en el mismo sitio, contra la pared de la izquierda. De ella se ve
+     * el costado (de cara a quien mira, cortado por el borde), con sus dos cuarterones, la veta, la cornisa y el zócalo; la
+     * luz de la ventana le resbala por el canto. Colgados del costado, el paño bordado y la ristra de setas secas. Por
+     * delante, en escorzo, las puertas: arriba de cristal, con los platos de pie, las tazas y los tarros; en medio, el
+     * cajón; abajo, de madera con su llave. Encima, el samovar de carbón de la abuela y una cesta.
+     */
     fun DrawScope.alacena(lz: LuzUrss, x0: Float, x1: Float, t0: Float, t1: Float, yTapa: Float) {
-        val suelo = CocinaUrss.SUELO
-        val frente = caja(lz, x0, x1, yTapa, suelo, t0, t1, C.MADERA, lerp(C.MADERA, C.PAPEL, 0.15f), lerp(C.MADERA, C.LATON, 0.12f))
-        val m = p((x0 + x1) / 2f, (yTapa + suelo) / 2f, t1); val k = K.s(t1)
-        clipPath(frente) {
-            for (i in 0..14) { val x = x0 + (x1 - x0) * i / 14f; drawLine(lz.sombra(m, C.MADERA, 0.4f).copy(alpha = 0.3f), p(x, yTapa, t1), p(x + 1f, suelo, t1), 0.5f) }
-        }
-        // En la cara que mira al centro, las puertas: abajo, de madera; arriba, de cristal con los platos de pie.
-        val med = (yTapa + suelo) / 2f + 10f
-        for ((ya, yb) in listOf(yTapa + 6f to med - 4f, med to suelo - 8f)) {
-            val pz = poligono(p(x1 + 0.1f, ya, t0 + 4f), p(x1 + 0.1f, ya, t1 - 4f), p(x1 + 0.1f, yb, t1 - 4f), p(x1 + 0.1f, yb, t0 + 4f))
-            drawPath(pz, lz.der(m, lerp(C.MADERA, C.PAPEL, if (ya < med - 10f) 0.05f else 0.1f)))
-            drawPath(pz, lz.sombra(m, C.TINTA, 0.5f).copy(alpha = 0.5f), style = Stroke(0.8f))
-            if (ya < med - 10f) clipPath(pz) {
-                drawPath(pz, lz.sombra(m, C.AZUL, 0.6f).copy(alpha = 0.6f))
-                for (i in 0..3) { val q = p(x1 + 0.1f, ya + 16f, t0 + 8f + i * 7f); drawOval(lz.der(q, C.ESMALTE), Offset(q.x - 1.4f * k, q.y - 7f * k), Size(2.8f * k, 13f * k)); drawOval(lz.der(q, C.AZUL).copy(alpha = 0.6f), Offset(q.x - 0.8f * k, q.y - 4f * k), Size(1.6f * k, 7f * k), style = Stroke(0.5f)) }
-                drawLine(lz.en(m, Color.White).copy(alpha = 0.2f), p(x1, ya + 4f, t0 + 10f), p(x1, yb - 4f, t0 + 18f), 3f)
+        val suelo = CocinaUrss.SUELO; val k = K.s(t1); val madera = lerp(C.MADERA, C.LATON, 0.08f)
+        val a = p(x0, yTapa, t1); val b = p(x1, yTapa, t1); val c = p(x1, suelo, t1); val d = p(x0, suelo, t1)
+        val m = p((x0 + x1) / 2f, (yTapa + suelo) / 2f, t1)
+        // El costado: la madera en penumbra, que se aclara hacia el canto por donde le llega la ventana.
+        val costado = poligono(a, b, c, d)
+        drawPath(costado, Brush.horizontalGradient(0f to lz.sombra(m, madera, 0.55f), 0.6f to lz.frente(m, madera), 0.92f to lz.der(m, lerp(madera, C.PAPEL, 0.15f)), 1f to lz.der(m, lerp(madera, C.PAPEL, 0.3f)), startX = a.x, endX = b.x))
+        clipPath(costado) {
+            // La veta: líneas onduladas, más juntas en los largueros.
+            val az = Azar(Semilla.de("urss", "veta"))
+            repeat(26) { val x = x0 + az.real() * (x1 - x0); val pth = Path(); var y = yTapa; pth.moveTo(p(x, y, t1).x, p(x, y, t1).y); var dx = 0f; while (y < suelo) { y += 12f; dx += az.entre(-0.8f, 0.8f); val q = p(x + dx, y, t1); pth.lineTo(q.x, q.y) }; drawPath(pth, lz.sombra(m, madera, 0.5f).copy(alpha = 0.22f), style = Stroke(0.5f)) }
+            // Los dos cuarterones, rehundidos: el bisel que mira a la ventana, claro; el otro, oscuro.
+            for ((ya, yb) in listOf(yTapa + 10f to yTapa + 62f, yTapa + 72f to suelo - 14f)) {
+                val xa = x0 + 8f; val xb = x1 - 7f
+                val panel = poligono(p(xa, ya, t1), p(xb, ya, t1), p(xb, yb, t1), p(xa, yb, t1))
+                drawPath(panel, lz.sombra(m, madera, 0.25f).copy(alpha = 0.45f))
+                drawLine(lz.sombra(m, C.TINTA, 0.4f).copy(alpha = 0.6f), p(xa, ya, t1), p(xb, ya, t1), 1.2f * k)
+                drawLine(lz.sombra(m, C.TINTA, 0.4f).copy(alpha = 0.5f), p(xa, ya, t1), p(xa, yb, t1), 1.2f * k)
+                drawLine(lz.der(m, lerp(madera, C.PAPEL, 0.4f)).copy(alpha = 0.7f), p(xb, ya, t1), p(xb, yb, t1), 1.1f * k)
+                drawLine(lz.der(m, lerp(madera, C.PAPEL, 0.35f)).copy(alpha = 0.6f), p(xa, yb, t1), p(xb, yb, t1), 1f * k)
             }
+            // El roce del uso a media altura y la sombra del suelo abajo.
+            mancha(p(x1 - 10f, yTapa + 70f, t1), 6f * k, 12f * k, lz.en(m, lerp(madera, C.PAPEL, 0.4f)), 0.2f)
+            drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to C.SOMBRA.copy(alpha = 0.3f), startY = d.y - 24f * k, endY = d.y), Offset(d.x - 10f, d.y - 24f * k), Size(c.x - d.x + 20f, 24f * k), blendMode = BlendMode.Multiply)
         }
-        drawCircle(lz.der(m, C.LATON), 1.2f * k, p(x1 + 0.5f, med + 8f, t1 - 8f))
+        // La luz que resbala por el canto del costado.
+        drawLine(lz.der(m, lerp(madera, C.PAPEL, 0.55f)).copy(alpha = 0.8f), b, c, 1.2f * k)
+        // La cornisa que vuela arriba y el zócalo oscuro abajo.
+        drawPath(poligono(p(x0, yTapa - 6f, t1 + 3f), p(x1 + 3f, yTapa - 6f, t1 + 3f), p(x1 + 3f, yTapa, t1 + 3f), p(x0, yTapa, t1 + 3f)), lz.frente(m, lerp(madera, C.TINTA, 0.1f)))
+        drawLine(lz.der(m, lerp(madera, C.PAPEL, 0.4f)), p(x0, yTapa - 6f, t1 + 3f), p(x1 + 3f, yTapa - 6f, t1 + 3f), 0.8f)
+        drawPath(poligono(p(x0, suelo - 8f, t1 + 1f), p(x1 + 1f, suelo - 8f, t1 + 1f), p(x1 + 1f, suelo, t1 + 1f), p(x0, suelo, t1 + 1f)), lz.sombra(m, lerp(madera, C.TINTA, 0.4f), 0.4f))
+        // Por delante, en escorzo: las puertas de cristal con los platos, el cajón y las puertas de abajo.
+        val med = yTapa + 70f
+        val crist = poligono(p(x1 + 0.1f, yTapa + 4f, t0 + 4f), p(x1 + 0.1f, yTapa + 4f, t1 - 3f), p(x1 + 0.1f, med - 8f, t1 - 3f), p(x1 + 0.1f, med - 8f, t0 + 4f))
+        drawPath(poligono(p(x1, yTapa, t0), p(x1, yTapa, t1), p(x1, suelo, t1), p(x1, suelo, t0)), lz.der(m, lerp(madera, C.PAPEL, 0.12f)))
+        drawPath(crist, lz.sombra(m, lerp(C.AZUL, C.MADERA, 0.4f), 0.5f))
+        clipPath(crist) {
+            // Dos baldas: abajo los platos de pie, con su filete azul; arriba las tazas y un tarro de mermelada.
+            for (y in listOf(yTapa + 30f, med - 8f)) drawLine(lz.der(m, lerp(madera, C.PAPEL, 0.3f)), p(x1, y, t0), p(x1, y, t1), 1f)
+            for (i in 0..4) { val q = p(x1 + 0.1f, med - 18f, t0 + 7f + i * 6f); val kk = K.s(t0 + 7f + i * 6f); drawOval(lz.der(q, C.ESMALTE), Offset(q.x - 1.3f * kk, q.y - 8f * kk), Size(2.6f * kk, 16f * kk)); drawOval(lz.der(q, C.AZUL).copy(alpha = 0.6f), Offset(q.x - 0.8f * kk, q.y - 5f * kk), Size(1.6f * kk, 10f * kk), style = Stroke(0.5f)) }
+            for (i in 0..2) { val q = p(x1 + 0.1f, yTapa + 30f, t0 + 9f + i * 9f); drawRect(lz.der(q, if (i == 1) C.ROJO else lerp(C.ESMALTE, C.LATON, 0.2f)), Offset(q.x - 1.4f, q.y - 6f), Size(2.8f, 6f)) }
+            // El cristal devuelve la ventana.
+            drawLine(lz.en(m, Color.White).copy(alpha = 0.25f), p(x1, yTapa + 6f, t0 + 12f), p(x1, med - 10f, t0 + 22f), 4f)
+        }
+        drawPath(crist, lz.der(m, lerp(madera, C.PAPEL, 0.25f)), style = Stroke(1.2f))
+        drawLine(lz.der(m, lerp(madera, C.PAPEL, 0.25f)), p(x1 + 0.2f, yTapa + 4f, (t0 + t1) / 2f), p(x1 + 0.2f, med - 8f, (t0 + t1) / 2f), 1f)
+        // El cajón, con su tirador de latón, y las dos puertas de abajo con su llave.
+        val cajon = poligono(p(x1 + 0.1f, med - 4f, t0 + 4f), p(x1 + 0.1f, med - 4f, t1 - 3f), p(x1 + 0.1f, med + 8f, t1 - 3f), p(x1 + 0.1f, med + 8f, t0 + 4f))
+        drawPath(cajon, lz.sombra(m, C.TINTA, 0.4f).copy(alpha = 0.5f), style = Stroke(0.8f))
+        drawCircle(lz.der(m, C.LATON), 1.1f * k, p(x1 + 0.6f, med + 2f, (t0 + t1) / 2f))
+        val abajo = poligono(p(x1 + 0.1f, med + 12f, t0 + 4f), p(x1 + 0.1f, med + 12f, t1 - 3f), p(x1 + 0.1f, suelo - 10f, t1 - 3f), p(x1 + 0.1f, suelo - 10f, t0 + 4f))
+        drawPath(abajo, lz.sombra(m, C.TINTA, 0.4f).copy(alpha = 0.5f), style = Stroke(0.8f))
+        drawLine(lz.sombra(m, C.TINTA, 0.4f).copy(alpha = 0.5f), p(x1 + 0.2f, med + 12f, (t0 + t1) / 2f), p(x1 + 0.2f, suelo - 10f, (t0 + t1) / 2f), 0.8f)
+        val llave = p(x1 + 0.6f, med + 30f, (t0 + t1) / 2f + 3f); drawRect(lz.der(llave, C.LATON), Offset(llave.x - 0.6f, llave.y - 1.6f), Size(1.4f, 3.2f)); drawCircle(lz.der(llave, C.LATON), 1.2f, llave + Offset(0.2f, 3f))
+        // Colgados del costado: el paño de lino bordado de punto de cruz y la ristra de setas secas.
+        val clavo = p(x1 - 14f, yTapa + 8f, t1 + 0.5f)
+        val pano = poligono(clavo + Offset(-7f * k, 1f), clavo + Offset(6f * k, 1f), clavo + Offset(7f * k, 44f * k), clavo + Offset(-6f * k, 46f * k))
+        drawPath(pano, lz.frente(clavo, C.PAPEL))
+        clipPath(pano) {
+            for (j in 0..1) { val y = clavo.y + (34f + j * 5f) * k; var x = clavo.x - 6f * k; while (x < clavo.x + 6f * k) { drawLine(lz.frente(clavo, C.ROJO), Offset(x, y), Offset(x + 1.6f, y + 1.6f), 0.6f); drawLine(lz.frente(clavo, C.ROJO), Offset(x + 1.6f, y), Offset(x, y + 1.6f), 0.6f); x += 2.6f } }
+            drawLine(lz.sombra(clavo, C.PAPEL, 0.3f).copy(alpha = 0.6f), clavo + Offset(-1f * k, 2f), clavo + Offset(0f, 46f * k), 0.8f)
+        }
+        drawCircle(lz.en(clavo, C.TINTA), 0.8f, clavo)
+        val ristra = p(x0 + 14f, yTapa + 6f, t1 + 0.5f)
+        drawLine(lz.frente(ristra, lerp(C.PAPEL, C.MADERA, 0.4f)), ristra, ristra + Offset(1f, 52f * k), 0.5f)
+        for (i in 0..12) { val q = ristra + Offset(1f * i / 12f + (if (i % 2 == 0) -1.4f else 1.4f), (4f + i * 3.8f) * k); drawOval(lz.frente(q, lerp(C.MADERA, C.LATON, 0.3f)), Offset(q.x - 2f, q.y - 1.4f), Size(4f, 2.8f)); drawOval(lz.sombra(q, C.MADERA, 0.4f), Offset(q.x - 0.8f, q.y + 0.4f), Size(1.6f, 0.8f)) }
+        // Encima, el samovar de carbón de la abuela, más oscuro, y una cesta de mimbre.
+        samovar(lz, p(x0 + 30f, yTapa - 6f, t0 + 24f) + Offset(0f, 0f), K.s(t0 + 24f) * 0.85f, conTetera = false)
+        val cesta = p(x0 + 14f, yTapa - 6f, t0 + 34f); val kc = K.s(t0 + 34f)
+        val cf = Path().apply { moveTo(cesta.x - 9f * kc, cesta.y - 9f * kc); lineTo(cesta.x + 9f * kc, cesta.y - 9f * kc); lineTo(cesta.x + 7f * kc, cesta.y); lineTo(cesta.x - 7f * kc, cesta.y); close() }
+        cuerpo(lz.a, cf, cesta.x - 9f * kc, cesta.x + 9f * kc, cesta.y - 4f * kc, lerp(C.LATON, C.MADERA, 0.4f))
+        clipPath(cf) { for (j in 0..4) drawLine(lz.sombra(cesta, C.MADERA, 0.4f).copy(alpha = 0.6f), Offset(cesta.x - 9f * kc, cesta.y - 9f * kc + j * 2f * kc), Offset(cesta.x + 9f * kc, cesta.y - 9f * kc + j * 2f * kc), 0.5f) }
     }
 
     // ---------------------------------------------------------------- Cosas pequeñas de encima
@@ -893,7 +967,8 @@ internal object PiezasUrss {
      * travesaño, y el cristal que devuelve un poco el cielo.
      */
     fun DrawScope.hojaAbierta(lz: LuzUrss, nueva: Boolean) {
-        val ang = 0.62f; val largo = CocinaUrss.MONTANTE - 2f - (CocinaUrss.VX0 + 4f)
+        // Abierta casi del todo, pegada al derrame de la izquierda: así no tapa el patio.
+        val ang = 1.38f; val largo = CocinaUrss.MONTANTE - 2f - (CocinaUrss.VX0 + 4f)
         val xb = CocinaUrss.VX0 + 4f; val xf = xb + largo * kotlin.math.cos(ang); val tf = largo * kotlin.math.sin(ang)
         fun q(u: Float, y: Float) = p(xb + (xf - xb) * u, y, tf * u)
         val y0 = CocinaUrss.VY0 + 4f; val y1 = CocinaUrss.VY1 - 4f; val tr = CocinaUrss.TRAVESANO
@@ -1083,6 +1158,76 @@ internal object PiezasUrss {
         }
         drawLine(lz.sombra(a, C.TINTA, 0.3f).copy(alpha = 0.4f), Offset((a.x + b.x) / 2f, (a.y + b.y) / 2f), Offset((c.x + d.x) / 2f, (c.y + d.y) / 2f), 0.5f)
         drawPath(poligono(c, Offset(c.x - 4f, c.y - 2.4f), Offset(c.x - 6f, c.y + 0.4f)), lz.en(c, lerp(C.PAPEL, Color.White, 0.2f)))
+    }
+    // ---------------------------------------------------------------- El primer plano de abajo
+
+    /** El cubo de zinc con las patatas, con su asa y sus abolladuras, cortado por el borde de abajo. */
+    fun DrawScope.cuboDePatatas(lz: LuzUrss, x: Float, t: Float, az: Azar) {
+        val pie = p(x, CocinaUrss.SUELO, t); val k = K.s(t); val w = 11f * k; val h = 26f * k
+        drawOval(C.SOMBRA.copy(alpha = 0.35f), Offset(pie.x - w * 1.3f, pie.y - 2f * k), Size(w * 2.8f, 5f * k), blendMode = BlendMode.Multiply)
+        val cubo = Path().apply { moveTo(pie.x - w * 0.8f, pie.y); lineTo(pie.x - w, pie.y - h); lineTo(pie.x + w, pie.y - h); lineTo(pie.x + w * 0.8f, pie.y); close() }
+        cuerpo(lz.a, cubo, pie.x - w, pie.x + w, pie.y - h / 2f, lerp(C.CROMO, C.HORMIGON, 0.45f))
+        clipPath(cubo) {
+            for (j in 1..2) drawLine(lz.sombra(pie, C.HIERRO, 0.4f).copy(alpha = 0.6f), Offset(pie.x - w, pie.y - h * j / 3f), Offset(pie.x + w, pie.y - h * j / 3f), 0.9f * k)
+            mancha(Offset(pie.x + w * 0.3f, pie.y - h * 0.45f), 3f * k, 2f * k, lz.sombra(pie, C.HIERRO, 0.5f), 0.4f)
+            drawLine(Color.White.copy(alpha = 0.3f), Offset(pie.x - w * 0.55f, pie.y - h * 0.9f), Offset(pie.x - w * 0.45f, pie.y - h * 0.1f), 1.4f * k)
+        }
+        // Las patatas, que asoman por encima del borde, con tierra.
+        drawOval(lz.sombra(pie, C.TIERRA, 0.5f), Offset(pie.x - w, pie.y - h - 2f * k), Size(w * 2f, 4f * k))
+        repeat(7) { val c = Offset(pie.x + az.entre(-w * 0.8f, w * 0.8f), pie.y - h - az.entre(0f, 5f) * k); drawOval(lz.arriba(c, lerp(C.LATON, C.TIERRA, 0.45f)), Offset(c.x - 3.4f * k, c.y - 2.4f * k), Size(6.8f * k, 4.6f * k)); drawCircle(lz.sombra(c, C.TIERRA, 0.5f), 0.5f * k, c + Offset(1f * k, 0f)) }
+        drawOval(lz.en(pie, lerp(C.CROMO, Color.White, 0.3f)), Offset(pie.x - w, pie.y - h - 1.4f * k), Size(w * 2f, 2.8f * k), style = Stroke(0.9f * k))
+        drawPath(Path().apply { moveTo(pie.x - w, pie.y - h); cubicTo(pie.x - w * 0.8f, pie.y - h - 14f * k, pie.x + w * 0.8f, pie.y - h - 14f * k, pie.x + w, pie.y - h) }, lz.en(pie, C.HIERRO), style = Stroke(0.8f * k))
+    }
+
+    /** La cesta de mimbre con cebollas y su piel suelta, delante del fogón. */
+    fun DrawScope.cestaDeCebollas(lz: LuzUrss, x: Float, t: Float, az: Azar) {
+        val pie = p(x, CocinaUrss.SUELO, t); val k = K.s(t); val w = 10f * k; val h = 9f * k
+        drawOval(C.SOMBRA.copy(alpha = 0.32f), Offset(pie.x - w * 1.3f, pie.y - 2f * k), Size(w * 2.7f, 4.4f * k), blendMode = BlendMode.Multiply)
+        repeat(6) { val c = Offset(pie.x + az.entre(-w * 0.8f, w * 0.8f), pie.y - h - az.entre(0f, 4f) * k); drawCircle(lz.arriba(c, lerp(C.LATON, C.NARANJA, 0.35f)), 3.2f * k, c); drawLine(lz.arriba(c, lerp(C.LATON, C.TIERRA, 0.3f)), c + Offset(0f, -3f * k), c + Offset(0.6f * k, -5f * k), 0.5f * k); drawLine(lz.sombra(c, C.LADRILLO, 0.4f).copy(alpha = 0.5f), c + Offset(-1.4f * k, -2f * k), c + Offset(-1.6f * k, 2f * k), 0.4f) }
+        val cesta = Path().apply { moveTo(pie.x - w, pie.y - h); lineTo(pie.x + w, pie.y - h); lineTo(pie.x + w * 0.85f, pie.y); lineTo(pie.x - w * 0.85f, pie.y); close() }
+        cuerpo(lz.a, cesta, pie.x - w, pie.x + w, pie.y - h / 2f, lerp(C.LATON, C.MADERA, 0.35f))
+        clipPath(cesta) { for (j in 0..4) drawLine(lz.sombra(pie, C.MADERA, 0.4f).copy(alpha = 0.6f), Offset(pie.x - w, pie.y - h + j * 2f * k), Offset(pie.x + w, pie.y - h + j * 2f * k), 0.5f); var xx = pie.x - w; while (xx < pie.x + w) { drawLine(lz.sombra(pie, C.MADERA, 0.4f).copy(alpha = 0.35f), Offset(xx, pie.y - h), Offset(xx + 1f, pie.y), 0.4f); xx += 2.2f * k } }
+        drawLine(lz.arriba(pie, lerp(C.LATON, C.PAPEL, 0.3f)), Offset(pie.x - w, pie.y - h), Offset(pie.x + w, pie.y - h), 1.2f * k)
+        repeat(3) { val c = pie + Offset(az.entre(w, w * 2.4f), az.entre(-1f, 2f) * k); drawOval(lz.arriba(c, lerp(C.LATON, C.PAPEL, 0.4f)).copy(alpha = 0.8f), Offset(c.x, c.y), Size(2.4f * k, 1f * k)) }
+    }
+
+    /** La escoba de ramas, apoyada en el costado del fogón: lo que cruza en diagonal el primer plano. */
+    fun DrawScope.escoba(lz: LuzUrss, pie: Offset, punta: Offset, k: Float) {
+        drawLine(lz.sombra(pie, C.MADERA, 0.5f), pie + Offset(1.4f, 0f), punta + Offset(1.4f, 0f), 2.2f * k)
+        drawLine(lz.der(pie, lerp(C.MADERA, C.PAPEL, 0.2f)), pie, punta, 1.6f * k, StrokeCap.Round)
+        // El haz de ramas, atado con alambre, gastado de un lado.
+        val d = (punta - pie) / (punta - pie).getDistance(); val n = Offset(-d.y, d.x)
+        val atado = pie + d * (18f * k)
+        val haz = Path().apply { moveTo(atado.x + n.x * 3f * k, atado.y + n.y * 3f * k); lineTo(pie.x + n.x * 7f * k - d.x * 3f * k, pie.y + 1f); lineTo(pie.x - n.x * 5f * k - d.x * 2f * k, pie.y + 1f); lineTo(atado.x - n.x * 3f * k, atado.y - n.y * 3f * k); close() }
+        drawPath(haz, lz.der(pie, lerp(C.LATON, C.MADERA, 0.45f)))
+        clipPath(haz) { for (i in -5..5) drawLine(lz.sombra(pie, C.MADERA, 0.5f).copy(alpha = 0.6f), atado + n * (i * 0.5f * k), pie + n * (i * 1.2f * k) + Offset(0f, 1f), 0.4f) }
+        drawLine(lz.en(atado, C.CROMO), atado + n * (3.2f * k), atado - n * (3.2f * k), 0.8f * k)
+    }
+
+    /** El paño de cuadros echado sobre el taburete, que cuelga por delante. */
+    fun DrawScope.panoEnElTaburete(lz: LuzUrss, x: Float, t: Float, ancho: Float, alto: Float) {
+        val y = CocinaUrss.SUELO - alto; val w = ancho / 2f
+        val a = p(x - w + 4f, y - 0.6f, t - 2f); val b = p(x + w - 2f, y - 0.6f, t + w - 1f); val c = p(x + w * 0.3f, y - 0.6f, t + w + 1f)
+        val k = K.s(t + w)
+        val pano = Path().apply { moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(b.x + 1f, b.y + 10f * k); cubicTo(b.x - 4f * k, b.y + 16f * k, c.x + 2f * k, c.y + 14f * k, c.x - 2f * k, c.y + 17f * k); lineTo(c.x - 6f * k, c.y); close() }
+        drawPath(pano, lz.frente(c, lerp(C.AZUL, C.PAPEL, 0.55f)))
+        clipPath(pano) { for (i in 0..8) drawLine(lz.frente(c, C.AZUL).copy(alpha = 0.5f), Offset(a.x + i * 3f * k, a.y - 2f), Offset(a.x + i * 3f * k + 2f, c.y + 18f * k), 0.7f); for (j in 0..5) drawLine(lz.frente(c, C.AZUL).copy(alpha = 0.4f), Offset(a.x - 4f, a.y + j * 3f * k), Offset(b.x + 4f, a.y + j * 3f * k), 0.6f) }
+        drawLine(lz.arriba(a, lerp(C.PAPEL, Color.White, 0.3f)).copy(alpha = 0.6f), a, b, 0.6f)
+    }
+
+    /** Los chanclos de goma negra, junto a la puerta de la entrada, cortados por el borde: con el barro o la nieve de la calle. */
+    fun DrawScope.chanclos(lz: LuzUrss, x: Float, t: Float, nieve: Boolean) {
+        val k = K.s(t)
+        for (i in 0..1) {
+            val pie = p(x + i * 9f, CocinaUrss.SUELO, t + i * 3f)
+            val forma = Path().apply { moveTo(pie.x - 9f * k, pie.y); cubicTo(pie.x - 10f * k, pie.y - 6f * k, pie.x - 4f * k, pie.y - 8f * k, pie.x + 4f * k, pie.y - 7f * k); cubicTo(pie.x + 9f * k, pie.y - 6f * k, pie.x + 11f * k, pie.y - 2f * k, pie.x + 10f * k, pie.y); close() }
+            drawOval(C.SOMBRA.copy(alpha = 0.35f), Offset(pie.x - 10f * k, pie.y - 1.4f * k), Size(21f * k, 3f * k), blendMode = BlendMode.Multiply)
+            drawPath(forma, Brush.horizontalGradient(0f to lz.sombra(pie, C.TINTA, 0.3f), 0.7f to lz.en(pie, lerp(C.TINTA, C.HIERRO, 0.4f)), 1f to lz.der(pie, lerp(C.TINTA, C.CROMO, 0.4f)), startX = pie.x - 9f * k, endX = pie.x + 10f * k))
+            drawLine(lz.filo.copy(alpha = 0.45f), Offset(pie.x - 6f * k, pie.y - 6.8f * k), Offset(pie.x + 6f * k, pie.y - 6.4f * k), 0.7f)
+            drawOval(lz.en(pie, C.ROJO).copy(alpha = 0.7f), Offset(pie.x - 6f * k, pie.y - 6f * k), Size(10f * k, 2.4f * k))
+            if (nieve) drawOval(lerp(lz.en(pie, C.NIEVE), C.LUNA, 0.2f).copy(alpha = 0.7f), Offset(pie.x + 2f * k, pie.y - 3f * k), Size(5f * k, 2f * k))
+        }
+        mancha(p(x + 4f, CocinaUrss.SUELO, t + 4f), 16f * k, 3f * k, lz.en(p(x, CocinaUrss.SUELO, t), lerp(C.LINOLEO, C.TINTA, 0.4f)), 0.4f)
     }
 }
 
@@ -1495,9 +1640,9 @@ internal object PiezasFueraUrss {
 
     /** La torre de televisión de Ostánkino: el tronco cónico de hormigón, las plataformas, la aguja y su luz roja en la punta. */
     fun DrawScope.ostankino(ext: Luces, p: Pincel, pie: Offset, alto: Float, lejos: Float, luzRoja: Boolean) {
-        val w = alto * 0.045f
+        val w = alto * 0.06f
         val tronco = poligono(pie + Offset(-w, 0f), pie + Offset(w, 0f), pie + Offset(w * 0.2f, -alto * 0.62f), pie + Offset(-w * 0.2f, -alto * 0.62f))
-        drawPath(tronco, Brush.horizontalGradient(0f to p.luz(C.PANEL, lejos), 1f to p.sombra(C.PANEL, lejos), startX = pie.x - w, endX = pie.x + w))
+        drawPath(tronco, Brush.horizontalGradient(0f to p.luz(lerp(C.PANEL, C.HORMIGON, 0.5f), lejos * 0.6f), 1f to p.sombra(lerp(C.PANEL, C.HORMIGON, 0.6f), lejos * 0.6f), startX = pie.x - w, endX = pie.x + w))
         // Las patas de la base, abiertas.
         for (s in listOf(-1f, 1f)) drawLine(p.medio(C.PANEL, lejos), pie + Offset(s * w * 0.6f, -alto * 0.05f), pie + Offset(s * w * 2f, 0f), 0.6f)
         // Las plataformas (el restaurante) y la aguja con sus franjas.
@@ -1579,6 +1724,61 @@ internal object PiezasFueraUrss {
         drawRect(p.frente(c, lejos), Offset(top.x - w * 1.6f, top.y), Size(w * 3.2f, alto * 0.05f))
         val g = top + Offset(largo * 0.7f, 0f); drawLine(p.sombra(C.TINTA, lejos).copy(alpha = 0.7f), g, g + Offset(0f, alto * 0.4f), 0.2f)
         if (ext.noche > 0.3f) { drawCircle(C.ROJO.copy(alpha = ext.noche), 0.6f, top + Offset(largo, 0f)); drawCircle(C.ROJO.copy(alpha = ext.noche), 0.6f, top + Offset(0f, -alto * 0.08f)) }
+    }
+
+    /**
+     * La torre del Kremlin, muy lejos, recortada contra el cielo: los cuerpos escalonados, el chapitel y, arriba, la
+     * estrella roja «encendida siempre», con su resplandor de noche.
+     */
+    fun DrawScope.torreDelKremlin(ext: Luces, p: Pincel, pie: Offset, alto: Float, lejos: Float) {
+        val w = alto * 0.18f; val ladrillo = lerp(C.LADRILLO, C.ROJO, 0.25f)
+        // Los cuerpos: la base ancha, el cuerpo del reloj y el templete, cada uno más estrecho.
+        for ((y0, y1, ancho) in listOf(Triple(0f, 0.42f, 1f), Triple(0.42f, 0.6f, 0.78f), Triple(0.6f, 0.72f, 0.56f))) {
+            val r = Rect(pie.x - w * ancho, pie.y - alto * y1, pie.x + w * ancho, pie.y - alto * y0)
+            drawRect(p.frente(ladrillo, lejos), r.topLeft, r.size)
+            drawRect(if (p.solALaDerecha) p.luz(ladrillo, lejos) else p.sombra(ladrillo, lejos), Offset(r.right - r.width * 0.3f, r.top), Size(r.width * 0.3f, r.height))
+            drawLine(p.luz(C.PAPEL, lejos), Offset(r.left, r.top), Offset(r.right, r.top), 0.4f)
+        }
+        // El reloj (sin cifras) y el chapitel verde, con la estrella.
+        drawCircle(p.medio(C.PAPEL, lejos), w * 0.35f, pie + Offset(0f, -alto * 0.52f))
+        val ch = poligono(pie + Offset(-w * 0.5f, -alto * 0.72f), pie + Offset(w * 0.5f, -alto * 0.72f), pie + Offset(0f, -alto * 0.95f))
+        drawPath(ch, p.frente(lerp(C.VERDE, C.HORMIGON, 0.4f), lejos))
+        val c = pie + Offset(0f, -alto - 1.6f)
+        val k = 0.4f + 0.6f * ext.noche
+        mancha(c, 4.4f, 4.4f, C.ROJO, 0.45f * k)
+        val estrella = Path(); for (i in 0..9) { val r = if (i % 2 == 0) 2.4f else 1f; val ang = (-PI / 2 + i * PI / 5).toFloat(); val q = c + Offset(cos(ang) * r, sin(ang) * r); if (i == 0) estrella.moveTo(q.x, q.y) else estrella.lineTo(q.x, q.y) }; estrella.close()
+        drawPath(estrella, lerp(lerp(p.medio(C.ROJO, lejos * 0.4f), C.ROJO, 0.6f), lerp(C.ROJO, Color.White, 0.3f), 0.5f * ext.noche))
+    }
+
+    /** Una torre de dieciséis pisos, lejos: más alta que las filas, con su cara de luz y de sombra y sus ventanas encendidas una a una. */
+    fun DrawScope.torreDeBloques(m: Momento, ext: Luces, p: Pincel, pie: Offset, ancho: Float, alto: Float, lejos: Float) {
+        val cara = Rect(pie.x - ancho / 2f, pie.y - alto, pie.x + ancho / 2f, pie.y)
+        drawRect(p.frente(C.PANEL, lejos), cara.topLeft, cara.size)
+        drawRect(if (p.solALaDerecha) p.luz(C.PANEL, lejos) else p.sombra(C.PANEL, lejos), Offset(cara.right, cara.top + 0.6f), Size(ancho * 0.35f, alto - 0.6f))
+        val oscuro = (ext.noche * 1.2f).coerceIn(0f, 1f); val az = Azar(Semilla.de("urss", "torre"))
+        for (piso in 0 until 16) for (i in 0 until 4) {
+            val x = cara.left + 1.4f + i * (ancho - 2f) / 4f; val y = cara.top + 1.4f + piso * (alto - 2f) / 16f
+            val luz = R.ventanaEncendida(m, 5000 + piso * 10 + i)
+            drawRect(if (luz && oscuro > 0.2f) lerp(C.VENTANA_LUZ, C.NARANJA, az.real() * 0.3f).copy(alpha = 0.4f + 0.6f * oscuro) else p.sombra(lerp(C.HIERRO, C.AZUL, 0.3f), lejos), Offset(x, y), Size(ancho / 4f - 1.4f, (alto - 2f) / 16f * 0.5f))
+        }
+        drawRect(p.frente(lerp(C.PANEL, C.HORMIGON, 0.4f), lejos), Offset(cara.left + ancho * 0.3f, cara.top - 3f), Size(ancho * 0.4f, 3f))
+    }
+
+    /**
+     * El testero del bloque nuevo, la pared ciega del extremo, en sombra: los paneles con sus juntas, los chorretones y
+     * la franja de color de cada piso. Va de [a]–[b] (el canto lejano, arriba y abajo) a [c]–[d] (el canto de la fachada).
+     */
+    fun DrawScope.testero(ext: Luces, p: Pincel, a: Offset, b: Offset, c: Offset, d: Offset, lejos: Float, nieve: Float) {
+        val forma = poligono(a, c, d, b)
+        drawPath(forma, Brush.horizontalGradient(0f to p.sombra(C.PANEL, lejos), 1f to lerp(p.sombra(C.PANEL, lejos), p.frente(C.PANEL, lejos), 0.35f), startX = a.x, endX = c.x))
+        clipPath(forma) {
+            for (j in 1 until 9) { val u = j / 9f; drawLine(p.sombra(lerp(C.PANEL, C.TINTA, 0.25f), lejos).copy(alpha = 0.4f), lerpO(a, b, u), lerpO(c, d, u), 0.4f) }
+            for (j in 1..2) { val u = j / 3f; drawLine(p.sombra(lerp(C.PANEL, C.TINTA, 0.25f), lejos).copy(alpha = 0.35f), lerpO(a, c, u), lerpO(b, d, u), 0.4f) }
+            for (j in 0..2) { val u = 0.2f + j * 0.3f; drawLine(p.sombra(lerp(C.PANEL, C.TINTA, 0.3f), lejos).copy(alpha = 0.2f), lerpO(a, c, u), lerpO(b, d, u), 1.4f) }
+            // La franja de azulejo de color de lo alto del testero (los bloques de aquellos años la llevaban).
+            drawPath(poligono(lerpO(a, b, 0.04f), lerpO(c, d, 0.04f), lerpO(c, d, 0.1f), lerpO(a, b, 0.1f)), p.sombra(lerp(C.AZUL, C.PANEL, 0.4f), lejos))
+        }
+        if (nieve > 0.3f) drawLine(lerp(p.arriba(C.NIEVE, lejos), C.LUNA, 0.3f * ext.noche), a + Offset(0f, -1f), c + Offset(0f, -1.6f), 1f)
     }
 
     /** La estrella roja del Kremlin, muy lejos, «encendida siempre»: un punto rubí con su resplandor. */

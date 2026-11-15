@@ -48,6 +48,13 @@ internal object CosasUrss {
     /** Dónde pisa el taburete en el cuadro (para que el gato no se siente encima). */
     val TABURETE: Offset = CocinaUrss.K.p(TAB_X, CocinaUrss.SUELO, TAB_T)
 
+    private const val CUBO_X = 104f
+    private const val CUBO_T = 74f
+
+    /** Dónde están el cubo de las patatas y los chanclos (en el suelo del gato, cortados por el borde). */
+    val CUBO: Offset = CocinaUrss.K.p(CUBO_X, CocinaUrss.SUELO, CUBO_T)
+    val CHANCLOS: Offset = CocinaUrss.K.p(306f, CocinaUrss.SUELO, 75f)
+
     /** Dónde están las cajas del suelo, los días de la mudanza. */
     val CAJAS_SUELO: Offset = CocinaUrss.K.p(124f, CocinaUrss.SUELO, 56f)
 
@@ -68,7 +75,7 @@ internal object CosasUrss {
             if (R.bolsaColgada(m) && R.laCocinaPinta(m, "bolsa")) bolsaDeRed(lz, p(K.x1, 104f, Co.PT0 - 3f), K.s(Co.PT0), m.azar("bolsa"))
             visillo(lz, R.visilloCorrido(m))
             radiador(lz, Co.RX0, Co.RX1, R.calefaccion(m), Azar(Semilla.de("urss", "radiador")))
-            if (R.botas(m) && R.laCocinaPinta(m, "botas")) botas(lz, p(194f, Co.SUELO, 18f), K.s(18f))
+            if (R.botas(m) && R.laCocinaPinta(m, "botas")) botas(lz, p(190f, Co.SUELO, 20f), K.s(20f) * 1.3f)
             fogon(lz, Co.FX0, Co.FX1, Co.FT1, Co.FY, R.fogon(m), Azar(Semilla.de("urss", "fogon")))
         }
         laMesa(m, lz)
@@ -78,6 +85,9 @@ internal object CosasUrss {
             if (R.nevera(m)) nevera(lz, Co.NX0, Co.NX1, Co.NT0, Co.NT1, Co.NY, Azar(Semilla.de("urss", "nevera")))
             else alacena(lz, Co.NX0, Co.NX1, Co.NT0, Co.NT1, Co.NY - 30f)
             lampara(lz, p(Co.LX, 26f, Co.LT), p(Co.LX, Co.LY, Co.LT), 58f * K.s(Co.LT), R.lampara(m), R.bombillaDesnuda(m))
+            // Lo más cercano, cortado por el borde de abajo: el cubo de las patatas junto a la nevera y los chanclos de la entrada.
+            cuboDePatatas(lz, CUBO_X, CUBO_T, Azar(Semilla.de("urss", "patatas")))
+            chanclos(lz, 302f, 74f, R.nieve(m) > 0.3f && R.fase(m) != EscenaUrss.Fase.SOLA)
         }
     }
 
@@ -166,7 +176,10 @@ internal object CosasUrss {
             val n = R.cajas(m)
             if (n > 0) cajasDeLaMudanza(lz, n, Azar(Semilla.de("urss", "cajas")))
             platilloDelGato(lz, 214f, 30f)
+            cestaDeCebollas(lz, 124f, 46f, Azar(Semilla.de("urss", "cebollas")))
+            escoba(lz, p(150f, Co.SUELO, 40f), p(167f, 98f, 4f), K.s(30f))
             taburete(lz, TAB_X, TAB_T, 34f, 36f)
+            panoEnElTaburete(lz, TAB_X, TAB_T, 34f, 36f)
             if (R.fase(m) != EscenaUrss.Fase.SOLA) periodico(lz, TAB_X, CocinaUrss.SUELO - 36f, TAB_T)
             // El objeto grande del día: de pie en el linóleo, recostado en el canto de la mesa.
             with(ObjetosUrss) { grande(m, Pincel(lz.l, LuzCocinaUrss.rayoDelSol(lz.sol ?: EscenaUrss.SolDeVentana(1f, 0f, 0f, Color.White), 1f, Co.PIE_GRANDE)), Co.PIE_GRANDE, Co.APOYO_GRANDE, K.s(70f))?.pintar?.invoke(this@delSuelo) }
