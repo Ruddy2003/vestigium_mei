@@ -90,5 +90,10 @@ val LUGARES: Map<String, LugarDeVida> = mapOf(
         listOf("Florida", "Tarpon Springs", "Grecia", "Kálimnos", "griego", "griegos")),
     "fogonero" to LugarDeVida(INGLATERRA_XIX, PALABRAS_INGLATERRA_XIX),
     "pintora_cueva" to LugarDeVida(emptySet(), listOf("Lascaux", "Altamira")),
+    // Eleazar, el iniciado de Arcontes (lote 10). Los identificadores salen de Wikidata, por el título de cada página de
+    // Wikipedia en español (`wbgetentities` con `sites=eswiki`, 15 nov 2026). Sin el Imperio romano: los sucesos de Roma
+    // de su época no son de su lugar.
+    "iniciado" to LugarDeVida(setOf("Q83241", "Q4880851", "Q1218", "Q126982", "Q1003997", "Q151920", "Q1294629"), // Galilea, Magdala, Jerusalén, Mar de Galilea, Judea (provincia romana), Tiberíades, Samaria
+        listOf("Galilea", "Judea", "Jerusalén", "Magdala", "Tiberíades", "Samaria", "Herodes", "Poncio Pilato", "Caifás", "judío", "judíos", "galileo", "galileos")),
     // Tom (escribiente) y Carmen (operadora) no tienen cuento, así que no hace falta su lugar.
 )
