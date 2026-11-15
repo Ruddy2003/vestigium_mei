@@ -294,10 +294,10 @@ object IdeasArcontes : DisenoIdeas {
                 drawCircle(GRIETA.copy(alpha = 0.45f + 0.5f * azar(87, k)), t, p)
             }
             // Una nube baja y, dentro, la sombra de un arconte que solo se adivina, cortada por la roca.
-            val nube = Offset(m.right - m.width * 0.12f, m.top + m.height * 0.2f)
+            val nube = Offset(m.left + m.width * 0.66f, m.top + m.height * 0.3f)
             for (k in 0 until 6) drawOval(Color(0xFF353B66).copy(alpha = 0.6f), Offset(nube.x - m.width * (0.3f - 0.07f * k), nube.y - m.height * (0.04f + 0.03f * azar(88, k))),
                 Size(m.width * (0.2f + 0.08f * azar(89, k)), m.height * (0.09f + 0.05f * azar(90, k))))
-            with(TrazosArcontes) { sombraArconte(Offset(nube.x + m.width * 0.04f, nube.y - m.height * 0.03f), m.height * 0.13f, TrazosArcontes.SOMBRA.copy(alpha = 0.92f), mira = -1f, desvanece = true) }
+            with(TrazosArcontes) { sombraArconte(Offset(nube.x + m.width * 0.07f, nube.y - m.height * 0.02f), m.height * 0.1f, TrazosArcontes.SOMBRA.copy(alpha = 0.92f), mira = -1f, desvanece = true) }
         }
         // Los montes de la otra orilla, en dos planos: el de atrás en la calima (o casi negro de noche).
         val lejos = Path().apply {
@@ -1028,8 +1028,8 @@ object IdeasArcontes : DisenoIdeas {
         }
         // De noche, solo la lámpara que se sostiene encima alumbra el fondo; las esquinas se hunden.
         if (oscuro) {
-            mancha(centro, maxOf(w, h) * 0.55f, LLAMA_HALO.copy(alpha = 0.12f))
-            drawRect(Brush.radialGradient(listOf(Color.Transparent, NOCHE.copy(alpha = 0.55f)), centro, maxOf(w, h) * 0.75f))
+            mancha(centro, minOf(w, h) * 0.9f, LLAMA_HALO.copy(alpha = 0.16f))
+            drawRect(Brush.radialGradient(listOf(Color.Transparent, NOCHE.copy(alpha = 0.7f)), centro, maxOf(w, h) * 0.7f))
         }
         // Las paredes, vistas desde arriba: la de atrás y la de la izquierda en sombra, la de delante y la de la derecha a la luz.
         val rim = 5 * u
@@ -1097,18 +1097,21 @@ object IdeasArcontes : DisenoIdeas {
             drawLine(FIBRA.copy(alpha = 0.14f), Offset(x0, y), Offset(x0 + w * (0.15f + 0.3f * azar(semilla, k + 30)), y + (azar(semilla, k + 40) - 0.5f) * u), 0.6f * u)
         }
         // Los dos agujeros del cordel que ata las hojas, en el margen de la izquierda, y el cordel que pasa por el canto.
-        val x = 6.5f * u * g
+        val x = 7f * u * g
         val ys = listOf(h * 0.36f, h * 0.68f)
+        val hilo = mezcla(CORDEL, FIBRA, 0.45f)
         ys.forEach { y ->
-            cordel(Offset(-2f * u, y - 1.5f * u * g), Offset(x, y), CORDEL, 1.1f * u * g)
-            drawCircle(TINTA.copy(alpha = 0.7f), 1.5f * u * g, Offset(x, y))
-            drawCircle(mezcla(PAPIRO_OSC, FIBRA, 0.4f), 1.5f * u * g, Offset(x, y), style = Stroke(0.7f * u))
+            drawCircle(mezcla(PAPIRO_OSC, FIBRA, 0.3f), 2.4f * u * g, Offset(x, y))
+            drawCircle(TINTA.copy(alpha = 0.75f), 1.6f * u * g, Offset(x, y))
+            cordel(Offset(-2f * u, y - 2.5f * u * g), Offset(x, y), hilo, 1.5f * u * g)
+            cordel(Offset(-2f * u, y + 2.5f * u * g), Offset(x, y), hilo, 1.5f * u * g)
         }
         // El nudo y sus dos cabos en el agujero de arriba.
         val nudo = Offset(x, ys[0])
-        cordel(nudo, nudo + Offset(-3f * u * g, 9f * u * g), CORDEL, 0.9f * u * g, 1f * u)
-        cordel(nudo, nudo + Offset(2.5f * u * g, 8f * u * g), CORDEL, 0.9f * u * g, 1f * u)
-        drawCircle(CORDEL, 1.6f * u * g, nudo)
+        cordel(nudo, nudo + Offset(-2f * u * g, 10f * u * g), hilo, 1.1f * u * g, 1f * u)
+        cordel(nudo, nudo + Offset(3f * u * g, 9f * u * g), hilo, 1.1f * u * g, 1f * u)
+        drawCircle(hilo, 2f * u * g, nudo)
+        drawCircle(luzMueble(0.5f), 0.8f * u * g, nudo - Offset(0.6f * u, 0.6f * u))
     }
 
     override val margenes = MargenesFicha(13.dp, 17.dp, 14.dp, 24.dp, 30.dp, 30.dp)
@@ -1133,7 +1136,12 @@ object IdeasArcontes : DisenoIdeas {
             // La chispa: esto es luz.
             "convence" -> with(TrazosArcontes) { chispa(c, s * 0.48f, 1f, p.detalle, TrazosArcontes.GRIETA_HALO) }
             // Las esferas: le sigue dando vueltas.
-            "piensa" -> with(TrazosArcontes) { esferas(c, s * 0.44f, p.acento, s * 0.055f, 0.1f, 3) }
+            "piensa" -> for (i in 0 until 3) {
+                val ri = s * (0.16f + 0.14f * i)
+                drawCircle(p.acento, ri, c, style = Stroke(s * 0.065f))
+                val a = Math.toRadians(-60.0 + i * 110.0)
+                drawCircle(p.acento, s * 0.07f, Offset(c.x + ri * cos(a).toFloat(), c.y + ri * sin(a).toFloat()))
+            }
             // La serpiente que todavía no se muerde la cola.
             "duda" -> {
                 drawArc(p.tenue, 40f, 270f, false, Offset(c.x - s * 0.32f, c.y - s * 0.32f), Size(s * 0.64f, s * 0.64f), style = Stroke(s * 0.11f, cap = StrokeCap.Round))
