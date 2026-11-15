@@ -262,7 +262,12 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     }, 7.dp, 0.dp, true, 1.4.dp)
     // Hoja de expediente: recta y con borde grueso.
     TemaId.DISTOPIA -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
-    TemaId.FRENTE -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
+    // El monitor de la consola: la cara de arriba arqueada como el mueble curvo, esquinas grandes arriba y pequeñas abajo.
+    TemaId.FRENTE -> PielDialogo(FormaDp { w, h, d ->
+        val r = 22 * d; val a = 7 * d; val q = 10 * d
+        moveTo(0f, r + a); quadraticTo(0f, a, r, a); quadraticTo(w / 2, -a, w - r, a); quadraticTo(w, a, w, r + a)
+        lineTo(w, h - q); quadraticTo(w, h, w - q, h); lineTo(q, h); quadraticTo(0f, h, 0f, h - q); close()
+    }, 8.dp, 0.dp, false, 1.6.dp)
     // Panel redondeado de refugio.
     TemaId.REFUGIO -> PielDialogo(RoundedCornerShape(24.dp), 0.dp, 0.dp, false, 1.5.dp)
     // Placa de acero ochavada.
@@ -488,18 +493,17 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
             }
         }
         TemaId.FRENTE -> {
-            // Dos perforaciones de archivador y un sello de goma ladeado abajo a la izquierda.
-            listOf(0.3f, 0.7f).forEach { fy ->
-                drawCircle(e.onSurface.copy(alpha = 0.18f), 3.5f * d, Offset(11 * d, h * fy))
-                drawCircle(e.onSurface.copy(alpha = 0.5f), 3.5f * d, Offset(11 * d, h * fy), style = Stroke(d))
+            // La fila de pilotos de estado arriba a la izquierda (rojo, ámbar y verde de radar, con su bisel), la rejilla del
+            // altavoz arriba a la derecha y, al pie, la regla de la consola con su escala.
+            listOf(Color(0xFFD9372B), Color(0xFFF2A33A), e.tertiary).forEachIndexed { k, luz ->
+                val c = Offset(20 * d + k * 10 * d, 22 * d)
+                drawCircle(e.onSurface.copy(alpha = 0.35f), 3.6f * d, c, style = Stroke(d))
+                drawCircle(luz.copy(alpha = 0.8f), 2.3f * d, c)
             }
-            val o = Offset(14 * d, h - 34 * d)
-            rotate(-8f, Offset(o.x + 26 * d, o.y + 10 * d)) {
-                drawRect(e.primary.copy(alpha = 0.55f), o, Size(52 * d, 20 * d), style = Stroke(1.6f * d))
-                drawRect(e.primary.copy(alpha = 0.55f), Offset(o.x + 3 * d, o.y + 3 * d), Size(46 * d, 14 * d), style = Stroke(0.7f * d))
-                drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 8 * d), Offset(o.x + 40 * d, o.y + 8 * d), 2 * d)
-                drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 13 * d), Offset(o.x + 30 * d, o.y + 13 * d), 2 * d)
-            }
+            for (k in 0 until 4) drawLine(e.onSurface.copy(alpha = 0.3f), Offset(w - 46 * d, 17 * d + k * 3.4f * d), Offset(w - 18 * d, 17 * d + k * 3.4f * d), 1.4f * d, StrokeCap.Round)
+            drawLine(e.onSurface.copy(alpha = 0.25f), Offset(14 * d, h - 8 * d), Offset(w - 14 * d, h - 8 * d), 0.8f * d)
+            var x = 14 * d; var k = 0
+            while (x < w - 14 * d) { drawLine(e.onSurface.copy(alpha = 0.25f), Offset(x, h - 8 * d), Offset(x, h - (if (k % 5 == 0) 13f else 10.5f) * d), 0.8f * d); x += 7 * d; k++ }
         }
         TemaId.REFUGIO -> {
             // Panel con su línea interior, cuatro pernos y un manómetro arriba.
@@ -842,9 +846,13 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
             drawRect(e.onSurface, Offset(0f, cy - 3 * d), Size(w, 3 * d))
             drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
         }
+        // La regla de la consola con su escala, tres pilotos delante y el tramo ámbar del nivel al final.
         TemaId.FRENTE -> {
-            drawRect(e.onSurface, Offset(0f, cy - 3 * d), Size(w, 3 * d))
-            drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
+            drawLine(e.onSurface.copy(alpha = 0.45f), Offset(30 * d, cy + 2 * d), Offset(w, cy + 2 * d), 0.8f * d)
+            var x = 30 * d; var k = 0
+            while (x < w * 0.8f) { drawLine(e.onSurface.copy(alpha = 0.35f), Offset(x, cy + 2 * d), Offset(x, cy - (if (k % 5 == 0) 3f else 0.5f) * d), 0.7f * d); x += 5 * d; k++ }
+            listOf(Color(0xFFD9372B), Color(0xFFF2A33A), e.tertiary).forEachIndexed { n, luz -> drawCircle(luz, 2.4f * d, Offset(5 * d + n * 8 * d, cy)) }
+            drawRect(e.primary, Offset(w * 0.82f, cy), Size(w * 0.18f, 2.4f * d))
         }
         // Línea redonda con un destello atómico en medio.
         TemaId.REFUGIO -> {
@@ -1236,10 +1244,16 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             drawRect(inactivo, Offset(0f, cy - g / 2), Size(w, g), style = Stroke(maxOf(g * 0.15f, 0.8f * d)))
             for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
         }
+        // El medidor de segmentos de la consola: barritas apagadas por recorrer y encendidas, con su halo, hasta donde va.
         TemaId.FRENTE -> {
-            if (x > 0f) drawRect(activo, Offset(0f, cy - g / 2), Size(x, g))
-            drawRect(inactivo, Offset(0f, cy - g / 2), Size(w, g), style = Stroke(maxOf(g * 0.15f, 0.8f * d)))
-            for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
+            val paso = maxOf(g * 0.9f, 2.5f * d); val ancho = paso * 0.58f
+            var px = 0f
+            while (px + ancho <= w + 0.5f) {
+                val encendida = px + ancho / 2 <= x
+                if (encendida) drawRoundRect(activo.copy(alpha = activo.alpha * 0.3f), Offset(px - ancho * 0.3f, cy - g * 0.75f), Size(ancho * 1.6f, g * 1.5f), CornerRadius(ancho * 0.5f))
+                drawRoundRect(if (encendida) activo else inactivo, Offset(px, cy - g / 2), Size(ancho, g), CornerRadius(ancho * 0.3f))
+                px += paso
+            }
         }
         // Tubo de indicador con luces encendidas por dentro.
         TemaId.REFUGIO -> {
@@ -1523,9 +1537,16 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
             drawPath(Path().apply { moveTo(c.x - r * 0.7f, c.y - r * 0.9f); lineTo(c.x + r * 0.7f, c.y - r * 0.9f); lineTo(c.x, c.y + r * 0.1f); close() }, color)
             drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
         }
+        // La perilla de baquelita: el disco con su canto moleteado y la raya que marca hacia arriba.
         TemaId.FRENTE -> {
-            drawPath(Path().apply { moveTo(c.x - r * 0.7f, c.y - r * 0.9f); lineTo(c.x + r * 0.7f, c.y - r * 0.9f); lineTo(c.x, c.y + r * 0.1f); close() }, color)
-            drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
+            drawCircle(color, r * 0.86f, c)
+            for (k in 0 until 18) {
+                val ang = k * PI / 9
+                drawLine(hueco.copy(alpha = 0.55f), Offset(c.x + r * 0.7f * cos(ang).toFloat(), c.y + r * 0.7f * sin(ang).toFloat()),
+                    Offset(c.x + r * 0.86f * cos(ang).toFloat(), c.y + r * 0.86f * sin(ang).toFloat()), r * 0.07f)
+            }
+            drawCircle(hueco.copy(alpha = 0.3f), r * 0.5f, c, style = Stroke(r * 0.06f))
+            drawLine(hueco, c, Offset(c.x, c.y - r * 0.62f), r * 0.16f, cap = StrokeCap.Round)
         }
         // Perilla de tablero con un destello.
         TemaId.REFUGIO -> {

@@ -71,7 +71,7 @@ private class Cosa(val pista: Int, val a: Long, val b: Long?, val color: Color, 
 private class PistaCinta(val nombre: String, val icono: String)
 
 /** Lo que se pinta dentro de un bloque de la cinta. */
-private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA }
+private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA, PERFORADA }
 
 /**
  * Cómo se ve la cinta en cada tema: la esquina de los bloques ([radio] en dp; [cortado], en chaflán), lo que llevan dentro,
@@ -99,7 +99,9 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.TEMPLARIO -> PielCinta(2.5f, true, RellenoCinta.FILETE, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Sello rayado del expediente.
     TemaId.DISTOPIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
-    TemaId.FRENTE -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
+    // La cinta perforada del teletipo: tramos de esquinas redondas con la fila de arrastre al centro y los agujeros del
+    // mensaje a los lados; las horas, punteadas como en el plóter de la carta estelar.
+    TemaId.FRENTE -> PielCinta(5f, false, RellenoCinta.PERFORADA, floatArrayOf(0.1f, 2.6f), StrokeCap.Round)
     // Indicador en segmentos.
     TemaId.REFUGIO -> PielCinta(6f, false, RellenoCinta.SEGMENTOS, floatArrayOf(3f, 3f), StrokeCap.Round)
     // Placa de acero en chaflán.
@@ -181,6 +183,18 @@ private fun DrawScope.bloqueCinta(p: PielCinta, color: Color, a: Offset, t: Size
             RellenoCinta.SEGMENTOS -> { var x = a.x + 7f * d; while (x < der) { drawLine(oscuro.copy(alpha = 0.45f), Offset(x, a.y), Offset(x, abajo), 1.4f * d); x += 7f * d } }
             RellenoCinta.PUNTADA -> if (t.width > 5f * d) drawLine(claro.copy(alpha = 0.7f), Offset(a.x + 2f * d, a.y + t.height / 2), Offset(der - 2f * d, a.y + t.height / 2), 1f * d,
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f * d, 2.5f * d)))
+            RellenoCinta.PERFORADA -> {
+                val cy = a.y + t.height / 2
+                var x = a.x + 3f * d; var k = 0
+                while (x < der) {
+                    drawCircle(oscuro, 0.7f * d, Offset(x, cy))
+                    if (t.height > 8f * d) {
+                        if ((k * 5) % 3 != 1) drawCircle(claro, 1.2f * d, Offset(x, cy - t.height * 0.28f))
+                        if ((k * 7) % 4 == 0) drawCircle(claro, 1.2f * d, Offset(x, cy + t.height * 0.28f))
+                    }
+                    x += 3.6f * d; k++
+                }
+            }
         }
     }
 }

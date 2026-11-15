@@ -114,7 +114,9 @@ private class Trazo(val s: DrawScope, val c: Color) {
             p(st = fino) { m(10.5f, 21.5f); t(10.5f, 17.5f); q(12f, 15.5f, 13.5f, 17.5f); t(13.5f, 21.5f) }
             l(12f, 6f, 12f, 1.6f, 1.1f); p(relleno = true) { m(12f, 1.6f); t(16.5f, 2.8f); t(12f, 4.1f); close() } }                           // torre del homenaje con su pendón
         TemaId.DISTOPIA -> { p { m(2.5f, 12f); q(12f, 3f, 21.5f, 12f); q(12f, 21f, 2.5f, 12f); close() }; ci(12f, 12f, 3.3f, relleno = true) } // ojo
-        TemaId.FRENTE -> { p { m(2.5f, 12f); q(12f, 3f, 21.5f, 12f); q(12f, 21f, 2.5f, 12f); close() }; ci(12f, 12f, 3.3f, relleno = true) } // ojo
+        TemaId.FRENTE -> { ci(12f, 12f, 8.6f); ci(12f, 12f, 4.4f, st = fino); l(12f, 3.4f, 12f, 20.6f, 0.8f); l(3.4f, 12f, 20.6f, 12f, 0.8f)
+            p(relleno = true) { m(12f, 12f); t(px(12f, 8f, -100.0), py(12f, 8f, -100.0)); q(px(12f, 9.3f, -72.0), py(12f, 9.3f, -72.0), px(12f, 8f, -44.0), py(12f, 8f, -44.0)); close() }
+            ci(7.4f, 15.6f, 1.3f, relleno = true) }                                                                                          // la pantalla del radar, con su barrido y un eco
         TemaId.REFUGIO -> { r(3f, 3.5f, 18f, 13.5f, 3f); l(12f, 17f, 12f, 20f); l(8f, 20.5f, 16f, 20.5f); p(st = fino) { m(6f, 10.5f); t(9f, 10.5f); t(10.5f, 7.5f); t(12.5f, 13.5f); t(14f, 10.5f); t(18f, 10.5f) } } // monitor
         TemaId.ORDEN -> { p { m(12f, 3f); t(19f, 5.5f); t(19f, 11f); q(19f, 17.5f, 12f, 21f); q(5f, 17.5f, 5f, 11f); t(5f, 5.5f); close() }; l(12f, 7f, 12f, 17f); l(8.5f, 10.5f, 15.5f, 10.5f) } // escudo
         TemaId.VAPOR -> { ci(12f, 13.5f, 7.5f); ci(12f, 3.8f, 1.4f); l(12f, 5.2f, 12f, 6f, 1.4f); l(12f, 13.5f, 12f, 9.2f, 1.4f); l(12f, 13.5f, 15.2f, 15.2f, 1.4f)
@@ -175,7 +177,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.MEDIEVAL -> { p { m(12f, 6.5f); q(8f, 4f, 3f, 5f); t(3f, 18.5f); q(8f, 17.5f, 12f, 19.5f); q(16f, 17.5f, 21f, 18.5f); t(21f, 5f); q(16f, 4f, 12f, 6.5f) }; l(12f, 6.5f, 12f, 19.5f, 1.1f) } // códice abierto
         TemaId.TEMPLARIO -> { r(5f, 3f, 13.5f, 18f, 1f); patada(11.8f, 11.5f, 4.6f); l(18.5f, 8f, 20.5f, 8f, 1.4f); l(18.5f, 15f, 20.5f, 15f, 1.4f); l(7f, 3f, 7f, 21f, 1.1f) } // la regla con su cruz y sus correas
         TemaId.DISTOPIA -> { r(5f, 4f, 14f, 17.5f, 0.6f); r(8.5f, 2.5f, 7f, 3.2f, 0.4f, relleno = true); l(8f, 10f, 16f, 10f); l(8f, 13.5f, 16f, 13.5f); l(8f, 17f, 12.5f, 17f) } // expediente
-        TemaId.FRENTE -> { r(5f, 4f, 14f, 17.5f, 0.6f); r(8.5f, 2.5f, 7f, 3.2f, 0.4f, relleno = true); l(8f, 10f, 16f, 10f); l(8f, 13.5f, 16f, 13.5f); l(8f, 17f, 12.5f, 17f) } // expediente
+        TemaId.FRENTE -> { p { m(3.5f, 5f); t(16.5f, 5f); t(20.5f, 9f); t(20.5f, 19.5f); t(3.5f, 19.5f); close() }; r(6.5f, 7.8f, 8.5f, 3.4f, 0.4f, true)
+            ci(9f, 15.4f, 1.9f, st = fino); ci(15f, 15.4f, 1.9f, st = fino); l(9f, 13.5f, 15f, 13.5f, 1.1f) }                                   // el cartucho de datos, con su muesca, su etiqueta y sus dos carretes
         TemaId.REFUGIO -> momentos(tm)
         TemaId.ORDEN -> momentos(tm)
         TemaId.VAPOR -> { r(5f, 3f, 14f, 18f, 1f); l(7.5f, 3f, 7.5f, 21f, 1.1f); engrane(13f, 10.5f, 3.8f, 2.7f, 8); ci(13f, 10.5f, 1f, relleno = true)
@@ -228,7 +231,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.TEMPLARIO -> { p(relleno = true) { m(12f, 1.8f); t(13.4f, 4f); t(13.1f, 15.5f); t(10.9f, 15.5f); t(10.6f, 4f); close() }; l(7f, 16.2f, 17f, 16.2f, 2f)
             l(12f, 16.2f, 12f, 20f, 1.8f); ci(12f, 21.2f, 1.3f, relleno = true) }                                                               // la espada en alto
         TemaId.DISTOPIA -> { p { m(2.5f, 12f); q(12f, 3f, 21.5f, 12f); q(12f, 21f, 2.5f, 12f); close() }; ci(12f, 12f, 3.3f, relleno = true) }  // ojo
-        TemaId.FRENTE -> { p { m(2.5f, 12f); q(12f, 3f, 21.5f, 12f); q(12f, 21f, 2.5f, 12f); close() }; ci(12f, 12f, 3.3f, relleno = true) }  // ojo
+        TemaId.FRENTE -> { r(2.5f, 8f, 19f, 8.5f, 2f); ci(8f, 12.25f, 2.5f); ci(8f, 12.25f, 0.8f, relleno = true); r(13.5f, 10.2f, 5f, 2.6f, 0.4f, true)
+            l(17.5f, 8f, 17.5f, 6f, 2f); l(4f, 20f, 20f, 20f, 1.1f); l(6.5f, 18.5f, 6.5f, 20f, 1.1f); l(10.5f, 18.5f, 10.5f, 20f, 1.1f); l(14.5f, 18.5f, 14.5f, 20f, 1.1f) } // la cámara de microfilm y su tira
         TemaId.REFUGIO -> { ci(12f, 16f, 1.8f, relleno = true); p { m(8f, 13f); q(12f, 9f, 16f, 13f) }; p { m(5f, 10f); q(12f, 3.5f, 19f, 10f) }; l(12f, 17.5f, 12f, 21f) } // radio
         TemaId.ORDEN -> { l(6f, 3f, 6f, 21f); p { m(6f, 4f); t(19f, 7.5f); t(6f, 11f) }; l(6f, 7.5f, 13f, 7.5f, 1.1f) }                        // banderín
         TemaId.VAPOR -> { r(3f, 10f, 11f, 6f, 1f); r(14f, 7f, 6f, 9f, 0.5f); r(5f, 6f, 2.5f, 4f, 0.3f); ci(6f, 18.5f, 2f); ci(11f, 18.5f, 2f); ci(17f, 18.5f, 2f)
@@ -288,7 +292,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.TEMPLARIO -> { p { m(3.5f, 10f); q(12f, 10.5f, 19.5f, 4f); t(21f, 9.5f); q(13f, 16.5f, 4.5f, 14f); close() }
             l(8f, 10.4f, 8.4f, 14.6f, 1.1f); l(15.4f, 7.6f, 16.6f, 12.6f, 1.1f); p(st = fino) { m(8.2f, 14.6f); q(12f, 20.5f, 16f, 12.6f) } }      // el olifante de la descubierta
         TemaId.DISTOPIA -> { ci(7f, 15f, 4f); ci(17f, 15f, 4f); l(4.5f, 11.8f, 6.5f, 5.5f); l(19.5f, 11.8f, 17.5f, 5.5f); l(6.5f, 5.5f, 10f, 5.5f); l(14f, 5.5f, 17.5f, 5.5f); l(10.5f, 9f, 13.5f, 9f) } // binoculares
-        TemaId.FRENTE -> { ci(7f, 15f, 4f); ci(17f, 15f, 4f); l(4.5f, 11.8f, 6.5f, 5.5f); l(19.5f, 11.8f, 17.5f, 5.5f); l(6.5f, 5.5f, 10f, 5.5f); l(14f, 5.5f, 17.5f, 5.5f); l(10.5f, 9f, 13.5f, 9f) } // binoculares
+        TemaId.FRENTE -> { r(2.5f, 3.5f, 19f, 13f, 2.5f); p(st = fino) { m(5f, 10f); t(9f, 10f); t(10.5f, 6.5f); t(12.5f, 13.5f); t(14f, 10f); t(19f, 10f) }
+            ci(6.5f, 20f, 1.6f); ci(12f, 20f, 1.6f); l(16f, 20f, 20f, 20f) }                                                                // el osciloscopio de la consola, con su eco y sus mandos
         TemaId.REFUGIO -> { p { m(12f, 21f); q(5f, 13f, 5f, 9.5f); q(5f, 3f, 12f, 3f); q(19f, 3f, 19f, 9.5f); q(19f, 13f, 12f, 21f); close() }; ci(12f, 9.5f, 2.6f) } // marcador de mapa
         TemaId.ORDEN -> { ci(12f, 12f, 7.5f); l(12f, 2f, 12f, 7f); l(12f, 17f, 12f, 22f); l(2f, 12f, 7f, 12f); l(17f, 12f, 22f, 12f); ci(12f, 12f, 1.2f, relleno = true) } // retícula
         TemaId.VAPOR -> { l(8f, 3f, 8f, 21f); p { m(8f, 4.5f); t(19.5f, 4.5f); t(19.5f, 8f); t(8f, 8f); close() }; l(15.5f, 4.5f, 15.5f, 8f, 1.1f); ci(8f, 11.5f, 1.8f)
@@ -349,7 +354,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.TEMPLARIO -> { p { m(6f, 20.5f); t(6f, 8f); q(6f, 3.5f, 12f, 3.5f); q(18f, 3.5f, 18f, 8f); t(18f, 20.5f); close() }
             l(7.5f, 10.5f, 16.5f, 10.5f, 1.5f); l(12f, 12.8f, 12f, 18.5f, 1.1f); l(9.5f, 15.5f, 14.5f, 15.5f, 1.1f) }                              // el yelmo de cubo
         TemaId.DISTOPIA -> { r(5f, 3f, 14f, 18f, 0.5f); l(5f, 9f, 19f, 9f, 1.1f); l(5f, 15f, 19f, 15f, 1.1f); l(10.5f, 6f, 13.5f, 6f); l(10.5f, 12f, 13.5f, 12f); l(10.5f, 18f, 13.5f, 18f) } // archivero
-        TemaId.FRENTE -> { r(5f, 3f, 14f, 18f, 0.5f); l(5f, 9f, 19f, 9f, 1.1f); l(5f, 15f, 19f, 15f, 1.1f); l(10.5f, 6f, 13.5f, 6f); l(10.5f, 12f, 13.5f, 12f); l(10.5f, 18f, 13.5f, 18f) } // archivero
+        TemaId.FRENTE -> { r(2.5f, 6.5f, 19f, 11f, 1.5f); ci(7f, 12f, 1.2f, relleno = true); ci(12f, 12f, 1.2f, relleno = true); ci(17f, 12f, 1.2f, relleno = true)
+            l(7f, 12f, 7f, 8.6f, 1.4f); l(12f, 12f, 12f, 15.4f, 1.4f); l(17f, 12f, 17f, 8.6f, 1.4f) }                                         // la fila de interruptores de palanca
         TemaId.REFUGIO -> { l(6f, 18f, 14.5f, 9.5f, 2.6f); p { m(14.5f, 9.5f); q(12.5f, 5f, 16.5f, 3.5f); t(15f, 6.5f); t(17.5f, 9f); t(20.5f, 7.5f); q(19f, 11.5f, 14.5f, 9.5f) } } // llave inglesa
         TemaId.ORDEN -> { l(5.5f, 20.5f, 13.5f, 12.5f, 2.2f); p(relleno = true) { m(10.5f, 6f); t(17f, 12.5f); t(20f, 9.5f); t(13.5f, 3f); close() } } // martillo
         TemaId.VAPOR -> { p { m(5f, 20.5f); t(5f, 14f); q(5f, 10.5f, 10f, 10.5f); t(11.5f, 10.5f); q(16.5f, 10.5f, 16.5f, 14f); t(16.5f, 20.5f); close() }
@@ -416,8 +422,9 @@ private class Trazo(val s: DrawScope, val c: Color) {
             p(st = fino) { m(10f, 21f); t(10f, 17f); q(12f, 14.5f, 14f, 17f); t(14f, 21f) } }                                                     // el castillo de la casa
         TemaId.DISTOPIA -> { r(2.5f, 5f, 19f, 14f, 1f); r(5f, 8f, 5.5f, 7.5f, 0.3f); ci(7.75f, 10.4f, 1.3f, st = fino); p(st = fino) { m(5.6f, 15.5f); q(7.75f, 11.8f, 9.9f, 15.5f) }
             l(12.5f, 9f, 18.5f, 9f, 1.1f); l(12.5f, 12f, 18.5f, 12f, 1.1f); l(12.5f, 15f, 16f, 15f, 1.1f) }                               // cédula con foto
-        TemaId.FRENTE -> { r(2.5f, 5f, 19f, 14f, 1f); r(5f, 8f, 5.5f, 7.5f, 0.3f); ci(7.75f, 10.4f, 1.3f, st = fino); p(st = fino) { m(5.6f, 15.5f); q(7.75f, 11.8f, 9.9f, 15.5f) }
-            l(12.5f, 9f, 18.5f, 9f, 1.1f); l(12.5f, 12f, 18.5f, 12f, 1.1f); l(12.5f, 15f, 16f, 15f, 1.1f) }                               // cédula con foto
+        TemaId.FRENTE -> { ci(4.5f, 18.5f, 1.6f, relleno = true); ci(11.5f, 11.5f, 1.6f, relleno = true); ci(18.5f, 5.5f, 3f); ci(18.5f, 5.5f, 0.9f, relleno = true)
+            l(5.9f, 17.1f, 7.1f, 15.9f, 1.1f); l(8.5f, 14.5f, 9.8f, 13.2f, 1.1f); l(13f, 10.2f, 14.3f, 9.1f, 1.1f); l(15.6f, 8f, 16.3f, 7.4f, 1.1f)
+            l(5f, 4.5f, 5f, 9.5f, 1.1f); l(2.5f, 7f, 7.5f, 7f, 1.1f); ci(20f, 18.5f, 0.8f, relleno = true) }                                // el mapa estelar, con la ruta de salto punteada
         TemaId.REFUGIO -> { arco(3f, 7f, 18f, 18f, 180f, 180f); l(3f, 16f, 21f, 16f, 1.1f); rayos(12f, 16f, 5, 6.4f, 9f, -180.0, 0.0, 1.2f)
             l(12f, 16f, 16.2f, 10f); ci(12f, 16f, 1.5f, relleno = true); r(9f, 18.5f, 6f, 2.5f, 0.4f) }                                   // manómetro
         TemaId.ORDEN -> { p { m(5f, 21f); t(5f, 4f); t(8f, 4f); t(8f, 6.5f); t(10.5f, 6.5f); t(10.5f, 4f); t(13.5f, 4f); t(13.5f, 6.5f); t(16f, 6.5f); t(16f, 4f); t(19f, 4f); t(19f, 21f); close() }
@@ -498,7 +505,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.MEDIEVAL -> p(relleno = true) { m(10.6f, 10.6f); t(9f, 3f); t(15f, 3f); t(13.4f, 10.6f); t(21f, 9f); t(21f, 15f); t(13.4f, 13.4f); t(15f, 21f); t(9f, 21f); t(10.6f, 13.4f); t(3f, 15f); t(3f, 9f); close() } // cruz patada
         TemaId.TEMPLARIO -> { p { m(4.5f, 3.5f); t(19.5f, 3.5f); q(20f, 14f, 12f, 21f); q(4f, 14f, 4.5f, 3.5f); close() }; l(12f, 7.5f, 12f, 15.5f, 2f); l(8f, 11.2f, 16f, 11.2f, 2f) } // escudo con el «+»
         TemaId.DISTOPIA -> { ci(12f, 4.6f, 2.3f); r(10.5f, 6.9f, 3f, 4.6f, 0.3f); r(5f, 11.6f, 14f, 4f, 0.6f, relleno = true); r(6.5f, 18.5f, 11f, 3f, 0.3f) } // sello de goma y su marca
-        TemaId.FRENTE -> { ci(12f, 4.6f, 2.3f); r(10.5f, 6.9f, 3f, 4.6f, 0.3f); r(5f, 11.6f, 14f, 4f, 0.6f, relleno = true); r(6.5f, 18.5f, 11f, 3f, 0.3f) } // sello de goma y su marca
+        TemaId.FRENTE -> { arco(3f, 3f, 18f, 18f, -22f, 304f); l(12f, 7.6f, 12f, 16.4f, 2.2f); l(7.6f, 12f, 16.4f, 12f, 2.2f)
+            arco(0.8f, 0.8f, 22.4f, 22.4f, -66f, 32f, fino) }                                                                                // el «+» en el canal roto, con la señal que se escapa
         TemaId.REFUGIO -> { ci(12f, 12f, 8.8f); ci(12f, 12f, 6.4f, st = fino); l(12f, 8.5f, 12f, 15.5f, 2f); l(8.5f, 12f, 15.5f, 12f, 2f) } // botón de panel
         TemaId.ORDEN -> { l(12f, 3.5f, 12f, 9.5f, 2.8f); l(12f, 14.5f, 12f, 20.5f, 2.8f); l(3.5f, 12f, 9.5f, 12f, 2.8f); l(14.5f, 12f, 20.5f, 12f, 2.8f)
             ci(12f, 12f, 1f, relleno = true) }                                                                                               // «+» de estarcido, con puentes
@@ -567,7 +575,8 @@ private class Trazo(val s: DrawScope, val c: Color) {
         TemaId.TEMPLARIO -> { p { m(3.5f, 10f); t(19.5f, 10f); q(19.5f, 13f, 15.5f, 13.5f); t(15f, 16.5f); t(18f, 20f); t(6f, 20f); t(9f, 16.5f); t(8.5f, 13.5f); q(4.5f, 13f, 3.5f, 10f); close() }
             l(12f, 7.6f, 17.5f, 2.5f, 1.4f); r(15.6f, 1f, 4.6f, 2.6f, 0.4f, true) }                                                               // yunque y martillo de la herrería
         TemaId.DISTOPIA -> { r(4f, 15f, 16f, 6f, 0.6f); l(8f, 18f, 16f, 18f, 1.1f); l(12f, 17f, 16.8f, 5.6f, 1.8f); ci(17.4f, 4.2f, 2.2f, relleno = true) } // palanca de mando
-        TemaId.FRENTE -> { r(4f, 15f, 16f, 6f, 0.6f); l(8f, 18f, 16f, 18f, 1.1f); l(12f, 17f, 16.8f, 5.6f, 1.8f); ci(17.4f, 4.2f, 2.2f, relleno = true) } // palanca de mando
+        TemaId.FRENTE -> { arco(2.6f, 3.1f, 18.8f, 18.8f, 140f, 260f, fino); rayos(12f, 12.5f, 3, 9.4f, 11.2f, 140.0, 400.0, 1.1f)
+            ci(12f, 12.5f, 5.4f); ci(12f, 12.5f, 1.2f, relleno = true); l(px(12f, 2.4f, -125.0), py(12.5f, 2.4f, -125.0), px(12f, 7.6f, -125.0), py(12.5f, 7.6f, -125.0), 1.6f) } // la perilla de sintonía, con su aguja y su escala
         TemaId.REFUGIO -> { ci(12f, 10f, 7f); rayos(12f, 10f, 4, 1.6f, 7f, 45.0, 405.0); ci(12f, 10f, 1.6f, relleno = true); l(12f, 17f, 12f, 19f); r(4f, 19f, 16f, 3f, 0.5f) } // válvula de rueda
         TemaId.ORDEN -> { p { for (k in 0 until 6) { val g = 60.0 * k; if (k == 0) m(px(12f, 9f, g), py(12f, 9f, g)) else t(px(12f, 9f, g), py(12f, 9f, g)) }; close() }; ci(12f, 12f, 3.8f) } // tuerca
         TemaId.VAPOR -> { engrane(12f, 12f, 9.5f, 7.2f, 10); ci(12f, 12f, 3.6f); ci(12f, 12f, 1.2f, relleno = true) }                    // engrane de diez dientes

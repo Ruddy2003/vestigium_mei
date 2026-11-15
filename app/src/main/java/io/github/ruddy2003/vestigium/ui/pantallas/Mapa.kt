@@ -61,6 +61,7 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.TrazosFrente
 import io.github.ruddy2003.vestigium.ui.numeralMaya
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.Dispatchers
@@ -110,8 +111,10 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Distopía: gris de expediente, sin color.
         TemaId.DISTOPIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
-        TemaId.FRENTE -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
-            else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
+        // Frente exterior: de día, el plano impreso sobre el hueso de la consola, casi sin color; de noche, el mismo plano
+        // en la pantalla de la sala, con el verde apagado del radar sobre el petróleo.
+        TemaId.FRENTE -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.5f, 0.68f, 0.62f, 2f, 8f, 8f)) }
+            else { m.setSaturation(0.12f); m.postConcat(tinte(1.0f, 0.96f, 0.88f, 2f, 0f, -4f)) }
         // Refugio: fósforo verde de noche; papel de folleto de día.
         TemaId.REFUGIO -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.18f, 0.9f, 0.38f, 0f, 6f, 0f)) }
             else { m.setSaturation(0.3f); m.postConcat(tinte(0.97f, 0.96f, 0.88f, 4f, 4f, 0f)) }
@@ -194,7 +197,8 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
 
 /**
  * La forma con que cada tema marca un lugar en el mapa, una distinta por tema: tabla con asas (Romano), cursor de bloque
- * (Terminal), sol de dieciséis rayos (Helénico), sello de cera (Scriptorium), ojo (Distopía), señal de refugio (Refugio),
+ * (Terminal), sol de dieciséis rayos (Helénico), sello de cera (Scriptorium), ojo (Distopía), círculo roto con su chispa
+ * (Frente exterior), señal de refugio (Refugio),
  * escudo (Orden), anillo de benceno (Laboratorio), casita (Colonos), bicornio (Napoleónico), hoja (Botánico), abeto (Navidad),
  * moneda con agujero (Seda), arco ojival (Gótico), destello (Espacio), estrella de dos cuadrados (Al-Ándalus), corona de yurta
  * (Mongol), cuadrado con el círculo de Vitruvio (Renacimiento), estrella (Soviético), escarapela (Revolución) y gema tallada
@@ -266,7 +270,13 @@ internal object Formas {
             TemaId.TEMPLARIO -> figura(x, y, r, -0.82f, -0.9f, 0.82f, -0.9f, 0.8f, -0.1f, 0.58f, 0.5f, 0f, 1.05f, -0.58f, 0.5f, -0.8f, -0.1f)
             // El ojo que todo lo ve.
             TemaId.DISTOPIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
-            TemaId.FRENTE -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
+            // El círculo roto del emblema de la red: el aro grueso con su hueco arriba a la derecha.
+            TemaId.FRENTE -> {
+                p.reset()
+                p.arcTo(android.graphics.RectF(x - r * 1.1f, y - r * 1.1f, x + r * 1.1f, y + r * 1.1f), -20f, 300f, true)
+                p.arcTo(android.graphics.RectF(x - r * 0.6f, y - r * 0.6f, x + r * 0.6f, y + r * 0.6f), 280f, -300f, false)
+                p.close()
+            }
             // La señal de refugio: un triángulo con la punta hacia abajo.
             TemaId.REFUGIO -> poligono(x, y, r * 1.2f, 3, 90.0)
             // El escudo de la orden.
@@ -349,7 +359,7 @@ internal object Formas {
             TemaId.TEMPLARIO -> { raya(c, x, y, r, 0f, -0.65f, 0f, 0.55f, d); raya(c, x, y, r, -0.52f, -0.15f, 0.52f, -0.15f, d)
                 raya(c, x, y, r, -0.62f, -0.75f, 0.62f, -0.75f, d) }   // la cruz del escudo y su jefe
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
-            TemaId.FRENTE -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
+            TemaId.FRENTE -> { raya(c, x, y, r, 0.16f, -0.42f, -0.2f, 0.05f, d); raya(c, x, y, r, -0.2f, 0.05f, 0.2f, -0.05f, d); raya(c, x, y, r, 0.2f, -0.05f, -0.16f, 0.42f, d) }   // la chispa de tres trazos
             TemaId.REFUGIO -> { poligono(x, y, r * 0.55f, 3, 90.0); c.drawPath(p, d) }
             TemaId.ORDEN -> { raya(c, x, y, r, 0f, -0.8f, 0f, 0.95f, d); raya(c, x, y, r, -0.72f, -0.25f, 0.72f, -0.25f, d) }   // la cruz del escudo
             TemaId.VAPOR -> { c.drawCircle(x, y, r * 0.5f, d); raya(c, x, y, r, 0f, 0f, 0.32f, -0.3f, d) }   // la esfera del manómetro y su aguja
@@ -866,15 +876,28 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                 x += 6 * u; i++
             }
         }
+        // El bisel de la pantalla de la sala de mando: el marco de esquinas muy redondas con su doble filo, un tornillo en
+        // cada esquina, la escala en los costados, el piloto ámbar encendido arriba con el rótulo de la carta y, abajo a la
+        // derecha, la fila de interruptores de palanca.
         TemaId.FRENTE -> {
-            filete(5 * u, tinta.copy(alpha = 0.45f), 1 * u)
-            drawCircle(acento, 3.5f * u, Offset(16 * u, 16 * u))
-            drawRect(tinta.copy(alpha = 0.6f), Offset(23 * u, 14 * u), Size(18 * u, 4 * u))
-            var x = 10 * u; var i = 0
-            while (x < w - 10 * u) {
-                val l = if (i % 5 == 0) 6 * u else 3 * u
-                drawLine(tinta.copy(alpha = 0.5f), Offset(x, h - 5 * u), Offset(x, h - 5 * u - l), 1 * u)
-                x += 6 * u; i++
+            drawRoundRect(tinta.copy(alpha = 0.5f), Offset(4 * u, 4 * u), Size(w - 8 * u, h - 8 * u), androidx.compose.ui.geometry.CornerRadius(13 * u), style = Stroke(2 * u))
+            drawRoundRect(tinta.copy(alpha = 0.25f), Offset(8 * u, 8 * u), Size(w - 16 * u, h - 16 * u), androidx.compose.ui.geometry.CornerRadius(9 * u), style = Stroke(0.8f * u))
+            esquinas(11 * u) { o, sx, sy ->
+                val t = o + Offset(sx * 3 * u, sy * 3 * u)
+                drawCircle(tinta.copy(alpha = 0.4f), 2.2f * u, t); drawLine(fondo, t + Offset(-1.3f * u, 0.8f * u), t + Offset(1.3f * u, -0.8f * u), 0.6f * u)
+            }
+            var y = 30 * u; var k = 0
+            while (y < h - 30 * u) {
+                val l = if (k % 5 == 0) 5 * u else 2.5f * u
+                drawLine(tinta.copy(alpha = 0.4f), Offset(4 * u, y), Offset(4 * u + l, y), 0.8f * u); drawLine(tinta.copy(alpha = 0.4f), Offset(w - 4 * u, y), Offset(w - 4 * u - l, y), 0.8f * u)
+                y += 8 * u; k++
+            }
+            with(TrazosFrente) { piloto(Offset(24 * u, 17 * u), 2.4f * u, acento, true, tinta.copy(alpha = 0.5f)) }
+            with(io.github.ruddy2003.vestigium.ui.TrofeosMas) { mono("CARTA · K-7", 31 * u, 19.5f * u, 7 * u, tinta.copy(alpha = 0.55f)) }
+            for (i in 0 until 4) {
+                val b = Offset(w - 20 * u - i * 9 * u, h - 15 * u)
+                drawCircle(tinta.copy(alpha = 0.45f), 1.8f * u, b)
+                drawLine(tinta.copy(alpha = 0.6f), b, b + Offset((if (i % 2 == 0) 1.3f else -1.3f) * u, -6 * u), 1.4f * u, androidx.compose.ui.graphics.StrokeCap.Round)
             }
         }
         // Una placa de acero con remaches.
@@ -1209,11 +1232,18 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))
             drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
         }
+        // La retícula de navegación de la consola: la pantalla redonda con sus anillos, la cruz y las marcas de cada diez
+        // grados, el barrido verde que gira con su eco y, en el borde, el norte marcado con un ángulo ámbar.
         TemaId.FRENTE -> {
-            punta(n, r * 0.98f, r * 0.1f, acento)
-            val ojo = Path().apply { moveTo(c.x - r * 0.8f, c.y); quadraticTo(c.x, c.y - r * 0.75f, c.x + r * 0.8f, c.y); quadraticTo(c.x, c.y + r * 0.75f, c.x - r * 0.8f, c.y); close() }
-            drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))
-            drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
+            val verde = lerp(tinta, TrazosFrente.RADAR, 0.5f)
+            with(TrazosFrente) {
+                reticula(c, r * 0.9f, tenue.copy(alpha = 0.55f), 0.9f * u, 3)
+                barrido(c, r * 0.9f, -60f, verde, 1.4f * u)
+            }
+            val q = c + rumbo(n) * (r * 0.98f); val b1 = c + rumbo(n - 9.0) * (r * 0.72f); val b2 = c + rumbo(n + 9.0) * (r * 0.72f)
+            drawPath(Path().apply { moveTo(b1.x, b1.y); lineTo(q.x, q.y); lineTo(b2.x, b2.y) }, acento, style = Stroke(2.2f * u))
+            drawCircle(verde, r * 0.07f, c + rumbo(-35.0) * (r * 0.52f))
+            drawCircle(acento, r * 0.08f, c)
         }
         // Un manómetro: medio círculo graduado y la aguja al norte.
         TemaId.REFUGIO -> {

@@ -96,7 +96,8 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     // El escudo: recto arriba y redondo abajo.
     TemaId.TEMPLARIO -> MarcoRecuadro(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 16.dp), 12.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
-    TemaId.FRENTE -> MarcoRecuadro(RectangleShape, 12.dp)
+    // La pantalla de la consola, de esquinas muy redondas, como el vidrio de un tubo de los setenta.
+    TemaId.FRENTE -> MarcoRecuadro(RoundedCornerShape(22.dp), 11.dp)
     TemaId.REFUGIO -> MarcoRecuadro(RoundedCornerShape(12.dp), 10.dp)
     TemaId.ORDEN -> MarcoRecuadro(CutCornerShape(7.dp), 10.dp)
     TemaId.VAPOR -> MarcoRecuadro(RoundedCornerShape(topStart = 13.dp, topEnd = 13.dp, bottomEnd = 3.dp, bottomStart = 3.dp), 10.dp)
@@ -290,13 +291,19 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 x += 12 * u
             }
         }
+        // El enlace de radio entre dos antenas: la portadora va de una a otra y oscila más alto cuanto más fuerte el lazo.
         TemaId.FRENTE -> {
-            drawLine(col, Offset(0f, y), Offset(w, y), grosor * 0.7f + 0.6f * u, pathEffect = punteado)
-            val b = 2.5f * u + grosor * 0.35f
-            var x = 9 * u
-            while (x < w - 6 * u) {
-                drawLine(col, Offset(x - b, y - b), Offset(x + b, y + b), 1.1f * u); drawLine(col, Offset(x - b, y + b), Offset(x + b, y - b), 1.1f * u)
-                x += 12 * u
+            val m = 8 * u; val amp = (1.5f + 4f * fuerza) * u
+            val portadora = Path().apply {
+                moveTo(m, y); var x = m
+                while (x <= w - m) { lineTo(x, y + amp * sin(2 * PI * ((x - m) / (w - 2 * m) * 4f)).toFloat()); x += 1.5f * u }
+            }
+            drawPath(portadora, col, style = Stroke(0.9f * u + grosor * 0.3f, cap = StrokeCap.Round, pathEffect = punteado))
+            listOf(3.5f * u, w - 3.5f * u).forEach { x ->
+                drawLine(col, Offset(x, y - 9 * u), Offset(x, y + 8 * u), 1.4f * u, cap = StrokeCap.Round)
+                drawLine(col, Offset(x - 3 * u, y - 6 * u), Offset(x + 3 * u, y - 6 * u), 1.1f * u, cap = StrokeCap.Round)
+                drawLine(col, Offset(x - 2.5f * u, y + 8 * u), Offset(x + 2.5f * u, y + 8 * u), 1.4f * u, cap = StrokeCap.Round)
+                drawCircle(col, 1.4f * u, Offset(x, y - 9.5f * u))
             }
         }
         // Tubería del refugio con dos bridas.

@@ -670,12 +670,15 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
             }
         }
+        // El dial de sintonía de la radio de maleta: la escala con sus marcas, la franja de lo recorrido y la aguja roja
+        // donde llega.
         TemaId.FRENTE -> {
-            drawRect(color.copy(alpha = 0.4f), Offset(0.5f * d, 0.5f * d), Size(w - d, h - d), style = Stroke(d))
+            drawRoundRect(pista, Offset.Zero, size, CornerRadius(h * 0.3f))
+            var x = 2f * d; var k = 0
+            while (x < w - d) { val l = if (k % 5 == 0) h * 0.5f else h * 0.28f; drawLine(color.copy(alpha = 0.45f), Offset(x, 0f), Offset(x, l), 0.7f * d); x += 3f * d; k++ }
             if (fw > 0f) {
-                drawRect(color.copy(alpha = 0.35f), Offset.Zero, Size(fw, h))
-                clipRect(right = fw) { var x = -h; while (x < fw) { drawLine(color, Offset(x, h), Offset(x + h, 0f), 1.6f * d); x += 3.2f * d } }
-                drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
+                drawRoundRect(color, Offset(0f, h * 0.58f), Size(fw, h * 0.42f), CornerRadius(h * 0.21f))
+                drawLine(io.github.ruddy2003.vestigium.ui.TrazosFrente.PILOTO_ROJO, Offset(fw, -0.5f * d), Offset(fw, h + 0.5f * d), 1.4f * d)
             }
         }
         // Medidor de esfera alargada, con sus décimos y el brillo del vidrio.
@@ -1079,11 +1082,21 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)
             marcas(24, 4f * d, 2.2f * d, tinta.copy(alpha = 0.6f))
         }
+        // El reloj de la sala de mando: el emblema de la red al centro, el anillo punteado de bronce de la hora de la capital,
+        // un piloto ámbar cada seis horas y, en el canto, la ventana de transmisión de hoy marcada en ámbar.
         TemaId.FRENTE -> {
-            val l = rc * 0.7f
-            drawPath(Path().apply { moveTo(c.x - l, c.y); quadraticTo(c.x, c.y - l * 0.9f, c.x + l, c.y); quadraticTo(c.x, c.y + l * 0.9f, c.x - l, c.y); close() }, tinta.copy(alpha = 0.5f), style = Stroke(1.5f * d))
-            drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)
-            marcas(24, 4f * d, 2.2f * d, tinta.copy(alpha = 0.6f))
+            with(io.github.ruddy2003.vestigium.ui.TrazosFrente) { emblemaRed(c, rc * 0.38f, tinta.copy(alpha = 0.45f), 1.4f * d) }
+            drawCircle(io.github.ruddy2003.vestigium.ui.TrazosFrente.BRONCE.copy(alpha = 0.5f), rc * 0.8f, c, style = Stroke(0.7f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.2f * d, 2.2f * d))))
+            for (k in 0 until 24) {
+                val a = k * 15f - 90f
+                if (k % 6 == 0) drawCircle(cs.primary.copy(alpha = 0.8f), 1.6f * d, polarFig(c, ro + 3f * d, a))
+                else drawLine(linea, polarFig(c, ro + 1.5f * d, a), polarFig(c, ro + 4f * d, a), 0.8f * d)
+            }
+            val ventana = runCatching {
+                val t = io.github.ruddy2003.vestigium.ui.Frente.ventana(io.github.ruddy2003.vestigium.data.Fechas.parse(io.github.ruddy2003.vestigium.data.Fechas.diaLogico()))
+                t.substring(0, 2).toInt() + t.substring(3, 5).toInt() / 60f
+            }.getOrNull()
+            if (ventana != null) { val rv = ro + 6f * d; drawArc(cs.primary, ventana * 15f - 90f, 7.5f, false, Offset(c.x - rv, c.y - rv), Size(2 * rv, 2 * rv), style = Stroke(3f * d, cap = StrokeCap.Round)) }
         }
         // Medidor: marcas largas cada tres horas y el átomo al centro.
         TemaId.REFUGIO -> {

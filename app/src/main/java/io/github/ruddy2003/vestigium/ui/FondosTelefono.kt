@@ -218,7 +218,7 @@ object FondosTelefono {
         TemaId.MEDIEVAL -> "Liber vestigii mei"
         TemaId.TEMPLARIO -> "Non nobis, Domine · Vestigium"
         TemaId.DISTOPIA -> "EXPEDIENTE PERSONAL"
-        TemaId.FRENTE -> "CÉLULA V-7 · VESTIGIUM"
+        TemaId.FRENTE -> "CÉLULA K-7 · VESTIGIUM"
         TemaId.REFUGIO -> "VESTIGIUM-MEI OS"
         TemaId.ORDEN -> "ORDO · VESTIGII"
         TemaId.VAPOR -> "Compañía de Vapor y Patentes Vestigium"

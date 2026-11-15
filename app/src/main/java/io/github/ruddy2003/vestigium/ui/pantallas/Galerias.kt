@@ -136,9 +136,14 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
     }
+    // El emblema de la red: el círculo roto, con su hueco arriba a la derecha, y la chispa adentro.
     TemaId.FRENTE -> {
-        val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
-        mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
+        val aro = Path().apply { arcTo(Rect(c, r), -20f, 300f, true); arcTo(Rect(c, r * 0.74f), 280f, -300f, false); close() }
+        val chispa = Path().apply {
+            moveTo(c.x + r * 0.22f, c.y - r * 0.6f); lineTo(c.x - r * 0.3f, c.y + r * 0.08f); lineTo(c.x - r * 0.02f, c.y + r * 0.08f)
+            lineTo(c.x - r * 0.2f, c.y + r * 0.6f); lineTo(c.x + r * 0.3f, c.y - r * 0.08f); lineTo(c.x + r * 0.02f, c.y - r * 0.08f); close()
+        }
+        mas(aro, chispa)
     }
     TemaId.REFUGIO -> menos(estrella(c, r, 20, 0.84f), circulo(c, r * 0.5f)).let { mas(it, circulo(c, r * 0.32f)) }
     // La cruz de malta de los caballeros: cuatro brazos que se abren y terminan en dos puntas.

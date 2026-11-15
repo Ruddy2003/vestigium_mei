@@ -266,7 +266,7 @@ def pintar_gouache(g, t, cel):
 
 
 # Cuánto se nota cada cosa (el grano y el pincel cuestan peso en el atlas).
-PINTURA = dict(grano=0.16, pincel=0.06, filtro=Image.LANCZOS)
+PINTURA = dict(grano=0.12, pincel=0.08, filtro=Image.BOX)
 _pintar_prev = g8.pintar
 
 
@@ -439,12 +439,12 @@ def o_reflector(L, a):
             if not (0 <= c < N): continue
             d = abs(c + 0.5 - xc) / w
             if d >= 1: continue
-            if (d < 0.5 and (r + c) % 2 == 0) or (r % 2 == 0 and c % 2 == 0):
+            if r % 2 == 0 and (d < 0.5 or c % 2 == 0):              # en filas (sin huecos cerrados: el acabado los rellenaría)
                 vistos.add((r, c))
     for r in range(int(gy) - 3, int(gy) + 2):                       # la mancha de luz en el suelo
         for c in range(int(bx - 10), int(bx + 11)):
             if 0 <= c < N and 0 <= r < N and ((c + 0.5 - bx) / 9.5) ** 2 + ((r + 0.5 - gy + 0.6) / 2.4) ** 2 < 1:
-                if (r + c) % 2 == 0 or abs(c + 0.5 - bx) < 4.5:
+                if r % 2 == 0 or (abs(c + 0.5 - bx) < 4.5 and r >= int(gy) - 1):
                     vistos.add((r, c))
     for r, c in vistos:
         rect(L, "f_Q", c, r, c + 1, r + 1)
@@ -602,7 +602,7 @@ PAL_N = dict(
 )
 VENTANA_N = hx("F0A04B")
 # Los reflectores de la noche: cuántas posiciones tiene cada barrido en el bucle, largo y apertura del haz.
-HACES = dict(estados_cielo=16, estados_nave=32, largo_cielo=240, ancho_cielo=0.06, ancho_nave=0.12)
+HACES = dict(estados_cielo=16, estados_nave=24, largo_cielo=240, ancho_cielo=0.06, ancho_nave=0.1, nave=(0.05, 0.6), cielo=(0.55, 0.98))
 
 
 def anillo(d, cx, cy, rx, ry, ang, cols, frente):
@@ -978,15 +978,23 @@ def fondo_frente(t):
         tk = tick % BUCLE
         if o:                                                   # los reflectores
             base = img.convert("RGBA")
-            q = int(tk * TORRE / BUCLE) % TORRE
-            ang = math.radians(-153 + 23 * math.sin(2 * math.pi * q / TORRE))
-            base = Image.alpha_composite(base, capa_haz(("t", q), REF[0], REF[1], ang, HACES["largo_cielo"], HACES["ancho_cielo"], es_cielo))
-            q2 = int(tk * NAVE_Q / BUCLE) % NAVE_Q
-            gx_ = 150 + 118 * math.sin(2 * math.pi * q2 / NAVE_Q)
-            fx_, fy_ = foco_nave[0], foco_nave[1]
-            ang2 = math.atan2(71 - fy_, gx_ - fx_)
-            largo = math.hypot(gx_ - fx_, 71 - fy_)
-            base = Image.alpha_composite(base, capa_haz(("n", q2), fx_, fy_, ang2, largo + 2, HACES["ancho_nave"], None, (gx_, 71, 15, 4)))
+            # Se turnan (y en el cuadro 0, el del fondo quieto, los dos están apagados): primero la nave barre el puerto
+            # de un lado a otro y apaga el foco; luego el reflector del tanque barre el cielo.
+            f_ = tk / BUCLE
+            c0, c1 = HACES["cielo"]
+            if c0 <= f_ < c1:
+                q = int((f_ - c0) / (c1 - c0) * TORRE)
+                ang = math.radians(-176 + 44 * q / (TORRE - 1))
+                base = Image.alpha_composite(base, capa_haz(("t", q), REF[0], REF[1], ang, HACES["largo_cielo"], HACES["ancho_cielo"], es_cielo))
+            n0, n1 = HACES["nave"]
+            u = (f_ - n0) / (n1 - n0)
+            if 0 <= u < 1:
+                q2 = int(u * NAVE_Q)
+                gx_ = 26 + 270 * q2 / (NAVE_Q - 1)
+                fx_, fy_ = foco_nave[0], foco_nave[1]
+                ang2 = math.atan2(71 - fy_, gx_ - fx_)
+                largo = math.hypot(gx_ - fx_, 71 - fy_)
+                base = Image.alpha_composite(base, capa_haz(("n", q2), fx_, fy_, ang2, largo + 2, HACES["ancho_nave"], None, (gx_, 71, 13, 3.6)))
             img.paste(base.convert("RGB"))
         dd = ImageDraw.Draw(img)
         if not o:
@@ -994,25 +1002,26 @@ def fondo_frente(t):
         # Humo de la chimenea y vapor del respiradero.
         bocanadas(dd, tk, sx + 0.5, 4, humo_c, 0, n=10, vida=40, alto=13, deriva=30, r0=1.6, r1=5.2)
         bocanadas(dd, tk, vx + 0.5, 17, vapor_c, 3, n=7, vida=32, alto=9, deriva=14, r0=1.0, r1=3.2)
-        if o and (tk // 3) % 4:                                 # la llama de la antorcha de gas, en la boca
-            cuad(dd, sx - 0.5, 4 + ((tk // 3) % 2) * 0.4, hx("F0A04B"), 2, 1)
+        if o and (tk // 4) % 4:                                 # la llama de la antorcha de gas, en la boca
+            cuad(dd, sx - 0.5, 4 + ((tk // 4) % 2) * 0.4, hx("F0A04B"), 2, 1)
             cuad(dd, sx, 3.4, hx("FFE0A8"), 1, 1)
         # Las luces de la nave.
         for j, (lx, ly, tipo) in enumerate(luces_nave):
             if tipo == "rojo" and (tk // 10 + j) % 2 == 0:
                 cuad(dd, lx - 0.5, ly - 0.5, P["rojo"], 1, 1)
-            elif tipo == "ambar" and (tk // 6 + j) % 4 != 0:
+            elif tipo == "ambar" and (tk // 5 + j) % 4 != 0:
                 cuad(dd, lx - 0.5, ly - 0.5, AMBAR_C, 1, 1)
             elif tipo == "blanco" and tk % 20 < 3:
                 cuad(dd, lx - 1, ly - 0.5, hx("FFFFFF"), 2, 1)
             elif tipo == "foco":
-                cuad(dd, lx - 1, ly - 0.5, hx("FFF0C8") if o else P["nave"][3], 2, 1)
+                encendido = o and HACES["nave"][0] <= tk / BUCLE < HACES["nave"][1]
+                cuad(dd, lx - 1, ly - 0.5, hx("FFF0C8") if encendido else P["nave"][3], 2, 1)
         # Los pilotos de la torre.
         if (tk // 8) % 2 == 0:
             cuad(dd, tx - 0.5, 0, P["rojo"], 1, 1)
         # La chispa de la soldadura en el desguace (de día y de noche).
         sx_, sy_ = soldadura
-        if (tk // 2) % 7 < 4:
+        if (tk // 2) % 8 < 5:
             rnd_ = random.Random(tk // 2)
             cuad(dd, sx_, sy_, hx("FFF4C8"), 1, 1)
             for _ in range(3):

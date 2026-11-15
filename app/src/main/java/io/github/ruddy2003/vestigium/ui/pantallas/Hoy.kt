@@ -455,19 +455,21 @@ fun FraseDelDia(fecha: String) {
                 }
             }
         }
-        TemaId.FRENTE -> Surface(color = cs.onBackground, shape = RectangleShape, modifier = arriba) {
-            Row(Modifier.height(IntrinsicSize.Min)) {
-                Box(Modifier.width(8.dp).fillMaxHeight().background(cs.primary))
-                Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                    Text(rotulo, style = ty.labelMedium, color = cs.primary)
-                    f.original?.let { Text(it, style = ty.bodySmall, fontStyle = FontStyle.Italic, color = cs.background.copy(alpha = 0.72f)) }
-                    Text(f.texto.uppercase(), style = ty.titleLarge, color = cs.background, modifier = Modifier.padding(vertical = 2.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("— ${f.autor}", style = ty.labelSmall, color = cs.background.copy(alpha = 0.7f), modifier = Modifier.weight(1f))
-                        CorazonFrase(f, cs.primary, fecha = fecha)
-                    }
-                }
-            }
+        // El despacho recibido en la consola: el panel de esquinas redondas con su bisel, las perforaciones de la cinta del
+        // teletipo a la izquierda, el piloto ámbar encendido arriba y la frase entre comillas angulares, con la ventana de
+        // transmisión del día.
+        TemaId.FRENTE -> Box(arriba.drawBehind {
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            drawRoundRect(cs.surfaceVariant, Offset.Zero, size, CornerRadius(13 * u))
+            drawRoundRect(cs.outline, Offset(0.5f * u, 0.5f * u), Size(w - u, h - u), CornerRadius(13 * u), style = Stroke(1 * u))
+            drawRoundRect(cs.outline.copy(alpha = 0.4f), Offset(4 * u, 4 * u), Size(w - 8 * u, h - 8 * u), CornerRadius(10 * u), style = Stroke(0.6f * u))
+            var y = 16 * u; while (y < h - 12 * u) { drawCircle(cs.onSurfaceVariant.copy(alpha = 0.35f), 1.6f * u, Offset(11 * u, y)); y += 7 * u }
+            val p = Offset(w - 16 * u, 14 * u)
+            drawCircle(androidx.compose.ui.graphics.Brush.radialGradient(listOf(cs.primary.copy(alpha = 0.45f), Color.Transparent), p, 9 * u), 9 * u, p)
+            drawCircle(cs.outline, 4 * u, p); drawCircle(cs.primary, 2.8f * u, p)
+        }.padding(start = 22.dp, end = 28.dp, top = 12.dp, bottom = 12.dp)) {
+            val ventana = runCatching { io.github.ruddy2003.vestigium.ui.Frente.ventana(Fechas.parse(fecha)) }.getOrDefault("--:--")
+            CuerpoFrase(f, fecha, "$rotulo · VENTANA $ventana", "‹ ", " ›")
         }
         // Tarjeta redonda de los cincuenta con el rótulo en una banda de color.
         TemaId.REFUGIO -> Surface(shape = RoundedCornerShape(12.dp), color = cs.surface, border = BorderStroke(2.dp, cs.primary), modifier = arriba) {
@@ -970,7 +972,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
         TemaId.TEMPLARIO -> c(LetraExtra.regla, FontWeight.Bold, 22f, 0.3f, "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
-        TemaId.FRENTE -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
+        TemaId.FRENTE -> c(LetraExtra.chivoMono, FontWeight.Medium, 23f, 1.4f, "tnum")   // las cifras del contador de la consola
         TemaId.REFUGIO -> c(LetraExtra.vt323, FontWeight.Normal, 30f, 0.4f)
         TemaId.ORDEN -> c(LetraExtra.estarcido, FontWeight.Normal, 23f, 1.2f)
         TemaId.VAPOR -> c(LetraExtra.caldera, FontWeight.Normal, 24f, 0.4f, "lnum")
@@ -1265,11 +1267,17 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             var y = top + k + 4 * u
                             while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
                         }
+                        // Los deslizadores de la consola: la ranura de esquinas redondas, llena hasta el alto del día, con las
+                        // marcas de la escala al lado y, arriba, la perilla de baquelita con su raya hueso.
                         TemaId.FRENTE -> {
-                            val k = minOf(w * 0.35f, barH * 0.2f)
-                            pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
-                            var y = top + k + 4 * u
-                            while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
+                            val ancho = w * 0.46f; val x0 = (w - ancho) / 2; val rr = CornerRadius(ancho / 2, ancho / 2)
+                            if (color != null) drawRoundRect(color, Offset(x0, top), Size(ancho, barH), rr) else drawRoundRect(linea, Offset(x0, top), Size(ancho, barH), rr, style = borde)
+                            var y = h - 4 * u; var k = 0
+                            while (y > top + 6 * u) { drawLine(linea.copy(alpha = 0.5f), Offset(0f, y), Offset(if (k % 4 == 0) x0 - u else w * 0.12f, y), 0.7f * u); y -= 6 * u; k++ }
+                            val perilla = io.github.ruddy2003.vestigium.ui.TrazosFrente.BAQUELITA
+                            if (color != null) drawRoundRect(perilla, Offset(0f, top - 3 * u), Size(w, 6 * u), CornerRadius(2 * u, 2 * u))
+                            else drawRoundRect(linea, Offset(0f, top - 3 * u), Size(w, 6 * u), CornerRadius(2 * u, 2 * u), style = borde)
+                            drawLine(if (color != null) io.github.ruddy2003.vestigium.ui.TrazosFrente.HUESO else linea, Offset(w * 0.15f, top), Offset(w * 0.85f, top), 0.9f * u)
                         }
                         // Medidor de segmentos, como en un tablero de control.
                         TemaId.REFUGIO -> {

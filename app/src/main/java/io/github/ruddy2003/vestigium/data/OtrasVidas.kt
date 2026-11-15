@@ -863,6 +863,27 @@ object OtrasVidas {
                 "lejos" to i(600, "La ciudad donde estudió."), "estatura" to i(172), "vida" to i(55), "vida_adulto" to i(65), "hijos" to i(0), "alfabetizacion" to i(70, "En el pueblo; él lee latín y letra antigua."),
                 "lectura" to i(120, "Legajos, cartas y los libros del fondo del archivo.")),
             fuentes = emptyList()),
+
+        // ------------------------------------------------ lote 10 (docs/diseno/PLAN_TEMAS.md, 10c)
+        Vida("agente_red", "Tadeo", "Ladrón de piezas y agente de la red", "El puerto de Halde, un mundo minero bajo el Directorio", "año 212 del Directorio", 212, "tema", "frente", edad = 32, ficticia = true,
+            inspiracion = "Inspirado en Andor, de Star Wars: un ladrón al que recluta una red clandestina. El mundo, los nombres y la gente son inventados.",
+            historia = listOf(
+                "Tadeo desarma naves viejas en el desguace del puerto de Halde, un mundo minero que el Directorio exprime desde hace dos siglos: corta cascos con el soplete, saca cables, válvulas y motores, y los apila por peso. Lo que vale de verdad no llega a la báscula: se lo lleva escondido en la chaqueta y lo vende en el mercado.",
+                "Una relojera del mercado, que le compraba piezas sin preguntar de dónde salían, un día le preguntó otra cosa. Ahora, además de chatarrero, es recadero de una red clandestina que trabaja en células; la suya es la K-7. Lleva paquetes que no abre, mira siempre si lo siguen y, de noche, a la hora de la ventana, escucha una radio de maleta que habla en cifras.",
+                "Vive en un cuarto alquilado sobre un taller de motores, con una ventana que da a las grúas. Come guiso de raíz, pan negro y café de cebada en el puesto de la esquina, y se acuesta cuando se cierra la ventana de transmisión. Conoce a medio puerto y no se fía de casi nadie. Nunca ha salido de su planeta.",
+            ),
+            dia = listOf(t(2.0, 9.0, Hacer.DORMIR, "en un cuarto alquilado sobre el taller"), t(9.0, 10.0, Hacer.COMER), t(10.0, 15.0, Hacer.TRABAJO, "desarmar naves en el desguace"),
+                t(15.0, 16.0, Hacer.CAMINO, "por el mercado, mirando si lo siguen"), t(16.0, 19.0, Hacer.TRABAJO, "llevar piezas y recados"), t(19.0, 20.0, Hacer.COMER),
+                t(20.0, 22.0, Hacer.GENTE, "el bar donde se pasan los mensajes"), t(22.0, 23.0, Hacer.CAMINO), t(23.0, 2.0, Hacer.TRABAJO, "la ventana de transmisión y la misión de la noche")),
+            datos = mapOf("pasos" to i(11000, "El desguace, los recados a pie y las vueltas de más para ver si lo siguen."), "km_anio" to i(3000, "Todo a pie o en el tranvía del puerto."),
+                "kcal" to i(2800, "Cortar y cargar chatarra es trabajo pesado."), "proteina" to i(70), "azucar" to i(25, "Melaza en el café de cebada."), "fibra" to i(20, "Raíces y pan negro."),
+                "alcohol" to i(25, "Dos vasos de aguardiente de raíz en el bar."), "sueno" to i(6.5, "De madrugada a media mañana, y se despierta con las sirenas del puerto."), "dormir" to i(26.0),
+                "trabajo" to i(66, "El desguace, los recados y la misión de la noche, seis días a la semana."), "aire_libre" to i(6, "El desguace está al descubierto."),
+                "pantalla" to i(1.5, "La pantalla redonda de la radio, durante la ventana."), "notificaciones" to i(40, "Sirenas de turno, altavoces de la Prefectura y los pitidos de la radio."),
+                "musica" to i(1, "La gramola del bar."), "personas_dia" to i(45), "conocidas" to i(900), "poblacion" to i(400000, "El puerto y su barrio de ladrillo."),
+                "lejos" to i(40, "La sierra que cierra el puerto por el norte."), "estatura" to i(176), "vida" to i(52, "El polvo del mineral y los accidentes del desguace."), "vida_adulto" to i(60),
+                "hijos" to i(2.8), "alfabetizacion" to i(70), "lectura" to i(2, "Manuales de motores y papeles que no debería tener.")),
+            fuentes = emptyList()),
     )
 
     /** Las vidas que se ven con el tema [tema]: las doce de todos y la del tema (primero). */

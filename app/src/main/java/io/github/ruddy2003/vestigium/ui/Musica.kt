@@ -491,18 +491,32 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
         }
     }
-    TemaId.FRENTE -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_AL_LADO, true, "EXP. " + t.nombre.uppercase(), "TOQUE PARA ACUSAR RECIBO",
-        comillas = "“" to "”", emblema = 88.dp, arriba = 52.dp, abajo = 70.dp) { e ->
+    // La pantalla redonda de la sala de mando: el emblema en el centro de la retícula, con el barrido verde que gira, el
+    // bisel de esquinas de consola alrededor de todo, la fila de pilotos al pie (dos ámbar encendidos y el rojo) y los
+    // interruptores de palanca a los lados.
+    TemaId.FRENTE -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre.uppercase(), "TOCA PARA ABRIR EL CANAL",
+        comillas = "‹ " to " ›", emblema = 120.dp, arriba = 46.dp, abajo = 58.dp) { e ->
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
-        val c = e.onSurface.copy(alpha = 0.55f)
-        drawPath(Path().apply { moveTo(0f, u * 18); lineTo(u * 10, 0f); lineTo(u * 110, 0f); lineTo(u * 120, u * 18) }, c, style = Stroke(u * 1.3f))
-        drawRect(c, Offset(0f, u * 18), Size(w, h - u * 18), style = Stroke(u * 1.3f))
-        for (i in 0 until 14) drawRect(c, Offset(w - u * 84 + i * u * 5, u * 26), Size(u * (if (i % 3 == 0) 2.4f else 1.2f), u * 14))
-        val centro = Offset(w - u * 62, h - u * 36)
-        rotate(-12f, centro) {
-            drawRect(e.primary.copy(alpha = 0.7f), Offset(centro.x - u * 46, centro.y - u * 17), Size(u * 92, u * 34), style = Stroke(u * 2.2f))
-            drawRect(e.primary.copy(alpha = 0.5f), Offset(centro.x - u * 41, centro.y - u * 12), Size(u * 82, u * 24), style = Stroke(u))
-            drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
+        val c = e.secondary.copy(alpha = 0.6f)
+        drawRoundRect(c, Offset(u * 4, u * 4), Size(w - u * 8, h - u * 8), CornerRadius(u * 26), style = Stroke(u * 2.2f))
+        drawRoundRect(c.copy(alpha = 0.3f), Offset(u * 10, u * 10), Size(w - u * 20, h - u * 20), CornerRadius(u * 20), style = Stroke(u))
+        val centro = Offset(w / 2, u * (46 + 60)); val radio = u * 84
+        drawCircle(TrazosFrente.PANTALLA.copy(alpha = 0.18f), radio, centro)
+        with(TrazosFrente) {
+            reticula(centro, radio, c.copy(alpha = 0.5f), u * 0.9f, 4)
+            barrido(centro, radio, -35f, e.tertiary.copy(alpha = 0.75f), u * 1.4f)
+        }
+        drawCircle(e.tertiary.copy(alpha = 0.8f), u * 2.4f, Offset(centro.x + radio * 0.52f, centro.y - radio * 0.3f))
+        val n = 5; val paso = u * 18; val x0 = w / 2 - paso * (n - 1) / 2
+        for (i in 0 until n) with(TrazosFrente) {
+            piloto(Offset(x0 + i * paso, h - u * 22), u * 3.2f, if (i == 4) PILOTO_ROJO else e.primary, i == 0 || i == 1 || i == 4, c)
+        }
+        listOf(u * 26, w - u * 26).forEach { x ->
+            for (k in 0 until 3) {
+                val b = Offset(x, h * 0.42f + k * u * 22)
+                drawCircle(c, u * 3.4f, b)
+                drawLine(TrazosFrente.BAQUELITA, b, b + Offset((if (k == 1) -1f else 1f) * u * 2.5f, -u * 10), u * 2.6f, StrokeCap.Round)
+            }
         }
     }
     // Compuerta: mampara redondeada con remaches y una franja de peligro al pie.

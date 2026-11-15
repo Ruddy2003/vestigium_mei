@@ -224,7 +224,8 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.TEMPLARIO -> LaminaRascar(0xFF2E3338.toInt(), 0xFF7E868E.toInt(), 0xFFDCE2E6.toInt())
     // Gris de ministerio: chapa sin brillo.
     TemaId.DISTOPIA -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
-    TemaId.FRENTE -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
+    // La chapa esmaltada color hueso de la consola, con el filo gastado hasta el metal.
+    TemaId.FRENTE -> LaminaRascar(0xFF5C5446.toInt(), 0xFFB8AD96.toInt(), 0xFFEFE7D6.toInt())
     // Chapa galvanizada, azulada.
     TemaId.REFUGIO -> LaminaRascar(0xFF4A5560.toInt(), 0xFF98A7B3.toInt(), 0xFFE3EBF0.toInt())
     // Acero pavonado.
@@ -414,11 +415,15 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
             c.drawCircle(x, y, s * 0.42f, relleno)
         }
-        TemaId.FRENTE -> tresbolillo { x, y ->
-            // El ojo que todo lo mira.
-            val s = l * 0.15f
-            c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
-            c.drawCircle(x, y, s * 0.42f, relleno)
+        TemaId.FRENTE -> {
+            // El emblema de la red al tresbolillo (el círculo roto con la chispa de tres trazos) y, entre uno y otro, los
+            // pilotos de la consola en su bisel.
+            tresbolillo { x, y ->
+                val s = l * 0.14f
+                c.drawArc(RectF(x - s, y - s, x + s, y + s), -20f, 300f, false, linea)
+                c.drawPath(Path().apply { moveTo(x + s * 0.2f, y - s * 0.6f); lineTo(x - s * 0.24f, y + s * 0.06f); lineTo(x + s * 0.24f, y - s * 0.06f); lineTo(x - s * 0.2f, y + s * 0.6f) }, linea)
+            }
+            for ((x, y) in listOf(l / 2 to 0f, l / 2 to l, 0f to l / 2, l to l / 2)) { c.drawCircle(x, y, l * 0.065f, linea); c.drawCircle(x, y, l * 0.03f, relleno) }
         }
         TemaId.REFUGIO -> {
             // Chapa estriada: lágrimas en relieve, alternando su inclinación.

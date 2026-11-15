@@ -269,6 +269,7 @@ private fun BandaConsola(modifier: Modifier) {
                 val arriba = (k * 5 + 1) % 3 != 0
                 drawRoundRect(baquelita, Offset(x - 1.3f * u, cy - 2.2f * u), Size(2.6f * u, 4.4f * u), CornerRadius(1.2f * u))
                 val punta = Offset(x, if (arriba) cy - 4.6f * u else cy + 4.6f * u)
+                drawLine(baquelita.copy(alpha = 0.35f), Offset(x + 0.6f * u, cy), punta + Offset(0.6f * u, 0.4f * u), 1.4f * u, cap = StrokeCap.Round)
                 drawLine(cromo, Offset(x, cy), punta, 1.1f * u, cap = StrokeCap.Round)
                 drawCircle(cromo, 1f * u, punta)
             }

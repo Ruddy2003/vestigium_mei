@@ -207,11 +207,15 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
             drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
         }
+        // El cartucho de datos de la red, apilado de canto: el bloque con la esquina cortada, la etiqueta hueso escrita y la
+        // ventanilla con sus dos carretes.
         TemaId.FRENTE -> {
-            drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), o, s)
-            drawRect(lerp(Color(0xFFD8C08A), c, 0.25f), Offset(x0 + w * 0.1f, y0 - h * 0.18f), Size(w * 0.3f, h * 0.2f))
-            drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
-            drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
+            val k = minOf(w, h) * 0.3f
+            drawPath(Path().apply { moveTo(x0, y0); lineTo(x0 + w - k, y0); lineTo(x0 + w, y0 + k); lineTo(x0 + w, y0 + h); lineTo(x0, y0 + h); close() }, lerp(c, Color(0xFF2A2622), 0.35f))
+            drawRect(lerp(Color(0xFFE4DED1), c, 0.12f), Offset(x0 + w * 0.08f, y0 + h * 0.2f), Size(w * 0.4f, h * 0.6f))
+            drawLine(oscuro.copy(alpha = 0.6f), Offset(x0 + w * 0.13f, cy), Offset(x0 + w * 0.42f, cy), 0.6f * d)
+            drawRoundRect(Color(0xFF0F1A16), Offset(x0 + w * 0.54f, y0 + h * 0.3f), Size(w * 0.38f, h * 0.48f), CornerRadius(h * 0.12f))
+            listOf(0.63f, 0.83f).forEach { f -> drawCircle(Color(0xFFB9B6AE), h * 0.13f, Offset(x0 + w * f, y0 + h * 0.54f)) }
         }
         // Archivador de anillas del refugio, con la etiqueta amarilla.
         TemaId.REFUGIO -> {
@@ -727,10 +731,12 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
             drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
         }
+        // La tecla de consola: el marco de esquinas muy redondas, la tecla hundida dentro y su piloto ámbar en la esquina.
         TemaId.FRENTE -> {
-            drawRect(relleno, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r))
-            drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
-            drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
+            drawRoundRect(relleno, Offset(x - r, y - r * 0.9f), Size(2 * r, 1.8f * r), CornerRadius(r * 0.5f))
+            drawRoundRect(borde, Offset(x - r, y - r * 0.9f), Size(2 * r, 1.8f * r), CornerRadius(r * 0.5f), style = Stroke(1.6f * d))
+            drawRoundRect(borde.copy(alpha = 0.3f), Offset(x - r * 0.8f, y - r * 0.7f), Size(1.6f * r, 1.4f * r), CornerRadius(r * 0.36f), style = fino)
+            drawCircle(Color(0xFFF2A33A), r * 0.09f, Offset(x + r * 0.7f, y - r * 0.6f))
         }
         // Placa con cuatro remaches.
         TemaId.REFUGIO -> {
@@ -1090,22 +1096,26 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             else -> return false
         }
         TemaId.FRENTE -> when (forma) {
-            // El ojo que vigila.
+            // La marca de posición en la carta estelar: el punto y la mira con sus cuatro marcas.
             "alfiler" -> {
-                drawPath(Path().apply { moveTo(x - r, y); quadraticTo(x, y - r * 0.9f, x + r, y); quadraticTo(x, y + r * 0.9f, x - r, y); close() }, col)
-                drawCircle(fondo, r * 0.4f, c); drawCircle(col, r * 0.2f, c)
+                drawCircle(col, r * 0.3f, c)
+                drawCircle(col, r * 0.72f, c, style = Stroke(1.2f * d))
+                for (k in 0 until 4) { val a = k * PI / 2; drawLine(col, polarCosa(c, r * 0.6f, a), polarCosa(c, r, a), 1.3f * d) }
             }
-            // Expediente con pestaña y franja roja.
+            // La transmisión: la cinta perforada del teletipo que sale de su carrete.
             "sobre" -> {
-                drawRect(col, Offset(x - r, y - r * 0.5f), Size(2 * r, r * 1.2f))
-                drawRect(col, Offset(x - r, y - r * 0.75f), Size(r * 0.8f, r * 0.3f))
-                drawRect(Color(0xFFC8102E), Offset(x - r, y + r * 0.35f), Size(2 * r, r * 0.2f))
+                val rc = Offset(x - r * 0.5f, y + r * 0.05f)
+                drawRect(col, Offset(rc.x, rc.y - r * 0.45f), Size(r * 1.5f, r * 0.42f))
+                drawCircle(col, r * 0.48f, rc); drawCircle(fondo, r * 0.16f, rc)
+                for (k in 0 until 4) drawCircle(fondo, r * 0.07f, Offset(x + r * (0.08f + k * 0.24f), rc.y - r * 0.24f))
             }
-            // Lata de ración.
+            // El jarro de lata esmaltada de la guardia de noche, con el esmalte saltado y el vapor.
             "taza" -> {
-                drawRect(col, Offset(x - r * 0.55f, y - r * 0.75f), Size(r * 1.1f, r * 1.5f))
-                listOf(-0.5f, 0.5f).forEach { f -> drawLine(fondo, Offset(x - r * 0.55f, y + f * r), Offset(x + r * 0.55f, y + f * r), 0.7f * d) }
-                drawRect(fondo, Offset(x - r * 0.38f, y - r * 0.2f), Size(r * 0.76f, r * 0.4f))
+                drawRoundRect(col, Offset(x - r * 0.55f, y - r * 0.55f), Size(r * 1.1f, r * 1.35f), CornerRadius(r * 0.12f))
+                drawArc(col, -90f, 180f, false, Offset(x + r * 0.3f, y - r * 0.3f), Size(r * 0.55f, r * 0.6f), style = Stroke(1.6f * d))
+                drawLine(fondo, Offset(x - r * 0.55f, y - r * 0.38f), Offset(x + r * 0.55f, y - r * 0.38f), 0.8f * d)
+                drawCircle(fondo, r * 0.08f, Offset(x - r * 0.2f, y + r * 0.35f)); drawCircle(fondo, r * 0.05f, Offset(x + r * 0.18f, y + r * 0.1f))
+                listOf(-0.18f, 0.12f).forEach { f -> drawPath(Path().apply { moveTo(x + f * r, y - r * 0.68f); quadraticTo(x + (f + 0.12f) * r, y - r * 0.85f, x + f * r, y - r) }, col, style = trazo) }
             }
             else -> return false
         }

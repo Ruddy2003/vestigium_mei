@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.inset
@@ -166,9 +167,13 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
             drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
         }
+        // La chispa de la célula en su canal roto: el aro grueso, abierto arriba a la derecha, y los tres trazos dentro.
         TemaId.FRENTE -> {
-            drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
-            drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
+            val ra = r * 0.84f
+            drawArc(color, -22f, 304f, false, Offset(c.x - ra, c.y - ra), Size(ra * 2, ra * 2), style = Stroke(r * 0.26f, cap = StrokeCap.Round))
+            drawPath(Path().apply {
+                moveTo(c.x + r * 0.2f, c.y - r * 0.5f); lineTo(c.x - r * 0.16f, c.y + r * 0.04f); lineTo(c.x + r * 0.16f, c.y - r * 0.04f); lineTo(c.x - r * 0.2f, c.y + r * 0.5f)
+            }, color, style = Stroke(r * 0.22f, cap = StrokeCap.Round, join = StrokeJoin.Round))
         }
         // El átomo: núcleo y tres órbitas.
         TemaId.REFUGIO -> {

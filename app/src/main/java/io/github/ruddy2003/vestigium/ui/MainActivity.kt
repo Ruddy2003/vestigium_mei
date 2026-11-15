@@ -261,8 +261,9 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.TEMPLARIO -> BloqueoMarco(TextosBloqueo("La puerta de la encomienda", "☩ El rastrillo está echado: solo un hermano de la casa lo levanta.", "Levantar el rastrillo"), arriba = 18, reintentar = reintentar) { cs -> bloqueoRastrillo(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
             listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
-        TemaId.FRENTE -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
-            listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
+        // La consola de la célula con el canal cerrado: el sello en la pantalla de radar, el estado de la línea y la llave.
+        TemaId.FRENTE -> BloqueoCanal(TextosBloqueo("TRANSMISIÓN CIFRADA", "— Canal cerrado. La célula no abre la frecuencia sin la huella del titular.", "ABRIR EL CANAL",
+            listOf("CANAL", "CIFRADO", "VENTANA", "", "OPERADOR", "SIN CONFIRMAR")), reintentar)
         TemaId.REFUGIO -> BloqueoMarco(TextosBloqueo("VESTIGIUM MEI", "[ esclusa sellada ] identifíquese, residente", "ABRIR ESCLUSA"), arriba = 6, reintentar = reintentar) { cs -> bloqueoMampara(cs) }
         TemaId.ORDEN -> BloqueoMarco(TextosBloqueo("ARCHIVO DE LA ORDEN", "— acceso reservado a hermanos acreditados —", "PRESENTAR CREDENCIAL"), arriba = 14, reintentar = reintentar) { cs -> bloqueoCompuerta(cs) }
         // La puerta de la caja fuerte de la compañía: remate en arco, bisagras, remaches y el dial de la combinación arriba.
@@ -394,6 +395,48 @@ private fun BloqueoExpediente(tx: TextosBloqueo, reintentar: () -> Unit) {
         Text(tx.lineas.getOrElse(2) { "" }, style = MaterialTheme.typography.titleLarge, color = cs.primary,
             modifier = Modifier.padding(top = 22.dp, bottom = 24.dp, start = 12.dp).rotate(-7f).border(2.dp, cs.primary).padding(horizontal = 10.dp, vertical = 3.dp))
         BotonPrincipal(tx.boton, Modifier.fillMaxWidth()) { reintentar() }
+    }
+}
+
+/**
+ * Frente exterior: la consola del radiooperador. Arriba, la célula y el nombre en clave de la operación del día; en medio,
+ * el sello en la pantalla de radar dentro de su bisel; abajo, el estado de la línea, cada renglón con su piloto, y la
+ * llave para abrir el canal. La ventana de transmisión del día llena el renglón que viene vacío.
+ */
+@Composable
+private fun BloqueoCanal(tx: TextosBloqueo, reintentar: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val hoy = remember { runCatching { io.github.ruddy2003.vestigium.data.Fechas.parse(io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) }.getOrElse { java.time.LocalDate.now() } }
+    val lineas = tx.lineas.map { it.ifEmpty { Frente.ventana(hoy) } }
+    Column(Modifier.fillMaxSize().padding(horizontal = 26.dp, vertical = 34.dp), verticalArrangement = Arrangement.Center) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("CÉLULA K-7", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
+            Text("OPERACIÓN ${Frente.clave(hoy)}", style = MaterialTheme.typography.labelSmall, color = cs.primary)
+        }
+        Canvas(Modifier.fillMaxWidth().padding(top = 6.dp).height(7.dp)) {
+            val u = 1.dp.toPx(); val y = size.height - 0.5f * u
+            drawLine(cs.onSurface.copy(alpha = 0.5f), Offset(0f, y), Offset(size.width, y), 1f * u)
+            var x = 0f; var k = 0
+            while (x <= size.width) { drawLine(cs.onSurface.copy(alpha = 0.4f), Offset(x, y), Offset(x, y - (if (k % 5 == 0) 6f else 3f) * u), 0.8f * u); x += 6 * u; k++ }
+        }
+        Box(Modifier.fillMaxWidth().padding(vertical = 20.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(200.dp).drawBehind { bloqueoBiselRadar(cs) }, contentAlignment = Alignment.Center) { SelloHuella(Modifier.size(140.dp)) }
+        }
+        Text(tx.titulo, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        LemaBloqueo(tx.lema, modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 14.dp))
+        val pilotos = listOf(Color(0xFFD9372B), cs.tertiary, Color(0xFFF2A33A))
+        lineas.chunked(2).forEachIndexed { i, par ->
+            Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                Canvas(Modifier.size(10.dp)) {
+                    drawCircle(cs.onSurface.copy(alpha = 0.35f), size.minDimension / 2, style = Stroke(1.dp.toPx()))
+                    drawCircle(pilotos[i % pilotos.size], size.minDimension / 2 - 2.dp.toPx())
+                }
+                Text(par[0], style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(start = 10.dp).weight(1f))
+                Text(par.getOrElse(1) { "" }, style = MaterialTheme.typography.labelLarge, color = cs.primary)
+            }
+            Box(Modifier.fillMaxWidth().height(1.dp).background(cs.outline.copy(alpha = 0.6f)))
+        }
+        BotonPrincipal(tx.boton, Modifier.padding(top = 22.dp).fillMaxWidth()) { reintentar() }
     }
 }
 
@@ -911,6 +954,38 @@ private fun DrawScope.bloqueoReticula(cs: ColorScheme) {
     drawLine(c.copy(alpha = 0.4f), Offset(0f, h / 2), Offset(10 * u, h / 2), 1f * u); drawLine(c.copy(alpha = 0.4f), Offset(w - 10 * u, h / 2), Offset(w, h / 2), 1f * u)
 }
 
+/**
+ * El bisel de la pantalla de radar del bloqueo: la placa de la consola con su luz arriba, el aro grueso alrededor del
+ * sello con su escala de grados, un tornillo en cada esquina, dos pilotos abajo a la izquierda y la perilla de sintonía
+ * abajo a la derecha.
+ */
+private fun DrawScope.bloqueoBiselRadar(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height; val c = center
+    val cromo = Color(0xFFB9B6AE); val baquelita = Color(0xFF2A2622)
+    drawRoundRect(cs.surfaceVariant, Offset.Zero, size, CornerRadius(32 * u))
+    drawRoundRect(Color.White.copy(alpha = 0.12f), Offset(3 * u, 3 * u), Size(w - 6 * u, h * 0.45f), CornerRadius(28 * u))
+    drawRoundRect(cs.outline, Offset.Zero, size, CornerRadius(32 * u), style = Stroke(1.5f * u))
+    for (k in 0 until 36) {
+        val a = Math.toRadians(k * 10.0)
+        val r0 = 76 * u; val r1 = if (k % 3 == 0) 83 * u else 80 * u
+        drawLine(cs.onSurface.copy(alpha = 0.55f), Offset(c.x + (r0 * kotlin.math.cos(a)).toFloat(), c.y + (r0 * kotlin.math.sin(a)).toFloat()),
+            Offset(c.x + (r1 * kotlin.math.cos(a)).toFloat(), c.y + (r1 * kotlin.math.sin(a)).toFloat()), 1f * u)
+    }
+    drawCircle(baquelita.copy(alpha = 0.85f), 72 * u, c, style = Stroke(4 * u))
+    drawCircle(cromo, 74 * u, c, style = Stroke(1f * u))
+    listOf(Offset(16 * u, 16 * u), Offset(w - 16 * u, 16 * u), Offset(16 * u, h - 16 * u), Offset(w - 16 * u, h - 16 * u)).forEach { t ->
+        drawCircle(cromo, 4.5f * u, t); drawCircle(baquelita.copy(alpha = 0.5f), 4.5f * u, t, style = Stroke(0.8f * u))
+        drawLine(baquelita.copy(alpha = 0.7f), t + Offset(-3 * u, 1.6f * u), t + Offset(3 * u, -1.6f * u), 1.1f * u)
+    }
+    listOf(Color(0xFFD9372B) to Offset(26 * u, h - 30 * u), Color(0xFFF2A33A) to Offset(38 * u, h - 22 * u)).forEach { (luz, p) ->
+        drawCircle(luz.copy(alpha = 0.3f), 7 * u, p); drawCircle(cromo, 4.6f * u, p); drawCircle(luz, 3.4f * u, p)
+        drawCircle(Color.White.copy(alpha = 0.6f), 1f * u, p + Offset(-1.2f * u, -1.2f * u))
+    }
+    val perilla = Offset(w - 28 * u, h - 28 * u)
+    drawCircle(baquelita, 8.5f * u, perilla)
+    drawLine(cromo, perilla, perilla + Offset(-4 * u, -5.5f * u), 1.6f * u, StrokeCap.Round)
+}
+
 /** Escotilla: doble aro con pernos alrededor del sello. */
 private fun DrawScope.bloqueoEscotilla(cs: ColorScheme) {
     val u = 1.dp.toPx(); val r = size.minDimension / 2 - 2 * u
@@ -1043,7 +1118,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> false
-    TemaId.FRENTE -> false
+    TemaId.FRENTE -> false            // la retícula que fija el blanco, en trazo
     TemaId.REFUGIO -> true
     TemaId.ORDEN -> true
     TemaId.VAPOR -> true
@@ -1083,7 +1158,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> true
-    TemaId.FRENTE -> true
+    TemaId.FRENTE -> true             // el pulsador ámbar de transmitir, encendido
     TemaId.REFUGIO -> true
     TemaId.ORDEN -> true
     TemaId.VAPOR -> true
@@ -1190,9 +1265,13 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
             drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
             drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
         }
-        TemaId.FRENTE -> girar(-5f, Offset(cx, cy)) {
-            drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
-            drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
+        // La retícula del radar que fija el blanco: el aro alrededor del ícono, la cuña del barrido y las cuatro marcas de rumbo.
+        TemaId.FRENTE -> {
+            val r = 13.5f * u * (0.7f + 0.3f * p)
+            drawArc(c.copy(alpha = c.alpha * 0.22f), -100f, 60f, true, Offset(cx - r, cy - r), Size(2 * r, 2 * r))
+            drawCircle(c, r, Offset(cx, cy), style = Stroke(1.4f * u))
+            listOf(Offset(1f, 0f), Offset(-1f, 0f)).forEach { d -> drawLine(c, Offset(cx + d.x * (r + 2 * u), cy), Offset(cx + d.x * (r + 9 * u), cy), 1.4f * u, StrokeCap.Round) }
+            listOf(Offset(0f, 1f), Offset(0f, -1f)).forEach { d -> drawLine(c, Offset(cx, cy + d.y * (r + 1 * u)), Offset(cx, cy + d.y * (r + 2.5f * u)), 1.4f * u, StrokeCap.Round) }
         }
         // Tubo de fósforo encendido, con líneas de barrido.
         TemaId.REFUGIO -> {
@@ -1444,9 +1523,21 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
             drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
         }
-        TemaId.FRENTE -> girar(-4f, Offset(cx, cy)) {
-            drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
-            drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
+        // El pulsador de transmitir: la escala grabada alrededor, el bisel de cromo y el botón ámbar encendido, con su
+        // brillo arriba y su sombra abajo.
+        TemaId.FRENTE -> {
+            val o = Offset(cx, cy)
+            for (k in 0 until 24) {
+                val a = Math.toRadians(k * 15.0)
+                val r1 = if (k % 6 == 0) 23.5f * u else 24.8f * u
+                drawLine(cs.outline, Offset(cx + (r1 * kotlin.math.cos(a)).toFloat(), cy + (r1 * kotlin.math.sin(a)).toFloat()),
+                    Offset(cx + (26.5f * u * kotlin.math.cos(a)).toFloat(), cy + (26.5f * u * kotlin.math.sin(a)).toFloat()), 1f * u)
+            }
+            drawCircle(Color(0xFFB9B6AE), 22 * u, o)
+            drawCircle(Color(0xFF2A2622).copy(alpha = 0.35f), 22 * u, o, style = Stroke(0.8f * u))
+            drawCircle(c, 19 * u, o)
+            drawArc(Color.White.copy(alpha = 0.28f), 200f, 80f, false, Offset(cx - 15.5f * u, cy - 15.5f * u), Size(31 * u, 31 * u), style = Stroke(2 * u, cap = StrokeCap.Round))
+            drawArc(Color.Black.copy(alpha = 0.18f), 20f, 140f, false, Offset(cx - 17 * u, cy - 17 * u), Size(34 * u, 34 * u), style = Stroke(2.2f * u))
         }
         // Botón de consola de refugio, con bisel claro arriba.
         TemaId.REFUGIO -> {
@@ -1658,7 +1749,13 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         }
         // Barra gruesa de cartel.
         TemaId.DISTOPIA -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
-        TemaId.FRENTE -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
+        // El canto de la consola: el filete, la escala grabada y dos pilotos encendidos a la izquierda.
+        TemaId.FRENTE -> {
+            filete()
+            var x = 30 * u; var k = 0
+            while (x < w) { drawLine(base, Offset(x, 1 * u), Offset(x, if (k % 5 == 0) 4.5f * u else 2.8f * u), 0.8f * u); x += 6 * u; k++ }
+            drawCircle(Color(0xFFF2A33A), 1.7f * u, Offset(10 * u, 2.6f * u)); drawCircle(Color(0xFFD9372B), 1.7f * u, Offset(18 * u, 2.6f * u))
+        }
         // Filete grueso con remaches.
         TemaId.REFUGIO -> { filete(1 * u, 1.4f * u); var x = 24 * u; while (x < w) { drawCircle(acento, 1.3f * u, Offset(x, 2.6f * u)); x += 48 * u } }
         // Franja de aviso: rayas oblicuas.
@@ -2083,7 +2180,7 @@ private fun origenTransicion(tema: TemaId, atras: Boolean): Alignment = when (te
     TemaId.MEDIEVAL -> Alignment.TopStart
     TemaId.TEMPLARIO -> Alignment.TopStart
     TemaId.DISTOPIA -> Alignment.TopStart
-    TemaId.FRENTE -> Alignment.TopStart
+    TemaId.FRENTE -> Alignment.TopCenter                                       // la imagen rueda y se asienta en el tubo, desde el centro
     TemaId.REFUGIO -> Alignment.TopStart
     TemaId.ORDEN -> Alignment.TopStart
     TemaId.VAPOR -> Alignment.TopStart
@@ -2151,7 +2248,14 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
             (scaleOut(t(240), targetScale = 0.97f) + fadeOut(t(200)))
         // Cajón de archivo: cae de golpe desde arriba.
         TemaId.DISTOPIA -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
-        TemaId.FRENTE -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
+        // El monitor de la consola que se sintoniza: la imagen nueva rueda un poco en vertical y se asienta con un temblor,
+        // tras un parpadeo de encendido; la de antes se encoge hacia el centro, como un tubo que se apaga.
+        TemaId.FRENTE -> {
+            val sintonia = androidx.compose.animation.core.Easing { f -> val b = 1f - (1f - f) * (1f - f); b + 0.08f * kotlin.math.sin(f * 3f * Math.PI.toFloat()) * (1f - f) }
+            val encendido = androidx.compose.animation.core.Easing { f -> when { f < 0.15f -> f * 3f; f < 0.25f -> 0.3f; else -> f } }
+            (slideInVertically(tween(320, 0, sintonia)) { dir * it / 14 } + fadeIn(tween(260, 0, encendido))) togetherWith
+                (scaleOut(t(160, lineal), targetScale = 0.97f) + fadeOut(t(140, lineal)))
+        }
         // Pantalla de tubo que se enciende desde una línea horizontal en el centro.
         TemaId.REFUGIO -> (expandVertically(t(260), expandFrom = Alignment.CenterVertically) { it / 14 } + fadeIn(t(200))) togetherWith fadeOut(t(120))
         // Persiana de acero: baja desde arriba, seca; la anterior sube un poco al irse.

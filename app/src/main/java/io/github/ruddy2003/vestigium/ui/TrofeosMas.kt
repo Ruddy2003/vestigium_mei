@@ -1575,7 +1575,7 @@ object TrofeosMas {
                 if (p.hecho) drawPath(latido, radar.copy(alpha = 0.3f), style = Stroke(lw * 1.8f, join = StrokeJoin.Round))
                 drawPath(latido, radar, style = Stroke(lw * 0.7f, join = StrokeJoin.Round))
                 listOf(-1f, 1f).forEach { s -> drawCircle(rojo, lw * 0.9f, Offset(c.x + s * r * 1.5f, c.y - r * 0.9f)) }
-                rotulo("072", 0.5f, 0.6f, 0.06f, pizarra)
+                rotulo("072", 0.5f, 0.648f, 0.055f, pizarra)
                 peana(0.63f)
             }
             "Mente" -> {
@@ -1634,7 +1634,7 @@ object TrofeosMas {
                     val o = Offset(c.x + s * r, c.y + r * 0.1f)
                     saten(Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(o.x - r * 0.26f, o.y - r * 0.36f, o.x + r * 0.26f, o.y + r * 0.36f), androidx.compose.ui.geometry.CornerRadius(r * 0.2f))) }, baquelita, 90f)
                     drawOval(cromo, Offset(o.x - r * 0.14f, o.y - r * 0.22f), Size(r * 0.28f, r * 0.44f), style = Stroke(lw * 0.5f))
-                    for (k in 1..2) drawArc(ambar.copy(alpha = 1f - k * 0.3f), if (s < 0) 150f else -30f, 60f, false, Offset(o.x - r * (0.3f + k * 0.26f), o.y - r * (0.3f + k * 0.26f)), Size(r * (0.6f + k * 0.52f), r * (0.6f + k * 0.52f)), style = Stroke(lw * 0.7f, cap = StrokeCap.Round))
+                    for (k in 1..2) drawArc(ambar.copy(alpha = 1f - k * 0.3f), if (s < 0) 150f else -30f, 60f, false, Offset(o.x - r * (0.3f + k * 0.22f), o.y - r * (0.3f + k * 0.22f)), Size(r * (0.6f + k * 0.44f), r * (0.6f + k * 0.44f)), style = Stroke(lw * 0.7f, cap = StrokeCap.Round))
                 }
                 val boca = Path().apply { moveTo(c.x - r, c.y + r * 0.4f); quadraticTo(c.x - r * 0.9f, c.y + r * 1.1f, c.x - r * 0.1f, c.y + r * 1.05f) }
                 drawPath(boca, cromo, style = Stroke(lw * 0.8f, cap = StrokeCap.Round))
@@ -1699,9 +1699,9 @@ object TrofeosMas {
                 drawCircle(cromo, rd * 1.1f, dial, style = Stroke(lw * 0.5f))
                 listOf(0.58f, 0.68f).forEach { x -> drawCircle(cromo, p.w * 0.032f, p.o(x, 0.42f)); drawCircle(baquelita, p.w * 0.016f, p.o(x, 0.42f)) }
                 listOf(0.56f, 0.62f, 0.68f).forEach { x -> with(TrazosFrente) { piloto(p.o(x, 0.53f), p.w * 0.011f, if (x == 0.62f) rojo else ambar, p.hecho) } }
-                hilo(p.o(0.72f, 0.33f), p.o(0.8f, 0.06f), cromo, lw * 0.6f)
-                drawCircle(rojo, lw * 1f, p.o(0.8f, 0.06f))
-                if (p.hecho) for (k in 1..2) drawArc(ambar.copy(alpha = 0.9f - k * 0.3f), -150f, 120f, false, Offset(p.x(0.8f) - p.w * 0.04f * k, p.y(0.06f) - p.w * 0.04f * k), Size(p.w * 0.08f * k, p.w * 0.08f * k), style = Stroke(lw * 0.5f))
+                hilo(p.o(0.72f, 0.33f), p.o(0.78f, 0.22f), cromo, lw * 0.6f)
+                drawCircle(rojo, lw * 1f, p.o(0.78f, 0.22f))
+                if (p.hecho) for (k in 1..2) drawArc(ambar.copy(alpha = 0.9f - k * 0.3f), -150f, 120f, false, Offset(p.x(0.78f) - p.w * 0.028f * k, p.y(0.22f) - p.w * 0.028f * k), Size(p.w * 0.056f * k, p.w * 0.056f * k), style = Stroke(lw * 0.5f))
                 rotulo("TX 21", 0.5f, 0.655f, 0.045f, pizarra)
                 peana(0.64f)
             }
