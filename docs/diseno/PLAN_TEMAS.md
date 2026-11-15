@@ -909,9 +909,9 @@ Junto al mito están las creencias del siglo I: **los Vigilantes** de Enoc, **Be
 - **Oscuro:** la misma Galilea de noche, en azul negro de cielo antiguo, con los círculos de las esferas (**recurso**: se dibujan como el diagrama de los ofitas), la lámpara de aceite y una luz blanca y violeta por las grietas.
 
 **Fecha y números.**
-- **El cielo del día:** «cielo 212 de 365». Según Ireneo, Basílides enseñaba que hay 365 cielos y que por eso el año tiene 365 días (*Contra las herejías* 1.24; a comprobar la cita).
-- **El planeta del día:** la semana planetaria antigua es real. Orígenes cuenta que los ofitas unían planetas y arcontes (por ejemplo, Saturno con el de cara de león; *Contra Celso* 6.31, a comprobar). Si la lista completa no está en las fuentes, solo se muestra el planeta.
-- **La fecha hebrea:** a comprobar si `android.icu.util.HebrewCalendar` sirve con el `minSdk` de la app.
+- **El cielo del día:** «cielo 212 de 365». Según Ireneo, Basílides enseñaba que hay 365 cielos (*Contra las herejías* 1.24.3–7); que por eso el año tiene 365 días lo cuenta Hipólito (*Refutación* 7.26). Comprobado en `docs/diseno/temas/fuentes_arcontes.md`.
+- **El planeta del día:** la semana planetaria antigua es real. Se muestra **solo el planeta**: en Orígenes hay dos listas distintas de siete arcontes (las caras de animal, *Contra Celso* 6.30, y las contraseñas, 6.31) y el Apócrifo de Juan da una tercera; qué arconte va con qué planeta no se pudo comprobar en el texto, y las listas no se mezclan.
+- **La fecha hebrea:** el calendario hebreo calculado de hoy, escrito en Kotlin en `ui/Arcontes.kt` (así funciona también en las pruebas, sin `android.icu`).
 - **Números:** con letras hebreas que valen números.
 - **Títulos:** en arameo o hebreo, y en copto, con su español al lado.
 
@@ -926,7 +926,7 @@ Junto al mito están las creencias del siglo I: **los Vigilantes** de Enoc, **Be
 - **Nunca se le ve de frente.** Los textos lo apoyan: el Salvador que cambia de forma en el Evangelio de Judas y en los Hechos de Juan, y cuyo cuerpo solo parecía cuerpo.
 
 **Superficies.**
-- **Emblema:** Abraxas como en las gemas antiguas (cabeza de gallo, piernas de serpiente), dentro del ouroboros.
+- **Emblema:** Abraxas como en las gemas antiguas (cabeza de gallo, piernas de serpiente), dentro del ouroboros. Se le llama «amuleto de Abraxas»: muchas de esas gemas son amuletos de magia, no obra segura de gnósticos. En el ícono va solo el ouroboros (la regla de la huella del lote 1 no deja sitio para una figura legible); Abraxas entero va en el sello.
 - **Libreta:** la jarra sellada con el códice.
 - **Cartas:** cartas entre comunidades escondidas.
 - **Libros:** los textos reales: Evangelio de Tomás, de Felipe, de María y de Judas, Apócrifo de Juan, Libro de Enoc.
@@ -981,9 +981,9 @@ Junto al mito están las creencias del siglo I: **los Vigilantes** de Enoc, **Be
   - **El cuadro lo cuenta también** (decisión 18 del plan de historia): los días en que Jesús aparece llevan la clave de escena `figura_luz`, la figura de luz de espaldas. Su viaje a Jerusalén en Pésaj y en Sucot es un estado (`jerusalen`), y la huida de la temporada 5 es otro (`huida`).
 - **Las fechas:**
   - año base 28 d. C.: la temporada 1 es el año 28 y la 5, el 32;
-  - el año 28 es el «año quince de Tiberio» en que empieza a predicar Juan el Bautista (Lucas 3:1);
-  - la crucifixión va el **viernes 14 de nisán del año 30**, el 7 de abril juliano, la fecha que más aceptan los historiadores (la otra propuesta fuerte es el 3 de abril del 33);
-  - las fiestas judías se calculan con la luna nueva de cada año y van como «aproximado» (como el calendario de Zaynab), porque el mes empezaba cuando se veía la luna;
+  - el año quince de Tiberio (Lucas 3:1), con la cuenta romana, empieza en el otoño del 28: Juan bautiza desde entonces, y el bautismo de Jesús, la llamada y Cafarnaúm van a finales del 28. Por eso los mercaderes del Templo van en la última semana, en el 30, donde los ponen Marcos y los otros sinópticos, y no en una Pascua del 28;
+  - la crucifixión va el **viernes 14 de nisán del año 30**, el 7 de abril juliano. No hay consenso: es una de las dos fechas más defendidas (según Riesner, al parecer la de la mayoría; la otra es el 3 de abril del 33, la habitual en el siglo XX). Sigue la cronología de Juan, porque en el 30 el 15 de nisán cayó en sábado;
+  - las fiestas judías se calcularon con la luna nueva de cada año y la primera luna visible en Jerusalén, y van como «aproximado» (como el calendario de Zaynab), porque el mes empezaba cuando se veía la luna. La tabla está en `fuentes_arcontes.md`, sección 6. Hay adar II en el 29 y en el 32. El Purim del 28 cae el 29 de febrero, que el calendario de la app no escribe: va el 1 de marzo (el 15 de adar, el Purim de Jerusalén);
   - lo que los evangelios no fechan va como «aproximado», con su cita.
 - **Su gente:**
   - inventada: su familia y su maestro salador;
@@ -992,13 +992,14 @@ Junto al mito están las creencias del siglo I: **los Vigilantes** de Enoc, **Be
 
 | Temporada | Año | Lo que pasa (los textos, entre paréntesis) | Cómo lo lee el iniciado (creencias reales, con su fuente) |
 |---|---|---|---|
-| 1 | 28 d. C. | Juan bautiza en el Jordán (Lucas 3; Josefo, *Antigüedades* 18.116–119). El bautismo de Jesús (Marcos 1:9–11). Jesús llama a los pescadores de Cafarnaúm, a una hora de Magdala (Marcos 1:16–20). Las curaciones de Cafarnaúm (Marcos 1:21–34). La primera Pascua en Jerusalén y los mercaderes del Templo (Juan 2:13–16) | En el bautismo, el Cristo de lo alto bajó sobre Jesús como una paloma (la creencia de Cerinto, según Ireneo, *Contra las herejías* 1.26.1). Juan es «el mayor de los nacidos de mujer», pero del mundo de abajo (Evangelio de Tomás 46) |
-| 2 | 29 d. C. | El sermón a la orilla. La tempestad calmada (Marcos 4:35–41). María de Magdala sigue a Jesús (Lucas 8:2). Herodes Antipas mata a Juan (Marcos 6:17–29; Josefo). Los panes, cerca de la Pascua (Juan 6:4–13). Jesús camina sobre el agua (Marcos 6:45–52). La transfiguración (Marcos 9:2–8). Sucot en Jerusalén (Juan 7) y Janucá (Juan 10:22) | El cuerpo del Salvador solo parecía un cuerpo, y por eso no se hunde. La transfiguración es la luz del Pleroma vista un momento. Días con `figura_luz` |
-| 3 | 30 d. C. | La entrada en Jerusalén (Marcos 11:1–11). La última cena. **La crucifixión, el viernes 14 de nisán (7 de abril)**. El sepulcro vacío y María de Magdala (Juan 20:1–18). Pentecostés, cincuenta días después (Hechos 2) | Quien sufre en la cruz no es el Salvador: Basílides decía que crucificaron a Simón de Cirene (Ireneo 1.24.4), y el Apocalipsis de Pedro de Nag Hammadi ve al Salvador vivo, riendo encima de la cruz. Después se le aparece como luz, niño y anciano, como al Juan del Apócrifo de Juan |
-| 4 | 31 d. C. | La comunidad de Jerusalén (Hechos 2:42–47). Pedro y Juan, presos (Hechos 4). Los apóstoles, azotados; el consejo de Gamaliel (Hechos 5). Los siete helenistas (Hechos 6). En Roma cae Sejano (18 de octubre del 31), y la noticia llega a Judea | Choca con el grupo de Pedro, como María en el Evangelio de María. Su círculo se esconde |
-| 5 | 32 d. C. | Esteban, apedreado (Hechos 7; la fecha es aproximada). La persecución de Saulo y la dispersión (Hechos 8:1–3). Huye a Samaria, donde predican Felipe y **Simón**, «el poder de Dios llamado Grande» (Hechos 8:5–24) | Conoce a Simón y a Helena, en quien Simón veía el primer pensamiento de Dios caído al mundo (Ireneo 1.23.2). La tradición posterior hace de Simón el padre de los gnósticos |
+| 1 | 28 d. C. | Juan bautiza en el Jordán desde el otoño (Lucas 3:1–3; Josefo, *Antigüedades* 18.5.2). A finales del año: el bautismo de Jesús (Marcos 1:9–11), la llamada a los pescadores (Marcos 1:16–20) y las curaciones de Cafarnaúm, a unas dos horas a pie de Magdala (Marcos 1:21–34) | El iniciado oye dos enseñanzas y las mezcla: que en el bautismo el Cristo de lo alto bajó sobre Jesús, un hombre de verdad (Cerinto, según Ireneo, *Contra las herejías* 1.26.1), y que el cuerpo del Salvador solo parecía cuerpo (el docetismo de los Hechos de Juan). Sobre Juan, el mayor de los nacidos de mujer (Mateo 11:11), cita Tomás 46; que Juan sea «del mundo de abajo» es lectura suya |
+| 2 | 29 d. C. | El sermón a la orilla. La tempestad calmada (Marcos 4:35–41). María de Magdala sigue a Jesús (Lucas 8:2). Herodes Antipas mata a Juan (Marcos 6:17–29; Josefo; aproximado: los estudiosos dan del 29 al 32, y Marcos lo pone antes de los panes). Los panes, cerca de la Pascua (Juan 6:4–13). Jesús camina sobre el agua (Marcos 6:45–52). La transfiguración (Marcos 9:2–8). Sucot en Jerusalén (Juan 7) y Janucá (Juan 10:22) | El cuerpo del Salvador solo parecía un cuerpo, y por eso no se hunde. La transfiguración es la luz del Pleroma vista un momento. Días con `figura_luz` |
+| 3 | 30 d. C. | La entrada en Jerusalén (Marcos 11:1–11) y los mercaderes del Templo (Marcos 11:15–19). La última cena. **La crucifixión, el viernes 14 de nisán (7 de abril)**, según la cronología de Juan. El sepulcro vacío y María de Magdala (Juan 20:1–18). Pentecostés, el domingo 28 de mayo (Hechos 2) | Quien sufre en la cruz no es el Salvador: según Ireneo (fuente enemiga), Basílides decía que crucificaron a Simón de Cirene (*Contra las herejías* 1.24.4), y el Apocalipsis de Pedro de Nag Hammadi ve al Salvador vivo, riendo encima de la cruz. Después se le aparece como luz, niño y anciano, como al Juan del Apócrifo de Juan (a comprobar el pasaje) |
+| 4 | 31 d. C. | La comunidad de Jerusalén (Hechos 2:42–47). Pedro y Juan, presos (Hechos 4). Los apóstoles, azotados; el consejo de Gamaliel (Hechos 5). Los siete helenistas (Hechos 6). En Roma cae Sejano (18 de octubre del 31); la noticia llega a Judea entre finales de noviembre y diciembre (aproximado) | Choca con el grupo de Pedro, como María en el Evangelio de María. Su círculo se esconde |
+| 5 | 32 d. C. | Esteban, apedreado (Hechos 7; aproximado y adelantado: lo habitual es ponerlo hacia el 34). La persecución de Saulo y la dispersión (Hechos 8:1–3). Huye a Samaria, donde predican Felipe y **Simón**, a quien la gente llamaba el gran poder de Dios (Hechos 8:5–24; el texto exacto, de la Reina-Valera 1909) | Oye a Simón, y oirá más tarde lo que se enseña de Helena, en quien Simón veía el primer pensamiento de Dios caído al mundo (Ireneo 1.23.2; Simón la encontró en Tiro, después). La tradición posterior hace de Simón el padre de los gnósticos |
 
-- **A comprobar en la tanda de su calendario:**
+- **Comprobado el 15 nov 2026** en `docs/diseno/temas/fuentes_arcontes.md` (con Wikipedia: los textos antiguos completos no se pudieron abrir todavía). Las correcciones ya están en esta ficha. Queda pendiente copiar el texto exacto de la Reina-Valera 1909 y de las traducciones de dominio público cuando la red las deje abrir.
+- **Lo que se comprobó en esa tanda:**
   - cada cita;
   - las fechas calculadas de las fiestas de los años 28 a 32;
   - la fecha de la crucifixión y su día de la semana;
@@ -1033,12 +1034,14 @@ Junto al mito están las creencias del siglo I: **los Vigilantes** de Enoc, **Be
 | Evangelio de Judas (Códice Tchacos) | El Salvador que se aparece como niño; Judas el que entiende |
 | Primer Apocalipsis de Santiago (Nag Hammadi V,3 y Códice Tchacos) | Las respuestas del alma a los guardianes |
 | Pistis Sofía (Códice Askew) | La tiniebla exterior como un dragón que se muerde la cola |
-| Ireneo, *Contra las herejías* 1.1–1.8 y 1.24 | Valentinianos (hílicos, psíquicos, pneumáticos); Basílides y los 365 cielos. Es una fuente enemiga |
+| Ireneo, *Contra las herejías* 1.1–1.8, 1.23, 1.24, 1.26 y 1.30 | Valentinianos (hílicos, psíquicos, pneumáticos); Simón y Helena; Basílides y los 365 cielos; Cerinto; los ofitas (los siete son los planetas). Es una fuente enemiga |
+| Hipólito, *Refutación de todas las herejías* 7.26 | Los 365 cielos y los 365 días del año. Fuente enemiga |
+| Clemente de Alejandría, *Stromata* 1.21 | Los basilidianos velan la noche anterior a la fiesta del bautismo, el 11 o el 15 de tybi (6 o 10 de enero) |
 | Orígenes, *Contra Celso* 6.24–6.38 | El diagrama de los ofitas con Leviatán, los siete arcontes y sus contraseñas. Fuente enemiga |
 | Hechos de Juan | El Salvador que cambia de forma |
 | 1 Enoc 6–16 | Los Vigilantes del monte Hermón |
 | Regla de la guerra (Qumrán, 1QM) | Hijos de la luz contra hijos de las tinieblas, Belial |
-| Testamento de Salomón | Demonios con nombre, el anillo |
+| Testamento de Salomón | Demonios con nombre, el anillo (se dibuja liso: la estrella del sello es medieval) |
 | Gemas de Abraxas, papiros mágicos griegos | El emblema, los amuletos |
 | Reina-Valera 1909 | Dichos canónicos en español de dominio público |
 

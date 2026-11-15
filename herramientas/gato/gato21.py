@@ -1,5 +1,5 @@
 """
-Lote 10: los gatos de los cinco temas nuevos. Primera tanda: Frente exterior.
+Lote 10: los gatos de los cinco temas nuevos. Primera tanda: Frente exterior; segunda tanda: Arcontes.
 
 - Frente exterior (`frente`): gato gris pizarra pintado como un cuadro de concepto de los años 70 (gouache sobre cartón:
   manchas de color opaco con la huella del pincel, luz cálida que entra por arriba y rebote frío abajo, grano del
@@ -13,7 +13,20 @@ Lote 10: los gatos de los cinco temas nuevos. Primera tanda: Frente exterior.
   el texto de las pantallas, las raíces que mece la ventilación y, una vez por bucle, el escáner de una patrulla que
   entra por la rendija. Esconde un microfilm en el collar y se agacha cuando el escáner entra por la rendija del techo.
 
-Los otros cuatro temas del lote 10 (`arcontes`, `galia`, `nouveau`, `psicodelia`) se agregan igual: su rama en
+- Arcontes (`arcontes`): gato negro con ojos de luz (el blanco violeta de la grieta), pintado a la encáustica como los
+  retratos de El Fayum (cera caliente con pigmento: toques densos que siguen la forma, una rampa corta del negro cálido
+  al ocre, el brillo de la cera donde le da la luz y la tabla cálida que se asoma en el contorno; de noche, un filo
+  violeta de la grieta en el lomo). Al cuello, un cordón con el amuleto de Abraxas: una gema ovalada de jaspe verde con
+  su grabado. Fondo: la orilla de Magdala y el lago de Galilea de día (el sol con su dorado de más, nubes con el filo
+  dorado, la otra orilla en lomas de caliza con una aldea, el lago con su hondura y su reguero de oro, barcas de pesca
+  con vela, la casa del salador con su tendedero de pescado, ánforas, sal y red, la barca varada y una palmera que
+  enmarca); de noche, el mismo lago bajo el cielo antiguo, con las esferas apenas, la lámpara en la puerta, la barca
+  que pesca con su lámpara y, muy fina, la grieta de luz blanca y violeta con su reflejo. Lo que se mueve: el agua
+  (destellos, ondas, la espuma), la vela, la palmera, el polvo dorado, las estrellas, las llamas, la grieta que late
+  apenas y, una vez por bucle, algo que pasa por el cielo y tapa las estrellas. Rasga el velo con la pata y por un
+  momento se ve la luz de detrás (recurso del dibujo) · eriza el lomo ante una sombra que no se ve.
+
+Los otros tres temas del lote 10 (`galia`, `nouveau`, `psicodelia`) se agregan igual: su rama en
 `tema_mio`, sus colores en `colores_obj`, sus dos acciones en `ESP_MIOS`, su fondo en `FONDOS_MIOS` (y `ETIQ`, `NOCHE`)
 y su nombre en `MIOS`; o en un archivo `gato21b.py` que importe este y registre los suyos de la misma forma.
 
@@ -476,8 +489,8 @@ def pintar_encaustica(g, t, cel):
             rgb[Qp] = qc
             alfa = np.where(Qp, 255, alfa)
         else:
-            b = _difuso(Qp, 1.4 * s)
-            a_ = np.round(np.clip(b * 1.3, 0, 1) * t["enc_sombra_a"] * 5) / 5
+            b = _difuso(Qp, 2.0 * s)
+            a_ = np.round(np.clip(b * 1.25, 0, 1) * t["enc_sombra_a"] * 6) / 6
             zona = ~gato & (a_ > 0.02)
             rgb[zona] = qc
             if t.get("enc_sombra_filo"):
@@ -574,7 +587,7 @@ def tema_mio(nombre, oscuro):
             t.update(enc_rampa=[hx(c) for c in ("0F0B0E", "181317", "211B20", "2D2529", "3E3333", "5D4D42", "97805C", "E6D4A2")],
                      enc_luz=(-0.46, -0.72, 0.52), enc_tinta=hx("0B0709"), enc_tabla=hx("7A5634"),
                      enc_jaspe=[hx(c) for c in ("2B4C38", "3E6B4E", "57876A", "A9CDB0", "E8F4E6")],
-                     enc_halo_ojo=0.5, enc_halo_col=hx("B9A3FF"), enc_grieta_halo=GRIETA_H, enc_sombra_a=0.26,
+                     enc_halo_ojo=0.5, enc_halo_col=hx("B9A3FF"), enc_grieta_halo=GRIETA_H, enc_sombra_a=0.22,
                      enc_sombra_filo=None)
             t["sombra_col"], t["sombra_a"] = (58, 44, 30), 62
         else:
@@ -760,16 +773,16 @@ def o_velo(L, a):
 
 # (cuánto se eriza, dónde va la sombra, inclinación de la cabeza, ojo, orejas, bufa). La sombra entra por delante,
 # alta, pasa por encima del gato y se va por detrás; el gato la sigue con la cabeza, erizado.
-SOMBRA_PASA = [(0.0, 74, -12, "abierto", 0.0, False), (0.55, 60, -20, "abierto", 0.55, False), (1.0, 47, -26, "abierto", 0.95, False),
-               (1.0, 34, -28, "abierto", 0.95, True), (1.0, 21, -20, "abierto", 0.95, True), (1.0, 8, -12, "abierto", 0.9, False),
-               (0.5, -6, -4, "medio", 0.6, False), (0.0, -22, 2, "medio", 0.3, False)]
+SOMBRA_PASA = [(0.0, 74, -16, "abierto", 0.0, False), (0.55, 60, -26, "abierto", 0.55, False), (1.0, 47, -34, "abierto", 0.95, False),
+               (1.0, 34, -36, "abierto", 0.95, True), (1.0, 21, -30, "abierto", 0.95, True), (1.0, 8, -22, "abierto", 0.9, False),
+               (0.5, -6, -8, "medio", 0.6, False), (0.0, -22, 0, "medio", 0.3, False)]
 
 
 def erizar_sombra(k):
     f, sx, inc, ojo, orejas, bufa = SOMBRA_PASA[k]
     p = g8.interp(g8.DE_PIE, g8.ANIMS["enojado"][k % 3], f)
     p.update(inc=inc, ojo=ojo, orejas=orejas, lengua=bufa, semilla=k)
-    p["cab"] = (p["cab"][0], p["cab"][1] - 1.2 * f)
+    p["cab"] = (p["cab"][0] - 0.6 * f, p["cab"][1] - 3.4 * f)          # alza la cabeza para seguirla
     return p, dict(obj=(sx, 7.0), k=k)
 
 
@@ -1299,9 +1312,728 @@ def fondo_frente(t):
     return big
 
 
-FONDOS_MIOS = {"frente": fondo_frente}
-ETIQ = {"frente": "Frente exterior · la base escondida en ruinas"}
-NOCHE = {"frente": "la base en penumbra, con el vidrio y las lámparas encendidos"}
+
+# ---------------------------------------------------------------------
+#  Arcontes: la orilla de Magdala y el lago de Galilea (docs/diseno/temas/arcontes.md, `TrazosArcontes`)
+# ---------------------------------------------------------------------
+HORIZONTE = 37          # donde el lago toca la otra orilla
+SOL = (104, 8)          # el sol, arriba a la izquierda: de ahí viene la luz de todo el fondo (y la del gato)
+GRIETA_X = 300          # la grieta de luz en el cielo de noche (arriba a la derecha: el filo del gato viene de ahí)
+
+PAL_ARC_D = dict(
+    cielo=(hx("AFC4C3"), hx("C3D0C2"), hx("D6D8BE"), hx("E6DAB2"), hx("F0DCA6")),
+    sol=hx("FFF8E2"), sol_halo=hx("F5DA8E"), oro=hx("D4A62A"),
+    nube=(hx("F8F1E0"), hx("E8DCC0"), hx("CFC09E")), nube_oro=hx("EDC765"),
+    lejos=(hx("CBBFA8"), hx("BDB09A")), monte=(hx("CDB890"), hx("B49E78"), hx("98845F")), matorral=hx("8E8A64"),
+    aldea=(hx("F2EAD6"), hx("A8987A")),
+    lago=(hx("A9C6BE"), hx("86AEA8"), hx("629698"), hx("478191"), hx("366E7E"), hx("2E6272"), hx("3B7680")),
+    onda_luz=hx("BFD9D0"), onda_osc=hx("2A5A68"), destello=(hx("FFF7E0"), hx("F3D47C"), hx("E2B648")),
+    orilla=hx("6FA096"), arena_mojada=(hx("BCA97F"), hx("A8956C")), espuma=(hx("F6F1E2"), hx("D9E4D6")),
+    arena=(hx("E0D3AE"), hx("D7C9A2"), hx("CCBC92")), guijarro=(hx("EDE3C8"), hx("C6B58E"), hx("9F8D6A")),
+    caliza=(hx("E1D5B2"), hx("D9CBA6"), hx("D0C29B"), hx("DCCFAB")), caliza_luz=hx("F1E8CD"), junta=hx("A8966F"),
+    caliza_sombra=hx("A9976F"), lado=(hx("B6A47F"), hx("A39169"), hx("8C7A57")), revoque=(hx("C9B48A"), hx("B39D74"), hx("8E7A56")),
+    madera=(hx("A27A4C"), hx("6B4A2E"), hx("4A321E")), barro=(hx("D19060"), hx("B9774A"), hx("8A4E2B"), hx("5E3420")),
+    lino=(hx("F6EEDB"), hx("E3D4AF"), hx("C4B48C")), pez=(hx("F0E4C4"), hx("C9B48A"), hx("8D7650")),
+    tronco=(hx("A88052"), hx("7C5C3A"), hx("57402A")), palma=(hx("9DB262"), hx("78944A"), hx("55703A"), hx("3B5229")),
+    datil=hx("C8862C"), hueco=(hx("4A382C"), hx("2E231C")), sal=(hx("FBF8F0"), hx("DCD5C4")),
+    cesto=(hx("B08A58"), hx("8A6A44"), hx("624A30")), sombra=hx("B19F78"), figura=(hx("3C2E26"), hx("D9C8A2")),
+    red=hx("7A6448"), polvo=(hx("FBEAB0"), hx("F3D47C")), vela_lejos=hx("EDE3CB"),
+)
+PAL_ARC_N = dict(
+    cielo=(hx("0B0D1C"), hx("0E1122"), hx("121528"), hx("171A30"), hx("1C2038")),
+    estrella=(hx("ECE4CF"), hx("A09CB0"), hx("C4B0FF"), hx("6E6A9E")),
+    lejos=(hx("161A2E"), hx("1A1E34")), monte=(hx("2A2E48"), hx("1E2238"), hx("171A2C")), matorral=hx("141728"),
+    aldea=(hx("E9B04F"), hx("8A6A3A")),
+    lago=(hx("1C2238"), hx("182238"), hx("152236"), hx("121E30"), hx("101A2A"), hx("0E1826"), hx("142434")),
+    onda_luz=hx("2E3F5E"), onda_osc=hx("09111C"), destello=(hx("ECE4CF"), hx("A09CB0"), hx("6E6A9E")),
+    orilla=hx("1C2C3C"), arena_mojada=(hx("2A2A3A"), hx("222232")), espuma=(hx("5A6078"), hx("3C4258")),
+    arena=(hx("34344A"), hx("2E2E44"), hx("29293D")), guijarro=(hx("4A4A62"), hx("34344A"), hx("22222F")),
+    caliza=(hx("3E3F56"), hx("393A51"), hx("35364C"), hx("3B3C53")), caliza_luz=hx("4C4D67"), junta=hx("25263A"),
+    caliza_sombra=hx("2A2B40"), lado=(hx("2B2C42"), hx("25263A"), hx("1F2032")), revoque=(hx("3A3850"), hx("302F44"), hx("232236")),
+    madera=(hx("4E3E3A"), hx("362A2A"), hx("241C1E")), barro=(hx("6A4436"), hx("553628"), hx("40281E"), hx("2A1A16")),
+    lino=(hx("4C4C64"), hx("3E3E55"), hx("303044")), pez=(hx("6A6A80"), hx("4E4E64"), hx("36364A")),
+    tronco=(hx("2C2834"), hx("221F2A"), hx("1A1820")), palma=(hx("2A3040"), hx("212634"), hx("1A1E2A"), hx("13161F")),
+    datil=hx("3A2A28"), hueco=(hx("3A2410"), hx("24160A")), sal=(hx("6C6C84"), hx("50506A")),
+    cesto=(hx("4A3C34"), hx("3A2E28"), hx("2A201C")), sombra=hx("232338"), figura=(hx("10101A"), hx("3A3A50")),
+    red=hx("2E2830"), vela_lejos=hx("3A3C54"),
+    llama=(hx("FFF1B0"), hx("F0B24A"), hx("C8742A")), llama_halo=hx("FFD98A"), grieta=GRIETA, grieta_halo=GRIETA_H,
+    esfera=hx("6E6A9E"),
+)
+
+
+def pon(px, x, y, col, k=1.0):
+    """Un pixel (a 1 dp), mezclado si k < 1; fuera del cuadro no hace nada."""
+    x, y = int(round(x)), int(round(y))
+    if 0 <= x < W and 0 <= y < H:
+        px[x, y] = col if k >= 1 else mezcla(px[x, y], col, k)
+
+
+def nube_larga(im, x, y, w, P, semilla):
+    """Nube alargada y baja: bultos redondos sobre una base chata; la panza en sombra, el cuerpo claro y el filo de arriba
+    que mira al sol, dorado (el oro de más del mundo visible). Las orillas, deshilachadas."""
+    px = im.load(); rnd = random.Random(semilla)
+    pint = set()
+    for k in range(0, w, 2):
+        u = k / w
+        r = 1.8 + 3.6 * math.sin(math.pi * u) ** 0.7 * rnd.uniform(0.7, 1.1)
+        bx, by = x + k, y - r * 0.35
+        for yy in range(int(by - r), int(y) + 1):
+            for xx in range(int(bx - r), int(bx + r) + 1):
+                if ((xx - bx) / r) ** 2 + ((yy - by) / (r * 0.7)) ** 2 < 1 and yy <= y:
+                    pint.add((xx, yy))
+    hacia_sol = lambda xx: (SOL[0] - xx)
+    for (xx, yy) in pint:
+        if (xx, yy - 1) not in pint and (xx > x + 2 or rnd.random() < 0.5):
+            col = P["nube_oro"] if (hacia_sol(xx) > -60 or (xx, yy - 2) in pint) and tramar(0.7, xx, yy) else P["nube"][0]
+        elif (xx, yy + 1) not in pint:
+            col = P["nube"][2]
+        elif (xx, yy + 2) not in pint:
+            col = P["nube"][1]
+        else:
+            col = P["nube"][0]
+        borde = (xx - 1, yy) not in pint or (xx + 1, yy) not in pint
+        pon(px, xx, yy, col, 0.6 if borde else 0.95)
+
+
+def montes_arc(im, P, o):
+    """La otra orilla: lomas de caliza (lejos, en la bruma) y más cerca, con las laderas que dan al sol más claras,
+    terrazas y matorral. De noche, siluetas; las que quedan cerca de la grieta tienen un filo violeta."""
+    px = im.load()
+    lejos = g9.ondas(41, 27.5, [(3.0, 150), (1.8, 55), (0.8, 21)])
+    cerca = g9.ondas(43, 31.5, [(3.4, 120), (1.6, 41), (0.7, 14)])
+    for x in range(W):
+        for y in range(max(0, round(lejos[x])), HORIZONTE):
+            px[x, y] = P["lejos"][0] if (y - lejos[x]) < 2.5 or o else P["lejos"][1]
+    rnd = random.Random(7)
+    for x in range(W):
+        top = round(cerca[x])
+        pend = cerca[min(W - 1, x + 2)] - cerca[max(0, x - 2)]
+        for y in range(max(0, top), HORIZONTE):
+            prof = y - top
+            if o:
+                col = P["monte"][1] if prof > 0 else P["monte"][0]
+                if prof == 0 and abs(x - GRIETA_X) < 60:
+                    col = mezcla(col, P["estrella"][3], 0.6 if abs(x - GRIETA_X) < 30 else 0.3)
+            else:
+                col = P["monte"][0] if pend < -0.25 else (P["monte"][2] if pend > 0.5 else P["monte"][1])
+                if prof > 3 and (y + int(x * 0.1 + 2 * math.sin(x / 9.0))) % 4 == 0:
+                    col = mezcla(col, P["monte"][2], 0.5)                       # terrazas
+            px[x, y] = col
+        if not o and rnd.random() < 0.22 and top + 2 < HORIZONTE - 1:     # matorral y olivos sueltos
+            yy = rnd.randint(top + 1, HORIZONTE - 2)
+            pon(px, x, yy, P["matorral"]); pon(px, x + 1, yy, P["matorral"], 0.6)
+    # Una aldea en la falda de la otra orilla (casitas cúbicas de caliza; de noche, sus lámparas).
+    for k, (ax, aw) in enumerate(((326, 3), (330, 2), (333, 3), (338, 2), (342, 3), (150, 2), (153, 3))):
+        ay = HORIZONTE - 3 - (k % 2)
+        if o:
+            if k in (1, 3, 5):
+                pon(px, ax + 1, ay + 1, P["aldea"][0])
+        else:
+            for xx in range(ax, ax + aw):
+                pon(px, xx, ay, P["aldea"][0]); pon(px, xx, ay + 1, P["aldea"][0] if xx < ax + aw - 1 else P["aldea"][1])
+    return cerca
+
+
+def lago_arc(im, P, o):
+    """El lago: claro en la lejanía (refleja el cielo), más hondo en medio, y otra vez claro y verdoso donde ya se ve
+    el fondo cerca de la orilla. Ondas en rayitas, más juntas cerca; el reflejo de las lomas al pie de la otra orilla."""
+    px = im.load()
+    orilla = [62.2 + 1.3 * math.sin(x / 23.0 + 0.6) + 0.7 * math.sin(x / 7.3 + 1.0) for x in range(W)]
+    degradado(im, HORIZONTE, 64, P["lago"][:6])
+    for x in range(W):                                   # el bajo cerca de la orilla
+        for y in range(int(orilla[x]) - 4, int(orilla[x]) + 1):
+            if 0 <= y < H and tramar((y - orilla[x] + 4) / 4.5, x, y):
+                px[x, y] = P["lago"][6]
+    for x in range(W):                                   # reflejo de las lomas
+        for y in range(HORIZONTE, HORIZONTE + 3):
+            if tramar(0.55 - (y - HORIZONTE) * 0.18, x, y):
+                px[x, y] = mezcla(px[x, y], P["monte"][2] if not o else P["monte"][2], 0.45)
+    rnd = random.Random(11)
+    for _ in range(330):                                 # ondas
+        y = int(HORIZONTE + 2 + (rnd.random() ** 0.7) * 22)
+        x = rnd.randrange(0, W)
+        if y >= orilla[min(W - 1, x)] - 1: continue
+        largo = 1 + int((y - HORIZONTE) / 6) + rnd.randint(0, 2)
+        col = P["onda_luz"] if rnd.random() < 0.55 else P["onda_osc"]
+        for k in range(largo):
+            pon(px, x + k, y, col, 0.7 if o else 0.85)
+    return orilla
+
+
+def costa_arc(im, P, o, orilla):
+    """La playa: la espuma donde rompe el agua, la arena mojada, la arena seca de caliza con su grano, y guijarros con la
+    luz arriba a la izquierda y la sombra abajo a la derecha."""
+    px = im.load(); rnd = random.Random(13)
+    for x in range(W):
+        y0 = int(orilla[x])
+        for y in range(y0, H):
+            v = (y - y0) / (H - y0)
+            if y - y0 < 3:
+                col = P["arena_mojada"][0 if (y - y0) == 2 or tramar(0.3, x, y) else 1]
+            else:
+                col = P["arena"][0] if v > 0.55 else (P["arena"][1] if v > 0.25 else P["arena"][2])
+                if tramar(0.5, x, y) and 0.2 < v < 0.3 or tramar(0.5, x, y) and 0.5 < v < 0.6:
+                    col = P["arena"][1]
+            px[x, y] = col
+        pon(px, x, y0, P["espuma"][0] if (x // 3) % 4 else P["espuma"][1])
+        pon(px, x, y0 - 1, P["espuma"][1], 0.5)
+    for _ in range(260):                                 # grano de la arena
+        x, y = rnd.randrange(W), rnd.randrange(64, H)
+        pon(px, x, y, P["guijarro"][rnd.choice((0, 1, 1, 2))], 0.6)
+    for _ in range(46):                                  # guijarros
+        x, y = rnd.randrange(W), rnd.randrange(66, H - 1)
+        r = rnd.choice((1, 1, 1, 2, 2, 3))
+        guijarro(px, x, y, r, P)
+
+
+def guijarro(px, x, y, r, P):
+    for yy in range(-r, 1):
+        for xx in range(-r - 1, r + 2):
+            if (xx / (r + 0.8)) ** 2 + (yy / (r * 0.75 + 0.3)) ** 2 <= 1:
+                col = P["guijarro"][0] if (xx < 0 and yy < 0) else (P["guijarro"][2] if (xx > 0 and yy == 0) else P["guijarro"][1])
+                pon(px, x + xx, y + yy, col)
+    for xx in range(-r + 1, r + 3):
+        pon(px, x + xx + 1, y + 1, P["sombra"], 0.55)
+
+
+def sombra_suelo(im, x0, x1, y0, y1, P, k=0.5):
+    """Sombra arrojada en el suelo (tramada para que no salga un color nuevo por cada pixel)."""
+    px = im.load()
+    for y in range(max(0, y0), min(H, y1)):
+        for x in range(max(0, int(x0)), min(W, int(x1))):
+            if tramar(k, x, y):
+                px[x, y] = mezcla(px[x, y], P["sombra"], 0.6)
+
+
+def casa_salador(im, P, o):
+    """La casa del salador, a la izquierda: muro de sillares de caliza (cada uno con su tono, el filo de arriba con luz y
+    la junta honda), el costado en sombra, el techo plano de barro con las vigas que asoman y la estera de caña, una
+    tinaja en la azotea, la puerta con su dintel de madera, una ventanita, la escalera de mano, dos ánforas y el cesto de
+    sal. Devuelve dónde está la puerta (de noche, de ahí sale la luz de la lámpara)."""
+    px = im.load(); d = ImageDraw.Draw(im); rnd = random.Random(3)
+    x0, x1, top, base = 0, 57, 21, 67
+    # Sillares.
+    y = top
+    while y < base:
+        alto = rnd.choice((4, 4, 5))
+        x = x0 - rnd.randint(0, 6)
+        while x < x1:
+            largo = rnd.randint(6, 11); tono = rnd.choice(P["caliza"])
+            for yy in range(y, min(y + alto, base)):
+                for xx in range(max(x, x0), min(x + largo, x1)):
+                    fy, fx = yy - y, xx - x
+                    if fy == alto - 1 or fx == 0:
+                        col = P["junta"]
+                    elif fy == 0:
+                        col = P["caliza_luz"]
+                    elif fx == largo - 1 or fy == alto - 2 and tramar(0.5, xx, yy):
+                        col = P["caliza_sombra"]
+                    else:
+                        col = tono
+                    pon(px, xx, yy, col)
+            if rnd.random() < 0.3:
+                cx_, cy_ = x + rnd.randint(2, max(2, largo - 3)), y + rnd.randint(1, max(1, alto - 2))
+                pon(px, cx_, cy_, P["caliza_sombra"]); pon(px, cx_ - 1, cy_ - 1, P["caliza_luz"])
+            x += largo
+        y += alto
+    # Lo de arriba, más claro (le da el sol de lleno); lo de abajo, un poco en la sombra del suelo.
+    for yy in range(base - 5, base):
+        for xx in range(x0, x1):
+            if tramar((yy - base + 5) / 6, xx, yy): px[xx, yy] = mezcla(px[xx, yy], P["caliza_sombra"], 0.45)
+    # El costado, en sombra (se va hacia atrás).
+    for xx in range(x1, x1 + 6):
+        f = (xx - x1) / 6
+        ya, yb = top + 0.4 + f * 1.6, base - f * 1.2
+        for yy in range(int(ya), int(yb) + 1):
+            col = P["lado"][1] if (yy - top) % 5 else P["lado"][2]
+            if xx == x1: col = P["lado"][0]
+            pon(px, xx, yy, col)
+    # Techo de barro, vigas que asoman y la estera de caña que cuelga.
+    for yy in range(top - 4, top):
+        for xx in range(x0, x1 + 6):
+            col = P["revoque"][0] if yy == top - 4 else (P["revoque"][1] if yy < top - 1 else P["revoque"][2])
+            if xx >= x1: col = mezcla(col, P["lado"][2], 0.5)
+            pon(px, xx, yy, col)
+    for xx in range(x0 + 3, x1, 7):
+        d.rectangle([xx, top, xx + 1, top + 1], fill=P["madera"][2]); pon(px, xx, top, P["madera"][1])
+    for xx in range(x0, x1 + 5):
+        if (xx * 5) % 7 < 4: pon(px, xx, top - 1 + (xx % 3 == 0), P["revoque"][2])
+    # Tinaja en la azotea, recortada contra el cielo.
+    tx, ty = 40, top - 4
+    for yy in range(ty - 7, ty):
+        u = (yy - (ty - 7)) / 7
+        w_ = 1.2 + 3.0 * math.sin(math.pi * min(1, u * 1.1))
+        for xx in range(int(tx - w_), int(tx + w_) + 1):
+            pon(px, xx, yy, P["barro"][1] if xx < tx - w_ * 0.3 else (P["barro"][2] if xx < tx + w_ * 0.5 else P["barro"][3]))
+    d.rectangle([tx - 1, ty - 9, tx + 1, ty - 8], fill=P["barro"][2]); pon(px, tx - 1, ty - 9, P["barro"][0])
+    # Puerta con dintel; ventanita.
+    pu = (15, 41, 26, base)
+    d.rectangle([pu[0], pu[1], pu[2], pu[3]], fill=P["hueco"][0])
+    for yy in range(pu[1], pu[3]):
+        for xx in range(pu[0], pu[2] + 1):
+            if tramar((yy - pu[1]) / (pu[3] - pu[1]) * 0.8, xx, yy): px[xx, yy] = P["hueco"][1]
+    d.line([pu[0] - 1, pu[1], pu[0] - 1, pu[3]], fill=P["caliza_luz"])            # la jamba que da a la luz
+    d.line([pu[2] + 1, pu[1], pu[2] + 1, pu[3]], fill=P["caliza_sombra"])
+    d.rectangle([pu[0] - 3, pu[1] - 3, pu[2] + 3, pu[1] - 1], fill=P["madera"][1])
+    d.line([pu[0] - 3, pu[1] - 3, pu[2] + 3, pu[1] - 3], fill=P["madera"][0])
+    d.rectangle([pu[0] - 2, base - 1, pu[2] + 2, base], fill=P["caliza_luz"])       # umbral
+    d.rectangle([38, 29, 44, 34], fill=P["hueco"][0]); d.line([38, 35, 44, 35], fill=P["caliza_luz"])
+    d.line([41, 29, 41, 34], fill=P["madera"][1])
+    # Escalera de mano al techo.
+    for (xa, ya, xb, yb) in ((59, base, 61, top - 6), (63, base, 65, top - 6)):
+        d.line([xa, ya, xb, yb], fill=P["madera"][1])
+        pon(px, xa, ya - 1, P["madera"][0])
+    for yy in range(top - 4, base, 4):
+        f = (base - yy) / (base - top + 6)
+        d.line([59 + 2 * f, yy, 63 + 2 * f, yy], fill=P["madera"][0 if not o else 1])
+    sombra_suelo(im, 64, 70, 66, 69, P, 0.5)
+    # Ánforas apoyadas en el muro y el cesto de sal.
+    for (ax, inc) in ((33, 0), (39, 1)):
+        anfora(im, ax, base, P, inc)
+    cesto(im, 46, base, P)
+    sombra_suelo(im, x1 + 6, x1 + 14, base - 1, base + 2, P, 0.5)
+    return pu
+
+
+def anfora(im, x, base, P, inc=0):
+    """Ánfora de barro: cuerpo de huso, cuello, dos asas; la luz a la izquierda."""
+    px = im.load()
+    alto = 13
+    for k in range(alto):
+        u = k / (alto - 1)
+        w_ = 0.6 + 2.6 * math.sin(math.pi * min(1.0, 0.15 + u * 0.95)) if u > 0.18 else 0.9
+        cx = x + inc * u * 1.4
+        yy = base - 1 - k
+        for xx in range(int(round(cx - w_)), int(round(cx + w_)) + 1):
+            f = (xx - (cx - w_)) / (2 * w_ + 0.01)
+            col = P["barro"][0] if f < 0.25 else (P["barro"][1] if f < 0.6 else (P["barro"][2] if f < 0.85 else P["barro"][3]))
+            pon(px, xx, yy, col)
+    top = base - alto
+    pon(px, x + inc * 1.4 - 1, top, P["barro"][1]); pon(px, x + inc * 1.4, top, P["barro"][1]); pon(px, x + inc * 1.4 + 1, top, P["barro"][2])
+    for s in (-1, 1):
+        pon(px, x + inc * 1.2 + 2 * s, top + 2, P["barro"][2]); pon(px, x + inc * 1.2 + 2 * s, top + 3, P["barro"][2])
+
+
+def cesto(im, x, base, P):
+    """Cesto de mimbre con el montón de sal."""
+    px = im.load()
+    for yy in range(base - 5, base):
+        for xx in range(x, x + 10):
+            col = P["cesto"][(xx + (yy % 2)) % 2] if 0 < xx - x < 9 else P["cesto"][2]
+            if yy == base - 5: col = P["cesto"][0]
+            pon(px, xx, yy, col)
+    for yy in range(base - 8, base - 5):
+        w_ = (yy - (base - 9)) * 1.6
+        for xx in range(int(x + 5 - w_), int(x + 5 + w_) + 1):
+            pon(px, xx, yy, P["sal"][0] if xx < x + 5 + w_ * 0.3 else P["sal"][1])
+
+
+def tendedero(im, P, o):
+    """El tendedero del salado: dos palos, la cuerda que se comba y los pescados abiertos colgados de la cola."""
+    px = im.load(); d = ImageDraw.Draw(im)
+    xa, xb, yt = 69, 103, 41
+    for xx in (xa, xb):
+        d.line([xx, yt - 1, xx, 68], fill=P["madera"][1]); d.line([xx - 1, yt, xx - 1, 68], fill=P["madera"][0])
+        sombra_suelo(im, xx + 1, xx + 9, 68, 70, P, 0.5)
+    cuerda = [(x, yt + 2.6 * math.sin(math.pi * (x - xa) / (xb - xa))) for x in range(xa, xb + 1)]
+    for (x, y) in cuerda:
+        pon(px, x, y, P["madera"][2])
+    for x in range(xa + 4, xb - 2, 5):
+        y = yt + 2.6 * math.sin(math.pi * (x - xa) / (xb - xa)) + 1
+        pez_abierto(px, x, y, P)
+    sombra_suelo(im, xa + 6, xb + 6, 69, 71, P, 0.3)
+
+
+def pez_abierto(px, x, y, P):
+    """Un pescado abierto y salado, colgado de la cola: la cola arriba, el cuerpo en huso, la carne clara al centro."""
+    pon(px, x - 1, y, P["pez"][2]); pon(px, x + 1, y, P["pez"][2]); pon(px, x, y + 1, P["pez"][2])
+    for k in range(2, 9):
+        w_ = 0.5 + 1.6 * math.sin(math.pi * (k - 1) / 8)
+        for xx in range(int(round(x - w_)), int(round(x + w_)) + 1):
+            col = P["pez"][0] if abs(xx - x) < w_ * 0.45 else (P["pez"][1] if xx < x else P["pez"][2])
+            pon(px, xx, y + k, col)
+
+
+def red_y_ancla(im, P):
+    """Red amontonada (malla de cuerda) y el ancla de piedra con su agujero."""
+    px = im.load()
+    for yy in range(63, 69):
+        w_ = (yy - 62) * 1.6
+        for xx in range(int(114 - w_), int(114 + w_) + 1):
+            pon(px, xx, yy, P["red"] if (xx + yy) % 2 == 0 else P["cesto"][1])
+    sombra_suelo(im, 116, 126, 67, 70, P, 0.5)
+    for yy in range(66, 71):
+        for xx in range(125, 131):
+            if ((xx - 127.8) / 3.2) ** 2 + ((yy - 68.6) / 2.6) ** 2 < 1:
+                pon(px, xx, yy, P["guijarro"][0] if xx < 127 and yy < 68 else P["guijarro"][1])
+    pon(px, 128, 68, P["guijarro"][2])
+
+
+def barca(im, x, yw, largo, P, o, vela=0, gente=True, lampara=False):
+    """Barca de pesca de Galilea: casco de madera redondo con proa y popa levantadas, la traca de arriba más clara, el
+    mástil y la vela cuadrada de lino en su verga (vela: cuánto la hincha el viento, 0 a 2). Mira a la derecha."""
+    px = im.load(); d = ImageDraw.Draw(im)
+    alto = max(2, largo // 7)
+    for k in range(largo):
+        u = k / (largo - 1)
+        sube = 1.6 * (abs(u - 0.5) * 2) ** 3
+        y_top = yw - alto - sube
+        for yy in range(int(round(y_top)), yw + 1):
+            col = P["madera"][0] if yy == int(round(y_top)) else (P["madera"][1] if yy < yw - 1 else P["madera"][2])
+            pon(px, x + k, yy, col)
+    mx = x + int(largo * 0.55)
+    tope = yw - alto - int(largo * 0.75)
+    d.line([mx, yw - alto, mx, tope], fill=P["madera"][2])
+    if vela >= 0:
+        ancho = int(largo * 0.62)
+        vx0 = mx - ancho // 2
+        alto_v = int(largo * 0.55)
+        for j in range(alto_v):
+            v = j / max(1, alto_v - 1)
+            hincha = (0.6 + 0.7 * vela) * math.sin(math.pi * min(1.0, v * 1.05))   # la baluma se hincha con el viento
+            xa, xb = vx0 + 0.4 * v, vx0 + ancho + hincha
+            for xx in range(int(round(xa)), int(round(xb)) + 1):
+                u = (xx - xa) / max(1, xb - xa)
+                col = P["lino"][0] if u < 0.45 else (P["lino"][1] if u < 0.82 else P["lino"][2])
+                if j == alto_v - 1 or (j == alto_v - 2 and u > 0.5): col = P["lino"][2]
+                if largo > 20 and (xx - vx0) % 4 == 2 and j % 2 == 0 and 0.1 < u < 0.9:
+                    col = P["lino"][1] if u < 0.45 else P["lino"][2]           # las líneas de los anillos de cargar
+                pon(px, xx, tope + 2 + j, col)
+        d.line([vx0 - 1, tope + 1, vx0 + ancho + 1, tope + 1], fill=P["madera"][1])        # la verga
+    if gente:
+        for (fx, alto_f) in ((x + 4, 4), (x + largo - 7, 3)):
+            for yy in range(yw - alto - alto_f, yw - alto):
+                pon(px, fx, yy, P["figura"][1] if yy > yw - alto - alto_f + 1 else P["figura"][0])
+            pon(px, fx, yw - alto - alto_f - 1, P["figura"][0])
+    if lampara:
+        pon(px, x + largo - 2, yw - alto - 2, P["llama"][1])
+
+
+def palmera(im, P, o, sway=0.0):
+    """La palmera datilera a la derecha: el tronco anillado que se inclina hacia el lago y una copa de hojas que se
+    arquean y cuelgan, con sus foliolos a los dos lados, y que cruzan el cielo y enmarcan la banda. La luz viene de
+    arriba a la izquierda: el lado de arriba de cada foliolo es más claro. De noche, silueta, con un filo violeta del
+    lado de la grieta. `sway` mece las puntas."""
+    px = im.load()
+    base, copa = (404, 75), (390, 13)
+    n = 64
+    for i in range(n + 1):
+        u = i / n
+        x = base[0] + (copa[0] - base[0]) * (u ** 1.9)
+        y = base[1] + (copa[1] - base[1]) * u
+        w_ = 2.3 - 0.8 * u
+        for xx in range(int(round(x - w_)), int(round(x + w_)) + 1):
+            f = (xx - (x - w_)) / (2 * w_)
+            col = P["tronco"][0] if f < 0.3 else (P["tronco"][1] if f < 0.72 else P["tronco"][2])
+            if (int(y) * 2 + (1 if xx > x else 0)) % 5 == 0: col = P["tronco"][2] if f > 0.15 else P["tronco"][1]
+            pon(px, xx, y, col)
+    for k in range(5):                                       # hojas secas que cuelgan bajo la copa
+        for j in range(4 + k % 3):
+            pon(px, copa[0] - 2 + k + 0.3 * j, copa[1] + 2 + j, P["tronco"][1 + (j % 2)])
+    hojas = [(268, 13, 0.25), (245, 22, 0.55), (222, 27, 0.75), (200, 29, 0.9), (180, 27, 0.95), (160, 21, 0.8),
+             (298, 16, 0.5), (325, 17, 0.7), (350, 15, 0.85), (15, 12, 0.7), (140, 14, 0.5)]
+    for j, (ang, largo, cae) in enumerate(hojas):
+        a = math.radians(ang)
+        dx, dy = math.cos(a), math.sin(a)
+        prev = (copa[0], copa[1])
+        for k in range(1, largo + 1):
+            u = k / largo
+            x = copa[0] + dx * k + sway * u * u * (1.0 if j % 2 else -0.7)
+            y = copa[1] + dy * k + cae * 10 * u * u
+            tx, ty = x - prev[0], y - prev[1]; tn = math.hypot(tx, ty) or 1; tx, ty = tx / tn, ty / tn
+            pon(px, x, y, P["palma"][2])
+            if k >= 2:
+                lf = 4.2 * math.sin(math.pi * min(1.0, u * 1.15)) ** 0.7 + 0.5
+                for sgn in (-1, 1):
+                    nx_, ny_ = -ty * sgn, tx * sgn
+                    lx, ly = 0.45 * tx + 0.8 * nx_, 0.45 * ty + 0.8 * ny_ + 0.55       # cuelgan un poco
+                    ln = math.hypot(lx, ly); lx, ly = lx / ln, ly / ln
+                    arriba = ly < 0.15
+                    for q in range(1, int(lf) + 1):
+                        if o:
+                            c2 = P["palma"][1] if arriba else P["palma"][3]
+                            if arriba and q == 1 and dx < 0.3 and k % 3 == 0: c2 = P["estrella"][3]
+                        else:
+                            c2 = (P["palma"][0] if q <= 2 else P["palma"][1]) if arriba else (P["palma"][2] if q == 1 else P["palma"][3])
+                        pon(px, x + lx * q, y + ly * q, c2)
+            prev = (x, y)
+    for (dx, dy) in ((-1, 2), (1, 3), (0, 4), (2, 2), (-2, 3), (0, 3), (1, 4)):     # racimo de dátiles
+        pon(px, copa[0] + dx, copa[1] + dy, P["datil"] if (dx + dy) % 3 else P["tronco"][0])
+
+
+def grieta_puntos():
+    """La grieta del cielo: una raja fina, casi vertical, con el filo quebrado y más abierta al centro (como una tela que
+    empieza a romperse), y una ramita corta. Es fija; lo que late es su luz."""
+    quiebre = [0, 0, 1, 1, 0, 1, 1, 2, 2, 1, 2, 2, 3, 3, 2, 3]
+    tronco = [(GRIETA_X + quiebre[k], 5 + k) for k in range(len(quiebre))]
+    tronco += [(x + 1, y) for (x, y) in tronco[5:11]]           # al centro se abre a dos pixeles
+    rama = [(GRIETA_X, 9), (GRIETA_X - 1, 9), (GRIETA_X - 2, 10)]
+    return tronco, rama
+
+
+def fondo_arcontes(t):
+    """Arcontes: la orilla de Magdala y el lago de Galilea, el mismo lugar de día y de noche. De día: el sol arriba a la
+    izquierda con un halo dorado de más (el oro del mundo visible), nubes largas con el filo dorado, la otra orilla en
+    lomas de caliza con una aldea, el lago con su hondura y su reguero de destellos bajo el sol, barcas de pesca con
+    vela, la casa del salador con su tendedero de pescado, ánforas, sal y la red, la playa de guijarros y una palmera que
+    enmarca. De noche: el cielo antiguo con sus estrellas, la casa con la lámpara en la puerta, la barca que pesca con su
+    lámpara, las luces de la aldea y, muy fina, la grieta de luz blanca y violeta, con su reflejo en el agua.
+    Lo que se mueve: el agua (destellos, ondas y la espuma de la orilla), la vela, la palmera, el polvo dorado en la luz
+    (de día); las estrellas, la grieta que late apenas, las llamas y, una vez por bucle, algo que pasa por el cielo y
+    tapa las estrellas (de noche)."""
+    o = t["oscuro"]
+    P = PAL_ARC_N if o else PAL_ARC_D
+    im, d = lienzo(P["cielo"][0])
+    px = im.load()
+    # --- El cielo.
+    degradado(im, 0, HORIZONTE, P["cielo"])
+    estrellas_ = []
+    if not o:
+        luz(im, SOL[0], SOL[1], 92, P["oro"], 0.2, 5, ry=40)              # el dorado de más
+        luz(im, SOL[0], SOL[1], 22, P["sol_halo"], 0.55, 4, ry=18)
+        nube_larga(im, 150, 16, 50, P, 1); nube_larga(im, 222, 10, 34, P, 2); nube_larga(im, 272, 21, 62, P, 3)
+        nube_larga(im, 340, 11, 26, P, 4); nube_larga(im, 20, 33, 26, P, 5)
+        d.ellipse([SOL[0] - 4, SOL[1] - 4, SOL[0] + 4, SOL[1] + 4], fill=P["sol"])
+        for a in range(0, 360, 30):                                   # rayos cortos, del oro del mundo de abajo
+            r0, r1 = 7, 10 if a % 60 else 12
+            for r in range(r0, r1):
+                pon(px, SOL[0] + r * math.cos(math.radians(a)), SOL[1] + r * math.sin(math.radians(a)), P["sol_halo"], 0.7)
+    else:
+        rnd = random.Random(19)
+        tronco, rama = grieta_puntos()
+        for _ in range(170):
+            x, y = rnd.randrange(W), rnd.randrange(0, HORIZONTE - 4)
+            if abs(x - GRIETA_X) < 6 and y < 26: continue
+            col = P["estrella"][rnd.choice((0, 1, 1, 1, 3, 3, 2))]
+            fondo_ = px[x, y]
+            px[x, y] = col
+            estrellas_.append((x, y, col, fondo_))
+        for (x, y) in ((70, 6), (176, 12), (232, 4), (356, 9), (128, 21)):     # algunas más grandes, en cruz
+            fondo_ = px[x, y]
+            for (dx, dy) in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1)):
+                pon(px, x + dx, y + dy, P["estrella"][0] if (dx, dy) == (0, 0) else P["estrella"][1])
+        # Las esferas (recurso: el diagrama de los ofitas): arcos de puntos, apenas.
+        for r in (150, 166, 182):
+            hechos = set()
+            for k in range(0, 1400):
+                a = math.pi + math.pi * k / 1400
+                x, y = round(206 + r * math.cos(a) * 1.3), round(175 + r * math.sin(a))
+                if 0 <= y < HORIZONTE - 5 and (x, y) not in hechos and abs(x - GRIETA_X) > 4:
+                    hechos.add((x, y)); pon(px, x, y, P["esfera"], 0.16)
+        luz(im, GRIETA_X + 2, 12, 20, P["grieta_halo"], 0.16, 4, ry=13)
+    # --- La otra orilla, el lago y la playa.
+    montes_arc(im, P, o)
+    orilla = lago_arc(im, P, o)
+    if not o:                                                          # el reguero de oro bajo el sol
+        rnd = random.Random(21)
+        for y in range(HORIZONTE + 1, 60):
+            ancho = 2 + (y - HORIZONTE) * 0.9
+            for _ in range(2):
+                x = SOL[0] + rnd.uniform(-ancho, ancho)
+                for k in range(rnd.randint(1, 3)):
+                    pon(px, x + k, y, P["destello"][rnd.choice((1, 1, 2))], 0.9)
+    else:                                                              # el reflejo de la grieta, quebrado
+        tronco, rama = grieta_puntos()
+        for y in range(HORIZONTE + 1, 60):
+            if y % 2 == 0 or y < HORIZONTE + 4:
+                x = GRIETA_X + int(1.4 * math.sin(y * 1.3))
+                pon(px, x, y, P["grieta_halo"], 0.35 if y > 50 else 0.5)
+    if o:                                                              # las estrellas más claras, reflejadas
+        for (x, y, col, _f) in estrellas_[::3]:
+            yy = 2 * HORIZONTE - y + 3
+            if HORIZONTE + 1 < yy < orilla[x] - 2:
+                pon(px, x, yy, col, 0.35)
+    agua = im.copy()                                                   # para saber después qué sigue siendo agua
+    costa_arc(im, P, o, orilla)
+    # --- Las barcas: una cerca, una lejos y una vela en la lejanía; la que está varada en la playa.
+    for (vx, vy) in ((246, 38), (124, 39)):
+        d.polygon([(vx, vy), (vx + 2, vy - 4), (vx + 3, vy)], fill=P["vela_lejos"])
+        pon(px, vx, vy + 1, P["onda_osc"])
+    barca_varada(im, P, o)
+    # --- La casa del salador, el tendedero, la red y el ancla.
+    puerta = casa_salador(im, P, o)
+    tendedero(im, P, o)
+    red_y_ancla(im, P)
+    for (gx, gy, gr) in ((146, 75, 3), (152, 77, 2), (232, 73, 2), (290, 76, 3), (330, 74, 2)):
+        guijarro(px, gx, gy, gr, P)
+    # --- La luz de noche: la lámpara de la puerta alumbra el muro y la arena; la ventana, apenas.
+    if o:
+        lx, ly = (puerta[0] + puerta[2]) / 2, puerta[3] - 4
+        luz(im, lx, ly - 2, 30, P["llama_halo"], 0.26, 5, ry=18)
+        luz(im, lx + 4, 70, 26, P["llama_halo"], 0.2, 4, ry=6)
+        d.rectangle([39, 30, 43, 34], fill=hx("6A4A26"))
+        d.rectangle([puerta[0], puerta[1] + 2, puerta[2], puerta[3] - 1], fill=P["hueco"][0])
+        luz(im, lx, ly, 9, P["llama"][2], 0.6, 3, ry=12, x0=puerta[0], x1=puerta[2] + 1, y1=puerta[3])
+        lampara_barro(im, lx, puerta[3] - 1, P)
+    # --- Lo que se mueve se dibuja en cada cuadro (sobre esta base, sin grano), y el grano va al final.
+    estatico = im.copy()
+    pe = estatico.load()
+    estrellas_ = [e for e in estrellas_ if pe[e[0], e[1]] == e[2]]          # las que no quedaron detrás de las lomas
+    pa = agua.load()
+    es_agua = lambda x, y: 0 <= x < W and 0 <= y < H and pe[x, y] == pa[x, y] and y < orilla[x] - 1
+    rnd = random.Random(5)
+    gr = np.ones((H, W), np.float32)
+    q = np.random.default_rng(31).random((H, W))
+    gr[q < 0.07] = 0.955; gr[q > 0.93] = 1.04
+    # Destellos del agua: (x, y, color, periodo, fase).
+    destellos = []
+    for _ in range(54 if not o else 40):
+        if not o and rnd.random() < 0.55:
+            y = rnd.randint(HORIZONTE + 1, 59); x = SOL[0] + rnd.uniform(-2 - (y - HORIZONTE) * 0.9, 2 + (y - HORIZONTE) * 0.9)
+            col = P["destello"][0]
+        else:
+            y = rnd.randint(HORIZONTE + 2, 59); x = rnd.randrange(0, W)
+            col = P["destello"][0 if not o else rnd.choice((1, 2))]
+        if not (es_agua(int(x), y) and es_agua(int(x) + 1, y)): continue
+        destellos.append((int(x), y, col, rnd.choice((10, 16, 20, 32, 40)), rnd.randrange(0, 40)))
+    ondas_ = [(rnd.randrange(80, W - 30), rnd.randint(HORIZONTE + 6, 58), rnd.randint(2, 4), rnd.uniform(0, 6.3)) for _ in range(26)]
+    ondas_ = [q_ for q_ in ondas_ if all(es_agua(q_[0] + k, q_[1]) for k in range(-2, q_[2] + 2))]
+    tramos = [(130, 175, 0.0), (210, 262, 2.1), (296, 336, 4.2)]           # donde lame el agua
+    polvo = [(rnd.uniform(4, 66), rnd.uniform(14, 60), rnd.uniform(0, 6.3)) for _ in range(9)]
+
+    def mover(f, tk):
+        px_ = f.load(); dd = ImageDraw.Draw(f)
+        for (x, y, col, per, ph) in destellos:
+            if (tk + ph) % per < per // 4:
+                pon(px_, x, y, col)
+                if per >= 32: pon(px_, x + 1, y, col, 0.6)
+        for (x, y, largo, ph) in ondas_:
+            dx = round(1.4 * math.sin(fase(tk, k=2) + ph))
+            for k in range(largo):
+                pon(px_, x + dx + k, y, P["onda_luz"], 0.75 if not o else 0.9)
+        for (xa, xb, ph) in tramos:                                     # la espuma que sube y baja por la arena
+            sube = math.sin(fase(tk, k=2) + ph)
+            for x in range(xa, xb):
+                y0 = orilla[x]
+                if sube > 0.35:
+                    pon(px_, x, int(y0) + 1, P["espuma"][0] if (x // 3) % 4 else P["espuma"][1])
+                    pon(px_, x, int(y0), P["arena_mojada"][1] if not o else P["orilla"])
+                elif sube < -0.35:
+                    pon(px_, x, int(y0), P["arena_mojada"][1])
+                    pon(px_, x, int(y0) - 1, P["espuma"][1])
+        # La barca de cerca: la vela respira con el viento y el banderín ondea.
+        v = 1 + math.sin(fase(tk, k=2))
+        barca(f, 186, 50, 30, P, o, vela=v, lampara=o)
+        bx_, by_ = 186 + int(30 * 0.55), 50 - 4 - int(30 * 0.75)
+        for k in range(4):
+            pon(px_, bx_ + 1 + k, by_ + round(0.8 * math.sin(fase(tk, k=4) + k * 1.2)), P["barro"][1] if not o else P["madera"][0])
+        for k in range(12):                                             # su reflejo en el agua
+            pon(px_, 188 + k * 2 + round(math.sin(fase(tk, k=2) + k)), 51 + (k % 2), P["onda_osc"], 0.6)
+        # La barca de lejos: se mece.
+        dy = round(0.6 * math.sin(fase(tk, k=1)))
+        barca(f, 300, 43 + dy, 14, P, o, vela=0.5, gente=False, lampara=o)
+        if not o:
+            # Polvo dorado que flota en la luz, junto a la casa.
+            for (x, y, ph) in polvo:
+                xx = x + 3 * math.sin(fase(tk, k=1) + ph); yy = y + 2 * math.cos(fase(tk, k=1) + ph * 1.7)
+                pon(px_, xx, yy, P["polvo"][int(ph * 3) % 2])
+            # La palmera: las puntas de las hojas se mecen.
+            palmera(f, P, o, sway=0.8 * math.sin(fase(tk, k=1)))
+            return
+        # --- Noche: estrellas que titilan, algo que pasa y tapa las estrellas, la grieta que late, las llamas.
+        fsom = (tk / BUCLE - 0.28) / 0.34
+        for j, (x, y, col, fondo_) in enumerate(estrellas_):
+            if 0 <= fsom <= 1:
+                sx = W + 70 - fsom * (W + 160)
+                sy = 13 + 3 * math.sin(fsom * 6)
+                if ((x - sx) / 46) ** 2 + ((y - sy) / 8) ** 2 < 1 or ((x - sx + 44) / 12) ** 2 + ((y - sy + 2) / 7) ** 2 < 1:
+                    px_[x, y] = fondo_
+                    continue
+            if j % 5 == 0 and ((tk + j * 3) // 8) % 4 == 0:
+                px_[x, y] = fondo_ if j % 2 else P["estrella"][0]
+        tronco, rama = grieta_puntos()
+        pulso = 0.5 + 0.5 * math.sin(fase(tk, k=2))
+        for (x, y) in tronco + rama:
+            for (dx, dy) in ((-1, 0), (1, 0)):
+                if pulso > 0.3: pon(px_, x + dx, y + dy, P["grieta_halo"], 0.35 + 0.35 * pulso)
+        for (x, y) in tronco + rama:
+            pon(px_, x, y, P["grieta"] if pulso > 0.2 or (x + y) % 2 else P["grieta_halo"])
+        for y in range(HORIZONTE + 2, 58, 2):                             # su reflejo tiembla
+            if (y + tk // 6) % 3 == 0:
+                pon(px_, GRIETA_X + int(1.4 * math.sin(y * 1.3 + fase(tk, k=4))), y, P["grieta"], 0.4 * (0.5 + pulso))
+        # La llama de la puerta y la de la barca, y el reflejo de la barca.
+        rnd2 = random.Random(tk // 2)
+        lx, ly = (puerta[0] + puerta[2]) / 2, puerta[3] - 2
+        llama_chica(px_, lx + 1, ly - 1, P, rnd2)
+        llama_chica(px_, 186 + 28, 50 - 4 - 2, P, rnd2)
+        for k, y in enumerate(range(52, 61)):
+            if (k + tk // 3) % 3:
+                pon(px_, 214 + round(1.2 * math.sin(fase(tk, k=4) + k)), y, P["llama"][1], 0.55 - k * 0.04)
+        pon(px_, 312, 43 - 2 + dy, P["llama"][0])
+        palmera(f, P, o, sway=0.8 * math.sin(fase(tk, k=1)))
+
+    cache = {}
+
+    def render(tk):
+        if tk not in cache:
+            f = estatico.copy()
+            mover(f, tk)
+            a = np.asarray(f, np.float32) * gr[..., None]
+            cache[tk] = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+        return cache[tk]
+
+    mascaras = {}
+
+    def vivo(img, tick, delante):
+        """Pega encima solo lo que cambió respecto del cuadro 0 (así no borra lo que ya haya en la banda)."""
+        if delante: return
+        tk = tick % BUCLE
+        if tk not in mascaras:
+            dif = (np.asarray(render(tk)) != np.asarray(render(0))).any(2)
+            mascaras[tk] = Image.fromarray((dif * 255).astype(np.uint8)).resize((W * ESC, H * ESC), Image.NEAREST) if dif.any() else None
+        if mascaras[tk] is not None:
+            img.paste(subir(render(tk)), (0, 0), mascaras[tk])
+    ANIM[("arcontes", o)] = [vivo]
+    return subir(render(0))
+
+
+def barca_varada(im, P, o):
+    """La barca varada en la playa, de costado e inclinada, con dos remos apoyados y la red tendida en dos palos."""
+    px = im.load(); d = ImageDraw.Draw(im)
+    x0, x1, yb = 338, 378, 69
+    for x in range(x0, x1):
+        u = (x - x0) / (x1 - x0)
+        quilla = yb - 1.5 * u
+        borda = quilla - 6 + 2.4 * (abs(u - 0.5) * 2) ** 2.5
+        for y in range(int(borda), int(quilla) + 1):
+            f = (y - borda) / max(1, quilla - borda)
+            col = P["madera"][0] if f < 0.25 else (P["madera"][1] if f < 0.75 else P["madera"][2])
+            if int(y - borda) == 2: col = P["madera"][2]
+            pon(px, x, y, col)
+    sombra_suelo(im, x0 + 4, x1 + 8, yb, yb + 3, P, 0.55)
+    for (xa, ya, xb, yb_) in ((346, 69, 356, 55), (350, 69, 361, 56)):
+        d.line([xa, ya, xb, yb_], fill=P["madera"][1])
+    for xx in (384, 396):
+        d.line([xx, 50, xx, 70], fill=P["madera"][1])
+    for x in range(384, 397):
+        y0 = 51 + 2.2 * math.sin(math.pi * (x - 384) / 12)
+        for y in range(int(y0), 64):
+            if (x + y) % 2 == 0 and (y - y0) < 10 - abs(x - 390) * 0.3:
+                pon(px, x, y, P["red"])
+
+
+def lampara_barro(im, x, y, P):
+    """La lámpara de aceite de barro, de pico, en el umbral."""
+    px = im.load()
+    for k, w_ in enumerate((3, 3, 2)):
+        for xx in range(int(x - w_), int(x + w_) + 1):
+            pon(px, xx, y - k, P["barro"][1] if xx < x else P["barro"][2])
+    pon(px, x + 3, y - 2, P["barro"][2])
+
+
+def llama_chica(px, x, y, P, rnd):
+    """Una llama de lámpara de 3 pixeles que titila."""
+    alto = rnd.choice((2, 3, 3))
+    pon(px, x, y, P["llama"][1])
+    pon(px, x, y - 1, P["llama"][0])
+    if alto == 3:
+        pon(px, x + rnd.choice((-1, 0, 0)), y - 2, P["llama"][1])
+
+
+FONDOS_MIOS = {"frente": fondo_frente, "arcontes": fondo_arcontes}
+ETIQ = {"frente": "Frente exterior · la base escondida en ruinas", "arcontes": "Arcontes · el lago de Galilea en Magdala"}
+NOCHE = {"frente": "la base en penumbra, con el vidrio y las lámparas encendidos",
+         "arcontes": "el mismo lago con las estrellas, la lámpara y una grieta de luz"}
 
 
 def registrar():

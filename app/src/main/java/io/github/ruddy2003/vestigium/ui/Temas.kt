@@ -244,9 +244,9 @@ object Temas {
 
     /**
      * Arcontes: solo fechas fijas reales. La noche del bautismo, que los basilidianos velaban leyendo (Clemente de
-     * Alejandría, *Stromata* 1.21.146: el 11 o el 15 de tybi, el 6 o el 10 de enero); y las cuatro puertas del sol del
-     * libro astronómico de Enoc (1 Enoc 72): el día igual a la noche, el más largo y el más corto. Las fiestas judías no
-     * van aquí porque se mueven con la luna (ver la historia del iniciado).
+     * Alejandría, *Stromata* 1.21: el 11 o el 15 de tybi, el 6 o el 10 de enero); y los dos equinoccios y los dos
+     * solsticios, que el libro astronómico de Enoc sigue por las puertas por donde sale el sol (1 Enoc 72; el versículo,
+     * a comprobar). Las fiestas judías no van aquí porque se mueven con la luna (ver la historia del iniciado).
      */
     private val MARCAS_ARCONTES = mapOf("01-06" to "Noche del bautismo", "03-20" to "Día igual a la noche", "06-21" to "El día más largo",
         "09-22" to "Noche igual al día", "12-21" to "La noche más larga")

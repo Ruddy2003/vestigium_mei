@@ -67,10 +67,11 @@ object Widgets {
             0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
             intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
             0xFF222527.toInt(), 0xFFFFFFFF.toInt())
+        // La noche de Galilea: la llama de la lámpara, lino a su luz y, en el ánimo, del rojo del jaspe al lago bajo la luna.
         TemaId.ARCONTES -> Colores(R.drawable.widget_fondo_arcontes, R.drawable.widget_boton_arcontes, R.drawable.widget_boton_activo_arcontes, R.drawable.widget_boton_ambar_arcontes,
-            0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
-            intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
-            0xFF222527.toInt(), 0xFFFFFFFF.toInt())
+            0xFFE9B04F.toInt(), 0xFFECE4CF.toInt(), 0xFFA09CB0.toInt(), 0xFF343A5A.toInt(),
+            intArrayOf(0xFFFF8A7A.toInt(), 0xFFF9A896.toInt(), 0xFFF2C6B3.toInt(), 0xFFECE4CF.toInt(), 0xFFCAD6CE.toInt(), 0xFFA8C9CC.toInt(), 0xFF86BBCB.toInt()),
+            0xFF1C2038.toInt(), 0xFF2B1A00.toInt())
         // La consola de noche, con las luces bajas: pilotos ámbar, rótulos color hueso y, en el ánimo, del rojo de botón al verde de radar.
         TemaId.FRENTE -> Colores(R.drawable.widget_fondo_frente, R.drawable.widget_boton_frente, R.drawable.widget_boton_activo_frente, R.drawable.widget_boton_ambar_frente,
             0xFFF0A04B.toInt(), 0xFFE7E1D4.toInt(), 0xFFA8A49A.toInt(), 0xFF3A4249.toInt(),
@@ -219,7 +220,7 @@ object Widgets {
         TemaId.MEDIEVAL -> "Agora" to "Scriptura"
         TemaId.TEMPLARIO -> "Vigilia" to "Al rol"
         TemaId.DISTOPIA -> "CONTROL" to "FORMULARIO"
-        TemaId.ARCONTES -> "CONTROL" to "FORMULARIO"
+        TemaId.ARCONTES -> "En esta hora" to "Al códice"
         TemaId.FRENTE -> "SEÑAL" to "TELETIPO"
         TemaId.REFUGIO -> "CHEQUEO" to "ENTRADA"
         TemaId.ORDEN -> "RELEVO" to "ACTA"
@@ -264,7 +265,7 @@ object Widgets {
             TemaId.MEDIEVAL -> R.font.gotica_regular to 1.1f
             TemaId.TEMPLARIO -> R.font.cruzada_titulo to 1.0f
             TemaId.DISTOPIA -> R.font.oswald_medium to 1.05f
-            TemaId.ARCONTES -> R.font.oswald_medium to 1.05f
+            TemaId.ARCONTES -> R.font.codice_regular to 1.0f       // Caudex, la letra de los códices
             TemaId.FRENTE -> R.font.chivo_mono_medium to 1.0f       // las cifras de la consola, no la letra ancha de los títulos
             TemaId.REFUGIO -> R.font.vt323 to 1.35f
             TemaId.ORDEN -> R.font.saira_stencil to 1.0f

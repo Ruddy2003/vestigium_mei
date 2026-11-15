@@ -523,16 +523,17 @@ def hacer_arcontes():
     # salmodia a media voz el bordón (la tónica y su quinta) y toma aire en cada compás. La armonía no se mueve como una
     # canción: el acorde de la tónica (el dorado), el cuarto grado menor sobre el bordón (la sombra) y el acorde aumentado
     # del sexto grado (la grieta), y vuelta a casa. En ese tercer compás crece el zumbido hondo de los arcontes; los
-    # crótalos marcan el principio de cada compás y, al final, entra la nota limpia y alta del Pleroma. Con su propio azar.
+    # crótalos marcan el principio de cada compás y, al final, entra la nota limpia y alta del Pleroma. Las cuerdas van
+    # domadas (ver [domar]) para que la música no suene más baja que la de los otros temas. Con su propio azar.
     with A.azar_propio('musica_arcontes'):
         T = -1; pz = 0.7
         ac = compases([0, 4, 7], [0, 5, 8], [0, 4, 8], [0, 4, 7, 12])
         mel = frase(0, "7:2 8:1 7:1 | 5:1.5 4:0.5 5:1 8:1 | 12:2 10:1 8:1 | 7:1 5:0.5 4:0.5 0:2")
-        canta = lambda f, d: kinnor(f, max(d, 0.9), 0.5, 0.9955)
+        canta = lambda f, d: domar(kinnor(f, max(d, 0.9), 0.35, 0.997))
         def rasguea(f, d):
             """El kinnor grave: cada cuerda un poco después que la de abajo (la púa baja por ellas), en el uno y, más suave, en el tres."""
             tarde = 0.004 * max(0.0, 12 * np.log2(f / hz(T - 24)))
-            una = lambda g: kinnor(f, min(d * 0.55, 1.6), 0.4, 0.995) * g
+            una = lambda g: domar(kinnor(f, min(d * 0.55, 1.6), 0.3, 0.996)) * g
             return mezclar((tarde, una(1.0), 1.0), (d / 2 + tarde, una(0.55), 1.0))
         def bordon(f, d):
             """La voz que salmodia la tónica y la quinta; dura un poco más que el compás y respira entre uno y otro."""
@@ -546,7 +547,7 @@ def hacer_arcontes():
                 out += [(pen - 0.5, zumbido_hondo(hz(T - 36), (acordes[-2][2] + 1) * pz, entra=0.6, sale=0.4), 0.6),
                         (fin + 2, pleroma(hz(T + 24), 3.6, 0.4), 0.25), (fin + 2, crotalos(hz(T + 24), 1.6), 0.18)]
             return out
-        kw = dict(inst_mel=canta, inst_ac=rasguea, bajo=bordon, perc=ritmo(ac), g_mel=0.5, g_ac=0.3, g_bajo=0.2,
+        kw = dict(inst_mel=canta, inst_ac=rasguea, bajo=bordon, perc=ritmo(ac), g_mel=0.5, g_ac=0.3, g_bajo=0.26,
                   oct_mel=0, oct_ac=-12, oct_bajo=-24, legato=1.0, cola=2.2, rev=0.34)
         # La llamada solo toma los dos primeros compases y el cierre: su ritmo se arma con esos mismos acordes.
         kw_llamada = dict(kw, perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)]))

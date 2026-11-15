@@ -117,12 +117,14 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
             Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
         }
+        // La cuerda del kinnor que se pulsa con la púa, los crótalos, la tapa de barro de la jarra y el zumbido de abajo.
         TemaId.ARCONTES -> when (e) {
-            Evento.TOQUE -> listOf(g(CLICK, 1f)); Evento.PASAR -> listOf(g(CLICK, 0.6f))
-            Evento.GUARDAR -> listOf(g(THUD, 1f), g(CLICK, 1f, 70))
-            Evento.ELEGIR -> listOf(g(CLICK, 0.45f)); Evento.ABRIR -> listOf(g(CLICK, 0.8f), g(THUD, 0.6f, 50))
-            Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
-            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
+            Evento.TOQUE -> listOf(g(TICK, 0.7f), g(TICK_GRAVE, 0.22f, 18)); Evento.PASAR -> listOf(g(TICK, 0.3f), g(TICK, 0.24f, 48))
+            Evento.GUARDAR -> listOf(g(THUD, 0.78f), g(TICK_GRAVE, 0.4f, 34), g(TICK, 0.32f, 40))
+            Evento.ELEGIR -> listOf(g(TICK, 0.56f), g(TICK, 0.3f, 26)); Evento.ABRIR -> listOf(g(TICK_GRAVE, 0.44f), g(SUBE_LENTO, 0.3f, 36))
+            Evento.CAMBIO -> listOf(g(TICK, 0.5f), g(TICK, 0.44f, 22), g(TICK_GRAVE, 0.3f, 22))
+            Evento.ERROR -> listOf(g(BAJA, 0.52f), g(TICK_GRAVE, 0.6f, 90), g(TICK_GRAVE, 0.5f, 120))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(TICK, 0.4f), g(TICK, 0.48f, 70), g(TICK, 0.56f, 70), g(TICK, 0.64f, 70), g(SUBE, 0.5f, 90))
         }
         // Relés de consola que cierran con su rebote, el chasquido de un interruptor de palanca y el contactor grande.
         TemaId.FRENTE -> when (e) {
@@ -500,7 +502,8 @@ object Sentidos {
         TemaId.TEMPLARIO -> Afinacion(st(-5, -2, 0, 5), st(-7, 0, 5, 7), pasarRuido = true, elegirRuido = false)
         // Do menor; la máquina de escribir, un semitono abajo y un tono arriba.
         TemaId.DISTOPIA -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
-        TemaId.ARCONTES -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
+        // La bemol mixolidio con la sexta menor: el kinnor con púa; el velo de lino de pasar es ruido, elegir es el crótalo.
+        TemaId.ARCONTES -> Afinacion(st(-2, 0, 4, 7, 8), st(-5, -2, 0, 4), pasarRuido = true, elegirRuido = false)
         // Fa menor con la séptima mayor (Fa, La bemol, Do, Mi): el pitido de la consola; el teletipo de pasar es ruido.
         TemaId.FRENTE -> Afinacion(st(-5, 0, 3, 7, 11), st(-8, -7, -4, 0), pasarRuido = true, elegirRuido = false)
         // Fa pentatónico; el relé sube por tonos enteros.
@@ -642,7 +645,7 @@ object Sentidos {
         TemaId.MEDIEVAL -> pasadas(TICK_GRAVE, 0.5f, 70, 3)   // pan de oro
         TemaId.TEMPLARIO -> pasadas(CLICK, 0.65f, 50, 4)   // hierro de cota de malla
         TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
-        TemaId.ARCONTES -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
+        TemaId.ARCONTES -> pasadas(TICK_GRAVE, 0.44f, 58, 3)   // la moneda de bronce de Herodes Antipas
         TemaId.FRENTE -> pasadas(CLICK, 0.56f, 44, 4)   // chapa esmaltada de consola
         TemaId.REFUGIO -> pasadas(TICK, 0.8f, 35, 4)   // chapa galvanizada
         TemaId.ORDEN -> pasadas(CLICK, 0.8f, 45, 3)   // acero pavonado

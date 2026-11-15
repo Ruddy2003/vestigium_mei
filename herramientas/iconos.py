@@ -419,59 +419,65 @@ def cinta(d, pts, w0, w1, c):
 def ouroboros(d, cx, cy, radio, w_cabeza, w_cola, c, hueco=(0, 0, 0, 0), cabeza=-math.pi / 2, escamas=True):
     """La serpiente que se muerde la cola, en coordenadas del lienzo: el cuerpo sigue el círculo de [radio] en el sentido
     del reloj, de la cola (fina, ancho w_cola) al cuello (w_cabeza). La cabeza va de perfil en el ángulo [cabeza], con la
-    mandíbula de arriba por fuera y la de abajo por dentro, abiertas sobre la punta de la cola. [hueco] es el color con
-    que se recortan las escamas, la boca y el ojo (transparente en una capa RGBA, 0 en una máscara)."""
-    L = w_cabeza * 2.5; W = w_cabeza * 1.05
-    cola0 = cabeza + L * 0.62 / radio                 # la punta de la cola, dentro de la boca
+    mandíbula de arriba por fuera y la de abajo por dentro, cerradas sobre la cola, que le entra por la boca. Las escamas
+    son medias lunas en hileras alternas, con el borde libre hacia la cola. [hueco] es el color con que se recortan las
+    escamas, la boca y el ojo (transparente en una capa RGBA, 0 en una máscara)."""
+    L = w_cabeza * 2.0; W = w_cabeza * 1.12
+    cola0 = cabeza + L * 0.3 / radio                  # la punta de la cola, metida en la boca
     cuello = cabeza - L * 0.5 / radio + 2 * math.pi   # donde el cuerpo se vuelve cabeza
-    n = 360
+    n = 720
     angs = [cola0 + (cuello - cola0) * i / n for i in range(n + 1)]
     pts = [(cx + radio * math.cos(a), cy + radio * math.sin(a)) for a in angs]
-    # El cuerpo engruesa rápido al salir de la cola y luego despacio hasta el cuello.
+    # El cuerpo engruesa rápido al salir de la boca y luego despacio hasta el cuello.
     anchos = [w_cola + (w_cabeza - w_cola) * (i / n) ** 0.55 for i in range(n + 1)]
     izq, der = [], []
     for (x, y), a, w in zip(pts, angs, anchos):
         nx, ny = math.cos(a), math.sin(a)
         izq.append((x + nx * w / 2, y + ny * w / 2)); der.append((x - nx * w / 2, y - ny * w / 2))
     d.polygon(izq + der[::-1], fill=c)
-    r0 = w_cola * 0.5; x0, y0 = pts[0]; d.ellipse([x0 - r0, y0 - r0, x0 + r0, y0 + r0], fill=c)
+    largo = (cuello - cola0) * radio
     if escamas:
-        # Escamas: dos hileras de cortes en V que avanzan hacia la cabeza, alternadas (dibujo de rombos).
-        paso = max(w_cabeza * 0.62, 1.0)
-        largo = (cuello - cola0) * radio
-        k = 0; t = paso * 2.2
-        while t < largo - paso * 0.8:
+        # Hileras de escamas: una media luna cada [paso], alternando entre dos y tres por el ancho del cuerpo.
+        paso = w_cabeza * 0.34
+        k = 0; t = L * 0.75
+        while t < largo - paso:
             i = int(t / largo * n); a = angs[i]; w = anchos[i]
-            if w > w_cabeza * 0.42:
-                nx, ny = math.cos(a), math.sin(a); tx, ty = -ny, nx      # tx: hacia la cabeza
-                x, y = pts[i]
-                for fila in ((-0.24, 0.24) if k % 2 == 0 else (0.0,)):
-                    bx, by = x + nx * fila * w, y + ny * fila * w
-                    s = w * 0.2
-                    d.line([(bx + nx * s - tx * s * 0.9, by + ny * s - ty * s * 0.9), (bx + tx * s * 0.35, by + ty * s * 0.35),
-                            (bx - nx * s - tx * s * 0.9, by - ny * s - ty * s * 0.9)], fill=hueco, width=max(1, int(w * 0.075)), joint='curve')
-            t += paso * 0.5; k += 1
+            nx, ny = math.cos(a), math.sin(a); tx, ty = -ny, nx          # t: hacia la cabeza
+            x, y = pts[i]
+            r = w * 0.2
+            # dos escamas por hilera, corridas media escama de una hilera a la otra (como tejas)
+            for g in ((-0.22, 0.22) if k % 2 == 0 else (0.0,)):
+                bx, by = x + nx * g * w, y + ny * g * w
+                arco = [(bx - (math.cos(u) * tx - math.sin(u) * nx) * r, by - (math.cos(u) * ty - math.sin(u) * ny) * r)
+                        for u in np.linspace(-1.2, 1.2, 9)]
+                d.line(arco, fill=hueco, width=max(1, int(w * 0.07)), joint='curve')
+            t += paso; k += 1
     # La cabeza, en el marco del cuello: t hacia donde avanza, n hacia fuera del círculo.
     hx, hy = cx + radio * math.cos(cabeza), cy + radio * math.sin(cabeza)
     tx, ty = -math.sin(cabeza), math.cos(cabeza); nx, ny = math.cos(cabeza), math.sin(cabeza)
     def Q(f, g): return (hx + tx * f * L + nx * g * W, hy + ty * f * L + ny * g * W)
-    # Cráneo y mandíbula de arriba (por fuera): sube del cuello, se redondea sobre el ojo y baja al hocico.
-    d.polygon([Q(-0.62, 0.5), Q(-0.42, 0.62), Q(-0.1, 0.72), Q(0.2, 0.66), Q(0.5, 0.5), Q(0.78, 0.34), Q(0.9, 0.2),
-               Q(0.86, 0.08), Q(0.3, 0.06), Q(0.02, 0.0), Q(-0.62, -0.1)], fill=c)
-    # Mandíbula de abajo (por dentro), abierta: deja ver la cola entre las dos.
-    d.polygon([Q(-0.62, -0.5), Q(-0.3, -0.62), Q(0.1, -0.58), Q(0.5, -0.42), Q(0.74, -0.3), Q(0.76, -0.2),
-               Q(0.3, -0.24), Q(0.02, -0.12), Q(-0.62, 0.1)], fill=c)
-    # Ojo con su párpado, la comisura de la boca y las escamas grandes de la cabeza.
-    ex, ey = Q(0.08, 0.36); r = W * 0.15
+    lab = w_cola / W / 2 + 0.07                       # dónde cierran los labios: apenas por fuera de la cola
+    # Cráneo y mandíbula de arriba (por fuera): sube del cuello, se redondea sobre el ojo y baja al hocico romo.
+    d.polygon([Q(-0.62, 0.46), Q(-0.4, 0.6), Q(-0.1, 0.68), Q(0.22, 0.64), Q(0.5, 0.55), Q(0.7, 0.46), Q(0.82, 0.38),
+               Q(0.89, 0.29), Q(0.9, 0.2), Q(0.87, lab + 0.03), Q(0.8, lab), Q(0.3, lab), Q(0.3, -lab), Q(-0.62, -0.46)], fill=c)
+    # Mandíbula de abajo (por dentro), un poco más corta, cerrada bajo la cola.
+    d.polygon([Q(-0.62, -0.46), Q(-0.3, -0.58), Q(0.1, -0.56), Q(0.44, -0.46), Q(0.66, -0.34), Q(0.78, -0.22),
+               Q(0.76, -lab), Q(0.3, -lab), Q(0.3, lab), Q(-0.62, 0.46)], fill=c)
+    # Las comisuras: un corte fino que sigue los labios por encima y por debajo de la cola y se abre hacia atrás.
+    for s_ in (1, -1):
+        d.line([Q(0.84 if s_ > 0 else 0.72, s_ * (lab - 0.02)), Q(0.12, s_ * (lab - 0.02)), Q(-0.16, s_ * (lab + 0.14))],
+               fill=hueco, width=max(1, int(W * 0.055)), joint='curve')
+    # Ojo con su pupila, y dos cortes de las escamas grandes de la cabeza.
+    ex, ey = Q(0.12, 0.38); r = W * 0.15
     d.ellipse([ex - r, ey - r, ex + r, ey + r], fill=hueco)
-    r2 = r * 0.45; d.ellipse([ex - r2 + r * 0.2, ey - r2, ex + r2 + r * 0.2, ey + r2], fill=c)
-    d.line([Q(-0.3, 0.02), Q(0.0, -0.06)], fill=hueco, width=max(1, int(W * 0.09)))
-    d.line([Q(-0.5, 0.28), Q(-0.22, 0.52)], fill=hueco, width=max(1, int(W * 0.07)))
-    d.line([Q(-0.5, -0.28), Q(-0.24, -0.44)], fill=hueco, width=max(1, int(W * 0.07)))
+    r2 = r * 0.5; d.ellipse([ex - r2 + r * 0.25, ey - r2, ex + r2 + r * 0.25, ey + r2], fill=c)
+    d.line([Q(-0.52, 0.3), Q(-0.24, 0.5)], fill=hueco, width=max(1, int(W * 0.06)))
+    d.line([Q(-0.52, -0.3), Q(-0.24, -0.45)], fill=hueco, width=max(1, int(W * 0.06)))
+    d.line([Q(0.62, 0.36), Q(0.74, 0.3)], fill=hueco, width=max(1, int(W * 0.05)))      # la fosa de la nariz
 
 
 def _ouroboros(d, c):                 # Arcontes: el anillo es el ouroboros, la serpiente que se muerde la cola, grabado
-    ouroboros(d, TAM / 2 * K, TAM / 2 * K, RADIO * K, 13.0 * K, 3.4 * K, c)
+    ouroboros(d, TAM / 2 * K, TAM / 2 * K, RADIO * K, 15.0 * K, 4.6 * K, c)
 
 def _cuerda(d, c, n=56):              # cuerda trenzada
     for i in range(n):
@@ -702,6 +708,9 @@ def tallado(m, tinta, sem, sombra='#0E1A13', suave=1.1):
     gy, gx = np.gradient(b)
     pend = (gx + gy) * suave / 1.1                    # > 0 en la pared de arriba a la izquierda (por dentro del corte)
     grano = np.random.default_rng(sem + 21).standard_normal((alto, ancho)).astype(np.float32)
+    # El grano del corte, apenas desenfocado: más fino que un píxel suelto (y el WebP sin pérdida pesa menos).
+    grano = np.asarray(Image.fromarray(np.clip(grano * 40 + 128, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8 if suave > 1.5 else 0.6)), np.float32)
+    grano = (grano - 128) / 16
     col = rgb(tinta)[None, None, :] * (0.93 + 0.05 * grano[..., None])
     col = col * (1 - np.clip(pend * 2.4, 0, 0.55))[..., None]
     col = col + (np.clip(-pend * 2.0, 0, 0.3) * 60)[..., None]
@@ -725,6 +734,8 @@ def hacer(tema, salida):
         # Talla en hueco sobre la piedra, como las gemas: el anillo y la huella son un solo grabado.
         anillo_m = np.asarray(anillo(tema, rgb(tinta)), np.float32)[..., 3] / 255
         final = tallado(np.maximum(m, anillo_m), tinta, sem)
+        # El grabado tiene pocos colores de verdad (el corte claro y su sombra): con 256 se ve igual y pesa un tercio.
+        final = final.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
         final.save(os.path.join(salida, f'logo_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
         return
     t2 = textura(sem + 7)

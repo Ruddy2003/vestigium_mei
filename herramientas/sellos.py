@@ -1044,7 +1044,7 @@ def bezier(p0, p1, p2, p3, n=40):
 def abraxas(d, x0, y0, u, c, hueco):
     """Abraxas como en las gemas grabadas (siglos II–IV): cabeza de gallo de perfil, torso con coraza y faldellín de tiras,
     las dos piernas de serpiente que se abren y levantan la cabeza a los lados, el látigo en alto en la mano de fuera y el
-    escudo redondo en la otra. Mira a la derecha. Origen en la cintura; [u] = px por unidad (la figura mide unas 84 de alto
+    escudo redondo en la otra. Mira a la derecha. Origen en la cintura; [u] = px por unidad (la figura mide unas 88 de alto
     y 62 de ancho). [c] es el color del grabado y [hueco] el de los cortes de detalle."""
     def P(x, y): return (x0 + x * u, y0 + y * u)
     def circ(x, y, r, f=c):
@@ -1056,7 +1056,7 @@ def abraxas(d, x0, y0, u, c, hueco):
             r = w * u / 2; d.ellipse([a - r, b - r, a + r, b + r], fill=f)
     # --- Las piernas de serpiente: salen del faldellín, bajan, se abren y suben con la cabeza hacia fuera.
     for lado in (-1, 1):
-        pts = bezier((lado * 3.5, 4), (lado * 6, 22), (lado * 26, 30), (lado * 27, 12), 60)
+        pts = bezier((lado * 3.5, 4), (lado * 5, 22), (lado * 22, 31), (lado * 22.5, 13), 60)
         cinta(d, [P(*p) for p in pts], 6.8 * u, 4.4 * u, c)
         # escamas: cortes cortos de través
         for i in range(8, 56, 6):
@@ -1073,9 +1073,9 @@ def abraxas(d, x0, y0, u, c, hueco):
                (hx + lado * 6.4, hy - 4.2), (hx + lado * 4.0, hy - 2.8), (hx + lado * 6.0, hy - 1.4), (hx + lado * 2.0, hy + 0.2)]
         d.polygon([P(*p) for p in cab], fill=c)
         circ(hx + lado * 1.4, hy - 3.4, 0.75, hueco)
-        linea([(hx + lado * 7.2, hy - 2.8), (hx + lado * 9.2, hy - 3.6)], 0.5)            # la lengua
-        linea([(hx + lado * 9.2, hy - 3.6), (hx + lado * 10.0, hy - 4.8)], 0.4)
-        linea([(hx + lado * 9.2, hy - 3.6), (hx + lado * 10.2, hy - 2.8)], 0.4)
+        linea([(hx + lado * 6.8, hy - 2.8), (hx + lado * 8.2, hy - 3.4)], 0.5)            # la lengua
+        linea([(hx + lado * 8.2, hy - 3.4), (hx + lado * 8.9, hy - 4.4)], 0.4)
+        linea([(hx + lado * 8.2, hy - 3.4), (hx + lado * 9.1, hy - 2.7)], 0.4)
     # --- El faldellín de tiras (pteryges) y el torso con la coraza musculada.
     d.polygon([P(-8.5, -5), P(8.5, -5), P(10.5, 6), P(-10.5, 6)], fill=c)
     for k in range(-3, 4):
@@ -1091,15 +1091,15 @@ def abraxas(d, x0, y0, u, c, hueco):
     linea([(-11, -25), (-19, -30), (-18.5, -40)], 4.4)
     circ(-18.5, -41.5, 2.8)
     linea([(-18.2, -43), (-16.4, -52)], 1.5)
-    for k, (c1, c2, fin) in enumerate((((-20, -57), (-27, -55), (-30, -47)), ((-21, -55), (-29, -50), (-31.5, -39)),
-                                        ((-21, -53), (-27.5, -45), (-29, -31)))):
+    for k, (c1, c2, fin) in enumerate((((-19.5, -57), (-25.5, -55), (-28, -47)), ((-20.5, -55), (-27, -50), (-29, -39.5)),
+                                        ((-20.5, -53), (-25.5, -45.5), (-26.5, -32)))):
         linea(bezier((-16.4, -52), c1, c2, fin, 30), 1.05 - k * 0.12)
     # --- El brazo del escudo y el escudo redondo, con su borde, su anillo y el umbo.
-    linea([(11, -25), (17, -21), (19, -17)], 4.4)
-    circ(21, -17, 11.2)
-    d.ellipse([*P(21 - 9.2, -17 - 9.2), *P(21 + 9.2, -17 + 9.2)], outline=hueco, width=max(1, int(0.8 * u)))
-    d.ellipse([*P(21 - 5.4, -17 - 5.4), *P(21 + 5.4, -17 + 5.4)], outline=hueco, width=max(1, int(0.6 * u)))
-    circ(21, -17, 2.0, hueco); circ(21, -17, 1.1)
+    linea([(11, -25), (16, -21), (18, -17)], 4.4)
+    circ(19.5, -17, 10.6)
+    d.ellipse([*P(19.5 - 8.7, -17 - 8.7), *P(19.5 + 8.7, -17 + 8.7)], outline=hueco, width=max(1, int(0.8 * u)))
+    d.ellipse([*P(19.5 - 5.1, -17 - 5.1), *P(19.5 + 5.1, -17 + 5.1)], outline=hueco, width=max(1, int(0.6 * u)))
+    circ(19.5, -17, 1.9, hueco); circ(19.5, -17, 1.05)
     # --- El cuello y la cabeza de gallo, de perfil, mirando a la derecha: cresta, pico, barba y ojo.
     d.polygon([P(-4.2, -26), P(4.4, -26), P(4.0, -33), P(-3.0, -34)], fill=c)
     circ(0.8, -37.2, 5.6)
@@ -1121,6 +1121,88 @@ def estrella(d, x, y, r, c, puntas=8, agudo=0.36, giro=0.0):
         a = giro - math.pi / 2 + k * math.pi / puntas; rr = r if k % 2 == 0 else r * agudo
         pts.append((x + rr * math.cos(a), y + rr * math.sin(a)))
     d.polygon(pts, fill=c)
+
+
+def arcontes(tam):
+    """Arcontes: una gema de heliotropo (el jaspe verde oscuro con motas rojas de las gemas de Abraxas), pulida en cabujón y
+    montada en un bisel de oro granulado. Grabados en hueco, como en esas gemas: el ouroboros alrededor (la serpiente que se
+    muerde la cola: el borde del mundo), Abraxas a la izquierda (cabeza de gallo, coraza, piernas de serpiente, látigo y
+    escudo), la luna creciente sobre él y, a la derecha, las siete estrellas de las siete esferas. Abajo a la derecha, una
+    grieta finísima en la piedra deja pasar la luz blanca y violeta (la grieta del tema). La huella es un grabado más: el
+    corte mate y claro en la piedra, con la luz de arriba a la izquierda."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    c = tam / 2
+    rr = np.sqrt((xx - c) ** 2 + (yy - c) ** 2) / c
+    # --- La piedra: nubes verdes, vetas finas, motas rojas y el abombado del cabujón (luz arriba a la izquierda).
+    nubes = nube(501, 4, tam) * 0.8 + nube(502, 10, tam) * 0.45 + nube(503, 26, tam) * 0.22 + nube(504, 160, tam) * 0.12
+    v = nube(505, 6, tam) + nube(506, 17, tam) * 0.3
+    vetas = np.exp(-(v / 0.02) ** 2) * np.clip(nube(507, 5, tam) * 2, 0, 1)
+    roja = np.clip((nube(508, 110, tam) + nube(509, 240, tam) * 0.5 - 0.78) * 4.0, 0, 1) * np.clip(nube(510, 4, tam) * 2 + 0.2, 0, 1)
+    piedra = col('#2B4636')[None, None, :] + nubes[..., None] * np.array([9, 14, 11], np.float32)
+    piedra = piedra + vetas[..., None] * np.array([7, 9, 8], np.float32)
+    piedra = mezcla(piedra, col('#7E3428'), roja * 0.6)
+    luz = np.clip(1 - np.sqrt((xx - tam * 0.34) ** 2 + (yy - tam * 0.3) ** 2) / (tam * 0.6), 0, 1) ** 2
+    piedra = piedra + luz[..., None] * np.array([18, 24, 20], np.float32) - (rr ** 3)[..., None] * np.array([16, 22, 18], np.float32)
+    fondo = a_img(piedra).convert('RGBA')
+    # --- Los grabados (todo lo que no es la huella), al triple y reducidos.
+    k = 3; S = tam * k
+    g = Image.new('L', (S, S), 0); d = ImageDraw.Draw(g)
+    ouroboros(d, S / 2, S / 2, 0.868 * c * k, 25 * k, 7 * k, 255, hueco=0)
+    abraxas(d, 119 * k, 368 * k, 1.65 * k, 255, 0)
+    # La luna creciente sobre Abraxas y las siete estrellas a la derecha, en arco.
+    lx, ly, lr = 178 * k, 196 * k, 21 * k
+    d.ellipse([lx - lr, ly - lr, lx + lr, ly + lr], fill=255)
+    d.ellipse([lx - lr * 0.62, ly - lr * 1.08, lx + lr * 1.28, ly + lr * 0.72], fill=0)
+    for i in range(7):
+        a = math.radians(-36 + i * 12.3)
+        estrella(d, (c + 252 * math.cos(a)) * k, (c + 252 * math.sin(a)) * k, 12.5 * k, 255, 8, 0.34, giro=i * 0.21)
+    grab = np.asarray(g.resize((tam, tam), Image.LANCZOS), np.float32) / 255
+    # La grieta: una raja finísima en la piedra, abajo a la derecha, por donde se filtra la luz blanca y violeta del Pleroma.
+    rg = np.random.default_rng(514)
+    a0 = math.radians(57); x, y = c + 306 * math.cos(a0), c + 306 * math.sin(a0); pts = [(x, y)]
+    rumbo = a0 + math.pi + 0.25
+    for i in range(10):
+        rumbo += (rg.random() - 0.5) * 1.1; l = 5 + rg.random() * 4
+        x += l * math.cos(rumbo); y += l * math.sin(rumbo); pts.append((x, y))
+    halo = Image.new('RGBA', (S, S), (0, 0, 0, 0)); dh = ImageDraw.Draw(halo, 'RGBA')
+    dh.line([(px * k, py * k) for px, py in pts], fill=(156, 123, 255, 230), width=int(8 * k), joint='curve')
+    fondo.alpha_composite(halo.filter(ImageFilter.GaussianBlur(4.5 * k)).resize((tam, tam), Image.LANCZOS))
+    fondo.alpha_composite(halo.filter(ImageFilter.GaussianBlur(10 * k)).resize((tam, tam), Image.LANCZOS))
+    nucleo = Image.new('RGBA', (S, S), (0, 0, 0, 0)); dn = ImageDraw.Draw(nucleo, 'RGBA')
+    for i in range(len(pts) - 1):                      # se afina hacia la punta
+        w = max(1, int((1.9 - 1.4 * i / len(pts)) * k))
+        dn.line([(pts[i][0] * k, pts[i][1] * k), (pts[i + 1][0] * k, pts[i + 1][1] * k)], fill=(244, 241, 255, 255), width=w)
+    fondo.alpha_composite(nucleo.filter(ImageFilter.GaussianBlur(0.6 * k)).resize((tam, tam), Image.LANCZOS))
+    fondo.alpha_composite(tallado(grab, '#D9D6BE', 511, suave=1.9))
+    # --- El bisel de oro: una banda redonda (luz arriba a la izquierda), con su granulado por dentro y la sombra en la piedra.
+    r_in, r_out = 0.952, 1.0
+    t_ = np.clip((rr - r_in) / (r_out - r_in), 0, 1)
+    dentro = (rr >= r_in).astype(np.float32)
+    dentro = np.asarray(Image.fromarray((dentro * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.7)), np.float32) / 255
+    lado = -((xx - c) + (yy - c)) / (rr * c + 1e-3) / math.sqrt(2)          # 1 arriba a la izquierda
+    # La banda es redonda: la cara de dentro mira al centro y la de fuera hacia afuera; brilla la que mira a la luz.
+    normal = np.cos(t_ * math.pi)                                           # 1 en el borde de dentro, -1 en el de fuera
+    brillo = np.clip(-lado * normal, -1, 1)                                 # la cara de dentro de abajo a la derecha mira a la luz
+    oro = mezcla(col('#6E4E0E'), col('#C99A2E'), np.clip(0.5 + 0.45 * brillo, 0, 1))
+    oro = mezcla(oro, col('#FFF0B8'), np.clip(brillo - 0.55, 0, 1) ** 1.5 * 1.6)
+    oro = oro * (0.95 + 0.07 * ruido(tam, 0.8, 512)[..., None])
+    arr = np.asarray(fondo.convert('RGB'), np.float32)
+    sombra = np.clip(1 - (r_in - rr) / 0.03, 0, 1) * (rr < r_in) * (0.45 + 0.35 * np.clip(lado, 0, 1))
+    arr = mezcla(arr, col('#06100A'), sombra * 0.8)
+    arr = mezcla(arr, oro, dentro)
+    fondo = a_img(arr).convert('RGBA')
+    gr = Image.new('RGBA', (S, S), (0, 0, 0, 0)); dg = ImageDraw.Draw(gr, 'RGBA')
+    n = 132; rb = (r_in - 0.004) * c * k; q = 3.6 * k
+    for i in range(n):
+        a = 2 * math.pi * i / n; x, y = c * k + rb * math.cos(a), c * k + rb * math.sin(a)
+        dg.ellipse([x - q * 1.1 + k, y - q * 1.1 + k, x + q * 1.1 + k, y + q * 1.1 + k], fill=(20, 16, 6, 140))
+        dg.ellipse([x - q, y - q, x + q, y + q], fill=(110, 78, 16, 255))
+        dg.ellipse([x - q * 0.82, y - q * 0.82, x + q * 0.62, y + q * 0.62], fill=(196, 150, 48, 255))
+        dg.ellipse([x - q * 0.6, y - q * 0.6, x - q * 0.08, y - q * 0.08], fill=(255, 238, 176, 230))
+    fondo.alpha_composite(gr.resize((tam, tam), Image.LANCZOS))
+    # --- La huella, grabada como lo demás.
+    guardar(fondo, tallado(m, '#D9D6BE', 513, suave=1.9), 'arcontes')
 
 
 # ------------------------------------------------------------------ Tierras Antiguas
@@ -1539,6 +1621,7 @@ SIETE = [
     'templario',
     'vapor',
     'frente',
+    'arcontes',
 ]
 ORDEN = [
     'romano',
@@ -1550,6 +1633,7 @@ ORDEN = [
     'medieval',
     'templario',
     'distopia',
+    'arcontes',
     'frente',
     'refugio',
     'orden',

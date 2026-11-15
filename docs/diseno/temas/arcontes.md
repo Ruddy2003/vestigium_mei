@@ -63,8 +63,8 @@ Paleta corta: caliza y lino, ocre y oro, el azul del lago, la noche azul negra y
 
 ## La fecha y los números
 
-- **El cielo del día:** «Cielo 212 de 365», el día del año. Ireneo cuenta que Basílides enseñaba que hay 365 cielos y que por eso el año tiene 365 días (*Contra las herejías* 1.24.7, a comprobar en las fuentes). **Recurso:** el 31 de diciembre de un año bisiesto (el día 366) se muestra como «Cielo 365» otra vez, porque el texto habla de 365.
-- **El planeta del día:** la semana planetaria antigua (domingo Sol, lunes Luna, martes Marte, miércoles Mercurio, jueves Júpiter, viernes Venus, sábado Saturno). Si las fuentes sostienen qué arconte va con qué planeta, se nombra; si no, solo el planeta.
+- **El cielo del día:** «Cielo 212 de 365», el día del año. Ireneo cuenta que Basílides enseñaba que hay 365 cielos (*Contra las herejías* 1.24.3–7), e Hipólito, que por eso el año tiene 365 días (*Refutación* 7.26). **Recurso:** el 31 de diciembre de un año bisiesto (el día 366) se muestra como «Cielo 365» otra vez, porque el texto habla de 365.
+- **El planeta del día:** la semana planetaria antigua (domingo Sol, lunes Luna, martes Marte, miércoles Mercurio, jueves Júpiter, viernes Venus, sábado Saturno). Solo el planeta: qué arconte va con cuál no se pudo comprobar en el texto, y hay tres listas de siete que no se mezclan (`fuentes_arcontes.md`, corrección 16).
 - **La fecha hebrea:** con `android.icu.util.HebrewCalendar` (existe desde la API 24; la app pide 30). **Recurso:** es el calendario hebreo calculado de hoy; en el siglo I el mes empezaba cuando se veía la luna, así que podía variar uno o dos días.
 - **Números:** con letras hebreas que valen números (א=1… ט=9, י=10… צ=90, ק=100… ת=400), con el gershayim antes de la última letra (כ״ג = 23) o el geresh si es una sola (ה׳ = 5). Los miles, con la letra de las unidades y un geresh delante. El 15 y el 16, ט״ו y ט״ז.
 - **Los títulos:** algunos llevan su palabra en arameo, hebreo o copto, con su español al lado.
@@ -75,11 +75,11 @@ Solemne y en voz baja, como quien comparte un secreto con alguien de confianza. 
 - **Ejemplos:** «La chispa sigue encendida», «Guardado en la jarra», «Una puerta más», «Lo de abajo no lo sabe», «Que la lámpara no se apague».
 - **Las frases del día:** citas de los textos (Evangelio de Tomás, de Felipe, de María, Apócrifo de Juan, Pistis Sofía, 1 Enoc, la Regla de la guerra) en traducción propia, o de los evangelios canónicos en la Reina-Valera de 1909. Cada una con su cita exacta.
 - **Lo que nunca dice:** «magia», «hechizo», «demoníaco» como adjetivo de miedo, «iluminado», «Illuminati», nada del ocultismo moderno ni de Horror cósmico.
-- **Niveles:** las tres clases de personas de los valentinianos (de materia, de alma y de espíritu: **hílico**, **psíquico** y **pneumático**), según Ireneo, *Contra las herejías* 1.7.5 (a comprobar).
+- **Niveles:** las tres clases de personas de los valentinianos (de materia, de alma y de espíritu: **hílico**, **psíquico** y **pneumático**), según Ireneo, *Contra las herejías* 1.7.5 (comprobado en `fuentes_arcontes.md`).
 
 ## Los motivos de las figuras
 
-- **El emblema:** Abraxas como en las gemas antiguas (cabeza de gallo, cuerpo con coraza, piernas de serpiente, látigo y escudo), dentro del ouroboros, la serpiente que se muerde la cola. Grabado, como sobre jaspe.
+- **El emblema:** el «amuleto de Abraxas» (muchas de esas gemas son amuletos de magia, no obra segura de gnósticos), como en las gemas antiguas (cabeza de gallo, cuerpo con coraza, piernas de serpiente, látigo y escudo), dentro del ouroboros, la serpiente que se muerde la cola. Grabado, como sobre jaspe.
 - **Las siete esferas:** círculos finos uno dentro de otro, como el diagrama de los ofitas que describe Orígenes; giran despacio de noche (**recurso**).
 - **La grieta de luz:** una raja fina en la piedra, el velo o el cielo, por donde sale el blanco violeta. Es el motivo del Pleroma; siempre pequeña, nunca un estallido.
 - **La lámpara de aceite** de barro, de pico, la de las casas de Galilea.
@@ -87,7 +87,7 @@ Solemne y en voz baja, como quien comparte un secreto con alguien de confianza. 
 - **El códice:** hojas de papiro en una tapa de cuero con solapa y correa, como los de Nag Hammadi.
 - **Las barcas y las redes:** el lago y el trabajo del salado (pescado abierto, sal, cestos, ánforas).
 - **Las sombras de los arcontes:** siluetas a contraluz entre nubes o estrellas, con cabeza de animal; solo se adivinan.
-- **El anillo de Salomón:** un anillo con su sello grabado, del Testamento de Salomón (la forma del signo, a comprobar; si no se sostiene, se dibuja liso).
+- **El anillo de Salomón:** del Testamento de Salomón; se dibuja **liso**, porque la estrella del sello es medieval.
 - **La figura de luz:** de espaldas, sin rasgos, blanca con borde violeta; solo en el cuadro y algunos días.
 
 ## El fondo y los muebles

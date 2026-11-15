@@ -7,8 +7,9 @@ import java.time.LocalDate
 /**
  * Arcontes (lote 10; `docs/diseno/temas/arcontes.md`): lo que el tema calcula para sus textos. Todo sale solo de la
  * fecha, así que el mismo día dice siempre lo mismo y no se guarda nada.
- * - **El cielo del día:** Ireneo (*Contra las herejías* 1.24) cuenta que Basílides enseñaba 365 cielos, uno por cada
- *   día del año. Recurso: el día 366 de un año bisiesto se muestra como el cielo 365.
+ * - **El cielo del día:** Ireneo (*Contra las herejías* 1.24.3–7) cuenta que Basílides enseñaba 365 cielos, e Hipólito
+ *   (*Refutación* 7.26), que por eso el año tiene 365 días. Recurso: el día 366 de un año bisiesto se muestra como el
+ *   cielo 365.
  * - **El planeta del día:** la semana planetaria antigua.
  * - **La fecha hebrea:** el calendario hebreo calculado (el de hoy). Recurso: en el siglo I el mes empezaba cuando se
  *   veía la luna nueva, así que la fecha real podía correrse uno o dos días; y el día hebreo empieza al ponerse el sol,

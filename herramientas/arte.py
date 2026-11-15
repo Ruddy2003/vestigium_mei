@@ -557,6 +557,102 @@ def papel_frente():
     a = a * (0.97 + 0.05 * ruido_rect(W, H, 0.8, 164)[..., None])
     a_img(a).save(os.path.join(OUT, 'papel_frente.jpg'), quality=86)
 
+def papel_arcontes():
+    """Arcontes: una hoja de un códice de papiro, como los de Nag Hammadi, en el color lino y caliza de la guía. Arriba,
+    las tiras de médula horizontales (cada una con su densidad, su filo y sus fibras finas a lo largo, que no corren del
+    todo derechas); debajo, las verticales, que se adivinan por transparencia; las motas oscuras de los haces de la
+    planta, alguna fibra suelta más oscura, una unión de hojas (kóllesis), el doblez del cuadernillo a la izquierda con
+    los agujeros del cosido, y los bordes gastados: tostados, un poco deshilachados y con algún mordisco."""
+    W, H = 720, 1280
+    r = np.random.default_rng(171)
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    yi, xi = np.mgrid[0:H, 0:W]
+    claro, denso = col('#F3ECD9'), col('#DCCBA4')
+    def estirado(semilla, sx, sy):
+        """Ruido de 0 a 1 estirado sx veces a lo ancho y sy a lo alto (fibras)."""
+        n = np.random.default_rng(semilla).random((max(2, H // sy), max(2, W // sx))).astype(np.float32)
+        return np.asarray(Image.fromarray((n * 255).astype(np.uint8)).resize((W, H), Image.BICUBIC), np.float32) / 255
+    # Las fibras no corren derechas: cada columna se corre unos píxeles arriba o abajo, despacio.
+    corre = ((ruido_rect(W, H, 40, 172) - 0.5) * 22 + (ruido_rect(W, H, 9, 173) - 0.5) * 3).astype(np.int32)
+    yc = np.clip(yi + corre, 0, H - 1)
+    # Densidad: lo que hace la hoja más oscura y parda (más médula, menos luz que pasa).
+    dens = ruido_rect(W, H, 90, 174) * 0.35 + ruido_rect(W, H, 30, 175) * 0.2
+    # Las tiras horizontales de arriba: anchos desparejos, cada una con su densidad y su filo.
+    tira = np.zeros(H, np.float32); filo = np.zeros(H, np.float32); y = -int(r.integers(0, 30))
+    while y < H:
+        alto = int(r.integers(22, 48)); y0, y1 = max(y, 0), min(y + alto, H)
+        if y1 > y0: tira[y0:y1] = r.random() * 0.22
+        if 0 <= y + alto < H: filo[y + alto] = 0.5 + r.random() * 0.5
+        y += alto
+    filo = np.convolve(filo, np.array([0.25, 1, 0.45, 0.15]), mode='same')
+    dens = dens + tira[yc] * (0.6 + 0.8 * ruido_rect(W, H, 45, 176)) + filo[yc] * 0.16
+    # Las fibras finas de las tiras, a lo largo (varias escalas) y, más tenues y anchas, las de la capa de abajo.
+    fh = estirado(177, 70, 1) * 0.5 + estirado(178, 26, 1) * 0.3 + estirado(179, 9, 1) * 0.2
+    fh = fh[yc, xi]
+    dens = dens + (fh - 0.5) * 0.26
+    tira_v = np.zeros(W, np.float32); x = -int(r.integers(0, 40))
+    while x < W:
+        ancho = int(r.integers(34, 80)); x0, x1 = max(x, 0), min(x + ancho, W)
+        if x1 > x0: tira_v[x0:x1] = r.random() * 0.07
+        if 0 <= x + ancho < W: tira_v[x + ancho] += 0.06
+        x += ancho
+    tira_v = np.convolve(tira_v, np.ones(5) / 5, mode='same')
+    dens = dens + tira_v[None, :] + (estirado(180, 2, 120) - 0.5) * 0.05
+    # Las motas de los haces de la planta: puntitos pardos alargados en el sentido de la fibra.
+    motas = Image.new('L', (W * 2, H * 2), 0); dm = ImageDraw.Draw(motas)
+    for _ in range(900):
+        x0, y0 = r.random() * W * 2, r.random() * H * 2; l = 2 + r.random() * 7
+        dm.line([(x0, y0), (x0 + l, y0 + (r.random() - 0.5))], fill=int(80 + r.random() * 150), width=2)
+    # Fibras sueltas más oscuras, largas y finas, casi siempre horizontales.
+    for _ in range(45):
+        x0, y0 = r.random() * W * 2, r.random() * H * 2
+        vertical = r.random() > 0.9
+        ang = (r.random() - 0.5) * 0.05 + (math.pi / 2 if vertical else 0)
+        largo = (80 + r.random() * (120 if vertical else 300)) * 2; fase = r.random() * 6; pts = []
+        for k in range(16):
+            t_ = k / 15; o = math.sin(t_ * (9 if vertical else 5) + fase) * (5 if vertical else 2.5)
+            pts.append((x0 + math.cos(ang) * largo * t_ - math.sin(ang) * o, y0 + math.sin(ang) * largo * t_ + math.cos(ang) * o))
+        dm.line(pts, fill=int(60 + r.random() * 110), width=2)
+    motas = np.asarray(motas.filter(ImageFilter.GaussianBlur(0.9)).resize((W, H), Image.LANCZOS), np.float32) / 255
+    # La kóllesis: la unión de dos hojas del rollo del que se cortó el códice, una banda vertical un poco más densa.
+    xk = W * 0.64 + 5 * np.sin(yy / H * math.pi * 2.3)
+    dens = dens + np.clip(1 - np.abs(xx - xk) / 14, 0, 1) ** 0.7 * 0.08 + np.exp(-((xx - xk - 14) / 1.4) ** 2) * 0.1
+    a = mezcla(claro[None, None, :] + np.zeros((H, W, 3), np.float32), denso, np.clip(dens, 0, 1))
+    a = mezcla(a, col('#8E6E44'), motas * 0.4)
+    # El doblez del cuadernillo, a la izquierda: la hoja se curva hacia el lomo (una sombra que crece hacia el canto, con
+    # el pliegue marcado) y, cerca, los agujeros del cosido de la correa de cuero.
+    xd = 22 + 1.2 * np.sin(yy / H * math.pi * 1.7)
+    a = a * (1 - 0.13 * np.exp(-xx / 13) - 0.04 * np.exp(-((xx - 4) / 2.5) ** 2) + 0.015 * np.exp(-((xx - 10) / 4) ** 2))[..., None]
+    for yc_ in (H * 0.22, H * 0.41, H * 0.59, H * 0.78):
+        yc_ += r.normal(0, 6)
+        d = np.sqrt((xx - xd) ** 2 * 1.5 + (yy - yc_) ** 2)
+        a = mezcla(a, col('#9A7F58'), np.clip(1 - np.abs(d - 3.0) / 1.3, 0, 1) * 0.3)
+        a = mezcla(a, col('#6A5538'), np.clip(1 - d / 2.4, 0, 1) * 0.7)
+    # Manchas de la edad, pocas y tenues, más hacia los bordes.
+    borde = np.sqrt(((xx - W / 2) / (W / 2)) ** 4 + ((yy - H / 2) / (H / 2)) ** 4) ** 0.25
+    manchas = np.clip((ruido_rect(W, H, 30, 181) - 0.66) * 3.0, 0, 1) * np.clip(borde * 1.4 - 0.5, 0, 1)
+    a = mezcla(a, col('#CDB27F'), manchas * 0.3)
+    # Los bordes gastados: el contorno de la hoja, irregular (las fibras horizontales se sueltan un poco en los cantos
+    # de los lados), con algún mordisco; el canto, tostado; por fuera, la caliza en sombra.
+    irreg = (ruido_rect(W, H, 10, 182) - 0.5) * 10 + (ruido_rect(W, H, 2.5, 183) - 0.5) * 4
+    hilachas = np.clip((estirado(184, 14, 1)[yc, xi] - 0.62) * 3, 0, 1) * (ruido_rect(W, H, 6, 187) > 0.5) * 7
+    dist = np.minimum(W - 1 - xx - hilachas, np.minimum(yy, H - 1 - yy)) + irreg      # a la izquierda está el lomo, sin canto
+    for _ in range(4):                                           # mordiscos en el canto: faltas de bordes quebrados
+        lado = r.integers(1, 4); rad = 6 + r.random() * 9
+        if lado < 2: cx_, cy_ = W + rad * 0.3, 80 + r.random() * (H - 160)
+        else: cx_, cy_ = 60 + r.random() * (W - 120), (-rad * 0.3 if lado == 2 else H + rad * 0.3)
+        dd = np.sqrt((xx - cx_) ** 2 + ((yy - cy_) * (0.6 if lado < 2 else 1.6)) ** 2)
+        dist = np.minimum(dist, dd - rad + irreg * 0.6)
+    hoja = np.clip((dist - 9) / 1.8, 0, 1)
+    tostado = np.clip(1 - (dist - 9) / 34, 0, 1) ** 1.8 * np.clip(xx / 40, 0, 1)   # el lomo no se tuesta como los cantos
+    a = mezcla(a, col('#CBB083'), tostado * 0.55)
+    fuera = col('#CDBB94')[None, None, :] * (0.95 + 0.06 * ruido_rect(W, H, 4, 185)[..., None])
+    sombra = np.clip(1 - np.clip(9 - dist, 0, None) / 6, 0, 1)     # la sombra de la hoja sobre lo de fuera
+    fuera = fuera * (1 - 0.1 * sombra[..., None])
+    a = mezcla(fuera, a, hoja)
+    a = a * (0.985 + 0.02 * ruido_rect(W, H, 0.8, 186)[..., None])
+    a_img(a).save(os.path.join(OUT, 'papel_arcontes.jpg'), quality=86)
+
 if __name__ == '__main__':
     OUT = sys.argv[1]
     if len(sys.argv) > 2:
@@ -581,4 +677,5 @@ if __name__ == '__main__':
     papel_edo()
     papel_vapor()
     papel_frente()
+    papel_arcontes()
     print('papeles listos')

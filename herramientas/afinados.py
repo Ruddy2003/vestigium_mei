@@ -9,7 +9,8 @@ Uso: python3 afinados.py <carpeta res/raw>
 import os, sys, subprocess, tempfile, wave
 from contextlib import contextmanager
 import numpy as np
-from scipy.signal import fftconvolve, butter, sosfilt
+from scipy.signal import fftconvolve, butter, sosfilt, sosfiltfilt
+from scipy.ndimage import maximum_filter1d
 
 SR = 22050
 OUT = sys.argv[1]
@@ -235,6 +236,14 @@ def resonador(x, f, ancho):
     r = np.exp(-np.pi * ancho / SR); w = 2 * np.pi * f / SR
     g = (1 - r) * np.sqrt(1 - 2 * r * np.cos(2 * w) + r * r)
     return sosfilt(np.array([[g, 0.0, 0.0, 1.0, -2 * r * np.cos(w), r * r]]), x)
+def domar(x, umbral=0.4, razon=3.0):
+    """Un compresor suave para una nota pulsada: por encima de [umbral] (del pico) baja la ganancia con razón [razon],
+    siguiendo una envolvente que mira un poco adelante y no tiembla (no recorta la onda: no ensucia el timbre). La nota
+    pierde el golpe de más del principio y la música puede sonar al mismo volumen que las de los otros temas."""
+    a = np.abs(x); p = a.max() + 1e-12
+    e = maximum_filter1d(a, int(0.02 * SR)) / p
+    e = np.maximum(sosfiltfilt(butter(2, 40 / (SR / 2), output='sos'), e), 1e-4)
+    return x * np.where(e > umbral, (umbral / e) ** (1 - 1 / razon), 1.0)
 def kinnor(f, d=0.8, brillo=0.5, decae=0.9935):
     """El kinnor, la lira de mano de Galilea: cuerda de tripa pulsada con púa (el golpe seco de la púa al empezar), que
     arranca apenas alta y se asienta, y la caja de madera pequeña que le da un color hueco (dos resonancias graves)."""
@@ -285,6 +294,7 @@ def zumbido_hondo(f, d, cae=0.0, entra=0.35, sale=0.35, abre=(300, 900)):
     fb = f * 2 ** (-cae * t / d / 12)
     x = 0.5 * sierra_limpia(fb, d) + 0.4 * sierra_limpia(fb * 1.0085, d, 0.3) + 0.25 * sierra_limpia(fb * 2.003, d, 0.6)
     x = paso_bajo_movil(x, abre[0] + (abre[1] - abre[0]) * (0.5 - 0.5 * np.cos(2 * np.pi * 0.23 * t)), 2.4)
+    x = filtro(x, 'alto', f * 1.6)   # sin la fundamental, que el altavoz no da y solo resta volumen a lo que sí se oye
     aspero = 0.78 + 0.22 * np.sin(2 * np.pi * 9.1 * t + 0.8 * np.sin(2 * np.pi * 1.3 * t))
     return 0.35 * x * aspero * np.minimum(1, t / max(entra * d, 1e-3)) ** 1.5 * np.minimum(1, np.maximum(0, d - t) / max(sale * d, 1e-3))
 def pleroma(f, d=2.0, ataque=0.12):
@@ -1470,12 +1480,14 @@ def arcontes():
                                 *[(0.35 + 0.22 * i, kin(T + n, 0.8 if i < 2 else 1.1, 0.5), 0.45) for i, n in enumerate([12, 8, 7])]), 1.3, 0.28),
             aviso=reverb(mezclar((0, crot(T + 24, 1.0), 0.28), (0.24, crot(T + 24, 1.2), 0.24), (0.5, voz(T - 24, 2.0), 0.45), (0.5, voz(T - 17, 2.0), 0.25),
                                  *[(0.5 + 0.2 * i, kin(T + n, 0.7 if i < 4 else 1.2, 0.5), 0.45) for i, n in enumerate([12, 8, 7, 4, 7])]), 1.4, 0.28),
+            # Lo solemne: abre el zumbido de los arcontes; una voz salmodia sobre el bordón de otra (sube a su nota de recitar,
+            # la repite y cae a la tónica), el kinnor marca los cambios y, al final, queda la nota limpia del Pleroma.
             solemne=reverb(mezclar(
                 (0, hondo(2.6, entra=0.45, sale=0.5), 0.4),
                 (0.4, voz(T - 24, 6.2, 'u'), 0.35),
-                *[(0.6 + 0.42 * i, voz(T - 12 + n, 0.46 if i < 12 else 1.2), 0.5) for i, n in enumerate([0, 2, 4, 4, 4, 4, 5, 4, 2, 4, 2, 0])],
-                *[(0.6 + 0.42 * i, rasgueo([T - 12 + a for a in ch], 1.6, 0.035, 0.4), 0.5) for i, ch in ((0, [0, 7, 12]), (4, [-4, 0, 4]), (8, [-7, 0, 5]), (11, [0, 4, 7, 12]))],
-                (5.2, crot(T + 24, 1.6), 0.18), (5.2, luz(T + 24, 2.4), 0.25)), 2.4, 0.34))
+                *[(0.6 + 0.42 * i, voz(T - 12 + n, 0.46 if i < 11 else 1.4), 0.5) for i, n in enumerate([0, 2, 4, 4, 4, 4, 5, 4, 2, 4, 2, 0])],
+                *[(0.6 + 0.42 * i, domar(rasgueo([T - 12 + a for a in ch], 1.6, 0.035, 0.4)), 0.5) for i, ch in ((0, [0, 7, 12]), (4, [-4, 0, 4]), (8, [-7, 0, 5]), (11, [0, 4, 7, 12]))],
+                (5.75, crot(T + 24, 1.6), 0.18), (5.75, luz(T + 24, 2.6), 0.25)), 2.4, 0.34))
 
     # Error: los arcontes: el zumbido hondo que crece de golpe y se hunde un semitono, con dos cuerdas apagadas que bajan
     # de la sexta menor a la sexta menor grave. Cambio: dos crótalos apagados, de la quinta a la octava. Tecla: la caña con

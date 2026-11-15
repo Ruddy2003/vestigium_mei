@@ -1,22 +1,43 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 12 y después: igual que la de drawable/. Ya no fuerza el radio del sistema (system_app_widget_background_radius) para no perder la forma del tema. -->
+<!-- Android 12 y después: igual que la de drawable/ (no fuerza el radio del sistema, para no perder la forma del tema). Arcontes: la casa del salador de noche, en el azul negro del cielo antiguo, con un filete fino del oro de abajo; arriba a la izquierda, la lámpara de aceite de barro encendida; arriba a la derecha, las siete esferas en círculos finos (el diagrama de los ofitas); abajo a la derecha, la grieta por donde se filtra la luz blanca y violeta. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#F72F3336"/>
-            <stroke android:width="1.5dp" android:color="#66707A"/>
-            <corners android:radius="0dp"/>
+            <solid android:color="#F7111427"/>
+            <stroke android:width="1.5dp" android:color="#343A5A"/>
+            <corners android:radius="10dp"/>
         </shape>
     </item>
-    <item android:gravity="top|right" android:width="20dp" android:height="20dp">
-        <vector android:width="20dp" android:height="20dp" android:viewportWidth="20" android:viewportHeight="20">
-            <path android:pathData="M4,0 L20,0 L20,16 Z" android:fillColor="#D0E0262F"/>
-            <path android:pathData="M0,0 L3,0 L20,17 L20,20 Z" android:fillColor="#55E0262F"/>
+    <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.8dp" android:color="#55D4A62A"/>
+            <corners android:radius="7dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="16dp" android:height="16dp" android:top="3dp" android:left="7dp">
+        <vector android:width="16dp" android:height="16dp" android:viewportWidth="16" android:viewportHeight="16">
+            <path android:pathData="M14.1,3.00 a3.6,3.6 0 1,1 0,7.20 a3.6,3.6 0 1,1 0,-7.20" android:fillColor="#22FFD98A"/>
+            <path android:pathData="M14.1,4.40 a2.2,2.2 0 1,1 0,4.40 a2.2,2.2 0 1,1 0,-4.40" android:fillColor="#38FFD98A"/>
+            <path android:pathData="M2.2,10.2 C2.2,8.4 4.6,7.4 7.2,7.4 C9.2,7.4 10.6,8.0 12.4,8.6 L14.2,8.8 C14.8,9.0 14.8,10.2 14.2,10.4 L12.2,10.8 C10.6,11.8 9.0,12.8 7.2,12.8 C4.6,12.8 2.2,12.0 2.2,10.2 Z" android:fillColor="#FFB9774A"/>
+            <path android:pathData="M2.4,10.6 C3.2,12.0 5.0,12.8 7.2,12.8 C9.0,12.8 10.6,11.8 12.2,10.8 L14.2,10.4 C12.6,11.2 9.6,11.6 7.2,11.6 C5.0,11.6 3.4,11.3 2.4,10.6 Z" android:fillColor="#FF8A4E2B"/>
+            <path android:pathData="M5.4,12.6 L9.0,12.6 L8.6,13.6 L5.8,13.6 Z" android:fillColor="#FF8A4E2B"/>
+            <path android:pathData="M6.1,8.7 a0.9,0.55 0 1,0 1.8,0 a0.9,0.55 0 1,0 -1.8,0 Z" android:fillColor="#FF5A3220"/>
+            <path android:pathData="M14.0,8.5 C12.9,7.5 13.3,6.0 14.3,4.6 C14.7,5.9 15.4,6.8 14.9,7.9 C14.7,8.3 14.4,8.6 14.0,8.5 Z" android:fillColor="#FFF0B24A"/>
+            <path android:pathData="M14.1,8.2 C13.7,7.6 13.9,6.9 14.3,6.2 C14.5,6.9 14.8,7.4 14.5,7.9 Z" android:fillColor="#FFFFF1C8"/>
         </vector>
     </item>
-    <item android:gravity="bottom|fill_horizontal" android:height="4dp" android:left="8dp" android:right="8dp" android:bottom="3dp">
-        <shape android:shape="line">
-            <stroke android:width="1dp" android:color="#CC66707A" android:dashWidth="3dp" android:dashGap="3dp"/>
-        </shape>
+    <item android:gravity="top|right" android:width="15dp" android:height="15dp" android:top="5dp" android:right="7dp">
+        <vector android:width="15dp" android:height="15dp" android:viewportWidth="16" android:viewportHeight="16">
+            <path android:pathData="M8,0.60 a7.4,7.4 0 1,1 0,14.80 a7.4,7.4 0 1,1 0,-14.80 M8,1.55 a6.45,6.45 0 1,1 0,12.90 a6.45,6.45 0 1,1 0,-12.90 M8,2.50 a5.5,5.5 0 1,1 0,11.00 a5.5,5.5 0 1,1 0,-11.00 M8,3.45 a4.55,4.55 0 1,1 0,9.10 a4.55,4.55 0 1,1 0,-9.10 M8,4.40 a3.6,3.6 0 1,1 0,7.20 a3.6,3.6 0 1,1 0,-7.20 M8,5.35 a2.65,2.65 0 1,1 0,5.30 a2.65,2.65 0 1,1 0,-5.30 M8,6.30 a1.7,1.7 0 1,1 0,3.40 a1.7,1.7 0 1,1 0,-3.40" android:strokeColor="#FF6E6A9E" android:strokeWidth="0.42"/>
+            <path android:pathData="M8,7.45 a0.55,0.55 0 1,1 0,1.10 a0.55,0.55 0 1,1 0,-1.10" android:fillColor="#FFD4A62A"/>
+            <path android:pathData="M8,-0.10 a0.7,0.7 0 1,1 0,1.40 a0.7,0.7 0 1,1 0,-1.40" android:fillColor="#FFC4B0FF"/>
+        </vector>
+    </item>
+    <item android:gravity="bottom|right" android:width="6dp" android:height="10dp" android:bottom="1.5dp" android:right="18dp">
+        <vector android:width="6dp" android:height="10dp" android:viewportWidth="8" android:viewportHeight="13">
+            <path android:pathData="M4.6,0.6 L3.7,3.2 L5.0,5.6 L3.6,8.2 L4.6,10.4 L3.9,12.6" android:strokeColor="#669C7BFF" android:strokeWidth="2.6" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+            <path android:pathData="M4.6,0.6 L3.7,3.2 L5.0,5.6 L3.6,8.2 L4.6,10.4 L3.9,12.6" android:strokeColor="#FFF4F1FF" android:strokeWidth="0.55" android:strokeLineCap="round" android:strokeLineJoin="round"/>
+            <path android:pathData="M5.0,5.6 L6.4,6.6" android:strokeColor="#CCF4F1FF" android:strokeWidth="0.4" android:strokeLineCap="round"/>
+        </vector>
     </item>
 </layer-list>
