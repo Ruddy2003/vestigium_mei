@@ -1219,12 +1219,16 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             addRect(Rect(x, y, x + w, y + h))
             if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
         }
-        // El cartucho de datos: la esquina de arriba cortada, la muesca de protección abajo y, si cabe, la ventana de la etiqueta.
+        // El cartucho de datos: la esquina de arriba cortada y, en los tramos largos, la muesca de protección abajo. Sin la
+        // ventana de la etiqueta: en la tira, tan baja, el hueco se leía como una letra.
         TemaId.FRENTE -> {
-            val k = minOf(h * 0.35f, w / 3); val nw = minOf(h * 0.5f, w * 0.15f); val nd = h * 0.25f; val n0 = x + minOf(h * 0.4f, w * 0.15f)
+            val k = minOf(h * 0.35f, w / 3)
             moveTo(x, y); lineTo(x + w - k, y); lineTo(x + w, y + k); lineTo(x + w, y + h)
-            lineTo(n0 + nw, y + h); lineTo(n0 + nw, y + h - nd); lineTo(n0, y + h - nd); lineTo(n0, y + h); lineTo(x, y + h); close()
-            if (w > h * 2.4f) { addRect(Rect(x + h * 0.4f, y + h * 0.22f, x + minOf(w * 0.6f, w - h * 0.8f), y + h * 0.56f)); fillType = PathFillType.EvenOdd }
+            if (w > h * 3f) {
+                val nw = h * 0.5f; val nd = h * 0.22f; val n0 = x + h * 0.5f
+                lineTo(n0 + nw, y + h); lineTo(n0 + nw, y + h - nd); lineTo(n0, y + h - nd); lineTo(n0, y + h)
+            }
+            lineTo(x, y + h); close()
         }
         TemaId.REFUGIO -> addRoundRect(RoundRect(x, y, x + w, y + h, CornerRadius(minOf(h, w) / 2)))
         TemaId.ORDEN -> {
