@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -929,10 +930,12 @@ object EstantePsicodelia : DisenoBiblioteca {
     /** Si un color es claro (para escribir encima con tinta oscura). */
     private fun esClaro(c: Color): Boolean = c.red * 0.299f + c.green * 0.587f + c.blue * 0.114f > 0.65f
 
-    /** Una luna chica (la de los discos de los sueños): el creciente sobre [fondo]. */
+    /** Una luna chica (la de los discos de los sueños): el creciente, recortado (el [fondo] queda para quien lo llama). */
+    @Suppress("UNUSED_PARAMETER")
     private fun DrawScope.lunita(c: Offset, r: Float, color: Color, fondo: Color) {
-        drawCircle(color, r, c)
-        drawCircle(fondo, r * 0.86f, Offset(c.x + r * 0.42f, c.y - r * 0.2f))
+        val disco = Path().apply { addOval(Rect(c, r)) }
+        val sombra = Path().apply { addOval(Rect(Offset(c.x + r * 0.42f, c.y - r * 0.2f), r * 0.86f)) }
+        drawPath(Path.combine(PathOperation.Difference, disco, sombra), color)
     }
 
     /**
@@ -1725,7 +1728,7 @@ object EstantePsicodelia : DisenoBiblioteca {
             }
             y += 9 * u * k; j++
         }
-        // La estampilla: el puente con sus dos torres sobre la niebla, «U.S.» y «4c».
+        // La estampilla: el puente con sus dos torres sobre la niebla, «U.S.» y el año (la tarifa de la postal de 1967 no está comprobada: no se escribe).
         val st = Rect(r.right - r.width * 0.2f, r.top + r.height * 0.17f, r.right - r.width * 0.05f, r.top + r.height * 0.17f + r.width * 0.18f)
         drawRect(c(Color(0xFFFBF6EC)), st.topLeft, st.size)
         var x = st.left
@@ -1742,7 +1745,7 @@ object EstantePsicodelia : DisenoBiblioteca {
             drawLine(claro, Offset(dentro.left, dentro.top + dentro.height * 0.66f), Offset(dentro.right, dentro.top + dentro.height * 0.66f), 1 * u)
         }
         textoEn(medidor, "U.S.", Rect(dentro.left, dentro.top, dentro.left + dentro.width * 0.6f, dentro.top + dentro.height * 0.28f), ROTULO, c(Color(0xFFF4EEF8)), 5.5f * k, minimo = 3f)
-        textoEn(medidor, "4c", Rect(dentro.right - dentro.width * 0.45f, dentro.bottom - dentro.height * 0.3f, dentro.right, dentro.bottom), ROTULO, c(Color(0xFFF4EEF8)), 6f * k, minimo = 3f)
+        textoEn(medidor, "1967", Rect(dentro.right - dentro.width * 0.45f, dentro.bottom - dentro.height * 0.3f, dentro.right, dentro.bottom), ROTULO, c(Color(0xFFF4EEF8)), 6f * k, minimo = 3f)
         // El matasellos de San Francisco, con sus ondas.
         val ms = Offset(st.left - r.width * 0.03f, st.center.y + st.height * 0.12f)
         val mr = st.width * 0.5f

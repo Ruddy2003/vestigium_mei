@@ -664,6 +664,7 @@ class AnioG9Prueba {
         // Llega (1), las salas y su primer cartel (2), el verano del amor (3), el año de después (4) y el barrio que cambia (5).
         assertEquals(listOf("01-01", null, null, null, null), fechasD("llega"))
         assertEquals(listOf("12-10", null, null, null, null), fechasD("baile_geary"))
+        assertEquals(listOf(null, "04-22", null, null, null), fechasD("sutter"))
         assertEquals(listOf(null, "05-07", null, null, null), fechasD("primer_cartel"))
         assertEquals(listOf(null, "09-02", null, null, null), fechasD("un_numero"))
         assertEquals(listOf(null, "09-20", null, null, null), fechasD("periodico"))
@@ -748,12 +749,12 @@ class AnioG9Prueba {
         // La casa de la señora Petrakis: gris hasta el 9 de mayo de 1969; turquesa desde el 12.
         assertEquals(0.0, arcoD("2027-01-01", "casa"), 0.0); assertEquals(0.0, arcoD("2031-05-09", "casa"), 0.0)
         assertEquals(0.6, arcoD("2031-05-11", "casa"), 0.0); assertEquals(1.0, arcoD("2031-12-31", "casa"), 0.0)
-        // Los carteles de los postes: ninguno hasta los bailes de la calle Sutter; llenos en el verano del amor; menos después.
-        assertEquals(0.0, arcoD("2028-02-18", "carteles"), 0.0); assertEquals(0.2, arcoD("2028-02-19", "carteles"), 0.0)
+        // Los carteles de los postes: ninguno hasta las letras que se derriten (marzo de 1966); llenos en el verano del amor; menos después.
+        assertEquals(0.0, arcoD("2028-03-11", "carteles"), 0.0); assertEquals(0.2, arcoD("2028-03-12", "carteles"), 0.0)
         (0..120).forEach { assertEquals(1.0, arcoD(LocalDate.of(2029, 6, 1).plusDays(it.toLong()).toString(), "carteles"), 0.0) }
         assertEquals(0.75, arcoD("2029-10-06", "carteles"), 0.0); assertTrue(arcoD("2031-06-01", "carteles") < 0.5)
         // Los días que cambian lo que se ve.
-        assertEquals("rotulo", fichaD("2027-06-26").escena); assertEquals("carteles", fichaD("2028-02-19").escena); assertEquals("carteles", fichaD("2028-05-07").escena)
+        assertEquals("rotulo", fichaD("2027-06-26").escena); assertEquals("carteles", fichaD("2028-03-12").escena); assertEquals("carteles", fichaD("2028-04-22").escena); assertEquals("carteles", fichaD("2028-05-07").escena)
         assertEquals("parque", fichaD("2029-01-14").escena); assertEquals("radio", fichaD("2029-02-12").escena); assertEquals("radio", fichaD("2029-08-06").escena)
         assertEquals("carteles", fichaD("2029-09-01").escena); assertEquals("mudanza", fichaD("2030-01-20").escena); assertEquals("mudanza", fichaD("2030-03-02").escena)
         assertEquals("luz_negra", fichaD("2030-04-13").escena); assertEquals("cerrado", fichaD("2031-08-30").escena)

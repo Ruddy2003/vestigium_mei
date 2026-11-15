@@ -1200,9 +1200,10 @@ internal object AnioG9 {
     // de la esquina con tablas) y fiesta (luces en las ventanas). Nunca personas.
     //
     // Arcos: casa (la casa de la señora Petrakis: 0 = gris; de 0.3 a 1, pintada de turquesa con molduras amarillas, en los
-    // tres días de `pintan_casa`), calle (las otras casas pintadas de la calle: ninguna hasta `casa_pintada`; 0.1 es una sola, la de
-    // azules y verdes; desde `colores_calle`, 0.25: dos) y carteles (lo llenos que están los postes de carteles de baile: ninguno hasta los bailes de
-    // la calle Sutter, en febrero de 1966; llenos en el verano de 1967; menos después del entierro de octubre). Estado:
+    // tres días de `pintan_casa`), calle (las otras casas pintadas de la calle: ninguna hasta `casa_pintada`; 0.1 es una
+    // sola, la de azules y verdes; desde `colores_calle`, 0.25: dos) y carteles (lo llenos que están los postes de carteles
+    // de baile: ninguno hasta `letras_derretidas`, en marzo de 1966; llenos en el verano de 1967; menos después del entierro
+    // de octubre, y menos aún tras la lluvia de enero de 1969). Estado:
     // «monterey» (temporada 3, los tres días del festival): no está en la ciudad. En la temporada 5, que desde 2032 se
     // repite, lo que no debe moverse es fiesta o suceso del mundo, y sus sucesos personales no forman cadenas.
     //
@@ -1289,12 +1290,12 @@ internal object AnioG9 {
                     NAVIDAD,
                 )),
             TemporadaVida("1966", "salas",
-                "En la calle Sutter empiezan los bailes de cada semana, cada uno con su cartel, y en los postes aparecen las letras que se derriten. Gil entra a tocar el órgano en una banda del barrio. En el auditorio de Geary montan luces y cine en las paredes, y Bill Graham pelea su permiso de sala de baile. David dibuja su primer cartel para un baile de la calle Sutter y conoce a Ellen, que mueve las luces líquidas. Lo declaran no apto para el servicio militar por la vista. Se cancela la autopista del Panhandle. En septiembre sale el periódico del barrio, y Graham alquila una sala grande. En diciembre, unos con máscaras pasean por Haight un ataúd lleno de dinero falso.",
+                "Gil entra a tocar el órgano en una banda del barrio. En los postes aparecen las letras que se derriten, y en la calle Sutter empiezan los bailes de cada semana, cada uno con su cartel. En el auditorio de Geary montan luces y cine en las paredes, y Bill Graham pelea su permiso de sala de baile. David dibuja su primer cartel para un baile de la calle Sutter y conoce a Ellen, que mueve las luces líquidas. Lo declaran no apto para el servicio militar por la vista. Se cancela la autopista del Panhandle. En septiembre sale el periódico del barrio, y Graham alquila una sala grande. En diciembre, unos con máscaras pasean por Haight un ataúd lleno de dinero falso.",
                 listOf(
                     suceso("gil_banda", "01-15", "Gil, su compañero de departamento, entra a tocar el órgano en una banda del barrio"),
-                    mundo("sutter", "02-19", "En la calle Sutter empiezan los bailes de cada semana, cada uno con su cartel", certeza = A, fuente = FN_SUTTER, escena = "carteles"),
-                    mundo("letras_derretidas", "03-12", "En los postes aparecen carteles con letras que se doblan como si se derritieran", certeza = A, fuente = FN_LETRAS),
+                    mundo("letras_derretidas", "03-12", "En los postes aparecen carteles con letras que se doblan como si se derritieran", certeza = A, fuente = FN_LETRAS, escena = "carteles"),
                     mundo("permiso", "04-20", "Bill Graham pelea con la ciudad el permiso de sala de baile del auditorio de Geary", certeza = A, fuente = FN_GRAHAM),
+                    mundo("sutter", "04-22", "En la calle Sutter empiezan los bailes de cada semana, cada uno con su cartel", certeza = A, fuente = FN_SUTTER, escena = "carteles"),
                     suceso("primer_cartel", "05-07", "Dibuja su primer cartel para un baile de la calle Sutter", escena = "carteles"),
                     mundo("luces_geary", "05-21", "En el auditorio de Geary montan estroboscopios, diapositivas y cine en las paredes", certeza = A, fuente = FN_GEARY),
                     NIEBLA_VERANO,
@@ -1393,9 +1394,9 @@ internal object AnioG9 {
             Arco("calle", TipoArco.ADORNOS, listOf(
                 p(1, "01-01", 0.0), p(1, "03-28", 0.0), p(1, "03-29", 0.1, salto = true), p(5, "04-18", 0.1), p(5, "04-19", 0.25, salto = true), p(5, "12-31", 0.25),
             )),
-            // Los carteles de baile en los postes: ninguno hasta febrero de 1966; llenos en el verano de 1967; menos después.
+            // Los carteles de baile en los postes: ninguno hasta las letras que se derriten, en marzo de 1966; llenos en el verano de 1967; menos después.
             Arco("carteles", TipoArco.ADORNOS, listOf(
-                p(1, "01-01", 0.0), p(2, "02-18", 0.0), p(2, "02-19", 0.2, salto = true), p(2, "12-31", 0.5), p(3, "06-01", 1.0), p(3, "10-05", 1.0),
+                p(1, "01-01", 0.0), p(2, "03-11", 0.0), p(2, "03-12", 0.2, salto = true), p(2, "12-31", 0.5), p(3, "06-01", 1.0), p(3, "10-05", 1.0),
                 p(3, "10-06", 0.75, salto = true), p(4, "12-31", 0.6), p(5, "01-09", 0.6), p(5, "01-10", 0.3, salto = true), p(5, "12-31", 0.45),
             )),
         ),

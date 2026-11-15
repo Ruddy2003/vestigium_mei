@@ -714,8 +714,8 @@ class CuentoG9Prueba {
         soloEntreD("2029-05-27", "2031-12-31", "pensando en las tintas fluorescentes")
         soloEntreD("2031-02-22", "2031-12-31", "pinta con los pinceles del viejo Sal")
         // Las noches: el sótano de la calle Page, la sala de la calle Sutter, el auditorio de Geary, la FM del 106.9, el tocadiscos.
-        soloEntreD("2027-04-24", "2028-02-18", "baja al sótano de la calle Page")
-        soloEntreD("2028-02-19", "2031-01-24", "está en la sala de la calle Sutter")
+        soloEntreD("2027-04-24", "2028-04-21", "baja al sótano de la calle Page")
+        soloEntreD("2028-04-22", "2031-01-24", "está en la sala de la calle Sutter")
         soloEntreD("2028-05-07", "2030-07-05", "está en el auditorio de Geary")
         soloEntreD("2031-01-25", "2031-12-31", "va a las salas que quedan")
         soloEntreD("2029-02-12", "2031-12-31", "A esta hora oye el 106.9")
@@ -742,7 +742,7 @@ class CuentoG9Prueba {
         soloEntreD("2030-04-13", "2031-12-31", "la ventana de su cuarto brilla de un violeta raro")
         soloEntreD("2031-05-10", "2031-12-31", "La casa de la señora Petrakis es ahora turquesa")
         // Los carteles de los postes (el arco `carteles`): ninguno, alguno, llenos y cubiertos.
-        soloEntreD("2027-01-01", "2028-02-18", "solo hay avisos de cuartos en alquiler")
+        soloEntreD("2027-01-01", "2028-03-11", "solo hay avisos de cuartos en alquiler")
         // Llenos del todo solo en el verano del amor: del 2 de mayo, cuando el arco pasa de 0.9, al entierro del 6 de octubre.
         nuncaD("2027-01-01", "2029-05-01", "como una enredadera de colores"); nuncaD("2029-10-06", "2031-12-31", "como una enredadera de colores")
         algunaD("2029-06-01", "2029-10-05", "como una enredadera de colores")
