@@ -699,7 +699,7 @@ class AnioG9Prueba {
         assertEquals(lugares.sorted(), lugares)
     }
 
-    @Test fun lasFechasSonLasDeLasFuentesYSusCorrecciones() {
+    @Test fun lasFechasDeDavidSonLasDeLasFuentesYSusCorrecciones() {
         // «Histórico», solo lo que `fuentes_psicodelia.md` da con día; lo que solo tiene año, mes o estación, «aproximado» con su fuente.
         val historicos = car.temporadas.flatMap { it.dias }.filter { it.certeza == CertezaDia.HISTORICO }.map { it.id }.toSet()
         assertEquals(setOf("baile_geary", "un_numero", "periodico", "sala_grande", "entierro_dinero", "encuentro_parque", "baile_krishna", "fm_noche", "marcha",
