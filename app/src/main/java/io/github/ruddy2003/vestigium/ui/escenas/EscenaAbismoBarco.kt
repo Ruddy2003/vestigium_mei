@@ -138,8 +138,8 @@ internal object BarcoAbismo {
     /** La escala de los objetos del día sobre la escotilla: la de Mongol, 60 unidades por metro a escala 1. */
     fun escalaEn(z: Float): Float = k(z) / 60f
 
-    /** Dónde va el objeto chico del día: sobre la tapa de la escotilla, un poco a la derecha (lo de la izquierda lo usan las ristras a medio hacer). */
-    fun soporte(): Offset = SITIO_ESCOTILLA.p(0.16f, ESCOTILLA_ALTO + 0.01f, -0.05f)
+    /** Dónde va el objeto chico del día: sobre la tapa de la bomba, en medio del cuadro (la escotilla queda detrás de los cascos). */
+    fun soporte(): Offset = SITIO_BOMBA.p(0f, PiezasAbismo.BOMBA_ALTO + 0.01f, 0f)
 
     /** El objeto grande pisa delante de la bomba, a su izquierda, y se recuesta en ella. */
     val PIE_GRANDE: Offset get() = pb(0.1f, 0f, 3.05f)
@@ -169,9 +169,9 @@ internal object BarcoAbismo {
     /** Las luces cálidas encendidas a esta hora, de 0 a 1: la lamparilla del icono y el farol. */
     internal class Lumbres(val lamparilla: Float, val farol: Float)
 
-    /** Dónde está el farol: sobre la tapa de la escotilla, en medio del corro. */
-    val FAROL: Offset get() = SITIO_ESCOTILLA.p(-0.22f, ESCOTILLA_ALTO + 0.12f, 0.08f)
-    val K_FAROL: Float get() = SITIO_ESCOTILLA.escala(-0.22f, 0.08f)
+    /** Dónde está el farol: colgado del cabo de las ristras, sobre el corro, en medio de la cubierta. */
+    val FAROL: Offset get() = pb(0.21f, 2.18f, 2.8f)
+    val K_FAROL: Float get() = k(cam(0.21f, 2.8f).y)
 
     /**
      * Todo lo que el cuadro de un momento comparte entre sus planos: la luz, el pincel, las lumbres, el mar y lo que

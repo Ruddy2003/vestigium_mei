@@ -20,7 +20,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.bota
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.cabo
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.escala
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.esponja
-import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.farol
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.hornacina
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.hornillo
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.manguera
@@ -156,8 +155,6 @@ internal object CubiertaAbismo {
             escotilla(v)
             if (EscenaAbismo.ensartando(m)) ensartando(v)
             if (EscenaAbismo.fase(m) == EscenaAbismo.Fase.CORRO) corro(v)
-            sobreElSoporte(m, v.pincel(B.soporte()), B.soporte(), B.escalaEn(B.cam(B.ESCOTILLA_U, B.ESCOTILLA_V).y))
-            if (v.lu.farol > 0.02f || EscenaAbismo.fase(m) == EscenaAbismo.Fase.SUENO) farol(v.pincel(B.FAROL), B.FAROL, B.K_FAROL, v.lu.farol)
         }
         // La bomba del aire, con la manguera.
         val sb = B.SITIO_BOMBA
@@ -165,6 +162,7 @@ internal object CubiertaAbismo {
             if (EscenaAbismo.manguera(m) == Manguera.ADUJADA) aduja(v.pincel(sb.pie), B.pb(1.0f, 0f, 2.95f), 0.32f * sb.k, 0.11f * sb.k, 4, 0.05f * sb.k, C.BREA, manguera = true)
             bomba(v.pincel(sb.p(0f, 0.6f, 0f)), sb, sol, EscenaAbismo.buzoAbajo(m), 0.75f, Semilla.de("abismo", "bomba"))
             if (EscenaAbismo.manguera(m) == Manguera.AL_AGUA) mangueraEnCubierta(v)
+            sobreElSoporte(m, v.pincel(B.soporte()), B.soporte(), B.escalaEn(sb.z0))
         }
         // Las botas de plomo, una de pie y otra caída (el día que son el objeto, las pinta el objeto).
         if (ObjetosAbismo.elCuadroPinta(m, "botas")) cosas += Cosa(sombraDe(B.SITIO_BOTA, sol, esquinas(-0.08f, 0.08f, 0f, 0.42f, -0.17f, 0.13f)), B.SITIO_BOTA.pie) { bota(v.pincel(B.SITIO_BOTA.pie), B.SITIO_BOTA.pie, B.SITIO_BOTA.k, -1f, 3) }
@@ -207,7 +205,7 @@ internal object CubiertaAbismo {
         // La luz de noche en la cubierta: el charco de la lamparilla y el del farol.
         if (v.l.noche > 0.2f) {
             resplandor(B.ICONO + Offset(-10f, 30f), 70f, 0.5f * v.l.noche, C.LUMBRE)
-            if (v.lu.farol > 0.02f) resplandor(B.FAROL + Offset(0f, 18f), 95f, 0.75f * v.l.noche * v.lu.farol, C.LUMBRE)
+            if (v.lu.farol > 0.02f) { resplandor(B.FAROL + Offset(0f, 70f), 120f, 0.7f * v.l.noche * v.lu.farol, C.LUMBRE); resplandor(B.FAROL, 45f, 0.5f * v.l.noche * v.lu.farol, C.LUMBRE) }
         }
         for (cosa in orden) cosa.pintar(this)
         // Lo que pasa por la regala: la escala echada y la cuerda de vida; y la hornacina del icono en su candelero.

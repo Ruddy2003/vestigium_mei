@@ -103,6 +103,10 @@ internal object AparejoAbismo {
         val (a, b) = CABO_CERCA
         cabo(p, (0..12).map { p(enElCabo(a, b, it / 12f, 0.22f)) }, 0.022f * B.k(z(a)))
         for (r in ristras(m).filter { it.arriba.z <= B.PALO_MAYOR + 0.05f }) pintarRistra(v, r)
+        // El farol, colgado del cabo sobre el corro: encendido de 18:00 a 20:00 y antes del alba; si no, apagado.
+        val cuelga = p(enElCabo(a, b, 0.5f, 0.22f))
+        drawLine(v.p.sombra(C.CANAMO), cuelga, B.FAROL + Offset(0f, -0.2f * B.K_FAROL), 0.012f * B.K_FAROL)
+        PiezasAbismo.run { farol(v.pincel(B.FAROL), B.FAROL, B.K_FAROL, v.lu.farol) }
         paloMayor(v)
     }
 
