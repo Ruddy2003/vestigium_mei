@@ -115,7 +115,7 @@ object IdeasArcontes : DisenoIdeas {
     private fun luz(c: Color, oscuro: Boolean, cerca: Float): Color {
         if (!oscuro) return c
         val k = cerca.coerceIn(0f, 1f)
-        return mezcla(mezcla(c, NOCHE, 0.9f - 0.5f * k * k), LLAMA, 0.2f * k)
+        return mezcla(mezcla(c, NOCHE, 0.9f - 0.52f * Math.pow(k.toDouble(), 1.4).toFloat()), LLAMA, 0.2f * k)
     }
 
     override val cols = 2
@@ -561,7 +561,7 @@ object IdeasArcontes : DisenoIdeas {
         drawRect(Brush.verticalGradient(listOf(sombraMueble(if (oscuro) 0.5f else 0.3f), Color.Transparent), b.top - 2 * u, asiento + 2 * u), Offset(0f, b.top - 2 * u), Size(w, asiento - b.top + 4 * u))
         if (oscuro) halo(fuegoPoyo, w * 0.36f, 0.9f)
         // El manto de lana doblado sobre el poyo, con sus dos franjas oscuras: un pliegue cae por el frente, con sus flecos.
-        val mx = w * 0.07f; val mw = w * 0.2f; val capa = b.height * 0.09f
+        val mx = w * 0.07f; val mw = w * 0.2f; val capa = b.height * 0.11f
         val lanaC = luz(LANA, oscuro, 0.25f)
         val lanaL = luz(mezcla(LANA, LUZ_MUEBLE, 0.25f), oscuro, 0.25f)
         val lanaS = luz(mezcla(LANA, SOMBRA_MUEBLE, 0.3f), oscuro, 0.25f)
@@ -618,7 +618,7 @@ object IdeasArcontes : DisenoIdeas {
             val e1 = Offset(r.left + r.width * 0.12f, frente + 2 * u); val e2 = Offset(r.right - r.width * 0.12f, frente + 2 * u)
             val forma0 = hoja(r, 23, 30, 0.03f)
             translate(1.5f * u, 2f * u) { drawPath(forma0, sombraMueble(0.35f)) }
-            drawPath(forma0, luz(PAPIRO, oscuro, 0.62f))
+            drawPath(forma0, if (oscuro) mezcla(mezcla(PAPIRO, NOCHE, 0.45f), LLAMA, 0.1f) else PAPIRO)
             clipPath(forma0) { fibras(r, FIBRA.copy(alpha = 0.5f), 29, 2.6f * u) }
             drawPath(forma0, FIBRA.copy(alpha = 0.45f), style = Stroke(0.8f * u))
             listOf(e1, e2).forEach { e ->
@@ -758,7 +758,7 @@ object IdeasArcontes : DisenoIdeas {
             clipPath(arriba) { vetas(limites(listOf(tapa(a0, 0f, canto), tapa(a1, 0f, canto), tapa(a1, hondo + sobra, canto), tapa(a0, hondo + sobra, canto))), madera(OLIVO_VETA, medio).copy(alpha = 0.25f), semilla + 9, densidad = 0.6f, ondulacion = 1.6f) }
             drawLine(luzMueble(if (oscuro) 0.1f else 0.6f), tapa(a0, hondo + sobra, canto), tapa(a1, hondo + sobra, canto), 0.8f * u)
         } else {
-            val dentroTapa = cuad(tapa(0f, 0f, 0f), tapa(ancho, 0f, 0f), tapa(ancho, hondo, 0f), tapa(0f, hondo, 0f))
+            val dentroTapa = cuad(tapa(a0, 0f, 0f), tapa(a1, 0f, 0f), tapa(a1, hondo + sobra, 0f), tapa(a0, hondo + sobra, 0f))
             drawPath(dentroTapa, madera(mezcla(OLIVO_LUZ, OLIVO, 0.3f), medio))
             clipPath(dentroTapa) {
                 // El ouroboros grabado por dentro: lo pongo en el plano de la tapa con una transformación afín.
@@ -766,8 +766,8 @@ object IdeasArcontes : DisenoIdeas {
                 withTransform({ transform(Matrix(floatArrayOf(ex.x, ex.y, 0f, 0f, ez.x, ez.y, 0f, 0f, 0f, 0f, 1f, 0f, o.x, o.y, 0f, 1f))) }) {
                     withTransform({ scale(1f, ancho / hondo, Offset(0.5f, 0.5f)) }) {
                         with(TrazosArcontes) {
-                            ouroboros(Offset(0.5f + 0.012f, 0.5f + 0.012f), 0.18f, 0.06f, luzMueble(if (oscuro) 0.15f else 0.5f))
-                            ouroboros(Offset(0.5f, 0.5f), 0.18f, 0.06f, madera(OLIVO_VETA, medio).copy(alpha = 0.75f))
+                            ouroboros(Offset(0.5f + 0.008f, 0.5f + 0.008f), 0.13f, 0.032f, luzMueble(if (oscuro) 0.12f else 0.45f))
+                            ouroboros(Offset(0.5f, 0.5f), 0.13f, 0.032f, madera(OLIVO_VETA, medio).copy(alpha = 0.6f))
                         }
                     }
                 }
