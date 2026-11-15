@@ -79,6 +79,7 @@ internal object MundoBarco {
         pajaros(v)
         costa(v)
         mar(v)
+        if (v.m.ficha.clima == Clima.NIEBLA) nieblaLejos(v)
     }
 
     /** Las aves que siguen al barco («pájaros que siguen al barco»): unas pocas, planeando, distintas cada día. De día. */
@@ -437,9 +438,9 @@ internal object MundoBarco {
     private fun DrawScope.fuego(v: Vista, az: Azar) {
         val l = v.l; val k = cerca(v)
         // Montañas negras y quebradas, con nieve en las cumbres y un glaciar que baja al mar; delante, el bosque oscuro.
-        cerro(v, sinTaparAstros(perfil(Azar(Semilla.de("botanico", "fuego lejos", az.entero(1000))), 100f, ANCHO + 30f, H + 1f, 50f * k, 0.95f, 40)), H + 2f, lerp(C.BREA, Color(0xFF6A7494), 0.55f), 0.78f, az, Manto.ROCA, nieve = 1f)
+        cerro(v, sinTaparAstros(perfil(Azar(Semilla.de("botanico", "fuego lejos", az.entero(1000))), 100f, ANCHO + 30f, H + 1f, 54f * k, 0.7f, 13)), H + 2f, lerp(C.BREA, Color(0xFF6A7494), 0.55f), 0.78f, az, Manto.ROCA, nieve = 1f)
         bruma(v, 100f, ANCHO, H + 1f, 12f)
-        val sierra = sinTaparAstros(perfil(Azar(Semilla.de("botanico", "fuego sierra", az.entero(1000))), 120f, ANCHO + 20f, H + 1f, 32f * k, 0.9f, 30))
+        val sierra = sinTaparAstros(perfil(Azar(Semilla.de("botanico", "fuego sierra", az.entero(1000))), 120f, ANCHO + 20f, H + 1f, 34f * k, 0.6f, 11))
         cerro(v, sierra, H + 2f, lerp(C.BREA, Color(0xFF5A6488), 0.4f), 0.55f, az, Manto.BOSQUE, nieve = 0.55f)
         // El glaciar: una lengua blanca y azulada que baja de un valle hasta el agua, con su frente cortado.
         val gx = az.entre(176f, 232f)
@@ -474,6 +475,12 @@ internal object MundoBarco {
         val cerros = sinTaparAstros(perfil(Azar(Semilla.de("botanico", "cerros secos", az.entero(1000))), 120f, ANCHO + 20f, H + 1f, 20f * k, 0.5f, 28))
         cerro(v, cerros, H + 2f, lerp(C.ARENA, C.CUERO, 0.42f), 0.55f, az, Manto.SECO)
         if (EscenaBotanico.puerto(v.m)) { pueblo(v, az.entre(166f, 186f), az.entre(232f, 252f), H - 1f, 2.9f * k, 0.52f, az, ruinas = EscenaBotanico.ruinas(v.m)); barcas(v, 160f, 330f, H + 1f, 4, az) }
+        if (EscenaBotanico.terremoto(v.m)) {
+            // El terremoto: los cerros se desmoronan en derrumbes claros y el polvo sube en nubes pardas sobre la costa.
+            val tz = v.m.azar("terremoto")
+            repeat(7) { val x = tz.entre(130f, 372f); if (x in 258f..342f) return@repeat; val y = alto(cerros, x) + 1f; drawPath(poligono(Offset(x - 1.5f, y), Offset(x + 1.5f, y), Offset(x + 5f, H), Offset(x - 3f, H)), l.tono(lerp(C.ARENA, C.CUERO, 0.2f), 0.5f)) }
+            repeat(12) { val x = tz.entre(130f, 372f); if (x in 262f..338f) return@repeat; mancha(Offset(x, H - tz.entre(3f, 22f)), tz.entre(10f, 26f), tz.entre(4f, 9f), l.tono(lerp(C.ARENA, C.CUERO, 0.35f), 0.55f), 0.4f) }
+        }
         orilla(v, 120f, ANCHO, H + 1f, az, lerp(C.ROCA, C.ARENA, 0.3f), true)
     }
 
@@ -527,7 +534,7 @@ internal object MundoBarco {
         clipPath(curva(tierra, H + 2f)) {
             var x = 116f
             while (x < ANCHO) { val w = az.entre(9f, 20f); val y = alto(tierra, x)
-                drawRect(l.tono(if (az.real() > 0.5f) lerp(C.HOJA, C.ARENA, 0.35f) else lerp(C.HOJA, C.SELVA, 0.5f), 0.58f), Offset(x, y + 2f), Size(w, H - y - 6f))
+                drawRect(l.tono(if (az.real() > 0.5f) lerp(C.HOJA, C.ARENA, 0.35f) else lerp(C.HOJA, C.SELVA, 0.5f), 0.58f), Offset(x, y + 2f), Size(w, (H - y - 6f).coerceAtLeast(0.5f)))
                 drawLine(l.tono(C.SELVA_OSC, 0.55f), Offset(x, y + 2f), Offset(x + az.entre(-2f, 2f), H - 4f), 0.7f); x += w }
             // El acantilado: el frente gris con sus repisas.
             drawRect(l.tono(lerp(C.ROCA, C.LONA, 0.28f), 0.54f), Offset(116f, H - 4.5f * k), Size(ANCHO, 6f))
@@ -594,6 +601,11 @@ internal object MundoBarco {
             drawPath(Path().apply { moveTo(x, y); cubicTo(x + largo * 0.3f, y - 0.6f * esc, x + largo * 0.7f, y - 0.6f * esc, x + largo, y + 0.2f) }, c, style = Stroke(0.45f + 0.5f * esc.coerceAtMost(1.5f), cap = StrokeCap.Round))
         }
         if (tormenta) olasGrandes(v, hondo, orilla)
+        if (calma) {
+            // La calma chicha: el agua como un plato, que copia el cielo en franjas largas y lisas.
+            drawRect(Brush.verticalGradient(listOf(l.bajo.copy(alpha = 0.55f), l.medio.copy(alpha = 0.25f), Color.Transparent), H, H + 70f), Offset(-40f, H), Size(ANCHO + 80f, 70f))
+            repeat(18) { val y = H + 2f + 80f * az.real() * az.real(); drawLine(lerp(l.bajo, Color.White, 0.3f).copy(alpha = 0.3f), Offset(az.entre(-40f, ANCHO), y), Offset(az.entre(-40f, ANCHO) + az.entre(60f, 200f), y), 0.5f + (y - H) * 0.02f) }
+        }
         estela(l, zona, m.azar("estela"))
         calleDeLuz(v)
         // La sombra del barco en el agua de estribor, cuando el sol viene de babor: una franja más honda junto al costado.
@@ -626,6 +638,23 @@ internal object MundoBarco {
             val largo = (1.5f + 9f * pr) * az.entre(0.5f, 1.3f)
             drawLine(color.copy(alpha = (0.7f * fuerza * (1f - 0.7f * kotlin.math.abs(u)) * az.entre(0.4f, 1f)).coerceIn(0f, 1f)), Offset(x - largo / 2f, y), Offset(x + largo / 2f, y), 0.5f + 0.8f * pr, StrokeCap.Round, blendMode = BlendMode.Screen)
         }
+    }
+
+    /**
+     * La niebla por capas, no como un velo encima del cuadro (la de Horror cósmico): lo lejano (la costa, el horizonte, el
+     * mar de lejos) se pierde del todo; el mar de cerca, a medias.
+     */
+    internal fun DrawScope.nieblaLejos(v: Vista) {
+        val c = lerp(v.l.bruma, Color.White, 0.2f); val az = v.m.azar("niebla lejos")
+        drawRect(Brush.verticalGradient(0f to c.copy(alpha = 0.35f), 0.45f to c.copy(alpha = 0.92f), 0.62f to c.copy(alpha = 0.7f), 1f to c.copy(alpha = 0.18f), startY = H - 60f, endY = H + 90f), Offset(0f, H - 60f), Size(ANCHO, 150f))
+        repeat(10) { mancha(Offset(az.entre(-20f, ANCHO + 20f), az.entre(H - 30f, H + 60f)), az.entre(70f, 160f), az.entre(8f, 18f), lerp(c, Color.White, 0.2f), 0.45f) }
+    }
+
+    /** La niebla entre la proa y la popa: lo de la mitad del barco (el trinquete, los botes, el palo) se aclara; lo de cerca, no. */
+    internal fun DrawScope.nieblaSobreLaProa(v: Vista) {
+        val c = lerp(v.l.bruma, Color.White, 0.2f); val az = v.m.azar("niebla proa")
+        drawRect(Brush.verticalGradient(0f to c.copy(alpha = 0.1f), 0.35f to c.copy(alpha = 0.55f), 0.6f to c.copy(alpha = 0.3f), 1f to Color.Transparent, startY = 0f, endY = H + 60f), Offset(0f, 0f), Size(ANCHO, H + 60f))
+        repeat(6) { mancha(Offset(az.entre(0f, ANCHO), az.entre(H - 20f, H + 30f)), az.entre(60f, 130f), az.entre(6f, 14f), lerp(c, Color.White, 0.25f), 0.3f) }
     }
 
     /** Con tormenta, la mar gruesa: olas grandes que se levantan a estribor, con la cresta rota en espuma y los regueros por el lomo. */

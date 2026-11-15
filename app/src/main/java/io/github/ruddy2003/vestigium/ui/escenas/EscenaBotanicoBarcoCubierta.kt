@@ -36,6 +36,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.BarcoBotanico.pc
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.capaSombra
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cubicTo
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.lineTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
@@ -171,8 +172,18 @@ internal object CubiertaBarco {
             val alturas = listOf(0f, 0.22f, 0.43f, 0.64f, 0.85f, REGALA)
             for (j in 0 until alturas.size - 1) {
                 val h0 = alturas[j]; val h1 = alturas[j + 1]
-                val tono = lerp(PINTURA, if (j % 2 == 0) C.LONA else C.MADERA, az.entre(0.04f, 0.12f))
-                drawPath(poligono(zs.map { pc(estribor(it), h0, it) } + zs.reversed().map { pc(estribor(it), h1, it) }), p.por(tono, t + 0.05f + 0.06f * j).copy(alpha = 0.6f))
+                // Cada traca, en tablones de unos cuatro metros con sus topes escalonados, cada tablón de su tono.
+                var za = POPA - az.entre(0f, 3f)
+                while (za < RODA) {
+                    val zb = za + az.entre(3.2f, 5f)
+                    val tono = lerp(PINTURA, if (az.real() > 0.5f) C.LONA else C.MADERA, az.entre(0.04f, 0.2f))
+                    val tramo = (0..6).map { za.coerceAtLeast(POPA) + (zb.coerceAtMost(RODA) - za.coerceAtLeast(POPA)) * it / 6f }
+                    drawPath(poligono(tramo.map { pc(estribor(it), h0, it) } + tramo.reversed().map { pc(estribor(it), h1, it) }), p.por(tono, t + 0.05f + 0.06f * j).copy(alpha = 0.65f))
+                    if (zb < RODA) drawLine(p.sombra(lerp(PINTURA, C.BREA, 0.3f)).copy(alpha = 0.55f), pc(estribor(zb), h0, zb), pc(estribor(zb), h1, zb), (k(zb) * 0.008f).coerceIn(0.3f, 1.2f))
+                    // Los cabillos de madera que clavan el tablón a cada barraganete.
+                    var zc = za + 0.5f; while (zc < zb && zc < 9f) { if (zc > POPA) drawCircle(p.sombra(lerp(PINTURA, C.MADERA, 0.5f)).copy(alpha = 0.6f), (k(zc) * 0.01f).coerceIn(0.3f, 1.2f), pc(estribor(zc), (h0 + h1) / 2f, zc)); zc += 1.05f }
+                    za = zb
+                }
                 if (j > 0) {
                     drawPath(Path().apply { moveTo(pc(estribor(zs[0]), h0, zs[0])); for (z in zs.drop(1)) lineTo(pc(estribor(z), h0, z)) }, p.sombra(lerp(PINTURA, C.BREA, 0.3f)).copy(alpha = 0.55f), style = Stroke(0.7f))
                     drawPath(Path().apply { moveTo(pc(estribor(zs[0]), h0 - 0.02f, zs[0])); for (z in zs.drop(1)) lineTo(pc(estribor(z), h0 - 0.02f, z)) }, p.luz(PINTURA).copy(alpha = 0.3f), style = Stroke(0.45f))
@@ -180,7 +191,9 @@ internal object CubiertaBarco {
             }
             // El desgaste de la pintura: donde rozan los cabos y las cajas, asoma la madera.
             repeat(26) { val zz = az.entre(1.8f, 13f); val q = pc(estribor(zz), az.entre(0.15f, 0.95f), zz); val e = k(zz); val w = e * az.entre(0.05f, 0.2f); val h = e * az.entre(0.02f, 0.06f)
-                drawPath(poligono(listOf(q + Offset(-w, 0f), q + Offset(-w * 0.4f, -h), q + Offset(w * 0.5f, -h * 0.8f), q + Offset(w, h * 0.2f), q + Offset(w * 0.2f, h), q + Offset(-w * 0.6f, h * 0.7f))), p.por(lerp(C.MADERA, C.TECA, 0.35f), t).copy(alpha = 0.55f)) }
+                // Un desconchón de borde roto, tendido a lo largo de la traca (no un polígono: puntos a mano alrededor).
+                val pts = (0 until 9).map { i -> val a = i * 0.698f; val rr = az.entre(0.55f, 1f); q + Offset(kotlin.math.cos(a) * w * rr, kotlin.math.sin(a) * h * rr) }
+                drawPath(curva(pts + pts.first() + pts[1]), p.por(lerp(C.MADERA, C.TECA, 0.35f), t).copy(alpha = 0.45f)) }
             // Las chorreras de sal (blancas, de la regala abajo) y de óxido (de cada perno).
             repeat(18) { val zz = az.entre(2f, 15f); val q = pc(estribor(zz), REGALA - 0.04f, zz); drawLine(p.luz(lerp(C.LONA, Color.White, 0.4f)).copy(alpha = 0.28f), q, q + Offset(az.entre(-0.3f, 0.3f), k(zz) * az.entre(0.15f, 0.55f)), (k(zz) * az.entre(0.01f, 0.03f)).coerceIn(0.4f, 2.4f), StrokeCap.Round) }
             repeat(12) { val zz = az.entre(2.2f, 14f); val h = az.entre(0.3f, 0.9f); val q = pc(estribor(zz), h, zz); val e = k(zz)
@@ -308,6 +321,13 @@ internal object CubiertaBarco {
                     val q = vela.map { a -> val xb = estribor(a.z.coerceIn(2f, 15f)); val s = (xb - a.x) / sol.sx; V3(xb, a.y - s, a.z + sol.sz * s) }
                     if (q.any { it.y > 6f || it.y < -4f }) continue
                     drawPath(poligono(q.map { pc(it) }), tibia)
+                }
+                // Y la de lo que está arrimado a ella (los cajones, la cuba, el balde), que se dobla al subir.
+                for (cuerpo in TallerBarco.cuerpos(v)) {
+                    val q = cuerpo.map { a -> val xb = estribor(a.z.coerceIn(1.5f, 15f)); val s = ((xb - a.x) / sol.sx).coerceAtLeast(0f); Offset(a.z + sol.sz * s, a.y - s) }
+                    if (q.all { it.y < 0f }) continue
+                    val env = envolvente(q)
+                    drawPath(poligono(env.map { pc(estribor(it.x.coerceIn(1.5f, 15f)), it.y, it.x) }), c)
                 }
             }
         }

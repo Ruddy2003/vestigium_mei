@@ -78,6 +78,14 @@ internal object TallerBarco {
         add(sombraDe(SITIO_BALDE, sol, (0 until 10).flatMap { i -> val a = i * 0.628f; listOf(V3(0.15f * cos(a), 0f, 0.15f * sin(a)), V3(0.17f * cos(a), 0.3f, 0.17f * sin(a))) }))
     }
 
+    /** Las esquinas (en metros del barco) de lo que está arrimado a la amurada de estribor: su sombra sube por ella con el sol de babor. */
+    fun cuerpos(v: Vista): List<List<V3>> = buildList {
+        fun caja(s: Sitio, x0: Float, x1: Float, y0: Float, y1: Float, z0: Float, z1: Float) = esquinas(x0, x1, y0, y1, z0, z1).map { V3(s.mx(it.x, it.z), it.y, s.mz(it.x, it.z)) }
+        for (c in cajones(v)) add(caja(c.s, c.x0, c.x1, c.y0, c.y1, c.z0, c.z1))
+        add(caja(SITIO_CUBA, -0.25f, 0.25f, 0f, 0.9f, -0.25f, 0.25f))
+        add(caja(SITIO_BALDE, -0.16f, 0.16f, 0f, 0.3f, -0.16f, 0.16f))
+    }
+
     fun DrawScope.primerPlano(v: Vista) {
         val m = v.m; val estado = EscenaBotanico.mesaDeCubierta(m)
         val cosas = ArrayList<Pair<Float, DrawScope.() -> Unit>>()
@@ -92,6 +100,7 @@ internal object TallerBarco {
                 with(PiezasBotanico) { mesa(me, pm, sm) }
                 if (estado == EscenaBotanico.Mesa.TRABAJO || estado == EscenaBotanico.Mesa.QUIETA) sobreLaMesa(v, me, estado == EscenaBotanico.Mesa.TRABAJO, pm, sm)
                 if (estado == EscenaBotanico.Mesa.RECOGIDA) trincas(v, me)
+                if (estado == EscenaBotanico.Mesa.TAPADA) encerado(v, me, pm, sm)
                 with(ObjetosBotanico) { sobreElSoporte(m, pm, BarcoBotanico.soporte(m), BarcoBotanico.escalaEn(SITIO_MESA.z0 - MESA_FONDO * 0.17f)) }
             }
         } else {
@@ -112,7 +121,8 @@ internal object TallerBarco {
         for (c in cajones(v).sortedWith(compareBy({ -it.s.hondo(V3(0f, 0f, 0f)) }, { it.base }))) cosas += parte(c.s.pie.y + c.base * 0.01f) {
             val (pcj, scj) = v.pincel(c.s.mx(0f, 0f), c.s.mz(0f, 0f), c.base + 0.3f); with(PiezasBotanico) { cajon(c, pcj, scj) } }
         // El balde y el lampazo del baldeo; la cuba del agua, en la esquina.
-        cosas += parte(SITIO_BALDE.pie.y) { baldeYLampazo(v) }
+        cosas += parte(SITIO_BALDE.pie.y) { balde(v) }
+        cosas += parte(pc(0.9f, 0f, 5.6f).y) { lampazo(v) }
         val cu = cuba(v)
         cosas += parte(ALTO + 60f) { val (pq, sq) = v.pincel(1.12f, 2.25f, 0.8f); with(PiezasBotanico) { cuba(cu, pq, sq) } }
         when (EscenaBotanico.red(m)) {
@@ -218,6 +228,44 @@ internal object TallerBarco {
         drawRect(p.luz(C.PAPEL), Offset(et.x, et.y - tam * 0.06f), Size(tam * 0.22f, tam * 0.12f)); drawLine(p.sombra(C.BREA).copy(alpha = 0.6f), Offset(et.x + tam * 0.03f, et.y), Offset(et.x + tam * 0.18f, et.y), 0.4f)
     }
 
+    /**
+     * El encerado sobre la mesa, con lluvia o nieve: una lona embreada, oscura y con brillo, que cae por los lados en
+     * pliegues, se abomba sobre lo que tapa (la prensa, la caja, los frascos) y se ata a las patas. Mojada, refleja el
+     * cielo; con nieve, se le queda encima.
+     */
+    private fun DrawScope.encerado(v: Vista, me: PiezasBotanico.Mesa, p: Pincel, sol: Sol3) {
+        val s = me.s; val w = MESA_ANCHO / 2f + 0.05f; val d = MESA_FONDO / 2f + 0.05f; val h = MESA_ALTO + 0.02f; val e = k(s.z0)
+        val lona = lerp(C.BREA, lerp(C.ROCA, C.SELVA, 0.25f), 0.45f)
+        val az = Azar(Semilla.de("botanico", "encerado"))
+        val caida = 0.36f
+        val tArriba = sol.t(s.normal(V3(0f, 1f, 0f))) + 0.25f
+        // Los faldones: el de delante y el del lado que se ve, con el borde de abajo ondulado y los pliegues.
+        for ((cara, n) in listOf(Triple(V3(-w, h, -d), V3(w, h, -d), V3(0f, 0f, -1f)), Triple(V3(w, h, -d), V3(w, h, d), V3(1f, 0f, 0f)), Triple(V3(-w, h, d), V3(-w, h, -d), V3(-1f, 0f, 0f))).map { Pair(it.first to it.second, it.third) }) {
+            if (!s.seVe(cara.first + (cara.second - cara.first) * 0.5f + V3(0f, -0.1f, 0f), n)) continue
+            val (a, b) = cara; val t = sol.t(s.normal(n))
+            val arriba = (0..10).map { s.p(a + (b - a) * (it / 10f)) }
+            val abajo = (10 downTo 0).map { val q = a + (b - a) * (it / 10f); s.p(q + V3(0f, -caida * (0.86f + 0.1f * sin(it * 0.9f + 1.3f) + 0.05f * az.real()), 0f)) }
+            val falda = poligono(arriba + abajo)
+            drawPath(falda, p.por(lona, t))
+            clipPath(falda) { for (i in 1..9) { val q = arriba[i]; drawLine((if (i % 2 == 0) p.luz(lona) else p.sombra(lona)).copy(alpha = 0.45f), q, q + Offset(az.entre(-1f, 1f), e * caida * 0.95f), (e * 0.02f).coerceIn(0.6f, 3f)) } }
+        }
+        // El tablero tapado, con los bultos de lo que hay debajo y el brillo del agua.
+        val tapa = poligono(listOf(V3(-w, h, -d), V3(w, h, -d), V3(w, h, d), V3(-w, h, d)).map { s.p(it) })
+        drawPath(tapa, p.por(lona, tArriba))
+        clipPath(tapa) {
+            for ((u, vv, r) in listOf(Triple(-0.52f, 0.5f, 0.22f), Triple(0.6f, 0.4f, 0.2f), Triple(0.5f, -0.1f, 0.12f), Triple(-0.1f, 0.2f, 0.16f))) {
+                val c = me.sobre(u, vv) + Offset(0f, -e * r * 0.25f); val rr = e * r
+                drawOval(p.sombra(lona).copy(alpha = 0.5f), Offset(c.x - rr, c.y - rr * 0.1f), Size(rr * 2f, rr * 0.45f))
+                drawOval(p.luz(lona), Offset(c.x - rr * 0.8f, c.y - rr * 0.35f), Size(rr * 1.6f, rr * 0.5f))
+            }
+            if (EscenaBotanico.cubiertaMojada(v.m)) repeat(6) { val c = me.sobre(az.entre(-0.9f, 0.9f), az.entre(-0.8f, 0.8f)); mancha(c, e * az.entre(0.1f, 0.25f), e * 0.03f, lerp(v.l.medio, Color.White, 0.2f), 0.35f) }
+            if (v.nieve > 0.02f) drawPath(tapa, p.luz(C.NIEVE).copy(alpha = 0.85f * v.nieve))
+        }
+        drawPath(tapa, p.sombra(lona).copy(alpha = 0.6f), style = Stroke(0.6f))
+        // Las ataduras a las patas.
+        with(PiezasBotanico) { for (u in listOf(-0.8f, 0.8f)) cabo(p, s.p(u * w, h - caida * 0.8f, -d), s.p(u * w * 0.9f, 0.05f, -d * 0.7f), 0f, (e * 0.014f).coerceIn(0.5f, 2f)) }
+    }
+
     /** Con tormenta, la mesa trincada a las argollas con dos vueltas por encima del tablero. */
     private fun DrawScope.trincas(v: Vista, me: PiezasBotanico.Mesa) {
         with(PiezasBotanico) { for (u in listOf(-0.6f, 0.6f)) { cabo(v.p, me.sobre(u, -1.05f), me.sobre(u, 1.05f), 0f, 1.6f); cabo(v.p, me.s.p(u * MESA_ANCHO / 2f, 0f, -MESA_FONDO * 0.7f), me.sobre(u, -1.05f), 0f, 1.4f) } }
@@ -236,14 +284,18 @@ internal object TallerBarco {
         }
     }
 
-    /** El balde del baldeo, con su asa de cabo y el agua dentro, y el lampazo recostado en la amurada, con sus filásticas mojadas. */
-    private fun DrawScope.baldeYLampazo(v: Vista) {
-        val (p, _) = v.pincel(0.62f, 2.65f, 0.3f); val s = SITIO_BALDE; val e = s.escala(0f, 0f)
-        // El lampazo, primero (queda detrás del balde): el mango recostado en la regala y la cabeza de filásticas en el suelo.
-        val cab = pc(0.95f, 0f, 3.05f); val tope = pc(estribor(2.75f) - 0.04f, REGALA + 0.12f, 2.75f)
+    /** El lampazo del baldeo, recostado en la amurada detrás de los cajones, con sus filásticas mojadas en el suelo. */
+    private fun DrawScope.lampazo(v: Vista) {
+        val (p, _) = v.pincel(0.9f, 5.6f, 0.5f); val e = k(5.6f)
+        val cab = pc(0.9f, 0f, 5.6f); val tope = pc(estribor(5.15f) - 0.04f, REGALA + 0.16f, 5.15f)
         drawLine(p.sombra(C.MADERA), cab + Offset(0f, -e * 0.08f), tope, e * 0.035f, StrokeCap.Round); drawLine(p.luz(lerp(C.MADERA, C.ARENA, 0.4f)), cab + Offset(-e * 0.006f, -e * 0.08f), tope + Offset(-e * 0.006f, 0f), e * 0.012f, StrokeCap.Round)
         repeat(16) { val a = -2.6f + it * 0.14f; drawLine((if (it % 2 == 0) p.medio(lerp(C.CANAMO, C.LONA, 0.3f)) else p.sombra(C.CANAMO)), cab + Offset(0f, -e * 0.08f), cab + Offset(cos(a) * e * 0.2f, -e * 0.02f + sin(a).coerceAtLeast(-0.3f) * e * 0.05f + e * 0.04f), (e * 0.012f).coerceAtLeast(0.5f), StrokeCap.Round) }
         mancha(cab + Offset(0f, e * 0.02f), e * 0.28f, e * 0.06f, lerp(v.l.medio, Color.White, 0.1f), 0.25f * (1f - 0.6f * v.l.noche))
+    }
+
+    /** El balde del baldeo, de duelas, con su asa de cabo y el agua dentro, que refleja el cielo. */
+    private fun DrawScope.balde(v: Vista) {
+        val (p, _) = v.pincel(0.62f, 2.65f, 0.3f); val s = SITIO_BALDE; val e = s.escala(0f, 0f)
         // El balde: de duelas, con dos aros, el agua con el cielo reflejado.
         val r0 = 0.15f; val r1 = 0.17f; val hb = 0.3f
         val cuerpo = poligono(s.p(-r0, 0f, 0f), s.p(r0, 0f, 0f), s.p(r1, hb, 0f), s.p(-r1, hb, 0f))

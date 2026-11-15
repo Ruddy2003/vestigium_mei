@@ -15,6 +15,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoDeFoco
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.tiempoQuieto
 import io.github.ruddy2003.vestigium.vidas.Azar
+import io.github.ruddy2003.vestigium.vidas.Clima
 import io.github.ruddy2003.vestigium.vidas.Semilla
 import kotlin.math.abs
 import kotlin.math.sqrt
@@ -151,7 +152,7 @@ internal object BarcoBotanico {
 
     /** La mesa de hoy (con el encerado si llueve o nieva). */
     internal fun mesa(m: Momento): PiezasBotanico.Mesa = PiezasBotanico.Mesa(SITIO_MESA, Semilla.de("botanico", "mesa", "cubierta"), PiezasBotanico.TipoMesa.CUBIERTA,
-        ancho = MESA_ANCHO, fondo = MESA_FONDO, alto = MESA_ALTO, tapada = EscenaBotanico.mesaDeCubierta(m) == EscenaBotanico.Mesa.TAPADA, nieve = EscenaBotanico.nieve(m))
+        ancho = MESA_ANCHO, fondo = MESA_FONDO, alto = MESA_ALTO, tapada = false, nieve = EscenaBotanico.nieve(m))
 
     /**
      * Dónde va el objeto chico del día: delante, en medio del tablero, con sitio alrededor (en los lugares sin cuadro
@@ -331,10 +332,11 @@ internal object BarcoBotanico {
         with(MundoBarco) { mundo(v) }
         with(VelasBarco) { lejos(v); mayor(v) }
         with(CubiertaBarco) { cubierta(v) }
+        if (m.ficha.clima == Clima.NIEBLA) with(MundoBarco) { nieblaSobreLaProa(v) }
         with(TallerBarco) { primerPlano(v) }
         with(VelasBarco) { marco(v) }
         with(NocheBarco) { lumbres(v) }
-        tiempoQuieto(v.l, m.ficha.clima, H, m.semilla("tiempo"))
+        if (m.ficha.clima != Clima.NIEBLA) tiempoQuieto(v.l, m.ficha.clima, H, m.semilla("tiempo"))
         grano(Azar(Semilla.de("botanico", "grano", "barco")), 0.6f + 0.4f * v.r.dia)
     }
 

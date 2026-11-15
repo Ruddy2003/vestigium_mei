@@ -399,5 +399,18 @@ internal object VelasBarco {
     internal fun formaDeLaCangreja(v: Vista): Path = contorno(cangrejaDe(v.velas == Velas.CAIDAS))
 
     /** La botavara, en el lienzo. */
+    /**
+     * Lo que de las velas y la jarcia de delante cruza el cielo, en el lienzo (para la prueba que vigila que nada tape la
+     * ventana de los astros): el contorno de la mayor y de la cangreja, la escota de la mayor y la braza.
+     */
+    internal fun loQueCruzaElCielo(m: Momento): List<Offset> {
+        val vel = EscenaBotanico.velas(m); if (vel == Velas.AFERRADAS) return emptyList()
+        val caida = vel == Velas.CAIDAS; val may = mayorDe(caida); val cang = cangrejaDe(caida)
+        fun borde(vela: Vela) = (0..40).flatMap { i -> val u = i / 40f; listOf(vela.en(u, 0f), vela.en(u, 1f), vela.en(0f, u), vela.en(1f, u)) }.map { pc(it) }
+        fun linea(a: V3, b: V3) = (0..40).map { pc(a + (b - a) * (it / 40f)) }
+        val motonB = V3(estribor(5.6f) + 0.05f, 3.4f, 5.6f)
+        return borde(may) + borde(cang) + linea(may.b, V3(estribor(3.75f) - 0.05f, REGALA + 0.04f, 3.75f)) + linea(may.c + V3(0.4f, 0f, 0f), motonB)
+    }
+
     internal fun botavaraEnLienzo(v: Vista): Pair<Offset, Offset> = if (v.velas == Velas.AFERRADAS) pc(EJE, 3.25f, PALO_MAYOR - 0.4f) to pc(EJE + 0.05f, 3.6f, 1.6f) else botavara(v.velas == Velas.CAIDAS).let { pc(it.first) to pc(it.second) }
 }
