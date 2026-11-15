@@ -198,12 +198,53 @@ class CuentoG9Prueba {
         piezaE.temporadasEscritas.forEach { t -> assertEquals("Temporada $t", calE.temporadas[t - 1].dias.map { it.id }.toSet(), porTemporada.getValue(t).keys) }
     }
 
-    @Test fun jesusNuncaDeFrenteYTodaviaSinCitasTextuales() {
+    /**
+     * Los versículos de la Reina-Valera 1909 que el cuento cita tal cual, copiados letra por letra de Wikisource
+     * (es.wikisource.org, «Biblia Reina-Valera 1909», un capítulo por página) el 15 nov 2026, con su ortografía de entonces.
+     * La tabla completa, con los enlaces, está en la sección 14 de `docs/diseno/temas/fuentes_arcontes.md`.
+     */
+    private val RV1909 = mapOf(
+        "Marcos 1:24" to "Diciendo: ¡Ah! ¿qué tienes con nosotros, Jesús Nazareno? ¿Has venido á destruirnos? Sé quién eres, el Santo de Dios.",
+        "Marcos 1:41" to "Y Jesús, teniendo misericordia de él, extendió su mano, y le tocó, y le dice: Quiero, sé limpio.",
+        "Marcos 6:18" to "Porque Juan decía á Herodes: No te es lícito tener la mujer de tu hermano.",
+        "Marcos 4:39" to "Y levantándose, increpó al viento, y dijo á la mar: Calla, enmudece. Y cesó el viento, y fué hecha grande bonanza.",
+        "Juan 6:63" to "El espíritu es el que da vida; la carne nada aprovecha: las palabras que yo os he hablado, son espíritu y son vida.",
+        "Juan 7:34" to "Me buscaréis, y no me hallaréis; y donde yo estaré, vosotros no podréis venir.",
+        "Juan 10:34" to "Respondióles Jesús: ¿No está escrito en vuestra ley: Yo dije, Dioses sois?",
+        "Juan 19:30" to "Y como Jesús tomó el vinagre, dijo: Consumado es. Y habiendo inclinado la cabeza, dió el espíritu.",
+        "Juan 20:17" to "Dícele Jesús: No me toques: porque aun no he subido á mi Padre: mas ve á mis hermanos, y diles: Subo á mi Padre y á vuestro Padre, á mi Dios y á vuestro Dios.",
+        "Juan 21:12" to "Díceles Jesús: Venid, comed. Y ninguno de los discípulos osaba preguntarle: ¿Tú, quién eres? sabiendo que era el Señor.",
+        "Hechos 1:11" to "Los cuales también les dijeron: Varones Galileos, ¿qué estáis mirando al cielo? este mismo Jesús que ha sido tomado desde vosotros arriba en el cielo, así vendrá como le habéis visto ir al cielo.",
+        "Hechos 3:6" to "Y Pedro dijo: Ni tengo plata ni oro; mas lo que tengo te doy: en el nombre de Jesucristo de Nazaret, levántate y anda.",
+        "Hechos 4:20" to "Porque no podemos dejar de decir lo que hemos visto y oído.",
+        "Hechos 7:60" to "Y puesto de rodillas, clamó á gran voz: Señor, no les imputes este pecado. Y habiendo dicho esto, durmió.",
+        "Hechos 8:10" to "Al cual oían todos atentamente desde el más pequeño hasta el más grande, diciendo: Este es la gran virtud de Dios.",
+    )
+
+    @Test fun jesusNuncaDeFrenteYSusPalabrasConSuCita() {
         val deEl = Regex("""\b(Nazaret|Nazareno|Jesús|Salvador)\b""")
         val deFrente = listOf("rostro", "su cara", "sus ojos", "de frente", "le vio la cara a", "lo miró a los ojos")
         piezaE.textos().filter { deEl.containsMatchIn(it) }.forEach { s -> deFrente.forEach { assertFalse("«$it» en «${s.take(60)}…»", it in s) } }
-        // Sus palabras van en estilo indirecto, con la cita al lado: todavía no hay ninguna cita textual entre comillas.
-        piezaE.textos().forEach { assertFalse("Cita textual en «${it.take(60)}…»", '«' in it || '"' in it) }
+        // Las palabras van en estilo indirecto, con la cita al lado. Solo unas pocas frases cortas van tal cual, de la
+        // Reina-Valera 1909: entre comillas españolas, seguidas de su cita entre paréntesis («…» (Juan 19:30)), y cada una
+        // está letra por letra en el versículo que cita (el primero, si la cita nombra varios). Nunca comillas inglesas.
+        val conCita = Regex("""«([^«»]+)» \(([^()]+)\)""")
+        var textuales = 0
+        piezaE.textos().forEach { s ->
+            assertFalse("Comillas inglesas en «${s.take(60)}…»", '"' in s || '“' in s || '”' in s)
+            val citas = conCita.findAll(s).toList()
+            assertEquals("Comillas sin su cita al lado en «${s.take(60)}…»", s.count { it == '«' }, citas.size)
+            assertEquals("Comillas sin cerrar en «${s.take(60)}…»", s.count { it == '«' }, s.count { it == '»' })
+            citas.forEach { m ->
+                val (frase, cita) = m.destructured
+                val ref = cita.split(';', ',').first().trim()
+                val versiculo = RV1909[ref]
+                assertTrue("«$frase» ($cita): no está entre los versículos copiados de la Reina-Valera 1909", versiculo != null)
+                assertTrue("«$frase» no está tal cual en $ref de la Reina-Valera 1909: «$versiculo»", frase in versiculo!!)
+            }
+            textuales += citas.size
+        }
+        assertTrue("Hay $textuales citas textuales: no más de 15 en todo el cuento", textuales in 1..15)
         // Los días en que lo ve (la figura de luz del cuadro), lo ve de espaldas.
         piezaE.temporadasEscritas.forEach { t -> calE.temporadas[t - 1].dias.filter { it.escena == "figura_luz" }.forEach { d ->
             val texto = piezaE.especiales.getValue(d.id).dias.first().values.joinToString(" ")

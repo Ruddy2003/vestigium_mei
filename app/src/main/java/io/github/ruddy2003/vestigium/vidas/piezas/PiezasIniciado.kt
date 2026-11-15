@@ -21,8 +21,10 @@ import io.github.ruddy2003.vestigium.vidas.Variante
  * - **Jesús nunca se describe de frente.** Eleazar lo ve de lejos, de espaldas, entre la gente; nunca le ve la cara. Se le
  *   llama «el de Nazaret» o «el Nazareno».
  * - **Sus palabras van en estilo indirecto, con la cita al lado** («dice que el tiempo se ha cumplido», Marcos 1:14–15).
- *   Todavía no hay citas textuales: el texto de la Reina-Valera de 1909 no se pudo copiar. Donde convendría una, el texto
- *   lleva la cita entre paréntesis, para cambiarla cuando se pueda.
+ *   Solo unas pocas frases cortas van tal cual, con el texto exacto de la Reina-Valera 1909 copiado de Wikisource, entre
+ *   comillas españolas y seguidas de su cita: «Consumado es» (Juan 19:30). No más de 15 en todo el cuento; el texto de cada
+ *   versículo está en la sección 14 de `docs/diseno/temas/fuentes_arcontes.md`, y la prueba (`CuentoG9Prueba`) comprueba
+ *   que cada frase esté letra por letra en el versículo que cita.
  * - **La lectura gnóstica es la del personaje**, no la del cuento: lo cuenta como lo que él cree, lo que dice Ismael o lo que
  *   dice Judit. Eleazar mezcla lo que oye: que el Cristo bajó sobre un hombre de verdad en el bautismo (Cerinto, según
  *   Ireneo) y que su cuerpo solo parecía cuerpo (el docetismo de los Hechos de Juan); son dos escuelas, y él cree las dos
@@ -708,7 +710,7 @@ internal object PiezasIniciado {
             ),
         ),
         "carcel_juan_28" to unDia(
-            Parrafo.PUEBLO to "Hoy llega la noticia a Magdala: Herodes Antipas ha mandado prender a Juan, el del Jordán, y lo tiene encerrado en Maqueronte, su fortaleza del otro lado del mar de la Sal. Dicen que Juan le echaba en cara que se ha casado con la mujer de su hermano (Marcos 6:17–18).",
+            Parrafo.PUEBLO to "Hoy llega la noticia a Magdala: Herodes Antipas ha mandado prender a Juan, el del Jordán, y lo tiene encerrado en Maqueronte, su fortaleza del otro lado del mar de la Sal. Dicen que Juan le echaba en cara su boda: «No te es lícito tener la mujer de tu hermano» (Marcos 6:18).",
             Parrafo.GENTE to "Tobías se entera en la orilla y se queda mirando el agua, con la red en las manos, sin moverse. Ezequías dice que ya lo decía él, que los profetas acaban mal. Shifra dice que el padre de este Herodes también encerraba a todo el que le molestaba. Nadie dice nada más. Hay que trabajar.",
             Parrafo.PENSAMIENTO to "{nombre} piensa en Juan encerrado en una fortaleza de piedra, en lo alto de un monte, en el desierto: el hombre del agua, sin agua. Piensa que los de abajo tienen sus fortalezas, sus soldados y sus cadenas, y que todo eso, para Ismael, es lo mismo que el mundo. Hoy el mundo es un poco más estrecho.",
         ),
@@ -726,12 +728,12 @@ internal object PiezasIniciado {
         "cafarnaum_28" to unDia(
             Parrafo.PUEBLO to "Hoy, el día después del sábado, llegan las noticias de Cafarnaúm: que el de Nazaret enseñó en la sinagoga y que un hombre con un espíritu impuro se puso a gritar, y que él lo hizo callar y salir; que curó de la fiebre a la suegra de Simón; y que, al ponerse el sol, le llevaron a todos los enfermos del pueblo (Marcos 1:21–34).",
             Parrafo.GENTE to "En Magdala no se habla de otra cosa. Las mujeres de la fuente cuentan que la suegra de Simón se levantó y les sirvió la comida a todos. Shifra dice que a ella la curó una vecina con hierbas y nadie hizo tanto ruido. Mara le dice que se calle. María, la vecina, escucha desde su puerta, muy quieta.",
-            Parrafo.PENSAMIENTO to "{nombre} piensa en el espíritu impuro que gritó en la sinagoga de Cafarnaúm. Dicen que gritó que sabía quién era el de Nazaret: el santo de Dios (Marcos 1:24). Piensa que los de abajo lo han reconocido antes que la gente. Es lo que más le asusta y lo que más le gusta de todo lo que ha oído.",
+            Parrafo.PENSAMIENTO to "{nombre} piensa en el espíritu impuro que gritó en la sinagoga de Cafarnaúm. Dicen que le dijo al de Nazaret: «Sé quién eres, el Santo de Dios» (Marcos 1:24). Piensa que los de abajo lo han reconocido antes que la gente. Es lo que más le asusta y lo que más le gusta de todo lo que ha oído.",
         ),
         "lo_ve_28" to unDia(
             Parrafo.MANANA to "Hoy {nombre} le pide el día a Ezequías, y Ezequías se lo da sin preguntar, cosa rara. Sale con Tobías antes del alba, a pie, por la orilla, hacia el norte, hacia los pueblos donde dicen que anda ahora el de Nazaret. Natán quería ir. Se ha quedado llorando en la puerta.",
             Parrafo.TRABAJO to "Hoy lo encuentran en un pueblo de la orilla, a media mañana, rodeado de gente: enfermos, mirones, pescadores, niños. {nombre} no consigue acercarse. Lo ve de lejos, de espaldas, entre cabezas y brazos: un hombre de pie que habla sin levantar la voz, y aun así se le oye. No le ve la cara.",
-            Parrafo.PUEBLO to "Dice que ha venido a predicar también en los otros pueblos, que para eso ha salido (Marcos 1:38). Le llevan a un leproso, y {nombre} ve que la gente se aparta y que él no se aparta (Marcos 1:40–42). Luego ya no se ve nada: la gente se cierra a su alrededor como el agua alrededor de una piedra.",
+            Parrafo.PUEBLO to "Dice que ha venido a predicar también en los otros pueblos, que para eso ha salido (Marcos 1:38). Le llevan a un leproso, y {nombre} ve que la gente se aparta y que él no: lo toca y le dice «Quiero, sé limpio» (Marcos 1:41). Luego ya no se ve nada: la gente se cierra a su alrededor como el agua alrededor de una piedra.",
             Parrafo.ANOCHECER to "Vuelven a Magdala de noche, por la orilla, sin antorcha, guiándose por el ruido del agua. Tobías canta bajito un salmo. {nombre} no canta. Va pensando en la luz que vio en el Jordán, que hoy no ha visto. Hoy solo ha visto a un hombre. Y no sabe qué le ha dado más miedo.",
         ),
     )

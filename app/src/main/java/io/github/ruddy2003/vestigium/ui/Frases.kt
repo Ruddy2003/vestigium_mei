@@ -294,12 +294,12 @@ object Frases {
      * eran enemigos de los galos: se citan como lo que ellos dicen. Ver `docs/diseno/temas/fuentes_galia.md`.
      */
     val GALIA = listOf(
-        f(null, "Dícese que allí aprenden gran número de versos. Así es que algunos gastan los veinte años en la escuela.", "$G 6.14 (trad. Goya)"),
-        f(null, "No tienen por lícito escribir lo que aprenden.", "$G 6.14 (trad. Goya), sobre los druidas"),
-        f(null, "Esméranse, sobre todo, en persuadir la inmortalidad de las almas y su transmigración de unos cuerpos a otros, cuya creencia juzgan ser grandísimo incentivo para el valor, poniendo aparte el temor de la muerte.", "$G 6.14 (trad. Goya)"),
-        f(null, "Hacen el cómputo de los tiempos no por días, sino por noches; y así en sus cumpleaños como en los principios de meses y años, siempre la noche precede al día.", "$G 6.18 (trad. Goya)"),
-        f(null, "Siempre que sucede alguna cosa ruidosa y muy notable, la pregonan por los campos y caminos; los primeros que oyen pasan a otros la noticia.", "$G 7.3 (trad. Goya)"),
-        f(null, "No haber emprendido él esta guerra por sus propios intereses, sino por la defensa de la común libertad.", "Vercingétorix, según $G 7.89 (trad. Goya)"),
+        f(null, "Dícese que allí aprenden gran número de versos. Así es que algunos gastan los veinte años en la escuela.", "César, Guerra de las Galias 6.14 (trad. Goya)"),
+        f(null, "No tienen por lícito escribir lo que aprenden.", "César, Guerra de las Galias 6.14 (trad. Goya), sobre los druidas"),
+        f(null, "Esméranse, sobre todo, en persuadir la inmortalidad de las almas y su transmigración de unos cuerpos a otros, cuya creencia juzgan ser grandísimo incentivo para el valor, poniendo aparte el temor de la muerte.", "César, Guerra de las Galias 6.14 (trad. Goya)"),
+        f(null, "Hacen el cómputo de los tiempos no por días, sino por noches; y así en sus cumpleaños como en los principios de meses y años, siempre la noche precede al día.", "César, Guerra de las Galias 6.18 (trad. Goya)"),
+        f(null, "Siempre que sucede alguna cosa ruidosa y muy notable, la pregonan por los campos y caminos; los primeros que oyen pasan a otros la noticia.", "César, Guerra de las Galias 7.3 (trad. Goya)"),
+        f(null, "No haber emprendido él esta guerra por sus propios intereses, sino por la defensa de la común libertad.", "Vercingétorix, según César, Guerra de las Galias 7.89 (trad. Goya)"),
         f(null, "Tomó las armas más hermosas que tenía, enjaezó ricamente su caballo, y saliendo en él por las puertas dio una vuelta alrededor de César.", "Plutarco, César 27 (trad. Ranz Romanillos), sobre Vercingétorix en Alesia"),
         f(null, "Era esto en la estación del invierno, y los ríos helados, las selvas cubiertas de nieve.", "Plutarco, César 25 (trad. Ranz Romanillos)"),
         f(null, "A ustedes solos les toca conocer, o no conocer, a los dioses y los astros; sus casas son los bosques apartados.", "Lucano, Farsalia I, a los druidas (traducción propia)"),

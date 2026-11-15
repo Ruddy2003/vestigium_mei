@@ -12,7 +12,8 @@ import io.github.ruddy2003.vestigium.vidas.TextoEspecial
  *   que cambiar al menos 4 párrafos de un día al siguiente);
  * - los días de camino a Jerusalén (`sube_*`, `baja_*`) cambian la mañana, el trabajo y el pueblo cada día, y un día
  *   especial que caiga en uno de ellos también los cambia;
- * - Jesús nunca de frente, sus palabras en estilo indirecto con la cita al lado, la lectura gnóstica como lo que él cree,
+ * - Jesús nunca de frente, sus palabras en estilo indirecto con la cita al lado (salvo unas pocas frases cortas de la
+ *   Reina-Valera 1909, tal cual, entre comillas y con su cita), la lectura gnóstica como lo que él cree,
  *   nada de más de 470 letras, ningún texto repetido, ningún año escrito y ningún hueco que no sea de `Piezas.HUECOS`.
  * Cuando estén todos sus días, `escrita = true`: entonces la temporada entra en `temporadasEscritas`.
  *
@@ -25,7 +26,7 @@ import io.github.ruddy2003.vestigium.vidas.TextoEspecial
  * Lo propio de esta temporada (el año 31, `comunidad`):
  * - Jesús ya no está: lo que hay son recuerdos (la Pascua del 30, la orilla, Jericó, la higuera de Betania), lo que
  *   cuentan los demás y lo que creen. Lo que dicen Pedro, Gamaliel y los del consejo va en estilo indirecto, con su cita
- *   de Hechos al lado.
+ *   de Hechos al lado; solo dos frases cortas de Pedro van tal cual, de la Reina-Valera 1909 (Hechos 3:6 y 4:20).
  * - El choque con el grupo de Pedro (`choque_31`) es el de María en el Evangelio de María: la pregunta de Pedro y la
  *   respuesta de Leví, las dos comprobadas en `docs/diseno/temas/fuentes_arcontes.md` (sección 8). Pedro y los suyos no
  *   son villanos: lo reciben, le dan pan y lo despiden sin empujarlo; María, después, le pide que no le guarde rencor.
@@ -129,7 +130,7 @@ internal val ESPECIALES_INICIADO_T4 = EspecialesIniciado(temporada = 4, escrita 
     ),
     "cojo_31" to unDia(
         Parrafo.TRABAJO to "Hoy, a media tarde, a la hora de la oración, {nombre} sube al Templo detrás de Pedro y de Juan, el hijo de Zebedeo, sin que ellos lo sepan. En la puerta que llaman la Hermosa hay un hombre sentado en el suelo, cojo desde que nació, al que traen cada día a pedir limosna (Hechos 3:1–2). Pedro se para delante de él. {nombre} se para también, unos pasos detrás, con el corazón golpeándole.",
-        Parrafo.PUEBLO to "Pedro le dice al cojo que no tiene plata ni oro, pero que lo que tiene se lo da, y le manda levantarse y andar en el nombre de Jesús de Nazaret (Hechos 3:6). Lo agarra de la mano derecha y tira de él, y el hombre se pone de pie, da un paso, otro, y entra en el Templo saltando y alabando a Dios (Hechos 3:7–8). La gente corre hacia el pórtico de Salomón. {nombre} corre con ella.",
+        Parrafo.PUEBLO to "Pedro le dice al cojo: «Ni tengo plata ni oro; mas lo que tengo te doy» (Hechos 3:6), y le manda levantarse y andar en el nombre de Jesús de Nazaret. Lo agarra de la mano derecha y tira de él, y el hombre se pone de pie, da un paso, otro, y entra en el Templo saltando y alabando a Dios (Hechos 3:7–8). La gente corre hacia el pórtico de Salomón. {nombre} corre con ella.",
         Parrafo.PENSAMIENTO to "{nombre} piensa que hoy es el día de la primera gavilla, y que mientras en el altar se ofrecía la cebada nueva, un hombre que nunca había andado entraba saltando por la puerta. Piensa que Pedro no ha dicho ninguna palabra secreta, ninguna de las que se dicen al oído: ha dicho un nombre en voz alta, en medio de la gente. Y ha bastado. Eso no le cabe en nada de lo que sabe.",
     ),
     "presos_31" to unDia(
@@ -140,7 +141,7 @@ internal val ESPECIALES_INICIADO_T4 = EspecialesIniciado(temporada = 4, escrita 
     "consejo_31" to unDia(
         Parrafo.MANANA to "Hoy, desde temprano, {nombre} espera con otros en la calle, cerca de donde se reúne el consejo, sin saber muy bien a qué. Dentro están los jefes, los ancianos y los escribas, y el sumo sacerdote con los de su familia (Hechos 4:5–6). Fuera hace frío. Al rato llega el cojo de ayer, andando, y entra detrás de los guardias. La gente le abre paso como si quemara.",
         Parrafo.PUEBLO to "A media mañana corre la noticia de boca en boca: que les han preguntado con qué poder o en qué nombre hicieron lo del cojo, y que Pedro ha contestado que en el nombre de Jesús de Nazaret, al que ellos crucificaron (Hechos 4:7–10). Que los del consejo se maravillan de verlos hablar así, siendo hombres sin letras, del pueblo (Hechos 4:13). Que al final los sueltan, con la orden de no hablar más de ese nombre (Hechos 4:18–21).",
-        Parrafo.PENSAMIENTO to "Dicen que Pedro les contestó que juzgaran ellos si era justo obedecerles a ellos antes que a Dios, y que no podían dejar de decir lo que habían visto y oído (Hechos 4:19–20). {nombre} piensa en eso toda la tarde. Hombres sin letras, como él hasta hace poco. Él se sabe sus palabras al oído y las dice en voz baja; Pedro dice las suyas delante del consejo. Piensa que hay dos maneras de guardar una cosa: callarla y gritarla.",
+        Parrafo.PENSAMIENTO to "Dicen que Pedro les contestó que juzgaran ellos si era justo obedecerles a ellos antes que a Dios (Hechos 4:19), y que les dijo: «Porque no podemos dejar de decir lo que hemos visto y oído» (Hechos 4:20). {nombre} piensa en eso toda la tarde. Hombres sin letras, como él hasta hace poco. Él se sabe sus palabras al oído y las dice en voz baja; Pedro dice las suyas delante del consejo. Piensa que hay dos maneras de guardar una cosa: callarla y gritarla.",
     ),
     "choque_31" to unDia(
         Parrafo.PUEBLO to "Hoy en Jerusalén no se habla de otra cosa que del consejo y de los dos pescadores que le contestaron. Dicen que, cuando los soltaron, volvieron con los suyos y rezaron todos juntos, y que el sitio donde estaban tembló (Hechos 4:23–31). Los del Nazareno andan por la ciudad con la cabeza alta. {nombre} los ve pasar desde el mercado y, al caer la tarde, vuelve a la casa donde comen.",

@@ -135,6 +135,40 @@ def heliotropo(sem):     # Arcontes: jaspe verde oscuro de las gemas de Abraxas 
     rgb_ += brillo[..., None] * np.array([14, 19, 16], np.float32) - caida[..., None] * np.array([10, 14, 12], np.float32)
     return rgb_
 
+def roble(sem, tam=TAM):  # Galia: una tabla de roble aserrada al cuarto, oscura y aceitada, con la veta horizontal (los
+    # anillos tardíos más oscuros, que ondulan apenas), los poros del leño de primavera en rayitas, los radios de la madera
+    # (las «flores» del roble: manchas claras y satinadas en forma de lente, a lo largo de la veta) y el brillo del aceite
+    # arriba a la izquierda. Devuelve el desvío en RGB, como el jaspe de Arcontes.
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32) * (TAM / tam)
+    onda = nube(sem, 3, tam) * 10 + nube(sem + 1, 7, tam) * 3.5
+    u = (yy + onda) / 7.2 + nube(sem + 2, 5, tam) * 0.9         # la cuenta de los anillos, que no van del todo parejos
+    f = u - np.floor(u)
+    tardio = np.clip(1 - np.abs(f - 0.72) / 0.2, 0, 1) ** 1.6     # la madera de verano: una banda oscura en cada anillo
+    rng = np.random.default_rng(sem + 3)
+    # Los poros: rayitas oscuras, cortas, a lo largo de la veta, sobre todo en la madera de primavera.
+    poros = np.clip((nube(sem + 4, 220, tam) - 0.62) * 5, 0, 1)
+    poros = np.asarray(Image.fromarray((poros * 255).astype(np.uint8)).resize((max(2, tam // 9), tam), Image.BILINEAR).resize((tam, tam), Image.BILINEAR), np.float32) / 255
+    poros = poros * np.clip(1 - tardio * 1.4, 0, 1)
+    # Los radios: lentes claras, alargadas en la veta, de varios tamaños, con un filo un poco más oscuro.
+    capa = Image.new('L', (tam, tam), 0); d = ImageDraw.Draw(capa)
+    s = tam / TAM
+    for _ in range(70):
+        x, y = rng.uniform(-20, TAM + 20), rng.uniform(0, TAM)
+        l = rng.uniform(8, 46); a = rng.uniform(1.0, 3.2)
+        pts = [((x + l * math.cos(t)) * s, (y + a * math.sin(t) * (0.6 + 0.4 * math.cos(t) ** 2)) * s) for t in np.linspace(0, 2 * math.pi, 24)]
+        d.polygon(pts, fill=int(rng.uniform(110, 255)))
+    radios = np.asarray(capa.filter(ImageFilter.GaussianBlur(0.9 * s)), np.float32) / 255
+    filo = np.clip(np.asarray(capa.filter(ImageFilter.GaussianBlur(2.2 * s)), np.float32) / 255 - radios, 0, 1)
+    brillo = np.clip(1 - np.sqrt((xx - TAM * 0.28) ** 2 + (yy - TAM * 0.22) ** 2) / (TAM * 0.75), 0, 1) ** 2
+    caida = np.clip(np.sqrt((xx - TAM * 0.5) ** 2 + (yy - TAM * 0.5) ** 2) / (TAM * 0.72), 0, 1) ** 2
+    rgb_ = -tardio[..., None] * np.array([17, 13, 9], np.float32)
+    rgb_ += nube(sem + 5, 4, tam)[..., None] * np.array([10, 8, 5], np.float32) + nube(sem + 6, 18, tam)[..., None] * np.array([5, 4, 3], np.float32)
+    rgb_ -= poros[..., None] * np.array([14, 11, 8], np.float32)
+    rgb_ += radios[..., None] * np.array([26, 20, 12], np.float32) - filo[..., None] * np.array([8, 6, 4], np.float32)
+    rgb_ += brillo[..., None] * np.array([20, 15, 9], np.float32) - caida[..., None] * np.array([12, 10, 7], np.float32)
+    rgb_ += np.random.default_rng(sem + 7).standard_normal((tam, tam)).astype(np.float32)[..., None] * 1.6
+    return rgb_
+
 def cuadricula(sem):     # Laboratorio: papel de laboratorio cuadriculado
     fino = ((X % 18 < 1) | (Y % 18 < 1)) * -0.6
     grueso = ((X % 90 < 1.5) | (Y % 90 < 1.5)) * -0.6

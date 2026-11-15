@@ -14,18 +14,21 @@ import io.github.ruddy2003.vestigium.vidas.piezas.EspecialesIniciado.Companion.u
  *   que cambiar al menos 4 párrafos de un día al siguiente);
  * - los días de camino a Jerusalén (`sube_*`, `baja_*`) cambian la mañana, el trabajo y el pueblo cada día, y un día
  *   especial que caiga en uno de ellos también los cambia;
- * - Jesús nunca de frente, sus palabras en estilo indirecto con la cita al lado, la lectura gnóstica como lo que él cree,
+ * - Jesús nunca de frente, sus palabras en estilo indirecto con la cita al lado (salvo unas pocas frases cortas de la
+ *   Reina-Valera 1909, tal cual, entre comillas y con su cita), la lectura gnóstica como lo que él cree,
  *   nada de más de 470 letras, ningún texto repetido, ningún año escrito y ningún hueco que no sea de `Piezas.HUECOS`.
  * Cuando estén todos sus días, `escrita = true`: entonces la temporada entra en `temporadasEscritas`.
  *
  * Lo propio de la temporada 5 (el año 32, el último del cuento):
- * - **Esteban, Felipe, Simón, Pedro y Saulo hablan en estilo indirecto, con la cita al lado** (Hechos 6 a 9); la muerte de
+ * - **Esteban, Felipe, Simón, Pedro y Saulo hablan en estilo indirecto, con la cita al lado** (Hechos 6 a 9), salvo el
+ *   último grito de Esteban (Hechos 7:60), que va tal cual, de la Reina-Valera 1909; la muerte de
  *   Esteban, sin nada cruento: Eleazar no mira. Esteban va adelantado (lo habitual es ponerlo hacia el 34).
  * - **Simón de Samaria** se cuenta como en Hechos 8 y, lo que enseñaba, como lo cuenta después la tradición, con la nota de
  *   que es fuente enemiga (Ireneo, *Contra las herejías* 1.23). La mujer de Tiro no está en Samaria: en `tiro_32` solo se
  *   oye, de boca de un mercader, que Simón dice buscar a «una que cayó», y la nota dice que lo de Tiro lo cuentan después
- *   sus enemigos (corrección 9 de `fuentes_arcontes.md`). La frase de Hechos 8:10 va en estilo indirecto («el gran poder
- *   de Dios»), porque el texto de la Reina-Valera 1909 no se pudo comprobar.
+ *   sus enemigos (corrección 9 de `fuentes_arcontes.md`). La frase de Hechos 8:10 va tal cual, de la Reina-Valera 1909
+ *   («Este es la gran virtud de Dios»), con su sentido al lado: en el castellano de entonces, «virtud» es poder. En lo
+ *   demás se le sigue llamando «el gran poder».
  * - Los días de la semana son los del año 32 (juliano): `sube_pesaj_32` y el primero de `vendimia_32` caen en sábado, y se
  *   sale o se trabaja al ponerse el sol; `entierro_esteban_32` es viernes (hay que enterrarlo antes del sábado), y
  *   `saulo_32` cae en sábado.
@@ -156,7 +159,7 @@ internal val ESPECIALES_INICIADO_T5 = EspecialesIniciado(
         "esteban_32" to unDia(
             Parrafo.TRABAJO to "Hoy {nombre} pasa la mañana a la puerta de la sala del consejo, entre la gente que espera, con el tejedor al lado. No se oye lo que pasa dentro. Al rato sale un rumor de voces, luego un grito, y la puerta se abre de golpe y sacan a Esteban a empujones, entre muchos, hacia las puertas de la ciudad. La gente va detrás. {nombre} también.",
             Parrafo.PUEBLO to "Dicen los que estaban dentro que Esteban les habló largo, de Abraham, de José y de Moisés, y que les dijo que el Altísimo no vive en casas hechas por manos de hombre (Hechos 7:48). Y que al final miró arriba y dijo que veía los cielos abiertos, y al Hijo del hombre de pie a la derecha de Dios (Hechos 7:56). Entonces se taparon los oídos (Hechos 7:57).",
-            Parrafo.GENTE to "Fuera de la muralla, en un descampado de piedras, los testigos se quitan los mantos y los dejan a los pies de un joven que no tira nada: mira, y está de acuerdo (Hechos 7:58; 8:1). Se llama Saulo, dice alguien. {nombre} no mira lo demás. Oye a Esteban pedir a gritos que no les tomen en cuenta este pecado (Hechos 7:60). Luego, nada.",
+            Parrafo.GENTE to "Fuera de la muralla, en un descampado de piedras, los testigos se quitan los mantos y los dejan a los pies de un joven que no tira nada: mira, y está de acuerdo (Hechos 7:58; 8:1). Se llama Saulo, dice alguien. {nombre} no mira lo demás. Oye a Esteban gritar: «Señor, no les imputes este pecado» (Hechos 7:60). Luego, nada.",
             Parrafo.PENSAMIENTO to "{nombre} piensa en los cielos abiertos que dijo ver Esteban. Ismael enseña que hay siete puertas cerradas y que el alma solo pasa si sabe qué contestarle a cada guardián. Esteban no era del círculo. No sabía ni una palabra. Y dijo que las veía abiertas. {nombre} piensa que, si es verdad, él no entiende nada. Y que, si no es verdad, nadie muere así.",
         ),
         "entierro_esteban_32" to unDia(
@@ -189,7 +192,7 @@ internal val ESPECIALES_INICIADO_T5 = EspecialesIniciado(
             Parrafo.PENSAMIENTO to "{nombre} piensa que Felipe no sabe nada de las siete puertas, ni de Sofía, ni del que se cree el único, y que aun así las voces le obedecen. Ismael diría que obedecen al nombre, no al hombre. Puede ser. Esta noche, en el cuarto prestado, {nombre} se sorprende diciendo ese nombre en voz baja, entre las palabras del círculo, como una más.",
         ),
         "simon_32" to unDia(
-            Parrafo.PUEBLO to "Hoy el samaritano viejo, mientras desgrana garbanzos en el patio, le habla de Simón, uno de aquí que hace años que tiene a la ciudad asombrada con sus artes y que dice de sí mismo que es alguien grande (Hechos 8:9). Todos lo escuchan, dice el viejo, desde el más pequeño hasta el más grande, y lo llaman el gran poder de Dios (Hechos 8:10).",
+            Parrafo.PUEBLO to "Hoy el samaritano viejo, mientras desgrana garbanzos en el patio, le habla de Simón, uno de aquí que hace años que tiene a la ciudad asombrada con sus artes y que dice de sí mismo que es alguien grande (Hechos 8:9). Todos lo escuchan, dice el viejo, desde el más pequeño hasta el más grande, y dicen: «Este es la gran virtud de Dios» (Hechos 8:10), que quiere decir su gran poder.",
             Parrafo.GENTE to "El viejo dice que ha visto a Simón en la plaza, y que no sabe si lo que hace son prodigios o trucos, pero que cuando habla no se le puede dejar de oír. Dice que habla de ángeles, de cielos y de un poder que está más arriba que todos. La nieta, desde la escalera, dice que ella le tiene miedo. El viejo la manda callar.",
             Parrafo.PENSAMIENTO to "{nombre} piensa que un hombre que habla en la plaza de ángeles, de cielos y de un poder más alto que todos habla de lo mismo que Ismael enseña de noche, con la puerta atrancada. Le parece imposible y le parece peligroso. Se pregunta quién le enseñó a Simón lo que sabe, y si alguien, en algún sitio, le dio las palabras. Y quién se las dio a quien se las dio.",
         ),
