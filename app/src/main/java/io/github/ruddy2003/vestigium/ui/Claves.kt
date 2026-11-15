@@ -195,7 +195,7 @@ internal object Claves {
     val PSICODELIA: Map<String, String> = mapOf(
         "somnus" to "dormir con la niebla", "animus" to "ánimo", "svmptvs" to "lo que costó", "cor" to "el pulso del baile", "loca" to "esquinas",
         "personae" to "tu gente", "consuetudo" to "costumbres", "palmae" to "discos de oro", "telephonum" to "lo que te roba el teléfono", "telephon" to "lo que te roba el teléfono",
-        "iudicium" to "juicio", "epistulae" to "postales", "reditus" to "lo que entró", "momenta" to "instantes",
+        "iudicium" to "juicio", "epistulae" to "postales", "reditus" to "lo que entró", "momenta" to "lo que brilló",
         "imagines" to "fotos", "iter" to "la calle", "orbis" to "el mundo", "themata" to "temas", "memorabilia" to "fechas que se recuerdan",
     )
 

@@ -711,8 +711,8 @@ object Temas {
         "Anoche" to "Lo que sonó anoche", "Selladas" to "Guardadas en la funda", "Listas para abrir" to "Ya se pueden poner", "A otras personas" to "Para tu gente",
         "Del pasado" to "Las que llegan del pasado", "Hoy" to "El disco de hoy", "Línea de tiempo" to "El surco de los días", "Ahora mismo estoy…" to "Ahora mismo, en la calle…",
         "Entender" to "Ver los colores", "Registros especiales" to "Las caras B", "Apariencia" to "Los colores del cartel", "Avisos y recordatorios" to "El pandero que te llama",
-        "Llenar el día" to "Llenar el disco del día", "Biblioteca del diario" to "La discoteca del diario", "Entrada" to "Hoja del periódico", "Día" to "El disco del día", "Momentos" to "Instantes",
-        "Gastos" to "Lo que costó", "Explorar" to "Salir a la calle", "Más" to "El departamento", "Hábitos" to "Lo de todos los días", "Cartas al futuro" to "Postales para otro verano",
+        "Llenar el día" to "Llenar el disco del día", "Biblioteca del diario" to "La discoteca del diario", "Entrada" to "Hoja del periódico", "Día" to "El disco del día", "Momentos" to "Destellos de la calle",
+        "Gastos" to "Lo que costó", "Explorar" to "Salir a la calle", "Más" to "El departamento", "Hábitos" to "Lo de cada día en el barrio", "Cartas al futuro" to "Postales para otro verano",
         "Experimentos personales" to "Probar algo nuevo", "Cómo leer tus datos" to "Cómo leer tus surcos", "Guía científica" to "Lo que dicen los que saben",
         "Cuestionarios" to "Las preguntas del periódico", "Prueba de reacción" to "La prueba del pandero", "Lugares" to "Esquinas del barrio", "Datos" to "El archivo del departamento",
         "Permisos y sensores" to "Lo que oye el teléfono", "Ajustes" to "Afinar la guitarra", "Reportes" to "Carteles para pegar", "Bienvenido" to "Pasa, la puerta está abierta",
@@ -723,8 +723,8 @@ object Temas {
         "Tablero" to "La mesa del departamento", "Tu día" to "Las pistas del día", "Tu día en 24 horas" to "Las pistas del día", "Te falta hoy" to "Lo que falta en el disco",
         "Datos que faltan" to "Surcos en blanco", "Tema" to "Los colores del cartel", "Recordatorios" to "Lo que la radio te recuerda", "Resumen semanal" to "La semana en un cartel",
         "Totales" to "La cuenta del departamento", "Gimnasio" to "Mover el cuerpo", "Buscar" to "Buscar en el periódico", "Cifras" to "Los números del barrio", "Fotos del día" to "Las fotos del día",
-        "Medicamentos" to "El botiquín", "Seguimiento privado" to "Lo que se guarda en el cajón", "Momentos de la semana" to "Instantes de la semana",
-        "Momentos de este día" to "Instantes de este día", "Lo mejor y lo peor" to "Lo que brilla y lo que se apaga", "Personas, temas e hitos" to "Gente, temas y fechas",
+        "Medicamentos" to "El botiquín del departamento", "Seguimiento privado" to "Lo que se guarda en el cajón", "Momentos de la semana" to "Destellos de la semana",
+        "Momentos de este día" to "Destellos de este día", "Lo mejor y lo peor" to "Lo que brilla y lo que se apaga", "Personas, temas e hitos" to "Gente, temas y fechas",
         "Respaldo automático" to "Una copia en otra cinta",
     )
 

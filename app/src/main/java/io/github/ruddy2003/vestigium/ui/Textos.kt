@@ -157,7 +157,7 @@ object Textos {
         "widget_animo" to "¿De qué color va tu día?",
         "widget_momento" to "Ahora mismo suena…",
         "widget_discreto_animo" to "Ánimo",
-        "widget_discreto_momento" to "Instante",
+        "widget_discreto_momento" to "Instantánea",
     )
 
 
