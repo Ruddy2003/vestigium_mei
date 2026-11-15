@@ -142,10 +142,11 @@ internal object ValleMongol {
         with(ValleLejos) { lejos(m, p, sol, nieve) }
         with(ValleRio) { suelo(m, p, sol, nieve); rio(m, p, sol, nieve) }
         with(ValleLejos) { monjeEnLaOrilla(m, p, sol) }
-        velo(m, l, 0.55f)
+        velo(m, l, 0.6f, 30f, 150f)
         with(ValleCerro) { cerro(m, p, sol, nieve) }
-        velo(m, l, 0.3f)
+        velo(m, l, 0.4f, 60f, 200f)
         with(ValleCampamento) { campamento(m, p, sol, nieve) }
+        velo(m, l, 0.22f, 140f, 222f)
         with(ValleCerca) { primerPlano(m, p, sol, nieve); marco(m, p, sol) }
         tiempoQuieto(l, m.ficha.clima, H, m.semilla("tiempo"))
         grano(Azar(Semilla.de("mongol", "grano", "valle")), 0.6f + 0.4f * r.dia)
@@ -153,14 +154,18 @@ internal object ValleMongol {
 
     /**
      * El aire entre los planos cuando nieva, hay nubes bajas o polvo: va por capas (como la niebla de Horror cósmico),
-     * más espesa detrás del cerro que delante, para que el cuadro no quede plano sin sombras.
+     * una banda de [y0] a [y1] después de cada plano, más espesa abajo (la bruma se asienta en lo hondo) y más espesa
+     * detrás que delante: así cada plano se despega del de atrás aunque no haya sombras. La capa de delante es fina.
      */
-    private fun DrawScope.velo(m: Momento, l: Luces, cuanto: Float) {
-        val k = when (m.ficha.clima) { Clima.NIEVE -> 0.62f; Clima.POLVO -> 0.4f; Clima.NUBES -> 0.16f; Clima.LLUVIA -> 0.16f; Clima.VIENTO -> 0.08f; else -> 0f } * cuanto
+    private fun DrawScope.velo(m: Momento, l: Luces, cuanto: Float, y0: Float, y1: Float) {
+        val k = when (m.ficha.clima) { Clima.NIEVE -> 0.7f; Clima.POLVO -> 0.45f; Clima.NUBES -> 0.3f; Clima.LLUVIA -> 0.3f; Clima.VIENTO -> 0.1f; else -> 0f } * cuanto
         if (k <= 0.01f) return
         val color = if (m.ficha.clima == Clima.POLVO) lerp(l.bruma, l.tono(C.ESTEPA), 0.45f) else lerp(l.bruma, l.bajo, 0.4f)
-        drawRect(Brush.verticalGradient(0f to color.copy(alpha = 0f), 0.3f to color.copy(alpha = 0.6f * k), 0.55f to color.copy(alpha = k), 1f to color.copy(alpha = 0.25f * k), startY = 10f, endY = 215f), Offset(0f, 10f), Size(ANCHO, 205f))
+        drawRect(Brush.verticalGradient(0f to color.copy(alpha = 0f), 0.65f to color.copy(alpha = 0.75f * k), 0.85f to color.copy(alpha = k), 1f to color.copy(alpha = 0f), startY = y0, endY = y1), Offset(0f, y0), Size(ANCHO, y1 - y0))
     }
+
+    /** Cuánto oscurece lo pisado y cuánto se adelantan las luces en un día cubierto, de 0 a 1. */
+    fun cubierto(l: Luces): Float = ((l.nublado - 0.4f) / 0.5f).coerceIn(0f, 1f) * (1f - l.noche)
 
     // ---------------------------------------------------------------- Lo que se mueve
 
@@ -242,6 +247,40 @@ internal object TrazosValle {
             if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y)
         }
         close()
+    }
+
+    /**
+     * Una forma blanda y cerrada (un ventisquero, una mata de nieve): [n] puntos alrededor de [c], con el radio movido
+     * hasta [quiebro], unidos por curvas (Catmull-Rom cerrada). Sin picos ni cantos rectos.
+     */
+    fun blando(c: Offset, rx: Float, ry: Float, az: Azar, n: Int = 9, quiebro: Float = 0.18f, plano: Float = 0.6f): Path =
+        cerrada((0 until n).map { i -> val a = 6.2832f * i / n + az.entre(-0.12f, 0.12f); val k = 1f + az.entre(-quiebro, quiebro); c + Offset(cos(a) * rx * k, sin(a) * ry * k * (if (sin(a) > 0f) plano else 1f)) })
+
+    /** Una curva cerrada y suave (Catmull-Rom) que pasa por todos los [p]: las esquinas salen redondas. */
+    fun cerrada(p: List<Offset>): Path = Path().apply {
+        val n = p.size
+        moveTo(p[0].x, p[0].y)
+        for (i in 0 until n) {
+            val a = p[(i - 1 + n) % n]; val b = p[i]; val cc = p[(i + 1) % n]; val d = p[(i + 2) % n]
+            cubicTo(b.x + (cc.x - a.x) / 6f, b.y + (cc.y - a.y) / 6f, cc.x - (d.x - b.x) / 6f, cc.y - (d.y - b.y) / 6f, cc.x, cc.y)
+        }
+        close()
+    }
+
+    /**
+     * Una cinta blanda a lo largo de [eje], de medio ancho [anchos] en cada punto: los dos bordes y las dos puntas,
+     * redondas, en una sola curva cerrada (un ventisquero metido en una cárcava o pegado a un lomo).
+     */
+    fun cinta(eje: List<Offset>, anchos: List<Float>): Path {
+        val izq = ArrayList<Offset>(); val der = ArrayList<Offset>()
+        for (i in eje.indices) {
+            val a = eje[maxOf(i - 1, 0)]; val b = eje[minOf(i + 1, eje.size - 1)]; val d = b - a; val n = Offset(-d.y, d.x) / d.getDistance().coerceAtLeast(0.01f)
+            izq += eje[i] + n * anchos[i]; der += eje[i] - n * anchos[i]
+        }
+        val d0 = eje[1] - eje[0]; val d1 = eje.last() - eje[eje.size - 2]
+        val punta0 = eje[0] - d0 / d0.getDistance().coerceAtLeast(0.01f) * anchos[0] * 0.8f
+        val punta1 = eje.last() + d1 / d1.getDistance().coerceAtLeast(0.01f) * anchos.last() * 0.8f
+        return cerrada(listOf(punta0) + izq + listOf(punta1) + der.reversed())
     }
 
     /** Un azar fijo del valle (lo que no cambia de un día a otro). */

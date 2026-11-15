@@ -23,8 +23,8 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.astros
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cielo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.lineTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.monte
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.nubes
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
@@ -41,17 +41,19 @@ import io.github.ruddy2003.vestigium.vidas.Semilla
 internal object ValleLejos {
     private val C = ColorMongol
 
-    /** La sierra del fondo, puesta a mano: picos y collados de distinta altura, nunca por encima del sol de las 7:00. */
+    /**
+     * La cadena del fondo, puesta a mano: macizos anchos y romos, de altura y ancho distintos (montes de estepa, no
+     * picos alpinos), con un collado justo debajo del sol de las 7:00.
+     */
     private val SIERRA_ALTA = pts(
-        226f, 116f, 234f, 108.6f, 241f, 103f, 247f, 99.6f, 253f, 95.4f, 258f, 97.8f, 264f, 92.4f, 270f, 89.8f, 275f, 92.6f, 281f, 91.2f,
-        288f, 95f, 294f, 92.6f, 300f, 89.6f, 306f, 91.6f, 312f, 90.2f, 319f, 86f, 324f, 88.2f, 330f, 84.2f, 337f, 81.6f, 342f, 83.4f,
-        349f, 79f, 355f, 80.8f, 361f, 84.4f, 367f, 82.2f, 373f, 79.4f, 380f, 81.8f, 386f, 85.2f, 394f, 83.6f,
+        220f, 117f, 232f, 111f, 244f, 104.4f, 254f, 99.6f, 263f, 97f, 272f, 96.4f, 281f, 97.8f, 289f, 100.6f, 297f, 103.6f, 305f, 104.6f,
+        313f, 103.2f, 321f, 99f, 330f, 94f, 339f, 90.6f, 348f, 89.4f, 357f, 90.2f, 365f, 92.6f, 372f, 95.4f, 380f, 95.8f, 387f, 94f, 396f, 92.6f,
     )
 
-    /** La sierra de delante, más baja y más oscura. */
+    /** La cadena de delante, más baja, más ancha y de otro azul, más oscuro. */
     private val SIERRA_BAJA = pts(
-        250f, 116f, 258f, 111.4f, 266f, 108.2f, 274f, 105.6f, 281f, 107.4f, 288f, 103.2f, 295f, 104.8f, 302f, 100.6f, 309f, 102.4f, 317f, 99.2f,
-        324f, 101.8f, 332f, 98.6f, 340f, 100.8f, 347f, 97.2f, 355f, 99.4f, 362f, 96.8f, 370f, 100.2f, 378f, 98f, 386f, 101.4f, 394f, 100f,
+        244f, 117.6f, 256f, 112.8f, 268f, 109.6f, 280f, 108.4f, 291f, 109.6f, 301f, 108.8f, 312f, 105.8f, 324f, 104f, 336f, 105.2f,
+        346f, 107.4f, 356f, 106f, 367f, 102.6f, 378f, 101.4f, 388f, 102.4f, 396f, 103.6f,
     )
 
     /** La loma de la otra orilla, la más cercana: un escarpe que baja al río. */
@@ -64,9 +66,9 @@ internal object ValleLejos {
         val l = p.l; val semilla = m.semilla("cielo")
         cielo(l, H, semilla); astros(l, H, semilla); nubes(l, H, m.ficha.clima, semilla)
         // Las dos sierras, con la bruma entre una y otra: la del fondo, nevada todo el año; la de delante, según el invierno.
-        sierra(p, SIERRA_ALTA, H + 2f, lerp(C.MONTE, C.SOMBRA, 0.12f), 0.86f, 1f, fijo("sierra", 0))
-        bruma(p, 84f, H + 2f, 0.5f)
-        sierra(p, SIERRA_BAJA, H + 2f, lerp(lerp(C.MONTE, C.SOMBRA, 0.3f), C.HOLLIN, 0.3f), 0.62f, 0.2f + 0.5f * nieve, fijo("sierra", 1))
+        sierra(p, SIERRA_ALTA, H + 2f, lerp(C.MONTE, C.SOMBRA, 0.25f), 0.72f, 1f, fijo("sierra", 0))
+        bruma(p, 90f, H + 2f, 0.5f)
+        sierra(p, SIERRA_BAJA, H + 2f, lerp(lerp(C.MONTE, C.SOMBRA, 0.4f), C.HOLLIN, 0.32f), 0.52f, 0.1f + 0.55f * nieve, fijo("sierra", 1))
         bruma(p, 98f, H + 3f, 0.42f)
         lomas(m, p, sol, nieve)
     }
@@ -77,28 +79,40 @@ internal object ValleLejos {
     }
 
     /**
-     * Una sierra: de cada pico baja una arista quebrada que separa la cara de luz de la cara en sombra (cambian de lado
-     * con la hora); en los picos altos, la nieve, de borde roto, con sus lenguas por las canales y su mitad en sombra azul.
-     * De noche, la luna le saca el filo. Es la idea de la sierra de Prehistoria, con la nieve de la estepa.
+     * Una cadena de macizos romos: el relleno con su degradado (más claro arriba, la bruma abajo); la cara de cada macizo
+     * que no ve el sol, en sombra azul que se apaga hacia el pie; la nieve en lo alto como una capa blanda que baja más
+     * por las vaguadas, con su mitad en sombra; y, de noche, el filo de la luna. Sin aristas en diente de sierra.
      */
     private fun DrawScope.sierra(p: Pincel, cresta: List<Offset>, base: Float, roca: Color, lejos: Float, nieve: Float, az: Azar) {
-        val l = p.l; val forma = curva(cresta, base); val hacia = if (p.solALaDerecha) -1f else 1f
-        monte(l, cresta, base, roca, lejos)
-        val alta = base - cresta.minOf { it.y }
+        val l = p.l; val forma = curva(cresta, base); val sombraHacia = if (p.solALaDerecha) -1f else 1f
+        val arriba = cresta.minOf { it.y }
+        drawPath(forma, Brush.verticalGradient(0f to p.medio(lerp(roca, C.FIELTRO, 0.1f), lejos), 0.5f to p.medio(roca, lejos), 1f to lerp(p.medio(roca, lejos), l.bruma, 0.3f), startY = arriba, endY = base))
+        // Las cumbres (los mínimos de y) y, a cada lado, la ladera hasta el collado.
+        val cumbres = (1 until cresta.size - 1).filter { cresta[it].y <= cresta[it - 1].y && cresta[it].y < cresta[it + 1].y }
         clipPath(forma) {
-            for (i in 1 until cresta.size - 1) {
-                val q = cresta[i]; if (q.y > cresta[i - 1].y || q.y > cresta[i + 1].y) continue
-                val h = base - q.y
-                val arista = (0..4).map { j -> Offset(q.x + (if (j == 0) 0f else az.entre(-0.1f, 0.22f) * h * hacia * j * 0.45f), q.y + h * j / 4f) }
-                drawPath(poligono(arista + listOf(Offset(q.x + hacia * h * 1.2f, base), Offset(q.x + hacia * h * 0.7f, q.y + h * 0.4f))), p.sombra(roca, lejos).copy(alpha = 0.55f))
-                drawPath(poligono(arista + listOf(Offset(q.x - hacia * h * 1.0f, base), Offset(q.x - hacia * h * 0.5f, q.y + h * 0.45f))), p.luz(lerp(roca, C.FIELTRO, 0.3f), lejos).copy(alpha = 0.3f * p.r.dia + 0.06f))
-                if (nieve > 0.05f && h > alta * 0.35f) {
-                    val n = h * (0.12f + 0.2f * nieve) * az.entre(0.75f, 1.15f)
-                    val borde = (0..10).map { j -> val t = j / 10f; val lengua = az.real().let { 0.3f + 1.8f * it * it }; Offset(q.x + (1.6f - 3.2f * t) * n + az.entre(-0.12f, 0.12f) * n, q.y + n * lengua * (1f - 0.5f * kotlin.math.abs(2f * t - 1f))) }
-                    val nevero = poligono(listOf(Offset(q.x - 1.8f * n, q.y - 3f), Offset(q.x + 1.8f * n, q.y - 3f)) + borde)
-                    drawPath(nevero, p.luz(C.NIEVE, lejos * 0.75f).copy(alpha = 0.95f))
-                    clipPath(nevero) { drawPath(poligono(arista.take(4) + listOf(Offset(q.x + hacia * n * 2.6f, q.y + n * 2.4f), Offset(q.x + hacia * n * 2.6f, q.y - 4f))), p.sombra(lerp(C.HIELO, C.NIEVE, 0.3f), lejos * 0.75f).copy(alpha = 0.92f)) }
+            for (i in cumbres) {
+                var j = i; while (j + sombraHacia.toInt() in cresta.indices && cresta[j + sombraHacia.toInt()].y >= cresta[j].y) j += sombraHacia.toInt()
+                val ladera = (if (j > i) (i..j) else (j..i).reversed()).map { cresta[it] }
+                val cara = poligono(ladera + listOf(Offset(ladera.last().x, base), Offset(ladera.first().x, base)))
+                drawPath(cara, Brush.verticalGradient(0f to p.sombra(roca, lejos).copy(alpha = 0.6f), 1f to p.sombra(roca, lejos).copy(alpha = 0.1f), startY = arriba, endY = base))
+                // Unas vaguadas blandas que bajan por la cara de luz.
+                repeat(2) { val x = cresta[i].x - sombraHacia * az.entre(4f, 14f); val y0 = TrazosValle.alturaEn(cresta, x) + 1f
+                    drawLine(p.sombra(roca, lejos).copy(alpha = 0.22f), Offset(x, y0), Offset(x - sombraHacia * az.entre(1f, 4f), base - 4f), az.entre(1.5f, 3f), StrokeCap.Round) }
+            }
+            // La nieve: una capa blanda en lo alto, más honda en las vaguadas (los collados) y con su lado en sombra.
+            if (nieve > 0.05f) {
+                val hondo = (base - arriba)
+                val bajo = cresta.map { q -> val h = base - q.y; q + Offset(0f, (h * (0.12f + 0.2f * nieve) * (0.8f + 0.25f * kotlin.math.sin(q.x * 0.21f)) - (q.y - arriba) * 0.45f).coerceAtLeast(0f)) }
+                val capa = curva(cresta.map { it + Offset(0f, -2f) }).apply { for (q in bajo.reversed()) lineTo(q); close() }
+                clipPath(capa) {
+                    drawPath(forma, p.luz(C.NIEVE, lejos * 0.8f))
+                    for (i in cumbres) {
+                        var j = i; while (j + sombraHacia.toInt() in cresta.indices && cresta[j + sombraHacia.toInt()].y >= cresta[j].y) j += sombraHacia.toInt()
+                        val ladera = (if (j > i) (i..j) else (j..i).reversed()).map { cresta[it] }
+                        drawPath(poligono(ladera + listOf(Offset(ladera.last().x, base), Offset(ladera.first().x, base))), p.sombra(lerp(C.NIEVE, C.HIELO, 0.4f), lejos * 0.8f).copy(alpha = 0.85f))
+                    }
                 }
+                drawPath(curva(bajo), p.medio(roca, lejos).copy(alpha = 0.25f * hondo / hondo), style = Stroke(0.6f))
             }
         }
         if (l.noche > 0.4f) drawPath(curva(cresta), C.LUNA.copy(alpha = 0.22f * l.noche * (1f - l.nublado)), style = Stroke(0.6f))

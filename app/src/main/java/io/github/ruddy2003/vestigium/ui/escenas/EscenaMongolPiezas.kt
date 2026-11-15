@@ -1548,19 +1548,16 @@ internal object PiezasMongol {
         return Offset(ubre.x - prueba.x, pie.y + alto * 0.05f) to ap
     }
 
-    /** Un caballo lejano: una mancha con su cabeza, sus patas y su sombra corta. */
+    /**
+     * Un caballo lejano: la misma pieza que el de cerca ([caballo]), en chico, con su sombra corta tendida. Con [pasta],
+     * pastando; si no, de pie o, uno de cada tres (según dónde pisa, sin azar), mirando atrás. [alto]: unidades hasta
+     * la cruz, como antes.
+     */
     fun DrawScope.caballoLejano(p: Pincel, sol: Sol3, pie: Offset, alto: Float, mira: Float, pelo: Color, lejos: Float, pasta: Boolean = false) {
-        val u = alto / 10f; val dir = if (mira >= 0f) 1f else -1f
+        val u = alto / 10f
         if (sol.r.fuerza > 0.05f) drawOval(sol.r.color, Offset(pie.x - 6f * u + (sol.sx * 2f * u).coerceAtMost(0f), pie.y - 0.5f * u), Size(12f * u + abs(sol.sx) * 2f * u, 1.2f * u), alpha = sol.r.fuerza * 0.7f, blendMode = BlendMode.Multiply)
-        val c = p.por(pelo, 0f, lejos); val o = p.sombra(lerp(pelo, C.HOLLIN, 0.4f), lejos)
-        for (x in listOf(-3.6f, 3.4f)) { drawLine(o, pie + Offset(x * u * dir + 0.6f * u * dir, -5f * u), pie + Offset(x * u * dir + 0.6f * u * dir, 0f), 0.9f * u); drawLine(c, pie + Offset(x * u * dir, -5f * u), pie + Offset(x * u * dir, 0f), 0.9f * u) }
-        drawOval(Brush.verticalGradient(listOf(p.luz(pelo, lejos), c, o), pie.y - 10f * u, pie.y - 4.5f * u), Offset(pie.x - 5f * u, pie.y - 9.6f * u), Size(10f * u, 5f * u))
-        val cabeza = if (pasta) pie + Offset(7.5f * u * dir, -1.5f * u) else pie + Offset(7f * u * dir, -12f * u)
-        drawLine(c, pie + Offset(4f * u * dir, -8f * u), cabeza, 2.2f * u, StrokeCap.Round)
-        drawLine(p.medio(lerp(pelo, C.HOLLIN, 0.5f), lejos), pie + Offset(-4.8f * u * dir, -8.6f * u), pie + Offset(-5.6f * u * dir, -3f * u), 1.1f * u, StrokeCap.Round)
-        // La crin oscura y, de noche, un filo de luna en el lomo.
-        drawLine(p.medio(lerp(pelo, C.HOLLIN, 0.55f), lejos), pie + Offset(3.6f * u * dir, -9.4f * u), cabeza + Offset(-0.6f * u * dir, -0.4f * u), 0.8f * u, StrokeCap.Round)
-        if (p.l.noche > 0.3f) drawLine(C.LUNA.copy(alpha = 0.4f * p.l.noche), pie + Offset(-4f * u, -9.6f * u), pie + Offset(4f * u, -9.6f * u), 0.7f * u, StrokeCap.Round)
+        val postura = when { pasta -> Postura.PASTANDO; Math.floorMod((pie.x * 7f + pie.y * 13f).toInt(), 3) == 0 -> Postura.MIRANDO_ATRAS; else -> Postura.DE_PIE }
+        caballo(p, pie, alto * 0.95f, mira, pelo, lejos = lejos, postura = postura)
     }
 
     // =================================================================

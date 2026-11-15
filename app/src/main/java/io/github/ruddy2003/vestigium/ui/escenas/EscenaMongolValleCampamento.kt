@@ -22,7 +22,9 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.carreta
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.corral
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.ger
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.luzDePuerta
-import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.rebano
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.rebanoApretado
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.perro
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.bovino
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.sombraDeCarreta
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosValle.borron
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosValle.fijo
@@ -43,6 +45,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombra
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
+import kotlin.math.sqrt
 
 /**
  * El campamento, el plano medio: las otras tiendas escalonadas al pie del cerro, en diagonal, cada una más chica, con su
@@ -133,16 +136,27 @@ internal object ValleCampamento {
         // De atrás adelante: el corral con las ovejas, las tiendas, los caballos, la carreta.
         corral(corral, p, sol)
         val enCorral = ValleMongol.ovejasEnElCorral(m)
-        val sitios = (0 until enCorral).map { Offset(az.entre(284f, 324f), az.entre(160f, 171f)) }
-        rebano(p, sitios, { y -> 3.4f + (y - 160f) * 0.08f }, az, { 0.16f }, pastan = 0.25f)
-        if (ValleMongol.corderos(m) > 0) { val cs = (0 until ValleMongol.corderos(m)).map { Offset(az.entre(286f, 322f), az.entre(165f, 172f)) }; rebano(p, cs, { 2.2f }, az, { 0.14f }, pastan = 0.1f, cabras = 99) }
+        // La mancha del rebaño crece con las ovejas que hay: pocas se juntan en un rincón, en varias hileras que se tapan;
+        // nunca una sola fila larga contra el muro del fondo.
+        if (enCorral > 0) {
+            val rx = (2.3f * sqrt(enCorral.toFloat())).coerceIn(5f, 19f); val ry = (rx * 0.3f).coerceIn(2.4f, 4.4f)
+            rebanoApretado(p, sol, Offset(303f + (19f - rx) * 0.3f, 167f - ry * 0.25f), rx, ry, enCorral, { y -> 3.4f + (y - 160f) * 0.08f }, az, 0.16f, pastan = 0.25f, corderos = (ValleMongol.corderos(m) * 0.7f).toInt())
+        }
         if (ValleMongol.antorchas(m)) for (q in ANTORCHAS) resplandor(q + Offset(0f, -10f), 34f, 0.55f * l.noche, C.LUMBRE)
         for (g in tiendas.sortedBy { it.s.pie.y }) ger(g, p, sol)
+        // Con el cielo muy cubierto las luces se encienden antes: el fuego de dentro asoma por el aro y por la rendija de
+        // la puerta.
+        val cub = ValleMongol.cubierto(l)
+        if (cub > 0.05f) for (g in tiendas) if (g.fieltro >= 0.999f) {
+            val f = cub * (0.45f + 0.55f * g.dentro)
+            resplandor(g.humero + Offset(0f, -1.5f), 5f + g.s.k * 1.1f, 0.7f * f, C.LUMBRE)
+            if (g.puertaSeVe) drawLine(C.LUMBRE.copy(alpha = (0.9f * f).coerceIn(0f, 1f)), g.pared(-g.mediaPuerta, 0.05f), g.pared(-g.mediaPuerta, g.altoPuerta), (0.05f * g.s.k).coerceIn(0.4f, 1.2f), blendMode = BlendMode.Plus)
+        }
         // Los caballos del campamento, con la grupa al viento; el potro blanco desde que nació.
         for ((j, h) in caballos.withIndex()) caballoLejano(p, sol, h.first, 9.6f + (h.first.y - 172f) * 0.12f, if (j % 3 == 0) 1f else -1f, h.second, 0.14f, pasta = j % 2 == 0)
         visitas(m, p, sol)
         muertos(m, p, nieve)
-        if (ValleMongol.bueyes(m)) { buey(p, sol, Offset(250f, 197f), 13f, 1f); buey(p, sol, Offset(262f, 200f), 14f, -1f) }
+        if (ValleMongol.bueyes(m)) { val buey = lerp(C.CUERO, C.HOLLIN, 0.35f); bovino(p, Offset(246f, 197f), 15f, 1f, buey, yak = false, lejos = 0.08f); bovino(p, Offset(225f, 201f), 15.5f, -1f, lerp(buey, C.FIELTRO, 0.3f), yak = false, pasta = true, lejos = 0.08f) }
         carreta(carreta, p, sol)
         if (ValleMongol.carneColgada(m)) carne(m, p, sol)
         if (EscenaMongol.pielDeLobo(m)) pielTendida(p, SITIO_CARRETA.p(0f, carreta.tabla + 0.75f, 0.3f), 16f, lerp(C.PIEDRA, C.HOLLIN, 0.3f))
@@ -150,7 +164,9 @@ internal object ValleCampamento {
 
     /** Las sendas que se pisan en la nieve (o en la escarcha): de la terraza a las tiendas, al corral y al agujero del agua. */
     private fun DrawScope.sendas(m: Momento, p: Pincel, nieve: Float, az: Azar) {
-        val pisada = lerp(lerp(C.TIERRA, C.ESTIERCOL, 0.25f), C.NIEVE, 0.35f + 0.4f * nieve)
+        // Con el cielo cubierto, lo pisado se ve más oscuro: es lo que despega los planos cuando no hay sombras.
+        val cub = ValleMongol.cubierto(p.l)
+        val pisada = lerp(lerp(C.TIERRA, C.ESTIERCOL, 0.25f + 0.3f * cub), C.NIEVE, (0.35f + 0.4f * nieve) * (1f - 0.45f * cub))
         val rutas = listOf(
             pts(234f, 205f, 238f, 196f, 250f, 186f, 270f, 178f, 290f, 173f),
             pts(290f, 173f, 306f, 172f, 322f, 170f, 338f, 168.4f, 347f, 166.8f),
@@ -202,21 +218,6 @@ internal object ValleCampamento {
         }
     }
 
-    /** Un buey de los que tiran de las carretas, esperando: el cuerpo pesado, la giba, los cuernos cortos **[Aproximación]**. */
-    private fun DrawScope.buey(p: Pincel, sol: Sol3, pie: Offset, largo: Float, mira: Float) {
-        val u = largo; val d = mira; val pelo = lerp(C.CUERO, C.HOLLIN, 0.35f)
-        fun q(x: Float, y: Float) = pie + Offset(x * u * d, y * u)
-        drawOval(sol.r.color.copy(alpha = 0.5f * sol.r.fuerza), Offset(pie.x - 0.6f * u + sol.r.ax.coerceIn(-1f, 1f) * u * 0.3f, pie.y - 0.06f * u), Size(1.2f * u, 0.14f * u), blendMode = BlendMode.Multiply)
-        for (x in listOf(-0.32f, -0.2f, 0.26f, 0.38f)) drawLine(p.sombra(pelo, 0.1f), q(x, -0.42f), q(x, 0f), 0.09f * u, StrokeCap.Round)
-        val cuerpo = Path().apply { moveTo(q(-0.46f, -0.66f)); lineTo(q(0.3f, -0.72f)); lineTo(q(0.48f, -0.6f)); lineTo(q(0.46f, -0.36f)); lineTo(q(-0.4f, -0.34f)); lineTo(q(-0.5f, -0.48f)); close() }
-        drawPath(cuerpo, p.por(pelo, if (p.solALaDerecha == (d > 0f)) 0.4f else -0.2f, 0.1f))
-        drawPath(poligono(q(-0.46f, -0.66f), q(-0.2f, -0.78f), q(-0.06f, -0.7f), q(-0.3f, -0.6f)), p.luz(pelo, 0.1f))
-        val cabeza = poligono(q(-0.5f, -0.6f), q(-0.7f, -0.5f), q(-0.74f, -0.34f), q(-0.62f, -0.32f), q(-0.46f, -0.44f))
-        drawPath(cabeza, p.por(lerp(pelo, C.HOLLIN, 0.2f), 0.1f, 0.1f))
-        drawLine(p.luz(C.FIELTRO, 0.1f), q(-0.56f, -0.58f), q(-0.62f, -0.7f), 0.05f * u, StrokeCap.Round)
-        drawLine(p.medio(C.HOLLIN, 0.1f), q(0.46f, -0.56f), q(0.52f, -0.24f), 0.04f * u, StrokeCap.Round)
-    }
-
     /** Las varas de la carreta, alzadas y atadas, de las que cuelga la carne de la matanza congelándose. **[Diseño propio]**: cómo se alzan. */
     private fun varas(): List<Pair<Offset, Offset>> {
         val s = SITIO_CARRETA
@@ -248,20 +249,7 @@ internal object ValleCampamento {
             drawLine(p.luz(lerp(C.ROJO, C.FIELTRO, 0.5f), 0.08f).copy(alpha = 0.7f), top + Offset(w * 0.4f, 2f), top + Offset(w * 0.6f, 1.4f + largo * 0.5f), 0.4f)
         }
         // Los perros, sentados debajo, mirando.
-        for ((j, q) in listOf(s.p(-0.2f, 0f, -2.6f), s.p(0.5f, 0f, -2.2f)).withIndex()) perro(p, q, 8f + j * 0.8f, if (j == 0) 1f else -1f)
-    }
-
-    /** Un perro de pastor, sentado: oscuro, de pelo largo, con el pecho más claro. */
-    private fun DrawScope.perro(p: Pincel, pie: Offset, alto: Float, mira: Float) {
-        val u = alto; val d = mira; val pelo = lerp(C.HOLLIN, C.CUERO, 0.35f)
-        fun q(x: Float, y: Float) = pie + Offset(x * u * d, y * u)
-        drawOval(p.r.color.copy(alpha = 0.4f * p.r.fuerza), Offset(pie.x - 0.5f * u, pie.y - 0.08f * u), Size(u, 0.16f * u), blendMode = BlendMode.Multiply)
-        drawPath(poligono(listOf(q(-0.3f, 0f), q(-0.36f, -0.4f), q(-0.2f, -0.7f), q(0.05f, -0.72f), q(0.3f, -0.3f), q(0.34f, 0f))), p.por(pelo, if (p.solALaDerecha == (d > 0f)) 0.3f else -0.3f, 0.08f))
-        drawPath(poligono(q(-0.12f, -0.66f), q(-0.06f, -1f), q(0.1f, -1.04f), q(0.24f, -0.92f), q(0.1f, -0.72f)), p.por(pelo, 0.2f, 0.08f))
-        drawPath(poligono(q(0.2f, -0.94f), q(0.36f, -0.88f), q(0.22f, -0.82f)), p.medio(pelo, 0.08f))
-        drawPath(poligono(q(-0.04f, -1f), q(0f, -1.16f), q(0.06f, -1.02f)), p.sombra(pelo, 0.08f))
-        drawLine(p.luz(lerp(C.CUERO, C.ORO, 0.3f), 0.08f), q(-0.12f, -0.6f), q(-0.1f, -0.2f), 0.12f * u, StrokeCap.Round)
-        drawLine(p.medio(pelo, 0.08f), q(0.3f, -0.06f), q(0.56f, -0.1f), 0.1f * u, StrokeCap.Round)
+        for ((j, q) in listOf(s.p(-0.2f, 0f, -2.6f), s.p(0.5f, 0f, -2.2f)).withIndex()) perro(p, q, 7f + j * 0.8f, if (j == 0) 1f else -1f, echado = j == 1, lejos = 0.08f)
     }
 
     /** Una piel tendida (la del lobo sobre la carreta): el cuerpo plano, las patas abiertas, la cola. */
