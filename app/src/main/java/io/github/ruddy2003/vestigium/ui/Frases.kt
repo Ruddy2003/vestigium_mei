@@ -287,32 +287,36 @@ object Frases {
         f("La visibilité est un piège.", "La visibilidad es una trampa.", "Michel Foucault, Vigilar y castigar, 1975"),
     )
 
+    /**
+     * Arcontes: dichos que el iniciado tendría por suyos. Los de Nag Hammadi, el papiro de Berlín e Hipólito se traducen
+     * aquí (no hay traducción al español de dominio público); el sentido de cada pasaje se comprobó en las páginas
+     * citadas en `docs/diseno/temas/fuentes_arcontes.md`. Los de los evangelios canónicos, traducidos aquí del griego
+     * mientras no se copie el texto exacto de la Reina-Valera 1909.
+     */
     val ARCONTES = listOf(
-        f("Quis custodiet ipsos custodes?", "¿Quién vigilará a los vigilantes?", "Juvenal, Sátira VI"),
-        f("Duas tantum res anxius optat, panem et circenses.", "El pueblo ya solo ansía dos cosas: pan y juegos de circo.", "Juvenal, Sátira X"),
-        f("Ubi solitudinem faciunt, pacem appellant.", "Donde crean un desierto, lo llaman paz.", "Tácito, Agrícola 30"),
-        f("Corruptissima re publica plurimae leges.", "Cuanto más corrupto el Estado, más numerosas las leyes.", "Tácito, Anales III, 27"),
-        f("Finis ergo reipublicae revera libertas est.", "El verdadero fin del Estado es, pues, la libertad.", "Spinoza, Tratado teológico-político XX, 1670"),
-        f("Il n'y a point de plus cruelle tyrannie que celle que l'on exerce à l'ombre des lois et avec les couleurs de la justice.",
-            "No hay tiranía más cruel que la que se ejerce a la sombra de las leyes y con los colores de la justicia.", "Montesquieu, Consideraciones sobre los romanos XIV, 1734"),
-        f("L'homme est né libre, et partout il est dans les fers.", "El hombre nació libre, y en todas partes está encadenado.", "Rousseau, El contrato social I, 1762"),
-        f("Habe Muth, dich deines eigenen Verstandes zu bedienen!", "¡Ten el valor de servirte de tu propio entendimiento!", "Immanuel Kant, ¿Qué es la Ilustración?, 1784"),
-        f("A new mode of obtaining power of mind over mind, in a quantity hitherto without example.",
-            "Un nuevo modo de obtener poder de la mente sobre la mente, en una cantidad sin precedentes.", "Jeremy Bentham, El panóptico, 1791"),
-        f("Those who would give up essential Liberty, to purchase a little temporary Safety, deserve neither Liberty nor Safety.",
-            "Quienes renuncian a la libertad esencial para obtener un poco de seguridad pasajera no merecen ni libertad ni seguridad.", "Benjamin Franklin, 1755"),
-        f("I have sworn upon the altar of God eternal hostility against every form of tyranny over the mind of man.",
-            "He jurado sobre el altar de Dios hostilidad eterna contra toda forma de tiranía sobre la mente humana.", "Thomas Jefferson, carta a Benjamin Rush, 1800"),
-        f("Soyez résolus de ne servir plus, et vous voilà libres.", "Decídanse a no servir más, y serán libres.", "Étienne de La Boétie, Discurso de la servidumbre voluntaria"),
-        f("Il ne brise pas les volontés, mais il les amollit, les plie et les dirige.", "No quiebra las voluntades: las ablanda, las doblega y las dirige.", "Alexis de Tocqueville, La democracia en América II, 1840"),
-        f("Over himself, over his own body and mind, the individual is sovereign.", "Sobre sí mismo, sobre su propio cuerpo y su propia mente, el individuo es soberano.", "John Stuart Mill, Sobre la libertad, 1859"),
-        f("Power tends to corrupt, and absolute power corrupts absolutely.", "El poder tiende a corromper, y el poder absoluto corrompe absolutamente.", "Lord Acton, carta a Mandell Creighton, 1887"),
-        f("The right to be let alone.", "El derecho a que lo dejen a uno en paz.", "Samuel Warren y Louis Brandeis, «The Right to Privacy», 1890"),
-        f("Sunlight is said to be the best of disinfectants.", "Se dice que la luz del sol es el mejor de los desinfectantes.", "Louis Brandeis, 1914"),
-        f(null, "Les juro, señores, que tener demasiada conciencia es una enfermedad, una verdadera enfermedad.", "Fiódor Dostoievski, Memorias del subsuelo, 1864"),
-        f("Ein Käfig ging einen Vogel suchen.", "Una jaula salió a buscar un pájaro.", "Franz Kafka, aforismos de Zürau, 1918"),
-        f(null, "Alguien debió de calumniar a Josef K., porque sin haber hecho nada malo fue detenido una mañana.", "Franz Kafka, El proceso, 1925"),
-        f("La visibilité est un piège.", "La visibilidad es una trampa.", "Michel Foucault, Vigilar y castigar, 1975"),
+        f(null, "Estas son las palabras escondidas que dijo Jesús, el que vive, y que escribió Dídimo Judas Tomás.", "Evangelio de Tomás, prólogo (Nag Hammadi II,2; traducción propia)"),
+        f(null, "Quien encuentre el sentido de estas palabras no probará la muerte.", "Evangelio de Tomás, dicho 1 (traducción propia)"),
+        f(null, "Que el que busca no deje de buscar hasta que encuentre. Cuando encuentre, se turbará; y cuando se turbe, se asombrará, y reinará sobre el todo.", "Evangelio de Tomás, dicho 2 (traducción propia)"),
+        f(null, "El reino está dentro de ustedes y está fuera de ustedes. Cuando se conozcan a sí mismos, serán conocidos.", "Evangelio de Tomás, dicho 3 (traducción propia)"),
+        f(null, "Si no se conocen a sí mismos, viven en la pobreza, y ustedes son la pobreza.", "Evangelio de Tomás, dicho 3 (traducción propia)"),
+        f(null, "El anciano de muchos días no dudará en preguntarle a un niño de siete días por el lugar de la vida, y vivirá.", "Evangelio de Tomás, dicho 4 (traducción propia)"),
+        f(null, "Les daré lo que ningún ojo ha visto, lo que ningún oído ha oído, lo que ninguna mano ha tocado y lo que no ha subido al corazón humano.", "Evangelio de Tomás, dicho 17 (traducción propia)"),
+        f(null, "Quien me busque me hallará en los niños de siete años en adelante; porque allí, escondido en el eón catorce, me manifiesto.", "Un pasaje de Tomás que cita Hipólito, Refutación 5.7.20 (traducción propia)"),
+        f(null, "La verdad es la madre, y el conocimiento, el padre.", "Evangelio de Felipe (Nag Hammadi II,3; traducción propia)"),
+        f(null, "Quien tiene el conocimiento de la verdad es libre.", "Evangelio de Felipe (traducción propia)"),
+        f(null, "No se mostró como era, sino de la manera en que podrían verlo.", "Evangelio de Felipe (traducción propia)"),
+        f(null, "Viste el Espíritu y te volviste espíritu. Viste a Cristo y te volviste Cristo.", "Evangelio de Felipe (traducción propia)"),
+        f(null, "Cuando un ciego y uno que ve están juntos en la tiniebla, no se distinguen uno del otro.", "Evangelio de Felipe (traducción propia)"),
+        f(null, "Quien recibe la luz no será visto, ni podrán retenerlo.", "Evangelio de Felipe (traducción propia)"),
+        f(null, "Donde está el entendimiento, allí está el tesoro.", "Evangelio de María (papiro de Berlín 8502; traducción propia)"),
+        f(null, "Dichosa tú, que no vacilaste al verme.", "Evangelio de María (traducción propia)"),
+        f(null, "La enseñanza del Salvador, y la revelación de los misterios y de lo que está escondido en el silencio.", "Apócrifo de Juan, primeras palabras (traducción propia)"),
+        f(null, "La luz brilla en la tiniebla, y la tiniebla no la venció.", "Juan 1:5 (traducción propia del griego)"),
+        f(null, "Conocerán la verdad, y la verdad los hará libres.", "Juan 8:32 (traducción propia del griego)"),
+        f(null, "Mi reino no es de este mundo.", "Juan 18:36 (traducción propia del griego)"),
+        f(null, "No hay nada escondido que no haya de ser manifestado.", "Marcos 4:22 (traducción propia del griego)"),
+        f(null, "La lámpara del cuerpo es el ojo.", "Mateo 6:22 (traducción propia del griego)"),
+        f(null, "Busquen, y hallarán; llamen, y se les abrirá.", "Mateo 7:7 (traducción propia del griego)"),
     )
 
     /**
@@ -1182,8 +1186,8 @@ object Frases {
         TemaId.MEDIEVAL -> "Sentencia del día"
         TemaId.TEMPLARIO -> "Lectura del refectorio"
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"
-        TemaId.ARCONTES -> "CONSIGNA DEL DÍA"
-        TemaId.FRENTE -> "CONSIGNA DEL DÍA"
+        TemaId.ARCONTES -> "Palabras escondidas"
+        TemaId.FRENTE -> "PALABRA DE LA RED"
         TemaId.REFUGIO -> "MENSAJE DEL DÍA"
         TemaId.ORDEN -> "ORDEN DEL DÍA"
         TemaId.VAPOR -> "Sentencia del horario"

@@ -884,6 +884,32 @@ object OtrasVidas {
                 "lejos" to i(40, "La sierra que cierra el puerto por el norte."), "estatura" to i(176), "vida" to i(52, "El polvo del mineral y los accidentes del desguace."), "vida_adulto" to i(60),
                 "hijos" to i(2.8), "alfabetizacion" to i(70), "lectura" to i(2, "Manuales de motores y papeles que no debería tener.")),
             fuentes = emptyList()),
+
+        // ------------------------------------------------ lote 10 (docs/diseno/PLAN_TEMAS.md, 10d)
+        // Persona inventada en un mundo real (10a): no es ficción (`ficticia = false`), sus cifras son reconstrucciones
+        // (`r`) y su calendario lleva días históricos y aproximados con su fuente (`vidas/anios/AnioG9.kt`). Las fechas y las
+        // citas están comprobadas en `docs/diseno/temas/fuentes_arcontes.md`.
+        Vida("iniciado", "Eleazar", "Salador de pescado e iniciado de un círculo escondido", "Magdala, a orillas del lago de Galilea", "hacia el año 30", 28, "tema", "arcontes", edad = 28,
+            inspiracion = "Persona inventada. Los hechos siguen los evangelios y lo que la historia da por probable. Sus creencias son las de los textos gnósticos de los siglos II a IV, puestas a propósito en el siglo I.",
+            historia = listOf(
+                "Eleazar sala pescado en Magdala, un pueblo de pescadores en la orilla oeste del lago de Galilea, a una hora a pie de Tiberíades, la ciudad nueva de Herodes Antipas. Trabaja en el secadero del viejo Ezequías: abre lo que traen las barcas de noche, lo cubre de sal, lo tiende al sol y lo guarda en ánforas que se llevan las caravanas. Hay quien dice que Magdala es la Tariquea de los griegos, «el saladero»; no es seguro.",
+                "De día es un trabajador como cualquiera: reza al alba, come pan de cebada, pescado y aceitunas, y va a la sinagoga el sábado. De noche va a una reunión escondida, la de «los que saben», donde un viejo venido de Alejandría enseña que este mundo es una cárcel hecha por un dios menor, que siete arcontes guardan las puertas del cielo y que en cada persona hay una chispa de una luz que está más allá.",
+                "Su vecina es María, la que llamarán Magdalena. Pronto empezará a predicar por la orilla del lago un hombre de Nazaret. Eleazar lo verá casi siempre de lejos, de espaldas, entre la gente, y entenderá lo que ve a su manera, que no es la de los discípulos sino la de su círculo. Lo que él cree está en textos reales, aunque se escribieron de uno a tres siglos después.",
+            ),
+            dia = listOf(t(21.0, 5.0, Hacer.DORMIR), t(5.0, 6.0, Hacer.REZAR, "la oración del alba"), t(6.0, 7.0, Hacer.COMER), t(7.0, 12.0, Hacer.TRABAJO, "salar y secar el pescado de la noche"),
+                t(12.0, 13.0, Hacer.COMER), t(13.0, 17.0, Hacer.TRABAJO, "cargar ánforas para las caravanas"), t(17.0, 18.0, Hacer.CAMINO, "a la orilla, a escuchar al maestro"),
+                t(18.0, 19.0, Hacer.COMER), t(19.0, 21.0, Hacer.GENTE, "la reunión escondida de los que saben")),
+            datos = mapOf("pasos" to r(14000, "El secadero, la carga de ánforas y la orilla, todo a pie."), "km_anio" to r(2500, "A pie; algunos años, además, la subida a Jerusalén: unos 150 km por cada lado."),
+                "kcal" to r(2800, "Trabajo de carga: pan de cebada, pescado, aceite, legumbres y fruta."), "proteina" to r(85, "Pescado casi a diario, salado o fresco, y legumbres."),
+                "azucar" to r(15, "Miel de dátiles y de abejas, higos y uvas pasas."), "fibra" to r(45, "Pan de cebada, legumbres, higos y verduras."), "alcohol" to r(20, "Vino aguado en la mesa; más en las fiestas."),
+                "sueno" to r(8.0, "Se acuesta con la noche y se levanta antes que el sol."), "dormir" to r(21.0), "trabajo" to r(54, "Seis días a la semana: el sábado no se trabaja."),
+                "aire_libre" to r(8, "El secadero está al sol, en la orilla."), "pantalla" to r(0), "notificaciones" to r(4, "Los gritos de las barcas que llegan y los del mercado."),
+                "musica" to r(0.5, "Salmos en la sinagoga y cantos en las fiestas."), "personas_dia" to r(40, "Los del secadero, los de las barcas y los de la reunión."), "conocidas" to r(1000),
+                "poblacion" to r(4000, "Un pueblo de pescadores; la cifra es muy insegura."), "lejos" to r(150, "Jerusalén, en las fiestas."),
+                "estatura" to r(166, "Promedio aproximado de los hombres de Galilea de la época, según sus esqueletos."), "vida" to r(30), "vida_adulto" to r(55), "hijos" to r(5),
+                "alfabetizacion" to r(5, "Muy pocos; las estimaciones son muy discutidas."), "lectura" to r(1, "Oye leer la Ley en la sinagoga; en el círculo, unas pocas hojas copiadas a mano.")),
+            fuentes = listOf("Magdala" to "${W}Magdala", "Tariquea, el pueblo del pescado salado (se discute)" to "${W}Tarichaea",
+                "La cronología de Jesús" to "${W}Chronology_of_Jesus", "El gnosticismo" to "${W}Gnosticism", "Los arcontes" to "${W}Archon_(Gnosticism)")),
     )
 
     /** Las vidas que se ven con el tema [tema]: las doce de todos y la del tema (primero). */
