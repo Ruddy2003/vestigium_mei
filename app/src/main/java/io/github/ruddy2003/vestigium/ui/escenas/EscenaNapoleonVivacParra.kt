@@ -45,7 +45,7 @@ internal object VivacParra {
     /** La sombra del follaje de la parra en el suelo de delante (una capa de sombra). */
     fun DrawScope.sombra(v: VistaVivac) {
         val k = hojas(v.m); if (k <= 0.05f) return
-        val r = RetiradaLuz.rayo(v.l)
+        val r = VivacLuz.rayo(v.l)
         capaSombra(r, 0.8f * k) { c -> sombraDeFollaje(Azar(Semilla.de("napoleon", "vivac", "parra", "sombra")), Rect(-40f + r.ax * 30f, 228f, 190f + r.ax * 30f, 290f), r, c, 40, 110) }
     }
 

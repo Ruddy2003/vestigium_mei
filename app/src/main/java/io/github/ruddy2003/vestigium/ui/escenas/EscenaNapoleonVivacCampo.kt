@@ -36,6 +36,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombraCorta
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
+import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.sin
 
@@ -50,41 +51,36 @@ import kotlin.math.sin
 internal object VivacCampo {
     private val C = ColorNapoleon
 
-    // ---- Los colores del campo: mezclas de la paleta.
-    private val HIERBA = lerp(C.PINO, C.HOJA, 0.58f)
-    private val HIERBA_SECA = lerp(C.HOJA, C.PINO_LUZ, 0.35f)
-    private val TRIGO = lerp(C.HOJA, C.LONA, 0.42f)
-    private val TRIGO_VERDE = lerp(C.PINO_LUZ, C.HOJA, 0.4f)
-    private val RASTROJO = lerp(C.HOJA, C.BARRO, 0.35f)
-    private val ARENA = lerp(C.LONA, C.HOJA, 0.42f)
-    private val VINA = lerp(C.PINO, C.HOJA, 0.42f)
-    private val TIERRA = lerp(C.BARRO, C.HOJA, 0.3f)
+    // ---- Los colores del campo: los de [ColorVivac].
+    private val V = ColorVivac
 
-    /** El prado del campamento, de cerca: la hierba de la estación, pisada. */
-    private fun prado(v: VistaVivac): Color = when (v.m.ficha.estacion) {
-        io.github.ruddy2003.vestigium.vidas.Estacion.PRIMAVERA -> HIERBA
-        io.github.ruddy2003.vestigium.vidas.Estacion.VERANO -> lerp(HIERBA, C.HOJA, 0.38f)
-        io.github.ruddy2003.vestigium.vidas.Estacion.OTONO -> lerp(HIERBA_SECA, C.BARRO, 0.25f)
-        else -> lerp(HIERBA_SECA, C.BARRO, 0.35f)
+    /** El prado del campamento, de cerca: la hierba de la estación. */
+    fun prado(v: VistaVivac): Color = when (v.m.ficha.estacion) {
+        io.github.ruddy2003.vestigium.vidas.Estacion.PRIMAVERA -> V.PRADO
+        io.github.ruddy2003.vestigium.vidas.Estacion.VERANO -> lerp(V.PRADO, V.PRADO_SECO, 0.22f)
+        io.github.ruddy2003.vestigium.vidas.Estacion.OTONO -> lerp(V.PRADO_SECO, V.PRADO, 0.25f)
+        else -> lerp(V.PRADO_SECO, C.BARRO, 0.3f)
+    }
+
+    /** El color de lo que cubre el llano hoy (el trigo, el rastrojo, la arena, las viñas, el prado). */
+    private fun llano(v: VistaVivac): Color = when (v.campo) {
+        Campo.HIERBA -> prado(v)
+        Campo.TRIGO_VERDE -> V.TRIGO_VERDE
+        Campo.TRIGO -> V.TRIGO
+        Campo.RASTROJO -> V.RASTROJO
+        Campo.ARENA -> V.ARENA
+        Campo.VINA -> V.VINA
+        Campo.NIEVE -> C.NIEVE
     }
 
     /**
-     * El color propio del campo, de lejos ([lejos] = 1) a cerca: de cerca, el prado del campamento, pisado; lejos, lo que
-     * cubre el llano ese día (el trigo, el rastrojo, la arena, las viñas). Con nieve, nieve, sucia de cerca.
+     * El color propio del campo, de lejos ([lejos] = 1) a cerca: de cerca, el prado del campamento (en Polonia, la arena
+     * con su hierba rala); lejos, lo que cubre el llano ese día. Con nieve, nieve, sucia de cerca.
      */
     fun colorDelCampo(v: VistaVivac, lejos: Float): Color {
         if (v.campo == Campo.NIEVE) return lerp(C.NIEVE_SUCIA, C.NIEVE, (lejos * 9f).coerceIn(0f, 1f))
-        val llano = when (v.campo) {
-            Campo.HIERBA -> prado(v)
-            Campo.TRIGO_VERDE -> TRIGO_VERDE
-            Campo.TRIGO -> TRIGO
-            Campo.RASTROJO -> RASTROJO
-            Campo.ARENA -> ARENA
-            Campo.VINA -> VINA
-            Campo.NIEVE -> C.NIEVE
-        }
-        val cerca = if (v.campo == Campo.ARENA) lerp(ARENA, prado(v), 0.35f) else lerp(prado(v), TIERRA, 0.22f)
-        return lerp(cerca, llano, ((lejos - 0.06f) * 12f).coerceIn(0f, 1f))
+        val cerca = if (v.campo == Campo.ARENA) lerp(V.ARENA, prado(v), 0.3f) else prado(v)
+        return lerp(cerca, llano(v), ((lejos - 0.048f) * 40f).coerceIn(0f, 1f))
     }
 
     // ---------------------------------------------------------------- El camino real
@@ -113,7 +109,7 @@ internal object VivacCampo {
         // La textura de cerca: matas, rastrojo, surcos de la arena, la nieve con sus ondas.
         textura(v, az)
         // En el pueblo, las filas de cepas que se van por la ladera, y el murete de piedra seca en diagonal.
-        if (v.fondo == Fondo.PUEBLO) vinas(v)
+        if (v.fondo == Fondo.PUEBLO || v.fondo == Fondo.FRANCIA) vinas(v)
         // El río del Niemen, a media distancia, con los puentes de barcas (el 24 de junio) o helado (el 14 de diciembre).
         if (v.fondo == Fondo.NIEMEN) niemen(v)
         // El camino real, con sus rodadas.
@@ -126,7 +122,7 @@ internal object VivacCampo {
      */
     private fun DrawScope.vinas(v: VistaVivac) {
         val p = v.p; val az = VivacNapoleon.fijo("vinas"); val hojas = VivacParra.hojas(v.m)
-        val verde = lerp(C.PINO, C.HOJA, 0.5f)
+        val verde = V.VINA
         for (fila in 8 downTo 0) {
             val dx = 2.4f + fila * 1.7f
             var z = 18f + fila * 1.2f
@@ -148,7 +144,8 @@ internal object VivacCampo {
                 if (hojas <= 0.05f) drawLine(p.medio(lerp(C.MADERA_OSC, C.CAPOTE, 0.25f), lejos), q, q + Offset(az.entre(-0.15f, 0.15f) * kk, -0.6f * kk), (0.06f * kk).coerceIn(0.4f, 2f), StrokeCap.Round)
             }
         }
-        // El murete, de piedras sin argamasa, a lo largo de la diagonal.
+        // El murete, de piedras sin argamasa, a lo largo de la diagonal (en el pueblo, donde no está la fila de fusiles).
+        if (v.fondo != Fondo.PUEBLO) return
         var z = 6.5f
         while (z < 60f) {
             val q = w(VivacCerca.filaEn(z) + 0.4f, z); val kk = k(z); val lejos = VivacNapoleon.lejos(z)
@@ -168,12 +165,12 @@ internal object VivacCampo {
         if (v.campo == Campo.NIEVE) return
         val p = v.p
         val colores = when (v.campo) {
-            Campo.TRIGO -> listOf(TRIGO, lerp(TRIGO, C.HOJA, 0.4f), RASTROJO, lerp(TRIGO, HIERBA, 0.45f), lerp(TRIGO, C.LONA, 0.3f))
-            Campo.TRIGO_VERDE -> listOf(TRIGO_VERDE, lerp(HIERBA, C.HOJA, 0.2f), lerp(TRIGO_VERDE, C.HOJA, 0.3f), lerp(TIERRA, C.HOJA, 0.3f), lerp(HIERBA, TRIGO_VERDE, 0.5f))
-            Campo.RASTROJO -> listOf(RASTROJO, TIERRA, lerp(RASTROJO, C.HOJA, 0.4f), HIERBA_SECA, lerp(TIERRA, C.CENIZA, 0.15f))
-            Campo.ARENA -> listOf(ARENA, lerp(ARENA, HIERBA_SECA, 0.5f), lerp(ARENA, C.LONA, 0.3f), HIERBA_SECA)
-            Campo.VINA -> listOf(VINA, lerp(VINA, C.HOJA, 0.3f), TIERRA, HIERBA)
-            Campo.HIERBA, Campo.NIEVE -> listOf(HIERBA, lerp(HIERBA, C.HOJA, 0.35f), HIERBA_SECA, TIERRA)
+            Campo.TRIGO -> listOf(V.TRIGO, lerp(V.TRIGO, C.HOJA, 0.3f), V.RASTROJO, prado(v), V.TRIGO, V.BARBECHO)
+            Campo.TRIGO_VERDE -> listOf(V.TRIGO_VERDE, V.PRADO, lerp(V.PRADO, V.TRIGO, 0.55f), V.BARBECHO, V.TRIGO_VERDE)
+            Campo.RASTROJO -> listOf(V.RASTROJO, V.BARBECHO, V.PRADO_SECO, lerp(V.RASTROJO, V.TRIGO, 0.4f), prado(v))
+            Campo.ARENA -> listOf(V.ARENA, lerp(V.ARENA, V.PRADO_SECO, 0.5f), V.PRADO_SECO, lerp(V.ARENA, V.BREZO, 0.35f), V.ARENA)
+            Campo.VINA -> listOf(V.VINA, V.VINA, prado(v), V.TRIGO, V.BARBECHO)
+            Campo.HIERBA, Campo.NIEVE -> listOf(prado(v), lerp(V.PRADO, V.PRADO_LUZ, 0.35f), V.PRADO_SECO, V.TRIGO_VERDE, V.BARBECHO)
         }
         // Las hazas, de lejos a cerca, en el llano de detrás del campamento (de z = 30 al horizonte).
         val bandas = listOf(22f, 30f, 42f, 58f, 80f, 110f, 160f, 240f, 400f, 900f)
@@ -185,13 +182,13 @@ internal object VivacCampo {
                 val col = colores[az.entero(colores.size)]
                 val lejos = VivacNapoleon.lejos((z0 + z1) / 2f)
                 val forma = poligono(w(x, z0), w(x + ancho, z0), w(x + ancho * 1.1f, z1), w(x + ancho * 0.02f, z1))
-                drawPath(forma, p.arriba(col, lejos).copy(alpha = 0.85f))
+                drawPath(forma, p.arriba(col, lejos))
                 // La linde: una raya de hierba más oscura, o un surco.
-                drawLine(p.sombra(lerp(col, C.PINO, 0.3f), lejos).copy(alpha = 0.5f), w(x, z0), w(x + ancho * 0.02f, z1), (0.25f * k(z0)).coerceIn(0.3f, 1.4f))
+                drawLine(p.medio(lerp(V.PRADO, C.PINO, 0.3f), lejos).copy(alpha = 0.8f), w(x, z0), w(x + ancho * 0.02f, z1), (0.5f * k(z0)).coerceIn(0.4f, 2.2f))
                 // Los surcos del trigo o del arado, que se van al fondo.
-                if (v.campo == Campo.TRIGO || v.campo == Campo.RASTROJO || v.campo == Campo.VINA) clipPath(forma) {
-                    val n = (ancho / 1.6f).toInt().coerceIn(2, 14)
-                    for (j in 1 until n) { val u = j / n.toFloat(); drawLine(p.sombra(col, lejos).copy(alpha = 0.35f), w(x + ancho * u, z0), w(x + ancho * (0.02f + 1.08f * u), z1), (0.08f * k(z0)).coerceIn(0.25f, 0.9f)) }
+                if (col != V.PRADO && col != V.BARBECHO && z0 < 160f) clipPath(forma) {
+                    val n = (ancho / (if (col == V.VINA) 1.2f else 2f)).toInt().coerceIn(2, 12)
+                    for (j in 1 until n) { val u = j / n.toFloat(); drawLine(if (col == V.VINA) p.medio(lerp(V.VINA, C.PINO, 0.45f), lejos) else p.sombra(col, lejos).copy(alpha = 0.4f), w(x + ancho * u, z0), w(x + ancho * (0.02f + 1.08f * u), z1), (0.08f * k(z0)).coerceIn(0.25f, 0.9f)) }
                 }
                 x += ancho
             }
@@ -202,8 +199,8 @@ internal object VivacCampo {
             if (q.x < -5f || q.x > ANCHO + 5f) return@repeat
             val kk = k(z); val lejos = VivacNapoleon.lejos(z)
             sombraCorta(v.r, q, 1.4f * kk, 0.9f * kk)
-            drawOval(p.medio(lerp(C.PINO, C.HOJA, 0.35f), lejos), Offset(q.x - 0.7f * kk, q.y - 0.9f * kk), Size(1.4f * kk, 0.95f * kk))
-            drawOval(p.lado(lerp(C.PINO_LUZ, C.HOJA, 0.3f), lejos).copy(alpha = 0.6f), Offset(q.x + (if (p.solALaDerecha) 0f else -0.6f) * kk, q.y - 0.88f * kk), Size(0.6f * kk, 0.5f * kk))
+            drawOval(p.medio(lerp(V.PRADO, C.PINO, 0.45f), lejos), Offset(q.x - 0.7f * kk, q.y - 0.9f * kk), Size(1.4f * kk, 0.95f * kk))
+            drawOval(p.lado(lerp(V.PRADO, V.PRADO_LUZ, 0.3f), lejos).copy(alpha = 0.6f), Offset(q.x + (if (p.solALaDerecha) 0f else -0.6f) * kk, q.y - 0.88f * kk), Size(0.6f * kk, 0.5f * kk))
         }
     }
 
@@ -221,40 +218,76 @@ internal object VivacCampo {
             }
             Campo.ARENA -> repeat(60) {
                 val q = Offset(az.entre(-10f, ANCHO), az.entre(150f, ALTO)); val kk = k(zEn(q.y))
-                drawLine(p.sombra(ARENA, VivacNapoleon.lejos(zEn(q.y))).copy(alpha = 0.4f), q, q + Offset(az.entre(0.6f, 1.6f) * kk, az.entre(-0.05f, 0.05f) * kk), (0.04f * kk).coerceIn(0.3f, 1f), StrokeCap.Round)
+                drawLine(p.sombra(V.ARENA, VivacNapoleon.lejos(zEn(q.y))).copy(alpha = 0.4f), q, q + Offset(az.entre(0.6f, 1.6f) * kk, az.entre(-0.05f, 0.05f) * kk), (0.04f * kk).coerceIn(0.3f, 1f), StrokeCap.Round)
             }
             else -> Unit
         }
-        // El prado del campamento: pinceladas de hierba más seca y más verde que rompen el degradado (regla 7), y las sendas
-        // pisadas que van del campamento al camino.
+        // El prado del campamento: pinceladas de hierba más seca y más verde que rompen el degradado (regla 7), la paja
+        // dorada que se esparce alrededor del rancho y de la fila, y las sendas pisadas, claras, del campamento al camino.
         if (v.campo != Campo.NIEVE) {
             val pr = prado(v)
-            repeat(26) {
+            repeat(22) {
                 val y = az.entre(150f, ALTO); val q = Offset(az.entre(-20f, ANCHO + 20f), y); val kk = k(zEn(y))
-                mancha(q, az.entre(2.5f, 6f) * kk, az.entre(0.4f, 0.9f) * kk, p.arriba(if (it % 2 == 0) lerp(pr, C.HOJA, 0.4f) else lerp(pr, C.PINO, 0.25f), VivacNapoleon.lejos(zEn(y))), 0.45f)
+                mancha(q, az.entre(2.5f, 6f) * kk, az.entre(0.4f, 0.9f) * kk, p.arriba(if (it % 2 == 0) lerp(pr, V.PRADO_LUZ, 0.5f) else lerp(pr, C.PINO, 0.22f), VivacNapoleon.lejos(zEn(y))), 0.5f)
             }
-            val senda = lerp(TIERRA, C.LONA, 0.25f)
-            for ((x0, z0, x1, z1) in listOf(floatArrayOf(2.4f, 6f, 9.5f, 26f), floatArrayOf(-0.4f, 9f, 6.8f, 34f))) {
-                for (i in 0 until 40) {
-                    val t = i / 40f; val z = z0 + (z1 - z0) * t; val q = w(x0 + (x1 - x0) * t + 0.3f * sin(t * 9f), z); val kk = k(z)
-                    mancha(q, 0.55f * kk, 0.1f * kk, p.arriba(senda, VivacNapoleon.lejos(z)), 0.5f)
+            for ((x0, z0, x1, z1) in listOf(floatArrayOf(2.4f, 6f, 9.5f, 26f), floatArrayOf(-0.4f, 9f, 6.8f, 34f), floatArrayOf(4.5f, 5.5f, 1.6f, 7.4f))) {
+                for (i in 0 until 30) {
+                    val t = i / 30f; val z = z0 + (z1 - z0) * t; val q = w(x0 + (x1 - x0) * t + 0.3f * sin(t * 9f), z); val kk = k(z)
+                    mancha(q, 0.6f * kk, 0.12f * kk, p.arriba(V.TIERRA, VivacNapoleon.lejos(z)), 0.75f)
                 }
             }
-            // Las flores del campo: amapolas y acianos entre el trigo y en las lindes (**[Aproximación]**), de abril a agosto.
+            // La paja dorada: briznas sueltas alrededor del rancho, de las camas y al pie de la fila.
+            for ((cx, cz) in listOf(1.2f to 6.4f, -0.4f to 7.8f, 0.6f to 11f, 2.5f to 9f)) repeat(26) {
+                val q = w(cx + az.entre(-1.2f, 1.2f), cz + az.entre(-0.8f, 0.8f)); val kk = k(zEn(q.y)); val ang = az.entre(-0.7f, 0.7f); val l = az.entre(0.12f, 0.3f) * kk
+                drawLine(p.arriba(if (it % 3 == 0) lerp(V.PAJA, C.LONA, 0.3f) else V.PAJA), q, q + Offset(cos(ang) * l, sin(ang) * l * 0.25f), (0.014f * kk).coerceIn(0.35f, 1.3f), StrokeCap.Round)
+            }
+            // Las flores del campo, en manchas que se ven: amapolas y acianos en el prado y en las lindes del trigo
+            // (**[Aproximación]**), de mayo a agosto; en la arena de Polonia y del Niemen, el brezo.
             val mes = v.m.ficha.dia.substring(5, 7).toInt()
-            if (mes in 5..8) repeat(90) {
-                val y = 145f + 140f * az.real() * az.real(); val q = Offset(az.entre(-6f, ANCHO + 6f), y); val kk = k(zEn(y))
-                val r = (0.04f * kk).coerceIn(0.35f, 2.2f)
-                drawCircle(p.luz(if (it % 3 == 0) lerp(C.AZUL, C.PLATA, 0.35f) else lerp(C.ROJO, C.LUMBRE, 0.15f), VivacNapoleon.lejos(zEn(y))), r, q + Offset(0f, -0.15f * kk))
+            if (mes in 5..8) {
+                val manchas = listOf(-3.8f to 9.5f, 3.6f to 12f, 0.8f to 17f, 6.5f to 22f, -1.5f to 26f, 9f to 30f, 3f to 40f, -6f to 46f)
+                val brezo = v.campo == Campo.ARENA
+                for ((mi, mz) in manchas.withIndex()) {
+                    val (mx, zc) = mz
+                    repeat(if (zc < 15f) 34 else 24) {
+                        val q = w(mx + az.entre(-1.4f, 1.4f) * (zc / 12f), zc + az.entre(-1.5f, 1.5f) * (zc / 12f)); val kk = k(zEn(q.y))
+                        if (q.x < -4f || q.x > ANCHO + 4f) return@repeat
+                        val r = (0.055f * kk).coerceIn(0.45f, 2.4f)
+                        val col = if (brezo) V.BREZO else if ((it + mi) % 4 == 0) V.ACIANO else V.AMAPOLA
+                        drawCircle(p.luz(col, VivacNapoleon.lejos(zEn(q.y))), r, q + Offset(0f, -0.18f * kk))
+                        if (r > 1.2f) drawCircle(p.sombra(col, 0f), r * 0.45f, q + Offset(0f, -0.18f * kk + r * 0.3f))
+                    }
+                }
             }
         }
-        // Las matas de hierba (o las espigas, o el rastrojo) de cerca, en mechones con su lado de luz.
+        // Las matas: en el prado del campamento, mechones de hierba con su lado de luz; más allá de la linde (a 13 m), lo
+        // del campo: las cañas del trigo con su espiga, el rastrojo corto y claro, la hierba rala de la arena.
         if (v.campo != Campo.NIEVE) {
-            val color = prado(v)
-            repeat(420) {
+            val color = prado(v); val cultivo = llano(v)
+            repeat(320) {
                 val y = 285f - 150f * az.real() * az.real(); val q = Offset(az.entre(-6f, ANCHO + 6f), y); val z = zEn(y); val kk = k(z); val lejos = VivacNapoleon.lejos(z)
-                val alto = az.entre(0.06f, 0.2f) * kk; if (alto < 0.6f) return@repeat
-                for (j in 0 until 4) { val inc = az.entre(-0.35f, 0.35f) * alto; drawLine(if (j % 2 == 0) p.lado(lerp(color, C.LONA, 0.12f), lejos) else p.medio(lerp(color, C.PINO, 0.2f), lejos), q + Offset(az.entre(-0.05f, 0.05f) * kk, 0f), q + Offset(inc, -alto), (0.012f * kk).coerceIn(0.3f, 1f), StrokeCap.Round) }
+                if (z < 13.5f || v.campo == Campo.HIERBA || v.campo == Campo.VINA) {
+                    val alto = az.entre(0.07f, 0.22f) * kk; if (alto < 0.8f) return@repeat
+                    for (j in 0 until 4) { val inc = az.entre(-0.35f, 0.35f) * alto; drawLine(if (j % 2 == 0) p.lado(lerp(color, V.PRADO_LUZ, 0.4f), lejos) else p.medio(lerp(color, C.PINO, 0.25f), lejos), q + Offset(az.entre(-0.05f, 0.05f) * kk, 0f), q + Offset(inc, -alto), (0.014f * kk).coerceIn(0.3f, 1.1f), StrokeCap.Round) }
+                } else when (v.campo) {
+                    Campo.TRIGO, Campo.TRIGO_VERDE -> {
+                        val alto = az.entre(0.7f, 0.95f) * kk; if (alto < 1.2f) return@repeat
+                        for (j in 0 until 3) { val inc = az.entre(-0.08f, 0.08f) * alto; val top = q + Offset(inc + az.entre(-0.1f, 0.1f) * kk, -alto)
+                            drawLine(p.medio(lerp(cultivo, C.HOJA, 0.2f), lejos), q + Offset(az.entre(-0.08f, 0.08f) * kk, 0f), top, (0.012f * kk).coerceIn(0.3f, 0.9f))
+                            drawLine(p.lado(lerp(cultivo, C.LONA, 0.15f), lejos), top, top + Offset(inc * 0.2f, -0.09f * kk), (0.03f * kk).coerceIn(0.5f, 2f), StrokeCap.Round) }
+                    }
+                    Campo.RASTROJO -> { val alto = 0.1f * kk; for (j in 0 until 5) { val b = q + Offset((j - 2) * 0.05f * kk, 0f); drawLine(p.lado(lerp(cultivo, C.LONA, 0.2f), lejos), b, b + Offset(az.entre(-0.02f, 0.02f) * kk, -alto), (0.012f * kk).coerceIn(0.3f, 0.9f)) } }
+                    Campo.ARENA -> if (az.real() < 0.35f) { val alto = az.entre(0.08f, 0.2f) * kk; for (j in 0 until 3) drawLine(p.lado(lerp(V.PRADO_SECO, C.LONA, 0.15f), lejos), q, q + Offset(az.entre(-0.3f, 0.3f) * alto, -alto), (0.012f * kk).coerceIn(0.3f, 0.9f), StrokeCap.Round) }
+                    Campo.HIERBA, Campo.VINA, Campo.NIEVE -> Unit
+                }
+            }
+            // La linde entre el prado del campamento y el campo: la hierba alta y el borde de las cañas, roto, a 13 m.
+            if (v.campo == Campo.TRIGO || v.campo == Campo.TRIGO_VERDE || v.campo == Campo.RASTROJO) {
+                val borde = (0..30).map { i -> val x = -14f + 30f * i / 30f; w(x + az.entre(-0.3f, 0.3f), 13.2f + az.entre(-0.5f, 0.6f)) }
+                val alto = if (v.campo == Campo.RASTROJO) 0.12f else 0.85f
+                val masa = poligono(borde + borde.reversed().map { it + Offset(0f, -alto * k(13.2f) * az.entre(0.85f, 1.1f)) })
+                drawPath(masa, p.medio(lerp(cultivo, C.HOJA, 0.15f), 0.05f))
+                drawPath(poligono(borde.map { it + Offset(0f, -alto * k(13.2f) * 0.75f) } + borde.reversed().map { it + Offset(0f, -alto * k(13.2f)) }), p.lado(lerp(cultivo, C.LONA, 0.2f), 0.05f))
             }
         }
     }
@@ -270,7 +303,7 @@ internal object VivacCampo {
 
     private fun DrawScope.caminoRealSinRio(v: VistaVivac) {
         val p = v.p; val forma = caminoForma()
-        val tierra = if (v.nieve > 0.5f) C.NIEVE_SUCIA else if (v.campo == Campo.ARENA) lerp(ARENA, C.LONA, 0.2f) else lerp(TIERRA, C.LONA, 0.28f)
+        val tierra = if (v.nieve > 0.5f) C.NIEVE_SUCIA else if (v.campo == Campo.ARENA) lerp(V.ARENA, C.LONA, 0.3f) else V.CAMINO
         drawPath(forma, Brush.verticalGradient(listOf(p.arriba(tierra, 0.85f), p.arriba(tierra, 0.4f)), H, 160f))
         clipPath(forma) {
             for (dx in listOf(-1.6f, -0.9f, 0.9f, 1.6f)) {
@@ -283,7 +316,7 @@ internal object VivacCampo {
         for (lado in listOf(-1f, 1f)) for (i in 0 until 40) {
             val z = 20f * exp(az.entre(0f, 2.8f)); val q = w(camino(z) + lado * (CAMINO_ANCHO + az.entre(-0.2f, 0.4f)), z); val kk = k(z)
             if (q.x < -4f || q.x > ANCHO + 4f) continue
-            mancha(q, 0.8f * kk, 0.14f * kk, p.medio(if (v.nieve > 0.5f) C.NIEVE_SOMBRA else lerp(C.PINO_LUZ, C.HOJA, 0.4f), VivacNapoleon.lejos(z)), 0.6f)
+            mancha(q, 0.8f * kk, 0.14f * kk, p.medio(if (v.nieve > 0.5f) C.NIEVE_SOMBRA else lerp(V.PRADO, C.PINO, 0.2f), VivacNapoleon.lejos(z)), 0.6f)
         }
     }
 
@@ -318,7 +351,7 @@ internal object VivacCampo {
             }
         }
         // La orilla de acá: la arena y el talud, que hacen de franja de paso entre el agua y el campo.
-        drawPath(TrazosValle.cerrada(aca.map { it + Offset(0f, -0.4f) } + aca.reversed().map { it + Offset(0f, 2.6f) }), p.arriba(if (helado) C.NIEVE else lerp(ARENA, C.LONA, 0.2f), 0.5f))
+        drawPath(TrazosValle.cerrada(aca.map { it + Offset(0f, -0.4f) } + aca.reversed().map { it + Offset(0f, 2.6f) }), p.arriba(if (helado) C.NIEVE else lerp(V.ARENA, C.LONA, 0.2f), 0.5f))
     }
 
     // ---------------------------------------------------------------- Los campamentos del ejército
@@ -370,9 +403,9 @@ internal object VivacCampo {
     fun ranchos(m: Momento): List<Pair<Float, Float>> = VivacCerca.FUEGOS.drop(1).take((VivacNapoleon.fuegosDeLaCompania(m) - 1).coerceAtLeast(0))
 
     /** Lo que tumba sombra en el campo: las tiendas y los carros del parque. */
-    fun sombras(v: VistaVivac): List<RetiradaLuz.Sombra> = buildList {
-        for (s in carros()) add(RetiradaLuz.Sombra(s.pie, poligono(s.p(-1.1f, 0f, 0f), s.p(1.1f, 0f, 0f), s.p(0.9f, 2.2f, 0f), s.p(-0.9f, 2.2f, 0f))))
-        for ((q, kk) in tiendas()) add(RetiradaLuz.Sombra(q, poligono(q + Offset(-1.3f * kk, 0f), q + Offset(1.3f * kk, 0f), q + Offset(0f, -2.4f * kk))))
+    fun sombras(v: VistaVivac): List<VivacLuz.Sombra> = buildList {
+        for (s in carros()) add(VivacLuz.Sombra(s.pie, poligono(s.p(-1.1f, 0f, 0f), s.p(1.1f, 0f, 0f), s.p(0.9f, 2.2f, 0f), s.p(-0.9f, 2.2f, 0f))))
+        for ((q, kk) in tiendas()) add(VivacLuz.Sombra(q, poligono(q + Offset(-1.3f * kk, 0f), q + Offset(1.3f * kk, 0f), q + Offset(0f, -2.4f * kk))))
     }
 
     /** Los carros del bagaje, aparcados a la derecha entre la fila y el camino (esperan para salir detrás de la columna). */
@@ -537,7 +570,7 @@ internal object VivacCampo {
     private fun DrawScope.polvoDeLaColumna(v: VistaVivac, k0: Float) {
         val l = v.l; val az = VivacNapoleon.fijo("polvo")
         val bajo = (1f - l.solAltura / 0.6f).coerceIn(0f, 1f)
-        val color = lerp(l.tono(lerp(ARENA, C.LONA, 0.3f)), l.solColor, 0.25f + 0.4f * bajo)
+        val color = lerp(l.tono(lerp(V.ARENA, C.LONA, 0.3f)), l.solColor, 0.25f + 0.4f * bajo)
         for (i in 0 until 34) {
             val z = 26f * exp(az.entre(0f, 2.7f)); val q = w(camino(z) + az.entre(-2f, 2f), z); val kk = k(z)
             if (q.x < -30f || q.x > ANCHO + 30f || enElRio(v, z)) continue
@@ -574,7 +607,7 @@ internal object VivacCampo {
         // El polvo que levanta la columna, que pasa.
         val polvo = VivacNapoleon.polvo(m)
         if (polvo > 0.05f) {
-            val az = VivacNapoleon.fijo("polvoVivo"); val color = lerp(l.tono(lerp(ARENA, C.LONA, 0.3f)), l.solColor, 0.4f)
+            val az = VivacNapoleon.fijo("polvoVivo"); val color = lerp(l.tono(lerp(V.ARENA, C.LONA, 0.3f)), l.solColor, 0.4f)
             for (i in 0 until 6) {
                 val z = 28f * exp(az.entre(0f, 2.2f)); val kk = k(z); val t = ((reloj * az.entre(0.03f, 0.06f) + az.real()) % 1f)
                 val q = w(camino(z) + (t - 0.5f) * 8f, z) + Offset(0f, -0.6f * kk - t * 0.8f * kk)

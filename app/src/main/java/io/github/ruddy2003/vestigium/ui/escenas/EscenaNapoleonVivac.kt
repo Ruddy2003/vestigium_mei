@@ -20,6 +20,31 @@ import io.github.ruddy2003.vestigium.vidas.Clima
 import io.github.ruddy2003.vestigium.vidas.Semilla
 
 /**
+ * Los colores del campo de la campaña, que no tiene la paleta común (hecha para la nieve de la retirada): el verde del
+ * prado de verano, que vuelve en los sotos, las lomas y las viñas; el oro del trigo, que vuelve en la paja, el latón y el
+ * polvo dorado; el rastrojo, el barbecho, la arena de Polonia con su brezo, las amapolas y los acianos (el rojo y el azul
+ * del uniforme, en las flores) y la tierra clara de las sendas y del camino. **[Diseño propio]**.
+ */
+internal object ColorVivac {
+    private val C = ColorNapoleon
+    val PRADO = Color(0xFF7C9852)                                               // el verde del prado de verano
+    val PRADO_LUZ = lerp(PRADO, C.LONA, 0.38f)
+    val PRADO_SECO = lerp(PRADO, C.HOJA, 0.55f)
+    val TRIGO = lerp(C.LATON, Color(0xFFE9C766), 0.45f)                         // el trigo maduro
+    val TRIGO_VERDE = lerp(PRADO, TRIGO, 0.35f)
+    val RASTROJO = lerp(TRIGO, C.LONA, 0.38f)
+    val BARBECHO = lerp(C.BARRO, C.MADERA, 0.35f)
+    val ARENA = lerp(C.LONA, C.HOJA, 0.3f)
+    val BREZO = lerp(C.ROJO, C.AZUL, 0.42f)
+    val VINA = lerp(PRADO, C.PINO, 0.3f)
+    val PAJA = lerp(TRIGO, C.LONA, 0.2f)
+    val TIERRA = lerp(C.BARRO, C.LONA, 0.5f)                                    // las sendas pisadas
+    val CAMINO = lerp(C.LONA, C.HOJA, 0.22f)                                    // el camino real, claro
+    val AMAPOLA = C.GRANA
+    val ACIANO = lerp(C.AZUL, C.PLATA, 0.42f)
+}
+
+/**
  * Lo que el vivac necesita saber de un momento, calculado una vez: la luz (el sol o la luna, el fuego del rancho, las
  * sombras de las nubes), la nieve, la fase del día, el paisaje del tramo y lo que el cuento pone ese día.
  */
@@ -29,7 +54,7 @@ internal class VistaVivac(val m: Momento) {
     val campo: VivacNapoleon.Campo = VivacNapoleon.campo(m)
     val l: Luces = VivacNapoleon.luces(m)
     /** El sol, con la sombra no más larga que tres veces lo alto (como en la retirada). */
-    val r: Rayo = RetiradaLuz.rayo(l)
+    val r: Rayo = VivacLuz.rayo(l)
     val sol: Sol3 = Sol3(r)
     val p: Pincel = Pincel(l, r, 0f, ColorNapoleon.LUMBRE)
     val nieve: Float = EscenaNapoleon.nieve(m)
@@ -210,21 +235,21 @@ internal object VivacNapoleon {
     internal enum class Campo { HIERBA, TRIGO_VERDE, TRIGO, RASTROJO, ARENA, VINA, NIEVE }
 
     /**
-     * El campo de hoy **[Aproximación]**: con nieve, la nieve; en Polonia y el día del Niemen, la arena («camino de
-     * arena»); en el pueblo, las viñas; si no, por el mes: la hierba del invierno y la primavera, el trigo verde de mayo y
-     * junio, el trigo maduro de julio y agosto («La compañía espera en un campo de trigo», el 17 de agosto), el rastrojo
-     * de septiembre a noviembre.
+     * El campo de hoy, que dice la tierra del tramo tanto como el horizonte **[Aproximación]**: con nieve, la nieve; en
+     * Francia y en el pueblo, las viñas; en Polonia y el día del Niemen, la arena («camino de arena», «bosques de pinos»);
+     * en Rusia, en Moscú y en Bélgica, el cereal por el mes (verde en mayo y junio, maduro en julio y agosto: «La compañía
+     * espera en un campo de trigo», el 17 de agosto; rastrojo de septiembre a noviembre); en Alemania y en Prusia, los
+     * prados verdes.
      */
     internal fun campo(m: Momento): Campo {
         if (EscenaNapoleon.nieve(m) >= 0.5f) return Campo.NIEVE
-        val f = fondo(m); val mes = mesDia(m).substring(0, 2).toInt()
-        return when {
-            f == Fondo.PUEBLO -> Campo.VINA
-            f == Fondo.POLONIA || (f == Fondo.NIEMEN && mes in 5..9) -> Campo.ARENA
-            mes in 5..6 -> Campo.TRIGO_VERDE
-            mes in 7..8 -> Campo.TRIGO
-            mes in 9..11 -> Campo.RASTROJO
-            else -> Campo.HIERBA
+        val mes = mesDia(m).substring(0, 2).toInt()
+        fun cereal(): Campo = when (mes) { 5, 6 -> Campo.TRIGO_VERDE; 7, 8 -> Campo.TRIGO; 9, 10, 11 -> Campo.RASTROJO; else -> Campo.HIERBA }
+        return when (fondo(m)) {
+            Fondo.PUEBLO, Fondo.FRANCIA -> Campo.VINA
+            Fondo.POLONIA, Fondo.NIEMEN -> Campo.ARENA
+            Fondo.RUSIA, Fondo.SMOLENSK, Fondo.BORODINO, Fondo.MOSCU, Fondo.CIEN_DIAS -> cereal()
+            Fondo.ALEMANIA, Fondo.RIN, Fondo.PRUSIA, Fondo.CUARTEL, Fondo.HOSPITAL -> Campo.HIERBA
         }
     }
 
@@ -315,11 +340,31 @@ internal object VivacNapoleon {
     // ---------------------------------------------------------------- La luz
 
     /**
-     * La luz de fuera: la de [EscenaNapoleon.luces] (el sol bajo del invierno, el aire dorado del verano) y, cuando arde
-     * Moscú o Smolensk, el cielo y la bruma rojos («el cielo está rojo como de día»).
+     * Cuánto es de verano el aire del vivac, de 0 a 1: de mayo a septiembre, sin nieve y sin el cielo cubierto. La luz
+     * común del tema ([EscenaNapoleon.luces]) deja el horizonte crema, que es la luz del invierno de la retirada; en el
+     * verano de la campaña el cielo es azul y el aire limpio, y los verdes del prado no se vuelven caqui.
+     */
+    fun verano(m: Momento): Float {
+        val mes = m.ficha.dia.substring(5, 7).toInt()
+        val base = when (mes) { 5, 6, 7, 8, 9 -> 1f; 4, 10 -> 0.55f; else -> 0.2f }
+        return (base * (1f - EscenaNapoleon.nieve(m) * 1.5f)).coerceIn(0f, 1f)
+    }
+
+    /**
+     * La luz de fuera: la de [EscenaNapoleon.luces] (el sol bajo del invierno, la claridad de la nieve), con el aire del
+     * verano de la campaña **[Diseño propio]**: el cielo de día más azul, la bruma más fría y menos crema y la luz de
+     * ambiente neutra (el color del prado y del trigo queda en su sitio); y, cuando arde Moscú o Smolensk, el cielo y la
+     * bruma rojos («el cielo está rojo como de día»).
      */
     fun luces(m: Momento): Luces {
-        val l = EscenaNapoleon.luces(m)
+        val l0 = EscenaNapoleon.luces(m)
+        val v = verano(m) * (1f - l0.noche).coerceIn(0f, 1f) * (1f - 0.6f * l0.nublado)
+        val l = if (v <= 0.01f) l0 else Luces(
+            alto = lerp(l0.alto, Color(0xFF4A7EAE), 0.3f * v), medio = lerp(l0.medio, Color(0xFF86AECB), 0.3f * v), bajo = lerp(l0.bajo, Color(0xFFD9E3DC), 0.35f * v),
+            ambiente = lerp(l0.ambiente, Color(0xFFF2F4EC), 0.3f * v), bruma = lerp(l0.bruma, Color(0xFFC3D2D8), 0.42f * v), brumaFuerza = l0.brumaFuerza * (1f - 0.25f * v),
+            solX = l0.solX, solAltura = l0.solAltura, solColor = l0.solColor, solFuerza = l0.solFuerza, lunaX = l0.lunaX, lunaAltura = l0.lunaAltura,
+            estrellas = l0.estrellas, noche = l0.noche, nublado = l0.nublado, eclipse = 0f,
+        )
         val k = incendio(m); if (k <= 0.01f) return l
         val n = l.noche * k
         return Luces(
@@ -339,6 +384,7 @@ internal object VivacNapoleon {
         with(VivacCampo) { campo(v) }
         with(VivacLuz) { sombrasDelSuelo(v) }
         with(VivacCampo) { campamentos(v) }
+        with(VivacLuz) { relente(v) }
         with(VivacLuz) { velo(v, 0.3f, 118f, 176f) }
         with(VivacLuz) { lucesDelSuelo(v) }
         with(VivacCerca) { base(v) }

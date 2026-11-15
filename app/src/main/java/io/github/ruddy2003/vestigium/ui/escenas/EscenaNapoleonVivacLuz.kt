@@ -49,6 +49,26 @@ import kotlin.math.sin
 internal object VivacLuz {
     private val C = ColorNapoleon
 
+    /** Algo que tumba sombra: su [pie], su silueta en el lienzo y cuánta sombra da (la de un pabellón entero, menos que la de sus fusiles). */
+    class Sombra(val pie: Offset, val forma: androidx.compose.ui.graphics.Path, val cuanta: Float = 1f)
+
+    /**
+     * El sol del vivac: el de `Rayo`, con la sombra no más larga que cinco veces y media lo alto **[Diseño propio]** (en la
+     * retirada, tres): a primera hora y al atardecer las sombras de la fila de pabellones cruzan rasantes la hierba, y a
+     * mediodía quedan cortas, al pie de cada cosa.
+     */
+    fun rayo(l: Luces): Rayo {
+        val r = Rayo(l)
+        if (r.dia <= 0.05f || l.solAltura <= 0f) return r
+        // La elevación baja más deprisa que la de la biblioteca cerca del horizonte (de 3° a 58°, con la altura a la 1,6):
+        // a las siete la sombra es cuatro o cinco veces lo alto; a las nueve, una; a mediodía, media.
+        val elev = Math.toRadians(3.0 + 55.0 * (l.solAltura / 1.35f).coerceIn(0f, 1f).toDouble().pow(1.6))
+        val cot = (1.0 / kotlin.math.tan(elev)).toFloat().coerceAtMost(5.5f)
+        val bajo = (1f - l.solAltura / 0.6f).coerceIn(0f, 1f) * (1f - l.nublado).coerceIn(0f, 1f)
+        return Rayo(r.dia, r.lat, cot, 1f / cot, -r.lat * cot, -0.33f * (1.3f - 0.6f * abs(r.lat)) * cot,
+            (r.fuerza * (1f + 0.45f * bajo)).coerceAtMost(0.72f), r.color, r.contraste)
+    }
+
     // ================================================================ Las sombras de las nubes
 
     /** Una nube del cielo del día: su borde izquierdo [x], su base [y] y su [ancho], como las pinta `nubes`. */
@@ -132,7 +152,8 @@ internal object VivacLuz {
         // Los días de cúmulos, el sol que se cuela entre las nubes enciende el campo que queda fuera de sus sombras.
         if (l.nublado > 0.2f) drawRect(Brush.verticalGradient(0f to Color.Transparent, 0.3f to l.solColor.copy(alpha = 0.1f * l.nublado), 0.8f to l.solColor.copy(alpha = 0.06f * l.nublado), 1f to Color.Transparent, startY = H, endY = HASTA),
             Offset(-10f, H), Size(ANCHO + 20f, HASTA - H), blendMode = BlendMode.Plus)
-        val honda = 0.24f + 0.2f * (r.fuerza / 0.72f).coerceIn(0f, 1f) + 0.14f * l.nublado
+        val alto = (l.solAltura / 0.9f).coerceIn(0f, 1f)
+        val honda = 0.26f + 0.24f * (r.fuerza / 0.72f).coerceIn(0f, 1f) + 0.22f * alto + 0.14f * l.nublado
         capaSombra(r, honda / r.fuerza.coerceAtLeast(0.05f)) { c ->
             clipRect(-10f, H - 1f, ANCHO + 10f, HASTA + 10f) {
                 for (s in sombras) {
@@ -162,7 +183,7 @@ internal object VivacLuz {
         if (v.luna > 0.02f) plata(v)
         val r = deSombras(v) ?: return
         val cosas = VivacCerca.sombras(v) + VivacCampo.sombras(v)
-        capaSombra(r, 1.3f) { c -> for (s in cosas) sombraArrojada(r, s.forma, s.pie, c, H, H) }
+        capaSombra(r, 1.3f) { c -> for (s in cosas) sombraArrojada(r, s.forma, s.pie, c.copy(alpha = c.alpha * s.cuanta), H, H) }
     }
 
     /** El campo plateado por la luna: más del lado de la luna, y más con nieve. */
@@ -193,7 +214,7 @@ internal object VivacLuz {
             capaSombra(rf) { c ->
                 for (s in cosas) {
                     val d = (s.pie - f.p).getDistance(); val kk = (1f / (1f + d * d / (150f * 150f))).coerceIn(0f, 1f)
-                    sombraArrojada(rayoDeFoco(f, s.pie, 1f, c), s.forma, s.pie, c.copy(alpha = kk), H, H)
+                    sombraArrojada(rayoDeFoco(f, s.pie, 1f, c), s.forma, s.pie, c.copy(alpha = kk * s.cuanta), H, H)
                 }
             }
         }
@@ -205,10 +226,40 @@ internal object VivacLuz {
         }
         // El farol de la tienda deja su luz en el suelo delante de la puerta.
         val farol = VivacNapoleon.farol(v.m)
-        if (farol > 0.02f) {
+        if (farol > 0.02f && v.lugar != EscenaNapoleon.Lugar.PUEBLO) {
             val s = VivacCerca.S_TIENDA; val q = s.p(V3(0.5f, 0f, -1.7f - 0.9f))
             charcoDeLuz(Foco(q + Offset(0f, -30f), C.LUMBRE, farol, 60f, q.y), q, 1.5f * s.k, 0.42f * s.k, VivacCampo.colorDelCampo(v, 0f), 0.75f)
         }
+    }
+
+    // ================================================================ El relente de la mañana
+
+    /**
+     * Cuánto relente hay sobre el campo, de 0 a 1: la bruma baja del amanecer, de 4:30 a 9:30, más espesa hacia las seis
+     * y media, en los días sin lluvia ni nieve **[Diseño propio]**.
+     */
+    fun relente(m: Momento, l: Luces): Float {
+        val h = m.hora.toFloat(); if (h < 4.5f || h > 9.5f) return 0f
+        when (m.ficha.clima) { Clima.LLUVIA, Clima.TORMENTA, Clima.NIEVE, Clima.POLVO -> return 0f; else -> Unit }
+        val k = if (h < 6.5f) (h - 4.5f) / 2f else 1f - (h - 6.5f) / 3f
+        return (k * (1f - 0.5f * l.nublado)).coerceIn(0f, 1f)
+    }
+
+    /**
+     * El relente: bandas de bruma baja tendidas sobre el campo, entre los campamentos y la lejanía, que el sol bajo
+     * atraviesa y dora del lado del sol (la luz que se ve en el aire). Va después de los campamentos y antes de la base.
+     */
+    fun DrawScope.relente(v: VistaVivac) {
+        val k = relente(v.m, v.l); if (k <= 0.02f) return
+        val az = VivacNapoleon.fijo("relente"); val sol = v.l.solX * ANCHO
+        val fria = lerp(v.l.bruma, Color.White, 0.25f); val dorada = lerp(v.l.solColor, Color(0xFFFFE2A8), 0.45f)
+        for (i in 0 until 9) {
+            val y = az.entre(126f, 196f); val x = az.entre(-20f, ANCHO + 20f); val ancho = az.entre(60f, 150f) * (0.6f + (y - 120f) / 80f)
+            val cerca = (1f - kotlin.math.abs(x - sol) / 260f).coerceIn(0f, 1f)
+            mancha(Offset(x, y), ancho, az.entre(3f, 7f) * (0.6f + (y - 120f) / 90f), lerp(fria, dorada, 0.25f + 0.6f * cerca * (v.r.fuerza / 0.72f).coerceIn(0f, 1f)), 0.42f * k)
+        }
+        // Donde el sol entra en la bruma, el resplandor dorado.
+        if (v.r.fuerza > 0.05f) mancha(Offset(sol, 140f), 130f, 22f, dorada, 0.22f * k * (v.r.fuerza / 0.72f).coerceIn(0f, 1f))
     }
 
     // ================================================================ La noche

@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -42,6 +43,7 @@ import io.github.ruddy2003.vestigium.vidas.Semilla
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
+import kotlin.math.sign
 import kotlin.math.sin
 
 /**
@@ -115,7 +117,7 @@ internal object VivacCerca {
     private const val T_PARED = 1.55f
     private const val T_CUMBRE = 3.65f
     /** La puerta va un poco a la derecha del centro del hastial (lo que se ve de él). */
-    private const val T_PX = 0.42f
+    private const val T_PX = 0.3f
     /**
      * El centro del hastial de la puerta, en metros: la tienda mira a quien mira, cortada por el borde de la izquierda
      * por en medio del hastial y por arriba por el mástil; detrás se van su costado y su faldón de la derecha.
@@ -171,26 +173,35 @@ internal object VivacCerca {
     // ---------------------------------------------------------------- Las sombras
 
     /** Lo que tumba sombra con el sol o la luna. */
-    fun sombras(v: VistaVivac): List<RetiradaLuz.Sombra> = buildList {
+    fun sombras(v: VistaVivac): List<VivacLuz.Sombra> = buildList {
         val m = v.m
-        if (EscenaNapoleon.lugar(m) != EscenaNapoleon.Lugar.PUEBLO) add(RetiradaLuz.Sombra(S_TIENDA.pie, siluetaDeLaTienda()))
-        if (VivacNapoleon.aguila(m)) { val g = GRUESO_ASTA; add(RetiradaLuz.Sombra(PIE_ASTA, poligono(PIE_ASTA + Offset(-g, 0f), PIE_ASTA + Offset(g, 0f), PUNTA_ASTA + Offset(g * 2.4f, 0f), PUNTA_ASTA + Offset(-g * 2.4f, 0f)))) }
+        if (EscenaNapoleon.lugar(m) != EscenaNapoleon.Lugar.PUEBLO) {
+            add(VivacLuz.Sombra(S_TIENDA.pie, siluetaDeLaTienda()))
+            // Los vientos de la tienda, con sus estacas: rayas finas de sombra en la hierba.
+            for (z in listOf(T_LARGO * 0.6f, 0f, -T_LARGO * 0.6f)) {
+                val p0 = S_TIENDA.p(V3(T_ANCHO, T_PARED, z)); val p1 = S_TIENDA.p(V3(T_ANCHO + 0.95f, 0f, z * 1.05f)); val d = p1 - p0; val n = Offset(-d.y, d.x) / d.getDistance().coerceAtLeast(0.1f) * 0.5f
+                add(VivacLuz.Sombra(p1, poligono(p0 + n, p1 + n, p1 - n, p0 - n), 0.8f))
+            }
+        }
+        if (VivacNapoleon.aguila(m)) { val g = GRUESO_ASTA; add(VivacLuz.Sombra(PIE_ASTA, poligono(PIE_ASTA + Offset(-g, 0f), PIE_ASTA + Offset(g, 0f), PUNTA_ASTA + Offset(g * 2.4f, 0f), PUNTA_ASTA + Offset(-g * 2.4f, 0f)))) }
         for ((i, pz) in filaDeHoy(m).withIndex()) {
             val pb = pabellonDe(i, pz, v.nieve)
-            add(RetiradaLuz.Sombra(pb.s.pie, PiezasNapoleon.siluetaDePabellon(pb) { pb.s.p(it) }))
+            add(VivacLuz.Sombra(pb.s.pie, PiezasNapoleon.siluetaDePabellon(pb) { pb.s.p(it) }))
+            // El cuerpo de la sombra del pabellón: la pirámide de los fusiles, más tenue que sus cañones.
+            add(VivacLuz.Sombra(pb.s.pie, poligono(envolvente(pb.culatas.map { pb.s.p(it) } + pb.s.p(pb.apice + V3(0f, 0.35f, 0f)))), 0.45f))
             // Y las mochilas de su pie (las de cerca).
-            if (pz.second < 14f) for (q in mochilasDe(i, pz)) { val sm = PiezasNapoleon.sitio(MIRADA, q, 0f); add(RetiradaLuz.Sombra(q, caja(sm, 0.2f, 0.34f))) }
+            if (pz.second < 14f) for (q in mochilasDe(i, pz)) { val sm = PiezasNapoleon.sitio(MIRADA, q, 0f); add(VivacLuz.Sombra(q, caja(sm, 0.2f, 0.34f))) }
         }
-        if (!VivacNapoleon.sinCompania(m)) for (q in listOf(Offset(326f, 229f), Offset(256f, 233f))) add(RetiradaLuz.Sombra(q, caja(PiezasNapoleon.sitio(MIRADA, q, 0f), 0.2f, 0.34f)))
-        add(RetiradaLuz.Sombra(S_TONEL.pie, caja(S_TONEL, 0.3f, TONEL_ALTO)))
-        if (!VivacNapoleon.sinCompania(m)) add(RetiradaLuz.Sombra(S_TAMBOR.pie, caja(S_TAMBOR, 0.22f, 0.42f)))
-        if (!ObjetosNapoleon.esGrande(m)) add(RetiradaLuz.Sombra(S_TOCON.pie, caja(S_TOCON, 0.26f, TOCON_ALTO + 0.12f)))
-        add(RetiradaLuz.Sombra(FUEGO, caja(S_FUEGO, 0.55f, if (EscenaNapoleon.marmita(m) == Marmita.AL_FUEGO) 0.95f else 0.8f)))
-        add(RetiradaLuz.Sombra(S_LENA.pie, caja(S_LENA, 0.7f, 0.45f)))
+        if (!VivacNapoleon.sinCompania(m)) for (q in listOf(Offset(326f, 229f), Offset(256f, 233f))) add(VivacLuz.Sombra(q, caja(PiezasNapoleon.sitio(MIRADA, q, 0f), 0.2f, 0.34f)))
+        add(VivacLuz.Sombra(S_TONEL.pie, caja(S_TONEL, 0.3f, TONEL_ALTO)))
+        if (!VivacNapoleon.sinCompania(m)) add(VivacLuz.Sombra(S_TAMBOR.pie, caja(S_TAMBOR, 0.22f, 0.42f)))
+        if (!ObjetosNapoleon.esGrande(m)) add(VivacLuz.Sombra(S_TOCON.pie, caja(S_TOCON, 0.26f, TOCON_ALTO + 0.12f)))
+        add(VivacLuz.Sombra(FUEGO, caja(S_FUEGO, 0.55f, if (EscenaNapoleon.marmita(m) == Marmita.AL_FUEGO) 0.95f else 0.8f)))
+        add(VivacLuz.Sombra(S_LENA.pie, caja(S_LENA, 0.7f, 0.45f)))
     }
 
     /** Lo que tumba sombra con la luz del fuego, en abanico: lo que está cerca de él (la tienda no: queda lejos). */
-    fun sombrasDelFuego(v: VistaVivac): List<RetiradaLuz.Sombra> = sombras(v).filter { (it.pie - FUEGO).getDistance() in 18f..230f && it.pie != S_TIENDA.pie }
+    fun sombrasDelFuego(v: VistaVivac): List<VivacLuz.Sombra> = sombras(v).filter { (it.pie - FUEGO).getDistance() in 18f..230f && it.pie != S_TIENDA.pie }
 
     private fun caja(s: Sitio, ancho: Float, alto: Float): Path = poligono(listOf(s.p(-ancho, 0f, 0f), s.p(ancho, 0f, 0f), s.p(ancho * 0.85f, alto, 0f), s.p(-ancho * 0.85f, alto, 0f)))
 
@@ -296,6 +307,17 @@ internal object VivacCerca {
             capote(v.en(q), q, 64f, 20f, Azar(71L), v.fase == Fase.SUENO, 0f, v.nieve)
         }
         for ((_, pintar) in cosas.sortedBy { it.first }) pintar()
+        // Al atardecer el latón brilla rojo, como los cañones de los fusiles: el tambor, el águila, la perilla del mástil.
+        val tarde = VivacLuz.ultimaLuz(v.l)
+        if (tarde > 0.05f) {
+            val lado = if (v.p.solALaDerecha) 1f else -1f; val rojo = Color(0xFFFF8A40)
+            val brillos = buildList {
+                if (!VivacNapoleon.sinCompania(m)) add(S_TAMBOR.p(V3(0.12f * lado, 0.24f, -0.1f)) to 0.16f * S_TAMBOR.k)
+                if (VivacNapoleon.aguila(m)) add(PUNTA_ASTA + Offset(0f, 1.5f * GRUESO_ASTA) to 3.5f * GRUESO_ASTA)
+                if (EscenaNapoleon.lugar(m) != EscenaNapoleon.Lugar.PUEBLO) add(S_TIENDA.p(V3(0f, T_CUMBRE + 0.45f, -T_LARGO - 0.02f)) to 0.1f * S_TIENDA.k)
+            }
+            for ((q, r) in brillos) drawCircle(Brush.radialGradient(listOf(rojo.copy(alpha = (0.55f * tarde).coerceIn(0f, 1f)), Color.Transparent), q, r), r, q, blendMode = BlendMode.Plus)
+        }
     }
 
     /**
@@ -305,12 +327,13 @@ internal object VivacCerca {
     private fun DrawScope.ultimaLuz(v: VistaVivac, pb: Pabellon) {
         val tarde = VivacLuz.ultimaLuz(v.l); if (tarde <= 0.02f) return
         val s = pb.s; val lado = if (v.p.solALaDerecha) 1f else -1f
-        val c = lerp(Color(0xFFFF8A4A), Color(0xFFFFD08A), 0.3f).copy(alpha = (0.85f * tarde).coerceIn(0f, 1f))
+        val c = lerp(Color(0xFFFF7A3A), Color(0xFFFFC27A), 0.25f).copy(alpha = (0.95f * tarde).coerceIn(0f, 1f))
         for ((i, cu) in pb.culatas.withIndex()) {
             val b = pb.bocas[i]; val e = Vec.unidad(b - cu); val t = b + e * 0.46f
             val p0 = s.p(cu + (b - cu) * 0.45f); val p1 = s.p(t)
             val n = Offset(lado * 0.04f * s.k * 0.5f, 0f)
-            drawLine(c, p0 + n, p1 + n, (0.012f * s.k).coerceIn(0.35f, 1.2f), StrokeCap.Round, blendMode = BlendMode.Plus)
+            drawLine(c, p0 + n, p1 + n, (0.02f * s.k).coerceIn(0.45f, 1.8f), StrokeCap.Round, blendMode = BlendMode.Plus)
+            drawCircle(c.copy(alpha = (0.6f * tarde).coerceIn(0f, 1f)), (0.03f * s.k).coerceIn(0.6f, 2.4f), p1, blendMode = BlendMode.Plus)
         }
     }
 
@@ -351,12 +374,6 @@ internal object VivacCerca {
         val s = S_TIENDA; val a = v.en(s.pie); val w = T_ANCHO; val d = T_LARGO; val pared = T_PARED; val cumbre = T_CUMBRE
         val az = VivacNapoleon.fijo("tienda"); val lona = lerp(C.LONA, C.HOJA, 0.12f)
         val farol = VivacNapoleon.farol(v.m)
-        // Los vientos de atrás y del costado, primero: tensos hasta sus estacas.
-        for ((x, z) in listOf(w to d * 0.6f, w to 0f, w to -d * 0.6f)) {
-            val p0 = s.p(V3(x, pared, z)); val p1 = s.p(V3(x + 0.95f, 0f, z * 1.05f))
-            drawLine(a.plano(lerp(C.CORREA, C.CAPOTE, 0.3f), p0, 0f).copy(alpha = 0.7f), p0, p1, (0.01f * s.k).coerceIn(0.3f, 0.9f))
-            drawLine(a.plano(C.MADERA, p1, 0f), p1, p1 + Offset(0f, -0.18f * s.escala(x + 0.95f, z)), (0.03f * s.escala(x + 0.95f, z)).coerceIn(0.5f, 2f), StrokeCap.Round)
-        }
         // Las caras: los dos costados, los dos hastiales y los dos faldones del techo.
         val caras = listOf(
             listOf(V3(-w, 0f, -d), V3(w, 0f, -d), V3(w, pared, -d), V3(0f, cumbre, -d), V3(-w, pared, -d)) to V3(0f, 0f, -1f),
@@ -369,55 +386,117 @@ internal object VivacCerca {
         for ((q, n) in caras) {
             val f = cara(s, a, q, n, lona) ?: continue
             val qq = q.map { s.p(it) }; val c = centroDe(qq)
-            val col = a.cara(lona, s.normal(n), c)
+            val col = a.cara(lona, s.normal(n), c); val nn = s.normal(n)
+            val techo = abs(n.y) > 0.5f; val hastial = q.size == 5; val derecha = n.x > 0.5f
             clipPath(f) {
-                // La lona a contraluz: el sol que la atraviesa desde el otro lado la enciende, con las costuras más oscuras.
-                val contraluz = (-v.sol.t(s.normal(n))).coerceIn(0f, 1f) * (v.r.fuerza / 0.72f) * (1f - 0.8f * v.cubierto)
-                if (contraluz > 0.02f) drawPath(f, lerp(v.l.solColor, Color(0xFFFFE2A8), 0.5f).copy(alpha = (0.26f * contraluz).coerceIn(0f, 1f)), blendMode = BlendMode.Plus)
-                // De noche, el farol la enciende por dentro: la lona se oscurece con la noche y, donde la alumbra, se pone
-                // naranja (más cerca de la luz, abajo y en medio), como una linterna.
-                if (farol > 0.02f) {
-                    val foco = s.p(V3(T_PX, 1.1f, -d * 0.4f))
-                    val techo = abs(n.y) > 0.5f
-                    drawPath(f, lerp(Color.White, Color(0xFF7A6A9A), (if (techo) 0.6f else 0.45f) * farol * v.noche), blendMode = BlendMode.Multiply)
-                    drawPath(f, Brush.radialGradient(listOf(Color(0xFFE8782E).copy(alpha = ((if (techo) 0.25f else 0.55f) * farol).coerceIn(0f, 1f)), Color(0xFFB8582A).copy(alpha = ((if (techo) 0.08f else 0.22f) * farol).coerceIn(0f, 1f)), Color.Transparent), foco, (if (techo) 1.6f else 2.4f) * s.k), blendMode = BlendMode.Plus)
+                // Los paños: tiras de lona de tonos un poco distintos (unas más viejas, otras más nuevas), de abajo arriba en
+                // las paredes y a lo largo en el techo.
+                for (j in 0 until 6) {
+                    val tono = when ((j + az.entero(3)) % 3) { 0 -> continue; 1 -> lerp(lona, C.HOJA, 0.2f); else -> lerp(lona, C.NIEVE, 0.32f) }
+                    val u0 = j / 6f; val u1 = (j + 1) / 6f
+                    val tira = if (!techo) { val a0 = q[0] + (q[1] - q[0]) * u0; val a1 = q[0] + (q[1] - q[0]) * u1; listOf(a0, a1, a1 + V3(0f, cumbre, 0f), a0 + V3(0f, cumbre, 0f)) }
+                    else listOf(q[0] + (q[3] - q[0]) * u0, q[1] + (q[2] - q[1]) * u0, q[1] + (q[2] - q[1]) * u1, q[0] + (q[3] - q[0]) * u1)
+                    drawPath(poligono(tira.map { s.p(it) }), a.cara(tono, nn, c).copy(alpha = 0.6f))
                 }
-                // Los paños cosidos: costuras verticales en los costados y hastiales; en el techo, a lo largo.
-                val costura = mult(col, C.SOMBRA, 0.32f).copy(alpha = 0.8f)
-                if (abs(n.y) < 0.5f) for (j in 1..5) { val u = j / 6f; val a0 = q[0] + (q[1] - q[0]) * u; drawLine(costura, s.p(a0), s.p(a0 + V3(0f, cumbre, 0f)), 0.45f) }
-                else for (j in 1..5) { val u = j / 6f; val a0 = q[0] + (q[3] - q[0]) * u; val a1 = q[1] + (q[2] - q[1]) * u; drawLine(costura, s.p(a0), s.p(a1), 0.45f) }
+                // Los remiendos: un paño nuevo, más blanco, y uno viejo, gris, cosidos con su pespunte (en el hastial, lejos
+                // de la puerta).
+                if (!techo) for (j in 0 until 2) {
+                    val u = if (hastial) az.entre(0.05f, 0.3f) else az.entre(0.12f, 0.75f); val h0 = az.entre(0.45f, 1.05f)
+                    val ancho = if (j == 0) 0.46f else 0.32f; val alto = if (j == 0) 0.4f else 0.3f
+                    val a0 = q[0] + (q[1] - q[0]) * u; val paso = Vec.unidad(q[1] - q[0]) * ancho
+                    val r = listOf(a0 + V3(0f, h0, 0f), a0 + paso + V3(0f, h0 + 0.02f, 0f), a0 + paso + V3(0f, h0 + alto, 0f), a0 + V3(0f, h0 + alto - 0.02f, 0f)).map { s.p(it) }
+                    val parche = poligono(r); val pc = a.cara(if (j == 0) lerp(lona, C.NIEVE, 0.45f) else lerp(lona, C.CENIZA, 0.22f), nn, centroDe(r))
+                    drawPath(parche, pc)
+                    drawPath(parche, mult(pc, C.SOMBRA, 0.45f).copy(alpha = 0.7f), style = Stroke(0.4f))
+                    drawPath(parche, lerp(pc, Color.White, 0.25f).copy(alpha = 0.8f), style = Stroke((0.012f * s.k).coerceAtLeast(0.3f), pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.035f * s.k, 0.025f * s.k))))
+                }
+                // El uso: los chorreones de la lluvia bajo el alero y la cumbre, el hollín del rancho arriba (del lado del
+                // fuego), la línea que deja el agua de los charcos y el barro salpicado abajo.
+                val sucio = a.cara(lerp(lona, C.BARRO, 0.5f), nn, c)
+                if (!techo) {
+                    repeat(if (hastial) 11 else 7) {
+                        val u = az.entre(0.03f, 0.97f); val b = q[0] + (q[1] - q[0]) * u
+                        val tope = if (hastial) pared + (cumbre - pared) * (1f - abs(b.x) / w) else pared
+                        val p0 = s.p(b + V3(0f, tope - 0.03f, 0f)); val p1 = s.p(b + V3(0f, tope - az.entre(0.35f, 1.15f), 0f))
+                        drawLine(Brush.linearGradient(listOf(sucio.copy(alpha = 0.42f), Color.Transparent), p0, p1), p0, p1, az.entre(0.05f, 0.13f) * s.k, StrokeCap.Round)
+                    }
+                    val linea = Path()
+                    for (i in 0..18) { val u = i / 18f; val b = q[0] + (q[1] - q[0]) * u; val pt = s.p(b + V3(0f, 0.34f + 0.06f * sin(u * 23f + 1.3f) + 0.03f * sin(u * 61f), 0f)); if (i == 0) linea.moveTo(pt.x, pt.y) else linea.lineTo(pt.x, pt.y) }
+                    drawPath(linea, sucio.copy(alpha = 0.4f), style = Stroke(0.03f * s.k))
+                    val bajo = qq.maxOf { it.y }
+                    drawRect(Brush.verticalGradient(listOf(Color.Transparent, a.cara(lerp(lona, C.BARRO, 0.6f), nn, c).copy(alpha = 0.8f)), bajo - 0.32f * s.k, bajo), Offset(qq.minOf { it.x }, bajo - 0.32f * s.k), Size(qq.maxOf { it.x } - qq.minOf { it.x }, 0.32f * s.k))
+                }
+                val hollin = a.cara(lerp(lona, C.CENIZA, 0.55f), nn, c)
+                if (hastial) mancha(s.p(V3(0.3f, cumbre - 0.75f, q[0].z)), 0.75f * s.k, 0.55f * s.k, hollin, 0.34f)
+                if (derecha) mancha(s.p(V3(w, pared - 0.25f, -d * 0.45f)), 1.1f * s.k, 0.3f * s.k, hollin, 0.3f)
+                if (techo && n.x > 0f) mancha(s.p(V3(w * 0.25f, cumbre - 0.3f, -d * 0.3f)), 1.4f * s.k, 0.35f * s.k, hollin, 0.3f)
+                // La lona a contraluz: el sol que la atraviesa desde el otro lado la enciende, y se ven en sombra lo de
+                // dentro que toca la pared y las varas.
+                val bajo = ((0.95f - v.l.solAltura) / 0.75f).coerceIn(0f, 1f)
+                val contraluz = maxOf((-v.sol.t(nn)).coerceIn(0f, 1f) * (v.r.fuerza / 0.72f), if (hastial) 0.8f * bajo * v.l.solFuerza * v.r.dia else 0f) * (1f - 0.8f * v.cubierto)
+                if (contraluz > 0.02f) drawPath(f, Brush.verticalGradient(listOf(lerp(v.l.solColor, Color(0xFFFFE2A8), 0.5f).copy(alpha = (0.36f * contraluz).coerceIn(0f, 1f)), lerp(v.l.solColor, Color(0xFFFFE2A8), 0.5f).copy(alpha = (0.16f * contraluz).coerceIn(0f, 1f))), qq.minOf { it.y }, qq.maxOf { it.y }), blendMode = BlendMode.Plus)
+                // De noche, el farol de dentro la enciende como una linterna de papel: la lona se apaga con la noche y,
+                // alrededor del farol, se pone naranja; lo de dentro tumba en ella sus sombras, más grandes.
+                if (farol > 0.02f) {
+                    val foco = when {
+                        hastial -> s.p(V3(FAROL.x, FAROL.y - 0.35f, q[0].z))
+                        techo -> s.p(V3(w * 0.5f * sign(n.x), (pared + cumbre) / 2f, FAROL.z))
+                        else -> s.p(V3(q[0].x, FAROL.y - 0.45f, FAROL.z))
+                    }
+                    val radio = (if (techo) 1.5f else if (hastial) 2.1f else 2.6f) * s.k
+                    drawPath(f, lerp(Color.White, Color(0xFF6A5C8E), (if (techo) 0.66f else 0.55f) * farol * v.noche), blendMode = BlendMode.Multiply)
+                    drawPath(f, Brush.radialGradient(listOf(Color(0xFFF2A050).copy(alpha = ((if (techo) 0.3f else 0.72f) * farol).coerceIn(0f, 1f)), Color(0xFFC8642E).copy(alpha = ((if (techo) 0.1f else 0.3f) * farol).coerceIn(0f, 1f)), Color.Transparent), foco, radio), blendMode = BlendMode.Plus)
+                }
+                if (hastial && q[0].z < 0f) {
+                    val sombraDentro = mult(col, C.SOMBRA, 0.6f)
+                    if (contraluz > 0.05f) for (o in JUNTO_AL_HASTIAL) {
+                        val forma = poligono(o.map { s.p(V3(it.x, it.y, -d)) })
+                        drawPath(forma, sombraDentro.copy(alpha = (0.25f * contraluz).coerceIn(0f, 1f)), style = Stroke(1.6f)); drawPath(forma, sombraDentro.copy(alpha = (0.6f * contraluz).coerceIn(0f, 1f)))
+                    }
+                    if (farol > 0.05f) for (o in JUNTO_AL_HASTIAL) {
+                        val forma = poligono(o.map { val k = (-d - FAROL.z) / (it.z - FAROL.z); s.p(FAROL + (it - FAROL) * k) })
+                        drawPath(forma, C.CENIZA.copy(alpha = (0.25f * farol).coerceIn(0f, 1f)), style = Stroke(2.2f)); drawPath(forma, C.CENIZA.copy(alpha = (0.5f * farol).coerceIn(0f, 1f)))
+                    }
+                }
+                if (derecha) {
+                    val sombraDentro = mult(col, C.SOMBRA, 0.6f)
+                    if (contraluz > 0.05f) for (o in JUNTO_A_LA_PARED) {
+                        val forma = poligono(o.map { s.p(V3(w, it.y, it.z)) })
+                        drawPath(forma, sombraDentro.copy(alpha = (0.2f * contraluz).coerceIn(0f, 1f)), style = Stroke(1.6f)); drawPath(forma, sombraDentro.copy(alpha = (0.42f * contraluz).coerceIn(0f, 1f)))
+                    }
+                    if (farol > 0.05f) for (o in JUNTO_A_LA_PARED) {
+                        val forma = poligono(o.map { val k = (w - FAROL.x) / (it.x - FAROL.x); s.p(FAROL + (it - FAROL) * k) })
+                        drawPath(forma, C.CENIZA.copy(alpha = (0.25f * farol).coerceIn(0f, 1f)), style = Stroke(2.2f)); drawPath(forma, C.CENIZA.copy(alpha = (0.5f * farol).coerceIn(0f, 1f)))
+                    }
+                }
+                // Los paños cosidos: costuras oscuras con el pespunte claro al lado (de noche, contra la luz, oscuras del todo).
+                val costura = mult(col, C.SOMBRA, 0.36f + 0.3f * farol).copy(alpha = 0.85f)
+                val pespunte = lerp(col, Color.White, 0.22f).copy(alpha = 0.5f * (1f - farol))
+                for (j in 1..5) {
+                    val u = j / 6f
+                    val (b0, b1) = if (!techo) { val a0 = q[0] + (q[1] - q[0]) * u; s.p(a0) to s.p(a0 + V3(0f, cumbre, 0f)) } else s.p(q[0] + (q[3] - q[0]) * u) to s.p(q[1] + (q[2] - q[1]) * u)
+                    drawLine(costura, b0, b1, (0.014f * s.k).coerceIn(0.45f, 1.1f))
+                    drawLine(pespunte, b0 + Offset(0.025f * s.k, 0f), b1 + Offset(0.025f * s.k, 0f), 0.35f)
+                }
                 // Las varas de dentro, que se ven a través de la lona encendida (de noche o a contraluz).
                 val trasluz = maxOf(farol, contraluz * 0.6f)
-                if (trasluz > 0.05f) {
-                    val vara = mult(col, C.MADERA_OSC, 0.6f).copy(alpha = (0.5f * trasluz).coerceIn(0f, 1f))
-                    drawLine(vara, s.p(V3(0f, 0f, -d * 0.98f)), s.p(V3(0f, cumbre, -d * 0.98f)), 0.07f * s.k)
-                    drawLine(vara, s.p(V3(0f, cumbre - 0.05f, -d)), s.p(V3(0f, cumbre - 0.05f, d)), 0.06f * s.k)
-                    drawLine(vara, s.p(V3(0f, 0f, d * 0.98f)), s.p(V3(0f, cumbre, d * 0.98f)), 0.07f * s.k)
+                if (trasluz > 0.05f && !techo) {
+                    val vara = mult(col, C.MADERA_OSC, 0.65f).copy(alpha = (0.65f * trasluz).coerceIn(0f, 1f))
+                    if (hastial) drawLine(vara, s.p(V3(0f, 0f, q[0].z * 0.98f)), s.p(V3(0f, cumbre, q[0].z * 0.98f)), 0.08f * s.k)
+                    else { drawLine(vara, s.p(V3(q[0].x, cumbre - 0.05f, -d)), s.p(V3(q[0].x, cumbre - 0.05f, d)), 0.06f * s.k); drawLine(vara, s.p(V3(q[0].x, 0f, 0f)), s.p(V3(q[0].x, pared, 0f)), 0.05f * s.k) }
                 }
                 // Los pliegues de la lona tensa: del remate a las estacas, una arruga oscura con su filo de luz al lado.
-                if (abs(n.y) < 0.5f && q.size == 5) {
+                if (hastial) {
                     val apice = qq[3]
                     for (u in listOf(0.18f, 0.5f, 0.82f)) {
                         val b = qq[0] + (qq[1] - qq[0]) * u
                         val m1 = apice + (b - apice) * 0.15f; val m2 = apice + (b - apice) * 0.7f
                         drawLine(mult(col, C.SOMBRA, 0.35f).copy(alpha = 0.4f), m1, m2, 0.05f * s.k, StrokeCap.Round)
-                        drawLine(lerp(col, Color.White, 0.18f).copy(alpha = 0.35f), m1 + Offset(0.04f * s.k, 0f), m2 + Offset(0.04f * s.k, 0f), 0.025f * s.k, StrokeCap.Round)
+                        drawLine(lerp(col, Color.White, 0.18f).copy(alpha = 0.35f * (1f - farol)), m1 + Offset(0.04f * s.k, 0f), m2 + Offset(0.04f * s.k, 0f), 0.025f * s.k, StrokeCap.Round)
                     }
                 }
-                // Los remiendos: paños de otra lona, cosidos con su pespunte.
-                if (abs(n.y) < 0.5f) for (j in 0 until 2) {
-                    val u = az.entre(0.15f, 0.8f); val h0 = az.entre(0.25f, 1.1f)
-                    val a0 = q[0] + (q[1] - q[0]) * u
-                    val r = listOf(a0 + V3(0f, h0, 0f), a0 + (q[1] - q[0]) * 0.08f + V3(0f, h0, 0f), a0 + (q[1] - q[0]) * 0.08f + V3(0f, h0 + 0.32f, 0f), a0 + V3(0f, h0 + 0.3f, 0f)).map { s.p(it) }
-                    val parche = poligono(r); val pc = a.cara(lerp(lona, C.HOJA, 0.28f), s.normal(n), centroDe(r))
-                    drawPath(parche, pc); drawPath(parche, mult(pc, C.SOMBRA, 0.4f).copy(alpha = 0.6f), style = Stroke(0.35f))
-                }
-                // El uso: el barro salpicado abajo, la mancha de lluvia, un remiendo.
-                val bajo = qq.maxOf { it.y }
-                drawRect(Brush.verticalGradient(listOf(Color.Transparent, a.cara(lerp(lona, C.BARRO, 0.5f), s.normal(n), c).copy(alpha = 0.75f)), bajo - 0.3f * s.k, bajo), Offset(qq.minOf { it.x }, bajo - 0.3f * s.k), Size(qq.maxOf { it.x } - qq.minOf { it.x }, 0.3f * s.k))
-                mancha(c + Offset(az.entre(-8f, 8f), az.entre(-6f, 6f)), 0.35f * s.k, 0.25f * s.k, a.cara(lerp(lona, C.HOJA, 0.35f), s.normal(n), c), 0.4f)
             }
-            drawPath(f, mult(col, C.SOMBRA, 0.25f).copy(alpha = 0.6f), style = Stroke(0.5f))
+            drawPath(f, mult(col, C.SOMBRA, 0.3f).copy(alpha = 0.7f), style = Stroke(0.6f))
         }
         // La cenefa: una tira festoneada bajo el alero de los costados, azul con ribete rojo.
         for (x in listOf(-w, w)) {
@@ -433,89 +512,149 @@ internal object VivacCerca {
         }
         // La puerta del hastial de delante, abierta, con los faldones recogidos y atados, y lo de dentro.
         if (s.seVe(V3(0f, 1f, -d), V3(0f, 0f, -1f))) puerta(v, a, farol)
-        // Los mástiles: el de delante asoma por arriba con su perilla y su gallardete; el farol cuelga de un gancho.
+        // Los vientos del costado: tensos desde el alero hasta sus estacas, con el tensor de madera.
+        for (z in listOf(d * 0.6f, 0f, -d * 0.6f)) viento(a, s.p(V3(w, pared, z)), V3(w + 0.95f, 0f, z * 1.05f))
+        // El mástil de delante asoma por arriba con su perilla de latón; la cuerda de la cumbrera baja hasta su estaca.
         val m0 = s.p(V3(0f, cumbre, -d - 0.02f)); val m1 = s.p(V3(0f, cumbre + 0.45f, -d - 0.02f))
         drawLine(a.plano(C.MADERA, m0, 0f), m0, m1, (0.05f * s.k).coerceIn(0.5f, 4f), StrokeCap.Round)
         drawCircle(a.plano(C.LATON, m1, 0.5f), (0.06f * s.k).coerceAtLeast(0.5f), m1)
-        farolDeLaTienda(v, a, farol)
-        // La cuerda de la cumbrera hasta su estaca, delante.
-        val c0 = s.p(V3(0f, cumbre + 0.3f, -d)); val c1 = s.p(V3(0.15f, 0f, -d - 1.5f))
-        drawLine(a.plano(C.CORREA, c0, 0f).copy(alpha = 0.9f), c0, c1, (0.012f * s.k).coerceIn(0.3f, 1.2f))
-        drawLine(a.plano(C.MADERA, c1, 0f), c1, c1 + Offset(0f, -0.2f * s.escala(0.15f, -d - 1.5f)), (0.035f * s.escala(0.15f, -d - 1.5f)).coerceIn(0.5f, 2.4f), StrokeCap.Round)
+        viento(a, s.p(V3(0f, cumbre + 0.3f, -d)), V3(0.15f, 0f, -d - 1.5f))
         if (v.nieve > 0.15f) {
             val borde = listOf(s.p(V3(-w, pared, -d)), s.p(V3(0f, cumbre, -d)), s.p(V3(w, pared, -d))).sortedBy { it.x }
             nieveEncima(a, borde, (0.07f * s.k * v.nieve).coerceAtMost(6f), az)
         }
     }
 
+    /** Un viento de la tienda: la cuerda tensa desde [desde] hasta la estaca clavada en [estaca] (ejes de la tienda), con su tensor. */
+    private fun DrawScope.viento(a: Alumbre, desde: Offset, estaca: V3) {
+        val s = S_TIENDA; val p1 = s.p(estaca); val ke = s.escala(estaca.x, estaca.z)
+        val cuerda = a.plano(lerp(C.LONA, C.MADERA, 0.4f), p1, 0.6f)
+        drawLine(mult(cuerda, C.SOMBRA, 0.4f), desde + Offset(0f, 0.4f), p1 + Offset(0f, 0.4f), (0.016f * ke).coerceIn(0.5f, 1.3f))
+        drawLine(cuerda, desde, p1, (0.014f * ke).coerceIn(0.45f, 1.1f))
+        // El tensor: una tablilla atravesada por la cuerda, cerca de la estaca.
+        val t = desde + (p1 - desde) * 0.8f; val e = (p1 - desde) / (p1 - desde).getDistance().coerceAtLeast(1f); val nrm = Offset(-e.y, e.x)
+        drawLine(a.plano(C.MADERA, t, 0.5f), t - nrm * (0.05f * ke) - e * (0.02f * ke), t + nrm * (0.05f * ke) + e * (0.02f * ke), (0.035f * ke).coerceIn(0.6f, 2f), StrokeCap.Round)
+        // La estaca, clavada inclinada hacia fuera, con su lado de luz y la muesca de la cuerda.
+        val cabeza = p1 + Offset(0.07f * ke, -0.24f * ke)
+        drawLine(a.plano(C.MADERA_OSC, p1, -0.5f), p1 + Offset(-0.01f * ke, 0.03f * ke), cabeza, (0.05f * ke).coerceIn(0.8f, 2.6f), StrokeCap.Round)
+        drawLine(a.plano(C.MADERA, p1, 0.8f), p1 + Offset(0.006f * ke, 0.01f * ke), cabeza + Offset(0.012f * ke, 0f), (0.02f * ke).coerceIn(0.4f, 1.2f), StrokeCap.Round)
+    }
+
     /**
-     * El hueco de la puerta, abierto: la penumbra de dentro (la lona del fondo deja pasar el día), el catre con la manta
-     * azul, la mesa plegable con los papeles y el tintero, el baúl de cuero con sus cantoneras; de noche, encendido por el
-     * farol y la vela. Los faldones, recogidos a los lados y atados con su cinta roja.
+     * Lo de dentro junto al hastial de la puerta (en los ejes de la tienda), que a contraluz (el sol bajo detrás de la
+     * tienda) y de noche (con el farol detrás) se ve en sombra en la lona **[Diseño propio]**: el sable colgado del mástil
+     * (que también se ve por la puerta), el morral y el bicornio en sus clavos, y la mesa plegable con la botella.
+     */
+    private val JUNTO_AL_HASTIAL: List<List<V3>> = run {
+        val z = -T_LARGO + 0.06f; val zm = -T_LARGO + 0.15f
+        listOf(
+            listOf(V3(0.02f, 1.4f, z), V3(0.05f, 1.4f, z), V3(0.07f, 0.55f, z), V3(0.04f, 0.55f, z)),
+            listOf(V3(-0.04f, 2.32f, z), V3(-0.3f, 2.28f, z), V3(-0.33f, 2.02f, z), V3(-0.2f, 1.96f, z), V3(-0.05f, 2.0f, z)),
+            listOf(V3(-0.2f, 2.5f, z), V3(0.2f, 2.5f, z), V3(0.13f, 2.66f, z), V3(0f, 2.6f, z), V3(-0.13f, 2.67f, z)),
+            listOf(V3(0.98f, 0.7f, zm), V3(1.3f, 0.7f, zm), V3(1.3f, 0.76f, zm), V3(0.98f, 0.76f, zm)),
+            listOf(V3(1.02f, 0f, zm), V3(1.06f, 0f, zm), V3(1.22f, 0.7f, zm), V3(1.18f, 0.7f, zm)),
+            listOf(V3(1.22f, 0f, zm), V3(1.26f, 0f, zm), V3(1.06f, 0.7f, zm), V3(1.02f, 0.7f, zm)),
+            listOf(V3(1.08f, 0.76f, zm), V3(1.13f, 0.76f, zm), V3(1.12f, 0.98f, zm), V3(1.09f, 0.98f, zm)),
+        )
+    }
+
+    /** Dónde cuelga el farol, dentro de la tienda (en sus ejes): de la cumbrera, a la vista por la puerta. */
+    private val FAROL = V3(T_PX - 0.15f, 1.95f, -T_LARGO + 0.7f)
+
+    /**
+     * Lo de dentro junto a la pared de la derecha (en los ejes de la tienda), que se ve en sombra a través de la lona a
+     * contraluz y, de noche, tumba en ella su sombra agrandada por el farol: la mesa plegable con la botella, la silla de
+     * tijera y la silla de montar en su caballete **[Diseño propio]**.
+     */
+    private val JUNTO_A_LA_PARED: List<List<V3>> = listOf(
+        listOf(V3(1.0f, 0.7f, -1.05f), V3(1.0f, 0.7f, -0.25f), V3(1.0f, 0.77f, -0.25f), V3(1.0f, 0.77f, -1.05f)),
+        listOf(V3(1.0f, 0f, -0.95f), V3(1.0f, 0f, -0.87f), V3(1.0f, 0.7f, -0.35f), V3(1.0f, 0.7f, -0.43f)),
+        listOf(V3(1.0f, 0f, -0.35f), V3(1.0f, 0f, -0.43f), V3(1.0f, 0.7f, -0.95f), V3(1.0f, 0.7f, -0.87f)),
+        listOf(V3(1.0f, 0.77f, -0.92f), V3(1.0f, 0.77f, -0.82f), V3(1.0f, 1.0f, -0.85f), V3(1.0f, 1.0f, -0.89f)),
+        listOf(V3(1.05f, 0.44f, 0.05f), V3(1.05f, 0.44f, 0.45f), V3(1.05f, 0.49f, 0.45f), V3(1.05f, 0.49f, 0.05f)),
+        listOf(V3(1.05f, 0.44f, 0.4f), V3(1.05f, 0.44f, 0.46f), V3(1.05f, 0.98f, 0.49f), V3(1.05f, 0.98f, 0.43f)),
+        listOf(V3(1.05f, 0f, 0.05f), V3(1.05f, 0f, 0.1f), V3(1.05f, 0.44f, 0.4f), V3(1.05f, 0.44f, 0.35f)),
+        listOf(V3(1.05f, 0f, 0.4f), V3(1.05f, 0f, 0.45f), V3(1.05f, 0.44f, 0.1f), V3(1.05f, 0.44f, 0.05f)),
+        listOf(V3(1.0f, 0f, 0.85f), V3(1.0f, 0f, 0.92f), V3(1.0f, 0.82f, 1.17f), V3(1.0f, 0.82f, 1.1f)),
+        listOf(V3(1.0f, 0f, 1.45f), V3(1.0f, 0f, 1.52f), V3(1.0f, 0.82f, 1.2f), V3(1.0f, 0.82f, 1.13f)),
+        listOf(V3(1.0f, 0.78f, 0.8f), V3(1.0f, 0.95f, 0.84f), V3(1.0f, 0.99f, 0.98f), V3(1.0f, 0.9f, 1.15f), V3(1.0f, 0.97f, 1.38f), V3(1.0f, 1.1f, 1.5f), V3(1.0f, 0.86f, 1.55f), V3(1.0f, 0.6f, 1.47f), V3(1.0f, 0.64f, 0.84f)),
+    )
+
+    /**
+     * El hueco de la puerta, abierto: se ve dentro (en perspectiva, con los ejes de la tienda) la lona del fondo y la de la
+     * izquierda, que dejan pasar el día; el mástil de atrás; el catre de campaña con la manta y la almohada; el cofre de
+     * madera con sus cantoneras y correas; y el farol colgado de la cumbrera, que de noche lo enciende todo. Los faldones,
+     * recogidos a los lados y atados con su cinta roja.
      */
     private fun DrawScope.puerta(v: VistaVivac, a: Alumbre, farol: Float) {
-        val s = S_TIENDA; val d = T_LARGO; val px = T_PX
-        val hueco = listOf(V3(px - 0.48f, 0f, -d - 0.01f), V3(px + 0.48f, 0f, -d - 0.01f), V3(px + 0.1f, 2.25f, -d - 0.01f), V3(px - 0.1f, 2.25f, -d - 0.01f)).map { s.p(it) }
+        val s = S_TIENDA; val d = T_LARGO; val w = T_ANCHO; val px = T_PX
+        fun q(x: Float, y: Float, z: Float) = s.p(V3(x, y, z))
+        fun cuatro(vararg c: Float) = poligono((0 until c.size / 3).map { i -> q(c[3 * i], c[3 * i + 1], c[3 * i + 2]) })
+        val hueco = listOf(q(px - 0.66f, 0f, -d - 0.01f), q(px + 0.66f, 0f, -d - 0.01f), q(px + 0.2f, 2.3f, -d - 0.01f), q(px - 0.2f, 2.3f, -d - 0.01f))
         val forma = poligono(hueco)
-        val bl = hueco[0]; val br = hueco[1]; val arriba = (hueco[2] + hueco[3]) / 2f
-        val ancho = br.x - bl.x; val alto = bl.y - arriba.y
-        fun en(u: Float, h: Float) = Offset(bl.x + ancho * u + (br.y - bl.y) * 0f, bl.y + (br.y - bl.y) * u - alto * h)
-        val pd = a.p.con(0.75f * farol)
-        val penumbra = lerp(pd.sombra(lerp(C.LONA, C.HOJA, 0.35f)), C.LUMBRE, 0.5f * farol)
-        drawPath(forma, penumbra)
+        val pd = a.p.con(0.8f * farol); val dia = 1f - v.noche
+        val lonaDentro = lerp(C.LONA, C.HOJA, 0.28f)
+        fun lonaA(k: Float) = lerp(pd.sombra(lonaDentro), pd.luz(lonaDentro), (k * dia + 0.45f * farol).coerceIn(0f, 1f))
+        drawPath(forma, pd.sombra(lonaDentro))
         clipPath(forma) {
-            // La lona del fondo, que deja pasar el día (más clara arriba) o la luz del farol.
-            drawRect(Brush.verticalGradient(listOf(pd.medio(lerp(C.LONA, C.HOJA, 0.2f)).copy(alpha = 0.55f * (1f - v.noche)), Color.Transparent), arriba.y, bl.y), Offset(bl.x, arriba.y), Size(ancho, alto))
-            if (farol > 0.02f) drawCircle(Brush.radialGradient(listOf(Color(0xFFFFC46E).copy(alpha = (0.8f * farol).coerceIn(0f, 1f)), Color.Transparent), en(0.62f, 0.48f), alto * 0.6f), alto * 0.6f, en(0.62f, 0.48f))
-            // El catre, al fondo a la izquierda: el bastidor, la manta azul y la almohada.
-            val c0 = en(0.04f, 0.27f); val c1 = en(0.5f, 0.31f)
-            drawLine(pd.sombra(C.MADERA_OSC), en(0.08f, 0.0f), en(0.08f, 0.24f), ancho * 0.025f)
-            drawLine(pd.sombra(C.MADERA_OSC), en(0.46f, 0.02f), en(0.46f, 0.27f), ancho * 0.025f)
-            drawLine(pd.medio(lerp(C.AZUL, C.CAPOTE, 0.2f)), c0, c1, alto * 0.07f, StrokeCap.Round)
-            drawLine(pd.luz(lerp(C.AZUL, C.LONA, 0.3f)), c0 + Offset(0f, -alto * 0.02f), c1 + Offset(0f, -alto * 0.025f), alto * 0.015f, StrokeCap.Round)
-            drawOval(pd.luz(C.LONA), Offset(c0.x - ancho * 0.02f, c0.y - alto * 0.05f), Size(ancho * 0.14f, alto * 0.05f))
-            // La mesa plegable, a la derecha, con sus papeles, el tintero y la vela.
-            val m0 = en(0.55f, 0.36f); val m1 = en(0.98f, 0.38f)
-            drawLine(pd.sombra(C.MADERA_OSC), en(0.6f, 0f), en(0.92f, 0.36f), ancho * 0.022f); drawLine(pd.sombra(C.MADERA_OSC), en(0.92f, 0f), en(0.6f, 0.35f), ancho * 0.022f)
-            drawLine(pd.medio(C.MADERA), m0, m1, alto * 0.03f)
-            drawLine(pd.luz(lerp(C.LONA, Color.White, 0.3f)), m0 + Offset(ancho * 0.05f, -alto * 0.02f), m0 + Offset(ancho * 0.22f, -alto * 0.02f), alto * 0.012f)
-            drawLine(pd.luz(lerp(C.LONA, C.HOJA, 0.2f)), m0 + Offset(ancho * 0.18f, -alto * 0.025f), m0 + Offset(ancho * 0.32f, -alto * 0.022f), alto * 0.01f)
-            drawCircle(pd.sombra(C.CUERO), alto * 0.018f, m1 + Offset(-ancho * 0.08f, -alto * 0.03f))
-            drawLine(pd.luz(C.CORREA), m1 + Offset(-ancho * 0.16f, -alto * 0.02f), m1 + Offset(-ancho * 0.16f, -alto * 0.07f), ancho * 0.02f)
-            if (farol > 0.05f) drawCircle(Color(0xFFFFE6A8).copy(alpha = farol), alto * 0.012f, m1 + Offset(-ancho * 0.16f, -alto * 0.085f))
-            // El baúl, delante, en el suelo: cuero con cantoneras de latón.
-            val b0 = en(0.2f, 0.0f)
-            drawRect(pd.medio(C.CUERO), b0 + Offset(0f, -alto * 0.12f), Size(ancho * 0.38f, alto * 0.12f))
-            drawRect(pd.luz(lerp(C.CUERO, C.MADERA, 0.4f)), b0 + Offset(0f, -alto * 0.13f), Size(ancho * 0.38f, alto * 0.025f))
-            for (u in listOf(0f, 0.33f)) drawRect(pd.luz(C.LATON), b0 + Offset(ancho * u, -alto * 0.13f), Size(ancho * 0.05f, alto * 0.03f))
-            // La sombra que cae del borde de la puerta hacia dentro.
-            drawPath(forma, Brush.horizontalGradient(listOf(mult(penumbra, C.SOMBRA, 0.8f).copy(alpha = 0.5f * (1f - farol)), Color.Transparent, Color.Transparent), bl.x, br.x))
+            // La lona de dentro: el fondo, que deja pasar el día (más clara arriba); la pared de la izquierda y su faldón de techo.
+            drawPath(cuatro(-w, 0f, d, w, 0f, d, w, T_PARED, d, 0f, T_CUMBRE, d, -w, T_PARED, d), lonaA(0.62f))
+            drawPath(cuatro(-w, 0f, -d, -w, 0f, d, -w, T_PARED, d, -w, T_PARED, -d), lonaA(0.42f))
+            drawPath(cuatro(-w, T_PARED, -d, -w, T_PARED, d, 0f, T_CUMBRE, d, 0f, T_CUMBRE, -d), lonaA(0.3f))
+            for (j in 1..3) { val z = -d + 2f * d * j / 4f; drawLine(mult(lonaA(0.42f), C.SOMBRA, 0.4f).copy(alpha = 0.7f), q(-w, 0f, z), q(-w, T_PARED, z), 0.5f) }
+            // El suelo: la tierra, con una estera de paja en medio.
+            drawPath(cuatro(-w, 0f, -d, w, 0f, -d, w, 0f, d, -w, 0f, d), pd.sombra(lerp(C.BARRO, C.HOJA, 0.35f)))
+            drawPath(cuatro(-0.4f, 0f, -1.2f, 0.95f, 0f, -1.2f, 0.95f, 0f, 0.8f, -0.4f, 0f, 0.8f), pd.medio(lerp(ColorVivac.PAJA, C.BARRO, 0.3f)))
+            // El mástil de atrás y la cumbrera.
+            drawLine(pd.sombra(C.MADERA_OSC), q(0f, 0f, d - 0.03f), q(0f, T_CUMBRE, d - 0.03f), 0.06f * s.escala(0f, d))
+            // El cofre, al fondo: madera con cantoneras de latón, dos correas y la tapa abombada.
+            val cx0 = -0.45f; val cx1 = 0.2f; val cz0 = 1.1f; val cz1 = 1.48f; val ch = 0.46f
+            drawPath(cuatro(cx1, 0f, cz0, cx1, 0f, cz1, cx1, ch, cz1, cx1, ch, cz0), pd.sombra(lerp(C.MADERA, C.CUERO, 0.35f)))
+            drawPath(cuatro(cx0, 0f, cz0, cx1, 0f, cz0, cx1, ch, cz0, cx0, ch, cz0), pd.medio(lerp(C.MADERA, C.CUERO, 0.35f)))
+            drawPath(cuatro(cx0, ch, cz0, cx1, ch, cz0, cx1, ch + 0.08f, cz0 + 0.1f, cx1, ch + 0.1f, (cz0 + cz1) / 2f, cx0, ch + 0.1f, (cz0 + cz1) / 2f, cx0, ch + 0.08f, cz0 + 0.1f), pd.luz(lerp(C.MADERA, C.CUERO, 0.25f)))
+            for (u in listOf(0.28f, 0.72f)) { val x = cx0 + (cx1 - cx0) * u; drawLine(pd.medio(lerp(C.CORREA, C.MADERA, 0.5f)), q(x, 0f, cz0 - 0.005f), q(x, ch + 0.08f, cz0 + 0.05f), 0.04f * s.escala(x, cz0)) }
+            for (x in listOf(cx0, cx1)) for (y in listOf(0f, ch - 0.07f)) drawPath(cuatro(x - 0.03f, y, cz0 - 0.01f, x + 0.03f, y, cz0 - 0.01f, x + 0.03f, y + 0.07f, cz0 - 0.01f, x - 0.03f, y + 0.07f, cz0 - 0.01f), pd.luz(C.LATON))
+            // El catre de campaña, contra la pared de la izquierda: las patas en tijera, el larguero, la manta azul que
+            // cuelga por el lado y la almohada.
+            val kx0 = -w + 0.08f; val kx1 = -0.55f; val kz0 = -0.1f; val kz1 = 1.55f; val kh = 0.42f
+            for (z in listOf(kz0 + 0.1f, (kz0 + kz1) / 2f, kz1 - 0.1f)) {
+                drawLine(pd.sombra(C.MADERA_OSC), q(kx1, 0f, z - 0.16f), q(kx1, kh, z + 0.16f), 0.035f * s.escala(kx1, z))
+                drawLine(pd.sombra(C.MADERA_OSC), q(kx1, 0f, z + 0.16f), q(kx1, kh, z - 0.16f), 0.035f * s.escala(kx1, z))
+            }
+            drawLine(pd.medio(C.MADERA), q(kx1, kh, kz0), q(kx1, kh, kz1), 0.04f * s.escala(kx1, kz0))
+            val manta = lerp(C.AZUL, C.CAPOTE, 0.25f)
+            drawPath(cuatro(kx0, kh + 0.06f, kz0, kx1 + 0.04f, kh + 0.06f, kz0, kx1 + 0.04f, kh + 0.06f, kz1 - 0.3f, kx0, kh + 0.06f, kz1 - 0.3f), pd.luz(manta))
+            drawPath(cuatro(kx1 + 0.04f, kh + 0.06f, kz0, kx1 + 0.04f, kh + 0.06f, kz1 - 0.3f, kx1 + 0.05f, kh - 0.2f, kz1 - 0.35f, kx1 + 0.05f, kh - 0.18f, kz0 + 0.05f), pd.medio(manta))
+            drawPath(cuatro(kx0, kh + 0.06f, kz0, kx1 + 0.04f, kh + 0.06f, kz0, kx1 + 0.05f, kh - 0.18f, kz0 + 0.05f, kx0, kh - 0.15f, kz0), pd.sombra(manta))
+            drawPath(cuatro(kx0 + 0.05f, kh + 0.06f, kz1 - 0.32f, kx1, kh + 0.06f, kz1 - 0.32f, kx1, kh + 0.16f, kz1 - 0.12f, kx0 + 0.05f, kh + 0.16f, kz1 - 0.12f), pd.luz(lerp(C.LONA, C.NIEVE, 0.4f)))
+            // El farol colgado de la cumbrera: la cuerda, el cuerpo con sus vidrios y el sombrerete.
+            val fc = s.p(FAROL); val fk = s.escala(FAROL.x, FAROL.z)
+            drawLine(pd.sombra(C.HIERRO), q(FAROL.x, T_CUMBRE - 0.1f, FAROL.z), fc + Offset(0f, -0.14f * fk), (0.012f * fk).coerceAtLeast(0.35f))
+            if (farol > 0.02f) drawCircle(Brush.radialGradient(listOf(Color(0xFFFFC870).copy(alpha = (0.85f * farol).coerceIn(0f, 1f)), Color(0xFFE8782E).copy(alpha = (0.35f * farol).coerceIn(0f, 1f)), Color.Transparent), fc, 1.3f * fk), 1.3f * fk, fc, blendMode = BlendMode.Plus)
+            val cuerpo = poligono(fc + Offset(-0.07f * fk, -0.12f * fk), fc + Offset(0.07f * fk, -0.12f * fk), fc + Offset(0.06f * fk, 0.1f * fk), fc + Offset(-0.06f * fk, 0.1f * fk))
+            drawPath(cuerpo, if (farol > 0.02f) lerp(pd.medio(C.LATON), Color(0xFFFFE0A0), 0.9f * farol) else pd.luz(lerp(C.PLATA, C.LONA, 0.3f)))
+            drawPath(cuerpo, pd.sombra(C.HIERRO), style = Stroke((0.014f * fk).coerceAtLeast(0.35f)))
+            drawLine(pd.sombra(C.HIERRO), fc + Offset(0f, -0.12f * fk), fc + Offset(0f, 0.1f * fk), (0.01f * fk).coerceAtLeast(0.3f))
+            drawPath(poligono(fc + Offset(-0.085f * fk, -0.12f * fk), fc + Offset(0f, -0.21f * fk), fc + Offset(0.085f * fk, -0.12f * fk)), pd.sombra(C.HIERRO))
+            // El mástil de delante, que asoma abajo, a la izquierda del hueco, con el sable colgado.
+            drawLine(pd.sombra(C.MADERA), q(0f, 0f, -d + 0.04f), q(0f, T_CUMBRE, -d + 0.04f), 0.07f * s.escala(0f, -d))
+            drawPath(poligono(JUNTO_AL_HASTIAL[0].map { s.p(it) }), pd.luz(C.PLATA))
+            drawLine(pd.medio(C.LATON), s.p(JUNTO_AL_HASTIAL[0][0]), s.p(JUNTO_AL_HASTIAL[0][1]), (0.04f * s.k).coerceAtLeast(0.6f))
+            // La penumbra que cae de los bordes del hueco hacia dentro (de día).
+            drawPath(forma, Brush.horizontalGradient(listOf(mult(pd.sombra(lonaDentro), C.SOMBRA, 0.8f).copy(alpha = 0.55f * (1f - farol)), Color.Transparent, Color.Transparent, mult(pd.sombra(lonaDentro), C.SOMBRA, 0.8f).copy(alpha = 0.3f * (1f - farol))), hueco[0].x, hueco[1].x))
         }
         // Los faldones de la puerta, recogidos a los lados: la lona doblada en pliegues, atada a media altura con su cinta.
         for (sg in listOf(-1f, 1f)) {
-            val t0 = s.p(V3(px + 0.1f * sg, 2.25f, -d - 0.02f)); val t1 = s.p(V3(px + 0.48f * sg, 0f, -d - 0.02f))
-            val nudo = s.p(V3(px + 0.62f * sg, 0.95f, -d - 0.05f)); val fuera = s.p(V3(px + 0.74f * sg, 0.95f, -d - 0.06f)); val pie = s.p(V3(px + 0.68f * sg, 0f, -d - 0.04f))
-            val faldon = poligono(listOf(t0, nudo + Offset(0f, -0.05f * s.k), fuera, pie, t1, nudo + Offset(-0.08f * sg * s.k, 0f)))
+            val t0 = q(px + 0.2f * sg, 2.3f, -d - 0.02f); val t1 = q(px + 0.66f * sg, 0f, -d - 0.02f)
+            val nudo = q(px + 0.8f * sg, 1.0f, -d - 0.05f); val fuera = q(px + 0.94f * sg, 1.0f, -d - 0.06f); val pie = q(px + 0.86f * sg, 0f, -d - 0.04f)
+            val faldon = poligono(listOf(t0, nudo + Offset(0f, -0.05f * s.k), fuera, pie, t1, nudo + Offset(-0.1f * sg * s.k, 0f)))
             val col = a.cara(lerp(C.LONA, C.HOJA, 0.16f), s.normal(V3(0.4f * sg, 0f, -1f)), nudo)
             drawPath(faldon, col)
+            drawPath(faldon, mult(col, C.SOMBRA, 0.3f).copy(alpha = 0.6f), style = Stroke(0.5f))
             drawLine(mult(col, C.SOMBRA, 0.45f), t0, nudo, 0.6f); drawLine(mult(col, C.SOMBRA, 0.45f), nudo, pie, 0.6f)
+            drawLine(mult(col, C.SOMBRA, 0.3f).copy(alpha = 0.6f), t0 + (nudo - t0) * 0.5f, t1 + (pie - t1) * 0.4f, 0.45f)
             drawLine(a.plano(C.ROJO, nudo, 0f), nudo + Offset(-0.07f * s.k, -0.02f * s.k), fuera + Offset(0.02f * sg * s.k, 0.02f * s.k), (0.035f * s.k).coerceAtLeast(0.5f))
         }
-    }
-
-    /** El farol de la tienda: colgado de un gancho del mástil de delante; de noche, encendido, con su halo en la lona. */
-    private fun DrawScope.farolDeLaTienda(v: VistaVivac, a: Alumbre, farol: Float) {
-        val s = S_TIENDA; val k = s.escala(T_PX + 0.62f, -T_LARGO - 0.2f)
-        val gancho = s.p(V3(T_PX + 0.5f, 2.45f, -T_LARGO - 0.04f)); val c = s.p(V3(T_PX + 0.62f, 2.05f, -T_LARGO - 0.2f))
-        drawLine(a.plano(C.HIERRO, gancho, 0f), gancho, c + Offset(0f, -0.14f * k), (0.012f * k).coerceAtLeast(0.35f))
-        if (farol > 0.02f) {
-            drawCircle(Brush.radialGradient(listOf(Color(0xFFFFD48A).copy(alpha = (0.5f * farol).coerceIn(0f, 1f)), Color.Transparent), c, 0.9f * k), 0.9f * k, c, blendMode = BlendMode.Plus)
-        }
-        val cuerpo = poligono(c + Offset(-0.07f * k, -0.12f * k), c + Offset(0.07f * k, -0.12f * k), c + Offset(0.06f * k, 0.1f * k), c + Offset(-0.06f * k, 0.1f * k))
-        drawPath(cuerpo, if (farol > 0.02f) lerp(a.plano(C.LATON, c, 0f), Color(0xFFFFE0A0), 0.85f * farol) else a.plano(lerp(C.PLATA, C.LONA, 0.3f), c, 0.5f))
-        drawPath(cuerpo, a.plano(C.HIERRO, c, 0f), style = Stroke((0.012f * k).coerceAtLeast(0.3f)))
-        drawPath(poligono(c + Offset(-0.08f * k, -0.12f * k), c + Offset(0f, -0.2f * k), c + Offset(0.08f * k, -0.12f * k)), a.plano(C.HIERRO, c, 0.4f))
-        drawLine(a.plano(C.HIERRO, c, 0f), c + Offset(-0.07f * k, 0.1f * k), c + Offset(0.07f * k, 0.1f * k), (0.02f * k).coerceAtLeast(0.4f))
     }
 
     // ---------------------------------------------------------------- El tonel, el tocón, la leña, la cama
@@ -712,15 +851,20 @@ internal object VivacCerca {
                 drawCircle(Color(0xFFFFC060).copy(alpha = ((1f - t) * f).coerceIn(0f, 1f)), 0.5f + 0.4f * (1f - t), q)
             }
             if (f >= 0.45f) humo(l, FUEGO + Offset(0f, -0.4f * k), 120f, 14f, reloj, v.m.viento + 0.15f, 0.22f + 0.3f * (1f - f), 0f, 4, 9, 0.45f + 0.35f * (1f - f))
-            else humo(l, FUEGO + Offset(0f, -0.2f * k), 70f, 5f, reloj, v.m.viento + 0.15f, 0.35f, 0f, 4, 6, 0.32f)
+            else {
+                humo(l, FUEGO + Offset(0f, -0.2f * k), 70f, 5f, reloj, v.m.viento + 0.15f, 0.35f, 0f, 4, 6, 0.32f)
+                // Con el sol bajo, el humo del rescoldo se enciende a contraluz: dorado.
+                val bajo = (1f - v.l.solAltura / 0.5f).coerceIn(0f, 1f) * (v.r.fuerza / 0.72f).coerceIn(0f, 1f)
+                if (bajo > 0.05f) mancha(FUEGO + Offset(4f + 3f * sin(reloj * 0.4f), -0.55f * k), 0.35f * k, 0.6f * k, lerp(v.l.solColor, Color(0xFFFFC98A), 0.4f), 0.3f * bajo)
+            }
             if (f > 0.3f && v.noche > 0.3f) mancha(LUZ_DEL_FUEGO + Offset(4f, -0.75f * k), 0.22f * k, 0.35f * k, C.LUMBRE, 0.16f * f * v.noche)
         }
         if (EscenaNapoleon.marmita(v.m) == Marmita.AL_FUEGO) humo(l, FUEGO + Offset(0f, -0.95f * k), 40f, 6f, reloj, v.m.viento, 0f, 0f, 5, 5, 0.4f)
         // La llama del farol de la tienda y la de la vela del tonel, que tiemblan.
         val farol = VivacNapoleon.farol(v.m)
         if (farol > 0.02f) {
-            val s = S_TIENDA; val c = s.p(V3(T_PX + 0.62f, 2.05f, -T_LARGO - 0.2f)); val kk = s.escala(T_PX + 0.62f, -T_LARGO - 0.2f)
-            drawCircle(Color(0xFFFFE6A8).copy(alpha = (0.9f * farol).coerceIn(0f, 1f)), 0.03f * kk * (0.9f + 0.1f * sin(reloj * 11f)), c)
+            val s = S_TIENDA; val c = s.p(FAROL); val kk = s.escala(FAROL.x, FAROL.z)
+            if (EscenaNapoleon.lugar(v.m) != EscenaNapoleon.Lugar.PUEBLO) drawCircle(Color(0xFFFFE6A8).copy(alpha = (0.9f * farol).coerceIn(0f, 1f)), 0.03f * kk * (0.9f + 0.1f * sin(reloj * 11f)), c)
             if (v.fase != Fase.SUENO && !VivacNapoleon.sinCompania(v.m) && farol > 0.3f) {
                 val sk = S_TONEL.k; val vela = S_TONEL.p(V3(-0.08f, TONEL_ALTO, -0.02f)) + Offset(0f, -0.38f * sk)
                 drawOval(Color(0xFFFFE0A0).copy(alpha = farol), Offset(vela.x - 0.012f * sk, vela.y - 0.035f * sk + sin(reloj * 9f) * 0.2f), Size(0.024f * sk, 0.05f * sk))
