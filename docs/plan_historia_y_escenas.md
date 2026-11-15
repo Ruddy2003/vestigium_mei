@@ -530,7 +530,7 @@ El alto útil de un teléfono va de unos 640 a 720 dp.
 | S9 | Egipto; Mesoamérica | 2 | hecho el 14 nov 2026 (`docs/historia/informes/S9.md`); falta que el autor los vea |
 | S10 | Prehistoria (el abrigo y la meseta; primer cuadro con luz de fuego) | 2 | hecho el 14 nov 2026 (`docs/historia/informes/S10.md`); falta que el autor los vea |
 | S11 | Templario; Japón Edo | 2 | hecho el 14 nov 2026 (`docs/historia/informes/S11.md`), con Opus 5.5 a modo de prueba; falta que el autor los vea |
-| S12 | Mongol (el valle de invierno y el campamento de verano) | 2 | hecho el 15 nov 2026 (`docs/historia/informes/S12.md`); capturas 306 con una prueba de cobertura que falló, arreglada en `d0edbe2`; después, capturas 307 y compilación 277, bien; falta que el autor los vea |
+| S12 | Mongol (el valle de invierno y el campamento de verano) | 2 | hecho el 15 nov 2026 (`docs/historia/informes/S12.md`); capturas 306 con una prueba de cobertura que falló, arreglada en `d0edbe2`; después, capturas 307 y compilación 277, bien; con la ronda de luz que pidió el autor, capturas 308 (las 20 imágenes; falló solo la prueba de cobertura por Botánico, ya corregida) y compilación 278, bien; falta que el autor los vea |
 | S13 | Botánico (el bergantín y la selva) | 2 | pendiente |
 | S14 | Napoleónico (el vivac y la retirada; el cuartel y Moscú como variantes; primer cuadro con nieve) | 2 | pendiente |
 | S15 | Art déco; Soviético | 2 | pendiente |
