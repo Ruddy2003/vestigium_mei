@@ -195,7 +195,7 @@ internal object LuzSelva {
      */
     fun DrawScope.luzEnPlano(luz: Luz, zona: Path, hp: Float, extra: List<Path>, fuerza: Float = 1f) {
         if (luz.directa < 0.03f) return
-        val a = ((if (luz.deLuna) 0.6f else 0.47f) * luz.directa * fuerza).coerceIn(0f, 1f)
+        val a = ((if (luz.deLuna) 0.42f else 0.47f) * luz.directa * fuerza).coerceIn(0f, 1f)
         val blando = 1.6f + 0.9f * hp
         drawIntoCanvas { c ->
             c.saveLayer(Rect(0f, 0f, ANCHO, ALTO), Paint().apply { blendMode = BlendMode.Plus })
@@ -215,19 +215,20 @@ internal object LuzSelva {
         if (luz.directa < 0.15f || luz.deLuna) return
         val k = luz.directa * (0.45f + 0.8f * luz.bruma)
         val az = Azar(Semilla.de("botanico", "haces"))
-        // Solo se ven bajo las hojas: en el claro del cielo no hay aire en penumbra que los recorte.
-        clipPath(poligono(listOf(Offset(0f, 0f), Offset(258f, 0f), Offset(258f, 165f), Offset(ANCHO, 165f), Offset(ANCHO, ALTO), Offset(0f, ALTO)))) {
         for (q in puntos) {
             if (alumbrado(luz, q.x, q.y, q.z) < 0.5f) continue
-            val sube = 2.2f
+            val sube = 1.7f
             val arriba = V3(q.x - luz.sol.sx * sube, q.y + sube, (q.z - luz.sol.sz * sube).coerceAtLeast(2.2f))
             val a = pc(arriba); val b = pc(q)
             val w0 = 0.12f * SelvaBotanico.k(arriba.z.coerceAtLeast(0.6f)); val w1 = 0.2f * SelvaBotanico.k(q.z)
             val d = b - a; val l = d.getDistance().coerceAtLeast(1f); val n = Offset(-d.y / l, d.x / l)
-            val haz = poligono(a - n * w0, a + n * w0, b + n * w1, b - n * w1)
-            drawPath(haz, Brush.linearGradient(listOf(Color.Transparent, luz.color.copy(alpha = (0.09f * k).coerceIn(0f, 1f)), luz.color.copy(alpha = (0.05f * k).coerceIn(0f, 1f))), a, b), blendMode = BlendMode.Plus)
-            repeat(10) { val u = az.real(); val v = az.entre(-1f, 1f); drawCircle(luz.color.copy(alpha = (0.55f * k * az.real()).coerceIn(0f, 1f)), az.entre(0.3f, 0.65f), a + d * u + n * (v * (w0 + (w1 - w0) * u))) }
-        }
+            // Tres franjas, cada una más ancha y más tenue, para que el haz no tenga borde; arriba se pierde (el aire
+            // claro de fuera no lo recorta), abajo se enciende donde el polvo y la humedad lo reciben.
+            for ((ancho, fuerza) in listOf(1.6f to 0.35f, 1f to 0.6f, 0.5f to 1f)) {
+                val haz = poligono(a - n * (w0 * ancho), a + n * (w0 * ancho), b + n * (w1 * ancho), b - n * (w1 * ancho))
+                drawPath(haz, Brush.linearGradient(listOf(Color.Transparent, luz.color.copy(alpha = (0.05f * k * fuerza).coerceIn(0f, 1f)), luz.color.copy(alpha = (0.09f * k * fuerza).coerceIn(0f, 1f))), a, b), blendMode = BlendMode.Plus)
+            }
+            repeat(10) { val u = az.entre(0.35f, 1f); val v = az.entre(-1f, 1f); drawCircle(luz.color.copy(alpha = (0.55f * k * az.real()).coerceIn(0f, 1f)), az.entre(0.3f, 0.65f), a + d * u + n * (v * (w0 + (w1 - w0) * u))) }
         }
     }
 

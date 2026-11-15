@@ -65,7 +65,7 @@ internal object GaleriaSelva {
                 drawLine(p.sombra(lerp(C.MADERA_OSC, C.BREA, 0.3f)).copy(alpha = 0.75f), pc(x, 0f, S.TABLADO_Z0), pc(x, 0f, S.TABLADO_Z1), 0.7f)
                 drawLine(p.luz(tono).copy(alpha = 0.25f), pc(x + 0.012f, 0f, S.TABLADO_Z0), pc(x + 0.012f, 0f, S.TABLADO_Z1), 0.4f)
                 // Los clavos, de dos en dos, en cada durmiente.
-                var z = 1.6f; while (z < S.TABLADO_Z1) { for (dx in listOf(0.04f, 0.12f)) drawCircle(p.sombra(C.HIERRO).copy(alpha = 0.7f), (0.012f * k(z)).coerceIn(0.35f, 1.3f), pc(x + dx, 0f, z)); z += 0.62f }
+                var z = 1.6f; while (z < S.TABLADO_Z1) { for (dx in listOf(0.04f, 0.12f)) if (az.real() < 0.8f) drawCircle(p.sombra(C.HIERRO).copy(alpha = 0.35f), (0.008f * k(z)).coerceIn(0.3f, 0.9f), pc(x + dx, 0f, z + az.entre(-0.03f, 0.03f))); z += 0.62f }
                 x += 0.16f; i++
             }
             // El roce del paso: de la escalera del jardín (a la derecha) hacia la mesa; y el barro de las botas.
@@ -142,14 +142,36 @@ internal object GaleriaSelva {
             for (r in listOf(5f, 9f, 13f)) drawArc(Color.White.copy(alpha = 0.14f), 25f, 70f, false, t - Offset(r, r), Size(r * 2f, r * 2f), style = Stroke(0.3f))
             drawCircle(p.sombra(C.BREA), 1.3f, t + Offset(6f, 5f)); for (j in -2..2) drawLine(p.sombra(C.BREA), t + Offset(6f, 5f), t + Offset(6f + j * 1.2f, 5f + (if (j == 0) 3f else 2f)), 0.3f)
             // De noche, la lámpara alumbra el alero desde abajo.
-            if (luz.lampara > 0.05f) charcoDeLuz(Foco(CercaSelva.LAMPARA, C.LUMBRE, luz.lampara, 70f), CercaSelva.LAMPARA + Offset(0f, -90f), 70f, 40f, canizo, 0.7f)
+            if (luz.lampara > 0.05f) {
+                val lam = CercaSelva.LAMPARA
+                charcoDeLuz(Foco(lam, C.LUMBRE, luz.lampara, 70f), lam + Offset(0f, -122f), 90f, 50f, canizo, 1.15f)
+                // Y las sombras grandes que tumba en el cañizo lo que tiene cerca: los cestos colgados y las frondas del
+                // helecho de la mesa, agrandados y blandos (la lámpara está baja).
+                val som = LuzSelva.SOMBRA_VERDE.copy(alpha = (0.5f * luz.lampara).coerceIn(0f, 1f))
+                for (c in listOf(V3(-1.55f, 2.25f, 3.85f), V3(-0.95f, 2.2f, 3.45f))) {
+                    val o = pc(c); val q = lam + (o - lam) * 1.35f
+                    drawOval(som, Offset(q.x - 13f, q.y - 7f), Size(26f, 14f), blendMode = BlendMode.Multiply)
+                    for (dx in listOf(-11f, 0f, 11f)) drawLine(som, q + Offset(dx, -5f), q + Offset(dx * 0.2f, -30f), 1.4f, blendMode = BlendMode.Multiply)
+                }
+                // La roseta de la bromelia de la tabla, como una estrella de hojas en el techo.
+                val f = pc(-0.72f, 2.0f, 3.0f); val qf = lam + (f - lam) * 1.35f
+                for (j in 0 until 8) { val a = -PI.toFloat() / 2f + (j - 3.5f) * 0.38f; val fin = qf + Offset(cos(a) * 30f, sin(a) * 18f)
+                    drawLine(som, qf, fin, 2.4f, StrokeCap.Round, blendMode = BlendMode.Multiply)
+                    for (t in 1..5) { val r = qf + (fin - qf) * (t / 6f); drawLine(som, r, r + Offset(-sin(a) * 6f, cos(a) * 4f), 1.6f, blendMode = BlendMode.Multiply); drawLine(som, r, r - Offset(-sin(a) * 6f, cos(a) * 4f), 1.6f, blendMode = BlendMode.Multiply) } }
+            }
         }
         // La tabla del canto (la del piñón) y las tejas rojas del alero, con sus bocas.
         val t0 = pc(S.ALERO_X, S.ALTO_ALERO, S.ALERO_Z); val t1 = pc(S.PARED_X, S.ALTO_CUMBRE, S.ALERO_Z)
         drawLine(p.por(C.MADERA, 0.2f), t0, t1, 3f)
         drawLine(p.luz(lerp(C.MADERA, C.ARENA, 0.3f)), t0 + Offset(0f, 1.2f), t1 + Offset(0f, 1.2f), 0.7f)
         // Las tejas del piñón, de lado: una hilera de lomos rojos sobre la tabla.
-        for (j in 0..9) { val q = t0 + (t1 - t0) * (j / 9f); val r = 3.2f; drawArc(luz.p.por(C.TEJA, 0.2f), 180f, 180f, true, Offset(q.x - r, q.y - r * 1.4f), Size(r * 2f, r * 1.6f)); drawArc(luz.p.luz(lerp(C.TEJA, C.ARENA, 0.3f)).copy(alpha = 0.6f), 200f, 60f, false, Offset(q.x - r, q.y - r * 1.4f), Size(r * 2f, r * 1.6f), style = Stroke(0.6f)) }
+        // Una hilera seguida de lomos (las cobijas) con los canales entre ellos, cada una con su luz y algún líquen.
+        val tz = Azar(Semilla.de("botanico", "tejas"))
+        for (j in 0..26) { val q = t0 + (t1 - t0) * (j / 26f); val r = 4.6f * tz.entre(0.92f, 1.06f); val teja = lerp(C.TEJA, if (j % 5 == 2) C.CUERO else C.ARENA, tz.entre(0f, 0.18f))
+            drawArc(p.sombra(lerp(teja, C.BREA, 0.3f)), 180f, 180f, true, Offset(q.x - r, q.y - r * 1.25f), Size(r * 2f, r * 1.7f))
+            drawArc(luz.p.por(teja, 0.15f), 185f, 170f, true, Offset(q.x - r * 0.92f, q.y - r * 1.2f), Size(r * 1.84f, r * 1.5f))
+            drawArc(luz.p.luz(lerp(teja, C.ARENA, 0.3f)).copy(alpha = 0.6f), 205f, 55f, false, Offset(q.x - r * 0.92f, q.y - r * 1.2f), Size(r * 1.84f, r * 1.5f), style = Stroke(0.7f))
+            if (j % 7 == 3) drawCircle(luz.p.medio(lerp(C.HOJA_LUZ, C.LONA, 0.4f)).copy(alpha = 0.6f), r * 0.3f, q + Offset(r * 0.2f, -r * 0.7f)) }
         // Las bocas de las tejas del alero, a lo largo del canto: medios caños con el hueco oscuro.
         var z = cerca + 0.1f
         while (z < S.ALERO_Z + 0.01f) {
@@ -171,7 +193,7 @@ internal object GaleriaSelva {
             val pin = LuzSelva.pincelEn(luz, q, LuzSelva.alumbrado(luz, -0.72f, 2.2f, 3.0f))
             drawLine(pin.sombra(C.HIERRO), g, q + Offset(0f, -e * 0.12f), 0.5f)
             drawPath(poligono(q + Offset(-e * 0.07f, -e * 0.13f), q + Offset(e * 0.07f, -e * 0.12f), q + Offset(e * 0.06f, e * 0.16f), q + Offset(-e * 0.08f, e * 0.15f)), pin.por(lerp(C.MADERA_OSC, C.ROCA, 0.3f), -0.1f))
-            bromelia(pin, q, e * 0.3f, Azar(Semilla.de("botanico", "bromelia tabla")), 0f, flor = true)
+            bromelia(pin, q + Offset(0f, e * 0.04f), e * 0.42f, Azar(Semilla.de("botanico", "bromelia tabla")), 0f, flor = true)
             // El manojo de plantas secándose, boca abajo.
             val h = pc(-1.95f, tejado(-1.95f) - 0.05f, 3.95f); val eh = k(3.95f)
             drawLine(pin.sombra(C.CANAMO), h, h + Offset(0f, eh * 0.12f), 0.6f)

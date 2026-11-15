@@ -99,7 +99,7 @@ internal object BovedaSelva {
         val sol = Offset(l.solX * 380f, SelvaBotanico.H * (1f - l.solAltura))
         val cerca = (1f - (q - sol).getDistance() / 230f).coerceIn(0f, 1f)
         val alto = (l.solAltura / 1.35f).coerceIn(0f, 1f) * (1f - q.y / 170f).coerceIn(0f, 1f)
-        return (luz.directa * (0.45f + 0.55f * maxOf(cerca, alto * 0.9f))).coerceIn(0f, 1f)
+        return (luz.directa * (0.4f + 0.6f * maxOf(cerca, alto * 0.7f))).coerceIn(0f, 1f)
     }
 
     // ---------------------------------------------------------------- Lo que se pinta
@@ -125,11 +125,14 @@ internal object BovedaSelva {
         // El pecíolo, de la cima de la mata a la hoja.
         val desde = pc(h.desde)
         drawLine(pin.medio(lerp(C.HOJA, C.ARENA, 0.2f)), desde, b, (0.05f * k(h.desde.z)).coerceAtLeast(0.6f))
-        val cl = contraluz(luz, mid)
+        // No todas se encienden igual: las que el sol cruza de lleno, mucho; las que quedan detrás de otras, poco.
+        val cl = contraluz(luz, mid) * (0.3f + 0.7f * Azar(h.semilla + 1L).real())
         // A contraluz la luz que pasa por la lámina es la del sol, no la de la penumbra.
         val pinH = if (cl > 0.3f) luz.p else pin
+        // De noche, las que miran a la luna (las de la derecha, hacia el claro) se platean por su cara.
+        val t0 = if (luz.deLuna) ((mid.x - 170f) / 160f).coerceIn(-0.4f, 0.6f) * luz.directa.coerceAtLeast(0.3f) else -0.15f + 0.5f * cl
         with(PiezasBotanico) {
-            hojaDePlatano(pinH, b, t, h.ancho * k(zm), curva, h.vuelta, h.rasgado, h.seca, (-0.15f + 0.5f * cl).coerceIn(-1f, 1f), az, 0f, cl)
+            hojaDePlatano(pinH, b, t, h.ancho * k(zm), curva, h.vuelta, h.rasgado, h.seca, t0.coerceIn(-1f, 1f), az, 0f, cl)
         }
         // Mojada, la hoja brilla: dos filos de luz a lo largo de la lámina, y la gota que cuelga de la punta.
         if (SelvaBotanico.mojado(m)) {

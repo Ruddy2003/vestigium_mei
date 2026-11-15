@@ -137,7 +137,9 @@ internal object LejosSelva {
     private fun DrawScope.montana(m: Momento, luz: LuzSelva.Luz) {
         val l = luz.l; val r = luz.r; val az = Azar(Semilla.de("botanico", "montana"))
         val p = luz.p
-        val forma = curva(CRESTA, 175f)
+        // La montaña baja al agua por la derecha: su pie sigue la orilla de la bahía, con sus peñas y su espuma.
+        val pie = listOf(Offset(298f, 121.5f), Offset(287f, 125f), Offset(279f, 131f), Offset(270f, 136f), Offset(264f, 146f), Offset(257f, 158f), Offset(250f, 176f), Offset(-14f, 176f))
+        val forma = curva(CRESTA).apply { for (q in pie) lineTo(q.x, q.y); close() }
         drawPath(forma, Brush.verticalGradient(listOf(l.tono(lerp(C.SELVA, Color(0xFF6A8098), 0.3f), 0.42f), l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.4f), 0.22f)), -30f, 160f))
         clipPath(forma) {
             // El primer plano de la montaña, el más lejano: copas chicas en lote que siguen la ladera, y el granito.
@@ -160,6 +162,14 @@ internal object LejosSelva {
             bruma(luz, 150f, 8f, 0.6f, az)
             // Los rayos de sol que bajan entre las copas y encienden lo que tocan.
             rayos(luz, Rect(-10f, -20f, 300f, 175f), 7, Semilla.de("botanico", "rayos montana", m.ficha.dia), 1f)
+        }
+        // La orilla de la montaña: peñas de granito con su lado de luz y la espuma blanca a su pie.
+        val pz = Azar(Semilla.de("botanico", "penas orilla"))
+        for (i in 0 until 6) {
+            val q = pie[i] + (pie[i + 1] - pie[i]) * pz.entre(0.2f, 0.8f); val e = pz.entre(2.2f, 4.2f)
+            val pena = Path().apply { moveTo(q + Offset(-e, 0.5f)); cubicTo(q + Offset(-e, -e * 0.8f), q + Offset(e * 0.5f, -e), q + Offset(e, 0.5f)); close() }
+            drawPath(pena, Brush.horizontalGradient(listOf(luz.p.sombra(C.ROCA, 0.4f), luz.p.luz(C.ROCA, 0.4f)), q.x - e * (if (luz.p.solALaDerecha) 1f else -1f), q.x + e * (if (luz.p.solALaDerecha) 1f else -1f)))
+            drawLine(l.tono(Color.White, 0.3f).copy(alpha = 0.7f * (1f - 0.5f * l.noche)), q + Offset(-e * 1.3f, 0.8f), q + Offset(e * 1.3f, 0.8f), 0.7f, StrokeCap.Round)
         }
     }
 
@@ -255,7 +265,12 @@ internal object LejosSelva {
         drawPath(pared, Brush.horizontalGradient(listOf(l.tono(lerp(roca, Color(0xFF4A4C7A), 0.4f), 0.38f), l.tono(lerp(roca, C.SELVA_OSC, 0.15f), 0.38f), l.tono(lerp(roca, Color(0xFFFFE8C0), 0.3f * r.dia), 0.38f)), 216f - lado * 20f, 216f + lado * 20f))
         clipPath(pared) {
             repeat(14) { val x = az.entre(197f, 235f); drawLine(l.tono(lerp(roca, C.BREA, 0.5f), 0.38f).copy(alpha = 0.45f), Offset(x, az.entre(18f, 40f)), Offset(x + az.entre(-1.5f, 1.5f), az.entre(46f, 70f)), az.entre(0.5f, 1.4f)) }
-            for (j in 0..3) { val y = 30f + j * 10f; drawPath(curva((0..6).map { Offset(196f + it * 7f, y + az.entre(-2f, 3f)) }), l.tono(lerp(C.SELVA, C.HOJA, 0.2f), 0.38f).copy(alpha = 0.75f), style = Stroke(az.entre(1.5f, 3f), cap = StrokeCap.Round)) }
+            // La selva que se agarra a las repisas de la pared: matas sueltas, más en las grietas y al pie.
+            val matas = ArrayList<Offset>(); val luces = ArrayList<Offset>()
+            for (j in 0..5) { val y0 = 26f + j * 8f + az.entre(-2f, 2f); var x = 197f + az.entre(0f, 6f)
+                while (x < 236f) { val largo = az.entre(2f, 7f); if (az.real() < 0.55f) { matas += Offset(x, y0 + (x - 197f) * 0.06f); matas += Offset(x + largo, y0 + (x + largo - 197f) * 0.06f + az.entre(-0.6f, 0.6f)); if (az.real() < 0.6f) { luces += Offset(x + 0.5f, y0 + (x - 197f) * 0.06f - 1f); luces += Offset(x + largo * 0.6f, y0 + (x - 197f) * 0.06f - 1.2f) } }; x += largo + az.entre(1f, 5f) } }
+            drawPoints(matas, PointMode.Lines, l.tono(lerp(C.SELVA, C.SELVA_OSC, 0.3f), 0.38f), 2.4f, StrokeCap.Round)
+            drawPoints(luces, PointMode.Lines, l.tono(lerp(C.HOJA, C.HOJA_LUZ, 0.3f), 0.38f).copy(alpha = 0.7f), 1.1f, StrokeCap.Round)
         }
         // La cascada: un hilo blanco que salta de la quebrada, con su nube de agua al pie.
         val crecida = if (SelvaBotanico.arroyoCrecido(luz.m)) 1.6f else 1f
@@ -290,7 +305,8 @@ internal object LejosSelva {
             val w0 = az.entre(2f, 5f); val w1 = w0 * az.entre(2f, 3.2f)
             val a = Offset(x0, y0); val b = Offset(x0 + dx * largo, y0 + largo)
             val haz = poligono(a + Offset(-w0, 0f), a + Offset(w0, 0f), b + Offset(w1, 0f), b + Offset(-w1, 0f))
-            drawPath(haz, Brush.linearGradient(listOf(color.copy(alpha = (0.2f * k).coerceIn(0f, 1f)), color.copy(alpha = (0.08f * k).coerceIn(0f, 1f)), Color.Transparent), a, b), blendMode = BlendMode.Plus)
+            drawPath(haz, Brush.linearGradient(listOf(color.copy(alpha = (0.27f * k).coerceIn(0f, 1f)), color.copy(alpha = (0.11f * k).coerceIn(0f, 1f)), Color.Transparent), a, b), blendMode = BlendMode.Plus)
+            drawPath(poligono(a + Offset(-w0 * 0.4f, 0f), a + Offset(w0 * 0.4f, 0f), b + Offset(w1 * 0.4f, 0f), b + Offset(-w1 * 0.4f, 0f)), Brush.linearGradient(listOf(color.copy(alpha = (0.18f * k).coerceIn(0f, 1f)), Color.Transparent), a, b), blendMode = BlendMode.Plus)
             // Lo que encienden: un trozo de follaje verde amarillo donde llegan.
             if (!luz.deLuna) { val q = a + (b - a) * az.entre(0.55f, 0.8f); mancha(q, w1 * 1.6f, w1 * 0.7f, luz.l.tono(lerp(C.HOJA_LUZ, C.LATON, 0.3f)), (0.35f * k).coerceIn(0f, 1f)) }
         }
