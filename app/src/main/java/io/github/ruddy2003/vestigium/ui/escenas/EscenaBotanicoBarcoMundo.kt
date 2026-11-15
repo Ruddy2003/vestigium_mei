@@ -399,7 +399,8 @@ internal object MundoBarco {
         // Tahití y Mauricio, verdes; Cabo Verde, Santa Elena y las Galápagos, secas y negras.
         val tramo = EscenaBotanico.tramo(v.m)
         val verde = EscenaBotanico.lugar(v.m) == EscenaBotanico.Lugar.BERGANTIN && ((tramo.temporada == 4 && tramo.desde == "11-15") || (tramo.temporada == 5 && tramo.desde == "04-29"))
-        val ladera = if (verde) lerp(C.SELVA, C.HOJA, 0.2f) else lerp(C.ROCA, C.CUERO, 0.3f)
+        val galapagos = EscenaBotanico.lugar(v.m) == EscenaBotanico.Lugar.ISLAS || (tramo.temporada == 4 && tramo.desde == "09-15")
+        val ladera = if (verde) lerp(C.SELVA, C.HOJA, 0.2f) else if (galapagos) lerp(C.BREA, C.ROCA, 0.4f) else lerp(C.ROCA, C.CUERO, 0.3f)
         val lava = lerp(C.BREA, C.ROCA, 0.3f)
         // Detrás, otra isla azul; el cono grande con su cráter mellado; delante, un cono chico y la punta de lava.
         cerro(v, perfil(Azar(Semilla.de("botanico", "isla lejana", az.entero(1000))), 120f, 250f, H + 1f, 22f * k, 0.5f, 18, isla = true), H + 2f, lerp(ladera, Color(0xFF7A90A8), 0.55f), 0.86f, az, if (verde) Manto.SELVA else Manto.ROCA)
@@ -408,6 +409,8 @@ internal object MundoBarco {
         val cono = listOf(Offset(cx - ancho / 2f, H + 1f), Offset(cx - ancho * 0.32f, H - alto * 0.38f), Offset(cx - ancho * 0.16f, H - alto * 0.8f), Offset(cx - ancho * 0.07f, H - alto), Offset(cx - ancho * 0.02f, H - alto * 0.9f),
             Offset(cx + ancho * 0.04f, H - alto * 0.88f), Offset(cx + ancho * 0.08f, H - alto * 0.98f), Offset(cx + ancho * 0.2f, H - alto * 0.62f), Offset(minOf(cx + ancho * 0.38f, 256f), H - alto * 0.2f), Offset(minOf(cx + ancho * 0.6f, 262f), H + 1f))
         cerro(v, cono, H + 2f, ladera, 0.6f, az, if (verde) Manto.SELVA else Manto.SECO)
+        // Las Galápagos: «una isla de lava negra que humea»: un hilo de humo blanco del cráter.
+        if (galapagos) humo(l, Offset(cx - ancho * 0.03f, H - alto * 0.9f), 34f, 8f, 2f, 0.6f, 0.15f, 0.55f, 5, 7, 0.6f)
         clipPath(curva(cono, H + 2f)) {
             // Las coladas de lava: lenguas oscuras que bajan del cráter y se abren al llegar abajo.
             repeat(5) { val x = cx + az.entre(-0.1f, 0.1f) * ancho; drawPath(Path().apply { moveTo(x, H - alto * 0.88f); cubicTo(x + az.entre(-8f, 8f), H - alto * 0.5f, x + az.entre(-14f, 14f), H - alto * 0.2f, x + az.entre(-22f, 22f), H + 1f) }, l.tono(lava, 0.58f).copy(alpha = 0.45f), style = Stroke(az.entre(1.5f, 4f))) }
@@ -469,7 +472,7 @@ internal object MundoBarco {
     private fun DrawScope.andes(v: Vista, az: Azar) {
         val l = v.l; val k = cerca(v)
         // La cordillera nevada, alta y lejana; el volcán, un cono blanco; delante, los cerros secos de la costa con el puerto.
-        cerro(v, sinTaparAstros(perfil(Azar(Semilla.de("botanico", "cordillera", az.entero(1000))), 100f, ANCHO + 30f, H - 4f, 40f, 0.75f, 36)), H + 2f, lerp(C.ROCA, Color(0xFF8A9CC0), 0.5f), 0.84f, az, Manto.ROCA, nieve = 1.3f)
+        cerro(v, sinTaparAstros(perfil(Azar(Semilla.de("botanico", "cordillera", az.entero(1000))), 100f, ANCHO + 30f, H - 4f, 42f, 0.55f, 14)), H + 2f, lerp(C.ROCA, Color(0xFF8A9CC0), 0.5f), 0.84f, az, Manto.ROCA, nieve = 1.3f)
         val vx = az.entre(192f, 218f); val va = az.entre(48f, 58f)
         val cono = listOf(Offset(vx - 56f, H - 2f), Offset(vx - 32f, H - va * 0.42f), Offset(vx - 14f, H - va * 0.82f), Offset(vx - 5f, H - va), Offset(vx + 2f, H - va * 0.96f), Offset(vx + 6f, H - va), Offset(vx + 15f, H - va * 0.8f), Offset(vx + 30f, H - va * 0.44f), Offset(vx + 46f, H - va * 0.14f), Offset(vx + 54f, H - 2f))
         cerro(v, cono, H + 2f, lerp(C.ROCA, Color(0xFF8A9CC0), 0.35f), 0.74f, az, Manto.ROCA, nieve = 1.6f)

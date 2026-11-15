@@ -124,7 +124,16 @@ internal object TallerBarco {
         cosas += parte(SITIO_BALDE.pie.y) { balde(v) }
         cosas += parte(pc(0.9f, 0f, 5.6f).y) { lampazo(v) }
         val cu = cuba(v)
-        cosas += parte(ALTO + 60f) { val (pq, sq) = v.pincel(1.12f, 2.25f, 0.8f); with(PiezasBotanico) { cuba(cu, pq, sq) } }
+        cosas += parte(ALTO + 60f) {
+            val (pq, sq) = v.pincel(1.15f, 2.05f, 0.8f); with(PiezasBotanico) { cuba(cu, pq, sq) }
+            // La trinca: dos vueltas de cabo que la abrazan por delante y van a las argollas de la amurada.
+            val s = SITIO_CUBA; val g = (s.escala(0f, 0f) * 0.022f).coerceIn(0.8f, 3f)
+            for (h in listOf(0.34f, 0.7f)) {
+                val vuelta = (0..12).map { i -> val a = (Math.PI + Math.PI * i / 12.0).toFloat(); s.p(0.262f * cos(a), h + 0.012f * sin(a * 3f), 0.262f * sin(a)) }
+                drawPath(Path().apply { moveTo(vuelta[0]); for (q in vuelta.drop(1)) lineTo(q) }, pq.sombra(C.CANAMO), style = Stroke(g, cap = StrokeCap.Round))
+                drawPath(Path().apply { moveTo(vuelta[0] + Offset(0f, -g * 0.3f)); for (q in vuelta.drop(1)) lineTo(q + Offset(0f, -g * 0.3f)) }, pq.luz(C.CANAMO).copy(alpha = 0.6f), style = Stroke(g * 0.4f, cap = StrokeCap.Round))
+            }
+        }
         when (EscenaBotanico.red(m)) {
             EscenaBotanico.Red.SECANDO -> cosas += parte(pc(estribor(10.5f), 0f, 10.5f).y) { val (pr, _) = v.pincel(1.4f, 10.5f, 1f); with(PiezasBotanico) { redASecar(pr, pc(estribor(9.7f) - 0.02f, REGALA + 0.03f, 9.7f), pc(estribor(11.6f) - 0.02f, REGALA + 0.03f, 11.6f), k(10.6f) * 0.55f, Azar(Semilla.de("botanico", "red"))) } }
             EscenaBotanico.Red.ARRASTRANDO -> cosas += parte(ALTO + 50f) { with(PiezasBotanico) { cabo(v.p, pc(estribor(2.9f) + 0.06f, REGALA + 0.06f, 2.9f), Offset(ANCHO + 30f, ALTO - 30f), 3f, 1.8f) } }
@@ -161,27 +170,23 @@ internal object TallerBarco {
             // La prensa, en su esquina del fondo, y una hoja de herbario recostada en ella, de cara a quien mira.
             val prensaS = Sitio(s.v, me.sobre(-0.52f, 0.55f), s.k, s.giro + 0.18f)
             prensa(PiezasBotanico.Prensa(prensaS, Semilla.de("botanico", "prensa"), ancho = 0.5f, fondo = 0.34f, grueso = 0.14f, base = 0f), p, sol)
+            // Detrás, una hoja de herbario de lado, con su planta de flor (siempre a la vista); delante, trabajando, otra recostada en la prensa.
+            val h2 = listOf(s.p(-0.3f * MESA_ANCHO, h + 0.01f, 0.28f), s.p(-0.06f * MESA_ANCHO, h + 0.01f, 0.3f), s.p(-0.06f * MESA_ANCHO, h + 0.3f, 0.36f), s.p(-0.3f * MESA_ANCHO, h + 0.3f, 0.34f))
+            hojaDeHerbario(p, h2, 0, 0.1f, Azar(Semilla.de("botanico", "herbario mesa 2")), sol = alSol * 0.6f)
             if (trabajando) {
                 val pie0 = s.p(-0.05f * MESA_ANCHO, h + 0.01f, 0.08f); val pie1 = s.p(0.28f * MESA_ANCHO, h + 0.01f, 0.06f)
                 val alto = k(s.z0 + 0.1f) * 0.42f
                 val hoja = listOf(pie0, pie1, pie1 + Offset(-alto * 0.16f, -alto), pie0 + Offset(-alto * 0.18f, -alto * 0.98f))
                 drawPath(poligono(listOf(pie0, pie1, pie1 + Offset(alto * 0.25f, alto * 0.06f), pie0 + Offset(alto * 0.25f, alto * 0.06f))), p.sombra(C.MADERA).copy(alpha = 0.35f))
                 hojaDeHerbario(p, hoja, 1, 0.4f, Azar(Semilla.de("botanico", "herbario mesa")), sol = alSol)
-                // Detrás, otra hoja, de lado, con su planta de flor.
-                val h2 = listOf(s.p(-0.3f * MESA_ANCHO, h + 0.01f, 0.28f), s.p(-0.06f * MESA_ANCHO, h + 0.01f, 0.3f), s.p(-0.06f * MESA_ANCHO, h + 0.3f, 0.36f), s.p(-0.3f * MESA_ANCHO, h + 0.3f, 0.34f))
-                hojaDeHerbario(p, h2, 0, 0.1f, Azar(Semilla.de("botanico", "herbario mesa 2")), sol = alSol * 0.6f)
             }
-            // La caja de insectos: abierta y levantada sobre un libro, a la derecha del fondo; o cerrada, tumbada.
-            if (trabajando) {
+            // La caja de insectos, abierta y levantada sobre un libro, a la derecha del fondo (sus mariposas, siempre a la vista).
+            run {
                 val libro = Sitio(s.v, me.sobre(0.62f, 0.45f), s.k, s.giro - 0.15f)
                 for (cara in visibles(libro, carasDeCaja(-0.17f, 0.17f, 0f, 0.07f, -0.12f, 0.12f))) { drawPath(forma(libro, cara), p.por(if (cara.arriba) C.CUERO else C.PAPEL, luzDe(libro, sol, cara))) }
                 val b0 = libro.p(-0.2f, 0.07f, -0.04f); val b1 = libro.p(0.26f, 0.07f, -0.06f); val altoC = k(s.z0 + 0.4f) * 0.38f
                 val caja = listOf(b0, b1, b1 + Offset(altoC * 0.12f, -altoC), b0 + Offset(altoC * 0.1f, -altoC * 0.96f))
                 cajaDeInsectos(p, caja, Offset(-altoC * 0.08f, altoC * 0.05f), t, Azar(Semilla.de("botanico", "insectos mesa")), sol = alSol)
-            } else {
-                val cajaS = Sitio(s.v, me.sobre(0.6f, 0.4f), s.k, s.giro - 0.1f)
-                for (cara in visibles(cajaS, carasDeCaja(-0.22f, 0.22f, 0f, 0.07f, -0.15f, 0.15f))) drawPath(forma(cajaS, cara), p.por(C.CAOBA, luzDe(cajaS, sol, cara)))
-                drawLine(p.luz(C.LATON), cajaS.p(-0.02f, 0.07f, -0.15f), cajaS.p(0.04f, 0.07f, -0.15f), 1.2f)
             }
             // Los frascos de esta tanda, de pie, y el pájaro a medio disecar con su estopa y su etiqueta.
             val ef = k(s.z0 - 0.1f)
@@ -235,7 +240,7 @@ internal object TallerBarco {
      */
     private fun DrawScope.encerado(v: Vista, me: PiezasBotanico.Mesa, p: Pincel, sol: Sol3) {
         val s = me.s; val w = MESA_ANCHO / 2f + 0.05f; val d = MESA_FONDO / 2f + 0.05f; val h = MESA_ALTO + 0.02f; val e = k(s.z0)
-        val lona = lerp(C.BREA, lerp(C.ROCA, C.SELVA, 0.25f), 0.45f)
+        val lona = lerp(C.BREA, lerp(C.ROCA, C.LONA, 0.3f), 0.72f)
         val az = Azar(Semilla.de("botanico", "encerado"))
         val caida = 0.36f
         val tArriba = sol.t(s.normal(V3(0f, 1f, 0f))) + 0.25f
@@ -256,7 +261,7 @@ internal object TallerBarco {
             for ((u, vv, r) in listOf(Triple(-0.52f, 0.5f, 0.22f), Triple(0.6f, 0.4f, 0.2f), Triple(0.5f, -0.1f, 0.12f), Triple(-0.1f, 0.2f, 0.16f))) {
                 val c = me.sobre(u, vv) + Offset(0f, -e * r * 0.25f); val rr = e * r
                 drawOval(p.sombra(lona).copy(alpha = 0.5f), Offset(c.x - rr, c.y - rr * 0.1f), Size(rr * 2f, rr * 0.45f))
-                drawOval(p.luz(lona), Offset(c.x - rr * 0.8f, c.y - rr * 0.35f), Size(rr * 1.6f, rr * 0.5f))
+                drawOval(p.luz(lerp(lona, C.LONA, 0.25f)), Offset(c.x - rr * 0.8f, c.y - rr * 0.35f), Size(rr * 1.6f, rr * 0.5f))
             }
             if (EscenaBotanico.cubiertaMojada(v.m)) repeat(6) { val c = me.sobre(az.entre(-0.9f, 0.9f), az.entre(-0.8f, 0.8f)); mancha(c, e * az.entre(0.1f, 0.25f), e * 0.03f, lerp(v.l.medio, Color.White, 0.2f), 0.35f) }
             if (v.nieve > 0.02f) drawPath(tapa, p.luz(C.NIEVE).copy(alpha = 0.85f * v.nieve))

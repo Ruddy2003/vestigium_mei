@@ -195,7 +195,7 @@ internal object VelasBarco {
             // Cada paño, de su tanda: con el degradado de la panza a lo alto (según hacia dónde mira cada trozo).
             for (k in 0 until panos) {
                 val u0 = k / panos.toFloat(); val u1 = (k + 1) / panos.toFloat(); val um = (u0 + u1) / 2f
-                val tanda = lerp(base, if (k % 3 == 0) C.ARENA else if (k % 3 == 1) lerp(C.LONA, Color.White, 0.4f) else lerp(C.LONA, C.ROCA, 0.35f), az.entre(0.04f, 0.2f))
+                val tanda = lerp(base, if (k % 3 == 0) C.ARENA else if (k % 3 == 1) lerp(C.LONA, Color.White, 0.4f) else lerp(C.LONA, C.ROCA, 0.35f), az.entre(0.08f, 0.3f))
                 val ps = (0..8).map { pc(vela.en(u0, it / 8f)) } + (8 downTo 0).map { pc(vela.en(u1 + 0.002f, it / 8f)) }
                 val colores = listOf(0.02f, 0.22f, 0.45f, 0.7f, 0.96f).map { vv -> val c = colorLona(v, normal(vela, um, vv), tanda); if (lejos > 0f) lerp(c, v.l.bruma, 0.4f * lejos) else c }
                 drawPath(poligono(ps), Brush.linearGradient(colores, pc(vela.en(um, 0f)), pc(vela.en(um, 1f))))
@@ -216,7 +216,7 @@ internal object VelasBarco {
             for (k in 1 until panos) {
                 val u = k / panos.toFloat()
                 val linea = (0..12).map { pc(vela.en(u, it / 12f)) }
-                drawPath(Path().apply { moveTo(linea[0]); for (q in linea.drop(1)) lineTo(q) }, p.sombra(lerp(base, C.CANAMO, 0.4f)).copy(alpha = 0.55f), style = Stroke(g))
+                drawPath(Path().apply { moveTo(linea[0]); for (q in linea.drop(1)) lineTo(q) }, p.sombra(lerp(base, C.CANAMO, 0.4f)).copy(alpha = 0.7f), style = Stroke(g * 1.15f))
                 drawPath(Path().apply { moveTo(linea[0] + Offset(0.9f, 0f)); for (q in linea.drop(1)) lineTo(q + Offset(0.9f, 0f)) }, p.luz(base).copy(alpha = 0.4f * (1f - 0.6f * noche)), style = Stroke(g * 0.7f))
                 if (lejos < 0.2f) drawPath(Path().apply { moveTo(linea[0] + Offset(-0.9f, 0f)); for (q in linea.drop(1)) lineTo(q + Offset(-0.9f, 0f)) }, p.sombra(base).copy(alpha = 0.28f), style = Stroke(0.35f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.2f, 1.3f))))
             }
