@@ -11,11 +11,8 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
-import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.Ger
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.caballoLejano
-import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.ger
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.ovoo
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.agua
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.bajio
@@ -152,7 +149,7 @@ internal object LejosVerano {
             for (i in 0 until n) {
                 val q = c + Offset(i * (if (j == 2) 7f else 5.6f), i * 0.5f); val k = if (j == 2) 2.1f else 1.5f
                 sombraCorta(sol.r, q, 3.2f * k, 2.6f * k)
-                ger(Ger(Sitio(VeranoMongol.MIRADA, q, k, 0.4f - i * 0.3f), 960L + j * 7 + i, 0.5f, EscenaMongol.Puerta.ABIERTA, 0.6f, lejos = if (j == 2) 0.42f else 0.6f, detalle = false), p, sol)
+                gerLejana(p, q, k, if (j == 2) 0.42f else 0.6f)
             }
             // Un carro y unas manchas de ganado junto a cada campamento.
             val az = Azar(Semilla.de("mongol", "verano", "recodo", j))
@@ -205,14 +202,14 @@ internal object LejosVerano {
         clipPath(forma) {
             // La banda de roca rota bajo la cima y los canchales que bajan de ella.
             val roca = lerp(C.PIEDRA, C.MONTE, 0.3f)
-            for (i in 0 until 9) { val x = 36f + i * 3.4f + az.entre(-1f, 1f); val y = 89f + kotlin.math.abs(x - CIMA.x) * 0.32f + az.entre(-0.6f, 0.6f); drawRect(l.tono(if ((x < CIMA.x) == luzIzq) lerp(roca, C.FIELTRO, 0.3f) else lerp(roca, C.SOMBRA, 0.3f), 0.36f), Offset(x, y), Size(az.entre(1.6f, 3f), az.entre(0.8f, 1.4f))) }
+            for (i in 0 until 14) { val x = 30f + i * 3f + az.entre(-1f, 1f); val y = 89f + kotlin.math.abs(x - CIMA.x) * 0.32f + az.entre(-0.6f, 0.6f); drawRect(l.tono(if ((x < CIMA.x) == luzIzq) lerp(roca, C.FIELTRO, 0.3f) else lerp(roca, C.SOMBRA, 0.3f), 0.36f), Offset(x, y), Size(az.entre(1.8f, 3.4f), az.entre(1f, 1.8f))) }
             // Las cárcavas: surcos que bajan de la cima y se bifurcan, oscuros, con un filo claro del lado del sol.
             for (k in 0 until 7) {
                 var q = Offset(CIMA.x + (k - 3f) * 8.5f + az.entre(-2f, 2f), 0f); q = Offset(q.x, cresta(q.x) + az.entre(2.5f, 5f))
                 val pasos = 3 + az.entero(3); val camino = ArrayList<Offset>(); camino += q
                 repeat(pasos) { q += Offset((q.x - CIMA.x) * 0.06f + az.entre(-1.5f, 1.5f), az.entre(2.4f, 4f)); camino += q }
                 val trazo = Path().apply { moveTo(camino[0]); for (c in camino.drop(1)) lineTo(c) }
-                drawPath(trazo, l.tono(lerp(propio, C.SOMBRA, 0.55f), 0.36f).copy(alpha = 0.55f), style = Stroke(0.7f, cap = StrokeCap.Round))
+                drawPath(trazo, l.tono(lerp(propio, C.SOMBRA, 0.55f), 0.36f).copy(alpha = 0.75f), style = Stroke(1f, cap = StrokeCap.Round))
                 drawPath(trazo.apply { translate(Offset(if (luzIzq) -0.5f else 0.5f, 0f)) }, l.tono(lerp(propio, C.FIELTRO, 0.4f), 0.36f).copy(alpha = 0.35f), style = Stroke(0.4f, cap = StrokeCap.Round))
                 if (az.real() < 0.6f) { val c = camino[camino.size / 2]; drawLine(l.tono(lerp(propio, C.SOMBRA, 0.5f), 0.36f).copy(alpha = 0.45f), c, c + Offset(if (c.x < CIMA.x) -2.6f else 2.6f, 2.6f), 0.5f, StrokeCap.Round) }
             }
@@ -220,6 +217,22 @@ internal object LejosVerano {
             repeat(30) { val x = az.entre(0f, 140f); val y = cresta(x) + az.entre(2f, 18f); drawOval(l.tono(lerp(propio, C.VERDE, 0.5f), 0.38f).copy(alpha = 0.5f), Offset(x, y), Size(az.entre(1.2f, 3f), 0.7f)) }
         }
         ovoo(p, CIMA + Offset(0f, 0.3f), 8.6f, EscenaMongol.cintasDelOvoo(m), Azar(Semilla.de("mongol", "ovoo")), 0.32f, 0f, m.viento, EscenaMongol.diaDelOvoo(m))
+    }
+
+    /**
+     * Una tienda de un campamento lejano, de pocas unidades: la pared con su lado de luz y de sombra, el techo cónico, la
+     * puerta (encendida de noche) y el aro oscuro. A ese tamaño la pieza entera no se distingue y pesa diez veces más.
+     */
+    private fun DrawScope.gerLejana(p: Pincel, pie: Offset, k: Float, lejos: Float) {
+        val r = 3f * k; val pared = 1.55f * k; val cumbre = 2.75f * k
+        val muro = poligono(pie + Offset(-r, 0f), pie + Offset(r, 0f), pie + Offset(r, -pared), pie + Offset(-r, -pared))
+        drawPath(muro, Brush.horizontalGradient(if (p.solALaDerecha) listOf(p.sombra(C.FIELTRO, lejos), p.medio(C.FIELTRO, lejos), p.luz(C.FIELTRO, lejos)) else listOf(p.luz(C.FIELTRO, lejos), p.medio(C.FIELTRO, lejos), p.sombra(C.FIELTRO, lejos)), pie.x - r, pie.x + r))
+        val techo = Path().apply { moveTo(pie + Offset(-r * 1.06f, -pared + 0.2f)); cubicTo(pie + Offset(-r * 0.7f, -pared - (cumbre - pared) * 0.5f), pie + Offset(-r * 0.3f, -cumbre), pie + Offset(0f, -cumbre)); cubicTo(pie + Offset(r * 0.3f, -cumbre), pie + Offset(r * 0.7f, -pared - (cumbre - pared) * 0.5f), pie + Offset(r * 1.06f, -pared + 0.2f)); close() }
+        drawPath(techo, Brush.horizontalGradient(if (p.solALaDerecha) listOf(p.sombra(C.FIELTRO_VIEJO, lejos), p.luz(C.FIELTRO_VIEJO, lejos)) else listOf(p.luz(C.FIELTRO_VIEJO, lejos), p.sombra(C.FIELTRO_VIEJO, lejos)), pie.x - r, pie.x + r))
+        drawLine(p.medio(C.CRIN, lejos), pie + Offset(-r, -pared * 0.5f), pie + Offset(r, -pared * 0.5f), (0.06f * k).coerceAtLeast(0.25f))
+        drawOval(p.sombra(C.HOLLIN, lejos), Offset(pie.x - r * 0.18f, pie.y - cumbre - 0.25f * k), Size(r * 0.36f, 0.3f * k))
+        val puerta = lerp(p.medio(C.ROJO, lejos), C.LUMBRE, (0.8f * p.l.noche).coerceIn(0f, 1f))
+        drawRect(puerta, Offset(pie.x - r * 0.3f, pie.y - pared * 0.8f), Size(r * 0.22f, pared * 0.8f))
     }
 
     /** La altura de la cresta del cerro en [x]. */

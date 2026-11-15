@@ -1,8 +1,8 @@
 package io.github.ruddy2003.vestigium.ui.escenas
 
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -30,9 +30,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.VeranoMongol.DeLaCuerda
 import io.github.ruddy2003.vestigium.ui.escenas.VeranoMongol.Postura
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Cosa
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.capaSombra
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cuerda
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cubicTo
@@ -42,7 +40,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.moveTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombra
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombraArrojada
 import io.github.ruddy2003.vestigium.vidas.Azar
@@ -133,6 +130,13 @@ internal object CercaVerano {
             flores(m, p, az)
             // Con lluvia, la tierra pisada se oscurece y se encharca: los charcos devuelven el cielo gris.
             if (V.rioTurbio(m)) charcos(p, az)
+            // Las mañanas de los últimos días de septiembre, «las primeras heladas blanquean la hierba» (EscenaMongol.helada):
+            // la escarcha cubre el llano, más espesa lejos de lo pisado, y se queda en la sombra.
+            if (EscenaMongol.helada(m)) {
+                drawRect(Brush.verticalGradient(listOf(p.luz(C.NIEVE, 0.2f).copy(alpha = 0.35f), p.medio(C.NIEVE_SOMBRA).copy(alpha = 0.45f)), 140f, ALTO), Offset(-14f, 140f), Size(ANCHO + 28f, ALTO - 138f))
+                drawPoints((0 until 900).map { Offset(az.entre(-4f, ANCHO + 4f), az.entre(145f, ALTO)) }, PointMode.Points, p.luz(C.NIEVE).copy(alpha = 0.55f), 0.9f, StrokeCap.Round)
+                mancha(Offset(212f, 252f), 50f, 12f, p.medio(lerp(C.TIERRA, C.ESTEPA, 0.3f)), 0.35f)
+            }
         }
     }
 
@@ -145,8 +149,9 @@ internal object CercaVerano {
             val h = w * (0.14f + (c.y - 150f) / 1400f)
             val borde = (0 until 12).map { j -> val a = j / 12f * 2f * PI.toFloat(); c + Offset(cos(a) * w * az.entre(0.8f, 1.1f), sin(a) * h * az.entre(0.8f, 1.1f)) }
             drawPath(poligono(borde.map { it + Offset(0f, 0.6f) }), p.sombra(lerp(C.TIERRA, C.HOLLIN, 0.4f)).copy(alpha = 0.7f))
-            drawPath(poligono(borde), Brush.verticalGradient(listOf(lerp(l.medio, l.alto, 0.4f), lerp(l.bajo, l.medio, 0.3f)), c.y - h, c.y + h))
-            drawLine(lerp(l.bajo, Color.White, 0.4f).copy(alpha = 0.5f), c + Offset(-w * 0.5f, -h * 0.3f), c + Offset(w * 0.2f, -h * 0.3f), 0.5f)
+            val barro = p.sombra(lerp(C.TIERRA, C.HOLLIN, 0.3f))
+            drawPath(poligono(borde), Brush.verticalGradient(listOf(lerp(lerp(l.medio, l.alto, 0.4f), barro, 0.45f), lerp(lerp(l.bajo, l.medio, 0.3f), barro, 0.3f)), c.y - h, c.y + h))
+            drawLine(lerp(l.bajo, Color.White, 0.3f).copy(alpha = 0.4f), c + Offset(-w * 0.5f, -h * 0.3f), c + Offset(w * 0.2f, -h * 0.3f), 0.5f)
         }
     }
 
@@ -267,7 +272,7 @@ internal object CercaVerano {
             ger(bat, p, sol)
             usoDeLaPared(p, bat, az, V.hierba(m))
             if (EscenaMongol.colgado(m) != Colgado.NADA) quesoEnElTecho(p, sol, bat, az)
-            arreos(p.con(calida(Offset(318f, 220f))), sol, bat)
+            arreos(p.con(calida(Offset(292f, 220f))), sol, bat)
             if (EscenaMongol.liebre(m)) liebre(p.con(calida(Offset(278f, 200f))), Offset(278f, 186f))
         }
         // Las sombras sobre la pared: la de la silla y la del objeto grande, que se arriman a ella.
@@ -314,7 +319,7 @@ internal object CercaVerano {
         val lejos = listOf(Offset(-12f, 266f), Offset(70f, 259f)); val cerca = listOf(Offset(-8f, 278f), Offset(80f, 268.5f))
         val madera = lerp(C.MADERA, C.TIERRA, 0.35f)
         // La sombra en la hierba.
-        drawPath(poligono(cerca[0] + Offset(0f, 12f), cerca[1] + Offset(0f, 12f), cerca[1] + Offset(sol.r.ax * 8f + 4f, 14f), cerca[0] + Offset(sol.r.ax * 8f, 16f)), sol.r.color.copy(alpha = 0.7f * sol.r.fuerza))
+        drawPath(poligono(cerca[0] + Offset(0f, 12f), cerca[1] + Offset(0f, 12f), cerca[1] + Offset(sol.r.ax * 8f + 4f, 14f), cerca[0] + Offset(sol.r.ax * 8f, 16f)), sol.r.color.copy(alpha = 0.7f * sol.r.fuerza), blendMode = BlendMode.Multiply)
         // La cara de dentro de la duela de allá, el agua y el canto de arriba.
         val boca = poligono(lejos[0], lejos[1], cerca[1], cerca[0])
         drawPath(boca, p.sombra(lerp(madera, C.HOLLIN, 0.2f)))
@@ -336,7 +341,7 @@ internal object CercaVerano {
     /** Un rollo de fieltro tendido en la hierba, en tres cuartos: el cuerpo con su luz, la cabeza con la espiral y las cuerdas de crin. */
     private fun DrawScope.rolloDeFieltro(p: Pincel, sol: Sol3, c: Offset, largo: Float, r: Float) {
         val inclina = -0.22f; val a = c + Offset(-largo / 2f, -largo / 2f * inclina); val b = c + Offset(largo / 2f, largo / 2f * inclina)
-        drawOval(sol.r.color.copy(alpha = 0.5f * sol.r.fuerza), Offset(c.x - largo * 0.55f + sol.r.ax * r, c.y - r * 0.3f), Size(largo * 1.1f, r * 0.9f))
+        drawOval(sol.r.color.copy(alpha = 0.5f * sol.r.fuerza), Offset(c.x - largo * 0.55f + sol.r.ax * r, c.y - r * 0.3f), Size(largo * 1.1f, r * 0.9f), blendMode = BlendMode.Multiply)
         val n = Offset(0f, -r)
         val cuerpo = poligono(a, b, b + n * 2f, a + n * 2f)
         drawPath(cuerpo, Brush.verticalGradient(listOf(p.luz(C.FIELTRO), p.medio(C.FIELTRO), p.sombra(C.FIELTRO)), c.y - 2f * r - largo * 0.12f, c.y + largo * 0.12f))
@@ -468,20 +473,20 @@ internal object CercaVerano {
     /** Lo que cuelga de la pared de la tienda: el ronzal y las riendas en una estaca de la celosía, y la soga de crin enrollada, cada uno con su sombra en el fieltro. */
     private fun DrawScope.arreos(p: Pincel, sol: Sol3, g: Ger) {
         val r = sol.r; val corre = Offset((r.ax * 3f).coerceIn(-5f, 5f), 1.6f)
-        val t1 = angulo(g, 318f); val clavo = g.pared(t1, 1.25f, g.radio + 0.02f)
+        val t1 = angulo(g, 292f); val clavo = g.pared(t1, 1.25f, g.radio + 0.02f)
         // El ronzal: un lazo de crin y cuero con su argolla, y las riendas que caen en curva.
         val ronzal = Path().apply { moveTo(clavo); cubicTo(clavo + Offset(-5f, 6f), clavo + Offset(-4f, 16f), clavo + Offset(1f, 18f)); cubicTo(clavo + Offset(6f, 16f), clavo + Offset(6f, 6f), clavo) }
         val riendas = Path().apply { moveTo(clavo); cubicTo(clavo + Offset(3f, 10f), clavo + Offset(9f, 22f), clavo + Offset(5f, 30f)) }
-        if (r.fuerza > 0.05f) { drawPath(ronzal.apply { translate(corre) }, r.color.copy(alpha = 0.35f * r.fuerza), style = Stroke(1.4f)); ronzal.translate(-corre) }
+        if (r.fuerza > 0.05f) { drawPath(ronzal.apply { translate(corre) }, r.color.copy(alpha = 0.35f * r.fuerza), style = Stroke(1.4f), blendMode = BlendMode.Multiply); ronzal.translate(-corre) }
         drawPath(ronzal, p.medio(C.CUERO), style = Stroke(1.3f, cap = StrokeCap.Round))
         drawPath(riendas, p.medio(C.CRIN), style = Stroke(0.9f, cap = StrokeCap.Round))
         drawCircle(p.luz(lerp(C.PIEDRA, C.FIELTRO, 0.3f)), 1.6f, clavo + Offset(1f, 18f), style = Stroke(0.7f))
         drawCircle(p.medio(C.MADERA_OSC), 1f, clavo)
         // La soga de crin, enrollada y colgada de otra estaca, más allá.
-        val t2 = angulo(g, 366f); val clavo2 = g.pared(t2, 1.2f, g.radio + 0.02f)
+        val t2 = angulo(g, 368f); val clavo2 = g.pared(t2, 1.2f, g.radio + 0.02f)
         for (j in 0 until 4) {
             val w = 6.4f + j * 0.5f; val c = clavo2 + Offset(j * 0.6f - 1f, 9f + j * 0.4f)
-            if (r.fuerza > 0.05f) drawOval(r.color.copy(alpha = 0.3f * r.fuerza), Offset(c.x - w + corre.x, c.y - 8f + corre.y), Size(w * 2f, 16f), style = Stroke(1f))
+            if (r.fuerza > 0.05f) drawOval(r.color.copy(alpha = 0.3f * r.fuerza), Offset(c.x - w + corre.x, c.y - 8f + corre.y), Size(w * 2f, 16f), style = Stroke(1f), blendMode = BlendMode.Multiply)
             drawOval(p.por(C.CRIN, if (j % 2 == 0) 0.3f else -0.3f), Offset(c.x - w, c.y - 8f), Size(w * 2f, 16f), style = Stroke(1.1f))
         }
         drawLine(p.medio(C.CRIN), clavo2, clavo2 + Offset(0f, 3f), 1.2f)
@@ -528,7 +533,7 @@ internal object CercaVerano {
         val queso = lerp(C.FIELTRO, C.ESTEPA, 0.18f)
         repeat(30) {
             val c = techo(az.entre(a + 0.02f, b - 0.02f), az.entre(k0 + 0.04f, k1 - 0.04f)); val w = az.entre(0.9f, 1.5f)
-            drawOval(sol.r.color.copy(alpha = 0.6f * sol.r.fuerza), Offset(c.x - w + sol.r.ax * 0.6f, c.y - w * 0.2f), Size(w * 2.2f, w * 0.9f))
+            drawOval(sol.r.color.copy(alpha = 0.6f * sol.r.fuerza), Offset(c.x - w + sol.r.ax * 0.6f, c.y - w * 0.2f), Size(w * 2.2f, w * 0.9f), blendMode = BlendMode.Multiply)
             drawRect(p.sombra(queso), Offset(c.x - w, c.y - w * 0.5f), Size(w * 2f, w))
             drawRect(p.luz(queso), Offset(if (p.solALaDerecha) c.x - w * 0.2f else c.x - w, c.y - w * 0.8f), Size(w * 1.2f, w * 0.7f))
         }
@@ -651,8 +656,10 @@ internal object CercaVerano {
                 Colgado.CINTAS -> if (i % 5 == 4) Pieza.BOLSA else Pieza.KHADAG
                 Colgado.NADA -> Pieza.BOLSA
             }
-            // Con lluvia se recoge lo que no se puede mojar (los paños, las pieles, la lana, el fieltro): quedan las bolsas que escurren.
-            val pieza = if (llueve && (pieza0 == Pieza.PANO || pieza0 == Pieza.PIEL || pieza0 == Pieza.VELLON || pieza0 == Pieza.FIELTRO)) Pieza.BOLSA else pieza0
+            // Con lluvia se recoge lo que no se puede mojar (los paños, las pieles, la lana, el fieltro): quedan, sueltas, las
+            // bolsas que escurren y las cintas.
+            val recogida = llueve && (pieza0 == Pieza.PANO || pieza0 == Pieza.PIEL || pieza0 == Pieza.VELLON || pieza0 == Pieza.FIELTRO || pieza0 == Pieza.SARTA)
+            val pieza = pieza0
             val (w, h) = when (pieza) {
                 Pieza.BOLSA -> 7.6f to 10.5f; Pieza.PANO -> 14f to 13f; Pieza.SARTA -> 3f to 15f; Pieza.ODRECILLO -> 7.4f to 9f
                 Pieza.PIEL -> 18f to 14f; Pieza.VELLON -> 15f to 11f; Pieza.FIELTRO -> 18f to 22f; Pieza.KHADAG -> 3.6f to 19f
@@ -665,7 +672,8 @@ internal object CercaVerano {
             }
             val k = (t * n).toInt().coerceIn(1, n - 1)
             val d = linea[k + 1] - linea[k - 1]; val dir = d / d.getDistance().coerceAtLeast(0.01f)
-            lista += Colgada(linea[k], t, dir, pieza, w * s * az.entre(0.85f, 1.15f), h * s * az.entre(0.85f, 1.18f), color, az.entero(1000), pieza == Pieza.BOLSA && az.real() < 0.35f)
+            val cosa = Colgada(linea[k], t, dir, pieza, w * s * az.entre(0.85f, 1.15f), h * s * az.entre(0.85f, 1.18f), color, az.entero(1000), pieza == Pieza.BOLSA && az.real() < 0.35f)
+            if (!recogida) lista += cosa
             val paso = when (pieza) { Pieza.KHADAG, Pieza.SARTA -> 0.05f; Pieza.BOLSA, Pieza.ODRECILLO -> 0.075f; Pieza.PANO, Pieza.PIEL, Pieza.VELLON -> 0.11f; Pieza.FIELTRO -> 0.15f }
             // A trechos se juntan, a trechos queda la cuerda sola.
             t += paso * (if (az.real() < 0.3f) 0.55f else az.entre(0.8f, 1.35f)) * (if (tipo == Colgado.CINTAS) 0.85f else 1f) * (0.75f + 0.5f * t); i++

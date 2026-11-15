@@ -18,21 +18,18 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.caballo
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.carreta
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.ger
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.hogar
-import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.luzDePuerta
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.rebano
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.sombraDeCarreta
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.capaSombra
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cubicTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.lineTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.moveTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombra
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombraArrojada
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombraCorta
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
@@ -106,7 +103,7 @@ internal object CampamentoVerano {
         // El rebaño de día, junto al río: bebe en la playa y pace en la orilla, en el hueco del pasillo.
         val cerca = EscenaMongol.ovejasCerca(m); val todas = EscenaMongol.ovejas(m)
         val lejanas = (todas * (1f - cerca)).toInt(); val juntas = todas - lejanas
-        rebano(p, (0 until lejanas).map { val u = az.real(); Offset(146f + 82f * u + az.entre(-6f, 6f), 143.6f + az.entre(0f, 6f) + 2f * u) }, { y -> 1.9f + (y - 140f) * 0.16f }, az, { 0.3f }, pastan = 0.75f)
+        rebanoLejano(p, sol, (0 until lejanas).map { val u = az.real(); Offset(146f + 82f * u + az.entre(-6f, 6f), 143.6f + az.entre(0f, 6f) + 2f * u) }.sortedBy { it.y }, az)
 
         // La semana del fieltro: las piezas nuevas, blancas, tendidas en la orilla, y el rollo con su palo.
         if (VeranoMongol.fieltroTendido(m)) fieltroEnLaHierba(p, sol, az)
@@ -146,6 +143,24 @@ internal object CampamentoVerano {
             caballo(p.con(calor(q)), q, alto, if (i % 2 == 0) 1f else -1f, pelos[i], pasta = i == 2, silla = true, cintas = EscenaMongol.fiesta(m) || VeranoMongol.carrera(m), lejos = lejosDe(q.y))
         }
         if (fuera > 1) { drawLine(p.medio(C.MADERA_OSC, 0.3f), Offset(222f, 150f), Offset(222f, 142f), 0.6f); drawLine(p.medio(C.CRIN, 0.3f), Offset(222f, 143f), Offset(216f, 141f), 0.3f) }
+    }
+
+    /**
+     * El rebaño lejos, junto al río, a dos o tres unidades de largo: a ese tamaño basta el lomo de lana con su luz arriba,
+     * la cabeza oscura (gacha la mayoría, que pastan) y la sombra corta; pesa mucho menos que la oveja de cerca.
+     */
+    private fun DrawScope.rebanoLejano(p: Pincel, sol: Sol3, sitios: List<Offset>, az: Azar) {
+        val lejos = 0.3f
+        for (q in sitios) {
+            val u = 1.9f + (q.y - 140f) * 0.16f; val d = if (az.entero(3) == 0) 1f else -1f
+            sombraCorta(sol.r, q, u, u * 0.5f)
+            val cabra = az.entero(7) == 0
+            val lana = if (cabra) lerp(C.LANA, C.HOLLIN, 0.5f) else lerp(C.LANA, C.FIELTRO_VIEJO, az.entre(0f, 0.5f))
+            drawOval(Brush.verticalGradient(listOf(p.luz(lana, lejos), p.sombra(lana, lejos)), q.y - u * 0.62f, q.y - u * 0.12f), Offset(q.x - u * 0.45f, q.y - u * 0.62f), Size(u * 0.9f, u * 0.5f))
+            val pasta = az.real() < 0.75f
+            val cabeza = q + Offset(-u * 0.5f * d, if (pasta) -u * 0.18f else -u * 0.5f)
+            drawOval(p.medio(C.CABEZA, lejos), Offset(cabeza.x - u * 0.14f, cabeza.y - u * 0.1f), Size(u * 0.28f, u * 0.2f))
+        }
     }
 
     /** La marca que deja una tienda en la hierba donde se arma: un círculo de hierba aplastada y amarillenta, con la del fuego del centro. */
