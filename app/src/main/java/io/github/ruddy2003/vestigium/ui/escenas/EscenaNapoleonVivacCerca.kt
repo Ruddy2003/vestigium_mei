@@ -194,10 +194,10 @@ internal object VivacCerca {
             if (pz.second < 14f) for (q in mochilasDe(i, pz)) { val sm = PiezasNapoleon.sitio(MIRADA, q, 0f); add(VivacLuz.Sombra(q, caja(sm, 0.2f, 0.34f))) }
         }
         if (!VivacNapoleon.sinCompania(m)) for (q in listOf(Offset(326f, 229f), Offset(256f, 233f))) add(VivacLuz.Sombra(q, caja(PiezasNapoleon.sitio(MIRADA, q, 0f), 0.2f, 0.34f)))
-        add(VivacLuz.Sombra(S_TONEL.pie, caja(S_TONEL, 0.3f, TONEL_ALTO)))
+        add(VivacLuz.Sombra(S_TONEL.pie, siluetaDelTonel()))
         if (!VivacNapoleon.sinCompania(m)) add(VivacLuz.Sombra(S_TAMBOR.pie, caja(S_TAMBOR, 0.22f, 0.42f)))
         if (!ObjetosNapoleon.esGrande(m)) add(VivacLuz.Sombra(S_TOCON.pie, caja(S_TOCON, 0.26f, TOCON_ALTO + 0.12f)))
-        add(VivacLuz.Sombra(FUEGO, caja(S_FUEGO, 0.55f, if (EscenaNapoleon.marmita(m) == Marmita.AL_FUEGO) 0.95f else 0.8f)))
+        add(VivacLuz.Sombra(FUEGO, siluetaDelRancho(EscenaNapoleon.marmita(m) == Marmita.AL_FUEGO)))
         add(VivacLuz.Sombra(S_LENA.pie, caja(S_LENA, 0.7f, 0.45f)))
     }
 
@@ -205,6 +205,26 @@ internal object VivacCerca {
     fun sombrasDelFuego(v: VistaVivac): List<VivacLuz.Sombra> = sombras(v).filter { (it.pie - FUEGO).getDistance() in 18f..230f && it.pie != S_TIENDA.pie }
 
     private fun caja(s: Sitio, ancho: Float, alto: Float): Path = poligono(listOf(s.p(-ancho, 0f, 0f), s.p(ancho, 0f, 0f), s.p(ancho * 0.85f, alto, 0f), s.p(-ancho * 0.85f, alto, 0f)))
+
+    /** La silueta del tonel (para su sombra): la panza de las duelas, la tapa y la botella encima. */
+    private fun siluetaDelTonel(): Path {
+        val s = S_TONEL; val r = 0.27f; val h = TONEL_ALTO
+        return Path().apply {
+            addPath(poligono(listOf(s.p(-r * 0.9f, 0f, 0f), s.p(-r, h * 0.5f, 0f), s.p(-r * 0.9f, h, 0f), s.p(-r * 0.5f, h + 0.03f, 0f), s.p(r * 0.5f, h + 0.03f, 0f), s.p(r * 0.9f, h, 0f), s.p(r, h * 0.5f, 0f), s.p(r * 0.9f, 0f, 0f))))
+            addPath(poligono(s.p(-0.12f, h, 0f), s.p(-0.04f, h, 0f), s.p(-0.06f, h + 0.3f, 0f), s.p(-0.1f, h + 0.3f, 0f)))
+        }
+    }
+
+    /** La silueta del rancho (para su sombra): la leña baja, las dos horquillas con la vara y, si cuelga, la marmita. */
+    private fun siluetaDelRancho(colgada: Boolean): Path = Path().apply {
+        val s = S_FUEGO
+        fun palo(a: V3, b: V3, grueso: Float) { val pa = s.p(a); val pb = s.p(b); val d = pb - pa; val n = Offset(-d.y, d.x) / d.getDistance().coerceAtLeast(0.1f) * (grueso * s.k / 2f); addPath(poligono(pa + n, pb + n, pb - n, pa - n)) }
+        palo(V3(-0.52f, 0f, 0.05f), V3(-0.52f, 0.78f, 0.05f), 0.05f)
+        palo(V3(0.5f, 0f, -0.04f), V3(0.5f, 0.78f, -0.04f), 0.05f)
+        palo(V3(-0.6f, 0.74f, 0.05f), V3(0.6f, 0.74f, -0.04f), 0.03f)
+        addPath(poligono(s.p(-0.42f, 0f, 0f), s.p(0.42f, 0f, 0f), s.p(0.22f, 0.2f, 0f), s.p(-0.22f, 0.2f, 0f)))
+        if (colgada) { palo(V3(0f, 0.74f, 0f), V3(0f, 0.42f, 0f), 0.015f); addPath(poligono(s.p(-0.2f, 0.12f, 0f), s.p(0.2f, 0.12f, 0f), s.p(0.22f, 0.42f, 0f), s.p(-0.22f, 0.42f, 0f))) }
+    }
 
     /** La silueta de la tienda (para su sombra): los dos hastiales y la cumbrera. */
     fun siluetaDeLaTienda(): Path {
@@ -355,6 +375,16 @@ internal object VivacCerca {
      */
     private fun DrawScope.mochilaA(v: VistaVivac, s: Sitio, q: Offset, estilo: Mochila, sem: Long, rollo: Color, lejos: Float, lado: Float) {
         val a = v.en(q); val kk = s.k
+        // Más allá de 18 m (menos de 12 px de ancho), la piel y su pelo no se ven: la caja con su luz y la manta enrollada.
+        if (kk < 30f) {
+            val tumbada = estilo == Mochila.ECHADA || estilo == Mochila.ABIERTA
+            val w = 0.19f; val h = if (tumbada) 0.15f else 0.32f; val d = if (tumbada) 0.17f else 0.075f
+            with(PiezasNapoleon) { caja(s, a, -w, w, 0f, h, -d, d, C.PIEL, lejos, lerp(C.PIEL, C.CUERO, 0.3f)) }
+            val rr = 0.068f
+            cilindro(s, a, V3(-w - 0.05f, h + rr * 0.85f, 0f), V3(1f, 0f, 0f), rr, rr, 2f * w + 0.1f, rollo, lerp(rollo, C.CENIZA, 0.15f), 10, lejos, lerp(rollo, C.CENIZA, 0.15f))
+            if (estilo == Mochila.CON_CANTIMPLORA) cantimplora(a, s.p(V3(0.24f, 0.14f, -0.02f)), kk, lejos)
+            return
+        }
         when (estilo) {
             Mochila.DE_PIE -> mochila(s, a, sem, false, rollo, lejos, v.nieve)
             Mochila.ECHADA -> mochila(s, a, sem, true, rollo, lejos, v.nieve)

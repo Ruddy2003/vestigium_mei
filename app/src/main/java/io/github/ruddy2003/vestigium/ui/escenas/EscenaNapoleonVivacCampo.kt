@@ -421,10 +421,11 @@ internal object VivacCampo {
     /** Los fuegos de los otros ranchos de la compañía, a lo largo de la fila (sin el nuestro, que está en la base). */
     fun ranchos(m: Momento): List<Pair<Float, Float>> = VivacCerca.FUEGOS.drop(1).take((VivacNapoleon.fuegosDeLaCompania(m) - 1).coerceAtLeast(0))
 
-    /** Lo que tumba sombra en el campo: las tiendas y los carros del parque. */
+    /** Lo que tumba sombra en el campo: las tiendas y los carros del parque (lo que se pinta: con la compañía, lo que se ve). */
     fun sombras(v: VistaVivac): List<VivacLuz.Sombra> = buildList {
+        if (VivacNapoleon.sinCompania(v.m)) return@buildList
         if (v.fondo != Fondo.NIEMEN) for (s in carros()) add(VivacLuz.Sombra(s.pie, poligono(s.p(-1.1f, 0f, 0f), s.p(1.1f, 0f, 0f), s.p(0.9f, 2.2f, 0f), s.p(-0.9f, 2.2f, 0f))))
-        for ((q, kk) in tiendas()) add(VivacLuz.Sombra(q, poligono(q + Offset(-1.3f * kk, 0f), q + Offset(1.3f * kk, 0f), q + Offset(0f, -2.4f * kk))))
+        for ((q, kk) in tiendas()) if (seVe(q) && !enElRio(v, MIRADA.focal / kk)) add(VivacLuz.Sombra(q, poligono(q + Offset(-1.3f * kk, 0f), q + Offset(1.3f * kk, 0f), q + Offset(0f, -2.4f * kk))))
     }
 
     /** Los carros del bagaje, aparcados a la derecha entre la fila y el camino (esperan para salir detrás de la columna). */

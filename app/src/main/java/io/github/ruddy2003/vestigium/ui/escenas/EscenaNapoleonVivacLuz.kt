@@ -62,9 +62,11 @@ internal object VivacLuz {
     fun rayo(l: Luces): Rayo {
         val r = Rayo(l)
         if (r.dia <= 0.05f || l.solAltura <= 0f) return r
-        // La elevación baja más deprisa que la de la biblioteca cerca del horizonte (de 3° a 58°, con la altura a la 1,6):
-        // a las siete la sombra es cuatro o cinco veces lo alto; a las nueve, una; a mediodía, media.
-        val elev = Math.toRadians(3.0 + 55.0 * (l.solAltura / 1.35f).coerceIn(0f, 1f).toDouble().pow(1.6))
+        // La elevación baja más deprisa que la de la biblioteca cerca del horizonte (de 3° a 58°, con la altura elevada a
+        // más cuanto más bajo está el sol): a las siete de verano la sombra es cuatro veces lo alto; a las nueve, una y
+        // media; a mediodía, media (en invierno, a mediodía, algo más de una).
+        val u = (l.solAltura / 1.35f).coerceIn(0f, 1f).toDouble()
+        val elev = Math.toRadians(3.0 + 55.0 * u.pow(1.0 + 0.6 * (1.0 - u)))
         val cot = (1.0 / kotlin.math.tan(elev)).toFloat().coerceAtMost(5.5f)
         val bajo = (1f - l.solAltura / 0.6f).coerceIn(0f, 1f) * (1f - l.nublado).coerceIn(0f, 1f)
         return Rayo(r.dia, r.lat, cot, 1f / cot, -r.lat * cot, -0.33f * (1.3f - 0.6f * abs(r.lat)) * cot,

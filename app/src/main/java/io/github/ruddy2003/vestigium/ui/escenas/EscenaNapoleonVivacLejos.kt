@@ -564,8 +564,10 @@ internal object VivacLejos {
         clipPath(sil) {
             // La luz de un lado en cada copa, la bruma al pie y la nieve encima si la hay.
             drawRect(Brush.verticalGradient(listOf(Color.Transparent, v.l.bruma.copy(alpha = 0.22f)), y - alto * 0.5f, y), Offset(x0, y - alto - 2f), Size(x1 - x0, alto + 2f))
-            repeat(((x1 - x0) / 3f).toInt()) { val x = az.entre(x0, x1); mancha(Offset(x + (if (v.p.solALaDerecha) 0.6f else -0.6f), y - alto * az.entre(0.4f, 0.9f)), 0.8f, alto * 0.25f, v.p.luz(C.PINO, lejos), 0.45f * v.r.dia) }
-            if (v.nieve > 0.4f) repeat(((x1 - x0) / 2f).toInt()) { val x = az.entre(x0, x1); mancha(Offset(x, y - alto * az.entre(0.3f, 0.9f)), 1.2f, 0.4f, v.p.arriba(C.NIEVE, lejos), 0.7f) }
+            // (Óvalos lisos y no manchas con degradado: miden un pixel o dos, y son cientos.)
+            val luz = v.p.luz(C.PINO, lejos).copy(alpha = (0.4f * v.r.dia).coerceIn(0f, 1f)); val ry = alto * 0.22f
+            repeat(((x1 - x0) / 3f).toInt()) { val x = az.entre(x0, x1); val c = Offset(x + (if (v.p.solALaDerecha) 0.6f else -0.6f), y - alto * az.entre(0.4f, 0.9f)); drawOval(luz, Offset(c.x - 0.7f, c.y - ry), Size(1.4f, 2f * ry)) }
+            if (v.nieve > 0.4f) { val nieve = v.p.arriba(C.NIEVE, lejos).copy(alpha = 0.6f); repeat(((x1 - x0) / 2f).toInt()) { val x = az.entre(x0, x1); val c = Offset(x, y - alto * az.entre(0.3f, 0.9f)); drawOval(nieve, Offset(c.x - 1f, c.y - 0.35f), Size(2f, 0.7f)) } }
         }
     }
 
