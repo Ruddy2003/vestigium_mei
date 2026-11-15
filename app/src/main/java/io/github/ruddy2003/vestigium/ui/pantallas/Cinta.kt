@@ -99,6 +99,7 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.TEMPLARIO -> PielCinta(2.5f, true, RellenoCinta.FILETE, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Sello rayado del expediente.
     TemaId.DISTOPIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
+    TemaId.PSICODELIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
     // El vidrio de Nancy: tramos de esquinas muy redondas, con la luz que pasa de un lado al otro y un tallo grabado que sube y
     // se curva; las horas menores, en punto y raya larga, como la pluma del cartel.
     TemaId.NOUVEAU -> PielCinta(9f, false, RellenoCinta.VIDRIO, floatArrayOf(0.1f, 2.4f, 7f, 2.4f), StrokeCap.Round)

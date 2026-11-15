@@ -191,6 +191,15 @@ internal object Claves {
         "imagines" to "evidencia", "iter" to "trayecto", "orbis" to "territorio", "themata" to "asuntos", "memorabilia" to "hechos",
     )
 
+    /** El barrio en 1967. Lo que no está aquí queda en el español común. */
+    val PSICODELIA: Map<String, String> = mapOf(
+        "somnus" to "dormir con la niebla", "animus" to "ánimo", "svmptvs" to "lo que costó", "cor" to "el pulso del baile", "loca" to "esquinas",
+        "personae" to "tu gente", "consuetudo" to "costumbres", "palmae" to "discos de oro", "telephonum" to "lo que te roba el teléfono", "telephon" to "lo que te roba el teléfono",
+        "iudicium" to "juicio", "epistulae" to "postales", "reditus" to "lo que entró", "momenta" to "instantes",
+        "imagines" to "fotos", "iter" to "la calle", "orbis" to "el mundo", "themata" to "temas", "memorabilia" to "fechas que se recuerdan",
+    )
+
+
     /** El taller de litografía de 1900. Lo que no está aquí queda en el español común. */
     val NOUVEAU: Map<String, String> = mapOf(
         "somnus" to "sueño bajo el tragaluz", "animus" to "ánimo", "svmptvs" to "gastos del bolsillo", "cor" to "pulso", "loca" to "rincones",

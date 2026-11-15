@@ -263,6 +263,8 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.TEMPLARIO -> BloqueoMarco(TextosBloqueo("La puerta de la encomienda", "☩ El rastrillo está echado: solo un hermano de la casa lo levanta.", "Levantar el rastrillo"), arriba = 18, reintentar = reintentar) { cs -> bloqueoRastrillo(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
             listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
+        TemaId.PSICODELIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
+            listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
         // La entrada del metro, de noche o antes de abrir: el sello entre los dos candelabros de fundición, bajo el letrero,
         // con la barandilla delante; abajo, la página del almanaque.
         TemaId.NOUVEAU -> BloqueoMetro(TextosBloqueo("L'atelier est fermé", "La piedra está entintada, pero la prensa solo corre con tu mano.", "Abrir el taller"), reintentar)
@@ -1273,6 +1275,7 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> false
+    TemaId.PSICODELIA -> false
     TemaId.NOUVEAU -> false           // las dos líneas de látigo que abrazan el ícono, en trazo
     TemaId.GALIA -> false             // el torques alrededor del ícono, en trazo
     TemaId.ARCONTES -> false          // el nicho de piedra, en trazo
@@ -1316,6 +1319,7 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> true
+    TemaId.PSICODELIA -> true
     TemaId.NOUVEAU -> true            // el cabujón de esmalte en su aro de látigo, lleno
     TemaId.GALIA -> true              // el estátero de oro, lleno
     TemaId.ARCONTES -> true           // el amuleto de oro, lleno
@@ -1423,6 +1427,10 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
         }
         // Sello de goma, doble filete y un poco torcido.
         TemaId.DISTOPIA -> girar(-5f, Offset(cx, cy)) {
+            drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
+            drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
+        }
+        TemaId.PSICODELIA -> girar(-5f, Offset(cx, cy)) {
             drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
             drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
         }
@@ -1720,6 +1728,10 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
             drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
         }
+        TemaId.PSICODELIA -> girar(-4f, Offset(cx, cy)) {
+            drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
+            drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
+        }
         // Un cabujón de esmalte del color del tema, con su reflejo de vidrio, dentro del aro de látigo de oro del sello.
         TemaId.NOUVEAU -> with(TrazosNouveau) {
             val o = Offset(cx, cy)
@@ -1989,6 +2001,7 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         }
         // Barra gruesa de cartel.
         TemaId.DISTOPIA -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
+        TemaId.PSICODELIA -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
         // El filete y, debajo, una línea de látigo de punta a punta: una sola onda larga, que se enrosca en cada extremo.
         TemaId.NOUVEAU -> with(TrazosNouveau) {
             filete()
@@ -2434,6 +2447,7 @@ private fun origenTransicion(tema: TemaId, atras: Boolean): Alignment = when (te
     TemaId.MEDIEVAL -> Alignment.TopStart
     TemaId.TEMPLARIO -> Alignment.TopStart
     TemaId.DISTOPIA -> Alignment.TopStart
+    TemaId.PSICODELIA -> Alignment.TopStart
     TemaId.NOUVEAU -> if (atras) Alignment.TopEnd else Alignment.TopStart                // la hoja se posa desde su esquina
     TemaId.GALIA -> Alignment.TopCenter                                        // la pantalla sale de la niebla desde el centro
     TemaId.ARCONTES -> Alignment.TopCenter                                     // el velo se abre desde el centro
@@ -2505,6 +2519,7 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
             (scaleOut(t(240), targetScale = 0.97f) + fadeOut(t(200)))
         // Cajón de archivo: cae de golpe desde arriba.
         TemaId.DISTOPIA -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
+        TemaId.PSICODELIA -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
         // La hoja que sale de la piedra litográfica: la pantalla nueva se posa desde su esquina de arriba, bajando un poco en
         // una curva suave, y se aclara como la tinta al secarse; la de antes se aparta despacio.
         TemaId.NOUVEAU -> {

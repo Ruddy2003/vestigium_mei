@@ -135,6 +135,7 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.TEMPLARIO -> Papeleria(Color(0xFFF1ECE0), Color(0xFFB9AE97), Color(0xFFFFFCF4), Color(0xFFB0191F), Color(0xFF7A2A16), Color(0xFF8A7650), Color(0xFF201E1B))
     // Sobre de manila de oficina, con su hilo y botones, y la tinta roja del sello de goma.
     TemaId.DISTOPIA -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
+    TemaId.PSICODELIA -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
     // La tarjeta postal ilustrada: cartulina crema, su sombra y su brillo, el verde salvia del reverso, la viñeta engomada con el
     // iris violeta, la cinta de seda malva que ata el paquete y la tinta de la prensa.
     TemaId.NOUVEAU -> Papeleria(Color(0xFFF2E9D2), Color(0xFFC2AE86), Color(0xFFFBF6EA), Color(0xFF5E7A58), Color(0xFF7E5FA6), Color(0xFFB48AB0), Color(0xFF2A2530))
@@ -390,6 +391,12 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             }, claro)
         }
         TemaId.DISTOPIA -> rotate(-14f, c) {
+            // El sello de goma del Ministerio: tinta en dos marcos y la palabra, un poco torcido.
+            drawRect(k(base.copy(alpha = 0.85f)), Offset(c.x - r * 1.25f, c.y - r * 0.6f), Size(r * 2.5f, r * 1.2f), style = Stroke(r * 0.1f))
+            drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
+            rotuloSello("ARCHIVADO", c.x, c.y + r * 0.13f, r * 0.36f, k(base.copy(alpha = 0.85f)))
+        }
+        TemaId.PSICODELIA -> rotate(-14f, c) {
             // El sello de goma del Ministerio: tinta en dos marcos y la palabra, un poco torcido.
             drawRect(k(base.copy(alpha = 0.85f)), Offset(c.x - r * 1.25f, c.y - r * 0.6f), Size(r * 2.5f, r * 1.2f), style = Stroke(r * 0.1f))
             drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
@@ -851,6 +858,8 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
     TemaId.TEMPLARIO -> VozCarta("Ya puede romperse el sello", "Sellada con el sello de la casa", "Al freire que seré el %s", "Al freire de %s", "Al freire que vendrá",
         "Hermano que serás yo:", "Escribe tu misiva, hermano…", "Misiva para %s, sellada por la casa", "Ningún hermano la abrirá antes de tiempo.", "Toca para tomar la pluma…")
     TemaId.DISTOPIA -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
+        "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
+    TemaId.PSICODELIA -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
         "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
     // Las cartas son tarjetas postales ilustradas; las de al futuro, «postales para el siglo nuevo», van atadas con una cinta de
     // seda y una viñeta engomada.

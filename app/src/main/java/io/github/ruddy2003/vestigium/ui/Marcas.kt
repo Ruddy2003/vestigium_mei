@@ -181,6 +181,7 @@ object Marcas {
                 else Aspecto(s, s, Forma.CALDERON, cursiva = true)
             TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
+            TemaId.PSICODELIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
             // La @persona, en la placa esmaltada de una entrada de metro (letras crema sobre el verde de la fundición); el #tema,
             // sobre una línea de látigo en el violeta del iris.
             TemaId.NOUVEAU -> if (persona) Aspecto(Color(0xFFF3EAD3), if (cs.background.luminance() < 0.5f) lerp(TrazosNouveau.HIERRO, Color.White, 0.08f) else TrazosNouveau.HIERRO, Forma.ESMALTE, negrita = true)

@@ -51,6 +51,7 @@ object Avisos {
         TemaId.MEDIEVAL -> R.raw.n_medieval_aviso to R.raw.n_medieval_solemne
         TemaId.TEMPLARIO -> R.raw.n_templario_aviso to R.raw.n_templario_solemne
         TemaId.DISTOPIA -> R.raw.n_distopia_aviso to R.raw.n_distopia_solemne
+        TemaId.PSICODELIA -> R.raw.n_psicodelia_aviso to R.raw.n_psicodelia_solemne
         TemaId.NOUVEAU -> R.raw.n_nouveau_aviso to R.raw.n_nouveau_solemne
         TemaId.GALIA -> R.raw.n_galia_aviso to R.raw.n_galia_solemne
         TemaId.ARCONTES -> R.raw.n_arcontes_aviso to R.raw.n_arcontes_solemne
@@ -338,6 +339,13 @@ object Avisos {
             "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
             "CONDECORACIÓN", "condecoraciones nuevas",
             "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
+        TemaId.PSICODELIA -> Voz("DECLARE SU ESTADO ACTUAL", "Dos toques obligatorios: agrado y energía.",
+            "REPORTE ONÍRICO PENDIENTE", "Declare lo soñado antes de levantarse. El recuerdo caduca en minutos.",
+            "DECLARACIÓN NOCTURNA", "Complete el parte del día. En jornada difícil se acepta un solo número.",
+            "Jornada difícil: un número", "INTERROGATORIO PENDIENTE:",
+            "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
+            "CONDECORACIÓN", "condecoraciones nuevas",
+            "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
         // Art nouveau: la campanilla de cristal del taller, la piedra litográfica que se moja antes de entintar, las vitrinas
         // que se encienden de noche, la postal ilustrada, las medallas de la Exposición y el cartel recién salido de la prensa.
         TemaId.NOUVEAU -> Voz("Suena la campanilla de cristal: ¿cómo estás ahora?", "Dos toques, como dos golpes de pincel: cuánto agrado y cuánta energía.",
@@ -571,6 +579,7 @@ object Avisos {
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste", "Explicit: llegaste a la meta")
         TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida", "Llegaste al castillo: meta cumplida")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
+        TemaId.PSICODELIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
         // Art nouveau: el respiro en la terraza del café, la mesa de dibujo, la luz del tragaluz, la piedra entintada y el iris
         // que se abre en la esfera del reloj.
         TemaId.NOUVEAU -> VozEnfoque("Un respiro en la terraza", "Deja el lápiz, sal a la calle un momento y bebe un vaso de agua.", "De vuelta a la mesa de dibujo", "Entra la luz por el tragaluz: hora de despertar", "La piedra está entintada: terminaste", "Se abre el iris: llegaste a la meta")

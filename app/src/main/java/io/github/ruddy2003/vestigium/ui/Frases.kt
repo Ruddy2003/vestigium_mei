@@ -288,6 +288,47 @@ object Frases {
     )
 
     /**
+     * Psicodelia: lo que se leía en el barrio en 1967. Los textos de ese año tienen derechos de autor, así que son los de
+     * dominio público que la contracultura leía y citaba: Blake, Whitman, Thoreau, Emerson, Gibran, el *Tao Te Ching*, la
+     * *Gita*, Kabir y Rumi en traducciones viejas, cada uno comprobado letra por letra en Wikisource (ortografía tal cual).
+     * Ver `docs/diseno/temas/fuentes_psicodelia.md`, sección 10. Las traducciones son propias.
+     */
+    val PSICODELIA = listOf(
+        f("Without Contraries is no progression.", "Sin contrarios no hay progreso.", "William Blake, El matrimonio del cielo y el infierno, hacia 1793"),
+        f("Energy is Eternal Delight", "La energía es deleite eterno", "William Blake, El matrimonio del cielo y el infierno, hacia 1793"),
+        f("Eternity is in love with the productions of time.", "La eternidad está enamorada de las obras del tiempo.", "William Blake, «Proverbios del infierno», hacia 1793"),
+        f("What is now proved was once, only imagind.", "Lo que hoy está probado antes fue solo imaginado.", "William Blake, «Proverbios del infierno», hacia 1793"),
+        f("The cistern contains: the fountain overflows", "La cisterna contiene; la fuente desborda", "William Blake, «Proverbios del infierno», hacia 1793"),
+        f("The tygers of wrath are wiser than the horses of instruction", "Los tigres de la ira son más sabios que los caballos de la instrucción", "William Blake, «Proverbios del infierno», hacia 1793"),
+        f("Exuberance is Beauty.", "La exuberancia es belleza.", "William Blake, «Proverbios del infierno», hacia 1793"),
+        f("To see a World in a Grain of Sand / And a Heaven in a Wild Flower / Hold Infinity in the palm of your hand / And Eternity in an hour", "Ver un mundo en un grano de arena / y un cielo en una flor silvestre, / tener el infinito en la palma de la mano / y la eternidad en una hora", "William Blake, «Augurios de inocencia», hacia 1801–1803"),
+        f("I loafe and invite my soul,", "Holgazaneo e invito a mi alma", "Walt Whitman, Hojas de hierba, 1855"),
+        f("A child said, What is the grass? fetching it to me with full hands;", "Un niño dijo: ¿qué es la hierba?, y me la trajo a manos llenas", "Walt Whitman, Hojas de hierba, 1855"),
+        f("I believe a leaf of grass is no less than the journeywork of the stars,", "Creo que una hoja de hierba no es menos que el trabajo de las estrellas", "Walt Whitman, Hojas de hierba, 1855"),
+        f("Do I contradict myself? / Very well then .... I contradict myself; / I am large .... I contain multitudes.", "¿Me contradigo? / Muy bien, entonces me contradigo; / soy grande, contengo multitudes.", "Walt Whitman, Hojas de hierba, 1855"),
+        f("I sound my barbaric yawp over the roofs of the world.", "Lanzo mi grito bárbaro sobre los tejados del mundo.", "Walt Whitman, Hojas de hierba, 1855"),
+        f("I went to the woods because I wished to live deliberately, to front only the essential facts of life,", "Me fui al bosque porque quería vivir a conciencia, enfrentarme solo a los hechos esenciales de la vida", "Henry David Thoreau, Walden, 1854"),
+        f("Simplicity, simplicity, simplicity!", "¡Sencillez, sencillez, sencillez!", "Henry David Thoreau, Walden, 1854"),
+        f("Time is but the stream I go a-fishing in.", "El tiempo no es más que el arroyo donde voy a pescar.", "Henry David Thoreau, Walden, 1854"),
+        f("If a man does not keep pace with his companions, perhaps it is because he hears a different drummer.", "Si un hombre no lleva el paso de sus compañeros, quizá sea porque oye otro tambor.", "Henry David Thoreau, Walden, 1854"),
+        f("Things do not change; we change.", "Las cosas no cambian; cambiamos nosotros.", "Henry David Thoreau, Walden, 1854"),
+        f("The sun is but a morning star.", "El sol no es más que una estrella de la mañana.", "Henry David Thoreau, Walden, 1854"),
+        f("Trust thyself: every heart vibrates to that iron string.", "Confía en ti: todo corazón vibra con esa cuerda de hierro.", "Ralph Waldo Emerson, «Confianza en uno mismo», 1841"),
+        f("Whoso would be a man must be a nonconformist.", "Quien quiera ser hombre ha de ser inconforme.", "Ralph Waldo Emerson, «Confianza en uno mismo», 1841"),
+        f("Nothing can bring you peace but yourself.", "Nada puede traerte la paz sino tú mismo.", "Ralph Waldo Emerson, «Confianza en uno mismo», 1841"),
+        f("Your children are not your children. / They are the sons and daughters of Life's longing for itself.", "Tus hijos no son tus hijos. / Son los hijos y las hijas del anhelo de la Vida por sí misma.", "Kahlil Gibran, El profeta, 1923"),
+        f("But let there be spaces in your togetherness, / And let the winds of the heavens dance between you.", "Pero que haya espacios en vuestra unión, / y que los vientos del cielo dancen entre vosotros.", "Kahlil Gibran, El profeta, 1923"),
+        f("Work is love made visible.", "El trabajo es el amor hecho visible.", "Kahlil Gibran, El profeta, 1923"),
+        f("Your joy is your sorrow unmasked.", "Tu alegría es tu tristeza sin máscara.", "Kahlil Gibran, El profeta, 1923"),
+        f("He who knows other men is discerning; he who knows himself is intelligent.", "Quien conoce a los demás es perspicaz; quien se conoce a sí mismo es inteligente.", "Laozi, Tao Te Ching, trad. de James Legge, 1891"),
+        f("Let right deeds be / Thy motive, not the fruit which comes from them.", "Que las obras rectas sean / tu motivo, no el fruto que viene de ellas.", "Bhagavad Gita, trad. de Edwin Arnold, 1885"),
+        f("O servant, where dost thou seek Me? / Lo! I am beside thee.", "Oh siervo, ¿dónde me buscas? / ¡Mira! Estoy a tu lado.", "Kabir, trad. de Rabindranath Tagore, 1915"),
+        f("I laugh when I hear that the fish in the water is thirsty:", "Me río cuando oigo que el pez en el agua tiene sed", "Kabir, trad. de Rabindranath Tagore, 1915"),
+        f("HEARKEN to the reed-flute, how it complains, / Lamenting its banishment from its home:", "Escucha a la flauta de caña, cómo se queja, / lamentando su destierro de su casa", "Rumi, Masnavi, trad. de E. H. Whinfield, 1898"),
+    )
+
+
+    /**
      * Art nouveau: lo que se leía en París hacia 1900. Solo las frases que `docs/diseno/temas/fuentes_nouveau.md` (sección
      * 11) comprobó letra por letra en el texto de la obra, en Wikisource, con su edición y su página; las de Baudelaire son
      * anteriores (1857), pero se leían. Las traducciones son propias; todos los autores son de dominio público.
@@ -1195,6 +1236,7 @@ object Frases {
         TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.TEMPLARIO -> TEMPLARIO
         TemaId.DISTOPIA -> DISTOPIA
+        TemaId.PSICODELIA -> PSICODELIA
         TemaId.NOUVEAU -> NOUVEAU
         TemaId.GALIA -> GALIA
         TemaId.ARCONTES -> ARCONTES
@@ -1252,6 +1294,7 @@ object Frases {
         TemaId.MEDIEVAL -> "Sentencia del día"
         TemaId.TEMPLARIO -> "Lectura del refectorio"
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"
+        TemaId.PSICODELIA -> "Lo que se leía en el barrio"
         TemaId.NOUVEAU -> "Lo que se leía en París"
         TemaId.GALIA -> "Lo que contaron de los galos"
         TemaId.ARCONTES -> "Palabras escondidas"

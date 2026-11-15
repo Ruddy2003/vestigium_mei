@@ -97,6 +97,7 @@ object MapasMas {
         TemaId.BASICO -> listOf(Offset(0.08f, 0.8f), Offset(0.22f, 0.66f), Offset(0.36f, 0.7f), Offset(0.5f, 0.5f), Offset(0.64f, 0.4f), Offset(0.78f, 0.44f), Offset(0.92f, 0.24f))
         // Los puntos de control: piso por piso, de la ventanilla de abajo al Ministerio en lo alto.
         TemaId.DISTOPIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
+        TemaId.PSICODELIA -> listOf(Offset(0.08f, 0.84f), Offset(0.22f, 0.72f), Offset(0.36f, 0.74f), Offset(0.5f, 0.54f), Offset(0.62f, 0.5f), Offset(0.74f, 0.32f), Offset(0.88f, 0.16f))
         // La línea 1 del metro, la «ligne A» que se abrió el 19 de julio de 1900 (el norte arriba), con las etapas de `Campanas`:
         // Porte Maillot, Champs-Élysées, Palais-Royal, Hôtel de Ville, Bastille, Gare de Lyon y Porte de Vincennes.
         TemaId.NOUVEAU -> geo(listOf(2.2826 to 48.8781, 2.3143 to 48.8676, 2.3364 to 48.8625, 2.3522 to 48.8573, 2.3690 to 48.8531, 2.3730 to 48.8448, 2.4105 to 48.8470), 2.262, 2.426, 48.838, 48.882)
@@ -295,6 +296,16 @@ object MapasMas {
             }
             TemaId.BASICO -> {}   // sin paisaje: solo la ruta y las paradas
             TemaId.DISTOPIA -> {
+                // Pisos de un edificio de oficinas en corte, con sus ventanillas; a la derecha, la torre del Ministerio.
+                val linea = cs.onSurface.copy(alpha = if (oscuro) 0.18f else 0.14f)
+                for (k in 1 until 6) { val y = h * k / 6f; drawLine(linea, Offset(0f, y), Offset(w * 0.8f, y), 1f * d) }
+                val az = java.util.Random(17)
+                for (k in 0 until 6) for (j in 0 until 10) if (az.nextInt(3) > 0) drawRect(linea, Offset(w * (0.03f + j * 0.075f), h * (k / 6f + 0.04f)), Size(w * 0.035f, h * 0.07f))
+                drawRect(cs.onSurface.copy(alpha = if (oscuro) 0.22f else 0.16f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.96f))
+                for (k in 0 until 9) drawRect(Color(0xFFC8102E).copy(alpha = 0.25f + 0.5f * avance), Offset(w * 0.86f, h * (0.12f + k * 0.09f)), Size(w * 0.06f, h * 0.03f))
+                drawRect(Color(0xFFC8102E).copy(alpha = 0.6f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.02f))
+            }
+            TemaId.PSICODELIA -> {
                 // Pisos de un edificio de oficinas en corte, con sus ventanillas; a la derecha, la torre del Ministerio.
                 val linea = cs.onSurface.copy(alpha = if (oscuro) 0.18f else 0.14f)
                 for (k in 1 until 6) { val y = h * k / 6f; drawLine(linea, Offset(0f, y), Offset(w * 0.8f, y), 1f * d) }
@@ -1078,6 +1089,7 @@ object MapasMas {
             TemaId.BASICO -> drawPath(p, cs.primary.copy(alpha = 0.8f), style = Stroke(2.4f * d, cap = StrokeCap.Round))
             // La línea roja del trámite, como cinta de señalización.
             TemaId.DISTOPIA -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
+            TemaId.PSICODELIA -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
             // La línea del metro en el plano: la zanja clara, el trazo de hierro verde y el riel de oro que corre por dentro;
             // de noche, con su brillo.
             TemaId.NOUVEAU -> {
@@ -1272,6 +1284,7 @@ object MapasMas {
             }
             // Una ventanilla de control: caseta cuadrada con su número.
             TemaId.DISTOPIA -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
+            TemaId.PSICODELIA -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
             // La estación: el letrero de lava esmaltada en óvalo, con su marco de hierro verde y su rizo; en la meta, sobre él,
             // los dos faroles rojo anaranjado.
             TemaId.NOUVEAU -> {

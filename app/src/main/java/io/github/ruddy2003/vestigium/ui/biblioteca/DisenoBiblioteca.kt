@@ -286,6 +286,7 @@ fun disenoBiblioteca(t: TemaId): DisenoBiblioteca = when (t) {
     TemaId.MEDIEVAL -> EstanteMedieval
     TemaId.TEMPLARIO -> EstanteTemplario
     TemaId.DISTOPIA -> EstanteDistopia
+    TemaId.PSICODELIA -> EstantePsicodelia
     TemaId.NOUVEAU -> EstanteNouveau
     TemaId.GALIA -> EstanteGalia
     TemaId.ARCONTES -> EstanteArcontes

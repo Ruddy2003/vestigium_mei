@@ -262,6 +262,8 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Expediente: el ojo, trazo grueso, renglones de registro en bandas, eje duro con marcas y barras rectas.
     TemaId.DISTOPIA -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
         Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
+    TemaId.PSICODELIA -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
+        Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
     // Art nouveau: cada dato, un capullo de iris; la serie, un trazo de pluma de cartel, redondo y con su segundo hilo
     // corrido; la meta, en raya larga y punto, como un tallo dibujado a lápiz; la rejilla en filetes finos; el eje rematado
     // en florón; las barras, arcos de herradura como los de las entradas de metro; las cifras, en la letra de los rótulos.

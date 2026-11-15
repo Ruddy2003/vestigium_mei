@@ -27,6 +27,7 @@ object ArranqueTema {
         TemaId.MEDIEVAL -> if (oscuro) R.style.Theme_Vestigium_Arranque_Medieval_Oscuro else R.style.Theme_Vestigium_Arranque_Medieval
         TemaId.TEMPLARIO -> if (oscuro) R.style.Theme_Vestigium_Arranque_Templario_Oscuro else R.style.Theme_Vestigium_Arranque_Templario
         TemaId.DISTOPIA -> if (oscuro) R.style.Theme_Vestigium_Arranque_Distopia_Oscuro else R.style.Theme_Vestigium_Arranque_Distopia
+        TemaId.PSICODELIA -> if (oscuro) R.style.Theme_Vestigium_Arranque_Psicodelia_Oscuro else R.style.Theme_Vestigium_Arranque_Psicodelia
         TemaId.NOUVEAU -> if (oscuro) R.style.Theme_Vestigium_Arranque_Nouveau_Oscuro else R.style.Theme_Vestigium_Arranque_Nouveau
         TemaId.GALIA -> if (oscuro) R.style.Theme_Vestigium_Arranque_Galia_Oscuro else R.style.Theme_Vestigium_Arranque_Galia
         TemaId.ARCONTES -> if (oscuro) R.style.Theme_Vestigium_Arranque_Arcontes_Oscuro else R.style.Theme_Vestigium_Arranque_Arcontes

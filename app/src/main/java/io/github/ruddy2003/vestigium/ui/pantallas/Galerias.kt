@@ -136,6 +136,10 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
     }
+    TemaId.PSICODELIA -> {
+        val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
+        mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
+    }
     // La libélula del emblema, vista desde arriba: las cuatro alas, el cuerpo largo y la cabeza.
     TemaId.NOUVEAU -> {
         val alas = listOf(Triple(-1f, -0.32f, -0.3f), Triple(1f, -0.32f, -0.3f), Triple(-1f, -0.12f, 0.08f), Triple(1f, -0.12f, 0.08f)).map { (s, dy, sube) ->

@@ -456,6 +456,20 @@ fun FraseDelDia(fecha: String) {
                 }
             }
         }
+        TemaId.PSICODELIA -> Surface(color = cs.onBackground, shape = RectangleShape, modifier = arriba) {
+            Row(Modifier.height(IntrinsicSize.Min)) {
+                Box(Modifier.width(8.dp).fillMaxHeight().background(cs.primary))
+                Column(Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
+                    Text(rotulo, style = ty.labelMedium, color = cs.primary)
+                    f.original?.let { Text(it, style = ty.bodySmall, fontStyle = FontStyle.Italic, color = cs.background.copy(alpha = 0.72f)) }
+                    Text(f.texto.uppercase(), style = ty.titleLarge, color = cs.background, modifier = Modifier.padding(vertical = 2.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("— ${f.autor}", style = ty.labelSmall, color = cs.background.copy(alpha = 0.7f), modifier = Modifier.weight(1f))
+                        CorazonFrase(f, cs.primary, fecha = fecha)
+                    }
+                }
+            }
+        }
         // La página de la revista ilustrada: la cartulina con dos esquinas muy redondas y dos casi rectas, el filete de dentro, un
         // iris que sube por el margen izquierdo y una línea de látigo que se enrosca en la esquina de arriba; la frase en francés
         // y su español, entre comillas francesas.
@@ -1025,6 +1039,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
         TemaId.TEMPLARIO -> c(LetraExtra.regla, FontWeight.Bold, 22f, 0.3f, "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
+        TemaId.PSICODELIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
         TemaId.NOUVEAU -> c(LetraExtra.dellaRespira, FontWeight.Normal, 25f, 0.8f, "lnum")   // las cifras altas y finas de los carteles
         TemaId.GALIA -> c(LetraExtra.ysabeau, FontWeight.SemiBold, 23f, 0.5f, "lnum")   // las cifras humanistas de los rótulos
         TemaId.ARCONTES -> c(LetraExtra.caudex, FontWeight.Bold, 23f, 0.4f)   // las cifras de la letra de los códices
@@ -1318,6 +1333,12 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                         }
                         // Fichas perforadas: esquina cortada y una hilera de agujeros.
                         TemaId.DISTOPIA -> {
+                            val k = minOf(w * 0.35f, barH * 0.2f)
+                            pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
+                            var y = top + k + 4 * u
+                            while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
+                        }
+                        TemaId.PSICODELIA -> {
                             val k = minOf(w * 0.35f, barH * 0.2f)
                             pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
                             var y = top + k + 4 * u

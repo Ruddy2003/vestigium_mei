@@ -243,6 +243,14 @@ object Temas {
         "10-01" to "PLAN", "11-15" to "REVISIÓN", "12-31" to "CIERRE")
 
     /**
+     * Psicodelia: los días de 1967 que el tema recuerda, comprobados en `docs/diseno/temas/fuentes_psicodelia.md`: el
+     * encuentro del parque (14 de enero; solo poetas y bandas), la primera noche de la FM libre (12 de febrero), el festival
+     * de Monterey (16 de junio), la FM a tiempo completo (6 de agosto) y el entierro de mentira del hippie (6 de octubre).
+     */
+    private val MARCAS_PSICODELIA = mapOf("01-14" to "El encuentro del parque", "02-12" to "La FM de medianoche", "06-16" to "Monterey",
+        "08-06" to "La FM, todo el día", "10-06" to "El entierro del hippie")
+
+    /**
      * Art nouveau: los días de 1900 que el tema recuerda, todos comprobados en `docs/diseno/temas/fuentes_nouveau.md`: se
      * abre la Exposición Universal (14 de abril), se abre la primera línea del metro (19 de julio, a la una de la tarde) y
      * se cierra la Exposición (12 de noviembre); y el 1 de enero, el día de 1895 en que el cartel de *Gismonda* salió a
@@ -352,6 +360,7 @@ object Temas {
             TemaId.MEDIEVAL -> FIESTAS[md]
             TemaId.TEMPLARIO -> Temas.mdJuliano(fecha)?.let { MARCAS_TEMPLARIO[it] }
             TemaId.DISTOPIA -> MARCAS_DISTOPIA[md]
+            TemaId.PSICODELIA -> MARCAS_PSICODELIA[md]
             TemaId.NOUVEAU -> MARCAS_NOUVEAU[md]
             TemaId.GALIA -> MARCAS_GALIA[md]
             TemaId.ARCONTES -> MARCAS_ARCONTES[md]
@@ -538,6 +547,7 @@ object Temas {
         TemaId.MEDIEVAL -> MEDIEVAL[titulo]
         TemaId.TEMPLARIO -> TEMPLARIO[titulo]
         TemaId.DISTOPIA -> DISTOPIA[titulo]
+        TemaId.PSICODELIA -> PSICODELIA[titulo]
         TemaId.NOUVEAU -> NOUVEAU[titulo]
         TemaId.GALIA -> GALIA[titulo]
         TemaId.ARCONTES -> ARCONTES[titulo]
@@ -583,6 +593,7 @@ object Temas {
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
             TemaId.TEMPLARIO -> mapOf("animo" to "Ánimo del freire", "momento" to "Crónica de la casa", "gasto" to "Tesorería", "sueno" to "Reposo", "habitos" to "La regla", "hoy" to "Guardia", "cifra" to "Recuento", "foto" to "Desde la torre", "enfoque" to "Instrucción")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
+            TemaId.PSICODELIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
             // Art nouveau: el ánimo en color, los bocetos, el bolsillo, el sueño bajo el tragaluz del taller, lo de cada mañana, la
             // página del almanaque, el folio de la revista, la placa fotográfica y la mesa de dibujo.
             TemaId.NOUVEAU -> mapOf("animo" to "Tu ánimo, en color", "momento" to "Bocetos", "gasto" to "Del bolsillo", "sueno" to "Bajo el tragaluz", "habitos" to "Lo de cada mañana", "hoy" to "La página de hoy", "cifra" to "El folio", "foto" to "La placa", "enfoque" to "A la mesa de dibujo")
@@ -689,6 +700,32 @@ object Temas {
         "Cifras" to "CIFRAS OFICIALES", "Fotos del día" to "EVIDENCIA FOTOGRÁFICA", "Medicamentos" to "SUMINISTRO MÉDICO",
         "Seguimiento privado" to "EXPEDIENTE RESERVADO", "Momentos de la semana" to "INCIDENCIAS DE LA SEMANA", "Momentos de este día" to "INCIDENCIAS DEL DÍA",
         "Lo mejor y lo peor" to "MÉRITOS Y FALTAS", "Personas, temas e hitos" to "PERSONAS DE INTERÉS", "Respaldo automático" to "COPIA DE SEGURIDAD",
+    )
+
+    /** Psicodelia: la voz del barrio en 1967, con el disco del día, el periódico del barrio, la radio y los carteles. */
+    private val PSICODELIA = mapOf(
+        "Mundo" to "El mundo, desde la calle Haight", "Patrimonio Mundial" to "Lugares que hay que ver una vez", "Mapa para rascar" to "El mapa que vas pintando",
+        "Ciudades visitadas" to "Ciudades de tus postales", "Biblioteca de sueños" to "Los sueños de colores", "Cartas" to "Postales con calcomanías", "Escribir una carta" to "Mandar una postal",
+        "Carta" to "Postal con calcomanía", "Conocerte" to "Quién eres en la onda", "Brújula política" to "Lo que se discute en el parque", "Mapas" to "Mapas del barrio",
+        "Salud" to "El cuerpo que baila", "Tus apps" to "Lo que te roba las horas", "Otras vidas" to "Otras canciones", "Logros" to "Discos de oro", "Tu año en historias" to "El año en carteles",
+        "Anoche" to "Lo que sonó anoche", "Selladas" to "Guardadas en la funda", "Listas para abrir" to "Ya se pueden poner", "A otras personas" to "Para tu gente",
+        "Del pasado" to "Las que llegan del pasado", "Hoy" to "El disco de hoy", "Línea de tiempo" to "El surco de los días", "Ahora mismo estoy…" to "Ahora mismo, en la calle…",
+        "Entender" to "Ver los colores", "Registros especiales" to "Las caras B", "Apariencia" to "Los colores del cartel", "Avisos y recordatorios" to "El pandero que te llama",
+        "Llenar el día" to "Llenar el disco del día", "Biblioteca del diario" to "La discoteca del diario", "Entrada" to "Hoja del periódico", "Día" to "El disco del día", "Momentos" to "Instantes",
+        "Gastos" to "Lo que costó", "Explorar" to "Salir a la calle", "Más" to "El departamento", "Hábitos" to "Lo de todos los días", "Cartas al futuro" to "Postales para otro verano",
+        "Experimentos personales" to "Probar algo nuevo", "Cómo leer tus datos" to "Cómo leer tus surcos", "Guía científica" to "Lo que dicen los que saben",
+        "Cuestionarios" to "Las preguntas del periódico", "Prueba de reacción" to "La prueba del pandero", "Lugares" to "Esquinas del barrio", "Datos" to "El archivo del departamento",
+        "Permisos y sensores" to "Lo que oye el teléfono", "Ajustes" to "Afinar la guitarra", "Reportes" to "Carteles para pegar", "Bienvenido" to "Pasa, la puerta está abierta",
+        "Calendario" to "Los discos del año", "Obras" to "Discos, libros y películas", "Tu año" to "Tu año en vinilo", "Privacidad" to "Lo que no se pega en la pared",
+        "Sueño" to "Dormir con la niebla", "Contexto" to "Lo que suena alrededor", "Hitos" to "Fechas que se recuerdan", "Ánimo y cuerpo" to "Ánimo y cuerpo, en colores",
+        "Diario" to "El periódico del barrio", "Predicción" to "Lo que viene sonando", "Este día hace un año" to "Este disco, hace un año", "Lo que registró el teléfono" to "Lo que anotó el teléfono",
+        "Registrar" to "Anotar", "Las relaciones más marcadas" to "La gente que más suena", "Mapa" to "El mapa de tus calles", "Mapa emocional" to "El ánimo por las calles",
+        "Tablero" to "La mesa del departamento", "Tu día" to "Las pistas del día", "Tu día en 24 horas" to "Las pistas del día", "Te falta hoy" to "Lo que falta en el disco",
+        "Datos que faltan" to "Surcos en blanco", "Tema" to "Los colores del cartel", "Recordatorios" to "Lo que la radio te recuerda", "Resumen semanal" to "La semana en un cartel",
+        "Totales" to "La cuenta del departamento", "Gimnasio" to "Mover el cuerpo", "Buscar" to "Buscar en el periódico", "Cifras" to "Los números del barrio", "Fotos del día" to "Las fotos del día",
+        "Medicamentos" to "El botiquín", "Seguimiento privado" to "Lo que se guarda en el cajón", "Momentos de la semana" to "Instantes de la semana",
+        "Momentos de este día" to "Instantes de este día", "Lo mejor y lo peor" to "Lo que brilla y lo que se apaga", "Personas, temas e hitos" to "Gente, temas y fechas",
+        "Respaldo automático" to "Una copia en otra cinta",
     )
 
     /** Art nouveau: la voz de un taller de litografía de París hacia 1900, con su almanaque de flores, sus postales y sus cafés. */

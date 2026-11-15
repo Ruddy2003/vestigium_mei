@@ -145,6 +145,22 @@ object Textos {
         "widget_discreto_momento" to "DECLARAR",
     )
 
+    private val PSICODELIA: Map<String, String> = mapOf(
+        "pestana_dia" to "Hoy",
+        "pestana_diario" to "Periódico",
+        "pestana_registrar" to "Anotar",
+        "pestana_vida" to "Calle",
+        "pestana_entender" to "Colores",
+        "escala_vacia" to "Todavía sin sonar · toca o desliza",
+        "lista_anadir" to "+ añadir al periódico",
+        "palabras" to "%d palabras en el periódico",
+        "widget_animo" to "¿De qué color va tu día?",
+        "widget_momento" to "Ahora mismo suena…",
+        "widget_discreto_animo" to "Ánimo",
+        "widget_discreto_momento" to "Instante",
+    )
+
+
     private val NOUVEAU: Map<String, String> = mapOf(
         "pestana_dia" to "Hoy",
         "pestana_diario" to "Carnet",
@@ -607,6 +623,7 @@ object Textos {
         TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.TEMPLARIO -> TEMPLARIO
         TemaId.DISTOPIA -> DISTOPIA
+        TemaId.PSICODELIA -> PSICODELIA
         TemaId.NOUVEAU -> NOUVEAU
         TemaId.GALIA -> GALIA
         TemaId.ARCONTES -> ARCONTES

@@ -153,6 +153,7 @@ object LibroDiario {
         TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.cardo_regular)
         TemaId.TEMPLARIO -> Fuentes(R.font.cruzada_titulo, R.font.regla_regular)
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
+        TemaId.PSICODELIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
         // La letra de cartel de curvas de pluma (Federant) para los títulos, y Brygada 1918 para leer.
         TemaId.NOUVEAU -> Fuentes(R.font.cartel_titulo, R.font.brygada_regular)
         // La Piazzolla gruesa de los títulos, como letra grabada, y la de leer.
@@ -250,6 +251,7 @@ object LibroDiario {
             TemaId.TEMPLARIO -> "h1{text-align:center;letter-spacing:.08em}article{border-top:4px solid $s;border-bottom:1px solid $p;padding-top:10px}.fecha{letter-spacing:.06em}" +
                 ".fecha::before{content:'\\2629  ';color:$p}" + capitular("2.6em", p)
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
+            TemaId.PSICODELIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
             // Cada día como una página de la revista ilustrada: el marco fino con las esquinas de arriba muy redondas, como un cartel,
             // un velo violeta en los márgenes, la fecha en la letra del cartel seguida de la línea de látigo, los datos en tinta
             // tenue y la capitular de cartel en verde salvia.
@@ -806,6 +808,7 @@ object LibroDiario {
             TemaId.MEDIEVAL -> Medidas(12.5f, aire)
             TemaId.TEMPLARIO -> Medidas(12f, if (carta) 1.5f else 1.44f)
             TemaId.DISTOPIA -> Medidas(11f, aire)
+            TemaId.PSICODELIA -> Medidas(11f, aire)
             TemaId.NOUVEAU -> Medidas(if (carta) 12.4f else 11.6f, aire + 0.04f)
             TemaId.GALIA -> Medidas(if (carta) 12.2f else 11.4f, aire + 0.03f)
             TemaId.ARCONTES -> Medidas(if (carta) 12.2f else 11.6f, aire + 0.02f)
@@ -865,6 +868,7 @@ object LibroDiario {
         TemaId.TEMPLARIO -> Inicial(R.font.cruzada_titulo, 1.3f, palabra = true, mayusculas = true)
         // La primera palabra en mayúsculas sobre la franja roja del formulario.
         TemaId.DISTOPIA -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
+        TemaId.PSICODELIA -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
         // La primera letra en la letra de cartel, grande, como la capitular de una revista ilustrada.
         TemaId.NOUVEAU -> Inicial(R.font.cartel_titulo, 2.7f)
         // La primera letra en la Piazzolla gruesa de los títulos, grande, como tallada en la cera.
@@ -1018,6 +1022,11 @@ object LibroDiario {
                 }, relleno)
             }
             TemaId.DISTOPIA -> {
+                // La barra negra del formulario y la línea roja de debajo.
+                cv.drawLine(x0, y - 1.5f, x1, y - 1.5f, Paint(linea).apply { color = tinta; strokeWidth = 2.4f })
+                cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
+            }
+            TemaId.PSICODELIA -> {
                 // La barra negra del formulario y la línea roja de debajo.
                 cv.drawLine(x0, y - 1.5f, x1, y - 1.5f, Paint(linea).apply { color = tinta; strokeWidth = 2.4f })
                 cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
@@ -1340,6 +1349,12 @@ object LibroDiario {
                 listOf(22f to 22f, A - 22f to 22f, 22f to B - 22f, A - 22f to B - 22f).forEach { (x, yy) -> cv.drawCircle(x, yy, 3.2f, Paint(relleno).apply { color = 0xFF4A5560.toInt() }) }
             }
             TemaId.DISTOPIA -> {
+                // Marco negro, la franja roja de arriba y la casilla del folio.
+                rect(22f, Paint(trazo).apply { color = tinta; strokeWidth = 1.6f; alpha = 220 })
+                cv.drawRect(22f, 22f, A - 22f, 30f, Paint(relleno).apply { alpha = 220 })
+                cv.drawRect(A - 130f, 36f, A - 34f, 54f, Paint(fino).apply { color = tinta; alpha = 160 })
+            }
+            TemaId.PSICODELIA -> {
                 // Marco negro, la franja roja de arriba y la casilla del folio.
                 rect(22f, Paint(trazo).apply { color = tinta; strokeWidth = 1.6f; alpha = 220 })
                 cv.drawRect(22f, 22f, A - 22f, 30f, Paint(relleno).apply { alpha = 220 })

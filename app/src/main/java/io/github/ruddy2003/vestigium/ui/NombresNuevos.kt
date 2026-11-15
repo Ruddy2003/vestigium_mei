@@ -31,6 +31,9 @@ object NombresNuevos {
         TemaId.DISTOPIA to mapOf("La cinta" to "REGISTRO HORARIO", "Constelación" to "RED DE CONTACTOS", "Hall de logros" to "SALA DE CONDECORACIONES", "Campañas" to "PLANES DE CUMPLIMIENTO",
             "Impulsos y recaídas" to "INFRACCIONES PRIVADAS", "Estado de los datos" to "ESTADO DE LA VIGILANCIA", "Enfoque y siestas" to "PRODUCTIVIDAD Y DESCANSO", "Ver tu vida" to "INFORMES VISUALES",
             "Tus atajos" to "ACCESOS AUTORIZADOS", "Logro conseguido" to "CONDECORACIÓN OTORGADA", "Este día hace un año" to "ARCHIVO: HACE UN AÑO", "Elegir campaña" to "ASIGNAR PLAN", "Campañas anteriores" to "PLANES CERRADOS"),
+        TemaId.PSICODELIA to mapOf("La cinta" to "REGISTRO HORARIO", "Constelación" to "RED DE CONTACTOS", "Hall de logros" to "SALA DE CONDECORACIONES", "Campañas" to "PLANES DE CUMPLIMIENTO",
+            "Impulsos y recaídas" to "INFRACCIONES PRIVADAS", "Estado de los datos" to "ESTADO DE LA VIGILANCIA", "Enfoque y siestas" to "PRODUCTIVIDAD Y DESCANSO", "Ver tu vida" to "INFORMES VISUALES",
+            "Tus atajos" to "ACCESOS AUTORIZADOS", "Logro conseguido" to "CONDECORACIÓN OTORGADA", "Este día hace un año" to "ARCHIVO: HACE UN AÑO", "Elegir campaña" to "ASIGNAR PLAN", "Campañas anteriores" to "PLANES CERRADOS"),
         // Art nouveau: el friso de las horas, el ramo de tu gente, el pabellón de las medallas y la primera línea del metro.
         TemaId.NOUVEAU to mapOf("La cinta" to "El friso de las horas", "Constelación" to "El ramo de tu gente", "Hall de logros" to "El pabellón de las medallas", "Campañas" to "La línea del Métropolitain",
             "Impulsos y recaídas" to "El cuaderno del cajón con llave", "Estado de los datos" to "Cómo va la tinta en cada piedra", "Enfoque y siestas" to "La mesa de dibujo y el diván", "Ver tu vida" to "Tu vida en láminas",

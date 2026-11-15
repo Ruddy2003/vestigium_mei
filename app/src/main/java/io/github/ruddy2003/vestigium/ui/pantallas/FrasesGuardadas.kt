@@ -197,6 +197,11 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
             circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
         }, 1.4f)
+        TemaId.PSICODELIA -> pinta(Path().apply {
+            fillType = PathFillType.EvenOdd
+            moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
+            circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
+        }, 1.4f)
         // La flor de iris: tres pétalos que suben y dos que caen, sobre su tallo; guardada, con las venas de los que caen.
         TemaId.NOUVEAU -> {
             drawLine(if (lleno) color else color.copy(alpha = 0.7f), p(12f, 13f), p(12.6f, 22.5f), 1.4f * u, StrokeCap.Round)

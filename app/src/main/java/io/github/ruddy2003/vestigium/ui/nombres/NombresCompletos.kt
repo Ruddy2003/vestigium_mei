@@ -18,6 +18,7 @@ object NombresCompletos {
         TemaId.MEDIEVAL -> NombresMedieval.M[titulo]
         TemaId.TEMPLARIO -> NombresTemplario.M[titulo]
         TemaId.DISTOPIA -> NombresDistopia.M[titulo]
+        TemaId.PSICODELIA -> NombresPsicodelia.M[titulo]
         TemaId.NOUVEAU -> NombresNouveau.M[titulo]
         TemaId.GALIA -> NombresGalia.M[titulo]
         TemaId.ARCONTES -> NombresArcontes.M[titulo]

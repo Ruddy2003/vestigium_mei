@@ -67,6 +67,10 @@ object Widgets {
             0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
             intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
             0xFF222527.toInt(), 0xFFFFFFFF.toInt())
+        TemaId.PSICODELIA -> Colores(R.drawable.widget_fondo_psicodelia, R.drawable.widget_boton_psicodelia, R.drawable.widget_boton_activo_psicodelia, R.drawable.widget_boton_ambar_psicodelia,
+            0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
+            intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
+            0xFF222527.toInt(), 0xFFFFFFFF.toInt())
         // La misma París de noche: la luz eléctrica, el papel crema a su luz y, en el ánimo, de la amapola al verde de los cafés.
         TemaId.NOUVEAU -> Colores(R.drawable.widget_fondo_nouveau, R.drawable.widget_boton_nouveau, R.drawable.widget_boton_activo_nouveau, R.drawable.widget_boton_ambar_nouveau,
             0xFFE8C46E.toInt(), 0xFFECE5D6.toInt(), 0xFFADA79A.toInt(), 0xFF3E4548.toInt(),
@@ -230,6 +234,7 @@ object Widgets {
         TemaId.MEDIEVAL -> "Agora" to "Scriptura"
         TemaId.TEMPLARIO -> "Vigilia" to "Al rol"
         TemaId.DISTOPIA -> "CONTROL" to "FORMULARIO"
+        TemaId.PSICODELIA -> "Ahora suena" to "Al periódico"
         TemaId.NOUVEAU -> "En el taller" to "Al carnet"
         TemaId.GALIA -> "Junto al fuego" to "A la tablilla"
         TemaId.ARCONTES -> "En esta hora" to "Al códice"
@@ -277,6 +282,7 @@ object Widgets {
             TemaId.MEDIEVAL -> R.font.gotica_regular to 1.1f
             TemaId.TEMPLARIO -> R.font.cruzada_titulo to 1.0f
             TemaId.DISTOPIA -> R.font.oswald_medium to 1.05f
+            TemaId.PSICODELIA -> R.font.fredoka_semibold to 1.0f    // Fredoka negrita, la de los rótulos
             TemaId.NOUVEAU -> R.font.vitrina_regular to 1.04f     // Della Respira, la de los rótulos
             TemaId.GALIA -> R.font.ysabeau_semibold to 1.02f      // Ysabeau, la de los rótulos
             TemaId.ARCONTES -> R.font.codice_regular to 1.0f       // Caudex, la letra de los códices

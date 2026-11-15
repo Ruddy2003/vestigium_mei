@@ -36,6 +36,10 @@ object LetraExtra {
     val federant = FontFamily(Font(R.font.cartel_titulo, FontWeight.Normal))
     val brygada = FontFamily(Font(R.font.brygada_regular, FontWeight.Normal), Font(R.font.brygada_semibold, FontWeight.SemiBold))
     val dellaRespira = FontFamily(Font(R.font.vitrina_regular, FontWeight.Normal), Font(R.font.vitrina_regular, FontWeight.Medium), Font(R.font.vitrina_regular, FontWeight.SemiBold))
+    /** Psicodelia: Modak, la letra burbuja de los carteles, para los títulos; Fredoka para leer y, en negrita un poco ancha, para rótulos y cifras. */
+    val modak = FontFamily(Font(R.font.burbuja_titulo, FontWeight.Normal))
+    val fredoka = FontFamily(Font(R.font.fredoka_regular, FontWeight.Normal), Font(R.font.fredoka_semibold, FontWeight.SemiBold))
+    val fredokaRotulo = FontFamily(Font(R.font.fredoka_semibold, FontWeight.Normal), Font(R.font.fredoka_semibold, FontWeight.Medium), Font(R.font.fredoka_semibold, FontWeight.SemiBold))
     val vt323 = FontFamily(Font(R.font.vt323, FontWeight.Normal))
     val estarcido = FontFamily(Font(R.font.saira_stencil, FontWeight.Normal))
     val jost = FontFamily(Font(R.font.jost_regular, FontWeight.Normal), Font(R.font.jost_medium, FontWeight.Medium), Font(R.font.jost_semibold, FontWeight.SemiBold))
@@ -258,6 +262,17 @@ internal val nouveauOscuro = esquema(true, 0xFF121519, 0xFF1A1E22, 0xFF23282C, 0
     0xFFE8C46E, 0xFF2B1E00, 0xFF4A3A14, 0xFFFBEBC4, 0xFFBFA6DE, 0xFF2F2540, 0xFF8CCBA4, 0xFFFF8B7E)
 /** Títulos en Federant, la letra de cartel con curvas de pluma; texto en Brygada 1918; rótulos y cifras en Della Respira. */
 internal val tipoNouveau = tipografia(LetraExtra.federant, FontWeight.Normal, 1.0f, 0.3f, LetraExtra.brygada, 1.0f, LetraExtra.dellaRespira, 1.04f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
+//  Psicodelia: San Francisco en 1967. De día, la calle con la niebla y los colores de los carteles; de noche, la misma
+//  ciudad en la sala de baile con luz negra, donde manda el verde limón (docs/diseno/temas/psicodelia.md).
+// ---------------------------------------------------------------------
+internal val psicodeliaClaro = esquema(false, 0xFFF2ECE3, 0xFFFAF6F0, 0xFFE6DED2, 0xFFB9AC9D, 0xFF2A1C32, 0xFF61546A,
+    0xFFB0246A, 0xFFFFF4F8, 0xFFF6D3E4, 0xFF3D0624, 0xFF2E7344, 0xFFD2EBD5, 0xFFA84B0A, 0xFFB3261E)
+internal val psicodeliaOscuro = esquema(true, 0xFF120A1C, 0xFF1A1126, 0xFF251935, 0xFF43335A, 0xFFF2EAF7, 0xFFB4A7C4,
+    0xFFC9F04A, 0xFF1C2600, 0xFF33410F, 0xFFECFFB8, 0xFFFF5CBE, 0xFF4F1640, 0xFFAE91FF, 0xFFFF8A80)
+/** Títulos en Modak, la letra burbuja; texto en Fredoka; rótulos y cifras en Fredoka negrita y un poco ancha. */
+internal val tipoPsicodelia = tipografia(LetraExtra.modak, FontWeight.Normal, 0.96f, 0.2f, LetraExtra.fredoka, 1.0f, LetraExtra.fredokaRotulo, 0.98f, cifrasAlineadas = true)
 
 /** Títulos en Piazzolla negrita gruesa, como letra grabada; texto en Piazzolla; rótulos en Ysabeau. */
 internal val tipoGalia = tipografia(LetraExtra.piazzolla, FontWeight.ExtraBold, 1.0f, 0.4f, LetraExtra.piazzolla, 1.0f, LetraExtra.ysabeau, 1.0f, cifrasAlineadas = true)
@@ -514,6 +529,7 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFFC9473B, 0xFF2A2016, 0xFF8DA5E0, 0xFFD5A84A) else listOf(0xFF9E1B1B, 0xFFE5D6B4, 0xFF1F3F8F, 0xFFA97C1E)
     TemaId.TEMPLARIO -> if (oscuro) listOf(0xFFD0453A, 0xFF262219, 0xFF9AA8B4, 0xFFDAAE68) else listOf(0xFFA8181E, 0xFFE2D6BC, 0xFF46525D, 0xFFA2763A)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFFE0262F, 0xFF2A2C2E, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFFB3121B, 0xFFCFCBC0, 0xFF2E3B44, 0xFFB3121B)
+    TemaId.PSICODELIA -> if (oscuro) listOf(0xFFC9F04A, 0xFF251935, 0xFFFF5CBE, 0xFFAE91FF) else listOf(0xFFB0246A, 0xFFE6DED2, 0xFF2E7344, 0xFFA84B0A)
     TemaId.NOUVEAU -> if (oscuro) listOf(0xFFBFA6DE, 0xFF23282C, 0xFFE8C46E, 0xFFE8C46E) else listOf(0xFF4B6A4E, 0xFFE2D8C0, 0xFF6D4C82, 0xFF6D4C82)
     // Del verde del roble al oro del torques, sobre el barro; de noche, del roble bajo la luna a la hoguera.
     TemaId.GALIA -> if (oscuro) listOf(0xFFA9C795, 0xFF212A20, 0xFFEBA53F, 0xFFEBA53F) else listOf(0xFF3E5F24, 0xFFD9D0B0, 0xFF7E590C, 0xFF7E590C)
@@ -561,6 +577,7 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFF8DA5E0, 0xFFD5A84A, 0xFFC9473B) else listOf(0xFF1F3F8F, 0xFFA97C1E, 0xFF9E1B1B)
     TemaId.TEMPLARIO -> if (oscuro) listOf(0xFF9AA8B4, 0xFFDAAE68, 0xFFE2453B) else listOf(0xFF46525D, 0xFFB98A45, 0xFFB0191F)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFF6D7377, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFF6D7377, 0xFF2E3B44, 0xFFB3121B)
+    TemaId.PSICODELIA -> if (oscuro) listOf(0xFFAE91FF, 0xFFC9F04A, 0xFFFF5CBE) else listOf(0xFF2E7344, 0xFFA84B0A, 0xFFB0246A)   // verde, naranja y magenta de cartel
     TemaId.NOUVEAU -> if (oscuro) listOf(0xFF8CCBA4, 0xFFE8C46E, 0xFFFF8B7E) else listOf(0xFF4B6A4E, 0xFF6D4C82, 0xFFA1302A)   // salvia, iris, tinta roja
     TemaId.GALIA -> if (oscuro) listOf(0xFFA9C795, 0xFFEBA53F, 0xFFFF8A7A) else listOf(0xFF3E5F24, 0xFF7E590C, 0xFFA3261C)   // roble, oro, sangre
     TemaId.ARCONTES -> if (oscuro) listOf(0xFF86BBCB, 0xFFE9B04F, 0xFFFF8A7A) else listOf(0xFF2B5B6C, 0xFF87590F, 0xFF8E3A2E)   // lago, ocre, jaspe rojo

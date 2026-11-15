@@ -82,6 +82,7 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.MEDIEVAL -> 5000
     TemaId.TEMPLARIO -> 4400
     TemaId.DISTOPIA -> 7000
+    TemaId.PSICODELIA -> 7000
     TemaId.NOUVEAU -> 9400                     // el destello recorre el aro de látigo, del brote al rizo, y el nácar de la libélula tornasola
     TemaId.GALIA -> 8000                       // el brillo da la vuelta al torques y el caballo galopa dos trancos
     TemaId.ARCONTES -> 10500                   // el destello cruza la piedra y las siete estrellas se encienden una tras otra
@@ -151,6 +152,7 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.MEDIEVAL -> roseton(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.TEMPLARIO -> escudoTemplario(c, r, e.primary, e.secondary, e.tertiary, if (oscuro) Color(0xFFEEE7D8) else Color.White, t)
         TemaId.DISTOPIA -> ojo(c, r, e.onBackground, e.primary, e.background, t)
+        TemaId.PSICODELIA -> ojo(c, r, e.onBackground, e.primary, e.background, t)
         TemaId.NOUVEAU -> with(TrazosNouveau) { medallon(c, r, t, oscuro) }
         TemaId.GALIA -> with(TrazosGalia) { emblema(c, r, t, oscuro) }
         TemaId.ARCONTES -> with(TrazosArcontes) { emblema(c, r, t, e.primary) }
@@ -2338,6 +2340,20 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                 y += p * 0.87f; fila++
             }
         }
+        TemaId.PSICODELIA -> {
+            color2 = esquema.onBackground.copy(alpha = if (oscuro) 0.06f else 0.07f)
+            val p = 13.dp.toPx(); var y = 0f; var fila = 0
+            while (y < h * 0.45f) {
+                var x = if (fila % 2 == 0) 0f else p / 2
+                while (x < w) {
+                    val k = ((x / w) * (1f - y / (h * 0.45f))).coerceIn(0f, 1f)
+                    val rr = p * 0.32f * k
+                    if (rr > 0.25.dp.toPx()) puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
+                    x += p
+                }
+                y += p * 0.87f; fila++
+            }
+        }
         TemaId.NOUVEAU -> {
             // El papel crema del taller, con su fibra apenas visible, y a cada lado una cenefa de tallos que suben y se
             // enroscan arriba, con hojas de sauce y algún lirio. De día, la luz difusa que entra por el vidrio del taller; de
@@ -3184,6 +3200,7 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.TEMPLARIO -> poligonoBoton(0.12f to 1f, 0.12f to 0.04f, 0.3f to 0.04f, 0.3f to 0.2f, 0.41f to 0.2f, 0.41f to 0.04f, 0.59f to 0.04f,
         0.59f to 0.2f, 0.7f to 0.2f, 0.7f to 0.04f, 0.88f to 0.04f, 0.88f to 1f)
     TemaId.DISTOPIA -> poligonoBoton(0.04f to 0.12f, 0.4f to 0.12f, 0.48f to 0.24f, 0.96f to 0.24f, 0.96f to 0.92f, 0.04f to 0.92f)
+    TemaId.PSICODELIA -> poligonoBoton(0.04f to 0.12f, 0.4f to 0.12f, 0.48f to 0.24f, 0.96f to 0.24f, 0.96f to 0.92f, 0.04f to 0.92f)
     // Un jarrón de vidrio de Nancy: el cuello con su labio, los hombros y la panza redonda sobre un pie corto.
     TemaId.NOUVEAU -> GenericShape { s, _ ->
         val w = s.width; val h = s.height
@@ -3328,6 +3345,7 @@ private fun textoMas(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Ítem"
     TemaId.TEMPLARIO -> "Armería"
     TemaId.DISTOPIA -> "Anexo"
+    TemaId.PSICODELIA -> "Anexo"
     TemaId.NOUVEAU -> "L'Atelier"              // lo demás está en el taller de litografía
     TemaId.GALIA -> "Oppidum"                 // lo demás está en el pueblo de la colina
     TemaId.ARCONTES -> "Apócrifo"                // «escondido»: lo que no se lee en voz alta
@@ -3425,6 +3443,8 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
                     color, style = Stroke(r * 0.09f, cap = StrokeCap.Round)) }
             // Sol tachado por el censor.
             TemaId.DISTOPIA -> { drawCircle(color, r * 0.62f, c); listOf(-0.3f, 0f, 0.3f).forEach { dy -> drawRect(fondo, Offset(c.x - r, c.y + r * dy - r * 0.05f), Size(r * 2, r * 0.1f)) }
+                drawCircle(color, r * 0.9f, c, style = Stroke(r * 0.08f)) }
+            TemaId.PSICODELIA -> { drawCircle(color, r * 0.62f, c); listOf(-0.3f, 0f, 0.3f).forEach { dy -> drawRect(fondo, Offset(c.x - r, c.y + r * dy - r * 0.05f), Size(r * 2, r * 0.1f)) }
                 drawCircle(color, r * 0.9f, c, style = Stroke(r * 0.08f)) }
             // El sol del cartel: el disco y, alrededor, ocho mechones que ondulan y se enroscan, como un pelo al viento.
             TemaId.NOUVEAU -> { drawCircle(color, r * 0.34f, c)
@@ -3565,6 +3585,7 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
                 drawRect(color, Offset(c.x - r * 0.9f, c.y + r * 0.8f), Size(r * 1.8f, r * 0.16f)) }
             // Luna tras los barrotes.
             TemaId.DISTOPIA -> { luna(); listOf(-0.45f, 0f, 0.45f).forEach { dx -> drawLine(color, Offset(c.x + r * dx, c.y - r * 0.95f), Offset(c.x + r * dx, c.y + r * 0.95f), r * 0.08f) } }
+            TemaId.PSICODELIA -> { luna(); listOf(-0.45f, 0f, 0.45f).forEach { dx -> drawLine(color, Offset(c.x + r * dx, c.y - r * 0.95f), Offset(c.x + r * dx, c.y + r * 0.95f), r * 0.08f) } }
             // La luna creciente y, desde abajo, un tallo que sube hacia ella y se enrosca, con una hoja de sauce.
             TemaId.NOUVEAU -> { luna(0.56f, 0.3f, -0.24f, c + Offset(-r * 0.18f, -r * 0.2f))
                 val pie = c + Offset(r * 0.5f, r * 0.95f)
@@ -3715,6 +3736,8 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
             drawLine(color, Offset(r * 0.6f, r * 0.84f), Offset(r * 0.84f, r * 0.6f), r * 0.08f, StrokeCap.Round); drawCircle(color, r * 0.065f, Offset(r * 0.92f, r * 0.92f)) }
         // Cruz de mira en el cristal.
         TemaId.DISTOPIA -> { lente(); mango()
+            drawLine(color, Offset(c.x - lr * 0.6f, c.y), Offset(c.x + lr * 0.6f, c.y), r * 0.05f); drawLine(color, Offset(c.x, c.y - lr * 0.6f), Offset(c.x, c.y + lr * 0.6f), r * 0.05f) }
+        TemaId.PSICODELIA -> { lente(); mango()
             drawLine(color, Offset(c.x - lr * 0.6f, c.y), Offset(c.x + lr * 0.6f, c.y), r * 0.05f); drawLine(color, Offset(c.x, c.y - lr * 0.6f), Offset(c.x, c.y + lr * 0.6f), r * 0.05f) }
         // El aro de la lupa y el mango que es un tallo: baja en curva, echa una hoja y acaba en un rizo.
         TemaId.NOUVEAU -> { lente()
@@ -3947,6 +3970,7 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> false
     TemaId.TEMPLARIO -> false
     TemaId.DISTOPIA -> false
+    TemaId.PSICODELIA -> false
     TemaId.NOUVEAU -> false            // los pétalos de iris, las hojas de sauce y los rizos de oro caen
     TemaId.GALIA -> false             // las hojas de roble, los estáteros y el muérdago caen
     TemaId.ARCONTES -> true            // las chispas vuelven arriba, a la luz de donde vinieron
@@ -4063,6 +4087,9 @@ fun CapaFiesta(fijo: Float? = null) {
                     }
                     // Tiras de expediente con sus renglones.
                     TemaId.DISTOPIA -> { drawRect(col, Offset(pos.x - s * 0.7f, pos.y - s * 0.45f), Size(s * 1.4f, s * 0.9f))
+                        drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y - s * 0.15f), Offset(pos.x + s * 0.5f, pos.y - s * 0.15f), s * 0.1f)
+                        drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y + s * 0.15f), Offset(pos.x + s * 0.2f, pos.y + s * 0.15f), s * 0.1f) }
+                    TemaId.PSICODELIA -> { drawRect(col, Offset(pos.x - s * 0.7f, pos.y - s * 0.45f), Size(s * 1.4f, s * 0.9f))
                         drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y - s * 0.15f), Offset(pos.x + s * 0.5f, pos.y - s * 0.15f), s * 0.1f)
                         drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y + s * 0.15f), Offset(pos.x + s * 0.2f, pos.y + s * 0.15f), s * 0.1f) }
                     // Pétalos de iris con su lengua amarilla, hojas de sauce con su nervio y rizos de oro, como los de los marcos.

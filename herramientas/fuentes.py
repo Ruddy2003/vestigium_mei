@@ -170,6 +170,11 @@ FUENTES = [
     ("brygada1918/Brygada1918[wght].ttf", {"wght": 400}, "brygada_regular", None, LATINO_CORTO),
     ("brygada1918/Brygada1918[wght].ttf", {"wght": 600}, "brygada_semibold", None, LATINO_CORTO),
     ("dellarespira/DellaRespira-Regular.ttf", None, "vitrina_regular", "Vitrina Vestigium", LATINO_CORTO),
+    # PSI: Psicodelia (lote 10). Títulos en Modak, la letra burbuja de los carteles; texto y rótulos en Fredoka (normal y
+    # negrita un poco ancha). A las tres se les agregan los signos del tema de Noto Sans Symbols (ver CON_SIGNOS_NOTO)
+    ("modak/Modak-Regular.ttf", None, "burbuja_titulo", None, LATINO_CORTO),
+    ("fredoka/Fredoka[wdth,wght].ttf", {"wght": 400, "wdth": 100}, "fredoka_regular", None, LATINO_CORTO),
+    ("fredoka/Fredoka[wdth,wght].ttf", {"wght": 600, "wdth": 112}, "fredoka_semibold", None, LATINO_CORTO),
 ]
 
 
@@ -225,6 +230,11 @@ SIGNOS_ARCONTES = [ord(c) for c in "◌⁘∴∵∷※⁂▪▫▹◃"]
 # y las flechas), copiados de Brygada 1918 con su peso.
 CON_SIGNOS_BRYGADA = {"cartel_titulo": 500, "vitrina_regular": 400}
 SIGNOS_BRYGADA = [ord(c) for c in "’”…←→↑↓"]
+# Psicodelia: la flor y el sol (de Noto Sans Symbols 2) y la nota, la paz y las flechas (de Noto Sans Symbols, con el peso
+# de cada salida), que Modak y Fredoka no traen.
+CON_SIGNOS_NOTO = {"burbuja_titulo": 700, "fredoka_regular": 400, "fredoka_semibold": 600}
+SIGNOS_NOTO_2 = [ord(c) for c in "✿☼"]
+SIGNOS_NOTO_1 = [ord(c) for c in "♪♫☮←→↑↓"]
 CON_SIGMA_LUNA = {"piazzolla_titulo", "piazzolla_regular", "ysabeau_semibold"}
 
 
@@ -478,6 +488,9 @@ def hacer(origen, ejes, salida, nombre, letras, cache):
         anadir_adornos(f)
     if salida in CON_SIGMA_LUNA:
         anadir_sigma_luna(f)
+    if salida in CON_SIGNOS_NOTO:
+        anadir_escritura(f, "notosanssymbols2/NotoSansSymbols2-Regular.ttf", SIGNOS_NOTO_2, None, cache, "ns2", solo_faltan=True)
+        anadir_escritura(f, "notosanssymbols/NotoSansSymbols[wght].ttf", SIGNOS_NOTO_1, {"wght": CON_SIGNOS_NOTO[salida]}, cache, "ns1", solo_faltan=True)
     if salida in CON_SIGNOS_BRYGADA:
         anadir_escritura(f, "brygada1918/Brygada1918[wght].ttf", SIGNOS_BRYGADA, {"wght": CON_SIGNOS_BRYGADA[salida]}, cache, "bry", solo_faltan=True)
     if salida in CON_HEBREO_COPTO:

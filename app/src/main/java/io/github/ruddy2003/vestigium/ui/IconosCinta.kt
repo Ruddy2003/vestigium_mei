@@ -167,6 +167,10 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
             drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
         }
+        TemaId.PSICODELIA -> {
+            drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
+            drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
+        }
         // La flor del iris en silueta: los tres pétalos que suben y los dos que caen, con la lengua calada en el de en medio.
         TemaId.NOUVEAU -> {
             val base = Offset(c.x, c.y + r * 0.12f)

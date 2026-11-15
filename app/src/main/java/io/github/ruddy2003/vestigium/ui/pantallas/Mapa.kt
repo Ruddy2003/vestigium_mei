@@ -114,6 +114,8 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Distopía: gris de expediente, sin color.
         TemaId.DISTOPIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
+        TemaId.PSICODELIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
+            else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
         // Art nouveau: de día, el plano impreso en papel crema con un poco del verde salvia; de noche, la misma París con el
         // azul negro de la calle y el oro de la luz eléctrica en las avenidas.
         TemaId.NOUVEAU -> if (oscuro) { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.84f, 0.78f, 0.6f, 4f, 4f, 10f)) }
@@ -284,6 +286,7 @@ internal object Formas {
             TemaId.TEMPLARIO -> figura(x, y, r, -0.82f, -0.9f, 0.82f, -0.9f, 0.8f, -0.1f, 0.58f, 0.5f, 0f, 1.05f, -0.58f, 0.5f, -0.8f, -0.1f)
             // El ojo que todo lo ve.
             TemaId.DISTOPIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
+            TemaId.PSICODELIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
             // El farol de la entrada de metro: el globo en forma de pera.
             TemaId.NOUVEAU -> {
                 p.reset(); p.moveTo(x, y - r * 1.25f)
@@ -387,6 +390,7 @@ internal object Formas {
             TemaId.TEMPLARIO -> { raya(c, x, y, r, 0f, -0.65f, 0f, 0.55f, d); raya(c, x, y, r, -0.52f, -0.15f, 0.52f, -0.15f, d)
                 raya(c, x, y, r, -0.62f, -0.75f, 0.62f, -0.75f, d) }   // la cruz del escudo y su jefe
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
+            TemaId.PSICODELIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
             TemaId.NOUVEAU -> { raya(c, x, y, r, -0.42f, -0.92f, 0.42f, -0.92f, d); raya(c, x, y, r, 0f, -0.55f, 0f, 0.55f, d) }   // el collar y el filamento
             TemaId.GALIA -> { raya(c, x, y, r, 0f, -0.95f, 0f, 0.95f, d); c.drawOval(x - r * 0.26f, y - r * 0.36f, x + r * 0.26f, y + r * 0.36f, d) }   // la espina y el umbo
             TemaId.ARCONTES -> { c.drawCircle(x + r * 0.72f, y - r * 0.92f, r * 0.1f, d); c.drawCircle(x, y, r * 0.2f, d) }   // el ojo de la serpiente y la chispa del centro
@@ -908,6 +912,17 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                 x += 6 * u; i++
             }
         }
+        TemaId.PSICODELIA -> {
+            filete(5 * u, tinta.copy(alpha = 0.45f), 1 * u)
+            drawCircle(acento, 3.5f * u, Offset(16 * u, 16 * u))
+            drawRect(tinta.copy(alpha = 0.6f), Offset(23 * u, 14 * u), Size(18 * u, 4 * u))
+            var x = 10 * u; var i = 0
+            while (x < w - 10 * u) {
+                val l = if (i % 5 == 0) 6 * u else 3 * u
+                drawLine(tinta.copy(alpha = 0.5f), Offset(x, h - 5 * u), Offset(x, h - 5 * u - l), 1 * u)
+                x += 6 * u; i++
+            }
+        }
         TemaId.NOUVEAU -> {
             // El marco del plano impreso de 1900: el doble filete; en cada esquina, dos líneas de látigo que salen a lo largo de los
             // bordes y se enroscan, y abajo a la izquierda, un iris.
@@ -1314,6 +1329,12 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
         }
         // El ojo, con la aguja del norte detrás.
         TemaId.DISTOPIA -> {
+            punta(n, r * 0.98f, r * 0.1f, acento)
+            val ojo = Path().apply { moveTo(c.x - r * 0.8f, c.y); quadraticTo(c.x, c.y - r * 0.75f, c.x + r * 0.8f, c.y); quadraticTo(c.x, c.y + r * 0.75f, c.x - r * 0.8f, c.y); close() }
+            drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))
+            drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
+        }
+        TemaId.PSICODELIA -> {
             punta(n, r * 0.98f, r * 0.1f, acento)
             val ojo = Path().apply { moveTo(c.x - r * 0.8f, c.y); quadraticTo(c.x, c.y - r * 0.75f, c.x + r * 0.8f, c.y); quadraticTo(c.x, c.y + r * 0.75f, c.x - r * 0.8f, c.y); close() }
             drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))

@@ -66,6 +66,9 @@
     <style name="Theme.Vestigium.Arranque.Distopia" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_distopia</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Psicodelia" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_psicodelia</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Nouveau" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_nouveau</item>
     </style>
@@ -89,6 +92,9 @@
     </style>
     <style name="Theme.Vestigium.Arranque.Nouveau.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_nouveau_oscuro</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Psicodelia.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_psicodelia_oscuro</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Galia.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_galia_oscuro</item>

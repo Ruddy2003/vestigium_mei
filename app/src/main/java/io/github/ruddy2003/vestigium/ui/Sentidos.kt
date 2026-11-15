@@ -117,6 +117,13 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
             Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
         }
+        TemaId.PSICODELIA -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 1f)); Evento.PASAR -> listOf(g(CLICK, 0.6f))
+            Evento.GUARDAR -> listOf(g(THUD, 1f), g(CLICK, 1f, 70))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.45f)); Evento.ABRIR -> listOf(g(CLICK, 0.8f), g(THUD, 0.6f, 50))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
+        }
         // El colgante de cristal de la lámpara, la lámina de la cajita de música, el golpe de la prensa y el vals.
         TemaId.NOUVEAU -> when (e) {
             Evento.TOQUE -> listOf(g(TICK, 0.58f), g(TICK, 0.18f, 30)); Evento.PASAR -> listOf(g(TICK, 0.22f), g(TICK, 0.16f, 34), g(TICK, 0.12f, 40))
@@ -431,6 +438,7 @@ object Sentidos {
         TemaId.MEDIEVAL -> intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro, R.raw.s_medieval_pasar, R.raw.s_medieval_elegir, R.raw.s_medieval_abrir, R.raw.s_medieval_tema, R.raw.s_medieval_error, R.raw.s_medieval_cambio, R.raw.s_tecla_medieval, R.raw.s_rascar_medieval)
         TemaId.TEMPLARIO -> intArrayOf(R.raw.s_templario_toque, R.raw.s_templario_guardar, R.raw.s_templario_logro, R.raw.s_templario_pasar, R.raw.s_templario_elegir, R.raw.s_templario_abrir, R.raw.s_templario_tema, R.raw.s_templario_error, R.raw.s_templario_cambio, R.raw.s_tecla_templario, R.raw.s_rascar_templario)
         TemaId.DISTOPIA -> intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir, R.raw.s_distopia_tema, R.raw.s_distopia_error, R.raw.s_distopia_cambio, R.raw.s_tecla_distopia, R.raw.s_rascar_distopia)
+        TemaId.PSICODELIA -> intArrayOf(R.raw.s_psicodelia_toque, R.raw.s_psicodelia_guardar, R.raw.s_psicodelia_logro, R.raw.s_psicodelia_pasar, R.raw.s_psicodelia_elegir, R.raw.s_psicodelia_abrir, R.raw.s_psicodelia_tema, R.raw.s_psicodelia_error, R.raw.s_psicodelia_cambio, R.raw.s_tecla_psicodelia, R.raw.s_rascar_psicodelia)
         TemaId.NOUVEAU -> intArrayOf(R.raw.s_nouveau_toque, R.raw.s_nouveau_guardar, R.raw.s_nouveau_logro, R.raw.s_nouveau_pasar, R.raw.s_nouveau_elegir, R.raw.s_nouveau_abrir, R.raw.s_nouveau_tema, R.raw.s_nouveau_error, R.raw.s_nouveau_cambio, R.raw.s_tecla_nouveau, R.raw.s_rascar_nouveau)
         TemaId.GALIA -> intArrayOf(R.raw.s_galia_toque, R.raw.s_galia_guardar, R.raw.s_galia_logro, R.raw.s_galia_pasar, R.raw.s_galia_elegir, R.raw.s_galia_abrir, R.raw.s_galia_tema, R.raw.s_galia_error, R.raw.s_galia_cambio, R.raw.s_tecla_galia, R.raw.s_rascar_galia)
         TemaId.ARCONTES -> intArrayOf(R.raw.s_arcontes_toque, R.raw.s_arcontes_guardar, R.raw.s_arcontes_logro, R.raw.s_arcontes_pasar, R.raw.s_arcontes_elegir, R.raw.s_arcontes_abrir, R.raw.s_arcontes_tema, R.raw.s_arcontes_error, R.raw.s_arcontes_cambio, R.raw.s_tecla_arcontes, R.raw.s_rascar_arcontes)
@@ -522,6 +530,7 @@ object Sentidos {
         TemaId.TEMPLARIO -> Afinacion(st(-5, -2, 0, 5), st(-7, 0, 5, 7), pasarRuido = true, elegirRuido = false)
         // Do menor; la máquina de escribir, un semitono abajo y un tono arriba.
         TemaId.DISTOPIA -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
+        TemaId.PSICODELIA -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
         // Mi bemol mayor con la séptima mayor y la novena: la campanilla de cristal; el pliego de pasar es ruido, elegir es la lámina de la cajita.
         TemaId.NOUVEAU -> Afinacion(st(-5, 0, 4, 7, 11, 14), st(-7, -5, 0, 4), pasarRuido = true, elegirRuido = false)
         // Do# eolio sin sensible: la lira de los bardos; pasar es el viento en los robles, elegir una cuerda apagada con la palma.
@@ -669,6 +678,7 @@ object Sentidos {
         TemaId.MEDIEVAL -> pasadas(TICK_GRAVE, 0.5f, 70, 3)   // pan de oro
         TemaId.TEMPLARIO -> pasadas(CLICK, 0.65f, 50, 4)   // hierro de cota de malla
         TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
+        TemaId.PSICODELIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
         TemaId.NOUVEAU -> pasadas(TICK, 0.53f, 48, 4)   // un franco de plata
         TemaId.GALIA -> pasadas(TICK, 0.48f, 66, 4)   // el estátero de oro arverno
         TemaId.ARCONTES -> pasadas(TICK_GRAVE, 0.44f, 58, 3)   // la moneda de bronce de Herodes Antipas

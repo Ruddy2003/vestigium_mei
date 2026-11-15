@@ -151,6 +151,7 @@ object Campanas {
         TemaId.MEDIEVAL -> listOf("Peregrinación a Compostela", "La copia del códice", "El camino de los monasterios", "La feria de Champaña")
         TemaId.TEMPLARIO -> listOf("La marcha de las atalayas", "Relevo en Montalbar", "La escolta de los peregrinos", "Cabalgada al Pozo del Halcón")
         TemaId.DISTOPIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
+        TemaId.PSICODELIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
         // La primera línea del metro de París, la «ligne A», abierta al público el 19 de julio de 1900 a la una de la tarde,
         // durante la Exposición, de Porte Maillot a Porte de Vincennes; la segunda clase costaba 15 céntimos, fuera cual fuera
         // el trayecto (`docs/diseno/temas/fuentes_nouveau.md`, sección 5).
@@ -201,6 +202,7 @@ object Campanas {
         // De fortaleza en fortaleza por una frontera inventada, de la costa al castillo de las montañas.
         TemaId.TEMPLARIO -> listOf("Encomienda de la costa", "Atalaya del Alba", "Torre de la Sed", "Pozo del Halcón", "Vado de las Piedras Rojas", "Peña del Cuervo", "Castillo de Montalbar")
         TemaId.DISTOPIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
+        TemaId.PSICODELIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
         // Siete de las ocho estaciones de la línea 1 que abrieron el primer día, el 19 de julio de 1900, de oeste a este y con
         // su nombre de entonces (`fuentes_nouveau.md`, sección 5; la octava, Nation, queda entre las dos últimas).
         TemaId.NOUVEAU -> listOf("Porte Maillot", "Champs-Élysées", "Palais-Royal", "Hôtel de Ville", "Bastille", "Gare de Lyon", "Porte de Vincennes")
