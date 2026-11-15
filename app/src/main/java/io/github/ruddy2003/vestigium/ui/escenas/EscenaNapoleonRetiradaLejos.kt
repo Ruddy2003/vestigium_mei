@@ -40,11 +40,17 @@ import kotlin.math.PI
 import kotlin.math.sin
 
 /**
- * La lejanía de la retirada: el cielo de invierno, las lomas blancas que se enciman con sus bosques como manchas, el
- * humo de otros fuegos y, en el llano de la derecha, la granja de madera quemada con su humo («Los pueblos del camino
- * de vuelta están quemados»). Los tres días del Berezina, el río con el hielo suelto, los dos puentes de caballetes y
- * las fogatas de la orilla. El día de Krasnoi, el humo de los cañones en las lomas; el día que queman los puentes, la
- * columna de humo del puente, a lo lejos.
+ * La lejanía de la retirada: el cielo de invierno, las lomas que se enciman con sus bosques como manchas, el humo de
+ * otros fuegos y, en el llano de la derecha, lo de cada tramo ([TramosRetirada.lejania]):
+ * - **los campos** de la salida, con un caserío de madera entero a lo lejos y, los dos primeros días, las ruinas de
+ *   Moscú humeando a la derecha;
+ * - **el pueblo quemado** del camino viejo, un campo de chimeneas («Los pueblos del camino de vuelta están quemados»),
+ *   que el día de Maloyaroslavets arde;
+ * - **el llano blanco** de la nieve, con la granja quemada y su humo;
+ * - **las colinas de Krasnoi**, junto al camino, con el humo de los cañones de día;
+ * - **el Berezina**, con el hielo suelto, los dos puentes de caballetes y las fogatas de la orilla; el día que queman
+ *   los puentes, la columna de humo del puente;
+ * - **el bosque cerrado** del final, al fondo de los dos lados.
  */
 internal object RetiradaLejos {
     private val C = ColorNapoleon
@@ -121,20 +127,185 @@ internal object RetiradaLejos {
         drawPath(banda, p.medio(C.PINO_OSC, 0.78f))
         if (v.nieve > 0.4f) repeat(40) { val x = az.entre(250f, ANCHO); mancha(Offset(x, H - az.entre(1f, 4f)), 1.4f, 0.4f, p.arriba(C.NIEVE, 0.75f), 0.6f) }
         drawRect(Brush.verticalGradient(listOf(Color.Transparent, l.bruma.copy(alpha = 0.55f)), H - 6f, H + 1f), Offset(0f, H - 6f), Size(ANCHO, 7f))
-        // Krasnoi: el humo blanco de los cañones en las lomas, junto al camino, y algún fogonazo.
+        when (TramosRetirada.lejania(if (v.vivac) null else v.tramo)) {
+            TramosRetirada.Lejania.COLINAS -> colinas(v)
+            TramosRetirada.Lejania.BOSQUE -> bosqueDelFondo(v)
+            TramosRetirada.Lejania.CAMPOS -> if (TramosRetirada.moscu(v.m)) moscu(v)
+            TramosRetirada.Lejania.QUEMADOS, TramosRetirada.Lejania.LLANO, TramosRetirada.Lejania.RIO -> Unit
+        }
+    }
+
+    /** La cresta de la colina de Krasnoi, a la derecha del camino: de dónde a dónde y su cumbre. */
+    private val COLINA: List<Offset> by lazy {
+        val az = Azar(Semilla.de("napoleon", "colina"))
+        (0..20).map { i -> val x = 228f + 170f * i / 20f; val u = i / 20f
+            Offset(x, H - 31f * (sin(PI.toFloat() * (0.15f + 0.85f * u)).coerceAtLeast(0f) * (0.75f + 0.25f * sin(u * 9f))) - az.entre(0f, 1.2f) + 1f) }
+    }
+
+    /**
+     * Las colinas de Krasnoi, «junto al camino»: una loma grande y blanca a la derecha, con sus bosques como manchas y
+     * su lado de sombra, y en la cresta las baterías: los cañones, chicos, contra el cielo (sin nadie: el cuento dice
+     * «con cañones y cosacos»; los cosacos no se pintan) y, de día, el humo blanco de los disparos.
+     */
+    private fun DrawScope.colinas(v: VistaNapoleon) {
+        val l = v.l; val p = v.p; val az = Azar(Semilla.de("napoleon", "colina", "manchas"))
+        val tierra = lerp(lerp(C.HOJA, C.BARRO, 0.35f), C.NIEVE, v.nieve)
+        val forma = curva(COLINA, H + 3f)
+        drawPath(forma, p.medio(tierra, 0.5f))
+        val lado = if (p.solALaDerecha) 1f else -1f
+        clipPath(forma) {
+            // La ladera de sombra (la que no mira al sol) y la luz rasante en la cresta.
+            val cumbre = COLINA.minByOrNull { it.y }!!
+            drawRect(Brush.horizontalGradient(if (lado > 0f) listOf(p.sombra(tierra, 0.5f).copy(alpha = 0.55f), Color.Transparent) else listOf(Color.Transparent, p.sombra(tierra, 0.5f).copy(alpha = 0.55f)), cumbre.x - 50f, cumbre.x + 50f), Offset(220f, H - 40f), Size(180f, 44f))
+            // Los bosques de la ladera, como manchas de pinos chicos.
+            repeat(9) {
+                val cx = az.entre(236f, 392f); val y = H - az.entre(1f, 14f); val ancho = az.entre(10f, 30f)
+                val n = (ancho / 2.4f).toInt()
+                for (i in 0 until n) {
+                    val x = cx - ancho / 2f + ancho * i / n + az.entre(-0.8f, 0.8f); val h = az.entre(2.6f, 5.2f)
+                    drawPath(poligono(Offset(x - h * 0.28f, y), Offset(x - h * 0.12f, y - h * 0.55f), Offset(x, y - h), Offset(x + h * 0.12f, y - h * 0.6f), Offset(x + h * 0.28f, y)), if (i % 3 == 0) p.lado(C.PINO, 0.5f) else p.medio(C.PINO_OSC, 0.5f))
+                }
+            }
+            // Las rodadas y los surcos que bajan de la batería, y la nieve pisada en la cresta.
+            for (j in 0 until 4) { val x0 = az.entre(270f, 360f); drawLine(p.medio(lerp(C.NIEVE_SUCIA, C.CENIZA, 0.3f), 0.5f).copy(alpha = 0.5f), Offset(x0, H - 22f), Offset(x0 - 18f + j * 6f, H + 2f), 0.6f) }
+        }
+        drawPath(curva(COLINA), lerp(p.arriba(C.NIEVE, 0.5f), Color.White, 0.3f).copy(alpha = 0.6f * (0.3f + 0.7f * v.r.dia)), style = Stroke(0.8f))
+        // Los cañones de la batería en la cresta, contra el cielo: el tubo y las dos ruedas.
+        for (x in listOf(286f, 304f, 322f, 344f)) {
+            val c = COLINA.minByOrNull { kotlin.math.abs(it.x - x) }!!
+            val col = p.medio(lerp(C.CENIZA, C.MADERA_OSC, 0.3f), 0.55f)
+            drawCircle(col, 1.6f, c + Offset(-1.2f, -1.4f)); drawCircle(col, 1.6f, c + Offset(1.6f, -1.4f))
+            drawLine(col, c + Offset(0f, -2.2f), c + Offset(-5f, -3.2f), 1.1f, StrokeCap.Round)
+        }
+        // El humo blanco de los disparos, de día, que se queda colgado sobre la cresta.
         if (EscenaNapoleon.canonesEnLasColinas(v.m)) {
             val ak = Azar(Semilla.de("napoleon", "krasnoi", v.m.hora.toInt()))
-            for (i in 0 until 7) {
-                val q = Offset(ak.entre(150f, 370f), H - ak.entre(5f, 12f))
-                mancha(q, ak.entre(6f, 14f), ak.entre(3f, 6f), lerp(l.tono(C.NIEVE), Color.White, 0.2f), 0.75f)
-                mancha(q + Offset(4f, -3f), ak.entre(5f, 10f), ak.entre(2.5f, 5f), l.tono(lerp(C.NIEVE, C.CAPOTE, 0.3f)), 0.5f)
+            for (i in 0 until 8) {
+                val c = COLINA[ak.entero(8) + 6]; val q = c + Offset(ak.entre(-6f, 6f), -ak.entre(3f, 9f))
+                mancha(q, ak.entre(6f, 13f), ak.entre(3f, 6f), lerp(l.tono(C.NIEVE), Color.White, 0.2f), 0.8f)
+                mancha(q + Offset(4f, -3f), ak.entre(5f, 10f), ak.entre(2.5f, 5f), l.tono(lerp(C.NIEVE, C.CAPOTE, 0.3f)), 0.55f)
             }
         }
     }
 
+    /**
+     * El bosque cerrado del final, al fondo: la pared de pinos de la derecha, que cierra el llano, alta y oscura, con su
+     * fleco de copas y la nieve en ellas, y la bruma al pie. No sube hasta donde van el sol y la luna.
+     */
+    private fun DrawScope.bosqueDelFondo(v: VistaNapoleon) {
+        val p = v.p; val az = Azar(Semilla.de("napoleon", "bosqueFondo"))
+        val pinos = (0 until 70).map { val x = az.entre(232f, ANCHO + 10f); Triple(x, az.entre(16f, 34f) * (0.55f + 0.45f * ((x - 232f) / 150f).coerceIn(0f, 1f)), az.entre(4f, 8f)) }.sortedBy { it.second }
+        for ((x, h, w) in pinos) {
+            val pie = Offset(x, H + 1f)
+            val lejos = 0.72f - 0.25f * ((x - 232f) / 150f).coerceIn(0f, 1f)
+            val pts = ArrayList<Offset>(); pts += pie + Offset(-w * 0.55f, 0f)
+            for (i in 0..5) { val t = i / 5f; val y = pie.y - h * (0.15f + 0.85f * t); val ww = w * 0.55f * (1f - t); pts += Offset(x - ww, y + h * 0.04f); pts += Offset(x - ww * 0.4f, y - h * 0.04f) }
+            pts += Offset(x, pie.y - h)
+            for (i in 5 downTo 0) { val t = i / 5f; val y = pie.y - h * (0.15f + 0.85f * t); val ww = w * 0.55f * (1f - t); pts += Offset(x + ww * 0.4f, y - h * 0.04f); pts += Offset(x + ww, y + h * 0.04f) }
+            pts += pie + Offset(w * 0.55f, 0f)
+            drawPath(poligono(pts), p.medio(lerp(C.PINO_OSC, C.CENIZA, 0.2f), lejos))
+            if (v.nieve > 0.4f) for (i in 1..4) { val t = i / 5f; val y = pie.y - h * (0.15f + 0.85f * t); drawLine(p.arriba(C.NIEVE, lejos).copy(alpha = 0.7f), Offset(x - w * 0.4f * (1f - t), y + h * 0.03f), Offset(x + w * 0.1f * (1f - t), y + h * 0.01f), 0.6f) }
+        }
+        drawRect(Brush.verticalGradient(listOf(Color.Transparent, v.l.bruma.copy(alpha = 0.5f)), H - 10f, H + 1f), Offset(228f, H - 10f), Size(ANCHO - 228f, 11f))
+    }
+
+    /**
+     * Moscú, los dos primeros días, a la derecha, lejos: «un campo de chimeneas negras», paredes caídas, una torre y
+     * dos cúpulas que quedaron (una dorada, otra pelada, en su esqueleto), y el humo que todavía sube ([vivo]).
+     */
+    private fun DrawScope.moscu(v: VistaNapoleon) {
+        val p = v.p; val az = Azar(Semilla.de("napoleon", "moscuLejos"))
+        val muro = lerp(C.CENIZA, C.LONA, 0.3f)
+        // El caserío quemado: una banda baja y desigual, y las chimeneas encima.
+        val banda = Path().apply { moveTo(262f, H + 1f); var x = 262f; while (x < ANCHO + 8f) { lineTo(x, H - az.entre(1.5f, 4.5f)); x += az.entre(2f, 5f) }; lineTo(ANCHO + 8f, H + 1f); close() }
+        drawPath(banda, p.medio(muro, 0.7f))
+        repeat(34) { val x = az.entre(264f, ANCHO + 4f); val h = az.entre(4f, 9f); drawRect(p.medio(lerp(C.CENIZA, Color.Black, 0.2f), 0.65f), Offset(x, H - h), Size(az.entre(0.8f, 1.6f), h)) }
+        // La torre del Kremlin y dos cúpulas: una dorada que brilla, otra quemada, solo las costillas.
+        val tx = 318f
+        drawRect(p.lado(lerp(C.ROJO, C.LONA, 0.35f), 0.6f, false), Offset(tx - 2.2f, H - 15f), Size(4.4f, 15f))
+        drawPath(poligono(Offset(tx - 2.8f, H - 15f), Offset(tx, H - 22f), Offset(tx + 2.8f, H - 15f)), p.lado(lerp(C.PINO_LUZ, C.CENIZA, 0.3f), 0.6f, true))
+        for ((cx, oro) in listOf(296f to true, 342f to false)) {
+            val r = 3.2f; val base = H - 11f
+            drawRect(p.medio(lerp(C.LONA, C.CENIZA, 0.35f), 0.6f), Offset(cx - r * 0.75f, base), Size(r * 1.5f, 11f))
+            val cupula = poligono(listOf(Offset(cx - r, base), Offset(cx - r * 1.05f, base - r * 0.9f), Offset(cx, base - r * 2.4f), Offset(cx + r * 1.05f, base - r * 0.9f), Offset(cx + r, base)))
+            if (oro) { drawPath(cupula, p.lado(C.ORO, 0.5f, cx > 300f)); drawLine(p.medio(C.ORO, 0.5f), Offset(cx, base - r * 2.4f), Offset(cx, base - r * 3.4f), 0.5f) }
+            else for (j in -2..2) drawLine(p.medio(Color.Black, 0.55f), Offset(cx + j * r * 0.45f, base), Offset(cx, base - r * 2.3f), 0.45f)
+        }
+    }
+
+    // ---------------------------------------------------------------- Los pueblos del llano
+
+    /**
+     * Lo del llano de la derecha, según el tramo: el caserío de madera entero de la salida; el pueblo quemado, más cerca y
+     * más grande, del camino viejo (ardiendo el día de Maloyaroslavets); la granja quemada de la nieve y del Berezina.
+     * En Krasnoi la tapa la colina y en el final, el bosque: solo queda el bosquecillo.
+     */
+    fun DrawScope.granja(v: VistaNapoleon) {
+        when (TramosRetirada.lejania(if (v.vivac) null else v.tramo)) {
+            TramosRetirada.Lejania.CAMPOS -> if (TramosRetirada.moscu(v.m)) bosquecillo(v) else caserio(v)
+            TramosRetirada.Lejania.QUEMADOS -> { granjaQuemada(v); puebloQuemado(v) }
+            TramosRetirada.Lejania.LLANO, TramosRetirada.Lejania.RIO -> granjaQuemada(v)
+            TramosRetirada.Lejania.COLINAS, TramosRetirada.Lejania.BOSQUE -> bosquecillo(v)
+        }
+    }
+
+    private fun DrawScope.bosquecillo(v: VistaNapoleon) {
+        for (pn in RetiradaCamino.bosquecillo()) {
+            val q = pn.pie; val lejos = (pn.z / 180f).coerceIn(0f, 0.85f)
+            if (pn.albar) pinoAlbar(v.en(q), q, pn.altoL, pn.anchoL, v.nieve * 0.7f, Azar(pn.semilla), lejos, (pn.k / 24f).coerceIn(0.2f, 1f))
+            else pino(v.en(q), q, pn.altoL, pn.anchoL, v.nieve * 0.6f, Azar(pn.semilla), lejos, (pn.k / 24f).coerceIn(0.2f, 1f))
+        }
+    }
+
+    /**
+     * El caserío de madera de la salida, entero, lejos en el llano: casas bajas de troncos con su tejado de dos aguas y
+     * la iglesia de madera con su cúpula de cebolla **[Diseño propio]**: el cuento no dice cómo eran los pueblos del
+     * camino de Kaluga; dice «casas de madera» y «iglesias con cúpulas».
+     */
+    private fun DrawScope.caserio(v: VistaNapoleon) {
+        val p = v.p; val az = Azar(Semilla.de("napoleon", "caserio"))
+        bosquecillo(v)
+        val casas = listOf(Triple(46f, 150f, 1f), Triple(36f, 168f, 0.8f), Triple(60f, 182f, 1.1f), Triple(28f, 196f, 0.7f), Triple(74f, 210f, 0.9f), Triple(52f, 236f, 1f))
+        for ((x, z, t) in casas.sortedByDescending { it.second }) {
+            val q = w(x, z); val kk = k(z); val lejos = (z / 180f).coerceIn(0.4f, 0.85f)
+            val ancho = 6f * t * kk; val alto = 2.6f * kk; val tejado = 2.2f * kk
+            val izq = az.real() < 0.5f
+            drawRect(p.lado(lerp(C.MADERA_GRIS, C.MADERA, 0.3f), lejos, izq), Offset(q.x - ancho / 2f, q.y - alto), Size(ancho, alto))
+            drawRect(p.lado(lerp(C.MADERA_GRIS, C.MADERA, 0.3f), lejos, !izq), Offset(q.x + (if (izq) ancho / 2f else -ancho / 2f - ancho * 0.25f), q.y - alto * 0.98f), Size(ancho * 0.25f, alto * 0.98f))
+            val techo = poligono(Offset(q.x - ancho / 2f - 0.3f * kk, q.y - alto), Offset(q.x, q.y - alto - tejado), Offset(q.x + ancho / 2f + 0.3f * kk, q.y - alto))
+            drawPath(techo, p.lado(lerp(C.HOJA, C.MADERA_GRIS, 0.5f), lejos, p.solALaDerecha))
+            if (v.nieve > 0.3f) drawPath(poligono(Offset(q.x - ancho / 2f - 0.3f * kk, q.y - alto), Offset(q.x, q.y - alto - tejado), Offset(q.x + ancho / 2f + 0.3f * kk, q.y - alto)), p.arriba(C.NIEVE, lejos).copy(alpha = 0.8f * v.nieve))
+            drawRect(p.medio(C.CENIZA, lejos), Offset(q.x - 0.4f * kk, q.y - alto * 0.62f), Size(0.8f * kk, 0.7f * kk))
+        }
+        // La iglesia de madera, con su torre y su cebolla verde.
+        val qi = w(66f, 250f); val ki = k(250f); val lejos = 0.8f
+        drawRect(p.lado(lerp(C.MADERA_GRIS, C.MADERA, 0.25f), lejos, false), Offset(qi.x - 3f * ki, qi.y - 5f * ki), Size(6f * ki, 5f * ki))
+        drawRect(p.lado(lerp(C.MADERA_GRIS, C.MADERA, 0.25f), lejos, true), Offset(qi.x - 1.2f * ki, qi.y - 11f * ki), Size(2.4f * ki, 6f * ki))
+        val cb = Offset(qi.x, qi.y - 11f * ki); val r = 1.6f * ki
+        drawPath(poligono(listOf(cb + Offset(-r, 0f), cb + Offset(-r * 1.1f, -r * 0.9f), cb + Offset(0f, -r * 2.5f), cb + Offset(r * 1.1f, -r * 0.9f), cb + Offset(r, 0f))), p.lado(lerp(C.PINO_LUZ, C.AZUL, 0.25f), lejos, p.solALaDerecha))
+        drawLine(p.medio(C.ORO, lejos), cb + Offset(0f, -r * 2.5f), cb + Offset(0f, -r * 3.6f), 0.5f)
+    }
+
+    /**
+     * El pueblo quemado del camino viejo, más cerca que la granja, a la derecha: un campo de chimeneas en pie entre los
+     * restos negros de las casas, con su humo ([vivo]); el día de Maloyaroslavets, ardiendo.
+     */
+    private val CASAS_QUEMADAS = listOf(Triple(9f, 44f, 0.4f), Triple(14f, 52f, -0.5f), Triple(22f, 58f, 0.9f), Triple(11f, 64f, 0.2f), Triple(28f, 90f, -0.3f))
+
+    private fun DrawScope.puebloQuemado(v: VistaNapoleon) {
+        val arde = EscenaNapoleon.puebloArde(v.m)
+        for ((i, c) in CASAS_QUEMADAS.sortedByDescending { it.second }.withIndex()) {
+            val s = PiezasNapoleon.sitio(MIRADA, w(c.first, c.second), c.third)
+            sombraCorta(v.r, s.pie, 3.5f * s.k, 2.2f * s.k)
+            casaQuemada(s, v.en(s.pie), 5.5f, 4.5f, 120L + i, v.nieve, arde, (c.second / 140f).coerceIn(0.25f, 0.7f))
+        }
+    }
+
+
     // ---------------------------------------------------------------- La granja quemada
 
-    fun DrawScope.granja(v: VistaNapoleon) {
+    /** La granja quemada del llano, con su compañera más lejos, la cerca rota, más casas del pueblo y el bosquecillo de detrás. */
+    private fun DrawScope.granjaQuemada(v: VistaNapoleon) {
         val arde = EscenaNapoleon.puebloArde(v.m)
         val lejos0 = 0.55f; val lejos1 = 0.75f
         sombraCorta(v.r, GRANJA_LEJOS.pie, 30f, 18f)
@@ -255,9 +426,17 @@ internal object RetiradaLejos {
         if (arde) {
             val c = GRANJA.p(0f, 1.2f, 0f); val kk = GRANJA.k
             resplandor(c, 6f * kk, 0.5f + 0.5f * v.noche)
-            for (i in 0 until 5) llama(GRANJA.p(-2.4f + i * 1.2f, 1.6f + (i % 2) * 0.6f, 0f), (1.2f + (i % 3) * 0.5f) * kk, reloj, i + 60)
+            for (i in 0 until 5) llama(GRANJA.p(-2.4f + i * 1.2f, 1.6f + (i % 2) * 0.6f, 0f), (0.55f + (i % 3) * 0.25f) * kk * (0.6f + 0.4f * v.noche), reloj, i + 60)
             humo(l, c + Offset(0f, -2f * kk), 70f, 14f, reloj, v.m.viento + 0.3f, 0.7f, 0.3f, 61, 9, 0.85f)
         } else humo(l, HUMO_GRANJA, 46f, 6f, reloj, v.m.viento + 0.25f, 0.45f, 0.4f, 62, 7, 0.55f)
+        // El pueblo quemado del camino viejo, que todavía humea; el día de Maloyaroslavets, arde.
+        if (!v.vivac && TramosRetirada.lejania(v.tramo) == TramosRetirada.Lejania.QUEMADOS) for ((i, c) in CASAS_QUEMADAS.withIndex()) {
+            val s = PiezasNapoleon.sitio(MIRADA, w(c.first, c.second), c.third); val q = s.p(0f, 1.2f, 0f)
+            if (arde) { resplandor(q, 3f * s.k, 0.25f + 0.55f * v.noche); for (j in 0 until 3) llama(s.p(-1.6f + j * 1.5f, 1.1f + (j % 2) * 0.4f, 0f), (0.45f + (j % 2) * 0.25f) * s.k * (0.6f + 0.4f * v.noche), reloj, 140 + i * 3 + j) }
+            if (arde || i % 2 == 0) humo(l, q + Offset(0f, -1.2f * s.k), if (arde) 90f else 34f, (if (arde) 12f else 4f), reloj, v.m.viento + 0.3f, if (arde) 0.75f else 0.5f, 0.35f, 150 + i, if (arde) 9 else 6, if (arde) 0.85f else 0.4f)
+        }
+        // Moscú, los dos primeros días: el humo que todavía sube de las ruinas.
+        if (TramosRetirada.moscu(v.m)) for (i in 0 until 4) humo(l, Offset(282f + i * 26f, H - 4f), 60f, 9f, reloj, v.m.viento + 0.3f, 0.6f, 0.3f, 160 + i, 8, 0.55f)
         // El humo del puente que arde, del otro lado: una columna oscura a lo lejos.
         if (EscenaNapoleon.humoDelPuente(v.m)) humo(l, Offset(206f, H - 2f), 96f, 16f, reloj, 0.35f, 0.75f, 0.35f, 63, 10, 0.9f)
         // Krasnoi: el humo de los cañones, que deriva.

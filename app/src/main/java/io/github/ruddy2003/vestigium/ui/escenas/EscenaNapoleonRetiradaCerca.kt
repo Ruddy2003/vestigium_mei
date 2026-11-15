@@ -49,7 +49,9 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * El primer plano de la retirada:
+ * El primer plano de la retirada: **la base que no se mueve**, que viaja con la compañía y está igual en todos los
+ * tramos ([TramosRetirada]); lo de la izquierda (el marco y lo abandonado de cerca) cambia con el tramo y lo pone
+ * [MarcosRetirada].
  * - **El alto, a la derecha**: el fuego de ruedas y tablas sobre la nieve derretida y negra; la marmita en sus
  *   horquillas; el fusil con la carne en la bayoneta; los fusiles en pabellón, con el chacó colgado y las cartucheras
  *   (el vertical que cruza las franjas, regla 6), y a su izquierda, plantada sola, el asta del águila envuelta en trapos
@@ -58,10 +60,7 @@ import kotlin.math.sin
  *   sitio (esos días no está la mochila). El tambor, cortado por el borde. De madrugada, la cama de ramas de abeto con
  *   la manta echada. Lo que está o no a cada hora lo dicen [EscenaNapoleon.pabellon], [EscenaNapoleon.marmita],
  *   [EscenaNapoleon.carneEnLaBayoneta] y [EscenaNapoleon.camas].
- * - **Lo abandonado, en el centro**: el cofre abierto con el candelabro, las telas y el cuadro del santo; el espejo roto
- *   que devuelve el cielo; la rueda suelta de la carroza, echada y cortada por el borde de abajo.
- * - **El marco, a la izquierda y arriba**: la carroza rota volcada, con la rueda que cruza el cielo, al pie del pino
- *   grande, cortado por el borde, cuyas ramas cargadas de nieve entran por arriba.
+ * - **El suelo del gato**, delante de todo, de y = 278, y la nieve pisada alrededor del alto.
  */
 internal object RetiradaCerca {
     private val C = ColorNapoleon
@@ -71,22 +70,13 @@ internal object RetiradaCerca {
     val LUZ_DEL_FUEGO = Offset(296f, 222f)
 
     /**
-     * El sitio de cada cosa, escalonado en hondo (regla 5): en las dos esquinas de abajo, cortadas por el borde, la rueda
-     * suelta y el tambor tumbado; un par de metros más allá, el cofre medio hundido y girado, con el espejo apoyado en su
-     * costado; más allá todavía, el alto alrededor del fuego. Entre unos y otros queda el suelo del gato, libre.
+     * El sitio de cada cosa del alto, escalonado en hondo (regla 5): en la esquina de abajo, cortado por el borde, el
+     * tambor tumbado; más allá, el alto alrededor del fuego. Delante queda el suelo del gato, libre.
      */
     private val S_FUEGO = PiezasNapoleon.sitio(MIRADA, FUEGO, 0.2f)
     private val S_PABELLON = PiezasNapoleon.sitio(MIRADA, Offset(250f, 220f), 0.35f)
     private val S_SOPORTE = PiezasNapoleon.sitio(MIRADA, Offset(350f, 243f), -0.25f)
     private val S_TAMBOR = PiezasNapoleon.sitio(MIRADA, Offset(374f, 306f), 0.75f)
-    private val S_COFRE = PiezasNapoleon.sitio(MIRADA, Offset(134f, 248f), -0.5f)
-    private val S_ESPEJO = PiezasNapoleon.sitio(MIRADA, Offset(182f, 256f), -0.45f)
-    private val S_RUEDA = PiezasNapoleon.sitio(MIRADA, Offset(6f, 302f), 0f)
-    private val S_CARROZA = PiezasNapoleon.sitio(MIRADA, Offset(22f, 212f), -0.98f)
-    private val S_TIENDA = PiezasNapoleon.sitio(MIRADA, Offset(78f, 184f), 0.55f)
-
-    /** El pino grande: su pie, cortado por el borde de la izquierda. */
-    val PIE_DEL_PINO = Offset(9f, 214f)
 
     /**
      * Donde se apoya el objeto chico del día: encima de la mochila de pie, a la derecha del fuego y un poco más cerca que
@@ -97,16 +87,9 @@ internal object RetiradaCerca {
 
     /** Donde se sienta el gato a mirar el objeto del día: el borde de su suelo más cercano a él. */
     const val GATO_MIRA_EL_OBJETO = 306f
-    val ESPEJO: Offset get() = S_ESPEJO.pie
 
     /** El pabellón de los fusiles. */
     private val PABELLON = Pabellon(S_PABELLON, Semilla.de("napoleon", "pabellon"), 4, 2, true)
-
-    /** La carroza volcada. */
-    private fun carrozaDe(nieve: Float) = Carroza(S_CARROZA, nieve)
-
-    /** El sitio alto del gato: en el costado de arriba de la carroza, lejos de la portezuela. */
-    val MIRADOR: Offset get() = carrozaDe(0f).let { c -> c.s.p(c.t(V3(c.w, 1.75f, 0.8f))).let { Offset(it.x.coerceIn(12f, 360f), it.y.coerceIn(30f, 260f)) } }
 
     /**
      * El pie y la punta del asta del águila: plantada sola en la nieve a la izquierda del pabellón, entre él y el espejo,
@@ -137,14 +120,10 @@ internal object RetiradaCerca {
     /** Lo que tumba sombra con el sol o la luna. */
     fun sombras(v: VistaNapoleon): List<RetiradaLuz.Sombra> = buildList {
         val ts = 0.022f * S_PABELLON.k
-        add(RetiradaLuz.Sombra(PIE_DEL_PINO, poligono(PIE_DEL_PINO + Offset(-20f, 0f), PIE_DEL_PINO + Offset(22f, 0f), Offset(8f, -40f), Offset(-12f, -40f))))
-        if (RetiradaNapoleon.carroza(v.m)) add(RetiradaLuz.Sombra(S_CARROZA.pie, PiezasNapoleon.siluetaDeCarroza(carrozaDe(v.nieve))))
-        else add(RetiradaLuz.Sombra(S_TIENDA.pie, siluetaCaja(S_TIENDA, 1.4f, 2.6f)))
+        addAll(MarcosRetirada.sombras(v))
         if (EscenaNapoleon.pabellon(v.m)) add(RetiradaLuz.Sombra(S_PABELLON.pie, PiezasNapoleon.siluetaDePabellon(PABELLON) { S_PABELLON.p(it) }))
-        if (!v.vivac) add(RetiradaLuz.Sombra(S_COFRE.pie, siluetaCaja(S_COFRE, 0.45f, 0.62f)))
         if (!ObjetosNapoleon.esGrande(v.m)) add(RetiradaLuz.Sombra(S_SOPORTE.pie, siluetaCaja(S_SOPORTE, 0.22f, 0.46f)))
         add(RetiradaLuz.Sombra(S_TAMBOR.pie, siluetaCaja(S_TAMBOR, 0.3f, 0.42f)))
-        if (!v.vivac) add(RetiradaLuz.Sombra(S_ESPEJO.pie, siluetaCaja(S_ESPEJO, 0.26f, 0.7f)))
         if (EscenaNapoleon.pabellon(v.m)) { val pa = PUNTA_ASTA; add(RetiradaLuz.Sombra(PIE_ASTA, poligono(PIE_ASTA + Offset(-ts, 0f), PIE_ASTA + Offset(ts, 0f), pa + Offset(ts * 2f, 0f), pa + Offset(-ts * 2f, 0f)))) }
         if (EscenaNapoleon.marmita(v.m) == Marmita.AL_FUEGO) add(RetiradaLuz.Sombra(FUEGO, siluetaCaja(S_FUEGO, 0.55f, 0.95f)))
     }
@@ -161,15 +140,8 @@ internal object RetiradaCerca {
         sueloCercano(v, az)
         val fase = v.fase
         val cosas = ArrayList<Pair<Float, DrawScope.() -> Unit>>()
-        // El tronco del pino grande (las ramas van en el marco).
-        cosas += parte(PIE_DEL_PINO.y) { troncoDelPino(v) }
-        // La carroza volcada (en el vivac, la tienda de oficial).
-        if (RetiradaNapoleon.carroza(m)) cosas += parte(S_CARROZA.pie.y) {
-            val c = carrozaDe(nieve)
-            carroza(c, v.en(S_CARROZA.pie))
-            plataDeLuna(v, PiezasNapoleon.siluetaDeCarroza(c), 0f, 150f, 0.16f)
-        }
-        else cosas += parte(S_TIENDA.pie.y) { tienda(S_TIENDA, v.en(S_TIENDA.pie), if (v.noche > 0.4f && fase != Fase.MARCHA) 1f else 0f, nieve) }
+        // El marco de hoy y lo abandonado de cerca, a la izquierda: cambian con el tramo.
+        MarcosRetirada.cosas(v, cosas)
         // El fuego, con las horquillas y la marmita.
         cosas += parte(FUEGO.y) {
             val a = v.en(FUEGO)
@@ -210,12 +182,6 @@ internal object RetiradaCerca {
         // El objeto grande del día, de pie a la derecha del fuego (pinta él mismo su sombra y su hoyo en la nieve).
         val enElGrande = PIE_GRANDE + Offset(0f, -40f)
         ObjetosNapoleon.grande(m, v.p.con(v.a.calor(enElGrande)), PIE_GRANDE, APOYO_GRANDE, ESCALA_GRANDE)?.let { g -> cosas += parte(g.pie.y) { g.pintar(this) } }
-        // Lo abandonado del centro (en la retirada).
-        if (!v.vivac) {
-            cosas += parte(S_COFRE.pie.y) { cofre(S_COFRE, v.en(S_COFRE.pie), 1f, 0f, nieve) }
-            cosas += parte(S_ESPEJO.pie.y) { espejo(S_ESPEJO, v.en(S_ESPEJO.pie), v.l.alto, v.l.bajo, 0f, nieve) }
-            cosas += parte(ALTO + 2f) { ruedaSuelta(S_RUEDA, v.en(S_RUEDA.pie), nieve) }
-        }
         for ((_, pintar) in cosas.sortedBy { it.first }) pintar()
     }
 
@@ -235,9 +201,7 @@ internal object RetiradaCerca {
         }
     }
 
-    // ---------------------------------------------------------------- El pino grande
-
-    private val AZ_PINO = Semilla.de("napoleon", "pino", "grande")
+    // ---------------------------------------------------------------- La cama
 
     /**
      * La cama de dormir junto al fuego, tendida en la nieve en perspectiva (en metros, en los ejes de [S_CAMA]; los pies,
@@ -330,19 +294,6 @@ internal object RetiradaCerca {
         drawPath(pliegue, p.sombra(lana).copy(alpha = 0.8f), style = Stroke(1.1f, cap = StrokeCap.Round))
     }
 
-    /**
-     * La plata de la luna sobre una cosa grande que queda lejos del fuego (la carroza): un lavado frío y claro sobre su
-     * [forma], de [x0] a [x1], más fuerte del lado de la luna, para que de noche se lea fuera del círculo del fuego.
-     */
-    private fun DrawScope.plataDeLuna(v: VistaNapoleon, forma: Path, x0: Float, x1: Float, fuerza: Float) {
-        val k = (fuerza * v.luna).coerceIn(0f, 1f); if (k <= 0.01f) return
-        val haciaLaLuna = v.l.lunaX > 0.5f
-        val fuerte = RetiradaLuz.LUNA.copy(alpha = k); val flojo = RetiradaLuz.LUNA.copy(alpha = k * 0.3f)
-        clipPath(forma) {
-            drawRect(Brush.horizontalGradient(if (haciaLaLuna) listOf(flojo, fuerte) else listOf(fuerte, flojo), x0, x1), Offset(x0, 0f), Size(x1 - x0, ALTO), blendMode = BlendMode.Plus)
-        }
-    }
-
     /** Un contorno cerrado y blando que pasa cerca de los [puntos] (curvas por los puntos medios, sin esquinas). */
     private fun suave(puntos: List<Offset>): Path = Path().apply {
         val n = puntos.size
@@ -354,53 +305,6 @@ internal object RetiradaCerca {
             cubicTo(c1.x, c1.y, c2.x, c2.y, hasta.x, hasta.y)
         }
         close()
-    }
-
-    /** El tronco del pino grande, con su corteza, su lado de luz, la nieve pegada del lado del viento y los muñones de las ramas muertas. */
-    private fun DrawScope.troncoDelPino(v: VistaNapoleon) {
-        val a = v.en(PIE_DEL_PINO); val p = PIE_DEL_PINO
-        val tronco = Path().apply { moveTo(p.x - 24f, p.y + 2f); cubicTo(p.x - 18f, p.y - 10f, p.x - 15f, p.y - 60f, p.x - 13f, -10f); lineTo(p.x + 13f, -10f); cubicTo(p.x + 15f, p.y - 60f, p.x + 18f, p.y - 12f, p.x + 26f, p.y + 2f); close() }
-        // El tronco como un cuerpo redondo: la sombra del lado contrario a la luz, la luz que rebota en el canto.
-        val corteza = lerp(C.MADERA_OSC, C.ROJO, 0.12f)
-        val lado = if (a.p.solALaDerecha) 1f else -1f
-        val izq = a.plano(corteza, p, -1f); val der = a.plano(lerp(corteza, C.MADERA, 0.35f), p, 1f, 0f, 0.6f); val mid = a.plano(corteza, p, 0f)
-        drawPath(tronco, Brush.horizontalGradient(0f to (if (lado > 0f) izq else der), 0.25f to mid, 0.7f to (if (lado > 0f) der else izq), 1f to lerp(izq, mid, 0.5f), startX = p.x - 24f, endX = p.x + 26f))
-        clipPath(tronco) {
-            // La corteza en escamas: placas redondeadas, alternadas, cada una con su filo de luz arriba y su grieta oscura
-            // alrededor; más chicas y rojizas arriba, más anchas y grises abajo.
-            val az = Azar(AZ_PINO + 1)
-            var y = -10f
-            while (y < p.y) {
-                val alto = az.entre(9f, 15f) * (0.7f + 0.5f * (y / p.y).coerceIn(0f, 1f))
-                var x = p.x - 22f + az.entre(-3f, 3f)
-                while (x < p.x + 24f) {
-                    val ancho = az.entre(5f, 9f); val c = Offset(x + ancho / 2f, y + alto / 2f + az.entre(-2f, 2f))
-                    val u = ((c.x - (p.x - 18f)) / 40f).coerceIn(0f, 1f); val luz = if (lado > 0f) u else 1f - u
-                    val placa = TrazosValle.blando(c, ancho * 0.48f, alto * 0.46f, az, 8, 0.18f, 0.85f)
-                    val col = lerp(lerp(a.plano(corteza, c, -1f), a.plano(lerp(corteza, C.MADERA, 0.4f), c, 1f, 0f, 0.6f), luz), a.plano(lerp(C.CAPOTE, corteza, 0.5f), c, 0f), (c.y / p.y).coerceIn(0f, 1f) * 0.4f)
-                    drawPath(placa, col)
-                    drawPath(placa, mult(col, C.SOMBRA, 0.55f), style = Stroke(0.9f))
-                    drawLine(lerp(col, Color.White, 0.15f + 0.2f * luz), c + Offset(-ancho * 0.3f, -alto * 0.36f), c + Offset(ancho * 0.25f, -alto * 0.4f), 0.6f, StrokeCap.Round)
-                    x += ancho * az.entre(0.85f, 1.05f)
-                }
-                y += alto * az.entre(0.75f, 0.95f)
-            }
-            // La nieve pegada en la corteza, del lado del viento, y la resina.
-            if (v.nieve > 0.3f) repeat(10) { val y = az.entre(20f, p.y - 10f); mancha(Offset(p.x - 12f, y), 4f, az.entre(5f, 12f), a.plano(C.NIEVE, Offset(p.x - 12f, y), -0.6f), 0.7f * v.nieve) }
-            mancha(Offset(p.x + 8f, 150f), 2f, 5f, a.plano(lerp(C.LATON, C.MADERA, 0.4f), p, 0.5f), 0.6f)
-        }
-        // La raíz que asoma y la nieve al pie, arrimada.
-        if (v.nieve > 0.2f) drawPath(TrazosValle.blando(p + Offset(2f, -2f), 34f, 7f, Azar(AZ_PINO + 2), 9, 0.2f, 0.5f), a.arriba(C.NIEVE, p))
-        else drawPath(TrazosValle.blando(p + Offset(2f, -1f), 30f, 5f, Azar(AZ_PINO + 2), 9, 0.2f, 0.5f), a.arriba(lerp(C.HOJA, C.BARRO, 0.4f), p))
-    }
-
-    /**
-     * El marco: las ramas bajas del pino grande, cargadas de nieve, que entran por arriba hasta la mitad del cuadro sin
-     * tapar el sol de la mañana ni la luna de la noche. De noche, el fuego las alumbra por debajo, un poco.
-     */
-    fun DrawScope.marco(v: VistaNapoleon) {
-        val a = v.en(Offset(80f, 40f)); val p = PIE_DEL_PINO
-        pino(a, p, 760f, 430f, v.nieve, Azar(AZ_PINO), 0f, 1f, false, hastaY = 30f, caidaPropia = 0.17f + 0.12f * v.nieve, grande = true)
     }
 
     // ---------------------------------------------------------------- Lo que se mueve

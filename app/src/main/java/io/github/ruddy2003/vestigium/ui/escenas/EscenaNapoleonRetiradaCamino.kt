@@ -415,27 +415,39 @@ internal object RetiradaCamino {
     val CANON: Sitio = PiezasNapoleon.sitio(MIRADA, w(bordeIzq(20f) - 0.35f, 20f), 0.62f)
     val ARMON: Sitio = PiezasNapoleon.sitio(MIRADA, w(bordeIzq(25f) - 2.3f, 25f), -0.4f)
 
+    /** El carro del plano medio (el del botín volcado, o el quemado), en el mismo sitio, y lo que se le cayó. */
+    val CARRO_MEDIO: Sitio = PiezasNapoleon.sitio(MIRADA, w(bordeIzq(21f) - 1.2f, 21f), 0.5f)
+    private val COFRE_MEDIO: Sitio = PiezasNapoleon.sitio(MIRADA, w(bordeIzq(18f) - 0.2f, 18f), -0.6f)
+
     /** Una cosa abandonada a lo largo del camino: a qué profundidad, a qué lado y qué es. */
     class Abandonada(val z: Float, val x: Float, val que: Int, val giro: Float, val semilla: Long) {
         val sitio: Sitio get() = PiezasNapoleon.sitio(MIRADA, w(x, z), giro)
     }
 
-    /** La fila de lo abandonado, de cerca a lejos (0: carro volcado, 1: fuego apagado, 2: cofre, 3: carro de pie, 4: caja, 5: cañón). */
-    private val FILA: List<Abandonada> by lazy {
-        val az = Azar(Semilla.de("napoleon", "abandonadas")); val lista = ArrayList<Abandonada>()
-        val tipos = listOf(0, 1, 4, 0, 1, 2, 0, 1, 5, 0, 1, 0)
+    /**
+     * Los sitios de la fila de lo abandonado, de cerca a lejos: a qué profundidad, a qué lado del camino (casi siempre a
+     * la izquierda, una de cada cuatro a la derecha) y cómo girada. Qué hay en cada uno lo dice el tramo
+     * ([TramosRetirada.fila]: 0 carro volcado, 1 fuego apagado, 2 cofre, 3 carro de pie, 4 caja de munición, 5 cañón).
+     */
+    private val SITIOS_DE_LA_FILA: List<Triple<Float, Float, Pair<Float, Long>>> by lazy {
+        val az = Azar(Semilla.de("napoleon", "abandonadas")); val lista = ArrayList<Triple<Float, Float, Pair<Float, Long>>>()
         var z = 28f
-        for ((i, t) in tipos.withIndex()) {
+        for (i in 0 until 12) {
             val izq = i % 4 != 3
             val x = if (izq) bordeIzq(z) - az.entre(0.6f, 2.4f) else bordeDer(z) + az.entre(0.8f, 3f)
-            lista += Abandonada(z, x, t, az.entre(-1.2f, 1.2f), az.entero(1_000_000).toLong())
+            lista += Triple(z, x, az.entre(-1.2f, 1.2f) to az.entero(1_000_000).toLong())
             z *= az.entre(1.18f, 1.32f)
         }
         lista
     }
 
-    /** Lo abandonado que se ve hoy: más cuanto más avanza la retirada. */
-    fun fila(v: VistaNapoleon): List<Abandonada> = if (v.vivac) emptyList() else FILA.take(RetiradaNapoleon.abandonadas(v.m)).filter { v.tramo != Tramo.BEREZINA || it.z < RetiradaLejos.ORILLA_ACA - 2f }
+    /** Lo abandonado que se ve hoy: lo del tramo, más cuanto más avanza la retirada; en el Berezina, solo lo de esta orilla. */
+    fun fila(v: VistaNapoleon): List<Abandonada> {
+        if (v.vivac) return emptyList()
+        val tipos = TramosRetirada.fila(v.tramo)
+        return SITIOS_DE_LA_FILA.zip(tipos).map { (s, t) -> Abandonada(s.first, s.second, t, s.third.first, s.third.second) }
+            .take(RetiradaNapoleon.abandonadas(v.m)).filter { v.tramo != Tramo.BEREZINA || it.z < RetiradaLejos.ORILLA_ACA - 2f }
+    }
 
     /**
      * Los dos huecos del lienzo donde puede arder un fuego de lejos: entre el bosque de la izquierda y el asta, en la
@@ -472,9 +484,13 @@ internal object RetiradaCamino {
     /** Lo que tumba sombra en el plano medio: el cañón, el armón, lo abandonado. */
     fun sombras(v: VistaNapoleon): List<RetiradaLuz.Sombra> = buildList {
         if (!v.vivac) {
-            if (v.tramo != Tramo.BEREZINA) {
-                add(RetiradaLuz.Sombra(CANON.pie, siluetaSimple(CANON, 1.9f, 1.5f)))
-                add(RetiradaLuz.Sombra(ARMON.pie, siluetaSimple(ARMON, 1.6f, 1.3f)))
+            when (TramosRetirada.planoMedio(v.tramo)) {
+                TramosRetirada.PlanoMedio.CANON -> {
+                    add(RetiradaLuz.Sombra(CANON.pie, siluetaSimple(CANON, 1.9f, 1.5f)))
+                    add(RetiradaLuz.Sombra(ARMON.pie, siluetaSimple(ARMON, 1.6f, 1.3f)))
+                }
+                TramosRetirada.PlanoMedio.CARRO, TramosRetirada.PlanoMedio.CARRO_QUEMADO -> add(RetiradaLuz.Sombra(CARRO_MEDIO.pie, siluetaSimple(CARRO_MEDIO, 1.4f, 1.1f)))
+                TramosRetirada.PlanoMedio.NADA -> Unit
             }
             for (c in fila(v)) if (c.que != 1) add(RetiradaLuz.Sombra(c.sitio.pie, siluetaSimple(c.sitio, 1.3f, if (c.que == 3) 1.8f else 1f)))
         }
@@ -502,11 +518,26 @@ internal object RetiradaCamino {
                 else -> canon(s, a, 0.1f, nieve, lejos)
             }
         }
-        // El cañón y su armón.
+        // Lo del plano medio, a la izquierda del camino: el cañón con su armón, o el carro del botín volcado, o el quemado.
         val l1 = (25f / 140f); val l0 = (20f / 140f)
-        if (v.tramo != Tramo.BEREZINA) {
-            armon(ARMON, v.en(ARMON.pie), nieve, l1)
-            canon(CANON, v.en(CANON.pie), 0.16f, nieve, l0)
+        when (TramosRetirada.planoMedio(v.tramo)) {
+            TramosRetirada.PlanoMedio.CANON -> {
+                armon(ARMON, v.en(ARMON.pie), nieve, l1)
+                canon(CANON, v.en(CANON.pie), 0.16f, nieve, l0)
+            }
+            TramosRetirada.PlanoMedio.CARRO -> {
+                carro(CARRO_MEDIO, v.en(CARRO_MEDIO.pie), nieve, 811L, l0)
+                // Lo que se cayó del carro: un cofre abierto y unos fardos, en la cuneta.
+                with(PiezasNapoleon) { caja(COFRE_MEDIO, v.en(COFRE_MEDIO.pie), -0.4f, 0.4f, 0f, 0.45f, -0.28f, 0.28f, lerp(C.MADERA, C.ROJO, 0.25f), l0, arriba = lerp(C.MADERA, C.ROJO, 0.25f)) }
+            }
+            TramosRetirada.PlanoMedio.CARRO_QUEMADO -> {
+                carro(CARRO_MEDIO, v.en(CARRO_MEDIO.pie), nieve, 812L, l0)
+                // Quemado: lo negro encima y el humo que todavía echa (en la parte viva).
+                val q = CARRO_MEDIO.pie; val kk = CARRO_MEDIO.k
+                mancha(q + Offset(0f, -0.5f * kk), 1.3f * kk, 0.6f * kk, lerp(C.CENIZA, Color.Black, 0.2f), 0.55f)
+                mancha(q + Offset(0.4f * kk, 0.05f * kk), 1.6f * kk, 0.3f * kk, C.CENIZA, 0.5f)
+            }
+            TramosRetirada.PlanoMedio.NADA -> Unit
         }
         // Un carro que pasa cargado el primer día, en el camino, lejos.
         if (EscenaNapoleon.cargados(v.m)) { val s = PiezasNapoleon.sitio(MIRADA, w(-1.8f + RUMBO * 38f, 38f), 0f); carro(s, v.en(s.pie), nieve, 77L, 38f / 140f, cargado = true) }
@@ -530,6 +561,8 @@ internal object RetiradaCamino {
             if (EscenaNapoleon.fuegosLejos(v.m)) { resplandor(q, 3f * kk, 0.3f + 0.6f * v.noche); llama(q, 0.8f * kk, reloj, i + 50) }
             humo(v.l, q, 9f * kk, 0.8f * kk, reloj, v.m.viento, 0.25f, 0.6f, i + 50, 5, 0.3f)
         }
+        // El carro quemado del camino viejo, que humea.
+        if (TramosRetirada.planoMedio(v.tramo) == TramosRetirada.PlanoMedio.CARRO_QUEMADO && !v.vivac) { val q = CARRO_MEDIO.pie; val kk = CARRO_MEDIO.k; humo(v.l, q + Offset(0f, -0.4f * kk), 9f * kk, 0.8f * kk, reloj, v.m.viento + 0.2f, 0.4f, 0.4f, 75, 6, 0.45f) }
         // Los fuegos apagados de la fila, de día, todavía humean un poco.
         if (!v.vivac && v.r.dia > 0.3f) for ((i, c) in fila(v).withIndex()) if (c.que == 1 && i % 2 == 0) { val q = c.sitio.pie; val kk = k(c.z); humo(v.l, q, 4f * kk, 0.5f * kk, reloj, v.m.viento, 0.3f, 0.5f, i + 70, 4, 0.25f) }
     }

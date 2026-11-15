@@ -152,18 +152,51 @@ internal object EscenaNapoleon : EscenaVida {
     // ---------------------------------------------------------------- La retirada: el tramo
 
     /**
-     * El tramo de la retirada: antes de que empiece a nevar (del 19 de octubre al 5 de noviembre: «Por la mañana ya hace
-     * frío», sin nieve), nevado (desde el 6 de noviembre, «empezó a nevar… y ya no paró») y el Berezina (sus tres días,
-     * del 26 al 28 de noviembre: el camino acaba en el río con el hielo suelto y los dos puentes).
+     * Los seis tramos de la retirada, de Moscú hacia el Niemen, del 19 de octubre al 13 de diciembre. La retirada **se
+     * mueve**: como en la Ruta de la Seda, hay una base que viaja con la compañía y no cambia (el alto alrededor del
+     * fuego, el sitio del objeto del día, el suelo del gato, el camino en fuga y desde dónde se mira) y lo de alrededor
+     * cambia de un tramo a otro: el marco de la izquierda, lo abandonado, la lejanía y la nieve ([TramosRetirada]).
+     *
+     * Cada tramo empieza el día de una frase del cuento (`PiezasJeanBaptiste`):
+     * - **SALIDA**, desde `sale_moscu` (19 oct): «Salió cargado como una feria: carros llenos de cosas robadas, carrozas»;
+     *   «un camino lleno de cosas tiradas: cofres abiertos, cuadros, candelabros, carrozas rotas, todo lo que se robó en
+     *   Moscú»; «mirando hacia atrás las ruinas de Moscú». Sin nieve: «Por la mañana ya hace frío».
+     * - **MALOYAROSLAVETS**, desde `maloyaroslavets` (24 oct): «un pueblo junto a un río… hasta que no quedó una casa en
+     *   pie»; «pasan junto al pueblo, que arde»; y se vuelve «por el camino de Smolensk, el que ya está comido y quemado»:
+     *   «Los pueblos del camino de vuelta están quemados, los que quemaron ellos mismos al venir».
+     * - **NIEVE**, desde `nieve` (6 nov), y otra vez del 19 al 25 de noviembre: «empezó a nevar… y ya no paró. Al mediodía
+     *   el camino estaba blanco»; «sembrado de muertos y de caballos, de carros volcados, de cañones abandonados, de fuegos
+     *   apagados».
+     * - **KRASNOI**, los cuatro días de `krasnoi` (15–18 nov): «los rusos esperaban en las colinas junto al camino, con
+     *   cañones y cosacos… en la nieve, bajo la metralla».
+     * - **BEREZINA**, los tres días de `berezina` (26–28 nov) y el de `lucien` (29 nov): el río «lleno de hielo suelto»,
+     *   «dos puentes de madera», las «fogatas»; el 29, «quemar los puentes… mirando el humo del puente, del otro lado»
+     *   (el cuento sigue ese día junto al río, por eso es de este tramo y no del siguiente).
+     * - **FINAL**, del 30 de noviembre al 13 de diciembre, hasta la víspera de `niemen_vuelta`: «el frío de verdad, que no
+     *   se parece a nada»; «la nieve, que le llega a las rodillas»; «Del ejército… quedan pedazos que andan».
+     *
+     * Las fechas de cada tramo son las de los días señalados del calendario (`AnioG5.kt`); la única que no lo es, el
+     * final del Berezina y el principio del último tramo (el 30, el día después de `lucien`), sale de que el cuento siga
+     * en el río el 29. Lo vigila `EscenaNapoleonPrueba`.
      */
-    internal enum class Tramo { SIN_NIEVE, NEVADA, BEREZINA }
+    internal enum class Tramo { SALIDA, MALOYAROSLAVETS, NIEVE, KRASNOI, BEREZINA, FINAL }
 
-    /** El tramo de hoy; null fuera de la retirada. */
+    /** El tramo de un día de la retirada, por su fecha («MM-DD»): la misma cuenta que [tramo], para las pruebas. */
+    internal fun tramoDe(md: String): Tramo = when {
+        md < "10-24" -> Tramo.SALIDA
+        md < "11-06" -> Tramo.MALOYAROSLAVETS
+        md in "11-15".."11-18" -> Tramo.KRASNOI
+        md in "11-26".."11-29" -> Tramo.BEREZINA
+        md >= "11-30" -> Tramo.FINAL
+        else -> Tramo.NIEVE
+    }
+
+    /** El tramo de hoy; null fuera de la retirada. Los días de Krasnoi y del Berezina mandan los días señalados mismos. */
     internal fun tramo(m: Momento): Tramo? = when {
         lugar(m) != Lugar.RETIRADA -> null
-        hoyEs(m, "berezina") -> Tramo.BEREZINA
-        mesDia(m) < "11-06" -> Tramo.SIN_NIEVE
-        else -> Tramo.NEVADA
+        hoyEs(m, "krasnoi") -> Tramo.KRASNOI
+        hoyEs(m, "berezina") || hoyEs(m, "lucien") -> Tramo.BEREZINA
+        else -> tramoDe(mesDia(m))
     }
 
     // ---------------------------------------------------------------- La nieve
