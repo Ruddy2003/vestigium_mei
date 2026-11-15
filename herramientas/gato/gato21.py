@@ -1,5 +1,6 @@
 """
-Lote 10: los gatos de los cinco temas nuevos. Primera tanda: Frente exterior; segunda tanda: Arcontes y Galia.
+Lote 10: los gatos de los cinco temas nuevos. Primera tanda: Frente exterior; segunda tanda: Arcontes, Galia y Art
+nouveau.
 
 - Frente exterior (`frente`): gato gris pizarra pintado como un cuadro de concepto de los años 70 (gouache sobre cartón:
   manchas de color opaco con la huella del pincel, luz cálida que entra por arriba y rebote frío abajo, grano del
@@ -41,7 +42,26 @@ Lote 10: los gatos de los cinco temas nuevos. Primera tanda: Frente exterior; se
   que caen, el agua, el fuego y sus chispas, dos cuervos (de día) y las hogueras lejanas que titilan (de noche). Se
   esconde entre el muérdago (una rama de roble caída con su mata) y le bufa a un casco romano tirado en el río.
 
-Los otros dos temas del lote 10 (`nouveau`, `psicodelia`) se agregan igual: su rama en
+- Art nouveau (`nouveau`): gato atigrado crema dibujado como en un cartel litografiado de París hacia 1900 (recurso del
+  dibujo: a la manera del cartel, sin copiar ninguno). Cada color es una piedra de la prensa: pocas tintas planas de
+  borde curvo (el papel en las luces, el crema, el caramelo de las rayas y una sombra violeta encima), el crachis
+  (tinta salpicada) en el paso de la luz a la sombra y la línea de contorno oscura y continua, de pluma, más gruesa del
+  lado de la sombra; las formas salen del dibujo a 8×, no de la cuadrícula. Las rayas, pocas y en curva, se afinan hacia
+  la panza. Al cuello, un lazo de seda malva con sus dos puntas cortadas en V. De noche, la luz eléctrica le deja un
+  filo dorado arriba y la luna uno azul. Fondo: un invernadero de hierro y vidrio a la manera de los de Auteuil (de
+  fundición pintada; aquí, del verde de hierro de Guimard que da la guía): los paños de vidrio en escama con el jardín
+  y el cielo detrás, el friso de vidrio opalino con cabujones de colores, los arcos con sus ménsulas de línea de
+  látigo, la luz que entra en franjas de crachis y cae en el suelo con la sombra de las barras, el arriate, la cenefa
+  de baldosas, la kentia en su jardinera de mayólica, el pie de hierro con el helecho en vidrio verde de Nancy, la
+  cesta colgante de hiedra, el estanque con nenúfares, los lirios en su jardinera de piedra, tres lámparas de vidrio
+  de colores (ámbar, violeta y verde) y, enmarcando, el helecho arborescente y el plátano de adorno; de noche, el vidrio
+  azul negro con la luna detrás, las lámparas encendidas con su halo y su luz en el suelo y franjas frías de luna. Lo
+  que se mueve: las hojas que se mecen, el reflejo que corre por el vidrio, una libélula (de día) o las polillas de las
+  lámparas (de noche), la luz de las lámparas que tiembla, los destellos del agua y la luna en el estanque. Persigue
+  una libélula (se agacha, se alza en dos patas y le tira un zarpazo) y se enrosca mientras una línea de oro sale de la
+  punta de su cola y dibuja la línea de látigo, que se dobla sobre sí misma y acaba en un rizo.
+
+El que falta del lote 10 (`psicodelia`) se agrega igual: su rama en
 `tema_mio`, sus colores en `colores_obj`, sus dos acciones en `ESP_MIOS`, su fondo en `FONDOS_MIOS` (y `ETIQ`, `NOCHE`)
 y su nombre en `MIOS`; o en un archivo `gato21b.py` que importe este y registre los suyos de la misma forma.
 
@@ -49,7 +69,10 @@ Colores de la guía del tema (docs/diseno/temas/frente.md, «La base escondida e
 ui/FrenteTrazos.kt): piedra verdosa, consola blanca y oscura, el turquesa del vidrio, el cobre, y el ámbar, el óxido y el
 rojo de los pilotos como lo único cálido. Se toma la estética, no los diseños de ninguna película. Los de Galia salen de
 docs/diseno/temas/galia.md (`TrazosGalia`): roble y muérdago, barro y paja, oro y bronce, humo y niebla; de noche, el
-verde negro, la luna y la hoguera; el rojo de Roma, solo en lo que es de Roma.
+verde negro, la luna y la hoguera; el rojo de Roma, solo en lo que es de Roma. Los de Art nouveau, de
+docs/diseno/temas/nouveau.md (`TrazosNouveau`): crema, salvia, el violeta del iris y la malva, el oro pálido y el verde de
+hierro de Guimard; de noche, el azul negro con la luz eléctrica dorada y el verde de los cafés. Nada de Art déco (ni
+geometría ni zigzag) ni nada copiado de ningún cartel: las curvas son de planta y de látigo.
 Importa la cadena (gato18, gato19 y los gato20*) y agrega sus temas sin tocar los demás.
 
 Uso: python3 gato21.py hoja|fondos|bandas [tema…]   (lo deja en salida/, que no se sube)
@@ -463,11 +486,11 @@ g8.collar = collar_lazo
 # ---------------------------------------------------------------------
 #  Art nouveau: el pelaje atigrado crema, dibujado como en un cartel litografiado. Las rayas son pocas, anchas y en curva
 #  (se afinan hacia la panza y no la tocan); la raya del lomo, las barras de las patas, la M de la frente, una raya en la
-#  mejilla y los anillos de la cola. La forma la suaviza el pintor (cada tinta es una mancha plana de borde curvo). El
-#  acabado guarda también, para cada celda, el rango de la parte que la dibuja: el pintor traza con la pluma la línea
-#  donde una parte pasa por delante de otra (la pata sobre el cuerpo, la cabeza sobre el pecho, el objeto sobre el gato).
+#  mejilla y los anillos de la cola. Para que el borde sea la curva del dibujo (la línea de pluma del cartel) y no la
+#  escalera de las celdas, el acabado guarda también el dibujo a 8× de cada cuadro (la letra y el rango de la parte en
+#  cada pixel) y las rayas se ponen ahí; con el rango, el pintor traza la línea donde una parte pasa por delante de otra
+#  (la pata sobre el cuerpo, la cabeza sobre el pecho, el objeto sobre el gato).
 # ---------------------------------------------------------------------
-_rangos_lito = {}
 COLA_ANILLOS_LITO = ((0.4, 0.49), (0.56, 0.65), (0.72, 0.8))
 COLA_PUNTA_LITO = 0.88
 PARTES_HR = {"cuerpo": 1, "cola": 2, "colafrente": 2, "pierna": 3, "cabeza": 4, "lejos": 5}
@@ -570,13 +593,7 @@ def acabar_lito(ch, parte, estilo):
         return _acabar_lito(ch, parte, estilo)
     out = _acabar_lito(ch, parte, ("ninguno",) + tuple(estilo[1:]))
     out = [f[:] for f in out]
-    rg = np.full((N, N), -1.0, np.float32)
-    for r in range(N):
-        for c in range(N):
-            if out[r][c] != ".":
-                rg[r, c] = g8.RANGO.get(parte[r][c], 2.0) if parte[r][c] is not None else 2.0
     clave = "".join("".join(f) for f in out)
-    _rangos_lito[clave] = rg
     if _ultimo_lienzo.get("L") is not None:
         _hr_lito[clave] = _dibujo_hr(_ultimo_lienzo.pop("L"))
     return out
@@ -1075,10 +1092,7 @@ def pintar_litografia(g, t, cel):
     Rb = np.where(sil, Rk, 255).astype(np.uint8)
     d_ = max(2, int(round(t["lito_pluma_dentro"] * s)))
     rmin = np.asarray(Image.fromarray(Rb).filter(ImageFilter.MinFilter(2 * d_ + 1)), np.int32)
-    dentro_ = sil & (Rb.astype(np.int32) - rmin > 2) & ~luzq
-    for (a_, b_) in t.get("lito_sin_linea", ()):
-        dentro_ &= ~((Rb == a_) & (rmin == b_))
-    linea |= dentro_
+    linea |= sil & (Rb.astype(np.int32) - rmin > 2) & ~luzq
     # --- El filo del ojo y la tinta de adentro.
     ojo = Lb == ord("E")
     if ojo.any():
@@ -1288,7 +1302,7 @@ def tema_mio(nombre, oscuro):
         t["sombra_col"], t["sombra_a"] = (86, 74, 96), 58
         if oscuro:
             t.update(lito_filos=[((-0.62, -0.78), hx("FFE3A0"), 0.4), ((0.93, -0.36), hx("9CB4E6"), 0.55)],
-                     lito_filo_ancho=0.5, lito_umbral=(0.45, 0.88), lito_crachis_p=0.28)
+                     lito_filo_ancho=0.5, lito_umbral=(0.45, 0.88), lito_crachis_p=0.2, lito_crachis=0.08)
             t["sombra_col"], t["sombra_a"] = (0, 0, 0), 84
     else:
         raise ValueError(nombre)
@@ -1769,7 +1783,7 @@ def curva_latigo():
     anchos = []
     for i in range(n_):
         u = i / (n_ - 1)
-        anchos.append(0.9 + 1.0 * math.sin(math.pi * min(1.0, u * 1.25)) ** 1.2 if u < 0.8 else 0.9 - 0.3 * (u - 0.8) / 0.2)
+        anchos.append(1.25 + 1.0 * math.sin(math.pi * min(1.0, u * 1.25)) ** 1.2 if u < 0.8 else 1.25 - 0.15 * (u - 0.8) / 0.2)
     return pts, anchos
 
 
@@ -4563,9 +4577,9 @@ def fondo_nouveau(t):
         # frío sobre el vidrio de la derecha.
         for (x, y, tipo) in NV_LAMPARAS:
             c = P["lampara"][tipo]
-            luz(im, x, y + 3, 22, c[2], 0.16, 4, ry=18)
-            luz(im, x, y + 3, 9, P["halo"], 0.24, 3)
-            luz(im, x, 70, 34, mezcla(c[2], P["halo"], 0.5), 0.2, 4, ry=6)
+            luz(im, x, y + 3, 22, c[1], 0.2, 4, ry=18)
+            luz(im, x, y + 3, 9, mezcla(c[2], P["halo"], 0.35), 0.26, 3)
+            luz(im, x, 70, 34, mezcla(c[1], P["halo"], 0.45), 0.2, 4, ry=6)
             nv_lampara(im, P, o, x, y, tipo)
         luz(im, NV_LUNA[0], 40, 70, P["luna_halo"], 0.06, 3, ry=30)
         # La luna entra por el vidrio desde arriba a la derecha: en el suelo, franjas frías con la sombra de las barras.
@@ -4615,12 +4629,14 @@ def fondo_nouveau(t):
             y = 34 + 7 * math.sin(ff * 2 * math.pi * 2 + 0.5) + 3 * math.sin(ff * 2 * math.pi * 7)
             li = P["libelula"]
             x, y = int(x), int(y)
-            for k in range(-4, 1):
-                pon(p_, x + k, y, li[0] if k > -4 else li[1])
-            pon(p_, x + 1, y, li[0]); pon(p_, x + 1, y - 1, li[3])
-            arriba_ = tk % 2 == 0
-            for (dx, dy) in ((-1, -1), (0, -1), (-1, 1), (0, 1)) if not arriba_ else ((-2, -1), (-1, -2), (0, -1), (1, -2)):
+            arriba_ = tk % 2 == 0                            # las alas baten: abiertas en cruz o alzadas
+            alas = ((-2, -1), (-1, -1), (-2, -2), (0, -1), (1, -1), (1, -2), (-2, 1), (-1, 1), (0, 1), (1, 1)) if not arriba_ else \
+                ((-2, -1), (-2, -2), (-3, -3), (0, -1), (0, -2), (1, -3), (-1, -1), (1, -1))
+            for (dx, dy) in alas:
                 pon(p_, x + dx, y + dy, li[2])
+            for k in range(-7, 1):                           # el abdomen largo y el tórax
+                pon(p_, x + k, y, li[0] if k > -6 else li[1])
+            pon(p_, x + 1, y, li[0]); pon(p_, x + 2, y, li[0]); pon(p_, x + 2, y - 1, li[3])
             return
         # De noche: las lámparas tiemblan (la campana y el anillo de luz), las polillas giran a su alrededor y los
         # reflejos de las lámparas en el vidrio parpadean.
