@@ -625,14 +625,16 @@ internal object VidaNouveau : DisenoVida {
         rect(r, lam(PIEDRA_CANTO, o, f))
         // Las capas de la caliza y los golpes del canto.
         clipRect(r.left, r.top, r.right, r.bottom) {
-            var y = r.top + r.height * 0.3f
-            var k = 0
-            while (y < r.bottom) {
-                drawLine(lam(PIEDRA_OSC, o, f).copy(alpha = 0.35f + 0.3f * azar(semilla, k)), Offset(r.left, y), Offset(r.right, y + (azar(semilla, k + 9) - 0.5f) * 0.6f * u), 0.15f * u)
-                y += r.height * (0.18f + 0.15f * azar(semilla, k + 3)); k++
+            // Una veta de la caliza y las motas; los golpes del canto, más claros, y la esquina mellada.
+            val yv = r.top + r.height * (0.5f + 0.25f * azar(semilla, 1))
+            drawLine(lam(PIEDRA_OSC, o, f).copy(alpha = 0.4f), Offset(r.left, yv), Offset(r.right, yv + (azar(semilla, 9) - 0.5f) * 0.6f * u), 0.15f * u)
+            for (j in 0 until 5) drawCircle(lam(PIEDRA_OSC, o, f).copy(alpha = 0.3f), (0.12f + 0.2f * azar(semilla, j + 30)) * u,
+                Offset(r.left + r.width * azar(semilla, j + 40), r.top + r.height * (0.35f + 0.6f * azar(semilla, j + 50))))
+            for (j in 0 until 2) {
+                val x = r.left + r.width * (0.15f + 0.7f * azar(semilla, j + 60))
+                drawOval(lam(PIEDRA_LUZ, o, f).copy(alpha = 0.6f), Offset(x, r.bottom - r.height * 0.45f), Size((0.8f + azar(semilla, j + 70)) * u, r.height * 0.3f))
             }
-            for (j in 0 until 3) drawCircle(lam(PIEDRA_OSC, o, f).copy(alpha = 0.3f), (0.2f + 0.3f * azar(semilla, j + 30)) * u,
-                Offset(r.left + r.width * azar(semilla, j + 40), r.top + r.height * azar(semilla, j + 50)))
+            drawPath(Path().apply { moveTo(r.right - 1.2f * u, r.bottom); lineTo(r.right, r.bottom - r.height * 0.5f); lineTo(r.right, r.bottom); close() }, lam(PIEDRA_OSC, o, f).copy(alpha = 0.5f))
         }
         val cara = Rect(r.left, r.top, r.right, r.top + minOf(r.height * 0.28f, 0.9f * u))
         rect(cara, lam(if (entintada) TINTA_NEGRA else PIEDRA_LUZ, o, f))
@@ -1615,8 +1617,9 @@ internal object VidaNouveau : DisenoVida {
                 }
                 drawPath(raspado, ic(TINTA_NEGRA, o).copy(alpha = 0.4f), style = Stroke(p * 0.8f))
                 // Las virutas de tinta que levanta el rascador.
-                listOf(0.82f to 0.12f, 0.9f to 0.0f, 0.78f to 0.26f).forEach { (fx, fy) ->
-                    drawArc(ic(TINTA_NEGRA, o), 0f, 250f, false, Offset(c.x + s * fx - p * 2, c.y + s * fy - p * 2), Size(p * 4f, p * 4f), style = Stroke(p * 0.8f))
+                listOf(0.86f to 0.16f, 0.95f to 0.06f, 0.8f to 0.28f).forEachIndexed { k, (fx, fy) ->
+                    val v = Offset(c.x + s * fx, c.y + s * fy)
+                    drawPath(Path().apply { moveTo(v.x - p * 2f, v.y); quadraticTo(v.x, v.y - p * (2.4f + k), v.x + p * 2f, v.y + p * 0.4f); quadraticTo(v.x, v.y - p * 0.8f, v.x - p * 2f, v.y); close() }, ic(TINTA_NEGRA, o))
                 }
                 // El rascador: la hoja de acero triangular y el mango de haya con su virola.
                 val filo = Offset(c.x + s * 0.7f, c.y + s * 0.02f)
@@ -1797,21 +1800,22 @@ internal object VidaNouveau : DisenoVida {
         }
         translate(1.2f * u, 1.8f * u) { drawPath(tablero, sombraMueble(if (o) 0.4f else 0.3f)) }
         clipPath(tablero) {
-            madera(Rect(0f, 0f, w, h), o, u, e.semilla + 5, nm(NOGAL, o).let { NOGAL }, NOGAL_OSC, NOGAL_LUZ, vertical = true, f = 0f)
-            if (o) {
-                rect(Rect(0f, 0f, w, h), nm(NOGAL, o).copy(alpha = 0.55f))
-                halo(foco, w * 0.3f, mez(NOGAL_LUZ, CALIDO, 0.4f), 0.9f)
-            }
+            madera(Rect(0f, 0f, w, h), o, u, e.semilla + 5, NOGAL, NOGAL_OSC, NOGAL_LUZ, vertical = true)
+            if (o) halo(foco, w * 0.3f, mez(NOGAL_LUZ, CALIDO, 0.4f), 0.9f)
+            // La ranura tallada que corre por el marco, a un dedo del borde, con su luz abajo.
+            val ran = Rect(marco.left + 1.6f * u, hombro + 1.6f * u, marco.right - 1.6f * u, marco.bottom - 1.4f * u)
+            drawRoundRect(lamm(NOGAL_OSC, o, 0f), ran.topLeft, ran.size, CornerRadius(1.6f * u), style = Stroke(0.35f * u))
+            drawRoundRect(luzMueble(if (o) 0.03f else 0.18f), Offset(ran.left + 0.3f * u, ran.top + 0.3f * u), ran.size, CornerRadius(1.6f * u), style = Stroke(0.2f * u))
         }
         // La moldura que sigue el copete, en luz, y el filo de abajo en sombra.
         drawPath(tablero, luzMueble(if (o) 0.05f else 0.35f), style = Stroke(0.5f * u))
         // La cresta tallada: el iris en relieve, con dos tallos que se enroscan a los lados y un toque de oro en la lengua.
         with(TrazosNouveau) {
             val talla = lamm(NOGAL_OSC, o, 0f); val relieve = lamm(NOGAL_LUZ, o, 0f)
-            latigo(Offset(cx - w * 0.035f, hombro - h * 0.012f), Offset(cx - w * 0.24f, hombro - h * 0.004f), 1.5f * u, 0.8f * u, talla, -0.12f, true, sombra = false)
-            latigo(Offset(cx + w * 0.035f, hombro - h * 0.012f), Offset(cx + w * 0.24f, hombro - h * 0.004f), 1.5f * u, 0.8f * u, lamm(NOGAL_OSC, o, fl(Offset(w * 0.7f, hombro))), 0.12f, false, sombra = false)
-            iris(Offset(cx, hombro + 0.4f * u), h * 0.075f, lamm(mez(NOGAL_LUZ, IRIS, 0.15f), o, 0f), relieve, talla, talla.copy(alpha = 0.7f))
-            drawCircle(lamm(ORO, o, 0f), 0.4f * u, Offset(cx, hombro - h * 0.046f))
+            latigo(Offset(cx - w * 0.04f, hombro + 0.6f * u), Offset(cx - w * 0.25f, hombro + 1.6f * u), 1.5f * u, 0.8f * u, talla, -0.1f, true, sombra = false)
+            latigo(Offset(cx + w * 0.04f, hombro + 0.6f * u), Offset(cx + w * 0.25f, hombro + 1.6f * u), 1.5f * u, 0.8f * u, lamm(NOGAL_OSC, o, fl(Offset(w * 0.7f, hombro))), 0.1f, false, sombra = false)
+            iris(Offset(cx, hombro + 2.2f * u), h * 0.105f, lamm(mez(NOGAL_LUZ, IRIS, 0.2f), o, 0f), relieve, talla, talla.copy(alpha = 0.8f))
+            drawCircle(lamm(ORO, o, 0f), 0.45f * u, Offset(cx - 0.2f * u, hombro + 2.2f * u - h * 0.105f * 0.78f))
         }
 
         // Los largueros y los travesaños tienen su canto: la luz a la izquierda y arriba, la sombra a la derecha y abajo.
@@ -1944,8 +1948,8 @@ internal object VidaNouveau : DisenoVida {
             drawRect(sombraMueble(if (o) 0.4f else 0.28f), Offset(t.left + 1.2f * un, t.top + 2f * un), t.size)
             val papel = nm(VELIN, o)
             rect(t, papel)
-            pinceladas(t, nm(VELIN_OSC, o), semilla, 8, un, if (o) 0.06f else 0.12f)
-            drawRect(luzMueble(if (o) 0.03f else 0.2f), t.topLeft, Size(t.width * 0.3f, t.height))
+            pinceladas(t, nm(VELIN_OSC, o), semilla, 8, un, if (o) 0.05f else 0.07f)
+            if (!o) drawRect(luzMueble(0.14f), t.topLeft, Size(t.width * 0.3f, t.height))
             for (k in 0 until 16) {
                 val x = t.left + t.width * k / 16f
                 drawLine(nm(VELIN_OSC, o), Offset(x, t.bottom - 0.3f * un), Offset(x + t.width / 16f, t.bottom - 0.3f * un + (azar(semilla, k + 30) - 0.5f) * 0.8f * un), 0.6f * un)
@@ -1998,8 +2002,16 @@ internal object VidaNouveau : DisenoVida {
     private fun DrawScope.vineta(tipo: String, q: Offset, t: Float, o: Boolean, un: Float) {
         when (tipo) {
             "idea" -> {
-                drawLine(nm(LATON_OSC, o), Offset(q.x, q.y - t * 1.6f), Offset(q.x, q.y - t * 0.6f), 0.4f * un)
-                rotate(180f, Offset(q.x, q.y - t * 0.6f)) { with(TrazosNouveau) { tulipa(Offset(q.x, q.y - t * 0.6f), t * 1.4f, 1f) } }
+                // La tulipa encendida: el casquillo, los tres pétalos de vidrio boca abajo y los rayos de su luz.
+                val c = Offset(q.x, q.y - t * 0.7f)
+                for (k in 0 until 5) {
+                    val a = PI.toFloat() * (0.1f + 0.2f * k)
+                    drawLine(nm(IRIS_LENGUA, o), Offset(q.x + cos(a) * t * 1.2f, c.y + t * 0.5f + sin(a) * t * 1.2f), Offset(q.x + cos(a) * t * 1.7f, c.y + t * 0.5f + sin(a) * t * 1.7f), 0.35f * un, StrokeCap.Round)
+                }
+                listOf(-1f, 1f).forEach { sd -> drawPath(TrazosNouveau.petalo(c, Offset(c.x + sd * t * 0.75f, c.y + t * 1.1f), t * 0.75f), nm(VIDRIO_VIOLETA, o)) }
+                drawPath(TrazosNouveau.petalo(c, Offset(c.x, c.y + t * 1.3f), t * 0.85f), nm(VIDRIO_AMBAR, o))
+                drawRect(nm(LATON_OSC, o), Offset(c.x - t * 0.22f, c.y - t * 0.2f), Size(t * 0.44f, t * 0.24f))
+                drawLine(nm(LATON_OSC, o), Offset(c.x, c.y - t * 0.2f), Offset(c.x, c.y - t * 0.9f), 0.3f * un)
             }
             "pensamiento" -> {
                 // Dos pétalos de arriba violeta hondo, dos de los lados malva y el de abajo con su mancha y su ojo amarillo.

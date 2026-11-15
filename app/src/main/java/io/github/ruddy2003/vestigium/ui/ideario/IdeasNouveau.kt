@@ -1165,8 +1165,11 @@ object IdeasNouveau : DisenoIdeas {
         val ty = r.center.y + r.height * 0.06f
         tirador(Offset(w * 0.12f, ty), w * 0.1f, -1f, oscuro, cerca + 0.12f)
         tirador(Offset(w * 0.88f, ty), w * 0.1f, 1f, oscuro, cerca + 0.24f)
-        // De noche, el filo cálido que deja la lámpara en el canto de arriba.
-        if (oscuro) drawLine(LAMPARA.copy(alpha = 0.22f), Offset(1f * u, f.top + 0.6f * u), Offset(w - 1f * u, f.top + 0.6f * u), 0.8f * u)
+        // De noche, el filo cálido que deja la lámpara en el canto de arriba y su reflejo, más tibio hacia la derecha, donde está.
+        if (oscuro) {
+            drawLine(LAMPARA.copy(alpha = 0.22f), Offset(1f * u, f.top + 0.6f * u), Offset(w - 1f * u, f.top + 0.6f * u), 0.8f * u)
+            drawRect(Brush.horizontalGradient(listOf(Color.Transparent, LAMPARA.copy(alpha = 0.07f)), w * 0.4f, w), Offset(w * 0.4f, f.top), Size(w * 0.6f, f.height))
+        }
 
         // Las maculaturas: una prueba revuelta que se sale por el borde del cajón, sobre el frente.
         if (c.sinTema && !c.vacio && entre > 0f) {
