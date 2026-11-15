@@ -86,6 +86,7 @@ import io.github.ruddy2003.vestigium.data.alFuturo
 import io.github.ruddy2003.vestigium.data.lista
 import io.github.ruddy2003.vestigium.data.sellada
 import io.github.ruddy2003.vestigium.ui.biblioteca.bullaArcontes
+import io.github.ruddy2003.vestigium.ui.biblioteca.selloGalia
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -133,7 +134,9 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.TEMPLARIO -> Papeleria(Color(0xFFF1ECE0), Color(0xFFB9AE97), Color(0xFFFFFCF4), Color(0xFFB0191F), Color(0xFF7A2A16), Color(0xFF8A7650), Color(0xFF201E1B))
     // Sobre de manila de oficina, con su hilo y botones, y la tinta roja del sello de goma.
     TemaId.DISTOPIA -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
-    TemaId.GALIA -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
+    // El mensaje que corre de oppidum en oppidum: la funda de cuero de la tablilla, por dentro de gamuza, el sello de barro con
+    // el caballo de quien lo manda y el cordel de lana roja.
+    TemaId.GALIA -> Papeleria(Color(0xFF9A7048), Color(0xFF6E4A2C), Color(0xFFB88A5E), Color(0xFFD8B88E), Color(0xFFA4704A), Color(0xFF8E3B2A), Color(0xFF20251A))
     // La carta entre comunidades escondidas: papiro doblado en paquete, por dentro la tinta de lo escrito, la bula de barro
     // cocido claro con el ouroboros y el cordel de pelo de cabra.
     TemaId.ARCONTES -> Papeleria(Color(0xFFE6D8B4), Color(0xFFAE9A6E), Color(0xFFF4EAD0), Color(0xFFCDB98C), Color(0xFFB9774A), Color(0xFF3B3026), Color(0xFF1E1A2B))
@@ -388,11 +391,13 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
             rotuloSello("ARCHIVADO", c.x, c.y + r * 0.13f, r * 0.36f, k(base.copy(alpha = 0.85f)))
         }
-        TemaId.GALIA -> rotate(-14f, c) {
-            // El sello de goma del Ministerio: tinta en dos marcos y la palabra, un poco torcido.
-            drawRect(k(base.copy(alpha = 0.85f)), Offset(c.x - r * 1.25f, c.y - r * 0.6f), Size(r * 2.5f, r * 1.2f), style = Stroke(r * 0.1f))
-            drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
-            rotuloSello("ARCHIVADO", c.x, c.y + r * 0.13f, r * 0.36f, k(base.copy(alpha = 0.85f)))
+        // El sello de barro sobre el nudo, con la marca de quien lo manda (el caballo de las monedas); debajo, los dos cabos del
+        // cordel de lana roja.
+        TemaId.GALIA -> {
+            val lana = k(Color(0xFF8E3B2A))
+            drawLine(lana, Offset(c.x - r * 0.2f, c.y + r * 0.6f), Offset(c.x - r * 0.8f, c.y + r * 1.5f), r * 0.11f, StrokeCap.Round)
+            drawLine(lana, Offset(c.x + r * 0.2f, c.y + r * 0.6f), Offset(c.x + r * 0.5f, c.y + r * 1.62f), r * 0.11f, StrokeCap.Round)
+            selloGalia(c, r, base, a, 5)
         }
         // La bula: el disco de barro apretado sobre el cordel, con el ouroboros hundido y la chispa en el centro; debajo, los
         // dos cabos del cordel de pelo de cabra.
@@ -836,8 +841,11 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Hermano que serás yo:", "Escribe tu misiva, hermano…", "Misiva para %s, sellada por la casa", "Ningún hermano la abrirá antes de tiempo.", "Toca para tomar la pluma…")
     TemaId.DISTOPIA -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
         "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
-    TemaId.GALIA -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
-        "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
+    // Los galos echaban cartas a la pira para sus muertos, porque creían que el alma vuelve a vivir (Diodoro 5.28): la carta al
+    // futuro va para el que uno volverá a ser. Las demás corren de oppidum en oppidum, como el grito (César 7.3).
+    TemaId.GALIA -> VozCarta("Llegó el mensajero: rompe el sello", "Atada con lana roja y sellada", "Para el que volveré a ser el %s", "El que volveré a ser · %s", "Para el que volveré a ser",
+        "A ti, que vuelves a vivir:", "Raya tu mensaje para el otro oppidum…", "Mensaje para %s: ya corre de oppidum en oppidum", "El sello no se rompe antes de su noche.",
+        "Toca para rayar la cera con el estilo…")
     TemaId.ARCONTES -> VozCarta("Ya puedes romper el barro: ábrela", "Atada y sellada con barro", "Para el iniciado que seré el %s", "Iniciado de %s", "Para el iniciado que seré",
         "Al que seré, de parte del que soy:", "Escribe para la otra comunidad…", "Carta para %s, atada y escondida", "El barro no se rompe antes de su día.",
         "Toca para escribir a la luz de la lámpara…")
