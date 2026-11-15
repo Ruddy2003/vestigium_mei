@@ -198,7 +198,7 @@ fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
     TemaId.LABORATORIO -> null      // S17
     TemaId.COLONOS -> null          // S19
     TemaId.NAPOLEON -> EscenaNapoleon
-    TemaId.DECO -> null             // S15
+    TemaId.DECO -> EscenaDeco
     TemaId.BOTANICO -> EscenaBotanico
     TemaId.RUINAS -> EscenaRuinas
     TemaId.NAVIDAD -> null          // Navidad: sin cuadro
