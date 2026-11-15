@@ -273,7 +273,12 @@ internal object MundoBarco {
                     drawPath(poligono(Offset(x - w * 0.06f, yy - h), Offset(x + w * 1.06f, yy - h), Offset(x + w * 0.62f, yy - h - casa * 0.32f * esc), Offset(x + w * 0.3f, yy - h - casa * 0.32f * esc)), l.tono(tejado, lj))
                     drawLine(l.tono(mult(tejado, Color(0xFF6A68A8), 0.5f), lj), Offset(x - w * 0.06f, yy - h + 0.3f), Offset(x + w * 1.06f, yy - h + 0.3f), 0.5f)
                     if (az.real() > 0.5f) drawRect(l.tono(lerp(pared, C.BREA, 0.6f), lj), Offset(x + w * 0.4f, yy - h * 0.55f), Size(maxOf(0.5f, w * 0.15f), maxOf(0.5f, h * 0.25f)))
-                    if (l.noche > 0.35f && az.real() > 0.45f) drawRect(C.LUMBRE.copy(alpha = (0.9f * l.noche).coerceIn(0f, 1f)), Offset(x + w * 0.42f, yy - h * 0.6f), Size(maxOf(0.6f, w * 0.16f), maxOf(0.6f, h * 0.24f)))
+                    if (l.noche > 0.35f && az.real() > 0.45f) {
+                        drawRect(C.LUMBRE.copy(alpha = (0.9f * l.noche).coerceIn(0f, 1f)), Offset(x + w * 0.42f, yy - h * 0.6f), Size(maxOf(0.6f, w * 0.16f), maxOf(0.6f, h * 0.24f)))
+                        // Su reflejo en el agua de la bahía, roto, debajo.
+                        val wx = x + w * 0.5f; var ry = H + 1.6f
+                        while (ry < H + 7f) { drawLine(C.LUMBRE.copy(alpha = (0.5f * l.noche * (1f - (ry - H) / 7f)).coerceIn(0f, 1f)), Offset(wx - 0.5f + az.entre(-0.4f, 0.4f), ry), Offset(wx + 0.5f + az.entre(-0.4f, 0.4f), ry), 0.5f); ry += 0.9f }
+                    }
                 }
                 x += w * az.entre(1.05f, 1.5f)
             }
@@ -337,7 +342,14 @@ internal object MundoBarco {
         cerro(v, perfil(Azar(Semilla.de("botanico", "punta tropical", az.entero(1000))), 318f, ANCHO + 20f, H + 1f, 10f * k, 0.3f, 14), H + 2f, lerp(C.SELVA, C.HOJA, 0.35f), 0.42f, az, Manto.SELVA)
         if (EscenaBotanico.puerto(v.m)) {
             // «Una ciudad de iglesias sobre una colina verde»: el pueblo blanco que sube por la loma, y las barcas.
-            pueblo(v, az.entre(236f, 246f), az.entre(262f, 270f), H + 0.4f, 3.2f * k, 0.48f, az)
+            val x0 = az.entre(222f, 232f); val x1 = 262f
+            val colina = listOf(Offset(x0 - 14f, H + 1f), Offset(x0 - 4f, H - 7f * k), Offset(x0 + 10f, H - 12f * k), Offset(x0 + 22f, H - 13f * k), Offset(x1 - 4f, H - 8f * k), Offset(x1 + 6f, H - 2f), Offset(x1 + 10f, H + 1f))
+            cerro(v, colina, H + 2f, lerp(C.SELVA, C.HOJA, 0.4f), 0.46f, az, Manto.SELVA)
+            pueblo(v, x0, x1 - 2f, H + 0.2f, 3.4f * k, 0.46f, az)
+            // El fuerte de la punta, bajo y blanco, con sus cañoneras.
+            val fx = az.entre(182f, 196f)
+            drawRect(l.tono(C.CAL, 0.48f), Offset(fx, H - 3.2f * k), Size(14f * k, 3.4f * k)); drawRect(l.tono(mult(C.CAL, Color(0xFF8688C6), 0.5f), 0.48f), Offset(if (v.p.solALaDerecha) fx else fx + 10f * k, H - 3.2f * k), Size(4f * k, 3.4f * k))
+            for (i in 0..3) drawRect(l.tono(C.BREA, 0.48f), Offset(fx + (2f + 3f * i) * k, H - 2.2f * k), Size(0.8f * k, 0.6f * k))
             barcas(v, 210f, 330f, H + 1f, if (fondeado) 5 else 2, az)
         }
         palmeras(v, 150f, 250f, H + 0.2f, az, 0.5f, 4)

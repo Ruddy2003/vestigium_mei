@@ -56,60 +56,76 @@ import kotlin.math.sin
 internal object NocheBarco {
     private val C = ColorBotanico
 
-    fun DrawScope.lumbres(v: Vista) {
+    /** El punto de la botavara que queda encima de la claraboya, en el lienzo: ahí llega el haz de la cabina. */
+    private fun sobreLaClaraboya(v: Vista): Offset = VelasBarco.botavaraEn(v, 8.6f)
+
+    /**
+     * Lo que las lumbres y la luna dejan en la cubierta y en el aire de detrás de lo cercano (va antes del taller, que se
+     * pinta delante): los charcos de la claraboya, de la bitácora y del farol en las tablas y en la amurada, el haz de la
+     * cabina que sube hasta la botavara con su polvo, y el relente de la cubierta que brilla hacia la luna.
+     */
+    fun DrawScope.lumbresEnCubierta(v: Vista) {
         val lu = v.lu; val l = v.l
         if (l.noche < 0.15f) return
-        // ---- La cabina, por la claraboya.
+        val cubierta = CubiertaBarco.formaDeLaCubierta()
         if (lu.claraboya > 0.02f) {
-            val f = lu.claraboya
-            val boca = LUZ_CLARABOYA
-            // El charco en la cubierta alrededor de la claraboya, y el que sube por el palo.
-            clipPath(CubiertaBarco.formaDeLaCubierta()) { charcoDeLuz(Foco(boca, C.LUMBRE, f, 60f), SITIO_CLARABOYA.p(0f, 0f, 0f), k(8.6f) * 1.6f, k(8.6f) * 0.5f, C.TECA, 0.9f) }
+            val f = lu.claraboya; val boca = LUZ_CLARABOYA
+            clipPath(cubierta) { charcoDeLuz(Foco(boca, C.LUMBRE, f, 60f), SITIO_CLARABOYA.p(0f, 0f, 0f), k(8.6f) * 1.7f, k(8.6f) * 0.55f, C.TECA, 1f) }
             // El haz: el aire húmedo de encima de la claraboya, encendido, que sube hasta la botavara y se abre.
-            val (b0, b1) = VelasBarco.botavaraEnLienzo(v)
-            val arriba = b0 + (b1 - b0) * 0.12f
-            val w0 = k(8.6f) * 0.55f; val w1 = w0 * 2.4f
-            drawPath(poligono(boca + Offset(-w0, 0f), boca + Offset(w0, 0f), arriba + Offset(w1 * 0.6f, 0f), arriba + Offset(-w1, 0f)),
-                Brush.verticalGradient(listOf(C.LUMBRE.copy(alpha = 0.03f * f), C.LUMBRE.copy(alpha = 0.16f * f)), arriba.y, boca.y), blendMode = BlendMode.Plus)
+            val arriba = sobreLaClaraboya(v)
+            val w0 = k(8.6f) * 0.5f; val w1 = w0 * 1.9f
+            drawPath(poligono(boca + Offset(-w0, 0f), boca + Offset(w0, 0f), arriba + Offset(w1, 0f), arriba + Offset(-w1, 0f)),
+                Brush.verticalGradient(listOf(C.LUMBRE.copy(alpha = 0.04f * f), C.LUMBRE.copy(alpha = 0.2f * f)), arriba.y, boca.y), blendMode = BlendMode.Plus)
             val az = Azar(Semilla.de("botanico", "polvo claraboya"))
-            repeat(26) { val t = az.real(); val q = boca + (arriba - boca) * t + Offset(az.entre(-1f, 1f) * (w0 + (w1 - w0) * t) * 0.7f, 0f); drawCircle(C.LUMBRE.copy(alpha = (0.5f * f * az.real()).coerceIn(0f, 1f)), az.entre(0.3f, 0.7f), q) }
-            // La botavara y el palo, encendidos por debajo.
-            resplandor(arriba, 34f, 0.5f * f, C.LUMBRE)
-            resplandor(SITIO_CLARABOYA.p(0f, 2.2f, 1.8f), 30f, 0.35f * f, C.LUMBRE)
-            if (VelasBarco.cangrejaLarga(v)) clipPath(VelasBarco.formaDeLaCangreja(v)) {
-                // La reja de sombra de los barrotes de la claraboya, abierta en abanico sobre el pie de la vela.
-                val pie = VelasBarco.pieDeLaCangreja(v)
-                resplandor(arriba + Offset(-14f, -26f), 110f, 0.85f * f, C.LUMBRE)
-                resplandor(pie, 70f, 0.5f * f, C.LUMBRE)
-                for (i in -3..3) { val dir = Offset(i * 0.2f, -1f); drawLine(Color(0xFF3A3050).copy(alpha = 0.22f * f), boca + dir * 40f, boca + dir * 200f + Offset(pie.x - boca.x, 0f) * 0.3f, 2.2f, blendMode = BlendMode.Multiply) }
-            }
-            haloDeBruma(boca + Offset(0f, -6f), k(8.6f) * 0.9f, k(8.6f) * 0.5f, C.LUMBRE, 0.6f * f)
+            repeat(30) { val t = az.real(); val q = boca + (arriba - boca) * t + Offset(az.entre(-1f, 1f) * (w0 + (w1 - w0) * t) * 0.7f, 0f); drawCircle(C.LUMBRE.copy(alpha = (0.55f * f * az.real()).coerceIn(0f, 1f)), az.entre(0.3f, 0.7f), q) }
+            // El palo mayor, encendido por el lado de la claraboya.
+            resplandor(SITIO_CLARABOYA.p(0f, 2.2f, 2.2f), 30f, 0.4f * f, C.LUMBRE)
+            haloDeBruma(boca + Offset(0f, -4f), k(8.6f) * 0.9f, k(8.6f) * 0.5f, C.LUMBRE, 0.7f * f)
         }
-        // ---- La lámpara de la bitácora en la rueda y en la cubierta.
         if (lu.bitacora > 0.02f) {
             val f = lu.bitacora
-            clipPath(CubiertaBarco.formaDeLaCubierta()) { charcoDeLuz(Foco(LUZ_BITACORA, C.LUMBRE, f, 50f), BarcoBotanico.SITIO_BITACORA.p(0f, 0f, -0.3f), k(5.5f) * 1.1f, k(5.5f) * 0.35f, C.TECA, 0.8f) }
-            resplandor(SITIO_TIMON.p(0.5f, 1.2f, 0f), 46f, 0.32f * f, C.LUMBRE)
+            clipPath(cubierta) { charcoDeLuz(Foco(LUZ_BITACORA, C.LUMBRE, f, 50f), BarcoBotanico.SITIO_BITACORA.p(0f, 0f, -0.3f), k(5.6f) * 1.2f, k(5.6f) * 0.38f, C.TECA, 0.9f) }
         }
-        // ---- El farol de popa: la amurada, los cajones y la cubierta de la aleta.
         if (lu.farol > 0.02f) {
             val f = lu.farol
-            clipPath(CubiertaBarco.caraDeEstribor()) { charcoDeLuz(Foco(FAROL, C.LUMBRE, f, 60f), pc(estribor(4.2f), 0.6f, 4.2f), 60f, 40f, C.AMURADA, 0.8f) }
-            clipPath(CubiertaBarco.formaDeLaCubierta()) { charcoDeLuz(Foco(FAROL, C.LUMBRE, f, 60f), pc(0.9f, 0f, 3.2f), 70f, 22f, C.TECA, 0.7f) }
-            haloDeBruma(FAROL, 26f, 22f, C.LUMBRE, 0.7f * f)
+            clipPath(CubiertaBarco.caraDeEstribor()) { charcoDeLuz(Foco(FAROL, C.LUMBRE, f, 60f), pc(estribor(4.2f), 0.6f, 4.2f), 64f, 42f, lerp(C.ARENA, C.CUERO, 0.24f), 0.85f) }
+            clipPath(cubierta) { charcoDeLuz(Foco(FAROL, C.LUMBRE, f, 60f), pc(0.9f, 0f, 3.2f), 74f, 24f, C.TECA, 0.75f) }
         }
-        // ---- La luna: el relente de la cubierta, que brilla hacia ella, y el filo de plata de la regala y la botavara.
         if (v.luna > 0.05f) {
+            // El relente: la cubierta, húmeda, brilla hacia la luna en una franja larga, y las costuras la parten.
             val lunaX = l.lunaX * ANCHO
-            clipPath(CubiertaBarco.formaDeLaCubierta()) {
-                mancha(Offset(150f + (lunaX - 150f) * 0.4f, H + 26f), 120f, 16f, EscenaBotanico.LUZ_DE_LUNA, 0.16f * v.luna)
-                mancha(Offset(150f + (lunaX - 150f) * 0.25f, H + 60f), 90f, 18f, EscenaBotanico.LUZ_DE_LUNA, 0.08f * v.luna)
+            clipPath(cubierta) {
+                mancha(Offset(150f + (lunaX - 150f) * 0.4f, H + 26f), 130f, 16f, EscenaBotanico.LUZ_DE_LUNA, 0.22f * v.luna)
+                mancha(Offset(150f + (lunaX - 150f) * 0.25f, H + 62f), 100f, 20f, EscenaBotanico.LUZ_DE_LUNA, 0.12f * v.luna)
             }
+        }
+    }
+
+    /**
+     * Lo que las lumbres y la luna dejan en lo alto y en lo cercano (va después de las velas y del taller): el pie de la
+     * cangreja y la botavara encendidos por debajo, con la reja de sombra de los barrotes de la claraboya; la rueda, por la
+     * lámpara de la bitácora; el halo del farol; y el filo de plata de la luna en la regala, la botavara y el palo.
+     */
+    fun DrawScope.lumbresEnLoAlto(v: Vista) {
+        val lu = v.lu; val l = v.l
+        if (l.noche < 0.15f) return
+        if (lu.claraboya > 0.02f) {
+            val f = lu.claraboya; val boca = LUZ_CLARABOYA; val arriba = sobreLaClaraboya(v)
+            resplandor(arriba, 30f, 0.55f * f, C.LUMBRE)
+            if (VelasBarco.cangrejaLarga(v)) clipPath(VelasBarco.formaDeLaCangreja(v)) {
+                resplandor(arriba + Offset(-10f, -22f), 100f, 0.9f * f, C.LUMBRE)
+                // La reja de sombra de los barrotes, abierta en abanico desde la claraboya.
+                for (i in -4..4) { val dir = Offset(i * 0.16f, -1f); drawLine(Color(0xFF3A3050).copy(alpha = 0.26f * f), boca + dir * 50f, boca + dir * 220f, 2.4f, blendMode = BlendMode.Multiply) }
+            }
+        }
+        if (lu.bitacora > 0.02f) resplandor(SITIO_TIMON.p(0.5f, 1.2f, 0f), 46f, 0.32f * lu.bitacora, C.LUMBRE)
+        if (lu.farol > 0.02f) haloDeBruma(FAROL, 26f, 22f, C.LUMBRE, 0.7f * lu.farol)
+        if (v.luna > 0.05f) {
             val zs = (0..30).map { 1.6f + 24f * it / 30f }
-            drawPoints(zs.map { pc(estribor(it) + 0.1f, REGALA + 0.04f, it) }, androidx.compose.ui.graphics.PointMode.Polygon, EscenaBotanico.LUZ_DE_LUNA.copy(alpha = 0.45f * v.luna), 0.8f, StrokeCap.Round)
+            drawPoints(zs.map { pc(estribor(it) + 0.1f, REGALA + 0.04f, it) }, androidx.compose.ui.graphics.PointMode.Polygon, EscenaBotanico.LUZ_DE_LUNA.copy(alpha = 0.5f * v.luna), 0.9f, StrokeCap.Round)
             val (b0, b1) = VelasBarco.botavaraEnLienzo(v)
-            drawLine(EscenaBotanico.LUZ_DE_LUNA.copy(alpha = 0.4f * v.luna), b0 + Offset(0f, -2f), b1 + Offset(0f, -5f), 1f, StrokeCap.Round)
-            drawLine(EscenaBotanico.LUZ_DE_LUNA.copy(alpha = 0.35f * v.luna), pc(EJE + 0.2f, 0.3f, PALO_MAYOR), pc(EJE + 0.2f, 6f, PALO_MAYOR), 1f)
+            drawLine(EscenaBotanico.LUZ_DE_LUNA.copy(alpha = 0.45f * v.luna), b0 + Offset(0f, -2f), b1 + Offset(0f, -5f), 1f, StrokeCap.Round)
+            drawLine(EscenaBotanico.LUZ_DE_LUNA.copy(alpha = 0.4f * v.luna), pc(EJE + 0.2f, 0.3f, PALO_MAYOR), pc(EJE + 0.2f, 6f, PALO_MAYOR), 1f)
         }
     }
 
@@ -127,7 +143,7 @@ internal object NocheBarco {
         if (l.noche > 0.6f && !EscenaBotanico.fondeado(m)) {
             val az = Azar(Semilla.de("botanico", "mar que brilla"))
             repeat(24) {
-                val z = az.entre(4f, 24f); val q = pc(estribor(z) + az.entre(0.2f, 1.6f) * (1f + (26f - z) / 10f), -2.6f, z)
+                val z = az.entre(4f, 24f); val q = pc(estribor(z) + az.entre(0.2f, 1f) * (1f + (26f - z) * 0.5f), -2.6f, z)
                 val a = (0.5f + 0.5f * sin(reloj * az.entre(1.2f, 2.6f) + az.entre(0f, 6.28f))).let { it * it * it }
                 drawCircle(Color(0xFF8FE6D2).copy(alpha = (0.75f * a * l.noche).coerceIn(0f, 1f)), az.entre(0.4f, 1f) * (k(z) / 30f).coerceIn(0.5f, 1.8f), q, blendMode = BlendMode.Plus)
             }

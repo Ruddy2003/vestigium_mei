@@ -333,9 +333,10 @@ internal object BarcoBotanico {
         with(VelasBarco) { lejos(v); mayor(v) }
         with(CubiertaBarco) { cubierta(v) }
         if (m.ficha.clima == Clima.NIEBLA) with(MundoBarco) { nieblaSobreLaProa(v) }
+        with(NocheBarco) { lumbresEnCubierta(v) }
         with(TallerBarco) { primerPlano(v) }
         with(VelasBarco) { marco(v) }
-        with(NocheBarco) { lumbres(v) }
+        with(NocheBarco) { lumbresEnLoAlto(v) }
         if (m.ficha.clima != Clima.NIEBLA) tiempoQuieto(v.l, m.ficha.clima, H, m.semilla("tiempo"))
         grano(Azar(Semilla.de("botanico", "grano", "barco")), 0.6f + 0.4f * v.r.dia)
     }

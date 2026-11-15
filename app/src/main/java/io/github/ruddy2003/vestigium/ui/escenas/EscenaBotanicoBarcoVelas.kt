@@ -412,5 +412,12 @@ internal object VelasBarco {
         return borde(may) + borde(cang) + linea(may.b, V3(estribor(3.75f) - 0.05f, REGALA + 0.04f, 3.75f)) + linea(may.c + V3(0.4f, 0f, 0f), motonB)
     }
 
+    /** El punto de la botavara que queda a [z] metros (en el lienzo). */
+    internal fun botavaraEn(v: Vista, z: Float): Offset {
+        val (a, b) = if (v.velas == Velas.AFERRADAS) V3(EJE, 3.25f, PALO_MAYOR - 0.4f) to V3(EJE + 0.05f, 3.6f, 1.6f) else botavara(v.velas == Velas.CAIDAS)
+        val t = ((a.z - z) / (a.z - b.z)).coerceIn(0f, 1f)
+        return pc(a + (b - a) * t)
+    }
+
     internal fun botavaraEnLienzo(v: Vista): Pair<Offset, Offset> = if (v.velas == Velas.AFERRADAS) pc(EJE, 3.25f, PALO_MAYOR - 0.4f) to pc(EJE + 0.05f, 3.6f, 1.6f) else botavara(v.velas == Velas.CAIDAS).let { pc(it.first) to pc(it.second) }
 }
