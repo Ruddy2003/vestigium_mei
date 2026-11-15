@@ -245,10 +245,11 @@ object ContenedoresMas {
                 val verde = if (oscuro) Color(0xFF9FD8A8) else Color(0xFF4F7A5A)
                 drawRect(ambar.copy(alpha = 0.55f), Offset(0f, 0f), Size(size.width, 3 * d))
                 with(TrofeosMas) {
-                    mono("CARTUCHO K-7 · LECTURA", margen, 30 * d, 8 * d, tinta.copy(alpha = 0.55f))
-                    mono("PISTA A", size.width - 12 * d, 30 * d, 8 * d, ambar.copy(alpha = 0.75f), android.graphics.Paint.Align.RIGHT, negrita = true)
+                    // La pista arriba a la derecha, donde el título de la hoja no llega; el rótulo de la lectura, al pie.
+                    mono("PISTA A", size.width - 12 * d, 16 * d, 8 * d, ambar.copy(alpha = 0.75f), android.graphics.Paint.Align.RIGHT, negrita = true)
+                    mono("CARTUCHO K-7 · LECTURA", margen, size.height - 16 * d, 8 * d, tinta.copy(alpha = 0.55f))
                 }
-                drawLine(tinta.copy(alpha = 0.25f), Offset(margen, 38 * d), Offset(size.width - 12 * d, 38 * d), 0.8f * d)
+                drawLine(tinta.copy(alpha = 0.25f), Offset(margen, size.height - 28 * d), Offset(size.width - 160 * d, size.height - 28 * d), 0.8f * d)
                 val cinta = Rect(margen - 30 * d, 0f, margen - 20 * d, size.height)
                 drawRect(Color(0xFF4A3A2C).copy(alpha = if (oscuro) 0.5f else 0.28f), cinta.topLeft, cinta.size)
                 drawLine(Color.White.copy(alpha = if (oscuro) 0.08f else 0.25f), Offset(cinta.left + 2 * d, 0f), Offset(cinta.left + 2 * d, size.height), 0.6f * d)

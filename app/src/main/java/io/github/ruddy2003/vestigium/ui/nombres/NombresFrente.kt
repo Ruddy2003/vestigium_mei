@@ -102,7 +102,7 @@ internal object NombresFrente {
         "Lectura del día" to "LECTURA DE HOY EN LA RED",
         "Leyendo ahora" to "LEYENDO EN ESTA GUARDIA",
         "Libido" to "LECTURA RESERVADA",
-        "Libreta de momentos" to "CARTUCHO DE MOMENTOS EN CLAVE",
+        "Libreta de momentos" to "CARTUCHO DE MOMENTOS",
         "Libros" to "LIBROS DE CONTRABANDO",
         "Lista y pendientes" to "MATERIAL POR LEER Y VER",
         "Llamadas y mensajes" to "LLAMADAS Y MENSAJES DE LA RED",
