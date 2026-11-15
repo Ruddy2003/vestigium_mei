@@ -652,7 +652,7 @@ object Marcas {
                 // El vidrio oscuro con su bisel de cromo, tres líneas de barrido tenues y, delante, el piloto ámbar con su halo.
                 // Con un interlineado amplio (la hoja del dosier va a 25 sobre 15), el renglón deja aire arriba de la letra: el
                 // vidrio se mide desde abajo para no subirse sobre la línea de antes.
-                val b = rr.bottom - h * 0.04f; val t = maxOf(rr.top + h * 0.06f, b - 19f * u); val iz = rr.left - 3 * u; val de = rr.right + 3 * u
+                val b = rr.bottom + (if (h > 24f * u) 2f * u else -h * 0.04f); val t = maxOf(rr.top + h * 0.06f, b - 19f * u); val iz = rr.left - 3 * u; val de = rr.right + 3 * u
                 drawRoundRect(c, Offset(iz, t), Size(de - iz, b - t), CornerRadius(2.4f * u, 2.4f * u))
                 drawRoundRect(Color(0xFFB9B6AE).copy(alpha = 0.75f), Offset(iz, t), Size(de - iz, b - t), CornerRadius(2.4f * u, 2.4f * u), style = Stroke(0.8f * u))
                 var y = t + 2f * u; var n = 0
