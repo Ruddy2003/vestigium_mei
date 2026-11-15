@@ -72,9 +72,9 @@ internal object VivacLejos {
     val ARDE = Offset(306f, H - 10f)
 
     // ---- Los colores del paisaje: mezclas de la paleta del tema.
-    private val VERDE = lerp(C.PINO, C.HOJA, 0.55f)                              // la hierba de primavera, verde apagado
-    private val VERDE_OSC = lerp(C.PINO, C.HOJA, 0.25f)
-    private val OCRE = lerp(C.HOJA, C.LONA, 0.3f)                                // el trigo maduro
+    private val VERDE = ColorVivac.PRADO                                         // el prado, que vuelve en las lomas
+    private val VERDE_OSC = lerp(ColorVivac.PRADO, C.PINO, 0.45f)
+    private val OCRE = ColorVivac.TRIGO                                          // el trigo maduro
     private val PIEDRA = lerp(C.LONA, C.HOJA, 0.28f)                             // la piedra rubia de Francia
     private val TEJA = lerp(C.ROJO, C.MADERA, 0.45f)
     private val PIZARRA = lerp(C.HIERRO, C.AZUL, 0.3f)
@@ -130,13 +130,8 @@ internal object VivacLejos {
 
     /** El color de las lomas lejanas hoy: la hierba de la estación, el trigo, el rastrojo o la nieve. */
     private fun tierra(v: VistaVivac): Color {
-        val base = when (v.m.ficha.estacion) {
-            Estacion.PRIMAVERA -> VERDE
-            Estacion.VERANO -> lerp(VERDE, OCRE, 0.45f)
-            Estacion.OTONO -> lerp(OCRE, C.BARRO, 0.35f)
-            else -> lerp(C.HOJA, C.BARRO, 0.45f)
-        }
-        return lerp(base, C.NIEVE, (v.nieve * 1.2f).coerceAtMost(1f))
+        if (v.nieve >= 0.5f) return lerp(VivacCampo.colorDelCampo(v, 1f), C.NIEVE, 0.6f)
+        return lerp(VivacCampo.colorDelCampo(v, 1f), VERDE, 0.3f)
     }
 
     /** La cresta de una loma, de lado a lado, a [alto] sobre el horizonte, con [semilla] y [ondas] ondulaciones. */
@@ -569,8 +564,10 @@ internal object VivacLejos {
         clipPath(sil) {
             // La luz de un lado en cada copa, la bruma al pie y la nieve encima si la hay.
             drawRect(Brush.verticalGradient(listOf(Color.Transparent, v.l.bruma.copy(alpha = 0.22f)), y - alto * 0.5f, y), Offset(x0, y - alto - 2f), Size(x1 - x0, alto + 2f))
-            repeat(((x1 - x0) / 3f).toInt()) { val x = az.entre(x0, x1); mancha(Offset(x + (if (v.p.solALaDerecha) 0.6f else -0.6f), y - alto * az.entre(0.4f, 0.9f)), 0.8f, alto * 0.25f, v.p.luz(C.PINO, lejos), 0.45f * v.r.dia) }
-            if (v.nieve > 0.4f) repeat(((x1 - x0) / 2f).toInt()) { val x = az.entre(x0, x1); mancha(Offset(x, y - alto * az.entre(0.3f, 0.9f)), 1.2f, 0.4f, v.p.arriba(C.NIEVE, lejos), 0.7f) }
+            // (Óvalos lisos y no manchas con degradado: miden un pixel o dos, y son cientos.)
+            val luz = v.p.luz(C.PINO, lejos).copy(alpha = (0.4f * v.r.dia).coerceIn(0f, 1f)); val ry = alto * 0.22f
+            repeat(((x1 - x0) / 3f).toInt()) { val x = az.entre(x0, x1); val c = Offset(x + (if (v.p.solALaDerecha) 0.6f else -0.6f), y - alto * az.entre(0.4f, 0.9f)); drawOval(luz, Offset(c.x - 0.7f, c.y - ry), Size(1.4f, 2f * ry)) }
+            if (v.nieve > 0.4f) { val nieve = v.p.arriba(C.NIEVE, lejos).copy(alpha = 0.6f); repeat(((x1 - x0) / 2f).toInt()) { val x = az.entre(x0, x1); val c = Offset(x, y - alto * az.entre(0.3f, 0.9f)); drawOval(nieve, Offset(c.x - 1f, c.y - 0.35f), Size(2f, 0.7f)) } }
         }
     }
 
