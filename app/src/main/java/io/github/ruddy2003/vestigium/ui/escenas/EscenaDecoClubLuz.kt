@@ -16,6 +16,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.EscenaDeco.Puerta
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Foco
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.banderines
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.capaSombra
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
@@ -68,25 +69,28 @@ internal object LuzDeco {
         for ((z0, z1) in S.VENTANAS) { val c = CamDeco.p(S.DER, (S.VY0 + S.VY1) / 2f, (z0 + z1) / 2f)
             if (dia > 0.02f) add(Foco(c, cielo, 0.3f * dia * nub, 140f, suelo)) }
         // ---- De noche, la luz fría de la calle por las ventanas: la otra luz, la de color opuesto a las lámparas.
-        if (v.farola > 0.05f) for ((z0, z1) in S.VENTANAS) add(Foco(CamDeco.p(S.DER, S.VY0, (z0 + z1) / 2f), C.FAROLA, 0.2f * v.farola, 165f, CamDeco.p(0f, 0f, z1).y))
+        if (v.frio > 0.05f && ext.noche > 0.5f) for ((z0, z1) in S.VENTANAS) add(Foco(CamDeco.p(S.DER, S.VY0, (z0 + z1) / 2f), v.colorFrio, 0.24f * v.frio, 165f, CamDeco.p(0f, 0f, z1).y))
+        // ---- De día, el rebote cálido del suelo de roble (y de la mancha de sol, si la hay) en lo de alrededor.
+        if (dia > 0.05f) add(Foco(CamDeco.p(-0.9f, 0f, 4.6f), lerp(C.ROBLE, C.LAMPARA, 0.5f), (0.1f + 0.16f * (v.sol?.fuerza ?: 0f)) * dia, 190f, CamDeco.p(-0.9f, 0f, 4.6f).y))
         // ---- El sol que entra: el rebote de su mancha.
         v.sol?.let { s -> manchaCentro(v)?.let { add(Foco(it, s.color, 0.38f * s.fuerza, 110f, it.y)) } }
         // ---- La puerta de arriba, abierta o entornada: el día, o de noche el rojo del letrero y el azul de la noche.
-        val abre = when (v.puerta) { Puerta.CERRADA -> 0.12f; Puerta.ENTORNADA -> 0.45f; Puerta.ABIERTA -> 1f }
+        // La puerta deja pasar luz aunque esté cerrada: por su montante de vidrio, arriba.
+        val abre = when (v.puerta) { Puerta.CERRADA -> 0.32f; Puerta.ENTORNADA -> 0.55f; Puerta.ABIERTA -> 1f }
         val puerta = CamDeco.p((S.PUERTA_X0 + S.PUERTA_X1) / 2f, 2.7f, S.FONDO - 0.3f)
         if (dia > 0.02f) add(Foco(puerta, cielo, 0.35f * dia * abre * nub, 70f, CamDeco.p(1.1f, 0f, 6.5f).y))
-        if (v.neon > 0.02f) add(Foco(puerta, C.NEON, 0.3f * v.neon * abre, 70f, CamDeco.p(1.1f, 0f, 6.5f).y))
+        if (v.neon > 0.02f) add(Foco(puerta, C.NEON, 0.48f * v.neon * abre, 80f, CamDeco.p(1.1f, 0f, 6.5f).y))
         if (ext.noche > 0.3f) add(Foco(CamDeco.p(1.1f, 3.4f, S.FONDO - 0.2f), C.NOCHE, 0.3f * ext.noche * (0.4f + 0.6f * abre), 90f, CamDeco.p(1.1f, 0f, 6.5f).y))
         // ---- El neón de enfrente, por las ventanas (rojo por la primera, jade por la segunda).
         if (v.neon > 0.02f) for ((i, z) in S.VENTANAS.withIndex()) if (i < EscenaDeco.letreros(v.m)) {
             val c = CamDeco.p(S.DER - 0.4f, S.VY1 - 0.1f, (z.first + z.second) / 2f)
-            add(Foco(c, if (i == 0) C.NEON else C.NEON_JADE, 0.32f * v.neon, 115f, CamDeco.p(0f, 0f, z.second).y))
+            add(Foco(c, if (i == 0) C.NEON else C.NEON_JADE, 0.5f * v.neon, 125f, CamDeco.p(0f, 0f, z.second).y))
         }
         // ---- Las lámparas de dentro.
         val e = v.enc; val k = 0.6f + 0.4f * ext.noche
         if (e.deco > 0.02f) {
-            add(Foco(CamDeco.p(bombilla(S.LAMPARA_CERCA, 0.44f)), C.LAMPARA, 0.4f * e.deco * k, 90f, CamDeco.p(S.LAMPARA_CERCA.x, 0f, S.LAMPARA_CERCA.z).y))
-            add(Foco(CamDeco.p(bombilla(S.LAMPARA_FONDO, 0.36f)), C.LAMPARA, 0.3f * e.deco * k, 68f, CamDeco.p(S.LAMPARA_FONDO.x, 0f, S.LAMPARA_FONDO.z).y))
+            add(Foco(CamDeco.p(bombilla(S.LAMPARA_CERCA, 0.44f)), C.LAMPARA, 0.36f * e.deco * k, 78f, CamDeco.p(S.LAMPARA_CERCA.x, 0f, S.LAMPARA_CERCA.z).y))
+            add(Foco(CamDeco.p(bombilla(S.LAMPARA_FONDO, 0.36f)), C.LAMPARA, 0.26f * e.deco * k, 60f, CamDeco.p(S.LAMPARA_FONDO.x, 0f, S.LAMPARA_FONDO.z).y))
             for (ap in S.APLIQUES) add(Foco(CamDeco.p(ap), lerp(C.LAMPARA, C.ORO, 0.2f), 0.2f * e.deco * k, 36f, CamDeco.p(ap.x, 0f, ap.z).y))
         }
         if (e.barra > 0.02f && !v.nuevo) add(Foco(CamDeco.p(bombilla(S.LAMPARA_BARRA, 0.52f)), C.LAMPARA, 0.34f * e.barra * k, 46f, CamDeco.p(S.LAMPARA_BARRA.x, 0f, S.LAMPARA_BARRA.z).y))
@@ -108,9 +112,10 @@ internal object LuzDeco {
     // =================================================================
 
     /** Los cristales de una ventana, entre los barrotes de su reja: cada uno, sus cuatro esquinas (z, y). */
-    private fun cristales(z0: Float, z1: Float): List<List<Pair<Float, Float>>> = (0..3).map { k ->
-        val a = z0 + (z1 - z0) * k / 4f + 0.025f; val b = z0 + (z1 - z0) * (k + 1) / 4f - 0.025f
-        listOf(a to S.VY0, b to S.VY0, b to S.VY1, a to S.VY1)
+    private fun cristales(z0: Float, z1: Float): List<List<Pair<Float, Float>>> = (0..3).flatMap { k ->
+        // Entre cristal y cristal, la sombra del barrote de la reja; a media altura, la del travesaño del bastidor.
+        val a = z0 + (z1 - z0) * k / 4f + 0.045f; val b = z0 + (z1 - z0) * (k + 1) / 4f - 0.045f; val ym = (S.VY0 + S.VY1) / 2f
+        listOf(listOf(a to S.VY0, b to S.VY0, b to ym - 0.035f, a to ym - 0.035f), listOf(a to ym + 0.035f, b to ym + 0.035f, b to S.VY1, a to S.VY1))
     }
 
     /** Lo que da un rayo que sale de la pared de las ventanas por (z, y), viajando hacia [d], al llegar al plano [plano]. */
@@ -156,17 +161,24 @@ internal object LuzDeco {
     fun DrawScope.enLasSuperficies(v: VistaDeco) {
         val suelo = S.formaDelSuelo()
         v.sol?.let { s -> val d = v.dirSol!!; val col = lerp(s.color, Color(0xFFFFD49A), 0.35f)
-            luzEn(mancha(d, 0), suelo, col, 1.6f * s.fuerza)
+            luzEn(mancha(d, 0), suelo, col, 1.0f * s.fuerza)
             luzEn(mancha(d, 1), S.formaParedIzquierda(), col, 1.0f * s.fuerza)
             luzEn(mancha(d, 2), S.formaParedFondo(), col, 1.1f * s.fuerza)
         }
-        if (v.farola > 0.05f) {
-            luzEn(mancha(v.dirFarola, 0), suelo, C.FAROLA, 1.6f * v.farola)
-            luzEn(mancha(v.dirFarola, 1), S.formaParedIzquierda(), C.FAROLA, 0.5f * v.farola)
+        if (v.frio > 0.05f) {
+            luzEn(mancha(v.dirFrio, 0), suelo, v.colorFrio, 2.0f * v.frio)
+            luzEn(mancha(v.dirFrio, 1), S.formaParedIzquierda(), v.colorFrio, 0.6f * v.frio)
         }
         if (v.neon > 0.05f && !v.prov) for ((i, w) in S.VENTANAS.withIndex()) if (i < EscenaDeco.letreros(v.m)) {
             val d = v.dirNeon; val forma = Path(); for (c in cristales(w.first, w.second)) forma.addPath(poligono(c.map { (z, y) -> CamDeco.p(cae(z, y, d, 0)) }))
-            luzEn(forma, suelo, if (i == 0) C.NEON else C.NEON_JADE, 0.55f * v.neon, penumbra = false)
+            val col = if (i == 0) C.NEON else C.NEON_JADE
+            luzEn(forma, suelo, lerp(col, Color.White, 0.25f), 0.6f * v.neon)
+            // Su reflejo en la cera: la luz del letrero, rota en trazos hacia los ojos.
+            val q = cae((w.first + w.second) / 2f, S.VY0, d, 0); val pq = CamDeco.p(q)
+            clipPath(suelo) { reflejo(pq, col, 0.9f * v.neon, 14f, 40f) }
+            // El resplandor del letrero en la pared de las ventanas y en el hueco de la escalera.
+            clipPath(S.formaParedDerecha()) { val c = CamDeco.p(S.DER, (S.VY0 + S.VY1) / 2f, (w.first + w.second) / 2f)
+                drawOval(Brush.radialGradient(listOf(col.copy(alpha = 0.42f * v.neon), col.copy(alpha = 0.12f * v.neon), Color.Transparent), c, 60f), c - Offset(30f, 60f), Size(60f, 120f), blendMode = BlendMode.Plus) }
         }
         // Los charcos de las lámparas en el suelo, y su reflejo en la cera (una columna de luz hacia los ojos).
         clipPath(suelo) {
@@ -203,12 +215,12 @@ internal object LuzDeco {
         v.sol?.let { s -> val d = v.dirSol!!; val col = lerp(s.color, Color(0xFFFFD49A), 0.35f)
             val tapa = CamDeco.forma(listOf(V3(S.IZQ, S.ESTRADO_ALTO, S.ESTRADO_Z0), V3(S.ESTRADO_X, S.ESTRADO_ALTO, S.ESTRADO_Z0), V3(S.ESTRADO_X, S.ESTRADO_ALTO, S.FONDO), V3(S.IZQ, S.ESTRADO_ALTO, S.FONDO)))
             luzEn(mancha(d, 0, S.ESTRADO_ALTO), tapa, col, 1.3f * s.fuerza) }
-        if (v.farola > 0.05f) { val tapa = CamDeco.forma(listOf(V3(S.IZQ, S.ESTRADO_ALTO, S.ESTRADO_Z0), V3(S.ESTRADO_X, S.ESTRADO_ALTO, S.ESTRADO_Z0), V3(S.ESTRADO_X, S.ESTRADO_ALTO, S.FONDO), V3(S.IZQ, S.ESTRADO_ALTO, S.FONDO)))
-            luzEn(mancha(v.dirFarola, 0, S.ESTRADO_ALTO), tapa, C.FAROLA, 0.8f * v.farola) }
+        if (v.frio > 0.05f) { val tapa = CamDeco.forma(listOf(V3(S.IZQ, S.ESTRADO_ALTO, S.ESTRADO_Z0), V3(S.ESTRADO_X, S.ESTRADO_ALTO, S.ESTRADO_Z0), V3(S.ESTRADO_X, S.ESTRADO_ALTO, S.FONDO), V3(S.IZQ, S.ESTRADO_ALTO, S.FONDO)))
+            luzEn(mancha(v.dirFrio, 0, S.ESTRADO_ALTO), tapa, v.colorFrio, 0.9f * v.frio) }
         // La luz que baja por la escalera desde la puerta: más fuerte arriba, en cada huella.
-        val abre = when (v.puerta) { Puerta.CERRADA -> 0.1f; Puerta.ENTORNADA -> 0.4f; Puerta.ABIERTA -> 1f }
+        val abre = when (v.puerta) { Puerta.CERRADA -> 0.3f; Puerta.ENTORNADA -> 0.5f; Puerta.ABIERTA -> 1f }
         val dia = (1f - v.ext.noche).coerceIn(0f, 1f)
-        val color = lerp(lerp(v.ext.medio, Color.White, 0.4f), lerp(C.NOCHE, C.NEON, 0.45f), v.ext.noche.coerceIn(0f, 1f))
+        val color = lerp(lerp(v.ext.medio, Color.White, 0.4f), lerp(C.NOCHE, C.NEON, 0.35f + 0.4f * v.neon), v.ext.noche.coerceIn(0f, 1f))
         val k = abre * (0.6f * dia + 0.8f * v.ext.noche)
         if (k > 0.02f) {
             // A contraluz: la luz de arriba cae en las huellas y en el canto de cada peldaño; las tabicas, que miran a los
@@ -218,8 +230,8 @@ internal object LuzDeco {
                 val tabica = CamDeco.forma(listOf(V3(S.ESC_X0, y0, z), V3(S.DER, y0, z), V3(S.DER, y1, z), V3(S.ESC_X0, y1, z)))
                 drawPath(tabica, C.SOMBRA.copy(alpha = (0.4f * k * t).coerceIn(0f, 0.6f)), blendMode = BlendMode.Multiply)
                 if (y1 < CamDeco.OJO) { val h = CamDeco.forma(listOf(V3(S.ESC_X0 + 0.1f, y1, z), V3(S.DER - 0.05f, y1, z), V3(S.DER - 0.05f, y1, z + huella), V3(S.ESC_X0 + 0.1f, y1, z + huella)))
-                    drawPath(h, color.copy(alpha = (0.4f * k * (0.3f + 0.7f * t)).coerceIn(0f, 1f)), blendMode = BlendMode.Plus) }
-                drawLine(color.copy(alpha = (0.75f * k * (0.35f + 0.65f * t)).coerceIn(0f, 1f)), CamDeco.p(S.ESC_X0 + 0.05f, y1, z - 0.03f), CamDeco.p(S.DER, y1, z - 0.03f), 0.9f, blendMode = BlendMode.Plus)
+                    drawPath(h, color.copy(alpha = (0.6f * k * (0.3f + 0.7f * t)).coerceIn(0f, 1f)), blendMode = BlendMode.Plus) }
+                drawLine(color.copy(alpha = (1f * k * (0.35f + 0.65f * t)).coerceIn(0f, 1f)), CamDeco.p(S.ESC_X0 + 0.05f, y1, z - 0.03f), CamDeco.p(S.DER, y1, z - 0.03f), 0.9f, blendMode = BlendMode.Plus)
             }
             mancha(CamDeco.p(1.15f, 2.4f, S.FONDO - 0.1f), 18f, 26f, color, 0.35f * k)
         }
@@ -264,9 +276,9 @@ internal object LuzDeco {
                 if (d != null && s != null) clipPath(mancha(d, 0)) {
                     for (k in conCuerpo) drawPath(poligono(envolvente(k.esqueleto.map { CamDeco.p(V3(it.x + d.x * it.y / -d.y, 0f, it.z + d.z * it.y / -d.y)) })), c.copy(alpha = (0.95f * s.fuerza).coerceIn(0f, 1f)))
                 }
-                // La de la farola, de noche, dentro de su mancha fría.
-                if (v.farola > 0.05f) { val f = v.dirFarola; clipPath(mancha(f, 0)) {
-                    for (k in conCuerpo) drawPath(poligono(envolvente(k.esqueleto.map { CamDeco.p(V3(it.x + f.x * it.y / -f.y, 0f, it.z + f.z * it.y / -f.y)) })), c.copy(alpha = (0.8f * v.farola).coerceIn(0f, 1f))) } }
+                // La de la luz fría (la acera de día, la farola de noche), dentro de su mancha.
+                if (v.frio > 0.05f) { val f = v.dirFrio; clipPath(mancha(f, 0)) {
+                    for (k in conCuerpo) drawPath(poligono(envolvente(k.esqueleto.map { CamDeco.p(V3(it.x + f.x * it.y / -f.y, 0f, it.z + f.z * it.y / -f.y)) })), c.copy(alpha = (0.8f * v.frio).coerceIn(0f, 1f))) } }
                 // Las de las lámparas, de noche.
                 for (k in conCuerpo) {
                     val pie = k.esqueleto.reduce { a, b -> V3(a.x + b.x, 0f, a.z + b.z) }.let { V3(it.x / k.esqueleto.size, 0f, it.z / k.esqueleto.size) }
@@ -294,7 +306,7 @@ internal object LuzDeco {
             val col = lerp(s.color, Color(0xFFFFD49A), 0.3f); val az = Azar(Semilla.de("deco", "polvo"))
             for ((z0, z1) in S.VENTANAS) for (c in cristales(z0, z1)) {
                 for (i in c.indices) { val (za, ya) = c[i]; val (zb, yb) = c[(i + 1) % c.size]
-                    drawPath(poligono(CamDeco.p(S.DER, ya, za), CamDeco.p(S.DER, yb, zb), CamDeco.p(fin(zb, yb, d)), CamDeco.p(fin(za, ya, d))), col.copy(alpha = 0.045f * s.fuerza), blendMode = BlendMode.Plus) }
+                    drawPath(poligono(CamDeco.p(S.DER, ya, za), CamDeco.p(S.DER, yb, zb), CamDeco.p(fin(zb, yb, d)), CamDeco.p(fin(za, ya, d))), col.copy(alpha = 0.018f * s.fuerza), blendMode = BlendMode.Plus) }
             }
             // El polvo: motas quietas a lo largo del haz (las que se mueven van en la parte viva).
             repeat(70) { val w = S.VENTANAS[it % 2]; val z = az.entre(w.first, w.second); val y = az.entre(S.VY0, S.VY1); val t = az.entre(0.05f, 0.95f)
@@ -307,11 +319,11 @@ internal object LuzDeco {
             val az = Azar(Semilla.de("deco", "humo"))
             for (capa in 0..4) { val y = 2.25f - capa * 0.14f; val z = 3.2f + capa * 0.9f
                 val c = CamDeco.p(-0.8f + az.entre(-0.6f, 0.6f), y, z)
-                mancha(c, 90f + capa * 16f, 5f + capa * 1.5f, v.c2(c, C.HUMO), 0.13f * humo) }
+                mancha(c, 90f + capa * 16f, 5f + capa * 1.5f, v.c2(c, C.HUMO), 0.16f * humo) }
             // Los conos de luz que las lámparas encienden en el humo.
             for ((l, f) in lamparas(v)) { val p = CamDeco.p(l); val k = CamDeco.k(l.z); val pie = CamDeco.p(l.x, 0.6f, l.z)
                 drawPath(Path().apply { moveTo(p.x - 0.18f * k, p.y); lineTo(p.x + 0.18f * k, p.y); lineTo(pie.x + 0.8f * k, pie.y); lineTo(pie.x - 0.8f * k, pie.y); close() },
-                    Brush.verticalGradient(0f to C.LAMPARA.copy(alpha = (0.07f * f * (0.3f + humo)).coerceIn(0f, 1f)), 1f to Color.Transparent, startY = p.y, endY = pie.y), blendMode = BlendMode.Plus) }
+                    Brush.verticalGradient(0f to C.LAMPARA.copy(alpha = (0.22f * f * (0.35f + humo)).coerceIn(0f, 1f)), 1f to Color.Transparent, startY = p.y, endY = pie.y), blendMode = BlendMode.Plus) }
             for (c in mesasEncendidas(v)) { val p = CamDeco.p(c.x, 1.1f, c.z); mancha(p, 0.4f * CamDeco.k(c.z), 0.25f * CamDeco.k(c.z), C.LAMPARA, 0.1f * humo * v.enc.mesas) }
         }
         // El aire teñido junto a las ventanas, de noche, por el neón.
@@ -340,21 +352,33 @@ internal object LuzDeco {
         val m = v.m; if (v.prov && !EscenaDeco.fiesta(m)) return
         if (EscenaDeco.fiesta(m)) {
             val az = Azar(Semilla.de("deco", "fiesta", m.ficha.dia))
-            // Los farolillos, en una cuerda de la pared de la izquierda a la viga del hueco.
-            val a = V3(S.IZQ, 2.3f, 3.6f); val b = V3(S.POZO, 2.25f, 6.6f)
-            val puntos = (0..14).map { i -> val t = i / 14f; V3(a.x + (b.x - a.x) * t, a.y - 0.22f * sin(PI.toFloat() * t), a.z + (b.z - a.z) * t) }
-            for (i in 0 until puntos.size - 1) drawLine(v.c2(CamDeco.p(puntos[i]), C.HIERRO), CamDeco.p(puntos[i]), CamDeco.p(puntos[i + 1]), 0.4f)
-            val colores = if (EscenaDeco.boda(m)) listOf(C.MARFIL, lerp(C.MARFIL, C.CORAL, 0.2f)) else listOf(C.CORAL, C.ORO, C.JADE)
-            for (i in 1 until puntos.size - 1 step 2) { val q = puntos[i]; val p = CamDeco.p(q); val k = CamDeco.k(q.z); val col = colores[i / 2 % colores.size]
-                val luz = if (v.enc.deco > 0.1f || v.neon > 0.3f) 0.5f else 0f
-                drawOval(Brush.horizontalGradient(0f to v.c(q, col, V3(-1f, 0f, -0.5f)), 0.5f to lerp(v.c(q, col, V3(0f, 0f, -1f)), lerp(col, C.LAMPARA, 0.5f), luz), 1f to v.c(q, lerp(col, C.LACA, 0.3f), V3(1f, 0f, -0.5f)), startX = p.x - 0.1f * k, endX = p.x + 0.1f * k), Offset(p.x - 0.1f * k, p.y), Size(0.2f * k, 0.26f * k))
-                for (r in 1..2) drawLine(v.c(q, lerp(col, C.LACA, 0.4f), V3(0f, 0f, -1f)).copy(alpha = 0.5f), Offset(p.x - 0.1f * k, p.y + r * 0.087f * k), Offset(p.x + 0.1f * k, p.y + r * 0.087f * k), 0.35f) }
-            // Las serpentinas, que caen del techo rizándose.
-            repeat(9) { i -> val x = az.entre(-2.6f, 0.2f); val z = az.entre(2.8f, 6.8f); val col = listOf(C.CORAL, C.ORO, C.JADE, C.MARFIL)[i % 4]
-                val largo = az.entre(0.4f, 0.9f); val tira = Path(); val p0 = CamDeco.p(x, S.TECHO, z); tira.moveTo(p0.x, p0.y)
-                for (j in 1..24) { val t = j / 24f; val q = CamDeco.p(x + 0.03f * sin(t * 26f + i), S.TECHO - largo * t, z + 0.03f * cos(t * 26f + i)); tira.lineTo(q.x, q.y) }
-                drawPath(tira, v.c(V3(x, 2f, z), col, V3(0f, 0f, -1f)), style = Stroke(0.025f * CamDeco.k(z), cap = StrokeCap.Round)) }
-            if (EscenaDeco.finDeAnio(m)) {
+            val navidad = EscenaDeco.navidad(m); val fin = EscenaDeco.finDeAnio(m); val pascua = EscenaDeco.hoyEs(m, "pascua"); val julio = EscenaDeco.hoyEs(m, "cuatro_julio")
+            // Los farolillos de papel en una cuerda que cruza la sala; no en Navidad, fin de año ni el 4 de julio, que llevan lo suyo.
+            if (!navidad && !fin && !julio) {
+                val a = V3(S.IZQ, 2.3f, 3.6f); val b = V3(S.POZO, 2.25f, 6.6f)
+                val puntos = (0..14).map { i -> val t = i / 14f; V3(a.x + (b.x - a.x) * t, a.y - 0.22f * sin(PI.toFloat() * t), a.z + (b.z - a.z) * t) }
+                for (i in 0 until puntos.size - 1) drawLine(v.c2(CamDeco.p(puntos[i]), C.HIERRO), CamDeco.p(puntos[i]), CamDeco.p(puntos[i + 1]), 0.4f)
+                val colores = if (EscenaDeco.boda(m)) listOf(C.MARFIL, lerp(C.MARFIL, C.CORAL, 0.2f)) else if (pascua) listOf(lerp(C.MARFIL, C.JADE, 0.3f), lerp(C.MARFIL, C.CORAL, 0.35f), lerp(C.MARFIL, C.ORO, 0.4f)) else listOf(C.CORAL, C.ORO, C.JADE)
+                for (i in 1 until puntos.size - 1 step 2) { val q = puntos[i]; val p = CamDeco.p(q); val k = CamDeco.k(q.z); val col = colores[i / 2 % colores.size]
+                    val luz = if (v.enc.deco > 0.1f || v.neon > 0.3f) 0.5f else 0f
+                    drawOval(Brush.horizontalGradient(0f to v.c(q, col, V3(-1f, 0f, -0.5f)), 0.5f to lerp(v.c(q, col, V3(0f, 0f, -1f)), lerp(col, C.LAMPARA, 0.5f), luz), 1f to v.c(q, lerp(col, C.LACA, 0.3f), V3(1f, 0f, -0.5f)), startX = p.x - 0.1f * k, endX = p.x + 0.1f * k), Offset(p.x - 0.1f * k, p.y), Size(0.2f * k, 0.26f * k))
+                    for (r in 1..2) drawLine(v.c(q, lerp(col, C.LACA, 0.4f), V3(0f, 0f, -1f)).copy(alpha = 0.5f), Offset(p.x - 0.1f * k, p.y + r * 0.087f * k), Offset(p.x + 0.1f * k, p.y + r * 0.087f * k), 0.35f) }
+            }
+            // El 4 de julio: banderines de coral, marfil y azul de paño, de pared a pared.
+            if (julio) for (j in 0..1) { val a = CamDeco.p(S.IZQ, 2.3f, 3.8f + j * 2f); val b = CamDeco.p(S.POZO, 2.3f, 5.2f + j * 2f)
+                banderines(v.l, a, b, 7f, listOf(C.CORAL, C.MARFIL, lerp(C.PANO, C.NOCHE, 0.3f)), 6f) }
+            // Pascua: flores en las mesas («los sombreros de las mujeres son jardines»).
+            if (pascua) for (c in CosasDeco.MESAS.take(3)) { val q = V3(c.x - 0.08f, PiezasDeco.MESA_ALTO, c.z - 0.05f); val p = CamDeco.p(q); val k = CamDeco.k(q.z)
+                repeat(6) { val f = p + Offset(az.entre(-0.06f, 0.06f) * k, -az.entre(0.08f, 0.16f) * k); drawLine(v.c(q, C.JADE, V3(0f, 0f, -1f)), p, f, 0.4f); drawCircle(v.c(q, listOf(C.CORAL, C.MARFIL, C.ORO)[it % 3], V3(0f, 0.5f, -1f)), 0.022f * k, f) } }
+            if (fin) {
+                // Las serpentinas, que caen del techo rizándose, y el confeti por el suelo.
+                repeat(9) { i -> val x = az.entre(-2.6f, 0.2f); val z = az.entre(2.8f, 6.8f); val col = listOf(C.CORAL, C.ORO, C.JADE, C.MARFIL)[i % 4]
+                    val largo = az.entre(0.4f, 0.9f); val tira = Path(); val p0 = CamDeco.p(x, S.TECHO, z); tira.moveTo(p0.x, p0.y)
+                    for (j in 1..24) { val t = j / 24f; val q = CamDeco.p(x + 0.03f * sin(t * 26f + i), S.TECHO - largo * t, z + 0.03f * cos(t * 26f + i)); tira.lineTo(q.x, q.y) }
+                    drawPath(tira, v.c(V3(x, 2f, z), col, V3(0f, 0f, -1f)), style = Stroke(0.025f * CamDeco.k(z), cap = StrokeCap.Round)) }
+                clipPath(S.formaDelSuelo()) { repeat(70) { val w = V3(az.entre(-1.8f, 0.8f), 0f, az.entre(2.5f, 6.5f)); drawRect(v.c(w, listOf(C.CORAL, C.ORO, C.JADE, C.MARFIL)[it % 4], V3(0f, 1f, 0f)), CamDeco.p(w), Size(1.1f, 0.6f)) } }
+            }
+            if (fin) {
                 // Globos atados al barandal y uno en el suelo; gorros de papel en las mesas.
                 for ((i, q) in listOf(V3(0.5f, 1.9f, 5.4f), V3(0.48f, 2.05f, 5.6f), V3(-3.2f, 2.0f, 4.4f)).withIndex()) {
                     val p = CamDeco.p(q); val r = 0.15f * CamDeco.k(q.z); val col = listOf(C.CORAL, C.ORO, C.JADE, C.CORAL)[i]
@@ -369,11 +393,21 @@ internal object LuzDeco {
                 for (c in CosasDeco.MESAS.take(3)) { val q = V3(c.x + 0.1f, PiezasDeco.MESA_ALTO, c.z); val p = CamDeco.p(q); val k = CamDeco.k(q.z)
                     drawPath(poligono(p + Offset(-0.06f * k, 0f), p + Offset(0.06f * k, 0f), p + Offset(0f, -0.16f * k)), v.c(q, C.ORO, V3(0f, 0f, -1f))) }
             }
-            if (EscenaDeco.navidad(m)) {
-                // El acebo sobre el friso de la pared de la izquierda, y el arbolito en el rincón de la barra.
-                for (z in listOf(4.4f, 5.2f, 6f, 6.8f, 7.6f)) { val q = V3(S.IZQ + 0.02f, S.FRISO_Y1 + 0.03f, z); val p = CamDeco.p(q); val k = CamDeco.k(z)
-                    for (j in -2..2) drawOval(v.c(q, lerp(C.JADE, C.LACA, 0.3f), V3(1f, 0f, 0f)), p + Offset(j * 0.04f * k * 0.5f, -0.02f * k), Size(0.06f * k * 0.5f, 0.03f * k))
-                    drawCircle(v.c(q, C.CORAL, V3(1f, 0f, 0f)), 0.018f * k, p) }
+            if (navidad) {
+                // «Acebo en las paredes»: guirnaldas de acebo en festón bajo el friso de las dos paredes, con sus bayas, y
+                // lazos rojos en las lámparas; y el arbolito en el rincón de la barra.
+                for (izq in listOf(true, false)) { val s0 = if (izq) 4.2f else S.IZQ + 0.1f; val s1 = if (izq) S.FONDO - 0.1f else S.POZO - 0.1f
+                    val pasos = 18; var prev: Offset? = null
+                    for (i in 0..pasos) { val s = s0 + (s1 - s0) * i / pasos; val caida = 0.1f * sin(PI.toFloat() * ((i % 3) / 3f))
+                        val q = if (izq) V3(S.IZQ + 0.02f, S.FRISO_Y0 - 0.04f - caida, s) else V3(s, S.FRISO_Y0 - 0.04f - caida, S.FONDO - 0.02f); val p = CamDeco.p(q); val k = CamDeco.k(q.z)
+                        prev?.let { drawLine(v.c(q, lerp(C.JADE, C.LACA, 0.35f), if (izq) V3(1f, 0f, 0f) else V3(0f, 0f, -1f)), it, p, 0.05f * k, StrokeCap.Round) }
+                        for (j in -1..1) drawOval(v.c(q, lerp(C.JADE, C.LACA, 0.2f + 0.1f * (j + 1)), if (izq) V3(1f, 0f, 0f) else V3(0f, 0f, -1f)), p + Offset(j * 0.03f * k - 0.02f * k, -0.025f * k), Size(0.045f * k, 0.03f * k))
+                        if (i % 2 == 0) drawCircle(lerp(v.c(q, C.CORAL, V3(0f, 0f, -1f)), C.CORAL, 0.3f), 0.016f * k, p + Offset(0f, 0.012f * k))
+                        prev = p }
+                }
+                for (l in listOf(S.LAMPARA_CERCA, S.LAMPARA_FONDO)) { val q = V3(l.x, l.y - 0.1f, l.z); val p = CamDeco.p(q); val k = CamDeco.k(q.z)
+                    for (s in listOf(-1f, 1f)) drawPath(poligono(p, p + Offset(s * 0.07f * k, -0.04f * k), p + Offset(s * 0.07f * k, 0.04f * k)), lerp(v.c(q, C.CORAL, V3(0f, 0f, -1f)), C.CORAL, 0.2f))
+                    drawLine(lerp(v.c(q, C.CORAL, V3(0f, 0f, -1f)), C.CORAL, 0.2f), p, p + Offset(0.01f * k, 0.14f * k), 0.025f * k) }
                 val pie = V3(-0.1f, 0f, 7.75f); val p = CamDeco.p(pie); val k = CamDeco.k(pie.z)
                 for (j in 0..3) { val y0 = 0.25f + j * 0.28f; val w = 0.42f - j * 0.09f
                     drawPath(poligono(CamDeco.p(pie.x - w, y0, pie.z), CamDeco.p(pie.x + w, y0, pie.z), CamDeco.p(pie.x, y0 + 0.42f, pie.z)), v.c(V3(pie.x, y0, pie.z), lerp(C.JADE, C.LACA, 0.2f + 0.1f * j), V3(0f, 0f, -1f))) }

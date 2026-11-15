@@ -154,6 +154,9 @@ internal object PiezasDeco {
                     1 -> clipPath(forma) {                                                  // el costado cercano: vetas y el canto de luz
                         val az = Azar(Semilla.de("deco", "piano", "costado"))
                         repeat(14) { val y = az.entre(0.05f, H - 0.05f); drawPath(f.forma(listOf(V3(0f, y, 0.02f), V3(0f, y + az.entre(-0.03f, 0.03f), D * az.entre(0.4f, 1f)), V3(0f, y + 0.008f, D * az.entre(0.4f, 1f)), V3(0f, y + 0.01f, 0.02f))), v.c(f.w(0f, y, D / 2f), lerp(madera, C.LACA, 0.3f), f.n(-1f, 0f, 0f)).copy(alpha = 0.35f)) }
+                        // El barniz, que devuelve la luz de la sala en una franja blanda, y la veta que corre a lo alto.
+                        drawPath(f.forma(listOf(V3(0f, 0.1f, D * 0.22f), V3(0f, 0.1f, D * 0.36f), V3(0f, H - 0.06f, D * 0.36f), V3(0f, H - 0.06f, D * 0.22f))), Brush.horizontalGradient(0f to Color.Transparent, 0.5f to Color.White.copy(alpha = 0.1f + 0.08f * v.noche), 1f to Color.Transparent, startX = f.p(0f, 0.6f, D * 0.22f).x, endX = f.p(0f, 0.6f, D * 0.36f).x))
+                        repeat(9) { val z0 = az.entre(0.05f, D - 0.05f); drawLine(v.c(f.w(0f, H / 2f, z0), lerp(madera, C.LACA, 0.35f), f.n(-1f, 0f, 0f)).copy(alpha = 0.35f), f.p(0f, 0.08f, z0), f.p(0f, H - 0.04f, z0 + az.entre(-0.04f, 0.04f)), 0.4f) }
                         // El canto delantero, redondeado, que coge la luz.
                         drawPath(f.forma(listOf(V3(0f, 0.62f, 0.0f), V3(0f, 0.62f, 0.04f), V3(0f, H, 0.04f), V3(0f, H, 0f))), v.c(f.w(0f, H / 2f, 0f), lerp(madera, C.MARFIL, 0.25f), f.n(-0.3f, 0f, -1f)).copy(alpha = 0.7f))
                         // Un recuadro moldurado.
@@ -163,6 +166,9 @@ internal object PiezasDeco {
                         drawPath(f.forma(listOf(V3(0f, H, 0f), V3(L, H, 0f), V3(L, H, 0.04f), V3(0f, H, 0.04f))), v.c(f.w(L / 2f, H, 0f), lerp(madera, C.MARFIL, 0.3f), ARRIBA).copy(alpha = 0.8f))
                         val az = Azar(Semilla.de("deco", "quemaduras"))
                         repeat(e.quemaduras) { val x = 0.08f + az.entre(0f, 0.5f) + it * 0.07f; val q = f.p(x, H, 0.05f + az.entre(0f, 0.03f)); drawOval(C.LACA.copy(alpha = 0.6f), q - Offset(1.6f, 0.5f), Size(3.2f, 1f)) }
+                        // Los cercos de los vasos que dejan encima, y el brillo del barniz.
+                        repeat(3) { val q = f.p(0.2f + it * 0.18f, H, 0.32f + 0.05f * it); drawOval(v.c(f.w(0.3f, H, 0.3f), lerp(madera, C.MARFIL, 0.35f), ARRIBA).copy(alpha = 0.5f), q - Offset(2.6f, 0.8f), Size(5.2f, 1.6f), style = Stroke(0.45f)) }
+                        drawPath(f.forma(listOf(V3(0.05f, H, 0.1f), V3(L - 0.1f, H, 0.12f), V3(L - 0.1f, H, 0.2f), V3(0.05f, H, 0.18f))), Color.White.copy(alpha = 0.08f + 0.06f * v.noche))
                     }
                     else -> {}
                 }
@@ -174,13 +180,13 @@ internal object PiezasDeco {
             clipPath(f.forma(hueco)) {
                 // Las cuerdas, en diagonal: las graves de cobre a la izquierda, las agudas de acero.
                 for (k in 0..34) { val x = x0 + 0.02f + k * (x1 - x0 - 0.04f) / 34f; val cobre = k < 12
-                    drawLine(v.c(f.w(x, y0 + 0.2f, zi), if (cobre) lerp(C.ORO, C.CORAL, 0.35f) else C.CROMO, f.n(0f, 0f, -1f)).copy(alpha = 0.55f), f.p(x - (if (cobre) 0.1f else 0f), y1, zi + 0.02f), f.p(x + (if (cobre) 0.06f else 0f), y0, zi), 0.45f) }
+                    drawLine(lerp(v.c(f.w(x, y0 + 0.2f, zi), if (cobre) lerp(C.ORO, C.CORAL, 0.35f) else C.CROMO, f.n(0f, 0f, -1f)), if (cobre) C.ORO else C.CROMO, 0.25f).copy(alpha = 0.75f), f.p(x - (if (cobre) 0.1f else 0f), y1, zi + 0.02f), f.p(x + (if (cobre) 0.06f else 0f), y0, zi), 0.45f) }
                 // El riel y la fila de macillos: cabezas de fieltro claro sobre sus mangos.
                 val ym = y0 + 0.17f
                 drawPath(f.forma(listOf(V3(x0, ym - 0.03f, 0.06f), V3(x1, ym - 0.03f, 0.06f), V3(x1, ym - 0.06f, 0.06f), V3(x0, ym - 0.06f, 0.06f))), v.c(f.w(L / 2f, ym, 0.06f), C.ROBLE, f.n(0f, 0f, -1f)))
                 for (k in 0..43) { val x = x0 + 0.03f + k * (x1 - x0 - 0.06f) / 43f
                     drawLine(v.c(f.w(x, ym, 0.07f), C.ROBLE_OSC, f.n(0f, 0f, -1f)), f.p(x, ym - 0.05f, 0.07f), f.p(x, ym + 0.02f, 0.05f), 0.5f)
-                    drawPath(f.forma(listOf(V3(x - 0.011f, ym + 0.02f, 0.04f), V3(x + 0.011f, ym + 0.02f, 0.04f), V3(x + 0.011f, ym + 0.055f, 0.04f), V3(x - 0.011f, ym + 0.055f, 0.04f))), v.c(f.w(x, ym + 0.04f, 0.04f), if (k % 9 == 4) lerp(C.MARFIL, C.CORAL, 0.25f) else C.MARFIL, f.n(0f, 0.3f, -1f)))
+                    drawPath(f.forma(listOf(V3(x - 0.011f, ym + 0.02f, 0.04f), V3(x + 0.011f, ym + 0.02f, 0.04f), V3(x + 0.011f, ym + 0.055f, 0.04f), V3(x - 0.011f, ym + 0.055f, 0.04f))), lerp(v.c(f.w(x, ym + 0.04f, 0.04f), if (k % 9 == 4) lerp(C.MARFIL, C.CORAL, 0.25f) else C.MARFIL, f.n(0f, 0.3f, -1f)), C.MARFIL, 0.22f))
                 }
                 // Los clavijeros, arriba: una fila de puntos de acero.
                 for (k in 0..30) drawCircle(v.c(f.w(x0 + k * (x1 - x0) / 30f, y1 - 0.04f, 0.1f), C.CROMO, FRENTE).copy(alpha = 0.7f), 0.4f, f.p(x0 + k * (x1 - x0) / 30f, y1 - 0.04f, 0.1f))
@@ -196,6 +202,8 @@ internal object PiezasDeco {
             // La tabla de las rodillas, metida, y los pedales.
             drawPath(f.forma(listOf(V3(0.06f, 0.08f, -0.03f), V3(L - 0.06f, 0.08f, -0.03f), V3(L - 0.06f, yt - 0.06f, -0.03f), V3(0.06f, yt - 0.06f, -0.03f))), v.c(f.w(L / 2f, 0.4f, -0.03f), oscura, f.n(0f, 0f, -1f)))
             drawPath(f.forma(listOf(V3(0.2f, 0.22f, -0.031f), V3(L - 0.2f, 0.22f, -0.031f), V3(L - 0.2f, yt - 0.14f, -0.031f), V3(0.2f, yt - 0.14f, -0.031f))), v.c(f.w(L / 2f, 0.4f, -0.03f), lerp(madera, C.MARFIL, 0.15f), FRENTE).copy(alpha = 0.5f), style = Stroke(0.7f))
+            run { val az = Azar(Semilla.de("deco", "piano", "veta")); repeat(10) { val y = az.entre(0.12f, yt - 0.1f); drawLine(v.c(f.w(L / 2f, y, -0.03f), lerp(madera, C.MARFIL, 0.2f), FRENTE).copy(alpha = 0.25f), f.p(0.08f, y, -0.032f), f.p(L - 0.08f, y + az.entre(-0.03f, 0.03f), -0.032f), 0.4f) }
+                drawPath(f.forma(listOf(V3(0.3f, 0.1f, -0.033f), V3(0.42f, 0.1f, -0.033f), V3(0.42f, yt - 0.08f, -0.033f), V3(0.3f, yt - 0.08f, -0.033f))), Color.White.copy(alpha = 0.07f + 0.06f * v.noche)) }
             for (k in 0..1) { val x = 0.66f + k * 0.16f; palo(v, f.w(x, 0.04f, -0.04f), f.w(x + 0.02f, 0.05f, -0.15f), 0.022f, C.ORO) }
             // Las mejillas: dos brazos que sostienen el teclado, con sus patas torneadas.
             for (x in listOf(0f, L - 0.05f)) {
@@ -207,13 +215,13 @@ internal object PiezasDeco {
             val tx0 = 0.05f; val tx1 = L - 0.05f
             drawPath(f.forma(listOf(V3(tx0, yt - 0.05f, zt + 0.02f), V3(tx1, yt - 0.05f, zt + 0.02f), V3(tx1, yt, zt + 0.02f), V3(tx0, yt, zt + 0.02f))), v.c(f.w(L / 2f, yt, zt), madera, FRENTE))
             val blancas = listOf(V3(tx0, yt, zt + 0.02f), V3(tx1, yt, zt + 0.02f), V3(tx1, yt, -0.02f), V3(tx0, yt, -0.02f))
-            drawPath(f.forma(blancas), v.c(f.w(L / 2f, yt, zt / 2f), lerp(C.MARFIL, C.ORO, 0.12f), ARRIBA))
+            drawPath(f.forma(blancas), lerp(v.c(f.w(L / 2f, yt, zt / 2f), lerp(C.MARFIL, C.ORO, 0.1f), ARRIBA), C.MARFIL, 0.38f))
             val n = 52
             for (k in 1 until n) { val x = tx0 + (tx1 - tx0) * k / n; drawLine(v.c(f.w(x, yt, zt / 2f), lerp(C.MARFIL, C.LACA, 0.4f), ARRIBA).copy(alpha = 0.6f), f.p(x, yt + 0.001f, zt + 0.02f), f.p(x, yt + 0.001f, -0.02f), 0.35f) }
             for (k in 0 until n - 1) {
                 val nota = (k + 5) % 7; if (nota == 2 || nota == 6) continue
                 val x = tx0 + (tx1 - tx0) * (k + 1) / n
-                drawPath(f.forma(listOf(V3(x - 0.007f, yt + 0.012f, zt + 0.12f), V3(x + 0.007f, yt + 0.012f, zt + 0.12f), V3(x + 0.007f, yt + 0.012f, -0.02f), V3(x - 0.007f, yt + 0.012f, -0.02f))), v.c(f.w(x, yt, zt / 2f), C.LACA, ARRIBA))
+                drawPath(f.forma(listOf(V3(x - 0.008f, yt + 0.012f, zt + 0.12f), V3(x + 0.008f, yt + 0.012f, zt + 0.12f), V3(x + 0.008f, yt + 0.012f, -0.02f), V3(x - 0.008f, yt + 0.012f, -0.02f))), lerp(v.c(f.w(x, yt, zt / 2f), C.LACA, ARRIBA), C.LACA, 0.5f))
             }
             // La tapa del teclado, abierta y metida bajo el atril, con su filo.
             drawPath(f.forma(listOf(V3(tx0, yt + 0.02f, -0.02f), V3(tx1, yt + 0.02f, -0.02f), V3(tx1, yt + 0.12f, -0.01f), V3(tx0, yt + 0.12f, -0.01f))), v.c(f.w(L / 2f, yt + 0.07f, -0.02f), madera, FRENTE))
@@ -287,21 +295,37 @@ internal object PiezasDeco {
         val b = LAMPARA_PIANO; val base = V3(b.x, PIANO_ALTO, b.z)
         drawOval(v.c(f.w(base.x, base.y, base.z), C.LATON, ARRIBA), f.p(base.x - 0.07f, base.y + 0.01f, base.z).let { Offset(it.x, it.y - 1.2f) }, Size(abs(f.p(base.x + 0.07f, base.y, base.z).x - f.p(base.x - 0.07f, base.y, base.z).x).coerceAtLeast(3f), 2.4f))
         palo(v, f.w(base.x, base.y, base.z), f.w(base.x, b.y - 0.04f, base.z), 0.018f, C.LATON)
-        // La pantalla: medio cilindro tumbado, de vidrio verde; por dentro, blanco.
-        val pantalla = listOf(V3(b.x - 0.19f, b.y - 0.03f, b.z - 0.09f), V3(b.x + 0.19f, b.y - 0.03f, b.z - 0.09f), V3(b.x + 0.18f, b.y + 0.07f, b.z - 0.01f), V3(b.x - 0.18f, b.y + 0.07f, b.z - 0.01f))
-        val forma = f.forma(pantalla); val p0 = f.p(b.x - 0.16f, b.y, b.z); val p1 = f.p(b.x + 0.16f, b.y, b.z)
-        val verde = lerp(C.JADE, Color(0xFF6FE0A0), 0.4f * encendida)
-        drawPath(forma, Brush.horizontalGradient(0f to v.c(f.w(b.x - 0.1f, b.y, b.z), lerp(C.JADE, C.MARFIL, 0.25f), V3(-0.5f, 0.5f, -0.5f)), 0.5f to lerp(v.c(f.w(b.x, b.y, b.z), C.JADE, FRENTE), verde, encendida), 1f to v.c(f.w(b.x + 0.1f, b.y, b.z), lerp(C.JADE, C.LACA, 0.3f), V3(0.5f, 0.5f, -0.5f)), startX = p0.x, endX = p1.x))
-        drawPath(forma, lerp(C.LATON, C.LAMPARA, encendida * 0.5f).copy(alpha = 0.8f), style = Stroke(0.5f))
+        // La pantalla: medio cilindro de vidrio verde tumbado a lo largo del piano, en franjas que giran (la de arriba coge
+        // la luz y brilla; la de delante, en sombra), con sus dos tapas de los extremos y su ribete de latón.
+        val r = 0.085f; val l0 = b.x - 0.19f; val l1 = b.x + 0.19f; val zc = b.z - 0.05f; val yc = b.y - 0.02f
+        val verde = lerp(C.JADE, Color(0xFF6FE0A0), 0.45f * encendida)
+        val n = 8; var forma = Path()
+        for (i in 0 until n) {
+            val a0 = (PI * i / n).toFloat(); val a1 = (PI * (i + 1) / n).toFloat()
+            // a = 0: el borde de delante (hacia la sala); a = π: el de detrás. El vidrio sube por encima.
+            val franja = listOf(V3(l0, yc + r * sin(a0), zc - r * cos(a0)), V3(l1, yc + r * sin(a0), zc - r * cos(a0)), V3(l1, yc + r * sin(a1), zc - r * cos(a1)), V3(l0, yc + r * sin(a1), zc - r * cos(a1)))
+            val am = (a0 + a1) / 2f; val normal = f.n(0f, sin(am), -cos(am))
+            if (!CamDeco.seVe(f.w(b.x, yc + r * sin(am), zc - r * cos(am)), normal)) continue
+            val brillo = (sin(am) * 0.6f + 0.4f).coerceIn(0f, 1f)
+            val col = lerp(v.c(f.w(b.x, yc, zc), lerp(C.JADE, C.MARFIL, 0.35f * brillo), normal), verde, 0.6f * encendida)
+            drawPath(f.forma(franja), col)
+            if (i == 0) forma = f.forma(franja)
+        }
+        // El brillo del vidrio, una raya a lo largo, y la tapa del extremo cercano.
+        drawLine(Color.White.copy(alpha = 0.35f + 0.25f * encendida), f.p(l0 + 0.02f, yc + r * 0.92f, zc - r * 0.38f), f.p(l1 - 0.02f, yc + r * 0.92f, zc - r * 0.38f), 0.7f, StrokeCap.Round)
+        val tapa = (0..8).map { f.p(l0, yc + r * sin((PI * it / 8).toFloat()), zc - r * cos((PI * it / 8).toFloat())) }
+        drawPath(poligono(tapa), lerp(v.c(f.w(l0, yc, zc), lerp(C.JADE, C.LACA, 0.25f), f.n(-1f, 0f, 0f)), verde, 0.4f * encendida))
+        drawPath(poligono(tapa), v.c(f.w(l0, yc, zc), C.LATON, f.n(-1f, 0f, 0f)), style = Stroke(0.5f))
+        drawLine(v.c(f.w(b.x, yc, zc), C.LATON, FRENTE), f.p(l0, yc, zc - r), f.p(l1, yc, zc - r), 0.6f)
         if (encendida > 0.02f) {
             // El borde de abajo, por donde sale la luz: una raya casi blanca.
-            drawLine(lerp(C.LAMPARA, Color.White, 0.5f).copy(alpha = encendida), f.p(b.x - 0.15f, b.y - 0.022f, b.z - 0.058f), f.p(b.x + 0.15f, b.y - 0.022f, b.z - 0.058f), 1f, StrokeCap.Round)
+            drawLine(lerp(C.LAMPARA, Color.White, 0.5f).copy(alpha = encendida), f.p(l0 + 0.03f, yc - 0.004f, zc - r * 0.9f), f.p(l1 - 0.03f, yc - 0.004f, zc - r * 0.9f), 1f, StrokeCap.Round)
             drawPath(forma, Color(0xFF7CF0B0).copy(alpha = 0.25f * encendida), blendMode = BlendMode.Plus)
             // El charco de luz que deja sobre la partitura y el teclado: cálido, con un tinte verde del vidrio.
             val luz = lerp(C.LAMPARA, Color(0xFFD8F8C0), 0.3f)
-            for ((x, y, z, r) in listOf(listOf(0.8f, 1.0f, -0.05f, 0.42f), listOf(0.85f, 0.72f, -0.16f, 0.5f))) {
+            for ((x, y, z, r) in listOf(listOf(0.8f, 1.0f, -0.05f, 0.42f), listOf(0.85f, 0.72f, -0.16f, 0.5f), listOf(0.95f, PIANO_ALTO, 0.15f, 0.35f))) {
                 val c = f.p(x, y, z); val rr = r * CamDeco.k(f.w(x, y, z).z)
-                drawOval(Brush.radialGradient(listOf(luz.copy(alpha = 0.42f * encendida), luz.copy(alpha = 0.14f * encendida), Color.Transparent), c, rr), c - Offset(rr, rr * 0.55f), Size(2f * rr, rr * 1.1f), blendMode = BlendMode.Plus)
+                drawOval(Brush.radialGradient(listOf(luz.copy(alpha = 0.55f * encendida), luz.copy(alpha = 0.18f * encendida), Color.Transparent), c, rr), c - Offset(rr, rr * 0.55f), Size(2f * rr, rr * 1.1f), blendMode = BlendMode.Plus)
             }
         }
     }
@@ -372,6 +396,12 @@ internal object PiezasDeco {
             clipPath(faldaForma) { for (i in 1..5) { val a = (PI * (i + 0.5f) / 7).toFloat(); val q = CamDeco.p(c.x + r * cos(a), y - 0.02f, c.z - r * sin(a)); val q2 = CamDeco.p(c.x + (r + 0.025f) * cos(a), y - 0.19f, c.z - (r + 0.025f) * sin(a))
                 drawLine(C.SOMBRA.copy(alpha = 0.16f), q, q2, 1.2f, blendMode = BlendMode.Multiply) } }
             drawPath(CamDeco.forma(top), v.c(V3(c.x, y, c.z), lerp(C.MARFIL, C.ORO, 0.05f), ARRIBA))
+            // Con la lamparita encendida, su charco en el mantel: claro y cálido alrededor del pie, y el borde en penumbra.
+            if (t.lampara > 0.02f) clipPath(CamDeco.forma(top)) {
+                val centro = CamDeco.p(c.x - 0.02f, y + 0.005f, c.z + 0.08f); val kk = CamDeco.k(c.z); val rr = r * kk * 1.15f
+                drawCircle(Brush.radialGradient(listOf(Color.Transparent, Color.Transparent, C.SOMBRA.copy(alpha = 0.4f * t.lampara)), centro, rr), rr * 1.6f, centro, blendMode = BlendMode.Multiply)
+                drawCircle(Brush.radialGradient(listOf(C.LAMPARA.copy(alpha = 0.6f * t.lampara), C.LAMPARA.copy(alpha = 0.2f * t.lampara), Color.Transparent), centro, rr * 0.8f), rr * 0.8f, centro, blendMode = BlendMode.Plus)
+            }
             // La arruga del centro, donde se dobló, y una mancha de café.
             drawLine(v.c(c, lerp(C.MARFIL, C.SOMBRA, 0.3f), ARRIBA).copy(alpha = 0.4f), CamDeco.p(c.x - r * 0.9f, y + 0.005f, c.z), CamDeco.p(c.x + r * 0.9f, y + 0.005f, c.z), 0.35f)
             if (t.tazas > 0) { val q = CamDeco.p(c.x + 0.1f, y + 0.005f, c.z - 0.12f); drawOval(v.c(c, lerp(C.MARFIL, C.CAOBA, 0.5f), ARRIBA).copy(alpha = 0.3f), q - Offset(2f, 0.6f), Size(4f, 1.2f)) }

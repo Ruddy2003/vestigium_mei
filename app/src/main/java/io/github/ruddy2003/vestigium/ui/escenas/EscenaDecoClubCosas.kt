@@ -37,13 +37,13 @@ internal object CosasDeco {
     const val CERCA = 3.45f
 
     // ---- El piano: su esquina cercana del frente en el suelo, y su giro (el teclado se aleja hacia el fondo a la derecha).
-    val PIANO = Marco3(V3(-2.2f, 0f, 2.8f), 1.28f)
+    val PIANO = Marco3(V3(-2.45f, 0f, 2.75f), 1.28f)
     /** La mesa cercana: el soporte del objeto del día. */
-    val MESA_CERCA = V3(-0.45f, 0f, 2.38f)
+    val MESA_CERCA = V3(0.0f, 0f, 2.38f)
     /** Las mesas de la fila y las de detrás de la pista (el club nuevo tiene las tres primeras). */
-    val MESAS = listOf(V3(-0.05f, 0f, 3.8f), V3(0.18f, 0f, 5.0f), V3(0.05f, 0f, 6.4f), V3(-0.74f, 0f, 6.95f), V3(-1.48f, 0f, 6.9f))
-    val TABURETE = V3(-1.22f, 0f, 3.0f)
-    val SILLA_ABRIGO = V3(0.48f, 0f, 2.72f)
+    val MESAS = listOf(V3(0.3f, 0f, 3.85f), V3(0.36f, 0f, 5.02f), V3(0.2f, 0f, 6.45f), V3(-0.74f, 0f, 6.95f), V3(-1.48f, 0f, 6.9f))
+    val TABURETE = V3(-1.62f, 0f, 3.3f)
+    val SILLA_ABRIGO = V3(0.64f, 0f, 2.74f)
     val CAJAS = V3(0.82f, 0f, 2.95f)
     val PERCHERO = V3(0.42f, 0f, 7.45f)
     /** El ventilador de techo (el día de calor y en verano), sobre la pista. */
@@ -53,17 +53,17 @@ internal object CosasDeco {
     val TABURETE_X: Float = CamDeco.p(TABURETE).x
     val SILLA_ABRIGO_X: Float = CamDeco.p(SILLA_ABRIGO).x
     /** Encima del piano, en el extremo cercano de la tapa: el sitio alto del gato. */
-    val MIRADOR: Offset = PIANO.p(0.32f, PiezasDeco.PIANO_ALTO, 0.3f)
+    val MIRADOR: Offset = PIANO.p(0.6f, PiezasDeco.PIANO_ALTO, 0.3f)
     /** Dónde va el objeto chico: sobre la mesa cercana, en su borde de delante a la derecha. */
     val SOBRE: V3 = V3(MESA_CERCA.x + 0.1f, PiezasDeco.MESA_ALTO, MESA_CERCA.z - 0.13f)
     val OBJETO_X: Float = CamDeco.p(SOBRE).x
     /** El objeto grande pisa en el suelo junto a la mesa cercana y se recuesta en su canto. */
-    val PIE_GRANDE = V3(0.08f, 0f, 2.95f)
-    val APOYO_GRANDE = V3(-0.17f, PiezasDeco.MESA_ALTO - 0.02f, 2.46f)
+    val PIE_GRANDE = V3(0.42f, 0f, 2.98f)
+    val APOYO_GRANDE = V3(0.28f, PiezasDeco.MESA_ALTO - 0.02f, 2.46f)
     /** El gato se guarece bajo el teclado del piano. */
     val ABRIGO_X: Float = PIANO.p(0.55f, 0f, -0.3f).x
     /** El globo caído de la fiesta, junto a la silla del abrigo. */
-    val GLOBO_X: Float = CamDeco.p(V3(0.3f, 0f, 2.6f)).x
+    val GLOBO_X: Float = CamDeco.p(V3(-0.5f, 0f, 2.75f)).x
 
     private const val FONDO_Z = 99f
 
@@ -81,11 +81,11 @@ internal object CosasDeco {
         lista += barra(v)
         // ---- El estrado: el contrabajo, la batería, la silla con la corneta, el atril.
         if (!prov) {
-            lista += PiezasDeco.contrabajo(v, Marco3(V3(-3.0f, S.ESTRADO_ALTO, 5.5f), 1.0f), -0.2f)
-            lista += PiezasDeco.bateria(v, V3(-2.32f, S.ESTRADO_ALTO, 7.15f), if (fase == Fase.ABIERTO) v.enc.deco else 0f)
-            lista += Cosa3(6.3f, listOf(V3(-2.15f, S.ESTRADO_ALTO, 6.1f), V3(-1.8f, S.ESTRADO_ALTO, 6.5f), V3(-2f, S.ESTRADO_ALTO + 0.9f, 6.5f))) {
-                with(PiezasDeco) { silla(v, V3(-1.98f, S.ESTRADO_ALTO, 6.3f), 2.4f, false); corneta(v, V3(-1.98f, S.ESTRADO_ALTO + 0.46f, 6.26f)) } }
-            lista += Cosa3(6.0f, listOf(V3(-2.55f, S.ESTRADO_ALTO, 6.0f), V3(-2.55f, S.ESTRADO_ALTO + 1.25f, 6.0f))) { with(PiezasDeco) { atril(v, V3(-2.55f, S.ESTRADO_ALTO, 6.0f), 0.9f) } }
+            lista += PiezasDeco.contrabajo(v, Marco3(V3(-3.02f, S.ESTRADO_ALTO, 6.5f), 1.05f), -0.2f)
+            lista += PiezasDeco.bateria(v, V3(-2.4f, S.ESTRADO_ALTO, 7.35f), if (fase == Fase.ABIERTO) v.enc.deco else 0f)
+            lista += Cosa3(5.8f, listOf(V3(-2.25f, S.ESTRADO_ALTO, 5.6f), V3(-1.9f, S.ESTRADO_ALTO, 6.0f), V3(-2.05f, S.ESTRADO_ALTO + 0.9f, 6.0f))) {
+                with(PiezasDeco) { silla(v, V3(-2.08f, S.ESTRADO_ALTO, 5.8f), 2.4f, false); corneta(v, V3(-2.08f, S.ESTRADO_ALTO + 0.47f, 5.76f), 1.25f) } }
+            lista += Cosa3(5.3f, listOf(V3(-2.85f, S.ESTRADO_ALTO, 5.3f), V3(-2.85f, S.ESTRADO_ALTO + 1.25f, 5.3f))) { with(PiezasDeco) { atril(v, V3(-2.85f, S.ESTRADO_ALTO, 5.3f), 0.9f) } }
         } else {
             // En la gira y sin club: el contrabajo y la batería no están; las sillas, apiladas en el estrado.
             lista += Cosa3(6.6f, listOf(V3(-2.6f, S.ESTRADO_ALTO, 6.4f), V3(-2f, S.ESTRADO_ALTO, 6.8f), V3(-2.3f, S.ESTRADO_ALTO + 1.6f, 6.6f))) {
@@ -100,14 +100,18 @@ internal object CosasDeco {
         lista += PiezasDeco.piano(v, PIANO, estado)
         lista += Cosa3(TABURETE.z, listOf(V3(TABURETE.x - 0.2f, 0f, TABURETE.z - 0.2f), V3(TABURETE.x + 0.2f, 0f, TABURETE.z + 0.2f), V3(TABURETE.x, 0.52f, TABURETE.z))) { taburete(v) }
         // ---- Las mesas de la fila, con sus sillas.
-        val n = EscenaDeco.mesas(m); val puestas = EscenaDeco.puestas(m); val arriba = EscenaDeco.sillasArriba(m)
+        val n = EscenaDeco.mesas(m); val puestas = EscenaDeco.puestas(m); val arriba = EscenaDeco.sillasArriba(m); val cerrado = EscenaDeco.cerrado(m)
         for (i in 0 until n - 1) {
             val c = MESAS[i]
-            // La mesa i+1 (la cercana es la 0): puesta si le toca; con las sillas arriba las últimas (las más lejanas).
-            // Las dos de detrás de la pista, con una sola silla arriba: la otra está arrimada a la pared.
+            // La mesa i+1 (la cercana es la 0): puesta si le toca; con una silla patas arriba las últimas (las más lejanas).
+            // Cerrado, las de la fila quedan desnudas: sus sillas están en la pila del fondo.
             val puesta = i + 1 < puestas; val sillasArriba = !puesta && (n - 1 - i) <= arriba
-            lista += mesaConSillas(v, c, i + 1, puesta, sillasArriba)
+            lista += mesaConSillas(v, c, i + 1, puesta, sillasArriba, sinSillas = cerrado && !sillasArriba)
         }
+        // La pila de sillas contra la pared del fondo, delante del camerino: «club cerrado» de un vistazo.
+        val pila = EscenaDeco.apiladas(m)
+        if (pila > 0 && !prov) lista += Cosa3(7.5f, listOf(V3(-0.2f, 0f, 7.3f), V3(0.25f, 0f, 7.7f), V3(0.02f, 0.45f + 0.9f + pila * 0.12f, 7.5f))) {
+            with(PiezasDeco) { for (k in 0 until pila) silla(v, V3(0.02f + k * 0.012f, k * 0.12f, 7.5f), 2.9f, false) } }
         // ---- Cuando no cabe un alma («se baila hasta entre las mesas»): más sillas, arrastradas a la orilla de la pista, con abrigos.
         if (v.fase == Fase.ABIERTO && !prov && v.gente == EscenaDeco.Gente.A_REVENTAR) for ((k, o) in listOf(V3(-1.25f, 0f, 3.95f), V3(-0.15f, 0f, 5.75f), V3(-1.9f, 0f, 6.45f)).withIndex())
             lista += Cosa3(o.z, listOf(V3(o.x - 0.2f, 0f, o.z - 0.2f), V3(o.x + 0.2f, 0f, o.z + 0.2f), V3(o.x, 0.9f, o.z))) {
@@ -140,7 +144,7 @@ internal object CosasDeco {
      * Una mesita de la fila con sus sillas: puesta, con las sillas alrededor (giradas como las dejan los que se levantan),
      * abrigos en algunos respaldos y sombreros en la mesa; sin poner, con las dos sillas patas arriba encima.
      */
-    private fun mesaConSillas(v: VistaDeco, c: V3, i: Int, puesta: Boolean, sillasArriba: Boolean): Cosa3 {
+    private fun mesaConSillas(v: VistaDeco, c: V3, i: Int, puesta: Boolean, sillasArriba: Boolean, sinSillas: Boolean = false): Cosa3 {
         val m = v.m; val az = Azar(Semilla.de("deco", "mesa", i, m.ficha.dia))
         val abierto = v.fase == Fase.ABIERTO || v.fase == Fase.DESPUES
         val tazas = if (puesta && abierto) 1 + az.entero(3) else 0
@@ -153,13 +157,13 @@ internal object CosasDeco {
         return Cosa3(c.z - 0.3f, esq) {
             with(PiezasDeco) {
                 // Las sillas de detrás de la mesa, luego la mesa, luego las de delante.
-                val sillas = if (sillasArriba) emptyList() else listOf(
+                val sillas = if (sillasArriba || sinSillas) emptyList() else listOf(
                     Triple(V3(c.x + 0.05f + 0.1f * az.real(), 0f, c.z + 0.42f), 0.15f + 0.4f * az.real(), false),
                     Triple(V3(c.x - 0.44f, 0f, c.z + 0.08f), 1.6f + 0.4f * az.real(), puesta && abierto && (reventar || az.real() > 0.5f)),
                 )
                 for ((o, g, abrigo) in sillas.filter { it.first.z >= c.z }) silla(v, o, g, false, if (abrigo) lerp(C.PANO, C.CAOBA, az.real() * 0.6f) else null)
                 mesita(v, mesa)
-                if (sillasArriba) { silla(v, V3(c.x - 0.08f, PiezasDeco.MESA_ALTO, c.z + 0.06f), 0.4f, true); if (i <= 3) silla(v, V3(c.x + 0.1f, PiezasDeco.MESA_ALTO, c.z - 0.05f), 3.4f, true) }
+                if (sillasArriba) silla(v, V3(c.x + 0.02f, PiezasDeco.MESA_ALTO, c.z + 0.02f), 0.4f + i * 0.5f, true)
                 for ((o, g, abrigo) in sillas.filter { it.first.z < c.z }) silla(v, o, g, false, if (abrigo) lerp(C.PANO, C.CAOBA, az.real() * 0.6f) else null)
             }
         }

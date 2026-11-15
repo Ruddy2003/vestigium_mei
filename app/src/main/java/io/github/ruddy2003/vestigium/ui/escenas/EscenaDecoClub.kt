@@ -49,12 +49,18 @@ internal class VistaDeco(val m: Momento) {
     /** Hacia dónde viaja la luz del letrero de enfrente que entra por las ventanas (de arriba y un poco del fondo). */
     val dirNeon: V3 = V3(-1f, -0.68f, -0.1f)
     /**
-     * La luz fría de la calle de noche (la farola de la acera y el cielo): entra por las ventanas altas como la luna por la
-     * ventana de Renacimiento, deja su mancha azul con la reja en el suelo y tumba sus sombras. Es la luz de color opuesto a
-     * la de las lámparas. Con nieve, la calle blanca la aviva.
+     * La luz fría que entra por las ventanas altas y modela la sala (la de color opuesto a las lámparas y al sol): de día,
+     * cuando el sol no entra (a primera hora, con el cielo cubierto), la claridad gris azulada que baja de la acera; de
+     * noche, la de la farola y del cielo, como la luna por la ventana de Renacimiento. Deja su mancha con la reja en el
+     * suelo y tumba sus sombras. Con nieve, la calle blanca la aviva. **[Diseño propio]**.
      */
-    val farola: Float = (ext.noche * (if (EscenaDeco.nevada(m)) 1f else 0.85f)).coerceIn(0f, 1f)
-    val dirFarola: V3 = V3(-1f, -1.35f, -0.85f)
+    val frio: Float = run {
+        val dia = (1f - ext.noche).coerceIn(0f, 1f); val nieve = if (EscenaDeco.nevada(m)) 1.15f else 1f
+        val deDia = if (sol == null) 0.9f * dia * (1f - 0.3f * ext.nublado) else 0.25f * dia * (1f - sol.fuerza)
+        (maxOf(deDia, ext.noche * 0.85f) * nieve).coerceIn(0f, 1f)
+    }
+    val dirFrio: V3 = if (ext.noche > 0.5f) V3(-1f, -1.35f, -0.85f) else V3(-1f, -1.2f, -0.7f)
+    val colorFrio: Color = lerp(lerp(lerp(ext.medio, Color.White, 0.5f), Color(0xFFC2D2F4), 0.55f), ColorDeco.FAROLA, ext.noche.coerceIn(0f, 1f))
 
     val focos: List<Foco> = LuzDeco.focos(this)
     val a: Alumbrado = Alumbrado(l, focos)
@@ -83,10 +89,10 @@ internal class VistaDeco(val m: Momento) {
                 col = lerp(col, alSolColor(propio), (k * s.fuerza * (0.25f + 0.75f * mira)).coerceIn(0f, 0.92f))
             }
         }
-        if (farola > 0.05f) {
-            val k = enElHaz(w, dirFarola, 0.08f)
-            if (k > 0.01f) { val fr = ColorDeco.FAROLA
-                col = lerp(col, Color((propio.red * 0.75f + 0.12f) * fr.red, (propio.green * 0.75f + 0.12f) * fr.green, (propio.blue * 0.75f + 0.12f) * fr.blue, propio.alpha), (0.45f * k * farola).coerceIn(0f, 1f)) }
+        if (frio > 0.05f) {
+            val k = enElHaz(w, dirFrio, 0.08f)
+            if (k > 0.01f) { val fr = colorFrio
+                col = lerp(col, Color((propio.red * 0.75f + 0.12f) * fr.red, (propio.green * 0.75f + 0.12f) * fr.green, (propio.blue * 0.75f + 0.12f) * fr.blue, propio.alpha), (0.5f * k * frio).coerceIn(0f, 1f)) }
         }
         if (neon > 0.05f && !prov) {
             val k = enElHaz(w, dirNeon, 0.18f)

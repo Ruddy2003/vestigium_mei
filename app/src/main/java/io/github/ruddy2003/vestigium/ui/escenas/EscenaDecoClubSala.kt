@@ -73,11 +73,11 @@ internal object SalaDeco {
     const val PUERTA_Y1 = 4.05f
 
     // ---- Las ventanas altas de la pared derecha, a ras de acera: de [VY0] a [VY1] de alto.
-    val VENTANAS = listOf(4.0f to 4.85f, 5.45f to 6.3f)
-    const val VY0 = 1.48f
-    const val VY1 = 2.4f
+    val VENTANAS = listOf(3.88f to 4.98f, 5.38f to 6.42f)
+    const val VY0 = 1.62f
+    const val VY1 = 2.45f
     /** El fondo del muro: el vidrio está a esta distancia de la cara de dentro. */
-    const val MURO = 0.12f
+    const val MURO = 0.07f
 
     // ---- La barra, contra la pared del fondo, y la puerta del camerino.
     const val BARRA_X0 = -1.75f
@@ -119,29 +119,34 @@ internal object SalaDeco {
      * diagonal con sus abrazaderas, su junta y su llave.
      */
     fun DrawScope.techo(v: VistaDeco) {
-        val chapa = lerp(lerp(C.MARFIL, C.ORO, 0.4f), C.CAOBA, 0.42f); val abajo = V3(0f, -1f, 0f)
+        val chapa = lerp(lerp(C.MARFIL, C.ORO, 0.32f), C.CAOBA, 0.22f); val abajo = V3(0f, -1f, 0f)
         drawPath(formaDelTecho(), Brush.verticalGradient(0f to v.s(V3(-1f, TECHO, 2.6f), chapa, abajo), 1f to v.s(V3(-1f, TECHO, 7.5f), chapa, abajo), startY = 0f, endY = 77f))
         clipPath(formaDelTecho()) {
             // Las placas de chapa: una cuadrícula con su florón en relieve, que coge un poco de luz.
+            // Cada placa, en relieve: un cuadrado levantado con su florón; con la luz rasante (de las ventanas, de la escalera y
+            // de las lámparas), el canto que mira a la luz brilla y el otro queda en sombra.
             var z = 2.4f
             while (z < FONDO) {
                 var x = IZQ; while (x < POZO) {
-                    val c = p(x + 0.3f, TECHO, z + 0.3f); val k = CamDeco.k(z + 0.3f)
-                    drawOval(v.s(V3(x + 0.3f, TECHO, z + 0.3f), lerp(chapa, C.MARFIL, 0.3f), abajo).copy(alpha = 0.4f), c - Offset(0.1f * k, 0.018f * k), Size(0.2f * k, 0.036f * k), style = Stroke(0.35f))
+                    val w = V3(x + 0.3f, TECHO, z + 0.3f); val k = CamDeco.k(z + 0.3f)
+                    val a = p(x + 0.08f, TECHO, z + 0.08f); val b = p(x + 0.52f, TECHO, z + 0.08f); val c2 = p(x + 0.52f, TECHO, z + 0.52f); val d = p(x + 0.08f, TECHO, z + 0.52f)
+                    val luz = v.s(w, lerp(chapa, C.MARFIL, 0.55f), V3(0.4f, -1f, -0.4f)); val sombra = v.s(w, lerp(chapa, C.SOMBRA, 0.45f), V3(-0.4f, -1f, 0.4f))
+                    drawLine(luz.copy(alpha = 0.7f), a, b, 0.5f); drawLine(luz.copy(alpha = 0.55f), b, c2, 0.5f)
+                    drawLine(sombra.copy(alpha = 0.7f), c2, d, 0.55f); drawLine(sombra.copy(alpha = 0.6f), d, a, 0.55f)
+                    val c = p(w.x, TECHO, w.z)
+                    drawOval(luz.copy(alpha = 0.5f), c - Offset(0.09f * k, 0.016f * k), Size(0.18f * k, 0.032f * k), style = Stroke(0.35f))
                     x += 0.6f }
-                drawLine(v.s(V3(-1f, TECHO, z), lerp(chapa, C.LACA, 0.5f), abajo).copy(alpha = 0.7f), p(IZQ, TECHO, z), p(POZO, TECHO, z), 0.5f)
                 z += 0.6f
             }
-            var x = IZQ + 0.6f; while (x < POZO) { drawLine(v.s(V3(x, TECHO, 5f), lerp(chapa, C.LACA, 0.5f), abajo).copy(alpha = 0.7f), p(x, TECHO, 2.2f), p(x, TECHO, FONDO), 0.5f); x += 0.6f }
             // El hollín de años de humo encima de las lámparas y de la barra.
             for (l in listOf(LAMPARA_FONDO, LAMPARA_BARRA, V3(-2.4f, TECHO, 6.4f))) mancha(p(l.x, TECHO, l.z), 0.9f * CamDeco.k(l.z), 0.25f * CamDeco.k(l.z), lerp(C.LACA, C.CAOBA, 0.3f), 0.35f)
         }
         // Las vigas: la cara de abajo y la que mira a quien mira (la de la derecha, en las de la izquierda del eje).
-        for (x in listOf(-2.75f, -1.75f, -0.75f)) viga(v, x, 0.14f, 0.16f, lerp(C.CAOBA, C.ROBLE, 0.3f))
-        viga(v, POZO - 0.1f, 0.2f, 0.24f, lerp(C.CAOBA, C.ROBLE, 0.2f))
+        for (x in listOf(-2.2f, -0.6f)) viga(v, x, 0.13f, 0.14f, lerp(C.ROBLE, C.CAOBA, 0.35f))
+        viga(v, POZO - 0.1f, 0.18f, 0.2f, lerp(C.ROBLE, C.CAOBA, 0.45f))
         // Las vigas que van de pared a pared, por encima de las de arriba: la del fondo, junto a la pared.
         val travesano = forma(IZQ, TECHO - 0.16f, FONDO - 0.15f, POZO, TECHO - 0.16f, FONDO - 0.15f, POZO, TECHO, FONDO - 0.15f, IZQ, TECHO, FONDO - 0.15f)
-        drawPath(travesano, v.s(V3(-1.5f, TECHO, FONDO), lerp(C.CAOBA, C.LACA, 0.3f), FRENTE))
+        drawPath(travesano, v.s(V3(-1.5f, TECHO, FONDO), lerp(C.ROBLE, C.CAOBA, 0.4f), FRENTE))
         tuberia(v)
     }
 
@@ -423,8 +428,8 @@ internal object SalaDeco {
      */
     fun DrawScope.suelo(v: VistaDeco) {
         val forma = formaDelSuelo(); val arriba = V3(0f, 1f, 0f)
-        val roble = lerp(C.ROBLE, C.CAOBA, 0.25f)
-        drawPath(forma, Brush.verticalGradient(0f to v.s(V3(-1f, 0f, FONDO), lerp(roble, C.MARFIL, 0.1f), arriba), 0.5f to v.s(V3(-1f, 0f, 4.5f), roble, arriba), 1f to v.s(V3(-1f, 0f, 2.5f), lerp(roble, C.CAOBA, 0.35f), arriba), startY = 170f, endY = 285f))
+        val roble = lerp(C.ROBLE, C.MARFIL, 0.08f)
+        drawPath(forma, Brush.verticalGradient(0f to v.s(V3(-1f, 0f, FONDO), lerp(roble, C.MARFIL, 0.16f), arriba), 0.5f to v.s(V3(-1f, 0f, 4.5f), roble, arriba), 1f to v.s(V3(-1f, 0f, 2.5f), lerp(roble, C.CAOBA, 0.22f), arriba), startY = 170f, endY = 285f))
         val az = Azar(Semilla.de("deco", "suelo"))
         clipPath(forma) {
             // Las tablas: cada una de su tono, con sus juntas de testa al tresbolillo.
@@ -458,7 +463,7 @@ internal object SalaDeco {
             if (EscenaDeco.lluvia(v.m) && !EscenaDeco.inundado(v.m)) { mancha(p(1.0f, 0f, 5.2f), 34f, 7f, lerp(v.ext.medio, Color.White, 0.35f), 0.32f)
                 repeat(8) { val w = V3(az.entre(0.2f, 1.5f), 0f, az.entre(4.4f, 5.4f)); val q = p(w.x, 0f, w.z); drawLine(Color.White.copy(alpha = 0.22f), q, q + Offset(3f, 0f), 0.6f, StrokeCap.Round) } }
             // Hacia los ojos el suelo se oscurece: queda en la sombra de la mesa cercana y del piano.
-            drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to C.SOMBRA.copy(alpha = 0.32f), startY = 220f, endY = 285f), Offset(0f, 220f), Size(ANCHO, 65f), blendMode = BlendMode.Multiply)
+            drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to C.SOMBRA.copy(alpha = 0.2f), startY = 225f, endY = 285f), Offset(0f, 225f), Size(ANCHO, 60f), blendMode = BlendMode.Multiply)
         }
     }
 
@@ -547,10 +552,10 @@ internal object SalaDeco {
         for (i in n - 1 downTo 0) {
             val y0 = i * sube; val y1 = (i + 1) * sube; val z = ESC_Z0 + i * huella
             val tabica = forma(x0, y0, z, x1, y0, z, x1, y1, z, x0, y1, z)
-            drawPath(tabica, v.s(V3((x0 + x1) / 2f, (y0 + y1) / 2f, z), lerp(madera, C.LACA, 0.15f), FRENTE))
+            drawPath(tabica, lerp(v.s(V3((x0 + x1) / 2f, (y0 + y1) / 2f, z), lerp(madera, C.LACA, 0.15f), FRENTE), lerp(C.LACA, C.SOMBRA, 0.35f), 0.55f * v.ext.noche))
             if (y1 < CamDeco.OJO) {
                 val h = forma(x0, y1, z - 0.03f, x1, y1, z - 0.03f, x1, y1, z + huella, x0, y1, z + huella)
-                drawPath(h, v.s(V3((x0 + x1) / 2f, y1, z + huella / 2f), lerp(madera, C.MARFIL, 0.12f), arriba))
+                drawPath(h, lerp(v.s(V3((x0 + x1) / 2f, y1, z + huella / 2f), lerp(madera, C.MARFIL, 0.12f), arriba), lerp(C.LACA, C.SOMBRA, 0.4f), 0.4f * v.ext.noche))
                 // El desgaste del centro de la huella, más claro, y la mampera.
                 mancha(p((x0 + x1) / 2f, y1, z + huella / 2f), 0.25f * CamDeco.k(z), 0.04f * CamDeco.k(z), v.s(V3(1.1f, y1, z), lerp(madera, C.MARFIL, 0.4f), arriba), 0.35f)
             }
@@ -599,11 +604,33 @@ internal object SalaDeco {
         val fuera = lerp(lerp(ext.bajo, ext.medio, 0.5f), Color(0xFF1A1C3A), v.noche * 0.6f)
         drawPath(hueco, Brush.verticalGradient(0f to lerp(fuera, ext.alto, 0.4f), 1f to lerp(fuera, if (v.neon > 0.1f) C.NEON else ext.bajo, 0.25f * v.neon + 0.2f * dia), startY = p(0f, y1, z).y, endY = p(0f, y0, z).y))
         clipPath(hueco) {
-            // El arranque de la acera y la fachada de enfrente, al fondo.
-            drawRect(lerp(ext.tono(C.LADRILLO), C.LACA, 0.4f * v.noche), p(x0, y0 + 1.1f, z), Size(p(x1, 0f, z).x - p(x0, 0f, z).x, p(0f, y0 + 0.2f, z).y - p(0f, y0 + 1.1f, z).y))
-            if (v.neon > 0.05f) tuboNeon(Path().apply { val a = p(x0 + 0.15f, y0 + 1.55f, z); val b = p(x1 - 0.1f, y0 + 1.55f, z); moveTo(a.x, a.y); lineTo(b.x, b.y) }, C.NEON, v.neon, 0.9f)
-            if (EscenaDeco.nevada(v.m)) drawRect(lerp(ext.tono(C.MARFIL), C.NOCHE, 0.4f * v.noche), p(x0, y0 + 0.25f, z), Size(p(x1, 0f, z).x - p(x0, 0f, z).x, 6f))
+            // La calle por la puerta: la acera arriba de la escalera, la fachada de enfrente con su escalera de incendios y
+            // sus ventanas (encendidas de noche) y, de noche, el letrero de neón de enfrente: una copa y una nota, sin letras.
+            fun q(u: Float, w: Float) = p(x0 + (x1 - x0) * u, y0 + (y1 - y0) * w, z)
+            fun banda(u0: Float, w0: Float, u1: Float, w1: Float, c: Color) = drawPath(poligono(q(u0, w0), q(u1, w0), q(u1, w1), q(u0, w1)), c)
+            val ladrillo = lerp(ext.cara(C.LADRILLO, if (dia > 0.5f) 0.35f else -0.2f, 0.3f), Color(0xFF16142C), 0.55f * v.noche)
+            banda(-0.1f, 0.1f, 1.1f, 0.86f, ladrillo)
+            for (k in 0..1) for (j in 0..1) { val u = 0.12f + k * 0.48f; val w = 0.3f + j * 0.3f; val luz = v.noche > 0.4f && (k + j) % 2 == 0
+                banda(u, w, u + 0.26f, w + 0.18f, if (luz) lerp(C.LAMPARA, C.ORO, 0.3f) else lerp(ext.tono(C.PANO, 0.3f), Color(0xFF0E0E22), v.noche * 0.6f)) }
+            val hierro = lerp(ext.tono(C.HIERRO, 0.2f), Color(0xFF08080F), v.noche * 0.5f)
+            for (w in listOf(0.27f, 0.57f)) { drawLine(hierro, q(-0.05f, w), q(1.05f, w), 1f); drawLine(hierro, q(0.1f, w), q(0.85f, w + 0.3f), 0.8f) }
+            banda(-0.1f, 0.84f, 1.1f, 1.02f, lerp(lerp(ext.alto, ext.medio, 0.5f), Color(0xFF101030), 0.3f * v.noche))
+            banda(-0.1f, -0.02f, 1.1f, 0.1f, lerp(ext.tono(C.ACERA, 0.1f), Color(0xFF181830), v.noche * 0.5f))
+            if (v.neon > 0.05f) {
+                val copa = Path().apply { val a = q(0.15f, 0.8f); val b = q(0.6f, 0.8f); val c = q(0.375f, 0.64f); val d = q(0.375f, 0.48f); moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c.x, c.y); close(); moveTo(c.x, c.y); lineTo(d.x, d.y); val e = q(0.25f, 0.48f); val f = q(0.5f, 0.48f); moveTo(e.x, e.y); lineTo(f.x, f.y) }
+                tuboNeon(copa, C.NEON, v.neon, 1.1f)
+                val nota = Path().apply { val a = q(0.72f, 0.5f); val b = q(0.78f, 0.78f); val c = q(0.92f, 0.72f); moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c.x, c.y); addOval(androidx.compose.ui.geometry.Rect(a.x - 2.4f, a.y - 1.4f, a.x + 1f, a.y + 1.4f)) }
+                tuboNeon(nota, C.NEON_JADE, v.neon, 1f)
+            }
+            if (EscenaDeco.nevada(v.m)) banda(-0.1f, 0.05f, 1.1f, 0.14f, lerp(ext.tono(C.MARFIL), C.NOCHE, 0.4f * v.noche))
         }
+        // El montante de vidrio sobre la puerta, con su abanico de varillas (por él entra la claridad aunque esté cerrada).
+        run { val ya = y1 + 0.04f; val yb = y1 + 0.42f; val c = p((x0 + x1) / 2f, ya, z); val r = (p(x1, ya, z).x - p(x0, ya, z).x) / 2f
+            val alto = p(0f, ya, z).y - p(0f, yb, z).y
+            val luz = lerp(lerp(ext.medio, Color.White, 0.5f), C.NEON, 0.6f * v.neon)
+            drawArc(luz, 180f, 180f, true, Offset(c.x - r, c.y - alto), Size(2f * r, 2f * alto))
+            for (i in 0..6) { val ang = (PI * (1.0 + (i + 0.5) / 7.0)).toFloat(); drawLine(v.s(V3(1.15f, ya, z), C.HIERRO, FRENTE), c, c + Offset(cos(ang) * r, sin(ang) * alto), 0.5f) }
+            drawArc(v.s(V3(1.15f, ya, z), lerp(C.CAOBA, C.LACA, 0.3f), FRENTE), 180f, 180f, false, Offset(c.x - r, c.y - alto), Size(2f * r, 2f * alto), style = Stroke(1.2f)) }
         // La hoja: abierta hacia dentro y contra la pared de la derecha; entornada, casi cerrada; cerrada, del todo.
         val abre = when (v.puerta) { Puerta.CERRADA -> 0f; Puerta.ENTORNADA -> 0.18f; Puerta.ABIERTA -> 0.85f }
         val ang = (PI / 2 * abre).toFloat(); val ancho = x1 - x0
@@ -696,20 +723,20 @@ internal object SalaDeco {
             banda(u, 0.56f, u + 0.14f, 0.8f, if (luz) lerp(C.LAMPARA, C.ORO, 0.3f) else lerp(ext.tono(C.PANO, 0.3f), Color(0xFF101024), noche * 0.6f)) }
         // La escalera de incendios: un zigzag de hierro con sus plataformas.
         val hierro = lerp(ext.tono(C.HIERRO, 0.2f), Color(0xFF0A0A16), noche * 0.5f)
-        for (k in 0..1) { val w = 0.5f + k * 0.3f; drawLine(hierro, q(0.05f, w), q(0.95f, w), 0.8f); drawLine(hierro, q(0.15f, w), q(0.75f, w + 0.3f), 0.6f) }
-        for (u in listOf(0.05f, 0.5f, 0.95f)) drawLine(hierro, q(u, 0.3f), q(u, 0.9f), 0.4f)
+        for (k in 0..1) { val w = 0.5f + k * 0.3f; drawLine(hierro, q(0.05f, w), q(0.95f, w), 1.2f); drawLine(hierro, q(0.15f, w), q(0.75f, w + 0.3f), 1f) }
+        for (u in listOf(0.05f, 0.5f, 0.95f)) drawLine(hierro, q(u, 0.3f), q(u, 0.9f), 0.7f)
         // El letrero de neón de enfrente (de noche): formas sin letras.
         if (v.neon > 0.05f && i < EscenaDeco.letreros(v.m)) {
             val c = if (i == 0) C.NEON else C.NEON_JADE
             val trazo = Path()
             if (i == 0) { val a = q(0.25f, 0.78f); val b = q(0.75f, 0.78f); val pie = q(0.5f, 0.52f); trazo.moveTo(a.x, a.y); trazo.lineTo(b.x, b.y); trazo.lineTo(pie.x, pie.y); trazo.close(); val base = q(0.5f, 0.4f); trazo.moveTo(pie.x, pie.y); trazo.lineTo(base.x, base.y) }
             else { val a = q(0.3f, 0.45f); val b = q(0.45f, 0.75f); val c2 = q(0.62f, 0.7f); trazo.moveTo(a.x, a.y); trazo.lineTo(b.x, b.y); trazo.lineTo(c2.x, c2.y); trazo.addOval(androidx.compose.ui.geometry.Rect(a.x - 2f, a.y - 1.2f, a.x + 1f, a.y + 1.2f)) }
-            tuboNeon(trazo, c, v.neon, 0.8f)
+            tuboNeon(trazo, c, v.neon, 1.15f)
         }
         // La calzada y el bordillo, y la acera, que llega hasta el vidrio.
         val acera = lerp(ext.tono(C.ACERA, 0.1f), Color(0xFF181830), noche * 0.5f)
         banda(0f, 0.22f, 1f, 0.31f, lerp(ext.tono(C.LACA, 0.2f), Color(0xFF0E0E1C), noche * 0.4f))
-        banda(0f, 0.17f, 1f, 0.22f, lerp(acera, Color.White, 0.15f))
+        banda(0f, 0.17f, 1f, 0.22f, lerp(acera, Color.White, 0.35f))
         banda(0f, -0.02f, 1f, 0.17f, acera)
         for (k in 1..3) drawLine(lerp(acera, C.LACA, 0.3f), q(k * 0.28f, 0f), q(k * 0.28f - 0.05f, 0.17f), 0.4f)
         if (llueve) { banda(0f, -0.02f, 1f, 0.17f, lerp(acera, ext.medio, 0.3f).copy(alpha = 0.5f)); if (v.neon > 0.1f) drawLine(C.NEON.copy(alpha = 0.5f * v.neon), q(0.3f, 0.12f), q(0.7f, 0.06f), 1.2f) }

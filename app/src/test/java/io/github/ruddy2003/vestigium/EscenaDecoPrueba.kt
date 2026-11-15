@@ -91,14 +91,16 @@ class EscenaDecoPrueba {
                 val mh = momento(d.toString(), h); val n = EscenaDeco.mesas(mh); val p = EscenaDeco.puestas(mh); val a = EscenaDeco.sillasArriba(mh)
                 assertTrue("$d $h", p in 0..n && a in 0..n && p + a <= n)
                 val humo = EscenaDeco.humo(mh); assertTrue("$d $h", humo in 0f..1f)
-                if (EscenaDeco.provisional(mh)) { assertEquals("$d $h", 0, p); assertEquals("$d $h", 0f, humo, 0f); continue }
+                if (EscenaDeco.provisional(mh)) { assertEquals("$d $h", 0, p); assertEquals("$d $h", 0f, humo, 0f); assertTrue("$d $h", EscenaDeco.cerrado(mh)); continue }
+                assertEquals("$d $h", EscenaDeco.cerrado(mh), EscenaDeco.apiladas(mh) > 0)
                 when (EscenaDeco.fase(mh)) {
                     Fase.ABIERTO -> {
                         // Más gente, más mesas puestas y más humo; las que no tienen gente, con las sillas arriba.
                         assertEquals("$d $h", when (EscenaDeco.gente(mh)) { Gente.CASI_VACIO -> 2; Gente.MEDIO -> Math.round(n * 0.58f); Gente.LLENO -> n - 1; Gente.A_REVENTAR -> n }, p)
                         assertEquals("$d $h", n - p, a); assertTrue("$d $h", humo >= 0.15f); assertTrue("$d $h", EscenaDeco.sombreros(mh) >= 2)
                     }
-                    Fase.CERRADO, Fase.ENSAYO -> { assertEquals("$d $h", 0, p); assertEquals("$d $h", n - 1, a) }      // «con las sillas encima de las mesas»
+                    // Cerrado: las mesas de la fila desnudas, una silla patas arriba en las de detrás de la pista y las demás apiladas.
+                    Fase.CERRADO, Fase.ENSAYO -> { assertEquals("$d $h", 0, p); assertEquals("$d $h", if (EscenaDeco.clubNuevo(mh)) 1 else 2, a); assertEquals("$d $h", 6, EscenaDeco.apiladas(mh)) }
                     Fase.PREPARA -> { assertEquals("$d $h", n, p); assertEquals("$d $h", 0, a) }
                     Fase.DESPUES -> assertTrue("$d $h", humo > 0f)
                 }

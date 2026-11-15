@@ -179,19 +179,27 @@ internal object EscenaDeco : EscenaVida {
         }
     }
 
+    /** Si el club está cerrado a esta hora (de mañana, en el ensayo, en la gira y sin club): «el club vacío». */
+    internal fun cerrado(m: Momento): Boolean = provisional(m) || fase(m) == Fase.CERRADO || fase(m) == Fase.ENSAYO
+
     /**
-     * Cuántas mesas tienen las sillas patas arriba encima: cerrado y en el ensayo, todas menos la cercana («con las sillas
-     * encima de las mesas»); abierto y recién cerrado, las que no están puestas («sobran sillas»).
+     * Cuántas mesas tienen una silla patas arriba encima. Cerrado, las de detrás de la pista («con las sillas encima de las
+     * mesas»: dos en el club de Sully, una en el nuevo); las demás sillas, apiladas contra la pared ([apiladas]), para que
+     * la mancha de sol del mediodía caiga entera en la pista. Abierto y recién cerrado, las que no están puestas («sobran
+     * sillas»). **[Diseño propio]**.
      */
     internal fun sillasArriba(m: Momento): Int {
         val n = mesas(m)
-        if (provisional(m)) return n - 1
+        if (cerrado(m)) return if (clubNuevo(m)) 1 else 2
         return when (fase(m)) {
-            Fase.CERRADO, Fase.ENSAYO -> n - 1
+            Fase.CERRADO, Fase.ENSAYO -> if (clubNuevo(m)) 1 else 2
             Fase.PREPARA -> 0
             Fase.ABIERTO, Fase.DESPUES -> n - puestas(m)
         }
     }
+
+    /** Cuántas sillas hay apiladas contra la pared del fondo, junto al camerino: cerrado, seis; si no, ninguna. */
+    internal fun apiladas(m: Momento): Int = if (cerrado(m)) 6 else 0
 
     /** Cuánto humo hay bajo el techo, de 0 a 1: abierto, más con más gente («el humo bajo»); después, lo que queda. */
     internal fun humo(m: Momento): Float {
@@ -348,7 +356,8 @@ internal object EscenaDeco : EscenaVida {
         // Con el sol dentro, la penumbra es la del rebote cálido de la mancha; sin él, la luz fría y gris que baja de la acera.
         val conSol = sol(m) != null
         val k = (if (conSol) 0.8f else 0.72f) * dia + 0.17f * (1f - dia) - 0.1f * l.nublado
-        val tinte = lerp(if (conSol) Color(0xFFDCCCF0) else Color(0xFFA2B4F2), Color(0xFF9A98DC), l.noche)
+        // La penumbra con color: rosa violeta con el sol dentro (el rojo queda rojo vino, no pardo); azul frío sin él.
+        val tinte = lerp(if (conSol) Color(0xFFF0CCE4) else Color(0xFFB8C4F4), Color(0xFF9A98DC), l.noche)
         val amb = Color((l.ambiente.red * k * tinte.red).coerceIn(0f, 1f), (l.ambiente.green * k * tinte.green).coerceIn(0f, 1f), (l.ambiente.blue * (k + 0.05f) * tinte.blue).coerceIn(0f, 1f))
         return Luces(
             alto = l.alto, medio = l.medio, bajo = l.bajo, ambiente = amb, bruma = lerp(Color(0xFF2E2438), amb, 0.5f), brumaFuerza = 0.5f,
@@ -363,15 +372,16 @@ internal object EscenaDeco : EscenaVida {
      * cielo cubierto). **[Diseño propio]**: las ventanas dan a una calle estrecha y el sol no entra directo hasta media
      * mañana (de 9:30 a 18:30), así que a las 7:00 el club está en la luz fría y gris de la mañana, como pide la
      * composición. Lo que cae por cada metro que cruza ([SolQueEntra.e]) sube hasta las 14:00 y vuelve a bajar; hacia
-     * dónde se tiende ([SolQueEntra.a]) camina del fondo (por la mañana: la mancha sube por la barra) a quien mira (por la
-     * tarde: la mancha llega a la pista y al piano). La luna no entra por un sótano.
+     * dónde se tiende ([SolQueEntra.a]) camina del fondo (por la mañana: la mancha va al estrado y a la barra) a quien
+     * mira (por la tarde: llega al mantel de la mesa cercana y al piano). **A las 13:00, la hora de las capturas, cae
+     * entera en la pista de rombos.** La luna no entra por un sótano.
      */
     internal fun sol(m: Momento): SolQueEntra? {
         val l = m.luces(); val fuerza = (Rayo(l).fuerza / 0.72f).coerceIn(0f, 1f); val h = m.hora.toFloat()
         if (fuerza <= 0.05f || h < 9.5f || h > 18.5f) return null
         val entra = ((h - 9.5f) / 1f).coerceIn(0f, 1f) * ((18.5f - h) / 1f).coerceIn(0f, 1f)
         if (entra <= 0.02f) return null
-        val e = 0.45f + 0.6f * kotlin.math.sin(Math.PI * (h - 9.0) / 10.0).toFloat().coerceAtLeast(0f)
+        val e = 0.42f + 0.32f * kotlin.math.sin(Math.PI * (h - 9.0) / 10.0).toFloat().coerceAtLeast(0f)
         val a = -0.4f + 1.2f * (h - 10f) / 8f
         return SolQueEntra(e, a, fuerza * entra, lerp(l.solColor, Color.White, 0.2f))
     }
