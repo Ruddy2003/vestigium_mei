@@ -26,6 +26,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.ObjetosNapoleon
 import io.github.ruddy2003.vestigium.ui.escenas.RetiradaLuz
 import io.github.ruddy2003.vestigium.ui.escenas.RetiradaNapoleon
 import io.github.ruddy2003.vestigium.ui.escenas.TipoAncla
+import io.github.ruddy2003.vestigium.ui.escenas.TramosRetirada
 import io.github.ruddy2003.vestigium.ui.escenas.VistaNapoleon
 import io.github.ruddy2003.vestigium.ui.escenas.gatoQuieto
 import io.github.ruddy2003.vestigium.ui.escenas.lienzo
@@ -82,20 +83,87 @@ class EscenaNapoleonPrueba {
         assertEquals(Lugar.PUEBLO, EscenaNapoleon.lugar(momento("2031-06-01"))); assertEquals(Lugar.VIVAC, EscenaNapoleon.lugar(momento("2027-07-10")))
     }
 
+    /**
+     * Los seis tramos de la retirada (lo que el cuadro cambia mientras la compañía anda), los 56 días de los dos años:
+     * cada uno empieza el día de su frase del cuento (los días señalados del calendario) y se sigue hasta el siguiente.
+     */
     @Test fun elTramoDeLaRetirada() {
-        val berezina = mutableMapOf<Int, Int>()
+        val dias = mutableMapOf<Pair<Int, Tramo>, Int>()
+        val primero = mutableMapOf<Pair<Int, Tramo>, String>()
         cadaDia { d, m ->
             val t = EscenaNapoleon.tramo(m)
             if (EscenaNapoleon.lugar(m) != Lugar.RETIRADA) { assertNull(d.toString(), t); return@cadaDia }
-            when {
-                hoyEs(m, "berezina") -> { assertEquals(d.toString(), Tramo.BEREZINA, t); berezina[d.year] = (berezina[d.year] ?: 0) + 1 }
-                md(d) < "11-06" -> assertEquals(d.toString(), Tramo.SIN_NIEVE, t)
-                else -> assertEquals(d.toString(), Tramo.NEVADA, t)
+            assertNotNull(d.toString(), t); t!!
+            // La cuenta por fecha y la de los días señalados dicen lo mismo.
+            assertEquals(d.toString(), EscenaNapoleon.tramoDe(md(d)), t)
+            val esperado = when {
+                hoyEs(m, "krasnoi") -> Tramo.KRASNOI
+                hoyEs(m, "berezina") || hoyEs(m, "lucien") -> Tramo.BEREZINA
+                md(d) < "10-24" -> Tramo.SALIDA
+                md(d) < "11-06" -> Tramo.MALOYAROSLAVETS
+                md(d) >= "11-30" -> Tramo.FINAL
+                else -> Tramo.NIEVE
+            }
+            assertEquals(d.toString(), esperado, t)
+            dias[d.year to t] = (dias[d.year to t] ?: 0) + 1
+            primero.putIfAbsent(d.year to t, md(d))
+            // El primer día de cada tramo es el de su día señalado.
+            if (hoyEs(m, "sale_moscu")) assertEquals(d.toString(), Tramo.SALIDA, t)
+            if (hoyEs(m, "maloyaroslavets")) assertEquals(d.toString(), Tramo.MALOYAROSLAVETS, t)
+            if (hoyEs(m, "nieve")) assertEquals(d.toString(), Tramo.NIEVE, t)
+            if (hoyEs(m, "trineo")) assertEquals(d.toString(), Tramo.FINAL, t)
+        }
+        for (anio in listOf(2026, 2027)) {
+            assertEquals("$anio", mapOf(Tramo.SALIDA to 5, Tramo.MALOYAROSLAVETS to 13, Tramo.NIEVE to 16, Tramo.KRASNOI to 4, Tramo.BEREZINA to 4, Tramo.FINAL to 14), Tramo.entries.associateWith { dias[anio to it] ?: 0 })
+            assertEquals("$anio", 56, Tramo.entries.sumOf { dias[anio to it] ?: 0 })
+            assertEquals("$anio", mapOf(Tramo.SALIDA to "10-19", Tramo.MALOYAROSLAVETS to "10-24", Tramo.NIEVE to "11-06", Tramo.KRASNOI to "11-15", Tramo.BEREZINA to "11-26", Tramo.FINAL to "11-30"), Tramo.entries.associateWith { primero[anio to it] })
+        }
+        // Después de Krasnoi se vuelve a la nieve hasta el Berezina; el día de Lucien todavía es el del río.
+        assertEquals(Tramo.NIEVE, EscenaNapoleon.tramo(momento("2027-11-19"))); assertEquals(Tramo.NIEVE, EscenaNapoleon.tramo(momento("2027-11-25")))
+        assertEquals(Tramo.BEREZINA, EscenaNapoleon.tramo(momento("2027-11-29"))); assertEquals(Tramo.FINAL, EscenaNapoleon.tramo(momento("2027-11-30")))
+        assertEquals(Tramo.FINAL, EscenaNapoleon.tramo(momento("2027-12-13"))); assertNull(EscenaNapoleon.tramo(momento("2027-12-14")))
+    }
+
+    /**
+     * Lo que cambia con el tramo (el marco, la lejanía, lo abandonado) y lo que no: cada tramo tiene su marco y su
+     * lejanía propios (el de la nieve comparte la lejanía con el vivac provisional), el botín solo en la salida, Moscú al
+     * fondo los dos primeros días, y la nieve honda en el final.
+     */
+    @Test fun cadaTramoTieneLoSuyo() {
+        val marcos = Tramo.entries.map { TramosRetirada.marco(it) }
+        assertEquals(6, marcos.toSet().size); assertFalse(TramosRetirada.Marco.TIENDA in marcos)
+        assertEquals(6, Tramo.entries.map { TramosRetirada.lejania(it) }.toSet().size)
+        assertEquals(TramosRetirada.Marco.TIENDA, TramosRetirada.marco(null))
+        for (t in Tramo.entries) {
+            assertEquals("$t", t == Tramo.SALIDA, TramosRetirada.botin(t)); assertEquals("$t", t == Tramo.FINAL, TramosRetirada.nieveHonda(t))
+            val fila = TramosRetirada.fila(t); assertTrue("$t", fila.size in 4..12 && fila.all { it in 0..5 })
+        }
+        // El botín de Moscú (cofres) se queda en los primeros tramos; los cañones, desde la nieve.
+        assertTrue(2 in TramosRetirada.fila(Tramo.SALIDA)); assertFalse(5 in TramosRetirada.fila(Tramo.SALIDA)); assertFalse(2 in TramosRetirada.fila(Tramo.NIEVE)); assertTrue(5 in TramosRetirada.fila(Tramo.KRASNOI))
+        assertTrue(TramosRetirada.fila(Tramo.FINAL).size < TramosRetirada.fila(Tramo.NIEVE).size)
+        assertTrue(TramosRetirada.moscu(momento("2027-10-19"))); assertTrue(TramosRetirada.moscu(momento("2027-10-20"))); assertFalse(TramosRetirada.moscu(momento("2027-10-21"))); assertFalse(TramosRetirada.moscu(momento("2027-09-20")))
+        // La base no se mueve: el fuego, el objeto, el suelo del gato, en el mismo sitio todos los días.
+        val anclas = Tramo.entries.map { t -> val dia = when (t) { Tramo.SALIDA -> "2027-10-20"; Tramo.MALOYAROSLAVETS -> "2027-10-30"; Tramo.NIEVE -> "2027-11-10"; Tramo.KRASNOI -> "2027-11-16"; Tramo.BEREZINA -> "2027-11-27"; Tramo.FINAL -> "2027-12-05" }
+            EscenaNapoleon.anclas(momento(dia, 13.0)).filter { it.tipo == TipoAncla.SUELO || it.tipo == TipoAncla.OBJETO || it.tipo == TipoAncla.ABRIGO }.map { Triple(it.tipo, it.x, it.y) } }
+        for (a in anclas) assertEquals(anclas.first(), a)
+    }
+
+    /** Cada tramo se dibuja, sin fallar, a varias horas (de noche, al alba, a mediodía, al atardecer) y con varios tiempos. */
+    @Test fun cadaTramoSeDibujaAVariasHorasYConVariosTiempos() {
+        Assume.assumeTrue("esta JVM no tiene con qué dibujar (se dibuja en el arnés)", runCatching { ImageBitmap(1, 1) }.isSuccess)
+        val ancho = 190; val alto = (ancho * ALTO / ANCHO).toInt(); val lienzoImg = Canvas(ImageBitmap(ancho, alto))
+        val dias = mapOf(Tramo.SALIDA to "2027-10-19", Tramo.MALOYAROSLAVETS to "2027-10-24", Tramo.NIEVE to "2027-11-21", Tramo.KRASNOI to "2027-11-15", Tramo.BEREZINA to "2027-11-29", Tramo.FINAL to "2027-12-06")
+        for ((t, dia) in dias) {
+            val base = momento(dia)
+            assertEquals(dia, t, EscenaNapoleon.tramo(base))
+            for (h in listOf(3.0, 8.0, 13.0, 16.5, 21.0)) for (clima in listOf(base.ficha.clima, Clima.DESPEJADO, Clima.NIEVE, Clima.NIEBLA, Clima.LLUVIA)) {
+                val m = Momento(base.ficha.copy(clima = clima), h)
+                CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, lienzoImg, Size(ancho.toFloat(), alto.toFloat())) {
+                    lienzo { with(EscenaNapoleon) { quieta(m) } }
+                    lienzo { with(EscenaNapoleon) { viva(m, 2.5f) } }
+                }
             }
         }
-        // El Berezina, sus tres días (del 26 al 28 de noviembre), en los dos años de la retirada.
-        assertEquals(mapOf(2026 to 3, 2027 to 3), berezina)
-        assertEquals(Tramo.BEREZINA, EscenaNapoleon.tramo(momento("2027-11-28"))); assertEquals(Tramo.NEVADA, EscenaNapoleon.tramo(momento("2027-11-29")))
     }
 
     /** La regla de la nieve (**[Aproximación]**): no contradice el cuento. */
@@ -213,7 +281,7 @@ class EscenaNapoleonPrueba {
             assertTrue(EscenaNapoleon.smolensk(momento("$a-08-17"))); assertFalse(EscenaNapoleon.smolensk(momento("$a-08-16")))
             // Lo abandonado crece a lo largo de la retirada.
             assertTrue(EscenaNapoleon.abandono(momento("$a-10-19")) < EscenaNapoleon.abandono(momento("$a-11-10")))
-            assertTrue(RetiradaNapoleon.abandonadas(momento("$a-10-19")) < RetiradaNapoleon.abandonadas(momento("$a-12-01")))
+            assertTrue(RetiradaNapoleon.abandonadas(momento("$a-10-19")) < RetiradaNapoleon.abandonadas(momento("$a-11-21")))
         }
     }
 
