@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium
 
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.ImageBitmap
@@ -14,10 +15,12 @@ import io.github.ruddy2003.vestigium.ui.escenas.ObjetosMongol
 import io.github.ruddy2003.vestigium.ui.escenas.TipoAncla
 import io.github.ruddy2003.vestigium.ui.escenas.ValleCerro
 import io.github.ruddy2003.vestigium.ui.escenas.ValleMongol
+import io.github.ruddy2003.vestigium.ui.escenas.ValleLuz
 import io.github.ruddy2003.vestigium.ui.escenas.ValleRio
 import io.github.ruddy2003.vestigium.ui.escenas.lienzo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
+import io.github.ruddy2003.vestigium.vidas.Clima
 import io.github.ruddy2003.vestigium.vidas.FichaDelDia
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -154,5 +157,60 @@ class EscenaMongolVallePrueba {
                 }
             }
         }
+    }
+
+    /** El mismo día con el tiempo forzado (como en las capturas): para mirar la luz sin depender del clima del calendario. */
+    private fun conClima(dia: String, hora: Double, clima: Clima) = momento(dia, hora).let { Momento(it.ficha.copy(clima = clima), hora) }
+
+    /**
+     * La sombra grande del valle camina con la hora (ronda de luz): con el sol raso de la mañana el campamento está en
+     * sombra y la terraza no; la franja de sol cambia de sitio; a mediodía no hay sombra grande; por la tarde la sombra
+     * del cerro avanza desde el pie y llega a la terraza; de noche y con el cielo cubierto no hay.
+     */
+    @Test fun laSombraDelCerroCaminaConLaHora() {
+        val campamento = Offset(212f, 185f); val terraza = Offset(200f, 270f)
+        for (dia in listOf("2027-01-12", "2028-02-03", "2029-11-20")) {
+            val luz = { h: Double -> EscenaMongol.luces(conClima(dia, h, Clima.DESPEJADO)) }
+            val manana = ValleLuz.sombraDelValle(luz(7.0)); val tarde = ValleLuz.sombraDelValle(luz(19.0)); val antes = ValleLuz.sombraDelValle(luz(16.5))
+            assertTrue("$dia 7:00: viene de la mañana", manana.manana)
+            assertTrue("$dia 7:00: el campamento en sombra", ValleLuz.sombraEn(manana, campamento) > 0.5f)
+            assertEquals("$dia 7:00: la terraza ya tiene sol", 0f, ValleLuz.sombraEn(manana, terraza, arriba = true), 0f)
+            // Dentro de la franja hay sol: su centro, a medio camino.
+            val dentro = (manana.franjaA + manana.franjaB) / 2f
+            assertTrue("$dia 7:00: la franja tiene sol", ValleLuz.sombraEn(manana, dentro) < 0.1f && ValleLuz.enFranja(manana, dentro) > 0.9f)
+            assertEquals("$dia 13:00: a mediodía no hay sombra grande", 0f, ValleLuz.sombraDelValle(luz(13.0)).fuerza, 0.001f)
+            assertFalse("$dia 19:00: viene del cerro", tarde.manana)
+            assertTrue("$dia 19:00: la terraza en sombra", ValleLuz.sombraEn(tarde, terraza, arriba = true) > 0.5f)
+            assertTrue("$dia: la sombra de la tarde avanza", tarde.frente > antes.frente)
+            assertTrue("$dia: a las 16:30 aún no llega a la terraza", ValleLuz.sombraEn(antes, Offset(300f, 270f), arriba = true) < 0.1f)
+            // La franja camina: no está en el mismo sitio a las 7:00, a las 8:00, a las 16:30 y a las 19:00.
+            val franjas = listOf(7.0, 8.0, 16.5, 19.0).map { ValleLuz.sombraDelValle(luz(it)).let { s -> s.franjaA to s.franjaB } }
+            for (i in franjas.indices) for (j in i + 1 until franjas.size) assertTrue("$dia: la franja se mueve", (franjas[i].first - franjas[j].first).getDistance() + (franjas[i].second - franjas[j].second).getDistance() > 4f)
+            assertEquals("$dia 23:00: de noche no hay", 0f, ValleLuz.sombraDelValle(luz(23.0)).fuerza, 0f)
+            for (c in listOf(Clima.NUBES, Clima.NIEVE, Clima.LLUVIA, Clima.NIEBLA)) for (h in listOf(7.0, 13.0, 19.0))
+                assertEquals("$dia $h $c: con el cielo cubierto no hay sombra arrojada", 0f, ValleLuz.sombraDelValle(EscenaMongol.luces(conClima(dia, h, c))).fuerza, 0f)
+        }
+    }
+
+    /** De noche, con el cielo claro, hay dos luces: la lumbre de la tienda (cálida) y la luna (fría), que tumba sombras. */
+    @Test fun deNocheHayDosLuces() {
+        var noches = 0
+        var d = LocalDate.of(2027, 1, 1)
+        while (d.year <= 2028) {
+            val m = momento(d.toString(), 21.5)
+            if (EscenaMongol.lugar(m) == Lugar.VALLE) {
+                val claro = Momento(m.ficha.copy(clima = Clima.DESPEJADO), 21.5); val l = EscenaMongol.luces(claro)
+                assertTrue("$d: la lumbre", ValleLuz.lumbre(claro, l) > 0.05f)
+                assertTrue("$d: la luna", ValleLuz.luna(l) > 0.5f)
+                assertTrue("$d: la luna tumba sombras", (ValleLuz.rayoDeLuna(l)?.fuerza ?: 0f) > 0.2f)
+                val cubierto = EscenaMongol.luces(Momento(m.ficha.copy(clima = Clima.NIEVE), 21.5))
+                assertEquals("$d: con nieve no hay luna", 0f, ValleLuz.luna(cubierto), 0f)
+                noches++
+            }
+            d = d.plusDays(7)
+        }
+        assertTrue(noches > 40)
+        // De día no hay luna.
+        assertEquals(0f, ValleLuz.luna(EscenaMongol.luces(conClima("2027-01-12", 13.0, Clima.DESPEJADO))), 0f)
     }
 }
