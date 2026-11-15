@@ -128,7 +128,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.MEDIEVAL -> Zarcillo(modifier)
         TemaId.TEMPLARIO -> Adarve(modifier)
         TemaId.DISTOPIA -> BandaExpediente(modifier)
-        TemaId.GALIA -> BandaExpediente(modifier)
+        TemaId.GALIA -> BandaGalia(modifier)
         TemaId.ARCONTES -> BandaArcontes(modifier)
         TemaId.FRENTE -> BandaConsola(modifier)
         TemaId.REFUGIO -> Destellos(modifier)
@@ -239,6 +239,59 @@ private fun BandaExpediente(modifier: Modifier) {
             k++
         }
     }
+}
+
+/**
+ * Galia: un zarcillo del arte de La Tène, en oro. Una onda corre de lado a lado y en cada seno suelta un zarcillo que se
+ * enrosca hacia dentro y acaba en una perla; donde nace, la hinchazón en trompeta. Fuera de cada seno, una hoja en forma
+ * de lente. Empieza y acaba en una perla.
+ */
+@Composable
+private fun BandaGalia(modifier: Modifier) {
+    val e = MaterialTheme.colorScheme
+    val oscuro = esOscuro()
+    Canvas(modifier.fillMaxWidth().height(13.dp)) { bandaGalia(if (oscuro) e.primary else e.secondary, if (oscuro) e.secondary else e.primary) }
+}
+
+private fun DrawScope.bandaGalia(oro: Color, hoja: Color) {
+    val u = 1.dp.toPx(); val w = size.width; val cy = size.height / 2
+    val a = 2.4f * u
+    val x0 = 4 * u; val x1 = w - 4 * u
+    val n = maxOf(2, ((x1 - x0) / (40 * u)).toInt())
+    val p = (x1 - x0) / n
+    fun y(x: Float) = cy + a * sin(2 * PI.toFloat() * (x - x0) / p)
+    val onda = Path().apply {
+        var x = x0; moveTo(x, y(x))
+        while (x < x1) { x = minOf(x + 1.2f * u, x1); lineTo(x, y(x)) }
+    }
+    drawPath(onda, oro, style = Stroke(1.2f * u, cap = StrokeCap.Round))
+    for (k in 0 until 2 * n) {
+        val s = if (k % 2 == 0) 1f else -1f                 // 1: el seno baja; -1: sube
+        val xe = x0 + p * (0.25f + 0.5f * k)
+        val centro = Offset(xe, cy - s * a * 0.12f)
+        val xa = xe + 0.2f * p
+        val q0 = Offset(xa, y(xa))
+        val r0 = (q0 - centro).getDistance()
+        val a0 = kotlin.math.atan2(q0.y - centro.y, q0.x - centro.x)
+        val zarcillo = ArrayList<Offset>()
+        for (i in 0..28) {
+            val t = i / 28f
+            val rr = r0 * (1f - t) + 0.9f * u * t
+            val ang = a0 - s * t * 1.75f * PI.toFloat()
+            zarcillo.add(Offset(centro.x + rr * cos(ang), centro.y + rr * sin(ang)))
+        }
+        drawPath(Path().apply { moveTo(zarcillo[0].x, zarcillo[0].y); for (q in zarcillo.drop(1)) lineTo(q.x, q.y) }, oro, style = Stroke(0.95f * u, cap = StrokeCap.Round))
+        // La trompeta donde nace el zarcillo y la perla donde acaba.
+        val xb = xe + 0.3f * p
+        drawPath(Path().apply { moveTo(q0.x, q0.y); lineTo(xb, y(xb)); lineTo(zarcillo[3].x, zarcillo[3].y); close() }, oro)
+        drawCircle(oro, 1.15f * u, zarcillo.last())
+        // La hoja en lente, fuera del seno.
+        val lc = Offset(xe, cy + s * (a + 2.3f * u))
+        drawPath(Path().apply {
+            moveTo(lc.x - 2.2f * u, lc.y); quadraticTo(lc.x, lc.y - 1.6f * u, lc.x + 2.2f * u, lc.y); quadraticTo(lc.x, lc.y + 1.6f * u, lc.x - 2.2f * u, lc.y); close()
+        }, hoja.copy(alpha = 0.8f))
+    }
+    drawCircle(oro, 1.6f * u, Offset(x0, y(x0))); drawCircle(oro, 1.6f * u, Offset(x1, y(x1)))
 }
 
 /**
@@ -1194,10 +1247,13 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "⚠", igual = "| ", nulo = "SIN DATO", elegido = "☒", riel = RolColor.TINTA, quitar = "✖", listaVacia = "[ EXPEDIENTE VACÍO ]", flecha = "►",
         sufijo = ":", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.NINGUNO,
         guiones = floatArrayOf(2.5f, 1f), tamBoton = 14, letraBoton = null, borde = RolColor.TINTA, grosor = 2f)
-    TemaId.GALIA -> PielComponentes(sep = " ▪ ", cerrada = "▶", abierta = "▼", numeral = RolColor.TINTA, centrar = true, rellena = false,
-        aviso = "⚠", igual = "| ", nulo = "SIN DATO", elegido = "☒", riel = RolColor.TINTA, quitar = "✖", listaVacia = "[ EXPEDIENTE VACÍO ]", flecha = "►",
-        sufijo = ":", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.NINGUNO,
-        guiones = floatArrayOf(2.5f, 1f), tamBoton = 14, letraBoton = null, borde = RolColor.TINTA, grosor = 2f)
+    // La voz de la asamblea: la raya larga entre número y título, el grito («¡») que abre el aviso, la tablilla de cera
+    // con sus renglones, el oro del torques en el numeral y en el riel, y el recuadro de «vacío» en perlas, como la
+    // gráfila de las monedas.
+    TemaId.GALIA -> PielComponentes(sep = "  —  ", cerrada = "›", abierta = "–", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
+        aviso = "¡", igual = " – ", nulo = "nada dicho", elegido = "•", riel = RolColor.SECUNDARIO, quitar = "×", listaVacia = "( la tablilla sigue lisa )", flecha = "›",
+        sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.4f, colorPrefijo = RolColor.SECUNDARIO, renglones = true, margen = MargenEditor.DOBLE,
+        guiones = floatArrayOf(0.1f, 2.6f), tamBoton = 16, letraBoton = null, borde = RolColor.SECUNDARIO, grosor = 1.4f)
     // La letra de los códices: el triple punto de los copistas entre número y título, el punto de la lámpara por elegido, la hoja de
     // papiro con sus fibras por renglones, el violeta de la grieta en el interruptor y el recuadro de «vacío» en punto y raya.
     TemaId.ARCONTES -> PielComponentes(sep = "  ∴  ", cerrada = "→", abierta = "↓", numeral = RolColor.PRIMARIO, centrar = false, rellena = true,
@@ -1368,7 +1424,16 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             }.padding(bottom = 5.dp))
         // Rótulo de expediente: blanco sobre negro.
         TemaId.DISTOPIA -> Text(nombre, style = estilo, color = e.background, modifier = peso.background(e.onBackground).padding(horizontal = 6.dp, vertical = 1.dp))
-        TemaId.GALIA -> Text(nombre, style = estilo, color = e.background, modifier = peso.background(e.onBackground).padding(horizontal = 6.dp, vertical = 1.dp))
+        // El torques pequeño delante y, debajo, una raya de oro que acaba en la «S» de las monedas.
+        TemaId.GALIA -> Text(nombre, style = estilo, modifier = peso.drawBehind {
+            val g = 1.dp.toPx(); val y = size.height - 2 * g
+            val oro = if (e.background.luminance() < 0.5f) e.primary else e.secondary
+            with(TrazosGalia) {
+                torques(Offset(5.5f * g, (size.height - 5 * g) / 2 + 0.5f * g), 4.1f * g, 1.5f * g)
+                drawLine(oro.copy(alpha = 0.7f), Offset(0f, y), Offset(size.width - 10 * g, y), 0.9f * g)
+                esse(Offset(size.width - 5 * g, y - 0.4f * g), 9 * g, 1.3f * g, oro.copy(alpha = 0.85f))
+            }
+        }.padding(start = 15.dp, bottom = 6.dp))
         // La llama de la lámpara delante y, debajo, un filete que se apaga hacia la derecha, como la luz que no llega lejos.
         TemaId.ARCONTES -> Text(nombre, style = estilo, modifier = peso.drawBehind {
             val g = 1.dp.toPx(); val y = size.height - 1.2f * g
@@ -1547,7 +1612,12 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         moveTo(0f, 0f); lineTo(w, 0f); lineTo(w - h * 0.22f, h / 2); lineTo(w, h); lineTo(0f, h); close()
     }
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.GALIA -> RectangleShape
+    // La tablilla de roble: las esquinas cortadas y la cara de arriba y la de abajo apenas abombadas.
+    TemaId.GALIA -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val c = minOf(h * 0.22f, w * 0.1f)
+        moveTo(0f, c * 1.3f); lineTo(c, h * 0.05f); quadraticTo(w / 2, -h * 0.03f, w - c, h * 0.05f); lineTo(w, c * 1.3f)
+        lineTo(w, h - c * 1.3f); lineTo(w - c, h * 0.95f); quadraticTo(w / 2, h * 1.03f, c, h * 0.95f); lineTo(0f, h - c * 1.3f); close()
+    }
     // El dintel de un nicho tallado en la caliza: un arco rebajado de lado a lado, sobre pies rectos.
     TemaId.ARCONTES -> GenericShape { s, _ ->
         val w = s.width; val h = s.height; val a = minOf(h * 0.14f, w * 0.06f)
@@ -1669,7 +1739,7 @@ private fun rotuloArchivo(archivo: String, t: TemaId): String {
         TemaId.MEDIEVAL -> "pluma y tintero · $es"
         TemaId.TEMPLARIO -> "rol de la casa · $es"
         TemaId.DISTOPIA -> "FORMULARIO 7-B · ${es.uppercase()}"
-        TemaId.GALIA -> "FORMULARIO 7-B · ${es.uppercase()}"
+        TemaId.GALIA -> "tablilla de cera · $es"
         TemaId.ARCONTES -> "hoja de papiro · $es"
         TemaId.FRENTE -> "transmisión cifrada · $es"
         TemaId.REFUGIO -> "BITÁCORA DEL REFUGIO > $es"
@@ -1801,12 +1871,10 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawLine(e.onSurface.copy(alpha = 0.7f), Offset(x + u * 0.45f, -u * 0.2f), Offset(x + u * 0.45f, u * 1.6f), fino * 1.1f)
             drawRect(e.primary.copy(alpha = 0.8f), Offset(w - i - u * 1.1f, h - i - u * 1.1f), Size(u * 1.1f, u * 1.1f), style = Stroke(fino * 1.6f))
         }
-        TemaId.GALIA -> {
-            // Un clip de expediente que asoma por arriba y un sello rojo abajo a la derecha.
-            val x = i + u * 1.2f
-            drawRoundRect(e.onSurface.copy(alpha = 0.7f), Offset(x, -u * 0.6f), Size(u * 0.9f, u * 2.8f), CornerRadius(u * 0.45f), style = Stroke(fino * 1.3f))
-            drawLine(e.onSurface.copy(alpha = 0.7f), Offset(x + u * 0.45f, -u * 0.2f), Offset(x + u * 0.45f, u * 1.6f), fino * 1.1f)
-            drawRect(e.primary.copy(alpha = 0.8f), Offset(w - i - u * 1.1f, h - i - u * 1.1f), Size(u * 1.1f, u * 1.1f), style = Stroke(fino * 1.6f))
+        TemaId.GALIA -> with(TrazosGalia) {
+            // Arriba a la izquierda, la «S» de las monedas con sus perlas; abajo a la derecha, una hoja de roble que asoma.
+            esse(Offset(i + u * 1.1f, i + u * 0.55f), u * 2.2f, fino * 1.4f, e.secondary.copy(alpha = 0.8f))
+            hojaRoble(Offset(w - i - u * 1.0f, h - i - u * 1.1f), u * 3.4f, -38f, e.primary.copy(alpha = 0.5f), e.surface.copy(alpha = 0.6f))
         }
         TemaId.ARCONTES -> {
             // Arriba a la izquierda, la chispa; abajo a la derecha, tres de las siete esferas, que asoman desde la esquina.
@@ -2018,7 +2086,12 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
         TemaId.MEDIEVAL -> drawCircle(c, d * 0.8f, Offset(w / 2, d * 1.4f))
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(w / 2, d * 1.6f), d * 1.2f), c)
         TemaId.DISTOPIA -> drawRect(c, Offset.Zero, Size(w, d))
-        TemaId.GALIA -> drawRect(c, Offset.Zero, Size(w, d))
+        // Un torques pequeño, abierto por abajo, con sus dos remates.
+        TemaId.GALIA -> {
+            val o = Offset(w / 2, h - d * 1.6f); val r = d * 1.05f
+            drawArc(c, 117f, 306f, false, Offset(o.x - r, o.y - r), Size(r * 2, r * 2), style = Stroke(d * 0.42f, cap = StrokeCap.Round))
+            listOf(117.0, 63.0).forEach { g -> val a = Math.toRadians(g); drawCircle(c, d * 0.36f, Offset(o.x + r * cos(a).toFloat(), o.y + r * sin(a).toFloat())) }
+        }
         // La llama de una lámpara, que sube desde el borde de abajo.
         TemaId.ARCONTES -> drawPath(Path().apply {
             moveTo(w / 2, h - d * 2.4f); quadraticTo(w / 2 + d * 1.1f, h - d * 0.9f, w / 2 + d * 0.6f, h)
@@ -2151,9 +2224,10 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
             drawRect(c, Offset(m * 0.7f, m * 0.7f), Size(w - m * 1.4f, h - m * 1.4f), style = Stroke(fino))
             drawRect(c, Offset(m * 1.4f, m * 1.4f), Size(w - m * 2.8f, h - m * 2.8f), style = Stroke(fino * 0.6f))
         }
+        // La gráfila de las monedas: una hilera de perlas arriba y otra abajo.
         TemaId.GALIA -> {
-            drawRect(c, Offset(m * 0.7f, m * 0.7f), Size(w - m * 1.4f, h - m * 1.4f), style = Stroke(fino))
-            drawRect(c, Offset(m * 1.4f, m * 1.4f), Size(w - m * 2.8f, h - m * 2.8f), style = Stroke(fino * 0.6f))
+            var x = m * 3f
+            while (x < w - m * 2.8f) { drawCircle(c, fino * 0.95f, Offset(x, m)); drawCircle(c, fino * 0.95f, Offset(x, h - m)); x += m * 1.6f }
         }
         // El arco del nicho, repetido por dentro, y la chispa a la izquierda.
         TemaId.ARCONTES -> {
@@ -2361,10 +2435,15 @@ private fun DrawScope.iconoEditor(t: TemaId, e: ColorScheme) {
             drawRect(a, Offset(f(0.14f), f(0.6f)), Size(f(0.72f), f(0.28f)))
         }
         TemaId.GALIA -> {
-            // Sello de goma.
-            drawCircle(l, f(0.16f), Offset(f(0.5f), f(0.2f)))
-            drawRect(l, Offset(f(0.44f), f(0.3f)), Size(f(0.12f), f(0.3f)))
-            drawRect(a, Offset(f(0.14f), f(0.6f)), Size(f(0.72f), f(0.28f)))
+            // Las dos tablillas abiertas, la de la izquierda con su cera y la otra ya escrita, con el cordel que las une; y
+            // el estilo de bronce, con la paleta de alisar la cera arriba.
+            drawRect(l, Offset(f(0.02f), f(0.3f)), Size(f(0.32f), f(0.56f)), style = tr)
+            drawRect(l, Offset(f(0.38f), f(0.3f)), Size(f(0.32f), f(0.56f)), style = tr)
+            drawRect(a.copy(alpha = 0.45f), Offset(f(0.08f), f(0.36f)), Size(f(0.2f), f(0.44f)))
+            for (k in 0..2) drawLine(l, Offset(f(0.44f), f(0.44f + k * 0.13f)), Offset(f(0.64f - k * 0.05f), f(0.44f + k * 0.13f)), tr.width * 0.8f)
+            drawLine(l, Offset(f(0.34f), f(0.46f)), Offset(f(0.38f), f(0.46f)), tr.width); drawLine(l, Offset(f(0.34f), f(0.7f)), Offset(f(0.38f), f(0.7f)), tr.width)
+            drawLine(a, Offset(f(0.78f), f(0.98f)), Offset(f(0.92f), f(0.18f)), tr.width * 1.2f, StrokeCap.Round)
+            drawPath(Path().apply { moveTo(f(0.88f), f(0.2f)); lineTo(f(0.98f), f(0.21f)); lineTo(f(0.96f), f(0.02f)); lineTo(f(0.86f), f(0.02f)); close() }, a)
         }
         TemaId.ARCONTES -> {
             // El cálamo de caña, con la punta hendida, y el tintero de barro con su tinta negra.

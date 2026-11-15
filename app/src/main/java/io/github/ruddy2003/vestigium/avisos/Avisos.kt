@@ -337,13 +337,15 @@ object Avisos {
             "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
             "CONDECORACIÓN", "condecoraciones nuevas",
             "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
-        TemaId.GALIA -> Voz("DECLARE SU ESTADO ACTUAL", "Dos toques obligatorios: agrado y energía.",
-            "REPORTE ONÍRICO PENDIENTE", "Declare lo soñado antes de levantarse. El recuerdo caduca en minutos.",
-            "DECLARACIÓN NOCTURNA", "Complete el parte del día. En jornada difícil se acepta un solo número.",
-            "Jornada difícil: un número", "INTERROGATORIO PENDIENTE:",
-            "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
-            "CONDECORACIÓN", "condecoraciones nuevas",
-            "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
+        // Galia: el grito que corre de campo en campo (César 7.3: lo de Cenabum, al amanecer, lo sabían antes de acabar la
+        // primera guardia de la noche a 160 millas); la hoguera de la casa grande, el mensajero, los torques y los bardos.
+        TemaId.GALIA -> Voz("Corre el grito: ¿cómo anda tu ánimo?", "Pasa de campo en campo hasta llegar a ti. Dos toques: cuánto agrado y cuánta energía.",
+            "¿Qué te contó la noche?", "Dilo antes de dejar el manto: el sueño se va con la niebla de la mañana.",
+            "Se enciende la hoguera: ¿cómo fue la jornada?", "Cuenta el día junto al fuego. Si fue jornada de lluvia y barro, basta con un número.",
+            "Jornada de barro: un número", "Lo que hoy preguntan los druidas:",
+            "Llega el mensajero: trae palabras de tu yo de antes", "Es la noche que elegiste para abrir su tablilla. Toca para leerla.",
+            "Torques ganado", "torques ganados",
+            "Los bardos ya cantan tu %d", "Un año entero en cantos, como los que guardan los bardos: lo que más hiciste, lo único, lo curioso. Toca para leerlo.")
         // Arcontes: la voz baja del círculo de Magdala; la lámpara de la noche, el códice, la jarra sellada y los amuletos.
         TemaId.ARCONTES -> Voz("¿Cómo está tu alma en esta hora?", "Dos toques, en voz baja: cuánto agrado sientes y cuánta energía te queda.",
             "Lo que viste mientras dormía el cuerpo", "Escríbelo antes de levantarte: lo que se ve de noche se va con la primera luz.",
@@ -559,7 +561,9 @@ object Avisos {
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste", "Explicit: llegaste a la meta")
         TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida", "Llegaste al castillo: meta cumplida")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
-        TemaId.GALIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
+        // Galia: el alto a la sombra del roble, los versos que se aprenden de memoria (César 6.14), la noche que va antes del
+        // día (6.18) y el carnyx que suena al llegar.
+        TemaId.GALIA -> VozEnfoque("Alto a la sombra del roble", "Suelta la tablilla, estira las piernas y bebe agua del manantial.", "Se acabó el alto: de vuelta a los versos", "Tras la noche viene el día: hora de despertar", "Ya lo sabes de memoria: terminaste", "Suena el carnyx: llegaste a la meta")
         TemaId.ARCONTES -> VozEnfoque("Baja la mecha: descanso", "Deja el códice, sal a la orilla y bebe agua de la jarra.", "Sube la mecha: de vuelta al códice", "Clarea sobre el lago: hora de despertar", "Hoja terminada: cierra el códice", "Una esfera más: llegaste a la meta")
         TemaId.FRENTE -> VozEnfoque("SILENCIO DE RADIO", "Suelta los mandos. Agua y estira la espalda.", "SE REABRE EL CANAL", "SE ENCIENDE LA CONSOLA: HORA DE DESPERTAR", "TRANSMISIÓN CERRADA: TERMINASTE", "EN POSICIÓN: LLEGASTE A LA META")
         TemaId.REFUGIO -> VozEnfoque("DESCANSO DE TURNO", "Levántate, bebe agua filtrada.", "FIN DEL DESCANSO", "HORA DE DESPERTAR, RESIDENTE", "TURNO COMPLETADO", "META DE TURNO ALCANZADA")

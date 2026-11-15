@@ -151,7 +151,9 @@ object Campanas {
         TemaId.MEDIEVAL -> listOf("Peregrinación a Compostela", "La copia del códice", "El camino de los monasterios", "La feria de Champaña")
         TemaId.TEMPLARIO -> listOf("La marcha de las atalayas", "Relevo en Montalbar", "La escolta de los peregrinos", "Cabalgada al Pozo del Halcón")
         TemaId.DISTOPIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
-        TemaId.GALIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
+        // El levantamiento del 52 a. C. (César, libro 7): de Cenabum a Alesia, la libertad común que Vercingétorix dice
+        // defender (7.89) y el juramento de los carnutos sobre los estandartes reunidos (7.2).
+        TemaId.GALIA -> listOf("El año del levantamiento", "De Cenabum a Alesia", "Por la libertad común", "El juramento sobre los estandartes")
         // El ascenso del alma por las siete esferas hasta la Ogdóada, la octava, por encima de ellas.
         TemaId.ARCONTES -> listOf("El ascenso hasta la Ogdóada", "Por las siete esferas", "La chispa que vuelve a lo alto", "Más allá de la séptima esfera")
         TemaId.FRENTE -> listOf("RUTA DE SALTO K-7", "SIETE SALTOS SIN RASTRO", "EL CARTUCHO HASTA ALBAR", "CORREDOR DE LAS MINAS")
@@ -195,7 +197,12 @@ object Campanas {
         // De fortaleza en fortaleza por una frontera inventada, de la costa al castillo de las montañas.
         TemaId.TEMPLARIO -> listOf("Encomienda de la costa", "Atalaya del Alba", "Torre de la Sed", "Pozo del Halcón", "Vado de las Piedras Rojas", "Peña del Cuervo", "Castillo de Montalbar")
         TemaId.DISTOPIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
-        TemaId.GALIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
+        // El levantamiento del 52 a. C. en su orden (`docs/diseno/temas/fuentes_galia.md`, sección 3): el grito de Cenabum
+        // (7.3); Gergovia, donde Vercingétorix vuelve y lo proclaman rey (7.4); el cerco perdido de Avárico (7.15–7.28); la
+        // victoria gala de Gergovia (7.45–7.51); la asamblea de Bibracte que lo confirma (7.63); el cerco de Alesia (7.69–7.74)
+        // y la entrega (7.89), que el tema cuenta como victoria de honra por decisión del autor (siguiendo a Plutarco, *César* 27).
+        // Las dos Gergovias y las dos Alesias llevan su hecho al lado: «Alesia» sola es etapa de Romano.
+        TemaId.GALIA -> listOf("Cenabum, el grito", "Gergovia, el mando", "Avárico, el cerco perdido", "Gergovia, la victoria", "Bibracte, la asamblea", "Alesia, el cerco", "Alesia, la entrega con honra")
         // Las siete esferas de los planetas en el orden antiguo, desde la Tierra hacia arriba; pasar la de Saturno es llegar a
         // la Ogdóada. Solo los planetas: qué arconte guarda cada una no está comprobado (`fuentes_arcontes.md`, corrección 16).
         // Las siete esferas, de abajo arriba; Marte va con su nombre griego antiguo, Pyróeis («el ardiente»), porque «Marte» ya es etapa de Espacio.

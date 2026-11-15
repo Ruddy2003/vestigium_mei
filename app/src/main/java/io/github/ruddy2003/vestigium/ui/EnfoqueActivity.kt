@@ -656,18 +656,40 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 drawLine(parpado, q, q + d * (6 * u / l), 1.5f * u)
             }
         }
+        // El torques de oro, abierto abajo: el aro sin luz se va dorando del primer remate al segundo conforme pasa el
+        // bloque; por dentro, la cuenta en el color del bloque, con la marca que parte en dos los meses de Coligny
+        // (ATENOVX) arriba; en el hueco, la hoguera que se aviva. Al cerrar la vuelta se encienden los dos remates.
         TemaId.GALIA -> {
-            arco(pista, 0f, 1f, r, g)
-            arco(color, 0f, p, r, g)
-            for (k in 0 until 72) { val f = k / 72f; drawLine(e.background.copy(alpha = 0.35f), en(f, r - g / 2), en(f, r + g / 2), if (k % 6 == 0) 2 * u else 0.8f * u) }
-            val parpado = e.onBackground.copy(alpha = 0.7f)
-            val p0 = Offset(c.x - R, c.y); val p1 = Offset(c.x, c.y - R * 1.85f); val p2 = Offset(c.x + R, c.y)
-            drawPath(Path().apply { moveTo(p0.x, p0.y); quadraticTo(p1.x, p1.y, p2.x, p2.y); quadraticTo(c.x, c.y + R * 1.85f, p0.x, p0.y); close() }, parpado, style = Stroke(2.2f * u))
-            for (k in -3..3) {
-                val s = 0.5f + k * 0.09f
-                val q = Offset((1 - s) * (1 - s) * p0.x + 2 * (1 - s) * s * p1.x + s * s * p2.x, (1 - s) * (1 - s) * p0.y + 2 * (1 - s) * s * p1.y + s * s * p2.y)
-                val d = q - c; val l = d.getDistance().coerceAtLeast(1f)
-                drawLine(parpado, q, q + d * (6 * u / l), 1.5f * u)
+            val noche = e.background.luminance() < 0.5f
+            val gr = 7.5f * u
+            val hueco = 44f; val inicio = 90f + hueco / 2; val barrido = 360f - hueco
+            with(TrazosGalia) {
+                torques(c, r, gr, androidx.compose.ui.graphics.lerp(ORO, e.background, if (noche) 0.72f else 0.6f),
+                    androidx.compose.ui.graphics.lerp(ORO_BRILLO, e.background, if (noche) 0.7f else 0.55f))
+            }
+            if (p > 0f) {
+                val cuna = Path().apply {
+                    moveTo(c.x, c.y)
+                    arcTo(Rect(c, R * 1.2f), inicio - 14f, 14f + (barrido + 14f) * p, false)
+                    close()
+                }
+                clipPath(cuna) { with(TrazosGalia) { torques(c, r, gr) } }
+            }
+            val ri = r - 15 * u
+            val esqi = Offset(c.x - ri, c.y - ri); val ladoi = Size(ri * 2, ri * 2)
+            drawArc(pista, inicio, barrido, false, esqi, ladoi, style = Stroke(2.5f * u, cap = StrokeCap.Round))
+            if (p > 0f) drawArc(color, inicio, barrido * p, false, esqi, ladoi, style = Stroke(3.2f * u, cap = StrokeCap.Round))
+            val mitad = en(0f, ri)
+            drawLine(if (p >= 0.5f) color else tenue.copy(alpha = 0.55f), Offset(mitad.x, mitad.y - 5 * u), Offset(mitad.x, mitad.y + 5 * u), 1.4f * u, StrokeCap.Round)
+            val a = Math.toRadians((inicio + barrido * p).toDouble())
+            val punta = Offset(c.x + ri * cos(a).toFloat(), c.y + ri * sin(a).toFloat())
+            if (p > 0f && p < 1f) { drawCircle(color.copy(alpha = 0.25f), 6 * u, punta); drawCircle(color, 3.4f * u, punta) }
+            with(TrazosGalia) { hoguera(Offset(c.x, c.y + r + 2f * u), 23 * u, p) }
+            if (p >= 1f) for (ang in listOf(inicio, inicio + barrido)) {
+                val rad = Math.toRadians(ang.toDouble())
+                val q = Offset(c.x + r * cos(rad).toFloat(), c.y + r * sin(rad).toFloat())
+                drawCircle(TrazosGalia.ORO_BRILLO.copy(alpha = if (noche) 0.22f else 0.3f), gr * 1.7f, q)
+                drawCircle(TrazosGalia.ORO_BRILLO.copy(alpha = if (noche) 0.3f else 0.4f), gr * 1.15f, q)
             }
         }
         // El ouroboros, la serpiente que se muerde la cola: el cuerpo, tenue, se enciende de la cola a la nuca conforme pasa
@@ -1274,9 +1296,26 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             addRect(Rect(x, y, x + w, y + h))
             if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
         }
+        // Un tramo de torques: la barra torcida, con los surcos de la torsión arriba y abajo, entre dos remates de disco;
+        // las piezas muy cortas quedan en una moneda.
         TemaId.GALIA -> {
-            addRect(Rect(x, y, x + w, y + h))
-            if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
+            val rc = h / 2; val b = h * 0.36f; val cy = y + h / 2
+            if (w < h * 2.6f) addOval(Rect(x + maxOf(0f, (w - h) / 2), y, x + maxOf(0f, (w - h) / 2) + minOf(w, h), y + h))
+            else {
+                val dx = sqrt(rc * rc - b * b)
+                val ang = Math.toDegrees(Math.asin((b / rc).toDouble())).toFloat()
+                val x0 = x + rc; val x1 = x + w - rc
+                val paso = maxOf(h * 0.95f, 4f * u); val hondo = b * 0.32f
+                arcTo(Rect(Offset(x0, cy), rc), ang, 360f - 2 * ang, true)
+                var xx = x0 + dx + paso * 0.5f
+                while (xx + paso * 0.5f < x1 - dx) { lineTo(xx, cy - b); lineTo(xx + paso * 0.22f, cy - b + hondo); lineTo(xx + paso * 0.44f, cy - b); xx += paso }
+                lineTo(x1 - dx, cy - b)
+                arcTo(Rect(Offset(x1, cy), rc), 180f + ang, 360f - 2 * ang, false)
+                xx = x1 - dx - paso * 0.5f
+                while (xx - paso * 0.5f > x0 + dx) { lineTo(xx, cy + b); lineTo(xx - paso * 0.22f, cy + b - hondo); lineTo(xx - paso * 0.44f, cy + b); xx -= paso }
+                lineTo(x0 + dx, cy + b)
+                close()
+            }
         }
         // Un sillar de caliza con el arco pequeño de los nichos arriba y, en los tramos largos, la grieta fina por donde pasa
         // la luz.

@@ -1208,7 +1208,7 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.MEDIEVAL -> 10.dp
     TemaId.TEMPLARIO -> 9.dp
     TemaId.DISTOPIA -> 12.dp
-    TemaId.GALIA -> 12.dp
+    TemaId.GALIA -> 16.dp
     TemaId.ARCONTES -> 7.dp
     TemaId.FRENTE -> 11.dp
     TemaId.REFUGIO -> 6.dp
@@ -1292,9 +1292,20 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
         val p = 12 * u; val a = w * 0.38f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
     }
+    // La meseta del oppidum: el borde sube en loma por los dos lados y arriba, en lo llano, la empalizada de estacas.
     TemaId.GALIA -> formaDp { w, h, u ->
-        val p = 12 * u; val a = w * 0.38f
-        moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+        val p = 16 * u; val alto = 7 * u; val a = w * 0.24f; val b = w * 0.76f
+        moveTo(0f, h); lineTo(0f, p)
+        cubicTo(a * 0.55f, p, a * 0.6f, alto, a, alto)
+        val paso = 11 * u; val n = ((b - a) / paso).toInt(); val ini = a + ((b - a) - n * paso) / 2
+        lineTo(ini, alto)
+        for (k in 0 until n) {
+            val x = ini + k * paso
+            lineTo(x + paso * 0.14f, alto); lineTo(x + paso * 0.14f, 2.2f * u); lineTo(x + paso * 0.5f, 0f); lineTo(x + paso * 0.86f, 2.2f * u); lineTo(x + paso * 0.86f, alto)
+        }
+        lineTo(b, alto)
+        cubicTo(b + (w - b) * 0.4f, alto, b + (w - b) * 0.45f, p, w, p)
+        lineTo(w, h); close()
     }
     // La losa de caliza: las esquinas de arriba en el arco pequeño de los nichos y, a la derecha, la grieta fina que baja
     // desde el borde.
@@ -1510,7 +1521,15 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     // El escudete: recto arriba y redondeado abajo.
     TemaId.TEMPLARIO -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.GALIA -> RectangleShape
+    // La hoja del roble, como las esquinas del tema: dos esquinas opuestas redondas y, en las otras dos, la escotadura de
+    // entre dos lóbulos.
+    TemaId.GALIA -> formaDp { w, h, u ->
+        val r = minOf(11 * u, h / 2); val s = minOf(5 * u, h / 4)
+        moveTo(r, 0f); lineTo(w - s, 0f); quadraticTo(w - s, s, w, s)
+        lineTo(w, h - r); quadraticTo(w, h, w - r, h)
+        lineTo(s, h); quadraticTo(s, h - s, 0f, h - s)
+        lineTo(0f, r); quadraticTo(0f, 0f, r, 0f); close()
+    }
     // La tapa de cuero del códice: el lomo redondeado a la izquierda y la solapa que asoma a la derecha, a media altura.
     TemaId.ARCONTES -> formaDp { w, h, u ->
         val d = minOf(7 * u, w * 0.08f); val r = minOf(3 * u, h / 4)

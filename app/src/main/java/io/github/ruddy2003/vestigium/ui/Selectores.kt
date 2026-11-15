@@ -274,7 +274,23 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     }
     // Casilla de formulario.
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.GALIA -> RectangleShape
+    // La moneda gala: el cospel redondo y desparejo de un estátero, apenas más ancho que alto.
+    TemaId.GALIA -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val cx = w / 2; val cy = h / 2
+        val rx = minOf(w, h * 1.12f) * 0.49f; val ry = minOf(h, w) * 0.48f
+        val k = listOf(1f, 0.98f, 1.015f, 0.97f, 1f, 1.02f, 0.975f, 1.01f)
+        fun pt(i: Int): Offset {
+            val ang = Math.PI * 2 * i / 8 - Math.PI / 2
+            return Offset(cx + rx * k[i % 8] * kotlin.math.cos(ang).toFloat(), cy + ry * k[i % 8] * kotlin.math.sin(ang).toFloat())
+        }
+        val p0 = pt(0); moveTo(p0.x, p0.y)
+        for (i in 0 until 8) {
+            val b = pt(i + 1); val ang = Math.PI * 2 * (i + 0.5) / 8 - Math.PI / 2
+            val kk = (k[i % 8] + k[(i + 1) % 8]) / 2 * 1.083f
+            quadraticTo(cx + rx * kk * kotlin.math.cos(ang).toFloat(), cy + ry * kk * kotlin.math.sin(ang).toFloat(), b.x, b.y)
+        }
+        close()
+    }
     // La gema grabada de los amuletos: un óvalo, más alto que ancho.
     TemaId.ARCONTES -> GenericShape { s, _ ->
         val alto = s.height * 0.96f; val ancho = minOf(s.width * 0.9f, alto * 0.84f)
@@ -413,7 +429,15 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         // La cruz patada calada en el escudo.
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(s.width / 2, s.height * 0.42f), minOf(s.width, s.height) * 0.26f), fondo.copy(alpha = 0.55f))
         TemaId.DISTOPIA -> {}
-        TemaId.GALIA -> {}
+        // La gráfila de perlas del borde de la moneda y la perla del centro, apenas grabadas.
+        TemaId.GALIA -> {
+            val l = minOf(s.width, s.height); val c = Offset(s.width / 2, s.height / 2)
+            for (k in 0 until 18) {
+                val ang = Math.PI * 2 * k / 18
+                drawCircle(fondo.copy(alpha = 0.38f), l * 0.022f, Offset(c.x + l * 0.4f * kotlin.math.cos(ang).toFloat(), c.y + l * 0.4f * kotlin.math.sin(ang).toFloat()))
+            }
+            drawCircle(fondo.copy(alpha = 0.38f), l * 0.045f, c)
+        }
         // El bisel de la gema y, grabada al centro, la serpiente que se muerde la cola.
         TemaId.ARCONTES -> {
             val alto = s.height * 0.96f; val ancho = minOf(s.width * 0.9f, alto * 0.84f); val l = minOf(ancho, alto)

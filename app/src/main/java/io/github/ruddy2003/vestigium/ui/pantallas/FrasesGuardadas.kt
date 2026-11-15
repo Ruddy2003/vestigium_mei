@@ -57,7 +57,7 @@ import kotlin.math.sin
 
 /**
  * El «corazón» de la frase del día, con la forma de cada tema (laurel, corazón de píxeles, sol de Vergina, cuadrifolio,
- * ojo, lámpara de aceite, estrella atómica, escudo, anillo de benceno, casa, abeja, hoja, copo, moneda, flor de lis, destello, estrella de
+ * ojo, muérdago, lámpara de aceite, estrella atómica, escudo, anillo de benceno, casa, abeja, hoja, copo, moneda, flor de lis, destello, estrella de
  * ocho puntas, yurta, corazón con trazos de construcción, estrella roja, escarapela, gema): late al tocarlo y suelta una
  * chispa de puntos cuando se guarda. Guardada, va rellena; sin guardar, solo el contorno.
  */
@@ -197,11 +197,23 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
             circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
         }, 1.4f)
-        TemaId.GALIA -> pinta(Path().apply {
-            fillType = PathFillType.EvenOdd
-            moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
-            circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
-        }, 1.4f)
+        // El muérdago que se corta del roble (Plinio 16.249–251): el tallo que se ahorquilla, un par de hojas largas y romas
+        // en cada punta y las tres bayas entre las dos ramas; guardada, rellena, con el brillo de las bayas.
+        TemaId.GALIA -> {
+            val col = if (lleno) color else color.copy(alpha = 0.7f)
+            val t = (if (lleno) 1.6f else 1.3f) * u
+            drawLine(col, p(12f, 22.5f), p(12f, 15.2f), t, StrokeCap.Round)
+            drawLine(col, p(12f, 15.2f), p(7.2f, 10.8f), t, StrokeCap.Round)
+            drawLine(col, p(12f, 15.2f), p(16.8f, 10.8f), t, StrokeCap.Round)
+            pinta(Path().also { c ->
+                hoja(c, p(7.2f, 10.8f), p(1.4f, 7.2f), 1.25f); hoja(c, p(7.2f, 10.8f), p(5.4f, 2f), 1.25f)
+                hoja(c, p(16.8f, 10.8f), p(22.6f, 7.2f), 1.25f); hoja(c, p(16.8f, 10.8f), p(18.6f, 2f), 1.25f)
+            }, 1.2f)
+            for ((x, y, r) in listOf(Triple(12f, 11.9f, 1.55f), Triple(10.2f, 9.2f, 1.3f), Triple(13.8f, 9.2f, 1.3f))) {
+                if (lleno) { drawCircle(color, r * u, p(x, y)); drawCircle(Color.White.copy(alpha = 0.6f), r * 0.4f * u, p(x - r * 0.3f, y - r * 0.3f)) }
+                else drawCircle(col, r * u, p(x, y), style = Stroke(1f * u))
+            }
+        }
         // La lámpara de aceite de barro, de pico, con el asa a la izquierda; guardada, encendida, con su llama y su halo.
         TemaId.ARCONTES -> {
             val col = if (lleno) color else color.copy(alpha = 0.7f)

@@ -31,9 +31,10 @@ object NombresNuevos {
         TemaId.DISTOPIA to mapOf("La cinta" to "REGISTRO HORARIO", "Constelación" to "RED DE CONTACTOS", "Hall de logros" to "SALA DE CONDECORACIONES", "Campañas" to "PLANES DE CUMPLIMIENTO",
             "Impulsos y recaídas" to "INFRACCIONES PRIVADAS", "Estado de los datos" to "ESTADO DE LA VIGILANCIA", "Enfoque y siestas" to "PRODUCTIVIDAD Y DESCANSO", "Ver tu vida" to "INFORMES VISUALES",
             "Tus atajos" to "ACCESOS AUTORIZADOS", "Logro conseguido" to "CONDECORACIÓN OTORGADA", "Este día hace un año" to "ARCHIVO: HACE UN AÑO", "Elegir campaña" to "ASIGNAR PLAN", "Campañas anteriores" to "PLANES CERRADOS"),
-        TemaId.GALIA to mapOf("La cinta" to "REGISTRO HORARIO", "Constelación" to "RED DE CONTACTOS", "Hall de logros" to "SALA DE CONDECORACIONES", "Campañas" to "PLANES DE CUMPLIMIENTO",
-            "Impulsos y recaídas" to "INFRACCIONES PRIVADAS", "Estado de los datos" to "ESTADO DE LA VIGILANCIA", "Enfoque y siestas" to "PRODUCTIVIDAD Y DESCANSO", "Ver tu vida" to "INFORMES VISUALES",
-            "Tus atajos" to "ACCESOS AUTORIZADOS", "Logro conseguido" to "CONDECORACIÓN OTORGADA", "Este día hace un año" to "ARCHIVO: HACE UN AÑO", "Elegir campaña" to "ASIGNAR PLAN", "Campañas anteriores" to "PLANES CERRADOS"),
+        // Galia: las horas que empiezan por la noche, los fuegos de la tribu, la casa de los torques y el levantamiento del 52 a. C.
+        TemaId.GALIA to mapOf("La cinta" to "Las horas, de la noche al día", "Constelación" to "Los fuegos de tu tribu", "Hall de logros" to "La casa de los torques", "Campañas" to "El levantamiento",
+            "Impulsos y recaídas" to "Lo que se calla junto al fuego", "Estado de los datos" to "Qué llega a las tablillas", "Enfoque y siestas" to "La memoria y el descanso", "Ver tu vida" to "Tu vida vista desde la colina",
+            "Tus atajos" to "Las sendas del bosque", "Logro conseguido" to "¡Un torques nuevo!", "Este día hace un año" to "Esta noche hace un año", "Elegir campaña" to "Elegir la marcha de la semana", "Campañas anteriores" to "Marchas de otras semanas"),
         // Arcontes: las horas del alba a la vigilia, las chispas de los tuyos, la hornacina de los amuletos y el ascenso del alma.
         TemaId.ARCONTES to mapOf("La cinta" to "Las horas, del alba a la vigilia", "Constelación" to "Las chispas que conoces", "Hall de logros" to "La hornacina de los amuletos", "Campañas" to "El ascenso del alma",
             "Impulsos y recaídas" to "La hoja que no se enseña", "Estado de los datos" to "Qué llega a la jarra", "Enfoque y siestas" to "La lámpara y el reposo", "Ver tu vida" to "Tu vida, vista desde lo alto",
