@@ -106,14 +106,14 @@ class CoberturaTemas {
         /** Los 16 temas que todavía no tienen su cuadro de Hoy: Helénico lo tiene desde la tanda P4a; Gótico y Ciudad neón, desde la P4b; Romano y Al-Ándalus, desde la S1; Pirata, desde la S2; Espacio y Distopía, desde la S3; Horror cósmico y Ciudad verde, desde la S4; Roma, desde la S5; Scriptorium, desde la S6; Renacimiento, desde la S6; Ruta de la Seda, desde la S7; Revolución francesa, desde la S8; Vapor victoriano, desde la S8; siguen las demás tandas S. */
         private val SIN_CUADRO = setOf("egipto", "templario", "refugio", "orden", "laboratorio", "colonos", "napoleon", "deco", "botanico", "edo", "abismo", "meso", "mongol", "urss", "antiguas", "cueva")
 
+        /** Los temas nuevos del lote 10 (`docs/diseno/PLAN_TEMAS.md`): sus cuadros van después de la tanda S19. */
+        private val SIN_CUADRO_LOTE10 = setOf("frente")
+
         /**
          * Lo que falta hoy, por superficie. Del plan de diseño no falta nada desde el lote 9. Lo que queda es del plan de
          * historia y escenas: el cuadro de Hoy (la escena, la banderita y el pelaje del gato) de cada tema, que va llegando por tandas.
          */
         val PENDIENTES: Map<String, Set<String>> = mapOf("cuadro_escena" to SIN_CUADRO + SIN_CUADRO_LOTE10, "cuadro_banderita" to SIN_CUADRO + SIN_CUADRO_LOTE10, "cuadro_gato" to SIN_CUADRO + SIN_CUADRO_LOTE10)
-
-        /** Los temas nuevos del lote 10 (`docs/diseno/PLAN_TEMAS.md`): sus cuadros van después de la tanda S19. */
-        private val SIN_CUADRO_LOTE10 = setOf("frente")
 
         /** Despachos que el compilador no vigila, por archivo y tipo. Cada lote baja los suyos. */
         val DESPACHOS: Map<String, Int> = emptyMap()
