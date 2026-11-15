@@ -203,10 +203,10 @@ object TrazosFrente {
         val crudos = mutableListOf(desde)
         var p = desde; var lado = if (rnd.nextBoolean()) 1f else -1f; var rec = 0f
         while (rec < largo) {
-            val paso = maxOf(grosor, largo * 0.05f) * (1.6f + rnd.nextFloat() * 2f)
-            p = Offset(p.x + lado * grosor * (0.4f + rnd.nextFloat() * 1.6f), p.y + paso)
+            val paso = maxOf(grosor * 1.5f, largo * 0.06f) * (0.8f + rnd.nextFloat() * 0.9f)
+            p = Offset(p.x + lado * (grosor * 0.4f + largo * 0.03f) * (0.3f + rnd.nextFloat()), p.y + paso)
             crudos += p; rec += paso
-            if (rnd.nextFloat() < 0.65f) lado = -lado
+            if (rnd.nextFloat() < 0.7f) lado = -lado
         }
         // Se suaviza el zigzag dos veces (cortes de Chaikin) para que la raíz se curve.
         var pts: List<Offset> = crudos
@@ -219,17 +219,20 @@ object TrazosFrente {
             q += pts.last(); pts = q
         }
         val n = pts.size
-        fun ancho(i: Int) = grosor * (1f - 0.82f * i / n)
-        if (sombra > 0f) for (i in 0 until n - 1) drawLine(Color.Black.copy(alpha = sombra), Offset(pts[i].x + grosor * 0.6f, pts[i].y + grosor * 0.5f), Offset(pts[i + 1].x + grosor * 0.6f, pts[i + 1].y + grosor * 0.5f), ancho(i), StrokeCap.Round)
+        fun ancho(i: Int) = grosor * (1f - 0.85f * i / n)
+        if (sombra > 0f) for (i in 0 until n - 1) drawLine(Color.Black.copy(alpha = sombra), Offset(pts[i].x + grosor * 0.7f, pts[i].y + grosor * 0.6f), Offset(pts[i + 1].x + grosor * 0.7f, pts[i + 1].y + grosor * 0.6f), ancho(i), StrokeCap.Round)
         for (i in 0 until n - 1) drawLine(color, pts[i], pts[i + 1], ancho(i), StrokeCap.Round)
+        // El lado de la sombra, a la derecha, y el brillo blando del lado de la luz.
         for (i in 0 until n - 1) {
-            val o = ancho(i) * 0.24f
-            drawLine(luz, Offset(pts[i].x - o, pts[i].y), Offset(pts[i + 1].x - o, pts[i + 1].y), ancho(i) * 0.26f, StrokeCap.Round)
+            val o = ancho(i) * 0.26f
+            drawLine(Color.Black.copy(alpha = 0.3f), Offset(pts[i].x + o, pts[i].y), Offset(pts[i + 1].x + o, pts[i + 1].y), ancho(i) * 0.4f, StrokeCap.Round)
+            drawLine(luz, Offset(pts[i].x - o, pts[i].y), Offset(pts[i + 1].x - o, pts[i + 1].y), ancho(i) * 0.3f, StrokeCap.Round)
         }
-        // Los nudos y la corteza: rayitas oscuras de través.
-        for (i in 3 until n - 3 step 5) {
+        // Los nudos de la corteza, de vez en cuando.
+        for (i in 4 until n - 4 step 9) {
             val w = ancho(i)
-            drawLine(Color.Black.copy(alpha = 0.28f), Offset(pts[i].x - w * 0.45f, pts[i].y), Offset(pts[i].x + w * 0.45f, pts[i].y + w * 0.3f), w * 0.18f)
+            drawCircle(color, w * 0.62f, Offset(pts[i].x + w * 0.1f, pts[i].y))
+            drawLine(Color.Black.copy(alpha = 0.25f), Offset(pts[i].x - w * 0.4f, pts[i].y - w * 0.1f), Offset(pts[i].x + w * 0.45f, pts[i].y + w * 0.25f), w * 0.16f)
         }
         if (ramas && grosor > 0.6f) {
             var k = 0
@@ -277,7 +280,7 @@ object TrazosFrente {
                 capa { c, g -> drawLine(c, Offset(r.left, r.bottom - r.height * 0.1f), Offset(r.right, r.top + r.height * 0.2f), g) }
                 capa { c, g -> drawLine(c, Offset(r.left + r.width * 0.15f, r.top), Offset(r.left + r.width * 0.15f, r.bottom), g) }
             } else {
-                repeat(7) { k ->
+                repeat(5) { k ->
                     val desdeAbajo = k % 3 != 0
                     val a = if (desdeAbajo) Offset(r.left + r.width * rnd.nextFloat(), r.bottom) else Offset(r.left, r.top + r.height * rnd.nextFloat())
                     val b = Offset(r.left + r.width * (0.2f + rnd.nextFloat() * 1.1f), r.top)
@@ -312,7 +315,7 @@ object TrazosFrente {
      * [brillo] más de 0, alumbra: el halo alrededor y la luz que sale por debajo de la cúpula.
      */
     fun DrawScope.lamparaCupula(c: Offset, r: Float, pie: Float, metal: Color, cupula: Color, brillo: Float, luz: Color = Color(0xFFFFF4DE)) {
-        if (brillo > 0f) drawCircle(Brush.radialGradient(listOf(luz.copy(alpha = 0.42f * brillo), luz.copy(alpha = 0.12f * brillo), Color.Transparent), c, r * 5f), r * 5f, c)
+        if (brillo > 0f) drawCircle(Brush.radialGradient(listOf(luz.copy(alpha = 0.55f * brillo), luz.copy(alpha = 0.2f * brillo), Color.Transparent), c, r * 6f), r * 6f, c)
         if (pie > 0f) {
             val ancho = r * 0.3f
             drawRect(Color.Black.copy(alpha = 0.25f), Offset(c.x - ancho / 2 + r * 0.12f, c.y), Size(ancho, pie))

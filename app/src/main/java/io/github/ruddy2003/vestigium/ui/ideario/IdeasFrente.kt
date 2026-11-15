@@ -33,28 +33,35 @@ import kotlin.math.sin
 // =====================================================================
 
 /**
- * Frente exterior: el panel falso de la sala de radar. Arriba, el pupitre curvo de chapa color hueso con la pantalla redonda
- * de radar en su caja, la perilla de sintonía y la fila de palancas de baquelita con sus pilotos, y al otro lado el contador
- * de cuatro cifras ámbar, el altavoz de la radio y dos botones; del hombro de la capota cuelga el auricular, y su cordón en
- * espiral baja por el costado hasta el zócalo. El cuerpo parece un tablero de servicio cualquiera, pero cada tema es un nicho
- * escondido: su tapa falsa abierta sobre una bisagra de piano (por dentro, la marca de la célula rayada en la chapa), las
- * latas de microfilm apiladas (tantas como fotogramas), un foco rojo de cuarto oscuro y, en el frente del nicho, un piloto y
- * la etiqueta de cinta de papel; de los más llenos cuelga la punta de la película. Al abrirlo, la tapa se abre más y la lata
- * de arriba se levanta y suelta su tapa. Abajo, el zócalo de baquelita con sus rejillas, la cinta rotuladora roja y el piso de
- * goma. De noche es la misma sala con las luces bajas: la pantalla tiñe de verde el pupitre, los pilotos y los botones
- * alumbran y los nichos quedan a la luz roja de sus focos. Por dentro, el nicho con la lata abierta, su rollo, la tapa boca
- * arriba y la tira de película que lo cruza; en la pared del frente, el casquillo del piloto con sus cables. Las fichas son
- * fotogramas copiados en papel, con las dos orillas perforadas de la película y su número en cifras de segmentos.
+ * Frente exterior: el panel falso de la sala de radar, escondido en las ruinas de la base (`docs/diseno/temas/frente.md`,
+ * «La base escondida en ruinas»). Detrás, el muro de sillares viejos con su humedad y su musgo, el tubo de cobre con sus
+ * abrazaderas y las raíces que cuelgan y caen por los costados de la consola. Arriba, el pupitre curvo de chapa blanca con
+ * sus molduras redondas y una lámpara de cúpula en el hombro; en su panel de consola oscura, de verde casi negro, la pantalla
+ * redonda de radar en su caja, la perilla de sintonía y la fila de palancas de baquelita con sus pilotos, y al otro lado el
+ * contador de cuatro cifras ámbar, la botonera de botones cuadrados y dos botones; del hombro de la capota cuelga el
+ * auricular, y su cordón en espiral baja por el costado hasta el zócalo. El cuerpo parece un tablero de servicio cualquiera,
+ * manchado por la humedad, pero cada tema es un nicho cavado en la piedra del muro: su tapa falsa abierta sobre una bisagra
+ * de piano (por dentro, la marca de la célula rayada en la chapa), las latas de microfilm apiladas (tantas como fotogramas),
+ * un foco rojo de cuarto oscuro y, en el frente del nicho, un piloto y la etiqueta de cinta de papel; de los más llenos
+ * cuelga la punta de la película. Al abrirlo, la tapa se abre más y la lata de arriba se levanta y suelta su tapa. Abajo, el
+ * zócalo de consola oscura con sus rejillas, la cinta rotuladora roja y el piso de hormigón con la franja de peligro pintada
+ * y un cable grueso tirado. De noche es la misma base en penumbra verdosa: la pantalla tiñe de verde el pupitre, la lámpara,
+ * los pilotos y los botones alumbran y los nichos quedan a la luz roja de sus focos. Por dentro, el nicho cavado en la
+ * piedra, con la lata abierta, su rollo, la tapa boca arriba y la tira de película que lo cruza; en la pared del frente, el
+ * casquillo del piloto con sus cables. Las fichas son fotogramas copiados en papel, con las dos orillas perforadas de la
+ * película y su número en cifras de segmentos.
  */
 object IdeasFrente : DisenoIdeas {
     private val HUESO = TrazosFrente.HUESO
     private val HUESO_LUZ = Color(0xFFF4F0E7)
     private val HUESO_OSC = Color(0xFFC5BCA9)
-    /** La sombra de la chapa hueso: un pardo cálido, no un gris. */
-    private val SOMBRA = Color(0xFF5E5242)
-    private val PARED = Color(0xFF8E948C)
-    private val PANEL = TrazosFrente.PIZARRA
-    private val PANEL_OSC = Color(0xFF283139)
+    /** La sombra de la chapa blanca: un gris verdoso, el de la piedra húmeda de alrededor, no un negro. */
+    private val SOMBRA = Color(0xFF4A544D)
+    /** El hormigón del piso de la base. */
+    private val HORMIGON = Color(0xFFA9ACA2)
+    private val PANEL = TrazosFrente.CONSOLA_OSCURA
+    private val PANEL_OSC = Color(0xFF141D1A)
+    private val PANEL_LUZ = Color(0xFF34453F)
     private val BAQUELITA = TrazosFrente.BAQUELITA
     private val BAQUELITA_LUZ = Color(0xFF4E4741)
     private val CROMO = TrazosFrente.CROMO
@@ -68,14 +75,13 @@ object IdeasFrente : DisenoIdeas {
     private val PANTALLA = TrazosFrente.PANTALLA
     private val VERDE = Color(0xFF4F7A5A)
     private val ETIQUETA = Color(0xFFEFE6CF)
-    private val PIZARRA = Color(0xFF23252A)
-    private val GOMA = Color(0xFF41454A)
-    private val FORRO = Color(0xFF20262B)
+    private val PIZARRA = Color(0xFF1E2523)
+    private val FORRO = Color(0xFF17201D)
     private val CINTA = Color(0xFF8E241B)
     private val PELICULA = Color(0xFF3B2414)
-    private val HUECO = Color(0xFF0F1214)
-    /** La penumbra de la sala de noche: pizarra con un poco de petróleo. */
-    private val NOCHE = Color(0xFF0C1115)
+    private val HUECO = Color(0xFF0C1310)
+    /** La penumbra verdosa de la base de noche. */
+    private val NOCHE = Color(0xFF07110D)
     /** Los colores de las latas: aluminio, latón anodizado, rojo óxido, verde gris y aluminio viejo. */
     private val COLORES_LATA = listOf(CROMO, Color(0xFFC9A15A), Color(0xFF8E3A2C), Color(0xFF6E7F72), Color(0xFF9A978F))
 
@@ -231,6 +237,46 @@ object IdeasFrente : DisenoIdeas {
         }
     }
 
+    /** El muro de sillares de las ruinas en [r]: de día, piedra verdosa; de noche, en la penumbra verde de la base. */
+    private fun DrawScope.muro(r: Rect, oscuro: Boolean, alto: Float, semilla: Int) {
+        val piedra = if (oscuro) mezcla(TrazosFrente.PIEDRA, NOCHE, 0.56f) else TrazosFrente.PIEDRA
+        val junta = if (oscuro) mezcla(TrazosFrente.PIEDRA_SOMBRA, NOCHE, 0.55f) else TrazosFrente.PIEDRA_SOMBRA
+        val humedad = if (oscuro) Color(0xFF04100A).copy(alpha = 0.75f) else Color(0xFF34402F).copy(alpha = 0.5f)
+        with(TrazosFrente) { muroSillares(r, alto, piedra, junta, humedad, t(MUSGO, oscuro), semilla, if (oscuro) 0.28f else 1f) }
+    }
+
+    /** Las raíces que cuelgan desde [y0]: cada una es (x, largo, grosor), en manojo con una compañera más fina. */
+    private fun DrawScope.raices(lista: List<Triple<Float, Float, Float>>, y0: Float, oscuro: Boolean, semilla: Int) {
+        val color = if (oscuro) mezcla(TrazosFrente.RAIZ, NOCHE, 0.45f) else TrazosFrente.RAIZ
+        val brillo = if (oscuro) TrazosFrente.VIDRIO_TRAZO.copy(alpha = 0.14f) else Color(0xFFC9BC94).copy(alpha = 0.32f)
+        lista.forEachIndexed { k, (x, largo, grosor) ->
+            with(TrazosFrente) {
+                raiz(Offset(x + (if (k % 2 == 0) 1f else -1f) * grosor * 0.9f, y0), largo * 0.7f, grosor * 0.55f, mezcla(color, Color.Black, 0.15f), brillo, semilla * 13 + k + 50, sombra = if (oscuro) 0.4f else 0.26f)
+                raiz(Offset(x, y0), largo, grosor, color, brillo, semilla * 13 + k, sombra = if (oscuro) 0.4f else 0.28f)
+            }
+        }
+    }
+
+    /** Una botonera de botones cuadrados en [r]: unos encendidos (ámbar, verde del vidrio, blanco o rojo), otros apagados. */
+    private fun DrawScope.botonera(r: Rect, cols: Int, filas: Int, semilla: Int, oscuro: Boolean) {
+        val u = density
+        val paso = minOf(r.width / cols, r.height / filas)
+        val lado = paso * 0.7f
+        val colores = listOf(AMBAR, TrazosFrente.VIDRIO_TRAZO, HUESO_LUZ, AMBAR, ROJO, RADAR)
+        val x0 = r.center.x - paso * cols / 2f; val y0 = r.center.y - paso * filas / 2f
+        for (j in 0 until filas) for (i in 0 until cols) {
+            val c = Offset(x0 + paso * (i + 0.5f), y0 + paso * (j + 0.5f))
+            val k = (semilla * 5 + i * 7 + j * 11) % 13
+            val on = k % 3 != 0
+            val col = colores[(k + j) % colores.size]
+            if (on && oscuro) mancha(c, lado * 1.4f, col.copy(alpha = 0.4f))
+            drawRoundRect(Color.Black.copy(alpha = 0.6f), Offset(c.x - lado / 2 - 0.6f * u, c.y - lado / 2 - 0.6f * u), Size(lado + 1.2f * u, lado + 1.2f * u), CornerRadius(1f * u))
+            val lente = if (on) (if (oscuro) col else mezcla(col, Color.White, 0.12f)) else t(mezcla(col, PANEL, 0.8f), oscuro)
+            drawRoundRect(lente, Offset(c.x - lado / 2, c.y - lado / 2), Size(lado, lado), CornerRadius(0.8f * u))
+            drawLine(Color.White.copy(alpha = if (on) 0.5f else 0.1f), Offset(c.x - lado * 0.3f, c.y - lado * 0.28f), Offset(c.x + lado * 0.15f, c.y - lado * 0.28f), lado * 0.1f, StrokeCap.Round)
+        }
+    }
+
     // ---------------------------------------------------------------- el microfilm
 
     /** Un punto de la curva de Bézier cúbica de [a] a [d], en [t] (de 0 a 1). */
@@ -359,21 +405,23 @@ object IdeasFrente : DisenoIdeas {
         val ch = d.corona.height
         val y0 = d.corona.top
         fun tn(x: Color) = t(x, oscuro)
-        // La pared de la sala de radar: paneles de pizarra con sus juntas y, arriba, el tubo de los cables con sus abrazaderas.
-        drawRect(Brush.verticalGradient(listOf(tn(mezcla(PARED, Color.Black, 0.18f)), tn(PARED)), y0, d.corona.bottom), Offset(0f, y0), Size(w, ch))
-        for (k in 1 until 6) {
-            val x = w * k / 6f
-            drawLine(Color.Black.copy(alpha = 0.2f), Offset(x, y0), Offset(x, d.corona.bottom), 1f * u)
-            drawLine(Color.White.copy(alpha = if (oscuro) 0.03f else 0.12f), Offset(x + 1f * u, y0), Offset(x + 1f * u, d.corona.bottom), 0.7f * u)
+        // El muro de las ruinas donde se esconde la consola: sillares viejos con su humedad y su musgo, las raíces de atrás y,
+        // arriba, el tubo de cobre con sus abrazaderas.
+        muro(Rect(0f, y0, w, d.base.top), oscuro, 19f * u, 5)
+        if (oscuro) mancha(Offset(w / 2, y0 + ch * 0.55f), w * 0.7f, RADAR.copy(alpha = 0.1f))
+        raices(listOf(Triple(w * 0.025f, ch * 0.9f, 3.4f * u), Triple(w * 0.3f, ch * 0.14f, 2.4f * u), Triple(w * 0.985f, ch * 1.1f, 3.6f * u)), y0, oscuro, 21)
+        val yTubo = y0 + ch * 0.05f
+        with(TrazosFrente) { tubo(Offset(-2f * u, yTubo), Offset(w + 2f * u, yTubo), 4.2f * u, tn(TrazosFrente.COBRE), if (oscuro) 0.2f else 1f, juntas = 90f * u) }
+        listOf(0.1f, 0.38f, 0.66f, 0.92f).forEach { f ->
+            drawRoundRect(Color.Black.copy(alpha = 0.3f), Offset(w * f - 2f * u, yTubo - 3f * u), Size(5 * u, 7f * u), CornerRadius(1 * u))
+            drawRoundRect(tn(CROMO_OSC), Offset(w * f - 2.5f * u, yTubo - 3.4f * u), Size(5 * u, 6.8f * u), CornerRadius(1 * u))
+            drawLine(Color.White.copy(alpha = if (oscuro) 0.08f else 0.3f), Offset(w * f - 1.8f * u, yTubo - 2.8f * u), Offset(w * f - 1.8f * u, yTubo + 2.8f * u), 0.7f * u)
         }
-        val tubo = y0 + ch * 0.05f
-        drawLine(Color.Black.copy(alpha = 0.25f), Offset(0f, tubo + 2.4f * u), Offset(w, tubo + 2.4f * u), 3f * u)
-        drawLine(tn(CROMO_OSC), Offset(0f, tubo), Offset(w, tubo), 3.6f * u)
-        drawLine(Color.White.copy(alpha = if (oscuro) 0.1f else 0.35f), Offset(0f, tubo - 0.9f * u), Offset(w, tubo - 0.9f * u), 0.8f * u)
-        listOf(0.1f, 0.38f, 0.66f, 0.92f).forEach { f -> drawRoundRect(tn(CROMO), Offset(w * f - 2.5f * u, tubo - 3.4f * u), Size(5 * u, 6.8f * u), CornerRadius(1 * u)) }
+        // La lámpara de cúpula blanca sobre el hombro de la consola.
+        with(TrazosFrente) { lamparaCupula(Offset(w * 0.4f, y0 + ch * 0.1f - 3f * u), 7f * u, 3.5f * u, tn(CROMO_OSC), if (oscuro) mezcla(HUESO_LUZ, NOCHE, 0.12f) else HUESO_LUZ, if (oscuro) 1f else 0.5f) }
 
         // La capota curva del pupitre, de chapa color hueso, con su sombra en la pared y la luz de arriba.
-        val capota = Rect(w * 0.01f, y0 + ch * 0.1f, w * 0.99f, d.corona.bottom)
+        val capota = Rect(w * 0.02f, y0 + ch * 0.1f, w * 0.98f, d.corona.bottom)
         val rc = ch * 0.3f
         val formaCapota = Path().apply { addRoundRect(RoundRect(capota, CornerRadius(rc), CornerRadius(rc), CornerRadius.Zero, CornerRadius.Zero)) }
         sombraSuave(capota, rc, 7 * u, 0.2f)
@@ -396,7 +444,16 @@ object IdeasFrente : DisenoIdeas {
         with(TrazosFrente) { emblemaRed(marca, ch * 0.042f, tn(BOTON).copy(alpha = 0.8f), 1.2f * u) }
         for (k in 0 until 6) drawCircle(tn(HUESO), 0.6f * u, Offset(marca.x + ch * 0.12f * (azar(41, k) - 0.5f), marca.y + ch * 0.1f * (azar(42, k) - 0.5f)))
 
-        // El pupitre: el panel hundido de acero pizarra.
+        // Las molduras redondas de la capota, sobre la de cromo: la consola blanca anillada.
+        for (k in 0 until 2) {
+            val y = d.corona.bottom - 6f * u - (k + 1) * 3.4f * u
+            val m = Rect(capota.left + 0.5f * u, y, capota.right - 0.5f * u, y + 3.4f * u)
+            drawRoundRect(Brush.verticalGradient(listOf(tn(HUESO_LUZ), tn(HUESO), tn(mezcla(HUESO, SOMBRA, 0.35f))), m.top, m.bottom), m.topLeft, m.size, CornerRadius(1.7f * u))
+            drawLine(Color.White.copy(alpha = if (oscuro) 0.12f else 0.75f), Offset(m.left + 2f * u, m.top + 0.8f * u), Offset(m.right - 2f * u, m.top + 0.8f * u), 0.8f * u, StrokeCap.Round)
+            drawLine(SOMBRA.copy(alpha = 0.55f), Offset(m.left + 1f * u, m.bottom - 0.3f * u), Offset(m.right - 1f * u, m.bottom - 0.3f * u), 0.8f * u)
+        }
+
+        // El pupitre: el panel hundido de consola oscura, de verde casi negro.
         val panel = Rect(w * 0.055f, y0 + ch * 0.24f, w * 0.905f, y0 + ch * 0.9f)
         val rp = ch * 0.09f
         drawRoundRect(tn(SOMBRA).copy(alpha = 0.55f), Offset(panel.left - 2 * u, panel.top - 2 * u), Size(panel.width + 4 * u, panel.height + 4 * u), CornerRadius(rp + 2 * u))
@@ -447,13 +504,13 @@ object IdeasFrente : DisenoIdeas {
             if (oscuro && luz != null) mancha(lp, 10 * u, luz.copy(alpha = 0.45f))
             with(TrazosFrente) { piloto(lp, 1.6f * u, luz ?: AMBAR, luz != null) }
         }
-        // El contador de cuatro cifras, el altavoz de la radio y los dos botones.
+        // El contador de cuatro cifras, la botonera de botones cuadrados y los dos botones.
         val cont = Rect(w * 0.65f, panel.top + panel.height * 0.14f, w * 0.815f, panel.top + panel.height * 0.42f)
         visor(cont, d.huecos.size + d.mas, 4, AMBAR, oscuro)
         val alt = Rect(w * 0.65f, panel.top + panel.height * 0.54f, w * 0.815f, panel.bottom - panel.height * 0.12f)
-        drawRoundRect(tn(BAQUELITA), alt.topLeft, alt.size, CornerRadius(3 * u))
-        for (i in 0 until 3) for (j in 0 until 9) drawCircle(Color.Black.copy(alpha = 0.75f), 0.9f * u, Offset(alt.left + alt.width * (j + 0.5f) / 9f, alt.top + alt.height * (i + 0.5f) / 3f))
-        drawRoundRect(Color.White.copy(alpha = 0.1f), alt.topLeft, alt.size, CornerRadius(3 * u), style = Stroke(0.8f * u))
+        drawRoundRect(tn(mezcla(PANEL_OSC, Color.Black, 0.3f)), alt.topLeft, alt.size, CornerRadius(2 * u))
+        botonera(alt, 5, 2, 3, oscuro)
+        drawRoundRect(Color.White.copy(alpha = 0.1f), alt.topLeft, alt.size, CornerRadius(2 * u), style = Stroke(0.8f * u))
         boton(Offset(w * 0.862f, panel.top + panel.height * 0.3f), w * 0.017f, BOTON, oscuro)
         boton(Offset(w * 0.862f, panel.top + panel.height * 0.7f), w * 0.017f, AMBAR, oscuro)
         // Del hombro de la capota cuelga el auricular.
@@ -462,7 +519,7 @@ object IdeasFrente : DisenoIdeas {
         auricular(gancho, ra, oscuro)
 
         // El cuerpo de la consola: chapa hueso un poco abombada, con mugre abajo y su grano.
-        val cuerpo = Rect(w * 0.02f, d.corona.bottom - 4 * u, w * 0.98f, d.base.top + 3 * u)
+        val cuerpo = Rect(w * 0.03f, d.corona.bottom - 4 * u, w * 0.97f, d.base.top + 3 * u)
         drawRoundRect(Brush.horizontalGradient(0f to tn(HUESO_OSC), 0.05f to tn(HUESO), 0.24f to tn(HUESO_LUZ), 0.6f to tn(HUESO), 0.95f to tn(mezcla(HUESO, HUESO_OSC, 0.5f)),
             1f to tn(HUESO_OSC), startX = cuerpo.left, endX = cuerpo.right), cuerpo.topLeft, cuerpo.size, CornerRadius(5 * u))
         val mugre = minOf(34 * u, cuerpo.height)
@@ -486,13 +543,23 @@ object IdeasFrente : DisenoIdeas {
         }
         d.filas.forEachIndexed { i, f -> tornillo(Offset(w * 0.045f, f.center.y), 1.7f * u, 20f + 61f * i, oscuro) }
         // La moldura de cromo entre la capota y el cuerpo.
-        val moldura = Rect(w * 0.012f, d.corona.bottom - 6 * u, w * 0.988f, d.corona.bottom - 1.5f * u)
+        val moldura = Rect(w * 0.022f, d.corona.bottom - 6 * u, w * 0.978f, d.corona.bottom - 1.5f * u)
         drawRoundRect(Brush.verticalGradient(listOf(tn(CROMO_LUZ), tn(CROMO), tn(CROMO_OSC)), moldura.top, moldura.bottom), moldura.topLeft, moldura.size, CornerRadius(2 * u))
 
-        // El zócalo de baquelita, metido bajo la consola, con sus dos rejillas.
+        // Las manchas de humedad que bajan por la chapa desde la capota, y el óxido bajo los tornillos.
+        clipRect(cuerpo.left, cuerpo.top, cuerpo.right, cuerpo.bottom) {
+            listOf(0.05f to 0.5f, 0.5f to 0.18f, 0.93f to 0.42f).forEach { (f, l) ->
+                val x = cuerpo.left + cuerpo.width * f; val largo = cuerpo.height * l
+                drawRect(Brush.verticalGradient(listOf(tn(Color(0xFF5E6650)).copy(alpha = 0.32f), Color.Transparent), cuerpo.top, cuerpo.top + largo), Offset(x - 5f * u, cuerpo.top), Size(10f * u, largo))
+                drawLine(tn(Color(0xFF5E6650)).copy(alpha = 0.25f), Offset(x, cuerpo.top), Offset(x + 1f * u, cuerpo.top + largo * 1.1f), 1.2f * u)
+            }
+            d.filas.forEach { f -> drawLine(tn(QUEMADO).copy(alpha = 0.22f), Offset(w * 0.045f, f.center.y + 2f * u), Offset(w * 0.046f, f.center.y + 14f * u), 1.4f * u, StrokeCap.Round) }
+        }
+
+        // El zócalo de consola oscura, metido bajo la consola, con sus dos rejillas.
         val bh = d.base.height
-        val zocalo = Rect(w * 0.035f, cuerpo.bottom, w * 0.965f, d.base.top + bh * 0.68f)
-        drawRect(Brush.verticalGradient(listOf(tn(mezcla(BAQUELITA, Color.Black, 0.45f)), tn(BAQUELITA), tn(mezcla(BAQUELITA, BAQUELITA_LUZ, 0.6f))), zocalo.top, zocalo.bottom), zocalo.topLeft, zocalo.size)
+        val zocalo = Rect(w * 0.045f, cuerpo.bottom, w * 0.955f, d.base.top + bh * 0.68f)
+        drawRect(Brush.verticalGradient(listOf(tn(mezcla(PANEL, Color.Black, 0.5f)), tn(PANEL), tn(PANEL_LUZ)), zocalo.top, zocalo.bottom), zocalo.topLeft, zocalo.size)
         listOf(w * 0.07f, w * 0.76f).forEach { x0 ->
             for (fila in 0 until 2) {
                 val y = zocalo.top + zocalo.height * (0.38f + 0.3f * fila)
@@ -505,24 +572,24 @@ object IdeasFrente : DisenoIdeas {
             }
         }
         // El parachoques de goma al pie del cuerpo.
-        val goma = Rect(w * 0.015f, cuerpo.bottom - 2.5f * u, w * 0.985f, cuerpo.bottom + 2.5f * u)
+        val goma = Rect(w * 0.025f, cuerpo.bottom - 2.5f * u, w * 0.975f, cuerpo.bottom + 2.5f * u)
         drawRoundRect(tn(BAQUELITA_LUZ), goma.topLeft, goma.size, CornerRadius(2.5f * u))
         drawLine(Color.White.copy(alpha = if (oscuro) 0.08f else 0.22f), Offset(goma.left + 3 * u, goma.top + 1 * u), Offset(goma.right - 3 * u, goma.top + 1 * u), 0.8f * u)
-        // El piso de goma con sus botones, en sombra junto a la consola.
+        // El piso de hormigón de la base, con sus manchas, la franja de peligro pintada al pie de la consola y un cable grueso
+        // tirado; en sombra junto a la consola.
         val piso = Rect(0f, zocalo.bottom, w, d.base.bottom)
-        drawRect(Brush.verticalGradient(listOf(tn(mezcla(GOMA, Color.Black, 0.3f)), tn(GOMA)), piso.top, piso.bottom), piso.topLeft, piso.size)
-        var fy = piso.top + 3 * u
-        var fila = 0
-        while (fy < piso.bottom - 1 * u) {
-            var fx = if (fila % 2 == 0) 3 * u else 6 * u
-            while (fx < w) {
-                drawOval(Color.Black.copy(alpha = 0.35f), Offset(fx - 1.1f * u, fy - 0.4f * u), Size(2.6f * u, 1.4f * u))
-                drawOval(tn(mezcla(GOMA, Color.White, 0.16f)), Offset(fx - 1.3f * u, fy - 0.8f * u), Size(2.6f * u, 1.4f * u))
-                fx += 6 * u
-            }
-            fy += 3.4f * u; fila++
+        drawRect(Brush.verticalGradient(listOf(tn(mezcla(HORMIGON, Color.Black, 0.25f)), tn(HORMIGON)), piso.top, piso.bottom), piso.topLeft, piso.size)
+        for (k in 0 until 14) drawOval(tn(Color(0xFF4A5244)).copy(alpha = 0.1f + 0.1f * azar(61, k)), Offset(w * azar(62, k) - 8 * u, piso.top + piso.height * azar(63, k) - 2 * u), Size((8 + 18 * azar(64, k)) * u, (2 + 3 * azar(65, k)) * u))
+        grano(piso, Color.Black, 120, 66)
+        with(TrazosFrente) {
+            franjaPeligro(Rect(0f, piso.top + 2.5f * u, w, piso.top + 6.5f * u), tn(TrazosFrente.PELIGRO), tn(BAQUELITA), 6f * u)
         }
+        for (k in 0 until 30) drawCircle(tn(HORMIGON).copy(alpha = 0.7f), (0.5f + 1.2f * azar(67, k)) * u, Offset(w * azar(68, k), piso.top + 2.5f * u + 4f * u * azar(69, k)))
         drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.45f), Color.Transparent), piso.top, piso.top + 7 * u), piso.topLeft, Size(w, 7 * u))
+        with(TrazosFrente) {
+            cableGrueso(Path().apply { moveTo(-3f * u, piso.bottom - 2f * u); cubicTo(w * 0.25f, piso.bottom - 12f * u, w * 0.4f, piso.bottom + 2f * u, w * 0.62f, piso.bottom - 5f * u); cubicTo(w * 0.75f, piso.bottom - 9f * u, w * 0.85f, piso.top + 3f * u, w * 0.94f, zocalo.bottom - 2f * u) },
+                4.2f * u, tn(BAQUELITA), if (oscuro) 0.3f else 1f, 0.4f)
+        }
 
         // El cordón del auricular, en espiral, por el costado derecho hasta su pasacables en el zócalo.
         val xc = w * 0.957f
@@ -532,6 +599,13 @@ object IdeasFrente : DisenoIdeas {
         espiral(inicio, zocalo.top + 2 * u, 3.2f * u, oscuro)
         drawCircle(tn(CROMO_OSC), 2.6f * u, Offset(xc, zocalo.top + 4 * u))
         drawCircle(Color.Black, 1.4f * u, Offset(xc, zocalo.top + 4 * u))
+
+        // Las raíces de delante, que caen del muro por los costados de la consola (nunca sobre el pupitre ni los nichos).
+        val tapados = Path().apply {
+            addRect(Rect(-w, -w, 2 * w, size.height + w)); fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
+            addRoundRect(RoundRect(panel, CornerRadius(rp))); d.huecos.forEach { addRect(it) }
+        }
+        clipPath(tapados) { raices(listOf(Triple(w * 0.04f, ch * 1.5f, 3.6f * u), Triple(w * 0.075f, ch * 0.4f, 2.2f * u), Triple(w * 0.965f, ch * 0.75f, 3.2f * u), Triple(w * 0.6f, ch * 0.12f, 2.4f * u)), y0, oscuro, 31) }
 
         // La placa de «y N más»: un trozo de cinta rotuladora roja, con sus letras en relieve.
         if (d.mas > 0) placa.let { pl ->
@@ -572,7 +646,9 @@ object IdeasFrente : DisenoIdeas {
             }
         } else clipPath(formaNicho) {
             // El fondo del nicho, el piso visto un poco desde arriba, el foco rojo de cuarto oscuro y las latas.
-            drawRect(Brush.verticalGradient(listOf(tn(mezcla(PANEL_OSC, HUECO, 0.4f)), HUECO), 0f, repisa), Offset.Zero, nicho.size)
+            // El fondo es la piedra de las ruinas, en sombra: el nicho está cavado en el muro.
+            muro(nicho, true, h * 0.17f, c.semilla)
+            drawRect(Brush.verticalGradient(listOf(HUECO.copy(alpha = if (oscuro) 0.35f else 0.15f), HUECO.copy(alpha = 0.75f)), 0f, repisa), Offset.Zero, nicho.size)
             drawRect(Brush.verticalGradient(listOf(tn(mezcla(HUESO_OSC, HUECO, 0.7f)), tn(mezcla(HUESO_OSC, HUECO, 0.45f))), repisa - h * 0.06f, repisa),
                 Offset(0f, repisa - h * 0.06f), Size(w, h * 0.06f))
             if (!oscuro) mancha(Offset(w * 0.3f, 0f), w * 0.5f, HUESO_LUZ.copy(alpha = 0.12f))
@@ -709,8 +785,9 @@ object IdeasFrente : DisenoIdeas {
         val u = density
         val w = size.width; val h = size.height
         fun tn(x: Color) = t(x, oscuro)
-        // El fondo del nicho, en la penumbra, con su grano.
-        drawRect(Brush.verticalGradient(listOf(tn(mezcla(PANEL_OSC, FORRO, 0.5f)), tn(FORRO)), 0f, h))
+        // El fondo del nicho: la piedra de las ruinas donde está cavado, en la penumbra, con su grano.
+        muro(Rect(0f, 0f, w, h), true, 46f * u, 77)
+        drawRect(Brush.verticalGradient(listOf(tn(FORRO).copy(alpha = if (oscuro) 0.45f else 0.35f), tn(FORRO).copy(alpha = 0.7f)), 0f, h))
         grano(Rect(0f, 0f, w, h), Color.Black, 260, 77)
         val pl = 14 * u; val pa = 12 * u; val pf = 24 * u
         val dentro = Rect(pl, pa, w - pl, h - pf)
