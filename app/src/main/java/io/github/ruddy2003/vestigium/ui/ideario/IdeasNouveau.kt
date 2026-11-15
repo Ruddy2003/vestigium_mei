@@ -819,7 +819,7 @@ object IdeasNouveau : DisenoIdeas {
         val cuerda = Path().apply { for (i in 0..30) { val p = cordel(ca, cm, cb, i / 30f); if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y) } }
         if (!oscuro) translate(2f * u, 4f * u) { drawPath(cuerda, sombraMueble(0.14f), style = Stroke(1f * u)) }
         drawPath(cuerda, c(Color(0xFFB8A988), Offset(w * 0.7f, ch * 0.2f)), style = Stroke(0.9f * u))
-        // El clavo de la derecha donde se ata... queda fuera; el de la izquierda, en el marco de la ventana.
+        // El clavo donde se ata el cordel, en el marco de la ventana.
         drawCircle(c(TrazosNouveau.HIERRO_SOMBRA, ca), 1.6f * u, ca)
         colgadas.forEachIndexed { i, (fa, fb, fh) ->
             val pa = cordel(ca, cm, cb, tCordel(w * fa)); val pb = cordel(ca, cm, cb, tCordel(w * fb))

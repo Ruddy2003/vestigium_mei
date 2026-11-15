@@ -47,18 +47,19 @@ import kotlin.math.sqrt
  *   del pliego, las piedras apiladas en su tarima, la resma atada y el balde con la esponja.
  * - Mapas: la mesa de dibujo inclinada vista de frente: el tablero de tilo en su marco de nogal, el pliego sujeto con
  *   chinchetas (el nicho); a la izquierda, el estudio de iris y la tira de las cuatro tintas; a la derecha, la lámpara
- *   de tulipa en su brazo de hierro que se curva como un tallo, el calco con la línea de látigo y el compás colgado.
- *   Abajo, el canto con las barras de lápiz litográfico, el pincel, el tiralíneas y la regla en T; el faldón tallado, la
- *   cremallera de la inclinación y las patas sobre el piso.
+ *   de tulipa en su brazo de latón que se curva como un tallo, el calco con la línea de látigo y el compás colgado.
+ *   Abajo, el canto con las barras de lápiz litográfico, el pincel, el tiralíneas, la regla en T, los frascos de tinta y el
+ *   vaso de los pinceles; el faldón tallado, la cremallera de la inclinación y las patas sobre el piso.
  * - Otras vidas: el casillero de las piedras: cinco casillas de roble con una piedra de caliza graneada en el fondo de
- *   cada una (el nicho); arriba, las piedras apiladas, el rodillo sobre su losa de entintar y los frascos de tinta; abajo,
- *   los cajones con tiradores de hoja y el piso.
+ *   cada una y la boca en arco (el nicho); en el friso, dos líneas de látigo talladas que nacen de una flor; encima, las
+ *   piedras apiladas, el rodillo sobre su losa de entintar, los frascos de tinta y la lámpara de vidrio de Nancy; arriba
+ *   de todo, la viga del tragaluz con sus ménsulas; abajo, los portaetiquetas, los cajones con tiradores de hoja y el piso.
  * - Íconos: el Grand Palais de la Exposición de 1900 con su nave y su cúpula de hierro y vidrio sobre el Sena; una piedra
  *   entintada que el rascador de litógrafo raspa hasta descubrir el Sena; y una prueba con el plano de París y tres
  *   chinchetas de flor unidas por el camino.
  * - Notas: el tablero del taller, de sarga verde en su marco de nogal tallado como la biblioteca, con el iris en la
- *   cresta y la repisa del tintero. Cada nota es una tarjeta de papel vélin prendida con una chincheta de latón en flor;
- *   su tipo es una viñeta impresa en la esquina, en el lenguaje de las flores (la tulipa encendida, el pensamiento, el
+ *   cresta, la repisa del tintero y del florero de Nancy, y la tulipa que cuelga arriba a la derecha. Cada nota es una
+ *   tarjeta de papel vélin prendida con una chincheta de latón en flor; su tipo es una viñeta impresa en la esquina, en el lenguaje de las flores (la tulipa encendida, el pensamiento, el
  *   brote, el nomeolvides) y, si está fijada, la prende un alfiler de vidrio de Nancy y lleva un filete de oro.
  */
 internal object VidaNouveau : DisenoVida {
@@ -71,17 +72,14 @@ internal object VidaNouveau : DisenoVida {
     private val IRIS_LENGUA = TrazosNouveau.IRIS_LENGUA
     private val MALVA = TrazosNouveau.MALVA
     private val ORO = TrazosNouveau.ORO
-    private val ORO_BRILLO = TrazosNouveau.ORO_BRILLO
     private val VIDRIO_AMBAR = TrazosNouveau.VIDRIO_AMBAR
     private val VIDRIO_VIOLETA = TrazosNouveau.VIDRIO_VIOLETA
     private val VIDRIO_VERDE = TrazosNouveau.VIDRIO_VERDE
     private val PIEDRA = TrazosNouveau.PIEDRA
-    private val TINTA_ROJA = TrazosNouveau.TINTA_ROJA
     private val TINTA_AZUL = TrazosNouveau.TINTA_AZUL
     private val LUZ = TrazosNouveau.LUZ
     private val LUZ_HALO = TrazosNouveau.LUZ_HALO
     private val FAROL = TrazosNouveau.FAROL
-    private val CAFE = TrazosNouveau.CAFE
     private val PLUMA = TrazosNouveau.PLUMA
 
     /** El yeso crema de los muros, su luz y su sombra. */
@@ -632,7 +630,7 @@ internal object VidaNouveau : DisenoVida {
                 Offset(r.left + r.width * azar(semilla, j + 40), r.top + r.height * (0.35f + 0.6f * azar(semilla, j + 50))))
             for (j in 0 until 2) {
                 val x = r.left + r.width * (0.15f + 0.7f * azar(semilla, j + 60))
-                drawOval(lam(PIEDRA_LUZ, o, f).copy(alpha = 0.6f), Offset(x, r.bottom - r.height * 0.45f), Size((0.8f + azar(semilla, j + 70)) * u, r.height * 0.3f))
+                drawOval(lam(PIEDRA_LUZ, o, f).copy(alpha = 0.3f), Offset(x, r.bottom - r.height * 0.4f), Size((0.6f + 0.6f * azar(semilla, j + 70)) * u, r.height * 0.22f))
             }
             drawPath(Path().apply { moveTo(r.right - 1.2f * u, r.bottom); lineTo(r.right, r.bottom - r.height * 0.5f); lineTo(r.right, r.bottom); close() }, lam(PIEDRA_OSC, o, f).copy(alpha = 0.5f))
         }
@@ -805,7 +803,7 @@ internal object VidaNouveau : DisenoVida {
         with(TrazosNouveau) { lampara(base, alto, if (o) 1f else 0f) }
     }
 
-    // ---------------------------------------------------------------- Social
+    // ---------------------------------------------------------------- Los nichos
 
     override fun area(m: MuebleVida): Rect = when (m) {
         MuebleVida.SOCIAL -> Rect(0.22f, 0.215f, 0.76f, 0.725f)
@@ -813,6 +811,8 @@ internal object VidaNouveau : DisenoVida {
         MuebleVida.OTRAS_VIDAS -> Rect(0.065f, 0.3f, 0.935f, 0.8f)
         MuebleVida.NOTAS -> Rect(0.075f, 0.155f, 0.925f, 0.825f)
     }
+
+    // ---------------------------------------------------------------- Social
 
     override fun DrawScope.muebleSocial(e: EstadoMueble, oscuro: Boolean) {
         val w = size.width; val h = size.height; val u = size.minDimension / 100f
@@ -899,7 +899,7 @@ internal object VidaNouveau : DisenoVida {
         }
         balde(Offset(w * 0.74f, h * 0.945f), 6.4f * u, 6f * u, o, u)
 
-        // El velador de mármol bajo la ventana, con la lámpara de vidrio, la cafetera y las tazas; y la silla curvada.
+        // El velador de mármol bajo la ventana, con la lámpara de vidrio y las tazas; y la silla curvada.
         silla(Offset(w * 0.215f, h * 0.975f), h * 0.22f, o, u, fl(Offset(w * 0.215f, h * 0.85f)))
         velador(Offset(w * 0.105f, h * 0.79f), w * 0.082f, h * 0.17f, o, u)
         lamparaNancy(Offset(w * 0.087f, h * 0.785f), h * 0.135f, o)
@@ -1120,8 +1120,6 @@ internal object VidaNouveau : DisenoVida {
         drawOval(madL.copy(alpha = 0.7f), Offset(as0.left + g * 0.3f, as0.top + g * 0.1f), Size(as0.width * 0.5f, g * 0.4f))
     }
 
-    // ---------------------------------------------------------------- (provisional) las demás piezas
-
     // ---------------------------------------------------------------- Mapas
 
     override fun DrawScope.muebleMapas(e: EstadoMueble, oscuro: Boolean) {
@@ -1270,7 +1268,6 @@ internal object VidaNouveau : DisenoVida {
         // La tulipa cuelga boca abajo de la punta del brazo.
         rotate(180f, punta) { with(TrazosNouveau) { tulipa(punta, 6.4f * u, if (o) 1f else 0f) } }
 
-        // El papel que guarda el mapa: su barba en el pie y las chinchetas.
         granoMueble(Rect(0f, 0f, w, h), o)
     }
 
