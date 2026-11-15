@@ -57,8 +57,8 @@ import kotlin.math.sin
 internal object TallerBarco {
     private val C = ColorBotanico
 
-    private val SITIO_FRASCOS = sitio(0.3f, 3.0f, -0.25f)
-    private val SITIO_BALDE = sitio(0.62f, 2.65f, 0f)
+    private val SITIO_FRASCOS = sitio(-1.2f, 3.08f, 0.2f)
+    private val SITIO_BALDE = sitio(0.76f, 2.6f, 0f)
 
     private const val RADIO_CUBA = 0.22f
     private const val ALTO_CUBA = 0.8f
@@ -175,8 +175,8 @@ internal object TallerBarco {
         // La caja de frascos con serrín y unos frascos sueltos junto a ella.
         val fr = frascos()
         cosas += parte(SITIO_FRASCOS.pie.y) {
-            val (pf, sf) = v.pincel(0.3f, 3f, 0.3f)
-            with(PiezasBotanico) { cajaDeFrascos(fr, pf, sf); frasco(pf, pc(0.66f, 0f, 3.05f), 20f, 0); frasco(pf, pc(0.74f, 0f, 3.3f), 16f, 1) }
+            val (pf, sf) = v.pincel(-1.2f, 3.08f, 0.3f)
+            with(PiezasBotanico) { cajaDeFrascos(fr, pf, sf); frasco(pf, pc(-0.78f, 0f, 3.12f), 20f, 0); frasco(pf, pc(-0.7f, 0f, 3.36f), 16f, 1) }
         }
         cosas += parte(pc(-1.4f, 0f, 3.45f).y) { piedras(v) }
         val (pg, _) = v.pincel(0.5f, 3.2f, 0.6f)
@@ -364,7 +364,7 @@ internal object TallerBarco {
 
     /** El balde del baldeo, de duelas, con su asa de cabo y el agua dentro, que refleja el cielo. */
     private fun DrawScope.balde(v: Vista) {
-        val (p, _) = v.pincel(0.62f, 2.65f, 0.3f); val s = SITIO_BALDE; val e = s.escala(0f, 0f)
+        val (p, _) = v.pincel(0.76f, 2.6f, 0.3f); val s = SITIO_BALDE; val e = s.escala(0f, 0f)
         // El balde: de duelas, con dos aros, el agua con el cielo reflejado.
         val r0 = 0.15f; val r1 = 0.17f; val hb = 0.3f
         val cuerpo = poligono(s.p(-r0, 0f, 0f), s.p(r0, 0f, 0f), s.p(r1, hb, 0f), s.p(-r1, hb, 0f))
