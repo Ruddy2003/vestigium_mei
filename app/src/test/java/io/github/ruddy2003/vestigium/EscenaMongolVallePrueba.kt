@@ -1,17 +1,28 @@
 package io.github.ruddy2003.vestigium
 
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.LayoutDirection
 import io.github.ruddy2003.vestigium.data.OtrasVidas.Hacer
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaMongol
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaMongol.Lugar
 import io.github.ruddy2003.vestigium.ui.escenas.Momento
+import io.github.ruddy2003.vestigium.ui.escenas.ObjetosMongol
 import io.github.ruddy2003.vestigium.ui.escenas.TipoAncla
 import io.github.ruddy2003.vestigium.ui.escenas.ValleCerro
 import io.github.ruddy2003.vestigium.ui.escenas.ValleMongol
 import io.github.ruddy2003.vestigium.ui.escenas.ValleRio
+import io.github.ruddy2003.vestigium.ui.escenas.lienzo
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.vidas.FichaDelDia
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assume
 import org.junit.Test
 import java.time.LocalDate
 
@@ -114,5 +125,34 @@ class EscenaMongolVallePrueba {
         // La cresta y el pie del cerro acaban en el mismo punto, y el hombro en el pie.
         assertEquals(ValleCerro.CRESTA.last(), ValleCerro.PIE.last())
         assertTrue((ValleCerro.HOMBRO.last() - ValleCerro.PIE.first { it.x >= ValleCerro.HOMBRO.last().x - 1f }).getDistance() < 3f)
+    }
+
+    /** Si esta JVM puede dibujar: en el arnés de escritorio sí; en la de Android sin gráficos, no (y la prueba se salta). */
+    private val sePuedeDibujar: Boolean by lazy { runCatching { ImageBitmap(1, 1) }.isSuccess }
+
+    /**
+     * El valle se dibuja entero (la parte quieta y la viva) con cada uno de los doce objetos y sin objeto, con nieve,
+     * sin nieve y nevando, de día y de noche, sin lanzar nada. Los grandes llevan su sombra arrojada con un recorte que
+     * tiene que caber en el lienzo (un suelo por debajo de [ALTO] lo deja del revés y la sombra lanza una excepción).
+     */
+    @Test fun elValleSeDibujaConCadaObjeto() {
+        Assume.assumeTrue("esta JVM no tiene con qué dibujar (se dibuja en el arnés)", sePuedeDibujar)
+        val ancho = 190; val alto = (ancho * ALTO / ANCHO).toInt()
+        val lienzoImg = Canvas(ImageBitmap(ancho, alto))
+        for (dia in listOf("2027-01-12", "2027-10-20", "2027-11-03")) for (h in listOf(9.0, 13.0, 21.0)) {
+            val base = momento(dia, h)
+            assertEquals("$dia: es el valle", Lugar.VALLE, EscenaMongol.lugar(base))
+            for (o in ObjetosMongol.TODOS + listOf(null)) {
+                val m = Momento(base.ficha.copy(objeto = o), h)
+                try {
+                    CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, lienzoImg, Size(ancho.toFloat(), alto.toFloat())) {
+                        lienzo { with(EscenaMongol) { quieta(m) } }
+                        lienzo { with(EscenaMongol) { viva(m, 3.7f) } }
+                    }
+                } catch (x: Exception) {
+                    throw AssertionError("$dia $h con «$o»: $x", x)
+                }
+            }
+        }
     }
 }

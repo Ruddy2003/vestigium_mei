@@ -32,6 +32,8 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombraArrojada
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * El cerro que abriga el valle, la diagonal grande del cuadro, en dos planos: **la cima** detrás, con el ovoo recortado
@@ -128,13 +130,15 @@ internal object ValleCerro {
         clipPath(cima) { drawPath(poligono(HOMBRO.map { it + Offset(0f, 3f) } + HOMBRO.reversed().map { it + Offset(0f, -18f) }), Brush.verticalGradient(0f to Color.Transparent, 1f to lerp(l.bruma, l.bajo, 0.4f).copy(alpha = 0.3f * (1f - 0.6f * l.noche)), startY = 76f, endY = 138f)) }
         // El hombro, delante: más cálido, con la roca más grande.
         plano(p, sol, nieve, pasto, hombro, HOMBRO, DELANTE, PENAS_DELANTE, lerp(hierba, C.CUERO, 0.12f), 0.03f, fijo("hombro"))
-        // La nieve arrimada al pie del cerro: un ventisquero de borde roto.
+        // La nieve arrimada al pie del cerro: un ventisquero largo de borde festoneado y blando, y motas por encima.
         if (nieve > 0.1f) {
             val az = fijo("pie")
-            val arriba = rota(PIE.map { q -> q + Offset(0f, -(4f + 10f * nieve) * (0.6f + 0.8f * az.real())) }, az, 1.6f, 3)
-            val apron = poligono(arriba + PIE.reversed().map { it + Offset(0f, 2f) })
+            val arriba = PIE.indices.flatMap { i -> if (i == PIE.size - 1) listOf(PIE[i]) else { val a = PIE[i]; val b = PIE[i + 1]; (0 until 2).map { k -> a + (b - a) * (k / 2f) } } }
+                .map { q -> q + Offset(0f, -(3f + 9f * nieve) * (0.55f + 0.7f * az.real())) }
+            val apron = curva(arriba).apply { for (q in PIE.reversed()) lineTo(q + Offset(0f, 2f)); close() }
             drawPath(apron, p.por(C.NIEVE, sol.t(V3(0.1f, 0.8f, -0.6f)) + 0.15f, 0.06f).copy(alpha = (nieve * 1.3f).coerceAtMost(1f)))
-            drawPath(Path().apply { moveTo(arriba[0]); for (q in arriba.drop(1)) lineTo(q) }, p.luz(C.NIEVE, 0.06f).copy(alpha = 0.7f * nieve), style = Stroke(0.7f))
+            drawPath(curva(arriba), p.luz(C.NIEVE, 0.06f).copy(alpha = 0.7f * nieve), style = Stroke(0.7f))
+            drawPoints(arriba.flatMap { q -> (0 until 3).map { q + Offset(az.entre(-5f, 5f), -az.entre(1f, 6f)) } }, PointMode.Points, p.luz(C.NIEVE, 0.06f).copy(alpha = 0.8f * nieve), 1.2f, StrokeCap.Round)
         }
         // De día, el rebaño pace en la ladera del hombro: «las ovejas, por las laderas del valle». Apretado, para que se
         // lea como una mancha de lomos claros y no como puntos sueltos.
@@ -174,26 +178,6 @@ internal object ValleCerro {
                 val n = lineas[i].cara; val t = ((sol.t(n) - 0.35f) * 1.6f).coerceIn(-1f, 1f)
                 val claro = if (lineas[i].espolon) 0.18f else -0.18f
                 drawPath(cara, Brush.linearGradient(0f to p.por(piel, t + claro, lejos), 1f to p.por(piel, t - claro, lejos), start = en(a, 0.25f), end = en(b, 0.25f)))
-                // El manto de nieve de la cara: abajo, con el borde de arriba roto y lenguas que suben. Se queda más en las
-                // caras que miran a la izquierda **[Aproximación]**: las que menos ven el sol del mediodía.
-                if (nieve > 0.08f && n.y < 0.9f && i > 0) {
-                    val ra = rotas[i]; val rb = rotas[i + 1]
-                    val desde = when { n.x < -0.3f -> 0.12f + 0.75f * (1f - nieve); n.x > 0.3f -> 0.5f + 0.6f * (1f - nieve); else -> 0.5f + 0.7f * (1f - nieve) }
-                    if (desde < 0.97f) clipPath(cara) {
-                        val fa = (desde + az.entre(-0.08f, 0.08f)).coerceIn(0.02f, 0.98f); val fb = (desde + az.entre(-0.08f, 0.08f)).coerceIn(0.02f, 0.98f)
-                        // Los costados bajan siguiendo las dos líneas, pero apartados del espolón: el viento barre los lomos.
-                        fun lado(r1: List<Offset>, r2: List<Offset>, f0: Float, aparta: Boolean) = (0..6).map { k -> val f = f0 + (1f - f0) * k / 6f; val u = if (aparta) az.entre(0.14f, 0.38f) else az.entre(0f, 0.05f); en(r1, f) + (en(r2, f) - en(r1, f)) * u }
-                        val izq = lado(ra, rb, fa, lineas[i].espolon); val der = lado(rb, ra, fb, lineas[i + 1].espolon)
-                        val qa = izq[0]; val qb = der[0]; val ancho = (qb - qa).getDistance()
-                        val borde = (0..8).map { k -> val u = k / 8f; qa + (qb - qa) * u + Offset(0f, az.entre(-1.2f, 1.6f) * (2f + ancho * 0.05f) - (if (k in 2..6 && az.real() < 0.22f) az.entre(3f, 8f) * (0.4f + nieve) else 0f)) }
-                        // El borde de arriba, blando (la nieve se amontona redonda); los costados, rotos.
-                        val manto = curva(borde).apply { for (q in der.drop(1)) lineTo(q); lineTo(der.last() + Offset(0f, 120f)); lineTo(izq.last() + Offset(0f, 120f)); for (q in izq.drop(1).reversed()) lineTo(q); close() }
-                        drawPath(manto, p.por(C.NIEVE, t + 0.1f, lejos))
-                        // Calvas de hierba dentro del manto, y el filo del borde.
-                        repeat((3 + ancho / 10f).toInt()) { val c = qa + (qb - qa) * az.entre(0.1f, 0.9f) + Offset(0f, az.entre(6f, 40f)); val w = az.entre(2f, 6f) * (if (cerca) 1.3f else 1f); drawPath(borron(c, w, w * 0.32f, az, 7, 0.4f), p.por(piel, t, lejos).copy(alpha = 0.85f)) }
-                        drawPath(curva(borde), p.sombra(piel, lejos).copy(alpha = 0.45f), style = Stroke(0.6f))
-                    }
-                }
             }
             // Las cárcavas: el pliegue hondo, en sombra del lado contrario al sol, con una rama que se abre a media ladera
             // y la nieve dentro: una lengua que se ensancha hacia abajo, de borde roto.
@@ -205,15 +189,62 @@ internal object ValleCerro {
                 drawPath(pliegue, p.sombra(lerp(lerp(piel, C.TIERRA, 0.5f * (1f - nieve)), C.VERDE, (1.5f * pasto).coerceAtMost(0.7f)), lejos).copy(alpha = 0.8f))
                 val brote = en(r, az.entre(0.35f, 0.6f)); val rama = rota(listOf(brote, brote + Offset(-hacia * az.entre(5f, 9f), az.entre(-9f, -5f)), brote + Offset(-hacia * az.entre(8f, 14f), az.entre(-16f, -11f))), az, 0.8f, 2)
                 drawPath(Path().apply { moveTo(rama[0]); for (q in rama.drop(1)) lineTo(q) }, p.sombra(piel, lejos).copy(alpha = 0.65f), style = Stroke(ancho * 0.5f, cap = StrokeCap.Round))
-                if (nieve > 0.12f) {
-                    // Una cinta de ancho desigual (no un triángulo), de bordes blandos, que arranca un poco bajo la cresta.
-                    val k0 = r.size
-                    val izq = r.mapIndexed { k, q -> val w = ancho * (0.35f + 0.55f * nieve) * (0.75f + 0.4f * k / k0) * az.entre(0.55f, 1.35f); q + Offset(-w, 0.4f) }.drop(1)
-                    val der = r.mapIndexed { k, q -> val w = ancho * (0.35f + 0.55f * nieve) * (0.75f + 0.4f * k / k0) * az.entre(0.55f, 1.35f); q + Offset(w * 0.8f, 0.4f) }.drop(1)
-                    drawPath(curva(izq + der.reversed()).apply { close() }, p.por(C.NIEVE, sol.t(V3(-hacia * 0.4f, 0.6f, -0.7f)) + 0.1f, lejos))
-                    drawPath(curva(izq + r.drop(1).reversed()).apply { close() }, p.sombra(C.NIEVE, lejos).copy(alpha = 0.5f))
-                    drawPath(Path().apply { val rr = rama.map { it + Offset(0f, 0.4f) }; moveTo(rr[0]); for (q in rr.drop(1)) lineTo(q) }, p.por(C.NIEVE, 0.1f, lejos).copy(alpha = 0.85f * nieve), style = Stroke(ancho * 0.35f, cap = StrokeCap.Round))
+            }
+            // Los ventisqueros: la nieve que junta el viento, blanda y redonda (nunca en picos): metida en las cárcavas, al
+            // abrigo de los espolones (a su derecha: el viento sopla del noroeste **[Aproximación]**) y abajo en las caras
+            // que menos ven el sol. Cada uno es una sola forma de borde curvo, con su lomo claro y su vientre azul; alrededor,
+            // motas de nieve sueltas: el paso de la nieve a la hierba seca.
+            if (nieve > 0.08f) {
+                val motas = ArrayList<Offset>()
+                fun ventisquero(forma: Path, contorno: List<Offset>, t: Float, abajo: Float) {
+                    drawPath(forma, p.sombra(lerp(C.NIEVE, C.HIELO, 0.25f), lejos))
+                    // El lomo: la misma forma, un poco más arriba, sin tapar el vientre de abajo.
+                    clipPath(forma) { drawPath(forma.let { val q = Path(); q.addPath(it, Offset(0f, -abajo)); q }, p.por(C.NIEVE, t + 0.15f, lejos)) }
+                    for (q in contorno) if (az.real() < 0.6f) repeat(2) { motas += q + Offset(az.entre(-4f, 4f), az.entre(-3.5f, 1f)) }
                 }
+                val talla = if (cerca) 1f else 0.7f
+                // Abajo, en las caras que miran a la izquierda: un manto de borde festoneado y redondo, apartado del espolón.
+                for (i in 1 until rotas.size - 1) {
+                    val n = lineas[i].cara; if (n.x > -0.3f || rotas[i + 1].size < 3) continue
+                    val t = ((sol.t(n) - 0.35f) * 1.6f).coerceIn(-1f, 1f)
+                    val ra = rotas[i]; val rb = rotas[i + 1]
+                    val f0 = 0.88f - 0.6f * nieve + az.entre(-0.05f, 0.05f)
+                    val apartaA = if (lineas[i].espolon) 0.22f else 0.04f; val apartaB = if (lineas[i + 1].espolon) 0.22f else 0.04f
+                    fun lado(f: Float, desdeA: Boolean): Offset { val qa = en(ra, f); val qb = en(rb, f); return if (desdeA) qa + (qb - qa) * apartaA else qb + (qa - qb) * apartaB }
+                    val filas = 5
+                    val izq = (0..filas).map { k -> lado(f0 + (1f - f0) * k / filas, true) + Offset(az.entre(-1f, 1f), 0f) }
+                    val der = (0..filas).map { k -> lado(f0 + (1f - f0) * k / filas, false) + Offset(az.entre(-1f, 1f), 0f) }
+                    val ancho = (der[0] - izq[0]).getDistance()
+                    if (ancho < 4f) continue
+                    // El borde de arriba: festones redondos.
+                    val festones = (1..4).map { k -> izq[0] + (der[0] - izq[0]) * (k / 5f) + Offset(0f, (if (k % 2 == 0) -1f else 1f) * az.entre(1f, 2.6f) * (0.5f + ancho / 40f)) }
+                    val contorno = listOf(izq[0]) + festones + der + listOf(der.last() + Offset(0f, 40f), izq.last() + Offset(0f, 40f)) + izq.drop(1).reversed()
+                    ventisquero(TrazosValle.cerrada(contorno), listOf(izq[0]) + festones + der.take(3) + izq.take(3), t, 2.2f)
+                }
+                // En las cárcavas: una cinta de ancho desigual, más ancha hacia abajo, de puntas redondas.
+                for ((i, li) in lineas.withIndex()) {
+                    if (li.espolon || li.puntos.size < 3) continue
+                    val r = rotas[i]; val t = sol.t(V3(-hacia * 0.3f, 0.6f, -0.75f))
+                    // En dos o tres trozos, con la hierba asomando entre uno y otro.
+                    var f0 = 0.1f + 0.4f * (1f - nieve)
+                    while (f0 < 0.96f) {
+                        val f1 = (f0 + az.entre(0.2f, 0.38f)).coerceAtMost(1f)
+                        val eje = (0..6).map { k -> en(r, f0 + (f1 - f0) * k / 6f) + Offset(-hacia * 0.6f, 0.6f) }
+                        val anchos = (0..6).map { k -> val f = f0 + (f1 - f0) * k / 6f; 1.9f * talla * (0.5f + 0.9f * f) * (0.5f + 0.7f * nieve) * (0.75f + 0.45f * sin(3.1416f * k / 6f)) * az.entre(0.85f, 1.15f) }
+                        ventisquero(TrazosValle.cinta(eje, anchos), eje, t, 0.9f)
+                        f0 = f1 + az.entre(0.05f, 0.12f)
+                    }
+                }
+                // Al abrigo de los espolones: una lengua larga pegada al lomo, del lado contrario al viento.
+                for ((i, li) in lineas.withIndex()) {
+                    if (!li.espolon) continue
+                    val r = rotas[i]
+                    val f0 = 0.25f + 0.3f * (1f - nieve) + az.entre(0f, 0.1f); val f1 = (f0 + 0.25f + 0.4f * nieve).coerceAtMost(1f)
+                    val eje = (0..7).map { k -> en(r, f0 + (f1 - f0) * k / 7f) + Offset(4.5f * talla, 0.8f) }
+                    val anchos = (0..7).map { k -> 2.4f * talla * (0.5f + 0.6f * nieve) * sin(3.1416f * (k + 0.5f) / 8f).let { it * 0.7f + 0.3f } }
+                    ventisquero(TrazosValle.cinta(eje, anchos), eje, sol.t(V3(0.5f, 0.55f, -0.65f)), 1f)
+                }
+                drawPoints(motas, PointMode.Points, p.luz(C.NIEVE, lejos).copy(alpha = 0.85f), if (cerca) 1.2f else 0.85f, StrokeCap.Round)
             }
             // Los espolones: un filo de luz del lado del sol.
             for ((i, li) in lineas.withIndex()) {
