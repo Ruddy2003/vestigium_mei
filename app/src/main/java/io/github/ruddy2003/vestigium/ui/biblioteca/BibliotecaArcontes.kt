@@ -137,26 +137,55 @@ object EstanteArcontes : DisenoBiblioteca {
     private val ESTERA_OSC = Color(0xFF7E6A40)
     private val TIERRA = Color(0xFF85704F)
     private val SAL = Color(0xFFF5F1E8)
-    /** La cueva de noche (modo oscuro): la penumbra que deja la lámpara. */
-    private val PENUMBRA = Color(0xFF16131C)
+    /** La cueva de noche (modo oscuro): el azul negro del cielo antiguo, donde se hunde la piedra lejos de la lámpara. */
+    private val PENUMBRA = Color(0xFF090B1D)
+    /** La tinta de noche: el lino a la luz de la lámpara, sobre el papiro a oscuras. */
+    private val TINTA_NOCHE = Color(0xFFF1E2C2)
+    private val TENUE_NOCHE = Color(0xFFA09CB0)
 
     private val TITULO: FontFamily = LetraExtra.caudex
     private val TEXTO: FontFamily = LetraExtra.literata
 
-    /** El color con la luz del momento: en modo oscuro, la cueva a la luz de la lámpara; de noche, además, el azul negro del cielo antiguo. */
-    private fun t(c: Color, oscuro: Boolean, noche: Boolean): Color {
-        var r = c
-        if (oscuro) r = mezcla(r, PENUMBRA, 0.5f)
-        if (noche) r = mezcla(r, CIELO, 0.4f)
-        return r
+    /**
+     * El color de lo que no alumbra ninguna lámpara: en modo oscuro, la misma cueva de noche, hundida en el azul negro del
+     * cielo antiguo; de día, tal cual (con [noche], la de los sueños, un poco hacia el cielo de la noche).
+     */
+    private fun t(c: Color, oscuro: Boolean, noche: Boolean): Color = when {
+        oscuro -> mezcla(c, PENUMBRA, 0.84f)
+        noche -> mezcla(c, CIELO, 0.4f)
+        else -> c
     }
 
-    /** El papiro: se hunde menos que la piedra, porque es donde se lee, y de noche lo calienta un poco la lámpara. */
-    private fun papel(oscuro: Boolean, noche: Boolean): Color {
-        var r = PAPIRO
-        if (oscuro) r = mezcla(mezcla(r, PENUMBRA, 0.24f), LLAMA, 0.05f)
-        if (noche) r = mezcla(r, CIELO, 0.22f)
-        return r
+    /**
+     * Un color a [cerca] (0 a 1) de una lámpara encendida: de día, como [t]; en modo oscuro, menos hundido en la noche cuanto
+     * más cerca está, y calentado por la llama.
+     */
+    private fun luz(c: Color, oscuro: Boolean, noche: Boolean, cerca: Float): Color {
+        if (!oscuro) return t(c, false, noche)
+        val k = cerca.coerceIn(0f, 1f)
+        return mezcla(mezcla(c, PENUMBRA, 0.9f - 0.52f * Math.pow(k.toDouble(), 1.4).toFloat()), LLAMA, 0.2f * k)
+    }
+
+    /**
+     * El papiro donde se lee: de día, claro; en modo oscuro, la hoja a oscuras que alcanza la luz de la lámpara (a [cerca]), con
+     * la tinta clara encima ([tinta]); en los sueños de día, un poco hacia el cielo de la noche.
+     */
+    private fun papel(oscuro: Boolean, noche: Boolean, cerca: Float = 0.45f): Color = when {
+        oscuro -> luz(PAPIRO, true, noche, cerca)
+        noche -> mezcla(PAPIRO, CIELO, 0.22f)
+        else -> PAPIRO
+    }
+
+    /** La tinta sobre el papiro: de carbón de día; de noche, clara, a la luz de la lámpara. */
+    private fun tinta(oscuro: Boolean): Color = if (oscuro) TINTA_NOCHE else TINTA
+    private fun tenue(oscuro: Boolean): Color = if (oscuro) TENUE_NOCHE else TENUE
+    /** El ocre de las marcas: el oro quemado de día; de noche, la llama. */
+    private fun ocre(oscuro: Boolean): Color = if (oscuro) LLAMA else OCRE
+
+    /** La luz de una lámpara encendida sobre lo que la rodea, en modo oscuro: el halo cálido y, más cerca, la llama. */
+    private fun DrawScope.resplandor(c: Offset, r: Float, fuerza: Float = 1f) {
+        mancha(c, r, LLAMA_HALO.copy(alpha = 0.26f * fuerza))
+        mancha(c, r * 0.4f, LLAMA_HALO.copy(alpha = 0.22f * fuerza))
     }
 
     /** El orden de los planetas en las siete esferas, de la más baja a la más alta (recurso: así se dibujan). */
@@ -381,8 +410,8 @@ object EstanteArcontes : DisenoBiblioteca {
     }
 
     /** Una cuenta de vidrio (o de hueso, si no hay color) ensartada en un cordel. */
-    private fun DrawScope.cuenta(c: Offset, r: Float, color: Color?) {
-        val col = color ?: HUESO
+    private fun DrawScope.cuenta(c: Offset, r: Float, color: Color?, oscuro: Boolean = false) {
+        val col = (color ?: HUESO).let { if (oscuro) mezcla(it, PENUMBRA, 0.4f) else it }
         drawCircle(Color.Black.copy(alpha = 0.3f), r, c + Offset(r * 0.2f, r * 0.3f))
         drawCircle(col, r, c)
         drawCircle(mezcla(col, Color.Black, 0.35f), r, c, style = Stroke(r * 0.22f))
@@ -503,7 +532,10 @@ object EstanteArcontes : DisenoBiblioteca {
         val u = density
         val w = size.width; val h = size.height
         fun c(x: Color) = t(x, oscuro, noche)
+        // Lo que alcanza la luz de las lámparas: las tablas y los rótulos.
+        fun l(x: Color) = luz(x, oscuro, noche, 0.35f)
         val lampara = oscuro || noche
+        val llamas = mutableListOf<Offset>()
         // La cara de la roca, de arriba abajo: la caliza donde se abre el nicho.
         piedra(Rect(0f, 0f, w, h), c(CALIZA), 31)
         // Cada repisa es un hueco en la roca, de costados mordidos por el cincel: el fondo en sombra, más hondo bajo la tabla de
@@ -517,7 +549,7 @@ object EstanteArcontes : DisenoBiblioteca {
                 drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.32f), Color.Transparent), r.left - 3 * u, r.left + 9 * u), Offset(r.left - 3 * u, r.top), Size(12 * u, r.height))
                 drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.16f)), r.right - 8 * u, r.right + 3 * u), Offset(r.right - 8 * u, r.top), Size(11 * u, r.height))
                 when (k % 3) {
-                    0 -> lamparaRoca(Offset(r.right - 24 * u, r.bottom - 5 * u), 26 * u, oscuro, noche, lampara)
+                    0 -> { lamparaRoca(Offset(r.right - 24 * u, r.bottom - 5 * u), 26 * u, oscuro, noche, lampara); llamas.add(Offset(r.right - 12 * u, r.bottom - 14 * u)) }
                     1 -> cantaro(Offset(r.left + 20 * u, r.bottom), 34 * u, c(BARRO_CLARO))
                     else -> grietaLuz(Offset(r.left + r.width * 0.76f, r.top + 26 * u), Offset(r.left + r.width * 0.79f, r.top + r.height * 0.62f), 0.9f * u, if (lampara) 0.6f else 0.32f, 13 + k)
                 }
@@ -540,11 +572,11 @@ object EstanteArcontes : DisenoBiblioteca {
         }
         // Las tablas: olivo, de veta ondulada y algún nudo, sujetas con clavijas a la roca.
         d.tablas.forEachIndexed { k, r ->
-            drawRect(Brush.verticalGradient(listOf(c(OLIVO_LUZ), c(OLIVO), c(mezcla(OLIVO, OLIVO_VETA, 0.45f))), r.top, r.bottom), r.topLeft, r.size)
-            vetas(r, c(OLIVO_VETA).copy(alpha = 0.5f), 71 + k * 5, densidad = 1.3f, grosor = 0.9f, ondulacion = 1.8f)
+            drawRect(Brush.verticalGradient(listOf(l(OLIVO_LUZ), l(OLIVO), l(mezcla(OLIVO, OLIVO_VETA, 0.45f))), r.top, r.bottom), r.topLeft, r.size)
+            vetas(r, l(OLIVO_VETA).copy(alpha = 0.5f), 71 + k * 5, densidad = 1.3f, grosor = 0.9f, ondulacion = 1.8f)
             val nudo = Offset(r.left + r.width * (0.18f + 0.6f * azar(k, 3)), r.center.y)
-            drawOval(c(OLIVO_VETA).copy(alpha = 0.55f), nudo - Offset(3.4f * u, 1.5f * u), Size(6.8f * u, 3f * u))
-            drawOval(c(OLIVO_VETA).copy(alpha = 0.3f), nudo - Offset(5.5f * u, 2.4f * u), Size(11f * u, 4.8f * u), style = Stroke(0.5f * u))
+            drawOval(l(OLIVO_VETA).copy(alpha = 0.55f), nudo - Offset(3.4f * u, 1.5f * u), Size(6.8f * u, 3f * u))
+            drawOval(l(OLIVO_VETA).copy(alpha = 0.3f), nudo - Offset(5.5f * u, 2.4f * u), Size(11f * u, 4.8f * u), style = Stroke(0.5f * u))
             drawRect(Color.White.copy(alpha = if (lampara) 0.08f else 0.26f), r.topLeft, Size(r.width, 1f * u))
             drawRect(Color.Black.copy(alpha = 0.34f), Offset(r.left, r.bottom), Size(r.width, 3.5f * u))
             listOf(r.left + 7 * u, r.right - 7 * u).forEach { x ->
@@ -557,14 +589,14 @@ object EstanteArcontes : DisenoBiblioteca {
             val r = p.r
             val ancho = (anchoTx(medidor, p.texto, TITULO, 9.5f, 0.4f, FontWeight.Bold) + 24 * u).coerceIn(r.width * 0.45f, r.width)
             val tira = Rect(r.center.x - ancho / 2, r.top - 0.5f * u, r.center.x + ancho / 2, r.bottom + 0.5f * u)
-            hoja(tira, papel(oscuro, noche), 83 + p.texto.length, 0.3f, 0.025f)
+            hoja(tira, papel(oscuro, noche, 0.4f), 83 + p.texto.length, 0.3f, 0.025f)
             listOf(tira.left + 5 * u, tira.right - 5 * u).forEach { x ->
-                cordel(Offset(x - 0.6f * u, r.top - 3.5f * u), Offset(x + 0.6f * u, r.bottom + 3.5f * u), c(CORDEL), 1.1f * u)
-                cordel(Offset(x + 1.6f * u, r.top - 3.5f * u), Offset(x + 2.8f * u, r.bottom + 3.5f * u), c(CORDEL), 1.1f * u)
+                cordel(Offset(x - 0.6f * u, r.top - 3.5f * u), Offset(x + 0.6f * u, r.bottom + 3.5f * u), l(CORDEL), 1.1f * u)
+                cordel(Offset(x + 1.6f * u, r.top - 3.5f * u), Offset(x + 2.8f * u, r.bottom + 3.5f * u), l(CORDEL), 1.1f * u)
             }
-            textoEn(medidor, p.texto, Rect(tira.left + 10 * u, tira.top, tira.right - 10 * u, tira.bottom), TITULO, TINTA, 9.5f, peso = FontWeight.Bold, espaciado = 0.4f, minimo = 5f)
+            textoEn(medidor, p.texto, Rect(tira.left + 10 * u, tira.top, tira.right - 10 * u, tira.bottom), TITULO, tinta(oscuro), 9.5f, peso = FontWeight.Bold, espaciado = 0.4f, minimo = 5f)
         }
-        corona(d.corona, w * lado, medidor, oscuro, noche)
+        llamas.add(corona(d.corona, w * lado, medidor, oscuro, noche))
         base(d.base, oscuro, noche)
         // La luz: de día, el rayo de sol que baja de la lumbrera hasta la primera repisa, con su polvo dorado; de noche, el
         // resplandor de la lámpara de la corona sobre la roca de arriba.
@@ -574,7 +606,8 @@ object EstanteArcontes : DisenoBiblioteca {
             val fin = pr?.bottom ?: d.corona.bottom
             rayo(Offset(lu.left + 2 * u, lu.bottom) to Offset(lu.right - 2 * u, lu.bottom), Offset(w * 0.5f, fin) to Offset(w * 0.86f, fin), 1f, 7)
         } else {
-            mancha(Offset(d.corona.left + w * 0.2f, d.corona.bottom - d.corona.height * 0.2f), w * 0.55f, LLAMA_HALO.copy(alpha = if (noche) 0.16f else 0.12f))
+            // De noche, la luz cálida solo cerca de las lámparas encendidas; lo demás se queda en el azul negro.
+            llamas.forEachIndexed { k, o -> resplandor(o, if (k == llamas.size - 1) w * 0.6f else w * 0.42f, if (oscuro) 1f else 0.6f) }
         }
     }
 
@@ -584,11 +617,12 @@ object EstanteArcontes : DisenoBiblioteca {
      * noche, el cielo antiguo con sus estrellas, las siete esferas y una sombra que se asoma. A la izquierda, en su repisa de
      * roca, la lámpara de aceite (encendida de noche); a la derecha, el cántaro, y sobre él la grieta de luz.
      */
-    private fun DrawScope.corona(r: Rect, lado: Float, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
+    private fun DrawScope.corona(r: Rect, lado: Float, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean): Offset {
         val u = density
         fun c(x: Color) = t(x, oscuro, noche)
         val lampara = oscuro || noche
         val hh = r.height
+        var llama = Offset.Zero
         val izq = r.left + lado; val der = r.right - lado
         val clave = r.top + hh * 0.24f
         val arranque = r.top + hh * 0.6f
@@ -650,15 +684,20 @@ object EstanteArcontes : DisenoBiblioteca {
         listOf(izq + (der - izq) * 0.08f, der - (der - izq) * 0.08f - ancho).forEachIndexed { k, x ->
             val rep = Rect(x, yRep, x + ancho, yRep + 6 * u)
             drawRect(Color.Black.copy(alpha = 0.3f), Offset(rep.left + 1.5f * u, rep.bottom), Size(rep.width, 4 * u))
-            drawRect(c(CALIZA_LUZ), rep.topLeft, Size(rep.width, 2 * u))
-            drawRect(c(CALIZA), Offset(rep.left, rep.top + 2 * u), Size(rep.width, rep.height - 2 * u))
+            val cerca = if (k == 0) 0.75f else 0.15f
+            drawRect(luz(CALIZA_LUZ, oscuro, noche, cerca), rep.topLeft, Size(rep.width, 2 * u))
+            drawRect(luz(CALIZA, oscuro, noche, cerca), Offset(rep.left, rep.top + 2 * u), Size(rep.width, rep.height - 2 * u))
             drawLine(Color.Black.copy(alpha = 0.2f), Offset(rep.left, rep.bottom), Offset(rep.right, rep.bottom), 0.6f * u)
-            if (k == 0) lamparaRoca(Offset(rep.center.x, rep.top - 32 * u * 0.17f), 32 * u, oscuro, noche, lampara)
+            if (k == 0) {
+                lamparaRoca(Offset(rep.center.x, rep.top - 32 * u * 0.17f), 32 * u, oscuro, noche, lampara)
+                llama = Offset(rep.center.x + 32 * u * 0.46f, rep.top - 32 * u * 0.5f)
+            }
             else {
                 cantaro(Offset(rep.center.x, rep.top), 36 * u, c(BARRO_CLARO))
                 grietaLuz(Offset(rep.center.x + ancho * 0.16f, clave + hh * 0.2f), Offset(rep.center.x + ancho * 0.02f, rep.top - 46 * u), 1f * u, if (lampara) 0.8f else 0.4f, 3)
             }
         }
+        return llama
     }
 
     /**
@@ -725,7 +764,7 @@ object EstanteArcontes : DisenoBiblioteca {
             else -> codiceLino(v, medidor, oscuro)
         }
         // De noche, la lámpara de la cueva alumbra los códices por un costado.
-        if (v.noche) mancha(Offset(size.width, size.height * 0.3f), size.width * 1.2f, LLAMA_HALO.copy(alpha = 0.12f))
+        if (v.noche || oscuro) mancha(Offset(size.width, size.height * 0.3f), size.width * 1.2f, LLAMA_HALO.copy(alpha = if (oscuro) 0.1f else 0.12f))
     }
 
     /** Las hojas de papiro que asoman por el canto de arriba de un códice, más cuantas más palabras. */
@@ -740,12 +779,12 @@ object EstanteArcontes : DisenoBiblioteca {
         val u = density
         hoja(r, papel(oscuro, v.noche), v.semilla, 0.3f, 0.03f)
         val heb = hebreo(v.dia)
-        textoEn(medidor, v.dia, Rect(r.left, r.top + r.height * 0.04f, r.right, r.top + r.height * (if (heb.isEmpty()) 0.96f else 0.62f)), TITULO, TINTA, 14f, peso = FontWeight.Bold, minimo = 7f)
-        if (heb.isNotEmpty()) textoEn(medidor, heb, Rect(r.left, r.top + r.height * 0.6f, r.right, r.bottom - r.height * 0.04f), TITULO, OCRE, 8.5f, minimo = 5f)
+        textoEn(medidor, v.dia, Rect(r.left, r.top + r.height * 0.04f, r.right, r.top + r.height * (if (heb.isEmpty()) 0.96f else 0.62f)), TITULO, tinta(oscuro), 14f, peso = FontWeight.Bold, minimo = 7f)
+        if (heb.isNotEmpty()) textoEn(medidor, heb, Rect(r.left, r.top + r.height * 0.6f, r.right, r.bottom - r.height * 0.04f), TITULO, ocre(oscuro), 8.5f, minimo = 5f)
         // De noche, una luna chica en la esquina de la tira.
         if (v.noche) {
             val l = Offset(r.right - 3.2f * u, r.top + 3.4f * u)
-            drawCircle(TINTA.copy(alpha = 0.7f), 1.6f * u, l)
+            drawCircle(tinta(oscuro).copy(alpha = 0.7f), 1.6f * u, l)
             drawCircle(papel(oscuro, true), 1.4f * u, l + Offset(0.8f * u, -0.4f * u))
         }
     }
@@ -758,7 +797,7 @@ object EstanteArcontes : DisenoBiblioteca {
     private fun DrawScope.codiceCorrea(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
+        fun c(x: Color) = luz(x, oscuro, v.noche, 0.4f)
         val base = CUEROS[Math.floorMod(v.semilla, CUEROS.size)]
         val cuero = c(if (v.tono != null) mezcla(base, v.tono, 0.1f) else base)
         val arriba = 5 * u
@@ -785,7 +824,7 @@ object EstanteArcontes : DisenoBiblioteca {
         // El cabo que cuelga, con su cuenta.
         val xc = w * (0.6f + 0.2f * azar(v.semilla, 5))
         cordel(Path().apply { moveTo(xc, y0 + 5 * u); quadraticTo(xc + 2 * u, y0 + 10 * u, xc - 0.5f * u, y0 + 16 * u) }, correa, 1.4f * u)
-        cuenta(Offset(xc - 0.5f * u, y0 + 18 * u), 2.3f * u, v.tono)
+        cuenta(Offset(xc - 0.5f * u, y0 + 18 * u), 2.3f * u, v.tono, oscuro)
         // El mes, grabado en seco a lo largo del lomo.
         val mes = Rect(w * 0.2f, y0 + 22 * u, w * 0.8f, h - 4 * u)
         if (mes.height > 12 * u) {
@@ -802,7 +841,7 @@ object EstanteArcontes : DisenoBiblioteca {
     private fun DrawScope.codiceSolapa(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
+        fun c(x: Color) = luz(x, oscuro, v.noche, 0.4f)
         val cuero = c(CUEROS_OSCUROS[Math.floorMod(v.semilla, CUEROS_OSCUROS.size)])
         val arriba = 4 * u
         cantoHojas(w * 0.12f, w * 0.88f, arriba + 0.5f * u, v.lleno, papel(oscuro, v.noche))
@@ -834,7 +873,7 @@ object EstanteArcontes : DisenoBiblioteca {
             drawLine(Color.White.copy(alpha = 0.14f), Offset(-1 * u, y - 0.6f * u), Offset(w + 1 * u, y - 0.6f * u), 0.4f * u)
         }
         drawCircle(correa, 1.9f * u, Offset(w / 2, punta - 1 * u))
-        cuenta(Offset(w * 0.28f, y1 + 9 * u), 2.2f * u, v.tono)
+        cuenta(Offset(w * 0.28f, y1 + 9 * u), 2.2f * u, v.tono, oscuro)
         cordel(Offset(w * 0.32f, y1 + 3 * u), Offset(w * 0.28f, y1 + 7 * u), correa, 1.2f * u)
         // La tira del día, pegada sobre la tapa, entre la punta y el lazo.
         val tira = Rect(w * 0.14f, punta + 3 * u, w * 0.86f, y1 - 3 * u)
@@ -852,7 +891,7 @@ object EstanteArcontes : DisenoBiblioteca {
     private fun DrawScope.codiceLino(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
+        fun c(x: Color) = luz(x, oscuro, v.noche, 0.4f)
         val tela = c(if (v.tono != null) mezcla(LINO, v.tono, 0.08f) else LINO)
         val cuerpo = Rect(0.5f * u, 3 * u, w - 0.5f * u, h)
         val forma = Path().apply { addRoundRect(RoundRect(cuerpo, CornerRadius(4 * u))) }
@@ -876,7 +915,7 @@ object EstanteArcontes : DisenoBiblioteca {
         // El nudo con la bula de barro y el cabo con la cuenta.
         val nudo = Offset(w / 2, yb)
         cordel(Path().apply { moveTo(nudo.x, nudo.y); quadraticTo(nudo.x + 3 * u, nudo.y + 8 * u, nudo.x + 1 * u, nudo.y + 13 * u) }, cordelCol, 1.1f * u)
-        cuenta(Offset(nudo.x + 1 * u, nudo.y + 15 * u), 2.1f * u, v.tono)
+        cuenta(Offset(nudo.x + 1 * u, nudo.y + 15 * u), 2.1f * u, v.tono, oscuro)
         bullaArcontes(nudo, minOf(w * 0.24f, 6 * u), c(BARRO_CLARO), 1f, v.semilla)
     }
 
@@ -890,7 +929,7 @@ object EstanteArcontes : DisenoBiblioteca {
     override val tamTapa = 12f
     override val lineasTapa = 4
     override val centradoTapa = false
-    override fun tintaTapa(oscuro: Boolean, noche: Boolean): Color = TINTA
+    override fun tintaTapa(oscuro: Boolean, noche: Boolean): Color = tinta(oscuro)
     override fun palabrasTapa(n: Int): String = if (n == 1) "1 palabra en el códice" else "$n palabras en el códice"
 
     /**
@@ -905,12 +944,12 @@ object EstanteArcontes : DisenoBiblioteca {
     override fun DrawScope.tapa(e: EstadoTapa, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, e.noche)
+        fun c(x: Color) = luz(x, oscuro, e.noche, 0.5f)
         val a = e.abierto.coerceIn(0f, 1f)
         val aSol = (a / 0.35f).coerceIn(0f, 1f)
         val aTapa = ((a - 0.3f) / 0.7f).coerceIn(0f, 1f)
         val cuero = c(CUEROS[Math.floorMod(e.semilla, CUEROS.size)])
-        val hojaCol = papel(oscuro, e.noche)
+        val hojaCol = papel(oscuro, e.noche, 0.55f)
         val cuerpo = Rect(w * 0.02f, h * 0.05f, w * 0.9f, h * 0.95f)
         val x0 = cuerpo.left + w * 0.03f
         val cara = Rect(x0, cuerpo.top, cuerpo.right, cuerpo.bottom)
@@ -942,10 +981,10 @@ object EstanteArcontes : DisenoBiblioteca {
             // La hoja suelta, con la fecha del tema arriba y una fila de diplés.
             val hj = Rect(w * 0.075f, h * 0.1f, w * 0.625f, h * 0.665f)
             hoja(hj, hojaCol, e.semilla + 5, 0.3f, 0.008f)
-            enDos(medidor, e.fecha, Rect(hj.left + 8 * u, hj.top + 3 * u, hj.right - 8 * u, h * 0.255f), TITULO, TINTA, 12.5f, peso = FontWeight.Bold, k = 0.8f)
+            enDos(medidor, e.fecha, Rect(hj.left + 8 * u, hj.top + 3 * u, hj.right - 8 * u, h * 0.255f), TITULO, tinta(oscuro), 12.5f, peso = FontWeight.Bold, k = 0.8f)
             val yd = h * 0.278f
-            diples(hj.left + 10 * u, hj.right - 10 * u, yd, 4 * u, c(OCRE), 0.8f * u, haciaCentro = true, hueco = 8 * u)
-            drawCircle(c(OCRE), 1.5f * u, Offset(hj.center.x, yd))
+            diples(hj.left + 10 * u, hj.right - 10 * u, yd, 4 * u, c(ocre(oscuro)), 0.8f * u, haciaCentro = true, hueco = 8 * u)
+            drawCircle(c(ocre(oscuro)), 1.5f * u, Offset(hj.center.x, yd))
             // Al pie, el ouroboros y las palabras, grabados en seco.
             val pie = Rect(cara.left + w * 0.045f, h * 0.76f, puntaX - w * 0.04f, h * 0.88f)
             val hondo = mezcla(cuero, Color.Black, 0.45f)
@@ -1005,7 +1044,7 @@ object EstanteArcontes : DisenoBiblioteca {
         drawLine(Color.Black.copy(alpha = 0.4f), Offset(x0, cuerpo.top + 2 * u), Offset(x0, cuerpo.bottom - 2 * u), 1.1f * u)
         if (aSol < 0.04f) listOf(puntaY - 1.8f * u, puntaY + 2.8f * u).forEach { y -> drawLine(correa, Offset(cuerpo.left - 1 * u, y), Offset(x0, y), 2.4f * u) }
         // De noche, la lámpara alumbra el códice desde la esquina de arriba.
-        if (e.noche) clipPath(Path().apply { addRoundRect(RoundRect(cuerpo, CornerRadius(rad))) }) { mancha(Offset(cuerpo.right, cuerpo.top), w * 0.5f, LLAMA_HALO.copy(alpha = 0.2f)) }
+        if (e.noche || oscuro) clipPath(Path().apply { addRoundRect(RoundRect(cuerpo, CornerRadius(rad))) }) { mancha(Offset(cuerpo.right, cuerpo.top), w * 0.5f, LLAMA_HALO.copy(alpha = 0.2f)) }
     }
 
     /**
@@ -1015,7 +1054,7 @@ object EstanteArcontes : DisenoBiblioteca {
     private fun DrawScope.primeraHoja(r: Rect, e: EstadoTapa, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         hoja(r, papel(oscuro, e.noche), e.semilla + 9, 0.2f, 0.006f)
-        textoEn(medidor, "א׳", Rect(r.center.x - 12 * u, r.top + 2 * u, r.center.x + 12 * u, r.top + 13 * u), TITULO, TENUE, 8.5f, minimo = 5f)
+        textoEn(medidor, "א׳", Rect(r.center.x - 12 * u, r.top + 2 * u, r.center.x + 12 * u, r.top + 13 * u), TITULO, tenue(oscuro), 8.5f, minimo = 5f)
         val pie = r.bottom - r.height * 0.3f
         var y = r.top + 19 * u; var k = 0
         while (y < pie) {
@@ -1025,15 +1064,15 @@ object EstanteArcontes : DisenoBiblioteca {
             while (x < fin) {
                 val l = (4f + 11f * azar(e.semilla + k, j)) * u
                 val x2 = minOf(x + l, fin)
-                drawLine(TINTA.copy(alpha = 0.42f), Offset(x, y + (azar(e.semilla + 3, j + k) - 0.5f) * 0.6f * u), Offset(x2, y), 1.3f * u, StrokeCap.Round)
+                drawLine(tinta(oscuro).copy(alpha = 0.42f), Offset(x, y + (azar(e.semilla + 3, j + k) - 0.5f) * 0.6f * u), Offset(x2, y), 1.3f * u, StrokeCap.Round)
                 x = x2 + 3 * u; j++
             }
             y += 8 * u; k++
         }
         val ty = pie + (r.bottom - pie) * 0.5f
-        diples(r.left + 14 * u, r.right - 14 * u, ty - 8 * u, 3.6f * u, OCRE.copy(alpha = 0.8f), 0.7f * u, haciaCentro = true, hueco = 34 * u)
-        diples(r.left + 14 * u, r.right - 14 * u, ty + 8 * u, 3.6f * u, OCRE.copy(alpha = 0.8f), 0.7f * u, haciaCentro = true, hueco = 34 * u)
-        textoEn(medidor, if (e.noche) "ⲣⲁⲥⲟⲩ" else "ⲡϫⲱⲱⲙⲉ", Rect(r.center.x - 32 * u, ty - 7 * u, r.center.x + 32 * u, ty + 7 * u), TITULO, TINTA, 11f, minimo = 6f)
+        diples(r.left + 14 * u, r.right - 14 * u, ty - 8 * u, 3.6f * u, ocre(oscuro).copy(alpha = 0.8f), 0.7f * u, haciaCentro = true, hueco = 34 * u)
+        diples(r.left + 14 * u, r.right - 14 * u, ty + 8 * u, 3.6f * u, ocre(oscuro).copy(alpha = 0.8f), 0.7f * u, haciaCentro = true, hueco = 34 * u)
+        textoEn(medidor, if (e.noche) "ⲣⲁⲥⲟⲩ" else "ⲡϫⲱⲱⲙⲉ", Rect(r.center.x - 32 * u, ty - 7 * u, r.center.x + 32 * u, ty + 7 * u), TITULO, tinta(oscuro), 11f, minimo = 6f)
     }
 
     // =================================================================
@@ -1097,7 +1136,13 @@ object EstanteArcontes : DisenoBiblioteca {
         ouro(Offset(w / 2, h * 0.52f), w * 0.2f, w * 0.05f, tinta.copy(alpha = 0.03f))
         diples(w * 0.18f, w * 0.82f, h - 46 * u, 4.5f * u, p.acento.copy(alpha = 0.35f), 0.8f * u, haciaCentro = true, hueco = 14 * u)
         ouro(Offset(w / 2, h - 46 * u), 5 * u, 1.6f * u, p.acento.copy(alpha = 0.45f))
-        if (oscuro && !p.oscura) drawRect(Brush.radialGradient(listOf(LLAMA_HALO.copy(alpha = 0.1f), Color.Transparent, Color.Black.copy(alpha = 0.28f)), Offset(w * 0.3f, h * 0.22f), maxOf(w, h) * 0.9f))
+        // En modo oscuro, la hoja de noche: la lámpara alumbra el centro, donde se lee, y las orillas se van al azul negro.
+        if (oscuro && !p.oscura) {
+            drawRect(Brush.radialGradient(0f to LLAMA_HALO.copy(alpha = 0.1f), 0.42f to Color.Transparent, 1f to PENUMBRA.copy(alpha = 0.6f),
+                center = Offset(w * 0.42f, h * 0.3f), radius = maxOf(w, h) * 0.95f))
+            drawRect(Brush.horizontalGradient(listOf(PENUMBRA.copy(alpha = 0.35f), Color.Transparent), 0f, 18 * u), Offset.Zero, Size(18 * u, h))
+            drawRect(Brush.horizontalGradient(listOf(Color.Transparent, PENUMBRA.copy(alpha = 0.35f)), w - 18 * u, w), Offset(w - 18 * u, 0f), Size(18 * u, h))
+        }
         if (noche) {
             val o = Offset(w * 1.02f, h * 1.02f)
             for (i in 0 until 7) drawCircle(p.detalle.copy(alpha = 0.09f - i * 0.007f), w * (0.25f + 0.17f * i), o, style = Stroke(0.8f * u))
@@ -1162,6 +1207,8 @@ object EstanteArcontes : DisenoBiblioteca {
         val u = density
         val w = size.width; val h = size.height
         fun c(x: Color) = t(x, oscuro, false)
+        // Lo que alcanza la lámpara del nicho: la jarra, su tapa y su sello; la repisa, más.
+        fun j(x: Color) = luz(x, oscuro, false, 0.45f)
         val a = e.abierto.coerceIn(0f, 1f)
         val romper = (a / 0.3f).coerceIn(0f, 1f)
         val alzar = ((a - 0.25f) / 0.75f).coerceIn(0f, 1f)
@@ -1188,8 +1235,8 @@ object EstanteArcontes : DisenoBiblioteca {
         // La lámpara, en su repisa de roca dentro del nicho.
         val rep = Rect(ni.left + 4 * u, ni.top + ni.height * 0.44f, ni.left + 40 * u, ni.top + ni.height * 0.44f + 5 * u)
         drawRect(Color.Black.copy(alpha = 0.3f), Offset(rep.left + 1.5f * u, rep.bottom), Size(rep.width, 4 * u))
-        drawRect(c(CALIZA_LUZ), rep.topLeft, Size(rep.width, 2 * u))
-        drawRect(c(CALIZA), Offset(rep.left, rep.top + 2 * u), Size(rep.width, rep.height - 2 * u))
+        drawRect(luz(CALIZA_LUZ, oscuro, false, 0.85f), rep.topLeft, Size(rep.width, 2 * u))
+        drawRect(luz(CALIZA, oscuro, false, 0.85f), Offset(rep.left, rep.top + 2 * u), Size(rep.width, rep.height - 2 * u))
         lamparaRoca(Offset(rep.center.x, rep.top - 30 * u * 0.17f), 30 * u, oscuro, false, oscuro)
         // Los códices que ya salieron de la jarra, en el suelo: más cuantas más hojas.
         val n = (1 + e.hojas / 15).coerceIn(1, 4)
@@ -1199,17 +1246,17 @@ object EstanteArcontes : DisenoBiblioteca {
             val x0 = w * (0.6f + 0.03f * azar(e.semilla, j)); val x1 = x0 + w * 0.3f
             val r = Rect(x0, y - g, x1, y)
             drawRect(Color.Black.copy(alpha = 0.3f), Offset(r.left + 2 * u, r.top + 2 * u), r.size)
-            val cuero = c(CUEROS[Math.floorMod(e.semilla + j, CUEROS.size)])
+            val cuero = luz(CUEROS[Math.floorMod(e.semilla + j, CUEROS.size)], oscuro, false, 0.25f)
             drawRoundRect(cuero, r.topLeft, r.size, CornerRadius(1.5f * u))
             val hojas = Rect(r.left + 3 * u, r.top + 1.6f * u, r.right - 1 * u, r.bottom - 1.6f * u)
-            drawRect(papel(oscuro, false), hojas.topLeft, hojas.size)
+            drawRect(papel(oscuro, false, 0.25f), hojas.topLeft, hojas.size)
             var yy = hojas.top + 1 * u
             while (yy < hojas.bottom) { drawLine(FIBRA.copy(alpha = 0.3f), Offset(hojas.left, yy), Offset(hojas.right, yy), 0.4f * u); yy += 1.1f * u }
             drawLine(Color.White.copy(alpha = 0.15f), Offset(r.left, r.top + 0.4f * u), Offset(r.right, r.top + 0.4f * u), 0.5f * u)
             // El lazo que ata cada códice, con su cabo.
             val xl = r.left + r.width * (0.3f + 0.3f * azar(e.semilla + 2, j))
-            drawLine(c(CORREA), Offset(xl, r.top - 0.5f * u), Offset(xl, r.bottom + 0.5f * u), 2.2f * u)
-            if (j == n - 1) cordel(Path().apply { moveTo(xl, r.top); quadraticTo(xl + 6 * u, r.top - 5 * u, xl + 12 * u, r.top - 1 * u) }, c(CORREA), 1.4f * u)
+            drawLine(luz(CORREA, oscuro, false, 0.25f), Offset(xl, r.top - 0.5f * u), Offset(xl, r.bottom + 0.5f * u), 2.2f * u)
+            if (j == n - 1) cordel(Path().apply { moveTo(xl, r.top); quadraticTo(xl + 6 * u, r.top - 5 * u, xl + 12 * u, r.top - 1 * u) }, luz(CORREA, oscuro, false, 0.25f), 1.4f * u)
             y -= g + 0.6f * u
         }
         // La jarra.
@@ -1219,7 +1266,7 @@ object EstanteArcontes : DisenoBiblioteca {
         val hw = minOf(w * 0.115f, alto * 0.25f)
         val cuello = hw * 0.5f
         val bocaY = pie - alto
-        val barro = c(mezcla(BARRO_CLARO, CALIZA_SOMBRA, 0.22f))
+        val barro = j(mezcla(BARRO_CLARO, CALIZA_SOMBRA, 0.22f))
         drawOval(Color.Black.copy(alpha = 0.35f), Offset(jc - hw * 1.05f, pie - 4 * u), Size(hw * 2.4f, 9 * u))
         val cuerpo = Path().apply {
             moveTo(jc - hw * 0.3f, pie)
@@ -1268,10 +1315,10 @@ object EstanteArcontes : DisenoBiblioteca {
         if (alzar > 0f) {
             drawOval(c(Color(0xFF1C140E)), bocaR.topLeft, bocaR.size)
             clipPath(Path().apply { addOval(bocaR) }) {
-                listOf(-0.5f, 0.05f, 0.55f).forEachIndexed { j, f ->
+                listOf(-0.5f, 0.05f, 0.55f).forEachIndexed { k, f ->
                     val x = jc + cuello * f
-                    drawRoundRect(c(CUEROS[j]), Offset(x - cuello * 0.24f, bocaY - cuello * 0.1f - j * 0.8f * u), Size(cuello * 0.48f, cuello * 1.2f), CornerRadius(1.5f * u))
-                    drawLine(c(CORREA), Offset(x - cuello * 0.24f, bocaY + cuello * 0.14f), Offset(x + cuello * 0.24f, bocaY + cuello * 0.14f), 1.2f * u)
+                    drawRoundRect(j(CUEROS[k]), Offset(x - cuello * 0.24f, bocaY - cuello * 0.1f - k * 0.8f * u), Size(cuello * 0.48f, cuello * 1.2f), CornerRadius(1.5f * u))
+                    drawLine(j(CORREA), Offset(x - cuello * 0.24f, bocaY + cuello * 0.14f), Offset(x + cuello * 0.24f, bocaY + cuello * 0.14f), 1.2f * u)
                 }
                 mancha(Offset(jc, bocaY), cuello * 1.4f, GRIETA.copy(alpha = 0.6f * alzar))
             }
@@ -1285,7 +1332,7 @@ object EstanteArcontes : DisenoBiblioteca {
         // El cordel: dos vueltas al cuello que sujetan la tapa; se afloja al partirse la bula.
         val cordelA = (1f - romper * 1.3f).coerceIn(0f, 1f)
         if (cordelA > 0f) listOf(bocaY + 8 * u, bocaY + 12 * u).forEach { yy ->
-            cordel(Path().apply { moveTo(jc - cuello * 1.1f, yy - 1 * u); quadraticTo(jc, yy + 2.5f * u, jc + cuello * 1.1f, yy - 1 * u) }, c(CORDEL).copy(alpha = cordelA), 1.3f * u)
+            cordel(Path().apply { moveTo(jc - cuello * 1.1f, yy - 1 * u); quadraticTo(jc, yy + 2.5f * u, jc + cuello * 1.1f, yy - 1 * u) }, j(CORDEL).copy(alpha = cordelA), 1.3f * u)
         }
         // La tapa: el cuenco boca abajo con el barro del sello alrededor; al abrirse se levanta y se ladea.
         withTransform({
@@ -1299,7 +1346,7 @@ object EstanteArcontes : DisenoBiblioteca {
                 lineTo(jc + cuello * 1.45f, bocaY + 5 * u); lineTo(jc + cuello * 1.3f, bocaY - 2 * u); lineTo(jc - cuello * 1.3f, bocaY - 2 * u); close()
             }
             // El sello de barro oscuro, apretado a mano alrededor de la tapa, con las marcas de los dedos.
-            val selloCol = c(mezcla(BARRO, Color(0xFF2E2620), 0.45f))
+            val selloCol = j(mezcla(BARRO, Color(0xFF2E2620), 0.45f))
             drawPath(sello, Brush.horizontalGradient(listOf(mezcla(selloCol, Color.White, 0.12f), selloCol, mezcla(selloCol, Color.Black, 0.35f)), jc - cuello * 1.45f, jc + cuello * 1.45f))
             for (k in 0 until 4) drawOval(Color.White.copy(alpha = 0.08f), Offset(jc - cuello * 1.1f + k * cuello * 0.6f, bocaY - 0.5f * u), Size(cuello * 0.4f, 3 * u))
             val tapa = Path().apply {
@@ -1314,25 +1361,25 @@ object EstanteArcontes : DisenoBiblioteca {
         // La bula sobre el nudo: entera, o partida en dos.
         val pc = Offset(jc, bocaY + 12 * u)
         val rb = minOf(cuello * 0.7f, 9 * u)
-        if (romper <= 0f) bullaArcontes(pc, rb, c(BARRO_CLARO), 1f, e.semilla)
+        if (romper <= 0f) bullaArcontes(pc, rb, j(BARRO_CLARO), 1f, e.semilla)
         else if (romper < 1f || alzar < 0.6f) {
             val pr = Rect(pc.x - rb * 1.15f, pc.y - rb * 1.15f, pc.x + rb * 1.15f, pc.y + rb * 1.15f)
-            withTransform({ translate(-2 * u * romper, -1 * u * romper); rotate(-10f * romper, pc) }) { clipPath(mitad(pr, pc.y, true, e.semilla)) { bullaArcontes(pc, rb, c(BARRO_CLARO), 1f, e.semilla) } }
-            withTransform({ translate(2 * u * romper, 4 * u * romper); rotate(8f * romper, pc) }) { clipPath(mitad(pr, pc.y, false, e.semilla)) { bullaArcontes(pc, rb, c(BARRO_CLARO), 1f, e.semilla) } }
+            withTransform({ translate(-2 * u * romper, -1 * u * romper); rotate(-10f * romper, pc) }) { clipPath(mitad(pr, pc.y, true, e.semilla)) { bullaArcontes(pc, rb, j(BARRO_CLARO), 1f, e.semilla) } }
+            withTransform({ translate(2 * u * romper, 4 * u * romper); rotate(8f * romper, pc) }) { clipPath(mitad(pr, pc.y, false, e.semilla)) { bullaArcontes(pc, rb, j(BARRO_CLARO), 1f, e.semilla) } }
         }
         // La tira de papiro con el nombre y la cuenta, colgada del cuello.
         val tira = Rect(w * 0.55f, h * 0.3f, w * 0.96f, h * 0.55f)
-        cordel(Path().apply { moveTo(jc + cuello, bocaY + 10 * u); quadraticTo(w * 0.5f, bocaY + 2 * u, tira.left + 6 * u, tira.top + 3 * u) }, c(CORDEL), 1.1f * u)
+        cordel(Path().apply { moveTo(jc + cuello, bocaY + 10 * u); quadraticTo(w * 0.5f, bocaY + 2 * u, tira.left + 6 * u, tira.top + 3 * u) }, j(CORDEL), 1.1f * u)
         rotate(-2f, tira.center) {
-            hoja(tira, papel(oscuro, false), e.semilla + 3, 0.3f, 0.02f)
+            hoja(tira, papel(oscuro, false, 0.4f), e.semilla + 3, 0.3f, 0.02f)
             drawCircle(Color.Black.copy(alpha = 0.4f), 1.6f * u, Offset(tira.left + 6 * u, tira.top + 4 * u))
-            textoEn(medidor, e.nombre, Rect(tira.left + 10 * u, tira.top + tira.height * 0.08f, tira.right - 8 * u, tira.top + tira.height * 0.52f), TITULO, TINTA, 15f, peso = FontWeight.Bold, minimo = 8f)
-            diples(tira.left + 14 * u, tira.right - 12 * u, tira.top + tira.height * 0.57f, 3.2f * u, OCRE.copy(alpha = 0.7f), 0.6f * u, haciaCentro = true, hueco = 5 * u)
-            textoEn(medidor, e.cuenta, Rect(tira.left + 8 * u, tira.top + tira.height * 0.63f, tira.right - 8 * u, tira.bottom - tira.height * 0.08f), TEXTO, TINTA.copy(alpha = 0.85f), 10f, minimo = 6f)
+            textoEn(medidor, e.nombre, Rect(tira.left + 10 * u, tira.top + tira.height * 0.08f, tira.right - 8 * u, tira.top + tira.height * 0.52f), TITULO, tinta(oscuro), 15f, peso = FontWeight.Bold, minimo = 8f)
+            diples(tira.left + 14 * u, tira.right - 12 * u, tira.top + tira.height * 0.57f, 3.2f * u, ocre(oscuro).copy(alpha = 0.7f), 0.6f * u, haciaCentro = true, hueco = 5 * u)
+            textoEn(medidor, e.cuenta, Rect(tira.left + 8 * u, tira.top + tira.height * 0.63f, tira.right - 8 * u, tira.bottom - tira.height * 0.08f), TEXTO, tinta(oscuro).copy(alpha = 0.85f), 10f, minimo = 6f)
         }
         // La luz: de día, el sol que entra desde la boca de la cueva; de noche, el resplandor de la lámpara.
         if (!oscuro) rayo(Offset(-w * 0.1f, 0f) to Offset(w * 0.16f, 0f), Offset(w * 0.22f, suelo) to Offset(w * 0.7f, suelo), 0.85f, 41)
-        else mancha(Offset(rep.center.x, rep.top - 10 * u), w * 0.6f, LLAMA_HALO.copy(alpha = 0.1f))
+        else resplandor(Offset(rep.center.x + 14 * u, rep.top - 15 * u), w * 0.7f)
     }
 
     /**
@@ -1350,10 +1397,10 @@ object EstanteArcontes : DisenoBiblioteca {
             cordel(Path().apply { moveTo(agujero.x - 0.6f * u, agujero.y); lineTo(w / 2 - 3 * u, 0f) }, t(CORDEL, oscuro, false), 0.9f * u)
             cordel(Path().apply { moveTo(agujero.x + 0.6f * u, agujero.y); lineTo(w / 2 + 3 * u, 0f) }, t(CORDEL, oscuro, false), 0.9f * u)
             drawCircle(Color.Black.copy(alpha = 0.45f), 1.4f * u, agujero)
-            cuenta(Offset(w / 2, 4.5f * u), 2.6f * u, e.tono)
-            textoEn(medidor, e.semana, Rect(tira.right - 16 * u, tira.top + 1.5f * u, tira.right - 2 * u, tira.top + 11 * u), TITULO, OCRE, 8f, minimo = 5f)
-            textoEn(medidor, e.dia, Rect(tira.left, tira.top + 10 * u, tira.right, tira.bottom - 8 * u), TITULO, TINTA, 17f, peso = FontWeight.Bold, minimo = 8f)
-            diples(tira.left + 5 * u, tira.right - 5 * u, tira.bottom - 4.5f * u, 2.6f * u, OCRE.copy(alpha = 0.6f), 0.5f * u, haciaCentro = true, hueco = 2 * u)
+            cuenta(Offset(w / 2, 4.5f * u), 2.6f * u, e.tono, oscuro)
+            textoEn(medidor, e.semana, Rect(tira.right - 16 * u, tira.top + 1.5f * u, tira.right - 2 * u, tira.top + 11 * u), TITULO, ocre(oscuro), 8f, minimo = 5f)
+            textoEn(medidor, e.dia, Rect(tira.left, tira.top + 10 * u, tira.right, tira.bottom - 8 * u), TITULO, tinta(oscuro), 17f, peso = FontWeight.Bold, minimo = 8f)
+            diples(tira.left + 5 * u, tira.right - 5 * u, tira.bottom - 4.5f * u, 2.6f * u, ocre(oscuro).copy(alpha = 0.6f), 0.5f * u, haciaCentro = true, hueco = 2 * u)
         }
     }
 
@@ -1364,12 +1411,12 @@ object EstanteArcontes : DisenoBiblioteca {
         val tam = 11f
         val largo = (anchoTx(medidor, texto, TITULO, tam, 0.5f, FontWeight.Bold) + 30 * u).coerceAtMost(w - 80 * u)
         val tira = Rect(w / 2 - largo / 2, h / 2 - 10.5f * u, w / 2 + largo / 2, h / 2 + 10.5f * u)
-        val tinte = if (oscuro) mezcla(OCRE, LLAMA, 0.6f) else OCRE
+        val tinte = if (oscuro) mezcla(ocre(oscuro), LLAMA, 0.6f) else ocre(oscuro)
         diples(12 * u, tira.left - 8 * u, h / 2, 6 * u, tinte.copy(alpha = 0.7f), 0.9f * u)
         diples(tira.right + 8 * u, w - 12 * u, h / 2, 6 * u, tinte.copy(alpha = 0.7f), 0.9f * u, izquierda = true)
         drawCircle(tinte, 1.8f * u, Offset(6 * u, h / 2)); drawCircle(tinte, 1.8f * u, Offset(w - 6 * u, h / 2))
         hoja(tira, papel(oscuro, false), texto.length * 7 + 3, 0.25f, 0.03f)
-        textoEn(medidor, texto, Rect(tira.left + 8 * u, tira.top, tira.right - 8 * u, tira.bottom), TITULO, TINTA, tam, peso = FontWeight.Bold, espaciado = 0.5f, minimo = 6f)
+        textoEn(medidor, texto, Rect(tira.left + 8 * u, tira.top, tira.right - 8 * u, tira.bottom), TITULO, tinta(oscuro), tam, peso = FontWeight.Bold, espaciado = 0.5f, minimo = 6f)
     }
 
     // =================================================================
@@ -1401,15 +1448,14 @@ object EstanteArcontes : DisenoBiblioteca {
         val borde = bis + h * 0.32f
         val ab = e.abrir.coerceIn(0f, 1f)
         val cerrada = ab < 0.5f
-        // El papiro se hunde menos que la cueva, para que lo escrito por fuera se lea también de noche.
-        fun pap(x: Color) = if (oscuro) mezcla(mezcla(x, PENUMBRA, 0.28f), LLAMA, 0.04f) else x
-        val papiro = pap(Color(0xFFE6D8B4))
-        val papiroOsc = pap(Color(0xFFCDB98C))
+        // De noche, el papiro a oscuras que alcanza la lámpara: lo escrito por fuera, con la tinta clara.
+        val papiro = if (oscuro) luz(Color(0xFFE6D8B4), true, false, 0.45f) else Color(0xFFE6D8B4)
+        val papiroOsc = if (oscuro) luz(Color(0xFFCDB98C), true, false, 0.3f) else Color(0xFFCDB98C)
         val pelo = c(Color(0xFF3B3026))
         val ro = minOf(w, h) * 0.13f
         val pc = Offset(s.center.x, borde)
         val pr = Rect(pc.x - ro * 1.15f, pc.y - ro * 1.15f, pc.x + ro * 1.15f, pc.y + ro * 1.15f)
-        fun DrawScope.bula(alfa: Float) = bullaArcontes(pc, ro, mezcla(c(BARRO_CLARO), LLAMA_HALO, e.brillo * 0.2f), alfa, e.semilla)
+        fun DrawScope.bula(alfa: Float) = bullaArcontes(pc, ro, mezcla(luz(BARRO_CLARO, oscuro, false, 0.55f), LLAMA_HALO, e.brillo * 0.2f), alfa, e.semilla)
 
         sombraSuave(s, 3 * u, 6 * u, 0.28f)
         drawRect(papiroOsc, s.topLeft, s.size)
@@ -1425,7 +1471,7 @@ object EstanteArcontes : DisenoBiblioteca {
                 drawPath(p, mezcla(papiro, Color.White, 0.08f))
                 clipPath(p) {
                     var y = bis + 6 * u; var j = 0
-                    while (y < borde - 3 * u) { drawLine(TINTA.copy(alpha = 0.14f), Offset(s.left + w * 0.1f, y), Offset(s.right - w * (0.1f + 0.2f * azar(e.semilla + 1, j)), y), 0.9f * u); y += 5.5f * u; j++ }
+                    while (y < borde - 3 * u) { drawLine(tinta(oscuro).copy(alpha = 0.14f), Offset(s.left + w * 0.1f, y), Offset(s.right - w * (0.1f + 0.2f * azar(e.semilla + 1, j)), y), 0.9f * u); y += 5.5f * u; j++ }
                 }
                 return
             }
@@ -1443,9 +1489,10 @@ object EstanteArcontes : DisenoBiblioteca {
             val arriba0 = s.top + h * 0.05f
             val alza = minOf(e.subir.coerceIn(0f, 1f) * h * 0.9f, (arriba0 - 4 * u).coerceAtLeast(0f))
             val hj = Rect(s.left + w * 0.07f, arriba0 - alza, s.right - w * 0.07f, arriba0 - alza + h * 0.9f)
-            val papelCarta = if (oscuro) mezcla(e.hoja, Color.Black, 0.12f) else e.hoja
+            // La hoja que sale queda cerca de la lámpara: de noche, apenas en penumbra y tibia.
+            val papelCarta = if (oscuro) mezcla(mezcla(e.hoja, PENUMBRA, 0.22f), LLAMA, 0.06f) else e.hoja
             hoja(hj, papelCarta, e.semilla + 1, 0.22f, 0.006f)
-            diples(hj.left + 8 * u, hj.right - 8 * u, hj.top + 5 * u, 3 * u, OCRE.copy(alpha = 0.6f), 0.6f * u, haciaCentro = true, hueco = 5 * u)
+            diples(hj.left + 8 * u, hj.right - 8 * u, hj.top + 5 * u, 3 * u, ocre(oscuro).copy(alpha = 0.6f), 0.6f * u, haciaCentro = true, hueco = 5 * u)
             var y = hj.top + 6 * u * k + 11 * u
             while (y < hj.bottom - 3 * u) { drawLine(e.renglones, Offset(hj.left + 6 * u, y), Offset(hj.right - 6 * u, y), 0.7f * u); y += 11 * u }
             drawLine(Color.Black.copy(alpha = 0.08f), Offset(hj.center.x, hj.top), Offset(hj.center.x, hj.bottom), 0.8f * u)
@@ -1462,12 +1509,13 @@ object EstanteArcontes : DisenoBiblioteca {
         }
         drawPath(forma, FIBRA.copy(alpha = 0.55f), style = Stroke(0.7f * u))
         if (!cerrada) drawRect(Color.Black.copy(alpha = 0.3f), Offset(s.left, s.top), Size(w, 1.6f * u))
+        if (oscuro) clipPath(forma) { mancha(Offset(s.right, s.top), w * 0.7f, LLAMA_HALO.copy(alpha = 0.12f)) }
         // A quién va, escrito con tinta por fuera.
         val dir = Rect(s.left + w * 0.1f, s.top + h * 0.45f, s.right - w * 0.1f, s.bottom - h * 0.07f)
-        textoEn(medidor, e.linea1, Rect(dir.left, dir.top, dir.right, dir.top + dir.height * 0.5f), TITULO, TINTA, 11.5f, peso = FontWeight.Bold, minimo = 6.5f)
+        textoEn(medidor, e.linea1, Rect(dir.left, dir.top, dir.right, dir.top + dir.height * 0.5f), TITULO, tinta(oscuro), 11.5f, peso = FontWeight.Bold, minimo = 6.5f)
         if (e.linea1.isNotBlank() || e.linea2.isNotBlank())
-            diples(dir.left + dir.width * 0.22f, dir.right - dir.width * 0.22f, dir.top + dir.height * 0.55f, 3 * u, OCRE.copy(alpha = 0.6f), 0.6f * u, haciaCentro = true, hueco = 4 * u)
-        textoEn(medidor, e.linea2, Rect(dir.left, dir.top + dir.height * 0.6f, dir.right, dir.bottom), TEXTO, TINTA.copy(alpha = 0.85f), 9.5f, minimo = 5.5f)
+            diples(dir.left + dir.width * 0.22f, dir.right - dir.width * 0.22f, dir.top + dir.height * 0.55f, 3 * u, ocre(oscuro).copy(alpha = 0.6f), 0.6f * u, haciaCentro = true, hueco = 4 * u)
+        textoEn(medidor, e.linea2, Rect(dir.left, dir.top + dir.height * 0.6f, dir.right, dir.bottom), TEXTO, tinta(oscuro).copy(alpha = 0.85f), 9.5f, minimo = 5.5f)
         if (cerrada) solapa(bis, ab) { tapaSolapa(it) }
         // La luz que se escapa por la juntura de la carta que ya se puede abrir.
         if (e.brillo > 0f && cerrada) {
@@ -1519,8 +1567,8 @@ object EstanteArcontes : DisenoBiblioteca {
         // La repisa de arriba, con la lámpara, la grieta y la losa del escondite.
         val rep = Rect(w * 0.03f, 42 * u, w * 0.97f, 48 * u)
         drawRect(Color.Black.copy(alpha = 0.3f), Offset(rep.left + 1.5f * u, rep.bottom), Size(rep.width, 4 * u))
-        drawRect(c(CALIZA_LUZ), rep.topLeft, Size(rep.width, 2 * u))
-        drawRect(c(CALIZA), Offset(rep.left, rep.top + 2 * u), Size(rep.width, rep.height - 2 * u))
+        drawRect(luz(CALIZA_LUZ, oscuro, false, 0.5f), rep.topLeft, Size(rep.width, 2 * u))
+        drawRect(luz(CALIZA, oscuro, false, 0.5f), Offset(rep.left, rep.top + 2 * u), Size(rep.width, rep.height - 2 * u))
         grietaLuz(Offset(w * 0.66f, 5 * u), Offset(w * 0.69f, rep.top - 4 * u), 1f * u, if (oscuro) 0.9f else 0.45f, 9)
         lamparaRoca(Offset(w * 0.12f, rep.top - 28 * u * 0.17f), 28 * u, oscuro, false, oscuro)
         val losa = Path().apply { moveTo(w * 0.8f, rep.top); lineTo(w * 0.83f, 8 * u); lineTo(w * 0.93f, 6 * u); lineTo(w * 0.95f, rep.top); close() }
@@ -1530,8 +1578,8 @@ object EstanteArcontes : DisenoBiblioteca {
         val et = Rect(w * 0.28f, 12 * u, w * 0.58f, 34 * u)
         cordel(Offset(et.left + 6 * u, et.top + 2 * u), Offset(et.left + 10 * u, 2 * u), c(CORDEL), 0.9f * u)
         cordel(Offset(et.right - 6 * u, et.top + 2 * u), Offset(et.right - 10 * u, 2 * u), c(CORDEL), 0.9f * u)
-        hoja(et, papel(oscuro, false), 157, 0.25f, 0.02f)
-        textoEn(medidor, "Cartas escondidas", Rect(et.left + 6 * u, et.top, et.right - 6 * u, et.bottom), TITULO, TINTA, 10.5f, peso = FontWeight.Bold, minimo = 6f)
+        hoja(et, papel(oscuro, false, 0.5f), 157, 0.25f, 0.02f)
+        textoEn(medidor, "Cartas escondidas", Rect(et.left + 6 * u, et.top, et.right - 6 * u, et.bottom), TITULO, tinta(oscuro), 10.5f, peso = FontWeight.Bold, minimo = 6f)
         // Los tres nichos.
         val baseY = h - 12 * u
         val grupos = listOf(Triple("Para abrir", e.listas, 0), Triple("Atadas", e.selladas, 1), Triple("Leídas", e.abiertas, 2))
@@ -1539,8 +1587,8 @@ object EstanteArcontes : DisenoBiblioteca {
         grupos.forEach { (nombre, cuantas, tipo) ->
             val bx = 12 * u + tipo * (anchoB + 4 * u)
             val ti = Rect(bx + anchoB * 0.1f, 54 * u, bx + anchoB * 0.9f, 71 * u)
-            hoja(ti, papel(oscuro, false), 163 + tipo, 0.25f, 0.025f)
-            textoEn(medidor, "$nombre · $cuantas", Rect(ti.left + 4 * u, ti.top, ti.right - 4 * u, ti.bottom), TITULO, TINTA, 9.5f, peso = FontWeight.Bold, minimo = 5f)
+            hoja(ti, papel(oscuro, false, 0.35f), 163 + tipo, 0.25f, 0.025f)
+            textoEn(medidor, "$nombre · $cuantas", Rect(ti.left + 4 * u, ti.top, ti.right - 4 * u, ti.bottom), TITULO, tinta(oscuro), 9.5f, peso = FontWeight.Bold, minimo = 5f)
             val ni = Rect(bx + 4 * u, 78 * u, bx + anchoB - 4 * u, baseY)
             translate(0.7f * u, 0.7f * u) { drawPath(nicho(ni.inflate(3.5f * u)), Color.White.copy(alpha = if (oscuro) 0.06f else 0.25f), style = Stroke(0.6f * u)) }
             drawPath(nicho(ni.inflate(3.5f * u)), c(CALIZA_SOMBRA), style = Stroke(0.7f * u))
@@ -1554,20 +1602,20 @@ object EstanteArcontes : DisenoBiblioteca {
                     val gx = ni.left + 5 * u + (azar(tipo * 13 + 5, j) - 0.5f) * 4 * u
                     val gw = ni.width - 10 * u
                     drawRect(Color.Black.copy(alpha = 0.3f), Offset(gx + 1 * u, gy + 1.5f * u), Size(gw, 5 * u))
-                    drawRect(c(mezcla(Color(0xFFE6D8B4), Color(0xFFCDB98C), 0.3f * (j % 3))), Offset(gx, gy), Size(gw, 5 * u))
+                    drawRect(luz(mezcla(Color(0xFFE6D8B4), Color(0xFFCDB98C), 0.3f * (j % 3)), oscuro, false, 0.3f), Offset(gx, gy), Size(gw, 5 * u))
                     drawLine(Color.Black.copy(alpha = 0.12f), Offset(gx + gw / 2, gy), Offset(gx + gw / 2, gy + 5 * u), 0.6f * u)
                     when (tipo) {
                         0 -> {
                             drawLine(GRIETA.copy(alpha = 0.7f), Offset(gx + 2 * u, gy + 0.8f * u), Offset(gx + gw - 2 * u, gy + 0.8f * u), 0.8f * u)
-                            bullaArcontes(Offset(gx + gw * 0.5f, gy + 2.5f * u), 2.8f * u, BARRO_CLARO, 1f, j)
+                            bullaArcontes(Offset(gx + gw * 0.5f, gy + 2.5f * u), 2.8f * u, luz(BARRO_CLARO, oscuro, false, 0.4f), 1f, j)
                         }
                         1 -> {
                             drawLine(c(Color(0xFF3B3026)), Offset(gx - 0.5f * u, gy + 2.5f * u), Offset(gx + gw + 0.5f * u, gy + 2.5f * u), 1f * u)
                             bullaArcontes(Offset(gx + gw * 0.5f, gy + 2.5f * u), 2.6f * u, c(BARRO), 1f, j + 7)
                         }
                         else -> {
-                            drawRect(papel(oscuro, false), Offset(gx + gw * (0.12f + 0.1f * azar(31, j)), gy - 3.5f * u), Size(gw * 0.55f, 4 * u))
-                            drawLine(TINTA.copy(alpha = 0.3f), Offset(gx + gw * 0.18f, gy - 2 * u), Offset(gx + gw * 0.5f, gy - 2 * u), 0.6f * u)
+                            drawRect(papel(oscuro, false, 0.3f), Offset(gx + gw * (0.12f + 0.1f * azar(31, j)), gy - 3.5f * u), Size(gw * 0.55f, 4 * u))
+                            drawLine(tinta(oscuro).copy(alpha = 0.3f), Offset(gx + gw * 0.18f, gy - 2 * u), Offset(gx + gw * 0.5f, gy - 2 * u), 0.6f * u)
                         }
                     }
                 }
@@ -1580,7 +1628,7 @@ object EstanteArcontes : DisenoBiblioteca {
         // El umbral de piedra.
         drawRect(Brush.verticalGradient(listOf(c(CALIZA_LUZ), c(CALIZA)), baseY, h), Offset(0f, baseY), Size(w, h - baseY))
         drawRect(Color.White.copy(alpha = if (oscuro) 0.06f else 0.25f), Offset(0f, baseY), Size(w, 1 * u))
-        if (oscuro) mancha(Offset(w * 0.15f, rep.top - 10 * u), w * 0.5f, LLAMA_HALO.copy(alpha = 0.1f))
+        if (oscuro) resplandor(Offset(w * 0.12f + 28 * u * 0.46f, rep.top - 15 * u), w * 0.55f)
     }
 
     // =================================================================
@@ -1648,13 +1696,13 @@ object EstanteArcontes : DisenoBiblioteca {
             val ni = Rect(q.left + 5 * u, 6 * u, q.right - 5 * u, h - 7 * u)
             val sel = k == e.actual
             clipPath(nicho(ni)) {
-                piedra(ni.inflate(2 * u), c(mezcla(HUECO, CALIZA, if (sel) 0.62f else 0.45f)), 181 + k, 0.6f)
+                piedra(ni.inflate(2 * u), if (sel) luz(mezcla(HUECO, CALIZA, 0.62f), oscuro, false, 0.7f) else c(mezcla(HUECO, CALIZA, 0.45f)), 181 + k, 0.6f)
                 drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.3f), Color.Transparent), ni.top, ni.top + 18 * u), ni.topLeft, Size(ni.width, 18 * u))
                 if (sel) mancha(Offset(ni.center.x, ni.bottom - 4 * u), ni.width * 0.95f, LLAMA_HALO.copy(alpha = if (oscuro) 0.45f else 0.5f))
             }
             drawPath(nicho(ni), Color.Black.copy(alpha = if (sel) 0.4f else 0.25f), style = Stroke(if (sel) 1.1f * u else 0.8f * u))
-            val texto = if (oscuro) (if (sel) claroTxt else claroTxt.copy(alpha = 0.72f)) else (if (sel) TINTA else TINTA.copy(alpha = 0.72f))
-            val icono = if (sel) (if (oscuro) LLAMA else OCRE) else texto
+            val texto = if (oscuro) (if (sel) claroTxt else claroTxt.copy(alpha = 0.72f)) else (if (sel) tinta(oscuro) else tinta(oscuro).copy(alpha = 0.72f))
+            val icono = if (sel) (if (oscuro) LLAMA else ocre(oscuro)) else texto
             val ic = Rect(ni.center.x - 8 * u, ni.top + 9 * u, ni.center.x + 8 * u, ni.top + 25 * u)
             drawPath(iconoBiblioteca(k, ic), icono, style = Stroke(1.2f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
             textoEn(medidor, e.nombres.getOrElse(k) { "" }, Rect(ni.left + 2 * u, ni.top + 27 * u, ni.right - 2 * u, ni.top + 40 * u), TITULO, texto, 9f,
@@ -1669,7 +1717,7 @@ object EstanteArcontes : DisenoBiblioteca {
     override val altoCampo: Dp = 52.dp
     override val cajaCampo = Rect(0.17f, 0.24f, 0.83f, 0.76f)
     override val letraCampo: FontFamily = TEXTO
-    override fun tintaCampo(oscuro: Boolean): Color = TINTA
+    override fun tintaCampo(oscuro: Boolean): Color = tinta(oscuro)
 
     /**
      * El buscador es una tira de papiro puesta sobre una piedra: a la izquierda, la lámpara de aceite, que se enciende con el
@@ -1683,15 +1731,16 @@ object EstanteArcontes : DisenoBiblioteca {
         clipPath(forma) { piedra(Rect(0f, 0f, w, h), c(CALIZA), 191) }
         drawPath(forma, Color.Black.copy(alpha = 0.25f), style = Stroke(0.8f * u))
         val hj = Rect(w * 0.14f, h * 0.13f, w * 0.86f, h * 0.87f)
-        hoja(hj, papel(oscuro, false), 193, 0.28f, 0.02f)
+        hoja(hj, papel(oscuro, false, if (e.enfocado) 0.55f else 0.4f), 193, 0.28f, 0.02f)
         if (e.enfocado) drawRect(LLAMA_HALO.copy(alpha = 0.1f), hj.topLeft, hj.size)
+        if (e.enfocado && oscuro) clipPath(Path().apply { addRoundRect(RoundRect(Rect(0f, 0f, w, h), CornerRadius(8 * u))) }) { resplandor(Offset(w * 0.1f, h * 0.3f), w * 0.3f, 0.8f) }
         val lw = minOf(h * 0.75f, w * 0.1f)
         lamparaRoca(Offset(w * 0.065f, h * 0.68f), lw, oscuro, false, e.enfocado)
         val oc = Offset(w * 0.93f, h / 2)
         val orr = minOf(h * 0.26f, w * 0.045f)
-        ouro(oc, orr, orr * 0.32f, if (e.enfocado) c(OCRE) else c(CALIZA_SOMBRA), escamas = c(CALIZA_LUZ))
+        ouro(oc, orr, orr * 0.32f, if (e.enfocado) c(ocre(oscuro)) else c(CALIZA_SOMBRA), escamas = c(CALIZA_LUZ))
         if (e.enfocado) { mancha(oc, orr * 1.3f, GRIETA_HALO.copy(alpha = 0.45f)); drawCircle(GRIETA, orr * 0.2f, oc) }
-        if (e.vacio) aIzquierda(medidor, e.pista, Rect(w * cajaCampo.left, h * cajaCampo.top, w * cajaCampo.right, h * cajaCampo.bottom), TEXTO, TINTA.copy(alpha = 0.45f), 14f, minimo = 9f)
+        if (e.vacio) aIzquierda(medidor, e.pista, Rect(w * cajaCampo.left, h * cajaCampo.top, w * cajaCampo.right, h * cajaCampo.bottom), TEXTO, tinta(oscuro).copy(alpha = if (oscuro) 0.6f else 0.45f), 14f, minimo = 9f)
     }
 
     // ---------------------------------------------------------------- las obras
@@ -1717,13 +1766,15 @@ object EstanteArcontes : DisenoBiblioteca {
         drawPath(boca, Color.Black.copy(alpha = 0.3f), style = Stroke(0.8f * u))
         grietaLuz(Offset(w * 0.86f, ni.top + ni.height * 0.25f), Offset(w * 0.9f, ni.top + ni.height * 0.62f), 1f * u, if (oscuro) 0.9f else 0.4f, 17)
         val tabla = Rect(0f, y0, w, h - 9 * u)
-        drawRect(Brush.verticalGradient(listOf(c(OLIVO_LUZ), c(OLIVO), c(mezcla(OLIVO, OLIVO_VETA, 0.45f))), tabla.top, tabla.bottom), tabla.topLeft, tabla.size)
-        vetas(tabla, c(OLIVO_VETA).copy(alpha = 0.5f), 207, densidad = 1.3f, grosor = 0.9f, ondulacion = 1.8f)
+        fun l(x: Color) = luz(x, oscuro, false, 0.35f)
+        drawRect(Brush.verticalGradient(listOf(l(OLIVO_LUZ), l(OLIVO), l(mezcla(OLIVO, OLIVO_VETA, 0.45f))), tabla.top, tabla.bottom), tabla.topLeft, tabla.size)
+        vetas(tabla, l(OLIVO_VETA).copy(alpha = 0.5f), 207, densidad = 1.3f, grosor = 0.9f, ondulacion = 1.8f)
         drawRect(Color.White.copy(alpha = if (oscuro) 0.08f else 0.26f), tabla.topLeft, Size(w, 1 * u))
         drawRect(Color.Black.copy(alpha = 0.34f), Offset(0f, tabla.bottom), Size(w, 3 * u))
         piedra(Rect(0f, tabla.bottom + 3 * u, w, h), c(CALIZA_LUZ), 209)
         lamparaRoca(Offset(ni.left + 22 * u, y0 - 30 * u * 0.17f), 30 * u, oscuro, false, oscuro)
-        if (!oscuro) rayo(Offset(w * 0.56f, 0f) to Offset(w * 0.74f, 0f), Offset(w * 0.22f, y0) to Offset(w * 0.6f, y0), 0.7f, 205)
+        if (oscuro) resplandor(Offset(ni.left + 22 * u + 30 * u * 0.46f, y0 - 15 * u), w * 0.5f)
+        else rayo(Offset(w * 0.56f, 0f) to Offset(w * 0.74f, 0f), Offset(w * 0.22f, y0) to Offset(w * 0.6f, y0), 0.7f, 205)
     }
 
     /** Un título partido por palabras en a lo más tres renglones que caben en [r]. */
@@ -1759,14 +1810,14 @@ object EstanteArcontes : DisenoBiblioteca {
         val u = density
         val w = size.width; val h = size.height
         val s = w / u
-        fun c(x: Color) = t(x, oscuro, false)
+        fun c(x: Color) = luz(x, oscuro, false, 0.5f)
         val cuero = c(CUEROS[variante(e.semilla, CUEROS.size)])
         val tapa = Rect(0f, 0f, w, h)
         cuero(tapa, cuero, e.semilla, w * 0.03f)
         if (e.mini) {
             val r = Rect(w * 0.18f, h * 0.3f, w * 0.82f, h * 0.7f)
             hoja(r, papel(oscuro, false), e.semilla, 0.25f, 0.03f)
-            textoEn(medidor, e.titulo.trim().take(1).uppercase().ifEmpty { "◌" }, r, TITULO, TINTA, s * 0.36f, peso = FontWeight.Bold, minimo = 5f)
+            textoEn(medidor, e.titulo.trim().take(1).uppercase().ifEmpty { "◌" }, r, TITULO, tinta(oscuro), s * 0.36f, peso = FontWeight.Bold, minimo = 5f)
             return
         }
         grabado(tapa.deflate(w * 0.05f), cuero, w * 0.16f)
@@ -1783,15 +1834,15 @@ object EstanteArcontes : DisenoBiblioteca {
         // La tira con el tipo y el título.
         val ti = Rect(w * 0.1f, h * 0.08f, w * 0.74f, h * 0.45f)
         hoja(ti, papel(oscuro, false), e.semilla + 1, 0.3f, 0.015f)
-        textoEn(medidor, e.tipo, Rect(ti.left + w * 0.04f, ti.top + h * 0.015f, ti.right - w * 0.04f, ti.top + h * 0.075f), TITULO, OCRE, s * 0.07f, espaciado = s * 0.01f, minimo = 3.5f)
-        diples(ti.left + w * 0.08f, ti.right - w * 0.08f, ti.top + h * 0.09f, w * 0.03f, OCRE.copy(alpha = 0.7f), maxOf(0.5f * u, w * 0.006f), haciaCentro = true, hueco = w * 0.03f)
-        tituloEn(medidor, e.titulo, Rect(ti.left + w * 0.04f, ti.top + h * 0.11f, ti.right - w * 0.04f, ti.bottom - h * 0.01f), TITULO, TINTA, s * 0.1f, FontWeight.Bold)
+        textoEn(medidor, e.tipo, Rect(ti.left + w * 0.04f, ti.top + h * 0.015f, ti.right - w * 0.04f, ti.top + h * 0.075f), TITULO, ocre(oscuro), s * 0.07f, espaciado = s * 0.01f, minimo = 3.5f)
+        diples(ti.left + w * 0.08f, ti.right - w * 0.08f, ti.top + h * 0.09f, w * 0.03f, ocre(oscuro).copy(alpha = 0.7f), maxOf(0.5f * u, w * 0.006f), haciaCentro = true, hueco = w * 0.03f)
+        tituloEn(medidor, e.titulo, Rect(ti.left + w * 0.04f, ti.top + h * 0.11f, ti.right - w * 0.04f, ti.bottom - h * 0.01f), TITULO, tinta(oscuro), s * 0.1f, FontWeight.Bold)
         // La tira con el autor y el año.
         val pie = listOf(e.autor, e.anio).filter { it.isNotBlank() }.joinToString(" · ")
         if (pie.isNotEmpty()) {
             val ta = Rect(w * 0.12f, h * 0.6f, w * 0.72f, h * 0.73f)
             hoja(ta, papel(oscuro, false), e.semilla + 2, 0.3f, 0.02f)
-            textoEn(medidor, pie, ta.deflate(w * 0.03f), TEXTO, TINTA.copy(alpha = 0.85f), s * 0.065f, minimo = 3.5f)
+            textoEn(medidor, pie, ta.deflate(w * 0.03f), TEXTO, tinta(oscuro).copy(alpha = 0.85f), s * 0.065f, minimo = 3.5f)
         }
         ouro(Offset(w * 0.42f, h * 0.86f), w * 0.07f, w * 0.022f, mezcla(cuero, Color.Black, 0.45f), escamas = mezcla(cuero, Color.White, 0.2f))
     }
@@ -1800,7 +1851,7 @@ object EstanteArcontes : DisenoBiblioteca {
 
     override val margenRecuerdo: Dp = 14.dp
     override val altoRotuloRecuerdo: Dp = 46.dp
-    override fun tintaRecuerdo(oscuro: Boolean): Color = if (oscuro) Color(0xFFF1E2C2) else TINTA
+    override fun tintaRecuerdo(oscuro: Boolean): Color = tinta(oscuro)
 
     /** «Hace un año» o «Hace N años», como lo dice la hoja del recuerdo. */
     private fun haceAnios(n: Int): String = if (n == 1) "Hace un año" else "Hace $n años"
@@ -1817,14 +1868,15 @@ object EstanteArcontes : DisenoBiblioteca {
     override fun DrawScope.recuerdo(e: EstadoRecuerdo, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         val w = size.width; val h = size.height
-        val fondo = if (oscuro) Color(0xFF2A241B) else PAPIRO
+        val fondo = papel(oscuro, false, 0.3f)
         val tinta = tintaRecuerdo(oscuro)
-        val acento = if (oscuro) LLAMA else OCRE
+        val acento = if (oscuro) LLAMA else ocre(oscuro)
         val cab = altoRotuloRecuerdo.toPx()
         val forma = Path().apply { addRoundRect(RoundRect(Rect(0f, 0f, w, h), CornerRadius(8 * u))) }
         drawPath(forma, fondo)
         clipPath(forma) {
             fibras(Rect(0f, 0f, w, h), (if (oscuro) PAPIRO else FIBRA).copy(alpha = if (oscuro) 0.07f else 0.17f), e.semilla, 2.4f * u)
+            if (oscuro) mancha(Offset(0f, 0f), w * 0.6f, LLAMA_HALO.copy(alpha = 0.1f))
             drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.06f), Color.Transparent), 0f, cab), Offset.Zero, Size(w, cab))
             for (k in 0 until 3) {
                 val o = Offset(w - (3f + 3f * azar(e.semilla, k)) * u, h * (0.3f + 0.24f * k))
@@ -1843,6 +1895,6 @@ object EstanteArcontes : DisenoBiblioteca {
         val clima = sinSigno(e.clima)
         aIzquierda(medidor, if (clima.isEmpty()) e.fecha else e.fecha + " · " + clima, Rect(col.left, col.top + col.height * 0.5f, col.right, col.bottom), TEXTO, tinta, 10.5f, minimo = 6.5f)
         cordel(Offset(w - 16 * u, 3 * u), Offset(w - 16 * u, cab / 2f - 4 * u), if (oscuro) mezcla(CORDEL, PENUMBRA, 0.3f) else CORDEL, 1f * u)
-        cuenta(Offset(w - 16 * u, cab / 2f), 4.6f * u, e.animo)
+        cuenta(Offset(w - 16 * u, cab / 2f), 4.6f * u, e.animo, oscuro)
     }
 }

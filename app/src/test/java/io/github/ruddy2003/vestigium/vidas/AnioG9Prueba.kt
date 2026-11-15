@@ -32,7 +32,7 @@ class AnioG9Prueba {
         generateSequence(LocalDate.of(anio, 1, 1)) { it.plusDays(1) }.takeWhile { it.year == anio }.count { ficha(it.toString()).estado == clave }
 
     @Test fun estaTadeoConSuTemaYEsFiccion() {
-        assertEquals(listOf("agente_red"), AnioG9.TODOS.map { it.vida })
+        assertEquals(listOf("agente_red", "iniciado"), AnioG9.TODOS.map { it.vida })
         assertTrue("No está en el registro", Calendarios.de(c.vida) === c)
         val q = OtrasVidas.porId(c.vida)!!
         assertEquals("frente", q.tema); assertEquals("tema", q.dibujo); assertEquals("Tadeo", q.nombre); assertEquals(32, q.edad)

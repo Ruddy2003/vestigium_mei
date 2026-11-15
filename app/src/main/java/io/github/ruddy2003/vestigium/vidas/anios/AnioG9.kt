@@ -37,6 +37,7 @@ internal object AnioG9 {
     val CALCULADOS = emptySet<String>()
 
     private val I = INVENTADO
+    private val W = "https://en.wikipedia.org/wiki/"
 
     // =====================================================================
     //  Tadeo, ladrón de piezas y agente de la red. El puerto de Halde, años 212 a 216 del Directorio.
@@ -209,5 +210,371 @@ internal object AnioG9 {
         ),
         objetos = listOf("cartucho", "radio", "llave_cifrado", "credencial", "auricular", "microfilm", "carta_estelar", "soplete", "linterna", "chaqueta", "valvula", "ficha"),
         estados = listOf(Estado("cresta", "sube_cresta", "baja_cresta"), Estado("escondido", "redada", "sale_tuneles"), Estado("cresta", "sube_golpe", "golpe")),
+    )
+
+    // =====================================================================
+    //  Eleazar, salador de pescado e iniciado de un círculo escondido. Magdala, en el lago de Galilea, del 28 al 32 d. C.
+    // =====================================================================
+    //
+    // La ficha es la de PLAN_TEMAS, 10d («La historia del iniciado: los eventos especiales»), con las correcciones de
+    // `docs/diseno/temas/fuentes_arcontes.md` (sección 1). Lo que allí va como «[sin verificar]» no se afirma aquí.
+    //
+    // Su gente (toda inventada): Mara, su mujer; Natán, su hijo (unos seis años en la temporada 1); Débora, la hija que
+    // nace en la 2; Shifra, su madre, viuda, que vive con ellos y muere en el invierno de la 4. El viejo Ezequías, dueño
+    // del secadero de la orilla donde trabaja, que lo hace su socio en la 4. Los del círculo, «los que saben»: Ismael, el
+    // viejo que vino de Alejandría y enseña (se va quedando ciego desde la 3), Judit, una viuda que teje lino y trae hojas
+    // copiadas de Tiro, y Tobías, el barquero. La gente real que cruza su vida no se dibuja nunca: Juan el Bautista, María
+    // de Magdala (su vecina), Pedro, Felipe, Esteban, Saulo y Simón de Samaria. Lo que hacen ellos sale de los evangelios y
+    // de Hechos, con su cita; lo que hacen con él (lo que María le cuenta, lo que habla con los de Pedro) es inventado.
+    //
+    // Lo real: el año judío (Purim, Pésaj y la primera gavilla, Shavuot, Rosh Hashaná, Yom Kipur, Sucot y Janucá), la vida
+    // de Jesús según los evangelios y lo que vino después según Hechos, Herodes Antipas, Pilato y la caída de Sejano. Las
+    // creencias del círculo son las de los textos gnósticos (siglos II a IV) puestas a propósito en el siglo I, como decidió
+    // el autor; el cuento las cuenta como lo que él cree.
+    //
+    // Las fechas:
+    // - Van en juliano, el calendario de entonces, escritas como «MM-DD» (como las de Zaynab). Cada fiesta empieza al
+    //   ponerse el sol del día anterior; la fecha es la de su parte de luz.
+    // - Las fiestas salen de la tabla de `fuentes_arcontes.md` (sección 6), calculada con la luna nueva y la primera luna
+    //   visible en Jerusalén: van como «aproximado», porque el mes empezaba cuando se veía la luna (un día de margen, y un
+    //   mes si los sacerdotes añadían otro adar). Hay adar II en el 29 y en el 32. El Purim del 28 cayó el 29 de febrero,
+    //   que el calendario no puede escribir: va el 1 de marzo, el 15 de adar, el Purim de Jerusalén. Shavuot va con la
+    //   cuenta de los fariseos (el 6 de siván), salvo en el 30, en que las dos cuentas dan el domingo 28 de mayo.
+    // - El año quince de Tiberio (Lucas 3:1), con la cuenta romana, empieza en el otoño del 28: Juan bautiza desde
+    //   entonces, y el bautismo de Jesús, la llamada a los pescadores y Cafarnaúm van a finales del 28. Marcos (1:14) pone
+    //   la llamada después de que encierran a Juan, así que la cárcel de Juan va en diciembre del 28 y su muerte, antes de
+    //   los panes de la Pascua del 29, como en Marcos 6 (los estudiosos dan del 29 al 32).
+    // - La semana de la Pascua del 30 sigue la cronología de Juan: la crucifixión, el viernes 14 de nisán, 7 de abril (una
+    //   de las dos fechas más defendidas; según Riesner, al parecer la de la mayoría); la entrada, el domingo 2; los
+    //   mercaderes del Templo, el lunes 3 (en el 30, no en el 28); la cena, el jueves 6; el sepulcro vacío, el domingo 9.
+    //   Pentecostés, el domingo 28 de mayo. La ascensión, cuarenta días después del 9 de abril (Hechos 1:3).
+    // - Lo que los evangelios y Hechos no fechan va como «aproximado», en el orden de Marcos y de Hechos y con su cita.
+    //   **Esteban va adelantado**: lo habitual es ponerlo hacia el 34 (su muerte, entre el 33 y el 36); aquí va en junio
+    //   del 32, como pide la ficha. La noticia de Sejano (Roma, 18 de octubre del 31) llega entre finales de noviembre y
+    //   diciembre. Helena no está en Samaria: en el 32 Eleazar solo oye a Simón y su «gran poder» (corrección 9).
+    //
+    // Claves de escena: fiesta, lamparas (las luces de Janucá), sucot (las cabañas de ramas), luto, tormenta, humo,
+    // secadero (los cañizos llenos de pescado abierto), cosecha, grieta (las noches del círculo en que se abre la luz),
+    // camino (los días de camino a Jerusalén y de vuelta), jordan (el vado del Jordán), oscuridad (el cielo que se apaga la
+    // tarde de la cruz), luz_monte (una luz en lo alto de un monte, de noche), huida y **figura_luz** (decisión 18): los días
+    // en que Eleazar ve a Jesús, que en el cuadro es una figura de luz de espaldas, sin rasgos, blanca con borde violeta,
+    // lejos, en la orilla, sobre el agua o entre la gente (que no se dibuja).
+    //
+    // Arcos: secadero (cuánto pescado hay tendido al sol: más en invierno y primavera, menos en lo peor del verano;
+    // **[Aproximación]**), barcas (las barcas y las hogueras de la gente que sigue a Jesús por la orilla de Magdala: nada
+    // hasta diciembre del 28, lo más en la Pascua del 29, y nada desde la cruz; no se dibuja a la gente, solo sus barcas y
+    // sus fuegos), codice (las hojas que el círculo va copiando, que crecen poco a poco), cueva (0 = el círculo se reúne en
+    // la casa de Ismael; 1 = en una cueva del Arbel, desde noviembre del 31) y jarra (1 = las hojas, selladas en una jarra en
+    // lo hondo de la cueva, desde octubre del 32).
+    //
+    // Estados: «jerusalen» (sus subidas a Jerusalén: Sucot del 28 y del 29, Pésaj y Shavuot del 30, Pésaj y Sucot del 31,
+    // Pésaj y Shavuot del 32; del día en que sale de Magdala a la víspera del día en que vuelve, con los días de camino) y
+    // «huida» (temporada 5: de la persecución que sigue a Esteban a la víspera de Rosh Hashaná, escondido en la ciudad de
+    // Samaria). En la temporada 5, que desde 2032 se repite, los días que abren y cierran los estados son ritos, fiestas y
+    // sucesos del mundo, que no se mueven; sus sucesos personales van en enero y febrero o desde mediados de noviembre, lejos
+    // de los viajes, para que al sortearse de nuevo no caigan en Jerusalén ni en Samaria.
+    //
+    // Lo que el cuadro tiene que mostrar para contar lo mismo que el cuento (el cuadro de Arcontes va después de la tanda
+    // S19): la orilla de Magdala al atardecer, con su torre, las barcas varadas, el secadero con sus cañizos según
+    // `secadero`, las ánforas, el Arbel detrás y, en los días claros, el Hermón al norte; las barcas y las hogueras de la
+    // gente según `barcas`; la figura de luz, de espaldas, los días `figura_luz`; las cabañas de ramas en los tejados en
+    // Sucot y las lámparas en Janucá. De noche, a la hora de la reunión (19 a 21 h), el sitio del círculo con la lámpara de
+    // aceite, las hojas del códice según `codice` y la grieta de luz: el cuarto de Ismael y, desde `cueva`, la cueva del
+    // Arbel; con `jarra`, la jarra sellada en el fondo de la cueva. Durante «jerusalen», Jerusalén (lugar propio, porque
+    // vuelve cada año: decisión 21): el Templo al fondo, el monte de los Olivos con los fuegos de los peregrinos y, los días
+    // `camino`, el camino del valle del Jordán. Durante «huida», la ciudad de Samaria y sus montes, con las eras y las viñas
+    // (lugar propio: dura casi cuatro meses).
+
+    private val F_PURIM = "Purim" to "${W}Purim"
+    private val F_PESAJ = "Pésaj" to "${W}Passover"
+    private val F_SHAVUOT = "Shavuot" to "${W}Shavuot"
+    private val F_ROSH = "Rosh Hashaná" to "${W}Rosh_Hashanah"
+    private val F_KIPUR = "Yom Kipur" to "${W}Yom_Kippur"
+    private val F_SUCOT = "Sucot" to "${W}Sukkot"
+    private val F_JANUCA = "Janucá" to "${W}Hanukkah"
+    private val F_CRONOLOGIA = "La cronología de Jesús" to "${W}Chronology_of_Jesus"
+    private val F_JUAN_BAUTISTA = "Juan el Bautista" to "${W}John_the_Baptist"
+    private val F_MAQUERONTE = "Maqueronte" to "${W}Machaerus"
+    private val F_MARCOS_1 = "Marcos 1" to "${W}Mark_1"
+    private val F_MARCOS_4 = "Marcos 4" to "${W}Mark_4"
+    private val F_MARCOS_5 = "Marcos 5" to "${W}Mark_5"
+    private val F_MARCOS_6 = "Marcos 6" to "${W}Mark_6"
+    private val F_MARCOS_8 = "Marcos 8" to "${W}Mark_8"
+    private val F_MARCOS_10 = "Marcos 10" to "${W}Mark_10"
+    private val F_MARCOS_11 = "Marcos 11" to "${W}Mark_11"
+    private val F_LUCAS_8 = "Lucas 8" to "${W}Luke_8"
+    private val F_JUAN_6 = "Juan 6" to "${W}John_6"
+    private val F_JUAN_7 = "Juan 7" to "${W}John_7"
+    private val F_JUAN_10 = "Juan 10" to "${W}John_10"
+    private val F_JUAN_11 = "Juan 11" to "${W}John_11"
+    private val F_JUAN_20 = "Juan 20" to "${W}John_20"
+    private val F_JUAN_21 = "Juan 21" to "${W}John_21"
+    private val F_TEMPESTAD = "La tempestad calmada" to "${W}Calming_the_storm"
+    private val F_PANES = "Los panes y los peces" to "${W}Feeding_the_multitude"
+    private val F_AGUA = "Jesús camina sobre el agua" to "${W}Jesus_walking_on_water"
+    private val F_TRANSFIGURACION = "La transfiguración" to "${W}Transfiguration_of_Jesus"
+    private val F_PILATO = "Poncio Pilato" to "${W}Pontius_Pilate"
+    private val F_ENTRADA = "La entrada en Jerusalén" to "${W}Triumphal_entry_into_Jerusalem"
+    private val F_MERCADERES = "Los mercaderes del Templo" to "${W}Cleansing_of_the_Temple"
+    private val F_CENA = "La última cena" to "${W}Last_Supper"
+    private val F_CRUZ = "La crucifixión de Jesús" to "${W}Crucifixion_of_Jesus"
+    private val F_HECHOS_1 = "Hechos 1" to "${W}Acts_1"
+    private val F_PENTECOSTES = "Pentecostés" to "${W}Pentecost"
+    private val F_HECHOS_2 = "Hechos 2" to "${W}Acts_2"
+    private val F_HECHOS_4 = "Hechos 4" to "${W}Acts_4"
+    private val F_HECHOS_5 = "Hechos 5" to "${W}Acts_5"
+    private val F_HECHOS_6 = "Hechos 6" to "${W}Acts_6"
+    private val F_HECHOS_8 = "Hechos 8" to "${W}Acts_8"
+    private val F_HECHOS_9 = "Hechos 9" to "${W}Acts_9"
+    private val F_GAMALIEL = "Gamaliel" to "${W}Gamaliel"
+    private val F_SIETE = "Los siete" to "${W}Seven_Deacons"
+    private val F_SEJANO = "Sejano" to "${W}Sejanus"
+    private val F_ESTEBAN = "Esteban" to "${W}Saint_Stephen"
+    private val F_FELIPE = "Felipe el evangelista" to "${W}Philip_the_Evangelist"
+    private val F_SIMON = "Simón de Samaria" to "${W}Simon_Magus"
+
+    private val A = APROXIMADO
+    private val INV = INVENTADO
+
+    val INICIADO = Calendario(
+        vida = "iniciado",
+        estaciones = Calendario.TEMPLADO_NORTE,
+        // La orilla del lago, a más de doscientos metros bajo el nivel del mar: lluvias de noviembre a marzo, con tormentas
+        // que bajan de golpe de los montes; un verano largo, seco y caliente; y en primavera y otoño, el viento del desierto.
+        clima = listOf(
+            mes(despejado = 9, nubes = 9, lluvia = 9, tormenta = 2, niebla = 1, viento = 1), mes(despejado = 10, nubes = 9, lluvia = 8, tormenta = 2, niebla = 1, viento = 1),
+            mes(despejado = 14, nubes = 8, lluvia = 6, tormenta = 1, viento = 2, polvo = 1), mes(despejado = 18, nubes = 6, lluvia = 3, viento = 2, polvo = 2),
+            mes(despejado = 24, nubes = 3, lluvia = 1, viento = 2, polvo = 2), mes(despejado = 27, nubes = 1, viento = 3),
+            mes(despejado = 28, nubes = 1, viento = 3), mes(despejado = 28, nubes = 1, viento = 2),
+            mes(despejado = 25, nubes = 2, viento = 2, polvo = 2), mes(despejado = 20, nubes = 5, lluvia = 3, tormenta = 1, viento = 2, polvo = 1),
+            mes(despejado = 13, nubes = 8, lluvia = 6, tormenta = 2, viento = 1), mes(despejado = 10, nubes = 9, lluvia = 8, tormenta = 2, niebla = 1, viento = 1),
+        ),
+        temporadas = listOf(
+            TemporadaVida("28 d. C.", "antipas",
+                "Eleazar sala pescado en el secadero de Ezequías y va de noche al círculo de Ismael, que en primavera le enseña las palabras de las siete puertas. Su vecina María oye voces. En el otoño llega la noticia de Juan, que bautiza en el Jordán: Eleazar sube a Jerusalén para Yom Kipur y Sucot y, a la vuelta, lo ve en el vado. En noviembre vuelve al Jordán con Tobías y ve bautizar a un hombre de Nazaret. Herodes encierra a Juan. El de Nazaret vuelve a Galilea, llama a cuatro pescadores en Cafarnaúm, y Eleazar lo ve de lejos, de espaldas. Mara espera un hijo.",
+                listOf(
+                    suceso("hermon_28", "01-09", "Ismael le enseña el Hermón nevado: allí, dice, bajaron los Vigilantes"),
+                    mundo("tormenta_28", "01-27", "Una tormenta baja de golpe de los montes y vuelca dos barcas en el lago", certeza = INV, escena = "tormenta", clima = Clima.TORMENTA),
+                    cosecha("banco_28", "02-14", "Un banco de peces llena las redes: tres días abriendo pescado sin parar", 3, INV, escena = "secadero"),
+                    fiesta("purim_28", "03-01", "Purim, el de Jerusalén: en la sinagoga se lee el rollo de Ester", certeza = A, fuente = F_PURIM),
+                    suceso("fiebre_28", "03-12", "Shifra, su madre, cae con fiebre y no se levanta de la estera", cadena = "madre_28"),
+                    suceso("sana_28", "03-20", "Shifra se levanta de la estera y pide pescado asado", cadena = "madre_28"),
+                    fiesta("pesaj_28", "03-30", "Pésaj: este año no suben a Jerusalén, y la noche de los ácimos es en casa", certeza = A, fuente = F_PESAJ),
+                    cosecha("cebada_28", "04-01", "Empieza la siega de la cebada, y en el Templo se ofrece la primera gavilla", 1, A, F_SHAVUOT),
+                    rito("sello_28", "04-14", "La noche del sello: Ismael le enseña las palabras de las siete puertas", certeza = INV, escena = "grieta"),
+                    mundo("caravana_28", "05-06", "La caravana de Damasco se lleva cien ánforas de pescado del secadero", certeza = INV),
+                    fiesta("shavuot_28", "05-20", "Shavuot, la fiesta de las semanas: el trigo nuevo", certeza = A, fuente = F_SHAVUOT),
+                    suceso("esferas_28", "06-08", "Ismael dibuja en la arena los siete círculos del cielo y la serpiente de fuera"),
+                    mundo("sharav_28", "06-25", "Sopla tres días el viento caliente del desierto, y el pescado se seca de más", 3, INV, clima = Clima.POLVO),
+                    mundo("cobradores_28", "07-15", "Los cobradores de Herodes Antipas cuentan una por una las ánforas del secadero", certeza = INV),
+                    suceso("voces_28", "07-30", "De noche se oye a María, la vecina, hablar con voces que no son la suya"),
+                    suceso("natan_28", "08-20", "Natán abre su primer pescado con el cuchillo de su abuelo"),
+                    mundo("rumor_juan_28", "09-06", "Llega a Magdala la noticia de un profeta que bautiza en el Jordán", certeza = A, fuente = F_CRONOLOGIA),
+                    fiesta("rosh_28", "09-09", "Rosh Hashaná, el año nuevo: suena el cuerno en la sinagoga", certeza = A, fuente = F_ROSH),
+                    rito("sube_sucot_28", "09-12", "Sube a Jerusalén con los peregrinos de Magdala, para Yom Kipur y Sucot", 3, INV, escena = "camino"),
+                    rito("kipur_28", "09-18", "Yom Kipur en el Templo: ayuno, y el macho cabrío que se va al desierto", certeza = A, fuente = F_KIPUR),
+                    fiesta("sucot_28", "09-23", "Sucot en Jerusalén: siete días en una cabaña de ramas", 7, A, F_SUCOT, escena = "sucot"),
+                    rito("baja_sucot_28", "10-01", "Baja de Jerusalén por Jericó y el valle del Jordán", 4, INV, escena = "camino"),
+                    mundo("juan_vado_28", "10-03", "En un vado del Jordán ve a Juan, el que bautiza, metido en el agua", certeza = A, fuente = F_JUAN_BAUTISTA, escena = "jordan"),
+                    rito("vuelve_sucot_28", "10-05", "Vuelve a Magdala con el polvo del camino y con Juan en la cabeza", certeza = INV),
+                    suceso("agua_28", "10-20", "En el círculo discuten el agua de Juan: Ismael dice que es agua de abajo"),
+                    suceso("baja_jordan_28", "11-04", "Baja otra vez al Jordán con Tobías, a oír a Juan", 2, cadena = "jordan_28", escena = "jordan"),
+                    mundo("bautismo_28", "11-06", "Juan bautiza a un hombre de Nazaret, y la gente dice que el cielo se abrió", certeza = A, fuente = F_MARCOS_1, escena = "figura_luz"),
+                    suceso("vuelve_jordan_28", "11-07", "Vuelve del Jordán con Tobías sin hablar en todo el camino", cadena = "jordan_28"),
+                    suceso("dos_ensenanzas_28", "11-12", "Ismael dice que el Cristo bajó sobre él como paloma; Judit, que su cuerpo solo parece"),
+                    suceso("mara_espera_28", "11-20", "Mara le dice que espera otro hijo para el verano"),
+                    mundo("desierto_28", "11-26", "Dicen que el de Nazaret se fue al desierto y no ha vuelto", certeza = A, fuente = F_MARCOS_1),
+                    fiesta("januca_28", "12-01", "Janucá, la fiesta de la Dedicación: ocho días de luces", 8, A, F_JANUCA, escena = "lamparas"),
+                    mundo("carcel_juan_28", "12-10", "Herodes Antipas manda encerrar a Juan en la fortaleza de Maqueronte", certeza = A, fuente = F_MAQUERONTE),
+                    mundo("galilea_28", "12-16", "El de Nazaret ha vuelto a Galilea: dice que el tiempo se ha cumplido", certeza = A, fuente = F_MARCOS_1),
+                    mundo("pescadores_28", "12-21", "En la orilla de Cafarnaúm llama a cuatro pescadores, y lo dejan todo", certeza = A, fuente = F_MARCOS_1, escena = "figura_luz"),
+                    mundo("cafarnaum_28", "12-26", "Noticias de Cafarnaúm: el sábado sacó un espíritu en la sinagoga y sanó a muchos", certeza = A, fuente = F_MARCOS_1),
+                    suceso("lo_ve_28", "12-29", "Va a los pueblos de la orilla y lo ve de lejos, de espaldas, entre la gente", escena = "figura_luz"),
+                )),
+            TemporadaVida("29 d. C.", "maestro",
+                "El de Nazaret enseña por la orilla del lago, y la gente lo sigue en barcas. María, la vecina, sana y se va con él. Eleazar lo oye enseñar desde una barca y esa noche cruza el lago en la de Tobías, detrás de la suya, en plena tormenta. Herodes mata a Juan. Cerca de la Pascua, Eleazar ve los panes y, de madrugada, una figura que camina sobre el agua; en Cafarnaúm muchos lo dejan. Ezequías se lastima la espalda. El de Nazaret llega a la comarca de Magdala. Nace Débora. Una noche ve una luz en lo alto de un monte. Judit le enseña las letras. En Sucot lo ve en el Templo.",
+                listOf(
+                    mundo("granizo_29", "01-08", "Cae granizo sobre el lago y rompe las tejas del secadero", certeza = INV, escena = "tormenta", clima = Clima.TORMENTA),
+                    suceso("leviatan_29", "01-20", "Ismael le enseña que alrededor del mundo se enrosca Leviatán, la serpiente de fuera"),
+                    mundo("maria_sigue_29", "02-08", "María, la vecina, está sana: se va con el de Nazaret y con otras mujeres", certeza = A, fuente = F_LUCAS_8),
+                    mundo("sembrador_29", "02-21", "Enseña desde una barca a la gente de la orilla, con historias de semillas", certeza = A, fuente = F_MARCOS_4, escena = "figura_luz"),
+                    mundo("tempestad_29", "02-22", "Cruza el lago de noche en plena tormenta, y la tormenta se calla", certeza = A, fuente = F_TEMPESTAD, escena = "figura_luz", clima = Clima.TORMENTA),
+                    mundo("gerasa_29", "02-25", "Al otro lado del lago, dicen, una piara entera se echó al agua", certeza = A, fuente = F_MARCOS_5),
+                    mundo("jairo_29", "03-05", "Dicen que en Cafarnaúm levantó de la cama a la hija de Jairo, que ya estaba muerta", certeza = A, fuente = F_MARCOS_5),
+                    mundo("nazaret_29", "03-12", "En Nazaret, su pueblo, no le creen, y casi no hace nada allí", certeza = A, fuente = F_MARCOS_6),
+                    mundo("mayor_29", "03-16", "Los de Juan vienen desde la cárcel a preguntarle si es él el que tenía que venir", certeza = A, fuente = F_JUAN_BAUTISTA),
+                    fiesta("purim_29", "03-19", "Purim, en el segundo mes de adar: se lee el rollo de Ester", certeza = A, fuente = F_PURIM),
+                    mundo("envio_29", "03-26", "Manda a los doce de dos en dos por los pueblos de Galilea", certeza = A, fuente = F_MARCOS_6),
+                    mundo("muerte_juan_29", "04-02", "Llega la noticia: Herodes Antipas mandó matar a Juan en Maqueronte", certeza = A, fuente = F_MARCOS_6, escena = "luto"),
+                    mundo("panes_29", "04-11", "En un descampado de la orilla da de comer a miles con cinco panes y dos peces", certeza = A, fuente = F_JUAN_6, escena = "figura_luz"),
+                    mundo("agua_29", "04-12", "De madrugada, desde la orilla, ve una figura que camina sobre el agua", certeza = A, fuente = F_AGUA, escena = "figura_luz"),
+                    mundo("pan_vida_29", "04-14", "En la sinagoga de Cafarnaúm habla del pan de vida, y muchos lo dejan", certeza = A, fuente = F_JUAN_6),
+                    fiesta("pesaj_29", "04-18", "Pésaj: este año tampoco suben, y la noche de los ácimos es en casa", certeza = A, fuente = F_PESAJ),
+                    cosecha("cebada_29", "04-20", "La siega de la cebada: en el Templo se ofrece la primera gavilla", 1, A, F_SHAVUOT),
+                    mundo("sal_29", "05-04", "Llega por el camino del Jordán la sal del mar Muerto, en sacos, a lomo de burro", certeza = INV),
+                    suceso("espalda_29", "05-12", "Ezequías se lastima la espalda y deja el secadero en sus manos", cadena = "ezequias_29"),
+                    suceso("vuelve_ezequias_29", "06-02", "Ezequías vuelve al secadero con bastón, gritando como siempre", cadena = "ezequias_29"),
+                    fiesta("shavuot_29", "06-08", "Shavuot, la fiesta de las semanas: el trigo nuevo", certeza = A, fuente = F_SHAVUOT),
+                    mundo("magadan_29", "06-20", "Llega en barca a la comarca de Magdala, y los fariseos le piden una señal", certeza = A, fuente = F_PANES, escena = "figura_luz"),
+                    mundo("pedro_29", "07-08", "Dicen que, camino de Cesarea de Filipo, Pedro le dijo que es el Mesías", certeza = A, fuente = F_MARCOS_8),
+                    mundo("luz_monte_29", "07-17", "Ve de noche una luz blanca en lo alto de un monte, y no sabe qué es", certeza = A, fuente = F_TRANSFIGURACION, escena = "luz_monte"),
+                    suceso("nace_debora_29", "07-27", "Nace Débora, su hija, con el pelo negro de su abuela"),
+                    mundo("incendio_29", "08-26", "Se quema un secadero de la orilla, y el humo tapa Magdala un día entero", certeza = INV, escena = "humo"),
+                    suceso("letras_29", "09-10", "Judit empieza a enseñarle las letras, con un palo, en la arena del patio"),
+                    fiesta("rosh_29", "09-28", "Rosh Hashaná, el año nuevo: suena el cuerno en la sinagoga", certeza = A, fuente = F_ROSH),
+                    rito("sube_sucot_29", "10-04", "Sube otra vez a Jerusalén con los de Magdala, para Yom Kipur y Sucot", 3, INV, escena = "camino"),
+                    rito("kipur_29", "10-07", "Yom Kipur en el Templo: todo Jerusalén ayuna", certeza = A, fuente = F_KIPUR),
+                    fiesta("sucot_29", "10-12", "Sucot en Jerusalén: las cabañas de ramas en los tejados y en los caminos", 7, A, F_SUCOT, escena = "sucot"),
+                    mundo("ensena_29", "10-15", "En medio de la fiesta aparece en el Templo y se pone a enseñar", certeza = A, fuente = F_JUAN_7, escena = "figura_luz"),
+                    mundo("agua_viva_29", "10-18", "El último día de la fiesta, de pie, grita que quien tenga sed vaya a él", certeza = A, fuente = F_JUAN_7, escena = "figura_luz"),
+                    rito("baja_sucot_29", "10-20", "Baja de Jerusalén por el valle del Jordán", 3, INV, escena = "camino"),
+                    rito("vuelve_sucot_29", "10-23", "Vuelve a Magdala, y la orilla está casi vacía de barcas de fuera", certeza = INV),
+                    suceso("natan_29", "11-10", "Natán sale de noche por primera vez en la barca de Tobías"),
+                    suceso("hojas_29", "11-28", "Judit trae de Tiro unas hojas copiadas, y Ismael las lee en la reunión"),
+                    fiesta("januca_29", "12-20", "Janucá, la fiesta de la Dedicación: ocho días de luces", 8, A, F_JANUCA, escena = "lamparas"),
+                    mundo("dedicacion_29", "12-30", "Llega la noticia: en la fiesta de la Dedicación quisieron apedrearlo en el Templo", certeza = A, fuente = F_JUAN_10),
+                )),
+            TemporadaVida("30 d. C.", "pilato",
+                "El de Nazaret anda al otro lado del Jordán y en Judea. A Ismael se le nublan los ojos, y Eleazar, que ya lee, lee por él. Pilato mata a unos galileos en el Templo. Eleazar sube a Jerusalén para Pésaj por Jericó; ve la entrada, los mercaderes y la higuera seca; la noche del jueves, antorchas en el huerto de los olivos. El viernes 14 de nisán lo crucifican, y él mira de lejos. El domingo, María dice que el sepulcro está vacío y que lo ha visto. De vuelta en Magdala, lo ve al amanecer en la orilla. Sube otra vez en Shavuot. Ismael dice que el que sufrió no era él, y que él se reía. María le cuenta lo que vio.",
+                listOf(
+                    mundo("mas_alla_30", "01-10", "Dicen que se fue al otro lado del Jordán, adonde bautizaba Juan", certeza = A, fuente = F_JUAN_10),
+                    suceso("ojos_30", "01-25", "A Ismael se le nublan los ojos, y le pide que lea él en la reunión"),
+                    mundo("galileos_30", "02-14", "Llega la noticia: Pilato mató a unos galileos en el Templo, junto a sus sacrificios", certeza = A, fuente = F_PILATO),
+                    suceso("lee_30", "03-01", "Lee solo, por primera vez, una hoja entera de las que trajo Judit"),
+                    mundo("lazaro_30", "03-05", "Dicen que en Betania sacó vivo del sepulcro a un muerto de cuatro días", certeza = A, fuente = F_JUAN_11),
+                    fiesta("purim_30", "03-08", "Purim: se lee el rollo de Ester, y los niños hacen ruido con el nombre de Amán", certeza = A, fuente = F_PURIM),
+                    rito("sube_pesaj_30", "03-26", "Sube a Jerusalén para Pésaj por Jericó; dicen que el de Nazaret también va", 3, INV, escena = "camino"),
+                    mundo("jerico_30", "03-28", "En Jericó, a la salida, un ciego del camino le grita, y se va detrás de él viendo", certeza = A, fuente = F_MARCOS_10, escena = "figura_luz"),
+                    mundo("entrada_30", "04-02", "Entra en Jerusalén en un pollino, y la gente le tiende mantos y ramas", certeza = A, fuente = F_ENTRADA, escena = "figura_luz"),
+                    mundo("mercaderes_30", "04-03", "En el Templo vuelca las mesas de los cambistas y los puestos de las palomas", certeza = A, fuente = F_MERCADERES, escena = "figura_luz"),
+                    mundo("higuera_30", "04-04", "En el camino de Betania hay una higuera seca de raíz, la que él maldijo", certeza = A, fuente = F_MARCOS_11),
+                    mundo("cena_30", "04-06", "La última noche: cena con los doce, y antorchas en el huerto de los olivos", certeza = A, fuente = F_CENA),
+                    mundo("cruz_30", "04-07", "Lo crucifican bajo Poncio Pilato, la víspera de la Pascua, y él mira de lejos", certeza = A, fuente = F_CRUZ, escena = "oscuridad"),
+                    fiesta("pesaj_30", "04-08", "Pésaj cae en sábado, y la ciudad está callada", certeza = A, fuente = F_PESAJ, escena = "luto"),
+                    mundo("sepulcro_30", "04-09", "María, la vecina, dice que el sepulcro está vacío y que lo ha visto", certeza = A, fuente = F_JUAN_20),
+                    rito("baja_pesaj_30", "04-15", "Baja de Jerusalén con los de Galilea, que no hablan de otra cosa", 3, INV, escena = "camino"),
+                    rito("vuelve_pesaj_30", "04-18", "Vuelve a Magdala, y el secadero le parece de otro", certeza = INV),
+                    mundo("orilla_30", "04-28", "Al amanecer, desde el secadero, ve a un hombre en la orilla junto a unas brasas", certeza = A, fuente = F_JUAN_21, escena = "figura_luz"),
+                    suceso("circulo_30", "05-05", "La primera reunión del círculo después de Jerusalén: nadie sabe qué decir"),
+                    mundo("cuarenta_30", "05-18", "Dicen los de Pedro que en el monte de los Olivos lo vieron subir, y una nube lo tapó", certeza = A, fuente = F_HECHOS_1),
+                    rito("sube_shavuot_30", "05-22", "Sube otra vez a Jerusalén, para Shavuot", 3, INV, escena = "camino"),
+                    fiesta("shavuot_30", "05-28", "Shavuot: los de Galilea hablan, y cada forastero los oye en su lengua", certeza = A, fuente = F_PENTECOSTES),
+                    rito("baja_shavuot_30", "06-01", "Baja de Jerusalén: los de Pedro se quedan allí", 3, INV, escena = "camino"),
+                    rito("vuelve_shavuot_30", "06-04", "Vuelve a Magdala con el verano encima", certeza = INV),
+                    suceso("risa_30", "06-20", "Ismael dice que el que sufrió en el madero no era él, y que él se reía"),
+                    suceso("maria_vuelve_30", "07-20", "María vuelve unos días a su casa de Magdala, y abre la puerta"),
+                    suceso("debora_camina_30", "08-05", "Débora da sus primeros pasos en el patio, hacia la higuera"),
+                    suceso("vision_30", "08-14", "María le cuenta que lo vio después, y que lo vio con el espíritu"),
+                    suceso("barca_nueva_30", "09-05", "Tobías estrena una barca nueva, y la empujan al agua entre todos"),
+                    fiesta("rosh_30", "09-18", "Rosh Hashaná, el año nuevo: suena el cuerno en la sinagoga", certeza = A, fuente = F_ROSH),
+                    rito("kipur_30", "09-27", "Yom Kipur en Magdala: un día entero de ayuno en la sinagoga", certeza = A, fuente = F_KIPUR),
+                    fiesta("sucot_30", "10-02", "Sucot en Magdala: cabañas de ramas en los tejados", 7, A, F_SUCOT, escena = "sucot"),
+                    mundo("caravana_30", "10-25", "Los de la caravana de Damasco cuentan que allí también hay de los del Nazareno", certeza = INV),
+                    suceso("natan_30", "11-12", "Natán aprende a remendar la red con la aguja de hueso"),
+                    fiesta("januca_30", "12-10", "Janucá, la fiesta de la Dedicación: ocho días de luces", 8, A, F_JANUCA, escena = "lamparas"),
+                    suceso("cielos_30", "12-22", "Ismael, casi ciego, le pide que cuente los cielos por él"),
+                )),
+            TemporadaVida("31 d. C.", "comunidad",
+                "Muere Shifra, su madre. Eleazar sube a Jerusalén para Pésaj a ver a los del Nazareno, que lo tienen todo en común; ve a Pedro levantar a un cojo en la puerta del Templo y prenderlo después con Juan. Habla con los de Pedro de lo que enseña María, y lo echan. Llega la noticia de Ananías y Safira. Ezequías lo hace su socio. En Sucot ve que azotan a los apóstoles y que Gamaliel pide que los dejen. Eligen a los siete. En Roma cae Sejano, y la noticia llega en diciembre. Los ancianos de la sinagoga echan a Ismael, y el círculo se esconde en las cuevas del Arbel.",
+                listOf(
+                    mundo("tormenta_31", "01-05", "Una tormenta de invierno arranca los cañizos del secadero", certeza = INV, escena = "tormenta", clima = Clima.TORMENTA),
+                    suceso("muere_shifra_31", "01-18", "Muere Shifra, su madre, una noche de lluvia", escena = "luto"),
+                    rito("duelo_31", "01-25", "Se levantan del suelo al acabar los siete días de duelo", certeza = INV),
+                    cosecha("banco_31", "02-12", "Llega otro banco de peces, y el secadero no da abasto", 3, INV, escena = "secadero"),
+                    fiesta("purim_31", "02-25", "Purim: se lee el rollo de Ester en la sinagoga", certeza = A, fuente = F_PURIM),
+                    rito("sube_pesaj_31", "03-19", "Sube a Jerusalén para Pésaj, a ver a los del Nazareno", 3, INV, escena = "camino"),
+                    mundo("comunidad_31", "03-23", "Ve en Jerusalén a los del Nazareno: comen juntos y lo tienen todo en común", certeza = A, fuente = F_HECHOS_2),
+                    fiesta("pesaj_31", "03-27", "Pésaj en Jerusalén: el cordero, el pan sin levadura y las hierbas amargas", certeza = A, fuente = F_PESAJ),
+                    mundo("cojo_31", "03-29", "En la puerta del Templo, Pedro levanta a un cojo de nacimiento", certeza = A, fuente = F_HECHOS_4),
+                    mundo("presos_31", "03-30", "Prenden a Pedro y a Juan en el pórtico de Salomón y los llevan ante el consejo", certeza = A, fuente = F_HECHOS_4),
+                    suceso("choque_31", "04-01", "Habla en casa de los de Pedro de lo que enseña María, y lo echan"),
+                    mundo("bernabe_31", "04-02", "Un levita de Chipre vende su campo y pone el dinero a los pies de los apóstoles", certeza = A, fuente = F_HECHOS_4),
+                    rito("baja_pesaj_31", "04-04", "Baja de Jerusalén sin despedirse de nadie", 3, INV, escena = "camino"),
+                    rito("vuelve_pesaj_31", "04-07", "Vuelve a Magdala y no le cuenta a nadie lo de la casa de Pedro", certeza = INV),
+                    mundo("ananias_31", "05-02", "Llega la noticia: Ananías y Safira cayeron muertos delante de Pedro", certeza = A, fuente = F_HECHOS_5),
+                    fiesta("shavuot_31", "05-17", "Shavuot, la fiesta de las semanas: el trigo nuevo", certeza = A, fuente = F_SHAVUOT),
+                    suceso("socio_31", "06-10", "Ezequías lo hace socio del secadero, a medias en la ganancia"),
+                    suceso("guardianes_31", "06-28", "En la reunión aprenden lo que el alma responde a los guardianes del camino"),
+                    suceso("debora_habla_31", "07-14", "Débora dice su nombre, y luego el de su abuela, que ya no está"),
+                    suceso("natan_pesca_31", "08-03", "Natán sale a pescar con Tobías una noche entera"),
+                    suceso("maria_31", "08-20", "María pasa por Magdala camino de Jerusalén y deja un recado para el círculo"),
+                    fiesta("rosh_31", "09-07", "Rosh Hashaná, el año nuevo: suena el cuerno en la sinagoga", certeza = A, fuente = F_ROSH),
+                    rito("sube_sucot_31", "09-12", "Sube a Jerusalén para Yom Kipur y Sucot", 3, INV, escena = "camino"),
+                    rito("kipur_31", "09-16", "Yom Kipur en el Templo: el sumo sacerdote entra solo detrás del velo", certeza = A, fuente = F_KIPUR),
+                    fiesta("sucot_31", "09-21", "Sucot en Jerusalén: siete días en una cabaña de ramas", 7, A, F_SUCOT, escena = "sucot"),
+                    mundo("apostoles_31", "09-23", "Azotan a los apóstoles, y un fariseo, Gamaliel, pide que los dejen en paz", certeza = A, fuente = F_GAMALIEL),
+                    rito("baja_sucot_31", "09-29", "Baja de Jerusalén con las espaldas de los apóstoles en la cabeza", 3, INV, escena = "camino"),
+                    rito("vuelve_sucot_31", "10-02", "Vuelve a Magdala con las primeras lluvias", certeza = INV),
+                    mundo("siete_31", "10-12", "Los de Jerusalén eligen a siete, todos con nombre griego, para repartir el pan", certeza = A, fuente = F_SIETE),
+                    mundo("sejano_31", "10-18", "En Roma, el Senado condena a muerte a Sejano; aquí nadie lo sabe todavía", certeza = HISTORICO, fuente = F_SEJANO),
+                    mundo("esteban_31", "10-30", "Dicen que Esteban, uno de los siete, hace prodigios entre la gente", certeza = A, fuente = F_HECHOS_6),
+                    suceso("cueva_31", "11-04", "Los ancianos de la sinagoga echan a Ismael, y el círculo se va a las cuevas del Arbel", escena = "grieta"),
+                    fiesta("januca_31", "11-30", "Janucá, la fiesta de la Dedicación: ocho días de luces", 8, A, F_JANUCA, escena = "lamparas"),
+                    mundo("noticia_sejano_31", "12-12", "Llega la noticia: en Roma cayó Sejano, el que mandaba en nombre de Tiberio", certeza = A, fuente = F_SEJANO),
+                    suceso("guardia_31", "12-20", "Un hombre de la sinagoga le pregunta qué luces se ven de noche en el Arbel"),
+                )),
+            TemporadaVida("32 d. C.", "sanedrin",
+                "En Pésaj, Eleazar oye a Esteban discutir con los de la sinagoga de los libertos. En Shavuot lo apedrean fuera de la ciudad, y un joven, Saulo, guarda los mantos. Empieza la persecución, y Eleazar huye con otros a la ciudad de Samaria, donde predica Felipe y donde la gente llama a Simón el gran poder de Dios. Simón se bautiza; llegan Pedro y Juan, y Simón les ofrece dinero. Eleazar trabaja en las eras y en la vendimia y vuelve a Magdala para Rosh Hashaná. El círculo sella sus hojas en una jarra, en el fondo de la cueva. Saulo pide cartas para Damasco. Un mercader dice que Simón anda por la costa.",
+                listOf(
+                    suceso("natan_32", "01-12", "Natán carga solo, por primera vez, un ánfora hasta la caravana"),
+                    mundo("tormenta_32", "01-20", "Llueve una semana entera y el lago se come la orilla del secadero", certeza = INV, escena = "tormenta", clima = Clima.LLUVIA),
+                    suceso("debora_32", "01-29", "Débora se pierde en la orilla, y la encuentran dormida entre las redes"),
+                    suceso("llave_32", "02-10", "Ismael le da a guardar la llave del arca de las hojas"),
+                    mundo("nieve_hermon_32", "02-24", "Nieva hasta la mitad del Hermón, y desde Magdala se ve como un muro blanco", certeza = INV),
+                    fiesta("purim_32", "03-15", "Purim, en el segundo mes de adar: se lee el rollo de Ester", certeza = A, fuente = F_PURIM),
+                    rito("sube_pesaj_32", "04-05", "Sube a Jerusalén para Pésaj por el camino de Samaria", 3, INV, escena = "camino"),
+                    mundo("libertos_32", "04-10", "Oye a Esteban discutir con los de la sinagoga de los libertos, y ganarles", certeza = A, fuente = F_HECHOS_6),
+                    fiesta("pesaj_32", "04-13", "Pésaj en Jerusalén, con miedo en las casas de los del Nazareno", certeza = A, fuente = F_PESAJ),
+                    rito("baja_pesaj_32", "04-21", "Baja de Jerusalén por el camino de Samaria", 3, INV, escena = "camino"),
+                    rito("vuelve_pesaj_32", "04-24", "Vuelve a Magdala con la cebada ya segada", certeza = INV),
+                    mundo("sequia_32", "05-12", "No llueve en todo el mes, y el lago baja hasta enseñar piedras que nadie había visto", certeza = INV, clima = Clima.DESPEJADO),
+                    rito("sube_shavuot_32", "05-28", "Sube a Jerusalén para Shavuot", 3, INV, escena = "camino"),
+                    fiesta("shavuot_32", "06-03", "Shavuot en Jerusalén: el trigo nuevo y los dos panes en el Templo", certeza = A, fuente = F_SHAVUOT),
+                    mundo("esteban_32", "06-05", "Apedrean a Esteban fuera de la ciudad; un joven, Saulo, guarda los mantos", certeza = A, fuente = F_ESTEBAN, escena = "luto"),
+                    mundo("dispersion_32", "06-07", "Empieza la persecución: los del Nazareno huyen de Jerusalén", certeza = A, fuente = F_HECHOS_8, escena = "huida"),
+                    mundo("samaria_32", "06-11", "Llega a la ciudad de Samaria con otros que huyen, y no se atreve a volver a casa", certeza = INV),
+                    mundo("felipe_32", "06-25", "En la ciudad de Samaria predica Felipe, uno de los siete, y la gente lo sigue", certeza = A, fuente = F_FELIPE),
+                    mundo("simon_32", "07-06", "Oye hablar de Simón, al que los de Samaria llaman el gran poder de Dios", certeza = A, fuente = F_SIMON),
+                    mundo("bautizo_simon_32", "07-20", "Simón se hace bautizar por Felipe, y ya no se separa de él", certeza = A, fuente = F_SIMON),
+                    mundo("mensaje_32", "07-29", "Un barquero de Magdala le trae un recado de Mara: están bien", certeza = INV),
+                    mundo("pedro_juan_32", "08-08", "Llegan de Jerusalén Pedro y Juan, e imponen las manos a los bautizados", certeza = A, fuente = F_SIMON),
+                    mundo("dinero_32", "08-10", "Simón les ofrece dinero por ese poder, y Pedro lo echa con palabras duras", certeza = A, fuente = F_SIMON),
+                    mundo("noche_simon_32", "08-20", "De noche, en una casa de Samaria, oye hablar a Simón, y no sabe qué pensar", certeza = INV),
+                    mundo("eunuco_32", "08-30", "Dicen que Felipe bautizó en el camino de Gaza a un etíope, ministro de una reina", certeza = A, fuente = F_FELIPE),
+                    cosecha("vendimia_32", "09-06", "La vendimia en los montes de Samaria: pisa uva por un jornal", 3, INV),
+                    fiesta("rosh_32", "09-26", "Rosh Hashaná: está otra vez en Magdala para el año nuevo", certeza = A, fuente = F_ROSH),
+                    rito("kipur_32", "10-05", "Yom Kipur en Magdala: un día entero de ayuno en la sinagoga", certeza = A, fuente = F_KIPUR),
+                    fiesta("sucot_32", "10-10", "Sucot en Magdala: este año nadie del círculo sube a Jerusalén", 7, A, F_SUCOT, escena = "sucot"),
+                    rito("jarra_32", "10-28", "Sellan las hojas del círculo en una jarra, en lo hondo de la cueva", certeza = INV, escena = "grieta"),
+                    mundo("saulo_32", "11-15", "Dicen que Saulo pidió cartas para ir a buscar a los del Nazareno a Damasco", certeza = A, fuente = F_HECHOS_9),
+                    suceso("mara_32", "11-22", "Mara le pregunta si piensa seguir subiendo a la cueva, y él no contesta"),
+                    suceso("natan_cueva_32", "12-04", "Natán le pregunta qué hay en la cueva del Arbel"),
+                    fiesta("januca_32", "12-18", "Janucá, la fiesta de la Dedicación: ocho días de luces", 8, A, F_JANUCA, escena = "lamparas"),
+                    mundo("tiro_32", "12-28", "Un mercader de Tiro dice que Simón anda ahora por la costa", certeza = INV),
+                )),
+        ),
+        arcos = listOf(
+            // El pescado tendido al sol: más con los bancos de invierno y primavera, menos en lo peor del verano. [Aproximación]
+            Arco.cadaAnio("secadero", TipoArco.OTRO, "01-01" to 0.7, "02-20" to 1.0, "04-30" to 0.75, "07-15" to 0.3, "09-30" to 0.35, "11-30" to 0.6, "12-31" to 0.7),
+            // Las barcas y las hogueras de la gente que sigue a Jesús por la orilla de Magdala (la gente no se dibuja).
+            Arco("barcas", TipoArco.OTRO, listOf(
+                p(1, "01-01", 0.0), p(1, "12-15", 0.0), p(1, "12-31", 0.25), p(2, "02-20", 0.6), p(2, "04-11", 1.0), p(2, "04-16", 0.55),
+                p(2, "07-01", 0.5), p(2, "10-01", 0.1), p(3, "04-01", 0.05), p(3, "04-07", 0.0),
+            )),
+            // Las hojas que el círculo copia y guarda.
+            Arco("codice", TipoArco.OBRA, listOf(p(1, "01-01", 0.1), p(5, "10-27", 0.9), p(5, "12-31", 0.95))),
+            // Dónde se reúne el círculo: la casa de Ismael (0) o una cueva del Arbel (1).
+            Arco("cueva", TipoArco.OTRO, listOf(p(1, "01-01", 0.0), p(4, "11-04", 1.0, salto = true), p(5, "12-31", 1.0))),
+            // Las hojas, selladas en una jarra en el fondo de la cueva.
+            Arco("jarra", TipoArco.OTRO, listOf(p(1, "01-01", 0.0), p(5, "10-28", 1.0, salto = true), p(5, "12-31", 1.0))),
+        ),
+        objetos = listOf("lampara", "anfora", "sal", "cuchillo", "red", "pesa", "aguja", "cesto", "jarra", "hojas", "barca", "amuleto"),
+        estados = listOf(
+            Estado("jerusalen", "sube_sucot_28", "vuelve_sucot_28"), Estado("jerusalen", "sube_sucot_29", "vuelve_sucot_29"),
+            Estado("jerusalen", "sube_pesaj_30", "vuelve_pesaj_30"), Estado("jerusalen", "sube_shavuot_30", "vuelve_shavuot_30"),
+            Estado("jerusalen", "sube_pesaj_31", "vuelve_pesaj_31"), Estado("jerusalen", "sube_sucot_31", "vuelve_sucot_31"),
+            Estado("jerusalen", "sube_pesaj_32", "vuelve_pesaj_32"), Estado("jerusalen", "sube_shavuot_32", "dispersion_32"),
+            Estado("huida", "dispersion_32", "rosh_32"),
+        ),
     )
 }
