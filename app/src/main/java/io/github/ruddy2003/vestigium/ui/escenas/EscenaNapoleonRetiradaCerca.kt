@@ -244,7 +244,10 @@ internal object RetiradaCerca {
                 for ((dx, h) in listOf(-0.14f to 0.4f, 0.05f to 0.56f, 0.18f to 0.36f, -0.02f to 0.3f)) llama(FUEGO + Offset(dx * k, -0.12f * k), h * k * f * (0.5f + 0.5f * v.noche), reloj, (dx * 100f).toInt() + 3)
             } else {
                 // El rescoldo: alguna llama chica que asoma y las brasas que laten.
-                brasas(l, FUEGO + Offset(0f, -2f), 0.5f * k, reloj)
+                // Las brasas que laten entre la ceniza (la ceniza y los palos ya están en la parte quieta).
+                val ab = Azar(Semilla.de("napoleon", "brasas"))
+                repeat(9) { i -> val q = FUEGO + Offset(ab.entre(-0.22f, 0.22f) * k, ab.entre(-0.08f, 0.06f) * k); val a = (0.35f + 0.4f * sin(reloj * 1.4f + i * 2.3f)) * (f / 0.3f).coerceAtMost(1f)
+                    drawCircle(Color(0xFFFF6A22).copy(alpha = a.coerceIn(0f, 1f)), ab.entre(0.012f, 0.026f) * k, q); drawCircle(Color(0xFFFFB050).copy(alpha = (a * 0.12f).coerceIn(0f, 1f)), 0.04f * k, q, blendMode = BlendMode.Plus) }
                 llama(FUEGO + Offset(4f, -0.08f * k), 0.22f * k * (f / 0.3f).coerceAtMost(1f), reloj, 9)
             }
             // Las chispas que suben.

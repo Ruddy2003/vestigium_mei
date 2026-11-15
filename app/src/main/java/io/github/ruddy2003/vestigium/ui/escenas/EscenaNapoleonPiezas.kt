@@ -608,13 +608,15 @@ internal object PiezasNapoleon {
             val ang = az.entre(-0.5f, 0.5f) + (if (az.real() > 0.5f) 0f else PI.toFloat())
             val largo = ancho * az.entre(0.3f, 0.5f)
             val q1 = q0 + Offset(cos(ang) * largo, sin(ang) * largo * 0.3f)
-            drawLine(a.plano(C.MADERA_OSC, q0, 0f, lejos), q0, q1, 0.9f, StrokeCap.Round)
+            // La ramilla, de agujas espesas: primero la masa, luego las agujas sueltas.
+            drawLine(a.plano(C.PINO_OSC, q0, 0f, lejos, 0.5f), q0, q1, alto * 0.22f, StrokeCap.Round)
+            drawLine(a.plano(C.MADERA, q0, 0f, lejos), q0, q1, 0.6f, StrokeCap.Round)
             val pasos = 9
             for (i in 1..pasos) {
                 val t = i / (pasos + 1f); val p = q0 + (q1 - q0) * t; val hoja = (1f - t * 0.6f) * alto * 0.22f
                 val col = a.plano(if (i % 2 == 0) C.PINO_LUZ else C.PINO, p, if (i % 3 == 0) 0.5f else -0.3f, lejos, 0.6f)
-                drawLine(col, p, p + Offset(hoja * 0.6f, -hoja), 0.7f, StrokeCap.Round)
-                drawLine(col, p, p + Offset(-hoja * 0.5f, hoja * 0.5f), 0.7f, StrokeCap.Round)
+                drawLine(col, p, p + Offset(hoja * 0.5f, -hoja * 0.7f), 1.1f, StrokeCap.Round)
+                drawLine(col, p, p + Offset(-hoja * 0.4f, hoja * 0.45f), 1.1f, StrokeCap.Round)
             }
         }
     }
@@ -720,7 +722,7 @@ internal object PiezasNapoleon {
             drawPath(borde, a.arriba(lerp(C.BARRO, C.CENIZA, 0.4f), centro, lejos))
             // El agua de la nieve derretida, con su brillo, y el borde de la nieve, blando y sucio.
             drawPath(borde, a.arriba(lerp(C.NIEVE_SUCIA, C.CENIZA, 0.3f), centro, lejos), style = Stroke(0.07f * k, join = StrokeJoin.Round))
-            drawPath(borde, a.arriba(C.NIEVE_SOMBRA, centro, lejos), style = Stroke(0.025f * k, join = StrokeJoin.Round))
+            drawPath(borde, a.arriba(C.NIEVE_SOMBRA, centro, lejos).copy(alpha = 0.35f), style = Stroke(0.05f * k, join = StrokeJoin.Round))
             repeat(5) { val q = s.p(V3(az.entre(-0.6f, 0.6f), 0f, az.entre(-0.5f, 0.5f))); mancha(q, 0.12f * k, 0.03f * k, a.arriba(lerp(C.PLATA, Color.White, 0.3f), q, lejos), 0.35f) }
         } else {
             drawPath(TrazosValle.cerrada(anillo), a.arriba(lerp(C.BARRO, C.CENIZA, 0.25f), centro, lejos))
@@ -1185,7 +1187,8 @@ internal object PiezasNapoleon {
                 repeat((12 * detalle).toInt()) { val q = Offset(cx + az.entre(-1f, 1f) * rx, y + az.entre(-0.4f, 0.9f) * ry); drawLine(a.plano(if (az.real() < 0.5f) C.PINO_LUZ else C.PINO, q, lado, lejos, 0.3f), q, q + Offset(az.entre(-1f, 1f) * ry * 0.4f, ry * 0.5f), (ry * 0.12f).coerceIn(0.25f, 1f), StrokeCap.Round) }
             }
             if (nieve > 0.1f) {
-                val g = ry * (0.25f + 0.45f * nieve)
+                if (az.real() < 0.4f) continue
+                val g = ry * (0.15f + 0.3f * nieve)
                 val capa = TrazosValle.blando(Offset(cx, y - ry * 0.55f), rx * 0.8f, g, az, 9, 0.2f, 0.5f)
                 drawPath(capa, a.cara(C.NIEVE, Vec.unidad(V3(0f, 0.8f, -0.5f)), Offset(cx, y), lejos))
                 if (detalle > 0.35f) drawLine(a.cara(C.NIEVE_SOMBRA, V3(0f, -0.4f, -0.9f), Offset(cx, y), lejos), Offset(cx - rx * 0.7f, y - ry * 0.45f + g * 0.4f), Offset(cx + rx * 0.7f, y - ry * 0.4f + g * 0.4f), (g * 0.3f).coerceIn(0.3f, 1.6f), StrokeCap.Round)
