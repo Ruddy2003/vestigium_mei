@@ -1069,6 +1069,7 @@ def pintar_litografia(g, t, cel):
     cara = (-bx / on) * lv[0] + (-by / on) * lv[1]                  # 1: el borde mira a la luz
     w0, w1 = t["lito_pluma"]
     ancho = (w0 + (w1 - w0) * np.clip(0.5 - 0.6 * cara, 0, 1)) * s
+    ancho = np.where(np.isin(Lb, _o("UVX")), ancho * t.get("lito_pluma_obj", 1.0), ancho)
     linea = sil_c & (Bc < 0.5 * (1 + _erf(ancho / sg / math.sqrt(2))))
     # --- Las líneas de adentro: donde una parte de rango mayor pasa por delante de otra (más finas).
     Rb = np.where(sil, Rk, 255).astype(np.uint8)
@@ -1144,12 +1145,15 @@ def colores_obj(nombre, oscuro, j):
         ("arcontes", 1): dict(U=SOMBRA_A, V=SOMBRA_A, X=SOMBRA_A, Q=SOMBRA_A),        # la sombra que pasa
         ("galia", 0): dict(U=hx("4E6B2E"), V=hx("6B4B2A"), X=hx("9DB560"), Q=hx("F2EEDC")),   # roble, rama, muérdago, bayas
         ("galia", 1): dict(U=hx("9A6A3A"), V=hx("4F7A78"), X=hx("A33A2A"), Q=hx("E2ECE0")),   # casco de bronce, río, crin
-        ("nouveau", 0): dict(U=hx("2F6E7A"), V=hx("D9BE7A"), X=hx("E6E3EC"), Q=hx("FFFFFF")),  # libélula: cuerpo, nervios, alas, brillo
-        ("nouveau", 1): dict(U=hx("B48AB0"), V=hx("8FA67E"), X=hx("D9BE7A"), Q=hx("D9BE7A")),  # la línea de látigo, de oro
+        ("nouveau", 0): dict(U=hx("2F6E7A"), V=hx("C9A452"), X=hx("E6E3EC"), Q=hx("FFFFFF")),  # libélula: cuerpo, nervio, alas, brillo
+        ("nouveau", 1): dict(U=hx("2F6E7A"), V=hx("F2E2B0"), X=hx("D2AE58"), Q=hx("FFF8E2")),  # línea de látigo de oro, gota, destello
     }[(nombre, j)]
     if oscuro and nombre == "galia":
         c = [dict(U=hx("24331C"), V=hx("3A2C1C"), X=hx("5E7444"), Q=hx("C9CDB8")),
              dict(U=hx("6E4E2E"), V=hx("263A36"), X=hx("6E2C22"), Q=hx("B8C9B4"))][j]
+    if oscuro and nombre == "nouveau":
+        c = [dict(U=hx("3E8A94"), V=hx("E8C46E"), X=hx("C9C4DA"), Q=hx("FFF4D6")),
+             dict(U=hx("3E8A94"), V=hx("FFE9B8"), X=hx("F5D488"), Q=hx("FFF4D6"))][j]
     if oscuro and nombre == "frente" and j == 1:
         c["Q"] = hx("BFF5E0")
     if oscuro and nombre == "arcontes" and j == 1:
@@ -1266,8 +1270,8 @@ def tema_mio(nombre, oscuro):
                           S=hxs("E6CC94", "C4AD88", "6F6782"), W=hxs("CFA064", "9E7954", "594A5F"),
                           L=hxs("EEDDB6", "D6C9AE", "7E7A93"), D=hxs("A08C78", "8C7A70", "625B76"),
                           E=hxs("ECE290", "D8C96A", "A89C52"), N=hxs("CF9AA2", "A87882", "6E5468"),
-                          R=hxs("CFA49A", "B88F88", "7D6A78"), C=hxs("CDB1E0", "9C7BA8", "5A4470"),
-                          A=hxs("CDB1E0", "9C7BA8", "5A4470"), G=hxs("9C7BA8", "7A5C96", "4E3A68"))
+                          R=hxs("CFA49A", "B88F88", "7D6A78"), C=hxs("DCCBF0", "AE8FC8", "6B5390"),
+                          A=hxs("DCCBF0", "AE8FC8", "6B5390"), G=hxs("AE8FC8", "8A6CB0", "56427C"))
             tinta, papel, sombra_ = hx("15121A"), hx("E8D7AE"), hx("3A3E5E")
         P = tintas["P"][1]
         col = g8.pelaje(P, tinta, S=tintas["S"][2], L=tintas["L"][1], W=tintas["W"][1], D=tintas["D"][2], T=P,
@@ -1279,11 +1283,12 @@ def tema_mio(nombre, oscuro):
         t.update(lito_tintas=tintas, lito_tinta=tinta, lito_papel=papel, lito_sombra=sombra_,
                  lito_luz=(-0.55, -0.72, 0.5), lito_umbral=(0.43, 0.87), lito_crachis=0.1, lito_crachis_en="PLT",
                  lito_planas="Hk", lito_en_sombra="SD", lito_papel_en="PLWCAE", lito_luces="Q",
-                 lito_pluma=(0.5, 1.0), lito_pluma_dentro=0.3, lito_pluma_ojo=0.3)
+                 lito_pluma=(0.5, 1.0), lito_pluma_dentro=0.3, lito_pluma_ojo=0.3,
+                 lito_pluma_obj=0.5)
         t["sombra_col"], t["sombra_a"] = (86, 74, 96), 58
         if oscuro:
-            t.update(lito_filos=[((-0.62, -0.78), hx("F5D488"), 0.42), ((0.93, -0.36), hx("8FA8D8"), 0.6)],
-                     lito_filo_ancho=0.42, lito_umbral=(0.45, 0.8), lito_crachis_p=0.28)
+            t.update(lito_filos=[((-0.62, -0.78), hx("FFE3A0"), 0.4), ((0.93, -0.36), hx("9CB4E6"), 0.55)],
+                     lito_filo_ancho=0.5, lito_umbral=(0.45, 0.88), lito_crachis_p=0.28)
             t["sombra_col"], t["sombra_a"] = (0, 0, 0), 84
     else:
         raise ValueError(nombre)
@@ -1647,6 +1652,157 @@ def o_casco(L, a):
 g17.ACCIONES.update(muerdago=(muerdago, 8, "quieto"), bufar_casco=(bufar_casco, 8, "quieto"))
 g17.ESCALA.update(muerdago=1.0, bufar_casco=1.0)
 
+
+# --- Art nouveau: persigue una libélula · se enrosca dibujando la línea de látigo (la curva que se dobla sobre sí misma
+#     y acaba en un rizo). Las letras de los objetos: U, V, X (con su línea de pluma, más fina que la del gato) y Q (luz).
+ALZADO = g8.pose(H=(24.5, 47.5), rh=7.6, C=(34.5, 36.0), rc=7.6, cab=(40.0, 23.6), inc=-28, orejas=0.0,
+                 fn=[(37.0, 38.5), (42.0, 33.0), (45.6, 28.6), (48.0, 24.6)], ff=[(34.0, 39.5), (38.6, 35.4), (42.0, 31.6), (44.4, 28.8)],
+                 hn=[(24.5, 50.0), (29.0, 53.4), (23.6, 56.6), (27.2, SUELO)], hf=[(26.5, 50.0), (31.0, 53.4), (25.6, 56.6), (29.2, SUELO)],
+                 cola=[(17.4, 50.4), (12.6, 52.6), (8.8, 55.4), (7.4, 58.0), (9.4, 59.2), (12.6, 59.0)], colaw=g8.ANCHO_COLA)
+# (x, y de la libélula, alas: 0 abiertas, 1 arriba, 2 abajo, si se ve)
+LIBELULA = [(54.5, 13.5, 1, True), (56.5, 17.0, 2, True), (53.5, 20.5, 1, True), (52.0, 17.5, 0, True),
+            (57.5, 9.0, 2, True), (61.0, 5.0, 1, True), (70.0, 2.0, 0, False), (48.5, 7.0, 2, True)]
+
+
+def libelula(k):
+    """Ve la libélula que se cierne delante, se agacha y menea la grupa, se alza en dos patas y le tira un zarpazo,
+    ella se escapa hacia arriba, cae y se queda mirando por dónde se fue; la libélula vuelve."""
+    lx, ly, ala, ve = LIBELULA[k]
+    if k == 0:
+        p = g8.respirar(g8.DE_PIE, 1, 4)
+        p.update(inc=-22, orejas=0.0, ojo="abierto")
+    elif k in (1, 2):
+        p = g8.interp(g8.DE_PIE, AGAZAPADO, 0.55)
+        p.update(inc=-18, orejas=0.1, ojo="abierto")
+        s_ = 1 if k == 1 else -1
+        p = g8.mover(p, 0.6 * s_, 0, ("H",))
+        p["cola"] = [(x + s_ * 1.6 * (i / 5) ** 1.6, y + 0.4 * i) for i, (x, y) in enumerate(g8.DE_PIE["cola"])]
+    elif k == 3:
+        p = dict(ALZADO)
+    elif k == 4:
+        p = g8.mover(ALZADO, 0.6, -2.2, ("C", "cab", "fn", "ff"))
+        p["fn"] = [(37.6, 36.4), (43.0, 29.6), (47.4, 23.6), (50.6, 18.4)]
+        p["ff"] = [(34.6, 37.6), (39.4, 32.0), (43.0, 27.0), (45.6, 23.4)]
+        p.update(inc=-34, orejas=0.05)
+    elif k == 5:
+        p = dict(g8.CAIDA)
+        p.update(inc=-30, ojo="abierto", orejas=0.2)
+    elif k == 6:
+        p = g8.respirar(g8.DE_PIE, 0, 4)
+        p.update(inc=-30, ojo="abierto", orejas=0.0)
+        p["cola"] = [(x - 1.4 * (i / 5) ** 1.5, y) for i, (x, y) in enumerate(g8.DE_PIE["cola"])]
+    else:
+        p = g8.respirar(g8.DE_PIE, 3, 4)
+        p.update(inc=-16, ojo="medio", orejas=0.1)
+    return p, dict(obj=(lx, ly), k=k, ala=ala, ve=ve)
+
+
+def o_libelula(L, a):
+    """La libélula vista desde arriba, como en las joyas de la época: la cabeza con sus dos ojos grandes, el tórax, el
+    abdomen largo y fino, y las cuatro alas de nácar abiertas en cruz, cada una con su nervio de oro. En vuelo, las alas
+    baten: de un cuadro a otro se acortan (se ven de canto) y cambian de ángulo."""
+    if not a["ve"]:
+        return
+    x, y = a["obj"]
+    ala, k = a["ala"], a["k"]
+    ang = math.radians(-38 if k in (4, 5) else (-8 if k == 7 else 6))     # cuando huye, va de cabeza hacia arriba
+    P_ = lambda u, v: (x + u * math.cos(ang) - v * math.sin(ang), y + u * math.sin(ang) + v * math.cos(ang))
+    corto = {0: 1.0, 1: 0.62, 2: 0.82}[ala]
+    abre = {0: 0.0, 1: -12.0, 2: 10.0}[ala]
+    for base_u, inc_ala, largo in ((0.5, 74.0, 4.4), (-0.5, 104.0, 4.0)):   # las de adelante y las de atrás
+        for lado in (-1, 1):
+            aa = math.radians(lado * (inc_ala + abre * lado))
+            lg = largo * corto
+            cx, cy = base_u + math.cos(aa) * lg * 0.55, math.sin(aa) * lg * 0.55
+            q = P_(cx, cy)
+            L.elipse("f_X", q[0], q[1], lg * 0.56, 0.95, math.degrees(ang + aa))
+            L.capsula("f_V", [P_(base_u + math.cos(aa) * 0.6, math.sin(aa) * 0.6), P_(base_u + math.cos(aa) * lg * 0.9, math.sin(aa) * lg * 0.9)], 0.38)
+    L.capsula("f_U", [P_(-0.8, 0.0), P_(-4.4, 0.0), P_(-8.2, 0.0)], 1.0)          # el abdomen
+    L.elipse("f_U", *P_(0.2, 0.0), 1.45, 1.1, math.degrees(ang))                   # el tórax
+    for lado in (-1, 1):                                                           # los ojos
+        L.elipse("f_U", *P_(1.9, lado * 0.55), 0.75, 0.75)
+    L.elipse("f_Q", *P_(2.1, -0.6), 0.36, 0.36)
+
+
+def latigo(k):
+    """Da una vuelta, se echa y se enrosca; la cola sube en una S y, desde su punta, una línea de oro sigue la curva por
+    encima del gato hasta doblarse sobre sí misma en un rizo (la línea de látigo). La mira, cierra los ojos a gusto, la
+    línea brilla y se va apagando mientras él se levanta."""
+    cola_s = [(16.5, 50.6), (11.4, 48.6), (9.0, 43.6), (10.6, 38.8), (14.4, 37.2), (17.0, 39.0)]
+    if k == 0:
+        p = g8.respirar(g8.DE_PIE, 2, 4)
+        p.update(inc=22, orejas=0.1)
+        p["cola"] = [(x - 0.6 * (i / 5) ** 1.5, y - 1.0 * (i / 5)) for i, (x, y) in enumerate(g8.DE_PIE["cola"])]
+    elif k in (1, 2):
+        f = 0.4 if k == 1 else 0.78
+        p = g8.interp(g8.DE_PIE, g8.DORMIDO, f)
+        p.update(ojo="abierto", orejas=0.15, inc=8 + 6 * f)
+        p["cola"] = [(a_[0] + (b_[0] - a_[0]) * f, a_[1] + (b_[1] - a_[1]) * f) for a_, b_ in zip(g8.DE_PIE["cola"], cola_s)]
+    elif k in (3, 4, 5, 6):
+        p = dict(g8.DORMIDO)
+        p["cola"] = list(cola_s)
+        p["colaw"] = [4.2, 4.2, 4.0, 3.8, 3.6, 3.4]
+        p.update(cab={3: (43.0, 46.8), 4: (43.2, 47.4), 5: (42.8, 49.4), 6: (43.0, 46.4)}[k],
+                 inc={3: -16, 4: -10, 5: 14, 6: -12}[k], orejas=0.05,
+                 ojo={3: "abierto", 4: "abierto", 5: "cerrado", 6: "medio"}[k])
+    else:
+        p = g8.interp(g8.DORMIDO, g8.DE_PIE, 0.55)
+        p["cola"] = [(a_[0] + (b_[0] - a_[0]) * 0.55, a_[1] + (b_[1] - a_[1]) * 0.55) for a_, b_ in zip(cola_s, g8.DE_PIE["cola"])]
+        p.update(ojo="medio", inc=0, orejas=0.0)
+    hasta = {0: 0.0, 1: 0.0, 2: 0.16, 3: 0.48, 4: 0.82, 5: 1.0, 6: 1.0, 7: 1.0}[k]
+    return p, dict(obj=(36.0, 24.0), k=k, hasta=hasta, punta=p["cola"][-1])
+
+
+def curva_latigo():
+    """La línea de látigo, de la punta de la cola en adelante: sube por detrás del gato, pasa por encima en una curva
+    larga que se vuelve sobre sí misma y acaba en un rizo que se cierra (espiral), adelante. Devuelve (puntos, anchos)."""
+    ctrl = [(17.0, 39.0), (19.6, 33.0), (16.6, 27.2), (19.8, 20.6), (28.4, 17.6), (37.0, 21.8), (42.6, 27.4), (49.6, 27.4)]
+    pts = g8.catmull(ctrl, 10)
+    cx, cy = 50.4, 22.6                                    # el rizo: una espiral que se cierra hacia adentro
+    x0, y0 = pts[-1]
+    r0 = math.hypot(x0 - cx, y0 - cy); a0 = math.atan2(y0 - cy, x0 - cx)
+    for q in range(1, 34):
+        a_ = a0 - q * 0.19                                 # hacia arriba por delante (contra las agujas, en pantalla)
+        r_ = r0 * math.exp(-0.085 * q)
+        pts.append((cx + r_ * math.cos(a_), cy + r_ * math.sin(a_)))
+    n_ = len(pts)
+    anchos = []
+    for i in range(n_):
+        u = i / (n_ - 1)
+        anchos.append(0.9 + 1.0 * math.sin(math.pi * min(1.0, u * 1.25)) ** 1.2 if u < 0.8 else 0.9 - 0.3 * (u - 0.8) / 0.2)
+    return pts, anchos
+
+
+LATIGO = curva_latigo()
+
+
+def o_latigo(L, a):
+    """La línea de oro (con su filo de pluma), que crece desde la punta de la cola; al cerrarse el rizo, un destello en
+    su centro; al final se apaga desde el principio hacia el rizo."""
+    k, hasta = a["k"], a["hasta"]
+    if hasta <= 0:
+        return
+    pts, anchos = LATIGO
+    n_ = len(pts)
+    i1 = max(2, int(n_ * hasta))
+    i0 = {6: int(n_ * 0.18), 7: int(n_ * 0.62)}.get(k, 0)
+    px, py = a["punta"]
+    dx, dy = px - pts[0][0], py - pts[0][1]                # que salga de la punta de la cola
+    seg = [(x + dx * max(0.0, 1 - i / 18), y + dy * max(0.0, 1 - i / 18)) for i, (x, y) in enumerate(pts)]
+    for i in range(i0, i1 - 1):
+        L.capsula("f_X", [seg[i], seg[i + 1]], anchos[i] * (0.85 if k == 7 else 1.0))
+    if k == 5:                                             # el destello del rizo
+        cx, cy = 50.4, 22.6
+        L.capsula("f_Q", [(cx - 2.2, cy), (cx + 2.2, cy)], 0.55)
+        L.capsula("f_Q", [(cx, cy - 2.2), (cx, cy + 2.2)], 0.55)
+    if k in (3, 4):                                        # la gota de oro en la punta, donde se está dibujando
+        x, y = seg[i1 - 1]
+        L.elipse("f_V", x, y, 0.95, 0.95)
+
+
+g17.ACCIONES.update(libelula=(libelula, 8, "quieto"), latigo=(latigo, 8, "quieto"))
+g17.ESCALA.update(libelula=1.0, latigo=1.0)
+
 ESP_MIOS = {
     "frente": [("microfilm", o_microfilm, "esconde un microfilm en el collar"),
                ("agacharse", o_escaner, "se agacha cuando el escáner de una patrulla entra por la rendija del techo")],
@@ -1654,8 +1810,10 @@ ESP_MIOS = {
                  ("erizar_sombra", o_sombra, "eriza el lomo ante una sombra que no se ve")],
     "galia": [("muerdago", o_muerdago, "se esconde entre el muérdago de un roble"),
               ("bufar_casco", o_casco, "le bufa a un casco romano tirado en el río")],
+    "nouveau": [("libelula", o_libelula, "persigue una libélula"),
+                ("latigo", o_latigo, "se enrosca dibujando la línea de látigo")],
 }
-ESCALA_MIA = {("frente", 0): 1.35}
+ESCALA_MIA = {("frente", 0): 1.35, ("nouveau", 0): 1.45}
 g17.ESP.update(ESP_MIOS)
 for nombre, lista in ESP_MIOS.items():
     for j, (accion, f, _) in enumerate(lista):
@@ -3698,12 +3856,831 @@ def fondo_galia(t):
     return subir(render(0))
 
 
-FONDOS_MIOS = {"frente": fondo_frente, "arcontes": fondo_arcontes, "galia": fondo_galia}
+# ---------------------------------------------------------------------
+#  Art nouveau: el invernadero de hierro y vidrio (docs/diseno/temas/nouveau.md, `TrazosNouveau`), a la manera de los
+#  de Auteuil (de fundición pintada, 1895–1898; aquí, del verde de hierro de Guimard que da la guía). Se dibuja como un
+#  cartel litografiado: tintas planas con su línea de pluma, el crachis en los degradados y el grano del papel.
+# ---------------------------------------------------------------------
+NV_PARED = 57                 # donde el muro de vidrio toca el suelo (detrás de los arriates)
+NV_COLUMNAS = (22, 146, 270, 394)
+NV_CAPITEL = 25               # donde arrancan los arcos
+NV_LAMPARAS = ((116, 15, "ambar"), (206, 19, "violeta"), (332, 15, "verde"))
+NV_ESTANQUE = (214, 64.5, 31, 4.6)
+NV_LUNA = (300, 11)
+NV_DIR = 0.42                 # la luz baja de arriba a la izquierda: x crece 0,42 por cada pixel que baja
+
+PAL_NOU_D = dict(
+    cielo=[hx(c) for c in ("D3DFDA", "DFE7DE", "E9EEE2", "F1F2E6")],
+    fuera=[hx(c) for c in ("A9BDA6", "B9CAB2", "C9D6C0")],
+    barra=hx("7C9686"), barra_luz=hx("B9CABA"),
+    hierro=[hx(c) for c in ("24372B", "3D5A48", "577A62", "8FAF98")],
+    friso=dict(a=hx("D9A14A"), A=hx("F2D49A"), v=hx("8E6FB0"), V=hx("C9B6E2"), g=hx("6E9C7E"), G=hx("B2D3BA"),
+               op=hx("E4E8D8"), op2=hx("D6DFCF"), p=hx("3D5A48")),
+    hoja=[hx(c) for c in ("29402D", "3F5E43", "5E7F55", "86A06E", "B4C696")],
+    palma=[hx(c) for c in ("2E4A2C", "4B6C40", "6F9058", "9DB77C")],
+    maceta=[hx(c) for c in ("3E2C52", "6D4C82", "8E6FB0", "C2A6D6")], oro=hx("D9BE7A"), oro_luz=hx("F2E2B0"),
+    piedra=[hx(c) for c in ("8A8473", "A39C88", "BBB49E", "CFC8B4", "E6E1D2")],
+    junta=hx("8E8774"),
+    agua=[hx(c) for c in ("2C4744", "3D5E58", "5A8075", "93B7A8", "DCEADF")],
+    nenufar=[hx(c) for c in ("3C5F3A", "5E8550", "86A86A")], flor_agua=[hx("F6EEF2"), hx("D9B4CC"), hx("E2B84A")],
+    iris=[hx(c) for c in ("4A3570", "7E5FA6", "A88BCB", "E2B84A")],
+    platano=[hx(c) for c in ("2F4E2A", "4C7038", "73964F", "A3BE76", "6A5A2E")],
+    luz=hx("FFF4D6"), sombra=hx("8B8597"),
+    cenefa=[hx("E8E0C8"), hx("6E8F62"), hx("B48AB0"), hx("8A8473")], flor=[hx("B48AB0"), hx("EFE6D2"), hx("D9BE7A")],
+    vidrio_v=[hx("3E6E54"), hx("5E9474"), hx("7FA88A"), hx("C6E0CC")],
+    lampara=dict(ambar=[hx(c) for c in ("8E5E1C", "C88A34", "E6B65C", "F7DE9E")],
+                 violeta=[hx(c) for c in ("45325F", "6B4E8C", "9C7FC0", "CDB9E6")],
+                 verde=[hx(c) for c in ("2F5A44", "4F8A68", "7FB596", "BEE0C8")]),
+    laton=[hx("6E5420"), hx("B8913A"), hx("E2C878")],
+    libelula=[hx("2F6E7A"), hx("5E9CA4"), hx("E6E3EC"), hx("C9A452")],
+)
+PAL_NOU_N = dict(
+    cielo=[hx(c) for c in ("0C111C", "111827", "162033", "1B273B")],
+    fuera=[hx(c) for c in ("0A1214", "0F1A1D", "142226")],
+    barra=hx("1E2A2E"), barra_luz=hx("3A4E58"),
+    hierro=[hx(c) for c in ("070C09", "15231B", "27402F", "4E6E58")],
+    friso=dict(a=hx("8A5E24"), A=hx("C89A4A"), v=hx("4A3868"), V=hx("7A64A0"), g=hx("2E5A44"), G=hx("5E9A78"),
+               op=hx("1A2230"), op2=hx("161D2A"), p=hx("0A110D")),
+    hoja=[hx(c) for c in ("0B1610", "142619", "1F3A25", "325438", "557A55")],
+    palma=[hx(c) for c in ("0D1A10", "18301C", "28492C", "426A42")],
+    maceta=[hx(c) for c in ("1C1428", "33264A", "4E3C6E", "7A64A0")], oro=hx("B89448"), oro_luz=hx("F5D488"),
+    piedra=[hx(c) for c in ("1A1A19", "252522", "302F2B", "3D3B35", "4C4941")],
+    junta=hx("1E1E1C"),
+    agua=[hx(c) for c in ("070D10", "0D1719", "142426", "2E4C56", "9CB4E0")],
+    nenufar=[hx(c) for c in ("0F2014", "1C3620", "2F5230")], flor_agua=[hx("C9C4D8"), hx("8E7FA6"), hx("C9A452")],
+    iris=[hx(c) for c in ("1E1530", "3A2C5A", "5C4886", "A88A3A")],
+    platano=[hx(c) for c in ("0C180E", "16281A", "24402A", "3C5E3C", "2A2416")],
+    luz=hx("F5D488"), sombra=hx("050608"),
+    cenefa=[hx("3A3730"), hx("2A4430"), hx("5A4470"), hx("161614")], flor=[hx("5A4470"), hx("6E6A5E"), hx("6E5E34")],
+    vidrio_v=[hx("12261C"), hx("1E3A2A"), hx("2E5240"), hx("6FB58C")],
+    lampara=dict(ambar=[hx(c) for c in ("C88A34", "F2B55A", "F5D488", "FFF1C8")],
+                 violeta=[hx(c) for c in ("6B4E8C", "9C7FC0", "BFA6DE", "EDE2FA")],
+                 verde=[hx(c) for c in ("3E7A58", "6FB58C", "A2D8B6", "E2F6E8")]),
+    laton=[hx("3A2C10"), hx("8A6A28"), hx("E2C070")],
+    luna=hx("E4ECF8"), luna_halo=hx("8FA8D8"), halo=hx("FFE9B8"),
+    libelula=[hx("3E8A94"), hx("6FB5BC"), hx("C9C4DA"), hx("E8C46E")],
+)
+
+
+def nv_salpicar(im, mascara, col, k, densidad, semilla, x0=0, y0=0):
+    """Crachis: puntos sueltos de una tinta (densidad 0..1 por pixel, en un arreglo del tamaño de la máscara)."""
+    px = im.load(); rnd = np.random.default_rng(semilla)
+    q = rnd.random(mascara.shape)
+    ys, xs = np.nonzero(mascara & (q < densidad))
+    for y, x in zip(ys, xs):
+        X, Y = x + x0, y + y0
+        if 0 <= X < W and 0 <= Y < H:
+            px[X, Y] = mezcla(px[X, Y], col, k)
+
+
+def nv_curva(pts, n=12):
+    return g8.catmull(pts, n)
+
+
+def nv_trazo(d, pts, col, ancho=1):
+    """Una línea de pluma por los puntos (a 1 pixel por dp)."""
+    for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
+        d.line([x0, y0, x1, y1], fill=col, width=ancho)
+
+
+def nv_espiral(cx, cy, r0, vueltas, a0, sentido=1, n=40, k=None):
+    k = k if k is not None else 1.6 / (2 * math.pi * vueltas)
+    return [(cx + r0 * math.exp(-k * t) * math.cos(a0 + sentido * t), cy + r0 * math.exp(-k * t) * math.sin(a0 + sentido * t))
+            for t in np.linspace(0, 2 * math.pi * vueltas, n)]
+
+
+def nv_cielo(im, P, o):
+    """Lo que se ve por el vidrio: el cielo (de día, claro y verdoso por el vidrio viejo; de noche, azul negro con la luna)
+    y el jardín de afuera, copas en manchas, más tenue que lo de adentro."""
+    px = im.load()
+    degradado(im, 0, 44, P["cielo"])
+    if o:
+        lx, ly = NV_LUNA
+        luz(im, lx, ly, 34, P["luna_halo"], 0.16, 4, ry=26)
+        luz(im, lx, ly, 13, P["luna_halo"], 0.3, 3)
+        for y in range(ly - 4, ly + 5):
+            for x in range(lx - 4, lx + 5):
+                dd = (x - lx) ** 2 + (y - ly) ** 2
+                if dd <= 17:
+                    px[x, y] = P["luna"] if dd <= 9 or (x - lx) < 0 else mezcla(P["luna"], P["luna_halo"], 0.35)
+        px[lx - 1, ly - 1] = mezcla(P["luna"], P["luna_halo"], 0.2); px[lx + 1, ly + 1] = mezcla(P["luna"], P["luna_halo"], 0.25)
+        rnd = random.Random(4)
+        for _ in range(26):                                  # pocas estrellas: el vidrio las apaga
+            x, y = rnd.randrange(W), rnd.randrange(2, 34)
+            if abs(x - lx) > 16:
+                px[x, y] = mezcla(P["cielo"][2], P["luna"], 0.55)
+    else:                                                    # nubes de día, planas, como en el cartel
+        for (x0, y0, w_) in ((40, 14, 46), (176, 11, 60), (300, 17, 52)):
+            for x in range(x0, x0 + w_):
+                u = (x - x0) / w_
+                alto_ = int(2 + 3 * math.sin(math.pi * u) + 1.2 * math.sin(u * 13))
+                for y in range(y0 - alto_, y0 + 1):
+                    px[x, y] = mezcla(px[x, y], P["cielo"][3], 0.8 if y < y0 else 0.45)
+    # El jardín de afuera: copas redondas en tres planos (las de atrás, más claras).
+    rnd = random.Random(11)
+    for tono, (yb, rmin, rmax, n) in ((2, (40, 5, 9, 40)), (1, (44, 4, 8, 44)), (0, (49, 3, 6, 50))):
+        for _ in range(n):
+            cx, r_ = rnd.uniform(-6, W + 6), rnd.uniform(rmin, rmax)
+            cy = yb - r_ * 0.4 + rnd.uniform(-1.5, 1.5)
+            for y in range(int(cy - r_), NV_PARED):
+                for x in range(int(cx - r_), int(cx + r_) + 1):
+                    if 0 <= x < W and 0 <= y < H and (((x - cx) / r_) ** 2 + ((y - cy) / r_) ** 2 < 1 or y > cy):
+                        claro = (x - cx) + (y - cy) < -r_ * 0.6 and not o
+                        px[x, y] = mezcla(P["fuera"][tono], P["cielo"][3], 0.35) if claro else P["fuera"][tono]
+
+
+def nv_vidrio(im, P, o):
+    """Los paños de vidrio: barras verticales finas y travesaños, con el borde de abajo de cada vidrio en curva (los
+    vidrios montados en escama, como en los invernaderos de la época). Algunos paños, un poco más verdes."""
+    px = im.load()
+    rnd = random.Random(8)
+    tinte = {}
+    for y in range(0, NV_PARED):
+        for x in range(W):
+            col_ = (x - 2) // 9; fila = (y - 3) // 8
+            if (col_, fila) not in tinte:
+                tinte[(col_, fila)] = rnd.random() < 0.18
+            u = ((x - 2) % 9) / 8
+            curva_ = int(round(1.2 * math.sin(math.pi * u)))           # el borde en escama
+            en_luna = o and (x - NV_LUNA[0]) ** 2 + (y - NV_LUNA[1]) ** 2 <= 20
+            if (x - 2) % 9 == 0:
+                px[x, y] = mezcla(px[x, y], P["barra"], 0.4) if en_luna else P["barra"]
+            elif ((y - 3) % 8) == (7 - curva_) % 8 and y > 3:
+                px[x, y] = mezcla(px[x, y], P["barra"], 0.55 if not o else (0.25 if en_luna else 0.7))
+            elif tinte[(col_, fila)]:
+                px[x, y] = mezcla(px[x, y], hx("9FB8A0") if not o else hx("1C2A2C"), 0.18)
+            if (x - 2) % 9 == 1 and not o and y % 3 != 0:
+                px[x, y] = mezcla(px[x, y], P["barra_luz"], 0.45)
+
+
+def nv_friso(im, P, o):
+    """El friso de vidrio de arriba: vidrio opalino con cabujones de color (ámbar, violeta y verde, como el vidrio de
+    Nancy), unidos por el plomo en una línea de látigo que ondula."""
+    px = im.load(); d = ImageDraw.Draw(im)
+    F = P["friso"]
+    for x in range(W):
+        for y in range(0, 8):
+            px[x, y] = F["op"] if y < 4 else F["op2"]
+    for x in range(W):
+        y1 = 3.5 + 2.2 * math.sin(x * 2 * math.pi / 28)
+        for y in (int(round(y1)),):
+            if 0 <= y < 8: px[x, y] = F["p"]
+    for k, x in enumerate(range(7, W, 14)):
+        c = "agv"[k % 3]
+        yc = 3.5 - 2.2 * math.sin(x * 2 * math.pi / 28) * 0.9
+        d.ellipse([x - 2, yc - 1.6, x + 2, yc + 1.6], fill=F[c], outline=F["p"])
+        px[x - 1, int(yc)] = F[c.upper()]
+    d.line([0, 0, W, 0], fill=F["p"]); d.line([0, 7, W, 7], fill=F["p"])
+
+
+def nv_arco(xa, xb, y0, ry, n=60):
+    xm, rx = (xa + xb) / 2, (xb - xa) / 2
+    pts = []
+    for q in range(n + 1):
+        x = xa + (xb - xa) * q / n
+        u = max(0.0, 1 - ((x - xm) / rx) ** 2)
+        pts.append((x, y0 - ry * math.sqrt(u)))
+    return pts
+
+
+def nv_hierro(im, P, o, encendidas=()):
+    """La estructura de fundición: columnas finas con su basa y su capitel, los arcos que suben al techo y, en cada
+    capitel, las ménsulas de línea de látigo (curvas que se doblan y acaban en un rizo). Luz por la izquierda."""
+    px = im.load(); d = ImageDraw.Draw(im)
+    hz = P["hierro"]
+    # Los arcos (de una columna a la otra), con el filo de luz arriba.
+    for xa, xb in zip(NV_COLUMNAS, NV_COLUMNAS[1:]):
+        pts = nv_arco(xa + 2, xb - 2, NV_CAPITEL, 34)
+        pts = [(x, y) for x, y in pts if y > -3]
+        nv_trazo(d, pts, hz[1], 3)
+        nv_trazo(d, [(x, y - 1) for x, y in pts], hz[2], 1)
+        nv_trazo(d, [(x, y + 1) for x, y in pts], hz[0], 1)
+        # El arco de adentro, más fino, unido con anillos (el alma calada del arco).
+        pin = [(x, y + 5) for x, y in nv_arco(xa + 6, xb - 6, NV_CAPITEL, 30) if y + 5 > -1]
+        nv_trazo(d, pin, hz[1], 1)
+        for q in range(0, len(pin) - 1, 6):
+            x, y = pin[q]
+            d.ellipse([x - 2, y - 4, x + 2, y], outline=hz[1])        # el anillo entre los dos arcos
+    # Columnas.
+    for cx in NV_COLUMNAS:
+        for y in range(NV_CAPITEL, NV_PARED + 4):
+            for dx, c_ in ((-1, hz[2]), (0, hz[1]), (1, hz[0])):
+                if 0 <= cx + dx < W:
+                    px[cx + dx, y] = c_
+            if (y - NV_CAPITEL) % 9 == 4 and 0 <= cx - 1 < W:  # los anillos del fuste
+                for dx in (-2, -1, 0, 1, 2):
+                    if 0 <= cx + dx < W: px[cx + dx, y] = hz[1] if dx > -2 else hz[2]
+        # La basa.
+        d.rectangle([cx - 3, NV_PARED, cx + 3, NV_PARED + 4], fill=hz[1])
+        d.line([cx - 3, NV_PARED, cx + 3, NV_PARED], fill=hz[2])
+        d.line([cx + 3, NV_PARED, cx + 3, NV_PARED + 4], fill=hz[0])
+        # El capitel: un brote que se abre en hojas, y de él salen las ménsulas en látigo hacia los dos arcos.
+        for sx in (-1, 1):
+            esp = nv_espiral(cx + sx * 6.5, NV_CAPITEL + 6.5, 4.5, 1.15, math.pi if sx > 0 else 0.0, -sx, 30)
+            tallo = nv_curva([(cx, NV_CAPITEL + 13), (cx + sx * 1.5, NV_CAPITEL + 8), (cx + sx * 4.5, NV_CAPITEL + 3),
+                              (cx + sx * 9, NV_CAPITEL + 1.5), (cx + sx * 13, NV_CAPITEL - 1.5)])
+            nv_trazo(d, tallo, hz[1], 2)
+            nv_trazo(d, [(x, y - 1) for x, y in tallo], hz[2], 1)
+            nv_trazo(d, esp, hz[1], 1)
+        d.polygon([(cx - 3, NV_CAPITEL + 1), (cx, NV_CAPITEL - 3), (cx + 3, NV_CAPITEL + 1), (cx, NV_CAPITEL + 3)], fill=hz[1], outline=hz[0])
+        px[cx - 1, NV_CAPITEL - 1] = hz[3]
+
+
+def nv_suelo(im, P, o):
+    """El suelo de losas de caliza en perspectiva (las juntas se abren hacia adelante), con la rejilla de hierro de la
+    calefacción al pie del muro, calada en curvas, y una cenefa de baldosas hidráulicas (tallos que se curvan) a lo
+    largo del arriate."""
+    px = im.load(); d = ImageDraw.Draw(im)
+    pi_ = P["piedra"]
+    degradado(im, NV_PARED, H, [pi_[3], pi_[2], pi_[2], pi_[1], pi_[1]])
+    y0 = NV_PARED
+    # La rejilla de la calefacción.
+    d.rectangle([0, y0, W, y0 + 3], fill=P["hierro"][0])
+    for x in range(0, W, 6):
+        d.arc([x, y0, x + 6, y0 + 5], 180, 360, fill=P["hierro"][2])
+        px[x + 3, y0 + 2] = P["hierro"][1]
+    d.line([0, y0 + 3, W, y0 + 3], fill=P["hierro"][1])
+    # La cenefa de baldosas: fondo crema, un tallo en S verde salvia y una flor malva, cada 8 pixeles.
+    cf = P["cenefa"]
+    for x in range(W):
+        for y in (y0 + 4, y0 + 5, y0 + 6):
+            px[x, y] = cf[0]
+        px[x, y0 + 7] = cf[3]
+        u = x % 8
+        yy = y0 + 5 + (1 if u in (1, 2) else (-1 if u in (5, 6) else 0))
+        px[x, yy] = cf[1]
+        if u == 4:
+            px[x, y0 + 5] = cf[2]
+    filas = [y0 + 8, 67, 72, 79]
+    for y in filas[:-1]:
+        d.line([0, y, W, y], fill=P["junta"])
+        if not o:
+            d.line([0, y + 1, W, y + 1], fill=pi_[4])
+    vx = 206
+    for k in range(-16, 17):
+        for y in range(y0 + 8, H):
+            f = (y - y0) / 24
+            x = int(round(vx + k * 17 * (0.55 + 1.6 * f)))
+            if 0 <= x < W and (y not in filas):
+                px[x, y] = P["junta"]
+    rnd = random.Random(5)                                   # cada losa con su tono (la piedra no es pareja)
+    for ya, yb in zip(filas, filas[1:]):
+        for k in range(-16, 17):
+            tono = rnd.choice((0.0, 0.0, 0.035, -0.035, 0.06, -0.06))
+            if tono == 0.0: continue
+            for y in range(ya + 2, min(yb, H)):
+                f = (y - y0) / 24
+                xa = vx + k * 17 * (0.55 + 1.6 * f); xb = vx + (k + 1) * 17 * (0.55 + 1.6 * f)
+                for x in range(int(xa) + 1, int(xb)):
+                    if 0 <= x < W:
+                        px[x, y] = esc(px[x, y], 1 + tono)
+    if not o:                                                # vetas y desconchones de la caliza, en crachis
+        m = np.zeros((H - y0 - 8, W), bool); m[:] = True
+        nv_salpicar(im, m, pi_[0], 0.25, 0.035, 17, 0, y0 + 8)
+
+
+def nv_arriate(im, P, o):
+    """El arriate al pie del vidrio: un bordillo de piedra y, encima, matas bajas (aspidistras de hoja larga, helechos)
+    con unas flores chicas, malva y crema."""
+    px = im.load(); d = ImageDraw.Draw(im)
+    rnd = random.Random(21)
+    ho = P["hoja"]
+    for x in range(W):
+        alto = 4 + 2.5 * math.sin(x / 9.0) + 1.5 * math.sin(x / 3.7 + 1)
+        for y in range(int(NV_PARED - alto), NV_PARED):
+            px[x, y] = ho[1] if (x + y) % 5 else ho[0]
+    for _ in range(80):                                    # hojas largas de aspidistra, en abanico
+        x = rnd.randrange(-4, W + 4)
+        largo = rnd.uniform(6, 13); ang = rnd.uniform(-1.1, 1.1)
+        pts = [(x + math.sin(ang) * largo * u + 1.5 * u * u * (1 if ang > 0 else -1), NV_PARED - 1 - math.cos(ang) * largo * u) for u in np.linspace(0, 1, 6)]
+        c_ = rnd.choice((ho[2], ho[3], ho[2], ho[1]))
+        nv_trazo(d, pts, c_, 1)
+        if rnd.random() < 0.5:
+            nv_trazo(d, [(a + 1, b) for a, b in pts[1:-1]], mezcla(c_, ho[0], 0.35), 1)
+    for _ in range(40):                                    # flores chicas
+        x = rnd.randrange(W); y = NV_PARED - rnd.randint(3, 8)
+        c_ = rnd.choice((P["flor"][0], P["flor"][1], P["flor"][0]))
+        px[x, y] = c_
+        if rnd.random() < 0.5 and x + 1 < W: px[x + 1, y] = P["flor"][2]
+    d.line([0, NV_PARED - 1, W, NV_PARED - 1], fill=P["piedra"][1])
+    d.line([0, NV_PARED - 2, W, NV_PARED - 2], fill=P["piedra"][3] if not o else P["piedra"][2])
+
+
+def nv_fronda(d, base, ang, largo, caida, tonos, sway=0.0, lado_luz=-1):
+    """Una fronda de kentia: el raquis sale hacia arriba, se arquea y cae; de él cuelgan los folíolos, largos al medio y
+    cortos en la punta, como una cortina (el lado que da a la luz, más claro)."""
+    pts = [base]
+    for q in range(1, 16):
+        u = q / 15
+        a_ = ang + (caida + sway) * u ** 1.5
+        x, y = pts[-1]
+        pts.append((x + math.cos(a_) * largo / 15, y + math.sin(a_) * largo / 15))
+    for i in range(2, len(pts) - 1):
+        u = i / (len(pts) - 1)
+        x, y = pts[i]
+        l_ = 3.0 + 6.0 * math.sin(math.pi * min(1.0, u * 1.15)) ** 0.8
+        for s_ in (-1, 1):
+            ex, ey = x + s_ * 0.35 * l_ + 0.25 * l_ * math.cos(ang), y + l_ * 0.9
+            c_ = tonos[2] if s_ == lado_luz else tonos[1]
+            d.line([x, y, ex, ey], fill=c_)
+            d.point([(ex, ey)], fill=tonos[0])
+    nv_trazo(d, pts, tonos[3], 1)
+    return pts
+
+
+def nv_palmera(im, P, o, sway=0.0, solo_puntas=False):
+    """La kentia (la palmera de salón de la época) en su jardinera de mayólica violeta con filo de oro, sobre un pie de
+    hierro de patas curvas."""
+    d = ImageDraw.Draw(im)
+    cx, cy = 92, 36
+    # (ángulo de salida, largo, cuánto se arquea): las de la izquierda se doblan hacia la izquierda y las otras al revés.
+    frondas = [(-2.25, 32, -1.7), (-1.95, 30, -1.5), (-1.7, 26, -1.3), (-1.45, 27, 1.3), (-1.2, 30, 1.55), (-0.95, 33, 1.75),
+               (-2.6, 26, -1.5), (-0.62, 26, 1.4), (-1.58, 22, 0.25)]
+    tonos = P["palma"]
+    for j, (ang, largo, caida) in enumerate(frondas):
+        mueve = j in (0, 5, 6, 7)
+        if solo_puntas != mueve:
+            continue
+        nv_fronda(d, (cx + (j % 3) - 1, cy + (j % 2) * 2), ang, largo, caida, tonos,
+                  sway=(sway * (1 if j % 2 else -0.8)) if mueve else 0.0, lado_luz=-1 if math.cos(ang) > 0 else 1)
+    if solo_puntas:
+        return
+    for dx in (-3, -1, 1, 3):                              # los tallos que salen de la tierra
+        nv_trazo(d, [(cx + dx * 0.5, 48), (cx + dx * 0.8, 43), (cx + dx * 0.3, cy + 2)], tonos[1], 1)
+    m = P["maceta"]
+    for y in range(48, 58):
+        u = (y - 48) / 10
+        hw = 11 - 4 * u * u
+        for x in range(int(cx - hw), int(cx + hw) + 1):
+            f = (x - (cx - hw)) / (2 * hw)
+            c_ = m[3] if f < 0.18 else (m[2] if f < 0.55 else (m[1] if f < 0.85 else m[0]))
+            im.putpixel((x, y), c_)
+        im.putpixel((int(cx - hw), y), m[0]); im.putpixel((int(cx + hw), y), m[0])
+    d.line([cx - 12, 48, cx + 12, 48], fill=P["oro"]); d.line([cx - 11, 47, cx + 11, 47], fill=P["oro_luz"])
+    d.line([cx - 10, 49, cx + 10, 49], fill=m[0])
+    for k, x in enumerate(range(cx - 7, cx + 8, 7)):        # el relieve: tres tallos que suben y se curvan
+        nv_trazo(d, nv_curva([(x, 56), (x - 1, 53), (x + 1, 51.5), (x + 2.5, 52.5)], 4), P["oro"] if k != 1 else P["oro_luz"], 1)
+    hz = P["hierro"]
+    d.line([cx - 6, 58, cx + 6, 58], fill=hz[1])
+    for sx in (-1, 1):
+        nv_trazo(d, nv_curva([(cx + sx * 4, 58), (cx + sx * 7, 61), (cx + sx * 9, 64.5), (cx + sx * 11.5, 65)], 4), hz[1], 1)
+        im.putpixel((cx + sx * 12, 65), hz[0])
+
+
+def nv_platano(im, P, o, sway=0.0, solo_puntas=False):
+    """El plátano de adorno, a la derecha y adelante: hojas grandes, anchas y de punta roma, con su nervio claro y sus
+    rasgaduras, que salen del tallo, se arquean hacia la izquierda y caen; la más alta se sale por arriba (enmarca)."""
+    d = ImageDraw.Draw(im)
+    pl = P["platano"]
+    tallo = (401, 40)
+    hojas = [(tallo, -2.05, 54, -1.15, 7.0), ((402, 44), -2.7, 44, -1.4, 6.4), ((400, 36), -1.75, 48, -0.9, 6.6),
+             ((403, 48), -2.95, 30, -1.2, 5.2), ((404, 38), -1.3, 34, 0.5, 5.4)]
+    for j, (base, ang, largo, caida, ancho) in enumerate(hojas):
+        mueve = j in (1, 3)
+        if solo_puntas != mueve:
+            continue
+        sw = sway if mueve else 0.0
+        eje = [base]
+        for q in range(1, 22):
+            u = q / 21
+            a_ = ang + (caida + sw) * u ** 1.6
+            x, y = eje[-1]
+            eje.append((x + math.cos(a_) * largo / 21, y + math.sin(a_) * largo / 21))
+        izq, der = [], []
+        for i, (x, y) in enumerate(eje):
+            u = i / (len(eje) - 1)
+            hw = 0.7 if u < 0.16 else ancho * min(1.0, (u - 0.16) / 0.22) ** 0.6 * (1 - max(0.0, u - 0.9) / 0.1 * 0.7)
+            i0, i1 = max(i - 1, 0), min(i + 1, len(eje) - 1)
+            dx, dy = eje[i1][0] - eje[i0][0], eje[i1][1] - eje[i0][1]
+            n_ = math.hypot(dx, dy) or 1
+            izq.append((x - dy / n_ * hw, y + dx / n_ * hw)); der.append((x + dy / n_ * hw, y - dx / n_ * hw))
+        arriba_, abajo_ = (der, izq) if sum(q[1] for q in der) < sum(q[1] for q in izq) else (izq, der)
+        d.polygon(abajo_ + eje[::-1], fill=pl[1] if not o else pl[1], outline=pl[0])
+        d.polygon(arriba_ + eje[::-1], fill=pl[3] if not o else pl[2], outline=pl[0])
+        for i in range(5, len(eje) - 1, 2):                                              # nervios
+            x, y = eje[i]
+            for lado, c_ in ((arriba_, pl[2]), (abajo_, pl[0])):
+                ex, ey = lado[min(i + 1, len(lado) - 1)]
+                d.line([x, y, ex * 0.85 + x * 0.15, ey * 0.85 + y * 0.15], fill=c_)
+        for i in (8, 13, 17):                                                            # rasgaduras
+            if i < len(eje):
+                x, y = eje[i]; ex, ey = arriba_[i]
+                d.line([x + (ex - x) * 0.45, y + (ey - y) * 0.45, ex, ey], fill=P["cielo"][2] if not o else pl[0])
+        nv_trazo(d, eje, pl[4] if not o else pl[3], 1)
+    if not solo_puntas:                                    # el tallo y la maceta de barro
+        d.polygon([(397, 66), (399, tallo[1]), (404, tallo[1]), (407, 66)], fill=pl[1], outline=pl[0])
+        d.line([400, tallo[1] + 2, 400, 64], fill=pl[2])
+        d.polygon([(389, 64), (412, 64), (412, 79), (392, 79)], fill=P["maceta"][1], outline=P["maceta"][0])
+        d.line([389, 64, 412, 64], fill=P["oro"]); d.line([390, 66, 412, 66], fill=P["maceta"][2])
+        d.line([392, 67, 394, 78], fill=P["maceta"][3])
+
+
+def nv_helecho(im, P, o, sway=0.0, solo_puntas=False):
+    """El helecho arborescente de la izquierda, adelante: frondas que se arquean desde el borde y otra que cuelga de
+    arriba (enmarcan), con sus pinnas a los dos lados y el báculo enrollado de una fronda nueva."""
+    d = ImageDraw.Draw(im)
+    ho = P["hoja"]
+    frondas = [((-2, 60), -0.55, 40, 0.55), ((-3, 52), -0.95, 34, 0.9), ((-2, 70), -0.2, 30, 0.35), ((-4, 8), 0.35, 30, 0.6),
+               ((-3, 18), 0.05, 24, 0.45)]
+    for j, (base, ang, largo, caida) in enumerate(frondas):
+        mueve = j in (0, 3)
+        if solo_puntas != mueve:
+            continue
+        sw = sway if mueve else 0.0
+        pts = [base]
+        for q in range(1, 18):
+            u = q / 17
+            a_ = ang + (caida + sw) * u * u
+            x, y = pts[-1]
+            pts.append((x + math.cos(a_) * largo / 17, y + math.sin(a_) * largo / 17))
+        for i in range(1, len(pts) - 1):
+            u = i / (len(pts) - 1)
+            x, y = pts[i]
+            dx, dy = pts[i + 1][0] - x, pts[i + 1][1] - y
+            n_ = math.hypot(dx, dy) or 1
+            l_ = 5.0 * math.sin(math.pi * min(1.0, 0.2 + u)) ** 0.8
+            for s_ in (-1, 1):
+                nx_, ny_ = -dy / n_ * s_, dx / n_ * s_
+                ex, ey = x + nx_ * l_ + dx / n_ * 1.6, y + ny_ * l_ + dy / n_ * 1.6 + 0.8
+                d.line([x, y, ex, ey], fill=ho[3] if (s_ < 0) else ho[2])
+                if i % 2 == 0:
+                    d.point([(ex, ey)], fill=ho[1])
+        nv_trazo(d, pts, ho[1], 1)
+    if not solo_puntas:                                   # el báculo: una fronda nueva enrollada
+        esp = nv_espiral(13, 60, 3.2, 1.2, 0.0, -1, 24)
+        nv_trazo(d, [(2, 72), (6, 68), (10, 63)] + esp, ho[3], 1)
+
+
+def nv_sellette(im, P, o):
+    """El pie de maceta de hierro (una «sellette»), alto y fino, de patas en látigo, con un cuenco de vidrio verde de
+    Nancy y un helecho que se derrama por los bordes."""
+    d = ImageDraw.Draw(im); px = im.load()
+    cx, top = 163, 43
+    hz, ho = P["hierro"], P["hoja"]
+    for sx in (-1, 1):                                      # las patas: bajan, se abren y acaban en rizo
+        pts = nv_curva([(cx + sx * 2, top + 2), (cx + sx * 2.5, top + 8), (cx + sx * 1.5, top + 14), (cx + sx * 4, top + 19),
+                        (cx + sx * 7, top + 21)], 6)
+        nv_trazo(d, pts, hz[1], 1)
+        nv_trazo(d, nv_espiral(cx + sx * 7.5, top + 19.4, 1.8, 0.8, math.pi / 2, sx, 10), hz[1], 1)
+    d.line([cx, top + 2, cx, top + 19], fill=hz[1]); px[cx - 1, top + 8] = hz[2]
+    d.line([cx - 5, top + 2, cx + 5, top + 2], fill=hz[1]); d.line([cx - 5, top + 1, cx + 5, top + 1], fill=hz[2])
+    ve = P["vidrio_v"]                                      # el cuenco de vidrio verde que pasa a ámbar abajo
+    for y in range(top - 6, top + 1):
+        u = (y - top + 6) / 6
+        hw = 6 - 2.4 * u * u
+        for x in range(int(cx - hw), int(cx + hw) + 1):
+            f = (x - cx + hw) / (2 * hw)
+            c_ = ve[3] if f < 0.2 else (ve[1] if f < 0.7 else ve[0])
+            if u > 0.7: c_ = mezcla(c_, P["lampara"]["ambar"][1], 0.45)
+            px[x, y] = c_
+    d.line([cx - 6, top - 6, cx + 6, top - 6], fill=ve[3])
+    # El helecho: frondas que salen arqueadas y caen por los dos lados.
+    for (ang, largo, caida) in ((-2.0, 13, -1.9), (-1.2, 13, 1.9), (-2.5, 11, -1.6), (-0.7, 11, 1.6), (-1.6, 8, 0.3),
+                                (-2.8, 9, -1.4), (-0.35, 9, 1.4)):
+        pts = [(cx, top - 6)]
+        for q in range(1, 10):
+            u = q / 9
+            a_ = ang + caida * u ** 1.3
+            x, y = pts[-1]
+            pts.append((x + math.cos(a_) * largo / 9, y + math.sin(a_) * largo / 9))
+        for i in range(1, len(pts)):
+            x, y = pts[i]
+            if i % 1 == 0:
+                for s_ in (-1, 1):
+                    d.point([(x + s_, y + (0 if s_ < 0 else 1))], fill=ho[3] if s_ < 0 else ho[2])
+        nv_trazo(d, pts, ho[2], 1)
+
+
+def nv_cesta(im, P, o, sway=0.0, solo_puntas=False):
+    """La cesta colgante de alambre, colgada del arco, con una hiedra cuyas guías cuelgan y se mecen."""
+    d = ImageDraw.Draw(im); px = im.load()
+    cx, y0 = 252, 26
+    ho = P["hoja"]
+    if not solo_puntas:
+        for sx in (-1, 0, 1):
+            d.line([cx + sx * 4, y0, cx, 9], fill=P["laton"][0])
+        d.chord([cx - 6, y0 - 4, cx + 6, y0 + 5], 0, 180, fill=mezcla(ho[0], P["maceta"][0], 0.4), outline=P["hierro"][1])
+        for x in range(cx - 5, cx + 6, 2):
+            px[x, y0 + 2] = P["hierro"][2]
+        for k in range(14):
+            a_ = math.pi + k / 13 * math.pi
+            x, y = cx + 6.2 * math.cos(a_), y0 + 0.5 + 2.4 * math.sin(a_)
+            px[int(x), int(y)] = ho[3] if k % 2 else ho[2]
+    for j, (dx, largo) in enumerate(((-5, 16), (-2, 11), (2, 19), (5, 13))):
+        mueve = j in (0, 2)
+        if solo_puntas != mueve:
+            continue
+        sw = sway * (1.4 if j == 2 else -1.0) if mueve else 0.0
+        x, y = cx + dx, y0 + 1
+        for q in range(largo):
+            u = q / largo
+            xx = x + (sw * 12 + 0.8 * dx / 5) * u * u + 0.6 * math.sin(q * 0.7)
+            px[int(round(xx)), int(y + q)] = ho[2]
+            if q % 3 == 1:
+                px[int(round(xx)) + (1 if q % 6 == 1 else -1), int(y + q)] = ho[3]
+
+
+IRIS_DIBUJO = ["..s.s..",
+               ".sSsSs.",
+               "f.SyS.f",
+               "ff.y.ff",
+               "Ff...fF",
+               ".F...F."]
+
+
+def nv_iris(im, P, o):
+    """El arriate de lirios (iris) en su jardinera de piedra, a la derecha del estanque: hojas en espada y las flores
+    violeta con su lengua amarilla (el iris del cartel, no la lámina de botánica)."""
+    d = ImageDraw.Draw(im)
+    px = im.load()
+    ir, ho = P["iris"], P["hoja"]
+    x0, x1, yb = 300, 366, 60
+    rnd = random.Random(31)
+    for _ in range(34):                                    # hojas en espada, un poco curvas
+        x = rnd.uniform(x0 + 2, x1 - 2)
+        alto = rnd.uniform(14, 26); incl = rnd.uniform(-0.35, 0.35)
+        pts = [(x + incl * alto * u + 1.5 * incl * u * u * 4, yb - 6 - alto * u) for u in np.linspace(0, 1, 7)]
+        c_ = rnd.choice((ho[2], ho[3], ho[2]))
+        nv_trazo(d, pts, c_, 1)
+        nv_trazo(d, [(a + 1, b) for a, b in pts[:-2]], ho[1], 1)
+    cols = {"s": ir[2], "S": ir[1], "f": ir[1], "F": ir[0], "y": ir[3]}
+    for (fx, fy) in ((306, 31), (318, 26), (331, 33), (342, 28), (355, 32), (325, 38)):
+        nv_trazo(d, [(fx + 3, fy + 5), (fx + 3, yb - 6)], ho[1], 1)
+        for r, fila in enumerate(IRIS_DIBUJO):
+            for c, v in enumerate(fila):
+                if v != "." and 0 <= fx + c < W:
+                    px[fx + c, fy + r] = cols[v]
+    # La jardinera de piedra, con su moldura y una guirnalda en relieve.
+    pi_ = P["piedra"]
+    d.rectangle([x0, yb - 6, x1, yb + 2], fill=pi_[2], outline=pi_[0])
+    d.line([x0 + 1, yb - 5, x1 - 1, yb - 5], fill=pi_[4] if not o else pi_[3])
+    d.line([x0 - 1, yb - 7, x1 + 1, yb - 7], fill=pi_[1])
+    for k in range(4):
+        xa = x0 + 4 + k * 15
+        nv_trazo(d, nv_curva([(xa, yb - 3), (xa + 4, yb), (xa + 8, yb - 1), (xa + 11, yb - 3.5)], 4), pi_[1], 1)
+    d.line([x0 + 1, yb + 2, x1 - 1, yb + 2], fill=pi_[0])
+
+
+def nv_estanque(im, P, o):
+    """El estanque bajo: el borde de piedra con su canto de luz y su cara de adelante, el agua con su hondura (oscura al
+    centro, clara donde refleja el vidrio), las hojas de nenúfar y una flor."""
+    px = im.load(); d = ImageDraw.Draw(im)
+    cx, cy, rx, ry = NV_ESTANQUE
+    ag, pi_ = P["agua"], P["piedra"]
+    # La cara de adelante del borde (baja dos pixeles) y el borde de arriba.
+    for y in range(int(cy - ry - 3), int(cy + ry + 5)):
+        for x in range(int(cx - rx - 5), int(cx + rx + 6)):
+            e = ((x - cx) / (rx + 3.5)) ** 2 + ((y - cy) / (ry + 2.2)) ** 2
+            e_b = ((x - cx) / (rx + 3.5)) ** 2 + ((y - cy - 2) / (ry + 2.2)) ** 2
+            if e_b < 1 and y > cy:
+                px[x, y] = pi_[1] if e >= 1 else px[x, y]
+            if e < 1:
+                px[x, y] = pi_[4] if (y < cy - ry * 0.4 and not o) else (pi_[3] if y < cy + ry * 0.4 else pi_[2])
+            if 0.82 < e < 1 and y > cy:
+                px[x, y] = pi_[2]
+    for y in range(int(cy - ry - 1), int(cy + ry + 2)):
+        for x in range(int(cx - rx - 2), int(cx + rx + 3)):
+            e2 = ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2
+            if e2 < 1:
+                hond = 1 - e2
+                c_ = ag[2] if hond < 0.22 else (ag[1] if hond < 0.65 else ag[0])
+                if y < cy - ry * 0.45:
+                    c_ = ag[0] if hond > 0.1 else ag[1]          # el borde de arriba hace sombra en el agua
+                px[x, y] = c_
+    # El reflejo del vidrio (de día) en franjas quebradas.
+    for y in range(int(cy - ry + 2), int(cy + ry)):
+        for x in range(int(cx - rx + 3), int(cx + rx - 3)):
+            if ((x - cx) / rx) ** 2 + ((y - cy) / ry) ** 2 < 0.8 and (x - 1.4 * y) % 19 < 2.5 and (x + y) % 2 == 0:
+                px[x, y] = ag[3] if not o else ag[2]
+    nen = P["nenufar"]
+    for (lx, ly, r_) in ((196, 64.0, 2.8), (204, 66.6, 2.2), (231, 64.4, 2.6), (238, 66.8, 2.0), (220, 67.0, 1.8), (210, 63.4, 1.6)):
+        for y in range(int(ly - r_), int(ly + r_) + 1):
+            for x in range(int(lx - r_ * 1.7), int(lx + r_ * 1.7) + 1):
+                e = ((x - lx) / (r_ * 1.7)) ** 2 + ((y - ly) / (r_ * 0.8)) ** 2
+                if e < 1 and not (x > lx and abs(y - ly) < 0.6 and x < lx + r_ * 1.6):
+                    px[x, y] = nen[2] if (y < ly and x < lx) else (nen[1] if e < 0.7 else nen[0])
+    fl = P["flor_agua"]
+    for (x, y, c_) in ((231, 61, 0), (230, 62, 1), (232, 62, 1), (231, 62, 2), (229, 62, 0), (233, 62, 0), (231, 60, 0),
+                       (230, 61, 0), (232, 61, 0)):
+        px[x, y] = fl[c_]
+
+
+LAMP_DIBUJO = ["...b...",
+               "..bLb..",
+               ".1223..",
+               "1122233",
+               "0122230",
+               ".0.0.0.",
+               "...h..."]
+
+
+def nv_lampara(im, P, o, x, y, tipo, brillo=1.0):
+    """Una lámpara colgante de vidrio de colores (a la manera de las de Nancy): la varilla de latón, la campana de vidrio
+    que pasa de un tono a otro, el borde festoneado y la bombilla. De noche, encendida."""
+    d = ImageDraw.Draw(im); px = im.load()
+    la = P["laton"]
+    d.line([x, 0, x, y - 1], fill=la[0])
+    for yy in range(0, y - 1, 3):
+        px[x, yy] = la[1]
+    c = P["lampara"][tipo]
+    cols = {"b": la[1], "L": la[2], "0": c[0], "1": c[1 if not o else 2], "2": c[2 if not o else 3], "3": c[1] if not o else c[1],
+            "h": (P["luz"] if o else la[1])}
+    if not o:
+        cols.update({"1": c[2], "2": c[1], "3": c[0]})
+    for r, fila in enumerate(LAMP_DIBUJO):
+        for k, v in enumerate(fila):
+            if v != ".":
+                px[x - 3 + k, y + r] = cols[v]
+    if not o:
+        px[x - 2, y + 3] = c[3]                            # el brillo del vidrio
+
+
+def nv_rayos(im, P, o):
+    """La luz que entra por el vidrio: franjas en diagonal (de arriba a la izquierda), en crachis, y en el suelo, las
+    manchas de luz con la sombra de las barras del vidrio."""
+    if o:
+        return
+    yy, xx = np.mgrid[0:H, 0:W]
+    p_ = (xx - NV_DIR * yy * 2.2) % 96
+    banda = np.clip(1 - np.abs(p_ - 10) / 10, 0, 1) ** 0.5
+    densidad = banda * np.clip((yy - 8) / 26, 0, 1) * 0.5
+    densidad[NV_PARED:, :] = 0
+    nv_salpicar(im, np.ones((H, W), bool), P["luz"], 0.5, densidad, 41)
+    px = im.load()
+    for y in range(NV_PARED + 8, H):
+        for x in range(W):
+            q0 = x - NV_DIR * y * 2.2 - (y - NV_PARED) * 1.4
+            q = q0 % 96
+            if q < 24:
+                sombra_barra = q0 % 9 < 1.0 or (y - NV_PARED) % 6 == 2
+                borde = q < 2 or q > 22
+                if not sombra_barra:
+                    px[x, y] = mezcla(px[x, y], P["luz"], 0.3 if borde else 0.6)
+
+
+def fondo_nouveau(t):
+    """Art nouveau: el invernadero de hierro y vidrio, el mismo de día y de noche. De día: la luz que entra por el vidrio
+    de arriba a la izquierda (en franjas de crachis y, en el suelo, en manchas con la sombra de las barras), el cielo y el
+    jardín vistos por los paños en escama, el friso de vidrio de colores, los arcos de fundición verde con sus ménsulas
+    de línea de látigo, el arriate al pie del vidrio, la palmera en su jardinera de mayólica, el estanque con nenúfares,
+    los lirios en su jardinera de piedra, las tres lámparas de vidrio de colores apagadas y, adelante, el helecho
+    arborescente (izquierda) y el plátano de adorno (derecha), que enmarcan. De noche: el vidrio azul negro con la luna
+    detrás, las lámparas encendidas (oro, violeta y verde) con su halo y su luz en el suelo, la luna en el agua.
+    Lo que se mueve: las hojas que se mecen, el reflejo que corre por el vidrio, una libélula (de día) o las polillas de
+    las lámparas (de noche), la luz de las lámparas que tiembla un poco y los destellos del agua."""
+    o = t["oscuro"]
+    P = PAL_NOU_N if o else PAL_NOU_D
+    im, d = lienzo(P["cielo"][0])
+    px = im.load()
+    nv_cielo(im, P, o)
+    nv_vidrio(im, P, o)
+    vidrio_antes = np.asarray(im).copy()
+    nv_friso(im, P, o)
+    nv_hierro(im, P, o)
+    nv_arriate(im, P, o)
+    nv_suelo(im, P, o)
+    # Sombras en el suelo (la luz viene de arriba a la izquierda: caen a la derecha y un poco hacia atrás).
+    if not o:
+        for (x0, x1, y0, y1) in ((84, 114, 64, 67), (366, 384, 61, 64), (244, 252, 66, 68)):
+            for y in range(y0, y1):
+                for x in range(x0, x1):
+                    if tramar(0.7 - (x - x0) / (x1 - x0) * 0.4, x, y):
+                        px[x, y] = mezcla(px[x, y], P["sombra"], 0.38)
+    nv_estanque(im, P, o)
+    nv_iris(im, P, o)
+    nv_sellette(im, P, o)
+    nv_cesta(im, P, o)
+    nv_palmera(im, P, o)
+    for (x, y, tipo) in NV_LAMPARAS:
+        nv_lampara(im, P, o, x, y, tipo)
+    vidrio_m = (np.asarray(im) == vidrio_antes).all(2)
+    vidrio_m[NV_PARED - 12:, :] = False
+    nv_rayos(im, P, o)
+    nv_helecho(im, P, o)
+    nv_platano(im, P, o)
+    if o:
+        # Las lámparas encendidas: su halo, el cono de luz hacia abajo y su charco de luz en el suelo; de la luna, un velo
+        # frío sobre el vidrio de la derecha.
+        for (x, y, tipo) in NV_LAMPARAS:
+            c = P["lampara"][tipo]
+            luz(im, x, y + 3, 22, c[2], 0.16, 4, ry=18)
+            luz(im, x, y + 3, 9, P["halo"], 0.24, 3)
+            luz(im, x, 70, 34, mezcla(c[2], P["halo"], 0.5), 0.2, 4, ry=6)
+            nv_lampara(im, P, o, x, y, tipo)
+        luz(im, NV_LUNA[0], 40, 70, P["luna_halo"], 0.06, 3, ry=30)
+        # La luna entra por el vidrio desde arriba a la derecha: en el suelo, franjas frías con la sombra de las barras.
+        for y in range(NV_PARED + 8, H):
+            for x in range(W):
+                q0 = x + NV_DIR * y * 2.2 + (y - NV_PARED) * 1.4
+                q = q0 % 110
+                if q < 20 and x > 120:
+                    if not (q0 % 9 < 1.0 or (y - NV_PARED) % 6 == 2):
+                        px[x, y] = mezcla(px[x, y], P["luna_halo"], 0.16 if 2 < q < 18 else 0.08)
+    # --- Lo que se mueve: se dibuja en cada cuadro sobre la base, y el grano va al final.
+    estatico = im.copy()
+    gr = np.ones((H, W), np.float32)
+    q = np.random.default_rng(53).random((H, W))
+    gr[q < 0.06] = 0.955; gr[q > 0.94] = 1.04
+    vy, vx = np.nonzero(vidrio_m)
+    cx_, cy_, rx_, ry_ = NV_ESTANQUE
+    rnd = random.Random(9)
+    destellos = []
+    for _ in range(22):
+        x = rnd.uniform(cx_ - rx_ + 4, cx_ + rx_ - 4); y = rnd.uniform(cy_ - ry_ + 1, cy_ + ry_ - 1)
+        if ((x - cx_) / rx_) ** 2 + ((y - cy_) / ry_) ** 2 < 0.75:
+            destellos.append((int(x), int(y), rnd.choice((12, 16, 20, 32)), rnd.randrange(32)))
+
+    def mover(f, tk):
+        p_ = f.load(); dd = ImageDraw.Draw(f)
+        sw = 0.09 * math.sin(fase(tk)) + 0.04 * math.sin(fase(tk, k=3) + 1)
+        nv_palmera(f, P, o, sway=sw, solo_puntas=True)
+        nv_helecho(f, P, o, sway=-0.7 * sw, solo_puntas=True)
+        nv_platano(f, P, o, sway=0.6 * sw, solo_puntas=True)
+        nv_cesta(f, P, o, sway=0.05 * math.sin(fase(tk, k=2) + 0.6), solo_puntas=True)
+        for (x, y, per, ph) in destellos:                    # el agua
+            if (tk + ph) % per < per // 4:
+                pon(p_, x, y, P["agua"][4] if not o else P["luna_halo"])
+        if not o:
+            # El reflejo que corre por el vidrio (una vez por bucle, de izquierda a derecha).
+            ff = tk / BUCLE
+            if ff < 0.45:
+                xs = -30 + (W + 60) * ff / 0.45
+                for y, x in zip(vy, vx):
+                    u = x - 0.55 * y - xs
+                    if -1.5 < u < 1.5 or 3.5 < u < 4.5:
+                        p_[x, y] = mezcla(p_[x, y], (255, 255, 250), 0.55 if abs(u) < 1.5 else 0.35)
+            # La libélula: cruza la banda, se detiene en el aire y sigue (dos vueltas por bucle).
+            ff = (tk / BUCLE * 2) % 1.0
+            x = -10 + (W + 20) * (ff + 0.06 * math.sin(ff * 2 * math.pi * 3))
+            y = 34 + 7 * math.sin(ff * 2 * math.pi * 2 + 0.5) + 3 * math.sin(ff * 2 * math.pi * 7)
+            li = P["libelula"]
+            x, y = int(x), int(y)
+            for k in range(-4, 1):
+                pon(p_, x + k, y, li[0] if k > -4 else li[1])
+            pon(p_, x + 1, y, li[0]); pon(p_, x + 1, y - 1, li[3])
+            arriba_ = tk % 2 == 0
+            for (dx, dy) in ((-1, -1), (0, -1), (-1, 1), (0, 1)) if not arriba_ else ((-2, -1), (-1, -2), (0, -1), (1, -2)):
+                pon(p_, x + dx, y + dy, li[2])
+            return
+        # De noche: las lámparas tiemblan (la campana y el anillo de luz), las polillas giran a su alrededor y los
+        # reflejos de las lámparas en el vidrio parpadean.
+        for j, (x, y, tipo) in enumerate(NV_LAMPARAS):
+            c = P["lampara"][tipo]
+            r2 = random.Random((tk // 3) * 7 + j)
+            v = r2.random()
+            if v < 0.3:
+                for (dx, dy) in ((-1, 3), (0, 3), (1, 3), (0, 4), (-1, 4), (1, 2)):
+                    pon(p_, x + dx, y + dy, c[2])
+            elif v > 0.82:
+                for (dx, dy) in ((-2, 3), (2, 3), (0, 2)):
+                    pon(p_, x + dx, y + dy, P["halo"])
+                for a_ in range(0, 360, 30):
+                    pon(p_, x + 7 * math.cos(math.radians(a_)), y + 4 + 6 * math.sin(math.radians(a_)), P["halo"], 0.2)
+            for m in range(2):
+                a_ = fase(tk, k=4 if m == 0 else -3) + j * 2.1 + m * 3.1
+                mx, my = x + 6.5 * math.cos(a_), y + 4 + 4.5 * math.sin(a_) * (1 + 0.3 * math.sin(a_ * 2))
+                pon(p_, mx, my, hx("E9E2CC")); pon(p_, mx + (1 if (tk // 2) % 2 else -1), my, hx("A89E86"), 0.7)
+            for (gx, gy) in ((x - 16, y + 9), (x + 14, y + 13)):
+                if ((tk // 5) + j) % 3 == 0:
+                    pon(p_, gx, gy, c[3], 0.8)
+        lx_ = NV_LUNA[0]                                     # la luna en el agua
+        if abs(lx_ - cx_) < rx_:
+            for k in range(3):
+                pon(p_, lx_ + int(1.5 * math.sin(fase(tk, k=4) + k)), int(cy_ - 1 + k), P["luna"], 0.5)
+
+    cache = {}
+
+    def render(tk):
+        if tk not in cache:
+            f = estatico.copy()
+            mover(f, tk)
+            a = np.asarray(f, np.float32) * gr[..., None]
+            cache[tk] = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+        return cache[tk]
+
+    mascaras = {}
+
+    def vivo(img, tick, delante):
+        """Pega encima solo lo que cambió respecto del cuadro 0 (así no borra lo que ya haya en la banda)."""
+        if delante: return
+        tk = tick % BUCLE
+        if tk not in mascaras:
+            dif = (np.asarray(render(tk)) != np.asarray(render(0))).any(2)
+            mascaras[tk] = Image.fromarray((dif * 255).astype(np.uint8)).resize((W * ESC, H * ESC), Image.NEAREST) if dif.any() else None
+        if mascaras[tk] is not None:
+            img.paste(subir(render(tk)), (0, 0), mascaras[tk])
+    ANIM[("nouveau", o)] = [vivo]
+    return subir(render(0))
+
+
+
+FONDOS_MIOS = {"frente": fondo_frente, "arcontes": fondo_arcontes, "galia": fondo_galia, "nouveau": fondo_nouveau}
 ETIQ = {"frente": "Frente exterior · la base escondida en ruinas", "arcontes": "Arcontes · el lago de Galilea en Magdala",
-        "galia": "Galia · el oppidum arverno y su robledal"}
+        "galia": "Galia · el oppidum arverno y su robledal", "nouveau": "Art nouveau · el invernadero de hierro y vidrio"}
 NOCHE = {"frente": "la base en penumbra, con el vidrio y las lámparas encendidos",
          "arcontes": "el mismo lago con las estrellas, la lámpara y una grieta de luz",
-         "galia": "el mismo oppidum con sus hogueras y, en el llano, las del cerco romano"}
+         "galia": "el mismo oppidum con sus hogueras y, en el llano, las del cerco romano",
+         "nouveau": "el mismo invernadero con las lámparas de vidrio encendidas y la luna tras el vidrio"}
 
 
 def registrar():
