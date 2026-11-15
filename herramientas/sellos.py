@@ -1330,8 +1330,10 @@ def astro(d, x0, y0, u, c, n=6, r=7.0, rp=2.3):
 
 
 # El electro de las monedas de Vercingétorix (oro con plata): más pálido y frío que el oro de los torques.
-ELECTRO = [(0.0, '#22150A'), (0.22, '#553810'), (0.42, '#8E671E'), (0.57, '#B88E34'), (0.7, '#D2AC4E'), (0.83, '#E7CB7A'),
-           (0.93, '#F6E6AE'), (1.0, '#FFF8DE')]
+# El electro: oro con mucha plata, más pálido y menos amarillo que el oro fino; como tinta vieja, sin saturar, para que el
+# sello quede en la familia de los demás.
+ELECTRO = [(0.0, '#22180D'), (0.22, '#543D1D'), (0.42, '#8C6D32'), (0.57, '#B29149'), (0.7, '#CCAD61'), (0.83, '#E2CA89'),
+           (0.93, '#F2E4B7'), (1.0, '#FDF7E2')]
 
 
 def galia(tam):
@@ -1399,20 +1401,20 @@ def galia(tam):
     alto = (alto - grieta * 0.35) * np.clip(moneda * 1.2, 0, 1)
     color = oro_relieve(suavizar(alto, 0.5 * k), 24.0 * k, 612, tonos=ELECTRO, grano=0.02, ambiente=0.75, plano=0.34)
     # El roce: lo más alto del relieve, pulido por las manos, más claro.
-    color = mezcla(color, col('#F0D684'), np.clip(alto_rel * 1.6 - 0.45, 0, 1) * 0.3)
+    color = mezcla(color, col('#ECD795'), np.clip(alto_rel * 1.6 - 0.45, 0, 1) * 0.3)
     # El campo no es parejo: tonos más cálidos y más fríos en manchas grandes, y la luz que cae hacia abajo a la derecha.
     color = color * (0.94 + 0.1 * nube(616, 3, S)[..., None] + 0.04 * nube(617, 9, S)[..., None])
     color = color * (1.06 - 0.16 * np.clip((dx + dy) / (2 * c) + 0.5, 0, 1))[..., None]
     # La pátina: rojiza en los huecos junto al relieve y por dentro del canto; el campo, un poco más mate que lo alto.
     hueco = np.clip(suavizar(rel, 5 * k) * 1.5 - rel * 1.2, 0, 1)
-    color = mezcla(color, col('#6B3A16'), hueco * 0.42)
-    color = mezcla(color, col('#6B3A16'), np.clip(1 - dentro_px / (34 * k), 0, 1) * np.clip(dentro_px / (6 * k), 0, 1) * 0.18)
+    color = mezcla(color, col('#6A4221'), hueco * 0.42)
+    color = mezcla(color, col('#6A4221'), np.clip(1 - dentro_px / (34 * k), 0, 1) * np.clip(dentro_px / (6 * k), 0, 1) * 0.18)
     color = color * (0.93 + 0.07 * np.clip(alto_rel * 2, 0, 1))[..., None]
     color = mezcla(color, col('#2E1C08'), np.clip(grieta * 1.6, 0, 1) * 0.85)
     # El campo, con la pátina de siglos: más pardo y apagado que lo alto, con manchas rojizas.
     campo = 1 - np.clip(alto_rel * 3, 0, 1)
-    color = mezcla(color, col('#6E4A16'), campo * 0.22)
-    color = mezcla(color, col('#8C4A22'), np.clip(nube(618, 5, S) * 1.6 - 0.2, 0, 1) * 0.18 * campo)
+    color = mezcla(color, col('#6D5028'), campo * 0.22)
+    color = mezcla(color, col('#8A522E'), np.clip(nube(618, 5, S) * 1.6 - 0.2, 0, 1) * 0.18 * campo)
     # --- El cuero de fuera: pardo oscuro, con su flor (el grano) y la sombra de la moneda.
     cuero = col('#2B1D13')[None, None, :] * (0.9 + 0.12 * nube(613, 6, S)[..., None] + 0.06 * nube(614, 40, S)[..., None])
     flor = suavizar(rg.standard_normal((S, S)).astype(np.float32), 1.6 * k)
@@ -1426,7 +1428,7 @@ def galia(tam):
     alto_h = suavizar(m, 4.6 * k) * (0.25 + 0.75 * m)
     alto_h = alto_h / max(1e-3, float(alto_h.max()))        # cada cresta, un hilo redondo y no una tira plana
     color_h = oro_relieve(suavizar(alto_cospel * 0.9 + alto_h * 0.8, 0.5 * k), 24.0 * k, 615, tonos=ELECTRO, grano=0.02, ambiente=0.75, plano=0.56)
-    color_h = mezcla(color_h, col('#F0D684'), np.clip(alto_h * 1.6 - 0.6, 0, 1) * 0.3)
+    color_h = mezcla(color_h, col('#ECD795'), np.clip(alto_h * 1.6 - 0.6, 0, 1) * 0.3)
     color_h = color_h * (0.94 + 0.1 * nube(616, 3, S)[..., None] + 0.04 * nube(617, 9, S)[..., None])
     color_h = color_h * (1.06 - 0.16 * np.clip((dx + dy) / (2 * c) + 0.5, 0, 1))[..., None]
     capa = a_rgba(color_h, m)
@@ -1629,12 +1631,13 @@ def nouveau(tam):
     M = {n: np.asarray(capas[n], np.float32) / 255 for n in nombres}
     # --- El campo: esmalte translúcido sobre el guilloché, con los colores del vidrio de Nancy que se funden.
     v = (dx * 0.3 + dy * 0.95) / S + 0.5 + nube(702, 3, S) * 0.12 + nube(703, 8, S) * 0.04
-    tonos = [(0.0, '#58437F'), (0.3, '#46366B'), (0.5, '#3A3058'), (0.64, '#30394A'), (0.78, '#283E34'), (1.0, '#1C2F25')]
+    # Los tonos, apagados como un esmalte viejo (no el violeta de una lámpara nueva), para quedar en la familia de los sellos.
+    tonos = [(0.0, '#55486F'), (0.3, '#443A5C'), (0.5, '#39334D'), (0.64, '#333944'), (0.78, '#2D3B35'), (1.0, '#202D26')]
     xs = [p for p, _ in tonos]; cs = np.array([col(t) for _, t in tonos])
     campo = np.stack([np.interp(v, xs, cs[:, j]) for j in range(3)], -1)
     # Arriba a la izquierda, donde la luz atraviesa el esmalte, el violeta se calienta hacia el ámbar (como en el vidrio).
     ambar = np.clip(1 - np.sqrt((xx - c * 0.45) ** 2 + (yy - c * 0.28) ** 2) / (c * 0.75), 0, 1) ** 1.6
-    campo = mezcla(campo, col('#9A6E58'), ambar * 0.42)
+    campo = mezcla(campo, col('#93705F'), ambar * 0.42)
     # El guilloché: ondas concéntricas talladas en el metal, que se ven por debajo del esmalte (más claro en la cresta).
     ondas = np.sin(2 * math.pi * (rr * c / (4.6 * k) + 0.55 * np.sin(ang * 9 + rr * 7)))
     campo = campo * (0.9 + 0.1 * (0.5 + 0.5 * ondas))[..., None]
@@ -1673,7 +1676,7 @@ def nouveau(tam):
     hoja_c = mezcla(col('#9AB287'), col('#5C7A52'), np.clip((yy_n - 0.4) / 0.5, 0, 1))
     img = esmalte(img, M['hoja'], hoja_c)
     img = esmalte(img, M['verde'], col('#6E9064'))
-    caida_c = mezcla(col('#8A6BB4'), col('#5A3E86'), np.clip(suavizar(M['caida'], 4 * k) * 1.4, 0, 1))
+    caida_c = mezcla(col('#876FA6'), col('#574278'), np.clip(suavizar(M['caida'], 4 * k) * 1.4, 0, 1))
     img = esmalte(img, M['caida'], caida_c)
     img = mezcla(img, col('#3E2766'), M['vena'] * M['caida'] * 0.75)
     est_c = mezcla(col('#D6BEE6'), col('#B08AB8'), np.clip(suavizar(M['estandarte'], 4 * k) * 1.3, 0, 1))
@@ -1724,14 +1727,24 @@ def paz(d, cx, cy, r, w, c):
     d.ellipse([cx - w / 2, cy - w / 2, cx + w / 2, cy + w / 2], fill=c)
 
 
+# Las tintas del botón de Psicodelia: los complementarios de los carteles (magenta y verde, naranja y azul, amarillo y
+# violeta), pero como salen de una prensa vieja en un papel que ya amarilleó: apagados, sin el brillo de la tinta nueva,
+# para que el sello quede en la familia de los demás.
+TINTAS_PSICODELIA = dict(
+    azul='#4E6894', azul_claro='#6A80A8', azul_violeta='#58598C', trama='#7088AE', burbuja='#97A7C0',
+    naranja='#C27E4E', verde='#5E8D6C', nervio='#456C50', magenta='#AE4F7A', amarillo='#D9B65E',
+    filete='#3A2D48', huella='#F3EADB', papel='#E9DFCB')
+
+
 def psicodelia(tam):
     """Psicodelia: un botón de solapa grande, de 1967, impreso en tintas planas bajo el celuloide. El campo es el azul de
     cartel con las gotas blandas de las luces líquidas (apenas más claras o más violetas); lo cerca una orla de rayos
     naranjas y azules (dos complementarios del mismo peso, que vibran) que giran y engordan hacia el borde, como si se
     derritieran. A la izquierda, la margarita de pétalos redondos en magenta, con su eco verde y el corazón amarillo, que
     se monta sobre la orla; a la derecha, el símbolo de la paz de una línea, en amarillo. Todo lleva el filete violeta
-    oscuro de la plancha del negro, y el registro del magenta va un poco corrido. La huella, como en el ícono: tinta
-    clara con su filete. Encima de todo, la cúpula de celuloide con su brillo (también sobre la huella)."""
+    oscuro de la plancha del negro, y el registro del magenta va un poco corrido. Las tintas son las de una prensa vieja
+    (TINTAS_PSICODELIA): los mismos complementarios, apagados, con el papel que se trasluce. La huella: tinta clara con su
+    filete. Encima de todo, la cúpula de celuloide con su brillo (también sobre la huella)."""
     from iconos import margarita, celuloide, mezclar
     def _hoja_redonda(x, y, largo, ancho, a):
         """Una hoja redonda que sale de (x, y) hacia [a]: un óvalo con la punta roma."""
@@ -1739,6 +1752,7 @@ def psicodelia(tam):
         def w(t): return ancho / 2 * np.sign(math.sin(t)) * abs(math.sin(t)) ** 0.6 * (0.55 + 0.45 * math.cos(t / 2) ** 2)
         return [(x + largo / 2 * (1 + math.cos(t)) * ca - w(t) * sa, y + largo / 2 * (1 + math.cos(t)) * sa + w(t) * ca)
                 for t in np.linspace(0, 2 * math.pi, 64, endpoint=False)]
+    T = {n: col(h) for n, h in TINTAS_PSICODELIA.items()}
     k = 2; S = tam * k; c = S / 2
     yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
     dx, dy = xx - c, yy - c
@@ -1749,15 +1763,15 @@ def psicodelia(tam):
         im = Image.new('L', (S, S), 0); dibujo(ImageDraw.Draw(im)); return np.asarray(im, np.float32) / 255
     def filete(m, w):
         return np.clip(suavizar(m, w * k) * 3.3, 0, 1)
-    FILETE = col('#3A1A5C')
+    FILETE = T['filete']
     # --- El campo: las gotas de las luces líquidas, de borde blando, unas más claras y otras más violetas.
     g1 = nube(1201, 4, S) + nube(1202, 9, S) * 0.45
     g2 = nube(1203, 5, S) + nube(1204, 12, S) * 0.35
     claro = np.clip((g1 - 0.2) * 3.2, 0, 1)
     violeta = np.clip((g2 - 0.3) * 3.2, 0, 1) * (1 - claro)
-    img = np.zeros((S, S, 3), np.float32) + col('#2F6BFF')
-    img = mezclar(img, col('#5089FF'), claro * 0.85)
-    img = mezclar(img, col('#4250E0'), violeta * 0.9)
+    img = np.zeros((S, S, 3), np.float32) + T['azul']
+    img = mezclar(img, T['azul_claro'], claro * 0.85)
+    img = mezclar(img, T['azul_violeta'], violeta * 0.9)
     # Las gotas claras van impresas en trama de medios tonos (puntos a 45°, más grandes donde la gota es más clara), como
     # se imprimía una tinta aclarada sin otra plancha; y unas burbujas chicas (el aceite que hierve en el vidrio).
     paso = 9.0 * k
@@ -1765,11 +1779,11 @@ def psicodelia(tam):
     dcel = np.sqrt((tu - np.round(tu)) ** 2 + (tv - np.round(tv)) ** 2)
     radio_punto = np.sqrt(np.clip(claro, 0, 1)) * 0.42
     puntos = np.clip((radio_punto - dcel) * paso / 1.2 + 0.5, 0, 1) * (radio_punto > 0.05)
-    img = mezclar(img, col('#2F6BFF'), np.clip(claro * 0.85, 0, 1))      # la gota, en vez de un tono plano...
-    img = mezclar(img, col('#5C92FF'), puntos)                              # ...es trama de puntos
+    img = mezclar(img, T['azul'], np.clip(claro * 0.85, 0, 1))      # la gota, en vez de un tono plano...
+    img = mezclar(img, T['trama'], puntos)                              # ...es trama de puntos
     burbujas = lapiz(lambda d: [d.ellipse([x - q, y - q, x + q, y + q], outline=255, width=int(1.6 * k))
                                 for x, y, q in zip(rg.uniform(0, S, 40), rg.uniform(0, S, 40), rg.uniform(4, 11, 40) * k)])
-    img = mezclar(img, col('#8DB0FF'), burbujas * np.clip(violeta * 2, 0, 1) * 0.7)
+    img = mezclar(img, T['burbuja'], burbujas * np.clip(violeta * 2, 0, 1) * 0.7)
     # --- La orla de rayos que giran: 20 rayos, los naranjas más anchos hacia fuera.
     RIN = 0.80
     fuera_ = np.clip(r - RIN, 0, None)
@@ -1778,7 +1792,7 @@ def psicodelia(tam):
     ancho_ = 0.5 + 0.18 * np.clip(fuera_ / (1 - RIN), 0, 1)
     banda = np.clip((tri - (1 - ancho_)) * c / 18 * 3 + 0.5, 0, 1)
     orla = np.clip((r - RIN) * c / 1.0, 0, 1)
-    img = mezclar(img, mezclar(np.zeros((S, S, 3)) + col('#2F6BFF'), col('#FF7A1A'), banda), orla)
+    img = mezclar(img, mezclar(np.zeros((S, S, 3)) + T['azul'], T['naranja'], banda), orla)
     img = mezclar(img, FILETE, np.clip(1 - np.abs(r - RIN) * c / (2.2 * k), 0, 1))
     # --- La margarita, a la izquierda, sobre la orla; el registro del magenta, corrido.
     fx, fy, fe = 112 * k, 372 * k, 300 * k
@@ -1791,33 +1805,34 @@ def psicodelia(tam):
     nervio = lapiz(lambda d: [d.line([(px, py), (px + 52 * k * math.cos(a), py + 52 * k * math.sin(a))], fill=255, width=int(2.4 * k))
                               for (px, py), a in ((tallo_pts[15], math.radians(205)), (tallo_pts[25], math.radians(-30)))]) * hojas
     img = mezclar(img, FILETE, filete(verde, 1.6))
-    img = mezclar(img, col('#2FBF71'), verde)
-    img = mezclar(img, col('#1E8A50'), nervio * 0.8)
+    img = mezclar(img, T['verde'], verde)
+    img = mezclar(img, T['nervio'], nervio * 0.8)
     pet = lapiz(lambda d: margarita(d, 255, fx, fy, fe))
     eco = np.clip(lapiz(lambda d: margarita(d, 255, fx, fy, fe, encoge=0.022)) - lapiz(lambda d: margarita(d, 255, fx, fy, fe, encoge=0.031)), 0, 1)
     eco = eco * np.clip((np.sqrt((xx - fx) ** 2 + (yy - fy) ** 2) - 0.15 * fe) / (3 * k), 0, 1)
     corrido = lambda m: np.roll(np.roll(m, -int(1.2 * k), 0), int(1.5 * k), 1)
     img = mezclar(img, FILETE, filete(pet, 1.6))
-    img = mezclar(img, col('#E0218A'), corrido(pet) * pet)
-    img = mezclar(img, col('#2FBF71'), eco)
+    img = mezclar(img, T['magenta'], corrido(pet) * pet)
+    img = mezclar(img, T['verde'], eco)
     cor = lapiz(lambda d: d.ellipse([fx - 27 * k, fy - 27 * k, fx + 27 * k, fy + 27 * k], fill=255))
     img = mezclar(img, FILETE, filete(cor, 1.4))
-    img = mezclar(img, col('#FFD23F'), cor)
+    img = mezclar(img, T['amarillo'], cor)
     # --- La paz, a la derecha.
     pz = lapiz(lambda d: paz(d, 626 * k, 350 * k, 66 * k, 14 * k, 255))
     img = mezclar(img, FILETE, filete(pz, 1.6))
-    img = mezclar(img, col('#FFD23F'), pz)
+    img = mezclar(img, T['amarillo'], pz)
     # --- El papel bajo las tintas, la cúpula y su brillo; fuera del borde enrollado, la sombra.
     grano = suavizar(rg.standard_normal((S, S)).astype(np.float32), 0.8 * k)
     sombreado, brillo = celuloide(S, 0.99 * c, alto=22.0 * 432 / tam, reflejo=0.8)
     def luz(x):
+        x = x * 0.9 + T['papel'] * 0.1                     # el papel amarillento se trasluce por la tinta gastada
         x = x * (1 + grano[..., None] * 0.03)
         return x * (0.66 + 0.4 * sombreado[..., None]) + brillo[..., None] * 255
     afuera = np.clip((r - 0.993) * c / 1.5, 0, 1)
     fondo = a_img(mezclar(luz(img), col('#141018'), afuera)).resize((tam, tam), Image.LANCZOS)
     # --- La huella: tinta clara con su filete, bajo el mismo celuloide.
     m = mascara_sello(S)
-    hcol = luz(mezclar(np.zeros((S, S, 3)) + FILETE, col('#FFF6E6'), m))
+    hcol = luz(mezclar(np.zeros((S, S, 3)) + FILETE, T['huella'], m))
     huella = a_rgba(hcol, np.clip(suavizar(m, 2.2 * k) * 3.4, 0, 1))
     huella = huella.convert('RGBa').resize((tam, tam), Image.LANCZOS).convert('RGBA')
     guardar(fondo, huella, 'psicodelia')

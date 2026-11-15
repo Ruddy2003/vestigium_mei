@@ -17,7 +17,6 @@ TAM = 432
 RADIO = 0.29 * TAM         # el anillo y su motivo caben en el círculo seguro (radio 0.333) con aire alrededor
 GROSOR = 2.6               # px a 432 (unos 0.65 dp)
 K = 4                      # el anillo se dibuja al cuádruple y se reduce, para bordes suaves
-RADIO_CHAPA = 0.292        # el botón de Psicodelia, en fracción de TAM: deja ver la mezclilla alrededor
 
 
 def mascara():
@@ -119,154 +118,36 @@ def nube(sem, celdas, tam=TAM):
     a = np.asarray(im, np.float32)
     return (a - a.mean()) / (a.std() + 1e-6) * 0.5
 
-def heliotropo(sem):     # Arcontes: jaspe verde oscuro de las gemas de Abraxas (heliotropo), con nubes más claras y más oscuras,
-    # alguna veta fina, motas rojas de hierro y el brillo del pulido arriba a la izquierda. Es la única textura en color:
-    # devuelve el desvío en RGB.
-    nubes = nube(sem, 4) * 0.8 + nube(sem + 1, 10) * 0.45 + nube(sem + 2, 26) * 0.22 + ruido(sem + 3, 0.1)
-    # Vetas: líneas finas y quebradas donde un campo cruza el cero (no rayas parejas), solo en algunas zonas.
-    v = nube(sem + 4, 6) + nube(sem + 5, 17) * 0.3
-    vetas = np.exp(-(v / 0.02) ** 2) * np.clip(nube(sem + 6, 5) * 2, 0, 1)
-    # Las motas rojas del heliotropo: chicas, sueltas y agrupadas en una o dos zonas.
-    roja = np.clip((nube(sem + 7, 70) + nube(sem + 8, 150) * 0.5 - 0.78) * 4.0, 0, 1) * np.clip(nube(sem + 9, 4) * 2 + 0.2, 0, 1)
-    brillo = np.clip(1 - np.sqrt((X - TAM * 0.3) ** 2 + (Y - TAM * 0.26) ** 2) / (TAM * 0.62), 0, 1) ** 2
-    caida = np.clip(np.sqrt((X - TAM * 0.5) ** 2 + (Y - TAM * 0.5) ** 2) / (TAM * 0.72), 0, 1) ** 2
-    rgb_ = nubes[..., None] * np.array([9, 14, 11], np.float32)
-    rgb_ += vetas[..., None] * np.array([7, 9, 8], np.float32)
-    rgb_ += roja[..., None] * (rgb('#8E3A2E') - rgb('#2B4636')) * 0.6
-    rgb_ += brillo[..., None] * np.array([14, 19, 16], np.float32) - caida[..., None] * np.array([10, 14, 12], np.float32)
-    return rgb_
+def lino_codice(sem):    # Arcontes: el lino claro en que se envolvían los códices: tafetán fino, algún hilo más grueso
+    # (los nudos del hilado, rayas cortas más claras o más oscuras) y manchas suaves de uso.
+    trama = np.sin(X * 2.3 + ruido(sem, 0.9, 2)) * 0.16 + np.sin(Y * 2.1 + ruido(sem + 1, 0.9, 2)) * 0.16
+    rng = np.random.default_rng(sem + 2)
+    nudos = np.zeros((TAM, TAM), np.float32)
+    for _ in range(26):
+        y0 = rng.uniform(0, TAM); x0 = rng.uniform(-40, TAM); l = rng.uniform(20, 90)
+        nudos += (np.abs(Y - y0) < 0.9) * np.clip(1 - np.abs(X - x0 - l / 2) / (l / 2), 0, 1) * rng.choice([-1, 1]) * 0.55
+    return trama + nudos + ruido(sem + 3, 0.7, 22) + ruido(sem + 4, 0.25)
 
-def roble(sem, tam=TAM):  # Galia: una tabla de roble aserrada al cuarto, oscura y aceitada, con la veta horizontal (anillos de
-    # anchos desparejos, el leño de verano más oscuro, que ondula apenas), las vetas largas de color, los poros del leño de
-    # primavera en rayitas, los radios de la madera (las «flores» del roble: manchas claras y satinadas en forma de lente, a
-    # lo largo de la veta) y el brillo del aceite arriba a la izquierda. Devuelve el desvío en RGB, como el jaspe de Arcontes.
-    s = tam / TAM
-    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32) / s
-    rng = np.random.default_rng(sem + 3)
-    def estirada(semilla, celdas_x, celdas_y):
-        n = np.random.default_rng(semilla).random((celdas_y, celdas_x)).astype(np.float32)
-        a = np.asarray(Image.fromarray(n, 'F').resize((tam, tam), Image.BICUBIC), np.float32)
-        return (a - a.mean()) / (a.std() + 1e-6)
-    # Los anillos: fronteras con anchos al azar (de 4 a 15 px), recorridas por una onda suave.
-    bordes = np.cumsum(rng.uniform(4, 15, 120)) - 60
-    onda = nube(sem, 3, tam) * 9 + nube(sem + 1, 8, tam) * 2.5
-    v = yy + onda
-    k = np.searchsorted(bordes, v)
-    b0 = bordes[np.clip(k - 1, 0, len(bordes) - 1)]; b1 = bordes[np.clip(k, 0, len(bordes) - 1)]
-    f = np.clip((v - b0) / np.maximum(b1 - b0, 1e-3), 0, 1)
-    fuerza_anillo = rng.uniform(0.35, 1.0, len(bordes) + 1)[k]
-    tardio = np.clip((f - 0.55) / 0.3, 0, 1) ** 1.4 * np.clip((1 - f) / 0.12, 0, 1) * fuerza_anillo
-    vetas = estirada(sem + 8, 3, 60) * 0.6 + estirada(sem + 9, 6, 140) * 0.4
-    # Los poros: rayitas oscuras, cortas, a lo largo de la veta, sobre todo en la madera de primavera.
-    poros = np.clip((nube(sem + 4, 260, tam) - 0.55) * 4, 0, 1)
-    poros = np.asarray(Image.fromarray((poros * 255).astype(np.uint8)).resize((max(2, tam // 8), tam), Image.BILINEAR).resize((tam, tam), Image.BILINEAR), np.float32) / 255
-    poros = poros * np.clip(1 - tardio * 1.6, 0, 1)
-    # Los radios: lentes claras, alargadas en la veta, de varios tamaños, con un filo un poco más oscuro.
-    capa = Image.new('L', (tam, tam), 0); d = ImageDraw.Draw(capa)
-    for _ in range(46):
-        x, y = rng.uniform(-30, TAM + 30), rng.uniform(0, TAM)
-        l = rng.uniform(10, 62); a = rng.uniform(1.4, 4.2) * (0.6 + l / 90)
-        pts = [((x + l * math.cos(t)) * s, (y + a * math.sin(t) * (0.55 + 0.45 * abs(math.cos(t)))) * s) for t in np.linspace(0, 2 * math.pi, 28)]
-        d.polygon(pts, fill=int(rng.uniform(120, 255)))
-    radios = np.asarray(capa.filter(ImageFilter.GaussianBlur(0.8 * s)), np.float32) / 255
-    filo = np.clip(np.asarray(capa.filter(ImageFilter.GaussianBlur(2.4 * s)), np.float32) / 255 - radios, 0, 1)
-    brillo = np.clip(1 - np.sqrt((xx - TAM * 0.28) ** 2 + (yy - TAM * 0.22) ** 2) / (TAM * 0.8), 0, 1) ** 2
-    caida = np.clip(np.sqrt((xx - TAM * 0.5) ** 2 + (yy - TAM * 0.5) ** 2) / (TAM * 0.72), 0, 1) ** 2
-    rgb_ = -tardio[..., None] * np.array([16, 13, 9], np.float32)
-    rgb_ += vetas[..., None] * np.array([8, 6, 4], np.float32) + nube(sem + 5, 4, tam)[..., None] * np.array([10, 8, 5], np.float32)
-    rgb_ -= poros[..., None] * np.array([11, 9, 6], np.float32)
-    rgb_ += radios[..., None] * np.array([24, 19, 12], np.float32) - filo[..., None] * np.array([7, 6, 4], np.float32)
-    rgb_ += brillo[..., None] * np.array([22, 17, 10], np.float32) - caida[..., None] * np.array([14, 11, 8], np.float32)
-    rgb_ += np.random.default_rng(sem + 7).standard_normal((tam, tam)).astype(np.float32)[..., None] * 1.4
-    return rgb_
-
-def vidrio_nancy(sem, tam=TAM):  # Art nouveau: vidrio de Nancy, de varias capas, grabado al ácido (mate y satinado). Los
-    # colores se funden sin frontera, en diagonal: el violeta del iris arriba a la izquierda, más hondo en el medio, y
-    # abajo a la derecha el verde del hierro de Guimard, en nubes; donde se encuentran, el polvo de vidrio de color que se
-    # mete entre las capas deja motas de uno dentro del otro. Unas burbujas finas y la luz que pasa a través, ámbar,
-    # arriba a la izquierda. Devuelve el color entero menos el del fondo de TEMAS (como el jaspe de Arcontes, en RGB).
-    s = tam / TAM
-    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32) / s
-    # Dónde está cada pixel en el degradado: una diagonal, torcida en nubes por la masa del vidrio al soplarla.
-    v = (xx * 0.5 + yy * 0.86) / TAM / 1.36 + 0.04 + nube(sem, 3, tam) * 0.16 + nube(sem + 1, 7, tam) * 0.09 + nube(sem + 8, 18, tam) * 0.035
-    tonos = [(-0.1, '#7759A3'), (0.2, '#634A8A'), (0.4, '#4E3C6E'), (0.54, '#3F3A5A'), (0.64, '#324540'), (0.8, '#294436'), (1.1, '#1C3026')]
-    xs = [p for p, _ in tonos]; cs = np.array([rgb(c) for _, c in tonos])
-    col = np.stack([np.interp(v, xs, cs[:, k]) for k in range(3)], -1)
-    # El polvo de vidrio entre las capas: motas del verde dentro del violeta y del violeta dentro del verde, sobre todo
-    # donde los dos se encuentran, de varios tamaños.
-    junta = np.exp(-((v - 0.58) / 0.2) ** 2)
-    polvo = nube(sem + 3, 110, tam) + nube(sem + 4, 40, tam) * 0.7 + nube(sem + 11, 14, tam) * 0.5
-    verdes = np.clip((polvo - 0.5) * 1.8, 0, 1) * junta * np.clip((0.62 - v) * 8, 0, 1)
-    violetas = np.clip((-polvo - 0.5) * 1.8, 0, 1) * junta * np.clip((v - 0.54) * 8, 0, 1)
-    col = col * (1 - verdes[..., None] * 0.45) + rgb('#3C6650') * verdes[..., None] * 0.45
-    col = col * (1 - violetas[..., None] * 0.4) + rgb('#5E4A84') * violetas[..., None] * 0.4
-    # Nubes más claras dentro de la masa (el vidrio es más delgado ahí y pasa más luz).
-    claro = np.clip(nube(sem + 12, 5, tam) * 1.4, 0, 1)
-    col = col * (1 + claro[..., None] * 0.1)
-    # La luz que pasa a través, arriba a la izquierda: ámbar, muy suave; y la caída hacia abajo a la derecha.
-    luz = np.clip(1 - np.sqrt((xx - TAM * 0.24) ** 2 + (yy - TAM * 0.2) ** 2) / (TAM * 0.5), 0, 1) ** 2
-    col = col * (1 - luz[..., None] * 0.22) + rgb('#C49A5E') * luz[..., None] * 0.22
-    caida = np.clip(np.sqrt((xx - TAM * 0.5) ** 2 + (yy - TAM * 0.5) ** 2) / (TAM * 0.72), 0, 1) ** 2
-    col = col * (1 - 0.2 * caida[..., None])
-    # El martelado de Daum: la superficie tallada en facetas chicas y poco hondas, como golpes de martillo, que la luz
-    # vuelve un poco más claras de un lado y más oscuras del otro.
-    from scipy.spatial import cKDTree
-    rp = np.random.default_rng(sem + 13)
-    centros = rp.uniform(-10, TAM + 10, (1100, 2)).astype(np.float32)
-    dist, cual = cKDTree(centros).query(np.stack([xx.ravel(), yy.ravel()], -1))
-    dx_ = (xx.ravel() - centros[cual, 0]).reshape(tam, tam); dy_ = (yy.ravel() - centros[cual, 1]).reshape(tam, tam)
-    faceta = np.clip((dx_ * -0.6 + dy_ * -0.75) / 9.0, -1, 1)          # la pendiente del hoyuelo, de cara a la luz o no
-    col = col + (faceta * 5.5)[..., None] * np.array([1.0, 1.0, 1.1], np.float32)
-    # El grabado al ácido: grano fino y mate, con un satinado más grueso encima.
-    grano = np.random.default_rng(sem + 6).standard_normal((tam, tam)).astype(np.float32)
-    grano = np.asarray(Image.fromarray(np.clip(grano * 40 + 128, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.6 * s)), np.float32)
-    col = col + ((grano - 128) / 40 * 2.6)[..., None] + nube(sem + 7, 70, tam)[..., None] * 2.5
-    # Burbujas finas: un punto claro con su borde oscuro.
-    img = Image.fromarray(np.clip(col, 0, 255).astype(np.uint8)).convert('RGBA')
-    K2 = 3; S = tam * K2
-    capa = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(capa, 'RGBA')
-    rng = np.random.default_rng(sem + 5)
-    def P(x, y): return (x * s * K2, y * s * K2)
-    for _ in range(18):
-        x, y = rng.uniform(0, TAM, 2); r = rng.uniform(0.8, 2.2)
-        d.ellipse([*P(x - r, y - r), *P(x + r, y + r)], outline=(18, 16, 26, 70), width=K2)
-        d.ellipse([*P(x - r * 0.55 - 0.3, y - r * 0.55 - 0.3), *P(x + r * 0.1 - 0.3, y + r * 0.1 - 0.3)], fill=(236, 232, 246, 90))
-    img.alpha_composite(capa.resize((tam, tam), Image.LANCZOS))
-    return np.asarray(img.convert('RGB'), np.float32) - rgb('#40384F')[None, None, :]
-
-def mezclilla(sem, tam=TAM):  # Psicodelia: la solapa de una chaqueta de mezclilla, donde va prendido el botón. Sarga 3/1: la
-    # urdimbre teñida de índigo (vertical) pasa sobre tres pasadas de la trama cruda y deja ver una, y así se forman las
-    # diagonales que suben hacia la derecha. Cada hilo de urdimbre tiene su tinte (el índigo se queda en la superficie del
-    # hilo y se gasta desparejo: rayas verticales y nudos), la trama asoma en puntos crudos y el uso aclara la tela en nubes
-    # grandes. Devuelve el color menos el del fondo de TEMAS (como el jaspe de Arcontes, en RGB).
-    s = tam / TAM
-    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32) / s
+def barro_paja(sem):     # Galia: el revoque de barro de las casas, alisado a mano, con la paja picada que asoma
     rng = np.random.default_rng(sem)
-    pw, pt = 3.3, 4.4                                       # el paso de la urdimbre y el de la trama, en px a 432
-    xw = xx + nube(sem + 1, 5, tam) * 2.4 + nube(sem + 9, 19, tam) * 0.5      # los hilos no van del todo rectos
-    yw = yy + nube(sem + 2, 6, tam) * 2.0
-    i = np.floor(xw / pw); fx = xw / pw - i
-    j = np.floor(yw / pt); fy = yw / pt - j
-    fase = (j + i) % 4
-    trama = fase == 0                                       # donde asoma la trama: una de cada cuatro, corrida un hilo
-    a_lo_largo = np.clip((fase - 1 + fy) / 3.0, 0, 1)       # dentro del flotante de urdimbre (tres pasadas)
-    cil = np.sin(np.pi * np.clip(fx, 0, 1)) ** 0.6          # el hilo es redondo: claro al medio
-    puntas = np.sin(np.pi * a_lo_largo) ** 0.45             # y se hunde donde entra bajo la trama
-    ncol = int(TAM / pw) + 8
-    hilo = rng.normal(0, 1, ncol)[np.clip(i.astype(int) + 4, 0, ncol - 1)]
-    nudos = np.asarray(Image.fromarray(nube(sem + 3, 90, tam), 'F').resize((max(2, tam // 5), tam), Image.BILINEAR)
-                       .resize((tam, tam), Image.BILINEAR), np.float32)
-    gasto = np.clip(hilo * 0.35 + nudos * 1.1 + nube(sem + 4, 4, tam) * 0.7, -1, 2)
-    indigo, lavado, crudo = rgb('#1F2D4E'), rgb('#4C6491'), rgb('#8E97A8')
-    urd = indigo + (lavado - indigo) * np.clip(0.18 + gasto * 0.3, 0, 1)[..., None]
-    urd = urd * (0.72 + 0.36 * (cil * puntas)[..., None])
-    tra = crudo * (0.5 + 0.3 * np.sin(np.pi * np.clip(fy, 0, 1))[..., None] ** 0.8) * (0.85 + 0.15 * cil[..., None])
-    col = np.where(trama[..., None], tra * 0.55 + urd * 0.45, urd)
-    brillo = np.clip(1 - np.sqrt((xx - TAM * 0.28) ** 2 + (yy - TAM * 0.22) ** 2) / (TAM * 0.8), 0, 1) ** 2
-    caida = np.clip(np.sqrt((xx - TAM * 0.5) ** 2 + (yy - TAM * 0.5) ** 2) / (TAM * 0.72), 0, 1) ** 2
-    col = col * (0.88 + 0.2 * brillo[..., None] - 0.14 * caida[..., None])
-    col = np.asarray(Image.fromarray(np.clip(col, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.45 * s)), np.float32)
-    return col - rgb('#24324F')[None, None, :]
+    capa = Image.new('L', (TAM, TAM), 128); d = ImageDraw.Draw(capa)
+    for _ in range(170):
+        x, y = rng.uniform(0, TAM, 2); a = rng.uniform(0, math.pi); l = rng.uniform(4, 15)
+        d.line([(x, y), (x + l * math.cos(a), y + l * math.sin(a))], fill=int(rng.choice([175, 185, 95])), width=1)
+    paja = (np.asarray(capa.filter(ImageFilter.GaussianBlur(0.5)), np.float32) - 128) / 40
+    llana = np.sin((X * 0.5 + Y * 0.8) * 0.045 + ruido(sem + 1, 2.0, 18)) * 0.3       # las pasadas de la mano
+    return paja * 0.9 + llana + ruido(sem + 2, 0.7, 10) + ruido(sem + 3, 0.3, 1)
+
+def papel_cartel(sem):   # Art nouveau: el papel crema de los carteles, con el grano del lápiz litográfico
+    grano = (ruido(sem, 1, 0.7) > 1.1) * -0.55
+    return grano + ruido(sem + 1, 0.6, 16) + ruido(sem + 2, 0.3, 2)
+
+def periodico(sem):      # Psicodelia: el papel del periódico del barrio, con fibras y las columnas del otro lado que se transparentan
+    lineas = ((Y % 7) < 2.4) & ((X % 74) > 6)
+    bloques = np.clip(ruido(sem, 1.0, 30) + 0.3, 0, 1)
+    transp = np.asarray(Image.fromarray((lineas * bloques * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.6)), np.float32) / 255 * -0.55
+    fibras = (np.abs(np.sin(X * 0.3 + Y * 0.11 + ruido(sem + 1, 7, 6))) < 0.04) * -0.4
+    return transp + fibras + ruido(sem + 2, 0.6, 2) + ruido(sem + 3, 0.5, 20)
 
 def cuadricula(sem):     # Laboratorio: papel de laboratorio cuadriculado
     fino = ((X % 18 < 1) | (Y % 18 < 1)) * -0.6
@@ -620,8 +501,29 @@ def ouroboros(d, cx, cy, radio, w_cabeza, w_cola, c, hueco=(0, 0, 0, 0), cabeza=
     d.line([Q(0.62, 0.36), Q(0.74, 0.3)], fill=hueco, width=max(1, int(W * 0.05)))      # la fosa de la nariz
 
 
-def _ouroboros(d, c):                 # Arcontes: el anillo es el ouroboros, la serpiente que se muerde la cola, grabado
-    ouroboros(d, TAM / 2 * K, TAM / 2 * K, RADIO * K, 15.0 * K, 4.6 * K, c)
+def _ouroboros(d, c, hueco=0):         # Arcontes: el anillo es el ouroboros, fino: la serpiente que se muerde la cola
+    # Del grosor del anillo; la cola se afina al entrar en la boca y la cabeza, chica, arriba, de perfil.
+    cx = cy = TAM / 2 * K; r = RADIO * K; w = GROSOR * K
+    cab = -math.pi / 2
+    L, W = 10.5 * K, 6.2 * K                 # largo y ancho de la cabeza
+    cola0 = cab + L * 0.25 / r               # la punta de la cola, metida en la boca
+    cuello = cab - L * 0.55 / r + 2 * math.pi
+    n = 900
+    izq, der = [], []
+    for i in range(n + 1):
+        u = i / n; a = cola0 + (cuello - cola0) * u
+        ww = w * (0.42 + 0.58 * min(1, u / 0.22) ** 0.8) * (1 + 0.35 * max(0, (u - 0.93) / 0.07) ** 1.5) / 2
+        izq.append((cx + (r + ww) * math.cos(a), cy + (r + ww) * math.sin(a)))
+        der.append((cx + (r - ww) * math.cos(a), cy + (r - ww) * math.sin(a)))
+    d.polygon(izq + der[::-1], fill=c)
+    hx, hy = cx + r * math.cos(cab), cy + r * math.sin(cab)
+    tx, ty = -math.sin(cab), math.cos(cab); nx, ny = math.cos(cab), math.sin(cab)
+    def Q(f, g): return (hx + tx * f * L + nx * g * W, hy + ty * f * L + ny * g * W)
+    lab = w * 0.42 / W / 2 + 0.06            # los labios, cerrados sobre la cola
+    d.polygon([Q(-0.7, 0.4), Q(-0.35, 0.62), Q(0.1, 0.7), Q(0.5, 0.6), Q(0.82, 0.42), Q(0.95, 0.2), Q(0.9, lab), Q(0.3, lab),
+               Q(0.3, -lab), Q(0.8, -lab), Q(0.78, -0.28), Q(0.45, -0.5), Q(0.0, -0.58), Q(-0.4, -0.52), Q(-0.7, -0.4)], fill=c)
+    ex, ey = Q(0.16, 0.3); re_ = W * 0.14
+    d.ellipse([ex - re_, ey - re_, ex + re_, ey + re_], fill=hueco)
 
 def torques(d, cx, cy, radio, w, c, hueco=(0, 0, 0, 0), abre=0.27, paso=None):
     """El torques galo visto de frente, en coordenadas del lienzo: el aro de oro torcido (una barra retorcida, con los surcos
@@ -676,8 +578,9 @@ def torques(d, cx, cy, radio, w, c, hueco=(0, 0, 0, 0), abre=0.27, paso=None):
         d.line([P(g0, -h_in * 0.97), P(g0, h_out * 0.96)], fill=hueco, width=max(1, int(w * 0.12)))
 
 
-def _torques(d, c, hueco=(0, 0, 0, 0)):   # Galia: el anillo es el torques de oro, abierto abajo, con sus dos remates
-    torques(d, TAM / 2 * K, TAM / 2 * K, RADIO * K, 11.0 * K, c, hueco)
+def _torques(d, c, hueco=0):            # Galia: el anillo es un torques fino, abierto abajo, con sus dos remates pequeños
+    # El aro, del grosor del anillo arriba, engruesa apenas hacia los remates; los surcos de la torsión se ven de cerca.
+    torques(d, TAM / 2 * K, TAM / 2 * K, RADIO * K, GROSOR * 1.6 * K, c, hueco, abre=0.2)
 
 
 def latigo_puntos(cx, cy, radio, a0=math.radians(116), a1=math.radians(366), centro_rizo=(math.radians(46), 0.9),
@@ -758,8 +661,11 @@ def latigo(d, cx, cy, radio, w0, w1, c, hojas=((0.0, math.radians(152), 0.44, 0.
     return pts
 
 
-def _latigo(d, c, hueco=(0, 0, 0, 0)):   # Art nouveau: el anillo es la línea de látigo, un tallo que se cierra en un rizo
-    latigo(d, TAM / 2 * K, TAM / 2 * K, RADIO * 0.975 * K, 12.5 * K, 5.6 * K, c)
+def _latigo(d, c, hueco=0):             # Art nouveau: el anillo es la línea de látigo, fina: un tallo con su hoja que da la
+    # vuelta y se cierra abajo a la derecha en un rizo pequeño.
+    latigo(d, TAM / 2 * K, TAM / 2 * K, RADIO * K, GROSOR * 1.7 * K, GROSOR * 0.75 * K, c,
+           hojas=((0.0, math.radians(150), 0.2, 0.055, -0.3),),
+           a0=math.radians(112), a1=math.radians(392), centro_rizo=(math.radians(64), 0.93), rizo=(0.1, 0.025, 1.3), onda=0.012)
 
 
 def petalo_redondo(P, ang, r0, r1, ancho_punta, ancho_raiz, n=40):
@@ -784,8 +690,14 @@ def margarita(d, c, cx, cy, escala, n=8, r0=0.035, r1=0.305, punta=0.15, raiz=0.
         d.polygon(petalo_redondo(P, a, r0, r1 - encoge, punta - 2 * encoge, max(0.004, raiz - 2 * encoge)), fill=c)
 
 
-def _margarita(d, c, hueco=(0, 0, 0, 0), encoge=0.0):   # Psicodelia: el anillo se vuelve la flor; la huella es su corazón
-    margarita(d, c, TAM / 2 * K, TAM / 2 * K, TAM * K, r1=RADIO_CHAPA, encoge=encoge)
+def _margaritas(d, c, hueco=0, n=10):   # Psicodelia: el anillo con una guirnalda de margaritas pequeñas de pétalos redondos
+    caja = [(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K]
+    d.ellipse(caja, outline=c, width=int(GROSOR * K))
+    for i in range(n):
+        a = 2 * math.pi * i / n
+        x, y = _pos(a)
+        margarita(d, c, x, y, 22 * K, n=8, r0=0.0, r1=0.31, punta=0.13, raiz=0.04, fase=a)
+        rc = 1.9 * K; d.ellipse([x - rc, y - rc, x + rc, y + rc], fill=hueco)
 
 
 def oro_relieve(alto, fuerza, sem, luz=(-0.55, -0.7, 1.0), brillo=40, tonos=None, grano=0.035, ambiente=0.0, plano=None):
@@ -992,10 +904,10 @@ TEMAS = {
     'templario':    (lino,          '#EDE6D6', '#9A1A1F',   8, 5, 'esmalte',     _cruces_patadas),
     'distopia':     (papel,         '#EFE9DA', '#1A1A1A',  10, 6, 'tinta',       _marcas),
     'frente':       (consola,       '#E4DED1', '#B85C0F',  10, 4, 'piloto',      _canal),
-    'arcontes':     (heliotropo,    '#2B4636', '#D9D6BE',   1, 0, 'grabado',     _ouroboros),
-    'galia':        (roble,         '#3A2A1B', '#C9962B',   1, 0, 'oro',         _torques),
-    'nouveau':      (vidrio_nancy,  '#40384F', '#D9BE7A',   1, 0, 'nacar',       _latigo),
-    'psicodelia':   (mezclilla,     '#24324F', '#FFF6E6',   1, 0, 'chapa',       _margarita),
+    'arcontes':     (lino_codice,   '#ECE4CF', '#2E2541',   9, 5, 'tinta',       _ouroboros),
+    'galia':        (barro_paja,    '#E4D9BA', '#7E590C',  10, 6, 'dorado',      _torques),
+    'nouveau':      (papel_cartel,  '#EFE8D6', '#4B6A4E',   9, 5, 'esmalte',     _latigo),
+    'psicodelia':   (periodico,     '#EEE7D7', '#B0246A',   9, 5, 'tinta',       _margaritas),
     'refugio':      (hormigon,      '#1B1C1A', '#9BE8AE',   8, 5, 'fosforo',     _dientes),
     'orden':        (acero,         '#16171A', '#C2A15E',   9, 5, 'dorado',      _remaches),
     'vapor':        (hollin_plano,  '#E6D9BD', '#7A4E12',  10, 5, 'dorado',      _engrane_manometro),
@@ -1029,17 +941,26 @@ VARIANTES = {
 }
 
 
+EN_MASCARA = (_ouroboros, _torques, _latigo, _margaritas)
+
+
 def anillo(tema, color):
     """El anillo fino y su motivo, en una capa RGBA de TAM × TAM."""
     capa = Image.new('RGBA', (TAM * K, TAM * K), (0, 0, 0, 0)); d = ImageDraw.Draw(capa, 'RGBA')
     c = tuple(int(v) for v in color) + (235,)
     caja = [(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K]
     motivo = TEMAS[tema][6]
+    if motivo in EN_MASCARA:
+        # Llevan huecos (el ojo de la serpiente, los surcos del torques, el corazón de las margaritas): se dibujan en una
+        # máscara y se tiñen, con la misma opacidad que los demás anillos.
+        m = Image.new('L', (TAM * K, TAM * K), 0); motivo(ImageDraw.Draw(m), 255, 0)
+        a = np.asarray(m.resize((TAM, TAM), Image.LANCZOS), np.float32) / 255 * 235
+        return Image.fromarray(np.dstack([np.broadcast_to(np.asarray(color, np.float32), (TAM, TAM, 3)), a]).astype(np.uint8), 'RGBA')
     if motivo is _tricolor:
         _tricolor(d, [(31, 42, 110, 235), (245, 245, 245, 235), (178, 34, 52, 235)])
         d.ellipse(caja, outline=c, width=int(GROSOR * K * 0.5))
         return capa.resize((TAM, TAM), Image.LANCZOS)
-    if motivo not in (_rayas, _canal, _ouroboros, _torques, _latigo):
+    if motivo not in (_rayas, _canal):
         d.ellipse(caja, outline=c, width=int(GROSOR * K))
     if motivo is _monedas: _monedas(d, c, (0, 0, 0, 0))
     else: motivo(d, c, **VARIANTES.get(tema, {}))
@@ -1078,34 +999,8 @@ def suavizar(a, s):
     return np.fft.irfft2(np.fft.rfft2(b) * g, s=b.shape)[p:p + a.shape[0], p:p + a.shape[1]].astype(np.float32)
 
 
-def sombra_de(alfa, dx, dy, radio, fuerza, color='#0A0603'):
-    """La sombra que deja una pieza con alfa [alfa] (0–1) cuando la luz viene de arriba a la izquierda."""
-    a = np.roll(np.roll(suavizar(alfa, radio), int(round(dy)), 0), int(round(dx)), 1)
-    return Image.fromarray(np.dstack([np.broadcast_to(rgb(color), alfa.shape + (3,)), np.clip(a * fuerza, 0, 1) * 255]).astype(np.uint8), 'RGBA')
-
-
-def oro_icono(tema, sem):
-    """Galia: el torques y la huella en oro fundido, en relieve (el aro torcido, los remates, cada cresta como un hilo de
-    oro redondo), sobre la tabla de roble, con su sombra. Se calcula al cuádruple y se reduce."""
-    S = TAM * K
-    lienzo = Image.new('L', (S, S), 0)
-    TEMAS[tema][6](ImageDraw.Draw(lienzo), 255, 0)
-    aro = np.asarray(lienzo, np.float32) / 255
-    huella = maestra.mascara(S, S * 0.46)
-    m = np.maximum(aro, huella)
-    alto = suavizar(m, 1.3 * K) * 0.55 + suavizar(m, 3.0 * K) * 0.45
-    alto = alto * (0.35 + 0.65 * m)                        # los surcos de la torsión y los bordes, bien hundidos
-    color = oro_relieve(suavizar(alto, 0.6 * K), 9.0 * K, sem)
-    capa = Image.fromarray(np.dstack([np.clip(color, 0, 255), m * 255]).astype(np.uint8), 'RGBA')
-    capa = capa.convert('RGBa').resize((TAM, TAM), Image.LANCZOS).convert('RGBA')
-    a = np.asarray(capa, np.float32)[..., 3] / 255
-    final = sombra_de(a, 3.2, 4.2, 3.4, 0.62)
-    final.alpha_composite(sombra_de(a, 1.0, 1.4, 1.0, 0.5))
-    final.alpha_composite(capa)
-    return final
-
-
-# El oro pálido del tema (#D9BE7A, con su brillo #F2E2B0): más claro y más frío que el oro de Galia.
+# Piezas de metal, nácar y celuloide que usan los sellos (sellos.py) de Galia, Art nouveau y Psicodelia.
+# El oro pálido de Art nouveau (#D9BE7A, con su brillo #F2E2B0): más claro y más frío que el oro de Galia.
 ORO_PALIDO = [(0.0, '#2E2410'), (0.25, '#6A5628'), (0.45, '#A08850'), (0.6, '#C2A86A'), (0.74, '#D9BE7A'), (0.86, '#E8D49C'),
               (0.94, '#F2E2B0'), (1.0, '#FFF7DE')]
 
@@ -1130,40 +1025,6 @@ def nacar(alto, fuerza, sem, base='#E6E3EC', luz=(-0.55, -0.7, 1.0), cuanto=0.78
     col = rgb(base)[None, None, :] * (1 - cuanto) + tinte * cuanto
     col = col * (0.66 + 0.4 * dif[..., None]) + esp[..., None] * np.array([70, 68, 72], np.float32)
     return col
-
-
-def nacar_icono(tema, sem):
-    """Art nouveau: la huella de nácar, cada cresta engastada en un hilo de oro (como un esmalte con sus tabiques), y el
-    marco de látigo de oro pálido en relieve, sobre el vidrio, con su sombra. Se calcula al cuádruple y se reduce."""
-    S = TAM * K
-    lienzo = Image.new('L', (S, S), 0)
-    TEMAS[tema][6](ImageDraw.Draw(lienzo), 255, 0)
-    aro = np.asarray(lienzo, np.float32) / 255
-    huella = maestra.mascara(S, S * 0.46)
-    # El marco: un tallo redondo de oro (alto en el centro del trazo), con la luz de arriba a la izquierda.
-    alto = suavizar(aro, 1.6 * K) * 0.5 + suavizar(aro, 3.4 * K) * 0.5
-    alto = alto * (0.35 + 0.65 * aro)
-    oro = oro_relieve(suavizar(alto, 0.6 * K), 9.0 * K, sem, tonos=ORO_PALIDO, grano=0.02, ambiente=0.55, plano=0.62)
-    # La huella: el nácar abombado en cada cresta y, en el borde, el hilo de oro que la engasta.
-    alto_h = suavizar(huella, 1.7 * K) * (0.3 + 0.7 * huella)
-    alto_h = alto_h / max(1e-3, float(alto_h.max()))
-    perla = nacar(suavizar(alto_h, 0.5 * K), 7.0 * K, sem + 3)
-    nucleo = np.clip((suavizar(huella, 1.0 * K) - 0.74) / 0.12, 0, 1) * huella
-    hilo = oro_relieve(suavizar(alto_h, 0.5 * K), 7.0 * K, sem + 4, tonos=ORO_PALIDO, grano=0.0, ambiente=0.5, plano=0.6)
-    color_h = hilo * (1 - nucleo[..., None]) + perla * nucleo[..., None]
-    m = np.maximum(aro, huella)
-    color = np.where((aro >= huella)[..., None], oro, color_h)
-    capa = Image.fromarray(np.dstack([np.clip(color, 0, 255), m * 255]).astype(np.uint8), 'RGBA')
-    capa = capa.convert('RGBa').resize((TAM, TAM), Image.LANCZOS).convert('RGBA')
-    a = np.asarray(capa, np.float32)[..., 3] / 255
-    final = sombra_de(a, 3.0, 4.0, 3.6, 0.55, '#0C0A14')
-    final.alpha_composite(sombra_de(a, 0.9, 1.3, 1.0, 0.45, '#0C0A14'))
-    final.alpha_composite(capa)
-    return final
-
-
-# Las tintas planas del botón de Psicodelia (los colores de dibujo de la guía: los complementarios que vibran).
-TINTAS_CHAPA = dict(fondo='#2FBF71', petalo='#E0218A', eco='#2FBF71', corazon='#FFD23F', huella='#FFF6E6', filete='#3A1A5C')
 
 
 def mezclar(a, b, t):
@@ -1200,81 +1061,15 @@ def celuloide(tam, radio, alto=15.0, dentro=0.80, reflejo=1.0):
     return sombreado.astype(np.float32), brillo.astype(np.float32)
 
 
-def chapa_icono(tema, sem):
-    """Psicodelia: un botón de solapa de 1967 prendido en la mezclilla. Bajo el celuloide, el papel impreso en tintas
-    planas: la margarita de pétalos redondos en magenta sobre el verde (dos complementarios del mismo peso, que vibran),
-    cada pétalo con su eco verde por dentro, el corazón amarillo, y la huella en tinta clara con su filete violeta oscuro.
-    Las planchas no casan del todo (el magenta va corrido medio pixel). Encima, la cúpula con su brillo y, en la tela, la
-    sombra del botón. Se calcula al cuádruple y se reduce."""
-    S = TAM * K
-    radio = RADIO_CHAPA * TAM * K
-    yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
-    r = np.sqrt((xx - S / 2) ** 2 + (yy - S / 2) ** 2)
-    disco = np.clip((radio - r) / (1.4 * K), 0, 1)
-    def lapiz(dibujo):
-        im = Image.new('L', (S, S), 0); dibujo(ImageDraw.Draw(im)); return np.asarray(im, np.float32) / 255
-    pet = lapiz(lambda d: _margarita(d, 255))
-    eco = np.clip(lapiz(lambda d: _margarita(d, 255, encoge=0.024)) - lapiz(lambda d: _margarita(d, 255, encoge=0.031)), 0, 1)
-    eco = eco * np.clip((r - 0.155 * TAM * K) / (3 * K), 0, 1)       # el eco no llega al corazón, donde se juntan los pétalos
-    corazon = np.clip((0.083 * TAM * K - r) / (1.2 * K), 0, 1)
-    huella = maestra.mascara(S, S * 0.46)
-    T = {k: rgb(v) for k, v in TINTAS_CHAPA.items()}
-    corrido = lambda m, ox, oy: np.roll(np.roll(m, int(oy * K), 0), int(ox * K), 1)
-    img = np.zeros((S, S, 3), np.float32) + T['fondo']
-    img = mezclar(img, T['petalo'], corrido(pet, 0.6, -0.4))
-    img = mezclar(img, T['eco'], corrido(eco, 0.6, -0.4) * 0.95)
-    img = mezclar(img, T['corazon'], corazon)
-    img = mezclar(img, T['filete'], np.clip(suavizar(huella, 1.7 * K) * 3.6, 0, 1))
-    img = mezclar(img, T['huella'], corrido(huella, -0.3, 0.3) * huella)
-    grano = suavizar(np.random.default_rng(sem).standard_normal((S, S)).astype(np.float32), 0.7 * K)
-    img = img * (1 + grano[..., None] * 0.035)                         # el grano del papel bajo las tintas
-    sombreado, brillo = celuloide(S, radio, reflejo=0.75)
-    img = img * (0.42 + 0.62 * sombreado[..., None]) + brillo[..., None] * 255
-    capa = Image.fromarray(np.dstack([np.clip(img, 0, 255), disco * 255]).astype(np.uint8), 'RGBA')
-    capa = capa.convert('RGBa').resize((TAM, TAM), Image.LANCZOS).convert('RGBA')
-    a = np.asarray(capa, np.float32)[..., 3] / 255
-    final = sombra_de(a, 3.5, 5.5, 5.0, 0.8, '#070A16')
-    final.alpha_composite(sombra_de(a, 1.0, 1.6, 1.2, 0.6, '#070A16'))
-    final.alpha_composite(capa)
-    return final
-
-
 def hacer(tema, salida):
     textura, fondo, tinta, f_fondo, f_huella, acabado, _ = TEMAS[tema]
     sem = sum(map(ord, tema))
     tex = textura(sem)
-    # Fondo: el color con la textura (pocos niveles arriba y abajo). Una textura en color (la del jaspe) trae su desvío en RGB.
-    bg = rgb(fondo)[None, None, :] + (tex if tex.ndim == 3 else tex[..., None]) * f_fondo
+    # Fondo: el color con la textura (pocos niveles arriba y abajo).
+    bg = rgb(fondo)[None, None, :] + tex[..., None] * f_fondo
     Image.fromarray(np.clip(bg, 0, 255).astype(np.uint8)).save(os.path.join(salida, f'logo_fondo_{tema}.jpg'), quality=92)
     # Huella: la forma fija, con la misma textura muy leve y el acabado del tema.
-    if acabado == 'oro':
-        # Oro en relieve sobre la madera: el anillo (el torques) y la huella son una sola pieza de orfebre.
-        final = oro_icono(tema, sem)
-        # Como el grabado: con 256 colores se ve igual y pesa la cuarta parte.
-        final = final.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
-        final.save(os.path.join(salida, f'logo_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
-        return
-    if acabado == 'nacar':
-        # Nácar y oro pálido sobre el vidrio de Nancy: el marco de látigo y la huella son una sola joya.
-        final = nacar_icono(tema, sem)
-        final = final.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
-        final.save(os.path.join(salida, f'logo_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
-        return
-    if acabado == 'chapa':
-        # Un botón de solapa de celuloide: la flor y la huella impresas en tintas planas, bajo la cúpula con su brillo.
-        final = chapa_icono(tema, sem)
-        final = final.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
-        final.save(os.path.join(salida, f'logo_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
-        return
     m = mascara()
-    if acabado == 'grabado':
-        # Talla en hueco sobre la piedra, como las gemas: el anillo y la huella son un solo grabado.
-        anillo_m = np.asarray(anillo(tema, rgb(tinta)), np.float32)[..., 3] / 255
-        final = tallado(np.maximum(m, anillo_m), tinta, sem)
-        # El grabado tiene pocos colores de verdad (el corte claro y su sombra): con 256 se ve igual y pesa un tercio.
-        final = final.quantize(256, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE)
-        final.save(os.path.join(salida, f'logo_{tema}.webp'), 'WEBP', lossless=True, quality=100, method=6, exact=True)
-        return
     t2 = textura(sem + 7)
     base = rgb(tinta)
     col = base[None, None, :] + t2[..., None] * f_huella
