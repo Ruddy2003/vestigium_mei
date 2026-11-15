@@ -285,7 +285,13 @@ internal object CercaSelva {
             drawCircle(p.sombra(C.HIERRO), 0.8f, clavo)
             val aro = clavo + Offset(e * 0.05f, e * 0.17f)
             drawOval(p.sombra(C.HIERRO), Offset(aro.x - e * 0.15f, aro.y - e * 0.16f), Size(e * 0.3f, e * 0.32f), style = Stroke(max(0.6f, e * 0.012f)))
-            drawPath(Path().apply { moveTo(aro + Offset(-e * 0.15f, 0f)); cubicTo(aro + Offset(-e * 0.13f, e * 0.25f), aro + Offset(e * 0.02f, e * 0.42f), aro + Offset(e * 0.05f, e * 0.48f)); cubicTo(aro + Offset(e * 0.12f, e * 0.3f), aro + Offset(e * 0.15f, e * 0.1f), aro + Offset(e * 0.15f, 0f)); close() }, p.por(C.LONA, 0.2f).copy(alpha = 0.72f))
+            // La bolsa de gasa: se transparenta, con su malla y los pliegues donde la tela se junta.
+            val bolsa = Path().apply { moveTo(aro + Offset(-e * 0.15f, 0f)); cubicTo(aro + Offset(-e * 0.13f, e * 0.25f), aro + Offset(e * 0.02f, e * 0.42f), aro + Offset(e * 0.05f, e * 0.48f)); cubicTo(aro + Offset(e * 0.12f, e * 0.3f), aro + Offset(e * 0.15f, e * 0.1f), aro + Offset(e * 0.15f, 0f)); close() }
+            drawPath(bolsa, p.por(lerp(C.LONA, C.ARENA, 0.2f), 0.2f).copy(alpha = 0.42f))
+            clipPath(bolsa) {
+                for (j in -6..6) { drawLine(p.sombra(C.LONA).copy(alpha = 0.35f), aro + Offset(j * e * 0.03f, -e * 0.02f), aro + Offset(j * e * 0.03f + e * 0.2f, e * 0.5f), 0.3f); drawLine(p.sombra(C.LONA).copy(alpha = 0.35f), aro + Offset(j * e * 0.03f, -e * 0.02f), aro + Offset(j * e * 0.03f - e * 0.2f, e * 0.5f), 0.3f) }
+                for (j in 1..3) drawLine(p.luz(C.LONA).copy(alpha = 0.5f), aro + Offset(-e * 0.1f + j * e * 0.05f, e * 0.04f), aro + Offset(e * 0.04f, e * 0.44f), 0.5f)
+            }
             drawLine(p.por(lerp(C.MADERA, C.ARENA, 0.3f), 0.3f), aro + Offset(e * 0.14f, e * 0.08f), aro + Offset(e * 0.2f, e * 1.25f), max(0.8f, e * 0.022f))
             // La escopeta, del suelo al poste.
             val cul = pc(x - 0.26f, 0f, z - 0.12f); val boca = pc(x - g, 1.18f, z - 0.02f)

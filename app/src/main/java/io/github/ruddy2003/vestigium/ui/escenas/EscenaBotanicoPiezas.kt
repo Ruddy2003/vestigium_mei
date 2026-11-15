@@ -1422,9 +1422,11 @@ internal object PiezasBotanico {
                     if (k > 0.05f) drawPath(Path().apply { val pts = (0..pasos).map { j -> val ss = s0 + (s1 - s0) * j / pasos; val tg = tangente(ss); nervio(ss) + Offset(-tg.y, tg.x) * (lado * anchoEn(ss) * canto * 0.6f) }; moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) },
                         lerp(translucida, Color(0xFFFFF4C0), 0.4f).copy(alpha = (0.4f * k).coerceIn(0f, 1f)), style = Stroke(ancho * 0.2f * canto, cap = StrokeCap.Round), blendMode = BlendMode.Plus)
                     // Las venas, paralelas, del nervio al borde, inclinadas hacia la punta.
-                    var v = s0
-                    while (v < s1) { val tg = tangente(v); val nn = Offset(-tg.y, tg.x); val a = nervio(v); val w = anchoEn(v) * canto
-                        drawLine((if (k > 0.2f) vena else p.sombra(hoja, lejos)).copy(alpha = (0.12f + 0.4f * k).coerceIn(0f, 1f)), a, a + nn * (lado * w) + tg * (w * 0.35f), if (k > 0.2f) 0.45f else 0.3f); v += 0.02f }
+                    if (ancho > 5f) {
+                        val venas = ArrayList<Offset>(); var v = s0; val paso = if (ancho > 20f) 0.02f else 0.035f
+                        while (v < s1) { val tg = tangente(v); val nn = Offset(-tg.y, tg.x); val a = nervio(v); val w = anchoEn(v) * canto; venas += a; venas += a + nn * (lado * w) + tg * (w * 0.35f); v += paso }
+                        drawPoints(venas, PointMode.Lines, (if (k > 0.2f) vena else p.sombra(hoja, lejos)).copy(alpha = (0.12f + 0.4f * k).coerceIn(0f, 1f)), if (k > 0.2f) 0.45f else 0.3f)
+                    }
                     // El brillo del haz, a lo largo, del lado del sol (de frente; a contraluz no se ve).
                     if (lado * vuelta >= -0.2f && k < 0.5f) drawPath(Path().apply { val pts = (0..6).map { j -> val ss = s0 + (s1 - s0) * j / 6f; val tg = tangente(ss); nervio(ss) + Offset(-tg.y, tg.x) * (lado * anchoEn(ss) * canto * 0.45f) }; moveTo(pts[0]); for (q in pts.drop(1)) lineTo(q) },
                         p.luz(lerp(hoja, C.ARENA, 0.3f), lejos).copy(alpha = 0.3f * p.r.dia * (1f - 2f * k)), style = Stroke(ancho * 0.08f, cap = StrokeCap.Round))
@@ -1615,16 +1617,18 @@ internal object PiezasBotanico {
     private fun DrawScope.fronda(p: Pincel, a: Offset, ctrl: Offset, b: Offset, largo: Float, color: Color, oscuro: Color, az: Azar, lejos: Float) {
         fun en(t: Float): Offset { val m = 1f - t; return a * (m * m) + ctrl * (2f * m * t) + b * (t * t) }
         val g = max(0.3f, largo * 0.012f)
+        // Las pinnas, en tres tamaños (cada una un trazo que se afina a la punta), las del lado de la luz y las del otro.
+        val claras = Array(3) { ArrayList<Offset>(40) }; val sombras = Array(3) { ArrayList<Offset>(40) }
         for (k in 3..28) {
             val t = k / 28f; val q = en(t); val dd = en((t + 0.03f).coerceAtMost(1f)) - en(t - 0.03f); val tg = dd / dd.getDistance().coerceAtLeast(0.01f); val n = Offset(-tg.y, tg.x)
             val l = largo * 0.16f * sin(PI.toFloat() * (0.15f + 0.85f * t)).coerceAtLeast(0.15f) * az.entre(0.85f, 1.1f)
+            val tam = if (l > largo * 0.11f) 0 else if (l > largo * 0.06f) 1 else 2
             for (s in listOf(-1f, 1f)) {
                 val punta = q + n * (s * l) + tg * (l * 0.25f) + Offset(0f, l * 0.25f)
-                // La pinna: una hoja estrecha y dentada (dos trazos que se estrechan).
-                drawPath(poligono(q, q + (punta - q) * 0.5f + tg * (l * 0.08f), punta, q + (punta - q) * 0.5f - tg * (l * 0.08f)), if (s > 0f) color else oscuro)
-                if (l > 3f) for (j in 1..3) { val r = q + (punta - q) * (j / 4f); drawLine(if (s > 0f) oscuro else color, r, r + tg * (l * 0.1f) + n * (s * l * 0.04f), 0.3f) }
+                (if (s > 0f) claras[tam] else sombras[tam]).apply { add(q); add(punta) }
             }
         }
+        for (tam in 0..2) { val w = max(0.4f, largo * (0.036f - 0.01f * tam)); drawPoints(sombras[tam], PointMode.Lines, oscuro, w, StrokeCap.Round); drawPoints(claras[tam], PointMode.Lines, color, w, StrokeCap.Round) }
         drawPath(Path().apply { moveTo(a); cubicTo(ctrl, ctrl, b) }, oscuro, style = Stroke(g, cap = StrokeCap.Round))
     }
 

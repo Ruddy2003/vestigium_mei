@@ -86,6 +86,8 @@ internal object LuzSelva {
         val lampara: Float = SelvaBotanico.lampara(m)
         /** Cuánta bruma hay entre los planos. */
         val bruma: Float = SelvaBotanico.bruma(m)
+        /** Las sombras ya tumbadas en cada plano (se piden muchas veces en un mismo dibujo). */
+        internal val sombrasEn = HashMap<Float, List<List<Offset>>>()
     }
 
     /** La luz de la penumbra: la de fuera, más baja y más verde y azul cuanto más fuerte es el sol (de noche, igual). */
@@ -127,7 +129,9 @@ internal object LuzSelva {
      * el poste y cada hoja de la bóveda, tumbadas con la luz del momento. Las cajas, como su envolvente; las hojas, con
      * su contorno.
      */
-    fun sombras(luz: Luz, hp: Float): List<List<Offset>> {
+    fun sombras(luz: Luz, hp: Float): List<List<Offset>> = luz.sombrasEn.getOrPut(hp) { tumbar(luz, hp) }
+
+    private fun tumbar(luz: Luz, hp: Float): List<List<Offset>> {
         val r = ArrayList<List<Offset>>()
         for (caja in cajas()) { val pts = caja.filter { it.y > hp }.map { cae(luz, it, hp) } + caja.filter { it.y <= hp + 0.001f }.map { Offset(it.x, it.z) }; if (pts.size >= 3) r += envolvente(pts) }
         for (h in BovedaSelva.HOJAS) r += h.contorno().map { cae(luz, it, hp) }
@@ -146,7 +150,9 @@ internal object LuzSelva {
     /** Cuánta luz directa le llega al punto ([x], [h], [z]): 0 si está a la sombra del tejado, del poste o de una hoja. */
     fun alumbrado(luz: Luz, x: Float, h: Float, z: Float): Float {
         if (luz.directa < 0.04f) return 0f
-        for (pol in sombras(luz, h)) if (dentro(pol, x, z)) return 0f
+        // La altura, de diez en diez centímetros: así las sombras de cada plano se tumban una sola vez por dibujo.
+        val hq = kotlin.math.round(h * 10f) / 10f
+        for (pol in sombras(luz, hq)) if (dentro(pol, x, z)) return 0f
         return luz.directa
     }
 
@@ -213,7 +219,7 @@ internal object LuzSelva {
      */
     fun DrawScope.haces(luz: Luz, puntos: List<V3>) {
         if (luz.directa < 0.15f || luz.deLuna) return
-        val k = luz.directa * (0.45f + 0.8f * luz.bruma)
+        val k = luz.directa * (0.2f + 0.45f * luz.bruma)
         val az = Azar(Semilla.de("botanico", "haces"))
         for (q in puntos) {
             if (alumbrado(luz, q.x, q.y, q.z) < 0.5f) continue
