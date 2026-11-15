@@ -19,7 +19,6 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -52,9 +51,10 @@ import kotlin.math.sin
  * del trolebús, con un arcoíris pintado en el vidrio; un cartel de concierto inventado («baile», en letras de burbuja que se
  * derriten, sobre los rayos naranja y azul y la flor que vibra); tres sencillos colgados de un clavo por su agujero grande y
  * una hoja volante de «paz» en tinta de arcoíris; arriba, el tubo de luz negra. Abajo, el piso de duela con un tapete
- * trenzado, una caja de cartón con discos de larga duración y una maceta de margaritas pintada con la paz. De día, la luz entra por la ventana, de la izquierda. De noche, la misma tienda con la luz negra encendida:
- * todo se hunde en el negro violeta y brilla lo fluorescente (los carteles, la pintura del mostrador, las pestañas, las
- * tarjetas de papel), y la lámpara de cera echa su luz tibia. Por dentro, la caja vista desde arriba con los sencillos de
+ * trenzado, una caja de cartón con discos de larga duración y una maceta de margaritas pintada con la paz. De día, la luz
+ * entra por la ventana, de la izquierda. De noche, la misma tienda con la luz negra encendida: todo se hunde en el negro
+ * violeta y brilla lo fluorescente (los carteles, la pintura del mostrador, las pestañas, las tarjetas de papel), y la
+ * lámpara de cera echa su luz tibia. Por dentro, la caja vista desde arriba con los sencillos de
  * canto. Las fichas son fundas de papel de sencillo: la muesca del pulgar arriba, por donde asoma el disco; el agujero
  * redondo con la etiqueta y su agujero grande; la marca del aro del disco y la onda de arcoíris de la tienda.
  */
@@ -976,16 +976,28 @@ object IdeasPsicodelia : DisenoIdeas {
         val x0 = d.huecos.first().left
         val x1 = d.huecos.last().right
         val pintura = 1.6f * u
+        // La pintura descascarada en los cantos de los huecos, donde se rozan las cajas: asoma el pino de abajo.
+        d.huecos.forEachIndexed { i, h ->
+            for (k in 0 until 2) {
+                if (azar(760 + i, k) < 0.35f) continue
+                val x = h.left + h.width * (0.08f + 0.84f * azar(761 + i, k))
+                val y = if (k == 0) h.bottom + 2.6f * u else h.top - 2.6f * u
+                val tam = (2.5f + 4f * azar(762 + i, k)) * u
+                val astilla = contornoIrregular(Rect(x - tam, y - tam * 0.35f, x + tam, y + tam * 0.35f), 763 + i * 7 + k, 12, 0.25f)
+                drawPath(astilla, t(PINO, oscuro, 0.75f))
+                drawPath(astilla, sombra(oscuro, 0.35f), style = Stroke(0.4f * u))
+            }
+        }
         // Las margaritas pintadas en los costados, con su tallo que se enrosca.
-        listOf(Rect(0f, frente, x0 - 2f * u, zocalo) to 1f, Rect(x1 + 2f * u, frente, w, zocalo) to -1f).forEachIndexed { i, (pr, s) ->
+        listOf(Rect(0f, frente, x0 - 2f * u, zocalo) to 1f, Rect(x1 + 2f * u, frente, w, zocalo) to -1f).forEach { (pr, s) ->
             val cx = pr.center.x
             val tallo = Path().apply {
                 moveTo(cx, pr.bottom - 2f * u)
-                var y = pr.bottom - 2f * u; var k = 0
+                var y = pr.bottom - 2f * u
                 while (y > pr.top + 10f * u) {
                     val y2 = y - pr.width * 2.2f
                     cubicTo(cx + s * pr.width * 0.35f, y - pr.width * 0.6f, cx - s * pr.width * 0.35f, y2 + pr.width * 0.6f, cx, y2)
-                    y = y2; k++
+                    y = y2
                 }
             }
             clipRect(pr.left, pr.top + 4f * u, pr.right, pr.bottom) {
@@ -1019,10 +1031,10 @@ object IdeasPsicodelia : DisenoIdeas {
         // El friso bajo el canto: una hilera de festones pintados de amarillo.
         val yf = (frente + d.filas.first().top) / 2
         if (d.filas.first().top - frente > 5f * u) {
-            var xf = 4f * u; var k = 0
+            var xf = 4f * u
             while (xf < w - 4f * u) {
                 drawArc(fluor(AMARILLO, oscuro), 0f, 180f, false, Offset(xf, yf - 3f * u), Size(7f * u, 5f * u), style = Stroke(pintura * 0.9f, cap = StrokeCap.Round))
-                xf += 8f * u; k++
+                xf += 8f * u
             }
         }
 
@@ -1102,7 +1114,7 @@ object IdeasPsicodelia : DisenoIdeas {
      * cartón; 3, la funda impresa de un color con su franja; 4, la funda ilustrada. Con [agujero], se ve el agujero redondo
      * con la etiqueta de [etiqueta] (para el sencillo que se sacó a medias).
      */
-    private fun DrawScope.funda(r: Rect, estilo: Int, color: Color, oscuro: Boolean, agujero: Float = 0f, etiqueta: Color = NARANJA) {
+    private fun DrawScope.funda(r: Rect, estilo: Int, color: Color, oscuro: Boolean, agujero: Float = 0f, etiqueta: Color = NARANJA, semilla: Int = 0) {
         val u = density
         val base = when (estilo) { 0 -> PAPEL; 1 -> BLANCO; 2 -> CARTON; 3 -> mezcla(color, Color.White, 0.35f); else -> mezcla(color, Color.White, 0.15f) }
         val col = if (oscuro) (if (estilo <= 1) mezcla(base, SALA, 0.68f) else mezcla(fluor(color, true), SALA, 0.72f)) else base
@@ -1117,7 +1129,7 @@ object IdeasPsicodelia : DisenoIdeas {
             }
             // La muesca del pulgar, arriba, por donde asoma el canto del disco.
             if (estilo <= 2 && r.width > 12f * u) {
-                val cm = Offset(r.center.x + r.width * 0.08f, r.top)
+                val cm = Offset(r.center.x + r.width * (azar(semilla, 7) - 0.5f) * 0.5f, r.top)
                 val rm = minOf(r.width * 0.09f, 5f * u)
                 drawCircle(VINILO, rm, cm)
                 drawArc(Color.White.copy(alpha = 0.15f), 20f, 140f, false, Offset(cm.x - rm * 0.7f, cm.y - rm * 0.7f), Size(rm * 1.4f, rm * 1.4f), style = Stroke(0.4f * u))
@@ -1127,7 +1139,7 @@ object IdeasPsicodelia : DisenoIdeas {
                 val ra = r.width * 0.3f
                 drawCircle(VINILO, ra, ca)
                 val e = fluor(etiqueta, oscuro)
-                if (oscuro) drawCircle(e.copy(alpha = 0.35f), ra * 1.2f, ca)
+                if (oscuro) drawCircle(e.copy(alpha = 0.35f), ra * 0.85f, ca)
                 drawCircle(e, ra * 0.72f, ca)
                 drawCircle(mezcla(e, Color.White, 0.35f), ra * 0.58f, ca, style = Stroke(0.5f * u))
                 drawCircle(col, ra * 0.26f, ca)
@@ -1182,7 +1194,7 @@ object IdeasPsicodelia : DisenoIdeas {
         val m = if (c.vacio) 0 else c.n.coerceIn(0, 11)
         val yFrente = y0 - h * 0.055f
         val yFondo = h * 0.17f + baja
-        val sacado = if (m >= 3) Math.floorMod(c.semilla / 3, m - 1) + 1 else -1
+        val sacado = if (m >= 3) Math.floorMod(c.semilla / 3, m - 1) + 1 else m - 1
         val separador = if (c.vacio) -1 else (m / 2).coerceAtLeast(0)
         val colores = listOf(MAGENTA, NARANJA, AMARILLO, VERDE, AZUL, VIOLETA)
         for (j in maxOf(m - 1, separador) downTo 0) {
@@ -1191,15 +1203,15 @@ object IdeasPsicodelia : DisenoIdeas {
             val giro = if (c.sinTema) (azar(c.semilla, j + 30) - 0.5f) * 9f else (azar(c.semilla, j + 30) - 0.5f) * 2.5f
             if (j < m) {
                 var top = yFrente - (yFrente - yFondo) * f * 1.0f + (azar(c.semilla, j) - 0.5f) * h * 0.025f
-                val estilo = when (val a = azar(c.semilla, j + 10)) { in 0f..0.38f -> 0; in 0.38f..0.55f -> 1; in 0.55f..0.7f -> 2; in 0.7f..0.86f -> 3; else -> 4 }
+                val estilo = when (azar(c.semilla, j + 10)) { in 0f..0.38f -> 0; in 0.38f..0.55f -> 1; in 0.55f..0.7f -> 2; in 0.7f..0.86f -> 3; else -> 4 }
                 val color = colores[Math.floorMod(c.semilla + j * 5, colores.size)]
                 var agujero = 0f
-                if (j == sacado) { top -= h * (0.17f + 0.06f * ab); agujero = h * 0.15f }
+                if (j == sacado) { top -= h * (0.17f + 0.3f * ab); agujero = h * 0.15f }
                 val ancho = (xb - xa) * (0.9f + 0.08f * azar(c.semilla, j + 20))
                 val xs = xa + (xb - xa - ancho) * azar(c.semilla, j + 40)
                 rotate(giro, Offset((xa + xb) / 2, y0)) {
                     drawRect(Brush.verticalGradient(listOf(Color.Transparent, sombra(oscuro, 0.35f)), top - 3f * u, top), Offset(xs, top - 3f * u), Size(ancho, 3f * u))
-                    funda(Rect(xs, top, xs + ancho, y0 + 4f * u), estilo, color, oscuro, agujero, colores[Math.floorMod(c.semilla + j, colores.size)])
+                    funda(Rect(xs, top, xs + ancho, y0 + 4f * u), estilo, color, oscuro, agujero, colores[Math.floorMod(c.semilla + j, colores.size)], c.semilla + j)
                     drawRect(Brush.verticalGradient(listOf(Color.Transparent, sombra(oscuro, 0.3f)), top + 4f * u, y0), Offset(xs, top + 4f * u), Size(ancho, (y0 - top - 4f * u).coerceAtLeast(0f)))
                 }
             }
@@ -1341,7 +1353,7 @@ object IdeasPsicodelia : DisenoIdeas {
                 } else {
                     val a = azar(804, k)
                     val estilo = when { a < 0.44f -> 0; a < 0.62f -> 1; a < 0.8f -> 2; a < 0.92f -> 3; else -> 4 }
-                    funda(r, estilo, mezcla(colores[Math.floorMod(k * 5, colores.size)], PAPEL, 0.45f), oscuro)
+                    funda(r, estilo, mezcla(colores[Math.floorMod(k * 5, colores.size)], PAPEL, 0.45f), oscuro, semilla = 811 + k)
                 }
                 // La sombra que le echa la funda de adelante, abajo.
                 drawRect(Brush.verticalGradient(listOf(Color.Transparent, sombra(oscuro, 0.35f)), r.top + alto - 4f * u, r.top + alto), Offset(r.left, r.top + alto - 4f * u), Size(r.width, 4f * u))
@@ -1489,25 +1501,14 @@ object IdeasPsicodelia : DisenoIdeas {
         }
     }
 
-    /** El adaptador amarillo de tres patas, el que fija el sencillo en el eje del tocadiscos: el disco con sus tres ventanas. */
+    /** Una chincheta de plástico en forma de margarita, clavada de lado: así se clavan las tarjetas de las cajas. */
     override fun DrawScope.marcaFijada(p: Pagina) {
-        val s = size.minDimension; val c = center
-        val borde = mezcla(AMARILLO, Color(0xFF8A5A00), 0.6f)
-        drawCircle(borde, s * 0.48f, c)
-        drawCircle(AMARILLO, s * 0.42f, c)
-        // Las tres ventanas entre las patas, y el agujero del eje.
-        for (k in 0 until 3) {
-            val a0 = -90f + 120f * k + 18f
-            val ventana = Path().apply {
-                arcTo(Rect(c, s * 0.33f), a0, 84f, true)
-                arcTo(Rect(c, s * 0.17f), a0 + 84f, -84f, false)
-                close()
-            }
-            drawPath(ventana, p.color)
-            drawPath(ventana, borde, style = Stroke(s * 0.04f))
-        }
-        drawCircle(p.color, s * 0.06f, c)
-        drawCircle(Color.White.copy(alpha = 0.5f), s * 0.07f, c + Offset(-s * 0.26f, -s * 0.26f))
+        val s = size.minDimension; val c = center + Offset(s * 0.06f, -s * 0.06f)
+        // La aguja, que entra en diagonal, y la sombra de la cabeza.
+        drawLine(Color(0xFF8A8C88), c, c + Offset(-s * 0.4f, s * 0.4f), s * 0.08f, StrokeCap.Round)
+        drawCircle(sombraMueble(0.25f), s * 0.34f, c + Offset(s * 0.05f, s * 0.07f))
+        with(TrazosPsicodelia) { margarita(c, s * 0.4f, MAGENTA, AMARILLO, 6, 0.3f) }
+        drawCircle(Color.White.copy(alpha = 0.55f), s * 0.07f, c + Offset(-s * 0.15f, -s * 0.17f))
     }
 
     override val desorden = 2.5f
