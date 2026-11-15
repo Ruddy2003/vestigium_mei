@@ -46,6 +46,8 @@ internal object CosasDeco {
     val SILLA_ABRIGO = V3(0.48f, 0f, 2.72f)
     val CAJAS = V3(0.82f, 0f, 2.95f)
     val PERCHERO = V3(0.42f, 0f, 7.45f)
+    /** El ventilador de techo (el día de calor y en verano), sobre la pista. */
+    val VENTILADOR = V3(-1.75f, SalaDeco.TECHO, 4.7f)
 
     // ---- Para el gato y el objeto del día (en el lienzo).
     val TABURETE_X: Float = CamDeco.p(TABURETE).x
@@ -74,7 +76,7 @@ internal object CosasDeco {
         lista += Cosa3(S.LAMPARA_FONDO.z, emptyList()) { with(PiezasDeco) { lamparaColgante(v, S.LAMPARA_FONDO, 0.36f, 0.2f, deco) } }
         lista += Cosa3(S.LAMPARA_CERCA.z, emptyList()) { with(PiezasDeco) { lamparaColgante(v, S.LAMPARA_CERCA, 0.44f, 0.27f, deco) } }
         if (!v.nuevo) lista += Cosa3(S.LAMPARA_BARRA.z, emptyList()) { with(PiezasDeco) { lamparaColgante(v, S.LAMPARA_BARRA, 0.52f, 0.12f, v.enc.barra) } }
-        if (EscenaDeco.ventilador(m)) lista += Cosa3(4.2f, emptyList()) { with(PiezasDeco) { ventiladorDeTecho(v, V3(-1.35f, S.TECHO, 4.2f), 0.3f, !giraElVentilador(v)) } }
+        if (EscenaDeco.ventilador(m)) lista += Cosa3(VENTILADOR.z, emptyList()) { with(PiezasDeco) { ventiladorDeTecho(v, VENTILADOR, 0.3f, !giraElVentilador(v)) } }
         // ---- La barra.
         lista += barra(v)
         // ---- El estrado: el contrabajo, la batería, la silla con la corneta, el atril.
@@ -102,23 +104,34 @@ internal object CosasDeco {
         for (i in 0 until n - 1) {
             val c = MESAS[i]
             // La mesa i+1 (la cercana es la 0): puesta si le toca; con las sillas arriba las últimas (las más lejanas).
+            // Las dos de detrás de la pista, con una sola silla arriba: la otra está arrimada a la pared.
             val puesta = i + 1 < puestas; val sillasArriba = !puesta && (n - 1 - i) <= arriba
             lista += mesaConSillas(v, c, i + 1, puesta, sillasArriba)
         }
+        // ---- Cuando no cabe un alma («se baila hasta entre las mesas»): más sillas, arrastradas a la orilla de la pista, con abrigos.
+        if (v.fase == Fase.ABIERTO && !prov && v.gente == EscenaDeco.Gente.A_REVENTAR) for ((k, o) in listOf(V3(-1.25f, 0f, 3.95f), V3(-0.15f, 0f, 5.75f), V3(-1.9f, 0f, 6.45f)).withIndex())
+            lista += Cosa3(o.z, listOf(V3(o.x - 0.2f, 0f, o.z - 0.2f), V3(o.x + 0.2f, 0f, o.z + 0.2f), V3(o.x, 0.9f, o.z))) {
+                with(PiezasDeco) { silla(v, o, 0.6f + k * 1.9f, false, abrigo = if (k != 1) lerp(C.PANO, C.CORAL, 0.2f * k) else null) } }
         // ---- La mesa cercana (cortada por el borde de abajo), con el objeto del día, y la silla con el abrigo.
         lista += mesaCercana(v)
         if (!prov) lista += Cosa3(SILLA_ABRIGO.z, listOf(V3(SILLA_ABRIGO.x - 0.2f, 0f, SILLA_ABRIGO.z - 0.2f), V3(SILLA_ABRIGO.x + 0.2f, 0f, SILLA_ABRIGO.z + 0.2f), V3(SILLA_ABRIGO.x, 0.95f, SILLA_ABRIGO.z + 0.2f))) {
-            with(PiezasDeco) { silla(v, SILLA_ABRIGO, 2.5f, false, abrigo = if (fase == Fase.ABIERTO || fase == Fase.ENSAYO || fase == Fase.PREPARA) lerp(C.PANO, C.CORAL, 0.25f) else null) } }
+            with(PiezasDeco) { silla(v, SILLA_ABRIGO, 1.15f, false, abrigo = if (fase == Fase.ABIERTO || fase == Fase.ENSAYO || fase == Fase.PREPARA) abrigoDeLou(m) else null) } }
         // ---- El perchero al pie de la escalera, las cajas de gaseosa en el rincón cercano, el cubo de la mañana.
         lista += PiezasDeco.perchero(v, PERCHERO, EscenaDeco.sombreros(m), EscenaDeco.nevada(m) && fase == Fase.ABIERTO)
         lista += PiezasDeco.cajas(v, CAJAS, 0.25f, if (prov) 2 else 3)
         if (!prov && fase == Fase.CERRADO && m.hora < 12.0) lista += PiezasDeco.cubo(v, V3(-1.05f, 0f, 4.7f))
         // El cubo con el bloque de hielo del día de calor, junto a la barra.
-        if (EscenaDeco.calor(m)) lista += hielo(v, V3(-0.25f, 0f, 7.1f))
+        if (EscenaDeco.calor(m)) lista += hielo(v, V3(-0.02f, 0f, 3.05f))
         // Las sillas apiladas en el rincón, cuando el club está cerrado por la gira o sin club.
         if (prov) lista += Cosa3(5.6f, listOf(V3(-0.7f, 0f, 5.4f), V3(-0.2f, 0f, 5.8f), V3(-0.45f, 1.4f, 5.6f))) { with(PiezasDeco) { for (k in 0..3) silla(v, V3(-0.45f + k * 0.02f, k * 0.12f, 5.6f), 2.0f + k * 0.05f, false) } }
         return lista.sortedByDescending { it.hondo }
     }
+
+    /**
+     * El abrigo de Lou, echado en la silla mientras está en el club: uno de paño color camello y, desde el 10 de marzo de
+     * la temporada 3, «un abrigo de piel de conejo», gris claro **[Diseño propio]**: el color de los dos.
+     */
+    fun abrigoDeLou(m: Momento): Color = if (EscenaDeco.paso(m, 3, "03-10")) lerp(C.MARFIL, C.ACERA, 0.55f) else lerp(C.ROBLE, C.MARFIL, 0.3f)
 
     /** Si el ventilador gira: mientras hay alguien en el club (si no, está quieto y se le ven las aspas). */
     fun giraElVentilador(v: VistaDeco): Boolean = !v.prov && (v.fase == Fase.ABIERTO || v.fase == Fase.ENSAYO || v.fase == Fase.PREPARA)
@@ -132,7 +145,8 @@ internal object CosasDeco {
         val abierto = v.fase == Fase.ABIERTO || v.fase == Fase.DESPUES
         val tazas = if (puesta && abierto) 1 + az.entero(3) else 0
         val cenicero = if (puesta && abierto) 2 + az.entero(5) else if (puesta) 0 else 0
-        val sombrero = puesta && v.fase == Fase.ABIERTO && az.real() > 0.45f
+        val reventar = v.gente == EscenaDeco.Gente.A_REVENTAR
+        val sombrero = puesta && v.fase == Fase.ABIERTO && (reventar || az.real() > 0.45f)
         val lampara = if (puesta && v.fase == Fase.ABIERTO) v.enc.mesas else 0f
         val mesa = Mesa(c, puesta, lampara, sillasArriba, tazas, cenicero, sombrero, i)
         val esq = listOf(V3(c.x - 0.45f, 0f, c.z - 0.45f), V3(c.x + 0.45f, 0f, c.z - 0.45f), V3(c.x - 0.45f, 0f, c.z + 0.45f), V3(c.x + 0.45f, 0f, c.z + 0.45f), V3(c.x, PiezasDeco.MESA_ALTO + (if (sillasArriba) 0.5f else 0.25f), c.z))
@@ -141,11 +155,11 @@ internal object CosasDeco {
                 // Las sillas de detrás de la mesa, luego la mesa, luego las de delante.
                 val sillas = if (sillasArriba) emptyList() else listOf(
                     Triple(V3(c.x + 0.05f + 0.1f * az.real(), 0f, c.z + 0.42f), 0.15f + 0.4f * az.real(), false),
-                    Triple(V3(c.x - 0.44f, 0f, c.z + 0.08f), 1.6f + 0.4f * az.real(), puesta && abierto && az.real() > 0.5f),
+                    Triple(V3(c.x - 0.44f, 0f, c.z + 0.08f), 1.6f + 0.4f * az.real(), puesta && abierto && (reventar || az.real() > 0.5f)),
                 )
                 for ((o, g, abrigo) in sillas.filter { it.first.z >= c.z }) silla(v, o, g, false, if (abrigo) lerp(C.PANO, C.CAOBA, az.real() * 0.6f) else null)
                 mesita(v, mesa)
-                if (sillasArriba) { silla(v, V3(c.x - 0.08f, PiezasDeco.MESA_ALTO, c.z + 0.06f), 0.4f, true); silla(v, V3(c.x + 0.1f, PiezasDeco.MESA_ALTO, c.z - 0.05f), 3.4f, true) }
+                if (sillasArriba) { silla(v, V3(c.x - 0.08f, PiezasDeco.MESA_ALTO, c.z + 0.06f), 0.4f, true); if (i <= 3) silla(v, V3(c.x + 0.1f, PiezasDeco.MESA_ALTO, c.z - 0.05f), 3.4f, true) }
                 for ((o, g, abrigo) in sillas.filter { it.first.z < c.z }) silla(v, o, g, false, if (abrigo) lerp(C.PANO, C.CAOBA, az.real() * 0.6f) else null)
             }
         }

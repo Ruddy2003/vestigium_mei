@@ -39,11 +39,12 @@ internal object ColorDeco {
     val CROMO = Color(0xFFB8BDC4)                                               // los platillos, la boca de riego pintada, los cubos
     val HUMO = Color(0xFFB9B0C4)                                                // el humo de los cigarrillos
 
-    // ---- Las luces: la de las lámparas, las dos del neón de la calle y el azul de la noche; y el violeta de las sombras.
+    // ---- Las luces: la de las lámparas, las dos del neón de la calle, el azul de la noche y la farola; y el violeta de las sombras.
     val LAMPARA = Color(0xFFFFC27A)
     val NEON = Color(0xFFFF4E62)
     val NEON_JADE = Color(0xFF52E2C4)
     val NOCHE = Color(0xFF7F95D2)
+    val FAROLA = Color(0xFFB4C4EE)                                              // la luz fría de la calle, de noche
     val SOMBRA = Color(0xFF6C62A8)
 
     // ---- Mezclas con nombre.

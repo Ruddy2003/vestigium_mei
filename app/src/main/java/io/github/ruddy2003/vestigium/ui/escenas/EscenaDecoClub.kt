@@ -48,6 +48,13 @@ internal class VistaDeco(val m: Momento) {
     val dirSol: V3? = sol?.let { V3(-1f, -it.e, -it.a) }
     /** Hacia dónde viaja la luz del letrero de enfrente que entra por las ventanas (de arriba y un poco del fondo). */
     val dirNeon: V3 = V3(-1f, -0.68f, -0.1f)
+    /**
+     * La luz fría de la calle de noche (la farola de la acera y el cielo): entra por las ventanas altas como la luna por la
+     * ventana de Renacimiento, deja su mancha azul con la reja en el suelo y tumba sus sombras. Es la luz de color opuesto a
+     * la de las lámparas. Con nieve, la calle blanca la aviva.
+     */
+    val farola: Float = (ext.noche * (if (EscenaDeco.nevada(m)) 1f else 0.85f)).coerceIn(0f, 1f)
+    val dirFarola: V3 = V3(-1f, -1.35f, -0.85f)
 
     val focos: List<Foco> = LuzDeco.focos(this)
     val a: Alumbrado = Alumbrado(l, focos)
@@ -75,6 +82,11 @@ internal class VistaDeco(val m: Momento) {
                 val mira = (-(n.x * d.x + n.y * d.y + n.z * d.z) / (largo * nl)).coerceIn(0f, 1f)
                 col = lerp(col, alSolColor(propio), (k * s.fuerza * (0.25f + 0.75f * mira)).coerceIn(0f, 0.92f))
             }
+        }
+        if (farola > 0.05f) {
+            val k = enElHaz(w, dirFarola, 0.08f)
+            if (k > 0.01f) { val fr = ColorDeco.FAROLA
+                col = lerp(col, Color((propio.red * 0.75f + 0.12f) * fr.red, (propio.green * 0.75f + 0.12f) * fr.green, (propio.blue * 0.75f + 0.12f) * fr.blue, propio.alpha), (0.45f * k * farola).coerceIn(0f, 1f)) }
         }
         if (neon > 0.05f && !prov) {
             val k = enElHaz(w, dirNeon, 0.18f)

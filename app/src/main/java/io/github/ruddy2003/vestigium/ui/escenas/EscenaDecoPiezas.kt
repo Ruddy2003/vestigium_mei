@@ -235,19 +235,27 @@ internal object PiezasDeco {
         }
     }
 
-    /** El piano tapado con su funda de lona, atada abajo: los días que Lou no está (la gira, sin club). */
+    /** El piano tapado con su funda de lona gris, atada abajo: los días que Lou no está (la gira, sin club). */
     private fun DrawScope.pianoConFunda(v: VistaDeco, f: Marco3) {
-        val L = PIANO_LARGO; val H = PIANO_ALTO; val D = PIANO_FONDO; val lona = lerp(C.MARFIL, C.ACERA, 0.45f)
-        caja(v, f, -0.02f, L + 0.02f, 0.05f, H + 0.03f, -0.32f, D + 0.02f, lona) { i, forma ->
+        val L = PIANO_LARGO; val H = PIANO_ALTO; val D = PIANO_FONDO; val lona = lerp(lerp(C.ACERA, C.PANO, 0.35f), C.MARFIL, 0.15f)
+        caja(v, f, -0.03f, L + 0.03f, 0.08f, H + 0.04f, -0.33f, D + 0.02f, lona) { i, forma ->
             clipPath(forma) {
+                // Los pliegues que caen desde las esquinas de arriba y los dobleces de la tela, en sombra y con su filo.
                 val az = Azar(Semilla.de("deco", "funda", i))
-                repeat(7) { val x = az.entre(0.05f, L); val pl = if (i == 1) f.forma(listOf(V3(-0.02f, H, az.entre(0f, D)), V3(-0.02f, 0.05f, az.entre(0f, D)), V3(-0.02f, 0.05f, az.entre(0f, D) + 0.05f))) else f.forma(listOf(V3(x, H + 0.03f, -0.32f), V3(x + az.entre(-0.1f, 0.1f), 0.05f, -0.32f), V3(x + 0.06f, 0.05f, -0.32f)))
-                    drawPath(pl, C.SOMBRA.copy(alpha = 0.18f), blendMode = BlendMode.Multiply) }
+                repeat(9) { val t = az.entre(0.05f, 0.95f); val a = if (i == 1) f.p(-0.03f, H, D * t) else if (i == 3) f.p(L * t, H + 0.04f, -0.33f) else f.p(L * t, H + 0.04f, -0.33f)
+                    val b = if (i == 1) f.p(-0.03f, 0.08f, D * (t + az.entre(-0.15f, 0.15f))) else if (i == 3) f.p(L * (t + az.entre(-0.1f, 0.1f)), H + 0.04f, D) else f.p(L * (t + az.entre(-0.08f, 0.08f)), 0.08f, -0.33f)
+                    drawLine(C.SOMBRA.copy(alpha = 0.35f), a, b, 2.2f, blendMode = BlendMode.Multiply)
+                    drawLine(Color.White.copy(alpha = 0.1f), a + Offset(1.4f, 0f), b + Offset(1.4f, 0f), 0.6f) }
+                // El bulto del teclado, a media altura.
+                if (i == 0) drawLine(C.SOMBRA.copy(alpha = 0.4f), f.p(0f, 0.62f, -0.33f), f.p(L, 0.62f, -0.33f), 2.5f, blendMode = BlendMode.Multiply)
             }
         }
-        // El cordel de abajo y la caída de la lona, que deja ver una pata.
-        drawLine(v.c(f.w(L / 2f, 0.2f, -0.32f), lerp(C.ROBLE, C.ACERA, 0.4f), FRENTE), f.p(0f, 0.2f, -0.33f), f.p(L, 0.2f, -0.33f), 0.7f)
-        palo(v, f.w(0.03f, 0f, -0.27f), f.w(0.03f, 0.06f, -0.27f), 0.05f, C.CAOBA)
+        // El dobladillo de abajo, en ondas, el cordel y una pata que asoma.
+        val ondas = Path(); val p0 = f.p(-0.03f, 0.1f, -0.33f); ondas.moveTo(p0.x, p0.y)
+        for (k in 1..12) { val q = f.p(-0.03f + (L + 0.06f) * k / 12f, 0.08f + (if (k % 2 == 0) 0.03f else 0f), -0.33f); ondas.lineTo(q.x, q.y) }
+        drawPath(ondas, v.c(f.w(L / 2f, 0.1f, -0.33f), lerp(lona, C.LACA, 0.3f), FRENTE), style = Stroke(1f))
+        drawLine(v.c(f.w(L / 2f, 0.22f, -0.33f), lerp(C.ROBLE, C.ACERA, 0.4f), FRENTE), f.p(-0.03f, 0.24f, -0.34f), f.p(L + 0.03f, 0.24f, -0.34f), 0.8f)
+        palo(v, f.w(0.03f, 0f, -0.27f), f.w(0.03f, 0.08f, -0.27f), 0.05f, C.CAOBA)
     }
 
     /** La partitura abierta en el atril: dos páginas con sus pentagramas y sus notas, sin letras. */
