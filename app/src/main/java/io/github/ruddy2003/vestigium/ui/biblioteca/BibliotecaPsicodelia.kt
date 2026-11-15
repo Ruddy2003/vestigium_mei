@@ -1317,3 +1317,253 @@ object EstantePsicodelia : DisenoBiblioteca {
     }
 
     override fun tintaBoton(p: Pagina, oscuro: Boolean, noche: Boolean): Color = if (oscuro || p.oscura) Color(0xFF1C2600) else Color(0xFFFFF4F8)
+
+    // =================================================================
+    //  La libreta de momentos: el periódico del barrio, en la mesa de la cocina
+    // =================================================================
+
+    override val altoLibreta: Dp = 270.dp
+
+    /**
+     * La calle que se ve por la ventana, en [r]: la niebla que entra, las casas victorianas de enfrente (grises, y una pintada
+     * de turquesa) y, de noche, sus ventanas encendidas (una con la luz negra de otro departamento).
+     */
+    private fun DrawScope.calle(r: Rect, oscuro: Boolean) {
+        val u = density
+        clipRect(r.left, r.top, r.right, r.bottom) {
+            if (oscuro) drawRect(Brush.verticalGradient(listOf(Color(0xFF1A1230), Color(0xFF2A1F44)), r.top, r.bottom), r.topLeft, r.size)
+            else drawRect(Brush.verticalGradient(listOf(NIEBLA, Color(0xFFF3E6D6), TrazosPsicodelia.CIELO_TARDE), r.top, r.bottom), r.topLeft, r.size)
+            val base = r.bottom + r.height * 0.06f
+            val ancho = r.width * 0.36f
+            val colores = listOf(TrazosPsicodelia.CASA_GRIS, TrazosPsicodelia.CASA_TURQUESA, mezcla(TrazosPsicodelia.CASA_GRIS, TrazosPsicodelia.CASA_BLANCA, 0.4f))
+            colores.forEachIndexed { i, col ->
+                val cx = r.left + ancho * (0.42f + i * 0.98f)
+                val ventanas = if (oscuro) (if (i == 1) FVIOLETA else Color(0xFFFFC46A)) else Color(0xFF5E6B78)
+                val madera = if (oscuro) mezcla(col, SALA, 0.78f) else col
+                with(TrazosPsicodelia) { casaVictoriana(Offset(cx, base), ancho * 0.94f, r.height * 0.86f, madera, if (oscuro) mezcla(TrazosPsicodelia.CASA_BLANCA, SALA, 0.7f) else TrazosPsicodelia.CASA_BLANCA, ventanas) }
+                if (oscuro && i == 1) resplandor(Offset(cx - ancho * 0.1f, base - r.height * 0.45f), ancho * 0.6f, FVIOLETA, 0.6f)
+            }
+            // La niebla que entra en bancos.
+            if (!oscuro) {
+                for (k in 0 until 4) {
+                    val y = r.top + r.height * (0.25f + 0.2f * k)
+                    drawOval(Color.White.copy(alpha = 0.32f), Offset(r.left - r.width * 0.2f + k * r.width * 0.15f, y - 8 * u), Size(r.width * 0.9f, 16 * u))
+                }
+                drawRect(NIEBLA.copy(alpha = 0.25f), r.topLeft, r.size)
+            } else for (k in 0 until 3) drawOval(FVIOLETA.copy(alpha = 0.06f), Offset(r.left + k * r.width * 0.3f - r.width * 0.1f, r.top + r.height * (0.4f + 0.15f * k)), Size(r.width * 0.7f, 14 * u))
+        }
+    }
+
+    /**
+     * La portada del periódico del barrio, doblada a la mitad, en [r]: el nombre inventado, «La Niebla», en letras infladas de
+     * tinta de arcoíris (la del tintero partido); las orejas de la cabecera (una flor y el número de la edición); la línea de
+     * la fecha con el nombre y la cuenta de la libreta; abajo, el grabado grande de la flor en su mandala y las columnas.
+     */
+    private fun DrawScope.primeraPlana(r: Rect, e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val papelP = if (oscuro) Color(0xFF3A3152) else PAPEL
+        val tintaP = if (oscuro) Color(0xFFD9CFEA) else TINTA
+        drawRect(papelP, r.topLeft, r.size)
+        // El papel barato: fibras y el amarillo de las orillas.
+        for (k in 0 until 30) drawLine(tintaP.copy(alpha = 0.05f), Offset(r.left + r.width * azar(e.semilla, k), r.top + r.height * azar(e.semilla, k + 40)),
+            Offset(r.left + r.width * azar(e.semilla, k) + 3 * u, r.top + r.height * azar(e.semilla, k + 40) + 1 * u), 0.5f * u)
+        drawRect(Brush.radialGradient(0f to Color.Transparent, 0.7f to Color.Transparent, 1f to Color(0xFFB89A62).copy(alpha = if (oscuro) 0.1f else 0.25f),
+            center = r.center, radius = r.width * 0.75f), r.topLeft, r.size)
+        val m = r.deflate(6 * u)
+        // La cabecera, en tinta de arcoíris.
+        val cab = Rect(m.left + m.width * 0.16f, m.top, m.right - m.width * 0.16f, m.top + m.height * 0.3f)
+        arcoiris(medidor, "La Niebla", cab, TITULO, 30f, if (oscuro) ARCOIRIS_FLUOR else ARCOIRIS, minimo = 10f)
+        if (oscuro) resplandor(cab.center, cab.width * 0.5f, FMAGENTA, 0.4f)
+        // Las orejas: la flor a la izquierda y el número de la edición a la derecha.
+        val oreja = m.height * 0.24f
+        with(TrazosPsicodelia) { flor(Offset(m.left + oreja * 0.55f, cab.center.y), oreja * 0.42f, fluor(MAGENTA, oscuro), fluor(VERDE, oscuro), 6, 0.4f) }
+        val or2 = Rect(m.right - m.width * 0.15f, cab.top + 2 * u, m.right, cab.bottom - 2 * u)
+        drawRect(tintaP.copy(alpha = 0.6f), or2.topLeft, or2.size, style = Stroke(0.6f * u))
+        textoEn(medidor, "Nº", Rect(or2.left, or2.top, or2.right, or2.center.y), ROTULO, tintaP, 7f, minimo = 4f)
+        textoEn(medidor, Psicodelia.numero(e.hojas.coerceAtLeast(1)), Rect(or2.left, or2.center.y - 1 * u, or2.right, or2.bottom), ROTULO, tintaP, 8f, minimo = 4f)
+        // La línea de la fecha, entre dos rayas: el nombre y la cuenta.
+        val yl = cab.bottom + 2 * u
+        drawLine(tintaP, Offset(m.left, yl), Offset(m.right, yl), 0.9f * u)
+        textoEn(medidor, e.nombre + " · " + e.cuenta, Rect(m.left, yl + 1 * u, m.right, yl + 11 * u), ROTULO, tintaP, 7.5f, minimo = 4.5f)
+        drawLine(tintaP, Offset(m.left, yl + 12 * u), Offset(m.right, yl + 12 * u), 0.5f * u)
+        // El grabado de la flor en su mandala, con los rayos en arcoíris, a la izquierda.
+        val cuerpo = Rect(m.left, yl + 15 * u, m.right, m.bottom)
+        val mc = Offset(cuerpo.left + cuerpo.width * 0.27f, cuerpo.top + cuerpo.height * 0.62f)
+        val mr = cuerpo.height * 0.56f
+        clipRect(cuerpo.left, cuerpo.top, cuerpo.right, cuerpo.bottom) {
+            for (k in 0 until 24) {
+                val a = 2 * PI * k / 24
+                drawLine(colorArcoiris(k / 23f, oscuro).copy(alpha = 0.75f), mc, Offset(mc.x + (mr * cos(a)).toFloat(), mc.y + (mr * sin(a)).toFloat()), 1.4f * u)
+            }
+            drawCircle(papelP, mr * 0.62f, mc)
+            drawCircle(tintaP, mr * 0.62f, mc, style = Stroke(0.8f * u))
+            with(TrazosPsicodelia) { flor(mc, mr * 0.5f, fluor(MAGENTA, oscuro), fluor(VERDE, oscuro), 8, 0.5f) }
+        }
+        // Las columnas de texto, a la derecha, con su titular.
+        val cols = Rect(cuerpo.left + cuerpo.width * 0.56f, cuerpo.top + 2 * u, cuerpo.right, cuerpo.bottom)
+        drawRect(tintaP.copy(alpha = 0.85f), Offset(cols.left, cols.top), Size(cols.width * 0.9f, 3 * u))
+        drawRect(tintaP.copy(alpha = 0.85f), Offset(cols.left, cols.top + 5 * u), Size(cols.width * 0.6f, 3 * u))
+        val ancho = (cols.width - 4 * u) / 2f
+        for (j in 0 until 2) {
+            var y = cols.top + 12 * u; var k = 0
+            while (y < cols.bottom - 2 * u) {
+                val largo = ancho * (if (k % 6 == 5) 0.5f else 0.92f)
+                drawLine(tintaP.copy(alpha = 0.35f), Offset(cols.left + j * (ancho + 4 * u), y), Offset(cols.left + j * (ancho + 4 * u) + largo, y), 1.1f * u)
+                y += 3 * u; k++
+            }
+        }
+        drawLine(tintaP.copy(alpha = 0.4f), Offset(cols.left - 3 * u, cuerpo.top), Offset(cols.left - 3 * u, cuerpo.bottom), 0.5f * u)
+    }
+
+    /**
+     * El periódico alternativo del barrio, «La Niebla» (nombre inventado: se vendía en la calle), sobre la mesa de pino de la
+     * cocina del departamento: detrás, la ventana del mirador con la niebla y las casas de enfrente, la cortina teñida con
+     * nudos y el tubo de luz negra encima; en la mesa, la taza de café y el lápiz. El periódico está doblado a la mitad y debajo
+     * asoman las ediciones anteriores (engorda con las hojas). Al abrirse, la plana gira sobre su lomo y deja ver las columnas
+     * de adentro. Bajo la luz negra, la tinta de arcoíris brilla.
+     */
+    override fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        fun c(x: Color) = t(x, oscuro, false)
+        val a = e.abierto.coerceIn(0f, 1f)
+        val mesaY = h * 0.42f
+        // La pared de la cocina.
+        drawRect(Brush.verticalGradient(listOf(c(PARED), c(mezcla(PARED, PARED_SOMBRA, 0.5f))), 0f, mesaY), Offset.Zero, Size(w, mesaY))
+        // La ventana del mirador, con la calle y su marco de madera pintada.
+        val ven = Rect(w * 0.1f, h * 0.06f, w * 0.64f, mesaY - 6 * u)
+        calle(ven, oscuro)
+        val marco = c(Color(0xFFF4EFE4))
+        drawRect(Color.Black.copy(alpha = 0.2f), Offset(ven.left, ven.top), Size(ven.width, 4 * u))
+        drawRect(marco, Offset(ven.center.x - 2 * u, ven.top), Size(4 * u, ven.height))
+        drawRect(marco, Offset(ven.left, ven.top + ven.height * 0.45f), Size(ven.width, 4 * u))
+        drawRect(marco, ven.topLeft, ven.size, style = Stroke(5 * u))
+        drawRect(Color.Black.copy(alpha = 0.18f), ven.deflate(2.5f * u).topLeft, ven.deflate(2.5f * u).size, style = Stroke(0.8f * u))
+        // El alféizar.
+        drawRect(c(Color(0xFFE9E1D2)), Offset(ven.left - 6 * u, ven.bottom), Size(ven.width + 12 * u, 5 * u))
+        drawRect(Color.Black.copy(alpha = 0.2f), Offset(ven.left - 6 * u, ven.bottom + 5 * u), Size(ven.width + 12 * u, 1.5f * u))
+        // La cortina teñida con nudos, recogida a la derecha de la ventana.
+        val cort = Path().apply {
+            moveTo(ven.right - 10 * u, ven.top - 4 * u); lineTo(ven.right + 22 * u, ven.top - 4 * u)
+            cubicTo(ven.right + 18 * u, ven.top + ven.height * 0.4f, ven.right + 26 * u, ven.top + ven.height * 0.7f, ven.right + 20 * u, mesaY - 2 * u)
+            lineTo(ven.right + 2 * u, mesaY - 2 * u)
+            cubicTo(ven.right + 8 * u, ven.top + ven.height * 0.6f, ven.right - 8 * u, ven.top + ven.height * 0.4f, ven.right - 10 * u, ven.top - 4 * u); close()
+        }
+        clipPath(cort) {
+            val cc = Offset(ven.right + 8 * u, ven.top + ven.height * 0.45f)
+            drawRect(c(Color(0xFF7B3FD1)), Offset(ven.right - 12 * u, ven.top - 6 * u), Size(40 * u, mesaY))
+            for (k in 6 downTo 1) drawCircle(c(listOf(Color(0xFFFF7A1A), Color(0xFFFFD23F), Color(0xFFE0218A), Color(0xFF7B3FD1), Color(0xFF2F6BFF), Color(0xFFFFD23F))[k % 6]).copy(alpha = 0.85f),
+                k * 7 * u, cc, style = Stroke(3.5f * u))
+            for (k in 0 until 6) drawLine(Color.Black.copy(alpha = 0.12f), Offset(ven.right - 6 * u + k * 5 * u, ven.top), Offset(ven.right - 2 * u + k * 5 * u, mesaY), 1.6f * u)
+        }
+        // El tubo de luz negra sobre la ventana.
+        val tubo = Rect(ven.left + ven.width * 0.15f, ven.top - 9 * u, ven.right - ven.width * 0.15f, ven.top - 5 * u)
+        drawRoundRect(if (oscuro) FVIOLETA else c(Color(0xFF3A2F64)), tubo.topLeft, tubo.size, CornerRadius(2 * u))
+        if (oscuro) resplandor(tubo.center, w * 0.4f, FVIOLETA, 0.9f)
+        // La mesa de pino, en perspectiva, con su canto.
+        val mesa = Path().apply { moveTo(w * 0.03f, mesaY); lineTo(w * 0.97f, mesaY); lineTo(w, h * 0.9f); lineTo(0f, h * 0.9f); close() }
+        clipPath(mesa) {
+            pino(Rect(0f, mesaY, w, h * 0.9f), c(PINO), 501, nudos = 2)
+            drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.12f), Color.Transparent, Color.White.copy(alpha = if (oscuro) 0.02f else 0.1f)), mesaY, h * 0.9f), Offset(0f, mesaY), Size(w, h * 0.9f - mesaY))
+            // La luz fría de la ventana sobre la mesa.
+            if (!oscuro) drawPath(Path().apply { moveTo(ven.left, mesaY); lineTo(ven.right, mesaY); lineTo(ven.right + w * 0.1f, h * 0.9f); lineTo(ven.left - w * 0.02f, h * 0.9f); close() }, Color.White.copy(alpha = 0.12f))
+        }
+        val canto = Rect(0f, h * 0.9f, w, h)
+        pino(canto, c(PINO_OSC), 503, nudos = 0)
+        drawRect(Brush.verticalGradient(listOf(Color.White.copy(alpha = if (oscuro) 0.04f else 0.2f), Color.Transparent, Color.Black.copy(alpha = 0.35f)), canto.top, canto.bottom), canto.topLeft, canto.size)
+        // La taza de café y el lápiz.
+        val tc = Offset(w * 0.86f, h * 0.6f)
+        drawOval(Color.Black.copy(alpha = 0.25f), Offset(tc.x - 15 * u, tc.y - 4 * u), Size(32 * u, 16 * u))
+        drawOval(c(Color(0xFFE88A3A)), Offset(tc.x - 14 * u, tc.y - 10 * u), Size(28 * u, 18 * u))
+        drawOval(c(Color(0xFF4A2A18)), Offset(tc.x - 11 * u, tc.y - 8 * u), Size(22 * u, 13 * u))
+        drawOval(Color.White.copy(alpha = 0.18f), Offset(tc.x - 6 * u, tc.y - 6 * u), Size(8 * u, 3 * u))
+        drawArc(c(Color(0xFFE88A3A)), -60f, 120f, false, Offset(tc.x + 9 * u, tc.y - 7 * u), Size(10 * u, 10 * u), style = Stroke(3 * u))
+        rotate(-18f, Offset(w * 0.1f, h * 0.8f)) {
+            drawLine(Color.Black.copy(alpha = 0.25f), Offset(w * 0.04f, h * 0.82f), Offset(w * 0.2f, h * 0.82f), 4 * u, StrokeCap.Round)
+            drawLine(c(Color(0xFFF2C14E)), Offset(w * 0.04f, h * 0.81f), Offset(w * 0.18f, h * 0.81f), 3.4f * u)
+            drawPath(Path().apply { moveTo(w * 0.18f, h * 0.81f - 1.7f * u); lineTo(w * 0.205f, h * 0.81f); lineTo(w * 0.18f, h * 0.81f + 1.7f * u); close() }, c(Color(0xFFE2C79A)))
+        }
+        // El periódico.
+        val cw = minOf(w * 0.56f, (h * 0.9f - mesaY) * 1.36f)
+        val ch = cw / 1.36f
+        val x0 = w * 0.47f - cw / 2
+        val y0 = mesaY + (h * 0.9f - mesaY - ch) * 0.45f
+        val grueso = (1.5f + minOf(e.hojas, 50) * 0.11f) * u
+        val cara = Rect(x0, y0, x0 + cw, y0 + ch)
+        rotate(-2f, cara.center) {
+            drawRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.25f), Offset(cara.left + 4 * u, cara.top + grueso + 4 * u), cara.size)
+            // Las ediciones de antes, apiladas debajo.
+            val pila = Rect(cara.left + 1.5f * u, cara.top + 1.5f * u, cara.right + grueso * 0.6f, cara.bottom + grueso)
+            drawRect(if (oscuro) Color(0xFF2E2742) else mezcla(PAPEL, Color(0xFFC9B48A), 0.35f), pila.topLeft, pila.size)
+            var yy = cara.bottom + 1 * u
+            while (yy < pila.bottom) { drawLine(Color.Black.copy(alpha = 0.14f), Offset(pila.left, yy), Offset(pila.right, yy), 0.4f * u); yy += 1.2f * u }
+            // Debajo de la plana, las columnas de adentro.
+            val girar = ((a - 0.15f) / 0.85f).coerceIn(0f, 1f)
+            if (girar > 0.01f) {
+                drawRect(if (oscuro) Color(0xFF3A3152) else PAPEL, cara.topLeft, cara.size)
+                val tintaI = (if (oscuro) Color(0xFFD9CFEA) else TINTA)
+                val cols = 3
+                val anchoC = (cara.width - 20 * u) / cols
+                for (j in 0 until cols) {
+                    var y = cara.top + 14 * u; var k = 0
+                    while (y < cara.bottom - 8 * u) { drawLine(tintaI.copy(alpha = 0.3f), Offset(cara.left + 8 * u + j * (anchoC + 2 * u), y), Offset(cara.left + 8 * u + j * (anchoC + 2 * u) + anchoC * (if (k % 7 == 6) 0.5f else 0.92f), y), 1f * u); y += 3 * u; k++ }
+                }
+                drawRect(papel(oscuro, false), Rect(cara.left + 8 * u, cara.top + 4 * u, cara.right - 8 * u, cara.top + 13 * u).topLeft, Size(cara.width - 16 * u, 9 * u))
+                textoEn(medidor, e.cuenta, Rect(cara.left + 8 * u, cara.top + 3 * u, cara.right - 8 * u, cara.top + 13 * u), TEXTO, tintaI, 8.5f, minimo = 5f)
+                drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.25f), Color.Transparent), cara.left, cara.left + 14 * u), cara.topLeft, Size(14 * u, cara.height))
+            }
+            val ang = girar * 1.5f
+            val co = cos(ang); val si = sin(ang)
+            afin(co, -si * 0.1f, 0f, 1f, cara.left - cara.left * co, cara.left * si * 0.1f) {
+                primeraPlana(cara, e, medidor, oscuro)
+                drawRect(Color.Black.copy(alpha = 0.2f), cara.topLeft, cara.size, style = Stroke(0.6f * u))
+                if (girar > 0f) drawRect(Color.Black.copy(alpha = 0.45f * (1f - co)), cara.topLeft, cara.size)
+            }
+            // El doblez del medio, abajo.
+            if (girar < 0.02f) drawLine(Color.White.copy(alpha = if (oscuro) 0.08f else 0.4f), Offset(cara.left, cara.bottom - 0.6f * u), Offset(cara.right, cara.bottom - 0.6f * u), 1f * u)
+        }
+        // La luz: de día, la fría de la niebla que entra por la ventana; de noche, la luz negra del tubo.
+        if (oscuro) {
+            drawRect(Brush.radialGradient(0f to FVIOLETA.copy(alpha = 0.06f), 0.35f to Color.Transparent, 1f to SALA.copy(alpha = 0.55f), center = tubo.center, radius = w * 1.05f), Offset.Zero, Size(w, h))
+        } else drawRect(Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.12f), Color.Transparent, Color.Black.copy(alpha = 0.08f)), 0f, w), Offset.Zero, Size(w, h))
+    }
+
+    /**
+     * La pestaña de un día: un sencillo de vinilo con su etiqueta del color del ánimo (de papel crema, si no lo hay), con el
+     * número del día en letras infladas y, debajo, la letra de la semana.
+     */
+    override fun DrawScope.pestana(e: EstadoPestana, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val c = Offset(w / 2, 22 * u)
+        val r = minOf(w / 2 - 2 * u, 20 * u)
+        rotate(-4f + 8f * azar(e.semilla, 1), c) {
+            drawCircle(Color.Black.copy(alpha = 0.3f), r, c + Offset(1 * u, 1.6f * u))
+            drawCircle(VINILO, r, c)
+            var k = r * 0.95f
+            while (k > r * 0.62f) { drawCircle(Color.White.copy(alpha = 0.07f), k, c, style = Stroke(0.4f * u)); k -= 1.3f * u }
+            drawArc(Color.White.copy(alpha = 0.2f), 200f + 40f * azar(e.semilla, 2), 34f, true, Offset(c.x - r * 0.95f, c.y - r * 0.95f), Size(r * 1.9f, r * 1.9f))
+            val etiqueta = e.tono ?: if (oscuro) Color(0xFF3A2F52) else PAPEL_CLARO
+            if (oscuro && e.tono != null) drawCircle(etiqueta.copy(alpha = 0.3f), r * 0.72f, c)
+            drawCircle(etiqueta, r * 0.6f, c)
+            drawCircle(Color.Black.copy(alpha = 0.15f), r * 0.6f, c, style = Stroke(0.5f * u))
+            val claro = (etiqueta.red * 0.299f + etiqueta.green * 0.587f + etiqueta.blue * 0.114f) > 0.55f
+            textoEn(medidor, e.dia, Rect(c.x - r * 0.55f, c.y - r * 0.45f, c.x + r * 0.55f, c.y + r * 0.45f), TITULO, if (claro) TINTA else PAPEL_CLARO, 14f, minimo = 6f)
+        }
+        letrero(medidor, e.semana, Rect(0f, c.y + r + 1.5f * u, w, h - 1 * u), ROTULO, tenue(oscuro), 8.5f, espaciado = 0.4f, minimo = 5f)
+    }
+
+    /** El rótulo de un mes: el nombre del álbum en letras infladas, entre dos ondas de tinta de arcoíris que acaban en una flor. */
+    override fun DrawScope.rotuloMes(texto: String, medidor: TextMeasurer, oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        val tam = 15f
+        val largo = (anchoTx(medidor, texto, TITULO, tam) + 18 * u).coerceAtMost(w - 70 * u)
+        listOf(-1f, 1f).forEach { s ->
+            val desde = Offset(w / 2 + s * (largo / 2 + 4 * u), h / 2)
+            val hasta = Offset(w / 2 + s * (w / 2 - 12 * u), h / 2)
+            ondaArcoiris(if (s < 0) hasta else desde, if (s < 0) desde else hasta, 2.5f, 2.2f * u, 1.6f * u, oscuro, 0.9f)
+            with(TrazosPsicodelia) { flor(hasta, 4.5f * u, fluor(if (s < 0) MAGENTA else NARANJA, oscuro), fluor(if (s < 0) VERDE else AZUL, oscuro), 6, 0.3f) }
+        }
+        letrero(medidor, texto, Rect(w / 2 - largo / 2, 0f, w / 2 + largo / 2, h), TITULO, tinta(oscuro), tam, luce = oscuro, minimo = 8f)
+    }
