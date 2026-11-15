@@ -165,8 +165,8 @@ internal object RetiradaLejos {
     // ---------------------------------------------------------------- El Berezina
 
     /** La orilla de acá y la de allá del Berezina, en metros de profundidad. */
-    const val ORILLA_ACA = 34f
-    const val ORILLA_ALLA = 60f
+    const val ORILLA_ACA = 21f
+    const val ORILLA_ALLA = 40f
 
     /** El río del Berezina, como forma. */
     fun rio(): Path {
@@ -184,13 +184,13 @@ internal object RetiradaLejos {
         if (v.tramo != Tramo.BEREZINA) return
         val p = v.p; val l = v.l; val forma = rio(); val az = Azar(Semilla.de("napoleon", "berezina", "hielo"))
         val y0 = w(0f, ORILLA_ALLA).y; val y1 = w(0f, ORILLA_ACA).y
-        drawPath(forma, Brush.verticalGradient(listOf(lerp(p.medio(lerp(C.AZUL, C.CENIZA, 0.55f), 0.7f), l.bajo, 0.25f), p.medio(lerp(C.AZUL, C.CENIZA, 0.65f), 0.4f)), y0, y1))
+        drawPath(forma, Brush.verticalGradient(listOf(lerp(p.medio(lerp(C.AZUL, C.CENIZA, 0.6f), 0.35f), l.bajo, 0.2f), p.medio(lerp(C.AZUL, C.CENIZA, 0.72f), 0.15f)), y0, y1))
         clipPath(forma) {
             // El cielo reflejado en el agua, y las placas de hielo, más grandes y más separadas cerca.
             drawRect(Brush.verticalGradient(listOf(l.bajo.copy(alpha = 0.35f), Color.Transparent), y0, y1), Offset(-10f, y0), Size(ANCHO + 20f, y1 - y0))
-            repeat(60) {
+            repeat(34) {
                 val z = az.entre(ORILLA_ACA, ORILLA_ALLA); val q = w(az.entre(-30f, 40f), z); val kk = k(z)
-                val placa = TrazosValle.borron(q, az.entre(0.8f, 2.6f) * kk, az.entre(0.12f, 0.3f) * kk, az, 7, 0.3f, 0.6f)
+                val placa = TrazosValle.borron(q, az.entre(0.6f, 1.8f) * kk, az.entre(0.1f, 0.22f) * kk, az, 7, 0.3f, 0.6f)
                 drawPath(placa, p.arriba(C.NIEVE, (z / 140f)))
                 drawPath(placa, v.a.plano(C.NIEVE_SOMBRA, q, 0f, z / 140f), style = Stroke(0.4f))
             }
@@ -199,27 +199,30 @@ internal object RetiradaLejos {
         }
         // Los dos puentes de caballetes, del camino a la otra orilla, con sus patas en el agua.
         for (x0 in listOf(-1.7f, 3.6f)) {
-            val tablero = ArrayList<Offset>()
-            var z = ORILLA_ACA - 1f
-            while (z <= ORILLA_ALLA + 1f) {
-                val x = x0 + RUMBO * z; val kk = k(z)
-                val pIzq = w(x - 1.5f, z); val pDer = w(x + 1.5f, z)
-                for (pp in listOf(pIzq, pDer)) drawLine(v.a.plano(C.MADERA_OSC, pp, 0f, z / 140f), pp + Offset(0f, 0.2f * kk), pp + Offset(0f, -1.1f * kk), (0.12f * kk).coerceIn(0.3f, 2f))
-                drawLine(v.a.plano(C.MADERA_OSC, pIzq, 0f, z / 140f), pIzq + Offset(0f, -1.1f * kk), pDer + Offset(0f, -1.1f * kk), (0.1f * kk).coerceIn(0.3f, 2f))
-                tablero += w(x, z) + Offset(0f, -1.15f * kk)
-                z += 3f
+            // De lejos a cerca: los caballetes (patas en A metidas en el agua) y el tablero de tablas encima, que se va al fondo.
+            val zs = generateSequence(ORILLA_ALLA + 0.5f) { it - 2.6f }.takeWhile { it >= ORILLA_ACA - 1.5f }.toList()
+            fun borde(dx: Float, z: Float) = w(x0 + RUMBO * z + dx, z) + Offset(0f, -1.0f * k(z))
+            for (z in zs) {
+                val kk = k(z); val x = x0 + RUMBO * z; val lejos = z / 140f
+                for (dx in listOf(-1.3f, 1.3f)) {
+                    val pata = w(x + dx, z); val pata2 = w(x + dx * 0.6f, z)
+                    drawLine(v.a.plano(C.MADERA_OSC, pata, 0f, lejos), pata + Offset(0f, 0.15f * kk), borde(dx * 0.9f, z), (0.1f * kk).coerceIn(0.3f, 1.6f))
+                    drawLine(v.a.plano(C.MADERA_OSC, pata2, 0f, lejos), pata2 + Offset(0f, 0.15f * kk), borde(dx * 0.9f, z), (0.07f * kk).coerceIn(0.25f, 1.2f))
+                }
             }
-            val izq = tablero
-            drawPath(curva(izq), p.arriba(C.MADERA_GRIS, 0.5f), style = Stroke(2.2f, cap = StrokeCap.Round))
-            drawPath(curva(izq.map { it + Offset(0f, 0.8f) }), v.a.plano(C.MADERA_OSC, izq[0], 0f, 0.5f), style = Stroke(0.6f))
-            if (v.nieve > 0.3f) drawPath(curva(izq.map { it + Offset(0f, -0.7f) }), p.arriba(C.NIEVE, 0.5f), style = Stroke(0.8f, cap = StrokeCap.Round))
+            val tablero = poligono(zs.map { borde(-1.5f, it) } + zs.reversed().map { borde(1.5f, it) })
+            drawPath(tablero, p.arriba(C.MADERA_GRIS, 0.45f))
+            clipPath(tablero) { for (z in zs) for (j in 0..2) { val zz = z - j * 0.85f; drawLine(v.a.plano(C.MADERA_OSC, borde(0f, zz), 0f, 0.5f), borde(-1.5f, zz), borde(1.5f, zz), 0.35f) } }
+            // El canto del tablero, en sombra, y la nieve pisada encima.
+            drawPath(curva(zs.map { borde(1.5f, it) + Offset(0f, 0.12f * k(it)) }), v.a.plano(C.MADERA_OSC, borde(1.5f, zs.last()), 0f, 0.5f), style = Stroke(1.1f))
+            if (v.nieve > 0.3f) drawPath(curva(zs.map { borde(0f, it) }), p.arriba(C.NIEVE_SUCIA, 0.45f), style = Stroke(1.2f, cap = StrokeCap.Round))
         }
         // Las fogatas de la orilla de acá: muchas, de los que esperan.
         for ((i, q) in fogatas().withIndex()) { val s = PiezasNapoleon.sitio(MIRADA, q, i * 0.7f); hoguera(s, v.en(q), if (EscenaNapoleon.fuegosLejos(v.m) || v.cubierto > 0.4f) 0.7f else 0.12f, v.nieve, Semilla.de("napoleon", "fogata", i), 0.45f) }
     }
 
     /** Las fogatas de la orilla de acá del Berezina. */
-    fun fogatas(): List<Offset> { val az = Azar(Semilla.de("napoleon", "fogatas")); return (0 until 9).map { val z = az.entre(26f, ORILLA_ACA - 1f); w(az.entre(-14f, 18f) + RUMBO * z, z) } }
+    fun fogatas(): List<Offset> { val az = Azar(Semilla.de("napoleon", "fogatas")); return (0 until 8).map { val z = az.entre(14f, ORILLA_ACA - 1f); w(if (az.real() < 0.5f) az.entre(-12f, -4.5f) else az.entre(1.5f, 14f), z) } }
 
     // ---------------------------------------------------------------- Lo que se mueve
 

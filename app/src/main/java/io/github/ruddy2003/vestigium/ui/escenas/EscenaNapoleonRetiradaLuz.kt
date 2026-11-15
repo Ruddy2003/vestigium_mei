@@ -175,8 +175,8 @@ internal object RetiradaLuz {
         val k = v.lumbre * (0.3f + 0.7f * v.l.noche)
         if (k > 0.02f) {
             val nieve = lerp(C.BARRO, C.NIEVE, v.nieve)
-            charcoDeLuz(f, RetiradaCerca.FUEGO + Offset(-6f, 4f), 120f * (0.55f + 0.45f * v.fuego), 34f * (0.55f + 0.45f * v.fuego), nieve, 0.85f * (0.3f + 0.7f * v.l.noche))
-            charcoDeLuz(f, RetiradaCerca.FUEGO, 46f, 14f, nieve, 0.8f * (0.4f + 0.6f * v.l.noche))
+            charcoDeLuz(f, RetiradaCerca.FUEGO + Offset(-6f, 4f), 120f * (0.55f + 0.45f * v.fuego), 34f * (0.55f + 0.45f * v.fuego), nieve, 0.7f * (0.3f + 0.7f * v.l.noche))
+            charcoDeLuz(f, RetiradaCerca.FUEGO, 50f, 15f, nieve, 0.35f * (0.4f + 0.6f * v.l.noche))
         }
     }
 
@@ -202,7 +202,7 @@ internal object RetiradaLuz {
         val k = when (v.m.ficha.clima) { Clima.NIEVE -> 0.85f; Clima.NIEBLA -> 1f; Clima.NUBES -> 0.32f; Clima.LLUVIA, Clima.TORMENTA -> 0.45f; else -> 0f } * cuanto
         if (k <= 0.01f) return
         val color = lerp(v.l.bruma, v.l.bajo, 0.35f)
-        drawRect(Brush.verticalGradient(0f to color.copy(alpha = 0f), 0.6f to color.copy(alpha = 0.7f * k), 0.85f to color.copy(alpha = k), 1f to color.copy(alpha = 0f), startY = y0, endY = y1), Offset(0f, y0), Size(ANCHO, y1 - y0))
+        drawRect(Brush.verticalGradient(0f to color.copy(alpha = 0f), 0.35f to color.copy(alpha = 0.55f * k), 0.62f to color.copy(alpha = k), 0.8f to color.copy(alpha = 0.6f * k), 1f to color.copy(alpha = 0f), startY = y0, endY = y1), Offset(0f, y0), Size(ANCHO, y1 - y0))
     }
 
     // ---------------------------------------------------------------- Lo que se mueve

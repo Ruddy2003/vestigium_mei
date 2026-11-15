@@ -120,7 +120,7 @@ internal object RetiradaNapoleon {
         val m = v.m
         with(RetiradaLejos) { cielo(v); lejos(v) }
         if (v.vivac) with(VivacNapoleon) { horizonte(v) }
-        with(RetiradaLuz) { velo(v, 0.7f, 70f, 132f) }
+        with(RetiradaLuz) { velo(v, 0.45f, -40f, 112f); velo(v, 0.8f, 74f, 136f) }
         with(RetiradaCamino) { suelo(v) }
         with(RetiradaLuz) { sombrasDelSuelo(v) }
         with(RetiradaLejos) { granja(v) }
@@ -132,7 +132,12 @@ internal object RetiradaNapoleon {
         with(RetiradaLuz) { velo(v, 0.22f, 150f, 210f); lucesDelSuelo(v) }
         with(RetiradaCerca) { primerPlano(v); marco(v) }
         with(RetiradaLuz) { noche(v) }
-        tiempoQuieto(v.l, m.ficha.clima, H, m.semilla("tiempo"))
+        // El velo del tiempo: la lluvia, de la biblioteca; la nieve y la niebla van por capas ([RetiradaLuz.velo]), para
+        // que su borde no corte el pino ni la carroza.
+        when (m.ficha.clima) {
+            Clima.LLUVIA, Clima.TORMENTA, Clima.POLVO -> tiempoQuieto(v.l, m.ficha.clima, H, m.semilla("tiempo"))
+            Clima.NIEVE, Clima.NIEBLA, Clima.DESPEJADO, Clima.NUBES, Clima.VIENTO, Clima.SIN_CLIMA -> Unit
+        }
         grano(Azar(Semilla.de("napoleon", "grano", "retirada")), 0.6f + 0.4f * v.r.dia)
     }
 

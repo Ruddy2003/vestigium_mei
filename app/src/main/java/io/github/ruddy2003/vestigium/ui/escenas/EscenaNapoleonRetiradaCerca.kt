@@ -76,7 +76,7 @@ internal object RetiradaCerca {
     private val S_ESPEJO = PiezasNapoleon.sitio(MIRADA, Offset(194f, 271f), 0.25f)
     private val S_RUEDA = PiezasNapoleon.sitio(MIRADA, Offset(74f, 292f), 0f)
     private val S_CARROZA = PiezasNapoleon.sitio(MIRADA, Offset(22f, 212f), -0.98f)
-    private val S_TIENDA = PiezasNapoleon.sitio(MIRADA, Offset(30f, 214f), -0.5f)
+    private val S_TIENDA = PiezasNapoleon.sitio(MIRADA, Offset(78f, 184f), 0.55f)
 
     /** El pino grande: su pie, cortado por el borde de la izquierda. */
     val PIE_DEL_PINO = Offset(2f, 214f)
@@ -92,7 +92,7 @@ internal object RetiradaCerca {
     private fun carrozaDe(nieve: Float) = Carroza(S_CARROZA, nieve)
 
     /** El sitio alto del gato: en el costado de arriba de la carroza, lejos de la portezuela. */
-    val MIRADOR: Offset get() = carrozaDe(0f).let { c -> c.s.p(c.t(V3(c.w, 1.62f, -0.82f))) }
+    val MIRADOR: Offset get() = carrozaDe(0f).let { c -> c.s.p(c.t(V3(c.w, 1.75f, 0.8f))).let { Offset(it.x.coerceIn(12f, 360f), it.y.coerceIn(30f, 260f)) } }
 
     /** El pie y la punta del asta del águila: apoyada en el cruce de las bayonetas del pabellón. */
     private val PIE_ASTA = Offset(330f, 271f)

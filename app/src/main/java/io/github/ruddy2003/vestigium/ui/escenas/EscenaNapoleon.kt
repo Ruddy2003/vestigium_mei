@@ -206,7 +206,7 @@ internal object EscenaNapoleon : EscenaVida {
                     else -> curvaDelAnio(md, NIEVE_DE_LA_RETIRADA)
                 }
                 when (clima) {
-                    Clima.NIEVE -> if (md < "11-06") 0.35f else maxOf(base, 0.9f)
+                    Clima.NIEVE -> if (md < "11-06") 0.35f else if (md == "11-06") base else maxOf(base, 0.9f)
                     Clima.LLUVIA, Clima.TORMENTA -> base * 0.85f
                     else -> base
                 }

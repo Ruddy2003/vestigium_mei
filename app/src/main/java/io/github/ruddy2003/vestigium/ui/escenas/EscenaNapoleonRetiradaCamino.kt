@@ -286,10 +286,10 @@ internal object RetiradaCamino {
             }
             // Los charcos del barro (sin nieve), que devuelven el cielo; helados por la mañana.
             if (nieve < 0.5f) repeat(9) {
-                val z = 3.6f * kotlin.math.exp(az.entre(0f, 2.6f)); val x = (bordeIzq(z) + bordeDer(z)) / 2f + az.entre(-1.2f, 1.2f)
+                val z = 5f * kotlin.math.exp(az.entre(0f, 2.4f)); val x = (bordeIzq(z) + bordeDer(z)) / 2f + az.entre(-1.2f, 1.2f)
                 val q = w(x, z); val kk = k(z)
-                val charco = TrazosValle.blando(q, az.entre(0.4f, 0.9f) * kk, az.entre(0.06f, 0.12f) * kk, az, 9, 0.25f)
-                drawPath(charco, Brush.verticalGradient(listOf(lerp(v.l.medio, v.l.alto, 0.4f), v.l.bajo), q.y - 0.12f * kk, q.y + 0.12f * kk))
+                val charco = TrazosValle.blando(q, az.entre(0.25f, 0.6f) * kk, az.entre(0.04f, 0.08f) * kk, az, 9, 0.25f)
+                drawPath(charco, Brush.verticalGradient(listOf(lerp(lerp(v.l.medio, v.l.alto, 0.4f), C.BARRO, 0.35f), lerp(v.l.bajo, C.BARRO, 0.3f)), q.y - 0.12f * kk, q.y + 0.12f * kk))
                 drawPath(charco, p.arriba(if (v.helada) C.NIEVE else C.BARRO, 0f).copy(alpha = if (v.helada) 0.35f else 0.2f), style = Stroke((0.03f * kk).coerceIn(0.3f, 1.5f)))
             }
             // Las rodadas: pares de surcos que se van al fondo, oscuros, con el canto de luz.
@@ -416,8 +416,10 @@ internal object RetiradaCamino {
     /** Lo que tumba sombra en el plano medio: el cañón, el armón, lo abandonado. */
     fun sombras(v: VistaNapoleon): List<RetiradaLuz.Sombra> = buildList {
         if (!v.vivac) {
-            add(RetiradaLuz.Sombra(CANON.pie, siluetaSimple(CANON, 1.9f, 1.5f)))
-            add(RetiradaLuz.Sombra(ARMON.pie, siluetaSimple(ARMON, 1.6f, 1.3f)))
+            if (v.tramo != Tramo.BEREZINA) {
+                add(RetiradaLuz.Sombra(CANON.pie, siluetaSimple(CANON, 1.9f, 1.5f)))
+                add(RetiradaLuz.Sombra(ARMON.pie, siluetaSimple(ARMON, 1.6f, 1.3f)))
+            }
             for (c in fila(v)) if (c.que != 1) add(RetiradaLuz.Sombra(c.sitio.pie, siluetaSimple(c.sitio, 1.3f, if (c.que == 3) 1.8f else 1f)))
         }
     }
@@ -446,8 +448,10 @@ internal object RetiradaCamino {
         }
         // El cañón y su armón.
         val l1 = (25f / 140f); val l0 = (20f / 140f)
-        armon(ARMON, v.en(ARMON.pie), nieve, l1)
-        canon(CANON, v.en(CANON.pie), 0.16f, nieve, l0)
+        if (v.tramo != Tramo.BEREZINA) {
+            armon(ARMON, v.en(ARMON.pie), nieve, l1)
+            canon(CANON, v.en(CANON.pie), 0.16f, nieve, l0)
+        }
         // Un carro que pasa cargado el primer día, en el camino, lejos.
         if (EscenaNapoleon.cargados(v.m)) { val s = PiezasNapoleon.sitio(MIRADA, w(-1.8f + RUMBO * 38f, 38f), 0f); carro(s, v.en(s.pie), nieve, 77L, 38f / 140f, cargado = true) }
     }

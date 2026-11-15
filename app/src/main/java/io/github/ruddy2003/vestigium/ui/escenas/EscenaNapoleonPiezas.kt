@@ -1224,9 +1224,9 @@ internal object PiezasNapoleon {
             drawPath(curva(listOf(desde + (medio - desde) * 0.5f, medio, medio + (punta - medio) * 0.7f)), a.plano(C.PINO, medio, sg, lejos, 0.7f), style = Stroke((grueso * 0.14f).coerceIn(0.3f, 1.6f), cap = StrokeCap.Round))
         }
         // La nieve posada encima, siguiendo el lomo; más gruesa en medio, y su canto de abajo azul.
-        if (nieve > 0.05f && az.real() > 0.22f) {
-            val g = grueso * (0.1f + 0.24f * nieve)
-            val p0 = desde + (medio - desde) * 0.35f; val p1 = medio; val p2 = medio + (punta - medio) * az.entre(0.6f, 0.9f)
+        if (nieve > 0.05f && az.real() > 0.3f) {
+            val g = grueso * (0.06f + 0.24f * nieve) * az.entre(0.5f, 1.2f)
+            val p0 = desde + (medio - desde) * az.entre(0.2f, 0.7f); val p1 = medio + (punta - medio) * az.entre(-0.2f, 0.25f); val p2 = medio + (punta - medio) * az.entre(0.4f, 0.95f)
             val sube = Offset(0f, -g)
             val capa = Path().apply {
                 moveTo(p0); cubicTo(p0 + sube * 0.8f, p1 + sube * 1.1f + Offset(-sg * largo * 0.1f, 0f), p1 + sube); cubicTo(p1 + sube * 0.9f + Offset(sg * largo * 0.15f, 0f), p2 + sube * 0.4f, p2)
