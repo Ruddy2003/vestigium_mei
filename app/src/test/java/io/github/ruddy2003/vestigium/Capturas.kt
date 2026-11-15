@@ -3111,4 +3111,33 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("hospital", "2028-02-15", listOf(13.0)),                   // el hospital de Prusia, provisional: sin la compañía, la ciudad nevada (decisión 21: tendrá su cuadro)
         Triple("pueblo", "2029-08-10", listOf(13.0)),                     // el pueblo de Borgoña, provisional: la parra de su puerta y las viñas (decisión 21: tendrá su cuadro)
     ),
+    // Lou (Art déco, tanda S15): el sótano del club de Sully, desde el piano hacia la escalera de la calle, con las mesas según el público.
+    "pianista" to listOf(
+        Triple("club", "2030-06-05", HORAS_CUADRO),                       // un día de público alto: cerrado por la mañana, el sol en la pista a mediodía y, de noche, a tres luces
+        Triple("ensayo", "2030-06-05", listOf(15.5)),                     // el ensayo: solo la lámpara verde del piano, con su charco en la partitura
+        Triple("madrugada", "2030-06-05", listOf(2.0)),                   // la madrugada con el club lleno: el humo espeso y los sombreros
+        Triple("publico_bajo", "2030-12-15", listOf(23.0)),               // después del crac: pocas mesas puestas y sillas patas arriba
+        Triple("nochevieja", "2027-12-31", listOf(23.0)),                 // la fiesta: serpentinas, globos y gorros de papel
+        Triple("boda", "2031-09-14", listOf(22.0)),                       // la boda: farolillos y flores blancas (el club nuevo)
+        Triple("luto", "2027-08-24", listOf(23.0)),                       // muere Valentino: el crespón en el piano y las lámparas a media luz
+        Triple("nevada", "2031-01-20", listOf(13.0)),                     // la nevada: nieve contra las ventanas y abrigos nevados
+        Triple("lluvia", "2030-10-01", listOf(13.0, 23.0)),               // la lluvia: agua en los cristales y el neón reflejado en la acera
+        Triple("gira", "2029-07-10", listOf(13.0)),                       // la gira, provisional: el club cerrado con el piano bajo su funda
+        Triple("sin_club", "2031-03-10", listOf(22.0)),                   // sin club, provisional: el club cerrado de noche
+        Triple("club_nuevo", "2031-06-10", listOf(23.0)),                 // el club nuevo, más pequeño: la pared jade y cuatro mesas
+    ),
+    // Liudmila (Soviético, tanda S15): la cocina, con su ventana al patio; la cocina es la base y lo de fuera cambia con las estaciones y la mudanza.
+    "obrera_moscu" to listOf(
+        Triple("invierno", "2027-02-19", HORAS_CUADRO),                   // un día de invierno despejado: la nieve, la escarcha de la mañana, la mancha de sol y, de noche, la lámpara contra la nieve
+        Triple("verano", "2027-07-07", HORAS_CUADRO),                     // un día de verano: los árboles con hojas, la ventana abierta y la luz verde
+        Triple("ventanas", "2028-01-10", listOf(17.5)),                   // las 17:30 de invierno: anochece y se encienden las ventanas de enfrente
+        Triple("anio_nuevo", "2028-01-01", listOf(21.0)),                 // Año Nuevo: las mandarinas, el champán y la rama de abeto
+        Triple("desfile", "2027-05-01", listOf(13.0)),                    // el 1 de mayo: banderas en las farolas y en los balcones, y la pancarta sin letras
+        Triple("escarcha", "2028-01-16", listOf(7.0)),                    // el frío: las flores de escarcha en el cristal
+        Triple("nevando", "2027-02-10", listOf(13.0)),                    // nevando: la claridad blanca y la lámpara encendida a mediodía
+        Triple("pelusa", "2027-06-17", listOf(13.0)),                     // la pelusa de los álamos de junio
+        Triple("mudanza", "2029-06-25", listOf(13.0)),                    // la mudanza: las cajas, la bombilla sin pantalla y los bloques nuevos por la ventana
+        Triple("casa_nueva", "2030-01-20", listOf(21.0)),                 // la casa nueva de noche: el noveno piso y la ciudad encendida
+        Triple("sanatorio", "2028-07-15", listOf(13.0)),                  // el sanatorio, provisional: la cocina sin ella, con el visillo corrido
+    ),
 )

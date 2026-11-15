@@ -210,7 +210,8 @@ internal object CocinaUrss {
     }
 
     fun estorbos(m: Momento): List<Float> = buildList {
-        add(CosasUrss.TABURETE.x); add(CosasUrss.CUBO.x); add(CosasUrss.CHANCLOS.x)
+        // Los chanclos, junto a la puerta, quedan fuera del suelo del gato (x > 362): no le estorban y no se cuentan.
+        add(CosasUrss.TABURETE.x); add(CosasUrss.CUBO.x)
         if (R.cajas(m) > 0) add(CosasUrss.CAJAS_SUELO.x)
     }
 

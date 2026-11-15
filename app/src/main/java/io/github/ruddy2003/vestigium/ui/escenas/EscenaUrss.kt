@@ -537,8 +537,9 @@ internal object EscenaUrss : EscenaVida {
      * **[Aproximación]**, la misma que aprobó el autor en la capilla: la ventana da al mismo cielo que pinta `Luces`, y la
      * mancha cae como si la ventana mirara hacia el sol. Por la mañana el sol está a la derecha y bajo: la mancha se
      * tiende larga sobre la mesa y se corre a la izquierda; a mediodía cae corta, con toda la cruz del marco, junto a la
-     * ventana; por la tarde, a la derecha, hacia la puerta. La altura es la de las luces de siempre, rebajada en
-     * invierno solo a la mitad de lo que baja fuera, para que la mancha caiga en la cocina y no detrás de quien mira.
+     * ventana; por la tarde, a la derecha, hacia la puerta. La altura es la de las luces de siempre; dentro, el sol de
+     * invierno baja muy poco (un 12 % de lo que baja fuera, [alturaDelSol]), para que la mancha caiga en la cocina y no
+     * detrás de quien mira.
      */
     internal fun solQueEntra(m: Momento): SolDeVentana? {
         val l = m.luces(); val r = Rayo(l)

@@ -1656,8 +1656,8 @@ internal object PiezasFueraUrss {
     }
 
     /**
-     * La fábrica de tejidos, lejos: las naves de tejado en dientes de sierra, la chimenea de ladrillo con su humo, y en la
-     * fachada el cartel del plan: un panel rojo con su raya que sube con lo cumplido ([plan]), sin letras. De noche, un
+     * La fábrica de tejidos, lejos: las naves de tejado en dientes de sierra, la chimenea de ladrillo con su humo, y de pie
+     * sobre la nave, el cartel del plan: un panel rojo con su raya que sube con lo cumplido ([plan]), sin letras. De noche, un
      * foco lo alumbra.
      */
     fun DrawScope.fabrica(ext: Luces, p: Pincel, base: Offset, ancho: Float, lejos: Float, plan: Float, humo: Boolean, az: Azar) {
