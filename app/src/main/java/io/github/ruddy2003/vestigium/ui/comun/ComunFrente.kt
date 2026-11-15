@@ -903,16 +903,17 @@ object ComunFrente : DisenoComun {
             var x = 86 * u; var k = 0
             while (x <= w - 38 * u && k < 80) { drawLine(fino, Offset(x, y + 2 * u), Offset(x, y + (if (k % 4 == 0) -3f else -0.5f) * u), 0.7f * u); x += maxOf(8 * u, 1f); k++ }
         }
-        // El tablero de clavijas del canto izquierdo, con el cable de conexión entre dos.
+        // El tablero de clavijas del canto izquierdo, con el cable de conexión entre dos; pegado al canto, para no meterse
+        // debajo del texto de la hoja.
         val clavijas = ArrayList<Offset>()
         var yc = 56 * u
-        while (yc < h - 60 * u && clavijas.size < 24) { clavijas.add(Offset(8 * u, yc)); yc += maxOf(30 * u, 1f) }
-        clavijas.forEach { p -> drawCircle(linea, 2.6f * u, p, style = Stroke(0.8f * u)); drawCircle(fino, 1 * u, p) }
+        while (yc < h - 60 * u && clavijas.size < 24) { clavijas.add(Offset(5.5f * u, yc)); yc += maxOf(30 * u, 1f) }
+        clavijas.forEach { p -> drawCircle(linea, 2f * u, p, style = Stroke(0.8f * u)); drawCircle(fino, 0.8f * u, p) }
         if (clavijas.size >= 4) {
             val a = clavijas[1]; val b = clavijas[3]
-            drawPath(Path().apply { moveTo(a.x + 2 * u, a.y); cubicTo(a.x + 22 * u, a.y + 8 * u, b.x + 22 * u, b.y - 8 * u, b.x + 2 * u, b.y) }, luz.copy(alpha = 0.45f),
+            drawPath(Path().apply { moveTo(a.x + 2 * u, a.y); cubicTo(a.x + 7 * u, a.y + 8 * u, b.x + 7 * u, b.y - 8 * u, b.x + 2 * u, b.y) }, luz.copy(alpha = 0.45f),
                 style = Stroke(1.6f * u, cap = StrokeCap.Round))
-            listOf(a, b).forEach { p -> drawRoundRect(luz.copy(alpha = 0.7f), Offset(p.x + 1 * u, p.y - 1.5f * u), Size(4 * u, 3 * u), CornerRadius(0.8f * u)) }
+            listOf(a, b).forEach { p -> drawRoundRect(luz.copy(alpha = 0.7f), Offset(p.x + 0.5f * u, p.y - 1.2f * u), Size(3 * u, 2.4f * u), CornerRadius(0.8f * u)) }
         }
         // El deslizador del canto derecho: la escala y su perilla a un tercio.
         if (h - 50 * u > 60 * u) {

@@ -167,14 +167,8 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
             drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
         }
-        // La chispa de la célula en su canal roto: el aro grueso, abierto arriba a la derecha, y los tres trazos dentro.
-        TemaId.FRENTE -> {
-            val ra = r * 0.84f
-            drawArc(color, -22f, 304f, false, Offset(c.x - ra, c.y - ra), Size(ra * 2, ra * 2), style = Stroke(r * 0.26f, cap = StrokeCap.Round))
-            drawPath(Path().apply {
-                moveTo(c.x + r * 0.2f, c.y - r * 0.5f); lineTo(c.x - r * 0.16f, c.y + r * 0.04f); lineTo(c.x + r * 0.16f, c.y - r * 0.04f); lineTo(c.x - r * 0.2f, c.y + r * 0.5f)
-            }, color, style = Stroke(r * 0.22f, cap = StrokeCap.Round, join = StrokeJoin.Round))
-        }
+        // El emblema de la red: el aro roto arriba a la derecha, la célula en el centro y los tres trazos que se escapan por el hueco.
+        TemaId.FRENTE -> with(TrazosFrente) { emblemaRed(Offset(c.x - r * 0.12f, c.y + r * 0.14f), r * 0.7f, color, r * 0.2f) }
         // El átomo: núcleo y tres órbitas.
         TemaId.REFUGIO -> {
             for (a in listOf(0f, 60f, 120f)) rotate(a, c) { drawOval(color, Offset(c.x - r, c.y - r * 0.34f), Size(r * 2, r * 0.68f), style = Stroke(r * 0.13f)) }
