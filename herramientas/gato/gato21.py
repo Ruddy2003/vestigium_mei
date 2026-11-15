@@ -323,11 +323,19 @@ def _rayas_montes(out, ch, parte):
             if u >= COLA_PUNTA or any(a <= u < b for a, b in COLA_ANILLOS):
                 out[r][c] = "F"
     if ps is None:
-        if giro == 1:                                                    # de espaldas: la raya del lomo y la nuca
-            for r in range(N):
-                for c in range(N):
-                    if out[r][c] == "P" and ((parte[r][c] == "cuerpo" and 31 <= c <= 32 and r >= 33) or
-                                             (parte[r][c] == "cabeza" and c in (30, 33) and 21 <= r <= 27)):
+        for r in range(N):
+            for c in range(N):
+                if out[r][c] != "P":
+                    continue
+                p_ = parte[r][c]
+                if giro == 1:                    # de espaldas: la raya del lomo, las rayas que bajan por los flancos y la nuca
+                    if (p_ == "cuerpo" and ((31 <= c <= 32 and r >= 33) or (abs(c - 32) > 3 and (r + abs(c - 32) // 3) % 4 == 0))) or \
+                            (p_ == "cabeza" and c in (30, 33) and 21 <= r <= 27):
+                        out[r][c] = "W"
+                elif giro == 0:                  # tres cuartos de espaldas: rayas en diagonal por el flanco
+                    if p_ == "cuerpo" and r < 50 and (c + 0.45 * r) % 3.7 < 0.85:
+                        out[r][c] = "W"
+                    elif p_ == "pierna" and r % 4 == 1 and r < SUELO - 4:
                         out[r][c] = "W"
         return
     Hh, C, cab = ps["H"], ps["C"], ps["cab"]
@@ -2837,7 +2845,7 @@ def colina_galia(im, P, o):
                 if ladera and campo in (0, 3) and prof > 2:
                     col = P["campo"][0]
                 if seto_:
-                    col = P["seto"]
+                    col = mezcla(col, P["seto"], 0.5)
             px[x, y] = col
     # Árboles sueltos y matas en las laderas: una copita con su lado al sol y su sombra a la derecha.
     for (x, dp_) in ((156, 3), (163, 6), (171, 2), (176, 9), (168, 13), (159, 16), (312, 4), (322, 8), (330, 3), (338, 12), (316, 15), (344, 6)):
