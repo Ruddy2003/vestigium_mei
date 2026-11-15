@@ -344,14 +344,13 @@ internal object VivacCerca {
 
     /**
      * La tienda de un oficial (el soldado duerme al raso; «las tiendas de los oficiales», dice el cuento): de pared, de
-     * lona cruda, con la puerta en el hastial. Medidas **[Aproximación]**: 3 m de ancho, 4.6 de largo, 1.55 de pared y 3.45
-     * de cumbrera. Lo de dentro y la cenefa azul con su ribete rojo son **[Diseño propio]**.
+     * lona cruda, con la puerta en el hastial. Medidas **[Aproximación]**: 2.6 m de ancho, 3.4 de largo, 1.55 de pared y
+     * 3.65 de cumbrera. Lo de dentro y la cenefa azul con su ribete rojo son **[Diseño propio]**.
      */
     private fun DrawScope.tienda(v: VistaVivac) {
         val s = S_TIENDA; val a = v.en(s.pie); val w = T_ANCHO; val d = T_LARGO; val pared = T_PARED; val cumbre = T_CUMBRE
         val az = VivacNapoleon.fijo("tienda"); val lona = lerp(C.LONA, C.HOJA, 0.12f)
         val farol = VivacNapoleon.farol(v.m)
-        val dentro = Offset(-0.1f, 0f)
         // Los vientos de atrás y del costado, primero: tensos hasta sus estacas.
         for ((x, z) in listOf(w to d * 0.6f, w to 0f, w to -d * 0.6f)) {
             val p0 = s.p(V3(x, pared, z)); val p1 = s.p(V3(x + 0.95f, 0f, z * 1.05f))
@@ -379,8 +378,9 @@ internal object VivacCerca {
                 // naranja (más cerca de la luz, abajo y en medio), como una linterna.
                 if (farol > 0.02f) {
                     val foco = s.p(V3(T_PX, 1.1f, -d * 0.4f))
-                    drawPath(f, lerp(Color.White, Color(0xFF7A6A9A), 0.45f * farol * v.noche), blendMode = BlendMode.Multiply)
-                    drawPath(f, Brush.radialGradient(listOf(Color(0xFFE8782E).copy(alpha = (0.55f * farol).coerceIn(0f, 1f)), Color(0xFFB8582A).copy(alpha = (0.22f * farol).coerceIn(0f, 1f)), Color.Transparent), foco, 2.4f * s.k), blendMode = BlendMode.Plus)
+                    val techo = abs(n.y) > 0.5f
+                    drawPath(f, lerp(Color.White, Color(0xFF7A6A9A), (if (techo) 0.6f else 0.45f) * farol * v.noche), blendMode = BlendMode.Multiply)
+                    drawPath(f, Brush.radialGradient(listOf(Color(0xFFE8782E).copy(alpha = ((if (techo) 0.25f else 0.55f) * farol).coerceIn(0f, 1f)), Color(0xFFB8582A).copy(alpha = ((if (techo) 0.08f else 0.22f) * farol).coerceIn(0f, 1f)), Color.Transparent), foco, (if (techo) 1.6f else 2.4f) * s.k), blendMode = BlendMode.Plus)
                 }
                 // Los paños cosidos: costuras verticales en los costados y hastiales; en el techo, a lo largo.
                 val costura = mult(col, C.SOMBRA, 0.32f).copy(alpha = 0.8f)

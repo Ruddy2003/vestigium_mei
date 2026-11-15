@@ -179,17 +179,24 @@ internal object VivacLejos {
         val p = v.p; val n = (ancho / (alto * 0.55f)).toInt().coerceIn(3, 30)
         val oscuro = if (pinos) C.PINO_OSC else lerp(C.PINO, C.HOJA, if (v.m.ficha.estacion == Estacion.OTONO) 0.6f else 0.3f)
         val claro = if (pinos) C.PINO else lerp(oscuro, C.HOJA, 0.35f)
-        for (i in 0 until n) {
+        if (pinos) for (i in 0 until n) {
             val x = cx - ancho / 2f + ancho * i / n + az.entre(-1f, 1f); val h = alto * az.entre(0.7f, 1.3f) * (1f - 0.5f * kotlin.math.abs(i - n / 2f) / n)
             val y0 = y + az.entre(-0.8f, 0.8f)
             if (pinos) {
                 val sil = poligono(listOf(Offset(x - h * 0.3f, y0), Offset(x - h * 0.2f, y0 - h * 0.4f), Offset(x - h * 0.08f, y0 - h * 0.55f), Offset(x, y0 - h), Offset(x + h * 0.1f, y0 - h * 0.6f), Offset(x + h * 0.22f, y0 - h * 0.42f), Offset(x + h * 0.3f, y0)))
                 drawPath(sil, p.medio(oscuro, lejos))
                 drawPath(poligono(Offset(x, y0 - h), Offset(x + h * 0.3f * (if (p.solALaDerecha) 1f else -1f), y0), Offset(x, y0)), p.lado(claro, lejos).copy(alpha = 0.6f))
-            } else {
-                drawOval(p.medio(oscuro, lejos), Offset(x - h * 0.42f, y0 - h), Size(h * 0.84f, h))
-                val lado = if (p.solALaDerecha) 1f else -1f
-                drawOval(p.luz(claro, lejos).copy(alpha = 0.55f * v.r.dia + 0.15f), Offset(x - h * 0.3f + lado * h * 0.1f, y0 - h * 0.95f), Size(h * 0.5f, h * 0.55f))
+            }
+        }
+        // Los de hoja, en una sola masa de copas que se tocan (no en fila: de lejos se leerían como letras), con su lado
+        // de luz y la sombra de abajo.
+        if (!pinos) {
+            val lado = if (p.solALaDerecha) 1f else -1f
+            val masa = TrazosValle.blando(Offset(cx, y - alto * 0.45f), ancho * 0.5f, alto * 0.55f, az, 12, 0.22f, 0.9f)
+            drawPath(masa, p.medio(oscuro, lejos))
+            clipPath(masa) {
+                repeat(5) { val c = Offset(cx + az.entre(-0.4f, 0.4f) * ancho, y - alto * az.entre(0.6f, 1f)); mancha(c + Offset(lado * alto * 0.2f, 0f), ancho * 0.18f, alto * 0.35f, p.luz(claro, lejos), 0.5f * v.r.dia + 0.15f) }
+                drawRect(p.sombra(oscuro, lejos).copy(alpha = 0.45f), Offset(cx - ancho, y - alto * 0.25f), Size(ancho * 2f, alto))
             }
         }
     }
@@ -587,12 +594,17 @@ internal object VivacLejos {
     /** El humo de la batalla: bancos blancos y pesados a ras de las lomas, con fogonazos (de día). */
     private fun DrawScope.humoDeBatalla(v: VistaVivac, x0: Float, x1: Float, k: Float) {
         val az = Azar(Semilla.de("napoleon", "vivac", "batalla", v.m.hora.toInt()))
-        val blanco = lerp(v.l.tono(C.NIEVE), v.l.bruma, 0.25f)
-        repeat(16) {
-            val q = Offset(az.entre(x0, x1), H - az.entre(2f, 14f))
-            mancha(q, az.entre(10f, 26f), az.entre(4f, 8f), blanco, 0.8f * k)
-            mancha(q + Offset(5f, 3f), az.entre(8f, 18f), az.entre(3f, 6f), v.l.tono(lerp(C.NIEVE, C.CAPOTE, 0.4f)), 0.5f * k)
-            if (az.real() < 0.3f) drawCircle(Color(0xFFFFD27A).copy(alpha = 0.8f * k), 1.2f, q + Offset(0f, 3f))
+        val blanco = lerp(v.l.tono(C.NIEVE), v.l.bruma, 0.2f); val gris = v.l.tono(lerp(C.NIEVE, C.CAPOTE, 0.45f))
+        // Los bancos de humo de los cañones: pesados, a ras de las lomas, que suben en torres donde tiran las baterías.
+        repeat(22) {
+            val q = Offset(az.entre(x0, x1), H - az.entre(2f, 16f))
+            mancha(q + Offset(6f, 4f), az.entre(14f, 30f), az.entre(5f, 10f), gris, 0.55f * k)
+            mancha(q, az.entre(16f, 34f), az.entre(6f, 12f), blanco, 0.85f * k)
+        }
+        repeat(5) {
+            val x = az.entre(x0 + 20f, x1 - 20f)
+            for (j in 0 until 5) mancha(Offset(x + j * 3f, H - 14f - j * 9f), 12f + j * 4f, 7f + j * 2f, if (j % 2 == 0) blanco else gris, (0.7f - 0.1f * j) * k)
+            if (az.real() < 0.7f) drawCircle(Color(0xFFFFD27A).copy(alpha = 0.85f * k), 1.6f, Offset(x, H - 4f))
         }
     }
 

@@ -265,12 +265,4 @@ internal object VivacLuz {
         }
     }
 
-    /** Un rayo de luz que baja en el aire (el sol entre las nubes, el resplandor de la ciudad que arde). */
-    fun DrawScope.rayo(desde: Offset, hasta: Offset, ancho: Float, color: Color, fuerza: Float) {
-        if (fuerza <= 0.01f) return
-        drawLine(Brush.linearGradient(listOf(color.copy(alpha = (0.18f * fuerza).coerceIn(0f, 1f)), Color.Transparent), desde, hasta), desde, hasta, ancho, StrokeCap.Round, blendMode = BlendMode.Plus)
-    }
-
-    /** Un azar fijo de la luz. */
-    fun fijo(vararg partes: Any): Azar = Azar(Semilla.de("napoleon", "vivac", "luz", *partes))
 }

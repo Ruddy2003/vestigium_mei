@@ -381,6 +381,8 @@ internal object VivacCampo {
         val conCompania = !VivacNapoleon.sinCompania(m)
         val enPie = VivacNapoleon.pabellones(m) > 0
         val noche = EscenaNapoleon.fuegosLejos(m)
+        // Los sotos del llano, a media distancia: lo de cada tierra (pinos, árboles de hoja, álamos), delante de la lejanía.
+        arboledas(v)
         // De lejos a cerca: los pabellones y las tiendas de las filas, y los fuegos (de día, la ceniza y el humo).
         if (conCompania) {
             for ((fi, f) in FILAS.withIndex()) {
@@ -427,6 +429,62 @@ internal object VivacCampo {
             for ((esc, col) in listOf(1f to Color(0xFFE0541C).copy(alpha = 0.7f), 0.7f to Color(0xFFFF9A30).copy(alpha = 0.9f), 0.4f to Color(0xFFFFE9AE))) {
                 val p = pie + Offset(u, 0f); val w = alto * 0.26f * esc; val h = alto * esc
                 drawPath(Path().apply { moveTo(p.x - w, p.y); cubicTo(p.x - w, p.y - h * 0.4f, p.x - w * 0.2f, p.y - h * 0.7f, p.x + w * 0.2f, p.y - h); cubicTo(p.x + w * 0.4f, p.y - h * 0.6f, p.x + w, p.y - h * 0.35f, p.x + w, p.y); close() }, col)
+            }
+        }
+    }
+
+    /** Qué árbol crece en el llano de cada tramo. */
+    private enum class Arbol { PINO, HOJA, ALAMO }
+
+    private fun arbolDe(f: Fondo): Arbol = when (f) {
+        Fondo.POLONIA, Fondo.NIEMEN, Fondo.RUSIA, Fondo.SMOLENSK, Fondo.BORODINO, Fondo.MOSCU, Fondo.PRUSIA, Fondo.HOSPITAL -> Arbol.PINO
+        Fondo.ALEMANIA, Fondo.RIN, Fondo.CUARTEL -> Arbol.HOJA
+        Fondo.FRANCIA, Fondo.CIEN_DIAS, Fondo.PUEBLO -> Arbol.ALAMO
+    }
+
+    /**
+     * Los sotos del llano: grupos de tres a seis árboles a media distancia (de 80 a 230 m), a la derecha del camino y,
+     * uno, entre la tienda y la fila; cada árbol con su lado de luz y su sombra corta. Hacen de «algo delante» de la
+     * lejanía (regla 10) y dicen la tierra del tramo: pinos albares en Polonia y Rusia, árboles de hoja en Alemania,
+     * álamos en Francia y en Bélgica **[Aproximación]**.
+     */
+    private fun DrawScope.arboledas(v: VistaVivac) {
+        val tipo = arbolDe(v.fondo); val az = VivacNapoleon.fijo("sotos", v.fondo.ordinal); val p = v.p; val lado = if (p.solALaDerecha) 1f else -1f
+        val desnudo = v.m.ficha.estacion == io.github.ruddy2003.vestigium.vidas.Estacion.INVIERNO || v.nieve > 0.4f
+        val sotos = listOf(Triple(232f, 135f, 4), Triple(364f, 165f, 4), Triple(150f, 150f, 3))
+        for ((sx, z0, n) in sotos.sortedByDescending { it.second }) {
+            val arboles = (0 until n).map { j -> val z = z0 * az.entre(0.92f, 1.12f); val x = (sx + az.entre(-12f, 12f) + (j - n / 2f) * 6f - MIRADA.centro) * z / MIRADA.focal; x to z }
+            for ((x, z) in arboles.sortedByDescending { it.second }) {
+                if (enElCamino(x, z)) continue
+                val q = w(x, z); val kk = k(z); val lejos = VivacNapoleon.lejos(z)
+                val alto = when (tipo) { Arbol.PINO -> az.entre(13f, 19f); Arbol.HOJA -> az.entre(9f, 14f); Arbol.ALAMO -> az.entre(15f, 21f) } * kk
+                sombraCorta(v.r, q, alto * 0.45f, alto * 0.6f)
+                when (tipo) {
+                    Arbol.PINO -> PiezasNapoleon.run { pinoAlbar(v.en(q), q, alto, alto * az.entre(0.3f, 0.38f), v.nieve * 0.8f, Azar(az.entero(100000).toLong()), lejos, (kk / 10f).coerceIn(0.25f, 0.8f)) }
+                    Arbol.HOJA, Arbol.ALAMO -> {
+                        val tronco = lerp(C.MADERA, C.CAPOTE, 0.35f)
+                        drawLine(p.medio(tronco, lejos), q, q + Offset(0f, -alto * 0.45f), (alto * 0.04f).coerceAtLeast(0.5f))
+                        val hoja = if (v.m.ficha.estacion == io.github.ruddy2003.vestigium.vidas.Estacion.OTONO) lerp(C.HOJA, C.LATON, 0.3f) else lerp(C.PINO, C.HOJA, if (tipo == Arbol.ALAMO) 0.38f else 0.45f)
+                        if (desnudo) {
+                            // Desnudo: la copa es una neblina de ramillas (un huso en el álamo, una bola en el de hoja) con
+                            // las ramas gruesas que se ven dentro.
+                            val ancho = if (tipo == Arbol.ALAMO) 0.12f else 0.3f
+                            val huso = TrazosValle.cerrada(listOf(q + Offset(-alto * ancho * 0.6f, -alto * 0.3f), q + Offset(-alto * ancho, -alto * 0.6f), q + Offset(-alto * ancho * 0.4f, -alto * 0.95f), q + Offset(0f, -alto), q + Offset(alto * ancho * 0.45f, -alto * 0.94f), q + Offset(alto * ancho, -alto * 0.6f), q + Offset(alto * ancho * 0.6f, -alto * 0.3f)))
+                            drawPath(huso, p.medio(lerp(tronco, C.CAPOTE, 0.3f), lejos).copy(alpha = 0.4f))
+                            for (j in 0 until 7) { val a0 = q + Offset(0f, -alto * (0.32f + 0.08f * j)); val sg = if (j % 2 == 0) -1f else 1f
+                                drawLine(p.medio(tronco, lejos).copy(alpha = 0.75f), a0, a0 + Offset(sg * alto * ancho * 0.7f, -alto * (if (tipo == Arbol.ALAMO) 0.3f else 0.2f)), (alto * 0.008f).coerceAtLeast(0.3f)) }
+                        }
+                        else if (tipo == Arbol.ALAMO) {
+                            val copa = TrazosValle.cerrada(listOf(q + Offset(-alto * 0.09f, -alto * 0.22f), q + Offset(-alto * 0.13f, -alto * 0.6f), q + Offset(-alto * 0.04f, -alto), q + Offset(alto * 0.06f, -alto * 0.95f), q + Offset(alto * 0.13f, -alto * 0.55f), q + Offset(alto * 0.08f, -alto * 0.22f)))
+                            drawPath(copa, p.medio(hoja, lejos))
+                            drawPath(TrazosValle.cerrada(listOf(q + Offset(lado * alto * 0.02f, -alto * 0.3f), q + Offset(lado * alto * 0.11f, -alto * 0.55f), q + Offset(lado * alto * 0.03f, -alto * 0.9f))), p.lado(lerp(hoja, C.LONA, 0.15f), lejos).copy(alpha = 0.7f))
+                        } else for (j in 0 until 5) {
+                            val c = q + Offset(az.entre(-0.22f, 0.22f) * alto, -alto * az.entre(0.55f, 0.85f)); val r = alto * az.entre(0.18f, 0.27f)
+                            drawCircle(p.medio(lerp(hoja, C.PINO_OSC, 0.25f), lejos), r, c)
+                            drawCircle(p.lado(lerp(hoja, C.LONA, 0.12f), lejos).copy(alpha = 0.75f), r * 0.6f, c + Offset(lado * r * 0.3f, -r * 0.3f))
+                        }
+                    }
+                }
             }
         }
     }

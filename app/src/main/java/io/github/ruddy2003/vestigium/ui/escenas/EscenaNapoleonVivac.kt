@@ -17,9 +17,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.tiempoQuieto
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.tiempoVivo
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Clima
-import io.github.ruddy2003.vestigium.vidas.Estacion
 import io.github.ruddy2003.vestigium.vidas.Semilla
-import kotlin.math.roundToInt
 
 /**
  * Lo que el vivac necesita saber de un momento, calculado una vez: la luz (el sol o la luna, el fuego del rancho, las
@@ -397,10 +395,4 @@ internal object VivacNapoleon {
 
     /** Un azar fijo del vivac (lo que no cambia de un día a otro). */
     fun fijo(vararg partes: Any): Azar = Azar(Semilla.de("napoleon", "vivac", *partes))
-
-    /** Cuántos días lleva la estación, para la hierba: el color de la estación de hoy. */
-    fun estacion(m: Momento): Estacion = m.ficha.estacion
-
-    /** Redondea a entero (para contar cosas). */
-    internal fun entero(x: Float): Int = x.roundToInt()
 }
