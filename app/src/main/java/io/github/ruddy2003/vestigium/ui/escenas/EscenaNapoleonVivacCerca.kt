@@ -143,7 +143,7 @@ internal object VivacCerca {
     private val S_CAMA = PiezasNapoleon.sitio(MIRADA, Offset(252f, 263f), 0.55f)
 
     /** El montón de leña con el hacha, en la esquina de abajo a la derecha, cortado por el borde. */
-    private val S_LENA = PiezasNapoleon.sitio(MIRADA, Offset(372f, 290f), -0.35f)
+    private val S_LENA = PiezasNapoleon.sitio(MIRADA, Offset(380f, 293f), -0.3f)
 
     /** Dónde se apoya el objeto chico del día: en lo alto del tocón. */
     val SOPORTE: Offset get() = S_TOCON.p(0f, TOCON_ALTO, 0f)
@@ -570,16 +570,16 @@ internal object VivacCerca {
     private fun DrawScope.lena(v: VistaVivac) {
         val s = S_LENA; val a = v.en(s.pie); val az = VivacNapoleon.fijo("lena"); val k = s.k
         val troncos = ArrayList<Pair<V3, Float>>()
-        for (fila in 0..2) for (j in 0 until 4 - fila) troncos += V3(-0.62f + j * 0.2f + fila * 0.1f + az.entre(-0.03f, 0.03f), 0.08f + fila * 0.13f, az.entre(-0.06f, 0.06f)) to az.entre(0.06f, 0.085f)
+        for (fila in 0..2) for (j in 0 until 4 - fila) troncos += V3(-0.5f + j * 0.15f + fila * 0.075f + az.entre(-0.02f, 0.02f), 0.06f + fila * 0.1f, az.entre(-0.05f, 0.05f)) to az.entre(0.045f, 0.065f)
         for ((c, r) in troncos.sortedBy { it.first.y }) {
             val corte = c + V3(0f, 0f, -0.35f)
-            cilindro(s, a, c + V3(0f, 0f, 0.3f), V3(0f, 0f, -1f), r, r, 0.65f, lerp(C.MADERA_OSC, C.MADERA_GRIS, az.entre(0f, 0.5f)), lerp(C.MADERA, C.LONA, 0.4f), 10)
+            cilindro(s, a, c + V3(0f, 0f, 0.3f), V3(0f, 0f, -1f), r * az.entre(0.9f, 1.1f), r, 0.65f, lerp(C.MADERA_OSC, C.MADERA_GRIS, az.entre(0f, 0.5f)), lerp(C.MADERA, C.LONA, 0.4f), 16)
             val q = s.p(corte); drawCircle(a.cara(lerp(C.MADERA, C.HOJA, 0.25f), s.normal(V3(0f, 0f, -1f)), q), r * 0.35f * s.escala(c.x, -0.35f), q, style = Stroke(0.01f * k))
         }
         // El hacha, clavada en el tronco de arriba, con el mango hacia arriba.
-        val h0 = s.p(V3(-0.32f, 0.4f, -0.15f)); val h1 = s.p(V3(-0.5f, 0.78f, -0.32f))
+        val h0 = s.p(V3(-0.28f, 0.3f, -0.12f)); val h1 = s.p(V3(-0.42f, 0.6f, -0.26f))
         drawLine(a.plano(C.MADERA, h0, -0.5f), h0, h1, (0.035f * k).coerceAtLeast(0.6f), StrokeCap.Round)
-        drawPath(poligono(h0 + Offset(-0.1f * k, 0.02f * k), h0 + Offset(0.06f * k, -0.03f * k), h0 + Offset(0.08f * k, 0.06f * k), h0 + Offset(-0.06f * k, 0.08f * k)), a.plano(C.HIERRO, h0, 0.6f))
+        drawPath(poligono(h0 + Offset(-0.07f * k, 0.015f * k), h0 + Offset(0.045f * k, -0.02f * k), h0 + Offset(0.06f * k, 0.045f * k), h0 + Offset(-0.045f * k, 0.06f * k)), a.plano(C.HIERRO, h0, 0.6f))
         if (v.nieve > 0.2f) for ((c, r) in troncos.filter { it.first.y > 0.3f }) { val q = s.p(c + V3(0f, r, 0f)); mancha(q, 0.35f * k, 0.05f * k, a.arriba(C.NIEVE, q), 0.8f * v.nieve) }
     }
 
