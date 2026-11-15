@@ -70,7 +70,15 @@ internal object ValleCerro {
      * Una arista (espolón, `true`) o una cárcava, de arriba abajo; y la cara que queda a su derecha, con su normal (las
      * caras que miran a la derecha se encienden con el sol de la mañana; las que miran a la izquierda, por la tarde).
      */
-    private class Linea(val puntos: List<Offset>, val espolon: Boolean, val cara: V3)
+    private class Linea(val puntos: List<Offset>, val espolon: Boolean, val cara: V3, val nieve: Receta? = null, val manto: Boolean = true)
+
+    /**
+     * Cómo junta la nieve una cárcava (o el abrigo de un espolón), cada una a su manera para que no salgan rayas
+     * iguales y paralelas: los [tramos] que lleva (fracciones de la línea, de arriba abajo; con poca nieve solo quedan
+     * los de abajo), su [ancho] relativo, si acaba en una hondonada ancha ([hoya], su tamaño) y cuánto se [tuerce] la
+     * cinta fuera de la línea recta del pliegue. **[Diseño propio]**.
+     */
+    private class Receta(val tramos: List<Pair<Float, Float>>, val ancho: Float, val hoya: Float = 0f, val tuerce: Float = 0f)
 
     private val DERECHA = V3(0.74f, 0.42f, -0.52f)
     private val IZQUIERDA = V3(-0.74f, 0.42f, -0.52f)
@@ -78,23 +86,26 @@ internal object ValleCerro {
 
     private val CIMA = listOf(
         Linea(pts(-6f, 70f, -6f, 260f), false, IZQUIERDA),
+        // Un hombro detrás de la tienda, con su cárcava: rompen la cara larga de la izquierda como el resto del cerro.
+        Linea(pts(58f, 63.4f, 62f, 71f, 67f, 80f, 73f, 90f, 79f, 100f), true, DERECHA, Receta(listOf(0.42f to 0.7f), 0.8f, tuerce = 0.8f)),
+        Linea(pts(88f, 59.6f, 91f, 68f, 95f, 77f, 100f, 87f, 105f, 98f), false, IZQUIERDA, Receta(listOf(0.4f to 0.66f), 0.85f, hoya = 0.9f, tuerce = -1f), manto = false),
         Linea(pts(116f, 57.6f, 122f, 72f, 128f, 88f, 132f, 104f), true, DERECHA),
-        Linea(pts(140f, 55.8f, 147f, 68f, 152f, 82f, 158f, 96f, 162f, 110f), false, FRENTE),
+        Linea(pts(140f, 55.8f, 147f, 68f, 152f, 82f, 158f, 96f, 162f, 110f), false, FRENTE, Receta(listOf(0.62f to 0.9f), 0.75f, tuerce = 1.3f)),
         Linea(pts(190f, 54.4f, 200f, 66f, 214f, 80f, 228f, 95f, 244f, 112f, 258f, 130f, 270f, 142f), true, DERECHA),
-        Linea(pts(222f, 64f, 232f, 76f, 242f, 89f, 254f, 104f, 266f, 120f, 280f, 136f), false, IZQUIERDA),
+        Linea(pts(222f, 64f, 232f, 76f, 242f, 89f, 254f, 104f, 266f, 120f, 280f, 136f), false, IZQUIERDA, Receta(listOf(0.24f to 0.38f, 0.6f to 0.84f), 1.1f, hoya = 0.8f, tuerce = -1.6f)),
         Linea(pts(246f, 73f, 255f, 85f, 265f, 99f, 276f, 114f, 288f, 130f), true, DERECHA),
-        Linea(pts(270f, 86.4f, 278f, 97f, 287f, 110f, 297f, 125f), false, IZQUIERDA),
+        Linea(pts(270f, 86.4f, 278f, 97f, 287f, 110f, 297f, 125f), false, IZQUIERDA, Receta(listOf(0.42f to 0.76f), 1.25f, hoya = 1.25f, tuerce = 1.1f)),
         Linea(pts(292f, 100.4f, 297f, 108f, 303f, 117f, 308f, 124f), true, DERECHA),
         Linea(pts(317f, 121.2f, 330f, 260f), false, V3(0f, 1f, 0f)),
     )
 
     private val DELANTE = listOf(
         Linea(pts(-6f, 92f, -6f, 260f), false, FRENTE),
-        Linea(pts(150f, 102.6f, 154f, 118f, 158f, 136f, 163f, 156f, 168f, 178f, 172f, 200f), false, IZQUIERDA),
-        Linea(pts(174f, 108.2f, 180f, 122f, 184f, 138f, 188f, 156f, 192f, 176f), true, DERECHA),
-        Linea(pts(198f, 114f, 203f, 127f, 209f, 141f, 215f, 156f, 220f, 170f), false, IZQUIERDA),
+        Linea(pts(150f, 102.6f, 154f, 118f, 158f, 136f, 163f, 156f, 168f, 178f, 172f, 200f), false, IZQUIERDA, Receta(listOf(0.3f to 0.56f), 1.2f, hoya = 1.3f, tuerce = 1f)),
+        Linea(pts(174f, 108.2f, 180f, 122f, 184f, 138f, 188f, 156f, 192f, 176f), true, DERECHA, Receta(listOf(0.3f to 0.56f), 0.85f)),
+        Linea(pts(198f, 114f, 203f, 127f, 209f, 141f, 215f, 156f, 220f, 170f), false, IZQUIERDA, Receta(listOf(0.44f to 0.6f, 0.7f to 0.88f), 0.75f, tuerce = -1.2f)),
         Linea(pts(222f, 120.2f, 228f, 132f, 234f, 144f, 240f, 156f), true, DERECHA),
-        Linea(pts(244f, 126.2f, 249f, 136f, 254f, 147f), false, FRENTE),
+        Linea(pts(244f, 126.2f, 249f, 136f, 254f, 147f), false, FRENTE, Receta(listOf(0.35f to 0.85f), 0.6f)),
         Linea(pts(262f, 133.2f, 266f, 141f, 270f, 146f), true, DERECHA),
         Linea(pts(279f, 138.4f, 290f, 260f), false, V3(0f, 1f, 0f)),
     )
@@ -105,8 +116,11 @@ internal object ValleCerro {
     private val PENAS_CIMA = listOf(
         Pena(Offset(128f, 62f), 7f, false), Pena(Offset(146f, 60.6f), 9f, true), Pena(Offset(168f, 60f), 6f, false),
         Pena(Offset(220f, 69.6f), 10f, true), Pena(Offset(262f, 92f), 6f, false), Pena(Offset(288f, 106f), 5f, true),
+        // Las del hombro de la izquierda, detrás de la tienda.
+        Pena(Offset(70f, 74f), 8f, true), Pena(Offset(101f, 80f), 6f, false),
     )
     private val PENAS_DELANTE = listOf(
+        Pena(Offset(140f, 108f), 9f, true),
         Pena(Offset(164f, 113f), 12f, true), Pena(Offset(184f, 118.6f), 9f, false), Pena(Offset(204f, 123.4f), 14f, true),
         Pena(Offset(196f, 148f), 10f, true), Pena(Offset(236f, 136f), 8f, false), Pena(Offset(170f, 168f), 11f, false),
     )
@@ -205,10 +219,11 @@ internal object ValleCerro {
                 val talla = if (cerca) 1f else 0.7f
                 // Abajo, en las caras que miran a la izquierda: un manto de borde festoneado y redondo, apartado del espolón.
                 for (i in 1 until rotas.size - 1) {
-                    val n = lineas[i].cara; if (n.x > -0.3f || rotas[i + 1].size < 3) continue
+                    val n = lineas[i].cara; if (n.x > -0.3f || !lineas[i].manto || rotas[i + 1].size < 3) continue
                     val t = ((sol.t(n) - 0.35f) * 1.6f).coerceIn(-1f, 1f)
                     val ra = rotas[i]; val rb = rotas[i + 1]
-                    val f0 = 0.88f - 0.6f * nieve + az.entre(-0.05f, 0.05f)
+                    // Solo abajo, y cada uno empieza a otra altura: no bandas largas iguales.
+                    val f0 = 0.92f - 0.34f * nieve + az.entre(-0.1f, 0.06f)
                     val apartaA = if (lineas[i].espolon) 0.22f else 0.04f; val apartaB = if (lineas[i + 1].espolon) 0.22f else 0.04f
                     fun lado(f: Float, desdeA: Boolean): Offset { val qa = en(ra, f); val qb = en(rb, f); return if (desdeA) qa + (qb - qa) * apartaA else qb + (qa - qb) * apartaB }
                     val filas = 5
@@ -221,28 +236,41 @@ internal object ValleCerro {
                     val contorno = listOf(izq[0]) + festones + der + listOf(der.last() + Offset(0f, 40f), izq.last() + Offset(0f, 40f)) + izq.drop(1).reversed()
                     ventisquero(TrazosValle.cerrada(contorno), listOf(izq[0]) + festones + der.take(3) + izq.take(3), t, 2.2f)
                 }
-                // En las cárcavas: una cinta de ancho desigual, más ancha hacia abajo, de puntas redondas.
+                // En las cárcavas, cada una según su receta: tramos cortos o partidos, de ancho desigual (más anchos
+                // hacia abajo, de puntas redondas), torcidos fuera de la recta del pliegue; alguna acaba en una
+                // hondonada ancha donde la nieve se junta.
+                val desde = 0.1f + 0.4f * (1f - nieve)
                 for ((i, li) in lineas.withIndex()) {
-                    if (li.espolon || li.puntos.size < 3) continue
+                    val rc = li.nieve ?: continue
+                    if (li.espolon) continue
                     val r = rotas[i]; val t = sol.t(V3(-hacia * 0.3f, 0.6f, -0.75f))
-                    // En dos o tres trozos, con la hierba asomando entre uno y otro.
-                    var f0 = 0.1f + 0.4f * (1f - nieve)
-                    while (f0 < 0.96f) {
-                        val f1 = (f0 + az.entre(0.2f, 0.38f)).coerceAtMost(1f)
-                        val eje = (0..6).map { k -> en(r, f0 + (f1 - f0) * k / 6f) + Offset(-hacia * 0.6f, 0.6f) }
-                        val anchos = (0..6).map { k -> val f = f0 + (f1 - f0) * k / 6f; 1.9f * talla * (0.5f + 0.9f * f) * (0.5f + 0.7f * nieve) * (0.75f + 0.45f * sin(3.1416f * k / 6f)) * az.entre(0.85f, 1.15f) }
+                    for ((a, b) in rc.tramos) {
+                        val f0 = maxOf(a, desde); val f1 = b; if (f1 - f0 < 0.06f) continue
+                        val d = en(r, f1) - en(r, f0); val normal = Offset(-d.y, d.x) / d.getDistance().coerceAtLeast(0.01f)
+                        val eje = (0..6).map { k -> en(r, f0 + (f1 - f0) * k / 6f) + Offset(-hacia * 0.6f, 0.6f) + normal * (rc.tuerce * talla * sin(3.1416f * k / 6f)) }
+                        val anchos = (0..6).map { k -> val f = f0 + (f1 - f0) * k / 6f; 1.9f * talla * rc.ancho * (0.5f + 0.9f * f) * (0.5f + 0.7f * nieve) * (0.7f + 0.5f * sin(3.1416f * k / 6f)) * az.entre(0.85f, 1.15f) }
                         ventisquero(TrazosValle.cinta(eje, anchos), eje, t, 0.9f)
-                        f0 = f1 + az.entre(0.05f, 0.12f)
+                    }
+                    if (rc.hoya > 0f) {
+                        val c = en(r, rc.tramos.last().second) + Offset(-hacia * 1f, 1.5f * talla)
+                        val rx = 6.5f * rc.hoya * talla * (0.45f + 0.6f * nieve); val ry = rx * 0.4f
+                        // Lomo de arriba abultado y desigual; el de abajo, casi tendido sobre la ladera.
+                        val borde = (0 until 12).map { j -> val ang = 6.2832f * j / 12f; val arriba = sin(ang) < 0f; val k = if (arriba) az.entre(0.75f, 1.2f) else az.entre(0.92f, 1.05f); c + Offset(cos(ang) * rx * k, sin(ang) * ry * k * (if (arriba) 1.15f else 0.45f)) }
+                        ventisquero(TrazosValle.cerrada(borde), borde.filter { it.y <= c.y }, t, 1.6f)
                     }
                 }
-                // Al abrigo de los espolones: una lengua larga pegada al lomo, del lado contrario al viento.
+                // Al abrigo de algunos espolones (no de todos): una lengua pegada al lomo, del lado contrario al viento.
                 for ((i, li) in lineas.withIndex()) {
+                    val rc = li.nieve ?: continue
                     if (!li.espolon) continue
                     val r = rotas[i]
-                    val f0 = 0.25f + 0.3f * (1f - nieve) + az.entre(0f, 0.1f); val f1 = (f0 + 0.25f + 0.4f * nieve).coerceAtMost(1f)
-                    val eje = (0..7).map { k -> en(r, f0 + (f1 - f0) * k / 7f) + Offset(4.5f * talla, 0.8f) }
-                    val anchos = (0..7).map { k -> 2.4f * talla * (0.5f + 0.6f * nieve) * sin(3.1416f * (k + 0.5f) / 8f).let { it * 0.7f + 0.3f } }
-                    ventisquero(TrazosValle.cinta(eje, anchos), eje, sol.t(V3(0.5f, 0.55f, -0.65f)), 1f)
+                    for ((a, b) in rc.tramos) {
+                        val f0 = a + (b - a) * 0.4f * (1f - nieve); val f1 = b
+                        val d = en(r, f1) - en(r, f0); val normal = Offset(-d.y, d.x) / d.getDistance().coerceAtLeast(0.01f)
+                        val eje = (0..7).map { k -> en(r, f0 + (f1 - f0) * k / 7f) + Offset(4.5f * talla, 0.8f) + normal * (rc.tuerce * talla * sin(3.1416f * k / 7f)) }
+                        val anchos = (0..7).map { k -> 2.4f * talla * rc.ancho * (0.5f + 0.6f * nieve) * sin(3.1416f * (k + 0.5f) / 8f).let { it * 0.7f + 0.3f } }
+                        ventisquero(TrazosValle.cinta(eje, anchos), eje, sol.t(V3(0.5f, 0.55f, -0.65f)), 1f)
+                    }
                 }
                 drawPoints(motas, PointMode.Points, p.luz(C.NIEVE, lejos).copy(alpha = 0.85f), if (cerca) 1.2f else 0.85f, StrokeCap.Round)
             }
@@ -255,18 +283,19 @@ internal object ValleCerro {
             // La hierba seca: pinceladas cortas del color de la piel, con su luz y su sombra; más grandes abajo.
             val y0 = cresta.minOf { it.y }
             val claros = ArrayList<Offset>(); val oscuros = ArrayList<Offset>()
-            repeat(if (cerca) 420 else 300) { val q = Offset(az.entre(100f, 320f), az.entre(y0, 214f)); if (az.real() < 0.5f) claros += q else oscuros += q }
+            // (Todo esto llega hasta la izquierda, detrás de la tienda, con la misma densidad que en el resto.)
+            repeat(if (cerca) 550 else 395) { val q = Offset(az.entre(30f, 320f), az.entre(y0, 214f)); if (az.real() < 0.5f) claros += q else oscuros += q }
             drawPoints(claros, PointMode.Points, p.luz(lerp(piel, C.ESTEPA, 0.5f), lejos).copy(alpha = 0.45f), if (cerca) 1f else 0.7f, StrokeCap.Round)
             drawPoints(oscuros, PointMode.Points, p.sombra(lerp(piel, C.CUERO, 0.4f), lejos).copy(alpha = 0.4f), if (cerca) 1f else 0.7f, StrokeCap.Round)
             // Las manchas de la hierba: más rubia en los lomos, más parda en las vaguadas, a pinceladas tendidas.
-            repeat(if (cerca) 22 else 16) {
-                val x = az.entre(110f, 316f); val yA = alturaEn(cresta, x) + 3f; val yB = alturaEn(PIE, x) - 3f; if (yB <= yA) return@repeat
+            repeat(if (cerca) 29 else 21) {
+                val x = az.entre(40f, 316f); val yA = alturaEn(cresta, x) + 3f; val yB = alturaEn(PIE, x) - 3f; if (yB <= yA) return@repeat
                 val q = Offset(x, az.entre(yA, yB)); val w = az.entre(6f, 18f) * (if (cerca) 1.3f else 1f)
                 drawPath(borron(q, w, w * 0.24f, az, 9, 0.35f), (if (it % 2 == 0) p.luz(lerp(piel, C.ESTEPA, 0.6f), lejos) else p.por(lerp(piel, C.CUERO, 0.45f), -0.2f, lejos)).copy(alpha = 0.5f * (1f - 0.6f * nieve)))
             }
             // Los manchones de matorral: un velo pardo con su punteado de matas, en las vaguadas y al pie de las rocas.
-            repeat(if (cerca) 9 else 7) {
-                val x = az.entre(120f, 312f); val yA = alturaEn(cresta, x) + 6f; val yB = alturaEn(PIE, x) - 4f; if (yB <= yA) return@repeat
+            repeat(if (cerca) 12 else 10) {
+                val x = az.entre(40f, 312f); val yA = alturaEn(cresta, x) + 6f; val yB = alturaEn(PIE, x) - 4f; if (yB <= yA) return@repeat
                 val q = Offset(x, az.entre(yA, yB)); val w = az.entre(8f, 18f) * (if (cerca) 1.3f else 1f)
                 drawPath(borron(q, w, w * 0.3f, az, 10, 0.4f), p.sombra(lerp(piel, C.CUERO, 0.5f), lejos).copy(alpha = 0.4f * (1f - 0.7f * nieve)))
                 val matas = (0 until (w * 1.4f).toInt()).map { q + Offset(az.entre(-w, w) * 0.85f, az.entre(-w, w) * 0.24f) }
@@ -274,8 +303,8 @@ internal object ValleCerro {
                 drawPoints(matas.map { it + Offset(if (p.solALaDerecha) 0.35f else -0.35f, -0.4f) }, PointMode.Points, p.luz(lerp(C.CUERO, C.ESTEPA, 0.5f), lejos).copy(alpha = 0.6f), if (cerca) 0.8f else 0.5f, StrokeCap.Round)
             }
             // Las matas de espino: bultos oscuros con su luz y su sombra en el suelo.
-            repeat(if (cerca) 26 else 14) {
-                val x = az.entre(if (cerca) 150f else 200f, if (cerca) 278f else 314f); val yA = alturaEn(cresta, x) + 6f; val yB = alturaEn(PIE, x) - 5f; if (yB <= yA) return@repeat
+            repeat(if (cerca) 34 else 32) {
+                val x = az.entre(if (cerca) 110f else 50f, if (cerca) 278f else 314f); val yA = alturaEn(cresta, x) + 6f; val yB = alturaEn(PIE, x) - 5f; if (yB <= yA) return@repeat
                 val q = Offset(x, az.entre(yA, yB)); val w = (1.4f + (q.y - 110f) * 0.03f).coerceAtLeast(0.9f) * (if (cerca) 1f else 0.7f)
                 // Una mata de varas: ramitas que salen de un punto, oscuras, con alguna clara del lado del sol; su sombra tendida.
                 drawOval(p.r.color.copy(alpha = 0.4f * p.r.fuerza), q + Offset(-w + p.r.ax.coerceIn(-2f, 2f) * w * 0.6f, -w * 0.15f), Size(w * 2.6f, w * 0.5f), blendMode = BlendMode.Multiply)
