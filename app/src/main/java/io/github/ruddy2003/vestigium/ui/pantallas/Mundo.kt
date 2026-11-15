@@ -224,7 +224,7 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.TEMPLARIO -> LaminaRascar(0xFF2E3338.toInt(), 0xFF7E868E.toInt(), 0xFFDCE2E6.toInt())
     // Gris de ministerio: chapa sin brillo.
     TemaId.DISTOPIA -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
-    TemaId.GALIA -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
+    TemaId.GALIA -> LaminaRascar(0xFF2E2A1C.toInt(), 0xFF9A6A3A.toInt(), 0xFFE2B87E.toInt())   // el bronce del caldero
     // El oro de más del mundo de abajo, el del Demiurgo, con la sombra violeta de lo que hay debajo.
     TemaId.ARCONTES -> LaminaRascar(0xFF3A2A40.toInt(), 0xFFD4A62A.toInt(), 0xFFFFF0B8.toInt())
     // La chapa esmaltada color hueso de la consola, con el filo gastado hasta el metal.
@@ -418,11 +418,19 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
             c.drawCircle(x, y, s * 0.42f, relleno)
         }
-        TemaId.GALIA -> tresbolillo { x, y ->
-            // El ojo que todo lo mira.
-            val s = l * 0.15f
-            c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
-            c.drawCircle(x, y, s * 0.42f, relleno)
+        TemaId.GALIA -> {
+            // La rueda votiva al tresbolillo (el aro, los cuatro rayos y el cubo) y, entre una y otra, la onda de La Tène en ese.
+            tresbolillo { x, y ->
+                val s = l * 0.13f
+                c.drawCircle(x, y, s, linea)
+                c.drawLine(x - s, y, x + s, y, linea); c.drawLine(x, y - s, x, y + s, linea)
+                c.drawCircle(x, y, l * 0.03f, relleno)
+            }
+            for ((x, y) in listOf(l / 2 to 0f, l / 2 to l, 0f to l / 2, l to l / 2)) {
+                val s = l * 0.09f
+                c.drawPath(Path().apply { moveTo(x - s, y + s * 0.3f); cubicTo(x - s, y - s * 0.9f, x, y - s * 0.9f, x, y); cubicTo(x, y + s * 0.9f, x + s, y + s * 0.9f, x + s, y - s * 0.3f) }, linea)
+                c.drawCircle(x - s, y + s * 0.3f, l * 0.018f, relleno); c.drawCircle(x + s, y - s * 0.3f, l * 0.018f, relleno)
+            }
         }
         TemaId.ARCONTES -> {
             // El ouroboros al tresbolillo, con la cabeza que muerde la cola, y entre uno y otro las siete esferas, chiquitas.

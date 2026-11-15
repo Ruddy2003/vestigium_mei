@@ -909,13 +909,13 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
             esquinas(7 * u) { o, sx, sy ->
                 val g = Math.toDegrees(kotlin.math.atan2(sx.toDouble(), (-sy).toDouble())).toFloat()
                 with(TrazosGalia) {
-                    hojaRoble(Offset(o.x + sx * 9 * u, o.y + sy * 4 * u), 13 * u, g + 35f, acento.copy(alpha = 0.7f), tinta.copy(alpha = 0.4f))
-                    hojaRoble(Offset(o.x + sx * 4 * u, o.y + sy * 9 * u), 13 * u, g - 35f, acento.copy(alpha = 0.7f), tinta.copy(alpha = 0.4f))
+                    hojaRoble(Offset(o.x + sx * 10 * u, o.y + sy * 4.5f * u), 16 * u, g + 35f, acento.copy(alpha = 0.7f), tinta.copy(alpha = 0.4f))
+                    hojaRoble(Offset(o.x + sx * 4.5f * u, o.y + sy * 10 * u), 16 * u, g - 35f, acento.copy(alpha = 0.7f), tinta.copy(alpha = 0.4f))
                 }
                 drawOval(tinta.copy(alpha = 0.55f), Offset(o.x - 2.2f * u, o.y - 1.2f * u), Size(4.4f * u, 5 * u))
                 drawArc(tinta.copy(alpha = 0.75f), 180f, 180f, true, Offset(o.x - 2.8f * u, o.y - 2.6f * u), Size(5.6f * u, 4.6f * u))
             }
-            with(TrazosGalia) { torques(Offset(24 * u, h - 22 * u), 9f * u, 2.6f * u) }
+            with(TrazosGalia) { torques(Offset(40 * u, h - 24 * u), 9f * u, 2.6f * u) }
         }
         // La hoja del códice: el doble filete de tinta con las esquinas en arco de nicho, los siete círculos que asoman en la
         // esquina de arriba, la lámpara encendida abajo a la izquierda y, en el canto derecho, una grieta de luz finísima.

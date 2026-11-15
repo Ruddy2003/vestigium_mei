@@ -136,9 +136,13 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
     }
+    // La bellota del roble: el cascabillo arriba, con su rabillo, y el fruto debajo, separados por una raya.
     TemaId.GALIA -> {
-        val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
-        mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
+        val caja = { y0: Float, y1: Float -> Path().apply { addRect(Rect(c.x - r * 1.2f, c.y + y0 * r, c.x + r * 1.2f, c.y + y1 * r)) } }
+        val cascabillo = menos(ovalo(Offset(c.x, c.y - r * 0.22f), r * 0.64f, r * 0.42f), caja(-0.08f, 1.2f))
+        val fruto = menos(ovalo(Offset(c.x, c.y + r * 0.3f), r * 0.47f, r * 0.68f), caja(-1.2f, 0f))
+        val rabillo = Path().apply { addRect(Rect(c.x - r * 0.07f, c.y - r * 0.95f, c.x + r * 0.07f, c.y - r * 0.55f)) }
+        mas(mas(cascabillo, fruto), rabillo)
     }
     // La lámpara de aceite de barro, de lado: el cuerpo bajo con la ranura de llenar, el pico y la llama encendida; cada
     // calificación enciende una.
