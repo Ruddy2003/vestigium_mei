@@ -3,7 +3,9 @@ package io.github.ruddy2003.vestigium
 import io.github.ruddy2003.vestigium.data.OtrasVidas
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaMongol
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaMongol.Lugar
+import io.github.ruddy2003.vestigium.ui.escenas.LuzVerano
 import io.github.ruddy2003.vestigium.ui.escenas.Momento
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol
 import io.github.ruddy2003.vestigium.ui.escenas.VeranoMongol
 import io.github.ruddy2003.vestigium.ui.escenas.VeranoMongol.Edad
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.Postura
@@ -112,5 +114,69 @@ class EscenaMongolVeranoPrueba {
         assertEquals(VeranoMongol.yeguada(a).map { Triple(it.t, it.postura, it.blanco) }, VeranoMongol.yeguada(b).map { Triple(it.t, it.postura, it.blanco) })
         assertEquals(VeranoMongol.caballosDeFuera(a), VeranoMongol.caballosDeFuera(b))
         assertEquals(VeranoMongol.hierba(a), VeranoMongol.hierba(b))
+        assertEquals(LuzVerano.sombrasDeNube(a).map { it.centro }, LuzVerano.sombrasDeNube(b).map { it.centro })
+    }
+
+    // ---------------------------------------------------------------- La ronda de luz (revision_3_luz.md)
+
+    private val bat = PiezasMongol.Ger(VeranoMongol.SITIO_BAT, 0L)
+    private fun aro(dia: String, hora: Double) = PiezasMongol.luzDelAro(bat, EscenaMongol.luces(momento(dia, hora)))
+
+    @Test fun laManchaDelAroCaminaConLaHora() {
+        // Un día claro (2027-08-01): por la mañana sube por la celosía de un lado, a mediodía cae en el suelo, por la
+        // tarde sube por la celosía del otro lado.
+        val manana = aro("2027-08-01", 7.0)!!; val mediodia = aro("2027-08-01", 13.0)!!; val tarde = aro("2027-08-01", 18.5)!!
+        assertFalse("de mañana, en la celosía", manana.enElSuelo); assertTrue(manana.centro.y > 0.3f)
+        assertTrue("a mediodía, en el suelo", mediodia.enElSuelo)
+        assertFalse("de tarde, en la celosía", tarde.enElSuelo); assertTrue(tarde.centro.y > 0.3f)
+        assertTrue("de mañana y de tarde, a lados contrarios", manana.centro.x * tarde.centro.x < 0f)
+        assertFalse(manana.deLuna || mediodia.deLuna || tarde.deLuna)
+        // Siempre dentro de la tienda y por debajo del techo.
+        for (h in listOf(6.5, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0, 17.0, 18.0, 18.5, 19.0)) {
+            val z = aro("2027-08-01", h) ?: continue
+            for (q in z.borde + z.centro) { assertTrue("$h", q.x * q.x + q.z * q.z <= bat.radio * bat.radio + 0.01f); assertTrue("$h", q.y in 0f..bat.pared) }
+        }
+    }
+
+    @Test fun conElCieloCubiertoNoHaySombraArrojada() {
+        cadaVerano { d, _ ->
+            for (h in listOf(7.0, 13.0, 18.0)) {
+                val m = momento(d.toString(), h)
+                if (m.ficha.clima == Clima.LLUVIA || m.ficha.clima == Clima.TORMENTA) {
+                    assertNull("$d $h: ni mancha de sol en la tienda", aro(d.toString(), h))
+                    assertTrue("$d $h: ni sombras de nubes", LuzVerano.sombrasDeNube(m).isEmpty())
+                    assertEquals("$d $h: ni sol raso", 0f, LuzVerano.rasante(m))
+                }
+                if (m.ficha.clima != Clima.TORMENTA) assertNull("$d $h: los rayos entre las nubes, solo con tormenta", LuzVerano.claroDeTormenta(m))
+            }
+        }
+        assertTrue("la tormenta de día deja su claro", LuzVerano.claroDeTormenta(momento("2027-07-08", 13.0)) != null)
+        assertNull("y de noche no", LuzVerano.claroDeTormenta(momento("2027-07-08", 23.0)))
+    }
+
+    @Test fun lasSombrasDeLasNubesCaminanConLaHora() {
+        // 2027-08-01 trae borregos: hay sombras, cambian de sitio con la hora y de noche no hay.
+        val manana = LuzVerano.sombrasDeNube(momento("2027-08-01", 9.0)); val tarde = LuzVerano.sombrasDeNube(momento("2027-08-01", 17.0))
+        assertTrue(manana.isNotEmpty() && tarde.isNotEmpty())
+        assertTrue("caminan", manana.zip(tarde).any { (a, b) -> (a.centro - b.centro).getDistance() > 10f })
+        assertTrue("de noche, ninguna", LuzVerano.sombrasDeNube(momento("2027-08-01", 23.0)).isEmpty())
+        assertTrue("con calima, ninguna", LuzVerano.sombrasDeNube(momento("2027-07-26", 13.0)).isEmpty())
+        // Más juntas y más chicas hacia el horizonte; ninguna en el llano de este lado.
+        for (s in manana + tarde) { assertTrue(s.centro.y >= VeranoMongol.H); assertTrue(s.centro.y - s.ry < LuzVerano.HASTA) }
+        val porAltura = manana.sortedBy { it.centro.y }; assertTrue(porAltura.first().rx < porAltura.last().rx)
+        // El sol raso: al alba y al atardecer, no a mediodía.
+        assertTrue(LuzVerano.rasante(momento("2027-07-26", 7.0)) > 0.5f); assertEquals(0f, LuzVerano.rasante(momento("2027-07-26", 13.0)))
+    }
+
+    @Test fun deNocheHayDosLuces() {
+        // La noche clara del 1 de agosto de 2027: la puerta abierta y la luna, a la vez.
+        val (calida, fria) = LuzVerano.dosLuces(momento("2027-08-01", 23.0))
+        assertTrue("la lumbre", calida > 0.3f); assertTrue("la luna", fria > 0.5f)
+        val z = aro("2027-08-01", 23.0)!!; assertTrue("la luna entra por el aro", z.deLuna)
+        // Con la luna, las sombras de la noche son las suyas; de día, las del sol.
+        val l = EscenaMongol.luces(momento("2027-08-01", 23.0)); assertTrue(LuzVerano.rayoDeSombras(l).fuerza > 0.1f)
+        val (calidaDia, friaDia) = LuzVerano.dosLuces(momento("2027-08-01", 13.0)); assertEquals(0f, calidaDia); assertEquals(0f, friaDia)
+        // Con el cielo cubierto, la luna no alumbra.
+        cadaVerano { d, _ -> val m = momento(d.toString(), 23.0); if (m.ficha.clima == Clima.LLUVIA || m.ficha.clima == Clima.TORMENTA) assertEquals("$d", 0f, LuzVerano.dosLuces(m).second) }
     }
 }

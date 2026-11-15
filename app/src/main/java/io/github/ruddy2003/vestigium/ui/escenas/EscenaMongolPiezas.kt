@@ -19,7 +19,9 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaMongol.Puerta
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Luces
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.solQueEntra
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cubicTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
@@ -208,6 +210,72 @@ internal object PiezasMongol {
         val umbral: Offset get() = pared(0f, 0f)
     }
 
+    /** La luz de la luna (azul plata), la otra luz de la noche. */
+    val LUNA = Color(0xFFC4D0EC)
+
+    /**
+     * El rayo de la luna, para las sombras de luna y el lado plata de las cosas: viene del lado de la luna, más alto que
+     * el sol raso (de 14° a 54° según lo alta que esté) y su sombra es fría y floja, de [lunaQueAlumbra] **[Aproximación]**.
+     * `Rayo(l)` de noche ya toma el lado de la luna, pero la altura del sol (sombras larguísimas) y ninguna fuerza.
+     */
+    fun rayoDeLuna(l: Luces): Rayo {
+        val cruda = ((l.lunaX - 0.5f) * 2.6f).coerceIn(-1f, 1f)
+        val lat = if (abs(cruda) < 0.35f) (if (cruda < 0f) -0.35f else 0.35f) else cruda
+        val elev = Math.toRadians(14.0 + 40.0 * (l.lunaAltura / 1.2f).coerceIn(0f, 1f))
+        val tan = kotlin.math.tan(elev).toFloat(); val cot = 1f / tan
+        return Rayo(dia = 0f, lat = lat, cot = cot, tan = tan, ax = -lat * cot, ay = -0.33f * (1.3f - 0.6f * abs(lat)) * cot,
+            fuerza = 0.42f * lunaQueAlumbra(l), color = Color(0xFF56609A), contraste = 0.3f)
+    }
+
+    /**
+     * Cuánto alumbra la luna, de 0 a 1: de noche, con la luna alta y sin el cielo cubierto **[Aproximación]**: las mismas
+     * condiciones que pide `solQueEntra` para la mancha de luna de los interiores, con un paso suave en vez de un umbral.
+     */
+    fun lunaQueAlumbra(l: Luces): Float =
+        ((l.noche - 0.3f) / 0.4f).coerceIn(0f, 1f) * (1f - 1.6f * l.nublado).coerceIn(0f, 1f) * (l.lunaAltura / 0.15f).coerceIn(0f, 1f)
+
+    /**
+     * La luz que entra por el aro y lo que alumbra dentro de la tienda: la mancha ([borde], en metros, en los ejes de la
+     * tienda), si cae en el suelo o en la celosía, su [centro], su [fuerza] y [color], y hacia dónde baja ([baja]: lo que
+     * se corre en x y en z por cada metro que baja).
+     */
+    class LuzDelAro(val centro: V3, val enElSuelo: Boolean, val borde: List<V3>, val fuerza: Float, val color: Color, val deLuna: Boolean, val baja: V3)
+
+    /**
+     * Dónde cae dentro de la tienda [g] la luz del sol (o de la luna) que entra por el aro, con las luces [l]; null si no
+     * entra (el cielo cubierto, la noche sin luna, la tienda sin techo).
+     *
+     * Es la lógica de `solQueEntra` de los interiores (`paisaje/Estancia.kt`), con el aro por ventana **[Aproximación]**:
+     * la luz baja hacia el fondo de la tienda (el sitio de honor, frente a la puerta) y se corre al lado contrario del
+     * sol, así que la mancha camina con la hora y siempre cae donde se ve por la puerta. Con el sol bajo sube por la
+     * celosía del fondo (la altura del sol se toma de 35° como poco, para que no se vaya al techo, que no se ve); a
+     * mediodía cae en el suelo, entre el fogón y el fondo; por la tarde vuelve a subir por la celosía, del otro lado. La
+     * luna entra siempre a la misma altura, como en la capilla. No es el recorrido real del sol por el aro de una tienda
+     * que mira al sur.
+     */
+    fun luzDelAro(g: Ger, l: Luces): LuzDelAro? {
+        if (g.fieltro < 0.999f) return null
+        val sq = solQueEntra(l, LUNA) ?: return null
+        val r = Rayo(l)
+        val lado = -r.lat * 0.24f
+        val n = sqrt(1f + lado * lado); val hx = lado / n; val hz = 1f / n
+        val e = if (sq.deLuna) sq.e else sq.e.coerceAtLeast(0.7f)
+        val ux = hx / e; val uz = hz / e
+        val rr = g.radio - 0.03f
+        fun cae(a: Float, b: Float): V3 {
+            val xf = a + ux * g.cumbre; val zf = b + uz * g.cumbre
+            if (xf * xf + zf * zf <= rr * rr) return V3(xf, 0f, zf)
+            val aa = ux * ux + uz * uz; val bb = 2f * (a * ux + b * uz); val cc = a * a + b * b - rr * rr
+            val t = (-bb + sqrt((bb * bb - 4f * aa * cc).coerceAtLeast(0f))) / (2f * aa)
+            return V3(a + ux * t, (g.cumbre - t).coerceIn(0f, g.pared), b + uz * t)
+        }
+        val ra = g.aro * 0.8f
+        val borde = (0 until 16).map { val t = (2 * PI * it / 16).toFloat(); cae(ra * sin(t), -ra * cos(t)) }
+        val c = cae(0f, 0f)
+        val color = if (sq.deLuna) lerp(sq.color, Color(0xFF94B0EE), 0.45f) else lerp(sq.color, Color(0xFFFFC97E), 0.5f)
+        return LuzDelAro(c, c.y < 0.01f, borde, sq.fuerza, color, sq.deLuna, V3(ux, -1f, uz))
+    }
+
     /** La silueta de la tienda (para lo que la tape o se recorte con ella). */
     fun silueta(g: Ger): Path {
         val (a, b) = g.visible(); val n = 24
@@ -256,16 +324,34 @@ internal object PiezasMongol {
         return poligono(g.pared(t0, 0f), g.pared(t1, 0f), g.pared(c + (t1 - c) * abre * g.radio / r1 * 1.6f, 0f, r1), g.pared(c + (t0 - c) * abre * g.radio / r1 * 1.6f, 0f, r1))
     }
 
-    /** Pinta el charco de luz de la puerta con la fuerza [k] (de 0 a 1). */
+    /**
+     * Pinta el charco de luz de la puerta con la fuerza [k] (de 0 a 1): el trapecio que recortan las jambas, con su
+     * borde reconocible (duro junto al umbral, blando lejos) y más fuerte junto a la puerta, encima de un halo bajo.
+     * Con la puerta cerrada, la rendija: una raya de luz al pie de la hoja y un abanico corto.
+     */
     fun DrawScope.luzDePuerta(g: Ger, k: Float, largo: Float = 3.6f) {
-        if (charcoDePuerta(g, largo) == null || k <= 0.02f) return
+        if (k <= 0.02f) return
         val a = g.umbral; val b = g.pared(0f, 0f, g.radio + largo)
-        val forma = charcoDePuerta(g, largo)!!
-        drawPath(forma, Brush.linearGradient(0f to C.LUMBRE.copy(alpha = (0.2f * k).coerceIn(0f, 1f)), 1f to Color.Transparent, start = a, end = b), blendMode = BlendMode.Plus)
-        // Encima, manchas blandas a lo largo del charco, cada vez más anchas y más tenues: el borde no queda duro.
         val ancho = (g.pared(g.mediaPuerta, 0f) - g.pared(-g.mediaPuerta, 0f)).getDistance()
-        for (j in 0 until 7) { val t = j / 6f; val c = a + (b - a) * (0.08f + 0.8f * t); val w = ancho * (0.7f + 1.6f * t); mancha(c, w, w * 0.32f + 2f, C.LUMBRE, (0.3f * k * (1f - 0.75f * t)).coerceIn(0f, 1f)) }
-        mancha(a + (b - a) * 0.12f, (b - a).getDistance() * 0.35f + 6f, 5f, C.LUMBRE, 0.22f * k)
+        val forma = charcoDePuerta(g, largo)
+        if (forma == null) {
+            if (!g.puertaSeVe) return
+            val d = g.mediaPuerta
+            val abanico = poligono(g.pared(-d, 0f), g.pared(d, 0f), g.pared(d * 1.25f, 0f, g.radio + 0.5f), g.pared(-d * 1.25f, 0f, g.radio + 0.5f))
+            drawPath(abanico, Brush.linearGradient(0f to C.LUMBRE.copy(alpha = (0.35f * k).coerceIn(0f, 1f)), 1f to Color.Transparent, start = a, end = g.pared(0f, 0f, g.radio + 0.5f)), blendMode = BlendMode.Plus)
+            drawLine(C.LUMBRE.copy(alpha = (0.6f * k).coerceIn(0f, 1f)), g.pared(-d, 0.01f, g.radio + 0.05f), g.pared(d, 0.01f, g.radio + 0.05f), (0.025f * g.s.escala(0f, -g.radio)).coerceIn(0.4f, 1.4f), StrokeCap.Round, blendMode = BlendMode.Plus)
+            return
+        }
+        // El halo bajo, ancho y tenue, que no tiene forma.
+        mancha(a + (b - a) * 0.18f, (b - a).getDistance() * 0.45f + ancho, ancho * 0.5f + 3f, C.LUMBRE, 0.16f * k)
+        // El trapecio: fuerte junto al umbral, se apaga lejos.
+        val calor = lerp(C.LUMBRE, Color(0xFFFFD9A0), 0.25f)
+        drawPath(forma, Brush.linearGradient(0f to calor.copy(alpha = (0.42f * k).coerceIn(0f, 1f)), 0.55f to calor.copy(alpha = (0.18f * k).coerceIn(0f, 1f)), 1f to Color.Transparent, start = a, end = b), blendMode = BlendMode.Plus)
+        // El borde: tres trazos, cada uno más ancho y más tenue (como `manchaDeSol`), que se abren con la distancia.
+        val e = (ancho / 4f).coerceIn(0.6f, 4f)
+        for ((w, al) in listOf(2.6f to 0.05f, 1.6f to 0.07f, 0.8f to 0.08f)) drawPath(forma, Brush.linearGradient(0f to calor.copy(alpha = (al * k).coerceIn(0f, 1f)), 1f to Color.Transparent, start = a, end = b), style = Stroke(w * e), blendMode = BlendMode.Plus)
+        // Junto al umbral, la luz más blanca.
+        mancha(a + (b - a) * 0.06f, ancho * 0.55f, ancho * 0.16f + 1f, Color(0xFFFFE2B0), 0.3f * k)
     }
 
     /** Pinta la tienda [g] con el pincel [p] (su luz, y de noche la lumbre de cerca) y la luz [sol]. */
@@ -288,6 +374,13 @@ internal object PiezasMongol {
             val xs = pie.map { it.x }; val x0 = xs.min(); val x1 = xs.max()
             val paradas = angulos.mapIndexed { i, th -> ((xs[i] - x0) / (x1 - x0).coerceAtLeast(0.01f)) to p.por(fieltro, sol.t(s.normal(V3(sin(th), 0f, -cos(th)))), lejos) }.sortedBy { it.first }
             drawPath(forma, Brush.horizontalGradient(*paradas.toTypedArray(), startX = x0, endX = x1))
+            // De noche, el lado que mira a la luna, azul plata.
+            val luna = lunaQueAlumbra(p.l)
+            if (luna > 0.02f) {
+                val sl = Sol3(rayoDeLuna(p.l))
+                val plata = angulos.mapIndexed { i, th -> ((xs[i] - x0) / (x1 - x0).coerceAtLeast(0.01f)) to LUNA.copy(alpha = (0.24f * luna * (1f - lejos) * sl.t(s.normal(V3(sin(th), 0f, -cos(th))))).coerceIn(0f, 1f)) }.sortedBy { it.first }
+                drawPath(forma, Brush.horizontalGradient(*plata.toTypedArray(), startX = x0, endX = x1), blendMode = BlendMode.Plus)
+            }
             clipPath(forma) {
                 val yPie = pie.maxOf { it.y }; val yAlto = alto.minOf { it.y }; val h = yPie - yAlto
                 // El bajo sucio: la tierra y el estiércol que salpican, y la humedad.
@@ -399,10 +492,14 @@ internal object PiezasMongol {
             drawPath(Path().apply { moveTo(arriba[0]); for (q in arriba.drop(1)) lineTo(q) }, p.luz(C.NIEVE, lejos).copy(alpha = 0.8f), style = Stroke((0.02f * s.escala(0f, 0f)).coerceIn(0.3f, 1.2f)))
         }
 
-        // ---- El aro, de noche: la luz del fuego sale por arriba y alumbra el humo.
+        // ---- El aro, de noche: la luz del fuego sale por arriba y enciende por dentro la columna de humo, que se abre
+        // y se apaga al subir (el humo de verdad va encima, en la parte viva).
         if (noche > 0.25f && g.dentro > 0.05f && g.fieltro >= 0.999f) {
-            val h = g.humero
-            resplandor(h + Offset(0f, -0.3f * s.escala(0f, 0f)), 1.3f * s.escala(0f, 0f), 0.45f * g.dentro * noche, C.LUMBRE)
+            val h = g.humero; val e = s.escala(0f, 0f); val k = (g.dentro * noche).coerceIn(0f, 1f)
+            resplandor(h + Offset(0f, -0.3f * e), 1.3f * e, 0.45f * k, C.LUMBRE)
+            // Resplandores blandos, cada vez más anchos y más tenues, a lo largo de la columna (sin borde: es humo).
+            val n = if (e > 12f) 5 else 2
+            for (i in 0 until n) resplandor(h + Offset(0f, -(0.35f + 0.42f * i * 5f / n) * e), (0.42f + 0.12f * i * 5f / n) * e, 0.2f * k * (1f - i / n.toFloat()), C.LUMBRE)
         }
     }
 
@@ -411,28 +508,34 @@ internal object PiezasMongol {
         val s = g.s; val lejos = g.lejos; val m = if (g.detalle) 48 else 24
         val pendiente = atan((g.cumbre - g.pared) / (g.alero - g.aro))
         val yAlero = g.pared - 0.06f
-        class Cara(val t0: Float, val t1: Float, val hondo: Float, val luz: Float)
+        class Cara(val t0: Float, val t1: Float, val hondo: Float, val luz: Float, val plata: Float)
+        val luna = lunaQueAlumbra(p.l); val sl = if (luna > 0.02f) Sol3(rayoDeLuna(p.l)) else null
         val caras = (0 until m).map { i ->
             val t0 = (2 * PI * i / m).toFloat(); val t1 = (2 * PI * (i + 1) / m).toFloat(); val tm = (t0 + t1) / 2f
             val nl = V3(sin(tm) * sin(pendiente), cos(pendiente), -cos(tm) * sin(pendiente))
             val centro = V3((g.alero + g.aro) / 2f * sin(tm), (yAlero + g.cumbre) / 2f, -(g.alero + g.aro) / 2f * cos(tm))
-            if (!s.seVe(centro, nl)) null else Cara(t0, t1, s.hondo(centro), sol.t(s.normal(nl)))
+            if (!s.seVe(centro, nl)) null else Cara(t0, t1, s.hondo(centro), sol.t(s.normal(nl)), sl?.t(s.normal(nl)) ?: 0f)
         }.filterNotNull().sortedByDescending { it.hondo }
         fun alero(t: Float) = s.p(g.alero * sin(t), yAlero, -g.alero * cos(t))
         fun arriba(t: Float, k: Float = 1f) = s.p((g.aro + (g.alero - g.aro) * (1f - k)) * sin(t), g.cumbre - (g.cumbre - yAlero) * (1f - k), -(g.aro + (g.alero - g.aro) * (1f - k)) * cos(t))
         val base = Path().apply { for (c in caras) addPath(poligono(alero(c.t0), alero(c.t1), arriba(c.t1), arriba(c.t0))) }
         drawPath(base, p.medio(color, lejos))
+        // El lado de la luna, azul plata, en cuatro tandas según cuánto mira a la luna (cuatro trazos y no uno por cara).
+        val plata = if (luna > 0.02f) Array(4) { Path() } else null
         for ((i, c) in caras.withIndex()) {
             val forma = poligono(alero(c.t0), alero(c.t1), arriba(c.t1), arriba(c.t0))
             val col = p.por(color, c.luz.coerceIn(-1f, 1f), lejos)
             drawPath(forma, col)
             drawPath(forma, col, style = Stroke(0.5f))
+            if (plata != null && c.plata > 0f) plata[(c.plata * 4f).toInt().coerceIn(0, 3)].addPath(forma)
             // El cerco de hollín alrededor del aro, y la mugre del alero.
             val h0 = arriba(c.t0, 0.72f); val h1 = arriba(c.t1, 0.72f)
             drawPath(poligono(h0, h1, arriba(c.t1), arriba(c.t0)), Brush.linearGradient(0f to Color.Transparent, 1f to p.sombra(C.HOLLIN, lejos).copy(alpha = 0.55f + 0.2f * g.desgaste), start = (h0 + h1) / 2f, end = (arriba(c.t0) + arriba(c.t1)) / 2f))
             // Una vara de cada tres se nota bajo el fieltro: el fieltro se hunde un poco entre ellas.
             if (g.detalle && i % 3 == 0) drawLine(p.sombra(color, lejos).copy(alpha = 0.22f), alero(c.t0), arriba(c.t0), (0.02f * s.escala(0f, 0f)).coerceIn(0.3f, 0.9f))
         }
+        // El que le da la espalda a la luna se queda con la noche.
+        if (plata != null) for (j in 0 until 4) if (!plata[j].isEmpty) drawPath(plata[j], LUNA.copy(alpha = (0.2f * luna * (j + 0.5f) / 4f * (1f - lejos)).coerceIn(0f, 1f)), blendMode = BlendMode.Plus)
         if (g.detalle && s.escala(0f, 0f) > 20f) clipPath(base) {
             val e2 = s.escala(0f, 0f); val tz = Azar(Semilla.de(g.semilla, "fieltro", "techo"))
             val (va, vb) = g.visible()
@@ -519,8 +622,144 @@ internal object PiezasMongol {
         drawPath(marco, p.por(C.ROJO, tFrente, lejos))
         drawPath(rect(-d * 1.22f, d * 1.22f, h + 0.08f, h + 0.12f, g.radio + 0.035f), p.luz(lerp(C.ROJO, C.ORO, 0.35f), lejos).copy(alpha = 0.8f))
         if (g.detalle) drawPath(rect(-d * 1.22f, -d * 1.1f, 0f, h + 0.12f, g.radio + 0.035f), p.luz(lerp(C.ROJO, C.MADERA, 0.6f), lejos).copy(alpha = 0.5f))
-        // El hueco.
+        // El hueco: de cerca, la tienda por dentro ([dentro]); de lejos, la penumbra con la celosía y el fuego.
         val hueco = rect(-d, d, 0.04f, h, g.radio + 0.03f)
+        if (g.puerta != Puerta.CERRADA) { if (esc >= 9f && g.fieltro >= 0.999f) dentro(g, p, hueco, esc) else huecoLejano(g, p, hueco, esc) }
+        hoja(g, p, sol, hueco)
+    }
+
+    /** Lo que se corre la luz del aro que pasa por el punto ([a], [b]) del aro hasta caer en el suelo o en la celosía. */
+    private fun caeDelAro(g: Ger, baja: V3, a: Float, b: Float): V3 {
+        val ux = baja.x; val uz = baja.z; val rr = g.radio - 0.03f
+        val xf = a + ux * g.cumbre; val zf = b + uz * g.cumbre
+        if (xf * xf + zf * zf <= rr * rr) return V3(xf, 0f, zf)
+        val aa = ux * ux + uz * uz; val bb = 2f * (a * ux + b * uz); val cc = a * a + b * b - rr * rr
+        val t = (-bb + sqrt((bb * bb - 4f * aa * cc).coerceAtLeast(0f))) / (2f * aa).coerceAtLeast(1e-4f)
+        return V3(a + ux * t, (g.cumbre - t).coerceIn(0f, g.pared), b + uz * t)
+    }
+
+    /**
+     * La tienda por dentro, vista por la puerta de una tienda cercana: es la estancia de los interiores
+     * (`paisaje/Estancia.kt`) hecha redonda, con el aro por ventana. Se mira como desde la puerta, con los ojos a 1.4 m y
+     * a 9 m, a lo largo de [Ger.haciaDentro] **[Aproximación]**: con los ojos de verdad (altos, lejos) solo se vería el
+     * suelo. De atrás adelante: la penumbra cálida, el suelo de fieltro, la celosía del fondo (alumbrada desde abajo por
+     * el fogón), la alfombra, el cofre pintado; la mancha de la luz que entra por el aro ([luzDelAro]), con la sombra de
+     * los rayos del aro y la celosía encendida dentro; el fogón con las trébedes y la olla; el humo que sube al aro, y el
+     * haz de luz con su polvo, que lo cruza. De noche, el fuego alumbra la celosía y, si hay luna, entra su mancha fría.
+     */
+    private fun DrawScope.dentro(g: Ger, p: Pincel, hueco: Path, esc: Float) {
+        val s = g.s; val lejos = g.lejos; val l = p.l; val noche = l.noche; val rr = g.radio - 0.03f
+        val vx = 0f; val vz = 1f; val lx = 1f; val lz = 0f
+        val yi = 1.4f; val dist = 9f; val ex = -vx * dist; val ez = -g.radio - vz * dist
+        fun t(z: Float) = (-g.radio - ez) / (z - ez).coerceAtLeast(0.05f)
+        fun q(x: Float, y: Float, z: Float): Offset { val k = t(z); return s.p(ex + (x - ex) * k, yi + (y - yi) * k, -g.radio) }
+        fun q(a: V3) = q(a.x, a.y, a.z)
+        fun k(z: Float) = esc * t(z)
+        val calor = (g.dentro * (0.25f + 0.75f * noche)).coerceIn(0f, 1f)
+        // La penumbra de dentro es cálida (la luz rebota en el fieltro y la madera, y el fogón nunca se apaga del todo):
+        // el pincel con algo de lumbre siempre, y mucha de noche.
+        val pf = p.con(maxOf(p.calida, 0.3f + 0.6f * calor)); val pl = p.con(maxOf(p.calida, 0.2f + 0.8f * calor))
+        val oscuro = pf.sombra(lerp(C.HOLLIN, C.CUERO, 0.35f), lejos)
+        fun penumbra(c: Color, cuanto: Float) = lerp(pf.medio(c, lejos), oscuro, (0.25f + 0.75f * cuanto).coerceIn(0f, 1f))
+        val luz = luzDelAro(g, l)
+        val ys = (0..1).map { g.pared(0f, if (it == 0) g.altoPuerta else 0.04f).y }
+        val forro = lerp(C.FIELTRO, C.MADERA, 0.45f); val suelo = lerp(C.FIELTRO_VIEJO, C.TIERRA, 0.3f)
+        clipPath(hueco) {
+            // La penumbra: más honda arriba, donde no llega la luz de la puerta.
+            drawRect(Brush.verticalGradient(listOf(penumbra(forro, 0.7f), penumbra(forro, 0.45f)), ys[0], ys[1]), Offset(-2f, ys[0] - 2f), Size(ANCHO + 4f, ys[1] - ys[0] + 4f))
+            // El suelo de fieltro, más claro junto a la puerta, por donde entra la luz de fuera.
+            val pisoTienda = poligono((0 until 28).map { val a = (2 * PI * it / 28).toFloat(); q(rr * sin(a), 0f, -rr * cos(a)) })
+            drawPath(pisoTienda, Brush.verticalGradient(listOf(penumbra(suelo, 0.4f), penumbra(lerp(suelo, C.FIELTRO, 0.3f), 0.12f)), q(vx * rr, 0f, vz * rr).y, ys[1]))
+            mancha(q(0f, 0f, -g.radio + 0.7f), 0.9f * k(-g.radio + 0.7f), 0.3f * k(-g.radio + 0.7f), pf.luz(suelo, lejos), 0.35f * p.r.dia)
+            // La celosía del fondo: rombos de varas, encendidos desde abajo por el fogón.
+            val celosia = Path()
+            for (i in 0 until 120) {
+                val t0 = (2 * PI * i / 120).toFloat(); if (sin(t0) * vx - cos(t0) * vz < 0.05f) continue
+                for (sentido in listOf(-1f, 1f)) { val t1 = t0 + sentido * 0.13f
+                    for (j in 0..3) { val th = t0 + (t1 - t0) * j / 3f; val c = q(rr * sin(th), g.pared * j / 3f, -rr * cos(th)); if (j == 0) celosia.moveTo(c) else celosia.lineTo(c) } }
+            }
+            val pieFondo = q(vx * rr, 0f, vz * rr).y; val altoFondo = q(vx * rr, g.pared, vz * rr).y
+            val gl = (0.022f * k(rr)).coerceIn(0.25f, 1f)
+            drawPath(celosia, Brush.verticalGradient(listOf(pl.medio(lerp(C.MADERA, C.ROJO, 0.25f), lejos), penumbra(C.MADERA, 0.55f)), pieFondo, altoFondo), style = Stroke(gl))
+            // La alfombra delante del sitio de honor, pintada: roja, con su cenefa y un rombo azul.
+            val ca = V3(vx * 1.55f, 0.01f, vz * 1.55f)
+            fun en(u: Float, w: Float) = q(ca.x + lx * u + vx * w, 0.01f, ca.z + lz * u + vz * w)
+            val alfombra = poligono(en(-0.85f, -0.6f), en(0.85f, -0.6f), en(0.85f, 0.6f), en(-0.85f, 0.6f))
+            drawPath(alfombra, penumbra(lerp(C.ROJO, C.CUERO, 0.15f), 0.3f))
+            drawPath(poligono(en(-0.7f, -0.47f), en(0.7f, -0.47f), en(0.7f, 0.47f), en(-0.7f, 0.47f)), penumbra(C.ORO, 0.35f), style = Stroke((0.04f * k(1.5f)).coerceIn(0.3f, 1.2f)))
+            drawPath(poligono(en(0f, -0.32f), en(0.42f, 0f), en(0f, 0.32f), en(-0.42f, 0f)), penumbra(C.AZUL, 0.3f))
+            // El cofre pintado, arrimado a la celosía del fondo.
+            val tf = 2f * g.radio * vz; val fx = vx * tf; val fz = -g.radio + vz * tf
+            val th = atan2(fx, -fz) + 0.18f; val tx = cos(th); val tz = sin(th)
+            fun cofre(rad: Float, u: Float, y: Float) = q(rad * sin(th) + tx * u, y, -rad * cos(th) + tz * u)
+            val pintado = lerp(C.ROJO, C.ORO, 0.3f)
+            val frente = poligono(cofre(2.4f, -0.5f, 0f), cofre(2.4f, 0.5f, 0f), cofre(2.4f, 0.5f, 0.56f), cofre(2.4f, -0.5f, 0.56f))
+            drawPath(poligono(cofre(2.4f, -0.5f, 0.56f), cofre(2.4f, 0.5f, 0.56f), cofre(2.82f, 0.5f, 0.56f), cofre(2.82f, -0.5f, 0.56f)), penumbra(pintado, 0.2f))
+            drawPath(frente, Brush.verticalGradient(listOf(penumbra(pintado, 0.35f), pl.medio(pintado, lejos)), cofre(2.4f, 0f, 0.56f).y, cofre(2.4f, 0f, 0f).y))
+            val gc = (0.03f * k(2.4f)).coerceIn(0.3f, 1f)
+            drawPath(poligono(cofre(2.39f, -0.42f, 0.06f), cofre(2.39f, 0.42f, 0.06f), cofre(2.39f, 0.42f, 0.42f), cofre(2.39f, -0.42f, 0.42f)), penumbra(C.ORO, 0.25f), style = Stroke(gc))
+            drawLine(penumbra(C.HOLLIN, 0.2f), cofre(2.39f, -0.5f, 0.47f), cofre(2.39f, 0.5f, 0.47f), gc)
+            val medallon = cofre(2.39f, 0f, 0.25f); drawCircle(penumbra(C.ORO, 0.2f), (0.09f * k(2.4f)).coerceAtLeast(0.5f), medallon)
+            // La luz que entra por el aro: su mancha, con el borde blando (tres trazos, como `manchaDeSol`), la sombra de
+            // los rayos del aro y, si cae en la celosía, las varas encendidas.
+            if (luz != null) {
+                val kk = luz.fuerza; val forma = poligono(envolvente(luz.borde.map { q(it) }))
+                val kz = k(luz.centro.z)
+                for ((w, al) in listOf(0.16f to 0.05f, 0.09f to 0.07f, 0.04f to 0.1f)) drawPath(forma, luz.color.copy(alpha = al * kk), style = Stroke(w * kz), blendMode = BlendMode.Plus)
+                // La de luna enfría lo que toca (encima del fuego, que la entibiaría): primero tiñe, luego alumbra.
+                if (luz.deLuna) drawPath(forma, luz.color.copy(alpha = (0.4f * kk).coerceIn(0f, 1f)))
+                drawPath(forma, luz.color.copy(alpha = ((if (luz.deLuna) 0.22f else 0.44f) * kk).coerceIn(0f, 1f)), blendMode = BlendMode.Plus)
+                clipPath(forma) {
+                    if (!luz.enElSuelo) drawPath(celosia, lerp(pf.luz(C.MADERA, lejos), luz.color, 0.3f).copy(alpha = 0.8f), style = Stroke(gl))
+                    val ra = g.aro * 0.8f
+                    for (j in 0 until 8) {
+                        val a = (PI * j / 4).toFloat()
+                        val rayo = (0..5).map { u -> q(caeDelAro(g, luz.baja, ra * (1f - u / 5f) * sin(a), -ra * (1f - u / 5f) * cos(a))) }
+                        drawPath(Path().apply { moveTo(rayo[0]); for (c in rayo.drop(1)) lineTo(c) }, oscuro.copy(alpha = 0.55f), style = Stroke((0.05f * kz).coerceIn(0.3f, 1.6f)))
+                    }
+                    val anillo = (0..24).map { u -> val a = (2 * PI * u / 24).toFloat(); q(caeDelAro(g, luz.baja, ra * sin(a), -ra * cos(a))) }
+                    drawPath(Path().apply { moveTo(anillo[0]); for (c in anillo.drop(1)) lineTo(c) }, oscuro.copy(alpha = 0.5f), style = Stroke((0.07f * kz).coerceIn(0.4f, 2f)))
+                }
+            } else if (noche < 0.5f) {
+                // Con el cielo cubierto, el aro solo deja una claridad gris bajo él, sin forma.
+                mancha(q(0f, 0f, 0.4f), 1.1f * k(0.4f), 0.35f * k(0.4f), pf.luz(suelo, lejos), 0.22f * (1f - noche))
+            }
+            // El fogón: la ceniza, las brasas, las trébedes de hierro y la olla.
+            val kc = k(0f)
+            drawPath(poligono((0 until 16).map { val a = (2 * PI * it / 16).toFloat(); q(0.46f * sin(a), 0.01f, -0.46f * cos(a)) }), penumbra(lerp(C.PIEDRA, C.HOLLIN, 0.4f), 0.35f))
+            mancha(q(0f, 0.05f, 0f), 0.32f * kc, 0.1f * kc, C.LUMBRE, (0.25f + 0.6f * g.dentro).coerceIn(0f, 1f))
+            val hierro = pf.sombra(lerp(C.HOLLIN, C.CUERO, 0.15f), lejos)
+            for (j in 0 until 3) { val a = (2 * PI * j / 3 + 0.5).toFloat(); drawLine(hierro, q(0.32f * sin(a), 0f, -0.32f * cos(a)), q(0.2f * sin(a), 0.4f, -0.2f * cos(a)), (0.035f * kc).coerceIn(0.3f, 1.2f)) }
+            val boca = (0 until 14).map { val a = (2 * PI * it / 14).toFloat(); q(0.22f * sin(a), 0.56f, -0.22f * cos(a)) }
+            val fondoOlla = (0 until 10).map { val a = (2 * PI * it / 10).toFloat(); q(0.14f * sin(a), 0.36f, -0.14f * cos(a)) }
+            val olla = poligono(envolvente(boca + fondoOlla))
+            drawPath(olla, Brush.verticalGradient(listOf(hierro, lerp(hierro, C.LUMBRE, 0.35f * calor)), boca.minOf { it.y }, fondoOlla.maxOf { it.y }))
+            drawPath(poligono(boca), penumbra(lerp(C.FIELTRO, C.TIERRA, 0.35f), 0.3f))
+            drawPath(poligono(boca), pf.medio(C.HOLLIN, lejos), style = Stroke((0.03f * kc).coerceIn(0.3f, 1f)))
+            // El humo que sube del fogón al aro (en el haz se enciende).
+            val h0 = q(0f, 0.6f, 0f); val h1 = q(0f, g.cumbre, 0f); val w0 = 0.12f * kc; val w1 = 0.4f * kc
+            drawPath(poligono(h0 + Offset(-w0, 0f), h0 + Offset(w0, 0f), h1 + Offset(w1, 0f), h1 + Offset(-w1, 0f)), Brush.verticalGradient(listOf(pf.medio(lerp(C.FIELTRO, C.PIEDRA, 0.4f), lejos).copy(alpha = 0.22f * (0.3f + g.dentro)), Color.Transparent), h0.y, h1.y))
+            // El haz: del aro a la mancha, con el polvo y el humo que flotan en él.
+            if (luz != null) {
+                val ra = g.aro * 0.8f; val kk = luz.fuerza
+                val arriba = (0 until 12).map { val a = (2 * PI * it / 12).toFloat(); q(ra * sin(a), g.cumbre, -ra * cos(a)) }
+                val haz = poligono(envolvente(arriba + luz.borde.map { q(it) }))
+                drawPath(haz, Brush.linearGradient(0f to luz.color.copy(alpha = 0.12f * kk), 1f to luz.color.copy(alpha = 0.34f * kk), start = q(0f, g.cumbre, 0f), end = q(luz.centro)), blendMode = BlendMode.Plus)
+                val az = Azar(Semilla.de(g.semilla, "motas"))
+                repeat(26) {
+                    val a = az.entre(0f, 6.28f); val u = sqrt(az.real()) * ra; val a0 = V3(u * sin(a), g.cumbre, -u * cos(a))
+                    val c = caeDelAro(g, luz.baja, a0.x, a0.z); val f = az.entre(0.3f, 0.97f)
+                    drawCircle(luz.color.copy(alpha = (0.7f * kk * az.real()).coerceIn(0f, 1f)), (0.014f * k(c.z)).coerceIn(0.25f, 0.9f), q(a0 + (c - a0) * f), blendMode = BlendMode.Plus)
+                }
+            }
+            // El fuego alumbra la tienda: el halo alrededor del fogón, que sube por la celosía.
+            if (g.dentro > 0.05f) resplandor(q(0f, 0.35f, 0f), 1.5f * kc, ((0.2f + 0.8f * noche) * g.dentro).coerceIn(0f, 1f), C.LUMBRE)
+        }
+    }
+
+    /** El hueco de la puerta de una tienda lejana: la penumbra con la celosía, un cofre, el resplandor del fuego y la mancha del aro. */
+    private fun DrawScope.huecoLejano(g: Ger, p: Pincel, hueco: Path, esc: Float) {
+        val lejos = g.lejos; val d = g.mediaPuerta; val h = g.altoPuerta; val noche = p.l.noche
         val calor = (g.dentro * (0.25f + 0.75f * noche)).coerceIn(0f, 1f)
         val penumbra = lerp(p.sombra(C.HOLLIN, lejos), C.LUMBRE, 0.1f * calor)
         val abajoCalido = lerp(lerp(p.medio(C.MADERA_OSC, lejos), C.HOLLIN, 0.4f), C.LUMBRE, 0.55f * calor)
@@ -536,8 +775,21 @@ internal object PiezasMongol {
             drawRect(lerp(p.sombra(C.ROJO, lejos), C.LUMBRE, 0.3f * calor), Offset(c.x - w * 0.15f, ys[1] - alto * 0.38f), Size(w * 0.5f, alto * 0.22f))
             drawRect(lerp(p.sombra(C.ORO, lejos), C.LUMBRE, 0.3f * calor).copy(alpha = 0.6f), Offset(c.x - w * 0.15f, ys[1] - alto * 0.33f), Size(w * 0.5f, alto * 0.025f))
             if (g.dentro > 0.05f) resplandor(Offset(c.x, ys[1] - alto * 0.05f), alto * 0.9f, (0.3f + 0.7f * noche) * g.dentro, C.LUMBRE)
+            // La luz del aro, reducida: un punto de luz en el fondo, más arriba con el sol bajo.
+            val luz = luzDelAro(g, p.l)
+            if (luz != null) mancha(Offset(c.x + w * 0.3f * (-p.r.lat), ys[1] - alto * (0.1f + 0.5f * luz.centro.y / g.pared)), w * 0.22f, alto * 0.12f, luz.color, 0.5f * luz.fuerza)
         }
-        // La hoja de fieltro acolchado: blanca, con el pespunte en rombos de hilo azul y el ribete rojo.
+    }
+
+    /** La hoja de fieltro acolchado de la puerta: blanca, con el pespunte en rombos de hilo azul y el ribete rojo. */
+    private fun DrawScope.hoja(g: Ger, p: Pincel, sol: Sol3, hueco: Path) {
+        val s = g.s; val lejos = g.lejos; val d = g.mediaPuerta; val h = g.altoPuerta; val noche = p.l.noche
+        val esc = s.escala(0f, -g.radio)
+        fun rect(t0: Float, t1: Float, y0: Float, y1: Float, r: Float = g.radio + 0.02f): Path {
+            val arriba = (0..4).map { g.pared(t0 + (t1 - t0) * it / 4f, y1, r) }; val abajo = (0..4).map { g.pared(t0 + (t1 - t0) * it / 4f, y0, r) }
+            return poligono(abajo + arriba.reversed())
+        }
+        val tFrente = sol.t(s.normal(V3(0f, 0f, -1f)))
         val hoja = lerp(C.FIELTRO, Color.White, 0.35f)
         fun acolchado(forma: Path, t0: Float, t1: Float, y0: Float, y1: Float) {
             drawPath(forma, p.por(hoja, tFrente, lejos))

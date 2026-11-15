@@ -71,7 +71,7 @@ internal object VeranoMongol {
     val SITIO_BAT = Sitio(MIRADA, Offset(300f, 214f), 32f, -0.62f)
 
     /** El odre en su armazón, junto a la puerta. */
-    val ODRE = Offset(224f, 244f)
+    val ODRE = Offset(217f, 245f)
 
     /** La estaca cercana de la cuerda de las yeguas y su otra punta, al fondo. */
     val ESTACA = Offset(150f, 224f)
@@ -247,9 +247,13 @@ internal object VeranoMongol {
         val semilla = m.semilla("cielo")
         cielo(l, H, semilla); astros(l, H, semilla); nubes(l, H, m.ficha.clima, semilla)
         with(LejosVerano) { lejos(m, p, sol) }
+        with(LuzVerano) { rayosDeTormenta(m, p) }
         with(LejosVerano) { rio(m, p, sol) }
         with(CercaVerano) { suelo(m, p, sol) }
+        with(LuzVerano) { brumaDelRio(m, p) }
         with(CampamentoVerano) { campamento(m, p, sol) }
+        // Las sombras de las nubes del día sobre la estepa, el río y el campamento (el llano de este lado queda al sol).
+        with(LuzVerano) { sombrasDeNubes(m, r) }
         with(CercaVerano) { primerPlano(m, p, sol) }
         with(CercaVerano) { marco(m, p, sol) }
         tiempoQuieto(l, m.ficha.clima, H, m.semilla("tiempo"))
@@ -264,6 +268,15 @@ internal object VeranoMongol {
         val bat = Ger(SITIO_BAT, 0L)
         val dentro = EscenaMongol.fuegoDentro(m)
         if (EscenaMongol.armado(m) >= 1f) humo(l, bat.humero, 64f, 11f, reloj, m.viento, 0.5f, 0f, 3, 10, 0.75f + 0.6f * dentro)
+        // El humo, encendido: a contraluz del sol bajo (cálido) y, de noche, por la lumbre de dentro, que sale por el aro.
+        val contraluz = LuzVerano.contraluz(m)
+        with(LuzVerano) {
+            if (EscenaMongol.armado(m) >= 1f) {
+                humoEncendido(bat.humero, 64f, 11f, m.viento, l.solColor, 0.2f * contraluz)
+                humoEncendido(bat.humero, 64f, 11f, m.viento, C.LUMBRE, 0.32f * dentro * l.noche)
+            }
+            for (q in CampamentoVerano.humeros(m)) humoEncendido(q.first, 26f * q.second, 3.4f * q.second, m.viento, l.solColor, 0.14f * contraluz)
+        }
         // Los humos de las otras tiendas y de los campamentos de los recodos del río.
         for ((j, q) in CampamentoVerano.humeros(m).withIndex()) humo(l, q.first, 26f * q.second, 3.4f * q.second, reloj, m.viento, 0.2f, 0.3f, j + 11, 6, 0.24f + 0.2f * dentro)
         for ((j, q) in LejosVerano.CAMPAMENTOS.withIndex()) humo(l, q + Offset(0f, -2.4f), 16f, 1.4f, reloj, m.viento, 0.2f, 0.65f, j + 20, 5, 0.34f)

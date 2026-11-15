@@ -29,6 +29,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.CampamentoVerano.montonDeLana
 import io.github.ruddy2003.vestigium.ui.escenas.VeranoMongol.DeLaCuerda
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.Postura
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasMongol.parejaMamando
+import io.github.ruddy2003.vestigium.ui.escenas.LuzVerano.filoDeLuna
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
@@ -243,17 +244,19 @@ internal object CercaVerano {
         val silla = V.sillaEnElCaballete(m); val hayCaballete = V.caballete(m)
         val lumbreX = puerta.x
 
-        // ---- 1. Las sombras en el suelo: la tienda, la carreta, los caballos, el odre, el caballete, el objeto grande, la cuerda con lo colgado.
-        capaSombra(sol.r) { c ->
-            sombra(PiezasMongol.sombraDeGer(bat, sol), c)
-            sombraDeCarreta(carreta, sol, c)
-            for (d in yeguada) { val q = pieDe(d); sombraArrojada(sol.r, siluetaDe(d), q, c, 150f, 150f) }
-            if (negro) sombraArrojada(sol.r, PiezasMongol.siluetaDeCaballo(V.NEGRO, 34f, 1f, postura = Postura.DESCANSO), V.NEGRO, c, 150f, 150f)
-            if (forastero) sombraArrojada(sol.r, PiezasMongol.siluetaDeCaballo(V.FORASTERO, 33f, -1f), V.FORASTERO, c, 150f, 150f)
-            if (EscenaMongol.odre(m)) sombraArrojada(sol.r, PiezasMongol.siluetaDeOdre(V.ODRE, 54f), V.ODRE, c, 150f, 150f)
-            if (hayCaballete) sombraArrojada(sol.r, siluetaDeCaballete(V.CABALLETE, silla), V.CABALLETE, c, 150f, 150f)
-            if (grande != null) sombraArrojada(sol.r, grande.forma, grande.pie, c, 150f, 150f)
-            sombraDeLaCuerda(m, sol, c)
+        // ---- 1. Las sombras en el suelo: la tienda, la carreta, los caballos, el odre, el caballete, el objeto grande, la
+        // cuerda con lo colgado y la vara. De día, las del sol; de noche, las de la luna, frías y flojas (la misma capa).
+        val rs = LuzVerano.rayoDeSombras(l); val ss = Sol3(rs)
+        capaSombra(rs) { c ->
+            sombra(PiezasMongol.sombraDeGer(bat, ss), c)
+            sombraDeCarreta(carreta, ss, c)
+            for (d in yeguada) { val q = pieDe(d); sombraArrojada(rs, siluetaDe(d), q, c, 150f, 150f) }
+            if (negro) sombraArrojada(rs, PiezasMongol.siluetaDeCaballo(V.NEGRO, 34f, 1f, postura = Postura.DESCANSO), V.NEGRO, c, 150f, 150f)
+            if (forastero) sombraArrojada(rs, PiezasMongol.siluetaDeCaballo(V.FORASTERO, 33f, -1f), V.FORASTERO, c, 150f, 150f)
+            if (EscenaMongol.odre(m)) sombraArrojada(rs, PiezasMongol.siluetaDeOdre(V.ODRE, 54f), V.ODRE, c, 150f, 150f)
+            if (hayCaballete) sombraArrojada(rs, siluetaDeCaballete(V.CABALLETE, silla), V.CABALLETE, c, 150f, 150f)
+            if (grande != null) sombraArrojada(rs, grande.forma, grande.pie, c, 150f, 150f)
+            sombraDeLaCuerda(m, ss, c)
         }
         // La luz de la puerta abierta en la hierba.
         luzDePuerta(bat, maxOf(l.noche - 0.1f, 0f) * maxOf(bat.dentro, 0.6f), 5f)
@@ -268,12 +271,16 @@ internal object CercaVerano {
         val cosas = ArrayList<Pair<Float, DrawScope.() -> Unit>>()
         // La cuerda de las yeguas: de estaca en estaca, baja, con sus nudos; con la cinta azul de la primera leche.
         cosas += parte(V.FONDO_CUERDA.y - 1f) { cuerdaDeLasYeguas(m, p) }
-        for (d in yeguada) cosas += parte(pieDe(d).y) { caballoDeLaCuerda(p.con(calida(pieDe(d))), d, cintas, m.viento, lumbreX) }
+        // Los del fondo de la cuerda pueden quedar bajo la sombra de una nube: entonces, con el pincel de la sombra. De
+        // noche, la luna les deja el filo plata en el lomo.
+        val nubes = LuzVerano.sombrasDeNube(m)
+        for (d in yeguada) cosas += parte(pieDe(d).y) { caballoDeLaCuerda(LuzVerano.enSombra(p.con(calida(pieDe(d))), LuzVerano.enSombraDeNube(nubes, pieDe(d))), d, cintas, m.viento, lumbreX); filoDeLuna(siluetaDe(d), l) }
         // El Negro, atado de noche junto a la puerta: en descanso, la cabeza baja y una pata doblada, alumbrado por la puerta.
-        if (negro) cosas += parte(V.NEGRO.y) { caballo(p.con(calida(V.NEGRO) + 0.15f * l.noche), V.NEGRO, 34f, 1f, PiezasMongol.NEGRO, postura = Postura.DESCANSO, viento = m.viento, lumbreX = lumbreX) }
+        if (negro) cosas += parte(V.NEGRO.y) { caballo(p.con(calida(V.NEGRO) + 0.15f * l.noche), V.NEGRO, 34f, 1f, PiezasMongol.NEGRO, postura = Postura.DESCANSO, viento = m.viento, lumbreX = lumbreX); filoDeLuna(PiezasMongol.siluetaDeCaballo(V.NEGRO, 34f, 1f, postura = Postura.DESCANSO), l, 1.4f) }
         // El caballo de fuera (el del correo, el del que trae las noticias, el de un invitado), ensillado y atado a la carreta.
         if (forastero) cosas += parte(V.FORASTERO.y) {
             caballo(p.con(calida(V.FORASTERO)), V.FORASTERO, 33f, -1f, PiezasMongol.TORDO, silla = true, cintas = EscenaMongol.fiesta(m) || V.carrera(m), viento = m.viento, lumbreX = lumbreX)
+            filoDeLuna(PiezasMongol.siluetaDeCaballo(V.FORASTERO, 33f, -1f), l, 1.4f)
             drawPath(Path().apply { moveTo(V.FORASTERO + Offset(-28f, -24f)); cubicTo(V.FORASTERO + Offset(-32f, -14f), V.FORASTERO + Offset(-38f, -18f), V.FORASTERO + Offset(-42f, -30f)) }, p.medio(C.CRIN), style = Stroke(0.8f))
         }
         // El ordeño del alba y la primera leche: el cubo de cuero lleno junto a la primera yegua; la cuchara de nueve agujeros.
@@ -291,10 +298,10 @@ internal object CercaVerano {
         // Las sombras sobre la pared: la de la silla y la del objeto grande, que se arriman a ella.
         cosas += parte(214.5f) {
             val (suelo, arriba) = pared(bat, V.PIE_GRANDE.x)
-            capaSombra(sol.r, 0.85f) { c ->
+            capaSombra(rs, 0.85f) { c ->
                 clipPath(PiezasMongol.silueta(bat)) {
-                    if (grande != null) sombraArrojada(sol.r, grande.forma, grande.pie, c, suelo, arriba, 200f, ANCHO)
-                    if (hayCaballete) sombraArrojada(sol.r, siluetaDeCaballete(V.CABALLETE, silla), V.CABALLETE, c, baseCab, arriba, 200f, ANCHO)
+                    if (grande != null) sombraArrojada(rs, grande.forma, grande.pie, c, suelo, arriba, 200f, ANCHO)
+                    if (hayCaballete) sombraArrojada(rs, siluetaDeCaballete(V.CABALLETE, silla), V.CABALLETE, c, baseCab, arriba, 200f, ANCHO)
                 }
             }
         }
@@ -302,7 +309,7 @@ internal object CercaVerano {
         // El día que llegan, mientras se arma la tienda, los rollos de fieltro esperan en la hierba donde irá el odre.
         if (V.llegada(m) && EscenaMongol.armado(m) < 1f) for ((c, largo) in listOf(Offset(226f, 246f) to 38f, Offset(258f, 252f) to 32f, Offset(240f, 238f) to 30f).sortedBy { it.first.y }) cosas += parte(c.y) { rolloDeFieltro(p, sol, c, largo, 6.4f) }
         if (grande != null) cosas += parte(grande.pie.y) { grande.pintar(this) }
-        if (hayCaballete) cosas += parte(V.CABALLETE.y) { caballete(p.con(calida(V.CABALLETE)), sol, V.CABALLETE, silla) }
+        if (hayCaballete) cosas += parte(V.CABALLETE.y) { caballete(p.con(calida(V.CABALLETE)), sol, V.CABALLETE, silla); filoDeLuna(siluetaDeCaballete(V.CABALLETE, silla), l, 0.7f) }
         // El fieltro de sentarse, con el objeto del día encima; los días de objeto grande, la tabla del queso con su cuchara.
         cosas += parte(V.FIELTRO_OBJETO.y) {
             val pp = p.con(calida(V.FIELTRO_OBJETO))
@@ -390,6 +397,10 @@ internal object CercaVerano {
         val n = linea.size - 1
         val sombraLinea = linea.mapIndexed { i, q -> enElSuelo(q, i / n.toFloat()) }
         clipRect(0f, 146f, ANCHO, ALTO) {
+            // La vara, de pie junto a la carreta: su sombra sale de donde pisa y se tiende en el llano.
+            val pieVara = Offset(V.VARA_PIE.x, 252f)
+            fun deLaVara(q: Offset): Offset { val h = pieVara.y - q.y; return Offset(q.x + r.ax * h, pieVara.y + r.ay * h) }
+            drawLine(c, deLaVara(V.VARA_PIE), deLaVara(V.VARA_PUNTA), 2.2f, StrokeCap.Round)
             drawPath(Path().apply { moveTo(sombraLinea[0]); for (q in sombraLinea.drop(1)) lineTo(q) }, c, style = Stroke(1.2f))
             for (cosa in colgados(m, linea)) { val q = enElSuelo(cosa.q, cosa.t, cosa.alto * 0.5f); drawOval(c, Offset(q.x - cosa.ancho * 0.5f, q.y - cosa.alto * 0.25f), Size(cosa.ancho, cosa.alto * 0.5f)) }
         }
@@ -412,11 +423,11 @@ internal object CercaVerano {
         val hilo = p.sombra(lerp(C.CRIN, C.CUERO, 0.3f)).copy(alpha = 0.7f)
         // La sombra en la hierba y el canto grueso, de delante y del lado derecho.
         drawPath(poligono(listOf(q(-w * 1.03f, -d * 1.03f, 0f), q(w * 1.05f, -d * 1.03f, 0f), q(w * 1.06f, d * 1.1f, 0f), q(-w * 1.03f, d * 1.1f, 0f))), p.sombra(C.TIERRA).copy(alpha = 0.5f))
-        drawPath(poligono(listOf(q(-w, d), q(w - doblez, d), q(w - doblez, d, 0f), q(-w, d, 0f))), p.sombra(ribete))
-        drawPath(poligono(listOf(q(w, -d), q(w, d - doblez), q(w, d - doblez, 0f), q(w, -d, 0f))), p.por(ribete, if (p.solALaDerecha) 0.3f else -0.5f))
+        drawPath(poligono(listOf(q(-w, d), q(w - doblez, d), q(w - doblez, d, 0f), q(-w, d, 0f))), LuzVerano.pintado(p, ribete, -0.7f))
+        drawPath(poligono(listOf(q(w, -d), q(w, d - doblez), q(w, d - doblez, 0f), q(w, -d, 0f))), LuzVerano.pintado(p, ribete, if (p.solALaDerecha) 0.3f else -0.5f))
         // La cara de arriba: el ribete rojo y, dentro, el campo acolchado.
         val cara = poligono(listOf(q(-w, -d), q(w, -d), q(w, d - doblez), q(w - doblez, d), q(-w, d)))
-        drawPath(cara, Brush.verticalGradient(listOf(p.arriba(ribete), p.medio(ribete)), q(0f, -d).y, q(0f, d).y))
+        drawPath(cara, Brush.verticalGradient(listOf(LuzVerano.pintado(p, ribete, 0.6f), LuzVerano.pintado(p, ribete, 0.3f)), q(0f, -d).y, q(0f, d).y))
         val campo = poligono(listOf(q(-w + b, -d + b), q(w - b, -d + b), q(w - b, d - doblez - b * 0.3f), q(w - doblez - b * 0.3f, d - b), q(-w + b, d - b)))
         drawPath(campo, Brush.verticalGradient(listOf(p.arriba(tela), p.medio(tela)), q(0f, -d).y, q(0f, d).y))
         clipPath(cara) {
@@ -508,8 +519,8 @@ internal object CercaVerano {
         clipPath(manta) {
             drawRect(Brush.horizontalGradient(if (p.solALaDerecha) listOf(p.sombra(tela).copy(alpha = 0.6f), Color.Transparent) else listOf(Color.Transparent, p.sombra(tela).copy(alpha = 0.6f)), q(-36f, 0f).x, q(40f, 0f).x), q(-40f, -90f), Size(84f * u, 52f * u))
             for (k in 0..4) drawLine(p.sombra(tela).copy(alpha = 0.4f), q(-26f + k * 14f, -82f), q(-28f + k * 15f, -42f), 0.9f * u)
-            drawRect(p.medio(C.ROJO), q(-40f, -52f), Size(84f * u, 8f * u))
-            for (k in 0 until 9) drawPath(poligono(q(-34f + k * 8.6f, -48f), q(-30f + k * 8.6f, -51f), q(-26f + k * 8.6f, -48f), q(-30f + k * 8.6f, -45f)), p.medio(C.AZUL))
+            drawRect(LuzVerano.pintado(p, C.ROJO, 0.35f), q(-40f, -52f), Size(84f * u, 8f * u))
+            for (k in 0 until 9) drawPath(poligono(q(-34f + k * 8.6f, -48f), q(-30f + k * 8.6f, -51f), q(-26f + k * 8.6f, -48f), q(-30f + k * 8.6f, -45f)), LuzVerano.pintado(p, C.AZUL, 0.35f))
         }
         drawPath(manta, p.sombra(lerp(tela, C.CRIN, 0.4f)).copy(alpha = 0.6f), style = Stroke(0.8f * u))
         if (!silla) return
@@ -523,7 +534,8 @@ internal object CercaVerano {
             cubicTo(q(0f, -88f), q(12f, -90f), q(20f, -98f)); cubicTo(q(24f, -110f), q(34f, -114f), q(38f, -104f)); cubicTo(q(40f, -96f), q(38f, -88f), q(34f, -84f))
             cubicTo(q(14f, -80f), q(-14f, -80f), q(-34f, -84f)); close()
         }
-        drawPath(asiento, Brush.horizontalGradient(if (p.solALaDerecha) listOf(p.sombra(pintada), p.medio(pintada), p.luz(pintada)) else listOf(p.luz(pintada), p.medio(pintada), p.sombra(pintada)), q(-40f, 0f).x, q(40f, 0f).x))
+        val sl = LuzVerano.pintado(p, pintada, 0.9f); val sm = LuzVerano.pintado(p, pintada, 0.15f); val ss = LuzVerano.pintado(p, pintada, -0.8f)
+        drawPath(asiento, Brush.horizontalGradient(if (p.solALaDerecha) listOf(ss, sm, sl) else listOf(sl, sm, ss), q(-40f, 0f).x, q(40f, 0f).x))
         clipPath(asiento) { drawRect(Brush.verticalGradient(listOf(p.luz(lerp(pintada, C.ORO, 0.4f)).copy(alpha = 0.6f), Color.Transparent), q(0f, -122f).y, q(0f, -100f).y), q(-40f, -124f), Size(80f * u, 26f * u)) }
         drawPath(asiento, p.sombra(lerp(pintada, C.HOLLIN, 0.4f)).copy(alpha = 0.7f), style = Stroke(0.8f * u))
         // Las placas de cobre de los borrenes y el borde gastado del asiento.
@@ -784,6 +796,8 @@ internal object CercaVerano {
         val az = Azar(c.semilla.toLong()); val q = c.q; val w = c.ancho; val h = c.alto
         val luzIzq = !p.solALaDerecha
         fun lados(col: Color, x0: Float, x1: Float) = Brush.horizontalGradient(if (luzIzq) listOf(p.luz(col), p.medio(col), p.sombra(col)) else listOf(p.sombra(col), p.medio(col), p.luz(col)), x0, x1)
+        // Lo pintado (un paño, una cinta): al sol sube y se calienta, en la sombra baja y se enfría (LuzVerano.pintado).
+        fun pintados(col: Color, x0: Float, x1: Float) = Brush.horizontalGradient(if (luzIzq) listOf(LuzVerano.pintado(p, col, 0.9f), LuzVerano.pintado(p, col, 0.2f), LuzVerano.pintado(p, col, -0.8f)) else listOf(LuzVerano.pintado(p, col, -0.8f), LuzVerano.pintado(p, col, 0.2f), LuzVerano.pintado(p, col, 0.9f)), x0, x1)
         val tuerce = viento * 2.4f
         when (c.pieza) {
             Pieza.BOLSA -> {
@@ -830,7 +844,7 @@ internal object CercaVerano {
                 // La vuelta de detrás, por el lado bajo de la cuerda.
                 drawPath(poligono(listOf(b, b + Offset(1.6f + tuerce, h * 0.2f), abajo.last() + Offset(1.4f, -h * 0.25f), abajo.last())), p.sombra(lerp(col, C.HOLLIN, 0.12f)))
                 val forma = Path().apply { moveTo(a); lineTo(b); lineTo(abajo.last()); for (j in pasos - 1 downTo 0) { val u0 = abajo[j + 1]; val u1 = abajo[j]; cubicTo(u0 + (u1 - u0) * 0.33f + Offset(0f, 1.2f), u0 + (u1 - u0) * 0.66f + Offset(0f, 1.2f), u1) }; close() }
-                drawPath(forma, lados(col, minOf(a.x, b.x) - 1f, maxOf(a.x, b.x) + 1f))
+                drawPath(forma, if (c.pieza == Pieza.PANO) pintados(col, minOf(a.x, b.x) - 1f, maxOf(a.x, b.x) + 1f) else lados(col, minOf(a.x, b.x) - 1f, maxOf(a.x, b.x) + 1f))
                 clipPath(forma) {
                     // La sombra que hace la cuerda en el doblez, y los pliegues que bajan.
                     drawPath(Path().apply { moveTo(a); lineTo(b) }, p.sombra(col).copy(alpha = 0.6f), style = Stroke(2.4f))
@@ -838,7 +852,7 @@ internal object CercaVerano {
                         Pieza.PANO -> {
                             for (k in 1..4) { val top = a + (b - a) * (k / 5f); drawLine(p.sombra(col).copy(alpha = 0.4f), top, top + Offset(tuerce + az.entre(-0.8f, 0.8f), h), 0.7f); drawLine(p.luz(col).copy(alpha = 0.3f), top + Offset(0.8f, 0f), top + Offset(tuerce + 0.8f, h), 0.5f) }
                             val franja = if (c.color == C.ROJO) C.ORO else if (c.color == C.AZUL) C.FIELTRO else C.ROJO
-                            drawPath(Path().apply { moveTo(a + Offset(-2f, h * 0.66f)); lineTo(b + Offset(2f, h * 0.66f)) }, p.medio(franja).copy(alpha = 0.8f), style = Stroke(h * 0.08f))
+                            drawPath(Path().apply { moveTo(a + Offset(-2f, h * 0.66f)); lineTo(b + Offset(2f, h * 0.66f)) }, LuzVerano.pintado(p, franja, 0.3f).copy(alpha = 0.8f), style = Stroke(h * 0.08f))
                         }
                         Pieza.PIEL, Pieza.VELLON -> repeat((w * 1.4f).toInt()) {
                             val k = a + (b - a) * az.real() + Offset(az.entre(-1f, 1f), az.entre(1f, h))
@@ -879,7 +893,7 @@ internal object CercaVerano {
                 for ((dx, largo) in listOf(-0.6f to h, 0.8f to h * 0.78f)) {
                     val a = q + Offset(dx, 0.6f); val b = a + Offset(tuerce * 2f + 1.2f, largo)
                     val cinta = Path().apply { moveTo(a); cubicTo(a + Offset(w * 0.6f + tuerce, largo * 0.3f), b + Offset(-w * 0.8f, -largo * 0.35f), b); lineTo(b + Offset(w * 0.55f, -0.4f)); cubicTo(b + Offset(-w * 0.2f, -largo * 0.35f), a + Offset(w * 1.2f + tuerce, largo * 0.3f), a + Offset(w * 0.5f, 0f)); close() }
-                    drawPath(cinta, p.por(c.color, if (dx < 0f == luzIzq) 0.5f else -0.3f))
+                    drawPath(cinta, LuzVerano.pintado(p, c.color, if (dx < 0f == luzIzq) 0.7f else -0.4f))
                 }
                 drawCircle(p.sombra(c.color), 0.9f, q + Offset(0.2f, 0.8f))
             }
