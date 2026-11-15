@@ -178,7 +178,10 @@ internal object VivacCerca {
         for ((i, pz) in filaDeHoy(m).withIndex()) {
             val pb = pabellonDe(i, pz, v.nieve)
             add(RetiradaLuz.Sombra(pb.s.pie, PiezasNapoleon.siluetaDePabellon(pb) { pb.s.p(it) }))
+            // Y las mochilas de su pie (las de cerca).
+            if (pz.second < 14f) for (q in mochilasDe(i, pz)) { val sm = PiezasNapoleon.sitio(MIRADA, q, 0f); add(RetiradaLuz.Sombra(q, caja(sm, 0.2f, 0.34f))) }
         }
+        if (!VivacNapoleon.sinCompania(m)) for (q in listOf(Offset(326f, 229f), Offset(256f, 233f))) add(RetiradaLuz.Sombra(q, caja(PiezasNapoleon.sitio(MIRADA, q, 0f), 0.2f, 0.34f)))
         add(RetiradaLuz.Sombra(S_TONEL.pie, caja(S_TONEL, 0.3f, TONEL_ALTO)))
         if (!VivacNapoleon.sinCompania(m)) add(RetiradaLuz.Sombra(S_TAMBOR.pie, caja(S_TAMBOR, 0.22f, 0.42f)))
         if (!ObjetosNapoleon.esGrande(m)) add(RetiradaLuz.Sombra(S_TOCON.pie, caja(S_TOCON, 0.26f, TOCON_ALTO + 0.12f)))
@@ -202,6 +205,14 @@ internal object VivacCerca {
 
     /** Los pabellones de la fila que se ven hoy (los primeros [VivacNapoleon.pabellones]). */
     fun filaDeHoy(m: Momento): List<Pair<Float, Float>> = FILA.take(VivacNapoleon.pabellones(m).coerceAtMost(FILA.size))
+
+    /** Dónde están las mochilas al pie del pabellón [i] (en el lienzo): del lado del fuego las dos primeras, del otro las demás. */
+    private fun mochilasDe(i: Int, pz: Pair<Float, Float>): List<Offset> {
+        val az = VivacNapoleon.fijo("mochilas", i)
+        val lado = if (i < 2) 1f else -1f
+        val n = if (pz.second < 14f) 2 else 1
+        return (0 until n).map { j -> w(pz.first + lado * (0.9f + j * 0.5f) + az.entre(-0.08f, 0.08f), pz.second + 0.3f + az.entre(-0.35f, 0.35f) + j * 0.4f) }
+    }
 
     private fun pabellonDe(i: Int, pz: Pair<Float, Float>, nieve: Float): Pabellon {
         val az = VivacNapoleon.fijo("pabellon", i)
@@ -227,15 +238,12 @@ internal object VivacCerca {
             }
             // Lo de los cuatro al pie del pabellón, cada uno a su modo: mochilas de pie o echadas, con la manta o el capote
             // enrollado encima (de colores distintos), y algún capote tirado.
-            val az = VivacNapoleon.fijo("mochilas", i)
-            val lado = if (i < 2) 1f else -1f
-            val n = if (pz.second < 14f) 2 else 1
-            for (j in 0 until n) {
-                val q = w(pz.first + lado * (0.9f + j * 0.5f) + az.entre(-0.08f, 0.08f), pz.second + 0.3f + az.entre(-0.35f, 0.35f) + j * 0.4f)
+            val az = VivacNapoleon.fijo("mochilas", i, "estilo")
+            for ((j, q) in mochilasDe(i, pz).withIndex()) {
                 val s = PiezasNapoleon.sitio(MIRADA, q, az.entre(-0.9f, 0.9f) + 0.4f)
                 val tumbada = az.real() < 0.5f
                 val rollo = listOf(C.CAPOTE, lerp(C.CAPOTE, C.LONA, 0.3f), lerp(C.CAPOTE, C.MADERA, 0.35f), lerp(C.AZUL, C.CAPOTE, 0.55f))[az.entero(4)]
-                val sem = az.entero(1000).toLong(); val capote = j == 1 && az.real() < 0.5f
+                val sem = az.entero(1000).toLong(); val capote = j == 1 && i % 3 == 1
                 val lejos = VivacNapoleon.lejos(pz.second)
                 cosas += parte(q.y) {
                     if (capote) { val kk = k(VivacNapoleon.zEn(q.y)); capote(v.en(q), q, 1.1f * kk, 0.3f * kk, Azar(sem), false, lejos, v.nieve, rollo) }
@@ -703,7 +711,8 @@ internal object VivacCerca {
                 val t = ((reloj * az.entre(0.3f, 0.6f) + az.real()) % 1f); val q = FUEGO + Offset(az.entre(-0.2f, 0.2f) * k + sin(reloj * 3f + i) * 3f, -0.3f * k - t * 1.6f * k)
                 drawCircle(Color(0xFFFFC060).copy(alpha = ((1f - t) * f).coerceIn(0f, 1f)), 0.5f + 0.4f * (1f - t), q)
             }
-            humo(l, FUEGO + Offset(0f, -0.4f * k), 120f, 14f, reloj, v.m.viento + 0.15f, 0.22f + 0.3f * (1f - f), 0f, 4, 9, 0.45f + 0.35f * (1f - f))
+            if (f >= 0.45f) humo(l, FUEGO + Offset(0f, -0.4f * k), 120f, 14f, reloj, v.m.viento + 0.15f, 0.22f + 0.3f * (1f - f), 0f, 4, 9, 0.45f + 0.35f * (1f - f))
+            else humo(l, FUEGO + Offset(0f, -0.2f * k), 70f, 5f, reloj, v.m.viento + 0.15f, 0.35f, 0f, 4, 6, 0.32f)
             if (f > 0.3f && v.noche > 0.3f) mancha(LUZ_DEL_FUEGO + Offset(4f, -0.75f * k), 0.22f * k, 0.35f * k, C.LUMBRE, 0.16f * f * v.noche)
         }
         if (EscenaNapoleon.marmita(v.m) == Marmita.AL_FUEGO) humo(l, FUEGO + Offset(0f, -0.95f * k), 40f, 6f, reloj, v.m.viento, 0f, 0f, 5, 5, 0.4f)

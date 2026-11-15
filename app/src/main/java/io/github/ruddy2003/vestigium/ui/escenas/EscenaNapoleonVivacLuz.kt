@@ -162,7 +162,7 @@ internal object VivacLuz {
         if (v.luna > 0.02f) plata(v)
         val r = deSombras(v) ?: return
         val cosas = VivacCerca.sombras(v) + VivacCampo.sombras(v)
-        capaSombra(r) { c -> for (s in cosas) sombraArrojada(r, s.forma, s.pie, c, H, H) }
+        capaSombra(r, 1.3f) { c -> for (s in cosas) sombraArrojada(r, s.forma, s.pie, c, H, H) }
     }
 
     /** El campo plateado por la luna: más del lado de la luna, y más con nieve. */
