@@ -115,7 +115,7 @@ internal object PiezasUrss {
         }
         val medio = p((x0 + x1) / 2f, (yTapa + suelo) / 2f, t1)
         // El costado da la espalda a la ventana y a la lámpara: en penumbra, más claro hacia el canto redondeado de la puerta.
-        val luzCostado = lz.frente(medio, C.ESMALTE); val sombraCostado = lz.sombra(medio, C.ESMALTE, 0.5f)
+        val luzCostado = lz.frente(medio, C.ESMALTE); val sombraCostado = lz.sombra(medio, C.ESMALTE, 0.7f)
         drawPath(costado, Brush.horizontalGradient(0f to sombraCostado, 0.55f to lerp(sombraCostado, luzCostado, 0.45f), 0.88f to luzCostado, 1f to lz.der(medio, lerp(C.ESMALTE, Color.White, 0.2f)), startX = c0.x, endX = c1.x))
         drawPath(costado, Brush.verticalGradient(0f to Color.White.copy(alpha = 0.1f), 0.4f to Color.Transparent, 1f to C.SOMBRA.copy(alpha = 0.3f), startY = p(x0, yTapa, t1).y, endY = c0.y), blendMode = BlendMode.Multiply)
         // El canto redondeado brilla con la luz de la puerta (la ventana o la lámpara están a la derecha).
@@ -216,9 +216,9 @@ internal object PiezasUrss {
                 val xa = x0 + 8f; val xb = x1 - 7f
                 val panel = poligono(p(xa, ya, t1), p(xb, ya, t1), p(xb, yb, t1), p(xa, yb, t1))
                 drawPath(panel, lz.sombra(m, madera, 0.25f).copy(alpha = 0.45f))
-                drawLine(lz.sombra(m, C.TINTA, 0.4f).copy(alpha = 0.6f), p(xa, ya, t1), p(xb, ya, t1), 1.2f * k)
+                drawLine(lz.sombra(m, C.TINTA, 0.5f).copy(alpha = 0.8f), p(xa, ya, t1), p(xb, ya, t1), 1.6f * k)
                 drawLine(lz.sombra(m, C.TINTA, 0.4f).copy(alpha = 0.5f), p(xa, ya, t1), p(xa, yb, t1), 1.2f * k)
-                drawLine(lz.der(m, lerp(madera, C.PAPEL, 0.4f)).copy(alpha = 0.7f), p(xb, ya, t1), p(xb, yb, t1), 1.1f * k)
+                drawLine(lz.der(m, lerp(madera, C.PAPEL, 0.5f)).copy(alpha = 0.85f), p(xb, ya, t1), p(xb, yb, t1), 1.5f * k)
                 drawLine(lz.der(m, lerp(madera, C.PAPEL, 0.35f)).copy(alpha = 0.6f), p(xa, yb, t1), p(xb, yb, t1), 1f * k)
             }
             // El roce del uso a media altura y la sombra del suelo abajo.
@@ -263,9 +263,9 @@ internal object PiezasUrss {
             drawLine(lz.sombra(clavo, C.PAPEL, 0.3f).copy(alpha = 0.6f), clavo + Offset(-1f * k, 2f), clavo + Offset(0f, 46f * k), 0.8f)
         }
         drawCircle(lz.en(clavo, C.TINTA), 0.8f, clavo)
-        val ristra = p(x0 + 14f, yTapa + 6f, t1 + 0.5f)
+        val ristra = p(x0 + 30f, yTapa + 6f, t1 + 0.5f)
         drawLine(lz.frente(ristra, lerp(C.PAPEL, C.MADERA, 0.4f)), ristra, ristra + Offset(1f, 52f * k), 0.5f)
-        for (i in 0..12) { val q = ristra + Offset(1f * i / 12f + (if (i % 2 == 0) -1.4f else 1.4f), (4f + i * 3.8f) * k); drawOval(lz.frente(q, lerp(C.MADERA, C.LATON, 0.3f)), Offset(q.x - 2f, q.y - 1.4f), Size(4f, 2.8f)); drawOval(lz.sombra(q, C.MADERA, 0.4f), Offset(q.x - 0.8f, q.y + 0.4f), Size(1.6f, 0.8f)) }
+        for (i in 0..12) { val q = ristra + Offset(1f * i / 12f + (if (i % 2 == 0) -1.4f else 1.4f), (4f + i * 3.8f) * k); drawOval(lz.der(q, lerp(C.LATON, C.PAPEL, 0.25f)), Offset(q.x - 3f, q.y - 2f), Size(6f, 4f)); drawOval(lz.sombra(q, C.MADERA, 0.4f), Offset(q.x - 1.2f, q.y + 0.6f), Size(2.4f, 1.2f)) }
         // Encima, el samovar de carbón de la abuela, más oscuro, y una cesta de mimbre.
         samovar(lz, p(x0 + 30f, yTapa - 6f, t0 + 24f) + Offset(0f, 0f), K.s(t0 + 24f) * 0.85f, conTetera = false)
         val cesta = p(x0 + 14f, yTapa - 6f, t0 + 34f); val kc = K.s(t0 + 34f)

@@ -219,17 +219,21 @@ internal object LuzCocinaUrss {
         if (s.deLuna || !R.ventanilloAbierto(m)) return null
         val u = ((m.luces().solX - 0.6f) / 0.22f); if (u <= 0.02f) return null
         val k = u.coerceIn(0f, 1f)
-        return Rebote(Offset(104f + 34f * (1f - k), 116f + 58f * (1f - k)), 26f + 8f * (1f - k), 20f + 6f * (1f - k), (s.fuerza * (0.45f + 0.55f * k)).coerceIn(0f, 1f))
+        return Rebote(Offset(108f + 30f * (1f - k), 118f + 54f * (1f - k)), 34f + 8f * (1f - k), 26f + 6f * (1f - k), (s.fuerza * (0.45f + 0.55f * k)).coerceIn(0f, 1f))
     }
 
     /** El cuadro de luz del rebote, con la sombra del marquito del ventanillo y el borde blando. */
     private fun DrawScope.dibujaRebote(r: Rebote, color: Color) {
         val c = r.centro; val w = r.ancho / 2f; val h = r.alto / 2f; val sesgo = 5f
         val q = poligono(c + Offset(-w + sesgo, -h), c + Offset(w + sesgo, -h), c + Offset(w - sesgo, h), c + Offset(-w - sesgo, h))
-        for (ancho in listOf(6f, 3f)) drawPath(q, color.copy(alpha = 0.05f * r.fuerza), style = Stroke(ancho), blendMode = BlendMode.Plus)
-        drawPath(q, color.copy(alpha = 0.34f * r.fuerza), blendMode = BlendMode.Plus); drawPath(q, C.SOMBRA.copy(alpha = 0.12f * r.fuerza), style = Stroke(0.6f))
-        // La sombra del marquito y de la falleba del ventanillo, dentro del cuadro.
-        drawLine(C.SOMBRA.copy(alpha = 0.25f * r.fuerza), c + Offset(-w + sesgo * 0.3f, -h * 0.1f), c + Offset(w + sesgo * 0.3f, -h * 0.1f), 1.4f, blendMode = BlendMode.Multiply)
+        // Alrededor, la penumbra del rincón se hace más honda: así el cuadro de luz se lee aunque caiga en los azulejos claros.
+        mancha(c, r.ancho * 1.6f, r.alto * 1.5f, C.SOMBRA, 0.12f * r.fuerza)
+        for (ancho in listOf(6f, 3f)) drawPath(q, color.copy(alpha = 0.06f * r.fuerza), style = Stroke(ancho), blendMode = BlendMode.Plus)
+        drawPath(q, lerp(color, Color(0xFFFFF0CC), 0.4f).copy(alpha = 0.42f * r.fuerza))
+        drawPath(q, color.copy(alpha = 0.22f * r.fuerza), blendMode = BlendMode.Plus)
+        // La sombra del marquito y del travesaño del ventanillo, dentro del cuadro.
+        drawPath(q, C.SOMBRA.copy(alpha = 0.3f * r.fuerza), style = Stroke(1.2f))
+        drawLine(C.SOMBRA.copy(alpha = 0.35f * r.fuerza), c + Offset(-w + sesgo * 0.1f, h * 0.15f), c + Offset(w + sesgo * 0.1f, h * 0.15f), 1.4f)
     }
 
     // ---------------------------------------------------------------- El halo de la lámpara en las paredes
@@ -311,8 +315,8 @@ internal object LuzCocinaUrss {
                 val boca = K.s(Co.LT) * 29f; val a0 = Offset(b.x - boca, b.y + 4f); val a1 = Offset(b.x + boca, b.y + 4f)
                 val c0 = Co.BAJO_LA_LAMPARA + Offset(-84f, -2f); val c1 = Co.BAJO_LA_LAMPARA + Offset(72f, -2f)
                 val cono = poligono(a0, a1, c1, c0)
-                drawPath(cono, C.LAMPARA.copy(alpha = 0.035f * lz.noche), blendMode = BlendMode.Plus)
-                for ((u, v) in listOf(a0 to c0, a1 to c1)) drawLine(C.LAMPARA.copy(alpha = 0.07f * lz.noche), u, v, 0.8f, blendMode = BlendMode.Plus)
+                drawPath(cono, C.LAMPARA.copy(alpha = 0.05f * lz.noche), blendMode = BlendMode.Plus)
+                for ((u, v) in listOf(a0 to c0, a1 to c1)) drawLine(C.LAMPARA.copy(alpha = 0.12f * lz.noche), u, v, 0.9f, blendMode = BlendMode.Plus)
             }
         }
         if (R.televisor(m)) {
