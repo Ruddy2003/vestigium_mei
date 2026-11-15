@@ -511,12 +511,14 @@ object LogrosFrente : DisenoLogros {
         val raiz = if (oscuro) mezcla(RAIZ, PENUMBRA, 0.3f) else m(RAIZ, 0.85f)
         val brilloRaiz = if (oscuro) VIDRIO_TRAZO.copy(alpha = 0.16f) else Color(0xFFC9BC94).copy(alpha = 0.3f)
         val sombraRaiz = if (oscuro) 0.4f else 0.18f
+        // Con muchas columnas las torres son angostas: las raíces, más finas y más cortas.
+        val escala = (g.pil / (15f * u)).coerceIn(0.5f, 1f)
         with(TrazosFrente) {
             for (i in 0..g.n) {
                 val x = g.borde(i); val s = e.semilla * 5 + i * 17
-                raiz(Offset(x - g.pil * 0.45f, g.friso - 1f * u), (60f + 90f * azar(s, 1)) * u, 2.2f * u, mezcla(raiz, Color.Black, 0.12f), brilloRaiz, s + 1, sombra = sombraRaiz)
-                raiz(Offset(x + g.pil * 0.3f, g.friso - 1f * u), (90f + 110f * azar(s, 2)) * u, 2.6f * u, raiz, brilloRaiz, s + 2, sombra = sombraRaiz)
-                if (azar(s, 3) > 0.4f) raiz(Offset(x + g.pil * 0.85f, g.friso), (24f + 30f * azar(s, 4)) * u, 1.3f * u, raiz, brilloRaiz, s + 3, ramas = false, sombra = sombraRaiz)
+                raiz(Offset(x - g.pil * 0.45f, g.friso - 1f * u), (60f + 90f * azar(s, 1)) * escala * u, 2.2f * escala * u, mezcla(raiz, Color.Black, 0.12f), brilloRaiz, s + 1, sombra = sombraRaiz)
+                raiz(Offset(x + g.pil * 0.3f, g.friso - 1f * u), (90f + 110f * azar(s, 2)) * escala * u, 2.6f * escala * u, raiz, brilloRaiz, s + 2, sombra = sombraRaiz)
+                if (g.n <= 3 && azar(s, 3) > 0.4f) raiz(Offset(x + g.pil * 0.85f, g.friso), (24f + 30f * azar(s, 4)) * u, 1.3f * u, raiz, brilloRaiz, s + 3, ramas = false, sombra = sombraRaiz)
             }
             // Más abajo, alguna raíz que sale de una grieta entre los sillares, junto a las torres.
             for (i in 0..g.n) repetirSala(g.friso + g.modulo * 0.8f, g.suelo - 90f * u, g.modulo, 10) { k, y ->

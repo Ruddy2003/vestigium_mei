@@ -861,9 +861,11 @@ Todos heredan las 13 animaciones comunes y la reacción al ánimo. Lo propio de 
   - 23–2 trabajo «la ventana de transmisión y la misión de la noche»
 - **`inspiracion`:** «Inspirado en *Andor*, de Star Wars: un ladrón al que recluta una red clandestina. El mundo, los nombres y la gente son inventados.» Hay precedente: la vida de Distopía dice «Inspirado en el mundo de 1984, de George Orwell».
 
-**Cuadro (para la fila de escenas).** Dos opciones:
-- el puerto de ladrillo con tropas formadas y una nave enorme de forma propia (un bloque o un anillo, nunca un triángulo);
-- la plaza blanca de la capital con su cúpula de bronce, o la sala de radar con su ventanal.
+**Tadeo viaja mucho y su cuadro es la cabina de su nave** (pedido del autor del 15 nov 2026). La primera versión de su vida (Tadeo, «Cobre», ladrón de piezas del puerto de Halde, ya escrita en `AnioG9.kt` y `PiezasTadeo.kt`) casi no salía de su puerto. Se rehace así:
+- **Su oficio:** de ladrón de piezas pasa a **piloto correo de la red**, en un carguero viejo. Viaja de mundo en mundo casi todo el año, y cada temporada recorre varias rutas. Se conservan los hechos grandes de sus cinco temporadas: el reclutamiento, las primeras misiones, la caída de Odila, la fuga del Hondo y el golpe contra la estación de radar.
+- **El cuadro:** el interior de la cabina, con los controles (consolas, palancas, pilotos, pantallas redondas) y un **parabrisas muy amplio**, casi de pared a pared, por el que se ve el mundo donde está o al que llega ese día. Funciona como el camino de la Ruta de la Seda, que cambia de paisaje según el arco `ruta`: aquí la ficha del día dice en qué mundo está (un estado o un arco por mundo), y el parabrisas lo pinta.
+- **Los mundos, muy distintos entre sí:** el puerto minero de ladrillo de Halde; un mundo océano con plataformas; un desierto de dunas con ciudades excavadas; una luna de hielo; un mundo de selva; una estación en órbita de un gigante gaseoso; la capital de mármol y bronce del Directorio (Albar); un mundo volcánico; y las ruinas de piedra con raíces donde se esconde la base de la red. De noche, el mismo mundo con sus luces, y en el salto, el espacio entre estrellas.
+- **Orden:** la historia se rehace en la parte que sigue a la estética de la base en ruinas; el cuadro sigue en la fila de escenas (después de S19), salvo que el autor pida adelantarlo.
 
 **Se distingue de:**
 - **Distopía:** es el expediente del Estado, en gris y rojo de cartel. Este es el lado del espía, en hueso, ámbar y petróleo, y entre planetas.
