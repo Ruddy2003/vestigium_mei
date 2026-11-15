@@ -1248,7 +1248,10 @@ internal object PiezasNapoleon {
         // Lejos, la copa es una sola nube irregular, con su lado de luz y su nieve (sin pisos que parezcan platos).
         if (detalle < 0.45f) {
             val c = Offset(pie.x + inclina * 0.25f, (copa + top) / 2f)
-            val nube = TrazosValle.borron(c, ancho * 0.5f, (copa - top) * 0.48f, az, 13, 0.3f, 0.7f)
+            val hc = copa - top
+            val nube = union(listOf(TrazosValle.blando(c + Offset(0f, hc * 0.12f), ancho * 0.5f, hc * 0.3f, az, 11, 0.22f, 0.6f),
+                TrazosValle.blando(c + Offset(-ancho * 0.12f, -hc * 0.2f), ancho * 0.32f, hc * 0.24f, az, 9, 0.22f, 0.6f),
+                TrazosValle.blando(c + Offset(ancho * 0.16f, -hc * 0.05f), ancho * 0.3f, hc * 0.22f, az, 9, 0.22f, 0.6f)))
             drawPath(nube, a.plano(C.PINO_OSC, c, 0f, lejos, 0f))
             clipPath(nube) { mancha(c + Offset(lado * ancho * 0.2f, -(copa - top) * 0.15f), ancho * 0.35f, (copa - top) * 0.3f, a.plano(C.PINO, c, lado, lejos, 0.5f), 0.6f)
                 if (nieve > 0.15f) repeat(4) { val q = c + Offset(az.entre(-0.35f, 0.35f) * ancho, az.entre(-0.4f, 0.2f) * (copa - top)); mancha(q, ancho * 0.18f, (copa - top) * 0.05f, a.arriba(C.NIEVE, q, lejos), 0.8f * nieve) } }
