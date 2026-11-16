@@ -81,10 +81,14 @@ object IdeasGotico : DisenoIdeas {
     private val LATON_LUZ = Color(0xFFF2DC98)
     private val LATON_OSC = Color(0xFF6A4E22)
     private val ORO = Color(0xFFC79A3A)
-    /** La vitela de las hojas y las cartelas; la de las cartelas de noche, a la luz de las velas, para que el rótulo se lea. */
+    /**
+     * La vitela de las hojas y las cartelas. De noche, la de las cartelas va de [VITELA_NOCHE] (lejos de las velas) a
+     * [VITELA_VELA] (junto a ellas); la de lejos aún da 6.6:1 con la tinta del título y 4.5:1 con la del subtítulo (78 %).
+     */
     private val VITELA = Color(0xFFF3ECDC)
     private val VITELA_OSC = Color(0xFFD9C9A6)
-    private val VITELA_NOCHE = Color(0xFFBCA882)
+    private val VITELA_NOCHE = Color(0xFFBAA680)
+    private val VITELA_VELA = Color(0xFFF2DEB0)
     /** La cera de las velas. */
     private val CERA = Color(0xFFF0E3B4)
     /** La grana de la estola y las cintas, el ultramar y el almagre de la cruz de consagración. */
@@ -115,6 +119,16 @@ object IdeasGotico : DisenoIdeas {
         return m.coerceIn(0f, 1f)
     }
 
+    /**
+     * Cuánto alumbran las velas, más abajo, el cuerpo del mueble en [p] (en fracciones del ancho): cae despacio con la
+     * distancia, de modo que la primera fila de cajones queda cálida y la última casi perdida.
+     */
+    private fun luzBaja(p: Offset): Float {
+        var m = 0f
+        for (v in VELAS) m = maxOf(m, 1.15f * (1f - (p - v).getDistance() / 1.2f))
+        return m.coerceIn(0f, 1f)
+    }
+
     /** Un color a [k] (0 a 1) de las velas: de día, tal cual; de noche, hundido en el azul negro y calentado cerca de ellas. */
     private fun n(c: Color, oscuro: Boolean, k: Float): Color {
         if (!oscuro) return c
@@ -124,6 +138,9 @@ object IdeasGotico : DisenoIdeas {
 
     /** La sombra: de día, violeta hondo; de noche, el azul negro. */
     private fun sombra(oscuro: Boolean, a: Float) = if (oscuro) NOCHE.copy(alpha = (a * 1.15f).coerceIn(0f, 1f)) else sombraMueble(a)
+
+    /** La sombra de un rebaje en la madera: de día, pardo violeta (no negro); de noche, el azul negro. */
+    private fun sombraParda(oscuro: Boolean, a: Float) = if (oscuro) NOCHE.copy(alpha = (a * 1.15f).coerceIn(0f, 1f)) else mezcla(SOMBRA_MUEBLE, ROBLE_OSC, 0.55f).copy(alpha = a.coerceIn(0f, 1f))
 
     /** El brillo de lo que mira a la luz: de día, crema; de noche, el filo cálido de las velas, según lo cerca que esté. */
     private fun brillo(oscuro: Boolean, a: Float, k: Float = 0f) =
@@ -658,45 +675,87 @@ object IdeasGotico : DisenoIdeas {
         }
     }
 
-    /** La estola grana, doblada en el tablero; sus dos caídas tapan parte de la crestería. */
+    /**
+     * La estola grana, de seda pesada: un tramo largo echado en el tablero, que rueda por el canto y cae en dos tiras de
+     * largo distinto, con pliegues blandos, la punta ensanchada, la cruz bordada y el fleco de oro; tapa parte de la crestería.
+     */
     private fun DrawScope.estola(w: Float, oscuro: Boolean) {
         val u = density
-        val k = if (oscuro) calor(Offset(w * 0.41f, w * 0.48f), w) else 0f
+        val k = if (oscuro) calor(Offset(w * 0.41f, w * 0.47f), w) else 0f
         val tela = n(GRANA, oscuro, k)
+        val luzTela = n(mezcla(GRANA, Color(0xFFE88A6E), 0.4f), oscuro, k + 0.1f)
+        val honda = n(mezcla(GRANA, ROBLE_OSC, 0.5f), oscuro, k)
         val oro = n(ORO, oscuro, k)
-        // Lo que descansa en el tablero, doblado.
-        val arriba = Rect(w * 0.356f, w * 0.441f, w * 0.466f, w * 0.456f)
-        drawRect(sombra(oscuro, 0.3f), Offset(arriba.left + 1.5f * u, arriba.top + 1.5f * u), arriba.size)
-        drawRect(mezcla(tela, LUZ_MUEBLE, if (oscuro) 0f else 0.1f), arriba.topLeft, arriba.size)
-        drawLine(oro, Offset(arriba.left, arriba.top + 1.4f * u), Offset(arriba.right, arriba.top + 1.4f * u), 0.7f * u)
-        drawLine(sombra(oscuro, 0.35f), Offset(w * 0.41f, arriba.top), Offset(w * 0.413f, arriba.bottom), 0.8f * u)
-        // Las dos caídas, que se ensanchan hacia la punta, con su fleco de oro y la cruz bordada.
-        listOf(Triple(0.369f, 0.404f, 0.572f), Triple(0.408f, 0.448f, 0.538f)).forEachIndexed { j, (a, b, fin) ->
-            val ensancha = w * 0.006f
+        // Lo que descansa en el tablero: una capa de tela echada, apenas abultada, que se hunde entre los dos dobleces.
+        val capa = Path().apply {
+            moveTo(w * 0.35f, w * TAB_F)
+            cubicTo(w * 0.352f, w * (TAB + 0.002f), w * 0.37f, w * (TAB - 0.002f), w * 0.39f, w * (TAB + 0.0f))
+            cubicTo(w * 0.405f, w * (TAB + 0.003f), w * 0.415f, w * (TAB - 0.003f), w * 0.44f, w * (TAB - 0.002f))
+            cubicTo(w * 0.46f, w * (TAB - 0.001f), w * 0.468f, w * (TAB + 0.004f), w * 0.472f, w * TAB_F)
+            close()
+        }
+        translate(w * 0.007f, w * 0.0015f) { drawPath(capa, sombra(oscuro, 0.3f)) }
+        drawPath(capa, tela)
+        clipPath(capa) {
+            drawOval(luzTela.copy(alpha = 0.8f), Offset(w * 0.355f, w * (TAB - 0.003f)), Size(w * 0.045f, w * 0.008f))
+            drawOval(luzTela.copy(alpha = 0.7f), Offset(w * 0.418f, w * (TAB - 0.004f)), Size(w * 0.035f, w * 0.007f))
+            drawLine(honda, Offset(w * 0.404f, w * TAB), Offset(w * 0.398f, w * TAB_F), 1.4f * u)
+        }
+        drawLine(oro, Offset(w * 0.356f, w * (TAB + 0.003f)), Offset(w * 0.39f, w * (TAB + 0.001f)), 0.7f * u)
+
+        /**
+         * Una caída: entra por el canto entre [x0] y [x1], dobla sobre la arista, y baja con peso hasta [fin]: los bordes se
+         * recogen a media caída, la tela se va de lado [deriva] y la punta se ensancha.
+         */
+        fun caida(x0: Float, x1: Float, fin: Float, deriva: Float, semilla: Int) {
+            val y0 = w * TAB_F - w * 0.002f
+            val yf = w * fin
+            val dx = w * deriva
+            val ens = w * 0.008f
+            val l = yf - y0
+            val izq = listOf(Offset(w * x0, y0), Offset(w * x0 - w * 0.003f, y0 + l * 0.2f), Offset(w * x0 + dx * 0.5f + w * 0.005f, y0 + l * 0.6f), Offset(w * x0 + dx - ens, yf))
+            val der = listOf(Offset(w * x1, y0), Offset(w * x1 + w * 0.004f, y0 + l * 0.2f), Offset(w * x1 + dx * 0.5f - w * 0.004f, y0 + l * 0.6f), Offset(w * x1 + dx + ens, yf))
             val p = Path().apply {
-                moveTo(w * a, w * TAB_F); lineTo(w * b, w * TAB_F)
-                cubicTo(w * b + 1f * u, w * (TAB_F + 0.02f), w * b + ensancha * 0.5f, w * (fin - 0.04f), w * b + ensancha, w * fin)
-                lineTo(w * a - ensancha, w * fin)
-                cubicTo(w * a - ensancha * 0.5f, w * (fin - 0.04f), w * a - 1f * u, w * (TAB_F + 0.02f), w * a, w * TAB_F)
+                moveTo(izq[0].x, izq[0].y); lineTo(der[0].x, der[0].y)
+                cubicTo(der[1].x, der[1].y, der[2].x, der[2].y, der[3].x, der[3].y)
+                cubicTo(der[3].x - w * 0.012f, yf + w * 0.005f, izq[3].x + w * 0.012f, yf + w * 0.005f, izq[3].x, izq[3].y)
+                cubicTo(izq[2].x, izq[2].y, izq[1].x, izq[1].y, izq[0].x, izq[0].y)
                 close()
             }
-            translate(w * 0.012f, w * 0.004f) { drawPath(p, sombra(oscuro, 0.35f)) }
+            translate(w * 0.011f, w * 0.004f) { drawPath(p, sombra(oscuro, 0.32f)) }
             drawPath(p, tela)
             clipPath(p) {
-                // El doblez sobre el canto, a la luz; debajo, la sombra del pliegue.
-                drawRect(brillo(oscuro, 0.3f, k), Offset(w * a - 2f * u, w * TAB_F), Size(w * (b - a) + 4f * u, w * 0.006f))
-                drawRect(sombra(oscuro, 0.22f), Offset(w * a - 2f * u, w * (TAB_F + 0.012f)), Size(w * (b - a) + 4f * u, w * 0.012f))
-                drawRect(sombra(oscuro, 0.18f), Offset(w * (a + (b - a) * 0.62f), w * TAB_F), Size(w * (b - a) * 0.5f, w * (fin - TAB_F)))
-                drawLine(oro, Offset(w * a + 1.6f * u, w * TAB_F), Offset(w * a + 1.6f * u - ensancha, w * fin), 0.7f * u)
-                drawLine(oro, Offset(w * b - 1.6f * u, w * TAB_F), Offset(w * b - 1.6f * u + ensancha, w * fin), 0.7f * u)
+                val mid = (izq[0].x + der[0].x) / 2
+                val anc = der[0].x - izq[0].x
+                // La arista del tablero: la tela coge la luz al doblar y queda en sombra justo debajo.
+                drawRect(luzTela, Offset(izq[0].x - w * 0.01f, y0), Size(anc + w * 0.02f, w * 0.006f))
+                drawRect(honda.copy(alpha = 0.5f), Offset(izq[0].x - w * 0.01f, y0 + w * 0.009f), Size(anc + w * 0.02f, w * 0.012f))
+                // Pliegues blandos: anchos y tenues, que se abren hacia la punta y siguen la deriva.
+                listOf(Triple(-0.22f, honda, 0.55f), Triple(0.12f, luzTela, 0.6f), Triple(0.38f, honda, 0.5f)).forEach { (fx, col, al) ->
+                    val a0 = Offset(mid + anc * fx * 0.5f, y0 + w * 0.02f)
+                    val b0 = Offset(mid + anc * fx * 1.15f + dx, yf)
+                    val q = Path().apply { moveTo(a0.x, a0.y); cubicTo(a0.x, a0.y + l * 0.35f, b0.x - dx * 0.4f, a0.y + l * 0.65f, b0.x, b0.y) }
+                    drawPath(q, col.copy(alpha = al * 0.55f), style = Stroke(anc * 0.32f, cap = StrokeCap.Round))
+                    drawPath(q, col.copy(alpha = al), style = Stroke(anc * 0.12f, cap = StrokeCap.Round))
+                }
             }
-            val cx = w * (a + b) / 2
-            drawPath(cruzPatada(Offset(cx, w * (fin - 0.017f)), w * 0.0085f), oro)
-            for (q in 0 until 9) {
-                val x = w * a - ensancha + (w * (b - a) + 2 * ensancha) * (q + 0.5f) / 9f
-                drawLine(oro, Offset(x, w * fin), Offset(x + 0.3f * u, w * fin + (2.4f + 1.2f * azar(70 + j, q)) * u), 0.7f * u, StrokeCap.Round)
+            // Los galones de oro de los bordes.
+            drawPath(Path().apply { moveTo(izq[0].x + 1.4f * u, izq[0].y + w * 0.006f); cubicTo(izq[1].x + 1.4f * u, izq[1].y, izq[2].x + 1.4f * u, izq[2].y, izq[3].x + 1.6f * u, izq[3].y) }, oro, style = Stroke(0.7f * u))
+            drawPath(Path().apply { moveTo(der[0].x - 1.4f * u, der[0].y + w * 0.006f); cubicTo(der[1].x - 1.4f * u, der[1].y, der[2].x - 1.4f * u, der[2].y, der[3].x - 1.6f * u, der[3].y) }, oro, style = Stroke(0.7f * u))
+            // La cruz bordada en la punta y el fleco.
+            val cx = (izq[3].x + der[3].x) / 2
+            drawPath(cruzPatada(Offset(cx, yf - w * 0.017f), w * 0.0095f), oro)
+            drawLine(oro, Offset(izq[3].x + 1f * u, yf - w * 0.003f), Offset(der[3].x - 1f * u, yf - w * 0.003f), 0.8f * u)
+            val m = 12
+            for (q in 0 until m) {
+                val x = izq[3].x + (der[3].x - izq[3].x) * (q + 0.5f) / m
+                val yb = yf + w * 0.004f * (1f - ((q + 0.5f) / m - 0.5f).let { it * it } * 4f)
+                drawLine(oro, Offset(x, yb - 0.5f * u), Offset(x + 0.4f * u, yb + (2.6f + 1.4f * azar(semilla, q)) * u), 0.7f * u, StrokeCap.Round)
             }
         }
+        // La de atrás, corta; la de delante, larga y un poco más ancha, que se va hacia la izquierda y tapa a la otra.
+        caida(0.408f, 0.458f, 0.545f, 0.005f, 71)
+        caida(0.358f, 0.414f, 0.602f, -0.012f, 70)
     }
 
     private fun siluetaCaliz(w: Float): Path = unir(listOf(
@@ -911,7 +970,7 @@ object IdeasGotico : DisenoIdeas {
             if (j > 0) hundido(cuadrifolioPath(ej, aw * 0.075f), fondo, suelo, 1.2f * u, oscuro, k)
         }
         // El bocel de abajo.
-        drawRect(n(ROBLE_OSC, oscuro, 0.1f), Offset(r.left, r.bottom - 2.5f * u), Size(r.width, 2.5f * u))
+        drawRect(n(mezcla(ROBLE, ROBLE_OSC, 0.55f), oscuro, 0.1f), Offset(r.left, r.bottom - 2.5f * u), Size(r.width, 2.5f * u))
         drawRect(brillo(oscuro, 0.3f, 0.4f), Offset(r.left, r.bottom - 2.5f * u), Size(r.width, 0.8f * u))
         // La sombra que el vuelo del tablero deja encima.
         drawRect(Brush.verticalGradient(listOf(sombra(oscuro, 0.5f), Color.Transparent), r.top, r.top + w * 0.02f), r.topLeft, Size(r.width, w * 0.02f))
@@ -921,15 +980,18 @@ object IdeasGotico : DisenoIdeas {
     private fun DrawScope.contrafuerte(x0: Float, x1: Float, y0: Float, y1: Float, filas: List<Rect>, w: Float, oscuro: Boolean, derecho: Boolean) {
         val u = density
         val cara = Rect(x0, y0, x1, y1)
-        val k = if (oscuro) calor(Offset(cara.center.x, y0), w) else 0f
+        val k = if (oscuro) luzBaja(Offset(cara.center.x / w, y0 / w)) else 0f
         val col = if (derecho) mezcla(ROBLE, ROBLE_OSC, 0.25f) else mezcla(ROBLE, ROBLE_LUZ, 0.25f)
-        drawRect(Brush.verticalGradient(listOf(n(col, oscuro, k), n(col, oscuro, k * 0.3f)), y0, y1), cara.topLeft, cara.size)
+        drawRect(if (oscuro) Brush.verticalGradient(List(6) { i -> n(col, true, luzBaja(Offset(cara.center.x / w, (y0 + (y1 - y0) * i / 5f) / w))) }, y0, y1)
+            else Brush.verticalGradient(listOf(col, col), y0, y1), cara.topLeft, cara.size)
         vetas(cara, ROBLE_OSC.copy(alpha = 0.35f), (x0 / u).toInt(), 0.7f, vertical = true, grosor = 0.6f, ondulacion = 0.3f)
-        drawRect(brillo(oscuro, if (derecho) 0.12f else 0.3f, k), cara.topLeft, Size(1.2f * u, cara.height))
+        if (oscuro) drawRect(Brush.verticalGradient(listOf(LLAMA.copy(alpha = 0.35f * k), Color.Transparent), y0, y0 + w * 0.9f), cara.topLeft, Size(1.2f * u, cara.height))
+        else drawRect(brillo(oscuro, if (derecho) 0.12f else 0.3f, k), cara.topLeft, Size(1.2f * u, cara.height))
         drawRect(sombra(oscuro, 0.35f), Offset(cara.right - cara.width * 0.22f, y0), Size(cara.width * 0.22f, cara.height))
         // Un retallo con su tejadillo en lo alto de cada fila.
         filas.forEach { f ->
             val y = f.top + f.height * 0.1f
+            val k = if (oscuro) luzBaja(Offset(cara.center.x / w, y / w)) else 0f
             drawPath(poligono(x0, y + cara.width * 0.45f, (x0 + x1) / 2, y, x1, y + cara.width * 0.45f, x1, y + cara.width * 0.6f, x0, y + cara.width * 0.6f), n(mezcla(col, ROBLE_LUZ, 0.3f), oscuro, k))
             drawLine(brillo(oscuro, 0.4f, k), Offset(x0, y + cara.width * 0.45f), Offset((x0 + x1) / 2, y), 0.9f * u)
             drawLine(sombra(oscuro, 0.5f), Offset(x0, y + cara.width * 0.62f), Offset(x1, y + cara.width * 0.62f), 1.2f * u)
@@ -958,10 +1020,10 @@ object IdeasGotico : DisenoIdeas {
         val m = 2.6f * u
         drawRect(sombra(oscuro, 0.4f), Offset(r.left - m + 1.6f * u, r.top - m + 2f * u), Size(r.width + 2 * m, r.height + 2 * m))
         if (cresta) {
-            val g = poligono(r.center.x - r.width * 0.16f, r.top - m + 0.5f, r.center.x, r.top - m - r.height * 0.22f, r.center.x + r.width * 0.16f, r.top - m + 0.5f)
+            val g = poligono(r.center.x - r.height * 0.5f, r.top - m + 0.5f, r.center.x, r.top - m - r.height * 0.22f, r.center.x + r.height * 0.5f, r.top - m + 0.5f)
             translate(1.2f * u, 1.2f * u) { drawPath(g, sombra(oscuro, 0.4f)) }
             drawPath(g, n(LATON, oscuro, k + 0.1f))
-            drawLine(brillo(oscuro, 0.5f, k + 0.3f), Offset(r.center.x - r.width * 0.16f, r.top - m), Offset(r.center.x, r.top - m - r.height * 0.22f), 0.8f * u)
+            drawLine(brillo(oscuro, 0.5f, k + 0.3f), Offset(r.center.x - r.height * 0.5f, r.top - m), Offset(r.center.x, r.top - m - r.height * 0.22f), 0.8f * u)
             drawPath(trebolPath(Offset(r.center.x, r.top - m - r.height * 0.1f), r.height * 0.11f), n(LATON_OSC, oscuro, k))
         }
         drawRect(n(LATON, oscuro, k + 0.1f), Offset(r.left - m, r.top - m), Size(r.width + 2 * m, r.height + 2 * m))
@@ -969,8 +1031,17 @@ object IdeasGotico : DisenoIdeas {
         drawRect(brillo(oscuro, 0.4f, k + 0.35f), Offset(r.left - m, r.top - m), Size(0.9f * u, r.height + 2 * m))
         drawRect(n(LATON_OSC, oscuro, k), Offset(r.left - m, r.bottom + m - 0.9f * u), Size(r.width + 2 * m, 0.9f * u))
         drawRect(n(LATON_OSC, oscuro, k), Offset(r.right + m - 0.9f * u, r.top - m), Size(0.9f * u, r.height + 2 * m))
-        drawRect(if (oscuro) VITELA_NOCHE else VITELA, r.topLeft, r.size)
+        drawRect(if (oscuro) mezcla(VITELA_NOCHE, VITELA_VELA, k * 1.4f) else VITELA, r.topLeft, r.size)
         drawRect(sombra(oscuro, 0.18f), r.topLeft, Size(r.width, 1.2f * u))
+        // De noche, el destello de las velas en el canto del marco que las mira (arriba a la derecha).
+        if (oscuro && k > 0.15f) {
+            val d = Offset(r.right + m * 0.2f, r.top - m * 0.6f)
+            drawLine(LLAMA.copy(alpha = (k * 1.2f).coerceIn(0f, 0.9f)), Offset(r.right - r.width * 0.35f, r.top - m + 0.5f * u), Offset(r.right + m, r.top - m + 0.5f * u), 1f * u)
+            drawLine(LLAMA.copy(alpha = (k * 0.9f).coerceIn(0f, 0.8f)), Offset(r.right + m - 0.5f * u, r.top - m), Offset(r.right + m - 0.5f * u, r.top + r.height * 0.4f), 0.9f * u)
+            drawCircle(Color(0xFFFFF0C8).copy(alpha = (k * 1.3f).coerceIn(0f, 1f)), 1.3f * u, d)
+            drawLine(Color(0xFFFFF0C8).copy(alpha = (k * 0.9f).coerceIn(0f, 0.9f)), d - Offset(3.2f * u, 0f), d + Offset(3.2f * u, 0f), 0.5f * u)
+            drawLine(Color(0xFFFFF0C8).copy(alpha = (k * 0.9f).coerceIn(0f, 0.9f)), d - Offset(0f, 3.2f * u), d + Offset(0f, 3.2f * u), 0.5f * u)
+        }
         drawRect(sombra(oscuro, 0.1f), r.topLeft, Size(1.2f * u, r.height))
         listOf(r.topLeft, Offset(r.right, r.top), Offset(r.left, r.bottom), r.bottomRight).forEach { p ->
             val q = Offset(p.x + (if (p.x < r.center.x) -m / 2 else m / 2), p.y + (if (p.y < r.center.y) -m / 2 else m / 2))
@@ -1075,15 +1146,18 @@ object IdeasGotico : DisenoIdeas {
 
         // ---- el cuerpo del mueble
         val cuerpo = Rect(w * BL, w * TAB_B, w * BR, zoc)
-        drawRect(if (oscuro) Brush.verticalGradient(listOf(n(ROBLE, true, 0.4f), n(ROBLE, true, 0.12f), n(ROBLE, true, 0f)), cuerpo.top, cuerpo.top + w * 1.1f)
+        drawRect(if (oscuro) Brush.verticalGradient(List(6) { i -> n(ROBLE, true, luzBaja(Offset(0.72f, (cuerpo.top + (cuerpo.bottom - cuerpo.top) * i / 5f) / w))) }, cuerpo.top, cuerpo.bottom)
             else Brush.verticalGradient(listOf(ROBLE, ROBLE), cuerpo.top, cuerpo.bottom), cuerpo.topLeft, cuerpo.size)
+        // Y de lado: la columna izquierda, un punto más lejos de las velas.
+        if (oscuro) drawRect(Brush.horizontalGradient(listOf(NOCHE.copy(alpha = 0.3f), Color.Transparent), cuerpo.left, cuerpo.left + cuerpo.width * 0.6f), cuerpo.topLeft, Size(cuerpo.width * 0.6f, cuerpo.height))
         vetas(cuerpo, ROBLE_OSC.copy(alpha = 0.4f), 13, 0.7f, grosor = 0.7f, ondulacion = 0.4f)
         // Los rebajes de los cajones, con su filo de luz por fuera y las clavijas de las uniones.
         d.huecos.forEach { r ->
-            val kk = k(r.center.x, r.top)
-            drawRect(n(mezcla(ROBLE_OSC, Color(0xFF140C06), 0.5f), oscuro, 0f), Offset(r.left - 2.4f * u, r.top - 2.4f * u), Size(r.width + 4.8f * u, r.height + 4.8f * u))
+            val kk = if (oscuro) luzBaja(Offset(r.center.x / w, r.top / w)) else 0f
+            drawRect(sombraParda(oscuro, 0.7f), Offset(r.left - 2.4f * u, r.top - 2.4f * u), Size(r.width + 4.8f * u, r.height + 4.8f * u))
+            drawRect(sombraParda(oscuro, 0.3f), Offset(r.left - 2.4f * u, r.top - 2.4f * u), Size(r.width + 4.8f * u, 1.6f * u))
             drawRect(brillo(oscuro, 0.25f, kk), Offset(r.left - 3.4f * u, r.bottom + 2.4f * u), Size(r.width + 6.8f * u, 1f * u))
-            drawRect(sombra(oscuro, 0.3f), Offset(r.left - 3.4f * u, r.top - 3.6f * u), Size(r.width + 6.8f * u, 1.2f * u))
+            drawRect(sombraParda(oscuro, 0.35f), Offset(r.left - 3.4f * u, r.top - 3.6f * u), Size(r.width + 6.8f * u, 1.2f * u))
         }
         d.filas.forEach { f ->
             val y = f.bottom + d.separacion / 2
@@ -1130,6 +1204,12 @@ object IdeasGotico : DisenoIdeas {
             }
         }
         drawOval(sombra(oscuro, 0.25f), Offset(w * 0.8f, w * (TAB + 0.004f)), Size(w * 0.03f, w * 0.006f))
+        // De noche, el charco de luz de las velas en el tablero, que baja un poco por el canto.
+        if (oscuro) clipRect(cara.left, cara.top, cara.right, canto.bottom) {
+            withTransform({ scale(1f, 0.18f, Offset(w * 0.71f, w * TAB_F)) }) {
+                drawCircle(Brush.radialGradient(listOf(LLAMA.copy(alpha = 0.55f), LLAMA.copy(alpha = 0.22f), Color.Transparent), Offset(w * 0.71f, w * TAB_F), w * 0.26f), w * 0.26f, Offset(w * 0.71f, w * TAB_F))
+            }
+        }
 
         // ---- lo de encima, de atrás adelante
         caliz(w, oscuro)
@@ -1208,11 +1288,14 @@ object IdeasGotico : DisenoIdeas {
         val u = density
         drawRect(Brush.verticalGradient(listOf(n(mezcla(ROBLE, ROBLE_LUZ, 0.32f), oscuro, cerca + 0.1f), n(ROBLE, oscuro, cerca), n(mezcla(ROBLE, ROBLE_OSC, 0.3f), oscuro, cerca - 0.1f)), f.top, f.bottom), f.topLeft, f.size)
         vetas(f, ROBLE_OSC.copy(alpha = 0.38f), semilla, 1.1f, grosor = 0.7f, ondulacion = 0.4f)
-        if (oscuro) drawRect(Brush.horizontalGradient(listOf(Color.Transparent, LLAMA.copy(alpha = 0.08f)), f.left + f.width * 0.35f, f.right), f.topLeft, f.size)
+        if (oscuro) {
+            drawRect(Brush.horizontalGradient(listOf(Color.Transparent, LLAMA.copy(alpha = 0.2f * cerca)), f.left + f.width * 0.3f, f.right), f.topLeft, f.size)
+            drawRect(Brush.verticalGradient(listOf(LLAMA.copy(alpha = 0.22f * cerca), Color.Transparent), f.top, f.top + f.height * 0.4f), f.topLeft, Size(f.width, f.height * 0.4f))
+        }
         drawRect(brillo(oscuro, 0.4f, cerca + 0.4f), f.topLeft, Size(f.width, 1.3f * u))
         drawRect(brillo(oscuro, 0.18f, cerca), f.topLeft, Size(1.3f * u, f.height))
-        drawRect(sombra(oscuro, 0.45f), Offset(f.left, f.bottom - 1.6f * u), Size(f.width, 1.6f * u))
-        drawRect(sombra(oscuro, 0.35f), Offset(f.right - 1.6f * u, f.top), Size(1.6f * u, f.height))
+        drawRect(sombraParda(oscuro, 0.5f), Offset(f.left, f.bottom - 1.6f * u), Size(f.width, 1.6f * u))
+        drawRect(sombraParda(oscuro, 0.4f), Offset(f.right - 1.6f * u, f.top), Size(1.6f * u, f.height))
         val i = 4.5f * u
         val m = Rect(f.left + i, f.top + i, f.right - i, f.bottom - i)
         drawLine(sombra(oscuro, 0.45f), m.topLeft, Offset(m.right, m.top), 1f * u)
@@ -1235,14 +1318,19 @@ object IdeasGotico : DisenoIdeas {
     private fun DrawScope.pergamino(r: Rect, oscuro: Boolean, cerca: Float) {
         val u = density
         panel(r, oscuro, cerca)
-        val pw = r.width / 3
-        for (k in 0 until 3) {
+        val m = if (r.width < r.height * 0.9f) 2 else 3
+        val pw = r.width / m
+        // De día la luz viene de la izquierda; de noche, de las velas, arriba a la derecha.
+        val luzIzq = !oscuro
+        for (k in 0 until m) {
             val x = r.left + pw * k
             val top = r.top + pw * 0.5f; val bot = r.bottom - pw * 0.5f
-            drawRect(n(mezcla(ROBLE, ROBLE_LUZ, 0.3f), oscuro, cerca + 0.1f), Offset(x + pw * 0.14f, top), Size(pw * 0.36f, bot - top))
-            drawRect(n(mezcla(ROBLE, ROBLE_OSC, 0.1f), oscuro, cerca), Offset(x + pw * 0.5f, top), Size(pw * 0.36f, bot - top))
-            drawLine(brillo(oscuro, 0.4f, cerca + 0.3f), Offset(x + pw * 0.22f, top), Offset(x + pw * 0.22f, bot), 1f * u)
-            drawLine(sombra(oscuro, 0.55f), Offset(x + pw * 0.9f, top - pw * 0.1f), Offset(x + pw * 0.9f, bot + pw * 0.1f), 1.2f * u)
+            val claro = n(mezcla(ROBLE, ROBLE_LUZ, 0.35f), oscuro, cerca + 0.15f)
+            val oscura = n(mezcla(ROBLE, ROBLE_OSC, 0.15f), oscuro, cerca * 0.7f)
+            drawRect(if (luzIzq) claro else oscura, Offset(x + pw * 0.14f, top), Size(pw * 0.36f, bot - top))
+            drawRect(if (luzIzq) oscura else claro, Offset(x + pw * 0.5f, top), Size(pw * 0.36f, bot - top))
+            drawLine(brillo(oscuro, 0.5f, cerca + 0.2f), Offset(x + pw * (if (luzIzq) 0.22f else 0.78f), top), Offset(x + pw * (if (luzIzq) 0.22f else 0.78f), bot), 1f * u)
+            drawLine(sombra(oscuro, 0.55f), Offset(x + pw * (if (luzIzq) 0.9f else 0.1f), top - pw * 0.1f), Offset(x + pw * (if (luzIzq) 0.9f else 0.1f), bot + pw * 0.1f), 1.2f * u)
             drawArc(brillo(oscuro, 0.35f, cerca + 0.3f), 180f, 180f, false, Offset(x + pw * 0.12f, r.top + pw * 0.22f), Size(pw * 0.76f, pw * 0.56f), style = Stroke(1f * u))
             drawArc(sombra(oscuro, 0.5f), 0f, 180f, false, Offset(x + pw * 0.12f, r.bottom - pw * 0.78f), Size(pw * 0.76f, pw * 0.56f), style = Stroke(1f * u))
         }
@@ -1335,8 +1423,14 @@ object IdeasGotico : DisenoIdeas {
         val w = size.width; val h = size.height
         val ab = c.abierto.coerceIn(0f, 1f)
         val k = if (c.vacio) 0 else c.n
-        // De noche, las velas quedan encima y a la derecha del mueble: a los cajones les llega poco, más al canto de arriba.
-        val cerca = 0.15f
+        // Dónde está este cajón en el mueble (en fracciones del ancho), para saber cuánto le llega de las velas: la primera
+        // fila de la derecha, cálida; cada fila hacia abajo, más apagada; la izquierda, un punto menos que la derecha.
+        val anchoH = (1f - 2f * lado - hueco * (cols - 1)) / cols
+        val altoH = anchoH / proporcion
+        val centro = Offset(lado + c.col * (anchoH + hueco) + anchoH / 2, corona + hueco + c.fila * (altoH + hueco) + altoH / 2)
+        val cerca = if (oscuro) luzBaja(centro) else 0f
+        // De día, la luz de arriba a la izquierda aclara apenas las filas de arriba y la columna de la izquierda.
+        val dia = if (oscuro) 0f else 0.07f * (1f - c.fila / maxOf(1f, c.filas - 1f)) + (if (c.col == 0) 0.025f else 0f)
         // Los más llenos quedan más entreabiertos; el de las ideas sin tema, un poco más.
         val entre = if (c.vacio || k == 0) 0f else h * (0.025f + 0.017f * k.coerceIn(0, 7)) + (if (c.sinTema) h * 0.02f else 0f)
         val baja = h * SALIDA * ab
@@ -1347,10 +1441,11 @@ object IdeasGotico : DisenoIdeas {
         val f = Rect(-e, arriba, w + e, h + baja + h * 0.04f * ab)
         if (ab > 0f) drawRect(sombra(oscuro, 0.35f * ab), Offset(f.left + 2f * u, f.bottom - 1f * u), Size(f.width, 1f * u + 5f * u * ab))
         frente(f, c.semilla, oscuro, cerca)
-        if (arriba < 0.5f) drawRect(sombra(oscuro, 0.3f), Offset(0f, 0f), Size(w, 2.2f * u))
+        if (dia > 0f) drawRect(luzMueble(dia), f.topLeft, f.size)
+        if (arriba < 0.5f) drawRect(sombraParda(oscuro, 0.35f), Offset(0f, 0f), Size(w, 2.2f * u))
         val fh = f.height
-        val izq = Rect(w * 0.045f, f.top + fh * 0.15f, w * 0.205f, f.bottom - fh * 0.13f)
-        val der = Rect(w * 0.795f, izq.top, w * 0.955f, izq.bottom)
+        val izq = Rect(w * 0.035f, f.top + fh * 0.15f, w * 0.135f, f.bottom - fh * 0.13f)
+        val der = Rect(w * 0.865f, izq.top, w * 0.965f, izq.bottom)
         val roseta = Offset(w / 2, h * 0.775f + baja)
         val rr = h * 0.055f
 
@@ -1390,8 +1485,8 @@ object IdeasGotico : DisenoIdeas {
             1 -> {
                 listOf(0.3f, 0.74f).forEach { fy ->
                     val y = f.top + fh * fy
-                    faja(w * 0.025f, w * 0.225f, y, h * 0.068f, oscuro, cerca)
-                    faja(w * 0.975f, w * 0.775f, y, h * 0.068f, oscuro, cerca)
+                    faja(w * 0.02f, w * 0.15f, y, h * 0.066f, oscuro, cerca)
+                    faja(w * 0.98f, w * 0.85f, y, h * 0.066f, oscuro, cerca)
                 }
             }
             else -> { calado(izq, false, k, c.semilla, oscuro, cerca); calado(der, true, k, c.semilla + 1, oscuro, cerca) }
@@ -1406,14 +1501,14 @@ object IdeasGotico : DisenoIdeas {
             }
         }
         if (Math.floorMod(c.semilla / 11, 4) == 1) {
-            val g = Path(); val x0 = w * 0.99f; val y0 = f.top + fh * 0.4f
+            val g = Path(); val x0 = w * 0.99f; val y0 = f.top + fh * 0.62f
             for (j in 0..8) {
-                val p = Offset(x0 - w * 0.17f * j / 8f, y0 + fh * 0.2f * j / 8f + (azar(c.semilla, 320 + j) - 0.5f) * 2.4f * u)
+                val p = Offset(x0 - w * 0.12f * j / 8f, y0 + fh * 0.2f * j / 8f + (azar(c.semilla, 320 + j) - 0.5f) * 2.4f * u)
                 if (j == 0) g.moveTo(p.x, p.y) else g.lineTo(p.x, p.y)
             }
             drawPath(g, n(Color(0xFF140D08), oscuro, 0f), style = Stroke(1.1f * u))
             translate(0.7f * u, 0.7f * u) { drawPath(g, brillo(oscuro, 0.2f, cerca), style = Stroke(0.5f * u)) }
-            val gc = Offset(w * 0.905f, y0 + fh * 0.1f)
+            val gc = Offset(w * 0.93f, y0 + fh * 0.1f)
             drawRect(sombra(oscuro, 0.45f), Offset(gc.x - w * 0.006f + 1f * u, gc.y - fh * 0.08f + 1f * u), Size(w * 0.012f, fh * 0.16f))
             drawRect(n(HIERRO, oscuro, cerca), Offset(gc.x - w * 0.006f, gc.y - fh * 0.08f), Size(w * 0.012f, fh * 0.16f))
             drawCircle(n(HIERRO_LUZ, oscuro, cerca), 1f * u, gc - Offset(0f, fh * 0.055f))
@@ -1424,7 +1519,7 @@ object IdeasGotico : DisenoIdeas {
         if (c.sinTema) {
             val tira = contornoIrregular(Rect(r.left - 2f * u, r.top - 1f * u, r.right + 2f * u, r.bottom + 2f * u), c.semilla, 28, 0.02f)
             translate(1.6f * u, 2.2f * u) { drawPath(tira, sombra(oscuro, 0.4f)) }
-            drawPath(tira, if (oscuro) VITELA_NOCHE else VITELA)
+            drawPath(tira, if (oscuro) mezcla(VITELA_NOCHE, VITELA_VELA, cerca * 1.4f) else VITELA)
             clipPath(tira) {
                 drawLine(sombra(oscuro, 0.12f), Offset(r.left, r.top + r.height * 0.52f), Offset(r.right, r.top + r.height * 0.48f), 1f * u)
                 drawLine(brillo(oscuro, 0.5f, cerca), Offset(r.left, r.top + r.height * 0.52f + 1f * u), Offset(r.right, r.top + r.height * 0.48f + 1f * u), 0.6f * u)
@@ -1445,7 +1540,7 @@ object IdeasGotico : DisenoIdeas {
         if (ab > 0f) mancha(Offset(w / 2, arriba), w * 0.4f, if (oscuro) LLAMA.copy(alpha = 0.18f * ab) else luzMueble(0.3f * ab))
     }
 
-    override val rotulo = Rect(0.25f, 0.22f, 0.75f, 0.67f)
+    override val rotulo = Rect(0.165f, 0.22f, 0.835f, 0.67f)
     override fun tintaRotulo(oscuro: Boolean) = TINTA
     override val letraRotulo: FontFamily = LetraExtra.goudy
     override val salida = SALIDA
