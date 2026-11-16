@@ -73,81 +73,81 @@ internal fun Azar.real01(): Float = entero(100000) / 100000f
  * Los sitios fijos del cuadro, en el lienzo (380 × 285), puestos a mano. Los dibujos y las pruebas los comparten.
  */
 internal object SitioAntiguas {
-    /** El horizonte: la altura de los ojos (de pie en el poyo) y el borde de abajo del cielo. */
+    /** El horizonte: la altura de los ojos (de pie en la plaza, delante de la puerta) y el borde de abajo del cielo. */
     const val H = 150f
     val MIRADA = Mirada(H, 560f)
 
-    /** La muesca del collado y la cumbre alta, la de la izquierda. */
+    /** La muesca del collado y la cumbre alta, a la izquierda del centro. */
     val COLLADO = Offset(305f, 108.6f)
-    val CUMBRE = Offset(196f, 23.8f)
+    val CUMBRE = Offset(150f, 20.2f)
 
     /**
-     * La cresta lejana, de izquierda a derecha: sube por detrás de la ladera de las vetas a la cumbre alta, baja larga por
-     * la cara norte hasta el collado y vuelve a subir, empinada, por la otra cumbre, que sale por el borde por encima del
-     * alero de la posada.
+     * La cresta lejana, de izquierda a derecha: sube despacio, con un hombro, de detrás de la ladera de las vetas a la cumbre
+     * alta; baja más empinada por la derecha a otro hombro con su gendarme, y de ahí, larga, hasta el collado; vuelve a
+     * subir por la otra cumbre, que se mete detrás del cuerpo alto de la posada. **[Diseño propio]**: no es un triángulo
+     * en el eje del cuadro.
      */
     val CRESTA = pts(
-        -6f, 98f, 8f, 94f, 20f, 90.4f, 30f, 86f, 40f, 80.6f, 50f, 76.2f, 58f, 72.6f, 66f, 70.2f, 74f, 71f, 82f, 68f, 90f, 63.4f, 98f, 60.2f,
-        106f, 56.2f, 114f, 53.2f, 122f, 50.6f, 130f, 47f, 138f, 44.6f, 146f, 40.6f, 154f, 37.2f, 162f, 34.6f, 170f, 31.2f, 178f, 28.6f,
-        185f, 26f, 191f, 24.6f, 196f, 23.8f, 201f, 24.8f, 206f, 26.6f, 212f, 29.6f, 218f, 33.4f, 225f, 37.2f, 232f, 41.8f, 239f, 46.6f,
-        246f, 51f, 252f, 56.4f, 258f, 61f, 264f, 66.6f, 270f, 71.6f, 276f, 77.6f, 282f, 84f, 287f, 90f, 291f, 95f, 295f, 100f, 299f, 104.6f,
-        302f, 107.4f, 305f, 108.6f, 308f, 107.6f, 311f, 104.8f, 315f, 100.8f, 319f, 96f, 324f, 89.6f, 330f, 82f, 337f, 73f, 344f, 64.6f,
-        351f, 57f, 358f, 50f, 365f, 44.4f, 373f, 39f, 380f, 35f, 388f, 32f,
+        -6f, 74f, 10f, 70f, 24f, 64.6f, 38f, 60f, 50f, 54.4f, 60f, 50.6f, 70f, 49f, 80f, 47.4f, 90f, 42.6f, 100f, 37.4f, 110f, 33f,
+        118f, 29.8f, 126f, 26.4f, 134f, 23.8f, 140f, 22f, 146f, 20.8f, 150f, 20.2f, 154f, 21.2f, 160f, 23.8f, 166f, 26.6f, 172f, 30.4f,
+        178f, 34.2f, 184f, 37.4f, 190f, 39.8f, 196f, 41f, 204f, 42.2f, 212f, 44.2f, 217f, 42.2f, 221f, 43.6f, 226f, 48f, 234f, 53.2f,
+        242f, 58.4f, 250f, 63.6f, 258f, 69.4f, 266f, 75.6f, 274f, 82.4f, 282f, 89.6f, 289f, 95.8f, 295f, 101f, 300f, 105.2f, 305f, 108.6f,
+        309f, 107f, 314f, 103.2f, 320f, 97.6f, 326f, 91.2f, 333f, 84f, 340f, 77f, 348f, 70f, 358f, 63f, 368f, 57f, 380f, 51f, 388f, 48f,
     )
 
-    /** El pie de la cara norte: el borde de arriba a la izquierda de la ladera del paso, de la garganta al collado. */
+    /** El pie de la cara norte: el borde de arriba de la ladera del paso, de la garganta al collado. */
     val PIE_CARA = pts(
-        166f, 210f, 171f, 198f, 177f, 187f, 185f, 177f, 194f, 168f, 204f, 160f, 215f, 152f, 226f, 145f, 237f, 139f, 248f, 133f, 258f, 128f,
-        267f, 123.4f, 275f, 119.6f, 282f, 116.4f, 288f, 113.8f, 294f, 111.6f, 299f, 110f, 305f, 108.6f,
+        166f, 214f, 167f, 198f, 170f, 182f, 175f, 167f, 181f, 153f, 189f, 141f, 199f, 131f, 211f, 123f, 225f, 117.4f, 240f, 113.6f,
+        256f, 111.4f, 272f, 110f, 289f, 109.2f, 305f, 108.6f,
     )
 
-    /** El pie de la otra cumbre: el borde de arriba a la derecha de la ladera del paso, del collado a la esquina de la posada. */
-    val PIE_DERECHA = pts(305f, 108.6f, 310f, 110.8f, 315f, 113.6f, 320f, 117f, 326f, 121f, 332f, 125f, 342f, 131f)
+    /** El pie de la otra cumbre: el borde de arriba a la derecha de la ladera del paso, del collado a detrás de la posada. */
+    val PIE_DERECHA = pts(305f, 108.6f, 312f, 110.6f, 320f, 113.4f, 330f, 117f, 342f, 121f, 356f, 125f)
 
     /**
-     * El camino, de la punta del puente al collado: cinco tramos en zetas por la ladera de los alerces, la pedrera y la
-     * cornisa. Las vueltas están en los puntos 2, 4, 6 y 8.
+     * El camino, del cabo de allá del puente al collado: cinco tramos en zetas por la ladera de los alerces y la pedrera, y
+     * el último, largo, por la cornisa. Las vueltas están en los puntos 1 a 4.
      */
-    val ZETAS = pts(211f, 196f, 248f, 189.6f, 293f, 180f, 262f, 172.4f, 226f, 162.4f, 263f, 153.4f, 301f, 144f, 278f, 137f, 262f, 129.4f, 288f, 120.4f, 300f, 114f, 305f, 109.4f)
+    val ZETAS = pts(183f, 197.6f, 234f, 183.4f, 180f, 168.6f, 239f, 153f, 194f, 139.4f, 230f, 129.6f, 268f, 119.6f, 305f, 109.6f)
 
     /** El camino de este lado del torrente: de la puerta de la posada, por la plaza, al puente. */
-    val BAJADA = pts(372f, 292f, 340f, 276f, 306f, 260f, 280f, 247f, 258f, 236f, 240f, 226f, 228f, 218f, 221f, 212f)
+    val BAJADA = pts(330f, 292f, 300f, 270f, 272f, 254f, 248f, 240f, 226f, 229f, 208f, 220f, 198f, 214.4f)
 
     /**
-     * Las piedras marcadas, de abajo arriba, con su runa: la del puente («la primera»), las de las vueltas y la última,
-     * antes del collado, con la runa de Arn medio tapada de liquen.
+     * Las piedras marcadas, de abajo arriba, con su runa: la del puente («la primera»), las de las vueltas, las de la
+     * cornisa y la última, antes del collado, con la runa de Arn medio tapada de liquen.
      */
     val PIEDRAS: List<Pair<Offset, Runa>> = listOf(
-        Offset(204f, 194f) to Runa.CAMINO, Offset(270f, 185.4f) to Runa.AGUA, Offset(297f, 178.4f) to Runa.CAMINO, Offset(242f, 166.6f) to Runa.REFUGIO,
-        Offset(222f, 160.6f) to Runa.CAMINO, Offset(304f, 142.6f) to Runa.PELIGRO, Offset(259f, 128.2f) to Runa.CAMINO, Offset(284f, 120.4f) to Runa.PELIGRO,
-        Offset(299f, 112.6f) to Runa.CAMINO_QUE_SIGUE,
+        Offset(181f, 197f) to Runa.CAMINO, Offset(210f, 189f) to Runa.AGUA, Offset(237f, 182f) to Runa.CAMINO, Offset(182f, 167.2f) to Runa.REFUGIO,
+        Offset(242f, 152f) to Runa.PELIGRO, Offset(196f, 138.2f) to Runa.CAMINO, Offset(232f, 127.6f) to Runa.PELIGRO, Offset(268f, 118.4f) to Runa.CAMINO,
+        Offset(300f, 110f) to Runa.CAMINO_QUE_SIGUE,
     )
 
     /** El refugio de la Piedra Partida, a media subida; el de la Cabra, en la cara norte; el de Arn, en el collado. */
-    val PIEDRA_PARTIDA = Offset(240f, 170f)
-    val CABRA = Offset(236f, 84f)
-    val REFUGIO_ARN = Offset(311f, 109.4f)
+    val PIEDRA_PARTIDA = Offset(207f, 172.6f)
+    val CABRA = Offset(212f, 76f)
+    val REFUGIO_ARN = Offset(287f, 110.6f)
 
     /** El borde de arriba de la ladera de las vetas, de detrás del pino a la garganta. */
     val VETAS = pts(
         -6f, 104f, 10f, 101f, 24f, 99.4f, 38f, 100.4f, 50f, 103f, 62f, 106.8f, 74f, 110f, 86f, 114.4f, 98f, 119.6f, 108f, 124.4f, 118f, 130f,
-        128f, 136.6f, 138f, 143f, 148f, 150f, 156f, 156.6f, 164f, 163.4f, 171f, 170.6f, 176f, 178f, 180f, 186f, 183f, 195f, 185f, 206f,
+        128f, 136.6f, 138f, 143f, 146f, 150f, 151f, 157f, 155f, 165f, 157.4f, 173f, 158.8f, 181f, 159.8f, 190f, 160.4f, 199f, 161f, 208f,
     )
 
-    /** El torrente: su eje, de detrás de la esquina de la posada a la izquierda, con su medio ancho en cada punto. */
+    /** El torrente: su eje, de detrás de la posada a la izquierda, con su medio ancho en cada punto. */
     val TORRENTE: List<Pair<Offset, Float>> = listOf(
-        Offset(338f, 192.4f) to 2.8f, Offset(320f, 194.6f) to 3.2f, Offset(300f, 196f) to 3.6f, Offset(282f, 198.4f) to 3.8f, Offset(262f, 198.8f) to 4.2f,
-        Offset(244f, 201.6f) to 4.4f, Offset(228f, 202f) to 4.8f, Offset(214f, 204.4f) to 5.2f, Offset(200f, 207.6f) to 5.4f, Offset(186f, 210f) to 5.8f,
+        Offset(338f, 192.4f) to 2.8f, Offset(320f, 194.6f) to 3.2f, Offset(300f, 196f) to 3.6f, Offset(282f, 198.4f) to 3.8f, Offset(262f, 199f) to 4.2f,
+        Offset(244f, 201.6f) to 4.4f, Offset(228f, 202.6f) to 4.8f, Offset(214f, 205f) to 5.2f, Offset(200f, 207.6f) to 5.4f, Offset(186f, 210f) to 5.8f,
         Offset(170f, 212.4f) to 6.2f, Offset(152f, 216.6f) to 6.6f, Offset(134f, 219.2f) to 7f, Offset(116f, 223.4f) to 7.3f, Offset(98f, 225.4f) to 7.6f,
         Offset(80f, 229.6f) to 8f, Offset(62f, 232.2f) to 8.4f, Offset(44f, 236.6f) to 8.8f, Offset(24f, 239.6f) to 9.2f, Offset(-8f, 246f) to 9.8f,
     )
 
-    /** Los dos extremos del puente de troncos: el de este lado y el de allá. */
-    val PUENTE_ACA = Offset(222f, 212.6f)
-    val PUENTE_ALLA = Offset(210f, 196.4f)
+    /** Los dos cabos del puente de troncos: el de este lado y el de allá. Cruza el torrente en diagonal, largo. */
+    val PUENTE_ACA = Offset(199f, 215f)
+    val PUENTE_ALLA = Offset(182f, 199.4f)
 
     /** La piedra de la plaza donde suena el cuerno. */
-    val PIEDRA_DEL_CUERNO = Offset(262f, 228f)
+    val PIEDRA_DEL_CUERNO = Offset(226f, 233f)
 
     /** La altura del torrente en [x] (su eje). */
     fun torrenteEn(x: Float): Float = TrazosValle.alturaEn(TORRENTE.map { it.first }.reversed(), x)
@@ -157,41 +157,65 @@ internal object SitioAntiguas {
 }
 
 /**
- * La fachada de la posada vista de pie en el poyo de su puerta, a lo largo, en fuga hacia la izquierda: una cámara de
- * agujero (la misma [SitioAntiguas.MIRADA]) y un muro recto que pasa a [A] metros a la derecha de los ojos y se aleja con
- * un giro de [B] (la tangente del ángulo con la mirada). [z] es la distancia en metros (de 9.2, el borde derecho del
- * cuadro, a 16, la esquina) y [h], la altura sobre el suelo del muro, también en metros; los ojos van a [OJO] metros.
- * **[Diseño propio]**: con la posada tan cerca y el collado en el centro, el muro solo cabe así, casi a lo largo de la
- * mirada; la puerta se ve de canto y lo que da la cara es la piedra de su jamba, la de los años.
+ * La fachada de la posada, en tres cuartos, vista desde la plaza: una cámara de agujero (la misma
+ * [SitioAntiguas.MIRADA]) y un muro recto que mira a la plaza y se aleja hacia la izquierda con un giro de 33° respecto de
+ * la mirada. Los puntos del muro se dan con [s], los metros a lo largo del muro (0 en la jamba de la derecha de la puerta,
+ * positivo hacia la izquierda, que se aleja), [h], la altura, y [fuera], los metros por delante del muro (hacia la plaza).
+ * Los ojos van a [OJO] metros del suelo.
+ *
+ * La posada tiene dos cuerpos **[Diseño propio]**: a la izquierda, el zaguán de una planta, con la puerta, de [S_ALTO] a
+ * [S_FIN], con su tejado de una sola agua que baja hacia la izquierda; a la derecha, el cuerpo alto (la planta de piedra y
+ * el piso de tablas del cuarto alto) que sale por el borde. Así, por encima del collado (donde salen el sol y la luna) no
+ * hay nada de la posada: lo alto empieza a la derecha de la muesca.
  */
 internal object FachadaPosada {
-    const val A = 1.943f
-    const val B = 0.1286f
     const val OJO = 2f
-    const val Z_BORDE = 9.22f
-    const val Z_ESQUINA = 16f
-    const val ALERO = 3.5f
+    private const val SEN = 0.5446f
+    private const val COS = 0.8387f
+
+    /** A qué distancia y a qué lado de la mirada está la jamba de la derecha de la puerta, a ras de suelo (en metros). */
+    const val Z0 = 10.6f
+    private val X0 get() = (338f - SitioAntiguas.MIRADA.centro) * Z0 / SitioAntiguas.MIRADA.focal
+
+    /** La esquina de la izquierda del cuerpo alto y la del zaguán, a lo largo del muro. */
+    const val S_ALTO = -0.24f
+    const val S_FIN = 2.25f
+
+    /** El alero del zaguán junto al cuerpo alto y en su esquina; el del cuerpo alto. */
+    const val ALERO_ZAGUAN = 2.62f
+    const val ALERO_PUNTA = 2.32f
+    const val ALERO_ALTO = 4.3f
+
+    /** La altura del borde del tejado del zaguán en [s] (baja hacia la esquina de la izquierda). */
+    fun aleroEn(s: Float): Float = ALERO_ZAGUAN + (ALERO_PUNTA - ALERO_ZAGUAN) * ((s - S_ALTO) / (S_FIN - S_ALTO)).coerceIn(0f, 1f)
 
     private val F get() = SitioAntiguas.MIRADA.focal
     private val C get() = SitioAntiguas.MIRADA.centro
 
-    /** Un punto del muro: a [z] metros de los ojos, [h] de alto y [fuera] metros por delante del muro (hacia la plaza). */
-    fun p(z: Float, h: Float, fuera: Float = 0f): Offset = Offset(C + F * ((A + B * z - fuera) / z), SitioAntiguas.H - F * (h - OJO) / z)
+    private fun xm(s: Float, fuera: Float): Float = X0 - s * SEN - fuera * COS
+    private fun zm(s: Float, fuera: Float): Float = Z0 + s * COS - fuera * SEN
 
-    /** Cuántas unidades del lienzo mide un metro a la distancia [z]. */
-    fun escala(z: Float): Float = F / z
+    /** Un punto del muro: a [s] metros a lo largo, [h] de alto y [fuera] metros por delante. */
+    fun p(s: Float, h: Float, fuera: Float = 0f): Offset { val z = zm(s, fuera); return Offset(C + F * xm(s, fuera) / z, SitioAntiguas.H - F * (h - OJO) / z) }
 
-    /** La forma de un rectángulo del muro (de [z0] a [z1] y de [h0] a [h1]), [fuera] metros por delante de él. */
-    fun cara(z0: Float, z1: Float, h0: Float, h1: Float, fuera: Float = 0f): Path = poligono(p(z0, h0, fuera), p(z1, h0, fuera), p(z1, h1, fuera), p(z0, h1, fuera))
+    /** Cuántas unidades del lienzo mide un metro en ese punto. */
+    fun escala(s: Float, fuera: Float = 0f): Float = F / zm(s, fuera)
 
-    /** La forma de un rectángulo perpendicular al muro, a la distancia [z] (la cara que mira a quien mira), de [d0] a [d1] metros hacia fuera. */
-    fun canto(z: Float, d0: Float, d1: Float, h0: Float, h1: Float): Path = poligono(p(z, h0, d0), p(z, h0, d1), p(z, h1, d1), p(z, h1, d0))
+    /** La normal de la cara del muro (mira a la plaza: a la izquierda y hacia quien mira) y la de los cantos que se ven (a la derecha). */
+    val CARA = V3(-COS, 0f, -SEN)
+    val CANTO = V3(SEN, 0f, -COS)
 
-    /** La forma de una tapa horizontal a la altura [h], de [z0] a [z1] y de [d0] a [d1] metros hacia fuera. */
-    fun tapa(z0: Float, z1: Float, d0: Float, d1: Float, h: Float): Path = poligono(p(z0, h, d0), p(z1, h, d0), p(z1, h, d1), p(z0, h, d1))
+    /** La forma de un rectángulo del muro (de [s0] a [s1] y de [h0] a [h1]), [fuera] metros por delante de él. */
+    fun cara(s0: Float, s1: Float, h0: Float, h1: Float, fuera: Float = 0f): Path = poligono(p(s0, h0, fuera), p(s1, h0, fuera), p(s1, h1, fuera), p(s0, h1, fuera))
 
-    /** A qué distancia está el muro en la columna [x] del lienzo (para el muro que se ve en esa columna). */
-    fun zEn(x: Float): Float = A / ((x - C) / F - B)
+    /** La forma de un rectángulo perpendicular al muro en [s] (los que se ven miran a la derecha), de [f0] a [f1] metros hacia fuera. */
+    fun canto(s: Float, f0: Float, f1: Float, h0: Float, h1: Float): Path = poligono(p(s, h0, f0), p(s, h0, f1), p(s, h1, f1), p(s, h1, f0))
+
+    /** La forma de una tapa horizontal a la altura [h], de [s0] a [s1] y de [f0] a [f1] metros hacia fuera. */
+    fun tapa(s0: Float, s1: Float, f0: Float, f1: Float, h: Float): Path = poligono(p(s0, h, f0), p(s1, h, f0), p(s1, h, f1), p(s0, h, f1))
+
+    /** A cuántos metros de los ojos está ese punto (para ordenar y para las sombras). */
+    fun hondo(s: Float, fuera: Float = 0f): Float = zm(s, fuera)
 }
 
 /**

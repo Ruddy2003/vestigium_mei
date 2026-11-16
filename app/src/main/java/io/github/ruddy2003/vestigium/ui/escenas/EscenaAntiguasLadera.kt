@@ -65,29 +65,31 @@ internal object LaderaAntiguas {
     private val FRENTE_DER = V3(0.32f, 0.42f, -0.85f)
 
     private val LINEAS = listOf(
-        Linea(pts(-6f, 98f, -6f, 240f), false, IZQUIERDA),
-        Linea(pts(66f, 70.2f, 72f, 96f, 80f, 120f, 86f, 150f), true, FRENTE_DER, 0.6f),
-        Linea(pts(98f, 60.2f, 104f, 82f, 112f, 104f, 118f, 132f), false, IZQUIERDA, 1f),
-        Linea(pts(146f, 40.6f, 150f, 62f, 156f, 86f, 160f, 112f, 162f, 140f), true, FRENTE, 0.7f),
-        Linea(pts(178f, 28.6f, 176f, 52f, 172f, 78f, 168f, 104f, 166f, 132f, 164f, 170f), false, IZQUIERDA, 1.2f),
-        Linea(pts(196f, 23.8f, 199f, 46f, 197f, 72f, 192f, 100f, 186f, 130f, 178f, 170f), true, DERECHA, 0.5f),
-        Linea(pts(212f, 29.6f, 220f, 52f, 226f, 76f, 228f, 102f, 224f, 128f, 216f, 154f), false, FRENTE, 1.4f),
-        Linea(pts(232f, 41.8f, 240f, 64f, 246f, 88f, 250f, 112f, 252f, 132f), true, DERECHA, 0.6f),
-        Linea(pts(252f, 56.4f, 260f, 76f, 266f, 96f, 270f, 116f), false, FRENTE, 1.2f),
-        Linea(pts(270f, 71.6f, 279f, 90f, 286f, 106f), true, DERECHA, 0.7f),
-        Linea(pts(287f, 90f, 294f, 102f, 299f, 110f), false, FRENTE, 1f),
+        Linea(pts(-6f, 74f, -6f, 240f), false, IZQUIERDA),
+        Linea(pts(60f, 50.6f, 64f, 76f, 70f, 102f, 76f, 130f), true, FRENTE_DER, 0.6f),
+        Linea(pts(90f, 42.6f, 95f, 68f, 101f, 94f, 106f, 122f), false, IZQUIERDA, 1f),
+        Linea(pts(126f, 26.4f, 129f, 50f, 133f, 76f, 137f, 104f, 140f, 134f), true, FRENTE_DER, 0.7f),
+        Linea(pts(150f, 20.2f, 153f, 44f, 156f, 70f, 158f, 98f, 159f, 130f, 160f, 170f), false, FRENTE, 1.3f),
+        Linea(pts(166f, 26.6f, 172f, 48f, 177f, 74f, 181f, 100f, 184f, 128f), true, DERECHA, 0.5f),
+        Linea(pts(190f, 39.8f, 194f, 60f, 197f, 84f, 199f, 108f, 200f, 130f), false, FRENTE, 1.2f),
+        Linea(pts(204f, 42.2f, 212f, 62f, 219f, 84f, 224f, 106f, 227f, 124f), true, DERECHA, 0.6f),
+        Linea(pts(221f, 43.6f, 232f, 64f, 241f, 86f, 247f, 108f, 250f, 120f), false, FRENTE, 1.4f),
+        Linea(pts(242f, 58.4f, 253f, 76f, 262f, 94f, 268f, 112f), true, DERECHA, 0.7f),
+        Linea(pts(266f, 75.6f, 276f, 90f, 285f, 104f, 290f, 112f), false, FRENTE, 1.1f),
+        Linea(pts(289f, 95.8f, 295f, 104f, 299f, 112f), true, DERECHA, 0.7f),
         Linea(pts(305f, 108.6f, 306f, 118f), true, IZQUIERDA, 0.8f),
-        Linea(pts(324f, 89.6f, 320f, 106f, 318f, 120f), false, IZQUIERDA, 1.2f),
-        Linea(pts(344f, 64.6f, 338f, 90f, 334f, 118f), true, IZQUIERDA, 0.7f),
-        Linea(pts(365f, 44.4f, 358f, 74f, 352f, 104f), false, IZQUIERDA, 1.2f),
-        Linea(pts(388f, 32f, 392f, 240f), false, V3(0f, 1f, 0f)),
+        Linea(pts(320f, 97.6f, 317f, 108f, 315f, 120f), false, IZQUIERDA, 1.2f),
+        Linea(pts(340f, 77f, 335f, 98f, 331f, 122f), true, IZQUIERDA, 0.7f),
+        Linea(pts(368f, 57f, 360f, 84f, 354f, 112f), false, IZQUIERDA, 1.2f),
+        Linea(pts(388f, 48f, 392f, 240f), false, V3(0f, 1f, 0f)),
     )
 
-    /** Las bandas de roca de la cara norte: tramos tendidos y algo caídos hacia la derecha, de distinto largo. */
+    /** Las bandas de roca de la cara norte: tramos tendidos y algo caídos hacia la derecha, de distinto largo, rotos. */
     private val BANDAS = listOf(
-        pts(150f, 70f, 166f, 72f, 182f, 75f), pts(200f, 52f, 214f, 56f, 230f, 62f), pts(204f, 84f, 222f, 88f, 240f, 95f, 256f, 102f),
-        pts(170f, 110f, 186f, 112f, 200f, 116f), pts(232f, 118f, 248f, 122f, 262f, 124f), pts(112f, 92f, 128f, 94f, 140f, 99f),
-        pts(40f, 100f, 56f, 104f, 70f, 108f), pts(276f, 98f, 290f, 103f), pts(332f, 96f, 346f, 92f, 358f, 86f),
+        pts(104f, 66f, 120f, 70f, 136f, 74f), pts(152f, 50f, 166f, 54f, 180f, 60f), pts(168f, 88f, 186f, 92f, 204f, 98f, 220f, 104f),
+        pts(206f, 62f, 222f, 68f, 238f, 76f), pts(232f, 96f, 248f, 102f, 262f, 108f), pts(118f, 100f, 134f, 103f, 148f, 108f),
+        pts(28f, 84f, 46f, 88f, 62f, 92f), pts(256f, 84f, 270f, 90f, 282f, 98f), pts(320f, 100f, 334f, 96f, 346f, 90f),
+        pts(70f, 64f, 86f, 66f, 98f, 70f),
     )
 
     fun DrawScope.cumbres(v: VistaAntiguas) {
@@ -154,13 +156,13 @@ internal object LaderaAntiguas {
     /** El pie de la cara norte, entre la ladera de las vetas y la del paso: canchales grises y un bosque oscuro de pinos que sube por la garganta. */
     private fun DrawScope.pieDeLaCara(v: VistaAntiguas, roca: Color, az: io.github.ruddy2003.vestigium.vidas.Azar) {
         val p = v.p
-        val canchal = TrazosValle.cerrada(pts(150f, 150f, 176f, 134f, 204f, 140f, 232f, 132f, 254f, 140f, 250f, 170f, 214f, 196f, 170f, 206f, 140f, 190f))
+        val canchal = TrazosValle.cerrada(pts(120f, 140f, 146f, 126f, 170f, 128f, 196f, 122f, 214f, 132f, 190f, 160f, 166f, 196f, 146f, 196f, 126f, 176f))
         drawPath(canchal, p.por(lerp(roca, C.NIEVE, 0.18f), 0.1f, 0.2f).copy(alpha = 0.75f))
-        clipPath(canchal) { drawPoints((0 until 160).map { Offset(az.entre(140f, 256f), az.entre(132f, 206f)) }, PointMode.Points, p.sombra(roca, 0.2f).copy(alpha = 0.55f), 0.9f, StrokeCap.Round) }
+        clipPath(canchal) { drawPoints((0 until 160).map { Offset(az.entre(120f, 214f), az.entre(122f, 200f)) }, PointMode.Points, p.sombra(roca, 0.2f).copy(alpha = 0.55f), 0.9f, StrokeCap.Round) }
         // El bosque de la garganta: pinos oscuros, en masa, con la punta de cada uno.
         val verde = lerp(C.PINO, C.ESCORIA, 0.15f)
         repeat(70) {
-            val x = az.entre(150f, 240f); val y = az.entre(160f, 210f) + (x - 150f) * 0.05f
+            val x = az.entre(146f, 186f); val y = az.entre(170f, 214f) + (x - 150f) * 0.05f
             val h = 4f + (y - 150f) * 0.09f
             drawPath(poligono(Offset(x, y - h), Offset(x + h * 0.32f, y), Offset(x - h * 0.32f, y)), p.por(verde, if (az.real() < 0.5f) 0.1f else -0.3f, 0.2f))
         }

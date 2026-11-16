@@ -28,17 +28,17 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 internal object MulasAntiguas {
     private val C = ColorAntiguas
 
-    /** Una mula de la argolla: a qué distancia del ojo está (para su tamaño y su suelo), cuánto se aparta del muro, su pelo y si descansa una pata. */
-    class Mula(val z: Float, val fuera: Float, val pelo: Color, val descansa: Boolean)
+    /** Una mula de la argolla: dónde tiene el hocico a lo largo del muro del zaguán, cuánto se aparta del muro, su pelo y si descansa una pata. */
+    class Mula(val s: Float, val fuera: Float, val pelo: Color, val descansa: Boolean)
 
-    val MULAS = listOf(Mula(13.8f, 0.45f, C.MULA, false), Mula(14.9f, 0.9f, C.MULA_PARDA, true))
+    val MULAS = listOf(Mula(1.12f, 0.95f, C.MULA, false), Mula(1.28f, 0.42f, C.MULA_PARDA, true))
 
     /** Dónde pisa una mula (bajo la cruz) y su alto hasta la cruz, en el lienzo. */
     fun pieYAlto(m: Mula): Pair<Offset, Float> {
-        val s = FachadaPosada.escala(m.z)
-        val hocico = FachadaPosada.p(m.z, 0f, m.fuera)
-        val alto = 1.22f * s
-        return Offset(hocico.x - 0.88f * alto, hocico.y) to alto
+        val k = FachadaPosada.escala(m.s + 1f, m.fuera)
+        val hocico = FachadaPosada.p(m.s, 0f, m.fuera)
+        val alto = 1.28f * k
+        return Offset(hocico.x - 0.88f * alto, FachadaPosada.p(m.s + 1f, 0f, m.fuera).y) to alto
     }
 
     fun DrawScope.mulas(v: VistaAntiguas, n: Int, cargadas: Boolean) {
@@ -49,7 +49,7 @@ internal object MulasAntiguas {
             mula(pe, v, pie, alto, mu.pelo, mu.descansa, cargadas)
             // El ronzal, de la cabeza a la argolla.
             val cab = pie + Offset(0.7f * alto, -alto * 0.96f)
-            drawPath(Path().apply { moveTo(cab); cubicTo(cab + Offset(6f, 8f), PosadaAntiguas.ARGOLLA + Offset(-6f, 8f), PosadaAntiguas.ARGOLLA) }, pe.medio(lerp(C.CUERO, C.LANA, 0.3f)), style = Stroke(0.7f, cap = StrokeCap.Round))
+            drawPath(Path().apply { moveTo(cab); cubicTo(cab + Offset(6f, 8f), PuertaAntiguas.ARGOLLA + Offset(-6f, 8f), PuertaAntiguas.ARGOLLA) }, pe.medio(lerp(C.CUERO, C.LANA, 0.3f)), style = Stroke(0.7f, cap = StrokeCap.Round))
         }
     }
 

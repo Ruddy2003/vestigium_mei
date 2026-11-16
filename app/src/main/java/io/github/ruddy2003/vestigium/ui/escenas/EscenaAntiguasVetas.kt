@@ -50,7 +50,7 @@ internal object VetasAntiguas {
 
     /** La forma de la ladera: su cresta y, abajo, la orilla de allá del torrente. */
     val FORMA: Path by lazy {
-        val orilla = TORRENTE.filter { it.first.x <= 186f }.map { (q, w) -> q + Offset(0f, -w - 0.4f) }
+        val orilla = TORRENTE.filter { it.first.x <= 163f }.map { (q, w) -> q + Offset(0f, -w - 0.4f) }
         poligono(VETAS + orilla)
     }
 
@@ -216,7 +216,7 @@ internal object VetasAntiguas {
     private fun DrawScope.senda(v: VistaAntiguas, az: Azar) {
         val p = v.p
         drawPath(curva(SENDA), p.por(lerp(C.TIERRA, C.LANA, 0.4f), 0.2f, LEJOS).copy(alpha = 0.8f), style = Stroke(1f, cap = StrokeCap.Round))
-        for (t in listOf(0.2f, 0.45f, 0.7f)) with(PasoAntiguas) { piedraMarcada(p, en(SENDA, t) + Offset(2.4f, 0.4f), 0.55f, Runa.CAMINO, az, LEJOS, fresca = if (Senal.RUNAS_FRESCAS in v.senales) 1f else 0f) }
+        for (t in listOf(0.2f, 0.45f, 0.7f)) with(PasoAntiguas) { mojon(p, en(SENDA, t) + Offset(2.4f, 0.4f), 0.55f, Runa.CAMINO, az, LEJOS, fresca = if (Senal.RUNAS_FRESCAS in v.senales) 1f else 0f) }
     }
 
     /** El camino de carros, en zetas, con sus rodadas. [viejo]: sin uso, comido por la hierba. */

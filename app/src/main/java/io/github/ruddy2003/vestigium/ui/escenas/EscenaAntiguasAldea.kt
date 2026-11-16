@@ -64,7 +64,7 @@ internal object AldeaAntiguas {
     private fun chimenea(c: Casa): Offset = c.pie + Offset((if (c.espejo) -1f else 1f) * c.costado * 0.55f, -c.alto - c.tejado * 0.8f - c.costado * 0.09f)
 
     /** La plaza: la tierra pisada delante de la posada, hasta el puente. */
-    val PLAZA = pts(196f, 220f, 236f, 214f, 288f, 210f, 336f, 206f, 344f, 232f, 334f, 252f, 262f, 256f, 214f, 250f, 192f, 236f)
+    val PLAZA = pts(172f, 228f, 200f, 220f, 236f, 215f, 268f, 213f, 270f, 246f, 240f, 252f, 204f, 251f, 178f, 245f)
 
     fun DrawScope.valle(v: VistaAntiguas) {
         val az = fijo("aldea")
@@ -151,7 +151,7 @@ internal object AldeaAntiguas {
                 drawPath(curva(pts(c.x + r * 1.3f, c.y - r * 0.3f, c.x + r * 2.2f, c.y, c.x + r * 1.3f, c.y + r * 0.5f)), lerp(l.bajo, Color.White, 0.7f).copy(alpha = 0.75f * (1f - 0.5f * v.noche)), style = Stroke(r * 0.6f, cap = StrokeCap.Round))
             }
             // El reflejo del puente.
-            if (EscenaAntiguas.hayPuente(v.m)) reflejoRoto(PUENTE_ALLA.x - 2f, PUENTE_ACA.x + 2f, SitioAntiguas.torrenteEn(216f) - 2f, 8f, p.sombra(C.MADERA_OSC, 0.1f), 0.5f, az, 0.9f)
+            if (EscenaAntiguas.hayPuente(v.m)) reflejoRoto(PUENTE_ALLA.x - 2f, PUENTE_ACA.x + 2f, SitioAntiguas.torrenteEn((PUENTE_ACA.x + PUENTE_ALLA.x) / 2f) - 2f, 8f, p.sombra(C.MADERA_OSC, 0.1f), 0.5f, az, 0.9f)
             // De noche, la luna en el agua.
             if (v.luna > 0.05f) for ((q, w) in TORRENTE.filterIndexed { i, _ -> i % 2 == 0 }) drawLine(C.LUNA.copy(alpha = 0.4f * v.luna), q + Offset(-3f, -w * 0.3f), q + Offset(3f, -w * 0.3f), 0.7f, StrokeCap.Round)
         }

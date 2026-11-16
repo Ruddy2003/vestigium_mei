@@ -535,10 +535,10 @@ internal object EscenaAntiguas : EscenaVida {
 
     // ---------------------------------------------------------------- El gato
 
-    /** El suelo del gato: delante de todo, de la sombra del pino hasta la puerta. */
-    const val PISO_GATO = 277f
-    const val GATO_DESDE = 192f
-    const val GATO_HASTA = 336f
+    /** El suelo del gato: delante de todo, de detrás de la montura del caballete hasta delante del poyo. */
+    const val PISO_GATO = 278f
+    const val GATO_DESDE = 216f
+    const val GATO_HASTA = 346f
 
     override fun luzDelGato(m: Momento, en: Offset): LuzGato {
         val l = luces(m); val r = LuzAntiguas.rayo(l)
@@ -549,13 +549,13 @@ internal object EscenaAntiguas : EscenaVida {
         return LuzGato(r2, l.noche) { c -> l.tono(c).let { t -> lerp(t, Color(t.red * frio.red, t.green * frio.green, t.blue * frio.blue, t.alpha), 0.8f * k) } }
     }
 
-    /** Lo plantado en el suelo del gato: la cuna (en la crianza) y el trineo de los niños (en invierno), que el gato quieto no debe tapar. */
-    override fun estorbos(m: Momento): List<Float> = buildList { if (cuna(m)) add(CercaAntiguas.CUNA.x); if (caminoBorrado(m)) add(CercaAntiguas.TRINEO.x) }
+    /** Lo plantado en el suelo del gato: la cuna (en la crianza), delante del poyo, que el gato quieto no debe tapar. */
+    override fun estorbos(m: Momento): List<Float> = buildList { if (cuna(m)) add(CercaAntiguas.CUNA.x) }
 
     override fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, GATO_DESDE, PISO_GATO, hasta = GATO_HASTA))
         add(Ancla(TipoAncla.MIRADOR, CercaAntiguas.LENA.x, CercaAntiguas.LENA.y))     // en lo alto del montón de leña, al pie del pino
-        add(Ancla(TipoAncla.OBJETO, GATO_HASTA - 6f, PISO_GATO))                     // bajo el poyo, donde está el objeto del día
-        add(Ancla(TipoAncla.ABRIGO, GATO_HASTA - 2f, PISO_GATO))                     // pegado a la puerta, bajo el alero
+        add(Ancla(TipoAncla.OBJETO, GATO_HASTA - 4f, PISO_GATO))                     // delante del poyo, donde está el objeto del día
+        add(Ancla(TipoAncla.ABRIGO, 322f, PISO_GATO))                                // delante de la puerta, en su luz
     }
 }
