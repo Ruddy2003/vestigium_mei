@@ -83,7 +83,7 @@ internal object LuzRefugio {
             }
             luzDelVentanal(v, true)
             v.sol?.let { solEnElPasillo(v, it) }
-            if (v.fuego > 0.02f) { val c = K.p(V3(P.CENTRO_X, 0f, P.PUERTA_Z - 1.5f)); charco(c, 120f, 22f, C.FUEGO, 0.5f * v.fuego) }
+            reflejoDeLaPuerta(v)
             // Con lluvia, la que entra por la Puerta moja el suelo: un charco oscuro que devuelve el hueco de la Puerta.
             val f = v.fuera
             if (f != null && v.puerta == Puerta.ABIERTA && R.climaDeFuera(v.m) == Clima.LLUVIA) {
@@ -96,15 +96,6 @@ internal object LuzRefugio {
             if (v.alarma) { val c = K.p(V3(P.CENTRO_X, 0f, 20f)); charco(c, 60f, 12f, C.ALARMA, 0.35f) }
         }
         clipPath(paredDerecha()) { luzDelVentanal(v, false) }
-        // Los tubos de luz de la clave, con su halo.
-        for (z in P.TUBOS) {
-            val a = V3(P.CENTRO_X, P.BOVEDA - 0.18f, z - 0.6f); val b = V3(P.CENTRO_X, P.BOVEDA - 0.18f, z + 0.6f)
-            Trazo3.run { barra(a + V3(0f, 0.05f, 0f), b + V3(0f, 0.05f, 0f), 0.16f, v.c(K.medio(a, b), K.ABAJO, C.HIERRO, true), StrokeCap.Butt) }
-            val luz = lerp(v.colorTubo, Color.White, 0.55f * v.fuerzaTubo.coerceAtMost(1f))
-            Trazo3.run { barra(a, b, 0.07f, luz, StrokeCap.Round) }
-            val m = K.p(K.medio(a, b)); val k = K.k(a)
-            mancha(m, 0.9f * k, 0.35f * k, v.colorTubo, 0.3f * v.fuerzaTubo.coerceAtMost(1f))
-        }
         // El haz del sol en el aire, de la Puerta a su mancha, con su polvo.
         v.sol?.let { s ->
             val col = lerp(s.color, Color(0xFFFFD49A), 0.3f)
@@ -123,6 +114,39 @@ internal object LuzRefugio {
         if (v.compuerta == Compuerta.BAJADA) mancha(K.p(P.LUZ_COMPUERTA), 0.9f * K.k(P.LUZ_COMPUERTA), 0.7f * K.k(P.LUZ_COMPUERTA), C.ALARMA, 0.18f)
     }
 
+    /**
+     * Lo que devuelve el suelo mojado del pasillo de la Puerta abierta: un camino de brillos que corre por el centro desde la
+     * Puerta hasta la boca del pasillo, como el de la luna en el agua (un suelo mojado y áspero estira hacia los ojos el
+     * reflejo de lo brillante del fondo), del color de lo que hay fuera: el cielo de día, el sol si entra, el naranja del
+     * fuego de noche. Debajo, el reflejo de la Puerta misma, más corto.
+     */
+    private fun DrawScope.reflejoDeLaPuerta(v: VistaRefugio) {
+        val f = v.fuera ?: return
+        if (v.puerta != Puerta.ABIERTA) return
+        val claridad = (1f - f.noche).coerceIn(0f, 1f)
+        val cielo = lerp(lerp(f.medio, Color.White, 0.3f), f.bajo, 0.3f)
+        val sol = v.sol
+        val color = when { v.fuego > 0.3f -> C.FUEGO; sol != null -> lerp(sol.color, Color(0xFFFFD49A), 0.3f); else -> cielo }
+        val fuerza = maxOf(0.75f * v.fuego, (0.3f + 0.3f * (sol?.fuerza ?: 0f)) * claridad).coerceIn(0f, 1f)
+        if (fuerza < 0.04f) return
+        // El reflejo de la Puerta: su círculo volcado bajo el suelo, que se apaga hacia los ojos.
+        val volcada = K.circulo(V3(P.PUERTA_C.x, -P.PUERTA_C.y, P.PUERTA_Z - 0.02f), K.FRENTE, P.PUERTA_R * 0.92f, 24)
+        val arriba = K.p(V3(P.CENTRO_X, 0f, P.PUERTA_Z)).y; val abajo = K.p(V3(P.CENTRO_X, -P.PUERTA_C.y - P.PUERTA_R, P.PUERTA_Z)).y
+        drawPath(K.forma(volcada), Brush.verticalGradient(listOf(color.copy(alpha = 0.32f * fuerza), color.copy(alpha = 0.08f * fuerza), Color.Transparent), startY = arriba, endY = abajo), blendMode = BlendMode.Plus)
+        // El camino de brillos: trazos cortos de través, más anchos y más tenues según se acercan.
+        val n = 26
+        for (i in 0 until n) {
+            val t = i / (n - 1f)
+            val z = P.PUERTA_Z - 0.6f - (P.PUERTA_Z - 0.6f - (P.BOCA - 0.2f)) * t
+            val ancho = 0.35f + 0.5f * t + 0.3f * P.ruido(i, 5, 31)
+            val x = P.CENTRO_X + (P.ruido(i, 6, 31) - 0.5f) * 0.5f
+            val a = (fuerza * (0.85f - 0.35f * t) * (0.55f + 0.45f * P.ruido(i, 7, 31))).coerceIn(0f, 1f)
+            Trazo3.run { barra(V3(x - ancho / 2f, 0.003f, z), V3(x + ancho / 2f, 0.003f, z), 0.06f + 0.08f * t, color.copy(alpha = a)) }
+        }
+        val pie = K.p(V3(P.CENTRO_X, 0f, P.BOCA + 0.5f))
+        mancha(pie, 30f, 5f, color, 0.12f * fuerza)
+    }
+
     /** Un charco de luz en el suelo: una elipse que suma su color, con el borde blando. */
     private fun DrawScope.charco(c: Offset, rx: Float, ry: Float, color: Color, fuerza: Float) {
         if (fuerza <= 0.01f || rx <= 0.5f || ry <= 0.3f) return
@@ -134,7 +158,7 @@ internal object LuzRefugio {
      * del ventanal en el suelo del pasillo y en la pared de enfrente; de noche, «la última luz del refugio».
      */
     private fun DrawScope.luzDelVentanal(v: VistaRefugio, enSuelo: Boolean) {
-        val fuerza = (0.1f + 0.45f * v.tanques * (0.35f + 0.65f * v.noche)).coerceIn(0f, 1f)
+        val fuerza = (0.1f + 0.3f * v.tanques * (0.5f + 0.5f * v.noche)).coerceIn(0f, 1f)
         val fuente = V3(P.IZQ - 1.4f, 3.1f, (P.VENTANAL_Z0 + P.VENTANAL_Z1) / 2f)
         val esquinas = listOf(V3(P.IZQ, P.VENTANAL_Y0, P.VENTANAL_Z0), V3(P.IZQ, P.VENTANAL_Y0, P.VENTANAL_Z1), V3(P.IZQ, P.VENTANAL_Y1, P.VENTANAL_Z1), V3(P.IZQ, P.VENTANAL_Y1, P.VENTANAL_Z0))
         val forma = esquinas.map { q ->
@@ -191,17 +215,26 @@ internal object LuzRefugio {
     private val FUENTE_DEL_PORTON: V3 get() = V3(P.CENTRO_X + 0.2f, P.BOVEDA - 0.3f, P.TUBOS.first())
 
     /**
-     * La luz del pasillo que entra por el portón: el hueco del arco llevado desde el primer tubo hasta el suelo de la sala,
-     * con su borde blando. De día, el blanco frío; de noche, el azul de piscina; el día del sol falso, cálido.
+     * La luz del pasillo que entra por el portón: el hueco del arco llevado desde el primer tubo hasta el suelo de la sala.
+     * Las jambas le dan dos bordes nítidos, que se abren hacia los ojos, y la luz se apaga hacia delante: una forma con borde
+     * sobre la penumbra, no un velo. De día, el blanco frío; de noche, el azul de piscina con el violeta de los tanques; el
+     * día del sol falso, cálido.
      */
     private fun DrawScope.luzDelPorton(v: VistaRefugio) {
         val f = FUENTE_DEL_PORTON
         val arco = S.arcoDelPorton(P.BOCA).map { q -> val d = q - f; val t = (-f.y / d.y.coerceAtMost(-0.01f)).coerceAtMost(12f); f + d * t }
+            .map { V3(it.x, 0f, it.z.coerceAtLeast(3.2f)) }
         val forma = K.forma(arco)
-        val fuerza = (if (v.solFalso) 0.42f else if (v.dia) 0.2f else 0.22f) * (if (v.puerta == Puerta.ABIERTA && v.dia) 1.15f else 1f)
-        val col = lerp(v.colorTubo, Color.White, if (v.dia) 0.2f else 0f)
-        for (ancho in listOf(12f, 7f, 3f)) drawPath(forma, col.copy(alpha = 0.035f * fuerza / 0.3f), style = Stroke(ancho), blendMode = BlendMode.Plus)
-        drawPath(forma, Brush.linearGradient(listOf(col.copy(alpha = fuerza), col.copy(alpha = fuerza * 0.5f), col.copy(alpha = 0f)), start = K.p(V3(P.CENTRO_X, 0f, S.FONDO)), end = K.p(V3(P.CENTRO_X, 0f, 2.4f))), blendMode = BlendMode.Plus)
+        val fuerza = (if (v.solFalso) 0.36f else if (v.dia) 0.13f else 0.15f) * (if (v.puerta == Puerta.ABIERTA && v.dia) 1.15f else 1f)
+        val col = lerp(lerp(v.colorTubo, Color.White, if (v.dia) 0.15f else 0f), C.VIOLETA, 0.45f * v.noche * v.tanques)
+        // En el suelo, la hondura va con la altura en el lienzo: el degradado, de arriba (el umbral) abajo (hacia los ojos).
+        drawPath(forma, Brush.verticalGradient(listOf(col.copy(alpha = fuerza), col.copy(alpha = fuerza * 0.55f), col.copy(alpha = 0f)), startY = K.p(V3(P.CENTRO_X, 0f, S.FONDO)).y, endY = K.p(V3(P.CENTRO_X, 0f, 4.2f)).y), blendMode = BlendMode.Plus)
+        // Los dos bordes, el de cada jamba: una raya de luz un poco más fuerte que se apaga igual.
+        for (i in listOf(0, arco.size - 1)) {
+            val a = arco[i]; val b = V3(a.x, 0f, S.FONDO)
+            val lejos = V3(b.x + (a.x - b.x) * 0.75f, 0f, b.z + (a.z - b.z) * 0.75f)
+            drawLine(Brush.linearGradient(listOf(col.copy(alpha = 1.6f * fuerza), Color.Transparent), K.p(b), K.p(lejos)), K.p(b), K.p(lejos), 1.4f, blendMode = BlendMode.Plus)
+        }
     }
 
     /**
@@ -351,7 +384,7 @@ internal object LuzRefugio {
             val a = arriba.first(); val b = arriba.last()
             fun alSueloDe(q: V3): V3 { val d = q - f; val t = (-f.y / d.y.coerceAtMost(-0.01f)).coerceAtMost(12f); return f + d * t }
             val haz = K.forma(listOf(a, b, alSueloDe(b), alSueloDe(a)))
-            drawPath(haz, Brush.linearGradient(listOf(v.colorTubo.copy(alpha = if (v.dia) 0.06f else 0.08f), Color.Transparent), start = K.p(K.medio(a, b)), end = K.p(alSueloDe(K.medio(a, b)))), blendMode = BlendMode.Plus)
+            drawPath(haz, Brush.linearGradient(listOf(v.colorTubo.copy(alpha = if (v.dia) 0.025f else 0.04f), Color.Transparent), start = K.p(K.medio(a, b)), end = K.p(alSueloDe(K.medio(a, b)))), blendMode = BlendMode.Plus)
         }
         if (v.alarma) { val b = K.p(S.BALIZA); drawCircle(Brush.radialGradient(listOf(C.ALARMA.copy(alpha = 0.3f), Color.Transparent), b, 40f), 40f, b, blendMode = BlendMode.Plus) }
     }
@@ -386,18 +419,25 @@ internal object LuzRefugio {
                 drawCircle(lerp(C.VIOLETA, Color.White, 0.6f).copy(alpha = 0.55f), az.entre(0.3f, 0.6f), K.p(q) + Offset(0.4f * sin(reloj * 1.3f + it), 0f))
             }
         }
-        // La gota de la junta de la bomba grande, y su anillo en el cubo.
-        val gota0 = V3(S.BOMBA.x + 0.53f, 1.0f, 3.14f); val gota1 = PiezasSala.CUBO + V3(0f, 0.29f, 0f)
-        val fase = (reloj / 2.6f) % 1f
-        if (fase < 0.55f) {
-            val k = (fase / 0.55f).let { it * it }
+        // La gota de la gotera del tubo verde, que cae al cubo, y su anillo en el agua.
+        val gota0 = PiezasTubos.GOTERA; val gota1 = PiezasSala.CUBO + V3(0f, 0.29f, 0f)
+        val fase = (reloj / 2.2f) % 1f
+        if (fase < 0.4f) {
+            val k = (fase / 0.4f).let { it * it }
             val q = gota0 + (gota1 - gota0) * k + V3((gota1.x - gota0.x) * 0f, 0f, 0f)
             drawCircle(lerp(C.PISCINA, Color.White, 0.6f).copy(alpha = 0.85f), 0.018f * K.k(q), K.p(q))
         } else {
-            val k = (fase - 0.55f) / 0.45f
+            val k = (fase - 0.4f) / 0.6f
             val anillo = K.circulo(gota1, K.ARRIBA, 0.03f + 0.12f * k, 14).map { K.p(it) }
             val camino = Path().apply { moveTo(anillo[0].x, anillo[0].y); for (i in 1 until anillo.size) lineTo(anillo[i].x, anillo[i].y) }
             drawPath(camino, lerp(C.PISCINA, Color.White, 0.6f).copy(alpha = 0.5f * (1f - k)), style = Stroke(0.5f))
+        }
+        // El tubo de la clave que falla: de vez en cuando se apaga un momento y vuelve.
+        val apagon = sin(reloj * 0.9f) * sin(reloj * 6.7f + 1f)
+        if (apagon > 0.55f && v.fuerzaTubo > 0.1f) clipPath(P.hueco()) {
+            val z = P.tuboQueFalla(); val a = V3(P.CENTRO_X, P.BOVEDA - 0.2f, z - 0.65f); val b = V3(P.CENTRO_X, P.BOVEDA - 0.2f, z + 0.65f)
+            Trazo3.run { barra(a, b, 0.085f, v.c(K.medio(a, b), K.ABAJO, lerp(C.HIERRO, C.TUBO, 0.3f), true)) }
+            mancha(K.p(V3(P.CENTRO_X, 0f, z)), 0.9f * K.k(V3(P.CENTRO_X, 0f, z)), 0.25f * K.k(V3(P.CENTRO_X, 0f, z)), C.SOMBRA, 0.15f)
         }
         // El piloto verde del cuadro de palancas, que parpadea.
         if (sin(reloj * 2.2f) > 0.6f) { val w = V3(S.ARMARIO_X0 + 0.25f, 1.62f, S.FONDO - 0.44f); drawCircle(Color.White.copy(alpha = 0.6f), 0.02f * K.k(w), K.p(w)) }

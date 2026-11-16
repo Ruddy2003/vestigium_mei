@@ -108,31 +108,34 @@ internal object SalaRefugio {
     /** La radio de la sala (el día de la señal), en la bancada. */
     val RADIO = V3(-1.45f, BANCADA_Y + 0.12f, 3.1f)
     /** La pared de manómetros, la columna de nivel y el cuadro de palancas, en la pared del fondo. */
-    const val TABLERO_X0 = -6.0f
-    const val TABLERO_X1 = -4.0f
-    const val COLUMNA_X = -3.45f
+    const val TABLERO_X0 = -5.85f
+    const val TABLERO_X1 = -3.95f
+    const val COLUMNA_X = -3.55f
     const val ARMARIO_X0 = -7.1f
     const val ARMARIO_X1 = -6.15f
     /** La lucecita de guardia, encima del tablero; la baliza de la alarma, junto al portón. */
     val GUARDIA = V3(-4.3f, 2.85f, FONDO - 0.12f)
     val BALIZA = V3(-3.15f, 2.98f, FONDO - 0.15f)
+    /** El cuadrito de mando de la bomba grande, con su piloto ámbar (de noche, una de las luces cálidas de delante). */
+    val PILOTO_BOMBA = V3(-2.35f, 1.32f, 2.2f)
     /** El quicio de la derecha: el gancho del mono y la percha de las linternas. */
     val GANCHO = V3(1.42f, 1.75f, FONDO - 0.06f)
 
     /** Dónde cuelga la bombilla de la lámpara de trabajo, según la obra. */
     fun bombilla(o: Obra): V3 = when (o) {
-        Obra.MANOMETROS -> V3(-4.5f, 2.25f, 6.7f)
+        Obra.MANOMETROS -> V3(-4.6f, 2.42f, 6.95f)
         Obra.BOMBA -> V3(-2.55f, 2.1f, 3.1f)
         Obra.BANCADA -> V3(-0.65f, 2.0f, 2.9f)
         Obra.FILTRO -> V3(-1.4f, 2.1f, 4.0f)
     }
 
     /**
-     * Hacia dónde alumbra la lámpara de jaula, que tiene la pantallita de un lado: a primera hora, colgada delante de la
-     * pared de manómetros, alumbra la pared (y un poco el suelo); en las demás obras, hacia abajo.
+     * Hacia dónde alumbra la lámpara de jaula, que tiene la pantallita de un lado: casi siempre hacia abajo, así que desde
+     * los ojos (más abajo que ella) se ve la jaula encendida y su cono. A primera hora cuelga pegada a la pared de
+     * manómetros, que queda dentro de su cono.
      */
     fun haciaDonde(o: Obra): V3 = when (o) {
-        Obra.MANOMETROS -> K.unidad(V3(-0.2f, -0.55f, 1f))
+        Obra.MANOMETROS -> K.unidad(V3(0.12f, -1f, 0.06f))
         Obra.BOMBA -> K.unidad(V3(-0.25f, -1f, 0.1f))
         Obra.BANCADA -> K.ABAJO
         Obra.FILTRO -> K.unidad(V3(0.15f, -1f, -0.2f))
@@ -150,7 +153,9 @@ internal object SalaRefugio {
         paredDelFondo(v)
         suelo(v)
         porton(v)
-        with(PiezasSala) { enLaPared(v) }
+        with(PiezasSala) { enElSuelo(v) }
+        with(PiezasPared) { enLaPared(v) }
+        if (R.primerDia(v.m)) with(PiezasSala) { guirnaldaDelPorton(v) }
         with(LuzRefugio) { enLaSala(v) }
         val cosas = with(PiezasSala) { cosas(v) }.sortedByDescending { it.hondo }
         with(LuzRefugio) { sombras(v, cosas) }
@@ -179,7 +184,7 @@ internal object SalaRefugio {
             x = x1
         }
         // Las vigas que cruzan el techo.
-        for (zv in listOf(3.2f, 5.6f)) Trazo3.run { caja(v, IZQ, DER, TECHO - 0.28f, TECHO, zv, zv + 0.3f, lerp(C.HORMIGON, C.TINTA, 0.2f)) }
+        for (zv in listOf(5.6f)) Trazo3.run { caja(v, IZQ, DER, TECHO - 0.28f, TECHO, zv, zv + 0.3f, lerp(C.HORMIGON, C.TINTA, 0.2f)) }
     }
 
     /**
@@ -331,7 +336,7 @@ internal object SalaRefugio {
      * el suelo; y el objeto grande del día, de pie junto a la bancada.
      */
     fun estorbos(m: Momento): List<Float> = buildList {
-        add(PiezasSala.PATA_BANCADA_X); add(PiezasSala.CUBO_X)
+        add(PiezasSala.PATA_BANCADA_X); add(PiezasSala.CUBO_X); add(PiezasSala.TABURETE_X)
         if (R.bombaTres(m)) add(K.p(PiezasSala.PIEZAS).x)
         if (ObjetosRefugio.esGrande(m)) add(K.p(PIE_GRANDE).x)
     }

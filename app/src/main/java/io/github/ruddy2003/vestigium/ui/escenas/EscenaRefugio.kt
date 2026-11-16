@@ -283,19 +283,20 @@ internal object EscenaRefugio : EscenaVida {
     internal class SolDePuerta(val elevacion: Float, val azimut: Float, val fuerza: Float, val color: Color)
 
     /**
-     * El sol que entra a esta hora por la Puerta abierta, o null si no entra **[Aproximación]**: la Puerta mira a poniente,
-     * así que por la mañana el sol está detrás del monte y solo entra la luz del cielo («gris, débil»); desde mediodía entra
-     * de lado y se queda junto a la Puerta; por la tarde, cada vez más de frente y más bajo, se tiende por el suelo del
-     * pasillo y, a la caída del sol, llega hasta el umbral de la sala. No es el recorrido real del sol para una Puerta con
-     * una orientación dada (la misma aproximación que la capilla de Roma).
+     * El sol que entra a esta hora por la Puerta abierta, o null si no entra **[Aproximación]**: la Puerta mira al sureste,
+     * al fondo de un valle hondo, así que el sol entra desde que asoma por la loma (6:00) hasta que se va detrás del monte
+     * (17:00): de lado por la mañana, de frente hacia las 11:30, de lado otra vez por la tarde; y como entra por encima de
+     * la loma de enfrente, siempre bajo (entre 3° y 11°), así que su mancha se tiende largo por el suelo del pasillo. Por la
+     * tarde solo entra la luz del cielo («gris, débil»), que se pone naranja. No es el recorrido real del sol para una
+     * Puerta con una orientación dada (la misma aproximación que la capilla de Roma): la altura va comprimida.
      */
     internal fun solPorLaPuerta(m: Momento): SolDePuerta? {
         if (puerta(m) != Puerta.ABIERTA) return null
-        val h = m.hora.toFloat(); if (h < 12f || h > 20.4f) return null
+        val h = m.hora.toFloat(); if (h < 6.0f || h > 17.0f) return null
         val l = cieloDeFuera(m); if (l.solAltura <= 0.02f || l.solFuerza < 0.1f) return null
-        val az = 90f * ((19.6f - h) / 7.6f)
+        val az = 84f * ((h - 11.5f) / 5.5f)
         if (abs(az) > 84f) return null
-        val elev = 2.5f + 48f * (l.solAltura / 1.35f).coerceIn(0f, 1f)
+        val elev = 3f + 8f * (l.solAltura / 1.35f).coerceIn(0f, 1f)
         val fuerza = (kotlin.math.sqrt(l.solFuerza) * (l.solAltura / 0.1f).coerceIn(0f, 1f) * (1f - 0.4f * l.nublado)).coerceIn(0f, 1f)
         if (fuerza < 0.05f) return null
         return SolDePuerta(elev, az, fuerza, lerp(l.solColor, Color.White, 0.12f))
@@ -370,6 +371,22 @@ internal object EscenaRefugio : EscenaVida {
     /** La flor de verdad ya seca, un mes después **[Diseño propio]**. */
     internal fun florSeca(m: Momento): Boolean = florDeVerdad(m) && paso(m, 4, "08-28")
 
+    /** Las latas de antes de la guerra abiertas en la bancada: el postre del año nuevo y la tarta de lata de los fundadores. */
+    internal fun latas(m: Momento): Boolean = hoyEs(m, "anio_nuevo") || hoyEs(m, "fundadores")
+
+    /** Las etiquetas rojas en las ruedas de las válvulas de emergencia, que ella cierra «una por una» el día del simulacro. */
+    internal fun etiquetasRojas(m: Momento): Boolean = simulacro(m)
+
+    /** El primer día del «abierto» (`abre`): los papeles de colores y las huellas de todos hacia la Puerta, la guirnalda del portón. */
+    internal fun primerDia(m: Momento): Boolean = hoyEs(m, "abre")
+
+    /** Una puerta del pasillo con luz detrás, de noche: alguien despierto en su cuarto (cada noche una, o ninguna) **[Diseño propio]**. */
+    internal fun rendija(m: Momento): Int {
+        if (deDia(m)) return -1
+        val r = m.azar("rendija").real()
+        return if (r < 0.75f) (r * 4f).toInt().coerceIn(0, 2) else -1
+    }
+
     // ---------------------------------------------------------------- Lo que dejan los estados
 
     /** El racionamiento: el grifo medidor junto al portón, con las botellas en fila en el suelo del pasillo. */
@@ -380,6 +397,9 @@ internal object EscenaRefugio : EscenaVida {
 
     /** La cuarentena: las mascarillas de tela colgadas, el jabón amarillo, la ventanilla de la compuerta con botellas y un paquete. */
     internal fun mascarillas(m: Momento): Boolean = cuarentena(m)
+
+    /** La cuarentena: ella lleva las bombas sola y las herramientas quedan por todas partes. */
+    internal fun herramientasPorTodas(m: Momento): Boolean = cuarentena(m)
 
     /** El «abierto»: hojas secas y tierra que entran por el pasillo, y los bidones para el arroyo junto al portón. */
     internal fun hojasSecas(m: Momento): Boolean = abierto(m)

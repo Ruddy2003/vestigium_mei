@@ -157,7 +157,7 @@ internal class VistaRefugio(val m: Momento) {
     /** El color de los tubos del pasillo: blanco frío de día, azul de noche, cálido el día del sol falso. */
     val colorTubo: Color = when { solFalso -> lerp(C.TUBO, C.LAMPARA, 0.5f); dia -> C.TUBO; else -> C.PISCINA }
     /** Cuánto dan los tubos del pasillo. */
-    val fuerzaTubo: Float = when { solFalso -> 1.1f; dia -> 0.62f; else -> 0.3f }
+    val fuerzaTubo: Float = when { solFalso -> 1.0f; dia -> 0.55f; else -> 0.3f }
 
     /**
      * La penumbra de la sala, la luz que no viene de ningún foco: verde azulada honda de día (nunca gris), azul de noche.
@@ -172,8 +172,8 @@ internal class VistaRefugio(val m: Momento) {
     /** La del pasillo: el blanco parejo de los tubos de día; de noche, el azul «del fondo de una piscina». */
     val ambientePasillo: Color = when {
         solFalso -> Color(0xFFD8C7A8)
-        dia -> Color(0xFF78858A)
-        else -> Color(0xFF2E4C78)
+        dia -> Color(0xFF5C666B)
+        else -> Color(0xFF2B4672)
     }
 
     /** Dónde está el sol que entra por la Puerta (su rebote en el suelo del pasillo), o null. */
@@ -182,17 +182,28 @@ internal class VistaRefugio(val m: Momento) {
     val focos: List<FocoRefugio> = buildList {
         val sala = SalaRefugio
         // ---- Las lámparas de trabajo: cálidas, hacia abajo, con borde.
-        for (o in obras) add(FocoRefugio(sala.bombilla(o), C.LAMPARA, 1.35f, 2.4f, cono = sala.haciaDonde(o), coseFuera = 0.5f, coseDentro = 0.8f, tumba = true))
+        for (o in obras) {
+            val b = sala.bombilla(o); val e = sala.haciaDonde(o)
+            add(FocoRefugio(b, C.LAMPARA, 1.35f, 2.4f, cono = e, coseFuera = 0.5f, coseDentro = 0.8f, tumba = true))
+            // El rebote cálido de su charco, que alumbra por debajo los tubos, el techo y los cantos de lo que tiene cerca.
+            val t = if (e.y < -0.05f) (-b.y / e.y).coerceAtMost(3f) else 1f
+            val q = b + e * t
+            add(FocoRefugio(V3(q.x, 0.35f, q.z.coerceAtMost(SalaRefugio.FONDO - 0.3f)), lerp(C.LAMPARA, C.COBRE, 0.3f), 0.32f, 2.4f, enPasillo = false))
+        }
         // ---- La luz del pasillo que entra por el portón: una sola luz grande, fría (o azul, o cálida el día del sol falso).
         val porton = V3(PasilloRefugio.CENTRO_X, 2.1f, SalaRefugio.FONDO + 2.6f)
-        add(FocoRefugio(porton, colorTubo, if (solFalso) 1.2f else if (dia) 0.7f else 0.58f, if (dia) 7.5f else 7f, tumba = true, enPasillo = false))
+        add(FocoRefugio(porton, colorTubo, if (solFalso) 1.1f else if (dia) 0.34f else 0.42f, 6.5f, tumba = true, enPasillo = false))
+        // ---- De noche, el violeta de los tanques sale por el portón: «la última luz» tiñe los cantos, el suelo y el techo.
+        add(FocoRefugio(V3(PasilloRefugio.IZQ + 0.6f, 1.9f, SalaRefugio.FONDO + 1.2f), C.VIOLETA, (0.08f + 0.5f * noche) * tanques, 6.5f, enPasillo = false))
+        // ---- El piloto ámbar del cuadro de la bomba grande: siempre encendido; de noche, la luz cálida de delante.
+        add(FocoRefugio(sala.PILOTO_BOMBA, C.GUARDIA, if (dia) 0.12f else 0.6f, 1.7f, enPasillo = false))
         // ---- Los tubos del techo del pasillo, uno por tramo entre costillas.
         for (z in PasilloRefugio.TUBOS) add(FocoRefugio(V3(PasilloRefugio.CENTRO_X, PasilloRefugio.BOVEDA - 0.25f, z), colorTubo, fuerzaTubo, 2.8f, enSala = false))
         // ---- La lucecita de guardia de la sala, sobre el cuadro de mando.
         add(FocoRefugio(sala.GUARDIA, C.GUARDIA, 0.9f * guardia, 2.2f, tumba = !dia, enPasillo = false))
         // ---- Los tanques de cultivo, por el ventanal del pasillo: violeta.
         val ventanal = V3(PasilloRefugio.IZQ + 0.3f, 1.7f, (PasilloRefugio.VENTANAL_Z0 + PasilloRefugio.VENTANAL_Z1) / 2f)
-        add(FocoRefugio(ventanal, C.VIOLETA, 0.25f + 0.75f * tanques * (0.5f + 0.5f * noche), 4.2f, enSala = false))
+        add(FocoRefugio(ventanal, C.VIOLETA, 0.2f + 0.5f * tanques * (0.4f + 0.6f * noche), 4.2f, enSala = false))
         add(FocoRefugio(V3(PasilloRefugio.IZQ + 0.3f, 1.4f, PasilloRefugio.VENTANAL_Z0 + 0.8f), C.VIOLETA, 0.4f * tanques * noche, 2.6f, enSala = false))
         // ---- La alarma: una baliza roja sobre el portón y otra en el pasillo.
         if (alarma) {
@@ -210,7 +221,11 @@ internal class VistaRefugio(val m: Momento) {
             if (puerta == Puerta.ABIERTA) add(FocoRefugio(V3(PasilloRefugio.CENTRO_X, 1.5f, SalaRefugio.FONDO + 1f), cielo, 0.22f * claridad, 5f, enPasillo = false))
         }
         manchaDeSol?.let { s -> sol?.let { add(FocoRefugio(V3(s.x, 0.6f, s.z), it.color, 0.9f * it.fuerza, 4.5f, enSala = false)) } }
-        if (fuego > 0.02f) add(FocoRefugio(V3(PasilloRefugio.CENTRO_X, 0.7f, PasilloRefugio.PUERTA_Z + 2.5f), C.FUEGO, 1.6f * fuego, 9f, enSala = false))
+        if (fuego > 0.02f) add(FocoRefugio(V3(PasilloRefugio.CENTRO_X, 0.9f, PasilloRefugio.PUERTA_Z + 2.0f), C.FUEGO, 2.3f * fuego, 13f, enSala = false))
+        if (fuego > 0.02f) add(FocoRefugio(V3(PasilloRefugio.CENTRO_X, 1.2f, SalaRefugio.FONDO + 1.5f), C.FUEGO, 0.3f * fuego, 4f, enPasillo = false))
+        // ---- La rendija de luz de una puerta del pasillo, de noche: alguien despierto.
+        val r = R.rendija(m)
+        if (r >= 0) add(FocoRefugio(PasilloRefugio.puerta(r).let { V3(it.x + (if (it.x < 0f) 0.3f else -0.3f), 1.0f, it.z) }, C.LAMPARA, 0.55f, 2.2f, enSala = false))
         // ---- Las lucecitas del árbol de Nochebuena.
         if (R.lucesDelArbol(m)) add(FocoRefugio(PasilloRefugio.ARBOL + V3(0f, 1.1f, 0f), lerp(C.GUARDIA, C.ROJO, 0.3f), 0.5f, 1.8f))
         // ---- La radio encendida del día de la señal.
