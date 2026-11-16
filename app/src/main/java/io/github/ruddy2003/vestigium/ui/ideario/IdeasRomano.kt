@@ -98,6 +98,8 @@ object IdeasRomano : DisenoIdeas {
     private val PLACA_LEJOS = Color(0xFFB09A72)
     /** Las del interior y las fichas (sin cambios). */
     private val LACRE = Color(0xFFA3172E)
+    private val PURPURA = Color(0xFF6E3458)
+    private val AZAFRAN = Color(0xFFD6A23E)
 
     /** El oscurecido de siempre: solo el interior lo usa. */
     private fun t(c: Color, oscuro: Boolean) = if (oscuro) mezcla(c, Color.Black, 0.3f) else c
@@ -1460,7 +1462,7 @@ object IdeasRomano : DisenoIdeas {
         translate(0f, -SALIDA * h * ab) {
             when {
                 c.sinTema -> cesto(w, h, c, t, der)
-                else -> when (Math.floorMod(m, 3)) {
+                else -> when (Math.floorMod(m ushr 18, 3)) {
                     0 -> capsa(w, h, c, m, t, der)
                     1 -> haz(w, h, c, m, t, der)
                     else -> tablillas(w, h, c, m, t, der)
@@ -1593,13 +1595,16 @@ object IdeasRomano : DisenoIdeas {
         val u = density
         val piso = h * PISO
         val n = c.n.coerceIn(0, 12)
-        val total = (3 + n / 2).coerceIn(3, 6)
-        val rr = w * 0.1f
-        // Las filas, de abajo arriba: 3, 2, 1.
-        val filas = when (total) { 3 -> listOf(2, 1); 4 -> listOf(2, 2); 5 -> listOf(3, 2); else -> listOf(3, 2, 1) }
+        val rr = w * 0.11f
+        // Las filas, de abajo arriba. La de abajo queda casi toda tras la placa: para que el haz llene el hueco, desde 2
+        // fichas ya es la pirámide entera (3, 2, 1); con una, 3 y 2.
+        val filas = if (n >= 2) listOf(3, 2, 1) else listOf(3, 2)
         val cx = w * 0.38f
-        // El rollo de pie, apoyado en el costado derecho.
-        rolloDePie(Offset(w * 0.84f, piso), w * 0.045f, h * 0.66f, -9f, t, HUESO, colorSillybos(m, 5))
+        // La funda del haz (la membrana teñida que envolvía los rollos buenos): púrpura, azafrán, roja o sin funda.
+        val funda: Color? = when (Math.floorMod(m ushr 9, 4)) { 0 -> PURPURA; 1 -> AZAFRAN; 2 -> ROJO; else -> null }
+        // El rollo de pie, apoyado en el costado derecho; con muchas fichas, otro más corto a su lado.
+        if (n >= 6) rolloDePie(Offset(w * 0.75f, piso), w * 0.04f, h * 0.5f, 6f, t, TINTA, colorSillybos(m, 3))
+        rolloDePie(Offset(w * 0.86f, piso), w * 0.045f, h * 0.66f, -9f, t, HUESO, colorSillybos(m, 5))
         // La sombra del haz en el fondo: la de cada cabo, corrida.
         val anchoHaz = rr * 2f * filas[0]
         filas.forEachIndexed { fi, cuantos ->
@@ -1619,6 +1624,8 @@ object IdeasRomano : DisenoIdeas {
                 val papiro = mezcla(PAPIRO, PAPIRO_OSC, 0.45f * azar(c.semilla, i + 60))
                 drawCircle(t.s(0.3f), rrr, p + Offset(rrr * 0.08f, rrr * 0.1f))
                 drawCircle(t.c(papiro), rrr, p)
+                // La funda teñida, que se ve como un aro alrededor del cabo (no todos los rollos del haz la llevan).
+                if (funda != null && azar(c.semilla, i + 80) < 0.85f) drawCircle(t.c(funda), rrr * 0.89f, p, style = Stroke(rrr * 0.22f))
                 // La espiral de las vueltas.
                 listOf(0.82f, 0.64f, 0.46f).forEach { f -> drawCircle(t.c(PAPIRO_OSC).copy(alpha = 0.55f), rrr * f, p + Offset(rrr * (1f - f) * 0.15f, 0f), style = Stroke(0.6f * u)) }
                 drawArc(t.b(0.45f), 190f, 80f, false, Offset(p.x - rrr * 0.88f, p.y - rrr * 0.88f), Size(rrr * 1.76f, rrr * 1.76f), style = Stroke(1.2f * u))
