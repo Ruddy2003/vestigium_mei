@@ -75,6 +75,8 @@ object IdeasLaboratorio : DisenoIdeas {
     private val NOCHE = Color(0xFF0A1A20)
     /** La bombilla del flexo. */
     private val FLEXO = Color(0xFFFFCF8A)
+    /** La tira de luz fría bajo el techo del armario, la de los armarios de muestras. */
+    private val TIRA = Color(0xFFD9F3FA)
 
     // ---------------------------------------------------------------- de la paleta de siempre (también el interior y las fichas)
     private val BLANCO = Color(0xFFF2F6F8)
@@ -108,6 +110,9 @@ object IdeasLaboratorio : DisenoIdeas {
     /** El brillo de lo que mira a la luz: de día, crema; de noche, el filo cálido del flexo, según lo cerca que esté. */
     private fun brillo(o: Boolean, a: Float, cerca: Float = 0f) =
         if (o) FLEXO.copy(alpha = (a * 0.9f * cerca).coerceIn(0f, 1f)) else luzMueble(a)
+
+    /** El filo de lo que hay en las repisas: de día, la luz crema de arriba a la izquierda; de noche, la tira fría de arriba. */
+    private fun filo(o: Boolean, a: Float) = if (o) TIRA.copy(alpha = (a * 0.75f).coerceIn(0f, 1f)) else luzMueble(a)
 
     /** La tarjeta de los rótulos: de día, blanca; de noche, gris azulado, para que la tinta se lea igual. */
     private fun tarjeta(o: Boolean) = if (o) mezcla(BLANCO, NOCHE, 0.3f) else BLANCO
@@ -432,6 +437,63 @@ object IdeasLaboratorio : DisenoIdeas {
      * El cuerpo del armario: los costados de esmalte con su marco de acero, el panel de arriba con la pantallita y los pilotos,
      * el montante del centro, el canto verdoso de cada repisa de vidrio, la pintura saltada y las etiquetas viejas.
      */
+    /** Cuánta luz de la tira del techo le llega a la fila [fila] (de 0 a 1): mucha a la primera, casi nada a la última. */
+    private fun luzTira(fila: Int) = 0.95f * Math.pow(0.5, fila.toDouble()).toFloat()
+
+    /**
+     * El fondo de un hueco del armario, en [r]: la chapa perforada con la sombra de la repisa de arriba, los costados y el vidrio
+     * del piso. De día, la fila de arriba un poco más clara y el lado izquierdo de cada hueco con más luz. De noche, alumbra la
+     * tira fría del techo del armario: fuerte en la primera fila (lo que hay en ella queda a contraluz) y cada fila más oscura;
+     * en la de arriba a la derecha, además, el derrame cálido del flexo.
+     */
+    private fun DrawScope.fondoHueco(r: Rect, fila: Int, filas: Int, col: Int, o: Boolean) {
+        val u = density
+        val w = r.width; val h = r.height
+        val piso = r.top + h * 0.9f
+        val chapa = mezcla(HUESO_OSC, HUESO, 0.35f)
+        if (!o) {
+            val f = 1f - fila / filas.coerceAtLeast(1).toFloat()
+            drawRect(mezcla(mezcla(chapa, HUESO_OSC, 0.25f), HUESO, 0.35f * f), r.topLeft, Size(w, h))
+            // El lado de la luz (izquierda) y el de la sombra (derecha).
+            drawRect(luzMueble(0.14f + 0.08f * f), r.topLeft, Size(w * 0.3f, h))
+            drawRect(luzMueble(0.1f), r.topLeft, Size(w * 0.12f, h))
+            drawRect(sombraMueble(0.12f), Offset(r.right - w * 0.28f, r.top), Size(w * 0.28f, h))
+            drawRect(sombraMueble(0.14f), Offset(r.right - w * 0.08f, r.top), Size(w * 0.08f, h))
+            // La sombra de la repisa de arriba, en escalones.
+            listOf(0.3f to 0.1f, 0.165f to 0.12f, 0.066f to 0.18f).forEach { (alto, a) -> drawRect(sombraMueble(a), r.topLeft, Size(w, h * alto)) }
+        } else {
+            val l = luzTira(fila)
+            val hondo = mezcla(mezcla(chapa, GRIS_OSC, 0.3f), NOCHE, 0.9f)
+            val claro = mezcla(chapa, TIRA, 0.45f)
+            // La luz baja de la tira en cuatro escalones, más fuerte arriba.
+            for (j in 0 until 6) {
+                val lum = (l * (1f - 0.15f * j)).coerceIn(0f, 1f)
+                drawRect(mezcla(hondo, claro, lum * 0.78f), Offset(r.left, r.top + h * 0.15f * j), Size(w, h * (if (j == 5) 0.25f else 0.15f)))
+            }
+            drawRect(NOCHE.copy(alpha = 0.3f), Offset(r.right - w * 0.1f, r.top), Size(w * 0.1f, h))
+            drawRect(NOCHE.copy(alpha = 0.2f), r.topLeft, Size(w * 0.05f, h))
+            if (fila == 0 && col == cols - 1) mancha(Offset(r.right, r.top), w * 0.85f, FLEXO.copy(alpha = 0.2f))
+        }
+        // Los agujeros de la chapa, en filas.
+        for (fy in 0 until 4) for (fx in 0 until 9) {
+            val p = Offset(r.left + w * (0.08f + 0.105f * fx + (if (fy % 2 == 0) 0f else 0.052f)), r.top + h * (0.12f + 0.12f * fy))
+            drawCircle(sombra(o, if (o) 0.4f else 0.22f), 1.3f * u, p)
+        }
+        // El piso de vidrio grueso, visto desde arriba.
+        val vidrioPiso = if (o) mezcla(mezcla(CANTO_VIDRIO, NOCHE, 0.85f), TIRA, 0.5f * luzTira(fila)) else mezcla(CANTO_VIDRIO, BLANCO, 0.45f)
+        drawRect(vidrioPiso, Offset(r.left, piso), Size(w, r.bottom - piso))
+        drawRect(if (o) TIRA.copy(alpha = 0.6f * luzTira(fila)) else luzMueble(0.5f), Offset(r.left, piso), Size(w, 1f * u))
+        // La tira de luz, bajo el techo del armario, solo en la primera fila.
+        if (fila == 0) {
+            drawRect(luz(GRIS, o, 0.1f), r.topLeft, Size(w, 3.2f * u))
+            drawRect(if (o) TIRA else mezcla(BLANCO, TIRA, 0.4f), Offset(r.left + 2f * u, r.top + 3.2f * u), Size(w - 4f * u, 1.6f * u))
+            if (o) {
+                drawRect(TIRA.copy(alpha = 0.22f), Offset(r.left, r.top + 4.8f * u), Size(w, 3f * u))
+                drawRect(TIRA.copy(alpha = 0.1f), Offset(r.left, r.top + 7.8f * u), Size(w, 6f * u))
+            }
+        }
+    }
+
     private fun DrawScope.armario(d: Disposicion, o: Boolean, calor: (Offset) -> Float) {
         val u = density
         val w = size.width
@@ -441,8 +503,8 @@ object IdeasLaboratorio : DisenoIdeas {
         val primero = d.huecos.first(); val ultimo = d.filas.last()
         fun c(col: Color, p: Offset) = luz(col, o, calor(p))
         val cuerpo = Rect(xL, canto, xR, ultimo.bottom)
-        // El fondo del armario, detrás de los compartimentos (en sombra).
-        drawRect(c(mezcla(HUESO_OSC, GRIS_OSC, 0.3f), Offset(w * 0.5f, cuerpo.center.y)), Offset(primero.left, primero.top), Size(d.huecos[cols - 1].right - primero.left, ultimo.bottom - primero.top))
+        // El fondo de cada hueco: la chapa perforada, el vidrio del piso y la luz que le llega (la pintan aquí, que se sabe en qué fila está).
+        d.huecos.forEachIndexed { i, r -> fondoHueco(r, i / cols, d.filas.size, i % cols, o) }
         // El panel de arriba.
         val panel = Rect(xL, canto, xR, primero.top)
         drawRect(c(HUESO, Offset(w * 0.4f, canto)), panel.topLeft, panel.size)
@@ -459,13 +521,14 @@ object IdeasLaboratorio : DisenoIdeas {
         d.filas.forEachIndexed { i, f ->
             val siguiente = d.filas.getOrNull(i + 1)?.top ?: (f.bottom + d.separacion * 0.4f)
             if (siguiente > f.bottom + 1f) {
-                drawRect(c(mezcla(HUESO_OSC, GRIS_OSC, 0.45f), Offset(w * 0.5f, f.bottom)), Offset(primero.left, f.bottom), Size(d.huecos[cols - 1].right - primero.left, siguiente - f.bottom))
+                drawRect(if (o) mezcla(mezcla(HUESO_OSC, GRIS_OSC, 0.45f), NOCHE, 0.9f) else c(mezcla(HUESO_OSC, GRIS_OSC, 0.45f), Offset(w * 0.5f, f.bottom)), Offset(primero.left, f.bottom), Size(d.huecos[cols - 1].right - primero.left, siguiente - f.bottom))
                 val g = minOf(d.separacion * 0.3f, 9f * u)
                 val cv = c(CANTO_VIDRIO, Offset(w * 0.7f, f.bottom))
                 drawRect(cv, Offset(primero.left - 2f * u, f.bottom), Size(d.huecos[cols - 1].right - primero.left + 4f * u, g))
                 drawRect(mezcla(cv, Color.White, 0.5f).copy(alpha = if (o) 0.3f else 0.8f), Offset(primero.left - 2f * u, f.bottom), Size(d.huecos[cols - 1].right - primero.left + 4f * u, 1f * u))
                 drawRect(mezcla(cv, NOCHE, 0.35f), Offset(primero.left - 2f * u, f.bottom + g * 0.62f), Size(d.huecos[cols - 1].right - primero.left + 4f * u, g * 0.38f))
-                if (o) drawRect(FLEXO.copy(alpha = 0.12f), Offset(w * 0.55f, f.bottom), Size(d.huecos[cols - 1].right - w * 0.55f, 1.2f * u))
+                // De noche, el canto del vidrio recoge la luz de la tira: una línea fina, más viva arriba que abajo.
+                if (o) drawRect(TIRA.copy(alpha = 0.75f * luzTira(i)), Offset(primero.left - 2f * u, f.bottom), Size(d.huecos[cols - 1].right - primero.left + 4f * u, 1.2f * u))
                 // La sombra de la repisa en el fondo, y los soportes.
                 drawRect(sombra(o, 0.35f), Offset(primero.left, f.bottom + g), Size(d.huecos[cols - 1].right - primero.left, 2.5f * u))
                 listOf(primero.left + 3f * u, d.huecos[cols - 1].right - 8f * u, d.huecos[0].right - 7f * u, d.huecos[1].left + 2f * u).forEach { x ->
@@ -698,32 +761,40 @@ object IdeasLaboratorio : DisenoIdeas {
             cubicTo(X(0.36f), Y(0.115f), X(0.43f), Y(0.09f), X(0.44f), Y(0.05f))
             lineTo(X(0.44f), Y(0f)); close()
         }
+        // El brazo: una C continua que nace atrás en la base y se curva hacia delante hasta el cabezal.
         val brazo = Path().apply {
-            moveTo(X(0.12f), Y(0.1f))
-            cubicTo(X(0.15f), Y(0.3f), X(0.15f), Y(0.5f), X(0.04f), Y(0.68f))
-            lineTo(X(0.2f), Y(0.8f))
-            cubicTo(X(0.34f), Y(0.62f), X(0.38f), Y(0.36f), X(0.36f), Y(0.1f))
+            moveTo(X(0.16f), Y(0.1f))
+            cubicTo(X(0.27f), Y(0.36f), X(0.25f), Y(0.58f), X(0.04f), Y(0.7f))
+            lineTo(X(0.06f), Y(0.78f))
+            cubicTo(X(0.36f), Y(0.76f), X(0.47f), Y(0.5f), X(0.41f), Y(0.1f))
             close()
         }
+        // El cabezal: corto y redondeado, con la torre de los oculares encima.
         val cabezal = Path().apply {
-            moveTo(X(-0.28f), Y(0.62f)); lineTo(X(-0.24f), Y(0.76f))
-            cubicTo(X(-0.22f), Y(0.8f), X(-0.1f), Y(0.82f), X(0.05f), Y(0.82f))
-            lineTo(X(0.22f), Y(0.82f))
-            cubicTo(X(0.27f), Y(0.82f), X(0.28f), Y(0.78f), X(0.27f), Y(0.74f))
-            lineTo(X(0.24f), Y(0.62f)); close()
+            moveTo(X(-0.26f), Y(0.7f))
+            cubicTo(X(-0.26f), Y(0.77f), X(-0.2f), Y(0.79f), X(-0.12f), Y(0.79f))
+            lineTo(X(0.1f), Y(0.79f))
+            lineTo(X(0.14f), Y(0.66f))
+            lineTo(X(-0.2f), Y(0.64f))
+            cubicTo(X(-0.24f), Y(0.64f), X(-0.26f), Y(0.66f), X(-0.26f), Y(0.7f))
+            close()
         }
-        val giroOc = -32f
-        val pivote = Offset(X(-0.1f), Y(0.8f))
+        val torre = Path().apply {
+            moveTo(X(-0.2f), Y(0.78f)); lineTo(X(-0.16f), Y(0.86f)); lineTo(X(0.0f), Y(0.88f)); lineTo(X(0.06f), Y(0.78f)); close()
+        }
+        val giroOc = -36f
+        val pivote = Offset(X(-0.1f), Y(0.86f))
         val oculares = Path().apply {
             val g = Math.toRadians(giroOc.toDouble()); val cg = cos(g).toFloat(); val sg = sin(g).toFloat()
-            listOf(Offset(-B * 0.11f, -H * 0.27f), Offset(B * 0.11f, -H * 0.27f), Offset(B * 0.11f, H * 0.02f), Offset(-B * 0.11f, H * 0.02f)).forEachIndexed { i, q ->
+            listOf(Offset(-B * 0.07f, -H * 0.22f), Offset(B * 0.16f, -H * 0.22f), Offset(B * 0.16f, H * 0.02f), Offset(-B * 0.07f, H * 0.02f)).forEachIndexed { i, q ->
                 val x = pivote.x + q.x * cg - q.y * sg; val y = pivote.y + q.x * sg + q.y * cg
                 if (i == 0) moveTo(x, y) else lineTo(x, y)
             }
             close()
         }
         val silueta = Path().apply { op(base, brazo, PathOperation.Union) }
-        val silueta2 = Path().apply { op(silueta, cabezal, PathOperation.Union) }
+        val silueta1 = Path().apply { op(silueta, cabezal, PathOperation.Union) }
+        val silueta2 = Path().apply { op(silueta1, torre, PathOperation.Union) }
         val silueta3 = Path().apply { op(silueta2, oculares, PathOperation.Union) }
         // La sombra en el azulejo, corrida a la derecha y un poco abajo; y la de contacto en la tapa.
         clipRect(0f, 0f, size.width, pie.y - 1f * u) { translate(B * 0.2f, H * 0.05f) { drawPath(silueta3, sombra(o, 0.17f)) } }
@@ -734,21 +805,24 @@ object IdeasLaboratorio : DisenoIdeas {
             moveTo(X(0.42f), Y(0.03f)); cubicTo(X(0.6f), Y(0.02f), X(0.62f), Y(-0.025f), X(0.78f), Y(-0.015f)); cubicTo(X(0.9f), Y(-0.01f), X(0.95f), Y(0.02f), X(1.02f), Y(0.035f))
         }, luz(TINTA, o, k).copy(alpha = 0.85f), style = Stroke(2f * u, cap = StrokeCap.Round))
 
-        // Los oculares (detrás del cabezal).
+        // Los dos tubos oculares, inclinados hacia quien mira: el de atrás más oscuro y un poco más arriba, el de delante tapándolo.
         rotate(giroOc, pivote) {
-            val px = pivote.x; val py = pivote.y
-            // El prisma.
-            drawRect(esmalte, Offset(px - B * 0.11f, py - H * 0.1f), Size(B * 0.22f, H * 0.12f))
-            drawRect(sombra(o, 0.18f), Offset(px + B * 0.04f, py - H * 0.1f), Size(B * 0.07f, H * 0.12f))
-            // Los dos tubos: el de atrás un poco corrido.
-            listOf(Offset(B * 0.05f, -H * 0.012f) to 0.25f, Offset(-B * 0.035f, 0f) to 0f).forEach { (dx, osc) ->
-                val tx = px + dx.x; val ty = py - H * 0.1f + dx.y
-                drawRect(mezcla(luz(GRIS, o, k), luz(GRIS_OSC, o, k), osc), Offset(tx - B * 0.045f, ty - H * 0.1f), Size(B * 0.09f, H * 0.1f))
-                drawRect(brillo(o, 0.5f, k), Offset(tx - B * 0.04f, ty - H * 0.1f), Size(1.2f * u, H * 0.1f))
-                drawRoundRect(mezcla(negro, NOCHE, osc * 0.6f), Offset(tx - B * 0.055f, ty - H * 0.155f), Size(B * 0.11f, H * 0.06f), CornerRadius(2f * u))
-                drawRect(brillo(o, 0.3f, k), Offset(tx - B * 0.05f, ty - H * 0.155f), Size(B * 0.1f, 1f * u))
+            listOf(Offset(B * 0.09f, -H * 0.015f) to 0.45f, Offset(0f, 0f) to 0f).forEach { (dx, osc) ->
+                val tx = pivote.x + dx.x; val ty = pivote.y + dx.y
+                val tubo = mezcla(luz(GRIS, o, k), luz(GRIS_OSC, o, k), osc)
+                drawRect(tubo, Offset(tx - B * 0.04f, ty - H * 0.16f), Size(B * 0.08f, H * 0.17f))
+                drawRect(sombra(o, 0.25f), Offset(tx + B * 0.015f, ty - H * 0.16f), Size(B * 0.025f, H * 0.17f))
+                if (osc == 0f) drawRect(brillo(o, 0.6f, k), Offset(tx - B * 0.03f, ty - H * 0.15f), Size(1.2f * u, H * 0.15f))
+                // El anillo de ajuste y la copa de goma, más ancha.
+                drawRect(mezcla(tubo, Color.White, 0.2f), Offset(tx - B * 0.045f, ty - H * 0.115f), Size(B * 0.09f, H * 0.012f))
+                drawRoundRect(mezcla(negro, NOCHE, osc * 0.5f), Offset(tx - B * 0.055f, ty - H * 0.215f), Size(B * 0.11f, H * 0.06f), CornerRadius(2.5f * u))
+                drawRect(brillo(o, 0.35f, k), Offset(tx - B * 0.045f, ty - H * 0.215f), Size(B * 0.08f, 1f * u))
             }
         }
+        // La torre del prisma, sobre el cabezal.
+        drawPath(torre, esmalte)
+        clipPath(torre) { drawRect(sombra(o, 0.22f), Offset(X(-0.03f), Y(0.9f)), Size(B * 0.12f, H * 0.14f)) }
+        drawPath(torre, sombra(o, 0.22f), style = Stroke(0.6f * u))
 
         // La base pesada.
         drawPath(base, esmalte)
@@ -766,12 +840,26 @@ object IdeasLaboratorio : DisenoIdeas {
         // El brazo.
         drawPath(brazo, esmalte)
         clipPath(brazo) {
-            drawRect(sombra(o, 0.24f), Offset(X(0.26f), Y(0.82f)), Size(B * 0.2f, H * 0.75f))
-            drawRect(brillo(o, 0.4f, k), Offset(X(0.1f), Y(0.7f)), Size(1.4f * u, H * 0.58f))
-            if (o) drawRect(FLEXO.copy(alpha = 0.28f * kd), Offset(X(0.31f), Y(0.82f)), Size(B * 0.1f, H * 0.75f))
+            drawRect(sombra(o, 0.24f), Offset(X(0.3f), Y(0.86f)), Size(B * 0.2f, H * 0.78f))
+            drawPath(Path().apply { moveTo(X(0.18f), Y(0.12f)); cubicTo(X(0.28f), Y(0.36f), X(0.26f), Y(0.6f), X(0.08f), Y(0.76f)) }, brillo(o, 0.45f, k), style = Stroke(1.6f * u))
+            if (o) drawRect(FLEXO.copy(alpha = 0.28f * kd), Offset(X(0.36f), Y(0.86f)), Size(B * 0.1f, H * 0.78f))
         }
+        drawPath(brazo, sombra(o, 0.22f), style = Stroke(0.6f * u))
+        // El cabezal.
+        drawPath(cabezal, esmalte)
+        clipPath(cabezal) {
+            drawRect(sombra(o, 0.2f), Offset(X(0.0f), Y(0.82f)), Size(B * 0.2f, H * 0.2f))
+            drawRect(sombra(o, 0.25f), Offset(X(-0.3f), Y(0.665f)), Size(B * 0.6f, H * 0.025f))
+            drawRect(brillo(o, 0.55f, k), Offset(X(-0.2f), Y(0.79f)), Size(B * 0.28f, 1.3f * u))
+            if (o) drawRect(FLEXO.copy(alpha = 0.3f * kd), Offset(X(0.06f), Y(0.82f)), Size(B * 0.1f, H * 0.2f))
+        }
+        drawPath(cabezal, sombra(o, 0.22f), style = Stroke(0.6f * u))
+        // Una tira de cinta con el número del aparato, en el cabezal.
+        drawRect(luz(mezcla(BLANCO, AMARILLO, 0.2f), o, k), Offset(X(-0.2f), Y(0.745f)), Size(B * 0.15f, H * 0.04f))
+        drawLine(luz(TINTA, o, k).copy(alpha = 0.6f), Offset(X(-0.18f), Y(0.725f)), Offset(X(-0.08f), Y(0.725f)), 0.9f * u)
+
         // Los mandos de enfoque, coaxiales: el grande con su moleteado y el fino delante.
-        val mando = Offset(X(0.25f), Y(0.27f))
+        val mando = Offset(X(0.3f), Y(0.27f))
         drawCircle(sombra(o, 0.25f), B * 0.1f, mando + Offset(2f * u, 2f * u))
         drawCircle(negro, B * 0.095f, mando)
         for (j in 0 until 10) {
@@ -801,21 +889,8 @@ object IdeasLaboratorio : DisenoIdeas {
             luz(GRIS, o, k), style = Stroke(1.6f * u, cap = StrokeCap.Round))
         drawCircle(luz(GRIS, o, k), 2f * u, Offset(X(0.16f), Y(0.44f)))
 
-        // El cabezal.
-        drawPath(cabezal, esmalte)
-        clipPath(cabezal) {
-            drawRect(sombra(o, 0.2f), Offset(X(0.12f), Y(0.84f)), Size(B * 0.2f, H * 0.24f))
-            drawRect(sombra(o, 0.25f), Offset(X(-0.3f), Y(0.645f)), Size(B * 0.6f, H * 0.025f))
-            drawRect(brillo(o, 0.55f, k), Offset(X(-0.24f), Y(0.82f)), Size(B * 0.4f, 1.3f * u))
-            if (o) drawRect(FLEXO.copy(alpha = 0.3f * kd), Offset(X(0.2f), Y(0.84f)), Size(B * 0.1f, H * 0.24f))
-        }
-        drawPath(cabezal, sombra(o, 0.22f), style = Stroke(0.6f * u))
-        // Una tira de cinta con el número del aparato, en el cabezal.
-        drawRect(luz(mezcla(BLANCO, AMARILLO, 0.2f), o, k), Offset(X(-0.18f), Y(0.74f)), Size(B * 0.16f, H * 0.04f))
-        drawLine(luz(TINTA, o, k).copy(alpha = 0.6f), Offset(X(-0.16f), Y(0.72f)), Offset(X(-0.05f), Y(0.72f)), 0.9f * u)
-
         // El revólver y los tres objetivos.
-        val rev = Offset(X(-0.12f), Y(0.61f))
+        val rev = Offset(X(-0.1f), Y(0.635f))
         drawOval(luz(GRIS, o, k), Offset(rev.x - B * 0.18f, rev.y - H * 0.035f), Size(B * 0.36f, H * 0.07f))
         drawArc(brillo(o, 0.5f, k), 180f, 90f, false, Offset(rev.x - B * 0.14f, rev.y - H * 0.028f), Size(B * 0.28f, H * 0.056f), style = Stroke(1f * u))
         listOf(Triple(30f, 0.1f, AMARILLO), Triple(-32f, 0.11f, VIOLETA), Triple(0f, 0.14f, CIAN)).forEach { (g, l, anillo) ->
@@ -1255,28 +1330,10 @@ object IdeasLaboratorio : DisenoIdeas {
         val o = oscuro
         val w = size.width; val h = size.height
         val ab = c.abierto.coerceIn(0f, 1f)
-        // De noche, el flexo queda encima del armario: a las repisas les llega poco, más por arriba a la derecha.
-        val k = 0.2f
+        // De noche, lo que hay en las repisas casi no recibe luz de frente: la tira del techo lo recorta por arriba.
+        val k = 0.12f
         val piso = h * 0.9f
-        // ---- el fondo de la repisa: el fondo del armario, la sombra de la repisa de arriba y el vidrio del piso
-        drawRect(luz(mezcla(HUESO_OSC, HUESO, 0.35f), o, k * 0.5f))
-        // La sombra de la repisa de arriba, en tres escalones (sin degradados: se repinta en cada cuadro al abrir).
-        val hs = h * (if (o) 0.5f else 0.3f)
-        drawRect(sombra(o, if (o) 0.3f else 0.1f), Offset.Zero, Size(w, hs))
-        drawRect(sombra(o, if (o) 0.3f else 0.12f), Offset.Zero, Size(w, hs * 0.55f))
-        drawRect(sombra(o, if (o) 0.3f else 0.18f), Offset.Zero, Size(w, hs * 0.22f))
-        drawRect(sombra(o, 0.22f), Offset(w * 0.93f, 0f), Size(w * 0.07f, h))
-        drawRect(brillo(o, 0.25f, 0.1f), Offset(0f, 0f), Size(w * 0.03f, h))
-        // Los agujeros de la chapa del fondo, en filas.
-        for (fy in 0 until 4) for (fx in 0 until 9) {
-            val p = Offset(w * (0.08f + 0.105f * fx + (if (fy % 2 == 0) 0f else 0.052f)), h * (0.12f + 0.12f * fy))
-            drawCircle(sombra(o, 0.22f), 1.3f * u, p)
-        }
-        // El piso de vidrio grueso, visto desde arriba, con su reflejo.
-        drawRect(luz(mezcla(CANTO_VIDRIO, BLANCO, 0.45f), o, k), Offset(0f, piso), Size(w, h - piso))
-        drawRect(brillo(o, 0.5f, 0.2f), Offset(0f, piso), Size(w, 1f * u))
-        if (o) { drawRect(FLEXO.copy(alpha = 0.04f), Offset(w * 0.55f, 0f), Size(w * 0.45f, h)); drawRect(FLEXO.copy(alpha = 0.18f), Offset(0f, piso), Size(w, 1f * u)) }
-
+        // El fondo de la repisa (la chapa, el vidrio y su luz) lo pinta el mueble: aquí va solo lo que hay en ella.
         if (c.vacio) { repisaVacia(w, h, piso, o, k); return }
         val dy = SALIDA * h * ab
         translate(0f, dy) {
@@ -1298,21 +1355,21 @@ object IdeasLaboratorio : DisenoIdeas {
         drawRect(sombra(o, 0.15f), Offset(r.left + 1f * u, r.top + 1.2f * u), r.size)
         drawRect(tarjeta(o), r.topLeft, r.size)
         drawRect(luz(franja, o, k + 0.3f), r.topLeft, Size(r.width, 2.4f * u))
-        drawRect(brillo(o, 0.4f, k), Offset(r.left, r.bottom - 1f * u), Size(r.width, 1f * u))
+        drawRect(filo(o, 0.4f), Offset(r.left, r.bottom - 1f * u), Size(r.width, 1f * u))
     }
 
     /** La caja de criogenia azul hielo: la rejilla de viales con sus tapones (más cuanto más guarda), la tapa apoyada detrás y la escarcha. */
     private fun DrawScope.criogenia(w: Float, h: Float, piso: Float, c: EstadoCajon, ab: Float, o: Boolean, k: Float) {
         val u = density
-        val frente = Rect(w * 0.12f, h * 0.48f, w * 0.86f, piso + h * 0.03f)
+        val frente = Rect(w * 0.05f, h * 0.48f, w * 0.93f, piso + h * 0.03f)
         val fondo = 0.035f * w
         val arriba = h * 0.37f
         // La tapa, apoyada contra el fondo, detrás de la caja.
-        val tapa = Path().apply { moveTo(w * 0.2f, arriba + 2f * u); lineTo(w * 0.25f, h * 0.1f); lineTo(w * 0.82f, h * 0.12f); lineTo(w * 0.8f, arriba + 2f * u); close() }
+        val tapa = Path().apply { moveTo(w * 0.12f, arriba + 2f * u); lineTo(w * 0.17f, h * 0.1f); lineTo(w * 0.87f, h * 0.12f); lineTo(w * 0.86f, arriba + 2f * u); close() }
         translate(w * 0.03f, h * 0.02f) { drawPath(tapa, sombra(o, 0.2f)) }
         drawPath(tapa, luz(HIELO, o, k).copy(alpha = 0.75f))
         drawPath(tapa, luz(mezcla(HIELO, TINTA, 0.35f), o, k), style = Stroke(0.9f * u))
-        drawLine(brillo(o, 0.6f, k), Offset(w * 0.27f, h * 0.14f), Offset(w * 0.24f, arriba - 2f * u), 1.2f * u)
+        drawLine(filo(o, 0.6f), Offset(w * 0.19f, h * 0.14f), Offset(w * 0.16f, arriba - 2f * u), 1.2f * u)
         // La sombra de la caja en el vidrio.
         drawRect(sombra(o, 0.3f), Offset(frente.left + w * 0.03f, piso), Size(frente.width, h * 0.05f))
         // La cara de arriba: la rejilla de 3 × 9 agujeros, vista un poco desde arriba.
@@ -1333,15 +1390,15 @@ object IdeasLaboratorio : DisenoIdeas {
                 drawOval(luz(tap, o, k), Offset(x - rx, y - ry * 3.2f), Size(rx * 2, ry * 2))
                 drawOval(luz(mezcla(tap, Color.Black, 0.25f), o, k), Offset(x - rx, y - ry * 2.6f), Size(rx * 2, ry * 1.4f))
                 drawOval(luz(tap, o, k), Offset(x - rx, y - ry * 3.2f), Size(rx * 2, ry * 1.6f))
-                drawCircle(brillo(o, 0.7f, k + 0.2f), rx * 0.28f, Offset(x - rx * 0.35f, y - ry * 2.6f))
+                drawCircle(filo(o, 0.7f), rx * 0.28f, Offset(x - rx * 0.35f, y - ry * 2.6f))
             } else drawOval(luz(mezcla(HIELO, TINTA, 0.55f), o, k), Offset(x - rx * 0.8f, y - ry * 0.8f), Size(rx * 1.6f, ry * 1.6f))
         }
         drawPath(sup, luz(mezcla(HIELO, TINTA, 0.3f), o, k), style = Stroke(0.8f * u))
         // El frente de la caja, con su lado de sombra y la escarcha en el canto.
         drawRect(luz(HIELO, o, k), frente.topLeft, frente.size)
         drawRect(sombra(o, 0.2f), Offset(frente.right - frente.width * 0.14f, frente.top), Size(frente.width * 0.14f, frente.height))
-        drawRect(brillo(o, 0.6f, k + 0.1f), frente.topLeft, Size(frente.width, 1.3f * u))
-        drawRect(brillo(o, 0.3f, k), frente.topLeft, Size(1.4f * u, frente.height))
+        drawRect(filo(o, 0.6f), frente.topLeft, Size(frente.width, 1.3f * u))
+        drawRect(filo(o, 0.3f), frente.topLeft, Size(1.4f * u, frente.height))
         for (j in 0 until 9) drawCircle(luz(Color.White, o, k + 0.2f).copy(alpha = 0.7f), (0.8f + 1.2f * azar(c.semilla, j)) * u, Offset(frente.left + frente.width * azar(c.semilla + 3, j), frente.top + (1f + 3f * azar(c.semilla + 5, j)) * u))
         etiqueta(w, h, CIAN, o, k)
         // El código de barras, debajo de la etiqueta.
@@ -1350,9 +1407,9 @@ object IdeasLaboratorio : DisenoIdeas {
         while (bx > frente.right - frente.width * 0.42f) { val bw = (0.5f + 1.1f * azar(c.semilla, q)) * u; drawRect(luz(TINTA, o, k).copy(alpha = 0.6f), Offset(bx - bw, by - 2f * u), Size(bw, 4f * u)); bx -= bw + 0.9f * u; q++ }
         // Con más de nueve ideas, un vial suelto tumbado al lado.
         if (c.n > 9) {
-            val vy = piso + h * 0.015f
-            drawRoundRect(luz(VIDRIO, o, k), Offset(w * 0.86f, vy - 4f * u), Size(w * 0.1f, 4f * u), CornerRadius(2f * u))
-            drawRect(luz(TAPONES[c.semilla.mod(TAPONES.size)], o, k), Offset(w * 0.86f, vy - 4.5f * u), Size(w * 0.025f, 5f * u))
+            val vy = h * 0.975f
+            drawRoundRect(luz(VIDRIO, o, k), Offset(w * 0.12f, vy - 4f * u), Size(w * 0.1f, 4f * u), CornerRadius(2f * u))
+            drawRect(luz(TAPONES[c.semilla.mod(TAPONES.size)], o, k), Offset(w * 0.12f, vy - 4.5f * u), Size(w * 0.025f, 5f * u))
         }
         // Al abrir, el vapor frío del nitrógeno.
         if (ab > 0f) for (j in 0 until 6) drawOval(luz(Color.White, o, k + 0.3f).copy(alpha = 0.4f * ab * (1f - j / 8f)),
@@ -1362,7 +1419,7 @@ object IdeasLaboratorio : DisenoIdeas {
     /** La gradilla de tubos cónicos con tapón de rosca: un tubo por cada idea (hasta ocho), cada uno con su nivel y su color. */
     private fun DrawScope.conicos(w: Float, h: Float, piso: Float, c: EstadoCajon, o: Boolean, k: Float) {
         val u = density
-        val panel = Rect(w * 0.12f, h * 0.52f, w * 0.86f, piso + h * 0.03f)
+        val panel = Rect(w * 0.05f, h * 0.52f, w * 0.93f, piso + h * 0.03f)
         val placa = h * 0.46f
         drawRect(sombra(o, 0.3f), Offset(panel.left + w * 0.03f, piso), Size(panel.width, h * 0.05f))
         // La placa de arriba de la gradilla, con sus agujeros, vista un poco desde arriba.
@@ -1385,12 +1442,12 @@ object IdeasLaboratorio : DisenoIdeas {
                 liquido(cuerpo, Rect(x - tw / 2, top, x + tw / 2, placa + h * 0.03f), placa + h * 0.03f - largo * nivel, col, o, k, 1.6f)
                 // Las marcas impresas de la graduación.
                 for (j in 1..3) drawLine(luz(GRIS_OSC, o, k).copy(alpha = 0.5f), Offset(x - tw / 2, top + largo * 0.22f * j), Offset(x - tw * 0.1f, top + largo * 0.22f * j), 0.5f * u)
-                drawLine(brillo(o, 0.7f, k + 0.2f), Offset(x - tw * 0.28f, top + 4f * u), Offset(x - tw * 0.28f, placa), 1f * u)
+                drawLine(filo(o, 0.7f), Offset(x - tw * 0.28f, top + 4f * u), Offset(x - tw * 0.28f, placa), 1f * u)
                 // El tapón de rosca, con sus estrías.
                 val tp = Rect(x - tw * 0.62f, top - h * 0.05f, x + tw * 0.62f, top + 1f * u)
                 drawRoundRect(luz(TAPONES[(i + c.semilla.mod(6)) % 6], o, k), tp.topLeft, tp.size, CornerRadius(1.2f * u))
                 for (j in 1 until 4) drawLine(sombra(o, 0.3f), Offset(tp.left + tp.width * j / 4f, tp.top + 1f * u), Offset(tp.left + tp.width * j / 4f, tp.bottom - 1f * u), 0.5f * u)
-                drawRect(brillo(o, 0.6f, k + 0.1f), tp.topLeft, Size(tp.width * 0.25f, tp.height))
+                drawRect(filo(o, 0.6f), tp.topLeft, Size(tp.width * 0.25f, tp.height))
             }
             drawOval(luz(mezcla(HUESO_OSC, TINTA, 0.35f), o, k), Offset(x - tw * 0.55f, placa + (panel.top - placa) * 0.25f), Size(tw * 1.1f, (panel.top - placa) * 0.5f))
             if (i < n) drawRect(luz(VIDRIO, o, k).copy(alpha = 0.7f), Offset(x - tw / 2, placa), Size(tw, (panel.top - placa) * 0.55f))
@@ -1398,22 +1455,15 @@ object IdeasLaboratorio : DisenoIdeas {
         // El frente de la gradilla, con su lado de sombra.
         drawRect(luz(mezcla(BLANCO, HUESO, 0.4f), o, k), panel.topLeft, panel.size)
         drawRect(sombra(o, 0.18f), Offset(panel.right - panel.width * 0.12f, panel.top), Size(panel.width * 0.12f, panel.height))
-        drawRect(brillo(o, 0.6f, k + 0.1f), panel.topLeft, Size(panel.width, 1.3f * u))
+        drawRect(filo(o, 0.6f), panel.topLeft, Size(panel.width, 1.3f * u))
         drawRect(sombra(o, 0.2f), Offset(panel.left, panel.bottom - h * 0.03f), Size(panel.width, h * 0.03f))
         etiqueta(w, h, VIOLETA, o, k)
-        // Un tubo cónico tumbado en el vidrio, junto a la gradilla, con su punta.
-        val ty = piso + (h - piso) * 0.45f
-        val tx = w * 0.865f
-        val tubo = Path().apply { moveTo(tx, ty - 3.5f * u); lineTo(tx + w * 0.07f, ty - 3.5f * u); lineTo(tx + w * 0.105f, ty); lineTo(tx + w * 0.07f, ty + 3.5f * u); lineTo(tx, ty + 3.5f * u); close() }
-        drawRect(sombra(o, 0.2f), Offset(tx + 1f * u, ty + 2f * u), Size(w * 0.1f, 3f * u))
-        vidrio(tubo, o, k, 0.6f)
-        drawRect(luz(TAPONES[(c.semilla + 2).mod(6)], o, k), Offset(tx - w * 0.025f, ty - 4.5f * u), Size(w * 0.03f, 9f * u))
     }
 
     /** La caja gris de portaobjetos con la tapa abatible entreabierta: un portaobjetos por idea (de dos en dos), con su muestra teñida. */
     private fun DrawScope.portaobjetos(w: Float, h: Float, piso: Float, c: EstadoCajon, ab: Float, o: Boolean, k: Float) {
         val u = density
-        val frente = Rect(w * 0.12f, h * 0.5f, w * 0.86f, piso + h * 0.03f)
+        val frente = Rect(w * 0.05f, h * 0.5f, w * 0.93f, piso + h * 0.03f)
         val boca = h * 0.42f
         val gris = mezcla(GRIS, BLANCO, 0.25f)
         drawRect(sombra(o, 0.3f), Offset(frente.left + w * 0.03f, piso), Size(frente.width, h * 0.05f))
@@ -1430,7 +1480,7 @@ object IdeasLaboratorio : DisenoIdeas {
                 val x = frente.left + w * 0.06f + (frente.width - w * 0.06f) * (j + 0.5f) / 6f
                 drawLine(sombra(o, 0.1f), Offset(x, boca - alzada), Offset(x - w * 0.02f, boca), 0.7f * u)
             }
-            drawLine(brillo(o, 0.6f, k), Offset(frente.left + w * 0.07f, boca - alzada + 2f * u), Offset(frente.left + w * 0.04f, boca - 2f * u), 1.2f * u)
+            drawLine(filo(o, 0.6f), Offset(frente.left + w * 0.07f, boca - alzada + 2f * u), Offset(frente.left + w * 0.04f, boca - 2f * u), 1.2f * u)
             drawRect(sombra(o, 0.12f), Offset(frente.right - frente.width * 0.15f, boca - alzada), Size(frente.width * 0.2f, alzada))
         }
         drawPath(tapa, luz(GRIS_OSC, o, k), style = Stroke(0.8f * u))
@@ -1453,8 +1503,8 @@ object IdeasLaboratorio : DisenoIdeas {
         // El frente de la caja, con el cierre y su lado de sombra.
         drawRect(luz(gris, o, k), frente.topLeft, frente.size)
         drawRect(sombra(o, 0.22f), Offset(frente.right - frente.width * 0.12f, frente.top), Size(frente.width * 0.12f, frente.height))
-        drawRect(brillo(o, 0.55f, k + 0.1f), frente.topLeft, Size(frente.width, 1.3f * u))
-        drawRect(brillo(o, 0.3f, k), frente.topLeft, Size(1.4f * u, frente.height))
+        drawRect(filo(o, 0.55f), frente.topLeft, Size(frente.width, 1.3f * u))
+        drawRect(filo(o, 0.3f), frente.topLeft, Size(1.4f * u, frente.height))
         drawRoundRect(luz(GRIS_OSC, o, k), Offset(frente.center.x - w * 0.05f, frente.top - 1f * u), Size(w * 0.1f, h * 0.04f), CornerRadius(1.5f * u))
         etiqueta(w, h, ROSA, o, k)
     }
@@ -1462,7 +1512,7 @@ object IdeasLaboratorio : DisenoIdeas {
     /** Lo que no tiene tema: una cubeta de acero con frascos sin etiqueta (más cuanto más guarda) y un rótulo de cinta de papel. */
     private fun DrawScope.cubeta(w: Float, h: Float, piso: Float, c: EstadoCajon, o: Boolean, k: Float) {
         val u = density
-        val frente = Rect(w * 0.1f, h * 0.52f, w * 0.88f, piso + h * 0.03f)
+        val frente = Rect(w * 0.04f, h * 0.52f, w * 0.95f, piso + h * 0.03f)
         drawRect(sombra(o, 0.3f), Offset(frente.left + w * 0.03f, piso), Size(frente.width, h * 0.05f))
         // Los frascos: ámbar, transparente y gotero, de alturas distintas, ladeados.
         val n = (2 + c.n).coerceIn(3, 5)
@@ -1484,7 +1534,7 @@ object IdeasLaboratorio : DisenoIdeas {
                 drawPath(cuerpo, luz(col, o, k).copy(alpha = if (col == VIDRIO) 0.6f else 0.92f))
                 clipPath(cuerpo) { drawRect(sombra(o, 0.25f), Offset(x + a * 0.35f, pie - altoF), Size(a, altoF)) }
                 drawPath(cuerpo, luz(GRIS_OSC, o, k).copy(alpha = 0.5f), style = Stroke(0.7f * u))
-                drawLine(brillo(o, 0.7f, k + 0.2f), Offset(x - a * 0.6f, pie - altoF * 0.65f), Offset(x - a * 0.6f, pie - altoF * 0.1f), 1.2f * u, StrokeCap.Round)
+                drawLine(filo(o, 0.7f), Offset(x - a * 0.6f, pie - altoF * 0.65f), Offset(x - a * 0.6f, pie - altoF * 0.1f), 1.2f * u, StrokeCap.Round)
                 // El tapón negro, o la perilla del gotero.
                 if (i == 4) drawOval(luz(TINTA, o, k), Offset(x - a * 0.4f, pie - altoF * 1.05f), Size(a * 0.8f, altoF * 0.26f))
                 else drawRect(luz(mezcla(TINTA, GRIS_OSC, 0.4f), o, k), Offset(x - a * 0.42f, pie - altoF * 0.95f), Size(a * 0.84f, altoF * 0.14f))
@@ -1494,10 +1544,10 @@ object IdeasLaboratorio : DisenoIdeas {
         }
         // La cubeta de acero inoxidable: el frente cepillado, el borde doblado y su lado de sombra.
         drawRect(luz(mezcla(GRIS, BLANCO, 0.4f), o, k), frente.topLeft, frente.size)
-        for (j in 0 until 8) drawLine(brillo(o, 0.18f, k), Offset(frente.left, frente.top + frente.height * (j + 0.5f) / 8f), Offset(frente.right, frente.top + frente.height * (j + 0.5f) / 8f), 0.5f * u)
+        for (j in 0 until 8) drawLine(filo(o, 0.18f), Offset(frente.left, frente.top + frente.height * (j + 0.5f) / 8f), Offset(frente.right, frente.top + frente.height * (j + 0.5f) / 8f), 0.5f * u)
         drawRect(sombra(o, 0.22f), Offset(frente.right - frente.width * 0.12f, frente.top), Size(frente.width * 0.12f, frente.height))
         drawRect(luz(mezcla(GRIS, BLANCO, 0.6f), o, k + 0.1f), Offset(frente.left - 2f * u, frente.top - 2f * u), Size(frente.width + 4f * u, 4f * u))
-        drawRect(brillo(o, 0.7f, k + 0.1f), Offset(frente.left - 2f * u, frente.top - 2f * u), Size(frente.width + 4f * u, 1f * u))
+        drawRect(filo(o, 0.7f), Offset(frente.left - 2f * u, frente.top - 2f * u), Size(frente.width + 4f * u, 1f * u))
         // El rótulo: una tira de cinta de papel con los extremos rotos.
         val r = Rect(w * rotulo.left, h * rotulo.top, w * rotulo.right, h * rotulo.bottom)
         val cin = cinta(Offset(r.left - w * 0.02f, r.center.y), Offset(r.right + w * 0.02f, r.center.y), r.height, c.semilla)
@@ -1522,11 +1572,11 @@ object IdeasLaboratorio : DisenoIdeas {
         drawRect(sombra(o, 0.15f), Offset(pr.left + 1.5f * u, pr.top + 1.5f * u), pr.size)
         drawRect(luz(VIDRIO, o, k).copy(alpha = 0.35f), pr.topLeft, pr.size)
         drawRect(luz(GRIS, o, k), pr.topLeft, pr.size, style = Stroke(1f * u))
-        drawLine(brillo(o, 0.6f, k), Offset(pr.left + 2f * u, pr.top + 2f * u), Offset(pr.left + pr.width * 0.4f, pr.top + 2f * u), 1f * u)
+        drawLine(filo(o, 0.6f), Offset(pr.left + 2f * u, pr.top + 2f * u), Offset(pr.left + pr.width * 0.4f, pr.top + 2f * u), 1f * u)
         drawRect(luz(GRIS, o, k), Offset(pr.left, pr.top - 2f * u), Size(pr.width, 2.5f * u))
     }
 
-    override val rotulo = Rect(0.16f, 0.58f, 0.8f, 0.87f)
+    override val rotulo = Rect(0.08f, 0.6f, 0.9f, 0.88f)
     override fun tintaRotulo(oscuro: Boolean) = TINTA
     override val letraRotulo: FontFamily = LetraExtra.jost
     override val salida = SALIDA
