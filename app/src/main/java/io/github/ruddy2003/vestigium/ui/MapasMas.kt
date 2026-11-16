@@ -309,118 +309,10 @@ object MapasMas {
                 drawRect(Color(0xFFC8102E).copy(alpha = 0.6f), Offset(w * 0.82f, h * 0.04f), Size(w * 0.14f, h * 0.02f))
             }
             TemaId.PSICODELIA -> {
-                // El plano dibujado de San Francisco en 1967, como el de un cartel (no va a escala): el Pacífico al oeste con la
-                // niebla que entra por el Golden Gate y su puente, la bahía al este, el Golden Gate Park con los Polo Fields y el
-                // Panhandle, Buena Vista y los Twin Peaks, las calles (Haight, Ashbury, Masonic, Sutter, Geary, Van Ness y Market)
-                // y una hilera de casas victorianas grises con alguna pintada. A la derecha, en su recuadro de esquinas blandas, la
-                // costa de la bahía de Monterey con sus cipreses y el recinto ferial; abajo, la flor de los vientos con el norte
-                // arriba. De noche, el mismo plano con la luz negra: las calles, los parques y las ventanas brillan.
-                val T = TrazosPsicodelia
-                val tinta = if (oscuro) Color(0xFFF2EAF7) else Color(0xFF2A1C32)
-                fun q(x: Float, y: Float) = Offset(w * x, h * y)
-                fun blanda(cerrar: Boolean, vararg p: Pair<Float, Float>): Path = Path().apply {
-                    val l = p.map { q(it.first, it.second) }
-                    if (cerrar) {
-                        val a0 = Offset((l.last().x + l[0].x) / 2, (l.last().y + l[0].y) / 2); moveTo(a0.x, a0.y)
-                        for (i in l.indices) { val a = l[i]; val b = l[(i + 1) % l.size]; quadraticTo(a.x, a.y, (a.x + b.x) / 2, (a.y + b.y) / 2) }
-                        close()
-                    } else {
-                        moveTo(l[0].x, l[0].y)
-                        for (i in 1 until l.size - 1) quadraticTo(l[i].x, l[i].y, (l[i].x + l[i + 1].x) / 2, (l[i].y + l[i + 1].y) / 2)
-                        lineTo(l.last().x, l.last().y)
-                    }
-                }
-                val papel = if (oscuro) Color(0xFF1A1126) else T.PAPEL
-                val agua = if (oscuro) Color(0xFF2A1F52) else Color(0xFFB9DCE0)
-                val ola = if (oscuro) T.FLUOR_VIOLETA.copy(alpha = 0.5f) else Color(0xFF2F6BFF).copy(alpha = 0.3f)
-                val parque = if (oscuro) T.LIMON else T.VERDE
-                // El papel del plano.
-                drawRect(papel.copy(alpha = if (oscuro) 0.85f else 0.6f), Offset.Zero, size)
-                // El Pacífico al oeste y el estrecho al norte, la bahía al este.
-                val oceano = Path().apply { moveTo(0f, 0f); lineTo(w * 0.62f, 0f); lineTo(w * 0.6f, h * 0.06f); quadraticTo(w * 0.3f, h * 0.1f, w * 0.06f, h * 0.08f)
-                    quadraticTo(w * 0.04f, h * 0.5f, w * 0.05f, h); lineTo(0f, h); close() }
-                val bahia = blanda(true, 0.6f to -0.05f, 0.64f to 0.2f, 0.7f to 0.45f, 0.66f to 0.75f, 0.72f to 1.05f, 0.8f to 1.05f, 0.8f to -0.05f)
-                listOf(oceano, bahia).forEach { drawPath(it, agua.copy(alpha = 0.75f)) }
-                // Las olas: rayitas onduladas en el agua.
-                listOf(0.02f to 0.3f, 0.025f to 0.62f, 0.02f to 0.86f, 0.73f to 0.18f, 0.74f to 0.55f, 0.75f to 0.82f, 0.2f to 0.04f, 0.42f to 0.05f).forEach { (x, y) ->
-                    drawPath(Path().apply { val o = q(x, y); moveTo(o.x - 4 * d, o.y); quadraticTo(o.x - 2 * d, o.y - 1.6f * d, o.x, o.y); quadraticTo(o.x + 2 * d, o.y + 1.6f * d, o.x + 4 * d, o.y) }, ola, style = Stroke(0.8f * d, cap = StrokeCap.Round))
-                }
-                drawPath(oceano, tinta.copy(alpha = 0.3f), style = Stroke(0.8f * d))
-                drawPath(bahia, tinta.copy(alpha = 0.3f), style = Stroke(0.8f * d))
-                // El puente en el estrecho: las dos torres y el cable que cuelga.
-                val puente = if (oscuro) T.FLUOR_NARANJA else Color(0xFFC0482A)
-                listOf(0.03f, 0.1f).forEach { x -> drawLine(puente, q(x, 0.0f), q(x, 0.09f), 1.4f * d) }
-                drawLine(puente, q(0.0f, 0.075f), q(0.14f, 0.075f), 1f * d)
-                drawPath(Path().apply { moveTo(w * 0.03f, h * 0.0f); quadraticTo(w * 0.065f, h * 0.09f, w * 0.1f, h * 0.0f) }, puente, style = Stroke(0.6f * d))
-                // La niebla que entra por el Golden Gate y se queda sobre la playa.
-                val bruma = if (oscuro) T.FLUOR_VIOLETA.copy(alpha = 0.14f) else Color.White.copy(alpha = 0.6f)
-                listOf(Triple(0.05f, 0.06f, 20f), Triple(0.13f, 0.1f, 14f), Triple(0.03f, 0.24f, 16f), Triple(0.02f, 0.5f, 13f), Triple(0.2f, 0.08f, 10f)).forEach { (x, y, r) ->
-                    drawPath(T.gota(q(x, y), r * d, x * 3f, 0.12f), bruma)
-                }
-                // Los parques: el Golden Gate Park con los Polo Fields, el Panhandle y Buena Vista.
-                val ggp = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(q(0.04f, 0.31f), q(0.27f, 0.49f)), CornerRadius(3 * d))) }
-                val panhandle = Path().apply { addRect(Rect(q(0.27f, 0.435f), q(0.44f, 0.485f))) }
-                val buenaVista = blanda(true, 0.44f to 0.56f, 0.49f to 0.55f, 0.5f to 0.62f, 0.45f to 0.63f)
-                listOf(ggp, panhandle, buenaVista).forEach {
-                    drawPath(it, parque.copy(alpha = if (oscuro) 0.14f else 0.22f))
-                    drawPath(it, parque.copy(alpha = if (oscuro) 0.7f else 0.5f), style = Stroke(0.8f * d))
-                }
-                val az = java.util.Random(67)
-                repeat(46) {
-                    val o = q(0.05f + az.nextFloat() * 0.21f, 0.33f + az.nextFloat() * 0.14f)
-                    if ((o - q(0.08f, 0.38f)).getDistance() > 10 * d) drawCircle(parque.copy(alpha = if (oscuro) 0.35f else 0.4f), (1.2f + az.nextFloat()) * d, o)
-                }
-                drawOval(papel, Offset(w * 0.08f - 9 * d, h * 0.38f - 5 * d), Size(18 * d, 10 * d))
-                drawOval(parque.copy(alpha = 0.6f), Offset(w * 0.08f - 9 * d, h * 0.38f - 5 * d), Size(18 * d, 10 * d), style = Stroke(0.8f * d))
-                // Los Twin Peaks, al sur.
-                listOf(0.4f, 0.45f).forEach { x -> drawPath(Path().apply { val o = q(x, 0.93f); moveTo(o.x - 7 * d, o.y); quadraticTo(o.x, o.y - 12 * d, o.x + 7 * d, o.y) }, tinta.copy(alpha = 0.35f), style = Stroke(0.9f * d)) }
-                // Las calles: la retícula tenue y las que tienen nombre en la campaña, más marcadas.
-                val calle = if (oscuro) T.FLUOR_VIOLETA.copy(alpha = 0.16f) else tinta.copy(alpha = 0.1f)
-                var gx = 0.07f; while (gx < 0.64f) { drawLine(calle, q(gx, 0.1f), q(gx, 0.3f), 0.6f * d); drawLine(calle, q(gx, 0.5f), q(gx, 0.98f), 0.6f * d); gx += 0.045f }
-                var gy = 0.12f; while (gy < 0.98f) { if (gy !in 0.29f..0.5f) drawLine(calle, q(0.06f, gy), q(0.64f, gy), 0.6f * d); gy += 0.08f }
-                val principal = if (oscuro) T.LIMON.copy(alpha = 0.42f) else tinta.copy(alpha = 0.36f)
-                listOf(q(0.18f, 0.72f) to q(0.5f, 0.72f), q(0.24f, 0.5f) to q(0.24f, 0.88f), q(0.38f, 0.3f) to q(0.38f, 0.9f), q(0.28f, 0.12f) to q(0.62f, 0.12f), q(0.26f, 0.21f) to q(0.62f, 0.21f), q(0.47f, 0.06f) to q(0.47f, 0.5f)).forEach { (a, b) ->
-                    drawLine(principal, a, b, 1.1f * d, StrokeCap.Round)
-                }
-                drawPath(blanda(false, 0.44f to 0.92f, 0.52f to 0.76f, 0.58f to 0.5f, 0.66f to 0.18f), principal, style = Stroke(1.4f * d, cap = StrokeCap.Round))
-                // Haight Street: la hilera de casas victorianas, casi todas grises y una o dos pintadas.
-                for (k in 0 until 5) {
-                    val col = when (k) { 1 -> T.CASA_TURQUESA; 3 -> T.CASA_ROSA; else -> T.CASA_GRIS }
-                    with(T) { casaVictoriana(q(0.275f + k * 0.017f * (if (k < 3) 1f else 1f), 0.705f), 6f * d, 10 * d, if (oscuro) lerp(col, Color(0xFF1A1126), 0.45f) else col, if (oscuro) Color(0xFFB4A7C4) else CASA_BLANCA, if (oscuro) LIMON else Color(0xFF5E6B78)) }
-                }
-                // La FM del 106.9: las ondas que salen de noche.
-                val fm = q(0.6f, 0.6f)
-                for (k in 1..3) drawArc((if (oscuro) T.FLUOR_MAGENTA else T.MAGENTA).copy(alpha = 0.7f - k * 0.15f), -60f, 120f, false, Offset(fm.x - (6 + k * 5) * d, fm.y - (6 + k * 5) * d), Size((12 + k * 10) * d, (12 + k * 10) * d), style = Stroke(1f * d, cap = StrokeCap.Round))
-                // El recuadro de la costa hasta Monterey: el mar, la curva de la bahía, la península con sus cipreses y el recinto
-                // ferial.
-                val rec = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(q(0.79f, 0.34f), q(0.985f, 0.96f)), CornerRadius(12 * d))) }
-                drawPath(Path().apply { addPath(rec, Offset(1.2f * d, 1.6f * d)) }, Color.Black.copy(alpha = if (oscuro) 0.4f else 0.12f))
-                drawPath(rec, papel)
-                clipPath(rec) {
-                    val mar = blanda(true, 0.75f to 0.3f, 0.86f to 0.32f, 0.83f to 0.46f, 0.92f to 0.55f, 0.96f to 0.66f, 0.89f to 0.76f, 0.81f to 0.8f, 0.85f to 0.9f, 0.84f to 1.0f, 0.75f to 1.0f)
-                    drawPath(mar, agua.copy(alpha = 0.85f))
-                    drawPath(mar, tinta.copy(alpha = 0.3f), style = Stroke(0.8f * d))
-                    listOf(0.8f to 0.45f, 0.86f to 0.62f, 0.8f to 0.7f).forEach { (x, y) ->
-                        drawPath(Path().apply { val o = q(x, y); moveTo(o.x - 3 * d, o.y); quadraticTo(o.x - 1.5f * d, o.y - 1.2f * d, o.x, o.y); quadraticTo(o.x + 1.5f * d, o.y + 1.2f * d, o.x + 3 * d, o.y) }, ola, style = Stroke(0.7f * d))
-                    }
-                    listOf(0.83f to 0.84f, 0.85f to 0.8f, 0.86f to 0.86f, 0.84f to 0.9f).forEach { (x, y) -> drawPath(T.gota(q(x, y), 2.4f * d, x * 7f, 0.18f), if (oscuro) T.LIMON.copy(alpha = 0.55f) else Color(0xFF2E5A3A)) }
-                    // El recinto ferial: la pista oval junto a la meta.
-                    drawOval(parque.copy(alpha = 0.5f), Offset(w * 0.9f - 8 * d, h * 0.74f + 4 * d), Size(16 * d, 7 * d), style = Stroke(0.9f * d))
-                }
-                drawPath(rec, tinta.copy(alpha = 0.45f), style = Stroke(0.9f * d))
-                // La flor de los vientos, con el norte arriba.
-                val rv = q(0.73f, 0.88f)
-                with(T) { flor(rv, 5 * d, if (oscuro) FLUOR_MAGENTA else MAGENTA, if (oscuro) LIMON else VERDE, 4, 0f, PI.toFloat() / 4) }
-                drawPath(Path().apply { moveTo(rv.x, rv.y - 12 * d); lineTo(rv.x + 2 * d, rv.y - 5 * d); lineTo(rv.x - 2 * d, rv.y - 5 * d); close() }, tinta.copy(alpha = 0.8f))
-                // Las paradas ya pasadas: una florecita encendida al lado.
+                // El plano de San Francisco en 1967, de Haight a Monterey, en la cara del tema: el de una guía de la ciudad en
+                // los colores de la foto de los 70, o el impreso como el cartel de la semana (ver PantallasPsicodelia.fondoCampana).
                 val pts = puntos(tema).map { Offset(it.x * w, it.y * h) }
-                val pasadas = (avance * 7f + 0.01f).toInt().coerceAtMost(7)
-                for (i in 0 until pasadas) {
-                    val o = pts[i] + Offset(9 * d, -8 * d)
-                    if (oscuro) drawCircle(Brush.radialGradient(listOf(T.FLUOR_MAGENTA.copy(alpha = 0.5f), Color.Transparent), o, 7 * d), 7 * d, o)
-                    with(T) { flor(o, 3 * d, if (oscuro) FLUOR_MAGENTA else MAGENTA, if (oscuro) LIMON else VERDE, 5) }
-                }
-                drawRect(tinta.copy(alpha = 0.2f), Offset(2 * d, 2 * d), Size(w - 4 * d, h - 4 * d), style = Stroke(0.6f * d))
+                with(io.github.ruddy2003.vestigium.ui.PantallasPsicodelia) { fondoCampana(oscuro, avance, pts) }
             }
             TemaId.NOUVEAU -> {
                 // El plano de París de 1900 (con la misma proyección que [puntos]): el papel crema del plano impreso, las
@@ -1196,17 +1088,8 @@ object MapasMas {
             TemaId.BASICO -> drawPath(p, cs.primary.copy(alpha = 0.8f), style = Stroke(2.4f * d, cap = StrokeCap.Round))
             // La línea roja del trámite, como cinta de señalización.
             TemaId.DISTOPIA -> { drawPath(p, Color(0xFF141414).copy(alpha = 0.35f), style = Stroke(4 * d)); drawPath(p, Color(0xFFC8102E), style = Stroke(2 * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(10 * d, 4 * d)))) }
-            // El camino pintado con la tinta de arcoíris del tintero partido, con su sombra y la raya del centro; de noche, con su
-            // resplandor.
-            TemaId.PSICODELIA -> {
-                val oscuro = cs.background.luminance() < 0.5f
-                val arcoiris = Brush.horizontalGradient((if (oscuro) listOf(TrazosPsicodelia.FLUOR_MAGENTA, TrazosPsicodelia.FLUOR_NARANJA, Color(0xFFFFF07A), TrazosPsicodelia.LIMON, Color(0xFF7FA6FF), TrazosPsicodelia.FLUOR_VIOLETA)
-                    else TrazosPsicodelia.ARCOIRIS), 0f, size.width)
-                if (oscuro) drawPath(p, TrazosPsicodelia.FLUOR_MAGENTA.copy(alpha = 0.2f), style = Stroke(8 * d, cap = StrokeCap.Round, join = StrokeJoin.Round))
-                drawPath(p, Color(0xFF2A1C32).copy(alpha = if (oscuro) 0.5f else 0.28f), style = Stroke(4.8f * d, cap = StrokeCap.Round, join = StrokeJoin.Round))
-                drawPath(p, arcoiris, style = Stroke(3.2f * d, cap = StrokeCap.Round, join = StrokeJoin.Round))
-                drawPath(p, (if (oscuro) TrazosPsicodelia.SALA else Color.White).copy(alpha = 0.8f), style = Stroke(0.7f * d, cap = StrokeCap.Round, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3 * d, 3.5f * d))))
-            }
+            // El camino: los cables del trolebús en la ciudad; en el cartel, la banda de ultramar con la línea de magenta corrida.
+            TemaId.PSICODELIA -> with(io.github.ruddy2003.vestigium.ui.PantallasPsicodelia) { caminoCampana(p, cs.background.luminance() < 0.5f) }
             // La línea del metro en el plano: la zanja clara, el trazo de hierro verde y el riel de oro que corre por dentro;
             // de noche, con su brillo.
             TemaId.NOUVEAU -> {
@@ -1401,25 +1284,9 @@ object MapasMas {
             }
             // Una ventanilla de control: caseta cuadrada con su número.
             TemaId.DISTOPIA -> { drawRect(col, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r)); drawRect(Color(0xFF141414).copy(alpha = 0.6f), Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(0.8f * d)); drawRect(Color(0xFFF2EFE6).copy(alpha = 0.8f), Offset(c.x - r * 0.5f, c.y - r * 0.6f), Size(r, r * 0.5f)) }
-            // Cada parada, un botón de solapa en forma de flor de seis pétalos redondos, con su centro claro; la meta, más grande,
-            // con un aro de puntos de arcoíris.
-            TemaId.PSICODELIA -> {
-                val oscuro = cs.background.luminance() < 0.5f
-                val tinta = Color(0xFF2A1C32)
-                val flor = Path().apply {
-                    for (k in 0..72) { val a = k * 2 * PI / 72; val rr = r * (1.05f + 0.2f * cos(a * 6).toFloat()); val x = c.x + (rr * cos(a)).toFloat(); val y = c.y + (rr * sin(a)).toFloat(); if (k == 0) moveTo(x, y) else lineTo(x, y) }
-                    close()
-                }
-                if (oscuro) drawCircle(Brush.radialGradient(listOf(col.copy(alpha = 0.45f), Color.Transparent), c, r * 2f), r * 2f, c)
-                drawPath(Path().apply { addPath(flor, Offset(0.8f * d, 1f * d)) }, tinta.copy(alpha = if (oscuro) 0.5f else 0.25f))
-                drawPath(flor, col)
-                drawPath(flor, tinta.copy(alpha = 0.7f), style = Stroke(0.8f * d, join = StrokeJoin.Round))
-                drawCircle(lerp(col, Color.White, 0.35f), r * 0.32f, c)
-                if (meta) TrazosPsicodelia.ARCOIRIS.forEachIndexed { i, k ->
-                    val a = i * PI / 3 - PI / 2
-                    drawCircle(k, r * 0.2f, Offset(c.x + (r * 1.6f * cos(a)).toFloat(), c.y + (r * 1.6f * sin(a)).toFloat()))
-                }
-            }
+            // Cada parada, el disco del día con la etiqueta de su color (la ciudad) o el disco hecho sol (el cartel); la meta, con
+            // un aro más.
+            TemaId.PSICODELIA -> with(io.github.ruddy2003.vestigium.ui.PantallasPsicodelia) { paradaCampana(c, r, col, meta, cs.background.luminance() < 0.5f) }
             // La estación: el letrero de lava esmaltada en óvalo, con su marco de hierro verde y su rizo; en la meta, sobre él,
             // los dos faroles rojo anaranjado.
             TemaId.NOUVEAU -> {

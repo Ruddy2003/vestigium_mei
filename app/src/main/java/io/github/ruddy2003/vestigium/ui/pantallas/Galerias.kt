@@ -136,19 +136,10 @@ fun simboloCalificacion(t: TemaId, c: Offset, r: Float): Path = when (t) {
         val ojo = Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }
         mas(menos(ojo, circulo(c, r * 0.36f)), circulo(c, r * 0.18f))
     }
-    // El símbolo de la paz (Holtom, 1958; de dominio público): el aro y las tres barras de la versión de una sola línea.
-    TemaId.PSICODELIA -> {
-        val g = r * 0.17f
-        fun barra(desde: Offset, hasta: Offset): Path {
-            val d = hasta - desde; val l = d.getDistance(); val n = Offset(-d.y / l, d.x / l) * (g / 2)
-            return Path().apply { moveTo(desde.x + n.x, desde.y + n.y); lineTo(hasta.x + n.x, hasta.y + n.y); lineTo(hasta.x - n.x, hasta.y - n.y); lineTo(desde.x - n.x, desde.y - n.y); close() }
-        }
-        val ri = r * 0.92f - g
-        val aro = menos(circulo(c, r * 0.92f), circulo(c, ri))
-        val a = PI / 4
-        val barras = mas(mas(barra(Offset(c.x, c.y - ri - g * 0.3f), Offset(c.x, c.y + ri + g * 0.3f)), barra(c, c + dir(PI / 2 + a) * (ri + g * 0.3f))), barra(c, c + dir(PI / 2 - a) * (ri + g * 0.3f)))
-        mas(aro, barras)
-    }
+    // La ciudad: el disco del día, con la etiqueta calada y su agujero. El cartel: el disco hecho sol, con su corona de doce
+    // rayos que ondulan y la etiqueta calada.
+    TemaId.PSICODELIA -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(t) == io.github.ruddy2003.vestigium.ui.Cara.BASE) mas(menos(circulo(c, r * 0.95f), circulo(c, r * 0.4f)), circulo(c, r * 0.12f))
+        else mas(menos(mas(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(c, r * 0.5f, r * 1.05f, 12, 0.5f, 0.14f, 0f), circulo(c, r * 0.6f)), circulo(c, r * 0.3f)), circulo(c, r * 0.1f))
     // La libélula del emblema, vista desde arriba: las cuatro alas, el cuerpo largo y la cabeza.
     TemaId.NOUVEAU -> {
         val alas = listOf(Triple(-1f, -0.32f, -0.3f), Triple(1f, -0.32f, -0.3f), Triple(-1f, -0.12f, 0.08f), Triple(1f, -0.12f, 0.08f)).map { (s, dy, sube) ->

@@ -208,13 +208,25 @@ private fun DrawScope.volumen(tema: TemaId, o: Offset, s: Size, c: Color, fondo:
             drawRect(Color(0xFFC8102E), Offset(x0, y0 + h * 0.7f), Size(w, h * 0.14f))
             drawRect(Color(0xFFF2EFE6), Offset(x0 + w * 0.55f, y0 + h * 0.22f), Size(w * 0.3f, h * 0.3f))
         }
-        // Un disco de larga duración en su funda, de canto: la funda del color con la franja de arcoíris del lomo, una flor y
-        // el disco que asoma por el lado abierto.
+        // Un disco de larga duración en su funda, de canto, con el disco que asoma por el lado abierto. La ciudad: la funda del
+        // color, con dos franjas de los 70 y la luz de la tarde en el canto. El cartel: la funda impresa, con la banda de ondas
+        // en el papel y el disco hecho sol en medio.
         TemaId.PSICODELIA -> {
-            drawCircle(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia.VINILO, h * 0.46f, Offset(x0 + w * 0.9f, cy))
-            drawRoundRect(lerp(c, Color(0xFFE0218A), 0.2f), o, Size(w * 0.9f, h), CornerRadius(1 * d))
-            io.github.ruddy2003.vestigium.ui.TrazosPsicodelia.ARCOIRIS.forEachIndexed { i, k -> drawRect(k, Offset(x0 + w * 0.05f + i * w * 0.018f, y0), Size(w * 0.018f, h)) }
-            with(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia) { flor(Offset(x0 + w * 0.6f, cy), h * 0.3f, claro, oscuro, 5) }
+            drawCircle(Color(0xFF1E1916), h * 0.46f, Offset(x0 + w * 0.9f, cy))
+            drawRoundRect(c, o, Size(w * 0.9f, h), CornerRadius(1 * d))
+            if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) {
+                drawRect(Color(0xFF9C4219).copy(alpha = 0.85f), Offset(x0, y0 + h * 0.6f), Size(w * 0.9f, h * 0.12f))
+                drawRect(Color(0xFFA77A2A).copy(alpha = 0.85f), Offset(x0, y0 + h * 0.74f), Size(w * 0.9f, h * 0.06f))
+                drawLine(claro.copy(alpha = 0.6f), Offset(x0 + 0.8f * d, y0), Offset(x0 + 0.8f * d, y0 + h), 1 * d)
+            } else {
+                drawPath(Path().apply {
+                    var x = x0; val yb = y0 + h * 0.72f; moveTo(x, yb)
+                    while (x < x0 + w * 0.9f) { quadraticTo(x + h * 0.08f, yb - h * 0.06f, x + h * 0.16f, yb); quadraticTo(x + h * 0.24f, yb + h * 0.06f, x + h * 0.32f, yb); x += maxOf(h * 0.32f, 1f) }
+                }, claro, style = Stroke(maxOf(h * 0.05f, 0.6f * d)))
+                val o2 = Offset(x0 + w * 0.45f, y0 + h * 0.36f)
+                drawPath(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(o2, h * 0.08f, h * 0.22f, 12, 0.5f, 0.12f, 0f), claro)
+                drawCircle(claro, h * 0.08f, o2)
+            }
             drawRoundRect(oscuro.copy(alpha = 0.5f), o, Size(w * 0.9f, h), CornerRadius(1 * d), style = Stroke(0.6f * d))
         }
         // La revista ilustrada encuadernada: la tela salvia con su filete de oro que se curva en látigo, el lomo con sus dos
@@ -773,14 +785,15 @@ private fun DrawScope.fichaCosa(tema: TemaId, c: Offset, r: Float, col: Color, r
             drawRect(borde, Offset(x - r, y - r * 0.85f), Size(2 * r, 1.7f * r), style = fino)
             drawRect(borde, Offset(x - r * 0.86f, y - r * 0.71f), Size(1.72f * r, 1.42f * r), style = fino)
         }
-        // Un botón de solapa con el canto en forma de flor, el aro de dentro y su brillo.
-        TemaId.PSICODELIA -> {
-            lleno(Path().apply {
-                for (k in 0..96) { val a = k * 2 * PI / 96; val p = polarCosa(c, r * (0.93f + 0.07f * kotlin.math.cos(a * 12).toFloat()), a); if (k == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y) }
-                close()
-            })
-            drawCircle(borde.copy(alpha = 0.45f), r * 0.78f, c, style = fino)
+        // La ciudad: la etiqueta del disco, redonda, con su filete y el brillo de la tarde. El cartel: el disco hecho sol, con su
+        // corona de rayos que ondulan y el aro de dentro.
+        TemaId.PSICODELIA -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) {
+            lleno(Path().apply { addOval(androidx.compose.ui.geometry.Rect(c, r * 0.95f)) })
+            drawCircle(borde.copy(alpha = 0.45f), r * 0.74f, c, style = fino)
             drawArc(Color.White.copy(alpha = 0.35f), 200f, 60f, false, Offset(x - r * 0.68f, y - r * 0.68f), Size(r * 1.36f, r * 1.36f), style = Stroke(1.1f * d, cap = StrokeCap.Round))
+        } else {
+            lleno(Path().apply { addPath(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(c, r * 0.62f, r * 1.02f, 16, 0.5f, 0.14f, 0f)); addOval(androidx.compose.ui.geometry.Rect(c, r * 0.68f)) })
+            drawCircle(borde.copy(alpha = 0.6f), r * 0.5f, c, style = fino)
         }
         // La etiqueta de la vitrina: dos esquinas muy redondas y dos casi rectas, con su filete de dentro.
         TemaId.NOUVEAU -> {
@@ -1169,23 +1182,38 @@ private fun DrawScope.objetoDelTema(tema: TemaId, forma: String, c: Offset, r: F
             else -> return false
         }
         TemaId.PSICODELIA -> when (forma) {
-            // El botón de solapa con el símbolo de la paz.
-            "alfiler" -> {
-                drawCircle(col, r * 0.9f, c)
-                with(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia) { paz(c, r * 0.58f, fondo, r * 0.12f) }
+            // El alfiler: el pase de autobús prendido, con la franja de color y la picadura (la ciudad), o la chapa redonda del
+            // disco hecho sol (el cartel).
+            "alfiler" -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) {
+                drawRoundRect(col, Offset(x - r * 0.8f, y - r * 0.6f), Size(r * 1.6f, r * 1.2f), CornerRadius(r * 0.12f))
+                drawRect(fondo, Offset(x - r * 0.8f, y - r * 0.22f), Size(r * 1.6f, r * 0.08f))
+                drawCircle(fondo, r * 0.14f, Offset(x + r * 0.42f, y + r * 0.24f))
+            } else {
+                drawPath(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(c, r * 0.5f, r * 0.98f, 12, 0.5f, 0.14f, 0f), col)
+                drawCircle(col, r * 0.56f, c); drawCircle(fondo, r * 0.2f, c)
             }
-            // La postal con una calcomanía de flor y las líneas de la dirección.
+            // La postal: la raya del medio y la dirección; a la izquierda, la foto de dos victorianas (la ciudad) o el disco
+            // hecho sol impreso (el cartel).
             "sobre" -> {
                 drawRoundRect(col, Offset(x - r, y - r * 0.66f), Size(2 * r, r * 1.32f), CornerRadius(r * 0.14f))
-                with(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia) { flor(Offset(x - r * 0.48f, y), r * 0.36f, fondo, col, 6) }
+                if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) {
+                    listOf(-0.78f, -0.42f).forEach { fx ->
+                        drawRect(fondo, Offset(x + fx * r, y - r * 0.1f), Size(r * 0.3f, r * 0.5f))
+                        drawPath(Path().apply { moveTo(x + fx * r - r * 0.03f, y - r * 0.1f); lineTo(x + fx * r + r * 0.15f, y - r * 0.3f); lineTo(x + fx * r + r * 0.33f, y - r * 0.1f); close() }, fondo)
+                    }
+                } else {
+                    drawPath(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(Offset(x - r * 0.48f, y), r * 0.14f, r * 0.42f, 10, 0.5f, 0.12f, 0f), fondo)
+                    drawCircle(fondo, r * 0.14f, Offset(x - r * 0.48f, y))
+                }
                 drawLine(fondo, Offset(x + r * 0.05f, y - r * 0.45f), Offset(x + r * 0.05f, y + r * 0.45f), 0.8f * d)
                 listOf(-0.1f, 0.14f, 0.38f).forEach { f -> drawLine(fondo, Offset(x + r * 0.22f, y + f * r), Offset(x + r * 0.82f, y + f * r), 0.7f * d) }
             }
-            // El tazón de barro hecho a mano, con su asa y una flor pintada.
+            // La taza: el tazón de loza de la cocina del departamento, con su asa; en el cartel, con una onda impresa.
             "taza" -> {
                 drawArc(col, -70f, 140f, false, Offset(x + r * 0.38f, y - r * 0.3f), Size(r * 0.5f, r * 0.6f), style = Stroke(1.3f * d))
                 drawPath(Path().apply { moveTo(x - r * 0.62f, y - r * 0.6f); lineTo(x + r * 0.62f, y - r * 0.6f); quadraticTo(x + r * 0.7f, y + r * 0.7f, x + r * 0.42f, y + r * 0.75f); lineTo(x - r * 0.42f, y + r * 0.75f); quadraticTo(x - r * 0.7f, y + r * 0.7f, x - r * 0.62f, y - r * 0.6f); close() }, col)
-                with(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia) { flor(Offset(x, y + r * 0.08f), r * 0.32f, fondo, col, 5) }
+                if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) drawLine(fondo, Offset(x - r * 0.6f, y - r * 0.2f), Offset(x + r * 0.6f, y - r * 0.2f), 1f * d)
+                else drawPath(Path().apply { moveTo(x - r * 0.55f, y + r * 0.05f); quadraticTo(x - r * 0.27f, y - r * 0.2f, x, y + r * 0.05f); quadraticTo(x + r * 0.27f, y + r * 0.3f, x + r * 0.55f, y + r * 0.05f) }, fondo, style = Stroke(1.1f * d, cap = StrokeCap.Round))
                 drawOval(fondo, Offset(x - r * 0.5f, y - r * 0.66f), Size(r, r * 0.14f))
             }
             else -> return false

@@ -456,21 +456,50 @@ fun FraseDelDia(fecha: String) {
                 }
             }
         }
-        // El cartel de la semana: la burbuja de esquinas muy redondas con la franja de arcoíris del tintero partido arriba,
-        // el contorno que vibra (el color y, corrido, su segunda tinta) y una flor que asoma por la esquina de abajo.
-        TemaId.PSICODELIA -> Box(arriba.drawBehind {
-            val u = 1.dp.toPx(); val w = size.width; val h = size.height
-            val g = minOf(18 * u, h * 0.3f)
-            val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(androidx.compose.ui.geometry.Rect(0f, 0f, w, h), CornerRadius(g))) }
-            drawPath(forma, androidx.compose.ui.graphics.lerp(cs.surface, cs.primaryContainer, 0.3f))
-            clipPath(forma) {
-                drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia.ARCOIRIS.map { it.copy(alpha = 0.85f) }, 0f, w), Offset.Zero, Size(w, 5 * u))
-                with(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia) { flor(Offset(w - 4 * u, h - 2 * u), 22 * u, cs.primary.copy(alpha = 0.85f), cs.secondary.copy(alpha = 0.85f), 7, 0.6f) }
+        // La ciudad: la copia de foto mate, con su margen claro, la luz de la tarde que entra por la izquierda, el filete café y,
+        // abajo a la derecha, la etiqueta del disco del día. El cartel: el marco de arco del cartel de la semana, con su doble
+        // filete (el de magenta corrido de registro con la intensidad), la banda de ondas arriba y el disco hecho sol que asoma
+        // por la esquina de abajo. El texto va siempre sobre la superficie lisa (la regla de legibilidad de la guía).
+        TemaId.PSICODELIA -> {
+            val cara = io.github.ruddy2003.vestigium.ui.caraLocal()
+            val i = io.github.ruddy2003.vestigium.ui.intensidadLocal()
+            val oscuro = esOscuro()
+            Box(arriba.drawBehind {
+                val u = 1.dp.toPx(); val w = size.width; val h = size.height
+                val k = io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.colores(oscuro, cara, i)
+                if (k.ciudad) {
+                    val r = androidx.compose.ui.geometry.Rect(0f, 0f, w, h)
+                    val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(r, CornerRadius(11 * u))) }
+                    drawPath(Path().apply { addPath(forma, Offset(1.2f * u, 1.8f * u)) }, k.sombra)
+                    drawPath(forma, k.superficie)
+                    clipPath(forma) {
+                        drawRect(androidx.compose.ui.graphics.Brush.linearGradient(listOf(k.luz, Color.Transparent), Offset.Zero, Offset(w * 0.45f, h)), Offset.Zero, size)
+                        with(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia) {
+                            disco(Offset(w - 14 * u, h - 12 * u), 9 * u, k)
+                            granoPelicula(forma, k.grano)
+                        }
+                    }
+                    drawPath(forma, k.borde, style = Stroke(0.8f * u))
+                    drawRoundRect(k.borde.copy(alpha = 0.5f), Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u), CornerRadius(7 * u), style = Stroke(0.6f * u))
+                } else {
+                    val caja = androidx.compose.ui.geometry.Rect(0f, 0f, w, h)
+                    val forma = io.github.ruddy2003.vestigium.ui.TrazosTinta.arco(caja, minOf(26 * u, h * 0.4f), 2 * u)
+                    drawPath(forma, k.superficie)
+                    clipPath(forma) {
+                        with(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia) {
+                            ondas(14 * u, w - 14 * u, 6 * u, (1.2f + 0.05f * k.m.amplitud) * u, 24 * u, 1.3f * u, 2.4f * u, tintasBanda(k), k.m.registro * 0.5f)
+                            corona(Offset(w - 4 * u, h - 2 * u), 10 * u, 30 * u, k, n = 18)
+                            disco(Offset(w - 4 * u, h - 2 * u), 10 * u, k, sombra = false)
+                        }
+                    }
+                    with(io.github.ruddy2003.vestigium.ui.TrazosTinta) {
+                        conRegistro(io.github.ruddy2003.vestigium.ui.TrazosTinta.Tinta.MAGENTA, k.m.registro * 0.6f) { drawPath(forma, k.magenta.copy(alpha = 0.7f), style = Stroke(1.2f * u)) }
+                    }
+                    drawPath(forma, k.grabado, style = Stroke(1.4f * u))
+                }
+            }.padding(start = 16.dp, end = 34.dp, top = 16.dp, bottom = 12.dp)) {
+                CuerpoFrase(f, fecha, rotulo, "“", "”")
             }
-            drawPath(Path().apply { addPath(forma, Offset(1.4f * u, 1.2f * u)) }, cs.secondary.copy(alpha = 0.6f), style = Stroke(1.2f * u))
-            drawPath(forma, cs.primary.copy(alpha = 0.8f), style = Stroke(1.4f * u))
-        }.padding(start = 16.dp, end = 34.dp, top = 16.dp, bottom = 12.dp)) {
-            CuerpoFrase(f, fecha, rotulo, "✿ ", " ✿")
         }
         // La página de la revista ilustrada: la cartulina con dos esquinas muy redondas y dos casi rectas, el filete de dentro, un
         // iris que sube por el margen izquierdo y una línea de látigo que se enrosca en la esquina de arriba; la frase en francés
@@ -1041,7 +1070,7 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
         TemaId.TEMPLARIO -> c(LetraExtra.regla, FontWeight.Bold, 22f, 0.3f, "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
-        TemaId.PSICODELIA -> c(LetraExtra.modak, FontWeight.Normal, 25f, 0.4f)   // las cifras infladas de los carteles
+        TemaId.PSICODELIA -> c(LetraExtra.franklinRotulo, FontWeight.SemiBold, 23f, 0.2f, "tnum")   // las cifras de Libre Franklin, iguales en las dos caras
         TemaId.NOUVEAU -> c(LetraExtra.dellaRespira, FontWeight.Normal, 25f, 0.8f, "lnum")   // las cifras altas y finas de los carteles
         TemaId.GALIA -> c(LetraExtra.ysabeau, FontWeight.SemiBold, 23f, 0.5f, "lnum")   // las cifras humanistas de los rótulos
         TemaId.ARCONTES -> c(LetraExtra.caudex, FontWeight.Bold, 23f, 0.4f)   // las cifras de la letra de los códices
@@ -1340,23 +1369,39 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             var y = top + k + 4 * u
                             while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
                         }
-                        // Una columna blanda que se derrite: los costados ondulan como la cera de la lámpara y arriba la cabeza
-                        // redonda de una gota; con color, el brillo de la gota y una burbuja que sube.
+                        // La ciudad: cada día es un disco en su funda, de canto: la funda que sube tanto como dormiste, con el
+                        // disco que asoma arriba en medio círculo y su etiqueta. El cartel: la columna con el remate de arco del
+                        // cartel, la trama de la tinta en su mitad de sombra y, arriba, un disco chico con su corona de rayos.
                         TemaId.PSICODELIA -> {
-                            val rc = w * 0.32f
-                            val cab = minOf(rc, barH / 2)
-                            pinta(Path().apply {
-                                moveTo(w * 0.5f - rc, h)
-                                var y = h; var k = 0
-                                while (y > top + cab && k < 200) { val ny = maxOf(y - 6 * u, top + cab); quadraticTo(w * 0.5f - rc - (if (k % 2 == 0) 1.6f else -1.6f) * u, (y + ny) / 2, w * 0.5f - rc, ny); y = ny; k++ }
-                                arcTo(Rect(w * 0.5f - rc, top, w * 0.5f + rc, top + 2 * cab), 180f, 180f, false)
-                                y = top + cab; k = 0
-                                while (y < h && k < 200) { val ny = minOf(y + 6 * u, h); quadraticTo(w * 0.5f + rc + (if (k % 2 == 0) 1.6f else -1.6f) * u, (y + ny) / 2, w * 0.5f + rc, ny); y = ny; k++ }
-                                close()
-                            })
-                            if (color != null) {
-                                drawCircle(Color.White.copy(alpha = 0.4f), cab * 0.28f, Offset(w * 0.5f - rc * 0.35f, top + cab * 0.7f))
-                                if (barH > 4 * cab) drawCircle(color, rc * 0.42f, Offset(w * 0.5f + rc * 0.1f, top - rc * 0.6f))
+                            val ciudad = io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE
+                            val fx = w * 0.12f; val fw = w * 0.76f
+                            if (ciudad) {
+                                val rd = minOf(fw / 2, barH * 0.4f)
+                                val cd = Offset(w / 2, top + rd)
+                                if (color != null) {
+                                    drawCircle(Color(0xFF1E1916), rd, cd)
+                                    drawCircle(androidx.compose.ui.graphics.lerp(color, Color.White, 0.25f), rd * 0.36f, cd)
+                                } else drawCircle(linea, rd, cd, style = borde)
+                                pinta(caja(fx, top + rd, fw, barH - rd))
+                                if (color != null) drawLine(Color.White.copy(alpha = 0.3f), Offset(fx + 1.2f * u, top + rd), Offset(fx + 1.2f * u, h), 1.2f * u)
+                            } else {
+                                val arcoTop = minOf(fw / 2, barH / 2)
+                                val cuerpo = Path().apply {
+                                    moveTo(fx, h); lineTo(fx, top + arcoTop)
+                                    arcTo(Rect(fx, top, fx + fw, top + 2 * arcoTop), 180f, 180f, false)
+                                    lineTo(fx + fw, h); close()
+                                }
+                                pinta(cuerpo)
+                                if (color != null) {
+                                    clipPath(cuerpo) {
+                                        var y = top + arcoTop; while (y < h) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(w * 0.55f, y), Offset(fx + fw, y), 0.7f * u); y += 2.4f * u }
+                                    }
+                                    if (barH > 3 * fw) {
+                                        val o = Offset(w / 2, top - fw * 0.55f)
+                                        drawPath(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(o, fw * 0.22f, fw * 0.5f, 10, 0.5f, 0.12f, 0f), color)
+                                        drawCircle(color, fw * 0.22f, o)
+                                    }
+                                }
                             }
                             sello = cs.secondary
                         }

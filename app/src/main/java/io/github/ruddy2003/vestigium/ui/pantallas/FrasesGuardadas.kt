@@ -197,21 +197,12 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
             circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
         }, 1.4f)
-        // Una margarita de siete pétalos redondos, la flor del verano de 1967; guardada, rellena, con el botón del centro
-        // calado.
+        // La ciudad: el disco del día, con su etiqueta calada; guardado, relleno, con el agujero en medio. El cartel: el disco
+        // hecho sol, con doce rayos; guardado, relleno.
         TemaId.PSICODELIA -> {
-            pinta(Path().apply {
-                fillType = PathFillType.EvenOdd
-                for (i in 0..168) {
-                    val a = 2 * Math.PI * i / 168
-                    val rr = 6.6f + 4.8f * kotlin.math.abs(cos(3.5 * a)).toFloat()
-                    val q = p(12f + rr * sin(a).toFloat(), 12f - rr * cos(a).toFloat())
-                    if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y)
-                }
-                close()
-                circulo(this, 12f, 12f, 3.1f)
-            }, 1.3f)
-            if (lleno) drawCircle(color, 1.7f * u, p(12f, 12f))
+            if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) pinta(Path().apply { fillType = PathFillType.EvenOdd; circulo(this, 12f, 12f, 10.5f); circulo(this, 12f, 12f, 3.6f) }, 1.3f)
+            else pinta(estrella(12f, 12f, 12, 11.5f, 7.6f).also { it.fillType = PathFillType.EvenOdd; circulo(it, 12f, 12f, 3.4f) }, 1.2f)
+            if (lleno) drawCircle(color, 1.4f * u, p(12f, 12f))
         }
         // La flor de iris: tres pétalos que suben y dos que caen, sobre su tallo; guardada, con las venas de los que caen.
         TemaId.NOUVEAU -> {

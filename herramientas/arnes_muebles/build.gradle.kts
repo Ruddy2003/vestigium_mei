@@ -35,6 +35,8 @@ val enlazados = listOf(
     "$paquete/ui/CaraTema.kt",
     // Las piezas de Psicodelia v2 (tanda 2) y sus piezas comunes, para la muestra `comun psicodelia`.
     "$paquete/ui/PsicodeliaPiezas.kt", "$paquete/ui/comun/ComunPsicodelia.kt", "$paquete/ui/IconosPestana.kt",
+    // Los logros, los trofeos y las figuras de pantalla de Psicodelia v2 (tanda 4), para la muestra `logros psicodelia`.
+    "$paquete/ui/logros/LogrosPsicodelia.kt", "$paquete/ui/PsicodeliaPantallas.kt",
     // Lo que Estilo necesita para nombrar meses y fechas en cada tema.
     "$paquete/ui/Temas.kt", "$paquete/ui/Vapor.kt", "$paquete/ui/CuentaMaya.kt", "$paquete/ui/NombresNuevos.kt", "$paquete/ui/Textos.kt",
     "$paquete/ui/Claves.kt", "$paquete/ui/nombres/**/*.kt",
@@ -62,6 +64,8 @@ val piezas = linkedMapOf(
     // El contrato de las piezas comunes, sin `disenoComun` (que nombra los 40 objetos de los temas).
     "$paquete/ui/comun/DisenoComun.kt" to listOf("DisenoComun", "EstadoAdorno", "EstadoBalanza", "EstadoMes", "EstadoAsiento", "TipoTarjeta",
         "EstadoTarjeta", "EstadoFila", "EstadoVacio", "EstadoAviso", "EstadoCifra", "EstadoSeparador", "EstadoBotonTexto", "EstadoMarco"),
+    // El contrato de los logros, sin `disenoLogros` (que nombra los 40 objetos de los temas).
+    "$paquete/ui/logros/DisenoLogros.kt" to listOf("DisenoLogros", "EstadoObjeto", "EstadoMarcador", "EstadoVictoria", "EstadoSalon", "EstadoPedestal"),
 )
 
 val generado = layout.buildDirectory.dir("generado/kotlin")

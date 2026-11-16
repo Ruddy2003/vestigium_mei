@@ -96,13 +96,10 @@ private fun marcoRecuadro(tema: TemaId): MarcoRecuadro = when (tema) {
     // El escudo: recto arriba y redondo abajo.
     TemaId.TEMPLARIO -> MarcoRecuadro(RoundedCornerShape(topStart = 2.dp, topEnd = 2.dp, bottomEnd = 16.dp, bottomStart = 16.dp), 12.dp)
     TemaId.DISTOPIA -> MarcoRecuadro(RectangleShape, 12.dp)
-    // Una burbuja de cartel: los cantos de arriba y de abajo ondulan apenas, en contra, y las esquinas son muy redondas.
-    TemaId.PSICODELIA -> MarcoRecuadro(androidx.compose.foundation.shape.GenericShape { s, _ ->
-        val w = s.width; val h = s.height; val r = minOf(h * 0.3f, w * 0.18f); val k = minOf(h * 0.05f, w * 0.03f)
-        moveTo(r, k); cubicTo(w * 0.36f, -k * 0.5f, w * 0.64f, k * 2.2f, w - r, k); quadraticTo(w, k, w, r)
-        lineTo(w, h - r); quadraticTo(w, h - k, w - r, h - k); cubicTo(w * 0.64f, h - k * 2.2f, w * 0.36f, h + k * 0.5f, r, h - k)
-        quadraticTo(0f, h - k, 0f, h - r); lineTo(0f, r); quadraticTo(0f, k, r, k); close()
-    }, 13.dp)
+    // La ciudad: la ventanilla del trolebús, de esquinas redondas. El cartel: el marco de arco del cartel, redondo arriba y casi
+    // recto abajo.
+    TemaId.PSICODELIA -> if (EstadoTema.caraDe(tema) == Cara.BASE) MarcoRecuadro(RoundedCornerShape(11.dp), 12.dp)
+        else MarcoRecuadro(RoundedCornerShape(topStart = 18.dp, topEnd = 18.dp, bottomEnd = 2.dp, bottomStart = 2.dp), 13.dp)
     // La placa de una entrada de metro: el canto de arriba sube en medio en una curva suave, como el letrero de Guimard, y
     // las esquinas de abajo son redondas.
     TemaId.NOUVEAU -> MarcoRecuadro(androidx.compose.foundation.shape.GenericShape { s, _ ->
@@ -314,17 +311,27 @@ private fun DrawScope.lazo(tema: TemaId, color: Color, fuerza: Float, azar: Bool
                 x += 12 * u
             }
         }
-        // Una cadena de margaritas, como las que se trenzaban en el parque: el tallo que ondula de recuadro a recuadro y, cada
-        // tanto, una flor con su botón calado; más gruesa cuanto más fuerte el lazo.
-        TemaId.PSICODELIA -> {
+        // La ciudad: los dos cables del trolebús de recuadro a recuadro, más gruesos cuanto más fuerte el lazo, con un colgador
+        // de trecho en trecho. El cartel: la onda de recuadro a recuadro y, cada tanto, un disco hecho sol chico.
+        TemaId.PSICODELIA -> if (EstadoTema.caraDe(tema) == Cara.BASE) {
+            val m = 6 * u; val sep = 1.6f * u + grosor * 0.3f
+            listOf(-sep, sep).forEach { dy -> drawLine(col, Offset(m, y + dy), Offset(w - m, y + dy), grosor * 0.3f + 0.6f * u, cap = StrokeCap.Round, pathEffect = punteado) }
+            var x = 16f * u
+            while (x < w - 10 * u) { drawLine(col, Offset(x, y - sep - 2.4f * u), Offset(x, y + sep), 0.8f * u); drawCircle(col, 1f * u, Offset(x, y - sep)); x += 30f * u }
+        } else {
             val m = 6 * u; val a = 2.2f * u
-            drawPath(TrazosPsicodelia.onda(m, w - m, y, a, 16f * u), col, style = Stroke(grosor * 0.5f + 0.8f * u, cap = StrokeCap.Round, pathEffect = punteado))
-            val rf = 3.2f * u + grosor * 0.35f
-            var x = 11f * u; var k = 0
-            while (x < w - 8 * u) {
-                val q = Offset(x, y + a * sin(2f * PI.toFloat() * (x - m) / (16f * u)))
-                with(TrazosPsicodelia) { margarita(q, rf, col, fondo, 6, k * 0.5f) }
-                x += 15f * u; k++
+            val onda = Path().apply {
+                var x = m; moveTo(x, y)
+                while (x < w - m) { quadraticTo(x + 4f * u, y - a, x + 8f * u, y); quadraticTo(x + 12f * u, y + a, x + 16f * u, y); x += 16f * u }
+            }
+            drawPath(onda, col, style = Stroke(grosor * 0.5f + 0.8f * u, cap = StrokeCap.Round, pathEffect = punteado))
+            val rf = 3f * u + grosor * 0.3f
+            var x = 22f * u
+            while (x < w - 10 * u) {
+                val q = Offset(x, y)
+                drawPath(PiezasPsicodelia.cunas(q, rf * 0.75f, rf * 1.5f, 10, 0.5f, 0.12f, 0f), col)
+                drawCircle(col, rf * 0.8f, q); drawCircle(fondo, rf * 0.25f, q)
+                x += 32f * u
             }
         }
         // Una línea de látigo de recuadro a recuadro: una sola S que se enrosca en cada punta (abajo a la izquierda y arriba a la

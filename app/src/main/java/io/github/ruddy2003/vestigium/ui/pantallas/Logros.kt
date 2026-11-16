@@ -213,23 +213,27 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
             drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
         }
-        // El disco de oro: el disco en el metal del nivel, con sus surcos, los dos brillos que cruzan y la etiqueta con el
-        // canto en forma de flor.
+        // El disco de oro, en el metal del nivel. La ciudad: el disco con sus surcos, el brillo de la tarde arriba a la izquierda
+        // y la etiqueta redonda con sus dos renglones. El cartel: el disco hecho sol, con su corona de rayos que ondulan en el
+        // metal y la etiqueta lisa.
         TemaId.PSICODELIA -> {
-            forma(disco(c, r * 0.97f))
-            var k = 0.9f
-            while (k > 0.56f) { drawCircle(sombra.copy(alpha = sombra.alpha * 0.55f), r * k, c, style = Stroke(r * 0.018f)); k -= 0.07f }
-            listOf(-40f, 140f).forEach { a -> drawArc(luz, a, 26f, true, Offset(c.x - r * 0.9f, c.y - r * 0.9f), Size(r * 1.8f, r * 1.8f)) }
-            val etiqueta = Path().apply {
-                for (i in 0..96) {
-                    val a = i * 2 * kotlin.math.PI / 96; val rr = r * (0.47f + 0.045f * kotlin.math.cos(a * 8).toFloat())
-                    val x = c.x + rr * kotlin.math.cos(a).toFloat(); val y = c.y + rr * kotlin.math.sin(a).toFloat()
-                    if (i == 0) moveTo(x, y) else lineTo(x, y)
-                }
-                close()
+            val ciudad = io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE
+            val etiqueta = if (hecho) lerp(metal, Color.White, 0.55f) else apagado
+            if (ciudad) {
+                forma(disco(c, r * 0.97f))
+                var k = 0.9f
+                while (k > 0.56f) { drawCircle(sombra.copy(alpha = sombra.alpha * 0.55f), r * k, c, style = Stroke(r * 0.018f)); k -= 0.07f }
+                drawArc(luz, 200f, 50f, false, Offset(c.x - r * 0.78f, c.y - r * 0.78f), Size(r * 1.56f, r * 1.56f), style = Stroke(r * 0.07f))
+                drawCircle(etiqueta, r * 0.42f, c)
+                drawLine(sombra, Offset(c.x - r * 0.22f, c.y - r * 0.16f), Offset(c.x + r * 0.22f, c.y - r * 0.16f), r * 0.04f)
+                drawLine(sombra, Offset(c.x - r * 0.14f, c.y + r * 0.18f), Offset(c.x + r * 0.14f, c.y + r * 0.18f), r * 0.03f)
+                drawCircle(sombra, r * 0.05f, c)
+            } else {
+                forma(Path().apply { addPath(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(c, r * 0.5f, r * 0.98f, 16, 0.5f, 0.14f, 0f)); addOval(Rect(c, r * 0.62f)) })
+                drawCircle(sombra, r * 0.62f, c, style = Stroke(r * 0.04f))
+                drawCircle(etiqueta, r * 0.34f, c)
+                drawCircle(sombra, r * 0.05f, c)
             }
-            drawPath(etiqueta, if (hecho) lerp(metal, Color.White, 0.55f) else apagado)
-            drawPath(etiqueta, sombra, style = Stroke(r * 0.03f))
         }
         // La plaqueta de la Exposición de 1900: rectangular y de remate en arco, con el filete de dentro, un iris en relieve
         // con sus hojas y la anilla de arriba.

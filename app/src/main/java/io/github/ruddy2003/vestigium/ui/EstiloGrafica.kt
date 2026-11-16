@@ -179,8 +179,10 @@ enum class FormaPunto {
     TORQUES,
     /** Art nouveau: el capullo de iris, cerrado y en punta, con sus dos sépalos abajo. */
     CAPULLO,
-    /** Psicodelia: la margarita de seis pétalos redondos, con su botón calado. */
-    MARGARITA,
+    /** Psicodelia, la ciudad: el disco del día, con su etiqueta y su agujero. */
+    DISCO,
+    /** Psicodelia, el cartel: el disco hecho sol, con su corona de rayos que ondulan. */
+    DISCO_SOL,
 }
 
 /** Lo que acompaña al trazo de una serie. */
@@ -231,8 +233,21 @@ const val ESCALA_REPORTE = 2f
 
 private val ESTILOS_GRAFICA: Map<TemaId, EstiloGrafica> by lazy { TemaId.entries.associateWith { crearEstiloGrafica(it) } }
 
-/** El estilo de gráfica del tema. */
-fun estiloGrafica(tema: TemaId = Estilo.tema): EstiloGrafica = ESTILOS_GRAFICA.getValue(tema)
+/**
+ * El estilo de gráfica de la cara intensa de los temas que tienen dos caras ([TemaId.conCaras]; hoy, Psicodelia): null en los
+ * demás. Psicodelia, el cartel: cada dato, el disco hecho sol; la serie, el trazo redondo con su copia corrida, como dos tintas
+ * de serigrafía que no casan; la meta, en puntos; la rejilla, ondas; las barras, de puntas redondas; las mismas cifras de
+ * Libre Franklin que la ciudad.
+ */
+private fun crearEstiloIntenso(t: TemaId): EstiloGrafica? = if (!t.conCaras) null else
+    EstiloGrafica(FormaPunto.DISCO_SOL, 2.4f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.SOMBRA, listOf(0.1f, 3.4f),
+        Rejilla.ONDAS, 0.45f, Eje.LINEA, FormaBarra.REDONDA, R.font.franklin_semibold, FontWeight.SemiBold, "tnum", 0.02f, 1.04f)
+
+private val ESTILOS_INTENSOS: Map<TemaId, EstiloGrafica> by lazy { TemaId.entries.mapNotNull { t -> crearEstiloIntenso(t)?.let { t to it } }.toMap() }
+
+/** El estilo de gráfica del tema; en un tema con caras, el de la cara que toca ([EstadoTema.caraDe]). */
+fun estiloGrafica(tema: TemaId = Estilo.tema): EstiloGrafica =
+    (if (tema.conCaras && EstadoTema.caraDe(tema) == Cara.INTENSA) ESTILOS_INTENSOS[tema] else null) ?: ESTILOS_GRAFICA.getValue(tema)
 
 private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Inscripción: interpunct triangular, líneas finas cinceladas, eje con remates de serif y barras como columnas con capitel.
@@ -264,11 +279,12 @@ private fun crearEstiloGrafica(t: TemaId): EstiloGrafica = when (t) {
     // Expediente: el ojo, trazo grueso, renglones de registro en bandas, eje duro con marcas y barras rectas.
     TemaId.DISTOPIA -> EstiloGrafica(FormaPunto.DIANA, 2.6f, null, StrokeCap.Square, StrokeJoin.Miter, AdornoTrazo.NINGUNO, listOf(8f, 3f),
         Rejilla.BANDAS, 0.55f, Eje.GRUESA, FormaBarra.RECTA, R.font.oswald_medium, FontWeight.Medium, "tnum", 0.05f, 1.05f)
-    // Psicodelia: cada dato, una margarita; la serie, un trazo redondo y grueso con su copia corrida, como dos tintas de
-    // cartel que no casan; la meta, en burbujas; la rejilla, ondas blandas; las barras, de puntas redondas, como letras de
-    // burbuja; las cifras, en Fredoka.
-    TemaId.PSICODELIA -> EstiloGrafica(FormaPunto.MARGARITA, 2.4f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.SOMBRA, listOf(0.1f, 3.4f),
-        Rejilla.ONDAS, 0.45f, Eje.LINEA, FormaBarra.REDONDA, R.font.fredoka_semibold, FontWeight.SemiBold, "tnum", 0.02f, 1.04f)
+    // Psicodelia, la ciudad (la cara de la intensa está en [crearEstiloIntenso]): cada dato, el disco del día; la serie, un
+    // trazo firme sin adorno, como el de un plano de la ciudad; la meta, en raya larga, como los cables del trolebús; la
+    // rejilla, filetes finos de periódico; las barras, de canto apenas redondo; las cifras, en Libre Franklin (las mismas en
+    // las dos caras, para que un dato no cambie de aspecto con la hora).
+    TemaId.PSICODELIA -> EstiloGrafica(FormaPunto.DISCO, 2.2f, null, StrokeCap.Round, StrokeJoin.Round, AdornoTrazo.NINGUNO, listOf(7f, 2.5f),
+        Rejilla.FILETES, 0.5f, Eje.LINEA, FormaBarra.PILDORA, R.font.franklin_semibold, FontWeight.SemiBold, "tnum", 0.02f, 1.02f)
     // Art nouveau: cada dato, un capullo de iris; la serie, un trazo de pluma de cartel, redondo y con su segundo hilo
     // corrido; la meta, en raya larga y punto, como un tallo dibujado a lápiz; la rejilla en filetes finos; el eje rematado
     // en florón; las barras, arcos de herradura como los de las entradas de metro; las cifras, en la letra de los rótulos.
@@ -597,10 +613,17 @@ fun DrawScope.puntoGrafica(e: EstiloGrafica, centro: Offset, radio: Float, color
                 quadraticTo(c.x + s * r * 0.4f, c.y + r * 0.4f, c.x, c.y + r * 0.95f); close()
             }, color)
         }
-        // La margarita: seis pétalos redondos y el botón claro (hueca, el contorno de los pétalos y el botón lleno).
-        FormaPunto.MARGARITA -> {
-            figura(TrazosPsicodelia.petalos(c, r * 1.3f, 6, -PI.toFloat() / 2, 0.34f, 0.14f))
-            if (!hueco) drawCircle(androidx.compose.ui.graphics.lerp(color, Color.White, 0.5f), r * 0.34f, c) else drawCircle(color, r * 0.28f, c)
+        // El disco del día: el disco con su etiqueta clara y el agujero (hueco, el canto y la etiqueta llena).
+        FormaPunto.DISCO -> {
+            if (hueco) drawCircle(color, r - g / 2, c, style = Stroke(g)) else drawCircle(color, r * 1.05f, c)
+            drawCircle(if (hueco) color else lerp(color, Color.White, 0.55f), r * 0.42f, c)
+            drawCircle(if (hueco) Color.White.copy(alpha = 0.8f) else color, r * 0.12f, c)
+        }
+        // El disco hecho sol: la corona de rayos que ondulan y el disco con su etiqueta clara.
+        FormaPunto.DISCO_SOL -> {
+            figura(PiezasPsicodelia.cunas(c, r * 0.62f, r * 1.4f, 12, 0.5f, 0.14f, 0f))
+            if (hueco) drawCircle(color, r * 0.6f, c, style = Stroke(g * 0.8f)) else drawCircle(color, r * 0.66f, c)
+            drawCircle(if (hueco) color else lerp(color, Color.White, 0.55f), r * 0.26f, c)
         }
         // El torques: el aro abierto por abajo, con un disco en cada punta.
         FormaPunto.TORQUES -> {

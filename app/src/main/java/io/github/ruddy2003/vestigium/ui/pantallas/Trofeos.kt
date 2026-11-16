@@ -60,7 +60,11 @@ import io.github.ruddy2003.vestigium.ui.TrazosArcontes
 import io.github.ruddy2003.vestigium.ui.TrazosFrente
 import io.github.ruddy2003.vestigium.ui.TrazosGalia
 import io.github.ruddy2003.vestigium.ui.TrazosNouveau
-import io.github.ruddy2003.vestigium.ui.TrazosPsicodelia
+import io.github.ruddy2003.vestigium.ui.Cara
+import io.github.ruddy2003.vestigium.ui.EstadoTema
+import io.github.ruddy2003.vestigium.ui.PiezasPsicodelia
+import io.github.ruddy2003.vestigium.ui.TrazosCiudad
+import io.github.ruddy2003.vestigium.ui.TrazosTinta
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import io.github.ruddy2003.vestigium.ui.signoEgipcio
 import kotlin.math.PI
@@ -359,11 +363,19 @@ private fun DrawScope.chispa(tema: TemaId, o: Offset, s: Float, i: Int) {
             drawPath(ojo, Color.White.copy(alpha = 0.92f)); drawPath(ojo, Color(0xFF2B2B2B), style = Stroke(s * 0.1f))
             drawCircle(Color(0xFFD32F2F), s * 0.3f, o)
         }
-        // Una florecita de luz negra: cinco pétalos redondos que vibran sobre su complementario, con el halo de lo fluorescente.
-        TemaId.PSICODELIA -> {
-            val col = if (i % 2 == 0) TrazosPsicodelia.FLUOR_MAGENTA else TrazosPsicodelia.LIMON
-            drawCircle(Brush.radialGradient(listOf(col.copy(alpha = 0.5f), Color.Transparent), o, s * 1.4f), s * 1.4f, o)
-            with(TrazosPsicodelia) { flor(o, s * 0.9f, col, complementario(col), 5, 0.5f, i * 0.6f) }
+        // En la ciudad, el brillo de la tarde que se prende en el vinilo: una cruz fina de luz con su halo. En el cartel, un
+        // disco chico con su corona de rayos que ondulan, en magenta o en ultramar (las tintas del negro, que se leen en los dos).
+        TemaId.PSICODELIA -> if (EstadoTema.caraDe(tema) == Cara.BASE) {
+            val luz = TrazosCiudad.SOL_VELADO
+            drawCircle(Brush.radialGradient(listOf(luz.copy(alpha = 0.55f), Color.Transparent), o, s * 1.2f), s * 1.2f, o)
+            drawLine(luz, Offset(o.x - s, o.y), Offset(o.x + s, o.y), s * 0.08f, StrokeCap.Round)
+            drawLine(luz, Offset(o.x, o.y - s * 0.7f), Offset(o.x, o.y + s * 0.7f), s * 0.08f, StrokeCap.Round)
+            drawCircle(Color.White.copy(alpha = 0.9f), s * 0.12f, o)
+        } else {
+            val col = if (i % 2 == 0) TrazosTinta.tinta(TrazosTinta.Tinta.MAGENTA, true, 0f) else TrazosTinta.tinta(TrazosTinta.Tinta.ULTRAMAR, true, 0f)
+            drawPath(PiezasPsicodelia.cunas(o, s * 0.4f, s * 1.05f, 12, 0.5f, 0.12f, i * 0.4f), col)
+            drawCircle(TrazosTinta.CREMA, s * 0.38f, o)
+            drawCircle(col, s * 0.16f, o)
         }
         // Una chispa de luz eléctrica: el halo, cuatro pétalos de luz y el punto encendido (una sí y una no, girada).
         TemaId.NOUVEAU -> {
@@ -534,7 +546,8 @@ private fun tonoPared(tema: TemaId): Color = when (tema) {
     TemaId.MEDIEVAL -> Color(0xFFD8C08E)
     TemaId.TEMPLARIO -> Color(0xFFCDBB97)
     TemaId.DISTOPIA -> Color(0xFF8E9296)
-    TemaId.PSICODELIA -> Color(0xFFF0C4A6)          // el naranja pálido de la pared de la sala, con sus carteles
+    // La ciudad: el ladrillo pintado de la sala de día, con la luz de la tarde; el cartel: el rosa del papel bajo el magenta.
+    TemaId.PSICODELIA -> if (EstadoTema.caraDe(tema) == Cara.BASE) Color(0xFFD9C3A4) else Color(0xFFE7C9D6)
     TemaId.NOUVEAU -> Color(0xFFC9D2B8)          // el papel pintado salvia de la sala de la Exposición
     TemaId.GALIA -> Color(0xFFBFA676)          // el barro de las paredes de la casa grande
     TemaId.ARCONTES -> Color(0xFFCBB98F)          // la caliza tallada de la sala escondida
@@ -644,23 +657,34 @@ internal fun DrawScope.paredTema(tema: TemaId, tinta: Color, acento: Color) {
                 y += ph
             }
         }
-        TemaId.PSICODELIA -> {
-            // Los carteles pegados en la pared de la sala, uno junto a otro y un poco chuecos: el contorno blando de cada uno,
-            // su círculo (o el símbolo de la paz) y la banda de letras que ondula arriba.
+        TemaId.PSICODELIA -> if (EstadoTema.caraDe(tema) == Cara.BASE) {
+            // La ciudad: el muro de ladrillo pintado de la sala de baile de día, con las hiladas apenas marcadas y, de trecho
+            // en trecho, la mancha de sol de las ventanas altas, que baja hacia la derecha.
+            var y = 0f; var fila = 0
+            while (y < h) {
+                drawLine(v, Offset(0f, y), Offset(w, y), d)
+                var x = if (fila % 2 == 0) 0f else 13 * d
+                while (x < w) { drawLine(v, Offset(x, y), Offset(x, y + 9 * d), d); x += 26 * d }
+                y += 9 * d; fila++
+            }
+            var ym = 20 * d
+            while (ym < h) {
+                drawPath(Path().apply { moveTo(w * 0.12f, ym); lineTo(w * 0.38f, ym); lineTo(w * 0.62f, ym + 180 * d); lineTo(w * 0.36f, ym + 180 * d); close() }, a)
+                ym += 360 * d
+            }
+        } else {
+            // El cartel: los carteles de la semana pegados uno junto a otro, cada uno con su marco de arco, el disco hecho sol
+            // que asoma con su corona de rayos y las letras de bloque arriba.
             val pw = 84 * d; val ph = 116 * d; var y = 8 * d; var fila = 0
             while (y < h) {
                 var x = if (fila % 2 == 0) 6 * d else -pw / 2 + 6 * d; var k = 0
                 while (x < w) {
-                    val c = Offset(x + pw / 2, y + ph / 2)
-                    rotate(if ((k + fila) % 2 == 0) -3f else 2.5f, c) {
-                        drawRoundRect(v, Offset(x + 4 * d, y + 4 * d), Size(pw - 8 * d, ph - 8 * d), CornerRadius(6 * d), style = Stroke(1.2f * d))
-                        drawPath(Path().apply {
-                            moveTo(x + 12 * d, y + 22 * d)
-                            var xx = x + 12 * d; while (xx < x + pw - 14 * d) { quadraticTo(xx + 6 * d, y + 15 * d, xx + 12 * d, y + 22 * d); xx += 12 * d }
-                        }, v, style = Stroke(5 * d, cap = StrokeCap.Round))
-                        if ((k + fila) % 3 == 0) with(TrazosPsicodelia) { paz(Offset(c.x, c.y + 10 * d), 18 * d, a, 2.4f * d) }
-                        else { drawCircle(a, 18 * d, Offset(c.x, c.y + 10 * d)); drawCircle(v, 9 * d, Offset(c.x, c.y + 10 * d)) }
-                    }
+                    val caja = Rect(x + 4 * d, y + 4 * d, x + pw - 4 * d, y + ph - 4 * d)
+                    drawPath(TrazosTinta.arco(caja, 30 * d, 2 * d), v, style = Stroke(1.2f * d))
+                    val c = Offset(caja.center.x, caja.top + caja.height * 0.62f)
+                    drawPath(PiezasPsicodelia.cunas(c, 10 * d, 30 * d, 16, 0.5f, 0.12f, 0f), a)
+                    drawCircle(v, 9 * d, c)
+                    with(io.github.ruddy2003.vestigium.ui.logros.LogrosPsicodelia) { letrasBloque(Rect(caja.left + 8 * d, caja.top + 10 * d, caja.right - 8 * d, caja.top + 26 * d), 4, v, Color.Transparent, 0.3f, fila * 7 + k) }
                     x += pw; k++
                 }
                 y += ph; fila++
@@ -1054,20 +1078,28 @@ private fun DrawScope.repisaTema(tema: TemaId, oscuro: Boolean) {
                 x += 110 * d
             }
         }
-        TemaId.PSICODELIA -> {
-            // La repisa de pino del departamento, con el canto pintado a mano: tres ondas de colores que vibran y, de trecho en
-            // trecho, una flor.
-            tabla(m(Color(0xFFC79A62)), 0f, h * 0.4f)
-            drawRect(m(Color(0xFFF6EEDD)), Offset(0f, h * 0.4f), Size(w, h * 0.6f))
-            listOf(TrazosPsicodelia.MAGENTA to 0.55f, TrazosPsicodelia.NARANJA to 0.72f, TrazosPsicodelia.AZUL to 0.88f).forEach { (col, fy) ->
-                drawPath(Path().apply {
-                    var x = 0f; moveTo(x, h * fy)
-                    while (x < w) { quadraticTo(x + 7 * d, h * fy - 2.2f * d, x + 14 * d, h * fy); quadraticTo(x + 21 * d, h * fy + 2.2f * d, x + 28 * d, h * fy); x += 28 * d }
-                }, m(col), style = Stroke(1.6f * d))
+        TemaId.PSICODELIA -> if (EstadoTema.caraDe(tema) == Cara.BASE) {
+            // La ciudad: la tabla de pino de la repisa sobre ladrillos, con la luz de la tarde en el canto y, debajo, la hilada
+            // de ladrillo que la sostiene; de trecho en trecho, una tira de cinta de pintor.
+            val pino = m(Color(0xFFB48A5A))
+            tabla(pino, 0f, h * 0.5f)
+            val ladrillo = m(TrazosCiudad.COCHE)
+            drawRect(lerp(ladrillo, Color.Black, 0.35f), Offset(0f, h * 0.5f), Size(w, h * 0.5f))
+            var x = 0f; var k = 0
+            while (x < w) { drawRect(if (k % 2 == 0) ladrillo else lerp(ladrillo, Color.Black, 0.12f), Offset(x + 0.8f * d, h * 0.5f + 0.8f * d), Size(26 * d, h * 0.5f - 1.6f * d)); x += 27.6f * d; k++ }
+            drawLine(lerp(pino, Color.White, 0.35f), Offset(0f, 0.6f * d), Offset(w, 0.6f * d), 0.8f * d)
+            var xc = 46 * d
+            while (xc < w - 20 * d) { drawRect(m(Color(0xFFE6D8B4)).copy(alpha = 0.85f), Offset(xc, h * 0.1f), Size(14 * d, h * 0.3f)); xc += 120 * d }
+        } else {
+            // El cartel: la tabla impresa en la tinta que graba, con su trama abajo, y la banda de ondas a dos tintas que corre
+            // por el canto.
+            val k = PiezasPsicodelia.colores(oscuro)
+            val canto = Rect(0f, 0f, w, h * 0.45f)
+            drawRect(if (oscuro) Color(0xFF26203A) else TrazosTinta.GRABAR, canto.topLeft, canto.size)
+            drawLine(TrazosTinta.CREMA.copy(alpha = 0.5f), Offset(0f, 0.8f * d), Offset(w, 0.8f * d), 0.8f * d)
+            with(PiezasPsicodelia) {
+                ondas(0f, w, h * 0.72f, 1.6f * d, 26 * d, 1.4f * d, 2.6f * d, tintasBanda(k), k.m.registro * 0.5f, adelgaza = false)
             }
-            var x = 40 * d
-            while (x < w - 10 * d) { with(TrazosPsicodelia) { flor(Offset(x, h * 0.7f), 4 * d, m(VERDE), m(MAGENTA), 5) }; x += 84 * d }
-            drawLine(lerp(m(Color(0xFFC79A62)), Color.Black, 0.3f), Offset(0f, h * 0.4f), Offset(w, h * 0.4f), 0.8f * d)
         }
         TemaId.NOUVEAU -> {
             // La repisa de la vitrina: el canto de vidrio verdoso con su filo de luz, sobre el friso de caoba con los rizos tallados
@@ -1396,15 +1428,21 @@ private fun DrawScope.fondoPlaca(tema: TemaId, tinta: Color, acento: Color, hech
             drawLine(Color(0xFFB71C1C).copy(alpha = 0.5f * f), Offset(0f, h - 2 * d), Offset(w, h - 2 * d), 2 * d)
         }
         TemaId.PSICODELIA -> {
-            // La entrada del baile: el papel de esquinas redondas y, a la izquierda, el talón con su línea de perforaciones,
-            // las dos muescas y una florecita.
+            // La entrada del baile: el cartón de esquinas redondas y, a la izquierda, el talón con su línea de perforaciones y
+            // sus dos muescas; en el talón, la etiqueta del disco del día (la ciudad) o el disco hecho sol (el cartel).
             val r = minOf(h * 0.3f, 8 * d); val xt = minOf(w * 0.13f, 18 * d)
             drawRoundRect(fondo, Offset.Zero, size, CornerRadius(r))
             drawRoundRect(borde, Offset.Zero, size, CornerRadius(r), style = fino)
             drawLine(borde, Offset(xt, 4 * d), Offset(xt, h - 4 * d), d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.6f * d, 1.8f * d)))
             drawArc(borde, 0f, 180f, false, Offset(xt - 2.5f * d, -2.5f * d), Size(5 * d, 5 * d), style = fino)
             drawArc(borde, 180f, 180f, false, Offset(xt - 2.5f * d, h - 2.5f * d), Size(5 * d, 5 * d), style = fino)
-            with(TrazosPsicodelia) { flor(Offset(xt / 2, h / 2), minOf(xt * 0.36f, h * 0.2f), ac, ac.copy(alpha = ac.alpha * 0.4f), 5) }
+            val c = Offset(xt / 2, h / 2); val rd = minOf(xt * 0.34f, h * 0.2f)
+            if (EstadoTema.caraDe(tema) == Cara.BASE) {
+                drawCircle(borde, rd, c); drawCircle(ac, rd * 0.45f, c)
+            } else {
+                drawPath(PiezasPsicodelia.cunas(c, rd * 0.7f, rd * 1.25f, 12, 0.5f, 0.12f, 0f), borde)
+                drawCircle(ac, rd * 0.7f, c)
+            }
         }
         TemaId.NOUVEAU -> {
             // La etiqueta de la vitrina: dos esquinas muy redondas y dos casi rectas, el filete de dentro y un rizo de látigo en

@@ -256,7 +256,8 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.MEDIEVAL -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 7.dp, bottomStart = 1.dp)
     TemaId.TEMPLARIO -> CutCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 5.dp, bottomStart = 5.dp)
     TemaId.DISTOPIA -> RectangleShape
-    TemaId.PSICODELIA -> RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp, bottomEnd = 10.dp, bottomStart = 3.dp)   // la funda blanda, de esquinas redondas como una burbuja
+    // La ciudad: la copia de foto de esquinas apenas redondas. El cartel: el marco de arco (arriba redondo, abajo casi recto).
+    TemaId.PSICODELIA -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) RoundedCornerShape(5.dp) else RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
     TemaId.NOUVEAU -> RoundedCornerShape(topStart = 2.dp, topEnd = 14.dp, bottomEnd = 5.dp, bottomStart = 5.dp)   // la hoja del almanaque, como un cartel de esquina redonda
     TemaId.GALIA -> RoundedCornerShape(topStart = 2.dp, topEnd = 5.dp, bottomEnd = 5.dp, bottomStart = 5.dp)   // la tablilla de roble, de esquinas gastadas
     TemaId.ARCONTES -> RoundedCornerShape(topStart = 3.dp, topEnd = 12.dp, bottomEnd = 3.dp, bottomStart = 6.dp)   // un sillar de caliza, gastado
@@ -390,32 +391,37 @@ private fun DrawScope.marcoCelda(tema: TemaId, fecha: String, forma: Shape, hoy:
                 figuraTema(tema, tinta, pc, 2.6f * s, Color.White)
             }
         }
-        // Cada día es un disco (recurso): a la derecha asoman los surcos del vinilo alrededor de su etiqueta, de los colores que
-        // vibran que le tocan por su número de disco (`Psicodelia.disco`); hoy, el disco brilla y la aguja del brazo baja sobre el
-        // surco; el día sellado lleva en la etiqueta la flor que vibra.
+        // Cada día es un disco (recurso): a la derecha asoman los surcos del vinilo alrededor de su etiqueta, de las tintas que le
+        // tocan por su número de disco (`Psicodelia.disco`). La ciudad: la etiqueta naranja quemado, verde botella u ocre, y hoy
+        // el brazo del tocadiscos baja sobre el surco; el día sellado lleva en la etiqueta el agujero y su renglón. El cartel: la
+        // etiqueta en magenta o ultramar con su corona de rayos, y el día sellado, el disco hecho sol entero.
         TemaId.PSICODELIA -> {
             contorno(if (hoy) acento else linea, if (hoy) 1.4f else 0.6f)
             val dia = runCatching { io.github.ruddy2003.vestigium.data.Fechas.parse(fecha) }.getOrNull()
             val n = dia?.let { io.github.ruddy2003.vestigium.ui.Psicodelia.disco(it) } ?: 1
-            val trazos = io.github.ruddy2003.vestigium.ui.TrazosPsicodelia
-            val pares = listOf(trazos.MAGENTA to trazos.VERDE, trazos.NARANJA to trazos.AZUL, trazos.AMARILLO to trazos.VIOLETA)
-            val (a0, b0) = pares[n % 3]
+            val ciudad = io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE
+            val etiqueta = if (ciudad) listOf(Color(0xFF9C4219), Color(0xFF3D5838), Color(0xFFA77A2A))[n % 3]
+                else listOf(io.github.ruddy2003.vestigium.ui.TrazosTinta.tinta(io.github.ruddy2003.vestigium.ui.TrazosTinta.Tinta.MAGENTA, false, 0f),
+                    io.github.ruddy2003.vestigium.ui.TrazosTinta.tinta(io.github.ruddy2003.vestigium.ui.TrazosTinta.Tinta.ULTRAMAR, false, 0f))[n % 2]
             val c0 = Offset(w - 7.5f * s, h * 0.56f)
             for (k in 1..4) drawCircle(linea.copy(alpha = if (hoy) 0.5f else 0.32f), (4.8f + k * 2.3f) * s, c0, style = Stroke(0.4f * s))
-            if (hoy) drawArc(acento.copy(alpha = 0.45f), 200f, 50f, false, Offset(c0.x - 11f * s, c0.y - 11f * s), Size(22f * s, 22f * s), style = Stroke(1.2f * s))
-            if (sellado) with(trazos) { flor(c0, 4.6f * s, a0, b0, 6, 0.4f) }
-            else {
-                drawCircle(a0, 4.2f * s, c0)
-                drawCircle(b0, 3.3f * s, c0, style = Stroke(0.6f * s))
+            if (ciudad) {
+                if (hoy) drawArc(acento.copy(alpha = 0.45f), 200f, 50f, false, Offset(c0.x - 11f * s, c0.y - 11f * s), Size(22f * s, 22f * s), style = Stroke(1.2f * s))
+                drawCircle(etiqueta, 4.2f * s, c0)
+                if (sellado) drawLine(sobre.copy(alpha = 0.8f), Offset(c0.x - 2.4f * s, c0.y - 1.6f * s), Offset(c0.x + 2.4f * s, c0.y - 1.6f * s), 0.6f * s)
                 drawCircle(sobre, 0.6f * s, c0)
-            }
-            if (hoy) {
-                // El brazo del tocadiscos, desde la esquina de arriba, con la cápsula sobre el surco.
-                val eje = Offset(w - 2.2f * s, 2.8f * s)
-                val punta = Offset(c0.x - 3.5f * s, c0.y - 8.5f * s)
-                drawCircle(oro, 1.4f * s, eje)
-                drawLine(oro, eje, punta, 0.8f * s)
-                drawRect(oro, Offset(punta.x - 1.4f * s, punta.y - 0.6f * s), Size(2.6f * s, 1.8f * s))
+                if (hoy) {
+                    // El brazo del tocadiscos, desde la esquina de arriba, con la cápsula sobre el surco.
+                    val eje = Offset(w - 2.2f * s, 2.8f * s)
+                    val punta = Offset(c0.x - 3.5f * s, c0.y - 8.5f * s)
+                    drawCircle(oro, 1.4f * s, eje)
+                    drawLine(oro, eje, punta, 0.8f * s)
+                    drawRect(oro, Offset(punta.x - 1.4f * s, punta.y - 0.6f * s), Size(2.6f * s, 1.8f * s))
+                }
+            } else {
+                if (hoy || sellado) drawPath(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(c0, 4.4f * s, (if (sellado) 9.5f else 7.5f) * s, 12, 0.5f, 0.12f, 0f), if (hoy) acento else etiqueta.copy(alpha = 0.8f))
+                drawCircle(etiqueta, 4.2f * s, c0)
+                drawCircle(sobre, 0.6f * s, c0)
             }
         }
         // La hoja del almanaque de flores: la fila de agujeros por donde se arranca del taco, arriba, y a la derecha la flor del día

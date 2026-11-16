@@ -69,6 +69,7 @@ private fun uso(): Nothing {
           dibujar.sh hoja <ideario|biblioteca> <claro|oscuro> <salida.png> <tema1,tema2,...>
           dibujar.sh trazos psicodelia <claro|oscuro> <salida.png>   (muestra de TrazosCiudad o TrazosTinta, según ARNES_CARA)
           dibujar.sh comun psicodelia <claro|oscuro> <salida.png>    (las piezas comunes y de decoración de Psicodelia, según ARNES_CARA)
+          dibujar.sh logros psicodelia <claro|oscuro> <salida.png>   (los trofeos, el hall, el salón y la campaña de Psicodelia, según ARNES_CARA)
         Temas: ${TemaId.entries.joinToString(" ") { it.id }}
         Variable ARNES_HOY=AAAA-MM-DD: el «hoy» de los ejemplos (por omisión, el día lógico de hoy; las capturas de CI usan el día en que corrieron).
         Variables ARNES_TEMAS=0,1,5 (un Ideario por cada número de temas) y ARNES_MAX=6 (el Ideario cortado, con su placa «y N más»).
@@ -89,7 +90,7 @@ fun main(args: Array<String>) {
     val salida = File(args[3])
     val inicio = System.nanoTime()
     val imagen = when (args[0]) {
-        "ideario", "biblioteca", "trazos", "comun" -> dibujar(args[0], tema(args[1]), oscuro, null)
+        "ideario", "biblioteca", "trazos", "comun", "logros" -> dibujar(args[0], tema(args[1]), oscuro, null)
         "hoja" -> {
             if (args.size < 5 || args[1] !in setOf("ideario", "biblioteca")) uso()
             val temas = args[4].split(',').filter { it.isNotBlank() }.map(::tema)
@@ -147,6 +148,7 @@ private fun dibujar(que: String, t: TemaId, oscuro: Boolean, titulo: String?): I
                     "ideario" -> Ideario()
                     "trazos" -> MuestraTrazos(o)
                     "comun" -> MuestraComun(o)
+                    "logros" -> MuestraLogros(o)
                     else -> Biblioteca()
                 }
             }
