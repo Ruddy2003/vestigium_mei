@@ -1,0 +1,4 @@
+e: org.jetbrains.kotlin.codegen.CompilationException: Back-end (JVM) Internal error: Couldn't transform method node:
+> Task :app:compileReleaseKotlin FAILED
+* What went wrong:
+BUILD FAILED in 17m 20s
