@@ -20,7 +20,7 @@ Lo que pidió el autor el 16 de noviembre de 2026 después de comparar los 39 te
 | 5 | Psicodelia nueva | pendiente |
 | 6 | Fondos de pantalla con las escenas | pendiente |
 | 7 | Lo temático nuevo: el toque, la hora y el clima, los mensajes breves, las esperas, el selector de fecha y de hora | pendiente |
-| 8 | Los cuadros: seguir personajes, «Hoy en la historia» bajo el cuento, la galería de cuadros y su mueble en Vida, el sonido al acariciar al gato | pendiente |
+| 8 | Los cuadros y los avisos: seguir personajes (con notificación y sonido propio), «Hoy en la historia» bajo el cuento, el cuadro a pantalla completa y arriba del cuento con su ambiente, la galería de cuadros y su mueble en Vida, el ronroneo del gato, y las notificaciones que hoy no suenan | pendiente |
 
 ## Decisiones del autor, parte por parte
 
@@ -63,6 +63,17 @@ La respuesta al tocar; que el fondo y los muebles reaccionen a la hora, el clima
 - **Galería:** «me gusta» a un cuadro para guardarlo tal cual (el tema, la vida, el día y la hora); se ven en un mueble nuevo de la pestaña Vida.
 - **El gato del cuadro** suena al acariciarlo.
 
-## Lo que falta decidir
+## Respuestas del autor (16 nov 2026, segunda ronda)
 
-Ver las preguntas abiertas al final de cada entrega.
+1. **Las ventanas que ya existen se quedan por ahora** (los Idearios de Arcontes, Galia, Art nouveau y Psicodelia; las bibliotecas de Urbe, Pirata, Revolución, Ruinas, Navidad, Espacio y Abismo). La regla de «solo mueble y pared» vale para lo que se rehace.
+2. **Psicodelia se queda en San Francisco a fines de los 60**, con su personaje y su cuento. De las referencias de los 70 se toma solo el estilo.
+3. **Seguir a un personaje avisa también con una notificación del teléfono,** con un sonido nuevo, propio de la historia.
+4. **La galería guarda el cuadro como imagen,** además de sus datos (tema, vida, día y hora), para que no cambie cuando se mejore el dibujo.
+5. **Sonido de ambiente:**
+   - nada continuo en la app;
+   - el cuadro se puede ver a pantalla completa;
+   - el cuadro sale arriba en la pantalla del cuento del día, y al abrir el cuento suena el ambiente del cuadro completo: suave, pero no necesariamente muy tenue;
+   - el gato del cuadro ronronea al acariciarlo.
+6. **Nada pasa a `main` hasta que todo esté arreglado.**
+
+Además, el autor notó que **algunas notificaciones no suenan**: hay que revisarlas una por una y arreglarlas (parte 8). Lo que se ve en el código: solo cuatro canales llevan el sonido del tema (ánimo, diario, cuestionarios y fin de bloque de enfoque); el de reportes se crea con importancia baja, que en Android es sin sonido; los de recordatorios y lugares no llevan sonido del tema.
