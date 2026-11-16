@@ -190,7 +190,10 @@ internal object DiasOrden {
             val color = v.lz.color(if (forma == 1) C.VIDRIO else if (forma == 2) lerp(C.LATON, C.ROCA, 0.4f) else C.LATON, V3(0f, 0f, -1f))
             if (forma == 0) drawOval(color, Offset(q.x - ancho, q.y - alto * 0.5f), Size(ancho * 2f, alto * 0.5f))
             else drawRect(color, Offset(q.x - ancho * 0.6f, q.y - alto), Size(ancho * 1.2f, alto))
-            resplandor(q + Offset(0f, -alto * 0.8f), k * 0.8f + 2f, 0.8f, if (forma == 1) Color(0xFFFFE6A0) else C.LUMBRE)
+            // El halo, según lo cerca que esté: las del fondo, solo un punto de luz (juntas harían un foco).
+            val luz = if (forma == 1) Color(0xFFFFE6A0) else C.LUMBRE
+            if (k < 3f) drawCircle(luz.copy(alpha = 0.8f), 0.6f, q + Offset(0f, -alto * 0.8f))
+            else resplandor(q + Offset(0f, -alto * 0.8f), k * 0.8f + 1f, 0.25f + 0.55f * (k / 12f).coerceIn(0f, 1f), luz)
         }
     }
 
