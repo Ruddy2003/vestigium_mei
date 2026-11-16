@@ -45,8 +45,7 @@ import kotlin.math.sin
  * ([SitioObjeto]): cada cara pide su color a la luz de su sitio, la misma cuenta que la mesa o el suelo de debajo
  * (`VistaLab.c`). Así cada uno tiene su lado de la lámpara de cultivo y de la pantalla y, de noche, el de la lámpara de su
  * mesa y el del violeta de la puerta, sin pintarlos a mano; y su sombra la tumban las luces que la tumban en ese sitio.
- * (La sala mira el cono de sus lámparas al revés y no alumbra lo que tienen debajo; los objetos lo corrigen para sí, a
- * media fuerza, mientras la sala no lo corrija: `SitioObjeto.delLaboratorio`.) Las firmas de siempre ([sobreElSoporte], [grande]) reconocen el claro de la mesa y el pie del taburete del laboratorio y
+ * Las firmas de siempre ([sobreElSoporte], [grande]) reconocen el claro de la mesa y el pie del taburete del laboratorio y
  * toman su luz de `VistaLab`; en cualquier otro sitio, si el cuadro solo da su [Pincel], se arma una luz con él
  * ([SitioObjeto.dePincel], más plana). Un cuadro con luces propias (el centro del Claustro) llama a las variantes que
  * reciben un [SitioObjeto] armado con su cámara y sus luces.
@@ -591,50 +590,12 @@ internal class SitioObjeto(
         fun delLaboratorio(v: VistaLab, o: V3, eje: V3, mesa: Boolean, apoyo: V3? = null): SitioObjeto {
             val tumban = if (mesa) v.tumban.filter { (it.de == Fuente.CULTIVO && !v.noche) || it.de == Fuente.MESA || it.de == Fuente.VELA || it.de == Fuente.LINTERNA }
                 else v.tumban.filter { it.de != Fuente.CULTIVO }
-            val conos = v.luces.filter { it.cono > 0f && it.fuerza > 0.01f }
-            val alReves = conoAlReves(v, conos)
-            fun cuanto(f: Luz3, w: V3, n: V3) = if (alReves && f.cono > 0f) cuantoConCono(f, w, n) else v.cuanto(f, w, n)
             // Cuánto tumba cada una: la misma cuenta que las sombras del tablero y las del suelo de la sala.
-            val sombras = tumban.map { f -> f.w to if (mesa) cuanto(f, o, V3(0f, 1f, 0f))
-                else 1.2f * (cuanto(f, o + V3(0f, 0.4f, 0f), V3(0f, 1f, 0f)) + 0.6f * cuanto(f, o + V3(0f, 0.6f, 0f), V3(f.w.x - o.x, 0f, f.w.z - o.z))) }.filter { it.second > 0.06f }
-            val color: (V3, Color, V3) -> Color = if (!alReves) { w, c, n -> v.c(w, c, n) } else { w, c, n -> conLosConos(v.c(w, c, n), conos, w, c, n) }
+            val sombras = tumban.map { f -> f.w to if (mesa) v.cuanto(f, o, V3(0f, 1f, 0f))
+                else 1.2f * (v.cuanto(f, o + V3(0f, 0.4f, 0f), V3(0f, 1f, 0f)) + 0.6f * v.cuanto(f, o + V3(0f, 0.6f, 0f), V3(f.w.x - o.x, 0f, f.w.z - o.z))) }.filter { it.second > 0.06f }
+            val color: (V3, Color, V3) -> Color = { w, c, n -> v.c(w, c, n) }
             return SitioObjeto(o, eje, V3(0f, CamLab.OJO, 0f), { CamLab.p(it) }, color, sombras,
                 if (mesa) MesaLab.formaDelTablero() else SalaLab.formaDelSuelo(), if (v.noche) 1f else 0f, apoyo)
-        }
-
-        /**
-         * Si `VistaLab.c` y `VistaLab.cuanto` miran el cono de las lámparas al revés (la dirección que usan va del punto a la
-         * lámpara, así que lo de debajo queda fuera del cono: una lámpara de pantalla no alumbra lo que tiene debajo). Se
-         * comprueba con un punto justo debajo de cada lámpara con cono; si el cuadro lo corrige, deja de corregirse aquí.
-         */
-        private fun conoAlReves(v: VistaLab, conos: List<Luz3>): Boolean =
-            conos.isNotEmpty() && conos.all { v.cuanto(it, it.w - V3(0f, 0.4f, 0f), V3(0f, 1f, 0f)) < 1e-4f }
-
-        /** La caída de la luz con la distancia, la misma de `VistaLab`. */
-        private fun caida(dist: Float, alcance: Float): Float { val q = dist / alcance; val corte = (1f - q * q / 9f).coerceAtLeast(0f); return corte * corte / (1f + q * q) }
-
-        /** Cuánto alumbra la lámpara con cono [f] el punto [w] de una cara que mira a [n], con el cono hacia abajo. */
-        private fun cuantoConCono(f: Luz3, w: V3, n: V3): Float {
-            val d = f.w - w; val dist = d.largo().coerceAtLeast(0.05f); val u = d * (1f / dist)
-            return f.fuerza * caida(dist, f.alcance) * n.unidad().punto(u).coerceAtLeast(0f) * ((u.y - f.cono) / 0.16f).coerceIn(0f, 1f)
-        }
-
-        /**
-         * El color [base] que da `VistaLab.c` más lo que le falta de cada lámpara con cono que de verdad alumbra el punto, a
-         * [CONO] de su fuerza **[Aproximación]**: así lo de debajo de una lámpara queda tan claro como el charco que la sala pinta
-         * en la mesa, sin quemarse.
-         */
-        private const val CONO = 0.5f
-        private fun conLosConos(base: Color, conos: List<Luz3>, w: V3, propio: Color, n: V3): Color {
-            val nn = n.unidad(); var r = base.red; var g = base.green; var b = base.blue
-            for (f in conos) {
-                val d = f.w - w; val dist = d.largo().coerceAtLeast(0.05f); val u = d * (1f / dist)
-                val falta = ((u.y - f.cono) / 0.16f).coerceIn(0f, 1f) - ((-u.y - f.cono) / 0.16f).coerceIn(0f, 1f)
-                if (falta <= 0f) continue
-                val k = f.fuerza * caida(dist, f.alcance) * ((nn.punto(u) + 0.15f) / 1.15f).coerceAtLeast(0f) * falta * CONO
-                r += (propio.red * 0.9f + 0.05f) * f.color.red * k; g += (propio.green * 0.9f + 0.05f) * f.color.green * k; b += (propio.blue * 0.9f + 0.05f) * f.color.blue * k
-            }
-            return Color(r.coerceIn(0f, 1f), g.coerceIn(0f, 1f), b.coerceIn(0f, 1f), base.alpha)
         }
 
         /**

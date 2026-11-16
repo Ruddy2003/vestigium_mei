@@ -7,7 +7,6 @@ import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.data.OtrasVidas.Hacer
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaLaboratorio.Lugar
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.grano
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoFijo
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
 import kotlin.math.abs

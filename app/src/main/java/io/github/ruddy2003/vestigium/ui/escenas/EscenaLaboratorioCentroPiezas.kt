@@ -56,10 +56,8 @@ internal object GeoCentro {
     const val PY1 = 8.6f
     /** Las costillas: donde están (grados); la primera es la de cerca. Faltan las que tapaban la pared de pantallas y el centro del cuadro. **[Diseño propio]** */
     val COSTILLAS = listOf(-111f, 115f, 160f, 205f, 32f)
-    /** El radio de la cara de dentro de las costillas y su fondo (hacia fuera) y su grueso. */
+    /** El radio de la cara de dentro de las costillas. */
     const val RC = 7.45f
-    const val FONDO_COSTILLA = 1.15f
-    const val GRUESO_COSTILLA = 0.45f
     /** La pasarela: va a la altura de la segunda galería, de un lado a otro del vacío, a [PASA_D] metros del centro. */
     const val PASA_A0 = -42.5f
     const val PASA_A1 = 82.5f

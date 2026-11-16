@@ -54,7 +54,6 @@ internal object ColorLaboratorio {
     val HOJA_OSC = lerp(GRAMA, NEGRO, 0.45f)                                     // el verde de lo hondo de una mata
     val TOMATE = lerp(AVISO, BARRO, 0.25f)                                       // los tomates de los jardines
     val CUELLO = lerp(GRAMA, NEGRO, 0.25f)                                       // el cuello verde de la bata
-    val ESCOMBRO = lerp(TIERRA, HORMIGON, 0.35f)                                 // la piedra de las ruinas
     val HIERRO = lerp(ACERO, BARRO, 0.35f)                                       // los hierros oxidados de arriba
     val PAJA = lerp(AMARILLO, TIERRA, 0.45f)                                     // la hierba rala y amarilla de arriba
     val VELA = lerp(LAMPARA, Color.White, 0.25f)                                 // la cera de las colmenas, encendida
@@ -75,7 +74,8 @@ internal object ColorLaboratorio {
  *
  * Lo que cuenta, igual que el cuento (todo sale de la ficha; ver el comentario del calendario en `AnioG8.kt`):
  * - **Dónde está** ([lugar], [cuadro], [provisional]): el laboratorio; la cuarentena, la campana y el cierre son el mismo
- *   cuadro con lo suyo; arriba, el laboratorio sin ella y el campamento en la pantalla, provisional.
+ *   cuadro con lo suyo; arriba, el laboratorio sin ella y el campamento en la pantalla, provisional. A las horas de comer
+ *   y en los días de lo común se pinta el segundo cuadro, el centro del Claustro ([CentroLab], `EscenaLaboratorioCentro*.kt`).
  * - **Los tres arcos:** los jardines por la puerta ([jardines], [tramoJardines]), la grama en la mesa ([investigacion],
  *   [grama]) y lo verde de las ruinas en la pantalla ([superficie]).
  * - **La luz** ([cultivo], [encendidas], [lamparaDeMesa], [cielo], [lucesDeArriba], [luces]): las lámparas de cultivo caminan

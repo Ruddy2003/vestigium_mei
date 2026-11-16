@@ -1,6 +1,5 @@
 package io.github.ruddy2003.vestigium.ui.escenas
 
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -15,7 +14,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasCentro.linea
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasCentro.trazo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
 import kotlin.math.cos
