@@ -72,6 +72,14 @@ Trazos: `corrimiento(tinta, registro)` y `DrawScope.conRegistro(tinta, registro)
 
 Una hoja de muestra de todo esto: `herramientas/arnes_muebles/dibujar.sh trazos psicodelia <claro|oscuro> salida.png` con `ARNES_CARA` y `ARNES_INTENSIDAD` (`arnes/MuestraTrazos.kt`).
 
+### Los sonidos (tanda 7)
+
+- **Dos juegos, uno por cara**, en lo que suena dentro de la app. La ciudad (BASE) se queda con los nombres de siempre (`s_psicodelia_<evento>`, `s_tecla_psicodelia`, `s_psicodelia_presentacion`, `s_psicodelia_anual`): órgano de transistores suave, pandero, eco de cinta corto, la aguja y la perilla de la radio. La psicodelia (INTENSA) va en `s_psicodelia_tinta_<evento>`, `s_tecla_psicodelia_tinta`, `s_psicodelia_tinta_presentacion` y `s_psicodelia_tinta_anual`: sitar en zumbido, guitarra con distorsión en el logro, eco de cinta largo, el rasero y el bastidor de la serigrafía, el pincel de rotulista. El rascado del mapa es uno solo (`s_rascar_psicodelia`, la misma moneda).
+- **El sonido sigue la cara de la hora, nunca la intensidad:** `Sentidos.caraDelSonido(tema)` = `EstadoTema.caraSinIntensidad(tema)`. Con un consumo de día, la pantalla pasa a la psicodelia pero se sigue oyendo la ciudad (un consumo no debe oírse). La cara forzada (capturas, arnés) sí manda.
+- En código: `Sentidos.SONIDOS` (BASE, como antes), `Sentidos.SONIDOS_INTENSA` (solo los temas con caras), `Sentidos.sonidosDe(tema, cara)`; `Musica.presentacion(t, cara)` y `Musica.anual(t, cara)`, con la cara de la hora por omisión. Pruebas: `SonidosCaraPrueba` y la superficie `sonidos_intensa` de `CoberturaTemas`.
+- **No cambian con la cara:** los avisos (`n_psicodelia_aviso`, `n_psicodelia_solemne`, que ahora son de la ciudad: perilla, órgano suave y pandero, sin sitar) y los tonos del teléfono (`t_psicodelia_llamada`, `t_psicodelia_notificacion`, los mismos de antes: el guion los reproduce idénticos).
+- Generadores: `herramientas/afinados.py` (`psicodelia` y `psicodelia_tinta`) y `herramientas/musica.py` (`hacer_psicodelia_ciudad` y `hacer_psicodelia`).
+
 ## Cómo leer la cara y la intensidad
 
 **Desde un `@Composable`** (componentes, pantallas): `val cara = caraLocal()` y `val i = intensidadLocal()`; los colores calientes, `TrazosTinta.rol(Rol.PRIMARIO, oscuro, i)`. Así respetan `SinIntensidad`.

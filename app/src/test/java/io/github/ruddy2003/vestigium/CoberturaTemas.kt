@@ -41,6 +41,8 @@ class CoberturaTemas {
 
         // Mapas que todavía van por texto (hasta que pasen a `when (tema)` exhaustivos).
         superficie("sonidos_mapa") { it.id !in Sentidos.SONIDOS }
+        // Los temas con caras (Psicodelia) tienen además el juego de su cara intensa, con los 11 sonidos.
+        superficie("sonidos_mapa_intensa") { it.conCaras && Sentidos.SONIDOS_INTENSA[it.id]?.size != Sentidos.SONIDOS[it.id]?.size }
         superficie("avisos_mapa") { it.id !in Avisos.SONIDOS }
         superficie("campana_titulos") { it.id !in Campanas.TITULOS }
         superficie("campana_etapas") { Campanas.ETAPAS[it.id]?.size != 7 }
@@ -72,6 +74,7 @@ class CoberturaTemas {
         superficie("sonido_error") { !recurso("raw", "s_${it.id}_error") }
         superficie("sonido_cambio") { !recurso("raw", "s_${it.id}_cambio") }
         superficie("sonido_rascar") { !recurso("raw", "s_rascar_${it.id}") }
+        superficie("sonidos_intensa") { t -> t.conCaras && SONIDOS_INTENSA.any { !recurso("raw", it.replace("<id>", t.id)) } }
         val temas = Pendientes.main("res/values/themes.xml").readText()
         superficie("arranque") { "Theme.Vestigium.Arranque.${Id(it)}\"" !in temas }
 
@@ -102,6 +105,13 @@ class CoberturaTemas {
 
         /** Los del lote 6: error, cambio, la tecla del diario y el rascado de la lámina. */
         val SONIDOS_LOTE6 = listOf("s_<id>_error", "s_<id>_cambio", "s_tecla_<id>", "s_rascar_<id>")
+
+        /**
+         * El juego de la cara intensa de los temas con caras (Psicodelia v2, tanda 7): lo que suena dentro de la app. Sin
+         * avisos ni tonos del teléfono (se quedan los de la cara de base) y sin rascado (la misma moneda en las dos caras).
+         */
+        val SONIDOS_INTENSA = listOf("toque", "guardar", "logro", "pasar", "elegir", "abrir", "tema", "presentacion", "anual", "error", "cambio").map { "s_<id>_tinta_$it" } +
+            listOf("s_tecla_<id>_tinta")
 
         /** Los 16 temas que todavía no tienen su cuadro de Hoy: Helénico lo tiene desde la tanda P4a; Gótico y Ciudad neón, desde la P4b; Romano y Al-Ándalus, desde la S1; Pirata, desde la S2; Espacio y Distopía, desde la S3; Horror cósmico y Ciudad verde, desde la S4; Roma, desde la S5; Scriptorium, desde la S6; Renacimiento, desde la S6; Ruta de la Seda, desde la S7; Revolución francesa, desde la S8; Vapor victoriano, desde la S8; siguen las demás tandas S. */
         private val SIN_CUADRO = setOf("egipto", "templario", "refugio", "orden", "laboratorio", "colonos", "napoleon", "deco", "botanico", "edo", "abismo", "meso", "mongol", "urss", "antiguas", "cueva")

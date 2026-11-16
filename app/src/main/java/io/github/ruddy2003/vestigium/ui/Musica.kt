@@ -75,7 +75,12 @@ object Musica {
     /** El tema no tiene música ni tonos propios (Básico): no suena nada y no hay tono que instalar. */
     const val SIN_SONIDO = 0
 
-    fun presentacion(t: TemaId): Int = when (t) {
+    /**
+     * La música de la presentación de [t]. Los temas con caras ([TemaId.conCaras], hoy Psicodelia) tienen una por [cara]
+     * (la ciudad: el órgano suave y la aguja; la psicodelia: el sitar, la guitarra con distorsión y el eco largo); por
+     * omisión, la cara de la hora ([Sentidos.caraDelSonido]), nunca la de la intensidad: un consumo no debe oírse.
+     */
+    fun presentacion(t: TemaId, cara: Cara = Sentidos.caraDelSonido(t)): Int = when (t) {
         TemaId.ROMANO -> R.raw.s_romano_presentacion
         TemaId.URBE -> R.raw.s_urbe_presentacion
         TemaId.CIBER -> R.raw.s_ciber_presentacion
@@ -85,7 +90,10 @@ object Musica {
         TemaId.MEDIEVAL -> R.raw.s_medieval_presentacion
         TemaId.TEMPLARIO -> R.raw.s_templario_presentacion
         TemaId.DISTOPIA -> R.raw.s_distopia_presentacion
-        TemaId.PSICODELIA -> R.raw.s_psicodelia_presentacion
+        TemaId.PSICODELIA -> when (cara) {
+            Cara.BASE -> R.raw.s_psicodelia_presentacion
+            Cara.INTENSA -> R.raw.s_psicodelia_tinta_presentacion
+        }
         TemaId.NOUVEAU -> R.raw.s_nouveau_presentacion
         TemaId.GALIA -> R.raw.s_galia_presentacion
         TemaId.ARCONTES -> R.raw.s_arcontes_presentacion
@@ -117,8 +125,8 @@ object Musica {
         TemaId.CUEVA -> R.raw.s_cueva_presentacion
         TemaId.BASICO -> SIN_SONIDO
     }
-    /** La música larga de «Tu año»: la frase del tema que va creciendo (~1 min y medio). */
-    fun anual(t: TemaId): Int = when (t) {
+    /** La música larga de «Tu año»: la frase del tema que va creciendo (~1 min y medio). Por [cara], como [presentacion]. */
+    fun anual(t: TemaId, cara: Cara = Sentidos.caraDelSonido(t)): Int = when (t) {
         TemaId.ROMANO -> R.raw.s_romano_anual
         TemaId.URBE -> R.raw.s_urbe_anual
         TemaId.CIBER -> R.raw.s_ciber_anual
@@ -128,7 +136,10 @@ object Musica {
         TemaId.MEDIEVAL -> R.raw.s_medieval_anual
         TemaId.TEMPLARIO -> R.raw.s_templario_anual
         TemaId.DISTOPIA -> R.raw.s_distopia_anual
-        TemaId.PSICODELIA -> R.raw.s_psicodelia_anual
+        TemaId.PSICODELIA -> when (cara) {
+            Cara.BASE -> R.raw.s_psicodelia_anual
+            Cara.INTENSA -> R.raw.s_psicodelia_tinta_anual
+        }
         TemaId.NOUVEAU -> R.raw.s_nouveau_anual
         TemaId.GALIA -> R.raw.s_galia_anual
         TemaId.ARCONTES -> R.raw.s_arcontes_anual
@@ -160,6 +171,7 @@ object Musica {
         TemaId.CUEVA -> R.raw.s_cueva_anual
         TemaId.BASICO -> SIN_SONIDO
     }
+    /** Los tonos del teléfono ([llamada], [notificacion]): uno por tema, sin caras (el teléfono los fija al instalarlos). */
     fun llamada(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_llamada
         TemaId.URBE -> R.raw.t_urbe_llamada
@@ -269,14 +281,15 @@ object Musica {
     /** Para «Tu año»: la música larga, que se puede bajar poco a poco y se repite si las historias duran más. */
     fun anualTocar(ctx: Context, t: TemaId): MediaPlayer? {
         detener()
-        if (anual(t) == SIN_SONIDO) return null
+        val res = anual(t)
+        if (res == SIN_SONIDO) return null
         if (!Repo.config.sonidos) return null
         val audio = ctx.getSystemService(AudioManager::class.java)
         if (audio != null && audio.ringerMode != AudioManager.RINGER_MODE_NORMAL) return null
         return runCatching {
             val mp = MediaPlayer()
             mp.setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
-            ctx.resources.openRawResourceFd(anual(t)).use { fd -> mp.setDataSource(fd.fileDescriptor, fd.startOffset, fd.length) }
+            ctx.resources.openRawResourceFd(res).use { fd -> mp.setDataSource(fd.fileDescriptor, fd.startOffset, fd.length) }
             mp.isLooping = true
             mp.prepare(); mp.start()
             reproductor = mp
