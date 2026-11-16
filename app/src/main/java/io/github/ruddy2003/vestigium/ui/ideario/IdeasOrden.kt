@@ -117,6 +117,8 @@ object IdeasOrden : DisenoIdeas {
     private val TINTA = Color(0xFF1B1710)
 
     override val cols = 2
+    /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoIdeas.auraEnReposo]). */
+    override val auraEnReposo = false
     override val proporcion = 2.0f
     override val corona = 0.62f
     override val base = 0.24f
