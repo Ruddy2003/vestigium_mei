@@ -109,6 +109,27 @@ class EscenaAbismoBarcoPrueba {
         assertTrue(BarcoAbismo.cordero(momento("2027-05-01", 9.0))); assertTrue(!BarcoAbismo.cordero(momento("2027-05-01", 21.0))); assertTrue(!BarcoAbismo.cordero(momento(DIA, 9.0)))
     }
 
+    @Test fun losObjetosGrandesTienenSuSitioYNadaSaleDosVeces() {
+        for (o in listOf("escafandra", "botas", "cuerda", "red")) {
+            val m = momento(DIA, 13.0, objeto = o)
+            // El casco de Nikos se aparta a la escotilla, la manta de delante no se tiende y lo plantado sigue en el paso del gato.
+            assertTrue(o, BarcoAbismo.cascoEnLaEscotilla(m))
+            assertEquals(o, 2, BarcoAbismo.mantasHoy(momento(DIA, 21.0, objeto = o)))
+            val suelo = EscenaAbismo.anclas(m).single { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }
+            for (x in BarcoAbismo.estorbos(m)) assertTrue("$o $x", x in suelo.x..suelo.hasta)
+            // Lo que el grande tiende a la derecha de su pie no pisa el casco ni las limpias.
+            val pie = BarcoAbismo.PIE_GRANDE; val limpias = BarcoAbismo.limpiasEn(m).let { BarcoAbismo.pb(it.x, 0f, it.y) }
+            assertTrue("$o: las limpias, a la derecha del grande", limpias.x - pie.x > 0.9f * io.github.ruddy2003.vestigium.ui.escenas.ObjetosAbismo.METRO * BarcoAbismo.ESCALA_GRANDE)
+        }
+        assertEquals(3, BarcoAbismo.mantasHoy(momento(DIA, 21.0, objeto = "pan"))); assertTrue(!BarcoAbismo.cascoEnLaEscotilla(momento(DIA, 13.0, objeto = "pan")))
+        // Nada dos veces: el traje tendido, las botas, el casco de la cubierta y la aduja de cabo se quitan el día que son el objeto.
+        assertEquals(0, BarcoAbismo.trajesASecar(momento(DIA, 13.0, objeto = "escafandra")))
+        assertTrue(!BarcoAbismo.cascoEnCubierta(momento(DIA, 13.0, objeto = "casco")))
+        assertTrue(!BarcoAbismo.adujaDeCabo(momento(DIA, 13.0, objeto = "cuerda"))); assertTrue(BarcoAbismo.adujaDeCabo(momento(DIA, 13.0, objeto = "pan")))
+        // Y nada cuelga delante del objeto chico, sobre la tapa de la bomba: el farol queda por encima.
+        assertTrue(BarcoAbismo.FAROL.y + 0.25f * BarcoAbismo.K_FAROL < BarcoAbismo.soporte().y - 0.45f * io.github.ruddy2003.vestigium.ui.escenas.ObjetosAbismo.METRO * BarcoAbismo.escalaEn(BarcoAbismo.SITIO_BOMBA.z0))
+    }
+
     @Test fun elAguaDejaVerElFondoCercaYLoTapaLejos() {
         val a = MarAbismo.agua(BarcoAbismo.Vista(momento(DIA, 13.0)))
         assertTrue(a.transparencia(ALTO - 2f) > 0.6f)

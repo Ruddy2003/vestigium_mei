@@ -123,9 +123,8 @@ internal object BarcoAbismo {
     /** Las botas de plomo, a la derecha de la bomba: una de pie y la otra caída de lado. */
     val SITIO_BOTA = sitio(-0.35f, 4.3f, -0.5f)
     val SITIO_BOTA2 = sitio(-0.12f, 4.5f, 0.6f)
-    /** El montón de las esponjas limpias, abajo, junto a la borda. */
-    const val LIMPIAS_U = 1.0f
-    const val LIMPIAS_V = 2.7f
+    /** El montón de las esponjas limpias, abajo, junto a la borda (los días de objeto grande, más pegado a ella, para dejarle sitio). */
+    fun limpiasEn(m: Momento): Offset = if (ObjetosAbismo.esGrande(m)) Offset(1.15f, 2.55f) else Offset(1.0f, 2.7f)
     /**
      * La hornacina del icono, en la aleta de estribor, abajo a la derecha: clavada en lo alto de un candelero que sube de
      * la borda, para que se vea entera sobre el agua y su lamparilla alumbre la regala, las tablas y el agua.
@@ -155,8 +154,16 @@ internal object BarcoAbismo {
     fun soporte(): Offset = SITIO_BOMBA.p(0f, PiezasAbismo.BOMBA_ALTO + 0.01f, 0f)
 
     /** El objeto grande pisa delante de la bomba, a su izquierda, y se recuesta en ella. */
-    val PIE_GRANDE: Offset get() = pb(0.1f, 0f, 3.05f)
-    val APOYO_GRANDE: Offset get() = SITIO_BOMBA.p(-0.25f, 0.62f, -0.15f)
+    /**
+     * El objeto grande pisa en medio de la cubierta, delante de la bomba y a su derecha, y se recuesta en ella; lo que
+     * tiende (las piernas del traje, la segunda bota, la aduja) cae a la derecha de su pie, donde la cubierta queda libre
+     * esos días (el casco de Nikos va a la escotilla, las limpias se arriman a la borda y la manta de delante no se tiende).
+     */
+    const val GRANDE_U = 0.45f
+    const val GRANDE_V = 3.4f
+    val PIE_GRANDE: Offset get() = pb(GRANDE_U, 0f, GRANDE_V)
+    val APOYO_GRANDE: Offset get() = SITIO_BOMBA.p(0.18f, 0.62f, -0.12f)
+    val ESCALA_GRANDE: Float get() = escalaEn(cam(GRANDE_U, GRANDE_V).y)
 
     // ---------------------------------------------------------------- La luz
 
@@ -222,6 +229,18 @@ internal object BarcoAbismo {
     internal fun cascoEnCubierta(m: Momento): Boolean =
         EscenaAbismo.lugar(m) == EscenaAbismo.Lugar.BARCO && EscenaAbismo.cascosColgados(m) == 3 && ObjetosAbismo.elCuadroPinta(m, "casco")
 
+    /** Los días de objeto grande, el casco de Nikos no va junto a la tina sino encima de la tapa de la escotilla, para dejarle el sitio al objeto. */
+    internal fun cascoEnLaEscotilla(m: Momento): Boolean = cascoEnCubierta(m) && ObjetosAbismo.esGrande(m)
+
+    /** Cuántas mantas se tienden de noche: tres; dos los días de objeto grande (la de delante dejaría el objeto debajo). */
+    internal fun mantasHoy(m: Momento): Int = if (!EscenaAbismo.mantas(m)) 0 else if (ObjetosAbismo.esGrande(m)) 2 else 3
+
+    /** Dónde se aduja la manguera cuando no está en el agua (u, v): junto a la bomba; los días de objeto grande, donde va el cubo, para dejarle al objeto su suelo. */
+    fun adujaDeLaManguera(m: Momento): Offset = if (ObjetosAbismo.esGrande(m)) Offset(1.16f, 3.62f) else Offset(0.95f, 3.05f)
+
+    /** La aduja de cabo junto a la borda: no el día que el objeto es la cuerda adujada, para que no haya dos iguales. */
+    internal fun adujaDeCabo(m: Momento): Boolean = m.ficha.objeto != "cuerda"
+
     /** Dónde descansa el casco de Nikos en la cubierta (u, v en metros), y su escala. */
     const val CASCO_U = 0.62f
     const val CASCO_V = 2.92f
@@ -265,7 +284,7 @@ internal object BarcoAbismo {
     /** Dónde está el farol: colgado de una driza larga del cabo de las ristras, sobre la bomba y el corro, a la altura del pecho. */
     private const val FAROL_U = 0.35f
     private const val FAROL_V = 2.85f
-    const val FAROL_ALTO = 1.55f
+    const val FAROL_ALTO = 1.95f
     val FAROL: Offset get() = pb(FAROL_U, FAROL_ALTO, FAROL_V)
     val K_FAROL: Float get() = k(cam(FAROL_U, FAROL_V).y)
     /** El farol en metros de la cámara (x, alto, z), para las sombras que tumba. */
@@ -352,8 +371,8 @@ internal object BarcoAbismo {
      * a la hora de limpiar (la tina pisa más acá y la bomba más allá).
      */
     fun estorbos(m: Momento): List<Float> = buildList {
-        if (cascoEnCubierta(m)) add(pb(CASCO_U, 0f, CASCO_V).x)
-        if (esponjasLimpias(m) > 0.02f) add(pb(LIMPIAS_U, 0f, LIMPIAS_V).x)
+        if (cascoEnCubierta(m) && !cascoEnLaEscotilla(m)) add(pb(CASCO_U, 0f, CASCO_V).x)
+        if (esponjasLimpias(m) > 0.02f) { val q = limpiasEn(m); val x = pb(q.x, 0f, q.y).x; if (x <= GATO_HASTA) add(x) }
     }
 
     fun anclas(m: Momento): List<Ancla> = buildList {

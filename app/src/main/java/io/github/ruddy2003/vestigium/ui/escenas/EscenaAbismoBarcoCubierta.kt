@@ -293,12 +293,13 @@ internal object CubiertaAbismo {
             escotilla(v)
             if (EscenaAbismo.ensartando(m)) ensartando(v)
             if (fase == Fase.CORRO) corro(v)
+            if (B.cascoEnLaEscotilla(m)) { val s = B.SITIO_ESCOTILLA; cascoEnLaCubierta(v, Sitio(s.v, s.p(0.18f, B.ESCOTILLA_ALTO, 0.02f), s.k, s.giro)) }
         }
         // La bomba del aire, con la manguera (y encima, el objeto chico del día). De noche, cada cara con la lumbre que la alumbra.
         val sb = B.SITIO_BOMBA
         aLaLumbre += Sombreable(sb, PiezasAbismo.bombaEsquinas())
         cosas += Cosa(sombraDe(sb, sol, PiezasAbismo.bombaEsquinas()), sb.pie) {
-            if (EscenaAbismo.manguera(m) == Manguera.ADUJADA) aduja(v.pincel(sb.pie), B.pb(0.95f, 0f, 3.05f), 0.3f * sb.k, 0.1f * sb.k, 5, 0.05f * sb.k, C.BREA, manguera = true)
+            if (EscenaAbismo.manguera(m) == Manguera.ADUJADA) { val a = B.adujaDeLaManguera(m); val q = B.pb(a.x, 0f, a.y); val kk = B.k(B.cam(a.x, a.y).y); aduja(v.pincel(q), q, 0.25f * kk, 0.085f * kk, 4, 0.045f * kk, C.BREA, manguera = true) }
             val pb = v.pincel(sb.p(0f, 0.6f, 0f))
             bomba(pb, sb, v.solDe(pb), EscenaAbismo.buzoAbajo(m), 0.75f, Semilla.de("abismo", "bomba"))
             if (EscenaAbismo.manguera(m) == Manguera.AL_AGUA) mangueraEnCubierta(v)
@@ -320,7 +321,7 @@ internal object CubiertaAbismo {
             mazo(pt, B.pb(0.12f, 0f, 2.75f), st.p(0.36f, 0.5f, -0.1f), 0.11f * st.k)
         }
         // El casco de Nikos, cuando ha subido: descansa en la cubierta, ladeado sobre su peto, junto a la tina.
-        if (B.cascoEnCubierta(m)) {
+        if (B.cascoEnCubierta(m) && !B.cascoEnLaEscotilla(m)) {
             val s = B.sitio(B.CASCO_U, B.CASCO_V)
             aLaLumbre += Sombreable(s, esquinas(-0.26f, 0.26f, 0f, 0.55f, -0.22f, 0.22f))
             cosas += Cosa(sombraDe(s, sol, esquinas(-0.26f, 0.26f, 0f, 0.55f, -0.22f, 0.22f)), s.pie) { cascoEnLaCubierta(v, s) }
@@ -334,16 +335,16 @@ internal object CubiertaAbismo {
         }
         // Las limpias, «como pan blanco», a la tarde: el montón dorado que crece hasta que se ensartan.
         if (limpias > 0.02f) {
-            val s = B.sitio(B.LIMPIAS_U, B.LIMPIAS_V)
+            val s = B.limpiasEn(m).let { B.sitio(it.x, it.y) }
             cosas += Cosa(sombraDe(s, sol, esquinas(-0.3f, 0.3f, 0f, 0.25f * limpias + 0.1f, -0.2f, 0.2f)), s.pie) { monton(v.pincel(s.pie), s.pie, 0.62f * s.k * (0.6f + 0.4f * limpias), (4 + 9 * limpias).toInt(), Semilla.de("abismo", "limpias"), true) }
         }
         // El cubo de agua de mar (para lavarse la cara, para mojar las esponjas), con su asa de cuerda.
-        if (fase != Fase.SUENO) {
+        if (fase != Fase.SUENO && !ObjetosAbismo.esGrande(m)) {
             val s = B.sitio(1.18f, 3.55f)
             cosas += Cosa(sombraDe(s, sol, esquinas(-0.13f, 0.13f, 0f, 0.3f, -0.13f, 0.13f)), s.pie) { val pc = v.pincel(s.pie); cuboDeMadera(pc, s, v.solDe(pc), Semilla.de("abismo", "cubo")) }
         }
         // Una aduja de cabo junto a la borda, de proa (siempre).
-        run {
+        if (B.adujaDeCabo(m)) {
             val q = B.pb(0.85f, 0f, 5.8f); val kk = kEn(5.8f)
             cosas += Cosa(Path().apply { addOval(Rect(q.x - 0.3f * kk, q.y - 0.1f * kk, q.x + 0.3f * kk, q.y + 0.08f * kk)) }, q) { aduja(v.pincel(q), q, 0.28f * kk, 0.09f * kk, 5, 0.035f * kk, C.CANAMO) }
         }
@@ -355,12 +356,13 @@ internal object CubiertaAbismo {
             cosas += Cosa(Path().apply { addOval(Rect(pie.x - 0.3f * kk, pie.y - 0.7f * kk, pie.x + 0.3f * kk, pie.y)) }, pie) { saco(v.pincel(pie), pie, kk, Semilla.de("abismo", "saco", i)) }
         }
         // Las mantas tendidas para dormir, con el rollo de cuerda de almohada.
-        if (EscenaAbismo.mantas(m)) for ((i, mt) in MANTAS.withIndex()) {
+        for ((i, mt) in MANTAS.withIndex()) {
+            if (i >= B.mantasHoy(m)) continue
             val pie = B.pb(mt[0], 0f, mt[1])
             cosas += Cosa(Path(), pie) { manta(v, mt, i) }
         }
         // El objeto grande del día, recostado en la bomba.
-        grande(m, v.pincel(B.PIE_GRANDE), B.PIE_GRANDE, B.APOYO_GRANDE, B.escalaEn(B.cam(0.1f, 3.05f).y))?.let { cosas += it }
+        grande(m, v.pincel(B.PIE_GRANDE), B.PIE_GRANDE, B.APOYO_GRANDE, B.ESCALA_GRANDE)?.let { cosas += it }
 
         // La luz de las lumbres en las tablas, antes de las sombras que la cortan: el charco del farol, grande, bajo él; el de
         // la lamparilla, chico, junto a la hornacina.
@@ -395,8 +397,8 @@ internal object CubiertaAbismo {
         // cobre del casco): la franja de sol los enciende entre sombra y sombra **[Aproximación]**: la sombra se calcula en las tablas.
         if (v.r.dia > 0.5f && v.r.fuerza > 0.1f && (limpias > 0.02f || B.cascoEnCubierta(m))) {
             val zona = Path()
-            if (limpias > 0.02f) { val q = B.pb(B.LIMPIAS_U, 0f, B.LIMPIAS_V); val kk = kEn(B.LIMPIAS_V); zona.addOval(Rect(q.x - 0.4f * kk, q.y - 0.4f * kk, q.x + 0.4f * kk, q.y + 0.05f * kk)) }
-            if (B.cascoEnCubierta(m)) { val q = B.pb(B.CASCO_U, 0f, B.CASCO_V); val kk = B.k(B.cam(B.CASCO_U, B.CASCO_V).y); zona.addOval(Rect(q.x - 0.35f * kk, q.y - 0.62f * kk, q.x + 0.35f * kk, q.y + 0.02f * kk)) }
+            if (limpias > 0.02f) { val l0 = B.limpiasEn(m); val q = B.pb(l0.x, 0f, l0.y); val kk = kEn(l0.y); zona.addOval(Rect(q.x - 0.4f * kk, q.y - 0.4f * kk, q.x + 0.4f * kk, q.y + 0.05f * kk)) }
+            if (B.cascoEnCubierta(m) && !B.cascoEnLaEscotilla(m)) { val q = B.pb(B.CASCO_U, 0f, B.CASCO_V); val kk = B.k(B.cam(B.CASCO_U, B.CASCO_V).y); zona.addOval(Rect(q.x - 0.35f * kk, q.y - 0.62f * kk, q.x + 0.35f * kk, q.y + 0.02f * kk)) }
             capaSombra(v.r, 0.75f) { c -> clipPath(zona) { with(AparejoAbismo) { sombras(v, c) } } }
         }
         // Lo que pasa por la regala: la escala (echada o recogida), la cuerda de vida y la red colgada.
@@ -423,8 +425,8 @@ internal object CubiertaAbismo {
         if (v.luna > 0.05f) drawArc(B.plata(v).copy(alpha = 0.3f * v.luna), 200f, 90f, false, Offset(c.x - r * 1.0f, c.y - r * 1.0f), Size(r * 1.7f, r * 1.6f), style = Stroke(r * 0.07f, cap = StrokeCap.Round))
     }
 
-    /** Las mantas de dormir: (u0, v0, u1, v1) de cada una en la cubierta, en metros. */
-    private val MANTAS = listOf(floatArrayOf(0.85f, 2.45f, 1.3f, 3.3f), floatArrayOf(0.55f, 4.7f, 1.15f, 5.9f), floatArrayOf(-0.55f, 4.4f, -0.05f, 5.5f))
+    /** Las mantas de dormir: (u0, v0, u1, v1) de cada una en la cubierta, en metros; la última, la de delante, no se tiende los días de objeto grande ([BarcoAbismo.mantasHoy]). */
+    private val MANTAS = listOf(floatArrayOf(0.55f, 4.7f, 1.15f, 5.9f), floatArrayOf(-0.55f, 4.4f, -0.05f, 5.5f), floatArrayOf(0.85f, 2.45f, 1.3f, 3.3f))
 
     /** La sombra que tumba la lumbre [lum] (en metros de la cámara: x, alto, z) de una cosa con estas esquinas, en la cubierta. */
     private fun sombraALaLumbre(s: Sitio, esquinas: List<V3>, lum: V3): Path {
