@@ -17,9 +17,9 @@ Lo que pidió el autor el 16 de noviembre de 2026 después de comparar los 39 te
 | 0 | Este plan, las reglas de los muebles rehechos (`MUEBLES.md`, versión 2) y el arnés | hecho |
 | 1 | Arreglos: el aviso que sonaba junto con la música al estrenar tema; las notificaciones que no sonaban; el modo claro de día y oscuro de noche | hecho y compilado en Actions; **falta probarlo en el teléfono** |
 | 2 | Piloto de Idearios (Laboratorio, Helénico y Gótico) | hecho y aprobado por el autor |
-| 3 | Los otros 31 Idearios, y un piloto de tres bibliotecas rehechas | Idearios: 33 de 34 en la rama, falta la segunda vuelta de Revolución. Bibliotecas piloto: Helénico hecha; Laboratorio y Gótico, terminándose. **Las otras 36 bibliotecas no se empiezan** hasta que el autor vea los tres pilotos |
+| 3 | Los otros 31 Idearios, y un piloto de tres bibliotecas rehechas | **hecho.** Los 34 Idearios están rehechos, compilados y capturados en Actions (corridas 12, 13 y 14, sin fallas). Bibliotecas piloto hechas: Helénico, Laboratorio y Gótico (`ui/biblioteca/MuebleEstante<Tema>.kt`). **Las otras 36 bibliotecas no se empiezan** hasta que el autor diga, vistos los tres pilotos |
 | 4 | Los muebles de Vida | **no se hace ahora**: queda escrita abajo |
-| 5 | Psicodelia nueva | siguiente; guía y plan técnico escritos, nada programado |
+| 5 | Psicodelia nueva | **en curso**, por tandas (`temas/psicodelia_plan.md`). Hecha la base (`ui/CaraTema.kt`, las cuatro paletas, `temas/psicodelia_base.md`); en curso: componentes, Ideario, textos y el cuento de David |
 | 6 | Fondos de pantalla con las escenas | después de la 5; el fallo del cambio automático ya está diagnosticado (abajo) |
 | 7 | Lo temático nuevo: el toque, la hora y el clima, los mensajes breves, las esperas, el selector de fecha y de hora | **no se hace ahora**: queda escrita abajo |
 | 8 | Los cuadros: seguir personajes (con notificación y sonido propio), «Hoy en la historia» bajo el cuento, el cuadro a pantalla completa y arriba del cuento con su ambiente, la galería y su mueble en Vida, el ronroneo del gato. Deja puestos los campos que necesita la parte 9 | después de la 6 |
