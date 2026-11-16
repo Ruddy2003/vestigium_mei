@@ -193,8 +193,8 @@ val instantanea by tasks.registering {
             j.copyTo(tmp, overwrite = true)
             tmp.renameTo(copia)
         }
-        // Las copias viejas se borran después de un día (una llamada no tarda tanto).
-        dir.listFiles()!!.filter { it.name.endsWith(".jar") && it != copia && System.currentTimeMillis() - it.lastModified() > 86_400_000 }.forEach { it.delete() }
+        // Las copias viejas se borran después de una hora (una llamada no tarda tanto).
+        dir.listFiles()!!.filter { it.name.endsWith(".jar") && it != copia && System.currentTimeMillis() - it.lastModified() > 3_600_000 }.forEach { it.delete() }
         val linea = (listOf(copia) + cp.get().files).joinToString(File.pathSeparator) { it.absolutePath }
         val f = dir.resolve("classpath.txt")
         val t = dir.resolve("classpath.txt.tmp")

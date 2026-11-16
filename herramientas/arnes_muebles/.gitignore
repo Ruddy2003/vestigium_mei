@@ -1,5 +1,6 @@
-# Carpetas de compilación del arnés
-.gradle/
+# Lo que genera el arnés al compilar y dibujar: nada de esto va al repositorio.
 build/
-salida/
+build-otras/
+.gradle/
+.kotlin/
 *.png
