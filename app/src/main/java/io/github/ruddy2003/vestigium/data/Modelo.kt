@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 25
+const val SCHEMA_V = 26
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -840,7 +840,10 @@ data class Config(
     /** Esquema 22: la revisión semanal de la base de datos (PRAGMA quick_check): cuándo y si salió bien. */
     val bd_revision: String? = null,
     val bd_revision_ok: Boolean = true,
-    /** Claro u oscuro: «sistema» sigue al teléfono, «claro» u «oscuro» lo fijan dentro de la app. */
+    /**
+     * Claro u oscuro: «sistema» sigue al teléfono, «claro» u «oscuro» lo fijan dentro de la app y, desde el esquema 26
+     * (16 nov 2026), «hora» va en claro de 5:00 a 21:00 y en oscuro de 21:00 a 5:00 (`ui/ModoHora.kt`).
+     */
     val modo: String = "sistema",
     /** Emblemas que se mueven, transiciones y barras que crecen. */
     val animaciones: Boolean = true,

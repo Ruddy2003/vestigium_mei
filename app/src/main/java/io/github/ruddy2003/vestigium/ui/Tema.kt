@@ -630,24 +630,28 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.BASICO -> Esquinas(8, Esquina.REDONDA)          // las de Material 3: 8 dp los botones, 12 dp las tarjetas
 }
 
-/** ¿Va en oscuro? Lo decide el botón de la app (claro, oscuro o como el teléfono); Terminal y Ciudad neón siempre son oscuros. */
-/** Lo mismo que [modoOscuro], fuera de Compose: el arranque, el fondo vivo, el pulso y los avisos. */
-fun modoOscuroDe(ctx: android.content.Context, tema: TemaId = Estilo.tema): Boolean = tema.soloOscuro || when (Repo.config.modo) {
-    "claro" -> false
-    "oscuro" -> true
-    else -> (ctx.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
-}
+/**
+ * Lo mismo que [modoOscuro], fuera de Compose: el arranque, el fondo vivo, el pulso, los reportes y los avisos. Con el
+ * modo «hora» mira la hora en cada llamada ([ModoHora]).
+ */
+fun modoOscuroDe(ctx: android.content.Context, tema: TemaId = Estilo.tema): Boolean = oscuroSegun(
+    Repo.config.modo, tema.soloOscuro,
+    (ctx.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    ModoHora.esDeNoche(java.time.LocalTime.now()),
+)
 
+/**
+ * ¿Va en oscuro? Lo decide el ajuste de la app (claro, oscuro, como el teléfono o según la hora, ver [oscuroSegun]);
+ * Terminal y Ciudad neón siempre son oscuros. Con «hora», el cambio llega solo al cruzar la hora ([RelojModo]).
+ */
 @Composable
-fun modoOscuro(tema: TemaId = Estilo.tema): Boolean = tema.soloOscuro || when (Repo.config.modo) {
-    "claro" -> false
-    "oscuro" -> true
-    else -> isSystemInDarkTheme()
-}
+fun modoOscuro(tema: TemaId = Estilo.tema): Boolean = oscuroSegun(Repo.config.modo, tema.soloOscuro, isSystemInDarkTheme(), RelojModo.noche)
 
 @Composable
 fun TemaVestigium(content: @Composable () -> Unit) {
     val tema = Estilo.tema
+    // Con el modo «hora», el reloj que pasa de claro a oscuro (y al revés) sin reiniciar la app.
+    if (Repo.config.modo == "hora" && !tema.soloOscuro && !LocalView.current.isInEditMode) RelojDelModo()
     val oscuro = modoOscuro(tema)
     val esquema = esquemaDe(tema, oscuro)
     // Íconos de la barra de estado legibles aunque el teléfono esté en modo claro y el tema sea oscuro.

@@ -4,7 +4,6 @@ import io.github.ruddy2003.vestigium.data.porNumero
 
 import android.content.ContentValues
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -86,11 +85,8 @@ class Lienzo(private val ctx: Context, val tema: TemaId = Estilo.tema, val oscur
     fun colorAnimo(v: Double): Int { val t = (v - 1) / 6; return if (t < 0.5) mezcla(error, linea, t * 2) else mezcla(linea, primario, (t - 0.5) * 2) }
 
     companion object {
-        /** Claro u oscuro sin Compose: lo que elegiste en la app, o lo del teléfono. */
-        fun oscuroFuera(ctx: Context, tema: TemaId): Boolean = tema.soloOscuro || when (Repo.config.modo) {
-            "oscuro" -> true; "claro" -> false
-            else -> (ctx.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        }
+        /** Claro u oscuro sin Compose: la misma regla que la app ([io.github.ruddy2003.vestigium.ui.modoOscuroDe]), también con «hora». */
+        fun oscuroFuera(ctx: Context, tema: TemaId): Boolean = io.github.ruddy2003.vestigium.ui.modoOscuroDe(ctx, tema)
     }
 }
 

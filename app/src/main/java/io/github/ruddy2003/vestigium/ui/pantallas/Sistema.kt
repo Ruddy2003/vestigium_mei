@@ -977,8 +977,9 @@ private fun DriveTarjeta(tarea: (suspend () -> String) -> Unit) {
 }
 
 /**
- * Claro, oscuro o como el teléfono. Está en Apariencia y arriba en «Más» (13 nov 2026; antes, además, el sol o la luna iba
- * junto al título de cada pantalla y amontonaba el encabezado). El tema que solo existe en oscuro lo dice.
+ * Claro, oscuro, como el teléfono o según la hora (16 nov 2026). Está en Apariencia y arriba en «Más» (13 nov 2026; antes,
+ * además, el sol o la luna iba junto al título de cada pantalla y amontonaba el encabezado). Con cuatro fichas ya no caben
+ * en una línea: bajan a la siguiente, como las demás filas de fichas de Ajustes. El tema que solo existe en oscuro lo dice.
  */
 @Composable
 fun SelectorModo(modifier: Modifier = Modifier) {
@@ -986,12 +987,20 @@ fun SelectorModo(modifier: Modifier = Modifier) {
     if (tema.soloOscuro) { Ayuda("El tema ${tema.nombre} solo existe en oscuro.", modifier); return }
     val ctx = LocalContext.current
     val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        listOf("sistema" to "Como el teléfono", "claro" to "Claro", "oscuro" to "Oscuro").forEach { (id, nombre) ->
-            Ficha(nombre, Repo.config.modo == id) {
-                sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.CAMBIO)
-                Repo.cambiarConfig { it.copy(modo = id) }; runCatching { Widgets.actualizar(ctx) }
+    Column(modifier) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("sistema" to "Como el teléfono", "claro" to "Claro", "oscuro" to "Oscuro", "hora" to "Según la hora").forEach { (id, nombre) ->
+                Ficha(nombre, Repo.config.modo == id) {
+                    sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.CAMBIO)
+                    // Con «hora», que el primer cuadro ya salga con la hora de ahora.
+                    if (id == "hora") io.github.ruddy2003.vestigium.ui.RelojModo.actualizar()
+                    Repo.cambiarConfig { it.copy(modo = id) }; runCatching { Widgets.actualizar(ctx) }
+                }
             }
+        }
+        if (Repo.config.modo == "hora") {
+            val o = io.github.ruddy2003.vestigium.ui.ModoHora.OSCURECE; val a = io.github.ruddy2003.vestigium.ui.ModoHora.AMANECE
+            Ayuda("Claro de $a:00 a $o:00 y oscuro de $o:00 a $a:00; cambia solo.", Modifier.padding(top = 6.dp))
         }
     }
 }
