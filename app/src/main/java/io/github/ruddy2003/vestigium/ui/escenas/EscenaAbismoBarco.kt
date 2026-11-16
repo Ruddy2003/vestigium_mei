@@ -110,7 +110,7 @@ internal object BarcoAbismo {
      * La bomba: en medio de la cubierta, un poco a estribor, con el frente (el manómetro) hacia popa, girada lo justo para
      * que se lean a la vez la caja con su manómetro y las dos ruedas en escorzo.
      */
-    val SITIO_BOMBA = sitio(0.32f, 3.85f, 0.2f)
+    val SITIO_BOMBA = sitio(0.32f, 3.85f, 0.1f)
     /** La tapa de la escotilla de proa, detrás de la bomba: ahí se ensartan las ristras y se juega a las cartas en el corro. */
     const val ESCOTILLA_U = -0.05f
     const val ESCOTILLA_V = 6.6f
@@ -183,7 +183,7 @@ internal object BarcoAbismo {
     internal class Lumbres(val lamparilla: Float, val farol: Float)
 
     /** Cuánto alumbra el farol «ya bajo» las primeras horas del sueño. */
-    const val FAROL_BAJO = 0.45f
+    const val FAROL_BAJO = 0.6f
     /** Hasta qué hora queda el farol bajo encendido. */
     const val FAROL_HASTA = 22.5
 
@@ -283,7 +283,7 @@ internal object BarcoAbismo {
     /** La luz de fuera con la noche más honda a bordo: así lo que alumbran la lamparilla, el farol y la luna destaca. */
     private fun deNoche(l: Luces): Luces {
         if (l.noche < 0.05f) return l
-        val k = 1f - 0.3f * l.noche
+        val k = 1f - 0.16f * l.noche
         val amb = Color((l.ambiente.red * k * 0.94f).coerceIn(0f, 1f), (l.ambiente.green * k * 0.97f).coerceIn(0f, 1f), (l.ambiente.blue * k).coerceIn(0f, 1f))
         return Luces(alto = l.alto, medio = l.medio, bajo = l.bajo, ambiente = amb, bruma = l.bruma, brumaFuerza = l.brumaFuerza, solX = l.solX, solAltura = l.solAltura,
             solColor = l.solColor, solFuerza = l.solFuerza, lunaX = l.lunaX, lunaAltura = l.lunaAltura, estrellas = l.estrellas, noche = l.noche, nublado = l.nublado, eclipse = l.eclipse)

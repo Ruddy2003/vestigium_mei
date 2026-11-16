@@ -39,6 +39,12 @@ internal object AparejoAbismo {
     val OBENQUES = listOf(V3(B.estribor(2.5f), B.REGALA, 2.5f), V3(B.estribor(3.3f), B.REGALA, 3.3f))
     val TOPE = V3(B.EJE, 10f, B.PALO_MAYOR)
 
+    /** Los obenques de estribor del trinquete: de la borda, a la altura del palo, a su tope. */
+    val OBENQUES_PROA = listOf(V3(B.estribor(7.9f) - 0.02f, B.regala(7.9f), 7.9f), V3(B.estribor(8.6f) - 0.02f, B.regala(8.6f), 8.6f))
+    val TOPE_PROA = V3(B.EJE, 9.5f, B.TRINQUETE)
+
+    fun obenqueProa(i: Int, h: Float): V3 { val a = OBENQUES_PROA[i]; val t = (h - a.y) / (TOPE_PROA.y - a.y); return a + (TOPE_PROA - a) * t }
+
     /** Un punto del obenque [i] a [h] metros de altura. */
     fun obenque(i: Int, h: Float): V3 { val a = OBENQUES[i]; val t = (h - a.y) / (TOPE.y - a.y); return a + (TOPE - a) * t }
 
@@ -64,7 +70,7 @@ internal object AparejoAbismo {
         val n = EscenaAbismo.ristras(m)
         val az = Azar(Semilla.de("abismo", "ristras"))
         val huecos = ArrayList<Ristra>()
-        val cerca = listOf(0.62f, 0.3f, 0.82f, 0.46f, 0.14f, 0.72f, 0.38f)
+        val cerca = listOf(0.6f, 0.28f, 0.5f, 0.44f, 0.12f, 0.68f, 0.36f)
         for ((i, t) in cerca.withIndex()) huecos += Ristra(enElCabo(CABO_CERCA.first, CABO_CERCA.second, t, 0.22f), az.entre(0.55f, 0.95f) * (1f - 0.25f * t), 14 + az.entero(7), i % 3 == 1, Semilla.de("abismo", "ristra", i))
         val lejos = listOf(0.3f, 0.55f, 0.75f, 0.15f, 0.88f, 0.42f, 0.65f)
         for ((i, t) in lejos.withIndex()) huecos += Ristra(enElCabo(CABO_LEJOS.first, CABO_LEJOS.second, t, 0.35f), az.entre(0.7f, 1.2f), 8 + az.entero(4), i % 2 == 0, Semilla.de("abismo", "ristraLejos", i))
@@ -83,6 +89,16 @@ internal object AparejoAbismo {
         drawLine(p.sombra(C.MADERA_OSC), bot0, bot1, 0.12f * k, StrokeCap.Round)
         drawLine(p.por(C.LONA, 0.3f), bot0 + Offset(0f, -0.14f * k), bot1 + Offset(0f, -0.12f * k), 0.24f * k, StrokeCap.Round)
         drawLine(p.luz(C.LONA).copy(alpha = 0.6f), bot0 + Offset(0f, -0.22f * k), bot1 + Offset(0f, -0.2f * k), 0.06f * k, StrokeCap.Round)
+        // Los obenques de estribor del trinquete, con sus flechastes, y en ellos los trajes de lona tendidos a secar (uno
+        // por la mañana, dos a la tarde) **[Diseño propio]**: ahí se ven enteros, como ropa en un tendedero, sin tapar el agua.
+        val k8 = B.k(z(OBENQUES_PROA[0]))
+        for (i in OBENQUES_PROA.indices) cabo(p, listOf(p(OBENQUES_PROA[i]), p(obenqueProa(i, 7f))), 0.03f * k8, lerp(C.CANAMO, C.BREA, 0.55f))
+        for (j in 1..12) { val h = 0.95f + 0.36f * j; drawLine(p.sombra(C.CANAMO).copy(alpha = 0.8f), p(obenqueProa(0, h)), p(obenqueProa(1, h)), 0.014f * k8) }
+        for (i in 0 until B.trajesASecar(m)) {
+            val h = 0.95f + 0.36f * (if (i == 0) 3 else 2)
+            val a0 = p(obenqueProa(0, h)); val a1 = p(obenqueProa(1, h)); val kk = B.k(z(obenqueProa(0, h)))
+            PiezasAbismo.run { trajeEnLaJarcia(v.pincel(a0), a0, a1, kk, Semilla.de("abismo", "traje", i), en = if (i == 0) 0.3f else 0.8f, mojado = if (EscenaAbismo.fase(m) == EscenaAbismo.Fase.INMERSION || i == 1) 0.9f else 0.35f) }
+        }
         // El estay: del trinquete a la roda.
         val roda = p(V3(B.EJE, B.regala(B.RODA) + 0.2f, B.RODA + 0.3f))
         drawLine(p.sombra(C.CANAMO).copy(alpha = 0.8f), p(V3(B.EJE, 6.2f, B.TRINQUETE)), roda, 0.45f)
@@ -102,6 +118,7 @@ internal object AparejoAbismo {
         val k0 = B.k(z(OBENQUES[0]))
         for (i in OBENQUES.indices) cabo(p, listOf(p(OBENQUES[i]), p(obenque(i, 6f))), 0.03f * k0, lerp(C.CANAMO, C.BREA, 0.55f))
         for (j in 1..9) { val h = B.REGALA + 0.38f * j; drawLine(p.sombra(C.CANAMO).copy(alpha = 0.85f), p(obenque(0, h)), p(obenque(1, h)), 0.012f * k0) }
+
         // El cabo de las ristras grandes y sus ristras.
         val (a, b) = CABO_CERCA
         cabo(p, (0..12).map { p(enElCabo(a, b, it / 12f, 0.22f)) }, 0.022f * B.k(z(a)))
@@ -212,7 +229,10 @@ internal object AparejoAbismo {
 
     /** De noche, la luna platea lo alto de la cúpula de un casco. */
     private fun DrawScope.lunaEnLaCupula(v: BarcoAbismo.Vista, c: Offset, r: Float) {
-        if (v.luna > 0.05f) drawArc(B.plata(v).copy(alpha = 0.55f * v.luna), 200f, 110f, false, Offset(c.x - r * 0.85f, c.y - r * 0.95f), Size(r * 1.7f, r * 1.6f), style = androidx.compose.ui.graphics.drawscope.Stroke(r * 0.08f))
+        if (v.luna > 0.05f) {
+            drawArc(B.plata(v).copy(alpha = 0.16f * v.luna), 200f, 110f, false, Offset(c.x - r * 0.8f, c.y - r * 0.9f), Size(r * 1.6f, r * 1.5f), style = Stroke(r * 0.22f, cap = StrokeCap.Round))
+            drawArc(B.plata(v).copy(alpha = 0.32f * v.luna), 215f, 70f, false, Offset(c.x - r * 0.85f, c.y - r * 0.95f), Size(r * 1.7f, r * 1.6f), style = Stroke(r * 0.06f, cap = StrokeCap.Round))
+        }
     }
 
     /** Las banderas de los días señalados: en el trinquete, a media altura (la única parte que se ve). */
@@ -226,6 +246,7 @@ internal object AparejoAbismo {
             var i = 0
             for ((a, b) in tramos) for (t in 1..9) {
                 val c = p(enElCabo(a, b, t / 10f, 0.25f)); val kk = B.k(z(enElCabo(a, b, t / 10f, 0.25f)))
+                if (c.x < 48f && c.y < 62f) { i++; continue }                       // el sitio de la banderita, arriba a la izquierda, queda libre
                 val w = 0.16f * kk
                 val col = if (i % 2 == 0) p.luz(C.BLANCO) else p.medio(C.AZUL)
                 drawPath(Path().apply { moveTo(c.x - w * 0.4f, c.y); lineTo(c.x + w * 0.4f, c.y); lineTo(c.x, c.y + w * 1.1f); close() }, col)
@@ -266,6 +287,7 @@ internal object AparejoAbismo {
         fun alSuelo(a: V3): Offset { val q = B.cam(a.x, a.z); val s = B.alSuelo(sol, q.x, a.y, q.y); return B.pc(s.x, 0f, s.y) }
         val k0 = B.k(z(OBENQUES[0]))
         for (o in OBENQUES.indices) drawLine(c, alSuelo(OBENQUES[o]), alSuelo(obenque(o, 5.5f)), 0.03f * k0)
+        for (o in OBENQUES_PROA.indices) drawLine(c, alSuelo(OBENQUES_PROA[o]), alSuelo(obenqueProa(o, 6f)), 0.03f * B.k(z(OBENQUES_PROA[0])))
         // Los flechastes: la escala de la jarcia, tendida en las tablas por la mañana.
         for (j in 1..12) { val h = B.REGALA + 0.38f * j; drawLine(c, alSuelo(obenque(0, h)), alSuelo(obenque(1, h)), 0.016f * k0) }
         val (a, b) = CABO_CERCA

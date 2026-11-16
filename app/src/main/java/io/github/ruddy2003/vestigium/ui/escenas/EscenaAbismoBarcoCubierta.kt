@@ -176,6 +176,8 @@ internal object CubiertaAbismo {
         drawPath(cara, Brush.verticalGradient(listOf(p.por(pintura, t + 0.1f), p.por(pintura, t), p.por(lerp(pintura, C.MADERA_GRIS, 0.25f), t - 0.15f)), B.H + 30f, ALTO))
         val az = Azar(Semilla.de("abismo", "borda"))
         clipPath(cara) {
+            // El rebote de las tablas al sol: la parte de abajo de la cara en sombra se calienta.
+            if (v.r.fuerza > 0.1f && t < 0.2f) drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.luz(C.MADERA).copy(alpha = 0.32f * v.r.dia)), 130f, ALTO), Offset(100f, 120f), Size(260f, ALTO))
             // La traca alta, azul, bajo la regala.
             val azulArriba = (0..24).map { i -> val vv = 0.9f + (B.RODA - 0.9f) * i / 24f; enLaBorda(vv, 1f) }
             val azulAbajo = (24 downTo 0).map { i -> val vv = 0.9f + (B.RODA - 0.9f) * i / 24f; enLaBorda(vv, 0.8f) }
@@ -305,7 +307,7 @@ internal object CubiertaAbismo {
         // Las esponjas negras recién sacadas, por limpiar: un montón que crece con la mañana y mengua con la tarde.
         if (neg > 0.02f) {
             val s = B.sitio(1.0f, 4.15f)
-            val ancho = 0.75f * s.k * (0.55f + 0.45f * neg)
+            val ancho = 1.05f * s.k * (0.5f + 0.5f * neg)
             aLaLumbre += Sombreable(s, esquinas(-0.35f, 0.35f, 0f, 0.3f * neg + 0.1f, -0.25f, 0.25f))
             cosas += Cosa(sombraDe(s, sol, esquinas(-0.35f, 0.35f, 0f, 0.3f * neg + 0.1f, -0.25f, 0.25f)), s.pie) { monton(v.pincel(s.pie), s.pie, ancho, (5 + 11 * neg).toInt(), Semilla.de("abismo", "negras"), false) }
         }
@@ -367,19 +369,9 @@ internal object CubiertaAbismo {
         // Lo que pasa por la regala: la escala (echada o recogida), la cuerda de vida y la red colgada.
         escalaYCuerda(v)
         if ((fase == Fase.ESPONJAS || (fase == Fase.COMIDA && m.hora > 11.0)) && m.ficha.objeto != "red") redColgada(v)
-        // Los trajes de lona, doblados a secar sobre la regala (uno por la mañana, dos a la tarde).
-        val trajes = B.trajesASecar(m)
-        for ((i, tramo) in TRAJES.take(trajes).withIndex()) {
-            val va = tramo.first; val vb = tramo.second
-            val a = B.pb(B.estribor(va) - 0.04f, B.regala(va) + 0.04f, va); val b = B.pb(B.estribor(vb) - 0.04f, B.regala(vb) + 0.04f, vb)
-            trajeEnLaBorda(v.pincel(a), a, b, kEn((va + vb) / 2f), Semilla.de("abismo", "traje", i), mojado = if (fase == Fase.INMERSION || i == 1) 0.9f else 0.35f)
-        }
         if (v.l.noche > 0.2f && v.lu.farol > 0.02f) haloDeBruma(B.FAROL, 26f, 18f, C.LUMBRE, 0.55f * v.lu.farol * v.l.noche)
         icono(v)
     }
-
-    /** Dónde se doblan los trajes sobre la regala (de [first] a [second] metros hacia proa). */
-    private val TRAJES = listOf(2.05f to 2.8f, 5.0f to 5.75f)
 
     /** Las mantas de dormir: (u0, v0, u1, v1) de cada una en la cubierta, en metros. */
     private val MANTAS = listOf(floatArrayOf(0.35f, 2.75f, 1.0f, 3.55f), floatArrayOf(0.55f, 4.7f, 1.15f, 5.9f), floatArrayOf(-0.55f, 4.4f, -0.05f, 5.5f))
@@ -503,18 +495,23 @@ internal object CubiertaAbismo {
 
     /** Un saco de esponjas secas: la arpillera abombada por los bultos, atada por arriba. */
     private fun DrawScope.saco(p: io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel, pie: Offset, k: Float, semilla: Long) {
-        val az = Azar(semilla); val w = 0.32f * k * az.entre(0.9f, 1.1f); val h = 0.62f * k * az.entre(0.85f, 1.05f)
-        val forma = lazo(listOf(Offset(pie.x - w, pie.y), Offset(pie.x - w * 1.08f, pie.y - h * 0.45f), Offset(pie.x - w * 0.7f, pie.y - h * 0.85f), Offset(pie.x - w * 0.15f, pie.y - h), Offset(pie.x + w * 0.2f, pie.y - h * 0.95f), Offset(pie.x + w * 0.8f, pie.y - h * 0.8f), Offset(pie.x + w * 1.06f, pie.y - h * 0.4f), Offset(pie.x + w * 0.95f, pie.y)))
+        val az = Azar(semilla); val w = 0.3f * k * az.entre(0.9f, 1.1f); val h = 0.6f * k * az.entre(0.85f, 1.05f)
+        // La arpillera, abultada por las esponjas de dentro (lóbulos), con el cuello estrecho y atado, y la boca que se abre.
+        val forma = lazo(listOf(Offset(pie.x - w * 0.95f, pie.y), Offset(pie.x - w * 1.1f, pie.y - h * 0.3f), Offset(pie.x - w * 0.9f, pie.y - h * 0.55f), Offset(pie.x - w * 1.0f, pie.y - h * 0.7f), Offset(pie.x - w * 0.35f, pie.y - h * 0.86f),
+            Offset(pie.x - w * 0.3f, pie.y - h * 1.02f), Offset(pie.x + w * 0.3f, pie.y - h * 1.04f), Offset(pie.x + w * 0.38f, pie.y - h * 0.86f), Offset(pie.x + w * 1.0f, pie.y - h * 0.72f), Offset(pie.x + w * 0.92f, pie.y - h * 0.5f), Offset(pie.x + w * 1.08f, pie.y - h * 0.25f), Offset(pie.x + w * 0.95f, pie.y)))
         val ld = if (p.solALaDerecha) 1f else -1f
-        drawPath(forma, Brush.horizontalGradient(listOf(if (ld > 0) p.sombra(C.LONA) else p.luz(C.LONA), p.medio(C.LONA), if (ld > 0) p.luz(C.LONA) else p.sombra(C.LONA)), pie.x - w, pie.x + w))
+        val arpillera = lerp(C.LONA, C.MADERA, 0.3f)
+        drawPath(forma, Brush.horizontalGradient(listOf(if (ld > 0) p.sombra(arpillera) else p.luz(arpillera), p.medio(arpillera), if (ld > 0) p.luz(arpillera) else p.sombra(arpillera)), pie.x - w, pie.x + w))
         clipPath(forma) {
-            repeat(5) { val q = Offset(pie.x + az.entre(-0.7f, 0.7f) * w, pie.y - az.entre(0.2f, 0.8f) * h); drawArc(p.sombra(C.LONA).copy(alpha = 0.5f), 20f, 140f, false, Offset(q.x - w * 0.3f, q.y - w * 0.2f), Size(w * 0.6f, w * 0.4f), style = Stroke(0.5f)) }
-            // La trama de la arpillera.
-            for (i in 0 until 6) drawLine(p.sombra(C.LONA).copy(alpha = 0.18f), Offset(pie.x - w, pie.y - h * i / 6f), Offset(pie.x + w, pie.y - h * i / 6f - w * 0.1f), 0.4f)
+            repeat(6) { val q = Offset(pie.x + az.entre(-0.7f, 0.7f) * w, pie.y - az.entre(0.15f, 0.7f) * h); drawArc(p.sombra(arpillera).copy(alpha = 0.55f), 20f, 140f, false, Offset(q.x - w * 0.35f, q.y - w * 0.22f), Size(w * 0.7f, w * 0.44f), style = Stroke(0.6f)); drawArc(p.luz(arpillera).copy(alpha = 0.35f), 200f, 120f, false, Offset(q.x - w * 0.3f, q.y - w * 0.3f), Size(w * 0.6f, w * 0.4f), style = Stroke(0.5f)) }
+            // La trama de la arpillera y un remiendo.
+            for (i in 0 until 9) drawLine(p.sombra(arpillera).copy(alpha = 0.16f), Offset(pie.x - w * 1.1f, pie.y - h * i / 9f), Offset(pie.x + w * 1.1f, pie.y - h * i / 9f - w * 0.1f), 0.35f)
+            drawRect(p.medio(lerp(arpillera, C.MADERA_OSC, 0.3f)), Offset(pie.x + az.entre(-0.5f, 0.1f) * w, pie.y - h * az.entre(0.3f, 0.5f)), Size(w * 0.35f, w * 0.3f))
         }
         // Lo que asoma por la boca: un par de esponjas secas.
-        esponja(p, Offset(pie.x - w * 0.15f, pie.y - h * 0.98f), w * 0.32f, semilla * 3, true)
-        drawLine(p.sombra(C.CANAMO), Offset(pie.x - w * 0.3f, pie.y - h * 0.88f), Offset(pie.x + w * 0.3f, pie.y - h * 0.86f), 0.03f * k)
+        esponja(p, Offset(pie.x - w * 0.05f, pie.y - h * 1.04f), w * 0.3f, semilla * 3, true)
+        drawLine(p.sombra(C.CANAMO), Offset(pie.x - w * 0.4f, pie.y - h * 0.87f), Offset(pie.x + w * 0.42f, pie.y - h * 0.85f), 0.035f * k)
+        drawLine(p.luz(C.CANAMO).copy(alpha = 0.6f), Offset(pie.x - w * 0.3f, pie.y - h * 0.885f), Offset(pie.x + w * 0.3f, pie.y - h * 0.865f), 0.012f * k)
     }
 
     /**

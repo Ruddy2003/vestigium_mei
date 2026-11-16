@@ -100,7 +100,7 @@ internal class AguaClara(
 
     /** El color de algo que nada a [d] metros bajo la superficie, visto en la altura [y]: cuanta más agua encima, más verde. */
     fun colorEnElAgua(propio: Color, d: Float, y: Float): Color =
-        l.tono(lerp(propio, C.MAR, (0.12f + 0.42f * d / hondo + 0.45f * absorbe(y)).coerceIn(0f, 0.92f)))
+        l.tono(lerp(propio, C.MAR, (0.06f + 0.34f * d / hondo + 0.3f * absorbe(y)).coerceIn(0f, 0.85f)))
 
     /**
      * Hacia dónde y cuánto se corre, por cada metro de agua que atraviesa la luz, la sombra de lo que flota o nada (en
@@ -245,7 +245,7 @@ internal class AguaClara(
     private fun DrawScope.peces(zona: Rect, semillaDia: Long, desde: (Float) -> Float) {
         val az = Azar(semillaDia * 13 + 5)
         val bancos = listOf(
-            Banco(az.entre(262f, 330f), az.entre(178f, 230f), hondo * az.entre(0.22f, 0.34f), 26 + az.entero(12), 0.34f, az.entre(-0.5f, 0.5f) + (if (az.real() > 0.5f) PI.toFloat() else 0f), 1.4f, 1f),
+            Banco(az.entre(262f, 330f), az.entre(178f, 230f), hondo * az.entre(0.22f, 0.34f), 26 + az.entero(12), 0.4f, az.entre(-0.5f, 0.5f) + (if (az.real() > 0.5f) PI.toFloat() else 0f), 1.4f, 1f),
             Banco(az.entre(296f, 360f), az.entre(232f, 268f), hondo * az.entre(0.62f, 0.75f), 5 + az.entero(4), 0.6f, az.entre(-0.7f, 0.7f) + (if (az.real() > 0.5f) PI.toFloat() else 0f), 1.0f, 0.4f),
             Banco(az.entre(262f, 300f), az.entre(255f, 280f), hondo * 0.85f, 1, 0.9f, az.entre(0f, 6.28f), 0f, 0.2f),
             Banco(az.entre(305f, 370f), az.entre(160f, 180f), hondo * 0.4f, 16 + az.entero(8), 0.26f, az.entre(-0.4f, 0.4f), 2.2f, 0.8f),
@@ -373,6 +373,16 @@ internal class AguaClara(
             val a = (0.07f + 0.14f * az.real()) * (0.7f + 0.6f * viento) * (if (claridad > 0.9f) 0.65f else 1f)
             val c = if (az.real() > 0.45f) claro else oscuro
             drawPath(Path().apply { moveTo(x, y); cubicTo(x + largo * 0.3f, y - alza, x + largo * 0.7f, y - alza, x + largo, y + alza * 0.2f) }, c.copy(alpha = a.coerceIn(0f, 0.5f)), style = Stroke(0.5f + 1.1f * k, cap = StrokeCap.Round))
+        }
+        // Con viento («el viento levanta de golpe olas cortas y blancas»; el norte «pica el agua»): las crestas que rompen,
+        // con su espuma y la sombra de la ola debajo, más grandes y más sueltas cuanto más cerca.
+        if (viento > 0.6f) repeat((70 * viento).toInt()) {
+            val k = az.real().let { it * it * 0.4f + it * 0.6f }; val y = horizonte + 2f + (zona.bottom - horizonte - 2f) * k
+            val x = az.entre(zona.left, zona.right); val largo = (2f + 16f * k) * az.entre(0.6f, 1.3f); val alza = 0.4f + 2.2f * k
+            val espuma = lerp(l.bajo, Color.White, 0.55f)
+            drawLine(lerp(l.tono(C.MAR_HONDO), Color(0xFF0A1A2C), 0.3f).copy(alpha = 0.3f), Offset(x - largo * 0.1f, y + alza * 0.9f), Offset(x + largo * 1.1f, y + alza * 0.7f), 0.6f + 1.6f * k, StrokeCap.Round)
+            drawPath(Path().apply { moveTo(x, y); cubicTo(x + largo * 0.25f, y - alza, x + largo * 0.6f, y - alza * 1.1f, x + largo, y) }, espuma.copy(alpha = 0.55f * dia + 0.15f), style = Stroke(0.5f + 1.2f * k, cap = StrokeCap.Round))
+            if (k > 0.35f) repeat(3) { drawCircle(espuma.copy(alpha = 0.4f), 0.3f + 0.6f * k, Offset(x + largo * az.entre(0.2f, 0.9f), y - alza * az.entre(0.6f, 1.6f))) }
         }
         // Las sombras de las nubes sobre el agua («sus sombras corren sobre el agua»), los días de nubes.
         if (l.nublado in 0.3f..0.75f && dia > 0.3f) repeat(3) {
