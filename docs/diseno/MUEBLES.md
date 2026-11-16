@@ -37,3 +37,65 @@ Las piezas están en `ui/muebles/Luz.kt`, que no usa el motor de los cuadros (lo
 ## Los demás temas
 
 Van después de las escenas S1 a S19 (lo decidió el autor), de 2 a 3 temas por tanda: primero Gótico y Ciudad neón, luego por archivo de época.
+
+---
+
+# Versión 2 (16 nov 2026): muebles rehechos
+
+El autor comparó los 39 temas en capturas (los 34 de antes junto a Frente exterior, Arcontes, Galia, Art nouveau y Psicodelia) y decidió ir más lejos que la versión sutil. Lo de arriba sigue valiendo para lo que no se rehace; esta sección manda en lo que sí.
+
+## Lo que decidió el autor
+
+- **Los 34 Idearios se rehacen.** Estaban muy por debajo de los nuevos: un mueble de frente, el mismo recipiente repetido y adorno solo arriba.
+- **Las bibliotecas no se rehacen, se completan** con tres cosas: noche de verdad, tres tipos de entrada y objetos del tema en los huecos.
+- **Solo el mueble y la pared de detrás.** Nada de ventanas, paisajes ni exteriores. Sí objetos y sí iluminación.
+- **El nivel de detalle y de calidad es el de los cuadros** de «Otras vidas» (`ESCENAS.md`).
+- **La noche, como la de Galia y Art nouveau:** todos los temas llegan a ese nivel.
+- **La noche se enciende con el modo oscuro.** El modo puede ser claro, oscuro, como el teléfono o por hora (claro de día, oscuro de noche).
+
+## Las reglas de un mueble rehecho
+
+Son las diez de `ESCENAS.md` llevadas a un interior sin ventana. Si una no se puede cumplir al pie de la letra, se cumple su propósito y se anota.
+
+1. **El encuadre.** El mueble de frente contra su pared. La pared se ve arriba (la corona) y asoma a los lados y entre los objetos. No hay ventana, puerta abierta, cielo ni paisaje, ni reflejo de ellos.
+2. **La luz tiene dirección.** De día viene de arriba a la izquierda, de algo que queda fuera del cuadro:
+   - una mancha de luz en la pared, más clara arriba a la izquierda;
+   - cada volumen con su lado de luz y su lado de sombra;
+   - el mueble deja su sombra en la pared, a su derecha y debajo de cada saliente;
+   - cada objeto deja su sombra en lo que pisa y en lo que tiene detrás;
+   - dentro de cada compartimento, la sombra de la tabla de arriba.
+3. **La noche está al nivel del día.** No es el dibujo de día con un velo.
+   - Todo se hunde hacia el color de noche del tema.
+   - Alumbran una o dos luces **del tema**, dibujadas en el cuadro (la lámpara, la vela, la pantalla, las brasas), puestas donde su luz caiga sobre la pared.
+   - Lo cercano a la luz se enciende: halo en la pared, filo cálido en los cantos que la miran, brillo en los compartimentos vecinos. Lo lejano casi se pierde.
+   - Los rótulos se siguen leyendo (contraste de 4.5 a 1 o más sobre su placa).
+4. **La paleta es corta y va junta.** De 12 a 18 colores con nombre al principio del archivo. La sombra tiene color (`sombraMueble`), nunca negro ni gris; la luz es crema (`luzMueble`). Los colores se repiten de un objeto a otro. Si el tema tiene cuadro, la paleta sale de la suya.
+5. **Nada es liso.** Vetas, pinceladas, desgaste, manchas de uso y grano fino al final (`pinceladas`, `granoMueble`).
+6. **Objetos con uso, no adornos en fila.** De 5 a 9 objetos del tema, sobre el mueble, a su pie, colgados de la pared y en los compartimentos vacíos:
+   - de alturas distintas, encimados, descentrados, alguno cortado por el borde;
+   - puestos donde los dejaría alguien: apoyados, colgados, ladeados;
+   - en los temas históricos, cada objeto es de su época y de su lugar. Lo dudoso no se pone.
+7. **Los compartimentos varían.** Al menos tres variantes según la `semilla` (otro recipiente, otro desgaste, otra forma de asomar las fichas). Se ve cuántas fichas hay (`n`): más lleno con más. El de «sin tema» se distingue. Se conserva la animación de abrir (`abierto` de 0 a 1).
+8. **La composición.** Un punto donde el ojo cae primero, asimetría, y las siluetas de los objetos rompen la línea de arriba del mueble. La caja del rótulo queda limpia.
+9. **Lo que no cambia.**
+   - El contrato de `DisenoIdeas`: `rotulo`, `placa`, `salida`, las zonas de toque y la animación.
+   - El interior, las fichas y sus marcas (`interior`, `forma`, `adornoFicha`, `marcaPostura`, `marcaFijada`), salvo pedido.
+   - Sí pueden cambiar `cols`, `proporcion`, `corona`, `base`, `lado` y `hueco`, revisando la vista corta de la pestaña Diario y la pantalla entera del Ideario.
+10. **Lo técnico.**
+    - Cada Ideario rehecho va en su archivo, `ui/ideario/Ideas<Tema>.kt`, como los temas nuevos.
+    - Todo el dibujo es código, determinista (azar con semilla fija) y en fracciones del ancho.
+    - Pocos degradados (Paparazzi pinta de negro los últimos cuando son muchos) y un dibujo que no pese: el compartimento se vuelve a pintar en cada cuadro de la animación.
+
+## Las bibliotecas: lo que se les agrega
+
+- **Tres tipos de entrada** por tema, elegidos con la `semilla` (como `clase(v.semilla)` en `BibliotecaGalia.kt`). Los tres son objetos del tema, no el mismo con otro color. Se conserva lo que cada entrada dice: el día, el color del ánimo, el grosor según las palabras y la marca de la noche.
+- **Objetos del tema** donde las repisas quedan vacías, y los de arriba con uso (regla 6).
+- **Noche de verdad** (regla 3).
+- No cambia la silueta del estante, sus medidas ni las cajas de texto.
+
+## Cómo se revisa
+
+- **Arnés de escritorio** en `herramientas/arnes_muebles/` (ver su `LEEME.md`): dibuja el Ideario y la biblioteca de cualquier tema, en claro y en oscuro, con los archivos reales de la app.
+- Cada mueble se dibuja, se mira y se corrige al menos tres veces antes de entregarlo, en claro y en oscuro.
+- Se compara al lado del Ideario de Galia y del de Art nouveau, y con el cuadro del tema si lo tiene.
+- El autor ve cada tanda antes de darla por buena. El piloto es Laboratorio, Helénico y Gótico.
