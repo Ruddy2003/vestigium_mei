@@ -145,16 +145,20 @@ object Textos {
         "widget_discreto_momento" to "DECLARAR",
     )
 
+    /**
+     * Psicodelia (versión 2): el barrio, el periódico y el disco. Iguales en las dos caras: las pestañas y los widgets no
+     * cambian de nombre con la hora.
+     */
     private val PSICODELIA: Map<String, String> = mapOf(
         "pestana_dia" to "Hoy",
         "pestana_diario" to "Periódico",
         "pestana_registrar" to "Anotar",
         "pestana_vida" to "Calle",
-        "pestana_entender" to "Colores",
+        "pestana_entender" to "Surcos",
         "escala_vacia" to "Todavía sin sonar · toca o desliza",
-        "lista_anadir" to "+ añadir al periódico",
+        "lista_anadir" to "+ sumar otro",
         "palabras" to "%d palabras en el periódico",
-        "widget_animo" to "¿De qué color va tu día?",
+        "widget_animo" to "¿Cómo andas ahora?",
         "widget_momento" to "Ahora mismo suena…",
         "widget_discreto_animo" to "Ánimo",
         "widget_discreto_momento" to "Instantánea",

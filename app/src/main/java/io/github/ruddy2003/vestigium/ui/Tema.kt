@@ -150,7 +150,7 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     ARCONTES("arcontes", "Arcontes", "Galilea en el siglo I, vivida por un iniciado que cree el mito gnóstico: el mundo visible es una cárcel dorada, siete arcontes guardan las esferas y la luz verdadera se asoma por las grietas. Cada día es uno de los 365 cielos de Basílides.", Epoca.FANTASIA),
     GALIA("galia", "Galia", "La Galia del 52 a. C., el año del levantamiento de Vercingétorix: el oppidum en su colina, el robledal sagrado, el oro de los torques y el humo; de noche, las hogueras y, al fondo, las del campamento romano. Los días se cuentan por noches.", Epoca.ANTIGUEDAD),
     NOUVEAU("nouveau", "Art nouveau", "París hacia 1900, cuando el hierro, el vidrio y la luz eléctrica aprendieron a parecer plantas: papel crema, verde salvia, iris violeta y oro pálido; de noche, los escaparates, las lámparas de vidrio y el verde de los cafés. Cada día trae su flor y lo que significa.", Epoca.CONTEMPORANEA),
-    PSICODELIA("psicodelia", "Psicodelia", "San Francisco en 1967, el verano del amor: la niebla de la mañana entre casas victorianas, los carteles de conciertos con letras que se derriten y colores que vibran; de noche, la sala de baile con luz negra y luces líquidas. Cada día es un disco, con su lado A y su lado B.", Epoca.CONTEMPORANEA,
+    PSICODELIA("psicodelia", "Psicodelia", "San Francisco a fines de los sesenta, con dos caras. De día, la ciudad como en una foto vieja: casas victorianas grises, cables del trolebús, niebla, naranja quemado y café. De noche, el cartel de concierto: tres tintas planas sobre papel crema o sobre negro, rayos que ondulan y letras de bloque. Con un consumo anotado en curso, el cartel sale también de día y sube de color. Cada día es un disco, con su lado A y su lado B.", Epoca.CONTEMPORANEA,
         conCaras = true, conIntensidad = true),
     /**
      * Básico: sin diseño, a propósito, para probar la app de forma más fluida. Material 3 limpio: grises con un acento azul
@@ -884,7 +884,8 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> "Del día"
         TemaId.TEMPLARIO -> "Guardia"
         TemaId.DISTOPIA -> "PARTE"
-        TemaId.PSICODELIA -> "Lado A"
+        // La etiqueta del disco de día; el lado B del cartel de noche.
+        TemaId.PSICODELIA -> if (EstadoTema.caraDe(tema) == Cara.INTENSA) "Lado B" else "Disco 290"
         TemaId.NOUVEAU -> "Almanach"
         TemaId.GALIA -> "ΝΕΜΗΤΟΝ"
         TemaId.ARCONTES -> "ⲡⲉϩⲟⲟⲩ"
@@ -926,7 +927,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> "xvij de otubre"
         TemaId.TEMPLARIO -> "iv oct. · juliano"
         TemaId.DISTOPIA -> "EXP. 0290"
-        TemaId.PSICODELIA -> "Disco 290 · lado B"
+        TemaId.PSICODELIA -> if (EstadoTema.caraDe(tema) == Cara.INTENSA) "Disco 290 · pista 10" else "sábado 17 de octubre"
         TemaId.NOUVEAU -> "samedi 17 octobre"
         TemaId.GALIA -> "Noche 290 · Cantlos"
         TemaId.ARCONTES -> "cielo 290 · Saturno"

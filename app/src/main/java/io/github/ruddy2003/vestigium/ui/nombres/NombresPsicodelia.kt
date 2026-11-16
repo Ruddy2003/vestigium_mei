@@ -1,14 +1,28 @@
 package io.github.ruddy2003.vestigium.ui.nombres
 
 /**
- * Los títulos del tema Psicodelia que su diccionario de `Temas` no tiene, en la voz del barrio de la calle Haight en 1967:
- * la mesa de dibujo del cartel de la semana, el disco del día con sus pistas, el periódico del barrio con su tinta de
- * arcoíris, la radio FM de noche, el departamento compartido, las esquinas, la niebla y la gente. Cálida, de amigos, un poco
- * soñadora; tutea, con mayúsculas y minúsculas. Lo privado (lo que consumes, el deseo, las tomas) va dicho llano, sin
- * adorno del tema. «Registros especiales» se queda con el de `Temas` («Las caras B»). Se consultan antes que los
- * diccionarios de siempre; ver [NombresCompletos].
+ * Los títulos del tema Psicodelia (versión 2) que su diccionario de `Temas` no tiene, en la voz del barrio de la calle Haight
+ * a fines de los sesenta: la mesa de dibujo del cartel de la semana, el disco del día con sus pistas, el periódico del
+ * barrio, la radio, el departamento compartido, las esquinas, la niebla y la gente. Concreta y tranquila, de oficio; tutea,
+ * con mayúsculas y minúsculas. Los títulos son los mismos en las dos caras (la ciudad y el cartel): lo que cambia con la hora
+ * es el comentario («Lado A · pista 4» o «Lado B · pista 4», en `Estilo`), no el nombre de la pantalla, para que nada se
+ * busque en otro sitio de noche. «Registros especiales» se queda con el de `Temas` («Las caras B»). Se consultan antes que
+ * los diccionarios de siempre; ver [NombresCompletos].
+ *
+ * Lo del seguimiento privado y lo de Sustancias no se renombra ([NEUTROS]): esas pantallas van con la voz neutra de la app
+ * (`docs/diseno/temas/psicodelia.md`, «La voz», puntos 2 y 4). La prueba `VozPsicodeliaPrueba` vigila que ningún nombre
+ * del tema hable del consumo, celebre con jerga ni toque lo privado.
  */
 internal object NombresPsicodelia {
+    /**
+     * Los títulos que el tema deja como los dice la app, sin nombre ni comentario propios: el seguimiento privado y lo que
+     * toca las sustancias. No están en [M], ni en el diccionario de `Temas`, ni en el de `NombresNuevos`.
+     */
+    val NEUTROS: Set<String> = setOf(
+        "Privado", "Seguimiento privado", "Impulsos y recaídas", "Medicamentos", "Libido", "Dónde, qué lo detona y qué hacías",
+        "Sustancias", "Sustancias en pantalla", "Dinero y sustancias", "Tu gente y sustancias", "Cafeína en el cuerpo", "Últimas tomas",
+    )
+
     val M: Map<String, String> = mapOf(
         // Ideario (esquema 16): las ideas se apuntan en la mesa de dibujo, junto al cartel de la semana.
         "Ideario" to "Las ideas de la mesa de dibujo",
@@ -32,7 +46,7 @@ internal object NombresPsicodelia {
         "Antes y después" to "Antes y después, como lado A y lado B",
         "Análisis" to "Mirar los surcos de cerca",
         "Aparecen un solo día" to "Sonaron un solo día",
-        "Apariencia" to "Los colores y las letras del cartel",
+        "Apariencia" to "Las tintas y las letras del cartel",
         "Apps y sitios" to "Las apps y los sitios donde se te va el rato",
         "Archivados" to "En la caja de los discos viejos",
         "Avisos" to "Los golpes del pandero",
@@ -40,7 +54,6 @@ internal object NombresPsicodelia {
         "Añadir ciudad" to "Sumar una ciudad a tus postales",
         "Bloques" to "Los bloques que subiste",
         "Buscadores" to "Los buscadores que usas",
-        "Cafeína en el cuerpo" to "Cuánta cafeína llevas todavía",
         "Capas" to "Las capas del mapa, como acetatos",
         "Categorías de gasto" to "En qué se va el dinero, por tipo",
         "Categorías y subcategorías" to "Los tipos de gasto, con sus apartados",
@@ -54,31 +67,29 @@ internal object NombresPsicodelia {
         "Con quién vives" to "Quién comparte el departamento contigo",
         "Contra tu enfoque" to "Lo que te levanta de la mesa",
         "Corregir gasto" to "Arreglar la cuenta de un gasto",
-        "Cruzar dos variables" to "Dos datos juntos, como dos colores que se tocan",
+        "Cruzar dos variables" to "Dos datos juntos, como dos tintas una encima de otra",
         "Cuerpo" to "Tu cuerpo, de la calle a la sala de baile",
         "Cultura" to "Discos, libros, cine y carteles",
         "Cuándo y dónde" to "Qué día y en qué esquina",
         "Cómo estás ahora" to "Cómo estás en esta pista del día",
         "Cómo ha cambiado" to "Cómo fue cambiando, disco tras disco",
         "Cómo pregunta" to "Cómo te pregunta el pandero",
-        "Cómo te sentiste" to "Cómo te sentiste, en colores",
+        "Cómo te sentiste" to "Cómo te sentiste, día por día",
         "Cómo usar la app" to "Instrucciones del tocadiscos: la app paso a paso",
         "Cómo va, mes por mes" to "Cómo va cada mes, álbum por álbum",
         "De dónde salen estos números" to "De qué surco sale cada número",
         "Detalle de Health Connect" to "Lo que trae Health Connect, pista por pista",
         "Diario y mente" to "El periódico y tu cabeza",
         "Dinero" to "El frasco de las monedas",
-        "Dinero y sustancias" to "El dinero y lo que consumes",
         "Disponibles" to "Las que puedes hacer hoy",
         "Donde más has estado" to "Las calles donde más has andado",
         "Dormiste" to "Cuánto dormiste",
         "Días especiales" to "Días con su cartel propio",
         "Dónde has pasado más tiempo" to "Las esquinas donde más se te va el rato",
-        "Dónde, qué lo detona y qué hacías" to "Dónde, qué lo desató y qué hacías",
         "Ejercicios" to "Los ejercicios, uno por uno",
         "El año en píxeles" to "El año en puntitos de color",
         "Enfoque" to "A lo tuyo, con un disco de fondo",
-        "Entenderte" to "Verte con otros colores",
+        "Entenderte" to "Verte desde la acera de enfrente",
         "Entorno" to "Lo que rodea el departamento",
         "Entrenamientos recientes" to "Tus últimas sesiones de ejercicio",
         "Escalada" to "Trepar por el muro",
@@ -99,12 +110,11 @@ internal object NombresPsicodelia {
         "Importar" to "Traer discos de fuera",
         "Ir a una fecha" to "Ir a otro disco del año",
         "Juegos" to "Juegos en el departamento",
-        "La carta" to "La postal con calcomanías",
+        "La carta" to "La postal",
         "La palabra de tu año" to "La palabra que suena en todo tu año",
         "Laptop" to "La laptop, en la mesa del cuarto",
         "Lectura del día" to "Lo que lees hoy, en la escalera de la entrada",
         "Leyendo ahora" to "En la mesita de noche, a medio leer",
-        "Libido" to "El deseo, en su escala",
         "Libreta de momentos" to "La libreta de los destellos",
         "Libros" to "Libros y folletos",
         "Lista y pendientes" to "Lo que espera turno en la repisa",
@@ -143,7 +153,6 @@ internal object NombresPsicodelia {
         "Pausadas, logradas y abandonadas" to "En pausa, cumplidas o dejadas de lado",
         "Películas" to "Lo que viste en el cine del barrio",
         "Pendientes" to "Lo que tienes pendiente de leer y ver",
-        "Privado" to "Lo que no sale del cuarto",
         "Progreso" to "Cuánto llevas andado",
         "Protección" to "El candado de la puerta",
         "Qué cambió" to "Qué cambió desde el último disco",
@@ -176,8 +185,6 @@ internal object NombresPsicodelia {
         "Subrayados de Kindle" to "Lo que subrayaste en tu Kindle",
         "Suplementos" to "Los frascos de la repisa",
         "Suplementos de este día" to "Los frascos que tomaste este día",
-        "Sustancias" to "Alcohol, tabaco y lo demás que anotas",
-        "Sustancias en pantalla" to "Lo que consumes, a la vista",
         "Te moviste" to "Cuánto te moviste",
         "Teléfono" to "El teléfono que llevas encima",
         "Terminados" to "Leídos y vistos hasta el final",
@@ -189,9 +196,8 @@ internal object NombresPsicodelia {
         "Tu dinero" to "Lo que hay en el frasco",
         "Tu día a día" to "Tus días en el barrio",
         "Tu gente" to "Los amigos del barrio",
-        "Tu gente y sustancias" to "Tu gente y lo que consumes",
         "Tu pantalla" to "Cuánto miras la pantalla",
-        "Tu ánimo" to "Los colores de tu ánimo",
+        "Tu ánimo" to "Cómo anda tu ánimo",
         "Tus calles" to "Las calles que anduviste",
         "Tus costumbres" to "Tus costumbres de cada semana",
         "Tus lugares" to "Tus esquinas de la ciudad",
@@ -203,7 +209,7 @@ internal object NombresPsicodelia {
         "Un día suyo" to "Un día suyo en el barrio",
         "Vida" to "La vida, de cartel en cartel",
         "Vitaminas y minerales" to "Vitaminas y minerales de la cocina",
-        "Widgets" to "Los botones de solapa de tu pantalla de inicio",
+        "Widgets" to "Lo que pegas en tu pantalla de inicio",
         "¿Cuándo?" to "¿En qué disco?",
         "¿Es el mismo tema?" to "¿Suenan a lo mismo?",
         "¿Estuviste o pensaste?" to "¿Estuvo contigo o solo en tu cabeza?",
@@ -214,7 +220,6 @@ internal object NombresPsicodelia {
         "Ánimo según con quién estás" to "Tu ánimo según con quién andas",
         "Índices" to "Las listas del archivo",
         "Últimas dos semanas" to "Los últimos catorce días, disco a disco",
-        "Últimas tomas" to "Lo último que tomaste, con su hora",
         "Últimos 30 días" to "Los últimos treinta días, disco a disco",
         "Últimos 30 días, por tipo" to "Los últimos treinta días, por tipo",
         "Único y curioso" to "Lo que solo pasó una vez, y lo curioso",

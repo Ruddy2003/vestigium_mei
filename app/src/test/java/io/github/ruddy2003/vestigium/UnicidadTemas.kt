@@ -3,6 +3,7 @@ package io.github.ruddy2003.vestigium
 import io.github.ruddy2003.vestigium.ciencia.Campanas
 import io.github.ruddy2003.vestigium.ui.Cara
 import io.github.ruddy2003.vestigium.ui.Contenedor
+import io.github.ruddy2003.vestigium.ui.EstadoTema
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.TemaId
@@ -29,17 +30,26 @@ class UnicidadTemas {
         val r = linkedMapOf<String, Set<String>>()
         fun conEstilo(nombre: String, valor: () -> Any?) { r[nombre] = iguales { t -> Pendientes.conTema(t) { valor() } } }
 
-        // Textos del tema.
-        conEstilo("comentario") { Estilo.comentario }
-        conEstilo("atras") { Estilo.atras }
-        conEstilo("prefijo") { Estilo.prefijo }
-        conEstilo("clave") { Estilo.clave("somnus") }
-        conEstilo("racha") { Estilo.racha(5) }
-        conEstilo("widget_rotulos") { CoberturaTemas.CLAVES_WIDGET.joinToString(" | ") { Estilo.widget(it) } }
-        conEstilo("textos") { Textos.CLAVES.joinToString(" | ") { Estilo.texto(it) } }
-        conEstilo("pestanas") { listOf("dia", "diario", "registrar", "vida", "entender").joinToString(" | ") { Estilo.texto("pestana_$it") } }
-        conEstilo("claves_dia") { CLAVES_DIA.joinToString(" ") { Estilo.clave(it) } }
-        r["pantallas"] = PANTALLAS.flatMap { p -> iguales { t -> Pendientes.conTema(t) { Estilo.pantalla(p, null).first } } }.toSet()
+        // Textos del tema. Los temas con caras (Psicodelia) tienen dos voces: se comparan en la cara de base y, aparte, en la
+        // intensa, con la cara fijada para no depender de la hora a la que corre la prueba.
+        for (cara in Cara.entries) {
+            val sufijo = if (cara == Cara.BASE) "" else "_intensa"
+            EstadoTema.forzar(cara, 0f)
+            try {
+                conEstilo("comentario$sufijo") { Estilo.comentario }
+                conEstilo("atras$sufijo") { Estilo.atras }
+                conEstilo("prefijo$sufijo") { Estilo.prefijo }
+                conEstilo("clave$sufijo") { Estilo.clave("somnus") }
+                conEstilo("racha$sufijo") { Estilo.racha(5) }
+                conEstilo("widget_rotulos$sufijo") { CoberturaTemas.CLAVES_WIDGET.joinToString(" | ") { Estilo.widget(it) } }
+                conEstilo("textos$sufijo") { Textos.CLAVES.joinToString(" | ") { Estilo.texto(it) } }
+                conEstilo("pestanas$sufijo") { listOf("dia", "diario", "registrar", "vida", "entender").joinToString(" | ") { Estilo.texto("pestana_$it") } }
+                conEstilo("claves_dia$sufijo") { CLAVES_DIA.joinToString(" ") { Estilo.clave(it) } }
+                r["pantallas$sufijo"] = PANTALLAS.flatMap { p -> iguales { t -> Pendientes.conTema(t) { Estilo.pantalla(p, null).first } } }.toSet()
+            } finally {
+                EstadoTema.forzar(null, null)
+            }
+        }
 
         // Números y fechas.
         conEstilo("numeral_17") { Estilo.numeral(17) }

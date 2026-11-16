@@ -31,10 +31,11 @@ object NombresNuevos {
         TemaId.DISTOPIA to mapOf("La cinta" to "REGISTRO HORARIO", "Constelación" to "RED DE CONTACTOS", "Hall de logros" to "SALA DE CONDECORACIONES", "Campañas" to "PLANES DE CUMPLIMIENTO",
             "Impulsos y recaídas" to "INFRACCIONES PRIVADAS", "Estado de los datos" to "ESTADO DE LA VIGILANCIA", "Enfoque y siestas" to "PRODUCTIVIDAD Y DESCANSO", "Ver tu vida" to "INFORMES VISUALES",
             "Tus atajos" to "ACCESOS AUTORIZADOS", "Logro conseguido" to "CONDECORACIÓN OTORGADA", "Este día hace un año" to "ARCHIVO: HACE UN AÑO", "Elegir campaña" to "ASIGNAR PLAN", "Campañas anteriores" to "PLANES CERRADOS"),
-        // Psicodelia: las horas del disco, lado A y lado B; tu gente como gotas de luz; la pared de los discos de oro y el
-        // recorrido de la calle Haight a Monterey.
+        // Psicodelia: las horas del disco, lado A y lado B; tu gente como las manchas de las luces líquidas; la pared de los
+        // discos de oro y el recorrido de la calle Haight a Monterey. «Impulsos y recaídas» se queda con el nombre de la app
+        // (`NombresPsicodelia.NEUTROS`).
         TemaId.PSICODELIA to mapOf("La cinta" to "Las horas, lado A y lado B", "Constelación" to "Tu gente, en luces líquidas", "Hall de logros" to "La pared de los discos de oro", "Campañas" to "De la calle Haight a Monterey",
-            "Impulsos y recaídas" to "El cuaderno aparte", "Estado de los datos" to "Cómo llegan los datos a la redacción", "Enfoque y siestas" to "La mesa de dibujo y el colchón", "Ver tu vida" to "Tu vida, pegada en la pared",
+            "Estado de los datos" to "Cómo llegan los datos a la redacción", "Enfoque y siestas" to "La mesa de dibujo y el colchón", "Ver tu vida" to "Tu vida, pegada en la pared",
             "Tus atajos" to "Tus atajos por el Panhandle", "Logro conseguido" to "¡Un disco de oro más!", "Este día hace un año" to "Este disco, hace un año", "Elegir campaña" to "Elegir el recorrido de la semana", "Campañas anteriores" to "Recorridos de otras semanas"),
         // Art nouveau: el friso de las horas, el ramo de tu gente, el pabellón de las medallas y la primera línea del metro.
         TemaId.NOUVEAU to mapOf("La cinta" to "El friso de las horas", "Constelación" to "El ramo de tu gente", "Hall de logros" to "El pabellón de las medallas", "Campañas" to "La línea del Métropolitain",

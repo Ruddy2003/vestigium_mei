@@ -291,9 +291,12 @@ object Frases {
      * Psicodelia: lo que se leía en el barrio en 1967. Los textos de ese año tienen derechos de autor, así que son los de
      * dominio público que la contracultura leía y citaba: Blake, Whitman, Thoreau, Emerson, Gibran, el *Tao Te Ching*, la
      * *Gita*, Kabir y Rumi en traducciones viejas, cada uno comprobado letra por letra en Wikisource (ortografía tal cual).
-     * Ver `docs/diseno/temas/fuentes_psicodelia.md`, sección 10. Las traducciones son propias.
+     * Ver `docs/diseno/temas/fuentes_psicodelia.md`, sección 10. Las traducciones son propias. Desde la versión 2 del tema
+     * entra también la n.º 1 de esa sección, la de las puertas de la percepción (sin explicar de dónde le vino la fama, como
+     * pide la sección 9); la del exceso («The road of excess…») sigue fuera, por el seguimiento de impulsos y recaídas.
      */
     val PSICODELIA = listOf(
+        f("If the doors of perception were cleansed every thing would appear to man as it is, infinite.", "Si se limpiaran las puertas de la percepción, todo se le aparecería al hombre como es: infinito.", "William Blake, El matrimonio del cielo y el infierno, hacia 1793"),
         f("Without Contraries is no progression.", "Sin contrarios no hay progreso.", "William Blake, El matrimonio del cielo y el infierno, hacia 1793"),
         f("Energy is Eternal Delight", "La energía es deleite eterno", "William Blake, El matrimonio del cielo y el infierno, hacia 1793"),
         f("Eternity is in love with the productions of time.", "La eternidad está enamorada de las obras del tiempo.", "William Blake, «Proverbios del infierno», hacia 1793"),

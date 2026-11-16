@@ -104,7 +104,7 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
     TemaId.TEMPLARIO -> R.font.regla_bold           // la letra de la regla, negrita: cifras firmes
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
-    TemaId.PSICODELIA -> R.font.fredoka_semibold     // Fredoka en negrita, la de los rótulos y las cifras del tema: redonda, de cartel
+    TemaId.PSICODELIA -> R.font.franklin_semibold    // Libre Franklin SemiBold, la de los rótulos y las cifras en las dos caras
     TemaId.NOUVEAU -> R.font.vitrina_regular       // Della Respira, la de los rótulos y las cifras del tema: altas y finas, de cartel
     TemaId.GALIA -> R.font.ysabeau_semibold       // Ysabeau, la de los rótulos y las cifras del tema, de trazo humanista
     TemaId.ARCONTES -> R.font.codice_bold           // Caudex, la letra de los códices: cifras de pluma, firmes

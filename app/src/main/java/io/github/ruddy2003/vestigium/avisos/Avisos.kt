@@ -15,11 +15,15 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.graphics.toArgb
 import io.github.ruddy2003.vestigium.R
+import io.github.ruddy2003.vestigium.ui.Cara
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.MainActivity
+import io.github.ruddy2003.vestigium.ui.ModoHora
 import io.github.ruddy2003.vestigium.ui.QuickActivity
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.caraSegun
 import io.github.ruddy2003.vestigium.ui.esquemaDe
+import java.time.LocalTime
 
 object Avisos {
     const val CANAL_ANIMO = "animo"
@@ -399,6 +403,32 @@ object Avisos {
     )
 
     /**
+     * Las dos voces de Psicodelia (versión 2; `docs/diseno/temas/psicodelia.md`, «La voz»). La cara la decide solo la hora
+     * del aviso (`caraSegun(tema, noche, 0f)`): un aviso no dice nada de un consumo, ni con las palabras ni con la voz.
+     * - [Cara.BASE], la ciudad: la del barrio y del oficio, tranquila y concreta (la niebla, la mesa de dibujo, el periódico
+     *   del barrio, el cartel que sale de la imprenta).
+     * - [Cara.INTENSA], el cartel: la de la sala y la radio, un poco más suelta (la luz que se mueve en la pared, el 106.9,
+     *   el lado B).
+     * Ninguna nombra sustancias, celebra con jerga ni toca lo privado (lo vigila `VozPsicodeliaPrueba`).
+     */
+    internal fun vozPsicodelia(cara: Cara): Voz = when (cara) {
+        Cara.BASE -> Voz("¿Cómo andas ahora?", "Dos toques, como quien levanta la vista de la mesa de dibujo: cuánto agrado y cuánta energía.",
+            "Todavía no se retira la niebla · ¿qué soñaste?", "Anótalo antes de levantarte: se va como la niebla a mediodía.",
+            "Se cierra la edición del barrio: ¿cómo te fue hoy?", "Escribe tu día para el periódico. Si fue de niebla espesa, basta con un número.",
+            "Día de niebla espesa: un número", "Las preguntas del periódico, hoy:",
+            "Llegó una postal de tu yo de antes", "Es el día que escogiste para abrirla. Toca para leer lo que te dejaste dicho.",
+            "Disco de oro", "discos de oro nuevos",
+            "Sale de la imprenta el cartel de tu %d", "Todo tu año en un cartel: lo que más sonó, lo único, lo curioso. Toca para verlo.")
+        Cara.INTENSA -> Voz("Lado B · ¿cómo andas ahora?", "Dos toques, al compás de lo que suene: cuánto agrado y cuánta energía.",
+            "Se despide el 106.9 · ¿qué soñaste?", "Anótalo antes de levantarte: se borra como la luz de la pared cuando apagan el proyector.",
+            "Se encienden las luces de la pared: ¿cómo te fue hoy?", "Pasa tu día al periódico antes de que cierre. Si fue pesado, basta con un número.",
+            "Día pesado: solo un número", "Las preguntas de la sala, hoy:",
+            "Te llegó una postal de otra temporada", "Es la fecha que escogiste para abrirla. Toca para leerla con calma.",
+            "Disco de oro", "discos de oro nuevos",
+            "Sale el cartel de tu %d, a tres tintas", "Tu año entero en un cartel de concierto: lo que más sonó, lo único, lo curioso. Toca para verlo.")
+    }
+
+    /**
      * Los avisos de cuidado (respaldos, Drive, importaciones, metas, suplementos, lugares, lo de anoche) no cambian de voz:
      * tienen que leerse igual de claros en cualquier tema, y los privados no deben llamar la atención.
      */
@@ -466,15 +496,8 @@ object Avisos {
             "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
             "CONDECORACIÓN", "condecoraciones nuevas",
             "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
-        // Psicodelia: el pandero que llama, la FM de la madrugada que se despide a las seis, la niebla que entra por el puente,
-        // la edición del periódico del barrio que se cierra de noche, la postal con calcomanías, los discos de oro y el cartel.
-        TemaId.PSICODELIA -> Voz("♪ Suena el pandero: ¿cómo andas ahora?", "Dos golpecitos, como en el pandero: cuánto agrado y cuánta energía.",
-            "♪ Se despide la FM de la madrugada · ¿qué soñaste?", "Anótalo antes de levantarte: se esfuma como la niebla cuando sale el sol sobre el puente.",
-            "✿ Se cierra la edición del barrio: ¿cómo te fue hoy?", "Escribe tu día para el periódico. Si fue de niebla espesa, basta con un número.",
-            "Día de niebla espesa: un número", "Las preguntas del periódico, hoy:",
-            "✿ Llegó una postal con calcomanías de tu yo de antes", "Es el día que escogiste para abrirla. Toca para leer lo que te dejaste dicho.",
-            "¡Disco de oro!", "discos de oro nuevos",
-            "Sale el cartel de tu %d", "Todo tu año en un cartel de concierto: lo que más sonó, lo único, lo curioso. Toca para verlo.")
+        // Psicodelia: dos voces, la de la cara que toca a la hora del aviso (sin contar ningún consumo: ver [vozPsicodelia]).
+        TemaId.PSICODELIA -> vozPsicodelia(caraSegun(t, ModoHora.esDeNoche(LocalTime.now()), 0f))
         // Art nouveau: la campanilla de cristal del taller, la piedra litográfica que se moja antes de entintar, las vitrinas
         // que se encienden de noche, la postal ilustrada, las medallas de la Exposición y el cartel recién salido de la prensa.
         TemaId.NOUVEAU -> Voz("Suena la campanilla de cristal: ¿cómo estás ahora?", "Dos toques, como dos golpes de pincel: cuánto agrado y cuánta energía.",
@@ -698,6 +721,20 @@ object Avisos {
      */
     internal class VozEnfoque(val descanso: String, val consejo: String, val finDescanso: String, val despertar: String, val terminaste: String, val meta: String)
 
+    /**
+     * El cronómetro de enfoque de Psicodelia, en la voz de la cara que toca a la hora del aviso (sin contar ningún consumo):
+     * de día, la mesa de dibujo, la niebla y el cartel que va a la imprenta; de noche, el disco que se da vuelta en la sala y
+     * el cartel recién impreso. El descanso es darle la vuelta al disco en las dos.
+     */
+    internal fun vozEnfoquePsicodelia(cara: Cara): VozEnfoque = when (cara) {
+        Cara.BASE -> VozEnfoque("Intermedio: dale la vuelta al disco", "Suelta la plumilla, asómate a la ventana y bebe un vaso de agua.",
+            "Suena el otro lado: de vuelta a la mesa", "La niebla ya cruzó el puente: hora de despertar",
+            "Cartel listo para la imprenta: terminaste", "Fin de la pista: llegaste a la meta")
+        Cara.INTENSA -> VozEnfoque("Intermedio: el disco, del otro lado", "Deja la plumilla, abre la ventana y bebe un vaso de agua.",
+            "Vuelve a girar el disco: de vuelta a la mesa", "Se prende la luz de la sala: hora de despertar",
+            "El cartel queda impreso: terminaste", "Se acaba la pista: llegaste a la meta")
+    }
+
     internal fun vozEnfoque(t: TemaId = temaActual()): VozEnfoque = when (t) {
         TemaId.ROMANO -> VozEnfoque("Otium", "Levántate y bebe agua, como en las termas.", "Se acabó el otium", "Surge: hora de despertar", "Opus perfectum: terminaste", "Ad metam: llegaste a la meta")
         TemaId.URBE -> VozEnfoque("Pausa caffè", "Levántate y bebe agua del nasone, como en la calle.", "Fine della pausa", "Sveglia! Hora de despertar", "Fatto! Terminaste", "Meta raggiunta: llegaste")
@@ -708,9 +745,8 @@ object Avisos {
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste", "Explicit: llegaste a la meta")
         TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida", "Llegaste al castillo: meta cumplida")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
-        // Psicodelia: el descanso es darle la vuelta al disco; la mesa de dibujo, la niebla que cruza el puente, el cartel que
-        // va a la imprenta y la flor que se abre en la esfera.
-        TemaId.PSICODELIA -> VozEnfoque("Intermedio: dale la vuelta al disco", "Suelta la plumilla, asómate a la ventana y bebe un vaso de agua.", "Suena el otro lado: de vuelta a la mesa", "La niebla ya cruzó el puente: hora de despertar", "Cartel listo para la imprenta: terminaste", "Se abrió la flor del disco: llegaste a la meta")
+        // Psicodelia: dos voces, la de la cara que toca a la hora del aviso (ver [vozEnfoquePsicodelia]).
+        TemaId.PSICODELIA -> vozEnfoquePsicodelia(caraSegun(t, ModoHora.esDeNoche(LocalTime.now()), 0f))
         // Art nouveau: el respiro en la terraza del café, la mesa de dibujo, la luz del tragaluz, la piedra entintada y el iris
         // que se abre en la esfera del reloj.
         TemaId.NOUVEAU -> VozEnfoque("Un respiro en la terraza", "Deja el lápiz, sal a la calle un momento y bebe un vaso de agua.", "De vuelta a la mesa de dibujo", "Entra la luz por el tragaluz: hora de despertar", "La piedra está entintada: terminaste", "Se abre el iris: llegaste a la meta")

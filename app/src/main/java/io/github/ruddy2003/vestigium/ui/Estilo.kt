@@ -4,6 +4,7 @@ import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.ui.nombres.NombresPsicodelia
 import java.text.Normalizer
 
 /**
@@ -31,7 +32,7 @@ object Estilo {
         TemaId.MEDIEVAL -> "¶ "
         TemaId.TEMPLARIO -> "☩ "
         TemaId.DISTOPIA -> "▪ "
-        TemaId.PSICODELIA -> "✿ "          // la flor de pétalos redondos
+        TemaId.PSICODELIA -> "◉ "          // el disco del día, el emblema de las dos caras
         TemaId.NOUVEAU -> "• "          // el punto de las listas de los almanaques
         TemaId.GALIA -> "› "
         TemaId.ARCONTES -> "◌ "        // un círculo de puntos: una de las esferas del cielo
@@ -78,7 +79,7 @@ object Estilo {
         TemaId.MEDIEVAL -> false       // gótica de libro
         TemaId.TEMPLARIO -> false       // letra de estandarte, en minúsculas
         TemaId.DISTOPIA -> true        // cartel
-        TemaId.PSICODELIA -> false       // letra burbuja, con mayúsculas y minúsculas
+        TemaId.PSICODELIA -> false       // titular de periódico de día y letra de bloque de noche, con mayúsculas y minúsculas
         TemaId.NOUVEAU -> false       // letra de cartel, con mayúsculas y minúsculas
         TemaId.GALIA -> false       // letra de libro, con mayúsculas y minúsculas
         TemaId.ARCONTES -> false       // la letra de los códices, con mayúsculas y minúsculas
@@ -127,7 +128,11 @@ object Estilo {
             TemaId.HELENO -> null
             TemaId.EGIPTO -> if (igual) null else "☥ $t"
             TemaId.DISTOPIA -> if (pantalla) "EXPEDIENTE Nº %04d · %s".format(folio(titulo, 1000, 9000), t) else if (igual) null else "▪ $t"
-            TemaId.PSICODELIA -> if (pantalla) "Pista %d · %s".format(folio(titulo, 1, 12), t) else if (igual) null else "✿ $t"
+            // Cada pantalla es una pista fija del disco: de día suena el lado A, de noche (o con la cara del cartel) el lado B.
+            // Lo privado y lo de Sustancias van sin comentario, con la voz de la app (`NombresPsicodelia.NEUTROS`).
+            TemaId.PSICODELIA -> if (titulo in NombresPsicodelia.NEUTROS) null
+                else if (pantalla) "Lado %s · pista %d · %s".format(if (EstadoTema.cara == Cara.INTENSA) "B" else "A", folio(titulo, 1, 12), t)
+                else if (igual) null else "◉ $t"
             TemaId.NOUVEAU -> if (pantalla) "Planche %d · %s".format(folio(titulo, 1, 120), t) else if (igual) null else "• $t"
             TemaId.GALIA -> if (igual) null else "› $t"
             // Cada pantalla es uno de los 365 cielos de Basílides, siempre el mismo: «Cielo 212 · Momentos».
@@ -758,7 +763,8 @@ object Estilo {
         TemaId.MEDIEVAL -> "← tornar"
         TemaId.TEMPLARIO -> "← volver grupas"
         TemaId.DISTOPIA -> "◄ RETROCEDER"
-        TemaId.PSICODELIA -> "← de vuelta a la calle"
+        // De día se vuelve a la calle; de noche, a la sala del baile.
+        TemaId.PSICODELIA -> if (EstadoTema.cara == Cara.INTENSA) "← de vuelta a la sala" else "← de vuelta a la calle"
         TemaId.NOUVEAU -> "‹ à l'atelier"
         TemaId.GALIA -> "‹ de vuelta al oppidum"
         TemaId.ARCONTES -> "← de regreso"
@@ -800,7 +806,7 @@ object Estilo {
         TemaId.MEDIEVAL -> "¶ "
         TemaId.TEMPLARIO -> "✚ "
         TemaId.DISTOPIA -> "▪ "
-        TemaId.PSICODELIA -> "♪ "          // la nota de la radio
+        TemaId.PSICODELIA -> "‣ "          // la viñeta de imprenta de los programas de mano
         TemaId.NOUVEAU -> "~ "          // la línea de látigo
         TemaId.GALIA -> "— "
         TemaId.ARCONTES -> "⁘ "
@@ -894,7 +900,7 @@ object Estilo {
         TemaId.MEDIEVAL -> EstiloFecha(1.1f, 0.3f)
         TemaId.TEMPLARIO -> EstiloFecha(1.08f, 1.0f, abre = "☩")
         TemaId.DISTOPIA -> EstiloFecha(1.12f, 1.6f, peso = 700, abre = "▼")
-        TemaId.PSICODELIA -> EstiloFecha(0.98f, 0.3f, abre = "✿")
+        TemaId.PSICODELIA -> EstiloFecha(0.98f, 0.3f, abre = "◉")
         TemaId.NOUVEAU -> EstiloFecha(1.04f, 0.5f, abre = "~")
         TemaId.GALIA -> EstiloFecha(1.06f, 0.5f, peso = 800, abre = "›")
         TemaId.ARCONTES -> EstiloFecha(1.06f, 0.4f, peso = 700, abre = "⁘")

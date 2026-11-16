@@ -94,13 +94,20 @@ when (cara) {
 
 **Pruebas y capturas:** `EstadoTema.forzar(Cara.X, i)` y luego `forzar(null, null)`. `UnicidadTemas` ya compara la letra y las esquinas de las dos caras de Psicodelia con la versión de `tipoDe`/`radioDe` con cara explícita. **Las capturas de Paparazzi (`Capturas.kt`) todavía no fuerzan nada**: Psicodelia sale con la cara de la hora a la que corra CI. La tanda que haga sus capturas debe forzar las cuatro variantes más i = 0.5 y 1.
 
+## La voz (tanda 8)
+
+- **Dos voces, por cara:** el comentario de cada pantalla («Lado A · pista 4 · hoy» en la ciudad, «Lado B · pista 4 · hoy» en el cartel; `Estilo.comentarioNuevo`), «atrás» («← de vuelta a la calle» / «← de vuelta a la sala»), la vista previa del selector y los avisos (`Avisos.vozPsicodelia(cara)` y `Avisos.vozEnfoquePsicodelia(cara)`, elegidos con `caraSegun(tema, ModoHora.esDeNoche(LocalTime.now()), 0f)`: un aviso nunca cambia por un consumo). Dentro de la app, `Estilo` lee `EstadoTema.cara`. Los títulos de pantalla, las pestañas y los widgets son los mismos en las dos caras.
+- **Signos:** comentario «◉ » (el disco del día), prefijo «‣ », la fecha grande abre con «◉».
+- **Lo privado y lo de Sustancias van con la voz de la app:** `NombresPsicodelia.NEUTROS` (sin nombre ni comentario del tema; esos títulos ya no están en ningún diccionario de Psicodelia).
+- **La prueba:** `app/src/test/.../VozPsicodeliaPrueba.kt` (`laVozDelTemaNoHablaDelConsumo` y tres más) define `LO_PRIVADO`, `JERGA_QUE_CELEBRA` y `NOMBRES_DE_SUSTANCIAS` en el paquete raíz de las pruebas y recorre los nombres, `Estilo` en las dos caras, `Textos`, los widgets, las claves, los avisos y las campañas. Fuera quedan las frases del día, las fechas del calendario y el cuento. `UnicidadTemas` compara los textos de `Estilo` también con la cara intensa fijada.
+
 ## Lo de la versión 1 que queda por retirar
 
 | Qué | Dónde | Quién lo usa todavía |
 |---|---|---|
 | `TrazosPsicodelia` entero (la flor, la paz, el arcoíris, el verde limón, las burbujas, la casa victoriana de colores, el botón de solapa) | `ui/PsicodeliaV1Trazos.kt` (sin cambios; solo se movió y se marcó) | `comun/ComunPsicodelia.kt`, `ideario/IdeasPsicodelia.kt`, `biblioteca/BibliotecaPsicodelia.kt`, `vida/VidaPsicodelia.kt`, `logros/LogrosPsicodelia.kt`, `Decoracion.kt`, `Componentes.kt`, `ControlesTema.kt`, `IconosPestana.kt`, `IconosCinta.kt`, `Animaciones.kt`, `Celebracion.kt`, `Marcas.kt`, `Relacion.kt`, `Libros.kt`, `MapasMas.kt`, `TrofeosMas.kt`, `FondosTelefono.kt`, `EstiloGrafica.kt`, `Musica.kt`, `MainActivity.kt`, `EnfoqueActivity.kt`, `pantallas/Hoy.kt`, `Mapa.kt`, `Trofeos.kt`, `Cinta.kt`, `OtrasVidas.kt`, `Calendario.kt`, `TuAnioVisual.kt`, `Hall.kt` |
 | `LetraExtra.modak`, `fredoka`, `fredokaRotulo` y los archivos `burbuja_titulo`, `fredoka_regular`, `fredoka_semibold` (con sus entradas en `herramientas/fuentes.py`, `CON_SIGNOS_NOTO` y la licencia) | `ui/Disenios.kt`, `res/font/` | `comun/ComunPsicodelia.kt`, `ideario/IdeasPsicodelia.kt`, `biblioteca/BibliotecaPsicodelia.kt`, `pantallas/Hoy.kt`, `Libros.kt`, `LibroDiario.kt`, `EstiloGrafica.kt`, `reportes/Reportes.kt`, `widget/Widgets.kt` |
-| Los textos con «✿», «♪», «~» y la descripción de `TemaId.PSICODELIA` | `Estilo.kt`, `Tema.kt` y otros (tanda 8) | — |
+| Los textos con «✿», «☮», «♪», «~» | Retirados por la tanda 8 de `Estilo.kt`, `Tema.kt`, `Textos.kt`, `Temas.kt`, `NombresNuevos.kt`, `nombres/NombresPsicodelia.kt`, `avisos/Avisos.kt` y `reportes/Reportes.kt` (la letra de las cifras) | Quedan en archivos de otras tandas: `Huella.kt` («Fin del lado B ☮»), `pantallas/HallImagen.kt` («✿ … ✿», «paz y amor»), `MainActivity.kt` (el bloqueo, «☮ Hoy hay baile…»), `Musica.kt` (comillas «✿»), `pantallas/Hoy.kt` (comillas de la frase «✿»), `Componentes.kt` («♪», «♫», «✿»), `Cartas.kt` («calcomanía»), el dibujo del reporte en `reportes/Reportes.kt` (la flor y la paz) |
 | La vista previa del tema (la forma del cartel que se derrite y la flor) | `Tema.kt` (ramas `PSICODELIA` de la vista previa) | tanda 2 |
 
 Cuando el último de una fila deje de usarlo, se borra (y, para las letras, se quitan sus salidas de `fuentes.py` y su línea de la licencia).
