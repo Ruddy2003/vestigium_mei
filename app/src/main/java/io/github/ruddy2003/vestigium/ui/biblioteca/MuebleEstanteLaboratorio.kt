@@ -75,6 +75,8 @@ internal object MuebleEstanteLaboratorio {
     private val NOCHE = Color(0xFF0A1A20)
     private val NOCHE_SUENOS = Color(0xFF140F2C)
     private val ANOCHECER = Color(0xFF2D3158)
+    /** El aire de los Sueños en claro: un violeta que no ensucia, para que lo fluorescente destaque sin oscurecer. */
+    private val VIOLETA_SUENOS = Color(0xFF5A3F9E)
     private val FLEXO = Color(0xFFFFCF8A)
     private val UV = Color(0xFFA77BFF)
     private val FLUOR = Color(0xFF8CFFB8)
@@ -120,19 +122,34 @@ internal object MuebleEstanteLaboratorio {
     /** Una repisa con su tabla, en dp. */
     private const val FILA = 127f
 
+    /** Hacia dónde mira la pantalla del flexo: abajo a la derecha, a 58° de la horizontal. */
+    private const val EJE_X = 0.53f
+    private const val EJE_Y = 0.848f
+
     /**
-     * La curva de la luz, la misma para el mueble y para los volúmenes: cuánta llega (de 1 a 0) a un punto que está a [dx] y
-     * [dy] de la luz, en anchos del mueble. Cae más deprisa que en línea recta, para que las dos primeras repisas queden
-     * alumbradas y las de abajo se pierdan.
+     * La curva de la luz del flexo, la misma para el mueble y para los volúmenes: cuánta llega (de 1 a 0) a un punto que está
+     * a [dx] y [dy] de la bombilla, en anchos del mueble. Es un cono: dentro de él (hasta unos 45° del eje) llega entera, y
+     * fuera cae deprisa hasta lo que rebota (un tercio). Con la distancia se apaga al cuadrado, para que la primera repisa
+     * quede encendida, la segunda a media luz, la tercera tenue y lo de abajo se pierda.
      */
     fun alcance(dx: Float, dy: Float, repisas: Int): Float {
+        val d = sqrt(dx * dx * 0.56f + dy * dy)
+        val base = (1f - d / 1.3f).coerceIn(0f, 1f).let { it * it }
+        val cosEje = (dx * EJE_X + dy * EJE_Y) / sqrt(dx * dx + dy * dy).coerceAtLeast(0.001f)
+        val t = ((cosEje - 0.09f) / 0.62f).coerceIn(0f, 1f)
+        val cono = 0.35f + 0.65f * t * t * (3f - 2f * t)
+        return (base * cono * 2.2f).coerceIn(0f, 1f)
+    }
+
+    /** La curva del tubo de luz negra de los Sueños: ancho y bajo la tabla alta, alumbra parejo hacia abajo. */
+    fun alcanceUV(dx: Float, dy: Float, repisas: Int): Float {
         val radio = 1.28f + 0.07f * repisas.coerceIn(2, 5)
-        return (1f - sqrt(dx * dx + dy * dy) / radio).coerceIn(0f, 1f).pow(1.35f)
+        return (1f - sqrt(dx * dx * 0.3f + dy * dy) / radio).coerceIn(0f, 1f).pow(1.35f)
     }
 
     /** La luz que llega al cuerpo del mueble: [pos] cuenta repisas desde la de arriba; en los Sueños manda el tubo ultravioleta. */
     fun cercaCuerpo(pos: Float, repisas: Int, fx: Float, suenos: Boolean): Float =
-        if (suenos) alcance((fx - UV_X) * 0.55f, CORONA - UV_Y + pos * FILA / ANCHO_NOMINAL, repisas)
+        if (suenos) alcanceUV(fx - UV_X, CORONA - UV_Y + pos * FILA / ANCHO_NOMINAL, repisas)
         else alcance(fx - LAMP_X, CORONA - LAMP_Y + pos * FILA / ANCHO_NOMINAL, repisas)
 
     /**
@@ -147,8 +164,9 @@ internal object MuebleEstanteLaboratorio {
 
         fun luz(c: Color, cerca: Float): Color {
             val k = cerca.coerceIn(0f, 1f)
-            if (!oscuro) return if (noche) mezcla(mezcla(c, ANOCHECER, 0.36f - 0.2f * k), UV, 0.14f * k) else c
-            return mezcla(mezcla(c, hondo, 0.93f - 0.8f * k.pow(0.9f)), foco, (if (noche) 0.16f else 0.2f) * k)
+            if (!oscuro) return if (noche) mezcla(mezcla(c, VIOLETA_SUENOS, 0.25f - 0.1f * k), UV, 0.07f + 0.15f * k) else c
+            if (noche) return mezcla(mezcla(c, hondo, 0.93f - 0.8f * k.pow(0.9f)), foco, 0.16f * k)
+            return mezcla(mezcla(c, hondo, 0.93f - 0.86f * k.pow(0.75f)), foco, 0.18f * k)
         }
         fun sombra(a: Float): Color = when {
             oscuro -> hondo.copy(alpha = (a * 1.15f).coerceIn(0f, 1f))
@@ -160,18 +178,19 @@ internal object MuebleEstanteLaboratorio {
         /** El color del ánimo: de noche se apaga menos que lo demás, para que se vea también en la repisa más lejana. */
         fun animo(t: Color, cerca: Float): Color {
             val k = cerca.coerceIn(0f, 1f)
-            if (!oscuro) return if (noche) mezcla(t, ANOCHECER, 0.22f) else t
+            if (!oscuro) return if (noche) mezcla(t, VIOLETA_SUENOS, 0.2f) else t
             return mezcla(mezcla(t, hondo, 0.68f - 0.58f * k), foco, 0.08f * k)
         }
         /** El papel de las etiquetas: casi no se apaga; en los Sueños fluoresce bajo la luz negra. */
         fun etiqueta(cerca: Float): Color {
             val k = cerca.coerceIn(0f, 1f)
-            if (noche) return mezcla(PAPEL_UV, hondo, if (oscuro) 0.2f * (1f - k) else 0.04f)
+            if (noche) return if (oscuro) mezcla(PAPEL_UV, hondo, 0.2f * (1f - k)) else mezcla(PAPEL_UV, Color.White, 0.5f * k)
             if (!oscuro) return BLANCO
             return mezcla(mezcla(BLANCO, hondo, 0.42f - 0.32f * k), FLEXO, 0.12f * k)
         }
         /** Lo que fluoresce en los Sueños (líquidos, franjas, rotulador) o su color de día. */
-        fun fluor(c: Color, brillo: Color, cerca: Float): Color = if (noche) brillo else luz(c, cerca)
+        fun fluor(c: Color, brillo: Color, cerca: Float): Color =
+            if (noche) (if (oscuro) brillo else mezcla(brillo, Color.White, 0.35f * cerca.coerceIn(0f, 1f))) else luz(c, cerca)
     }
 
     // ---------------------------------------------------------------- ayudantes
@@ -185,6 +204,16 @@ internal object MuebleEstanteLaboratorio {
         moveTo(xy[0], xy[1])
         for (i in 1 until xy.size / 2) lineTo(xy[2 * i], xy[2 * i + 1])
         close()
+    }
+
+    /** El cono de luz del flexo, desde [o] y de [largo]: unos 45° a cada lado del eje de la pantalla. */
+    private fun cono(o: Offset, largo: Float): Path {
+        fun dir(g: Double) = Offset(cos(Math.toRadians(g)).toFloat(), sin(Math.toRadians(g)).toFloat()) * largo
+        return Path().apply {
+            moveTo(o.x, o.y)
+            for (g in listOf(10.0, 40.0, 70.0, 103.0)) { val p = o + dir(g); lineTo(p.x, p.y) }
+            close()
+        }
     }
 
     private fun caja(r: Rect, radio: Float) = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(r, CornerRadius(radio))) }
@@ -228,8 +257,7 @@ internal object MuebleEstanteLaboratorio {
         val fila = if (n > 0) d.repisas[0].height + d.tablas[0].height else FILA * u
         val luzEn = if (noche) Offset(w * UV_X, w * UV_Y) else Offset(w * LAMP_X, w * LAMP_Y)
         fun cerca(p: Offset): Float = if (p.y <= ch) {
-            val dx = (p.x - luzEn.x) / w * (if (noche) 0.55f else 1f)
-            alcance(dx, (p.y - luzEn.y) / w, n)
+            if (noche) alcanceUV((p.x - luzEn.x) / w, (p.y - luzEn.y) / w, n) else alcance((p.x - luzEn.x) / w, (p.y - luzEn.y) / w, n)
         } else cercaCuerpo((p.y - ch) / fila, n, p.x / w, noche)
         fun hacia(x: Float) = if (luzEn.x >= x) 1f else -1f
         /** Hacia dónde cae la sombra de algo en [p] sobre la pared: de día, corta, a la derecha y abajo; de noche, lejos de la luz. */
@@ -248,16 +276,19 @@ internal object MuebleEstanteLaboratorio {
         pared(a, ch, yAz, yMesa, apoyo)
         // El halo de la luz que manda: unas pocas manchas, no un velo.
         if (a.lumbre) {
-            val f = if (oscuro) 1f else 0.85f
+            val f = if (oscuro) 1f else 1.1f
             if (noche) {
                 mancha(luzEn + Offset(0f, w * 0.08f), w * 1.0f, UV.copy(alpha = 0.2f * f))
                 mancha(luzEn + Offset(0f, w * 0.04f), w * 0.45f, UV.copy(alpha = 0.3f * f))
             } else {
-                mancha(luzEn, w * 1.15f, FLEXO.copy(alpha = 0.16f * f))
-                mancha(luzEn + Offset(w * 0.08f, w * 0.2f), w * 0.55f, FLEXO.copy(alpha = 0.22f * f))
-                mancha(luzEn + Offset(w * 0.02f, w * 0.05f), w * 0.22f, LUZ_MUEBLE.copy(alpha = 0.32f * f))
-                // Lo que la pantalla echa hacia abajo, a las dos primeras repisas.
-                mancha(Offset(w * 0.36f, ch + w * 0.16f), w * 0.5f, FLEXO.copy(alpha = 0.16f * f))
+                // Lo que rebota alrededor de la bombilla.
+                mancha(luzEn, w * 0.9f, FLEXO.copy(alpha = 0.12f))
+                mancha(luzEn + Offset(w * 0.02f, w * 0.05f), w * 0.22f, LUZ_MUEBLE.copy(alpha = 0.32f))
+                // El cono de la pantalla, abajo a la derecha: mucha luz dentro y el borde marcado.
+                clipPath(cono(luzEn, w * 1.5f)) {
+                    mancha(luzEn, w * 1.15f, FLEXO.copy(alpha = 0.32f))
+                    mancha(luzEn + Offset(w * EJE_X, w * EJE_Y) * 0.3f, w * 0.75f, LUZ_MUEBLE.copy(alpha = 0.28f))
+                }
             }
         }
         canaleta(a, w * 0.042f, { p -> cerca(p) })
@@ -293,6 +324,11 @@ internal object MuebleEstanteLaboratorio {
                 if (!oscuro) {
                     pinceladas(Rect(lado + 8f * u, r.top + r.height * 0.3f, lado + an * 0.6f, r.bottom), luzMueble(1f), 955 + k, 16, u, if (noche) 0.04f else 0.08f)
                     pinceladas(Rect(lado + 8f * u, r.top + r.height * 0.5f, lado + an * 0.32f, r.bottom), luzMueble(1f), 959 + k, 10, u, if (noche) 0.04f else 0.08f)
+                }
+                // De noche, el cono del flexo entra en el fondo de las repisas de arriba.
+                if (oscuro && !noche) {
+                    val kc = cerca(Offset(w * 0.45f, r.center.y))
+                    if (kc > 0.15f) clipPath(cono(luzEn, w * 2f)) { mancha(Offset(w * 0.45f, r.center.y), w * 0.7f, FLEXO.copy(alpha = 0.34f * kc)) }
                 }
                 // El costado derecho, más hondo.
                 pinceladas(Rect(w - lado - an * 0.34f, r.top, w - lado, r.bottom), a.sombra(1f), 963 + k, 20, u, 0.07f)
