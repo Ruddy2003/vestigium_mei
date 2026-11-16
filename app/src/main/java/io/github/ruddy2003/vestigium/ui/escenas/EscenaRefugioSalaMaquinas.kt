@@ -46,8 +46,8 @@ internal object PiezasMaquinas {
 
     /** La etiqueta roja de cartón, colgada de su cordel desde [desde]: «cerrada» (sin letras), con su ojal. */
     private fun DrawScope.etiqueta(v: VistaRefugio, desde: V3) {
-        val a = desde + V3(0.02f, -0.07f, -0.01f)
-        val pts = listOf(a + V3(-0.045f, 0f, 0f), a + V3(0.045f, 0f, 0f), a + V3(0.055f, -0.13f, -0.01f), a + V3(-0.035f, -0.135f, -0.01f))
+        val a = desde + V3(0.02f, -0.08f, -0.01f)
+        val pts = listOf(a + V3(-0.06f, 0f, 0f), a + V3(0.06f, 0f, 0f), a + V3(0.07f, -0.19f, -0.01f), a + V3(-0.05f, -0.195f, -0.01f))
         Trazo3.run {
             barra(desde, a, 0.006f, v.c(desde, K.NADA, C.PAPEL))
             cara(v, pts, K.unidad(V3(0.2f, 0f, -1f)), lerp(C.ALARMA, C.ROJO, 0.4f))

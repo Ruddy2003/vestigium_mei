@@ -78,7 +78,7 @@ internal object PiezasSala {
             for (k in 0..6) { val q = V3(0.25f + 0.1f * (k % 2), 0f, 7.25f - 0.42f * k); add(cosa(q, K.circulo(q, K.ARRIBA, 0.08f, 5)) { botellaEnSuelo(v, q, k, 1.2f, false) }) }
         }
         if (R.hojasSecas(m)) for ((k, q) in listOf(V3(1.35f, 0f, 6.0f), V3(1.25f, 0f, 5.35f)).withIndex()) add(cosa(q, K.circulo(q, K.ARRIBA, 0.3f, 8) + K.circulo(q + V3(0f, 0.88f, 0f), K.ARRIBA, 0.3f, 8)) { bidon(v, q, if (k == 0) C.AZUL else C.ACERO) })
-        if (R.herramientasPorTodas(m)) add(cosa(V3(-0.2f, 0f, 4.4f), emptyList()) { herramientasEnElSuelo(v) })
+        if (R.herramientasPorTodas(m)) add(cosa(V3(0.2f, 0f, 5.6f), emptyList()) { herramientasEnElSuelo(v) })
         ObjetosRefugio.grande(m, v.pincel(S.PIE_GRANDE), K.p(S.PIE_GRANDE), K.p(S.APOYO_GRANDE), K.k(S.PIE_GRANDE) / 120f)?.let { o ->
             add(CosaRefugio(K.hondo(S.PIE_GRANDE), listOf(S.PIE_GRANDE)) { o.pintar(this) })
         }
@@ -149,14 +149,20 @@ internal object PiezasSala {
         }
     }
 
-    /** Las herramientas por el suelo de la cuarentena: una llave grande, un martillo y un trapo tirado junto a la bomba. */
+    /**
+     * Las herramientas por el suelo de la cuarentena, en el claro de delante: la llave grande, el martillo, el destornillador,
+     * una llave inglesa y un trapo tirado.
+     */
     private fun DrawScope.herramientasEnElSuelo(v: VistaRefugio) {
+        val acero = v.c(V3(0.2f, 0f, 4.4f), K.ARRIBA, lerp(C.ACERO, Color.White, 0.15f))
         Trazo3.run {
-            barra(V3(-0.6f, 0.02f, 4.2f), V3(-0.1f, 0.02f, 4.45f), 0.04f, v.c(V3(-0.3f, 0f, 4.3f), K.ARRIBA, lerp(C.ACERO, C.HIERRO, 0.3f)))
-            disco(v, V3(-0.62f, 0.025f, 4.19f), K.ARRIBA, 0.06f, lerp(C.ACERO, C.HIERRO, 0.3f), lados = 8)
-            barra(V3(0.05f, 0.02f, 4.05f), V3(0.3f, 0.02f, 3.95f), 0.03f, v.c(V3(0.1f, 0f, 4f), K.ARRIBA, lerp(C.COBRE, C.AMARILLO, 0.3f)))
-            barra(V3(0.28f, 0.03f, 3.88f), V3(0.32f, 0.03f, 4.02f), 0.06f, v.c(V3(0.3f, 0f, 4f), K.ARRIBA, C.HIERRO), StrokeCap.Butt)
-            cara(v, listOf(V3(-1.9f, 0.006f, 4.0f), V3(-1.55f, 0.006f, 3.95f), V3(-1.5f, 0.006f, 4.25f), V3(-1.85f, 0.006f, 4.3f)), K.ARRIBA, lerp(C.PAPEL, C.ROCA, 0.4f))
+            cara(v, listOf(V3(-0.05f, 0.006f, 4.9f), V3(0.4f, 0.006f, 4.85f), V3(0.45f, 0.006f, 5.2f), V3(0.0f, 0.006f, 5.25f)), K.ARRIBA, lerp(C.PAPEL, C.ROCA, 0.35f))
+            barra(V3(-0.05f, 0.025f, 4.3f), V3(0.45f, 0.025f, 4.6f), 0.05f, acero)
+            disco(v, V3(-0.08f, 0.03f, 4.28f), K.ARRIBA, 0.08f, lerp(C.ACERO, C.HIERRO, 0.2f), lados = 8)
+            barra(V3(0.1f, 0.025f, 5.55f), V3(0.4f, 0.025f, 5.45f), 0.04f, v.c(V3(0.2f, 0f, 5.5f), K.ARRIBA, lerp(C.COBRE, C.AMARILLO, 0.3f)))
+            barra(V3(0.38f, 0.04f, 5.36f), V3(0.42f, 0.04f, 5.56f), 0.08f, v.c(V3(0.4f, 0f, 5.5f), K.ARRIBA, C.HIERRO), StrokeCap.Butt)
+            barra(V3(0.0f, 0.02f, 3.75f), V3(0.2f, 0.02f, 3.9f), 0.035f, v.c(V3(0.1f, 0f, 3.8f), K.ARRIBA, C.AMARILLO))
+            barra(V3(0.2f, 0.02f, 3.9f), V3(0.36f, 0.02f, 4.02f), 0.012f, acero)
         }
     }
 
@@ -175,8 +181,13 @@ internal object PiezasSala {
         for ((c, r) in listOf(CUBO + V3(0.15f, 0f, 0.35f) to 0.45f, V3(-0.9f, 0f, 5.3f) to 0.35f, V3(-2.9f, 0f, 5.4f) to 0.3f)) charco(v, c, r)
         // Las huellas mojadas de ella, de la bomba a la bancada.
         for (k in 0..4) huella(v, V3(-2.0f + 0.32f * k, 0f, 3.9f - 0.18f * k + 0.08f * (k % 2)), lerp(C.TINTA, C.CHAPA, 0.3f), 0.22f, k)
-        if (R.barroDeBotas(m)) for (k in 0..9) huella(v, V3(-0.35f + 0.16f * (k % 2) - 0.07f * k, 0f, 7.3f - 0.42f * k), C.BARRO, 0.8f, k)
-        if (R.sellado(m)) for (k in 0..6) PiezasBancada.run { florDePapel(v, V3(S.PORTON_X0 + 0.25f + 0.55f * k, 0.04f, S.FONDO - 0.55f - 0.12f * (k % 2)), 0.13f, listOf(C.ROJO, C.PAPEL, C.AMARILLO, C.AZUL)[k % 4]) }
+        // El barro de las botas: de la boca del pasillo a la bancada, por el claro del suelo que se ve.
+        if (R.barroDeBotas(m)) for (k in 0..8) huella(v, V3(0.08f + 0.2f * (k % 2), 0f, 7.35f - 0.4f * k), C.BARRO, 0.9f, k, 1.35f)
+        // Las flores de papel del sellado: un camino de flores del umbral hacia delante, y una fila en el umbral.
+        if (R.sellado(m)) {
+            for (k in 0..5) PiezasBancada.run { florDePapel(v, V3(0.18f + 0.1f * (k % 2), 0.04f, 7.2f - 0.45f * k), 0.17f, listOf(C.ROJO, C.PAPEL, C.AMARILLO, C.AZUL)[k % 4]) }
+            for (k in 0..3) PiezasBancada.run { florDePapel(v, V3(S.PORTON_X0 + 1.0f + 0.5f * k, 0.04f, S.FONDO - 0.35f), 0.15f, listOf(C.PAPEL, C.ROJO, C.AZUL, C.AMARILLO)[k % 4]) }
+        }
         if (R.primerDia(m)) papelitos(v, S.PORTON_X0, S.PORTON_X1, 4.6f, S.FONDO, "sala", 60)
     }
 
@@ -192,12 +203,12 @@ internal object PiezasSala {
         if (v.obras.isNotEmpty()) drawOval(lerp(C.LAMPARA, Color.White, 0.4f).copy(alpha = 0.3f * v.deLampara(c)), Offset(p.x - 0.3f * r * k, p.y - 0.05f * r * k), androidx.compose.ui.geometry.Size(0.6f * r * k, 0.1f * r * k), blendMode = BlendMode.Plus)
     }
 
-    /** Una huella de bota en [c] (la punta hacia la sala), de [color] y [alfa]: la suela y el tacón. */
-    private fun DrawScope.huella(v: VistaRefugio, c: V3, color: Color, alfa: Float, k: Int) {
+    /** Una huella de bota en [c] (la punta hacia la sala), de [color] y [alfa], de [talla]: la suela y el tacón. */
+    private fun DrawScope.huella(v: VistaRefugio, c: V3, color: Color, alfa: Float, k: Int, talla: Float = 1f) {
         val lado = if (k % 2 == 0) -1f else 1f
-        val suela = listOf(V3(-0.05f, 0f, 0.02f), V3(0.05f, 0f, 0.0f), V3(0.06f, 0f, -0.12f), V3(0.0f, 0f, -0.16f), V3(-0.055f, 0f, -0.11f)).map { c + V3(it.x * lado, 0.003f, it.z) }
+        val suela = listOf(V3(-0.05f, 0f, 0.02f), V3(0.05f, 0f, 0.0f), V3(0.06f, 0f, -0.12f), V3(0.0f, 0f, -0.16f), V3(-0.055f, 0f, -0.11f)).map { c + V3(it.x * lado * talla, 0.003f, it.z * talla) }
         Trazo3.run { cara(v, suela, K.ARRIBA, color, alfa = alfa) }
-        Trazo3.run { cara(v, listOf(V3(-0.045f, 0.003f, 0.06f), V3(0.045f, 0.003f, 0.06f), V3(0.04f, 0.003f, 0.13f), V3(-0.04f, 0.003f, 0.13f)).map { it + V3(c.x, 0f, c.z) }, K.ARRIBA, color, alfa = alfa) }
+        Trazo3.run { cara(v, listOf(V3(-0.045f, 0.003f, 0.06f), V3(0.045f, 0.003f, 0.06f), V3(0.04f, 0.003f, 0.13f), V3(-0.04f, 0.003f, 0.13f)).map { V3(c.x + it.x * talla, 0.003f, c.z + it.z * talla) }, K.ARRIBA, color, alfa = alfa) }
     }
 
     /** Los papelitos de colores del primer día, por el suelo, entre [x0] y [x1] y de [z0] a [z1]. */
@@ -205,7 +216,7 @@ internal object PiezasSala {
         val az = SalaRefugio.azar("papelitos$que")
         val colores = listOf(C.ROJO, C.AMARILLO, C.AZUL, C.ALGA, lerp(C.PAPEL, C.NARANJA, 0.4f))
         repeat(cuantos) {
-            val q = V3(az.entre(x0, x1), 0.004f, az.entre(z0, z1)); val a = az.entre(0f, 3.1f); val r = az.entre(0.03f, 0.06f)
+            val q = V3(az.entre(x0, x1), 0.004f, az.entre(z0, z1)); val a = az.entre(0f, 3.1f); val r = az.entre(0.05f, 0.09f)
             Trazo3.run { cara(v, listOf(q + V3(cos(a) * r, 0f, sin(a) * r), q + V3(-sin(a) * r, 0f, cos(a) * r), q + V3(-cos(a) * r, 0f, -sin(a) * r), q + V3(sin(a) * r, 0f, -cos(a) * r)), K.ARRIBA, colores[it % colores.size], enPasillo) }
         }
     }

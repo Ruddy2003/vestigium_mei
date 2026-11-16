@@ -118,12 +118,12 @@ internal object PiezasBancada {
         botella(v, V3(-0.26f, y, zb + 0.02f), if (R.racionamiento(m)) 0.15f else 0.75f, R.bombaTres(m))
         aceitera(v, V3(-1.72f, y, zm + 0.08f))
         filtroPequeno(v, V3(-1.33f, y, zm))
-        if (R.latas(m)) latas(v, V3(-0.95f, y, zm))
+        if (R.latas(m)) latas(v, V3(-1.02f, y, zf - 0.08f))
         if (R.florDeVerdad(m)) florEnFrasco(v, V3(-0.3f, y, 2.9f), R.florSeca(m))
         manometroSuelto(v, V3(-1.6f, y, zf))
         if (R.laSalaPinta(m, "cuaderno")) cuaderno(v, V3(-1.2f, y, zf), R.cuadernoAbierto(m))
         fiambrera(v, V3(-0.84f, y, zf + 0.02f), R.fiambreraAbierta(m))
-        alicates(v, V3(-0.98f, y, zf - 0.12f))
+        if (!R.latas(m)) alicates(v, V3(-0.98f, y, zf - 0.12f))
         juntas(v, V3(-1.45f, y, zf - 0.13f))
         if (R.gafasDeCarton(m)) gafas(v, V3(-1.48f, y, 2.66f))
         if (R.mascarillas(m)) jabon(v, V3(-0.68f, y, 2.66f))
@@ -276,13 +276,14 @@ internal object PiezasBancada {
 
     /** Las latas de antes de la guerra, abiertas (el postre del año nuevo, la tarta de los fundadores): dos latas con su tapa doblada. */
     private fun DrawScope.latas(v: VistaRefugio, c: V3) {
-        for ((k, d) in listOf(V3(0f, 0f, 0f), V3(0.13f, 0f, 0.05f)).withIndex()) {
+        for ((k, d) in listOf(V3(0f, 0f, 0f), V3(0.16f, 0f, 0.07f)).withIndex()) {
             val q = c + d; val etiqueta = if (k == 0) lerp(C.ROJO, C.PAPEL, 0.15f) else lerp(C.AZUL, C.PAPEL, 0.2f)
             Trazo3.run {
-                cilindro(v, q, q + V3(0f, 0.11f, 0f), 0.05f, etiqueta, lerp(C.ACERO, Color.White, 0.2f), lados = 12)
-                aro(q + V3(0f, 0.11f, 0f), K.ARRIBA, 0.05f, 0.008f, v.c(q, K.ARRIBA, lerp(C.ACERO, Color.White, 0.4f)), 12)
-                disco(v, q + V3(0f, 0.105f, 0f), K.ARRIBA, 0.045f, lerp(C.AMARILLO, C.NARANJA, 0.3f + 0.3f * k), lados = 12)
-                cara(v, listOf(q + V3(-0.03f, 0.11f, 0.04f), q + V3(0.03f, 0.11f, 0.04f), q + V3(0.025f, 0.18f, 0.07f), q + V3(-0.025f, 0.18f, 0.07f)), K.FRENTE, lerp(C.ACERO, Color.White, 0.3f))
+                cilindro(v, q, q + V3(0f, 0.14f, 0f), 0.065f, etiqueta, lerp(C.ACERO, Color.White, 0.2f), lados = 12)
+                for (y in listOf(0.015f, 0.125f)) aro(q + V3(0f, y, 0f), K.ARRIBA, 0.066f, 0.008f, v.c(q, K.FRENTE, lerp(C.ACERO, Color.White, 0.3f)), 12)
+                aro(q + V3(0f, 0.14f, 0f), K.ARRIBA, 0.065f, 0.01f, v.c(q, K.ARRIBA, lerp(C.ACERO, Color.White, 0.4f)), 12)
+                disco(v, q + V3(0f, 0.135f, 0f), K.ARRIBA, 0.058f, lerp(C.AMARILLO, C.NARANJA, 0.3f + 0.3f * k), lados = 12)
+                cara(v, listOf(q + V3(-0.04f, 0.14f, 0.05f), q + V3(0.04f, 0.14f, 0.05f), q + V3(0.035f, 0.23f, 0.09f), q + V3(-0.035f, 0.23f, 0.09f)), K.FRENTE, lerp(C.ACERO, Color.White, 0.3f))
             }
         }
         Trazo3.run { barra(c + V3(-0.1f, 0.006f, -0.06f), c + V3(0.02f, 0.006f, -0.1f), 0.012f, v.c(c, K.ARRIBA, C.ACERO)) }

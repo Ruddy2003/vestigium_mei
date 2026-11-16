@@ -26,7 +26,7 @@ internal object PiezasPared {
     private val S = SalaRefugio
 
     /** Dónde está la llave de paso de las duchas (la del candado), junto a la jamba izquierda del portón. */
-    val LLAVE_DE_PASO = V3(-3.1f, 1.05f, S.FONDO - 0.1f)
+    val LLAVE_DE_PASO = V3(-3.1f, 1.72f, S.FONDO - 0.1f)
 
     fun DrawScope.enLaPared(v: VistaRefugio) {
         cartel(v, -8.4f, -7.55f, 1.45f, 2.55f, 0)
@@ -188,7 +188,7 @@ internal object PiezasPared {
         val k = c + V3(0f, 0f, -0.21f); val acero = v.c(k, K.FRENTE, lerp(C.ACERO, Color.White, 0.1f))
         Trazo3.run {
             comba(k + V3(-0.17f, 0.08f, 0f), k + V3(0.15f, -0.1f, 0f), 0.08f, 0.026f, acero)
-            comba(k + V3(-0.17f, 0.08f, 0f), V3(c.x - 0.04f, 0.6f, S.FONDO - 0.12f), 0.05f, 0.026f, acero)
+            comba(k + V3(-0.17f, 0.08f, 0f), V3(c.x - 0.04f, c.y - 0.45f, S.FONDO - 0.12f), 0.05f, 0.026f, acero)
             aro(k + V3(0.12f, -0.17f, -0.01f), K.FRENTE, 0.05f, 0.02f, acero, 12)
             caja(v, k.x + 0.04f, k.x + 0.2f, k.y - 0.36f, k.y - 0.2f, k.z - 0.03f, k.z + 0.03f, C.LATON, lerp(C.LATON, Color.White, 0.3f))
             disco(v, V3(k.x + 0.12f, k.y - 0.3f, k.z - 0.035f), K.FRENTE, 0.018f, C.TINTA, lados = 8)

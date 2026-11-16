@@ -136,7 +136,7 @@ internal object SalaRefugio {
      */
     fun haciaDonde(o: Obra): V3 = when (o) {
         Obra.MANOMETROS -> K.unidad(V3(0.12f, -1f, 0.06f))
-        Obra.BOMBA -> K.unidad(V3(-0.25f, -1f, 0.1f))
+        Obra.BOMBA -> K.unidad(V3(-0.15f, -1f, -0.05f))
         Obra.BANCADA -> K.ABAJO
         Obra.FILTRO -> K.unidad(V3(0.15f, -1f, -0.2f))
     }
@@ -233,6 +233,8 @@ internal object SalaRefugio {
      */
     private fun DrawScope.suelo(v: VistaRefugio) {
         val az = Azar(Semilla.de("refugio", "losas"))
+        // Debajo, el color de las juntas: oscuro, para que entre losa y losa no asome la penumbra alumbrada.
+        Trazo3.run { cara(v, listOf(V3(IZQ, 0f, 1.3f), V3(DER, 0f, 1.3f), V3(DER, 0f, FONDO), V3(IZQ, 0f, FONDO)), K.ARRIBA, lerp(C.TINTA, C.HORMIGON, 0.3f)) }
         val lado = 1.2f
         var x = IZQ
         while (x < DER) {

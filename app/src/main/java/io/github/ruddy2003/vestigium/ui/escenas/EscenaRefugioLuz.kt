@@ -63,7 +63,7 @@ internal object LuzRefugio {
     /** El suelo del pasillo, de la boca a la Puerta. */
     private fun sueloDelPasillo(): Path = K.forma(listOf(V3(P.IZQ, 0f, P.BOCA - 0.3f), V3(P.DER, 0f, P.BOCA - 0.3f), V3(P.DER, 0f, P.PUERTA_Z), V3(P.IZQ, 0f, P.PUERTA_Z)))
 
-    /** La pared de la derecha del pasillo (la que recibe el violeta del ventanal y el sol de la tarde). */
+    /** La pared de la derecha del pasillo (la que recibe el violeta del ventanal y el sol de la mañana). */
     private fun paredDerecha(): Path = K.forma(listOf(V3(P.DER, 0f, P.BOCA), V3(P.DER, 0f, P.PUERTA_Z), V3(P.DER, P.PARED, P.PUERTA_Z), V3(P.DER, P.PARED, P.BOCA)))
 
     /**
@@ -225,7 +225,7 @@ internal object LuzRefugio {
         val arco = S.arcoDelPorton(P.BOCA).map { q -> val d = q - f; val t = (-f.y / d.y.coerceAtMost(-0.01f)).coerceAtMost(12f); f + d * t }
             .map { V3(it.x, 0f, it.z.coerceAtLeast(3.2f)) }
         val forma = K.forma(arco)
-        val fuerza = (if (v.solFalso) 0.36f else if (v.dia) 0.13f else 0.15f) * (if (v.puerta == Puerta.ABIERTA && v.dia) 1.15f else 1f)
+        val fuerza = (if (v.solFalso) 0.36f else if (v.dia) 0.13f else 0.1f) * (if (v.puerta == Puerta.ABIERTA && v.dia) 1.15f else 1f)
         val col = lerp(lerp(v.colorTubo, Color.White, if (v.dia) 0.15f else 0f), C.VIOLETA, 0.45f * v.noche * v.tanques)
         // En el suelo, la hondura va con la altura en el lienzo: el degradado, de arriba (el umbral) abajo (hacia los ojos).
         drawPath(forma, Brush.verticalGradient(listOf(col.copy(alpha = fuerza), col.copy(alpha = fuerza * 0.55f), col.copy(alpha = 0f)), startY = K.p(V3(P.CENTRO_X, 0f, S.FONDO)).y, endY = K.p(V3(P.CENTRO_X, 0f, 4.2f)).y), blendMode = BlendMode.Plus)
@@ -394,7 +394,7 @@ internal object LuzRefugio {
      * violeta, nunca en gris; de noche, más. Así lo encendido destaca.
      */
     fun DrawScope.penumbra(v: VistaRefugio) {
-        val k = 0.28f + 0.2f * v.noche
+        val k = 0.28f + 0.3f * v.noche
         drawRect(Brush.radialGradient(0f to Color.Transparent, 0.55f to Color.Transparent, 1f to C.PENUMBRA.copy(alpha = k), center = Offset(250f, 150f), radius = 290f), Offset.Zero, Size(ANCHO, ALTO), blendMode = BlendMode.Multiply)
         drawRect(Brush.verticalGradient(0f to C.SOMBRA.copy(alpha = 0.3f + 0.15f * v.noche), 1f to Color.Transparent, startY = 0f, endY = 70f), Offset.Zero, Size(ANCHO, 70f), blendMode = BlendMode.Multiply)
     }

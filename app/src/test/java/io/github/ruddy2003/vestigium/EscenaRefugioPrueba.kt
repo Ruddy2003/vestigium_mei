@@ -142,8 +142,12 @@ class EscenaRefugioPrueba {
         val sitios = Obra.entries.map { CamRefugio.p(SalaRefugio.bombilla(it)) }
         for (i in sitios.indices) for (j in i + 1 until sitios.size) assertTrue("$i $j", (sitios[i] - sitios[j]).getDistance() > 25f)
         assertTrue(abs(CamRefugio.p(SalaRefugio.bombilla(Obra.MANOMETROS)).x - CamRefugio.p(SalaRefugio.bombilla(Obra.FILTRO)).x) > 40f)
-        // Cada lámpara está dentro del cuadro y bajo el techo.
-        for (o in Obra.entries) { val p = CamRefugio.p(SalaRefugio.bombilla(o)); assertTrue("$o", p.x in 0f..ANCHO && p.y in 0f..ALTO); assertTrue(SalaRefugio.bombilla(o).y < SalaRefugio.TECHO) }
+        // Cada lámpara está dentro del cuadro y bajo el techo, y su boca mira a los ojos: se ve la jaula encendida, no la pantalla por detrás.
+        for (o in Obra.entries) {
+            val b = SalaRefugio.bombilla(o); val e = SalaRefugio.haciaDonde(o); val p = CamRefugio.p(b)
+            assertTrue("$o", p.x in 0f..ANCHO && p.y in 0f..ALTO); assertTrue(b.y < SalaRefugio.TECHO)
+            assertTrue("$o: la lámpara se ve por detrás", CamRefugio.seVe(b - e * 0.05f, e))
+        }
         // Con el cuaderno: abierto mientras trabaja, cerrado cuando se va; el mono cuelga cuando no lo lleva.
         assertTrue(EscenaRefugio.cuadernoAbierto(momento(dia, 10.0))); assertFalse(EscenaRefugio.cuadernoAbierto(momento(dia, 21.0)))
         assertFalse(EscenaRefugio.monoColgado(momento(dia, 10.0))); assertTrue(EscenaRefugio.monoColgado(momento(dia, 21.0)))
@@ -190,7 +194,11 @@ class EscenaRefugioPrueba {
         assertTrue(EscenaRefugio.tanques(momento("2027-05-05", 21.0)) > EscenaRefugio.tanques(momento("2027-05-05", 13.0)))
     }
 
-    /** Con la Puerta abierta, el cielo de fuera cambia con la hora y el sol de la tarde camina por el pasillo. */
+    /**
+     * Con la Puerta abierta, el cielo de fuera cambia con la hora y el sol camina por el pasillo: la Puerta mira al sureste,
+     * así que entra de las 6:00 a las 17:00, bajo; a la hora de la captura (las 13:00) su mancha es larga; entra de lado
+     * por la mañana y de frente hacia las 11:30; por la tarde y de noche no entra.
+     */
     @Test fun enAbiertoElCieloCambiaConLaHora() {
         var conSol = 0
         var d = LocalDate.of(2031, 9, 20)
@@ -199,16 +207,18 @@ class EscenaRefugioPrueba {
             val manana = EscenaRefugio.cieloDeFuera(momento(dia, 7.0)); val tarde = EscenaRefugio.cieloDeFuera(momento(dia, 13.0)); val noche = EscenaRefugio.cieloDeFuera(momento(dia, 21.0))
             assertNotEquals(dia, manana.medio, tarde.medio); assertNotEquals(dia, tarde.medio, noche.medio)
             assertTrue(dia, noche.noche > tarde.noche + 0.5f)
-            // Por la mañana el sol está detrás del monte; desde mediodía entra, y cuanto más tarde, más lejos llega.
-            assertNull(dia, EscenaRefugio.solPorLaPuerta(momento(dia, 9.0)))
+            assertNull(dia, EscenaRefugio.solPorLaPuerta(momento(dia, 5.0)))
+            assertNull(dia, EscenaRefugio.solPorLaPuerta(momento(dia, 19.67)))
             assertNull(dia, EscenaRefugio.solPorLaPuerta(momento(dia, 22.0)))
-            val a = EscenaRefugio.alcanceDelSol(momento(dia, 16.0)); val b = EscenaRefugio.alcanceDelSol(momento(dia, 19.67))
-            if (a > 0f && b > 0f) { assertTrue(dia, b > a + 3f); conSol++ }
+            val a = EscenaRefugio.alcanceDelSol(momento(dia, 13.0))
+            if (a > 0f) { assertTrue("$dia: la mancha de las 13:00 es corta", a > PasilloRefugio.LARGO * 0.5f); conSol++ }
             d = d.plusDays(1)
         }
-        assertTrue("casi todos los días entra el sol de la tarde", conSol > 80)
-        // A la caída del sol llega hasta el umbral de la sala.
-        assertTrue((20..31).any { EscenaRefugio.alcanceDelSol(momento("2031-10-${"%02d".format(it)}", 20.0)) > PasilloRefugio.LARGO * 0.8f })
+        assertTrue("casi todos los días entra el sol a la hora de la captura", conSol > 60)
+        // Camina con la hora: a primera hora entra de lado, hacia las 11:30 de frente.
+        val lados = (20..31).mapNotNull { dd -> EscenaRefugio.solPorLaPuerta(momento("2031-10-${"%02d".format(dd)}", 8.0))?.azimut }
+        assertTrue(lados.isNotEmpty() && lados.all { it < -30f })
+        assertTrue((20..31).mapNotNull { dd -> EscenaRefugio.solPorLaPuerta(momento("2031-10-${"%02d".format(dd)}", 11.5))?.azimut }.all { abs(it) < 5f })
         // El día que llueve, llueve fuera.
         assertEquals(Clima.LLUVIA, EscenaRefugio.climaDeFuera(momento("2031-10-15")))
         assertNotEquals(Clima.LLUVIA, EscenaRefugio.climaDeFuera(momento("2031-10-14")))
@@ -223,7 +233,8 @@ class EscenaRefugioPrueba {
         val m = momento(dia, h); val R = EscenaRefugio
         listOf(R.estado(m), R.lamparas(m), R.compuerta(m), R.puerta(m), R.alarma(m), R.solFalso(m), R.guirnalda(m), R.luto(m), R.sellado(m), R.cosecha(m),
             R.filtros(m), R.bombaTres(m), R.senal(m), R.tocadiscosRoto(m), R.arbolDeCable(m), R.lucesDelArbol(m), R.barroDeBotas(m), R.florDeVerdad(m),
-            R.gafasDeCarton(m), R.tramoReserva(m), R.tramoCultivo(m), if (R.abierto(m)) R.climaDeFuera(m) else null)
+            R.gafasDeCarton(m), R.tramoReserva(m), R.tramoCultivo(m), if (R.abierto(m)) R.climaDeFuera(m) else null,
+            R.latas(m), R.etiquetasRojas(m), R.primerDia(m), R.herramientasPorTodas(m))
     }
 
     /** Cada día del cuento que tiene algo que verse cambia el cuadro respecto del último día corriente antes de él. */
@@ -248,6 +259,22 @@ class EscenaRefugioPrueba {
         assertTrue(EscenaRefugio.solFalso(momento("2027-07-20", 13.0))); assertFalse(EscenaRefugio.solFalso(momento("2027-07-20", 22.0)))
         assertFalse(EscenaRefugio.florDeVerdad(momento("2030-07-27"))); assertTrue(EscenaRefugio.florDeVerdad(momento("2030-07-28"))); assertTrue(EscenaRefugio.florSeca(momento("2031-01-10")))
         assertTrue(EscenaRefugio.tramoReserva(momento("2028-03-14")) == TramoReserva.BAJA && EscenaRefugio.alarma(momento("2028-03-14")) && !EscenaRefugio.botellasEnFila(momento("2028-03-14")))
+    }
+
+    /** Lo que faltaba del cuento: las etiquetas del simulacro, las latas de las dos fiestas, el primer día abierto, las herramientas de la cuarentena, la rendija de la noche. */
+    @Test fun loQueFaltabaDelCuento() {
+        val R = EscenaRefugio
+        assertTrue(R.etiquetasRojas(momento("2027-11-11", 10.0))); assertFalse(R.etiquetasRojas(momento("2027-11-12", 10.0)))
+        assertTrue(R.latas(momento("2028-01-01")) && R.latas(momento("2027-03-01"))); assertFalse(R.latas(momento("2027-03-02")))
+        var primeros = 0
+        cadaDia { d, m -> if (R.primerDia(m)) { primeros++; assertEquals("$d", Puerta.ABIERTA, R.puerta(m)) } }
+        assertTrue(primeros >= 1)
+        cadaDia { d, m -> assertEquals("$d", R.cuarentena(m), R.herramientasPorTodas(m)) }
+        assertTrue(R.lamparas(momento("2029-02-10", 10.0)).size == 2)
+        // La rendija: de día nunca; de noche, una de las tres puertas o ninguna, y no siempre la misma.
+        val noches = mutableSetOf<Int>()
+        cadaDia { d, _ -> assertEquals("$d", -1, R.rendija(momento(d.toString(), 13.0))); val r = R.rendija(momento(d.toString(), 22.0)); assertTrue("$d", r in -1..2); noches += r }
+        assertEquals(setOf(-1, 0, 1, 2), noches)
     }
 
     // ---------------------------------------------------------------- El gato

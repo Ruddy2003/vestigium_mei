@@ -166,14 +166,14 @@ internal class VistaRefugio(val m: Momento) {
     val ambienteSala: Color = when {
         solFalso -> Color(0xFF8E8C88)
         dia -> Color(0xFF6E7A9C)
-        else -> Color(0xFF384679)
+        else -> Color(0xFF283058)
     }
 
     /** La del pasillo: el blanco parejo de los tubos de día; de noche, el azul «del fondo de una piscina». */
     val ambientePasillo: Color = when {
         solFalso -> Color(0xFFD8C7A8)
         dia -> Color(0xFF5C666B)
-        else -> Color(0xFF2B4672)
+        else -> Color(0xFF223A62)
     }
 
     /** Dónde está el sol que entra por la Puerta (su rebote en el suelo del pasillo), o null. */
@@ -194,13 +194,14 @@ internal class VistaRefugio(val m: Momento) {
         val porton = V3(PasilloRefugio.CENTRO_X, 2.1f, SalaRefugio.FONDO + 2.6f)
         add(FocoRefugio(porton, colorTubo, if (solFalso) 1.1f else if (dia) 0.34f else 0.42f, 6.5f, tumba = true, enPasillo = false))
         // ---- De noche, el violeta de los tanques sale por el portón: «la última luz» tiñe los cantos, el suelo y el techo.
-        add(FocoRefugio(V3(PasilloRefugio.IZQ + 0.6f, 1.9f, SalaRefugio.FONDO + 1.2f), C.VIOLETA, (0.08f + 0.5f * noche) * tanques, 6.5f, enPasillo = false))
-        // ---- El piloto ámbar del cuadro de la bomba grande: siempre encendido; de noche, la luz cálida de delante.
-        add(FocoRefugio(sala.PILOTO_BOMBA, C.GUARDIA, if (dia) 0.12f else 0.6f, 1.7f, enPasillo = false))
+        add(FocoRefugio(V3(PasilloRefugio.IZQ + 0.6f, 1.9f, SalaRefugio.FONDO + 1.2f), C.VIOLETA, (0.08f + 0.75f * noche) * tanques, 7f, enPasillo = false))
+        // ---- Los pilotos de los cuadritos de mando de las bombas: de noche, las luces cálidas de delante y del fondo.
+        add(FocoRefugio(sala.PILOTO_BOMBA, C.GUARDIA, if (dia) 0.12f else 0.75f, 2.0f, enPasillo = false))
+        if (!dia) for (q in listOf(sala.BOMBA_2 + V3(0.55f, 1.15f, -0.45f), sala.BOMBA_3 + V3(0.75f, 0.95f, -0.4f))) add(FocoRefugio(q, C.GUARDIA, 0.35f, 1.3f, enPasillo = false))
         // ---- Los tubos del techo del pasillo, uno por tramo entre costillas.
         for (z in PasilloRefugio.TUBOS) add(FocoRefugio(V3(PasilloRefugio.CENTRO_X, PasilloRefugio.BOVEDA - 0.25f, z), colorTubo, fuerzaTubo, 2.8f, enSala = false))
         // ---- La lucecita de guardia de la sala, sobre el cuadro de mando.
-        add(FocoRefugio(sala.GUARDIA, C.GUARDIA, 0.9f * guardia, 2.2f, tumba = !dia, enPasillo = false))
+        add(FocoRefugio(sala.GUARDIA, C.GUARDIA, (if (dia) 0.9f else 1.25f) * guardia, if (dia) 2.2f else 2.7f, tumba = !dia, enPasillo = false))
         // ---- Los tanques de cultivo, por el ventanal del pasillo: violeta.
         val ventanal = V3(PasilloRefugio.IZQ + 0.3f, 1.7f, (PasilloRefugio.VENTANAL_Z0 + PasilloRefugio.VENTANAL_Z1) / 2f)
         add(FocoRefugio(ventanal, C.VIOLETA, 0.2f + 0.5f * tanques * (0.4f + 0.6f * noche), 4.2f, enSala = false))
