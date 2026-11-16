@@ -28,9 +28,16 @@ val enlazados = listOf(
     "$paquete/ui/*Trazos.kt",
     "$paquete/ui/Galia.kt", "$paquete/ui/Nouveau.kt", "$paquete/ui/Psicodelia.kt", "$paquete/ui/Frente.kt", "$paquete/ui/Arcontes.kt",
     // Los temas: TemaId, sus colores, sus letras, sus escalas de color y cómo nombran los meses.
-    "$paquete/ui/Tema.kt", "$paquete/ui/Disenios.kt", "$paquete/ui/Estilo.kt",
+    "$paquete/ui/Tema.kt", "$paquete/ui/ModoHora.kt", "$paquete/ui/Disenios.kt", "$paquete/ui/Estilo.kt",
+    // Lo que Estilo necesita para nombrar meses y fechas en cada tema.
+    "$paquete/ui/Temas.kt", "$paquete/ui/Vapor.kt", "$paquete/ui/CuentaMaya.kt", "$paquete/ui/NombresNuevos.kt", "$paquete/ui/Textos.kt",
+    "$paquete/ui/Claves.kt", "$paquete/ui/nombres/**/*.kt",
     // Los datos: el modelo (Dia, Config), el conteo de palabras y las fechas.
     "$paquete/data/Modelo.kt", "$paquete/data/Texto.kt", "$paquete/data/Fechas.kt",
+    // Los tipos que Modelo usa en sus campos.
+    "$paquete/data/Catalogo.kt", "$paquete/data/Especiales.kt",
+    // Los cajones del Ideario (cómo se agrupan las ideas por tema) y cómo cada tema cuenta sus fichas («7 óstraka»).
+    "$paquete/data/Ideario.kt", "$paquete/ui/ArchivoIdeas.kt",
 )
 
 /**
@@ -41,6 +48,10 @@ val enlazados = listOf(
 val piezas = linkedMapOf(
     "$paquete/ui/Escena.kt" to listOf("halo", "luzCalida"),
     "$paquete/ui/Libros.kt" to listOf("Rayas", "Pagina"),
+    "$paquete/data/Mundo.kt" to listOf("CiudadVisitada", "SitioMarcado"),
+    "$paquete/ui/Decoracion.kt" to listOf("piezasMano"),
+    // Cómo arma FicheroIdeas los cajones del mueble y su rótulo (la llamada a MuebleIdeas se repite en arnes/Dibujar.kt).
+    "$paquete/ui/pantallas/Fichero.kt" to listOf("cajones", "rotuloCajon"),
 )
 
 val generado = layout.buildDirectory.dir("generado/kotlin")
@@ -59,6 +70,8 @@ dependencies {
     implementation("org.jetbrains.compose.desktop:desktop-jvm-linux-x64:1.7.3")
     implementation("org.jetbrains.compose.material3:material3-desktop:1.7.3")
     implementation("org.jetbrains.compose.material:material-icons-core-desktop:1.7.3")
+    // El ciclo de vida (ModoHora.kt lo escucha para cambiar de modo al volver a la app).
+    implementation("org.jetbrains.androidx.lifecycle:lifecycle-runtime-compose:2.8.4")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-swing:1.9.0")
 }
@@ -134,7 +147,8 @@ fun extraerPiezas(texto: String, nombres: List<String>, origen: String): String 
         val i = inicios.firstOrNull { decl.find(lineas[it])!!.groupValues[1] == n }
             ?: error("El arnés no encontró «$n» en $origen: si cambió de nombre o de archivo, actualiza `piezas` en build.gradle.kts.")
         val sig = inicios.firstOrNull { it > i }?.let { arranque(it) } ?: lineas.size
-        lineas.subList(arranque(i), sig).joinToString("\n").trimEnd()
+        // Lo privado del archivo se vuelve interno, para que el arnés lo pueda llamar desde otro archivo.
+        lineas.subList(arranque(i), sig).joinToString("\n").trimEnd().replaceFirst(Regex("""(?m)^private """), "internal ")
     }
     val cuerpo = bloques.joinToString("\n\n")
     val usadas = importaciones.filter { imp ->
