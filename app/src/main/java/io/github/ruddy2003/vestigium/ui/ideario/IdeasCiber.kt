@@ -51,7 +51,7 @@ import kotlin.math.sin
  * Cada tema es una bahía del bastidor con sus orejas atornilladas a los rieles y, según la semilla, una bandeja de disco
  * extraíble (asa, cerradura de llave, piloto verde fijo, ámbar de actividad y una barra de diez segmentos que se enciende
  * según cuánto guarda), una bandeja de alambre con una pila de listados de rayas verdes (más alta cuanto más guarda) o una
- * caja de cartuchos de cinta de pie con sus etiquetas escritas a mano (uno por ficha, hasta ocho); el tema va en una cinta de
+ * caja de cartuchos de cinta de pie con sus etiquetas escritas a mano (uno por ficha, hasta seis); el tema va en una cinta de
  * rotular en relieve. Lo que no tiene tema va en una caja de cartón con disquetes sueltos sin etiquetar; una bahía sin tema
  * lleva su tapa ciega y un piloto apagado. Al abrir una, la bandeja sale hacia delante y su piloto de actividad se enciende.
  * La luz: el fósforo del monitor baña el teclado, el panel y la primera fila, y cada fila hacia abajo se hunde en su propio
@@ -1368,7 +1368,7 @@ object IdeasCiber : DisenoIdeas {
     }
 
     /**
-     * La caja de cartuchos de cinta: de plástico negro, con los cartuchos de pie (uno por ficha, hasta ocho) que muestran el
+     * La caja de cartuchos de cinta: de plástico negro, con los cartuchos de pie (uno por ficha, hasta seis) que muestran el
      * canto con su etiqueta de papel escrita a mano; alguno más alzado o ladeado; delante, la cinta del tema.
      */
     private fun DrawScope.cintas(w: Float, h: Float, c: EstadoCajon, m: Int, t: Tono) {
