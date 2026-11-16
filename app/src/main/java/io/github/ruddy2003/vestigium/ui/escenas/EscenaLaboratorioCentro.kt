@@ -299,10 +299,13 @@ internal object CuadroCentro {
     fun luzDelGato(m: Momento, en: Offset): LuzGato {
         val v = VistaCentro(m)
         val w = enElSuelo(en) + V3(0f, 0.25f, 0f)
+        // Pareja, como en el laboratorio (`CuadroLab.luzPareja`): el matiz del hall donde pisa, el lado del pozo (o de la
+        // lámpara de su mesa, si está cerca) y la sombra hacia dentro de la galería.
         val lat = if (en.x < EsquinaCentro.MESA_X) 0.55f else -0.45f
-        val rayo = rayoFijo(lat, 56f, (0.32f * (1f - 0.5f * v.noche)).coerceIn(0f, 1f), ColorLaboratorio.SOMBRA)
-        val brillo = lerp(v.pozo.color, Color.White, 0.5f)
-        return LuzGato(rayo, v.noche.coerceIn(0f, 1f), brillo) { c -> v.c(w, c, V3(0f, 0.5f, 1f)) }
+        val calida = (v.luces.maxOfOrNull { if (it.de == Fuente.VELA || it.de == Fuente.MESA) v.cuanto(it, w, it.w - w) else 0f } ?: 0f).coerceIn(0f, 1f)
+        val filo = lerp(lerp(v.pozo.color, Color.White, 0.2f), ColorLaboratorio.LAMPARA, calida)
+        val k = (v.pozo.fuerza * v.haz(w) + 0.4f * v.difusa + calida).coerceIn(0f, 1f)
+        return CuadroLab.luzPareja(v.c(w, Color.White, V3(0f, 0.5f, 1f)), v.noche, filo, lat, k, ColorLaboratorio.SOMBRA)
     }
 
     /** Lo plantado en el suelo del gato: la pata de la silla apartada (si cae en su tramo). */
