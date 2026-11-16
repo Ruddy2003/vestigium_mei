@@ -166,13 +166,20 @@ object EstadoTema {
 /** Verdad dentro de [SinIntensidad]: los dibujos leen la intensidad 0 y la cara de la hora. */
 val LocalSinIntensidad = compositionLocalOf { false }
 
-/** La cara que deben pintar los componentes del tema aquí: la de [EstadoTema], o la de la hora dentro de [SinIntensidad]. */
-@Composable
-fun caraLocal(): Cara = if (LocalSinIntensidad.current) EstadoTema.caraSinIntensidad(Estilo.tema) else EstadoTema.cara
+/**
+ * Una cara fija para un trozo de la interfaz que no sigue ni la hora ni los consumos: los fondos del teléfono, que se
+ * eligen a mano (tanda 5). Dentro, [caraLocal] da esta cara y [intensidadLocal] da 0. Null (lo normal): la de [EstadoTema].
+ */
+val LocalCaraFija = compositionLocalOf<Cara?> { null }
 
-/** La intensidad que deben pintar los componentes del tema aquí: la de [EstadoTema], o 0 dentro de [SinIntensidad]. */
+/** La cara que deben pintar los componentes del tema aquí: la fija ([LocalCaraFija]), la de la hora dentro de [SinIntensidad] o la de [EstadoTema]. */
 @Composable
-fun intensidadLocal(): Float = if (LocalSinIntensidad.current) 0f else EstadoTema.intensidad
+fun caraLocal(): Cara = LocalCaraFija.current
+    ?: if (LocalSinIntensidad.current) EstadoTema.caraSinIntensidad(Estilo.tema) else EstadoTema.cara
+
+/** La intensidad que deben pintar los componentes del tema aquí: la de [EstadoTema], o 0 con una cara fija o dentro de [SinIntensidad]. */
+@Composable
+fun intensidadLocal(): Float = if (LocalSinIntensidad.current || LocalCaraFija.current != null) 0f else EstadoTema.intensidad
 
 /**
  * Las pantallas que se dibujan siempre como si no hubiera ningún consumo en curso (la guía, «La regla de legibilidad»,

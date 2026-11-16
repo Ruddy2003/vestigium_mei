@@ -1608,9 +1608,14 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.NAVIDAD -> Pagina(R.drawable.papel_navidad, c(0xFFFBF6EC), c(0xFF1E2A22), c(0xFF5E6B62), c(0xFFB71C1C), c(0xFF1B5E20), LetraExtra.italianno, 27f, 32f, false, Rayas.NADA, LetraExtra.cinzelDeco)
     // La declaración, tecleada.
     TemaId.DISTOPIA -> Pagina(R.drawable.papel_distopia, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.terminal, 15.5f, 24f, false, Rayas.RENGLONES)
-    // La funda interior, en papel de periódico con la trama de arcoíris arriba: se lee en Fredoka, con la tinta violeta negra,
-    // el magenta y el verde de los carteles, y la capitular en las letras infladas de los títulos.
-    TemaId.PSICODELIA -> Pagina(R.drawable.papel_psicodelia, c(0xFFEFE7D6), c(0xFF2A1C32), c(0xFF61546A), c(0xFFB0246A), c(0xFF2E7344), LetraExtra.fredoka, 16.5f, 26f, false, Rayas.NADA, LetraExtra.modak)
+    // La funda interior: se lee en Fredoka, con la tinta violeta negra, el magenta y el verde de los carteles, y la capitular
+    // en las letras infladas de los títulos (la letra y los colores son de la versión 1; los cambia la tanda de los libros).
+    // El papel sigue la cara (Psicodelia v2, tanda 5): de día, el de la copia de foto de la ciudad; de noche (o con un
+    // consumo en curso), el papel crema del cartel con su trama apenas visible.
+    TemaId.PSICODELIA -> Pagina(when (EstadoTema.caraDe(t)) {
+        Cara.BASE -> R.drawable.papel_psicodelia
+        Cara.INTENSA -> R.drawable.papel_psicodelia_cartel
+    }, c(0xFFEFE7D6), c(0xFF2A1C32), c(0xFF61546A), c(0xFFB0246A), c(0xFF2E7344), LetraExtra.fredoka, 16.5f, 26f, false, Rayas.NADA, LetraExtra.modak)
     // El papel de cartel crema con su cenefa de tallos, la tinta de la prensa, el verde salvia y el violeta del iris; se lee en
     // Brygada 1918 y la capitular va en la letra del cartel.
     TemaId.NOUVEAU -> Pagina(R.drawable.papel_nouveau, c(0xFFEFE8D6), c(0xFF2A2530), c(0xFF5E5662), c(0xFF4B6A4E), c(0xFF6D4C82), LetraExtra.brygada, 17f, 27f, false, Rayas.NADA, LetraExtra.federant)

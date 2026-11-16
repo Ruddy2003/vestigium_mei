@@ -1,39 +1,80 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Android 12 y después: igual que la de drawable/ (no fuerza el radio del sistema, para no perder la forma del tema). Psicodelia: la sala de baile de noche, con la luz negra, en su violeta negro, con las esquinas blandas y desparejas de una gota (ninguna igual) y el borde violeta apagado, sin letreros ni rejillas; arriba a la izquierda, dos gotas de las luces líquidas, magenta y verde limón, que se tocan y se mezclan (donde se juntan sale el naranja), con una gotita violeta y su halo; arriba a la derecha, la margarita de pétalos redondos en verde limón con el corazón violeta (los dos complementarios que vibran); abajo a la derecha, bajo las teclas, tres burbujas del aceite que sube. -->
+<!-- Android 12 y después: igual que la de drawable/ (no fuerza el radio del sistema, para no perder la forma del tema). Psicodelia, la ciudad (de 5:00 a 21:00; el widget va siempre en oscuro): el cuarto de noche, con la lámpara de pantalla plisada encendida. El café casi negro del cuarto a media luz, el borde café y un filete fino por dentro, las esquinas redondas de la ventanilla del trolebús; arriba a la izquierda, la pantalla encendida con el halo cálido que echa sobre la pared; arriba a la derecha, el disco del día con su etiqueta naranja quemado; abajo, el canto de la repisa de madera. Sin flores, sin paz, sin arcoíris. -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#F7180F24"/>
-            <stroke android:width="1.5dp" android:color="#43335A"/>
-            <corners android:topLeftRadius="22dp" android:topRightRadius="12dp" android:bottomRightRadius="24dp" android:bottomLeftRadius="14dp"/>
+            <solid android:color="#F71B1511"/>
+            <stroke android:width="1.5dp" android:color="#54463A"/>
+            <corners android:radius="16dp"/>
         </shape>
     </item>
-    <item android:gravity="top|left" android:width="18dp" android:height="13.2dp" android:top="2.5dp" android:left="5dp">
-        <vector android:width="18dp" android:height="13.2dp" android:viewportWidth="26" android:viewportHeight="19">
-            <path android:pathData="M8,0.6 C13.6,-0.2 18.4,1.6 22.6,4.8 C25.8,7.4 25.6,12.6 22.4,15.6 C18.8,18.8 12.4,19.2 7.4,17.6 C2.6,16 0.2,12.2 0.8,8.2 C1.4,4.2 4.2,1.2 8,0.6 Z" android:fillColor="#1CFF5CBE"/>
-            <path android:pathData="M8.2,3.4 C11.8,2.6 14.6,5.0 14.4,8.4 C14.2,11.6 11.6,13.8 8.4,13.6 C5.0,13.4 2.8,10.8 3.2,7.8 C3.5,5.5 5.6,3.9 8.2,3.4 Z" android:fillColor="#B8FF5CBE"/>
-            <path android:pathData="M16.4,6.6 C19.6,6.2 22.4,8.3 22.4,11.4 C22.4,14.3 20.1,16.4 17.2,16.2 C14.5,16.0 12.6,13.9 12.8,11.2 C13.0,8.7 14.4,6.9 16.4,6.6 Z" android:fillColor="#B8C9F04A"/>
-            <path android:pathData="M13.2,8.4 C14.4,8.9 14.8,10.2 14.2,11.6 C13.4,12.1 12.6,11.8 12.5,10.6 C12.4,9.6 12.7,8.8 13.2,8.4 Z" android:fillColor="#88FF9F43"/>
-            <path android:pathData="M18.9,3.2 a2.3,2.3 0 1,0 4.6,0 a2.3,2.3 0 1,0 -4.6,0 Z" android:fillColor="#CCAE91FF"/>
-            <path android:pathData="M6.4,5.6 C7.2,5.0 8.4,4.9 9.2,5.2" android:strokeColor="#99FFE3F4" android:strokeWidth="0.8" android:strokeLineCap="round"/>
-            <path android:pathData="M15.2,8.6 C15.9,8.1 17.0,8.0 17.8,8.3" android:strokeColor="#99F4FFD6" android:strokeWidth="0.8" android:strokeLineCap="round"/>
-            <path android:pathData="M20,2.5 a0.6,0.6 0 1,0 1.2,0 a0.6,0.6 0 1,0 -1.2,0 Z" android:fillColor="#AAF2EAF7"/>
+    <item android:gravity="top|left" android:width="110dp" android:height="50dp" android:top="1.5dp" android:left="1dp">
+        <shape android:shape="oval">
+            <solid android:color="#08F0A35A"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="88dp" android:height="40dp" android:top="1.5dp" android:left="1dp">
+        <shape android:shape="oval">
+            <solid android:color="#08F0A35A"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="68dp" android:height="31dp" android:top="1.5dp" android:left="1dp">
+        <shape android:shape="oval">
+            <solid android:color="#09F0A35A"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="50dp" android:height="23dp" android:top="1.5dp" android:left="1dp">
+        <shape android:shape="oval">
+            <solid android:color="#0AF0A35A"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="34dp" android:height="16dp" android:top="1.5dp" android:left="1dp">
+        <shape android:shape="oval">
+            <solid android:color="#0CF0A35A"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="20dp" android:height="10dp" android:top="1.5dp" android:left="5.5dp">
+        <shape android:shape="oval">
+            <solid android:color="#10F0A35A"/>
+        </shape>
+    </item>
+    <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.8dp" android:color="#4D8C6A4E"/>
+            <corners android:radius="12.5dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="9dp" android:height="8.6dp" android:top="1.4dp" android:left="11dp">
+        <vector android:width="9dp" android:height="8.6dp" android:viewportWidth="12" android:viewportHeight="11.5">
+            <path android:pathData="M3.6,1.2 L8.4,1.2 L10.2,6.4 L1.8,6.4 Z" android:fillColor="#FFF2C996"/>
+            <path android:pathData="M4.8,1.4 L4.0,6.2" android:strokeColor="#66D9A06A" android:strokeWidth="0.35"/>
+            <path android:pathData="M6.0,1.4 L6.0,6.2" android:strokeColor="#66D9A06A" android:strokeWidth="0.35"/>
+            <path android:pathData="M7.2,1.4 L8.0,6.2" android:strokeColor="#66D9A06A" android:strokeWidth="0.35"/>
+            <path android:pathData="M1.8,6.4 L10.2,6.4" android:strokeColor="#FFB9733E" android:strokeWidth="0.6"/>
+            <path android:pathData="M6,6.6 L6,10.6" android:strokeColor="#FF8A5A34" android:strokeWidth="0.7"/>
         </vector>
     </item>
-    <item android:gravity="top|right" android:width="13dp" android:height="13dp" android:top="5dp" android:right="7dp">
-        <vector android:width="13dp" android:height="13dp" android:viewportWidth="16" android:viewportHeight="16">
-            <path android:pathData="M0.2,8 a7.8,7.8 0 1,0 15.6,0 a7.8,7.8 0 1,0 -15.6,0 Z" android:fillColor="#1AC9F04A"/>
-            <path android:pathData="M5.55,3.3 a2.45,2.45 0 1,0 4.9,0 a2.45,2.45 0 1,0 -4.9,0 Z M8.87,4.68 a2.45,2.45 0 1,0 4.9,0 a2.45,2.45 0 1,0 -4.9,0 Z M10.25,8 a2.45,2.45 0 1,0 4.9,0 a2.45,2.45 0 1,0 -4.9,0 Z M8.87,11.32 a2.45,2.45 0 1,0 4.9,0 a2.45,2.45 0 1,0 -4.9,0 Z M5.55,12.7 a2.45,2.45 0 1,0 4.9,0 a2.45,2.45 0 1,0 -4.9,0 Z M2.23,11.32 a2.45,2.45 0 1,0 4.9,0 a2.45,2.45 0 1,0 -4.9,0 Z M0.85,8 a2.45,2.45 0 1,0 4.9,0 a2.45,2.45 0 1,0 -4.9,0 Z M2.23,4.68 a2.45,2.45 0 1,0 4.9,0 a2.45,2.45 0 1,0 -4.9,0 Z" android:fillColor="#FFC9F04A"/>
-            <path android:pathData="M5.3,8 a2.7,2.7 0 1,0 5.4,0 a2.7,2.7 0 1,0 -5.4,0 Z" android:fillColor="#FF7B3FD1"/>
-            <path android:pathData="M6.3,7.6 a1.3,1.3 0 1,0 2.6,0 a1.3,1.3 0 1,0 -2.6,0 Z" android:fillColor="#FFAE91FF"/>
+    <item android:gravity="top|right" android:width="14dp" android:height="14dp" android:top="5dp" android:right="7dp">
+        <vector android:width="14dp" android:height="14dp" android:viewportWidth="16" android:viewportHeight="16">
+            <path android:pathData="M15.6,8 C15.6,12.2 12.2,15.6 8,15.6 C3.8,15.6 0.4,12.2 0.4,8 C0.4,3.8 3.8,0.4 8,0.4 C12.2,0.4 15.6,3.8 15.6,8 Z" android:fillColor="#FF17110D"/>
+            <path android:pathData="M14.2,8 C14.2,11.42 11.42,14.2 8,14.2 C4.58,14.2 1.8,11.42 1.8,8 C1.8,4.58 4.58,1.8 8,1.8 C11.42,1.8 14.2,4.58 14.2,8 Z" android:strokeColor="#33B8A890" android:strokeWidth="0.3"/>
+            <path android:pathData="M12.9,8 C12.9,10.71 10.71,12.9 8,12.9 C5.29,12.9 3.1,10.71 3.1,8 C3.1,5.29 5.29,3.1 8,3.1 C10.71,3.1 12.9,5.29 12.9,8 Z" android:strokeColor="#33B8A890" android:strokeWidth="0.3"/>
+            <path android:pathData="M2.3,4.2 C3.1,2.9 4.3,1.9 5.6,1.3" android:strokeColor="#66D8CDB5" android:strokeWidth="0.9" android:strokeLineCap="round"/>
+            <path android:pathData="M13.7,11.8 C12.9,13.1 11.7,14.1 10.4,14.7" android:strokeColor="#33D8CDB5" android:strokeWidth="0.8" android:strokeLineCap="round"/>
+            <path android:pathData="M11.2,8 C11.2,9.77 9.77,11.2 8,11.2 C6.23,11.2 4.8,9.77 4.8,8 C4.8,6.23 6.23,4.8 8,4.8 C9.77,4.8 11.2,6.23 11.2,8 Z" android:fillColor="#FFC8662A"/>
+            <path android:pathData="M10.6,8 C10.6,9.44 9.44,10.6 8,10.6 C6.56,10.6 5.4,9.44 5.4,8 C5.4,6.56 6.56,5.4 8,5.4 C9.44,5.4 10.6,6.56 10.6,8 Z" android:strokeColor="#992A2119" android:strokeWidth="0.25"/>
+            <path android:pathData="M8.55,8 C8.55,8.3 8.3,8.55 8,8.55 C7.7,8.55 7.45,8.3 7.45,8 C7.45,7.7 7.7,7.45 8,7.45 C8.3,7.45 8.55,7.7 8.55,8 Z" android:fillColor="#FF1B1511"/>
         </vector>
     </item>
-    <item android:gravity="bottom|right" android:width="17dp" android:height="8.5dp" android:bottom="1.8dp" android:right="16dp">
-        <vector android:width="17dp" android:height="8.5dp" android:viewportWidth="20" android:viewportHeight="10">
-            <path android:pathData="M12.2,5 a3.4,3.4 0 1,0 6.8,0 a3.4,3.4 0 1,0 -6.8,0 Z" android:strokeColor="#99AE91FF" android:strokeWidth="0.9"/>
-            <path android:pathData="M14.0,3.6 C14.5,2.9 15.4,2.7 16.1,3.0" android:strokeColor="#77F2EAF7" android:strokeWidth="0.6" android:strokeLineCap="round"/>
-            <path android:pathData="M6.4,6.4 a2.2,2.2 0 1,0 4.4,0 a2.2,2.2 0 1,0 -4.4,0 Z" android:strokeColor="#99FF5CBE" android:strokeWidth="0.8"/>
-            <path android:pathData="M2.1,4.2 a1.3,1.3 0 1,0 2.6,0 a1.3,1.3 0 1,0 -2.6,0 Z" android:strokeColor="#99C9F04A" android:strokeWidth="0.7"/>
-        </vector>
+    <item android:gravity="bottom|fill_horizontal" android:height="2.4dp" android:left="16dp" android:right="16dp" android:bottom="3.6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#806E4630"/>
+            <corners android:radius="1dp"/>
+        </shape>
+    </item>
+    <item android:gravity="bottom|fill_horizontal" android:height="0.8dp" android:left="16dp" android:right="16dp" android:bottom="5.6dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#668C5E3E"/>
+        </shape>
     </item>
 </layer-list>

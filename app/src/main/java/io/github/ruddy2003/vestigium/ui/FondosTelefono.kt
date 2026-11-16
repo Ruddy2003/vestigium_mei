@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.asAndroidBitmap
@@ -84,9 +85,25 @@ import kotlin.math.sin
 object FondosTelefono {
     private const val VERSION = 3
 
-    /** [variante]: «bloqueo» (con emblema, nombre y marco) o «inicio» (limpio, para que no compita con las apps). */
-    fun archivo(ctx: Context, tema: TemaId, oscuro: Boolean, variante: String = "inicio"): File =
-        File(File(ctx.filesDir, "fondos").apply { mkdirs() }, "fondo_v${VERSION}_${tema.id}_${if (oscuro) "o" else "c"}_$variante.png")
+    /**
+     * [variante]: «bloqueo» (con emblema, nombre y marco) o «inicio» (limpio, para que no compita con las apps). Un tema con
+     * caras ([TemaId.conCaras]) lleva además la cara elegida ([cara]) en el nombre; los demás conservan el nombre de siempre.
+     */
+    fun archivo(ctx: Context, tema: TemaId, oscuro: Boolean, variante: String = "inicio"): File {
+        val c = if (tema.conCaras) "_" + cara(ctx, tema).name.lowercase() else ""
+        return File(File(ctx.filesDir, "fondos").apply { mkdirs() }, "fondo_v${VERSION}_${tema.id}_${if (oscuro) "o" else "c"}${c}_$variante.png")
+    }
+
+    /**
+     * La cara del fondo de un tema con caras (Psicodelia: la ciudad o el cartel). La elige la persona en la pantalla del
+     * fondo y se queda: el fondo no cambia solo con la hora ni con un consumo. Se guarda en las preferencias de los fondos
+     * (no es un dato: no va a la base ni a la exportación). Sin elegir, la ciudad.
+     */
+    fun cara(ctx: Context, t: TemaId): Cara = if (!t.conCaras) Cara.BASE
+        else runCatching { Cara.valueOf(prefs(ctx).getString("cara_${t.id}", null) ?: Cara.BASE.name) }.getOrDefault(Cara.BASE)
+
+    /** Guarda la cara elegida para el fondo de [t] (solo en un tema con caras). */
+    fun elegirCara(ctx: Context, t: TemaId, c: Cara) { if (t.conCaras) prefs(ctx).edit().putString("cara_${t.id}", c.name).apply() }
 
     fun guardar(ctx: Context, bmp: Bitmap, tema: TemaId, oscuro: Boolean, variante: String) {
         val f = archivo(ctx, tema, oscuro, variante)
@@ -158,8 +175,8 @@ object FondosTelefono {
     fun ultimo(ctx: Context): String? = prefs(ctx).getString("ultimo", null)
     fun marcarUltimo(ctx: Context, clave: String) { prefs(ctx).edit().putString("ultimo", clave).apply() }
 
-    /** «romano/false»: el tema y si va en oscuro, la clave de un fondo. */
-    fun clave(t: TemaId, oscuro: Boolean) = "${t.id}/$oscuro"
+    /** «romano/false»: el tema y si va en oscuro, la clave de un fondo; en un tema con caras, también la cara («psicodelia/true/intensa»). */
+    fun clave(t: TemaId, oscuro: Boolean, cara: Cara = Cara.BASE) = if (t.conCaras) "${t.id}/$oscuro/${cara.name.lowercase()}" else "${t.id}/$oscuro"
 
     /**
      * Los fondos que conviene tener pintados en archivo: el del tema de hoy en sus dos modos y, si el tema cambia solo cada
@@ -199,7 +216,7 @@ object FondosTelefono {
         if (!c.fondo_telefono_auto || Repo.errorAlAbrir != null || vivoActivo(ctx)) return false
         val t = Estilo.tema
         val o = modoOscuroDe(ctx, t)
-        val k = clave(t, o)
+        val k = clave(t, o, cara(ctx, t))
         if (ultimo(ctx) == k || !pintado(ctx, t, o)) return false
         val bi = runCatching { BitmapFactory.decodeFile(archivo(ctx, t, o, "inicio").absolutePath) }.getOrNull()
         val bb = runCatching { BitmapFactory.decodeFile(archivo(ctx, t, o, "bloqueo").absolutePath) }.getOrNull()
@@ -256,17 +273,20 @@ object FondosTelefono {
 /**
  * El fondo tal como queda en el teléfono. «bloqueo»: papel o pantalla del tema, emblema grande, nombre, adorno y marco.
  * «inicio»: solo el papel, lo que se mueve y el emblema muy tenue en grande, para que las apps y los widgets se lean bien encima.
+ * [cara]: en un tema con caras (Psicodelia), la que se pinta; fija, sin intensidad (los componentes que leen [caraLocal] la
+ * siguen). Sin decirla, la de ahora (las capturas la fuerzan con [EstadoTema.forzar]); los demás temas la ignoran.
  */
 @Composable
-fun FondoTelefonoVista(tema: TemaId, oscuro: Boolean, modifier: Modifier = Modifier, variante: String = "bloqueo") {
+fun FondoTelefonoVista(tema: TemaId, oscuro: Boolean, modifier: Modifier = Modifier, variante: String = "bloqueo", cara: Cara = EstadoTema.caraDe(tema)) {
     val o = oscuro || tema.soloOscuro
-    val e = esquemaDe(tema, o)
+    val e = esquemaDe(tema, o, cara)
     val limpio = variante == "inicio"
-    MaterialTheme(colorScheme = e, typography = tipoDe(tema, o)) {
+    androidx.compose.runtime.CompositionLocalProvider(LocalCaraFija provides (if (tema.conCaras) cara else null)) {
+    MaterialTheme(colorScheme = e, typography = tipoDe(tema, o, cara)) {
         Box(modifier.background(e.background).fondoTema(tema, e)) {
             // Lo que se mueve en la app, aquí quieto y un poco más visible (se dibuja dos veces en el de bloqueo).
             FondoVivo(tema, fijo = 0.37f)
-            if (!limpio) { FondoVivo(tema, fijo = 0.37f); MarcoFondo(tema, e) }
+            if (!limpio) { FondoVivo(tema, fijo = 0.37f); MarcoFondo(tema, e, cara) }
             // Una luz suave al centro y las orillas un poco más oscuras.
             Canvas(Modifier.fillMaxSize()) {
                 val c = Offset(size.width / 2, size.height * 0.42f)
@@ -283,6 +303,7 @@ fun FondoTelefonoVista(tema: TemaId, oscuro: Boolean, modifier: Modifier = Modif
                 Meandro(Modifier.width(210.dp).padding(top = 10.dp), tema = tema)
             }
         }
+    }
     }
 }
 
@@ -410,53 +431,128 @@ private fun DrawScope.marcoNouveau(e: androidx.compose.material3.ColorScheme, iz
 }
 
 /**
- * Psicodelia: el marco de un cartel de concierto. El borde es blando y ondula, con un filete por dentro; detrás del
- * emblema, el arco de tinta de arcoíris del tintero partido; arriba, en las esquinas, dos margaritas que vibran; abajo,
- * la calle con su hilera de casas victorianas, casi todas grises y una pintada de turquesa. De noche, la misma calle con
- * las ventanas encendidas en luz negra (las luces líquidas ya las pone el fondo vivo).
+ * Psicodelia, la ciudad (cara de día; `docs/diseno/temas/psicodelia.md`, v2). El marco es la ventanilla del trolebús, de
+ * esquinas redondas, con su junta por dentro, y el pasamanos que la cruza de arriba abajo a la derecha. Abajo, la calle vista
+ * desde la ventanilla: cinco victorianas casi todas grises (la cuarta pintada, desteñida por la foto), con su mirador de tres
+ * paños y su cornisa o su frontón; la luz de la tarde por la izquierda y la sombra café a la derecha. Por delante, dos postes
+ * y los cables del trolebús. De noche (oscuro), la misma calle en sombra, con alguna ventana encendida por la lámpara de
+ * dentro. Todo apagado hacia el fondo, para que manden el emblema y el nombre. Encima, el grano de película.
  */
-private fun DrawScope.marcoPsicodelia(e: androidx.compose.material3.ColorScheme, izq: Float, der: Float, arr: Float, aba: Float, col: Color, tenue: Color, claro: Boolean) {
-    val u = 1.dp.toPx(); val cx = (izq + der) / 2
-    fun borde(dentro: Float) = Path().apply {
-        val x0 = izq + dentro; val x1 = der - dentro; val y0 = arr + dentro; val y1 = aba - dentro; val r = 26 * u; val a = 2.6f * u
-        fun lado(desde: Offset, hasta: Offset, primero: Boolean) {
-            val n = 48; val largo = (hasta - desde).getDistance(); val d = (hasta - desde) / largo; val nn = Offset(-d.y, d.x)
-            for (k in 0..n) {
-                val f = k / n.toFloat()
-                val q = desde + d * (largo * f) + nn * (a * sin(f * largo / (58 * u) * 2 * PI.toFloat()) * sin(PI.toFloat() * f))
-                if (primero && k == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y)
+private fun DrawScope.marcoPsicodeliaCiudad(izq: Float, der: Float, arr: Float, aba: Float, col: Color, tenue: Color, claro: Boolean) {
+    val u = 1.dp.toPx()
+    if (der - izq <= 40 * u || aba - arr <= 40 * u) return
+    val fondo = if (claro) Color(0xFFE9DFCC) else Color(0xFF1B1511)
+    fun suave(c: Color, k: Float) = lerp(fondo, c, k)
+    val kc = if (claro) 0.55f else 0.4f
+    val suelo = aba - 10 * u
+    // La acera.
+    drawRect(suave(Color(0xFF6B5D4E), kc), Offset(izq + 2 * u, suelo), Size(der - izq - 4 * u, aba - suelo - 2 * u))
+    // Las cinco casas.
+    val n = 5
+    val ancho = (der - izq - 16 * u) / n
+    for (k in 0 until n) {
+        val x0 = izq + 8 * u + k * ancho
+        val w = ancho * 0.97f
+        val alto = ancho * (2.0f + 0.22f * ((k * 7) % 3))
+        val top = suelo - alto
+        val base = suave(TrazosCiudad.CASAS[k % TrazosCiudad.CASAS.size], kc)
+        val luz = TrazosCiudad.alSol(base, if (claro) 0.35f else 0.12f)
+        val sombra = TrazosCiudad.enSombra(base, 0.42f)
+        drawRect(base, Offset(x0, top), Size(w, alto))
+        if (k % 3 == 1) {
+            // El frontón en punta de las casas de estilo Stick: la mitad de la izquierda, al sol.
+            val pico = Offset(x0 + w / 2, top - w * 0.36f)
+            drawPath(Path().apply { moveTo(x0 - 2 * u, top); lineTo(pico.x, pico.y); lineTo(pico.x, top); close() }, luz)
+            drawPath(Path().apply { moveTo(pico.x, pico.y); lineTo(x0 + w + 2 * u, top); lineTo(pico.x, top); close() }, base)
+            drawPath(Path().apply { moveTo(x0 - 2 * u, top); lineTo(pico.x, pico.y); lineTo(x0 + w + 2 * u, top) }, sombra, style = Stroke(1.6f * u))
+        } else {
+            // La cornisa volada, con sus ménsulas.
+            drawRect(luz, Offset(x0 - 3 * u, top - 6 * u), Size(w + 6 * u, 6 * u))
+            drawRect(sombra, Offset(x0 - 3 * u, top), Size(w + 6 * u, 2.4f * u))
+            for (j in 0 until 6) drawRect(sombra, Offset(x0 + j * w / 5.4f, top + 2.4f * u), Size(2 * u, 4 * u))
+        }
+        // El mirador de tres paños: el de la izquierda al sol, el de la derecha en sombra; dos pisos de ventanas.
+        val mx0 = x0 + w * 0.08f; val tercio = w * 0.52f / 3f
+        listOf(luz, lerp(base, luz, 0.35f), sombra).forEachIndexed { j, c ->
+            drawRect(c, Offset(mx0 + j * tercio, top + 10 * u), Size(tercio, alto - 16 * u))
+        }
+        val vidrio = suave(Color(0xFF4A3D33), if (claro) 0.8f else 0.9f)
+        for (piso in 0 until 2) {
+            val yy = top + 16 * u + piso * (alto - 22 * u) / 2f
+            val hv = (alto - 22 * u) / 2f * 0.62f
+            for (j in 0 until 3) {
+                val encendida = !claro && (k + piso + j) % 4 == 0
+                val c = if (encendida) suave(TrazosCiudad.LAMPARA, 0.75f) else vidrio
+                drawRect(c, Offset(mx0 + j * tercio + 2 * u, yy), Size(tercio - 4 * u, hv))
             }
+            drawRect(sombra, Offset(mx0 - u, yy + hv + u), Size(tercio * 3 + 2 * u, 2 * u))
+            // La ventana de guillotina del otro lado.
+            drawRect(vidrio, Offset(x0 + w * 0.7f, yy + 3 * u), Size(w * 0.17f, hv))
         }
-        lado(Offset(x0 + r, y0), Offset(x1 - r, y0), true); quadraticTo(x1, y0, x1, y0 + r)
-        lado(Offset(x1, y0 + r), Offset(x1, y1 - r), false); quadraticTo(x1, y1, x1 - r, y1)
-        lado(Offset(x1 - r, y1), Offset(x0 + r, y1), false); quadraticTo(x0, y1, x0, y1 - r)
-        lado(Offset(x0, y1 - r), Offset(x0, y0 + r), false); quadraticTo(x0, y0, x0 + r, y0); close()
+        // La sombra que la casa echa a su derecha.
+        drawRect(sombra, Offset(x0 + w - 3 * u, top), Size(3 * u, alto))
     }
-    with(TrazosPsicodelia) {
-        fun suave(c: Color, k: Float) = lerp(e.background, c, k)
-        // El arco de arcoíris detrás del emblema.
-        val centro = Offset(cx, size.height * 0.41f - 40 * u)
-        val tintas = if (claro) ARCOIRIS.take(5) else ARCOIRIS_NOCHE
-        tintas.forEachIndexed { k, t ->
-            val r = 106 * u + k * 7 * u
-            drawArc(suave(t, if (claro) 0.42f else 0.62f), 196f, 148f, false, Offset(centro.x - r, centro.y - r), Size(2 * r, 2 * r), style = Stroke(5.4f * u, cap = StrokeCap.Round))
-        }
-        // La calle: cinco casas victorianas al pie, casi todas grises y una pintada.
-        val ancho = (der - izq - 20 * u) / 5f
-        for (k in 0 until 5) {
-            val pintada = k == 3
-            val alto = ancho * (2.05f + 0.18f * ((k * 7) % 3))
-            val madera = if (pintada) CASA_TURQUESA else if (k % 2 == 0) CASA_GRIS else lerp(CASA_GRIS, CASA_BLANCA, 0.35f)
-            val luz = if (claro) Color(0xFF5E6B78) else if (k % 2 == 0) FLUOR_VIOLETA else LIMON
-            casaVictoriana(Offset(izq + 10 * u + ancho * (k + 0.5f), aba - 6 * u), ancho * 0.94f, alto,
-                suave(madera, if (claro) 0.55f else 0.42f), suave(if (pintada) CASA_AMARILLA else CASA_BLANCA, if (claro) 0.6f else 0.45f), suave(luz, if (claro) 0.5f else 0.75f))
-        }
-        // Las dos margaritas de las esquinas de arriba.
-        flor(Offset(izq + 30 * u, arr + 30 * u), 16 * u, suave(MAGENTA, 0.85f), suave(VERDE, 0.85f), 8, 0.6f)
-        flor(Offset(der - 30 * u, arr + 30 * u), 16 * u, suave(NARANJA, 0.85f), suave(AZUL, 0.85f), 8, 0.6f)
+    // Los postes y los cables del trolebús, por delante de las casas.
+    val madera = suave(TrazosCiudad.POSTE, if (claro) 0.7f else 0.6f)
+    val altoPoste = ancho * 3.0f
+    with(TrazosCiudad) {
+        poste(Offset(izq + (der - izq) * 0.28f, suelo), altoPoste, 4.5f * u, madera)
+        poste(Offset(izq + (der - izq) * 0.68f, suelo), altoPoste, 4.5f * u, madera)
+        val yc = suelo - altoPoste * 0.86f
+        cables(Offset(izq + 4 * u, yc), Offset(der - 4 * u, yc + 8 * u), 9 * u, 4 * u, 1.2f * u, madera)
     }
-    drawPath(borde(0f), col, style = Stroke(1.4f * u))
-    drawPath(borde(7 * u), tenue, style = Stroke(0.8f * u))
+    // El pasamanos que cruza por delante, con su brillo a la izquierda y la sombra a la derecha.
+    val hx = der - 48 * u
+    drawRect(suave(TrazosCiudad.PASAMANOS, 0.55f), Offset(hx, arr + 2 * u), Size(8 * u, aba - arr - 4 * u))
+    drawRect(suave(TrazosCiudad.PASAMANOS_BRILLO, 0.6f), Offset(hx + 1.6f * u, arr + 2 * u), Size(1.6f * u, aba - arr - 4 * u))
+    drawRect(suave(TrazosCiudad.SOMBRA, 0.35f), Offset(hx + 6 * u, arr + 2 * u), Size(2 * u, aba - arr - 4 * u))
+    // La ventanilla: el marco de esquinas redondas y su junta de goma.
+    drawRoundRect(col, Offset(izq, arr), Size(der - izq, aba - arr), CornerRadius(34 * u), style = Stroke(2.4f * u))
+    drawRoundRect(tenue, Offset(izq + 7 * u, arr + 7 * u), Size(der - izq - 14 * u, aba - arr - 14 * u), CornerRadius(27 * u), style = Stroke(1f * u))
+    // El grano de la película, sobre todo.
+    with(TrazosCiudad) { grano((if (claro) GRANO_DIA else GRANO_NOCHE) * 0.5f, semilla = 7, celda = 1.6f) }
+}
+
+/**
+ * Psicodelia, el cartel (cara de noche; la guía v2): el cartel de la semana, sin intensidad (el fondo se elige y no cambia
+ * con un consumo). El marco de arco del cartel, doble, en la tinta que graba; detrás del emblema, el disco hecho sol: los
+ * rayos que ondulan, uno lleno de tinta y el siguiente en el grabado fino de líneas, todo dentro del marco; alrededor del
+ * emblema, el negro (o el papel) que respira y dos anillos, ultramar y magenta; en las esquinas de abajo, las marcas de
+ * registro de la imprenta. Tinta plana, sin sombras. Sin flores, sin paz, sin arcoíris.
+ */
+private fun DrawScope.marcoPsicodeliaCartel(izq: Float, der: Float, arr: Float, aba: Float, tenue: Color, claro: Boolean) {
+    val u = 1.dp.toPx()
+    if (der - izq <= 40 * u || aba - arr <= 40 * u) return
+    val oscuro = !claro
+    val fondo = TrazosTinta.papel(oscuro)
+    fun suave(c: Color, k: Float) = lerp(fondo, c, k)
+    val grabar = TrazosTinta.grabado(oscuro)
+    val magenta = TrazosTinta.tinta(TrazosTinta.Tinta.MAGENTA, oscuro, 0f)
+    val ultramar = TrazosTinta.tinta(TrazosTinta.Tinta.ULTRAMAR, oscuro, 0f)
+    val marco = TrazosTinta.arco(Rect(izq, arr, der, aba), (der - izq) * 0.36f, 3 * u)
+    val centro = Offset((izq + der) / 2, size.height * 0.41f - 40 * u)
+    val r0 = 112 * u
+    val r1 = size.height
+    clipPath(marco) {
+        // Los rayos: los pares llenos, los impares (los mismos, girados un sector) en el grabado fino de líneas.
+        val rayos = TrazosTinta.rayos(centro, r0, r1, 36, 10 * u, 2.4f)
+        drawPath(rayos, suave(grabar, if (claro) 0.1f else 0.14f))
+        rotate(10f, centro) { with(TrazosTinta) { trama(rayos, 3.4f * u, 0.9f * u, suave(grabar, if (claro) 0.13f else 0.18f)) } }
+    }
+    // El aire alrededor del emblema y los dos anillos.
+    drawCircle(fondo, r0 - 2 * u, centro)
+    drawCircle(suave(ultramar, if (claro) 0.55f else 0.6f), r0 - 7 * u, centro, style = Stroke(4.5f * u))
+    drawCircle(suave(magenta, if (claro) 0.5f else 0.55f), r0 - 15 * u, centro, style = Stroke(1.6f * u))
+    // El marco del cartel, doble: el filete grueso y, por dentro, el fino.
+    drawPath(marco, suave(grabar, if (claro) 0.6f else 0.55f), style = Stroke(2.2f * u))
+    drawPath(TrazosTinta.arco(Rect(izq + 7 * u, arr + 7 * u, der - 7 * u, aba - 7 * u), (der - izq) * 0.36f - 7 * u, 2 * u), tenue, style = Stroke(0.8f * u))
+    // Las marcas de registro de la imprenta, abajo, en las dos esquinas.
+    val marca = suave(grabar, 0.45f)
+    listOf(Offset(izq + 22 * u, aba - 22 * u), Offset(der - 22 * u, aba - 22 * u)).forEach { m ->
+        drawCircle(marca, 5 * u, m, style = Stroke(0.9f * u))
+        drawLine(marca, m - Offset(9 * u, 0f), m + Offset(9 * u, 0f), 0.9f * u)
+        drawLine(marca, m - Offset(0f, 9 * u), m + Offset(0f, 9 * u), 0.9f * u)
+    }
 }
 
 /** Una estrella pequeña de [puntas] puntas, para adornar los marcos. */
@@ -474,7 +570,7 @@ private fun DrawScope.estrellaMarco(c: Offset, r: Float, puntas: Int, color: Col
 
 /** El marco del fondo de bloqueo, propio de cada tema: del doble filete con rombos del romano a la consola, el arco o la gaceta. */
 @Composable
-private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) {
+private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme, cara: Cara) {
     Canvas(Modifier.fillMaxSize()) {
         val u = 1.dp.toPx(); val m = 22 * u
         val izq = m; val der = size.width - m; val arr = m + 26 * u; val aba = size.height - m - 10 * u
@@ -602,7 +698,10 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
                     drawLine(tenue, c + Offset(0f, sy * 4 * u), c + Offset(0f, sy * 14 * u), 1f * u)
                 }
             }
-            TemaId.PSICODELIA -> marcoPsicodelia(e, izq, der, arr, aba, col, tenue, claro)
+            TemaId.PSICODELIA -> when (cara) {
+                Cara.BASE -> marcoPsicodeliaCiudad(izq, der, arr, aba, col, tenue, claro)
+                Cara.INTENSA -> marcoPsicodeliaCartel(izq, der, arr, aba, tenue, claro)
+            }
             TemaId.NOUVEAU -> marcoNouveau(e, izq, der, arr, aba, col, tenue, claro)
             TemaId.GALIA -> marcoGalia(e, izq, der, arr, aba, col, tenue, claro)
             TemaId.ARCONTES -> marcoArcontes(e, izq, der, arr, aba, col, tenue, claro)
@@ -979,9 +1078,9 @@ private fun MarcoFondo(tema: TemaId, e: androidx.compose.material3.ColorScheme) 
 
 /** Las dos variantes dibujadas a tamaño de pantalla: se ve una, la otra se graba sin mostrarse. */
 @Composable
-private fun DosFondos(tema: TemaId, oscuro: Boolean, visible: String?, inicio: androidx.compose.ui.graphics.layer.GraphicsLayer, bloqueo: androidx.compose.ui.graphics.layer.GraphicsLayer) {
+private fun DosFondos(tema: TemaId, oscuro: Boolean, cara: Cara, visible: String?, inicio: androidx.compose.ui.graphics.layer.GraphicsLayer, bloqueo: androidx.compose.ui.graphics.layer.GraphicsLayer) {
     listOf("inicio" to inicio, "bloqueo" to bloqueo).forEach { (v, capa) ->
-        FondoTelefonoVista(tema, oscuro, Modifier.fillMaxSize().drawWithContent { capa.record { this@drawWithContent.drawContent() }; if (v == visible) drawLayer(capa) }, v)
+        FondoTelefonoVista(tema, oscuro, Modifier.fillMaxSize().drawWithContent { capa.record { this@drawWithContent.drawContent() }; if (v == visible) drawLayer(capa) }, v, cara)
     }
 }
 
@@ -996,6 +1095,8 @@ fun PantallaFondoTelefono(nav: Nav) {
     val tema = Estilo.tema
     val oscuroInicial = modoOscuro(tema)
     var oscuro by remember { mutableStateOf(oscuroInicial) }
+    // En un tema con caras (Psicodelia), la que se elige para el fondo: empieza en la que se puso la última vez.
+    var cara by remember { mutableStateOf(FondosTelefono.cara(ctx, tema)) }
     var ver by remember { mutableStateOf("bloqueo") }
     var mensaje by remember { mutableStateOf<String?>(null) }
     var ocupado by remember { mutableStateOf(false) }
@@ -1004,7 +1105,7 @@ fun PantallaFondoTelefono(nav: Nav) {
     val sentir = rememberSentir()
 
     Box(Modifier.fillMaxSize()) {
-        DosFondos(tema, oscuro, ver, capaInicio, capaBloqueo)
+        DosFondos(tema, oscuro, cara, ver, capaInicio, capaBloqueo)
         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)) {
                 BotonTexto(onClick = nav.atras) { Text(Estilo.atras, color = MaterialTheme.colorScheme.primary) }
@@ -1019,17 +1120,22 @@ fun PantallaFondoTelefono(nav: Nav) {
                     Ficha("bloqueo", ver == "bloqueo") { ver = "bloqueo" }; Ficha("inicio", ver == "inicio") { ver = "inicio" }
                     if (!tema.soloOscuro) { Ficha("claro", !oscuro) { oscuro = false }; Ficha("oscuro", oscuro) { oscuro = true } }
                 }
+                // Las dos caras del tema, para elegir: el fondo se queda en la elegida, no cambia solo con la hora.
+                if (tema.conCaras) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Ficha("la ciudad", cara == Cara.BASE) { cara = Cara.BASE }; Ficha("el cartel", cara == Cara.INTENSA) { cara = Cara.INTENSA }
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf("inicio" to "poner en inicio", "bloqueo" to "en bloqueo", "ambas" to "en los dos").forEach { (id, n) ->
                         BotonSecundario(n, Modifier.weight(1f), habilitado = !ocupado) {
                             ocupado = true
                             scope.launch {
+                                FondosTelefono.elegirCara(ctx, tema, cara)
                                 val bi = foto(capaInicio); val bb = foto(capaBloqueo)
                                 val ok = (bi != null || bb != null) && withContext(Dispatchers.IO) {
                                     bi?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "inicio") }; bb?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "bloqueo") }
                                     FondosTelefono.poner(ctx, bi, bb, id)
                                 }
-                                if (ok) { FondosTelefono.marcarUltimo(ctx, "${tema.id}/$oscuro"); Repo.cambiarConfig { it.copy(fondo_telefono_donde = id) }; sentir(Sentidos.Evento.GUARDAR) }
+                                if (ok) { FondosTelefono.marcarUltimo(ctx, FondosTelefono.clave(tema, oscuro, cara)); Repo.cambiarConfig { it.copy(fondo_telefono_donde = id) }; sentir(Sentidos.Evento.GUARDAR) }
                                 mensaje = if (ok) "Listo: " + when (id) { "inicio" -> "el limpio ya es tu fondo de inicio."; "bloqueo" -> "ya es tu fondo de bloqueo."; else -> "el limpio en inicio y el completo en bloqueo." } else "El teléfono no dejó cambiar el fondo."
                                 ocupado = false
                             }
@@ -1039,6 +1145,7 @@ fun PantallaFondoTelefono(nav: Nav) {
                 BotonPrincipal("Fondo vivo", Modifier.fillMaxWidth(), habilitado = !ocupado) {
                     ocupado = true
                     scope.launch {
+                        FondosTelefono.elegirCara(ctx, tema, cara)
                         // El fondo vivo dibuja encima de estas mismas imágenes; se guardan en claro y en oscuro de una vez.
                         suspend fun guardarAmbas() {
                             foto(capaInicio)?.let { b -> withContext(Dispatchers.IO) { FondosTelefono.guardar(ctx, b, tema, oscuro, "inicio") } }
@@ -1077,7 +1184,7 @@ fun CapturaFondoTelefono() {
             addAll(FondosTelefono.necesarios(ctx).filterNot { (t, o) -> FondosTelefono.pintado(ctx, t, o) })
         }
     }
-    val claveHoy = FondosTelefono.clave(tema, oscuroAhora)
+    val claveHoy = FondosTelefono.clave(tema, oscuroAhora, FondosTelefono.cara(ctx, tema))
     var intentos by remember(claveHoy, auto) { mutableStateOf(0) }
     val actual = pendientes.firstOrNull()
     if (actual == null) {
@@ -1093,7 +1200,8 @@ fun CapturaFondoTelefono() {
     val (t, o) = actual
     val capaInicio = rememberGraphicsLayer()
     val capaBloqueo = rememberGraphicsLayer()
-    Box(Modifier.fillMaxSize()) { DosFondos(t, o, null, capaInicio, capaBloqueo) }
+    // Con la cara que se eligió para el fondo de ese tema (la ciudad si nunca se eligió): no la de la hora.
+    Box(Modifier.fillMaxSize()) { DosFondos(t, o, FondosTelefono.cara(ctx, t), null, capaInicio, capaBloqueo) }
     LaunchedEffect(t, o) {
         var hecho = false
         for (vez in 0 until 3) {
@@ -1154,7 +1262,7 @@ class FondoVivoServicio : WallpaperService() {
 
         private fun cargar(t: TemaId, o: Boolean, w: Int, h: Int) {
             val f = FondosTelefono.archivo(applicationContext, t, o, variante())
-            val clave = "${t.id}/$o/${f.lastModified()}/$w/$h"
+            val clave = "${f.name}/${f.lastModified()}/$w/$h"
             if (clave == claveBase) return
             claveBase = clave
             base = runCatching { BitmapFactory.decodeFile(f.absolutePath) }.getOrNull() ?: runCatching { BitmapFactory.decodeResource(resources, logo(t)) }.getOrNull()
@@ -1165,7 +1273,8 @@ class FondoVivoServicio : WallpaperService() {
             val c = runCatching { h.lockCanvas() }.getOrNull() ?: return
             try {
                 val t = tema(); val o = oscuro(t)
-                val e = esquemaDe(t, o)
+                // La cara del fondo es la que se eligió (no la de la hora: el fondo no cambia solo).
+                val e = esquemaDe(t, o, FondosTelefono.cara(applicationContext, t))
                 val w = c.width; val alto = c.height
                 cargar(t, o, w, alto)
                 c.drawColor(e.background.toArgb())

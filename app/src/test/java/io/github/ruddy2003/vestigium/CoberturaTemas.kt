@@ -64,11 +64,16 @@ class CoberturaTemas {
         superficie("icono_alias") { "android:name=\".Icono${Id(it)}\"" !in manifiesto }
         superficie("ic_launcher") { !Pendientes.main("res/mipmap-anydpi-v26/ic_launcher_${it.id}.xml").exists() }
         listOf("logo", "logo_fondo", "huella", "huella_fondo", "papel").forEach { r -> superficie(r) { !recurso("drawable-nodpi", "${r}_${it.id}") } }
+        // Un tema con caras (Psicodelia) lleva los de su cara intensa con «_tinta» al final (`docs/diseno/temas/psicodelia_base.md`).
         superficie("widget_drawables") { t ->
-            val suf = if (t == TemaId.ROMANO) "" else "_${t.id}"
-            listOf("widget_fondo", "widget_boton", "widget_boton_activo", "widget_boton_ambar").any { !recurso("drawable", it + suf) } ||
-                !recurso("drawable-v31", "widget_fondo$suf")
+            val base = if (t == TemaId.ROMANO) "" else "_${t.id}"
+            (if (t.conCaras) listOf(base, base + "_tinta") else listOf(base)).any { suf ->
+                listOf("widget_fondo", "widget_boton", "widget_boton_activo", "widget_boton_ambar").any { !recurso("drawable", it + suf) } ||
+                    !recurso("drawable-v31", "widget_fondo$suf")
+            }
         }
+        // Y su papel de la cara intensa: `papel_<id>_cartel` (el de la cara base es `papel_<id>`, arriba).
+        superficie("papel_cara") { t -> t.conCaras && !recurso("drawable-nodpi", "papel_${t.id}_cartel") }
         superficie("sonidos") { t -> SONIDOS_TEMA.any { !recurso("raw", it.replace("<id>", t.id)) } }
         superficie("sonido_tecla") { !recurso("raw", "s_tecla_${it.id}") }
         superficie("sonido_error") { !recurso("raw", "s_${it.id}_error") }
