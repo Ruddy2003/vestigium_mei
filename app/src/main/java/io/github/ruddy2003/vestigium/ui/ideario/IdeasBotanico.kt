@@ -6,10 +6,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
@@ -17,7 +15,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.font.FontFamily
@@ -89,6 +86,9 @@ object IdeasBotanico : DisenoIdeas {
     private val HOJA = Color(0xFF5A7A3A)
     private val TERRACOTA = Color(0xFFB0603A)
     private val LACRE = Color(0xFF9A3A2A)
+    /** Las lacas de las cajas de hojalata: burdeos (del lacre) y ocre mostaza (del latón). */
+    private val BURDEOS = Color(0xFF6A2A28)
+    private val MOSTAZA = Color(0xFFA9832F)
     private val CRUDO = Color(0xFFD9C9A0)
     /** La llama del quinqué y el resplandor de su pantalla verde. */
     private val LLAMA = Color(0xFFFFC56E)
@@ -116,6 +116,9 @@ object IdeasBotanico : DisenoIdeas {
     override val lado = 0.06f
     override val hueco = 0.04f
 
+    /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoIdeas.auraEnReposo]). */
+    override val auraEnReposo = false
+
     /** En la corona: el fondo de la tapa, su canto de frente y lo bajo de la moldura, en fracción de su alto. */
     private const val SUP = 0.8f
     private const val FRENTE = 0.86f
@@ -142,7 +145,26 @@ object IdeasBotanico : DisenoIdeas {
     private fun luz(p: Offset): Float {
         val dx = p.x - LUZ.x
         val dy = (p.y - LUZ.y) * (if (p.y > LUZ.y) 0.75f else 1f)
-        return (1.38f * kotlin.math.exp(-3.4f * kotlin.math.sqrt(dx * dx + dy * dy))).coerceIn(0.03f, 1f)
+        val radial = 1.38f * kotlin.math.exp(-3.4f * kotlin.math.sqrt(dx * dx + dy * dy))
+        return maxOf(radial, luzCuerpo(p)).coerceIn(0.03f, 1f)
+    }
+
+    /**
+     * La luz que la pantalla echa hacia abajo sobre el frente del gabinete: cae despacio de fila en fila (la primera, encendida;
+     * la segunda, a medias; la tercera, tenue; la cuarta y la quinta, casi perdidas), un poco menos en la columna de la
+     * izquierda, más lejos del quinqué. Los puntos son los centros de las filas con 9 temas, en fracciones del ancho.
+     */
+    private val CAIDA = listOf(0.62f to 0.85f, 0.82f to 0.76f, 1.19f to 0.5f, 1.55f to 0.25f, 1.92f to 0.075f, 2.29f to 0.04f, 2.7f to 0.03f)
+
+    private fun luzCuerpo(p: Offset): Float {
+        if (p.y < CAIDA.first().first) return 0f
+        var k = CAIDA.last().second
+        for (i in 0 until CAIDA.size - 1) {
+            val (y0, k0) = CAIDA[i]; val (y1, k1) = CAIDA[i + 1]
+            if (p.y in y0..y1) { k = k0 + (k1 - k0) * (p.y - y0) / (y1 - y0); break }
+        }
+        val lado = (1f - 0.5f * (abs(p.x - LUZ.x) - 0.05f).coerceAtLeast(0f)).coerceIn(0.7f, 1f)
+        return k * lado
     }
 
     /** El color propio de algo, hundido: oscuro, de su mismo tono (no gris), con el aire de la noche. */
@@ -269,6 +291,25 @@ object IdeasBotanico : DisenoIdeas {
             }
             p = q; a += 0.06
         }
+    }
+
+    /**
+     * El filo cálido del quinqué en un recipiente, de noche: en su canto de arriba y en el costado que mira a la luz ([der]: el
+     * derecho), tanto más vivo cuanto más le llega. De día no pinta nada.
+     */
+    private fun DrawScope.filo(r: Rect, t: Tono, der: Boolean) {
+        if (!t.o || t.k < 0.06f) return
+        val u = density
+        drawRect(LLAMA.copy(alpha = (0.85f * t.k).coerceAtMost(0.75f)), r.topLeft, Size(r.width, 1.5f * u))
+        drawRect(LLAMA.copy(alpha = (0.3f * t.k).coerceAtMost(0.3f)), Offset(r.left, r.top + 1.5f * u), Size(r.width, 3f * u))
+        val x = if (der) r.right - 1.3f * u else r.left
+        drawRect(LLAMA.copy(alpha = (0.6f * t.k).coerceAtMost(0.55f)), Offset(x, r.top), Size(1.3f * u, r.height))
+    }
+
+    /** El destello del quinqué en el latón o el vidrio, de noche (de día, la luz crema). */
+    private fun DrawScope.destello(c: Offset, r: Float, t: Tono) {
+        if (t.o) { if (t.k > 0.06f) { drawCircle(LLAMA.copy(alpha = (0.35f * t.k).coerceAtMost(0.3f)), r * 2.2f, c); drawCircle(Color(0xFFFFF0CF).copy(alpha = (1.1f * t.k).coerceAtMost(0.95f)), r, c) } }
+        else drawCircle(luzMueble(0.8f), r, c)
     }
 
     /** Un tornillo de latón con su sombra y su brillo. */
@@ -660,7 +701,7 @@ object IdeasBotanico : DisenoIdeas {
             if (o) drawRect(tr.b(0.5f), Offset(xR - w * 0.008f, y0), Size(1f * u, cuerpo.height / 10f))
         }
 
-        // Los marcos de los huecos (ver [cubreAura]), con su grosor y su sombra.
+        // Los marcos de los huecos, con su grosor y su sombra.
         val m = w * MARCO
         d.huecos.forEachIndexed { i, r ->
             val t = tn(r.center)
@@ -1313,7 +1354,7 @@ object IdeasBotanico : DisenoIdeas {
 
     // ---------------------------------------------------------------- los compartimentos
 
-    /** El ancho del marco de cada hueco, en fracción del ancho del mueble (más ancho que el aura en reposo). */
+    /** El ancho del marco de cada hueco, en fracción del ancho del mueble. */
     private const val MARCO = 0.014f
 
     /** Revuelve la semilla de un tema (su `hashCode`, que en temas parecidos se parece) para repartir bien las tres clases. */
@@ -1335,9 +1376,8 @@ object IdeasBotanico : DisenoIdeas {
         val k = if (!oscuro) 0f else if (dentro) luz(centro) else 0.5f
         val dia = if (oscuro) 0f else 0.07f * (1f - c.fila / maxOf(1f, c.filas - 1f)) + (if (c.col == 0) 0.025f else 0f)
         val t = Tono(oscuro, k, false, dia)
-        val der = oscuro && dentro && centro.x < LUZ.x
+        val der = oscuro && (!dentro || centro.x < LUZ.x)
         fondoHueco(w, h, t)
-        cubreAura(w, h, t)
         if (c.vacio) { vacio(w, h, c, t); return }
         val m = mezclar(c.semilla)
         translate(0f, -SALIDA * h * ab) {
@@ -1374,19 +1414,6 @@ object IdeasBotanico : DisenoIdeas {
         val piso = h * PISO
         drawRect(t.c(mezcla(ROBLE, ROBLE_LUZ, 0.3f)), Offset(0f, piso), Size(w, h - piso))
         drawRect(t.b(0.45f), Offset(0f, piso), Size(w, 1f * u))
-    }
-
-    /**
-     * El aura de `Modifier.halo()` calca todo lo que pinta el compartimento y lo corre unos 2.5 dp: sobre el marco del hueco
-     * quedaba un contorno pálido. Este aro, del color del marco y un poco más ancho que el aura, se pinta en una capa con
-     * `SrcAtop`: en la capa del aura no agrega nada; en el dibujo normal tapa el aura en reposo con el mismo marco. Al tocar el
-     * compartimento el aura crece más allá del aro y se sigue viendo.
-     */
-    private fun DrawScope.cubreAura(w: Float, h: Float, t: Tono) {
-        val a = 1.9f * density
-        drawIntoCanvas { it.saveLayer(Rect(-a * 3, -a * 3, w + a * 3, h + a * 3), Paint().apply { blendMode = BlendMode.SrcAtop }) }
-        drawRect(t.c(mezcla(ROBLE, ROBLE_LUZ, 0.35f)), Offset(-a, -a), Size(w + 2 * a, h + 2 * a), style = Stroke(2 * a), blendMode = BlendMode.Src)
-        drawIntoCanvas { it.restore() }
     }
 
     /** La etiqueta de papel del tema, con su sombra y el filete a pluma; de noche, más hundida cuanto más lejos del quinqué. */
@@ -1474,7 +1501,10 @@ object IdeasBotanico : DisenoIdeas {
             drawRect(t.c(LATON), hb.topLeft, hb.size, style = Stroke(1.4f * u))
             drawLine(t.c(LATON), Offset(hb.left, hb.center.y), Offset(hb.right + 1.5f * u, hb.center.y), 1f * u)
             drawLine(t.b(0.7f), hb.topLeft, Offset(hb.right, hb.top), 0.6f * u)
+            destello(Offset(if (der) hb.right else hb.left, hb.top), 1.1f * u, t)
         }
+        filo(caja, t, der)
+        filo(lomo, t, der)
         etiqueta(w, h, t)
     }
 
@@ -1485,7 +1515,10 @@ object IdeasBotanico : DisenoIdeas {
     private fun DrawScope.hojalata(w: Float, h: Float, c: EstadoCajon, m: Int, t: Tono, der: Boolean) {
         val u = density
         val piso = h * PISO
-        val laca = if (Math.floorMod(m ushr 3, 2) == 0) Color(0xFF23271F) else VERDE
+        // La laca, según la semilla: verde botella, burdeos u ocre mostaza; el negro, el menos frecuente.
+        val clase = Math.floorMod(m ushr 3, 7)
+        val laca = when (clase) { 0, 1 -> BURDEOS; 2, 3 -> MOSTAZA; 4, 5 -> VERDE; else -> Color(0xFF23271F) }
+        val oro = if (clase == 2 || clase == 3) mezcla(LATON, LUZ_MUEBLE, 0.45f) else LATON
         val lacaO = mezcla(laca, NOCHE, 0.3f)
         val caja = Rect(w * 0.06f, h * 0.34f, w * 0.94f, piso)
         drawRect(t.s(0.3f), Offset(caja.left + w * 0.035f, caja.top + h * 0.02f), caja.size)
@@ -1500,8 +1533,8 @@ object IdeasBotanico : DisenoIdeas {
             drawRect(t.s(0.2f), Offset(if (der) caja.left else caja.right - caja.width * 0.25f, caja.top), Size(caja.width * 0.25f, caja.height))
             // El filete dorado.
             val f = Rect(caja.left + w * 0.035f, caja.top + h * 0.06f, caja.right - w * 0.035f, caja.bottom - h * 0.05f)
-            drawRect(t.c(LATON).copy(alpha = 0.75f), f.topLeft, f.size, style = Stroke(0.8f * u))
-            listOf(f.topLeft, Offset(f.right, f.top), Offset(f.left, f.bottom), f.bottomRight).forEach { p -> drawCircle(t.c(LATON).copy(alpha = 0.75f), 1.4f * u, p, style = Stroke(0.6f * u)) }
+            drawRect(t.c(oro).copy(alpha = 0.8f), f.topLeft, f.size, style = Stroke(0.8f * u))
+            listOf(f.topLeft, Offset(f.right, f.top), Offset(f.left, f.bottom), f.bottomRight).forEach { p -> drawCircle(t.c(oro).copy(alpha = 0.8f), 1.4f * u, p, style = Stroke(0.6f * u)) }
             // Los golpes: la hojalata que asoma.
             for (k in 0 until 4) drawOval(t.c(Color(0xFF9EA39A)), Offset(caja.left + caja.width * (if (k % 2 == 0) 0.01f else 0.93f) + w * 0.01f * azar(m, k), caja.top + caja.height * (0.15f + 0.7f * azar(m + 1, k))), Size(w * 0.025f, h * 0.025f))
         }
@@ -1515,15 +1548,18 @@ object IdeasBotanico : DisenoIdeas {
             drawRect(t.b(0.55f), tapa.topLeft, Size(tapa.width, 1.1f * u))
             if (der) drawRect(t.b(0.25f), Offset(tapa.right - tapa.width * 0.2f, tapa.top), Size(tapa.width * 0.2f, tapa.height))
             else drawRect(t.b(0.25f), Offset(tapa.left + tapa.width * 0.05f, tapa.top), Size(tapa.width * 0.12f, tapa.height))
-            drawLine(t.c(LATON).copy(alpha = 0.7f), Offset(tapa.left + w * 0.03f, tapa.top + tapa.height * 0.75f), Offset(tapa.right - w * 0.03f, tapa.top + tapa.height * 0.75f), 0.7f * u)
+            drawLine(t.c(oro).copy(alpha = 0.8f), Offset(tapa.left + w * 0.03f, tapa.top + tapa.height * 0.75f), Offset(tapa.right - w * 0.03f, tapa.top + tapa.height * 0.75f), 0.7f * u)
             // El asa de alambre, abatida, con sus orejas.
             val a0 = Offset(tapa.left + tapa.width * 0.36f, tapa.top + 1f * u); val a1 = Offset(tapa.left + tapa.width * 0.64f, tapa.top + 1f * u)
             val asa = Path().apply { moveTo(a0.x, a0.y); cubicTo(a0.x, tapa.top - h * 0.13f, a1.x, tapa.top - h * 0.13f, a1.x, a1.y) }
             translate(1.5f * u, 2f * u) { drawPath(asa, t.s(0.3f), style = Stroke(1.8f * u)) }
             drawPath(asa, t.c(Color(0xFF8F938A)), style = Stroke(1.8f * u, cap = StrokeCap.Round))
             drawPath(asa, t.b(0.5f), style = Stroke(0.6f * u))
+            destello(Offset((a0.x + a1.x) / 2, tapa.top - h * 0.098f), 1.2f * u, t)
+            filo(tapa, t, der)
             listOf(a0, a1).forEach { p -> drawRect(t.c(lacaO), Offset(p.x - 2.5f * u, p.y - 1f * u), Size(5f * u, 3f * u)); drawCircle(t.c(LATON), 0.9f * u, p + Offset(0f, 0.5f * u)) }
         }
+        filo(Rect(caja.left, tapa.bottom, caja.right, caja.bottom), t, der)
         etiqueta(w, h, t, mezcla(PAPEL, KRAFT, 0.15f), filete = Math.floorMod(m ushr 4, 2) == 0)
         // La etiqueta pegada: la esquina que se despega.
         val r = Rect(w * rotulo.left, h * rotulo.top, w * rotulo.right, h * rotulo.bottom)
@@ -1563,48 +1599,69 @@ object IdeasBotanico : DisenoIdeas {
         drawRect(t.s(0.3f), Offset(fr.left, fr.bottom - 1.4f * u), Size(fr.width, 1.4f * u))
         drawRect(t.s(0.2f), Offset(fr.right - fr.width * 0.06f, fr.top), Size(fr.width * 0.06f, fr.height))
         // La ventana: el fondo de papel, la rejilla de bandejitas y lo que guardan.
-        val ven = Rect(w * 0.1f, h * 0.2f, w * 0.9f, h * 0.48f)
+        val ven = Rect(w * 0.09f, h * 0.19f, w * 0.91f, h * 0.485f)
         drawRect(t.s(0.45f), Offset(ven.left - 1.5f * u, ven.top - 1.5f * u), Size(ven.width + 3f * u, ven.height + 3f * u))
         drawRect(t.c(mezcla(SECANTE, KRAFT, 0.3f)), ven.topLeft, ven.size)
-        val columnas = 4; val filas = 2
-        val llenas = (2 + n).coerceAtMost(columnas * filas)
-        val cw = ven.width / columnas; val chh = ven.height / filas
-        for (j in 0 until filas) for (i in 0 until columnas) {
-            val idx = j * columnas + i
-            val celda = Rect(ven.left + cw * i, ven.top + chh * j, ven.left + cw * (i + 1), ven.top + chh * (j + 1))
-            drawRect(t.s(0.25f), celda.topLeft, Size(celda.width, 1.5f * u))
-            drawRect(t.s(0.15f), celda.topLeft, Size(1.2f * u, celda.height))
-            drawRect(t.c(madera), Offset(celda.right - 0.8f * u, celda.top), Size(1.6f * u, celda.height))
-            if (idx >= llenas) continue
-            val p = Offset(celda.center.x, celda.center.y + chh * 0.08f)
-            val s = minOf(cw, chh) * 1.9f
-            when (Math.floorMod(m + idx * 7, 4)) {
-                0 -> { // una bellota con su cúpula
-                    drawOval(t.c(mezcla(KRAFT, CUERO, 0.4f)), Offset(p.x - s * 0.18f, p.y - s * 0.12f), Size(s * 0.36f, s * 0.42f))
-                    drawOval(t.b(0.4f), Offset(p.x - s * 0.12f, p.y - s * 0.02f), Size(s * 0.08f, s * 0.16f))
-                    drawArc(t.c(mezcla(NOGAL, KRAFT, 0.3f)), 180f, 180f, true, Offset(p.x - s * 0.21f, p.y - s * 0.24f), Size(s * 0.42f, s * 0.28f))
-                    drawLine(t.c(NOGAL), Offset(p.x, p.y - s * 0.24f), Offset(p.x + s * 0.04f, p.y - s * 0.32f), 1f * u)
+        // Cuatro casillas, todas llenas (lo que cambia con las fichas son los sobres de atrás), cada una con lo suyo.
+        val columnas = 4
+        val cw = ven.width / columnas
+        for (i in 0 until columnas) {
+            val celda = Rect(ven.left + cw * i, ven.top, ven.left + cw * (i + 1), ven.bottom)
+            drawRect(t.s(0.25f), celda.topLeft, Size(celda.width, 2f * u))
+            drawRect(t.s(0.15f), celda.topLeft, Size(1.4f * u, celda.height))
+            val p = Offset(celda.center.x, celda.center.y + ven.height * 0.06f)
+            val s = cw * 1.75f
+            // La sombra de lo que hay en la casilla: en su fondo, corrida a la derecha, y la de contacto.
+            drawOval(t.s(0.22f), Offset(p.x - s * 0.1f, p.y - s * 0.2f), Size(s * 0.42f, s * 0.46f))
+            drawOval(t.s(0.3f), Offset(p.x - s * 0.2f, p.y + s * 0.17f), Size(s * 0.46f, s * 0.08f))
+            when ((Math.floorMod(m, 4) + i) % 4) {
+                0 -> { // una bellota con su cúpula y su rabillo
+                    drawOval(t.c(mezcla(KRAFT, CUERO, 0.4f)), Offset(p.x - s * 0.17f, p.y - s * 0.12f), Size(s * 0.34f, s * 0.36f))
+                    drawOval(t.s(0.2f), Offset(p.x + s * 0.02f, p.y - s * 0.1f), Size(s * 0.14f, s * 0.32f))
+                    drawOval(t.b(0.45f), Offset(p.x - s * 0.11f, p.y - s * 0.04f), Size(s * 0.07f, s * 0.14f))
+                    drawCircle(t.c(NOGAL), s * 0.02f, Offset(p.x, p.y + s * 0.23f))
+                    drawArc(t.c(mezcla(NOGAL, KRAFT, 0.3f)), 180f, 180f, true, Offset(p.x - s * 0.2f, p.y - s * 0.24f), Size(s * 0.4f, s * 0.26f))
+                    for (q in 0 until 4) drawLine(t.s(0.3f), Offset(p.x - s * 0.15f + s * 0.1f * q, p.y - s * 0.17f), Offset(p.x - s * 0.12f + s * 0.1f * q, p.y - s * 0.12f), 0.6f * u)
+                    drawLine(t.b(0.35f), Offset(p.x - s * 0.17f, p.y - s * 0.13f), Offset(p.x + s * 0.05f, p.y - s * 0.2f), 0.7f * u)
+                    drawLine(t.c(NOGAL), Offset(p.x, p.y - s * 0.24f), Offset(p.x + s * 0.05f, p.y - s * 0.31f), 1.4f * u, StrokeCap.Round)
                 }
-                1 -> { // semillas redondas sueltas
-                    for (q in 0 until 5) drawCircle(t.c(if (q % 2 == 0) NOGAL else mezcla(KRAFT, CRUDO, 0.3f)), s * 0.08f, Offset(p.x + s * (azar(c.semilla, idx * 10 + q) - 0.5f) * 0.5f, p.y + s * (azar(c.semilla + 3, idx * 10 + q) - 0.5f) * 0.4f))
-                }
-                2 -> { // una cápsula con su corona
-                    drawOval(t.c(mezcla(HOJA, KRAFT, 0.55f)), Offset(p.x - s * 0.16f, p.y - s * 0.18f), Size(s * 0.32f, s * 0.36f))
-                    drawRect(t.c(mezcla(NOGAL, KRAFT, 0.4f)), Offset(p.x - s * 0.12f, p.y - s * 0.24f), Size(s * 0.24f, s * 0.07f))
-                    drawOval(t.b(0.35f), Offset(p.x - s * 0.1f, p.y - s * 0.1f), Size(s * 0.07f, s * 0.18f))
-                }
-                else -> { // una vaina abierta
-                    rotate(-25f, p) {
-                        drawOval(t.c(mezcla(KRAFT, CUERO, 0.2f)), Offset(p.x - s * 0.32f, p.y - s * 0.09f), Size(s * 0.64f, s * 0.18f))
-                        for (q in 0 until 3) drawCircle(t.c(NOGAL), s * 0.045f, Offset(p.x - s * 0.15f + s * 0.15f * q, p.y))
+                1 -> { // un puñado de semillas redondas, de dos clases
+                    for (q in 0 until 6) {
+                        val c0 = Offset(p.x + s * (azar(c.semilla, i * 10 + q) - 0.5f) * 0.36f, p.y + s * 0.02f + s * (azar(c.semilla + 3, i * 10 + q) - 0.5f) * 0.26f)
+                        val r = s * (0.055f + 0.02f * azar(c.semilla + 5, q))
+                        drawCircle(t.s(0.3f), r, c0 + Offset(r * 0.35f, r * 0.35f))
+                        drawCircle(t.c(if (q % 2 == 0) NOGAL else mezcla(KRAFT, CRUDO, 0.3f)), r, c0)
+                        drawCircle(t.b(0.5f), r * 0.35f, c0 - Offset(r * 0.35f, r * 0.35f))
                     }
                 }
+                2 -> { // una cápsula de adormidera con su corona
+                    drawOval(t.c(mezcla(HOJA, KRAFT, 0.55f)), Offset(p.x - s * 0.15f, p.y - s * 0.16f), Size(s * 0.3f, s * 0.34f))
+                    drawOval(t.s(0.2f), Offset(p.x + s * 0.02f, p.y - s * 0.14f), Size(s * 0.12f, s * 0.3f))
+                    drawOval(t.b(0.4f), Offset(p.x - s * 0.1f, p.y - s * 0.08f), Size(s * 0.07f, s * 0.16f))
+                    drawRect(t.c(mezcla(NOGAL, KRAFT, 0.4f)), Offset(p.x - s * 0.11f, p.y - s * 0.22f), Size(s * 0.22f, s * 0.07f))
+                    for (q in 0 until 4) drawLine(t.s(0.35f), Offset(p.x - s * 0.08f + s * 0.055f * q, p.y - s * 0.22f), Offset(p.x - s * 0.08f + s * 0.055f * q, p.y - s * 0.15f), 0.6f * u)
+                    drawLine(t.c(mezcla(HOJA, KRAFT, 0.4f)), Offset(p.x, p.y + s * 0.18f), Offset(p.x + s * 0.02f, p.y + s * 0.24f), 1.4f * u)
+                }
+                else -> { // una vaina abierta con sus semillas
+                    rotate(-30f, p) {
+                        drawOval(t.c(mezcla(KRAFT, CUERO, 0.2f)), Offset(p.x - s * 0.27f, p.y - s * 0.08f), Size(s * 0.54f, s * 0.16f))
+                        drawOval(t.c(mezcla(KRAFT, NOGAL, 0.45f)), Offset(p.x - s * 0.23f, p.y - s * 0.04f), Size(s * 0.46f, s * 0.08f))
+                        for (q in 0 until 4) drawCircle(t.c(NOGAL), s * 0.035f, Offset(p.x - s * 0.15f + s * 0.1f * q, p.y))
+                        drawLine(t.b(0.45f), Offset(p.x - s * 0.22f, p.y - s * 0.06f), Offset(p.x + s * 0.2f, p.y - s * 0.06f), 0.7f * u)
+                    }
+                }
+            }
+            if (i < columnas - 1) {
+                drawRect(t.c(madera), Offset(celda.right - 1f * u, celda.top), Size(2f * u, celda.height))
+                drawRect(t.b(0.35f), Offset(celda.right - 1f * u, celda.top), Size(0.7f * u, celda.height))
             }
         }
         // El vidrio: el reflejo en diagonal y el canto de luz.
         drawPath(poligono(ven.left + ven.width * 0.06f, ven.bottom, ven.left + ven.width * 0.22f, ven.top, ven.left + ven.width * 0.34f, ven.top, ven.left + ven.width * 0.18f, ven.bottom), if (t.o) LLAMA.copy(alpha = 0.18f * t.k) else luzMueble(0.22f))
         drawPath(poligono(ven.left + ven.width * 0.4f, ven.bottom, ven.left + ven.width * 0.5f, ven.top, ven.left + ven.width * 0.54f, ven.top, ven.left + ven.width * 0.44f, ven.bottom), if (t.o) LLAMA.copy(alpha = 0.12f * t.k) else luzMueble(0.12f))
-        drawRect(if (t.o) LLAMA.copy(alpha = 0.5f * t.k) else luzMueble(0.5f), Offset(ven.left, ven.top), Size(ven.width, 0.8f * u))
+        drawRect(if (t.o) LLAMA.copy(alpha = (0.9f * t.k).coerceAtMost(0.8f)) else luzMueble(0.5f), Offset(ven.left, ven.top), Size(ven.width, 0.8f * u))
+        destello(Offset(ven.right - ven.width * 0.06f, ven.top + ven.height * 0.15f), 1.3f * u, t)
+        filo(fr, t, true)
         // El portaetiquetas de latón alrededor de la etiqueta y el tirador de concha debajo.
         val r = Rect(w * rotulo.left, h * rotulo.top, w * rotulo.right, h * rotulo.bottom)
         val pr = Rect(r.left - 2.5f * u, r.top - 2.5f * u, r.right + 2.5f * u, r.bottom + 2.5f * u)
@@ -1666,6 +1723,7 @@ object IdeasBotanico : DisenoIdeas {
         }
         drawCircle(cinta, 2.6f * u, lc)
         drawCircle(t.s(0.2f), 2.6f * u, lc + Offset(0.8f * u, 0.8f * u), style = Stroke(0.6f * u))
+        filo(car, t, true)
         etiqueta(w, h, t, mezcla(PAPEL, KRAFT, 0.1f), filete = false)
     }
 
