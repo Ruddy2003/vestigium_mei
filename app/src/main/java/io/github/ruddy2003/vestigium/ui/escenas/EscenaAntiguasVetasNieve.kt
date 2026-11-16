@@ -53,7 +53,7 @@ internal object VetasEnLaNieve {
         val sombra = p.sombra(C.NIEVE_SOMBRA, LEJOS)
         drawRect(Brush.verticalGradient(listOf(p.por(C.NIEVE, 0.4f, LEJOS), p.por(C.NIEVE, 0.1f, LEJOS)), 100f, 230f), Offset(-10f, 90f), Size(200f, 150f))
         for ((c, w) in LOMAS) {
-            mancha(c + Offset(-lado * w * 0.42f, w * 0.12f), w * 0.85f, w * 0.3f, sombra, 0.42f)
+            mancha(c + Offset(-lado * w * 0.42f, w * 0.1f), w * 0.7f, w * 0.36f, sombra, 0.24f)
             mancha(c + Offset(lado * w * 0.28f, -w * 0.08f), w * 0.7f, w * 0.24f, Color.White, 0.45f * p.r.dia)
         }
         sombraDeLaSierra(p, sombra, az)
@@ -126,8 +126,8 @@ internal object VetasEnLaNieve {
     fun DrawScope.boca(p: Pincel, b: Boca) {
         val sombra = p.sombra(C.NIEVE_SOMBRA, LEJOS); val nieve = p.por(C.NIEVE, 0.45f, LEJOS); val lado = if (p.solALaDerecha) 1f else -1f
         val q = b.q; val r = b.r; val l = b.escombrera
-        mancha(q + Offset(-lado * l * 0.22f, l * 0.55f), l * 0.32f, l * 0.42f, sombra, 0.32f)
-        mancha(q + Offset(lado * l * 0.18f, l * 0.45f), l * 0.26f, l * 0.36f, Color.White, 0.35f * p.r.dia)
+        // El bulto de la escombrera tapada: una sombra corta y blanda pegada al labio, del lado contrario al sol.
+        mancha(q + Offset(-lado * r * 0.5f, r * 0.9f + l * 0.08f), r * 1.5f + l * 0.06f, r * 0.55f, sombra, 0.3f)
         if (b.hundida) {
             mancha(q + Offset(0f, -r * 0.5f), r * 1.6f, r * 0.6f, sombra, 0.7f)
             val madera = p.medio(C.MADERA_OSC, LEJOS)
