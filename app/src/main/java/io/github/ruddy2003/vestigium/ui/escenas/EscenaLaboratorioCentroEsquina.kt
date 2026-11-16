@@ -271,7 +271,7 @@ internal object EsquinaCentro {
         val llenas = when (v.mesa) { Mesa.COMIDA, Mesa.FIESTA -> 3; Mesa.DESAYUNO -> 2; Mesa.CENA, Mesa.CENSO -> 0 }
         for ((i, y) in listOf(0.18f, 0.55f, 0.92f).withIndex()) {
             caja(v, o + V3(0f, y, 0f), u, 0.9f, 0.5f, 0.025f, metal, tapa = lerp(metal, Color.White, 0.2f))
-            if (i < llenas) for (j in 0 until 4) caja(v, o + V3(0f, y + 0.03f + j * 0.028f, 0f) + u * ((j % 2) * 0.03f), u, 0.44f, 0.34f, 0.022f, lerp(C.ACERO, C.CIAN, 0.25f), tapa = lerp(C.ACERO, Color.White, 0.35f))
+            if (i < llenas) for (j in 0 until 5) caja(v, o + V3(0f, y + 0.03f + j * 0.035f, 0f) + u * ((j % 2) * 0.04f - 0.02f), u, 0.46f, 0.36f, 0.03f, lerp(C.TELA, C.CIAN, 0.2f), tapa = lerp(C.TELA, Color.White, 0.3f))
         }
         for ((sa, sb) in listOf(-1f to -1f, 1f to -1f, 1f to 1f, -1f to 1f)) {
             val p = o + u * (0.44f * sa) + w * (0.24f * sb)

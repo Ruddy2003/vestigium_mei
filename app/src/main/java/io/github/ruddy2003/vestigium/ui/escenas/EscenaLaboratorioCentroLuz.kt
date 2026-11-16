@@ -169,6 +169,10 @@ internal object LuzCentro {
     /** El haz del pozo en el aire: del aro a la mancha, una columna de luz con su polvo, más viva arriba. */
     fun DrawScope.haz(v: VistaCentro) {
         val f = v.pozo.fuerza; if (f <= 0.02f) return
+        clipPath(sobreLaLosa()) { hazRecortado(v, f) }
+    }
+
+    private fun DrawScope.hazRecortado(v: VistaCentro, f: Float) {
         val col = v.pozo.color
         val arriba = (0 until 24).map { CamCentro.p(GeoCentro.aro(GeoCentro.RO * 0.97f, GeoCentro.YO, it * 15f)) }
         val abajo = mancha(v, 24).map { CamCentro.p(it) }
@@ -216,12 +220,17 @@ internal object LuzCentro {
      * encima de la galería.
      */
     fun comedorVisto(): Path {
-        val canto = (0..36).map { CamCentro.p(GeoCentro.aro(GeoCentro.RV, GeoCentro.G1, -135f + (GeoCentro.PA0 + 135f) * it / 36f)) }
-        val zona = poligono(listOf(Offset(-60f, -60f), Offset(-60f, canto.first().y)) + canto + listOf(Offset(canto.last().x, -60f)))
+        val zona = sobreLaLosa()
         val mesa = poligono(envolvente(PiezasCentro.esquinas(EsquinaCentro.MESA, EsquinaCentro.U_MESA, EsquinaCentro.LADO + 0.1f, EsquinaCentro.LADO + 0.1f, EsquinaCentro.ALTO + 0.3f).map { CamCentro.p(it) } +
             PiezasCentro.esquinas(EsquinaCentro.SILLA, EsquinaCentro.U_MESA, 0.5f, 0.5f, 0.9f).map { CamCentro.p(it) }))
         val r = Path(); r.op(zona, mesa, PathOperation.Difference)
         return r
+    }
+
+    /** Lo que queda por encima del canto de la losa de cerca (lo de más abajo es el suelo de la galería, delante del vacío). */
+    fun sobreLaLosa(): Path {
+        val canto = (0..36).map { CamCentro.p(GeoCentro.aro(GeoCentro.RV, GeoCentro.G1, -135f + (GeoCentro.PA0 + 135f) * it / 36f)) }
+        return poligono(listOf(Offset(-60f, -60f), Offset(-60f, canto.first().y)) + canto + listOf(Offset(canto.last().x, -60f)))
     }
 
     fun DrawScope.vivo(v: VistaCentro, reloj: Float) {

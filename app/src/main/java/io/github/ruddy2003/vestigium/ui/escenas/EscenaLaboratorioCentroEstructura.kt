@@ -12,6 +12,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasCentro.cara
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasCentro.linea
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasCentro.trazo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
@@ -157,8 +158,9 @@ internal object EstructuraCentro {
             val p = a + (b - a) * (i / 8f) + V3(0f, y0 - a.y - 0.01f, 0f)
             val q = CamCentro.p(p); if (!CamCentro.enCuadro(q)) continue
             val k = CamCentro.k(p)
-            drawCircle(lerp(C.LUZ_DIA, Color.White, 0.4f), (0.07f * k).coerceIn(0.4f, 2.5f), q)
-            drawCircle(C.LUZ_DIA.copy(alpha = 0.18f + 0.2f * v.noche), (0.3f * k).coerceIn(1f, 8f), q, blendMode = BlendMode.Plus)
+            val rr = (0.05f * k).coerceIn(0.35f, 1.2f)
+            drawOval(lerp(C.LUZ_DIA, Color.White, 0.4f), q - androidx.compose.ui.geometry.Offset(rr, rr * 0.4f), androidx.compose.ui.geometry.Size(rr * 2f, rr * 0.8f))
+            mancha(q, rr * 3f, rr * 2f, C.LUZ_DIA, 0.15f + 0.2f * v.noche)
         }
     }
 

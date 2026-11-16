@@ -233,7 +233,7 @@ internal object PantallasCentro {
         val a = cam.q(s, t); val b = cam.q(s + 0.03f, t - 0.06f); val c = cam.q(s + 0.06f, t - 0.08f)
         drawPath(Path().apply { moveTo(a.x, a.y); cubicTo(a.x, a.y - 0.03f * kk, b.x, b.y, c.x, c.y) }, tronco, style = Stroke(0.008f * kk + 0.4f, cap = StrokeCap.Round))
         val hoja = lerp(lerp(C.HOJA_OSC, C.PAJA, 0.3f).let { Color(it.red * l.ambiente.red, it.green * l.ambiente.green, it.blue * l.ambiente.blue) }, l.bruma, 0.2f)
-        for ((ds, dt, r) in listOf(Triple(0.06f, -0.09f, 0.02f), Triple(0.08f, -0.075f, 0.016f), Triple(0.04f, -0.1f, 0.015f))) mancha(cam.q(s + ds, t + dt), r * kk, r * kk * 0.7f, hoja, 0.95f)
+        for ((ds, dt, r) in listOf(Triple(0.06f, -0.085f, 0.03f), Triple(0.085f, -0.07f, 0.024f), Triple(0.035f, -0.095f, 0.022f), Triple(0.07f, -0.105f, 0.02f))) mancha(cam.q(s + ds, t + dt), r * kk, r * kk * 0.75f, hoja, 0.97f)
     }
 
     /** La grama que ven las cámaras: manchas verdes entre las piedras, de [t0] a [t1] de alto, tantas como diga [cuanto]. */
@@ -265,9 +265,10 @@ internal object PantallasCentro {
     /** El humo de las ruinas, «una columna fina y gris que sale de entre las ruinas, lejos, y se dobla con el viento», en la pantalla de arriba a la derecha. */
     private fun DrawScope.humo(cam: Camara, img: PantallaLab.Imagen) {
         // La pantalla del humo es la (HUMO_COL, HUMO_FILA): en la imagen grande, su centro.
-        val s = ((HUMO_COL + 0.4f) / COLUMNAS - U0) / (U1 - U0); val base = 0.52f
-        for (j in 0..13) { val t = base - j * 0.026f; val ss = s + j * 0.004f + j * j * 0.0012f
-            mancha(cam.q(ss, t), (0.012f + j * 0.004f) * cam.k(ss), (0.014f + j * 0.003f) * cam.k(ss), lerp(Color(0xFF4A4846), img.l.medio, 0.1f + 0.045f * j), 0.9f - j * 0.05f) }
+        val s = ((HUMO_COL + 0.3f) / COLUMNAS - U0) / (U1 - U0); val base = 0.53f
+        for (j in 0..15) { val t = base - j * 0.024f; val ss = s - j * 0.002f + j * j * 0.0011f
+            val gris = lerp(Color(0xFF3E3C3A), img.l.medio, 0.05f + 0.035f * j)
+            mancha(cam.q(ss, t), (0.008f + j * 0.0035f) * cam.k(ss), (0.012f + j * 0.0025f) * cam.k(ss), gris, 0.95f - j * 0.04f) }
     }
 
     // ---------------------------------------------------------------- Las pantallas sueltas

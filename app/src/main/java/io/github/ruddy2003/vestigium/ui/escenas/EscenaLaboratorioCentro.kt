@@ -161,7 +161,7 @@ internal object CentroLab {
         val h = m.hora.toFloat()
         val dia = when {
             h < 10f -> lerp(Color(0xFF5A7E98), Color(0xFF6E92A6), ((h - 6.5f) / 3.5f).coerceIn(0f, 1f))
-            h < 16f -> Color(0xFF7698AA)
+            h < 16f -> Color(0xFF6E90A6)
             else -> lerp(Color(0xFF6E8EA4), Color(0xFF6A6694), ((h - 16f) / 4.5f).coerceIn(0f, 1f))
         }
         val noche = if (EscenaLaboratorio.nocheLarga(m)) Color(0xFF242C4C) else Color(0xFF34406C)
