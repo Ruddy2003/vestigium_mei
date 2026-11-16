@@ -115,10 +115,14 @@ internal object PosadaAntiguas {
 
     /** Una piedra del muro, de canto redondeado, centrada en ([z], [h]) con sus medios largos en metros: su cara, su labio de luz arriba y su sombra abajo. */
     private fun DrawScope.piedraDelMuro(pe: Pincel, z: Float, h: Float, rz: Float, rh: Float, tono: Color, t: Float, az: Azar) {
-        val puntos = (0 until 8).map { i -> val a = 6.2832f * i / 8f + 0.39f; val k = az.entre(0.86f, 1.06f); p(z + kotlin.math.cos(a) * rz * k, h + kotlin.math.sin(a) * rh * k) }
-        drawPath(poligono(puntos), pe.por(tono, t))
-        drawLine(pe.luz(lerp(tono, C.NIEVE, 0.3f)).copy(alpha = 0.4f), puntos[1], puntos[3], 0.6f)
-        drawLine(pe.sombra(tono).copy(alpha = 0.6f), puntos[5], puntos[7], 0.6f)
+        // Una piedra de cuatro cantos algo torcidos (a lo largo del muro se ve muy de canto): la cara, el labio de luz
+        // de arriba y la junta de sombra de abajo.
+        fun j() = az.entre(-0.18f, 0.18f)
+        val a = p(z - rz * (1f + j()), h + rh * (1f + j())); val b = p(z + rz * (1f + j()), h + rh * (1f + j()))
+        val c = p(z + rz * (1f + j()), h - rh * (1f + j())); val d = p(z - rz * (1f + j()), h - rh * (1f + j()))
+        drawPath(poligono(a, b, c, d), pe.por(tono, t))
+        drawLine(pe.luz(lerp(tono, C.NIEVE, 0.3f)).copy(alpha = 0.45f), a, b, 0.6f)
+        drawLine(pe.sombra(tono).copy(alpha = 0.6f), d, c, 0.7f)
     }
 
     /** El establo, «más grande que la casa»: tablas sobre un zócalo de piedra y su puerta grande, entornada a la hora de cuidar las mulas. */
@@ -227,7 +231,7 @@ internal object PosadaAntiguas {
         // El vuelo del alero, visto desde abajo: oscuro, con las cabezas de las vigas.
         drawPath(tapa(8.4f, z1, 0f, 0.16f, al), pe.sombra(C.MADERA_OSC))
         var z = 8.7f
-        while (z < FachadaPosada.Z_ESQUINA) { val q = p(z, al - 0.03f, 0.14f); val s = FachadaPosada.escala(z) * 0.07f; drawRect(pincel(v, z, al).por(C.MADERA, 0.15f), q + Offset(-s * 0.5f, -s * 0.2f), androidx.compose.ui.geometry.Size(s, s * 0.9f)); z += 0.6f }
+        while (z < FachadaPosada.Z_ESQUINA) { drawLine(pincel(v, z, al).por(C.MADERA, -0.1f).copy(alpha = 0.7f), p(z, al - 0.02f, 0.02f), p(z, al - 0.02f, 0.15f), FachadaPosada.escala(z) * 0.035f); z += 0.6f }
         // El canto de las losas: dos hiladas, con sus juntas y el musgo.
         drawPath(cara(8.4f, z1, al, al + 0.07f, 0.17f), pe.por(lerp(C.LOSA, C.ESCORIA, 0.2f), 0.1f))
         drawPath(cara(8.4f, z1, al + 0.07f, al + 0.13f, 0.12f), pe.por(lerp(C.LOSA, C.MUSGO, 0.25f), 0.35f))

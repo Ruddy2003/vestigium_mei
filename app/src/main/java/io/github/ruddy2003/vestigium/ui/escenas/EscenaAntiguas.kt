@@ -327,7 +327,7 @@ internal object EscenaAntiguas : EscenaVida {
         val h = m.hora
         return when (lugar(m)) {
             Lugar.TRAVESIA -> 0
-            Lugar.POSADA -> if (companiaEnElCamino(m)) 0 else if (h >= 18.0 && h < 22.0 || hoyEs(m, "refugios") && h >= 7.0 && h < 18.0) 2 else 0
+            Lugar.POSADA -> if (hoyEs(m, "refugios") && h >= 7.0 && h < 18.0 || h >= 18.0 && h < 22.0) 2 else 0
             Lugar.CERRADO -> if (h >= 10.0 && h < 16.0 && m.ficha.clima != Clima.NIEVE) 1 else 0
             Lugar.CRIANZA -> if (h >= 18.0 && h < 22.0) 2 else if (h >= 8.0 && h < 18.0) 1 else 0
         }

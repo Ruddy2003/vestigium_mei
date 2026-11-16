@@ -68,12 +68,15 @@ internal object PasoAntiguas {
         clipPath(FORMA) {
             suelo(v, az)
             cornisa(v, az)
-            camino(v)
+            val zanja = v.camino == EscenaAntiguas.Camino.ZANJA
+            if (!zanja) camino(v)
             alerces(v, az)
-            piedras(v)
+            if (!zanja) piedras(v)
             refugioPiedraPartida(v)
-            filaDeMulas(v)
             nieve(v, az)
+            // Recién abierto, la zanja y sus piedras se abren en la nieve: van encima.
+            if (zanja) { camino(v); piedras(v) }
+            filaDeMulas(v)
         }
         refugioDeArn(v)
         cascada(v, az)

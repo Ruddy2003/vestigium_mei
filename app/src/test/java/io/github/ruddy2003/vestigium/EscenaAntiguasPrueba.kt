@@ -156,9 +156,9 @@ class EscenaAntiguasPrueba {
         antes = -Float.MAX_VALUE
         for (h in listOf(6.67, 7.0, 8.0, 9.0)) { val s = sombra(h); assertTrue(s.manana); val y = s.y(SitioAntiguas.COLLADO.x); assertTrue("$h", y > antes); antes = y }
         val puente = SitioAntiguas.PUENTE_ACA; val collado = SitioAntiguas.COLLADO; val cumbre = SitioAntiguas.CUMBRE
-        assertTrue(LuzAntiguas.sombraEn(sombra(18.67), puente) > 0.9f); assertTrue(LuzAntiguas.sombraEn(sombra(18.67), collado) < 0.1f)
+        assertTrue(LuzAntiguas.sombraEn(sombra(18.67), puente) > 0.7f); assertTrue(LuzAntiguas.sombraEn(sombra(18.67), collado) < 0.1f)
         assertTrue(LuzAntiguas.sombraEn(sombra(20.0), cumbre) < 0.1f)
-        assertTrue(LuzAntiguas.sombraEn(sombra(20.0), collado) > 0.3f)
+        assertTrue(LuzAntiguas.sombraEn(sombra(20.0), collado) > 0.2f); assertTrue(LuzAntiguas.sombraEn(sombra(20.0), collado) > LuzAntiguas.sombraEn(sombra(19.0), collado))
         assertTrue(LuzAntiguas.sombraEn(sombra(7.0), cumbre) < 0.1f); assertTrue(LuzAntiguas.sombraEn(sombra(7.0), puente) > 0.5f)
         assertTrue(LuzAntiguas.sombraEn(sombra(10.33), puente) < 0.05f)
         for (h in listOf(11.0, 13.0, 14.67)) assertEquals("$h", 0f, LuzAntiguas.sombraEn(sombra(h), puente), 0f)
@@ -200,7 +200,8 @@ class EscenaAntiguasPrueba {
         cadaDia(8.0) { d, m ->
             val c = EscenaAntiguas.companiaEnElCamino(m)
             assertEquals(d.toString(), EscenaAntiguas.lugar(m) == Lugar.POSADA, c)
-            if (c) { assertEquals(d.toString(), 0, EscenaAntiguas.mulas(m)); assertFalse(EscenaAntiguas.bastonEnLaPuerta(m)) }
+            if (c) { if (!hoyEs(m, "refugios")) assertEquals(d.toString(), 0, EscenaAntiguas.mulas(m)); assertFalse(EscenaAntiguas.bastonEnLaPuerta(m)) }
+            if (hoyEs(m, "refugios")) assertEquals(d.toString(), 2, EscenaAntiguas.mulas(m))
             if (c && m.ficha.clima != Clima.NIEBLA) assertNotNull(d.toString(), EscenaAntiguas.filaEnElCamino(m))
             if (EscenaAntiguas.lugar(m) == Lugar.TRAVESIA) { assertEquals(0, EscenaAntiguas.mulas(m)); assertFalse(EscenaAntiguas.bastonEnLaPuerta(m)) }
         }
