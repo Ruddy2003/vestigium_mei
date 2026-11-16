@@ -156,7 +156,7 @@ internal object PantallaLab {
         while (u < 1.05f) { val w = az.entre(0.04f, 0.09f); val alto = az.entre(0.08f, 0.2f)
             drawPath(forma(torre(u, u + w, H + 0.005f, H - alto, az)), piedra(C.ESCOMBRO, 0.75f, solDer == (az.real() > 0.5f))); u += w + az.entre(0.01f, 0.06f) }
         // Lo verde de lejos (desde el día del verde): manchas de grama entre las ruinas.
-        if (img.verde > 0.01f) verde(img, H + 0.01f, H + 0.06f, img.verde, 0.6f)
+        if (img.verde > 0.0005f) verde(img, H + 0.01f, H + 0.06f, img.verde.coerceAtLeast(0.03f), 0.6f)
         // Fila del medio: torres más grandes, con un lado al sol, sus huecos negros y su corte quebrado.
         for ((i, u0) in listOf(0.05f, 0.27f, 0.52f, 0.8f).withIndex()) {
             val w = listOf(0.11f, 0.08f, 0.13f, 0.1f)[i]; val alto = listOf(0.3f, 0.2f, 0.36f, 0.24f)[i]; val base = H + 0.07f

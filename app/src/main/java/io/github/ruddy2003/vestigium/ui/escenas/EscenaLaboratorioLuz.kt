@@ -43,6 +43,7 @@ internal object LucesLab {
         // Las lámparas de cultivo: blancas de día, violetas de noche.
         for (i in 0 until EscenaLaboratorio.LAMPARAS) {
             val k = if (v.noche) v.cultivoNoche * 0.7f else v.cultivo[i] * 1.5f
+            if (k <= 0.005f) continue
             val w = MesaLab.lampara(i) - V3(0f, 0.04f, 0f)
             add(Luz3(Fuente.CULTIVO, w, v.colorCultivo, k, 1.3f, cono = 0.92f))
             // El rebote del charco en el tablero: la luz que sube a la pared, al techo y a lo de alrededor (sin sombra).

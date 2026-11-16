@@ -184,7 +184,8 @@ internal object EscenaLaboratorio : EscenaVida {
     internal enum class Grama { TIERRA, HILO, MATAS, TANQUE, CAJAS }
 
     internal fun grama(m: Momento): Grama {
-        val v = investigacion(m) + 0.0005f
+        // Sin holgura: el valor del día del hito es justo el del punto del arco (el mismo Double llevado a Float).
+        val v = investigacion(m)
         return if (v < 0.25f) Grama.TIERRA else if (v < 0.55f) Grama.HILO else if (v < 0.9f) Grama.MATAS else if (v < 0.92f) Grama.TANQUE else Grama.CAJAS
     }
 

@@ -36,8 +36,8 @@ internal object CosasLab {
     fun taburete(m: Momento): V3 = if (EscenaLaboratorio.enLaCampana(m)) V3(1.05f, 0f, 3.75f) else V3(1.15f, 0f, 3.02f)
 
     /** La caja de tierra de arriba, abierta, y el cubo, en el suelo, delante del estante de las semillas. */
-    val CAJA = V3(2.25f, 0f, 2.5f)
-    val CUBO = V3(2.55f, 0f, 2.28f)
+    val CAJA = V3(2.4f, 0f, 2.45f)
+    val CUBO = V3(2.62f, 0f, 2.2f)
 
     fun cosas(v: VistaLab): List<CosaLab> = buildList {
         val m = v.m

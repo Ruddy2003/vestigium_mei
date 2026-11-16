@@ -28,7 +28,7 @@ internal object CuadroLab {
     const val GATO_HASTA = 372f
 
     /** Dónde va el objeto grande: de pie en el suelo, recostado en el taburete de Lauro. */
-    val PIE_GRANDE = V3(1.47f, 0f, 2.88f)
+    val PIE_GRANDE = V3(1.3f, 0f, 2.95f)
 
     fun seMueve(m: Momento): Boolean = true                                    // el polvo en los haces, las nubes de la pantalla y las gotas de la campana
 
