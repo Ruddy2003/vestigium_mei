@@ -11,7 +11,9 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Luces
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoFijo
 import kotlin.math.PI
 import kotlin.math.cos
@@ -56,8 +58,8 @@ internal object GeoCentro {
     val COSTILLAS = listOf(-110f, 70f, 115f, 160f, 205f, 32f)
     /** El radio de la cara de dentro de las costillas y su fondo (hacia fuera) y su grueso. */
     const val RC = 7.45f
-    const val FONDO_COSTILLA = 0.85f
-    const val GRUESO_COSTILLA = 0.55f
+    const val FONDO_COSTILLA = 1.15f
+    const val GRUESO_COSTILLA = 0.45f
     /** La pasarela: va a la altura de la segunda galería, de un lado a otro del vacío, a [PASA_D] metros del centro. */
     const val PASA_A0 = 92f
     const val PASA_A1 = 208f
@@ -382,6 +384,28 @@ internal object PiezasCentro {
         )
         for ((ps, n) in caras) cara(v, ps, propio, n, lejos)
         cara(v, listOf(q(-hl, -ha, alto), q(hl, -ha, alto), q(hl, ha, alto), q(-hl, ha, alto)), tapa, ARRIBA, lejos)
+    }
+
+    /**
+     * Las manchas de una pared curva vista desde dentro (radio [r], de [y0] a [y1], de [g0] a [g1] grados): la humedad, los
+     * remiendos de otra pintura, las chorreras; [n] de ellas, con el azar de [semilla]. Solo en lo que mira a los ojos.
+     */
+    fun DrawScope.manchasEnLaPared(v: VistaCentro, r: Float, y0: Float, y1: Float, g0: Float, g1: Float, n: Int, semilla: String) {
+        val az = io.github.ruddy2003.vestigium.vidas.Azar(io.github.ruddy2003.vestigium.vidas.Semilla.de("laboratorio", "centro", semilla))
+        val sucio = lerp(ColorLaboratorio.TIERRA, ColorLaboratorio.SOMBRA, 0.3f); val claro = lerp(ColorLaboratorio.TELA, ColorLaboratorio.HORMIGON, 0.3f)
+        repeat(n) {
+            val g = g0 + (g1 - g0) * az.real(); val y = y0 + (y1 - y0) * az.real()
+            if (GeoCentro.enPantallas(g)) return@repeat
+            val w = GeoCentro.aro(r - 0.02f, y, g); val nn = V3(-cos(GeoCentro.rad(g)), 0f, -sin(GeoCentro.rad(g)))
+            if (!CamCentro.seVe(w, nn)) return@repeat
+            val q = CamCentro.p(w); if (!CamCentro.enCuadro(q, 0f)) return@repeat
+            val k = CamCentro.k(w); val lj = GaleriaCentro.lejos(w)
+            when (az.entero(3)) {
+                0 -> mancha(q, (0.25f + 0.5f * az.real()) * k, (0.15f + 0.3f * az.real()) * k, v.c(w, sucio, nn, lj), 0.22f)
+                1 -> mancha(q, (0.2f + 0.4f * az.real()) * k, (0.1f + 0.2f * az.real()) * k, v.c(w, claro, nn, lj), 0.3f)
+                else -> { val largo = (0.3f + 1.0f * az.real()) * k; drawLine(v.c(w, sucio, nn, lj).copy(alpha = 0.25f), q, q + Offset(0f, largo), (0.04f * k).coerceAtLeast(0.3f)) }
+            }
+        }
     }
 
     /** Los ocho puntos de una caja girada (para su sombra). */

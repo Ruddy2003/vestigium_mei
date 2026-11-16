@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
@@ -62,7 +63,37 @@ internal object LuzCentro {
         return V3(px, GeoCentro.YO * (1f - lo) + 0.006f, pz)
     }
 
-    fun formaDeLaMancha(v: VistaCentro): Path? = CamCentro.forma(mancha(v))
+    /**
+     * La mancha en el suelo del comedor, recortada por lo que de verdad es suelo a la luz: el círculo del vacío y el tramo de
+     * la pared de pantallas (donde no hay galerías). Lo que cae más allá queda bajo la losa de la primera galería.
+     */
+    fun formaDeLaMancha(v: VistaCentro): Path? {
+        val circulo = CamCentro.forma(mancha(v)) ?: return null
+        val r = Path(); r.op(circulo, sueloAlaLuz(), PathOperation.Intersect)
+        return r
+    }
+
+    /** Lo que del suelo del comedor ve el pozo: el círculo del vacío y el tramo de la pared de pantallas. */
+    private fun sueloAlaLuz(): Path {
+        val vacio = CamCentro.forma((0 until 60).map { GeoCentro.aro(GeoCentro.RV, 0f, it * 6f) })!!
+        val tramo = CamCentro.forma(listOf(V3(0f, 0f, 0f)) + (0..12).map { GeoCentro.aro(GeoCentro.RW, 0f, GeoCentro.PA0 + (GeoCentro.PA1 - GeoCentro.PA0) * it / 12f) })!!
+        val r = Path(); r.op(vacio, tramo, PathOperation.Union)
+        return r
+    }
+
+    /**
+     * La parte del haz que cae en el suelo de la primera galería (cuando la mancha va muy sesgada y la losa la corta): el
+     * círculo del aro llevado a esa altura, entre el canto y la pared.
+     */
+    fun formaEnLaGaleria(v: VistaCentro): Path? {
+        val mm = v.pozo.mancha; val k = (GeoCentro.YO - GeoCentro.G1) / GeoCentro.YO
+        if (kotlin.math.sqrt(mm.x * mm.x + mm.y * mm.y) * k + GeoCentro.RO < GeoCentro.RV) return null
+        val circulo = CamCentro.forma((0 until 32).map { i -> val a = i * 2f * PI.toFloat() / 32; V3(mm.x * k + GeoCentro.RO * cos(a), GeoCentro.G1 + 0.005f, mm.y * k + GeoCentro.RO * sin(a)) }) ?: return null
+        val tramos = GaleriaCentro.tramos()
+        val anillo = CamCentro.forma(tramos.map { GeoCentro.aro(GeoCentro.RW, GeoCentro.G1, it.first) } + tramos.reversed().map { GeoCentro.aro(GeoCentro.RV, GeoCentro.G1, it.second) }) ?: return null
+        val r = Path(); r.op(circulo, anillo, PathOperation.Intersect)
+        return r
+    }
 
     /**
      * Lo que la luz deja en el suelo antes de las cosas: la mancha del pozo (un borde que se reconoce, un corazón más claro y
@@ -80,6 +111,13 @@ internal object LuzCentro {
         clipPath(forma) {
             mancha(centro, GeoCentro.RO * 1.1f * k, GeoCentro.RO * 0.45f * k, lerp(col, Color.White, 0.4f), 0.35f * f)
         }
+    }
+
+    /** La luz del haz en el suelo de la galería de enfrente, cuando la losa corta la mancha (se pinta después de la galería). */
+    fun DrawScope.enLaGaleria(v: VistaCentro) {
+        val f = v.pozo.fuerza; if (f <= 0.02f) return
+        val forma = formaEnLaGaleria(v) ?: return
+        drawPath(forma, v.pozo.color.copy(alpha = (0.4f * f).coerceIn(0f, 1f)), blendMode = BlendMode.Plus)
     }
 
     /** El reflejo de la pared de pantallas en el suelo pulido: columnas de su color, rotas en trazos, que se apagan al alejarse. */

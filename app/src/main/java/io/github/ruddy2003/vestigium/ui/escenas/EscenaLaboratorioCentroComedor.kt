@@ -84,6 +84,7 @@ internal object ComedorCentro {
         }
         // La losa de la primera galería vista por debajo, desde lejos (el techo del piso de abajo): una franja oscura.
         for ((a, b) in GaleriaCentro.tramos()) cara(v, PiezasCentro.tramoH(RV, RW, alto, a, b), lerp(C.HORMIGON, C.SOMBRA, 0.25f), PiezasCentro.ABAJO, GaleriaCentro.lejos(GeoCentro.aro(RV, alto, a)))
+        PiezasCentro.run { manchasEnLaPared(v, RW, 0.3f, alto - 0.2f, GeoCentro.PA1, 360f + GeoCentro.PA0, 50, "muro") }
         for ((i, g) in GeoCentro.BOCAS.withIndex()) boca(v, g, COLORES_BOCAS[i], i == 2)
         destello(v)
     }
@@ -327,7 +328,9 @@ internal object ComedorCentro {
             if (v.consejo > 0.01f) {
                 val q = CamCentro.p(c - V3(0f, 0.27f, 0f)); val k = CamCentro.k(c)
                 drawOval(lerp(C.LAMPARA, Color.White, 0.5f), q - Offset(0.26f * k, 0.03f * k), androidx.compose.ui.geometry.Size(0.52f * k, 0.07f * k))
-                mancha(q + Offset(0f, 0.6f * k), 0.9f * k, 0.9f * k, C.LAMPARA, 0.25f * v.consejo)
+                mancha(q + Offset(0f, 0.4f * k), 1.1f * k, 1.0f * k, C.LAMPARA, 0.3f * v.consejo)
+                // El charco cálido en el tablero, debajo.
+                val t = CamCentro.p(V3(CABECERA_X, ESTRADO + ALTO_MESA + 0.01f, z)); mancha(t, 0.75f * k, 0.22f * k, lerp(C.LAMPARA, Color.White, 0.2f), 0.55f * v.consejo)
             }
         }
     }
@@ -352,9 +355,13 @@ internal object ComedorCentro {
         caja(v, o, u, 2.0f, 0.8f, ALTO_MESA, lerp(C.MADERA, C.HORMIGON, 0.2f), tapa = lerp(C.MADERA, C.TELA, 0.3f))
         for (i in 0..3) caja(v, o + V3(0f, ALTO_MESA, -0.7f + i * 0.45f), u, 0.3f, 0.22f, 0.02f + 0.03f * (i % 2), C.TELA)
         // Los postes y la cinta, por fuera de las mesas.
-        val postes = (0..22).map { i -> GeoCentro.aro(7.0f, 0f, 30f + i * 8f) }
-        for (p in postes) { if (!CamCentro.enCuadro(CamCentro.p(p))) continue; caja(v, p, V3(1f, 0f, 0f), 0.06f, 0.06f, 0.95f, lerp(C.ACERO, C.LATON, 0.4f)) }
-        trazo(v, postes.map { it + V3(0f, 0.88f, 0f) }, C.AMARILLO, ARRIBA, 0.05f, 0.95f)
+        val postes = (0..26).map { i -> GeoCentro.aro(7.1f, 0f, 20f + i * 7f) } + (0..10).map { i -> GeoCentro.aro(5.2f, 0f, 195f - i * 9f) }
+        for (p in postes) { if (!CamCentro.enCuadro(CamCentro.p(p))) continue; caja(v, p, V3(1f, 0f, 0f), 0.1f, 0.1f, 0.95f, lerp(C.ACERO, C.LATON, 0.5f)); cilindro(v, p, 0.2f, 0.05f, lerp(C.ACERO, C.NEGRO, 0.3f), null) }
+        trazo(v, postes.take(27).map { it + V3(0f, 0.85f, 0f) }, C.AMARILLO, ARRIBA, 0.09f, 0.95f)
+        trazo(v, postes.drop(27).map { it + V3(0f, 0.85f, 0f) }, C.AMARILLO, ARRIBA, 0.09f, 0.95f)
+        // Las listas largas que cuelgan de la mesa del censo, y la caja de las tarjetas.
+        caja(v, o + V3(0f, ALTO_MESA, 0.6f), u, 0.4f, 0.3f, 0.18f, C.MADERA)
+        trazo(v, listOf(o + V3(0.4f, ALTO_MESA, -0.4f), o + V3(0.45f, 0.4f, -0.45f), o + V3(0.5f, 0.02f, -0.3f)), C.TELA, V3(1f, 0.3f, 0f), 0.12f, 0.95f)
     }
 
     @Suppress("unused") private val nada = Offset.Zero

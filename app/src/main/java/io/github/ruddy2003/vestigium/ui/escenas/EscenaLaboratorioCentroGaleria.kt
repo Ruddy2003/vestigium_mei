@@ -112,6 +112,8 @@ internal object GaleriaCentro {
             val gm = (a + b) / 2f
             cara(v, PiezasCentro.tramoV(RW - 0.01f, y0, y0 + 0.12f, a, b), lerp(C.ACERO, C.TIERRA, 0.4f), haciaDentro(gm), lejos(GeoCentro.aro(RW, y0, gm)))
         }
+        // La humedad y los remiendos.
+        PiezasCentro.run { manchasEnLaPared(v, RW, y0 + 0.2f, y1 - 0.1f, GeoCentro.PA1, 360f + GeoCentro.PA0, 70, "pared $piso") }
         // Las puertas: una cada 24 grados, con su franja de color y el vidrio del ojo de buey encendido.
         var i = 0
         var g = GeoCentro.PA1 + 9f + piso * 6f
@@ -213,8 +215,9 @@ internal object GaleriaCentro {
             if (CamCentro.hondo(w) > 2.2f && CamCentro.enCuadro(q, 4f)) {
                 val k = CamCentro.k(w)
                 if (deFrente) {
-                    drawCircle(lerp(color, Color.White, 0.5f), (0.07f * k).coerceIn(0.4f, 2f), q)
-                    drawCircle(color.copy(alpha = 0.25f * k0), (0.3f * k).coerceIn(1f, 5f), q, blendMode = BlendMode.Plus)
+                    val rr = (0.07f * k).coerceIn(0.4f, 1.6f)
+                    drawOval(lerp(color, Color.White, 0.5f), q - Offset(rr, rr * 0.45f), androidx.compose.ui.geometry.Size(rr * 2f, rr * 0.9f))
+                    mancha(q, rr * 3f, rr * 2f, color, 0.3f * k0)
                 } else {
                     // El charco en el suelo: un óvalo aplastado por la fuga.
                     val r = 0.9f * k; val alto = r * ((CamCentro.OJO_Y - y) / CamCentro.hondo(w)).coerceIn(0.1f, 1f)

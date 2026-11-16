@@ -123,7 +123,7 @@ internal object CentroLab {
      * de pantallas. Se mueve en línea recta entre las tres.
      */
     fun mancha(h: Float): Offset {
-        val alba = Offset(-3.0f, 5.8f); val medio = Offset(0.25f, 0.05f); val tarde = Offset(8.8f, 1.9f)
+        val alba = Offset(-2.0f, 7.1f); val medio = Offset(0.25f, 0.05f); val tarde = Offset(8.8f, 1.9f)
         return if (h <= 13f) { val t = ((h - 6.5f) / 6.5f).coerceIn(0f, 1f); alba + (medio - alba) * t } else { val t = ((h - 13f) / 8f).coerceIn(0f, 1f); medio + (tarde - medio) * t }
     }
 
@@ -174,7 +174,7 @@ internal object CentroLab {
      */
     fun difusa(m: Momento): Float {
         val h = m.hora.toFloat()
-        val dia = when { h < 13f -> 0.55f + 0.35f * ((h - 6.5f) / 6.5f).coerceIn(0f, 1f); else -> 0.9f - 0.4f * ((h - 13f) / 8f).coerceIn(0f, 1f) }
+        val dia = when { h < 13f -> 0.55f + 0.2f * ((h - 6.5f) / 6.5f).coerceIn(0f, 1f); else -> 0.75f - 0.25f * ((h - 13f) / 8f).coerceIn(0f, 1f) }
         return dia * pozo(m).fuerza.coerceAtMost(1f) * (1f - 0.7f * penumbra(m))
     }
 
@@ -261,7 +261,7 @@ internal object CuadroCentro {
     /** Por dónde camina el gato: el suelo de la galería, delante de todo. */
     const val PISO_GATO = 277f
     const val GATO_DESDE = 78f
-    const val GATO_HASTA = 340f
+    const val GATO_HASTA = 330f
 
     fun seMueve(m: Momento): Boolean = true                                    // el ventilador, el polvo en el haz, las pantallas, el destello
 
@@ -272,8 +272,9 @@ internal object CuadroCentro {
         with(PantallasCentro) { pared(v) }
         with(ComedorCentro) { abajo(v) }
         with(GaleriaCentro) { primera(v) }
+        with(LuzCentro) { enLaGaleria(v) }
         with(VerdeCentro) { columnas(v) }
-        with(EstructuraCentro) { costillasLejos(v); pasarela(v) }
+        with(EstructuraCentro) { costillasLejos(v); pasarela(v); banderas(v) }
         with(LuzCentro) { haz(v) }
         with(EstructuraCentro) { costillaCerca(v) }
         with(EsquinaCentro) { esquina(v) }

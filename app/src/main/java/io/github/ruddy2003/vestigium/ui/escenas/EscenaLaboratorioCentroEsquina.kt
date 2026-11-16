@@ -2,6 +2,7 @@ package io.github.ruddy2003.vestigium.ui.escenas
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -47,7 +48,7 @@ internal object EsquinaCentro {
     const val MESA_X = 30f
 
     /** La silla apartada (el centro de su asiento en el suelo) y el sitio del objeto grande, junto a la mesa. */
-    val SILLA: V3 = GeoCentro.aro(8.1f, G1, -105.6f)
+    val SILLA: V3 = GeoCentro.aro(8.12f, G1, -107.0f)
     val PIE_GRANDE: V3 = GeoCentro.aro(8.55f, G1, -103.4f)
 
     /** La vela de su mesa, la noche larga. */
@@ -70,6 +71,7 @@ internal object EsquinaCentro {
         sombras(v)
         barandilla(v, G1, GaleriaCentro.CERCA0 + 360f, GaleriaCentro.CERCA1 + 360f)
         if (CentroLab.sillasALaBarandilla(v.m)) sillasArrimadas(v)
+        carro(v)
         silla(v)
         // El objeto grande del día, de pie en el suelo junto a la mesa y recostado en su canto.
         ObjetosLaboratorio.grande(v.m, v.pincel(PIE_GRANDE), CamCentro.p(PIE_GRANDE), CamCentro.p(enLaMesa(0.37f, -0.3f, -0.02f)), CamCentro.k(PIE_GRANDE) / 150f)?.let { it.pintar(this) }
@@ -91,6 +93,22 @@ internal object EsquinaCentro {
         for (g in listOf(-90f, -82f)) {
             val punta = listOf(GeoCentro.aro(r - 0.2f, G1 + 0.003f, g), GeoCentro.aro(r, G1 + 0.003f, g + 2.0f), GeoCentro.aro(r + 0.2f, G1 + 0.003f, g), GeoCentro.aro(r, G1 + 0.003f, g + 0.7f))
             CamCentro.forma(punta)?.let { drawPath(it, v.c(GeoCentro.aro(r, G1, g), C.GRAMA, ARRIBA)) }
+        }
+        // La luz del vacío, que entra por la barandilla y se tiende en el pulido; y el reflejo roto del canto del vidrio.
+        for ((a, b) in GaleriaCentro.tramos(-110f + 360f, -40f + 360f, 4f)) {
+            val f = CamCentro.forma(listOf(GeoCentro.aro(GeoCentro.RV, G1 + 0.002f, a), GeoCentro.aro(GeoCentro.RV, G1 + 0.002f, b), GeoCentro.aro(GeoCentro.RV + 0.75f, G1 + 0.002f, b), GeoCentro.aro(GeoCentro.RV + 0.75f, G1 + 0.002f, a))) ?: continue
+            val p0 = CamCentro.p(GeoCentro.aro(GeoCentro.RV, G1, a)); val p1 = CamCentro.p(GeoCentro.aro(GeoCentro.RV + 0.75f, G1, a))
+            drawPath(f, Brush.linearGradient(listOf(lerp(v.colorDifusa, v.fondo, 0.4f).copy(alpha = 0.22f * (0.3f + 0.7f * v.difusa)), Color.Transparent), p0, p1), blendMode = BlendMode.Plus)
+        }
+        val az0 = Azar(Semilla.de("laboratorio", "centro", "reflejo baranda"))
+        var g = -104f
+        while (g < -44f) {
+            for (j in 0 until 5) {
+                val r0 = GeoCentro.RV + 0.08f + j * 0.12f + az0.entre(0f, 0.05f)
+                val a = CamCentro.p(GeoCentro.aro(r0, G1 + 0.002f, g)); val b = CamCentro.p(GeoCentro.aro(r0, G1 + 0.002f, g + az0.entre(0.8f, 2.4f)))
+                drawLine(lerp(C.VIDRIO, Color.White, 0.5f).copy(alpha = (0.16f * (1f - j / 5f) * az0.entre(0.4f, 1f)).coerceIn(0f, 1f)), a, b, 0.8f, blendMode = BlendMode.Plus)
+            }
+            g += 3f + az0.entre(0f, 2f)
         }
         // El paso gastado y las rayas de las sillas, junto a la barandilla.
         val az = Azar(Semilla.de("laboratorio", "centro", "esquina suelo"))
@@ -125,21 +143,23 @@ internal object EsquinaCentro {
      * La silla, del lado de la barandilla, de espaldas al vacío («sola, de espaldas al ruido»), apartada de la mesa y a
      * escuadra con ella: su respaldo mira al hall.
      */
-    private fun uSilla(): V3 { val w = V3(-cos(GeoCentro.rad(-105.6f)), 0f, -sin(GeoCentro.rad(-105.6f))); return V3(w.z, 0f, -w.x) }
+    private fun uSilla(): V3 { val w = V3(-cos(GeoCentro.rad(-107.0f)), 0f, -sin(GeoCentro.rad(-107.0f))); return V3(w.z, 0f, -w.x) }
 
     /** La silla apartada de la mesa, a escuadra con ella: asiento, respaldo y patas de metal. */
     private fun DrawScope.silla(v: VistaCentro) {
         val u = uSilla(); val w = V3(-u.z, 0f, u.x)
-        val metal = lerp(C.ACERO, C.NEGRO, 0.2f)
-        for ((a, b) in listOf(-0.18f to -0.18f, 0.18f to -0.18f, 0.18f to 0.18f, -0.18f to 0.18f)) {
+        val metal = lerp(C.ACERO, C.NEGRO, 0.15f)
+        val asiento = lerp(C.MADERA, C.TELA, 0.25f)
+        for ((a, b) in listOf(-0.18f to -0.17f, 0.18f to -0.17f, 0.18f to 0.17f, -0.18f to 0.17f)) {
             val p = SILLA + u * a + w * b
-            linea(v, p, p + V3(0f, 0.45f, 0f), metal, V3(0f, 0f, -1f), (0.025f * CamCentro.k(p)).coerceIn(0.6f, 4f))
+            linea(v, p, p + V3(0f, 0.44f, 0f), metal, V3(0f, 0f, -1f), (0.022f * CamCentro.k(p)).coerceIn(0.6f, 4f))
         }
-        caja(v, SILLA + V3(0f, 0.43f, 0f), u, 0.44f, 0.42f, 0.04f, lerp(C.CIAN, C.ACERO, 0.6f), tapa = lerp(C.CIAN, C.TELA, 0.45f))
-        // El respaldo, del lado de la barandilla.
+        caja(v, SILLA + V3(0f, 0.42f, 0f), u, 0.44f, 0.42f, 0.035f, lerp(asiento, C.NEGRO, 0.2f), tapa = asiento)
+        // El respaldo, del lado de la barandilla: dos montantes de metal y una tabla curvada, más clara arriba (donde se agarra).
         val r0 = SILLA + w * 0.19f
-        for (s in listOf(-0.18f, 0.18f)) linea(v, r0 + u * s + V3(0f, 0.45f, 0f), r0 + u * s + V3(0f, 0.86f, 0f), metal, w * -1f, (0.02f * CamCentro.k(r0)).coerceIn(0.5f, 3f))
-        caja(v, r0 + V3(0f, 0.62f, 0f), u, 0.42f, 0.03f, 0.24f, lerp(C.CIAN, C.ACERO, 0.55f))
+        for (s in listOf(-0.18f, 0.18f)) linea(v, r0 + u * s + V3(0f, 0.45f, 0f), r0 + u * s + V3(0f, 0.84f, 0f), metal, w * -1f, (0.02f * CamCentro.k(r0)).coerceIn(0.5f, 3f))
+        caja(v, r0 + V3(0f, 0.66f, 0f), u, 0.42f, 0.025f, 0.17f, asiento, tapa = lerp(asiento, Color.White, 0.3f))
+        linea(v, r0 + u * -0.2f + V3(0f, 0.835f, 0f), r0 + u * 0.2f + V3(0f, 0.835f, 0f), lerp(asiento, Color.White, 0.35f), V3(0f, 1f, 0f), 0.6f, 0.8f)
     }
 
     /** La mesa chica: el tablero de madera con su canto, más clara donde se apoyan los brazos, y las patas de metal. */
@@ -174,8 +194,8 @@ internal object EsquinaCentro {
         if (v.velas) {
             cilindro(v, LAMPARA - V3(0f, 0.12f, 0f), 0.03f, 0.12f, C.TELA, lerp(C.TELA, C.AMARILLO, 0.2f))
             val q = CamCentro.p(LAMPARA + V3(0f, 0.03f, 0f)); val k = CamCentro.k(LAMPARA)
-            drawCircle(lerp(C.VELA, Color.White, 0.4f), 0.02f * k, q)
-            drawCircle(C.VELA.copy(alpha = 0.3f), 0.25f * k, q, blendMode = BlendMode.Plus)
+            drawOval(lerp(C.VELA, Color.White, 0.5f), q - Offset(0.012f * k, 0.035f * k), androidx.compose.ui.geometry.Size(0.024f * k, 0.045f * k))
+            mancha(q, 0.12f * k, 0.12f * k, C.VELA, 0.3f)
         }
     }
 
@@ -235,6 +255,23 @@ internal object EsquinaCentro {
         // La esquina de resina, ámbar.
         val r = listOf(enLaMesa(0.22f, 0.28f, 0.003f), enLaMesa(0.27f, 0.28f, 0.003f), enLaMesa(0.27f, 0.23f, 0.003f))
         cara(v, r, lerp(C.LATON, C.BARRO, 0.3f), ARRIBA, siempre = true)
+    }
+
+    /** El carro de las bandejas, a la derecha, cortado por el borde: un armazón de acero con tres baldas de bandejas usadas (vacío en la cena). */
+    private fun DrawScope.carro(v: VistaCentro) {
+        val o = GeoCentro.aro(9.25f, G1, -81.5f); val a = GeoCentro.rad(-81.5f + 90f); val u = V3(cos(a), 0f, sin(a)); val w = V3(-u.z, 0f, u.x)
+        val metal = lerp(C.ACERO, C.HORMIGON, 0.15f)
+        val llenas = when (v.mesa) { Mesa.COMIDA, Mesa.FIESTA -> 3; Mesa.DESAYUNO -> 2; Mesa.CENA, Mesa.CENSO -> 0 }
+        for ((i, y) in listOf(0.18f, 0.55f, 0.92f).withIndex()) {
+            caja(v, o + V3(0f, y, 0f), u, 0.9f, 0.5f, 0.025f, metal, tapa = lerp(metal, Color.White, 0.2f))
+            if (i < llenas) for (j in 0 until 4) caja(v, o + V3(0f, y + 0.03f + j * 0.028f, 0f) + u * ((j % 2) * 0.03f), u, 0.44f, 0.34f, 0.022f, lerp(C.ACERO, C.CIAN, 0.25f), tapa = lerp(C.ACERO, Color.White, 0.35f))
+        }
+        for ((sa, sb) in listOf(-1f to -1f, 1f to -1f, 1f to 1f, -1f to 1f)) {
+            val p = o + u * (0.44f * sa) + w * (0.24f * sb)
+            linea(v, p + V3(0f, 0.08f, 0f), p + V3(0f, 1.02f, 0f), lerp(metal, C.NEGRO, 0.25f), w * -1f, (0.022f * CamCentro.k(p)).coerceIn(0.6f, 3f))
+            cilindro(v, p, 0.045f, 0.08f, C.NEGRO, null)
+        }
+        linea(v, o + u * -0.46f + w * -0.26f + V3(0f, 1.02f, 0f), o + u * -0.46f + w * 0.26f + V3(0f, 1.02f, 0f), lerp(metal, Color.White, 0.3f), PiezasCentro.ARRIBA, 1.4f)
     }
 
     /** Arriba: dos sillas arrimadas a la barandilla, de cara a la pared de pantallas, una de ellas un poco ladeada. */

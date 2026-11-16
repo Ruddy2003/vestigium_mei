@@ -119,9 +119,9 @@ internal object EstructuraCentro {
         if (g == GeoCentro.COSTILLAS[0]) {
             // La rejilla del aire, a la altura de los ojos, en el costado que se ve.
             val c = caras.firstOrNull { it.n.punto(t) != 0f && kotlin.math.abs(it.n.punto(u)) < 0.1f } ?: return
-            val ya = CamCentro.OJO_Y - 0.5f
-            cara(v, listOf(c.lado(0.3f, ya), c.lado(0.7f, ya), c.lado(0.7f, ya + 0.42f), c.lado(0.3f, ya + 0.42f)), lerp(C.ACERO, C.NEGRO, 0.25f), c.n, siempre = true)
-            for (i in 1..6) linea(v, c.lado(0.32f, ya + i * 0.06f), c.lado(0.68f, ya + i * 0.06f), lerp(C.ACERO, C.HORMIGON, 0.45f), c.n, 0.9f)
+            val ya = CamCentro.OJO_Y + 0.9f
+            cara(v, listOf(c.lado(0.45f, ya), c.lado(0.72f, ya), c.lado(0.72f, ya + 0.26f), c.lado(0.45f, ya + 0.26f)), lerp(C.ACERO, C.HORMIGON, 0.2f), c.n, siempre = true)
+            for (i in 1..4) linea(v, c.lado(0.47f, ya + i * 0.052f), c.lado(0.7f, ya + i * 0.052f), lerp(C.ACERO, C.NEGRO, 0.35f), c.n, 0.7f)
         }
     }
 
@@ -159,6 +159,34 @@ internal object EstructuraCentro {
             val k = CamCentro.k(p)
             drawCircle(lerp(C.LUZ_DIA, Color.White, 0.4f), (0.07f * k).coerceIn(0.4f, 2.5f), q)
             drawCircle(C.LUZ_DIA.copy(alpha = 0.18f + 0.2f * v.noche), (0.3f * k).coerceIn(1f, 8f), q, blendMode = BlendMode.Plus)
+        }
+    }
+
+    // ---------------------------------------------------------------- Las banderas de la Fundación
+
+    /** Las guirnaldas de banderas de papel de la Fundación: de galería a galería, a través del vacío (grados de cada punta). */
+    private val GUIRNALDAS = listOf(-66f to 146f, 12f to 170f, 52f to 204f)
+
+    /**
+     * La Fundación: banderas de papel con los colores de los departamentos colgadas de galería a galería (la de Botánica,
+     * verde, y más que ninguna) **[Diseño propio]**: el cuento las cuelga entre los tanques de los jardines.
+     */
+    fun DrawScope.banderas(v: VistaCentro) {
+        if (!CentroLab.banderas(v.m)) return
+        val colores = GaleriaCentro.ALAS
+        for ((i, ab) in GUIRNALDAS.withIndex()) {
+            val a = GeoCentro.aro(GeoCentro.RV, GeoCentro.G2 + 0.9f, ab.first); val b = GeoCentro.aro(GeoCentro.RV, GeoCentro.G2 + 0.9f, ab.second)
+            val n = 30; val caida = 2.2f - 0.3f * i
+            val ps = (0..n).map { j -> val t = j / n.toFloat(); a + (b - a) * t - V3(0f, caida * 4f * t * (1f - t), 0f) }
+            trazo(v, ps, lerp(C.TELA, C.TIERRA, 0.3f), ARRIBA, 0.015f, 0.8f)
+            for (j in 1 until n) {
+                val p = ps[j]; val q = CamCentro.p(p); if (!CamCentro.enCuadro(q, 0f)) continue
+                val k = CamCentro.k(p)
+                val col = if (j % 3 == 0) C.GRAMA else colores[(j + i) % colores.size]
+                val w = (0.13f * k).coerceAtLeast(1f); val h = (0.24f * k).coerceAtLeast(1.6f)
+                val f = io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono(q + androidx.compose.ui.geometry.Offset(-w, 0f), q + androidx.compose.ui.geometry.Offset(w, 0f), q + androidx.compose.ui.geometry.Offset(0f, h))
+                drawPath(f, v.c(p, lerp(col, C.TELA, 0.15f), V3(0f, 0f, -1f), GaleriaCentro.lejos(p)))
+            }
         }
     }
 
