@@ -44,7 +44,9 @@ import kotlin.math.sqrt
  *
  * **El candil.** Es objeto del día y también la lámpara de cada almena (la orden lo tiene por signo). El día que es el
  * objeto, el cuadro deja vacía la hornacina de la almena de delante ([elCuadroPinta]) y el candil está en el soporte; de
- * noche alumbra desde ahí (su llama, su halo y su charco) **[Diseño propio]**.
+ * noche alumbra desde ahí (su llama, su halo y su charco) **[Diseño propio]**. Arde con la corona de candiles
+ * ([candilEncendido]). **Pendiente del cuadro** (tanda S18): el candil que deja de pintar es el de la almena 0, que cae
+ * fuera del lienzo; el que se ve junto al objeto es el de la almena 1 (`AdarveOrden.candil(1)`).
  *
  * Sin personas, letras ni números: los renglones son rayas, el nombre rayado de la cantimplora son rayas, la rosa de la
  * brújula lleva marcas sin letras. **[Diseño propio]**: cómo es cada uno, qué lo acompaña y los colores (mezclas de
@@ -322,7 +324,7 @@ internal object ColorObjetoOrden {
     val LATON_OSC = lerp(C.LATON, C.HOLLIN, 0.35f)
     val COBRE = lerp(C.LATON, C.ROCA, 0.5f)
     val ACERO = lerp(C.HIERRO_CLARO, C.TELA, 0.45f)
-    val ALUMINIO = lerp(lerp(C.TELA, C.NIEVE, 0.25f), C.ARENA, 0.42f)
+    val ALUMINIO = lerp(lerp(C.TELA, C.ARENA, 0.42f), C.HOLLIN, 0.1f)
     val CUERO = lerp(C.MADERA, C.ROCA, 0.35f)
     val CUERO_OSC = lerp(CUERO, C.HOLLIN, 0.4f)
     val LINO = lerp(C.ARENA, C.MADERA, 0.12f)

@@ -337,7 +337,6 @@ internal object GrandesOrden {
     private fun DrawScope.cuello(lo: LuzObjeto, f: MarcoOrden) {
         revolucion(lo, f, V3(0.008f, 0.19f, 0.006f), V3(0.008f, 0.225f, 0.006f), listOf(0f to 0.104f, 0.5f to 0.117f, 1f to 0.11f), lerp(K.SACO, C.ARENA, 0.3f), null, 16)
         val cordon = lerp(C.MADERA, C.HOLLIN, 0.3f)
-        trazo(lo, f, TrazoOrden.circulo(V3(0.008f, 0.202f, 0.006f), V3(0f, 1f, 0f), 0.112f, 16, 2.6f, 6.6f), 0.006f, cordon, V3(0f, 0.3f, -1f))
         trazo(lo, f, TrazoOrden.curva(V3(-0.1f, 0.2f, -0.03f), V3(-0.155f, 0.14f, -0.04f), V3(-0.165f, 0.04f, -0.06f), V3(-0.21f, 0.004f, -0.1f), 10), 0.007f, cordon, V3(-0.8f, 0.3f, -0.5f))
         disco(lo, f, V3(-0.21f, 0.006f, -0.1f), V3(0f, 1f, 0f), 0.009f, cordon, 6)
     }
@@ -498,13 +497,14 @@ internal object GrandesOrden {
     /** El soldador: la cabeza de cobre (lo que se ve fuera de las brasas, con el filo limado), la varilla y el mango. */
     private fun DrawScope.hierro(lo: LuzObjeto, f: MarcoOrden) {
         val d = TrazoOrden.unidad(V3(-1f, 0.2f, -0.6f))
-        val cabeza = V3(0.0f, 0.165f, 0.0f)
+        val cabeza = V3(-0.01f, 0.17f, 0.01f)
         val cf = f.mas(cabeza.x, cabeza.y, cabeza.z, giro = 2.6f, vuelco = 0.18f)
-        caja(lo, cf, -0.07f, 0.0f, -0.016f, 0.016f, -0.018f, 0.018f, K.COBRE, lerp(K.COBRE, C.LATON, 0.25f))
-        cara(lo, cf, listOf(V3(-0.07f, -0.014f, -0.016f), V3(-0.095f, 0f, 0f), V3(-0.07f, 0.014f, -0.016f)), V3(-0.4f, 0f, -1f), K.COBRE, claro = 0.15f)
-        cara(lo, cf, listOf(V3(-0.07f, 0.014f, -0.016f), V3(-0.095f, 0f, 0f), V3(-0.07f, 0.014f, 0.016f)), V3(-0.3f, 1f, 0f), lerp(K.COBRE, C.LATON, 0.5f), claro = 0.25f)
+        caja(lo, cf, -0.1f, 0.0f, -0.022f, 0.022f, -0.025f, 0.025f, K.COBRE, lerp(K.COBRE, C.LATON, 0.25f))
+        cara(lo, cf, listOf(V3(-0.1f, -0.022f, -0.025f), V3(-0.135f, 0f, 0f), V3(-0.1f, 0.022f, -0.025f)), V3(-0.4f, 0f, -1f), K.COBRE, claro = 0.15f)
+        cara(lo, cf, listOf(V3(-0.1f, 0.022f, -0.025f), V3(-0.135f, 0f, 0f), V3(-0.1f, 0.022f, 0.025f)), V3(-0.3f, 1f, 0f), lerp(K.COBRE, C.LATON, 0.55f), claro = 0.3f)
+        brillo(lo, cf, V3(-0.095f, 0.023f, -0.02f), V3(-0.005f, 0.023f, -0.02f), 0.004f, K.COBRE, V3(0f, 1f, -0.4f), 0.9f)
         // El cobre que se pone rojo en las brasas, de noche.
-        if (lo.noche > 0.2f) disco(lo, cf, V3(-0.075f, 0f, -0.017f), V3(0f, 0f, -1f), 0.012f, C.FRAGUA.copy(alpha = 0.6f * lo.noche), 8, luz = false)
+        if (lo.noche > 0.2f) disco(lo, cf, V3(-0.11f, 0f, -0.024f), V3(0f, 0f, -1f), 0.016f, C.FRAGUA.copy(alpha = 0.6f * lo.noche), 8, luz = false)
         val r0 = cabeza + d * 0.01f; val r1 = r0 + d * 0.2f
         cilindro(lo, f, r0, r1, 0.0075f, lerp(C.HIERRO, K.ACERO, 0.3f), null, 6)
         brillo(lo, f, r0 + V3(0f, 0.005f, 0f), r1 + V3(0f, 0.005f, 0f), 0.003f, C.HIERRO, V3(0f, 1f, -0.4f), 0.7f)
