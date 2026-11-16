@@ -142,12 +142,12 @@ def papel_cartel(sem):   # Art nouveau: el papel crema de los carteles, con el g
     grano = (ruido(sem, 1, 0.7) > 1.1) * -0.55
     return grano + ruido(sem + 1, 0.6, 16) + ruido(sem + 2, 0.3, 2)
 
-def periodico(sem):      # Psicodelia: el papel del periódico del barrio, con fibras y las columnas del otro lado que se transparentan
-    lineas = ((Y % 7) < 2.4) & ((X % 74) > 6)
-    bloques = np.clip(ruido(sem, 1.0, 30) + 0.3, 0, 1)
-    transp = np.asarray(Image.fromarray((lineas * bloques * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.6)), np.float32) / 255 * -0.55
-    fibras = (np.abs(np.sin(X * 0.3 + Y * 0.11 + ruido(sem + 1, 7, 6))) < 0.04) * -0.4
-    return transp + fibras + ruido(sem + 2, 0.6, 2) + ruido(sem + 3, 0.5, 20)
+def papel_etiqueta(sem):  # Psicodelia: el papel satinado de la etiqueta del disco, con su fibra corta, el roce circular
+    # del plato (la etiqueta gira contra la goma y se pule en anillos) y un desgaste suave
+    rr = np.sqrt((X - TAM / 2) ** 2 + (Y - TAM / 2) ** 2)
+    roce = np.sin(rr * 0.9 + ruido(sem, 2.5, 10)) * 0.12 * np.clip(ruido(sem + 1, 1.0, 26) + 0.4, 0, 1.4)
+    fibras = (np.abs(np.sin(X * 0.33 + Y * 0.12 + ruido(sem + 2, 6, 6))) < 0.035) * -0.35
+    return roce + fibras + ruido(sem + 3, 0.45, 1.2) + ruido(sem + 4, 0.55, 22)
 
 def cuadricula(sem):     # Laboratorio: papel de laboratorio cuadriculado
     fino = ((X % 18 < 1) | (Y % 18 < 1)) * -0.6
@@ -668,36 +668,56 @@ def _latigo(d, c, hueco=0):             # Art nouveau: el anillo es la línea de
            a0=math.radians(112), a1=math.radians(392), centro_rizo=(math.radians(64), 0.93), rizo=(0.1, 0.025, 1.3), onda=0.012)
 
 
-def petalo_redondo(P, ang, r0, r1, ancho_punta, ancho_raiz, n=40):
-    """Un pétalo redondo de botón de 1967, de la raíz (a [r0] del centro) a la punta (a [r1]), en la dirección [ang]: se
-    ensancha hacia fuera y termina en medio círculo. [P] lleva del plano de la flor (x, y) a pixeles."""
-    ca, sa = math.cos(ang), math.sin(ang)
-    rc = r1 - ancho_punta / 2
-    lado = [(r0 + (rc - r0) * t, ancho_raiz / 2 + (ancho_punta - ancho_raiz) / 2 * math.sin(t * math.pi / 2) ** 0.75)
-            for t in np.linspace(0, 1, n)]
-    arco = [(rc + ancho_punta / 2 * math.cos(a), ancho_punta / 2 * math.sin(a)) for a in np.linspace(math.pi / 2, -math.pi / 2, 36)]
-    q = lambda u, v: P(u * ca - v * sa, u * sa + v * ca)
-    return [q(u, w) for u, w in lado] + [q(u, v) for u, v in arco] + [q(u, -w) for u, w in lado[::-1]]
+FUENTES_APP = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'app', 'src', 'main', 'res', 'font')
 
 
-def margarita(d, c, cx, cy, escala, n=8, r0=0.035, r1=0.305, punta=0.15, raiz=0.035, fase=-math.pi / 2 + math.pi / 8, encoge=0.0):
-    """La margarita de los botones y los carteles de 1967: [n] pétalos redondos alrededor del corazón, medidos en
-    fracciones de [escala] (px) desde (cx, cy). [encoge] la achica por dentro de su contorno: dos margaritas encogidas,
-    una menos la otra, dan el eco (la línea que repite la forma por dentro, como en los carteles)."""
-    P = lambda x, y: (cx + x * escala, cy + y * escala)
-    for k in range(n):
-        a = 2 * math.pi * k / n + fase
-        d.polygon(petalo_redondo(P, a, r0, r1 - encoge, punta - 2 * encoge, max(0.004, raiz - 2 * encoge)), fill=c)
+def letra(nombre, px):
+    """Una letra de `res/font` (las mismas de la app), a [px] de alto de cuerpo."""
+    from PIL import ImageFont
+    return ImageFont.truetype(os.path.join(FUENTES_APP, nombre), int(round(px)))
 
 
-def _margaritas(d, c, hueco=0, n=10):   # Psicodelia: el anillo con una guirnalda de margaritas pequeñas de pétalos redondos
+def texto_en_arco(lienzo, texto, cx, cy, r, centro, fuente, color, espacio=0.0, abajo=False):
+    """Escribe [texto] sobre el arco de radio [r] alrededor de (cx, cy), centrado en el ángulo [centro] (radianes, 0 a la
+    derecha, en el sentido del reloj, como en la pantalla). Arriba se lee de izquierda a derecha por fuera; con [abajo],
+    también de izquierda a derecha, con la base de las letras hacia fuera (como las leyendas de abajo de una moneda).
+    [espacio]: el espaciado entre letras, en fracción del cuerpo. Pinta sobre [lienzo] (imagen L o RGBA)."""
+    medidor = ImageDraw.Draw(Image.new('L', (1, 1)))
+    anchos = [medidor.textlength(ch, font=fuente) for ch in texto]
+    sep = espacio * fuente.size
+    total = sum(anchos) + sep * (len(texto) - 1)
+    sentido = -1 if abajo else 1
+    a = centro - sentido * total / 2 / r
+    for ch, w in zip(texto, anchos):
+        medio = a + sentido * (w / 2) / r
+        if ch.strip():
+            caja = int(fuente.size * 2)
+            g = Image.new('L', (caja, caja), 0)
+            ImageDraw.Draw(g).text((caja / 2, caja / 2), ch, font=fuente, fill=255, anchor='mm')
+            giro = -math.degrees(medio) - 90 if not abajo else -math.degrees(medio) + 90
+            g = g.rotate(giro, resample=Image.BICUBIC)
+            x, y = cx + r * math.cos(medio), cy + r * math.sin(medio)
+            capa = Image.new(lienzo.mode, g.size, color)
+            lienzo.paste(capa, (int(round(x - caja / 2)), int(round(y - caja / 2))), g)
+        a += sentido * (w + sep) / r
+
+
+def _etiqueta(m, c=255):               # Psicodelia: el anillo es el filete impreso de la etiqueta del disco del día, con su
+    # leyenda en letra de molde fina: arriba «DISCO DEL DÍA», abajo «LADO A · LARGA DURACIÓN». Se dibuja sobre la máscara [m] (no sobre
+    # un ImageDraw), porque las letras se giran una por una.
+    d = ImageDraw.Draw(m)
     caja = [(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K]
     d.ellipse(caja, outline=c, width=int(GROSOR * K))
-    for i in range(n):
-        a = 2 * math.pi * i / n
-        x, y = _pos(a)
-        margarita(d, c, x, y, 22 * K, n=8, r0=0.0, r1=0.31, punta=0.13, raiz=0.04, fase=a)
-        rc = 1.9 * K; d.ellipse([x - rc, y - rc, x + rc, y + rc], fill=hueco)
+    r2 = RADIO - 5.2
+    d.ellipse([(TAM / 2 - r2) * K, (TAM / 2 - r2) * K, (TAM / 2 + r2) * K, (TAM / 2 + r2) * K], outline=c, width=int(GROSOR * K * 0.38))
+    f = letra('franklin_semibold.ttf', 7.6 * K)
+    rt = (RADIO - 13.5) * K
+    texto_en_arco(m, 'DISCO DEL DÍA', TAM / 2 * K, TAM / 2 * K, rt, -math.pi / 2, f, c, espacio=0.16)
+    texto_en_arco(m, 'LADO A · LARGA DURACIÓN', TAM / 2 * K, TAM / 2 * K, rt + 2.4 * K, math.pi / 2, f, c, espacio=0.16, abajo=True)
+    # Dos puntos que separan las leyendas, a los lados (como en las etiquetas de entonces).
+    for a in (0.0, math.pi):
+        x, y = _pos(a, RADIO - 12.5); q = 1.7 * K
+        d.ellipse([x - q, y - q, x + q, y + q], fill=c)
 
 
 def oro_relieve(alto, fuerza, sem, luz=(-0.55, -0.7, 1.0), brillo=40, tonos=None, grano=0.035, ambiente=0.0, plano=None):
@@ -891,8 +911,8 @@ def _manos(d, c, n=24):                 # Prehistoria: puntos de ocre de tamaño
 # Acabados: 'tinta' (se asienta en el soporte), 'dorado' (brillo metálico leve), 'ferrogalica' (sepia que se aclara
 # donde la pluma tenía menos tinta), 'fosforo' (resplandor de pantalla), 'esmalte' (relieve suave), 'grabado' (talla en
 # hueco sobre piedra pulida, con el anillo: la huella y el motivo son un solo grabado), 'oro' (oro fundido en relieve, con
-# su sombra: el anillo y la huella son una sola pieza), 'nacar' (nácar engastado en oro pálido) y 'chapa' (un botón de
-# solapa: la huella impresa en tintas planas bajo la cúpula de celuloide, con su brillo).
+# su sombra: el anillo y la huella son una sola pieza), 'nacar' (nácar engastado en oro pálido) e 'impreso' (tipografía
+# sobre papel satinado: la tinta se carga en el borde de cada cresta y se gasta un poco en el medio).
 TEMAS = {
     'romano':       (travertino,    '#E5E1D9', '#6E5424',  10, 6, 'dorado',      _hojitas),
     'urbe':         (revoque,       '#E7C793', '#7A2E1C',  13, 5, 'tinta',       _cupolas),
@@ -907,7 +927,7 @@ TEMAS = {
     'arcontes':     (lino_codice,   '#ECE4CF', '#2E2541',   9, 5, 'tinta',       _ouroboros),
     'galia':        (barro_paja,    '#E4D9BA', '#7E590C',  10, 6, 'dorado',      _torques),
     'nouveau':      (papel_cartel,  '#EFE8D6', '#4B6A4E',   9, 5, 'esmalte',     _latigo),
-    'psicodelia':   (periodico,     '#EEE7D7', '#B0246A',   9, 5, 'tinta',       _margaritas),
+    'psicodelia':   (papel_etiqueta, '#B9612F', '#2A2119',  9, 4, 'impreso',     _etiqueta),
     'refugio':      (hormigon,      '#1B1C1A', '#9BE8AE',   8, 5, 'fosforo',     _dientes),
     'orden':        (acero,         '#16171A', '#C2A15E',   9, 5, 'dorado',      _remaches),
     'vapor':        (hollin_plano,  '#E6D9BD', '#7A4E12',  10, 5, 'dorado',      _engrane_manometro),
@@ -941,7 +961,45 @@ VARIANTES = {
 }
 
 
-EN_MASCARA = (_ouroboros, _torques, _latigo, _margaritas)
+EN_MASCARA = (_ouroboros, _torques, _latigo)
+# Los que escriben (giran letras una por una): reciben la máscara misma, no un ImageDraw.
+CON_LETRAS = (_etiqueta,)
+
+
+def disco_icono(bg, sem):
+    """Psicodelia: la etiqueta del disco del día ([bg], el papel naranja quemado) puesta en su disco, como en una foto de
+    revista de los 70: alrededor de la etiqueta asoma el vinilo negro café, con sus surcos y el brillo de la luz de la
+    tarde que entra por la izquierda (dos cuñas opuestas, la de arriba a la izquierda más fuerte). Encima, la luz con
+    dirección (la izquierda más clara), una viñeta hacia el café y el grano de película."""
+    cx = cy = TAM / 2
+    dx, dy = X - cx, Y - cy
+    r = np.sqrt(dx ** 2 + dy ** 2); ang = np.arctan2(dy, dx)
+    r_etiqueta = RADIO + 6.5
+    # El vinilo: casi negro y cálido, los surcos (finos, con la pista de entrada más lisa) y las dos cuñas de brillo.
+    # Junto a la etiqueta, la zona lisa de salida (brilla más y sin rayas); después, los surcos de la última pista.
+    surcos = 0.5 + 0.5 * np.sin(r * 2 * math.pi / 2.1 + ruido(sem + 30, 0.6, 3))
+    lisa = np.clip(((r_etiqueta + 9) - r) / 1.5, 0, 1)
+    def cuña(a0, w): return np.exp(-(np.angle(np.exp(1j * (ang - a0))) / w) ** 2)
+    brillo = cuña(math.radians(-140), 0.36) * 1.0 + cuña(math.radians(40), 0.3) * 0.5
+    tono = 20 + 10 * surcos * (1 - lisa) + brillo * (52 + 46 * surcos * (1 - lisa) + 40 * lisa)
+    vinilo = np.stack([tono * 1.08, tono * 0.92, tono * 0.78], -1)
+    # El canto de la etiqueta: el papel acaba con un borde un poco levantado, que la luz de la izquierda aclara.
+    dentro = np.clip((r_etiqueta - r) / 0.9 + 0.5, 0, 1)
+    out = vinilo * (1 - dentro[..., None]) + bg * dentro[..., None]
+    canto = np.exp(-((r - r_etiqueta + 0.8) / 0.9) ** 2) * np.clip(-(dx + dy * 0.8) / (r + 1), -0.6, 1)
+    out = out * (1 + 0.16 * canto[..., None])
+    # La luz de la tarde, de la izquierda y un poco de arriba; la viñeta hacia el café; el grano.
+    luz = np.clip(0.5 - (dx * 0.8 + dy * 0.45) / TAM, 0, 1)
+    out = out * (0.88 + 0.22 * luz[..., None])
+    vin = np.clip((r / (TAM * 0.62)) ** 2.2, 0, 1)
+    out = out * (1 - vin[..., None] * 0.35) + rgb('#3A2410')[None, None, :] * vin[..., None] * 0.35
+    g = ruido(sem + 40, 1.0, 0.6)
+    out = out + g[..., None] * np.array([7.0, 6.2, 5.0], np.float32)
+    return out
+
+
+# Los temas cuyo fondo no es solo un color con textura: reciben el fondo ya texturado y lo completan.
+FONDOS_PROPIOS = {'psicodelia': disco_icono}
 
 
 def anillo(tema, color):
@@ -950,10 +1008,12 @@ def anillo(tema, color):
     c = tuple(int(v) for v in color) + (235,)
     caja = [(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K]
     motivo = TEMAS[tema][6]
-    if motivo in EN_MASCARA:
-        # Llevan huecos (el ojo de la serpiente, los surcos del torques, el corazón de las margaritas): se dibujan en una
-        # máscara y se tiñen, con la misma opacidad que los demás anillos.
-        m = Image.new('L', (TAM * K, TAM * K), 0); motivo(ImageDraw.Draw(m), 255, 0)
+    if motivo in EN_MASCARA or motivo in CON_LETRAS:
+        # Llevan huecos (el ojo de la serpiente, los surcos del torques) o letras: se dibujan en una máscara y se tiñen,
+        # con la misma opacidad que los demás anillos.
+        m = Image.new('L', (TAM * K, TAM * K), 0)
+        if motivo in CON_LETRAS: motivo(m, 255)
+        else: motivo(ImageDraw.Draw(m), 255, 0)
         a = np.asarray(m.resize((TAM, TAM), Image.LANCZOS), np.float32) / 255 * 235
         return Image.fromarray(np.dstack([np.broadcast_to(np.asarray(color, np.float32), (TAM, TAM, 3)), a]).astype(np.uint8), 'RGBA')
     if motivo is _tricolor:
@@ -999,7 +1059,7 @@ def suavizar(a, s):
     return np.fft.irfft2(np.fft.rfft2(b) * g, s=b.shape)[p:p + a.shape[0], p:p + a.shape[1]].astype(np.float32)
 
 
-# Piezas de metal, nácar y celuloide que usan los sellos (sellos.py) de Galia, Art nouveau y Psicodelia.
+# Piezas de metal y nácar que usan los sellos (sellos.py) de Galia y Art nouveau.
 # El oro pálido de Art nouveau (#D9BE7A, con su brillo #F2E2B0): más claro y más frío que el oro de Galia.
 ORO_PALIDO = [(0.0, '#2E2410'), (0.25, '#6A5628'), (0.45, '#A08850'), (0.6, '#C2A86A'), (0.74, '#D9BE7A'), (0.86, '#E8D49C'),
               (0.94, '#F2E2B0'), (1.0, '#FFF7DE')]
@@ -1032,41 +1092,13 @@ def mezclar(a, b, t):
     return a * (1 - t[..., None]) + b * t[..., None]
 
 
-def celuloide(tam, radio, alto=15.0, dentro=0.80, reflejo=1.0):
-    """La luz sobre un botón de solapa de [radio] px en un lienzo de [tam] px (centrado): el papel impreso va bajo una
-    lámina de celuloide abombada, casi plana en el centro y que se curva fuerte donde se enrolla en el borde. Devuelve
-    (sombreado, brillo): el sombreado (0–1, cuánto mira a la luz, que viene de arriba a la izquierda) multiplica las
-    tintas; el brillo (0–1) se suma en blanco: la franja curva del reflejo de la ventana, que sigue la cúpula a
-    [dentro] del radio, con un punto nítido, el halo ancho y los dos filos del borde (el de la luz y el de la contraluz)."""
-    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
-    dx, dy = xx - tam / 2, yy - tam / 2
-    r = np.sqrt(dx ** 2 + dy ** 2)
-    rn = np.clip(r / radio, 0, 1)
-    h = np.sqrt(np.clip(1 - rn ** 8, 0, 1)) * 0.8 + (1 - rn ** 2) * 0.2
-    gy, gx = np.gradient(h * alto * tam / TAM)
-    nx, ny, nz = -gx, -gy, np.ones_like(h)
-    nn = np.sqrt(nx * nx + ny * ny + nz * nz)
-    L = np.array([-0.5, -0.65, 0.75]); L = L / np.linalg.norm(L)
-    sombreado = np.clip((nx * L[0] + ny * L[1] + nz * L[2]) / nn, 0, 1)
-    u, v = dx / radio, dy / radio
-    ang = np.arctan2(dy, dx)
-    da = np.angle(np.exp(1j * (ang - math.radians(-128))))
-    franja = np.clip(np.exp(-((rn - dentro) / 0.055) ** 2) * np.clip(1 - (da / 0.62) ** 2, 0, 1) ** 1.3 * 1.25, 0, 1)
-    punto = np.exp(-((u + 0.47) ** 2 + (v + 0.6) ** 2) / 0.0035)
-    halo = np.clip(1 - np.sqrt((u + 0.35) ** 2 + (v + 0.42) ** 2) / 0.8, 0, 1) ** 2
-    diag = (dx + dy) / (r + 1)
-    filo_luz = np.exp(-((rn - 0.962) / 0.016) ** 2) * np.clip(-diag * 1.2 + 0.1, 0, 1)
-    filo_contra = np.exp(-((rn - 0.958) / 0.03) ** 2) * np.clip(diag * 1.2 - 0.2, 0, 1)
-    brillo = (franja * 0.62 + punto * 0.5) * reflejo + halo * 0.1 + filo_luz * 0.45 + filo_contra * 0.22
-    return sombreado.astype(np.float32), brillo.astype(np.float32)
-
-
 def hacer(tema, salida):
     textura, fondo, tinta, f_fondo, f_huella, acabado, _ = TEMAS[tema]
     sem = sum(map(ord, tema))
     tex = textura(sem)
     # Fondo: el color con la textura (pocos niveles arriba y abajo).
     bg = rgb(fondo)[None, None, :] + tex[..., None] * f_fondo
+    if tema in FONDOS_PROPIOS: bg = FONDOS_PROPIOS[tema](bg, sem)
     Image.fromarray(np.clip(bg, 0, 255).astype(np.uint8)).save(os.path.join(salida, f'logo_fondo_{tema}.jpg'), quality=92)
     # Huella: la forma fija, con la misma textura muy leve y el acabado del tema.
     m = mascara()
@@ -1088,6 +1120,13 @@ def hacer(tema, salida):
         b = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.4)), np.float32) / 255
         gy, gx = np.gradient(b)
         col = col * (1 + np.clip((gx + gy) * -5, -0.25, 0.25))[..., None]
+    elif acabado == 'impreso':
+        # La plancha aprieta el papel: el borde de la cresta junta más tinta (más oscuro) y el medio se gasta donde el papel
+        # tiene poro (la textura del soporte asoma).
+        b = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.3)), np.float32) / 255
+        borde = np.clip(1 - np.abs(b - 0.5) * 2.2, 0, 1) * m
+        col = col * (1 - 0.18 * borde[..., None])
+        alfa = alfa * np.clip(0.97 - np.clip(t2 - 0.6, 0, 2) * 0.12, 0.78, 1)
     capa = Image.fromarray(np.dstack([np.clip(col, 0, 255), alfa * 255]).astype(np.uint8), 'RGBA')
     if acabado == 'piloto':
         # El cristal ámbar de un piloto encendido: el centro de cada cresta más claro, como luz que pasa, y un halo cálido.

@@ -1715,125 +1715,125 @@ def nouveau(tam):
 
 
 # ------------------------------------------------------------------ Psicodelia
-def paz(d, cx, cy, r, w, c):
-    """El símbolo de la paz (Gerald Holtom, 21 de febrero de 1958; nunca se registró: es de dominio público) en la versión
-    de una sola línea de un mismo grueso que dibujó Ken Garland: el círculo, el trazo vertical y los dos que bajan en
-    diagonal desde el centro (las banderas de la N y la D del alfabeto de señales)."""
-    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=c, width=int(round(w)))
-    rr = r - w / 2
-    d.line([(cx, cy - rr), (cx, cy + rr)], fill=c, width=int(round(w)))
-    for lado in (-1, 1):
-        d.line([(cx, cy), (cx + lado * rr * math.sqrt(0.5), cy + rr * math.sqrt(0.5))], fill=c, width=int(round(w)))
-    d.ellipse([cx - w / 2, cy - w / 2, cx + w / 2, cy + w / 2], fill=c)
-
-
-# Las tintas del botón de Psicodelia: los complementarios de los carteles (magenta y verde, naranja y azul, amarillo y
-# violeta), pero como salen de una prensa vieja en un papel que ya amarilleó: apagados, sin el brillo de la tinta nueva,
-# para que el sello quede en la familia de los demás.
-TINTAS_PSICODELIA = dict(
-    azul='#4E6894', azul_claro='#6A80A8', azul_violeta='#58598C', trama='#7088AE', burbuja='#97A7C0',
-    naranja='#C27E4E', verde='#5E8D6C', nervio='#456C50', magenta='#AE4F7A', amarillo='#D9B65E',
-    filete='#3A2D48', huella='#F3EADB', papel='#E9DFCB')
+# La ciudad de fines de los sesenta, vista como en una foto de revista de los 70 (`docs/diseno/temas/psicodelia.md`, v2):
+# el sello es fijo y de la ciudad, aunque la app esté en la cara del cartel (lo archivado no depende de la hora).
+CIUDAD_PSICODELIA = dict(
+    etiqueta='#B9612F', etiqueta_luz='#D07A42', tinta='#2A2119', crema='#F3ECDD', vinilo='#17110D', brillo='#B8A890',
+    vineta='#3A2410', sombra='#4A3528', fuera='#1B1511')
 
 
 def psicodelia(tam):
-    """Psicodelia: un botón de solapa grande, de 1967, impreso en tintas planas bajo el celuloide. El campo es el azul de
-    cartel con las gotas blandas de las luces líquidas (apenas más claras o más violetas); lo cerca una orla de rayos
-    naranjas y azules (dos complementarios del mismo peso, que vibran) que giran y engordan hacia el borde, como si se
-    derritieran. A la izquierda, la margarita de pétalos redondos en magenta, con su eco verde y el corazón amarillo, que
-    se monta sobre la orla; a la derecha, el símbolo de la paz de una línea, en amarillo. Todo lleva el filete violeta
-    oscuro de la plancha del negro, y el registro del magenta va un poco corrido. Las tintas son las de una prensa vieja
-    (TINTAS_PSICODELIA): los mismos complementarios, apagados, con el papel que se trasluce. La huella: tinta clara con su
-    filete. Encima de todo, la cúpula de celuloide con su brillo (también sobre la huella)."""
-    from iconos import margarita, celuloide, mezclar
-    def _hoja_redonda(x, y, largo, ancho, a):
-        """Una hoja redonda que sale de (x, y) hacia [a]: un óvalo con la punta roma."""
-        ca, sa = math.cos(a), math.sin(a)
-        def w(t): return ancho / 2 * np.sign(math.sin(t)) * abs(math.sin(t)) ** 0.6 * (0.55 + 0.45 * math.cos(t / 2) ** 2)
-        return [(x + largo / 2 * (1 + math.cos(t)) * ca - w(t) * sa, y + largo / 2 * (1 + math.cos(t)) * sa + w(t) * ca)
-                for t in np.linspace(0, 2 * math.pi, 64, endpoint=False)]
-    T = {n: col(h) for n, h in TINTAS_PSICODELIA.items()}
+    """Psicodelia: el disco del día, de cerca, como en una foto de revista de los 70. Llena el sello la etiqueta de papel
+    naranja quemado, satinada, con el roce en anillos del plato y su fibra; impresa en dos tintas, el café casi negro y el
+    crema: cerca del borde, la banda crema entre dos filetes con la leyenda menuda alrededor; arriba «DISCO DEL DÍA» en letra de titular, y
+    a los lados «LADO A» y «33⅓ R.P.M.», donde la huella deja sitio. La huella va impresa en el café, con la tinta cargada
+    en el borde de cada cresta, como la tipografía. Fuera de la etiqueta, el vinilo: la zona lisa de salida y los surcos,
+    con las dos cuñas de brillo de la luz de la tarde. Todo con la luz de la izquierda, la viñeta hacia el café y el grano
+    de película. Sin flores, sin paz, sin arcoíris."""
+    from iconos import letra, texto_en_arco
+    P = {n: col(h) for n, h in CIUDAD_PSICODELIA.items()}
     k = 2; S = tam * k; c = S / 2
     yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
     dx, dy = xx - c, yy - c
-    r = np.sqrt(dx ** 2 + dy ** 2) / c
+    rr = np.sqrt(dx ** 2 + dy ** 2)
+    r = rr / c
     ang = np.arctan2(dy, dx)
-    rg = np.random.default_rng(1967)
+    rg = np.random.default_rng(1969)
+    R_ETIQUETA = 0.915          # en fracción del radio del sello
+    R_SALIDA = 0.952            # hasta aquí, la zona lisa; después, los surcos
+    # --- El vinilo: casi negro y cálido, liso junto a la etiqueta y con surcos después; las dos cuñas de brillo.
+    surcos = 0.5 + 0.5 * np.sin(rr / k * 2 * math.pi / 1.6 + nube(1970, 40, S) * 1.5)
+    lisa = np.clip((R_SALIDA - r) * c / (1.5 * k), 0, 1)
+    def cuña(a0, w): return np.exp(-(np.angle(np.exp(1j * (ang - a0))) / w) ** 2)
+    brillo = cuña(math.radians(-138), 0.34) + cuña(math.radians(42), 0.28) * 0.6
+    tono = 0.05 + 0.06 * surcos * (1 - lisa) + brillo * (0.5 + 0.45 * surcos * (1 - lisa) + 0.42 * lisa)
+    vinilo = P['vinilo'] * (1 - brillo[..., None] * 0.6) + P['brillo'] * np.clip(tono, 0, 1)[..., None]
+    # El borde del disco, apenas redondeado, y lo de fuera (el plato en sombra; el sello se recorta en círculo).
+    canto_disco = np.exp(-((r - 0.995) / 0.004) ** 2) * np.clip(-(dx + dy) / (rr + 1), 0, 1)
+    vinilo = vinilo + canto_disco[..., None] * 60
+    # --- La etiqueta: el papel naranja quemado, satinado, con su fibra, el roce del plato y la luz de la tarde.
+    fibra = suavizar(rg.standard_normal((S, S)).astype(np.float32), 0.7 * k)
+    roce = np.sin(rr / k * 1.3 + nube(1971, 6, S) * 4) * np.clip(nube(1972, 4, S) + 0.3, 0, 1)
+    satinado = np.clip(1 - np.sqrt((xx - c * 0.55) ** 2 + (yy - c * 0.45) ** 2) / (c * 1.0), 0, 1) ** 1.6
+    papel = P['etiqueta'] * (1 + 0.035 * fibra[..., None] + 0.03 * roce[..., None])
+    papel = mezcla(papel, P['etiqueta_luz'], satinado * 0.45)
+    # El desgaste: un cerco más claro donde roza el disco de arriba en la pila, y manchitas de uso.
+    gastado = np.exp(-((r - 0.62) / 0.05) ** 2) * np.clip(nube(1973, 7, S) + 0.1, 0, 1) * 0.3
+    papel = mezcla(papel, col('#D9A07A'), gastado)
+    manchas = np.clip((nube(1974, 22, S) - 0.75) * 3, 0, 1) * 0.25
+    papel = mezcla(papel, col('#8E4A24'), manchas)
+    dentro = np.clip((R_ETIQUETA - r) * c / (0.9 * k) + 0.5, 0, 1)
+    img = mezcla(vinilo, papel, dentro)
+    # El canto de la etiqueta: un filo claro del lado de la luz y una sombra del otro.
+    canto = np.exp(-((r - R_ETIQUETA + 0.002) / 0.003) ** 2) * np.clip(-(dx * 0.8 + dy) / (rr + 1), -0.7, 1)
+    img = img * (1 + 0.22 * canto[..., None])
+    # --- Lo impreso, en sus dos tintas. Cada tinta en su máscara, dibujada al tamaño grande.
     def lapiz(dibujo):
-        im = Image.new('L', (S, S), 0); dibujo(ImageDraw.Draw(im)); return np.asarray(im, np.float32) / 255
-    def filete(m, w):
-        return np.clip(suavizar(m, w * k) * 3.3, 0, 1)
-    FILETE = T['filete']
-    # --- El campo: las gotas de las luces líquidas, de borde blando, unas más claras y otras más violetas.
-    g1 = nube(1201, 4, S) + nube(1202, 9, S) * 0.45
-    g2 = nube(1203, 5, S) + nube(1204, 12, S) * 0.35
-    claro = np.clip((g1 - 0.2) * 3.2, 0, 1)
-    violeta = np.clip((g2 - 0.3) * 3.2, 0, 1) * (1 - claro)
-    img = np.zeros((S, S, 3), np.float32) + T['azul']
-    img = mezclar(img, T['azul_claro'], claro * 0.85)
-    img = mezclar(img, T['azul_violeta'], violeta * 0.9)
-    # Las gotas claras van impresas en trama de medios tonos (puntos a 45°, más grandes donde la gota es más clara), como
-    # se imprimía una tinta aclarada sin otra plancha; y unas burbujas chicas (el aceite que hierve en el vidrio).
-    paso = 9.0 * k
-    tu = (xx + yy) / math.sqrt(2) / paso; tv = (xx - yy) / math.sqrt(2) / paso
-    dcel = np.sqrt((tu - np.round(tu)) ** 2 + (tv - np.round(tv)) ** 2)
-    radio_punto = np.sqrt(np.clip(claro, 0, 1)) * 0.42
-    puntos = np.clip((radio_punto - dcel) * paso / 1.2 + 0.5, 0, 1) * (radio_punto > 0.05)
-    img = mezclar(img, T['azul'], np.clip(claro * 0.85, 0, 1))      # la gota, en vez de un tono plano...
-    img = mezclar(img, T['trama'], puntos)                              # ...es trama de puntos
-    burbujas = lapiz(lambda d: [d.ellipse([x - q, y - q, x + q, y + q], outline=255, width=int(1.6 * k))
-                                for x, y, q in zip(rg.uniform(0, S, 40), rg.uniform(0, S, 40), rg.uniform(4, 11, 40) * k)])
-    img = mezclar(img, T['burbuja'], burbujas * np.clip(violeta * 2, 0, 1) * 0.7)
-    # --- La orla de rayos que giran: 20 rayos, los naranjas más anchos hacia fuera.
-    RIN = 0.80
-    fuera_ = np.clip(r - RIN, 0, None)
-    f = (ang + 2.2 * fuera_ ** 1.3 + 0.05 * np.sin(ang * 5 + r * 9)) * 20 / (2 * math.pi)
-    tri = np.abs((f % 1) - 0.5) * 2
-    ancho_ = 0.5 + 0.18 * np.clip(fuera_ / (1 - RIN), 0, 1)
-    banda = np.clip((tri - (1 - ancho_)) * c / 18 * 3 + 0.5, 0, 1)
-    orla = np.clip((r - RIN) * c / 1.0, 0, 1)
-    img = mezclar(img, mezclar(np.zeros((S, S, 3)) + T['azul'], T['naranja'], banda), orla)
-    img = mezclar(img, FILETE, np.clip(1 - np.abs(r - RIN) * c / (2.2 * k), 0, 1))
-    # --- La margarita, a la izquierda, sobre la orla; el registro del magenta, corrido.
-    fx, fy, fe = 112 * k, 372 * k, 300 * k
-    # El tallo baja desde la flor, por dentro de la orla, y se mete en ella; lleva dos hojas redondas.
-    tallo_pts = bezier((fx, fy), (fx + 6 * k, fy + 120 * k), (fx + 70 * k, fy + 170 * k), (fx + 64 * k, fy + 300 * k), 40)
-    tallo = lapiz(lambda d: cinta(d, tallo_pts, 10 * k, 7 * k, 255))
-    hojas = lapiz(lambda d: [d.polygon(_hoja_redonda(px, py, 70 * k, 44 * k, a), fill=255)
-                             for (px, py), a in ((tallo_pts[15], math.radians(205)), (tallo_pts[25], math.radians(-30)))])
-    verde = np.maximum(tallo, hojas)
-    nervio = lapiz(lambda d: [d.line([(px, py), (px + 52 * k * math.cos(a), py + 52 * k * math.sin(a))], fill=255, width=int(2.4 * k))
-                              for (px, py), a in ((tallo_pts[15], math.radians(205)), (tallo_pts[25], math.radians(-30)))]) * hojas
-    img = mezclar(img, FILETE, filete(verde, 1.6))
-    img = mezclar(img, T['verde'], verde)
-    img = mezclar(img, T['nervio'], nervio * 0.8)
-    pet = lapiz(lambda d: margarita(d, 255, fx, fy, fe))
-    eco = np.clip(lapiz(lambda d: margarita(d, 255, fx, fy, fe, encoge=0.022)) - lapiz(lambda d: margarita(d, 255, fx, fy, fe, encoge=0.031)), 0, 1)
-    eco = eco * np.clip((np.sqrt((xx - fx) ** 2 + (yy - fy) ** 2) - 0.15 * fe) / (3 * k), 0, 1)
-    corrido = lambda m: np.roll(np.roll(m, -int(1.2 * k), 0), int(1.5 * k), 1)
-    img = mezclar(img, FILETE, filete(pet, 1.6))
-    img = mezclar(img, T['magenta'], corrido(pet) * pet)
-    img = mezclar(img, T['verde'], eco)
-    cor = lapiz(lambda d: d.ellipse([fx - 27 * k, fy - 27 * k, fx + 27 * k, fy + 27 * k], fill=255))
-    img = mezclar(img, FILETE, filete(cor, 1.4))
-    img = mezclar(img, T['amarillo'], cor)
-    # --- La paz, a la derecha.
-    pz = lapiz(lambda d: paz(d, 626 * k, 350 * k, 66 * k, 14 * k, 255))
-    img = mezclar(img, FILETE, filete(pz, 1.6))
-    img = mezclar(img, T['amarillo'], pz)
-    # --- El papel bajo las tintas, la cúpula y su brillo; fuera del borde enrollado, la sombra.
-    grano = suavizar(rg.standard_normal((S, S)).astype(np.float32), 0.8 * k)
-    sombreado, brillo = celuloide(S, 0.99 * c, alto=22.0 * 432 / tam, reflejo=0.8)
-    def luz(x):
-        x = x * 0.9 + T['papel'] * 0.1                     # el papel amarillento se trasluce por la tinta gastada
-        x = x * (1 + grano[..., None] * 0.03)
-        return x * (0.66 + 0.4 * sombreado[..., None]) + brillo[..., None] * 255
-    afuera = np.clip((r - 0.993) * c / 1.5, 0, 1)
-    fondo = a_img(mezclar(luz(img), col('#141018'), afuera)).resize((tam, tam), Image.LANCZOS)
-    # --- La huella: tinta clara con su filete, bajo el mismo celuloide.
+        im = Image.new('L', (S, S), 0); dibujo(im, ImageDraw.Draw(im)); return np.asarray(im, np.float32) / 255
+    def filetes(im, d):
+        # La banda de la leyenda, entre dos filetes: el de fuera más grueso.
+        for rf, g in ((0.906, 2.4), (0.862, 1.1)):
+            q = rf * c; d.ellipse([c - q, c - q, c + q, c + q], outline=255, width=int(g * k))
+    def leyendas(im, d):
+        # La leyenda menuda da la vuelta entera: el espaciado se ajusta para que cierre justo.
+        f = letra('franklin_semibold.ttf', 9.2 * k)
+        frase = 'VESTIGIUM MEI · DISCOS DE LA CIUDAD · HECHO EN SAN FRANCISCO, CALIF. · LARGA DURACIÓN · '
+        rl = 0.874 * c
+        vueltas = 1
+        while sum(d.textlength(ch, font=f) for ch in frase * (vueltas + 1)) * 1.1 < 2 * math.pi * rl: vueltas += 1
+        leyenda = frase * vueltas
+        ancho = sum(d.textlength(ch, font=f) for ch in leyenda)
+        espacio = max(0.0, (2 * math.pi * rl - ancho) / len(leyenda) / f.size)
+        texto_en_arco(im, leyenda, c, c, rl, -math.pi / 2, f, 255, espacio=espacio)
+        # Arriba, el nombre del sello discográfico (propio, inventado): DISCO DEL DÍA, en el titular de la ciudad.
+        g = letra('franklin_extrabold.ttf', 25 * k)
+        d.text((c, 0.108 * S), 'DISCO DEL DÍA', font=g, fill=255, anchor='mm')
+        # A los lados, donde la huella deja sitio: el lado y la velocidad.
+        chica = letra('franklin_semibold.ttf', 12 * k); grande = letra('franklin_extrabold.ttf', 52 * k)
+        xi, xd, ym = 0.135 * S, 0.865 * S, 0.5 * S
+        d.text((xi, ym - 34 * k), 'LADO', font=chica, fill=255, anchor='mm')
+        d.text((xi, ym + 8 * k), 'A', font=grande, fill=255, anchor='mm')
+        d.text((xd - 8 * k, ym + 8 * k), '33', font=grande, fill=255, anchor='mm')
+        # El tercio, a mano (la letra no trae el signo ⅓): 1, la barra y 3, chicos, arriba a la derecha del 33.
+        fx, fy = xd + 30 * k, ym - 6 * k
+        mini = letra('franklin_semibold.ttf', 11 * k)
+        d.text((fx - 4 * k, fy - 6 * k), '1', font=mini, fill=255, anchor='mm')
+        d.line([(fx - 6 * k, fy + 7 * k), (fx + 6 * k, fy - 9 * k)], fill=255, width=int(1.4 * k))
+        d.text((fx + 4 * k, fy + 6 * k), '3', font=mini, fill=255, anchor='mm')
+        d.text((xd, ym - 34 * k), 'R.P.M.', font=chica, fill=255, anchor='mm')
+        # Dos rayas finas bajo cada lado, como las de las etiquetas de entonces.
+        for x0 in (xi, xd):
+            d.line([(x0 - 34 * k, ym + 44 * k), (x0 + 34 * k, ym + 44 * k)], fill=255, width=int(1.2 * k))
+    def crema(im, d):
+        # La segunda tinta: la banda crema de la leyenda, entre los dos filetes (se imprime antes que el café, que va encima).
+        q0, q1 = 0.906 * c, 0.862 * c
+        d.ellipse([c - q0, c - q0, c + q0, c + q0], fill=255)
+        d.ellipse([c - q1, c - q1, c + q1, c + q1], fill=0)
+    m_crema = lapiz(crema)
+    m_cafe = np.clip(lapiz(filetes) + lapiz(leyendas), 0, 1)
+    # El registro de la segunda tinta, un poco corrido (la prensa de una fábrica chica): el crema 1 px a la izquierda.
+    m_crema = np.roll(m_crema, -int(1.0 * k), 1)
+    tinta_gastada = np.clip(0.9 + 0.12 * fibra, 0.7, 1)
+    img = mezcla(img, P['crema'] * (0.95 + 0.05 * satinado[..., None]), m_crema * tinta_gastada * dentro)
+    img = mezcla(img, P['tinta'], m_cafe * tinta_gastada * dentro)
+    # --- La luz de la tarde (de la izquierda), la viñeta hacia el café y el grano: el fondo y la huella, igual.
+    luz = np.clip(0.5 - (dx * 0.8 + dy * 0.45) / S, 0, 1)
+    vin = np.clip((r / 1.25) ** 2.4, 0, 1)
+    grano = suavizar(rg.standard_normal((S, S)).astype(np.float32), 0.6 * k)
+    def foto(x):
+        x = x * (0.86 + 0.24 * luz[..., None])
+        x = x * (1 - vin[..., None] * 0.32) + P['vineta'] * vin[..., None] * 0.32
+        x = x + grano[..., None] * np.array([9.0, 8.0, 6.5], np.float32)
+        return x
+    afuera = np.clip((r - 0.999) * c / 1.5, 0, 1)
+    fondo = a_img(mezcla(foto(img), P['fuera'], afuera)).resize((tam, tam), Image.LANCZOS)
+    # --- La huella, en el café de la imprenta: la tinta se carga en el borde de la cresta y se gasta donde hay poro.
     m = mascara_sello(S)
-    hcol = luz(mezclar(np.zeros((S, S, 3)) + FILETE, T['huella'], m))
-    huella = a_rgba(hcol, np.clip(suavizar(m, 2.2 * k) * 3.4, 0, 1))
+    b = suavizar(m, 1.6 * k)
+    borde = np.clip(1 - np.abs(b - 0.5) * 2.2, 0, 1) * m
+    hcol = P['tinta'] * (1 - 0.2 * borde[..., None]) + P['etiqueta'] * 0.06
+    alfa = np.clip(suavizar(m, 0.9 * k) * 1.6, 0, 1) * np.clip(0.95 + 0.1 * fibra - np.clip(roce, 0, 1) * 0.04, 0.78, 1)
+    huella = a_rgba(foto(hcol), alfa)
     huella = huella.convert('RGBa').resize((tam, tam), Image.LANCZOS).convert('RGBA')
     guardar(fondo, huella, 'psicodelia')
 

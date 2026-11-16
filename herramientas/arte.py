@@ -926,68 +926,102 @@ def papel_nouveau():
     a_img(a).save(os.path.join(OUT, 'papel_nouveau.jpg'), quality=86)
 
 def papel_psicodelia():
-    """Psicodelia: el papel del periódico del barrio, en San Francisco en 1967: papel de diario de pasta mecánica, barato,
-    gris crema, con la formación en nubes, astillitas oscuras de madera, fibras cortas y los bordes un poco más amarillos
-    (el papel ácido se tuesta con la luz). Lo cruza el doblez del periódico, apenas marcado. Arriba, sangrando del borde,
-    la tinta de arcoíris del tintero partido: en el tintero de la prensa se ponen dos o tres tintas lado a lado (aquí el
-    magenta a la izquierda, el amarillo al medio y el azul a la derecha) y los rodillos las funden donde se tocan, así que
-    una sola pasada imprime el degradado (el naranja y el verde salen solos). Se imprime en trama de puntos que se achican
-    hacia abajo hasta desaparecer, con la tinta absorbida desigual por el papel. El centro queda libre para el texto."""
+    """Psicodelia, la ciudad (cara de día): el papel de una copia de foto de los 70, mate perla, ya amarillento. El
+    color de la ciudad clara (#E9DFCC); la superficie perla del papel (un punteado muy fino, que no estorba al texto); el
+    grano de película, cálido y menudo; la luz de la tarde, que entra por la izquierda; los bordes que amarillean más (el
+    papel se tuesta por donde lo tocan) y una viñeta suave hacia el café. Alrededor, el margen blanco de la copia, con las
+    esquinas redondeadas del laboratorio de revelado (el papel sin exponer, a 14 px del borde), con la leyenda menuda que
+    imprimía el laboratorio en el margen de abajo. Nada en el centro."""
     W, H = 720, 1280
-    r = np.random.default_rng(1967)
     yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
-    # --- El papel: crema grisáceo de diario, con la formación en nubes (más espeso aquí, más ralo allá).
-    a = mezcla(col('#EFE7D6'), col('#E3DAC6'), ruido_rect(W, H, 60, 1968) * 0.75)
-    a = mezcla(a, col('#E6DDC9'), np.clip((ruido_rect(W, H, 5, 1969) - 0.5) * 2.4, 0, 1) * 0.45)      # la formación
-    a = mezcla(a, col('#F3ECDD'), np.clip((ruido_rect(W, H, 14, 1970) - 0.55) * 2.0, 0, 1) * 0.3)
-    # Los bordes, tostados por la luz (más arriba y a la derecha, que quedaban por fuera de la pila).
-    borde = np.clip(np.maximum(np.abs(xx - W / 2) / (W / 2), np.abs(yy - H / 2) / (H / 2)) - 0.86, 0, 1) / 0.14
-    tostado = borde ** 1.6 * (0.75 + 0.5 * ruido_rect(W, H, 40, 1971))
-    a = mezcla(a, col('#D9C7A2'), np.clip(tostado, 0, 1) * 0.42)
-    # --- El doblez: el periódico venía doblado en dos; la luz de arriba hace clara una cara del pliegue y oscura la otra.
-    yd = H * 0.535 + 3 * np.sin(xx / W * 2.3 + 0.4)
-    dpl = yy - yd
-    a = a * (1 - 0.045 * np.exp(-((dpl - 1.6) / 1.4) ** 2) + 0.03 * np.exp(-((dpl + 1.4) / 1.6) ** 2)
-             - 0.018 * np.exp(-(dpl / 14) ** 2) * ruido_rect(W, H, 20, 1972))[..., None]
+    a = mezcla(col('#ECE3D1'), col('#E2D7C1'), ruido_rect(W, H, 70, 2001) * 0.8)
+    # La superficie perla: un punteado fino y regular, más claro y más oscuro, casi invisible.
+    perla = ruido_rect(W, H, 0.9, 2002) - 0.5
+    a = a * (1 + 0.035 * perla[..., None])
+    # El grano de la película: cálido (el oscuro hacia el café, el claro hacia el crema), en granitos de 1 a 2 px.
+    g = ruido_rect(W, H, 0.6, 2003) - 0.5
+    a = a + np.where(g[..., None] > 0, col('#FFF6E4') - a, col('#4A3528') - a) * (np.abs(g) * 0.11)[..., None]
+    # La luz de la tarde: de la izquierda y un poco de arriba.
+    luz = np.clip(0.55 - (xx / W - 0.5) * 0.7 - (yy / H - 0.5) * 0.25, 0, 1)
+    a = a * (0.95 + 0.08 * luz[..., None])
+    # El margen de la copia: el papel sin exponer, más claro, con las esquinas redondeadas.
+    m, rc = 14, 26
+    qx = np.clip(np.maximum(m + rc - xx, xx - (W - m - rc)), 0, None)
+    qy = np.clip(np.maximum(m + rc - yy, yy - (H - m - rc)), 0, None)
+    fuera_img = np.clip(np.sqrt(qx ** 2 + qy ** 2) - rc + 0.5, 0, 1)
+    fuera_img = np.maximum(fuera_img, ((xx < m) | (xx > W - m) | (yy < m) | (yy > H - m)).astype(np.float32))
+    a = mezcla(a, col('#F2ECDF'), fuera_img * 0.75)
+    # Lo tostado de los bordes y la viñeta hacia el café de la foto.
+    borde = np.sqrt(((xx - W / 2) / (W / 2)) ** 4 + ((yy - H / 2) / (H / 2)) ** 4) ** 0.25 + (ruido_rect(W, H, 24, 2004) - 0.5) * 0.1
+    a = mezcla(a, col('#D2BE98'), np.clip((borde - 0.8) * 2.6, 0, 1) * 0.42)
+    vin = np.clip((np.sqrt(((xx - W / 2) / (W * 0.62)) ** 2 + ((yy - H * 0.48) / (H * 0.62)) ** 2) - 0.55) * 1.6, 0, 1) ** 1.5
+    a = mezcla(a, col('#3A2410'), vin * 0.16)
+    # Dos o tres motas de polvo que quedaron en la ampliadora (sombras blancas pequeñas: el polvo tapa la luz al copiar).
+    r = np.random.default_rng(2005)
+    for _ in range(5):
+        x0, y0 = r.uniform(40, W - 40), r.choice([r.uniform(30, 220), r.uniform(H - 260, H - 40)])
+        d = np.sqrt((xx - x0) ** 2 + ((yy - y0) * r.uniform(0.6, 1.6)) ** 2)
+        a = mezcla(a, col('#F7F1E6'), np.clip(1 - d / r.uniform(1.2, 2.6), 0, 1) * 0.55)
+    # En el margen de abajo, lo que el laboratorio imprimía en la copia: el papel y el mes, en letra menuda y tenue.
     img = a_img(a); d = ImageDraw.Draw(img, 'RGBA')
-    for _ in range(900):                                             # fibras cortas, claras y oscuras
-        x, y = r.random() * W, r.random() * H; ang = r.random() * math.pi; l = 2 + r.random() * 6
-        tono = (110, 98, 80, int(10 + r.random() * 16)) if r.random() < 0.65 else (255, 252, 244, int(28 + r.random() * 36))
-        d.line([(x, y), (x + l * math.cos(ang), y + l * math.sin(ang))], fill=tono, width=1)
-    for _ in range(140):                                             # las astillitas de la pasta mecánica: oscuras y cortas
-        x, y = r.random() * W, r.random() * H; ang = r.random() * math.pi; l = 1.5 + r.random() * 4.5
-        d.line([(x, y), (x + l * math.cos(ang), y + l * math.sin(ang))], fill=(70, 58, 44, int(40 + r.random() * 60)), width=1)
-    a = np.asarray(img, np.float32)
-    a = a * (0.985 + 0.028 * ruido_rect(W, H, 0.6, 1973)[..., None])                         # el grano
-    # --- La tinta de arcoíris. Las tres tintas del tintero partido, fundidas donde se tocan (más ancho el paso al azul).
-    u = np.clip(xx / W + 0.05 * (ruido_rect(W, H, 90, 1974) - 0.5), 0, 1)
-    k = 2
-    def tinta(centro, ancho):
-        return np.exp(-((u - centro) / ancho) ** 2)
-    magenta = tinta(-0.08, 0.4); amarillo = tinta(0.48, 0.3); azul = tinta(1.08, 0.42)
-    # Cuánta tinta llega a cada punto: llena junto al borde de arriba y cada vez menos hacia abajo, con el borde de abajo
-    # que ondula (el rodillo no cargaba parejo); se imprime en trama.
-    caida = 80 + 110 * ruido_rect(W, H, 70, 1975)[0:1, :] + 16 * np.sin(xx / W * 7.0 + 1.2)
-    carga = np.clip(1 - yy / caida, 0, 1) ** 1.5
-    mancha = np.clip(carga * (0.85 + 0.3 * ruido_rect(W, H, 16, 1976)), 0, 1)
-    # La trama a 45°, al doble y reducida: el punto crece con la tinta (el punto lleno se junta con el de al lado).
-    Y2, X2 = np.mgrid[0:H * k, 0:W * k].astype(np.float32) / k
-    paso = 5.2
-    tu = (X2 + Y2) / math.sqrt(2) / paso; tv = (X2 - Y2) / math.sqrt(2) / paso
-    dcel = np.sqrt((tu - np.round(tu)) ** 2 + (tv - np.round(tv)) ** 2)
-    carga2 = np.asarray(Image.fromarray(mancha.astype(np.float32), 'F').resize((W * k, H * k), Image.BILINEAR))
-    rad = carga2 ** 0.7 * 0.62
-    punto = np.clip((rad - dcel) * paso * k / 1.3 + 0.5, 0, 1) * np.clip(rad * paso * k / 1.5, 0, 1)
-    punto = np.asarray(Image.fromarray(punto.astype(np.float32), 'F').resize((W, H), Image.LANCZOS), np.float32)
-    punto = np.clip(punto, 0, 1) * (0.78 + 0.22 * ruido_rect(W, H, 1.2, 1977))          # el papel absorbe desigual
-    # Cada tinta resta lo suyo del papel (las tintas de imprenta son transparentes: se multiplican, y donde el amarillo
-    # se monta en el magenta sale naranja, y en el azul, verde). Suave, para que no estorbe el texto.
-    filtro = np.ones((H, W, 3), np.float32)
-    for cobertura, tono in ((magenta, '#E0218A'), (amarillo, '#FFD23F'), (azul, '#2F6BFF')):
-        filtro = filtro * (1 - (1 - col(tono) / 255) * (np.clip(cobertura * 1.25, 0, 1) * 0.5)[..., None])
-    a = a * (1 - punto[..., None] + punto[..., None] * filtro)
-    a_img(a).save(os.path.join(OUT, 'papel_psicodelia.jpg'), quality=86)
+    from iconos import letra
+    d.text((W / 2, H - m / 2), 'PAPEL FOTOGRÁFICO · MATE PERLA · OCT 1967', font=letra('franklin_semibold.ttf', 8.5),
+           fill=(120, 100, 76, 70), anchor='mm')
+    img.save(os.path.join(OUT, 'papel_psicodelia.jpg'), quality=86)
 
+
+def papel_psicodelia_cartel():
+    """Psicodelia, el cartel (cara de noche): el papel crema del cartel de la semana (#F2E8D3), sin estucar, con su fibra.
+    Por detrás se transparenta, apenas, lo impreso del otro lado: arriba, el disco hecho sol con sus rayos que ondulan, en
+    el grabado fino de líneas de la tinta azul negra, y el marco de arco del cartel cerca del borde. Un par de puntos del
+    magenta y del ultramar que saltaron de la plancha. Muy tenue: el centro queda para el texto. Se usa en las dos claridades
+    de la cara del cartel (la página de leer es siempre clara)."""
+    W, H = 720, 1280
+    yy, xx = np.mgrid[0:H, 0:W].astype(np.float32)
+    a = mezcla(col('#F4EBD8'), col('#EADFC8'), ruido_rect(W, H, 60, 2011) * 0.75)
+    a = mezcla(a, col('#E6DAC2'), np.clip((ruido_rect(W, H, 4, 2012) - 0.5) * 2.2, 0, 1) * 0.35)        # la formación
+    img = a_img(a); d = ImageDraw.Draw(img, 'RGBA')
+    r = np.random.default_rng(2013)
+    for _ in range(700):                                                     # fibras cortas
+        x, y = r.random() * W, r.random() * H; ang = r.random() * math.pi; l = 2 + r.random() * 7
+        tono = (120, 104, 84, int(8 + r.random() * 14)) if r.random() < 0.6 else (255, 252, 244, int(24 + r.random() * 30))
+        d.line([(x, y), (x + l * math.cos(ang), y + l * math.sin(ang))], fill=tono, width=1)
+    a = np.asarray(img, np.float32)
+    # Lo del otro lado: los rayos que ondulan alrededor del disco (centrado arriba, fuera del papel), en trama de líneas.
+    k = 2
+    Y2, X2 = np.mgrid[0:H * k, 0:W * k].astype(np.float32) / k
+    cx, cy = W * 0.5, -H * 0.06
+    rr = np.sqrt((X2 - cx) ** 2 + (Y2 - cy) ** 2); ang = np.arctan2(Y2 - cy, X2 - cx)
+    n = 26
+    onda = 0.05 * np.sin(rr / 190 * 2 * math.pi + 0.8) * (220 / np.maximum(rr, 220)) ** 0.4
+    sector = ((ang + onda) * n / (2 * math.pi)) % 2
+    rayo = np.clip((np.abs(sector - 0.5) < 0.5).astype(np.float32), 0, 1)
+    lineas = (np.abs(((Y2 + 0.3 * X2) % 5.0) - 2.5) < 0.75).astype(np.float32)        # el grabado, inclinado
+    fuera_disco = np.clip((rr - 190) / 4, 0, 1)
+    caida = np.clip(1 - (Y2 - H * 0.04) / (H * 0.42), 0, 1) ** 1.3
+    trama = rayo * lineas * fuera_disco * caida
+    # El disco, del otro lado: dos anillos finos.
+    for r0, g0 in ((176, 3.0), (150, 1.2)):
+        trama = np.maximum(trama, np.clip(1 - np.abs(rr - r0) / g0, 0, 1) * 0.9)
+    # El marco de arco del cartel: arriba, esquinas grandes; abajo, casi rectas.
+    m, ra = 30, 120
+    qx = np.maximum(m + ra - X2, X2 - (W - m - ra)); qy = m + ra - Y2
+    arco = np.where((qx > 0) & (qy > 0), np.abs(np.sqrt(np.clip(qx, 0, None) ** 2 + np.clip(qy, 0, None) ** 2) - ra),
+                    np.minimum(np.minimum(np.abs(X2 - m), np.abs(X2 - (W - m))), np.minimum(np.abs(Y2 - m), np.abs(Y2 - (H - m)))))
+    trama = np.maximum(trama, np.clip(1 - arco / 1.4, 0, 1))
+    trama = np.asarray(Image.fromarray(trama.astype(np.float32), 'F').resize((W, H), Image.LANCZOS), np.float32)
+    trama = np.clip(trama, 0, 1) * (0.75 + 0.25 * ruido_rect(W, H, 1.0, 2014))
+    # Del otro lado y a través del papel: muy poca, y un poco borrosa hacia el gris de la tinta vista por detrás.
+    a = mezcla(a, col('#8E89A0'), trama * 0.16)
+    # Dos o tres salpicaduras de las otras tintas, chicas.
+    for x0, y0, c0 in ((W * 0.86, H * 0.2, '#A94870'), (W * 0.1, H * 0.83, '#3F4C9E'), (W * 0.9, H * 0.9, '#A94870')):
+        dd = np.sqrt((xx - x0) ** 2 + (yy - y0) ** 2)
+        a = mezcla(a, col(c0), np.clip(1 - dd / 2.2, 0, 1) * 0.5)
+    # El borde, apenas tostado.
+    borde = np.clip(np.maximum(np.abs(xx - W / 2) / (W / 2), np.abs(yy - H / 2) / (H / 2)) - 0.88, 0, 1) / 0.12
+    a = mezcla(a, col('#DCCBA8'), np.clip(borde ** 1.6 * (0.7 + 0.5 * ruido_rect(W, H, 30, 2015)), 0, 1) * 0.35)
+    a = a * (0.985 + 0.025 * ruido_rect(W, H, 0.6, 2016)[..., None])
+    a_img(a).save(os.path.join(OUT, 'papel_psicodelia_cartel.jpg'), quality=86)
 
 if __name__ == '__main__':
     OUT = sys.argv[1]
@@ -1017,4 +1051,5 @@ if __name__ == '__main__':
     papel_galia()
     papel_nouveau()
     papel_psicodelia()
+    papel_psicodelia_cartel()
     print('papeles listos')
