@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.Casa
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.Goleta
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.banderolas
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.casa
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.farolDeMuelle
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.goleta
@@ -77,6 +78,16 @@ internal object OrillaMuelle {
 
     private fun sitioDe(e: Edificio): Sitio = M.sitio(FACHADA - e.retiro, e.z, MEDIO_PI, SUELO)
 
+    /** Lo alto de la otra orilla: los tejados, la iglesia, las palmeras, los faroles y los topes de los palos (para la zona de los astros). */
+    internal fun altos(m: Momento): List<Offset> = buildList {
+        for (e in PUEBLO) { val alto = if (e.casa != null) 3.1f * e.casa.pisos + 0.4f + e.casa.fondo * 0.35f + 1f else 5.4f; val l = (e.casa?.largo ?: 16f) / 2f
+            for (dz in listOf(-l, 0f, l)) add(M.pm(FACHADA - e.retiro, SUELO + alto, e.z + dz)) }
+        add(M.pm(IGLESIA_X, SUELO + 0.6f + 17.5f, IGLESIA_Z - 4.4f)); add(M.pm(IGLESIA_X, SUELO + 0.6f + 13.5f, IGLESIA_Z + 5f))
+        for ((x, z, h) in PALMERAS) add(M.pm(x, SUELO + h * 1.15f, z))
+        for (z in FAROLES) add(M.pm(-M.RIO - 0.6f, SUELO + 3.6f, z))
+        for ((x, z, i) in M.barcos(m)) { val g = Goleta(Semilla.de("abismo", "goleta", i)); add(M.pm(x, M.AGUA + g.franco + g.palo1 + 0.3f, z + g.largo * 0.36f)); add(M.pm(x, M.AGUA + g.franco + g.palo2 + 0.3f, z + g.largo * 0.7f)) }
+    }
+
     // ---------------------------------------------------------------- La orilla
 
     fun DrawScope.orilla(v: MuelleAbismo.Vista) {
@@ -98,8 +109,8 @@ internal object OrillaMuelle {
         for (e in PUEBLO.sortedByDescending { it.z }) {
             val s = sitioDe(e); val lj = M.lejos(FACHADA, e.z)
             when (e.tipo) {
-                Tipo.LONJA -> lonja(p, s, v.sol, 16f, Semilla.de("abismo", "lonja"), v.luces.cafes * l.noche, if (EscenaAbismo.hoyEs(m, "lonja")) 1f else 0.35f, lj)
-                Tipo.CASA -> casa(p, s, v.sol, e.casa!!, ventanas * 0.7f, lj)
+                Tipo.LONJA -> lonja(p, s, v.sol, 16f, Semilla.de("abismo", "lonja"), v.luces.cafes * l.noche, if (EscenaAbismo.hoyEs(m, "lonja")) 1f else 0.35f, lj, cerrada = v.flota == EscenaAbismo.Flota.VACIO)
+                Tipo.CASA -> { casa(p, s, v.sol, e.casa!!, ventanas * 0.7f, lj); if (EscenaAbismo.hoyEs(m, "cuatro_julio") && e.casa.pisos > 1) banderolas(p, s, e.casa, lj) }
                 Tipo.CAFE -> {
                     casa(p, s, v.sol, e.casa!!, (v.luces.cafes * l.noche).coerceIn(0f, 1f), lj)
                     toldoDeCafe(p, s, e.casa.largo * 0.9f, 2.9f, 1.6f, if (e.z < 40f) C.AZUL else C.ROJO, lj)
@@ -180,23 +191,26 @@ internal object OrillaMuelle {
             reflejoRoto(a.x - ancho / 2f, a.x + ancho / 2f, a.y, b.y - a.y, l.tono(color, M.lejos(x, z)), alfa, az, 0.9f)
         }
         // La iglesia, con su cúpula azul y el campanario.
-        espejo(IGLESIA_X, IGLESIA_Z, 11f, 6.4f * M.k(IGLESIA_X, IGLESIA_Z), C.BLANCO, 0.35f)
-        espejo(IGLESIA_X, IGLESIA_Z + 4.9f, 13f, 4.4f * M.k(IGLESIA_X, IGLESIA_Z), C.AZUL, 0.3f)
+        espejo(IGLESIA_X, IGLESIA_Z, 11f, 6.4f * M.k(IGLESIA_X, IGLESIA_Z), C.BLANCO, 0.45f)
+        espejo(IGLESIA_X, IGLESIA_Z + 4.9f, 13f, 4.4f * M.k(IGLESIA_X, IGLESIA_Z), C.AZUL, 0.42f)
         // Las casas: cada una su color.
         for (e in PUEBLO) {
             val alto = if (e.casa != null) 3.1f * e.casa.pisos + 1.6f else 4.6f
             val largo = e.casa?.largo ?: 16f
             val a = M.pm(FACHADA, 0f, e.z - largo / 2f); val b = M.pm(FACHADA, 0f, e.z + largo / 2f)
             val c0 = M.pm(FACHADA, 2f * M.AGUA - SUELO, e.z); val c1 = M.pm(FACHADA, 2f * M.AGUA - alto, e.z)
-            reflejoRoto(minOf(a.x, b.x), maxOf(a.x, b.x), c0.y, c1.y - c0.y, l.tono(e.casa?.muro ?: lerp(C.MADERA_GRIS, C.BLANCO, 0.45f), M.lejos(FACHADA, e.z)), 0.42f, az, 0.9f)
-            if (e.casa != null) reflejoRoto(minOf(a.x, b.x), maxOf(a.x, b.x), c1.y - 2f, 4f, l.tono(e.casa.tejado, M.lejos(FACHADA, e.z)), 0.3f, az, 0.9f)
+            reflejoRoto(minOf(a.x, b.x), maxOf(a.x, b.x), c0.y, c1.y - c0.y, p.medio(e.casa?.muro ?: lerp(C.MADERA_GRIS, C.BLANCO, 0.45f), M.lejos(FACHADA, e.z)), 0.55f, az, 0.8f)
+            if (e.casa != null) reflejoRoto(minOf(a.x, b.x), maxOf(a.x, b.x), c1.y - 3f, 5f, p.medio(e.casa.tejado, M.lejos(FACHADA, e.z)), 0.45f, az, 0.8f)
         }
         // Las palmeras del muelle: el tronco y la copa, temblando.
         for ((x, z, h) in PALMERAS.filter { it.first >= FACHADA - 1f }) { espejo(x, z, h * 0.7f, 0.5f * M.k(x, z), C.PLOMO, 0.35f); espejo(x, z + 0.1f, h, 2.6f * M.k(x, z), C.PALMA, 0.3f) }
         // La fila: cada casco con sus palos.
         for ((x, z, i) in M.barcos(v.m)) reflejoDeGoleta(p, M.sitio(x, z, 0f, M.AGUA), Goleta(Semilla.de("abismo", "goleta", i)), M.lejos(x, z), az)
         // De noche, las luces de la otra orilla, quietas en el agua (lo que tiembla va en la parte viva).
-        if (l.noche > 0.3f) for ((x, y, alto) in lucesEnElAgua(v)) reflejoRoto(x - 1.4f, x + 1.4f, y, alto, C.LUMBRE, 0.45f * l.noche, az, 0.8f)
+        if (l.noche > 0.3f) for ((x, y, alto) in lucesEnElAgua(v)) reflejoRoto(x - 1.6f, x + 1.6f, y, alto, C.LUMBRE, 0.7f * l.noche, az, 0.8f)
+        // El tablestacado de enfrente, oscuro, devuelto al pie de la otra orilla.
+        val qa = M.pm(-M.RIO, M.AGUA, 6f); val qb = M.pm(-M.RIO, M.AGUA, 260f)
+        drawPath(poligono(listOf(qa, qb, qb + Offset(0f, 1.5f), M.pm(-M.RIO, 2f * M.AGUA - SUELO - 0.2f, 6f))), p.sombra(lerp(C.MADERA_OSC, C.MAR_HONDO, 0.4f), 0.2f).copy(alpha = 0.55f))
         // La bruma que se posa sobre el agua al pie de la otra orilla.
         mancha(M.pm(-M.RIO + 1f, M.AGUA, 40f), 200f, 5f, l.bruma, 0.25f)
     }

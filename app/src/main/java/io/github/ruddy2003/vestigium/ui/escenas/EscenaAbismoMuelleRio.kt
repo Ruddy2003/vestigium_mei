@@ -56,6 +56,9 @@ internal object RioMuelle {
     /** Los pilotes del río, con sus aves: (x, z). */
     internal val PILOTES = listOf(Offset(-7.2f, 13.5f), Offset(-6.6f, 14.1f), Offset(-9.5f, 31f), Offset(-4.5f, 47f))
 
+    /** Lo alto de la lejanía: los tinglados de la calle de este muelle (los árboles de lejos no pasan de la línea del horizonte). */
+    internal fun altos(): List<Offset> = listOf(70f to 14f, 92f to 18f, 128f to 22f).flatMap { (z, w) -> listOf(M.pm(9f, 3.2f, z), M.pm(9f, 3.2f, z + w)) }
+
     // ---------------------------------------------------------------- Lejos
 
     fun DrawScope.lejos(v: MuelleAbismo.Vista) {
@@ -117,9 +120,9 @@ internal object RioMuelle {
         val m = v.m; val l = v.l
         val forma = agua()
         clipPath(forma) {
-            // El espejo: arriba, el cielo del horizonte devuelto; abajo, el verde del río y el cielo alto.
-            val cerca = lerp(l.tono(RIO), l.alto, 0.3f); val hondo = lerp(l.tono(RIO_HONDO), l.alto, 0.15f)
-            drawRect(Brush.verticalGradient(0f to lerp(l.bajo, l.tono(RIO), 0.18f), 0.08f to lerp(l.bajo, l.tono(RIO), 0.42f), 0.3f to lerp(l.medio, cerca, 0.6f), 0.7f to cerca, 1f to hondo, startY = M.H, endY = ALTO),
+            // El espejo: arriba, el cielo del horizonte devuelto; en medio, el cielo alto; abajo, el verde oscuro del río.
+            val rio = l.tono(RIO); val hondo = l.tono(RIO_HONDO)
+            drawRect(Brush.verticalGradient(0f to lerp(l.bajo, rio, 0.22f), 0.07f to lerp(l.medio, rio, 0.3f), 0.32f to lerp(l.alto, rio, 0.42f), 0.62f to lerp(l.alto, rio, 0.62f), 1f to lerp(l.alto, hondo, 0.78f), startY = M.H, endY = ALTO),
                 Offset(-20f, M.H), Size(ANCHO + 40f, ALTO - M.H))
             // El cielo devuelto: las nubes del día, rotas y bajas (el mismo azar que las del cielo, puestas al revés).
             val nz = Azar(m.semilla("nubesEnElRio"))
@@ -138,12 +141,13 @@ internal object RioMuelle {
             val rz = Azar(m.semilla("rizos"))
             val viento = m.viento
             val claro = lerp(l.bajo, Color.White, 0.35f); val oscuro = lerp(l.tono(RIO_HONDO), Color(0xFF0A1A2C), 0.3f)
-            repeat((70 + 160 * viento).toInt()) {
+            repeat((44 + 160 * viento).toInt()) {
                 val k = rz.real(); val prof = k * k
                 val y = M.H + 1.5f + (ALTO - M.H) * prof * 0.75f
-                val largo = (3f + 26f * prof) * rz.entre(0.5f, 1.4f) * (1f + viento); val x = rz.entre(-20f, ANCHO)
-                val c = (if (rz.real() > 0.45f) claro else oscuro).copy(alpha = ((0.08f + 0.16f * rz.real()) * (1f + 0.6f * viento)).coerceAtMost(0.5f))
-                drawLine(c, Offset(x, y), Offset(x + largo, y), 0.4f + 0.9f * prof, StrokeCap.Round)
+                val largo = (6f + 40f * prof) * rz.entre(0.5f, 1.4f) * (1f + viento); val x = rz.entre(-20f, ANCHO)
+                // Cada rizo: su lomo claro, que devuelve el cielo, y su seno oscuro debajo.
+                drawLine(claro.copy(alpha = ((0.1f + 0.14f * rz.real()) * (1f + 0.6f * viento)).coerceAtMost(0.5f)), Offset(x, y), Offset(x + largo, y), 0.4f + 0.8f * prof, StrokeCap.Round)
+                drawLine(oscuro.copy(alpha = ((0.08f + 0.1f * rz.real()) * (1f + 0.6f * viento)).coerceAtMost(0.5f)), Offset(x + largo * 0.15f, y + 0.6f + prof), Offset(x + largo * 0.9f, y + 0.6f + prof), 0.4f + 0.7f * prof, StrokeCap.Round)
             }
             for (i in 0 until 2) {
                 val c = M.pm(rz.entre(-14f, -4f), M.AGUA, rz.entre(14f, 40f)); val r = rz.entre(14f, 30f)
@@ -151,9 +155,13 @@ internal object RioMuelle {
             }
             // Con lluvia, el agua picada de gotas; de noche, el río más oscuro y la luna que platea lo que se riza.
             if (M.mojado(m)) repeat(140) { val p = Offset(rz.entre(-10f, ANCHO), M.H + 2f + rz.real() * rz.real() * (ALTO - M.H)); drawCircle(claro.copy(alpha = 0.25f), 0.4f + 0.8f * (p.y - M.H) / 150f, p, style = Stroke(0.35f)) }
-            if (v.luna > 0.05f) {
-                val x0 = l.lunaX * ANCHO
-                mancha(Offset(x0 - 30f, M.H + 30f), 80f, 30f, C.LUNA, 0.18f * v.luna)
+            if (v.luna > 0.05f && l.noche > 0.5f) {
+                // La calle de la luna: trazos claros que bajan desde el horizonte y se abren hacia quien mira; el muelle corta su
+                // lado derecho **[Aproximación]**: se corre un poco hacia el agua para que se vea.
+                val x0 = l.lunaX * ANCHO - 22f; val h = Azar(m.semilla("luna"))
+                mancha(Offset(x0, M.H + 30f), 18f, 30f, Color(0xFFDDE6FF), 0.16f * v.luna)
+                repeat(90) { val d = h.real(); val y = M.H + 1f + d * d * 110f; val w = 3f + 34f * d; val x = x0 + (h.real() + h.real() - 1f) * w; val largo = (2f + 10f * d) * h.entre(0.5f, 1.2f)
+                    drawLine(Color(0xFFEEF3FF).copy(alpha = (v.luna * h.entre(0.3f, 0.85f) * (1f - 0.5f * d)).coerceIn(0f, 1f)), Offset(x - largo / 2f, y), Offset(x + largo / 2f, y), 0.5f + 0.9f * d, StrokeCap.Round, blendMode = BlendMode.Screen) }
             }
         }
         // La sombra que hace este muelle en el agua, al pie del canto, y el reflejo de sus pilotes.
@@ -213,8 +221,9 @@ internal object RioMuelle {
         val fuerza = when (c) { Clima.NIEBLA -> 1f; Clima.LLUVIA -> 0.45f; Clima.TORMENTA -> 0.55f; else -> 0f }
         if (fuerza <= 0f) return
         val az = Azar(Semilla.de(v.m.semilla("niebla"), plano))
-        val y = M.H + listOf(-2f, 6f, 16f)[plano]; val alfa = listOf(0.62f, 0.42f, 0.24f)[plano] * fuerza
-        drawRect(Brush.verticalGradient(0f to l.bruma.copy(alpha = 0f), 0.5f to l.bruma.copy(alpha = alfa), 1f to l.bruma.copy(alpha = alfa * 0.5f), startY = y - 60f + plano * 14f, endY = y + 16f), Offset(-10f, y - 60f + plano * 14f), Size(ANCHO + 20f, 76f - plano * 14f))
+        val y = M.H + listOf(-4f, 6f, 16f)[plano]; val alfa = (if (c == Clima.NIEBLA) listOf(0.86f, 0.62f, 0.4f) else listOf(0.62f, 0.42f, 0.24f))[plano] * fuerza
+        val arriba = y - (if (c == Clima.NIEBLA) 110f else 60f) + plano * 14f
+        drawRect(Brush.verticalGradient(0f to l.bruma.copy(alpha = 0f), 0.45f to l.bruma.copy(alpha = alfa), 0.8f to l.bruma.copy(alpha = alfa * 0.85f), 1f to l.bruma.copy(alpha = alfa * 0.4f), startY = arriba, endY = y + 18f), Offset(-10f, arriba), Size(ANCHO + 20f, y + 18f - arriba))
         repeat(5) { mancha(Offset(az.entre(-20f, ANCHO + 20f), y + az.entre(-8f, 6f)), az.entre(80f, 160f), az.entre(5f, 11f), lerp(l.bruma, Color.White, 0.25f), 0.5f * alfa) }
     }
 

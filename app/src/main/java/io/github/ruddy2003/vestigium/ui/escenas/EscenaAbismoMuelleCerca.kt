@@ -82,16 +82,16 @@ internal object CercaMuelle {
     private fun pv(a: V3): Offset = M.pm(a.x, a.y, a.z)
 
     /** Dónde cuelga la ristra [i] de [n] a lo largo de la botavara: lejos de quien mira, hacia su extremo. */
-    private fun tRistra(i: Int, n: Int): Float = 0.98f - 0.2f * i / maxOf(n - 1, 1).toFloat() - (if (n > 5) 0.12f * i / n else 0f)
-    private fun largoRistra(i: Int): Float = 0.7f + 0.12f * (i % 3)
+    private fun tRistra(i: Int, n: Int): Float = 0.98f - (if (n > 3) 0.34f else 0.2f) * i / maxOf(n - 1, 1).toFloat() + listOf(0f, 0.012f, -0.01f, 0.006f)[i % 4]
+    private fun largoRistra(i: Int): Float = listOf(0.78f, 0.62f, 0.92f, 0.7f, 0.55f, 0.85f, 0.66f)[i % 7]
 
     // ---------------------------------------------------------------- Las cosas del muelle (en los ejes del río)
 
     /** La bita donde va la amarra de popa de Nikos: en el paso del gato. */
-    val BITA: Sitio get() = M.sitio(0.3f, 4.25f, 0.2f)
+    val BITA: Sitio get() = M.sitio(0.3f, 3.45f, 0.2f)
     /** El farol del muelle, junto al canto. */
-    private const val FAROL_X = 2.75f
-    private const val FAROL_Z = 6.7f
+    private const val FAROL_X = 2.2f
+    private const val FAROL_Z = 7.7f
     private const val FAROL_ALTO = 3.0f
     val FAROL: Offset get() = M.pm(FAROL_X, FAROL_ALTO + 0.2f, FAROL_Z)
     /** La luz del café de este lado (su puerta, fuera del cuadro a la derecha): se derrama en las tablas desde el borde. */
@@ -102,12 +102,19 @@ internal object CercaMuelle {
     private val TENDEDERO_0 = V3(0.6f, 2.0f, 11.5f)
     private val TENDEDERO_1 = V3(4.4f, 2.1f, 12f)
     /** La casa del café y la de al lado, fuera del cuadro a la derecha (solo dan su sombra), y el callejón entre las dos. */
-    private val CASAS = listOf(floatArrayOf(6.2f, -8f, 9.5f, 6.8f), floatArrayOf(6.6f, 12.5f, 34f, 5.6f))
+    private val CASAS = listOf(floatArrayOf(6.2f, -8f, 2.6f, 6.8f), floatArrayOf(6.6f, 6.4f, 34f, 5.6f))
     /** El toldo del café: de la fachada a su volante, sobre la terraza. */
     private const val TOLDO_X = 4.2f
     private const val TOLDO_Z0 = -3f
     private const val TOLDO_Z1 = 8.6f
     private const val TOLDO_H = 2.7f
+
+    /** Lo alto de cerca: el farol, los postes del tendedero y la botavara (para la zona de los astros). */
+    internal fun altos(m: Momento): List<Offset> = buildList {
+        add(M.pm(FAROL_X, FAROL_ALTO + 0.55f, FAROL_Z))
+        for (q in listOf(TENDEDERO_0, TENDEDERO_1)) add(pv(q))
+        if (M.nikosAmarrado(m)) { for (i in 0..10) add(pv(enBotavara(i / 10f))); add(pv(BOTAVARA_1 + V3(-0.8f, 6f, -2f))) }
+    }
 
     // ---------------------------------------------------------------- Lo de cerca
 
@@ -116,7 +123,7 @@ internal object CercaMuelle {
         tablas(v)
         sombras(v)
         cosasDelMuelle(v)
-        if (M.nikosAmarrado(m)) nikos(v)
+        if (M.nikosAmarrado(m)) nikos(v) else amarradero(v)
         if (M.nikosAmarrado(m)) botavara(v)
         nocheEnElMuelle(v)
     }
@@ -128,7 +135,7 @@ internal object CercaMuelle {
         val forma = poligono(listOf(M.pm(0f, 0f, 0.6f), M.pm(0f, 0f, 400f), M.pm(40f, 0f, 400f), M.pm(40f, 0f, 0.6f), Offset(ANCHO + 20f, ALTO + 20f), Offset(M.pm(0f, 0f, 0.6f).x, ALTO + 20f)))
         val madera = lerp(C.MADERA_GRIS, C.MADERA, 0.42f)
         val mojado = M.mojado(v.m)
-        val base = if (mojado) lerp(madera, C.MADERA_OSC, 0.4f) else madera
+        val base = if (mojado) lerp(madera, lerp(C.MADERA_OSC, C.MAR_HONDO, 0.25f), 0.6f) else madera
         drawPath(forma, Brush.verticalGradient(listOf(p.arriba(base, 0.25f), p.arriba(base, 0.05f), p.arriba(lerp(base, C.MADERA_OSC, 0.12f))), M.H, ALTO))
         val az = Azar(Semilla.de("abismo", "tablasMuelle"))
         clipPath(forma) {
@@ -145,8 +152,16 @@ internal object CercaMuelle {
             // El desgaste: el paso gastado, las manchas de brea y de agua, la sal; de noche, la plata de la luna en lo gastado.
             repeat(16) { val q = M.pm(az.entre(0.2f, 3.5f), 0f, az.entre(1.5f, 16f)); val kk = M.k(1f, 5f); mancha(q, az.entre(0.3f, 0.9f) * kk, az.entre(0.06f, 0.15f) * kk, p.sombra(lerp(base, C.BREA, 0.45f)), 0.3f) }
             repeat(10) { val q = M.pm(az.entre(0.2f, 3.5f), 0f, az.entre(1.5f, 14f)); val kk = M.k(1f, 5f); mancha(q, az.entre(0.3f, 0.8f) * kk, az.entre(0.05f, 0.12f) * kk, p.luz(lerp(base, C.BLANCO, 0.55f)), 0.22f) }
-            if (mojado) for (q in listOf(M.pm(1.6f, 0f, 5.5f), M.pm(0.8f, 0f, 9f), M.pm(2.4f, 0f, 13f))) mancha(q, 34f, 4f, lerp(l.bajo, Color.White, 0.2f), 0.35f)
-            if (v.luna > 0.05f) drawRect(Brush.verticalGradient(listOf(Color.Transparent, C.LUNA.copy(alpha = 0.16f * v.luna)), M.H, ALTO), Offset(0f, M.H), Size(ANCHO, ALTO - M.H), blendMode = BlendMode.Screen)
+            if (mojado) {
+                // Los charcos en lo gastado devuelven el cielo; las tablas mojadas, en largo, el farol y el agua.
+                for ((x, z, w) in listOf(Triple(1.5f, 5.2f, 1.2f), Triple(0.7f, 9.5f, 1.6f), Triple(2.2f, 13f, 2f), Triple(1.1f, 3.6f, 0.8f))) { val q = M.pm(x, 0f, z); val kk = M.k(x, z); mancha(q, w * kk, 0.12f * kk, lerp(l.bajo, Color.White, 0.25f), 0.5f) }
+                var x = 0.1f; while (x < 4f) { drawLine(lerp(l.medio, Color.White, 0.2f).copy(alpha = 0.16f), M.pm(x, 0f, 2.5f), M.pm(x, 0f, 60f), 0.5f); x += 0.48f }
+            }
+            if (v.luna > 0.05f) {
+                // La plata de la luna en las tablas, entre los charcos cálidos: un lavado frío que se abre hacia el canto.
+                drawRect(Brush.verticalGradient(listOf(Color.Transparent, C.LUNA.copy(alpha = 0.2f * v.luna)), M.H, ALTO), Offset(0f, M.H), Size(ANCHO, ALTO - M.H), blendMode = BlendMode.Screen)
+                mancha(M.pm(1.2f, 0f, 6f), 90f, 18f, C.LUNA, 0.14f * v.luna)
+            }
         }
         // El canto: la tabla de borde, gastada, con su filo de luz y la sombra que deja hacia el agua.
         val c0 = M.pm(0f, 0.11f, 0.6f); val c1 = M.pm(0f, 0.11f, 260f); val c2 = M.pm(0.22f, 0.11f, 260f); val c3 = M.pm(0.22f, 0.11f, 0.6f)
@@ -237,6 +252,9 @@ internal object CercaMuelle {
         // Los sacos de esponjas apretadas, unos de pie y otros echados, y un montón suelto: el día de la lonja, más.
         val ss = sacos()
         for ((i, s) in ss.withIndex().sortedByDescending { it.value.z0 }) saco(v.pincel(s.pie), s, v.sol, 0.62f, Semilla.de("abismo", "saco", i), i % 2 == 1)
+        if (EscenaAbismo.hoyEs(m, "zarpa")) for (i in 0 until 3) { val bs = M.sitio(1.0f + 0.55f * i, 6.2f + 0.3f * i, 0f); val kb = bs.escala(0f, 0f); val bx0 = bs.pie.x - 0.26f * kb; val bx1 = bs.pie.x + 0.26f * kb
+            drawRect(Brush.horizontalGradient(listOf(p.sombra(C.MADERA_OSC), p.medio(C.MADERA), p.luz(C.MADERA)), bx0, bx1), Offset(bx0, bs.pie.y - 0.66f * kb), Size(bx1 - bx0, 0.66f * kb))
+            for (h in listOf(0.1f, 0.56f)) drawLine(p.sombra(C.PLOMO), Offset(bx0, bs.pie.y - h * kb), Offset(bx1, bs.pie.y - h * kb), 0.03f * kb) }
         if (EscenaAbismo.cargadoEnElMuelle(m) || EscenaAbismo.hoyEs(m, "zarpa")) monton(v.pincel(M.pm(3.1f, 0f, 6.4f)), M.pm(3.1f, 0f, 6.4f), 0.9f * M.k(3.1f, 6.4f), 8, Semilla.de("abismo", "montonMuelle"), true)
         // La amarra de popa de Nikos: de su cornamusa a la bita, tensa; y la aduja del resto, en las tablas.
         val bita = BITA
@@ -260,7 +278,7 @@ internal object CercaMuelle {
         sobreElSoporte(m, v.pincel(M.soporte()), M.soporte(), M.escalaEn(3.7f))
         grande(m, v.pincel(M.PIE_GRANDE), M.PIE_GRANDE, M.APOYO_GRANDE, M.escalaEn(3.35f))?.pintar?.invoke(this)
         // La mesa del café, cerca y cortada por el borde de la derecha, con sus dos sillas, las tazas, el tavli y el comboloi.
-        mesaDeCafe(v.pincel(MESA.pie), MESA, v.sol, Semilla.de("abismo", "mesa", m.semilla("mesa") % 3))
+        mesaDeCafe(v.pincel(MESA.pie), MESA, v.sol, Semilla.de("abismo", "mesa", m.semilla("mesa") % 3), sillas = 1)
     }
 
     /** La báscula de la lonja: una plataforma de tablas con su columna de hierro y el brazo con la pesa. */
@@ -296,7 +314,7 @@ internal object CercaMuelle {
         clipPath(cub) {
             for (i in -8..8) drawLine(p.sombra(C.BREA).copy(alpha = 0.45f), M.pm(EJE + i * 0.25f, CUBIERTA, POPA + 0.2f), M.pm(EJE + i * 0.25f, CUBIERTA, M.zCerca(EJE + i * 0.25f)), 0.6f)
             // La luz de la lamparilla en las tablas de la popa, de noche: su charco.
-            if (l.noche > 0.2f) mancha(M.pm(EJE + 0.6f, CUBIERTA, POPA - 0.9f), 0.9f * K_ICONO, 0.32f * K_ICONO, C.LUMBRE, 0.45f * v.lamparilla * l.noche)
+            if (l.noche > 0.2f) mancha(M.pm(EJE + 0.75f, CUBIERTA, POPA - 0.6f), 0.55f * K_ICONO, 0.2f * K_ICONO, C.LUMBRE, 0.4f * v.lamparilla * l.noche)
             // La sombra de la regala de estribor en la cubierta, del lado contrario al sol.
             if (v.r.fuerza > 0.05f && p.solALaDerecha) drawPath(poligono(listOf(borde(0f, CUBIERTA), M.pm(EJE + B, CUBIERTA, ze), M.pm(EJE + B - 0.6f, CUBIERTA, ze), M.pm(EJE + B - 0.6f, CUBIERTA, ZC))), C.SOMBRA.copy(alpha = 0.3f * v.r.fuerza), blendMode = BlendMode.Multiply)
         }
@@ -311,7 +329,7 @@ internal object CercaMuelle {
             for (h in listOf(0.24f, 0.4f)) drawPath(curva(giro.map { borde(it, h) }), p.sombra(blancoDentro).copy(alpha = 0.5f), style = Stroke(0.6f))
             for (i in 2 until n step 2) { val a = giro[i]; drawLine(p.sombra(C.MADERA_OSC).copy(alpha = 0.45f), borde(a, REGALA - 0.04f), borde(a, CUBIERTA + 0.02f), 0.06f * M.k(EJE, ZC)) }
             // La luz de la lamparilla en la borda: su halo naranja alrededor de la hornacina.
-            if (l.noche > 0.2f) mancha(ICONO, 1.1f * K_ICONO, 0.5f * K_ICONO, C.LUMBRE, 0.55f * v.lamparilla * l.noche)
+            if (l.noche > 0.2f) mancha(ICONO, 0.75f * K_ICONO, 0.36f * K_ICONO, C.LUMBRE, 0.5f * v.lamparilla * l.noche)
         }
         // Lo que hay en cubierta, en la popa: la caña del timón, la aduja, el cesto de esponjas, la manta, el cubo, el farol.
         val cana0 = M.pm(EJE + 0.05f, CUBIERTA + 0.5f, POPA - 0.3f); val cana1 = M.pm(EJE + 0.85f, CUBIERTA + 0.78f, ZC - 1.3f)
@@ -322,26 +340,77 @@ internal object CercaMuelle {
         val cesto = M.pm(EJE + 1.25f, CUBIERTA, ZC - 0.2f); val kc = M.k(EJE + 1.2f, ZC)
         monton(pc, cesto, 0.55f * kc, if (EscenaAbismo.cargadoEnElMuelle(m)) 7 else 4, Semilla.de("abismo", "cestoNikos"), true)
         if (EscenaAbismo.mantas(m)) { val q = M.pm(EJE - 0.2f, CUBIERTA, ZC - 0.8f); drawOval(pc.por(lerp(C.ROJO, C.MADERA_OSC, 0.45f), 0.2f), Offset(q.x - 0.5f * kc, q.y - 0.18f * kc), Size(1f * kc, 0.3f * kc)) }
+        // El barril del agua dulce, atado a la borda de babor, y el cubo de lavar las esponjas.
+        val barril = M.sitio(EJE - 1.45f, ZC - 0.1f, 0f, CUBIERTA); val kb = barril.escala(0f, 0f)
+        val bx0 = barril.pie.x - 0.28f * kb; val bx1 = barril.pie.x + 0.28f * kb
+        drawRect(Brush.horizontalGradient(listOf(pc.sombra(C.MADERA_OSC), pc.medio(C.MADERA), pc.luz(C.MADERA)), bx0, bx1), Offset(bx0, barril.pie.y - 0.7f * kb), Size(bx1 - bx0, 0.7f * kb))
+        for (h in listOf(0.1f, 0.6f)) drawLine(pc.sombra(C.PLOMO), Offset(bx0, barril.pie.y - h * kb), Offset(bx1, barril.pie.y - h * kb), 0.035f * kb)
+        drawOval(pc.arriba(C.MADERA_OSC), Offset(bx0, barril.pie.y - 0.75f * kb), Size(bx1 - bx0, 0.1f * kb))
+        val cubo = M.sitio(EJE + 0.55f, ZC - 0.55f, 0f, CUBIERTA); val kq = cubo.escala(0f, 0f)
+        drawPath(poligono(cubo.pie + Offset(-0.15f * kq, -0.3f * kq), cubo.pie + Offset(0.15f * kq, -0.3f * kq), cubo.pie + Offset(0.12f * kq, 0f), cubo.pie + Offset(-0.12f * kq, 0f)), Brush.horizontalGradient(listOf(pc.sombra(C.MADERA_GRIS), pc.luz(C.MADERA_GRIS)), cubo.pie.x - 0.15f * kq, cubo.pie.x + 0.15f * kq))
+        drawOval(pc.medio(lerp(C.MAR, l.alto, 0.4f)), Offset(cubo.pie.x - 0.14f * kq, cubo.pie.y - 0.33f * kq), Size(0.28f * kq, 0.06f * kq))
         // La hornacina del icono, clavada en la popa por dentro, con su lamparilla.
         hornacina(pc, ICONO, K_ICONO * 1.05f, v.lamparilla, mira = 0.4f, luto = EscenaAbismo.luto(m), velas = EscenaAbismo.hoyEs(m, "san_nicolas") || EscenaAbismo.cruz(m))
-        if (l.noche > 0.2f) resplandor(ICONO, 1.6f * K_ICONO, 0.4f * l.noche, C.LUMBRE)
+        if (l.noche > 0.2f) resplandor(ICONO, 1.0f * K_ICONO, 0.32f * l.noche, C.LUMBRE)
         // La regala azul, que da la vuelta a la popa, con su filo de luz y, de noche, la plata de la luna.
         val regala = curva(giro.map { borde(it, REGALA) })
         drawPath(regala, pc.por(C.AZUL, 0.25f), style = Stroke(0.075f * M.k(EJE, ZC), cap = StrokeCap.Round))
         drawPath(Path().apply { addPath(regala, Offset(0f, -0.025f * M.k(EJE, ZC))) }, pc.luz(lerp(C.AZUL, C.BLANCO, 0.4f)).copy(alpha = 0.6f), style = Stroke(0.02f * M.k(EJE, ZC), cap = StrokeCap.Round))
         if (v.luna > 0.05f) drawPath(Path().apply { addPath(regala, Offset(0f, -0.03f * M.k(EJE, ZC))) }, C.LUNA.copy(alpha = 0.5f * v.luna), style = Stroke(0.015f * M.k(EJE, ZC)))
+        // La boda: guirnaldas de flores blancas y cintas en la regala de la popa **[Diseño propio]**.
+        if (EscenaAbismo.hoyEs(m, "boda")) {
+            val pts = (0..10).map { borde(PI.toFloat() * (0.05f + 0.9f * it / 10f), REGALA) }
+            for (i in 0 until pts.size - 1) { val a = pts[i]; val b = pts[i + 1]; val kk = M.k(EJE, ZC)
+                val c = combada(a, b, 0.12f * kk, 6)
+                drawPath(curva(c), pc.medio(C.HIERBA), style = Stroke(0.04f * kk, cap = StrokeCap.Round))
+                for ((j, q) in c.withIndex()) if (j % 2 == 1) drawCircle(pc.luz(C.BLANCO), 0.035f * kk, q) }
+            val q = borde(0.9f, REGALA); val kk = M.k(EJE, ZC)
+            for (sl in listOf(-1f, 1f)) drawLine(pc.luz(lerp(C.BLANCO, C.AZUL, 0.15f)), q, q + Offset(sl * 0.06f * kk, 0.45f * kk), 0.03f * kk, StrokeCap.Round)
+        }
         // El costado de estribor, por fuera, junto al muelle: blanco con la franja azul, la tablazón, las defensas.
         val fuera = poligono(listOf(borde(0f, REGALA), M.pm(EJE + B, REGALA, ze), M.pm(EJE + B, 0f, ze), M.pm(EJE + B, 0f, ZC)))
         val tFuera = v.sol.t(V3(CGs(), 0f, -SGs()))
-        drawPath(fuera, Brush.horizontalGradient(listOf(pc.por(C.BLANCO, tFuera - 0.3f), pc.por(C.BLANCO, tFuera)), 0f, borde(0f, 0f).x))
+        drawPath(fuera, pc.por(C.BLANCO, tFuera))
         clipPath(fuera) {
-            drawPath(poligono(listOf(borde(0f, REGALA), M.pm(EJE + B, REGALA, ze), M.pm(EJE + B, REGALA - 0.2f, ze), borde(0f, REGALA - 0.2f))), pc.por(C.AZUL, tFuera))
-            for (h in listOf(0.3f, 0.15f)) drawLine(p.sombra(C.BLANCO).copy(alpha = 0.5f), M.pm(EJE + B, h, ZC), M.pm(EJE + B, h, ze), 0.7f)
+            // La franja azul bajo la regala, las juntas de la tablazón, la sombra que sube del hueco entre el casco y el canto.
+            drawPath(poligono(listOf(borde(0f, REGALA), M.pm(EJE + B, REGALA, ze), M.pm(EJE + B, REGALA - 0.17f, ze), borde(0f, REGALA - 0.17f))), pc.por(C.AZUL, tFuera))
+            for (h in listOf(0.36f, 0.22f, 0.09f)) drawLine(pc.sombra(C.BLANCO).copy(alpha = 0.55f), M.pm(EJE + B, h, ZC), M.pm(EJE + B, h, ze), 0.7f)
+            drawPath(poligono(listOf(M.pm(EJE + B, 0.16f, ZC), M.pm(EJE + B, 0.16f, ze), M.pm(EJE + B, 0f, ze), M.pm(EJE + B, 0f, ZC))), Brush.verticalGradient(listOf(Color.Transparent, pc.sombra(lerp(C.BLANCO, C.MAR_HONDO, 0.4f)).copy(alpha = 0.7f)), borde(0f, 0.16f).y, borde(0f, 0f).y))
             val az = Azar(Semilla.de("abismo", "costadoNikos"))
-            repeat(6) { val z = az.entre(ze, ZC); drawLine(p.sombra(lerp(C.BLANCO, C.COBRE_OSC, 0.3f)).copy(alpha = 0.4f), M.pm(EJE + B, REGALA - 0.22f, z), M.pm(EJE + B, REGALA - az.entre(0.4f, 0.6f), z), 0.06f * M.k(EJE + B, z)) }
+            repeat(7) { val z = az.entre(ze, ZC); drawLine(pc.sombra(lerp(C.BLANCO, C.COBRE_OSC, 0.35f)).copy(alpha = 0.45f), M.pm(EJE + B, REGALA - 0.18f, z), M.pm(EJE + B, REGALA - az.entre(0.35f, 0.55f), z), 0.05f * M.k(EJE + B, z)) }
+            repeat(4) { val z = az.entre(ze, ZC); mancha(M.pm(EJE + B, az.entre(0.1f, 0.4f), z), 0.25f * M.k(EJE + B, z), 0.05f * M.k(EJE + B, z), pc.sombra(C.BLANCO), 0.35f) }
         }
+        drawLine(pc.luz(C.BLANCO).copy(alpha = 0.7f), borde(0f, REGALA - 0.18f), M.pm(EJE + B, REGALA - 0.18f, ze), 0.6f)
         // Las defensas de cuerda, colgadas entre el casco y el canto.
         for (z in listOf(0.9f, 1.9f)) { val q = M.pm(EJE + B + 0.06f, REGALA - 0.35f, z); val kk = M.k(EJE + B, z); drawLine(p.sombra(C.CANAMO), M.pm(EJE + B, REGALA, z), q, 0.02f * kk); drawOval(pc.por(C.CANAMO, 0.2f), Offset(q.x - 0.09f * kk, q.y - 0.05f * kk), Size(0.18f * kk, 0.34f * kk)) }
+    }
+
+    /**
+     * El amarradero vacío de Nikos, el verano del cuarto («ningún barco: están todos en el mar»): los dos pilotes donde
+     * amarraba, con las amarras sueltas que cuelgan al agua, las defensas colgadas del canto y una red echada sobre él a
+     * secar. Que se note la ausencia **[Diseño propio]**.
+     */
+    private fun DrawScope.amarradero(v: MuelleAbismo.Vista) {
+        val p = v.p; val l = v.l
+        for ((x, z) in listOf(-3.9f to 6.8f, -2.0f to 2.6f)) {
+            val a = M.pm(x, 1.5f, z); val b = M.pm(x, M.AGUA, z); val kk = M.k(x, z)
+            reflejoRotoCerca(b, (b.y - a.y) * 0.8f, 0.36f * kk, p.medio(C.MADERA_GRIS))
+            PiezasAbismoTierra.run { pilote(p, a, b, 0.36f * kk) }
+            // La amarra suelta: del pilote cae al agua y se pierde.
+            cabo(p, listOf(a + Offset(0f, 0.15f * kk), a + Offset(0.3f * kk, 0.5f * kk), a + Offset(0.5f * kk, 1.1f * kk), b + Offset(0.6f * kk, 0f)), 0.045f * kk)
+        }
+        // Las defensas de cuerda colgadas del canto, sin barco que proteger, y la red echada sobre el canto.
+        for (z in listOf(2.2f, 4.6f)) { val q = M.pm(-0.05f, -0.45f, z); val kk = M.k(0f, z); drawLine(p.sombra(C.CANAMO), M.pm(0.1f, 0.05f, z), q, 0.025f * kk); drawOval(p.por(C.CANAMO, 0.2f), Offset(q.x - 0.1f * kk, q.y - 0.06f * kk), Size(0.2f * kk, 0.36f * kk)) }
+        redTendida(p, M.pm(0.25f, 0.08f, 3.0f), M.pm(0.25f, 0.08f, 5.6f), 0.5f * M.k(0.25f, 4f))
+        if (l.noche < 0.75f) PiezasAbismoTierra.run { pelicano(p, M.pm(-2.0f, 1.5f, 2.6f), M.k(-2.0f, 2.6f), 1f, PiezasAbismoTierra.Postura.POSADO, Semilla.de("abismo", "pelicanoVacio")) }
+        // La amarra de Nikos, suelta en la bita, que cae al agua: el barco no está.
+        cabo(p, listOf(BITA.p(0f, 0.3f, 0f), BITA.p(-0.4f, 0.05f, -0.2f), M.pm(-0.1f, 0.0f, 3.6f), M.pm(-0.6f, M.AGUA, 3.4f)), 0.05f * BITA.k)
+    }
+
+    /** El reflejo de un pilote cercano: trazos que se corren hacia abajo. */
+    private fun DrawScope.reflejoRotoCerca(pie: Offset, alto: Float, ancho: Float, color: Color) {
+        val az = Azar(Semilla.de("abismo", "pilote", pie.x.toInt()))
+        var y = pie.y; while (y < pie.y + alto) { val k = (y - pie.y) / alto; val c = az.entre(-1f, 1f) * (1f + 4f * k); drawLine(color.copy(alpha = 0.45f * (1f - k)), Offset(pie.x - ancho / 2f + c, y), Offset(pie.x + ancho / 2f + c, y), 1f); y += 1.6f }
     }
 
     /** La dirección de estribor (+x del río) en los ejes de quien mira, para el lado de luz del costado. */
@@ -361,6 +430,12 @@ internal object CercaMuelle {
         val ejes = (0..pasos).map { pv(enBotavara(it / pasos.toFloat())) }
         for (i in 0 until pasos) drawLine(p.sombra(C.MADERA_OSC), ejes[i], ejes[i + 1], 0.12f * ks[i], StrokeCap.Round)
         val vela = (0..pasos).map { i -> ejes[i] + Offset(0f, -0.16f * ks[i] * (1f - 0.35f * i / pasos)) }
+        if (EscenaAbismo.hoyEs(m, "zarpa")) {
+            // La mañana de zarpar: la mayor suelta de sus tomadores, colgando en senos de la botavara, lista para izar.
+            for (i in 2 until pasos - 1 step 3) { val a0 = ejes[i]; val a1 = ejes[minOf(i + 3, pasos)]; val kk = ks[i]
+                drawPath(Path().apply { moveTo(a0.x, a0.y); cubicTo(a0.x, a0.y + 0.36f * kk, a1.x, a1.y + 0.36f * kk, a1.x, a1.y); close() }, p.por(lerp(C.LONA, C.BLANCO, 0.3f), -0.1f))
+                drawLine(p.sombra(C.LONA), Offset((a0.x + a1.x) / 2f, (a0.y + a1.y) / 2f), Offset((a0.x + a1.x) / 2f, (a0.y + a1.y) / 2f + 0.24f * kk), 0.02f * kk) }
+        }
         for (i in 0 until pasos) {
             val g = 0.3f * ks[i] * (1f - 0.3f * i / pasos)
             drawLine(p.por(lerp(C.LONA, C.BLANCO, 0.25f), -0.1f), vela[i], vela[i + 1], g, StrokeCap.Round)

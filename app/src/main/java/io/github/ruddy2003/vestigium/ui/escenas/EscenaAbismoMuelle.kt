@@ -111,7 +111,7 @@ internal object MuelleAbismo {
     const val FILA_DENTRO = -RIO + 2.35f
     const val FILA_FUERA = -RIO + 6.75f
     /** Dónde tienen la popa las parejas de la fila, río arriba. */
-    val PAREJAS = listOf(9.5f, 25f, 43f, 61f, 81f, 104f, 130f)
+    val PAREJAS = listOf(11f, 26.5f, 44f, 62f, 81f, 104f)
 
     /** El barco de Nikos, amarrado a este muelle detrás de quien mira: su eje, su popa (hacia río arriba) y su manga. */
     const val NIKOS_EJE = -2.3f
@@ -120,8 +120,8 @@ internal object MuelleAbismo {
 
     /** El suelo del gato: las tablas de este muelle, delante. */
     const val PISO_GATO = 276f
-    const val GATO_DESDE = 172f
-    const val GATO_HASTA = 300f
+    const val GATO_DESDE = 166f
+    const val GATO_HASTA = 322f
 
     /** El cajón del primer plano: el soporte del objeto del día. */
     val SITIO_CAJON: Sitio get() = sitio(0.75f, 4.6f, -0.3f)
@@ -182,12 +182,13 @@ internal object MuelleAbismo {
         /** De noche, el pincel con el calor de la lamparilla de Nikos, del farol o del café, si están cerca de [en]. */
         fun pincel(en: Offset): Pincel {
             if (l.noche < 0.3f) return p
-            val fuentes = listOf(CercaMuelle.ICONO to lamparilla * 0.6f, CercaMuelle.FAROL to farol * 0.9f, CercaMuelle.LUZ_DEL_CAFE to cafe * 0.85f)
+            // Cada lumbre con su fuerza y su alcance: la lamparilla de aceite alumbra poco y de cerca; el farol y la puerta del café, más.
+            val fuentes = listOf(Triple(CercaMuelle.ICONO, lamparilla * 0.35f, 40f), Triple(CercaMuelle.FAROL, farol * 0.9f, 85f), Triple(CercaMuelle.LUZ_DEL_CAFE, cafe * 0.85f, 95f))
             var mejor: Pair<Offset, Float>? = null; var calor = 0f
-            for ((q, f) in fuentes) { if (f <= 0.02f) continue; val d = (q - en).getDistance(); val kk = f / (1f + (d / 80f) * (d / 80f)); calor += kk; if (mejor == null || kk > mejor.second) mejor = q to kk }
+            for ((q, f, alcance) in fuentes) { if (f <= 0.02f) continue; val d = (q - en).getDistance(); val kk = f / (1f + (d / alcance) * (d / alcance)); calor += kk; if (mejor == null || kk > mejor.second) mejor = q to kk }
             if (mejor == null || calor < 0.06f) return p
             val rr = rayoDeFoco(Foco(mejor.first, C.LUMBRE, 1f, 80f, suelo = en.y), en, 0.4f, C.SOMBRA)
-            return Pincel(l, Rayo(rr.dia, rr.lat, rr.cot, rr.tan, rr.ax, rr.ay, rr.fuerza, rr.color, maxOf(rr.contraste, r.contraste)), (calor * l.noche).coerceIn(0f, 0.85f), C.LUMBRE)
+            return Pincel(l, Rayo(rr.dia, rr.lat, rr.cot, rr.tan, rr.ax, rr.ay, rr.fuerza, rr.color, maxOf(rr.contraste, r.contraste)), (calor * l.noche).coerceIn(0f, 0.8f), C.LUMBRE)
         }
     }
 
@@ -203,7 +204,7 @@ internal object MuelleAbismo {
         PAREJAS.forEachIndexed { i, z ->
             todos += Triple(FILA_DENTRO, z, i * 3)
             todos += Triple(FILA_FUERA, z + 1.4f + (i % 3) * 0.7f, i * 3 + 1)
-            if (i == 1 || i == 4) todos += Triple(FILA_FUERA + 4.4f, z + 2.6f, i * 3 + 2)       // las de tres en tres
+            if (i == 1 || i == 3) todos += Triple(FILA_FUERA + 4.4f, z + 2.6f, i * 3 + 2)       // las de tres en tres
         }
         return when (EscenaAbismo.flota(m) ?: Flota.LLENO) {
             Flota.LLENO -> todos
@@ -222,7 +223,7 @@ internal object MuelleAbismo {
      */
     internal fun ristrasDeLaBotavara(m: Momento): Int = when {
         !nikosAmarrado(m) -> 0
-        EscenaAbismo.cargadoEnElMuelle(m) -> 9
+        EscenaAbismo.cargadoEnElMuelle(m) -> 7
         EscenaAbismo.flota(m) == Flota.POCOS -> 5
         else -> 3
     }
@@ -267,6 +268,15 @@ internal object MuelleAbismo {
         add(Ancla(TipoAncla.ABRIGO, SITIO_CAJON.pie.x - 34f, PISO_GATO))           // al abrigo del cajón
         if (EscenaAbismo.fiesta(m) || EscenaAbismo.cruz(m)) add(Ancla(TipoAncla.ADORNO, 206f, 262f))
     }
+
+    /** La zona del cielo por donde pasan el sol de las 7:00 y la luna de las 21:00: nada alto del cuadro la tapa. */
+    val ZONA_DE_LOS_ASTROS = androidx.compose.ui.geometry.Rect(270f, 45f, 330f, 110f)
+
+    /**
+     * Los puntos de arriba de todo lo alto del cuadro de hoy (los palos, los tejados, la cúpula, las palmeras, el farol, la
+     * botavara…): lo que la prueba comprueba que no entra en [ZONA_DE_LOS_ASTROS].
+     */
+    internal fun altos(m: Momento): List<Offset> = CercaMuelle.altos(m) + OrillaMuelle.altos(m) + RioMuelle.altos()
 
     /** Si hoy llueve o hay tormenta: las tablas mojadas devuelven las luces. */
     internal fun mojado(m: Momento): Boolean = m.ficha.clima == Clima.LLUVIA || m.ficha.clima == Clima.TORMENTA
