@@ -265,7 +265,7 @@ class EscenaAntiguasPrueba {
         assertEquals(ObjetosAntiguas.TODOS.toSortedSet(), delCalendario)
         assertTrue(ObjetosAntiguas.TODOS.containsAll(ObjetosAntiguas.GRANDES + ObjetosAntiguas.YA_EN_EL_CUADRO))
         val base = momento("2027-05-05").ficha
-        for (pieza in ObjetosAntiguas.YA_EN_EL_CUADRO) assertTrue(pieza, ObjetosAntiguas.elCuadroPinta(Momento(base.copy(objeto = pieza), 13.0), pieza))
+        for (pieza in ObjetosAntiguas.YA_EN_EL_CUADRO) assertEquals(pieza, pieza !in ObjetosAntiguas.DIBUJADOS, ObjetosAntiguas.elCuadroPinta(Momento(base.copy(objeto = pieza), 13.0), pieza))
         for (o in ObjetosAntiguas.TODOS) assertEquals(o, o in ObjetosAntiguas.GRANDES, ObjetosAntiguas.esGrande(Momento(base.copy(objeto = o), 13.0)))
     }
 
