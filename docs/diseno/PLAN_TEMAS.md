@@ -1208,7 +1208,16 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
 
 ### 10g. Psicodelia (`psicodelia`)
 
-**Estado (15 nov 2026): programado** en la rama de los temas nuevos, todo menos el cuadro (va en la fila de escenas, después de S19). Guía: `docs/diseno/temas/psicodelia.md`; fuentes: `docs/diseno/temas/fuentes_psicodelia.md`. La otra vida es David Hale, dibujante de carteles, con su calendario de 1965 a 1969 y el cuento de la temporada 1; ni las drogas ni su jerga aparecen en ninguna superficie (hay una prueba que lo vigila en el cuento). Decisiones a confirmar por el autor: la letra de los títulos (Modak, la burbuja, con las cifras de Fredoka porque el 8 de Modak parecía una S; la ficha proponía Shrikhand); el nombre (David; otras: Richard, Thomas, Ronald, Michael).
+**Estado (16 nov 2026): en rediseño, versión 2.** El autor vio el tema programado y pidió otra estética: «una base de los años 70 sobria, urbana, pero que a veces se haga súper psicodélico». Decidió, el 16 nov 2026:
+- **Dos caras que no son el claro y el oscuro:** de día (5:00 a 21:00, las horas de `ModoHora`) la **ciudad**, sobria, cálida y gastada como una foto de los 70; de noche la **psicodelia**, tres tintas planas de serigrafía (magenta, bermellón y ultramar) sobre papel crema o sobre negro de terciopelo, «más seria pero sí colorida, pero pensada», sin imágenes estereotipadas. Cada cara tiene su claro y su oscuro: cuatro variantes. Con el modo «hora», ciudad clara de día y psicodelia oscura de noche. **Es una excepción a 10a** («claro y oscuro son el mismo tema»): dentro de cada cara el claro y el oscuro siguen siendo el mismo mundo, pero el concepto lo cambia la hora.
+- **La intensidad:** con un consumo de cannabis en curso, la psicodelia se satura mucho más (y de día la ciudad solo se tiñe). El tema solo lee lo anotado; no se guarda nada nuevo.
+- **Se quita la regla de «sin drogas»:** David consume en el cuento de vez en cuando, y el tema puede aludir a ello. Siguen fuera la jerga que celebra y todo lo que toque el seguimiento privado.
+- **Para después, con el cuadro:** las noches en que David toma LSD u hongos, la escena se vuelve muy psicodélica (claves `humo` y `noche_tinta`).
+- **Se queda** San Francisco a fines de los 60, con David y su calendario de 1965 a 1969: de las fotos de los 70 se toma el aspecto, no la época.
+- Guía nueva: `docs/diseno/temas/psicodelia.md` (v2: cuatro paletas con su contraste, la fórmula de la intensidad, Libre Franklin y Chango, esquinas de 11 redondas y de 13 en arco, los muebles de las dos caras, la voz). Plan técnico: `docs/diseno/temas/psicodelia_plan.md` (un estado `EstadoTema` con cara e intensidad que no toca los otros 38 temas, el inventario por tandas, el cuento y sus pruebas, otros temas). Lámina: `docs/diseno/temas/muestras/psicodelia_caras.png` (la dibuja `herramientas/muestras/psicodelia_caras.py`). Falta que el autor vea la lámina y conteste las seis preguntas de la guía; todavía no se programa.
+- Lo que sigue en esta ficha es la **versión 1** (15 nov 2026) y se deja como historia. Donde choque con la guía v2, manda la guía v2; en particular quedan sustituidos la regla de las drogas, Modak y Fredoka, el emblema de la flor, la lámpara de cera, las gafas y la cinta del gato, el verde limón de la luz negra y los números «~17~».
+
+**Estado anterior (15 nov 2026): programado** en la rama de los temas nuevos, todo menos el cuadro (va en la fila de escenas, después de S19). Guía: `docs/diseno/temas/psicodelia.md`; fuentes: `docs/diseno/temas/fuentes_psicodelia.md`. La otra vida es David Hale, dibujante de carteles, con su calendario de 1965 a 1969 y el cuento de la temporada 1; ni las drogas ni su jerga aparecen en ninguna superficie (hay una prueba que lo vigila en el cuento). Decisiones a confirmar por el autor: la letra de los títulos (Modak, la burbuja, con las cifras de Fredoka porque el 8 de Modak parecía una S; la ficha proponía Shrikhand); el nombre (David; otras: Richard, Thomas, Ronald, Michael).
 
 **Fuentes comprobadas** (15 nov 2026): `docs/diseno/temas/fuentes_psicodelia.md`, con la cronología de 1967, la campaña con sus lugares, 33 frases de dominio público y 23 correcciones, ya puestas aquí.
 
@@ -1292,6 +1301,8 @@ Las creencias son reales: el alma no muere y pasa a otro cuerpo, por eso los gue
   - las estaciones de la primera línea del metro;
   - la ley de 1900.
 - **Psicodelia:**
+  - (v2, 16 nov 2026) las seis preguntas de «Lo que debe decidir el autor» en `docs/diseno/temas/psicodelia.md`;
+  - (v2) qué tan comunes eran los hongos en San Francisco entre 1965 y 1969, y las penas de California por marihuana en 1967 (`psicodelia_plan.md`, 3.5);
   - el nombre del cartelista;
   - si los nombres de las salas, la radio y el festival son marcas registradas;
   - la hora de cierre de los bailes en 1967;
