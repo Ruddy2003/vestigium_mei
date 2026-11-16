@@ -8,6 +8,7 @@ Dibuja en PNG, en esta máquina y sin Android, los muebles de la pestaña Diario
 herramientas/arnes_muebles/dibujar.sh ideario <tema> <claro|oscuro> <salida.png>
 herramientas/arnes_muebles/dibujar.sh biblioteca <tema> <claro|oscuro> <salida.png>
 herramientas/arnes_muebles/dibujar.sh hoja <ideario|biblioteca> <claro|oscuro> <salida.png> <tema1,tema2,...>
+herramientas/arnes_muebles/dibujar.sh trazos psicodelia <claro|oscuro> <salida.png>
 ```
 
 - `<tema>` es el id de `TemaId` (`heleno`, `gotico`, `laboratorio`, `galia`…). Con un id que no existe, el script dice cuáles hay.
@@ -19,6 +20,8 @@ herramientas/arnes_muebles/dibujar.sh hoja <ideario|biblioteca> <claro|oscuro> <
 - `ARNES_HOY=AAAA-MM-DD` fija el «hoy» de los ejemplos (por omisión, el día lógico de hoy). Cambia las fechas de las entradas y, con ellas, cómo se reparten en el estante. Para comparar con una captura de CI, pon el día en que corrió; las de noviembre de 2026 usan `ARNES_HOY=2026-11-15`.
 - `ARNES_TEMAS=0,1,5` dibuja un Ideario por cada número de temas, uno bajo otro (es la captura `temaMueble` «_a»: sin temas, con uno y con cinco); por omisión, 9 (la «_b»). `ARNES_MAX=6` corta el Ideario a ese número de compartimentos y pone la placa «y N más» (la «_c»). **Todo Ideario nuevo se dibuja también así:** un mueble que solo se probó con 9 temas puede colgarse o romperse con 0.
 - `ARNES_SUENOS=1` dibuja la biblioteca como estante de los Sueños: es el `noche` de `EstanteTema`, aparte del claro y el oscuro (la luna en lugar del sello y la luz propia que cada tema enciende ahí). Los volúmenes salen delgados porque los días de ejemplo no traen texto de sueño.
+- `ARNES_CARA=base|intensa` y `ARNES_INTENSIDAD=0..1` fijan la cara y la intensidad de los temas que las tienen (hoy, Psicodelia: `base` es la ciudad, `intensa` la psicodelia; ver `ui/CaraTema.kt` y `docs/diseno/temas/psicodelia_base.md`). Llaman a `EstadoTema.forzar` antes de dibujar. **Por omisión, `base` y 0**, así el dibujo no depende de la hora a la que se corre (en la app, la cara la decide la hora). Las cuatro variantes de Psicodelia son `base` y `intensa`, cada una en `claro` y `oscuro`; por ejemplo, `ARNES_CARA=intensa ARNES_INTENSIDAD=1 dibujar.sh ideario psicodelia oscuro salida.png`. Los temas sin caras no cambian con ellas.
+- `trazos`: una hoja de muestra de los trazos de Psicodelia (`ui/PsicodeliaTrazos.kt`, en `arnes/MuestraTrazos.kt`): con `ARNES_CARA=base`, los de la ciudad (`TrazosCiudad`: casas, poste, cables, viñeta, grano, ladrillo, persiana, letrero y los colores); con `intensa`, los de la tinta (`TrazosTinta`: rayos con trama, bandas a tres tintas con su registro, anillos, marco de arco, letras que llenan su forma y los colores), según `ARNES_INTENSIDAD`. No es un mueble: sirve para ver la base antes de usarla.
 - `ARNES_APP=/ruta/a/app/src/main` dibuja otra copia de la app, por ejemplo otro árbol de trabajo. Compila en `build-otras/<clave>/` y no toca la compilación normal.
 
 ## Cuánto tarda (medido en esta máquina, 4 núcleos)
@@ -43,7 +46,7 @@ Probado con 3 llamadas en paralelo justo después de editar un archivo: las 3 sa
 
 - `ui/ideario/**`, `ui/biblioteca/**` y `ui/muebles/**`: las carpetas enteras, así un archivo nuevo entra solo.
 - `ui/*Trazos.kt`, `ui/Galia.kt`, `Nouveau.kt`, `Psicodelia.kt`, `Frente.kt` y `Arcontes.kt`.
-- `ui/Tema.kt` (`TemaId`, `Letra`, los esquemas, `tipoDe`, `Tonos`, `PaletaBasica`) y `ui/ModoHora.kt`.
+- `ui/Tema.kt` (`TemaId`, `Letra`, los esquemas, `tipoDe`, `Tonos`, `PaletaBasica`), `ui/ModoHora.kt` y `ui/CaraTema.kt` (la cara y la intensidad: `Cara`, `EstadoTema`, `Intensidad`).
 - `ui/Disenios.kt` (`LetraExtra` y las escalas de color de los volúmenes).
 - `ui/Estilo.kt`, junto con lo que usa para nombrar meses y fechas: `Temas.kt`, `Vapor.kt`, `CuentaMaya.kt`, `NombresNuevos.kt`, `Textos.kt`, `Claves.kt` y `ui/nombres/**`.
 - `data/Modelo.kt`, `Texto.kt`, `Fechas.kt`, `Catalogo.kt`, `Especiales.kt` e `Ideario.kt`.
@@ -72,6 +75,7 @@ Algunos archivos no compilan enteros en escritorio. Para esos, Gradle copia en c
 - `sustitutos/Pantallas.kt` y `sustitutos/Cartas.kt`: `simboloCalificacion` y `selloCarta`, vacíos. Los muebles no los dibujan: el primero es para la ficha fijada de Helénico y el segundo para el sobre de Frente exterior.
 - `sustitutos/Emblema.kt`: `Emblema`, vacío. Tema.kt lo usa en el selector de temas.
 - `sustitutos/Datos.kt`: `Privado.TIPOS` y `Suplementos.INICIALES`, los valores por omisión que nombra `Modelo.kt`.
+- `sustitutos/Sustancias.kt`: `Sustancias.finEfectivo` y `nivelEn`, que no hacen nada (las nombra `Intensidad`, en `CaraTema.kt`; el `Sustancias` real arrastra la base de datos). `Repo.consumos` está vacío: la intensidad se fija con `ARNES_INTENSIDAD`.
 - `android/*.kt`: cascarones de `Activity`, `Context`, `Configuration`, `View`, `Window`, `WindowCompat` y `LocalView`, solo para que `Tema.kt` compile entero.
 - `arnes/Dibujar.kt`: el programa. Reproduce la llamada de `FicheroIdeas` a `MuebleIdeas` y la de `BibliotecaDiario`/`EstantePorMeses` a `EstanteTema`, y en lugar de `TemaVestigium` usa `MaterialTheme(esquemaDe, tipoDe)`.
 

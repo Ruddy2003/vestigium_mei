@@ -6,4 +6,6 @@ object Repo {
     var config: Config = Config()
     /** Los días guardados (las entradas de ejemplo de la biblioteca). */
     var dias: Map<String, Dia> = emptyMap()
+    /** Los consumos anotados: el medidor de la intensidad (ui/CaraTema.kt) los lee. En el arnés no hay ninguno: ARNES_INTENSIDAD la fija. */
+    var consumos: List<Consumo> = emptyList()
 }

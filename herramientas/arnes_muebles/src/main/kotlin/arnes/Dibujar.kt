@@ -35,6 +35,8 @@ import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Idea
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.data.porNumero
+import io.github.ruddy2003.vestigium.ui.Cara
+import io.github.ruddy2003.vestigium.ui.EstadoTema
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.archivoIdeas
@@ -65,10 +67,12 @@ private fun uso(): Nothing {
           dibujar.sh ideario <tema> <claro|oscuro> <salida.png>
           dibujar.sh biblioteca <tema> <claro|oscuro> <salida.png>
           dibujar.sh hoja <ideario|biblioteca> <claro|oscuro> <salida.png> <tema1,tema2,...>
+          dibujar.sh trazos psicodelia <claro|oscuro> <salida.png>   (muestra de TrazosCiudad o TrazosTinta, según ARNES_CARA)
         Temas: ${TemaId.entries.joinToString(" ") { it.id }}
         Variable ARNES_HOY=AAAA-MM-DD: el «hoy» de los ejemplos (por omisión, el día lógico de hoy; las capturas de CI usan el día en que corrieron).
         Variables ARNES_TEMAS=0,1,5 (un Ideario por cada número de temas) y ARNES_MAX=6 (el Ideario cortado, con su placa «y N más»).
         Variable ARNES_SUENOS=1: la biblioteca como estante de los Sueños (el modo «noche» del estante, aparte de claro y oscuro).
+        Variables ARNES_CARA=base|intensa (la cara de los temas que la tienen; por omisión, base) y ARNES_INTENSIDAD=0..1 (por omisión, 0).
     """.trimIndent())
     exitProcess(2)
 }
@@ -84,7 +88,7 @@ fun main(args: Array<String>) {
     val salida = File(args[3])
     val inicio = System.nanoTime()
     val imagen = when (args[0]) {
-        "ideario", "biblioteca" -> dibujar(args[0], tema(args[1]), oscuro, null)
+        "ideario", "biblioteca", "trazos" -> dibujar(args[0], tema(args[1]), oscuro, null)
         "hoja" -> {
             if (args.size < 5 || args[1] !in setOf("ideario", "biblioteca")) uso()
             val temas = args[4].split(',').filter { it.isNotBlank() }.map(::tema)
@@ -107,7 +111,21 @@ private fun hoy(): String = System.getenv("ARNES_HOY")?.takeIf { it.isNotBlank()
 /** La configuración de las capturas (`Capturas.config`): el tema, el modo y sin animaciones. */
 private fun configurar(t: TemaId, oscuro: Boolean) {
     Repo.config = Config(tema = t.id, modo = if (oscuro) "oscuro" else "claro", animaciones = false, bienvenida_vista = true, widget_cifra = "racha")
+    // La cara y la intensidad de los temas que las tienen (Psicodelia), fijas: el dibujo no depende de la hora en que se corre.
+    EstadoTema.forzar(cara(), intensidad())
 }
+
+/** ARNES_CARA=base|intensa: la cara (la ciudad o la psicodelia, en Psicodelia). Por omisión, base. */
+private fun cara(): Cara = when (System.getenv("ARNES_CARA")?.trim()?.lowercase()) {
+    null, "", "base" -> Cara.BASE
+    "intensa" -> Cara.INTENSA
+    else -> { System.err.println("ARNES_CARA debe ser «base» o «intensa»."); uso() }
+}
+
+/** ARNES_INTENSIDAD=0..1: la intensidad de los consumos en curso (en Psicodelia). Por omisión, 0. */
+private fun intensidad(): Float = System.getenv("ARNES_INTENSIDAD")?.trim()?.takeIf { it.isNotEmpty() }?.let {
+    it.toFloatOrNull()?.takeIf { v -> v.isFinite() && v in 0f..1f } ?: run { System.err.println("ARNES_INTENSIDAD debe ser un número de 0 a 1."); uso() }
+} ?: 0f
 
 /**
  * Dibuja un mueble en una escena de Compose de 1080 px de ancho y la recorta a lo que ocupa. [titulo], si va, se escribe
@@ -126,6 +144,7 @@ private fun dibujar(que: String, t: TemaId, oscuro: Boolean, titulo: String?): I
                     modifier = Modifier.padding(start = 16.dp, top = 12.dp))
                 when (que) {
                     "ideario" -> Ideario()
+                    "trazos" -> MuestraTrazos(o)
                     else -> Biblioteca()
                 }
             }

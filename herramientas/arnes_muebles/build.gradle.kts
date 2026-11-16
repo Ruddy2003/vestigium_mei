@@ -31,6 +31,8 @@ val enlazados = listOf(
     "$paquete/ui/Galia.kt", "$paquete/ui/Nouveau.kt", "$paquete/ui/Psicodelia.kt", "$paquete/ui/Frente.kt", "$paquete/ui/Arcontes.kt",
     // Los temas: TemaId, sus colores, sus letras, sus escalas de color y cómo nombran los meses.
     "$paquete/ui/Tema.kt", "$paquete/ui/ModoHora.kt", "$paquete/ui/Disenios.kt", "$paquete/ui/Estilo.kt",
+    // La cara y la intensidad de los temas que las tienen (Psicodelia): el esquema y los dibujos las leen.
+    "$paquete/ui/CaraTema.kt",
     // Lo que Estilo necesita para nombrar meses y fechas en cada tema.
     "$paquete/ui/Temas.kt", "$paquete/ui/Vapor.kt", "$paquete/ui/CuentaMaya.kt", "$paquete/ui/NombresNuevos.kt", "$paquete/ui/Textos.kt",
     "$paquete/ui/Claves.kt", "$paquete/ui/nombres/**/*.kt",
