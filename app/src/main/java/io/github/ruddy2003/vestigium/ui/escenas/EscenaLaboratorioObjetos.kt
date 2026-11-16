@@ -15,11 +15,12 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
  * dibujos los pondrá otro agente.
  *
  * Varios objetos son también cosas fijas del laboratorio ([DE_LA_SALA]): el microscopio, la taza, la tableta, el cuaderno
- * abierto, las semillas del plato negro y la pipeta están en la mesa; la bata, en la percha; los guantes, colgados de sus
- * pinzas; las macetas, apiladas en el estante de las semillas. Mientras su id no esté en [DIBUJADOS], el del laboratorio es
- * el objeto del día (ese día «bien a la vista»); cuando este contrato lo dibuje él mismo, se agrega a [DIBUJADOS] y el
- * cuadro deja de pintar el suyo ese día (`SalaLab.laSalaPinta`), para que no salga dos veces. La tarjeta, los auriculares
- * y la piedra (que está en el cajón) no están a la vista en el laboratorio: solo salen el día que son el objeto.
+ * abierto, las semillas del plato negro, la pipeta y los auriculares están en la mesa; la bata, en la percha; los guantes
+ * amarillos, colgados de sus pinzas en la percha, junto a la puerta; las macetas, apiladas en el estante de las semillas.
+ * Mientras su id no esté en [DIBUJADOS], el del laboratorio es el objeto del día (ese día «bien a la vista»); cuando este
+ * contrato lo dibuje él mismo, se agrega a [DIBUJADOS] y el cuadro deja de pintar el suyo ese día (`SalaLab.laSalaPinta`),
+ * para que no salga dos veces. La tarjeta y la piedra (que está en el cajón) no están a la vista en el laboratorio: solo
+ * salen el día que son el objeto.
  */
 internal object ObjetosLaboratorio {
     /** Los doce objetos del calendario de la doctora (`AnioG8.kt`). */
@@ -29,7 +30,7 @@ internal object ObjetosLaboratorio {
     val GRANDES = setOf("bata", "maceta")
 
     /** Los objetos que son también cosas fijas del laboratorio (en la mesa, en la percha, en el estante). */
-    val DE_LA_SALA = setOf("microscopio", "taza", "tableta", "cuaderno", "semilla", "pipeta", "bata", "guantes", "maceta")
+    val DE_LA_SALA = setOf("microscopio", "taza", "tableta", "cuaderno", "semilla", "pipeta", "bata", "guantes", "maceta", "auriculares")
 
     /** Los objetos del laboratorio que este contrato ya dibuja él mismo el día que tocan. Vacío mientras no haya dibujos. */
     val DIBUJADOS: Set<String> = emptySet()

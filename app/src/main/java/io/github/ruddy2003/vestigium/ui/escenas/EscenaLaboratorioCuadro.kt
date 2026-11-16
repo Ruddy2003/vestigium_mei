@@ -38,7 +38,7 @@ internal object CuadroLab {
         val v = VistaLab(m)
         with(SalaLab) { techo(v); paredDelFondo(v); puerta(v); paredDerecha(v); marcoDeLaPantalla(v) }
         with(PantallaLab) { pantalla(v) }
-        with(SalaLab) { suelo(v) }
+        with(SalaLab) { cables(v); suelo(v) }
         with(LuzLab) { enLasSuperficies(v) }
         val cosas = ArrayList<CosaLab>()
         cosas += CosasLab.cosas(v)

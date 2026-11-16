@@ -149,6 +149,26 @@ internal class VistaLab(val m: Momento) {
     /** Cómo cae la luz con la distancia: a la mitad a [alcance] metros, y nada más allá de tres veces el alcance. */
     private fun caida(dist: Float, alcance: Float): Float { val q = dist / alcance; val corte = (1f - q * q / 9f).coerceAtLeast(0f); return corte * corte / (1f + q * q) }
 
+    /**
+     * El color de fondo de una superficie grande (una pared, el suelo, el techo, el tablero): solo la luz de fondo y la de
+     * los paneles del techo, que es pareja. La luz de cada lámpara, de la puerta y de la pantalla se pinta encima con su
+     * forma (charcos, halos, la mancha de la puerta): así hay penumbra de color y, dentro, manchas de luz con borde, en vez
+     * de una superficie toda teñida por la luz que cae cerca de un punto de muestra.
+     */
+    fun cFondo(w: V3, propio: Color, n: V3, lejos: Float = 0f): Color {
+        val nn = n.unidad(); val amb = l.ambiente
+        val arriba = 0.8f + 0.2f * nn.y + 0.1f * general * nn.y.coerceAtLeast(0f)
+        var r = propio.red * amb.red * arriba; var g = propio.green * amb.green * arriba; var b = propio.blue * amb.blue * arriba
+        for (f in luces) {
+            if (f.de != Fuente.PANEL || f.fuerza <= 0.01f) continue
+            val d = f.w - w; val dist = d.largo().coerceAtLeast(0.05f); val u = d * (1f / dist)
+            val k = f.fuerza * caida(dist, f.alcance) * ((nn.punto(u) + 0.15f) / 1.15f).coerceAtLeast(0f)
+            r += (propio.red * 0.9f + 0.05f) * f.color.red * k; g += (propio.green * 0.9f + 0.05f) * f.color.green * k; b += (propio.blue * 0.9f + 0.05f) * f.color.blue * k
+        }
+        val col = Color(r.coerceIn(0f, 1f), g.coerceIn(0f, 1f), b.coerceIn(0f, 1f), propio.alpha)
+        return if (lejos > 0.01f) lerp(col, l.bruma.copy(alpha = propio.alpha), (lejos * l.brumaFuerza).coerceIn(0f, 0.9f)) else col
+    }
+
     /** Cuánto alumbra la luz [f] el punto [w] de una cara que mira a [n] (sin el color), para los charcos y los brillos. */
     fun cuanto(f: Luz3, w: V3, n: V3): Float {
         val d = f.w - w; val dist = d.largo().coerceAtLeast(0.05f); val u = d * (1f / dist)
@@ -204,7 +224,7 @@ internal object PiezasLab {
         val forma = CamLab.forma(puntos)
         val ini = a ?: puntos[0]; val fin = b ?: puntos[puntos.size / 2]
         val pi = CamLab.p(ini); val pf = CamLab.p(fin)
-        val paradas = Array(pasos + 1) { i -> val t = i / pasos.toFloat(); t to v.c(ini + (fin - ini) * t, propio, n, lejos) }
+        val paradas = Array(pasos + 1) { i -> val t = i / pasos.toFloat(); t to v.cFondo(ini + (fin - ini) * t, propio, n, lejos) }
         drawPath(forma, Brush.linearGradient(*paradas, start = pi, end = pf))
     }
 

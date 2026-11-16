@@ -213,11 +213,17 @@ class EscenaLaboratorioPrueba {
         par("2029-01-20") { EscenaLaboratorio.cuadernosDeHilda(it) }
         par("2030-09-27") { EscenaLaboratorio.bataDeLauro(it) }
         par("2030-12-10") { EscenaLaboratorio.superficie(it) > 0f }
+        par("2027-08-18") { EscenaLaboratorio.revisionDestello(it) == 1 }
+        par("2029-04-12") { EscenaLaboratorio.sacosDeOsvaldo(it) }
+        assertEquals(2, EscenaLaboratorio.revisionDestello(momento("2027-08-19")))
+        assertTrue(EscenaLaboratorio.sacosDeOsvaldo(momento("2029-05-02"))); assertFalse(EscenaLaboratorio.sacosDeOsvaldo(momento("2029-05-03")))
         assertTrue(EscenaLaboratorio.bataDeLauro(momento("2031-05-16"))); assertFalse(EscenaLaboratorio.bataDeLauro(momento("2031-05-17")))
         assertFalse(EscenaLaboratorio.lauro(momento("2030-09-27")))
-        // Y el cuadro se ve distinto ese día que la víspera (con el mismo objeto y a la misma hora).
+        // Y el cuadro se ve distinto ese día que la víspera (con el mismo objeto y a la misma hora): también los días de lo
+        // pequeño (el primer día de Lauro, el de los de afuera, los dos de la revisión del destello, los sacos de Osvaldo).
         Assume.assumeTrue("esta JVM no tiene con qué dibujar (se dibuja en el arnés)", sePuedeDibujar)
-        for (dia in listOf("2027-05-14", "2027-09-10", "2027-03-18", "2027-01-01", "2027-04-08", "2030-03-02", "2027-12-04", "2027-06-21", "2027-12-21", "2027-07-08", "2030-12-10")) {
+        for (dia in listOf("2027-05-14", "2027-09-10", "2027-03-18", "2027-01-01", "2027-04-08", "2030-03-02", "2027-12-04", "2027-06-21", "2027-12-21", "2027-07-08", "2030-12-10",
+            "2027-02-03", "2027-10-15", "2027-08-18", "2027-08-19", "2029-04-12")) {
             val h = if (dia == "2027-06-21" || dia == "2027-12-21") 22.0 else 13.0
             val antes = LocalDate.parse(dia).minusDays(1).toString()
             assertNotEquals(dia, pixeles(sinObjeto(momento(antes, h))).toList(), pixeles(sinObjeto(momento(dia, h))).toList())

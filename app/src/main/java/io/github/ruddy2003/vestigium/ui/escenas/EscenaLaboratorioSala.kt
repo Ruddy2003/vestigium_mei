@@ -50,12 +50,12 @@ internal object SalaLab {
     const val Z_CERCA = 0.9f
 
     /** La puerta de vidrio, de dos hojas, en la pared del fondo. */
-    const val PX0 = -1.0f
+    const val PX0 = -0.85f
     const val PX1 = 0.55f
     const val PH = 2.3f
 
     /** El pasillo de Botánica, detrás de la puerta, y su final: la pared de vidrio de los jardines. */
-    const val PZ1 = 14f
+    const val PZ1 = 10.6f
     const val PXI = -1.5f
     const val PXD = 1.05f
     const val PT = 2.7f
@@ -73,8 +73,8 @@ internal object SalaLab {
     const val EY = 0.94f
 
     /** El estante de los cuadernos y la percha, en la pared del fondo, a la izquierda de la puerta. */
-    const val CX0 = -2.6f
-    const val CX1 = -1.3f
+    const val CX0 = -2.15f
+    const val CX1 = -1.15f
 
     /** El conducto del aire de arriba, redondo, que cruza el techo a lo hondo y baja a la campana. */
     const val CONDUCTO_X = 1.6f
@@ -88,7 +88,13 @@ internal object SalaLab {
     fun formaDelSuelo(): Path = CamLab.forma(listOf(V3(XI, 0f, ZF), V3(XD, 0f, ZF), V3(XD, 0f, Z_CERCA), V3(XI, 0f, Z_CERCA)))
     fun formaDelFondo(): Path = CamLab.forma(listOf(V3(XI, 0f, ZF), V3(XD, 0f, ZF), V3(XD, TECHO, ZF), V3(XI, TECHO, ZF)))
     fun formaDerecha(): Path = CamLab.forma(listOf(V3(XD, 0f, ZF), V3(XD, 0f, Z_CERCA), V3(XD, TECHO, Z_CERCA), V3(XD, TECHO, ZF)))
+    fun formaDelTecho(): Path = CamLab.forma(listOf(V3(XI, TECHO, ZF), V3(XD, TECHO, ZF), V3(XD, TECHO, Z_CERCA), V3(XI, TECHO, Z_CERCA)))
     fun formaDeLaPuerta(): Path = CamLab.forma(listOf(V3(PX0, 0f, ZF), V3(PX1, 0f, ZF), V3(PX1, PH, ZF), V3(PX0, PH, ZF)))
+
+    /** La pared del fondo sin el hueco de la puerta: lo que alumbran los halos de la pared, que no tiñen el vidrio. */
+    fun formaDelFondoSinPuerta(): Path = Path().apply {
+        addPath(formaDelFondo()); addPath(formaDeLaPuerta()); fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
+    }
 
     /** Un punto de la pantalla: [u] de 0 (el borde lejano) a 1 (el cercano), [v] de 0 (arriba) a 1 (abajo). */
     fun enLaPantalla(u: Float, v: Float, metido: Float = 0.015f): V3 = V3(XD - metido, PY1 + (PY0 - PY1) * v, PZ_LEJOS + (PZ_CERCA - PZ_LEJOS) * u)
@@ -113,7 +119,8 @@ internal object SalaLab {
         }
         // Los paneles de la luz general: dos tiras largas, a lo hondo, que brillan de día.
         val luz = v.general
-        for (x in listOf(-1.2f, 1.45f)) for ((z0, z1) in listOf(5.35f to 6.85f, 3.45f to 4.95f)) {
+        // Solo la fila de la derecha: a la izquierda va la banderita, sobre el techo liso.
+        for (x in listOf(1.45f)) for ((z0, z1) in listOf(5.35f to 6.85f, 3.45f to 4.95f)) {
             val ps = listOf(V3(x - 0.28f, TECHO - 0.02f, z0), V3(x + 0.28f, TECHO - 0.02f, z0), V3(x + 0.28f, TECHO - 0.02f, z1), V3(x - 0.28f, TECHO - 0.02f, z1))
             drawPath(CamLab.forma(ps), v.c(V3(x, TECHO, (z0 + z1) / 2f), C.ACERO, abajo))
             val dentro = listOf(V3(x - 0.22f, TECHO - 0.03f, z0 + 0.05f), V3(x + 0.22f, TECHO - 0.03f, z0 + 0.05f), V3(x + 0.22f, TECHO - 0.03f, z1 - 0.05f), V3(x - 0.22f, TECHO - 0.03f, z1 - 0.05f))
@@ -159,9 +166,9 @@ internal object SalaLab {
             drawLine(v.c(punto(ss, yy), Color.White, n).copy(alpha = 0.35f), CamLab.p(ps[1]), CamLab.p(ps[3]), 0.4f)
         }
         // Las manchas grandes del lavado de la pintura, que no queda pareja, y las chorreras bajo los tubos y las juntas.
-        repeat(12) {
+        repeat(8) {
             val ss = az.entre(s0, s1); val yy = az.entre(0.3f, TECHO - 0.3f); val q = punto(ss, yy); val k = CamLab.k(q)
-            mancha(CamLab.p(q), az.entre(0.5f, 1.3f) * k, az.entre(0.3f, 0.8f) * k, if (it % 3 == 0) lerp(C.HORMIGON, C.TIERRA, 0.5f) else lerp(C.HORMIGON, C.SOMBRA, 0.35f), 0.07f)
+            mancha(CamLab.p(q), az.entre(0.6f, 1.5f) * k, az.entre(0.35f, 0.9f) * k, if (it % 3 == 0) lerp(C.HORMIGON, C.TIERRA, 0.5f) else lerp(C.HORMIGON, C.SOMBRA, 0.35f), 0.07f)
         }
         repeat(10) {
             val ss = az.entre(s0 + 0.2f, s1 - 0.2f); val y0 = az.entre(1.2f, TECHO - 0.2f); val largo = az.entre(0.4f, 1.4f)
@@ -206,6 +213,13 @@ internal object SalaLab {
         drawCircle(v.c(llave, C.LATON, V3(0.4f, 0.3f, -1f)), 0.055f * k, p)
         drawCircle(v.c(llave, lerp(C.LATON, C.NEGRO, 0.35f), FRENTE), 0.055f * k, p, style = Stroke(0.014f * k))
         drawLine(v.c(llave, lerp(C.LATON, Color.White, 0.3f), FRENTE), p + Offset(-0.05f * k, 0f), p + Offset(0.05f * k, 0f), 0.012f * k)
+        if (EscenaLaboratorio.memoria(v.m)) {
+            // El riego cerrado: la etiqueta roja colgada del volante, y un lazo negro.
+            drawLine(v.c(llave, C.NEGRO, FRENTE), p + Offset(0.03f * k, 0.02f * k), p + Offset(0.05f * k, 0.1f * k), 0.5f)
+            drawRect(v.c(llave, C.AVISO, FRENTE), p + Offset(0.03f * k, 0.1f * k), Size(0.05f * k, 0.08f * k))
+            drawLine(v.c(llave, C.NEGRO, FRENTE), p + Offset(-0.04f * k, -0.04f * k), p + Offset(-0.07f * k, 0.12f * k), (0.02f * k).coerceAtLeast(0.6f))
+            drawLine(v.c(llave, C.NEGRO, FRENTE), p + Offset(-0.04f * k, -0.04f * k), p + Offset(-0.01f * k, 0.13f * k), (0.02f * k).coerceAtLeast(0.6f))
+        }
         // La mancha de humedad que deja bajo la llave.
         mancha(CamLab.p(x, 0.55f, ZF - 0.01f), 0.07f * k, 0.32f * k, lerp(C.TIERRA, C.SOMBRA, 0.4f), 0.16f)
     }
@@ -244,9 +258,45 @@ internal object SalaLab {
         val yP = 1.52f; val zP = ZF - 0.04f
         palo(v, V3(CX0 + 0.1f, yP, zP), V3(CX1 - 0.05f, yP, zP), 0.03f, C.ACERO)
         if (!EscenaLaboratorio.enLaMesa(v.m) || v.tarea == EscenaLaboratorio.Tarea.MUSICA || EscenaLaboratorio.arriba(v.m) || v.tarea == EscenaLaboratorio.Tarea.DESAYUNO) {
-            if (laSalaPinta(v.m, "bata")) bata(v, V3(CX1 - 0.32f, yP, zP - 0.05f), false)
+            if (laSalaPinta(v.m, "bata")) bata(v, V3(CX0 + 0.55f, yP, zP - 0.05f), false)
         }
-        if (EscenaLaboratorio.bataDeLauro(v.m)) bata(v, V3(CX0 + 0.42f, yP, zP - 0.05f), true)
+        if (EscenaLaboratorio.bataDeLauro(v.m) && !EscenaLaboratorio.cierre(v.m)) bata(v, V3(CX0 + 0.25f, yP, zP - 0.07f), true)
+        if (laSalaPinta(v.m, "guantes")) guantes(v, V3(CX1 - 0.14f, yP, zP - 0.04f))
+    }
+
+    /**
+     * Los guantes amarillos de ella, de goma larga, colgados de la percha con sus pinzas de madera, los dedos abajo: el
+     * retrato de Hilda. Uno algo vuelto, con el pulgar hacia fuera.
+     */
+    private fun DrawScope.guantes(v: VistaLab, pinza: V3) {
+        for ((i, dx) in listOf(-0.12f, 0f).withIndex()) {
+            val g = pinza + V3(dx, 0f, 0f); val k = CamLab.k(g); val p = CamLab.p(g)
+            fun q(a: Float, b: Float) = p + Offset(a * k, -b * k)
+            val s = if (i == 0) -1f else 1f
+            val luz = v.c(g + V3(0f, -0.2f, -0.05f), C.AMARILLO, V3(-0.4f, 0.2f, -1f)); val sombra = v.c(g + V3(0f, -0.2f, -0.05f), lerp(C.AMARILLO, C.BARRO, 0.35f), V3(0.8f, -0.2f, -0.5f))
+            // El puño ancho, la palma y los cuatro dedos que cuelgan, algo abiertos.
+            val guante = Path().apply {
+                val a = q(-0.055f, -0.01f); moveTo(a.x, a.y)
+                val b = q(0.055f, -0.01f); lineTo(b.x, b.y)
+                val c = q(0.047f, -0.2f); val c1 = q(0.06f, -0.1f); cubicTo(c1.x, c1.y, c1.x, c1.y, c.x, c.y)
+                val d = q(0.044f, -0.3f); lineTo(d.x, d.y)
+                val e = q(-0.044f, -0.3f); val e1 = q(0f, -0.315f); cubicTo(e1.x, e1.y, e1.x, e1.y, e.x, e.y)
+                val f = q(-0.047f, -0.2f); lineTo(f.x, f.y)
+                val f1 = q(-0.06f, -0.1f); cubicTo(f1.x, f1.y, f1.x, f1.y, a.x, a.y)
+                close()
+            }
+            drawPath(guante, Brush.horizontalGradient(0f to luz, 0.6f to luz, 1f to sombra, startX = q(-0.06f, 0f).x, endX = q(0.06f, 0f).x))
+            for (j in 0..3) { val x = -0.03f + j * 0.02f
+                drawLine(if (j < 3) luz else sombra, q(x, -0.29f), q(x + 0.004f * (j - 1.5f), -0.39f + 0.012f * kotlin.math.abs(j - 1.5f)), (0.019f * k).coerceAtLeast(0.6f), StrokeCap.Round) }
+            // El pulgar, de lado.
+            drawLine(sombra, q(s * 0.04f, -0.2f), q(s * 0.085f, -0.29f), (0.022f * k).coerceAtLeast(0.6f), StrokeCap.Round)
+            // El canto vuelto del puño y el brillo de la goma.
+            drawLine(lerp(sombra, C.BARRO, 0.2f), q(-0.056f, -0.035f), q(0.056f, -0.035f), (0.012f * k).coerceAtLeast(0.5f))
+            drawLine(Color.White.copy(alpha = 0.3f + 0.2f * v.general), q(-0.025f, -0.08f), q(-0.022f, -0.25f), (0.008f * k).coerceAtLeast(0.4f), StrokeCap.Round)
+            // La pinza de madera, sobre la barra.
+            drawRect(v.c(g, lerp(C.MADERA, C.TELA, 0.3f), FRENTE), q(-0.012f, 0.05f), androidx.compose.ui.geometry.Size(0.024f * k, 0.09f * k))
+            drawLine(v.c(g, C.ACERO, FRENTE), q(-0.012f, 0.0f), q(0.012f, 0.0f), 0.5f)
+        }
     }
 
     /**
@@ -322,7 +372,7 @@ internal object SalaLab {
      */
     private fun DrawScope.pasillo(v: VistaLab) {
         val m = v.m; val noche = v.noche; val roja = v.roja
-        val luzPasillo = when { roja -> lerp(C.AVISO, C.SOMBRA, 0.25f); noche -> lerp(C.SOMBRA, C.VIOLETA, 0.35f * v.violeta + 0.1f); else -> lerp(C.HORMIGON, C.LUZ_DIA, 0.4f) }
+        val luzPasillo = when { roja -> lerp(C.AVISO, C.SOMBRA, 0.42f); noche -> lerp(C.SOMBRA, C.VIOLETA, 0.35f * v.violeta + 0.1f); else -> lerp(C.HORMIGON, C.LUZ_DIA, 0.4f) }
         val oscuro = if (EscenaLaboratorio.nocheLarga(m) && noche || EscenaLaboratorio.apagon(m) && noche) 0.25f else 1f
         fun tinte(c: Color, k: Float = 1f) = Color((c.red * luzPasillo.red * k * oscuro).coerceIn(0f, 1f), (c.green * luzPasillo.green * k * oscuro).coerceIn(0f, 1f), (c.blue * luzPasillo.blue * k * oscuro).coerceIn(0f, 1f))
         // El fondo: los jardines (se pintan primero; el pasillo los enmarca).
@@ -334,17 +384,17 @@ internal object SalaLab {
         drawPath(CamLab.forma(listOf(V3(PXD, 0f, ZF), V3(PXD, 0f, fin), V3(PXD, PT, fin), V3(PXD, PT, ZF))), tinte(C.HORMIGON, 0.75f))
         drawPath(CamLab.forma(listOf(V3(PXI, PT, ZF), V3(PXD, PT, ZF), V3(PXD, PT, fin), V3(PXI, PT, fin))), tinte(C.HORMIGON, 0.6f))
         // Las luces del techo del pasillo (rojas con aviso), y su reflejo en el suelo.
-        for (i in 0..4) { val z = ZF + 0.8f + i * 1.4f; val col = if (roja) C.AVISO else if (noche) lerp(C.VIOLETA, Color.White, 0.3f) else Color.White
+        for (i in 0..2) { val z = ZF + 0.5f + i * 1.15f; val col = if (roja) C.AVISO else if (noche) lerp(C.VIOLETA, Color.White, 0.3f) else Color.White
             val k = if (oscuro < 1f) 0.15f else 1f
             drawPath(CamLab.forma(listOf(V3(-0.5f, PT - 0.01f, z), V3(0.1f, PT - 0.01f, z), V3(0.1f, PT - 0.01f, z + 0.5f), V3(-0.5f, PT - 0.01f, z + 0.5f))), col.copy(alpha = (if (noche && !roja) 0.5f else 0.9f) * k))
             mancha(CamLab.p(-0.2f, 0f, z + 0.25f), 6f, 1.2f, col, 0.22f * k) }
         // Las flechas de color en el suelo, hacia los jardines: verde de Botánica y cian.
-        for ((i, z) in listOf(8.2f, 10.2f, 12.2f).withIndex()) { val col = if (i % 2 == 0) C.GRAMA else C.CIAN
+        for ((i, z) in listOf(7.5f, 8.5f, 9.5f).withIndex()) { val col = if (i % 2 == 0) C.GRAMA else C.CIAN
             drawPath(CamLab.forma(listOf(V3(-0.55f, 0.002f, z), V3(-0.2f, 0.002f, z + 0.5f), V3(0.15f, 0.002f, z), V3(0.15f, 0.002f, z + 0.18f), V3(-0.2f, 0.002f, z + 0.68f), V3(-0.55f, 0.002f, z + 0.18f))), tinte(col, 0.9f)) }
         // Las otras puertas de vidrio de Botánica, en la pared del pasillo, y un banco.
-        for (z in listOf(8.6f, 11.4f)) drawPath(CamLab.forma(listOf(V3(PXI + 0.01f, 0f, z), V3(PXI + 0.01f, 0f, z + 1.0f), V3(PXI + 0.01f, 2.1f, z + 1.0f), V3(PXI + 0.01f, 2.1f, z))), tinte(lerp(C.VIDRIO, C.HORMIGON, 0.4f), 1.05f))
+        for (z in listOf(7.9f)) drawPath(CamLab.forma(listOf(V3(PXI + 0.01f, 0f, z), V3(PXI + 0.01f, 0f, z + 1.0f), V3(PXI + 0.01f, 2.1f, z + 1.0f), V3(PXI + 0.01f, 2.1f, z))), tinte(lerp(C.VIDRIO, C.HORMIGON, 0.4f), 1.05f))
         // La siega: cestas y cajas con hojas en el pasillo, camino del abono.
-        if (EscenaLaboratorio.siega(m) > 0) for ((i, z) in listOf(9.4f, 12.6f).withIndex()) {
+        if (EscenaLaboratorio.siega(m) > 0) for ((i, z) in listOf(8.3f, 9.6f).withIndex()) {
             val x0 = 0.35f - 0.1f * i
             drawPath(CamLab.forma(listOf(V3(x0, 0f, z), V3(x0 + 0.5f, 0f, z), V3(x0 + 0.5f, 0.38f, z), V3(x0, 0.38f, z))), tinte(C.MADERA, 0.9f))
             drawPath(CamLab.forma(listOf(V3(x0 - 0.03f, 0.38f, z), V3(x0 + 0.53f, 0.38f, z), V3(x0 + 0.45f, 0.55f, z), V3(x0 + 0.05f, 0.55f, z))), tinte(C.GRAMA, 1.1f))
@@ -358,12 +408,25 @@ internal object SalaLab {
                 addPath(CamLab.forma(listOf(V3(-0.5f, 1.0f, z), V3(0.25f, 1.0f, z), V3(0.25f, 1.75f, z), V3(-0.5f, 1.75f, z))))
                 fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
             }
-            drawPath(hoja, tinte(lerp(C.ACERO, C.HORMIGON, 0.45f), 1.15f))
+            // El acero de la hoja, gris oscuro, con la luz roja que le cae desde arriba.
+            val acero = lerp(C.ACERO, C.NEGRO, 0.35f)
+            drawPath(hoja, Brush.verticalGradient(0f to lerp(acero, C.AVISO, 0.3f), 0.3f to lerp(acero, C.AVISO, 0.1f), 1f to lerp(acero, C.NEGRO, 0.45f), startY = CamLab.p(0f, PT, z).y, endY = CamLab.p(0f, 0f, z).y))
+            // El marco de la ventanilla, grueso, y las juntas de las planchas.
+            drawPath(CamLab.forma(listOf(V3(-0.5f, 1.0f, z), V3(0.25f, 1.0f, z), V3(0.25f, 1.75f, z), V3(-0.5f, 1.75f, z))), lerp(acero, C.NEGRO, 0.4f), style = Stroke(1.6f))
+            for (x in listOf(-0.75f, 0.5f)) drawLine(lerp(acero, C.NEGRO, 0.45f), CamLab.p(x, 0.3f, z), CamLab.p(x, PT - 0.1f, z), 0.5f)
+            // Los remaches y el volante de cierre.
+            for (x in listOf(PXI + 0.12f, PXD - 0.12f)) for (y in listOf(0.3f, 1.2f, 2.2f)) drawCircle(lerp(acero, Color.White, 0.25f), 0.45f, CamLab.p(x, y, z - 0.01f))
+            val volante = CamLab.p(0.55f, 1.2f, z - 0.02f); val kv = CamLab.k(0.55f, z)
+            drawCircle(lerp(acero, C.AVISO, 0.25f), 0.12f * kv, volante, style = Stroke(0.025f * kv))
+            drawLine(lerp(acero, C.AVISO, 0.25f), volante + Offset(-0.12f * kv, 0f), volante + Offset(0.12f * kv, 0f), 0.02f * kv)
             for (y in listOf(0.55f, 1.95f)) drawLine(tinte(lerp(C.ACERO, C.NEGRO, 0.3f), 1.1f), CamLab.p(PXI, y, z), CamLab.p(PXD, y, z), 0.5f)
             for (s in 0..7) { val x = PXI + s * (PXD - PXI) / 7f; drawLine(Color(0xFF1E1A16).copy(alpha = 0.55f), CamLab.p(x, 0.04f, z - 0.01f), CamLab.p(x + 0.15f, 0.22f, z - 0.01f), 1.1f) }
             for (s in 0..7) { val x = PXI + 0.15f + s * (PXD - PXI) / 7f; drawLine(tinte(C.AMARILLO, 1.3f).copy(alpha = 0.8f), CamLab.p(x, 0.04f, z - 0.01f), CamLab.p(x + 0.15f, 0.22f, z - 0.01f), 1.1f) }
             val luzRoja = CamLab.p(-0.12f, PT - 0.12f, z - 0.05f)
             drawCircle(lerp(C.AVISO, Color.White, 0.3f), 1.1f, luzRoja); mancha(luzRoja, 9f, 6f, C.AVISO, 0.7f)
+            // Su luz en el suelo y las paredes del pasillo: más fuerte junto a la compuerta.
+            drawPath(CamLab.forma(listOf(V3(PXI, 0.001f, ZF), V3(PXD, 0.001f, ZF), V3(PXD, 0.001f, z), V3(PXI, 0.001f, z))),
+                Brush.verticalGradient(0f to C.AVISO.copy(alpha = 0.4f), 1f to C.AVISO.copy(alpha = 0.05f), startY = CamLab.p(0f, 0f, z).y, endY = CamLab.p(0f, 0f, ZF).y), blendMode = BlendMode.Plus)
         }
     }
 
@@ -389,7 +452,7 @@ internal object SalaLab {
         val alto = when { siega >= 2 -> 0f; tramo == Jardines.VACIOS -> 0f; tramo == Jardines.BROTES -> 0.07f; tramo == Jardines.MEDIO -> 0.85f; else -> 1.7f }
         val az = Azar(Semilla.de("laboratorio", "jardines"))
         for (fila in 3 downTo 0) {
-            val z = PZ1 + 1.0f + fila * 2.2f
+            val z = PZ1 + 0.7f + fila * 2.0f
             val lejos = 0.08f + 0.12f * fila
             fun col(c: Color) = lerp(Color(c.red * claro.red, c.green * claro.green, c.blue * claro.blue), claro, lejos)
             for (x in listOf(-3.2f, -1.2f, 0.8f, 2.8f)) {
@@ -445,9 +508,27 @@ internal object SalaLab {
             // La pilastra del rincón.
             cara(v, listOf(V3(XD - 0.12f, 0f, ZF - 0.12f), V3(XD - 0.12f, 0f, ZF - 0.002f), V3(XD - 0.12f, TECHO, ZF - 0.002f), V3(XD - 0.12f, TECHO, ZF - 0.12f)), lerp(C.HORMIGON, C.TIERRA, 0.06f), FRENTE)
         }
-        // El canal de cables que corre bajo el techo hacia el rincón y baja a la pantalla.
+        // El canal de cables que corre bajo el techo hacia el rincón.
         palo(v, V3(XD - 0.05f, TECHO - 0.12f, 1.0f), V3(XD - 0.05f, TECHO - 0.12f, ZF - 0.1f), 0.06f, lerp(C.ACERO, C.HORMIGON, 0.3f))
-        palo(v, V3(XD - 0.05f, TECHO - 0.12f, 3.0f), V3(XD - 0.05f, PY1 + 0.08f, 3.0f), 0.04f, lerp(C.ACERO, C.HORMIGON, 0.3f))
+    }
+
+    /**
+     * Los cables de la pared de pantallas, que suben del marco al canal del techo: gruesos, de colores gastados, cada uno
+     * con su comba, y una caja de empalmes. Van después del marco.
+     */
+    fun DrawScope.cables(v: VistaLab) {
+        val arriba = PY1 + 0.12f; val canal = TECHO - 0.15f
+        val cables = listOf(Triple(2.55f, 2.75f, C.NEGRO), Triple(2.85f, 3.05f, lerp(C.ACERO, C.NEGRO, 0.5f)), Triple(3.25f, 3.1f, lerp(C.AMARILLO, C.NEGRO, 0.45f)),
+            Triple(3.6f, 3.3f, C.NEGRO), Triple(4.1f, 3.6f, lerp(C.CIAN, C.NEGRO, 0.55f)), Triple(4.45f, 3.9f, lerp(C.ACERO, C.NEGRO, 0.4f)))
+        for ((i, c) in cables.withIndex()) {
+            val (z0, z1, col) = c
+            val a = CamLab.p(XD - 0.07f, arriba, z0); val b = CamLab.p(XD - 0.07f, canal, z1)
+            val comba = (b.x - a.x) * 0.35f + 1.5f + (i % 3)
+            val ancho = (0.022f * CamLab.k(XD, (z0 + z1) / 2f)).coerceAtLeast(0.7f)
+            drawPath(Path().apply { moveTo(a.x, a.y); cubicTo(a.x - comba, a.y - (a.y - b.y) * 0.3f, b.x - comba * 0.6f, b.y + (a.y - b.y) * 0.3f, b.x, b.y) },
+                v.c(V3(XD - 0.1f, (arriba + canal) / 2f, (z0 + z1) / 2f), col, IZQ), style = Stroke(ancho, cap = StrokeCap.Round))
+        }
+        caja(v, XD - 0.16f, XD - 0.01f, canal - 0.12f, canal + 0.04f, 3.15f, 3.55f, lerp(C.ACERO, C.HORMIGON, 0.2f))
     }
 
     /**
@@ -480,10 +561,14 @@ internal object SalaLab {
         for (i in 1..5) { val zz = g0 + (g1 - g0) * i / 6f; drawLine(v.c(V3(x, y - r, zz), chapa, V3(0f, -1f, 0f)), CamLab.p(x - 0.1f, y - r * 0.95f, zz), CamLab.p(x + 0.12f, y - r * 0.95f, zz), 0.5f) }
     }
 
-    /** El marco de la pantalla: metal viejo atornillado a la pared, con su canto y su repisa; la imagen la pinta [PantallaLab]. */
+    /**
+     * El marco de la pared de pantallas: un bastidor grueso de metal viejo atornillado a la pared, con su canto, sus
+     * tornillos a lo largo, la repisa y el brillo propio de la imagen que se desborda por su borde de dentro; la imagen la
+     * pinta [PantallaLab].
+     */
     fun DrawScope.marcoDeLaPantalla(v: VistaLab) {
-        val x = XD - 0.01f; val g = 0.07f; val hondo = 0.08f
-        val m0 = PZ_LEJOS + g; val m1 = PZ_CERCA - g; val y0 = PY0 - g; val y1 = PY1 + g
+        val x = XD - 0.01f; val g = 0.12f; val hondo = 0.11f
+        val m0 = PZ_LEJOS + g; val m1 = PZ_CERCA - g; val y0 = PY0 - 0.08f; val y1 = PY1 + g
         // El canto del marco, que sale de la pared (se ve el de abajo y el lejano).
         cara(v, listOf(V3(x, y0, m0), V3(x - hondo, y0, m0), V3(x - hondo, y1, m0), V3(x, y1, m0)), lerp(C.ACERO, C.NEGRO, 0.2f), V3(0f, 0f, 1f))
         cara(v, listOf(V3(x, y0, m0), V3(x - hondo, y0, m0), V3(x - hondo, y0, m1), V3(x, y0, m1)), lerp(C.ACERO, C.NEGRO, 0.35f), V3(0f, -1f, 0f))
@@ -493,11 +578,30 @@ internal object SalaLab {
             addPath(CamLab.forma(listOf(V3(x - hondo, PY0, PZ_LEJOS), V3(x - hondo, PY1, PZ_LEJOS), V3(x - hondo, PY1, PZ_CERCA), V3(x - hondo, PY0, PZ_CERCA))))
             fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
         }
-        drawPath(frente, Brush.linearGradient(0f to v.c(V3(x, 2f, m0), lerp(C.ACERO, C.NEGRO, 0.15f), IZQ), 1f to v.c(V3(x, 2f, m1), lerp(C.ACERO, C.NEGRO, 0.15f), IZQ), start = CamLab.p(x, 2f, m0), end = CamLab.p(x, 2f, m1)))
-        // Los tornillos del marco y un piloto (verde si está encendida).
-        for (z in listOf(m0 - 0.035f, (m0 + m1) / 2f, m1 + 0.035f)) for (y in listOf(y0 + 0.035f, y1 - 0.035f)) drawCircle(v.c(V3(x, y, z), lerp(C.ACERO, Color.White, 0.25f), IZQ), 0.5f, CamLab.p(x - hondo, y, z))
+        drawPath(frente, Brush.linearGradient(0f to v.c(V3(x, 2f, m0), lerp(C.ACERO, C.NEGRO, 0.5f), IZQ), 1f to v.c(V3(x, 2f, m1), lerp(C.ACERO, C.NEGRO, 0.5f), IZQ), start = CamLab.p(x, 2f, m0), end = CamLab.p(x, 2f, m1)))
+        // El canto de arriba del bastidor, con algo de luz del techo.
+        drawPath(CamLab.forma(listOf(V3(x - hondo, y1, m0), V3(x - hondo, y1, m1), V3(x - hondo, y1 - 0.025f, m1), V3(x - hondo, y1 - 0.025f, m0))), v.c(V3(x, y1, 3.5f), lerp(C.ACERO, Color.White, 0.1f), V3(-0.5f, 1f, 0f)).copy(alpha = 0.6f))
+        // La junta entre el bastidor y la imagen: un filete oscuro.
+        drawPath(CamLab.forma(listOf(V3(x - hondo, PY0, PZ_LEJOS), V3(x - hondo, PY1, PZ_LEJOS), V3(x - hondo, PY1, PZ_CERCA), V3(x - hondo, PY0, PZ_CERCA))), C.NEGRO.copy(alpha = 0.8f), style = Stroke(1.6f))
+        // El brillo de la imagen que se desborda por el borde de dentro del marco.
+        val brillo = (0.3f * v.pantalla + if (v.noche) 0.1f else 0f).coerceIn(0f, 1f)
+        if (brillo > 0.02f) for ((ancho, a) in listOf(6f to 0.18f, 3f to 0.3f)) drawPath(CamLab.forma(listOf(V3(x - hondo, PY0, PZ_LEJOS), V3(x - hondo, PY1, PZ_LEJOS), V3(x - hondo, PY1, PZ_CERCA), V3(x - hondo, PY0, PZ_CERCA))),
+            v.colorPantalla.copy(alpha = a * brillo), style = Stroke(ancho), blendMode = BlendMode.Plus)
+        // Los tornillos del marco, a lo largo, y un piloto (verde si está encendida).
+        val tornillo = v.c(V3(x, 2f, 3.5f), lerp(C.ACERO, Color.White, 0.3f), IZQ); val sombra = lerp(C.NEGRO, C.ACERO, 0.2f)
+        for (i in 0..8) { val z = m1 + 0.06f + (m0 - m1 - 0.12f) * i / 8f
+            for (y in listOf(y0 + 0.04f, y1 - 0.06f)) { val p = CamLab.p(x - hondo, y, z); drawCircle(sombra, 0.75f, p + Offset(0.25f, 0.3f)); drawCircle(tornillo, 0.6f, p) } }
+        for (i in 0..4) { val y = y0 + 0.1f + (y1 - y0 - 0.2f) * i / 4f
+            for (z in listOf(m0 - 0.06f, m1 + 0.06f)) { val p = CamLab.p(x - hondo, y, z); drawCircle(sombra, 0.75f, p + Offset(0.25f, 0.3f)); drawCircle(tornillo, 0.6f, p) } }
         val piloto = CamLab.p(x - hondo, y0 + 0.035f, PZ_LEJOS + 0.2f)
         drawCircle(if (EscenaLaboratorio.pantallaApagada(v.m)) C.AVISO.copy(alpha = 0.7f) else lerp(C.GRAMA, Color.White, 0.3f), 0.8f, piloto)
+        if (EscenaLaboratorio.memoria(v.m)) {
+            // El crespón negro, atado en la esquina de arriba del marco, con sus dos colas.
+            val e = V3(x - hondo - 0.01f, y1 - 0.05f, m0 - 0.06f); val k = CamLab.k(e); val p = CamLab.p(e)
+            val negro = v.c(e, lerp(C.NEGRO, C.SOMBRA, 0.15f), IZQ)
+            drawPath(poligono(p + Offset(-0.06f * k, -0.04f * k), p + Offset(0.07f * k, -0.03f * k), p + Offset(0.02f * k, 0.03f * k)), negro)
+            for ((dx, largo) in listOf(-0.03f to 0.32f, 0.03f to 0.26f)) drawLine(negro, p + Offset(dx * k, 0f), p + Offset((dx + 0.02f) * k, largo * k), (0.035f * k).coerceAtLeast(0.8f))
+        }
         // La repisa de abajo.
         caja(v, x - 0.22f, x - 0.01f, y0 - 0.06f, y0 - 0.03f, m1 + 0.05f, m0 - 0.05f, lerp(C.ACERO, C.HORMIGON, 0.25f))
     }
