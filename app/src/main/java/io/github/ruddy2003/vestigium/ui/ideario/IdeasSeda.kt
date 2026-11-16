@@ -49,7 +49,8 @@ import kotlin.math.sin
  * de ave, una sarta de monedas de agujero cuadrado que cuelga del canto y la lámpara de aceite vidriada de turquesa sobre su
  * pie de bronce, con el hollín encima. En el muro, la campana de camello con su correa colgada de una estaca, sobre el
  * arco, y el odre de agua colgado al otro lado. Al pie, sobre el suelo de tierra, la tarima de álamo con la alforja de kilim
- * a medio cargar (un bolsillo encima, abierto, y el otro cayendo por el frente; al lado, la ropa doblada que falta meter) y
+ * a medio cargar (dos bolsas unidas por una banda: una encima, abierta, y la otra colgando por el frente con su solapa
+ * en pico, su cierre de lazo y sus borlas; al lado, la ropa doblada que falta meter) y
  * un fardo de yute con el sello de arcilla del mercader, cortado por el borde derecho. Cada tema es, según la semilla, una
  * caja de laca roja con volutas y filetes de oro, un estuche cilíndrico de cuero o de bambú tumbado con su tapa y su cordón,
  * o un fardo de seda envuelto en tela basta y atado, con su tablilla de madera; en las tres asoman tiras de bambú (más con
@@ -102,7 +103,7 @@ object IdeasSeda : DisenoIdeas {
 
     /** El almagre del friso y el fondo del nicho: variaciones de la paleta. */
     private val ALMAGRE = mezcla(LACA, ADOBE_OSC, 0.4f)
-    private val NICHO = mezcla(ADOBE, ADOBE_OSC, 0.38f)
+    private val NICHO = mezcla(mezcla(ADOBE, ADOBE_OSC, 0.2f), Color(0xFFB4ADA6), 0.45f)
 
     /** El oscurecido de siempre: solo el interior lo usa. */
     private fun t(c: Color, oscuro: Boolean) = if (oscuro) mezcla(c, Color.Black, 0.3f) else c
@@ -110,7 +111,7 @@ object IdeasSeda : DisenoIdeas {
     // ---------------------------------------------------------------- las medidas
 
     override val cols = 2
-    override val proporcion = 1.3f
+    override val proporcion = 1.55f
     override val corona = 0.64f
     override val base = 0.3f
     override val lado = 0.085f
@@ -147,8 +148,8 @@ object IdeasSeda : DisenoIdeas {
     /** Cuánto le llega de la lámpara a un punto [p] (en fracciones del ancho): cae con la distancia; abajo a la izquierda, casi nada. */
     private fun luz(p: Offset): Float {
         val dx = p.x - LUZ.x
-        val dy = (p.y - LUZ.y) * (if (p.y > LUZ.y) 0.75f else 1f)
-        val radial = 1.38f * kotlin.math.exp(-3.7f * kotlin.math.sqrt(dx * dx + dy * dy))
+        val dy = (p.y - LUZ.y) * (if (p.y > LUZ.y) 1.3f else 1f)
+        val radial = 1.5f * kotlin.math.exp(-2.2f * kotlin.math.sqrt(dx * dx + dy * dy))
         return maxOf(radial, luzCuerpo(p)).coerceIn(0.03f, 1f)
     }
 
@@ -157,7 +158,7 @@ object IdeasSeda : DisenoIdeas {
      * medias; la tercera, tenue; la cuarta y la quinta, casi perdidas), menos en la columna de la izquierda. Los puntos son
      * los centros de las filas con 9 temas, en fracciones del ancho.
      */
-    private val CAIDA = listOf(0.5f to 0.9f, 0.83f to 0.8f, 1.18f to 0.48f, 1.52f to 0.22f, 1.86f to 0.07f, 2.21f to 0.04f, 2.7f to 0.03f)
+    private val CAIDA = listOf(0.5f to 0.9f, 0.81f to 0.76f, 1.1f to 0.5f, 1.4f to 0.25f, 1.69f to 0.08f, 1.99f to 0.04f, 2.4f to 0.03f)
 
     private fun luzCuerpo(p: Offset): Float {
         if (p.y < CAIDA.first().first) return 0f
@@ -218,7 +219,7 @@ object IdeasSeda : DisenoIdeas {
                 val k = luz(desde / w)
                 if (k > 0.12f) {
                     val dx = (desde.x / w - LUZ.x).coerceIn(-0.3f, 0.3f) / 0.3f
-                    translate(w * 0.04f * dx, w * 0.012f) { drawPath(p, NOCHE.copy(alpha = (0.6f * k).coerceAtMost(0.5f))) }
+                    translate(w * 0.085f * dx, w * 0.022f) { drawPath(p, NOCHE.copy(alpha = (0.55f * k).coerceAtMost(0.42f))) }
                 }
             }
         }
@@ -346,8 +347,9 @@ object IdeasSeda : DisenoIdeas {
         // ---- la luz de la lámpara, por encima de lo que tiene cerca
         val llama = LUZ * w
         if (o) {
-            mancha(llama + Offset(0f, w * 0.04f), w * 0.46f, LLAMA.copy(alpha = 0.1f))
-            mancha(llama + Offset(0f, w * 0.02f), w * 0.16f, LLAMA.copy(alpha = 0.24f))
+            mancha(llama + Offset(-w * 0.12f, -w * 0.04f), w * 0.62f, LLAMA.copy(alpha = 0.16f))
+            mancha(llama + Offset(0f, w * 0.01f), w * 0.24f, LLAMA.copy(alpha = 0.3f))
+            mancha(llama, w * 0.06f, Color(0xFFFFE6B0).copy(alpha = 0.45f))
             llamaLampara(llama)
         }
         granoMueble(Rect(0f, 0f, w, alto), o)
@@ -851,7 +853,6 @@ object IdeasSeda : DisenoIdeas {
             addPath(plato(platoI)); addPath(plato(platoD))
             addRect(Rect(izq.x, pivote.y - w * 0.004f, dch.x, pivote.y + w * 0.004f))
             addRect(Rect(pivote.x - w * 0.006f, gancho.y, pivote.x + w * 0.006f, pivote.y))
-            listOf(izq to platoI, dch to platoD).forEach { (a, p) -> addPath(poligono(a.x - 0.8f * u, a.y, a.x + 0.8f * u, a.y, p.x + pr * 0.8f, p.y, p.x - pr * 0.8f, p.y)) }
         }
         sombraEnPared(silueta, pivote, hasta, 0.2f)
         // El gancho de hierro clavado en el muro.
@@ -927,6 +928,15 @@ object IdeasSeda : DisenoIdeas {
             destello(Offset(p.x + (if (der) pr * 0.5f else -pr * 0.55f), p.y + pr * 0.1f), 1.3f * u, t)
         }
         destello(Offset(pivote.x - largo * 0.32f, pivote.y - w * 0.002f + largo * 0.32f * sa), 1.2f * u, t)
+        // De noche, el bronce devuelve la llama: el filo del astil y el borde de los platillos que miran a la lámpara.
+        if (esNoche) {
+            val a = (1.4f * t.k).coerceAtMost(0.9f)
+            drawLine(LLAMA.copy(alpha = a), Offset(izq.x, izq.y - w * 0.004f), Offset(dch.x, dch.y - w * 0.004f), 1.3f * u)
+            listOf(platoI, platoD).forEach { p ->
+                drawArc(Color(0xFFFFF0CF).copy(alpha = a), 300f, 50f, false, Offset(p.x - pr, p.y - w * 0.004f), Size(pr * 2, w * 0.008f), style = Stroke(1.2f * u))
+            }
+            drawCircle(LLAMA.copy(alpha = a * 0.5f), w * 0.008f, Offset(gancho.x, pivote.y))
+        }
     }
 
     /** El estuche de las pesas, con la tapa abierta apoyada en el muro y su forro rojo, y tres pesas de bronce delante. */
@@ -1354,18 +1364,18 @@ object IdeasSeda : DisenoIdeas {
             drawRect(t.s(0.2f), Offset(r.right - w * 0.012f, r.top), Size(w * 0.012f, r.height))
             py -= w * 0.018f
         }
-        // El bolsillo tumbado sobre la tarima, abierto.
-        val ab = Rect(w * 0.05f, b.top + hb * TT - w * 0.05f, w * 0.37f, borde + w * 0.004f)
+        // La bolsa de encima, tumbada sobre la tarima y abierta.
+        val ab = Rect(w * 0.045f, b.top + hb * TT - w * 0.05f, w * 0.3f, borde + w * 0.004f)
         val bolsa = Path().apply {
             moveTo(ab.left, ab.bottom)
             cubicTo(ab.left - w * 0.006f, ab.top + w * 0.03f, ab.left + w * 0.02f, ab.top + w * 0.012f, ab.left + w * 0.06f, ab.top + w * 0.014f)
-            cubicTo(ab.left + w * 0.14f, ab.top + w * 0.02f, ab.right - w * 0.08f, ab.top - w * 0.004f, ab.right - w * 0.02f, ab.top + w * 0.012f)
+            cubicTo(ab.left + w * 0.12f, ab.top + w * 0.02f, ab.right - w * 0.07f, ab.top - w * 0.004f, ab.right - w * 0.02f, ab.top + w * 0.012f)
             cubicTo(ab.right + w * 0.008f, ab.top + w * 0.03f, ab.right + w * 0.004f, ab.bottom - w * 0.01f, ab.right, ab.bottom)
             close()
         }
         contacto(Offset(ab.center.x + w * 0.02f, ab.bottom - w * 0.004f), ab.width * 1.05f, w * 0.014f, 0.4f)
         // Lo que asoma por la boca: un rollo de fieltro y una punta de seda verde.
-        val boca = Offset(ab.left + w * 0.2f, ab.top + w * 0.014f)
+        val boca = Offset(ab.left + w * 0.15f, ab.top + w * 0.014f)
         drawRoundRect(t.c(mezcla(YUTE, PAPEL, 0.2f)), Offset(boca.x - w * 0.05f, boca.y - w * 0.026f), Size(w * 0.1f, w * 0.034f), CornerRadius(w * 0.017f))
         drawOval(t.c(mezcla(YUTE, PAPEL, 0.45f)), Offset(boca.x - w * 0.056f, boca.y - w * 0.026f), Size(w * 0.016f, w * 0.034f))
         drawOval(t.s(0.25f), Offset(boca.x - w * 0.052f, boca.y - w * 0.018f), Size(w * 0.008f, w * 0.018f), style = Stroke(0.6f * u))
@@ -1380,32 +1390,74 @@ object IdeasSeda : DisenoIdeas {
             drawRect(t.c(mezcla(YUTE, HOLLIN, 0.2f)), Offset(ab.left, ab.top), Size(ab.width, w * 0.018f))
             drawRect(t.s(0.3f), Offset(ab.left, ab.top + w * 0.018f), Size(ab.width, 1.4f * u))
         }
-        // El bolsillo que cae por el frente de la tarima, con su vuelta sobre el canto.
-        val fr = Rect(w * 0.055f, borde - w * 0.004f, w * 0.355f, borde + w * 0.074f)
+        // Una borla en la esquina de la bolsa de encima.
+        borla(Offset(ab.left + w * 0.006f, ab.bottom - w * 0.006f), t, w)
+
+        // La banda que une las dos bolsas: pasa por el canto de la tarima y baja.
+        val fr = Rect(w * 0.13f, borde + w * 0.03f, w * 0.37f, borde + w * 0.108f)
+        val banda = Rect(w * 0.19f, ab.bottom - w * 0.012f, w * 0.27f, fr.top + w * 0.006f)
+        val tbd = tn(banda.center)
+        translate(if (esNoche) -w * 0.006f else w * 0.008f, w * 0.005f) { drawRect(tbd.s(0.3f), banda.topLeft, banda.size) }
+        drawRect(tbd.c(mezcla(CARMESI, LACA, 0.3f)), banda.topLeft, banda.size)
+        listOf(0.12f to PAPEL, 0.3f to INDIGO, 0.5f to AZAFRAN, 0.7f to INDIGO, 0.88f to PAPEL).forEach { (f, col) ->
+            drawRect(tbd.c(if (col == PAPEL) mezcla(PAPEL, YUTE, 0.25f) else col), Offset(banda.left + banda.width * f - w * 0.004f, banda.top), Size(w * 0.008f, banda.height))
+        }
+        // El doblez sobre el canto: luz arriba, sombra debajo.
+        drawRect(tbd.b(0.45f), Offset(banda.left, borde - w * 0.004f), Size(banda.width, w * 0.006f))
+        drawRect(tbd.s(0.3f), Offset(banda.left, borde + w * 0.004f), Size(banda.width, w * 0.006f))
+        drawRect(tbd.s(0.25f), Offset(banda.right - w * 0.008f, banda.top), Size(w * 0.008f, banda.height))
+
+        // La bolsa de delante, colgando por el frente de la tarima: llena, con su solapa en pico y el cierre de lazo.
         val cae = Path().apply {
             moveTo(fr.left, fr.top)
             lineTo(fr.right, fr.top)
-            cubicTo(fr.right + w * 0.004f, fr.top + fr.height * 0.5f, fr.right + w * 0.002f, fr.bottom - w * 0.012f, fr.right - w * 0.012f, fr.bottom)
-            cubicTo(fr.right - w * 0.1f, fr.bottom + w * 0.006f, fr.left + w * 0.1f, fr.bottom + w * 0.002f, fr.left + w * 0.01f, fr.bottom - w * 0.002f)
-            cubicTo(fr.left - w * 0.004f, fr.bottom - w * 0.02f, fr.left - w * 0.003f, fr.top + fr.height * 0.4f, fr.left, fr.top)
+            cubicTo(fr.right + w * 0.008f, fr.top + fr.height * 0.4f, fr.right + w * 0.006f, fr.bottom - w * 0.016f, fr.right - w * 0.016f, fr.bottom)
+            cubicTo(fr.right - w * 0.08f, fr.bottom + w * 0.008f, fr.left + w * 0.08f, fr.bottom + w * 0.006f, fr.left + w * 0.014f, fr.bottom - w * 0.002f)
+            cubicTo(fr.left - w * 0.008f, fr.bottom - w * 0.02f, fr.left - w * 0.006f, fr.top + fr.height * 0.4f, fr.left, fr.top)
             close()
         }
         val tf = tn(fr.center)
-        translate(if (esNoche) -w * 0.008f else w * 0.01f, w * 0.006f) { drawPath(cae, tf.s(0.3f)) }
+        translate(if (esNoche) -w * 0.01f else w * 0.012f, w * 0.008f) { drawPath(cae, tf.s(0.3f)) }
         drawPath(cae, tf.c(CARMESI))
         clipPath(cae) {
-            kilim(Rect(fr.left - w * 0.01f, fr.top + w * 0.01f, fr.right + w * 0.01f, fr.bottom + w * 0.004f), tf, 5311)
-            // El bulto de lo que ya va dentro y la vuelta sobre el canto.
-            drawRect(tf.s(0.2f), Offset(fr.left, fr.bottom - fr.height * 0.25f), Size(fr.width, fr.height * 0.25f))
-            drawRect(tf.b(0.4f), Offset(fr.left, fr.top), Size(fr.width, w * 0.008f))
-            drawRect(tf.s(0.25f), Offset(fr.left, fr.top + w * 0.008f), Size(fr.width, 1.2f * u))
+            kilim(Rect(fr.left - w * 0.01f, fr.top + w * 0.02f, fr.right + w * 0.01f, fr.bottom + w * 0.004f), tf, 5311)
+            // El bulto de lo que ya va dentro: claro arriba a la izquierda, sombra abajo y al costado.
+            drawRect(tf.s(0.22f), Offset(fr.left, fr.bottom - fr.height * 0.28f), Size(fr.width, fr.height * 0.28f))
+            drawRect(tf.s(0.2f), Offset(fr.right - fr.width * 0.14f, fr.top), Size(fr.width * 0.14f, fr.height))
+            drawRect(tf.b(0.18f), Offset(fr.left, fr.top), Size(fr.width * 0.18f, fr.height))
         }
-        // Las borlas de las esquinas.
-        listOf(Offset(fr.left + w * 0.012f, fr.bottom - w * 0.002f), Offset(fr.right - w * 0.012f, fr.bottom)).forEach { p ->
-            drawCircle(tf.c(INDIGO), w * 0.005f, p)
-            for (k in -2..2) drawLine(tf.c(if (k % 2 == 0) AZAFRAN else INDIGO), p, p + Offset(k * w * 0.003f, w * 0.022f), 1.1f * u, StrokeCap.Round)
+        // La solapa en pico, de otro tejido (añil con una greca), con su sombra sobre la bolsa.
+        val pico = Offset(fr.center.x, fr.top + fr.height * 0.5f)
+        val solapa = poligono(fr.left - w * 0.004f, fr.top, fr.right + w * 0.004f, fr.top, fr.right + w * 0.002f, fr.top + fr.height * 0.18f, pico.x, pico.y, fr.left - w * 0.002f, fr.top + fr.height * 0.18f)
+        translate(0f, w * 0.006f) { drawPath(solapa, tf.s(0.3f)) }
+        drawPath(solapa, tf.c(mezcla(INDIGO, NOCHE, 0.15f)))
+        clipPath(solapa) {
+            var x = fr.left
+            var k = 0
+            while (x < fr.right) {
+                drawPath(poligono(x, fr.top + fr.height * 0.08f, x + w * 0.012f, fr.top + fr.height * 0.02f, x + w * 0.024f, fr.top + fr.height * 0.08f), tf.c(if (k % 2 == 0) AZAFRAN else PAPEL))
+                x += w * 0.024f; k++
+            }
+            drawRect(tf.b(0.3f), Offset(fr.left, fr.top), Size(fr.width, w * 0.004f))
         }
+        drawPath(solapa, tf.c(mezcla(CARMESI, HOLLIN, 0.2f)), style = Stroke(1.2f * u))
+        // El cierre: una presilla de cordón en el pico que abraza un botón de madera.
+        val boton = Offset(pico.x, pico.y + w * 0.012f)
+        drawCircle(tf.s(0.35f), w * 0.008f, boton + Offset(1.2f * u, 1.4f * u))
+        drawCircle(tf.c(mezcla(ALAMO, CUERO, 0.4f)), w * 0.008f, boton)
+        drawCircle(tf.b(0.4f), w * 0.003f, boton - Offset(w * 0.002f, w * 0.002f))
+        drawOval(tf.c(CUERDA), Offset(pico.x - w * 0.007f, pico.y - w * 0.004f), Size(w * 0.014f, w * 0.026f), style = Stroke(1.3f * u))
+        // Las borlas de las esquinas de abajo.
+        borla(Offset(fr.left + w * 0.014f, fr.bottom - w * 0.002f), tf, w)
+        borla(Offset(fr.right - w * 0.016f, fr.bottom), tf, w)
         filo(fr, tf, true)
+    }
+
+    /** Una borla de lana: el nudo y los hilos que cuelgan. */
+    private fun DrawScope.borla(p: Offset, t: Tono, w: Float) {
+        val u = density
+        drawCircle(t.c(INDIGO), w * 0.005f, p)
+        for (k in -2..2) drawLine(t.c(if (k % 2 == 0) AZAFRAN else INDIGO), p, p + Offset(k * w * 0.003f, w * 0.022f), 1.1f * u, StrokeCap.Round)
     }
 
     /** El fardo de yute en el suelo, cortado por el borde: atado con dos cuerdas y el sello de arcilla del mercader en el nudo. */
@@ -1508,9 +1560,11 @@ object IdeasSeda : DisenoIdeas {
             val a = azar(5430, i) * 3.14f
             drawLine(t.c(mezcla(NICHO, PAPEL, 0.5f)).copy(alpha = 0.7f), p, p + Offset(3.5f * u * cos(a), 3.5f * u * sin(a)), 0.6f * u)
         }
-        listOf(0.32f to 0.1f, 0.18f to 0.12f, 0.07f to 0.24f).forEach { (a, al) -> drawRect(t.s(al), Offset.Zero, Size(w, h * a)) }
-        if (!t.o) { drawRect(t.s(0.2f), Offset.Zero, Size(w * 0.1f, h)); drawRect(t.b(0.1f), Offset(w * 0.6f, h * 0.3f), Size(w * 0.4f, h * 0.6f)) }
-        else { drawRect(t.s(0.18f), Offset.Zero, Size(w * 0.08f, h)); drawRect(t.b(0.12f), Offset(w * 0.75f, 0f), Size(w * 0.25f, h)) }
+        // La sombra de la repisa de arriba, en escalones, y el costado de la izquierda en sombra (el poste o la jamba).
+        listOf(0.34f to 0.1f, 0.2f to 0.14f, 0.09f to 0.28f).forEach { (a, al) -> drawRect(t.s(al), Offset.Zero, Size(w, h * a)) }
+        drawRect(t.s(0.22f), Offset.Zero, Size(w * 0.16f, h))
+        drawRect(t.s(0.18f), Offset.Zero, Size(w * 0.06f, h))
+        drawRect(t.b(0.12f), Offset(w * 0.62f, h * 0.34f), Size(w * 0.38f, h * 0.54f))
         // La tabla del piso.
         val piso = h * PISO
         drawRect(t.c(mezcla(ALAMO, ALAMO_LUZ, 0.5f)), Offset(0f, piso), Size(w, h - piso))
@@ -1545,7 +1599,7 @@ object IdeasSeda : DisenoIdeas {
             val f = (i + 0.5f) / cuantas
             val tw = (x1 - x0) * 0.07f + 2f * u
             val x = x0 + (x1 - x0 - tw) * (f * 0.92f + 0.04f * azar(c.semilla, i + 30))
-            val y = arriba - sube * (0.45f + 0.55f * azar(c.semilla, i))
+            val y = (arriba - sube * (0.45f + 0.55f * azar(c.semilla, i))).coerceAtLeast(h * 0.03f + h * 0.04f * azar(c.semilla, i + 50))
             val g = (azar(c.semilla, i + 40) - 0.5f) * 9f
             rotate(g, Offset(x + tw / 2, arriba)) {
                 drawRect(t.s(0.22f), Offset(x + 1.4f * u, y + 1.4f * u), Size(tw, arriba - y))
@@ -1567,13 +1621,13 @@ object IdeasSeda : DisenoIdeas {
         val piso = h * PISO
         val laca = when (Math.floorMod(m ushr 3, 3)) { 0 -> LACA; 1 -> mezcla(LACA, CARMESI, 0.5f); else -> mezcla(LACA, HOLLIN, 0.22f) }
         val lacaO = mezcla(laca, HOLLIN, 0.4f)
-        val sube = h * 0.012f * c.n.coerceIn(0, 8)
-        val cuerpo = Rect(w * 0.07f, h * 0.4f, w * 0.93f, piso)
-        val tapa = Rect(w * 0.045f, h * 0.27f - sube, w * 0.955f, h * 0.4f - sube + 1f * u)
+        val sube = h * 0.008f * c.n.coerceIn(0, 8)
+        val cuerpo = Rect(w * 0.07f, h * 0.36f, w * 0.93f, piso)
+        val tapa = Rect(w * 0.045f, h * 0.22f - sube, w * 0.955f, h * 0.36f - sube + 1f * u)
         drawRect(t.s(0.26f), Offset(cuerpo.left + (if (t.o) -w * 0.035f else w * 0.035f), tapa.top + h * 0.04f), Size(cuerpo.width, piso - tapa.top - h * 0.04f))
         contacto(Offset(cuerpo.center.x + w * 0.04f, piso), cuerpo.width * 1.05f, h * 0.05f, 0.42f)
-        // Con muchas fichas, las tiras asoman también por detrás de la tapa.
-        if (c.n > 5) tiras(cuerpo.left + w * 0.1f, cuerpo.right - w * 0.1f, tapa.top + h * 0.04f, h, c, t, 5)
+        // Las tiras asoman por detrás de la tapa, que no cierra: más y más altas cuanto más guarda.
+        tiras(cuerpo.left + w * 0.08f, cuerpo.right - w * 0.08f, tapa.top + h * 0.04f, h, c, t, 7, 0.12f)
         // La rendija entre tapa y cuerpo, con las tiras.
         if (sube > 1f) {
             drawRect(t.c(LACA_NEGRA), Offset(cuerpo.left + 3f * u, tapa.bottom - 2f * u), Size(cuerpo.width - 6f * u, cuerpo.top - tapa.bottom + 4f * u))
@@ -1642,12 +1696,16 @@ object IdeasSeda : DisenoIdeas {
     private fun DrawScope.estuche(w: Float, h: Float, c: EstadoCajon, m: Int, t: Tono, der: Boolean) {
         val u = density
         val piso = h * PISO
-        val clase = Math.floorMod(m ushr 3, 4)
+        // El cuero teñido (rojo, añil, verde o negro) o el bambú, y un cordón de seda de otro color.
+        val clase = Math.floorMod(m ushr 11, 5)
         val bambu = clase == 0
-        val col = when (clase) { 0 -> mezcla(BAMBU, VERDE, 0.2f); 1 -> mezcla(CUERO, AZAFRAN, 0.3f); 2 -> mezcla(LACA, CUERO, 0.25f); else -> mezcla(CUERO, HOLLIN, 0.55f) }
-        val colTapa = if (bambu) mezcla(BAMBU, ALAMO_OSC, 0.25f) else mezcla(col, HOLLIN, 0.2f)
-        val tubo = Rect(w * 0.08f, h * 0.41f, w * 0.91f, piso - h * 0.004f)
-        val tapa = Rect(w * 0.025f, h * 0.39f, w * 0.115f, piso)
+        val col = when (clase) { 0 -> mezcla(BAMBU, VERDE, 0.2f); 1 -> mezcla(LACA, CUERO, 0.2f); 2 -> mezcla(INDIGO, CUERO, 0.15f); 3 -> mezcla(VERDE, CUERO, 0.25f); else -> mezcla(HOLLIN, CUERO, 0.3f) }
+        val sedaCordon = when (clase) { 1, 3 -> AZAFRAN; 4 -> mezcla(AZAFRAN, CARMESI, 0.3f); else -> CARMESI }
+        val colTapa = if (bambu) mezcla(BAMBU, ALAMO_OSC, 0.25f) else mezcla(col, HOLLIN, 0.25f)
+        val tubo = Rect(w * 0.08f, h * 0.3f, w * 0.91f, piso - h * 0.004f)
+        val tapa = Rect(w * 0.025f, h * 0.28f, w * 0.115f, piso)
+        // Un mazo de tiras de bambú de pie detrás, apoyado en el fondo: más alto y más lleno con más fichas.
+        tiras(w * 0.28f, w * 0.78f, tubo.top + h * 0.05f, h, c, t, 6, 0.14f)
         drawRoundRect(t.s(0.26f), Offset(tapa.left + (if (t.o) -w * 0.03f else w * 0.035f), tapa.top + h * 0.035f), Size(tubo.right - tapa.left, tubo.height), CornerRadius(tubo.height / 2))
         contacto(Offset(tubo.center.x + w * 0.03f, piso), tubo.width * 1.1f, h * 0.05f, 0.45f)
         // La boca abierta y las tiras que salen por ella.
@@ -1666,7 +1724,8 @@ object IdeasSeda : DisenoIdeas {
                 var y = tubo.top + 2f * u
                 while (y < tubo.bottom) { drawLine(t.s(0.1f), Offset(tubo.left, y), Offset(tubo.right, y), 0.5f * u); y += 3.4f * u }
             } else {
-                for (k in 0 until 22) drawLine(t.c(CUERDA).copy(alpha = 0.55f), Offset(tubo.left + tubo.width * (0.03f + 0.044f * k), tubo.top + h * 0.03f), Offset(tubo.left + tubo.width * (0.05f + 0.044f * k), tubo.top + h * 0.03f), 0.7f * u)
+                for (k in 0 until 22) drawLine(t.c(sedaCordon).copy(alpha = 0.7f), Offset(tubo.left + tubo.width * (0.03f + 0.044f * k), tubo.top + h * 0.035f), Offset(tubo.left + tubo.width * (0.05f + 0.044f * k), tubo.top + h * 0.035f), 0.8f * u)
+                drawRect(t.b(0.3f), Offset(tubo.left, tubo.top + h * 0.06f), Size(tubo.width, h * 0.02f))
                 drawOval(t.c(mezcla(col, ADOBE, 0.4f)).copy(alpha = 0.45f), Offset(tubo.left + tubo.width * 0.7f, tubo.bottom - h * 0.1f), Size(w * 0.1f, h * 0.06f))
             }
         }
@@ -1688,7 +1747,7 @@ object IdeasSeda : DisenoIdeas {
         clipRect(tapa.left, tapa.top, tapa.right, tapa.bottom) { tumbado(tapa, t, 1.4f) }
         drawRect(t.s(0.4f), Offset(tapa.right - 1.4f * u, tapa.top + 1f * u), Size(1.4f * u, tapa.height - 2f * u))
         drawRect(t.b(0.5f), Offset(tapa.left + tapa.width * 0.2f, tapa.top), Size(tapa.width * 0.6f, 1f * u))
-        val cord = t.c(if (bambu) CARMESI else CUERDA)
+        val cord = t.c(sedaCordon)
         listOf(0.4f, 0.6f).forEach { f -> drawLine(cord, Offset(tapa.left + tapa.width * f, tapa.top), Offset(tapa.left + tapa.width * (f + 0.08f), tapa.bottom), 1.6f * u) }
         val caeC = Path().apply { moveTo(tapa.left + tapa.width * 0.6f, tapa.bottom - h * 0.02f); cubicTo(w * 0.12f, h * 0.98f, w * 0.2f, h * 0.9f, w * 0.3f, h * 0.95f) }
         translate(1f * u, 1.4f * u) { drawPath(caeC, t.s(0.3f), style = Stroke(1.6f * u)) }
@@ -1713,7 +1772,7 @@ object IdeasSeda : DisenoIdeas {
         val piso = h * PISO
         val tela = when (Math.floorMod(m ushr 3, 3)) { 0 -> YUTE; 1 -> mezcla(YUTE, ADOBE_OSC, 0.3f); else -> mezcla(YUTE, PAPEL, 0.25f) }
         val seda = listOf(CARMESI, AZAFRAN, VERDE, INDIGO)[Math.floorMod(m ushr 5, 4)]
-        val r = Rect(w * 0.05f, h * 0.3f, w * 0.95f, piso)
+        val r = Rect(w * 0.05f, h * 0.2f, w * 0.95f, piso)
         val forma = Path().apply {
             moveTo(r.left + w * 0.03f, r.bottom)
             cubicTo(r.left - w * 0.01f, r.bottom - h * 0.2f, r.left - w * 0.01f, r.top + h * 0.1f, r.left + w * 0.06f, r.top + h * 0.03f)
@@ -1725,7 +1784,7 @@ object IdeasSeda : DisenoIdeas {
         translate(if (t.o) -w * 0.035f else w * 0.035f, h * 0.035f) { drawPath(forma, t.s(0.26f)) }
         contacto(Offset(r.center.x + w * 0.04f, piso), r.width * 1.05f, h * 0.05f, 0.42f)
         // Las tiras metidas bajo la cuerda, detrás.
-        tiras(w * 0.6f, w * 0.88f, r.top + h * 0.06f, h, c, t, 5, 0.1f)
+        tiras(w * 0.66f, w * 0.9f, r.top + h * 0.06f, h, c, t, 5, 0.14f)
         drawPath(forma, t.c(tela))
         clipPath(forma) {
             var x = r.left
@@ -1738,21 +1797,24 @@ object IdeasSeda : DisenoIdeas {
             pinceladas(r, if (t.o) NOCHE else HOLLIN, c.semilla, 6, u, 0.12f)
             // La boca del envoltorio con la seda que asoma.
             // (la seda: una franja bajo el borde deshilachado de la tela, con su brillo)
-            val sy = r.top + h * 0.035f
-            drawPath(poligono(w * 0.26f, r.top - h * 0.02f, w * 0.58f, r.top - h * 0.02f, w * 0.56f, sy + h * 0.05f, w * 0.42f, sy + h * 0.07f, w * 0.28f, sy + h * 0.04f), t.c(seda))
-            drawLine(t.b(0.65f), Offset(w * 0.3f, sy), Offset(w * 0.54f, sy + h * 0.005f), 1.4f * u)
-            drawLine(t.b(0.3f), Offset(w * 0.33f, sy + h * 0.03f), Offset(w * 0.5f, sy + h * 0.035f), 1f * u)
-            listOf(0.36f, 0.47f).forEach { f -> drawLine(t.s(0.3f), Offset(w * f, r.top), Offset(w * (f + 0.02f), sy + h * 0.06f), 0.8f * u) }
+            val sy = r.top + h * 0.05f
+            drawPath(poligono(w * 0.14f, r.top - h * 0.02f, w * 0.66f, r.top - h * 0.02f, w * 0.64f, sy + h * 0.07f, w * 0.4f, sy + h * 0.1f, w * 0.16f, sy + h * 0.06f), t.c(seda))
+            // Los pliegues de la seda, con su lustre.
+            listOf(0.22f, 0.34f, 0.46f, 0.57f).forEachIndexed { i, f ->
+                drawLine(t.s(0.3f), Offset(w * f, r.top), Offset(w * (f + 0.015f), sy + h * 0.08f), 1f * u)
+                drawLine(t.b(0.6f), Offset(w * (f - 0.03f), r.top + h * 0.01f), Offset(w * (f - 0.02f), sy + h * (0.04f + 0.01f * i)), 1.3f * u)
+            }
+            drawLine(t.b(0.7f), Offset(w * 0.18f, sy - h * 0.01f), Offset(w * 0.6f, sy), 1.2f * u)
             // El borde de la tela basta que la envuelve, doblado y con hilos sueltos.
-            val borde = Path().apply { moveTo(w * 0.24f, sy + h * 0.035f); cubicTo(w * 0.32f, sy + h * 0.085f, w * 0.5f, sy + h * 0.1f, w * 0.6f, sy + h * 0.06f) }
+            val borde = Path().apply { moveTo(w * 0.12f, sy + h * 0.05f); cubicTo(w * 0.25f, sy + h * 0.12f, w * 0.5f, sy + h * 0.13f, w * 0.68f, sy + h * 0.07f) }
             drawPath(borde, t.c(mezcla(tela, HOLLIN, 0.25f)), style = Stroke(2.4f * u))
             drawPath(borde, t.b(0.4f), style = Stroke(0.8f * u))
-            for (q in 0 until 7) { val x = w * (0.28f + 0.045f * q); val y = sy + h * (0.06f + 0.025f * sin(q * 0.9f + 1f).coerceAtLeast(0f)); drawLine(t.c(mezcla(tela, PAPEL, 0.3f)), Offset(x, y), Offset(x + 1f * u, y - h * 0.02f), 0.6f * u) }
+            for (q in 0 until 10) { val x = w * (0.16f + 0.05f * q); val y = sy + h * (0.08f + 0.03f * sin(q * 0.9f + 1f).coerceAtLeast(0f)); drawLine(t.c(mezcla(tela, PAPEL, 0.3f)), Offset(x, y), Offset(x + 1f * u, y - h * 0.02f), 0.6f * u) }
             // Las arrugas que tira la cuerda.
             listOf(0.15f, 0.3f, 0.7f, 0.86f).forEach { f -> drawLine(t.s(0.25f), Offset(r.left + r.width * f, r.top + h * 0.13f), Offset(r.left + r.width * (f + 0.04f), r.top + h * 0.22f), 0.8f * u) }
         }
         // La cuerda de lado a lado, y la que baja.
-        val cy = r.top + h * 0.13f
+        val cy = r.top + h * 0.2f
         val cuerda = t.c(CUERDA)
         val c1 = Path().apply { moveTo(r.left - w * 0.004f, cy + h * 0.02f); cubicTo(w * 0.3f, cy - h * 0.01f, w * 0.7f, cy + h * 0.01f, r.right + w * 0.004f, cy + h * 0.02f) }
         translate(1f * u, 1.6f * u) { drawPath(c1, t.s(0.3f), style = Stroke(2f * u)) }
@@ -1766,6 +1828,14 @@ object IdeasSeda : DisenoIdeas {
         drawCircle(cuerda, 2.6f * u, nudo)
         drawCircle(t.b(0.4f), 1f * u, nudo - Offset(0.8f * u, 0.8f * u))
         drawLine(cuerda, nudo, Offset(w * rotulo.left + w * 0.05f, h * rotulo.top + 2f * u), 1f * u)
+        // El sello de arcilla roja en el cruce de la derecha.
+        val se = Offset(w * 0.8f, cy + h * 0.015f)
+        val rs = w * 0.04f
+        drawCircle(t.s(0.35f), rs, se + Offset(1.4f * u, 1.8f * u))
+        drawCircle(t.c(mezcla(LACA, LADRILLO, 0.35f)), rs, se)
+        drawCircle(t.s(0.3f), rs * 0.66f, se, style = Stroke(0.9f * u))
+        drawPath(estrella(se, rs * 0.4f, 4, 0.35f, 0f), t.s(0.35f))
+        drawArc(t.b(0.55f), 190f, 80f, false, Offset(se.x - rs * 0.85f, se.y - rs * 0.85f), Size(rs * 1.7f, rs * 1.7f), style = Stroke(0.9f * u))
         filo(r, t, der)
         etiqueta(w, h, t, ALAMO_LUZ, madera = true)
         // El agujero de la tablilla.
@@ -1776,7 +1846,7 @@ object IdeasSeda : DisenoIdeas {
     private fun DrawScope.cesto(w: Float, h: Float, c: EstadoCajon, t: Tono, der: Boolean) {
         val u = density
         val piso = h * PISO
-        val top = h * 0.36f
+        val top = h * 0.26f
         val cesto = poligono(w * 0.07f, top, w * 0.93f, top, w * 0.86f, piso, w * 0.14f, piso)
         translate(if (t.o) -w * 0.035f else w * 0.035f, h * 0.035f) { drawPath(cesto, t.s(0.26f)) }
         contacto(Offset(w * 0.54f, piso), w * 0.8f, h * 0.05f, 0.42f)
@@ -1785,7 +1855,7 @@ object IdeasSeda : DisenoIdeas {
         for (i in 0 until (3 + n / 2).coerceAtMost(8)) {
             val bx = w * (0.2f + 0.6f * (i + 0.5f) / (3 + n / 2).coerceAtMost(8))
             val g = -35f + 70f * azar(c.semilla, i)
-            val l = h * (0.18f + 0.12f * azar(c.semilla, i + 3))
+            val l = h * (0.17f + 0.06f * azar(c.semilla, i + 3))
             rotate(g, Offset(bx, top + h * 0.05f)) {
                 val r = Rect(bx - w * 0.016f, top + h * 0.05f - l, bx + w * 0.016f, top + h * 0.06f)
                 drawRect(t.s(0.22f), Offset(r.left + 1.4f * u, r.top + 1.4f * u), r.size)
@@ -1827,7 +1897,7 @@ object IdeasSeda : DisenoIdeas {
         val u = density
         val piso = h * PISO
         if (Math.floorMod(c.semilla ushr 2, 2) == 0) {
-            val cx = w * 0.42f; val bw = w * 0.36f; val bh = h * 0.24f
+            val cx = w * 0.44f; val bw = w * 0.46f; val bh = h * 0.32f
             val boca = piso - bh
             val cuenco = Path().apply {
                 moveTo(cx - bw / 2, boca)
@@ -1871,7 +1941,7 @@ object IdeasSeda : DisenoIdeas {
         }
     }
 
-    override val rotulo = Rect(0.1f, 0.5f, 0.9f, 0.8f)
+    override val rotulo = Rect(0.08f, 0.46f, 0.92f, 0.82f)
     override fun tintaRotulo(oscuro: Boolean) = TINTA
     override val letraRotulo: FontFamily = LetraExtra.almendra
     override val salida = -SALIDA
