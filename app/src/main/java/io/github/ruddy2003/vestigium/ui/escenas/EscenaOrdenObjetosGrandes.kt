@@ -49,6 +49,12 @@ internal object GrandesOrden {
         sombra(lo, base, cuerpo, g.suelo.y, donde, contacto, g.pared, donde)
     }
 
+    /**
+     * Cuánto se corre un grande hacia la almena para quedar arrimado: lo que le falta al pie para llegar a la pared, menos
+     * [medio] (su medio ancho, ya ampliado) y un dedo de holgura.
+     */
+    private fun arrimado(g: Arrimo, medio: Float): Float = ((g.hueco - medio - 0.03f) / 0.955f).coerceIn(-0.25f, 0.4f)
+
     /** El marco de un grande: en el pie, corrido [corre] metros hacia la almena y girado [giro]. */
     private fun marco(g: Arrimo, corre: Float, giro: Float, amplia: Float): MarcoOrden =
         MarcoOrden.de(g.suelo, 0f, 1f).mas(corre, 0f, 0f, giro = giro, amp = amplia)
@@ -65,7 +71,7 @@ internal object GrandesOrden {
      * de la almena. Recostada en el parapeto.
      */
     fun radio(lo: LuzObjeto, g: Arrimo, pie: Offset): Cosa {
-        val f0 = marco(g, (g.hueco - 0.2f).coerceIn(0f, 0.3f), -0.32f, 1.3f).mas(0f, 0f, 0f, ladeo = 0.07f)
+        val f0 = marco(g, arrimado(g, 0.32f), -0.3f, 2.15f).mas(0f, 0f, 0f, ladeo = 0.06f)
         val antena = antenaPuntos()
         val puntos = listOf(V3(-0.15f, 0f, -0.09f), V3(0.15f, 0f, -0.09f), V3(0.15f, 0f, 0.09f), V3(-0.15f, 0f, 0.09f), V3(-0.15f, 0.44f, -0.09f), V3(0.15f, 0.44f, 0.09f), V3(-0.22f, 0.2f, -0.05f)) + antena.takeLast(1)
         val forma = TrazoOrden.silueta(f0, puntos)
@@ -78,15 +84,15 @@ internal object GrandesOrden {
             frente(lo, f0)
             correas(lo, f0, detras = false)
             auricular(lo, f0)
-            trazo(lo, f0, antena, 0.007f, lerp(K.ACERO, C.HOLLIN, 0.3f), V3(-0.6f, 0.2f, -0.8f))
-            for (i in 1 until antena.size - 1 step 3) disco(lo, f0, antena[i], V3(0f, 0f, -1f), 0.0055f, K.ACERO, 6)
-            trazo(lo, f0, antena, 0.0025f, lerp(K.ACERO, Color.White, 0.3f), V3(-0.6f, 0.3f, -0.8f), 0.8f)
-            disco(lo, f0, antena.last(), V3(0f, 0f, -1f), 0.009f, K.ACERO, 8)
+            trazo(lo, f0, antena, 0.011f, lerp(K.ACERO, C.HOLLIN, 0.2f), V3(-0.6f, 0.2f, -0.8f))
+            for (i in 1 until antena.size - 1 step 3) disco(lo, f0, antena[i], V3(0f, 0f, -1f), 0.0085f, K.ACERO, 6)
+            trazo(lo, f0, antena, 0.004f, lerp(K.ACERO, Color.White, 0.4f), V3(-0.6f, 0.3f, -0.8f), 0.9f)
+            disco(lo, f0, antena.last(), V3(0f, 0f, -1f), 0.013f, K.ACERO, 8)
         }
     }
 
     /** La antena: sale de su zócalo en la esquina de arriba y sube, larga y algo combada, como una caña. */
-    private fun antenaPuntos(): List<V3> = TrazoOrden.curva(V3(0.1f, 0.48f, 0.04f), V3(0.08f, 0.85f, 0.04f), V3(0.0f, 1.2f, 0.02f), V3(-0.1f, 1.48f, 0f), 15)
+    private fun antenaPuntos(): List<V3> = TrazoOrden.curva(V3(0.1f, 0.48f, 0.04f), V3(0.09f, 0.75f, 0.04f), V3(0.04f, 1.0f, 0.02f), V3(-0.03f, 1.2f, 0f), 15)
 
     /** La caja de chapa: las caras con su luz, los cantos gastados y los desconchones. */
     private fun DrawScope.cajaDeLaRadio(lo: LuzObjeto, f: MarcoOrden) {
@@ -145,7 +151,7 @@ internal object GrandesOrden {
 
     /** Las correas de mochila: lona parda, una caída por delante hasta el suelo con su hebilla y otra por el lado. */
     private fun DrawScope.correas(lo: LuzObjeto, f: MarcoOrden, detras: Boolean) {
-        val lona = lerp(C.TELA_VIEJA, C.MADERA, 0.3f)
+        val lona = lerp(C.ARENA, C.MADERA, 0.38f)
         if (detras) {
             trazo(lo, f, TrazoOrden.curva(V3(0.12f, 0.43f, 0.095f), V3(0.2f, 0.4f, 0.12f), V3(0.2f, 0.1f, 0.1f), V3(0.13f, 0.02f, 0.06f), 10), 0.03f, lona, V3(1f, 0f, 0f))
             return
@@ -182,7 +188,7 @@ internal object GrandesOrden {
      * de agua y la esquina doblada.
      */
     fun manual(lo: LuzObjeto, g: Arrimo, pie: Offset): Cosa {
-        val f = marco(g, (g.hueco - 0.34f).coerceIn(0f, 0.2f), -0.2f, 1.95f)
+        val f = marco(g, arrimado(g, 0.48f), -0.2f, 2.65f)
         // Abierto hacia quien mira, con el lomo detrás: cada mitad se gira 0,5 rad (unos 120° entre las dos).
         val izq = f.mas(0f, 0f, 0f, giro = 0.5f); val der = f.mas(0f, 0f, 0f, giro = -0.5f)
         val puntos = listOf(V3(-0.195f, 0f, 0f), V3(-0.195f, 0.262f, 0f)).map { izq.w(it) } + listOf(V3(0.195f, 0f, 0f), V3(0.195f, 0.262f, 0f)).map { der.w(it) } +
@@ -276,7 +282,7 @@ internal object GrandesOrden {
      * cebada y las tiras de carne; delante, en su paño, más carne y las pasas.
      */
     fun racion(lo: LuzObjeto, g: Arrimo, pie: Offset): Cosa {
-        val f = marco(g, (g.hueco - 0.22f).coerceIn(0f, 0.25f), 0.1f, 1.55f).mas(0f, 0f, 0f, ladeo = 0.1f)
+        val f = marco(g, arrimado(g, 0.34f), 0.1f, 2.55f).mas(0f, 0f, 0f, ladeo = 0.08f)
         val puntos = listOf(V3(-0.14f, 0f, -0.14f), V3(0.14f, 0f, 0.13f), V3(-0.13f, 0.26f, 0f), V3(0.13f, 0.26f, 0f), V3(0f, 0.33f, 0f), V3(-0.3f, 0f, -0.2f), V3(-0.26f, 0.02f, -0.28f))
         val forma = TrazoOrden.silueta(f, puntos)
         return Cosa(forma, pie) {
@@ -288,44 +294,52 @@ internal object GrandesOrden {
         }
     }
 
-    /** La bolsa de lino crudo: panzuda, con su remiendo y sus manchas. */
+    /** La bolsa: un saco de tela de yute, panzudo abajo y más estrecho arriba, con su remiendo y una mancha de grasa. */
     private fun DrawScope.bolsa(lo: LuzObjeto, f: MarcoOrden) {
-        revolucion(lo, f, V3(0f, 0f, 0f), V3(0f, 0.22f, 0f), listOf(0f to 0.1f, 0.12f to 0.125f, 0.4f to 0.132f, 0.75f to 0.118f, 1f to 0.106f), K.LINO, null, 16)
-        // El remiendo, de otro paño, con sus puntadas; una mancha de grasa.
-        val r = listOf(V3(-0.07f, 0.06f, -0.108f), V3(-0.01f, 0.065f, -0.13f), V3(-0.012f, 0.13f, -0.125f), V3(-0.075f, 0.125f, -0.1f))
-        cara(lo, f, r, V3(-0.3f, 0f, -1f), lerp(C.TELA_VIEJA, K.LINO, 0.4f))
-        for (i in 0 until 6) { val u = i / 6f; raya(f, V3(-0.07f + 0.06f * u, 0.06f + 0.004f * u, -0.112f - 0.022f * u), V3(-0.067f + 0.06f * u, 0.067f + 0.004f * u, -0.112f - 0.022f * u), 0.0022f, lerp(C.MADERA, C.HOLLIN, 0.3f).copy(alpha = 0.8f)) }
-        disco(lo, f, V3(0.05f, 0.1f, -0.122f), V3(0.3f, 0f, -1f), 0.025f, lerp(K.LINO, C.MADERA, 0.4f), 10, alfa = 0.35f)
-        // Las arrugas verticales de la tela que cede.
-        for (ang in listOf(3.6f, 4.2f, 4.9f, 5.5f)) trazo(lo, f, listOf(V3(0.128f * cos(ang), 0.03f, 0.128f * sin(ang)), V3(0.13f * cos(ang + 0.08f), 0.11f, 0.13f * sin(ang + 0.08f)), V3(0.113f * cos(ang), 0.19f, 0.113f * sin(ang))), 0.004f, lerp(K.LINO, C.SOMBRA, 0.4f), V3(cos(ang), 0f, sin(ang)), 0.6f)
+        revolucion(lo, f, V3(0f, 0f, 0f), V3(0.008f, 0.2f, 0.006f), listOf(0f to 0.11f, 0.1f to 0.136f, 0.35f to 0.142f, 0.7f to 0.122f, 0.9f to 0.104f, 1f to 0.1f), K.SACO, null, 16)
+        // El remiendo, de otro paño, con sus puntadas; la mancha de grasa.
+        val r = listOf(V3(-0.075f, 0.05f, -0.112f), V3(-0.012f, 0.055f, -0.138f), V3(-0.014f, 0.125f, -0.13f), V3(-0.078f, 0.118f, -0.104f))
+        cara(lo, f, r, V3(-0.3f, 0f, -1f), lerp(C.TELA_VIEJA, K.SACO, 0.35f))
+        for (i in 0 until 6) { val u = i / 6f; raya(f, V3(-0.075f + 0.062f * u, 0.05f + 0.005f * u, -0.116f - 0.024f * u), V3(-0.072f + 0.062f * u, 0.058f + 0.005f * u, -0.116f - 0.024f * u), 0.0024f, lerp(C.ARENA, C.MADERA, 0.2f).copy(alpha = 0.85f)) }
+        disco(lo, f, V3(0.055f, 0.1f, -0.128f), V3(0.3f, 0f, -1f), 0.026f, lerp(K.SACO, C.HOLLIN, 0.35f), 10, alfa = 0.4f)
+        // La trama del yute: rayas finas de través y los pliegues de la tela que cede.
+        for (j in 0 until 6) { val y = 0.02f + j * 0.03f; trazo(lo, f, TrazoOrden.circulo(V3(0.004f * j / 6f, y, 0f), V3(0f, 1f, 0f), 0.14f - 0.004f * j, 10, 3.6f, 5.4f), 0.0018f, lerp(K.SACO, C.HOLLIN, 0.25f), V3(0f, 0f, -1f), 0.35f) }
+        for (ang in listOf(3.7f, 4.4f, 5.2f)) trazo(lo, f, listOf(V3(0.138f * cos(ang), 0.03f, 0.138f * sin(ang)), V3(0.142f * cos(ang + 0.08f), 0.1f, 0.142f * sin(ang + 0.08f)), V3(0.11f * cos(ang), 0.19f, 0.11f * sin(ang))), 0.005f, lerp(K.SACO, C.SOMBRA, 0.45f), V3(cos(ang), 0f, sin(ang)), 0.55f)
     }
 
-    /** Lo que asoma por la boca: dentro, en penumbra; dos tostadas de cebada de pie y las tiras de carne seca. */
+    /** Lo que asoma por la boca: dentro, en penumbra; tres tostadas de cebada de pie, abiertas hacia fuera, y dos tiras de carne. */
     private fun DrawScope.contenido(lo: LuzObjeto, f: MarcoOrden) {
-        disco(lo, f, V3(0f, 0.215f, 0f), V3(0f, 1f, 0f), 0.1f, lerp(K.LINO, C.HOLLIN, 0.55f), 16)
-        tostada(lo, f.mas(-0.03f, 0.17f, 0.02f, giro = 0.4f, ladeo = -0.3f))
-        tostada(lo, f.mas(0.035f, 0.165f, -0.01f, giro = -0.3f, ladeo = 0.25f))
-        for ((x, ang) in listOf(0.0f to 0.2f, 0.05f to -0.35f)) {
-            val tira = TrazoOrden.curva(V3(x, 0.17f, 0.04f), V3(x + 0.02f * ang, 0.27f, 0.03f), V3(x + 0.06f * ang, 0.31f, 0.0f), V3(x + 0.1f * ang, 0.29f, -0.02f), 8)
-            trazo(lo, f, tira, 0.016f, K.CARNE, V3(0f, 0.3f, -1f))
-            trazo(lo, f, tira.map { it + V3(0.003f, 0f, -0.004f) }, 0.004f, lerp(K.CARNE, C.ARENA, 0.4f), V3(0f, 0.3f, -1f), 0.6f)
+        disco(lo, f, V3(0.008f, 0.205f, 0.006f), V3(0f, 1f, 0f), 0.096f, lerp(K.SACO, C.HOLLIN, 0.6f), 16)
+        for ((x, ang) in listOf(-0.005f to 0.25f, 0.045f to -0.35f)) {
+            val tira = TrazoOrden.curva(V3(x, 0.17f, 0.03f), V3(x + 0.01f * ang, 0.26f, 0.03f), V3(x + 0.05f * ang, 0.3f, 0.01f), V3(x + 0.08f * ang, 0.3f, -0.01f), 8)
+            trazo(lo, f, tira, 0.02f, K.CARNE, V3(0f, 0.3f, -1f))
+            trazo(lo, f, tira.map { it + V3(0.004f, 0.002f, -0.006f) }, 0.005f, lerp(K.CARNE, C.ARENA, 0.45f), V3(0f, 0.3f, -1f), 0.7f)
         }
+        tostada(lo, f.mas(0.05f, 0.15f, 0.03f, giro = -0.4f, vuelco = 0.4f, ladeo = 0.35f, amp = 1.15f))
+        tostada(lo, f.mas(-0.045f, 0.15f, 0.02f, giro = 0.5f, vuelco = 0.4f, ladeo = -0.35f, amp = 1.15f))
+        tostada(lo, f.mas(0.005f, 0.155f, -0.03f, giro = 0.1f, vuelco = 0.55f, amp = 1.15f))
     }
 
-    /** Una tostada de pan de cebada cocido dos veces: gruesa, tostada por fuera, con la miga parda llena de ojos. */
+    /** Una tostada de pan de cebada cocido dos veces: gruesa, con la corteza parda y la miga tostada llena de ojos. */
     private fun DrawScope.tostada(lo: LuzObjeto, f: MarcoOrden) {
-        caja(lo, f, -0.04f, 0.04f, 0f, 0.1f, -0.014f, 0.014f, K.PAN, lerp(K.PAN, C.HOLLIN, 0.3f))
+        val corteza = lerp(K.PAN, C.MADERA, 0.45f)
+        caja(lo, f, -0.045f, 0.045f, 0f, 0.13f, -0.012f, 0.012f, corteza, lerp(corteza, C.HOLLIN, 0.15f))
+        val miga = lerp(K.PAN, C.ARENA, 0.35f)
+        val cara0 = listOf(V3(-0.04f, 0.004f, -0.0125f), V3(0.04f, 0.004f, -0.0125f), V3(0.041f, 0.11f, -0.0125f), V3(0.02f, 0.126f, -0.0125f), V3(-0.022f, 0.125f, -0.0125f), V3(-0.041f, 0.108f, -0.0125f))
+        cara(lo, f, cara0, V3(0f, 0f, -1f), miga, claro = 0.1f)
         val a = az("tostada", f.o.x)
-        repeat(6) { disco(lo, f, V3(a.entreF(-0.03f, 0.03f), a.entreF(0.015f, 0.09f), -0.0145f), V3(0f, 0f, -1f), a.entreF(0.003f, 0.006f), lerp(K.PAN, C.HOLLIN, 0.35f), 6, alfa = 0.8f) }
-        trazo(lo, f, listOf(V3(-0.04f, 0.1f, -0.015f), V3(0f, 0.104f, -0.015f), V3(0.04f, 0.1f, -0.015f)), 0.008f, lerp(K.PAN, C.MADERA, 0.6f), V3(0f, 0.5f, -1f))
+        repeat(9) { disco(lo, f, V3(a.entreF(-0.032f, 0.032f), a.entreF(0.015f, 0.105f), -0.013f), V3(0f, 0f, -1f), a.entreF(0.003f, 0.0065f), lerp(K.PAN, C.HOLLIN, 0.4f), 6, alfa = 0.8f) }
+        // Los granos de cebada, más claros, y el tostado del borde.
+        repeat(5) { disco(lo, f, V3(a.entreF(-0.03f, 0.03f), a.entreF(0.02f, 0.1f), -0.0132f), V3(0f, 0f, -1f), 0.0035f, lerp(C.ARENA, Color.White, 0.2f), 5, alfa = 0.7f) }
     }
 
-    /** La boca vuelta hacia fuera y el cordón de cerrarla, suelto, que cae a las losas. */
+    /** La boca vuelta hacia fuera, más clara (el revés de la tela), y el cordón de cerrarla, suelto, que cae por un lado. */
     private fun DrawScope.cuello(lo: LuzObjeto, f: MarcoOrden) {
-        revolucion(lo, f, V3(0f, 0.2f, 0f), V3(0f, 0.235f, 0f), listOf(0f to 0.112f, 0.5f to 0.122f, 1f to 0.116f), lerp(K.LINO, C.ARENA, 0.15f), null, 16)
-        val cordon = lerp(C.MADERA, C.HOLLIN, 0.25f)
-        trazo(lo, f, TrazoOrden.circulo(V3(0f, 0.212f, 0f), V3(0f, 1f, 0f), 0.114f, 16, 2.6f, 6.6f), 0.006f, cordon, V3(0f, 0.3f, -1f))
-        trazo(lo, f, TrazoOrden.curva(V3(-0.1f, 0.21f, -0.06f), V3(-0.16f, 0.16f, -0.12f), V3(-0.16f, 0.02f, -0.16f), V3(-0.22f, 0.004f, -0.22f), 10), 0.006f, cordon, V3(-0.5f, 0.3f, -0.8f))
+        revolucion(lo, f, V3(0.008f, 0.19f, 0.006f), V3(0.008f, 0.225f, 0.006f), listOf(0f to 0.104f, 0.5f to 0.117f, 1f to 0.11f), lerp(K.SACO, C.ARENA, 0.3f), null, 16)
+        val cordon = lerp(C.MADERA, C.HOLLIN, 0.3f)
+        trazo(lo, f, TrazoOrden.circulo(V3(0.008f, 0.202f, 0.006f), V3(0f, 1f, 0f), 0.112f, 16, 2.6f, 6.6f), 0.006f, cordon, V3(0f, 0.3f, -1f))
+        trazo(lo, f, TrazoOrden.curva(V3(-0.1f, 0.2f, -0.03f), V3(-0.155f, 0.14f, -0.04f), V3(-0.165f, 0.04f, -0.06f), V3(-0.21f, 0.004f, -0.1f), 10), 0.007f, cordon, V3(-0.8f, 0.3f, -0.5f))
+        disco(lo, f, V3(-0.21f, 0.006f, -0.1f), V3(0f, 1f, 0f), 0.009f, cordon, 6)
     }
 
     /** El paño delante de la bolsa: más carne seca, retorcida, y el puñado de pasas con su brillo. */
@@ -354,7 +368,7 @@ internal object GrandesOrden {
      * del nombre (rayas, nunca letras), el tapón con su cadenilla y la correa de cuero colgada de un clavo del parapeto.
      */
     fun cantimplora(lo: LuzObjeto, g: Arrimo, pie: Offset): Cosa {
-        val f = marco(g, (g.hueco - 0.18f).coerceIn(0f, 0.3f), -0.42f, 2.0f).mas(0f, 0f, 0f, ladeo = 0.1f)
+        val f = marco(g, arrimado(g, 0.24f), -0.42f, 3.0f).mas(0f, 0f, 0f, ladeo = 0.08f)
         val clavo = TrazoOrden.aCamara(V3(g.pared - 0.01f, 0.9f, TrazoOrden.aCiudadela(g.suelo).z + 0.08f))
         val puntos = listOf(V3(-0.11f, 0.01f, 0f), V3(0.11f, 0.01f, 0f), V3(-0.11f, 0.22f, 0f), V3(0.11f, 0.22f, 0f), V3(0f, 0.26f, 0f))
         val forma = poligono(envolvente(puntos.map { f.p(it) } + TrazoOrden.pc(clavo)))
@@ -440,7 +454,7 @@ internal object GrandesOrden {
      * siempre algo vivas (el rescoldo); de noche, rojas, con su luz en el cobre y en las losas.
      */
     fun soldador(lo0: LuzObjeto, g: Arrimo, pie: Offset): Cosa {
-        val f = marco(g, (g.hueco - 0.2f).coerceIn(0f, 0.25f), 0.2f, 1.6f)
+        val f = marco(g, arrimado(g, 0.32f), 0.2f, 2.5f)
         val brasa = f.w(V3(0f, 0.16f, 0f))
         val lo = lo0.con(Lumbre(brasa, 0.35f + 0.5f * lo0.noche, 0.35f))
         val puntos = listOf(V3(-0.13f, 0f, -0.13f), V3(0.13f, 0f, 0.13f), V3(-0.13f, 0.16f, 0f), V3(0.13f, 0.16f, 0f), V3(-0.28f, 0.22f, -0.18f), V3(-0.3f, 0.005f, -0.2f))
@@ -484,19 +498,19 @@ internal object GrandesOrden {
     /** El soldador: la cabeza de cobre (lo que se ve fuera de las brasas, con el filo limado), la varilla y el mango. */
     private fun DrawScope.hierro(lo: LuzObjeto, f: MarcoOrden) {
         val d = TrazoOrden.unidad(V3(-1f, 0.2f, -0.6f))
-        val cabeza = V3(0.01f, 0.152f, 0.01f)
+        val cabeza = V3(0.0f, 0.165f, 0.0f)
         val cf = f.mas(cabeza.x, cabeza.y, cabeza.z, giro = 2.6f, vuelco = 0.18f)
-        caja(lo, cf, -0.07f, 0.0f, -0.014f, 0.014f, -0.016f, 0.016f, K.COBRE, lerp(K.COBRE, C.HOLLIN, 0.2f))
+        caja(lo, cf, -0.07f, 0.0f, -0.016f, 0.016f, -0.018f, 0.018f, K.COBRE, lerp(K.COBRE, C.LATON, 0.25f))
         cara(lo, cf, listOf(V3(-0.07f, -0.014f, -0.016f), V3(-0.095f, 0f, 0f), V3(-0.07f, 0.014f, -0.016f)), V3(-0.4f, 0f, -1f), K.COBRE, claro = 0.15f)
         cara(lo, cf, listOf(V3(-0.07f, 0.014f, -0.016f), V3(-0.095f, 0f, 0f), V3(-0.07f, 0.014f, 0.016f)), V3(-0.3f, 1f, 0f), lerp(K.COBRE, C.LATON, 0.5f), claro = 0.25f)
         // El cobre que se pone rojo en las brasas, de noche.
         if (lo.noche > 0.2f) disco(lo, cf, V3(-0.075f, 0f, -0.017f), V3(0f, 0f, -1f), 0.012f, C.FRAGUA.copy(alpha = 0.6f * lo.noche), 8, luz = false)
         val r0 = cabeza + d * 0.01f; val r1 = r0 + d * 0.2f
-        cilindro(lo, f, r0, r1, 0.006f, C.HIERRO, null, 6)
+        cilindro(lo, f, r0, r1, 0.0075f, lerp(C.HIERRO, K.ACERO, 0.3f), null, 6)
         brillo(lo, f, r0 + V3(0f, 0.005f, 0f), r1 + V3(0f, 0.005f, 0f), 0.003f, C.HIERRO, V3(0f, 1f, -0.4f), 0.7f)
         val m1 = r1 + d * 0.13f
         cilindro(lo, f, r1, r1 + d * 0.015f, 0.011f, K.ACERO, K.ACERO, 8)
-        revolucion(lo, f, r1 + d * 0.015f, m1, listOf(0f to 0.013f, 0.15f to 0.016f, 0.85f to 0.016f, 1f to 0.012f), lerp(C.MADERA, C.HOLLIN, 0.15f), lerp(C.MADERA, C.HOLLIN, 0.35f), 10)
+        revolucion(lo, f, r1 + d * 0.015f, m1, listOf(0f to 0.014f, 0.15f to 0.018f, 0.85f to 0.018f, 1f to 0.013f), lerp(C.MADERA, C.ARENA, 0.25f), lerp(C.MADERA, C.HOLLIN, 0.2f), 10)
         // El quemado del mango, cerca de la virola.
         raya(f, r1 + d * 0.02f + V3(0f, 0.014f, 0f), r1 + d * 0.045f + V3(0f, 0.014f, 0f), 0.006f, C.HOLLIN.copy(alpha = 0.5f))
     }

@@ -37,6 +37,12 @@ internal object ChicosOrden {
     private val K = ColorObjetoOrden
     private fun az(vararg partes: Any) = Azar(Semilla.de("orden", "objetos", *partes))
 
+    /**
+     * Cuánto más grandes que de verdad van todos (además de lo propio de cada uno): el soporte está a unos cinco metros y
+     * medio, donde un metro mide unas 40 unidades del lienzo, y a tamaño de teléfono no se leían **[Diseño propio]**.
+     */
+    private const val MAS = 1.95f
+
     /** La tapa del soporte bajo [o], para recortar las sombras: unos 60 × 90 cm. */
     private fun tapa(o: V3): Path = TrazoOrden.tapa(o, 0.3f, 0.45f)
 
@@ -52,7 +58,7 @@ internal object ChicosOrden {
      * latón.
      */
     fun DrawScope.candil(lo0: LuzObjeto, o: V3) {
-        val f = MarcoOrden.de(o, 0.35f, 2.6f)
+        val f = MarcoOrden.de(o, 0.35f, 2.6f * MAS)
         val arde = ObjetosOrden.candilEncendido(lo0.m)
         val punta = V3(0.062f, 0.106f, -0.035f)
         val lo = if (arde) lo0.con(Lumbre(f.w(punta + V3(0f, 0.03f, 0f)), 0.95f, 0.45f)) else lo0
@@ -121,17 +127,20 @@ internal object ChicosOrden {
     // =================================================================
 
     /**
-     * La pluma de acero «de una caja de antes del Fuego que tenía cien iguales»: el mango de madera clara con su virola y el
-     * plumín de acero con su raja y su ojo, manchado de tinta, tendida sobre un trapo con borrones; detrás, el tintero de
-     * gres vidriado con la tinta a la vista y una chorrera.
+     * La pluma de acero «de una caja de antes del Fuego que tenía cien iguales»: el mango de madera clara con su virola de
+     * acero, metida en el tintero de vidrio verdoso, con la tinta a la vista; delante, la cajita de hojalata abierta con los
+     * plumines de repuesto, que brillan, y uno suelto, todo sobre un trapo con borrones de tinta.
      */
     fun DrawScope.pluma(lo: LuzObjeto, o: V3) {
-        val f = MarcoOrden.de(o, -0.25f, 3.0f)
-        val cuerpo = listOf(V3(-0.075f, 0f, 0.05f), V3(0.07f, 0f, -0.06f), V3(0.03f, 0.06f, 0.03f), V3(-0.08f, 0.02f, 0.045f))
-        sombra(lo, listOf(V3(-0.07f, 0f, -0.05f), V3(0.07f, 0f, -0.05f), V3(0.07f, 0f, 0.05f), V3(-0.07f, 0f, 0.05f)).map { f.w(it) }, cuerpo.map { f.w(it) }, o.y, tapa(o), 0.25f)
+        val f = MarcoOrden.de(o, -0.25f, 3.0f * MAS)
+        val d = TrazoOrden.unidad(V3(0.42f, 1f, 0.22f))
+        val boca = V3(0.02f, 0.05f, 0.03f)
+        val cuerpo = listOf(V3(-0.075f, 0f, 0.05f), V3(0.07f, 0f, -0.06f), V3(0.05f, 0.06f, 0.05f), boca + d * 0.17f).map { f.w(it) }
+        sombra(lo, listOf(V3(-0.07f, 0f, -0.05f), V3(0.07f, 0f, -0.05f), V3(0.07f, 0f, 0.05f), V3(-0.07f, 0f, 0.05f)).map { f.w(it) }, cuerpo, o.y, tapa(o), 0.25f)
         trapo(lo, f, az("trapo"))
-        tintero(lo, f.mas(0.03f, 0.003f, 0.03f))
-        plumaSuelta(lo, f)
+        cajita(lo, f.mas(-0.042f, 0.003f, -0.02f, giro = 0.3f))
+        tintero(lo, f.mas(boca.x, 0.003f, boca.z))
+        mangoDePluma(lo, f, boca + d * 0.012f, d)
     }
 
     /** El trapo de limpiar la pluma: un paño de lino arrugado, con un pico doblado y los borrones de tinta. */
@@ -139,46 +148,55 @@ internal object ChicosOrden {
         val borde = listOf(V3(-0.075f, 0.002f, -0.05f), V3(-0.02f, 0.003f, -0.058f), V3(0.04f, 0.002f, -0.055f), V3(0.075f, 0.003f, -0.035f), V3(0.07f, 0.002f, 0.02f),
             V3(0.06f, 0.004f, 0.055f), V3(0.0f, 0.003f, 0.06f), V3(-0.06f, 0.002f, 0.05f), V3(-0.08f, 0.004f, 0.0f))
         cara(lo, f, borde, V3(0f, 1f, 0f), K.LINO)
-        // Las arrugas: dos pliegues con su lado de sombra.
         for (z in listOf(-0.02f, 0.025f)) trazo(lo, f, listOf(V3(-0.07f, 0.006f, z + 0.01f), V3(-0.01f, 0.008f, z - 0.004f), V3(0.06f, 0.006f, z + 0.006f)), 0.005f, lerp(K.LINO, C.SOMBRA, 0.35f), V3(-0.3f, 0.7f, -0.6f), 0.7f)
-        // El pico doblado, de canto: el revés, más oscuro.
         cara(lo, f, listOf(V3(0.04f, 0.003f, -0.055f), V3(0.075f, 0.003f, -0.035f), V3(0.05f, 0.014f, -0.03f)), V3(0.3f, 0.6f, -0.7f), lerp(K.LINO, C.ARENA, 0.2f))
-        // Los borrones de tinta: unos grandes, otros salpicados.
         repeat(5) { i ->
             val c = V3(a.entreF(-0.06f, 0.05f), 0.0045f, a.entreF(-0.045f, 0.045f)); val r = if (i < 2) a.entreF(0.008f, 0.014f) else a.entreF(0.003f, 0.006f)
             disco(lo, f, c, V3(0f, 1f, 0f), r, K.TINTA, 9, alfa = 0.75f)
         }
     }
 
-    /** El tintero de gres, rechoncho, vidriado de pardo, con la boca estrecha y la tinta dentro. */
+    /** El tintero de vidrio verdoso, rechoncho, con la tinta oscura dentro, la boca estrecha y una chorrera. */
     private fun DrawScope.tintero(lo: LuzObjeto, f: MarcoOrden) {
-        val gres = lerp(C.MADERA, C.ROCA, 0.35f)
-        revolucion(lo, f, V3(0f, 0f, 0f), V3(0f, 0.05f, 0f), listOf(0f to 0.027f, 0.5f to 0.029f, 0.66f to 0.024f, 0.8f to 0.013f, 0.9f to 0.011f, 1f to 0.013f), gres, null, 16)
-        disco(lo, f, V3(0f, 0.05f, 0f), V3(0f, 1f, 0f), 0.0125f, lerp(gres, C.HOLLIN, 0.3f), 12)
-        disco(lo, f, V3(0f, 0.047f, 0f), V3(0f, 1f, 0f), 0.009f, K.TINTA, 12)
-        // El brillo del vidriado y la chorrera de tinta que bajó por la panza.
-        brillo(lo, f, V3(-0.02f, 0.008f, -0.018f), V3(-0.021f, 0.028f, -0.019f), 0.004f, gres, V3(-0.6f, 0.2f, -0.8f), 0.8f)
-        trazo(lo, f, listOf(V3(0.006f, 0.046f, -0.012f), V3(0.012f, 0.033f, -0.022f), V3(0.014f, 0.02f, -0.026f)), 0.0045f, K.TINTA, V3(0.3f, 0f, -1f))
+        val vidrio = lerp(C.VIDRIO, K.TINTA, 0.78f)
+        revolucion(lo, f, V3(0f, 0f, 0f), V3(0f, 0.05f, 0f), listOf(0f to 0.03f, 0.5f to 0.032f, 0.66f to 0.026f, 0.8f to 0.014f, 0.9f to 0.012f, 1f to 0.014f), vidrio, null, 16)
+        // Por encima de la tinta, el vidrio claro: una franja más clara en lo alto de la panza.
+        trazo(lo, f, TrazoOrden.circulo(V3(0f, 0.031f, 0f), V3(0f, 1f, 0f), 0.029f, 12, 3.4f, 6.0f), 0.006f, lerp(C.VIDRIO, Color.White, 0.2f), V3(0f, 0.6f, -1f), 0.45f)
+        disco(lo, f, V3(0f, 0.05f, 0f), V3(0f, 1f, 0f), 0.0135f, lerp(C.VIDRIO, C.HOLLIN, 0.3f), 12)
+        disco(lo, f, V3(0f, 0.047f, 0f), V3(0f, 1f, 0f), 0.0095f, K.TINTA, 12)
+        brillo(lo, f, V3(-0.022f, 0.006f, -0.019f), V3(-0.023f, 0.03f, -0.02f), 0.005f, C.VIDRIO, V3(-0.6f, 0.2f, -0.8f), 1f)
+        trazo(lo, f, listOf(V3(0.006f, 0.047f, -0.012f), V3(0.013f, 0.034f, -0.024f), V3(0.016f, 0.02f, -0.028f)), 0.0045f, K.TINTA, V3(0.3f, 0f, -1f))
     }
 
-    /** La pluma tendida en el trapo: el mango, la virola y el plumín de acero, que brilla, con su raja y su ojo. */
-    private fun DrawScope.plumaSuelta(lo: LuzObjeto, f: MarcoOrden) {
-        val atras = V3(-0.078f, 0.008f, 0.04f); val virola = V3(0.022f, 0.008f, -0.028f); val cuello = V3(0.034f, 0.0075f, -0.036f)
-        cilindro(lo, f, atras, virola, 0.0062f, lerp(C.MADERA, C.ARENA, 0.35f), lerp(C.MADERA, C.HOLLIN, 0.2f), 10)
-        // El mango se adelgaza hacia la virola: una banda más oscura donde se agarra.
-        cilindro(lo, f, V3(0.004f, 0.008f, -0.016f), virola, 0.0066f, lerp(C.MADERA, C.HOLLIN, 0.25f), null, 10)
-        cilindro(lo, f, virola, cuello, 0.0058f, K.ACERO, K.ACERO, 10)
-        val d = TrazoOrden.unidad(cuello - atras); val lado = V3(-d.z, 0f, d.x)
-        val pico = cuello + d * 0.03f + V3(0f, -0.004f, 0f)
-        val plumin = listOf(cuello + lado * 0.006f, cuello + d * 0.012f + lado * 0.0055f, pico, cuello + d * 0.012f - lado * 0.0055f, cuello - lado * 0.006f)
-        cara(lo, f, plumin, V3(0f, 1f, 0f), lerp(K.ACERO, Color.White, 0.15f), claro = 0.2f)
-        // La punta mojada de tinta, la raja, el ojo y el brillo del acero.
-        cara(lo, f, listOf(cuello + d * 0.021f + lado * 0.0032f, pico, cuello + d * 0.021f - lado * 0.0032f), V3(0f, 1f, 0f), K.TINTA)
-        raya(f, cuello + d * 0.012f, pico, 0.0012f, C.HOLLIN.copy(alpha = 0.9f))
-        disco(lo, f, cuello + d * 0.011f + V3(0f, 0.0004f, 0f), V3(0f, 1f, 0f), 0.0018f, C.HOLLIN, 6, luz = false)
-        brillo(lo, f, cuello + d * 0.002f + lado * 0.003f, cuello + d * 0.018f + lado * 0.0025f, 0.0022f, K.ACERO, V3(0.2f, 1f, -0.4f), 1f)
-        // Un borrón fresco bajo la punta.
-        disco(lo, f, pico + d * 0.006f + V3(0f, -0.0035f, 0f), V3(0f, 1f, 0f), 0.006f, K.TINTA, 8, alfa = 0.8f)
+    /** La pluma en el tintero: la virola de acero con su brillo y el mango de madera clara, que sube en diagonal. */
+    private fun DrawScope.mangoDePluma(lo: LuzObjeto, f: MarcoOrden, a: V3, d: V3) {
+        val v1 = a + d * 0.03f; val fin = a + d * 0.175f
+        cilindro(lo, f, a, v1, 0.0062f, K.ACERO, null, 10)
+        revolucion(lo, f, v1, fin, listOf(0f to 0.0066f, 0.25f to 0.0056f, 0.9f to 0.0048f, 1f to 0.004f), lerp(C.MADERA, C.ARENA, 0.4f), lerp(C.MADERA, C.ARENA, 0.2f), 10)
+        // Donde se agarra, más oscuro de los dedos; el brillo del acero y el de la madera.
+        cilindro(lo, f, v1, v1 + d * 0.035f, 0.0068f, lerp(C.MADERA, C.HOLLIN, 0.2f), null, 10)
+        brillo(lo, f, a + V3(-0.004f, 0f, -0.003f), v1 + V3(-0.004f, 0f, -0.003f), 0.0025f, K.ACERO, V3(-0.7f, 0.2f, -0.7f), 1f)
+        brillo(lo, f, v1 + d * 0.05f + V3(-0.004f, 0f, -0.003f), fin + V3(-0.003f, 0f, -0.002f), 0.002f, lerp(C.MADERA, C.ARENA, 0.4f), V3(-0.7f, 0.2f, -0.7f), 0.6f)
+    }
+
+    /** La cajita de hojalata de los plumines, abierta: la tapa levantada y, dentro, los plumines de acero en fila; uno, fuera. */
+    private fun DrawScope.cajita(lo: LuzObjeto, f: MarcoOrden) {
+        val hoja = lerp(K.ACERO, C.LATON, 0.25f)
+        caja(lo, f, -0.03f, 0.03f, 0f, 0.012f, -0.02f, 0.02f, hoja, lerp(hoja, C.HOLLIN, 0.45f))
+        val tp = f.mas(0f, 0.012f, 0.02f, vuelco = -1.75f)
+        cara(lo, tp, listOf(V3(-0.031f, 0f, 0f), V3(0.031f, 0f, 0f), V3(0.031f, 0f, -0.041f), V3(-0.031f, 0f, -0.041f)), V3(0f, -1f, 0f), lerp(hoja, Color.White, 0.15f))
+        cara(lo, tp, listOf(V3(-0.031f, 0f, -0.041f), V3(0.031f, 0f, -0.041f), V3(0.031f, 0.004f, -0.041f), V3(-0.031f, 0.004f, -0.041f)), V3(0f, 0f, -1f), hoja)
+        for (i in 0 until 5) plumin(lo, f, V3(-0.022f + i * 0.011f, 0.0125f, 0.004f), V3(0f, 0f, -1f))
+        plumin(lo, f, V3(0.01f, 0.001f, -0.04f), TrazoOrden.unidad(V3(0.6f, 0f, -1f)))
+    }
+
+    /** Un plumín de acero: la punta con su raja y su ojo, que brilla. */
+    private fun DrawScope.plumin(lo: LuzObjeto, f: MarcoOrden, c: V3, d: V3) {
+        val l = V3(-d.z, 0f, d.x)
+        val forma = listOf(c + l * 0.0045f, c + d * 0.012f + l * 0.004f, c + d * 0.024f, c + d * 0.012f - l * 0.004f, c - l * 0.0045f)
+        cara(lo, f, forma, V3(0f, 1f, 0f), lerp(K.ACERO, Color.White, 0.2f), claro = 0.3f)
+        raya(f, c + d * 0.012f, c + d * 0.024f, 0.0009f, C.HOLLIN.copy(alpha = 0.8f))
+        brillo(lo, f, c + l * 0.002f, c + d * 0.014f + l * 0.002f, 0.0016f, K.ACERO, V3(0f, 1f, -0.4f), 1f)
     }
 
     // =================================================================
@@ -192,8 +210,8 @@ internal object ChicosOrden {
      * vuelta en el soporte.
      */
     fun DrawScope.cuaderno(lo: LuzObjeto, o: V3) {
-        val base = MarcoOrden.de(o, 0.18f, 2.2f)
-        val f = base.mas(0f, 0.012f, 0f, vuelco = -0.42f)
+        val base = MarcoOrden.de(o, 0.18f, 2.2f * MAS)
+        val f = base.mas(0f, 0.012f, 0f, vuelco = 0.62f)
         val cuerpo = listOf(V3(-0.11f, 0f, -0.075f), V3(0.11f, 0f, -0.075f), V3(0.11f, 0f, 0.075f), V3(-0.11f, 0f, 0.075f), V3(0f, 0.025f, 0f)).map { f.w(it) }
         sombra(lo, listOf(V3(-0.1f, -0.012f, -0.07f), V3(0.1f, -0.012f, -0.07f), V3(0.1f, -0.012f, 0f), V3(-0.1f, -0.012f, 0f)).map { f.w(it) }, cuerpo, o.y, tapa(o), 0.3f)
         cordon(lo, base)
@@ -278,8 +296,8 @@ internal object ChicosOrden {
      * se ve grande a través de la lente. Con sol, en su sombra, el punto de luz que junta la lente.
      */
     fun DrawScope.lupa(lo: LuzObjeto, o: V3) {
-        val f = MarcoOrden.de(o, 0.1f, 2.7f)
-        val anillo = f.mas(0.018f, 0.014f, -0.004f, vuelco = -0.32f)
+        val f = MarcoOrden.de(o, 0.1f, 2.7f * MAS)
+        val anillo = f.mas(0.018f, 0.014f, -0.004f, vuelco = 0.55f)
         val cuerpo = (TrazoOrden.circulo(V3(0f, 0f, 0f), V3(0f, 1f, 0f), 0.05f, 8).map { anillo.w(it) } + listOf(f.w(V3(-0.07f, 0.01f, -0.04f))))
         sombra(lo, listOf(V3(-0.075f, 0f, -0.045f), V3(0.07f, 0f, -0.03f), V3(0.06f, 0f, 0.05f), V3(-0.06f, 0f, 0.05f)).map { f.w(it) }, cuerpo, o.y, tapa(o), 0.2f)
         foco(lo, anillo)
@@ -354,8 +372,8 @@ internal object ChicosOrden {
      * madera con su virola y una punta puesta, delante.
      */
     fun DrawScope.destornillador(lo: LuzObjeto, o: V3) {
-        val base = MarcoOrden.de(o, -0.15f, 2.4f)
-        val f = base.mas(0f, 0.006f, 0.01f, vuelco = -0.5f)
+        val base = MarcoOrden.de(o, -0.15f, 2.4f * MAS)
+        val f = base.mas(0f, 0.006f, 0.01f, vuelco = 0.75f)
         val cuerpo = listOf(V3(-0.085f, 0f, -0.05f), V3(0.085f, 0f, -0.05f), V3(0.085f, 0.012f, 0.06f), V3(-0.085f, 0.012f, 0.06f)).map { f.w(it) } + listOf(base.w(V3(0.08f, 0.012f, -0.07f)))
         sombra(lo, listOf(V3(-0.085f, 0f, -0.04f), V3(0.085f, 0f, -0.04f), V3(0.085f, 0f, 0.02f), V3(-0.085f, 0f, 0.02f)).map { base.w(it) }, cuerpo, o.y, tapa(o), 0.3f)
         // Lo que la sostiene: el cinturón enrollado detrás.
@@ -418,8 +436,8 @@ internal object ChicosOrden {
      * lado: la que tiembla. El cristal, con sus rayas y su brillo; el cordón de colgar, suelto.
      */
     fun DrawScope.brujula(lo: LuzObjeto, o: V3) {
-        val base = MarcoOrden.de(o, 0.25f, 3.0f)
-        val f = base.mas(0f, 0.004f, 0f, vuelco = -0.38f)
+        val base = MarcoOrden.de(o, 0.25f, 3.0f * MAS)
+        val f = base.mas(0f, 0.004f, 0f, vuelco = 0.5f)
         val cuerpo = listOf(V3(-0.035f, 0f, -0.035f), V3(0.035f, 0f, -0.035f), V3(0.035f, 0f, 0.035f), V3(-0.035f, 0f, 0.035f), V3(0f, 0.07f, 0.04f)).map { f.w(it) }
         sombra(lo, TrazoOrden.circulo(V3(0f, 0f, 0.01f), V3(0f, 1f, 0f), 0.034f, 10).map { base.w(it) }, cuerpo, o.y, tapa(o), 0.35f)
         trazo(lo, base, TrazoOrden.curva(V3(0.03f, 0.004f, -0.025f), V3(0.07f, 0.002f, -0.05f), V3(0.09f, 0.002f, 0f), V3(0.06f, 0.002f, 0.04f), 10), 0.0035f, lerp(C.MADERA, C.HOLLIN, 0.2f), V3(0f, 1f, 0f))
@@ -487,8 +505,8 @@ internal object ChicosOrden {
      * columnas de veinte renglones sin letras, cada uno con su marca carmesí al empezar.
      */
     fun DrawScope.codigo(lo: LuzObjeto, o: V3) {
-        val base = MarcoOrden.de(o, -0.12f, 2.2f)
-        val f = base.mas(0f, 0.004f, 0f, vuelco = -0.36f)
+        val base = MarcoOrden.de(o, -0.12f, 2.2f * MAS)
+        val f = base.mas(0f, 0.004f, 0f, vuelco = 0.62f)
         val cuerpo = listOf(V3(-0.075f, 0f, -0.1f), V3(0.075f, 0f, -0.1f), V3(0.075f, 0.05f, 0.075f), V3(-0.075f, 0.05f, 0.075f)).map { f.w(it) }
         sombra(lo, listOf(V3(-0.075f, 0f, -0.1f), V3(0.075f, 0f, -0.1f), V3(0.075f, 0f, -0.04f), V3(-0.075f, 0f, -0.04f)).map { f.w(it) }, cuerpo, o.y, tapa(o), 0.25f)
         rollo(lo, f, detras = true)

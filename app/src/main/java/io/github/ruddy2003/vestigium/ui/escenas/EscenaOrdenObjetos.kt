@@ -206,7 +206,8 @@ internal class LuzObjeto(val m: Momento, val p: Pincel, private val extra: List<
     /** El color de [c] en el punto [en] con la cara mirando a [n]. [claro] sube o baja la cara hacia la luz. */
     fun color(c: Color, en: V3, n: V3, claro: Float = 0f): Color {
         val sol = if (haySol) alSol(en) else 1f
-        var col = lz.color(c, TrazoOrden.normalCiudadela(n), 0f, claro - (1f - sol) * 1.1f)
+        // En la sombra del parapeto o del cubo queda algo de luz de rebote de las losas al sol [Aproximación].
+        var col = lz.color(c, TrazoOrden.normalCiudadela(n), 0f, claro - (1f - sol) * 0.85f)
         if (nieve > 0f && n.y > 0.65f) col = lerp(col, lz.color(C.NIEVE, V3(0f, 1f, 0f)), 0.5f * nieve)
         val w = calor(en, n)
         if (w > 0.01f) col = lerp(col, calido(c), w)
@@ -321,12 +322,13 @@ internal object ColorObjetoOrden {
     val LATON_OSC = lerp(C.LATON, C.HOLLIN, 0.35f)
     val COBRE = lerp(C.LATON, C.ROCA, 0.5f)
     val ACERO = lerp(C.HIERRO_CLARO, C.TELA, 0.45f)
-    val ALUMINIO = lerp(C.TELA, C.NIEVE, 0.45f)
+    val ALUMINIO = lerp(lerp(C.TELA, C.NIEVE, 0.25f), C.ARENA, 0.42f)
     val CUERO = lerp(C.MADERA, C.ROCA, 0.35f)
     val CUERO_OSC = lerp(CUERO, C.HOLLIN, 0.4f)
-    val LINO = lerp(C.ARENA, C.TELA, 0.3f)
+    val LINO = lerp(C.ARENA, C.MADERA, 0.12f)
     val TINTA = lerp(C.HOLLIN, C.TELA, 0.18f)
-    val PAN = lerp(C.MADERA, C.ARENA, 0.42f)
+    val PAN = lerp(C.MADERA, C.ARENA, 0.55f)
+    val SACO = lerp(C.MADERA, C.ARENA, 0.5f)                      // el yute de la bolsa de la ración
     val CARNE = lerp(C.ROCA, C.HOLLIN, 0.35f)
     val PASA = lerp(C.HOLLIN, C.ROCA, 0.35f)
     val PINTURA = lerp(C.HIERRO_CLARO, C.LIQUEN, 0.42f)          // la radio: pintura de antes, verde gris
