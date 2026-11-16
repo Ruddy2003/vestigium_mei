@@ -10,7 +10,7 @@
 # llamada dibuja en paralelo con su propio archivo de salida.
 #
 # Variables: ARNES_APP=/ruta/a/app/src/main (otro árbol de la app; por omisión el de este repositorio),
-#            ARNES_HOY=AAAA-MM-DD (el «hoy» de los ejemplos), GRADLE=/ruta/a/gradle.
+#            ARNES_HOY=AAAA-MM-DD (el «hoy» de los ejemplos), ARNES_SUENOS=1 (la biblioteca de los Sueños), GRADLE=/ruta/a/gradle.
 set -euo pipefail
 
 aqui="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

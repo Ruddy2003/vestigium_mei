@@ -67,6 +67,7 @@ private fun uso(): Nothing {
           dibujar.sh hoja <ideario|biblioteca> <claro|oscuro> <salida.png> <tema1,tema2,...>
         Temas: ${TemaId.entries.joinToString(" ") { it.id }}
         Variable ARNES_HOY=AAAA-MM-DD: el «hoy» de los ejemplos (por omisión, el día lógico de hoy; las capturas de CI usan el día en que corrieron).
+        Variable ARNES_SUENOS=1: la biblioteca como estante de los Sueños (el modo «noche» del estante, aparte de claro y oscuro).
     """.trimIndent())
     exitProcess(2)
 }
@@ -218,6 +219,7 @@ private fun Biblioteca() {
     val porMes = todas.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
     val grupos = porMes.entries.take(6).map { (mes, lista) -> GrupoEstante(Estilo.mesConComun(mes.drop(5).toInt(), mes.take(4).toInt()), lista) }
     Box(Modifier.padding(horizontal = 16.dp).padding(top = 18.dp, bottom = 16.dp)) {
-        EstanteTema(disenoBiblioteca(Estilo.tema), grupos, false, {})
+        // ARNES_SUENOS=1: el estante de los Sueños (lo que la app llama «noche»: la luna en lugar del sello, la luz propia del tema).
+        EstanteTema(disenoBiblioteca(Estilo.tema), grupos, System.getenv("ARNES_SUENOS") == "1", {})
     }
 }
