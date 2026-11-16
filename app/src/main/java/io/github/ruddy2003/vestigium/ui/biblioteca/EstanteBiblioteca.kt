@@ -25,6 +25,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.data.Dia
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Texto
@@ -40,7 +41,7 @@ import kotlinx.coroutines.launch
 class GrupoEstante(val titulo: String?, val dias: List<Dia>)
 
 /** Dónde va un volumen dentro del mueble. */
-private class Lugar(val dia: Dia, val x: Dp, val y: Dp, val ancho: Dp, val alto: Dp)
+private class Lugar(val dia: Dia, val x: Dp, val y: Dp, val ancho: Dp, val alto: Dp, val repisa: Int, val centro: Float)
 
 /**
  * El estante del diario dibujado por el tema ([DisenoBiblioteca]): el mueble entero, que crece con las entradas, y cada
@@ -66,6 +67,8 @@ fun EstanteTema(d: DisenoBiblioteca, grupos: List<GrupoEstante>, noche: Boolean,
         // Se acomodan los volúmenes de izquierda a derecha; cada grupo empieza en una repisa nueva.
         val lugares = mutableListOf<Lugar>()
         val placas = mutableListOf<Pair<Int, String>>()
+        // Hasta dónde llegan los volúmenes de cada repisa (desde el costado izquierdo), para que el tema sepa qué queda libre.
+        val ocupado = mutableMapOf<Int, Dp>()
         var repisa = 0
         grupos.filter { it.dias.isNotEmpty() }.forEachIndexed { g, grupo ->
             if (g > 0) repisa++
@@ -77,7 +80,8 @@ fun EstanteTema(d: DisenoBiblioteca, grupos: List<GrupoEstante>, noche: Boolean,
                 if (x + w > interior - d.separa && x > d.separa) { repisa++; x = d.separa }
                 val h = d.altoRepisa * d.alto(dia.fecha.hashCode(), palabras).coerceIn(0.1f, 1f)
                 val y = altoCorona + fila * repisa + (d.altoRepisa - h)
-                lugares.add(Lugar(dia, lado + x, y, w, h))
+                lugares.add(Lugar(dia, lado + x, y, w, h, repisa, ((x + w / 2) / interior).coerceIn(0f, 1f)))
+                ocupado[repisa] = x + w
                 x += w + d.separa
             }
         }
@@ -98,6 +102,7 @@ fun EstanteTema(d: DisenoBiblioteca, grupos: List<GrupoEstante>, noche: Boolean,
                         val ancho0 = (w - 2 * l) * 0.42f
                         PlacaEstante(Rect(w / 2 - ancho0 / 2, y0 + d.tabla.toPx() * 0.12f, w / 2 + ancho0 / 2, y0 + d.tabla.toPx() * 0.88f), t)
                     },
+                    ocupado = (0 until repisas).map { k -> l + (ocupado[k] ?: 0.dp).toPx() },
                 )
                 clipRect { with(d) { estante(disp, medidor, oscuro, noche) } }
             }
@@ -113,11 +118,12 @@ fun EstanteTema(d: DisenoBiblioteca, grupos: List<GrupoEstante>, noche: Boolean,
                         palabras = n,
                         tono = Tonos.valencia((if (noche) dia.sueno_valencia else dia.valencia)?.toDouble(), oscuro),
                         semilla = dia.fecha.hashCode(), noche = noche,
+                        repisa = lu.repisa, repisas = repisas, centro = lu.centro,
                     )
                     val etiqueta = Fechas.corto(dia.fecha) + ", " + porNumero(n, "1 palabra", "$n palabras")
                     Canvas(Modifier.offset(lu.x, lu.y).size(lu.ancho, lu.alto)
                         .graphicsLayer { translationY = -anim.value * lu.alto.toPx() * 0.22f }
-                        .halo()
+                        .halo(reposo = d.auraEnReposo)
                         .semantics { contentDescription = etiqueta }
                         .clickable(toque, null) {
                             alcance.launch {
