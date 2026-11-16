@@ -30,9 +30,8 @@ import kotlin.math.sin
  * Los cuatro objetos grandes de la residente, junto a la punta de la bancada ([ObjetosRefugio.grande]). Cada uno recibe
  * su pie en el suelo ([suelo], en la sala), el canto donde se recuesta ([canto]: 5 cm por debajo de la tapa, en la punta)
  * y el pie en el lienzo para su [Cosa]. Como la punta de la bancada se ve casi de filo, la manta cae por el canto de
- * delante, que se ve de frente, y el mono, doblado, se queda de pie en la esquina, recostado en lo de atrás; el pie del
- * suelo queda en el borde de abajo del cuadro, así que lo que pisa el suelo (la llave, el tocadiscos) sube lo bastante
- * para verse entero (la llave pisa un palmo más al fondo).
+ * delante, que se ve de frente, y el mono, doblado, se queda de pie en la esquina, recostado en lo de atrás. El cuadro
+ * puede dar otro pie y otro canto (la manta va echada sobre el taburete: ver `PiezasSala.cosas`).
  */
 internal object GrandesRefugio {
     private val C = ColorRefugio
@@ -61,9 +60,8 @@ internal object GrandesRefugio {
      * un brazo (unos 95 cm), para que la cabeza asome por encima del canto **[Diseño propio]**.
      */
     fun llave(v: VistaRefugio, suelo: V3, canto: V3, pie: Offset): Cosa {
-        // El pie, un palmo más al fondo que el que da el cuadro (que cae en el borde de abajo), para que el mango se vea;
-        // la cabeza, en el canto de arriba de la punta.
-        val pieLlave = suelo + V3(0f, 0f, 0.3f); val arriba = canto + V3(0.012f, 0.035f, 0.1f)
+        // El pie, el que da el cuadro (ya dentro del lienzo); la cabeza, en el canto de arriba de la punta.
+        val pieLlave = suelo; val arriba = canto + V3(0.012f, 0.035f, 0.1f)
         val d = arriba - pieLlave; val eje = K.unidad(d); val largo = K.largo(d) + 0.09f
         val f = MarcoObjeto(pieLlave, 0f, 1f)
         val ojo = K.unidad(V3(-pieLlave.x, K.OJO - pieLlave.y - largo * 0.5f, -pieLlave.z))
@@ -233,7 +231,7 @@ internal object GrandesRefugio {
             encimaDeLaTapa(v, f)
             pliegues(v, f, caida)
             quemado(v, f, V3(-0.27f, -0.07f, -0.016f))
-            escudo(v, f, V3(-0.085f, -0.27f, -0.03f), 1.2f)
+            escudo(v, f, V3(-0.07f, -0.39f, -0.03f), 0.8f)
         }
     }
 

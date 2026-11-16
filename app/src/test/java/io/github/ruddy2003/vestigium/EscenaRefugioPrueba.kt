@@ -173,6 +173,14 @@ class EscenaRefugioPrueba {
         assertTrue(b.deLampara(bancada) > a.deLampara(bancada) + 0.1f)
         // De noche, la penumbra es azul, no gris.
         assertTrue(frio(c.ambienteSala) && frio(c.ambientePasillo))
+        // El cono de la lámpara va del lado bueno: lo que tiene justo debajo recibe su luz (más que lo de al lado) y le tumba sombra.
+        for ((v, o) in listOf(a to Obra.MANOMETROS, b to Obra.FILTRO)) {
+            val bombilla = SalaRefugio.bombilla(o); val eje = SalaRefugio.haciaDonde(o)
+            val debajo = bombilla + eje * 1.2f; val lado = debajo + io.github.ruddy2003.vestigium.ui.escenas.V3(2.5f, 0f, 0f)
+            assertTrue("$o: debajo de la lámpara no llega su luz", v.deLampara(debajo) > 0.5f)
+            assertTrue("$o", v.deLampara(debajo) > v.deLampara(lado) + 0.3f)
+            assertTrue("$o: la lámpara no tumba sombra", v.tumban.any { it.cono != null && it.p == bombilla })
+        }
     }
 
     /** De noche hay dos luces de color opuesto: el azul del pasillo y el ámbar de la guardia (o la lámpara del turno de más, o el fuego de fuera). */

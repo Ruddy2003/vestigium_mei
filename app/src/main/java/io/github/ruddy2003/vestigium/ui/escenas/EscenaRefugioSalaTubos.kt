@@ -93,11 +93,17 @@ internal object PiezasTubos {
     private fun DrawScope.gotera(v: VistaRefugio) {
         val c = V3(VERDE_X, VERDE_Y, GOTERA.z)
         val tela = lerp(C.PAPEL, C.ROCA, 0.4f)
-        Trazo3.run {
-            cilindro(v, c - K.FONDO * 0.11f, c + K.FONDO * 0.11f, VERDE_R * 1.05f, tela, lerp(tela, C.TINTA, 0.3f), lados = 14, tapas = false)
-            for (dz in listOf(-0.08f, 0.08f)) { val atado = K.circulo(c + K.FONDO * dz, K.FONDO, VERDE_R * 1.07f, 10, 0f, PI.toFloat()); for (i in 0 until atado.size - 1) barra(atado[i], atado[i + 1], 0.016f, v.c(c, K.NADA, C.TINTA)) }
-            cara(v, listOf(c + V3(0.05f, -VERDE_R, -0.04f), c + V3(0.12f, -VERDE_R, 0.02f), c + V3(0.1f, -VERDE_R - 0.24f, 0.04f), c + V3(0.04f, -VERDE_R - 0.2f, -0.02f)), K.unidad(V3(0.4f, 0f, -1f)), lerp(tela, C.TINTA, 0.15f))
-        }
+        val n = K.unidad(V3(0.35f, 0f, -1f))
+        // El alambre que ata el trapo a la junta: dos vueltas por debajo del tubo.
+        for (dz in listOf(-0.05f, 0.05f)) { val atado = K.circulo(c + K.FONDO * dz, K.FONDO, VERDE_R * 1.06f, 10, 0f, PI.toFloat())
+            Trazo3.run { for (i in 0 until atado.size - 1) barra(atado[i], atado[i + 1], 0.012f, v.c(c, K.NADA, C.ACERO)) } }
+        // El trapo que cuelga de la junta, con el borde deshilachado, los pliegues y la punta mojada, más oscura.
+        val arriba = c + V3(0f, -VERDE_R * 0.9f, 0f)
+        val borde = (0..6).map { i -> val t = i / 6f; arriba + V3(0.04f * sin(t * 7f), -0.3f - 0.05f * ((i * 3) % 4) / 3f, -0.1f + 0.2f * t) }
+        val pts = listOf(arriba + V3(0f, 0f, -0.09f), arriba + V3(0f, 0f, 0.09f)) + borde.reversed()
+        Trazo3.run { caraDegradada(v, pts, n, tela, arriba, arriba + V3(0f, -0.32f, 0f)) }
+        for (dz in listOf(-0.04f, 0.03f)) Trazo3.run { barra(arriba + V3(0.002f, -0.03f, dz), arriba + V3(0.01f, -0.28f, dz + 0.01f), 0.014f, v.c(arriba, n, lerp(tela, C.TINTA, 0.35f)).copy(alpha = 0.6f)) }
+        Trazo3.run { cara(v, borde.subList(1, 6) + listOf(arriba + V3(0.02f, -0.22f, 0.04f), arriba + V3(0.02f, -0.22f, -0.05f)), n, lerp(tela, C.TINTA, 0.45f), alfa = 0.55f) }
         PiezasMaquinas.run { cal(v, c + V3(-0.04f, -VERDE_R * 0.4f, -VERDE_R * 1.13f), K.FRENTE, 0.16f) }
         val g = GOTERA
         drawCircle(v.c(g, K.NADA, lerp(C.PISCINA, Color.White, 0.6f)), 0.022f * K.k(g), K.p(g))

@@ -79,12 +79,28 @@ internal object PiezasSala {
         }
         if (R.hojasSecas(m)) for ((k, q) in listOf(V3(1.35f, 0f, 6.0f), V3(1.25f, 0f, 5.35f)).withIndex()) add(cosa(q, K.circulo(q, K.ARRIBA, 0.3f, 8) + K.circulo(q + V3(0f, 0.88f, 0f), K.ARRIBA, 0.3f, 8)) { bidon(v, q, if (k == 0) C.AZUL else C.ACERO) })
         if (R.herramientasPorTodas(m)) add(cosa(V3(0.2f, 0f, 5.6f), emptyList()) { herramientasEnElSuelo(v) })
-        ObjetosRefugio.grande(m, v.pincel(S.PIE_GRANDE), K.p(S.PIE_GRANDE), K.p(S.APOYO_GRANDE), K.k(S.PIE_GRANDE) / 120f)?.let { o ->
-            add(CosaRefugio(K.hondo(S.PIE_GRANDE), listOf(S.PIE_GRANDE)) { o.pintar(this) })
-        }
+        grande(v)?.let { add(it) }
     }
 
     private fun cosa(donde: V3, esqueleto: List<V3>, pintar: DrawScope.() -> Unit) = CosaRefugio(K.hondo(donde), esqueleto, pintar)
+
+    /** Donde se echa la manta: sobre el asiento del taburete (su canto, 5 cm bajo el asiento, y su pie, debajo). */
+    private val CANTO_MANTA: V3 get() = PiezasBancada.TABURETE + V3(0.18f, 0.61f, 0.08f)
+
+    /**
+     * El objeto grande del día, como cosa del cuadro. Se pinta después de la bancada (o del taburete) en que se apoya,
+     * aunque su pie quede más al fondo. La manta no cabe en la punta de la bancada, que se ve de filo: va echada sobre el
+     * taburete, donde cae por los dos lados y se lee como manta **[Diseño propio]**.
+     */
+    private fun grande(v: VistaRefugio): CosaRefugio? {
+        val m = v.m
+        val enTaburete = m.ficha.objeto == "manta"
+        val pie = if (enTaburete) V3(CANTO_MANTA.x, 0f, CANTO_MANTA.z) else S.PIE_GRANDE
+        val apoyo = if (enTaburete) CANTO_MANTA else S.APOYO_GRANDE
+        val o = ObjetosRefugio.grande(m, v.pincel(pie), K.p(pie), K.p(apoyo), K.k(pie) / 120f) ?: return null
+        val antes = if (enTaburete) K.hondo(PiezasBancada.TABURETE) else K.hondo(V3(-0.98f, 0f, 2.9f))
+        return CosaRefugio(minOf(K.hondo(pie), antes - 0.01f), listOf(pie)) { o.pintar(this) }
+    }
 
     /**
      * Un cubo de chapa abollado, con su asa, su borde brillante y lo que tiene dentro ([dentro]: agua, barro, arena), con
@@ -333,7 +349,8 @@ internal object PiezasSala {
         val pantalla = poligono(K.casco((borde + cima).map { K.p(it) }))
         val bocaSeVe = K.seVe(boca, eje)
         val pb = K.p(b); val kb = K.k(b)
-        val alambre = if (encendida) lerp(C.TINTA, C.LAMPARA, 0.25f) else v.c(b, K.NADA, C.LATON)
+        val alambre = if (encendida) lerp(C.TINTA, C.LAMPARA, 0.25f) else v.c(b, K.NADA, lerp(C.LATON, C.TINTA, 0.6f))
+        val chapa = if (encendida) lerp(C.NARANJA, C.TINTA, 0.2f) else lerp(C.NARANJA, C.TINTA, 0.62f)
         fun jaula() {
             val u = K.unidad(K.cruz(eje, if (kotlin.math.abs(eje.y) > 0.9f) K.DER else K.ARRIBA)); val w = K.cruz(eje, u)
             for (k in 0 until 6) {
@@ -346,16 +363,16 @@ internal object PiezasSala {
         }
         fun bombilla() {
             if (encendida) drawCircle(Brush.radialGradient(listOf(Color.White, lerp(C.LAMPARA, Color.White, 0.5f), C.LAMPARA.copy(alpha = 0f)), pb, 0.09f * kb), 0.09f * kb, pb)
-            else drawCircle(v.c(b, K.NADA, lerp(C.PAPEL, C.TINTA, 0.35f)), 0.045f * kb, pb)
+            else drawCircle(v.c(b, K.NADA, lerp(C.PAPEL, C.TINTA, 0.6f)), 0.04f * kb, pb)
         }
         if (bocaSeVe) {
-            drawPath(pantalla, v.c(atras, eje * -1f, lerp(C.NARANJA, C.TINTA, 0.2f)))
+            drawPath(pantalla, v.c(atras, eje * -1f, chapa))
             if (encendida) drawPath(K.forma(borde), lerp(C.LAMPARA, Color.White, 0.25f).copy(alpha = 0.9f))
             bombilla(); jaula()
         } else {
             bombilla(); jaula()
             if (encendida) drawCircle(Brush.radialGradient(listOf(C.LAMPARA.copy(alpha = 0.55f), Color.Transparent), pb, 0.32f * kb), 0.32f * kb, pb, blendMode = BlendMode.Plus)
-            drawPath(pantalla, v.c(atras, eje * -1f, lerp(C.NARANJA, C.TINTA, 0.2f)))
+            drawPath(pantalla, v.c(atras, eje * -1f, chapa))
             if (encendida) drawPath(pantalla, lerp(C.LAMPARA, Color.White, 0.4f).copy(alpha = 0.6f), style = Stroke(0.9f))
         }
     }

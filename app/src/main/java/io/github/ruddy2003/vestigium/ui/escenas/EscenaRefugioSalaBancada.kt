@@ -38,8 +38,10 @@ internal object PiezasBancada {
         tapa(v, x0, x1, z0, z1, y)
         tornillo(v, x0, z0, y)
         encima(v, y)
-        trapo(v, V3(-0.3f, y - 0.01f, z0 - 0.02f), 0)
-        if (R.guirnalda(v.m)) guirnalda(v, V3(x0 + 0.05f, y - 0.02f, z0 - 0.03f), V3(x1 - 0.05f, y - 0.02f, z0 - 0.03f))
+        // El trapo del canto, salvo el día del contador (que cuelga de ese canto).
+        if (v.m.ficha.objeto != "contador") trapo(v, V3(-0.3f, y - 0.01f, z0 - 0.02f), 0)
+        // La guirnalda de las fiestas, de la izquierda hasta antes del soporte: no tapa el objeto del día.
+        if (R.guirnalda(v.m)) guirnalda(v, V3(x0 + 0.05f, y - 0.02f, z0 - 0.03f), V3(-0.78f, y - 0.02f, z0 - 0.03f))
     }
 
     /** Una pata de ángulo de hierro, con la pintura saltada abajo. */
@@ -113,13 +115,14 @@ internal object PiezasBancada {
         val m = v.m
         val zb = 3.08f; val zm = 2.92f; val zf = 2.74f
         microscopio(v, V3(-1.55f, y, zb))
-        if (R.senal(m)) radio(v, V3(-1.1f, y, zb)) else gradilla(v, V3(-1.12f, y, zb))
-        if (R.tocadiscosRoto(m)) tocadiscosGrande(v, V3(-0.62f, y, zb)) else if (R.laSalaPinta(m, "tocadiscos")) tocadiscos(v, V3(-0.66f, y, zb), R.lampara(m) == Obra.BANCADA || R.racionamiento(m) && R.lampara(m) != null)
-        botella(v, V3(-0.26f, y, zb + 0.02f), if (R.racionamiento(m)) 0.15f else 0.75f, R.bombaTres(m))
+        // Lo de detrás del soporte, corrido a los lados para que el objeto del día no lo tape a medias.
+        if (R.senal(m)) radio(v, V3(-1.16f, y, zb)) else gradilla(v, V3(-1.18f, y, zb))
+        if (R.tocadiscosRoto(m)) tocadiscosGrande(v, V3(-0.66f, y, zb)) else if (R.laSalaPinta(m, "tocadiscos")) tocadiscos(v, V3(-0.79f, y, zb), R.lampara(m) == Obra.BANCADA || R.racionamiento(m) && R.lampara(m) != null)
+        botella(v, V3(-0.21f, y, zb + 0.04f), if (R.racionamiento(m)) 0.15f else 0.75f, R.bombaTres(m))
         aceitera(v, V3(-1.72f, y, zm + 0.08f))
         filtroPequeno(v, V3(-1.33f, y, zm))
         if (R.latas(m)) latas(v, V3(-1.02f, y, zf - 0.08f))
-        if (R.florDeVerdad(m)) florEnFrasco(v, V3(-0.3f, y, 2.9f), R.florSeca(m))
+        if (R.florDeVerdad(m)) florEnFrasco(v, V3(-0.24f, y, 2.86f), R.florSeca(m))
         manometroSuelto(v, V3(-1.6f, y, zf))
         if (R.laSalaPinta(m, "cuaderno")) cuaderno(v, V3(-1.2f, y, zf), R.cuadernoAbierto(m))
         fiambrera(v, V3(-0.84f, y, zf + 0.02f), R.fiambreraAbierta(m))
@@ -386,6 +389,6 @@ internal object PiezasBancada {
         for (k in 0..2) { val a = 2f * PI.toFloat() * k / 3 + 0.4f; Trazo3.run { barra(c + V3(cos(a) * 0.17f, 0f, sin(a) * 0.17f), c + V3(cos(a) * 0.1f, alto, sin(a) * 0.1f), 0.028f, v.c(c + V3(0f, 0.3f, 0f), K.NADA, C.HIERRO)) } }
         Trazo3.run { aro(c + V3(0f, 0.22f, 0f), K.ARRIBA, 0.145f, 0.018f, v.c(c, K.NADA, C.HIERRO), 14) }
         Trazo3.run { cilindro(v, c + V3(0f, alto, 0f), c + V3(0f, alto + 0.04f, 0f), 0.16f, lerp(lerp(C.COBRE, C.AMARILLO, 0.2f), C.TINTA, 0.25f), lados = 16) }
-        trapo(v, c + V3(0.08f, alto + 0.04f, -0.12f), 2)
+        if (v.m.ficha.objeto != "manta") trapo(v, c + V3(0.08f, alto + 0.04f, -0.12f), 2)
     }
 }

@@ -102,8 +102,12 @@ internal object SalaRefugio {
     const val BANCADA_Y = 0.9f
     /** El sitio del objeto chico del día: la esquina de delante de la bancada, a la derecha. */
     val SOPORTE = V3(-0.5f, BANCADA_Y, 2.78f)
-    /** El objeto grande del día pisa el suelo junto a la punta de la bancada y se recuesta en su canto. */
-    val PIE_GRANDE = V3(0.05f, 0f, 3.05f)
+    /**
+     * El objeto grande del día pisa el suelo junto a la punta de la bancada y se recuesta en su canto. Va 30 cm más al fondo
+     * que la esquina de delante para que su pie caiga dentro del cuadro (en el lienzo, hacia y = 271): así se ven enteros la
+     * llave, el tocadiscos del comedor con sus patas, el mono y la manta.
+     */
+    val PIE_GRANDE = V3(0.05f, 0f, 3.35f)
     val APOYO_GRANDE = V3(BANCADA_X1, BANCADA_Y - 0.05f, 2.95f)
     /** La radio de la sala (el día de la señal), en la bancada. */
     val RADIO = V3(-1.45f, BANCADA_Y + 0.12f, 3.1f)

@@ -278,10 +278,13 @@ internal object LuzRefugio {
      */
     fun DrawScope.charcoEnLaBancada(v: VistaRefugio, x0: Float, x1: Float, z0: Float, z1: Float, y: Float) {
         val tapa = K.forma(listOf(V3(x0, y, z0), V3(x1, y, z0), V3(x1, y, z1), V3(x0, y, z1)))
+        clipPath(tapa) { portonEnLaTapa(v, y, z0) }
         for (o in v.obras) {
             val b = S.bombilla(o); val e = S.haciaDonde(o); if (e.y > -0.3f) continue
             val t = (y - b.y) / e.y; val c = b + e * t
-            val alto = b.y - y; val radio = alto * 0.95f
+            // El radio del charco, el del cono de la lámpara a esa distancia (hasta donde su luz se nota): así su borde
+            // llega a la esquina del soporte cuando la lámpara cuelga sobre el filtro.
+            val alto = b.y - y; val radio = alto * 1.15f
             clipPath(tapa) {
                 val pc = K.p(c); val borde = K.circulo(c, K.ARRIBA, radio, 26); val forma = K.forma(borde)
                 for (ancho in listOf(10f, 5f)) drawPath(forma, C.LAMPARA.copy(alpha = 0.05f), style = Stroke(ancho), blendMode = BlendMode.Plus)
@@ -289,6 +292,26 @@ internal object LuzRefugio {
                 reja(c, radio, 0.3f)
             }
         }
+    }
+
+    /**
+     * La luz del pasillo que entra por el portón, en la tapa de la bancada (a la altura [y]): lo alto del arco, llevado desde
+     * el primer tubo, cae sobre la tapa; es la luz «de día» del soporte del objeto, a cualquier hora en que la lámpara esté
+     * lejos. Fría de día, azul y violeta de noche, cálida el día del sol falso; más fuerte hacia el portón, con su borde
+     * delante (donde la tapa sale de la luz, hacia el canto de [z0]).
+     */
+    private fun DrawScope.portonEnLaTapa(v: VistaRefugio, y: Float, z0: Float) {
+        val f = FUENTE_DEL_PORTON
+        val alto = S.arcoDelPorton(P.BOCA).filter { it.y > S.ARRANQUE - 0.3f }
+        if (alto.size < 2) return
+        val borde = alto.map { q -> val d = q - f; f + d * ((y - f.y) / d.y.coerceAtMost(-0.01f)).coerceAtMost(12f) }
+        val forma = K.forma(borde + listOf(V3(borde.last().x, y, S.FONDO), V3(borde.first().x, y, S.FONDO)))
+        val fuerza = when { v.solFalso -> 0.3f; v.dia -> 0.16f; else -> 0.12f }
+        val col = lerp(lerp(v.colorTubo, Color.White, if (v.dia) 0.2f else 0f), C.VIOLETA, 0.4f * v.noche * v.tanques)
+        drawPath(forma, Brush.verticalGradient(listOf(col.copy(alpha = fuerza), col.copy(alpha = 0.55f * fuerza)), startY = K.p(V3(-1f, y, S.BANCADA_Z1)).y, endY = K.p(V3(-1f, y, z0)).y), blendMode = BlendMode.Plus)
+        val q = borde.map { K.p(it) }
+        val camino = Path().apply { moveTo(q[0].x, q[0].y); for (i in 1 until q.size) lineTo(q[i].x, q[i].y) }
+        drawPath(camino, col.copy(alpha = 1.4f * fuerza), style = Stroke(1.2f), blendMode = BlendMode.Plus)
     }
 
     /** La reja de sombra de los seis alambres de la jaula: rayos que salen de [c] (en el plano del suelo o de una tapa), hasta [radio]. */

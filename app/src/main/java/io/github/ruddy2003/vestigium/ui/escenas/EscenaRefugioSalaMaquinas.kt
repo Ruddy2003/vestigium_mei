@@ -135,7 +135,11 @@ internal object PiezasMaquinas {
      */
     private fun DrawScope.mando(v: VistaRefugio, c: V3, conPie: Boolean) {
         Trazo3.run {
-            if (conPie) caja(v, c.x - 0.025f, c.x + 0.025f, 0f, c.y - 0.2f, c.z + 0.02f, c.z + 0.07f, C.HIERRO)
+            if (conPie) {
+                // Colgado de su tubo de cables, que baja del techo, y el cable que va de su culo al motor.
+                cilindro(v, V3(c.x, c.y + 0.14f, c.z + 0.05f), V3(c.x, S.TECHO, c.z + 0.05f), 0.022f, lerp(C.ACERO, C.HIERRO, 0.3f), lados = 8, tapas = false)
+                comba(V3(c.x, c.y - 0.2f, c.z + 0.05f), V3(S.BOMBA.x + 0.3f, 0.75f, 2.2f), 0.12f, 0.02f, v.c(c, K.NADA, C.TINTA))
+            }
             caja(v, c.x - 0.08f, c.x + 0.08f, c.y - 0.2f, c.y + 0.14f, c.z, c.z + 0.09f, lerp(C.CHAPA, C.HIERRO, 0.45f))
             cara(v, listOf(V3(c.x - 0.06f, c.y + 0.08f, c.z - 0.004f), V3(c.x + 0.06f, c.y + 0.08f, c.z - 0.004f), V3(c.x + 0.06f, c.y + 0.12f, c.z - 0.004f), V3(c.x - 0.06f, c.y + 0.12f, c.z - 0.004f)), K.FRENTE, lerp(C.PAPEL, C.AMARILLO, 0.2f))
             caja(v, c.x - 0.035f, c.x + 0.035f, c.y - 0.17f, c.y - 0.1f, c.z - 0.03f, c.z, C.HIERRO)
