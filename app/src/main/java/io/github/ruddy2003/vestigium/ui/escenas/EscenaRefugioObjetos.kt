@@ -19,7 +19,7 @@ import kotlin.math.sin
 /**
  * Los doce objetos del día de la residente, en la sala de bombas. Los chicos van sobre su soporte, la bancada, en la
  * esquina de delante a la derecha, donde la lámpara los alumbra a mediodía y la luz del portón de noche; los grandes van
- * junto a la punta de la bancada: de pie en el suelo y recostados en su canto, o echados sobre su punta.
+ * junto a la punta de la bancada: de pie en el suelo y recostados en su canto, o en su esquina.
  *
  * **Se pintan en la sala, con su luz** (como los objetos de Art déco): el punto que recibe cada función y su escala se
  * vuelven a llevar a la sala con la cámara del cuadro ([enLaSala]) y cada cara toma su color con la luz de ese sitio
@@ -29,13 +29,14 @@ import kotlin.math.sin
  * [grande] no usan el `Pincel` que reciben: la luz la sacan de [VistaRefugio].
  *
  * - **Chicos** ([ChicosRefugio], `EscenaRefugioObjetosChicos.kt`): el disco de diez pulgadas medio fuera de su funda de
- *   papel, de pie contra el tocadiscos de la sala; la linterna de dinamo con su manivela; el contador de radiación colgado
+ *   papel, de pie contra el tocadiscos de la sala; la linterna de dinamo tumbada, con su manivela (encendida mientras ella
+ *   trabaja); el contador de radiación colgado
  *   de su correa del canto de la tapa, con su lucecita verde encendida; la ración (la tarjeta perforada apoyada en una lata
- *   de antes de la guerra); el cuaderno del turno sobre los tomos viejos; la cajita de las pastillas de yodo, abierta; la
- *   foto de fuera en su carpetilla de cartón, de pie; y dos flores de papel de hojas de libro, pintadas.
+ *   de antes de la guerra); el cuaderno del turno recostado en los tomos viejos; la cajita de las pastillas de yodo,
+ *   abierta; la foto de fuera en su cartón de fotógrafo, de pie; y dos flores de papel de hojas de libro, pintadas.
  * - **Grandes** ([GRANDES], [GrandesRefugio], `EscenaRefugioObjetosGrandes.kt`): la llave de válvulas, recostada en el
- *   canto; el mono azul y la manta gris, echados sobre la punta de la bancada; y el tocadiscos del comedor, de pie en el
- *   suelo junto a ella, abierto, con su pincel.
+ *   canto; el mono azul, doblado y de pie en la esquina de la punta; la manta gris, echada en esa esquina y cayendo por
+ *   el canto; y el tocadiscos del comedor, de pie en el suelo junto a ella, abierto, con su pincel.
  *
  * **Para que nada salga dos veces:** cinco objetos son también piezas de la sala ([YA_EN_LA_SALA], que es
  * `EscenaRefugio.DE_LA_SALA`): el tocadiscos pequeño y el cuaderno del turno (en la bancada), el mono (en su gancho), la

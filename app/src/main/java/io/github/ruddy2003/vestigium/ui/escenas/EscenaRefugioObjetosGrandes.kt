@@ -29,9 +29,10 @@ import kotlin.math.sin
 /**
  * Los cuatro objetos grandes de la residente, junto a la punta de la bancada ([ObjetosRefugio.grande]). Cada uno recibe
  * su pie en el suelo ([suelo], en la sala), el canto donde se recuesta ([canto]: 5 cm por debajo de la tapa, en la punta)
- * y el pie en el lienzo para su [Cosa]. Como la punta de la bancada se ve casi de filo, lo que se echa encima (el mono, la
- * manta) cae por el canto de delante, que se ve de frente; el pie del suelo queda en el borde de abajo del cuadro, así que
- * lo que pisa el suelo (la llave, el tocadiscos) sube lo bastante para verse entero.
+ * y el pie en el lienzo para su [Cosa]. Como la punta de la bancada se ve casi de filo, la manta cae por el canto de
+ * delante, que se ve de frente, y el mono, doblado, se queda de pie en la esquina, recostado en lo de atrás; el pie del
+ * suelo queda en el borde de abajo del cuadro, así que lo que pisa el suelo (la llave, el tocadiscos) sube lo bastante
+ * para verse entero (la llave pisa un palmo más al fondo).
  */
 internal object GrandesRefugio {
     private val C = ColorRefugio
@@ -251,8 +252,7 @@ internal object GrandesRefugio {
     private fun DrawScope.encimaDeLaTapa(v: VistaRefugio, f: MarcoObjeto) {
         val arriba = V3(0f, 1f, 0f); val y = 0.034f
         caraDegradada(v, f, listOf(V3(-0.36f, y, -0.012f), V3(0.035f, y, -0.012f), V3(0.03f, y, 0.22f), V3(-0.35f, y, 0.22f)), arriba, LANA, V3(-0.2f, y, 0.22f), V3(-0.2f, y, 0f))
-        cil(v, f, V3(-0.35f, 0.018f, 0.22f), V3(0.03f, 0.018f, 0.22f), 0.018f, LANA, lados = 10)
-        rayaLuz(v, f, V3(-0.35f, y + 0.001f, 0.2f), V3(0.03f, y + 0.001f, 0.2f), 0.012f, lerp(LANA, C.TINTA, 0.3f), arriba, 0.8f)
+        cil(v, f, V3(-0.35f, 0.018f, 0.22f), V3(0.03f, 0.018f, 0.22f), 0.018f, lerp(LANA, C.PAPEL, 0.1f), lados = 10)
         lana(v, f, listOf(V3(-0.36f, y, -0.012f), V3(0.035f, y, -0.012f), V3(0.03f, y, 0.2f), V3(-0.35f, y, 0.2f)), arriba, "tapa")
     }
 

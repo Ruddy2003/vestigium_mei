@@ -62,44 +62,60 @@ internal object ChicosRefugio {
      */
     fun DrawScope.disco(v: VistaRefugio, o: V3, tapa: Path) {
         val f = MarcoObjeto(o, -0.32f, 1.15f)
-        val ancho = 0.13f; val alto = 0.26f; val inclina = 0.2f; val z0 = 0.04f
-        val ci = cos(inclina); val si = sin(inclina)
-        fun s(u: Float, h: Float, d: Float = 0f) = V3(u + 0.04f, h * ci - d * si, z0 + h * si + d * ci)
+        val r = Recostada(0.04f, 0.04f, 0.2f)
+        sombra(v, f, listOf(r.s(-ANCHO_FUNDA, 0f), r.s(ANCHO_FUNDA, 0f), r.s(ANCHO_FUNDA, 0f, 0.01f), r.s(-ANCHO_FUNDA, 0f, 0.01f)), listOf(r.s(-ANCHO_FUNDA, ALTO_FUNDA), r.s(ANCHO_FUNDA, ALTO_FUNDA), r.s(0f, ALTO_FUNDA + 0.1f)), o.y, tapa)
+        vinilo(v, f, r)
+        funda(v, f, r)
+    }
+
+    private const val ANCHO_FUNDA = 0.13f
+    private const val ALTO_FUNDA = 0.26f
+
+    /**
+     * Un plano de pie, recostado [inclina] radianes hacia atrás: [s] da su punto a [u] de su eje (corrido [dx]), [h] metros
+     * subiendo por él y [d] metros hacia atrás; su cara de delante mira a [n].
+     */
+    private class Recostada(val dx: Float, val z0: Float, inclina: Float) {
+        private val ci = cos(inclina); private val si = sin(inclina)
+        fun s(u: Float, h: Float, d: Float = 0f) = V3(u + dx, h * ci - d * si, z0 + h * si + d * ci)
         val n = V3(0f, si, -ci)
-        sombra(v, f, listOf(s(-ancho, 0f), s(ancho, 0f), s(ancho, 0f, 0.01f), s(-ancho, 0f, 0.01f)), listOf(s(-ancho, alto), s(ancho, alto), s(0f, alto + 0.1f)), o.y, tapa)
-        // El disco, detrás de la cara de la funda: se ve lo que asoma por arriba.
-        val hc = alto * 0.5f + 0.125f; val r = 0.123f
-        val borde = (0..30).map { i -> val a = 2f * PI_F * i / 30; s(r * cos(a), hc + r * sin(a), 0.004f) }
-        cara(v, f, borde, n, VINILO)
+    }
+
+    /** El disco, detrás de la cara de la funda (se ve lo que asoma por arriba): los surcos, el brillo en cruz, las rayas, la etiqueta. */
+    private fun DrawScope.vinilo(v: VistaRefugio, f: MarcoObjeto, p: Recostada) {
+        val n = p.n; val hc = ALTO_FUNDA * 0.5f + 0.125f; val r = 0.123f
+        cara(v, f, (0..30).map { i -> val a = 2f * PI_F * i / 30; p.s(r * cos(a), hc + r * sin(a), 0.004f) }, n, VINILO)
         for (j in 0..6) { val rr = 0.05f + 0.011f * j
-            trazo(v, f, (0..24).map { i -> val a = 2f * PI_F * i / 24; s(rr * cos(a), hc + rr * sin(a), 0.0035f) }, 0.0012f, lerp(VINILO, C.PAPEL, if (j % 2 == 0) 0.16f else 0.08f), n) }
+            trazo(v, f, (0..24).map { i -> val a = 2f * PI_F * i / 24; p.s(rr * cos(a), hc + rr * sin(a), 0.0035f) }, 0.0012f, lerp(VINILO, C.PAPEL, if (j % 2 == 0) 0.16f else 0.08f), n) }
         // El brillo en cruz de la luz en los surcos (del lado que más alumbra) y las rayas del gastado.
-        val izq = TrazoObjeto.luz(v, f, s(-r, hc), V3(-1f, 0.3f, -0.6f), C.PAPEL); val der = TrazoObjeto.luz(v, f, s(r, hc), V3(1f, 0.3f, -0.6f), C.PAPEL)
+        val izq = TrazoObjeto.luz(v, f, p.s(-r, hc), V3(-1f, 0.3f, -0.6f), C.PAPEL); val der = TrazoObjeto.luz(v, f, p.s(r, hc), V3(1f, 0.3f, -0.6f), C.PAPEL)
         val a0 = if (TrazoObjeto.lum(izq) > TrazoObjeto.lum(der)) PI_F * 0.78f else PI_F * 0.22f
         for (lado in 0..1) for (j in 0..4) { val a = a0 + lado * PI_F; val rr = 0.058f + j * 0.013f
-            trazo(v, f, (0..5).map { i -> val t = a - 0.3f + 0.6f * i / 5; s(rr * cos(t), hc + rr * sin(t), 0.003f) }, 0.0022f, lerp(VINILO, Color.White, 0.6f), n, if (lado == 0) 0.55f else 0.28f) }
-        for ((k, t) in listOf(0.3f, 1.9f, 2.6f).withIndex()) { val rr = 0.07f + 0.02f * k
-            trazo(v, f, (0..4).map { i -> val q = t + 0.25f * i / 4; s(rr * cos(q), hc + rr * sin(q), 0.003f) }, 0.0015f, lerp(VINILO, C.ACERO, 0.6f), n, 0.6f) }
+            trazo(v, f, (0..5).map { i -> val q = a - 0.3f + 0.6f * i / 5; p.s(rr * cos(q), hc + rr * sin(q), 0.003f) }, 0.0022f, lerp(VINILO, Color.White, 0.6f), n, if (lado == 0) 0.55f else 0.28f) }
+        for ((k, q0) in listOf(0.3f, 1.9f, 2.6f).withIndex()) { val rr = 0.07f + 0.02f * k
+            trazo(v, f, (0..4).map { i -> val q = q0 + 0.25f * i / 4; p.s(rr * cos(q), hc + rr * sin(q), 0.003f) }, 0.0015f, lerp(VINILO, C.ACERO, 0.6f), n, 0.6f) }
         // La etiqueta: naranja con su franja y el agujero.
-        cara(v, f, (0..20).map { i -> val a = 2f * PI_F * i / 20; s(0.042f * cos(a), hc + 0.042f * sin(a), 0.003f) }, n, lerp(C.NARANJA, C.AMARILLO, 0.25f))
-        cara(v, f, listOf(s(-0.04f, hc + 0.012f, 0.0028f), s(0.04f, hc + 0.012f, 0.0028f), s(0.038f, hc + 0.022f, 0.0028f), s(-0.038f, hc + 0.022f, 0.0028f)), n, C.PAPEL)
-        disco(v, f, s(0f, hc, 0.0027f), n, 0.005f, C.TINTA, 8)
-        // La funda: el papel, la ola, el sol con sus rayos, los globos, el cerco del disco, la cinta, las esquinas.
-        val funda = listOf(s(-ancho, 0f), s(ancho, 0f), s(ancho, alto - 0.03f), s(ancho - 0.025f, alto), s(-ancho, alto))
-        caraDegradada(v, f, funda, n, FUNDA, s(0f, alto), s(0f, 0f))
-        cara(v, f, listOf(s(-ancho, 0f), s(ancho, 0f)) + (0..8).map { i -> val u = ancho - 2f * ancho * i / 8; s(u, 0.075f + 0.012f * sin(i * 1.4f)) }, n, lerp(C.CHAPA, C.AZUL, 0.3f))
-        val sol = s(-0.055f, 0.185f)
-        for (k in 0 until 10) { val a = 2f * PI_F * k / 10; cara(v, f, listOf(s(-0.055f + 0.034f * cos(a - 0.12f), 0.185f + 0.034f * sin(a - 0.12f)), s(-0.055f + 0.06f * cos(a), 0.185f + 0.06f * sin(a)), s(-0.055f + 0.034f * cos(a + 0.12f), 0.185f + 0.034f * sin(a + 0.12f))), n, lerp(C.AMARILLO, C.PAPEL, 0.2f)) }
-        cara(v, f, (0..16).map { i -> val a = 2f * PI_F * i / 16; s(-0.055f + 0.03f * cos(a), 0.185f + 0.03f * sin(a)) }, n, lerp(C.NARANJA, C.AMARILLO, 0.35f))
+        cara(v, f, (0..20).map { i -> val a = 2f * PI_F * i / 20; p.s(0.042f * cos(a), hc + 0.042f * sin(a), 0.003f) }, n, lerp(C.NARANJA, C.AMARILLO, 0.25f))
+        cara(v, f, listOf(p.s(-0.04f, hc + 0.012f, 0.0028f), p.s(0.04f, hc + 0.012f, 0.0028f), p.s(0.038f, hc + 0.022f, 0.0028f), p.s(-0.038f, hc + 0.022f, 0.0028f)), n, C.PAPEL)
+        disco(v, f, p.s(0f, hc, 0.0027f), n, 0.005f, C.TINTA, 8)
+    }
+
+    /** La funda: el papel, la ola, el sol con sus rayos, los globos, el cerco del disco, la cinta, las esquinas gastadas. */
+    private fun DrawScope.funda(v: VistaRefugio, f: MarcoObjeto, p: Recostada) {
+        val n = p.n; val w = ANCHO_FUNDA; val h = ALTO_FUNDA
+        caraDegradada(v, f, listOf(p.s(-w, 0f), p.s(w, 0f), p.s(w, h - 0.03f), p.s(w - 0.025f, h), p.s(-w, h)), n, FUNDA, p.s(0f, h), p.s(0f, 0f))
+        cara(v, f, listOf(p.s(-w, 0f), p.s(w, 0f)) + (0..8).map { i -> val u = w - 2f * w * i / 8; p.s(u, 0.075f + 0.012f * sin(i * 1.4f)) }, n, lerp(C.CHAPA, C.AZUL, 0.3f))
+        for (k in 0 until 10) { val a = 2f * PI_F * k / 10; cara(v, f, listOf(p.s(-0.055f + 0.034f * cos(a - 0.12f), 0.185f + 0.034f * sin(a - 0.12f)), p.s(-0.055f + 0.06f * cos(a), 0.185f + 0.06f * sin(a)), p.s(-0.055f + 0.034f * cos(a + 0.12f), 0.185f + 0.034f * sin(a + 0.12f))), n, lerp(C.AMARILLO, C.PAPEL, 0.2f)) }
+        cara(v, f, (0..16).map { i -> val a = 2f * PI_F * i / 16; p.s(-0.055f + 0.03f * cos(a), 0.185f + 0.03f * sin(a)) }, n, lerp(C.NARANJA, C.AMARILLO, 0.35f))
         for ((k, g) in listOf(Triple(0.045f, 0.16f, C.ROJO), Triple(0.085f, 0.13f, C.AMARILLO), Triple(0.06f, 0.1f, lerp(C.AZUL, C.PAPEL, 0.2f))).withIndex()) {
-            cara(v, f, (0..12).map { i -> val a = 2f * PI_F * i / 12; s(g.first + (0.02f - 0.003f * k) * cos(a), g.second + (0.02f - 0.003f * k) * sin(a)) }, n, g.third)
-            rayaLuz(v, f, s(g.first, g.second - 0.02f), s(g.first + 0.004f, g.second - 0.06f), 0.0015f, C.TINTA, n, 0.6f)
+            cara(v, f, (0..12).map { i -> val a = 2f * PI_F * i / 12; p.s(g.first + (0.02f - 0.003f * k) * cos(a), g.second + (0.02f - 0.003f * k) * sin(a)) }, n, g.third)
+            rayaLuz(v, f, p.s(g.first, g.second - 0.02f), p.s(g.first + 0.004f, g.second - 0.06f), 0.0015f, C.TINTA, n, 0.6f)
         }
-        trazo(v, f, (0..30).map { i -> val a = 2f * PI_F * i / 30; s(0.11f * cos(a), alto * 0.5f + 0.11f * sin(a), -0.0005f) }, 0.006f, lerp(FUNDA, Color.White, 0.5f), n, 0.35f)
-        cara(v, f, listOf(s(-ancho, 0.02f, -0.0008f), s(-ancho + 0.018f, 0.02f, -0.0008f), s(-ancho + 0.018f, alto - 0.02f, -0.0008f), s(-ancho, alto - 0.02f, -0.0008f)), n, lerp(C.PAPEL, C.AMARILLO, 0.3f), 0.75f)
-        for ((u, h) in listOf(-ancho to 0f, ancho to 0f, -ancho to alto)) cara(v, f, listOf(s(u, h), s(u - 0.025f * kotlin.math.sign(u), h), s(u, h + if (h == 0f) 0.025f else -0.025f)), n, lerp(FUNDA, C.PAPEL, 0.7f))
-        rayaLuz(v, f, s(ancho, 0f), s(ancho, alto - 0.03f), 0.003f, lerp(FUNDA, C.TINTA, 0.35f), V3(1f, 0f, 0f))
-        rayaLuz(v, f, s(-ancho, alto), s(ancho - 0.025f, alto), 0.003f, lerp(FUNDA, Color.White, 0.3f), V3(0f, 1f, 0f))
+        trazo(v, f, (0..30).map { i -> val a = 2f * PI_F * i / 30; p.s(0.11f * cos(a), h * 0.5f + 0.11f * sin(a), -0.0005f) }, 0.006f, lerp(FUNDA, Color.White, 0.5f), n, 0.35f)
+        cara(v, f, listOf(p.s(-w, 0.02f, -0.0008f), p.s(-w + 0.018f, 0.02f, -0.0008f), p.s(-w + 0.018f, h - 0.02f, -0.0008f), p.s(-w, h - 0.02f, -0.0008f)), n, lerp(C.PAPEL, C.AMARILLO, 0.3f), 0.75f)
+        for ((u, hh) in listOf(-w to 0f, w to 0f, -w to h)) cara(v, f, listOf(p.s(u, hh), p.s(u - 0.025f * kotlin.math.sign(u), hh), p.s(u, hh + if (hh == 0f) 0.025f else -0.025f)), n, lerp(FUNDA, C.PAPEL, 0.7f))
+        rayaLuz(v, f, p.s(w, 0f), p.s(w, h - 0.03f), 0.003f, lerp(FUNDA, C.TINTA, 0.35f), V3(1f, 0f, 0f))
+        rayaLuz(v, f, p.s(-w, h), p.s(w - 0.025f, h), 0.003f, lerp(FUNDA, Color.White, 0.3f), V3(0f, 1f, 0f))
     }
 
     // =================================================================
@@ -147,7 +163,11 @@ internal object ChicosRefugio {
             disco(v, f, lente + V3(-0.0006f, 0f, 0f), izq, 0.006f, lerp(C.PAPEL, C.AMARILLO, 0.3f), 8)
             brillo(v, f, lente + V3(-0.001f, 0.016f, -0.012f), lente + V3(-0.001f, 0.02f, 0.004f), 0.004f, C.ACERO, V3(-1f, 0.4f, -0.4f), 0.9f)
         }
-        // La manivela, abierta, en el costado de la dinamo: el cubo, el brazo y el puño de baquelita.
+        manivelaYCola(v, f, y)
+    }
+
+    /** La manivela, abierta, en el costado de la dinamo (el cubo, el brazo y el puño de baquelita), la cola y el cordón. */
+    private fun DrawScope.manivelaYCola(v: VistaRefugio, f: MarcoObjeto, y: Float) {
         val cubo = V3(0.018f, 0.014f, -0.025f)
         disco(v, f, cubo, V3(0f, 0f, -1f), 0.011f, lerp(C.ACERO, Color.White, 0.15f), 12)
         val codo = V3(0.06f, 0.036f, -0.03f)
@@ -186,8 +206,11 @@ internal object ChicosRefugio {
         // Por el canto y abajo, hasta la caja.
         val bajada = listOf(V3(-0.02f, 0.003f, zc), V3(-0.022f, -0.01f, zc - 0.006f), V3(-0.022f, -0.045f, zc - 0.008f))
         trazo(v, base, bajada, ancho, CUERO, V3(0f, 0.2f, -1f))
-        // La caja, de pie, colgada.
-        val f = MarcoObjeto(base.w(-0.022f, -0.05f, zc - 0.03f), 0.12f, 3.0f)
+        cajaDelContador(v, MarcoObjeto(base.w(-0.022f, -0.05f, zc - 0.03f), 0.12f, 3.0f))
+    }
+
+    /** La caja del contador, de pie, colgada: la chapa, la esfera, las tres lucecitas, la ruedecilla y el otro cabo de la correa. */
+    private fun DrawScope.cajaDelContador(v: VistaRefugio, f: MarcoObjeto) {
         val x0 = -0.034f; val x1 = 0.034f; val y0 = -0.054f; val z0 = -0.012f; val z1 = 0.012f
         caja(v, f, -0.012f, 0.012f, -0.006f, 0.003f, -0.006f, 0.006f, lerp(OLIVA, C.ACERO, 0.4f))
         caja(v, f, x0, x1, y0, -0.004f, z0, z1, OLIVA, lerp(OLIVA, C.PAPEL, 0.15f))
