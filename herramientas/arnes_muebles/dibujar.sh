@@ -40,4 +40,4 @@ cp=""
   cp="$(cat "$build/instantaneas/classpath.txt")"
 } 9>"$build/.candado"
 
-exec java -Djava.awt.headless=true -Xss8m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -cp "$cp" arnes.DibujarKt "$@" 2> >(grep -v '^Picked up JAVA_TOOL_OPTIONS' >&2)
+exec java -Djava.awt.headless=true -Dstdout.encoding=UTF-8 -Dfile.encoding=UTF-8 -Xss8m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -cp "$cp" arnes.DibujarKt "$@" 2> >(grep -v '^Picked up JAVA_TOOL_OPTIONS' >&2)

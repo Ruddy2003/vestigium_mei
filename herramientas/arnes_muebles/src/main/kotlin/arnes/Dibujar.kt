@@ -175,7 +175,7 @@ private fun ideasConTemas(n: Int): List<Idea> {
 
 /**
  * La captura `temaMueble` «_b»: `FicheroIdeas` con 9 temas, dentro de una columna con 16 dp de margen. La llamada a
- * [MuebleIdeas] es la de `FicheroIdeas` (ui/pantallas/Fichero.kt), sin el toque.
+ * [MuebleIdeas] es la de `FicheroIdeas` (ui/pantallas/Fichero.kt), con un toque que no hace nada.
  */
 @Composable
 private fun Ideario() {
@@ -185,7 +185,7 @@ private fun Ideario() {
     val d = disenoIdeas(Estilo.tema)
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
         MuebleIdeas(lista, ::rotuloCajon, { c -> a.cuenta(c.n) + (if (d.cols <= 2) c.ultima?.let { " · " + Fechas.corto(it) } ?: "" else "") },
-            mas = 0, textoMas = "y 0 ${porNumero(0, a.contenedor, a.contenedores)} más")
+            mas = 0, textoMas = "y 0 ${porNumero(0, a.contenedor, a.contenedores)} más") { }   // con toque: así lleva el aura (halo) como en la app
     }
 }
 
