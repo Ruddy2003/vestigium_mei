@@ -3140,4 +3140,29 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("casa_nueva", "2030-01-20", listOf(21.0)),                 // la casa nueva de noche: el noveno piso y la ciudad encendida
         Triple("sanatorio", "2028-07-15", listOf(13.0)),                  // el sanatorio, provisional: la cocina sin ella, con el visillo corrido
     ),
+    // Nikos (Abismo, tanda S16): el barco fondeado sobre el banco, con el agua tan clara que se ve el fondo; y el muelle de Tarpon Springs.
+    "buzo_esponjas" to listOf(
+        Triple("barco", "2027-05-05", HORAS_CUADRO),                      // un día normal: las inmersiones, limpiar esponjas y el sueño con el farol bajo
+        Triple("agua_clara", "2027-04-12", listOf(13.0)),                 // despejado: el fondo a la vista, con la sombra del bote y los peces
+        Triple("norte", "2027-03-06", listOf(13.0)),                      // el viento del norte: olas cortas y el fondo que ya no se ve
+        Triple("tormenta", "2027-05-20", listOf(13.0)),                   // tormenta: el mar blanco y la lluvia
+        Triple("huracan", "2027-10-18", listOf(9.0)),                     // el huracán de 1910: el cielo amarillo y la ensenada entre manglares
+        Triple("esponjas_pocas", "2027-02-16", listOf(15.0)),             // el arco esponjas de 0 a 0,2: las cuerdas casi vacías
+        Triple("esponjas_racimos", "2027-04-14", listOf(15.0)),           // de 0,2 a 0,6: «como racimos»
+        Triple("esponjas_llenas", "2027-06-18", listOf(15.0)),            // de 0,6 a 1: «colgadas de todas partes»
+        Triple("farol", "2027-04-12", listOf(21.0)),                      // la noche con el farol bajo y su charco, la lamparilla y la luna
+        Triple("luna", "2027-04-12", listOf(23.5)),                       // la noche con el farol apagado: la luna y la lamparilla
+        Triple("pascua", "2028-04-23", listOf(13.0, 23.5)),               // Pascua: el cordero en el espetón; a medianoche, las velas y los huevos rojos
+        Triple("luto", "2029-04-17", listOf(13.0)),                       // luto (el Titanic): el gallardete a media asta y el paño negro en el icono
+        Triple("objeto_grande", "2027-04-17", listOf(13.0)),              // un objeto grande (la escafandra, doblada en montón junto a la bomba)
+        Triple("muelle", "2027-01-12", HORAS_CUADRO),                     // el muelle en invierno: la flota amarrada, el pueblo enfrente y San Nicolás
+        Triple("vuelta", "2027-12-18", listOf(13.0)),                     // la vuelta a puerto: los barcos «cargados de esponjas hasta los palos»
+        Triple("epifania", "2027-01-19", listOf(11.0, 21.0)),             // la Epifanía: la cruz y las coronas en el río, los cirios encendidos de noche
+        Triple("fin_anio", "2027-12-31", listOf(23.0)),                   // fin de año: los farolillos en los barcos y los cohetes
+        Triple("cuatro_julio", "2027-07-04", listOf(13.0)),               // el 4 de julio (en el muelle): las dos banderas sin letras
+        Triple("lonja", "2028-06-26", listOf(13.0)),                      // la lonja de junio (en el muelle): los sacos y los montones fuera
+        Triple("zarpa", "2027-01-26", listOf(8.0)),                       // la mañana de zarpar: los barcos que salen y los barriles en el muelle
+        Triple("boda", "2031-02-17", listOf(13.0)),                       // la boda (en el muelle): las guirnaldas blancas en la regala de Nikos
+        Triple("cuarto", "2030-06-21", listOf(13.0)),                     // el cuarto de 2030, provisional: el amarradero vacío, sin ningún barco
+    ),
 )
