@@ -13,6 +13,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.ChicosAntiguas.MURO
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.contacto
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.empolvado
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.labio
+import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.marca
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.punto
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.sombra
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.trazo
@@ -103,7 +104,13 @@ internal object PapelesAntiguas {
                 u = fin + 0.012f + az.real01() * 0.01f
             }
         }
-        for (j in 0 until 11) renglon(-g.ancho + 0.035f, -0.03f - (if (j == 10) 0.11f else 0f), 0.88f - j * 0.075f)
+        // Los dos primeros renglones, en runas («las primeras páginas están en runas»): las del cuadro, por referencia.
+        val runas = TrazosObjetos.RUNAS_DEL_CAMINO
+        for (j in 0 until 2) for (i in 0 until 7) {
+            val u = -g.ancho + 0.045f + i * 0.036f; val r = runas[(i + 3 * j) % runas.size]
+            marca(lm, r, lm.q(g.pt(u, 0.88f - j * 0.08f, g.bombeo(u) + 0.002f)), 0.024f * lm.k(), lerp(O.HOJA, O.TINTA, 0.5f))
+        }
+        for (j in 2 until 11) renglon(-g.ancho + 0.035f, -0.03f - (if (j == 10) 0.11f else 0f), 0.88f - j * 0.075f)
         for (j in 0 until 3) renglon(0.035f, g.ancho - 0.035f - (if (j == 2) 0.12f else 0f), 0.3f - j * 0.075f)
     }
 
@@ -161,7 +168,6 @@ internal object PapelesAntiguas {
         }
         pelos(lm, borde)
         dibujoDelMapa(lm, n)
-        empolvado(lm, listOf(lm.q(enPiel(-0.86f, 0.97f)), lm.q(enPiel(-0.5f, 0.93f)), lm.q(enPiel(0f, 1.0f)), lm.q(enPiel(0.48f, 0.94f)), lm.q(enPiel(0.8f, 0.98f))), 1f)
         labio(lm, 0.1f, MURO - 0.1f, 0.5f)
     }
 
@@ -181,25 +187,23 @@ internal object PapelesAntiguas {
         trazo((0..12).map { j -> val u = -0.85f + j * 1.7f / 12f; q(u, 0.27f + 0.025f * sin(j * 1.3f)) }, tinta, 0.45f)
         trazo((0..12).map { j -> val u = -0.85f + j * 1.7f / 12f; q(u, 0.31f + 0.025f * sin(j * 1.3f + 0.4f)) }, tinta, 0.35f)
         for (du in listOf(-0.04f, 0.03f)) trazo(listOf(q(-0.16f + du, 0.24f), q(-0.12f + du, 0.34f)), tinta, 0.45f)
-        // Las piedras marcadas, una tras otra en zetas, sin el camino entre ellas; cada una con su signo, un rasguño claro.
-        val piedras = listOf(-0.42f to 0.4f, 0.5f to 0.45f, -0.58f to 0.53f, 0.4f to 0.6f, -0.4f to 0.68f, 0.3f to 0.74f, 0.0f to 0.81f)
-        for ((i, uv) in piedras.withIndex()) piedraDelMapa(lm, q(uv.first, uv.second), i, tinta, n)
+        // Las piedras marcadas, una tras otra en zetas, sin el camino entre ellas; cada una con su runa al lado (las del cuadro).
+        val runas = TrazosObjetos.RUNAS_DEL_CAMINO
+        for ((i, r) in runas.withIndex()) {
+            val t = i / (runas.size - 1).coerceAtLeast(1).toFloat(); val lado = if (i % 2 == 0) -1f else 1f
+            piedraDelMapa(lm, q(lado * (0.72f - 0.42f * t), 0.36f + 0.48f * t), r, tinta, n, lado)
+        }
         // Las dos cumbres y la muesca del collado.
         trazo(listOf(q(-0.85f, 0.84f), q(-0.55f, 0.94f), q(-0.38f, 0.99f), q(-0.18f, 0.9f), q(0f, 0.86f), q(0.16f, 0.92f), q(0.42f, 0.98f), q(0.7f, 0.9f), q(0.85f, 0.84f)), tinta, 0.55f)
     }
 
     /**
-     * Una piedra del mapa: el mojón dibujado en tinta llena, una piedra alzada en punta como las del camino, con su signo
-     * rasgado en claro dentro (cada piedra el suyo: una raya tendida o en sesgo, o un punto). Nada que se lea como letra.
+     * Una piedra del mapa: el mojón dibujado en tinta llena, una piedra alzada en punta como las del camino, y a su lado,
+     * hacia dentro, su runa: la del cuadro, con su misma pieza ([TrazosObjetos.marca]), en la tinta de la piel.
      */
-    private fun DrawScope.piedraDelMapa(lm: LuzObjeto, c: Offset, i: Int, tinta: Color, n: V3) {
-        val k = lm.k() * 0.026f
+    private fun DrawScope.piedraDelMapa(lm: LuzObjeto, c: Offset, runa: Runa, tinta: Color, n: V3, lado: Float) {
+        val k = lm.k() * 0.024f
         drawPath(poligono(listOf(c + Offset(-k, k * 0.55f), c + Offset(-k * 0.55f, -k * 0.35f), c + Offset(-k * 0.1f, -k * 1.05f), c + Offset(k * 0.5f, -k * 0.4f), c + Offset(k * 0.95f, k * 0.55f))), tinta)
-        val claro = lm.c(O.CABRA, n, 0.15f)
-        when (i % 3) {
-            0 -> drawLine(claro, c + Offset(-k * 0.4f, k * 0.05f), c + Offset(k * 0.4f, k * 0.05f), 0.4f)
-            1 -> drawLine(claro, c + Offset(-k * 0.3f, k * 0.25f), c + Offset(k * 0.25f, -k * 0.3f), 0.4f)
-            else -> drawCircle(claro, k * 0.17f, c + Offset(0f, k * 0.05f))
-        }
+        marca(lm, runa, c + Offset(-lado * k * 2.3f, -k * 0.2f), k * 1.9f, lerp(O.CABRA, O.TINTA, 0.35f))
     }
 }

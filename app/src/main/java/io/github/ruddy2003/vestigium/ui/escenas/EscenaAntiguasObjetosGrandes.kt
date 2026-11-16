@@ -13,7 +13,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.empolvado
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.hoyo
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.labio
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.punto
-import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.signo
+import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.marca
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.sombra
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.trazo
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.tubo
@@ -96,7 +96,7 @@ internal object GrandesAntiguas {
      * talladas (el surco en sombra y su labio de luz, nunca brillan). Va algo más grueso que uno de verdad (1,5 veces).
      */
     private fun baston(lm: LuzObjeto, zm: Float): Cosa {
-        val pie = V3(0.12f, 0f, 0.02f); val dz = zm - 0.035f - pie.z; val dx = 0.08f
+        val pie = V3(-0.02f, 0f, -0.18f); val dz = zm - 0.035f - pie.z; val dx = 0.32f
         val arriba = V3(pie.x + dx, sqrt((1.9f * 1.9f - dz * dz - dx * dx).coerceAtLeast(1f)), pie.z + dz)
         val eje = (0..12).map { pie + (arriba - pie) * (it / 12f) }
         val env = listOf(pie + V3(-0.03f, 0f, 0f), pie + V3(0.03f, 0f, 0f), arriba + V3(-0.035f, 0.03f, 0f), arriba + V3(0.035f, 0.03f, 0f), arriba + V3(0f, 0.03f, -0.03f))
@@ -109,13 +109,16 @@ internal object GrandesAntiguas {
         }
     }
 
+    /** El fresno del bastón, oscurecido por los años y la grasa de las manos (más que la pala nueva de la esquina). */
+    private val VIEJO = lerp(ColorAntiguas.FRESNO, ColorAntiguas.CUERO, 0.3f)
+
     private fun DrawScope.palo(lm: LuzObjeto, eje: List<V3>, arriba: V3) {
         val radios = eje.indices.map { i -> if (i == eje.size - 1) 0.036f else 0.031f - 0.003f * i / eje.size }
-        tubo(lm, eje, radios, C.FRESNO, 0.65f)
+        tubo(lm, eje, radios, VIEJO, 0.65f)
         // El barro de abajo, la empuñadura oscura de manos y la cabeza.
-        tubo(lm, listOf(eje[1], eje[2]), listOf(0.0315f, 0.031f), lerp(C.FRESNO, C.TIERRA, 0.45f), 0.3f)
-        tubo(lm, listOf(eje[7] + (eje[8] - eje[7]) * 0.6f, eje[9] + (eje[10] - eje[9]) * 0.4f), listOf(0.0325f, 0.0325f), lerp(C.FRESNO, C.CUERO, 0.5f), 0.55f)
-        tubo(lm, listOf(eje[11] + (eje[12] - eje[11]) * 0.6f, arriba, arriba + LuzObjeto.unidad(arriba - eje[11]) * 0.03f), listOf(0.034f, 0.038f, 0.025f), lerp(C.FRESNO, C.MADERA, 0.35f), 0.7f)
+        tubo(lm, listOf(eje[1], eje[2]), listOf(0.0315f, 0.031f), lerp(VIEJO, C.TIERRA, 0.45f), 0.3f)
+        tubo(lm, listOf(eje[7] + (eje[8] - eje[7]) * 0.6f, eje[9] + (eje[10] - eje[9]) * 0.4f), listOf(0.0325f, 0.0325f), lerp(VIEJO, C.CUERO, 0.5f), 0.55f)
+        tubo(lm, listOf(eje[11] + (eje[12] - eje[11]) * 0.6f, arriba, arriba + LuzObjeto.unidad(arriba - eje[11]) * 0.03f), listOf(0.034f, 0.038f, 0.025f), lerp(VIEJO, C.MADERA, 0.35f), 0.7f)
         // La contera de hierro, en punta, con su anillo.
         val p0 = eje[0]; val d = LuzObjeto.unidad(eje[1] - eje[0])
         tubo(lm, listOf(p0 - d * 0.015f, p0 + d * 0.05f, p0 + d * 0.12f), listOf(0.009f, 0.025f, 0.033f), O.HIERRO, 0.85f)
@@ -126,15 +129,16 @@ internal object GrandesAntiguas {
     }
 
     /**
-     * Las marcas del paso, talladas de arriba abajo en la cara que mira a quien mira: una por piedra marcada, en el orden del
-     * camino, cada una de muescas en cuña y agujeros ([TrazosObjetos.signo]); las de abajo, más gastadas por las manos y el barro.
+     * Las marcas del paso, talladas de arriba abajo en la cara que mira a quien mira: la runa de cada piedra marcada, de la
+     * del collado (arriba) a la del puente (abajo), las del cuadro por referencia ([TrazosObjetos.RUNAS_DEL_CAMINO]); las de
+     * abajo, más gastadas por las manos y el barro.
      */
     private fun DrawScope.marcasDelPaso(lm: LuzObjeto, eje: List<V3>) {
-        val orden = listOf(0, 3, 1, 4, 2, 0, 1, 3, 4)
-        val a = eje.first(); val b = eje.last()
-        for ((i, s) in orden.withIndex()) {
-            val c = lm.q(a + (b - a) * (0.76f - i * 0.065f) + lm.girado(lm.aCamara, -lm.s.giro) * 0.024f)
-            signo(lm, s, c, 0.055f * lm.k(), lerp(C.FRESNO, C.LANA, 0.2f), gastada = 0.04f * i)
+        val runas = TrazosObjetos.RUNAS_DEL_CAMINO.reversed()
+        val a = eje.first(); val b = eje.last(); val paso = 0.6f / runas.size.coerceAtLeast(1)
+        for ((i, r) in runas.withIndex()) {
+            val c = lm.q(a + (b - a) * (0.78f - i * paso) + lm.girado(lm.aCamara, -lm.s.giro) * 0.024f)
+            marca(lm, r, c, 0.055f * lm.k(), lerp(VIEJO, C.LANA, 0.2f), gastada = 0.04f * i)
         }
     }
 
@@ -142,7 +146,7 @@ internal object GrandesAntiguas {
     private fun DrawScope.correaDelBaston(lm: LuzObjeto, eje: List<V3>) {
         val a = eje[10] + V3(-0.02f, 0f, -0.02f)
         val lazo = listOf(a, a + V3(-0.04f, -0.08f, -0.02f), a + V3(-0.03f, -0.19f, -0.03f), a + V3(0.0f, -0.24f, -0.035f), a + V3(0.03f, -0.18f, -0.025f), a + V3(0.03f, -0.06f, -0.01f), a + V3(0.02f, 0f, 0f))
-        tubo(lm, lazo, lazo.map { 0.007f }, lerp(C.CUERO, C.ESCORIA, 0.2f), 0.35f)
+        tubo(lm, TrazosObjetos.suave(lazo), TrazosObjetos.suave(lazo).map { 0.007f }, lerp(C.CUERO, C.ESCORIA, 0.2f), 0.35f)
     }
 
     // ---------------------------------------------------------------- La montura
@@ -241,9 +245,9 @@ internal object GrandesAntiguas {
     private fun DrawScope.correas(lm: LuzObjeto, zf: Float, y: Float) {
         val cuero = lerp(C.CUERO, C.ESCORIA, 0.15f)
         val baticola = listOf(V3(0.4f, y + 0.1f, zf - 0.01f), V3(0.47f, y - 0.06f, zf - 0.03f), V3(0.48f, y - 0.2f, zf - 0.02f), V3(0.44f, y - 0.16f, zf + 0.01f), V3(0.42f, y + 0.02f, zf + 0.02f))
-        tubo(lm, baticola, baticola.map { 0.014f }, lerp(cuero, C.ESCORIA, 0.2f), 0.3f)
+        tubo(lm, TrazosObjetos.suave(baticola), TrazosObjetos.suave(baticola).map { 0.014f }, lerp(cuero, C.ESCORIA, 0.2f), 0.3f)
         val cincha = listOf(V3(0.04f, 0.17f, zf - 0.058f), V3(0.06f, 0.08f, zf - 0.07f), V3(0.03f, 0.014f, zf - 0.13f), V3(-0.1f, 0.014f, zf - 0.18f), V3(-0.22f, 0.014f, zf - 0.12f))
-        tubo(lm, cincha, cincha.map { 0.022f }, cuero, 0.35f)
+        tubo(lm, TrazosObjetos.suave(cincha), TrazosObjetos.suave(cincha).map { 0.022f }, cuero, 0.35f)
         drawCircle(lm.c(O.HAYA, V3(0f, 1f, -0.5f), 0.1f), 0.035f * lm.k(), lm.q(-0.25f, 0.016f, zf - 0.1f), style = Stroke(0.013f * lm.k()))
     }
 

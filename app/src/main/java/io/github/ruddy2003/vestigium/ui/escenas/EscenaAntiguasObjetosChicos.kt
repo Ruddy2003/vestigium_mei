@@ -109,7 +109,6 @@ internal object ChicosAntiguas {
         for (n in CARAS) if (lo.s.seVe(V3(n.x * w, 0.18f, n.z * w), n)) ventana(lo, n, w, alto, luz)
         tejadillo(lo, w, alto)
         aro(lo, alto)
-        empolvado(lo, listOf(lo.q(-0.07f, alto + 0.04f, 0f), lo.q(0f, alto + 0.12f, 0f), lo.q(0.07f, alto + 0.04f, 0f)), 1.2f)
         labio(lm, 0f, 0f, 0.3f)
     }
 
@@ -182,6 +181,11 @@ internal object ChicosAntiguas {
             val cara = poligono(lo.q(n.x * m - lado.x * m, alto, n.z * m - lado.z * m), lo.q(n.x * m + lado.x * m, alto, n.z * m + lado.z * m), lo.q(cima))
             drawPath(cara, lo.c(O.HIERRO, nn, 0.1f))
             drawPath(cara, C.ESCORIA.copy(alpha = 0.25f), style = Stroke(0.4f))
+            if (lo.e.nevando) {
+                val a = V3(n.x * m - lado.x * m, alto, n.z * m - lado.z * m) * 0.45f + cima * 0.55f; val b = V3(n.x * m + lado.x * m, alto, n.z * m + lado.z * m) * 0.45f + cima * 0.55f
+                drawPath(poligono(lo.q(a), lo.q(b), lo.q(cima)), lo.base.arriba(C.NIEVE))
+                drawLine(lo.base.sombra(C.NIEVE_SOMBRA).copy(alpha = 0.6f), lo.q(a), lo.q(b), 0.5f)
+            }
         }
         redondo(lo, 0f, 0f, listOf(alto + 0.07f to 0.032f, alto + 0.13f to 0.03f), O.HIERRO)
         drawPath(boca(lo, 0f, alto + 0.13f, 0f, 0.03f), lo.c(O.HIERRO, V3(0f, 1f, 0f), 0.2f))
@@ -247,14 +251,14 @@ internal object ChicosAntiguas {
         for (t in listOf(0.11f, 0.8f)) { val r = radioEn(t) * 1.12f; tubo(lo, listOf(enEje(t), enEje(t + 0.025f)), listOf(r, r), O.LATON, 0.9f) }
     }
 
-    /** La correa de cuero, de abrazadera a abrazadera: sale hacia delante, cruza la losa y cuelga en lazo por el canto del poyo. */
+    /** La correa de cuero, de abrazadera a abrazadera: baja de la boquilla a la losa, se tiende floja por delante del cuerno y sube a la boca ancha. */
     private fun DrawScope.correa(lm: LuzObjeto, lo: LuzObjeto) {
         val d = lo.s.giro - lm.s.giro
         val a = lm.girado(enEje(0.11f) + V3(0f, -0.01f, -0.02f), d); val b = lm.girado(enEje(0.8f) + V3(0f, -0.02f, -0.03f), d)
-        val m = (a.x + b.x) / 2f
-        val tramo = listOf(a, V3(a.x + 0.012f, 0.04f, a.z - 0.03f), V3(a.x + 0.03f, 0.005f, a.z - 0.07f), V3(a.x + 0.08f, 0.004f, CANTO + 0.01f), V3(m - 0.04f, -0.035f, CANTO - 0.012f),
-            V3(m + 0.05f, -0.045f, CANTO - 0.013f), V3(b.x - 0.1f, 0.004f, CANTO + 0.01f), V3(b.x - 0.05f, 0.005f, b.z - 0.08f), V3(b.x - 0.02f, 0.07f, b.z - 0.05f), b)
-        tubo(lm, tramo, tramo.map { 0.0095f }, lerp(C.CUERO, C.ESCORIA, 0.18f), 0.35f)
+        val m = (a.x + b.x) / 2f; val z = minOf(a.z, b.z)
+        val tramo = TrazosObjetos.suave(listOf(a, V3(a.x + 0.015f, 0.03f, a.z - 0.04f), V3(a.x + 0.05f, 0.004f, z - 0.08f), V3(m - 0.02f, 0.004f, z - 0.12f),
+            V3(m + 0.09f, 0.004f, z - 0.11f), V3(b.x - 0.05f, 0.004f, b.z - 0.08f), V3(b.x - 0.015f, 0.07f, b.z - 0.04f), b))
+        tubo(lm, tramo, tramo.map { 0.0095f }, lerp(C.CUERO, C.ESCORIA, 0.18f), 0.15f)
     }
 
     // ---------------------------------------------------------------- La cecina
@@ -266,8 +270,8 @@ internal object ChicosAntiguas {
      * caído por el canto. 1,3 veces más grande.
      */
     private fun DrawScope.cecina(lm: LuzObjeto) {
-        val zv = MURO - 0.05f; val yv = 0.52f; val xa = -0.15f; val xb = 0.35f
-        val tiras = (0 until 5).map { i -> Triple(xa + 0.07f + i * (xb - xa - 0.14f) / 4f, 0.27f + 0.1f * ((i * 37 + lm.e.dia) % 5) / 4f, 0.062f + 0.016f * ((i * 13) % 3) / 2f) }
+        val zv = MURO - 0.05f; val yv = 0.53f; val xa = -0.18f; val xb = 0.4f
+        val tiras = (0 until 5).map { i -> Triple(xa + 0.08f + i * (xb - xa - 0.16f) / 4f, 0.32f + 0.11f * ((i * 37 + lm.e.dia) % 5) / 4f, 0.075f + 0.018f * ((i * 13) % 3) / 2f) }
         sombra(lm, tiras.flatMap { (x, largo, w) -> listOf(V3(x - w, yv, zv), V3(x + w, yv, zv), V3(x, yv - largo, zv - 0.01f)) } + listOf(V3(xa, yv, zv), V3(xb, yv, zv)), MURO, losa(lm), muro(lm))
         pano(lm)
         for ((x, largo, w) in tiras) tira(lm, x + 0.012f, yv, zv + 0.015f, largo * 0.6f, w * 0.9f, atras = true)
@@ -361,8 +365,8 @@ internal object ChicosAntiguas {
 
     /** El cordel de colgar de la viga, atado al asa y suelto en la losa, en un par de vueltas flojas por delante. */
     private fun DrawScope.cordel(lo: LuzObjeto, g: Float) {
-        val eje = listOf(V3(0.072f * g, 0.05f * g, -0.004f), V3(0.09f * g, 0.025f * g, -0.02f), V3(0.1f * g, 0.004f, -0.05f), V3(0.16f * g, 0.004f, -0.07f),
-            V3(0.17f * g, 0.004f, -0.13f), V3(0.11f * g, 0.004f, -0.15f), V3(0.07f * g, 0.004f, -0.1f), V3(0.12f * g, 0.004f, -0.06f))
+        val eje = TrazosObjetos.suave(listOf(V3(0.072f * g, 0.05f * g, -0.004f), V3(0.09f * g, 0.025f * g, -0.02f), V3(0.1f * g, 0.004f, -0.05f), V3(0.16f * g, 0.004f, -0.07f),
+            V3(0.17f * g, 0.004f, -0.13f), V3(0.11f * g, 0.004f, -0.15f), V3(0.07f * g, 0.004f, -0.1f), V3(0.12f * g, 0.004f, -0.06f)))
         tubo(lo, eje, eje.map { 0.0045f }, lerp(C.LANA, C.CUERO, 0.35f), 0.2f)
     }
 

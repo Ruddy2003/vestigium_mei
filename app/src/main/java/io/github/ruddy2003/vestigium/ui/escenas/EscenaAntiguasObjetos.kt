@@ -27,25 +27,29 @@ import kotlin.math.sqrt
 
 /**
  * Los doce objetos del día de Brenna, en la puerta de la posada. Los chicos van sobre su soporte, la losa del poyo, a la
- * derecha de la puerta, donde los toca el sol de la tarde y, de noche, la luz que sale de la sala; los grandes van de pie
- * en el suelo de losas y se recuestan en el muro del zaguán, a la izquierda de la puerta, junto al banco.
+ * derecha de la puerta, donde los toca el sol de la tarde y, de noche, la luz que sale de la sala; los grandes van junto al
+ * banco del zaguán, a la izquierda de la puerta: de pie en las losas, recostados o colgados en su muro, o echados en el banco.
+ * Todos a la derecha del pie que da el cuadro, para no meterse bajo la cabeza de las mulas de la argolla.
  *
  * - **Chicos** ([ChicosAntiguas]): la linterna de mina, de hierro y cuerno raspado (de noche, encendida); el cuerno de guía,
- *   tumbado sobre su panza, con la boquilla de latón y su correa; el libro de crónicas abierto y recostado en el muro
- *   (renglones sin letras y un dibujo del paso); el mapa del paso en su piel de cabra, colgado de un clavo y apoyado en la
- *   losa (las piedras marcadas una tras otra, con sus signos); las tiras de cecina colgadas de su vara; la jarra de barro
- *   con su raya negra y su marca; y el pedernal con el eslabón, la bolsita de cuero y la yesca.
- * - **Grandes** ([GrandesAntiguas], [GRANDES]): el bastón de fresno con su punta de hierro y las marcas del paso talladas,
- *   recostado en el muro; la cuerda de cáñamo adujada, colgada de una estaquilla, con el chicote que baja por el banco al
- *   suelo; la capa de lana doblada y colgada de su estaquilla como un paño, con el forro de piel y la capucha; la montura
- *   de carga en las losas, con sus arcos de haya, su fieltro y sus ganchos; y las botas de guía, una de pie y otra tumbada
- *   enseñando la suela claveteada. Cada uno se entrega como [Cosa], con su silueta y su pie.
+ *   tumbado sobre su panza, con la boquilla de latón y su correa floja por la losa; el libro de crónicas abierto y
+ *   recostado en el muro (dos renglones de runas, rayas y un dibujo del paso; [PapelesAntiguas]); el mapa del paso en su
+ *   piel de cabra, colgado de un clavo y apoyado en la losa (las piedras marcadas una tras otra, cada una con su runa, sin
+ *   el camino); las tiras de cecina colgadas de su vara, con el paño debajo; la jarra de barro con su raya negra, su marca
+ *   y su cordel; y el pedernal con el eslabón de lazos, la bolsita de cuero y la yesca.
+ * - **Grandes** ([GrandesAntiguas], [CuerdaYCapa], [GRANDES]): el bastón de fresno con su punta de hierro y las runas del
+ *   paso talladas, recostado en el muro en diagonal; la cuerda de cáñamo adujada, colgada de una estaquilla, con el chicote
+ *   que baja por el banco al suelo; la capa de lana echada sobre el banco, con el forro de piel en el doblez y la capucha
+ *   colgando (colgada de un clavo se leía como una figura con capucha); la montura de carga a horcajadas en el banco, como
+ *   en el lomo de la mula, con sus arcos de haya en aspa, su fieltro y sus ganchos; y las botas de guía, una de pie y otra
+ *   tumbada enseñando la suela claveteada. Cada uno se entrega como [Cosa], con su silueta y su pie.
  *
  * **La luz** ([LuzObjeto]): cada cara toma su color del sol (o de la luna) por su normal, como el muro de la posada; de
  * noche, además, la lumbre de la puerta por el lado de la puerta (los grandes, por la derecha; los chicos, por la
  * izquierda y desde el ventanuco de arriba) y el filo frío de la luna del otro. **Las sombras** ([TrazosObjetos.sombra]):
  * la de cada objeto, proyectada con el sol del cuadro sobre la losa o el suelo y sobre el muro de detrás, que el cuadro
- * no pinta (su sombra de las cosas llega solo al suelo de delante del pie).
+ * no pinta (su sombra de las cosas, en `CercaAntiguas.primerPlano`, se recorta de `pie.y - 1` para abajo y no sube al
+ * muro). La de los grandes se pinta solo por encima de esa raya, para no salir dos veces donde la pinta el cuadro.
  *
  * **Para que nada salga dos veces:** tres objetos son también piezas del cuadro ([YA_EN_EL_CUADRO]): el bastón de Brenna
  * (apoyado junto a la puerta cuando no está en el camino), la montura de carga (en su caballete, en primer plano) y la
@@ -58,8 +62,10 @@ import kotlin.math.sqrt
  * las de los que vuelven tarde).
  *
  * **[Diseño propio]**: cómo es y dónde va cada uno; los chicos van más grandes de lo que serían (de 1,3 a 2,8 veces) y los
- * grandes algo más (de 1,2 a 1,5) para que se lean a tamaño de teléfono. Sin personas, letras ni cifras: los renglones son
- * rayas, y las marcas talladas son las runas inventadas del cuadro ([Runa]).
+ * grandes algo más (de 1,2 a 1,6) para que se lean a tamaño de teléfono. Sin personas, letras ni cifras: los renglones son
+ * rayas, y las runas del bastón, del mapa y del libro son las del cuadro ([Runa]), dibujadas con su misma pieza y por
+ * referencia ([TrazosObjetos.marca], [TrazosObjetos.RUNAS_DEL_CAMINO]): si el cuadro las cambia, cambian aquí. La única
+ * marca propia es la del dueño de la jarra (una raya y dos puntos).
  */
 internal object ObjetosAntiguas {
     /** Los doce objetos del calendario de Brenna (`AnioG8.kt`). */
@@ -318,27 +324,30 @@ internal object TrazosObjetos {
     }
 
     /**
-     * Una marca tallada en [centro], de [alto] unidades: una de cinco hechas de muescas en cuña (▽) y de agujeros, como las
-     * que se hacen a punta de cuchillo en un palo **[Diseño propio]**: una cuña, dos cuñas, una cuña con su punto, una raya
-     * con dos puntos encima y tres puntos. No son letras de ningún alfabeto (ni latino ni rúnico) y nunca brillan: el hueco
-     * en sombra y su labio de luz del lado del sol. [gastada], de 0 a 1, la borra.
+     * Una marca tallada en [centro], de [alto] unidades: una de las runas del cuadro ([Runa]), dibujada con su misma pieza
+     * (`PiezasAntiguas.runa`), por referencia: si el cuadro cambia sus runas, cambian aquí también. El surco en sombra y su
+     * labio de luz; nunca brilla. [gastada], de 0 a 1, la borra.
      */
-    fun DrawScope.signo(l: LuzObjeto, cual: Int, centro: Offset, alto: Float, madera: Color, gastada: Float = 0f) {
-        val hueco = l.base.sombra(lerp(madera, C.ESCORIA, 0.5f)).copy(alpha = (0.92f * (1f - 0.7f * gastada)).coerceIn(0f, 1f))
-        val labio = l.base.luz(lerp(madera, C.NIEVE, 0.35f)).copy(alpha = (0.6f * l.r.contraste * (1f - gastada)).coerceIn(0f, 1f))
-        val h = alto / 2f; val lado = if (l.base.solALaDerecha) 1f else -1f
-        fun cuna(c: Offset, w: Float) {
-            drawPath(poligono(c + Offset(-w, -w * 0.7f), c + Offset(w, -w * 0.7f), c + Offset(0f, w)), hueco)
-            drawLine(labio, c + Offset(lado * w * 0.1f, w * 1.1f), c + Offset(lado * w * 1.1f, -w * 0.6f), (w * 0.35f).coerceAtLeast(0.25f))
+    fun DrawScope.marca(l: LuzObjeto, signo: Runa, centro: Offset, alto: Float, materia: Color, gastada: Float = 0f) {
+        with(PiezasAntiguas) { runa(l.base, signo, centro, alto, materia, gastada = gastada) }
+    }
+
+    /** Las runas de las piedras marcadas del camino, de abajo (la del puente) arriba (la del collado): las del cuadro, por referencia. */
+    val RUNAS_DEL_CAMINO: List<Runa> get() = SitioAntiguas.PIEDRAS.map { it.second }
+
+    /** Una línea blanda que pasa por los [puntos] (Catmull-Rom), con [pasos] tramos entre cada dos: para correas, cordeles y cuerdas, que no hacen esquinas. */
+    fun suave(puntos: List<V3>, pasos: Int = 4): List<V3> {
+        if (puntos.size < 3) return puntos
+        val r = ArrayList<V3>()
+        for (i in 0 until puntos.size - 1) {
+            val a = puntos[maxOf(i - 1, 0)]; val b = puntos[i]; val c = puntos[i + 1]; val d = puntos[minOf(i + 2, puntos.size - 1)]
+            for (j in 0 until pasos) {
+                val t = j / pasos.toFloat(); val t2 = t * t; val t3 = t2 * t
+                r += (b * 2f + (c - a) * t + (a * 2f - b * 5f + c * 4f - d) * t2 + (b * 3f - a - c * 3f + d) * t3) * 0.5f
+            }
         }
-        fun agujero(c: Offset, r: Float) { drawCircle(hueco, r, c); drawCircle(labio, r, c + Offset(lado * r * 0.5f, r * 0.5f), style = Stroke((r * 0.35f).coerceAtLeast(0.2f))) }
-        when (Math.floorMod(cual, 5)) {
-            0 -> cuna(centro, h * 0.55f)
-            1 -> { cuna(centro + Offset(-h * 0.42f, 0f), h * 0.4f); cuna(centro + Offset(h * 0.42f, 0f), h * 0.4f) }
-            2 -> { cuna(centro + Offset(0f, -h * 0.25f), h * 0.45f); agujero(centro + Offset(0f, h * 0.65f), h * 0.18f) }
-            3 -> { drawLine(hueco, centro + Offset(-h * 0.6f, h * 0.3f), centro + Offset(h * 0.6f, h * 0.3f), (h * 0.22f).coerceAtLeast(0.3f)); agujero(centro + Offset(-h * 0.3f, -h * 0.35f), h * 0.16f); agujero(centro + Offset(h * 0.3f, -h * 0.35f), h * 0.16f) }
-            else -> { agujero(centro + Offset(0f, -h * 0.45f), h * 0.17f); agujero(centro + Offset(-h * 0.4f, h * 0.3f), h * 0.17f); agujero(centro + Offset(h * 0.4f, h * 0.3f), h * 0.17f) }
-        }
+        r += puntos.last()
+        return r
     }
 
     /** Un trazo a mano (tinta, una costura, un rasguño) por los [puntos] del lienzo. */

@@ -58,8 +58,8 @@ internal object CuerdaYCapa {
      */
     fun cuerda(lm: LuzObjeto, zm: Float): Cosa {
         val pl = Plano(V3(0.2f, 1.18f, zm - 0.14f))
-        val chicote = listOf(pl.p(0.05f, 0.27f, -0.05f), pl.p(0.14f, 0.12f, -0.07f), pl.p(0.17f, -0.12f, -0.06f), V3(0.33f, 0.72f, 0.14f), V3(0.3f, 0.48f, 0.07f), V3(0.27f, 0.28f, 0.02f), V3(0.2f, 0.02f, -0.07f),
-            V3(0.06f, 0.012f, -0.16f), V3(-0.1f, 0.012f, -0.12f), V3(-0.08f, 0.012f, -0.02f), V3(0.08f, 0.012f, -0.03f), V3(0.16f, 0.012f, -0.1f), V3(0.04f, 0.012f, -0.2f))
+        val chicote = TrazosObjetos.suave(listOf(pl.p(0.05f, 0.27f, -0.05f), pl.p(0.14f, 0.12f, -0.07f), pl.p(0.17f, -0.12f, -0.06f), V3(0.33f, 0.72f, 0.14f), V3(0.3f, 0.48f, 0.07f), V3(0.27f, 0.28f, 0.02f), V3(0.2f, 0.02f, -0.07f),
+            V3(0.06f, 0.012f, -0.16f), V3(-0.1f, 0.012f, -0.12f), V3(-0.08f, 0.012f, -0.02f), V3(0.08f, 0.012f, -0.03f), V3(0.16f, 0.012f, -0.1f), V3(0.04f, 0.012f, -0.2f)), 3)
         val env = (0 until 12).map { j -> val a = 2f * PI.toFloat() * j / 12f; pl.p(0.26f * cos(a), 0.32f * sin(a)) } + chicote
         return Cosa(silueta(lm, env), lm.s.pie) {
             hoyo(lm, 0.03f, -0.1f, 0.3f)

@@ -166,7 +166,8 @@ class EscenaAntiguasObjetosPrueba {
             assertNotNull("$dia $o $h: no se pinta", caja); caja!!
             val ancho = caja[2] - caja[0]; val alto = caja[3] - caja[1]
             assertTrue("$o $h: es muy chico para leerse ($ancho × $alto)", ancho >= 14 && alto >= 12 && ancho * alto >= 350)
-            assertTrue("$o $h: no está en el poyo (${caja.toList()})", abs((caja[0] + caja[2]) / 2f - sobre.x) < 25f && caja[1] < sobre.y - 10f && caja[3] > sobre.y - 4f && caja[0] >= 325)
+            // Con nieve en la losa, se posa encima (hasta unas 5 unidades más arriba).
+            assertTrue("$dia $o $h: no está en el poyo (${caja.toList()})", abs((caja[0] + caja[2]) / 2f - sobre.x) < 25f && caja[1] < sobre.y - 10f && caja[3] > sobre.y - 10f && caja[0] >= 325)
         }
     }
 
