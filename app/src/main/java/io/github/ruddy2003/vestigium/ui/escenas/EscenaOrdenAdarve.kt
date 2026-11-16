@@ -224,6 +224,20 @@ internal object AdarveOrden {
      * Lo que alumbran de noche los candiles encendidos: el charco cálido en las losas al pie de cada almena y el halo en
      * su cara; el de delante, grande. Se suma a lo pintado (va después de las sombras).
      */
+    /** Los charcos de luz de los candiles cercanos en las losas: van debajo de lo que hay de pie en el adarve. */
+    fun DrawScope.charcosDeLosCandiles(v: VistaOrden) {
+        val n = EscenaOrden.candiles(v.m); if (n <= 0) return
+        val k = 0.2f + 0.8f * v.l.noche
+        for (i in 0 until minOf(n, 2)) {
+            if (i == 1 && !ObjetosOrden.elCuadroPinta(v.m, "candil")) continue
+            val c = candil(i); val e = CamOrden.k(c.x, c.z)
+            // El charco en las losas al pie, chico y tendido; los lejanos ya no se distinguen.
+            if (e < 9f) continue
+            val pie = CamOrden.p(PARAPETO - 0.35f, 0f, c.z)
+            drawOval(Brush.radialGradient(listOf(C.LUMBRE.copy(alpha = (0.26f * k).coerceIn(0f, 1f)), Color.Transparent), pie, e * 0.8f), Offset(pie.x - e * 0.8f, pie.y - e * 0.22f), Size(e * 1.6f, e * 0.44f), blendMode = BlendMode.Plus)
+        }
+    }
+
     fun DrawScope.luzDeLosCandiles(v: VistaOrden) {
         val n = EscenaOrden.candiles(v.m); if (n <= 0) return
         val k = 0.2f + 0.8f * v.l.noche
@@ -233,10 +247,6 @@ internal object AdarveOrden {
             val q = CamOrden.p(c)
             // El halo en la piedra de la almena, alrededor de la hornacina.
             resplandor(q, (e * 0.75f).coerceAtLeast(3f), 0.5f * k, C.LUMBRE)
-            // El charco en las losas al pie, chico y tendido; los lejanos ya no se distinguen.
-            if (e < 9f) continue
-            val pie = CamOrden.p(PARAPETO - 0.35f, 0f, c.z)
-            drawOval(Brush.radialGradient(listOf(C.LUMBRE.copy(alpha = (0.26f * k).coerceIn(0f, 1f)), Color.Transparent), pie, e * 0.8f), Offset(pie.x - e * 0.8f, pie.y - e * 0.22f), Size(e * 1.6f, e * 0.44f), blendMode = BlendMode.Plus)
         }
     }
 

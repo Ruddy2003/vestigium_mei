@@ -69,6 +69,25 @@ internal object MateriaOrden {
         for (j in 1..6) { val a = en(tejado[0], tejado[3], j / 7f); palo(v.lz, V3(a.x + 0.35f, a.y - 0.12f, a.z), V3(a.x - 0.25f, a.y - 0.2f, a.z), 0.16f, C.MADERA_OSC, 0.1f) }
     }
 
+    /**
+     * La chimenea de la fragua: un tiro de piedra girado, con su cara de luz y su cara de sombra, que se estrecha hacia
+     * arriba; el remate de losa con la boca negra de hollín y las chorreras que bajan por las dos caras. Más baja que el
+     * adarve, para que no compita con la torre.
+     */
+    fun DrawScope.chimenea(v: VistaOrden, s: Float, vv: Float, pie: Float) {
+        val lz = v.lz; val giro = 0.7f; val piedra = lerp(C.PIEDRA, C.HOLLIN, 0.1f)
+        with(PiezasOrden) {
+            caja(lz, s, vv, giro, 1.3f, 1.3f, pie, -3.2f, piedra, 0.1f, arriba = C.LOSA)
+            caja(lz, s, vv, giro, 1f, 1f, -3.2f, -1.45f, piedra, 0.1f)
+            caja(lz, s, vv, giro, 1.25f, 1.25f, -1.45f, -1.25f, lerp(C.LOSA, C.ARENA, 0.15f), 0.1f, arriba = lerp(C.HOLLIN, C.ROCA_HONDA, 0.25f))
+        }
+        val q = PiezasOrden.esquinas(s, vv, giro, 1.02f, 1.02f)
+        for ((a, b) in listOf(q[0] to q[1], q[1] to q[2])) for (t in listOf(0.25f, 0.6f, 0.85f)) {
+            val x = a.x + (b.x - a.x) * t; val z = a.y + (b.y - a.y) * t
+            drawLine(v.l.tono(C.HOLLIN).copy(alpha = 0.5f), CamOrden.p(x, -1.5f, z), CamOrden.p(x, -2.1f - t * 0.9f, z), 0.9f, StrokeCap.Round)
+        }
+    }
+
     /** El suelo del adarve de cerca: las losas con sus juntas de arena, el centro gastado y la mancha de aceite bajo el candil. */
     fun DrawScope.sueloDelAdarve(v: VistaOrden) {
         val lz = v.lz; val az = PiezasOrden.fijo("losas de cerca"); val arriba = V3(0f, 1f, 0f)

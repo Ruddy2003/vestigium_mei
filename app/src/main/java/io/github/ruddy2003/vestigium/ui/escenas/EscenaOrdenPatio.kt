@@ -444,8 +444,8 @@ internal object PatioOrden {
         val tejado = listOf(V3(s1 - 0.4f, alto1 - 0.1f, v0 - 0.5f), V3(s0, alto0 + 0.1f, v0 - 0.5f), V3(s0, alto0 + 0.1f, v1 + 0.3f), V3(s1 - 0.4f, alto1 - 0.1f, v1 + 0.3f))
         cara(lz, tejado, V3(-0.4f, 1f, 0f), if (v.nieve > 0f) C.NIEVE else C.LOSA, 0.1f, 0.15f)?.let { t -> clipPath(t) {
             with(MateriaOrden) { tejadoDeLaFragua(v, tejado) }; if (v.nieve > 0f) for (j in 0..10) drawLine(v.l.tono(C.HOLLIN).copy(alpha = 0.25f), CamOrden.p(s1 - 0.4f, alto1, v0 - 0.5f + j * 0.75f), CamOrden.p(s0, alto0, v0 - 0.5f + j * 0.75f), 0.5f) } }
-        // La chimenea, del lado del patio (así su humo no pasa por delante del cubo), hasta por encima del adarve.
-        caja(lz, s1 + 0.7f, v1 - 1.2f, 0f, 1.1f, 1.1f, alto1, 1.4f, lerp(C.PIEDRA, C.HOLLIN, 0.15f), 0.1f)
+        // La chimenea, del lado del patio (así su humo no pasa por delante del cubo).
+        with(MateriaOrden) { chimenea(v, s1 + 0.8f, v1 - 1.3f, alto1) }
     }
 
     /** El fuelle de cuero junto al hogar y las tenazas y los martillos colgados de la pared de la muralla. */
@@ -465,7 +465,7 @@ internal object PatioOrden {
         V3(CamOrden.BORDE, P + 4.8f, FRAGUA_V0), V3(FRAGUA_S, P + 3.3f, FRAGUA_V0), V3(CamOrden.BORDE, P + 4.8f, FRAGUA_V1), V3(FRAGUA_S, P + 3.3f, FRAGUA_V1))
 
     /** Dónde sale el humo de la fragua (la boca de la chimenea). */
-    val CHIMENEA: V3 get() = V3(FRAGUA_S + 0.7f, 1.5f, FRAGUA_V1 - 1.2f)
+    val CHIMENEA: V3 get() = V3(FRAGUA_S + 0.8f, -1.05f, FRAGUA_V1 - 1.3f)
 
     /**
      * Las placas de caparazón colgadas en el costado de la fragua, por piezas: hombreras, petos y grebas de hierro

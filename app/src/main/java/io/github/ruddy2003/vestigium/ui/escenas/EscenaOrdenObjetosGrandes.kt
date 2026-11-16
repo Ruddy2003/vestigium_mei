@@ -385,13 +385,23 @@ internal object GrandesOrden {
 
     /** El cuerpo: un disco chato con el canto abombado, de aluminio gris frío, y su brillo largo. */
     private fun DrawScope.cuerpoDeLaCantimplora(lo: LuzObjeto, f: MarcoOrden) {
-        revolucion(lo, f, V3(0f, 0.11f, 0.034f), V3(0f, 0.11f, -0.034f), listOf(0f to 0.095f, 0.2f to 0.107f, 0.5f to 0.112f, 0.8f to 0.107f, 1f to 0.095f), K.ALUMINIO, K.ALUMINIO, 22)
-        // El abombado de la cara, con su luz: más clara arriba a la izquierda.
-        disco(lo, f, V3(-0.02f, 0.13f, -0.035f), V3(-0.3f, 0.3f, -1f), 0.07f, lerp(K.ALUMINIO, Color.White, 0.12f), 16, alfa = 0.45f)
-        brillo(lo, f, V3(-0.07f, 0.06f, -0.03f), V3(-0.075f, 0.16f, -0.03f), 0.012f, K.ALUMINIO, V3(-0.7f, 0.2f, -0.7f), 0.9f)
+        // Macizo: las dos caras enteras primero, sin mirar si se ven, para que nunca se transparente lo de detrás.
+        // Su silueta, con un canto oscuro alrededor que la separa de lo de detrás.
+        disco(lo, f, V3(0f, 0.11f, 0.034f), V3(0f, 0f, 1f), 0.116f, lo.color(lerp(ALU, ColorOrden.HOLLIN, 0.45f), f.w(V3(0f, 0.11f, 0f)), f.n(V3(0.3f, 0.2f, -1f))), 22, luz = false)
+        for (z in listOf(0.034f, -0.034f)) {
+            val c = V3(0f, 0.11f, z); val n = V3(0f, 0f, if (z > 0f) 1f else -1f)
+            disco(lo, f, c, n, 0.1f, lo.color(ALU, f.w(c), f.n(V3(0.3f, 0.2f, -1f))), 22, luz = false)
+        }
+        revolucion(lo, f, V3(0f, 0.11f, 0.034f), V3(0f, 0.11f, -0.034f), listOf(0f to 0.095f, 0.2f to 0.107f, 0.5f to 0.112f, 0.8f to 0.107f, 1f to 0.095f), ALU, ALU, 22)
+        // El abombado de la cara, con su luz: más clara arriba a la izquierda, y un brillo corto.
+        disco(lo, f, V3(-0.02f, 0.13f, -0.035f), V3(-0.3f, 0.3f, -1f), 0.06f, lerp(ALU, Color.White, 0.1f), 16, alfa = 0.35f)
+        brillo(lo, f, V3(-0.072f, 0.09f, -0.03f), V3(-0.075f, 0.13f, -0.03f), 0.01f, ALU, V3(-0.7f, 0.2f, -0.7f), 0.9f)
         // El cerco gastado y oscuro del canto, donde se toca.
-        trazo(lo, f, TrazoOrden.circulo(V3(0f, 0.11f, -0.034f), V3(0f, 0f, -1f), 0.095f, 22, 5.8f, 9.6f), 0.004f, lerp(K.ALUMINIO, C.HOLLIN, 0.35f), V3(0.3f, -0.3f, -1f), 0.6f)
+        trazo(lo, f, TrazoOrden.circulo(V3(0f, 0.11f, -0.034f), V3(0f, 0f, -1f), 0.095f, 22, 5.8f, 9.6f), 0.004f, lerp(ALU, C.HOLLIN, 0.35f), V3(0.3f, -0.3f, -1f), 0.6f)
     }
+
+    /** El aluminio viejo de la cantimplora: gris metal mate, más cálido que el de la radio (sin el azul del vidrio). */
+    private val ALU = lerp(lerp(ColorOrden.TELA, ColorOrden.ARENA, 0.55f), ColorOrden.HOLLIN, 0.3f)
 
     /** Tres abolladuras: una sombra en media luna y su canto de luz. */
     private fun DrawScope.abolladuras(lo: LuzObjeto, f: MarcoOrden) {

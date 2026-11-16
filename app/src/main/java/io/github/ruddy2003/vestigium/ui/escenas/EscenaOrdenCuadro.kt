@@ -108,6 +108,8 @@ internal object CuadroOrden {
         with(MateriaOrden) { sueloDelAdarve(v) }
         with(DiasOrden) { mojado(v) }
         sombrasDelAdarve(v)
+        with(AdarveOrden) { charcosDeLosCandiles(v) }
+        with(CuboOrden) { charcoDelCandil(v) }
         parapeto(v)
         with(AdarveOrden) { enseres(v) }
         nieveEnLasAlmenas(v)

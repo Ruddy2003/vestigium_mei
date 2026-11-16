@@ -163,6 +163,12 @@ internal object CuboOrden {
         if (!arde(v)) return
         val k = 0.25f + 0.75f * v.l.noche; val c = CamOrden.p(CANDIL); val e = CamOrden.k(CANDIL.x, CANDIL.z)
         resplandor(c, e * 1.6f, 0.55f * k, C.LUMBRE)
+    }
+
+    /** El charco del candil grande en las losas del adarve: va debajo del banco, del objeto y del gato. */
+    fun DrawScope.charcoDelCandil(v: VistaOrden) {
+        if (!arde(v)) return
+        val k = 0.25f + 0.75f * v.l.noche; val e = CamOrden.k(CANDIL.x, CANDIL.z)
         val pie = CamOrden.p(CANDIL.x - 0.9f, 0f, CANDIL.z - 0.6f)
         drawOval(Brush.radialGradient(listOf(C.LUMBRE.copy(alpha = (0.3f * k).coerceIn(0f, 1f)), Color.Transparent), pie, e * 1.6f), Offset(pie.x - e * 1.6f, pie.y - e * 0.45f), Size(e * 3.2f, e * 0.9f), blendMode = BlendMode.Plus)
     }
