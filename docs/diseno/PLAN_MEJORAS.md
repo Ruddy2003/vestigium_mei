@@ -53,6 +53,15 @@ Orden de los Idearios, de los más simples a los que ya tenían carácter:
 - La escena del tema como fondo, recortada en una franja vertical, en inicio y en bloqueo, y que cambie con la hora.
 - El cambio automático con el tema ya existe (`fondo_telefono_auto`) y a veces no ocurre: hay que encontrar por qué.
 
+**Por qué a veces no cambia (leído en el código, 16 nov 2026; sin probar en el teléfono):**
+1. **El fondo solo se puede pintar con la app abierta en su pantalla principal.** `CapturaFondoTelefono` (en `ui/FondosTelefono.kt`) lo compone escondido y le saca una foto; espera al menos 0,6 s por fondo y los pinta en fila (el de hoy, el de hoy en el otro modo y, con la rotación, los dos de mañana). **Y no pone el fondo hasta haber pintado todos.** Si cambias de tema y sales enseguida a ver cómo quedó, no dio tiempo: ni se pintó ni se puso. Después el pulso de 15 minutos (`FondosTelefono.alDia`) no puede hacer nada, porque solo sabe poner un archivo ya pintado. Es la causa más probable de «a veces sí y a veces no»: depende de cuántos segundos te quedas en la app.
+2. **Solo se dejan pintados hoy y mañana** (`necesarios`). Si un día registras desde los avisos o el widget sin abrir la app, al día siguiente no hay archivo del tema nuevo y el fondo se queda con el anterior hasta que la abras.
+3. **Una foto que falla no se reintenta** hasta que cambie el tema o el modo.
+4. El cambio de las 5:00 lo pone el pulso, que el teléfono puede retrasar si está en reposo; llega, pero tarde.
+5. El modo nuevo «según la hora» cambia el fondo a las 21:00 y a las 5:00 también con el pulso: mismo retraso.
+
+**Cómo se arregla en esta parte:** las escenas se dibujan con código puro (sin componer pantallas), así que el fondo nuevo se puede pintar **fuera de la pantalla, desde el pulso**, cualquier tema a cualquier hora y con la app cerrada. Con eso desaparecen 1, 2 y 3. Además: poner el fondo de hoy en cuanto esté pintado el suyo (no esperar a los demás) y, al cambiar de tema dentro de la app, pintarlo y ponerlo en el momento.
+
 ### Lo temático nuevo (parte 7)
 
 La respuesta al tocar; que el fondo y los muebles reaccionen a la hora, el clima o la estación; los mensajes breves; las esperas; el interior del selector de fecha y de hora. Sonido de ambiente: poco y opcional (por definir).
