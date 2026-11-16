@@ -59,6 +59,18 @@ internal object PosadaAntiguas {
         aleroDelZaguan(v, az)
         aleroAlto(v, az)
         pieDelMuro(v, az)
+        if (v.clima == io.github.ruddy2003.vestigium.vidas.Clima.LLUVIA || v.clima == io.github.ruddy2003.vestigium.vidas.Clima.TORMENTA) mojada(v)
+    }
+
+    /** Con lluvia: la piedra oscura de agua, más abajo que arriba, y el brillo del cielo en las losas de los tejados y en el canto de los aleros. */
+    private fun DrawScope.mojada(v: VistaAntiguas) {
+        drawPath(MURO, Brush.verticalGradient(listOf(C.ESCORIA.copy(alpha = 0.12f), C.ESCORIA.copy(alpha = 0.28f)), p(0.5f, 2.6f).y, p(0.5f, 0f).y))
+        val brillo = lerp(v.l.alto, Color.White, 0.35f)
+        for (s0 in listOf(FachadaPosada.S_ALTO, 0.6f, 1.4f)) drawLine(brillo.copy(alpha = 0.4f), p(s0, aleroEn(s0) + 0.15f, 0.36f), p(s0 + 0.55f, aleroEn(s0 + 0.55f) + 0.15f, 0.36f), 0.9f, StrokeCap.Round)
+        drawLine(brillo.copy(alpha = 0.45f), p(S_ALTO + 0.3f, ALERO_ALTO + 0.12f, 0.62f), p(S_BORDE, ALERO_ALTO + 0.12f, 0.62f), 1f)
+        // El agua que cae del alero del zaguán, en hilos.
+        var s = S_ALTO + 0.1f
+        while (s < S_FIN) { val q = p(s, aleroEn(s), 0.36f); drawLine(brillo.copy(alpha = 0.35f), q, q + Offset(0f, 9f), 0.5f); s += 0.33f }
     }
 
     /** El pincel de un punto del muro, con la lumbre de la puerta de noche: más cuanto más cerca de la puerta. */
@@ -116,10 +128,12 @@ internal object PosadaAntiguas {
         val arriba = minOf(h + rh * (1f + j()), techo - 0.02f); val arriba2 = minOf(h + rh * (1f + j()), techo - 0.02f)
         val a = p(s + rs * (1f + j()), arriba); val b = p(s - rs * (1f + j()), arriba2)
         val c = p(s - rs * (1f + j()), h - rh * (1f + j())); val d = p(s + rs * (1f + j()), h - rh * (1f + j()))
-        val m1 = (a + b) / 2f + Offset(0f, -az.entre(0f, 0.8f)); val m2 = (c + d) / 2f + Offset(0f, az.entre(0f, 0.6f))
-        drawPath(poligono(listOf(a, m1, b, c, m2, d)), pe.por(tono, luz))
-        drawLine(pe.luz(lerp(tono, C.NIEVE, 0.3f)).copy(alpha = 0.5f), a, b, 0.7f, StrokeCap.Round)
-        drawLine(pe.sombra(lerp(tono, C.ESCORIA, 0.3f)).copy(alpha = 0.7f), d, c, 0.9f, StrokeCap.Round)
+        val m1 = (a + b) / 2f + Offset(0f, -az.entre(0f, 1f)); val m2 = (c + d) / 2f + Offset(0f, az.entre(0f, 0.8f))
+        val m3 = (b + c) / 2f + Offset(az.entre(-1f, 0.4f), 0f); val m4 = (d + a) / 2f + Offset(az.entre(-0.4f, 1f), 0f)
+        // Una piedra sin labrar: de cantos redondos, abombada (la luz arriba, la sombra abajo), con su junta honda debajo.
+        val forma = TrazosValle.cerrada(listOf(a, m1, b, m3, c, m2, d, m4))
+        drawPath(forma, Brush.verticalGradient(listOf(pe.por(tono, luz + 0.35f), pe.por(tono, luz), pe.por(lerp(tono, C.ESCORIA, 0.2f), luz - 0.45f)), minOf(a.y, b.y), maxOf(c.y, d.y)))
+        drawPath(TrazosValle.cerrada(listOf(c + Offset(0f, 0.6f), m2 + Offset(0f, 0.7f), d + Offset(0f, 0.6f), d, m2, c)), pe.sombra(lerp(tono, C.ESCORIA, 0.5f)).copy(alpha = 0.6f))
         if (az.real() < 0.25f) drawCircle(pe.medio(C.LIQUEN).copy(alpha = 0.5f), az.entre(0.6f, 1.4f), (a + c) / 2f + Offset(az.entre(-2f, 2f), az.entre(-1f, 1f)))
     }
 

@@ -88,11 +88,19 @@ internal object PinoAntiguas {
 
     private fun DrawScope.masaDelFondo(v: VistaAntiguas, az: Azar, partido: Boolean) {
         val pe = pincel(v, Offset(80f, 10f))
-        val oscuro = pe.sombra(lerp(C.PINO, C.ESCORIA, 0.35f))
-        for ((c, w) in listOf(Offset(14f, -8f) to 40f, Offset(76f, -14f) to 46f, Offset(130f, -12f) to 36f)) {
-            if (partido && c.x > 60f) continue
-            drawPath(borron(c, w, 20f, az, 15, 0.35f, 0.6f), oscuro)
+        val oscuro = pe.por(lerp(C.PINO, C.ESCORIA, 0.3f), -0.6f); val medio = pe.por(lerp(C.PINO, C.ESCORIA, 0.15f), -0.25f)
+        // La copa de detrás, que sale por arriba: mechones oscuros que se enciman, cada uno con su abanico de agujas, con
+        // huecos de cielo entre ellos.
+        val masa = Path(); val agujas = Path(); val puntas = Path()
+        repeat(40) {
+            val x = az.entre(-14f, if (partido) 60f else 170f); val y = az.entre(-10f, 20f) + (x / 170f) * 6f
+            val r = az.entre(4f, 8f)
+            masa.addOval(Rect(x - r, y - r * 0.5f, x + r, y + r * 0.5f))
+            for (k in 0 until 9) { val ang = -3.1f + 3.1f * k / 8f + az.entre(-0.15f, 0.15f); val l = r * az.entre(1f, 1.5f); (if (k % 3 == 1) puntas else agujas).apply { moveTo(x, y); lineTo(x + cos(ang) * l, y + sin(ang) * l * 0.8f) } }
         }
+        drawPath(masa, oscuro)
+        drawPath(agujas, oscuro, style = Stroke(0.6f, cap = StrokeCap.Round))
+        drawPath(puntas, medio, style = Stroke(0.55f, cap = StrokeCap.Round))
     }
 
     /** Una rama: de gruesa a fina, con su lado de luz; muerta (negra y pelada) si el rayo partió el pino. */
@@ -178,43 +186,63 @@ internal object PinoAntiguas {
     }
 
     /**
-     * Una copa: una masa tendida, de base plana, oscura dentro; encima, las agujas en haces (abanicos cortos de trazos)
-     * por el borde, claros del lado del sol; dos o tres piñas; con nieve, su capa encima con su sombra azul. Muerta: solo
-     * ramillas negras y alguna aguja parda.
+     * Una copa: no una almohada, sino brazadas de agujas una por una: de la rama salen ramillas y en la punta de cada una,
+     * un mechón de agujas que se abre hacia arriba en abanico (oscuro por dentro y por debajo, claro arriba del lado del
+     * sol), con huecos de cielo entre mechón y mechón; las piñas colgadas; con nieve, un copo encima de cada mechón de
+     * arriba. Muerta: las ramillas negras y quebradas, con algún mechón pardo.
      */
     private fun DrawScope.copa(v: VistaAntiguas, c: Offset, w: Float, az: Azar, muerta: Boolean) {
         val pe = pincel(v, c)
         val lado = if (pe.solALaDerecha) 1f else -1f
+        val h = w * 0.42f
+        val n = (w * 1.05f).toInt().coerceAtLeast(7)
+        // Dónde va cada mechón: repartidos en el abanico de la copa, más juntos en el centro.
+        val mechones = (0 until n).map { i ->
+            val f = (i + az.entre(0.1f, 0.9f)) / n
+            val ang = 3.1416f + 3.1416f * f
+            val r = az.entre(0.35f, 1f)
+            Offset(c.x + cos(ang) * w * r, c.y + sin(ang) * h * r * 1.1f + h * 0.25f) to az.entre(0.75f, 1.15f) * (3f + w * 0.13f)
+        }.sortedBy { it.first.y }
+        val ramilla = if (muerta) pe.medio(C.QUEMADO) else pe.por(lerp(C.MADERA, C.ROJIZA, 0.3f), -0.1f)
+        val base = c + Offset(0f, h * 0.45f)
+        val ramillas = Path()
+        for ((q, _) in mechones) { ramillas.moveTo(base.x, base.y); ramillas.cubicTo(base.x + (q.x - base.x) * 0.4f, base.y, q.x - (q.x - base.x) * 0.2f, q.y + 2f, q.x, q.y + 1f) }
+        drawPath(ramillas, ramilla, style = Stroke(if (muerta) 1.1f else 0.8f, cap = StrokeCap.Round))
         if (muerta) {
-            for (k in 0..7) { val a = -2.9f + k * 0.42f + az.entre(-0.2f, 0.2f); val q = c + Offset(cos(a) * w * 0.9f, sin(a) * w * 0.55f); drawLine(pe.medio(C.QUEMADO), c + Offset(0f, w * 0.2f), q, 0.9f, StrokeCap.Round); drawLine(pe.medio(C.QUEMADO), q, q + Offset(cos(a + 0.6f) * 4f, sin(a + 0.6f) * 3f), 0.6f, StrokeCap.Round) }
+            val pardo = pe.sombra(lerp(C.CUERO, C.QUEMADO, 0.4f))
+            for ((q, r) in mechones) if (az.real() < 0.25f) for (k in -2..2) { val ang = -1.57f + k * 0.4f; drawLine(pardo, q, q + Offset(cos(ang) * r * 0.8f, sin(ang) * r * 0.8f), 0.5f, StrokeCap.Round) }
             return
         }
-        val h = w * 0.36f
-        // La masa: varios bultos tendidos que se enciman, de borde quebrado, con la base casi plana.
-        val bultos = (0 until 4).map { k -> val d = (k - 1.5f) / 1.5f; TrazosValle.borron(c + Offset(d * w * 0.55f, -az.entre(0f, h * 0.7f) + kotlin.math.abs(d) * h * 0.3f), w * az.entre(0.42f, 0.58f), h * az.entre(0.7f, 1f), az, 12, 0.32f, 0.5f) }
-        val masa = union(bultos)
-        val hondo = pe.sombra(lerp(C.PINO, C.ESCORIA, 0.3f)); val medio = pe.por(C.PINO, 0f); val claro = pe.luz(lerp(C.PINO, C.ALERCE, 0.5f))
-        drawPath(masa, hondo)
-        // El lomo de cada bulto, donde da la luz (arriba y del lado del sol); abajo, la sombra honda.
-        clipPath(masa) { for (bu in bultos.indices) { val q = c + Offset(((bu - 1.5f) / 1.5f) * w * 0.55f + lado * w * 0.12f, -h * 0.7f); drawOval(medio.copy(alpha = 0.85f), Offset(q.x - w * 0.36f, q.y - h * 0.5f), Size(w * 0.72f, h * 1.1f)) } }
-        // Las agujas en haces: abanicos de trazos cortos que salen por el borde de arriba y de los lados; claros del lado del sol.
-        val n = (w * 1.4f).toInt()
-        for (i in 0 until n) {
-            val a = -3.1416f + 3.1416f * (i + az.entre(-0.3f, 0.3f)) / n
-            val q = c + Offset(cos(a) * w * az.entre(0.7f, 0.98f), sin(a) * h * az.entre(0.9f, 1.4f) - h * 0.2f)
-            val col = if (cos(a) * lado > -0.1f) claro else medio
-            for (k in -2..2) { val ang = a + k * 0.24f + az.entre(-0.08f, 0.08f); drawLine(col, q, q + Offset(cos(ang) * w * 0.15f, sin(ang) * w * 0.15f), 0.55f, StrokeCap.Round) }
+        // Los mechones: el corazón oscuro y las agujas en tres pasadas (sombra, medio, luz), cada una en un solo trazo.
+        val hondo = pe.sombra(lerp(C.PINO, C.ESCORIA, 0.35f)); val medio = pe.por(C.PINO, 0f); val claro = pe.luz(lerp(C.PINO, C.ALERCE, 0.55f))
+        val agujasS = Path(); val agujasM = Path(); val agujasL = Path()
+        for ((q, r) in mechones) {
+            drawOval(hondo, Offset(q.x - r * 0.55f, q.y - r * 0.35f), Size(r * 1.1f, r * 0.8f))
+            for (k in 0 until 13) {
+                val ang = -3.1416f + 3.1416f * (k + az.entre(-0.3f, 0.3f)) / 12f
+                val largo = r * az.entre(0.8f, 1.3f) * (if (sin(ang) > -0.3f) 0.7f else 1f)
+                val punta = q + Offset(cos(ang) * largo, sin(ang) * largo * 0.9f)
+                val destino = if (sin(ang) > -0.35f) agujasS else if (cos(ang) * lado > 0.1f && sin(ang) < -0.5f) agujasL else agujasM
+                destino.moveTo(q.x, q.y); destino.lineTo(punta.x, punta.y)
+            }
         }
-        // Los haces que cuelgan por debajo, oscuros.
-        repeat((w * 0.4f).toInt()) { val q = c + Offset(az.entre(-0.8f, 0.8f) * w, h * 0.35f); for (k in -1..1) drawLine(hondo, q, q + Offset(k * 1.2f + az.entre(-0.5f, 0.5f), w * 0.1f), 0.55f, StrokeCap.Round) }
-        // Las piñas, colgadas bajo la masa.
-        repeat(2) { val q = c + Offset(az.entre(-0.5f, 0.5f) * w, h * 0.5f); drawOval(pe.por(lerp(C.CUERO, C.MADERA, 0.4f), 0.2f), Offset(q.x - 1.3f, q.y - 0.4f), Size(2.6f, 3.8f)); drawLine(pe.sombra(C.MADERA_OSC), q + Offset(-1f, 1.4f), q + Offset(1f, 1.4f), 0.4f) }
+        drawPath(agujasS, hondo, style = Stroke(0.6f, cap = StrokeCap.Round))
+        drawPath(agujasM, medio, style = Stroke(0.6f, cap = StrokeCap.Round))
+        drawPath(agujasL, claro, style = Stroke(0.55f, cap = StrokeCap.Round))
+        // Las piñas, colgadas bajo los mechones de abajo: escamas en rombo.
+        for ((q, r) in mechones.takeLast(3).take(2)) {
+            val pq = q + Offset(az.entre(-1f, 1f), r * 0.7f)
+            drawOval(pe.por(lerp(C.CUERO, C.MADERA, 0.4f), 0.15f), Offset(pq.x - 1.5f, pq.y - 0.4f), Size(3f, 4.4f))
+            for (j in 0..2) drawLine(pe.sombra(C.MADERA_OSC), pq + Offset(-1.3f, 0.8f + j * 1.2f), pq + Offset(1.3f, 0.8f + j * 1.2f), 0.35f)
+        }
+        // La nieve: un copo encima de cada mechón de arriba, con su sombra azul debajo.
         if (v.nieveAbajo > 0.15f) {
             val k = v.nieveAbajo
-            val arriba = (0..10).map { i -> val t = i / 10f; c + Offset((t - 0.5f) * 1.7f * w, -h * (0.8f + 0.35f * sin(t * 3.1416f)) - k * 3.6f * sin(t * 3.1416f)) }
-            val abajo = (10 downTo 0).map { i -> val t = i / 10f; c + Offset((t - 0.5f) * 1.6f * w, -h * (0.35f + 0.25f * sin(t * 3.1416f)) + 1.2f * sin(t * 13f)) }
-            drawPath(TrazosValle.cerrada(arriba + abajo), pe.por(C.NIEVE, 0.5f).copy(alpha = (0.5f + 0.5f * k).coerceAtMost(1f)))
-            drawPath(curva(abajo), pe.sombra(C.NIEVE_SOMBRA).copy(alpha = 0.7f), style = Stroke(1f))
+            for ((q, r) in mechones.take((n * 0.7f).toInt())) {
+                val cima = TrazosValle.blando(q + Offset(0f, -r * 0.45f), r * (0.75f + 0.35f * k), r * (0.3f + 0.2f * k), az, 8, 0.2f, 0.4f)
+                drawPath(cima, pe.por(C.NIEVE, 0.45f).copy(alpha = (0.55f + 0.45f * k).coerceAtMost(1f)))
+                drawLine(pe.sombra(C.NIEVE_SOMBRA).copy(alpha = 0.6f), q + Offset(-r * 0.6f, -r * 0.2f), q + Offset(r * 0.6f, -r * 0.2f), 0.6f)
+            }
         }
     }
 

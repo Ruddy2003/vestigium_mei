@@ -168,21 +168,49 @@ internal object VetasAntiguas {
         }
     }
 
-    /** Una boca vieja: el hueco negro con su marco de troncos y el abanico de escoria que baja. */
+    /** Una boca vieja: el hueco con su entibado, la explanada delante y la escombrera de escoria que cae por la ladera, larga. */
     private fun DrawScope.bocaVieja(v: VistaAntiguas, q: Offset, az: Azar) {
         val p = v.p
-        val fan = poligono(q + Offset(-2.4f, 1f), q + Offset(2.6f, 1f), q + Offset(7f + az.entre(0f, 3f), 14f), q + Offset(-1f, 17f), q + Offset(-7f, 12f))
-        drawPath(fan, p.por(lerp(C.ESCORIA, C.PIEDRA, 0.25f), 0.1f, LEJOS))
-        clipPath(fan) { drawPoints((0 until 30).map { q + Offset(az.entre(-7f, 9f), az.entre(1f, 17f)) }, PointMode.Points, p.luz(lerp(C.ESCORIA, C.PIEDRA, 0.6f), LEJOS).copy(alpha = 0.6f), 0.8f, StrokeCap.Round) }
-        boca(p, q, 3f)
+        escombrera(p, q, 15f + az.entre(0f, 6f), lerp(C.PIEDRA_OSC, C.ESCORIA, 0.3f), az)
+        boca(p, q, 3.8f)
     }
 
-    /** El hueco de una boca de mina de [r] de ancho: negro, con sus dos pies de troncos y el dintel. */
+    /**
+     * La escombrera de una boca: la explanada plana delante y la lengua de escoria que cae por la ladera, ancha abajo, con
+     * su lado de luz, sus regueros y las piedras que ruedan hasta el pie.
+     */
+    private fun DrawScope.escombrera(p: Pincel, q: Offset, largo: Float, color: Color, az: Azar) {
+        val lado = if (p.solALaDerecha) 1f else -1f
+        val explanada = poligono(q + Offset(-largo * 0.32f, 0.4f), q + Offset(largo * 0.4f, 0.4f), q + Offset(largo * 0.34f, 2.2f), q + Offset(-largo * 0.28f, 2.4f))
+        val lengua = poligono(rota(listOf(q + Offset(-largo * 0.22f, 2f), q + Offset(largo * 0.3f, 2f), q + Offset(largo * 0.55f, largo * 0.7f), q + Offset(largo * 0.62f, largo * 1.15f)), az, 1.2f, 2) + rota(listOf(q + Offset(largo * 0.62f, largo * 1.15f), q + Offset(largo * 0.2f, largo * 1.25f), q + Offset(-largo * 0.25f, largo * 1.18f), q + Offset(-largo * 0.5f, largo * 1.05f)), az, 1.6f, 2) + listOf(q + Offset(-largo * 0.42f, largo * 0.6f)))
+        drawPath(lengua, p.por(color, 0f, LEJOS))
+        clipPath(lengua) {
+            drawRect(Brush.horizontalGradient(listOf(p.sombra(color, LEJOS).copy(alpha = if (lado > 0f) 0.55f else 0f), Color.Transparent, p.luz(lerp(color, C.PIEDRA, 0.3f), LEJOS).copy(alpha = if (lado > 0f) 0f else 0.35f)), q.x - largo * 0.5f, q.x + largo * 0.6f), Offset(q.x - largo, q.y), Size(largo * 2f, largo * 1.2f))
+            for (k in 0..3) { val x = q.x - largo * 0.2f + k * largo * 0.18f; drawLine(p.sombra(lerp(color, C.ESCORIA, 0.4f), LEJOS).copy(alpha = 0.5f), Offset(x, q.y + 3f), Offset(x + az.entre(-2f, 3f), q.y + largo * 1.05f), 0.6f) }
+            drawPoints((0 until (largo * 2.4f).toInt()).map { q + Offset(az.entre(-largo * 0.45f, largo * 0.5f), az.entre(2f, largo * 1.1f)) }, PointMode.Points, p.luz(lerp(color, C.PIEDRA, 0.55f), LEJOS).copy(alpha = 0.6f), 0.9f, StrokeCap.Round)
+        }
+        drawPath(explanada, p.por(lerp(color, C.TIERRA, 0.3f), 0.35f, LEJOS))
+        // Las piedras que ruedan hasta el pie de la lengua.
+        repeat(5) { drawCircle(p.por(color, 0.1f, LEJOS), az.entre(0.5f, 1.1f), q + Offset(az.entre(-largo * 0.3f, largo * 0.5f), largo * az.entre(1.05f, 1.3f))) }
+    }
+
+    /**
+     * La boca de una mina de [r] de ancho: el hueco negro y hondo, con el entibado (los dos pies de troncos, el cabezal y,
+     * más adentro, otro marco que se pierde en lo oscuro), el canto de la roca de encima y su sombra.
+     */
     private fun DrawScope.boca(p: Pincel, q: Offset, r: Float) {
-        drawPath(Path().apply { moveTo(q + Offset(-r, 0.6f)); lineTo(q + Offset(-r, -r * 0.9f)); cubicTo(q.x - r, q.y - r * 1.7f, q.x + r, q.y - r * 1.7f, q.x + r, q.y - r * 0.9f); lineTo(q + Offset(r, 0.6f)); close() }, p.medio(C.ESCORIA, LEJOS))
-        val madera = p.por(C.MADERA, 0.2f, LEJOS)
-        drawLine(madera, q + Offset(-r, 0.6f), q + Offset(-r, -r * 1.3f), 0.6f); drawLine(madera, q + Offset(r, 0.6f), q + Offset(r, -r * 1.3f), 0.6f)
-        drawLine(madera, q + Offset(-r * 1.25f, -r * 1.3f), q + Offset(r * 1.25f, -r * 1.3f), 0.7f)
+        val alto = r * 1.5f
+        // El corte en la ladera: el labio de roca encima, en sombra, de borde roto.
+        drawPath(poligono(listOf(q + Offset(-r * 1.4f, -alto * 0.6f), q + Offset(-r * 0.9f, -alto - r * 0.55f), q + Offset(0f, -alto - r * 0.75f), q + Offset(r * 1f, -alto - r * 0.5f), q + Offset(r * 1.4f, -alto * 0.55f), q + Offset(r, -alto), q + Offset(-r, -alto))), p.sombra(lerp(C.ROJIZA, C.ESCORIA, 0.45f), LEJOS).copy(alpha = 0.75f))
+        drawPath(poligono(q + Offset(-r, 0.6f), q + Offset(r, 0.6f), q + Offset(r * 0.9f, -alto), q + Offset(-r * 0.9f, -alto)), p.medio(C.ESCORIA, LEJOS))
+        val madera = p.por(C.MADERA, 0.2f, LEJOS); val hondo = p.sombra(C.MADERA_OSC, LEJOS)
+        // El marco de dentro, más chico y oscuro.
+        drawLine(hondo, q + Offset(-r * 0.55f, 0.4f), q + Offset(-r * 0.5f, -alto * 0.7f), 0.5f); drawLine(hondo, q + Offset(r * 0.55f, 0.4f), q + Offset(r * 0.5f, -alto * 0.7f), 0.5f)
+        drawLine(hondo, q + Offset(-r * 0.6f, -alto * 0.7f), q + Offset(r * 0.6f, -alto * 0.7f), 0.5f)
+        // El marco de la boca: los pies, el cabezal que sobresale y su sombra.
+        drawLine(madera, q + Offset(-r, 0.6f), q + Offset(-r * 0.92f, -alto), 0.9f); drawLine(madera, q + Offset(r, 0.6f), q + Offset(r * 0.92f, -alto), 0.9f)
+        drawLine(madera, q + Offset(-r * 1.3f, -alto), q + Offset(r * 1.3f, -alto), 1.1f, StrokeCap.Round)
+        drawLine(p.luz(C.FRESNO, LEJOS).copy(alpha = 0.5f * p.r.dia), q + Offset(-r * 1.3f, -alto - 0.5f), q + Offset(r * 1.3f, -alto - 0.5f), 0.4f)
     }
 
     /**
@@ -195,16 +223,17 @@ internal object VetasAntiguas {
         if (EscenaAntiguas.sendaDeLaGuia(v.m)) senda(v, az)
         when (veta) {
             Veta.ENTERA -> Unit
-            Veta.PEQUENA -> { montonRojo(p, BOCA, 7f, az); boca(p, BOCA, 2.6f) }
-            Veta.MEJOR -> { caminoDeCarros(v); montonRojo(p, BOCA, 13f, az); for (q in BOCAS_NUEVAS) { montonRojo(p, q, 6f, az); boca(p, q, 2.4f) }; boca(p, BOCA, 3.2f); carros(v) }
-            Veta.HUNDIDA -> { caminoDeCarros(v); montonRojo(p, BOCA, 13f, az); hundida(v, az) }
-            Veta.TAPADA -> { caminoDeCarros(v, viejo = true); montonRojo(p, BOCA, 13f, az); tapada(v, az) }
+            Veta.PEQUENA -> { montonRojo(p, BOCA, 11f, az); boca(p, BOCA, 3.6f) }
+            Veta.MEJOR -> { caminoDeCarros(v); montonRojo(p, BOCA, 20f, az); for (q in BOCAS_NUEVAS) { montonRojo(p, q, 9f, az); boca(p, q, 3.4f) }; boca(p, BOCA, 4.6f); carros(v) }
+            Veta.HUNDIDA -> { caminoDeCarros(v); montonRojo(p, BOCA, 20f, az); hundida(v, az) }
+            Veta.TAPADA -> { caminoDeCarros(v, viejo = true); montonRojo(p, BOCA, 18f, az); tapada(v, az) }
         }
         if (Senal.POLVO_ROJO in v.senales || Senal.BOCA_HUNDIDA in v.senales) mancha(BOCA + Offset(4f, -8f), 22f, 10f, p.medio(lerp(C.ROJIZA, C.LANA, 0.4f), LEJOS), 0.5f)
     }
 
     /** El montón de roca sacada de la boca: rojo, en abanico, con su lado de sombra. */
     private fun DrawScope.montonRojo(p: Pincel, q: Offset, tam: Float, az: Azar) {
+        escombrera(p, q, tam * 1.1f, lerp(lerp(C.ROJIZA, C.TIERRA, 0.3f), C.ESCORIA, 0.1f), az)
         val fan = poligono(q + Offset(-2f, 0.6f), q + Offset(3f, 0.6f), q + Offset(tam * 0.9f, tam * 1.1f), q + Offset(-tam * 0.2f, tam * 1.3f), q + Offset(-tam * 0.6f, tam * 0.9f))
         val tierra = lerp(lerp(C.ROJIZA, C.TIERRA, 0.35f), C.ESCORIA, 0.15f)
         drawPath(fan, p.por(tierra, 0f, LEJOS))
@@ -243,18 +272,21 @@ internal object VetasAntiguas {
     /** La boca hundida: la roca caída tapando el hueco, los troncos del marco rotos y, los días del derrumbe, las linternas del rescate. */
     private fun DrawScope.hundida(v: VistaAntiguas, az: Azar) {
         val p = v.p
-        drawPath(TrazosValle.borron(BOCA + Offset(0f, -2f), 6f, 4f, az, 9, 0.35f), p.por(lerp(C.ROJIZA, C.PIEDRA, 0.4f), 0.1f, LEJOS))
+        // El monte caído sobre la boca, la cicatriz clara en la roca de encima y los troncos del entibado rotos.
+        drawPath(TrazosValle.borron(BOCA + Offset(0f, -9f), 8f, 5f, az, 9, 0.35f), p.por(lerp(C.ROJIZA, C.LANA, 0.35f), 0.3f, LEJOS))
+        drawPath(TrazosValle.borron(BOCA + Offset(0f, -2f), 9f, 5.4f, az, 9, 0.35f), p.por(lerp(C.ROJIZA, C.PIEDRA, 0.4f), 0.1f, LEJOS))
         val madera = p.por(C.MADERA, 0.1f, LEJOS)
-        drawLine(madera, BOCA + Offset(-4f, 0f), BOCA + Offset(-1f, -5f), 0.7f); drawLine(madera, BOCA + Offset(4f, 0.4f), BOCA + Offset(0.5f, -4f), 0.7f)
-        repeat(6) { drawCircle(p.por(C.PIEDRA, -0.1f, LEJOS), az.entre(0.6f, 1.3f), BOCA + Offset(az.entre(-6f, 6f), az.entre(-4f, 1f))) }
+        drawLine(madera, BOCA + Offset(-6f, 0f), BOCA + Offset(-1.6f, -7f), 1f); drawLine(madera, BOCA + Offset(6f, 0.4f), BOCA + Offset(0.8f, -6f), 1f); drawLine(madera, BOCA + Offset(-5f, -4f), BOCA + Offset(5f, -2f), 0.9f)
+        repeat(10) { drawCircle(p.por(C.PIEDRA, -0.1f, LEJOS), az.entre(0.7f, 1.8f), BOCA + Offset(az.entre(-9f, 9f), az.entre(-6f, 2f))) }
         if (Senal.BOCA_HUNDIDA in v.senales) for (k in 0..3) lucecita(BOCA + Offset(-7f + k * 4.6f, 2f + (k % 2)), 0.7f, maxOf(0.6f, v.noche))
     }
 
     /** La boca tapada con piedras: un muro de piedra seca en el hueco. El día del Hierro sin fiesta, sus lámparas encendidas. */
     private fun DrawScope.tapada(v: VistaAntiguas, az: Azar) {
         val p = v.p
-        boca(p, BOCA, 3.2f)
-        for (fila in 0..3) for (k in 0..2) drawCircle(p.por(C.PIEDRA, 0.3f - fila * 0.1f, LEJOS), 0.9f, BOCA + Offset(-2.2f + k * 2.2f + (fila % 2) * 0.8f, -0.4f - fila * 1.5f))
+        boca(p, BOCA, 4.6f)
+        // El muro de piedra seca que cierra el hueco, piedra a piedra, más claro que la boca.
+        for (fila in 0..4) for (k in 0..3) drawCircle(p.por(lerp(C.PIEDRA, C.LANA, 0.2f), 0.35f - fila * 0.08f, LEJOS), 1.15f, BOCA + Offset(-3.3f + k * 2.2f + (fila % 2) * 1.1f, -0.6f - fila * 1.4f))
         if (Senal.LAMPARAS_EN_LA_BOCA in v.senales) for (k in 0..2) lucecita(BOCA + Offset(-5f + k * 5f, 1.4f), 0.75f, maxOf(0.7f, v.noche))
     }
 

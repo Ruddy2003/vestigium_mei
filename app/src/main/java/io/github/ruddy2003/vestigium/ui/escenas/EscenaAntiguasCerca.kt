@@ -46,8 +46,15 @@ internal object CercaAntiguas {
     /** El trineo de duelas de los niños, en invierno, olvidado en la plaza (detrás del suelo del gato). */
     val TRINEO = Offset(198f, 262f)
 
+    /** Cuánta lumbre de la puerta le llega de noche a [q], por su distancia al umbral (cero con la puerta cerrada). */
+    fun lumbreEn(v: VistaAntiguas, q: Offset): Float {
+        if (EscenaAntiguas.puerta(v.m) == EscenaAntiguas.Puerta.CERRADA) return 0f
+        return (v.encendido.sala * v.noche * (1f - (q - PuertaAntiguas.UMBRAL).getDistance() / 180f)).coerceIn(0f, 0.85f)
+    }
+
     fun DrawScope.primerPlano(v: VistaAntiguas) {
         suelo(v)
+        with(LuzAntiguas) { charcoDeLaPuerta(v) }
         posada(v)
         val cosas = cosas(v)
         capaSombra(v.r) { c ->
@@ -123,7 +130,7 @@ internal object CercaAntiguas {
     }
 
     private fun DrawScope.dibujoCaballete(v: VistaAntiguas, pie: Offset) {
-        val pe = v.pincelEn(pie + Offset(0f, -40f)); val madera = lerp(C.MADERA, C.FRESNO, 0.2f)
+        val pe = v.pincelEn(pie + Offset(0f, -40f), lumbre = lumbreEn(v, pie + Offset(0f, -50f))); val madera = lerp(C.MADERA, C.FRESNO, 0.2f)
         for (dx in listOf(-17f, 15f)) { drawLine(pe.por(madera, -0.2f), pie + Offset(dx - 5f, 0f), pie + Offset(dx + 1f, -26f), 2.4f); drawLine(pe.por(madera, 0.2f), pie + Offset(dx + 6f, -1f), pie + Offset(dx, -26f), 2.4f) }
         drawLine(pe.por(madera, 0.3f), pie + Offset(-21f, -26f), pie + Offset(21f, -27f), 3.4f, StrokeCap.Round)
         // La montura: la manta de fieltro que cuelga a los lados y los dos arcos de haya con sus ganchos.
@@ -174,7 +181,7 @@ internal object CercaAntiguas {
         val pie = p(2.12f, 0f, 0.4f); val arriba = p(2.16f, 1.45f, 0.02f)
         val forma = poligono(pie + Offset(-4f, 0f), pie + Offset(4f, 0f), arriba + Offset(1f, 0f), arriba + Offset(-1f, 0f))
         return Cosa(forma, pie) {
-            val pe = v.pincelEn(pie + Offset(0f, -30f))
+            val pe = v.pincelEn(pie + Offset(0f, -30f), lumbre = lumbreEn(v, pie))
             drawLine(pe.por(C.FRESNO, 0.2f), pie + (arriba - pie) * 0.18f, arriba, 1.8f, StrokeCap.Round)
             val hoja = if (v.invierno) lerp(C.MADERA, C.FRESNO, 0.4f) else C.PIEDRA_OSC
             drawPath(poligono(pie + Offset(-4.4f, 0f), pie + Offset(4.6f, -1f), pie + (arriba - pie) * 0.2f + Offset(3f, 0f), pie + (arriba - pie) * 0.2f + Offset(-3f, 0f)), pe.por(hoja, 0.25f))
@@ -213,7 +220,7 @@ internal object CercaAntiguas {
         val pie = TRINEO
         val forma = poligono(pie + Offset(-14f, 0f), pie + Offset(14f, 0f), pie + Offset(12f, -6f), pie + Offset(-12f, -6f))
         return Cosa(forma, pie) {
-            val pe = v.pincelEn(pie)
+            val pe = v.pincelEn(pie, lumbre = lumbreEn(v, pie))
             for (k in 0..3) drawPath(Path().apply { moveTo(pie + Offset(-14f, -1f - k * 1.4f)); cubicTo(pie + Offset(-6f, 1f - k * 1.4f), pie + Offset(6f, 1f - k * 1.4f), pie + Offset(14f, -3f - k * 1.4f)) }, pe.por(lerp(C.MADERA, C.FRESNO, 0.3f), 0.3f - k * 0.1f), style = Stroke(1.4f, cap = StrokeCap.Round))
             drawLine(pe.medio(C.ESCORIA), pie + Offset(-12f, -2f), pie + Offset(-12f, -6f), 0.7f); drawLine(pe.medio(C.ESCORIA), pie + Offset(12f, -3f), pie + Offset(12f, -7f), 0.7f)
             drawPath(Path().apply { moveTo(pie + Offset(-14f, -2f)); cubicTo(pie + Offset(-20f, -4f), pie + Offset(-22f, 2f), pie + Offset(-18f, 4f)) }, pe.medio(C.CUERO), style = Stroke(0.6f))
@@ -225,7 +232,7 @@ internal object CercaAntiguas {
         val pie = p(-0.3f, 0f, 1.5f) + Offset(-6f, 0f)
         val forma = poligono(pie + Offset(-18f, 0f), pie + Offset(18f, 0f), pie + Offset(16f, -10f), pie + Offset(-16f, -10f))
         return Cosa(forma, pie) {
-            val pe = v.pincelEn(pie)
+            val pe = v.pincelEn(pie, lumbre = lumbreEn(v, pie))
             for (h in 0..2) for (j in 0..5) { val y = pie.y - 2f - h * 3.2f - j * 0.3f; drawLine(pe.por(lerp(C.MADERA, C.FRESNO, 0.3f), 0.3f - j * 0.08f), Offset(pie.x - 16f + h * 2f, y), Offset(pie.x + 16f - h * 2f, y - 0.6f), 1.6f, StrokeCap.Round) }
             for (dx in listOf(-8f, 8f)) drawLine(pe.medio(C.CUERO), pie + Offset(dx, -0.4f), pie + Offset(dx, -9.4f), 0.9f)
         }
@@ -236,7 +243,7 @@ internal object CercaAntiguas {
         val pie = p(1.55f, 0f, 0.62f)
         val forma = poligono(pie + Offset(-8f, 0f), pie + Offset(10f, 0f), pie + Offset(6f, -30f), pie + Offset(-2f, -32f))
         return Cosa(forma, pie) {
-            val pe = v.pincelEn(pie)
+            val pe = v.pincelEn(pie, lumbre = lumbreEn(v, pie))
             drawOval(pe.por(C.LANA, 0.2f), Offset(pie.x - 9f, pie.y - 9f), Size(14f, 9f))
             drawPath(poligono(pie + Offset(-1f, 0f), pie + Offset(9f, 0f), pie + Offset(5f, -30f), pie + Offset(0f, -32f)), pe.por(C.CUERO, 0.3f))
             drawLine(pe.luz(C.ORO).copy(alpha = 0.6f), pie + Offset(1f, -4f), pie + Offset(2f, -28f), 0.6f)

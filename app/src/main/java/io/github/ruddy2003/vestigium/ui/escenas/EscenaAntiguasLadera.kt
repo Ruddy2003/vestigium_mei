@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.escenas
 
+import io.github.ruddy2003.vestigium.vidas.Azar
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
@@ -56,61 +57,67 @@ internal object LaderaAntiguas {
 
     // ---------------------------------------------------------------- Las cumbres
 
-    /** Una arista (espolón, `true`) o una canal que baja de la cresta, y la normal de la cara que queda a su derecha. */
+    /**
+     * Una arista (espolón, `true`) o una canal que baja de la cresta, y la normal de la cara que queda a su derecha. Las
+     * caras se alternan: la que sigue a un espolón baja hacia la derecha (mira a la derecha) y la que sigue a una canal sube
+     * hacia el espolón siguiente (mira a la izquierda): así la montaña se pliega y cada hora enciende unas y apaga otras.
+     * [nieve]: cuánto junta la canal (sus neveros).
+     */
     private class Linea(val puntos: List<Offset>, val espolon: Boolean, val cara: V3, val nieve: Float = 1f)
 
-    private val DERECHA = V3(0.62f, 0.4f, -0.68f)
-    private val IZQUIERDA = V3(-0.66f, 0.38f, -0.65f)
-    private val FRENTE = V3(-0.08f, 0.45f, -0.89f)
+    private val DERECHA = V3(0.64f, 0.4f, -0.66f)
+    private val IZQUIERDA = V3(-0.68f, 0.38f, -0.63f)
     private val FRENTE_DER = V3(0.32f, 0.42f, -0.85f)
+    private val FRENTE_IZQ = V3(-0.36f, 0.42f, -0.83f)
 
     private val LINEAS = listOf(
-        Linea(pts(-6f, 74f, -6f, 240f), false, IZQUIERDA),
-        Linea(pts(60f, 50.6f, 64f, 76f, 70f, 102f, 76f, 130f), true, FRENTE_DER, 0.6f),
-        Linea(pts(90f, 42.6f, 95f, 68f, 101f, 94f, 106f, 122f), false, IZQUIERDA, 1f),
-        Linea(pts(126f, 26.4f, 129f, 50f, 133f, 76f, 137f, 104f, 140f, 134f), true, FRENTE_DER, 0.7f),
-        Linea(pts(150f, 20.2f, 153f, 44f, 156f, 70f, 158f, 98f, 159f, 130f, 160f, 170f), false, FRENTE, 1.3f),
-        Linea(pts(166f, 26.6f, 172f, 48f, 177f, 74f, 181f, 100f, 184f, 128f), true, DERECHA, 0.5f),
-        Linea(pts(190f, 39.8f, 194f, 60f, 197f, 84f, 199f, 108f, 200f, 130f), false, FRENTE, 1.2f),
-        Linea(pts(204f, 42.2f, 212f, 62f, 219f, 84f, 224f, 106f, 227f, 124f), true, DERECHA, 0.6f),
-        Linea(pts(221f, 43.6f, 232f, 64f, 241f, 86f, 247f, 108f, 250f, 120f), false, FRENTE, 1.4f),
-        Linea(pts(242f, 58.4f, 253f, 76f, 262f, 94f, 268f, 112f), true, DERECHA, 0.7f),
-        Linea(pts(266f, 75.6f, 276f, 90f, 285f, 104f, 290f, 112f), false, FRENTE, 1.1f),
-        Linea(pts(289f, 95.8f, 295f, 104f, 299f, 112f), true, DERECHA, 0.7f),
+        Linea(pts(-6f, 74f, -6f, 240f), false, FRENTE_IZQ),
+        Linea(pts(60f, 50.6f, 64f, 76f, 69f, 104f, 74f, 134f), true, FRENTE_DER, 0.6f),
+        Linea(pts(88f, 43.6f, 93f, 70f, 98f, 98f, 102f, 128f), false, IZQUIERDA, 1f),
+        Linea(pts(124f, 27.2f, 127f, 54f, 130f, 82f, 133f, 110f, 136f, 138f), true, FRENTE_IZQ, 0.7f),
+        Linea(pts(150f, 20.2f, 152f, 46f, 150f, 76f, 146f, 106f, 142f, 138f), true, DERECHA, 0.5f),
+        Linea(pts(172f, 30.4f, 176f, 56f, 179f, 84f, 181f, 112f, 183f, 140f), false, IZQUIERDA, 1.3f),
+        Linea(pts(190f, 39.8f, 195f, 62f, 199f, 88f, 202f, 114f), true, DERECHA, 0.6f),
+        Linea(pts(212f, 44.2f, 216f, 64f, 221f, 88f, 225f, 112f), false, FRENTE_IZQ, 1.2f),
+        Linea(pts(221f, 43.6f, 230f, 64f, 239f, 88f, 246f, 112f), true, DERECHA, 0.6f),
+        Linea(pts(250f, 63.6f, 259f, 82f, 268f, 100f, 274f, 114f), false, IZQUIERDA, 1.1f),
+        Linea(pts(266f, 75.6f, 276f, 92f, 284f, 106f, 289f, 113f), true, FRENTE_DER, 0.7f),
+        Linea(pts(284f, 91.6f, 292f, 102f, 297f, 112f), false, IZQUIERDA, 0.9f),
         Linea(pts(305f, 108.6f, 306f, 118f), true, IZQUIERDA, 0.8f),
-        Linea(pts(320f, 97.6f, 317f, 108f, 315f, 120f), false, IZQUIERDA, 1.2f),
+        Linea(pts(320f, 97.6f, 317f, 108f, 315f, 120f), false, DERECHA, 1.1f),
         Linea(pts(340f, 77f, 335f, 98f, 331f, 122f), true, IZQUIERDA, 0.7f),
-        Linea(pts(368f, 57f, 360f, 84f, 354f, 112f), false, IZQUIERDA, 1.2f),
+        Linea(pts(368f, 57f, 360f, 84f, 354f, 112f), false, DERECHA, 1.1f),
         Linea(pts(388f, 48f, 392f, 240f), false, V3(0f, 1f, 0f)),
     )
 
-    /** Las bandas de roca de la cara norte: tramos tendidos y algo caídos hacia la derecha, de distinto largo, rotos. */
+    /**
+     * Las bandas de roca: tramos tendidos que cruzan las caras, cada una con su repisa (donde se queda la nieve) y su
+     * escarpe en sombra debajo; rotas a mano, de distinto largo, alguna partida en dos.
+     */
     private val BANDAS = listOf(
-        pts(104f, 66f, 120f, 70f, 136f, 74f), pts(152f, 50f, 166f, 54f, 180f, 60f), pts(168f, 88f, 186f, 92f, 204f, 98f, 220f, 104f),
-        pts(206f, 62f, 222f, 68f, 238f, 76f), pts(232f, 96f, 248f, 102f, 262f, 108f), pts(118f, 100f, 134f, 103f, 148f, 108f),
-        pts(28f, 84f, 46f, 88f, 62f, 92f), pts(256f, 84f, 270f, 90f, 282f, 98f), pts(320f, 100f, 334f, 96f, 346f, 90f),
-        pts(70f, 64f, 86f, 66f, 98f, 70f),
+        pts(100f, 64f, 112f, 67f, 124f, 70f), pts(130f, 72f, 140f, 75f), pts(156f, 50f, 166f, 54f, 178f, 59f), pts(168f, 86f, 182f, 90f, 196f, 95f),
+        pts(204f, 99f, 216f, 103f, 226f, 108f), pts(206f, 60f, 220f, 66f, 234f, 73f), pts(240f, 86f, 252f, 92f, 262f, 98f), pts(110f, 98f, 124f, 101f, 138f, 106f),
+        pts(26f, 84f, 42f, 87f, 56f, 91f), pts(68f, 62f, 82f, 64f, 92f, 68f), pts(256f, 104f, 268f, 109f), pts(322f, 100f, 334f, 96f, 344f, 90f),
+        pts(150f, 112f, 162f, 116f, 172f, 120f),
     )
 
     fun DrawScope.cumbres(v: VistaAntiguas) {
-        val p = v.p; val sol = v.sol; val l = v.l
+        val p = v.p; val l = v.l
         val az = fijo("cumbres")
-        val roca = lerp(lerp(C.ROCA, C.ESCORIA, 0.2f), C.TIERRA, 0.12f)
+        val roca = lerp(lerp(C.ROCA, C.ESCORIA, 0.3f), C.TIERRA, 0.18f)
         val forma = curva(CRESTA, 240f)
-        val lejos = 0.26f
-        // El relleno: la roca gris, que abajo se calienta y se pierde en la bruma del valle.
-        drawPath(forma, Brush.verticalGradient(0f to p.medio(roca, lejos), 0.6f to p.medio(lerp(roca, C.TIERRA, 0.2f), lejos * 0.8f), 1f to lerp(p.medio(lerp(roca, C.PINO, 0.35f), lejos * 0.6f), l.bruma, 0.2f), startY = 24f, endY = 215f))
-        val rotas = LINEAS.map { li -> if (li.puntos.size > 2) rota(li.puntos, az, 1.3f, 2) else li.puntos }
+        val lejos = 0.22f
+        drawPath(forma, p.medio(roca, lejos))
+        val rotas = LINEAS.map { li -> if (li.puntos.size > 2) rota(li.puntos, az, 1.6f, 2) else li.puntos }
         clipPath(forma) {
-            caras(v, rotas, roca, lejos)
-            estrias(v, rotas, roca, lejos, az)
+            caras(v, rotas, roca, lejos, az)
             bandas(v, roca, lejos, az)
             canales(v, rotas, roca, lejos)
-            pieDeLaCara(v, roca, az)
             nieve(v, rotas, lejos, az)
+            pieDeLaCara(v, roca, az)
             refugioDeLaCabra(v)
-            // La bruma del valle al pie: despega las cumbres de las laderas de delante.
-            drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to lerp(l.bruma, l.bajo, 0.4f).copy(alpha = 0.32f * (1f - 0.5f * l.noche)), startY = 140f, endY = 208f), Offset(0f, 140f), Size(ANCHO, 70f))
+            // El aire entre la montaña y la ladera del paso: la bruma del valle sube por el pie y la despega.
+            drawRect(Brush.verticalGradient(0f to Color.Transparent, 0.5f to lerp(l.bruma, l.bajo, 0.35f).copy(alpha = 0.22f * (1f - 0.5f * l.noche)), 1f to lerp(l.bruma, l.bajo, 0.35f).copy(alpha = 0.34f * (1f - 0.5f * l.noche)), startY = 84f, endY = 150f), Offset(0f, 84f), Size(ANCHO, 156f))
         }
         // La cresta recortada contra el cielo: un filo de luz o de luna.
         val filo = if (l.noche > 0.4f) C.LUNA.copy(alpha = 0.45f * v.luna + 0.08f) else p.luz(lerp(roca, C.NIEVE, 0.6f), lejos).copy(alpha = 0.55f)
@@ -118,48 +125,67 @@ internal object LaderaAntiguas {
         sombrero(v)
     }
 
-    /** Cada cara entre dos líneas, con su luz: la que da la espalda al sol se va a la sombra azul. */
-    private fun DrawScope.caras(v: VistaAntiguas, rotas: List<List<Offset>>, roca: Color, lejos: Float) {
+    /** La luz de una cara con la normal [n], con el contraste estirado: la que da la espalda al sol se va de verdad a la sombra azul. */
+    private fun luzDeCara(v: VistaAntiguas, n: V3): Float {
+        // Media luz del sol de verdad y media de un sol que siempre viene algo de lado (del lado donde está), para que a
+        // mediodía las paredes en sombra y las caras al sol no se igualen: el modelado no se pierde **[Diseño propio]**.
+        val lado = if (v.r.lat >= 0f) 1f else -1f
+        val lx = lado * maxOf(kotlin.math.abs(v.r.lat), 0.55f)
+        val largo = kotlin.math.sqrt(lx * lx + 0.74f)
+        val propia = ((n.x * lx + n.y * 0.7f - n.z * 0.5f) / largo - 0.55f) * 2.6f
+        val real = (v.sol.t(n) - 0.22f) * 2.3f
+        val fuerza = (v.r.fuerza / 0.72f).coerceIn(0f, 1f)
+        return ((0.5f * real + 0.5f * propia) * (0.3f + 0.7f * fuerza)).coerceIn(-1f, 1f)
+    }
+
+    /** El color de la roca de una cara con luz [t]: al sol, cálida; en sombra, azul violeta (las paredes en sombra). */
+    private fun colorDeCara(v: VistaAntiguas, roca: Color, t: Float, lejos: Float): Color {
+        val p = v.p
+        val base = p.por(lerp(roca, C.ORO, 0.1f * t.coerceAtLeast(0f)), if (t > 0f) t * 0.72f else t, lejos)
+        return if (t >= 0f) base else lerp(base, p.sombra(lerp(roca, C.SOMBRA, 0.42f), lejos), (-t * 0.8f).coerceAtMost(0.75f))
+    }
+
+    /**
+     * Las caras entre dos líneas, cada una con su luz, de la arista a la canal; por dentro, la roca con sus manchas (más
+     * oscura en las paredes, con vetas de color) y las grietas cortas, rotas, que no son rayas iguales.
+     */
+    private fun DrawScope.caras(v: VistaAntiguas, rotas: List<List<Offset>>, roca: Color, lejos: Float, az: Azar) {
         val p = v.p
         for (i in 0 until rotas.size - 1) {
             val a = larga(rotas[i]); val b = larga(rotas[i + 1])
             val arriba = CRESTA.filter { it.x > a.first().x && it.x < b.first().x }
             val cara = poligono(a + b.reversed() + arriba.reversed())
-            val t = ((v.sol.t(LINEAS[i].cara) - 0.25f) * 2f).coerceIn(-1f, 1f)
-            val claro = if (LINEAS[i].espolon) 0.3f else -0.3f
-            drawPath(cara, Brush.linearGradient(0f to p.por(roca, t + claro, lejos), 1f to p.por(roca, t - claro, lejos), start = en(a, 0.3f), end = en(b, 0.3f)))
+            val t = luzDeCara(v, LINEAS[i].cara)
+            // Junto a la arista, la cara más clara (le da más el aire); junto a la canal, más honda.
+            val claro = if (LINEAS[i].espolon) 0.22f else -0.22f
+            drawPath(cara, Brush.linearGradient(0f to colorDeCara(v, roca, t + claro, lejos), 1f to colorDeCara(v, roca, t - claro, lejos), start = en(a, 0.3f), end = en(b, 0.3f)))
+            clipPath(cara) {
+                // Manchas de roca más oscura y más rojiza, tendidas, a mano.
+                repeat(5) {
+                    val q = en(a, az.entre(0.15f, 0.85f)) + (en(b, 0.5f) - en(a, 0.5f)) * az.entre(0.2f, 0.8f)
+                    drawPath(borron(q, az.entre(4f, 10f), az.entre(1.6f, 3.4f), az, 8, 0.4f), colorDeCara(v, lerp(roca, if (it % 2 == 0) C.ROJIZA else C.ESCORIA, 0.3f), t - 0.15f, lejos).copy(alpha = 0.45f))
+                }
+                // Grietas cortas y quebradas, sueltas: en sombra, con su filo de luz del lado del sol.
+                val lado = if (p.solALaDerecha) 0.6f else -0.6f
+                repeat(9) {
+                    val f = az.entre(0.15f, 0.85f); val h = az.entre(0.1f, 0.9f)
+                    val q = en(a, h) + (en(b, h) - en(a, h)) * f
+                    val r = rota(listOf(q, q + Offset(az.entre(-2f, 2f), az.entre(5f, 11f))), az, 1.2f, 2)
+                    drawPath(curva(r), p.sombra(lerp(roca, C.ESCORIA, 0.35f), lejos).copy(alpha = 0.5f), style = Stroke(az.entre(0.6f, 1.1f), cap = StrokeCap.Round))
+                    drawPath(curva(r.map { it + Offset(lado, -0.2f) }), p.luz(lerp(roca, C.NIEVE, 0.2f), lejos).copy(alpha = 0.25f * p.r.dia), style = Stroke(0.45f, cap = StrokeCap.Round))
+                }
+            }
         }
     }
 
     private fun larga(r: List<Offset>): List<Offset> { val d = r.last() - r[r.size - 2]; return r + (r.last() + d / d.getDistance().coerceAtLeast(0.01f) * 120f) }
 
-    /**
-     * Las estrías de la roca: las líneas de caída de cada cara (las que deja el agua y la piedra que baja), trazos finos
-     * entre una arista y la siguiente, oscuros y con huecos; con su filo de luz del lado del sol. Dan a la roca su materia.
-     */
-    private fun DrawScope.estrias(v: VistaAntiguas, rotas: List<List<Offset>>, roca: Color, lejos: Float, az: io.github.ruddy2003.vestigium.vidas.Azar) {
-        val p = v.p; val oscura = p.sombra(lerp(roca, C.ESCORIA, 0.35f), lejos); val clara = p.luz(lerp(roca, C.NIEVE, 0.2f), lejos)
-        val lado = if (p.solALaDerecha) 0.6f else -0.6f
-        for (i in 0 until rotas.size - 1) {
-            val a = rotas[i]; val b = rotas[i + 1]
-            val n = ((b.first().x - a.first().x) / 5f).toInt().coerceIn(2, 12)
-            for (k in 1 until n) {
-                val f = k / n.toFloat() + az.entre(-0.04f, 0.04f)
-                val t0 = az.entre(0.02f, 0.3f); val t1 = (t0 + az.entre(0.25f, 0.6f)).coerceAtMost(1f)
-                val linea = (0..5).map { j -> val t = t0 + (t1 - t0) * j / 5f; en(a, t) + (en(b, t) - en(a, t)) * f + Offset(az.entre(-0.8f, 0.8f), 0f) }
-                drawPath(curva(linea), oscura.copy(alpha = 0.42f), style = Stroke(az.entre(0.5f, 1.1f), cap = StrokeCap.Round))
-                drawPath(curva(linea.map { it + Offset(lado, -0.2f) }), clara.copy(alpha = 0.22f * p.r.dia), style = Stroke(0.4f, cap = StrokeCap.Round))
-            }
-        }
-    }
-
-    /** El pie de la cara norte, entre la ladera de las vetas y la del paso: canchales grises y un bosque oscuro de pinos que sube por la garganta. */
-    private fun DrawScope.pieDeLaCara(v: VistaAntiguas, roca: Color, az: io.github.ruddy2003.vestigium.vidas.Azar) {
+    /** El pie de la cara norte, en la garganta: un canchal gris y el bosque oscuro de pinos que sube por ella. */
+    private fun DrawScope.pieDeLaCara(v: VistaAntiguas, roca: Color, az: Azar) {
         val p = v.p
         val canchal = TrazosValle.cerrada(pts(120f, 140f, 146f, 126f, 170f, 128f, 196f, 122f, 214f, 132f, 190f, 160f, 166f, 196f, 146f, 196f, 126f, 176f))
         drawPath(canchal, p.por(lerp(roca, C.NIEVE, 0.18f), 0.1f, 0.2f).copy(alpha = 0.75f))
         clipPath(canchal) { drawPoints((0 until 160).map { Offset(az.entre(120f, 214f), az.entre(122f, 200f)) }, PointMode.Points, p.sombra(roca, 0.2f).copy(alpha = 0.55f), 0.9f, StrokeCap.Round) }
-        // El bosque de la garganta: pinos oscuros, en masa, con la punta de cada uno.
         val verde = lerp(C.PINO, C.ESCORIA, 0.15f)
         repeat(70) {
             val x = az.entre(146f, 186f); val y = az.entre(170f, 214f) + (x - 150f) * 0.05f
@@ -168,74 +194,89 @@ internal object LaderaAntiguas {
         }
     }
 
-    /** Las bandas de roca: cada una, una repisa clara arriba y el escarpe oscuro debajo. */
-    private fun DrawScope.bandas(v: VistaAntiguas, roca: Color, lejos: Float, az: io.github.ruddy2003.vestigium.vidas.Azar) {
-        val p = v.p
+    /** Las bandas de roca: cada una, una repisa clara arriba (con su nieve) y el escarpe oscuro debajo, roto. */
+    private fun DrawScope.bandas(v: VistaAntiguas, roca: Color, lejos: Float, az: Azar) {
+        val pared = colorDeCara(v, roca, -0.6f, lejos)
         for (b in BANDAS) {
-            val r = rota(b, az, 0.8f, 3)
-            val alto = az.entre(2.4f, 4.6f)
-            drawPath(poligono(r + r.reversed().map { it + Offset(az.entre(-0.6f, 0.6f), alto) }), p.sombra(lerp(roca, C.ESCORIA, 0.25f), lejos).copy(alpha = 0.55f))
-            drawPath(curva(r), p.luz(lerp(roca, C.NIEVE, 0.25f), lejos).copy(alpha = 0.45f), style = Stroke(0.7f))
+            val r = rota(b, az, 1f, 3)
+            val alto = az.entre(2.6f, 5f)
+            val abajo = r.reversed().map { it + Offset(az.entre(-0.8f, 0.8f), alto * az.entre(0.6f, 1.2f)) }
+            drawPath(poligono(r + abajo), pared.copy(alpha = 0.8f))
+            drawPath(curva(r), colorDeCara(v, roca, 0.7f, lejos).copy(alpha = 0.7f), style = Stroke(0.9f))
         }
-        // Grietas y piedras: trazos cortos caídos por la cara.
-        val trazos = ArrayList<Offset>()
-        repeat(240) { val x = az.entre(20f, 372f); val y0 = alturaEn(CRESTA, x) + 4f; val y = az.entre(y0, 196f); trazos += Offset(x, y) }
-        drawPoints(trazos, PointMode.Points, p.sombra(lerp(roca, C.ESCORIA, 0.4f), lejos).copy(alpha = 0.45f), 0.9f, StrokeCap.Round)
-        drawPoints(trazos.map { it + Offset(if (p.solALaDerecha) 0.5f else -0.5f, -0.4f) }, PointMode.Points, p.luz(roca, lejos).copy(alpha = 0.35f * p.r.dia), 0.7f, StrokeCap.Round)
     }
 
-    /** Las canales: el pliegue hondo, en sombra, con una rama que se abre abajo. */
+    /** Las canales: el pliegue hondo, en sombra del lado contrario al sol; los espolones, un filo de luz. */
     private fun DrawScope.canales(v: VistaAntiguas, rotas: List<List<Offset>>, roca: Color, lejos: Float) {
         val p = v.p; val hacia = if (p.solALaDerecha) -1f else 1f
+        val hondo = colorDeCara(v, lerp(roca, C.ESCORIA, 0.3f), -0.8f, lejos)
         for ((i, li) in LINEAS.withIndex()) {
             if (li.espolon || li.puntos.size < 3) continue
             val r = rotas[i]
-            val pliegue = poligono(r + r.reversed().mapIndexed { k, q -> q + Offset(hacia * 2.4f * (0.4f + 0.6f * (r.size - 1 - k) / r.size), 1f) })
-            drawPath(pliegue, p.sombra(lerp(roca, C.ESCORIA, 0.3f), lejos).copy(alpha = 0.75f))
+            val pliegue = poligono(r + r.reversed().mapIndexed { k, q -> q + Offset(hacia * 3f * (0.4f + 0.6f * (r.size - 1 - k) / r.size), 1f) })
+            drawPath(pliegue, hondo.copy(alpha = 0.8f))
         }
         for ((i, li) in LINEAS.withIndex()) {
             if (!li.espolon || li.puntos.size < 3) continue
             val r = rotas[i]
-            drawPath(Path().apply { moveTo(r[0]); for (q in r.drop(1)) lineTo(q) }, p.luz(lerp(roca, C.NIEVE, 0.35f), lejos).copy(alpha = 0.25f + 0.35f * p.r.dia), style = Stroke(0.9f, cap = StrokeCap.Round))
+            drawPath(Path().apply { moveTo(r[0]); for (q in r.drop(1)) lineTo(q) }, p.luz(lerp(roca, C.NIEVE, 0.35f), lejos).copy(alpha = 0.3f + 0.35f * p.r.dia), style = Stroke(1f, cap = StrokeCap.Round))
         }
     }
 
     /**
-     * La nieve de las cumbres ([VistaAntiguas.nieveArriba]): una capa blanda en lo alto que baja más por las canales y menos
-     * por los espolones, con su lado en sombra; cintas de nieve dentro de las canales, más largas cuanta más nieve; manchas
-     * en las repisas de las bandas. De noche, la luna la platea.
+     * La nieve de las cumbres ([VistaAntiguas.nieveArriba], al menos 0.3): se queda donde la roca la deja: el casquete de
+     * lo alto, que baja más por las caras que dan la espalda al sol y por las canales; los neveros de las canales, cintas que
+     * se ensanchan hacia abajo y crecen con la nieve; las repisas de las bandas. Con mucha nieve, las aristas y los
+     * escarpes de las bandas siguen asomando negros: la montaña no se vuelve un cono liso. De noche, la luna la platea.
      */
-    private fun DrawScope.nieve(v: VistaAntiguas, rotas: List<List<Offset>>, lejos: Float, az: io.github.ruddy2003.vestigium.vidas.Azar) {
-        val n = v.nieveArriba; val p = v.p; val sol = v.sol
+    private fun DrawScope.nieve(v: VistaAntiguas, rotas: List<List<Offset>>, lejos: Float, az: Azar) {
+        val n = v.nieveArriba; val p = v.p
         if (n <= 0.02f) return
-        // La capa: baja de la cresta un trecho que crece con la nieve y con la altura de la cresta (lo alto, más).
-        val baja = CRESTA.map { q -> val alto = ((200f - q.y) / 176f).coerceIn(0f, 1f); q + Offset(0f, (6f + 70f * n * n) * (0.3f + 0.7f * alto) * (0.8f + 0.28f * sin(q.x * 0.19f) + 0.12f * sin(q.x * 0.53f))) }
-        val capa = curva(CRESTA.map { it + Offset(0f, -2f) }).apply { for (q in baja.reversed()) lineTo(q); close() }
-        clipPath(capa) {
-            fun larga(r: List<Offset>): List<Offset> { val d = r.last() - r[r.size - 2]; return r + (r.last() + d / d.getDistance().coerceAtLeast(0.01f) * 120f) }
-            for (i in 0 until rotas.size - 1) {
-                val a = larga(rotas[i]); val b = larga(rotas[i + 1])
-                val arriba = CRESTA.filter { it.x > a.first().x && it.x < b.first().x }
-                val t = ((sol.t(LINEAS[i].cara) - 0.3f) * 1.6f).coerceIn(-1f, 1f)
-                drawPath(poligono(a + b.reversed() + arriba.reversed()), p.por(C.NIEVE, t + 0.2f, lejos * 0.8f))
-            }
-            // Los espolones asoman negros en la nieve.
-            for ((i, li) in LINEAS.withIndex()) if (li.espolon && li.puntos.size > 2) drawPath(curva(rotas[i]), p.sombra(lerp(C.ROCA, C.ESCORIA, 0.3f), lejos).copy(alpha = 0.6f * (1f - 0.4f * n)), style = Stroke(1.6f, cap = StrokeCap.Round))
+        // El casquete: de la cresta baja un trecho que crece con la nieve y con la altura, distinto en cada cara.
+        val capas = ArrayList<Path>()
+        for (i in 0 until rotas.size - 1) {
+            val a = larga(rotas[i]); val b = larga(rotas[i + 1])
+            val arriba = CRESTA.filter { it.x > a.first().x && it.x < b.first().x }
+            val sombra = LINEAS[i].cara.x < 0f
+            // Con poca nieve, el casquete queda en manchas: solo en algunas caras, y más en las de sombra.
+            val queda = az.real() < 0.35f + 0.9f * n
+            val baja = if (!queda) 0f else (2f + 60f * (n - 0.2f).coerceAtLeast(0f) * (0.4f + n)) * (if (sombra) 1.4f else 0.6f) * (0.7f + 0.6f * az.real())
+            if (baja < 1.5f) continue
+            val borde = (0..8).map { k -> val f = k / 8f; val q = a.first() + (b.first() - a.first()) * f; val y0 = alturaEn(CRESTA, q.x); Offset(q.x, y0 + baja * ((200f - y0) / 176f).coerceIn(0.2f, 1f) * (0.7f + 0.5f * sin(f * 3.1416f)) + az.entre(-2f, 2f)) }
+            val capa = poligono(listOf(Offset(a.first().x, a.first().y - 3f)) + arriba + listOf(Offset(b.first().x, b.first().y - 3f)) + borde.reversed())
+            val t = luzDeCara(v, LINEAS[i].cara)
+            clipPath(poligono(a + b.reversed() + arriba.reversed())) { drawPath(capa, p.por(C.NIEVE, t + 0.15f, lejos * 0.8f)) }
+            drawPath(curva(borde), p.sombra(C.NIEVE_SOMBRA, lejos).copy(alpha = 0.3f), style = Stroke(0.6f))
+            capas += capa
         }
-        drawPath(curva(baja), p.sombra(C.NIEVE_SOMBRA, lejos).copy(alpha = 0.35f), style = Stroke(0.6f))
-        // Las cintas de nieve en las canales.
+        // Los neveros de las canales: cintas que se ensanchan hacia abajo, más largas cuanta más nieve; partidas.
         val hacia = if (p.solALaDerecha) -1f else 1f
         for ((i, li) in LINEAS.withIndex()) {
             if (li.espolon || li.puntos.size < 3) continue
-            val r = rotas[i]; val f1 = (0.35f + 0.6f * n * li.nieve).coerceAtMost(0.98f)
-            val eje = (0..7).map { k -> en(r, 0.04f + (f1 - 0.04f) * k / 7f) + Offset(hacia * 0.6f, 0.4f) }
-            val anchos = (0..7).map { k -> (1f + 1.6f * n) * li.nieve * (0.5f + 0.7f * k / 7f) * (0.75f + 0.35f * sin(k * 1.7f + i)) }
-            drawPath(cinta(eje, anchos), p.por(C.NIEVE, sol.t(V3(-hacia * 0.3f, 0.6f, -0.75f)) + 0.1f, lejos))
+            val r = rotas[i]; val f1 = (0.3f + 0.6f * n * li.nieve).coerceAtMost(0.98f)
+            for ((f0, fa) in listOf(0.04f to f1 * 0.55f, f1 * 0.62f to f1)) {
+                if (fa - f0 < 0.06f) continue
+                val eje = (0..6).map { k -> en(r, f0 + (fa - f0) * k / 6f) + Offset(hacia * 0.8f, 0.4f) }
+                val anchos = (0..6).map { k -> (1.1f + 2f * n) * li.nieve * (0.45f + 0.7f * k / 6f) * (0.75f + 0.35f * sin(k * 1.7f + i)) }
+                drawPath(cinta(eje, anchos), p.por(C.NIEVE, v.sol.t(V3(-hacia * 0.3f, 0.6f, -0.75f)) + 0.1f, lejos))
+            }
         }
         // Las repisas de las bandas, con su nieve.
-        for (b in BANDAS) for (q in b) if (az.real() < 0.3f + 0.6f * n) drawPath(borron(q + Offset(0f, -0.6f), az.entre(2f, 5f) * (0.5f + n), 0.9f, az, 7, 0.35f), p.por(C.NIEVE, 0.4f, lejos).copy(alpha = (0.5f + 0.5f * n).coerceAtMost(1f)))
+        for (b in BANDAS) for (q in b) if (az.real() < 0.35f + 0.6f * n) drawPath(borron(q + Offset(0f, -0.8f), az.entre(2.4f, 5.5f) * (0.5f + n), 1f, az, 7, 0.35f), p.por(C.NIEVE, 0.4f, lejos).copy(alpha = (0.55f + 0.45f * n).coerceAtMost(1f)))
+        // Con mucha nieve, las aristas y los escarpes asoman negros: cintas de roca que la nieve no tapa.
+        if (n > 0.45f) {
+            val k = ((n - 0.45f) / 0.4f).coerceIn(0f, 1f)
+            for ((i, li) in LINEAS.withIndex()) {
+                if (!li.espolon || li.puntos.size < 3) continue
+                val r = rotas[i]
+                val eje = (0..6).map { j -> en(r, 0.05f + 0.9f * j / 6f) + Offset(-hacia * 1.2f, 0f) }
+                val anchos = (0..6).map { j -> (0.8f + 2.2f * k) * (0.5f + 0.5f * sin(j * 1.3f + i)).coerceAtLeast(0.25f) }
+                drawPath(cinta(eje, anchos), colorDeCara(v, C.ROCA, -0.5f, lejos).copy(alpha = 0.85f))
+            }
+            for (b in BANDAS) { val r = rota(b, az, 1f, 3); drawPath(curva(r.map { it + Offset(0f, 2.4f) }), colorDeCara(v, C.ROCA, -0.6f, lejos).copy(alpha = 0.75f * k), style = Stroke(2.4f, cap = StrokeCap.Round)) }
+        }
         // De noche, la luna platea la nieve de lo alto (la noche a dos luces: el frío arriba).
-        if (v.luna > 0.02f) clipPath(capa) { drawRect(Brush.horizontalGradient(listOf(C.LUNA.copy(alpha = 0.06f * v.luna), C.LUNA.copy(alpha = 0.26f * v.luna)), 120f, 380f), Offset(0f, 0f), Size(ANCHO, 200f), blendMode = BlendMode.Plus) }
+        if (v.luna > 0.02f) for (c in capas) drawPath(c, C.LUNA.copy(alpha = 0.18f * v.luna), blendMode = BlendMode.Plus)
     }
 
     /**

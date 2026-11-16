@@ -86,8 +86,12 @@ internal object LuzAntiguas {
      * o la de la tarde (que sube) y hasta dónde llega ([sube], de 0, nada, a 1, todo cubierto hasta las cumbres).
      */
     class Sombra(val cuanta: Float, val manana: Boolean, val sube: Float) {
-        /** La altura de la línea en la columna [x]: por la tarde, en diagonal, más alta a la izquierda; por la mañana, algo más alta a la derecha. */
-        fun y(x: Float): Float = if (manana) (343f - 381f * sube) - 0.28f * (x - 190f) + borde(x) else (385f - 465f * sube) + 0.5f * (x - 190f) + borde(x)
+        /**
+         * La altura de la línea en la columna [x]: por la tarde, casi tendida y algo más alta a la izquierda (la cumbre alta,
+         * que está a la izquierda, queda al sol hasta el final porque está mucho más arriba); por la mañana, algo más alta a
+         * la derecha.
+         */
+        fun y(x: Float): Float = if (manana) (343f - 381f * sube) - 0.28f * (x - 190f) + borde(x) else (385f - 465f * sube) + 0.2f * (x - 190f) + borde(x)
 
         /** El borde roto: la sombra de una sierra, con sus dientes desiguales. */
         private fun borde(x: Float): Float = 4.5f * sin(x * 0.061f + 1.3f) + 2.6f * sin(x * 0.17f + 0.4f) + 1.4f * sin(x * 0.41f + 2.2f)
@@ -262,6 +266,26 @@ internal object LuzAntiguas {
     }
 
     /**
+     * El charco de luz de la puerta, en el suelo, antes que las cosas (que la reciben con su pincel, por el lado de la
+     * puerta): el trapecio que sale del umbral y se tiende por las losas hacia la plaza, recortado por las jambas, fuerte
+     * junto al umbral y blando lejos, sobre un halo bajo sin forma.
+     */
+    fun DrawScope.charcoDeLaPuerta(v: VistaAntiguas) {
+        val sala = v.encendido.sala * v.noche
+        val puerta = EscenaAntiguas.puerta(v.m)
+        if (sala <= 0.05f || puerta == EscenaAntiguas.Puerta.CERRADA) return
+        val f = FachadaPosada; val P = PuertaAntiguas
+        val boca = P.UMBRAL; val lejos = f.p(0.9f, 0f, 3.6f)
+        val ancho = if (puerta == EscenaAntiguas.Puerta.ABIERTA) 1f else 0.4f
+        val charco = poligono(listOf(f.p(P.PUERTA_S0 + 0.05f, 0f), f.p(P.PUERTA_S0 + 0.05f + 0.85f * ancho, 0f), f.p(1.0f + 1.5f * ancho, 0f, 3.8f), f.p(0.2f, 0f, 3.6f)))
+        mancha(f.p(0.6f, 0f, 1.2f), 46f, 12f, C.LUMBRE, 0.2f * sala)
+        val calor = lerp(C.LUMBRE, Color(0xFFFFD9A0), 0.25f)
+        drawPath(charco, Brush.linearGradient(0f to calor.copy(alpha = (0.55f * sala).coerceAtMost(1f)), 0.55f to calor.copy(alpha = (0.24f * sala).coerceAtMost(1f)), 1f to Color.Transparent, start = boca, end = lejos), blendMode = BlendMode.Plus)
+        for ((w, a) in listOf(3f to 0.05f, 1.6f to 0.08f)) drawPath(charco, Brush.linearGradient(0f to calor.copy(alpha = a * sala), 1f to Color.Transparent, start = boca, end = lejos), style = Stroke(w), blendMode = BlendMode.Plus)
+        mancha(f.p(0.5f, 0f, 0.3f), 14f, 3f, Color(0xFFFFE2B0), 0.32f * sala)
+    }
+
+    /**
      * Lo encendido que alumbra lo de alrededor, después del primer plano: el charco de la puerta en las losas y su halo en
      * el muro, el del ventanuco, el de la ventana del cuarto alto; y la luna, que platea lo que mira hacia ella.
      */
@@ -269,20 +293,7 @@ internal object LuzAntiguas {
         val n = v.noche; val e = v.encendido
         val sala = e.sala * n
         val puerta = EscenaAntiguas.puerta(v.m)
-        if (sala > 0.05f && puerta != EscenaAntiguas.Puerta.CERRADA) {
-            // El trapecio: la luz sale por la puerta y se tiende por las losas hacia la plaza, recortada por las jambas,
-            // fuerte junto al umbral y blanda lejos; debajo, un halo bajo sin forma; en el muro, el halo de alrededor.
-            val f = FachadaPosada; val P = PuertaAntiguas
-            val boca = P.UMBRAL; val lejos = f.p(0.9f, 0f, 3.6f)
-            val ancho = if (puerta == EscenaAntiguas.Puerta.ABIERTA) 1f else 0.4f
-            val charco = poligono(listOf(f.p(P.PUERTA_S0 + 0.05f, 0f), f.p(P.PUERTA_S0 + 0.05f + 0.85f * ancho, 0f), f.p(1.0f + 1.5f * ancho, 0f, 3.8f), f.p(0.2f, 0f, 3.6f)))
-            mancha(f.p(0.6f, 0f, 1.2f), 46f, 12f, C.LUMBRE, 0.2f * sala)
-            val calor = lerp(C.LUMBRE, Color(0xFFFFD9A0), 0.25f)
-            drawPath(charco, Brush.linearGradient(0f to calor.copy(alpha = (0.48f * sala).coerceAtMost(1f)), 0.55f to calor.copy(alpha = (0.2f * sala).coerceAtMost(1f)), 1f to Color.Transparent, start = boca, end = lejos), blendMode = BlendMode.Plus)
-            for ((w, a) in listOf(3f to 0.05f, 1.6f to 0.08f)) drawPath(charco, Brush.linearGradient(0f to calor.copy(alpha = a * sala), 1f to Color.Transparent, start = boca, end = lejos), style = Stroke(w), blendMode = BlendMode.Plus)
-            mancha(f.p(0.5f, 0f, 0.3f), 14f, 3f, Color(0xFFFFE2B0), 0.32f * sala)
-            resplandor(f.p(0.5f, 1.1f, 0.2f), 62f, 0.42f * sala, C.LUMBRE)
-        }
+        if (sala > 0.05f && puerta != EscenaAntiguas.Puerta.CERRADA) resplandor(FachadaPosada.p(0.5f, 1.1f, 0.2f), 62f, 0.42f * sala, C.LUMBRE)
         if (sala > 0.05f) resplandor(FachadaPosada.p(-0.66f, 1.4f, 0.1f), 20f, 0.38f * sala, C.LUMBRE)
         val alto = e.cuartoAlto * n
         if (alto > 0.05f) resplandor(FachadaPosada.p(-0.72f, 3.3f, 0.1f), 30f, 0.5f * alto, C.LUMBRE)
@@ -299,6 +310,11 @@ internal object LuzAntiguas {
      */
     fun DrawScope.luzEnElAire(v: VistaAntiguas) {
         val fr = franja(v.l) ?: return
+        // El haz pasa por detrás de la posada: no le cae encima.
+        clipPath(PosadaAntiguas.MURO, androidx.compose.ui.graphics.ClipOp.Difference) { haz(v, fr) }
+    }
+
+    private fun DrawScope.haz(v: VistaAntiguas, fr: Franja) {
         val az = SitioAntiguas.fijo("haz")
         val calido = lerp(v.l.solColor, Color(0xFFFFD6A0), 0.4f)
         val sol = v.l.sol(SitioAntiguas.H)

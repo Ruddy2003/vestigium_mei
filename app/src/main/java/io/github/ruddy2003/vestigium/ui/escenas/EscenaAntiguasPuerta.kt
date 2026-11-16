@@ -89,12 +89,13 @@ internal object PuertaAntiguas {
             if (pu != Puerta.CERRADA) sala(v, luz, arriba, abajo, az)
             // El grueso del muro de la izquierda (mira a la derecha): piedra, encendida por dentro de noche.
             val derrame = canto(PUERTA_S1, 0f, -GRUESO, 0f, PUERTA_ALTO)
-            drawPath(derrame, pe.por(lerp(C.PIEDRA, C.TIERRA, 0.2f), v.sol.t(FachadaPosada.CANTO) - 0.15f))
-            if (luz > 0.05f) drawPath(derrame, Brush.horizontalGradient(listOf(C.LUMBRE.copy(alpha = 0f), C.LUMBRE.copy(alpha = 0.6f * luz)), p(PUERTA_S1, 1f).x, p(PUERTA_S1, 1f, -GRUESO).x), blendMode = BlendMode.Plus)
+            val tj = v.sol.t(FachadaPosada.CANTO) - 0.35f; val piedraJ = lerp(C.PIEDRA, C.TIERRA, 0.25f)
+            drawPath(derrame, Brush.horizontalGradient(listOf(pe.por(piedraJ, tj + 0.15f), pe.por(lerp(piedraJ, C.ESCORIA, 0.35f), tj - 0.4f)), p(PUERTA_S1, 1f).x, p(PUERTA_S1, 1f, -GRUESO).x))
+            if (luz > 0.05f) drawPath(derrame, Brush.horizontalGradient(listOf(C.LUMBRE.copy(alpha = 0f), C.LUMBRE.copy(alpha = 0.85f * luz)), p(PUERTA_S1, 1f).x, p(PUERTA_S1, 1f, -GRUESO).x), blendMode = BlendMode.Plus)
             for (h in listOf(0.45f, 0.95f, 1.4f)) drawLine(pe.sombra(C.PIEDRA).copy(alpha = 0.6f), p(PUERTA_S1, h), p(PUERTA_S1, h, -GRUESO), 0.6f)
             when (pu) {
                 Puerta.ABIERTA -> drawLine(pe.por(C.MADERA_OSC, -0.3f), p(PUERTA_S0 + 0.03f, 0f, -GRUESO), p(PUERTA_S0 + 0.03f, PUERTA_ALTO, -GRUESO), 2.2f)
-                Puerta.ENTORNADA -> hoja(v, pe, PUERTA_S0, PUERTA_S1 - 0.22f, -GRUESO + 0.04f, luz)
+                Puerta.ENTORNADA -> hoja(v, pe, PUERTA_S0, PUERTA_S0 + 0.5f, -GRUESO + 0.04f, luz)
                 Puerta.CERRADA -> hoja(v, pe, PUERTA_S0, PUERTA_S1, -GRUESO + 0.04f, v.encendido.sala * v.noche)
             }
             // La sombra del dintel, arriba.
@@ -108,7 +109,7 @@ internal object PuertaAntiguas {
 
     /** La sala vista por la puerta, de [arriba] a [abajo] en el lienzo. */
     private fun DrawScope.sala(v: VistaAntiguas, luz: Float, arriba: Float, abajo: Float, az: Azar) {
-        val fondo = lerp(lerp(C.MADERA_OSC, C.ESCORIA, 0.45f), C.LUMBRE, 0.12f + 0.3f * luz)
+        val fondo = lerp(lerp(C.MADERA_OSC, C.ESCORIA, 0.45f), C.LUMBRE, 0.14f + 0.5f * luz)
         val alto = abajo - arriba
         // Lo que se ve de la sala va del canto de dentro de la jamba de la izquierda a la jamba de la derecha.
         val xa = p(PUERTA_S1, 1f, -GRUESO).x; val xb = p(PUERTA_S0, 1f).x; val w = xb - xa
@@ -142,6 +143,8 @@ internal object PuertaAntiguas {
         // Las mantas tendidas en las vigas, al fondo, y la mesa pegada al fuego.
         drawPath(poligono(Offset(xa + w * 0.42f, viga + 1.2f), Offset(xa + w * 0.86f, viga + 1.2f), Offset(xa + w * 0.84f, viga + 11f), Offset(xa + w * 0.46f, viga + 9.6f)), lerp(lerp(C.RUBI, C.CUERO, 0.4f), Color.Black, 0.4f - 0.2f * luz))
         drawRect(lerp(C.MADERA, C.ESCORIA, 0.4f), Offset(xa + w * 0.05f, suelo - 9f), Size(w * 0.45f, 1.6f))
+        // De noche la sala entera se enciende: la luz de la lumbre llena el hueco.
+        if (luz > 0.05f) drawRect(Brush.radialGradient(listOf(Color(0xFFFFE0A8).copy(alpha = 0.55f * luz), C.LUMBRE.copy(alpha = 0.3f * luz), Color.Transparent), fuego, alto * 0.7f), Offset(290f, arriba), Size(60f, alto), blendMode = BlendMode.Plus)
         drawLine(lerp(C.MADERA, C.ESCORIA, 0.5f), Offset(xa + w * 0.12f, suelo - 8f), Offset(xa + w * 0.12f, suelo - 2f), 0.8f)
     }
 
@@ -229,26 +232,26 @@ internal object PuertaAntiguas {
         val tabla = cara(0.24f, 0.78f, PUERTA_ALTO + 0.27f, PUERTA_ALTO + 0.72f, 0.04f)
         drawPath(tabla, pe.por(lerp(C.MADERA, C.PIEDRA, 0.2f), luzDeCara(v) - 0.05f))
         drawPath(tabla, pe.sombra(C.MADERA_OSC).copy(alpha = 0.8f), style = Stroke(0.7f))
-        val c = p(0.5f, PUERTA_ALTO + 0.5f, 0.1f); val s = FachadaPosada.escala(0.5f) * 0.0105f
-        // La espiral: de la base (arriba a la derecha) da la vuelta por fuera, baja y se enrosca hacia dentro.
-        val cuerno = Path().apply {
-            moveTo(c + Offset(8f * s, -10f * s))
-            cubicTo(c + Offset(-6f * s, -19f * s), c + Offset(-22f * s, -10f * s), c + Offset(-20f * s, 4f * s))
-            cubicTo(c + Offset(-18f * s, 18f * s), c + Offset(-2f * s, 21f * s), c + Offset(4f * s, 10f * s))
-            cubicTo(c + Offset(8f * s, 2f * s), c + Offset(0f, -5f * s), c + Offset(-6f * s, 0f))
-            cubicTo(c + Offset(-9f * s, 4f * s), c + Offset(-6f * s, 11f * s), c + Offset(-2f * s, 10f * s))
-            cubicTo(c + Offset(-11f * s, 13f * s), c + Offset(-13f * s, 0f), c + Offset(-7f * s, -6f * s))
-            cubicTo(c + Offset(-2f * s, -10f * s), c + Offset(8f * s, -7f * s), c + Offset(11f * s, -2f * s))
-            close()
-        }
+        val c = p(0.52f, PUERTA_ALTO + 0.5f, 0.1f); val s = FachadaPosada.escala(0.5f) * 0.0105f
+        // El cuerno: un tubo que se adelgaza a lo largo de una espiral de vuelta y media, de la base (arriba, contra la
+        // tabla) hacia fuera y abajo, y la punta que vuelve hacia delante; cada anillo con su arruga.
         val hueso = lerp(C.LANA, C.ORO, 0.22f)
-        drawPath(cuerno, Brush.linearGradient(listOf(pe.luz(hueso), pe.por(hueso, 0f), pe.sombra(lerp(hueso, C.CUERO, 0.5f))), c + Offset(4f * s, -14f * s), c + Offset(-12f * s, 14f * s)))
-        clipPath(cuerno) { for (k in 0..9) drawCircle(pe.sombra(lerp(hueso, C.CUERO, 0.55f)).copy(alpha = 0.45f), (5f + k * 1.8f) * s, c + Offset(-6f * s, 3f * s), style = Stroke(0.5f * s + 0.3f)) }
-        drawPath(cuerno, pe.sombra(lerp(hueso, C.CUERO, 0.6f)).copy(alpha = 0.7f), style = Stroke(0.6f))
-        // El clavo de la base.
-        drawCircle(pe.medio(C.ESCORIA), 1.1f, c + Offset(7f * s, -8f * s))
+        val n = 26
+        val eje = (0..n).map { i -> val f = i / n.toFloat(); val ang = 1.2f + 5.4f * f; val r = (15f - 9.5f * f) * s; c + Offset(kotlin.math.cos(ang) * r * 1.15f, -kotlin.math.sin(ang) * r) }
+        val anchos = (0..n).map { i -> (9.5f - 7.6f * i / n.toFloat()) * s }
+        val luzDe = Offset(if (pe.solALaDerecha) 0.6f else -0.6f, -0.8f)
+        for (i in n - 1 downTo 0) {
+            val d = eje[i + 1] - eje[i]; val largo = d.getDistance().coerceAtLeast(0.01f); val nr = Offset(-d.y, d.x) / largo
+            val tramo = poligono(eje[i] + nr * anchos[i] * 0.5f, eje[i + 1] + nr * anchos[i + 1] * 0.5f, eje[i + 1] - nr * anchos[i + 1] * 0.5f, eje[i] - nr * anchos[i] * 0.5f)
+            val t = (nr.x * luzDe.x + nr.y * luzDe.y) * 0.6f + 0.15f - 0.3f * i / n
+            drawPath(tramo, Brush.linearGradient(listOf(pe.por(hueso, t + 0.35f), pe.por(lerp(hueso, C.CUERO, 0.35f), t - 0.45f)), eje[i] + nr * anchos[i] * 0.5f, eje[i] - nr * anchos[i] * 0.5f))
+            if (i % 2 == 0) drawLine(pe.sombra(lerp(hueso, C.CUERO, 0.6f)).copy(alpha = 0.55f), eje[i] + nr * anchos[i] * 0.48f, eje[i] - nr * anchos[i] * 0.48f, 0.45f)
+        }
+        // La punta, más oscura, y el clavo de la base.
+        drawCircle(pe.sombra(lerp(hueso, C.CUERO, 0.7f)), anchos.last() * 0.6f, eje.last())
+        drawCircle(pe.medio(C.ESCORIA), 1.1f, eje.first() + Offset(1.5f * s, -1f * s))
         if (Senal.LAZO_NEGRO in v.senales) {
-            val q = c + Offset(-18f * s, 6f * s)
+            val q = eje[n / 3]
             drawLine(pe.medio(C.ESCORIA), q, q + Offset(-3f, 12f), 1.6f, StrokeCap.Round); drawLine(pe.medio(C.ESCORIA), q, q + Offset(2f, 11f), 1.4f, StrokeCap.Round)
             drawCircle(pe.medio(C.ESCORIA), 2f, q)
         }
