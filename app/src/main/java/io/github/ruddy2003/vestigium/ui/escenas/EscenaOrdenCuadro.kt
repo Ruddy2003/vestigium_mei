@@ -138,7 +138,7 @@ internal object CuadroOrden {
         val v = VistaOrden(m)
         // El humo de la fragua, que sube por delante de la muralla del fondo y se tumba con el viento.
         val f = EscenaOrden.fragua(m)
-        humo(v.l, CamOrden.p(PatioOrden.CHIMENEA), 125f, 12f, reloj, 0.15f + 0.35f * m.viento, 0.3f, 0f, 6, 9, 0.35f + 0.5f * f)
+        humo(v.l, CamOrden.p(PatioOrden.CHIMENEA), 125f, 12f, reloj, -0.1f - 0.25f * m.viento, 0.3f, 0f, 6, 9, 0.35f + 0.5f * f)
         // Las llamas de los candiles de las almenas.
         val n = EscenaOrden.candiles(m)
         for (i in 0 until n) {
@@ -181,8 +181,8 @@ internal object CuadroOrden {
         add(Ancla(TipoAncla.SUELO, AdarveOrden.GATO_DESDE, AdarveOrden.PISO_GATO, hasta = AdarveOrden.GATO_HASTA))
         val mir = AdarveOrden.MIRADOR
         add(Ancla(TipoAncla.MIRADOR, mir.x, mir.y))                                // sentado en el taburete de la guardia
-        // Junto al objeto, sin taparlo: a la izquierda del pie del grande, o al pie del banco donde está el chico.
-        val obj = if (ObjetosOrden.esGrande(m)) CamOrden.p(AdarveOrden.PIE_GRANDE).x - 48f else CamOrden.p(AdarveOrden.SOPORTE).x - 6f
+        // Dónde está el objeto (el gato se pone a su lado y, quieto, se aparta de él; el abrigo queda lejos, junto al taburete).
+        val obj = if (ObjetosOrden.esGrande(m)) CamOrden.p(AdarveOrden.PIE_GRANDE).x else CamOrden.p(AdarveOrden.SOPORTE).x
         add(Ancla(TipoAncla.OBJETO, obj.coerceIn(AdarveOrden.GATO_DESDE + 10f, AdarveOrden.GATO_HASTA - 10f), AdarveOrden.PISO_GATO))
         add(Ancla(TipoAncla.ABRIGO, AdarveOrden.GATO_DESDE + 26f, AdarveOrden.PISO_GATO))  // junto al taburete, al abrigo del viento
         if (EscenaOrden.fiesta(m)) { val q = CamOrden.p(AdarveOrden.PENDON); add(Ancla(TipoAncla.ADORNO, q.x.coerceIn(10f, 370f), q.y.coerceIn(10f, 275f))) }

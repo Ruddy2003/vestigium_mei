@@ -197,7 +197,7 @@ internal class LuzObjeto(val m: Momento, val p: Pincel, private val extra: List<
     val lumbres: List<Lumbre> = buildList {
         val n = EscenaOrden.candiles(m)
         val k = 0.15f + 0.85f * l.noche
-        if (n > 0 && ObjetosOrden.elCuadroPinta(m, "candil")) add(Lumbre(TrazoOrden.aCamara(CuboOrden.CANDIL), 0.75f * k, 2.4f))
+        if (n > 0 && ObjetosOrden.elCuadroPinta(m, "candil")) add(Lumbre(TrazoOrden.aCamara(CuboOrden.CANDIL), 0.9f * k, 3.2f))
         // El de la almena de delante no cuenta el día del candil: el cuadro lo deja (o lo dejará) vacío, y alumbra el del objeto.
         if (n > 1 && ObjetosOrden.elCuadroPinta(m, "candil")) add(Lumbre(TrazoOrden.aCamara(AdarveOrden.candil(1)), 0.6f * k, 1.4f))
         addAll(extra)
