@@ -219,7 +219,11 @@ object Avisos {
         val propio = c?.sonido_avisos ?: true
         val tema = c?.tema ?: "romano"
         val clave = if (propio) tema else "sistema"
-        canalVigente(ids, base, clave)?.let { return it }
+        canalVigente(ids, base, clave)?.let { vigente ->
+            // Si quedó algún canal viejo sin borrar (la app se cerró antes de [borrarLuego]), se borra ahora, ya sin avisos dentro.
+            borrarVacios(nm, canalesQueSobran(ids, base, vigente))
+            return vigente
+        }
         val viejos = canalesQueSobran(ids, base, "")
         val previo = viejos.firstNotNullOfOrNull { nm.getNotificationChannel(it) }
         val id = idCanalNuevo(base, clave, System.currentTimeMillis())
@@ -234,8 +238,32 @@ object Avisos {
         }
         nm.createNotificationChannel(ch)
         mudarAvisos(ctx, nm, viejos, id)
-        viejos.forEach { runCatching { nm.deleteNotificationChannel(it) } }
+        borrarLuego(nm, viejos)
         return id
+    }
+
+    /** Lo que se espera antes de borrar los canales viejos: lo que tarda Android en recibir los avisos mudados. */
+    private const val ESPERA_BORRAR_MS = 6000L
+
+    /**
+     * Borra los canales [viejos] un poco después, no enseguida. Android publica un aviso con retraso (lo pasa antes por su
+     * asistente) y borrar un canal cancela al instante sus avisos: si el canal viejo se borraba justo después de mudar, el
+     * aviso se cancelaba antes de que llegara su copia, la copia entraba como aviso **nuevo** y sonaba con el sonido del tema
+     * recién elegido, encima de la música de la presentación. Con el canal viejo todavía vivo, la copia entra como una
+     * actualización del mismo aviso y `setOnlyAlertOnce` la deja en silencio.
+     */
+    private fun borrarLuego(nm: NotificationManager, viejos: Collection<String>) {
+        if (viejos.isEmpty()) return
+        val lista = viejos.toList()
+        // Sin hilo principal (una prueba) no se programa nada: quedan para la próxima llamada a [canal], que los borra al encontrarlos.
+        runCatching { android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ borrarVacios(nm, lista) }, ESPERA_BORRAR_MS) }
+    }
+
+    /** De [ids], borra los canales que ya no tienen avisos en la cortina; los que todavía tienen alguno se dejan para después. */
+    private fun borrarVacios(nm: NotificationManager, ids: Collection<String>) {
+        if (ids.isEmpty()) return
+        val conAvisos = runCatching { nm.activeNotifications.map { it.notification.channelId }.toSet() }.getOrNull() ?: return
+        ids.filter { it !in conAvisos }.forEach { runCatching { nm.deleteNotificationChannel(it) } }
     }
 
     fun crearCanales(ctx: Context) {
