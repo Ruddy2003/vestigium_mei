@@ -107,6 +107,7 @@ internal object PatioOrden {
                 val s = az.entre(-40f, -1f); val vv2 = az.entre(14f, FONDO); val q = CamOrden.p(s, P, vv2); val k = CamOrden.k(s, vv2)
                 mancha(q, k * az.entre(0.8f, 2.4f), k * az.entre(0.25f, 0.6f), if (it % 2 == 0) lz.color(C.ARENA, V3(0f, 1f, 0f), 0.1f) else lz.color(C.LOSA, V3(0f, 1f, 0f), 0.1f), 0.35f)
             }
+            sendas(v)
             canales(v)
             if (v.nieve > 0f) {
                 drawPath(forma, lz.color(C.NIEVE, V3(0f, 1f, 0f), 0.1f).copy(alpha = 0.88f * v.nieve))
@@ -115,6 +116,21 @@ internal object PatioOrden {
                 for ((a, b) in listOf(V3(PUERTA_S, P, FONDO - 3f) to CAMARA.enCara(3, 0.5f, P), V3(PUERTA_S, P, FONDO - 3f) to V3(FRAGUA_S, P, FRAGUA_V0), CAMARA.enCara(3, 0.5f, P) to V3(CISTERNA.x, P, CISTERNA.y)))
                     drawLine(senda.copy(alpha = 0.7f), CamOrden.p(a), CamOrden.p(b), (CamOrden.k(a.x, a.z) * 0.6f).coerceAtLeast(1f))
             }
+        }
+    }
+
+    /**
+     * Las sendas gastadas del patio, las de todos los días **[Diseño propio]**: de la puerta de la escalera a la Cámara y a
+     * la fragua, de la Cámara a la cisterna y de la cisterna al corral. La losa pisada se aclara y se pule; a los lados, la
+     * arena que se aparta.
+     */
+    private fun DrawScope.sendas(v: VistaOrden) {
+        val pisado = v.lz.color(lerp(C.ARENA, C.PAPEL, 0.25f), V3(0f, 1f, 0f), 0.08f).copy(alpha = 0.3f)
+        val puerta = V3(PUERTA_S, P, FONDO - 3f); val camara = CAMARA.enCara(3, 0.5f, P); val cisterna = V3(CISTERNA.x, P, CISTERNA.y + 2.8f)
+        for ((a, b) in listOf(puerta to camara, puerta to V3(FRAGUA_S - 1f, P, FRAGUA_V1), camara to cisterna, cisterna to V3(-15.5f, P, 17f))) {
+            val dx = b.x - a.x; val dz = b.z - a.z; val l = kotlin.math.sqrt(dx * dx + dz * dz).coerceAtLeast(0.01f)
+            val nx = -dz / l * 0.8f; val nz = dx / l * 0.8f
+            drawPath(poligono(listOf(V3(a.x + nx, P, a.z + nz), V3(b.x + nx, P, b.z + nz), V3(b.x - nx, P, b.z - nz), V3(a.x - nx, P, a.z - nz)).map { CamOrden.p(it) }), pisado)
         }
     }
 
@@ -361,15 +377,23 @@ internal object PatioOrden {
         val fuego = EscenaOrden.fragua(v.m)
         clipPath(dentro) {
             drawPath(dentro, v.l.tono(lerp(C.HOLLIN, C.ROCA, 0.25f)))
-            // El hogar al fondo y su lumbre.
+            // El suelo de dentro, de tierra apisonada y ceniza.
+            drawPath(poligono(listOf(V3(s1, P, v0), V3(s0, P, v0), V3(s0, P, v1), V3(s1, P, v1)).map { CamOrden.p(it) }), lz.color(lerp(C.LOSA, C.HOLLIN, 0.45f), V3(0f, 1f, 0f), 0.1f))
             val hogar = CamOrden.p(s0 - 1.2f, P + 1f, v1 - 1f); val k = CamOrden.k(s0 - 1.2f, v1 - 1f)
+            placas(v)
+            fuelleYHerramientas(v, k)
+            // La tina de templar, el tajo con el yunque y su cuerno.
+            caja(lz, s1 + 1f, v0 + 1.1f, 0.2f, 0.8f, 0.8f, P, P + 0.75f, C.MADERA_OSC, 0.1f, arriba = lerp(C.VIDRIO, C.HOLLIN, 0.55f))
+            caja(lz, s1 + 2.4f, v0 + 2.2f, 0f, 0.6f, 0.6f, P, P + 0.55f, C.MADERA, 0.1f)
+            caja(lz, s1 + 2.4f, v0 + 2.2f, 0f, 1.0f, 0.35f, P + 0.55f, P + 0.85f, C.HIERRO, 0.1f, arriba = lerp(C.HIERRO_CLARO, C.FRAGUA, 0.25f * fuego))
+            val cuerno = listOf(V3(s1 + 1.9f, P + 0.85f, v0 + 2.2f), V3(s1 + 1.45f, P + 0.8f, v0 + 2.2f), V3(s1 + 1.9f, P + 0.65f, v0 + 2.2f)).map { CamOrden.p(it) }
+            drawPath(poligono(cuerno), lz.color(C.HIERRO, V3(-0.5f, 0.6f, -0.6f), 0.1f))
+            // Bajo el tejadillo no entra el sol: todo lo de dentro, en sombra de color.
+            drawPath(dentro, v.l.tono(lerp(C.HOLLIN, C.ROCA_HONDA, 0.4f)).copy(alpha = 0.55f))
+            // El hogar al fondo y su lumbre, que tiñe de naranja lo de dentro (de día también: la fragua no se apaga).
+            resplandor(hogar, k * 7f, (0.4f + 0.6f * v.l.noche) * fuego, C.FRAGUA)
             drawRect(lz.color(C.PIEDRA_OSC, V3(0f, 0f, -1f), 0.12f), Offset(hogar.x - k * 1f, hogar.y - k * 0.2f), Size(k * 2f, k * 1.2f))
             drawOval(lerp(C.FRAGUA, C.LUMBRE, 0.3f).copy(alpha = 0.35f + 0.65f * fuego), Offset(hogar.x - k * 0.7f, hogar.y - k * 0.35f), Size(k * 1.4f, k * 0.4f))
-            resplandor(hogar, k * 5f, (0.25f + 0.75f * v.l.noche) * fuego, C.FRAGUA)
-            // El yunque, delante.
-            val y = CamOrden.p(s1 + 1.6f, P + 0.8f, v0 + 2f)
-            drawRect(lz.color(C.HIERRO, V3(0f, 1f, 0f), 0.1f), Offset(y.x - k * 0.5f, y.y - k * 0.15f), Size(k * 1f, k * 0.3f))
-            placas(v)
         }
         // El poste de la esquina y el tejadillo de losas, que baja hacia el patio.
         palo(lz, V3(s1, P, v0), V3(s1, alto1, v0), 0.35f, C.MADERA, 0.1f)
@@ -377,6 +401,18 @@ internal object PatioOrden {
         cara(lz, tejado, V3(-0.4f, 1f, 0f), if (v.nieve > 0f) C.NIEVE else C.LOSA, 0.1f, 0.15f)?.let { t -> clipPath(t) { for (j in 0..10) drawLine(v.l.tono(C.HOLLIN).copy(alpha = 0.25f), CamOrden.p(s1 - 0.4f, alto1, v0 - 0.5f + j * 0.75f), CamOrden.p(s0, alto0, v0 - 0.5f + j * 0.75f), 0.5f) } }
         // La chimenea, pegada a la muralla, hasta por encima del adarve.
         caja(lz, s0 - 0.55f, v1 - 1.2f, 0f, 1.1f, 1.1f, alto0, 1.4f, lerp(C.PIEDRA, C.HOLLIN, 0.15f), 0.1f)
+    }
+
+    /** El fuelle de cuero junto al hogar y las tenazas y los martillos colgados de la pared de la muralla. */
+    private fun DrawScope.fuelleYHerramientas(v: VistaOrden, k: Float) {
+        val fuelle = CamOrden.p(FRAGUA_S + 3.2f, P + 1.1f, FRAGUA_V1 - 1.4f)
+        drawOval(v.lz.color(lerp(C.MADERA_OSC, C.CARMESI, 0.15f), V3(0f, 0.4f, -1f), 0.1f), Offset(fuelle.x - k * 0.6f, fuelle.y - k * 0.25f), Size(k * 1.2f, k * 0.5f))
+        val hierro = v.l.tono(lerp(C.HIERRO, C.FRAGUA, 0.15f), 0.1f); val g = (k * 0.06f).coerceAtLeast(0.5f)
+        for (i in 0 until 4) {
+            val a = CamOrden.p(CamOrden.BORDE - 0.05f, P + 2.4f, FRAGUA_V0 + 1.2f + i * 0.45f); val b = CamOrden.p(CamOrden.BORDE - 0.05f, P + 1.6f + (i % 2) * 0.3f, FRAGUA_V0 + 1.25f + i * 0.45f)
+            drawLine(hierro, a, b, g, StrokeCap.Round)
+            if (i % 2 == 1) drawCircle(hierro, g * 1.6f, b)
+        }
     }
 
     /** Las esquinas de la fragua (para las sombras). */
