@@ -59,6 +59,7 @@ internal object PiezasSala {
         cartel(v, -9.8f, -9.0f, 1.25f, 2.2f, 2)
         armario(v)
         tablero(v)
+        llaveDePaso(v)
         columna(v)
         // La lucecita de guardia: una jaulita con su bombilla ámbar.
         val g = S.GUARDIA
@@ -402,6 +403,28 @@ internal object PiezasSala {
         if (R.laSalaPinta(v.m, "llave")) llave(v, V3(b.x + 1.05f, 0.0f, 2.05f), V3(b.x + 0.62f, 0.9f, 2.5f))
     }
 
+    /**
+     * La llave de paso de las duchas, en la pared junto al tablero, con su rueda roja: en el racionamiento, cerrada con una
+     * cadena y un candado («las duchas cerradas con candado»).
+     */
+    private fun DrawScope.llaveDePaso(v: VistaRefugio) {
+        val c = V3(-3.78f, 1.0f, S.FONDO - 0.1f)
+        Trazo3.run {
+            cilindro(v, V3(c.x, 3.1f, S.FONDO - 0.07f), V3(c.x, 0.25f, S.FONDO - 0.07f), 0.05f, C.VERDE, lados = 10)
+            cilindro(v, c + V3(0f, -0.1f, 0f), c + V3(0f, 0.1f, 0f), 0.09f, lerp(C.VERDE, C.HIERRO, 0.3f), lados = 12)
+        }
+        rueda(v, c + V3(0f, 0f, -0.16f), K.FRENTE, 0.15f)
+        if (!R.candado(v.m)) return
+        // La cadena que traba la rueda al tubo, y el candado de latón colgando.
+        val k = c + V3(0f, 0f, -0.18f)
+        Trazo3.run {
+            comba(k + V3(-0.14f, 0.05f, 0f), k + V3(0.12f, -0.08f, 0f), 0.06f, 0.014f, v.c(k, K.FRENTE, C.ACERO))
+            comba(k + V3(-0.14f, 0.05f, 0f), V3(c.x - 0.05f, 0.75f, S.FONDO - 0.1f), 0.04f, 0.014f, v.c(k, K.FRENTE, C.ACERO))
+            caja(v, k.x + 0.08f, k.x + 0.19f, k.y - 0.25f, k.y - 0.13f, k.z - 0.02f, k.z + 0.02f, C.LATON)
+            aro(k + V3(0.135f, -0.11f, -0.02f), K.FRENTE, 0.035f, 0.012f, v.c(k, K.FRENTE, C.ACERO), 10)
+        }
+    }
+
     /** Un manómetro pequeño en un tubo, mirando hacia la sala. */
     private fun DrawScope.manometroDeTubo(v: VistaRefugio, c: V3, r: Float, lee: Float) {
         Trazo3.run { barra(c + K.FONDO * 0.12f, c, 0.03f, v.c(c, K.NADA, C.LATON)) }
@@ -622,6 +645,7 @@ internal object PiezasSala {
         if (R.laSalaPinta(m, "cuaderno")) cuaderno(v, V3(-1.18f, y, zf), R.cuadernoAbierto(m))
         fiambrera(v, V3(-0.84f, y, zf), R.fiambreraAbierta(m))
         if (R.gafasDeCarton(m)) gafas(v, V3(-1.45f, y, 2.7f))
+        if (R.mascarillas(m)) Trazo3.run { caja(v, -1.62f, -1.5f, y, y + 0.04f, 2.66f, 2.74f, lerp(C.AMARILLO, C.PAPEL, 0.25f)) }
         if (R.sellado(m) || R.luto(m)) Trazo3.run { for (k in 0 until 5) { val a = 2f * PI.toFloat() * k / 5; disco(v, V3(-1.42f + cos(a) * 0.035f, y + 0.02f, 2.72f + sin(a) * 0.03f), K.ARRIBA, 0.03f, lerp(C.PAPEL, C.ROJO, 0.35f), lados = 7) }; disco(v, V3(-1.42f, y + 0.025f, 2.72f), K.ARRIBA, 0.018f, C.AMARILLO, lados = 6) }
         // El soporte del objeto chico del día: en la esquina de delante, a la derecha.
         with(ObjetosRefugio) { sobreElSoporte(m, v.pincel(S.SOPORTE), K.p(S.SOPORTE), K.k(S.SOPORTE) / 120f) }
