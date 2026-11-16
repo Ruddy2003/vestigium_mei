@@ -15,6 +15,8 @@ import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasOrden.cara
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasOrden.palo
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasOrden.sillares
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import kotlin.math.cos
@@ -70,7 +72,8 @@ internal object CuboOrden {
         val izquierda = listOf(enIzq(0f, 0f), enIzq(1f, 0f), enIzq(1f, ALTO), enIzq(0f, ALTO))
         cara(lz, izquierda, nIzq, C.PIEDRA)?.let { f ->
             clipPath(f) {
-                sillares(enIzq(1f, 0f), enIzq(0f, 0f), ALTO, lz.color(C.PIEDRA, nIzq), az, 0.5f, 0.85f)
+                sillares(enIzq(1f, 0f), enIzq(0f, 0f), ALTO, lz.color(C.PIEDRA, nIzq), az, 0.36f, 0.62f)
+                marcas(v, nIzq)
                 alero(v, enIzq(1f, ALTO), enIzq(0f, ALTO), nIzq)
                 tronera(v, enIzq(0.55f, 1.3f), enIzq(0.62f, 1.3f), nIzq)
             }
@@ -80,7 +83,8 @@ internal object CuboOrden {
         val delante = listOf(enDel(0f, 0f), enDel(p0, 0f), enDel(p0, CamOrden.ALTO_PARAPETO), enDel(1f, CamOrden.ALTO_PARAPETO), enDel(1f, ALTO), enDel(0f, ALTO))
         cara(lz, delante, nDel, C.PIEDRA)?.let { f ->
             clipPath(f) {
-                sillares(enDel(0f, 0f), enDel(1f, 0f), ALTO, lz.color(C.PIEDRA, nDel), az, 0.46f, 0.8f)
+                sillares(enDel(0f, 0f), enDel(1f, 0f), ALTO, lz.color(C.PIEDRA, nDel), az, 0.4f, 0.7f)
+                with(MateriaOrden) { manchasDelMuro(v, enDel(0f, 0f), enDel(1f, 0f), ALTO, nDel, PiezasOrden.fijo("cubo de delante"), 0f) }
                 alero(v, enDel(0f, ALTO), enDel(1f, ALTO), nDel)
                 hornacina(v)
             }
@@ -89,6 +93,22 @@ internal object CuboOrden {
         drawLine(lerp(lz.color(C.PIEDRA, V3(nIzq.x + nDel.x, 0f, nIzq.z + nDel.z)), C.ARENA, 0.25f), CamOrden.p(enIzq(0f, 0f)), CamOrden.p(enIzq(0f, ALTO)), (CamOrden.k(esquinas[0].x, esquinas[0].y) * 0.06f).coerceAtLeast(0.6f))
         tejadillo(v)
         cabria(v)
+    }
+
+    /**
+     * Lo que tiene la cara del patio: el liquen verde gris en lo bajo, una grieta que baja de la tronera, las chorreras bajo
+     * el alero y las muescas de los años junto a la esquina (rayas en grupos, nunca números).
+     */
+    private fun DrawScope.marcas(v: VistaOrden, n: V3) {
+        val az = PiezasOrden.fijo("marcas del cubo"); val tono = v.lz.color(C.PIEDRA, n)
+        repeat(6) { val c = CamOrden.p(enIzq(az.entre(0.2f, 0.95f), az.entre(0.1f, 1.2f))); val k = CamOrden.k(S, V)
+            mancha(c, k * az.entre(0.2f, 0.45f), k * az.entre(0.1f, 0.2f), v.lz.color(C.LIQUEN, V3(0f, 1f, 0f)), 0.55f) }
+        val grieta = (0..6).map { j -> CamOrden.p(enIzq(0.6f + az.entre(-0.03f, 0.03f), 1.25f - j * 0.2f)) }
+        drawPath(Path().apply { moveTo(grieta[0].x, grieta[0].y); for (q in grieta.drop(1)) lineTo(q.x, q.y) }, lerp(tono, C.HOLLIN, 0.5f), style = Stroke(0.6f))
+        for (j in 0 until 4) { val t = 0.15f + j * 0.22f; drawLine(lerp(tono, C.HOLLIN, 0.22f).copy(alpha = 0.5f), CamOrden.p(enIzq(t, ALTO - 0.3f)), CamOrden.p(enIzq(t + 0.01f, ALTO - az.entre(1f, 2.2f))), 1.1f, StrokeCap.Round) }
+        for (j in 0 until 13) { if (j % 5 == 4) continue
+            val a = CamOrden.p(enIzq(0.05f + j * 0.012f, 1.25f)); val b = CamOrden.p(enIzq(0.05f + j * 0.012f, 1.42f))
+            drawLine(lerp(tono, C.HOLLIN, 0.45f), a, b, 0.5f) }
     }
 
     /** La sombra del alero en lo alto del muro: una franja oscura bajo el tejadillo. */
@@ -108,21 +128,22 @@ internal object CuboOrden {
     }
 
     /** Dónde arde el candil grande de la hornacina del cubo. */
-    val CANDIL: V3 get() = enDel(0.24f, 1.45f).let { V3(it.x + nDel.x * 0.05f, it.y, it.z + nDel.z * 0.05f) }
+    val CANDIL: V3 get() = enDel(0.135f, 1.35f).let { V3(it.x + nDel.x * 0.05f, it.y, it.z + nDel.z * 0.05f) }
 
     /**
      * La hornacina con el candil grande de la guardia: el arco hondo en la piedra, el vaso de latón con su asa; de noche,
      * su llama (va con lo vivo) y su luz en la piedra.
      */
     private fun DrawScope.hornacina(v: VistaOrden) {
-        val a = enDel(0.16f, 1.05f); val b = enDel(0.32f, 1.05f); val k = CamOrden.k(a.x, a.z)
-        val qa = CamOrden.p(a); val qb = CamOrden.p(b); val qc = CamOrden.p(b.x, 1.8f, b.z); val qd = CamOrden.p(a.x, 1.8f, a.z)
+        val a = enDel(0.06f, 0.95f); val b = enDel(0.21f, 0.95f); val k = CamOrden.k(a.x, a.z)
+        val qa = CamOrden.p(a); val qb = CamOrden.p(b); val qc = CamOrden.p(b.x, 1.7f, b.z); val qd = CamOrden.p(a.x, 1.7f, a.z)
         val arco = Path().apply {
             moveTo(qa.x, qa.y); lineTo(qb.x, qb.y); lineTo(qc.x, qc.y)
             cubicTo(qc.x, qc.y - k * 0.32f, qd.x, qd.y - k * 0.32f, qd.x, qd.y); close()
         }
         drawPath(arco, v.l.tono(lerp(C.HOLLIN, C.ROCA_HONDA, 0.45f)))
         drawPath(arco, v.lz.color(lerp(C.PIEDRA, C.ARENA, 0.35f), nDel), style = Stroke((k * 0.05f).coerceAtLeast(0.5f)))
+        if (!ObjetosOrden.elCuadroPinta(v.m, "candil")) return
         // El vaso de latón, grande, con su pico y su asa.
         val c = CamOrden.p(CANDIL); val w = k * 0.17f
         val vaso = Path().apply { moveTo(c.x - w, c.y - w * 0.2f); cubicTo(c.x - w, c.y + w * 1.1f, c.x + w, c.y + w * 1.1f, c.x + w, c.y - w * 0.2f); close() }
@@ -131,8 +152,11 @@ internal object CuboOrden {
         drawArc(v.l.tono(lerp(C.LATON, C.HOLLIN, 0.3f)), 180f, 180f, false, Offset(c.x - w * 0.6f, c.y - w * 0.9f), Size(w * 1.2f, w * 1.2f), style = Stroke((k * 0.025f).coerceAtLeast(0.4f)))
     }
 
-    /** Si el candil grande arde: con la corona de candiles (el primero que se enciende), y nunca de luto. */
-    fun arde(v: VistaOrden): Boolean = EscenaOrden.candiles(v.m) > 0
+    /**
+     * Si el candil grande arde: con la corona de candiles (el primero que se enciende), nunca de luto, y no el día del
+     * candil, que es este mismo bajado al banco (así no hay dos vasos iguales pegados) **[Diseño propio]**.
+     */
+    fun arde(v: VistaOrden): Boolean = EscenaOrden.candiles(v.m) > 0 && ObjetosOrden.elCuadroPinta(v.m, "candil")
 
     /** La luz del candil grande: el halo en la piedra del cubo y el charco en las losas del adarve. */
     fun DrawScope.luzDelCandil(v: VistaOrden) {
@@ -151,13 +175,12 @@ internal object CuboOrden {
             val a = vuelo[i]; val b = vuelo[(i + 1) % 4]
             val n = normal(a, b, punta)
             val f = cara(lz, listOf(a, b, punta), n, color, 0f, 0.1f) ?: continue
-            clipPath(f) {
-                val junta = lerp(lz.color(color, n), C.HOLLIN, 0.35f).copy(alpha = 0.5f)
-                for (j in 1..5) { val t = j / 6f; drawLine(junta, CamOrden.p(mezcla(a, punta, t)), CamOrden.p(mezcla(b, punta, t)), 0.5f) }
-            }
+            if (v.nieve <= 0f) clipPath(f) { with(MateriaOrden) { losas(v, listOf(a, punta, punta, b), n, color, 5, 7, PiezasOrden.fijo("tejadillo", i)) } }
             // El canto del faldón, más claro.
             drawLine(lerp(lz.color(color, n), C.ARENA, 0.3f), CamOrden.p(a), CamOrden.p(b), 0.8f)
         }
+        // El caballete: las aristas del tejadillo, de losas de canto, más claras.
+        for (c in vuelo) drawLine(lerp(lz.color(color, V3(0f, 1f, 0f)), C.ARENA, 0.25f), CamOrden.p(c), CamOrden.p(punta), 1.3f, StrokeCap.Round)
     }
 
     private fun mezcla(a: V3, b: V3, t: Float) = V3(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t, a.z + (b.z - a.z) * t)

@@ -28,6 +28,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.PatioOrden.fragua
 import io.github.ruddy2003.vestigium.ui.escenas.PatioOrden.luzDeLaFragua
 import io.github.ruddy2003.vestigium.ui.escenas.TorreOrden.garza
 import io.github.ruddy2003.vestigium.ui.escenas.TorreOrden.torre
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoFijo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Luces
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo
@@ -70,6 +71,7 @@ internal object CuadroOrden {
         val v = VistaOrden(m)
         with(ParamoOrden) { cielo(v) }
         horaAzul(v)
+        with(MateriaOrden) { mesetasLejanas(v) }
         lejos(v)
         // El polvo va por capas entre los planos: lo lejano casi se borra («a cien pasos»); el patio, a medias; lo de cerca, poco.
         if (v.polvo > 0f) veloDePolvo(v, CamOrden.H - 50f, 215f, 0.85f * v.polvo)
@@ -103,6 +105,7 @@ internal object CuadroOrden {
         luzEnElAire(v)
         // El adarve: el suelo, sus sombras, el parapeto con las almenas y el objeto del día.
         with(AdarveOrden) { suelo(v) }
+        with(MateriaOrden) { sueloDelAdarve(v) }
         with(DiasOrden) { mojado(v) }
         sombrasDelAdarve(v)
         parapeto(v)
@@ -123,9 +126,9 @@ internal object CuadroOrden {
     private fun DrawScope.objetoDelDia(v: VistaOrden) {
         val m = v.m
         if (ObjetosOrden.esGrande(m)) {
-            ObjetosOrden.grande(m, v.p, CamOrden.p(AdarveOrden.PIE_GRANDE), CamOrden.p(AdarveOrden.APOYO_GRANDE), AdarveOrden.escalaEn(AdarveOrden.PIE_GRANDE))?.let { cosa -> cosa.pintar(this) }
+            ObjetosOrden.grande(m, v.p, CamOrden.p(AdarveOrden.PIE_GRANDE), CamOrden.p(AdarveOrden.APOYO_GRANDE), AdarveOrden.escalaEn(AdarveOrden.PIE_GRANDE) * 0.85f)?.let { cosa -> cosa.pintar(this) }
         } else {
-            with(ObjetosOrden) { sobreElSoporte(m, v.p, CamOrden.p(AdarveOrden.SOPORTE), AdarveOrden.escalaEn(AdarveOrden.SOPORTE)) }
+            with(ObjetosOrden) { sobreElSoporte(m, v.p, CamOrden.p(AdarveOrden.SOPORTE), AdarveOrden.escalaEn(AdarveOrden.SOPORTE) * 0.7f) }
         }
     }
 
@@ -135,11 +138,11 @@ internal object CuadroOrden {
         val v = VistaOrden(m)
         // El humo de la fragua, que sube por delante de la muralla del fondo y se tumba con el viento.
         val f = EscenaOrden.fragua(m)
-        humo(v.l, CamOrden.p(PatioOrden.CHIMENEA), 125f, 12f, reloj, 0.45f + 0.6f * m.viento, 0.3f, 0f, 6, 9, 0.35f + 0.5f * f)
+        humo(v.l, CamOrden.p(PatioOrden.CHIMENEA), 125f, 12f, reloj, 0.15f + 0.35f * m.viento, 0.3f, 0f, 6, 9, 0.35f + 0.5f * f)
         // Las llamas de los candiles de las almenas.
         val n = EscenaOrden.candiles(m)
         for (i in 0 until n) {
-            if (i == 0 && !ObjetosOrden.elCuadroPinta(m, "candil")) continue
+            if (i == 1 && !ObjetosOrden.elCuadroPinta(m, "candil")) continue
             val c = AdarveOrden.candil(i); val k = CamOrden.k(c.x, c.z)
             llama(CamOrden.p(c) + Offset(0f, -0.06f * k), (0.16f * k).coerceIn(1.2f, 9f), reloj, i)
         }
@@ -158,7 +161,17 @@ internal object CuadroOrden {
         // Cerca del candil grande del cubo, de noche, su lado cálido.
         val c = CamOrden.p(CuboOrden.CANDIL); val d = (c - en).getDistance()
         val calida = if (CuboOrden.arde(v)) (v.l.noche * 0.6f / (1f + (d / 80f) * (d / 80f))) else 0f
-        return LuzGato(v.r, v.l.noche) { col -> if (calida > 0.03f) lerp(v.l.tono(col), mult(col, C.LUMBRE, 0.5f), (calida * 0.5f).coerceIn(0f, 1f)) else v.l.tono(col) }
+        // De día, una luz pareja (como en Laboratorio): el color del sol, sin que la cabeza se queme ni el cuerpo se vaya al
+        // violeta; de noche, la del cuadro, que ya estaba bien.
+        val n = v.l.noche.coerceIn(0f, 1f)
+        val sol = v.l.solColor; val m0 = maxOf(sol.red, sol.green, sol.blue).coerceAtLeast(0.05f)
+        val deDia = lerp(Color.White, Color(sol.red / m0, sol.green / m0, sol.blue / m0), 0.2f).let { Color(it.red * 0.92f, it.green * 0.92f, it.blue * 0.92f) }
+        val rayo = if (n < 0.5f) rayoFijo(if (v.p.solALaDerecha) 0.45f else -0.45f, 50f, 0.3f, C.SOMBRA, 0.5f) else v.r
+        return LuzGato(rayo, v.l.noche) { col ->
+            val dia = Color(col.red * deDia.red, col.green * deDia.green, col.blue * deDia.blue, col.alpha)
+            val base = lerp(dia, v.l.tono(col), (n * 1.4f).coerceIn(0f, 1f))
+            if (calida > 0.03f) lerp(base, mult(col, C.LUMBRE, 0.5f), (calida * 0.5f).coerceIn(0f, 1f)) else base
+        }
     }
 
     /** Nada plantado en el suelo del gato: el objeto grande pisa más al fondo del adarve, junto a la almena. */
@@ -167,10 +180,11 @@ internal object CuadroOrden {
     fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, AdarveOrden.GATO_DESDE, AdarveOrden.PISO_GATO, hasta = AdarveOrden.GATO_HASTA))
         val mir = AdarveOrden.MIRADOR
-        add(Ancla(TipoAncla.MIRADOR, mir.x, mir.y))                                // sentado en la tronera de la segunda almena
-        val obj = if (ObjetosOrden.esGrande(m)) CamOrden.p(AdarveOrden.PIE_GRANDE).x else CamOrden.p(AdarveOrden.SOPORTE).x
+        add(Ancla(TipoAncla.MIRADOR, mir.x, mir.y))                                // sentado en el taburete de la guardia
+        // Junto al objeto, sin taparlo: a la izquierda del pie del grande, o al pie del banco donde está el chico.
+        val obj = if (ObjetosOrden.esGrande(m)) CamOrden.p(AdarveOrden.PIE_GRANDE).x - 48f else CamOrden.p(AdarveOrden.SOPORTE).x - 6f
         add(Ancla(TipoAncla.OBJETO, obj.coerceIn(AdarveOrden.GATO_DESDE + 10f, AdarveOrden.GATO_HASTA - 10f), AdarveOrden.PISO_GATO))
-        add(Ancla(TipoAncla.ABRIGO, AdarveOrden.GATO_HASTA - 8f, AdarveOrden.PISO_GATO))    // al pie de la almena de delante, al abrigo del viento
+        add(Ancla(TipoAncla.ABRIGO, AdarveOrden.GATO_DESDE + 26f, AdarveOrden.PISO_GATO))  // junto al taburete, al abrigo del viento
         if (EscenaOrden.fiesta(m)) { val q = CamOrden.p(AdarveOrden.PENDON); add(Ancla(TipoAncla.ADORNO, q.x.coerceIn(10f, 370f), q.y.coerceIn(10f, 275f))) }
     }
 }

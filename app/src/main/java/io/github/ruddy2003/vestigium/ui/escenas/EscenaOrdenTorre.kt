@@ -87,7 +87,7 @@ internal object TorreOrden {
         fun lobulo(t: Float, a: Float): Float {
             val gajo = (a / (2f * PI.toFloat() / 9f)).let { it - kotlin.math.floor(it) }
             // La panza cuelga entre las cinchas (las de la góndola y las del lastre), en bolsas.
-            val bolsa = if (cos(a) < -0.2f) 0.11f * -cos(a) * (0.5f + 0.5f * sin(t * 2f * PI.toFloat() * 4.5f + 0.6f)) else 0f
+            val bolsa = if (cos(a) < -0.2f) 0.15f * -cos(a) * (0.5f + 0.5f * sin(t * 2f * PI.toFloat() * 4.5f + 0.6f)) else 0f
             return 1f + 0.05f * sin(PI.toFloat() * gajo) + 0.03f * kotlin.math.abs(sin(a * 5f + t * 7f)) * (1f - cos(a)) * 0.5f + bolsa
         }
 
@@ -302,6 +302,7 @@ internal object TorreOrden {
                 if ((i * 31 + j * 17) % 6 == 0 && (q[2] - q[0]).getDistance() > 5f) arruga(q, tono, v)
             }
         }
+        if (hasta >= 0.999f && !rota) with(MateriaOrden) { parches(v, b, lejos) }
         contorno?.let { (ar, ab) ->
             drawPath(abierta(ar), lz.color(C.TELA, V3(0f, 1f, -0.4f), lejos).copy(alpha = 0.75f), style = Stroke(1f))
             drawPath(abierta(ab), lz.color(C.TELA, V3(0f, -1f, -0.4f), lejos).copy(alpha = 0.75f), style = Stroke(1f))

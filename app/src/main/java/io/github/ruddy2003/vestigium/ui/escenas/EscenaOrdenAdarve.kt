@@ -66,8 +66,8 @@ internal object AdarveOrden {
 
     // ---------------------------------------------------------------- El objeto del día
 
-    /** El objeto chico, en el fondo de la tronera que sigue a la almena de delante (en medio del grueso del parapeto). */
-    val SOPORTE: V3 = V3((PARAPETO + FUERA) / 2f - 0.15f, CamOrden.ALTO_PARAPETO, almena(1) + ALMENA + (PASO - ALMENA) / 2f)
+    /** El objeto chico, sobre la manta doblada del banco de la guardia: a la vista y en el charco del candil del cubo. */
+    val SOPORTE: V3 = V3(PARAPETO - 0.25f, 0.5f, 6.75f)
     /** El objeto grande: pisa en el adarve, junto a la segunda almena, y se apoya en ella. */
     val PIE_GRANDE: V3 = V3(PARAPETO - 0.35f, 0f, almena(1) + 0.75f)
     val APOYO_GRANDE: V3 = V3(PARAPETO, 1.15f, almena(1) + 0.75f)
@@ -213,7 +213,7 @@ internal object AdarveOrden {
         val hueco = Path().apply { moveTo(q.x - w * 0.35f, q.y + h * 0.15f); lineTo(q.x - w * 0.35f, q.y - h * 0.45f); cubicTo(q.x - w * 0.35f, q.y - h * 0.85f, q.x + w * 0.35f, q.y - h * 0.85f, q.x + w * 0.35f, q.y - h * 0.45f); lineTo(q.x + w * 0.35f, q.y + h * 0.15f); close() }
         drawPath(hueco, v.l.tono(lerp(C.PIEDRA_OSC, C.HOLLIN, 0.45f)))
         val encendido = i < EscenaOrden.candiles(v.m)
-        if (i == 0 && !ObjetosOrden.elCuadroPinta(v.m, "candil")) return
+        if (i == 1 && !ObjetosOrden.elCuadroPinta(v.m, "candil")) return
         // El vaso de latón.
         val vaso = Path().apply { moveTo(q.x - w * 0.18f, q.y + h * 0.12f); lineTo(q.x + w * 0.18f, q.y + h * 0.12f); lineTo(q.x + w * 0.22f, q.y - h * 0.06f); lineTo(q.x - w * 0.22f, q.y - h * 0.06f); close() }
         drawPath(vaso, if (encendido && v.l.noche > 0.3f) lerp(C.LATON, C.LUMBRE, 0.5f) else v.lz.color(C.LATON, V3(-1f, 0.3f, -0.4f)))
@@ -228,7 +228,7 @@ internal object AdarveOrden {
         val n = EscenaOrden.candiles(v.m); if (n <= 0) return
         val k = 0.2f + 0.8f * v.l.noche
         for (i in 0 until n) {
-            if (i == 0 && !ObjetosOrden.elCuadroPinta(v.m, "candil")) continue
+            if (i == 1 && !ObjetosOrden.elCuadroPinta(v.m, "candil")) continue
             val c = candil(i); val e = CamOrden.k(c.x, c.z)
             val q = CamOrden.p(c)
             // El halo en la piedra de la almena, alrededor de la hornacina.
@@ -307,12 +307,12 @@ internal object AdarveOrden {
         for (vv in listOf(b0 + 0.15f, b1 - 0.15f)) caja(lz, PARAPETO - 0.25f, vv, 0f, 0.32f, 0.1f, 0f, 0.42f, C.MADERA_OSC)
         caja(lz, PARAPETO - 0.25f, (b0 + b1) / 2f, 0f, 0.4f, b1 - b0, 0.42f, 0.48f, C.MADERA, arriba = lerp(C.MADERA, C.ARENA, 0.3f))
         manta(v, b0, b1)
-        val farol = V3(PARAPETO - 0.25f, 0.48f, b1 - 0.3f); val qf = CamOrden.p(farol); val kf = CamOrden.k(farol.x, farol.z)
+        val farol = V3(1.2f, 0f, 7.5f); val qf = CamOrden.p(farol); val kf = CamOrden.k(farol.x, farol.z)
         drawRect(lz.color(C.HIERRO_CLARO, V3(-1f, 0f, -0.5f)), Offset(qf.x - kf * 0.09f, qf.y - kf * 0.26f), Size(kf * 0.18f, kf * 0.26f))
         drawPath(poligono(qf + Offset(-kf * 0.11f, -kf * 0.26f), qf + Offset(kf * 0.11f, -kf * 0.26f), qf + Offset(0f, -kf * 0.36f)), lz.color(C.HIERRO, V3(0f, 1f, -0.5f)))
         if (v.l.noche > 0.4f) drawLine(C.LUMBRE.copy(alpha = 0.8f), qf + Offset(-kf * 0.06f, -kf * 0.05f), qf + Offset(kf * 0.06f, -kf * 0.05f), (kf * 0.025f).coerceAtLeast(0.4f))
         // El cántaro, contra el parapeto, delante del banco, con su boca.
-        val j = V3(1.15f, 0f, 6.2f); val q = CamOrden.p(j); val k = CamOrden.k(j.x, j.z)
+        val j = V3(0.6f, 0f, 8.25f); val q = CamOrden.p(j); val k = CamOrden.k(j.x, j.z)
         val alto = 0.55f * k; val ancho = 0.36f * k
         val forma = Path().apply {
             moveTo(q.x - ancho * 0.22f, q.y); cubicTo(q.x - ancho * 0.75f, q.y - alto * 0.1f, q.x - ancho * 0.7f, q.y - alto * 0.75f, q.x - ancho * 0.18f, q.y - alto * 0.88f)
@@ -329,7 +329,7 @@ internal object AdarveOrden {
     const val GATO_HASTA = 365f
 
     /** Sobre la tronera de la segunda almena, sentado en el parapeto. */
-    val MIRADOR: Offset get() = CamOrden.p(PARAPETO + 0.35f, CamOrden.ALTO_PARAPETO, almena(2) - (PASO - ALMENA) / 2f)
+    val MIRADOR: Offset get() = CamOrden.p(0.35f, 0.48f, 6.7f)
 
     /** Un velo cálido sobre el adarve cuando se adelantan las luces con el cielo cubierto (el polvo, la tormenta). */
     fun DrawScope.nieveEnLasAlmenas(v: VistaOrden) {

@@ -127,12 +127,12 @@ internal object PatioOrden {
     private fun DrawScope.zonas(v: VistaOrden) {
         val lz = v.lz; val az = PiezasOrden.fijo("zonas"); val arriba = V3(0f, 1f, 0f)
         for ((s, vv, r) in listOf(Triple(-16f, 28f, 6f), Triple(-24f, 34f, 7f), Triple(-12f, 40f, 5f), Triple(-30f, 26f, 5f), Triple(-8f, 33f, 3.5f)))
-            mancha(CamOrden.p(s, P, vv), CamOrden.k(s, vv) * r, CamOrden.k(s, vv) * r * 0.32f, lz.color(lerp(C.PARAMO, C.MADERA, 0.4f), arriba, 0.08f), 0.32f)
+            mancha(CamOrden.p(s, P, vv), CamOrden.k(s, vv) * r, CamOrden.k(s, vv) * r * 0.32f, lz.color(lerp(C.PARAMO, C.MADERA, 0.5f), arriba, 0.08f), 0.5f)
         // Las losas rotas o cambiadas: de otro tono, con su raja.
         repeat(34) {
             val s = az.entre(-36f, -2f); val vv = az.entre(13f, 52f); val w = az.entre(0.9f, 1.6f); val d = az.entre(0.7f, 1.2f)
             val q = listOf(V3(s, P, vv), V3(s - w, P, vv), V3(s - w, P, vv + d), V3(s, P, vv + d)).map { CamOrden.p(it) }
-            drawPath(poligono(q), lz.color(if (it % 3 == 0) lerp(C.LOSA, C.ARENA, 0.4f) else lerp(C.LOSA, C.ROCA, 0.3f), arriba, 0.08f).copy(alpha = 0.45f))
+            drawPath(poligono(q), lz.color(if (it % 3 == 0) lerp(C.LOSA, C.ARENA, 0.4f) else lerp(C.LOSA, C.ROCA, 0.3f), arriba, 0.08f).copy(alpha = 0.62f))
             if (it % 2 == 0) drawLine(lz.color(lerp(C.LOSA, C.HOLLIN, 0.5f), arriba, 0.08f).copy(alpha = 0.5f), CamOrden.p(s - w * 0.1f, P, vv + d * az.real()), CamOrden.p(s - w * 0.9f, P, vv + d * az.real()), 0.4f)
         }
         // La paja del corral, que se sale por la cerca.
@@ -151,7 +151,7 @@ internal object PatioOrden {
      * arena que se aparta.
      */
     private fun DrawScope.sendas(v: VistaOrden) {
-        val pisado = v.lz.color(lerp(C.ARENA, C.PAPEL, 0.25f), V3(0f, 1f, 0f), 0.08f).copy(alpha = 0.3f)
+        val pisado = v.lz.color(lerp(C.ARENA, C.MADERA, 0.3f), V3(0f, 1f, 0f), 0.08f).copy(alpha = 0.42f)
         val puerta = V3(PUERTA_S, P, FONDO - 3f); val camara = CAMARA.enCara(3, 0.5f, P); val cisterna = V3(CISTERNA.x, P, CISTERNA.y + 2.8f)
         for ((a, b) in listOf(puerta to camara, puerta to V3(FRAGUA_S - 1f, P, FRAGUA_V1), camara to cisterna, cisterna to V3(-15.5f, P, 17f))) {
             val dx = b.x - a.x; val dz = b.z - a.z; val l = kotlin.math.sqrt(dx * dx + dz * dz).coerceAtLeast(0.01f)
@@ -186,11 +186,26 @@ internal object PatioOrden {
     fun DrawScope.fondo(v: VistaOrden) {
         val lz = v.lz; val n = V3(0f, 0f, -1f)
         val cara = cara(lz, listOf(V3(CamOrden.BORDE, P, FONDO), V3(IZQ, P, FONDO), V3(IZQ, 0f, FONDO), V3(CamOrden.BORDE, 0f, FONDO)), n, C.PIEDRA, 0.22f)
-        if (cara != null) clipPath(cara) { sillares(V3(IZQ, P, FONDO), V3(CamOrden.BORDE, P, FONDO), 8f, lz.color(C.PIEDRA, n, 0.22f), PiezasOrden.fijo("fondo"), 0.55f, 0.95f, lejos = 0.22f) }
+        if (cara != null) clipPath(cara) {
+            sillares(V3(IZQ, P, FONDO), V3(CamOrden.BORDE, P, FONDO), 8f, lz.color(C.PIEDRA, n, 0.22f), PiezasOrden.fijo("fondo"), 0.55f, 0.95f, lejos = 0.22f)
+            val az = PiezasOrden.fijo("paños del fondo")
+            // Los paños rehechos, de otra piedra, y las chorreras bajo cada gárgola.
+            for (j in 0 until 6) {
+                val s0 = -4f - j * 9f - az.entre(0f, 4f); val w = az.entre(3f, 6f); val h0 = P + az.entre(0f, 3f); val h1 = h0 + az.entre(2f, 4f)
+                drawPath(poligono(listOf(V3(s0, h0, FONDO), V3(s0 - w, h0, FONDO), V3(s0 - w, h1, FONDO), V3(s0, h1, FONDO)).map { CamOrden.p(it) }), lz.color(if (j % 2 == 0) lerp(C.PIEDRA, C.ARENA, 0.25f) else lerp(C.PIEDRA, C.ROCA, 0.3f), n, 0.22f).copy(alpha = 0.55f))
+            }
+            var sc = CamOrden.BORDE - 3f
+            while (sc > IZQ) { drawLine(lz.color(lerp(C.PIEDRA, C.HOLLIN, 0.3f), n, 0.22f).copy(alpha = 0.4f), CamOrden.p(sc, -0.1f, FONDO), CamOrden.p(sc, -az.entre(1.5f, 4f), FONDO), 0.7f); sc -= 5.2f }
+        }
         // El parapeto de arriba y las almenas, contra el cielo.
         caja(lz, (IZQ + CamOrden.BORDE) / 2f, FONDO + 0.5f, 0f, -IZQ + CamOrden.BORDE, 1f, 0f, CamOrden.ALTO_PARAPETO, C.PIEDRA, 0.22f)
         var s = CamOrden.BORDE - 1f
-        while (s > IZQ) { caja(lz, s - 0.8f, FONDO + 0.5f, 0f, 1.6f, 1f, CamOrden.ALTO_PARAPETO, CamOrden.ALTO_ALMENA, C.PIEDRA, 0.22f); s -= 2.6f }
+        val alturas = PiezasOrden.fijo("almenas del fondo"); var j = 0
+        while (s > IZQ) {
+            val alto = if (j == 11) CamOrden.ALTO_PARAPETO + 0.6f else CamOrden.ALTO_ALMENA + alturas.entre(-0.2f, 0.15f)
+            caja(lz, s - 0.8f, FONDO + 0.5f, 0f, 1.6f, 1f, CamOrden.ALTO_PARAPETO, alto, if (j % 4 == 1) lerp(C.PIEDRA, C.ARENA, 0.15f) else C.PIEDRA, 0.22f)
+            s -= 2.6f; j++
+        }
         puertaDeLaEscalera(v)
     }
 
@@ -242,6 +257,7 @@ internal object PatioOrden {
                 if (i < 4) {
                     val (a, b) = when (i) { 0 -> e.enCara(0, 0f, P) to e.enCara(0, 1f, P); 1 -> e.enCara(1, 0f, P) to e.enCara(1, 1f, P); 2 -> e.enCara(2, 0f, P) to e.enCara(2, 1f, P); else -> e.enCara(3, 0f, P) to e.enCara(3, 1f, P) }
                     sillares(a, b, e.alto - P, v.lz.color(C.PIEDRA, normalDe(e, i), bruma), az, 0.5f, 0.85f, lejos = bruma)
+                    with(MateriaOrden) { manchasDelMuro(v, a, b, e.alto - P, normalDe(e, i), az, bruma); sombraDelAlero(v, a, b, e.alto, normalDe(e, i)) }
                 }
             }
             when (e) {
@@ -300,7 +316,7 @@ internal object PatioOrden {
         val postigo = EscenaOrden.postigos(v.m)
         if (postigo) {
             drawPath(hueco, v.lz.color(C.HIERRO, n, 0.1f))
-            if (vc.verde > 0f) drawPath(hueco, C.NUCLEO.copy(alpha = 0.7f), style = Stroke(0.6f))
+            if (vc.verde > 0f) drawPath(hueco, C.NUCLEO.copy(alpha = 0.9f), style = Stroke(0.9f))
             return
         }
         drawPath(hueco, v.l.tono(lerp(C.HOLLIN, C.MADERA, 0.25f)))
@@ -312,7 +328,7 @@ internal object PatioOrden {
             if (EscenaOrden.nucleoEnLaCamara(v.m)) {
                 val nc = Offset(abajo.x - w * 0.18f, abajo.y - alt * 0.42f)
                 drawRect(v.l.tono(C.HOLLIN), Offset(nc.x - w * 0.16f, nc.y - alt * 0.1f), Size(w * 0.32f, alt * 0.12f))
-                if (vc.verde > 0f) { drawCircle(C.NUCLEO, (w * 0.05f).coerceAtLeast(0.6f), nc + Offset(w * 0.08f, -alt * 0.04f)); resplandor(nc, w * 0.9f, 0.35f + 0.5f * v.l.noche, C.NUCLEO) }
+                if (vc.verde > 0f) { drawCircle(C.NUCLEO, (w * 0.05f).coerceAtLeast(0.6f), nc + Offset(w * 0.08f, -alt * 0.04f)); resplandor(nc, w * 1.2f, 0.6f + 0.35f * v.l.noche, C.NUCLEO) }
                 // La pila de hojas, cada vez más alta.
                 val pisos = when (EscenaOrden.pila(v.m)) { EscenaOrden.Pila.NINGUNA -> 0; EscenaOrden.Pila.POCAS -> 2; EscenaOrden.Pila.MEDIA -> 4; EscenaOrden.Pila.ALTA -> 7 }
                 for (k in 0 until pisos) drawRect(v.l.tono(if (k % 2 == 0) C.PAPEL else lerp(C.PAPEL, C.ARENA, 0.3f)), Offset(abajo.x + w * 0.08f, abajo.y - alt * (0.33f + 0.055f * (k + 1))), Size(w * 0.3f, alt * 0.05f))
@@ -367,9 +383,11 @@ internal object PatioOrden {
         }
         // El brocal: un murete bajo en tres lados (el cuarto, hacia la muralla, es la entrada de la escalera).
         val alto = 0.55f; val g = 0.35f
-        caja(lz, s0 - g / 2f, CISTERNA.y, 0f, g, CISTERNA_LARGO + g * 2f, P, P + alto, C.PIEDRA, 0.1f)
-        caja(lz, CISTERNA.x, v0 - g / 2f, 0f, CISTERNA_ANCHO, g, P, P + alto, C.PIEDRA, 0.1f)
-        caja(lz, CISTERNA.x, v1 + g / 2f, 0f, CISTERNA_ANCHO, g, P, P + alto, C.PIEDRA, 0.1f)
+        val mam = PiezasOrden.fijo("brocal")
+        val brocal: DrawScope.(Int, Path) -> Unit = { i, f -> with(MateriaOrden) { mampuesto(f, lz.color(C.PIEDRA, if (i == 4) V3(0f, 1f, 0f) else normalDeCaja(i), 0.1f), mam, 2.2f) } }
+        caja(lz, s0 - g / 2f, CISTERNA.y, 0f, g, CISTERNA_LARGO + g * 2f, P, P + alto, C.PIEDRA, 0.1f, encima = brocal)
+        caja(lz, CISTERNA.x, v0 - g / 2f, 0f, CISTERNA_ANCHO, g, P, P + alto, C.PIEDRA, 0.1f, encima = brocal)
+        caja(lz, CISTERNA.x, v1 + g / 2f, 0f, CISTERNA_ANCHO, g, P, P + alto, C.PIEDRA, 0.1f, encima = brocal)
         // Lo que dice el nivel desde arriba: a medias, el cubo con su cuerda en el brocal; baja, «el agua se reparte con
         // cazo»: los cuencos en fila y el cazo, encima del brocal de delante **[Diseño propio]**.
         when (EscenaOrden.tramoDeLaCisterna(v.m)) {
@@ -424,9 +442,10 @@ internal object PatioOrden {
         // El poste de la esquina y el tejadillo de losas, que baja hacia el patio.
         palo(lz, V3(s1, P, v0), V3(s1, alto1, v0), 0.35f, C.MADERA, 0.1f)
         val tejado = listOf(V3(s1 - 0.4f, alto1 - 0.1f, v0 - 0.5f), V3(s0, alto0 + 0.1f, v0 - 0.5f), V3(s0, alto0 + 0.1f, v1 + 0.3f), V3(s1 - 0.4f, alto1 - 0.1f, v1 + 0.3f))
-        cara(lz, tejado, V3(-0.4f, 1f, 0f), if (v.nieve > 0f) C.NIEVE else C.LOSA, 0.1f, 0.15f)?.let { t -> clipPath(t) { for (j in 0..10) drawLine(v.l.tono(C.HOLLIN).copy(alpha = 0.25f), CamOrden.p(s1 - 0.4f, alto1, v0 - 0.5f + j * 0.75f), CamOrden.p(s0, alto0, v0 - 0.5f + j * 0.75f), 0.5f) } }
-        // La chimenea, pegada a la muralla, hasta por encima del adarve.
-        caja(lz, s0 - 0.55f, v1 - 1.2f, 0f, 1.1f, 1.1f, alto0, 1.4f, lerp(C.PIEDRA, C.HOLLIN, 0.15f), 0.1f)
+        cara(lz, tejado, V3(-0.4f, 1f, 0f), if (v.nieve > 0f) C.NIEVE else C.LOSA, 0.1f, 0.15f)?.let { t -> clipPath(t) {
+            with(MateriaOrden) { tejadoDeLaFragua(v, tejado) }; if (v.nieve > 0f) for (j in 0..10) drawLine(v.l.tono(C.HOLLIN).copy(alpha = 0.25f), CamOrden.p(s1 - 0.4f, alto1, v0 - 0.5f + j * 0.75f), CamOrden.p(s0, alto0, v0 - 0.5f + j * 0.75f), 0.5f) } }
+        // La chimenea, del lado del patio (así su humo no pasa por delante del cubo), hasta por encima del adarve.
+        caja(lz, s1 + 0.7f, v1 - 1.2f, 0f, 1.1f, 1.1f, alto1, 1.4f, lerp(C.PIEDRA, C.HOLLIN, 0.15f), 0.1f)
     }
 
     /** El fuelle de cuero junto al hogar y las tenazas y los martillos colgados de la pared de la muralla. */
@@ -446,7 +465,7 @@ internal object PatioOrden {
         V3(CamOrden.BORDE, P + 4.8f, FRAGUA_V0), V3(FRAGUA_S, P + 3.3f, FRAGUA_V0), V3(CamOrden.BORDE, P + 4.8f, FRAGUA_V1), V3(FRAGUA_S, P + 3.3f, FRAGUA_V1))
 
     /** Dónde sale el humo de la fragua (la boca de la chimenea). */
-    val CHIMENEA: V3 get() = V3(CamOrden.BORDE - 0.55f, 1.5f, FRAGUA_V1 - 1.2f)
+    val CHIMENEA: V3 get() = V3(FRAGUA_S + 0.7f, 1.5f, FRAGUA_V1 - 1.2f)
 
     /**
      * Las placas de caparazón colgadas en el costado de la fragua, por piezas: hombreras, petos y grebas de hierro
