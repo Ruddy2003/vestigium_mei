@@ -419,11 +419,13 @@ internal object EscenaLaboratorio : EscenaVida {
     /** El día `sol` la pantalla deslumbra y tiñe media sala. */
     internal fun deslumbra(m: Momento): Boolean = hoyEs(m, "sol") && !deNoche(m)
 
-    /** El color con que la pantalla tiñe la sala: el del cielo de arriba a su hora. De noche, un azul hondo. */
+    /** El color con que la pantalla tiñe la sala: el del cielo de arriba a su hora (dorado al alba, blanco azulado a mediodía, naranja por la tarde). De noche, un azul hondo. */
     internal fun colorDePantalla(m: Momento): Color {
         val l = lucesDeArriba(m)
         val c = lerp(lerp(l.medio, l.bajo, 0.5f), l.ambiente, 0.3f)
-        val conSol = if (deslumbra(m)) lerp(c, Color(0xFFFFF2D4), 0.65f) else c
+        // La cámara de arriba exagera el color de la hora (es lo que da la hora a la sala): dorada al alba, naranja por la tarde.
+        val deHora = when (cielo(m)) { Cielo.ALBA -> lerp(c, Color(0xFFFFCC8C), 0.25f); Cielo.TARDE -> lerp(c, Color(0xFFFFB878), 0.4f); Cielo.DIA, Cielo.NOCHE -> c }
+        val conSol = if (deslumbra(m)) lerp(deHora, Color(0xFFFFF2D4), 0.65f) else deHora
         return lerp(conSol, Color(0xFF7E9AE0), (l.noche * 0.6f).coerceIn(0f, 1f))
     }
 
