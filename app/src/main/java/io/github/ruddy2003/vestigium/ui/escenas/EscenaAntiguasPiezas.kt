@@ -233,18 +233,22 @@ internal object FachadaPosada {
  *
  * Se comprobaron una por una, de memoria **[sin verificar contra una tabla]**, contra las runas del futhark antiguo y del
  * joven (con sus variantes de rama corta), las letras latinas y griegas, el ogam y las cifras, en sus cuatro vueltas y en
- * espejo: ninguna tiene las ramas a los dos lados del palo a alturas distintas (camino), ni rayas sueltas que no se tocan
- * (agua, refugio, peligro). La de «camino que sigue» es la misma marca que lleva la banderita (`BanderitaAntiguas.MARCA`,
- * llevada a estas medidas): un palo con una raya corta que sube a cada lado, a alturas distintas, y la de abajo larga, que
- * se va hasta el borde de la piedra; la de «camino» es esa misma sin la raya larga.
+ * espejo (la hoja `r3_antiguas_runas.jpg` las dibuja así). Lo que las aparta de las letras: las de palo llevan sus ramas a
+ * los dos lados, a alturas distintas y hacia el mismo lado (las runas que llevan una rama a cada lado las sacan del mismo
+ * punto, o de las dos puntas del palo y hacia lados contrarios); las otras son rayas
+ * sueltas de largo y ángulo distintos, sin dos paralelas (no son palotes ni ogam) y sin esquinas ni cruces que se adivinen
+ * (no forman una T, una L, una Y, una π ni un 7). La de «camino que sigue» es la misma marca que lleva la banderita
+ * (`BanderitaAntiguas.MARCA`, llevada a estas medidas): un palo con una raya corta que sube a cada lado, a alturas
+ * distintas, y la de abajo larga, que se va hasta el borde de la piedra; la de «camino» es esa misma sin la raya larga, y
+ * la de «agua», la de camino con las ramas hacia abajo (el agua baja, el camino sube).
  */
 internal enum class Runa(val trazos: List<Pair<Offset, Offset>>) {
-    /** Tres rayas sueltas y paralelas, casi derechas y caídas hacia la derecha, cada una más larga y más baja: agua que cae. */
-    AGUA(listOf(Offset(-0.474f, -0.392f) to Offset(-0.366f, -0.048f), Offset(-0.075f, -0.238f) to Offset(0.075f, 0.238f), Offset(0.324f, -0.085f) to Offset(0.516f, 0.525f))),
-    /** Un tejado de una sola agua, un poste que no llega a tocarlo y el suelo corrido a la izquierda, sueltos: el abrigo. */
-    REFUGIO(listOf(Offset(-0.62f, -0.02f) to Offset(0.6f, -0.62f), Offset(0.34f, -0.28f) to Offset(0.34f, 0.62f), Offset(-0.6f, 0.62f) to Offset(0.06f, 0.62f))),
-    /** Un palo partido, con las dos mitades corridas, y la esquirla que salta de la rotura: peligro. */
-    PELIGRO(listOf(Offset(0.16f, -0.66f) to Offset(0.16f, -0.06f), Offset(-0.16f, 0.04f) to Offset(-0.16f, 0.66f), Offset(0.36f, 0f) to Offset(0.62f, 0.3f))),
+    /** Un palo con una raya corta que baja a cada lado, a alturas distintas (la de la izquierda más arriba): el agua que baja. */
+    AGUA(listOf(Offset(0f, -0.65f) to Offset(0f, 0.65f), Offset(0f, -0.36f) to Offset(-0.33f, -0.08f), Offset(0f, 0.12f) to Offset(0.33f, 0.4f))),
+    /** Una raya larga que sube, el tejado de una sola agua, y debajo, suelta y corta, la losa del hogar: el abrigo. */
+    REFUGIO(listOf(Offset(-0.62f, 0.05f) to Offset(0.62f, -0.5f), Offset(-0.1f, 0.5f) to Offset(0.4f, 0.5f))),
+    /** Una raya larga que baja, la piedra que rueda, y dos esquirlas sueltas que saltan a los lados: peligro. */
+    PELIGRO(listOf(Offset(-0.5f, -0.62f) to Offset(0.3f, 0.45f), Offset(0.18f, -0.3f) to Offset(0.58f, -0.36f), Offset(-0.62f, 0.58f) to Offset(-0.4f, 0.32f))),
     /** Un palo con una raya corta que sube a cada lado, a alturas distintas (la de la derecha más arriba): el camino en zetas. */
     CAMINO(listOf(Offset(0f, -0.65f) to Offset(0f, 0.65f), Offset(0f, -0.337f) to Offset(0.329f, -0.572f), Offset(0f, 0.024f) to Offset(-0.329f, -0.211f))),
     /** La de camino, «con una raya más que no termina»: la de abajo, larga, sube a la derecha hasta el borde de la piedra. */

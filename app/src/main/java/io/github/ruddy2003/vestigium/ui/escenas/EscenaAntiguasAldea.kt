@@ -71,10 +71,10 @@ internal object AldeaAntiguas {
         suelo(v, az)
         torrente(v, az)
         puente(v)
-        for (c in CASAS.take(5)) casa(v, c, az)
+        for (i in 0 until 5) casa(v, CASAS[i], az, i)
         plaza(v, az)
         molino(v, az)
-        for (c in CASAS.drop(5)) casa(v, c, az)
+        for (i in 5 until CASAS.size) casa(v, CASAS[i], az, i)
         fiestas(v, az)
     }
 
@@ -205,7 +205,7 @@ internal object AldeaAntiguas {
      * linternas, con su linterna y la nieve dorada debajo). La del Gremio, más grande y más vieja; la herrería, con su boca
      * encendida y su humo.
      */
-    private fun DrawScope.casa(v: VistaAntiguas, c: Casa, az: Azar) {
+    private fun DrawScope.casa(v: VistaAntiguas, c: Casa, az: Azar, i: Int = -1) {
         val e = if (c.espejo) -1f else 1f
         val pie = c.pie; val p = v.pincelEn(pie + Offset(0f, -c.alto * 0.5f))
         val lejos = ((250f - pie.y) / 120f).coerceIn(0f, 0.3f)
@@ -243,6 +243,7 @@ internal object AldeaAntiguas {
             clipPath(pinon) { var x = minOf(t0.x, t1.x); while (x < maxOf(t0.x, t1.x)) { drawLine(p.sombra(tabla, lejos).copy(alpha = 0.6f), Offset(x, cima.y), Offset(x, t1.y - c.alto * 0.9f), 0.4f); x += 1.6f } }
         }
         val pm = t0 + (t1 - t0) * 0.52f
+        val acento = if (i >= 0) ACENTOS[i] else null
         drawRect(p.medio(lerp(C.MADERA_OSC, C.ESCORIA, 0.3f), lejos), pm + Offset(-c.testero * 0.12f, -c.alto * 0.62f), Size(c.testero * 0.24f, c.alto * 0.62f))
         drawLine(p.por(lerp(muro, C.NIEVE, 0.3f), tTestero + 0.3f, lejos), pm + Offset(-c.testero * 0.16f, -c.alto * 0.64f), pm + Offset(c.testero * 0.16f, -c.alto * 0.64f), 0.7f)
         // El tejado de losa: el faldón que se ve, con sus hiladas desiguales, su alero y su caballete.
@@ -284,11 +285,79 @@ internal object AldeaAntiguas {
         drawRect(p.por(muro, tTestero, lejos), ch + Offset(-2.1f, 0f), Size(0.8f, c.tejado * 0.7f))
         drawRect(p.por(C.LOSA, 0.4f, lejos), ch + Offset(-1.8f, -0.7f), Size(3.6f, 0.9f))
         ventana(v, c, e, s1, t1, lejos, p)
+        acento?.let { acento(v, c, t1, s1, tCostado, it, p, lejos, az) }
         if (c.fragua) {
-            // La herrería: la boca de la fragua abierta en el costado, roja, y su resplandor de noche.
+            // La herrería: la boca de la fragua abierta en el costado, con su brasa, y su resplandor en el muro y en el suelo de
+            // delante (más de noche).
             val boca = t1 + (s1 - t1) * 0.25f + Offset(0f, -c.alto * 0.18f)
-            drawRect(Color(0xFFB8442A).copy(alpha = 0.85f), boca + Offset(-1.2f, -1.6f), Size(2.4f, 2.2f))
-            if (v.encendido.aldea > 0.1f || v.noche < 0.5f) resplandor(boca, 6f + 8f * v.noche, 0.35f + 0.3f * v.noche, Color(0xFFFF7A38))
+            val fuego = if (v.invierno && v.noche < 0.3f) 0.7f else 1f
+            mancha(boca + Offset(e * 2f, c.alto * 0.18f + 1.6f), 8f, 2.2f, Color(0xFFFF8A40), (0.25f + 0.35f * v.noche) * fuego)
+            drawRect(p.medio(C.ESCORIA, lejos), boca + Offset(-1.7f, -2.2f), Size(3.4f, 3f))
+            drawRect(Color(0xFFB8442A).copy(alpha = 0.9f * fuego), boca + Offset(-1.3f, -1.4f), Size(2.6f, 2.2f))
+            drawRect(Color(0xFFFFC870).copy(alpha = 0.8f * fuego), boca + Offset(-0.6f, -0.6f), Size(1.2f, 1.2f))
+            resplandor(boca, 8f + 8f * v.noche, (0.4f + 0.3f * v.noche) * fuego, Color(0xFFFF7A38))
+        }
+    }
+
+    /** El punto de color de cada casa (la aldea, chica y gris, se lee por ellos) **[Diseño propio]**. */
+    private sealed class Acento {
+        /** La puerta pintada, de [color]. */
+        class Puerta(val color: Color) : Acento()
+        /** La ropa tendida en una cuerda junto al costado. */
+        object Ropa : Acento()
+        /** La leña apilada contra el testero. */
+        object Lena : Acento()
+        /** El huerto delante, con sus surcos. */
+        object Huerto : Acento()
+    }
+
+    private val ACENTOS: List<Acento> = listOf(
+        Acento.Ropa, Acento.Puerta(C.RUBI), Acento.Huerto, Acento.Puerta(lerp(C.AGUA, C.PINO, 0.3f)), Acento.Lena,
+        Acento.Ropa, Acento.Puerta(C.ORO), Acento.Huerto, Acento.Lena, Acento.Puerta(lerp(C.AGUA, C.PINO, 0.3f)), Acento.Ropa,
+    )
+
+    /**
+     * El acento de una casa, en el costado que mira a quien mira (el testero queda casi siempre tapado por la de al lado): la
+     * puerta del corral pintada, junto a la esquina de atrás; la ropa tendida en una cuerda bajo el alero; la leña apilada
+     * contra el muro; o el huerto delante, con sus surcos.
+     */
+    private fun DrawScope.acento(v: VistaAntiguas, c: Casa, t1: Offset, s1: Offset, tc: Float, a: Acento, p: Pincel, lejos: Float, az: Azar) {
+        val nieve = v.nieveAbajo > 0.5f; val cerca = lejos * 0.4f
+        fun q(f: Float, h: Float) = t1 + (s1 - t1) * f + Offset(0f, -h)
+        when (a) {
+            is Acento.Puerta -> {
+                val h = c.alto * 0.6f
+                drawPath(poligono(q(0.66f, 0f), q(0.8f, 0f), q(0.8f, h), q(0.66f, h)), p.por(a.color, maxOf(tc, 0f) * 0.4f + 0.1f, cerca))
+                drawLine(p.sombra(a.color, cerca).copy(alpha = 0.7f), q(0.73f, 0f), q(0.73f, h), 0.35f)
+                drawLine(p.por(lerp(C.PIEDRA, C.LANA, 0.4f), 0.4f, lejos), q(0.64f, h + 0.4f), q(0.82f, h + 0.4f), 0.6f)
+            }
+            Acento.Ropa -> {
+                // Una cuerda bajo el alero con tres prendas (no con la nieve, de noche ni con lluvia).
+                if (nieve || v.noche > 0.5f || v.clima == io.github.ruddy2003.vestigium.vidas.Clima.LLUVIA) return
+                val a0 = q(0.06f, c.alto * 0.86f); val a1 = q(0.4f, c.alto * 0.84f)
+                drawLine(p.medio(C.CUERO, lejos).copy(alpha = 0.7f), a0, a1, 0.35f)
+                for ((k, col) in listOf(C.LANA, C.RUBI, lerp(C.AGUA, C.LANA, 0.35f)).withIndex()) {
+                    val m = a0 + (a1 - a0) * (0.15f + k * 0.32f)
+                    drawRect(p.por(col, 0.3f, cerca), m + Offset(-1f, 0.1f), Size(2f, 2.4f + (k % 2) * 0.9f))
+                }
+            }
+            Acento.Lena -> {
+                val h = c.alto * 0.42f
+                drawPath(poligono(q(0.06f, 0f), q(0.38f, 0f), q(0.38f, h), q(0.06f, h)), p.por(C.MADERA_OSC, 0f, lejos))
+                var hh = 0.7f
+                while (hh < h - 0.4f) { var f = 0.08f; while (f < 0.37f) { drawCircle(p.por(lerp(C.FRESNO, C.MADERA, 0.3f), 0.35f, cerca), 0.45f, q(f, hh)); f += 0.07f }; hh += 1f }
+                if (nieve) drawPath(poligono(q(0.05f, h), q(0.39f, h), q(0.39f, h + 0.9f), q(0.05f, h + 0.9f)), p.por(C.NIEVE, 0.45f, lejos))
+            }
+            Acento.Huerto -> {
+                // El huerto delante del costado: sus surcos de berzas, verdes (pardos fuera de temporada), y la cerca de varas.
+                val o = q(0.05f, -1.2f); val d = (s1 - t1) * 0.7f; val hondo = Offset(-1.2f, 3f)
+                val forma = poligono(o, o + d, o + d + hondo, o + hondo)
+                drawPath(forma, p.por(lerp(C.TIERRA, C.ESCORIA, 0.15f), 0.1f, lejos))
+                val berza = if (v.m.ficha.dia.substring(5) in "04-15".."10-15") lerp(C.ALERCE, C.PRADO, 0.15f) else lerp(C.TIERRA, C.ORO, 0.3f)
+                if (!nieve) for (k in 0..2) { var f = 0.05f; while (f < 0.95f) { drawCircle(p.por(berza, 0.35f, cerca), 0.6f, o + d * f + hondo * (0.2f + k * 0.3f)); f += 0.12f + az.entre(0f, 0.04f) } }
+                else drawPath(forma, p.por(C.NIEVE, 0.4f, lejos))
+                drawLine(p.por(C.FRESNO, 0f, lejos).copy(alpha = 0.8f), o + hondo, o + d + hondo, 0.4f)
+            }
         }
     }
 
@@ -362,7 +431,10 @@ internal object AldeaAntiguas {
     private fun DrawScope.piedraDelCuerno(v: VistaAntiguas, p: Pincel) {
         val q = PIEDRA_DEL_CUERNO; val piedra = lerp(C.PIEDRA, C.NIEVE, 0.18f)
         val lado = if (p.solALaDerecha) 1f else -1f
-        drawOval(p.r.color.copy(alpha = 0.5f * p.r.fuerza), Offset(q.x - 8f - lado * 8f, q.y - 1.6f), Size(22f, 4f), blendMode = BlendMode.Multiply)
+        // Su sombra arrojada en la tierra de la plaza (la del pilar, larga con el sol bajo) y la de contacto del peldaño.
+        val h = 22f; val punta = q + Offset(p.r.ax * h, p.r.ay * h)
+        drawPath(poligono(q + Offset(-3.6f, 0.6f), q + Offset(3.8f, 0.6f), punta + Offset(1.4f, 0f), punta + Offset(-1.2f, 0f)), p.r.color.copy(alpha = (0.65f * p.r.fuerza).coerceIn(0f, 1f)), blendMode = BlendMode.Multiply)
+        drawOval(p.r.color.copy(alpha = 0.35f * p.r.fuerza + 0.1f), Offset(q.x - 8.5f, q.y - 0.6f), Size(17f, 2.6f), blendMode = BlendMode.Multiply)
         drawPath(poligono(q + Offset(-7f, 1f), q + Offset(7f, 1f), q + Offset(6f, -2.4f), q + Offset(-6f, -2.4f)), p.por(piedra, 0.1f, 0.04f))
         drawPath(poligono(q + Offset(-6f, -2.4f), q + Offset(6f, -2.4f), q + Offset(5.6f, -3.2f), q + Offset(-5.6f, -3.2f)), p.por(piedra, 0.5f, 0.04f))
         val pilar = poligono(q + Offset(-3.2f, -2.6f), q + Offset(3.4f, -2.6f), q + Offset(3f, -20f), q + Offset(0.6f, -22.4f), q + Offset(-2.8f, -20.6f))

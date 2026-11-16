@@ -296,11 +296,12 @@ internal object LuzAntiguas {
         if (sala > 0.05f && puerta != EscenaAntiguas.Puerta.CERRADA) resplandor(FachadaPosada.p(0.5f, 1.1f, 0.2f), 62f, 0.42f * sala, C.LUMBRE)
         if (sala > 0.05f) resplandor(FachadaPosada.p(-0.66f, 1.4f, 0.1f), 20f, 0.38f * sala, C.LUMBRE)
         val alto = e.cuartoAlto * n
-        if (alto > 0.05f) resplandor(FachadaPosada.p(-0.72f, 3.3f, 0.1f), 30f, 0.5f * alto, C.LUMBRE)
+        if (alto > 0.05f) resplandor(FachadaPosada.p(PosadaAntiguas.VENTANA_ALTA, 3.3f, 0.1f), 30f, 0.5f * alto, C.LUMBRE)
         // La luna sobre el collado: un halo frío en la nieve de arriba.
         if (v.luna > 0.05f) {
             val q = v.l.luna(SitioAntiguas.H)
-            clipPath(TIERRA) { drawCircle(Brush.radialGradient(listOf(C.LUNA.copy(alpha = 0.16f * v.luna * (0.5f + 0.5f * v.nieveArriba)), Color.Transparent), q + Offset(0f, 40f), 120f), 120f, q + Offset(0f, 40f), blendMode = BlendMode.Plus) }
+            // En la montaña, no en la posada (si no, la raya de la cresta le cruzaba el cuerpo alto).
+            clipPath(PosadaAntiguas.MURO, androidx.compose.ui.graphics.ClipOp.Difference) { clipPath(TIERRA) { drawCircle(Brush.radialGradient(listOf(C.LUNA.copy(alpha = 0.16f * v.luna * (0.5f + 0.5f * v.nieveArriba)), Color.Transparent), q + Offset(0f, 40f), 120f), 120f, q + Offset(0f, 40f), blendMode = BlendMode.Plus) } }
         }
     }
 

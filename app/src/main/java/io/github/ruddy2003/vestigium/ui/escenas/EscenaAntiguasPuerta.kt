@@ -180,9 +180,11 @@ internal object PuertaAntiguas {
     }
 
     /**
-     * La piedra de los años, la jamba de la derecha: una losa alta, más clara que el muro, con una marca por año (una raya y
-     * su tilde), una debajo de otra: las de arriba, nuevas; las de abajo, gastadas por las botas y la lluvia hasta no
-     * leerse. La del año nuevo, recién tallada, clara. Marcas, no números.
+     * La piedra de los años, la jamba de la derecha: una losa alta, más clara que el muro, con una marca por año, en dos
+     * columnas al tresbolillo: las de arriba, nuevas; las de abajo, gastadas por las botas y la lluvia hasta no leerse. Cada
+     * marca es de la familia de las del paso (un palo con una raya a cada lado, a alturas distintas, que suben o bajan),
+     * distinta de las demás, unas talladas hondas (el surco oscuro y su labio de luz) y otras someras. La del año nuevo,
+     * recién tallada, clara. Marcas, no números.
      */
     private fun DrawScope.piedraDeLosAnios(v: VistaAntiguas, az: Azar) {
         val pe = pincel(v, -0.07f, 1f)
@@ -192,23 +194,39 @@ internal object PuertaAntiguas {
         // Su canto de la derecha (el que mira a quien mira, si sobresale) y el labio de luz.
         drawPath(canto(JAMBA_S0, 0f, 0.025f, 0f, PUERTA_ALTO + 0.02f), pe.por(piedra, v.sol.t(FachadaPosada.CANTO)))
         val nueva = Senal.RUNA_NUEVA in v.senales
-        val filas = 24
+        val filas = 10
+        val oscuro = pe.sombra(lerp(piedra, C.ESCORIA, 0.5f)); val labio = pe.luz(lerp(piedra, C.NIEVE, 0.4f)); val fresco = pe.luz(lerp(piedra, C.FRESNO, 0.5f))
         clipPath(forma) {
             drawRect(Brush.verticalGradient(listOf(Color.Transparent, pe.sombra(lerp(piedra, C.TIERRA, 0.4f)).copy(alpha = 0.45f)), p(0f, 0.6f).y, p(0f, 0f).y), Offset(320f, p(0f, 0.6f).y), Size(40f, p(0f, 0f).y - p(0f, 0.6f).y))
-            for (k in 0 until filas) {
-                val h = PUERTA_ALTO - 0.1f - 1.6f * k / filas
-                val gastada = (k / (filas - 1f)).let { it * it }
+            for (k in 0 until filas * 2) {
+                val fila = k / 2; val col = k % 2
+                val h = PUERTA_ALTO - 0.13f - 1.58f * (fila + 0.5f * col) / filas
+                val c = p(if (col == 0) -0.045f else -0.135f, h, 0.03f)
+                val gastada = (k / (filas * 2 - 1f)).let { it * it } * az.entre(0.7f, 1.1f)
+                val honda = az.real01() < 0.35f && gastada < 0.6f
                 val fresca = if (k == 0 && nueva) 1f else 0f
-                val surco = lerp(pe.sombra(lerp(piedra, C.ESCORIA, 0.45f)), pe.luz(lerp(piedra, C.FRESNO, 0.5f)), fresca).copy(alpha = (0.9f * (1f - gastada)).coerceIn(0.06f, 1f))
-                val largo = az.entre(0.09f, 0.16f)
-                val a = p(-0.02f, h, 0.03f); val b = p(-0.02f - largo, h, 0.03f)
-                drawLine(surco, a, b, 0.75f, StrokeCap.Round)
-                val mitad = (a + b) / 2f + Offset(az.entre(-0.8f, 0.8f), 0f)
-                drawLine(surco, mitad, mitad + Offset(az.entre(-0.5f, 0.5f), if (k % 3 == 0) -1.5f else 1.3f), 0.6f, StrokeCap.Round)
-                if (k % 5 == 4) drawLine(surco, b, b + Offset(-0.8f, -0.8f), 0.5f)
+                val a = (0.95f * (1f - gastada)).coerceIn(0.08f, 1f)
+                marcaDeAnio(lerp(oscuro, fresco, fresca).copy(alpha = a), if (honda && fresca == 0f) labio.copy(alpha = 0.6f * a) else null, c, az.entre(2f, 2.6f), if (honda) 0.85f else 0.55f, az)
             }
         }
-        if (nueva) drawCircle(lerp(C.FRESNO, C.NIEVE, 0.5f).copy(alpha = 0.45f), 2.6f, p(-0.09f, PUERTA_ALTO - 0.1f, 0.03f))
+        if (nueva) drawCircle(lerp(C.FRESNO, C.NIEVE, 0.5f).copy(alpha = 0.45f), 2.6f, p(-0.045f, PUERTA_ALTO - 0.13f, 0.03f))
+    }
+
+    /**
+     * Una marca de año en [c], de [m] de medio alto: el palo y una raya a cada lado, a alturas distintas, las dos hacia
+     * arriba o las dos hacia abajo, de largos distintos; con [labio], el filo de luz del surco hondo.
+     */
+    private fun DrawScope.marcaDeAnio(surco: Color, labio: Color?, c: Offset, m: Float, grueso: Float, az: Azar) {
+        val sube = if (az.real01() < 0.5f) -1f else 1f; val lado = if (az.real01() < 0.5f) -1f else 1f
+        val ya = az.entre(-0.7f, -0.2f) * m; val yb = az.entre(0.05f, 0.55f) * m
+        val la = az.entre(0.45f, 0.8f) * m; val lb = az.entre(0.4f, 0.75f) * m
+        val trazos = listOf(
+            c + Offset(az.entre(-0.2f, 0.2f), -m) to c + Offset(0f, m),
+            c + Offset(0f, ya) to c + Offset(lado * la * 0.75f, ya + sube * la * 0.65f),
+            c + Offset(0f, yb) to c + Offset(-lado * lb * 0.75f, yb + sube * lb * 0.65f),
+        )
+        if (labio != null) for ((a, b) in trazos) drawLine(labio, a + Offset(0.45f, 0.45f), b + Offset(0.45f, 0.45f), grueso * 0.7f, StrokeCap.Round)
+        for ((a, b) in trazos) drawLine(surco, a, b, grueso, StrokeCap.Round)
     }
 
     /** El dintel: una piedra larga y tosca, con su canto de abajo en sombra; con las ramas de pino de la Noche del Arpa. */

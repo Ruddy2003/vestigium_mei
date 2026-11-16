@@ -176,31 +176,39 @@ internal object PosadaAntiguas {
         drawLine(pincel(v, -0.5f, PISO).luz(C.MADERA).copy(alpha = 0.5f), p(S_ALTO + 0.12f, PISO + 0.1f, 0.06f), p(S_BORDE, PISO + 0.1f, 0.06f), 0.7f)
     }
 
-    /** La ventana del cuarto alto, «la de la ventana al paso»: su marco, los postigos abiertos y el alféizar; encendida en la crianza y cuando viven arriba; los pañales tendidos en la crianza de día. */
+    /** El medio de la ventana del cuarto alto, a lo largo del muro (para su resplandor). */
+    const val VENTANA_ALTA = -0.6f
+
+    /**
+     * La ventana del cuarto alto, «la de la ventana al paso», entera dentro del cuadro: su marco, el postigo abierto en
+     * escuadra (tan cerca de la esquina no cabe abierto contra el muro) y el alféizar; encendida en la crianza y cuando
+     * viven arriba; los pañales tendidos en la crianza de día.
+     */
     private fun DrawScope.cuartoAlto(v: VistaAntiguas) {
-        val s0 = -0.42f; val s1 = -1.02f; val h0 = 2.95f; val h1 = 3.62f
+        val s0 = -0.36f; val s1 = -0.84f; val h0 = 2.95f; val h1 = 3.62f
         val forma = cara(s0, s1, h0, h1)
         val luz = v.encendido.cuartoAlto * maxOf(v.noche, 0.15f)
         val pe = pincel(v, -0.7f, 3.3f); val t = luzDeCara(v)
         if (luz > 0.05f) {
             drawPath(forma, Brush.verticalGradient(listOf(lerp(C.LUMBRE, Color(0xFFFFE6B0), 0.5f), lerp(C.LUMBRE, C.MADERA, 0.25f)), p(s0, h1).y, p(s0, h0).y), alpha = (0.5f + 0.5f * luz).coerceAtMost(1f))
-            resplandor(p(-0.72f, 3.3f), 18f, 0.45f * luz, C.LUMBRE)
+            resplandor(p(VENTANA_ALTA, 3.3f), 18f, 0.45f * luz, C.LUMBRE)
         } else {
             drawPath(forma, pe.medio(C.ESCORIA))
             // El reflejo del cielo en el vidrio de abajo, partido por el travesaño.
             drawPath(cara(s0 - 0.04f, s1 + 0.04f, h0 + 0.04f, h0 + 0.3f), lerp(v.l.medio, v.l.bajo, 0.4f).copy(alpha = 0.25f * v.r.dia))
         }
-        drawLine(pe.medio(C.MADERA_OSC), p(-0.72f, h0), p(-0.72f, h1), 1f)
+        drawLine(pe.medio(C.MADERA_OSC), p(VENTANA_ALTA, h0), p(VENTANA_ALTA, h1), 1f)
         drawLine(pe.medio(C.MADERA_OSC), p(s0, 3.28f), p(s1, 3.28f), 0.9f)
         // El marco, el dintel y el alféizar.
         val marco = lerp(C.MADERA, C.MADERA_OSC, 0.2f)
         drawPath(cara(s0 + 0.06f, s0, h0 - 0.04f, h1 + 0.04f, 0.03f), pe.por(marco, t + 0.1f))
         drawPath(cara(s0 + 0.08f, s1 - 0.08f, h1, h1 + 0.1f, 0.04f), pe.por(marco, t + 0.15f))
         drawPath(cara(s0 + 0.12f, s1 - 0.1f, h0 - 0.1f, h0, 0.1f), pe.por(lerp(marco, C.LANA, 0.2f), 0.45f))
-        // El postigo abierto contra el muro, pintado de verde viejo, con sus tablas.
+        // El postigo, pintado de verde viejo, abierto en escuadra: de canto, con sus tablas y su sombra en el muro.
         val postigo = lerp(lerp(C.PINO, C.MADERA, 0.4f), C.PIEDRA, 0.2f)
-        drawPath(cara(s0 + 0.08f, s0 + 0.4f, h0 - 0.02f, h1 + 0.02f, 0.05f), pe.por(postigo, t))
-        for (k in 1..2) drawLine(pe.sombra(postigo), p(s0 + 0.08f + k * 0.107f, h0, 0.055f), p(s0 + 0.08f + k * 0.107f, h1, 0.055f), 0.6f)
+        drawPath(cara(s0 + 0.02f, s0 + 0.14f, h0, h1, 0f), pe.sombra(C.MADERA_OSC).copy(alpha = 0.45f))
+        drawPath(FachadaPosada.canto(s0 + 0.02f, 0.02f, 0.3f, h0 - 0.02f, h1 + 0.02f), pe.por(postigo, v.sol.t(FachadaPosada.CANTO)))
+        for (k in 1..2) drawLine(pe.sombra(postigo), p(s0 + 0.02f, h0, 0.02f + k * 0.093f), p(s0 + 0.02f, h1, 0.02f + k * 0.093f), 0.5f)
         if (v.invierno) drawPath(cara(s0 + 0.12f, s1 - 0.1f, h0, h0 + 0.08f, 0.11f), pe.por(C.NIEVE, 0.5f))
         // Los pañales de la crianza, tendidos en una cuerda bajo la ventana.
         if (EscenaAntiguas.cuna(v.m) && v.noche < 0.5f) {
@@ -217,12 +225,15 @@ internal object PosadaAntiguas {
         val pe = pincel(v, -0.66f, 1.4f)
         if (luz > 0.05f) drawPath(forma, lerp(C.LUMBRE, Color(0xFFFFE2A8), 0.4f).copy(alpha = (0.4f + 0.6f * luz).coerceAtMost(1f)))
         else drawPath(forma, pe.medio(C.ESCORIA))
-        // El grueso del muro: el derrame de la izquierda, que mira a la derecha.
-        drawPath(FachadaPosada.canto(s0, 0f, -0.3f, h0, h1), pe.por(C.PIEDRA, v.sol.t(FachadaPosada.CANTO) - 0.2f))
+        // El grueso del muro: el derrame de la izquierda, que mira a la derecha, en sombra y más oscuro hacia dentro; y la
+        // sombra del dintel arriba. Un hueco con hondura, no una moldura clara.
+        val derrame = FachadaPosada.canto(s0, 0f, -0.3f, h0, h1)
+        drawPath(derrame, Brush.horizontalGradient(listOf(pe.por(lerp(C.PIEDRA, C.ESCORIA, 0.25f), v.sol.t(FachadaPosada.CANTO) - 0.45f), pe.medio(lerp(C.PIEDRA, C.ESCORIA, 0.6f))), p(s0, h0).x, p(s0, h0, -0.3f).x))
+        drawPath(cara(s0, s1, h1 - 0.07f, h1, 0f), pe.sombra(C.ESCORIA).copy(alpha = 0.55f))
         if (v.invierno) drawPath(forma, C.NIEVE.copy(alpha = 0.32f))
         for (s in listOf(-0.6f, -0.71f)) drawLine(pe.medio(C.ESCORIA), p(s, h0, -0.05f), p(s, h1, -0.05f), 0.8f)
-        drawPath(cara(s0 + 0.06f, s1 - 0.06f, h0 - 0.07f, h0, 0.07f), pe.por(lerp(C.PIEDRA, C.NIEVE, 0.2f), 0.4f))
-        drawPath(cara(s0 + 0.08f, s1 - 0.08f, h1, h1 + 0.12f, 0.02f), pe.por(lerp(C.PIEDRA, C.NIEVE, 0.2f), luzDeCara(v) + 0.1f))
+        drawPath(cara(s0 + 0.06f, s1 - 0.06f, h0 - 0.07f, h0, 0.07f), pe.por(lerp(C.PIEDRA, C.NIEVE, 0.12f), 0.25f))
+        drawPath(cara(s0 + 0.08f, s1 - 0.08f, h1, h1 + 0.12f, 0.02f), pe.por(C.PIEDRA, luzDeCara(v) - 0.05f))
     }
 
     // ---------------------------------------------------------------- Los tejados
@@ -266,8 +277,11 @@ internal object PosadaAntiguas {
     }
 
     /**
-     * El alero del zaguán: el tejado de una sola agua, de losas, que baja hacia la izquierda; se ve su canto (dos hiladas
-     * de losas gruesas, con musgo) y, debajo, el vuelo en sombra; con nieve, el manto encima y los carámbanos.
+     * El alero del zaguán: el tejado de una sola agua, de losas, que baja hacia la izquierda. Debajo, el vuelo en sombra con
+     * las cabezas de las vigas; delante, el canto de las dos hiladas de losas gruesas, **una por una**: cada losa de su
+     * ancho, su grueso y su tono, unas más salidas que otras, con su filo de luz arriba, su sombra debajo, las juntas
+     * oscuras y el musgo y el liquen en algunas. Con nieve, el manto con su espesor, que vuela un poco por delante y deja su
+     * sombra azul en el canto, y los carámbanos, cada uno de su largo.
      */
     private fun DrawScope.aleroDelZaguan(v: VistaAntiguas, az: Azar) {
         val vuelo = 0.34f; val s0 = S_ALTO; val s1 = S_FIN + 0.24f
@@ -275,21 +289,49 @@ internal object PosadaAntiguas {
         val pasos = (0..10).map { s0 + (s1 - s0) * it / 10f }
         drawPath(poligono(pasos.map { p(it, aleroEn(it), 0f) } + pasos.reversed().map { p(it, aleroEn(it), vuelo) }), pe.sombra(C.MADERA_OSC))
         for (s in pasos.drop(1)) drawLine(pe.por(C.MADERA, -0.25f), p(s, aleroEn(s) - 0.01f, 0f), p(s, aleroEn(s) - 0.05f, vuelo - 0.03f), 1.2f)
-        val canto = poligono(pasos.map { p(it, aleroEn(it), vuelo) } + pasos.reversed().map { p(it, aleroEn(it) + 0.15f, vuelo + 0.02f) })
-        drawPath(canto, pe.por(lerp(C.LOSA, C.ESCORIA, 0.15f), 0.1f))
-        clipPath(canto) {
-            var s = s0 + az.entre(0f, 0.2f)
-            while (s < s1) { drawLine(pe.sombra(C.ESCORIA).copy(alpha = 0.7f), p(s, aleroEn(s), vuelo), p(s, aleroEn(s) + 0.16f, vuelo), 0.6f); s += az.entre(0.2f, 0.4f) }
-            drawPath(poligono(pasos.map { p(it, aleroEn(it) + 0.07f, vuelo + 0.01f) } + pasos.reversed().map { p(it, aleroEn(it) + 0.08f, vuelo + 0.01f) }), pe.sombra(C.ESCORIA).copy(alpha = 0.6f))
-            for (k in 0..4) { val s = s0 + az.entre(0.2f, s1 - s0 - 0.2f); drawCircle(pe.medio(lerp(C.MUSGO, C.ALERCE, 0.4f)).copy(alpha = 0.7f), az.entre(1f, 2f), p(s, aleroEn(s) + 0.12f, vuelo)) }
+        val losa = lerp(C.LOSA, C.ESCORIA, 0.1f); val t = 0.1f
+        // Las dos hiladas, con las juntas cruzadas: la de abajo, más salida; la de arriba, un poco más atrás.
+        for ((fila, h0, h1, f) in listOf(Hilada(0, 0f, 0.08f, vuelo), Hilada(1, 0.075f, 0.155f, vuelo - 0.035f))) {
+            var s = s0 + (if (fila == 1) az.entre(0.1f, 0.2f) else 0f)
+            while (s < s1) {
+                val ancho = az.entre(0.2f, 0.4f); val e = (s + ancho).coerceAtMost(s1)
+                val sale = f + az.entre(-0.015f, 0.03f); val cae = az.entre(-0.012f, 0.012f)
+                val forma = poligono(p(s, aleroEn(s) + h0 + cae, sale), p(e, aleroEn(e) + h0 - cae, sale), p(e, aleroEn(e) + h1, sale), p(s, aleroEn(s) + h1, sale))
+                drawPath(forma, pe.por(lerp(losa, if (az.real() < 0.5f) C.PIEDRA else C.ESCORIA, az.entre(0f, 0.3f)), t + az.entre(-0.15f, 0.2f)))
+                drawLine(pe.luz(lerp(C.LOSA, C.NIEVE, 0.4f)).copy(alpha = 0.5f), p(s + 0.02f, aleroEn(s) + h1 - 0.01f, sale), p(e - 0.02f, aleroEn(e) + h1 - 0.01f, sale), 0.6f)
+                drawLine(pe.sombra(C.ESCORIA).copy(alpha = 0.75f), p(s, aleroEn(s) + h0 + cae, sale), p(e, aleroEn(e) + h0 - cae, sale), 0.7f)
+                drawLine(pe.sombra(C.ESCORIA).copy(alpha = 0.8f), p(e, aleroEn(e) + h0, sale), p(e, aleroEn(e) + h1, sale), 0.6f)
+                // El musgo en el canto de algunas losas, más en la de abajo (la que se moja), y el liquen.
+                if (az.real() < (if (fila == 0) 0.45f else 0.25f)) {
+                    val m = s + (e - s) * az.entre(0.2f, 0.8f)
+                    drawOval(pe.por(lerp(C.MUSGO, C.ALERCE, 0.35f), 0.15f).copy(alpha = 0.85f), p(m, aleroEn(m) + h0 + 0.035f, sale) - Offset(2f, 1f), androidx.compose.ui.geometry.Size(az.entre(2.4f, 5f), az.entre(1.4f, 2.4f)))
+                } else if (az.real() < 0.3f) drawCircle(pe.por(lerp(C.ORO, C.LANA, 0.4f), 0.2f).copy(alpha = 0.6f), 0.7f, p(s + (e - s) * 0.5f, aleroEn(s) + h1 - 0.03f, sale))
+                s = e
+            }
         }
-        drawLine(pe.luz(lerp(C.LOSA, C.NIEVE, 0.4f)).copy(alpha = 0.6f), p(s0, aleroEn(s0) + 0.15f, vuelo + 0.02f), p(s1, aleroEn(s1) + 0.15f, vuelo + 0.02f), 0.8f)
         if (v.nieveAbajo > 0.15f) {
-            val alto = 0.08f + 0.28f * v.nieveAbajo
-            drawPath(poligono(pasos.map { p(it, aleroEn(it) + 0.14f, vuelo + 0.01f) } + pasos.reversed().map { p(it, aleroEn(it) + 0.14f + alto * (0.8f + 0.2f * kotlin.math.sin(it * 9f)), vuelo - 0.02f) }), pe.por(C.NIEVE, 0.35f).copy(alpha = v.nieveAbajo.coerceAtMost(1f)))
-            if (v.invierno) { var s = s0 + 0.1f; while (s < s1) { val q = p(s, aleroEn(s), vuelo); drawLine(pe.luz(lerp(C.NIEVE, C.AGUA, 0.25f)).copy(alpha = 0.7f), q, q + Offset(0f, az.entre(2f, 8f)), 0.7f, StrokeCap.Round); s += az.entre(0.15f, 0.35f) } }
+            val alto = 0.08f + 0.3f * v.nieveAbajo; val a = v.nieveAbajo.coerceAtMost(1f)
+            // El manto: su espesor, con el borde de arriba redondeado y un poco volado por delante del canto.
+            val arriba = pasos.map { p(it, aleroEn(it) + 0.155f + alto * (0.85f + 0.15f * kotlin.math.sin(it * 9f)), vuelo + 0.02f) }
+            val abajo = pasos.map { p(it, aleroEn(it) + 0.135f, vuelo + 0.04f) }
+            drawPath(poligono(abajo + arriba.reversed()), pe.por(C.NIEVE, 0.35f).copy(alpha = a))
+            drawPath(poligono(abajo + abajo.reversed().map { it + Offset(0f, -2.2f) }), pe.sombra(C.NIEVE_SOMBRA).copy(alpha = 0.7f * a))
+            drawPath(io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva(arriba), pe.luz(C.NIEVE).copy(alpha = 0.6f * a), style = androidx.compose.ui.graphics.drawscope.Stroke(0.7f))
+            // Los carámbanos: cada uno de su largo, anchos arriba y en punta, con su brillo.
+            if (v.invierno) {
+                var s = s0 + 0.08f
+                while (s < s1) {
+                    val q = p(s, aleroEn(s) - 0.005f, vuelo + 0.01f); val l = az.entre(2f, 9f); val w = 0.5f + l * 0.07f
+                    drawPath(poligono(q + Offset(-w, 0f), q + Offset(w, 0f), q + Offset(0.2f, l)), pe.luz(lerp(C.NIEVE, C.AGUA, 0.25f)).copy(alpha = 0.75f))
+                    drawLine(Color.White.copy(alpha = 0.5f), q + Offset(-w * 0.3f, 0.5f), q + Offset(0f, l * 0.7f), 0.3f)
+                    s += az.entre(0.12f, 0.3f)
+                }
+            }
         }
     }
+
+    /** Una hilada de losas del canto del alero: cuál, de qué altura a qué altura sobre el alero y cuánto vuela. */
+    private data class Hilada(val fila: Int, val h0: Float, val h1: Float, val fuera: Float)
 
     /** La chimenea de la lumbre de la sala, de piedra, entre el zaguán y el cuerpo alto, con su losa de remate. */
     private fun DrawScope.chimenea(v: VistaAntiguas) {

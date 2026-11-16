@@ -69,22 +69,35 @@ internal object PinoAntiguas {
         Rama(pts(32f, 112f, 46f, 116f, 60f, 111f), 3.4f, emptyList(), true),
     )
 
+    /** Una rama de detrás, más fina y velada por el aire, entre las dos grandes; y una de delante, oscura, que sale por arriba. */
+    private val RAMA_DE_DETRAS = Rama(pts(33f, 56f, 58f, 44f, 84f, 39f, 112f, 44f), 3.4f, listOf(Offset(66f, 34f) to 15f, Offset(102f, 36f) to 14f), false)
+    private val RAMA_DE_DELANTE = Rama(pts(34f, 10f, 60f, 0f, 96f, -14f), 6.4f, listOf(Offset(66f, -6f) to 26f, Offset(98f, -12f) to 18f), false)
+
     /** Las linternas de la rama de abajo: de dónde cuelgan, el largo del cordel y su tamaño. */
     private val LINTERNAS = listOf(Triple(Offset(80f, 77f), 12f, 1.25f), Triple(Offset(114f, 84f), 20f, 1.1f), Triple(Offset(148f, 83f), 10f, 1.2f), Triple(Offset(174f, 74f), 18f, 1f), Triple(Offset(46f, 72f), 28f, 1.05f))
 
     fun DrawScope.pino(v: VistaAntiguas) {
         val az = fijo("pino")
         val partido = EscenaAntiguas.pinoPartido(v.m)
-        // La masa del fondo de la copa, que sale por arriba: oscura, con huecos de cielo.
+        // La rama de detrás, velada; la masa del fondo de la copa, que sale por arriba: oscura, con huecos de cielo.
+        if (!partido) { rama(v, RAMA_DE_DETRAS, false, velo = 0.32f); for ((c, w) in RAMA_DE_DETRAS.copas) copa(v, c, w, az, false, velo = 0.32f) }
         masaDelFondo(v, az, partido)
+        for ((c, w) in COPAS_DE_DETRAS) if (!partido || c.x < 60f) copa(v, c, w, az, false, velo = -0.32f)
         for (r in RAMAS) rama(v, r, partido)
         tronco(v, az, partido)
         for (r in RAMAS) for ((c, w) in r.copas) copa(v, c, w, az, partido && r.muerta)
+        if (!partido) { rama(v, RAMA_DE_DELANTE, false, velo = -0.25f); for ((c, w) in RAMA_DE_DELANTE.copas) copa(v, c, w, az, false, velo = -0.25f) }
         linternas(v)
     }
 
     /** El pincel de un punto del pino: el de la vista, con la sombra grande si le llega. */
     private fun pincel(v: VistaAntiguas, q: Offset): Pincel = v.pincelEn(q)
+
+    /**
+     * Las brazadas de detrás, arriba a la izquierda: la copa honda que sale por el borde de arriba, oscura, por detrás de las
+     * ramas grandes, con sus huecos de cielo entre brazada y brazada.
+     */
+    private val COPAS_DE_DETRAS = listOf(Offset(44f, -2f) to 24f, Offset(84f, -8f) to 22f, Offset(118f, -2f) to 15f, Offset(16f, 10f) to 16f, Offset(150f, -6f) to 12f)
 
     private fun DrawScope.masaDelFondo(v: VistaAntiguas, az: Azar, partido: Boolean) {
         val pe = pincel(v, Offset(80f, 10f))
@@ -93,7 +106,8 @@ internal object PinoAntiguas {
         // huecos de cielo entre ellos.
         val masa = Path(); val agujas = Path(); val puntas = Path()
         repeat(40) {
-            val x = az.entre(-14f, if (partido) 60f else 170f); val y = az.entre(-10f, 20f) + (x / 170f) * 6f
+            // (Arriba del todo: más abajo, una mancha suelta bajo la rama se leía como un erizo negro.)
+            val x = az.entre(-14f, if (partido) 60f else 170f); val y = az.entre(-12f, 11f) + (x / 170f) * 4f
             val r = az.entre(4f, 8f)
             masa.addOval(Rect(x - r, y - r * 0.5f, x + r, y + r * 0.5f))
             for (k in 0 until 9) { val ang = -3.1f + 3.1f * k / 8f + az.entre(-0.15f, 0.15f); val l = r * az.entre(1f, 1.5f); (if (k % 3 == 1) puntas else agujas).apply { moveTo(x, y); lineTo(x + cos(ang) * l, y + sin(ang) * l * 0.8f) } }
@@ -104,10 +118,10 @@ internal object PinoAntiguas {
     }
 
     /** Una rama: de gruesa a fina, con su lado de luz; muerta (negra y pelada) si el rayo partió el pino. */
-    private fun DrawScope.rama(v: VistaAntiguas, r: Rama, partido: Boolean) {
+    private fun DrawScope.rama(v: VistaAntiguas, r: Rama, partido: Boolean, velo: Float = 0f) {
         val pe = pincel(v, r.eje[r.eje.size / 2])
         val negra = partido && r.muerta
-        val col = if (negra) pe.medio(C.QUEMADO) else pe.por(lerp(C.MADERA, C.ROJIZA, 0.3f), 0.1f)
+        val col = velado(v, if (negra) pe.medio(C.QUEMADO) else pe.por(lerp(C.MADERA, C.ROJIZA, 0.3f), 0.1f), velo)
         val eje = suave(r.eje, 6)
         // La rama, de gruesa a fina, con su lado de abajo en sombra y un filo de luz arriba.
         val n = eje.size
@@ -124,6 +138,16 @@ internal object PinoAntiguas {
             drawPath(Path().apply { moveTo(base); cubicTo(base + Offset((c.x - base.x) * 0.3f, -2f), c + Offset(-(c.x - base.x) * 0.3f, 2f), c) }, col.copy(alpha = 0.9f), style = Stroke(maxOf(1f, r.grueso * 0.28f), cap = StrokeCap.Round))
         }
         if (v.nieveAbajo > 0.2f && !negra) drawPath(curva(arriba.map { it + Offset(0f, -0.6f) }), pe.por(C.NIEVE, 0.5f).copy(alpha = v.nieveAbajo), style = Stroke(1.8f, cap = StrokeCap.Round))
+    }
+
+    /**
+     * Un color del pino a otra hondura: con [velo] > 0, más lejos (velado por el aire, hacia el color del cielo de arriba);
+     * con [velo] < 0, más cerca (más oscuro).
+     */
+    private fun velado(v: VistaAntiguas, c: Color, velo: Float): Color = when {
+        velo > 0f -> lerp(c, lerp(v.l.alto, v.l.bruma, 0.4f), velo)
+        velo < 0f -> lerp(c, Color(c.red * 0.55f, c.green * 0.55f, c.blue * 0.6f, c.alpha), -velo * 2f)
+        else -> c
     }
 
     /** Puntos de una curva suave (Catmull-Rom) por [puntos], [k] por tramo. */
@@ -191,7 +215,7 @@ internal object PinoAntiguas {
      * sol), con huecos de cielo entre mechón y mechón; las piñas colgadas; con nieve, un copo encima de cada mechón de
      * arriba. Muerta: las ramillas negras y quebradas, con algún mechón pardo.
      */
-    private fun DrawScope.copa(v: VistaAntiguas, c: Offset, w: Float, az: Azar, muerta: Boolean) {
+    private fun DrawScope.copa(v: VistaAntiguas, c: Offset, w: Float, az: Azar, muerta: Boolean, velo: Float = 0f) {
         val pe = pincel(v, c)
         val lado = if (pe.solALaDerecha) 1f else -1f
         val h = w * 0.42f
@@ -214,7 +238,7 @@ internal object PinoAntiguas {
             return
         }
         // Los mechones: el corazón oscuro y las agujas en tres pasadas (sombra, medio, luz), cada una en un solo trazo.
-        val hondo = pe.sombra(lerp(C.PINO, C.ESCORIA, 0.35f)); val medio = pe.por(C.PINO, 0f); val claro = pe.luz(lerp(C.PINO, C.ALERCE, 0.55f))
+        val hondo = velado(v, pe.sombra(lerp(C.PINO, C.ESCORIA, 0.35f)), velo); val medio = velado(v, pe.por(C.PINO, 0f), velo); val claro = velado(v, pe.luz(lerp(C.PINO, C.ALERCE, 0.55f)), velo)
         val agujasS = Path(); val agujasM = Path(); val agujasL = Path()
         for ((q, r) in mechones) {
             drawOval(hondo, Offset(q.x - r * 0.55f, q.y - r * 0.35f), Size(r * 1.1f, r * 0.8f))

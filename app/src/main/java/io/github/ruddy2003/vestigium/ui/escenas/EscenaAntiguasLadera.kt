@@ -139,11 +139,19 @@ internal object LaderaAntiguas {
         return ((0.5f * real + 0.5f * propia) * (0.3f + 0.7f * fuerza)).coerceIn(-1f, 1f)
     }
 
+    /**
+     * Cuánto es mediodía para la montaña, de 0 a 1: con el sol alto y fuerte, la luz la lava (la masa más clara y más gris
+     * del cuadro), y se le devuelve el color: la roca más parda al sol y más azul violeta en la sombra, con menos bruma, y
+     * los neveros blancos de verdad **[Diseño propio]**.
+     */
+    private fun mediodia(v: VistaAntiguas): Float = (v.r.dia * ((v.l.solAltura - 0.75f) / 0.45f).coerceIn(0f, 1f) * (v.r.fuerza / 0.6f).coerceIn(0f, 1f)).coerceIn(0f, 1f)
+
     /** El color de la roca de una cara con luz [t]: al sol, cálida; en sombra, azul violeta (las paredes en sombra). */
     private fun colorDeCara(v: VistaAntiguas, roca: Color, t: Float, lejos: Float): Color {
-        val p = v.p
-        val base = p.por(lerp(roca, C.ORO, 0.1f * t.coerceAtLeast(0f)), if (t > 0f) t * 0.72f else t, lejos)
-        return if (t >= 0f) base else lerp(base, p.sombra(lerp(roca, C.SOMBRA, 0.42f), lejos), (-t * 0.8f).coerceAtMost(0.75f))
+        val p = v.p; val md = mediodia(v); val l = lejos * (1f - 0.4f * md)
+        val propia = lerp(roca, lerp(C.TIERRA, C.ROJIZA, 0.35f), 0.3f * md * t.coerceIn(0f, 1f))
+        val base = p.por(lerp(propia, C.ORO, 0.1f * t.coerceAtLeast(0f)), if (t > 0f) t * (0.72f - 0.12f * md) else t, l)
+        return if (t >= 0f) base else lerp(base, p.sombra(lerp(roca, C.SOMBRA, 0.42f + 0.22f * md), l), (-t * (0.8f + 0.2f * md)).coerceAtMost(0.75f + 0.1f * md))
     }
 
     /**
@@ -232,7 +240,7 @@ internal object LaderaAntiguas {
      * escarpes de las bandas siguen asomando negros: la montaña no se vuelve un cono liso. De noche, la luna la platea.
      */
     private fun DrawScope.nieve(v: VistaAntiguas, rotas: List<List<Offset>>, lejos: Float, az: Azar) {
-        val n = v.nieveArriba; val p = v.p
+        val n = v.nieveArriba; val p = v.p; val md = mediodia(v)
         if (n <= 0.02f) return
         // El casquete: de la cresta baja un trecho que crece con la nieve y con la altura, distinto en cada cara.
         val capas = ArrayList<Path>()
@@ -247,7 +255,7 @@ internal object LaderaAntiguas {
             val borde = (0..8).map { k -> val f = k / 8f; val q = a.first() + (b.first() - a.first()) * f; val y0 = alturaEn(CRESTA, q.x); Offset(q.x, y0 + baja * ((200f - y0) / 176f).coerceIn(0.2f, 1f) * (0.7f + 0.5f * sin(f * 3.1416f)) + az.entre(-2f, 2f)) }
             val capa = poligono(listOf(Offset(a.first().x, a.first().y - 3f)) + arriba + listOf(Offset(b.first().x, b.first().y - 3f)) + borde.reversed())
             val t = luzDeCara(v, LINEAS[i].cara)
-            clipPath(poligono(a + b.reversed() + arriba.reversed())) { drawPath(capa, p.por(C.NIEVE, t + 0.15f, lejos * 0.8f)) }
+            clipPath(poligono(a + b.reversed() + arriba.reversed())) { drawPath(capa, p.por(C.NIEVE, t + 0.15f + 0.2f * md, lejos * (0.8f - 0.45f * md))) }
             drawPath(curva(borde), p.sombra(C.NIEVE_SOMBRA, lejos).copy(alpha = 0.3f), style = Stroke(0.6f))
             capas += capa
         }
@@ -260,7 +268,7 @@ internal object LaderaAntiguas {
                 if (fa - f0 < 0.06f) continue
                 val eje = (0..6).map { k -> en(r, f0 + (fa - f0) * k / 6f) + Offset(hacia * 0.8f, 0.4f) }
                 val anchos = (0..6).map { k -> (1.1f + 2f * n) * li.nieve * (0.45f + 0.7f * k / 6f) * (0.75f + 0.35f * sin(k * 1.7f + i)) }
-                drawPath(cinta(eje, anchos), p.por(C.NIEVE, v.sol.t(V3(-hacia * 0.3f, 0.6f, -0.75f)) + 0.1f, lejos))
+                drawPath(cinta(eje, anchos), p.por(C.NIEVE, v.sol.t(V3(-hacia * 0.3f, 0.6f, -0.75f)) + 0.1f + 0.25f * md, lejos * (1f - 0.55f * md)))
             }
         }
         // Las repisas de las bandas, con su nieve.
