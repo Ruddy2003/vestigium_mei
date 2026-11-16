@@ -381,9 +381,9 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             }
         }
         if (parte == "avisos") Seccion("Sonido de las notificaciones", "Cada tema suena a su manera.",
-            explica = "Cada tema suena a su manera, siempre grave y solemne: campanas, órgano, coros, synthwave. Los avisos de ánimo usan un sonido corto; el diario, los sueños, las cartas y los cuestionarios, uno más largo.") {
+            explica = "Cada tema suena a su manera, siempre grave y solemne: campanas, órgano, coros, synthwave. Lo breve usa un sonido corto: el ánimo, el fin de un bloque, los recordatorios, los lugares y los respaldos. El diario, los sueños, las cartas, los cuestionarios y el reporte listo, uno más largo.") {
             Tarjeta {
-                Interruptor("Usar el sonido del tema", c.sonido_avisos, "Si lo apagas, suena el del teléfono.", explica = "Si lo apagas, suenan con el sonido normal del teléfono. Si silencias un tipo de aviso en los ajustes de Android, sigue en silencio aunque cambies de tema.") { v ->
+                Interruptor("Usar el sonido del tema", c.sonido_avisos, "Si lo apagas, suena el del teléfono.", explica = "Si lo apagas, suenan con el sonido normal del teléfono. Si silencias un tipo de aviso en los ajustes de Android (Sonido: ninguno), sigue en silencio aunque cambies de tema. Para que vuelva a sonar, elige ahí cualquier sonido: desde el siguiente cambio de tema vuelve el del tema.") { v ->
                     cambiar { it.copy(sonido_avisos = v) }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {

@@ -25,21 +25,25 @@ object Avisos {
     const val CANAL_ANIMO = "animo"
     const val CANAL_DIARIO = "diario"
     const val CANAL_ESCALAS = "escalas"
+    /** El reporte semanal o mensual ya está listo. Hasta el 16 nov 2026, un canal fijo con importancia baja (sin sonido). */
     const val CANAL_REPORTES = "reportes"
-    /** Lugares especiales: canal propio con su sonido (se cambia en los ajustes de Android). */
-    const val CANAL_LUGARES = "lugares_especiales_2"
-    /** El canal de lugares de antes, con el sonido guardado por número: se reemplaza por [CANAL_LUGARES]. */
-    private const val CANAL_LUGARES_V1 = "lugares_especiales"
-    /** Importaciones, metas y notas de recordatorio. */
+    /**
+     * Lugares especiales. Antes eran dos canales fijos, «lugares_especiales» (sonido por número) y «lugares_especiales_2»
+     * (`n_lugar`); los dos son de esta familia («lugares_…») y se mudan al canal por tema la primera vez.
+     */
+    const val CANAL_LUGARES = "lugares"
+    /** Importaciones, metas, notas de recordatorio y suplementos. Hasta el 16 nov 2026, un canal fijo con el sonido del teléfono. */
     const val CANAL_RECORDATORIOS = "recordatorios"
+    /** Respaldos que no salen o vienen incompletos, Drive sin permiso, la base dañada. Antes salían por «reportes», sin sonido. */
+    const val CANAL_RESPALDOS = "respaldos"
     const val ID_IMPORTAR = 2020
     const val ID_METAS = 2021
     const val ID_LUGAR = 2030
     const val ID_SUPLEMENTOS = 2040
 
     /**
-     * Sonido de cada tema: el de los avisos de ánimo y el solemne (diario, sueños, cartas, cuestionarios). null: el tema no
-     * tiene sonidos propios (Básico) y los avisos suenan con el sonido normal del teléfono.
+     * Sonido de cada tema: el corto (`aviso`) y el solemne; qué familia lleva cuál, en [tono]. null: el tema no tiene sonidos
+     * propios (Básico) y los avisos suenan con el sonido normal del teléfono.
      */
     private fun sonidosDe(t: TemaId): Pair<Int, Int>? = when (t) {
         TemaId.ROMANO -> R.raw.n_romano_aviso to R.raw.n_romano_solemne
@@ -103,25 +107,48 @@ object Avisos {
         return esquemaDe(t, t.soloOscuro || noche).primary.toArgb()
     }
 
+    /** Las familias de avisos que tienen un canal por tema (ver [canal]): todas las que avisan de algo que hay que notar. */
+    internal val FAMILIAS = listOf(CANAL_ANIMO, CANAL_DIARIO, CANAL_ESCALAS, CANAL_REPORTES, CANAL_RECORDATORIOS, CANAL_LUGARES,
+        CANAL_RESPALDOS, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO)
+
+    /**
+     * Qué sonido del tema lleva cada familia: el corto (`aviso`) para lo breve y frecuente, que pide un gesto rápido (ánimo,
+     * fin de bloque, recordatorios, lugares, respaldos); el largo (`solemne`) para lo ceremonioso o de fin de día (diario,
+     * sueños, cartas, logros, cuestionarios, el reporte listo). null: la familia no tiene canal por tema (el cronómetro fijo).
+     */
+    internal fun tono(base: String): String? = when (base) {
+        CANAL_ANIMO, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO, CANAL_RECORDATORIOS, CANAL_LUGARES, CANAL_RESPALDOS -> "aviso"
+        CANAL_DIARIO, CANAL_ESCALAS, CANAL_REPORTES -> "solemne"
+        else -> null
+    }
+
     private fun nombreCanal(base: String) = when (base) {
         CANAL_ANIMO -> "Ánimo durante el día"; CANAL_DIARIO -> "Diario y sueños"; CANAL_ESCALAS -> "Escalas periódicas"
+        CANAL_RECORDATORIOS -> "Importaciones y metas"; CANAL_LUGARES -> "Lugares especiales"
+        CANAL_RESPALDOS -> "Respaldos y estado de los datos"
         io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "Meta del bloque o del descanso"; else -> "Reportes"
     }
     private fun descripcionCanal(base: String) = when (base) {
         CANAL_ANIMO -> "Avisos breves para registrar cómo te sientes"; CANAL_DIARIO -> "Recordatorio de la mañana y de la noche"
-        io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "Avisa cuando un bloque o un descanso llega a su meta (y sigue contando) y cuando suena la siesta"; else -> "Cuestionarios que tocan"
+        CANAL_ESCALAS -> "Cuestionarios que tocan"
+        CANAL_RECORDATORIOS -> "Un aviso por semana con lo que toca importar, las metas y notas que toca revisar y los suplementos"
+        CANAL_LUGARES -> "«¿Es un lugar especial?» cuando llevas un rato en un sitio nuevo"
+        CANAL_RESPALDOS -> "Cuando un respaldo no sale o viene incompleto, Drive pide permiso o la base de datos tiene un problema"
+        io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "Avisa cuando un bloque o un descanso llega a su meta (y sigue contando) y cuando suena la siesta"
+        else -> "Tu reporte semanal o mensual, cuando ya está listo"
     }
-    private fun importancia(base: String) = when (base) {
+    /** La importancia con la que nace el canal de una familia. Todas suenan; ánimo y fin de bloque, además, asoman en pantalla. */
+    internal fun importancia(base: String) = when (base) {
         CANAL_ANIMO, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> NotificationManager.IMPORTANCE_HIGH
-        CANAL_REPORTES -> NotificationManager.IMPORTANCE_LOW; else -> NotificationManager.IMPORTANCE_DEFAULT
+        else -> NotificationManager.IMPORTANCE_DEFAULT
     }
 
     /** Recurso de sonido para un canal según el tema elegido (null = sonido normal del teléfono). */
     fun sonido(base: String, tema: String = runCatching { io.github.ruddy2003.vestigium.data.Repo.config.tema }.getOrDefault("romano")): Int? {
         val par = sonidosDe(temaDe(tema)) ?: return null
-        return when (base) {
-            CANAL_ANIMO, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> par.first
-            CANAL_DIARIO, CANAL_ESCALAS -> par.second
+        return when (tono(base)) {
+            "aviso" -> par.first
+            "solemne" -> par.second
             else -> null
         }
     }
@@ -133,11 +160,7 @@ object Avisos {
     internal fun nombreSonido(base: String, tema: String): String? {
         val t = temaDe(tema)
         if (sonidosDe(t) == null) return null
-        return when (base) {
-            CANAL_ANIMO, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "n_${t.id}_aviso"
-            CANAL_DIARIO, CANAL_ESCALAS -> "n_${t.id}_solemne"
-            else -> null
-        }
+        return tono(base)?.let { "n_${t.id}_$it" }
     }
 
     /** Para oír un sonido ahora mismo (la prueba de sonido de Ajustes). */
@@ -149,9 +172,6 @@ object Avisos {
      * el archivo de otro tema.
      */
     fun uriSonido(ctx: Context, nombre: String): Uri = Uri.parse("android.resource://${ctx.packageName}/raw/$nombre")
-
-    /** Un sonido que puso la app (por número o por nombre), no uno que eligió la persona en los ajustes de Android. */
-    private fun esNuestro(ctx: Context, u: Uri?): Boolean = u != null && u.toString().startsWith("android.resource://${ctx.packageName}/")
 
     /** El principio del id de los canales de [base] con [clave] (el tema, o «sistema»): «animo_medieval_». */
     internal fun prefijoCanal(base: String, clave: String) = base + "_" + clave + "_"
@@ -172,6 +192,61 @@ object Avisos {
     /** De [ids], los canales de la familia de [base] que sobran (todos menos [vigente]). «enfoque» no es de «enfoque_aviso». */
     internal fun canalesQueSobran(ids: Collection<String>, base: String, vigente: String): List<String> =
         ids.filter { (it == base || it.startsWith(base + "_")) && it != vigente }
+
+    /** Las claves que puede llevar un canal por tema: los temas, «sistema» (sin sonido propio) y «muertos» (un id de antes). */
+    private val CLAVES: Set<String> by lazy { TemaId.entries.map { it.id }.toSet() + "sistema" + "muertos" }
+
+    /**
+     * La serie de un canal por tema de [base] («animo_romano_<serie>»), o null si no es uno de ellos: los canales fijos de
+     * antes («recordatorios», «lugares_especiales_2») y los de antes de la serie («animo_romano»). Solo cuenta si la clave
+     * es un tema o «sistema»: en «lugares_especiales_2», «especiales» no es un tema y ese «2» no es una serie.
+     */
+    internal fun serialDe(id: String, base: String): Long? {
+        if (!id.startsWith(base + "_")) return null
+        val resto = id.removePrefix(base + "_")
+        val clave = resto.substringBeforeLast('_', "")
+        if (clave !in CLAVES) return null
+        return resto.substringAfterLast('_').toLongOrNull(36)
+    }
+
+    /**
+     * De [ids] (canales de la familia de [base]), el más reciente: el de serie más alta; los de antes de la serie, al final, y
+     * entre ellos el de nombre más largo («lugares_especiales_2» va después de «lugares_especiales»). Android no devuelve los
+     * canales en ningún orden, y desde que los viejos se borran unos segundos después ([borrarLuego]) puede haber varios vivos.
+     */
+    internal fun masReciente(ids: Collection<String>, base: String): String? =
+        ids.maxWithOrNull(compareBy<String>({ serialDe(it, base) ?: -1L }, { it.length }))
+
+    /**
+     * Lo que se recuerda de una familia después de mirar uno de sus canales: true, lo silenciaste tú (sin sonido y Android
+     * dice que el sonido lo cambiaste tú en sus ajustes); false, suena (si lo habías silenciado, ya le devolviste un sonido);
+     * null, no se sabe nada nuevo (sin sonido, y no lo tocaste tú en ese canal o Android no lo dice).
+     */
+    internal fun recordarSilencio(sinSonido: Boolean, loElegisteTu: Boolean?): Boolean? = when {
+        !sinSonido -> false
+        loElegisteTu == true -> true
+        else -> null
+    }
+
+    /**
+     * ¿El canal que sigue nace en silencio? Solo si el anterior está sin sonido y ese silencio es tuyo: lo pusiste tú en ese
+     * canal, o en uno anterior de la familia ([recordado]). Un silencio que nadie pidió (lo heredó de canal en canal desde un
+     * error) se deja: vuelve el sonido del tema. En Android 11 no se puede saber quién lo silenció ([loElegisteTu] null) y se
+     * respeta, como antes.
+     */
+    internal fun naceEnSilencio(sinSonido: Boolean, loElegisteTu: Boolean?, recordado: Boolean): Boolean =
+        sinSonido && ((recordarSilencio(sinSonido, loElegisteTu) ?: recordado) || loElegisteTu == null)
+
+    /**
+     * La importancia del canal nuevo. Un canal por tema trae la del anterior (lo que decidiste, heredado de canal en canal;
+     * todos nacen con [deFabrica]). Un canal fijo de antes solo la pasa si la cambiaste tú en sus ajustes: «reportes» nació
+     * con importancia baja, que en Android es sin sonido, y no se hereda.
+     */
+    internal fun importanciaNueva(previa: Int?, deLaSerie: Boolean, laCambiasteTu: Boolean, deFabrica: Int): Int = when {
+        previa == null -> deFabrica
+        deLaSerie || laCambiasteTu -> previa
+        else -> deFabrica
+    }
 
     /** Lo que le queda a un aviso antes de borrarse solo: null si no tiene plazo; 0 o menos si ya venció. */
     internal fun plazoRestante(timeoutAfter: Long, postTime: Long, ahora: Long): Long? = if (timeoutAfter <= 0L) null else timeoutAfter - (ahora - postTime)
@@ -199,38 +274,77 @@ object Avisos {
     private val atributosSonido: android.media.AudioAttributes get() = android.media.AudioAttributes.Builder()
         .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION).setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
 
+    /** Las familias que silenciaste tú (para que el silencio siga en los canales de los temas que vienen). */
+    private fun silencios(ctx: Context) = ctx.getSharedPreferences("avisos_silencio", Context.MODE_PRIVATE)
+
+    /** ¿Android dice que el sonido de [ch] lo cambiaste tú? null en Android 11, que no lo dice. */
+    private fun sonidoTuyo(ch: NotificationChannel): Boolean? =
+        if (android.os.Build.VERSION.SDK_INT >= 31) runCatching { ch.hasUserSetSound() }.getOrNull() else null
+
+    /** Mira [ch] (de [base]), guarda lo que haya cambiado ([recordarSilencio]) y dice si su silencio es tuyo. */
+    private fun silencioDe(ctx: Context, base: String, ch: NotificationChannel, tuyo: Boolean?): Boolean {
+        val sinSonido = ch.sound == null
+        val p = silencios(ctx)
+        val antes = p.getBoolean(base, false)
+        val ahora = recordarSilencio(sinSonido, tuyo) ?: antes
+        if (ahora != antes) p.edit().putBoolean(base, ahora).apply()
+        return naceEnSilencio(sinSonido, tuyo, antes)
+    }
+
+    /** Familias cuyo canal vigente ya se rehízo en este proceso por estar mudo sin que lo pidieras (para no rehacerlo en bucle). */
+    private val rehechos = mutableSetOf<String>()
+
     /**
      * El canal de [base] para el tema de hoy. Android no deja cambiar el sonido de un canal ya creado, así que hay uno por
      * tema («animo_medieval_<serie>»). Al cambiar de tema se crea uno nuevo, con id que nunca se usó, copiando lo que hayas
-     * decidido en el anterior (silencio, importancia, vibración); se le pasan los avisos que seguían en la cortina y se
-     * borran los viejos. Lo usa también el aviso de fin de bloque del enfoque («enfoque_aviso_<tema>_<serie>»).
+     * decidido en el más reciente de los anteriores ([masReciente]): importancia, vibración y, si lo silenciaste tú, el
+     * silencio ([naceEnSilencio]); se le pasan los avisos que seguían en la cortina y se borran los viejos. Un canal vigente
+     * que se quedó mudo sin que lo pidieras (un silencio heredado) se rehace una vez, con sonido. Lo usa también el aviso de
+     * fin de bloque del enfoque («enfoque_aviso_<tema>_<serie>»). La primera vez, los canales fijos de antes de la familia
+     * («recordatorios», «reportes», «lugares_especiales_2») se mudan aquí del mismo modo.
      */
     @Synchronized
     fun canal(ctx: Context, base: String): String {
-        if (base == CANAL_REPORTES) return base
         val nm = ctx.getSystemService(NotificationManager::class.java)
         // Red de seguridad: el tema de hoy, aunque quien avisa no lo haya revisado.
         runCatching { io.github.ruddy2003.vestigium.ui.RotacionTema.revisar() }
         val ids = runCatching { nm.notificationChannels.map { it.id } }.getOrDefault(emptyList())
-        // Con la base sin abrir bien, la configuración en memoria es la de fábrica: no se crea ni se borra nada.
-        if (io.github.ruddy2003.vestigium.data.Repo.errorAlAbrir != null)
-            return ids.filter { it == base || it.startsWith(base + "_") }.maxOrNull() ?: base
+        // Con la base sin abrir bien, la configuración en memoria es la de fábrica: no se cambia nada de lo que hay. Solo si la
+        // familia no tiene ningún canal se crea uno con el sonido del teléfono, para que el aviso no se pierda.
+        if (io.github.ruddy2003.vestigium.data.Repo.errorAlAbrir != null) {
+            masReciente(canalesQueSobran(ids, base, ""), base)?.let { return it }
+            val id = idCanalNuevo(base, "sistema", System.currentTimeMillis())
+            runCatching { nm.createNotificationChannel(NotificationChannel(id, nombreCanal(base), importancia(base)).apply { description = descripcionCanal(base) }) }
+            return id
+        }
         val c = runCatching { io.github.ruddy2003.vestigium.data.Repo.config }.getOrNull()
         val propio = c?.sonido_avisos ?: true
         val tema = c?.tema ?: "romano"
         val clave = if (propio) tema else "sistema"
         canalVigente(ids, base, clave)?.let { vigente ->
-            // Si quedó algún canal viejo sin borrar (la app se cerró antes de [borrarLuego]), se borra ahora, ya sin avisos dentro.
-            borrarVacios(nm, canalesQueSobran(ids, base, vigente))
-            return vigente
+            val ch = runCatching { nm.getNotificationChannel(vigente) }.getOrNull()
+            // Se mira siempre: así se recuerda si lo silenciaste tú, o si ya le devolviste un sonido.
+            val tuSilencio = ch?.let { silencioDe(ctx, base, it, sonidoTuyo(it)) }
+            val mudoSinPedirlo = ch != null && ch.sound == null && tuSilencio == false && base !in rehechos
+            if (!mudoSinPedirlo) {
+                // Si quedó algún canal viejo sin borrar (la app se cerró antes de [borrarLuego]), se borra ahora, ya sin avisos dentro.
+                borrarVacios(nm, canalesQueSobran(ids, base, vigente))
+                return vigente
+            }
+            rehechos += base           // sigue abajo: un canal nuevo del mismo tema, con sonido, que hereda lo demás de este
         }
         val viejos = canalesQueSobran(ids, base, "")
-        val previo = viejos.firstNotNullOfOrNull { nm.getNotificationChannel(it) }
+        val previo = masReciente(viejos, base)?.let { runCatching { nm.getNotificationChannel(it) }.getOrNull() }
+        val deLaSerie = previo != null && serialDe(previo.id, base) != null
+        // Un canal fijo de antes nunca nació sin sonido: si no tiene, lo quitaste tú.
+        val tuyo = previo?.let { if (!deLaSerie && it.sound == null) true else sonidoTuyo(it) }
+        val silencio = previo != null && silencioDe(ctx, base, previo, tuyo)
+        val imp = importanciaNueva(previo?.importance, deLaSerie, previo?.let { runCatching { it.hasUserSetImportance() }.getOrNull() } ?: false, importancia(base))
         val id = idCanalNuevo(base, clave, System.currentTimeMillis())
-        val ch = NotificationChannel(id, nombreCanal(base), previo?.importance ?: importancia(base)).apply {
+        val ch = NotificationChannel(id, nombreCanal(base), imp).apply {
             description = descripcionCanal(base)
             when {
-                previo != null && previo.sound == null -> setSound(null, null)          // lo habías silenciado: sigue en silencio
+                silencio -> setSound(null, null)          // lo silenciaste tú: sigue en silencio
                 propio -> nombreSonido(base, tema)?.let { setSound(uriSonido(ctx, it), atributosSonido) }
             }
             if (previo != null) { enableVibration(previo.shouldVibrate()); setShowBadge(previo.canShowBadge()) }
@@ -266,28 +380,13 @@ object Avisos {
         ids.filter { it !in conAvisos }.forEach { runCatching { nm.deleteNotificationChannel(it) } }
     }
 
+    /**
+     * Crea (o pone al día con el tema de hoy) el canal de cada familia. Ya no se crean canales fijos: «reportes»,
+     * «recordatorios» y los de lugares se mudan al canal por tema de su familia la primera vez que pasa por [canal], y crearlos
+     * otra vez los resucitaría (Android devuelve un canal borrado, con sus ajustes de entonces, si se crea con el mismo id).
+     */
     fun crearCanales(ctx: Context) {
-        val nm = ctx.getSystemService(NotificationManager::class.java)
-        nm.createNotificationChannel(NotificationChannel(CANAL_REPORTES, nombreCanal(CANAL_REPORTES), importancia(CANAL_REPORTES)))
-        nm.createNotificationChannel(NotificationChannel(CANAL_RECORDATORIOS, "Importaciones y metas", NotificationManager.IMPORTANCE_DEFAULT).apply {
-            description = "Un aviso por semana con lo que toca importar, y las metas y notas que toca revisar"
-        })
-        if (nm.getNotificationChannel(CANAL_LUGARES) == null && io.github.ruddy2003.vestigium.data.Repo.errorAlAbrir == null) {
-            // El canal de antes guardaba su sonido por número (ver [uriSonido]); este lo guarda por nombre. Se copia lo que
-            // decidiste en el anterior, incluido un sonido que hayas elegido tú en los ajustes de Android.
-            val viejo = nm.getNotificationChannel(CANAL_LUGARES_V1)
-            nm.createNotificationChannel(NotificationChannel(CANAL_LUGARES, "Lugares especiales", viejo?.importance ?: NotificationManager.IMPORTANCE_DEFAULT).apply {
-                description = "«¿Es un lugar especial?» cuando llevas un rato en un sitio nuevo"
-                when {
-                    viejo != null && viejo.sound == null -> setSound(null, null)
-                    viejo != null && !esNuestro(ctx, viejo.sound) -> setSound(viejo.sound, atributosSonido)
-                    else -> setSound(uriSonido(ctx, "n_lugar"), atributosSonido)
-                }
-                if (viejo != null) { enableVibration(viejo.shouldVibrate()); setShowBadge(viejo.canShowBadge()) }
-            })
-            if (viejo != null) { mudarAvisos(ctx, nm, listOf(CANAL_LUGARES_V1), CANAL_LUGARES); runCatching { nm.deleteNotificationChannel(CANAL_LUGARES_V1) } }
-        }
-        listOf(CANAL_ANIMO, CANAL_DIARIO, CANAL_ESCALAS, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO).forEach { runCatching { canal(ctx, it) } }
+        FAMILIAS.forEach { runCatching { canal(ctx, it) } }
     }
 
     /** Lo que dicen los avisos en la voz de cada tema; los datos (nombres, números) se agregan en cada aviso. */
@@ -776,7 +875,7 @@ object Avisos {
     fun reporte(ctx: Context, titulo: String, uri: Uri, mime: String) {
         val ver = Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         val pi = PendingIntent.getActivity(ctx, 2006, ver, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_REPORTES))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(titulo)
             .setContentText("Toca para verlo. Está guardado en tu galería.")
@@ -810,10 +909,9 @@ object Avisos {
     /** Una vez por semana: lo que toca importar, con «Recordar mañana». */
     fun importar(ctx: Context, fuentes: List<String>) {
         if (fuentes.isEmpty()) return
-        crearCanales(ctx)
         val manana = PendingIntent.getBroadcast(ctx, 2022, Intent(ctx, RecordatorioReceiver::class.java).putExtra(Recordatorios.ACCION, Recordatorios.MANANA),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RECORDATORIOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(if (fuentes.size == 1) "Toca importar ${fuentes[0].substringBefore(" (")}" else "Toca importar ${fuentes.size} fuentes")
             .setContentText(fuentes.joinToString(" · "))
@@ -827,13 +925,12 @@ object Avisos {
 
     /** Metas que toca revisar y notas de recordatorio que llegaron a su fecha. */
     fun metas(ctx: Context, metas: List<String>, notas: List<String>) {
-        crearCanales(ctx)
         val titulo = when {
             metas.isNotEmpty() && notas.isEmpty() -> if (metas.size == 1) "Revisa tu meta: ${metas[0]}" else "Toca revisar ${porNumero(metas.size, "1 meta", "${metas.size} metas")}"
             metas.isEmpty() -> if (notas.size == 1) "Recordatorio: ${notas[0]}" else "${notas.size} recordatorios para hoy"
             else -> "Metas y recordatorios para hoy"
         }
-        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RECORDATORIOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(titulo)
             .setContentText((metas + notas).take(4).joinToString(" · "))
@@ -844,10 +941,9 @@ object Avisos {
 
     /** El recordatorio diario de suplementos: «Ya los tomé» los anota con su dosis habitual; «En una hora» lo repite. */
     fun suplementos(ctx: Context, nombres: List<String>) {
-        crearCanales(ctx)
         fun accion(req: Int, a: String) = PendingIntent.getBroadcast(ctx, req, Intent(ctx, RecordatorioReceiver::class.java).putExtra(Recordatorios.ACCION, a),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RECORDATORIOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(if (nombres.size == 1) "¿Ya tomaste ${nombres[0].lowercase()}?" else "¿Ya tomaste tus suplementos?")
             .setContentText(nombres.joinToString(" · "))
@@ -860,10 +956,9 @@ object Avisos {
 
     /** Lo que anotaron «Ya los tomé» o el mosaico, con «deshacer» durante 10 minutos. */
     fun tomasAnotadas(ctx: Context, tomas: List<io.github.ruddy2003.vestigium.data.TomaSuplemento>) {
-        crearCanales(ctx)
         val quitar = PendingIntent.getBroadcast(ctx, 2043, Intent(ctx, RecordatorioReceiver::class.java).putExtra(Recordatorios.ACCION, Recordatorios.DESHACER_TOMAS)
             .putExtra(Recordatorios.TOMAS, tomas.map { it.id }.toTypedArray()), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RECORDATORIOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("Anotado")
             .setContentText(io.github.ruddy2003.vestigium.data.Suplementos.resumen(tomas))
@@ -877,9 +972,8 @@ object Avisos {
 
     /** «¿Es un lugar especial?»: abre la hoja para nombrarlo, ignorarlo o dejarlo para después. */
     fun lugar(ctx: Context, sugerencia: String, minutos: Int) {
-        crearCanales(ctx)
         val discreto = io.github.ruddy2003.vestigium.data.Repo.config.discreto
-        val b = NotificationCompat.Builder(ctx, CANAL_LUGARES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_LUGARES))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("¿Es un lugar especial?")
             .setContentText(if (discreto || sugerencia.isBlank()) "Llevas $minutos minutos aquí. Toca para nombrarlo o ignorarlo." else "Llevas $minutos minutos cerca de $sugerencia. Toca para nombrarlo.")
@@ -891,7 +985,7 @@ object Avisos {
 
     /** Los respaldos automáticos dejaron de salir: hay datos privados y no hay contraseña. */
     fun respaldoPausado(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RESPALDOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("Tus respaldos están en pausa")
             .setContentText("Llevan datos privados y no tienen contraseña. Toca para ponerla.")
@@ -902,7 +996,7 @@ object Avisos {
 
     /** El respaldo automático a la carpeta lleva días sin poder escribirse. */
     fun respaldoFallido(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RESPALDOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("Tu respaldo automático no está saliendo")
             .setContentText("Lleva más de 2 días sin poder guardarse en tu carpeta. Toca para revisarlo.")
@@ -915,7 +1009,7 @@ object Avisos {
 
     /** El respaldo a la carpeta vino mucho más pobre que el anterior y se guardó aparte (9 nov 2026). */
     fun respaldoEmpobrecido(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RESPALDOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("No reemplacé tu respaldo")
             .setContentText("El de hoy trae muchos menos días o momentos que el anterior. Toca para revisarlo.")
@@ -927,7 +1021,7 @@ object Avisos {
 
     /** La revisión semanal encontró la base de datos dañada (9 nov 2026). */
     fun baseDanada(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RESPALDOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("La base de datos tiene un problema")
             .setContentText("Haz un respaldo a mano ahora y no borres tus copias. Toca para ver el detalle.")
@@ -938,7 +1032,7 @@ object Avisos {
 
     /** El respaldo automático de Drive vino mucho más pobre que el último y se guardó aparte. */
     fun driveEmpobrecido(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RESPALDOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("No reemplacé tu respaldo de Drive")
             .setContentText("El nuevo trae muchos menos días o momentos. Toca para revisarlo.")
@@ -949,7 +1043,7 @@ object Avisos {
     }
 
     fun drive(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RESPALDOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("El respaldo en Drive necesita tu permiso")
             .setContentText("Google pidió confirmar el acceso. Toca para volver a conectar.")
