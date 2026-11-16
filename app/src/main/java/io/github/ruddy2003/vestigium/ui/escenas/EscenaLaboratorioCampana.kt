@@ -27,6 +27,7 @@ import io.github.ruddy2003.vestigium.vidas.Semilla
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
+import kotlin.math.min
 import kotlin.math.sin
 
 /**
@@ -80,7 +81,7 @@ internal object CampanaLab {
         val forma = cuerpo()
         // ---- Lo de detrás, visto a través: más frío, más verde y algo más oscuro (dos vidrios gruesos).
         clipPath(forma) {
-            drawPath(forma, lerp(C.VIDRIO, C.SOMBRA, if (noche) 0.55f else 0.2f).copy(alpha = if (noche) 0.45f else 0.24f), blendMode = BlendMode.Multiply)
+            drawPath(forma, lerp(lerp(C.VIDRIO, Color(0xFF5E9CA8), 0.5f), C.SOMBRA, if (noche) 0.55f else 0.15f).copy(alpha = if (noche) 0.5f else 0.42f), blendMode = BlendMode.Multiply)
             refraccion(v)
         }
         // ---- El zócalo de acero, con sus pernos.
@@ -103,7 +104,7 @@ internal object CampanaLab {
                 drawPath(poligono(t0, t1, b1, b0), Brush.verticalGradient(0f to col.copy(alpha = 0.22f * dentro), 1f to col.copy(alpha = 0.04f * dentro), startY = t0.y, endY = b0.y), blendMode = BlendMode.Plus)
             }
             // De noche, lo de dentro se apaga y el vidrio devuelve la sala: «se vuelve un espejo».
-            if (noche) drawPath(forma, lerp(C.SOMBRA, C.NEGRO, 0.4f).copy(alpha = (0.42f * (1f - 0.7f * dentro)).coerceIn(0f, 1f)))
+            if (noche) drawPath(forma, lerp(C.SOMBRA, C.NEGRO, 0.5f).copy(alpha = (0.6f * (1f - 0.6f * dentro)).coerceIn(0f, 1f)))
         }
         // ---- El vidrio de delante: el tinte, los montantes, la esclusa, el canto grueso, los brillos y las gotas.
         vidrio(v, forma, experimento)
@@ -118,7 +119,7 @@ internal object CampanaLab {
      */
     private fun DrawScope.refraccion(v: VistaLab) {
         val c = CamLab.p(CENTRO.x, 1.4f, CENTRO.z).x; val k = CamLab.k(CENTRO); val r = R * k
-        fun torcer(x: Float): Float { val d = ((x - c) / r).coerceIn(-1f, 1f); return c + r * (d * 0.62f + 0.18f * d * d * d) }
+        fun torcer(x: Float): Float { val d = ((x - c) / r).coerceIn(-1f, 1f); return c + r * (d * 0.45f + 0.3f * d * d * d) }
         val esquina = CamLab.p(SalaLab.XD, 0f, SalaLab.ZF); val esquinaArriba = CamLab.p(SalaLab.XD, SalaLab.TECHO, SalaLab.ZF)
         val linea = lerp(C.HORMIGON, C.SOMBRA, 0.5f)
         val xr = torcer(esquina.x)
@@ -127,6 +128,13 @@ internal object CampanaLab {
         val pie = Path(); var primero = true
         for (i in 0..20) { val x = CamLab.p(-0.6f + i * 0.18f, 0f, SalaLab.ZF); val p = Offset(torcer(x.x), x.y + 3f * (1f - ((x.x - c) / r).let { it * it })); if (primero) { pie.moveTo(p.x, p.y); primero = false } else pie.lineTo(p.x, p.y) }
         drawPath(pie, v.c(V3(1f, 0f, SalaLab.ZF), lerp(C.PISO, C.SOMBRA, 0.5f), ARRIBA).copy(alpha = 0.55f), style = Stroke(0.8f))
+        // El zócalo de la pared del fondo y la junta del techo, también torcidos (lo recto de detrás deja de serlo).
+        for ((y, col, a) in listOf(Triple(0.12f, C.HORMIGON, 0.4f), Triple(SalaLab.TECHO - 0.05f, C.SOMBRA, 0.35f))) {
+            val linea2 = Path(); var ini = true
+            for (i in 0..20) { val x = CamLab.p(-0.6f + i * 0.18f, y, SalaLab.ZF); val d = ((x.x - c) / r).coerceIn(-1f, 1f)
+                val p = Offset(torcer(x.x), x.y + (if (y > 1f) -4f else 4f) * (1f - d * d)); if (ini) { linea2.moveTo(p.x, p.y); ini = false } else linea2.lineTo(p.x, p.y) }
+            drawPath(linea2, v.c(V3(1f, y, SalaLab.ZF), lerp(col, C.SOMBRA, 0.4f), FRENTE).copy(alpha = a), style = Stroke(0.7f))
+        }
         // El tubo del canal de cables de la pared derecha, que baja torcido.
         val t = CamLab.p(SalaLab.XD - 0.05f, 2.0f, 5.6f)
         drawLine(v.c(V3(SalaLab.XD, 2f, 5.6f), lerp(C.ACERO, C.HORMIGON, 0.3f), PiezasLab.IZQ).copy(alpha = 0.4f), Offset(torcer(t.x), t.y - 40f), Offset(torcer(t.x) + 2f, t.y + 30f), 1.2f)
@@ -143,9 +151,19 @@ internal object CampanaLab {
         val rack = lerp(C.ACERO, C.NEGRO, 0.35f)
         for (x in listOf(0.0f, 1.2f)) for (b in listOf(0f, -0.34f)) palo(v, mk.w(x, b, 0f), mk.w(x, b, 1.95f), 0.03f, rack, filo = false)
         val tablas = if (experimento) listOf(0.55f, 1.05f, 1.55f) else listOf(0.45f, 1.0f, 1.55f)
+        val luz = v.campana; val colLuz = EscenaLaboratorio.colorDeLaCampana(m)
         for ((ti, y) in tablas.withIndex()) {
             cajaEn(v, mk, 0f, 1.2f, -0.34f, 0f, y - 0.03f, y, rack)
-            for (i in 0..3) bandejaDentro(v, mk, 0.05f + i * 0.29f, -0.26f, y, grama, ti * 4 + i)
+            // La tira de luz bajo la tabla de encima, y su claridad sobre las bandejas.
+            val yt = min((tablas.getOrNull(ti + 1) ?: 1.95f) - 0.035f, 1.92f)
+            if (luz > 0.02f) {
+                val a = mk.p(0.03f, -0.17f, yt); val b = mk.p(1.17f, -0.17f, yt)
+                val a2 = mk.p(0f, -0.06f, y + 0.02f); val b2 = mk.p(1.2f, -0.06f, y + 0.02f)
+                drawPath(poligono(a, b, b2, a2), Brush.verticalGradient(0f to colLuz.copy(alpha = 0.3f * luz), 1f to colLuz.copy(alpha = 0.1f * luz), startY = a.y, endY = a2.y), blendMode = BlendMode.Plus)
+                drawLine(rack, a + Offset(0f, -0.8f), b + Offset(0f, -0.8f), 1.6f)
+                drawLine(lerp(colLuz, Color.White, 0.6f).copy(alpha = (0.95f * luz + 0.05f).coerceIn(0f, 1f)), a, b, 1.0f, StrokeCap.Round)
+            }
+            for (i in 0..3) bandejaDentro(v, mk, 0.05f + i * 0.29f, -0.26f, y, grama, ti * 4 + i, luz, colLuz)
         }
         // Las mangueras que entran por el zócalo (el agua y el aire de arriba) y el higrómetro colgado del estante.
         val m0 = CamLab.p(CENTRO.x - 0.9f, ZOCALO + 0.05f, CENTRO.z - 0.4f)
@@ -172,20 +190,45 @@ internal object CampanaLab {
             val cm = PiezasLab.Marco(V3(CENTRO.x + x, ZOCALO, CENTRO.z - 0.65f + 0.1f * i), V3(1f, 0f, 0.2f * (i - 1)).unidad())
             cajaEn(v, cm, 0f, 0.38f, -0.15f, 0.15f, 0f, 0.26f, C.MADERA) { cara, f -> if (cara == 3) drawPath(f, v.c(cm.w(0.19f, 0f, 0.26f), C.TIERRA, ARRIBA).copy(alpha = 0.85f)) }
         }
-        // La lámpara de dentro, colgada.
-        val lp = V3(CENTRO.x, 2.25f, CENTRO.z)
-        palo(v, V3(lp.x, ALTO - 0.15f, lp.z), lp, 0.008f, C.NEGRO, filo = false)
-        drawCircle(lerp(Color(0xFFFFD08A), Color.White, 0.4f), 0.06f * CamLab.k(lp), CamLab.p(lp))
+        // El farol de dentro, colgado de la tapa: la jaula de alambre, el vidrio encendido y su claridad cálida.
+        val lp = V3(CENTRO.x - 0.2f, 1.95f, CENTRO.z - 0.2f); val kl = CamLab.k(lp); val pl = CamLab.p(lp)
+        palo(v, V3(lp.x, ALTO - 0.15f, lp.z), lp + V3(0f, 0.16f, 0f), 0.008f, C.NEGRO, filo = false)
+        drawCircle(Brush.radialGradient(listOf(Color(0xFFFFC27A).copy(alpha = 0.55f), Color(0xFFFFB264).copy(alpha = 0.15f), Color.Transparent), pl, 0.6f * kl), 0.6f * kl, pl, blendMode = BlendMode.Plus)
+        drawRect(lerp(Color(0xFFFFE0A8), Color.White, 0.3f), pl - Offset(0.04f * kl, 0.07f * kl), Size(0.08f * kl, 0.14f * kl))
+        for (dx in listOf(-0.045f, 0f, 0.045f)) drawLine(lerp(C.NEGRO, C.LATON, 0.3f), pl + Offset(dx * kl, -0.09f * kl), pl + Offset(dx * kl, 0.08f * kl), 0.5f)
+        drawLine(lerp(C.NEGRO, C.LATON, 0.4f), pl + Offset(-0.06f * kl, -0.09f * kl), pl + Offset(0.06f * kl, -0.09f * kl), 0.9f)
+        drawLine(lerp(C.NEGRO, C.LATON, 0.4f), pl + Offset(-0.06f * kl, 0.08f * kl), pl + Offset(0.06f * kl, 0.08f * kl), 0.9f)
     }
 
-    /** Una bandeja de prueba en el estante de la campana, con la grama según el arco. */
-    private fun DrawScope.bandejaDentro(v: VistaLab, mk: PiezasLab.Marco, a: Float, b: Float, y: Float, grama: Grama, i: Int) {
+    /**
+     * Una bandeja de prueba en el estante de la campana, bajo su tira de luz ([luz], de color [colLuz]): la tierra gris
+     * alumbrada y la grama según el arco: nada; un hilo en una de cada cuatro; o una mata tupida, cada vez más alta, que
+     * es lo más verde y más alumbrado del cuadro.
+     */
+    private fun DrawScope.bandejaDentro(v: VistaLab, mk: PiezasLab.Marco, a: Float, b: Float, y: Float, grama: Grama, i: Int, luz: Float, colLuz: Color) {
+        val k = CamLab.k(mk.w(a, b, y))
+        fun alumbrado(c: Color): Color = lerp(v.c(mk.w(a, b, y + 0.1f), c, ARRIBA), lerp(c, colLuz, 0.15f), (0.85f * luz).coerceIn(0f, 1f))
         cajaEn(v, mk, a, a + 0.25f, b, b + 0.2f, y, y + 0.07f, lerp(C.NEGRO, C.ACERO, 0.45f)) { cara, f ->
             if (cara == 3) {
-                drawPath(f, v.c(mk.w(a + 0.12f, b + 0.1f, y + 0.07f), C.TIERRA, ARRIBA))
-                val brota = when (grama) { Grama.TIERRA -> 0; Grama.HILO -> if (i % 4 == 1) 3 else 0; Grama.MATAS, Grama.TANQUE, Grama.CAJAS -> 8 }
-                for (j in 0 until brota) { val p = mk.p(a + 0.03f + j * 0.026f, b + 0.1f, y + 0.07f); val k = CamLab.k(mk.w(a, b, y))
-                    drawLine(lerp(v.c(mk.w(a, b, y + 0.1f), C.GRAMA, ARRIBA), C.GRAMA, 0.3f), p, p + Offset(0.008f * k * (j % 3 - 1), -(0.06f + 0.02f * (j % 2)) * k), 0.7f, StrokeCap.Round) }
+                drawPath(f, alumbrado(lerp(C.TIERRA, C.HORMIGON, 0.25f)))
+                val alto = when (grama) { Grama.TIERRA, Grama.HILO -> 0f; Grama.MATAS -> 0.08f; Grama.TANQUE -> 0.1f; Grama.CAJAS -> 0.12f }
+                if (grama == Grama.HILO && i % 4 == 1) {
+                    val p = mk.p(a + 0.12f, b + 0.1f, y + 0.07f)
+                    drawLine(alumbrado(lerp(C.GRAMA, Color(0xFFB6E86A), 0.5f)), p, p + Offset(0.01f * k, -0.05f * k), 0.6f, StrokeCap.Round)
+                }
+                if (alto > 0f) {
+                    // La mata: un seto de hojas finas con la cresta mellada, la luz arriba y la sombra al pie.
+                    val verde = lerp(C.GRAMA, Color(0xFF9CD45C), 0.45f)
+                    val pie0 = mk.p(a + 0.01f, b + 0.1f, y + 0.07f); val pie1 = mk.p(a + 0.24f, b + 0.1f, y + 0.07f)
+                    val cresta = Path().apply {
+                        moveTo(pie0.x, pie0.y)
+                        for (j in 0..8) { val p = mk.p(a + 0.01f + 0.23f * j / 8f, b + 0.1f, y + 0.07f + alto * (if (j % 2 == 0) 1f else 0.72f)); lineTo(p.x, p.y) }
+                        lineTo(pie1.x, pie1.y); close()
+                    }
+                    drawPath(cresta, Brush.verticalGradient(0f to alumbrado(lerp(verde, Color(0xFFE8F6A0), 0.35f)), 1f to alumbrado(C.HOJA_OSC), startY = pie0.y - alto * k, endY = pie0.y))
+                    for (j in 0..5) { val p = mk.p(a + 0.03f + j * 0.04f, b + 0.1f, y + 0.07f + alto * 0.8f)
+                        drawLine(alumbrado(lerp(verde, Color.White, 0.25f)), p, p + Offset(0.01f * k * (j % 3 - 1), -0.035f * k), 0.5f, StrokeCap.Round) }
+                }
             }
         }
     }
@@ -247,15 +290,53 @@ internal object CampanaLab {
             val q = V3(CENTRO.x + n.x * R, 0f, CENTRO.z + n.z * R)
             if (!CamLab.seVe(V3(q.x, 1f, q.z), n)) continue
             val dist = (f.w - V3(q.x, 1.3f, q.z)).largo()
-            val k = (f.fuerza / (1f + dist * dist / (f.alcance * f.alcance * 3f)) * (if (v.noche) 1.4f else 0.8f)).coerceIn(0f, 1f)
+            val k = (f.fuerza / (1f + dist * dist / (f.alcance * f.alcance * 3f)) * (if (v.noche) 1.8f else 1.1f)).coerceIn(0f, 1f)
             if (k < 0.04f) continue
             val p0 = CamLab.p(q.x, ALTO - 0.2f, q.z); val p1 = CamLab.p(q.x, ZOCALO + 0.15f, q.z)
-            val ancho = (if (f.de == Fuente.PANTALLA || f.de == Fuente.PUERTA) 0.09f else 0.035f) * CamLab.k(q)
+            if (f.de == Fuente.PANTALLA) { reflejoDeLaPantalla(v, q, k); continue }
+            if (f.de == Fuente.PUERTA) { reflejoDeLaPuerta(f, q, k); continue }
+            val ancho = (if (f.de == Fuente.MESA) 0.05f else 0.035f) * CamLab.k(q)
             val altoLuz = ((f.w.y - ZOCALO) / (ALTO - ZOCALO)).coerceIn(0.15f, 0.9f)
             val centroY = p1.y + (p0.y - p1.y) * altoLuz
             drawRect(Brush.verticalGradient(0f to Color.Transparent, 0.3f to f.color.copy(alpha = 0.35f * k), (centroY - p0.y) / (p1.y - p0.y).coerceAtLeast(1f) to f.color.copy(alpha = 0.75f * k), 0.85f to f.color.copy(alpha = 0.25f * k), 1f to Color.Transparent, startY = p0.y, endY = p1.y),
                 Offset(p0.x - ancho / 2f, p0.y), Size(ancho, p1.y - p0.y), blendMode = BlendMode.Screen)
+            // El punto de la luz, donde la devuelve más fuerte.
+            drawOval(lerp(f.color, Color.White, 0.6f).copy(alpha = (0.8f * k).coerceIn(0f, 1f)), Offset(p0.x - ancho * 0.35f, centroY - ancho * 1.2f), Size(ancho * 0.7f, ancho * 2.4f), blendMode = BlendMode.Screen)
         }
+        // Los dos brillos fijos del cilindro, finos y largos: el del techo (los paneles) a la izquierda del centro y su eco.
+        for ((fr, a) in listOf(0.34f to 0.32f, 0.385f to 0.16f, 0.7f to 0.1f)) {
+            val ang = anguloDelanteroEn(fr); val q0 = V3(CENTRO.x + R * cos(ang), 0f, CENTRO.z + R * sin(ang))
+            val p0 = CamLab.p(q0.x, ALTO - 0.25f, q0.z); val p1 = CamLab.p(q0.x, ZOCALO + 0.3f, q0.z)
+            drawLine(Brush.verticalGradient(0f to Color.White.copy(alpha = a * (0.4f + 0.6f * v.general)), 0.6f to Color.White.copy(alpha = a * 0.5f * (0.4f + 0.6f * v.general)), 1f to Color.Transparent, startY = p0.y, endY = p1.y), p0, p1, 0.9f, blendMode = BlendMode.Screen)
+        }
+    }
+
+    /**
+     * El reflejo de la pared de pantallas en el costado derecho: la imagen apretada y curvada por el cilindro (más estrecha
+     * arriba y abajo), con el cielo arriba, la línea de las ruinas y las juntas de los paneles. **[Aproximación]**: un
+     * espejo convexo sin cálculo exacto.
+     */
+    private fun DrawScope.reflejoDeLaPantalla(v: VistaLab, q: V3, k: Float) {
+        val img = PantallaLab.imagen(v.m); if (!img.encendida) return
+        val kk = CamLab.k(q); val p0 = CamLab.p(q.x, 2.55f, q.z); val p1 = CamLab.p(q.x, 0.95f, q.z)
+        val w = 0.13f * kk; val a = (0.55f * k + 0.1f).coerceIn(0f, 0.7f)
+        val forma = Path().apply {
+            moveTo(p0.x - w * 0.3f, p0.y); cubicTo(p0.x - w * 0.75f, p0.y + (p1.y - p0.y) * 0.3f, p1.x - w * 0.75f, p0.y + (p1.y - p0.y) * 0.7f, p1.x - w * 0.3f, p1.y)
+            lineTo(p1.x + w * 0.3f, p1.y); cubicTo(p1.x + w * 0.75f, p0.y + (p1.y - p0.y) * 0.7f, p0.x + w * 0.75f, p0.y + (p1.y - p0.y) * 0.3f, p0.x + w * 0.3f, p0.y); close()
+        }
+        val ruina = lerp(Color(0xFF8E887E), img.l.ambiente, 0.4f)
+        drawPath(forma, Brush.verticalGradient(0f to img.l.alto.copy(alpha = a), 0.45f to img.l.bajo.copy(alpha = a), 0.55f to ruina.copy(alpha = a * 0.9f), 1f to lerp(ruina, C.NEGRO, 0.4f).copy(alpha = a * 0.6f), startY = p0.y, endY = p1.y), blendMode = BlendMode.Screen)
+        for (j in 1..2) { val y = p0.y + (p1.y - p0.y) * j / 3f
+            drawPath(Path().apply { moveTo(p0.x - w * 0.62f, y + 1.2f); cubicTo(p0.x - w * 0.2f, y - 0.6f, p0.x + w * 0.2f, y - 0.6f, p0.x + w * 0.62f, y + 1.2f) }, C.NEGRO.copy(alpha = 0.35f), style = Stroke(0.6f)) }
+        drawLine(Color.White.copy(alpha = 0.5f * a), Offset(p0.x - w * 0.05f, p0.y + 3f), Offset(p1.x - w * 0.05f, p1.y - 3f), 0.6f, blendMode = BlendMode.Screen)
+    }
+
+    /** El reflejo de la puerta de vidrio en el costado izquierdo: dos hojas de su luz, con el montante oscuro en medio. */
+    private fun DrawScope.reflejoDeLaPuerta(f: Luz3, q: V3, k: Float) {
+        val kk = CamLab.k(q); val p0 = CamLab.p(q.x, 2.0f, q.z); val p1 = CamLab.p(q.x, 0.35f, q.z)
+        val w = 0.06f * kk; val a = (0.7f * k + 0.08f).coerceIn(0f, 0.85f)
+        drawRect(Brush.verticalGradient(0f to f.color.copy(alpha = a * 0.7f), 0.7f to f.color.copy(alpha = a), 1f to Color.Transparent, startY = p0.y, endY = p1.y), Offset(p0.x - w / 2f, p0.y), Size(w, p1.y - p0.y), blendMode = BlendMode.Screen)
+        drawLine(C.NEGRO.copy(alpha = 0.4f), Offset(p0.x, p0.y), Offset(p1.x, p1.y), (w * 0.12f).coerceAtLeast(0.5f))
     }
 
     /** Las gotas de condensación por dentro: más en la mitad de abajo, cada una con su punto de luz, alguna con su chorrera. */

@@ -424,7 +424,7 @@ internal object EscenaLaboratorio : EscenaVida {
         val l = lucesDeArriba(m)
         val c = lerp(lerp(l.medio, l.bajo, 0.5f), l.ambiente, 0.3f)
         // La cámara de arriba exagera el color de la hora (es lo que da la hora a la sala): dorada al alba, naranja por la tarde.
-        val deHora = when (cielo(m)) { Cielo.ALBA -> lerp(c, Color(0xFFFFCC8C), 0.25f); Cielo.TARDE -> lerp(c, Color(0xFFFFB878), 0.4f); Cielo.DIA, Cielo.NOCHE -> c }
+        val deHora = when (cielo(m)) { Cielo.ALBA -> lerp(c, Color(0xFFFFB866), 0.7f); Cielo.TARDE -> lerp(c, Color(0xFFFF9050), 0.75f); Cielo.DIA -> lerp(c, Color(0xFFCFE4FF), 0.3f); Cielo.NOCHE -> c }
         val conSol = if (deslumbra(m)) lerp(deHora, Color(0xFFFFF2D4), 0.65f) else deHora
         return lerp(conSol, Color(0xFF7E9AE0), (l.noche * 0.6f).coerceIn(0f, 1f))
     }
@@ -446,8 +446,8 @@ internal object EscenaLaboratorio : EscenaVida {
      */
     internal fun luces(m: Momento): Luces {
         val g = general(m); val h = m.hora.toFloat()
-        val dia = lerp(Color(0xFF41606C), Color(0xFF6A8A8E), ((h - 6f) / 6f).coerceIn(0f, 1f) * (1f - ((h - 15f) / 6f).coerceIn(0f, 1f)))
-        val tarde = lerp(dia, Color(0xFF6C6672), ((h - 15f) / 5f).coerceIn(0f, 1f) * 0.6f)
+        val dia = lerp(Color(0xFF34505C), Color(0xFF557378), ((h - 6f) / 6f).coerceIn(0f, 1f) * (1f - ((h - 15f) / 6f).coerceIn(0f, 1f)))
+        val tarde = lerp(dia, Color(0xFF5A5664), ((h - 15f) / 5f).coerceIn(0f, 1f) * 0.6f)
         val noche = if (nocheLarga(m) || apagon(m)) Color(0xFF161B30) else Color(0xFF222B4C)
         val amb = lerp(noche, tarde, g)
         val bruma = lerp(Color(0xFF1C2238), Color(0xFF8C98A0), g)

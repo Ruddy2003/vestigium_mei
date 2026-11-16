@@ -29,7 +29,7 @@ internal object ObjetosLaboratorio {
     val GRANDES = setOf("bata", "maceta")
 
     /** Los objetos que son también cosas fijas del laboratorio (en la mesa, en la percha, en el estante). */
-    val DE_LA_SALA = setOf("microscopio", "taza", "tableta", "cuaderno", "semilla", "pipeta", "bata", "guantes", "maceta")
+    val DE_LA_SALA = setOf("microscopio", "taza", "tableta", "cuaderno", "semilla", "pipeta", "bata", "guantes", "maceta", "auriculares")
 
     /** Los objetos del laboratorio que este contrato ya dibuja él mismo el día que tocan. Vacío mientras no haya dibujos. */
     val DIBUJADOS: Set<String> = emptySet()

@@ -39,15 +39,15 @@ internal object LucesLab {
 
     fun de(v: VistaLab): List<Luz3> = buildList {
         // Los paneles de la luz general: blancos, desde el techo, parejos. No tumban sombras (la luz es «pareja»).
-        if (v.general > 0.01f) for ((x, z) in listOf(-1.2f to 6.1f, 1.45f to 6.1f, -1.2f to 4.2f, 1.45f to 4.2f)) add(Luz3(Fuente.PANEL, V3(x, SalaLab.TECHO - 0.06f, z), Color(0xFFF4F4EC), 0.06f * v.general, 2.0f, cono = 0.15f, tumba = false))
+        if (v.general > 0.01f) for ((x, z) in listOf(-1.2f to 6.1f, 1.45f to 6.1f, -1.2f to 4.2f, 1.45f to 4.2f)) add(Luz3(Fuente.PANEL, V3(x, SalaLab.TECHO - 0.06f, z), Color(0xFFF4F4EC), 0.05f * v.general, 2.0f, cono = 0.15f, tumba = false))
         // Las lámparas de cultivo: blancas de día, violetas de noche.
         for (i in 0 until EscenaLaboratorio.LAMPARAS) {
-            val k = if (v.noche) v.cultivoNoche * 0.7f else v.cultivo[i] * 1.5f
+            val k = if (v.noche) v.cultivoNoche * 0.7f else v.cultivo[i] * 2.0f
             if (k <= 0.005f) continue
             val w = MesaLab.lampara(i) - V3(0f, 0.04f, 0f)
-            add(Luz3(Fuente.CULTIVO, w, v.colorCultivo, k, 1.3f, cono = 0.92f))
+            add(Luz3(Fuente.CULTIVO, w, v.colorCultivo, k, 1.4f, cono = 0.9f))
             // El rebote del charco en el tablero: la luz que sube a la pared, al techo y a lo de alrededor (sin sombra).
-            if (k > 0.05f) add(Luz3(Fuente.REBOTE, V3(w.x, MesaLab.ALTO + 0.12f, w.z), lerp(v.colorCultivo, ColorLaboratorio.TIERRA, 0.25f), 0.22f * k, 1.3f, tumba = false))
+            if (k > 0.05f) add(Luz3(Fuente.REBOTE, V3(w.x, MesaLab.ALTO + 0.12f, w.z), lerp(v.colorCultivo, ColorLaboratorio.TIERRA, 0.25f), 0.18f * k, 1.3f, tumba = false))
         }
         // La lámpara de su mesa: cálida, baja, con su pantalla.
         if (v.mesa > 0.01f) {
@@ -57,11 +57,11 @@ internal object LucesLab {
         // La pantalla de la Vigía: el color del cielo de arriba, que tiñe la pared, la campana y el suelo de su lado.
         if (v.pantalla > 0.01f) {
             val deslumbra = EscenaLaboratorio.deslumbra(v.m)
-            add(Luz3(Fuente.PANTALLA, V3(SalaLab.XD - 0.5f, 2.0f, 3.45f), v.colorPantalla, (if (v.noche) 0.85f else 0.9f) * v.pantalla * (if (deslumbra) 1.5f else 1f), if (deslumbra) 3.0f else 1.9f, tumba = v.noche || deslumbra))
+            add(Luz3(Fuente.PANTALLA, V3(SalaLab.XD - 0.5f, 2.0f, 3.45f), v.colorPantalla, (if (v.noche) 0.85f else 1.25f) * v.pantalla * (if (deslumbra) 1.4f else 1f), if (deslumbra) 3.2f else 2.4f, tumba = v.noche || deslumbra))
         }
         // La puerta: el violeta de los jardines de noche (o su blanco, la noche de la luz larga); de día, su claridad; con aviso, el rojo.
-        val kp = when { v.roja -> 0.75f; v.noche -> 0.85f * max(v.violeta, if (v.jardinBlanco) 1f else 0f); else -> 0.22f * v.general }
-        if (kp > 0.01f) add(Luz3(Fuente.PUERTA, V3(-0.22f, 1.15f, SalaLab.ZF - 0.2f), v.colorPuerta, kp, 1.5f, tumba = v.noche || v.roja))
+        val kp = when { v.roja -> 0.75f; v.noche -> 0.85f * max(v.violeta, if (v.jardinBlanco) 1f else 0f); else -> 0.55f * v.general }
+        if (kp > 0.01f) add(Luz3(Fuente.PUERTA, V3(-0.22f, 1.0f, SalaLab.ZF - 0.25f), v.colorPuerta, kp, if (v.noche) 1.5f else 1.9f, tumba = v.noche || v.roja))
         // La campana, de noche o en el experimento: el resplandor ámbar de dentro.
         if (v.campana > 0.01f) add(Luz3(Fuente.CAMPANA, V3(CampanaLab.CENTRO.x, 1.3f, CampanaLab.CENTRO.z), EscenaLaboratorio.colorDeLaCampana(v.m), 0.6f * v.campana, 1.3f, tumba = false))
         // Las velas de la noche larga y la linterna del apagón.
@@ -100,8 +100,22 @@ internal object LuzLab {
         val suelo = SalaLab.formaDelSuelo()
         // La pantalla tiñe su pared alrededor del marco, el techo de encima y el suelo de debajo.
         v.luces.firstOrNull { it.de == Fuente.PANTALLA }?.let { f ->
-            clipPath(SalaLab.formaDerecha()) { halo(V3(SalaLab.XD - 0.01f, 2.0f, 3.5f), 4.6f, 3.6f, f.color, 0.5f * f.fuerza) }
-            clipPath(suelo) { charco(V3(SalaLab.XD - 0.7f, 0f, 3.4f), 1.7f, f.color, 0.4f * f.fuerza) }
+            clipPath(SalaLab.formaDerecha()) {
+                halo(V3(SalaLab.XD - 0.01f, 2.0f, 3.5f), 5.6f, 4.4f, f.color, 0.75f * f.fuerza)
+                // El derrame bajo el marco, sobre el estante de las semillas.
+                halo(V3(SalaLab.XD - 0.01f, 0.8f, 3.6f), 3.2f, 1.4f, f.color, 0.5f * f.fuerza)
+            }
+            clipPath(suelo) { charco(V3(SalaLab.XD - 0.45f, 0f, 3.7f), 1.3f, f.color, 0.5f * f.fuerza, duro = 0.3f) }
+            clipPath(SalaLab.formaDelTecho()) { halo(V3(SalaLab.XD - 0.6f, SalaLab.TECHO, 3.5f), 3f, 1.6f, f.color, 0.3f * f.fuerza) }
+        }
+        // La luz de la puerta en su pared: la claridad que se derrama alrededor del marco (blanca de día, violeta de noche).
+        v.luces.firstOrNull { it.de == Fuente.PUERTA }?.let { f ->
+            clipPath(SalaLab.formaDelFondo()) { halo(V3((SalaLab.PX0 + SalaLab.PX1) / 2f, 1.2f, SalaLab.ZF - 0.01f), 3.4f, 3.0f, f.color, 0.42f * f.fuerza) }
+            clipPath(SalaLab.formaDelTecho()) { halo(V3((SalaLab.PX0 + SalaLab.PX1) / 2f, SalaLab.TECHO, SalaLab.ZF - 0.6f), 2.2f, 1.0f, f.color, 0.25f * f.fuerza) }
+        }
+        // La lámpara de su mesa: su claridad en la campana y en el suelo de delante.
+        v.luces.firstOrNull { it.de == Fuente.MESA }?.let { f ->
+            clipPath(suelo) { charco(V3(f.w.x + 0.5f, 0f, f.w.z + 0.6f), 1.1f, f.color, 0.25f * f.fuerza) }
         }
         // El rebote de los charcos de las lámparas de cultivo del fondo en la pared, sobre el extremo de la mesa.
         clipPath(SalaLab.formaDelFondo()) {
@@ -128,18 +142,25 @@ internal object LuzLab {
     private fun DrawScope.puerta(v: VistaLab) {
         val f = v.luces.firstOrNull { it.de == Fuente.PUERTA } ?: return
         val k = f.fuerza
-        val x0 = SalaLab.PX0; val x1 = SalaLab.PX1; val z = SalaLab.ZF
-        val mancha = CamLab.forma(listOf(V3(x0, 0f, z), V3(x1, 0f, z), V3(x1 + 0.9f, 0f, z - 3.6f), V3(x0 - 0.6f, 0f, z - 3.6f)))
-        val a = CamLab.p(0f, 0f, z); val b = CamLab.p(0f, 0f, z - 3.6f)
-        drawPath(mancha, Brush.verticalGradient(0f to f.color.copy(alpha = (0.32f * k).coerceIn(0f, 1f)), 0.5f to f.color.copy(alpha = (0.12f * k).coerceIn(0f, 1f)), 1f to Color.Transparent, startY = a.y, endY = b.y), blendMode = BlendMode.Plus)
-        // El reflejo de la puerta encendida: la columna de luz que baja del umbral, rota en trazos.
+        // La luz viene de la nave, baja y lejos: cada punto del hueco de la puerta, por debajo de su altura, cae en el
+        // suelo más acá cuanto más alto está. Dos hojas, con la sombra del montante en medio y la de los dos marcos.
+        val s = V3(-0.25f, 1.3f, SalaLab.PZ1 + 1.5f)
+        fun cae(x: Float, y: Float): V3 { val t = s.y / (s.y - y); return V3(s.x + (x - s.x) * t, 0f, s.z + (SalaLab.ZF - s.z) * t) }
+        val alto = 0.72f; val medio = (SalaLab.PX0 + SalaLab.PX1) / 2f
+        val a = CamLab.p(0f, 0f, SalaLab.ZF); val b = CamLab.p(cae(0f, alto))
+        for ((x0, x1) in listOf(SalaLab.PX0 + 0.04f to medio - 0.035f, medio + 0.035f to SalaLab.PX1 - 0.04f)) {
+            val hoja = CamLab.forma(listOf(cae(x0, 0f), cae(x1, 0f), cae(x1, alto), cae(x0, alto)))
+            for (ancho in listOf(5f, 2.5f)) drawPath(hoja, f.color.copy(alpha = (0.05f * k).coerceIn(0f, 1f)), style = Stroke(ancho), blendMode = BlendMode.Plus)
+            drawPath(hoja, Brush.verticalGradient(0f to f.color.copy(alpha = (0.5f * k).coerceIn(0f, 1f)), 0.55f to f.color.copy(alpha = (0.26f * k).coerceIn(0f, 1f)), 1f to f.color.copy(alpha = (0.06f * k).coerceIn(0f, 1f)), startY = a.y, endY = b.y), blendMode = BlendMode.Plus)
+        }
+        // El reflejo de la puerta encendida en el pulido: la columna de luz que baja del umbral, rota en trazos.
         val az = Azar(Semilla.de("laboratorio", "reflejo puerta"))
-        val pa = CamLab.p(x0, 0f, z); val pb = CamLab.p(x1, 0f, z)
-        var y = pa.y + 1f; val largo = 70f
+        val pa = CamLab.p(SalaLab.PX0, 0f, SalaLab.ZF); val pb = CamLab.p(SalaLab.PX1, 0f, SalaLab.ZF)
+        var y = pa.y + 1f; val largo = 60f
         while (y < pa.y + largo) {
             val t = (y - pa.y) / largo
             val w = (pb.x - pa.x) * (0.45f + 0.3f * az.real()); val cx = (pa.x + pb.x) / 2f + (az.real() - 0.5f) * 6f * t
-            drawLine(f.color.copy(alpha = (0.28f * k * (1f - t) * (0.5f + 0.5f * az.real())).coerceIn(0f, 1f)), Offset(cx - w / 2f, y), Offset(cx + w / 2f, y), 1.1f, StrokeCap.Round, blendMode = BlendMode.Plus)
+            drawLine(f.color.copy(alpha = (0.3f * k * (1f - t) * (0.5f + 0.5f * az.real())).coerceIn(0f, 1f)), Offset(cx - w / 2f, y), Offset(cx + w / 2f, y), 1.1f, StrokeCap.Round, blendMode = BlendMode.Plus)
             y += 1.6f + 2f * t
         }
     }
@@ -162,8 +183,15 @@ internal object LuzLab {
         val dentro = (0..16).map { i -> val a = ang - 0.75f + 1.5f * i / 16f; val e = 1.08f + 0.08f * sin(Math.PI.toFloat() * i / 16f); CamLab.p(c.x + r * e * cos(a), 0f, c.z + r * e * sin(a)) }
         val forma = poligono(fuera + dentro.reversed())
         val k = (peso * 0.8f).coerceIn(0f, 1f)
-        drawPath(forma, col.copy(alpha = 0.42f * k), blendMode = BlendMode.Plus)
-        drawPath(forma, col.copy(alpha = 0.16f * k), style = Stroke(3f), blendMode = BlendMode.Plus)
+        drawPath(forma, col.copy(alpha = 0.55f * k), blendMode = BlendMode.Plus)
+        drawPath(forma, col.copy(alpha = 0.2f * k), style = Stroke(3f), blendMode = BlendMode.Plus)
+        // Las venas de luz que el vidrio curvo junta en el suelo: tres arcos finos y brillantes.
+        for (j in 0..2) {
+            val e = 1.14f + 0.09f * j; val a0 = ang - 0.55f + 0.12f * j; val a1 = ang + 0.5f - 0.1f * j
+            val pts = (0..10).map { i -> val a = a0 + (a1 - a0) * i / 10f; CamLab.p(c.x + r * (e + 0.04f * sin(i * 1.7f + j)) * cos(a), 0f, c.z + r * (e + 0.04f * sin(i * 1.7f + j)) * sin(a)) }
+            val camino = Path().apply { moveTo(pts[0].x, pts[0].y); for (p in pts.drop(1)) lineTo(p.x, p.y) }
+            drawPath(camino, lerp(col, Color.White, 0.5f).copy(alpha = (0.45f * k).coerceIn(0f, 1f)), style = Stroke(0.8f, cap = StrokeCap.Round), blendMode = BlendMode.Plus)
+        }
     }
 
     /**
@@ -198,7 +226,7 @@ internal object LuzLab {
             for (f in v.luces) {
                 if (f.fuerza < 0.03f) continue
                 when (f.de) {
-                    Fuente.CULTIVO -> charco(V3(f.w.x, MesaLab.ALTO, f.w.z), radio(f, f.w.y - MesaLab.ALTO), f.color, 0.55f * f.fuerza, duro = 0.55f)
+                    Fuente.CULTIVO -> { val r = radio(f, f.w.y - MesaLab.ALTO); charco(V3(f.w.x, MesaLab.ALTO, f.w.z), r, f.color, 0.42f * f.fuerza, duro = 0.72f); charco(V3(f.w.x, MesaLab.ALTO, f.w.z), r * 0.6f, lerp(f.color, Color.White, 0.3f), 0.3f * f.fuerza, duro = 0.8f) }
                     Fuente.MESA -> charco(V3(f.w.x, MesaLab.ALTO, f.w.z), radio(f, f.w.y - MesaLab.ALTO) * 1.2f, f.color, 0.75f * f.fuerza, duro = 0.45f)
                     Fuente.VELA -> charco(V3(f.w.x, MesaLab.ALTO, f.w.z), 0.45f, f.color, 0.6f * f.fuerza)
                     Fuente.LINTERNA -> charco(MesaLab.MK.w(1.5f, 0.35f, MesaLab.ALTO), 0.4f, f.color, 0.7f * f.fuerza)
@@ -277,7 +305,7 @@ internal object LuzLab {
                     val cz = CamLab.hondo(f.w.x, f.w.z); val k = CamLab.F / cz
                     val p0 = CamLab.p(f.w); val p1 = CamLab.p(f.w.x, MesaLab.ALTO, f.w.z)
                     val haz = Path().apply { moveTo(p0.x - boca * k, p0.y); lineTo(p0.x + boca * k, p0.y); lineTo(p1.x + r * k, p1.y); lineTo(p1.x - r * k, p1.y); close() }
-                    val fuerza = (if (f.de == Fuente.MESA) 0.07f else 0.045f) * f.fuerza
+                    val fuerza = (if (f.de == Fuente.MESA) 0.07f else 0.06f) * f.fuerza
                     drawPath(haz, Brush.verticalGradient(0f to f.color.copy(alpha = (1.4f * fuerza).coerceIn(0f, 1f)), 0.5f to f.color.copy(alpha = (0.6f * fuerza).coerceIn(0f, 1f)), 1f to f.color.copy(alpha = (0.35f * fuerza).coerceIn(0f, 1f)), startY = p0.y, endY = p1.y), blendMode = BlendMode.Plus)
                     // El polvo, en motas quietas a lo largo del haz.
                     repeat(if (f.de == Fuente.MESA) 8 else 14) {
@@ -310,8 +338,21 @@ internal object LuzLab {
      * se ve dónde está la luz.
      */
     fun DrawScope.velo(v: VistaLab) {
-        val col = if (v.noche) lerp(C.SOMBRA, Color(0xFF141A34), 0.4f) else lerp(C.SOMBRA, C.VIDRIO, 0.2f)
-        drawRect(Brush.radialGradient(0f to Color.Transparent, 0.5f to Color.Transparent, 1f to col.copy(alpha = if (v.noche) 0.55f else 0.32f), center = Offset(170f, 150f), radius = 290f), Offset.Zero, Size(ANCHO, ALTO), blendMode = BlendMode.Multiply)
+        // La media sala que tiñe la pantalla: dorada al alba, naranja por la tarde, apenas fría a mediodía (es lo que separa
+        // las 17:30 de las 13:00). Un tinte que multiplica (quita el azul) y una claridad que suma, desde la pantalla.
+        val kh = when (EscenaLaboratorio.cielo(v.m)) {
+            EscenaLaboratorio.Cielo.ALBA, EscenaLaboratorio.Cielo.TARDE -> 1f
+            EscenaLaboratorio.Cielo.DIA -> 0.3f
+            EscenaLaboratorio.Cielo.NOCHE -> 0f
+        } * (v.pantalla / 0.6f).coerceAtMost(1.3f) * v.general
+        if (kh > 0.02f) {
+            val centro = CamLab.p(SalaLab.XD, 1.5f, 3.6f)
+            val tinte = lerp(Color.White, v.colorPantalla, (0.5f * kh).coerceIn(0f, 1f))
+            drawRect(Brush.radialGradient(0f to tinte, 0.5f to lerp(Color.White, tinte, 0.7f), 1f to Color.White, center = centro, radius = 250f), Offset.Zero, Size(ANCHO, ALTO), blendMode = BlendMode.Multiply)
+            drawRect(Brush.radialGradient(0f to v.colorPantalla.copy(alpha = (0.14f * kh).coerceIn(0f, 1f)), 0.6f to v.colorPantalla.copy(alpha = (0.05f * kh).coerceIn(0f, 1f)), 1f to Color.Transparent, center = centro, radius = 230f), Offset.Zero, Size(ANCHO, ALTO), blendMode = BlendMode.Plus)
+        }
+        val col = if (v.noche) lerp(C.SOMBRA, Color(0xFF141A34), 0.4f) else lerp(C.SOMBRA, Color(0xFF2E6A6A), 0.35f)
+        drawRect(Brush.radialGradient(0f to Color.Transparent, 0.45f to Color.Transparent, 1f to col.copy(alpha = if (v.noche) 0.55f else 0.42f), center = Offset(170f, 150f), radius = 280f), Offset.Zero, Size(ANCHO, ALTO), blendMode = BlendMode.Multiply)
     }
 
     // =================================================================

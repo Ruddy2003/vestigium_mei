@@ -51,7 +51,7 @@ internal object MesaLab {
     const val GRUESO = 0.05f
 
     /** Dónde cuelga cada lámpara de cultivo (a lo largo, de lado, de alto), de la del fondo a la cercana. */
-    val LAMPARAS = listOf(Triple(3.95f, 0.62f, 2.42f), Triple(3.25f, 0.38f, 2.3f), Triple(2.55f, 0.66f, 2.48f), Triple(1.8f, 0.4f, 2.34f), Triple(1.0f, 0.42f, 2.46f))
+    val LAMPARAS = listOf(Triple(3.95f, 0.34f, 2.3f), Triple(3.25f, 0.27f, 2.16f), Triple(2.55f, 0.33f, 2.26f), Triple(1.88f, 0.26f, 2.08f), Triple(1.22f, 0.3f, 2.2f))
 
     /** Dónde está la lámpara de su mesa (la bombilla, bajo la pantalla) y dónde cae su luz. */
     val LAMPARA_MESA = MK.w(0.36f, 0.22f, ALTO + 0.42f)
@@ -59,18 +59,36 @@ internal object MesaLab {
     /** El claro de la mesa más cercano: ahí va el objeto chico del día. */
     val CLARO = MK.w(0.2f, 0.2f, ALTO)
 
-    /** La bandeja cuarenta y siete: la que germina. */
-    private const val B47 = 7
+    /** La bandeja cuarenta y siete: la que germina (la cuarta de la segunda fila, bajo la lámpara cercana del medio). */
+    private const val B47 = 15
+
+    /** Las cuatro filas de bandejas: de lado ([FILAS]) y desde dónde empiezan a lo largo. */
+    private val FILAS = listOf(0.05f to 1.15f, 0.26f to 1.15f, 0.47f to 1.42f, 0.68f to 2.23f)
+    private const val PASO = 0.27f
 
     // ---------------------------------------------------------------- Las cosas de la mesa
 
-    /** Una bandeja de la mesa: dónde está (a lo largo, de lado) y su número en la fila. */
-    class Bandeja(val a: Float, val b: Float, val i: Int)
+    /** Una bandeja de la mesa: dónde está (a lo largo, de lado), su fila y su número. */
+    class Bandeja(val a: Float, val b: Float, val fila: Int, val i: Int)
 
+    /** Las bandejas, en cuatro filas exactas que se alejan (las de la mesa son unas cuarenta de las doscientas). */
     val BANDEJAS: List<Bandeja> = buildList {
         var i = 0
-        for (fila in 0..1) for (j in 0 until 9) add(Bandeja(1.62f + j * 0.285f, 0.47f + fila * 0.22f, i++))
-        for (j in 0 until 4) add(Bandeja(3.33f + j * 0.285f, 0.24f, i++))
+        for ((f, fila) in FILAS.withIndex()) { var a = fila.second; while (a + 0.24f <= LARGO - 0.04f) { add(Bandeja(a, fila.first, f, i++)); a += PASO } }
+    }
+
+    /** El orden en que brotan las bandejas desde que germina la cuarenta y siete: las de alrededor primero. */
+    private val ORDEN_DE_BROTE: List<Int> = BANDEJAS.sortedBy { val d = BANDEJAS[B47]; (it.a - d.a) * (it.a - d.a) + 3f * (it.b - d.b) * (it.b - d.b) }.map { it.i }
+
+    /** El sitio de Lauro: el trozo de mesa de su lado, junto al canto, desde que llega hasta que se va (y en el cierre, intacto). */
+    private fun sitioDeLauro(m: Momento) = EscenaLaboratorio.lauro(m) || EscenaLaboratorio.cierre(m)
+
+    /** Si hay bandeja en [bd] hoy: el tanque y las cajas ocupan el fondo; el sitio de Lauro, las dos primeras de su lado. */
+    private fun hayBandeja(m: Momento, bd: Bandeja, grama: Grama): Boolean {
+        if ((grama == Grama.TANQUE || grama == Grama.CAJAS) && bd.a + 0.24f > 3.3f) return false
+        if (grama == Grama.CAJAS && !EscenaLaboratorio.arriba(m) && bd.a + 0.24f > 2.74f && bd.fila >= 2) return false
+        if (sitioDeLauro(m) && bd.fila <= 1 && bd.a < 1.65f) return false
+        return true
     }
 
     /** Si la bandeja [i] tiene la tapa puesta a esta hora: en el desayuno y recogido, todas; trabajando o comiendo, algunas levantadas. */
@@ -95,20 +113,20 @@ internal object MesaLab {
         encima(v)
     }
 
-    /** Los cuerpos de lo que hay encima de la mesa, para sus sombras en el tablero. */
+    /** Los cuerpos de lo que hay encima de la mesa, para sus sombras en el tablero (las bandejas, bajas, llevan solo su sombra de contacto). */
     private fun esqueletos(v: VistaLab): List<List<V3>> {
         fun caja(a0: Float, a1: Float, b0: Float, b1: Float, alto: Float) = listOf(MK.w(a0, b0, ALTO), MK.w(a1, b0, ALTO), MK.w(a1, b1, ALTO), MK.w(a0, b1, ALTO), MK.w(a0, b0, ALTO + alto), MK.w(a1, b0, ALTO + alto), MK.w(a1, b1, ALTO + alto), MK.w(a0, b1, ALTO + alto))
         val grama = EscenaLaboratorio.grama(v.m)
         return buildList {
-            add(caja(0.92f, 1.12f, 0.13f, 0.29f, 0.4f))                            // el microscopio
-            add(caja(2.0f, 2.3f, 0.14f, 0.42f, 0.28f))                             // la balanza en su urna
-            add(caja(2.5f, 2.82f, 0.12f, 0.24f, 0.17f))                            // la gradilla
-            add(caja(1.64f, 1.84f, 0.14f, 0.22f, 0.28f))                           // las pipetas
-            add(caja(0.25f, 0.35f, 0.43f, 0.53f, 0.09f))                           // la taza
-            add(caja(0.84f, 0.96f, 0.7f, 0.86f, 0.13f))                            // el altavoz
+            add(caja(0.82f, 1.03f, 0.08f, 0.25f, 0.42f))                           // el microscopio
+            add(caja(0.95f, 1.25f, 0.6f, 0.86f, 0.28f))                            // la balanza en su urna
+            add(caja(1.32f, 1.64f, 0.68f, 0.8f, 0.17f))                            // la gradilla
+            add(caja(1.72f, 1.92f, 0.7f, 0.78f, 0.28f))                            // las pipetas
+            add(caja(0.15f, 0.25f, 0.55f, 0.65f, 0.09f))                           // la taza
+            add(caja(0.78f, 0.9f, 0.48f, 0.64f, 0.13f))                            // el altavoz
             add(caja(0.56f, 0.68f, 0.02f, 0.12f, 0.46f))                           // el pie y el brazo de la lámpara
-            if (grama == Grama.TANQUE || grama == Grama.CAJAS) add(caja(3.3f, 4.3f, 0.18f, 0.86f, 0.22f))
-            for (bd in BANDEJAS) add(caja(bd.a, bd.a + 0.24f, bd.b, bd.b + 0.17f, 0.06f))
+            add(caja(0.46f, 0.64f, 0.75f, 0.93f, 0.48f))                           // la garrafa
+            if (grama == Grama.TANQUE || grama == Grama.CAJAS) add(caja(3.3f, 4.3f, 0.05f, 0.86f, 0.22f))
         }
     }
 
@@ -196,64 +214,104 @@ internal object MesaLab {
         // el microscopio, el plato negro, el cuaderno, la tableta, el altavoz, la taza, la comida y la lámpara.
         val conTanque = grama == Grama.TANQUE || grama == Grama.CAJAS
         val conCajas = grama == Grama.CAJAS && !EscenaLaboratorio.arriba(m)
-        for (bd in BANDEJAS.sortedByDescending { it.a }) {
-            if (conTanque && bd.a > 3.25f) continue
-            if (conCajas && bd.a > 2.7f) continue
-            bandeja(v, bd, grama)
+        // Las sombras de contacto de las filas de bandejas, una por fila.
+        for ((f, fila) in FILAS.withIndex()) {
+            val en = BANDEJAS.filter { it.fila == f && hayBandeja(m, it, grama) }; if (en.isEmpty()) continue
+            val a0 = en.minOf { it.a }; val a1 = en.maxOf { it.a } + 0.24f; val b0 = fila.first - 0.012f; val b1 = fila.first + 0.17f + 0.02f
+            drawPath(poligono(MK.p(a0, b0, ALTO + 0.001f), MK.p(a1, b0, ALTO + 0.001f), MK.p(a1, b1, ALTO + 0.001f), MK.p(a0, b1, ALTO + 0.001f)), C.SOMBRA.copy(alpha = 0.25f), blendMode = BlendMode.Multiply)
         }
+        // De lejos a cerca: las bandejas (y el tanque o las cajas al fondo), luego lo de los lados y lo de cerca.
+        for (bd in BANDEJAS.sortedByDescending { it.a }) if (hayBandeja(m, bd, grama)) bandeja(v, bd, grama)
         if (conTanque) tanque(v)
-        if (conCajas) for ((i, b) in listOf(0.52f, 0.18f).withIndex()) cajaDeGrama(v, 2.78f + 0.04f * i, b)
-        gradilla(v, 2.5f, 0.12f)
-        balanza(v, 2.0f, 0.14f)
-        pipetas(v, 1.64f, 0.14f)
-        lupa(v, if (EscenaLaboratorio.germina(m)) BANDEJAS[B47].a else 1.5f, if (EscenaLaboratorio.germina(m)) BANDEJAS[B47].b else 0.4f)
-        cuaderno(v, 1.22f, 0.5f)
-        platoNegro(v, 1.36f, 0.3f)
-        if (EscenaLaboratorio.cajaDeHilda(m)) cajaDeCarton(v, 1.0f, 0.45f)
-        microscopio(v, 0.92f, 0.13f)
-        altavoz(v, 0.98f, 0.7f)
-        tableta(v, 0.62f, 0.3f)
+        if (conCajas) for ((i, b) in listOf(0.5f, 0.75f).withIndex()) cajaDeGrama(v, 2.74f + 0.02f * i, b - 0.24f)
+        if (sitioDeLauro(m)) sitioDeLauro(v)
+        pipetas(v, 1.72f, 0.7f)
+        gradilla(v, 1.32f, 0.68f)
+        lupa(v, if (EscenaLaboratorio.germina(m)) BANDEJAS[B47].a else 1.42f, if (EscenaLaboratorio.germina(m)) BANDEJAS[B47].b else 0.5f)
+        balanza(v, 0.95f, 0.6f)
+        platoNegro(v, 1.06f, 0.38f)
+        if (EscenaLaboratorio.cajaDeHilda(m)) cajaDeCarton(v, 0.62f, 0.5f)
+        microscopio(v, 0.82f, 0.08f)
+        if (SalaLab.laSalaPinta(m, "auriculares")) auriculares(v, 0.66f, 0.66f)
+        altavoz(v, 0.78f, 0.48f)
+        tableta(v, 0.58f, 0.3f)
+        cuaderno(v, 0.32f, 0.4f)
         when (v.tarea) {
-            Tarea.DESAYUNO -> desayuno(v, 0.46f, 0.56f)
-            Tarea.COMIDA -> bandejaDeComida(v, 0.45f, 0.56f)
+            Tarea.DESAYUNO -> desayuno(v, 0.04f, 0.66f)
+            Tarea.COMIDA -> bandejaDeComida(v, 0.04f, 0.66f)
             Tarea.TRABAJO, Tarea.MUSICA, Tarea.RECOGIDO -> {}
         }
-        if (SalaLab.laSalaPinta(m, "taza")) taza(v, 0.36f, 0.42f)
+        if (SalaLab.laSalaPinta(m, "taza")) taza(v, 0.2f, 0.6f)
+        if (EscenaLaboratorio.hoyEs(m, "revision")) gafas(v, 0.42f, 0.24f)
         lamparaDeMesa(v)
-        garrafa(v, 0.3f, 0.76f)
+        garrafa(v, 0.55f, 0.84f)
+    }
+
+    /**
+     * El sitio de Lauro, junto al canto: su cuaderno cerrado, con la franja gris de los Semejantes en el lomo, el lápiz
+     * paralelo al cuaderno y la regla paralela al lápiz («en la mesa de Lauro está todo como lo dejó»). El día de la
+     * pregunta, su pipeta fuera, en el aire de la mesa.
+     */
+    private fun DrawScope.sitioDeLauro(v: VistaLab) {
+        val a = 1.18f; val b = 0.1f
+        cajaEn(v, MK, a, a + 0.22f, b, b + 0.17f, ALTO, ALTO + 0.018f, lerp(C.TELA, C.TIERRA, 0.3f)) { cara, f -> if (cara == 3) drawLine(v.c(MK.w(a, b, ALTO), lerp(C.ACERO, C.TELA, 0.3f), ARRIBA), MK.p(a + 0.02f, b + 0.002f, ALTO + 0.019f), MK.p(a + 0.2f, b + 0.002f, ALTO + 0.019f), 1.2f) }
+        palo(v, MK.w(a, b + 0.22f, ALTO + 0.006f), MK.w(a + 0.18f, b + 0.22f, ALTO + 0.006f), 0.008f, C.AMARILLO, filo = false)
+        drawPath(poligono(MK.p(a, b + 0.26f, ALTO + 0.003f), MK.p(a + 0.3f, b + 0.26f, ALTO + 0.003f), MK.p(a + 0.3f, b + 0.29f, ALTO + 0.003f), MK.p(a, b + 0.29f, ALTO + 0.003f)), v.c(MK.w(a, b + 0.28f, ALTO), lerp(C.ACERO, Color.White, 0.3f), ARRIBA))
+        if (EscenaLaboratorio.hoyEs(v.m, "pregunta")) { val p0 = MK.w(a + 0.1f, b + 0.06f, ALTO + 0.15f); palo(v, p0, MK.w(a + 0.14f, b + 0.08f, ALTO + 0.04f), 0.007f, lerp(C.VIDRIO, Color.White, 0.3f), filo = false)
+            drawCircle(v.c(p0, lerp(C.AVISO, C.BARRO, 0.5f), ARRIBA), (0.013f * CamLab.k(p0)).coerceAtLeast(0.6f), CamLab.p(p0)) }
+    }
+
+    /** Los auriculares grandes, de los que tapan la oreja entera, dejados sobre la mesa con el cable enrollado. */
+    private fun DrawScope.auriculares(v: VistaLab, a: Float, b: Float) {
+        val c = MK.w(a, b, ALTO); val k = CamLab.k(c); val negro = lerp(C.NEGRO, C.ACERO, 0.2f)
+        for (s in listOf(-1f, 1f)) { val q = MK.w(a + s * 0.07f, b, ALTO + 0.025f); PiezasLab.run { cilindro(v, MK.w(a + s * 0.07f, b, ALTO), 0.045f, 0.035f, negro, tapa = lerp(negro, C.TELA, 0.15f)) } }
+        val d0 = MK.p(a - 0.07f, b, ALTO + 0.035f); val d1 = MK.p(a + 0.07f, b, ALTO + 0.035f); val cm = MK.p(a, b - 0.05f, ALTO + 0.1f)
+        drawPath(Path().apply { moveTo(d0.x, d0.y); cubicTo(d0.x, cm.y, d1.x, cm.y, d1.x, d1.y) }, v.c(c, negro, V3(0f, 0.6f, -1f)), style = Stroke((0.016f * k).coerceAtLeast(0.8f), cap = StrokeCap.Round))
+        val cab = MK.p(a + 0.12f, b + 0.06f, ALTO + 0.003f)
+        drawOval(v.c(c, negro, ARRIBA), cab - Offset(0.03f * k, 0.008f * k), Size(0.06f * k, 0.016f * k), style = Stroke(0.5f))
+    }
+
+    /** Las gafas, el día de la revisión médica («Se pone las gafas»). */
+    private fun DrawScope.gafas(v: VistaLab, a: Float, b: Float) {
+        val k = CamLab.k(MK.w(a, b, ALTO)); val montura = v.c(MK.w(a, b, ALTO), lerp(C.NEGRO, C.LATON, 0.3f), ARRIBA)
+        for (s in listOf(-1f, 1f)) { val q = MK.p(a + s * 0.035f, b, ALTO + 0.01f); drawOval(montura, q - Offset(0.025f * k, 0.009f * k), Size(0.05f * k, 0.018f * k), style = Stroke(0.5f)) }
     }
 
     /** Una bandeja de tierra gris de arriba, con su tapa (o levantada, apoyada al lado), su cinta de color y su brote. */
     private fun DrawScope.bandeja(v: VistaLab, bd: Bandeja, grama: Grama) {
         val a = bd.a; val b = bd.b; val la = 0.24f; val lb = 0.17f; val alto = 0.055f
-        val brote = when (grama) { Grama.TIERRA -> false; Grama.HILO -> bd.i == B47 || bd.i < EscenaLaboratorio.brotes(v.m) && bd.i % 3 == 1; Grama.MATAS, Grama.TANQUE, Grama.CAJAS -> bd.i % 7 != 3 }
-        cajaEn(v, MK, a, a + la, b, b + lb, ALTO, ALTO + alto, lerp(C.TELA, C.HORMIGON, 0.3f)) { cara, f ->
-            when (cara) {
-                3 -> {
-                    // La tierra, con su grano; donde le da la lámpara, casi blanca.
-                    val dentro = poligono(listOf(MK.p(a + 0.015f, b + 0.015f, ALTO + alto), MK.p(a + la - 0.015f, b + 0.015f, ALTO + alto), MK.p(a + la - 0.015f, b + lb - 0.015f, ALTO + alto), MK.p(a + 0.015f, b + lb - 0.015f, ALTO + alto)))
-                    val q = MK.w(a + la / 2f, b + lb / 2f, ALTO + alto)
-                    drawPath(dentro, v.c(q, if (grama == Grama.MATAS && brote) lerp(C.TIERRA, C.TIERRA_LIMPIA, 0.15f) else C.TIERRA, ARRIBA))
-                    val az = Azar(Semilla.de("laboratorio", "bandeja", bd.i))
-                    repeat(6) { val p = MK.p(a + az.entre(0.03f, la - 0.03f), b + az.entre(0.03f, lb - 0.03f), ALTO + alto); drawCircle(v.c(q, lerp(C.TIERRA, C.NEGRO, 0.3f), ARRIBA), 0.35f, p) }
-                    if (brote) grama(v, a + la / 2f, b + lb / 2f, ALTO + alto, if (grama == Grama.HILO) (if (bd.i == B47) 1 else 2) else 6 + bd.i % 4, grama == Grama.HILO && bd.i == B47)
-                }
-                0, 2 -> {
-                    // La cinta de color con la fecha (una raya, sin letras).
-                    if (cara == 0) drawPath(poligono(MK.p(a, b + 0.03f, ALTO + 0.018f), MK.p(a, b + 0.1f, ALTO + 0.018f), MK.p(a, b + 0.1f, ALTO + 0.04f), MK.p(a, b + 0.03f, ALTO + 0.04f)), v.c(MK.w(a, b, ALTO), if (bd.i % 4 == 0) C.AMARILLO else C.CIAN, MK.n(-1f, 0f, 0f)))
-                    if (cara == 2) drawLine(v.c(MK.w(a, b, ALTO), C.CIAN, MK.n(0f, -1f, 0f)), MK.p(a + 0.04f, b, ALTO + 0.03f), MK.p(a + 0.12f, b, ALTO + 0.03f), 0.9f)
-                }
-                else -> {}
-            }
+        val brote = when (grama) {
+            Grama.TIERRA -> false
+            Grama.HILO -> bd.i == B47 || ORDEN_DE_BROTE.indexOf(bd.i) in 1 until EscenaLaboratorio.brotes(v.m)
+            Grama.MATAS, Grama.TANQUE, Grama.CAJAS -> bd.i % 7 != 3
         }
+        val y1 = ALTO + alto
+        val q = MK.w(a + la / 2f, b + lb / 2f, y1)
+        val cuerpo = lerp(C.ACERO, C.NEGRO, 0.35f)
+        // El costado que se ve (el derecho) y el extremo de cerca, en una pieza, con su cinta de color (una raya, sin letras).
+        drawPath(poligono(listOf(MK.p(a, b, ALTO), MK.p(a + la, b, ALTO), MK.p(a + la, b, y1), MK.p(a, b, y1))), v.c(MK.w(a + la / 2f, b, ALTO + 0.03f), cuerpo, MK.n(0f, -1f, 0f)))
+        drawPath(poligono(listOf(MK.p(a, b, ALTO), MK.p(a, b + lb, ALTO), MK.p(a, b + lb, y1), MK.p(a, b, y1))), v.c(MK.w(a, b + lb / 2f, ALTO + 0.03f), cuerpo, MK.n(-1f, 0f, 0f)))
+        drawLine(if (bd.i % 4 == 0) C.AMARILLO else C.CIAN, MK.p(a + 0.04f, b - 0.001f, ALTO + 0.03f), MK.p(a + 0.13f, b - 0.001f, ALTO + 0.03f), 1f)
+        // La tierra, con su grano; donde le da la lámpara, casi blanca.
+        val borde = poligono(listOf(MK.p(a, b, y1), MK.p(a + la, b, y1), MK.p(a + la, b + lb, y1), MK.p(a, b + lb, y1)))
+        drawPath(borde, v.c(q, cuerpo, ARRIBA))
+        val dentro = poligono(listOf(MK.p(a + 0.015f, b + 0.015f, y1), MK.p(a + la - 0.015f, b + 0.015f, y1), MK.p(a + la - 0.015f, b + lb - 0.015f, y1), MK.p(a + 0.015f, b + lb - 0.015f, y1)))
+        val tierra = v.c(q, if (grama == Grama.MATAS && brote) lerp(C.TIERRA, C.TIERRA_LIMPIA, 0.15f) else C.TIERRA, ARRIBA)
+        drawPath(dentro, tierra)
+        val az = Azar(Semilla.de("laboratorio", "bandeja", bd.i))
+        val grumo = lerp(tierra, C.NEGRO, 0.25f)
+        repeat(4) { drawCircle(grumo, 0.35f, MK.p(a + az.entre(0.03f, la - 0.03f), b + az.entre(0.03f, lb - 0.03f), y1)) }
+        if (brote) grama(v, a + la / 2f, b + lb / 2f, y1, if (grama == Grama.HILO) (if (bd.i == B47) 1 else 3) else 7 + bd.i % 4, grama == Grama.HILO && bd.i == B47)
         // La tapa: un capuchón de plástico transparente, con su brillo; si no, apoyada de canto junto a la bandeja.
         if (tapada(v, bd.i, grama)) {
-            val t = listOf(MK.p(a - 0.005f, b - 0.005f, ALTO + alto + 0.005f), MK.p(a + la + 0.005f, b - 0.005f, ALTO + alto + 0.005f), MK.p(a + la - 0.02f, b + 0.02f, ALTO + alto + 0.06f), MK.p(a + 0.02f, b + lb - 0.02f, ALTO + alto + 0.06f), MK.p(a - 0.005f, b + lb + 0.005f, ALTO + alto + 0.005f))
-            val tapa = poligono(listOf(t[0], t[1], MK.p(a + la + 0.005f, b + lb + 0.005f, ALTO + alto + 0.005f), t[4]))
-            val cielo = poligono(listOf(MK.p(a + 0.02f, b + 0.02f, ALTO + alto + 0.06f), MK.p(a + la - 0.02f, b + 0.02f, ALTO + alto + 0.06f), MK.p(a + la - 0.02f, b + lb - 0.02f, ALTO + alto + 0.06f), MK.p(a + 0.02f, b + lb - 0.02f, ALTO + alto + 0.06f)))
-            drawPath(tapa, v.c(MK.w(a + la / 2f, b + lb / 2f, ALTO + 0.1f), C.VIDRIO, ARRIBA).copy(alpha = 0.32f))
-            drawPath(cielo, v.c(MK.w(a + la / 2f, b + lb / 2f, ALTO + 0.12f), lerp(C.VIDRIO, Color.White, 0.5f), ARRIBA).copy(alpha = 0.3f))
-            drawLine(Color.White.copy(alpha = 0.3f + 0.25f * v.general), t[0], t[1], 0.5f)
+            val t0 = MK.p(a - 0.005f, b - 0.005f, y1 + 0.005f); val t1 = MK.p(a + la + 0.005f, b - 0.005f, y1 + 0.005f)
+            val s0 = MK.p(a + 0.02f, b + 0.02f, y1 + 0.055f); val s1 = MK.p(a + la - 0.02f, b + 0.02f, y1 + 0.055f); val s2 = MK.p(a + la - 0.02f, b + lb - 0.02f, y1 + 0.055f); val s3 = MK.p(a + 0.02f, b + lb - 0.02f, y1 + 0.055f)
+            val plastico = lerp(v.c(q, C.VIDRIO, ARRIBA), Color.White, 0.15f)
+            drawPath(poligono(t0, t1, s1, s0), plastico.copy(alpha = 0.22f))
+            drawPath(poligono(t0, MK.p(a - 0.005f, b + lb + 0.005f, y1 + 0.005f), s3, s0), plastico.copy(alpha = 0.16f))
+            drawPath(poligono(s0, s1, s2, s3), plastico.copy(alpha = 0.14f))
+            drawLine(Color.White.copy(alpha = 0.25f + 0.2f * v.general), s0, s1, 0.4f)
+            drawLine(Color.White.copy(alpha = 0.35f + 0.3f * v.general), t0, t1, 0.5f)
         } else if (bd.i % 2 == 0) {
             val y0 = ALTO + 0.002f
             drawPath(poligono(MK.p(a + 0.02f, b - 0.005f, y0), MK.p(a + la - 0.02f, b - 0.005f, y0), MK.p(a + la - 0.02f, b - 0.03f, y0 + 0.15f), MK.p(a + 0.02f, b - 0.03f, y0 + 0.15f)), v.c(MK.w(a, b, ALTO + 0.08f), C.VIDRIO, MK.n(0f, -1f, 0.2f)).copy(alpha = 0.3f))
@@ -497,7 +555,7 @@ internal object MesaLab {
         drawPath(pantalla, Brush.horizontalGradient(0f to v.c(cab, C.CUELLO, V3(-1f, 0.3f, -0.5f)), 0.5f to v.c(cab, lerp(C.CUELLO, Color.White, 0.2f), V3(0f, 0.5f, -1f)), 1f to v.c(cab, C.CUELLO, V3(1f, 0.3f, -0.5f)), startX = pb.x - ancho, endX = pb.x + ancho))
         val enc = v.mesa
         drawOval(lerp(v.c(bombilla, C.CUELLO, V3(0f, -1f, 0f)), lerp(C.LAMPARA, Color.White, 0.5f), enc), pb - Offset(ancho, 0.012f * k), Size(ancho * 2f, 0.03f * k))
-        if (enc > 0.05f) drawOval(Brush.radialGradient(listOf(C.LAMPARA.copy(alpha = 0.5f * enc), Color.Transparent), pb, ancho * 2.2f), pb - Offset(ancho * 2.2f, ancho * 1.1f), Size(ancho * 4.4f, ancho * 2.2f), blendMode = BlendMode.Plus)
+        if (enc > 0.05f) drawCircle(Brush.radialGradient(listOf(C.LAMPARA.copy(alpha = 0.45f * enc), C.LAMPARA.copy(alpha = 0.12f * enc), Color.Transparent), pb + Offset(0f, 0.02f * k), ancho * 1.7f), ancho * 1.7f, pb + Offset(0f, 0.02f * k), blendMode = BlendMode.Plus)
     }
 
     // ---------------------------------------------------------------- Las lámparas de cultivo
