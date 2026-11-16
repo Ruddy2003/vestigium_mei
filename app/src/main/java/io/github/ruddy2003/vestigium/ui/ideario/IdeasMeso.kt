@@ -40,21 +40,26 @@ import kotlin.math.sin
 
 /**
  * Mesoamérica: el cuarto donde un escriba maya trabaja y guarda sus cosas. El muro es de estuco pintado: el paño ocre claro
- * arriba, una banda de grecas escalonadas (cinabrio y azul maya sobre crema) con su filete azul, y el zócalo de cinabrio, con
+ * arriba, una banda de grecas escalonadas (cinabrio y azul maya sobre crema) con su filete azul, y el zócalo rojo óxido, con
  * desconchones que dejan ver la caliza, parches repasados y el hollín que el copal deja encima del incensario. Contra él, la
  * banqueta de mampostería estucada, en gradas: una grada por fila, cada una un poco más ancha que la de arriba, con su cara de
- * almagre gastado, su huella de estuco crema con el canto comido y su sombra en el muro. Encima de la grada alta, lo del
- * escriba: el códice plegado en biombo, medio abierto, con sus tapas de piel de jaguar (lo primero que se ve, a la
- * izquierda); detrás, un manojo de plumas de quetzal en un vasito; el vaso cilíndrico policromo con los pinceles; dos medias
- * conchas con pigmento (rojo, azul maya y negro); el incensario de púas con su copal y su hilo de humo; y, de una estaca del
- * muro, un collar de cuentas de jade con su pectoral. Al pie, un petate enrollado tendido contra la grada (cortado por el
+ * almagre rosado y gastado (asoma el estuco junto a los cantos y donde rozan los recipientes), su franja honda de cinabrio al
+ * pie, su huella de estuco crema con el canto comido y su sombra en el muro. Encima de la grada alta, lo del escriba: el
+ * códice plegado en biombo, medio abierto, con sus tapas de piel de jaguar (lo primero que se ve, a la izquierda); detrás, el
+ * abanico de plumas de quetzal apoyado en el muro; una red con un calabazo colgada de una estaca; el vaso cilíndrico
+ * policromo con los pinceles; la tea de ocote en su soporte de barro (apagada de día, con la punta tiznada); dos medias
+ * conchas con pigmento (rojo, azul maya y negro); el incensario de púas con su copal y su hilo de humo; y, de otra estaca, un
+ * collar de cuentas de jade con su pectoral. Al pie, un petate enrollado tendido contra la grada (cortado por el
  * borde) y el brasero trípode de barro con sus brasas. Cada tema es lo que se guarda en una grada, según la semilla: una
  * petaca de palma tejida con su tapa atada con henequén, una olla con tapa (con una banda de glifos inventados o con engobe
  * rojo) o un bulto envuelto en manta de algodón con su nudo; las hojas de amate dobladas asoman (más cuantas más fichas) y el
  * tema va en una tira de amate con filete rojo colgada al frente. Lo que no tiene tema va en una jícara abierta con las hojas
  * sueltas, y su tira no lleva filete. Un hueco sin tema es la grada con el cerco limpio donde hubo una petaca y un caracol o
- * una mazorca seca. De noche alumbran el brasero, desde abajo a la derecha (el cinabrio de las gradas bajas se enciende), y
- * el copal del incensario, arriba; las gradas de en medio se pierden en el azul negro. Por dentro, el tejido de la petaca.
+ * una mazorca seca. De noche arden la tea, arriba (halo rojizo en el paño y las grecas, el códice encendido, filo en las
+ * plumas, brillo en el jade, sombras largas hacia fuera de la llama y su hilo de humo negro), y el brasero, abajo a la
+ * derecha (el cinabrio de las gradas bajas se enciende); cada compartimento suma la luz de las dos según su fila y su
+ * columna, así que las gradas de en medio se pierden, y lo que se apaga baja hacia su propio color oscuro (palma parda,
+ * barro rojo hondo, algodón crema sucio), no hacia gris. Por dentro, el tejido de la petaca.
  * Las fichas son hojas de amate cubiertas de estuco, con el filete rojo de las páginas de códice.
  */
 object IdeasMeso : DisenoIdeas {
@@ -65,8 +70,14 @@ object IdeasMeso : DisenoIdeas {
     private val OCRE = Color(0xFFD69A55)
     /** El cinabrio del zócalo y de las grecas; el almagre gastado de las caras de la banqueta. */
     private val CINABRIO = Color(0xFFA3301E)
-    private val ALMAGRE = Color(0xFFB8664B)
+    private val ALMAGRE = Color(0xFFC88468)
     /** El azul maya y el verde jade. */
+    /** El rojo óxido del zócalo del muro, más hondo y más pardo que las caras de la banqueta. */
+    private val OXIDO = Color(0xFF8A3324)
+    /** La franja honda de cinabrio al pie de cada cara. */
+    private val FRANJA = Color(0xFF8E2A1A)
+    /** Las astillas de ocote (pino resinoso) de la tea. */
+    private val OCOTE = Color(0xFFC08A4E)
     private val AZUL = Color(0xFF2C7F9C)
     private val JADE = Color(0xFF2F7D57)
     private val JADE_LUZ = Color(0xFF86C8A0)
@@ -105,15 +116,24 @@ object IdeasMeso : DisenoIdeas {
 
     // ---------------------------------------------------------------- la luz y la noche
 
-    /** Un color a [k] (0 a 1) de la lumbre: de día, tal cual (aclarado [dia]); de noche, hundido en el azul negro y calentado cerca. */
+    /**
+     * Un color a [k] (0 a 1) de la lumbre: de día, tal cual (aclarado [dia]). De noche se apaga hacia **su propio** oscuro: se
+     * baja el valor conservando el matiz (la palma se vuelve parda, el barro rojo hondo, el algodón crema sucio), con apenas
+     * un poco del azul negro del cuarto para unir la paleta; cerca de la lumbre sube el valor y se calienta.
+     */
     private fun n(c: Color, oscuro: Boolean, k: Float, dia: Float = 0f): Color {
         if (!oscuro) return if (dia > 0f) mezcla(c, LUZ_MUEBLE, dia) else c
         val q = k.coerceIn(0f, 1f)
-        return mezcla(mezcla(c, NOCHE, 0.79f - 0.57f * q.pow(1.2f)), BRASA, 0.3f * q)
+        val v = 0.24f + 0.6f * q.pow(1.1f)
+        val bajo = Color(c.red * v, c.green * v, c.blue * v, c.alpha)
+        return mezcla(mezcla(bajo, NOCHE, 0.1f * (1f - q)), BRASA, 0.2f * q)
     }
 
-    /** La sombra: de día, violeta hondo; de noche, el azul negro. */
-    private fun sombra(oscuro: Boolean, a: Float) = if (oscuro) NOCHE.copy(alpha = (a * 1.15f).coerceIn(0f, 1f)) else sombraMueble(a)
+    /** La sombra de noche: violeta muy hondo, no azul marino. */
+    private val SOMBRA_NOCHE = Color(0xFF140D12)
+
+    /** La sombra: de día, violeta hondo; de noche, violeta casi negro. */
+    private fun sombra(oscuro: Boolean, a: Float) = if (oscuro) SOMBRA_NOCHE.copy(alpha = (a * 1.15f).coerceIn(0f, 1f)) else sombraMueble(a)
 
     /** Lo que mira a la luz: de día, crema; de noche, el filo de la lumbre según lo cerca que esté. */
     private fun brillo(oscuro: Boolean, a: Float, k: Float = 0f) =
@@ -133,23 +153,32 @@ object IdeasMeso : DisenoIdeas {
     private fun altoH() = anchoH() / proporcion
     /** El piso, en fracciones del ancho, con [filas] filas. */
     private fun pisoY(filas: Int) = corona + hueco + filas * altoH() + (filas - 1) * hueco + hueco + ALTO_PISO
-    /** Las dos luces de noche, en fracciones del ancho: las brasas del brasero y el copal del incensario. */
+    /**
+     * Las luces de noche, en fracciones del ancho: las brasas del brasero (abajo), la llama de la tea de ocote (arriba, la que
+     * alumbra el códice) y, mucho menor, el copal del incensario.
+     */
     private fun brasero(filas: Int) = Offset(0.8f, pisoY(filas) + 0.012f)
     private val copal get() = Offset(COPAL_X, corona - 0.15f)
     private const val COPAL_X = 0.8f
+    /** La tea: dónde está su soporte y a qué altura sobre la grada alta arde la llama. */
+    private const val TEA_X = 0.685f
+    private const val TEA_ALTO = 0.255f
+    private val tea get() = Offset(TEA_X - 0.012f, corona - TEA_ALTO - 0.02f)
 
-    /** Cuánto alumbran el brasero y el copal el punto [p] (fracciones del ancho), con [filas] filas. */
-    private fun calor(p: Offset, filas: Int): Float {
-        val a = 1.15f * (1f - (p - brasero(filas)).getDistance() / 1.05f)
-        val b = 0.85f * (1f - (p - copal).getDistance() / 0.55f)
-        return maxOf(a, b, 0f).coerceAtMost(1f)
-    }
+    private fun deBrasero(p: Offset, filas: Int) = (1.15f * (1f - (p - brasero(filas)).getDistance() / 1.0f)).coerceAtLeast(0f)
+    private fun deTea(p: Offset) = (1.1f * (1f - (p - tea).getDistance() / 1.0f)).coerceAtLeast(0f)
+    private fun deCopal(p: Offset) = (0.5f * (1f - (p - copal).getDistance() / 0.3f)).coerceAtLeast(0f)
+
+    /**
+     * Cuánto alumbran el punto [p] (fracciones del ancho) las luces juntas, con [filas] filas: la suma de las tres. Así las
+     * filas de arriba (por la tea) y las de abajo (por el brasero) quedan encendidas y las de en medio se pierden.
+     */
+    private fun calor(p: Offset, filas: Int): Float = (deBrasero(p, filas) + deTea(p) + deCopal(p)).coerceIn(0f, 1f)
 
     /** La luz que manda en [p]: la que más alumbra (para el lado del filo y hacia dónde caen las sombras). */
     private fun luzMayor(p: Offset, filas: Int): Offset {
-        val a = 1.15f * (1f - (p - brasero(filas)).getDistance() / 1.05f)
-        val b = 0.85f * (1f - (p - copal).getDistance() / 0.55f)
-        return if (a >= b) brasero(filas) else copal
+        val a = deBrasero(p, filas); val b = deTea(p); val c = deCopal(p)
+        return if (a >= b && a >= c) brasero(filas) else if (b >= c) tea else copal
     }
 
     // ---------------------------------------------------------------- ayudantes
@@ -211,18 +240,77 @@ object IdeasMeso : DisenoIdeas {
         if (oscuro && k > 0.03f) drawPath(borde(forma, -sl * a * 0.045f, hh * 0.03f), BRASA.copy(alpha = (0.06f + 0.55f * k).coerceAtMost(0.6f)))
     }
 
+    // ---------------------------------------------------------------- lo que hay detrás de cada hueco, de noche
+
+    /** El borde de arriba de la cara [j] de la banqueta (0, la de la grada alta), en fracciones del ancho, con [filas] filas. */
+    private fun bordeCara(j: Int) = if (j == 0) corona else corona + hueco + j * altoH() + (j - 1) * hueco
+    /** El margen de la cara [j] (las de abajo son más anchas): el mismo que usa [mueble]. */
+    private fun margenCara(j: Int, filas: Int) = minOf(0.008f + 0.012f * (filas - j), 0.058f)
+
+    /** Un color de un degradado horizontal de cinco paradas ([paradas]) entre [x0] y [x1], en [x]: como lo pinta `Brush.horizontalGradient`. */
+    private fun enDegradado(paradas: List<Color>, x0: Float, x1: Float, x: Float): Color {
+        val t = ((x - x0) / (x1 - x0)).coerceIn(0f, 1f) * (paradas.size - 1)
+        val i = minOf(t.toInt(), paradas.size - 2)
+        return mezcla(paradas[i], paradas[i + 1], t - i)
+    }
+
     /**
-     * Tapa el aura en reposo de `Modifier.halo()` alrededor de lo guardado, de noche (la misma solución que Helénico):
-     * `halo()` calca lo que pinta el compartimento, lo aclara y lo corre unos 2.5 dp; sobre las gradas hundidas en la noche
-     * eso se lee como un recorte pálido. Un aro oscuro, compuesto con `SrcAtop`, lo apaga en el dibujo y no cambia la capa del
-     * aura (SrcAtop no agrega alfa); al tocarlo, el aura crece más allá del aro y se sigue viendo.
+     * El color que [mueble] pinta de noche detrás de un compartimento de la fila [fila], en el punto ([x], [y]) en fracciones
+     * del ancho, sin las pinceladas ni el grano: la cara de almagre (su degradado hacia la lumbre), la franja honda de abajo
+     * o la huella de estuco donde se apoya lo guardado. Son las mismas cuentas que en [mueble].
      */
-    private fun DrawScope.cubreAura(oscuro: Boolean, rellenos: List<Path>) {
-        if (!oscuro) return
-        val ancho = 3.4f * density; val junto = 1.9f * density
+    private fun fondoNoche(x: Float, y: Float, fila: Int, filas: Int): Color {
+        val arriba = bordeCara(fila); val abajo = bordeCara(fila + 1)
+        val td = hueco * 0.6f
+        fun k(px: Float, py: Float) = calor(Offset(px, py), filas)
+        if (y >= abajo - td) {
+            val m = margenCara(fila + 1, filas) - 0.004f
+            val yc = abajo - td / 2
+            return enDegradado(List(5) { i -> n(ESTUCO, true, k(m + (1f - 2 * m) * i / 4f, yc)) }, m, 1f - m, x)
+        }
+        val banda = minOf((abajo - arriba) * 0.3f, 0.06f)
+        if (y >= abajo - banda) return n(FRANJA, true, k(0.5f, abajo - banda / 2))
+        val m = margenCara(fila, filas)
+        val yc = (arriba + abajo) / 2
+        return enDegradado(List(5) { i -> n(ALMAGRE, true, k(m + (1f - 2 * m) * i / 4f, yc)) }, m, 1f - m, x)
+    }
+
+    /**
+     * Tapa el aura en reposo de `Modifier.halo()` alrededor de lo guardado, de noche. `halo()` calca lo que pinta el
+     * compartimento, lo aclara y lo corre unos 2.5 dp: sobre la grada en penumbra se leía como un recorte pálido, y un aro
+     * oscuro encima (la solución de Helénico) dejaba otro contorno, oscuro. Aquí el aro toma **el color que tiene detrás**
+     * ([fondoNoche]), por tramos de un sexto del ancho y por zonas (cara, franja, huella): en el dibujo el aura en reposo
+     * desaparece sin dejar borde. Va en una capa compuesta con `SrcAtop`, así que en la capa del aura no agrega nada (al
+     * tocarlo, el aura crece más allá del aro y se sigue viendo). Se pinta antes que lo guardado, que tapa la mitad de dentro.
+     */
+    private fun DrawScope.cubreAura(c: EstadoCajon, oscuro: Boolean, rellenos: List<Path>) {
+        if (!oscuro || c.cols != cols) return
+        val aw = anchoH()
+        val W = size.width / aw
+        val hx = lado + c.col * (aw + hueco)
+        val hy = corona + hueco + c.fila * (altoH() + hueco)
+        val ancho = 3.3f * density
+        val abajo = bordeCara(c.fila + 1)
+        val yBanda = (abajo - minOf((abajo - bordeCara(c.fila)) * 0.3f, 0.06f) - hy) * W
+        val yHuella = (abajo - hueco * 0.6f - hy) * W
+        val zonas = listOf(-size.height to yBanda, yBanda to yHuella, yHuella to size.height * 2)
+        val trazo = Stroke(ancho * 2, join = androidx.compose.ui.graphics.StrokeJoin.Round)
         drawIntoCanvas { it.saveLayer(Rect(-ancho * 4, -ancho * 4, size.width + ancho * 4, size.height + ancho * 4), Paint().apply { blendMode = BlendMode.SrcAtop }) }
-        for ((color, a) in listOf(NOCHE.copy(alpha = 0.4f) to ancho, NOCHE.copy(alpha = 0.65f) to junto)) {
-            rellenos.forEach { drawPath(it, color, style = Stroke(a * 2, join = androidx.compose.ui.graphics.StrokeJoin.Round), blendMode = BlendMode.Src) }
+        val tramos = 6
+        for (t in 0 until tramos) {
+            val xa = if (t == 0) -ancho * 4 else size.width * t / tramos
+            val xb = if (t == tramos - 1) size.width + ancho * 4 else size.width * (t + 1) / tramos
+            val xm = hx + (size.width * (t + 0.5f) / tramos) / W
+            for ((ya, yb) in zonas) {
+                if (yb <= ya) continue
+                val ym = hy + ((maxOf(ya, -ancho * 4) + minOf(yb, size.height + ancho * 4)) / 2) / W
+                val col = fondoNoche(xm, ym, c.fila, c.filas)
+                clipRect(xa, ya, xb, yb) { rellenos.forEach { drawPath(it, col, style = trazo, blendMode = BlendMode.Src) } }
+            }
+        }
+        // La sombra que la cara de arriba deja al fondo de la huella (como en [mueble]).
+        clipRect(-ancho * 4, yHuella, size.width + ancho * 4, yHuella + hueco * 0.6f * W * 0.3f) {
+            rellenos.forEach { drawPath(it, sombra(true, 0.18f), style = trazo) }
         }
         drawIntoCanvas { it.restore() }
     }
@@ -237,6 +325,22 @@ object IdeasMeso : DisenoIdeas {
         }
         drawPath(borde(p, -r * 0.18f, -r * 0.2f), sombra(oscuro, 0.45f))
         drawPath(borde(p, r * 0.14f, r * 0.16f), brillo(oscuro, 0.5f, k))
+    }
+
+    /** El contorno de cada hoja de [hojas] (un rectángulo girado como ella), para el aro que tapa el aura. */
+    private fun hojasContorno(x0: Float, x1: Float, arriba: Float, abajo: Float, cuantas: Int, semilla: Int): List<Path> {
+        if (cuantas <= 0) return emptyList()
+        val ancho = (x1 - x0) / (cuantas * 0.62f + 0.5f)
+        return List(cuantas) { i ->
+            val f = if (cuantas == 1) 0.5f else i / (cuantas - 1f)
+            val cx = x0 + ancho * 0.5f + (x1 - x0 - ancho) * f + (azar(semilla, i) - 0.5f) * ancho * 0.25f
+            val top = arriba + (abajo - arriba) * 0.35f * azar(semilla, i + 10)
+            val giro = Math.toRadians(((azar(semilla, i + 20) - 0.5f) * 14f).toDouble())
+            val co = cos(giro).toFloat(); val si = sin(giro).toFloat()
+            fun g(x: Float, y: Float): Offset { val dx = x - cx; val dy = y - abajo; return Offset(cx + dx * co - dy * si, abajo + dx * si + dy * co) }
+            val a = g(cx - ancho / 2, top); val b = g(cx + ancho / 2, top); val c = g(cx + ancho / 2, abajo); val d = g(cx - ancho / 2, abajo)
+            poli(a.x, a.y, b.x, b.y, c.x, c.y, d.x, d.y)
+        }
     }
 
     /** Las hojas de amate dobladas, de pie y un poco ladeadas, que asoman de un recipiente: [cuantas], de [x0] a [x1], subiendo hasta [arriba]. */
@@ -317,13 +421,13 @@ object IdeasMeso : DisenoIdeas {
 
         // ---- el zócalo de cinabrio, que baja detrás de la banqueta hasta el piso
         val zr = Rect(0f, zoc, w, piso)
-        pano(zr, mezcla(CINABRIO, NEGRO, 0.12f))
-        pinceladas(zr, c(mezcla(CINABRIO, OCRE, 0.35f), Offset(w * 0.5f, zoc)), 904, 70, u, 0.12f)
+        pano(zr, OXIDO)
+        pinceladas(zr, c(mezcla(OXIDO, OCRE, 0.35f), Offset(w * 0.5f, zoc)), 904, 70, u, 0.12f)
         pinceladas(zr, c(mezcla(CINABRIO, NEGRO, 0.4f), Offset(w * 0.5f, zoc)), 905, 40, u, 0.1f)
         // La orilla del zócalo, pintada a mano, con su filete de negro de humo.
         for (j in 0 until 30) {
             val x = w * j / 29f
-            drawOval(c(CINABRIO, Offset(x, zoc)), Offset(x - w * 0.024f, zoc - (0.4f + 1.6f * azar(906, j)) * u), Size(w * 0.048f, 3f * u))
+            drawOval(c(OXIDO, Offset(x, zoc)), Offset(x - w * 0.024f, zoc - (0.4f + 1.6f * azar(906, j)) * u), Size(w * 0.048f, 3f * u))
         }
         drawRect(c(NEGRO, Offset(w * 0.5f, zoc)).copy(alpha = 0.85f), Offset(0f, zoc - 3.2f * u), Size(w, 1.4f * u))
 
@@ -399,10 +503,16 @@ object IdeasMeso : DisenoIdeas {
             else drawRect(n(ALMAGRE, false, 0f, dia(j)), r.topLeft, r.size)
             pinceladas(r, c(mezcla(ALMAGRE, ESTUCO, 0.45f), Offset(w * 0.5f, yc)), 930 + j, 34, u, 0.14f)
             pinceladas(r, c(mezcla(ALMAGRE, CINABRIO, 0.7f), Offset(w * 0.5f, yc)), 940 + j, 24, u, 0.14f)
-            // El estuco gastado: donde se fue la pintura asoma el crema, y algún golpe deja ver la piedra.
-            for (q in 0 until 3) {
-                val o = Offset(r.left + r.width * azar(950 + j, q), r.top + r.height * (0.35f + 0.6f * azar(951 + j, q)))
-                drawPath(mancho(o, w * (0.02f + 0.02f * azar(952 + j, q)), w * 0.008f, 953 + j * 7 + q), c(mezcla(ESTUCO, ALMAGRE, 0.35f), o).copy(alpha = 0.55f))
+            // El estuco gastado: donde se fue el almagre asoma el crema, sobre todo junto al canto de arriba (donde se apoyan
+            // las manos) y abajo, donde rozan los recipientes. De noche, más tenue (no compite con lo guardado).
+            val gasto = if (oscuro) 0.25f else 0.7f
+            for (q in 0 until 7) {
+                val arriba = q < 4
+                val o = Offset(r.left + r.width * (0.04f + 0.92f * azar(950 + j, q)),
+                    if (arriba) r.top + w * (0.033f + 0.008f * azar(951 + j, q)) else r.bottom - w * (0.066f + 0.008f * azar(951 + j, q)))
+                val parche = mancho(o, w * (0.02f + 0.025f * azar(952 + j, q)), w * (0.004f + 0.004f * azar(954 + j, q)), 953 + j * 7 + q, 10)
+                drawPath(parche, c(mezcla(ESTUCO, ALMAGRE, 0.18f), o).copy(alpha = gasto))
+                drawPath(borde(parche, w * 0.003f, w * 0.002f), c(mezcla(ALMAGRE, CINABRIO, 0.4f), o).copy(alpha = gasto * 0.6f))
             }
             if (j % 2 == 1) desconchon(Offset(r.left + r.width * (0.1f + 0.8f * azar(960, j)), r.bottom - w * 0.02f), w * 0.011f, 961 + j, oscuro, k(r.center))
             // Los cantos: el de la izquierda a la luz, el de la derecha en sombra; la sombra del canto de la huella de encima.
@@ -412,8 +522,8 @@ object IdeasMeso : DisenoIdeas {
             drawRect(sombra(oscuro, 0.12f), Offset(r.left, r.top + w * 0.016f), Size(r.width, w * 0.014f))
             // Abajo, una franja de cinabrio más hondo con su filete negro, como en los zócalos pintados.
             val fr = Rect(r.left, r.bottom - minOf(r.height * 0.3f, w * 0.06f), r.right, r.bottom)
-            drawRect(c(mezcla(CINABRIO, NEGRO, 0.15f), fr.center).copy(alpha = 0.75f), fr.topLeft, fr.size)
-            pinceladas(fr, c(mezcla(CINABRIO, ALMAGRE, 0.5f), fr.center), 945 + j, 10, u, 0.14f)
+            drawRect(c(FRANJA, fr.center), fr.topLeft, fr.size)
+            pinceladas(fr, c(mezcla(FRANJA, ALMAGRE, 0.4f), fr.center), 945 + j, 10, u, 0.14f)
             drawRect(c(NEGRO, fr.center).copy(alpha = 0.6f), Offset(fr.left, fr.top - 0.6f * u), Size(fr.width, 1.4f * u))
         }
         // Las huellas de estuco crema, vistas un poco desde arriba, con el canto redondeado y comido.
@@ -449,25 +559,50 @@ object IdeasMeso : DisenoIdeas {
         drawRect(sombra(oscuro, 0.42f), Offset(0f, piso), Size(w, 1.6f * u))
         drawRect(sombra(oscuro, 0.14f), Offset(0f, piso + 1.6f * u), Size(w, 5f * u))
 
-        // ---- la noche: el halo de las brasas (abajo a la derecha) y el del copal (arriba)
+        // ---- la noche: el halo de la tea en el muro de arriba y el de las brasas abajo. Sobre las caras de las gradas no
+        // va halo: su luz ya va en su color (el degradado de cada cara), y así el compartimento puede saber qué color tiene
+        // detrás (ver [cubreAura]).
+        val teaP = Offset(w * tea.x, w * tea.y)
         if (oscuro) {
-            mancha(brasa, w * 0.95f, BRASA.copy(alpha = 0.12f))
-            mancha(brasa, w * 0.48f, BRASA.copy(alpha = 0.2f))
-            mancha(brasa, w * 0.2f, BRASA_VIVA.copy(alpha = 0.3f))
-            mancha(copalP, w * 0.4f, BRASA.copy(alpha = 0.13f))
-            mancha(copalP, w * 0.14f, BRASA_VIVA.copy(alpha = 0.22f))
+            clipRect(0f, 0f, w, ch) {
+                mancha(teaP, w * 1.0f, BRASA.copy(alpha = 0.16f))
+                mancha(teaP, w * 0.5f, Color(0xFFFF7A3A).copy(alpha = 0.2f))
+                mancha(teaP, w * 0.18f, BRASA_VIVA.copy(alpha = 0.34f))
+                mancha(copalP, w * 0.12f, BRASA_VIVA.copy(alpha = 0.16f))
+            }
+            clipRect(0f, ys[nf] - td, w, alto) {
+                mancha(brasa, w * 0.95f, BRASA.copy(alpha = 0.12f))
+                mancha(brasa, w * 0.48f, BRASA.copy(alpha = 0.2f))
+                mancha(brasa, w * 0.2f, BRASA_VIVA.copy(alpha = 0.3f))
+            }
         }
 
         // ---- lo del escriba, en la grada alta y colgado
         val apoyo = ch - td0 * 0.45f
         fun haciaX(x: Float, y: Float): Float = if (luzMayor(Offset(x / w, y / w), nf).x * w >= x) 1f else -1f
-        collar(Offset(w * 0.925f, w * 0.19f), w, oscuro, k(Offset(w * 0.925f, w * 0.29f)))
-        red(Offset(w * 0.4f, w * 0.165f), w, oscuro, k(Offset(w * 0.4f, w * 0.24f)))
-        plumas(Offset(w * 0.13f, apoyo - td0 * 0.5f), w, oscuro, k(Offset(w * 0.1f, apoyo - w * 0.15f)))
-        codice(w * 0.13f, w * 0.52f, apoyo, w * 0.205f, w, oscuro, k(Offset(w * 0.33f, apoyo - w * 0.1f)))
-        vasoPolicromo(Offset(w * 0.585f, apoyo - td0 * 0.3f), w * 0.088f, w * 0.15f, w, oscuro, k(Offset(w * 0.585f, apoyo - w * 0.07f)), haciaX(w * 0.585f, apoyo))
-        incensario(Offset(w * COPAL_X, apoyo - td0 * 0.3f), w * 0.15f, w, oscuro, k(Offset(w * COPAL_X, apoyo - w * 0.06f)), haciaX(w * COPAL_X, apoyo))
+        /** Hacia dónde cae la sombra de lo que está en [p]: de día, a la derecha y abajo; de noche, lejos de la luz que manda. */
+        fun caida(p: Offset, largo: Float): Offset {
+            if (!oscuro) return Offset(largo * 0.8f, largo * 0.6f)
+            val l = luzMayor(Offset(p.x / w, p.y / w), nf) * w
+            val v = p - l
+            return v / v.getDistance().coerceAtLeast(1f) * (largo * 1.6f)
+        }
+        val pCollar = Offset(w * 0.925f, w * 0.29f)
+        collar(Offset(w * 0.925f, w * 0.19f), w, oscuro, k(pCollar), caida(pCollar, w * 0.015f))
+        val pRed = Offset(w * 0.4f, w * 0.24f)
+        red(Offset(w * 0.4f, w * 0.165f), w, oscuro, k(pRed), caida(pRed, w * 0.015f))
+        val pPlumas = Offset(w * 0.1f, apoyo - w * 0.2f)
+        plumas(Offset(w * 0.13f, apoyo - td0 * 0.5f), w, oscuro, k(pPlumas), caida(pPlumas, w * 0.016f))
+        val pCodice = Offset(w * 0.33f, apoyo - w * 0.1f)
+        codice(w * 0.13f, w * 0.52f, apoyo, w * 0.205f, w, oscuro, k(pCodice), caida(pCodice, w * 0.022f))
+        val pVaso = Offset(w * 0.585f, apoyo - w * 0.07f)
+        vasoPolicromo(Offset(w * 0.585f, apoyo - td0 * 0.3f), w * 0.088f, w * 0.15f, w, oscuro, k(pVaso), haciaX(w * 0.585f, apoyo), caida(pVaso, w * 0.02f))
+        teaOcote(Offset(w * TEA_X, apoyo - td0 * 0.55f), w, oscuro, k(teaP + Offset(0f, w * 0.1f)))
+        val pInc = Offset(w * COPAL_X, apoyo - w * 0.06f)
+        incensario(Offset(w * COPAL_X, apoyo - td0 * 0.3f), w * 0.15f, w, oscuro, k(pInc), haciaX(w * COPAL_X, apoyo), caida(pInc, w * 0.02f))
         conchas(apoyo + td0 * 0.25f, w, oscuro, k(Offset(w * 0.68f, apoyo)))
+        // La llama de la tea, encima de lo suyo, con su propio color.
+        if (oscuro) llama(teaP, w)
 
         // ---- al pie: el petate enrollado, la placa (o un cajete caído) y el brasero
         val pieSuelo = piso + w * 0.105f
@@ -486,7 +621,7 @@ object IdeasMeso : DisenoIdeas {
      * (algo vuelta), el bloque de hojas aún plegadas y seis pliegues abiertos en zigzag, cada uno con su luz o su sombra, sus
      * filetes rojos, glifos inventados y números de puntos y barras; al final, la otra tapa de canto.
      */
-    private fun DrawScope.codice(x0: Float, x1: Float, pie: Float, alto: Float, w: Float, oscuro: Boolean, k: Float) {
+    private fun DrawScope.codice(x0: Float, x1: Float, pie: Float, alto: Float, w: Float, oscuro: Boolean, k: Float, caida: Offset) {
         val u = density
         val top = pie - alto
         val tapa = (x1 - x0) * 0.15f
@@ -508,14 +643,13 @@ object IdeasMeso : DisenoIdeas {
         }
         // Su sombra en el muro: de día, a la derecha y abajo; de noche, hacia fuera del copal (a la izquierda).
         clipRect(0f, 0f, w, pie - w * 0.012f) {
-            if (!oscuro) drawPath(corrido(silueta, w * 0.024f, w * 0.012f), sombra(false, 0.24f))
-            else drawPath(corrido(silueta, -w * 0.035f, w * 0.006f), sombra(true, 0.55f * k + 0.1f))
+            drawPath(corrido(silueta, caida.x, caida.y), sombra(oscuro, if (oscuro) 0.18f + 0.32f * k else 0.24f))
         }
         drawOval(sombra(oscuro, 0.35f), Offset(x0 + w * 0.01f, pie - w * 0.01f), Size(x1 - x0 + w * 0.015f, w * 0.016f))
         // Los pliegues abiertos.
         for (i in 0 until np) {
             val p = poli(xs[i], top + off(i), xs[i + 1], top + off(i + 1), xs[i + 1], pie - dy + off(i + 1), xs[i], pie - dy + off(i))
-            val luzP = off(i + 1) > off(i)
+            val luzP = if (oscuro) off(i + 1) < off(i) else off(i + 1) > off(i)
             drawPath(p, n(if (luzP) ESTUCO else mezcla(ESTUCO, PANO, 0.4f), oscuro, k))
             val xl = xs[i]; val xr = xs[i + 1]; val pw = xr - xl
             fun yA(f: Float, v: Float) = top + off(i) + (off(i + 1) - off(i)) * f + (alto - dy) * v
@@ -609,12 +743,12 @@ object IdeasMeso : DisenoIdeas {
      * El abanico de plumas, apoyado contra el muro: el mango de madera con su amarre rojo y, arriba, la rueda de plumas de
      * quetzal (dos coronas, la de atrás más larga y oscura) con las puntas tornasol; su sombra en el estuco.
      */
-    private fun DrawScope.plumas(pie: Offset, w: Float, oscuro: Boolean, k: Float) {
+    private fun DrawScope.plumas(pie: Offset, w: Float, oscuro: Boolean, k: Float, caida: Offset) {
         val u = density
         val centro = Offset(pie.x - w * 0.04f, pie.y - w * 0.215f)
         val eje = (centro - pie).let { it / it.getDistance() }
         val ang0 = Math.toDegrees(kotlin.math.atan2(eje.y.toDouble(), eje.x.toDouble())).toFloat()
-        val sd = if (oscuro) Offset(-w * 0.02f, w * 0.004f) else Offset(w * 0.016f, w * 0.012f)
+        val sd = caida
         fun pluma(ang: Float, largo: Float, ancho: Float): Path {
             val a = Math.toRadians(ang.toDouble())
             val d = Offset(cos(a).toFloat(), sin(a).toFloat()); val nn = Offset(-d.y, d.x)
@@ -655,7 +789,7 @@ object IdeasMeso : DisenoIdeas {
                     drawLine(n(mezcla(QUETZAL, NEGRO, 0.55f), oscuro, k), centro, centro + d * largo, 0.8f * u)
                 }
                 // Lo que mira arriba a la izquierda, a la luz; lo de abajo a la derecha, en sombra.
-                if (ang < ang0 - 10f) drawPath(borde(p, w * 0.004f, w * 0.004f), brillo(oscuro, 0.35f, k))
+                if ((ang < ang0 - 10f) != oscuro) drawPath(borde(p, if (oscuro) -w * 0.004f else w * 0.004f, w * 0.004f), brillo(oscuro, if (oscuro) 0.8f else 0.35f, k))
                 else drawPath(p, sombra(oscuro, 0.14f))
             }
         }
@@ -672,15 +806,15 @@ object IdeasMeso : DisenoIdeas {
      * Una red de henequén colgada de una estaca, con un calabazo para el agua dentro: el cordel, las mallas en rombo que
      * ciñen la panza y el tapón de olote; su sombra en el estuco.
      */
-    private fun DrawScope.red(clavo: Offset, w: Float, oscuro: Boolean, k: Float) {
+    private fun DrawScope.red(clavo: Offset, w: Float, oscuro: Boolean, k: Float, caida: Offset) {
         val u = density
-        val sd = if (oscuro) Offset(-w * 0.012f, w * 0.004f) else Offset(w * 0.014f, w * 0.012f)
+        val sd = caida
         val c0 = Offset(clavo.x + w * 0.004f, clavo.y + w * 0.085f)
         val calabazo = Path().apply {
             addOval(Rect(c0.x - w * 0.042f, c0.y - w * 0.03f, c0.x + w * 0.042f, c0.y + w * 0.045f))
             addOval(Rect(c0.x - w * 0.022f, c0.y - w * 0.058f, c0.x + w * 0.022f, c0.y - w * 0.012f))
         }
-        drawPath(corrido(calabazo, sd.x, sd.y), sombra(oscuro, if (oscuro) 0.2f + 0.3f * k else 0.2f))
+        drawPath(corrido(calabazo, sd.x, sd.y), sombra(oscuro, if (oscuro) 0.1f + 0.2f * k else 0.2f))
         val cuerdas = listOf(-0.03f, 0.03f).map { dx -> Offset(c0.x + w * dx, c0.y - w * 0.01f) }
         cuerdas.forEach { drawLine(sombra(oscuro, 0.25f), clavo + sd, it + sd, 1.1f * u) }
         cuerdas.forEach { drawLine(n(HENEQUEN, oscuro, k), clavo, it, 1.1f * u) }
@@ -705,7 +839,7 @@ object IdeasMeso : DisenoIdeas {
     }
 
     /** El vaso cilíndrico policromo: engobe crema anaranjado, bandas rojas, una columna de glifos inventados y los pinceles dentro. */
-    private fun DrawScope.vasoPolicromo(pie: Offset, ancho: Float, alto: Float, w: Float, oscuro: Boolean, k: Float, haciaX: Float) {
+    private fun DrawScope.vasoPolicromo(pie: Offset, ancho: Float, alto: Float, w: Float, oscuro: Boolean, k: Float, haciaX: Float, caida: Offset) {
         val u = density
         val l = pie.x - ancho / 2; val r = pie.x + ancho / 2; val top = pie.y - alto
         val ry = ancho * 0.13f
@@ -725,7 +859,7 @@ object IdeasMeso : DisenoIdeas {
             cubicTo(l, pie.y + ry * 0.4f, r, pie.y + ry * 0.4f, r, pie.y - ry * 0.5f)
             lineTo(r, top); close()
         }
-        if (!oscuro) clipRect(0f, 0f, w * 2, pie.y - w * 0.01f) { drawPath(corrido(cuerpo, w * 0.02f, w * 0.01f), sombra(false, 0.22f)) }
+        clipRect(0f, 0f, w * 2, pie.y - w * 0.01f) { drawPath(corrido(cuerpo, caida.x, caida.y), sombra(oscuro, if (oscuro) 0.15f + 0.3f * k else 0.22f)) }
         drawOval(sombra(oscuro, 0.4f), Offset(l + w * 0.006f, pie.y - w * 0.008f), Size(ancho * 1.25f, w * 0.014f))
         val fondo = mezcla(OCRE, ESTUCO, 0.45f)
         drawPath(cuerpo, n(fondo, oscuro, k))
@@ -756,8 +890,74 @@ object IdeasMeso : DisenoIdeas {
         drawArc(brillo(oscuro, 0.5f, k), 160f, 120f, false, Offset(l, top - ry), Size(ancho, ry * 2), style = Stroke(0.8f * u))
     }
 
+    /**
+     * La tea de ocote: un manojo de astillas de pino resinoso, atado con henequén, metido en un soporte de barro sobre la
+     * grada alta. De día está apagada, con la punta tiznada; de noche arde (la llama se pinta aparte, [llama]).
+     */
+    private fun DrawScope.teaOcote(pie: Offset, w: Float, oscuro: Boolean, k: Float) {
+        val u = density
+        val sw = w * 0.042f; val sh = w * 0.05f
+        val punta = Offset(w * tea.x, w * (tea.y + 0.02f))
+        val astillas = listOf(-0.012f, -0.005f, 0.002f, 0.009f, 0.015f)
+        // La sombra del manojo en el muro, de día (de noche la luz es suya).
+        if (!oscuro) astillas.forEach { dx ->
+            drawLine(sombra(false, 0.16f), Offset(pie.x + w * dx * 0.6f + w * 0.016f, pie.y - sh * 0.7f + w * 0.012f), Offset(punta.x + w * dx + w * 0.016f, punta.y + w * 0.012f), w * 0.008f, StrokeCap.Round)
+        }
+        astillas.forEachIndexed { i, dx ->
+            val a = Offset(pie.x + w * dx * 0.6f, pie.y - sh * 0.7f)
+            val b = Offset(punta.x + w * dx, punta.y + w * 0.006f * (i % 2))
+            val col = mezcla(OCOTE, if (i % 2 == 0) PALMA_LUZ else BARRO_OSC, 0.25f)
+            drawLine(n(col, oscuro, k), a, b, w * 0.0075f, StrokeCap.Butt)
+            // La resina que escurre y la cara de la astilla que mira a la luz.
+            drawLine(n(mezcla(OCOTE, BARRO_OSC, 0.5f), oscuro, k).copy(alpha = 0.6f), a + Offset(w * 0.002f, 0f), b + Offset(w * 0.002f, 0f), w * 0.002f)
+            drawLine(brillo(oscuro, if (oscuro) 0.45f else 0.3f, k), a - Offset(w * 0.0025f, 0f), b - Offset(w * 0.0025f, 0f), w * 0.0015f)
+            // La punta tiznada.
+            val t0 = b + (a - b) * 0.12f
+            drawLine(n(NEGRO, oscuro, maxOf(k, 0.3f)), b, t0, w * 0.0085f, StrokeCap.Butt)
+        }
+        // Los amarres.
+        listOf(0.35f, 0.7f).forEach { f ->
+            val y = pie.y - sh * 0.7f + (punta.y - pie.y + sh * 0.7f) * f
+            val x = pie.x + (punta.x - pie.x) * f
+            drawLine(n(HENEQUEN, oscuro, k), Offset(x - w * 0.017f, y + w * 0.002f), Offset(x + w * 0.019f, y - w * 0.002f), 2.2f * u)
+            drawLine(sombra(oscuro, 0.3f), Offset(x - w * 0.017f, y + w * 0.004f), Offset(x + w * 0.019f, y), 0.8f * u)
+        }
+        // El soporte de barro, con su pie.
+        val soporte = perfil(pie.x, pie.y - sh, 1f, 1f, floatArrayOf(sw * 0.5f, 0f, sw * 0.42f, sh * 0.35f, sw * 0.3f, sh * 0.65f, sw * 0.52f, sh * 0.92f, sw * 0.6f, sh))
+        drawOval(sombra(oscuro, 0.38f), Offset(pie.x - sw * 0.5f, pie.y - w * 0.006f), Size(sw * 1.4f, w * 0.012f))
+        drawPath(soporte, n(BARRO, oscuro, k))
+        clipPath(soporte) { drawRect(n(CINABRIO, oscuro, k), Offset(pie.x - sw, pie.y - sh), Size(sw * 2, sh * 0.16f)) }
+        volumen(soporte, oscuro, k, -1f, lustre = 0.2f)
+        drawOval(n(mezcla(BARRO_OSC, NEGRO, 0.5f), oscuro, k), Offset(pie.x - sw * 0.45f, pie.y - sh - w * 0.004f), Size(sw * 0.9f, w * 0.008f))
+    }
+
+    /** La llama de la tea, con su propio color (no se apaga de noche), y su hilo de humo negro que sube y se tuerce. */
+    private fun DrawScope.llama(c: Offset, w: Float) {
+        val u = density
+        // El humo negro del ocote.
+        var p = c - Offset(0f, w * 0.03f)
+        for (j in 0 until 5) {
+            val sube = w * (0.03f + 0.006f * j)
+            val lado = (if (j % 2 == 0) 1f else -1f) * w * (0.008f + 0.004f * j)
+            val q = p + Offset(lado * 0.3f - w * 0.003f, -sube)
+            val seg = Path().apply { moveTo(p.x, p.y); cubicTo(p.x + lado, p.y - sube * 0.35f, q.x + lado, q.y + sube * 0.35f, q.x, q.y) }
+            drawPath(seg, Color(0xFF1A1210).copy(alpha = 0.5f - 0.08f * j), style = Stroke((1.4f + 1.2f * j) * u, cap = StrokeCap.Round))
+            p = q
+        }
+        fun gota(alto: Float, ancho: Float) = Path().apply {
+            moveTo(c.x, c.y - alto * 0.62f)
+            cubicTo(c.x + ancho * 0.25f, c.y - alto * 0.3f, c.x + ancho * 0.55f, c.y + alto * 0.05f, c.x, c.y + alto * 0.38f)
+            cubicTo(c.x - ancho * 0.55f, c.y + alto * 0.05f, c.x - ancho * 0.3f, c.y - alto * 0.3f, c.x, c.y - alto * 0.62f)
+            close()
+        }
+        drawPath(gota(w * 0.05f, w * 0.03f), Color(0xFFE8622A))
+        drawPath(gota(w * 0.036f, w * 0.021f), BRASA)
+        drawPath(gota(w * 0.022f, w * 0.012f), BRASA_VIVA)
+        drawCircle(Color(0xFFFFF1C8), w * 0.004f, c + Offset(0f, w * 0.008f))
+    }
+
     /** El incensario de barro con púas: el pie acampanado, el cuerpo con dos hileras de púas, la boca con el copal y su humo. */
-    private fun DrawScope.incensario(pie: Offset, alto: Float, w: Float, oscuro: Boolean, k: Float, haciaX: Float) {
+    private fun DrawScope.incensario(pie: Offset, alto: Float, w: Float, oscuro: Boolean, k: Float, haciaX: Float, caida: Offset) {
         val u = density
         val cx = pie.x
         val barro = mezcla(BARRO, PIEDRA, 0.5f)
@@ -773,7 +973,7 @@ object IdeasMeso : DisenoIdeas {
             cubicTo(cx - cw * 0.6f, pie.y - pieA * 0.8f, cx - cw * 0.9f, pie.y - pieA * 0.4f, cx - cw * 1.25f, pie.y)
             close()
         }
-        if (!oscuro) clipRect(0f, 0f, w * 2, pie.y - w * 0.01f) { drawPath(corrido(silueta, w * 0.022f, w * 0.012f), sombra(false, 0.22f)) }
+        clipRect(0f, 0f, w * 2, pie.y - w * 0.01f) { drawPath(corrido(silueta, caida.x, caida.y), sombra(oscuro, if (oscuro) 0.15f + 0.3f * k else 0.22f)) }
         drawOval(sombra(oscuro, 0.4f), Offset(cx - cw * 1.1f, pie.y - w * 0.008f), Size(cw * 2.8f, w * 0.016f))
         drawPath(silueta, n(barro, oscuro, k))
         clipPath(silueta) {
@@ -848,7 +1048,7 @@ object IdeasMeso : DisenoIdeas {
     }
 
     /** El collar de cuentas de jade colgado de una estaca del muro, con su pectoral; su sombra en el estuco. */
-    private fun DrawScope.collar(clavo: Offset, w: Float, oscuro: Boolean, k: Float) {
+    private fun DrawScope.collar(clavo: Offset, w: Float, oscuro: Boolean, k: Float, caida: Offset) {
         val u = density
         val rx = w * 0.042f; val ry = w * 0.075f
         val c0 = Offset(clavo.x, clavo.y + ry * 0.98f)
@@ -857,8 +1057,8 @@ object IdeasMeso : DisenoIdeas {
             val a = Math.toRadians(-70.0 + 320.0 * j / (cuentas - 1))
             Offset(c0.x + rx * sin(a).toFloat(), c0.y - ry * cos(a).toFloat())
         }.filter { it.y > clavo.y + w * 0.008f }
-        val sd = if (oscuro) Offset(-w * 0.01f, -w * 0.004f) else Offset(w * 0.012f, w * 0.01f)
-        val sa = if (oscuro) 0.5f * k + 0.15f else 0.25f
+        val sd = caida
+        val sa = if (oscuro) 0.22f * k + 0.08f else 0.25f
         // La sombra del collar y del pectoral.
         pos.forEach { drawCircle(sombra(oscuro, sa), w * 0.0085f, it + sd) }
         drawRoundRect(sombra(oscuro, sa), Offset(c0.x - w * 0.016f, c0.y + ry - w * 0.006f) + sd, Size(w * 0.032f, w * 0.042f), CornerRadius(w * 0.008f))
@@ -1028,7 +1228,7 @@ object IdeasMeso : DisenoIdeas {
         val dentro = c.cols == cols
         val aw = anchoH(); val ah = altoH()
         val centro = Offset(lado + c.col * (aw + hueco) + aw * 0.5f, corona + hueco + c.fila * (ah + hueco) + ah * 0.6f)
-        val k = if (!oscuro) 0f else if (dentro) (calor(centro, c.filas) * 1.3f).coerceIn(0.08f, 1f) else 0.5f
+        val k = if (!oscuro) 0f else if (dentro) (calor(centro, c.filas) * 1.15f).coerceIn(0.06f, 1f) else 0.5f
         val fuente = if (dentro) luzMayor(centro, c.filas) else Offset(centro.x + 0.3f, centro.y + 0.3f)
         val haciaX = if (fuente.x >= centro.x) 1f else -1f
         val lejos = (centro - fuente).let { it / it.getDistance().coerceAtLeast(0.0001f) }
@@ -1043,18 +1243,34 @@ object IdeasMeso : DisenoIdeas {
         val cuantas = if (c.n <= 0) 0 else (1 + nn).coerceAtMost(7)
         val sube = h * (0.012f * nn) + ab * h * 0.14f
         val silueta = when (tipo) {
-            0 -> Path().apply { addRect(Rect(w * 0.07f, h * 0.24f - sube, w * 0.93f, pie)) }
+            0 -> Path().apply { addRect(Rect(w * 0.09f, h * 0.37f, w * 0.91f, pie)) }
             1 -> olla(w, h, pie)
             2 -> bulto(w, h, pie)
             else -> jicara(w, h, pie)
         }
+        // Primero el aro que tapa el aura (del color de lo que hay detrás); luego, encima, las sombras y lo guardado.
+        val extra = when (tipo) {
+            1 -> {
+                val bocaY = h * 0.3f; val alza = sube * 0.8f
+                listOf(Path().apply {
+                    moveTo(w * 0.26f, bocaY - alza)
+                    cubicTo(w * 0.28f, bocaY - h * 0.12f - alza, w * 0.72f, bocaY - h * 0.12f - alza, w * 0.74f, bocaY - alza)
+                    close()
+                }, Path().apply { addRect(Rect(w * 0.46f, bocaY - h * 0.13f - alza, w * 0.54f, bocaY - h * 0.09f - alza)) }) +
+                    hojasContorno(w * 0.3f, w * 0.7f, bocaY - h * 0.16f - alza * 0.6f, bocaY + h * 0.02f, cuantas.coerceAtMost(5), c.semilla)
+            }
+            2 -> orejasBulto(w, h) + hojasContorno(w * 0.38f, w * 0.62f, h * 0.06f - sube * 0.6f, h * 0.27f, cuantas.coerceAtMost(4), c.semilla)
+            3 -> hojasContorno(w * 0.16f, w * 0.84f, h * 0.18f - ab * h * 0.1f, h * 0.52f, cuantas.coerceAtLeast(2), c.semilla) +
+                poli(w * 0.78f, h * 0.48f, w * 0.95f, h * 0.52f, w * 0.93f, h * 0.7f, w * 0.8f, h * 0.62f)
+            else -> listOf(Path().apply { addRect(Rect(w * 0.065f, h * 0.24f - sube, w * 0.935f, h * 0.37f - sube + 1.5f * u)) })
+        }
+        cubreAura(c, oscuro, listOf(silueta, Path().apply { addRect(Rect(w * rotulo.left, h * rotulo.top, w * rotulo.right, h * rotulo.bottom)) }) + extra)
         // La sombra de lo guardado en la cara de la grada: de día, a la derecha y abajo; de noche, lejos de la lumbre.
         clipRect(-w, -h, w * 2, repisa) {
             if (!oscuro) drawPath(corrido(silueta, w * 0.045f, h * 0.02f), sombra(false, 0.2f), blendMode = BlendMode.SrcAtop)
-            else if (k > 0.08f) drawPath(corrido(silueta, lejos.x * w * 0.12f, lejos.y * w * 0.12f), NOCHE.copy(alpha = (0.7f * k).coerceAtMost(0.6f)), blendMode = BlendMode.SrcAtop)
+            else if (k > 0.08f) drawPath(corrido(silueta, lejos.x * w * 0.12f, lejos.y * w * 0.12f), SOMBRA_NOCHE.copy(alpha = (0.7f * k).coerceAtMost(0.6f)), blendMode = BlendMode.SrcAtop)
         }
         drawOval(sombra(oscuro, if (oscuro) 0.3f + 0.35f * k else 0.34f), Offset(w * 0.08f, pie - w * 0.025f), Size(w * 0.9f, w * 0.05f), blendMode = BlendMode.SrcAtop)
-        cubreAura(oscuro, listOf(silueta, Path().apply { addRect(Rect(w * rotulo.left, h * rotulo.top, w * rotulo.right, h * rotulo.bottom)) }))
         when (tipo) {
             0 -> petaca(w, h, pie, sube, cuantas, c.semilla, oscuro, k, dia, haciaX)
             1 -> ollaConTapa(w, h, pie, sube, cuantas, c.semilla, mez, oscuro, k, dia, haciaX)
@@ -1250,13 +1466,9 @@ object IdeasMeso : DisenoIdeas {
         volumen(forma, oscuro, k, haciaX, fuerza = 1.1f)
         // El nudo y las dos orejas de la manta, que caen a los lados.
         val nudo = Offset(w * 0.5f, h * 0.22f)
-        listOf(-1f, 1f).forEach { s ->
-            val oreja = Path().apply {
-                moveTo(nudo.x, nudo.y - h * 0.02f)
-                cubicTo(nudo.x + s * w * 0.08f, nudo.y - h * 0.12f, nudo.x + s * w * 0.2f, nudo.y - h * 0.06f, nudo.x + s * w * 0.22f, nudo.y + h * 0.02f)
-                cubicTo(nudo.x + s * w * 0.15f, nudo.y + h * 0.0f, nudo.x + s * w * 0.08f, nudo.y + h * 0.02f, nudo.x, nudo.y + h * 0.03f)
-                close()
-            }
+        val orejas = orejasBulto(w, h)
+        listOf(-1f, 1f).forEachIndexed { i, s ->
+            val oreja = orejas[i]
             drawPath(corrido(oreja, 1.5f * u, 2f * u), sombra(oscuro, 0.3f))
             drawPath(oreja, n(ALGODON, oscuro, k, dia))
             drawPath(borde(oreja, 0f, 1.1f * u), n(mezcla(cenefa, ALGODON, 0.4f), oscuro, k, dia))
@@ -1265,6 +1477,19 @@ object IdeasMeso : DisenoIdeas {
         drawOval(n(mezcla(ALGODON, PIEDRA, 0.3f), oscuro, k, dia), Offset(nudo.x - w * 0.05f, nudo.y - h * 0.035f), Size(w * 0.1f, h * 0.075f))
         drawOval(sombra(oscuro, 0.25f), Offset(nudo.x - w * 0.01f, nudo.y - h * 0.01f), Size(w * 0.06f, h * 0.045f))
         drawOval(brillo(oscuro, 0.45f, k), Offset(nudo.x - w * 0.04f, nudo.y - h * 0.03f), Size(w * 0.04f, h * 0.025f))
+    }
+
+    /** Las dos orejas de la manta del bulto (la izquierda y la derecha) y el nudo. */
+    private fun orejasBulto(w: Float, h: Float): List<Path> {
+        val nudo = Offset(w * 0.5f, h * 0.22f)
+        return listOf(-1f, 1f).map { s ->
+            Path().apply {
+                moveTo(nudo.x, nudo.y - h * 0.02f)
+                cubicTo(nudo.x + s * w * 0.08f, nudo.y - h * 0.12f, nudo.x + s * w * 0.2f, nudo.y - h * 0.06f, nudo.x + s * w * 0.22f, nudo.y + h * 0.02f)
+                cubicTo(nudo.x + s * w * 0.15f, nudo.y + h * 0.0f, nudo.x + s * w * 0.08f, nudo.y + h * 0.02f, nudo.x, nudo.y + h * 0.03f)
+                close()
+            }
+        } + Path().apply { addOval(Rect(nudo.x - w * 0.05f, nudo.y - h * 0.035f, nudo.x + w * 0.05f, nudo.y + h * 0.04f)) }
     }
 
     /** La silueta de la jícara: media calabaza, ancha y baja. */
