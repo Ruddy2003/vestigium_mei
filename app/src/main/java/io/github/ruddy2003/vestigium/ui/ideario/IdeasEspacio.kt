@@ -797,11 +797,11 @@ object IdeasEspacio : DisenoIdeas {
         val larguero = Rect(ix, w * TOPE, dx, primero.top)
         var x = larguero.left
         while (x < larguero.right) {
-            val tramo = minOf(w * 0.1f, larguero.right - x)
+            val tramo = minOf(w * 0.012f, larguero.right - x)
             val t = tn(Offset(x + tramo / 2, larguero.center.y))
-            drawRect(t.c(mezcla(ALU, ALU_LUZ, 0.25f)), Offset(x, larguero.top), Size(tramo, larguero.height))
-            drawRect(t.s(0.2f), Offset(x, larguero.bottom - larguero.height * 0.3f), Size(tramo, larguero.height * 0.3f))
-            drawRect(t.s(0.28f), Offset(x, larguero.top + larguero.height * 0.62f), Size(tramo, 1.3f * u))
+            drawRect(t.c(mezcla(ALU, ALU_LUZ, 0.25f)), Offset(x, larguero.top), Size(tramo + 0.5f, larguero.height))
+            drawRect(t.s(0.2f), Offset(x, larguero.bottom - larguero.height * 0.3f), Size(tramo + 0.5f, larguero.height * 0.3f))
+            drawRect(t.s(0.28f), Offset(x, larguero.top + larguero.height * 0.62f), Size(tramo + 0.5f, 1.3f * u))
             x += tramo
         }
         // En el larguero: la plantilla del rack, la cinta naranja y tres pilotos.
@@ -817,11 +817,11 @@ object IdeasEspacio : DisenoIdeas {
         val tapa = Rect(xL - w * 0.006f, w * SUP, xR + w * 0.006f, w * TOPE)
         x = tapa.left
         while (x < tapa.right) {
-            val tramo = minOf(w * 0.1f, tapa.right - x)
+            val tramo = minOf(w * 0.012f, tapa.right - x)
             val t = tn(Offset(x + tramo / 2, tapa.center.y))
-            drawRect(t.c(ALU_LUZ), Offset(x, tapa.top), Size(tramo, tapa.height))
-            drawRect(t.s(0.12f), Offset(x, tapa.top), Size(tramo, tapa.height * 0.35f))
-            drawRect(t.b(0.85f), Offset(x, tapa.bottom - 1.6f * u), Size(tramo, 1.4f * u))
+            drawRect(t.c(ALU_LUZ), Offset(x, tapa.top), Size(tramo + 0.5f, tapa.height))
+            drawRect(t.s(0.12f), Offset(x, tapa.top), Size(tramo + 0.5f, tapa.height * 0.35f))
+            drawRect(t.b(0.85f), Offset(x, tapa.bottom - 1.6f * u), Size(tramo + 0.5f, 1.4f * u))
             x += tramo
         }
         drawRect(tn(Offset(w * 0.5f, w * TOPE)).s(0.4f), Offset(xL, w * TOPE), Size(xR - xL, 1.4f * u))
@@ -1203,7 +1203,9 @@ object IdeasEspacio : DisenoIdeas {
         translate(0f, SALIDA * h * ab) {
             when {
                 c.sinTema -> malla(w, h, c, t)
-                else -> when ((azar(c.semilla, 11) * 3f).toInt().coerceIn(0, 2)) {
+                // La variante sale de la semilla con una mezcla elegida para repartir: en la hoja de ejemplo ninguna pasa de 3 de 8
+                // ni se repite entre vecinas.
+                else -> when ((azar(c.semilla, 185) * 3f).toInt().coerceIn(0, 2)) {
                     0 -> modulo(w, h, c, t)
                     1 -> bolsaCarga(w, h, c, t)
                     else -> cartuchos(w, h, c, t)
@@ -1322,45 +1324,97 @@ object IdeasEspacio : DisenoIdeas {
         drawRect(etiqueta(o, t.k), r.topLeft, r.size)
     }
 
-    /** La bandeja de cartuchos de memoria: más cartuchos con más fichas, de colores y alturas distintos, uno ladeado, y la tarjeta en el frente. */
+    /**
+     * La bandeja de cartuchos de memoria: una caja abierta de lado a lado de la bahía, con sus costados, su fondo con las
+     * guías de cada ranura y el canto numerado. Más cartuchos con más fichas, de alturas distintas y el último ladeado; las
+     * ranuras libres muestran su boca oscura y, algunas, su tapón de color. Con una o dos fichas, en el sitio libre, un rollo de
+     * cinta sujeto con una goma. La tarjeta, en el frente.
+     */
     private fun DrawScope.cartuchos(w: Float, h: Float, c: EstadoCajon, t: Tono) {
         val u = density
         val o = t.o
         val fr = Rect(w * 0.035f, h * 0.55f, w * 0.965f, h * 0.95f)
-        val boca = h * 0.47f
+        val boca = h * 0.48f
+        val tope = h * 0.15f
         val colTray = listOf(GRAFITO, mezcla(ALU, ALU_OSC, 0.3f), mezcla(TELA_AZUL, GRAFITO, 0.2f), mezcla(MAMPARO, ALU, 0.4f))[(azar(c.semilla, 5) * 4f).toInt().coerceIn(0, 3)]
         drawRect(t.s(0.35f), Offset(fr.left + 3f * u, fr.bottom - 1f * u), Size(fr.width, 4f * u))
-        // El fondo de la bandeja, visto un poco desde arriba.
-        drawRect(t.c(mezcla(colTray, GRAFITO, 0.5f)), Offset(fr.left + w * 0.02f, boca), Size(fr.width - w * 0.04f, fr.top - boca))
-        val total = 12
+        // La caja: los costados, el fondo con las guías de las ranuras y su canto de arriba.
+        val lado = w * 0.035f
+        val dentro = Rect(fr.left + lado, tope, fr.right - lado, fr.top)
+        drawRect(t.c(mezcla(colTray, GRAFITO, 0.5f)), dentro.topLeft, Size(dentro.width, boca - tope))
+        drawRect(t.s(0.25f), dentro.topLeft, Size(dentro.width, h * 0.06f))
+        val total = 10
+        val paso = dentro.width / total
+        for (i in 1 until total) drawLine(t.s(0.35f), Offset(dentro.left + paso * i, tope + h * 0.03f), Offset(dentro.left + paso * i, boca), 1f * u)
+        drawRect(t.c(mezcla(colTray, ALU_LUZ, 0.35f)), Offset(dentro.left, tope), Size(dentro.width, 1.6f * u))
+        // El piso de la bandeja, visto un poco desde arriba, con la boca de cada ranura.
+        drawRect(t.c(mezcla(colTray, ALU, 0.25f)), Offset(dentro.left, boca), Size(dentro.width, fr.top - boca))
+        listOf(fr.left to true, fr.right - lado to false).forEach { (x, izq) ->
+            drawRect(t.c(if (izq) mezcla(colTray, ALU_LUZ, 0.2f) else mezcla(colTray, GRAFITO, 0.25f)), Offset(x, tope), Size(lado, fr.top - tope))
+            drawRect(t.b(if (izq) 0.55f else 0.2f), Offset(x, tope), Size(1.2f * u, fr.top - tope))
+            drawRect(t.b(0.5f), Offset(x, tope), Size(lado, 1.2f * u))
+        }
         val llenos = (c.n + 2).coerceIn(2, total)
-        val paso = (fr.width - w * 0.08f) / total
         val colores = listOf(CIAN, CINCHA, ORO, LED, TELA_AZUL, ROJO, PAPEL)
         val cuerpo = listOf(mezcla(GRAFITO, ALU_OSC, 0.3f), mezcla(ALU, ALU_LUZ, 0.3f), mezcla(TELA_AZUL, GRAFITO, 0.3f), mezcla(CINCHA, MADERA, 0.4f))[(azar(c.semilla, 9) * 4f).toInt().coerceIn(0, 3)]
+        // De noche, en las filas que aún reciben algo de luz, el canto de arriba de cada cartucho un punto más claro, para que se cuenten.
+        val filoNoche = if (o && c.fila <= 2) mezcla(ALU_LUZ, CIAN, 0.25f).copy(alpha = 0.5f) else null
         for (i in 0 until total) {
-            val x = fr.left + w * 0.04f + paso * (i + 0.5f)
+            val x = dentro.left + paso * (i + 0.5f)
+            // La boca de la ranura.
+            drawRoundRect(t.s(0.6f), Offset(x - paso * 0.36f, boca + (fr.top - boca) * 0.25f), Size(paso * 0.72f, (fr.top - boca) * 0.55f), CornerRadius(1.2f * u))
             if (i < llenos) {
-                val sube = h * (0.3f + 0.08f * azar(c.semilla, i))
-                val giro = if (i == llenos - 1 && llenos < total) 9f else 0f
+                val sube = h * (0.37f + 0.05f * azar(c.semilla, i))
+                val giro = if (i == llenos - 1 && llenos < total) 8f else 0f
                 rotate(giro, Offset(x, fr.top)) {
-                    val cr = Rect(x - paso * 0.4f, fr.top - sube, x + paso * 0.4f, fr.top + 2f * u)
+                    val cr = Rect(x - paso * 0.42f, fr.top - sube, x + paso * 0.42f, fr.top + 2f * u)
                     drawRect(t.s(0.2f), Offset(cr.left + paso * 0.25f, cr.top + 2f * u), cr.size)
                     drawRoundRect(t.c(cuerpo), cr.topLeft, cr.size, CornerRadius(1.5f * u))
                     val tinte = colores[(i + Math.floorMod(c.semilla, colores.size)) % colores.size]
-                    drawRoundRect(t.c(tinte), cr.topLeft, Size(cr.width, sube * 0.18f), CornerRadius(1.5f * u))
-                    drawRect(t.c(PAPEL), Offset(cr.left + cr.width * 0.18f, cr.top + sube * 0.3f), Size(cr.width * 0.64f, sube * 0.3f))
-                    drawRect(t.c(TINTA).copy(alpha = 0.4f), Offset(cr.left + cr.width * 0.3f, cr.top + sube * 0.38f), Size(cr.width * 0.4f, 0.8f * u))
+                    drawRoundRect(t.c(tinte), cr.topLeft, Size(cr.width, sube * 0.16f), CornerRadius(1.5f * u))
+                    // La muesca de agarre, la etiqueta y su renglón.
+                    drawRect(t.s(0.35f), Offset(cr.left + cr.width * 0.25f, cr.top + sube * 0.2f), Size(cr.width * 0.5f, 1f * u))
+                    drawRect(t.c(PAPEL), Offset(cr.left + cr.width * 0.18f, cr.top + sube * 0.3f), Size(cr.width * 0.64f, sube * 0.28f))
+                    drawRect(t.c(TINTA).copy(alpha = 0.4f), Offset(cr.left + cr.width * 0.28f, cr.top + sube * 0.37f), Size(cr.width * 0.44f, 0.8f * u))
+                    drawRect(t.c(TINTA).copy(alpha = 0.3f), Offset(cr.left + cr.width * 0.28f, cr.top + sube * 0.44f), Size(cr.width * 0.3f, 0.8f * u))
                     drawRect(t.b(0.55f), cr.topLeft, Size(1f * u, cr.height))
                     drawRect(t.s(0.3f), Offset(cr.right - cr.width * 0.22f, cr.top), Size(cr.width * 0.22f, cr.height))
+                    if (filoNoche != null) drawRect(filoNoche, cr.topLeft, Size(cr.width, 1.2f * u))
                 }
-            } else drawRect(t.s(0.55f), Offset(x - paso * 0.35f, boca + (fr.top - boca) * 0.3f), Size(paso * 0.7f, (fr.top - boca) * 0.5f))
+            } else if (azar(c.semilla + 13, i) < 0.45f) {
+                // Un tapón de color en una ranura libre.
+                val tap = colores[(i * 3 + Math.floorMod(c.semilla, colores.size)) % colores.size]
+                val tp = Rect(x - paso * 0.32f, boca + (fr.top - boca) * 0.05f, x + paso * 0.32f, boca + (fr.top - boca) * 0.6f)
+                drawRoundRect(t.c(tap), tp.topLeft, tp.size, CornerRadius(1.5f * u))
+                drawRect(t.b(0.5f), tp.topLeft, Size(tp.width, 1f * u))
+                drawRect(t.s(0.3f), Offset(tp.right - tp.width * 0.3f, tp.top), Size(tp.width * 0.3f, tp.height))
+            }
+        }
+        // Con una o dos fichas, en el sitio libre: un rollo de cinta americana sujeto al costado con una goma.
+        if (c.n <= 2) {
+            val rc = Offset(dentro.right - paso * 2.2f, boca - h * 0.12f)
+            val rr = h * 0.13f
+            drawCircle(t.s(0.3f), rr, rc + Offset(rr * 0.25f, rr * 0.2f))
+            drawCircle(t.c(ALU), rr, rc)
+            drawCircle(t.b(0.4f), rr * 0.9f, rc - Offset(rr * 0.12f, rr * 0.12f), style = Stroke(rr * 0.12f))
+            drawCircle(t.c(mezcla(TELA, MADERA, 0.25f)), rr * 0.5f, rc)
+            drawCircle(t.c(mezcla(colTray, GRAFITO, 0.5f)), rr * 0.38f, rc)
+            // La punta de la cinta, colgando.
+            drawPath(Path().apply { moveTo(rc.x + rr * 0.6f, rc.y + rr * 0.78f); lineTo(rc.x + rr * 0.98f, rc.y + rr * 0.25f); lineTo(rc.x + rr * 1.05f, rc.y + rr * 0.95f); close() }, t.c(mezcla(ALU, ALU_LUZ, 0.3f)))
+            // La goma, del costado derecho al rollo.
+            drawLine(t.c(mezcla(TELA_AZUL, GRAFITO, 0.3f)), Offset(fr.right - lado, rc.y - rr * 0.7f), Offset(rc.x - rr * 0.2f, rc.y - rr * 0.98f), 2f * u, StrokeCap.Round)
+            drawLine(t.c(mezcla(TELA_AZUL, GRAFITO, 0.3f)), Offset(fr.right - lado, rc.y + rr * 0.5f), Offset(rc.x - rr * 0.2f, rc.y + rr * 0.98f), 2f * u, StrokeCap.Round)
         }
         // El frente de la bandeja, con su lado de sombra, el tirador y la tarjeta.
         drawRect(t.c(colTray), fr.topLeft, fr.size)
         drawRect(t.b(0.6f), fr.topLeft, Size(fr.width, 1.4f * u))
         drawRect(t.b(0.2f), fr.topLeft, Size(fr.width * 0.15f, fr.height))
         drawRect(t.s(0.25f), Offset(fr.right - fr.width * 0.1f, fr.top), Size(fr.width * 0.1f, fr.height))
-        drawRoundRect(t.s(0.5f), Offset(fr.center.x - w * 0.08f, fr.top + 2f * u), Size(w * 0.16f, h * 0.025f), CornerRadius(3f * u))
+        // El número de cada ranura, pintado en el canto.
+        for (i in 0 until total) {
+            val x = dentro.left + paso * (i + 0.5f)
+            plantilla("${(i + 1) % 10}", x - paso * 0.1f, fr.top + h * 0.007f, paso * 0.2f, h * 0.03f, t.c(mezcla(colTray, PAPEL, 0.6f)))
+        }
         val r = cajaRotulo(w, h)
         drawRect(t.c(ALU_OSC), Offset(r.left - 2f * u, r.top - 2f * u), Size(r.width + 4f * u, r.height + 4f * u))
         drawRect(etiqueta(o, t.k), r.topLeft, r.size)
