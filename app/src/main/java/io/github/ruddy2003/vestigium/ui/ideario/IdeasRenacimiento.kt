@@ -514,10 +514,10 @@ object IdeasRenacimiento : DisenoIdeas {
     }
 
     /**
-     * La hoja de estudio, de papel teñido, sujeta con dos clavos y un poco torcida: una mano a la sanguina (el contorno, el
-     * sombreado en diagonal del lado de la sombra, los realces de albayalde del lado de la luz, los nudillos y las uñas), un
-     * dedo repetido aparte, un círculo de compás y unos renglones de escritura en espejo, sin palabras. La esquina de abajo se
-     * levanta.
+     * La hoja de estudio, de papel teñido, sujeta con dos clavos y un poco torcida: un estudio de paños a la sanguina, una
+     * tela colgada de un punto que cae en pliegues de tubo y se quiebra en ángulos al llegar abajo, con el sombreado en
+     * diagonal en los hondos y los realces de albayalde en los lomos; abajo, unos renglones de escritura en espejo, sin
+     * palabras. La esquina de abajo se levanta.
      */
     private fun DrawScope.hojaDeEstudio(r: Rect, sup: Float) {
         val u = density
@@ -530,69 +530,74 @@ object IdeasRenacimiento : DisenoIdeas {
             drawPath(hoja, papel)
             clipPath(hoja) {
                 val sang = t.c(SANGUINA)
-                val trazo = 1.15f * u
+                val blanco = t.c(mezcla(CARTELLINO, Color.White, 0.6f))
                 fun p(x: Float, y: Float) = Offset(r.left + r.width * x, r.top + r.height * y)
-                // El círculo de compás con sus ejes, tenue, arriba a la derecha.
-                val cc = p(0.83f, 0.2f)
-                // (un drapeado apenas empezado: tres curvas sueltas)
-                for (j in 0 until 3) drawPath(Path().apply { m(cc + Offset(-r.width * 0.1f, r.width * 0.03f * j)); c3(cc + Offset(-r.width * 0.02f, -r.width * 0.06f + r.width * 0.03f * j), cc + Offset(r.width * 0.04f, r.width * 0.08f + r.width * 0.02f * j), cc + Offset(r.width * 0.11f, r.width * 0.02f * j)) }, sang.copy(alpha = 0.45f), style = Stroke(0.6f * u))
-                // La palma: el contorno, abierto en la muñeca.
-                val contorno = Path().apply {
-                    m(p(0.44f, 0.985f)); c3(p(0.44f, 0.87f), p(0.435f, 0.76f), p(0.385f, 0.67f))
-                    c3(p(0.335f, 0.57f), p(0.35f, 0.47f), p(0.44f, 0.452f)); c3(p(0.52f, 0.432f), p(0.62f, 0.438f), p(0.69f, 0.495f))
-                    c3(p(0.725f, 0.58f), p(0.67f, 0.7f), p(0.645f, 0.8f)); c3(p(0.635f, 0.86f), p(0.635f, 0.93f), p(0.64f, 0.985f))
+                // El paño: colgado de un clavito arriba a la izquierda, recogido en un nudo de pliegues, cae en tubos casi paralelos
+                // que se abren poco, y abajo se quiebra en ángulos; por la derecha, el bajo se vuelve y enseña el revés.
+                val punto = p(0.36f, 0.09f)
+                val bajo = listOf(0.16f to 0.83f, 0.24f to 0.88f, 0.31f to 0.8f, 0.4f to 0.86f, 0.47f to 0.79f, 0.56f to 0.9f, 0.64f to 0.81f, 0.72f to 0.85f)
+                val pano = Path().apply {
+                    m(punto)
+                    c3(p(0.3f, 0.16f), p(0.2f, 0.3f), p(0.21f, 0.48f))
+                    c3(p(0.22f, 0.62f), p(0.14f, 0.72f), p(bajo[0].first, bajo[0].second))
+                    bajo.drop(1).forEach { (x, y) -> l(p(x, y)) }
+                    l(p(0.8f, 0.7f))
+                    c3(p(0.7f, 0.55f), p(0.62f, 0.3f), p(0.44f, 0.15f))
+                    close()
                 }
-                drawPath(contorno, sang, style = Stroke(2f * trazo, cap = StrokeCap.Round))
-                // Un dedo: el contorno (un trazo grueso de sanguina con otro de papel dentro), el sombreado, el realce, los nudillos y la uña.
-                fun dedo(p0: Offset, p1: Offset, p2: Offset, ancho: Float, una: Boolean = true) {
-                    val pts = (0..8).map { curva(p0, p1, p2, it / 8f) }
-                    val linea = Path().apply { m(pts[0].first); pts.drop(1).forEach { l(it.first) } }
-                    drawPath(linea, sang, style = Stroke(ancho, cap = StrokeCap.Round, join = StrokeJoin.Round))
-                    drawPath(linea, mezcla(papel, SANGUINA, 0.1f), style = Stroke(ancho - 2f * trazo, cap = StrokeCap.Round, join = StrokeJoin.Round))
-                    for (j in 2..7) {
-                        val (q, dir) = pts[j]; val n = Offset(-dir.y, dir.x)
-                        drawLine(sang.copy(alpha = 0.6f), q + n * (ancho * 0.08f) - dir * (ancho * 0.14f), q + n * (ancho * 0.4f) + dir * (ancho * 0.16f), 0.7f * u)
+                drawPath(pano, mezcla(papel, SANGUINA, 0.14f))
+                // El revés del bajo, vuelto: un triángulo más claro con su sombra.
+                val reves = poligono(r.left + r.width * 0.72f, r.top + r.height * 0.85f, r.left + r.width * 0.8f, r.top + r.height * 0.7f, r.left + r.width * 0.86f, r.top + r.height * 0.8f)
+                drawPath(reves, mezcla(papel, blanco, 0.35f))
+                drawPath(reves, sang, style = Stroke(0.8f * u, join = StrokeJoin.Round))
+                // Los tubos: los hondos van sombreados en diagonal; los lomos, con un realce de albayalde.
+                val arribaX = listOf(0.3f, 0.34f, 0.38f, 0.42f, 0.46f, 0.5f, 0.54f)
+                arribaX.forEachIndexed { i, x0 ->
+                    val ini = p(x0, 0.2f + 0.02f * (i % 2))
+                    val (fx, fy) = bajo[(i + 1).coerceAtMost(bajo.size - 1)]
+                    val fin = p(fx, fy - 0.02f)
+                    val ctl1 = p(x0 - 0.1f + 0.035f * i, 0.4f)
+                    val ctl2 = p(fx + 0.06f * (if (i % 3 == 0) -1 else 1), 0.6f)
+                    val linea = Path().apply { m(ini); c3(ctl1, ctl2, fin) }
+                    if (i % 2 == 0) {
+                        drawPath(linea, sang.copy(alpha = 0.22f), style = Stroke(r.width * 0.07f, cap = StrokeCap.Round))
+                        drawPath(linea, sang.copy(alpha = 0.3f), style = Stroke(r.width * 0.035f, cap = StrokeCap.Round))
+                        drawPath(linea, sang.copy(alpha = 0.45f), style = Stroke(r.width * 0.01f, cap = StrokeCap.Round))
+                        for (j in 0 until 4) {
+                            val f = 0.35f + 0.17f * j; val g = 1f - f
+                            val q = ini * (g * g * g) + ctl1 * (3f * g * g * f) + ctl2 * (3f * g * f * f) + fin * (f * f * f)
+                            drawLine(sang.copy(alpha = 0.7f), q + Offset(-r.width * 0.035f, r.width * 0.022f), q + Offset(r.width * 0.025f, -r.width * 0.02f), 0.55f * u)
+                        }
+                    } else {
+                        clipRect(r.left, r.top + r.height * (0.26f + 0.04f * (i % 3)), r.right, r.top + r.height * (0.62f + 0.06f * (i % 2))) {
+                            drawPath(linea, blanco.copy(alpha = 0.6f), style = Stroke(1.2f * u, cap = StrokeCap.Round))
+                        }
                     }
-                    for (j in listOf(3, 6)) {
-                        val (q, dir) = pts[j]; val n = Offset(-dir.y, dir.x)
-                        drawLine(sang.copy(alpha = 0.65f), q - n * (ancho * 0.26f), q + n * (ancho * 0.02f) + dir * (ancho * 0.08f), 0.6f * u)
-                    }
-                    if (una) { val (q, dir) = pts[8]; drawCircle(sang.copy(alpha = 0.6f), ancho * 0.24f, q - dir * (ancho * 0.1f), style = Stroke(0.6f * u)) }
                 }
-                val a = r.width
-                dedo(p(0.415f, 0.7f), p(0.27f, 0.62f), p(0.195f, 0.455f), a * 0.105f)
-                dedo(p(0.41f, 0.52f), p(0.375f, 0.35f), p(0.345f, 0.215f), a * 0.09f)
-                dedo(p(0.505f, 0.5f), p(0.5f, 0.3f), p(0.49f, 0.125f), a * 0.094f)
-                dedo(p(0.595f, 0.51f), p(0.61f, 0.33f), p(0.62f, 0.185f), a * 0.088f)
-                dedo(p(0.67f, 0.55f), p(0.705f, 0.43f), p(0.74f, 0.325f), a * 0.074f)
-                // La palma por dentro tapa el arranque de los dedos; luego, los tendones, el sombreado y el realce.
-                drawPath(Path().apply { addPath(contorno); close() }, papel)
-                listOf(0.43f to 0.5f, 0.52f to 0.5f, 0.6f to 0.51f).forEach { (x0, x1) ->
-                    drawLine(sang.copy(alpha = 0.4f), p(x0, 0.5f), p(x1, 0.76f), 0.6f * u)
+                // El nudo de pliegues bajo el clavito: tres curvas cortas que se aprietan.
+                for (j in 0 until 3) drawArc(sang.copy(alpha = 0.7f), 20f, 140f, false, Offset(punto.x - r.width * (0.06f + 0.02f * j), punto.y + r.height * (0.02f + 0.03f * j)), Size(r.width * (0.12f + 0.04f * j), r.height * 0.06f), style = Stroke(0.7f * u))
+                // El contorno del paño, con los ángulos del bajo marcados.
+                drawPath(pano, sang.copy(alpha = 0.85f), style = Stroke(0.8f * u, join = StrokeJoin.Round))
+                bajo.zipWithNext().forEachIndexed { i, (a, b) ->
+                    if (i % 2 == 0) drawLine(sang.copy(alpha = 0.6f), p(a.first, a.second), p((a.first + b.first) / 2 + 0.01f, a.second - 0.08f), 0.7f * u)
                 }
-                for (j in 0 until 9) {
-                    val y = 0.53f + 0.045f * j
-                    val x1 = 0.685f - 0.007f * j - (if (j > 4) 0.012f * (j - 4) else 0f)
-                    drawLine(sang.copy(alpha = 0.6f), p(x1 - 0.085f, y + 0.035f), p(x1, y), 0.7f * u)
-                }
-                // El dedo repetido aparte, más chico.
+                // El clavito del que cuelga.
+                drawCircle(sang, 1.4f * u, punto)
                 // La escritura en espejo: renglones de trazos, sin palabras.
-                val tinta = t.c(TINTA).copy(alpha = 0.6f)
-                for (j in 0 until 4) {
-                    val y = 0.79f + 0.045f * j
-                    val fin = 0.07f + 0.05f * azar(6400, j)
+                val tinta = t.c(TINTA).copy(alpha = 0.55f)
+                for (j in 0 until 2) {
+                    val y = 0.93f + 0.035f * j
                     val linea = Path().apply {
-                        var x = 0.33f; var k = 0
+                        var x = 0.9f; var k = 0
                         m(p(x, y))
-                        while (x > fin) { x -= 0.011f + 0.012f * azar(6410 + j, k); l(p(x, y + (if (k % 2 == 0) -0.011f else 0.004f) * (0.4f + azar(6420 + j, k)))); k++ }
+                        while (x > 0.45f) { x -= 0.011f + 0.012f * azar(6410 + j, k); l(p(x, y + (if (k % 2 == 0) -0.01f else 0.004f) * (0.4f + azar(6420 + j, k)))); k++ }
                     }
                     drawPath(linea, tinta, style = Stroke(0.6f * u, join = StrokeJoin.Round))
                 }
                 // El papel: el claro a la izquierda, el doblez del medio y unas manchas.
                 drawRect(t.b(0.12f), r.topLeft, Size(r.width * 0.3f, r.height))
                 drawRect(t.s(0.07f), Offset(r.right - r.width * 0.2f, r.top), Size(r.width * 0.2f, r.height))
-                drawLine(t.s(0.14f), Offset(r.left, r.top + r.height * 0.5f), Offset(r.right, r.top + r.height * 0.505f), 0.8f * u)
-                drawLine(t.b(0.3f), Offset(r.left, r.top + r.height * 0.5f + 1f * u), Offset(r.right, r.top + r.height * 0.505f + 1f * u), 0.7f * u)
+                drawLine(t.s(0.12f), Offset(r.left, r.top + r.height * 0.5f), Offset(r.right, r.top + r.height * 0.505f), 0.8f * u)
                 pinceladas(r, if (esNoche) NOCHE else NOGAL, 6430, 7, u, 0.08f)
             }
             // La esquina que se levanta: el revés y su sombra.
@@ -1841,11 +1846,13 @@ object IdeasRenacimiento : DisenoIdeas {
     }
 
     /**
-     * El frente de un cajoncito: el marco de nogal (o de la [madera] del marco) con su bisel, el panel de la madera [panel]
-     * con su veta, el filete de ébano y arce alrededor y, si [motivo] no es -1, la taracea de abajo a los lados del botón:
-     * 0, dos estrellas de ocho puntas; 1, una cenefa de cubos; 2, un damero.
+     * El frente de un cajoncito: el marco de [marco] con su bisel; arriba, el travesaño donde va el cartellino; en medio, el
+     * panel rehundido de [campo] (veta tendida) con su filete de ébano y arce y, en el centro, el cuadro de taracea del
+     * [motivo] (ver [taracea]), con un rombo de dos maderas a cada lado; abajo, el travesaño con el botón de bronce. [panelArriba]
+     * y [panelAbajo] son, en píxeles, dónde empieza y acaba el panel.
      */
-    private fun DrawScope.frenteCajon(f: Rect, marco: Color, panel: Color, motivo: Int, t: Tono, semilla: Int, der: Boolean) {
+    private fun DrawScope.frenteCajon(f: Rect, marco: Color, campo: Color, motivo: Int, t: Tono, semilla: Int, der: Boolean,
+                                      panelArriba: Float, panelAbajo: Float) {
         val u = density
         val fw = f.width; val fh = f.height
         drawRect(t.c(marco), f.topLeft, f.size)
@@ -1856,94 +1863,272 @@ object IdeasRenacimiento : DisenoIdeas {
         drawRect(t.s(0.42f), Offset(f.left, f.bottom - 1.6f * u), Size(fw, 1.6f * u))
         drawRect(if (der) t.b(0.3f) else t.s(0.32f), Offset(f.right - 1.4f * u, f.top), Size(1.4f * u, fh))
         // El panel rehundido: la sombra del marco arriba y a la izquierda, y el canto de abajo con luz.
-        val p = Rect(f.left + fw * 0.05f, f.top + fh * 0.09f, f.right - fw * 0.05f, f.bottom - fh * 0.09f)
-        drawRect(t.c(panel), p.topLeft, p.size)
-        vetas(p, (if (t.o) NOCHE else mezcla(panel, NOGAL_OSC, 0.6f)).copy(alpha = 0.28f), semilla + 1, 0.4f, grosor = 0.5f, ondulacion = 0.6f)
-        drawRect(t.s(0.3f), p.topLeft, Size(p.width, 2f * u))
-        drawRect(t.s(0.2f), p.topLeft, Size(1.8f * u, p.height))
-        drawRect(t.b(0.3f), Offset(p.left, p.bottom - 1f * u), Size(p.width, 1f * u))
+        val p = Rect(f.left + fw * 0.045f, panelArriba, f.right - fw * 0.045f, panelAbajo)
+        if (p.height < 4f * u) return
+        drawRect(t.c(campo), p.topLeft, p.size)
+        vetas(p, (if (t.o) NOCHE else mezcla(campo, NOGAL_OSC, 0.6f)).copy(alpha = 0.26f), semilla + 1, 0.5f, grosor = 0.5f, ondulacion = 0.5f)
         // El filete: ébano, arce, ébano.
-        val fi = Rect(p.left + 3f * u, p.top + 3f * u, p.right - 3f * u, p.bottom - 3f * u)
-        drawRect(t.c(EBANO), fi.topLeft, fi.size, style = Stroke(2.6f * u))
-        drawRect(t.c(ARCE), fi.topLeft, fi.size, style = Stroke(1f * u))
-        // La taracea de abajo: a cada lado del botón.
-        val y0 = p.top + p.height * 0.66f; val y1 = fi.bottom - 3f * u
-        val alto = y1 - y0
-        if (alto > 2f * u) when (motivo) {
-            0 -> listOf(0.24f, 0.76f).forEach { fx ->
-                val c = Offset(f.left + fw * fx, (y0 + y1) / 2)
-                val rad = alto * 0.55f
-                for (k in 0 until 8) {
-                    val a0 = Math.toRadians(-90.0 + 45.0 * k); val a1 = Math.toRadians(-90.0 + 45.0 * k - 22.5); val a2 = Math.toRadians(-90.0 + 45.0 * k + 22.5)
-                    val punta = Offset(c.x + rad * cos(a0).toFloat(), c.y + rad * sin(a0).toFloat())
-                    val i1 = Offset(c.x + rad * 0.42f * cos(a1).toFloat(), c.y + rad * 0.42f * sin(a1).toFloat())
-                    val i2 = Offset(c.x + rad * 0.42f * cos(a2).toFloat(), c.y + rad * 0.42f * sin(a2).toFloat())
-                    drawPath(poligono(c.x, c.y, i1.x, i1.y, punta.x, punta.y), t.c(ARCE))
-                    drawPath(poligono(c.x, c.y, punta.x, punta.y, i2.x, i2.y), t.c(if (k % 2 == 0) NOGAL else ROBLE))
-                }
-                drawCircle(t.c(BOJ), rad * 0.14f, c)
+        val fi = Rect(p.left + 2.5f * u, p.top + 2.5f * u, p.right - 2.5f * u, p.bottom - 2.5f * u)
+        drawRect(t.c(EBANO), fi.topLeft, fi.size, style = Stroke(2.4f * u))
+        drawRect(t.c(ARCE), fi.topLeft, fi.size, style = Stroke(0.9f * u))
+        // El cuadro de taracea, en el centro, y un rombo de dos maderas a cada lado.
+        val mh = fi.height - 5f * u
+        val mw = minOf(fi.width * 0.68f, mh * 2.1f)
+        val m = Rect(p.center.x - mw / 2, fi.top + 2.5f * u, p.center.x + mw / 2, fi.top + 2.5f * u + mh)
+        listOf((fi.left + m.left) / 2, (m.right + fi.right) / 2).forEach { x ->
+            val c = Offset(x, m.center.y)
+            val a = minOf((m.left - fi.left) * 0.22f, mh * 0.22f); val b = mh * 0.3f
+            if (a > 1.5f * u) {
+                pieza(poligono(c.x, c.y - b, c.x, c.y + b, c.x - a, c.y), ARCE, 90f, t, c - Offset(a * 0.4f, 0f), a * 0.8f)
+                pieza(poligono(c.x, c.y - b, c.x + a, c.y, c.x, c.y + b), NOGAL, 90f, t, c + Offset(a * 0.4f, 0f), a * 0.8f)
+                drawCircle(t.c(BOJ), a * 0.16f, Offset(c.x, c.y - b - a * 0.35f))
+                drawCircle(t.c(BOJ), a * 0.16f, Offset(c.x, c.y + b + a * 0.35f))
             }
-            1 -> listOf(fi.left + 4f * u to f.left + fw * 0.4f, f.left + fw * 0.6f to fi.right - 4f * u).forEach { (xa, xb) ->
-                val s = alto / 2f
-                drawRect(t.c(NOGAL_OSC), Offset(xa, y0), Size(xb - xa, y1 - y0))
-                clipRect(xa, y0, xb, y1) {
-                    var cx = xa
-                    while (cx < xb + s) {
-                        val cy = y0 + s
-                        drawPath(poligono(cx, cy, cx + 0.866f * s, cy - 0.5f * s, cx, cy - s, cx - 0.866f * s, cy - 0.5f * s), t.c(mezcla(ARCE, LUZ_MUEBLE, 0.3f)))
-                        drawPath(poligono(cx, cy, cx - 0.866f * s, cy - 0.5f * s, cx - 0.866f * s, cy + 0.5f * s, cx, cy + s), t.c(BOJ))
-                        drawPath(poligono(cx, cy, cx + 0.866f * s, cy - 0.5f * s, cx + 0.866f * s, cy + 0.5f * s, cx, cy + s), t.c(NOGAL))
-                        cx += maxOf(1f, 2.1f * s)
-                    }
-                }
-            }
-            2 -> listOf(fi.left + 4f * u to f.left + fw * 0.4f, f.left + fw * 0.6f to fi.right - 4f * u).forEach { (xa, xb) ->
-                val q = alto / 2f
-                drawRect(t.s(0.25f), Offset(xa - 1f * u, y0 - 1f * u), Size(xb - xa + 2f * u, alto + 2f * u))
-                val n = ((xb - xa) / maxOf(1f, q)).toInt().coerceIn(1, 40)
-                for (i in 0 until n) for (j in 0..1)
-                    drawRect(t.c(if ((i + j) % 2 == 0) mezcla(NOGAL, NOGAL_OSC, 0.4f) else ARCE), Offset(xa + i * q, y0 + j * q), Size(q + 0.3f, q + 0.3f))
-            }
-            else -> {}
         }
+        drawRect(t.s(0.4f), Offset(m.left - 1.2f * u, m.top - 1.2f * u), Size(m.width + 2.4f * u, m.height + 2.4f * u))
+        clipRect(m.left, m.top, m.right, m.bottom) { taracea(m, motivo, t) }
+        drawRect(t.c(EBANO), m.topLeft, m.size, style = Stroke(1.6f * u))
+        drawRect(t.c(BOJ), Offset(m.left + 1.4f * u, m.top + 1.4f * u), Size(m.width - 2.8f * u, m.height - 2.8f * u), style = Stroke(0.7f * u))
+        // El rehundido: la sombra del marco arriba y a la izquierda, el canto de abajo con luz.
+        drawRect(t.s(0.32f), p.topLeft, Size(p.width, 2.2f * u))
+        drawRect(t.s(0.2f), p.topLeft, Size(2f * u, p.height))
+        drawRect(t.b(0.32f), Offset(p.left, p.bottom - 1f * u), Size(p.width, 1f * u))
     }
 
     /**
-     * Las hojas de boceto que asoman por arriba de un cajón entreabierto, en la franja de [alto]: de pie, ladeadas, con el
-     * borde de arriba irregular, de papel blanco, teñido de ocre o de rosa, alguna con trazos de sanguina o de punta de plata.
-     * Detrás, lo hondo del cajón; a los lados, sus costados de peral.
+     * Un cuadro de taracea en [m], como los del studiolo: cada pieza de su madera y con su veta en su dirección.
+     * 0, la estrella de ocho puntas en su tondo; 1, los cubos en perspectiva; 2, el damero en escorzo; 3, el mazzocchio;
+     * 4, el poliedro vaciado (las caras hechas marco); 5, la celosía de rombos; 6, el laúd en trampantojo.
      */
-    private fun DrawScope.hojas(w: Float, alto: Float, n: Int, semilla: Int, t: Tono) = clipRect(w * 0.035f, -alto, w * 0.965f, alto + 3f * density) {
+    private fun DrawScope.taracea(m: Rect, motivo: Int, t: Tono) {
         val u = density
-        drawRect(t.c(mezcla(EBANO, NOGAL_OSC, 0.4f)), Offset(w * 0.035f, 0f), Size(w * 0.93f, alto + 2f * u))
-        drawRect(t.s(0.45f), Offset(w * 0.035f, 0f), Size(w * 0.93f, alto * 0.4f))
-        val cuantas = (2 + n).coerceIn(2, 9)
-        for (i in 0 until cuantas) {
-            val x = w * (0.08f + 0.78f * (i + azar(semilla, 40 + i) * 0.6f) / cuantas)
-            val ancho = w * (0.2f + 0.12f * azar(semilla, 50 + i))
-            val y0 = alto * (0.08f + 0.5f * azar(semilla, 60 + i))
-            val papel = when (Math.floorMod(semilla + i * 7, 4)) { 0 -> PAPEL_TINTO; 1 -> PAPEL_ROSA; else -> PAPEL }
-            val tt = Tono(t.o, t.k * (0.75f + 0.25f * (i % 2)), t.dia)
-            val hoja = Path().apply {
-                moveTo(x, alto + 2f * u); lineTo(x + w * 0.004f, y0 + 1.5f * u)
-                for (j in 1..5) lineTo(x + ancho * j / 5f, y0 + (azar(semilla, 70 + i * 6 + j) - 0.3f) * 2.4f * u)
-                lineTo(x + ancho - w * 0.003f, alto + 2f * u); close()
+        val c = m.center
+        val r = minOf(m.width, m.height) / 2
+        when (motivo) {
+            0 -> {
+                tabla(m, ROBLE, t, 7501, densidad = 0.6f)
+                drawCircle(t.c(EBANO), r * 0.97f, c)
+                drawCircle(t.c(BOJ), r * 0.9f, c)
+                drawCircle(t.c(mezcla(ROBLE, NOGAL, 0.5f)), r * 0.84f, c)
+                for (k in 0 until 8) {
+                    val a0 = Math.toRadians(-90.0 + 45.0 * k); val a1 = Math.toRadians(-90.0 + 45.0 * k - 22.5); val a2 = Math.toRadians(-90.0 + 45.0 * k + 22.5)
+                    val punta = Offset(c.x + r * 0.8f * cos(a0).toFloat(), c.y + r * 0.8f * sin(a0).toFloat())
+                    val i1 = Offset(c.x + r * 0.34f * cos(a1).toFloat(), c.y + r * 0.34f * sin(a1).toFloat())
+                    val i2 = Offset(c.x + r * 0.34f * cos(a2).toFloat(), c.y + r * 0.34f * sin(a2).toFloat())
+                    pieza(poligono(c.x, c.y, i1.x, i1.y, punta.x, punta.y), ARCE, -90f + 45f * k, t, (c + i1 + punta) / 3f, r * 0.2f)
+                    pieza(poligono(c.x, c.y, punta.x, punta.y, i2.x, i2.y), if (k % 2 == 0) CEREZO else BOJ, -90f + 45f * k, t, (c + i2 + punta) / 3f, r * 0.2f)
+                }
+                // Las esquinas: cuatro hojas de peral.
+                listOf(m.topLeft, Offset(m.right, m.top), Offset(m.left, m.bottom), m.bottomRight).forEach { q ->
+                    val d = (c - q); val l = d.getDistance().coerceAtLeast(1f); val e = d / l
+                    val tip = q + e * (l - r * 1.0f)
+                    if ((tip - q).getDistance() > 3f * u) drawLine(t.c(PERAL), q + e * (2f * u), tip, minOf(r * 0.16f, 3f * u), StrokeCap.Round)
+                }
             }
-            translate(1.4f * u, 1f * u) { drawPath(hoja, tt.s(0.35f)) }
-            drawPath(hoja, tt.c(papel))
-            drawRect(tt.b(0.4f), Offset(x + w * 0.004f, y0 + 1f * u), Size(ancho - w * 0.008f, 1f * u))
-            // Trazos de sanguina: unas curvas de un drapeado o el borde de una mano.
-            if (Math.floorMod(semilla + i, 3) == 0 && alto - y0 > 6f * u) {
-                val trazo = tt.c(SANGUINA).copy(alpha = 0.7f)
-                val yy = y0 + (alto - y0) * 0.4f
-                drawPath(Path().apply { moveTo(x + ancho * 0.2f, alto); cubicTo(x + ancho * 0.3f, yy, x + ancho * 0.55f, yy - 2f * u, x + ancho * 0.7f, alto) }, trazo, style = Stroke(0.8f * u))
-                drawLine(trazo, Offset(x + ancho * 0.45f, yy + 2f * u), Offset(x + ancho * 0.52f, alto), 0.6f * u)
+            1 -> {
+                val s = maxOf(1f, m.height / 2.6f)
+                for (fila in 0 until 4) {
+                    val cy = m.top + s * 0.5f + fila * 1.5f * s
+                    val x0 = m.left - s + (if (fila % 2 == 0) 0f else s * 0.866f)
+                    val n = (m.width / (1.732f * s)).toInt() + 3
+                    for (i in 0 until n.coerceAtMost(14)) {
+                        val cx = x0 + i * 1.732f * s
+                        pieza(poligono(cx, cy, cx + 0.866f * s, cy - 0.5f * s, cx, cy - s, cx - 0.866f * s, cy - 0.5f * s), mezcla(ARCE, LUZ_MUEBLE, 0.2f), 0f, t, Offset(cx, cy - s * 0.5f), s * 0.5f)
+                        pieza(poligono(cx, cy, cx - 0.866f * s, cy - 0.5f * s, cx - 0.866f * s, cy + 0.5f * s, cx, cy + s), BOJ, 60f, t, Offset(cx - s * 0.43f, cy + s * 0.25f), s * 0.45f)
+                        pieza(poligono(cx, cy, cx + 0.866f * s, cy - 0.5f * s, cx + 0.866f * s, cy + 0.5f * s, cx, cy + s), mezcla(NOGAL, NOGAL_OSC, 0.3f), -60f, t, Offset(cx + s * 0.43f, cy + s * 0.25f), s * 0.45f)
+                    }
+                }
+            }
+            2 -> {
+                // Un suelo de damero que se aleja: más angosto y más apretado arriba, con la línea del horizonte.
+                tabla(m, ROBLE, t, 7502, densidad = 0.6f)
+                val hz = m.top + m.height * 0.2f
+                drawRect(t.c(mezcla(PERAL, ROBLE, 0.35f)), m.topLeft, Size(m.width, hz - m.top))
+                drawLine(t.c(BOJ), Offset(m.left, hz), Offset(m.right, hz), 1f * u)
+                val filas = 5; val cols = 6
+                fun y(k: Int) = hz + (m.bottom - hz) * (k / filas.toFloat()).let { it * (0.45f + 0.55f * it) }
+                fun ancho(yy: Float) = m.width * (0.34f + 0.76f * (yy - hz) / (m.bottom - hz))
+                fun x(j: Int, yy: Float) = c.x + (j / cols.toFloat() - 0.5f) * ancho(yy)
+                for (k in 0 until filas) for (j in 0 until cols) {
+                    val ya = y(k); val yb = y(k + 1)
+                    val q = poligono(x(j, ya), ya, x(j + 1, ya), ya, x(j + 1, yb), yb, x(j, yb), yb)
+                    drawPath(q, t.c(if ((k + j) % 2 == 0) mezcla(ARCE, LUZ_MUEBLE, 0.15f) else mezcla(NOGAL, NOGAL_OSC, 0.4f)))
+                }
+                // Las vetas siguen las hileras: tendidas en el arce.
+                for (k in 1 until filas) drawLine(t.s(0.18f), Offset(x(0, y(k)), y(k)), Offset(x(cols, y(k)), y(k)), 0.5f * u)
+            }
+            3 -> {
+                // El mazzocchio en trampantojo, sobre su repisa, como en los armarios de Urbino: el fondo, la tabla y su sombra.
+                tabla(m, ROBLE, t, 7503, densidad = 0.6f)
+                repisa(m, t)
+                drawOval(t.s(0.45f), Offset(c.x - r * 0.75f, m.bottom - m.height * 0.2f - r * 0.12f), Size(r * 1.9f, r * 0.24f))
+                mazzocchio(Offset(c.x, m.bottom - m.height * 0.2f - r * 0.48f), r * 0.82f, t)
+            }
+            4 -> {
+                // El poliedro vaciado: cada cara, un marco de madera que deja ver el fondo; las de la luz, de arce; las de la sombra, de nogal.
+                tabla(m, mezcla(ROBLE, EBANO, 0.3f), t, 7504, densidad = 0.6f)
+                repisa(m, t)
+                val rad = r * 0.86f
+                val cc = Offset(c.x, m.bottom - m.height * 0.2f - rad * PIE_DODECAEDRO)
+                drawOval(t.s(0.45f), Offset(cc.x - rad * 0.7f, m.bottom - m.height * 0.2f - rad * 0.1f), Size(rad * 1.8f, rad * 0.22f))
+                CARAS.sortedBy { it.nz }.forEach { k ->
+                    val br = (k.nx * -0.5f + k.ny * -0.68f + k.nz * 0.54f).coerceIn(0f, 1f)
+                    val pts = k.pts.map { cc + it * rad }
+                    val cen = Offset(pts.map { it.x }.average().toFloat(), pts.map { it.y }.average().toFloat())
+                    val fuera = Path().apply { pts.forEachIndexed { i, q -> if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) }; close() }
+                    val dentro = Path().apply { pts.forEachIndexed { i, q -> val z = cen + (q - cen) * 0.58f; if (i == 0) moveTo(z.x, z.y) else lineTo(z.x, z.y) }; close() }
+                    drawPath(fuera, t.c(mezcla(mezcla(NOGAL, NOGAL_OSC, 0.3f), mezcla(ARCE, LUZ_MUEBLE, 0.2f), br)))
+                    drawPath(dentro, t.c(mezcla(ROBLE, EBANO, 0.45f)))
+                    drawPath(fuera, t.c(EBANO).copy(alpha = 0.5f), style = Stroke(0.6f * u))
+                }
+            }
+            5 -> {
+                // La celosía: listones de arce y de peral cruzados en rombo sobre nogal, con un clavito de boj en cada cruce.
+                tabla(m, mezcla(NOGAL, NOGAL_OSC, 0.3f), t, 7505, densidad = 0.6f)
+                val d = maxOf(4f * u, m.height / 2.4f)
+                val ancho = maxOf(1.5f * u, d * 0.2f)
+                for (i in -8..8) {
+                    val b = c.x + i * d
+                    drawLine(t.c(PERAL), Offset(b - m.height, m.bottom), Offset(b + m.height, m.top), ancho)
+                }
+                for (i in -8..8) {
+                    val b = c.x + i * d
+                    drawLine(t.c(ARCE), Offset(b - m.height, m.top), Offset(b + m.height, m.bottom), ancho)
+                    drawLine(t.s(0.25f), Offset(b - m.height + ancho * 0.5f, m.top + ancho * 0.5f), Offset(b + m.height + ancho * 0.5f, m.bottom + ancho * 0.5f), 0.6f * u)
+                }
+                for (i in -8..8) for (j in -3..3) {
+                    val p = Offset(c.x + (i + 0.5f * (j % 2)) * d, c.y + j * d / 2f)
+                    if (p.x > m.left && p.x < m.right && p.y > m.top && p.y < m.bottom) drawCircle(t.c(BOJ), ancho * 0.45f, p)
+                }
+            }
+            else -> {
+                // El laúd tumbado en diagonal: la caja de duelas de cerezo y peral, la tapa de arce con su rosa calada, el puente,
+                // el mástil de nogal con sus trastes y el clavijero vuelto hacia atrás.
+                tabla(m, ROBLE, t, 7506, densidad = 0.6f)
+                val cuerpo = Offset(m.left + m.width * 0.36f, m.top + m.height * 0.56f)
+                val rr = m.height * 0.4f
+                rotate(-24f, cuerpo) {
+                    val mastil = Rect(cuerpo.x + rr * 0.8f, cuerpo.y - rr * 0.13f, cuerpo.x + rr * 2.35f, cuerpo.y + rr * 0.13f)
+                    drawRect(t.s(0.3f), Offset(mastil.left + 1f * u, mastil.top + 1.5f * u), mastil.size)
+                    drawRect(t.c(mezcla(NOGAL, NOGAL_OSC, 0.3f)), mastil.topLeft, mastil.size)
+                    for (k in 1..6) drawLine(t.c(BOJ), Offset(mastil.left + mastil.width * k / 7f, mastil.top), Offset(mastil.left + mastil.width * k / 7f, mastil.bottom), 0.6f * u)
+                    val clav = poligono(mastil.right, mastil.top, mastil.right + rr * 0.55f, mastil.top + rr * 0.2f, mastil.right + rr * 0.5f, mastil.bottom + rr * 0.2f, mastil.right, mastil.bottom)
+                    drawPath(clav, t.c(CEREZO))
+                    for (k in 0..2) drawCircle(t.c(EBANO), rr * 0.05f, Offset(mastil.right + rr * (0.12f + 0.15f * k), mastil.top - rr * 0.02f + rr * 0.06f * k))
+                    val caja = Path().apply {
+                        moveTo(cuerpo.x + rr * 0.95f, cuerpo.y - rr * 0.16f)
+                        cubicTo(cuerpo.x + rr * 0.4f, cuerpo.y - rr * 0.85f, cuerpo.x - rr * 1.2f, cuerpo.y - rr * 0.95f, cuerpo.x - rr * 1.1f, cuerpo.y)
+                        cubicTo(cuerpo.x - rr * 1.2f, cuerpo.y + rr * 0.95f, cuerpo.x + rr * 0.4f, cuerpo.y + rr * 0.85f, cuerpo.x + rr * 0.95f, cuerpo.y + rr * 0.16f)
+                        close()
+                    }
+                    translate(1.5f * u, 2f * u) { drawPath(caja, t.s(0.35f)) }
+                    drawPath(caja, t.c(CEREZO))
+                    // La tapa: arce, con su veta a lo largo; las duelas asoman como un filo de peral.
+                    clipPath(caja) {
+                        drawRect(t.c(mezcla(ARCE, PERAL, 0.25f)), Offset(cuerpo.x - rr * 1.2f, cuerpo.y - rr * 0.82f), Size(rr * 2.2f, rr * 1.64f))
+                        for (k in -4..4) drawLine(t.c(PERAL).copy(alpha = 0.6f), Offset(cuerpo.x - rr * 1.2f, cuerpo.y + rr * 0.17f * k), Offset(cuerpo.x + rr, cuerpo.y + rr * 0.17f * k), 0.5f * u)
+                        drawRect(t.s(0.22f), Offset(cuerpo.x - rr * 1.2f, cuerpo.y + rr * 0.35f), Size(rr * 2.2f, rr * 0.6f))
+                    }
+                    drawPath(caja, t.c(CEREZO), style = Stroke(1.6f * u))
+                    // La rosa calada y el puente.
+                    val rosa = Offset(cuerpo.x - rr * 0.05f, cuerpo.y)
+                    drawCircle(t.c(EBANO), rr * 0.3f, rosa)
+                    drawPath(estrella(rosa, rr * 0.27f, 6, 0.45f), t.c(BOJ))
+                    drawCircle(t.c(EBANO), rr * 0.08f, rosa)
+                    drawRect(t.c(mezcla(NOGAL, NOGAL_OSC, 0.4f)), Offset(cuerpo.x - rr * 0.8f, cuerpo.y - rr * 0.3f), Size(rr * 0.09f, rr * 0.6f))
+                    for (k in -2..2) drawLine(t.c(mezcla(BOJ, CARTELLINO, 0.4f)).copy(alpha = 0.8f), Offset(cuerpo.x - rr * 0.76f, cuerpo.y + rr * 0.05f * k), Offset(mastil.right, cuerpo.y + rr * 0.04f * k), 0.45f * u)
+                }
             }
         }
-        // Los costados del cajón, de peral, a la vista porque está fuera.
-        listOf(w * 0.035f, w * 0.965f - w * 0.022f).forEachIndexed { i, x ->
-            drawRect(t.c(if (i == 0) PERAL else mezcla(PERAL, NOGAL, 0.4f)), Offset(x, alto * 0.15f), Size(w * 0.022f, alto * 0.85f + 2f * u))
-            drawRect(t.b(0.4f), Offset(x, alto * 0.15f), Size(w * 0.022f, 1f * u))
+    }
+
+    /** La repisa pintada del trampantojo: la tabla de peral abajo, con su canto de luz y la sombra que deja en el fondo. */
+    private fun DrawScope.repisa(m: Rect, t: Tono) {
+        val u = density
+        val y = m.bottom - m.height * 0.2f
+        drawRect(t.c(PERAL), Offset(m.left, y), Size(m.width, m.bottom - y))
+        drawRect(t.c(mezcla(PERAL, NOGAL, 0.4f)), Offset(m.left, y + (m.bottom - y) * 0.45f), Size(m.width, (m.bottom - y) * 0.55f))
+        drawRect(t.b(0.5f), Offset(m.left, y), Size(m.width, 1f * u))
+        drawRect(t.s(0.3f), Offset(m.left, y - 2.5f * u), Size(m.width, 2.5f * u))
+    }
+
+    /**
+     * Lo que asoma de un cajón entreabierto entre [arriba] (donde acaba el hueco) y [abajo] (el canto de arriba del frente
+     * salido): lo hondo del cajón, sus costados de peral que se meten en el hueco y las hojas de boceto de pie, ladeadas, de
+     * papel blanco, teñido de ocre o de rosa, con el borde de arriba irregular; las de delante llevan un estudio a la
+     * sanguina (un círculo con su construcción, el perfil de un capitel o una espiral).
+     */
+    private fun DrawScope.hojas(w: Float, arriba: Float, abajo: Float, n: Int, semilla: Int, t: Tono) {
+        val u = density
+        val alto = abajo - arriba
+        if (alto < 2f * u) return
+        drawRect(t.c(mezcla(EBANO, NOGAL_OSC, 0.3f)), Offset(w * 0.02f, arriba), Size(w * 0.96f, alto + 2f * u))
+        drawRect(t.s(0.4f), Offset(w * 0.02f, arriba), Size(w * 0.96f, alto * 0.3f))
+        val cuantas = (3 + n).coerceIn(3, 9)
+        clipRect(w * 0.035f, -alto, w * 0.965f, abajo + 2f * u) {
+            for (i in 0 until cuantas) {
+                val x = w * (0.06f + 0.72f * (i + 0.5f * azar(semilla, 40 + i)) / cuantas)
+                val ancho = w * (0.22f + 0.1f * azar(semilla, 50 + i))
+                val y0 = arriba + alto * (0.04f + 0.36f * azar(semilla, 60 + i))
+                val giro = (azar(semilla, 65 + i) - 0.5f) * 10f
+                val papel = when (Math.floorMod(semilla + i * 7, 4)) { 0 -> PAPEL_TINTO; 1 -> PAPEL_ROSA; else -> PAPEL }
+                val tt = Tono(t.o, t.k * (0.7f + 0.3f * i / cuantas), t.dia)
+                rotate(giro, Offset(x + ancho / 2, abajo)) {
+                    val hoja = Path().apply {
+                        moveTo(x, abajo + 2f * u); lineTo(x + w * 0.003f, y0 + 2f * u)
+                        for (j in 1..6) lineTo(x + ancho * j / 6f, y0 + (azar(semilla, 70 + i * 7 + j) - 0.3f) * 3f * u)
+                        lineTo(x + ancho - w * 0.002f, abajo + 2f * u); close()
+                    }
+                    translate(1.6f * u, 1.2f * u) { drawPath(hoja, tt.s(0.35f)) }
+                    drawPath(hoja, tt.c(papel))
+                    drawRect(tt.b(0.35f), Offset(x + w * 0.004f, y0 + 1f * u), Size(ancho - w * 0.008f, 1f * u))
+                    drawRect(tt.s(0.12f), Offset(x + ancho * 0.7f, y0), Size(ancho * 0.3f, abajo - y0))
+                }
+            }
+            // Los estudios de las hojas de delante, en la franja que se ve bajo el cartellino.
+            val sang = t.c(SANGUINA)
+            val yb = abajo - alto * 0.12f
+            val sz = minOf(alto * 0.36f, w * 0.06f)
+            when (Math.floorMod(semilla ushr 2, 3)) {
+                0 -> {
+                    val cc = Offset(w * 0.3f, yb - sz)
+                    drawCircle(sang, sz, cc, style = Stroke(0.9f * u))
+                    drawLine(sang.copy(alpha = 0.6f), cc - Offset(sz * 1.3f, 0f), cc + Offset(sz * 1.3f, 0f), 0.6f * u)
+                    drawLine(sang.copy(alpha = 0.6f), cc - Offset(0f, sz * 1.3f), cc + Offset(0f, sz * 0.9f), 0.6f * u)
+                    drawPath(estrella(cc, sz, 5, 0.38f), sang.copy(alpha = 0.7f), style = Stroke(0.6f * u))
+                }
+                1 -> {
+                    // El perfil de un capitel: el ábaco, el equino y el collarino.
+                    val x0 = w * 0.62f; val y0 = yb - sz * 1.9f
+                    drawPath(Path().apply {
+                        moveTo(x0, y0); lineTo(x0 + sz * 1.6f, y0); lineTo(x0 + sz * 1.6f, y0 + sz * 0.35f)
+                        cubicTo(x0 + sz * 1.6f, y0 + sz * 0.9f, x0 + sz * 0.7f, y0 + sz * 0.8f, x0 + sz * 0.6f, y0 + sz * 1.3f)
+                        lineTo(x0 + sz * 0.75f, y0 + sz * 1.45f); lineTo(x0 + sz * 0.6f, y0 + sz * 1.6f); lineTo(x0 + sz * 0.6f, y0 + sz * 2.2f)
+                    }, sang, style = Stroke(0.9f * u))
+                    for (k in 0 until 5) drawLine(sang.copy(alpha = 0.5f), Offset(x0 + sz * (0.7f + 0.15f * k), y0 + sz * 0.5f), Offset(x0 + sz * (0.6f + 0.15f * k), y0 + sz * 0.95f), 0.5f * u)
+                }
+                else -> {
+                    // Una espiral de voluta con su ojo.
+                    val cc = Offset(w * 0.42f, yb - sz)
+                    val p = Path()
+                    for (k in 0..40) {
+                        val a = k * 0.42f; val rad = sz * (1f - k / 44f)
+                        val q = Offset(cc.x + rad * cos(a), cc.y + rad * sin(a))
+                        if (k == 0) p.moveTo(q.x, q.y) else p.lineTo(q.x, q.y)
+                    }
+                    drawPath(p, sang, style = Stroke(0.8f * u))
+                    drawCircle(sang, sz * 0.12f, cc)
+                }
+            }
+        }
+        // Los costados del cajón, de peral, que se meten en el hueco desde las esquinas del frente salido.
+        listOf(false, true).forEach { d ->
+            val xa = if (d) w * 1.0f else 0f
+            val xb = if (d) w * 0.95f else w * 0.05f
+            val g = if (d) -1f else 1f
+            val q = poligono(xa, abajo, xa + g * w * 0.035f, abajo, xb + g * w * 0.02f, arriba + alto * 0.1f, xb, arriba + alto * 0.1f)
+            drawPath(q, t.c(if (d) mezcla(PERAL, NOGAL, 0.45f) else PERAL))
+            drawPath(q, t.s(0.25f), style = Stroke(0.6f * u))
         }
     }
 
@@ -2008,8 +2193,87 @@ object IdeasRenacimiento : DisenoIdeas {
         destello(Offset(r.left + r.width * 0.55f - 0.7f * u, y - 0.7f * u), 0.6f * u, t)
     }
 
-    /** La clase de cada compartimento: según su lugar, para que en una fila no salgan dos iguales y ninguna se repita mucho. */
-    private fun clase(c: EstadoCajon): Int = Math.floorMod(2 * c.fila + c.col, 3)
+    /** Revuelve la semilla de un tema (su `hashCode`, que en temas parecidos se parece), para repartir bien clases y motivos. */
+    private fun mezclar(s: Int): Int {
+        var x = s * 0xA5268A23L.toInt()
+        x = x xor (x ushr 15)
+        x *= 0x1B2E32EF
+        return x xor (x ushr 13)
+    }
+
+    /** La sal de la mezcla: con ella, los temas de ejemplo salen 3, 3 y 2, sin dos iguales en una fila, y sus seis cajones con seis motivos distintos. */
+    private const val SAL = 1750
+
+    /** La clase de un compartimento, por su tema (no por su sitio): 0, cajoncito cerrado; 1, entreabierto; 2, nicho de rollos. */
+    private fun clase(semilla: Int): Int = Math.floorMod(mezclar(semilla + SAL), 3)
+
+    /** El motivo de taracea del frente (ver [taracea]). */
+    private fun motivo(semilla: Int): Int = Math.floorMod(mezclar(semilla + SAL * 7 + 13) shr 4, 7)
+
+    /** Los dos cordeles de los que cuelga el cartellino de un nicho, desde el canto de arriba. */
+    private fun DrawScope.cordeles(r: Rect, t: Tono) {
+        val u = density
+        listOf(r.left + r.width * 0.1f, r.right - r.width * 0.1f).forEach { x ->
+            drawLine(t.s(0.3f), Offset(x + 1f * u, 0f), Offset(x + 1f * u, r.top + 3f * u), 1f * u)
+            drawLine(t.c(mezcla(LINO, NOGAL, 0.3f)), Offset(x, 0f), Offset(x, r.top + 3f * u), 0.9f * u)
+            drawCircle(t.c(EBANO), 1.3f * u, Offset(x, 1.2f * u))
+        }
+    }
+
+    /**
+     * El cartapacio de lo que no tiene tema: cartón forrado de pergamino, apoyado en diagonal en su nicho, con el lomo hacia
+     * la luz, el cartón a la vista en las esquinas gastadas, las hojas que asoman en abanico por arriba, dos cintas atadas en
+     * lazo y su sombra en el fondo del nicho.
+     */
+    private fun DrawScope.cartapacio(w: Float, h: Float, dy: Float, n: Int, t: Tono, semilla: Int) {
+        val u = density
+        val c = Offset(w * 0.5f, h * 0.68f + dy)
+        val cw = w * 0.62f; val chh = h * 0.34f
+        val r = Rect(c.x - cw / 2, c.y - chh / 2, c.x + cw / 2, c.y + chh / 2)
+        rotate(-17f, c) {
+            // Su sombra en el fondo del nicho, corrida a la derecha.
+            drawRect(t.s(0.38f), Offset(r.left + w * 0.05f, r.top + h * 0.02f), r.size)
+            // Las hojas en abanico.
+            val cuantas = (3 + n).coerceIn(3, 8)
+            for (j in 0 until cuantas) {
+                val giro = -14f + 28f * j / (cuantas - 1).coerceAtLeast(1)
+                val pie = Offset(r.left + cw * (0.2f + 0.6f * j / cuantas), r.top + chh * 0.4f)
+                rotate(giro, pie) {
+                    val hoja = Rect(pie.x - cw * 0.14f, pie.y - chh * (0.75f + 0.25f * azar(semilla, 90 + j)), pie.x + cw * 0.14f, pie.y)
+                    drawRect(t.s(0.3f), Offset(hoja.left + 1.5f * u, hoja.top + 1f * u), hoja.size)
+                    drawRect(t.c(if (j % 3 == 1) PAPEL_TINTO else if (j % 3 == 2) PAPEL_ROSA else PAPEL), hoja.topLeft, hoja.size)
+                    drawRect(t.b(0.35f), hoja.topLeft, Size(hoja.width, 1f * u))
+                    if (j == cuantas / 2) drawArc(t.c(SANGUINA).copy(alpha = 0.6f), 200f, 140f, false, Offset(hoja.left + hoja.width * 0.2f, hoja.top + hoja.height * 0.15f), Size(hoja.width * 0.6f, hoja.width * 0.6f), style = Stroke(0.7f * u))
+                }
+            }
+            // Las dos tapas: la de atrás asoma un poco; la de delante, de pergamino, con el cartón en las esquinas.
+            drawRect(t.c(mezcla(CARTON, NOGAL_OSC, 0.2f)), Offset(r.left + w * 0.01f, r.top - h * 0.015f), r.size)
+            drawRect(t.c(VITELA), r.topLeft, r.size)
+            pinceladas(r, mezcla(VITELA, NOGAL, 0.5f), semilla, 6, u, 0.14f)
+            drawRect(t.b(0.3f), r.topLeft, Size(r.width * 0.35f, r.height))
+            drawRect(t.s(0.2f), Offset(r.right - r.width * 0.3f, r.top), Size(r.width * 0.3f, r.height))
+            listOf(r.topLeft to Offset(1f, 1f), Offset(r.right, r.top) to Offset(-1f, 1f), r.bottomRight to Offset(-1f, -1f)).forEach { (q, s) ->
+                val e = chh * 0.22f
+                drawPath(poligono(q.x, q.y, q.x + s.x * e, q.y, q.x, q.y + s.y * e), t.c(CARTON))
+            }
+            // El lomo, abajo, que coge la luz.
+            drawRect(t.c(mezcla(VITELA, CARTELLINO, 0.4f)), Offset(r.left, r.bottom - chh * 0.12f), Size(r.width, chh * 0.12f))
+            drawRect(t.b(0.45f), Offset(r.left, r.bottom - chh * 0.12f), Size(r.width, 1.1f * u))
+            drawRect(t.s(0.35f), Offset(r.left, r.bottom - 1.2f * u), Size(r.width, 1.2f * u))
+            // Las cintas, atadas en lazo junto al canto de la derecha.
+            val cinta = t.c(mezcla(BERMELLON, OCRE, 0.3f))
+            val yl = r.top + chh * 0.52f
+            drawRect(t.s(0.3f), Offset(r.right - cw * 0.3f + 1f * u, yl + 2.2f * u), Size(cw * 0.3f, 2.6f * u))
+            drawRect(cinta, Offset(r.right - cw * 0.3f, yl), Size(cw * 0.3f + w * 0.01f, 2.8f * u))
+            val nudo = Offset(r.right - cw * 0.16f, yl + 1.4f * u)
+            listOf(-1f, 1f).forEach { s ->
+                drawPath(Path().apply { moveTo(nudo.x, nudo.y); cubicTo(nudo.x + s * cw * 0.09f, nudo.y - chh * 0.38f, nudo.x + s * cw * 0.13f, nudo.y + chh * 0.1f, nudo.x, nudo.y) }, cinta, style = Stroke(2.2f * u))
+                drawPath(Path().apply { moveTo(nudo.x, nudo.y); cubicTo(nudo.x + s * cw * 0.02f, nudo.y + chh * 0.3f, nudo.x + s * cw * 0.07f, nudo.y + chh * 0.4f, nudo.x + s * cw * 0.05f, nudo.y + chh * 0.62f) }, cinta, style = Stroke(2f * u))
+            }
+            drawCircle(t.c(mezcla(BERMELLON, PORFIDO, 0.4f)), 2.4f * u, nudo)
+            drawCircle(t.b(0.5f), 0.8f * u, nudo - Offset(0.8f * u, 0.8f * u))
+        }
+    }
 
     override fun DrawScope.compartimento(c: EstadoCajon, oscuro: Boolean) {
         val u = density
@@ -2027,106 +2291,82 @@ object IdeasRenacimiento : DisenoIdeas {
         val der = oscuro && centro.x < LUZ.x
         val baja = h * SALIDA * ab
         val r = Rect(w * rotulo.left, h * rotulo.top + baja, w * rotulo.right, h * rotulo.bottom + baja)
-        // El orden de las maderas: tres compartimentos de la misma clase nunca salen de la misma.
-        val i = c.fila * cols + c.col
-        val tono3 = Math.floorMod(i / 3, 3)
-        val clase = if (c.vacio) -1 else if (c.sinTema) 3 else clase(c)
+        val clase = if (c.vacio) -1 else if (c.sinTema) 3 else clase(c.semilla)
+        val m = mezclar(c.semilla)
+        // Las maderas del campo del panel y del marco, según el tema.
+        val campos = listOf(PERAL, ARCE, BOJ, mezcla(NOGAL_LUZ, PERAL, 0.45f))
+        val campo = campos[Math.floorMod(m shr 8, 4)]
+        val marco = listOf(NOGAL, mezcla(NOGAL, CEREZO, 0.55f), mezcla(NOGAL, NOGAL_OSC, 0.3f))[Math.floorMod(m shr 12, 3)]
 
         when (clase) {
-            // El nicho abierto, sin cajón: los rollos atados con cintas, o los rollos y el cuaderno de vitela.
+            // El nicho abierto: los rollos atados con cintas, a veces con el cuaderno de vitela; el cartellino cuelga del canto.
             2 -> {
                 val dy = baja
                 val cintas = listOf(BERMELLON, ULTRAMAR, TIERRA_VERDE, OCRE)
                 val papeles = listOf(mezcla(CARTON, PAPEL, 0.3f), PAPEL_TINTO, PAPEL_ROSA, PAPEL)
-                val cuaderno = Math.floorMod(c.semilla ushr 3, 2) == 1
-                val xd = if (cuaderno) 0.78f else 0.95f
-                // Uno de pie al fondo, a la izquierda, con más fichas.
+                val t0 = Math.floorMod(m shr 16, 4)
+                val cuaderno = Math.floorMod(m shr 20, 2) == 1
+                val xd = if (cuaderno) 0.78f else 0.94f
                 if (n >= 5) {
-                    val pr = Rect(w * 0.06f, h * 0.06f + dy, w * 0.14f, h * 0.9f + dy)
+                    val pr = Rect(w * 0.06f, h * 0.36f + dy, w * 0.14f, h * 0.95f + dy)
                     drawRect(t.s(0.35f), Offset(pr.right, pr.top + 3f * u), Size(3f * u, pr.height))
                     drawRect(t.c(PAPEL_TINTO), pr.topLeft, pr.size)
                     clipRect(pr.left, pr.top, pr.right, pr.bottom) { cilindro(pr, t, 1.1f, der) }
                     drawOval(t.c(mezcla(PAPEL_TINTO, LUZ_MUEBLE, 0.3f)), Offset(pr.left, pr.top - pr.width * 0.18f), Size(pr.width, pr.width * 0.36f))
-                    drawRect(t.c(cintas[(tono3 + 1) % 4]), Offset(pr.left, pr.top + pr.height * 0.3f), Size(pr.width, 2.6f * u))
+                    drawRect(t.c(cintas[(t0 + 1) % 4]), Offset(pr.left, pr.top + pr.height * 0.3f), Size(pr.width, 2.6f * u))
                 }
                 val x0 = if (n >= 5) 0.15f else 0.05f
-                // Abajo, el rollo grande; encima, otro más chico corrido; y arriba, uno más con más fichas.
-                rolloLargo(Rect(w * x0, h * 0.6f + dy, w * xd, h * 0.95f + dy), papeles[tono3], cintas[tono3], t, c.semilla)
-                rolloLargo(Rect(w * (x0 + 0.1f), h * 0.3f + dy, w * (xd - 0.02f), h * 0.6f + dy), papeles[(tono3 + 1) % 4], cintas[(tono3 + 2) % 4], t, c.semilla + 1)
-                rolloLargo(Rect(w * (x0 + 0.02f + (if (n >= 3) 0f else 0.25f)), h * 0.07f + dy, w * (xd - 0.2f + (if (n >= 3) 0f else 0.12f)), h * 0.3f + dy), papeles[(tono3 + 2) % 4], cintas[(tono3 + 3) % 4], t, c.semilla + 2)
-                if (cuaderno) cuadernoVitela(Rect(w * 0.8f, h * 0.1f + dy, w * 0.95f, h * 0.95f + dy), t, der)
+                if (n >= 3) rolloLargo(Rect(w * (x0 + 0.04f), h * 0.36f + dy, w * (xd - 0.24f), h * 0.5f + dy), papeles[(t0 + 2) % 4], cintas[(t0 + 3) % 4], t, c.semilla + 2)
+                rolloLargo(Rect(w * (x0 + 0.1f), h * 0.46f + dy, w * (xd - 0.02f), h * 0.67f + dy), papeles[(t0 + 1) % 4], cintas[(t0 + 2) % 4], t, c.semilla + 1)
+                rolloLargo(Rect(w * x0, h * 0.65f + dy, w * xd, h * 0.95f + dy), papeles[t0], cintas[t0], t, c.semilla)
+                if (cuaderno) cuadernoVitela(Rect(w * 0.8f, h * 0.36f + dy, w * 0.95f, h * 0.95f + dy), t, der)
+                cordeles(r, t)
                 cartellino(r, t, c.semilla)
             }
-            // La carpeta de cartón de lo que no tiene tema, atravesada y atada con cintas.
+            // El cartapacio de lo que no tiene tema, en su nicho.
             3 -> {
-                clipRect(0f, 0f, w, h + baja) {
-                    rotate(-7f, Offset(w / 2, h / 2 + baja)) {
-                        val cp = Rect(w * 0.0f, h * 0.12f + baja, w * 1.0f, h * 0.92f + baja)
-                        drawRect(t.s(0.4f), Offset(cp.left + 3f * u, cp.top + 4f * u), cp.size)
-                        // Las hojas que asoman por arriba.
-                        for (j in 0 until (2 + n).coerceAtMost(6)) {
-                            val x = cp.left + cp.width * (0.08f + 0.14f * j)
-                            drawRect(t.c(if (j % 2 == 0) PAPEL else PAPEL_TINTO), Offset(x, cp.top - h * (0.04f + 0.04f * azar(c.semilla, j))), Size(cp.width * 0.2f, h * 0.2f))
-                        }
-                        drawRect(t.c(CARTON), cp.topLeft, cp.size)
-                        pinceladas(cp, mezcla(CARTON, NOGAL_OSC, 0.5f), c.semilla, 6, u, 0.18f)
-                        drawRect(t.b(0.35f), cp.topLeft, Size(cp.width, 1.4f * u))
-                        drawRect(t.s(0.3f), Offset(cp.left, cp.bottom - 2f * u), Size(cp.width, 2f * u))
-                        // Las esquinas gastadas, de un tono más claro, y las cintas que la atan por la derecha.
-                        drawPath(poligono(cp.left, cp.bottom, cp.left, cp.bottom - h * 0.1f, cp.left + w * 0.06f, cp.bottom), t.c(mezcla(CARTON, PAPEL, 0.4f)))
-                        // El canto del cartón, con su grosor, y las cintas de color ocre que la cierran por la derecha, con su lazo.
-                        drawRect(t.c(mezcla(CARTON, NOGAL_OSC, 0.45f)), Offset(cp.left, cp.bottom - 4f * u), Size(cp.width, 4f * u))
-                        drawRect(t.s(0.25f), Offset(cp.right - w * 0.05f, cp.top), Size(w * 0.05f, cp.height))
-                        val cinta = t.c(mezcla(BERMELLON, OCRE, 0.35f))
-                        val yl = cp.top + cp.height * 0.5f
-                        drawRect(t.s(0.3f), Offset(cp.right - w * 0.2f, yl + 3f * u), Size(w * 0.2f, 3f * u))
-                        drawRect(cinta, Offset(cp.right - w * 0.2f, yl), Size(w * 0.2f, 3.2f * u))
-                        val nudo = Offset(cp.right - w * 0.12f, yl + 1.6f * u)
-                        listOf(-1f, 1f).forEach { s ->
-                            drawPath(Path().apply { moveTo(nudo.x, nudo.y); cubicTo(nudo.x + s * w * 0.05f, nudo.y - h * 0.1f, nudo.x + s * w * 0.07f, nudo.y + h * 0.04f, nudo.x, nudo.y) }, cinta, style = Stroke(2.4f * u))
-                            drawPath(Path().apply { moveTo(nudo.x, nudo.y); cubicTo(nudo.x + s * w * 0.01f, nudo.y + h * 0.08f, nudo.x + s * w * 0.04f, nudo.y + h * 0.12f, nudo.x + s * w * 0.03f, nudo.y + h * 0.2f) }, cinta, style = Stroke(2.2f * u))
-                        }
-                        drawCircle(t.c(mezcla(BERMELLON, PORFIDO, 0.4f)), 2.6f * u, nudo)
-                    }
-                }
+                cartapacio(w, h, baja, n, t, c.semilla)
+                cordeles(r, t)
                 cartellino(r, t, c.semilla)
             }
             else -> {
-                // Un cajoncito: cerrado (con las puntas de las hojas) o entreabierto (con las hojas de boceto de pie).
                 val entreabierto = clase == 1
-                val entre = when {
-                    clase == -1 -> 0f
-                    entreabierto -> h * (0.15f + 0.007f * n.coerceIn(0, 7))
-                    else -> h * (0.02f + 0.006f * n.coerceIn(0, 7))
-                }
-                val arriba = entre + baja
-                if (arriba > 0.5f) hojas(w, arriba, maxOf(1, n), c.semilla, t)
                 val e = w * 0.025f * ab
-                val f = Rect(-e, arriba, w + e, h + baja + h * 0.04f * ab)
-                if (ab > 0f) drawRect(t.s(0.35f * ab), Offset(f.left + 2f * u, f.bottom - 1f * u), Size(f.width, 1f * u + 6f * u * ab))
-                val paneles = listOf(PERAL, ARCE, BOJ)
-                val marcos = listOf(NOGAL, mezcla(NOGAL, CEREZO, 0.6f), NOGAL_LUZ)
-                when (clase) {
-                    -1 -> frenteCajon(f, if (c.col % 2 == 0) NOGAL else mezcla(NOGAL, CEREZO, 0.5f), if (c.col % 2 == 0) mezcla(NOGAL_LUZ, PERAL, 0.3f) else mezcla(ARCE, PERAL, 0.4f), -1, t, c.semilla, der)
-                    0 -> frenteCajon(f, NOGAL, paneles[tono3], tono3, t, c.semilla, der)
-                    else -> frenteCajon(f, marcos[tono3], mezcla(paneles[(tono3 + 1) % 3], NOGAL_LUZ, 0.25f), -1, t, c.semilla, der)
+                val f = if (entreabierto) Rect(-w * 0.03f - e, h * 0.49f + baja, w * 1.03f + e, h * 0.965f + baja + h * 0.03f * ab)
+                        else Rect(-e, h * (0.012f + 0.004f * n.coerceIn(0, 7)) + baja, w + e, h + baja + h * 0.04f * ab)
+                if (entreabierto) {
+                    // Las hojas que asoman, los costados del cajón y su sombra en la tabla de abajo.
+                    hojas(w, 0f, f.top, maxOf(1, n), c.semilla, t)
+                    drawRect(t.s(0.5f), Offset(f.left + 2f * u, f.bottom), Size(f.width, h * 0.035f + 2f * u))
+                } else if (f.top > 0.5f) {
+                    // Las puntas de las hojas por la rendija de arriba.
+                    drawRect(t.c(mezcla(EBANO, NOGAL_OSC, 0.4f)), Offset(w * 0.03f, 0f), Size(w * 0.94f, f.top + 1f * u))
+                    for (j in 0 until (2 + n).coerceAtMost(8)) {
+                        val x = w * (0.08f + 0.8f * j / (2 + n).coerceAtMost(8))
+                        drawRect(t.c(if (j % 3 == 1) PAPEL_TINTO else if (j % 3 == 2) PAPEL_ROSA else PAPEL), Offset(x, f.top * (0.15f + 0.5f * azar(c.semilla, j))), Size(w * 0.1f, f.top))
+                    }
                 }
+                if (ab > 0f && !entreabierto) drawRect(t.s(0.35f * ab), Offset(f.left + 2f * u, f.bottom - 1f * u), Size(f.width, 1f * u + 6f * u * ab))
+                val mot = if (c.vacio) Math.floorMod(c.semilla / 7919, 7) else motivo(c.semilla)
+                val pa = if (entreabierto) f.top + h * 0.05f else h * 0.355f + baja
+                val pb = if (entreabierto) f.bottom - h * 0.1f else f.bottom - h * 0.15f
+                frenteCajon(f, if (c.vacio) NOGAL else marco, if (c.vacio) mezcla(NOGAL_LUZ, PERAL, 0.4f) else campo, mot, t, c.semilla, der, pa, pb)
                 // El uso: unas rozaduras junto al botón.
-                if (Math.floorMod(c.semilla ushr 5, 3) == 0) for (j in 0 until 5) {
-                    val x = w * (0.38f + 0.24f * azar(c.semilla, 300 + j)); val y = f.top + f.height * (0.7f + 0.15f * azar(c.semilla, 310 + j))
-                    drawLine(t.b(0.25f), Offset(x, y), Offset(x + w * 0.025f, y - f.height * 0.03f), 0.6f * u)
+                if (Math.floorMod(m shr 24, 3) == 0) for (j in 0 until 5) {
+                    val x = w * (0.36f + 0.28f * azar(c.semilla, 300 + j)); val y = f.bottom - h * (0.03f + 0.1f * azar(c.semilla, 310 + j))
+                    drawLine(t.b(0.25f), Offset(x, y), Offset(x + w * 0.025f, y - h * 0.02f), 0.6f * u)
                 }
-                if (arriba < 0.5f) drawRect(t.s(0.4f), Offset.Zero, Size(w, 2.2f * u))
-                cartellino(r, t, c.semilla, blanco = clase == -1)
-                boton(Offset(w / 2, f.top + f.height * 0.79f), h * 0.05f, t, der)
+                if (entreabierto) cordeles(r, t)
+                cartellino(r, t, c.semilla, blanco = c.vacio)
+                boton(Offset(w / 2, (pb + f.bottom) / 2), h * (if (entreabierto) 0.04f else 0.048f), t, der)
                 // Al abrirlo, sube algo de luz de dentro.
-                if (ab > 0f) mancha(Offset(w / 2, arriba), w * 0.4f, if (oscuro) LLAMA.copy(alpha = 0.16f * ab * (0.4f + k)) else luzMueble(0.3f * ab))
+                if (ab > 0f) mancha(Offset(w / 2, f.top), w * 0.4f, if (oscuro) LLAMA.copy(alpha = 0.16f * ab * (0.4f + k)) else luzMueble(0.3f * ab))
             }
         }
-        if (ab > 0f && clase >= 2) mancha(Offset(w / 2, h * 0.4f), w * 0.5f, if (oscuro) LLAMA.copy(alpha = 0.14f * ab * (0.4f + k)) else luzMueble(0.25f * ab))
+        if (ab > 0f && clase >= 2) mancha(Offset(w / 2, h * 0.5f), w * 0.5f, if (oscuro) LLAMA.copy(alpha = 0.14f * ab * (0.4f + k)) else luzMueble(0.25f * ab))
     }
 
-    override val rotulo = Rect(0.07f, 0.22f, 0.93f, 0.55f)
+    override val rotulo = Rect(0.06f, 0.045f, 0.94f, 0.335f)
     override fun tintaRotulo(oscuro: Boolean) = TINTA_ROTULO
     override val letraRotulo: FontFamily = LetraExtra.cormorant
     override val salida = SALIDA
