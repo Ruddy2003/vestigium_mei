@@ -98,7 +98,7 @@ internal object EsquinaCentro {
         for ((a, b) in GaleriaCentro.tramos(-110f + 360f, -40f + 360f, 4f)) {
             val f = CamCentro.forma(listOf(GeoCentro.aro(GeoCentro.RV, G1 + 0.002f, a), GeoCentro.aro(GeoCentro.RV, G1 + 0.002f, b), GeoCentro.aro(GeoCentro.RV + 0.75f, G1 + 0.002f, b), GeoCentro.aro(GeoCentro.RV + 0.75f, G1 + 0.002f, a))) ?: continue
             val p0 = CamCentro.p(GeoCentro.aro(GeoCentro.RV, G1, a)); val p1 = CamCentro.p(GeoCentro.aro(GeoCentro.RV + 0.75f, G1, a))
-            drawPath(f, Brush.linearGradient(listOf(lerp(v.colorDifusa, v.fondo, 0.4f).copy(alpha = 0.22f * (0.3f + 0.7f * v.difusa)), Color.Transparent), p0, p1), blendMode = BlendMode.Plus)
+            drawPath(f, Brush.linearGradient(listOf(lerp(v.colorDifusa, v.fondo, 0.3f).copy(alpha = 0.34f * (0.3f + 0.7f * v.difusa)), Color.Transparent), p0, p1), blendMode = BlendMode.Plus)
         }
         val az0 = Azar(Semilla.de("laboratorio", "centro", "reflejo baranda"))
         var g = -104f
@@ -110,6 +110,13 @@ internal object EsquinaCentro {
             }
             g += 3f + az0.entre(0f, 2f)
         }
+        // El granito del pulido: motas claras y oscuras en el suelo de cerca, y las juntas entre losas a lo ancho.
+        val az1 = Azar(Semilla.de("laboratorio", "centro", "granito"))
+        val claras = ArrayList<Offset>(); val oscuras = ArrayList<Offset>()
+        repeat(700) { val q = CamCentro.p(GeoCentro.aro(az1.entre(8.25f, 9.6f), G1 + 0.002f, az1.entre(-112f, -72f))); if (CamCentro.enCuadro(q, 0f)) { if (it % 2 == 0) claras += q else oscuras += q } }
+        drawPoints(claras, androidx.compose.ui.graphics.PointMode.Points, lerp(C.TELA, Color.White, 0.2f).copy(alpha = 0.16f), 0.8f, StrokeCap.Round)
+        drawPoints(oscuras, androidx.compose.ui.graphics.PointMode.Points, lerp(C.SOMBRA, C.NEGRO, 0.3f).copy(alpha = 0.18f), 0.8f, StrokeCap.Round)
+        for (rr in listOf(8.55f, 9.3f)) PiezasCentro.run { trazo(v, PiezasCentro.arco(rr, G1 + 0.002f, -112f, -50f, 30), lerp(C.SOMBRA, C.PISO, 0.4f), ARRIBA, 0.012f, 0.4f) }
         // El paso gastado y las rayas de las sillas, junto a la barandilla.
         val az = Azar(Semilla.de("laboratorio", "centro", "esquina suelo"))
         repeat(16) {

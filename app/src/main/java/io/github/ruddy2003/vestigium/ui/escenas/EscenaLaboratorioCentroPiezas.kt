@@ -198,7 +198,7 @@ internal class VistaCentro(val m: Momento) {
 
     /** La luz del pozo repartida por el hall (lo que imita el día, difusa, desde lo alto del eje): cuánta y de qué color. */
     val difusa: Float = CentroLab.difusa(m)
-    val colorDifusa: Color = lerp(pozo.color, Color.White, 0.12f)
+    val colorDifusa: Color = lerp(pozo.color, Color.White, 0.04f)
 
     /** Las luces que no son el pozo, en metros. */
     val luces: List<Luz3> = LucesCentro.de(this)

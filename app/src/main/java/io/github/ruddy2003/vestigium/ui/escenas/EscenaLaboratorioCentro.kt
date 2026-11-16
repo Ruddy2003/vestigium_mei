@@ -123,13 +123,13 @@ internal object CentroLab {
      * de pantallas. Se mueve en línea recta entre las tres.
      */
     fun mancha(h: Float): Offset {
-        val alba = Offset(-2.0f, 7.1f); val medio = Offset(0.25f, 0.05f); val tarde = Offset(8.8f, 1.9f)
+        val alba = Offset(-2.62f, 4.55f); val medio = Offset(0.25f, 0.05f); val tarde = Offset(8.8f, 1.9f)
         return if (h <= 13f) { val t = ((h - 6.5f) / 6.5f).coerceIn(0f, 1f); alba + (medio - alba) * t } else { val t = ((h - 13f) / 8f).coerceIn(0f, 1f); medio + (tarde - medio) * t }
     }
 
     /** El color del haz a la hora [h]: cálido al alba, blanco a mediodía, dorado y luego naranja en la cena. */
     fun colorDelPozo(h: Float): Color = when {
-        h < 9f -> lerp(Color(0xFFFFD49A), Color(0xFFFFF4E0), ((h - 6.5f) / 2.5f).coerceIn(0f, 1f))
+        h < 9f -> lerp(Color(0xFFFFC27E), Color(0xFFFFF4E0), ((h - 6.5f) / 2.5f).coerceIn(0f, 1f))
         h < 16f -> lerp(Color(0xFFFFF4E0), Color(0xFFFFFAF2), 1f - abs(h - 12.5f) / 3.5f)
         else -> lerp(Color(0xFFFFF0D6), Color(0xFFFFA858), ((h - 16f) / 4.5f).coerceIn(0f, 1f))
     }

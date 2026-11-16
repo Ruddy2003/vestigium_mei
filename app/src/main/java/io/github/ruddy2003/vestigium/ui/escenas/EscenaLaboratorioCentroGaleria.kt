@@ -70,6 +70,10 @@ internal object GaleriaCentro {
         pared(v, G2, techo, 2)
         // La losa vista por debajo (lo que está sobre la primera galería), con sus luces empotradas.
         for ((a, b) in tramos()) cara(v, PiezasCentro.tramoH(RV, RW, G2 - LOSA, a, b), lerp(C.HORMIGON, C.TIERRA, 0.1f), ABAJO, lejos(GeoCentro.aro(RV, G2, a)))
+        // Las juntas de los paneles del techo de la galería y la canaleta de las luces.
+        val junta = lerp(C.SOMBRA, C.HORMIGON, 0.4f)
+        for ((a, _) in tramos(paso = 10f)) linea(v, GeoCentro.aro(RV + 0.05f, G2 - LOSA - 0.003f, a), GeoCentro.aro(RW, G2 - LOSA - 0.003f, a), junta, ABAJO, 0.5f, 0.5f)
+        trazo(v, PiezasCentro.arco(RV + 1.3f, G2 - LOSA - 0.004f, GeoCentro.PA1, 360f + GeoCentro.PA0, 90), lerp(C.ACERO, C.SOMBRA, 0.4f), ABAJO, 0.12f, 0.6f)
         luces(v, G2 - LOSA - 0.01f, true)
         canto(v, G2)
         barandilla(v, G2, GeoCentro.PA1, 360f + GeoCentro.PA0)
@@ -87,7 +91,8 @@ internal object GaleriaCentro {
         val az = Azar(Semilla.de("laboratorio", "centro", "galeria"))
         for ((a, b) in tramos()) {
             val w = GeoCentro.aro((RV + RW) / 2f, G1, (a + b) / 2f)
-            val propio = if (az.real() < 0.18f) lerp(C.PISO, C.HORMIGON, 0.3f) else lerp(C.PISO, C.HORMIGON, 0.18f)
+            val base = lerp(lerp(C.PISO, C.TELA, 0.35f), C.BARRO, 0.05f)
+            val propio = if (az.real() < 0.2f) lerp(base, C.TELA, 0.2f) else lerp(base, C.PISO, az.entre(0f, 0.3f))
             caraGrande(v, PiezasCentro.tramoH(RV, RW, G1, a, b), propio, ARRIBA, GeoCentro.aro(RV, G1, (a + b) / 2f), GeoCentro.aro(RW, G1, (a + b) / 2f), lejos(w), pasos = 3)
             // La junta entre losas.
             linea(v, GeoCentro.aro(RV, G1 + 0.002f, a), GeoCentro.aro(RW, G1 + 0.002f, a), lerp(C.SOMBRA, C.PISO, 0.4f), ARRIBA, 0.4f, 0.35f)
@@ -212,7 +217,7 @@ internal object GaleriaCentro {
         var g = GeoCentro.PA1 + 6f
         while (g < 360f + GeoCentro.PA0 - 4f) {
             val w = GeoCentro.aro(RV + 1.3f, y, g); val q = CamCentro.p(w)
-            if (CamCentro.hondo(w) > 2.2f && CamCentro.enCuadro(q, 4f)) {
+            if (CamCentro.hondo(w) > (if (deFrente) 2.2f else 0.9f) && CamCentro.enCuadro(q, 4f)) {
                 val k = CamCentro.k(w)
                 if (deFrente) {
                     val rr = (0.07f * k).coerceIn(0.4f, 1.6f)
@@ -221,7 +226,7 @@ internal object GaleriaCentro {
                 } else {
                     // El charco en el suelo: un óvalo aplastado por la fuga.
                     val r = 0.9f * k; val alto = r * ((CamCentro.OJO_Y - y) / CamCentro.hondo(w)).coerceIn(0.1f, 1f)
-                    mancha(q, r, alto, color, 0.18f * k0)
+                    mancha(q, r, alto, color, 0.26f * k0)
                 }
             }
             g += 12f

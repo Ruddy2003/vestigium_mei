@@ -210,9 +210,24 @@ internal object LuzCentro {
      * La sombra de las aspas del ventilador, que giran despacio dentro de la mancha; el polvo que sube y baja en el haz; el
      * elevador que sube y baja; el latido azul de la sala del destello; las llamas de las velas.
      */
+    /**
+     * Lo del comedor que se ve desde la esquina: lo que queda por encima del canto de la losa de cerca, menos la mesa chica y su
+     * silla. La parte viva del suelo del comedor (la sombra de las aspas, las llamas) se recorta con esto, para no pintar
+     * encima de la galería.
+     */
+    fun comedorVisto(): Path {
+        val canto = (0..36).map { CamCentro.p(GeoCentro.aro(GeoCentro.RV, GeoCentro.G1, -135f + (GeoCentro.PA0 + 135f) * it / 36f)) }
+        val zona = poligono(listOf(Offset(-60f, -60f), Offset(-60f, canto.first().y)) + canto + listOf(Offset(canto.last().x, -60f)))
+        val mesa = poligono(envolvente(PiezasCentro.esquinas(EsquinaCentro.MESA, EsquinaCentro.U_MESA, EsquinaCentro.LADO + 0.1f, EsquinaCentro.LADO + 0.1f, EsquinaCentro.ALTO + 0.3f).map { CamCentro.p(it) } +
+            PiezasCentro.esquinas(EsquinaCentro.SILLA, EsquinaCentro.U_MESA, 0.5f, 0.5f, 0.9f).map { CamCentro.p(it) }))
+        val r = Path(); r.op(zona, mesa, PathOperation.Difference)
+        return r
+    }
+
     fun DrawScope.vivo(v: VistaCentro, reloj: Float) {
         val f = v.pozo.fuerza
-        val forma = if (f > 0.05f) formaDeLaMancha(v) else null
+        val visto = comedorVisto()
+        val forma = if (f > 0.05f) formaDeLaMancha(v)?.let { val r = Path(); r.op(it, visto, PathOperation.Intersect); r } else null
         if (forma != null) {
             val d = v.pozo.d
             val giro = BovedaCentro.giro(v, reloj)
@@ -244,12 +259,12 @@ internal object LuzCentro {
             mancha(CamCentro.p(c), 1.6f * CamCentro.k(c), 1.2f * CamCentro.k(c), Color(0xFF9FD0FF), 0.12f * v.destello * late)
         }
         // Las llamas de las velas de la noche larga.
-        if (v.velas) for (t in ComedorCentro.MESAS) for (i in 0..2) {
+        if (v.velas) clipPath(visto) { for (t in ComedorCentro.MESAS) for (i in 0..2) {
             val c = V3(t.x0 + (t.x1 - t.x0) * (0.2f + 0.3f * i), ComedorCentro.ALTO_MESA + 0.17f, t.z)
             val q = CamCentro.p(c); val k = CamCentro.k(c)
             val late = 0.8f + 0.2f * sin(reloj * 7f + i * 2f + t.z)
             drawOval(lerp(C.VELA, Color.White, 0.5f), q - Offset(0.012f * k, 0.05f * k * late), Size(0.024f * k + 0.4f, 0.05f * k * late + 0.6f))
-        }
+        } }
     }
 
     @Suppress("unused") private fun usar(az: Azar) = az.real()

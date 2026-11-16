@@ -343,6 +343,14 @@ internal object PantallasCentro {
         val junta = lerp(C.NEGRO, C.ACERO, 0.15f)
         for (c in 0..COLUMNAS) { val u = c / COLUMNAS.toFloat(); drawLine(junta, q(u, 0f), q(u, 1f), (0.06f * k(u) / 11f).coerceIn(0.5f, 2.6f)) }
         for (f in 0..FILAS) { val w = f / FILAS.toFloat(); drawPath(Path().apply { val a = q(0f, w); moveTo(a.x, a.y); for (i in 1..10) { val b = q(i / 10f, w); lineTo(b.x, b.y) } }, junta, style = Stroke((0.05f * k(0.5f) / 11f).coerceIn(0.5f, 2.2f))) }
+        // Cada pantalla con lo suyo: un poco más clara o más apagada que la de al lado, y el borde oscurecido (la viñeta del panel viejo).
+        val az = Azar(Semilla.de("laboratorio", "centro", "paneles"))
+        for (c in 0 until COLUMNAS) for (f in 0 until FILAS) {
+            val forma = pantalla(c, f)
+            val t = az.real()
+            if (t < 0.3f) drawPath(forma, Color.Black.copy(alpha = 0.05f + 0.1f * t)) else if (t > 0.8f) drawPath(forma, Color.White.copy(alpha = 0.05f * (t - 0.8f) * 5f))
+            drawPath(forma, Color.Black.copy(alpha = 0.22f), style = Stroke((0.06f * k(c / COLUMNAS.toFloat()) / 11f).coerceIn(0.5f, 2f)))
+        }
         // Las pantallas cansadas: una más verde, una más magenta, una más oscura.
         for ((cf, tinte) in listOf((3 to 1) to Color(0xFF7FE0A0), (6 to 3) to Color(0xFFE08AD0), (2 to 4) to Color(0xFF101828), (7 to 0) to Color(0xFFFFE0A0))) {
             drawPath(pantalla(cf.first, cf.second), tinte.copy(alpha = if (tinte.red < 0.2f) 0.4f else 0.14f))
