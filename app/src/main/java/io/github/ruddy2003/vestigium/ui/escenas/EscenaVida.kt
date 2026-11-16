@@ -207,7 +207,7 @@ fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
     TemaId.GOTICO -> EscenaGotico
     TemaId.ARCANO -> EscenaArcano
     TemaId.ESPACIO -> EscenaEspacio
-    TemaId.ABISMO -> null           // S16
+    TemaId.ABISMO -> EscenaAbismo
     TemaId.ANDALUS -> EscenaAndalus
     TemaId.MESO -> EscenaMeso
     TemaId.MONGOL -> EscenaMongol

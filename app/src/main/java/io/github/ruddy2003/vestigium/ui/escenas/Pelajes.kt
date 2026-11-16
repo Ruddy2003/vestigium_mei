@@ -67,7 +67,7 @@ fun pelajeDe(tema: TemaId): Pelaje? = when (tema) {
     TemaId.GOTICO -> PELAJE_GOTICO
     TemaId.ARCANO -> PELAJE_ARCANO
     TemaId.ESPACIO -> PELAJE_ESPACIO
-    TemaId.ABISMO -> null           // S16
+    TemaId.ABISMO -> PELAJE_ABISMO
     TemaId.ANDALUS -> PELAJE_ANDALUS
     TemaId.MESO -> PELAJE_MESO
     TemaId.MONGOL -> PELAJE_MONGOL
