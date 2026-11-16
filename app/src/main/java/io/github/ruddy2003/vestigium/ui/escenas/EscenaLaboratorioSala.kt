@@ -166,9 +166,9 @@ internal object SalaLab {
             drawLine(v.c(punto(ss, yy), Color.White, n).copy(alpha = 0.35f), CamLab.p(ps[1]), CamLab.p(ps[3]), 0.4f)
         }
         // Las manchas grandes del lavado de la pintura, que no queda pareja, y las chorreras bajo los tubos y las juntas.
-        repeat(12) {
+        repeat(8) {
             val ss = az.entre(s0, s1); val yy = az.entre(0.3f, TECHO - 0.3f); val q = punto(ss, yy); val k = CamLab.k(q)
-            mancha(CamLab.p(q), az.entre(0.5f, 1.3f) * k, az.entre(0.3f, 0.8f) * k, if (it % 3 == 0) lerp(C.HORMIGON, C.TIERRA, 0.5f) else lerp(C.HORMIGON, C.SOMBRA, 0.35f), 0.07f)
+            mancha(CamLab.p(q), az.entre(0.6f, 1.5f) * k, az.entre(0.35f, 0.9f) * k, if (it % 3 == 0) lerp(C.HORMIGON, C.TIERRA, 0.5f) else lerp(C.HORMIGON, C.SOMBRA, 0.35f), 0.07f)
         }
         repeat(10) {
             val ss = az.entre(s0 + 0.2f, s1 - 0.2f); val y0 = az.entre(1.2f, TECHO - 0.2f); val largo = az.entre(0.4f, 1.4f)

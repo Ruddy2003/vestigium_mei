@@ -116,9 +116,11 @@ internal object PantallaLab {
         if (encendida) for (i in 0 until COLUMNAS) for (j in 0 until FILAS) {
             val ps = panel(i, j); val d = az.entre(-1f, 1f)
             drawPath(forma(ps), (if (d > 0f) Color.White else Color.Black).copy(alpha = 0.1f * kotlin.math.abs(d)))
-            val centro = q((ps[0].first + ps[1].first) / 2f, (ps[0].second + ps[2].second) / 2f); val esquina = q(ps[0].first, ps[0].second)
-            val r = (centro - esquina).getDistance()
-            drawPath(forma(ps), Brush.radialGradient(0f to Color.Transparent, 0.62f to Color.Transparent, 1f to Color(0xFF0C1420).copy(alpha = 0.3f), center = centro, radius = r))
+        }
+        // Las orillas de cada pantalla, más oscuras arriba y abajo (la luz de detrás no llega a los bordes): un degradado por fila.
+        if (encendida) for (j in 0 until FILAS) {
+            val v0 = j / FILAS.toFloat(); val v1 = (j + 1) / FILAS.toFloat()
+            drawPath(forma(listOf(0f to v0, 1f to v0, 1f to v1, 0f to v1)), Brush.linearGradient(0f to Color(0xFF0C1420).copy(alpha = 0.28f), 0.2f to Color.Transparent, 0.8f to Color.Transparent, 1f to Color(0xFF0C1420).copy(alpha = 0.28f), start = q(0.5f, v0), end = q(0.5f, v1)))
         }
         if (encendida) {
             // El envejecido: la luz de detrás cansada, más oscura y verdosa.
@@ -212,7 +214,7 @@ internal object PantallaLab {
             if (img.sol && sv > -0.05f) { val r = 0.04f * k(su.coerceIn(0f, 1f)); drawCircle(lerp(l.solColor, Color.White, 0.7f), r, p) }
         }
         // Las nubes del día: pisos de borbotones, con la luz del lado del sol y la base en sombra.
-        val nubes = when (img.clima) { Clima.LLUVIA, Clima.TORMENTA -> 9; Clima.NUBES -> 6; else -> 2 + az.entero(4) }
+        val nubes = when (img.clima) { Clima.LLUVIA, Clima.TORMENTA -> 9; Clima.NUBES -> 6; else -> 2 + az.entero(4) }.let { if (l.noche > 0.6f) min(it, 2) else it }
         val carga = if (img.clima == Clima.LLUVIA || img.clima == Clima.TORMENTA) 0.7f else 0f
         val luz = lerp(lerp(Color.White, Color(0xFF9AA0AA), carga), l.solColor, if (l.solAltura in 0f..0.5f) 0.45f else 0.1f).let { Color(it.red * (0.35f + 0.65f * (1f - l.noche)), it.green * (0.35f + 0.65f * (1f - l.noche)), it.blue * (0.4f + 0.6f * (1f - l.noche))) }
         val sombra = lerp(lerp(l.medio, Color(0xFF8A86B0), 0.5f), Color(0xFF59616F), carga)

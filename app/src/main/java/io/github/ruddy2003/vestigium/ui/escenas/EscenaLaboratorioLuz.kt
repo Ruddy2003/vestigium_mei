@@ -1,26 +1,27 @@
 package io.github.ruddy2003.vestigium.ui.escenas
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasLab.charco
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasLab.halo
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasLab.sombraEnPlano
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.capaSombra
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoFijo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
@@ -47,7 +48,7 @@ internal object LucesLab {
             val w = MesaLab.lampara(i) - V3(0f, 0.04f, 0f)
             add(Luz3(Fuente.CULTIVO, w, v.colorCultivo, k, 1.4f, cono = 0.9f))
             // El rebote del charco en el tablero: la luz que sube a la pared, al techo y a lo de alrededor (sin sombra).
-            if (k > 0.05f) add(Luz3(Fuente.REBOTE, V3(w.x, MesaLab.ALTO + 0.12f, w.z), lerp(v.colorCultivo, ColorLaboratorio.TIERRA, 0.25f), 0.18f * k, 1.3f, tumba = false))
+            if (k > 0.5f) add(Luz3(Fuente.REBOTE, V3(w.x, MesaLab.ALTO + 0.12f, w.z), lerp(v.colorCultivo, ColorLaboratorio.TIERRA, 0.25f), 0.18f * k, 1.3f, tumba = false))
         }
         // La lámpara de su mesa: cálida, baja, con su pantalla.
         if (v.mesa > 0.01f) {
@@ -105,26 +106,26 @@ internal object LuzLab {
                 // El derrame bajo el marco, sobre el estante de las semillas.
                 halo(V3(SalaLab.XD - 0.01f, 0.8f, 3.6f), 3.2f, 1.4f, f.color, 0.5f * f.fuerza)
             }
-            clipPath(suelo) { charco(V3(SalaLab.XD - 0.45f, 0f, 3.7f), 1.3f, f.color, 0.5f * f.fuerza, duro = 0.3f) }
-            clipPath(SalaLab.formaDelTecho()) { halo(V3(SalaLab.XD - 0.6f, SalaLab.TECHO, 3.5f), 3f, 1.6f, f.color, 0.3f * f.fuerza) }
         }
-        // La luz de la puerta en su pared: la claridad que se derrama alrededor del marco (blanca de día, violeta de noche).
-        v.luces.firstOrNull { it.de == Fuente.PUERTA }?.let { f ->
-            clipPath(SalaLab.formaDelFondoSinPuerta()) { halo(V3((SalaLab.PX0 + SalaLab.PX1) / 2f, 1.2f, SalaLab.ZF - 0.01f), 3.4f, 3.0f, f.color, 0.42f * f.fuerza) }
-            clipPath(SalaLab.formaDelTecho()) { halo(V3((SalaLab.PX0 + SalaLab.PX1) / 2f, SalaLab.TECHO, SalaLab.ZF - 0.6f), 2.2f, 1.0f, f.color, 0.25f * f.fuerza) }
+        val pantalla = v.luces.firstOrNull { it.de == Fuente.PANTALLA }; val puerta = v.luces.firstOrNull { it.de == Fuente.PUERTA }
+        // El techo: la claridad de la pantalla y la de la puerta.
+        if (pantalla != null || puerta != null) clipPath(SalaLab.formaDelTecho()) {
+            pantalla?.let { f -> halo(V3(SalaLab.XD - 0.6f, SalaLab.TECHO, 3.5f), 3f, 1.6f, f.color, 0.3f * f.fuerza) }
+            puerta?.let { f -> halo(V3((SalaLab.PX0 + SalaLab.PX1) / 2f, SalaLab.TECHO, SalaLab.ZF - 0.6f), 2.2f, 1.0f, f.color, 0.25f * f.fuerza) }
         }
-        // La lámpara de su mesa: su claridad en la campana y en el suelo de delante.
-        v.luces.firstOrNull { it.de == Fuente.MESA }?.let { f ->
-            clipPath(suelo) { charco(V3(f.w.x + 0.5f, 0f, f.w.z + 0.6f), 1.1f, f.color, 0.25f * f.fuerza) }
-        }
-        // El rebote de los charcos de las lámparas de cultivo del fondo en la pared, sobre el extremo de la mesa.
+        // La pared del fondo: la claridad de la puerta alrededor del marco (blanca de día, violeta de noche) y el rebote de
+        // los charcos de las lámparas de cultivo del fondo, sobre el extremo de la mesa.
         clipPath(SalaLab.formaDelFondoSinPuerta()) {
+            puerta?.let { f -> halo(V3((SalaLab.PX0 + SalaLab.PX1) / 2f, 1.2f, SalaLab.ZF - 0.01f), 3.4f, 3.0f, f.color, 0.42f * f.fuerza) }
             for (f in v.luces) if (f.de == Fuente.CULTIVO && f.fuerza > 0.05f) {
                 val cerca = (1f - (SalaLab.ZF - f.w.z) / 3f).coerceIn(0f, 1f)
                 if (cerca > 0.05f) halo(V3(f.w.x, 1.3f, SalaLab.ZF - 0.01f), 2.2f, 2.0f, f.color, 0.35f * f.fuerza * cerca)
             }
         }
         clipPath(suelo) {
+            // La pantalla, en el suelo de debajo; la lámpara de su mesa, en el suelo de delante.
+            pantalla?.let { f -> charco(V3(SalaLab.XD - 0.45f, 0f, 3.7f), 1.3f, f.color, 0.5f * f.fuerza, duro = 0.3f) }
+            v.luces.firstOrNull { it.de == Fuente.MESA }?.let { f -> charco(V3(f.w.x + 0.5f, 0f, f.w.z + 0.6f), 1.1f, f.color, 0.25f * f.fuerza) }
             // La claridad de los paneles del techo, en el suelo.
             if (v.general > 0.01f) for ((x, z) in listOf(-1.2f to 5.9f, 1.45f to 5.9f, 1.45f to 3.6f)) charco(V3(x, 0f, z), 1.2f, C.LUZ_DIA, 0.12f * v.general, duro = 0.2f)
             // Las lámparas de cultivo, donde su luz sale del canto de la mesa y cae al suelo.
@@ -239,20 +240,19 @@ internal object LuzLab {
     /**
      * Las sombras de las cosas de la mesa sobre el tablero: cada lámpara encendida tumba la de lo que tiene cerca, lejos de
      * ella (de día, cortas y hacia todos lados bajo las lámparas de cultivo; de noche, largas, desde la lámpara de su
-     * mesa). Una sola capa.
+     * mesa). Sin capa: cada sombra multiplica lo que tiene debajo (donde dos se pisan, más honda, como bajo dos luces).
      */
     fun DrawScope.sombrasEnLaMesa(v: VistaLab, esqueletos: List<List<V3>>) {
-        val luces = v.tumban.filter { it.de == Fuente.CULTIVO || it.de == Fuente.MESA || it.de == Fuente.VELA || it.de == Fuente.LINTERNA }
+        // De noche, las de cultivo están bajas: tumba la lámpara de su mesa (o la vela, o la linterna).
+        val luces = v.tumban.filter { (it.de == Fuente.CULTIVO && !v.noche) || it.de == Fuente.MESA || it.de == Fuente.VELA || it.de == Fuente.LINTERNA }
         if (luces.isEmpty()) return
-        capaSombra(rayoFijo(-0.5f, 50f, 0.7f, C.SOMBRA)) { c ->
-            clipPath(MesaLab.formaDelTablero()) {
-                for (e in esqueletos) {
-                    val centro = e.reduce { a, b -> a + b } * (1f / e.size)
-                    for (f in luces) {
-                        val k = v.cuanto(f, V3(centro.x, MesaLab.ALTO, centro.z), PiezasLab.ARRIBA)
-                        if (k < 0.08f) continue
-                        sombraEnPlano(e, f.w, MesaLab.ALTO + 0.001f)?.let { drawPath(it, c.copy(alpha = (0.55f * k).coerceIn(0f, 0.85f))) }
-                    }
+        clipPath(MesaLab.formaDelTablero()) {
+            for (e in esqueletos) {
+                val centro = e.reduce { a, b -> a + b } * (1f / e.size)
+                for (f in luces) {
+                    val k = v.cuanto(f, V3(centro.x, MesaLab.ALTO, centro.z), PiezasLab.ARRIBA)
+                    if (k < 0.08f) continue
+                    sombraEnPlano(e, f.w, MesaLab.ALTO + 0.001f)?.let { drawPath(it, C.SOMBRA.copy(alpha = (0.38f * k).coerceIn(0f, 0.6f)), blendMode = BlendMode.Multiply) }
                 }
             }
         }
@@ -265,8 +265,8 @@ internal object LuzLab {
      */
     fun DrawScope.sombras(v: VistaLab, cosas: List<CosaLab>) {
         val suelo = SalaLab.formaDelSuelo()
-        val luces = v.tumban.filter { it.de != Fuente.CULTIVO || v.noche }
-        capaSombra(rayoFijo(-0.5f, 50f, 0.8f, C.SOMBRA)) { c ->
+        val luces = v.tumban.filter { it.de != Fuente.CULTIVO }
+        capaEnElSuelo(suelo, 0.8f) { c ->
             clipPath(suelo) {
                 for (k in cosas) {
                     val e = k.esqueleto; if (e.size < 3) continue
@@ -283,6 +283,21 @@ internal object LuzLab {
                     if (v.general > 0.1f) drawPath(poligono(envolvente(e.map { CamLab.p(it.x + 0.05f, 0f, it.z + 0.08f) })), c.copy(alpha = 0.16f * v.general))
                 }
             }
+        }
+    }
+
+    /**
+     * Una capa de sombras como `capaSombra` (multiplica, y una sola vez aunque las manchas se encimen), pero del tamaño del
+     * suelo que se ve y no del lienzo entero: el suelo es la tercera parte de abajo, y la capa pesa en proporción.
+     */
+    private inline fun DrawScope.capaEnElSuelo(suelo: Path, fuerza: Float, crossinline dibujo: DrawScope.(Color) -> Unit) {
+        val b = suelo.getBounds()
+        val zona = Rect(max(0f, b.left), max(0f, b.top), kotlin.math.min(ANCHO, b.right), kotlin.math.min(ALTO, b.bottom))
+        if (zona.width <= 0f || zona.height <= 0f) return
+        drawIntoCanvas { tela ->
+            tela.saveLayer(zona, Paint().apply { blendMode = BlendMode.Multiply; alpha = fuerza.coerceIn(0f, 1f) })
+            dibujo(C.SOMBRA)
+            tela.restore()
         }
     }
 
@@ -308,7 +323,7 @@ internal object LuzLab {
                     val fuerza = (if (f.de == Fuente.MESA) 0.07f else 0.06f) * f.fuerza
                     drawPath(haz, Brush.verticalGradient(0f to f.color.copy(alpha = (1.4f * fuerza).coerceIn(0f, 1f)), 0.5f to f.color.copy(alpha = (0.6f * fuerza).coerceIn(0f, 1f)), 1f to f.color.copy(alpha = (0.35f * fuerza).coerceIn(0f, 1f)), startY = p0.y, endY = p1.y), blendMode = BlendMode.Plus)
                     // El polvo, en motas quietas a lo largo del haz.
-                    repeat(if (f.de == Fuente.MESA) 8 else 14) {
+                    repeat(if (f.de == Fuente.MESA) 8 else if (f.fuerza > 0.5f) 14 else 0) {
                         val t = az.entre(0.05f, 0.95f); val lado = az.entre(-1f, 1f) * (boca + (r - boca) * t)
                         val q = Offset(p0.x + (p1.x - p0.x) * t + lado * k, p0.y + (p1.y - p0.y) * t)
                         drawCircle(lerp(f.color, Color.White, 0.5f).copy(alpha = (0.6f * f.fuerza.coerceAtMost(1f) * az.real()).coerceIn(0f, 1f)), az.entre(0.3f, 0.7f), q)
