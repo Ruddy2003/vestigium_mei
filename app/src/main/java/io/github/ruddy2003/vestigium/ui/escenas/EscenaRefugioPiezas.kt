@@ -166,7 +166,7 @@ internal class VistaRefugio(val m: Momento) {
     val ambienteSala: Color = when {
         solFalso -> Color(0xFF8E8C88)
         dia -> Color(0xFF6E7A9C)
-        else -> Color(0xFF2E3A66)
+        else -> Color(0xFF384679)
     }
 
     /** La del pasillo: el blanco parejo de los tubos de día; de noche, el azul «del fondo de una piscina». */
@@ -184,8 +184,8 @@ internal class VistaRefugio(val m: Momento) {
         // ---- Las lámparas de trabajo: cálidas, hacia abajo, con borde.
         for (o in obras) add(FocoRefugio(sala.bombilla(o), C.LAMPARA, 1.35f, 2.4f, cono = sala.haciaDonde(o), coseFuera = 0.5f, coseDentro = 0.8f, tumba = true))
         // ---- La luz del pasillo que entra por el portón: una sola luz grande, fría (o azul, o cálida el día del sol falso).
-        val porton = V3(PasilloRefugio.CENTRO_X, 2.1f, SalaRefugio.FONDO + 1.4f)
-        add(FocoRefugio(porton, colorTubo, if (solFalso) 1.1f else if (dia) 0.62f else 0.4f, if (dia) 7f else 6f, tumba = true, enPasillo = false))
+        val porton = V3(PasilloRefugio.CENTRO_X, 2.1f, SalaRefugio.FONDO + 2.6f)
+        add(FocoRefugio(porton, colorTubo, if (solFalso) 1.2f else if (dia) 0.7f else 0.58f, if (dia) 7.5f else 7f, tumba = true, enPasillo = false))
         // ---- Los tubos del techo del pasillo, uno por tramo entre costillas.
         for (z in PasilloRefugio.TUBOS) add(FocoRefugio(V3(PasilloRefugio.CENTRO_X, PasilloRefugio.BOVEDA - 0.25f, z), colorTubo, fuerzaTubo, 2.8f, enSala = false))
         // ---- La lucecita de guardia de la sala, sobre el cuadro de mando.

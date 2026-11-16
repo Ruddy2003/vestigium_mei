@@ -124,7 +124,7 @@ internal object SalaRefugio {
         Obra.MANOMETROS -> V3(-4.5f, 2.25f, 6.7f)
         Obra.BOMBA -> V3(-2.55f, 2.1f, 3.1f)
         Obra.BANCADA -> V3(-0.65f, 2.0f, 2.9f)
-        Obra.FILTRO -> V3(-1.9f, 2.1f, 4.15f)
+        Obra.FILTRO -> V3(-1.4f, 2.1f, 4.0f)
     }
 
     /**
@@ -281,7 +281,7 @@ internal object SalaRefugio {
             val dx = b.x - a.x; val dy = b.y - a.y
             val n = K.unidad(V3(dy, -dx, 0f))
             if (!K.seVe(K.centro(listOf(a, b, c, d)), n)) continue
-            Trazo3.run { caraDegradada(v, listOf(a, b, c, d), n, lerp(C.HORMIGON, C.CREMA, 0.2f), K.medio(a, b), K.medio(c, d)) }
+            Trazo3.run { caraDegradada(v, listOf(a, b, c, d), n, lerp(C.HORMIGON, C.ROCA, 0.25f), K.medio(a, b), K.medio(c, d)) }
         }
         // La costilla de acero: una banda remachada alrededor del hueco, en la cara de la sala.
         val fuera = arcoDelPorton(z0 - 0.02f).map { q -> val cx = (PORTON_X0 + PORTON_X1) / 2f; val cy = ARCO_Y; val dx = q.x - cx; val dy = q.y - cy

@@ -77,10 +77,10 @@ internal object PasilloRefugio {
     val LUZ_COMPUERTA = V3(IZQ + 0.12f, 2.6f, (COMPUERTA_Z0 + COMPUERTA_Z1) / 2f)
 
     /** El ventanal de la sala de tanques, más allá, en la misma pared. */
-    const val VENTANAL_Z0 = 16.0f
+    const val VENTANAL_Z0 = 13.3f
     const val VENTANAL_Z1 = 23.3f
-    const val VENTANAL_Y0 = 0.85f
-    const val VENTANAL_Y1 = 2.45f
+    const val VENTANAL_Y0 = 0.75f
+    const val VENTANAL_Y1 = 2.5f
 
     /** Dónde está el árbol de cable de la Nochebuena (pisa el suelo del pasillo, junto a la pared de la derecha). */
     val ARBOL = V3(DER - 0.75f, 0f, BOCA + 1.6f)
@@ -412,24 +412,29 @@ internal object PasilloRefugio {
         val z0 = VENTANAL_Z0; val z1 = VENTANAL_Z1; val y0 = VENTANAL_Y0; val y1 = VENTANAL_Y1
         // El hueco: dentro, la sala de tanques en violeta.
         val dentro = listOf(V3(x, y0, z0), V3(x, y0, z1), V3(x, y1, z1), V3(x, y1, z0))
-        val fondoTanques = lerp(lerp(C.TINTA, C.VIOLETA, 0.35f + 0.4f * v.tanques), C.CHAPA, 0.15f)
+        val fondoTanques = lerp(lerp(C.TINTA, C.VIOLETA, 0.25f + 0.3f * v.tanques), C.CHAPA, 0.2f)
         drawPath(K.forma(dentro), fondoTanques)
         clipPath(K.forma(dentro)) {
             val cosecha = R.cosecha(v.m)
             val tramo = R.tramoCultivo(v.m)
-            val espesor = if (cosecha) 0.12f else when (tramo) { EscenaRefugio.TramoCultivo.SEMBRADO -> 0.3f; EscenaRefugio.TramoCultivo.VERDE -> 0.62f; EscenaRefugio.TramoCultivo.LLENO -> 0.9f }
-            // Los tanques: columnas de vidrio, una detrás de otra, con el agua verde y su nivel.
-            val tanques = 6
+            // El agua de cada tramo: recién sembrados, clara (más cristal que verde, con los brotes abajo); verdes y espesos;
+            // llenos y oscuros de algas. El día de la cosecha, vaciándose: «parecen ventanas».
+            val agua = when { cosecha -> lerp(C.PISCINA, C.PAPEL, 0.55f); tramo == EscenaRefugio.TramoCultivo.SEMBRADO -> lerp(C.ALGA, C.PAPEL, 0.55f); tramo == EscenaRefugio.TramoCultivo.VERDE -> C.ALGA; else -> lerp(C.ALGA, C.TINTA, 0.5f) }
+            val opaco = when { cosecha -> 0.35f; tramo == EscenaRefugio.TramoCultivo.SEMBRADO -> 0.55f; tramo == EscenaRefugio.TramoCultivo.VERDE -> 0.85f; else -> 0.97f }
+            // Los tanques: una fila de vasos de vidrio, cada uno con su agua hasta el nivel, la luz violeta arriba y el poso abajo.
+            val tanques = 5
+            val paso = (z1 - z0 - 0.5f) / tanques
             for (k in 0 until tanques) {
-                val za = z0 + 0.35f + (z1 - z0 - 0.7f) * k / tanques; val zb = za + (z1 - z0 - 0.7f) / tanques * 0.7f
-                val xa = x - 0.9f
-                val agua = lerp(C.ALGA, C.TINTA, 0.55f * espesor)
-                val nivel = if (cosecha) y0 + 0.2f + 0.8f * ((k + v.m.ficha.especiales.firstOrNull { it.dia.id == "cosecha" }?.numero.let { it ?: 1 }) % 3) / 3f else y1 - 0.25f
+                val za = z0 + 0.25f + paso * k; val zb = za + paso * 0.84f
+                val xa = x - 0.7f
+                val nivel = if (cosecha) y0 + 0.15f + 0.9f * ((k + (v.m.ficha.especiales.firstOrNull { it.dia.id == "cosecha" }?.numero ?: 1)) % 3) / 3f else y1 - 0.18f
                 val vaso = listOf(V3(xa, y0 - 0.1f, za), V3(xa, y0 - 0.1f, zb), V3(xa, nivel, zb), V3(xa, nivel, za))
-                if (cosecha) drawPath(K.forma(listOf(V3(xa, y0 - 0.1f, za), V3(xa, y0 - 0.1f, zb), V3(xa, y1, zb), V3(xa, y1, za))), lerp(C.VIOLETA, Color.White, 0.55f).copy(alpha = 0.35f))
-                drawPath(K.forma(vaso), lerp(agua, C.VIOLETA, 0.35f * v.tanques).copy(alpha = 0.35f + 0.6f * espesor))
-                // El brillo del vidrio y el borde.
-                Trazo3.run { barra(V3(xa, y0 - 0.1f, za), V3(xa, y1, za), 0.025f, lerp(C.VIOLETA, Color.White, 0.5f).copy(alpha = 0.6f)) }
+                drawPath(K.forma(listOf(V3(xa, y0 - 0.1f, za), V3(xa, y0 - 0.1f, zb), V3(xa, y1, zb), V3(xa, y1, za))), lerp(C.VIOLETA, Color.White, 0.5f).copy(alpha = if (cosecha) 0.45f else 0.18f))
+                drawPath(K.forma(vaso), Brush.verticalGradient(listOf(lerp(agua, C.VIOLETA, 0.35f * v.tanques).copy(alpha = opaco), agua.copy(alpha = opaco), lerp(agua, C.TINTA, 0.35f).copy(alpha = opaco)), startY = K.p(V3(xa, nivel, za)).y, endY = K.p(V3(xa, y0, za)).y))
+                // El poso y los brotes de abajo, recién sembrados: mechones verdes.
+                if (tramo == EscenaRefugio.TramoCultivo.SEMBRADO && !cosecha) for (j in 0..3) { val zz = za + (zb - za) * (j + 0.5f) / 4f; Trazo3.run { barra(V3(xa, y0 - 0.05f, zz), V3(xa, y0 + 0.18f, zz + 0.04f), 0.035f, lerp(C.ALGA, C.TINTA, 0.2f)) } }
+                // La línea del agua, el brillo del vidrio y el borde.
+                Trazo3.run { barra(V3(xa, nivel, za), V3(xa, nivel, zb), 0.025f, lerp(C.VIOLETA, Color.White, 0.6f).copy(alpha = 0.7f)); barra(V3(xa, y0 - 0.1f, za), V3(xa, y1, za), 0.03f, lerp(C.VIOLETA, Color.White, 0.5f).copy(alpha = 0.65f)) }
             }
             // Las lámparas violetas encima de los tanques.
             for (k in 0..2) { val zz = z0 + 1.2f + 2.4f * k; val w = V3(x - 0.7f, y1 - 0.08f, zz); drawLine(lerp(C.VIOLETA, Color.White, 0.6f).copy(alpha = 0.5f + 0.5f * v.tanques), K.p(w), K.p(w + V3(0f, 0f, 0.9f)), 0.9f) }
@@ -439,7 +444,7 @@ internal object PasilloRefugio {
             for ((a, b) in listOf(V3(x, y0, z0) to V3(x, y0, z1), V3(x, y1, z0) to V3(x, y1, z1), V3(x, y0, z0) to V3(x, y1, z0), V3(x, y0, z1) to V3(x, y1, z1))) barra(a, b, 0.09f, v.c(K.medio(a, b), n, C.HIERRO, true), StrokeCap.Square)
             for (k in 1..3) { val zz = z0 + (z1 - z0) * k / 4f; barra(V3(x, y0, zz), V3(x, y1, zz), 0.05f, v.c(V3(x, 1.6f, zz), n, C.HIERRO, true)) }
         }
-        drawPath(K.forma(dentro), lerp(C.VIOLETA, Color.White, 0.5f).copy(alpha = 0.07f + 0.05f * v.tanques), blendMode = BlendMode.Plus)
+        drawPath(K.forma(dentro), lerp(C.VIOLETA, Color.White, 0.5f).copy(alpha = 0.03f + 0.03f * v.tanques), blendMode = BlendMode.Plus)
     }
 
     /**

@@ -208,11 +208,12 @@ internal object PiezasSala {
         val tz = z - 0.16f; val tx = x - 0.05f
         val nivel = y0 + (y1 - y0) * v.reserva
         Trazo3.run {
-            cilindro(v, V3(tx, y0, tz), V3(tx, nivel, tz), 0.045f, lerp(C.CHAPA, C.PISCINA, 0.35f), lados = 10)
-            cilindro(v, V3(tx, nivel, tz), V3(tx, y1, tz), 0.045f, lerp(C.HIERRO, C.CHAPA, 0.4f), lados = 10, tapas = false)
-            barra(V3(tx - 0.03f, y0, tz - 0.04f), V3(tx - 0.03f, y1, tz - 0.04f), 0.01f, v.c(V3(tx, 1.5f, tz), n, Color.White).copy(alpha = 0.5f))
+            cilindro(v, V3(tx, y0, tz), V3(tx, nivel, tz), 0.065f, lerp(C.PISCINA, C.PAPEL, 0.35f), lados = 12)
+            cilindro(v, V3(tx, nivel, tz), V3(tx, y1, tz), 0.065f, lerp(C.HIERRO, C.CHAPA, 0.25f), lados = 12, tapas = false)
+            barra(V3(tx - 0.035f, y0, tz - 0.06f), V3(tx - 0.035f, y1, tz - 0.06f), 0.012f, v.c(V3(tx, 1.5f, tz), n, Color.White).copy(alpha = 0.55f))
             // El flotador.
-            disco(v, V3(tx, nivel + 0.03f, tz - 0.05f), n, 0.055f, lerp(C.ROJO, C.NARANJA, 0.3f), lados = 10)
+            disco(v, V3(tx, nivel + 0.04f, tz - 0.07f), n, 0.075f, lerp(C.ROJO, C.NARANJA, 0.5f), lados = 12)
+            disco(v, V3(tx - 0.02f, nivel + 0.06f, tz - 0.08f), n, 0.025f, lerp(C.NARANJA, Color.White, 0.5f), lados = 8)
             // Las llaves de latón de arriba y de abajo, con su tubo a la pared.
             cilindro(v, V3(tx, y0 - 0.12f, tz), V3(tx, y0, tz), 0.07f, C.LATON, lados = 10)
             cilindro(v, V3(tx, y1, tz), V3(tx, y1 + 0.12f, tz), 0.07f, C.LATON, lados = 10)
@@ -769,7 +770,7 @@ internal object PiezasSala {
         if (R.sellado(m)) {
             // Las flores de papel delante de la Puerta, en la línea que nadie pisa, y a lo largo de la línea amarilla, por donde pasa todo el refugio.
             for (k in 0..7) { val q = V3(P.CENTRO_X - 1.5f + 0.42f * k, 0.05f, P.LINEA_Z - 0.2f); Trazo3.run { disco(v, q, K.unidad(V3(0f, 0.6f, -0.8f)), 0.13f, listOf(C.ROJO, C.PAPEL, C.AMARILLO)[k % 3], true, 7) } }
-            for (k in 0..9) { val q = V3(P.IZQ + 0.62f + 0.06f * (k % 2), 0.04f, P.BOCA + 0.6f + 2.4f * k); Trazo3.run { disco(v, q, K.unidad(V3(0.2f, 0.7f, -0.7f)), 0.12f, listOf(C.ROJO, C.PAPEL, C.AMARILLO, C.AZUL)[k % 4], true, 7); disco(v, q + V3(0f, 0.01f, -0.01f), K.unidad(V3(0.2f, 0.7f, -0.7f)), 0.04f, C.AMARILLO, true, 6) } }
+            for (k in 0..14) { val q = V3(P.IZQ + 0.62f + 0.08f * (k % 2), 0.05f, P.BOCA + 0.5f + 1.6f * k); Trazo3.run { disco(v, q, K.unidad(V3(0.2f, 0.7f, -0.7f)), 0.17f, listOf(C.ROJO, C.PAPEL, C.AMARILLO, C.AZUL)[k % 4], true, 7); disco(v, q + V3(0f, 0.01f, -0.01f), K.unidad(V3(0.2f, 0.7f, -0.7f)), 0.04f, C.AMARILLO, true, 6) } }
         }
         if (R.barroDeBotas(m)) { val az = Azar(Semilla.de("refugio", "barro")); repeat(14) { val q = V3(P.IZQ + 0.6f + az.entre(-0.15f, 0.25f), 0.006f, P.BOCA + 3f + 1.4f * it); Trazo3.run { cara(v, listOf(q, q + V3(0.12f, 0f, 0f), q + V3(0.12f, 0f, 0.26f), q + V3(0f, 0f, 0.26f)), K.ARRIBA, C.BARRO, true, 0.7f) } } }
         if (R.hojasSecas(m)) { val az = Azar(Semilla.de(m.ficha.semilla, "hojas")); repeat(40) { val q = V3(az.entre(P.IZQ + 0.2f, P.DER - 0.2f), 0.005f, az.entre(P.BOCA, P.PUERTA_Z - 1f)); Trazo3.run { disco(v, q, K.ARRIBA, az.entre(0.05f, 0.11f), lerp(C.COBRE, C.AMARILLO, az.real()), true, 5) } } }

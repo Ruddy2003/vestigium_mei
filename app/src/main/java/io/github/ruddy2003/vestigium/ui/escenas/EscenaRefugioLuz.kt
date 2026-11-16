@@ -79,7 +79,7 @@ internal object LuzRefugio {
                 charco(K.p(c), 1.3f * k, 1.3f * k * (K.OJO / K.hondo(c)).coerceIn(0.05f, 1f), v.colorTubo, 0.14f * v.fuerzaTubo)
                 // El reflejo del tubo en el suelo húmedo: una columna de luz que viene hacia los ojos.
                 val arriba = K.p(V3(P.CENTRO_X, 0f, z + 0.6f)); val abajo = K.p(V3(P.CENTRO_X, 0f, z - 1.4f))
-                drawLine(lerp(v.colorTubo, Color.White, 0.3f).copy(alpha = (0.16f * v.fuerzaTubo).coerceIn(0f, 1f)), arriba, abajo, 0.25f * k, StrokeCap.Round, blendMode = BlendMode.Plus)
+                mancha(Offset((arriba.x + abajo.x) / 2f, (arriba.y + abajo.y) / 2f), 0.22f * k, ((abajo.y - arriba.y) / 2f).coerceAtLeast(1f), lerp(v.colorTubo, Color.White, 0.3f), (0.09f * v.fuerzaTubo).coerceIn(0f, 1f))
             }
             luzDelVentanal(v, true)
             v.sol?.let { solEnElPasillo(v, it) }
@@ -90,7 +90,7 @@ internal object LuzRefugio {
                 val charcoPts = (0 until 14).map { i -> val a = 2f * PI.toFloat() * i / 14; V3(P.CENTRO_X + cos(a) * 2.1f, 0.004f, P.PUERTA_Z - 3.2f + sin(a) * 3.0f * (0.8f + 0.2f * ((i * 7) % 3))) }
                 drawPath(K.forma(charcoPts), lerp(C.TINTA, C.PISCINA, 0.3f).copy(alpha = 0.35f))
                 val cielo = lerp(f.medio, Color.White, 0.3f)
-                for (k in 0..6) { val x = P.CENTRO_X - 1.2f + 0.4f * k; drawLine(cielo.copy(alpha = 0.35f), K.p(V3(x, 0f, P.PUERTA_Z - 0.6f)), K.p(V3(x + 0.05f, 0f, P.PUERTA_Z - 4.5f)), 1.1f, StrokeCap.Round, blendMode = BlendMode.Plus) }
+                val pr = K.p(V3(P.CENTRO_X, 0f, P.PUERTA_Z - 2.4f)); mancha(pr, 16f, 5f, cielo, 0.35f)
             }
             if (v.compuerta == Compuerta.BAJADA) { val c = K.p(V3(P.IZQ + 0.6f, 0f, (P.COMPUERTA_Z0 + P.COMPUERTA_Z1) / 2f)); charco(c, 70f, 18f, C.ALARMA, 0.4f) }
             if (v.alarma) { val c = K.p(V3(P.CENTRO_X, 0f, 20f)); charco(c, 60f, 12f, C.ALARMA, 0.35f) }
@@ -336,7 +336,7 @@ internal object LuzRefugio {
             val boca = b + e * 0.05f
             val cono = listOf(boca - u * 0.13f, boca + u * 0.13f, fin + u * radio, fin - u * radio)
             val forma = K.forma(cono)
-            drawPath(forma, Brush.linearGradient(listOf(C.LAMPARA.copy(alpha = 0.12f), C.LAMPARA.copy(alpha = 0.02f)), start = K.p(b), end = K.p(fin)), blendMode = BlendMode.Plus)
+            drawPath(forma, Brush.linearGradient(listOf(C.LAMPARA.copy(alpha = 0.08f), C.LAMPARA.copy(alpha = 0.015f)), start = K.p(b), end = K.p(fin)), blendMode = BlendMode.Plus)
             // El halo de la bombilla.
             val pb = K.p(b); val kb = K.k(b)
             drawCircle(Brush.radialGradient(listOf(C.LAMPARA.copy(alpha = 0.35f), C.LAMPARA.copy(alpha = 0.08f), Color.Transparent), pb, 0.9f * kb), 0.9f * kb, pb, blendMode = BlendMode.Plus)
