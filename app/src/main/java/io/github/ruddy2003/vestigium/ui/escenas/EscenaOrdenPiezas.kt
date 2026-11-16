@@ -37,11 +37,15 @@ internal object CamOrden {
     const val F = 240f
     const val CX = 190f
 
-    /** Los ojos sobre el suelo del adarve: de pie en el escalón de la banqueta **[Diseño propio]**, como en el tambucho de Abismo. */
-    const val OJO = 2.1f
+    /** Los ojos sobre el suelo del adarve: de pie en lo alto de la banqueta **[Diseño propio]**, como en el tambucho de Abismo. */
+    const val OJO = 3.0f
 
-    /** Cuánto se gira la vista hacia fuera, a la derecha del camino de ronda (15°): el adarve se fuga hacia la torre, a la izquierda del centro. */
-    const val GIRO = 0.26f
+    /**
+     * Cuánto se gira la vista respecto del camino de ronda: negativo, hacia dentro (17°, revisión 1): se mira en diagonal a
+     * través del patio hacia la torre; el adarve se fuga a la derecha del centro y queda como una franja abajo, y por encima
+     * del parapeto, a la derecha, el vacío y el páramo.
+     */
+    const val GIRO = -0.3f
     private val CG = cos(GIRO); private val SG = sin(GIRO)
 
     /** El borde de dentro del adarve (la caída al patio), a la izquierda de los ojos. */
@@ -51,7 +55,7 @@ internal object CamOrden {
     const val FUERA = 2.75f
     /** El alto del parapeto (el fondo de las troneras) y el de las almenas, sobre el adarve. */
     const val ALTO_PARAPETO = 0.75f
-    const val ALTO_ALMENA = 1.5f
+    const val ALTO_ALMENA = 1.85f
     /** El suelo del patio, bajo el adarve. */
     const val PATIO = -8f
     /** El llano, al pie de la meseta. */

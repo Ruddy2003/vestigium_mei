@@ -41,11 +41,11 @@ internal object AdarveOrden {
     private const val FUERA = CamOrden.FUERA
 
     /** Dónde empieza la primera almena, cuánto mide cada una y cada cuánto se repiten. */
-    const val PRIMERA = 1.5f
-    const val ALMENA = 1.25f
-    const val PASO = 2.35f
+    const val PRIMERA = 2.5f
+    const val ALMENA = 1.5f
+    const val PASO = 2.5f
     /** Hasta dónde llega el adarve: la puerta de la torre. */
-    val FIN: Float get() = TorreOrden.V - TorreOrden.LADO / 2f
+    val FIN: Float get() = PatioOrden.FONDO - 1f
 
     /** Dónde empieza la almena [i] (0 la de delante). */
     fun almena(i: Int): Float = PRIMERA + i * PASO
@@ -66,8 +66,8 @@ internal object AdarveOrden {
 
     // ---------------------------------------------------------------- El objeto del día
 
-    /** El objeto chico, en el fondo de la primera tronera (en medio del grueso del parapeto). */
-    val SOPORTE: V3 = V3((PARAPETO + FUERA) / 2f - 0.1f, CamOrden.ALTO_PARAPETO, almena(0) + ALMENA + (PASO - ALMENA) / 2f)
+    /** El objeto chico, en el fondo de la tronera que sigue a la almena de delante (en medio del grueso del parapeto). */
+    val SOPORTE: V3 = V3((PARAPETO + FUERA) / 2f - 0.15f, CamOrden.ALTO_PARAPETO, almena(1) + ALMENA + (PASO - ALMENA) / 2f)
     /** El objeto grande: pisa en el adarve, junto a la segunda almena, y se apoya en ella. */
     val PIE_GRANDE: V3 = V3(PARAPETO - 0.35f, 0f, almena(1) + 0.75f)
     val APOYO_GRANDE: V3 = V3(PARAPETO, 1.15f, almena(1) + 0.75f)
@@ -183,7 +183,7 @@ internal object AdarveOrden {
                 else -> Unit
             }
         }
-        if (i <= 1) muescas(v, i)
+        if (i in 0..2) muescas(v, i)
         hornacina(v, i)
     }
 
@@ -201,11 +201,11 @@ internal object AdarveOrden {
         val v0 = almena(i); val az = PiezasOrden.fijo("muescas", i)
         val cara = poligono(listOf(V3(PARAPETO, CamOrden.ALTO_PARAPETO, v0), V3(PARAPETO, CamOrden.ALTO_PARAPETO, v0 + ALMENA), V3(PARAPETO, CamOrden.ALTO_ALMENA, v0 + ALMENA), V3(PARAPETO, CamOrden.ALTO_ALMENA, v0)).map { CamOrden.p(it) })
         val hondo = v.l.tono(lerp(C.PIEDRA_OSC, C.HOLLIN, 0.4f)); val filo = v.lz.color(lerp(C.PIEDRA, C.ARENA, 0.5f), V3(-1f, 0f, -0.3f))
-        val filas = if (i == 0) 2 else 1
+        val filas = if (i <= 1) 2 else 1
         clipPath(cara) {
             for (f in 0 until filas) {
                 val h = CamOrden.ALTO_PARAPETO + 0.32f + f * 0.15f
-                val cuantas = if (i == 0) 14 - f * 3 else 8
+                val cuantas = if (i <= 1) 14 - f * 3 else 8
                 for (j in 0 until cuantas) {
                     if (j % 5 == 4) continue                                     // el hueco entre grupos
                     val vv = v0 + 0.15f + j * 0.042f + az.entre(-0.005f, 0.005f)
@@ -297,7 +297,7 @@ internal object AdarveOrden {
     fun DrawScope.enseres(v: VistaOrden) {
         val lz = v.lz
         // El rollo de cuerda, tendido en las losas: tres vueltas que se enciman.
-        val c = V3(0.55f, 0.02f, 4.3f); val cuerda = lz.color(lerp(C.MADERA, C.ARENA, 0.45f), V3(0f, 1f, 0f))
+        val c = V3(0.6f, 0.02f, 5.6f); val cuerda = lz.color(lerp(C.MADERA, C.ARENA, 0.45f), V3(0f, 1f, 0f))
         // El cabo suelto, que se va hacia el borde.
         val cola = listOf(V3(c.x - 0.3f, 0.02f, c.z + 0.05f), V3(c.x - 0.55f, 0.02f, c.z - 0.25f), V3(c.x - 0.62f, 0.02f, c.z - 0.7f)).map { CamOrden.p(it) }
         drawPath(Path().apply { moveTo(cola[0].x, cola[0].y); cubicTo(cola[1].x, cola[1].y, cola[1].x, cola[1].y, cola[2].x, cola[2].y) }, cuerda, style = Stroke((CamOrden.k(c.x, c.z) * 0.05f).coerceAtLeast(0.5f), cap = StrokeCap.Round))
@@ -322,7 +322,7 @@ internal object AdarveOrden {
             drawOval(v.l.tono(C.MADERA_OSC), Offset(qb.x - kb * 0.19f, qb.y - kb * 0.38f), Size(kb * 0.38f, kb * 0.08f))
         }
         // El banco de la guardia, arrimado al parapeto, con el candil tapado de las rondas de noche encima.
-        val b0 = 5.7f; val b1 = 7.3f
+        val b0 = 8.3f; val b1 = 9.9f
         for (vv in listOf(b0 + 0.15f, b1 - 0.15f)) caja(lz, PARAPETO - 0.25f, vv, 0f, 0.32f, 0.1f, 0f, 0.42f, C.MADERA_OSC)
         caja(lz, PARAPETO - 0.25f, (b0 + b1) / 2f, 0f, 0.4f, b1 - b0, 0.42f, 0.48f, C.MADERA, arriba = lerp(C.MADERA, C.ARENA, 0.3f))
         val farol = V3(PARAPETO - 0.25f, 0.48f, b1 - 0.35f); val qf = CamOrden.p(farol); val kf = CamOrden.k(farol.x, farol.z)
@@ -330,7 +330,7 @@ internal object AdarveOrden {
         drawPath(poligono(qf + Offset(-kf * 0.11f, -kf * 0.26f), qf + Offset(kf * 0.11f, -kf * 0.26f), qf + Offset(0f, -kf * 0.36f)), lz.color(C.HIERRO, V3(0f, 1f, -0.5f)))
         if (v.l.noche > 0.4f) drawLine(C.LUMBRE.copy(alpha = 0.8f), qf + Offset(-kf * 0.06f, -kf * 0.05f), qf + Offset(kf * 0.06f, -kf * 0.05f), (kf * 0.025f).coerceAtLeast(0.4f))
         // El cántaro, contra el parapeto, delante del banco, con su boca.
-        val j = V3(PARAPETO - 0.24f, 0f, 5.3f); val q = CamOrden.p(j); val k = CamOrden.k(j.x, j.z)
+        val j = V3(PARAPETO - 0.24f, 0f, 7.1f); val q = CamOrden.p(j); val k = CamOrden.k(j.x, j.z)
         val alto = 0.55f * k; val ancho = 0.36f * k
         val forma = Path().apply {
             moveTo(q.x - ancho * 0.22f, q.y); cubicTo(q.x - ancho * 0.75f, q.y - alto * 0.1f, q.x - ancho * 0.7f, q.y - alto * 0.75f, q.x - ancho * 0.18f, q.y - alto * 0.88f)
@@ -342,9 +342,9 @@ internal object AdarveOrden {
     }
 
     /** Dónde se pone el gato: el suelo del adarve, delante de todo. */
-    const val PISO_GATO = 266f
-    const val GATO_DESDE = 116f
-    const val GATO_HASTA = 258f
+    const val PISO_GATO = 272f
+    const val GATO_DESDE = 252f
+    const val GATO_HASTA = 365f
 
     /** Sobre la tronera de la segunda almena, sentado en el parapeto. */
     val MIRADOR: Offset get() = CamOrden.p(PARAPETO + 0.35f, CamOrden.ALTO_PARAPETO, almena(2) - (PASO - ALMENA) / 2f)

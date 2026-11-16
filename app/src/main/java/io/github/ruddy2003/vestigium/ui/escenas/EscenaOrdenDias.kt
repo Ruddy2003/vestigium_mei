@@ -69,7 +69,7 @@ internal object DiasOrden {
     private fun DrawScope.caparazones(v: VistaOrden) {
         val lz = v.lz; val dibujos = listOf(C.CARMESI, C.LATON, C.PAPEL, C.CARMESI, C.LATON)
         for (i in 4 downTo 0) {
-            val s = -9f - i * 2.4f; val vv = 43f + i * 0.4f
+            val s = -18.5f - i * 2.3f; val vv = 23f + i * 1.1f
             // El armazón: un poste y su travesaño.
             palo(lz, V3(s, P, vv), V3(s, P + 1.9f, vv), 0.1f, C.MADERA, 0.2f)
             palo(lz, V3(s - 0.5f, P + 1.75f, vv), V3(s + 0.5f, P + 1.75f, vv), 0.08f, C.MADERA, 0.2f)
@@ -77,8 +77,12 @@ internal object DiasOrden {
             val peto = listOf(V3(s - 0.32f, P + 1.65f, vv - 0.05f), V3(s + 0.32f, P + 1.65f, vv - 0.05f), V3(s + 0.26f, P + 0.95f, vv - 0.05f), V3(s - 0.26f, P + 0.95f, vv - 0.05f))
             val forma = poligono(peto.map { CamOrden.p(it) })
             drawPath(forma, lz.color(C.HIERRO, V3(0f, 0f, -1f), 0.2f))
-            val c = CamOrden.p(V3(s, P + 1.3f, vv - 0.06f)); val k = CamOrden.k(s, vv)
-            drawCircle(lz.color(dibujos[i], V3(0f, 0f, -1f), 0.2f, 0.2f), (k * 0.15f).coerceAtLeast(0.8f), c)
+            // La pintura del día: el peto entero de un color, con una banda cruzada del otro.
+            val pintado = listOf(V3(s - 0.26f, P + 1.58f, vv - 0.06f), V3(s + 0.26f, P + 1.58f, vv - 0.06f), V3(s + 0.21f, P + 1.02f, vv - 0.06f), V3(s - 0.21f, P + 1.02f, vv - 0.06f))
+            drawPath(poligono(pintado.map { CamOrden.p(it) }), lz.color(dibujos[i], V3(0f, 0f, -1f), 0.2f, 0.2f))
+            val banda = listOf(V3(s - 0.26f, P + 1.45f, vv - 0.07f), V3(s - 0.26f, P + 1.3f, vv - 0.07f), V3(s + 0.21f, P + 1.05f, vv - 0.07f), V3(s + 0.21f, P + 1.2f, vv - 0.07f))
+            drawPath(poligono(banda.map { CamOrden.p(it) }), lz.color(dibujos[(i + 1) % 5], V3(0f, 0f, -1f), 0.2f, 0.2f))
+            val k = CamOrden.k(s, vv)
             for (lado in listOf(-1f, 1f)) { val h = CamOrden.p(V3(s + lado * 0.5f, P + 1.6f, vv - 0.05f)); drawOval(lz.color(C.HIERRO_CLARO, V3(lado, 0.3f, -1f), 0.2f), Offset(h.x - k * 0.16f, h.y), Size(k * 0.32f, k * 0.28f)) }
             caja(lz, s + 0.7f, vv - 0.2f, 0.3f, 0.5f, 0.4f, P, P + 0.55f, C.HIERRO, 0.2f)
         }
@@ -91,7 +95,7 @@ internal object DiasOrden {
         val lz = v.lz; val telas = listOf(lerp(C.ARENA, C.CARMESI, 0.35f), lerp(C.PAPEL, C.ARENA, 0.3f), lerp(C.VIDRIO, C.HIERRO, 0.3f))
         val az = v.m.azar("mercado")
         for (i in 2 downTo 0) {
-            val s = -8f - i * 4.2f; val vv = 40f + i * 1.2f
+            val s = -21f - i * 4.6f; val vv = 28f + i * 2.4f
             for ((ds, dv) in listOf(-1.4f to -1f, 1.4f to -1f, -1.4f to 1f, 1.4f to 1f)) palo(lz, V3(s + ds, P, vv + dv), V3(s + ds, P + 2.1f, vv + dv), 0.08f, C.MADERA, 0.2f)
             val toldo = listOf(V3(s - 1.6f, P + 2.2f, vv - 1.1f), V3(s + 1.6f, P + 2.2f, vv - 1.1f), V3(s + 1.6f, P + 2.4f, vv + 1.1f), V3(s - 1.6f, P + 2.4f, vv + 1.1f))
             drawPath(poligono(toldo.map { CamOrden.p(it) }), lz.color(telas[i], V3(0f, 1f, 0f), 0.2f))
@@ -113,7 +117,7 @@ internal object DiasOrden {
     /** La carne salada de la caza, colgada en tiras de dos cuerdas tendidas en el patio. */
     private fun DrawScope.carneAlSol(v: VistaOrden) {
         val lz = v.lz; val cuerda = v.l.tono(C.MADERA_OSC, 0.2f)
-        for ((a, b) in listOf(V3(-6f, P + 2.4f, 38f) to V3(-22f, P + 2.4f, 44f), V3(-4f, P + 2.2f, 34f) to V3(-16f, P + 2.2f, 37f))) {
+        for ((a, b) in listOf(V3(-20f, P + 2.4f, 25f) to V3(-36f, P + 2.4f, 33f), V3(-22f, P + 2.2f, 31f) to V3(-34f, P + 2.2f, 38f))) {
             palo(lz, V3(a.x, P, a.z), a, 0.1f, C.MADERA, 0.2f); palo(lz, V3(b.x, P, b.z), b, 0.1f, C.MADERA, 0.2f)
             cabo(a, b, 0.25f, cuerda, 0.5f)
             for (i in 1 until 12) {
@@ -126,7 +130,7 @@ internal object DiasOrden {
 
     /** Año nuevo: los candiles en corro sobre las losas del patio, encendidos de día, donde se ha leído el Código. */
     private fun DrawScope.corroDeCandiles(v: VistaOrden) {
-        val c = V3(-12f, P, 42f)
+        val c = V3(-28f, P, 32f)
         for (i in 0 until 22) {
             val a = i * 6.2832f / 22f; val q = CamOrden.p(c.x + 4f * kotlin.math.cos(a), P + 0.1f, c.z + 3f * kotlin.math.sin(a)); val k = CamOrden.k(c.x, c.z)
             drawRect(v.lz.color(C.LATON, V3(0f, 0f, -1f), 0.2f), Offset(q.x - k * 0.08f, q.y - k * 0.12f), Size(k * 0.16f, k * 0.12f))

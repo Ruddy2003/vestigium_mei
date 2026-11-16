@@ -28,13 +28,13 @@ import kotlin.math.abs
  */
 internal object ColorOrden {
     // ---- Quince colores de materia.
-    val ROCA = Color(0xFF9C4A34)                                                // la pared de la meseta
-    val PIEDRA = Color(0xFFC07658)                                              // las murallas, sin labrar
-    val LOSA = Color(0xFFB4705A)                                                // el suelo del adarve, gastado
-    val PARAMO = Color(0xFFC89E6C)                                              // el llano, ocre
-    val ARENA = Color(0xFFDCC092)                                               // el polvo, la arena que se arrima
-    val TELA = Color(0xFFA7A8A2)                                                // la Garza: gris cálido
-    val HIERRO = Color(0xFF4A4E58)                                              // pavonado: la aguja, los caparazones
+    val ROCA = Color(0xFF7E3428)                                                // la pared de la meseta
+    val PIEDRA = Color(0xFFA24C33)                                              // las murallas, sin labrar
+    val LOSA = Color(0xFF94553E)                                                // el suelo del adarve, gastado
+    val PARAMO = Color(0xFFD4B07E)                                              // el llano, ocre
+    val ARENA = Color(0xFFE2C99C)                                               // el polvo, la arena que se arrima
+    val TELA = Color(0xFF98A2AA)                                                // la Garza: gris azulado
+    val HIERRO = Color(0xFF2F3139)                                              // pavonado: la aguja, los caparazones
     val LATON = Color(0xFFC9A04A)                                               // el candil, la argolla, los ojos de buey
     val MADERA = Color(0xFF8A6442)                                              // la góndola, las vigas, los andamios
     val CARMESI = Color(0xFF9E1B22)                                             // lo que la orden pinta o cuelga
@@ -56,8 +56,8 @@ internal object ColorOrden {
     val PIEDRA_OSC = lerp(PIEDRA, ROCA, 0.5f)
     val MORTERO = lerp(PIEDRA, ARENA, 0.45f)
     val TELA_NUEVA = lerp(TELA, PAPEL, 0.45f)                                    // los paños nuevos de la costura
-    val TELA_VIEJA = lerp(TELA, PARAMO, 0.22f)                                   // los paños quemados de sol
-    val HIERRO_CLARO = lerp(HIERRO, TELA, 0.4f)
+    val TELA_VIEJA = lerp(TELA, MADERA, 0.38f)                                   // los paños pardos, quemados de sol
+    val HIERRO_CLARO = lerp(HIERRO, TELA, 0.45f)
     val MADERA_OSC = lerp(MADERA, HOLLIN, 0.45f)
     val LIQUEN = lerp(ARENA, Color(0xFF9AA060), 0.55f)                            // el liquen de las almenas
     val CABRA_OSC = lerp(MADERA, HOLLIN, 0.6f)
@@ -156,12 +156,13 @@ internal object EscenaOrden : EscenaVida {
     /**
      * Hacia dónde se tiende la Garza amarrada desde la argolla, en radianes: 0 hacia la izquierda del cuadro, positivo
      * alejándose, negativo acercándose. Gira con el viento del día **[Diseño propio]**: cada día su rumbo, siempre hacia la
-     * izquierda, para que no tape los astros; con viento fuerte, más de lado (tendida por el viento).
+     * izquierda y hacia quien mira (sale por la esquina de arriba a la izquierda y su sombra cruza el patio), para que no
+     * tape los astros; con viento fuerte, más de lado (tendida por el viento).
      */
     internal fun rumbo(m: Momento): Float {
         val a = m.azar("rumbo").real()
-        val base = -0.55f + 1.25f * a
-        return if (m.viento > 0.6f) base * 0.5f - 0.05f else base
+        val base = -0.95f + 0.75f * a
+        return if (m.viento > 0.6f) base * 0.6f else base
     }
 
     // ---------------------------------------------------------------- La cisterna (arco `cisterna`)
@@ -221,7 +222,7 @@ internal object EscenaOrden : EscenaVida {
     // ---------------------------------------------------------------- Lo de cada hora
 
     /** Cuántas almenas tiene el adarve a la vista, de la de delante a la torre (cada una con su candil). */
-    const val ALMENAS = 18
+    const val ALMENAS = 23
 
     /**
      * Cuántos candiles de las almenas están encendidos, de 0 a [ALMENAS]: «Los de guardia encienden los candiles de las
@@ -405,7 +406,7 @@ internal object EscenaOrden : EscenaVida {
             }
             Clima.TORMENTA -> l.con(alto = lerp(l.alto, Color(0xFF4A3A62), 0.5f), medio = lerp(l.medio, Color(0xFF6A5480), 0.45f), bruma = lerp(l.bruma, Color(0xFF6A5A7A), 0.4f))
             else -> l.con(alto = lerp(l.alto, Color(0xFF4C7EAE), 0.3f * dia * (1f - l.nublado)),
-                bruma = lerp(lerp(l.bruma, Color(0xFFE8D2AE), 0.25f * dia), Color(0xFF4E5490), 0.3f * l.noche),
+                bruma = lerp(lerp(l.bruma, Color(0xFFC6D2DE), 0.32f * dia), Color(0xFF4E5490), 0.3f * l.noche),
                 ambiente = lerp(l.ambiente, Color(0xFF9098CE), 0.35f * l.noche * (1f - l.nublado)))
         }
     }

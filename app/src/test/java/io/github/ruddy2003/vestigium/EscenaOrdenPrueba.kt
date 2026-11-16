@@ -99,7 +99,7 @@ class EscenaOrdenPrueba {
         assertEquals(0.7f, EscenaOrden.costura(momento("2030-05-30")), 0.05f)
         assertEquals(Garza.VOLANDO, EscenaOrden.garza(momento("2030-09-10"))); assertEquals(Garza.AMARRADA, EscenaOrden.garza(momento("2030-09-11")))
         // Amarrada, gira con el viento del día, siempre hacia la izquierda (no tapa los astros), y el mismo día da lo mismo.
-        cadaDia { d, m -> val r = EscenaOrden.rumbo(m); assertTrue(d.toString(), r in -0.6f..0.75f); assertEquals(r, EscenaOrden.rumbo(momento(d.toString(), 16.0)), 0f) }
+        cadaDia { d, m -> val r = EscenaOrden.rumbo(m); assertTrue(d.toString(), r in -0.96f..-0.1f); assertEquals(r, EscenaOrden.rumbo(momento(d.toString(), 16.0)), 0f) }
     }
 
     /** La cisterna con los tres tramos del cuento (cerrados, manda el primero) y su nivel en la escalera. */

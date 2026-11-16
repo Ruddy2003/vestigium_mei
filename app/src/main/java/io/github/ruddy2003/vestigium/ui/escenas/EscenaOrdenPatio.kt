@@ -55,27 +55,27 @@ internal object PatioOrden {
     }
 
     /** La Cámara: «una sala de muros gruesos con una sola ventana y una puerta de hierro». Su ventana, en la cara de la derecha. */
-    val CAMARA = Edificio(-10.5f, 28f, 0.55f, 6f, 5.5f, -1.8f)
+    val CAMARA = Edificio(-9.5f, 27f, 0.6f, 6.5f, 6f, -1.6f)
     /**
      * El ala de la torre **[Diseño propio]**: contra la muralla del fondo, junto a la torre; abajo, la enfermería («en la
      * planta baja… una ventana que da al camino de las patrullas») y arriba, el archivo, «sin más ventana que una alta».
      */
-    val ALA = Edificio(-6.2f, 54f, -0.06f, 6.4f, 5f, -0.4f)
+    val ALA = Edificio(-3.5f, 35f, 0f, 6.5f, 6f, -0.6f)
     /** La sala del Código y el refectorio: la nave grande, con sus ventanas altas y la espadaña de la campana. */
-    val SALA = Edificio(-19.5f, 52f, 0.12f, 10.5f, 7f, 0.6f)
+    val SALA = Edificio(-50f, 52f, 0.3f, 13f, 7.5f, 0.6f)
 
     val EDIFICIOS = listOf(SALA, ALA, CAMARA)
 
     /** La boca de la cisterna: el centro, el ancho (a través) y el largo (a lo largo de la muralla), en el patio junto a la muralla. */
-    val CISTERNA = Offset(-3.5f, 17.6f)
-    const val CISTERNA_ANCHO = 2.8f
-    const val CISTERNA_LARGO = 4.2f
+    val CISTERNA = Offset(-11f, 16f)
+    const val CISTERNA_ANCHO = 3.4f
+    const val CISTERNA_LARGO = 5f
     /** La fragua, arrimada a la muralla del oeste: de [FRAGUA_V0] a [FRAGUA_V1] a lo largo y hasta [FRAGUA_S] hacia dentro. */
-    const val FRAGUA_V0 = 21.5f
-    const val FRAGUA_V1 = 27.5f
+    const val FRAGUA_V0 = 16.5f
+    const val FRAGUA_V1 = 22.5f
     const val FRAGUA_S = -5.6f
     /** La puerta de la escalera de la meseta, en la muralla del fondo. */
-    const val PUERTA_S = -11.5f
+    const val PUERTA_S = -7f
 
     // ---------------------------------------------------------------- El suelo
 
@@ -91,8 +91,8 @@ internal object PatioOrden {
      */
     fun DrawScope.suelo(v: VistaOrden) {
         val forma = formaDelSuelo(); val lz = v.lz
-        val tierra = lz.color(lerp(C.ARENA, C.LOSA, 0.12f), V3(0f, 1f, 0f), 0.08f)
-        val lejos = lz.color(lerp(C.ARENA, C.LOSA, 0.12f), V3(0f, 1f, 0f), 0.3f)
+        val tierra = lz.color(lerp(C.PARAMO, C.LOSA, 0.4f), V3(0f, 1f, 0f), 0.05f)
+        val lejos = lz.color(lerp(C.PARAMO, C.LOSA, 0.3f), V3(0f, 1f, 0f), 0.25f)
         drawPath(forma, Brush.verticalGradient(0f to lejos, 1f to tierra, startY = 150f, endY = 285f))
         val az = PiezasOrden.fijo("patio")
         clipPath(forma) {
@@ -209,6 +209,9 @@ internal object PatioOrden {
             }
         }
     }
+
+    /** La normal de la cara [i] de una caja sin girar (0 delante, 1 detrás, 2 izquierda, 3 derecha). */
+    fun normalDeCaja(i: Int): V3 = when (i) { 0 -> V3(0f, 0f, -1f); 1 -> V3(0f, 0f, 1f); 2 -> V3(-1f, 0f, 0f); else -> V3(1f, 0f, 0f) }
 
     /** La normal de la cara [i] de un edificio. */
     fun normalDe(e: Edificio, i: Int): V3 {
@@ -411,7 +414,7 @@ internal object PatioOrden {
 
     /** El corral de las cabras, abajo a la izquierda: un murete de piedra seca, el abrevadero y las cabras apretujadas. */
     fun DrawScope.corral(v: VistaOrden) {
-        val lz = v.lz; val s0 = -5.6f; val s1 = -10f; val v0 = 14.2f; val v1 = 18.6f
+        val lz = v.lz; val s0 = -15f; val s1 = -21f; val v0 = 13.5f; val v1 = 19f
         val az = PiezasOrden.fijo("cabras")
         // Las cabras, de atrás adelante.
         val noche = v.m.hora >= 20.0 || v.m.hora < 6.0
@@ -428,24 +431,35 @@ internal object PatioOrden {
         caja(lz, (s0 + s1) / 2f, v0 + 0.6f, 0f, 2.4f, 0.7f, P, P + 0.55f, C.PIEDRA_OSC, 0.08f, arriba = lerp(C.VIDRIO, C.HOLLIN, 0.5f))
     }
 
-    /** Una cabra de [pie], vista de lado (clara u oscura), con su sombra corta. Pequeña pero entera: lomo, patas, cuernos. */
+    /** Una cabra suelta en el patio (la usan las cosas del patio). */
+    fun DrawScope.cabraSuelta(v: VistaOrden, pie: V3, derecha: Boolean, oscura: Boolean) = cabra(v, pie, derecha, oscura)
+
+    /**
+     * Una cabra de [pie], vista de lado (blanca o negra): el cuerpo en barril, las patas finas y cortas, el cuello alzado,
+     * la cabeza con la barba y los cuernos hacia atrás, el rabo arriba. Pequeña pero entera.
+     */
     private fun DrawScope.cabra(v: VistaOrden, pie: V3, derecha: Boolean, oscura: Boolean) {
         val q = CamOrden.p(pie); val k = CamOrden.k(pie.x, pie.z); val d = if (derecha) 1f else -1f
         val pelo = if (oscura) C.CABRA_OSC else C.CABRA
+        fun o(x: Float, y: Float) = Offset(q.x + x * k * d, q.y - y * k)
+        val lado = if (derecha == v.p.solALaDerecha) 0.5f else -0.5f
+        val pata = v.lz.color(lerp(pelo, C.HOLLIN, 0.35f), V3(0f, 0f, -1f), 0.1f); val g = (0.06f * k).coerceAtLeast(0.4f)
+        for (px in listOf(-0.38f, -0.26f, 0.26f, 0.36f)) drawLine(pata, o(px, 0.42f), o(px + 0.02f, 0f), g)
         val cuerpo = Path().apply {
-            moveTo(q.x - 0.55f * k * d, q.y - 0.55f * k)
-            cubicTo(q.x - 0.3f * k * d, q.y - 0.78f * k, q.x + 0.3f * k * d, q.y - 0.78f * k, q.x + 0.5f * k * d, q.y - 0.62f * k)
-            lineTo(q.x + 0.5f * k * d, q.y - 0.4f * k)
-            cubicTo(q.x + 0.2f * k * d, q.y - 0.32f * k, q.x - 0.3f * k * d, q.y - 0.32f * k, q.x - 0.55f * k * d, q.y - 0.42f * k)
+            val a = o(-0.48f, 0.66f); moveTo(a.x, a.y)
+            val c1 = o(-0.2f, 0.82f); val c2 = o(0.25f, 0.8f); val b = o(0.42f, 0.7f); cubicTo(c1.x, c1.y, c2.x, c2.y, b.x, b.y)
+            val e = o(0.46f, 0.42f); lineTo(e.x, e.y)
+            val c3 = o(0.15f, 0.32f); val c4 = o(-0.3f, 0.33f); val f = o(-0.5f, 0.45f); cubicTo(c3.x, c3.y, c4.x, c4.y, f.x, f.y)
             close()
         }
-        val lado = if (derecha == v.p.solALaDerecha) 0.5f else -0.5f
-        for (px in listOf(-0.42f, -0.3f, 0.3f, 0.42f)) drawLine(v.lz.color(lerp(pelo, C.HOLLIN, 0.3f), V3(0f, 0f, -1f), 0.1f), Offset(q.x + px * k * d, q.y - 0.4f * k), Offset(q.x + px * k * d, q.y), (0.07f * k).coerceAtLeast(0.4f))
         drawPath(cuerpo, v.lz.color(pelo, V3(lado, 0.6f, -0.5f), 0.1f))
-        // La cabeza y los cuernos.
-        val c = Offset(q.x + 0.62f * k * d, q.y - 0.74f * k)
-        drawOval(v.lz.color(pelo, V3(lado, 0.4f, -0.6f), 0.1f), Offset(c.x - 0.14f * k, c.y - 0.1f * k), Size(0.28f * k, 0.2f * k))
-        drawLine(v.l.tono(C.MADERA_OSC), c + Offset(-0.05f * k * d, -0.08f * k), c + Offset(-0.22f * k * d, -0.3f * k), (0.05f * k).coerceAtLeast(0.35f), StrokeCap.Round)
+        // El cuello, la cabeza con su hocico y la barba, la oreja, los cuernos hacia atrás y el rabo.
+        drawLine(v.lz.color(pelo, V3(lado, 0.4f, -0.6f), 0.1f), o(0.38f, 0.66f), o(0.52f, 0.88f), (0.16f * k).coerceAtLeast(0.8f), StrokeCap.Round)
+        drawLine(v.lz.color(pelo, V3(lado, 0.4f, -0.6f), 0.1f), o(0.52f, 0.9f), o(0.68f, 0.78f), (0.12f * k).coerceAtLeast(0.7f), StrokeCap.Round)
+        drawLine(pata, o(0.64f, 0.74f), o(0.63f, 0.64f), (0.04f * k).coerceAtLeast(0.35f), StrokeCap.Round)
+        drawLine(pata, o(0.5f, 0.86f), o(0.42f, 0.84f), (0.05f * k).coerceAtLeast(0.35f), StrokeCap.Round)
+        drawLine(v.l.tono(lerp(C.MADERA_OSC, C.ARENA, 0.3f)), o(0.53f, 0.96f), o(0.42f, 1.08f), (0.045f * k).coerceAtLeast(0.35f), StrokeCap.Round)
+        drawLine(v.lz.color(pelo, V3(lado, 0.4f, -0.6f), 0.1f), o(-0.47f, 0.66f), o(-0.53f, 0.78f), (0.05f * k).coerceAtLeast(0.35f), StrokeCap.Round)
     }
 
     /** Un azar del día para lo del patio que cambia. */

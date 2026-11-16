@@ -85,20 +85,22 @@ internal object CuadroOrden {
         sombrasEnElFondo(v)
         val enElPatio = EscenaOrden.garza(m) == Garza.CAIDA || EscenaOrden.garza(m) == Garza.COSIENDO
         edificios(v, lejos = true)
-        if (enElPatio) garza(v)
+        with(CosasDelPatio) { delFondo(v) }
         with(DiasOrden) { enElPatio(v) }
+        // La torre, en medio del patio, y la Garza amarrada (la que se aleja va detrás de la aguja); la caída, delante.
+        val detras = EscenaOrden.garza(m) == Garza.AMARRADA && EscenaOrden.rumbo(m) > 0.25f
+        if (detras) garza(v)
+        torre(v)
+        if (EscenaOrden.garza(m) == Garza.AMARRADA && !detras) garza(v)
+        if (enElPatio) garza(v)
         edificios(v, lejos = false)
         sombrasSobreLosEdificios(v)
+        with(CosasDelPatio) { deCerca(v) }
         cisterna(v)
         corral(v)
         fragua(v)
         luzDeLaFragua(v)
         if (v.polvo > 0f) veloDePolvo(v, 95f, 230f, 0.5f * v.polvo)
-        // La torre y la Garza amarrada (la que se aleja va detrás de la aguja).
-        val detras = EscenaOrden.garza(m) == Garza.AMARRADA && EscenaOrden.rumbo(m) > 0.25f
-        if (detras) garza(v)
-        torre(v)
-        if (EscenaOrden.garza(m) == Garza.AMARRADA && !detras) garza(v)
         luzEnElAire(v)
         // El adarve: el suelo, sus sombras, el parapeto con las almenas y el objeto del día.
         with(AdarveOrden) { suelo(v) }

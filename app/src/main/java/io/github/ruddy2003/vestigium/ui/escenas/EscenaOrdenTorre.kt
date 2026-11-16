@@ -45,18 +45,18 @@ internal object TorreOrden {
     private const val P = CamOrden.PATIO
 
     /** El centro de la torre, sobre la muralla. */
-    const val S = 0.4f
-    const val V = 46f
+    const val S = -24f
+    const val V = 40f
     /** El lado de su base de piedra, lo alto de la piedra y lo alto del invernadero. */
-    const val LADO = 6f
-    const val PIEDRA = 5f
-    const val INVERNADERO = 7.6f
+    const val LADO = 7f
+    const val PIEDRA = 7f
+    const val INVERNADERO = 9.5f
     /** La argolla, en lo alto de la aguja. */
-    const val ARGOLLA = 14.3f
+    const val ARGOLLA = 14.4f
 
     /** La Garza: su largo y el radio de su panza. */
     const val LARGO = 38f
-    const val RADIO = 5.2f
+    const val RADIO = 6.1f
 
     /** Dónde está la argolla. */
     val PUNTO_ARGOLLA: V3 = V3(S, ARGOLLA, V)
@@ -85,8 +85,9 @@ internal object TorreOrden {
          */
         fun lobulo(t: Float, a: Float): Float {
             val gajo = (a / (2f * PI.toFloat() / 9f)).let { it - kotlin.math.floor(it) }
-            val cuaderna = (t * 9f).let { it - kotlin.math.floor(it) }
-            return 1f + 0.035f * sin(PI.toFloat() * gajo) - 0.012f * (1f - sin(PI.toFloat() * cuaderna)) + (if (cos(a) < 0f) 0.03f * -cos(a) else 0f)
+            // La panza cuelga entre las cinchas (las de la góndola y las del lastre), en bolsas.
+            val bolsa = if (cos(a) < -0.2f) 0.11f * -cos(a) * (0.5f + 0.5f * sin(t * 2f * PI.toFloat() * 4.5f + 0.6f)) else 0f
+            return 1f + 0.05f * sin(PI.toFloat() * gajo) + 0.03f * kotlin.math.abs(sin(a * 5f + t * 7f)) * (1f - cos(a)) * 0.5f + bolsa
         }
 
         fun punto(t: Float, a: Float): V3 = eje(t) + radial(a) * (r(t) * lobulo(t, a))
@@ -111,18 +112,18 @@ internal object TorreOrden {
     /** La Garza el día que vuelve a volar: suelta, sobre el páramo, lejos, con el morro hacia la ensenada. */
     fun enVuelo(): Ballena {
         val d = CamOrden.mundo(0.9f, 0.44f)
-        return Ballena(V3(70f, 34f, 230f), V3(d.x, 0f, d.y), LARGO, RADIO)
+        return Ballena(V3(20f, 44f, 310f), V3(d.x, 0f, d.y), LARGO, RADIO)
     }
 
     /**
-     * La Garza caída o cosiéndose, tendida en el patio junto a la torre, delante de la puerta de la escalera y de la sala
-     * del Código, con el morro hacia la torre y la cola hacia la izquierda, fuera del cuadro **[Diseño propio]**: así no
-     * tapa la Cámara, la cisterna, la enfermería ni el archivo.
+     * La Garza caída o cosiéndose, tendida en el patio delante de la torre, a la izquierda, en diagonal hacia el fondo, con
+     * el morro junto a la Cámara **[Diseño propio]**: ese trozo del patio es el sitio donde cae y donde se cose, y se ve
+     * entera; no tapa la Cámara, la cisterna, la fragua ni la enfermería.
      */
-    fun enElPatio(): Ballena = Ballena(V3(-10.5f, P + RADIO + 0.6f, 51.5f), V3(-0.999f, 0f, 0.04f), LARGO, RADIO)
+    fun enElPatio(): Ballena = Ballena(V3(-20f, P + RADIO + 0.6f, 26f), V3(-0.872f, 0f, 0.49f), LARGO, RADIO)
 
     /** La Garza caída: la misma, desplomada sobre el patio (la tela, medio vacía, cuelga del armazón torcido). */
-    fun caida(): Ballena = Ballena(V3(-10.5f, P + RADIO * 0.55f + 0.1f, 51.5f), V3(-0.999f, 0f, 0.04f), LARGO, RADIO, achata = 0.55f)
+    fun caida(): Ballena = Ballena(V3(-20f, P + RADIO * 0.55f + 0.1f, 26f), V3(-0.872f, 0f, 0.49f), LARGO, RADIO, achata = 0.55f)
 
     /** La Garza que hay hoy en el cuadro (amarrada, en vuelo o en el patio), o null si no está. */
     fun garza(m: Momento): Ballena? = when (EscenaOrden.garza(m)) {
@@ -135,21 +136,44 @@ internal object TorreOrden {
 
     // ---------------------------------------------------------------- La torre
 
-    /** La torre entera, de abajo arriba: la piedra, el invernadero, la aguja y la argolla. */
+    /**
+     * La torre entera, de abajo arriba: la piedra roja sin labrar, con su puerta al patio y el pendón de la orden colgado
+     * en su cara; el invernadero; la aguja de hierro, corta y maciza, y la argolla.
+     */
     fun DrawScope.torre(v: VistaOrden) {
-        val lz = v.lz; val lejos = 0.18f
-        val n = PiezasOrden.fijo("torre")
+        val lz = v.lz; val lejos = 0.12f
+        val n = PiezasOrden.fijo("torre"); val a = LADO / 2f
         caja(lz, S, V, 0f, LADO, LADO, P, PIEDRA, C.PIEDRA, lejos, arriba = C.LOSA) { i, _ ->
-            if (i < 4) {
-                val (a, b) = when (i) { 0 -> V3(S - LADO / 2f, P, V - LADO / 2f) to V3(S + LADO / 2f, P, V - LADO / 2f); 2 -> V3(S - LADO / 2f, P, V - LADO / 2f) to V3(S - LADO / 2f, P, V + LADO / 2f); else -> V3(S + LADO / 2f, P, V - LADO / 2f) to V3(S + LADO / 2f, P, V + LADO / 2f) }
-                sillares(a, b, PIEDRA - P, lz.color(C.PIEDRA, V3(0f, 0f, -1f), lejos), n, 0.5f, 0.8f, lejos = lejos)
-            }
+            val (p0, p1) = when (i) { 0 -> V3(S - a, P, V - a) to V3(S + a, P, V - a); 1 -> V3(S - a, P, V + a) to V3(S + a, P, V + a); 2 -> V3(S - a, P, V - a) to V3(S - a, P, V + a); else -> V3(S + a, P, V - a) to V3(S + a, P, V + a) }
+            if (i < 4) sillares(p0, p1, PIEDRA - P, lz.color(C.PIEDRA, PatioOrden.normalDeCaja(i), lejos), n, 0.55f, 0.85f, lejos = lejos)
         }
-        // La puerta que da al adarve.
-        val pu = listOf(V3(1.2f, 0f, V - LADO / 2f - 0.02f), V3(2.4f, 0f, V - LADO / 2f - 0.02f), V3(2.4f, 2.3f, V - LADO / 2f - 0.02f), V3(1.2f, 2.3f, V - LADO / 2f - 0.02f))
+        // La puerta al patio, en la cara que mira hacia el adarve, con su arco de piedra.
+        val vv = V - a - 0.03f
+        val pu = listOf(V3(S - 0.8f, P, vv), V3(S + 0.8f, P, vv), V3(S + 0.8f, P + 2.4f, vv), V3(S, P + 3f, vv), V3(S - 0.8f, P + 2.4f, vv))
         drawPath(poligono(pu.map { CamOrden.p(it) }), lz.color(C.MADERA_OSC, V3(0f, 0f, -1f), lejos))
+        pendon(v)
         invernadero(v)
         aguja(v)
+    }
+
+    /**
+     * El pendón de la orden **[Diseño propio]**: un paño carmesí largo colgado de lo alto de la piedra, en la cara que mira
+     * al adarve, con el candil bordado en latón (el signo de la orden, sin letras). De luto, con un crespón oscuro encima.
+     */
+    private fun DrawScope.pendon(v: VistaOrden) {
+        val lz = v.lz; val vv = V - LADO / 2f - 0.05f; val s0 = S + 0.9f; val s1 = S + 2.6f; val h0 = PIEDRA - 0.4f; val h1 = PIEDRA - 5.2f
+        val ondea = 0.12f * v.m.viento
+        val q = listOf(V3(s0, h0, vv), V3(s1, h0, vv), V3(s1 + ondea, h1 + 0.4f, vv), V3((s0 + s1) / 2f, h1 + 0.9f, vv), V3(s0 + ondea, h1 + 0.4f, vv)).map { CamOrden.p(it) }
+        val n = V3(0f, 0f, -1f)
+        drawPath(poligono(q), lz.color(C.CARMESI, n, 0.1f))
+        // Los pliegues, en sombra.
+        for (k in 1..2) { val ss = s0 + (s1 - s0) * k / 3f; drawLine(lz.color(lerp(C.CARMESI, C.HOLLIN, 0.4f), n, 0.1f), CamOrden.p(ss, h0, vv), CamOrden.p(ss + ondea, h1 + 0.6f, vv), 0.6f) }
+        // El candil bordado.
+        val c = CamOrden.p((s0 + s1) / 2f, h0 - 1.6f, vv); val k = CamOrden.k(s0, vv)
+        drawPath(poligono(c + Offset(-k * 0.28f, 0f), c + Offset(k * 0.28f, 0f), c + Offset(k * 0.36f, -k * 0.3f), c + Offset(-k * 0.36f, -k * 0.3f)), lz.color(C.LATON, n, 0.1f, 0.2f))
+        drawPath(poligono(c + Offset(-k * 0.12f, -k * 0.34f), c + Offset(k * 0.12f, -k * 0.34f), c + Offset(0f, -k * 0.8f)), lz.color(lerp(C.LATON, C.LUMBRE, 0.5f), n, 0.1f, 0.2f))
+        drawLine(lz.color(C.HIERRO, n, 0.1f), CamOrden.p(s0 - 0.2f, h0 + 0.05f, vv), CamOrden.p(s1 + 0.2f, h0 + 0.05f, vv), (k * 0.08f).coerceAtLeast(0.6f))
+        if (EscenaOrden.luto(v.m)) drawPath(poligono(listOf(V3(s0, h0, vv - 0.02f), V3(s1, h0, vv - 0.02f), V3((s0 + s1) / 2f, h0 - 1.2f, vv - 0.02f)).map { CamOrden.p(it) }), lz.color(C.HOLLIN, n, 0.1f))
     }
 
     /** El invernadero de cristales en lo alto de la piedra: el armazón de hierro y los vidrios, que reflejan el cielo; rotos tras la granizada. */
@@ -168,35 +192,33 @@ internal object TorreOrden {
         }
     }
 
-    /** La aguja de hierro: cuatro patas que se juntan arriba, con sus cruces, y la argolla de latón. */
+    /**
+     * La aguja de hierro: corta y maciza, sobre su zócalo en lo alto del invernadero; un fuste grueso, un collar de latón y
+     * otro fuste más fino que lleva la argolla. Nada de celosía.
+     */
     private fun DrawScope.aguja(v: VistaOrden) {
-        val lz = v.lz; val lejos = 0.18f
-        val abajo = 1.6f; val arriba = 0.35f; val h0 = INVERNADERO; val h1 = ARGOLLA - 0.6f
-        val patas = listOf(-1f to -1f, 1f to -1f, 1f to 1f, -1f to 1f).map { (a, b) -> V3(S + a * abajo, h0, V + b * abajo) to V3(S + a * arriba, h1, V + b * arriba) }
-        val orden = patas.sortedByDescending { CamOrden.hondo(it.first) }
-        for ((a, b) in orden) palo(lz, a, b, 0.22f, C.HIERRO, lejos)
-        // Las cruces de cada tramo, en las dos caras que se ven.
-        for (k in 0 until 4) {
-            val t0 = k / 4f; val t1 = (k + 1) / 4f
-            for (i in listOf(0, 1)) {
-                val (a0, a1) = patas[i]; val (b0, b1) = patas[(i + 3) % 4]
-                fun en(p0: V3, p1: V3, t: Float) = V3(p0.x + (p1.x - p0.x) * t, p0.y + (p1.y - p0.y) * t, p0.z + (p1.z - p0.z) * t)
-                drawLine(lz.color(C.HIERRO, V3(0f, 0f, -1f), lejos), CamOrden.p(en(a0, a1, t0)), CamOrden.p(en(b0, b1, t1)), 0.5f)
-                drawLine(lz.color(C.HIERRO, V3(0f, 0f, -1f), lejos), CamOrden.p(en(b0, b1, t0)), CamOrden.p(en(a0, a1, t1)), 0.5f)
-            }
-        }
+        val lz = v.lz; val lejos = 0.12f
+        caja(lz, S, V, 0.4f, 1.8f, 1.8f, INVERNADERO, INVERNADERO + 0.6f, C.HIERRO, lejos)
+        val h1 = INVERNADERO + 2.8f
+        palo(lz, V3(S, INVERNADERO + 0.6f, V), V3(S, h1, V), 1.0f, C.HIERRO, lejos)
+        palo(lz, V3(S, h1, V), V3(S, ARGOLLA - 0.75f, V), 0.55f, C.HIERRO, lejos)
+        // El collar de latón y los remaches del fuste.
+        val c = CamOrden.p(S, h1, V); val k = CamOrden.k(S, V)
+        drawOval(lz.color(C.LATON, V3(0f, 1f, -1f), lejos, 0.2f), Offset(c.x - k * 0.62f, c.y - k * 0.18f), androidx.compose.ui.geometry.Size(k * 1.24f, k * 0.36f))
+        for (j in 0 until 4) { val q = CamOrden.p(S, INVERNADERO + 1f + j * 0.45f, V - 0.5f); drawCircle(lz.color(C.HIERRO_CLARO, V3(0f, 1f, -1f), lejos), (k * 0.05f).coerceAtLeast(0.4f), q + Offset(-k * 0.25f, 0f)); drawCircle(lz.color(C.HIERRO_CLARO, V3(0f, 1f, -1f), lejos), (k * 0.05f).coerceAtLeast(0.4f), q + Offset(k * 0.25f, 0f)) }
         argolla(v)
     }
 
-    /** La argolla «del tamaño de una rueda de carro», de latón, de canto hacia la Garza. */
+    /** La argolla «del tamaño de una rueda de carro», de latón, gruesa, de canto hacia la Garza. */
     private fun DrawScope.argolla(v: VistaOrden) {
-        val c = PUNTO_ARGOLLA; val r = 0.65f
-        val g = v.garza?.dir ?: V3(-1f, 0f, 0f)
+        val c = PUNTO_ARGOLLA; val r = 0.85f
+        val g = v.garza?.takeIf { EscenaOrden.garza(v.m) == Garza.AMARRADA }?.dir ?: V3(-1f, 0f, 0f)
         val lado = V3(g.z, 0f, -g.x)
-        val pts = (0..16).map { j -> val a = j * 2f * PI.toFloat() / 16f; CamOrden.p(c.x + lado.x * r * cos(a), c.y + r * sin(a), c.z + lado.z * r * cos(a)) }
+        val pts = (0..20).map { j -> val a = j * 2f * PI.toFloat() / 20f; CamOrden.p(c.x + lado.x * r * cos(a), c.y + r * sin(a), c.z + lado.z * r * cos(a)) }
         val camino = Path().apply { moveTo(pts[0].x, pts[0].y); for (q in pts.drop(1)) lineTo(q.x, q.y) }
-        drawPath(camino, v.lz.color(C.LATON, V3(0f, 1f, -1f), 0.15f), style = Stroke(1.3f))
-        drawPath(camino, v.l.tono(lerp(C.LATON, Color.White, 0.4f)).copy(alpha = 0.5f * (1f - v.l.noche)), style = Stroke(0.4f))
+        val k = CamOrden.k(c.x, c.z)
+        drawPath(camino, v.lz.color(lerp(C.LATON, C.HIERRO, 0.35f), V3(0f, -1f, -1f), 0.12f), style = Stroke(k * 0.22f))
+        drawPath(camino, v.lz.color(C.LATON, V3(0f, 1f, -1f), 0.12f, 0.2f), style = Stroke(k * 0.12f))
     }
 
     // ---------------------------------------------------------------- La Garza
@@ -231,11 +253,14 @@ internal object TorreOrden {
         val husos = (0 until HUSOS).map { az.entre(-1f, 1f) }
         // Los remiendos: paños de dos anillos por uno o dos husos, más claros, más oscuros o tostados.
         val remiendos = HashMap<Pair<Int, Int>, Color>()
-        repeat(11) { k ->
-            val i0 = 2 + az.entero(ANILLOS - 5); val j0 = az.entero(HUSOS); val c = when (k % 3) { 0 -> C.TELA_NUEVA; 1 -> C.TELA_VIEJA; else -> lerp(C.TELA, C.HIERRO, 0.3f) }
-            for (di in 0..1) for (dj in 0 until 1 + az.entero(2)) remiendos[(i0 + di) to ((j0 + dj) % HUSOS)] = c
+        repeat(22) { k ->
+            val i0 = 1 + az.entero(ANILLOS - 4); val j0 = az.entero(HUSOS)
+            val c = when (k % 5) { 0 -> C.TELA_NUEVA; 1 -> C.TELA_VIEJA; 2 -> lerp(C.TELA_VIEJA, C.ARENA, 0.3f); 3 -> lerp(C.TELA, C.MADERA, 0.6f); else -> lerp(C.TELA, C.HIERRO, 0.3f) }
+            for (di in 0 until 1 + az.entero(3)) for (dj in 0 until 1 + az.entero(2)) remiendos[(i0 + di) to ((j0 + dj) % HUSOS)] = c
         }
         val nuevos = EscenaOrden.garza(v.m) == Garza.COSIENDO
+        // A contraluz: el sol bajo de la tarde, del lado de la Garza (a la izquierda).
+        val contraluz = if (v.l.solX < 0.55f) EscenaOrden.sol(v.l) * ((0.9f - v.l.solAltura) / 0.6f).coerceIn(0f, 1f) else 0f
         // Lo que va detrás de la panza: las aletas y el motor del otro lado.
         if (hasta >= 0.999f && !rota) detalles(v, b, delante = false)
         val agujeros = if (rota) (0 until 16).map { (2 + az.entero(ANILLOS - 4)) to az.entero(HUSOS) }.toSet() else emptySet()
@@ -252,21 +277,38 @@ internal object TorreOrden {
                 val propio = when {
                     nuevos && kotlin.math.abs((a0 + a1) / 2f - PI.toFloat()) > PI.toFloat() * (hasta - 0.12f) -> C.TELA_NUEVA
                     nuevos -> lerp(C.TELA_NUEVA, C.TELA, 0.4f + 0.2f * husos[j])
-                    else -> remiendos[i to j] ?: lerp(C.TELA, if (husos[j] > 0f) C.TELA_VIEJA else C.HIERRO_CLARO, 0.25f * kotlin.math.abs(husos[j]))
+                    else -> remiendos[i to j] ?: lerp(C.TELA, if (husos[j] > 0f) C.TELA_VIEJA else C.HIERRO_CLARO, 0.42f * kotlin.math.abs(husos[j]))
                 }
                 // El rebote cálido del suelo en la panza y, en el lomo, el polvo que se posa.
                 val rebote = if (n.y < -0.3f) 0.14f * (-n.y) * (1f - v.l.noche) else 0f
+                // El borde, a contraluz con el sol bajo de la tarde, se vuelve translúcido.
+                val ve = V3(-c.x, CamOrden.OJO - c.y, -c.z).let { w -> w * (1f / sqrt(w.x * w.x + w.y * w.y + w.z * w.z).coerceAtLeast(0.01f)) }
+                val canto = (1f - kotlin.math.abs(n.x * ve.x + n.y * ve.y + n.z * ve.z) - 0.72f).coerceAtLeast(0f) / 0.28f
                 val tono = lerp(lz.color(propio, n, lejos), v.l.tono(C.ARENA, lejos), rebote).let { if ((i to j) in agujeros) lerp(it, v.l.tono(C.HOLLIN, lejos), 0.75f) else if (rota) lerp(it, v.l.tono(C.ARENA, lejos), 0.12f) else it }
+                    .let { if (canto > 0f && contraluz > 0.02f) lerp(it, lerp(v.l.solColor, Color(0xFFFFE0B0), 0.4f), (0.55f * canto * contraluz).coerceIn(0f, 1f)) else it }
                 val forma = poligono(q)
                 drawPath(forma, tono); drawPath(forma, tono, style = Stroke(0.6f))
                 // La costura de cada huso (más marcada cada dos: los largueros) y, en cada cuaderna, la de través.
                 val costura = lerp(tono, v.l.tono(C.HOLLIN), if (j % 2 == 0) 0.2f else 0.1f)
                 drawLine(costura, q[0], q[1], if (j % 2 == 0) 0.45f else 0.3f)
-                if (i % 3 == 0) drawLine(costura.copy(alpha = 0.45f), q[0], q[3], 0.3f)
                 if (remiendos.containsKey(i to j) && (q[2] - q[0]).getDistance() > 4f) drawPath(forma, lerp(tono, v.l.tono(C.HOLLIN), 0.3f), style = Stroke(0.45f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.7f, 0.7f))))
+                if ((i * 31 + j * 17) % 6 == 0 && (q[2] - q[0]).getDistance() > 5f) arruga(q, tono, v)
             }
         }
         if (hasta >= 0.999f && !rota) { red(v, b); morro(v, b); detalles(v, b, delante = true) }
+    }
+
+    /**
+     * Una arruga de la tela floja: un pliegue en diagonal por el paño, con su lado oscuro y su filo claro **[Diseño propio]**:
+     * lo que hace que la panza se vea blanda y no de chapa.
+     */
+    private fun DrawScope.arruga(q: List<Offset>, tono: Color, v: VistaOrden) {
+        fun en(a: Offset, b: Offset, t: Float) = Offset(a.x + (b.x - a.x) * t, a.y + (b.y - a.y) * t)
+        val a = en(q[0], q[1], 0.25f); val b = en(q[3], q[2], 0.7f); val m = en(en(q[0], q[3], 0.5f), en(q[1], q[2], 0.5f), 0.45f)
+        val pliegue = Path().apply { moveTo(a.x, a.y); cubicTo(m.x, m.y, m.x, m.y, b.x, b.y) }
+        drawPath(pliegue, lerp(tono, v.l.tono(C.HOLLIN), 0.22f), style = Stroke(0.55f, cap = StrokeCap.Round))
+        pliegue.translate(Offset(0.5f, -0.5f))
+        drawPath(pliegue, lerp(tono, v.l.tono(C.PAPEL), 0.18f), style = Stroke(0.35f, cap = StrokeCap.Round))
     }
 
     /** El cinturón de la red, un poco por debajo del ecuador de la panza: de él cuelgan la góndola y los sacos de lastre. */
@@ -470,8 +512,11 @@ internal object TorreOrden {
         // Las cuadernas torcidas que asoman por encima de la tela: arcos rotos, cada uno ladeado a su modo.
         val metal = lz.color(C.HIERRO, V3(0f, 1f, -1f), 0.12f)
         for (i in 0 until 7) {
-            val t = 0.05f + i * 0.09f; val c = b.eje(t); val r = b.r(t) * az.entre(1.1f, 1.5f); val ladeo = az.entre(-0.6f, 0.6f)
-            val arco = (0..9).map { j -> val a = -1.6f + j * (3.2f / 9f) * az.entre(0.55f, 1f) + ladeo; CamOrden.p(c + V3(b.lado.x * sin(a) * r, cos(a) * r * az.entre(0.9f, 1.4f), b.lado.z * sin(a) * r) + b.dir * az.entre(-1f, 1f)) }
+            val t = 0.05f + i * 0.09f; val c = b.eje(t); val r = b.r(t) * az.entre(1.05f, 1.3f); val ladeo = az.entre(-0.5f, 0.5f)
+            // Cada cuaderna, un arco que se dobla una sola vez (por donde partió) y se ladea, sin zigzag.
+            val dobla = az.entre(0.3f, 0.7f); val cuanto = az.entre(-0.5f, 0.5f); val cae = az.entre(0.75f, 1f)
+            val arco = (0..12).map { j -> val u = j / 12f; val a = -1.5f + 3f * u + ladeo + (if (u > dobla) cuanto * (u - dobla) * 2f else 0f)
+                CamOrden.p(c + V3(b.lado.x * sin(a) * r, cos(a) * r * (if (u > dobla) cae else 1f), b.lado.z * sin(a) * r)) }
             val camino = Path().apply { moveTo(arco[0].x, arco[0].y); for (q in arco.drop(1)) lineTo(q.x, q.y) }
             drawPath(camino, metal, style = Stroke(1.1f, cap = StrokeCap.Round))
             drawPath(camino, lz.color(C.HIERRO_CLARO, V3(0f, 1f, 0f), 0.12f), style = Stroke(0.4f, cap = StrokeCap.Round))
