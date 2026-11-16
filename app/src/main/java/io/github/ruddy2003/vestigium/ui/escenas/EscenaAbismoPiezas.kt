@@ -3,7 +3,6 @@ package io.github.ruddy2003.vestigium.ui.escenas
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -29,7 +28,6 @@ import io.github.ruddy2003.vestigium.vidas.Azar
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
-import kotlin.math.sign
 import kotlin.math.sin
 import kotlin.math.sqrt
 
@@ -301,243 +299,6 @@ internal object PiezasAbismo {
     // =================================================================
 
     /**
-     * El traje de lona y goma colgado a secar de un gancho por el cuello en [cuello], de [alto] unidades: «de una pieza, con
-     * puños de goma… y un cuello de cobre». Vacío, cae flojo: los brazos caídos, las piernas juntas con los pies del
-     * traje, los pliegues, la parte de abajo todavía mojada y oscura, los remiendos de goma. [mojado], de 0 a 1.
-     */
-    fun DrawScope.traje(p: Pincel, cuello: Offset, alto: Float, semilla: Long, mojado: Float = 0.5f, lejos: Float = 0f, vaiven: Float = 0f) {
-        val az = Azar(semilla)
-        val u = alto / 1.7f
-        val ld = lado(p)
-        fun q(x: Float, y: Float) = Offset(cuello.x + (x + vaiven * y * 0.1f) * u, cuello.y + y * u)
-        val lona = lerp(C.LONA, C.MADERA_GRIS, az.entre(0f, 0.3f))
-        val cuerpo = Path().apply {
-            moveTo(q(-0.13f, 0.02f))
-            cubicTo(q(-0.24f, 0.05f), q(-0.33f, 0.1f), q(-0.35f, 0.2f))            // el hombro
-            cubicTo(q(-0.4f, 0.45f), q(-0.42f, 0.7f), q(-0.39f, 0.92f))             // el brazo izquierdo, caído
-            lineTo(q(-0.3f, 0.93f)); cubicTo(q(-0.3f, 0.7f), q(-0.27f, 0.45f), q(-0.25f, 0.36f))
-            cubicTo(q(-0.27f, 0.6f), q(-0.27f, 0.8f), q(-0.24f, 0.9f))              // la cadera
-            cubicTo(q(-0.25f, 1.2f), q(-0.24f, 1.45f), q(-0.2f, 1.62f))             // la pierna izquierda
-            cubicTo(q(-0.2f, 1.7f), q(-0.06f, 1.7f), q(-0.04f, 1.62f))
-            cubicTo(q(-0.03f, 1.4f), q(-0.02f, 1.15f), q(0.0f, 0.98f))
-            cubicTo(q(0.02f, 1.15f), q(0.03f, 1.4f), q(0.04f, 1.62f))
-            cubicTo(q(0.06f, 1.7f), q(0.2f, 1.7f), q(0.21f, 1.62f))
-            cubicTo(q(0.25f, 1.45f), q(0.26f, 1.2f), q(0.24f, 0.9f))
-            cubicTo(q(0.27f, 0.8f), q(0.27f, 0.6f), q(0.25f, 0.36f))
-            cubicTo(q(0.27f, 0.45f), q(0.3f, 0.7f), q(0.3f, 0.93f)); lineTo(q(0.39f, 0.92f))
-            cubicTo(q(0.42f, 0.7f), q(0.4f, 0.45f), q(0.35f, 0.2f))
-            cubicTo(q(0.33f, 0.1f), q(0.24f, 0.05f), q(0.13f, 0.02f)); close()
-        }
-        val a = q(-0.42f, 0f).x; val b = q(0.42f, 0f).x
-        drawPath(cuerpo, Brush.horizontalGradient(0f to (if (ld > 0) p.sombra(lona, lejos) else p.luz(lona, lejos)), 0.5f to p.medio(lona, lejos), 1f to (if (ld > 0) p.luz(lona, lejos) else p.sombra(lona, lejos)), startX = a, endX = b))
-        clipPath(cuerpo) {
-            // Lo mojado: de las rodillas abajo, más oscuro y más frío.
-            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.sombra(C.LONA_MOJADA, lejos).copy(alpha = 0.75f * mojado)), q(0f, 0.95f).y, q(0f, 1.6f).y), Offset(a, q(0f, 0.95f).y), Size(b - a, q(0f, 0.75f).y - cuello.y))
-            // Los pliegues verticales: cada uno una raya de sombra con su filo de luz.
-            repeat(9) {
-                val x = az.entre(-0.33f, 0.33f); val y0 = az.entre(0.1f, 0.8f); val y1 = y0 + az.entre(0.25f, 0.6f)
-                drawLine(p.sombra(lona, lejos).copy(alpha = 0.55f), q(x, y0), q(x + az.entre(-0.03f, 0.03f), y1), u * 0.025f, StrokeCap.Round)
-                drawLine(p.luz(lona, lejos).copy(alpha = 0.4f), q(x + 0.02f * ld, y0 + 0.02f), q(x + 0.02f * ld, y1 - 0.05f), u * 0.012f, StrokeCap.Round)
-            }
-            // La costura de la cintura y los remiendos de goma.
-            drawLine(p.sombra(lerp(lona, C.BREA, 0.3f), lejos), q(-0.3f, 0.82f), q(0.3f, 0.84f), u * 0.02f)
-            repeat(3) {
-                val c0 = q(az.entre(-0.22f, 0.18f), az.entre(0.3f, 1.4f)); val w = u * az.entre(0.06f, 0.11f)
-                drawRect(p.medio(lerp(C.BREA, C.LONA, 0.25f), lejos), Offset(c0.x, c0.y), Size(w, w * 0.8f))
-                drawRect(p.luz(C.LONA, lejos).copy(alpha = 0.3f), Offset(c0.x, c0.y), Size(w, w * 0.8f), style = Stroke(u * 0.006f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(u * 0.012f, u * 0.01f))))
-            }
-        }
-        // Los puños de goma y el cuello de goma.
-        for (s in listOf(-1f, 1f)) drawLine(p.medio(C.BREA, lejos), q(0.395f * s, 0.9f), q(0.3f * s, 0.91f), u * 0.07f, StrokeCap.Round)
-        drawOval(p.medio(C.BREA, lejos), Offset(q(-0.15f, 0f).x, cuello.y - u * 0.04f), Size(u * 0.3f, u * 0.09f))
-        drawArc(p.luz(C.BREA, lejos), 180f, 180f, false, Offset(q(-0.15f, 0f).x, cuello.y - u * 0.04f), Size(u * 0.3f, u * 0.09f), style = Stroke(u * 0.012f))
-        // Las gotas que caen del bajo (si está mojado): unas pocas, quietas.
-        if (mojado > 0.3f) repeat(3) { val g = q(az.entre(-0.18f, 0.18f), 1.72f + az.entre(0f, 0.12f)); drawCircle(p.luz(C.MAR_CLARO, lejos).copy(alpha = 0.5f), u * 0.012f, g) }
-    }
-
-    /**
-     * El traje de lona doblado a secar sobre la regala, de [a] a [b] (dos puntos de la regala, en el lienzo), de [k]
-     * unidades por metro: el cuerpo echado sobre la tabla, con sus pliegues; una manga que cuelga por dentro de la borda
-     * con su puño de goma, una pierna que cuelga por fuera, y el cuello de goma a un lado. **[Diseño propio]**: colgado de
-     * pie, vacío, parecía una persona; doblado sobre la borda se lee como lo que es, ropa de trabajo puesta a secar.
-     */
-    fun DrawScope.trajeEnLaBorda(p: Pincel, a: Offset, b: Offset, k: Float, semilla: Long, mojado: Float = 0.5f, lejos: Float = 0f) {
-        val az = Azar(semilla)
-        val d = b - a
-        val lona = lerp(C.LONA, C.MADERA, az.entre(0.05f, 0.25f))
-        val ld = lado(p)
-        val alto = 0.46f * k
-        fun en(t: Float) = a + d * t
-        val luzL = p.luz(lona, lejos); val medioL = p.medio(lona, lejos); val sombraL = p.sombra(lona, lejos)
-        val mojadaL = p.sombra(lerp(lona, C.LONA_MOJADA, 0.8f), lejos)
-        fun gradiente(x0: Float, x1: Float, y0: Float, y1: Float) = Brush.linearGradient(listOf(if (ld > 0) sombraL else luzL, medioL, if (ld > 0) luzL else sombraL, lerp(medioL, mojadaL, mojado)), Offset(x0, y0), Offset(x1, y1))
-        // Las mangas, que cuelgan a los lados del cuerpo, con su puño de goma negra.
-        for ((t, largo) in listOf(0.12f to 0.86f, 0.9f to 0.8f)) {
-            val r = en(t); val g = 0.09f * k
-            val manga = Path().apply { moveTo(r.x - g * 0.5f, r.y); cubicTo(r.x - g * 0.6f, r.y + alto * 0.4f, r.x - g * 0.4f, r.y + alto * 0.7f, r.x - g * 0.42f, r.y + alto * largo); lineTo(r.x + g * 0.48f, r.y + alto * largo); cubicTo(r.x + g * 0.5f, r.y + alto * 0.6f, r.x + g * 0.6f, r.y + alto * 0.3f, r.x + g * 0.55f, r.y); close() }
-            drawPath(manga, gradiente(r.x - g, r.x + g, r.y, r.y + alto))
-            for (i in 1..3) drawArc(sombraL.copy(alpha = 0.5f), 10f, 160f, false, Offset(r.x - g * 0.5f, r.y + alto * largo * i / 4.5f), Size(g, g * 0.5f), style = Stroke(g * 0.08f))
-            drawLine(p.medio(C.BREA, lejos), Offset(r.x - g * 0.45f, r.y + alto * largo - g * 0.25f), Offset(r.x + g * 0.48f, r.y + alto * largo - g * 0.25f), g * 0.55f)       // el puño de goma
-            drawLine(p.luz(C.BREA, lejos).copy(alpha = 0.6f), Offset(r.x - g * 0.3f, r.y + alto * largo - g * 0.45f), Offset(r.x + g * 0.2f, r.y + alto * largo - g * 0.45f), g * 0.1f)
-        }
-        // El cuerpo, colgado del revés: de la cintura en la regala baja ancho hasta el cuello, con sus pliegues y los remiendos.
-        val r0 = en(0.24f); val r1 = en(0.78f)
-        val cuerpo = Path().apply {
-            moveTo(r0.x, r0.y); cubicTo(r0.x - 0.04f * k, r0.y + alto * 0.35f, r0.x - 0.02f * k, r0.y + alto * 0.7f, r0.x + 0.03f * k, r0.y + alto)
-            lineTo(r1.x - 0.02f * k, r1.y + alto * 0.97f); cubicTo(r1.x + 0.04f * k, r1.y + alto * 0.7f, r1.x + 0.05f * k, r1.y + alto * 0.35f, r1.x, r1.y); close()
-        }
-        drawPath(cuerpo, gradiente(minOf(r0.x, r1.x), maxOf(r0.x, r1.x), r0.y, r0.y + alto))
-        clipPath(cuerpo) {
-            repeat(8) {
-                val t = az.entre(0.05f, 0.95f); val top = r0 + (r1 - r0) * t; val lg = alto * az.entre(0.35f, 0.85f)
-                drawLine(sombraL.copy(alpha = 0.55f), top + Offset(0f, alto * 0.08f), top + Offset(az.entre(-0.02f, 0.02f) * k, lg), 0.012f * k, StrokeCap.Round)
-                drawLine(luzL.copy(alpha = 0.4f), top + Offset(0.01f * k * ld, alto * 0.1f), top + Offset(0.01f * k * ld, lg * 0.9f), 0.006f * k, StrokeCap.Round)
-            }
-            val parche = (r0 + r1) * 0.5f + Offset(-0.03f * k, alto * 0.45f)
-            drawRect(p.medio(lerp(C.BREA, C.LONA, 0.3f), lejos), Offset(parche.x, parche.y), Size(0.07f * k, 0.06f * k))
-            drawRect(Brush.verticalGradient(listOf(Color.Transparent, mojadaL.copy(alpha = 0.6f * mojado)), r0.y + alto * 0.4f, r0.y + alto), Offset(minOf(r0.x, r1.x) - 0.1f * k, r0.y + alto * 0.4f), Size(kotlin.math.abs(r1.x - r0.x) + 0.2f * k, alto))
-        }
-        // El cuello de goma, abajo, con su babero ancho y los agujeros de los pernos del peto: lo que dice que es un traje de buzo.
-        val cuello = Offset((r0.x + r1.x) / 2f + 0.005f * k, maxOf(r0.y, r1.y) + alto * 0.95f)
-        val bw = 0.17f * k; val bh = 0.08f * k
-        drawOval(p.medio(lerp(C.BREA, C.PLOMO, 0.2f), lejos), Offset(cuello.x - bw, cuello.y - bh * 0.5f), Size(bw * 2f, bh * 1.4f))
-        drawArc(p.luz(lerp(C.BREA, C.PLOMO, 0.4f), lejos), 190f, 150f, false, Offset(cuello.x - bw, cuello.y - bh * 0.5f), Size(bw * 2f, bh * 1.4f), style = Stroke(0.012f * k))
-        for (i in 0 until 7) { val an = PI.toFloat() * (0.1f + 0.8f * i / 6f); drawCircle(p.luz(C.LATON, lejos).copy(alpha = 0.8f), 0.008f * k, Offset(cuello.x + cos(an) * bw * 0.8f, cuello.y + bh * 0.2f + sin(an) * bh * 0.45f)) }
-        drawOval(p.sombra(C.BREA, lejos), Offset(cuello.x - bw * 0.4f, cuello.y - bh * 0.1f), Size(bw * 0.8f, bh * 0.5f))
-        // Lo doblado sobre la regala: un bulto largo de lona, con los pliegues de través.
-        val n = Offset(-d.y, d.x).let { val l = it.getDistance().coerceAtLeast(0.01f); if (it.y > 0f) -it / l else it / l }
-        val g = 0.06f * k
-        val sobre = lazo(listOf(a + n * (g * 0.2f) - d * 0.02f, en(0.25f) + n * (g * 1.1f), en(0.55f) + n * (g * 1.3f), en(0.85f) + n * (g * 1f), b + n * (g * 0.3f) + d * 0.02f, en(0.8f) - n * (g * 0.6f), en(0.3f) - n * (g * 0.6f)))
-        drawPath(sobre, Brush.linearGradient(listOf(luzL, medioL, sombraL), a + n * g * 1.3f, a - n * g * 0.6f))
-        clipPath(sobre) { repeat(7) { val t = az.entre(0.05f, 0.95f); val q = en(t); drawLine(sombraL.copy(alpha = 0.6f), q + n * g * 1.2f, q - n * g * 0.5f + d * az.entre(-0.03f, 0.03f), g * 0.15f, StrokeCap.Round) } }
-        // Las gotas que caen (si está mojado).
-        if (mojado > 0.3f) repeat(4) { val q = cuello + Offset(az.entre(-0.12f, 0.12f) * k, az.entre(0.06f, 0.16f) * k); drawCircle(p.luz(C.MAR_CLARO, lejos).copy(alpha = 0.55f), 0.008f * k, q) }
-    }
-
-    /**
-     * Un traje de lona puesto a secar sobre un flechaste de la jarcia (de [a] a [b], en el lienzo), de [k] unidades por
-     * metro, como la ropa en un tendedero: doblado por las rodillas, delante cuelgan las dos piernas cortas con sus pies de
-     * lona, y detrás, más largo, el resto del cuerpo, del revés: las mangas con sus puños de goma negra y, abajo del todo,
-     * el cuello de goma con su babero ancho y los agujeros de los pernos del peto, que es lo que dice que es un traje de
-     * buzo. [en], de 0 a 1, dónde del flechaste; [mojado], de 0 a 1 (lo de abajo, más oscuro, y gotea). **[Diseño propio]**:
-     * colgado de pie parecía una persona; así se lee como ropa de trabajo tendida.
-     */
-    fun DrawScope.trajeEnLaJarcia(p: Pincel, a: Offset, b: Offset, k: Float, semilla: Long, en: Float = 0.5f, mojado: Float = 0.5f, lejos: Float = 0f) {
-        val az = Azar(semilla)
-        val m = a + (b - a) * en
-        val lona = lerp(C.LONA, C.MADERA, az.entre(0.05f, 0.22f))
-        val ld = lado(p)
-        val luzL = p.luz(lona, lejos); val medioL = p.medio(lona, lejos); val sombraL = p.sombra(lona, lejos)
-        val mojadaL = p.sombra(lerp(lona, C.LONA_MOJADA, 0.85f), lejos)
-        fun tela(x0: Float, x1: Float, y0: Float, y1: Float) = Brush.linearGradient(listOf(if (ld > 0) sombraL else luzL, medioL, if (ld > 0) lerp(luzL, medioL, 0.3f) else sombraL), Offset(x0, y0), Offset(x1, y0))
-        fun mojar(forma: Path, y0: Float, y1: Float, x0: Float, x1: Float) = clipPath(forma) { drawRect(Brush.verticalGradient(listOf(Color.Transparent, mojadaL.copy(alpha = 0.75f * mojado)), y0 + (y1 - y0) * 0.35f, y1), Offset(x0, y0), Size(x1 - x0, y1 - y0)) }
-        val vaiven = az.entre(-0.03f, 0.03f) * k
-        // ---- Detrás: el cuerpo del revés, con las mangas a los lados y el cuello abajo.
-        val wb = 0.17f * k; val lb = 0.98f * k
-        val atras = Offset(m.x + 0.02f * k, m.y)
-        val cuerpo = Path().apply {
-            moveTo(atras.x - wb * 0.85f, atras.y); cubicTo(atras.x - wb * 1.05f, atras.y + lb * 0.3f, atras.x - wb * 0.95f + vaiven, atras.y + lb * 0.7f, atras.x - wb * 0.7f + vaiven, atras.y + lb)
-            lineTo(atras.x + wb * 0.7f + vaiven, atras.y + lb); cubicTo(atras.x + wb * 0.95f + vaiven, atras.y + lb * 0.7f, atras.x + wb * 1.05f, atras.y + lb * 0.3f, atras.x + wb * 0.85f, atras.y); close()
-        }
-        // Las mangas, colgando por fuera del cuerpo, un poco abiertas.
-        for (s in listOf(-1f, 1f)) {
-            val r = Offset(atras.x + s * wb * 0.95f + vaiven * 0.5f, atras.y + lb * 0.42f); val g = 0.085f * k; val largo = 0.56f * k
-            val manga = Path().apply { moveTo(r.x - g * 0.5f, r.y); cubicTo(r.x - g * 0.55f + s * g * 0.2f, r.y + largo * 0.4f, r.x - g * 0.4f + s * g * 0.5f, r.y + largo * 0.75f, r.x - g * 0.42f + s * g * 0.6f, r.y + largo); lineTo(r.x + g * 0.45f + s * g * 0.6f, r.y + largo); cubicTo(r.x + g * 0.5f + s * g * 0.5f, r.y + largo * 0.6f, r.x + g * 0.55f, r.y + largo * 0.3f, r.x + g * 0.5f, r.y); close() }
-            drawPath(manga, tela(r.x - g, r.x + g, r.y, r.y + largo)); mojar(manga, r.y, r.y + largo, r.x - g, r.x + g + s * g)
-            val puno = Offset(r.x + s * g * 0.6f, r.y + largo - g * 0.2f)
-            drawLine(p.medio(C.BREA, lejos), puno + Offset(-g * 0.5f, 0f), puno + Offset(g * 0.5f, 0f), g * 0.5f)
-            drawLine(p.luz(C.BREA, lejos).copy(alpha = 0.5f), puno + Offset(-g * 0.35f, -g * 0.18f), puno + Offset(g * 0.2f, -g * 0.18f), g * 0.1f)
-        }
-        drawPath(cuerpo, tela(atras.x - wb, atras.x + wb, atras.y, atras.y + lb))
-        clipPath(cuerpo) {
-            repeat(7) { val x = atras.x + az.entre(-0.8f, 0.8f) * wb; val y0 = atras.y + az.entre(0.05f, 0.4f) * lb; val y1 = y0 + az.entre(0.25f, 0.5f) * lb; drawLine(sombraL.copy(alpha = 0.5f), Offset(x, y0), Offset(x + vaiven * 0.5f, y1), 0.012f * k, StrokeCap.Round); drawLine(luzL.copy(alpha = 0.35f), Offset(x + ld * 0.008f * k, y0 + 0.02f * k), Offset(x + ld * 0.008f * k + vaiven * 0.5f, y1 - 0.02f * k), 0.006f * k, StrokeCap.Round) }
-            drawLine(sombraL.copy(alpha = 0.6f), Offset(atras.x - wb, atras.y + lb * 0.38f), Offset(atras.x + wb, atras.y + lb * 0.4f), 0.015f * k)       // la costura de la cintura
-            val parche = Offset(atras.x + az.entre(-0.5f, 0.2f) * wb, atras.y + lb * az.entre(0.5f, 0.7f))
-            drawRect(p.medio(lerp(C.BREA, C.LONA, 0.3f), lejos), parche, Size(0.07f * k, 0.06f * k))
-        }
-        mojar(cuerpo, atras.y, atras.y + lb, atras.x - wb * 1.1f, atras.x + wb * 1.1f)
-        // El cuello de goma y su babero, abajo del todo, con los agujeros del peto.
-        val cu = Offset(atras.x + vaiven, atras.y + lb + 0.02f * k); val bw = 0.2f * k; val bh = 0.09f * k
-        drawOval(p.medio(lerp(C.BREA, C.PLOMO, 0.25f), lejos), Offset(cu.x - bw, cu.y - bh * 0.6f), Size(bw * 2f, bh * 1.3f))
-        drawArc(p.luz(lerp(C.BREA, C.PLOMO, 0.5f), lejos), 190f, 150f, false, Offset(cu.x - bw, cu.y - bh * 0.6f), Size(bw * 2f, bh * 1.3f), style = Stroke(0.012f * k))
-        for (i in 0 until 8) { val an = PI.toFloat() * (0.06f + 0.88f * i / 7f); drawCircle(p.luz(C.LATON, lejos), 0.009f * k, Offset(cu.x + cos(an) * bw * 0.78f, cu.y + sin(an) * bh * 0.42f)) }
-        drawOval(p.sombra(C.BREA, lejos), Offset(cu.x - bw * 0.38f, cu.y - bh * 0.25f), Size(bw * 0.76f, bh * 0.55f))
-        if (mojado > 0.3f) repeat(4) { val q = cu + Offset(az.entre(-0.12f, 0.12f) * k, az.entre(0.08f, 0.2f) * k); drawCircle(p.luz(C.MAR_CLARO, lejos).copy(alpha = 0.6f), 0.009f * k, q) }
-        // ---- El doblez sobre el flechaste.
-        val d = (b - a); val u = d / d.getDistance().coerceAtLeast(0.01f)
-        drawOval(Brush.verticalGradient(listOf(luzL, medioL), m.y - 0.07f * k, m.y + 0.05f * k), Offset(m.x - 0.16f * k, m.y - 0.06f * k), Size(0.32f * k, 0.11f * k))
-        // ---- Delante: las dos piernas cortas, con sus pies de lona vueltos hacia quien mira.
-        for ((i, s) in listOf(-1f, 1f).withIndex()) {
-            val r = m + u * (s * 0.055f * k) + Offset(-0.01f * k * i, 0f); val g = 0.12f * k; val largo = (0.4f + 0.05f * i) * k
-            val pierna = Path().apply { moveTo(r.x - g * 0.5f, r.y); cubicTo(r.x - g * 0.55f, r.y + largo * 0.5f, r.x - g * 0.45f, r.y + largo * 0.85f, r.x - g * 0.4f, r.y + largo); lineTo(r.x + g * 0.45f, r.y + largo); cubicTo(r.x + g * 0.5f, r.y + largo * 0.8f, r.x + g * 0.55f, r.y + largo * 0.4f, r.x + g * 0.5f, r.y); close() }
-            drawPath(pierna, tela(r.x - g * 0.6f, r.x + g * 0.6f, r.y, r.y + largo))
-            clipPath(pierna) { repeat(3) { val y = r.y + largo * az.entre(0.2f, 0.8f); drawArc(sombraL.copy(alpha = 0.5f), 10f, 160f, false, Offset(r.x - g * 0.5f, y), Size(g, g * 0.4f), style = Stroke(0.01f * k)) } }
-            mojar(pierna, r.y, r.y + largo, r.x - g, r.x + g)
-            // El pie de lona: una bola blanda vuelta hacia delante, con la suela gastada.
-            val pie = Offset(r.x + 0.01f * k, r.y + largo + 0.03f * k)
-            drawOval(lerp(medioL, mojadaL, 0.6f * mojado), Offset(pie.x - g * 0.55f, pie.y - g * 0.45f), Size(g * 1.1f, g * 0.95f))
-            drawArc(sombraL, 20f, 140f, false, Offset(pie.x - g * 0.55f, pie.y - g * 0.45f), Size(g * 1.1f, g * 0.95f), style = Stroke(0.012f * k))
-        }
-    }
-
-    /**
-     * Un traje de lona colgado a secar por los hombros de un flechaste (de [a] a [b], en el lienzo), de [k] unidades por
-     * metro, como se tiende un mono: las mangas abiertas a lo largo del cabo y caídas por los codos, con sus puños de goma
-     * negra; el cuerpo flojo, sin nadie dentro; arriba, volcado sobre el cabo, el cuello de goma con su babero ancho y los
-     * agujeros de los pernos del peto, abierto y oscuro; y abajo las dos perneras con sus pies de lona, lo de abajo todavía
-     * mojado. **[Diseño propio]**: así se lee como ropa de buzo tendida, no como una persona ni como un saco.
-     */
-    fun DrawScope.trajeColgado(p: Pincel, a: Offset, b: Offset, k: Float, semilla: Long, mojado: Float = 0.5f, lejos: Float = 0f) {
-        val az = Azar(semilla)
-        val m = (a + b) * 0.5f
-        val lona = lerp(C.LONA, C.MADERA, az.entre(0.05f, 0.18f))
-        val ld = lado(p)
-        val luzL = p.luz(lona, lejos); val medioL = p.medio(lona, lejos); val sombraL = p.sombra(lona, lejos)
-        val mojadaL = p.sombra(lerp(lona, C.LONA_MOJADA, 0.85f), lejos)
-        fun tela(x0: Float, x1: Float) = Brush.horizontalGradient(listOf(if (ld > 0) sombraL else luzL, medioL, if (ld > 0) luzL else sombraL), x0, x1)
-        val hombro = 0.2f * k; val talle = 0.62f * k; val pierna = 0.82f * k; val ancho = 0.17f * k
-        val mojar = Brush.verticalGradient(listOf(Color.Transparent, mojadaL.copy(alpha = 0.8f * mojado)), m.y + talle * 0.6f, m.y + talle + pierna)
-        // Las perneras, juntas y un poco abiertas abajo, con sus pies de lona.
-        for (s in listOf(-1f, 1f)) {
-            val x0 = m.x + s * ancho * 0.45f; val y0 = m.y + talle - 0.04f * k; val g = 0.12f * k
-            val pr = Path().apply { moveTo(x0 - g * 0.5f, y0); cubicTo(x0 - g * 0.55f, y0 + pierna * 0.5f, x0 - g * 0.45f + s * 0.02f * k, y0 + pierna * 0.85f, x0 - g * 0.42f + s * 0.03f * k, y0 + pierna); lineTo(x0 + g * 0.45f + s * 0.03f * k, y0 + pierna); cubicTo(x0 + g * 0.5f + s * 0.02f * k, y0 + pierna * 0.8f, x0 + g * 0.55f, y0 + pierna * 0.4f, x0 + g * 0.5f, y0); close() }
-            drawPath(pr, tela(x0 - g * 0.6f, x0 + g * 0.6f)); drawPath(pr, mojar)
-            clipPath(pr) { repeat(3) { val y = y0 + pierna * az.entre(0.15f, 0.85f); drawArc(sombraL.copy(alpha = 0.5f), 10f, 160f, false, Offset(x0 - g * 0.5f, y), Size(g, g * 0.35f), style = Stroke(0.012f * k)) } }
-            val pie = Offset(x0 + s * 0.035f * k, y0 + pierna + 0.03f * k)
-            drawOval(lerp(medioL, mojadaL, 0.7f * mojado), Offset(pie.x - g * 0.55f, pie.y - g * 0.4f), Size(g * 1.1f, g * 0.85f))
-            drawArc(sombraL, 20f, 140f, false, Offset(pie.x - g * 0.55f, pie.y - g * 0.4f), Size(g * 1.1f, g * 0.85f), style = Stroke(0.012f * k))
-        }
-        // El cuerpo, flojo: de los hombros, en el cabo, a la cintura, con sus pliegues y un remiendo.
-        val cuerpo = Path().apply {
-            moveTo(m.x - hombro, m.y + 0.02f * k); cubicTo(m.x - ancho * 1.05f, m.y + talle * 0.35f, m.x - ancho * 0.95f, m.y + talle * 0.7f, m.x - ancho * 0.9f, m.y + talle)
-            lineTo(m.x + ancho * 0.9f, m.y + talle); cubicTo(m.x + ancho * 0.95f, m.y + talle * 0.7f, m.x + ancho * 1.05f, m.y + talle * 0.35f, m.x + hombro, m.y + 0.02f * k); close()
-        }
-        drawPath(cuerpo, tela(m.x - hombro, m.x + hombro)); drawPath(cuerpo, mojar)
-        clipPath(cuerpo) {
-            repeat(6) { val x = m.x + az.entre(-0.8f, 0.8f) * ancho; val y0 = m.y + az.entre(0.1f, 0.4f) * talle; drawLine(sombraL.copy(alpha = 0.5f), Offset(x, y0), Offset(x + az.entre(-0.01f, 0.01f) * k, y0 + az.entre(0.3f, 0.55f) * talle), 0.012f * k, StrokeCap.Round) }
-            drawLine(sombraL.copy(alpha = 0.6f), Offset(m.x - ancho, m.y + talle * 0.93f), Offset(m.x + ancho, m.y + talle * 0.95f), 0.016f * k)
-            drawRect(p.medio(lerp(C.BREA, C.LONA, 0.3f), lejos), Offset(m.x + az.entre(-0.6f, 0.2f) * ancho, m.y + talle * az.entre(0.4f, 0.65f)), Size(0.07f * k, 0.06f * k))
-        }
-        // Las mangas: abiertas por el cabo hasta el codo y caídas desde ahí, con el puño de goma negra.
-        for (s in listOf(-1f, 1f)) {
-            val h0 = Offset(m.x + s * hombro, m.y + 0.02f * k); val codo = Offset(m.x + s * (hombro + 0.2f * k), m.y + 0.04f * k); val puno = codo + Offset(s * 0.02f * k, 0.42f * k)
-            val g = 0.09f * k
-            drawLine(sombraL, h0, codo, g, StrokeCap.Round); drawLine(medioL, h0 + Offset(0f, -g * 0.15f), codo + Offset(0f, -g * 0.15f), g * 0.7f, StrokeCap.Round)
-            val manga = Path().apply { moveTo(codo.x - g * 0.5f, codo.y); cubicTo(codo.x - g * 0.55f, codo.y + 0.2f * k, puno.x - g * 0.5f, puno.y - 0.1f * k, puno.x - g * 0.45f, puno.y); lineTo(puno.x + g * 0.45f, puno.y); cubicTo(puno.x + g * 0.5f, puno.y - 0.1f * k, codo.x + g * 0.55f, codo.y + 0.2f * k, codo.x + g * 0.5f, codo.y); close() }
-            drawPath(manga, tela(codo.x - g, codo.x + g)); drawPath(manga, mojar)
-            drawLine(p.medio(C.BREA, lejos), puno + Offset(-g * 0.5f, -g * 0.15f), puno + Offset(g * 0.5f, -g * 0.15f), g * 0.55f)
-            drawLine(p.luz(C.BREA, lejos).copy(alpha = 0.55f), puno + Offset(-g * 0.35f, -g * 0.35f), puno + Offset(g * 0.25f, -g * 0.35f), g * 0.12f)
-        }
-        // El cuello de goma y su babero, volcado sobre el cabo: lo que dice que es un traje de buzo.
-        val cu = Offset(m.x, m.y - 0.02f * k); val bw = 0.19f * k; val bh = 0.1f * k
-        drawOval(p.medio(lerp(C.BREA, C.PLOMO, 0.25f), lejos), Offset(cu.x - bw, cu.y - bh * 0.55f), Size(bw * 2f, bh * 1.3f))
-        drawArc(p.luz(lerp(C.BREA, C.PLOMO, 0.55f), lejos), 190f, 150f, false, Offset(cu.x - bw, cu.y - bh * 0.55f), Size(bw * 2f, bh * 1.3f), style = Stroke(0.014f * k))
-        for (i in 0 until 9) { val an = PI.toFloat() * (1.06f + 0.88f * i / 8f); drawCircle(p.luz(C.LATON, lejos), 0.011f * k, Offset(cu.x + cos(an) * bw * 0.8f, cu.y + 0.08f * bh + sin(an) * bh * 0.45f)) }
-        drawOval(p.sombra(C.BREA, lejos), Offset(cu.x - bw * 0.42f, cu.y - bh * 0.15f), Size(bw * 0.84f, bh * 0.55f))
-        if (mojado > 0.3f) repeat(4) { drawCircle(p.luz(C.MAR_CLARO, lejos).copy(alpha = 0.6f), 0.01f * k, Offset(m.x + az.entre(-0.15f, 0.15f) * k, m.y + talle + pierna + az.entre(0.08f, 0.2f) * k)) }
-    }
-
-    /**
      * Un traje de lona tendido a secar doblado por la cintura sobre un cabo (que pasa por [a] y [b], en el lienzo), de [k]
      * unidades por metro, como se tiende un mono mojado, y caído de través, sin la forma de nadie: por el lado de acá
      * cuelgan las dos perneras con sus pies de lona; por el de allá, corrido a lo largo del cabo, el cuerpo del revés, que
@@ -594,16 +355,6 @@ internal object PiezasAbismo {
             val pie = Offset(r.x + (if (i == 0) -0.03f else 0.06f) * k, r.y + lg + 0.03f * k)
             drawOval(lerp(medioL, mojadaL, 0.7f * mojado), Offset(pie.x - gp * 0.6f, pie.y - gp * 0.4f), Size(gp * 1.2f, gp * 0.8f))
             drawArc(sombraL, 20f, 140f, false, Offset(pie.x - gp * 0.6f, pie.y - gp * 0.4f), Size(gp * 1.2f, gp * 0.8f), style = Stroke(0.012f * k))
-        }
-    }
-
-    /** La silueta del traje colgado (para su sombra). */
-    fun trajeSilueta(cuello: Offset, alto: Float): Path {
-        val u = alto / 1.7f
-        return Path().apply {
-            moveTo(cuello.x - 0.14f * u, cuello.y); lineTo(cuello.x - 0.38f * u, cuello.y + 0.22f * u); lineTo(cuello.x - 0.4f * u, cuello.y + 0.92f * u)
-            lineTo(cuello.x - 0.22f * u, cuello.y + 1.68f * u); lineTo(cuello.x + 0.22f * u, cuello.y + 1.68f * u); lineTo(cuello.x + 0.4f * u, cuello.y + 0.92f * u)
-            lineTo(cuello.x + 0.38f * u, cuello.y + 0.22f * u); lineTo(cuello.x + 0.14f * u, cuello.y); close()
         }
     }
 

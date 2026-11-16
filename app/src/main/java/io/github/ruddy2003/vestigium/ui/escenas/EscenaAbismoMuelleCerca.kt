@@ -35,7 +35,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.llama
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoDeFoco
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombra
 import io.github.ruddy2003.vestigium.vidas.Azar

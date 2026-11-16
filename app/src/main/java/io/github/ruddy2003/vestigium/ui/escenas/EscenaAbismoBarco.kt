@@ -48,7 +48,8 @@ import kotlin.math.sqrt
  * - **El mar** ([MarAbismo], `EscenaAbismoBarcoMar.kt`): el cielo, la costa, los otros barcos, el agua transparente con su
  *   fondo, el bote, los pelícanos.
  * - **El aparejo** ([AparejoAbismo], `EscenaAbismoBarcoAparejo.kt`): el trinquete, la botavara izada con las ristras, la
- *   jarcia y, delante, el palo mayor con los cascos y el traje colgados (el marco de la izquierda y de arriba).
+ *   jarcia, el tendedero con el traje y, delante, el palo mayor con los cascos colgados (el marco de la izquierda y de
+ *   arriba).
  * - **La cubierta** ([CubiertaAbismo], `EscenaAbismoBarcoCubierta.kt`): las tablas, la borda, la capa de sombras y lo que
  *   hay encima: la bomba, la escotilla con el objeto del día, la tina, las botas, la manguera, la escala, las esponjas,
  *   las mantas, la hornacina del icono.
@@ -208,10 +209,10 @@ internal object BarcoAbismo {
     }
 
     /**
-     * Cuántos trajes de lona hay tendidos a secar en el cabo de las ristras: uno de día (el de recambio por la mañana, el
-     * de la última bajada por la tarde) y ninguno de noche (doblados, en la bodega) **[Diseño propio]**. Uno solo, grande y
-     * cerca, para que se lea como traje de buzo (con el cuello de goma y los puños); varios chicos no se leían. El día que el
-     * traje es el objeto, ninguno: lo pinta el objeto.
+     * Cuántos trajes de lona hay tendidos a secar en el tendedero ([AparejoAbismo.TENDEDERO]): uno de día (el de recambio
+     * por la mañana, el de la última bajada por la tarde) y ninguno de noche (doblados, en la bodega) **[Diseño propio]**.
+     * Uno solo, grande y cerca, para que se lea como traje de buzo (con el cuello de goma y los puños); varios chicos no se
+     * leían. El día que el traje es el objeto, ninguno: lo pinta el objeto.
      */
     internal fun trajesASecar(m: Momento): Int {
         if (EscenaAbismo.lugar(m) != EscenaAbismo.Lugar.BARCO || !ObjetosAbismo.elCuadroPinta(m, "escafandra")) return 0

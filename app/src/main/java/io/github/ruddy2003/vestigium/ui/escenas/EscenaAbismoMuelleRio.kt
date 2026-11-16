@@ -297,7 +297,4 @@ internal object RioMuelle {
             }
         }
     }
-
-    @Suppress("unused")
-    private fun Azar.signo(): Float = if (real() > 0.5f) 1f else -1f
 }

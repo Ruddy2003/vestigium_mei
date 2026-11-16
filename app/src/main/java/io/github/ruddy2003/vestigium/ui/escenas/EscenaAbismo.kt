@@ -61,7 +61,6 @@ internal object ColorAbismo {
     val MADERA_OSC = lerp(MADERA, BREA, 0.5f)
     val MADERA_GRIS = lerp(MADERA, LONA, 0.45f)                                // la madera lavada por el mar
     val LONA_MOJADA = lerp(LONA, BREA, 0.35f)
-    val BLANCO_SUCIO = lerp(BLANCO, MADERA, 0.22f)
     val PALMA = lerp(HIERBA, MAR_HONDO, 0.25f)
     val ORO = lerp(LATON, Color(0xFFFFE6A0), 0.3f)
     val LUNA = lerp(SOMBRA, Color.White, 0.66f)
@@ -86,7 +85,7 @@ internal object ColorAbismo {
  * el mar») ([provisional]).
  *
  * Sin personas: que Nikos está abajo se cuenta con la manguera y la cuerda de vida tensas, la bomba en marcha, el collar
- * de burbujas, el gancho vacío de su casco y la escala echada ([buzoAbajo]). La enfermedad y los muertos van fuera de
+ * de burbujas, su casco que falta en la cubierta y la escala echada ([buzoAbajo]). La enfermedad y los muertos van fuera de
  * escena, como en el cuento.
  *
  * Lo que cuenta, igual que el cuento (todo sale de la ficha; ver el comentario de su calendario en `AnioG6.kt`):
@@ -227,7 +226,7 @@ internal object EscenaAbismo : EscenaVida {
     /**
      * Si Nikos está abajo, en el fondo: en el barco, a la hora de las inmersiones, un día de bajar. Entonces la bomba
      * está en marcha, la manguera y la cuerda de vida bajan tensas al agua, sube el collar de burbujas y falta su casco en
-     * el gancho. **[Diseño propio]**: «Baja una y otra vez durante la mañana»; el cuadro lo pinta abajo toda la mañana.
+     * la cubierta. **[Diseño propio]**: «Baja una y otra vez durante la mañana»; el cuadro lo pinta abajo toda la mañana.
      */
     internal fun buzoAbajo(m: Momento): Boolean = lugar(m) == Lugar.BARCO && fase(m) == Fase.INMERSION && !diaSinBajar(m)
 
@@ -241,7 +240,11 @@ internal object EscenaAbismo : EscenaVida {
 
     internal fun escala(m: Momento): Escala = if (lugar(m) == Lugar.BARCO && fase(m) == Fase.INMERSION && !diaSinBajar(m)) Escala.ECHADA else Escala.RECOGIDA
 
-    /** Los cascos de cobre colgados de sus ganchos (los tres buzos del barco): uno menos mientras Nikos está abajo. */
+    /**
+     * Los cascos de cobre que no lleva nadie (los de los tres buzos del barco): uno menos mientras Nikos está abajo. El
+     * barco cuelga del palo los de los otros dos (`AparejoAbismo.cascosEnElPalo`) y deja el de Nikos en la cubierta
+     * (`BarcoAbismo.cascoEnCubierta`).
+     */
     internal fun cascosColgados(m: Momento): Int = if (buzoAbajo(m)) 2 else 3
 
     /**

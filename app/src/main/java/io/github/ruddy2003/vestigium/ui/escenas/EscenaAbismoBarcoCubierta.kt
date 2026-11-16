@@ -33,7 +33,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.monton
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.radiosEnMarcha
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.redDeEsponjas
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.tina
-import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.trajeEnLaBorda
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Cosa
@@ -48,7 +47,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.llama
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoFijo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sombra
 import io.github.ruddy2003.vestigium.vidas.Azar
@@ -63,7 +61,7 @@ import kotlin.math.sin
  * - **a las 7:00 se bucea:** la bomba gira, la manguera y la cuerda de vida pasan por la regala, la escala está echada,
  *   la cubierta mojada junto a ella; suben las primeras esponjas negras; un solo traje a secar;
  * - **a las 13:00 se limpian esponjas:** el montón negro por limpiar, el de las limpias, la tina, el mazo, el cubo, las
- *   ristras a medio ensartar sobre la escotilla, la red colgada de la borda, dos trajes a secar;
+ *   ristras a medio ensartar sobre la escotilla, la red colgada de la borda, el traje a secar;
  * - **a las 21:00 se duerme:** las mantas tendidas, la cubierta despejada, el farol bajo y la lamparilla del icono.
  * Abajo a la derecha, en su candelero, la hornacina del icono con su lamparilla «que no se apaga nunca».
  */

@@ -33,7 +33,7 @@ import kotlin.math.sqrt
 // de buzo de latón: el peto, «una placa ancha al pie del cuello, con pernos» (#B8913E, pernos #EBD27E), y el casco,
 // «cúpula opaca que tapa las orejas, ojo de buey al frente por el que se ve la cara, otro arriba, pernos en la base y
 // la válvula del aire atrás» (latón #C9A24A, válvula #8C6A1F, vidrio #A8DCE6). Es el casco de cobre y bronce de Nikos
-// («tres ventanillas», «la válvula para que salga el aire viejo»), y en el barco hay otros tres colgados.
+// («tres ventanillas», «la válvula para que salga el aire viejo»); en el barco hay otros dos colgados del palo.
 //
 // Sus dos acciones propias, las del de pixel (`gato20c.py`): nadar entre burbujas (de pie; las burbujas suben de la
 // válvula del casco) y seguir la luz de un pez abisal (sentado; el rape con su señuelo de luz verde agua). En el cuadro

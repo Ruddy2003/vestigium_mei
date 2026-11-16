@@ -27,8 +27,9 @@ import io.github.ruddy2003.vestigium.vidas.Semilla
  *   sus ristras chicas, el hornillo de la proa y las banderas de los días de fiesta.
  * - **Cerca** ([marco]): los obenques de estribor con sus flechastes (la diagonal que sube de la borda y cruza el cielo),
  *   el cabo del palo mayor a los obenques con **las ristras de esponjas** colgadas a secar (más o menos según el arco), y
- *   el palo mayor, cerca, cortado por el borde de la izquierda y por arriba, con sus ganchos: **los cascos de cobre** y el
- *   traje de lona colgados a secar. El cobre es lo que la luz enciende.
+ *   el palo mayor, cerca, cortado por el borde de la izquierda y por arriba, con sus ganchos: **los cascos de cobre** de
+ *   los otros buzos. Entre los obenques de los dos palos, el tendedero con el traje de lona (de día). El cobre es lo que
+ *   la luz enciende.
  */
 internal object AparejoAbismo {
     private val C = ColorAbismo
@@ -96,8 +97,7 @@ internal object AparejoAbismo {
         drawLine(p.sombra(C.MADERA_OSC), bot0, bot1, 0.12f * k, StrokeCap.Round)
         drawLine(p.por(C.LONA, 0.3f), bot0 + Offset(0f, -0.14f * k), bot1 + Offset(0f, -0.12f * k), 0.24f * k, StrokeCap.Round)
         drawLine(p.luz(C.LONA).copy(alpha = 0.6f), bot0 + Offset(0f, -0.22f * k), bot1 + Offset(0f, -0.2f * k), 0.06f * k, StrokeCap.Round)
-        // Los obenques de estribor del trinquete, con sus flechastes, y en ellos los trajes de lona tendidos a secar (uno
-        // por la mañana, dos a la tarde) **[Diseño propio]**: ahí se ven enteros, como ropa en un tendedero, sin tapar el agua.
+        // Los obenques de estribor del trinquete, con sus flechastes.
         val k8 = B.k(z(OBENQUES_PROA[0]))
         for (i in OBENQUES_PROA.indices) cabo(p, listOf(p(OBENQUES_PROA[i]), p(obenqueProa(i, 7f))), 0.03f * k8, lerp(C.CANAMO, C.BREA, 0.55f))
         for (j in 1..12) { val h = 0.95f + 0.36f * j; drawLine(p.sombra(C.CANAMO).copy(alpha = 0.8f), p(obenqueProa(0, h)), p(obenqueProa(1, h)), 0.014f * k8) }
@@ -169,7 +169,7 @@ internal object AparejoAbismo {
      * El palo mayor, cerca, cortado por la izquierda y por arriba: redondo, con la cara del sol encendida y la otra en
      * sombra de color, la veta larga, los nudos y las grietas de la madera, los zunchos de hierro con sus remaches y su
      * chorrera de óxido, la trinca de cabo donde se amarra el de las ristras, la brea y el roce junto a los ganchos; al pie,
-     * el cabillero con sus cabillas y sus adujas; y los tres ganchos con los cascos colgados (o vacío el de Nikos).
+     * el cabillero con sus cabillas y sus adujas; y los dos ganchos con los cascos de los otros buzos ([cascosEnElPalo]).
      */
     private fun DrawScope.paloMayor(v: BarcoAbismo.Vista) {
         val m = v.m; val p = v.p
