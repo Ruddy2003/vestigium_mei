@@ -3258,17 +3258,29 @@ object EstanteRomano : DisenoBiblioteca {
     }
 }
 /**
- * Grecia: el estante jónico. El muro pintado de rojo tierra, las columnas de los costados con su fuste estriado, su capitel
- * de dos volutas y su basa de toros, y las tablas de mármol con el cimacio de óvulos y dardos en el canto; el mes va en una
- * placa de mármol con filetes azules. Arriba, el entablamento: cornisa con dentículos, el friso con el meandro y el
- * arquitrabe de tres fajas; encima, una kylix de barniz negro con su banda de palmetas en rojo y una lámpara de aceite.
- * Abajo, un escalón de mármol sobre el piso de baldosas. Cada entrada es un pinax: un díptico de madera con la cera oscura
- * hundida, el día y el mes incisos con el estilo, el cordón que une las hojas y, al pie, un ramito de olivo inciso (de
- * noche, una luna); se ven más hojas por el canto cuanto más escribiste. De noche se enciende la lámpara y llega la lechuza
- * con sus ojos. La tapa es ese pinax grande y de frente: el marco con su meandro tallado y el estilo apoyado, la fecha
+ * Grecia: el rincón del maestro de letras (el grammatistés) en una casa ática del siglo V a. C. El muro es de revoque pintado
+ * por zonas: arriba, un friso encalado con el meandro pintado en rojo, ya gastado; un filete rojo y otro azul; el paño grande
+ * azul apagado, con sus pinceladas, grietas, un desconchón y el abecedario que un niño rayó con un clavo; abajo, la franja roja
+ * y el zócalo oscuro sobre el suelo de tierra. Contra él, un armazón de madera vieja sin fondo: un tablero ancho que vuela
+ * sobre dos postes, las tablas gruesas clavijadas en ellos (el mes va en un leukoma, la tablilla blanqueada de los avisos,
+ * clavado en el canto) y una laja bajo cada poste. Encima, lo de escribir y lo de aprender: el escudo de entrenamiento apoyado
+ * en el muro, con su delfín (lo primero que se ve); la funda de piel del aulós doble y el saquito de las tabas, colgados; un haz
+ * de rollos de papiro atados; la lechuza de terracota; un lécito blanco con una rama de olivo fresca; y, bajo el nicho de la
+ * lucerna, el tintero con su cálamo, el platito del agua con la esponja y unas tabas. Al pie, el asiento plegable con el manto
+ * doblado, unas sandalias bajo el mueble y el cesto grande de mimbre con rollos, cortado por el borde. Cada entrada es una de
+ * tres cosas, según su semilla: un pinax (el díptico de boj, con el día y el mes incisos en su ventana de cera, las otras hojas
+ * por el canto y el cordón del color del ánimo), un políptico (varias tablillas vistas de canto, ceñidas por dos correas del
+ * color del ánimo, con su etiqueta de hueso y su sello de barro) o un rollo de papiro de pie en su funda teñida del color del
+ * ánimo, con la etiqueta colgante (el sillybos); cuanto más escribiste, más hojas, más tablillas o más vueltas; al pie llevan
+ * un ramito de olivo (en los Sueños, la luna). Donde una repisa queda libre hay lo del oficio: una tablilla apoyada en la
+ * última, el estilo y la espátula, el cesto de los óstraka, una pila de tablillas atadas, una lamparita, un lécito tumbado. De
+ * noche solo arde la lucerna de barro de dos picos en su nicho: su halo en el revoque, el filo cálido en lo que la mira y la
+ * luz que baja por el mueble hasta perderse en el azul violeta, donde solo se leen las etiquetas. En los Sueños se enciende la
+ * lucerna y a la lechuza de terracota le brillan los ojos. El dibujo del mueble y de las entradas está en
+ * [MuebleEstanteHeleno]. La tapa es el pinax grande y de frente: el marco con su meandro tallado y el estilo apoyado, la fecha
  * incisa en la cera, el olivo (de noche, la luna y la lechuza) y las otras hojas por el canto; al abrirse, la hoja de fuera
- * gira sobre su cordón y deja ver la de dentro, llena de renglones. Distinto del Ideario, que es la stoa dórica con sus
- * ánforas y sus óstraka.
+ * gira sobre su cordón y deja ver la de dentro, llena de renglones. Distinto del Ideario, que es el anaquel de ciprés del
+ * cuarto de las vasijas.
  */
 object EstanteHeleno : DisenoBiblioteca {
     private val MARMOL = Color(0xFFEEE8DA)
@@ -3322,120 +3334,24 @@ object EstanteHeleno : DisenoBiblioteca {
     /** El sobre en modo oscuro: la penumbra de antes, apenas fría. */
     private fun ccm(x: Color, oscuro: Boolean): Color = if (oscuro) mezcla(x, NOCHE_FRIA, 0.55f) else x
 
-    override val corona = 0.3f
-    override val base = 0.1f
-    override val lado = 0.07f
-    override val altoRepisa: Dp = 104.dp
-    override val tabla: Dp = 16.dp
-    override val separa: Dp = 3.dp
+    override val corona = MuebleEstanteHeleno.CORONA
+    override val base = MuebleEstanteHeleno.BASE
+    override val lado = MuebleEstanteHeleno.LADO
+    override val altoRepisa: Dp = MuebleEstanteHeleno.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteHeleno.TABLA
+    override val separa: Dp = MuebleEstanteHeleno.SEPARA
     override val letra: FontFamily = Letra.garamond
+    /** Estante rehecho: el aura solo sale al tocar (ver [DisenoBiblioteca.auraEnReposo]). */
+    override val auraEnReposo = false
 
-    override fun ancho(palabras: Int): Dp = (24 + (palabras / 40).coerceAtMost(18)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.72f + 0.2f * azar(semilla, 1)
+    override fun ancho(palabras: Int): Dp = MuebleEstanteHeleno.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteHeleno.alto(semilla, palabras)
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = tm(x, oscuro, noche)
-        // El muro pintado, con las manchas del revoque.
-        val cuerpo = Rect(0f, d.corona.bottom, w, d.base.top)
-        drawRect(c(MURO), cuerpo.topLeft, cuerpo.size)
-        for (j in 0 until 10) {
-            drawOval(c(MURO_OSC).copy(alpha = 0.35f), Offset(w * azar(j, 61), cuerpo.top + cuerpo.height * azar(j, 62)),
-                Size((14 + 20 * azar(j, 63)) * u, (6 + 8 * azar(j, 64)) * u))
-        }
-        // El revoque pintado a mano: pinceladas claras y oscuras que rompen el rojo liso.
-        pinceladas(cuerpo, c(MURO_OSC), 61, 40, u, 0.09f)
-        pinceladas(cuerpo, c(TERRACOTA), 67, 26, u, 0.07f)
-        // Cada repisa: la sombra de la tabla de arriba y de las columnas.
-        d.repisas.forEach { r ->
-            drawRect(sombraMueble(if (noche) 0.42f else 0.32f), r.topLeft, Size(r.width, 8 * u))
-            drawRect(sombraMueble(0.15f), Offset(r.left, r.top + 8 * u), Size(r.width, 6 * u))
-            drawRect(sombraMueble(0.18f), r.topLeft, Size(5 * u, r.height))
-            drawRect(sombraMueble(0.12f), Offset(r.right - 4 * u, r.top), Size(4 * u, r.height))
-        }
-        // La sombra de la columna izquierda en el muro, a su derecha: la luz viene de arriba a la izquierda.
-        drawRect(sombraMueble(0.16f), Offset(d.izquierda.right, d.izquierda.top), Size(d.izquierda.width * 0.45f, d.izquierda.height))
-        // Las columnas jónicas de los costados.
-        listOf(d.izquierda, d.derecha).forEach { r ->
-            val fuste = Rect(r.left + r.width * 0.16f, r.top + r.width * 0.55f, r.right - r.width * 0.16f, r.bottom - r.width * 0.4f)
-            drawRect(c(MARMOL), fuste.topLeft, fuste.size)
-            for (j in 1..4) {
-                val x = fuste.left + fuste.width * j / 5f
-                drawLine(c(MARMOL_OSC), Offset(x, fuste.top), Offset(x, fuste.bottom), 1.4f * u)
-                drawLine(c(MARMOL_LUZ), Offset(x + 1.2f * u, fuste.top), Offset(x + 1.2f * u, fuste.bottom), 0.6f * u)
-            }
-            drawRect(sombraMueble(0.16f), Offset(fuste.right - fuste.width * 0.2f, fuste.top), Size(fuste.width * 0.2f, fuste.height))
-            // El capitel: el ábaco, el canal, las dos volutas y los óvulos del equino.
-            val capitel = Rect(r.left, r.top, r.right, fuste.top)
-            drawRect(c(MARMOL_LUZ), capitel.topLeft, Size(capitel.width, capitel.height * 0.25f))
-            drawRect(c(MARMOL), Offset(capitel.left, capitel.top + capitel.height * 0.25f), Size(capitel.width, capitel.height * 0.5f))
-            val rv = capitel.height * 0.32f
-            listOf(capitel.left + rv, capitel.right - rv).forEach { vx ->
-                val vc = Offset(vx, capitel.top + capitel.height * 0.58f)
-                drawCircle(c(MARMOL), rv, vc)
-                drawCircle(c(MARMOL_SOMBRA), rv, vc, style = Stroke(1f * u))
-                drawCircle(c(MARMOL_SOMBRA), rv * 0.62f, vc, style = Stroke(0.8f * u))
-                drawCircle(c(MARMOL_SOMBRA), rv * 0.26f, vc)
-            }
-            var ox = capitel.left + rv * 2.4f
-            while (ox < capitel.right - rv * 2.2f) {
-                drawOval(c(MARMOL_OSC), Offset(ox - 1.5f * u, capitel.top + capitel.height * 0.6f), Size(3 * u, capitel.height * 0.3f))
-                ox += 4.5f * u
-            }
-            // La basa: dos toros, el de abajo más ancho.
-            val alturaBasa = r.bottom - fuste.bottom
-            drawRoundRect(c(MARMOL_LUZ), Offset(r.left + r.width * 0.08f, fuste.bottom), Size(r.width * 0.84f, alturaBasa * 0.45f), CornerRadius(3 * u))
-            drawRoundRect(c(MARMOL), Offset(r.left, fuste.bottom + alturaBasa * 0.45f), Size(r.width, alturaBasa * 0.55f), CornerRadius(3 * u))
-            drawLine(c(MARMOL_SOMBRA), Offset(r.left, fuste.bottom + alturaBasa * 0.45f), Offset(r.right, fuste.bottom + alturaBasa * 0.45f), 0.8f * u)
-        }
-        // Las tablas de mármol con su cimacio de óvulos y dardos.
-        d.tablas.forEach { r ->
-            drawRect(c(MARMOL), r.topLeft, r.size)
-            drawRect(c(MARMOL_LUZ), r.topLeft, Size(r.width, 2.2f * u))
-            // El canto de arriba toma la luz: crema de día, el filo tibio de la lámpara de noche.
-            drawRect(filoMueble(oscuro, if (oscuro) 0.4f else 0.5f), r.topLeft, Size(r.width, 1.2f * u))
-            val oy = r.top + r.height * 0.58f
-            var ox = r.left + 4 * u
-            while (ox < r.right - 2 * u) {
-                drawOval(c(MARMOL_OSC), Offset(ox - 2.2f * u, oy - r.height * 0.26f), Size(4.4f * u, r.height * 0.52f))
-                drawOval(c(MARMOL_LUZ), Offset(ox - 1.2f * u, oy - r.height * 0.18f), Size(2.4f * u, r.height * 0.36f))
-                drawLine(c(MARMOL_SOMBRA), Offset(ox + 3.8f * u, oy - r.height * 0.22f), Offset(ox + 3.8f * u, oy + r.height * 0.22f), 0.8f * u)
-                ox += 7.6f * u
-            }
-            drawRect(sombraMueble(0.22f), Offset(r.left, r.bottom), Size(r.width, 3.5f * u))
-        }
-        // El rótulo de cada mes: una placa de mármol con dos filetes azules.
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRect(sombraMueble(0.15f), Offset(r.left + 1.2f * u, r.top + 1.2f * u), r.size)
-            drawRect(c(MARMOL_LUZ), r.topLeft, r.size)
-            drawRect(c(MARMOL_SOMBRA), r.topLeft, r.size, style = Stroke(0.8f * u))
-            drawLine(c(EGEO), Offset(r.left + 2 * u, r.top + 1.6f * u), Offset(r.right - 2 * u, r.top + 1.6f * u), 0.8f * u)
-            drawLine(c(EGEO), Offset(r.left + 2 * u, r.bottom - 1.6f * u), Offset(r.right - 2 * u, r.bottom - 1.6f * u), 0.8f * u)
-            textoEn(medidor, p.texto, Rect(r.left + 4 * u, r.top + 2 * u, r.right - 4 * u, r.bottom - 2 * u), letra, c(BARNIZ), 10.5f, peso = FontWeight.Medium, espaciado = 1f, minimo = 5f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el escalón de mármol, con sus juntas, y el piso de baldosas de barro.
-        val b = d.base
-        val escalon = Rect(b.left, b.top, b.right, b.top + b.height * 0.5f)
-        drawRect(c(MARMOL), escalon.topLeft, escalon.size)
-        vetas(escalon, c(MARMOL_OSC).copy(alpha = 0.3f), 71, densidad = 0.25f, grosor = 0.6f, ondulacion = 3f)
-        drawRect(c(MARMOL_LUZ), escalon.topLeft, Size(escalon.width, 2.4f * u))
-        drawRect(sombraMueble(0.14f), Offset(escalon.left, escalon.bottom - escalon.height * 0.3f), Size(escalon.width, escalon.height * 0.3f))
-        var jx = escalon.left + 30 * u
-        while (jx < escalon.right) { drawLine(c(MARMOL_SOMBRA), Offset(jx, escalon.top + 2.4f * u), Offset(jx, escalon.bottom), 0.8f * u); jx += 54 * u }
-        val piso = escalon.bottom
-        drawRect(c(BALDOSA), Offset(0f, piso), Size(w, h - piso))
-        drawRect(sombraMueble(0.25f), Offset(0f, piso), Size(w, 3 * u))
-        var bx = 0f
-        while (bx < w) { drawLine(sombraMueble(0.22f), Offset(bx, piso), Offset(bx, h), 0.8f * u); bx += 24 * u }
-        var by = piso + 10 * u
-        while (by < h) { drawLine(sombraMueble(0.22f), Offset(0f, by), Offset(w, by), 0.8f * u); by += 12 * u }
-        pinceladas(Rect(0f, piso, w, h), c(MURO_OSC), 73, 12, u, 0.08f)
-        // El grano de papel, al final (regla 7).
-        granoMueble(Rect(0f, 0f, w, h), oscuro)
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteHeleno) { estante(d, medidor, oscuro, noche) }
+
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteHeleno) { volumen(v, medidor, oscuro) }
 
     /** El meandro: un gancho cuadrado por paso, entre dos líneas que lo enmarcan. */
     private fun DrawScope.meandro(m: Rect, color: Color) {
@@ -3456,84 +3372,6 @@ object EstanteHeleno : DisenoBiblioteca {
             x += s * 1.1f
         }
         drawPath(p, color, style = Stroke(maxOf(1f * u, s * 0.11f)))
-    }
-
-    /** El entablamento con el meandro, la kylix, la lámpara (encendida de noche) y, de noche, la lechuza. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = tm(x, oscuro, noche)
-        drawRect(c(MURO), r.topLeft, r.size)
-        val cornisa = r.top + r.height * 0.5f
-        drawRect(c(MARMOL_LUZ), Offset(r.left, cornisa), Size(r.width, r.height * 0.06f))
-        drawRect(sombraMueble(0.2f), Offset(r.left, cornisa + r.height * 0.06f), Size(r.width, 1.6f * u))
-        val dientes = cornisa + r.height * 0.06f + 1.6f * u
-        val altoDiente = r.height * 0.06f
-        drawRect(c(MARMOL_SOMBRA), Offset(r.left, dientes), Size(r.width, altoDiente))
-        var x = r.left + 1.5f * u
-        while (x < r.right) { drawRect(c(MARMOL), Offset(x, dientes), Size(4 * u, altoDiente)); x += 6.5f * u }
-        // El friso con el meandro.
-        val friso = Rect(r.left, dientes + altoDiente, r.right, dientes + altoDiente + r.height * 0.16f)
-        drawRect(c(MARMOL_LUZ), friso.topLeft, friso.size)
-        meandro(friso.deflate(friso.height * 0.16f), c(EGEO))
-        // El arquitrabe de tres fajas.
-        val arq = Rect(r.left, friso.bottom, r.right, r.bottom)
-        for (j in 0 until 3) {
-            val y0 = arq.top + arq.height * j / 3f
-            drawRect(c(if (j % 2 == 0) MARMOL else MARMOL_LUZ), Offset(arq.left, y0), Size(arq.width, arq.height / 3f))
-            drawLine(c(MARMOL_SOMBRA), Offset(arq.left, y0), Offset(arq.right, y0), 0.7f * u)
-        }
-        drawRect(sombraMueble(0.22f), Offset(r.left, r.bottom - 2 * u), Size(r.width, 2 * u))
-        // La kylix: el pie, el tallo y la copa de barniz negro con su banda de palmetas rojas.
-        val kx = r.left + r.width * 0.3f
-        val kw = r.width * 0.16f
-        val kh = r.height * 0.13f
-        val pieTop = cornisa - r.height * 0.07f
-        drawOval(c(BARNIZ), Offset(kx - kw * 0.22f, cornisa - r.height * 0.025f), Size(kw * 0.44f, r.height * 0.025f))
-        drawRect(c(BARNIZ), Offset(kx - kw * 0.05f, pieTop), Size(kw * 0.1f, cornisa - pieTop - r.height * 0.012f))
-        val labio = pieTop - kh
-        val copa = Rect(kx - kw / 2, labio - kh, kx + kw / 2, labio + kh)
-        listOf(-1f, 1f).forEach { s ->
-            drawOval(c(BARNIZ), Offset(kx + s * kw * 0.5f - kw * 0.08f, labio + kh * 0.05f), Size(kw * 0.16f, kh * 0.32f), style = Stroke(1.4f * u))
-        }
-        drawArc(c(BARNIZ), 0f, 180f, true, copa.topLeft, copa.size)
-        val cuenco = Path().apply { arcTo(copa, 0f, 180f, false); close() }
-        clipPath(cuenco) {
-            drawRect(c(TERRACOTA), Offset(copa.left, labio + kh * 0.18f), Size(copa.width, kh * 0.45f))
-            var px = copa.left + kw * 0.12f
-            while (px < copa.right) {
-                val pb = Offset(px, labio + kh * 0.6f)
-                for (a in -2..2) drawLine(c(BARNIZ), pb, Offset(pb.x + a * kh * 0.09f, pb.y - kh * 0.36f), 0.7f * u)
-                px += kw * 0.2f
-            }
-        }
-        drawLine(c(TERRACOTA), Offset(copa.left, labio), Offset(copa.right, labio), 1f * u)
-        // La lámpara de aceite: barro con barniz arriba, su pico y su asa.
-        val lx = r.left + r.width * 0.6f
-        val lampara = Rect(lx - 8 * u, cornisa - 7 * u, lx + 6 * u, cornisa)
-        val pico = Path().apply {
-            moveTo(lampara.right - 2 * u, cornisa - 5.5f * u); lineTo(lampara.right + 7 * u, cornisa - 4.5f * u)
-            lineTo(lampara.right + 7 * u, cornisa - 2 * u); lineTo(lampara.right - 2 * u, cornisa - 1 * u); close()
-        }
-        drawPath(pico, c(BARNIZ))
-        drawOval(c(TERRACOTA), lampara.topLeft, lampara.size)
-        drawArc(c(BARNIZ), 180f, 180f, true, lampara.topLeft, lampara.size)
-        drawCircle(c(TERRACOTA), 1.4f * u, Offset(lx - 1 * u, cornisa - 5.5f * u))
-        drawArc(c(BARNIZ), 90f, 180f, false, Offset(lampara.left - 3 * u, cornisa - 6 * u), Size(5 * u, 5 * u), style = Stroke(1.2f * u))
-        val boca = Offset(lampara.right + 6.5f * u, cornisa - 4.5f * u)
-        if (noche) {
-            // La lámpara encendida: el único degradado del mueble.
-            mancha(boca, r.height * 0.35f, LLAMA.copy(alpha = 0.4f))
-            val llama = Path().apply {
-                moveTo(boca.x - 1.8f * u, boca.y)
-                quadraticTo(boca.x - 2.2f * u, boca.y - 4 * u, boca.x + 0.4f * u, boca.y - 8 * u)
-                quadraticTo(boca.x + 2.4f * u, boca.y - 4 * u, boca.x + 1.8f * u, boca.y)
-                close()
-            }
-            drawPath(llama, LLAMA)
-            lechuza(Offset(r.left + r.width * 0.85f, cornisa), r.height * 0.3f)
-        } else {
-            drawLine(c(BARNIZ), boca, Offset(boca.x + 0.4f * u, boca.y - 2.4f * u), 1f * u)
-        }
     }
 
     /** La lechuza posada en la cornisa, con sus ojos encendidos (sale de noche). */
@@ -3563,56 +3401,6 @@ object EstanteHeleno : DisenoBiblioteca {
         }
         drawPath(pico, PICO)
         listOf(-1f, 1f).forEach { s -> drawLine(PICO, Offset(pie.x + s * alto * 0.07f, pie.y - 2 * u), Offset(pie.x + s * alto * 0.09f, pie.y), 1.2f * u) }
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = tm(x, oscuro, v.noche)
-        val base = MADERAS[(v.semilla and 0x7fffffff) % MADERAS.size]
-        val madera = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        drawRoundRect(madera, Offset.Zero, size, CornerRadius(1.2f * u))
-        drawRect(luzMueble(0.1f), Offset.Zero, Size(w * 0.1f, h))
-        // Las hojas del díptico vistas por el canto derecho: más cuanto más escribiste.
-        val hojas = 2 + (v.lleno * 3).toInt()
-        val canto = minOf(w * 0.22f, hojas * 2.2f * u)
-        drawRect(sombraMueble(0.18f), Offset(w - canto, 0f), Size(canto, h))
-        for (j in 1 until hojas) {
-            val x = w - canto + canto * j / hojas
-            drawLine(sombraMueble(0.35f), Offset(x, 0f), Offset(x, h), 0.6f * u)
-        }
-        // La cera oscura, hundida en el marco de madera.
-        val cera = Rect(w * 0.16f, h * 0.06f, w - canto - w * 0.06f, h * 0.94f)
-        drawRect(c(CERA), cera.topLeft, cera.size)
-        drawRect(sombraMueble(0.35f), cera.topLeft, Size(cera.width, 2 * u))
-        drawRect(sombraMueble(0.2f), cera.topLeft, Size(1.6f * u, cera.height))
-        drawRect(luzMueble(0.08f), Offset(cera.left, cera.bottom - 1.2f * u), Size(cera.width, 1.2f * u))
-        // El día y el mes incisos con el estilo.
-        textoEn(medidor, v.dia, Rect(cera.left, cera.top + 2 * u, cera.right, cera.top + cera.height * 0.26f), letra, c(INCISO), 15f, peso = FontWeight.SemiBold)
-        textoEn(medidor, v.mes, Rect(cera.left + 1 * u, cera.top + cera.height * 0.29f, cera.right - 1 * u, cera.top + cera.height * 0.78f), letra, c(INCISO).copy(alpha = 0.85f), 9f, vertical = true, minimo = 4.5f)
-        // Al pie, un ramito de olivo inciso; de noche, una luna.
-        val cr = Offset(cera.center.x, cera.top + cera.height * 0.88f)
-        val tam = minOf(cera.width * 0.32f, cera.height * 0.06f)
-        if (v.noche) {
-            drawCircle(LUNA, tam, cr)
-            drawCircle(c(CERA), tam * 0.82f, Offset(cr.x + tam * 0.4f, cr.y - tam * 0.25f))
-        } else {
-            drawLine(c(INCISO).copy(alpha = 0.8f), Offset(cr.x - tam * 1.2f, cr.y + tam * 0.6f), Offset(cr.x + tam * 1.2f, cr.y - tam * 0.6f), 0.7f * u)
-            for (j in 0 until 4) {
-                val f = -0.8f + 0.55f * j
-                val o = Offset(cr.x + tam * f, cr.y - tam * f * 0.5f)
-                val lado0 = if (j % 2 == 0) -1f else 1f
-                drawLine(c(INCISO).copy(alpha = 0.8f), o, Offset(o.x + tam * 0.25f, o.y + lado0 * tam * 0.6f), 1.4f * u, cap = StrokeCap.Round)
-            }
-        }
-        // El cordón que pasa por los dos agujeros del canto izquierdo y cuelga con su nudo.
-        val hx = w * 0.08f
-        val a1 = Offset(hx, h * 0.3f); val a2 = Offset(hx, h * 0.7f)
-        drawCircle(sombraMueble(0.5f), 1.1f * u, a1)
-        drawCircle(sombraMueble(0.5f), 1.1f * u, a2)
-        drawLine(c(CORDON), a1, a2, 1f * u)
-        drawLine(c(CORDON), a2, Offset(hx + 1.5f * u, h * 0.8f), 1f * u)
-        drawCircle(c(CORDON), 1.4f * u, Offset(hx + 1.5f * u, h * 0.8f))
     }
 
     // ---------------------------------------------------------------- la tapa
