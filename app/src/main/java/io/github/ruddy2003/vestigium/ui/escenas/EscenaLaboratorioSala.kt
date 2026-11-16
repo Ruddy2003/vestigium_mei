@@ -119,7 +119,8 @@ internal object SalaLab {
         }
         // Los paneles de la luz general: dos tiras largas, a lo hondo, que brillan de día.
         val luz = v.general
-        for (x in listOf(-1.2f, 1.45f)) for ((z0, z1) in listOf(5.35f to 6.85f, 3.45f to 4.95f)) {
+        // Solo la fila de la derecha: a la izquierda va la banderita, sobre el techo liso.
+        for (x in listOf(1.45f)) for ((z0, z1) in listOf(5.35f to 6.85f, 3.45f to 4.95f)) {
             val ps = listOf(V3(x - 0.28f, TECHO - 0.02f, z0), V3(x + 0.28f, TECHO - 0.02f, z0), V3(x + 0.28f, TECHO - 0.02f, z1), V3(x - 0.28f, TECHO - 0.02f, z1))
             drawPath(CamLab.forma(ps), v.c(V3(x, TECHO, (z0 + z1) / 2f), C.ACERO, abajo))
             val dentro = listOf(V3(x - 0.22f, TECHO - 0.03f, z0 + 0.05f), V3(x + 0.22f, TECHO - 0.03f, z0 + 0.05f), V3(x + 0.22f, TECHO - 0.03f, z1 - 0.05f), V3(x - 0.22f, TECHO - 0.03f, z1 - 0.05f))
