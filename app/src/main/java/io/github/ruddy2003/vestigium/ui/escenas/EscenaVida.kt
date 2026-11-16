@@ -53,8 +53,11 @@ class Momento(val ficha: FichaDelDia, horaExacta: Double) {
     /** Qué hace el personaje a esta hora, según «Un día suyo»: se nota en su entorno (el fuego a la hora de comer). */
     val hacer: OtrasVidas.Hacer? = ficha.tramo(horaExacta)?.que
 
-    /** Las claves de escena de todos los días especiales de hoy («fiesta», «humo», «partida»…). */
-    val claves: Set<String> = ficha.especiales.map { it.dia.escena }.filter { it.isNotEmpty() }.toSet()
+    /**
+     * Las claves de escena de hoy: las de todos los días especiales («fiesta», «partida»…) y la de la noche fija de la semana
+     * del personaje, si la tiene y toca hoy («humo», los viernes de David). Las junta la ficha ([FichaDelDia.claves]).
+     */
+    val claves: Set<String> = ficha.claves
 
     /** El estado del personaje («mar»), o vacío. */
     val estado: String get() = ficha.estado ?: ""
