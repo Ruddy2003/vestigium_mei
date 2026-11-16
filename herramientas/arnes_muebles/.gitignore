@@ -1,0 +1,5 @@
+# Carpetas de compilación del arnés
+.gradle/
+build/
+salida/
+*.png
