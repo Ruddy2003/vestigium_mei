@@ -4600,9 +4600,12 @@ object EstanteSeda : DisenoBiblioteca {
  * el borde y un cesto con rollos. Cada entrada es una de tres cosas, según su semilla: el libro de horas de terciopelo del
  * color del ánimo (bullones, broches, la cartela de latón con el día y los registros de seda abajo), el códice de tablas
  * forradas de cuero claro, el más alto (nervios, el tejuelo de pergamino clavado con el día, una cinta de seda ancha del color
- * del ánimo, la correa con su cierre y los registros por la cabeza) o el libro de bolsa, el más bajo, de cuero blando teñido
- * del color del ánimo, atado arriba con el cuero que sobra abierto en volantes (la papeleta con el día y el canto de las
- * hojas abajo); cuanto más escribiste, más registros o más hojas; en los Sueños, la luna de plata ocupa el lugar del bullón.
+ * del ánimo, la correa con su cierre y los registros por la cabeza) o un atado de cuadernillos sin encuadernar, el más bajo:
+ * los pliegos de pie con el lomo de dobleces y puntadas a la vista y los cantos desparejos, la camisa de pergamino abajo y una
+ * correa ancha del color del ánimo atada en cruz con su hebilla (la papeleta con el día, cosida a la camisa); cuanto más
+ * escribiste, más registros, más cuadernillos o más hojas asomando; en los Sueños, la luna de plata ocupa el lugar del bullón
+ * (en el atado, va en un sello de cera sobre el nudo).
+
  * Donde una repisa queda libre: el libro de coro tumbado y encadenado a la tabla de arriba, la caja de la piedra pómez con su
  * punzón, una pila de bifolios, una palmatoria apagada o el saquito de cuero de sujetalibros. De noche solo arde el farol: su
  * halo en la piedra, el filo dorado en el esmalte, los bullones y los broches, y la luz que baja por el mueble hasta perderse

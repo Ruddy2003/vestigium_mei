@@ -67,7 +67,7 @@ internal object MuebleEstanteGotico {
     /** La vitela de etiquetas y hojas, y la tinta. */
     private val VITELA = Color(0xFFEDE3C9)
     private val TINTA = Color(0xFF1E140C)
-    /** Los cueros: el blanco de cerdo curtido al alumbre, el pardo y el cuero de bolsa. */
+    /** Los cueros: el blanco de cerdo curtido al alumbre y el pardo de correas y saquitos. */
     private val CUERO_BLANCO = Color(0xFFD9CBA8)
     private val CUERO = Color(0xFF7A5232)
     /** El cuerno del farol y del tintero, el sebo de las velas y el vidrio del reloj. */
@@ -103,17 +103,17 @@ internal object MuebleEstanteGotico {
 
     fun ancho(palabras: Int): Dp = (24 + (palabras / 40).coerceAtMost(18)).dp
 
-    /** Cuál de los tres es una entrada: 0, el libro de horas de terciopelo; 1, el códice de tablas forradas; 2, el libro de bolsa. */
+    /** Cuál de los tres es una entrada: 0, el libro de horas de terciopelo; 1, el códice de tablas forradas; 2, el atado de cuadernillos. */
     fun clase(semilla: Int): Int {
         val k = Math.floorMod(semilla xor (semilla ushr 7), 7)
         return if (k < 3) 0 else if (k < 5) 1 else 2
     }
 
-    /** El libro de horas, mediano; el códice, el más alto; el libro de bolsa, el más bajo (con su nudo). */
+    /** El libro de horas, mediano; el códice, el más alto; el atado de cuadernillos, el más bajo. */
     fun alto(semilla: Int, palabras: Int): Float = when (clase(semilla)) {
         0 -> 0.74f + 0.1f * azar(semilla, 1)
         1 -> 0.9f + 0.08f * azar(semilla, 1)
-        else -> 0.64f + 0.08f * azar(semilla, 1)
+        else -> 0.58f + 0.08f * azar(semilla, 1)
     }
 
     // ---------------------------------------------------------------- la luz
@@ -1461,7 +1461,8 @@ internal object MuebleEstanteGotico {
         when (clase(v.semilla)) {
             0 -> horas(v, medidor, a, k)
             1 -> codice(v, medidor, a, k)
-            else -> bolsa(v, medidor, a, k)
+            else -> atado(v, medidor, a, k)
+
         }
     }
 
@@ -1609,74 +1610,107 @@ internal object MuebleEstanteGotico {
     }
 
     /**
-     * El libro de bolsa: el más bajo de cuerpo, envuelto en cuero blando teñido del color del ánimo. El cuero que sobra sube,
-     * se ata con una correa arrollada (para colgarlo del cinto) y por encima de la atadura se abre en volantes arrugados,
-     * como la boca de un saco. La papeleta de vitela con el día, metida en el pliegue; abajo, el canto de las hojas (más cuanto
-     * más escribiste); en la atadura, una cuenta de latón (en los Sueños, la luna).
+     * El atado de cuadernillos sin encuadernar (los pliegos que se copiaban por piezas): de cuatro a ocho cuadernillos de
+     * pergamino de pie, el más bajo y algo panzudo, con el lomo de pliegues a la vista (cada doblez una costilla redondeada
+     * con sus puntadas) y los cantos desparejos por arriba; abajo, la camisa de pergamino más oscuro que no llega arriba, y
+     * todo atado en cruz con una correa ancha del color del ánimo, con su hebilla al frente (en los Sueños, un sello de cera
+     * con la luna sobre el nudo). La papeleta con el día va cosida a la camisa. Cuanto más escribiste, más cuadernillos y más
+     * hojas asomando.
      */
-    private fun DrawScope.bolsa(v: Volumen, medidor: TextMeasurer, a: Aire, k: Float) {
+    private fun DrawScope.atado(v: Volumen, medidor: TextMeasurer, a: Aire, k: Float) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla and 0x7fffffff
-        val y0 = h * 0.44f                        // donde empieza el libro dentro de la bolsa
-        val ata = h * 0.2f                        // la atadura
-        val cuero = v.tono?.let { a.animo(mezcla(it, PELO, if (a.oscuro) 0.12f else 0.3f), k) } ?: a.luz(CUERO, k)
-        val reves = mezcla(cuero, a.hondo, 0.35f)
-        val sil = Path().apply {
-            moveTo(0.6f * u, h)
-            lineTo(0.6f * u, y0 + 2f * u)
-            cubicTo(0.6f * u, y0 - 6f * u, w * 0.3f, ata + 7f * u, w * 0.31f, ata + 1.5f * u)
-            // El volante de arriba, abierto y arrugado: picos desiguales.
-            cubicTo(w * 0.2f, ata - 3f * u, w * 0.02f, ata - 5f * u, 0.6f * u, 3.5f * u + 2f * u * azar(s, 11))
-            val picos = 5
-            for (j in 1..picos) {
-                val x = w * j / picos.toFloat()
-                val y = if (j % 2 == 1) 0.6f * u + 1.6f * u * azar(s, 12 + j) else 4.5f * u + 2.5f * u * azar(s, 12 + j)
-                lineTo(minOf(x, w - 0.6f * u), y)
-            }
-            cubicTo(w * 0.98f, ata - 5f * u, w * 0.8f, ata - 3f * u, w * 0.69f, ata + 1.5f * u)
-            cubicTo(w * 0.7f, ata + 7f * u, w - 0.6f * u, y0 - 6f * u, w - 0.6f * u, y0 + 2f * u)
-            lineTo(w - 0.6f * u, h)
+        val n = 4 + (v.lleno * 4f).toInt()
+        // El perfil panzudo: los costados se abomban un poco hacia el medio.
+        val panza = Path().apply {
+            moveTo(1.6f * u, 0f); lineTo(w - 1.6f * u, 0f)
+            cubicTo(w - 0.2f * u, h * 0.3f, w, h * 0.7f, w - 0.8f * u, h)
+            lineTo(0.8f * u, h)
+            cubicTo(0f, h * 0.7f, 0.2f * u, h * 0.3f, 1.6f * u, 0f)
             close()
         }
-        drawPath(sil, cuero)
-        clipPath(sil) {
-            // El revés del cuero dentro del volante, en sombra, y los pliegues que bajan de la atadura.
-            drawPath(poligono(w * 0.2f, 4f * u, w * 0.5f, ata - 1f * u, w * 0.8f, 4f * u, w * 0.62f, 1.5f * u, w * 0.4f, 2.5f * u), reves)
-            drawRect(a.claro(0.22f), Offset(w * 0.05f, 0f), Size(w * 0.12f, h))
-            drawRect(a.sombra(0.18f), Offset(w * 0.7f, 0f), Size(w * 0.3f, h))
-            drawRect(a.sombra(0.16f), Offset(w * 0.88f, 0f), Size(w * 0.12f, h))
-            drawLine(a.sombra(0.35f), Offset(w * 0.4f, ata + 3f * u), Offset(w * 0.14f, y0 + 1f * u), 0.9f * u)
-            drawLine(a.claro(0.25f), Offset(w * 0.38f, ata + 3f * u), Offset(w * 0.08f, y0), 0.6f * u)
-            drawLine(a.sombra(0.35f), Offset(w * 0.6f, ata + 3f * u), Offset(w * 0.86f, y0 + 1f * u), 0.9f * u)
-            drawLine(a.sombra(0.3f), Offset(w * 0.3f, ata - 1f * u), Offset(w * 0.18f, 5f * u), 0.7f * u)
-            drawLine(a.sombra(0.3f), Offset(w * 0.7f, ata - 1f * u), Offset(w * 0.84f, 5f * u), 0.7f * u)
-            // La vuelta del cuero sobre la tabla del libro.
-            drawRect(a.sombra(0.3f), Offset(0f, y0 + 2f * u), Size(w, 1.2f * u))
-            drawRect(a.claro(0.24f), Offset(0f, y0 + 3.2f * u), Size(w * 0.7f, 0.7f * u))
-            drawOval(a.sombra(0.12f), Offset(w * 0.1f, h * (0.8f + 0.08f * azar(s, 6))), Size(w * 0.6f, h * 0.08f))
+        val paso = (w - 2f * u) / n
+        val yCamisa = h * 0.5f
+        clipPath(panza) {
+            // Las costillas: el doblez de cada cuadernillo, con la cabeza a distinta altura.
+            val sombras = Path(); val luces = Path(); val puntadas = Path(); val asoman = Path()
+            for (j in 0 until n) {
+                val x0 = 1f * u + paso * j
+                val top = (1.6f + 4.2f * azar(s, 30 + j)) * u
+                drawRoundRect(a.luz(mezcla(VITELA, CUERNO, 0.08f + 0.26f * azar(s, 40 + j)), k), Offset(x0, top), Size(paso, h - top), CornerRadius(minOf(paso * 0.2f, 1.4f * u)))
+                sombras.addRect(Rect(x0 + paso * 0.7f, top, x0 + paso, h))
+                luces.addRect(Rect(x0 + paso * 0.12f, top + 2.6f * u, x0 + paso * 0.3f, yCamisa))
+                // La cabeza: las hojas en capas, una raya bajo el canto de arriba.
+                sombras.addRect(Rect(x0, top + 1.4f * u, x0 + paso, top + 2f * u))
+                // Las puntadas del hilo, de través en el doblez.
+                for (f in listOf(0.34f, 0.7f)) {
+                    val y = top + (yCamisa - top) * f
+                    puntadas.addRect(Rect(x0 + paso * 0.22f, y, x0 + paso * 0.78f, y + 0.9f * u))
+                }
+                // Las hojas que asoman por arriba, más cuanto más escribiste.
+                if (azar(s, 50 + j) < 0.35f + 0.6f * v.lleno) {
+                    val dx = paso * 0.3f * (azar(s, 60 + j) - 0.5f)
+                    asoman.addRect(Rect(x0 + paso * 0.1f + dx, top - 1.3f * u, x0 + paso * 0.9f + dx, top + 0.4f * u))
+                }
+
+            }
+            drawPath(asoman, a.luz(VITELA, k + 0.05f))
+            drawPath(sombras, a.sombra(0.26f))
+            drawPath(luces, a.claro(0.4f))
+            drawPath(puntadas, a.luz(mezcla(CUERO, TINTA, 0.4f), k))
+            // La camisa de pergamino más oscuro, que envuelve la parte de abajo, con su orilla desigual.
+            val camisa = Path().apply {
+                moveTo(0f, yCamisa + 1.5f * u)
+                lineTo(w * 0.3f, yCamisa - 0.5f * u); lineTo(w * 0.62f, yCamisa + 1f * u); lineTo(w, yCamisa - 1f * u)
+                lineTo(w, h); lineTo(0f, h); close()
+            }
+            drawPath(camisa, a.luz(mezcla(CUERNO, CUERO, 0.45f), k))
+            drawPath(borde(camisa, 0f, 1.6f * u), a.claro(0.3f))
+            drawRect(a.sombra(0.3f), Offset(0f, yCamisa - 1.5f * u), Size(w, 1.2f * u))
+            drawRect(a.claro(0.18f), Offset(w * 0.06f, yCamisa), Size(w * 0.1f, h - yCamisa))
+            drawRect(a.sombra(0.2f), Offset(w * 0.76f, yCamisa), Size(w * 0.24f, h - yCamisa))
         }
-        // La correa arrollada de la atadura, con la cuenta (o la luna).
-        val tira = a.luz(mezcla(CUERO, ROBLE_OSC, 0.3f), k)
-        drawRect(tira, Offset(w * 0.28f, ata - 1f * u), Size(w * 0.44f, 4.4f * u))
-        drawLine(a.sombra(0.4f), Offset(w * 0.28f, ata + 1.2f * u), Offset(w * 0.72f, ata + 1.2f * u), 0.6f * u)
-        drawRect(a.claro(0.3f), Offset(w * 0.28f, ata - 1f * u), Size(w * 0.44f, 0.7f * u))
-        drawLine(tira, Offset(w * 0.66f, ata + 3f * u), Offset(w * 0.78f, ata + 9f * u), 1.4f * u, StrokeCap.Round)
-        bullon(Offset(w * 0.5f, ata + 1.2f * u), minOf(w * 0.13f, 3.4f * u), v.noche, tira, a, k)
-        // El canto de las hojas, que asoma abajo: más líneas cuanto más escribiste.
-        val hojas = 2 + (v.lleno * 4f).toInt()
-        drawRect(a.luz(VITELA, k), Offset(w * 0.12f, h - 4f * u), Size(w * 0.76f, 4f * u))
-        for (j in 1..hojas) drawLine(a.sombra(0.25f), Offset(w * 0.12f, h - 4f * u * j / (hojas + 1)), Offset(w * 0.88f, h - 4f * u * j / (hojas + 1)), 0.4f * u)
-        // La papeleta de vitela con el día, metida en el pliegue.
-        val et = Rect(w * 0.1f, y0 + 6f * u, w * 0.9f, y0 + 26f * u)
-        rotate(if (azar(s, 7) < 0.5f) -3f else 3f, et.center) {
-            drawRect(a.sombra(0.42f), et.topLeft + Offset(0.9f * u, 1.1f * u), et.size)
-            drawRect(a.etiqueta(k), et.topLeft, et.size)
-            drawRect(a.sombra(0.12f), Offset(et.right - et.width * 0.16f, et.top), Size(et.width * 0.16f, et.height))
-            textoEn(medidor, v.dia, Rect(et.left + 1f * u, et.top + 0.5f * u, et.right - 1f * u, et.bottom), LETRA, a.tinta, 14.5f, peso = FontWeight.Bold)
+        // La correa en cruz, ancha, del color del ánimo (cuero sin teñir si no se marcó).
+        val correa = v.tono?.let { a.animo(mezcla(it, PELO, if (a.oscuro) 0.05f else 0.15f), k) } ?: a.luz(CUERO, k)
+        val honda = mezcla(correa, a.hondo, 0.35f)
+        val yc = h * 0.27f; val gc = maxOf(7f * u, h * 0.13f)
+        val xv = w * 0.5f; val gv = w * 0.26f
+        drawRect(a.sombra(0.35f), Offset(xv - gv / 2 + 1f * u, 0f), Size(gv, h))
+        drawRect(correa, Offset(xv - gv / 2, 0f), Size(gv, h))
+        drawRect(honda, Offset(xv + gv / 2 - gv * 0.25f, 0f), Size(gv * 0.25f, h))
+        drawRect(a.sombra(0.35f), Offset(0f, yc + gc), Size(w, 1.2f * u))
+        drawRect(correa, Offset(0f, yc), Size(w, gc))
+        drawRect(a.claro(0.32f), Offset(0f, yc), Size(w * 0.6f, 0.8f * u))
+        drawRect(honda, Offset(w * 0.8f, yc), Size(w * 0.2f, gc))
+        // La hebilla al frente, donde se cruzan; en los Sueños, el sello de cera con la luna sobre el nudo.
+        val c = Offset(xv, yc + gc / 2)
+        if (v.noche) {
+            val rs = minOf(w * 0.2f, gc * 0.75f)
+            drawCircle(a.sombra(0.4f), rs, c + Offset(0.8f * u, 1f * u))
+            drawCircle(a.luz(GRANA, maxOf(k, 0.25f)), rs, c)
+            drawCircle(if (a.oscuro) mezcla(LUNA, a.hondo, 0.25f - 0.25f * k) else LUNA, rs * 0.58f, c)
+            drawCircle(a.luz(GRANA, maxOf(k, 0.25f)), rs * 0.48f, c + Offset(rs * 0.26f, -rs * 0.16f))
+        } else {
+            val hb = Rect(c.x - gv * 0.45f, c.y - gc * 0.62f, c.x + gv * 0.45f, c.y + gc * 0.62f)
+            drawRect(a.sombra(0.4f), hb.topLeft + Offset(0.8f * u, 1f * u), hb.size)
+            drawRect(a.luz(LATON, k), hb.topLeft, hb.size)
+            drawRect(correa, Offset(hb.left + 1.3f * u, hb.top + 1.3f * u), Size(hb.width - 2.6f * u, hb.height - 2.6f * u))
+            drawLine(a.luz(LATON, k), Offset(c.x, hb.top + 1f * u), Offset(c.x, hb.bottom - 1f * u), 1f * u)
+            drawRect(if (a.oscuro) a.filo(0.8f * k) else a.claro(0.5f), hb.topLeft, Size(hb.width, 0.8f * u))
         }
-        val mes = Rect(w * 0.24f, et.bottom + 3f * u, w * 0.76f, h - 7f * u)
-        if (mes.height > 10f * u) textoEn(medidor, v.mes, mes, LETRA, a.etiqueta(k).copy(alpha = 0.85f), 8f, vertical = true, minimo = 4.5f)
-        if (a.oscuro && k > 0.08f) drawPath(borde(sil, 1.2f * u, 1.2f * u), a.filo(0.5f * k))
+        // La papeleta con el día, cosida a la camisa con dos puntadas.
+        val et = Rect(w * 0.08f, yCamisa + 4f * u, w * 0.92f, yCamisa + 23f * u)
+        drawRect(a.sombra(0.42f), et.topLeft + Offset(0.9f * u, 1.1f * u), et.size)
+        drawRect(a.etiqueta(k), et.topLeft, et.size)
+        drawRect(a.sombra(0.12f), Offset(et.right - et.width * 0.15f, et.top), Size(et.width * 0.15f, et.height))
+        val hilo = a.luz(mezcla(CUERO, TINTA, 0.4f), k)
+        drawLine(hilo, Offset(et.left + 1.6f * u, et.top - 1f * u), Offset(et.left + 1.6f * u, et.top + 2.4f * u), 0.8f * u)
+        drawLine(hilo, Offset(et.right - 1.6f * u, et.top - 1f * u), Offset(et.right - 1.6f * u, et.top + 2.4f * u), 0.8f * u)
+        textoEn(medidor, v.dia, Rect(et.left + 2f * u, et.top + 0.5f * u, et.right - 2f * u, et.bottom), LETRA, a.tinta, 14.5f, peso = FontWeight.Bold)
+        // El mes, a pluma en la camisa, si cabe.
+        val mes = Rect(w * 0.08f, et.bottom + 1.5f * u, w * 0.92f, h - 1.5f * u)
+        if (mes.height > 6f * u) textoEn(medidor, v.mes, mes, LETRA, if (a.oscuro) a.etiqueta(k).copy(alpha = 0.8f) else TINTA.copy(alpha = 0.75f), 7.5f, minimo = 4.5f)
+        if (a.oscuro && k > 0.08f) drawRect(a.filo(0.4f * k), Offset(1f * u, 2f * u), Size(1f * u, h - 2f * u))
     }
 }
