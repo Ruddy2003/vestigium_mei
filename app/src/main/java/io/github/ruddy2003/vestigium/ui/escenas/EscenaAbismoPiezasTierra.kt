@@ -208,25 +208,39 @@ internal object PiezasAbismoTierra {
     // =================================================================
 
     /**
-     * Una ristra de esponjas secas, «doradas y blandas», colgada de [arriba] a lo largo de [largo] unidades: la cuerda y
-     * muchas esponjas chicas apretadas (de [r] unidades de radio, cada una distinta en tamaño y en tono: las de lana, las
-     * amarillas, alguna más oscura), con su lado de luz y la sombra de una sobre otra. Más ligera que la ristra de a bordo:
-     * desde el muelle se ve de lejos y a contraluz. [racimo] las junta abajo; [sesgo] tuerce la cuerda.
+     * Una ristra de esponjas como la cuelgan de verdad: racimos irregulares a lo largo de la cuerda, de [arriba] hacia
+     * abajo [largo] unidades. Las esponjas (la `esponja` de a bordo, cada una de su clase: de lana, amarilla, de hierba, de
+     * dedo, alguna todavía mojada y oscura) van apretadas en grupos de tres a cinco, de tamaños muy distintos, corridas a un
+     * lado y a otro de la cuerda y unas delante de otras; entre racimo y racimo asoma la cuerda. [r] es el radio de una
+     * esponja media; [sesgo] tuerce la cuerda.
      */
-    fun DrawScope.ristraSeca(p: Pincel, arriba: Offset, largo: Float, r: Float, semilla: Long, lejos: Float = 0f, racimo: Boolean = false, sesgo: Float = 0f) {
+    fun DrawScope.racimoDeEsponjas(p: Pincel, arriba: Offset, largo: Float, r: Float, semilla: Long, lejos: Float = 0f, sesgo: Float = 0f) {
         val az = Azar(semilla)
         val abajo = arriba + Offset(sesgo * largo, largo)
-        drawLine(p.sombra(C.CANAMO, lejos), arriba, abajo, (r * 0.18f).coerceAtLeast(0.35f), StrokeCap.Round)
-        val ld = lado(p)
-        val n = ((largo / (r * 1.25f)).toInt()).coerceIn(4, 26)
-        for (i in 0 until n) {
-            val t0 = if (racimo) 0.25f + 0.75f * (i + 0.5f) / n else 0.06f + 0.94f * (i + 0.5f) / n
-            val q = arriba + (abajo - arriba) * t0 + Offset(az.entre(-0.5f, 0.5f) * r * (if (racimo) 1f + 0.8f * t0 else 0.7f), 0f)
-            val rr = r * az.entre(0.7f, 1.25f) * (if (racimo) 0.85f + 0.4f * t0 else 1f)
-            val propio = lerp(lerp(C.ESPONJA, listOf(C.ARENA, C.ESPONJA_OSC, C.LONA, C.ESPONJA)[az.entero(4)], az.entre(0f, 0.45f)), C.MADERA, az.entre(0f, 0.15f))
-            val forma = if (rr < 2.2f) Path().apply { addOval(Rect(q, rr)) } else lazo((0 until 7).map { val a = it * 0.8976f + az.entre(-0.2f, 0.2f); val k = az.entre(0.8f, 1.1f); Offset(q.x + cos(a) * rr * k * 1.08f, q.y + sin(a) * rr * k * 0.9f) })
-            drawPath(forma, Brush.radialGradient(0f to p.luz(propio, lejos), 0.55f to p.medio(propio, lejos), 1f to p.sombra(propio, lejos), center = q + Offset(ld * rr * 0.4f, -rr * 0.4f), radius = rr * 1.5f))
-            if (rr > 2.6f) { drawCircle(p.sombra(lerp(propio, C.BREA, 0.4f), lejos).copy(alpha = 0.55f), rr * 0.13f, q + Offset(-ld * rr * 0.25f, rr * 0.15f)); drawCircle(p.luz(lerp(propio, C.BLANCO, 0.4f), lejos).copy(alpha = 0.5f), rr * 0.1f, q + Offset(ld * rr * 0.35f, -rr * 0.3f)) }
+        val medio = arriba + (abajo - arriba) * 0.5f + Offset(-sesgo * largo * 0.15f + az.entre(-0.3f, 0.3f) * r, 0f)
+        val cuerda = Path().apply { moveTo(arriba); cubicTo(medio, medio, abajo) }
+        drawPath(cuerda, p.sombra(C.CANAMO, lejos), style = Stroke((r * 0.16f).coerceAtLeast(0.35f), cap = StrokeCap.Round))
+        drawPath(cuerda, p.luz(C.CANAMO, lejos).copy(alpha = 0.5f), style = Stroke((r * 0.06f).coerceAtLeast(0.2f), cap = StrokeCap.Round))
+        // Los racimos: dónde empieza cada uno a lo largo de la cuerda y cuántas esponjas lleva.
+        class Una(val q: Offset, val rr: Float, val delante: Float, val semilla: Long, val alarga: Float)
+        val todas = ArrayList<Una>()
+        var t = az.entre(0.08f, 0.2f); var i = 0
+        while (t < 0.97f) {
+            val n = 3 + az.entero(3)
+            val grande = az.entre(0.75f, 1.35f)                                   // cada racimo, de su tamaño
+            for (j in 0 until n) {
+                val tt = (t + az.entre(-0.04f, 0.07f)).coerceIn(0.04f, 1f)
+                val base = Offset(arriba.x + (abajo.x - arriba.x) * tt, arriba.y + (abajo.y - arriba.y) * tt)
+                val rr = r * grande * az.entre(0.55f, 1.3f)
+                val lado = (if ((i + j) % 2 == 0) 1f else -1f) * az.entre(0.25f, 0.95f)
+                todas += Una(base + Offset(lado * r, az.entre(-0.2f, 0.2f) * r), rr, az.real(), semilla * 53 + i * 7 + j, az.entre(0.8f, 1.4f))
+            }
+            t += az.entre(0.17f, 0.3f); i++
+        }
+        // De atrás adelante: las de atrás, un poco en sombra; las de delante tapan.
+        for (u in todas.sortedBy { it.delante }) {
+            PiezasAbismo.run { esponja(p, u.q, u.rr, u.semilla, true, lejos, u.alarga) }
+            if (u.delante < 0.35f) drawCircle(p.sombra(C.BREA, lejos).copy(alpha = 0.18f), u.rr * 0.9f, u.q)
         }
     }
 
@@ -854,27 +868,37 @@ internal object PiezasAbismoTierra {
     fun DrawScope.saco(p: Pincel, s: Sitio, sol: Sol3, ancho: Float, semilla: Long, tumbado: Boolean, lejos: Float = 0f) {
         val az = Azar(semilla); val e = s.escala(0f, 0f)
         val ld = lado(p)
-        val lona = lerp(C.LONA, C.MADERA, az.entre(0.1f, 0.3f))
+        val arpillera = lerp(C.LONA, C.MADERA, az.entre(0.15f, 0.32f))
         val c = s.p(0f, 0f, 0f)
-        val w = ancho * 0.5f * e; val h = (if (tumbado) ancho * 0.55f else ancho * 1.1f) * e
-        // La panza llena de bultos: ancha abajo, apoyada, y estrecha arriba hacia el cuello atado.
-        val pts = if (tumbado) listOf(Offset(-1.15f, 0f), Offset(-1.2f, -0.55f), Offset(-0.7f, -0.98f), Offset(0.1f, -1.0f), Offset(0.8f, -0.9f), Offset(1.25f, -0.5f), Offset(1.1f, 0f), Offset(0f, 0.08f))
-            else listOf(Offset(-1f, 0f), Offset(-1.08f, -0.35f), Offset(-0.95f, -0.72f), Offset(-0.5f, -0.92f), Offset(-0.18f, -1f), Offset(0.22f, -1f), Offset(0.55f, -0.9f), Offset(0.98f, -0.7f), Offset(1.06f, -0.3f), Offset(0.95f, 0f), Offset(0f, 0.06f))
-        val forma = lazo(pts.map { Offset(c.x + it.x * w * az.entre(0.95f, 1.05f), c.y + it.y * h) })
-        drawPath(forma, Brush.radialGradient(0f to p.luz(lona, lejos), 0.6f to p.medio(lona, lejos), 1f to p.sombra(lona, lejos), center = c + Offset(ld * w * 0.4f, -h * 0.65f), radius = maxOf(w, h) * 1.4f))
+        val w = ancho * 0.5f * e; val h = (if (tumbado) ancho * 0.55f else ancho * 1.05f) * e
+        // La silueta: la panza que se aplasta en el suelo, los hombros y, de pie, la boca abierta con el borde vuelto hacia fuera.
+        val pts = if (tumbado) listOf(Offset(-1.15f, 0f), Offset(-1.22f, -0.5f), Offset(-0.85f, -0.95f), Offset(-0.1f, -1.02f), Offset(0.65f, -0.92f), Offset(1.2f, -0.58f), Offset(1.15f, -0.05f), Offset(0f, 0.07f))
+            else listOf(Offset(-1.05f, 0f), Offset(-1.12f, -0.32f), Offset(-1.02f, -0.66f), Offset(-0.84f, -0.88f), Offset(-0.9f, -0.98f), Offset(0.88f, -0.98f), Offset(0.82f, -0.86f), Offset(1.0f, -0.62f), Offset(1.12f, -0.28f), Offset(1.0f, 0f), Offset(0f, 0.07f))
+        val forma = lazo(pts.map { Offset(c.x + it.x * w * az.entre(0.96f, 1.04f), c.y + it.y * h) })
+        drawPath(forma, Brush.radialGradient(0f to p.luz(arpillera, lejos), 0.6f to p.medio(arpillera, lejos), 1f to p.sombra(arpillera, lejos), center = c + Offset(ld * w * 0.45f, -h * 0.6f), radius = maxOf(w, h) * 1.4f))
         clipPath(forma) {
-            // Los bultos de las esponjas apretadas bajo la lona, la costura, un remiendo y la sombra de abajo.
-            repeat(6) { val q = c + Offset(az.entre(-0.7f, 0.7f) * w, -az.entre(0.15f, 0.8f) * h); drawArc(p.sombra(lona, lejos).copy(alpha = 0.45f), 200f, 130f, false, Offset(q.x - w * 0.28f, q.y - h * 0.08f), Size(w * 0.56f, h * 0.18f), style = Stroke((0.02f * e).coerceAtLeast(0.35f))) }
-            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.sombra(lerp(lona, C.BREA, 0.3f), lejos).copy(alpha = 0.6f)), c.y - h * 0.3f, c.y), Offset(c.x - w * 1.3f, c.y - h * 0.3f), Size(w * 2.6f, h * 0.3f))
-            if (!tumbado) drawLine(p.sombra(lona, lejos).copy(alpha = 0.5f), c + Offset(w * 0.15f, -h * 0.95f), c + Offset(w * 0.25f, -h * 0.05f), (0.012f * e).coerceAtLeast(0.3f))
-            if (az.real() > 0.4f) drawRect(p.medio(lerp(lona, C.ESPONJA_OSC, 0.4f), lejos), Offset(c.x + az.entre(-0.6f, 0.1f) * w, c.y - az.entre(0.3f, 0.7f) * h), Size(w * 0.45f, h * 0.22f))
+            // El tejido de la arpillera: la trama en cruz, fina; y los pliegues que bajan curvos desde la boca, con su lado de luz.
+            if (e > 25f) { val paso = (0.035f * e).coerceAtLeast(1.4f); var x = c.x - w * 1.3f; while (x < c.x + w * 1.3f) { drawLine(p.sombra(arpillera, lejos).copy(alpha = 0.22f), Offset(x, c.y - h * 1.1f), Offset(x + h * 0.1f, c.y), 0.4f); x += paso }
+                var y = c.y - h * 1.05f; while (y < c.y) { drawLine(p.luz(arpillera, lejos).copy(alpha = 0.16f), Offset(c.x - w * 1.3f, y), Offset(c.x + w * 1.3f, y + 0.4f), 0.4f); y += paso } }
+            for (k in 0 until 4) { val x0 = c.x + (-0.6f + 0.4f * k) * w; val pl = Path().apply { moveTo(x0, c.y - h * 0.9f); cubicTo(x0 + w * 0.15f, c.y - h * 0.6f, x0 - w * 0.12f, c.y - h * 0.3f, x0 + w * 0.08f, c.y - h * 0.05f) }
+                drawPath(pl, p.sombra(arpillera, lejos).copy(alpha = 0.5f), style = Stroke((0.025f * e).coerceAtLeast(0.5f), cap = StrokeCap.Round))
+                drawPath(Path().apply { addPath(pl, Offset(ld * (0.02f * e).coerceAtLeast(0.5f), 0f)) }, p.luz(arpillera, lejos).copy(alpha = 0.35f), style = Stroke((0.012f * e).coerceAtLeast(0.3f), cap = StrokeCap.Round)) }
+            // El remiendo cosido y la sombra de abajo, donde se apoya.
+            if (az.real() > 0.3f) { val q = c + Offset(az.entre(-0.55f, 0.05f) * w, -az.entre(0.3f, 0.6f) * h); drawRect(p.medio(lerp(arpillera, C.ESPONJA_OSC, 0.45f), lejos), Offset(q.x, q.y), Size(w * 0.45f, h * 0.2f)); drawRect(p.sombra(C.BREA, lejos).copy(alpha = 0.4f), Offset(q.x, q.y), Size(w * 0.45f, h * 0.2f), style = Stroke(0.5f)) }
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.sombra(lerp(arpillera, C.BREA, 0.35f), lejos).copy(alpha = 0.65f)), c.y - h * 0.28f, c.y), Offset(c.x - w * 1.3f, c.y - h * 0.28f), Size(w * 2.6f, h * 0.28f))
         }
         if (!tumbado) {
-            // El cuello atado con su cuerda y las puntas de la lona.
-            val boca = c + Offset(0f, -h); val gw = 0.02f * e
-            drawPath(poligono(boca + Offset(-w * 0.22f, h * 0.02f), boca + Offset(w * 0.22f, h * 0.02f), boca + Offset(w * 0.3f, -h * 0.16f), boca + Offset(-w * 0.05f, -h * 0.12f), boca + Offset(-w * 0.3f, -h * 0.15f)), p.por(lona, 0.3f, lejos))
-            drawLine(p.sombra(C.CANAMO, lejos), boca + Offset(-w * 0.24f, 0f), boca + Offset(w * 0.24f, 0f), (gw * 1.6f).coerceAtLeast(0.5f))
-        } else drawLine(p.sombra(C.CANAMO, lejos), c + Offset(w * 1.05f, -h * 0.85f), c + Offset(w * 1.2f, -h * 0.2f), (0.03f * e).coerceAtLeast(0.5f))
+            // La boca abierta: el borde vuelto hacia fuera (un rollo de arpillera) y las esponjas que asoman, cada una de su clase.
+            val boca = c + Offset(0f, -h * 0.97f)
+            drawOval(p.sombra(lerp(arpillera, C.BREA, 0.5f), lejos), Offset(boca.x - w * 0.86f, boca.y - h * 0.08f), Size(w * 1.72f, h * 0.17f))
+            for (j in 0 until 4) { val q = boca + Offset((-0.5f + 0.33f * j) * w * az.entre(0.8f, 1.1f), -h * az.entre(0.02f, 0.1f)); PiezasAbismo.run { esponja(p, q, w * az.entre(0.28f, 0.4f), semilla * 11 + j, true, lejos) } }
+            drawPath(Path().apply { moveTo(boca.x - w * 0.92f, boca.y + h * 0.02f); cubicTo(boca.x - w * 0.5f, boca.y + h * 0.1f, boca.x + w * 0.5f, boca.y + h * 0.1f, boca.x + w * 0.92f, boca.y + h * 0.02f) }, p.por(arpillera, 0.4f, lejos), style = Stroke((0.06f * e).coerceAtLeast(1f), cap = StrokeCap.Round))
+        } else {
+            // Echado: la boca atada con su cuerda y las puntas de la arpillera.
+            val boca = c + Offset(w * 1.12f, -h * 0.55f)
+            drawPath(poligono(boca, boca + Offset(w * 0.32f, -h * 0.28f), boca + Offset(w * 0.38f, h * 0.12f), boca + Offset(w * 0.1f, h * 0.3f)), p.por(arpillera, 0.2f, lejos))
+            drawLine(p.sombra(C.CANAMO, lejos), boca + Offset(0f, -h * 0.25f), boca + Offset(0f, h * 0.25f), (0.03f * e).coerceAtLeast(0.6f), StrokeCap.Round)
+        }
     }
 
     /** Las esquinas de un saco (para su sombra). */

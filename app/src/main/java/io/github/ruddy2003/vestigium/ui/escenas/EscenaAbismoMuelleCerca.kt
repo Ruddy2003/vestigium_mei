@@ -22,7 +22,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.bita
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.farolDeMuelle
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.mesaDeCafe
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.redTendida
-import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.ristraSeca
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.racimoDeEsponjas
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.saco
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.sacoEsquinas
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
@@ -220,6 +220,16 @@ internal object CercaMuelle {
                 }
             }
         }
+        // La franja de sol que entra por el callejón, más encendida: la luz cálida que se posa sobre las tablas, entre las dos
+        // sombras de las casas (solo por la mañana, cuando las casas tumban su sombra hacia el agua).
+        if (r.x < -0.3f && v.r.fuerza > 0.1f) {
+            val (a0, za, _, ha) = CASAS[0].toList(); val (b0, zb, _, hb) = CASAS[1].toList()
+            val largo = 3f
+            val franja = poligono(listOf(M.pm(a0, 0f, za), enElSuelo(r, a0, ha * largo, za), enElSuelo(r, b0, hb * largo, zb), M.pm(b0, 0f, zb)))
+            clipPath(poligono(listOf(M.pm(0f, 0f, 0.6f), M.pm(0f, 0f, 400f), M.pm(40f, 0f, 400f), Offset(ANCHO + 20f, ALTO + 20f), Offset(M.pm(0f, 0f, 0.6f).x, ALTO + 20f)))) {
+                drawPath(franja, lerp(v.l.solColor, Color.White, 0.35f).copy(alpha = (0.32f * v.r.fuerza).coerceIn(0f, 1f)), blendMode = BlendMode.Screen)
+            }
+        }
         // De noche, el farol del muelle tumba su propia sombra, cálida en su charco y abierta en abanico.
         if (v.farol > 0.05f) {
             val f = Foco(FAROL, C.LUMBRE, 1f, 120f, suelo = M.pm(FAROL_X, 0f, FAROL_Z).y)
@@ -248,7 +258,7 @@ internal object CercaMuelle {
         for (i in 0 until 7) {
             val t = 0.1f + 0.12f * i; val a = TENDEDERO_0 + (TENDEDERO_1 - TENDEDERO_0) * t; val q = pv(a) + Offset(0f, 3f * 4f * t * (1f - t)); val kk = M.k(a.x, a.z)
             if (i == 3) redTendida(p, q + Offset(-0.25f * kk, 0f), q + Offset(0.25f * kk, 0f), 1.0f * kk)
-            else ristraSeca(p, q, (1.0f + 0.25f * (i % 3)) * kk, 0.055f * kk, Semilla.de("abismo", "tendida", i), racimo = i % 2 == 0)
+            else racimoDeEsponjas(p, q, (1.0f + 0.25f * (i % 3)) * kk, 0.07f * kk, Semilla.de("abismo", "tendida", i))
         }
         // El farol del muelle, junto al canto.
         farolDeMuelle(v.pincel(FAROL), M.pm(FAROL_X, 0f, FAROL_Z), M.k(FAROL_X, FAROL_Z), FAROL_ALTO, v.farol)
@@ -258,6 +268,10 @@ internal object CercaMuelle {
         if (EscenaAbismo.hoyEs(m, "zarpa")) for (i in 0 until 3) { val bs = M.sitio(1.0f + 0.55f * i, 6.2f + 0.3f * i, 0f); val kb = bs.escala(0f, 0f); val bx0 = bs.pie.x - 0.26f * kb; val bx1 = bs.pie.x + 0.26f * kb
             drawRect(Brush.horizontalGradient(listOf(p.sombra(C.MADERA_OSC), p.medio(C.MADERA), p.luz(C.MADERA)), bx0, bx1), Offset(bx0, bs.pie.y - 0.66f * kb), Size(bx1 - bx0, 0.66f * kb))
             for (h in listOf(0.1f, 0.56f)) drawLine(p.sombra(C.PLOMO), Offset(bx0, bs.pie.y - h * kb), Offset(bx1, bs.pie.y - h * kb), 0.03f * kb) }
+        // Las esponjas ya limpias, apartadas por tamaños en tres montones junto a los sacos, como para la lonja.
+        for ((j, q) in listOf(Triple(1.25f, 5.55f, 0.5f), Triple(1.0f, 6.25f, 0.38f), Triple(1.6f, 6.9f, 0.3f)).withIndex()) {
+            val (x, z, a) = q; val pie = M.pm(x, 0f, z); monton(v.pincel(pie), pie, a * M.k(x, z), listOf(6, 7, 8)[j], Semilla.de("abismo", "tamanos", j), true)
+        }
         if (EscenaAbismo.cargadoEnElMuelle(m) || EscenaAbismo.hoyEs(m, "zarpa")) monton(v.pincel(M.pm(3.1f, 0f, 6.4f)), M.pm(3.1f, 0f, 6.4f), 0.9f * M.k(3.1f, 6.4f), 8, Semilla.de("abismo", "montonMuelle"), true)
         // La amarra de popa de Nikos: de su cornamusa a la bita, tensa; y la aduja del resto, en las tablas.
         val bita = BITA
@@ -469,7 +483,7 @@ internal object CercaMuelle {
         // Las ristras que cuelgan de la botavara, a secar sobre el muelle y el agua.
         for (i in 0 until M.ristrasDeLaBotavara(m)) {
             val t = tRistra(i, M.ristrasDeLaBotavara(m)); val q3 = enBotavara(t); val q = pv(q3) + Offset(0f, 0.06f * M.k(q3.x, q3.z)); val kk = M.k(q3.x, q3.z)
-            ristraSeca(p, q, largoRistra(i) * kk, 0.05f * kk, Semilla.de("abismo", "ristraMuelle", i), racimo = i % 2 == 0, sesgo = 0.04f * (i % 3 - 1))
+            racimoDeEsponjas(p, q, largoRistra(i) * kk, 0.075f * kk, Semilla.de("abismo", "ristraMuelle", i), sesgo = 0.04f * (i % 3 - 1))
         }
     }
 

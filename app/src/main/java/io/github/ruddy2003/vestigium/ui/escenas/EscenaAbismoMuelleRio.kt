@@ -18,7 +18,10 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.pelicano
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismoTierra.pilote
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Luces
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.astros
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.luna
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.sol
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cielo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cubicTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.destellos
@@ -66,6 +69,7 @@ internal object RioMuelle {
         cielo(l, M.H, m.semilla("cielo"))
         astros(l, M.H, m.semilla("astros"))
         nubes(l, M.H, m.ficha.clima, m.semilla("nubes"))
+        if (m.ficha.clima == Clima.DESPEJADO || m.ficha.clima == Clima.VIENTO) astrosALaVista(l)
         if (EscenaAbismo.veranoEnTierra(m) && (m.ficha.clima == Clima.DESPEJADO || m.ficha.clima == Clima.NUBES)) {
             // El verano: las torres de la tormenta de la tarde, que crecen sobre el horizonte (lejos de los astros).
             val crece = ((m.hora.toFloat() - 11f) / 6f).coerceIn(0.3f, 1f)
@@ -108,6 +112,34 @@ internal object RioMuelle {
         for ((z, w) in listOf(70f to 14f, 92f to 18f, 128f to 22f)) {
             val a = M.pm(9f, 0f, z); val b = M.pm(9f, 3.2f, z + w); val c = M.pm(9f, 0f, z + w)
             drawPath(poligono(a, Offset(a.x, b.y + (a.y - c.y)), b, c), v.p.lado(lerp(C.MADERA_GRIS, C.BLANCO, 0.3f), 0.6f, alReves = true))
+        }
+    }
+
+    /**
+     * El sol y la luna, siempre a la vista con el cielo despejado o con viento: las nubes de la biblioteca no los esquivan,
+     * así que se les abre un hueco blando de cielo (el color del cielo a esa altura) y se vuelve a pintar el disco encima,
+     * como el sol que rompe entre las nubes **[Diseño propio]**. Con el cielo cubierto, no.
+     */
+    private fun DrawScope.astrosALaVista(l: Luces) {
+        fun cieloEn(y: Float): Color { val t = (y / M.H).coerceIn(0f, 1f); return if (t < 0.58f) lerp(l.alto, l.medio, t / 0.58f) else lerp(l.medio, l.bajo, (t - 0.58f) / 0.42f) }
+        if (l.solAltura > -0.06f && l.solAltura < 1.05f && l.solFuerza > 0.02f && l.noche < 0.6f) {
+            val p = l.sol(M.H); val bajo = (1f - l.solAltura / 0.45f).coerceIn(0f, 1f); val r = 7.5f + 3f * bajo
+            mancha(p, r * 2.8f, r * 2.8f, cieloEn(p.y), 0.95f)
+            mancha(p, r * 2.4f, r * 2.4f, l.solColor, 0.45f * l.solFuerza)
+            val centro = lerp(l.solColor, Color.White, 0.75f - 0.45f * bajo)
+            drawCircle(Brush.radialGradient(listOf(centro, lerp(centro, l.solColor, 0.6f)), p, r), r, p)
+        }
+        val verLuna = (l.estrellas - 0.3f).coerceAtLeast(0f) / 0.7f
+        if (verLuna > 0.02f) {
+            val p = l.luna(M.H); val r = 7.5f
+            mancha(p, r * 2.6f, r * 2.6f, cieloEn(p.y), 0.9f * verLuna)
+            mancha(p, r * 2.4f, r * 2.4f, Color(0xFFDDE6FF), 0.3f * verLuna)
+            drawCircle(Color(0xFFF5EFDD).copy(alpha = verLuna.coerceIn(0f, 1f)), r, p)
+            clipPath(Path().apply { addOval(Rect(p, r)) }) {
+                drawCircle(lerp(l.alto, Color(0xFF2A3350), 0.4f).copy(alpha = (0.92f * verLuna).coerceIn(0f, 1f)), r * 1.05f, p + Offset(-5.2f, -2.2f))
+                drawCircle(Color(0xFFCFC8B4).copy(alpha = (0.55f * verLuna).coerceIn(0f, 1f)), 1.7f, p + Offset(2.6f, 1.2f))
+                drawCircle(Color(0xFFCFC8B4).copy(alpha = (0.45f * verLuna).coerceIn(0f, 1f)), 1.1f, p + Offset(4.2f, -2.4f))
+            }
         }
     }
 
