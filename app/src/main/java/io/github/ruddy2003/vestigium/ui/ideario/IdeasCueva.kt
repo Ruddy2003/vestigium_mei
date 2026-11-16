@@ -368,6 +368,76 @@ object IdeasCueva : DisenoIdeas {
             drawOval(HOLLIN.copy(alpha = if (oscuro) 0.07f else 0.05f - 0.004f * k), Offset(q.x - r * 0.8f, q.y - r * 1.4f), Size(r * 1.6f, r * 2.8f))
         }
 
+        // ---- las masas del cuerpo, leídas por la luz rasante: zonas claras y entrantes en sombra, la caliza gris azulada, el óxido
+        if (d.filas.isNotEmpty()) {
+            val sepM = d.separacion
+            val top = d.filas.first().top - sepM
+            val bot = d.filas.last().bottom + sepM
+            val alto0 = bot - top
+            fun y(t: Float) = top + alto0 * t
+            // Zonas claras, donde la roca sale hacia la luz de la boca.
+            listOf(Triple(0.18f, 0.12f, 0.28f), Triple(0.62f, 0.44f, 0.24f), Triple(0.25f, 0.72f, 0.22f)).forEachIndexed { k, (x, t, r) ->
+                drawPath(piedra(Offset(w * x, y(t)), w * r * 1.3f, alto0 * 0.1f, 1700 + k, 10, 0.3f), n(mezcla(CALIZA_MED, CALIZA_LUZ, 0.8f), oscuro, SIN_LUZ).copy(alpha = 0.7f))
+            }
+            // Entrantes grandes en sombra.
+            listOf(Triple(0.08f, 0.38f, 0.2f), Triple(0.78f, 0.7f, 0.22f), Triple(0.5f, 0.95f, 0.26f)).forEachIndexed { k, (x, t, r) ->
+                drawPath(piedra(Offset(w * x, y(t)), w * r, alto0 * 0.11f, 1710 + k, 10, 0.3f), sombra(oscuro, 0.38f))
+            }
+            // Una zona de caliza más dura, gris azulada.
+            drawPath(piedra(Offset(w * 0.7f, y(0.2f)), w * 0.24f, alto0 * 0.08f, 1720, 11, 0.3f), n(Color(0xFF9EA2A6), oscuro, SIN_LUZ).copy(alpha = 0.4f))
+            // Verdín tenue junto a la colada, donde siempre está húmedo.
+            listOf(0.33f, 0.61f, 0.86f).forEachIndexed { k, t ->
+                drawPath(piedra(Offset(w * 0.9f, y(t)), w * 0.045f, alto0 * 0.06f, 1730 + k, 8, 0.35f), n(Color(0xFF7E8C58), oscuro, SIN_LUZ).copy(alpha = 0.28f))
+            }
+            // Las cornisas: tres repisas naturales que cruzan el cuerpo en diagonal. La cara de arriba, casi crema; el canto con
+            // luz; la panza en sombra honda y la sombra que arroja sobre lo de abajo. De noche, la de abajo se enciende en rojo.
+            listOf(floatArrayOf(-0.04f, 0.72f, 0.08f, 0.26f, 0.013f), floatArrayOf(0.28f, 0.96f, 0.56f, 0.4f, 0.017f), floatArrayOf(-0.04f, 0.6f, 0.74f, 0.9f, 0.014f)).forEachIndexed { k, cfg ->
+                val (xa, xb, ta) = Triple(cfg[0], cfg[1], cfg[2]); val tb = cfg[3]; val g = w * cfg[4]
+                val canto = List(9) { j ->
+                    val t = j / 8f
+                    // Las puntas se afinan y se meten en la pared.
+                    Offset(w * (xa + (xb - xa) * t), y(ta + (tb - ta) * t) + w * 0.008f * (azar(1740 + k, j) - 0.5f))
+                }
+                val lCanto = luz(canto[4])
+                // La sombra que arroja, en dos capas: honda junto a la panza y abierta hacia abajo.
+                val panza = Path().apply {
+                    moveTo(canto[0].x, canto[0].y); canto.drop(1).forEach { lineTo(it.x, it.y) }
+                    for (j in 8 downTo 0) { val q = canto[j]; lineTo(q.x, q.y + g * (0.4f + 2.4f * sin(j / 8f * 3.1416f) + 0.6f * azar(1750 + k, j))) }
+                    close()
+                }
+                val arrojada = Path().apply {
+                    moveTo(canto[0].x, canto[0].y); canto.drop(1).forEach { lineTo(it.x, it.y) }
+                    for (j in 8 downTo 0) { val q = canto[j]; lineTo(q.x + w * 0.02f, q.y + g * (1f + 5f * sin(j / 8f * 3.1416f) + 1.5f * azar(1760 + k, j))) }
+                    close()
+                }
+                drawPath(arrojada, sombra(oscuro, 0.24f))
+                drawPath(panza, sombra(oscuro, if (oscuro) 0.65f else 0.62f))
+                // De noche, si el fuego de abajo la alcanza, la panza se enciende.
+                if (oscuro && lCanto.deAbajo && lCanto.k > 0.05f) drawPath(panza, BRASA.copy(alpha = (0.55f * lCanto.k).coerceAtMost(0.45f)))
+                // La cara de arriba, clara, que se pierde hacia arriba en la pared.
+                val cara = Path().apply {
+                    moveTo(canto[0].x, canto[0].y); canto.drop(1).forEach { lineTo(it.x, it.y) }
+                    for (j in 8 downTo 0) { val q = canto[j]; lineTo(q.x - w * 0.01f, q.y - g * (0.3f + 1.8f * sin(j / 8f * 3.1416f) + 0.6f * azar(1770 + k, j))) }
+                    close()
+                }
+                drawPath(cara, n(mezcla(CALIZA_LUZ, CALIZA_MED, 0.15f), oscuro, SIN_LUZ).copy(alpha = 0.8f))
+                drawPath(abierta(canto), if (oscuro) claro(true, 0.4f, lCanto) else LUZ_DIA.copy(alpha = 0.85f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
+                // Una chorrera de óxido que baja desde la cornisa.
+                val jo = 3 + Math.floorMod(k, 3)
+                val xo = canto[jo].x; val yo = canto[jo].y + g * 2.4f
+                drawPath(abierta(List(5) { j -> Offset(xo + w * 0.008f * sin(j * 1.3f + k), yo + alto0 * 0.06f * j) }),
+                    n(mezcla(OCRE_AMAR, OCRE_ROJO, 0.3f), oscuro, SIN_LUZ).copy(alpha = 0.32f), style = Stroke(w * (0.012f + 0.006f * azar(1781, k)), cap = StrokeCap.Round))
+            }
+            // Una lengua de hollín, negra, que sube sobre un nicho donde ardió muchas veces una lámpara.
+            d.huecos.getOrNull(2)?.let { hq ->
+                val b0 = Offset(hq.center.x + hq.width * 0.1f, hq.top + hq.height * 0.3f)
+                val lengua = cerrada(listOf(b0 + Offset(-w * 0.06f, 0f), b0 + Offset(-w * 0.04f, -w * 0.08f), b0 + Offset(-w * 0.01f, -w * 0.15f), b0 + Offset(w * 0.02f, -w * 0.2f),
+                    b0 + Offset(w * 0.03f, -w * 0.12f), b0 + Offset(w * 0.06f, -w * 0.05f), b0 + Offset(w * 0.05f, 0f)))
+                drawPath(lengua, HOLLIN.copy(alpha = 0.22f))
+                drawPath(piedra(b0 + Offset(0f, -w * 0.05f), w * 0.04f, w * 0.06f, 1790, 8, 0.3f), HOLLIN.copy(alpha = 0.22f))
+            }
+        }
+
         // ---- la colada de calcita, por la derecha, de arriba al suelo
         colada(w, suelo, oscuro, ::luz)
 
@@ -547,17 +617,31 @@ object IdeasCueva : DisenoIdeas {
         d.huecos.forEachIndexed { i, hq ->
             val r = Rect(hq.left, hq.top + hq.height * rotulo.top, hq.right, hq.top + hq.height * rotulo.bottom)
             val l = luz(r.center)
-            val nucleo = if (oscuro) mezcla(PARCHE_NOCHE, mezcla(PARCHE_FUEGO, l.tinte, 0.12f), l.k) else PARCHE
-            fun zona(e: Float, semilla: Int): Path = cerrada(List(16) { k ->
-                val a = 6.2832f * k / 16
-                val cx = cos(a); val sy = sin(a)
-                val px = Math.signum(cx) * Math.pow(Math.abs(cx).toDouble(), 0.4).toFloat()
-                val py = Math.signum(sy) * Math.pow(Math.abs(sy).toDouble(), 0.5).toFloat()
-                val j = 1f + 0.08f * (azar(semilla, k) - 0.5f)
-                Offset(r.center.x + (r.width * 0.5f + e) * px * j, r.center.y + (r.height * 0.5f + e * 0.7f) * py * j)
-            })
-            listOf(w * 0.04f to 0.08f, w * 0.028f to 0.14f, w * 0.018f to 0.24f, w * 0.009f to 0.4f, 0f to 0.65f, -w * 0.008f to 1f).forEachIndexed { k, (e, a) ->
-                drawPath(zona(e, 760 + 7 * i + k), nucleo.copy(alpha = a))
+            val nucleo = if (oscuro) mezcla(PARCHE_NOCHE, mezcla(PARCHE_FUEGO, l.tinte, 0.12f), l.k) else mezcla(CALIZA_MED, PARCHE, 0.58f)
+            // Una lasca pulida: más ancha por un lado, con un pico arriba o abajo, de caras rectas; distinta en cada nicho.
+            val ancho = if (azar(800 + i, 0) < 0.5f) -1f else 1f
+            val picoX = 0.2f + 0.6f * azar(800 + i, 1); val picoArriba = azar(800 + i, 2) < 0.5f
+            val base = listOf(Triple(0f, 0f, 0), Triple(0.3f, 0f, 1), Triple(0.62f, 0f, 1), Triple(1f, 0f, 0), Triple(1f, 0.5f, 2), Triple(1f, 1f, 0),
+                Triple(0.66f, 1f, 3), Triple(0.33f, 1f, 3), Triple(0f, 1f, 0), Triple(0f, 0.5f, 4))
+            fun zona(e: Float, semilla: Int): Path = Path().apply {
+                base.forEachIndexed { k, (fu, fv, lado4) ->
+                    var x = r.left + r.width * fu; var y = r.top + r.height * fv
+                    val dx = if (fu < 0.01f) -1f else if (fu > 0.99f) 1f else 0f
+                    val dy = if (fv < 0.01f) -1f else if (fv > 0.99f) 1f else 0f
+                    var extra = e + w * 0.008f * azar(semilla, k)
+                    if (dx == ancho) extra += w * 0.035f
+                    x += dx * extra; y += dy * extra * 0.7f
+                    // El pico: la arista que sobresale arriba o abajo.
+                    if ((lado4 == 1 && picoArriba) || (lado4 == 3 && !picoArriba)) {
+                        val cerca = 1f - (kotlin.math.abs(fu - picoX) / 0.35f).coerceIn(0f, 1f)
+                        y += dy * w * 0.03f * cerca
+                    }
+                    if (k == 0) moveTo(x, y) else lineTo(x, y)
+                }
+                close()
+            }
+            listOf(w * 0.036f to 0.1f, w * 0.024f to 0.18f, w * 0.014f to 0.3f, w * 0.006f to 0.5f, -w * 0.002f to 0.8f, -w * 0.01f to 1f).forEachIndexed { k, (e, a) ->
+                drawPath(zona(e, 760 + 7 * i), nucleo.copy(alpha = a))
             }
             // El lavado: dos chorreras más claras que bajan desde el labio del nicho, y el grano de la piedra.
             if (!oscuro) for (k in 0 until 2) {
@@ -1210,17 +1294,17 @@ object IdeasCueva : DisenoIdeas {
      * lado, para que la rejilla no se lea. Todas asientan su piso a la misma altura (el nombre va debajo).
      */
     private fun bocaNicho(tipo: Int, w: Float, h: Float, s: Int): Path {
-        val piso = h * 0.6f
-        val e = 0.86f + 0.14f * azar(s, 500)
+        val piso = h * 0.61f
+        val e = 0.95f + 0.05f * azar(s, 500)
         val (anchoF, altoF, puntos) = when (tipo) {
-            0 -> Triple(0.56f + 0.16f * azar(s, 502), 0.9f + 0.1f * azar(s, 503), ARCO)
-            1 -> Triple(0.86f + 0.12f * azar(s, 502), 0.44f + 0.12f * azar(s, 503), GRIETA)
-            else -> Triple(0.74f + 0.2f * azar(s, 502), 0.62f + 0.12f * azar(s, 503), VISERA)
+            0 -> Triple(0.76f + 0.1f * azar(s, 502), 0.94f + 0.06f * azar(s, 503), ARCO)
+            1 -> Triple(0.9f + 0.1f * azar(s, 502), 0.62f + 0.12f * azar(s, 503), GRIETA)
+            else -> Triple(0.82f + 0.14f * azar(s, 502), 0.74f + 0.1f * azar(s, 503), VISERA)
         }
         val aw = w * 0.92f * anchoF * e
         val x0 = w * 0.04f + (w * 0.92f - aw) * azar(s, 501)
-        val ah = (piso - h * 0.03f) * altoF * e
-        val incl = if (tipo == 1) (azar(s, 504) - 0.5f) * 0.3f else 0f
+        val ah = (piso - h * 0.015f) * altoF * e
+        val incl = if (tipo == 1) (azar(s, 504) - 0.5f) * 0.22f else 0f
         return cerrada(puntos.mapIndexed { k, q ->
             Offset(x0 + aw * (q.x + (azar(s, k + 600) - 0.5f) * 0.06f), piso - ah + ah * (q.y + (azar(s, k + 620) - 0.5f) * 0.06f) + ah * incl * (q.x - 0.5f))
         })
@@ -1272,6 +1356,12 @@ object IdeasCueva : DisenoIdeas {
                 drawOval(HOLLIN.copy(alpha = 0.5f), Offset(r.left + r.width * 0.2f, r.top - r.height * 0.1f), Size(r.width * 0.6f, r.height * 0.55f))
                 drawOval(HOLLIN.copy(alpha = 0.4f), Offset(r.left + r.width * 0.32f, r.top - r.height * 0.15f), Size(r.width * 0.36f, r.height * 0.4f))
             }
+            // De noche, la pared del fondo recibe la luz: desde arriba, la de la lámpara; desde abajo, el rojo de las brasas.
+            if (oscuro && l.k > 0.2f) {
+                val cy = if (l.deAbajo) r.bottom - r.height * 0.15f else r.top + r.height * 0.35f
+                drawOval(l.tinte.copy(alpha = 0.16f * l.k), Offset(r.center.x - r.width * 0.45f, cy - r.height * 0.4f), Size(r.width * 0.9f, r.height * 0.8f))
+                drawOval(l.tinte.copy(alpha = 0.2f * l.k), Offset(r.center.x - r.width * 0.28f, cy - r.height * 0.25f), Size(r.width * 0.56f, r.height * 0.5f))
+            }
             // Bajo la visera, la sombra honda que arroja hacia dentro.
             if (visera != null) drawPath(corrido(visera, w * 0.02f, r.height * 0.28f), col(HONDO).copy(alpha = 0.85f))
             if (ab > 0f) mancha(Offset(r.center.x, pisoY - r.height * 0.25f), r.width * 0.7f, (if (oscuro) LLAMA else LUZ_DIA).copy(alpha = 0.5f * ab))
@@ -1305,8 +1395,8 @@ object IdeasCueva : DisenoIdeas {
                     // Las lajas revueltas: unas tumbadas, otras de canto, torcidas, alguna rota.
                     val m = k.coerceIn(1, 6)
                     for (i in 0 until m) {
-                        val ancho = r.width * (0.22f + 0.12f * azar(c.semilla, i + 10))
-                        val alto = r.height * (0.3f + 0.25f * azar(c.semilla, i + 11))
+                        val ancho = r.width * (0.26f + 0.14f * azar(c.semilla, i + 10))
+                        val alto = r.height * (0.36f + 0.24f * azar(c.semilla, i + 11))
                         val x = r.left + r.width * (0.2f + 0.6f * azar(c.semilla, i + 12))
                         val giro = -60f + 120f * azar(c.semilla, i + 13)
                         laja(Rect(x - ancho / 2, pisoY - alto - sube, x + ancho / 2, pisoY - sube), giro, c.semilla + i, oscuro, l, ::col)
@@ -1316,24 +1406,24 @@ object IdeasCueva : DisenoIdeas {
                     // De pie, apoyadas unas en otras, de tamaños distintos.
                     val m = k.coerceIn(1, 7)
                     for (i in 0 until m) {
-                        val ancho = r.width * (0.7f / maxOf(m, 3)) * (1.05f + 0.45f * azar(c.semilla, i + 50))
-                        val alto = r.height * (0.4f + 0.3f * azar(c.semilla, i + 60))
+                        val ancho = r.width * (0.74f / maxOf(m, 3)) * (1.1f + 0.4f * azar(c.semilla, i + 50))
+                        val alto = r.height * (0.52f + 0.26f * azar(c.semilla, i + 60))
                         val x = r.left + r.width * (0.14f + 0.66f * (i + 0.5f) / m) - ancho / 2
                         laja(Rect(x, pisoY - alto - sube, x + ancho, pisoY - sube), -10f + 20f * azar(c.semilla, i + 70), c.semilla + i, oscuro, l, ::col)
                     }
-                    terron(Offset(r.right - r.width * 0.1f, pisoY - r.height * 0.03f), r.width * 0.06f, OCRE_ROJO, c.semilla + 5, oscuro, l, if (oscuro) 1f else -1f)
+                    terron(Offset(r.right - r.width * 0.13f, pisoY - r.height * 0.05f), r.width * 0.1f, OCRE_ROJO, c.semilla + 5, oscuro, l, if (oscuro) 1f else -1f)
                 }
                 tipo == 1 -> {
                     // De plano, apiladas: la pila crece con las fichas.
                     val m = k.coerceIn(1, 8)
-                    val grueso = r.height * 0.085f
+                    val grueso = r.height * 0.1f
                     for (i in 0 until m) {
-                        val ancho = r.width * (0.36f + 0.24f * azar(c.semilla, i + 80))
+                        val ancho = r.width * (0.4f + 0.22f * azar(c.semilla, i + 80))
                         val x = r.left + r.width * (0.42f + 0.1f * (azar(c.semilla, i + 81) - 0.5f)) - ancho / 2
                         val y = pisoY - grueso * (i + 1) - sube * (i + 1) / m
                         lajaPlana(Rect(x, y, x + ancho, y + grueso), c.semilla + i, oscuro, l, ::col)
                     }
-                    conchita(Offset(r.right - r.width * 0.16f, pisoY - r.height * 0.02f), r.width * 0.1f, oscuro, l, ::col)
+                    conchita(Offset(r.right - r.width * 0.17f, pisoY - r.height * 0.02f), r.width * 0.18f, oscuro, l, ::col)
                 }
                 else -> {
                     // En abanico, abiertas desde un mismo pie.
@@ -1341,22 +1431,22 @@ object IdeasCueva : DisenoIdeas {
                     val pieA = Offset(r.left + r.width * 0.42f, pisoY - sube)
                     for (i in 0 until m) {
                         val giro = if (m == 1) 0f else -40f + 80f * i / (m - 1)
-                        val ancho = r.width * (0.17f + 0.06f * azar(c.semilla, i + 91)); val alto = r.height * (0.48f + 0.16f * azar(c.semilla, i + 90))
+                        val ancho = r.width * (0.2f + 0.07f * azar(c.semilla, i + 91)); val alto = r.height * (0.56f + 0.16f * azar(c.semilla, i + 90))
                         laja(Rect(pieA.x - ancho / 2, pieA.y - alto, pieA.x + ancho / 2, pieA.y), giro, c.semilla + i, oscuro, l, ::col)
                     }
-                    huesoGrabado(Offset(r.right - r.width * 0.2f, pisoY - r.height * 0.02f), r.width * 0.3f, oscuro, l, ::col)
+                    huesoGrabado(Offset(r.right - r.width * 0.22f, pisoY - r.height * 0.03f), r.width * 0.4f, oscuro, l, ::col)
                 }
             }
             // Algo dejado en el labio o al lado del nicho, fuera de él.
             when (Math.floorMod(c.semilla / 5, 4)) {
-                0 -> huesoGrabado(Offset(minOf(r.right + w * 0.02f, w * 0.88f), r.bottom + h * 0.015f), w * 0.15f, oscuro, l, ::col)
+                0 -> huesoGrabado(Offset(minOf(r.right - w * 0.04f, w * 0.86f), r.bottom + h * 0.012f), w * 0.22f, oscuro, l, ::col)
                 1 -> {
-                    val q = Offset(minOf(r.right + w * 0.035f, w * 0.95f), r.bottom + h * 0.005f)
+                    val q = Offset(minOf(r.right + w * 0.01f, w * 0.94f), r.bottom + h * 0.0f)
                     // El terrón y la mancha que dejó al frotarlo contra la roca.
                     drawPath(piedra(q + Offset(-w * 0.01f, -h * 0.05f), w * 0.022f, h * 0.05f, c.semilla + 9, 8, 0.35f), col(OCRE_ROJO).copy(alpha = 0.55f))
-                    terron(q, w * 0.026f, OCRE_ROJO, c.semilla + 11, oscuro, l, -1f)
+                    terron(q, w * 0.036f, OCRE_ROJO, c.semilla + 11, oscuro, l, -1f)
                 }
-                2 -> raspador(Offset(maxOf(r.left - w * 0.03f, w * 0.05f), r.bottom + h * 0.01f), w * 0.035f, oscuro, l, ::col)
+                2 -> raspador(Offset(maxOf(r.left + w * 0.02f, w * 0.06f), r.bottom + h * 0.01f), w * 0.05f, oscuro, l, ::col)
                 else -> {}
             }
             // Bajo el nicho: tres puntos de ocre si tiene tema; un trazo de carbón si no.
@@ -1386,7 +1476,8 @@ object IdeasCueva : DisenoIdeas {
         rotate(giro, Offset(r.center.x, r.bottom)) {
             val f = contornoIrregular(rr, semilla, if (rota) 11 else 13, if (rota) 0.15f else 0.07f)
             val t = rr.width * 0.13f
-            drawPath(corrido(f, rr.width * 0.22f, rr.height * 0.04f), sombra(oscuro, 0.4f))
+            if (oscuro && l.deAbajo) drawPath(corrido(f, rr.width * 0.12f, -rr.height * 0.16f), sombra(true, 0.35f + 0.3f * l.k))
+            else drawPath(corrido(f, rr.width * (0.22f + (if (oscuro) 0.08f * l.k else 0f)), rr.height * 0.04f), sombra(oscuro, if (oscuro) 0.3f + 0.35f * l.k else 0.4f))
             drawPath(corrido(f, t, t * 0.35f), col(mezcla(CALIZA_OSC, CALIZA_MED, 0.4f)))
             drawPath(f, col(mezcla(mezcla(LAJA, CALIZA_MED, 0.35f * azar(semilla, 3)), CALCITA, 0.25f * azar(semilla, 4))))
             drawPath(borde(f, -rr.width * 0.16f, 0f), sombra(oscuro, 0.16f))
