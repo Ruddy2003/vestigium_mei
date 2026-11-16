@@ -61,22 +61,26 @@ nouveau y Psicodelia.
   una libélula (se agacha, se alza en dos patas y le tira un zarpazo) y se enrosca mientras una línea de oro sale de la
   punta de su cola y dibuja la línea de látigo, que se dobla sobre sí misma y acaba en un rizo.
 
-- Psicodelia (`psicodelia`): gato atigrado naranja dibujado en tinta fluorescente de imprenta (recurso del dibujo: a la
-  manera de un cartel de las salas de baile de 1967, serigrafiado, sin copiar ninguno): tres tintas planas por color, los
-  complementarios uno junto al otro para que vibren (el naranja con el azul de la cinta, el magenta de las rayas con el
-  verde del ojo, el amarillo de las luces con el violeta de la sombra), el contorno de cartel grueso y parejo, el medio
-  tono en trama de puntos y el registro un poco corrido (la pantalla del color se sale del contorno de un lado). De
-  noche, bajo la luz negra: el naranja y el magenta brillan, la sombra se hunde en el violeta y el tubo deja un filo
-  violeta. Lleva gafas redondas de alambre con el cristal rosa (el ojo se ve a través) y una cinta azul con florecitas
-  en la frente, anudada atrás. Fondo: una calle de San Francisco en el verano de 1967 (la niebla de la mañana, el sol
-  velado, la fila de casas victorianas casi todas grises o desteñidas con dos pintadas, la calle que sube recta la cuesta
-  con sus casas en escalera hasta los eucaliptos de la loma, el poste de madera con los carteles pegados, los cables
-  del trolebús, el árbol que enmarca y dibujos de tiza en la acera); de noche, la misma calle con el farol, las
-  ventanas con luz, un mirador con luz negra (y adentro carteles en verde limón y magenta) y otro con las luces
-  líquidas. Lo que se mueve: jirones de niebla que pasan y se deshacen, los carteles con el viento, una gaviota de día
-  y, de noche, las luces líquidas y dos polillas en el farol. Se queda hipnotizado mirando una lámpara de cera (un
-  frasco recto con cúpula sobre un pie de tambor: no la forma registrada de la lámpara de lava; de noche lo ilumina) ·
-  persigue las burbujas del show de luces (gotas de luz que se le proyectan encima). Nada remite a drogas.
+- Psicodelia (`psicodelia`, versión 2 del tema: docs/diseno/temas/psicodelia.md, «El gato»): el tema tiene dos caras
+  (la ciudad sobria de fines de los sesenta y la psicodelia de cartel) y la psicodelia tiene intensidad, así que hay una
+  banda por cara y, en la psicodelia, una por escalón: `psicodelia` (la ciudad), `psicodelia_tinta` (i = 0),
+  `psicodelia_tinta_media` (i = 0.5) y `psicodelia_tinta_plena` (i = 1), cada una en claro y oscuro (la app elige con
+  `Gato.clave`). El gato es el mismo atigrado naranja en todas, sin gafas ni cinta ni ningún accesorio, con las patas
+  manchadas de tinta. En la ciudad, pintado como una foto de los setenta («foto»: volumen continuo con la luz de la tarde
+  por la izquierda, sombras café, el filo de luz del sol, el color de película vieja, el grano fino y el borde blando; de
+  noche, la luz baja de la lámpara de pantalla). En la psicodelia, impreso a dos tintas («dos tintas»: el bermellón plano
+  y la tinta que graba; las rayas en trama de líneas, la sombra en grabado fino, lo claro es el papel; sobre el negro,
+  el crema como cuarta tinta); con la intensidad, la tinta sube de croma, entra el magenta en las rayas, el registro se
+  corre y las rayas ondulan. Fondo de la ciudad: una calle de San Francisco por la tarde (la bruma, el sol velado, la
+  cuesta, las victorianas grises con una sola pintada y desteñida, el poste con los carteles de la semana a dos tintas,
+  los cables del trolebús, el árbol, una rayuela de tiza) con la película encima; de noche, al anochecer, con el farol y
+  las lámparas de pantalla en las ventanas. Fondo de la psicodelia: el cartel de la semana impreso (el marco de arco, el
+  disco del día hecho sol con sus rayos en grabado, las bandas abiertas como un ojo, dos placas con letras de bloque que
+  llenan su forma, la fila de victorianas grabada en ultramar, el suelo en líneas) en papel o para luz negra, con más
+  bandas, onda, registro y anillos según el escalón. Se mueven: en la ciudad, la niebla, los carteles, una gaviota y,
+  de noche, las polillas del farol; en el cartel, las luces líquidas, el brillo del disco que gira y (desde 0.5) los
+  anillos que salen del disco. Persigue las manchas de luz líquida que resbalan por la pared · se sienta sobre el cartel
+  recién impreso y deja sus huellas de tinta. El consumo no se dibuja: solo se nota en la intensidad.
 
 Colores de la guía del tema (docs/diseno/temas/frente.md, «La base escondida en ruinas», y `TrazosFrente` en
 ui/FrenteTrazos.kt): piedra verdosa, consola blanca y oscura, el turquesa del vidrio, el cobre, y el ámbar, el óxido y el
@@ -86,9 +90,11 @@ verde negro, la luna y la hoguera; el rojo de Roma, solo en lo que es de Roma. L
 docs/diseno/temas/nouveau.md (`TrazosNouveau`): crema, salvia, el violeta del iris y la malva, el oro pálido y el verde de
 hierro de Guimard; de noche, el azul negro con la luz eléctrica dorada y el verde de los cafés. Nada de Art déco (ni
 geometría ni zigzag) ni nada copiado de ningún cartel: las curvas son de planta y de látigo.
-Los de Psicodelia, de docs/diseno/temas/psicodelia.md (`TrazosPsicodelia`): los complementarios que vibran, las casas grises
-y desteñidas con las pocas pintadas en turquesa y amarillo, la niebla; de noche, la luz negra (verde limón, magenta y
-violeta sobre el negro violeta). Nada de Ciudad neón (ni letreros ni rejillas): las formas son blandas.
+Los de Psicodelia, de docs/diseno/temas/psicodelia.md, versión 2 (`TrazosCiudad` y `TrazosTinta` en
+ui/PsicodeliaTrazos.kt): en la ciudad, la bruma, la luz baja, los grises cálidos, el verde azul desteñido, el café de las
+sombras y la película; en la psicodelia, solo el papel (o el negro de terciopelo), la tinta que graba, el crema y las tres
+tintas (magenta, bermellón y ultramar) con su croma según la intensidad. Ningún tópico (ni flores, ni la paz, ni el
+arcoíris, ni la lámpara de cera, ni gafas): la guía dice cuáles.
 Importa la cadena (gato18, gato19 y los gato20*) y agrega sus temas sin tocar los demás.
 
 Uso: python3 gato21.py hoja|fondos|bandas [tema…]   (lo deja en salida/, que no se sube)
@@ -587,8 +593,9 @@ def _rejilla_guarda(self):
 g8.Lienzo.rejilla = _rejilla_guarda
 
 
-def _dibujo_hr(Lz):
-    """Las capas del lienzo a su resolución (R pixeles por celda), sin pasar por la cuadrícula: letra y rango por pixel."""
+def _dibujo_hr(Lz, manchas=False):
+    """Las capas del lienzo a su resolución (R pixeles por celda), sin pasar por la cuadrícula: letra y rango por pixel.
+    Con `manchas` (Psicodelia), las patas llevan además sus manchas de tinta (la letra I)."""
     lab = np.full((N * g8.R, N * g8.R), ord("."), np.uint8)
     rk = np.full((N * g8.R, N * g8.R), 255, np.uint8)
     pa = np.zeros((N * g8.R, N * g8.R), np.uint8)
@@ -598,7 +605,10 @@ def _dibujo_hr(Lz):
             lab[m] = ord(letra if not (capa == "linea" or (capa.startswith(("f_", "b_")) and letra == "K")) else "k")
             rk[m] = int(round(g8.RANGO.get(p_, 2.0) * 10))
             pa[m] = PARTES_HR.get(p_, 0)
-    return _rayas_hr(lab, pa), rk
+    lab = _rayas_hr(lab, pa)
+    if manchas:
+        lab = _manchas_tinta(lab)
+    return lab, rk
 
 
 _acabar_lito = g8.acabar
@@ -611,7 +621,7 @@ def acabar_lito(ch, parte, estilo):
     out = [f[:] for f in out]
     clave = "".join("".join(f) for f in out)
     if _ultimo_lienzo.get("L") is not None:
-        _hr_lito[clave] = _dibujo_hr(_ultimo_lienzo.pop("L"))
+        _hr_lito[clave] = _dibujo_hr(_ultimo_lienzo.pop("L"), manchas=(len(estilo) > 3 and estilo[3] == "tinta_psi"))
     return out
 
 
@@ -619,90 +629,29 @@ g8.acabar = acabar_lito
 g8._spr.clear(); g8._rej.clear()
 
 # ---------------------------------------------------------------------
-#  Psicodelia: las gafas redondas y la cinta en la frente. Las gafas, de alambre, con el cristal teñido de rosa: el
-#  cristal es una capa propia que va debajo del ojo (así el ojo se ve a través, como en un cartel: el disco de color
-#  plano y el ojo encima), con su aro, el puente y la patilla que va hacia la oreja. La cinta, de tela azul con florecitas
-#  amarillas, rodea la frente por encima de las gafas y se anuda atrás; las dos puntas del nudo vuelan con el movimiento.
+#  Psicodelia (versión 2 del tema, docs/diseno/temas/psicodelia.md, «El gato»): sin gafas ni cinta. Lo único que lleva
+#  son las patas manchadas de tinta, como las manos de los operadores de luces y de los que imprimían los carteles: en el
+#  dibujo a 8×, la punta de cada pata (la capa «pata», letra T) se mancha con borrones irregulares (letra I), más en la
+#  punta y en la planta, como si hubiera pisado el cartel recién impreso.
 # ---------------------------------------------------------------------
-if "lente21" not in [c[0] for c in g8.CAPAS]:
-    g8.CAPAS.insert([c[0] for c in g8.CAPAS].index("ojo"), ("lente21", "O", "cabeza", 0.3))
-PSI_LENTE = (2.5, -0.6, 2.2, 2.3)          # el cristal, en coordenadas de la cabeza (centro y radios)
-_lado_psi, _frente_psi = g8.sombrero_lado, g8.sombrero_frente
+def _manchas_tinta(lab):
+    """Las manchas de tinta en las patas: la planta entera y, encima, borrones que suben un poco por los dedos."""
+    n_ = lab.shape[0]
+    yy, xx = np.mgrid[0:n_, 0:n_].astype(np.float32)
+    X, Y = (xx + 0.5) / g8.R, (yy + 0.5) / g8.R
+    pata = lab == ord("T")
+    if not pata.any():
+        return lab
+    borron = ruido((n_, n_), 33, (6, 6))
+    # Lo más bajo de cada columna de pata (la planta), con su borde irregular.
+    hay = pata.any(0)
+    abajo = np.where(hay, n_ - 1 - np.argmax(pata[::-1], 0), -1).astype(np.float32)
+    alto_ = (abajo[None, :] - yy) / g8.R                                   # dp desde la planta hacia arriba
+    m = pata & (alto_ < 0.9 + 1.5 * borron)
+    m |= pata & (borron > 0.66) & (alto_ < 2.6)                              # salpicaduras más arriba
+    return np.where(m, ord("I"), lab).astype(np.uint8)
 
 
-def sombrero_lado_psi(L, cx, cy, inc, som):
-    if som != "gafas_cinta":
-        return _lado_psi(L, cx, cy, inc, som)
-    a = math.radians(inc)
-    p = lambda x, y: g8.rot(cx, cy, x, y, a)
-    P = lambda pts: [p(*q) for q in pts]
-    ps = g17._actual.get("ps") or {}
-    v = min(1.0, ps.get("viento", 0.0)) if abs(ps.get("cab", (cx, cy))[0] - cx) < 1e-6 else 0.0
-    # La cinta: sigue la curva de la frente, por encima de las gafas y por debajo de la oreja.
-    banda = [(-6.1, -2.0), (-3.4, -3.75), (0.2, -4.45), (3.4, -4.15), (5.5, -3.1)]
-    L.curva("sombrero", P(banda), [1.75, 1.8, 1.8, 1.75, 1.6])
-    # El nudo, atrás, y sus dos puntas sueltas, que el viento de la carrera echa hacia atrás.
-    L.elipse("sombrero", *p(-6.4, -1.9), 1.25, 1.35, inc + 20)
-    for (x1, y1, x2, y2, w) in ((-8.3 - 0.8 * v, -1.2 - 0.5 * v, -9.6 - 1.6 * v, -0.2 - 1.0 * v, 1.5),
-                                (-7.8 - 0.6 * v, 0.6 - 0.3 * v, -8.6 - 1.3 * v, 2.3 - 0.8 * v, 1.4)):
-        L.curva("sombrero", P([(-6.6, -1.7), (x1, y1), (x2, y2)]), [w, w * 0.95, w * 0.85])
-    # Florecitas en la cinta (cinco pétalos no caben: un punto amarillo con su centro).
-    for (x, y) in ((-3.0, -3.85), (1.3, -4.4), (4.6, -3.7)):
-        L.elipse("sombrero3", *p(x, y), 0.62, 0.62)
-    # Las gafas: el cristal de color (debajo del ojo), el aro de alambre, el puente y la patilla.
-    ex, ey, rx, ry = PSI_LENTE
-    L.elipse("lente21", *p(ex, ey), rx, ry, inc)
-    aro = [p(ex + (rx + 0.1) * math.cos(u), ey + (ry + 0.1) * math.sin(u)) for u in np.linspace(0, 2 * math.pi, 30)]
-    L.capsula("sombrero2", aro, 0.5)
-    L.capsula("sombrero2", P([(ex + rx - 0.1, ey - 0.5), (5.0, -1.5), (5.9, -1.2)]), 0.45)        # el puente
-    L.capsula("sombrero2", P([(ex - rx, ey - 0.4), (-2.4, -1.3), (-4.9, -1.7)]), 0.45)            # la patilla
-    _lado_psi(L, cx, cy, inc, None)          # el objeto de la animación propia (si lo hay) se dibuja ahí
-
-
-def sombrero_frente_psi(L, cx, cy, som, desv=0.0):
-    """La cinta vista de espaldas (desv 0) o en tres cuartos de espaldas (desv > 0): cruza la nuca con el nudo y las
-    dos puntas que caen; de tres cuartos asoma además la patilla de las gafas."""
-    if som != "gafas_cinta":
-        return _frente_psi(L, cx, cy, som, desv)
-    dx = desv * 1.6
-    L.curva("sombrero", [(cx - 6.5 + dx * 0.3, cy - 1.9), (cx - 3.3 + dx * 0.6, cy - 3.8), (cx + dx * 0.8, cy - 4.3),
-                         (cx + 3.3 + dx, cy - 3.8), (cx + 6.4 + dx, cy - 1.9)], [1.7, 1.75, 1.8, 1.75, 1.7])
-    kx, ky = cx - 0.6 * desv, cy - 3.9
-    L.elipse("sombrero", kx, ky, 1.35, 1.2)
-    L.curva("sombrero", [(kx, ky), (kx - 1.1, ky + 2.6), (kx - 2.0, ky + 5.0)], [1.15, 1.0, 0.8])
-    L.curva("sombrero", [(kx, ky), (kx + 0.9, ky + 2.4), (kx + 0.8, ky + 4.5)], [1.05, 0.95, 0.78])
-    for x in (cx - 4.4 + dx * 0.4, cx + 4.0 + dx):
-        L.elipse("sombrero3", x, cy - 3.3, 0.6, 0.6)
-    if desv > 0:
-        L.capsula("sombrero2", [(cx + 4.4 + dx, cy - 0.9), (cx + 6.9 + dx, cy - 0.3)], 0.45)
-
-
-g8.sombrero_lado, g8.sombrero_frente = sombrero_lado_psi, sombrero_frente_psi
-
-# Para la luz que se proyecta sobre el gato (las burbujas del show de luces): el acabado guarda también el dibujo a 8×
-# sin los objetos, para pintar el gato entero y poner la luz encima, mezclada con lo que ilumina.
-_hr_luz = {}
-_acabar_psi = g8.acabar
-
-
-def acabar_psi(ch, parte, estilo):
-    Lz = _ultimo_lienzo.get("L")
-    out = _acabar_psi(ch, parte, estilo)
-    if estilo[0] == "lito" and estilo[2] == "gafas_cinta" and Lz is not None:
-        lab = np.full((N * g8.R, N * g8.R), ord("."), np.uint8)
-        pa = np.zeros((N * g8.R, N * g8.R), np.uint8)
-        for capa, letra, p_, _u in g8.CAPAS:
-            if capa.startswith(("f_", "b_")):
-                continue
-            m = np.asarray(Lz.img[capa]) > 127
-            if m.any():
-                lab[m] = ord(letra if capa != "linea" else "k")
-                pa[m] = PARTES_HR.get(p_, 0)
-        _hr_luz["".join("".join(f) for f in out)] = _rayas_hr(lab, pa)
-    return out
-
-
-g8.acabar = acabar_psi
 g8._spr.clear(); g8._rej.clear()
 
 # =====================================================================
@@ -1228,170 +1177,271 @@ def _erf(x):
 
 
 # =====================================================================
-#  Material: tinta fluorescente de imprenta (Psicodelia), como en los carteles de las salas de baile de 1967 (recurso del
-#  dibujo: se pinta a la manera de un cartel serigrafiado, sin copiar ninguno; la serigrafía es recurso). Cada color es
-#  una pantalla: tintas planas y saturadas, los complementarios uno junto al otro para que vibren (el naranja con el
-#  azul de la cinta, el magenta de las rayas con el verde del ojo), un contorno de cartel grueso y parejo, el medio tono
-#  en punto de trama (no en crachis: la trama ordenada de la imprenta) y el registro un poco corrido, como en una tirada
-#  a mano: la pantalla del color se sale del contorno de un lado y deja ver el papel del otro. De noche, la luz negra:
-#  las tintas fluorescentes brillan, lo que no es fluorescente se hunde en el violeta y el tubo deja un filo violeta.
+#  Materiales de Psicodelia (versión 2): el mismo gato pintado de dos maneras, una por cara del tema.
+#  - La ciudad («foto»): el atigrado naranja como en una foto de revista de fines de los sesenta vista con los ojos de
+#    los setenta: volumen continuo con la luz de la tarde que entra por la izquierda, sombras de color café (no grises),
+#    el filo de luz cálida del lado del sol, el color de película vieja (los oscuros se levantan hacia el café, las luces
+#    se van al crema, todo un poco apagado), el grano fino y cálido y el borde blando de una foto, no la línea de un dibujo.
+#  - La psicodelia («dos tintas»): el mismo gato impreso en serigrafía a dos tintas sobre el papel del cartel (o sobre el
+#    negro de terciopelo): una tinta de color plana (el bermellón) y la tinta que graba (azul negra; sobre el negro, el
+#    negro del fondo calado y el crema como cuarta tinta). Las rayas van en trama de líneas, la sombra en grabado fino a la
+#    derecha del volumen (la luz sigue viniendo de la izquierda) y lo claro es el papel sin tinta. Con la intensidad
+#    (`TrazosTinta.medidas`, en pequeño): la tinta sube de croma, entra la tercera (el magenta, en las rayas, desde i = 0.5),
+#    el registro se corre (el color a la izquierda y abajo, el magenta a la derecha y arriba) y las rayas ondulan.
 # =====================================================================
-TRAMA_PUNTO = (np.array([[12, 5, 6, 13], [4, 0, 1, 7], [11, 3, 2, 8], [15, 10, 9, 14]]) + 0.5) / 16
+SOMBRA_CAFE, AL_SOL = hx("4A3528"), hx("F4E6CC")       # `TrazosCiudad.SOMBRA` y `AL_SOL`
 
 
-def pintar_serigrafia(g, t, cel):
-    """Serigrafía fluorescente. Como la litografía (las formas salen del dibujo a 8×), pero: tres tintas planas por color
-    (la luz, la base y la sombra), el medio tono en trama de puntos, la línea de contorno gruesa y casi pareja, el registro
-    corrido y, en las animaciones de luz (las burbujas), la luz que se proyecta sobre el gato encima de todo. Se calcula a
-    4× y se toma un punto por pixel final (cada pixel es una tinta)."""
-    col = t["col"]
-    sub = 4
-    s = cel * sub
+def pelicula_np(rgb):
+    """`TrazosCiudad.pelicula` sobre un arreglo (0 a 255): los oscuros se levantan hacia el café (hasta un 18 %), las luces
+    se van al crema (hasta un 12 %) y todo pierde un 10 % de saturación hacia su gris cálido. **[Aproximación]**: se mezcla
+    en sRGB, no en Oklab como `lerp` de Compose."""
+    c = np.asarray(rgb, np.float32) / 255
+    lin = np.where(c <= 0.04045, c / 12.92, ((c + 0.055) / 1.055) ** 2.4)
+    l = (0.2126 * lin[..., 0] + 0.7152 * lin[..., 1] + 0.0722 * lin[..., 2])[..., None]
+    sombra, sol = np.array(SOMBRA_CAFE, np.float32) / 255, np.array(AL_SOL, np.float32) / 255
+    gris = l + (sombra - l) * 0.15
+    apagado = c + (gris - c) * 0.1
+    a = apagado + (sombra - apagado) * (0.18 * (1 - l))
+    return np.clip((a + (sol - a) * (0.12 * l)) * 255, 0, 255)
+
+
+def _hr_de(g, s):
+    """El dibujo a 8× de la cuadrícula g (letra y rango por pixel), llevado a s pixeles por dp. Si no está (no debería
+    pasar), la cuadrícula tal cual."""
     A = np.array([list(f) for f in g])
     filas, cols_ = A.shape
-    _o = lambda cs: [ord(c) for c in cs]
     clave = "".join("".join(f) for f in g)
-    hr, hl = _hr_lito.get(clave), _hr_luz.get(clave)
+    hr = _hr_lito.get(clave)
     if hr is None:
-        clave2 = "".join("".join(f[::-1]) for f in g)
-        hr2, hl2 = _hr_lito.get(clave2), _hr_luz.get(clave2)
+        hr2 = _hr_lito.get("".join("".join(f[::-1]) for f in g))
         if hr2 is not None:
             hr = (hr2[0][:, ::-1], hr2[1][:, ::-1])
-            hl = hl2[:, ::-1] if hl2 is not None else None
     tam = (cols_ * s, filas * s)
-    sube = lambda a: np.asarray(Image.fromarray(np.ascontiguousarray(a)).resize(tam, Image.NEAREST)).astype(np.int32)
     if hr is not None:
-        Lb_todo, Rk = sube(hr[0]), sube(hr[1])
-    else:
-        F = np.where((A == "K"), "k", A)
-        Lb_todo = np.vectorize(ord)(F).astype(np.int32).repeat(s, 0).repeat(s, 1)
-        Rk = np.where(A != ".", 20, 255).astype(np.int32).repeat(s, 0).repeat(s, 1)
-    luces_obj = col.get("_luces", "")
-    Lb = sube(hl) if (luces_obj and hl is not None) else Lb_todo        # el gato sin la luz que le cae encima
-    sil = Lb != ord(".")
-    h, w = Lb.shape
-    yy, xx = np.mgrid[0:h, 0:w]
-    trama = TRAMA_PUNTO[(yy // sub) % 4, (xx // sub) % 4]
-    luzq = np.isin(Lb, _o(t.get("lito_luces", "")))
-    # --- Volumen (para la sombra y las luces planas).
-    B2 = _difuso((sil & ~luzq).astype(np.float32), 2.1 * s)
+        sube = lambda a: np.asarray(Image.fromarray(np.ascontiguousarray(a)).resize(tam, Image.NEAREST)).astype(np.int32)
+        return sube(hr[0]), sube(hr[1]), clave
+    F = np.where((A == "K"), "k", A)
+    Lb = np.vectorize(ord)(F).astype(np.int32).repeat(s, 0).repeat(s, 1)
+    Rk = np.where(A != ".", 20, 255).astype(np.int32).repeat(s, 0).repeat(s, 1)
+    return Lb, Rk, clave
+
+
+def _difuso_f(m, r):
+    """Desenfoque gaussiano de un arreglo de números cualesquiera (no solo 0..1), en dos pasadas (filas y columnas)."""
+    r = max(0.5, float(r))
+    n = int(math.ceil(r * 2.5))
+    k = np.exp(-0.5 * (np.arange(-n, n + 1) / r) ** 2); k /= k.sum()
+    m = np.asarray(m, np.float32)
+    p = np.pad(m, ((0, 0), (n, n)), mode="edge")
+    m = sum(k[j] * p[:, j:j + m.shape[1]] for j in range(2 * n + 1))
+    p = np.pad(m, ((n, n), (0, 0)), mode="edge")
+    return sum(k[j] * p[j:j + m.shape[0], :] for j in range(2 * n + 1))
+
+
+def _volumen(sil, s, lv):
+    """La luz difusa de un volumen hecho de la silueta (como el de la litografía): de 0 (de espaldas a la luz) a 1."""
+    B2 = _difuso(sil.astype(np.float32), 2.1 * s)
     gy, gx = np.gradient(B2)
     k_ = 7.0 * s
     nx, ny = -gx * k_, -gy * k_
     nn = np.sqrt(nx * nx + ny * ny + 1)
-    lv = np.array(col.get("_luz", t["lito_luz"]), np.float32); lv /= np.linalg.norm(lv)
-    dif = np.clip((nx * lv[0] + ny * lv[1] + lv[2]) / nn, 0, 1)
-    u_sh, u_hi = t["lito_umbral"]
-    sombra = dif < u_sh
-    luces = dif > u_hi
-    tintas = t["lito_tintas"]
-    rgb = np.zeros((h, w, 3), np.float32)
+    lv = np.array(lv, np.float32); lv /= np.linalg.norm(lv)
+    return np.clip((nx * lv[0] + ny * lv[1] + lv[2]) / nn, 0, 1), lv
 
-    def rampa(v):
-        if v in tintas:
-            return [np.array(c, np.float32) for c in tintas[v]]
-        base = col["K"] if v == "k" else col[v]
-        return [np.array(mezcla(base, (255, 255, 255), 0.35), np.float32), np.array(base, np.float32),
-                np.array(mezcla(base, t["lito_sombra"], 0.45), np.float32)]
+
+def _borde(sil, s, lv):
+    """Para la línea del borde: la silueta suavizada (0.5 justo en el borde) y hacia dónde mira cada borde (1: a la luz)."""
+    Bc = _difuso(sil.astype(np.float32), 0.5 * s)
+    by, bx = np.gradient(_difuso(sil.astype(np.float32), 1.4 * s))
+    on = np.sqrt(bx * bx + by * by) + 1e-6
+    return Bc, (-bx / on) * lv[0] + (-by / on) * lv[1], on
+
+
+def pintar_foto(g, t, cel):
+    """La ciudad: el gato como en una foto de los setenta (ver arriba). Se calcula a 4× y se reduce promediando (el borde
+    blando de la foto, no un punto por pixel)."""
+    col = t["col"]
+    sub = 4
+    s = cel * sub
+    Lb, Rk, _ = _hr_de(g, s)
+    filas, cols_ = len(g), len(g[0])
+    _o = lambda cs: [ord(c) for c in cs]
+    sil = Lb != ord(".")
+    luzq = np.isin(Lb, _o(col.get("_luces", "")))               # lo que da luz (no lleva sombra ni borde)
+    dif, lv = _volumen(sil & ~luzq, s, t["foto_luz"])
+    rgb = np.zeros(Lb.shape + (3,), np.float32)
     for q in np.unique(Lb):
         v = chr(q)
-        if v == ".":
-            continue
-        m = Lb == q
-        c0, c1, c2 = rampa(v)
-        if v in t["lito_planas"] + col.get("_planas", ""):
-            rgb[m] = c1
-        elif v in t["lito_en_sombra"]:
-            rgb[m] = c2
-        else:
-            rgb[m] = c1
-            rgb[m & sombra] = c2
-            if v in t["lito_papel_en"]:
-                rgb[m & luces] = c0
-    # --- El medio tono: trama de puntos de la tinta de sombra, que crecen hacia la sombra.
-    ancho_c = t["lito_crachis"]
-    dens = np.clip(1 - (dif - u_sh) / ancho_c, 0, 1) * t.get("lito_crachis_p", 0.6)
-    punto = (dif >= u_sh) & (dif < u_sh + ancho_c) & (trama < dens)
-    for v in t["lito_crachis_en"]:
-        m = punto & (Lb == ord(v))
-        if m.any():
-            rgb[m] = rampa(v)[2]
-    # --- El registro corrido: la pantalla de color se sale del contorno de un lado y deja el papel del otro.
-    rdx, rdy = t.get("seri_registro", (0, 0))
-    sil_c = sil & ~luzq
-    fuera = np.zeros_like(sil)
-    if rdx or rdy:
-        rgb_c = np.dstack([_corrido(rgb[..., q], rdy * sub, rdx * sub) for q in range(3)])
-        sil_r = _corrido(sil_c, rdy * sub, rdx * sub)
-        fuera = sil_r & ~sil                                 # la tinta que se sale (fuera del contorno)
-        hueco = sil_c & ~sil_r                               # el papel que queda (dentro del contorno)
-        rgb[fuera] = rgb_c[fuera]
-        rgb[hueco] = t["lito_papel"]
-    # --- La línea de contorno: gruesa y casi pareja (la del cartel), un poco más del lado de la sombra.
-    sg = 0.5 * s
-    Bc = _difuso(sil_c.astype(np.float32), sg)
-    by, bx = np.gradient(_difuso(sil_c.astype(np.float32), 1.4 * s))
-    on = np.sqrt(bx * bx + by * by) + 1e-6
-    cara = (-bx / on) * lv[0] + (-by / on) * lv[1]
-    w0, w1 = t["lito_pluma"]
-    ancho = (w0 + (w1 - w0) * np.clip(0.5 - 0.6 * cara, 0, 1)) * s
-    ancho = np.where(np.isin(Lb, _o("UVX")), ancho * t.get("lito_pluma_obj", 1.0), ancho)
-    linea = sil_c & (Bc < 0.5 * (1 + _erf(ancho / sg / math.sqrt(2))))
+        if v != ".":
+            rgb[Lb == q] = col["K"] if v == "k" else col[v]
+    # --- El pelo de una foto no tiene bordes de tinta: lo de adentro (las rayas, la panza clara) se funde un poco con lo
+    #     de al lado; el ojo, la nariz, la línea y la tinta de las patas se quedan nítidos.
+    pelo_f = (sil & ~np.isin(Lb, _o("EkKHIN")) & ~luzq).astype(np.float32)
+    if pelo_f.any():
+        r_b = 0.45 * s
+        suave = np.dstack([_difuso_f(rgb[..., q] * pelo_f, r_b) for q in range(3)]) / np.maximum(_difuso_f(pelo_f, r_b), 1e-3)[..., None]
+        rgb = np.where(pelo_f[..., None] > 0, suave, rgb)
+    # --- La luz y la sombra, continuas: la sombra se va al café, la luz al crema del sol; lo plano (el ojo, la línea,
+    #     el brillo, lo que da luz) no se modela.
+    plano = np.isin(Lb, _o("EHkKUVXQ")) | luzq
+    a_, b_ = t["foto_tonos"]
+    k_s = np.clip((a_ - dif) / a_, 0, 1)[..., None] * t["foto_k_sombra"]
+    k_l = np.clip((dif - b_) / (1 - b_), 0, 1)[..., None] * t["foto_k_luz"]
+    sh = np.array(t["foto_sombra"], np.float32); lz = np.array(t["foto_luz_col"], np.float32)
+    mod = rgb + (sh - rgb) * k_s
+    mod = mod + (lz - mod) * k_l
+    rgb = np.where(plano[..., None], rgb, mod)
+    # --- La tinta de las patas: casi negra, con un brillo húmedo del lado de la luz.
+    tinta = Lb == ord("I")
+    if tinta.any():
+        brillo = tinta & (dif > b_ - 0.05)
+        rgb[brillo] = rgb[brillo] + (np.array(t["foto_luz_col"], np.float32) - rgb[brillo]) * 0.3
+    # --- El borde: no hay línea; el contorno se oscurece hacia el café (más del lado de la sombra) y del lado del sol
+    #     queda un filo de luz cálida, como el halo de la película a contraluz.
+    Bc, cara, on = _borde(sil & ~luzq, s, lv)
+    cerca = np.clip((0.86 - Bc) / 0.36, 0, 1) * (sil & ~luzq)
+    oscurece = cerca * (0.42 + 0.4 * np.clip(-cara, 0, 1))
+    con = np.array(t["foto_contorno"], np.float32)
+    rgb = rgb + (con - rgb) * oscurece[..., None]
+    filo = cerca * np.clip(cara - 0.35, 0, 1) * t["foto_k_filo"] * (~np.isin(Lb, _o("EkKI")))
+    rgb = rgb + (np.array(t["foto_filo"], np.float32) - rgb) * filo[..., None]
+    # --- Donde una parte pasa por delante de otra (la pata sobre el cuerpo): una sombra corta, blanda.
     Rb = np.where(sil, Rk, 255).astype(np.uint8)
-    d_ = max(2, int(round(t["lito_pluma_dentro"] * s)))
+    d_ = max(2, int(round(0.35 * s)))
     rmin = np.asarray(Image.fromarray(Rb).filter(ImageFilter.MinFilter(2 * d_ + 1)), np.int32)
-    linea |= sil & (Rb.astype(np.int32) - rmin > 2) & ~luzq
+    junta = (sil & (Rb.astype(np.int32) - rmin > 2) & ~luzq).astype(np.float32)
+    junta = _difuso(junta, 0.25 * s) * 0.5
+    rgb = rgb + (con - rgb) * junta[..., None]
+    # --- Lo que da luz, encima, sin tocar.
+    for v in col.get("_luces", ""):
+        m = Lb == ord(v)
+        if m.any():
+            rgb[m] = col[v]
+    # --- La película: el color viejo, se reduce promediando y el grano fino y cálido al final (en el pixel de salida).
+    rgb = pelicula_np(rgb) if t.get("foto_pelicula", True) else rgb
+    alfa = sil.astype(np.float32)
+    pre = np.dstack([rgb * alfa[..., None], alfa * 255])
+    tam = (cols_ * cel, filas * cel)
+    chico = np.dstack([np.asarray(Image.fromarray(np.clip(pre[..., q], 0, 255).astype(np.uint8)).resize(tam, Image.BOX), np.float32)
+                       for q in range(4)])
+    a = chico[..., 3:4]
+    out = np.where(a > 0, chico[..., :3] * 255 / np.maximum(a, 1), 0)
+    rng = np.random.default_rng(23)
+    gr = rng.random(out.shape[:2])
+    d_g = t.get("foto_grano", 0.3)
+    f_g = t.get("foto_grano_k", 0.05)
+    out *= np.where(gr < d_g / 2, 1 - f_g, np.where(gr > 1 - d_g / 2, 1 + f_g * 0.8, 1.0))[..., None]
+    a = np.where(a[..., 0] > 250, 255, a[..., 0])
+    return Image.fromarray(np.dstack([np.clip(out, 0, 255), a]).astype(np.uint8), "RGBA")
+
+
+def _lineas(X, Y, angulo, paso, ancho, onda=0.0, largo_onda=4.5, fase_=0.0):
+    """Trama de líneas paralelas (en dp): verdad sobre las líneas de `ancho` cada `paso`, giradas `angulo` grados; con
+    `onda`, las líneas ondulan (amplitud en dp, a lo largo de la línea)."""
+    a = math.radians(angulo)
+    u = X * math.cos(a) + Y * math.sin(a)
+    v = -X * math.sin(a) + Y * math.cos(a)
+    if onda:
+        u = u + onda * np.sin(2 * math.pi * v / largo_onda + fase_)
+    return (u % paso) < ancho
+
+
+def pintar_dos_tintas(g, t, cel):
+    """La psicodelia: el gato impreso a dos tintas (ver arriba). Se calcula a 4× y se toma un punto por pixel (cada pixel
+    es una tinta, como en la pantalla de serigrafía)."""
+    col = t["col"]
+    sub = 4
+    s = cel * sub
+    Lb0, Rk, clave = _hr_de(g, s)
+    filas, cols_ = len(g), len(g[0])
+    _o = lambda cs: [ord(c) for c in cs]
+    oscuro = t["oscuro"]
+    h, w = Lb0.shape
+    yy, xx = np.mgrid[0:h, 0:w]
+    X, Y = (xx + 0.5) / s, (yy + 0.5) / s
+    fase_ = (sum(map(ord, clave[::7])) % 360) * math.pi / 180      # cada cuadro, su fase: las ondas tiemblan al moverse
+    onda, reg = t["dt_onda"], t["dt_registro"]
+    # Con la intensidad, las rayas ondulan: la forma de cada raya se lee corrida por una onda horizontal.
+    Lb = Lb0
+    if onda:
+        dx = np.round(onda * 1.3 * np.sin(2 * math.pi * Y / 5.0 + fase_) * s).astype(np.int32)
+        Ld = Lb0[yy, np.clip(xx + dx, 0, w - 1)]
+        pelo_ = np.isin(Lb0, _o("PSDTW"))
+        Lb = np.where(pelo_ & np.isin(Ld, _o("PSDTW")), Ld, Lb0)
+    sil = Lb0 != ord(".")
+    luzq = np.isin(Lb0, _o(col.get("_luces", "")))
+    dif, lv = _volumen(sil & ~luzq, s, t["dt_luz"])
+    pelo = np.isin(Lb, _o("PSDTR"))
+    raya = Lb == ord("W")
+    claro = np.isin(Lb, _o("LH"))
+    nariz = Lb == ord("N")
     ojo = Lb == ord("E")
+    tinta_pata = Lb == ord("I")
+    linea_k = np.isin(Lb, _o("kK"))
+    objetos = np.isin(Lb, _o("UVXQGCAMZOBFJY"))
+    papel, grabar = np.array(t["dt_papel"], np.float32), np.array(t["dt_grabar"], np.float32)
+    color = np.array(t["dt_color"], np.float32)
+    crema = np.array(t["dt_crema"], np.float32)
+    # --- Las planchas.
+    plancha_color = pelo | raya | nariz
+    plancha_magenta = raya if t["dt_magenta"] is not None else np.zeros_like(raya)
+    sombra = (dif < t["dt_umbral"]) & (pelo | raya | claro)
+    k_sombra = np.clip((t["dt_umbral"] - dif) / t["dt_umbral"], 0, 1)
+    grabado = sombra & _lineas(X, Y, -32, 0.72, 0.16 + 0.3 * k_sombra)
+    trama_raya = raya & _lineas(X, Y, 72, 0.95, 0.5, onda * 0.7, 4.0, fase_)
+    trama_nariz = nariz & _lineas(X, Y, 0, 0.7, 0.3)
+    # --- El registro: la plancha de color corrida a la izquierda y abajo; la de magenta, a la derecha y arriba.
+    r_ = int(round(reg * s))
+    pc = _corrido(plancha_color, r_, -r_) if r_ else plancha_color
+    pm = _corrido(plancha_magenta, -r_, r_) if r_ else plancha_magenta
+    # --- Se imprime: el fondo (papel o negro), el crema (en el negro), el color, el magenta y la tinta que graba.
+    rgb = np.zeros((h, w, 3), np.float32)
+    rgb[:] = papel
+    if oscuro:
+        rgb[claro | ojo] = crema
+    else:
+        rgb[ojo] = papel
+    sobre = lambda base, tinta_: (base * tinta_ / 255) if not oscuro else (base + tinta_) / 2
+    rgb[pc] = color
+    if t["dt_magenta"] is not None:
+        mg = np.array(t["dt_magenta"], np.float32)
+        solo = pm & ~pc
+        rgb[solo] = mg
+        rgb[pm & pc] = sobre(color, mg)
+    for v in "UVXQGCAMZOBFJY":
+        m = Lb0 == ord(v)
+        if m.any():
+            rgb[m] = col[v]
+    # La línea del contorno: gruesa y casi pareja, un poco más del lado de la sombra (la del cartel).
+    Bc, cara, on = _borde(sil & ~luzq, s, lv)
+    w0, w1 = t["dt_pluma"]
+    ancho = (w0 + (w1 - w0) * np.clip(0.5 - 0.6 * cara, 0, 1)) * s
+    contorno = (sil & ~luzq) & (Bc < 0.5 * (1 + _erf(ancho / (0.5 * s) / math.sqrt(2))))
+    Rb = np.where(sil, Rk, 255).astype(np.uint8)
+    d_ = max(2, int(round(0.3 * s)))
+    rmin = np.asarray(Image.fromarray(Rb).filter(ImageFilter.MinFilter(2 * d_ + 1)), np.int32)
+    contorno |= sil & (Rb.astype(np.int32) - rmin > 2) & ~luzq
     if ojo.any():
-        d_ = max(2, int(round(t["lito_pluma_ojo"] * s)))
+        d_ = max(2, int(round(0.32 * s)))
         cerca = np.asarray(Image.fromarray(ojo.astype(np.uint8) * 255).filter(ImageFilter.MaxFilter(2 * d_ + 1))) > 0
-        linea |= cerca & ~ojo & sil & ~np.isin(Lb, _o("HkO"))
-    rgb[linea] = t["lito_tinta"]
-    rgb[Lb == ord("k")] = t["lito_tinta"]
-    # --- De noche: el filo de la luz negra justo dentro del contorno.
-    for (dx_, dy_), c_, u_ in list(t.get("lito_filos", ())) + ([col["_filo"]] if "_filo" in col else []):
-        cara2 = (-bx / on) * dx_ + (-by / on) * dy_
-        anillo = sil_c & ~linea & (Bc < 0.5 * (1 + _erf((ancho + t.get("lito_filo_ancho", 0.3) * s) / sg / math.sqrt(2))))
-        anillo &= (cara2 > u_) & (on > 0.002) & ~np.isin(Lb, _o("EHkNOUVXQ"))
-        rgb[anillo] = c_
-    alfa = np.where(sil | fuera, 255.0, 0.0)
-    # --- El halo de lo que da luz (la lámpara de noche): un velo translúcido alrededor, fuera del dibujo.
-    if "_halo" in col:
-        letras_, c_h, r_h, a_h = col["_halo"]
-        fuente_ = np.isin(Lb, _o(letras_)).astype(np.float32)
-        if fuente_.any():
-            hal = _difuso(fuente_, r_h * s) * 3.0
-            zona = ~(sil | fuera) & (hal > 0.06)
-            rgb[zona] = c_h
-            alfa[zona] = np.clip(hal[zona], 0, 1) * a_h
-            alfa[zona] = np.round(alfa[zona] / 24) * 24                # en pasos (como los anillos de luz del fondo)
-    # --- La luz proyectada (las gotas del show de luces): sobre el gato se mezcla con su color y lo aclara; fuera de él
-    #     es luz que flota, translúcida, con el borde más intenso (el filo de la gota de aceite).
-    if luces_obj:
-        for v in luces_obj:
-            m = Lb_todo == ord(v)
-            if not m.any():
-                continue
-            c = np.array(col[v], np.float32)
-            dentro_ = np.asarray(Image.fromarray(m.astype(np.uint8) * 255).filter(ImageFilter.MinFilter(2 * max(2, s // 3) + 1))) > 0
-            borde_ = m & ~dentro_
-            sobre = m & (sil | fuera)
-            k_luz = t.get("seri_luz_k", 0.6)
-            mezcla_ = rgb[sobre] * (1 - k_luz) + c * k_luz
-            rgb[sobre] = np.minimum(255, mezcla_ + t.get("seri_luz_suma", 30))
-            rgb[sobre & borde_ & ~linea] = np.minimum(255, c * 0.85 + 60)
-            libre = m & ~(sil | fuera)
-            rgb[libre] = c
-            alfa[libre & dentro_] = t.get("seri_luz_alfa", 150)
-            alfa[libre & borde_] = 235
-            if v == "Q":
-                rgb[m] = c; alfa[m] = 255
-    # --- Un punto por pixel final.
+        contorno |= cerca & ~ojo & sil & ~linea_k
+    lineas = grabado | trama_raya | trama_nariz | linea_k | tinta_pata
+    if oscuro:
+        rgb[lineas] = t["dt_negro"]
+        rgb[contorno & ~linea_k] = crema
+    else:
+        rgb[lineas | contorno] = grabar
+    for v in col.get("_luces", ""):
+        m = Lb0 == ord(v)
+        if m.any():
+            rgb[m] = col[v]
+    fuera = (pc | pm) & ~sil
+    alfa = np.where(sil | fuera, 255, 0)
     o = sub // 2
     out_rgb = rgb[o::sub, o::sub][:filas * cel, :cols_ * cel]
     out_a = alfa[o::sub, o::sub][:filas * cel, :cols_ * cel].astype(np.uint8)
-    out = np.dstack([np.clip(out_rgb, 0, 255).astype(np.uint8), out_a])
-    return Image.fromarray(out, "RGBA")
+    return Image.fromarray(np.dstack([np.clip(out_rgb, 0, 255).astype(np.uint8), out_a]), "RGBA")
 
 
 _pintar_prev = g8.pintar
@@ -1406,8 +1456,10 @@ def pintar(g, t, cel, oscuro=False):
         return pintar_repujado(g, t, cel)
     if t["material"] == "litografia":
         return pintar_litografia(g, t, cel)
-    if t["material"] == "serigrafia":
-        return pintar_serigrafia(g, t, cel)
+    if t["material"] == "foto":
+        return pintar_foto(g, t, cel)
+    if t["material"] == "dos_tintas":
+        return pintar_dos_tintas(g, t, cel)
     return _pintar_prev(g, t, cel, oscuro)
 
 
@@ -1422,8 +1474,54 @@ BAQUELITA, CROMO = hx("2A2622"), hx("B9B6AE")
 GRIETA, GRIETA_H, SOMBRA_A = hx("F4F1FF"), hx("9C7BFF"), hx("1A1424")
 
 
+# Psicodelia (versión 2): una banda por cara y, en la psicodelia, una por escalón de intensidad. La app elige la clave
+# (`Gato.clave`): `psicodelia_c/o` es la ciudad; `psicodelia_tinta_c/o`, la psicodelia en reposo (i = 0);
+# `psicodelia_tinta_media_c/o`, con i = 0.5, y `psicodelia_tinta_plena_c/o`, con i = 1.
+PSI_NIVEL = {"psicodelia_tinta": 0.0, "psicodelia_tinta_media": 0.5, "psicodelia_tinta_plena": 1.0}
+PSI_CARAS = ("psicodelia",) + tuple(PSI_NIVEL)
+# Las bandas que son de un tema con otro nombre: exportar.py nombra sus acciones con el del tema (esp_psicodelia_0 y _1),
+# así la app y las capturas las encuentran igual en cualquier cara.
+g8.TEMA_DE_BANDA = dict(getattr(g8, "TEMA_DE_BANDA", {}), **{n_: "psicodelia" for n_ in PSI_NIVEL})
+# Las tintas de dibujo (`TrazosTinta.tinta`, la tabla de docs/diseno/temas/psicodelia_base.md): magenta, bermellón y
+# ultramar, sobre papel (False) o sobre negro (True), con i = 0, 0.5 y 1.
+TINTAS_PSI = {
+    False: {0.0: ("A94870", "C56851", "3F4C9E"), 0.5: ("B73570", "D55A3C", "3A44B3"), 1.0: ("C50E70", "E5481E", "3739C9")},
+    True: {0.0: ("DC7BA1", "E0907B", "8693D7"), 0.5: ("EC6DA2", "EF876B", "8190EA"), 1.0: ("FB5BA2", "FD7C5A", "7C8CFC")},
+}
+PAPEL_T, NEGRO_T, GRABAR_T, CREMA_T = hx("F2E8D3"), hx("0F0C17"), hx("1E1A3A"), hx("F3E9D6")   # `TrazosTinta`
+
+
+def tintas_psi(oscuro, i):
+    """(magenta, bermellón, ultramar) del escalón de intensidad i."""
+    return tuple(hx(c) for c in TINTAS_PSI[bool(oscuro)][i])
+
+
+def colores_psi(nombre, oscuro, j):
+    """Los objetos de las dos acciones de Psicodelia en cada cara. Acción 0, las manchas de luz líquida (U, V y X, tres
+    manchas; Q, donde dos se sobreimprimen): son luz, sin contorno. Acción 1, el cartel recién impreso en el suelo (U el
+    papel, V y X sus dos tintas, Q las huellas de tinta del gato)."""
+    if nombre == "psicodelia":
+        if not oscuro:      # la tarde: luz que pasa por los frascos de colores de la ventana, desteñida por la foto
+            return [dict(U=hx("E9B48A"), V=hx("D9A2A0"), X=hx("A9BBAE"), Q=hx("F4DDB6"), _luces="UVXQ"),
+                    dict(U=hx("EFE5CF"), V=hx("A65A6E"), X=hx("4C5A92"), Q=hx("2B2C40"))][j]
+        return [dict(U=hx("F0A35A"), V=hx("D97E62"), X=hx("8FA88E"), Q=hx("F2C996"), _luces="UVXQ"),   # la lámpara
+                dict(U=hx("C9B79A"), V=hx("8A4460"), X=hx("3E4A80"), Q=hx("1A1620"))][j]
+    i = PSI_NIVEL[nombre]
+    mg, bm, ul = tintas_psi(oscuro, i)
+    tercera = bm if i >= 0.5 else ul               # el bermellón entra desde i = 0.5 (`TrazosTinta.medidas`)
+    if not oscuro:
+        sob = tuple(int(a * b / 255) for a, b in zip(mg, ul))          # magenta sobre ultramar: el violeta
+        return [dict(U=mg, V=ul, X=tercera, Q=sob, _luces="UVXQ"),
+                dict(U=hx("F9F3E6"), V=mg, X=ul, Q=GRABAR_T)][j]
+    sob = tuple((a + b) // 2 for a, b in zip(mg, ul))
+    return [dict(U=mg, V=ul, X=tercera, Q=sob, _luces="UVXQ"),
+            dict(U=CREMA_T, V=mg, X=ul, Q=NEGRO_T)][j]
+
+
 def colores_obj(nombre, oscuro, j):
     """U, V, X, Q de cada animación propia, de día y de noche."""
+    if nombre in PSI_CARAS:
+        return colores_psi(nombre, oscuro, j)
     c = {
         ("frente", 0): dict(U=hx("D08C3A"), V=hx("3A2E26"), X=CROMO, Q=hx("FFF6DC")),  # microfilm ámbar, cuadros, tapa, destello
         ("frente", 1): dict(U=hx("3A2E26"), V=AMBAR_C, X=CROMO, Q=hx("E4FFF4")),        # el haz del escáner
@@ -1433,8 +1531,6 @@ def colores_obj(nombre, oscuro, j):
         ("galia", 1): dict(U=hx("9A6A3A"), V=hx("4F7A78"), X=hx("A33A2A"), Q=hx("E2ECE0")),   # casco de bronce, río, crin
         ("nouveau", 0): dict(U=hx("2F6E7A"), V=hx("C9A452"), X=hx("E6E3EC"), Q=hx("FFFFFF")),  # libélula: cuerpo, nervio, alas, brillo
         ("nouveau", 1): dict(U=hx("2F6E7A"), V=hx("F2E2B0"), X=hx("D2AE58"), Q=hx("FFF8E2")),  # línea de látigo de oro, gota, destello
-        ("psicodelia", 0): dict(U=hx("2BB3A8"), V=hx("FFB43C"), X=hx("E0218A"), Q=hx("FFF6D8")),  # lámpara: pie, líquido, cera, brillo
-        ("psicodelia", 1): dict(U=hx("FF4FA8"), V=hx("FFB43C"), X=hx("6FE08A"), Q=hx("FFFFFF"), _luces="UVXQ"),  # gotas de luz
     }[(nombre, j)]
     if oscuro and nombre == "galia":
         c = [dict(U=hx("24331C"), V=hx("3A2C1C"), X=hx("5E7444"), Q=hx("C9CDB8")),
@@ -1442,10 +1538,6 @@ def colores_obj(nombre, oscuro, j):
     if oscuro and nombre == "nouveau":
         c = [dict(U=hx("3E8A94"), V=hx("E8C46E"), X=hx("C9C4DA"), Q=hx("FFF4D6")),
              dict(U=hx("3E8A94"), V=hx("FFE9B8"), X=hx("F5D488"), Q=hx("FFF4D6"))][j]
-    if oscuro and nombre == "psicodelia":
-        c = [dict(U=hx("1E8F88"), V=hx("FFC24A"), X=hx("FF4FB4"), Q=hx("FFF4C8"), _filo=((0.9, 0.44), hx("FFC46A"), 0.4),
-                  _planas="VX", _halo=("VX", hx("FFB45A"), 2.4, 150), _luz=(0.75, 0.1, 0.55)),
-             dict(U=hx("FF5CBE"), V=hx("FF9F43"), X=hx("C9F04A"), Q=hx("FFFFFF"), _luces="UVXQ")][j]
     if oscuro and nombre == "frente" and j == 1:
         c["Q"] = hx("BFF5E0")
     if oscuro and nombre == "arcontes" and j == 1:
@@ -1457,13 +1549,13 @@ _colores_prev = g17.colores
 
 
 def colores(nombre, oscuro, j, t):
-    if nombre in MIOS:
+    if nombre in MIOS or nombre in PSI_CARAS:
         return colores_obj(nombre, oscuro, j)
     return _colores_prev(nombre, oscuro, j, t)
 
 
 g17.colores = colores
-for _n in MIOS:
+for _n in MIOS + PSI_CARAS[1:]:
     g17.COL[_n] = tuple(colores_obj(_n, False, 0)[k] for k in "UVXQ")
 
 
@@ -1582,50 +1674,49 @@ def tema_mio(nombre, oscuro):
             t.update(lito_filos=[((-0.62, -0.78), hx("FFE3A0"), 0.4), ((0.93, -0.36), hx("9CB4E6"), 0.55)],
                      lito_filo_ancho=0.5, lito_umbral=(0.45, 0.88), lito_crachis_p=0.2, lito_crachis=0.08)
             t["sombra_col"], t["sombra_a"] = (0, 0, 0), 84
-    elif nombre == "psicodelia":
-        # psicodelia (guía): la niebla F2ECE3 / tinta 2A1C32, borde B9AC9D · oscuro: el negro violeta de la luz negra
-        # 120A1C, F2EAF7, 43335A. El gato: atigrado naranja en tinta fluorescente de imprenta; cada color, tres tintas
-        # planas (luz, base y sombra). Los complementarios que vibran: el naranja con el azul de la cinta, el magenta de las
-        # rayas con el verde del ojo, el amarillo de las luces con el violeta de la sombra. Las gafas, de cristal rosa.
-        # De noche, bajo la luz negra: el naranja y el magenta brillan, la panza se vuelve del amarillo limón de la tinta,
-        # la cinta brilla violeta y la sombra se hunde en el violeta oscuro.
+    elif nombre in PSI_CARAS:
+        # psicodelia, versión 2 (docs/diseno/temas/psicodelia.md, «El gato» y «Las cuatro paletas»). El mismo atigrado
+        # naranja en las dos caras, sin gafas ni cinta, con las patas manchadas de tinta (letra I; `patron_acc`).
         hxs = lambda *cs: tuple(hx(c) for c in cs)
-        if not oscuro:
-            tintas = dict(P=hxs("FFC33F", "FF7A1A", "E2482E"), T=hxs("FFC33F", "FF7A1A", "E2482E"),
-                          S=hxs("FFC33F", "FF7A1A", "E2482E"), W=hxs("F2589B", "D41F78", "7B2C9E"),
-                          L=hxs("FFF9D6", "FFE27A", "F0A04A"), D=hxs("F06A2C", "E0542E", "C23A3A"),
-                          E=hxs("9CEAA8", "2FBF71", "1C7A4C"), N=hxs("FFC6DA", "F28DB2", "C8577F"),
-                          R=hxs("FFB4A8", "FF8F86", "E25F6E"), M=hxs("7AA4FF", "2F6BFF", "2343B8"),
-                          G=hxs("FFF2A6", "FFD23F", "E8A21E"), Z=hxs("FFE48A", "F2C14E", "B88A2A"),
-                          O=hxs("FFD3E6", "F79CC4", "E06A9E"))
-            tinta, papel, sombra_ = hx("2A1C32"), hx("FFF7EA"), hx("7B3FD1")
+        if nombre == "psicodelia":
+            # La ciudad: foto de los setenta. Claro, la tarde (papel de foto E9DFCC / tinta 2A2119, borde A39478): la luz
+            # baja entra por la izquierda, la sombra se va al café 4A3528 y el filo al sol velado F6DDB4. Oscuro, el cuarto
+            # con la lámpara de pantalla (1B1511 / EEE3D0, borde 54463A): la luz de la lámpara F0A35A, baja y de la
+            # izquierda, y lo demás se hunde en la pared de noche 1F1712.
+            if not oscuro:
+                col = g8.pelaje(hx("CB7630"), hx("2E1F16"), S=hx("9E5626"), L=hx("E2C59E"), W=hx("7E3E1A"), D=hx("A25C2C"),
+                                T=hx("CB7630"), E=hx("A9A55C"), N=hx("C98478"), R=hx("CB7630"))
+                col.update(H=hx("FFF6E6"), I=hx("262A3E"))
+                t = g8.T(col, hx("E9DFCC"), hx("2A2119"), hx("A39478"), "lito", "foto", ("ninguno", None), "tinta_psi")
+                t.update(foto_luz=(-0.72, -0.48, 0.55), foto_tonos=(0.5, 0.74), foto_k_sombra=0.62, foto_k_luz=0.5,
+                         foto_sombra=SOMBRA_CAFE, foto_luz_col=hx("F6DDB4"), foto_contorno=hx("3A2618"),
+                         foto_filo=hx("F6DDB4"), foto_k_filo=0.35, foto_grano=0.1, foto_grano_k=0.06)
+                t["sombra_col"], t["sombra_a"] = (74, 53, 40), 70
+            else:
+                col = g8.pelaje(hx("A85C28"), hx("1A120C"), S=hx("74401E"), L=hx("C29C74"), W=hx("5A2A12"), D=hx("6E3E20"),
+                                T=hx("A85C28"), E=hx("D9C060"), N=hx("9A5E52"), R=hx("A85C28"))
+                col.update(H=hx("FFE9C8"), I=hx("15161F"))
+                t = g8.T(col, hx("1B1511"), hx("EEE3D0"), hx("54463A"), "lito", "foto", ("ninguno", None), "tinta_psi")
+                t.update(foto_luz=(-0.86, -0.3, 0.42), foto_tonos=(0.58, 0.66), foto_k_sombra=0.78, foto_k_luz=0.75,
+                         foto_sombra=hx("1F1712"), foto_luz_col=hx("F0A35A"), foto_contorno=hx("120C08"),
+                         foto_filo=hx("F7CF94"), foto_k_filo=0.85, foto_grano=0.12, foto_grano_k=0.08)
+                t["sombra_col"], t["sombra_a"] = (0, 0, 0), 85
         else:
-            tintas = dict(P=hxs("FFC870", "FF8A2E", "5A2478"), T=hxs("FFC870", "FF8A2E", "5A2478"),
-                          S=hxs("FFC870", "FF8A2E", "5A2478"), W=hxs("FF8AD6", "FF46B4", "8A1E86"),
-                          L=hxs("FFF4C8", "FFDC8A", "C26A4A"), D=hxs("E8742E", "C9582E", "4A1E66"),
-                          E=hxs("E6FF9A", "C9F04A", "7E9E26"), N=hxs("FFB0DA", "FF6FC4", "A0307E"),
-                          R=hxs("FF9AC4", "FF6FAE", "A0306E"), M=hxs("D2C2FF", "AE91FF", "5E44B8"),
-                          G=hxs("F2FFB0", "C9F04A", "8AA828"), Z=hxs("F6E6FF", "D8C8F4", "8A78B0"),
-                          O=hxs("FFB6E4", "FF5CBE", "B8307E"))
-            tinta, papel, sombra_ = hx("0D0716"), hx("2A1C3E"), hx("3A1A55")
-        P = tintas["P"][1]
-        col = g8.pelaje(P, tinta, S=tintas["S"][2], L=tintas["L"][1], W=tintas["W"][1], D=tintas["D"][2], T=P,
-                        E=tintas["E"][1], N=tintas["N"][1], R=tintas["R"][1], M=tintas["M"][1], G=tintas["G"][1],
-                        Z=tintas["Z"][1], O=tintas["O"][1])
-        col["H"] = hx("FFFFFF") if not oscuro else hx("F8FFE6")
-        t = g8.T(col, hx("F2ECE3") if not oscuro else hx("120A1C"), hx("2A1C32") if not oscuro else hx("F2EAF7"),
-                 hx("B9AC9D") if not oscuro else hx("43335A"), "lito", "serigrafia", ("ninguno", "gafas_cinta"))
-        t.update(lito_tintas=tintas, lito_tinta=tinta, lito_papel=papel, lito_sombra=sombra_,
-                 lito_luz=(-0.55, -0.72, 0.5), lito_umbral=(0.34, 0.84), lito_crachis=0.13, lito_crachis_en="PLTWMO",
-                 lito_crachis_p=0.6, lito_planas="HkZ", lito_en_sombra="SD", lito_papel_en="PLWMOGE", lito_luces="Q",
-                 lito_pluma=(0.72, 1.0), lito_pluma_dentro=0.32, lito_pluma_ojo=0.3, lito_pluma_obj=0.62,
-                 seri_registro=(-1, -1))
-        t["sombra_col"], t["sombra_a"] = (74, 46, 84), 60
-        if oscuro:
-            t.update(lito_filos=[((-0.25, -0.97), hx("C7B2FF"), 0.45)], lito_filo_ancho=0.45, seri_registro=(0, 0),
-                     lito_umbral=(0.36, 0.86), lito_crachis=0.1, lito_crachis_p=0.45,
-                     seri_luz_k=0.55, seri_luz_suma=40, seri_luz_alfa=215)
-            t["sombra_col"], t["sombra_a"] = (0, 0, 0), 90
+            # La psicodelia: impreso a dos tintas. Claro, el cartel en papel (F2E8D3 / la tinta que graba 1E1A3A, borde
+            # 3A3458); oscuro, el cartel de luz negra (0F0C17 / el crema F3E9D6, borde 6E6488). El escalón de intensidad
+            # de la banda decide el croma de las tintas, la tercera tinta, el registro y la onda.
+            i = PSI_NIVEL[nombre]
+            mg, bm, ul = tintas_psi(oscuro, i)
+            col = g8.pelaje(bm, GRABAR_T if not oscuro else CREMA_T, L=PAPEL_T if not oscuro else CREMA_T, E=PAPEL_T, N=bm)
+            col.update(H=PAPEL_T if not oscuro else CREMA_T, I=GRABAR_T if not oscuro else NEGRO_T)
+            t = g8.T(col, NEGRO_T if oscuro else PAPEL_T, CREMA_T if oscuro else GRABAR_T, hx("6E6488") if oscuro else hx("3A3458"),
+                     "lito", "dos_tintas", ("ninguno", None), "tinta_psi")
+            t.update(dt_papel=NEGRO_T if oscuro else PAPEL_T, dt_grabar=GRABAR_T, dt_color=bm,
+                     dt_magenta=mg if i >= 0.5 else None, dt_crema=CREMA_T, dt_negro=NEGRO_T,
+                     dt_onda={0.0: 0.0, 0.5: 0.35, 1.0: 0.8}[i], dt_registro={0.0: 0.0, 0.5: 0.5, 1.0: 1.0}[i],
+                     dt_umbral=0.42, dt_pluma=(0.6, 0.95), dt_luz=(-0.72, -0.48, 0.55))
+            t["sombra_col"], t["sombra_a"] = ((30, 26, 58), 55) if not oscuro else ((0, 0, 0), 0)
+            t.update(psi_i=i, psi_nombre=nombre)
     else:
         raise ValueError(nombre)
     t["oscuro"] = oscuro
@@ -1639,7 +1730,7 @@ _tema_prev = g8.tema
 
 
 def tema(nombre, oscuro=False):
-    if nombre in MIOS:
+    if nombre in MIOS or nombre in PSI_CARAS:
         return tema_mio(nombre, oscuro)
     return _tema_prev(nombre, oscuro)
 
@@ -1648,7 +1739,7 @@ for _m in ("gato8", "gato9", "gato10", "gato12", "gato13", "gato16", "gato17", "
     if _m in sys.modules:
         sys.modules[_m].tema = tema
 
-for _n in MIOS:
+for _n in MIOS + PSI_CARAS[1:]:
     if _n not in g9.NUEVOS:
         g9.NUEVOS.append(_n)
 
@@ -2140,87 +2231,28 @@ g17.ACCIONES.update(libelula=(libelula, 8, "quieto"), latigo=(latigo, 8, "quieto
 g17.ESCALA.update(libelula=1.0, latigo=1.0)
 
 
-# --- Psicodelia: se queda hipnotizado mirando una lámpara de cera · persigue las burbujas del show de luces.
-#     La lámpara es una lámpara de cera cualquiera, no la de la marca: un frasco recto con la tapa en cúpula, sobre un pie
-#     bajo como un tambor (la forma registrada es otra: el vidrio que se afila y el pie en cono). Las letras: U el pie,
-#     V el líquido, X la cera, Q el brillo del vidrio (luz, sin contorno). Las burbujas son luz: en esa animación las cuatro
-#     letras se pintan como luz que se proyecta (sobre el gato se mezcla con su color; fuera, flota translúcida).
-LAMPARA = dict(x=55.0, ancho=6.4, y0=41.6, pie=56.2)       # el frasco: centro, ancho, arranque de la cúpula y del pie
-
-
-def _gota_y(k, fase_=0.0, centro=48.8, amp=5.4):
-    return centro + amp * math.cos(2 * math.pi * k / 8 + fase_)
-
-
-def lampara(k):
-    """Se sienta junto a la lámpara y se queda mirándola: la cabeza sigue a la gota grande, que sale del charco de cera
-    del fondo, sube, se aplana arriba y vuelve a bajar; a la mitad se le entrecierran los ojos (se le va el mundo) y la
-    punta de la cola se le mueve sola."""
-    ya = _gota_y(k)
-    f = (54.2 - ya) / 10.8                                   # 0 con la gota abajo, 1 arriba
-    p = g8.respirar(SENTADO_PSI, k % 2, 2, 0.25, 0.0)
-    p["cab"] = (p["cab"][0] + 2.2 - 0.6 * f, p["cab"][1] + 2.4 - 2.0 * f)
-    p["C"] = (p["C"][0] + 0.8, p["C"][1] + 0.4)
-    p.update(inc=31 - 19 * f, orejas=0.0, ojo="medio" if k in (5, 6) else "abierto")
-    s_ = math.sin(2 * math.pi * k / 8)
-    p["cola"] = [(x + (0.9 * s_ if i >= 4 else 0.0), y - (0.8 * max(0.0, s_) if i == 5 else 0.0))
-                 for i, (x, y) in enumerate(p["cola"])]
-    return p, dict(obj=(LAMPARA["x"], SUELO), k=k)
-
-
-SENTADO_PSI = dict(g8.SENTADO)
-
-
-def o_lampara(L, a):
-    """La lámpara de cera: el pie de metal (un tambor bajo con su aro), el frasco recto con la cúpula, el líquido de
-    color, el charco de cera del fondo y las gotas que suben y bajan (la grande se estira al subir y se aplana arriba;
-    la chica va al revés), y el brillo del vidrio del lado de la luz."""
-    k = a["k"]
-    x, w2, y0, yp = LAMPARA["x"], LAMPARA["ancho"] / 2, LAMPARA["y0"], LAMPARA["pie"]
-    # El pie: un tambor con el borde de arriba redondeado y un aro.
-    L.poligono("b_U", [(x - w2 - 1.3, SUELO), (x + w2 + 1.3, SUELO), (x + w2 + 1.0, yp - 0.2), (x - w2 - 1.0, yp - 0.2)])
-    L.elipse("b_U", x, yp - 0.2, w2 + 1.0, 0.8)
-    L.capsula("b_X", [(x - w2 - 0.9, SUELO - 1.4), (x + w2 + 0.9, SUELO - 1.4)], 0.55)
-    # El frasco: recto, con la cúpula arriba; adentro, el líquido.
-    L.poligono("b_V", [(x - w2, yp), (x + w2, yp), (x + w2, y0), (x - w2, y0)])
-    L.elipse("b_V", x, y0, w2, w2 * 0.95)
-    L.capsula("b_U", [(x - 0.9, y0 - w2 * 0.95), (x + 0.9, y0 - w2 * 0.95)], 0.9)        # el botón de la cúpula
-    # La cera: el charco del fondo, la gota grande y la chica.
-    L.elipse("b_X", x, yp - 0.9, w2 - 0.5, 1.1)
-    ya = _gota_y(k)
-    sube = -math.sin(2 * math.pi * k / 8)                    # > 0 mientras sube
-    arriba = max(0.0, (49.0 - ya) / 5.4)
-    rx_ = 1.85 + 0.55 * arriba - 0.25 * max(0.0, sube)
-    ry_ = 2.3 - 0.7 * arriba + 0.45 * max(0.0, sube)
-    L.elipse("b_X", x - 0.3 * sube, ya, min(rx_, w2 - 0.5), ry_)
-    if ya > 51.5:                                            # todavía pegada al charco: el cuello de cera
-        L.capsula("b_X", [(x, ya), (x, yp - 0.9)], 1.6)
-    yb = _gota_y(k, math.pi * 0.85, 47.6, 4.6)
-    L.elipse("b_X", x + 1.0, yb, 1.05, 1.25 + 0.25 * math.cos(2 * math.pi * k / 8))
-    if k in (2, 3):                                          # una gotita que se desprende arriba
-        L.elipse("b_X", x - 1.2, y0 - 0.6 + (k - 2) * 1.4, 0.7, 0.7)
-    # El brillo del vidrio, del lado de la luz (arriba a la izquierda).
-    L.capsula("b_Q", [(x - w2 + 1.0, y0 - 1.2), (x - w2 + 0.9, yp - 2.4)], 0.55)
-    L.elipse("b_Q", x - w2 * 0.45, y0 - w2 * 0.55, 0.5, 0.5)
-
-
-# (color, x, y, radio) de cada gota de luz en los ocho cuadros; el color es U, V o X; None si ya no está.
-BURBUJAS = [
-    [("U", 52.0, 13.5, 3.0), ("V", 58.0, 22.0, 2.2), ("X", 46.0, 8.5, 2.4)],
-    [("U", 50.5, 18.5, 3.0), ("V", 55.8, 26.5, 2.2), ("X", 43.6, 12.0, 2.4)],
-    [("U", 49.2, 24.0, 3.0), ("V", 54.6, 31.5, 2.2), ("X", 41.0, 15.0, 2.4)],
-    [("U", 46.8, 25.4, 2.1), ("U", 52.6, 22.0, 1.9), ("V", 54.0, 36.0, 2.2), ("X", 41.0, 17.0, 2.5)],
-    [("U", 44.0, 28.5, 2.0), ("U", 55.6, 18.6, 1.8), ("V", 55.4, 41.0, 2.1), ("X", 46.4, 13.6, 2.5)],
-    [("U", 43.2, 33.6, 2.0), ("U", 57.6, 15.0, 1.7), ("V", 57.0, 47.0, 2.0), ("X", 29.0, 37.0, 2.6)],
-    [("U", 40.2, 41.0, 2.1), ("U", 59.6, 11.0, 1.6), ("V", 59.4, 54.0, 1.9), ("X", 26.0, 38.6, 2.3)],
-    [("U", 47.0, 31.0, 1.8), ("U", 61.0, 7.5, 1.4), ("V", 61.6, 58.0, 1.6), ("X", 21.5, 30.0, 1.9)],
+# --- Psicodelia (versión 2): persigue las manchas de luz líquida que se mueven por la pared · se sienta sobre el cartel
+#     recién impreso y deja sus huellas de tinta. Reemplazan a la lámpara de cera y a las burbujas de la versión 1.
+#     Las manchas son la luz del retroproyector de las luces líquidas, dibujada como manchas planas de tinta (la guía:
+#     sin brillo de burbuja ni gota con reflejo): U, V y X, una mancha cada una, y Q donde dos se sobreimprimen. Son luz
+#     (sin contorno). El cartel: U el papel, V y X sus dos tintas (el disco del día y las bandas), Q las huellas.
+# (letra, x, y, radio) de cada mancha en los ocho cuadros: bajan resbalando por la pared y se deforman al moverse.
+MANCHAS = [
+    [("U", 52.0, 14.0, 3.4), ("V", 58.5, 23.0, 2.6), ("X", 45.0, 8.5, 2.8)],
+    [("U", 50.5, 18.5, 3.4), ("V", 56.0, 27.0, 2.6), ("X", 43.0, 12.0, 2.8)],
+    [("U", 49.2, 24.0, 3.4), ("V", 54.6, 31.5, 2.6), ("X", 41.0, 15.0, 2.8)],
+    [("U", 46.8, 25.4, 2.4), ("U", 52.6, 22.0, 2.2), ("V", 54.0, 36.0, 2.6), ("X", 41.0, 17.0, 2.9)],
+    [("U", 44.0, 28.5, 2.3), ("U", 55.6, 18.6, 2.1), ("V", 55.4, 41.0, 2.5), ("X", 46.4, 13.6, 2.9)],
+    [("U", 43.2, 33.6, 2.3), ("U", 57.6, 15.0, 2.0), ("V", 57.0, 47.0, 2.4), ("X", 29.0, 37.0, 3.0)],
+    [("U", 40.2, 41.0, 2.4), ("U", 59.6, 11.0, 1.9), ("V", 59.4, 54.0, 2.2), ("X", 26.0, 38.6, 2.7)],
+    [("U", 47.0, 31.0, 2.1), ("U", 61.0, 7.5, 1.7), ("V", 61.6, 58.0, 1.9), ("X", 21.5, 30.0, 2.3)],
 ]
 
 
-def burbujas(k):
-    """Ve las gotas de luz del show que bajan flotando; las sigue con la cabeza, le tira un zarpazo a la magenta (la
-    pata la atraviesa y la gota se parte en dos), salta por la verde y cae con las patas juntas sin nada; la verde se le
-    ha posado en el lomo y una magenta en el pecho, que se mira; al final se le van flotando."""
+def manchas_luz(k):
+    """Ve las manchas de luz que resbalan por la pared; las sigue con la cabeza, le tira un zarpazo a una (la pata la
+    atraviesa y la mancha se parte en dos), salta por otra y cae con las patas juntas sin nada; una se le ha quedado en
+    el lomo y otra en el pecho, que se mira; al final se le van resbalando."""
     if k in (0, 1):
         p = g8.respirar(g8.DE_PIE, k, 4)
         p.update(inc=-18 if k == 0 else -8, orejas=0.0, ojo="abierto")
@@ -2253,25 +2285,81 @@ def burbujas(k):
     return p, dict(obj=(50.0, 30.0), k=k)
 
 
-def o_burbujas(L, a):
-    """Las gotas de luz: cada una con su borde que tiembla (de un cuadro a otro cambia un poco de forma, como el aceite
-    entre los dos vidrios del retroproyector), una gota chica de otro color adentro y un brillo."""
+def o_manchas(L, a):
+    """Las manchas planas de luz líquida: cada una, tres lóbulos que cambian de un cuadro a otro (el aceite entre los dos
+    vidrios del retroproyector) y, donde se le cruza la siguiente, la sobreimpresión de las dos (Q)."""
     k = a["k"]
-    otro = {"U": "V", "V": "X", "X": "U"}
-    for j, (c, x, y, r) in enumerate(BURBUJAS[k]):
+    for j, (c, x, y, r) in enumerate(MANCHAS[k]):
         rnd = random.Random(k * 13 + j * 5)
-        ang = rnd.uniform(-30, 30)
-        e = 1 + 0.12 * math.sin(k * 1.7 + j * 2.1)
-        r = r * 1.35
+        ang = rnd.uniform(-35, 35)
+        e = 1 + 0.16 * math.sin(k * 1.7 + j * 2.1)
         L.elipse("f_" + c, x, y, r * e, r / e, ang)
-        L.elipse("f_" + c, x + r * 0.45 * math.cos(k + j), y + r * 0.4 * math.sin(k * 1.3 + j), r * 0.62, r * 0.55, ang + 40)
-        if r > 1.7:
-            L.elipse("f_" + otro[c], x + r * 0.25, y + r * 0.2, r * 0.36, r * 0.32, ang)
-        L.elipse("f_Q", x - r * 0.42, y - r * 0.42, max(0.35, r * 0.17), max(0.35, r * 0.17))
+        for q in range(2):                                   # los lóbulos que se estiran hacia donde resbala
+            a_ = k * 0.9 + j * 2.3 + q * 2.6
+            L.elipse("f_" + c, x + r * 0.7 * math.cos(a_), y + r * 0.55 * math.sin(a_) + 0.4, r * 0.62, r * 0.5, ang + 50 * q)
+        if r > 2.2:                                          # la otra tinta que se le monta encima: la sobreimpresión
+            L.elipse("f_Q", x + r * 0.42, y - r * 0.28, r * 0.42, r * 0.34, ang + 20)
 
 
-g17.ACCIONES.update(lampara=(lampara, 8, "sentado"), burbujas=(burbujas, 8, "quieto"))
-g17.ESCALA.update(lampara=1.4, burbujas=1.0)
+# El cartel en el suelo, visto casi de canto: el borde de atrás a ras del suelo y el de adelante un poco más abajo.
+CARTEL_PSI = [(12.0, 58.8), (56.0, 58.8), (59.0, 62.9), (9.0, 62.9)]
+HUELLAS_PSI = ((43.6, 60.9), (47.6, 61.3))
+
+
+def _pata_en(x, y, alzada=0.0):
+    """La pata delantera de este lado con la mano en (x, y), alzada `alzada` dp."""
+    hom = (36.0, 43.0)
+    y = y - alzada
+    return [hom, (hom[0] + (x - hom[0]) * 0.36, hom[1] + (y - hom[1]) * 0.42), (hom[0] + (x - hom[0]) * 0.72, hom[1] + (y - hom[1]) * 0.73), (x, y)]
+
+
+def cartel_huellas(k):
+    """Sentado sobre el cartel recién impreso, mira el papel; alza una mano y la apoya más adelante, la alza (queda la
+    huella de tinta), la estira un poco más y la apoya otra vez, la vuelve a su sitio y se queda mirando sus dos huellas,
+    contento, con los ojos entrecerrados."""
+    p = g8.respirar(SENTADO_PSI, k % 2, 2, 0.25, 0.3)
+    mira = {0: 30, 1: 26, 2: 18, 3: 24, 4: 30, 5: 20, 6: 26, 7: 22}[k]
+    p.update(inc=mira, orejas={2: 0.25, 5: 0.2}.get(k, 0.0), ojo="medio" if k == 7 else "abierto")
+    if k == 2:
+        p["fn"] = _pata_en(41.0, SUELO, 4.0)
+    elif k == 3:
+        p["fn"] = _pata_en(43.6, SUELO)
+    elif k == 4:
+        p["fn"] = _pata_en(44.6, SUELO, 3.6)
+    elif k == 5:
+        p["C"] = (p["C"][0] + 1.4, p["C"][1] + 0.6); p["cab"] = (p["cab"][0] + 1.6, p["cab"][1] + 0.8)
+        p["fn"] = [(37.4, 43.6)] + _pata_en(47.6, SUELO)[1:]
+    elif k == 6:
+        p["fn"] = _pata_en(40.0, SUELO, 3.0)
+    if k >= 6:                                               # la cola se le enrosca, satisfecho
+        p["cola"] = [(x + 0.6 * (i / 5) ** 2, y - 0.8 * (i / 5) ** 2) for i, (x, y) in enumerate(p["cola"])]
+    return p, dict(obj=(34.0, SUELO), k=k)
+
+
+SENTADO_PSI = dict(g8.SENTADO)
+
+
+def o_cartel(L, a):
+    """El cartel recién impreso en el suelo: el papel, el disco del día en magenta con su anillo y las bandas que ondulan
+    en ultramar (impresos, planos) y las huellas de tinta que va dejando el gato (la planta y tres dedos)."""
+    k = a["k"]
+    L.poligono("b_U", CARTEL_PSI)
+    L.elipse("b_V", 25.0, 60.9, 5.2, 1.45)                    # el disco
+    L.elipse("b_X", 25.0, 60.9, 2.4, 0.7)                     # su etiqueta
+    for q in range(3):                                       # las bandas que salen del disco, a la derecha
+        y0 = 59.8 + q * 1.15
+        pts = [(31.5 + u * 1.6, y0 + 0.28 * math.sin(u * 1.3 + q)) for u in range(14)]
+        for p0, p1 in zip(pts, pts[1:]):
+            L.capsula("b_X", [p0, p1], 0.32)
+    vistas = [h for n_, h in enumerate(HUELLAS_PSI) if (n_ == 0 and k >= 4) or (n_ == 1 and k >= 6)]
+    for (x, y) in vistas:
+        L.elipse("b_Q", x, y, 1.35, 0.62)
+        for dx in (-1.0, 0.0, 1.0):
+            L.elipse("b_Q", x + dx + 0.6, y - 0.95, 0.42, 0.32)
+
+
+g17.ACCIONES.update(manchas_luz=(manchas_luz, 8, "quieto"), cartel_huellas=(cartel_huellas, 8, "sentado"))
+g17.ESCALA.update(manchas_luz=1.0, cartel_huellas=1.0)
 
 ESP_MIOS = {
     "frente": [("microfilm", o_microfilm, "esconde un microfilm en el collar"),
@@ -2282,10 +2370,12 @@ ESP_MIOS = {
               ("bufar_casco", o_casco, "le bufa a un casco romano tirado en el río")],
     "nouveau": [("libelula", o_libelula, "persigue una libélula"),
                 ("latigo", o_latigo, "se enrosca dibujando la línea de látigo")],
-    "psicodelia": [("lampara", o_lampara, "se queda hipnotizado mirando una lámpara de cera"),
-                   ("burbujas", o_burbujas, "persigue las burbujas del show de luces")],
+    "psicodelia": [("manchas_luz", o_manchas, "persigue las manchas de luz líquida que se mueven por la pared"),
+                   ("cartel_huellas", o_cartel, "se sienta sobre el cartel recién impreso y deja sus huellas de tinta")],
 }
-ESCALA_MIA = {("frente", 0): 1.35, ("nouveau", 0): 1.45, ("psicodelia", 0): 1.4}
+for _n in PSI_CARAS[1:]:                     # la psicodelia hace lo mismo que la ciudad, impreso
+    ESP_MIOS[_n] = ESP_MIOS["psicodelia"]
+ESCALA_MIA = {("frente", 0): 1.35, ("nouveau", 0): 1.45}
 g17.ESP.update(ESP_MIOS)
 for nombre, lista in ESP_MIOS.items():
     for j, (accion, f, _) in enumerate(lista):
@@ -5183,72 +5273,77 @@ def _casa(cuerpo, sombra, moldura, moldura_s, puerta, techo, tabla=None, moldura
                 moldura2=hx(moldura2) if moldura2 else hx(moldura))
 
 
+# Los colores de la ciudad (versión 2): `TrazosCiudad` (ui/PsicodeliaTrazos.kt) y la tabla de la guía. De día, la tarde
+# vista en una foto de los setenta: el cielo de la bruma D9CDB6 a la luz baja EDBE8C con el sol velado F6DDB4, las
+# victorianas grises cálidas (A0968A, 958B7E, A89C8C) y una sola pintada, el verde azul desteñido 7E958E; lo que mira al
+# sol hacia F4E6CC y la sombra hacia el café 4A3528; los postes y los cables 3E3128. De noche (ciudad · oscuro) la misma
+# calle al anochecer, con la luz de las lámparas de pantalla en las ventanas (F2C996, F0A35A) y la madera 6E4630: nada
+# de luz negra ni de luces líquidas, que son de la otra cara.
 PAL_PSI_D = dict(
-    cielo=[hx(c) for c in ("BFD0DB", "D3DEE4", "E6EBEA", "F4EEE3")],
-    sol=hx("FFF8E8"), sol_halo=hx("F7C99B"),
-    niebla=hx("F1F3F3"), niebla2=hx("F9F8F4"), niebla_s=hx("D7DCDF"),
-    cerro=[hx(c) for c in ("8E9C98", "A1ADA8", "B3BDB8")],
-    cerro_casas=[hx(c) for c in ("C9C4BA", "D9D3C8", "B3B0A9", "E4DED3", "E0C6BE", "BCD4CE", "E8D49E")],
-    cerro_techo=hx("7E8586"), cerro_ventana=hx("7E888C"),
-    eucalipto=[hx(c) for c in ("5E7068", "71837A", "8A9A90")],
-    casas=dict(gris=_casa("A9A49B", "8C877F", "E4DED3", "BDB7AC", "5E6466", "5E5A58"),
-               blanco=_casa("E4DED3", "C2BBAF", "F7F3EB", "D1CABE", "7C6E62", "6A6460"),
-               acorazado=_casa("8F9597", "767C7F", "CDD1CF", "A9AEAE", "4E5052", "55585A"),
-               beige=_casa("CDBFA6", "AE9F87", "EEE6D6", "CFC4B0", "6E5A46", "6A5E52"),
-               turquesa=_casa("2BB3A8", "1F8A82", "F28DB2", "C9668E", "F2C14E", "3E4A5A", moldura2="F2C14E"),
-               amarilla=_casa("F2C14E", "D19E30", "FBF4E2", "DCCDAE", "2E7344", "6A5A40")),
-    vidrio=[hx(c) for c in ("7F8E96", "A9B8BE", "D6E0E2")],
-    acera=[hx(c) for c in ("D8D2C7", "CBC4B8", "BAB3A7", "E6E1D7")], junta=hx("A9A296"),
-    bordillo=hx("ECE8DF"), bordillo_s=hx("9C958A"),
-    asfalto=[hx(c) for c in ("5C595E", "67646A", "727076")],
-    poste=[hx(c) for c in ("4E4038", "65544A", "7D6A5C", "978270")],
-    cable=hx("3E383C"), metal=hx("6E6A6C"), aislador=hx("6FA89A"),
-    farol=hx("8C8A86"), farol_vidrio=hx("E8E4D8"),
-    hojas=[hx(c) for c in ("2E4733", "3E5C3E", "557550", "75925F", "9BB27A")],
-    tronco=[hx(c) for c in ("4E443C", "66594C", "807060")],
-    sombra=hx("6E6478"),
-    papel=hx("EFE7D6"), papel_s=hx("CFC4AE"),
-    tiza=[hx(c) for c in ("F2A9C6", "8FCBEB", "FFE07A", "BDE8A6")],
-    flores=[hx("E0218A"), hx("FF7A1A"), hx("2E7344"), hx("4E8A4A")],
-    cartel=dict(magenta=hx("E0218A"), verde=hx("2FBF71"), naranja=hx("FF7A1A"), azul=hx("2F6BFF"),
-                amarillo=hx("FFD23F"), violeta=hx("7B3FD1"), tinta=hx("2A1C32")),
-    gaviota=[hx("F8F6F0"), hx("A8A9AC"), hx("4A4A4E")],
+    cielo=[hx(c) for c in ("CFC3AE", "D9CDB6", "E4CDAA", "EDBE8C")],
+    sol=hx("F6DDB4"), sol_halo=hx("EDBE8C"),
+    niebla=hx("E6DCC8"), niebla2=hx("EDE3CE"), niebla_s=hx("CFC4B0"),
+    cerro=[hx(c) for c in ("948C7E", "A39A8A", "B2A898")],
+    cerro_casas=[hx(c) for c in ("C2B8A6", "D0C6B4", "ADA493", "D9CDB6", "C9B8A4", "AEB4A6", "CFC09E")],
+    cerro_techo=hx("7A7064"), cerro_ventana=hx("7E7468"),
+    eucalipto=[hx(c) for c in ("66705E", "788070", "8C907E")],
+    casas=dict(gris=_casa("A0968A", "7E7468", "D8CDB5", "B2A694", "4A3528", "5A5048"),
+               blanco=_casa("C8BCA6", "A89C88", "E8DDC6", "CDBFA8", "6E4630", "5E544A"),
+               acorazado=_casa("958B7E", "776D62", "CFC4AE", "ABA08E", "4A3E34", "554C44"),
+               beige=_casa("A89C8C", "887C6E", "DCD0BA", "BBAE9A", "6E4630", "5E5246"),
+               turquesa=_casa("7E958E", "62766F", "D8CDB5", "A9A08E", "7A3424", "4E4A44", moldura2="C8B58A"),
+               amarilla=_casa("B0A492", "8E8272", "DDD2BC", "BFB29E", "3E3128", "5E5448")),
+    vidrio=[hx(c) for c in ("6E6A64", "968E84", "C9C0B0")],
+    acera=[hx(c) for c in ("CFC4B0", "C2B6A0", "AFA28C", "DAD0BC")], junta=hx("9A8C76"),
+    bordillo=hx("E2D8C4"), bordillo_s=hx("8C8270"),
+    asfalto=[hx(c) for c in ("5A524A", "645A50", "6E6458")],
+    poste=[hx(c) for c in ("3E3128", "54443A", "6A5848", "806C58")],
+    cable=hx("3E3128"), metal=hx("6A6058"), aislador=hx("8A9A8C"),
+    farol=hx("7E766C"), farol_vidrio=hx("E2D8C4"),
+    hojas=[hx(c) for c in ("3E4A34", "4E5C40", "62704E", "7A8460", "98986E")],
+    tronco=[hx(c) for c in ("4A3E32", "5E5040", "766450")],
+    sombra=hx("4A3528"),
+    papel=hx("E9DFCC"), papel_s=hx("C8BCA6"),
+    tiza=[hx(c) for c in ("E8DCCB", "D2D4D0", "EADCBE", "D9DCC8")],
+    flores=[hx("4E5C40"), hx("62704E"), hx("3E4A34"), hx("566444")],          # las jardineras: solo hojas
+    cartel=dict(magenta=hx("A65A6E"), verde=hx("4C5A92"), naranja=hx("B5604A"), azul=hx("4C5A92"),
+                amarillo=hx("E9DCC0"), violeta=hx("6E4E7A"), tinta=hx("2A2119")),
+    cortina=hx("D8C8A8"), cortina_s=hx("BFAE8C"),
+    gaviota=[hx("F2EBDD"), hx("A39A8E"), hx("4A4440")],
 )
 PAL_PSI_N = dict(
-    cielo=[hx(c) for c in ("120A1C", "170E24", "1E132D", "281B38")],
-    luna=hx("ECE6F4"), luna_halo=hx("6E5A8E"),
-    niebla=hx("4C3E66"), niebla2=hx("3A2E52"), niebla_s=hx("2A2040"),
-    cerro=[hx(c) for c in ("1D1530", "211836", "261C3C")],
-    cerro_casas=[hx(c) for c in ("2A2240", "30283F", "272038", "342C44", "33263E", "26303A", "3A3230")],
-    cerro_techo=hx("1A1428"), cerro_ventana=hx("FFC870"),
-    eucalipto=[hx(c) for c in ("130D20", "18112A", "1E1630")],
-    casas=dict(gris=_casa("3A3150", "2A243E", "5E5478", "463E60", "1E1830", "181228"),
-               blanco=_casa("4A4262", "352F4C", "726A8C", "5A5274", "241C34", "1A1428"),
-               acorazado=_casa("323050", "25233E", "545276", "403E5E", "1A182C", "161426"),
-               beige=_casa("463C56", "332B42", "6A5E7A", "524862", "221A2E", "1A1424"),
-               turquesa=_casa("1C4A52", "14363E", "8A4C70", "6A3A58", "8A7440", "161A2A", moldura2="8A7440"),
-               amarilla=_casa("5A4A3A", "42362C", "7A6E62", "62584C", "1E3628", "221C1C")),
-    vidrio=[hx(c) for c in ("120C1A", "1A1424", "2A2236")],
-    acera=[hx(c) for c in ("383044", "322A3E", "2B2436", "40384E")], junta=hx("231D2C"),
-    bordillo=hx("4A4258"), bordillo_s=hx("1E1828"),
-    asfalto=[hx(c) for c in ("1A1522", "1F1928", "241E2E")],
-    poste=[hx(c) for c in ("1A1418", "251E22", "33292C", "463A3A")],
-    cable=hx("0A060E"), metal=hx("2E2832"), aislador=hx("3E6A64"),
-    farol=hx("3A3438"), farol_vidrio=hx("FFF1CC"), farol_luz=hx("FFE3AA"), farol_halo=hx("C9A6D8"),
-    hojas=[hx(c) for c in ("0E1016", "141820", "1C2226", "283030", "3A443C")],
-    tronco=[hx(c) for c in ("161216", "201A20", "2C2428")],
-    sombra=hx("07040C"),
-    papel=hx("5E566A"), papel_s=hx("3E3648"),
-    tiza=[hx(c) for c in ("7E5672", "4A6A84", "8A7A4A", "5E7A56")],
-    flores=[hx("7A1E52"), hx("8A4A22"), hx("1E3A28"), hx("2A4A2A")],
-    cartel=dict(magenta=hx("8E1E5E"), verde=hx("1E7448"), naranja=hx("A8521E"), azul=hx("2A46A0"),
-                amarillo=hx("A8902E"), violeta=hx("4E2E86"), tinta=hx("120A1C")),
-    ventana=[hx(c) for c in ("FFE6A6", "FFCB72", "E8964A", "A85E3A")],
-    luz_negra=[hx(c) for c in ("2A1650", "5E3EB0", "AE91FF", "D8CCFF")],
-    fluor=dict(limon=hx("C9F04A"), magenta=hx("FF5CBE"), naranja=hx("FF9F43"), violeta=hx("AE91FF")),
-    liquidas=[(hx("FF5CBE"), hx("FFC2E6")), (hx("FFB347"), hx("FFE6B0")), (hx("9BE05A"), hx("E6FFB0"))],
+    cielo=[hx(c) for c in ("1B1511", "221A15", "2C221B", "3A2C22")],
+    luna=hx("EEE3D0"), luna_halo=hx("6E5A44"),
+    niebla=hx("4A3E34"), niebla2=hx("3A3028"), niebla_s=hx("2A221C"),
+    cerro=[hx(c) for c in ("221A15", "261E18", "2C231C")],
+    cerro_casas=[hx(c) for c in ("2F251D", "34291F", "2B221B", "3A2E24", "33281F", "2C2A24", "3A3024")],
+    cerro_techo=hx("1B1511"), cerro_ventana=hx("F2C996"),
+    eucalipto=[hx(c) for c in ("16110D", "1B1511", "211914")],
+    casas=dict(gris=_casa("3E342C", "2F2620", "5E5246", "4A4038", "1F1712", "1A130F"),
+               blanco=_casa("4A4036", "372E26", "6E6252", "584E42", "241C16", "1E1712"),
+               acorazado=_casa("38302A", "2A231E", "544A40", "443B33", "1C1510", "18120E"),
+               beige=_casa("443A30", "322A22", "645848", "50463A", "221A14", "1C1510"),
+               turquesa=_casa("34403A", "27302B", "5A5446", "48443A", "4A2018", "1A1612", moldura2="6A5E40"),
+               amarilla=_casa("463C32", "342C24", "665A4A", "524838", "201812", "1C1510")),
+    vidrio=[hx(c) for c in ("120E0B", "1A1410", "2A221C")],
+    acera=[hx(c) for c in ("3A3028", "342A22", "2E251E", "42372D")], junta=hx("231B15"),
+    bordillo=hx("4A3E32"), bordillo_s=hx("1E1712"),
+    asfalto=[hx(c) for c in ("1A1410", "1F1813", "241C16")],
+    poste=[hx(c) for c in ("1A140F", "251C16", "33281F", "463828")],
+    cable=hx("0E0A08"), metal=hx("2E2620"), aislador=hx("4A4E44"),
+    farol=hx("3A3028"), farol_vidrio=hx("F6DDB4"), farol_luz=hx("F2C996"), farol_halo=hx("C8925A"),
+    hojas=[hx(c) for c in ("100C0A", "16120E", "1E1812", "2A2218", "3A3020")],
+    tronco=[hx(c) for c in ("16110D", "201812", "2C221A")],
+    sombra=hx("0C0806"),
+    papel=hx("5E5244"), papel_s=hx("3E342A"),
+    tiza=[hx(c) for c in ("6E5E52", "54564E", "6E6248", "5A5E4C")],
+    flores=[hx("1E2418"), hx("2A3020"), hx("161A12"), hx("242A1C")],
+    cartel=dict(magenta=hx("6E3044"), verde=hx("2E3456"), naranja=hx("7A3A26"), azul=hx("2E3456"),
+                amarillo=hx("8E8068"), violeta=hx("4A3448"), tinta=hx("1B1511")),
+    cortina=hx("E8B27A"), cortina_s=hx("B87A48"),
+    ventana=[hx(c) for c in ("F6DDB4", "F2C996", "F0A35A", "A8603A")],
+    lampara=hx("F2C996"), lampara_luz=hx("F0A35A"),
 )
-
 
 def ps_cerro(x):
     """La cuesta del fondo: sube de izquierda a derecha, con la loma de los eucaliptos arriba a la derecha."""
@@ -5632,16 +5727,14 @@ def ps_casa(im, P, o, c, n):
     esp = c["esp"]
     xa, ya, wa, ha = ventanas[0][:4]                               # la ventana del centro del mirador, arriba
     if esp == "luces":
-        if not o:                                                  # una tela teñida con nudos, colgada de cortina
-            cx_, cy_ = xa + wa / 2 - 0.5, ya + ha / 2
+        # El mirador del cuarto de David: de día, la cortina de lino corrida a medias; de noche, la lámpara de pantalla
+        # plisada encendida detrás del vidrio (la luz del cuarto de la cara de la ciudad).
+        if not o:
             for yy in range(ya, ya + ha):
-                for xx in range(xa, xa + wa):
-                    r_ = math.hypot(xx - cx_, (yy - cy_) * 0.8)
-                    a_ = math.atan2(yy - cy_, xx - cx_)
-                    q = int((r_ * 1.2 + a_ * 1.3) % 4)
-                    pon(px, xx, yy, (P["flores"][0], P["cartel"]["amarillo"], P["cartel"]["azul"], P["cartel"]["naranja"])[q])
-        P.setdefault("_luces_ventanas", []).append((xa, ya, wa, ha))
-        P["_luces_ventanas"].append(ventanas[3][:4])
+                for xx in range(xa, xa + wa // 2 + 1):
+                    pon(px, xx, yy, P["cortina"] if (xx - xa) % 2 == 0 else P["cortina_s"])
+        else:
+            P.setdefault("_lamparas", []).append((xa, ya, wa, ha))
     elif esp == "cartel":
         x, y = ventanas[-1][0], ventanas[-1][1]
         for yy in range(y + 1, y + 8):
@@ -5650,19 +5743,19 @@ def ps_casa(im, P, o, c, n):
         pon(px, x + 1, y + 3, P["cartel"]["azul"]); pon(px, x + 2, y + 3, P["cartel"]["azul"]); pon(px, x + 1, y + 5, P["cartel"]["azul"])
         pon(px, x + 2, y + 6, P["cartel"]["azul"])
     elif esp == "paz":
+        # Un cartel de la semana pegado en el vidrio, a dos tintas: el disco del día en magenta y las bandas en ultramar
+        # sobre el papel (de noche, a contraluz de la ventana).
         x, y, w, h = ventanas[-1][:4]
-        if not o:                                                  # un cartel de una flor pegado en el vidrio
-            for yy in range(y + 1, y + h - 1):
-                for xx in range(x, x + w):
-                    pon(px, xx, yy, P["cartel"]["amarillo"])
-            cx_, cy_ = x + w // 2, y + h // 2
-            for (dx, dy) in ((0, -1), (-1, 0), (1, 0), (0, 1)):
-                pon(px, cx_ + dx, cy_ + dy, P["cartel"]["magenta"])
-            pon(px, cx_, cy_, P["cartel"]["naranja"])
-            for yy in range(cy_ + 2, y + h - 1):
-                pon(px, cx_, yy, P["cartel"]["verde"])
-        else:                                                      # de noche: el mirador con la luz negra
-            P.setdefault("_luz_negra", []).append(ventanas[0][:4])
+        fondo_ = P["cartel"]["amarillo"]
+        for yy in range(y + 1, y + h - 1):
+            for xx in range(x, x + w):
+                pon(px, xx, yy, fondo_)
+        cx_, cy_ = x + w // 2, y + 3
+        for (dx, dy) in ((0, 0), (-1, 0), (0, -1), (-1, -1)):
+            pon(px, cx_ + dx, cy_ + dy, P["cartel"]["magenta"])
+        for yy in range(cy_ + 2, y + h - 1, 2):
+            for xx in range(x, x + w):
+                pon(px, xx, yy, P["cartel"]["azul"])
     elif esp == "flores":
         x, y, w, h = ventanas[3][:4]
         for xx in range(x - 1, x + w + 1):                         # la jardinera con geranios
@@ -5671,7 +5764,7 @@ def ps_casa(im, P, o, c, n):
             if xx % 2 == 0:
                 pon(px, xx, y + h - 1, P["flores"][0] if xx % 4 else P["flores"][1])
     elif esp == "periodico":
-        for (xx, cc) in ((dx_p + 4, P["flores"][0]), (dx_p + 5, P["cartel"]["amarillo"]), (dx_p + 6, P["cartel"]["azul"])):
+        for (xx, cc) in ((dx_p + 4, P["papel_s"]), (dx_p + 5, P["cartel"]["amarillo"]), (dx_p + 6, P["papel_s"])):
             pon(px, xx, sotano - 1, cc); pon(px, xx, sotano - 2, P["papel"])
     return luces_
 
@@ -5718,21 +5811,19 @@ def ps_calle(im, P, o):
         for _ in range(largo):
             pon(px, x, y, P["junta"]); x += 1; y += rnd.choice((-1, 0, 0, 1)); y = max(PS_BORDILLO + 1, min(H - 1, y))
         pon(px, x0 + 2, y0 - 1, P["hojas"][3] if not o else P["hojas"][2]); pon(px, x0 + 3, y0 - 2, P["hojas"][2])
-    # Los dibujos de tiza.
+    # Los dibujos de tiza: una rayuela y, más allá, un disco con su etiqueta (el del día, dibujado por un niño).
     tz = P["tiza"]
-    cx_, cy_ = 166, 75
-    for a_ in range(0, 360, 45):                                   # una flor de cinco... de ocho pétalos
-        for r_ in (2.0, 3.0, 3.6):
-            pon(px, cx_ + r_ * math.cos(math.radians(a_)) * 1.6, cy_ + r_ * math.sin(math.radians(a_)) * 0.75, tz[0], 0.9)
-    for (dx, dy) in ((0, 0), (1, 0), (-1, 0), (0, 1)):
-        pon(px, cx_ + dx, cy_ + dy, tz[2], 0.8)
-    for q in range(10):                                            # el tallo
-        pon(px, cx_ - 2 - q * 0.2, cy_ + 3 + q * 0.35, tz[3], 0.7)
+    x0r, yr = 150, 72
+    for q, (dx, dy) in enumerate(((0, 0), (5, 0), (10, -1.6), (10, 1.6), (15, 0), (20, -1.6), (20, 1.6), (25, 0))):
+        x_, y_ = x0r + dx + (yr + dy - PS_BORDILLO) * -0.35, yr + dy
+        for u in range(5):
+            pon(px, x_ + u, y_ - 1.5, tz[q % 2], 0.8); pon(px, x_ + u, y_ + 1.5, tz[q % 2], 0.8)
+        pon(px, x_, y_ - 0.5, tz[q % 2], 0.8); pon(px, x_, y_ + 0.5, tz[q % 2], 0.8)
     sx_, sy_ = 284, 77
     for a_ in range(0, 360, 20):
-        pon(px, sx_ + 3.2 * math.cos(math.radians(a_)), sy_ + 1.6 * math.sin(math.radians(a_)), tz[1], 0.9)
-    for a_ in range(0, 360, 30):
         pon(px, sx_ + 5.4 * math.cos(math.radians(a_)), sy_ + 2.5 * math.sin(math.radians(a_)), tz[2], 0.85)
+    for a_ in range(0, 360, 45):
+        pon(px, sx_ + 1.6 * math.cos(math.radians(a_)), sy_ + 0.8 * math.sin(math.radians(a_)), tz[0], 0.85)
     # La boca de incendio en la acera de enfrente (blanca, con la tapa azul) y su sombra.
     hx_ = 292
     for y in range(55, 61):
@@ -5811,29 +5902,29 @@ def ps_carteles(im, P, o, flap=0, tira=0):
                     pon(px, x, y, P["papel"] if (x + y) % 3 else P["papel_s"])
     for q in range(4):                                             # la tira rota que cuelga
         pon(px, x0 + 4 + (tira if q > 1 else 0), 66 + q, P["papel"])
-    # 1: magenta con letras verdes y un sol naranja.
-    rect(x0 - 4, 31, x0 + 8, 44, C["magenta"])
-    for (xa, ya, w_, h_) in ((x0 - 3, 32, 3, 3), (x0, 32, 2, 3), (x0 + 3, 32, 4, 3), (x0 - 3, 36, 4, 2), (x0 + 2, 36, 5, 2)):
-        rect(xa, ya, xa + w_, ya + h_, C["verde"])
-        pon(px, xa + w_ - 1, ya + h_ - 1, C["magenta"])
-    for (dx, dy) in ((0, 0), (1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (-1, 1), (1, -1), (-1, -1)):
-        pon(px, x0 + 2 + dx, 41 + dy, C["naranja"])
-    for (dx, dy) in ((-2, 0), (2, 0), (0, 2), (0, -2)):
-        pon(px, x0 + 2 + dx, 41 + dy, C["amarillo"])
-    # 2: azul con una flor naranja (la esquina de abajo a la derecha se levanta).
+    # 1: el cartel de la semana: papel, el disco del día en magenta con sus rayos en ultramar y una línea de letras de
+    #    bloque que llenan su forma (ilegibles: no copian ninguno).
+    rect(x0 - 4, 31, x0 + 8, 44, C["amarillo"])
+    for (xa, ya, w_, h_) in ((x0 - 3, 32, 3, 3), (x0, 32, 2, 3), (x0 + 3, 32, 4, 3)):
+        rect(xa, ya, xa + w_, ya + h_, C["tinta"])
+    for (dx, dy) in ((0, 0), (1, 0), (0, 1), (1, 1), (-1, 0), (2, 1), (0, -1), (1, 2)):
+        pon(px, x0 + 1 + dx, 39 + dy, C["magenta"])
+    for (dx, dy) in ((-3, 39), (5, 40), (1, 36), (-2, 42), (4, 43)):
+        pon(px, x0 + dx, dy, C["azul"])
+    # 2: el de la semana pasada, a una tinta en ultramar, con bandas que ondulan (la esquina de abajo se levanta).
     rect(x0 - 3, 44, x0 + 7, 55, C["azul"])
-    for (dx, dy) in ((0, -2), (-2, 0), (2, 0), (0, 2), (-1, -1), (1, -1), (-1, 1), (1, 1)):
-        pon(px, x0 + 2 + dx, 48 + dy, C["naranja"])
-    pon(px, x0 + 2, 48, C["amarillo"])
-    for y in range(50, 54):
-        pon(px, x0 + 2, y, C["verde"])
-    rect(x0 - 2, 45, x0 + 6, 46, C["naranja"])
-    # 3: amarillo con ondas violeta que vibran.
+    for y in range(45, 55, 2):
+        for x in range(x0 - 3, x0 + 7):
+            if (x + int(1.5 * math.sin((x - y) * 0.8))) % 4 == 0:
+                pon(px, x, y, C["amarillo"])
+    # 3: uno viejo y desteñido, bermellón sobre papel, con su disco.
     rect(x0 - 4, 54, x0 + 6, 61, C["amarillo"])
-    for y in range(55, 61, 2):
+    for y in range(55, 61):
         for x in range(x0 - 4, x0 + 6):
-            if (x + int(1.5 * math.sin((x + y) * 0.9))) % 3 == 0:
-                pon(px, x, y, C["violeta"])
+            if (x - x0 - 1) ** 2 + (y - 57.5) ** 2 < 5:
+                pon(px, x, y, C["naranja"])
+    for x in range(x0 - 3, x0 + 5):
+        pon(px, x, 60, C["naranja"], 0.6)
     # La redondez del poste: la orilla derecha de los carteles, más oscura.
     for y in range(27, 66):
         for x in (x0 + 5, x0 + 6, x0 + 7):
@@ -5886,13 +5977,15 @@ def ps_arbol(im, P, o):
 
 
 def fondo_psicodelia(t):
-    """Psicodelia: una calle de San Francisco en el verano de 1967, el mismo lugar de día y de noche. De día: la niebla de
-    la mañana que se levanta, el sol velado arriba a la izquierda (de ahí la luz), la cuesta con sus casitas en escalera y
-    los eucaliptos, la fila de casas victorianas grises y desteñidas con dos pintadas, la calle, el poste con los carteles,
-    los cables y el árbol que enmarca; en la acera, dibujos de tiza. De noche: la misma calle con el farol encendido, las
-    ventanas con luz, una con luz negra (el violeta y, adentro, carteles en verde limón y magenta que brillan) y, en el
-    mirador de la casa turquesa, las luces líquidas que respiran. Lo que se mueve: la niebla (jirones que pasan y se
-    deshacen), los carteles con el viento, una gaviota de día y, de noche, las luces líquidas y dos polillas en el farol."""
+    """Psicodelia, la cara de la ciudad (versión 2): una calle de San Francisco a fines de los sesenta vista como una foto
+    de los setenta. De día, la tarde: la bruma, el sol velado arriba a la izquierda (de ahí la luz), la cuesta con sus
+    casitas en escalera y los eucaliptos, la fila de victorianas grises con una sola pintada y desteñida, la calle, el
+    poste con los carteles de la semana a dos tintas, los cables del trolebús y el árbol que enmarca; en la acera, una
+    rayuela de tiza. De noche (ciudad · oscuro): la misma calle al anochecer, con el farol, las ventanas con la luz de
+    las lámparas de pantalla y, en el mirador de David, la lámpara encendida. Encima de todo, la película: el color viejo
+    (`pelicula_np`), el grano fino y cálido y la viñeta hacia el café (`TrazosCiudad`: grano 0.22 de día y 0.30 de noche,
+    viñeta 0.28 y 0.35). Lo que se mueve: la niebla (jirones que pasan y se deshacen), los carteles con el viento, una
+    gaviota de día y, de noche, dos polillas en el farol."""
     o = t["oscuro"]
     P = dict(PAL_PSI_N if o else PAL_PSI_D)
     im, d = lienzo(P["cielo"][0])
@@ -5923,21 +6016,18 @@ def fondo_psicodelia(t):
         # Las ventanas con luz dejan su halo en la niebla de la calle; la luz negra, un halo violeta; el farol, su luz.
         for (x, y, w_, h_) in luces_casas:
             luz(im, x + w_ / 2, y + h_ / 2, 7, P["ventana"][2], 0.14, 3, ry=8)
-        for (x, y, w_, h_) in P.get("_luz_negra", []):
-            luz(im, x + w_ / 2, y + h_ / 2, 11, P["luz_negra"][1], 0.3, 4, ry=11)
+        for (x, y, w_, h_) in P.get("_lamparas", []):          # la lámpara de pantalla detrás del vidrio del mirador
+            luz(im, x + w_ / 2, y + h_ / 2, 12, P["lampara_luz"], 0.26, 4, ry=11)
             for yy in range(y, y + h_):
                 for xx in range(x, x + w_):
-                    pon(px, xx, yy, P["luz_negra"][1] if yy > y + 1 else P["luz_negra"][0])
-            F = P["fluor"]                                     # los carteles de adentro que brillan
-            for (xx, yy, cc) in ((x, y + 3, F["limon"]), (x + 1, y + 3, F["limon"]), (x, y + 4, F["limon"]), (x + 1, y + 5, F["limon"]),
-                                 (x + 3, y + 2, F["magenta"]), (x + 3, y + 3, F["magenta"]), (x + 2, y + 4, F["naranja"]),
-                                 (x + 3, y + 6, F["magenta"]), (x + 2, y + 7, F["limon"])):
-                pon(px, xx, yy, cc)
-            ps_marco(im, P, x, y, w_, h_, P["casas"]["gris"], frontoncito=False)
-            for yy in range(y + 1, y + h_):                    # las caras del mirador también, más tenues
-                pon(px, x - 4, yy, P["luz_negra"][1]); pon(px, x + w_ + 4, yy, P["luz_negra"][0])
-        for (x, y, w_, h_) in P.get("_luces_ventanas", []):     # el resplandor de las luces líquidas en la fachada
-            luz(im, x + w_ / 2, y + h_ / 2, 12, hx("C85AA8"), 0.24, 4, ry=11)
+                    pon(px, xx, yy, mezcla(P["ventana"][1], P["ventana"][3], (yy - y) / max(1, h_)))
+            cx_ = x + w_ // 2
+            for q in range(3):                                 # la pantalla plisada, más ancha abajo
+                for xx in range(cx_ - 1 - q, cx_ + 2 + q):
+                    pon(px, xx, y + 1 + q, P["lampara"] if (xx - cx_) % 2 else P["ventana"][0])
+            for yy in range(y + 4, y + h_):                    # el pie
+                pon(px, cx_, yy, P["cable"])
+            ps_marco(im, P, x, y, w_, h_, P["casas"]["turquesa"], frontoncito=False)
         fx, fy = PS_FAROL
         luz(im, fx, fy + 2, 34, P["farol_halo"], 0.12, 4, ry=26)
         luz(im, fx, fy + 2, 13, P["farol_luz"], 0.22, 3, ry=11)
@@ -5954,11 +6044,8 @@ def fondo_psicodelia(t):
         for y in range(30, 62):
             for x in range(PS_POSTE + 1, PS_POSTE + 8):
                 pon(px, x, y, P["farol_luz"], 0.12 * max(0, 1 - abs(y - 42) / 28))
-    # --- Lo que se mueve: se dibuja en cada cuadro sobre la base, y el grano va al final.
+    # --- Lo que se mueve: se dibuja en cada cuadro sobre la base, y la película va al final.
     estatico = im.copy()
-    gr = np.ones((H, W), np.float32)
-    q = np.random.default_rng(71).random((H, W))
-    gr[q < 0.06] = 0.955; gr[q > 0.94] = 1.04
     # Los jirones de niebla: aparecen, pasan despacio a la derecha subiendo un poco y se deshacen. Ninguno se ve en el
     # cuadro 0 (así la base no lleva ninguno). Su lugar va de pixel en pixel y su fuerza en cuatro pasos.
     JIRONES = [  # x, y, largo, grosor, de, hasta (fracción del bucle), cuánto avanza
@@ -6021,46 +6108,22 @@ def fondo_psicodelia(t):
                     pon(p_, gx + dx, gy + dy, g[0] if abs(dx) < 3 else g[1])
                 pon(p_, gx, gy, g[0]); pon(p_, gx - 1, gy + 1, g[1]); pon(p_, gx - 2, gy, g[2])
             return
-        # De noche: las luces líquidas del mirador (gotas de aceite y tinta que se mezclan y respiran) y dos polillas.
-        for (x, y, w_, h_) in P.get("_luces_ventanas", []):
-            liquidas(p_, x, y, w_, h_, tk, P)
+        # De noche: dos polillas en el farol.
         fx, fy = PS_FAROL
         for m in range(2):
             a_ = fase(tk, k=5 if m == 0 else -4) + m * 2.6
             mx, my = fx + 6 * math.cos(a_), fy + 5 + 3.2 * math.sin(a_) * (1 + 0.3 * math.sin(2 * a_))
             pon(p_, mx, my, hx("E9E0D0")); pon(p_, mx + (1 if (tk // 2) % 2 else -1), my, hx("A89E8A"), 0.7)
 
-    def liquidas(p_, x0, y0, w_, h_, tk, P):
-        """Tres gotas (magenta, ámbar y verde) que se mueven despacio dentro del vidrio, se juntan y se separan; donde se
-        tocan, se funden; alrededor, su luz tiñe el fondo violeta. Se repiten exactas cada BUCLE cuadros."""
-        gotas = []
-        for i in range(3):
-            cx = x0 + w_ * (0.5 + 0.34 * math.sin(fase(tk) + i * 2.1))
-            cy = y0 + h_ * (0.5 + 0.36 * math.sin(fase(tk, k=2) + i * 1.4 + 0.5))
-            r = 1.9 + 0.5 * math.sin(fase(tk, k=3) + i * 2.0)
-            gotas.append((cx, cy, r))
-        for yy in range(y0, y0 + h_):
-            for xx in range(x0, x0 + w_):
-                campos = [r * r / ((xx + 0.5 - cx) ** 2 + (yy + 0.5 - cy) ** 2 + 0.25) for (cx, cy, r) in gotas]
-                tot = sum(campos)
-                i = int(np.argmax(campos))
-                base, claro = P["liquidas"][i]
-                if tot > 2.6:
-                    c = claro
-                elif tot > 1.0:
-                    c = base
-                else:
-                    c = mezcla(hx("2A1448"), base, min(0.6, tot * 0.5))
-                pon(p_, xx, yy, c)
-
     cache = {}
+    pel = pelicula_ciudad(o)
 
     def render(tk):
+        """El cuadro tk ya pasado por la película, a la resolución de la banda (3 px por dp)."""
         if tk not in cache:
             f = estatico.copy()
             mover(f, tk)
-            a = np.asarray(f, np.float32) * gr[..., None]
-            cache[tk] = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+            cache[tk] = pel(subir(f))
         return cache[tk]
 
     mascaras = {}
@@ -6072,23 +6135,345 @@ def fondo_psicodelia(t):
         tk = tick % BUCLE
         if tk not in mascaras:
             dif = (np.asarray(render(tk)) != np.asarray(render(0))).any(2)
-            mascaras[tk] = Image.fromarray((dif * 255).astype(np.uint8)).resize((W * ESC, H * ESC), Image.NEAREST) if dif.any() else None
+            mascaras[tk] = Image.fromarray((dif * 255).astype(np.uint8)) if dif.any() else None
         if mascaras[tk] is not None:
-            img.paste(subir(render(tk)), (0, 0), mascaras[tk])
+            img.paste(render(tk), (0, 0), mascaras[tk])
     ANIM[("psicodelia", o)] = [vivo]
-    return subir(render(0))
+    return render(0)
+
+
+def pelicula_ciudad(o):
+    """La película de la ciudad sobre una imagen de la banda: el color viejo, la viñeta hacia el café 3A2410 y el grano
+    fino y cálido, fijo (el mismo en todos los cuadros, así lo quieto no cambia). Devuelve la función que la aplica."""
+    Wp, Hp = W * ESC, H * ESC
+    yy, xx = np.mgrid[0:Hp, 0:Wp].astype(np.float32)
+    # La viñeta: elíptica, suave, más fuerte en las esquinas (la banda es muy ancha: se mide con el alto).
+    dx = np.clip((np.abs(xx - Wp / 2) - (Wp / 2 - Hp * 1.1)) / (Hp * 1.1), 0, 1)
+    dy = np.abs(yy - Hp / 2) / (Hp / 2)
+    vin = np.clip(np.sqrt(dx * dx + 0.35 * dy * dy), 0, 1) ** 1.6 * (0.35 if o else 0.28)
+    vineta = np.array(hx("3A2410"), np.float32)
+    rng = np.random.default_rng(97)
+    q = rng.random((Hp, Wp))
+    fuerza = 0.30 if o else 0.22
+    claro, oscuro_ = np.array(AL_SOL, np.float32), np.array(SOMBRA_CAFE, np.float32)
+
+    def aplicar(img):
+        a = pelicula_np(np.asarray(img.convert("RGB"), np.float32))
+        a = a + (vineta - a) * vin[..., None]
+        k = fuerza * 0.2
+        a = np.where((q < 0.12)[..., None], a + (oscuro_ - a) * k, a)
+        a = np.where((q > 0.88)[..., None], a + (claro - a) * k * 0.8, a)
+        return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+    return aplicar
+
+
+# ---------------------------------------------------------------------
+#  Psicodelia, la cara de la psicodelia (versión 2): la banda es el cartel de la semana de David, impreso. En papel crema
+#  (claro) o para luz negra, sobre el negro de terciopelo (oscuro), con las tres tintas fijas (magenta, bermellón y
+#  ultramar) y la tinta que graba (azul negra; en el negro, el crema hace de cuarta tinta). Lo que tiene, de la guía
+#  («La psicodelia» y la decisión 1 del autor: más formas y dibujo de cartel): el marco de arco; en el centro, el disco
+#  del día hecho sol (la figura central, siempre él), con sus rayos que ondulan en grabado fino y las bandas que fluyen
+#  alrededor, abiertas como un ojo y simétricas; a los lados, dos placas de arco con letras de bloque que llenan su
+#  forma («LADO B» y «106.9», la FM de noche); abajo, la fila de victorianas de la ciudad impresa en ultramar con su
+#  grabado; el suelo, en grabado de líneas; y las luces líquidas, manchas planas que resbalan por el cartel.
+#  Se dibuja a la resolución de la banda (3 px por dp), sin suavizar: cada pixel es una tinta.
+#  La intensidad (una banda por escalón: i = 0, 0.5 y 1) sigue `TrazosTinta.medidas`, en la escala de la banda: más
+#  bandas y más anchas, más onda, el registro corrido, los anillos alrededor del disco, la tercera tinta (bermellón)
+#  desde 0.5 y, con i = 1, las bandas se salen del marco. Lo que se mueve: las luces líquidas, el brillo del disco que
+#  gira y, desde 0.5, los anillos que salen del disco (las bandas que fluyen).
+# ---------------------------------------------------------------------
+BUCLE_T = 80                   # cuadros del bucle del cartel (6,4 s): todo lo que se mueve cierra en él
+PT_DISCO = (206, 31, 12.5)     # el disco del día: centro y radio (dp)
+PT_SUELO = 70                  # donde empieza el suelo grabado
+PT_PLACAS = ((12, 7, 98, 40, "LADO B"), (314, 7, 400, 40, "106.9"))      # x0, y0, x1, y1 y su texto
+PT_LETRA = Path(__file__).resolve().parents[2] / "app" / "src" / "main" / "res" / "font" / "bloque_titulo.ttf"
+# Escalones de la banda (la tabla de `TrazosTinta.medidas`, llevada a la banda, que es mucho más chica que el motivo):
+PT_MEDIDAS = {
+    0.0: dict(bandas=4, amp=1.0, grosor=1.4, registro=0, anillos=0, onda_t=0.0, reg_t=0, fuera=False, vueltas=1, flujo=0),
+    0.5: dict(bandas=5, amp=2.6, grosor=2.0, registro=1, anillos=4, onda_t=1.2, reg_t=1, fuera=False, vueltas=2, flujo=2),
+    1.0: dict(bandas=6, amp=4.8, grosor=2.5, registro=2, anillos=6, onda_t=3.0, reg_t=2, fuera=True, vueltas=3, flujo=3),
+}
+# Las casas de abajo: x, ancho, alto del techo (dp), remate (frontón o cornisa) y si tienen mirador.
+PT_CASAS = [(0, 22, 50, "cornisa", True), (22, 20, 47, "fronton", False), (42, 24, 51, "cornisa", True),
+            (66, 20, 46, "fronton", True), (86, 22, 52, "cornisa", False), (108, 24, 49, "fronton", True),
+            (132, 20, 53, "cornisa", True), (152, 22, 48, "fronton", False),
+            (260, 22, 48, "fronton", False), (282, 20, 53, "cornisa", True), (302, 24, 49, "fronton", True),
+            (326, 22, 46, "fronton", True), (348, 20, 52, "cornisa", False), (368, 24, 47, "cornisa", True),
+            (392, 20, 50, "fronton", True)]
+
+
+def _pt_tintas(t):
+    """Los colores del cartel en esta banda: papel, la tinta que graba, magenta, bermellón, ultramar, crema."""
+    o, i = t["oscuro"], t["psi_i"]
+    mg, bm, ul = tintas_psi(o, i)
+    return dict(papel=NEGRO_T if o else PAPEL_T, graba=CREMA_T if o else GRABAR_T, magenta=mg, bermellon=bm,
+                ultramar=ul, crema=CREMA_T, negro=NEGRO_T, oscuro=o, i=i)
+
+
+def _pt_sobre(base, tinta, oscuro):
+    """Una tinta sobre otra (`TrazosTinta.sobreimpresion`): multiplica sobre papel; sobre negro, mitad y mitad (donde
+    no hay otra tinta debajo, sobre el negro del fondo, la tinta va sola)."""
+    base = np.asarray(base, np.float32); tinta = np.asarray(tinta, np.float32)
+    if not oscuro:
+        return base * tinta / 255
+    negro = np.all(np.abs(base - np.asarray(NEGRO_T, np.float32)) < 1, axis=-1)
+    return np.where(negro[..., None] if base.ndim > 1 else negro, tinta, (base + tinta) / 2)
+
+
+def _pt_pintar(a, mascara, col, C, sobre=False):
+    """Pone la tinta col donde dice la máscara (sobreimprimiendo si sobre)."""
+    if not mascara.any():
+        return
+    a[mascara] = _pt_sobre(a[mascara], col, C["oscuro"]) if sobre else np.asarray(col, np.float32)
+
+
+def _pt_letras(texto, ancho, alto, onda=0.0, fase_=0.0):
+    """Las letras de bloque que llenan su forma: el texto, medido con la letra del tema («Bloque Vestigium», Chango
+    renombrada), estirado para llenar una placa de arco (arriba redonda, abajo recta) de ancho×alto px; con onda, la
+    forma se dobla. Devuelve la máscara."""
+    from PIL import ImageFont
+    f = ImageFont.truetype(str(PT_LETRA), 120)
+    caja = f.getbbox(texto)
+    im = Image.new("L", (caja[2] - caja[0] + 8, caja[3] - caja[1] + 8), 0)
+    ImageDraw.Draw(im).text((4 - caja[0], 4 - caja[1]), texto, font=f, fill=255)
+    src = np.asarray(im) > 127
+    sh, sw = src.shape
+    out = np.zeros((alto, ancho), bool)
+    for x in range(ancho):
+        u = (x + 0.5) / ancho * 2 - 1
+        arriba = alto * 0.34 * (1 - math.sqrt(max(0.0, 1 - u * u)))          # el arco de la placa
+        abajo = alto - 1 - alto * 0.06 * u * u                               # abajo, casi recta (un poco de barril)
+        d = onda * math.sin(math.pi * (u + 1) * 1.5 + fase_)
+        arriba += d; abajo += d
+        if abajo - arriba < 2:
+            continue
+        sx = min(sw - 1, int((x + 0.5) / ancho * sw))
+        for y in range(max(0, int(arriba)), min(alto, int(abajo) + 1)):
+            sy = min(sh - 1, int((y - arriba) / (abajo - arriba) * sh))
+            out[y, x] = src[sy, sx]
+    return out
+
+
+def _pt_capa_fija(t):
+    """Todo lo que no se mueve del cartel, a 3 px por dp: devuelve el arreglo de color y lo que hace falta para mover."""
+    C = _pt_tintas(t)
+    M = PT_MEDIDAS[C["i"]]
+    S = ESC
+    Wp, Hp = W * S, H * S
+    a = np.zeros((Hp, Wp, 3), np.float32); a[:] = C["papel"]
+    yy, xx = np.mgrid[0:Hp, 0:Wp].astype(np.float32)
+    X, Y = (xx + 0.5) / S, (yy + 0.5) / S
+    cx, cy, rd = PT_DISCO
+    # --- El marco de arco del cartel (doble línea: una gruesa y una fina adentro).
+    def dentro_marco(m):
+        x0, y0, x1, y1, r = 3 + m, 3 + m, W - 3 - m, PT_SUELO - 1 - m, 12 - m
+        en = (X >= x0) & (X <= x1) & (Y >= y0) & (Y <= y1)
+        for qx, lado in ((x0 + r, X < x0 + r), (x1 - r, X > x1 - r)):          # las dos esquinas de arriba, en arco
+            en &= ~(lado & (Y < y0 + r) & (((X - qx) ** 2 + (Y - (y0 + r)) ** 2) > r * r))
+        return en
+    adentro = dentro_marco(0)
+    marco = adentro & ~dentro_marco(1.0)
+    marco |= dentro_marco(2.0) & ~dentro_marco(2.35)
+    # --- Los rayos que ondulan, en grabado fino, del disco hacia afuera (dentro del marco).
+    ang = np.arctan2(Y - cy, X - cx)
+    r_ = np.hypot(X - cx, (Y - cy) * 1.0)
+    n_rayos = 36
+    onda_r = 0.09 * np.sin(r_ / 4.2)
+    rayos = ((((ang + onda_r) / (2 * math.pi) * n_rayos) % 1.0) < 0.11 + 0.04 * C["i"]) & (r_ > rd + 2) & (r_ < 78) & adentro
+    # --- Las bandas que fluyen: abiertas como un ojo alrededor del disco, simétricas arriba y abajo.
+    def curva_banda(k, signo, desfase=0.0):
+        u = (X - cx) / 118
+        env = np.clip(np.cos(np.clip(u, -1, 1) * math.pi / 2), 0, 1) ** 0.85
+        base_ = rd + 2.2 + (k + desfase) * 2.9
+        ola = M["amp"] * np.sin(2 * math.pi * X / 23 + k * 0.7) * env ** 0.6
+        return cy + signo * (base_ * env + ola * (0.4 + 0.6 * env))
+    tinta_banda = [C["magenta"], C["ultramar"]] + ([C["bermellon"]] if C["i"] >= 0.5 else [])
+    bandas = []
+    limite = (np.abs(X - cx) < 118)
+    if not M["fuera"]:
+        limite &= adentro
+    for k in range(M["bandas"]):
+        for signo in (-1, 1):
+            yc = curva_banda(k, signo)
+            m = (np.abs(Y - yc) < M["grosor"] / 2) & limite
+            bandas.append((m, tinta_banda[k % len(tinta_banda)], k))
+    # --- Se imprime lo fijo: primero los rayos (grabado), luego las bandas con su registro.
+    _pt_pintar(a, rayos & ~(r_ < rd + 2), C["graba"] if not C["oscuro"] else C["ultramar"], C)
+    reg = M["registro"] * S
+    for (m, col, k) in bandas:
+        if reg and col is C["magenta"]:
+            m = _corrido(m, -reg, reg)
+        elif reg and col is C["bermellon"]:
+            m = _corrido(m, reg, -reg)
+        _pt_pintar(a, m, col, C, sobre=True)
+    # --- Las casas de la ciudad, grabadas en ultramar: el contorno lleno, las tablas de la fachada en líneas (más juntas
+    #     del lado de la sombra, a la derecha), el mirador que sale, las ventanas de guillotina y la cornisa o el frontón.
+    casas = np.zeros((Hp, Wp), bool); sombra_c = np.zeros_like(casas); ventanas = np.zeros_like(casas)
+    mirador_m = np.zeros_like(casas)
+    for (x0, w_, top, remate, mirador) in PT_CASAS:
+        x1 = x0 + w_
+        c_ = (X >= x0 + 0.5) & (X < x1 - 0.5) & (Y >= top) & (Y < PT_SUELO)
+        if remate == "fronton":
+            c_ |= (Y >= top - 5) & (Y < top) & (np.abs(X - (x0 + x1) / 2) < (Y - (top - 5)) / 5 * (w_ / 2 - 0.5))
+        else:
+            c_ |= (X >= x0) & (X < x1) & (Y >= top - 1.5) & (Y < top)              # la cornisa
+        casas |= c_
+        sombra_c |= c_ & (X > x1 - w_ * 0.32)
+        if mirador:                                                                 # el mirador, en ángulo
+            mirador_m |= (X >= x0 + 2) & (X < x0 + 10) & (Y >= top + 3) & (Y < top + 16)
+        for (vx, vy) in ((x0 + 3.2, top + 5), (x0 + 6.6, top + 5), (x0 + 13, top + 5), (x0 + 3.2, top + 12),
+                         (x0 + 6.6, top + 12), (x0 + 13, top + 12)):
+            if vx + 2.0 < x1 - 1.5:
+                ventanas |= (X >= vx) & (X < vx + 2.0) & (Y >= vy) & (Y < vy + 4.0)
+        ventanas |= (X >= x1 - 6.5) & (X < x1 - 3.5) & (Y >= PT_SUELO - 6.5) & (Y < PT_SUELO)   # la puerta
+    casas &= adentro
+    tinta_c = C["ultramar"]
+    contorno_c = casas & ~(_corrido(casas, S, 0) & _corrido(casas, -S, 0) & _corrido(casas, 0, S) & _corrido(casas, 0, -S))
+    tablas = casas & ((yy.astype(np.int32) % 3) == 0)                               # una tabla cada dp
+    tablas |= sombra_c & casas & ((yy.astype(np.int32) % 3) == 1)                   # a la sombra, el doble
+    _pt_pintar(a, casas, C["papel"], C)
+    _pt_pintar(a, tablas | contorno_c, tinta_c, C)
+    mir = mirador_m & casas
+    _pt_pintar(a, mir & (((xx + yy).astype(np.int32) % 3) == 0), tinta_c, C)          # el mirador, en trama cruzada
+    _pt_pintar(a, mir & ~(_corrido(mir, 0, S) & _corrido(mir, 0, -S)), tinta_c, C)
+    v_ = ventanas & casas
+    _pt_pintar(a, v_, C["graba"] if not C["oscuro"] else C["magenta"], C)
+    _pt_pintar(a, v_ & ((yy.astype(np.int32) % 6) == 2), C["papel"], C)                 # el travesaño de la guillotina
+    filo_c = casas & ~_corrido(casas, S, 0)                                      # el filo de arriba de cada techo
+    _pt_pintar(a, filo_c | _corrido(filo_c, S, 0) & casas, C["graba"] if not C["oscuro"] else C["crema"], C)
+    # --- Las placas de arco con las letras de bloque que llenan su forma.
+    for (x0, y0, x1, y1, texto) in PT_PLACAS:
+        px0, py0, px1, py1 = int(x0 * S), int(y0 * S), int(x1 * S), int(y1 * S)
+        placa = (X >= x0) & (X < x1) & (Y >= y0) & (Y < y1)
+        u = (X - (x0 + x1) / 2) / ((x1 - x0) / 2)
+        placa &= Y >= y0 + (y1 - y0) * 0.34 * (1 - np.sqrt(np.clip(1 - u * u, 0, 1)))
+        _pt_pintar(a, placa, C["papel"], C)
+        borde = placa & ~(_corrido(placa, S, 0) & _corrido(placa, -S, 0) & _corrido(placa, 0, S) & _corrido(placa, 0, -S))
+        letras = np.zeros((Hp, Wp), bool)
+        letras[py0 + 2 * S:py1 - S, px0 + 2 * S:px1 - 2 * S] = _pt_letras(texto, px1 - px0 - 4 * S, py1 - py0 - 3 * S,
+                                                                            M["onda_t"] * S)
+        if M["reg_t"]:
+            _pt_pintar(a, _corrido(letras, -M["reg_t"] * S // 2, M["reg_t"] * S) & placa, C["magenta"], C)
+        _pt_pintar(a, letras & placa, C["graba"], C)
+        _pt_pintar(a, borde, C["graba"], C)
+    # --- El suelo: grabado de líneas, más juntas hacia abajo; arriba, la línea gruesa del borde del cartel.
+    suelo = Y >= PT_SUELO
+    paso = np.where(Y < 75, 4, np.where(Y < 78, 3, 2))
+    _pt_pintar(a, suelo & ((yy.astype(np.int32) % paso) == 0), C["graba"] if not C["oscuro"] else C["ultramar"], C)
+    _pt_pintar(a, (Y >= PT_SUELO) & (Y < PT_SUELO + 0.7), C["graba"], C)
+    _pt_pintar(a, marco, C["graba"], C)
+    return a, C, M, (X, Y, r_, ang, adentro)
+
+
+def _pt_disco(a, C, giro, X, Y, r_, ang):
+    """El disco del día: el vinilo con sus surcos, el brillo de los surcos (16 marcas que giran con `giro`, en radianes),
+    la etiqueta en magenta y el agujero."""
+    cx, cy, rd = PT_DISCO
+    disco = r_ <= rd
+    base = C["crema"] if C["oscuro"] else hx("F9F3E6")
+    _pt_pintar(a, disco, base, C)
+    surcos = disco & (r_ > 4.8) & (((r_ * ESC).astype(np.int32) % 3) == 0)
+    _pt_pintar(a, surcos, C["graba"] if not C["oscuro"] else C["negro"], C)
+    brillo = disco & (r_ > 5.5) & (r_ < rd - 0.8) & ((((ang - giro) / (2 * math.pi) * 16) % 1.0) < 0.12)
+    _pt_pintar(a, brillo, C["magenta"], C)
+    _pt_pintar(a, disco & (r_ > rd - 0.7), C["graba"] if not C["oscuro"] else C["ultramar"], C)
+    _pt_pintar(a, r_ <= 4.6, C["magenta"], C)
+    _pt_pintar(a, (r_ <= 4.6) & (r_ > 3.9), C["graba"] if not C["oscuro"] else C["negro"], C)
+    _pt_pintar(a, r_ <= 0.75, C["papel"], C)
+
+
+def _pt_anillos(a, C, M, s_, r_, adentro):
+    """Los anillos alrededor del disco (desde i = 0.5), alternando las tintas, que salen del disco hacia afuera: `s_` va
+    de 0 a M["flujo"] en el bucle (un anillo por unidad). Las tintas se repiten cada M["flujo"] anillos, así el bucle
+    cierra sin salto."""
+    if not M["anillos"]:
+        return
+    rd = PT_DISCO[2]
+    tintas_ = [C["magenta"], C["ultramar"], C["bermellon"]][:max(2, M["flujo"])]
+    n_ = math.floor(s_)
+    fr = s_ - n_
+    r_min, r_max = rd + 1.4, rd + 1.4 + M["anillos"] * 2.2
+    for j in range(-1, M["anillos"] + 1):
+        r0 = r_min + (j + fr) * 2.2
+        if r0 < r_min - 0.01 or r0 + 1.1 > r_max + 0.01:
+            continue
+        m = (r_ > r0) & (r_ < r0 + 1.1) & adentro
+        _pt_pintar(a, m, tintas_[(j - n_) % len(tintas_)], C, sobre=True)
+
+
+def _pt_manchas(a, C, tk, X, Y):
+    """Las luces líquidas: dos manchas planas a cada lado del disco que resbalan despacio y se deforman; donde se tocan
+    dos tintas, la sobreimpresión. Cierran el bucle en BUCLE_T cuadros."""
+    f = 2 * math.pi * tk / BUCLE_T
+    zonas = ((150, 18, C["magenta"], C["ultramar"]), (262, 18, C["ultramar"], C["bermellon"] if C["i"] >= 0.5 else C["magenta"]))
+    for z, (zx, zy, c1, c2) in enumerate(zonas):
+        ms = []
+        for b, col in enumerate((c1, c2)):
+            campo = np.zeros(X.shape, np.float32)
+            for q in range(3):
+                s_ = (1 if z == 0 else -1)
+                px_ = zx + s_ * (7 * math.sin(f + b * 2.4 + q * 2.1) + 4 * b - 2)
+                py_ = zy + 4.5 * math.sin(f * 1 + b * 1.3 + q * 1.7) + 3 * b
+                r = 3.6 + 1.0 * math.sin(f + q * 2.0 + b)
+                campo += r * r / ((X - px_) ** 2 + (Y - py_) ** 2 + 0.5)
+            ms.append(campo > 1.6)
+        _pt_pintar(a, ms[0], c1, C)
+        _pt_pintar(a, ms[1] & ~ms[0], c2, C)
+        a[ms[0] & ms[1]] = _pt_sobre(c1, c2, C["oscuro"])
+
+
+def fondo_psi_tinta(t):
+    """Psicodelia, la cara de la psicodelia: el cartel de la semana (ver arriba)."""
+    nombre, o = t["psi_nombre"], t["oscuro"]
+    fija, C, M, (X, Y, r_, ang, adentro) = _pt_capa_fija(t)
+    cache = {}
+
+    def render(tk):
+        tk %= BUCLE_T
+        tk -= tk % 2                     # lo que se mueve cambia cada dos cuadros (6,25 por segundo): pesa la mitad
+        if tk not in cache:
+            a = fija.copy()
+            _pt_anillos(a, C, M, tk / BUCLE_T * M["flujo"], r_, adentro)
+            _pt_manchas(a, C, tk, X, Y)
+            # El brillo tiene 16 marcas: girar 1/16 de vuelta por bucle (6,4 s) es una vuelta cada 102 s (en reposo;
+            # `TrazosTinta.medidas` pide 1/180 por segundo); con 0.5, el doble, y con 1, el triple.
+            _pt_disco(a, C, 2 * math.pi * M["vueltas"] * tk / BUCLE_T / 16, X, Y, r_, ang)
+            cache[tk] = Image.fromarray(np.clip(a, 0, 255).astype(np.uint8))
+        return cache[tk]
+
+    mascaras = {}
+
+    def vivo(img, tick, delante):
+        """Pega encima solo lo que cambió respecto del cuadro 0."""
+        if delante:
+            return
+        tk = tick % BUCLE_T
+        if tk not in mascaras:
+            dif = (np.asarray(render(tk)) != np.asarray(render(0))).any(2)
+            mascaras[tk] = Image.fromarray((dif * 255).astype(np.uint8)) if dif.any() else None
+        if mascaras[tk] is not None:
+            img.paste(render(tk), (0, 0), mascaras[tk])
+    ANIM[(nombre, o)] = [vivo]
+    return render(0)
 
 
 FONDOS_MIOS = {"frente": fondo_frente, "arcontes": fondo_arcontes, "galia": fondo_galia, "nouveau": fondo_nouveau,
                "psicodelia": fondo_psicodelia}
+FONDOS_MIOS.update({n_: fondo_psi_tinta for n_ in PSI_NIVEL})
 ETIQ = {"frente": "Frente exterior · la base escondida en ruinas", "arcontes": "Arcontes · el lago de Galilea en Magdala",
         "galia": "Galia · el oppidum arverno y su robledal", "nouveau": "Art nouveau · el invernadero de hierro y vidrio",
-        "psicodelia": "Psicodelia · una calle de San Francisco en 1967, con la niebla de la mañana"}
+        "psicodelia": "Psicodelia · la ciudad: una calle de San Francisco por la tarde, como en una foto de los setenta",
+        "psicodelia_tinta": "Psicodelia · el cartel de la semana, impreso (i = 0)",
+        "psicodelia_tinta_media": "Psicodelia · el cartel de la semana, con un consumo en curso (i = 0.5)",
+        "psicodelia_tinta_plena": "Psicodelia · el cartel de la semana, con la intensidad plena (i = 1)"}
 NOCHE = {"frente": "la base en penumbra, con el vidrio y las lámparas encendidos",
          "arcontes": "el mismo lago con las estrellas, la lámpara y una grieta de luz",
          "galia": "el mismo oppidum con sus hogueras y, en el llano, las del cerco romano",
          "nouveau": "el mismo invernadero con las lámparas de vidrio encendidas y la luna tras el vidrio",
-         "psicodelia": "la misma calle con el farol, una ventana de luz negra y las luces líquidas en un mirador"}
+         "psicodelia": "la misma calle al anochecer, con el farol y las lámparas de pantalla en las ventanas",
+         "psicodelia_tinta": "el cartel para luz negra, sobre el negro de terciopelo",
+         "psicodelia_tinta_media": "el cartel para luz negra, con un consumo en curso",
+         "psicodelia_tinta_plena": "el cartel para luz negra, con la intensidad plena"}
 
 
 def registrar():
@@ -6152,7 +6537,7 @@ registrar()
 
 if __name__ == "__main__":
     que = sys.argv[1:2] or ["hoja"]
-    sel = [a for a in sys.argv[2:] if a in MIOS] or list(MIOS)
+    sel = [a for a in sys.argv[2:] if a in MIOS or a in PSI_CARAS] or list(MIOS)
     if "hoja" in que:
         hoja_mia("gato21_hoja.png", temas=sel)
     if "fondos" in que:

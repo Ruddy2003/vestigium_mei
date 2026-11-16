@@ -214,7 +214,9 @@ def exportar(destino, temas=None):
                 for c in info[a]:
                     c[0:0] = list(pos[j]); j += 1        # [atlas_x, atlas_y, dx, dy, ancho, alto]
             guardar(atlas, destino / f"{clave}_gato.webp")
-            m["anims"] = info
+            # Las bandas de una cara de un tema (Psicodelia: psicodelia_tinta…) nombran sus acciones con el id del tema.
+            base_ = getattr(g8, "TEMA_DE_BANDA", {}).get(n, n)
+            m["anims"] = {(f"esp_{base_}_" + a[len(f"esp_{n}_"):] if a.startswith(f"esp_{n}_") else a): v for a, v in info.items()}
             m["especiales"] = [{"accion": g17.ESP[n][q][0], "nombre": g17.ESP[n][q][2],
                                 "base": g17.ACCIONES[g17.ESP[n][q][0]][2]} for q in range(2)]
             # --- Sombra bajo el gato.
