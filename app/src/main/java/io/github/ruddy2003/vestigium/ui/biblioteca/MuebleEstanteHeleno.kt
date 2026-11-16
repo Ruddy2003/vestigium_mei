@@ -1350,7 +1350,7 @@ internal object MuebleEstanteHeleno {
                     contacto(Offset(pie.x + 2f * u, pie.y), 15f * u, 3.4f * u, a)
                     lecito(pie, 44f * u, a, cerca, haciaX)
                 }
-                else -> estiloYEspatula(Offset(oc + 8f * u, y), a, cerca, conEspatula = false)
+                else -> estiloYEspatula(Offset(oc + 13f * u, y), a, cerca, conEspatula = false, enVolumen = true)
             }
         }
     }
@@ -1476,10 +1476,14 @@ internal object MuebleEstanteHeleno {
         rotate(90f, pie) { lecito(pie, largo, a, cerca, -1f) }
     }
 
-    /** El estilo de hueso y, con [conEspatula], la espátula de bronce para alisar la cera, apoyados en el fondo. */
-    private fun DrawScope.estiloYEspatula(pie: Offset, a: Aire, cerca: Float, conEspatula: Boolean) {
+    /**
+     * El estilo de hueso y, con [conEspatula], la espátula de bronce para alisar la cera, apoyados en el fondo. Con [enVolumen],
+     * el estilo se echa hacia la izquierda y descansa en el último volumen.
+     */
+    private fun DrawScope.estiloYEspatula(pie: Offset, a: Aire, cerca: Float, conEspatula: Boolean, enVolumen: Boolean = false) {
         val u = density
-        val e0 = pie; val e1 = pie + Offset(9f * u, -58f * u)
+        val e0 = pie; val e1 = pie + (if (enVolumen) Offset(-11.5f * u, -52f * u) else Offset(9f * u, -58f * u))
+        if (enVolumen) drawOval(a.sombra(0.36f), Offset(e0.x - 3f * u, e0.y - 1.2f * u), Size(9f * u, 2.6f * u))
         drawLine(a.sombra(if (a.oscuro) 0.4f else 0.26f), e0 + Offset(5f * u, 0f), e1 + Offset(8f * u, 4f * u), 1.6f * u, StrokeCap.Round)
         val hueso = a.luz(mezcla(HUESO, PAPIRO, 0.3f), cerca + 0.05f)
         drawLine(hueso, e0, e1, 2f * u, StrokeCap.Round)
@@ -1668,81 +1672,118 @@ internal object MuebleEstanteHeleno {
     }
 
     /**
-     * El rollo de papiro, de pie en su funda de pergamino teñida del color del ánimo: arriba asoma la boca del rollo, con las
-     * vueltas de la hoja (más cuanto más escribiste) y el umbilicus; del umbilicus cuelga la etiqueta (el sillybos) con el día;
-     * en la funda, el mes de abajo arriba y, al pie, el ramito de olivo (en los Sueños, la luna).
+     * El rollo de papiro, de pie en su funda de pergamino teñida del color del ánimo. Arriba, la cabeza del rollo vista un poco
+     * desde arriba: la elipse con la espiral de la hoja enrollada (más vueltas cuanto más escribiste) y el umbilicus, un punto
+     * de hueso en el medio; el papiro asoma de la funda en un cuello más claro y más estrecho. La funda, fruncida con su cordón,
+     * tiene sus pliegues y su costura; por abajo vuelve a asomar el rollo, con el botón del umbilicus. De la cabeza cuelga de un
+     * cordel, ladeada, la etiqueta (el sillybos) con el día; en la funda, el mes de abajo arriba y, al pie, el ramito de olivo
+     * (en los Sueños, la luna).
      */
     private fun DrawScope.rollo(v: Volumen, medidor: TextMeasurer, a: Aire, k: Float) {
         val u = density
         val w = size.width; val h = size.height
         val r = w / 2
-        val rk = minOf(w * 0.1f, 3.2f * u)
-        val met = w * 0.08f                      // lo que el rollo es más estrecho que su funda, por lado
-        val ell = (w - 2 * met) * 0.3f
-        val yBoca = rk * 2f + ell * 0.36f
-        val yFunda = yBoca + h * 0.085f
-        val esq = r * 0.36f
+        val met = w * 0.1f                        // lo que el rollo es más estrecho que su funda, por lado
+        val an = w - 2 * met
+        val ell = an * 0.46f                      // la cabeza, vista desde arriba
+        val yBoca = ell / 2
+        val yFunda = yBoca + maxOf(h * 0.075f, 6.5f * u)
+        val yPie = h - 5f * u
         val papiro = a.luz(PAPIRO, k)
-        // El rollo, que asoma de la funda: las vueltas de la hoja y la orilla donde acaba.
-        drawRect(papiro, Offset(met, yBoca), Size(w - 2 * met, yFunda - yBoca + 3f * u))
-        drawRect(a.claro(0.3f), Offset(met + w * 0.1f, yBoca), Size(w * 0.13f, yFunda - yBoca + 3f * u))
-        drawRect(a.sombra(0.2f), Offset(w * 0.68f, yBoca), Size(w - met - w * 0.68f, yFunda - yBoca + 3f * u))
-        drawLine(a.luz(mezcla(PAPIRO, CUERO, 0.55f), k), Offset(w * 0.6f, yBoca + ell * 0.4f), Offset(w * 0.6f, yFunda + 2f * u), 0.6f * u)
-        // La funda de pergamino teñido: la boca fruncida, en ondas, y el cuerpo hasta el pie.
+        val linea = a.luz(mezcla(PAPIRO, CUERO, 0.62f), k)
+        val hueso = a.luz(mezcla(HUESO, Color.White, 0.2f), k + 0.06f)
+        // El pie del rollo, que asoma por debajo de la funda, con el botón del umbilicus.
+        drawRoundRect(papiro, Offset(met, yPie - 2f * u), Size(an, h - yPie + 2f * u), CornerRadius(1.2f * u))
+        drawRect(a.sombra(0.3f), Offset(met, yPie), Size(an, 1.6f * u))
+        drawRect(a.sombra(0.2f), Offset(r + an * 0.18f, yPie), Size(an * 0.32f, h - yPie))
+        drawOval(hueso, Offset(r - 2.3f * u, h - 3.3f * u), Size(4.6f * u, 3.3f * u))
+        // El cuello: el papiro que asoma por arriba, con la orilla donde acaba la hoja.
+        drawRect(papiro, Offset(met, yBoca), Size(an, yFunda - yBoca + 3f * u))
+        drawRect(a.claro(0.32f), Offset(met + an * 0.1f, yBoca), Size(an * 0.17f, yFunda - yBoca + 3f * u))
+        drawRect(a.sombra(0.22f), Offset(r + an * 0.2f, yBoca), Size(an * 0.3f, yFunda - yBoca + 3f * u))
+        drawLine(linea, Offset(r + an * 0.235f, yBoca + ell * 0.4f), Offset(r + an * 0.235f, yFunda + 2f * u), 0.7f * u)
+        // La funda: la boca fruncida en ondas, más estrecha que el cuerpo, que se abre debajo y se recoge otra vez en el dobladillo.
+        val hombro = yFunda + 10f * u
+        val paso = w * 0.9f / 4f
         val cuerpo = Path().apply {
-            moveTo(0f, yFunda + 2.4f * u)
-            for (j in 0 until 4) cubicTo(w * (j + 0.3f) / 4f, yFunda - 1.2f * u, w * (j + 0.7f) / 4f, yFunda - 1.2f * u, w * (j + 1f) / 4f, yFunda + (if (j == 3) 2.4f else 1.4f) * u)
-            lineTo(w, h - esq); cubicTo(w, h, w, h, w - esq, h); lineTo(esq, h); cubicTo(0f, h, 0f, h, 0f, h - esq); close()
+            moveTo(w * 0.05f, yFunda + 2.2f * u)
+            for (j in 0 until 4) {
+                val xa = w * 0.05f + paso * j
+                cubicTo(xa + paso * 0.3f, yFunda - 1.3f * u, xa + paso * 0.7f, yFunda - 1.3f * u, xa + paso, yFunda + (if (j == 3) 2.2f else 1.2f) * u)
+            }
+            cubicTo(w * 0.96f, yFunda + 6f * u, w, yFunda + 6.5f * u, w, hombro)
+            lineTo(w, yPie - 5f * u)
+            cubicTo(w, yPie - 1.5f * u, w * 0.985f, yPie, w * 0.95f, yPie)
+            lineTo(w * 0.05f, yPie)
+            cubicTo(w * 0.015f, yPie, 0f, yPie - 1.5f * u, 0f, yPie - 5f * u)
+            lineTo(0f, hombro)
+            cubicTo(0f, yFunda + 6.5f * u, w * 0.04f, yFunda + 6f * u, w * 0.05f, yFunda + 2.2f * u)
+            close()
         }
         val funda = v.tono?.let { a.animo(it, k) } ?: a.luz(mezcla(HUESO, MIMBRE, 0.3f), k)
+        val hondoFunda = mezcla(funda, a.hondo, 0.45f)
         drawPath(cuerpo, funda)
         clipPath(cuerpo) {
-            // El cilindro, sin degradados: una franja de luz a la izquierda y dos de sombra a la derecha.
-            drawRect(a.sombra(0.14f), Offset(0f, yBoca), Size(w * 0.07f, h))
-            drawRect(a.claro(0.3f), Offset(w * 0.14f, yBoca), Size(w * 0.15f, h))
-            drawRect(a.sombra(0.15f), Offset(w * 0.66f, yBoca), Size(w * 0.34f, h))
-            drawRect(a.sombra(0.2f), Offset(w * 0.85f, yBoca), Size(w * 0.15f, h))
-            // Los pliegues que bajan del fruncido, el roce del pie y la costura.
-            for (j in 0 until 4) drawLine(a.sombra(0.2f), Offset(w * (j + 0.5f) / 4f + 0.6f * u, yFunda + 6.5f * u), Offset(w * (j + 0.5f) / 4f + (j - 1.5f) * 0.5f * u, yFunda + (11f + 3f * azar(v.semilla, 50 + j)) * u), 0.7f * u)
-            drawRect(a.claro(0.16f), Offset(0f, h - 4.6f * u), Size(w, 1.2f * u))
-            drawRect(a.sombra(0.28f), Offset(0f, h - 1.5f * u), Size(w, 1.5f * u))
-            for (j in 0 until 8) drawLine(a.sombra(0.32f), Offset(w * 0.82f, yFunda + (16f + 9f * j) * u), Offset(w * 0.82f, yFunda + (20f + 9f * j) * u), 0.6f * u)
+            // El bulto, sin degradados: la luz a la izquierda y la sombra, en dos pasos, a la derecha.
+            drawRect(a.sombra(0.14f), Offset(0f, yFunda - 2f * u), Size(w * 0.06f, h))
+            drawRect(a.claro(0.3f), Offset(w * 0.13f, yFunda - 2f * u), Size(w * 0.15f, h))
+            drawRect(a.sombra(0.15f), Offset(w * 0.66f, yFunda - 2f * u), Size(w * 0.34f, h))
+            drawRect(a.sombra(0.2f), Offset(w * 0.86f, yFunda - 2f * u), Size(w * 0.14f, h))
+            // Dos pliegues blandos que bajan del fruncido, uno largo y otro corto.
+            drawLine(a.sombra(0.2f), Offset(w * 0.4f, yFunda + 6f * u), Offset(w * 0.36f, yPie - 4f * u), 1f * u)
+            drawLine(a.claro(0.22f), Offset(w * 0.4f - 1.1f * u, yFunda + 6f * u), Offset(w * 0.36f - 1.1f * u, yPie - 4f * u), 0.7f * u)
+            drawLine(a.sombra(0.18f), Offset(w * 0.6f, yFunda + 6f * u), Offset(w * 0.63f, yFunda + 24f * u), 0.9f * u)
+            // La costura, a la derecha, con sus puntadas, y el dobladillo.
+            drawLine(hondoFunda, Offset(w * 0.8f, hombro), Offset(w * 0.8f, yPie), 0.6f * u)
+            for (j in 0 until 3) drawLine(hondoFunda, Offset(w * 0.8f - 1.4f * u, hombro + (yPie - hombro) * (0.2f + 0.3f * j)), Offset(w * 0.8f + 1.4f * u, hombro + (yPie - hombro) * (0.2f + 0.3f * j) + 1f * u), 0.6f * u)
+            drawRect(a.claro(0.16f), Offset(0f, yPie - 3.6f * u), Size(w, 1f * u))
+            drawRect(hondoFunda, Offset(0f, yPie - 1.2f * u), Size(w, 1.2f * u))
         }
-        // El cordón que frunce la boca, con su lazada.
-        val lazo = mezcla(funda, a.hondo, 0.5f)
-        drawLine(lazo, Offset(0.4f * u, yFunda + 4.6f * u), Offset(w - 0.4f * u, yFunda + 4.6f * u), 1.3f * u)
-        drawLine(a.claro(0.25f), Offset(0.4f * u, yFunda + 3.8f * u), Offset(w * 0.6f, yFunda + 3.8f * u), 0.5f * u)
-        drawLine(lazo, Offset(w * 0.74f, yFunda + 4.6f * u), Offset(w * 0.68f, yFunda + 9.5f * u), 1.1f * u, StrokeCap.Round)
-        drawLine(lazo, Offset(w * 0.74f, yFunda + 4.6f * u), Offset(w * 0.8f, yFunda + 9f * u), 1.1f * u, StrokeCap.Round)
-        // La boca del rollo: la elipse con sus vueltas y, en el medio, el umbilicus con su pomo.
-        drawOval(a.luz(mezcla(PAPIRO, HUESO, 0.5f), k), Offset(met, yBoca - ell / 2), Size(w - 2 * met, ell))
-        drawOval(a.luz(mezcla(PAPIRO, CUERO, 0.6f), k), Offset(met, yBoca - ell / 2), Size(w - 2 * met, ell), style = Stroke(0.6f * u))
-        val vueltas = 1 + (v.lleno * 3).toInt()
-        for (j in 1..vueltas) {
-            val f = 1f - j / (vueltas + 1.3f)
-            drawOval(a.luz(mezcla(PAPIRO, CUERO, 0.6f), k), Offset(r - (r - met) * f, yBoca - ell / 2 * f), Size((w - 2 * met) * f, ell * f), style = Stroke(0.6f * u))
+        // El cordón que frunce la boca, con sus dos cabos.
+        drawLine(hondoFunda, Offset(w * 0.06f, yFunda + 4.6f * u), Offset(w * 0.94f, yFunda + 4.6f * u), 1.3f * u)
+        drawLine(hondoFunda, Offset(w * 0.2f, yFunda + 4.6f * u), Offset(w * 0.14f, yFunda + 9.5f * u), 1.1f * u, StrokeCap.Round)
+        drawLine(hondoFunda, Offset(w * 0.2f, yFunda + 4.6f * u), Offset(w * 0.27f, yFunda + 9f * u), 1.1f * u, StrokeCap.Round)
+        // La cabeza del rollo: la elipse con la espiral de la hoja, cada vuelta un poco más corrida, y el umbilicus en el medio.
+        drawOval(a.luz(mezcla(PAPIRO, HUESO, 0.55f), k + 0.08f), Offset(met, 0f), Size(an, ell))
+        drawOval(linea, Offset(met + 0.3f * u, 0.3f * u), Size(an - 0.6f * u, ell - 0.6f * u), style = Stroke(0.7f * u))
+        // La hoja se enrolla hacia dentro: una sola espiral, que arranca en la orilla (donde baja la línea del cuello).
+        val vueltas = 2f + (v.lleno * 2.4f).toInt()
+        val centro = Offset(r + an * 0.04f, yBoca + ell * 0.03f)
+        val espiral = Path()
+        val pasos = (vueltas * 14).toInt()
+        for (j in 0..pasos) {
+            val t = j / pasos.toFloat()
+            val ang = 1.05f + t * vueltas * 6.283f
+            val f = 0.94f - 0.74f * t
+            val c = Offset(r + (centro.x - r) * t, yBoca + (centro.y - yBoca) * t)
+            val p = Offset(c.x + an / 2 * f * cos(ang), c.y + ell / 2 * f * sin(ang))
+            if (j == 0) espiral.moveTo(p.x, p.y) else espiral.lineTo(p.x, p.y)
         }
-        drawRect(a.luz(MADERA_OSC, k), Offset(r - rk * 0.55f, rk * 1.2f), Size(rk * 1.1f, yBoca - rk * 1.2f))
-        drawCircle(a.luz(mezcla(MADERA_OSC, BRONCE, 0.45f), k), rk, Offset(r, rk))
-        drawCircle(a.claro(0.45f), rk * 0.34f, Offset(r - rk * 0.3f, rk * 0.7f))
-        // La etiqueta que cuelga del umbilicus, con el día.
-        val et = Rect(w * 0.1f, yFunda + 12f * u, w * 0.9f, yFunda + 31f * u)
-        drawLine(a.luz(HUESO, k), Offset(r, yBoca), Offset(r, et.top + 1f * u), 0.7f * u)
-        rotate((azar(v.semilla, 8) - 0.5f) * 5f, et.center) {
-            drawRect(a.sombra(0.4f), et.topLeft + Offset(0.9f * u, 1.1f * u), et.size)
+        drawPath(espiral, linea, style = Stroke(0.7f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+        val rb = minOf(1.3f * u, an * 0.075f)
+        drawCircle(a.luz(mezcla(HUESO, PAPIRO, 0.35f), k + 0.08f), rb, centro)
+        // El sillybos: la etiqueta con el día, colgada de un cordel desde la cabeza del rollo y ladeada.
+        val lado = if (azar(v.semilla, 8) < 0.5f) -1f else 1f
+        val ojal = Offset(r + lado * w * 0.05f, hombro + 1.6f * u)
+        val et = Rect(ojal.x - w * 0.35f, hombro, ojal.x + w * 0.35f, hombro + 18.5f * u)
+        val cordel = a.luz(mezcla(CUERO, MIMBRE, 0.35f), k + 0.05f)
+        drawLine(cordel, Offset(r + lado * an * 0.2f, yBoca + ell * 0.44f), ojal, 0.8f * u)
+        rotate(lado * (4f + 4f * azar(v.semilla, 9)), ojal) {
+            drawRect(a.sombra(0.42f), et.topLeft + Offset(0.9f * u, 1.2f * u), et.size)
             drawRoundRect(a.etiqueta(k), et.topLeft, et.size, CornerRadius(1.2f * u))
             drawRect(a.sombra(0.12f), Offset(et.right - et.width * 0.18f, et.top), Size(et.width * 0.18f, et.height))
-            textoEn(medidor, v.dia, Rect(et.left + 0.6f * u, et.top + 0.6f * u, et.right - 0.6f * u, et.bottom - 0.4f * u), LETRA, a.tinta, 14.5f, peso = FontWeight.SemiBold)
+            drawCircle(cordel, 0.9f * u, ojal)
+            textoEn(medidor, v.dia, Rect(et.left + 0.6f * u, et.top + 1.6f * u, et.right - 0.6f * u, et.bottom - 0.3f * u), LETRA, a.tinta, 14.5f, peso = FontWeight.SemiBold)
         }
         // El mes, escrito en la funda, y la marca al pie: con tinta oscura o clara, la que se lea sobre ese color.
         val pluma = if (funda.luminance() > 0.3f) a.tinta.copy(alpha = 0.85f) else a.inciso(k)
-        val yMarca = h - 8.5f * u
-        val mes = Rect(w * 0.22f, et.bottom + 3f * u, w * 0.72f, yMarca - 6.5f * u)
+        val yMarca = yPie - 7.5f * u
+        val mes = Rect(w * 0.42f, et.bottom + 4f * u, w * 0.78f, yMarca - 6f * u)
         if (mes.height > 9f * u) textoEn(medidor, v.mes, mes, LETRA, pluma, 8.5f, vertical = true, minimo = 4.5f)
-        marca(Offset(w * 0.47f, yMarca), minOf(w * 0.15f, 3.4f * u), v.noche, pluma, a, k)
+        marca(Offset(w * 0.5f, yMarca), minOf(w * 0.15f, 3.4f * u), v.noche, pluma, a, k)
         if (a.oscuro && k >= 0.1f) {
-            drawArc(FILO_MUEBLE.copy(alpha = 0.6f * k), 180f, 180f, false, Offset(met, yBoca - ell / 2), Size(w - 2 * met, ell), style = Stroke(1f * u))
-            clipPath(cuerpo) { drawRect(FILO_MUEBLE.copy(alpha = 0.34f * k), Offset(0f, yBoca), Size(0.9f * u, h)) }
+            drawArc(FILO_MUEBLE.copy(alpha = 0.6f * k), 150f, 150f, false, Offset(met, 0f), Size(an, ell), style = Stroke(1f * u))
+            clipPath(cuerpo) { drawRect(FILO_MUEBLE.copy(alpha = 0.34f * k), Offset(0f, yFunda), Size(0.9f * u, h)) }
         }
     }
 }
