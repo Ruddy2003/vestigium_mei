@@ -110,8 +110,10 @@ internal class LuzPlana(val p: Pincel, val sol: Sol3, val plata: Float = 0f) {
 
     /** El color de una cara con la normal [n]; de noche, con la luna, su lado de plata. */
     fun color(c: Color, n: V3, lejos: Float = 0f, claro: Float = 0f): Color {
-        val t = (t(n) + claro).coerceIn(-1f, 1f)
-        val base = p.por(c, t, lejos)
+        // La luz se separa más: la cara de luz, encendida; la de sombra, hacia el violeta **[Diseño propio]**.
+        val t0 = (t(n) + claro).coerceIn(-1f, 1f)
+        val t = if (t0 >= 0f) kotlin.math.sqrt(t0) * 0.35f + t0 * 0.65f else -(kotlin.math.sqrt(-t0) * 0.35f - t0 * 0.65f)
+        val base = p.por(c, t, lejos).let { if (t < 0f) lerp(it, p.l.tono(ColorOrden.SOMBRA, lejos), (0.18f * -t * (1f - p.l.noche)).coerceIn(0f, 1f)) else it }
         if (plata <= 0.02f || t <= 0f) return base
         val luna = Color(lerp(c, Color.White, 0.55f).red * ColorOrden.LUNA.red, lerp(c, Color.White, 0.55f).green * ColorOrden.LUNA.green, lerp(c, Color.White, 0.55f).blue * ColorOrden.LUNA.blue)
         return lerp(base, p.l.tono(luna, lejos).let { lerp(it, luna, 0.35f) }, (0.45f * plata * t).coerceIn(0f, 1f))

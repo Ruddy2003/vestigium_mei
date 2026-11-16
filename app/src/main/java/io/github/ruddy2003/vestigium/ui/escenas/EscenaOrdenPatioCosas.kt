@@ -6,6 +6,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasOrden.caja
+import io.github.ruddy2003.vestigium.ui.escenas.PiezasOrden.cara
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasOrden.palo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
@@ -26,8 +27,11 @@ internal object CosasDelPatio {
     fun DrawScope.delFondo(v: VistaOrden) {
         val libre = EscenaOrden.garza(v.m) != EscenaOrden.Garza.CAIDA && EscenaOrden.garza(v.m) != EscenaOrden.Garza.COSIENDO
         val ocupado = EscenaOrden.caparazonesPintados(v.m) || EscenaOrden.mercado(v.m) || EscenaOrden.caza(v.m) || EscenaOrden.hoyEs(v.m, "anio_nuevo")
-        if (libre) caballetesApilados(v)
-        if (libre && !ocupado) { rollosDeTela(v); carro(v, V3(-30f, P, 27f), 0.9f) } else carro(v, V3(-12f, P, 54.5f), 0.45f)
+        // El taller de la tela de la Garza (cuando ni está tendida ni hay fiesta en el patio): los caballetes con el paño
+        // tendido y los rollos; si no, los caballetes apilados contra el fondo.
+        if (libre && !ocupado) { taller(v); rollosDeTela(v) } else if (libre) caballetesApilados(v)
+        // El carro de las patrullas, junto a la puerta, con su carga.
+        carro(v, V3(-12f, P, 53.5f), 0.45f)
         val az = PiezasOrden.fijo("cajas")
         for (i in 0 until 5) caja(v.lz, -3.5f - az.entre(0f, 3f), 55.5f + az.entre(-1f, 1f), az.entre(-0.4f, 0.4f), 0.9f, 0.7f, P + (if (i == 4) 0.6f else 0f), P + (if (i == 4) 1.2f else 0.6f), lerp(C.MADERA, C.ARENA, az.real() * 0.4f), 0.2f)
         for (i in 0 until 4) saco(v, V3(-7.5f - i * 0.7f, P, 57.5f), 0.2f)
@@ -36,8 +40,8 @@ internal object CosasDelPatio {
     /** Lo de cerca del patio (va después de la Cámara y antes de la cisterna). */
     fun DrawScope.deCerca(v: VistaOrden) {
         lena(v)
-        for (i in 0 until 3) saco(v, V3(-6.6f - i * 0.65f, P, 23.2f + i * 0.2f), 0.06f)
-        carretilla(v, V3(-14.5f, P, 31f))
+        for (i in 0 until 3) saco(v, V3(-8.2f - i * 0.6f, P, 21.9f + i * 0.25f), 0.06f)
+        abrevadero(v)
         cabrasSueltas(v)
     }
 
@@ -68,6 +72,28 @@ internal object CosasDelPatio {
         caja(lz, c.x, c.z, giro, 1.5f, 2.6f, P + 0.55f, P + 1.25f, C.MADERA, 0.2f, arriba = C.MADERA_OSC)
         palo(lz, en(0f, 0.7f, -1.3f), en(0f, 0.05f, -3f), 0.12f, C.MADERA_OSC, 0.2f)
         rueda(v, en(0.85f, 0.6f, 0f), V3(dx, 0f, dz), 0.6f)
+        // La carga: sacos y un barril, atados.
+        for (i in 0 until 3) saco(v, en(-0.35f + i * 0.35f, 1.25f, -0.6f + (i % 2) * 0.5f), 0.2f)
+        caja(lz, en(0.3f, 0f, 0.6f).x, en(0.3f, 0f, 0.6f).z, giro, 0.7f, 0.7f, P + 1.25f, P + 2.05f, lerp(C.MADERA, C.MADERA_OSC, 0.4f), 0.2f)
+    }
+
+    /** El abrevadero de piedra junto al corral, con el agua y las cabras alrededor. */
+    private fun DrawScope.abrevadero(v: VistaOrden) {
+        caja(v.lz, -13.9f, 21f, 0f, 0.9f, 2.6f, P, P + 0.65f, lerp(C.PIEDRA, C.ARENA, 0.2f), 0.06f, arriba = lerp(C.VIDRIO, C.HOLLIN, 0.4f))
+    }
+
+    /** El taller de la tela: dos caballetes con un paño de la Garza tendido encima, a medio coser, y otro colgando. */
+    private fun DrawScope.taller(v: VistaOrden) {
+        val lz = v.lz
+        for ((s, vv) in listOf(-20.5f to 23.5f, -24.5f to 25.2f)) {
+            palo(lz, V3(s, P, vv - 0.5f), V3(s, P + 1.3f, vv), 0.16f, C.MADERA, 0.12f)
+            palo(lz, V3(s, P, vv + 0.5f), V3(s, P + 1.3f, vv), 0.16f, C.MADERA, 0.12f)
+            palo(lz, V3(s - 0.4f, P + 1.25f, vv), V3(s + 0.4f, P + 1.25f, vv), 0.18f, C.MADERA_OSC, 0.12f)
+        }
+        val pano = listOf(V3(-19.6f, P + 1.3f, 23.0f), V3(-25.3f, P + 1.3f, 24.7f), V3(-25.4f, P + 0.2f, 25.9f), V3(-19.7f, P + 0.25f, 24.2f))
+        cara(lz, pano.take(2) + listOf(V3(-25.3f, P + 1.3f, 25.8f), V3(-19.6f, P + 1.3f, 24.1f)), V3(0f, 1f, 0f), C.TELA, 0.12f)
+        cara(lz, listOf(pano[0], pano[1], pano[2], pano[3]), V3(0.2f, 0.3f, -1f), C.TELA_VIEJA, 0.12f)
+        drawLine(v.l.tono(C.HOLLIN, 0.12f).copy(alpha = 0.5f), CamOrden.p(-21.5f, P + 1.31f, 23.5f), CamOrden.p(-23.6f, P + 1.31f, 24.2f), 0.5f)
     }
 
     /** Una rueda de radios, en el plano perpendicular a su [eje]. */
@@ -92,7 +118,7 @@ internal object CosasDelPatio {
 
     /** La leña de la fragua, apilada: troncos de testa, unos encima de otros, y los sacos de carbón al lado. */
     private fun DrawScope.lena(v: VistaOrden) {
-        val lz = v.lz; val s0 = -6.4f; val vv = 21.6f
+        val lz = v.lz; val s0 = -8f; val vv = 19.8f
         caja(lz, s0 - 0.8f, vv, 0f, 1.7f, 0.9f, P, P + 0.95f, C.MADERA, 0.06f, arriba = lerp(C.MADERA, C.ARENA, 0.3f))
         val az = PiezasOrden.fijo("lena")
         for (fila in 0 until 3) for (i in 0 until 5 - fila) {
@@ -102,17 +128,9 @@ internal object CosasDelPatio {
         }
     }
 
-    /** La carretilla de la Cámara, de una rueda, con una caja encima. */
-    private fun DrawScope.carretilla(v: VistaOrden, c: V3) {
-        rueda(v, V3(c.x + 0.8f, P + 0.3f, c.z), V3(0f, 0f, 1f), 0.3f)
-        caja(v.lz, c.x, c.z, 0.1f, 1.2f, 0.7f, P + 0.3f, P + 0.75f, C.MADERA, 0.1f)
-        palo(v.lz, V3(c.x - 0.6f, P + 0.6f, c.z - 0.25f), V3(c.x - 1.4f, P + 0.05f, c.z - 0.25f), 0.08f, C.MADERA_OSC, 0.1f)
-        palo(v.lz, V3(c.x - 0.6f, P + 0.6f, c.z + 0.25f), V3(c.x - 1.4f, P + 0.05f, c.z + 0.25f), 0.08f, C.MADERA_OSC, 0.1f)
-    }
-
     /** Dos cabras sueltas, de día, fuera del corral: una blanca y una negra. */
     private fun DrawScope.cabrasSueltas(v: VistaOrden) {
         if (v.m.hora < 7.0 || v.m.hora >= 19.5) return
-        with(PatioOrden) { cabraSuelta(v, V3(-13f, P, 22.5f), true, false); cabraSuelta(v, V3(-16.5f, P, 25f), false, true) }
+        with(PatioOrden) { cabraSuelta(v, V3(-13.2f, P, 22.7f), false, false); cabraSuelta(v, V3(-14.9f, P, 19.4f), true, true); cabraSuelta(v, V3(-12.6f, P, 20.6f), false, false) }
     }
 }

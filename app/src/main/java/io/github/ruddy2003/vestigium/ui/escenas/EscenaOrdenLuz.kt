@@ -69,8 +69,8 @@ internal object LuzOrden {
         add(AdarveOrden.cuerpoDelParapeto())
         for (i in 0 until EscenaOrden.ALMENAS) add(AdarveOrden.cuerpoDeLaAlmena(i))
         for (e in PatioOrden.EDIFICIOS) add(e.esquinas)
-        add(listOf(V3(CamOrden.BORDE, P, PatioOrden.FRAGUA_V0), V3(PatioOrden.FRAGUA_S, P, PatioOrden.FRAGUA_V0), V3(CamOrden.BORDE, P, PatioOrden.FRAGUA_V1), V3(PatioOrden.FRAGUA_S, P, PatioOrden.FRAGUA_V1),
-            V3(CamOrden.BORDE, P + 4.2f, PatioOrden.FRAGUA_V0), V3(PatioOrden.FRAGUA_S, P + 3f, PatioOrden.FRAGUA_V0), V3(CamOrden.BORDE, P + 4.2f, PatioOrden.FRAGUA_V1), V3(PatioOrden.FRAGUA_S, P + 3f, PatioOrden.FRAGUA_V1)))
+        add(PatioOrden.cuerpoDeLaFragua())
+        add(CuboOrden.cuerpo())
         addAll(cuerposDeLaTorre())
     }
 
@@ -105,7 +105,7 @@ internal object LuzOrden {
     fun DrawScope.sombrasSobreLosEdificios(v: VistaOrden) {
         val P = CamOrden.PATIO
         val muralla = listOf(V3(CamOrden.BORDE, 0f, 0.5f), V3(CamOrden.BORDE, 0f, AdarveOrden.FIN), V3(CamOrden.FUERA, 0f, 0.5f), V3(CamOrden.FUERA, 0f, AdarveOrden.FIN), V3(CamOrden.BORDE, -20f, 0.5f), V3(CamOrden.BORDE, -20f, AdarveOrden.FIN))
-        val cuerpos = listOf(muralla, AdarveOrden.cuerpoDelParapeto()) + (0 until EscenaOrden.ALMENAS).map { AdarveOrden.cuerpoDeLaAlmena(it) } + cuerposDeLaTorre() +
+        val cuerpos = listOf(muralla, AdarveOrden.cuerpoDelParapeto(), CuboOrden.cuerpo()) + (0 until EscenaOrden.ALMENAS).map { AdarveOrden.cuerpoDeLaAlmena(it) } + cuerposDeLaTorre() +
             listOfNotNull(v.garza?.takeIf { EscenaOrden.garza(v.m) == Garza.AMARRADA }?.puntos())
         val altos = PatioOrden.EDIFICIOS.map { e -> poligono(envolvente(e.esquinas.map { CamOrden.p(it) })) to (P + (e.alto - P) * 0.5f) } +
             listOf(poligono(envolvente(PatioOrden.cuerpoDeLaFragua().map { CamOrden.p(it) })) to P + 3.6f)
@@ -130,6 +130,7 @@ internal object LuzOrden {
                 PiezasOrden.sombraEnElSuelo(v.lz, AdarveOrden.cuerpoDelParapeto(), 0f)?.let { sombra(it, c) }
                 for (i in 0 until EscenaOrden.ALMENAS) PiezasOrden.sombraEnElSuelo(v.lz, AdarveOrden.cuerpoDeLaAlmena(i), 0f)?.let { sombra(it, c) }
                 for (cuerpo in cuerposDeLaTorre()) PiezasOrden.sombraEnElSuelo(v.lz, cuerpo, 0f)?.let { sombra(it, c) }
+                PiezasOrden.sombraEnElSuelo(v.lz, CuboOrden.cuerpo(), 0f)?.let { sombra(it, c) }
                 v.garza?.let { b -> if (EscenaOrden.garza(v.m) == Garza.AMARRADA) PiezasOrden.sombraEnElSuelo(v.lz, b.puntos(), 0f)?.let { sombra(it, c) } }
             }
         }

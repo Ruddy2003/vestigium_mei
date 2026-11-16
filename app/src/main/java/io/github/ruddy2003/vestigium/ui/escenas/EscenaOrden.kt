@@ -161,7 +161,7 @@ internal object EscenaOrden : EscenaVida {
      */
     internal fun rumbo(m: Momento): Float {
         val a = m.azar("rumbo").real()
-        val base = -0.95f + 0.75f * a
+        val base = -0.5f + 0.5f * a
         return if (m.viento > 0.6f) base * 0.6f else base
     }
 

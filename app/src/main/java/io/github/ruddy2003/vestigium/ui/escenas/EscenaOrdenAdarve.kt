@@ -131,43 +131,22 @@ internal object AdarveOrden {
         }
         cara(lz, listOf(V3(PARAPETO, CamOrden.ALTO_PARAPETO, 0.3f), V3(PARAPETO, CamOrden.ALTO_PARAPETO, FIN), V3(FUERA, CamOrden.ALTO_PARAPETO, FIN), V3(FUERA, CamOrden.ALTO_PARAPETO, 0.3f)), V3(0f, 1f, 0f), lerp(C.PIEDRA, C.ARENA, 0.2f), 0f, 0.2f)
         // Las gárgolas del pie del parapeto, por donde sale el agua de la lluvia: una cada dos almenas.
-        for (i in 0 until EscenaOrden.ALMENAS step 2) {
+        for (i in 0..2 step 2) {
             val vv = almena(i) + ALMENA + (PASO - ALMENA) / 2f
             drawPath(poligono(listOf(V3(PARAPETO - 0.01f, 0.02f, vv - 0.12f), V3(PARAPETO - 0.01f, 0.02f, vv + 0.12f), V3(PARAPETO - 0.01f, 0.16f, vv + 0.12f), V3(PARAPETO - 0.01f, 0.16f, vv - 0.12f)).map { CamOrden.p(it) }), v.l.tono(lerp(C.HOLLIN, C.ROCA, 0.2f)))
         }
-        for (i in EscenaOrden.ALMENAS - 1 downTo 0) { almenaEntera(v, i); if (i == CABRIA + 1) cabria(v) }
+        // Detrás de la almena de delante, el cubo de la esquina tapa el resto del camino de ronda (y sus almenas).
+        with(CuboOrden) { cubo(v) }
+        for (i in 1 downTo 0) almenaEntera(v, i)
     }
 
-    /** En qué tronera está la cabria (la que sigue a esta almena). */
-    const val CABRIA = 3
-
-    /** La punta de la cabria, por fuera de la muralla, sobre el vacío. */
-    val PUNTA_CABRIA: V3 get() = V3(FUERA + 2.3f, 2.0f, almena(CABRIA) + ALMENA + (PASO - ALMENA) / 2f + 0.1f)
-
-    /**
-     * La cabria del pozo **[Diseño propio]**: un brazo de madera que sale por una tronera sobre el vacío, con su polea en
-     * la punta y la cuerda que baja recta por la pared de la meseta hasta el pozo del pie; en el adarve, el torno. Así se lee
-     * la altura («paredes que caen a pico») y de dónde sube el agua. El verano del pozo seco, la cuerda está recogida.
-     */
-    private fun DrawScope.cabria(v: VistaOrden) {
-        val lz = v.lz; val vv = almena(CABRIA) + ALMENA + (PASO - ALMENA) / 2f
-        val pie = V3(PARAPETO + 0.2f, CamOrden.ALTO_PARAPETO, vv); val punta = PUNTA_CABRIA
-        // El poste, el brazo y el tornapuntas.
-        palo(lz, V3(PARAPETO - 0.25f, 0f, vv), V3(PARAPETO - 0.25f, 1.7f, vv), 0.2f, C.MADERA)
-        palo(lz, pie, punta, 0.2f, C.MADERA)
-        palo(lz, V3(PARAPETO - 0.25f, 1.6f, vv), V3(FUERA + 1.2f, 1.55f, vv + 0.05f), 0.12f, C.MADERA_OSC)
-        val q = CamOrden.p(punta); val k = CamOrden.k(punta.x, punta.z)
-        drawCircle(lz.color(C.MADERA_OSC, V3(0f, 0f, -1f)), (k * 0.22f).coerceAtLeast(1f), q)
-        // El torno en el adarve, con la cuerda enrollada.
-        palo(lz, V3(PARAPETO - 1.1f, 0.55f, vv - 0.4f), V3(PARAPETO - 1.1f, 0.55f, vv + 0.4f), 0.36f, lerp(C.MADERA, C.ARENA, 0.3f))
-        for (dv in listOf(-0.45f, 0.45f)) palo(lz, V3(PARAPETO - 1.1f, 0f, vv + dv), V3(PARAPETO - 1.1f, 0.62f, vv + dv), 0.12f, C.MADERA_OSC)
-    }
-
-    /** La cuerda de la cabria, que baja recta al vacío: va con lo lejano (el parapeto y el adarve, delante, la tapan). */
-    fun DrawScope.cuerdaDeLaCabria(v: VistaOrden) {
-        if (EscenaOrden.pozoSeco(v.m)) return
-        val punta = PUNTA_CABRIA
-        drawLine(v.l.tono(lerp(C.MADERA, C.HOLLIN, 0.3f)).copy(alpha = 0.75f), CamOrden.p(punta), CamOrden.p(punta.x, CamOrden.LLANO, punta.z), 0.5f)
+    /** La manta de la guardia, doblada sobre el banco y caída por delante: lana parda con dos listas carmesí. */
+    private fun DrawScope.manta(v: VistaOrden, b0: Float, b1: Float) {
+        val s0 = PARAPETO - 0.47f; val s1 = PARAPETO - 0.03f; val v0 = b0 + 0.15f; val v1 = b0 + 0.75f
+        val lana = lerp(C.TELA_VIEJA, C.MADERA, 0.25f)
+        cara(v.lz, listOf(V3(s0, 0.5f, v0), V3(s1, 0.5f, v0), V3(s1, 0.5f, v1), V3(s0, 0.5f, v1)), V3(0f, 1f, 0f), lana)
+        cara(v.lz, listOf(V3(s0, 0.5f, v0), V3(s0, 0.5f, v1), V3(s0 - 0.04f, 0.12f, v1 + 0.04f), V3(s0 - 0.04f, 0.16f, v0 - 0.03f)), V3(-1f, 0f, 0f), lana)
+        for (h in listOf(0.22f, 0.3f)) drawLine(v.lz.color(C.CARMESI, V3(-1f, 0f, 0f)), CamOrden.p(s0 - 0.03f, h, v0), CamOrden.p(s0 - 0.03f, h, v1), (CamOrden.k(s0, v0) * 0.035f).coerceAtLeast(0.4f))
     }
 
     /** Una almena: la caja de piedra, su liquen, la hornacina con el candil y, en las dos de delante, las muescas. */
@@ -218,7 +197,10 @@ internal object AdarveOrden {
     }
 
     /** Dónde arde el candil de la almena [i] (en su hornacina, en la cara de dentro). */
-    fun candil(i: Int): V3 = V3(PARAPETO - 0.02f, CamOrden.ALTO_PARAPETO + 0.55f, almena(i) + ALMENA * 0.62f)
+    fun candil(i: Int): V3 = if (i <= 1) V3(PARAPETO - 0.02f, CamOrden.ALTO_PARAPETO + 0.55f, almena(i) + ALMENA * 0.62f)
+        // Los demás, tapados aquí por el cubo, se ven en las almenas de la muralla del fondo, al otro lado del patio:
+        // la corona da la vuelta a la ciudadela **[Diseño propio]**.
+        else V3(CamOrden.BORDE - 1.8f - (i - 2) * 2.6f, CamOrden.ALTO_PARAPETO + 0.55f, PatioOrden.FONDO - 0.02f)
 
     /**
      * La hornacina de cada almena con su candil de latón: «un vaso de latón con aceite de cabra y una mecha». El de la
@@ -297,7 +279,7 @@ internal object AdarveOrden {
     fun DrawScope.enseres(v: VistaOrden) {
         val lz = v.lz
         // El rollo de cuerda, tendido en las losas: tres vueltas que se enciman.
-        val c = V3(0.6f, 0.02f, 5.6f); val cuerda = lz.color(lerp(C.MADERA, C.ARENA, 0.45f), V3(0f, 1f, 0f))
+        val c = V3(0.55f, 0.02f, 5.6f); val cuerda = lz.color(lerp(C.MADERA, C.ARENA, 0.45f), V3(0f, 1f, 0f))
         // El cabo suelto, que se va hacia el borde.
         val cola = listOf(V3(c.x - 0.3f, 0.02f, c.z + 0.05f), V3(c.x - 0.55f, 0.02f, c.z - 0.25f), V3(c.x - 0.62f, 0.02f, c.z - 0.7f)).map { CamOrden.p(it) }
         drawPath(Path().apply { moveTo(cola[0].x, cola[0].y); cubicTo(cola[1].x, cola[1].y, cola[1].x, cola[1].y, cola[2].x, cola[2].y) }, cuerda, style = Stroke((CamOrden.k(c.x, c.z) * 0.05f).coerceAtLeast(0.5f), cap = StrokeCap.Round))
@@ -309,28 +291,28 @@ internal object AdarveOrden {
             drawPath(vuelta, cuerda, style = Stroke((CamOrden.k(c.x, c.z) * 0.04f).coerceAtLeast(0.4f)))
         }
         // El taburete, de tres patas, con la tapa gastada.
-        val t = V3(0.25f, 0f, 6.6f)
+        val t = V3(0.35f, 0f, 6.7f)
         for (a in listOf(0.3f, 2.4f, 4.5f)) palo(lz, V3(t.x + 0.17f * kotlin.math.cos(a), 0f, t.z + 0.17f * kotlin.math.sin(a)), V3(t.x + 0.1f * kotlin.math.cos(a), 0.44f, t.z + 0.1f * kotlin.math.sin(a)), 0.05f, C.MADERA_OSC)
         caja(lz, t.x, t.z, 0.3f, 0.36f, 0.36f, 0.42f, 0.48f, C.MADERA, arriba = lerp(C.MADERA, C.ARENA, 0.3f))
         // Los cubos de la cabria, junto al torno: uno de pie y otro volcado.
-        val tv = almena(CABRIA) + ALMENA + (PASO - ALMENA) / 2f
-        for ((ds, dv) in listOf(-0.55f to -0.75f, -0.2f to -1.05f)) {
-            val b = V3(PARAPETO + ds - 0.2f, 0f, tv + dv); val qb = CamOrden.p(b); val kb = CamOrden.k(b.x, b.z)
+        for ((bs, bv) in listOf(0.95f to 7.95f, 1.2f to 7.65f)) {
+            val b = V3(bs, 0f, bv); val qb = CamOrden.p(b); val kb = CamOrden.k(b.x, b.z)
             val cubo = poligono(listOf(qb + Offset(-kb * 0.16f, 0f), qb + Offset(kb * 0.16f, 0f), qb + Offset(kb * 0.19f, -kb * 0.34f), qb + Offset(-kb * 0.19f, -kb * 0.34f)))
             drawPath(cubo, Brush.horizontalGradient(listOf(lz.color(C.MADERA, V3(1f, 0f, -0.5f)), lz.color(C.MADERA, V3(-1f, 0f, -0.5f))), qb.x - kb * 0.19f, qb.x + kb * 0.19f))
             drawLine(lz.color(C.HIERRO, V3(0f, 0f, -1f)), qb + Offset(-kb * 0.18f, -kb * 0.25f), qb + Offset(kb * 0.18f, -kb * 0.25f), (kb * 0.03f).coerceAtLeast(0.4f))
             drawOval(v.l.tono(C.MADERA_OSC), Offset(qb.x - kb * 0.19f, qb.y - kb * 0.38f), Size(kb * 0.38f, kb * 0.08f))
         }
         // El banco de la guardia, arrimado al parapeto, con el candil tapado de las rondas de noche encima.
-        val b0 = 8.3f; val b1 = 9.9f
+        val b0 = 6.45f; val b1 = 7.45f
         for (vv in listOf(b0 + 0.15f, b1 - 0.15f)) caja(lz, PARAPETO - 0.25f, vv, 0f, 0.32f, 0.1f, 0f, 0.42f, C.MADERA_OSC)
         caja(lz, PARAPETO - 0.25f, (b0 + b1) / 2f, 0f, 0.4f, b1 - b0, 0.42f, 0.48f, C.MADERA, arriba = lerp(C.MADERA, C.ARENA, 0.3f))
-        val farol = V3(PARAPETO - 0.25f, 0.48f, b1 - 0.35f); val qf = CamOrden.p(farol); val kf = CamOrden.k(farol.x, farol.z)
+        manta(v, b0, b1)
+        val farol = V3(PARAPETO - 0.25f, 0.48f, b1 - 0.3f); val qf = CamOrden.p(farol); val kf = CamOrden.k(farol.x, farol.z)
         drawRect(lz.color(C.HIERRO_CLARO, V3(-1f, 0f, -0.5f)), Offset(qf.x - kf * 0.09f, qf.y - kf * 0.26f), Size(kf * 0.18f, kf * 0.26f))
         drawPath(poligono(qf + Offset(-kf * 0.11f, -kf * 0.26f), qf + Offset(kf * 0.11f, -kf * 0.26f), qf + Offset(0f, -kf * 0.36f)), lz.color(C.HIERRO, V3(0f, 1f, -0.5f)))
         if (v.l.noche > 0.4f) drawLine(C.LUMBRE.copy(alpha = 0.8f), qf + Offset(-kf * 0.06f, -kf * 0.05f), qf + Offset(kf * 0.06f, -kf * 0.05f), (kf * 0.025f).coerceAtLeast(0.4f))
         // El cántaro, contra el parapeto, delante del banco, con su boca.
-        val j = V3(PARAPETO - 0.24f, 0f, 7.1f); val q = CamOrden.p(j); val k = CamOrden.k(j.x, j.z)
+        val j = V3(1.15f, 0f, 6.2f); val q = CamOrden.p(j); val k = CamOrden.k(j.x, j.z)
         val alto = 0.55f * k; val ancho = 0.36f * k
         val forma = Path().apply {
             moveTo(q.x - ancho * 0.22f, q.y); cubicTo(q.x - ancho * 0.75f, q.y - alto * 0.1f, q.x - ancho * 0.7f, q.y - alto * 0.75f, q.x - ancho * 0.18f, q.y - alto * 0.88f)

@@ -2,6 +2,7 @@ package io.github.ruddy2003.vestigium.ui.escenas
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -263,6 +264,8 @@ internal object TorreOrden {
         val contraluz = if (v.l.solX < 0.55f) EscenaOrden.sol(v.l) * ((0.9f - v.l.solAltura) / 0.6f).coerceIn(0f, 1f) else 0f
         // Lo que va detrás de la panza: las aletas y el motor del otro lado.
         if (hasta >= 0.999f && !rota) detalles(v, b, delante = false)
+        val contorno = if (hasta >= 0.999f && !rota) silueta(b) else null
+        contorno?.let { (ar, ab) -> drawPath(cerrada(ar, ab), lz.color(C.TELA, V3(0f, -0.2f, -1f), lejos)) }
         val agujeros = if (rota) (0 until 16).map { (2 + az.entero(ANILLOS - 4)) to az.entero(HUSOS) }.toSet() else emptySet()
         for (i in 0 until ANILLOS) {
             val t0 = tAnillo(i); val tf = tAnillo(i + 1)
@@ -284,16 +287,24 @@ internal object TorreOrden {
                 // El borde, a contraluz con el sol bajo de la tarde, se vuelve translúcido.
                 val ve = V3(-c.x, CamOrden.OJO - c.y, -c.z).let { w -> w * (1f / sqrt(w.x * w.x + w.y * w.y + w.z * w.z).coerceAtLeast(0.01f)) }
                 val canto = (1f - kotlin.math.abs(n.x * ve.x + n.y * ve.y + n.z * ve.z) - 0.72f).coerceAtLeast(0f) / 0.28f
-                val tono = lerp(lz.color(propio, n, lejos), v.l.tono(C.ARENA, lejos), rebote).let { if ((i to j) in agujeros) lerp(it, v.l.tono(C.HOLLIN, lejos), 0.75f) else if (rota) lerp(it, v.l.tono(C.ARENA, lejos), 0.12f) else it }
+                fun tonoDe(nn: V3): Color = lerp(lz.color(propio, nn, lejos), v.l.tono(C.ARENA, lejos), rebote).let { if ((i to j) in agujeros) lerp(it, v.l.tono(C.HOLLIN, lejos), 0.75f) else if (rota) lerp(it, v.l.tono(C.ARENA, lejos), 0.12f) else it }
                     .let { if (canto > 0f && contraluz > 0.02f) lerp(it, lerp(v.l.solColor, Color(0xFFFFE0B0), 0.4f), (0.55f * canto * contraluz).coerceIn(0f, 1f)) else it }
+                val tono = tonoDe(n)
+                // El sombreado corre de un borde del paño al otro (la normal de cada borde), para que no se vean facetas.
+                val ra = b.radial((a0 + a1) / 2f)
+                fun hacia(r: V3): V3 { val w = V3(n.x + r.x - ra.x, n.y + r.y - ra.y, n.z + r.z - ra.z); return w * (1f / sqrt(w.x * w.x + w.y * w.y + w.z * w.z).coerceAtLeast(1e-4f)) }
                 val forma = poligono(q)
-                drawPath(forma, tono); drawPath(forma, tono, style = Stroke(0.6f))
-                // La costura de cada huso (más marcada cada dos: los largueros) y, en cada cuaderna, la de través.
-                val costura = lerp(tono, v.l.tono(C.HOLLIN), if (j % 2 == 0) 0.2f else 0.1f)
-                drawLine(costura, q[0], q[1], if (j % 2 == 0) 0.45f else 0.3f)
+                val pincel = Brush.linearGradient(listOf(tonoDe(hacia(b.radial(a0))), tonoDe(hacia(b.radial(a1)))), Offset((q[0].x + q[1].x) / 2f, (q[0].y + q[1].y) / 2f), Offset((q[2].x + q[3].x) / 2f, (q[2].y + q[3].y) / 2f))
+                drawPath(forma, pincel); drawPath(forma, pincel, style = Stroke(0.7f))
+                // Solo algunas costuras, sueltas: las de los paños que se cambiaron, no una retícula.
+                if ((i * 7 + j * 11) % 9 == 0) drawLine(lerp(tono, v.l.tono(C.HOLLIN), 0.16f), q[0], q[1], 0.35f)
                 if (remiendos.containsKey(i to j) && (q[2] - q[0]).getDistance() > 4f) drawPath(forma, lerp(tono, v.l.tono(C.HOLLIN), 0.3f), style = Stroke(0.45f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.7f, 0.7f))))
                 if ((i * 31 + j * 17) % 6 == 0 && (q[2] - q[0]).getDistance() > 5f) arruga(q, tono, v)
             }
+        }
+        contorno?.let { (ar, ab) ->
+            drawPath(abierta(ar), lz.color(C.TELA, V3(0f, 1f, -0.4f), lejos).copy(alpha = 0.75f), style = Stroke(1f))
+            drawPath(abierta(ab), lz.color(C.TELA, V3(0f, -1f, -0.4f), lejos).copy(alpha = 0.75f), style = Stroke(1f))
         }
         if (hasta >= 0.999f && !rota) { red(v, b); morro(v, b); detalles(v, b, delante = true) }
     }
@@ -310,6 +321,34 @@ internal object TorreOrden {
         pliegue.translate(Offset(0.5f, -0.5f))
         drawPath(pliegue, lerp(tono, v.l.tono(C.PAPEL), 0.18f), style = Stroke(0.35f, cap = StrokeCap.Round))
     }
+
+    /**
+     * Los dos bordes de la silueta (el de arriba y el de abajo), de la proa a la cola: donde la piel se ve de canto, con
+     * más puntos que la malla, para que el contorno sea curvo y no de facetas.
+     */
+    private fun silueta(b: Ballena): Pair<List<Offset>, List<Offset>> {
+        val arriba = ArrayList<Offset>(); val abajo = ArrayList<Offset>()
+        for (k in 0..44) {
+            val t = (k / 44f).let { it * (0.6f + 0.4f * it) }; val c = b.eje(t)
+            val w = V3(-c.x, CamOrden.OJO - c.y, -c.z)
+            val a1 = atan2(-b.achata * w.y, b.lado.x * w.x + b.lado.z * w.z); val a2 = a1 + PI.toFloat()
+            val q1 = CamOrden.p(b.punto(t, a1)); val q2 = CamOrden.p(b.punto(t, a2))
+            if (q1.y < q2.y) { arriba += q1; abajo += q2 } else { arriba += q2; abajo += q1 }
+        }
+        return arriba to abajo
+    }
+
+    /** Una línea suave por los puntos (curvas de Catmull-Rom con `cubicTo`). */
+    private fun Path.suave(pts: List<Offset>, primero: Boolean) {
+        if (primero) moveTo(pts[0].x, pts[0].y) else lineTo(pts[0].x, pts[0].y)
+        for (i in 0 until pts.size - 1) {
+            val p0 = pts[maxOf(i - 1, 0)]; val p1 = pts[i]; val p2 = pts[i + 1]; val p3 = pts[minOf(i + 2, pts.size - 1)]
+            cubicTo(p1.x + (p2.x - p0.x) / 6f, p1.y + (p2.y - p0.y) / 6f, p2.x - (p3.x - p1.x) / 6f, p2.y - (p3.y - p1.y) / 6f, p2.x, p2.y)
+        }
+    }
+
+    private fun cerrada(ar: List<Offset>, ab: List<Offset>): Path = Path().apply { suave(ar, true); suave(ab.reversed(), false); close() }
+    private fun abierta(pts: List<Offset>): Path = Path().apply { suave(pts, true) }
 
     /** El cinturón de la red, un poco por debajo del ecuador de la panza: de él cuelgan la góndola y los sacos de lastre. */
     private const val CINTURON = 1.95f
@@ -329,7 +368,7 @@ internal object TorreOrden {
                 val q = CamOrden.p(p3); antes?.let { drawLine(color, it, q, grueso) }; antes = q
             }
         }
-        for (k in 0 until 16) for (sentido in listOf(-1f, 1f)) linea((0..28).map { i -> val t = 0.07f + 0.78f * i / 28f; t to (-CINTURON * 1.6f + k * CINTURON * 3.2f / 15f + sentido * (t - 0.46f) * 4.2f) }, cuerda, 0.32f)
+        for (t in listOf(0.145f, 0.367f, 0.59f, 0.81f)) linea((0..24).map { i -> t to (-CINTURON + i * 2f * CINTURON / 24f) }, cuerda.copy(alpha = 0.75f), 0.55f)
         for (lado in listOf(-1f, 1f)) linea((0..28).map { i -> (0.07f + 0.78f * i / 28f) to lado * CINTURON }, cuerda.copy(alpha = 0.8f), 0.6f)
         // Los sacos de lastre, del lado que se ve.
         for (lado in listOf(-1f, 1f)) for (k in 0 until 6) {

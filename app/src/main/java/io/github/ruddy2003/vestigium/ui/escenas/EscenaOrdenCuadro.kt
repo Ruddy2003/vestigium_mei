@@ -75,7 +75,6 @@ internal object CuadroOrden {
         if (v.polvo > 0f) veloDePolvo(v, CamOrden.H - 50f, 215f, 0.85f * v.polvo)
         sombrasDeNubes(v)
         with(DiasOrden) { enElParamo(v) }
-        with(AdarveOrden) { cuerdaDeLaCabria(v) }
         val enVuelo = EscenaOrden.garza(m) == Garza.VOLANDO
         if (enVuelo) garza(v)
         // El patio: el suelo con sus sombras, la muralla del fondo, los edificios, la cisterna, el corral y la fragua.
@@ -114,6 +113,7 @@ internal object CuadroOrden {
         objetoDelDia(v)
         ocaso(v)
         luzDeLosCandiles(v)
+        with(CuboOrden) { luzDelCandil(v) }
         if (v.polvo > 0f) veloDePolvo(v, 0f, 330f, 0.2f * v.polvo)
         if (m.ficha.clima != Clima.POLVO) tiempoQuieto(v.l, m.ficha.clima, CamOrden.H, m.semilla("tiempo"))
         grano(Azar(Semilla.de("orden", "grano")), 0.6f + 0.4f * v.r.dia)
@@ -135,7 +135,7 @@ internal object CuadroOrden {
         val v = VistaOrden(m)
         // El humo de la fragua, que sube por delante de la muralla del fondo y se tumba con el viento.
         val f = EscenaOrden.fragua(m)
-        humo(v.l, CamOrden.p(PatioOrden.CHIMENEA), 70f, 9f, reloj, 0.25f + 0.6f * m.viento, 0.3f, 0f, 5, 9, 0.3f + 0.5f * f)
+        humo(v.l, CamOrden.p(PatioOrden.CHIMENEA), 125f, 12f, reloj, 0.45f + 0.6f * m.viento, 0.3f, 0f, 6, 9, 0.35f + 0.5f * f)
         // Las llamas de los candiles de las almenas.
         val n = EscenaOrden.candiles(m)
         for (i in 0 until n) {
@@ -143,6 +143,8 @@ internal object CuadroOrden {
             val c = AdarveOrden.candil(i); val k = CamOrden.k(c.x, c.z)
             llama(CamOrden.p(c) + Offset(0f, -0.06f * k), (0.16f * k).coerceIn(1.2f, 9f), reloj, i)
         }
+        // El candil grande del cubo.
+        if (CuboOrden.arde(v)) { val c = CuboOrden.CANDIL; llama(CamOrden.p(c) + Offset(0f, -0.1f * CamOrden.k(c.x, c.z)), (0.3f * CamOrden.k(c.x, c.z)).coerceIn(2f, 14f), reloj, 40) }
         // Las antorchas de la alarma.
         if (EscenaOrden.alarma(m) && v.l.noche > 0.3f) for (i in 0 until 3) { val a = DiasOrden.antorcha(i); llama(CamOrden.p(a), (0.35f * CamOrden.k(a.x, a.z)).coerceIn(2f, 12f), reloj, 30 + i) }
         if (v.polvo > 0f) polvo(reloj, m.semilla("polvo"))
@@ -153,9 +155,9 @@ internal object CuadroOrden {
 
     fun luzDelGato(m: Momento, en: Offset): LuzGato {
         val v = VistaOrden(m)
-        // Cerca del candil de la almena de delante, de noche, su lado cálido.
-        val c = CamOrden.p(AdarveOrden.candil(0)); val d = (c - en).getDistance()
-        val calida = if (EscenaOrden.candiles(m) > 0 && ObjetosOrden.elCuadroPinta(m, "candil")) (v.l.noche * 0.6f / (1f + (d / 80f) * (d / 80f))) else 0f
+        // Cerca del candil grande del cubo, de noche, su lado cálido.
+        val c = CamOrden.p(CuboOrden.CANDIL); val d = (c - en).getDistance()
+        val calida = if (CuboOrden.arde(v)) (v.l.noche * 0.6f / (1f + (d / 80f) * (d / 80f))) else 0f
         return LuzGato(v.r, v.l.noche) { col -> if (calida > 0.03f) lerp(v.l.tono(col), mult(col, C.LUMBRE, 0.5f), (calida * 0.5f).coerceIn(0f, 1f)) else v.l.tono(col) }
     }
 

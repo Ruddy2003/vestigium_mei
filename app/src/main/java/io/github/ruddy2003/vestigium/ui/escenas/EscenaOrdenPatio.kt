@@ -71,9 +71,9 @@ internal object PatioOrden {
     const val CISTERNA_ANCHO = 3.4f
     const val CISTERNA_LARGO = 5f
     /** La fragua, arrimada a la muralla del oeste: de [FRAGUA_V0] a [FRAGUA_V1] a lo largo y hasta [FRAGUA_S] hacia dentro. */
-    const val FRAGUA_V0 = 16.5f
-    const val FRAGUA_V1 = 22.5f
-    const val FRAGUA_S = -5.6f
+    const val FRAGUA_V0 = 14f
+    const val FRAGUA_V1 = 21.5f
+    const val FRAGUA_S = -7f
     /** La puerta de la escalera de la meseta, en la muralla del fondo. */
     const val PUERTA_S = -7f
 
@@ -107,6 +107,7 @@ internal object PatioOrden {
                 val s = az.entre(-40f, -1f); val vv2 = az.entre(14f, FONDO); val q = CamOrden.p(s, P, vv2); val k = CamOrden.k(s, vv2)
                 mancha(q, k * az.entre(0.8f, 2.4f), k * az.entre(0.25f, 0.6f), if (it % 2 == 0) lz.color(C.ARENA, V3(0f, 1f, 0f), 0.1f) else lz.color(C.LOSA, V3(0f, 1f, 0f), 0.1f), 0.35f)
             }
+            zonas(v)
             sendas(v)
             canales(v)
             if (v.nieve > 0f) {
@@ -117,6 +118,31 @@ internal object PatioOrden {
                     drawLine(senda.copy(alpha = 0.7f), CamOrden.p(a), CamOrden.p(b), (CamOrden.k(a.x, a.z) * 0.6f).coerceAtLeast(1f))
             }
         }
+    }
+
+    /**
+     * Las zonas del suelo del patio **[Diseño propio]**: la tierra pisada del centro, las losas rotas o cambiadas, la paja
+     * junto al corral, la carbonilla delante de la fragua y la humedad junto a la cisterna.
+     */
+    private fun DrawScope.zonas(v: VistaOrden) {
+        val lz = v.lz; val az = PiezasOrden.fijo("zonas"); val arriba = V3(0f, 1f, 0f)
+        for ((s, vv, r) in listOf(Triple(-16f, 28f, 6f), Triple(-24f, 34f, 7f), Triple(-12f, 40f, 5f), Triple(-30f, 26f, 5f), Triple(-8f, 33f, 3.5f)))
+            mancha(CamOrden.p(s, P, vv), CamOrden.k(s, vv) * r, CamOrden.k(s, vv) * r * 0.32f, lz.color(lerp(C.PARAMO, C.MADERA, 0.4f), arriba, 0.08f), 0.32f)
+        // Las losas rotas o cambiadas: de otro tono, con su raja.
+        repeat(34) {
+            val s = az.entre(-36f, -2f); val vv = az.entre(13f, 52f); val w = az.entre(0.9f, 1.6f); val d = az.entre(0.7f, 1.2f)
+            val q = listOf(V3(s, P, vv), V3(s - w, P, vv), V3(s - w, P, vv + d), V3(s, P, vv + d)).map { CamOrden.p(it) }
+            drawPath(poligono(q), lz.color(if (it % 3 == 0) lerp(C.LOSA, C.ARENA, 0.4f) else lerp(C.LOSA, C.ROCA, 0.3f), arriba, 0.08f).copy(alpha = 0.45f))
+            if (it % 2 == 0) drawLine(lz.color(lerp(C.LOSA, C.HOLLIN, 0.5f), arriba, 0.08f).copy(alpha = 0.5f), CamOrden.p(s - w * 0.1f, P, vv + d * az.real()), CamOrden.p(s - w * 0.9f, P, vv + d * az.real()), 0.4f)
+        }
+        // La paja del corral, que se sale por la cerca.
+        val paja = lz.color(lerp(C.ARENA, C.LATON, 0.45f), arriba, 0.06f)
+        repeat(60) { val s = az.entre(-23f, -13f); val vv = az.entre(12f, 21f); val q = CamOrden.p(s, P, vv); val k = CamOrden.k(s, vv); val a = az.entre(0f, 3.1f)
+            drawLine(paja.copy(alpha = 0.7f), q, q + Offset(kotlin.math.cos(a) * k * 0.35f, kotlin.math.sin(a) * k * 0.12f), 0.5f) }
+        // La carbonilla delante de la boca de la fragua y la humedad junto a la cisterna.
+        mancha(CamOrden.p(FRAGUA_S / 2f, P, FRAGUA_V0 - 1.3f), CamOrden.k(-3f, FRAGUA_V0) * 3.4f, CamOrden.k(-3f, FRAGUA_V0) * 0.9f, v.l.tono(lerp(C.HOLLIN, C.LOSA, 0.3f)), 0.4f)
+        for ((s, vv) in listOf(CISTERNA.x + 2.6f to CISTERNA.y + 1f, CISTERNA.x - 0.5f to CISTERNA.y + 3.4f))
+            mancha(CamOrden.p(s, P, vv), CamOrden.k(s, vv) * 1.6f, CamOrden.k(s, vv) * 0.5f, lz.color(lerp(C.LOSA, C.ROCA_HONDA, 0.45f), arriba, 0.06f), 0.4f)
     }
 
     /**
@@ -219,9 +245,9 @@ internal object PatioOrden {
                 }
             }
             when (e) {
-                CAMARA -> ventanaDeLaCamara(v)
-                ALA -> { ventanaAlta(v, e, 0, 0.66f, P + 5.3f, 0.9f, 0.8f, EscenaOrden.ventanaDelArchivo(v.m)); ventanaAlta(v, e, 0, 0.3f, P + 1.3f, 1.2f, 1.3f, EscenaOrden.enfermeria(v.m)) }
-                SALA -> { for (u in listOf(0.2f, 0.4f, 0.6f, 0.8f)) ventanaAlta(v, e, 0, u, P + 4.6f, 0.75f, 2.2f, EscenaOrden.salaDelCodigo(v.m)); espadana(v) }
+                CAMARA -> { with(OficioOrden) { camara(v) }; ventanaDeLaCamara(v) }
+                ALA -> { with(OficioOrden) { ala(v, bruma) }; ventanaAlta(v, e, 0, 0.66f, P + 5.3f, 0.9f, 0.8f, EscenaOrden.ventanaDelArchivo(v.m)); ventanaAlta(v, e, 0, 0.3f, P + 1.3f, 1.2f, 1.3f, EscenaOrden.enfermeria(v.m)) }
+                SALA -> { with(OficioOrden) { sala(v, bruma) }; for (u in listOf(0.2f, 0.4f, 0.6f, 0.8f)) ventanaAlta(v, e, 0, u, P + 4.6f, 0.75f, 2.2f, EscenaOrden.salaDelCodigo(v.m)); espadana(v) }
             }
         }
     }
@@ -267,7 +293,7 @@ internal object PatioOrden {
     private fun DrawScope.ventanaDeLaCamara(v: VistaOrden) {
         val e = CAMARA; val i = 3; val n = normalDe(e, i)
         if (!CamOrden.seVe(e.enCara(i, 0.5f, P + 3f), n)) return
-        val h0 = P + 2.6f; val alto = 1.7f; val du = 0.95f / e.fondo
+        val h0 = P + 2.3f; val alto = 2.2f; val du = 1.25f / e.fondo
         val q = listOf(e.enCara(i, 0.5f - du, h0), e.enCara(i, 0.5f + du, h0), e.enCara(i, 0.5f + du, h0 + alto), e.enCara(i, 0.5f - du, h0 + alto)).map { CamOrden.p(it) }
         val hueco = poligono(q)
         val vc = EscenaOrden.ventanaDeLaCamara(v.m)
@@ -370,7 +396,7 @@ internal object PatioOrden {
      */
     fun DrawScope.fragua(v: VistaOrden) {
         val lz = v.lz; val s0 = CamOrden.BORDE; val s1 = FRAGUA_S; val v0 = FRAGUA_V0; val v1 = FRAGUA_V1
-        val alto0 = P + 4.2f; val alto1 = P + 2.9f
+        val alto0 = P + 4.8f; val alto1 = P + 3.3f
         // El costado del fondo (v1) y el suelo, en sombra.
         cara(lz, listOf(V3(s1, P, v1), V3(s0, P, v1), V3(s0, alto0, v1), V3(s1, alto1, v1)), V3(0f, 0f, -1f), lerp(C.PIEDRA, C.HOLLIN, 0.35f), 0.12f)
         val dentro = poligono(listOf(V3(s1, P, v0), V3(s0, P, v0), V3(s0, alto0, v0), V3(s1, alto1, v0)).map { CamOrden.p(it) })
@@ -417,7 +443,7 @@ internal object PatioOrden {
 
     /** Las esquinas de la fragua (para las sombras). */
     fun cuerpoDeLaFragua(): List<V3> = listOf(V3(CamOrden.BORDE, P, FRAGUA_V0), V3(FRAGUA_S, P, FRAGUA_V0), V3(CamOrden.BORDE, P, FRAGUA_V1), V3(FRAGUA_S, P, FRAGUA_V1),
-        V3(CamOrden.BORDE, P + 4.2f, FRAGUA_V0), V3(FRAGUA_S, P + 3f, FRAGUA_V0), V3(CamOrden.BORDE, P + 4.2f, FRAGUA_V1), V3(FRAGUA_S, P + 3f, FRAGUA_V1))
+        V3(CamOrden.BORDE, P + 4.8f, FRAGUA_V0), V3(FRAGUA_S, P + 3.3f, FRAGUA_V0), V3(CamOrden.BORDE, P + 4.8f, FRAGUA_V1), V3(FRAGUA_S, P + 3.3f, FRAGUA_V1))
 
     /** Dónde sale el humo de la fragua (la boca de la chimenea). */
     val CHIMENEA: V3 get() = V3(CamOrden.BORDE - 0.55f, 1.5f, FRAGUA_V1 - 1.2f)
