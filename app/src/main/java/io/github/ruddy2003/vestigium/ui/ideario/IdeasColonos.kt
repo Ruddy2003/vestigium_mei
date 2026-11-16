@@ -2214,32 +2214,78 @@ object IdeasColonos : DisenoIdeas {
         drawRect(t.c(tinte).copy(alpha = 0.34f), cuello.topLeft, cuello.size)
         drawPath(cuerpo, t.c(mezcla(tinte, TABLON, 0.3f)).copy(alpha = 0.5f))
         clipPath(cuerpo) {
-            // Los recortes enrollados, de pie dentro: cada rollo con su boca en espiral y sus renglones.
+            // Los recortes de la gaceta, de pie dentro y ladeados unos contra otros: papel de periódico envejecido, enrollado
+            // fino y atado con cordel o con una goma, con los renglones impresos a lo largo; alguno, doblado en cuatro.
+            // Primero los de detrás y luego los de delante; más cuanto más guarda.
             val n = c.n.coerceIn(0, 10)
-            val cuantos = (2 + (n * 2 + 1) / 3).coerceIn(2, 8)
-            for (i in 0 until cuantos) {
-                val rw = w * (0.085f + 0.03f * azar(c.semilla, i + 3))
-                val cx = x0 + w * 0.07f + (x1 - x0 - w * 0.14f) * ((i + 0.5f) / cuantos + 0.03f * (azar(c.semilla, i + 7) - 0.5f))
-                val top = hombro + h * (0.045f + 0.1f * azar(c.semilla, i))
-                val papel = t.c(if (i % 3 == 1) mezcla(GACETA, CINTA, 0.4f) else mezcla(GACETA, tinte, 0.12f))
-                val rr = Rect(cx - rw / 2, top, cx + rw / 2, piso)
-                drawRect(papel, rr.topLeft, rr.size)
-                drawRect(t.s(0.2f), Offset(if (der) rr.left else rr.right - rw * 0.3f, rr.top), Size(rw * 0.3f, rr.height))
-                drawRect(t.b(0.2f), Offset(if (der) rr.right - rw * 0.3f else rr.left + rw * 0.08f, rr.top), Size(rw * 0.2f, rr.height))
-                val boca = Rect(rr.left, top - rw * 0.2f, rr.right, top + rw * 0.2f)
-                drawOval(papel, boca.topLeft, boca.size)
-                drawOval(t.s(0.3f), Offset(boca.left + rw * 0.2f, boca.top + rw * 0.09f), Size(rw * 0.6f, rw * 0.22f))
-                drawOval(t.s(0.35f), boca.topLeft, boca.size, style = Stroke(0.6f * u))
-                drawOval(t.s(0.3f), Offset(boca.left + rw * 0.3f, boca.top + rw * 0.13f), Size(rw * 0.4f, rw * 0.14f), style = Stroke(0.6f * u))
-                // El borde del papel a lo largo del rollo y lo impreso, que se ve por debajo de la etiqueta.
-                drawLine(t.s(0.3f), Offset(cx + rw * 0.1f, top + rw * 0.18f), Offset(cx + rw * 0.14f, piso), 0.6f * u)
-                val tinta = t.c(TINTA).copy(alpha = 0.34f)
-                var y = h * rotulo.bottom + 3f * u
-                var j = 0
-                while (y < piso - h * 0.06f) {
-                    if (j % 4 == i % 4) drawRect(tinta.copy(alpha = 0.5f), Offset(rr.left + rw * 0.08f, y - 0.8f * u), Size(rw * 0.84f, 2.2f * u))
-                    else { drawLine(tinta, Offset(rr.left + rw * 0.08f, y), Offset(cx + rw * 0.06f, y), 0.7f * u); drawLine(tinta, Offset(cx + rw * 0.2f, y), Offset(rr.right - rw * 0.08f, y), 0.7f * u) }
-                    y += 3.4f * u; j++
+            val cuantos = (3 + n).coerceIn(3, 10)
+            val tinta = t.c(TINTA)
+            val renglones = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(7f * u, 2.2f * u, 3.4f * u, 2.2f * u))
+            for (pasada in 0..1) for (i in 0 until cuantos) {
+                if (i % 2 != pasada) continue
+                val doblado = cuantos >= 4 && i % 5 == 2
+                val rw = if (doblado) w * 0.105f else w * (0.046f + 0.03f * azar(c.semilla, i + 3))
+                val cx = x0 + w * 0.085f + (x1 - x0 - w * 0.17f) * ((i + 0.5f) / cuantos + 0.04f * (azar(c.semilla, i + 7) - 0.5f))
+                val top = hombro + h * (if (doblado) 0.07f else 0.02f + 0.14f * azar(c.semilla, i))
+                val base = when (i % 3) { 0 -> mezcla(GACETA, CUERDA, 0.42f); 1 -> mezcla(GACETA, CINTA, 0.55f); else -> mezcla(GACETA, PINO, 0.3f) }
+                val papel = t.c(if (pasada == 0) mezcla(base, PINO_OSC, 0.14f) else base)
+                val rr = Rect(cx - rw / 2, top, cx + rw / 2, piso + 2f * u)
+                rotate((azar(c.semilla, i + 11) - 0.5f) * (if (doblado) 10f else 20f), Offset(cx, piso)) {
+                    // La sombra que deja en el de al lado.
+                    drawRect(t.s(0.24f), Offset(rr.left + (if (der) -2f else 2f) * u, rr.top + 1.5f * u), rr.size)
+                    drawRect(papel, rr.topLeft, rr.size)
+                    if (doblado) {
+                        // Doblado en cuatro: los cantos de las hojas, el doblez del medio, una cabecera y unos renglones.
+                        listOf(0.9f, 0.8f).forEach { f -> drawLine(t.s(0.26f), Offset(rr.left + rw * f, rr.top), Offset(rr.left + rw * f, rr.bottom), 0.6f * u) }
+                        drawLine(t.s(0.16f), Offset(cx - rw * 0.08f, rr.top), Offset(cx - rw * 0.08f, rr.bottom), 0.8f * u)
+                        drawRect(t.b(0.4f), rr.topLeft, Size(rw, 0.9f * u))
+                        drawRect(tinta.copy(alpha = 0.6f), Offset(rr.left + rw * 0.1f, rr.top + 3f * u), Size(rw * 0.5f, 2.2f * u))
+                        // Los renglones, donde la etiqueta los deja ver: arriba y abajo.
+                        listOf(rr.top + 7.6f * u to h * rotulo.top + 2f * u, h * rotulo.bottom + 3f * u to piso - h * 0.06f).forEach { (ya, yb) ->
+                            var y = ya
+                            while (y < yb) { drawLine(tinta.copy(alpha = 0.38f), Offset(rr.left + rw * 0.1f, y), Offset(rr.left + rw * 0.72f, y), 0.6f * u); y += 2.5f * u }
+                        }
+                    } else {
+                        // El rollo: el lado de luz y el de sombra, el borde del papel a lo largo y la punta de arriba, apretada.
+                        drawRect(t.b(0.2f), Offset(if (der) rr.right - rw * 0.36f else rr.left + rw * 0.1f, rr.top), Size(rw * 0.26f, rr.height))
+                        drawRect(t.s(0.24f), Offset(if (der) rr.left else rr.right - rw * 0.32f, rr.top), Size(rw * 0.32f, rr.height))
+                        // Lo impreso, a lo largo del rollo: renglones a trozos y el negro de un titular.
+                        listOf(0.2f, 0.4f, 0.78f).forEachIndexed { q, f ->
+                            val x = rr.left + rw * f
+                            drawLine(tinta.copy(alpha = 0.4f), Offset(x, rr.top + rw * (0.5f + 0.3f * q)), Offset(x, rr.bottom), 0.7f * u, pathEffect = renglones)
+                        }
+                        val ty = if (i % 2 == 0) h * rotulo.bottom + h * 0.03f else rr.top + rw * 0.7f
+                        drawRect(tinta.copy(alpha = 0.55f), Offset(rr.left + rw * 0.52f, ty), Size(rw * 0.16f, h * 0.075f))
+                        drawLine(t.s(0.32f), Offset(cx + rw * 0.2f, rr.top), Offset(cx + rw * 0.2f, rr.bottom), 0.6f * u)
+                        if (i % 4 == 1) {
+                            // Uno se ve de punta: la espiral del papel, apretada, sin hueco.
+                            val punta = Rect(rr.left, top - rw * 0.15f, rr.right, top + rw * 0.15f)
+                            drawOval(t.c(mezcla(base, PINO_OSC, 0.34f)), punta.topLeft, punta.size)
+                            drawOval(t.s(0.34f), punta.topLeft, punta.size, style = Stroke(0.6f * u))
+                            drawOval(t.s(0.3f), Offset(punta.left + rw * 0.18f, punta.top + rw * 0.06f), Size(rw * 0.64f, rw * 0.19f), style = Stroke(0.6f * u))
+                            drawOval(t.s(0.3f), Offset(punta.left + rw * 0.34f, punta.top + rw * 0.11f), Size(rw * 0.32f, rw * 0.09f), style = Stroke(0.6f * u))
+                        } else {
+                            // Los demás, de canto: el corte de arriba, un poco al sesgo, con su filo.
+                            drawLine(t.s(0.34f), Offset(rr.left, top + rw * 0.06f), Offset(rr.right, top - rw * 0.02f), 1.2f * u)
+                            drawLine(t.b(0.35f), Offset(rr.left, top + rw * 0.06f + 1.2f * u), Offset(rr.right, top - rw * 0.02f + 1.2f * u), 0.7f * u)
+                        }
+                        // La atadura: una goma o dos vueltas de cordel con su nudo; arriba, donde se ve, y otra abajo.
+                        listOf(top + h * 0.045f, piso - h * 0.105f).forEachIndexed { q, y ->
+                            if (i % 3 == 0) {
+                                drawRect(t.c(mezcla(LADRILLO, OXIDO, 0.35f)), Offset(rr.left - 0.5f * u, y), Size(rw + 1f * u, 1.5f * u))
+                            } else {
+                                drawRect(t.s(0.28f), Offset(rr.left, y + 2.2f * u), Size(rw, 0.8f * u))
+                                drawRect(t.c(mezcla(CUERDA, PINO_OSC, 0.2f)), Offset(rr.left - 0.6f * u, y), Size(rw + 1.2f * u, 2.2f * u))
+                                drawRect(t.b(0.35f), Offset(rr.left - 0.6f * u, y), Size(rw + 1.2f * u, 0.6f * u))
+                                if (q == 0) {
+                                    val nudo = Offset(cx - rw * 0.12f, y + 1.1f * u)
+                                    drawLine(t.c(CUERDA), nudo, nudo + Offset(-2.6f * u, 4f * u), 0.9f * u, StrokeCap.Round)
+                                    drawLine(t.c(CUERDA), nudo, nudo + Offset(2.2f * u, 4.4f * u), 0.9f * u, StrokeCap.Round)
+                                    drawCircle(t.c(CUERDA), 1.5f * u, nudo)
+                                }
+                            }
+                        }
+                    }
                 }
             }
             // El culo grueso del frasco y la luz que entra por el vidrio.
