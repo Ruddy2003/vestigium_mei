@@ -54,11 +54,12 @@ import kotlin.math.sqrt
  *   junto a su funda de bronce con las correas de la pierna, y el pie de una esponja recién cortada; la esponja de lana,
  *   dorada, con sus ósculos, y al lado una negra todavía viva; el comboloi de cuentas de ámbar con su borla; y el pan de
  *   barco: rodajas cocidas dos veces sobre el paño de la isla, con aceitunas negras y una cebolla.
- * - **Grandes.** El traje de lona echado sobre el apoyo por el cuello de cobre, con una manga colgando y las piernas
- *   arrugadas en el suelo, con sus rodilleras y sus pies; las botas de plomo, el par, una delante y otra detrás recostada;
+ * - **Grandes.** El traje de lona guardado, doblado en un montón bajo y ancho, con una manga y su puño de goma cayendo
+ *   por delante y, tumbado encima, el cuello de cobre con el babero de goma y sus pernos (nada que parezca un cuerpo); las
+ *   botas de plomo, el par, una delante y otra detrás recostada;
  *   la cuerda de vida adujada con el as de guía de la cintura encima y el firme amarrado arriba; y la red de malla con su
- *   aro de hierro, llena de esponjas negras que chorrean (en el muelle, vacía y a medio remendar). Lo que se tiende (las
- *   piernas, la segunda bota, la aduja) va a la derecha del pie, donde los dos cuadros dejan suelo libre.
+ *   aro de hierro, llena de esponjas negras que chorrean (en el muelle, vacía y a medio remendar). Lo que se tiende (el
+ *   montón del traje, la segunda bota, la aduja) va a la derecha del pie, donde los dos cuadros dejan suelo libre.
  *
  * **Lo que ya está en el cuadro** ([estaEnElCuadro]). La bomba, el icono y el barco son piezas fijas: ese día no se pinta
  * otro. Pero no siempre se ven: la bomba solo está en el barco, y el muelle del cuarto (2030) no tiene ningún barco. Esos
@@ -209,13 +210,13 @@ internal object ObjetosAbismo {
         val d = apoyo - pie
         val hacia = if (d.x >= 0f) 1f else -1f
         val ang = if (d.getDistance() < 1f) 0f else atan2(d.x, -d.y).coerceIn(-0.22f, 0.22f)
-        // Lo que se tiende (las piernas del traje, la segunda bota, la aduja, la rueda) va a la derecha del pie: es donde los
+        // Lo que se tiende (el montón del traje, la segunda bota, la aduja, la rueda) va a la derecha del pie: es donde los
         // dos cuadros dejan suelo libre (en el barco, la tina queda a la izquierda; en el muelle, la bita) **[Diseño propio]**.
         val libre = 1f
         val partes: List<Pair<List<Offset>, Float>>
         val pinta: DrawScope.() -> Unit
         when (id) {
-            "escafandra" -> { val tr = Traje(pie, apoyo, u, libre); partes = listOf(tr.silueta() to tr.suelo); pinta = { escafandra(p, tr, mojado, tierra) } }
+            "escafandra" -> { val mo = Monton(pie, u, libre); partes = listOf(mo.silueta() to pie.y); pinta = { escafandra(p, mo, mojado, tierra) } }
             "botas" -> {
                 val a = Eje(pie + Offset(-0.06f * u * libre, 0.02f * u), 0f, u * 1.15f); val b = Eje(pie + Offset(0.17f * u * libre, -0.05f * u), ang * 0.6f, u * 1.15f)
                 partes = listOf(siluetaBota(a, -libre) to a.pie.y, siluetaBota(b, libre) to b.pie.y); pinta = { botas(p, a, b, libre) }
@@ -776,132 +777,136 @@ internal object ObjetosAbismo {
     }
 
     // =================================================================
-    //  El traje
+    //  El traje, doblado
     // =================================================================
 
     /**
-     * Dónde va cada parte del traje echado sobre el apoyo: el cuello en [apoyo] (sobre la bomba o el cajón), el cuerpo que
-     * baja por delante hasta la cintura, y las piernas que llegan al suelo en [pie] y se arrugan en él, hacia un lado.
+     * Dónde va el traje doblado: un montón bajo y ancho que pisa en [pie] y se tiende hacia [s] (a la derecha, donde hay
+     * suelo libre), con [u] unidades por metro. [q] da un punto del montón: [x] a lo ancho (hacia [s]), [y] hacia arriba, en
+     * metros, desde el medio de su base.
      */
-    private class Traje(val pie: Offset, val apoyo: Offset, val u: Float, val s: Float) {
-        val caida = (pie.y - apoyo.y).coerceIn(0.3f * u, 1.1f * u)
-        val suelo = apoyo.y + caida
-        val cuello = apoyo + Offset(-0.03f * u * s, -0.08f * u)
-        val hombroA = apoyo + Offset(-0.24f * u, 0.02f * u)
-        val hombroB = apoyo + Offset(0.24f * u, 0.03f * u)
-        val cintura = Offset(apoyo.x + 0.03f * u * s, apoyo.y + minOf(0.52f * u, caida - 0.12f * u))
-        val rodilla = Offset(cintura.x + 0.12f * u * s, suelo - 0.05f * u)
-        val pieA = Offset(cintura.x + 0.5f * u * s, suelo + 0.04f * u)
-        /** La otra pierna, doblada hacia atrás y metida bajo el cuerpo: un montón, no alguien sentado. */
-        val rodillaB = Offset(cintura.x + 0.36f * u * s, suelo - 0.07f * u)
-        val pieB = Offset(cintura.x + 0.02f * u * s, suelo - 0.13f * u)
+    private class Monton(val pie: Offset, val u: Float, val s: Float) {
+        val c = Offset(pie.x + 0.1f * u * s, pie.y)
+        fun q(x: Float, y: Float) = Offset(c.x + x * u * s, c.y - y * u)
 
-        fun silueta(): List<Offset> = listOf(
-            cuello + Offset(-0.15f * u, 0f), hombroA, Offset(hombroA.x - 0.06f * u, cintura.y), Offset(cintura.x - 0.2f * u * s, suelo),
-            pieA + Offset(0f, 0.04f * u), pieA + Offset(0.06f * u * s, -0.03f * u), rodillaB + Offset(0.06f * u * s, -0.06f * u), Offset(cintura.x + 0.2f * u * s, cintura.y), hombroB, cuello + Offset(0.15f * u, 0f),
+        /** Los dobleces de la lona, de abajo arriba: (izquierda, derecha, abajo, arriba), en metros. */
+        val dobleces = listOf(
+            floatArrayOf(-0.35f, 0.36f, 0f, 0.09f),
+            floatArrayOf(-0.32f, 0.31f, 0.08f, 0.165f),
+            floatArrayOf(-0.27f, 0.32f, 0.155f, 0.235f),
+            floatArrayOf(-0.25f, 0.27f, 0.225f, 0.285f),
         )
+        /** La cara de arriba del montón (el último doblez, visto desde arriba), donde va tumbado el collar. */
+        val arriba = 0.285f
+
+        fun silueta(): List<Offset> = listOf(q(-0.37f, 0f), q(-0.37f, 0.08f), q(-0.33f, 0.165f), q(-0.29f, 0.24f), q(-0.26f, 0.33f), q(0.0f, 0.36f), q(0.27f, 0.33f),
+            q(0.33f, 0.24f), q(0.32f, 0.16f), q(0.37f, 0.09f), q(0.46f, 0.06f), q(0.45f, 0f))
     }
 
     /**
-     * El traje de lona y goma, «de una pieza, con puños de goma apretados en las muñecas y un cuello de cobre»: echado sobre
-     * el apoyo por el cuello de cobre (el aro con sus agujeros de los pernos y la goma por dentro, «se entra en él por el
-     * cuello, como en un saco»), el cuerpo que baja por delante con sus pliegues, una manga colgando con el puño de goma y
-     * otra doblada de través, y las piernas, que llegan al suelo y se arrugan en él con los pies del traje. Lo mojado, más
-     * oscuro; los remiendos de goma. En el muelle, a medio remendar: un parche nuevo con la aguja curva y el hilo encerado.
+     * El traje de lona y goma, «de una pieza, con puños de goma apretados en las muñecas y un cuello de cobre», **guardado**:
+     * doblado en un montón bajo y ancho, la lona en cuatro dobleces gruesos, cada uno con su canto redondo, sus arrugas y
+     * sus remiendos; debajo asoman las perneras dobladas, con el pie del traje; por delante cae una manga con su puño de goma
+     * negro. Encima, tumbado y bien a la vista, el cuello: el babero de goma con los agujeros y los pernos de latón, y el aro
+     * de cobre del cuello, abierto («se entra en él por el cuello, como en un saco»). Lo mojado, más oscuro. En el muelle, a
+     * medio remendar: un parche nuevo, la aguja curva clavada y el hilo encerado. **[Diseño propio]**: así se guarda un traje,
+     * sin nada que parezca un cuerpo (tendido, colgado o echado sobre algo, parecía alguien).
      */
-    private fun DrawScope.escafandra(p: Pincel, t: Traje, mojado: Float, tierra: Boolean) {
-        val u = t.u; val L = lado(p); val s = t.s
+    private fun DrawScope.escafandra(p: Pincel, t: Monton, mojado: Float, tierra: Boolean) {
+        val u = t.u; val L = lado(p)
         val az = Azar(Semilla.de("abismo", "objeto", "traje"))
-        val lona = lerp(C.LONA, C.ESPONJA, 0.14f)
-        val humeda = lerp(lona, C.LONA_MOJADA, 0.15f + 0.35f * mojado)
-        charco(p, t.pieA + Offset(-0.2f * u * s, 0.02f * u), 0.4f * u, 0.07f * u, mojado)
-        contacto(p, Offset((t.cintura.x + t.pieA.x) / 2f, t.suelo + 0.02f * u), 0.9f * u, 0.12f * u, 0.4f)
-        // ---- Las piernas: la de atrás primero, luego la de delante; del muslo, que baja, al pie, tendido en el suelo.
-        fun pierna(desde: Offset, rod: Offset, hasta: Offset, ancho: Float, tono: Color): Path {
-            val d1 = rod - desde; val d2 = hasta - rod
-            fun n(d: Offset): Offset { val l = d.getDistance().coerceAtLeast(0.01f); return Offset(-d.y / l, d.x / l) }
-            val a = n(d1) * ancho; val b = n(d2) * (ancho * 0.85f); val m = n(d1 + d2) * (ancho * 0.95f)
+        val lona = lerp(C.LONA, C.ESPONJA, 0.12f)
+        charco(p, t.q(0.05f, 0.0f) + Offset(0f, 0.015f * u), 0.42f * u, 0.06f * u, mojado)
+        contacto(p, t.q(0.04f, 0f) + Offset(0f, 0.005f * u), 0.86f * u, 0.09f * u, 0.5f)
+        // ---- Las perneras dobladas debajo: asoma el pie del traje por la derecha, al ras del suelo.
+        val pt = t.q(0.4f, 0.045f)
+        val pieTraje = lazo(listOf(pt + Offset(-0.08f * u * t.s, -0.045f * u), pt + Offset(0.02f * u * t.s, -0.05f * u), pt + Offset(0.07f * u * t.s, -0.02f * u), pt + Offset(0.065f * u * t.s, 0.03f * u), pt + Offset(-0.02f * u * t.s, 0.045f * u), pt + Offset(-0.09f * u * t.s, 0.035f * u)))
+        drawPath(pieTraje, Brush.verticalGradient(listOf(p.luz(lerp(lona, C.LONA_MOJADA, 0.3f)), p.sombra(lerp(lona, C.LONA_MOJADA, 0.4f))), pt.y - 0.05f * u, pt.y + 0.045f * u))
+        drawPath(Path().apply { moveTo(pt + Offset(-0.04f * u * t.s, -0.04f * u)); cubicTo(pt + Offset(-0.01f * u * t.s, -0.01f * u), pt + Offset(-0.03f * u * t.s, 0.02f * u), pt + Offset(-0.01f * u * t.s, 0.04f * u)) }, p.sombra(lona).copy(alpha = 0.7f), style = Stroke(0.008f * u))
+        // ---- Los dobleces, de abajo arriba: cada uno, un rollo de lona con su canto redondo de frente y sus cabos.
+        val formas = ArrayList<Path>()
+        t.dobleces.forEachIndexed { i, d ->
+            val (x0, x1, y0, y1) = d.toList()
+            val tono = lerp(lona, C.LONA_MOJADA, (0.08f + 0.5f * mojado) * (1f - i / 3.5f))
+            val h = y1 - y0; val ab = (0.015f + 0.01f * (i % 2)) * u
             val forma = Path().apply {
-                moveTo(desde + a); cubicTo(desde + d1 * 0.5f + a, rod + m - d1 * 0.15f, rod + m)
-                cubicTo(rod + d2 * 0.4f + b, hasta + b - d2 * 0.1f, hasta + b)
-                cubicTo(hasta + b + d2 * 0.12f, hasta - b + d2 * 0.12f, hasta - b)
-                cubicTo(hasta - b - d2 * 0.1f, rod - m + d2 * 0.3f, rod - m)
-                cubicTo(rod - m - d1 * 0.15f, desde + d1 * 0.5f - a, desde - a); close()
+                moveTo(t.q(x0 + 0.03f, y0))
+                cubicTo(t.q(x0 - 0.01f, y0), t.q(x0 - 0.02f, y1), t.q(x0 + 0.03f, y1))
+                cubicTo(t.q(x0 + 0.25f, y1 + 0.012f), t.q(x1 - 0.25f, y1 - 0.006f), t.q(x1 - 0.03f, y1))
+                cubicTo(t.q(x1 + 0.02f, y1), t.q(x1 + 0.02f, y0), t.q(x1 - 0.03f, y0))
+                cubicTo(t.q(x1 - 0.2f, y0 - 0.008f), t.q(x0 + 0.2f, y0 + 0.006f), t.q(x0 + 0.03f, y0)); close()
             }
-            drawPath(forma, Brush.linearGradient(listOf(p.sombra(tono), p.medio(tono), p.por(tono, 0.5f)), rod - m * 1.2f, rod + m * 1.2f))
+            formas += forma
+            // El canto del doblez: claro arriba (donde le da), el color en medio y oscuro abajo, donde se mete bajo el de encima.
+            drawPath(forma, Brush.verticalGradient(listOf(p.luz(tono), p.por(tono, 0.15f), p.sombra(tono)), t.q(0f, y1).y, t.q(0f, y0).y))
             clipPath(forma) {
-                // Los pliegues de través, donde la lona se arruga, y lo mojado del pie.
-                repeat(6) { val f = az.entre(0.1f, 0.95f); val q = if (f < 0.5f) desde + d1 * (f * 2f) else rod + d2 * ((f - 0.5f) * 2f); val nn = if (f < 0.5f) a else b; drawLine(p.sombra(tono).copy(alpha = 0.6f), q - nn, q + nn * 0.6f + Offset(0f, 0.02f * u), 0.018f * u, StrokeCap.Round); drawLine(p.luz(tono).copy(alpha = 0.35f), q - nn * 0.8f + Offset(0f, -0.012f * u), q + nn * 0.4f, 0.008f * u, StrokeCap.Round) }
-                drawCircle(p.sombra(C.LONA_MOJADA).copy(alpha = 0.35f + 0.3f * mojado), ancho * 1.6f, hasta)
-                // La rodillera de goma, cosida, donde el traje se gasta contra el fondo.
-                drawCircle(p.medio(lerp(GOMA, tono, 0.3f)).copy(alpha = 0.85f), ancho * 0.85f, rod)
-                drawCircle(p.luz(tono).copy(alpha = 0.45f), ancho * 0.85f, rod, style = Stroke(0.006f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.01f * u, 0.008f * u))))
-                // La costura de la pierna, a lo largo.
-                drawPath(curva(listOf(desde, rod, hasta)), p.sombra(tono).copy(alpha = 0.5f), style = Stroke(0.006f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.012f * u, 0.008f * u))))
+                // El volumen de lado a lado: el extremo de la sombra, más oscuro.
+                val xa = t.q(x0, 0f).x; val xb = t.q(x1, 0f).x
+                drawRect(Brush.horizontalGradient(if (L * t.s > 0f) listOf(p.sombra(tono).copy(alpha = 0.55f), Color.Transparent, Color.Transparent) else listOf(Color.Transparent, Color.Transparent, p.sombra(tono).copy(alpha = 0.55f)), minOf(xa, xb), maxOf(xa, xb)), Offset(minOf(xa, xb), t.q(0f, y1).y - 2f), Size(abs(xb - xa), h * u + 4f))
+                // Las arrugas de la lona: rayas cortas de sombra con su filo de luz, de través.
+                repeat(6) {
+                    val x = az.entre(x0 + 0.05f, x1 - 0.05f); val a = t.q(x, y1 - h * 0.15f); val b = t.q(x + az.entre(-0.03f, 0.03f), y0 + h * 0.3f)
+                    drawLine(p.sombra(tono).copy(alpha = 0.6f), a, b, 0.012f * u, StrokeCap.Round)
+                    drawLine(p.luz(tono).copy(alpha = 0.4f), a + Offset(0.007f * u * L, 0.004f * u), b + Offset(0.007f * u * L, -0.01f * u), 0.005f * u, StrokeCap.Round)
+                }
+                // La costura del borde, a lo largo del canto.
+                drawPath(curva(listOf(t.q(x0 + 0.04f, y1 - h * 0.28f), t.q((x0 + x1) / 2f, y1 - h * 0.22f), t.q(x1 - 0.04f, y1 - h * 0.3f))), p.sombra(tono).copy(alpha = 0.55f), style = Stroke(0.005f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.012f * u, 0.008f * u))))
             }
-            // El pie del traje: un calcetín de lona, más ancho, vuelto hacia arriba.
-            val dd = hasta - rod; val l = dd.getDistance().coerceAtLeast(0.01f); val dir = dd / l
-            val pieT = hasta + dir * (ancho * 0.4f) + Offset(0f, -ancho * 0.5f)
-            drawOval(p.sombra(tono), Offset(pieT.x - ancho * 0.75f, pieT.y - ancho * 0.85f), Size(ancho * 1.5f, ancho * 1.6f))
-            drawOval(p.por(tono, 0.3f), Offset(pieT.x - ancho * 0.6f, pieT.y - ancho * 0.85f), Size(ancho * 1.2f, ancho * 1.3f))
-            return forma
+            // La sombra que el doblez de encima echa sobre este, justo debajo de su canto.
+            drawPath(Path().apply { moveTo(t.q(x0 + 0.03f, y1)); cubicTo(t.q(x0 + 0.25f, y1 + 0.012f), t.q(x1 - 0.25f, y1 - 0.006f), t.q(x1 - 0.03f, y1)) }, p.sombra(C.BREA).copy(alpha = 0.35f), style = Stroke(ab, cap = StrokeCap.Round))
         }
-        val piernaB = pierna(t.cintura + Offset(0.08f * u * s, 0f), t.rodillaB, t.pieB, 0.09f * u, lerp(humeda, C.LONA_MOJADA, 0.15f))
-        val piernaA = pierna(t.cintura + Offset(-0.05f * u * s, 0f), t.rodilla, t.pieA, 0.095f * u, humeda)
-        // ---- El cuerpo: de los hombros, echados sobre el canto del apoyo, a la cintura.
-        val cuerpo = Path().apply {
-            moveTo(t.hombroA); cubicTo(t.hombroA + Offset(0.06f * u, -0.05f * u), t.hombroB + Offset(-0.06f * u, -0.05f * u), t.hombroB)
-            cubicTo(t.hombroB + Offset(0.04f * u, 0.15f * u), Offset(t.cintura.x + 0.24f * u, t.cintura.y - 0.15f * u), Offset(t.cintura.x + 0.2f * u, t.cintura.y + 0.04f * u))
-            cubicTo(Offset(t.cintura.x + 0.08f * u, t.cintura.y + 0.09f * u), Offset(t.cintura.x - 0.08f * u, t.cintura.y + 0.09f * u), Offset(t.cintura.x - 0.21f * u, t.cintura.y + 0.04f * u))
-            cubicTo(Offset(t.cintura.x - 0.26f * u, t.cintura.y - 0.15f * u), t.hombroA + Offset(-0.04f * u, 0.15f * u), t.hombroA); close()
+        // Los remiendos de goma, cosidos, en los cantos de los dobleces.
+        for ((x, y) in listOf(0.14f to 0.12f, -0.15f to 0.19f)) {
+            val a = t.q(x, y); val w = 0.07f * u
+            drawRect(p.medio(lerp(GOMA, lona, 0.2f)), Offset(a.x - w / 2f, a.y - w * 0.3f), Size(w, w * 0.6f))
+            drawRect(p.luz(lona).copy(alpha = 0.5f), Offset(a.x - w / 2f, a.y - w * 0.3f), Size(w, w * 0.6f), style = Stroke(0.005f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.01f * u, 0.008f * u))))
         }
-        volumen(p, cuerpo, t.hombroA.x - 0.06f * u, t.hombroB.x + 0.06f * u, lona, 0.85f)
-        clipPath(cuerpo) {
-            drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.sombra(C.LONA_MOJADA).copy(alpha = 0.35f + 0.4f * mojado)), t.cintura.y - 0.25f * u, t.cintura.y + 0.06f * u), Offset(t.hombroA.x - 0.2f * u, t.apoyo.y), Size(0.7f * u, t.cintura.y - t.apoyo.y + 0.12f * u))
-            // Los pliegues que caen del canto, y la costura de la cintura.
-            repeat(7) { val x = az.entre(-0.18f, 0.18f) * u; val y0 = t.apoyo.y + az.entre(0.03f, 0.15f) * u; val y1 = y0 + az.entre(0.15f, 0.35f) * u; drawLine(p.sombra(lona).copy(alpha = 0.55f), Offset(t.apoyo.x + x, y0), Offset(t.apoyo.x + x + az.entre(-0.02f, 0.02f) * u, y1), 0.016f * u, StrokeCap.Round); drawLine(p.luz(lona).copy(alpha = 0.4f), Offset(t.apoyo.x + x + 0.012f * u * L, y0 + 0.01f * u), Offset(t.apoyo.x + x + 0.012f * u * L, y1 - 0.04f * u), 0.007f * u, StrokeCap.Round) }
-            drawLine(p.sombra(lerp(lona, C.BREA, 0.3f)), Offset(t.cintura.x - 0.24f * u, t.cintura.y - 0.02f * u), Offset(t.cintura.x + 0.24f * u, t.cintura.y), 0.014f * u)
-            // Los remiendos de goma, cosidos.
-            for ((x, y) in listOf(-0.1f to 0.22f, 0.08f to 0.38f)) {
-                val q = t.apoyo + Offset(x * u, y * u); val w = 0.06f * u
-                drawRect(p.medio(lerp(GOMA, lona, 0.2f)), Offset(q.x - w / 2f, q.y - w * 0.4f), Size(w, w * 0.8f))
-                drawRect(p.luz(lona).copy(alpha = 0.5f), Offset(q.x - w / 2f, q.y - w * 0.4f), Size(w, w * 0.8f), style = Stroke(0.006f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.01f * u, 0.008f * u))))
-            }
-        }
-        // ---- La manga de un lado, colgando por delante con su puño de goma.
-        val m0 = t.hombroA + Offset(0.02f * u, 0.02f * u); val largo = minOf(0.55f * u, t.suelo - m0.y - 0.04f * u)
-        val mangaFin = m0 + Offset(-0.05f * u, largo)
+        // ---- La cara de arriba del montón: el último doblez, plano, visto desde arriba, donde va el cuello.
+        val tapa = lazo(listOf(t.q(-0.24f, t.arriba - 0.005f), t.q(-0.2f, t.arriba + 0.045f), t.q(0.0f, t.arriba + 0.06f), t.q(0.22f, t.arriba + 0.045f), t.q(0.26f, t.arriba), t.q(0.0f, t.arriba - 0.012f)))
+        drawPath(tapa, p.arriba(lerp(lona, C.BLANCO, 0.06f)))
+        clipPath(tapa) { repeat(4) { val x = az.entre(-0.18f, 0.18f); drawLine(p.sombra(lona).copy(alpha = 0.45f), t.q(x, t.arriba + 0.005f), t.q(x + 0.05f, t.arriba + 0.05f), 0.008f * u, StrokeCap.Round) } }
+        // ---- La manga que cae por delante, de lo alto del montón casi al suelo, con su puño de goma negro.
+        val m0 = t.q(-0.17f, t.arriba - 0.01f); val m1 = t.q(-0.24f, 0.05f)
         val manga = Path().apply {
-            moveTo(m0 + Offset(-0.07f * u, 0f)); cubicTo(m0 + Offset(-0.11f * u, largo * 0.4f), mangaFin + Offset(-0.09f * u, -largo * 0.3f), mangaFin + Offset(-0.06f * u, 0f))
-            lineTo(mangaFin + Offset(0.05f * u, 0f)); cubicTo(mangaFin + Offset(0.05f * u, -largo * 0.35f), m0 + Offset(0.07f * u, largo * 0.35f), m0 + Offset(0.07f * u, 0f)); close()
+            moveTo(m0 + Offset(-0.05f * u, 0f)); cubicTo(m0 + Offset(-0.07f * u, 0.08f * u), m1 + Offset(-0.07f * u, -0.08f * u), m1 + Offset(-0.05f * u, 0f))
+            lineTo(m1 + Offset(0.05f * u, 0.005f * u)); cubicTo(m1 + Offset(0.05f * u, -0.08f * u), m0 + Offset(0.06f * u, 0.07f * u), m0 + Offset(0.06f * u, 0f)); close()
         }
-        volumen(p, manga, m0.x - 0.12f * u, m0.x + 0.08f * u, lerp(lona, humeda, 0.3f), 0.8f)
-        clipPath(manga) { repeat(4) { val y = m0.y + az.entre(0.1f, 0.9f) * largo; drawLine(p.sombra(lona).copy(alpha = 0.55f), Offset(m0.x - 0.12f * u, y), Offset(m0.x + 0.1f * u, y + 0.03f * u), 0.012f * u) } }
-        drawLine(p.medio(GOMA), mangaFin + Offset(-0.065f * u, 0.005f * u), mangaFin + Offset(0.055f * u, 0.005f * u), 0.05f * u, StrokeCap.Round)
-        drawLine(p.luz(GOMA).copy(alpha = 0.6f), mangaFin + Offset(-0.05f * u, -0.01f * u), mangaFin + Offset(0.04f * u, -0.01f * u), 0.012f * u, StrokeCap.Round)
-        // ---- La otra manga, doblada de través sobre el cuerpo, con su puño.
-        val b0 = t.hombroB + Offset(-0.02f * u, 0.04f * u); val b1 = Offset(t.cintura.x - 0.05f * u, t.cintura.y - 0.12f * u)
-        val otra = Path().apply { moveTo(b0 + Offset(0.04f * u, -0.06f * u)); cubicTo(b0 + Offset(0.03f * u, 0.12f * u), b1 + Offset(0.12f * u, 0.0f), b1 + Offset(0.02f * u, 0.05f * u)); lineTo(b1 + Offset(-0.01f * u, -0.05f * u)); cubicTo(b1 + Offset(0.1f * u, -0.1f * u), b0 + Offset(-0.07f * u, 0.06f * u), b0 + Offset(-0.06f * u, -0.04f * u)); close() }
-        drawPath(otra, Brush.linearGradient(listOf(p.luz(lona), p.medio(lona), p.sombra(lona)), b0, b1))
-        drawPath(otra, p.sombra(lona).copy(alpha = 0.6f), style = Stroke(0.008f * u))
-        drawLine(p.medio(GOMA), b1 + Offset(0.03f * u, 0.05f * u), b1 + Offset(-0.02f * u, -0.05f * u), 0.045f * u, StrokeCap.Round)
-        // ---- El cuello de cobre, arriba, sobre el canto: el aro con sus agujeros y la goma por dentro, abierto.
-        val cc = t.cuello; val rx = 0.15f * u; val ry = 0.055f * u
-        drawOval(p.sombra(C.BREA).copy(alpha = 0.4f), Offset(cc.x - rx * 1.1f, cc.y - ry * 0.6f), Size(rx * 2.2f, ry * 2.1f))
-        val aro = Path().apply { addOval(Rect(cc.x - rx, cc.y - ry, cc.x + rx, cc.y + ry)) }
-        drawPath(aro, Brush.horizontalGradient(if (L > 0f) listOf(p.sombra(BRONCE), p.medio(C.COBRE), p.luz(C.LATON)) else listOf(p.luz(C.LATON), p.medio(C.COBRE), p.sombra(BRONCE)), cc.x - rx, cc.x + rx))
-        drawOval(p.medio(GOMA), Offset(cc.x - rx * 0.7f, cc.y - ry * 0.62f), Size(rx * 1.4f, ry * 1.24f))
-        drawOval(p.sombra(C.BREA), Offset(cc.x - rx * 0.52f, cc.y - ry * 0.42f), Size(rx * 1.04f, ry * 0.84f))
-        for (i in 0 until 10) { val a = i * 2f * PI.toFloat() / 10f; drawCircle(p.sombra(C.COBRE_OSC), 0.009f * u, Offset(cc.x + cos(a) * rx * 0.85f, cc.y + sin(a) * ry * 0.83f)) }
-        brillo(p, cc + Offset(L * rx * 0.55f, -ry * 0.55f), rx * 0.22f, ry * 0.18f, 0.7f)
-        dosLuces(p, aro, cc.x - rx, cc.x + rx, 0.6f, metal = 1f)
-        dosLuces(p, Path().apply { addPath(cuerpo); addPath(piernaA); addPath(piernaB); addPath(manga) }, t.hombroA.x - 0.3f * u, t.pieA.x.coerceAtLeast(t.hombroB.x) + 0.1f * u, 0.35f)
+        volumen(p, manga, m0.x - 0.08f * u, m0.x + 0.08f * u, lerp(lona, C.LONA_MOJADA, 0.1f + 0.3f * mojado), 0.85f)
+        clipPath(manga) { repeat(4) { val f = az.entre(0.15f, 0.85f); val q = m0 + (m1 - m0) * f; drawLine(p.sombra(lona).copy(alpha = 0.55f), q + Offset(-0.06f * u, 0f), q + Offset(0.06f * u, 0.012f * u), 0.01f * u) } }
+        drawLine(p.medio(GOMA), m1 + Offset(-0.055f * u, 0.0f), m1 + Offset(0.055f * u, 0.006f * u), 0.055f * u, StrokeCap.Round)
+        drawLine(p.luz(GOMA).copy(alpha = 0.6f), m1 + Offset(-0.045f * u, -0.016f * u), m1 + Offset(0.045f * u, -0.01f * u), 0.012f * u, StrokeCap.Round)
+        drawOval(p.sombra(C.BREA), Offset(m1.x - 0.035f * u, m1.y + 0.008f * u), Size(0.07f * u, 0.022f * u))
+        // ---- El cuello, tumbado encima: el babero de goma con sus agujeros y los pernos, y el aro de cobre, abierto.
+        val cc = t.q(0.02f, t.arriba + 0.035f)
+        val rx = 0.2f * u; val ry = 0.072f * u
+        drawOval(p.sombra(C.BREA).copy(alpha = 0.45f), Offset(cc.x - rx * 1.02f, cc.y - ry * 0.7f), Size(rx * 2.04f, ry * 2.1f))
+        val babero = lazo((0 until 14).map { val a = it * 2f * PI.toFloat() / 14f; val k = 1f + 0.06f * sin(3f * a) + 0.04f * cos(5f * a); Offset(cc.x + cos(a) * rx * k, cc.y + sin(a) * ry * k) })
+        drawPath(babero, Brush.verticalGradient(listOf(p.luz(GOMA), p.medio(GOMA), p.sombra(GOMA)), cc.y - ry, cc.y + ry))
+        drawPath(babero, lerp(p.luz(GOMA), Color.White, 0.15f).copy(alpha = 0.5f * p.r.contraste), style = Stroke(0.006f * u))
+        // Los pernos del corselete, que pasan por los agujeros del babero: un aro de cabezas de latón.
+        for (i in 0 until 12) {
+            val a = i * 2f * PI.toFloat() / 12f + 0.13f
+            val q = Offset(cc.x + cos(a) * rx * 0.8f, cc.y + sin(a) * ry * 0.8f)
+            drawCircle(p.sombra(C.BREA), 0.016f * u, q + Offset(0f, 0.004f * u))
+            drawCircle(if (cos(a) * L > 0f) p.luz(C.LATON) else p.medio(C.LATON), 0.012f * u, q)
+        }
+        // El aro de cobre del cuello, con su brillo, y el hueco por donde se entra.
+        val aro = Path().apply { addOval(Rect(cc.x - rx * 0.56f, cc.y - ry * 0.56f, cc.x + rx * 0.56f, cc.y + ry * 0.56f)) }
+        drawPath(aro, Brush.horizontalGradient(if (L > 0f) listOf(p.sombra(C.COBRE_OSC), p.medio(C.COBRE), p.luz(lerp(C.COBRE, C.LATON, 0.4f))) else listOf(p.luz(lerp(C.COBRE, C.LATON, 0.4f)), p.medio(C.COBRE), p.sombra(C.COBRE_OSC)), cc.x - rx * 0.56f, cc.x + rx * 0.56f))
+        drawOval(p.sombra(C.BREA), Offset(cc.x - rx * 0.4f, cc.y - ry * 0.38f), Size(rx * 0.8f, ry * 0.8f))
+        drawOval(p.medio(C.VERDIN).copy(alpha = 0.35f), Offset(cc.x - rx * 0.56f, cc.y + ry * 0.05f), Size(rx * 0.5f, ry * 0.45f))
+        brillo(p, cc + Offset(L * rx * 0.3f, -ry * 0.42f), rx * 0.14f, ry * 0.12f, 0.8f)
+        dosLuces(p, Path().apply { addPath(babero) }, cc.x - rx, cc.x + rx, 0.6f, metal = 1f)
+        val todo = Path().apply { formas.forEach { addPath(it) }; addPath(tapa); addPath(manga) }
+        val xs = listOf(t.q(-0.37f, 0f).x, t.q(0.46f, 0f).x)
+        dosLuces(p, todo, xs.min(), xs.max(), 0.35f)
         if (tierra) {
-            // A medio remendar: el parche nuevo, la aguja curva clavada y el hilo encerado.
-            val q = t.apoyo + Offset(-0.03f * u, 0.3f * u); val w = 0.08f * u
-            drawRect(p.luz(lerp(GOMA, C.PLOMO, 0.3f)), Offset(q.x - w / 2f, q.y - w * 0.4f), Size(w, w * 0.8f))
-            drawArc(p.luz(ACERO), 200f, 140f, false, Offset(q.x + w * 0.2f, q.y - w * 0.3f), Size(w * 0.7f, w * 0.5f), style = Stroke(0.007f * u, cap = StrokeCap.Round))
-            drawPath(Path().apply { moveTo(q + Offset(w * 0.9f, -w * 0.05f)); cubicTo(q + Offset(w * 1.4f, w * 0.3f), q + Offset(w * 1.1f, w * 1.0f), q + Offset(w * 1.6f, w * 1.6f)) }, p.medio(lerp(C.ESPONJA, C.BLANCO, 0.4f)), style = Stroke(0.005f * u))
+            // A medio remendar: el parche nuevo en el canto de arriba, la aguja curva clavada y el hilo encerado que cae.
+            val a = t.q(0.1f, 0.2f); val w = 0.085f * u
+            drawRect(p.luz(lerp(GOMA, C.PLOMO, 0.35f)), Offset(a.x - w / 2f, a.y - w * 0.3f), Size(w, w * 0.6f))
+            drawRect(p.sombra(C.BREA).copy(alpha = 0.5f), Offset(a.x - w / 2f, a.y - w * 0.3f), Size(w, w * 0.6f), style = Stroke(0.004f * u))
+            drawArc(p.luz(ACERO), 200f, 150f, false, Offset(a.x + w * 0.35f, a.y - w * 0.35f), Size(w * 0.75f, w * 0.55f), style = Stroke(0.008f * u, cap = StrokeCap.Round))
+            drawPath(curva(listOf(a + Offset(w * 1.05f, -w * 0.1f), a + Offset(w * 1.5f, w * 0.4f), a + Offset(w * 1.3f, w * 1.2f), t.q(0.32f, -0.01f))), p.medio(lerp(C.ESPONJA, C.BLANCO, 0.4f)), style = Stroke(0.005f * u))
         }
     }
 
