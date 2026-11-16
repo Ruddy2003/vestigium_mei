@@ -72,12 +72,13 @@ internal object PantallaLab {
     /** Lo que se ve en la pantalla ahora: el cielo y sus luces, y si está encendida. */
     class Imagen(
         val l: Luces, val hora: EscenaLaboratorio.Cielo, val encendida: Boolean, val arriba: Boolean, val sol: Boolean,
-        val verde: Float, val humo: Boolean, val clima: Clima, val semilla: Long,
+        val verde: Float, val humo: Boolean, val clima: Clima, val semilla: Long, val destello: Int,
     )
 
     fun imagen(m: Momento): Imagen = Imagen(
         EscenaLaboratorio.lucesDeArriba(m), EscenaLaboratorio.cielo(m), !EscenaLaboratorio.pantallaApagada(m), EscenaLaboratorio.arriba(m),
         EscenaLaboratorio.solEnLaPantalla(m), EscenaLaboratorio.superficie(m), EscenaLaboratorio.humo(m), EscenaLaboratorio.climaDeArriba(m), m.ficha.semilla,
+        EscenaLaboratorio.revisionDestello(m),
     )
 
     /** La imagen entera, dentro del hueco del marco. */
@@ -410,6 +411,14 @@ internal object PantallaLab {
         // Las manchas de la caseta: hollín y óxido que chorrea.
         for (i in 0..2) drawLine(luz(C.HIERRO, 0.1f, 0).copy(alpha = 0.5f), q(cu + 0.02f + i * 0.045f, cv - 0.1f), q(cu + 0.022f + i * 0.045f, cv - 0.05f), 0.5f)
         drawPath(forma(listOf(cu + 0.04f to cv, cu + 0.08f to cv, cu + 0.08f to cv - 0.06f, cu + 0.04f to cv - 0.06f)), luz(Color(0xFF26262A), 0.08f, 0))
+        if (img.destello > 0) {
+            val boca = q(cu + 0.06f, cv - 0.03f); val kk = k(cu)
+            drawPath(forma(listOf(cu + 0.04f to cv, cu + 0.08f to cv, cu + 0.08f to cv - 0.06f, cu + 0.04f to cv - 0.06f)), Color(0xFF9CC8FF).copy(alpha = 0.7f))
+            val r = (if (img.destello >= 2) 0.55f else 0.1f) * kk
+            drawCircle(Brush.radialGradient(listOf(Color(0xFFCFE6FF).copy(alpha = if (img.destello >= 2) 0.95f else 0.6f), Color(0xFF5A8CFF).copy(alpha = 0.35f), Color.Transparent), boca, r), r, boca, blendMode = BlendMode.Screen)
+            // El segundo día, el fogonazo azul lava la imagen entera.
+            if (img.destello >= 2) drawPath(forma(listOf(0f to 0f, 1f to 0f, 1f to 1f, 0f to 1f)), Color(0xFF8CB4FF).copy(alpha = 0.22f), blendMode = BlendMode.Screen)
+        }
         // Delante: los montones de escombro, con losas partidas, los hierros torcidos y la hierba rala y amarilla.
         for ((i, u0) in listOf(-0.06f, 0.28f, 0.62f).withIndex()) {
             val w = 0.34f + 0.05f * i; val base = 1.02f; val cima = 0.76f + 0.05f * i

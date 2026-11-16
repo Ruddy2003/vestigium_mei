@@ -86,6 +86,7 @@ internal object MesaLab {
     /** Si hay bandeja en [bd] hoy: el tanque y las cajas ocupan el fondo; el sitio de Lauro, las dos primeras de su lado. */
     private fun hayBandeja(m: Momento, bd: Bandeja, grama: Grama): Boolean {
         if ((grama == Grama.TANQUE || grama == Grama.CAJAS) && bd.a + 0.24f > 3.3f) return false
+        if (EscenaLaboratorio.cuarentena(m) && bd.a + 0.24f > 3.75f && bd.fila >= 1) return false
         if (grama == Grama.CAJAS && !EscenaLaboratorio.arriba(m) && bd.a + 0.24f > 2.74f && bd.fila >= 2) return false
         if (sitioDeLauro(m) && bd.fila <= 1 && bd.a < 1.65f) return false
         return true
@@ -224,6 +225,10 @@ internal object MesaLab {
         for (bd in BANDEJAS.sortedByDescending { it.a }) if (hayBandeja(m, bd, grama)) bandeja(v, bd, grama)
         if (conTanque) tanque(v)
         if (conCajas) for ((i, b) in listOf(0.5f, 0.75f).withIndex()) cajaDeGrama(v, 2.74f + 0.02f * i, b - 0.24f)
+        if (EscenaLaboratorio.cuarentena(m)) {
+            gradillaGrande(v, 3.8f, 0.3f)
+            BANDEJAS.firstOrNull { it.fila == 2 && hayBandeja(m, it, grama) }?.let { precinto(v, it) }
+        }
         if (sitioDeLauro(m)) sitioDeLauro(v)
         pipetas(v, 1.72f, 0.7f)
         gradilla(v, 1.32f, 0.68f)
@@ -254,11 +259,45 @@ internal object MesaLab {
      */
     private fun DrawScope.sitioDeLauro(v: VistaLab) {
         val a = 1.18f; val b = 0.1f
+        if (EscenaLaboratorio.hoyEs(v.m, "lauro")) {
+            // La bata nueva, doblada, con la franja gris de los Semejantes en la manga, y la etiqueta del almacén.
+            cajaEn(v, MK, a - 0.02f, a + 0.32f, b, b + 0.24f, ALTO, ALTO + 0.07f, C.TELA)
+            drawLine(v.c(MK.w(a, b, ALTO + 0.07f), lerp(C.ACERO, C.NEGRO, 0.2f), ARRIBA), MK.p(a + 0.04f, b + 0.06f, ALTO + 0.071f), MK.p(a + 0.28f, b + 0.06f, ALTO + 0.071f), 1.3f)
+            drawLine(v.c(MK.w(a, b, ALTO + 0.07f), C.CUELLO, ARRIBA), MK.p(a + 0.1f, b + 0.18f, ALTO + 0.071f), MK.p(a + 0.2f, b + 0.18f, ALTO + 0.071f), 1.2f)
+            return
+        }
         cajaEn(v, MK, a, a + 0.22f, b, b + 0.17f, ALTO, ALTO + 0.018f, lerp(C.TELA, C.TIERRA, 0.3f)) { cara, f -> if (cara == 3) drawLine(v.c(MK.w(a, b, ALTO), lerp(C.ACERO, C.TELA, 0.3f), ARRIBA), MK.p(a + 0.02f, b + 0.002f, ALTO + 0.019f), MK.p(a + 0.2f, b + 0.002f, ALTO + 0.019f), 1.2f) }
         palo(v, MK.w(a, b + 0.22f, ALTO + 0.006f), MK.w(a + 0.18f, b + 0.22f, ALTO + 0.006f), 0.008f, C.AMARILLO, filo = false)
         drawPath(poligono(MK.p(a, b + 0.26f, ALTO + 0.003f), MK.p(a + 0.3f, b + 0.26f, ALTO + 0.003f), MK.p(a + 0.3f, b + 0.29f, ALTO + 0.003f), MK.p(a, b + 0.29f, ALTO + 0.003f)), v.c(MK.w(a, b + 0.28f, ALTO), lerp(C.ACERO, Color.White, 0.3f), ARRIBA))
         if (EscenaLaboratorio.hoyEs(v.m, "pregunta")) { val p0 = MK.w(a + 0.1f, b + 0.06f, ALTO + 0.15f); palo(v, p0, MK.w(a + 0.14f, b + 0.08f, ALTO + 0.04f), 0.007f, lerp(C.VIDRIO, Color.White, 0.3f), filo = false)
             drawCircle(v.c(p0, lerp(C.AVISO, C.BARRO, 0.5f), ARRIBA), (0.013f * CamLab.k(p0)).coerceAtLeast(0.6f), CamLab.p(p0)) }
+    }
+
+    /**
+     * La gradilla grande de la cuarentena: las muestras del agua de cada tanque de los jardines, en tres filas de tubos con
+     * el agua turbia a distintos niveles y el tapón de color; una etiqueta roja en el canto.
+     */
+    private fun DrawScope.gradillaGrande(v: VistaLab, a: Float, b: Float) {
+        cajaEn(v, MK, a, a + 0.48f, b, b + 0.3f, ALTO, ALTO + 0.03f, lerp(C.ACERO, C.HORMIGON, 0.2f))
+        cajaEn(v, MK, a, a + 0.48f, b, b + 0.3f, ALTO + 0.12f, ALTO + 0.14f, lerp(C.ACERO, C.HORMIGON, 0.2f))
+        for (fila in 2 downTo 0) for (i in 0 until 10) {
+            val base = MK.w(a + 0.03f + i * 0.045f, b + 0.05f + fila * 0.1f, ALTO + 0.02f)
+            palo(v, base, base + V3(0f, 0.16f, 0f), 0.016f, lerp(C.VIDRIO, Color.White, 0.2f), filo = false)
+            val nivel = 0.05f + 0.09f * (((i * 7 + fila * 3) % 5) / 4f)
+            palo(v, base, base + V3(0f, nivel, 0f), 0.013f, lerp(C.VIDRIO, C.GRAMA, 0.35f + 0.1f * (i % 3)), filo = false)
+            drawCircle(v.c(base, if ((i + fila) % 4 == 0) C.AVISO else if (i % 2 == 0) C.AMARILLO else C.CIAN, ARRIBA), (0.011f * CamLab.k(base)).coerceAtLeast(0.6f), CamLab.p(base + V3(0f, 0.17f, 0f)))
+        }
+        drawPath(poligono(MK.p(a + 0.15f, b - 0.001f, ALTO + 0.005f), MK.p(a + 0.3f, b - 0.001f, ALTO + 0.005f), MK.p(a + 0.3f, b - 0.001f, ALTO + 0.025f), MK.p(a + 0.15f, b - 0.001f, ALTO + 0.025f)), v.c(MK.w(a, b, ALTO), C.AVISO, V3(0.2f, 0.2f, -1f)))
+    }
+
+    /** Una bandeja precintada con cinta de aviso en cruz (amarilla con franjas negras): una de las muestras de la cuarentena. */
+    private fun DrawScope.precinto(v: VistaLab, bd: Bandeja) {
+        val y = ALTO + 0.075f
+        for ((p0, p1) in listOf(MK.w(bd.a, bd.b, y) to MK.w(bd.a + 0.24f, bd.b + 0.17f, y), MK.w(bd.a, bd.b + 0.17f, y) to MK.w(bd.a + 0.24f, bd.b, y))) {
+            val k = CamLab.k(p0)
+            drawLine(v.c(p0, C.AMARILLO, ARRIBA), CamLab.p(p0), CamLab.p(p1), (0.03f * k).coerceAtLeast(1f))
+            for (j in 1..4) { val f = j / 5f; val q = p0 + (p1 - p0) * f; drawCircle(C.NEGRO.copy(alpha = 0.7f), (0.008f * k).coerceAtLeast(0.4f), CamLab.p(q)) }
+        }
     }
 
     /** Los auriculares grandes, de los que tapan la oreja entera, dejados sobre la mesa con el cable enrollado. */

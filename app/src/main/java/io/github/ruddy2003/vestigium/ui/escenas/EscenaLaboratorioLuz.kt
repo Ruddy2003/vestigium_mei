@@ -110,7 +110,7 @@ internal object LuzLab {
         }
         // La luz de la puerta en su pared: la claridad que se derrama alrededor del marco (blanca de día, violeta de noche).
         v.luces.firstOrNull { it.de == Fuente.PUERTA }?.let { f ->
-            clipPath(SalaLab.formaDelFondo()) { halo(V3((SalaLab.PX0 + SalaLab.PX1) / 2f, 1.2f, SalaLab.ZF - 0.01f), 3.4f, 3.0f, f.color, 0.42f * f.fuerza) }
+            clipPath(SalaLab.formaDelFondoSinPuerta()) { halo(V3((SalaLab.PX0 + SalaLab.PX1) / 2f, 1.2f, SalaLab.ZF - 0.01f), 3.4f, 3.0f, f.color, 0.42f * f.fuerza) }
             clipPath(SalaLab.formaDelTecho()) { halo(V3((SalaLab.PX0 + SalaLab.PX1) / 2f, SalaLab.TECHO, SalaLab.ZF - 0.6f), 2.2f, 1.0f, f.color, 0.25f * f.fuerza) }
         }
         // La lámpara de su mesa: su claridad en la campana y en el suelo de delante.
@@ -118,7 +118,7 @@ internal object LuzLab {
             clipPath(suelo) { charco(V3(f.w.x + 0.5f, 0f, f.w.z + 0.6f), 1.1f, f.color, 0.25f * f.fuerza) }
         }
         // El rebote de los charcos de las lámparas de cultivo del fondo en la pared, sobre el extremo de la mesa.
-        clipPath(SalaLab.formaDelFondo()) {
+        clipPath(SalaLab.formaDelFondoSinPuerta()) {
             for (f in v.luces) if (f.de == Fuente.CULTIVO && f.fuerza > 0.05f) {
                 val cerca = (1f - (SalaLab.ZF - f.w.z) / 3f).coerceIn(0f, 1f)
                 if (cerca > 0.05f) halo(V3(f.w.x, 1.3f, SalaLab.ZF - 0.01f), 2.2f, 2.0f, f.color, 0.35f * f.fuerza * cerca)

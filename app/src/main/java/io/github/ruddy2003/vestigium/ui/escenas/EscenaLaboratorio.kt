@@ -252,6 +252,9 @@ internal object EscenaLaboratorio : EscenaVida {
     /** El día que la grama limpia un tanque entero (2 de marzo de la temporada 4). */
     internal fun funciona(m: Momento): Boolean = hoyEs(m, "funciona")
 
+    /** Los diez sacos de tierra de arriba que le baja Osvaldo (`tierra`, 12 de abril de la temporada 3), en el suelo hasta que entra en la campana (`entra_campana`, 3 de mayo). */
+    internal fun sacosDeOsvaldo(m: Momento): Boolean = paso(m, 3, "04-12") && !paso(m, 3, "05-03")
+
     /** El día de los de afuera: la sirena larga, el riego cerrado. */
     internal fun memoria(m: Momento): Boolean = hoyEs(m, "memoria")
 

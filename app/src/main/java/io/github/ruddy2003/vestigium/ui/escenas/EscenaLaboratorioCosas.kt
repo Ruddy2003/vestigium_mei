@@ -42,7 +42,9 @@ internal object CosasLab {
     fun cosas(v: VistaLab): List<CosaLab> = buildList {
         val m = v.m
         add(CosaLab(CamLab.hondo(2.8f, 3.6f), caja3(2.62f, 2.98f, 0f, SalaLab.EY, SalaLab.EZ0, SalaLab.EZ1)) { estanteDeSemillas(v) })
-        add(CosaLab(CamLab.hondo(CAJA.x, CAJA.z), caja3(CAJA.x - 0.26f, CAJA.x + 0.26f, 0f, 0.3f, CAJA.z - 0.18f, CAJA.z + 0.18f)) { cajaDeTierra(v) })
+        // La caja de tierra abierta; mientras están los diez sacos que bajó Osvaldo, la pila de sacos en su sitio.
+        if (EscenaLaboratorio.sacosDeOsvaldo(m)) add(CosaLab(CamLab.hondo(CAJA.x, CAJA.z), caja3(CAJA.x - 0.28f, CAJA.x + 0.28f, 0f, 0.55f, CAJA.z - 0.26f, CAJA.z + 0.26f)) { sacos(v) })
+        else add(CosaLab(CamLab.hondo(CAJA.x, CAJA.z), caja3(CAJA.x - 0.26f, CAJA.x + 0.26f, 0f, 0.3f, CAJA.z - 0.18f, CAJA.z + 0.18f)) { cajaDeTierra(v) })
         add(CosaLab(CamLab.hondo(CUBO.x, CUBO.z), PiezasLab.aro(CUBO, 0.15f, 8) + PiezasLab.aro(CUBO + V3(0f, 0.32f, 0f), 0.17f, 8)) { cubo(v, CUBO, lerp(C.ACERO, C.HORMIGON, 0.3f)) })
         val t = taburete(m)
         add(CosaLab(CamLab.hondo(t.x, t.z), PiezasLab.aro(t, 0.17f, 8) + PiezasLab.aro(t + V3(0f, 0.62f, 0f), 0.17f, 8)) { taburete(v, t) })
@@ -83,14 +85,19 @@ internal object CosasLab {
             while (z > z0 + 0.1f) {
                 val saco = ti == 1 && z < z0 + 0.62f && z > z0 + 0.12f
                 if (!saco) {
-                    val c = V3(x0 + 0.15f, y, z); val alto = 0.2f + 0.04f * az.real()
-                    cilindro(v, c, 0.055f, alto, lerp(C.VIDRIO, C.TIERRA, 0.12f), lerp(C.NEGRO, C.ACERO, 0.3f))
-                    // Lo de dentro: semillas pardas hasta su altura.
-                    val dentro = PiezasLab.mitad(c + V3(0f, alto * (0.4f + 0.4f * az.real()), 0f), 0.05f, true).map { CamLab.p(it) } + PiezasLab.mitad(c + V3(0f, 0.01f, 0f), 0.05f, true).reversed().map { CamLab.p(it) }
-                    drawPath(poligono(dentro), v.c(c, lerp(C.MADERA, C.TIERRA, 0.3f + 0.3f * az.real()), IZQ).copy(alpha = 0.85f))
-                    drawLine(v.c(c, if (az.real() > 0.6f) C.AMARILLO else C.CIAN, IZQ), CamLab.p(c.x - 0.055f, y + alto * 0.55f, z), CamLab.p(c.x - 0.055f, y + alto * 0.7f, z), 1f)
+                    val r = az.entre(0.038f, 0.064f); val alto = az.entre(0.12f, 0.27f); val c = V3(x0 + 0.15f, y, z)
+                    val tapa = listOf(lerp(C.NEGRO, C.ACERO, 0.3f), C.LATON, lerp(C.MADERA, C.TELA, 0.3f), lerp(C.CIAN, C.NEGRO, 0.3f))[az.entero(4)]
+                    cilindro(v, c, r, alto, lerp(C.VIDRIO, C.TIERRA, 0.12f), tapa)
+                    // Lo de dentro: semillas hasta su nivel, cada frasco con las suyas (pardas, negras, pajizas, verdosas).
+                    val semilla = listOf(lerp(C.MADERA, C.TIERRA, 0.3f), lerp(C.NEGRO, C.MADERA, 0.4f), C.PAJA, lerp(C.HOJA_OSC, C.PAJA, 0.4f))[az.entero(4)]
+                    val dentro = PiezasLab.mitad(c + V3(0f, alto * az.entre(0.15f, 0.9f), 0f), r * 0.9f, true).map { CamLab.p(it) } + PiezasLab.mitad(c + V3(0f, 0.01f, 0f), r * 0.9f, true).reversed().map { CamLab.p(it) }
+                    drawPath(poligono(dentro), v.c(c, semilla, IZQ).copy(alpha = 0.88f))
+                    // La cinta o la etiqueta de papel.
+                    val cinta = listOf(C.AMARILLO, C.CIAN, C.TELA, C.AVISO, C.GRAMA)[az.entero(5)]
+                    if (az.real() > 0.4f) drawLine(v.c(c, cinta, IZQ), CamLab.p(c.x - r, y + alto * 0.5f, z), CamLab.p(c.x - r, y + alto * 0.68f, z), (0.04f * CamLab.k(c)).coerceAtLeast(0.8f))
+                    else drawLine(v.c(c, cinta, IZQ), CamLab.p(c.x - r, y + alto * 0.6f, z - r * 0.6f), CamLab.p(c.x - r, y + alto * 0.6f, z + r * 0.6f), (0.02f * CamLab.k(c)).coerceAtLeast(0.7f))
                 }
-                z -= 0.15f
+                z -= az.entre(0.11f, 0.16f)
             }
         }
         // El saco de semillas de grama, atado, en la tabla del medio (en el cierre, solo el hueco con el polvo).
@@ -157,6 +164,49 @@ internal object CosasLab {
         val aro = PiezasLab.mitad(t + V3(0f, 0.22f, 0f), 0.14f, true).map { CamLab.p(it) }
         for (i in 0 until aro.size - 1) drawLine(v.c(t + V3(0f, 0.22f, 0f), C.ACERO, PiezasLab.FRENTE), aro[i], aro[i + 1], 0.8f)
         cilindro(v, t + V3(0f, alto, 0f), 0.17f, 0.04f, C.MADERA)
+        // En el cierre, su bata de repuesto echada encima, con la franja gris en la manga que cuelga.
+        if (EscenaLaboratorio.cierre(v.m)) {
+            val c = t + V3(0f, alto + 0.04f, 0f); val k = CamLab.k(c); val p = CamLab.p(c)
+            fun q(x: Float, y: Float) = p + Offset(x * k, -y * k)
+            val tela = v.c(c, C.TELA, V3(-0.3f, 0.6f, -1f)); val sombra = v.c(c, lerp(C.TELA, C.SOMBRA, 0.3f), V3(0.8f, 0f, -0.4f))
+            val echada = Path().apply {
+                val a = q(-0.22f, 0.02f); moveTo(a.x, a.y)
+                val b = q(0.2f, 0.03f); val b1 = q(0f, 0.08f); cubicTo(b1.x, b1.y, b1.x, b1.y, b.x, b.y)
+                val c2 = q(0.24f, -0.12f); lineTo(c2.x, c2.y)
+                val d = q(0.16f, -0.3f); lineTo(d.x, d.y)
+                val e = q(-0.02f, -0.06f); val e1 = q(0.06f, -0.04f); cubicTo(e1.x, e1.y, e1.x, e1.y, e.x, e.y)
+                val f = q(-0.2f, -0.38f); lineTo(f.x, f.y)
+                val g = q(-0.28f, -0.34f); lineTo(g.x, g.y)
+                close()
+            }
+            drawPath(echada, androidx.compose.ui.graphics.Brush.horizontalGradient(0f to tela, 0.6f to tela, 1f to sombra, startX = q(-0.28f, 0f).x, endX = q(0.24f, 0f).x))
+            drawLine(v.c(c, C.CUELLO, PiezasLab.FRENTE), q(-0.12f, 0.05f), q(0.04f, 0.06f), (0.03f * k).coerceAtLeast(0.7f))
+            drawLine(v.c(c, lerp(C.ACERO, C.NEGRO, 0.2f), PiezasLab.FRENTE), q(-0.2f, -0.24f), q(-0.26f, -0.22f), (0.03f * k).coerceAtLeast(0.7f))
+            drawLine(sombra.copy(alpha = 0.6f), q(-0.05f, 0f), q(-0.18f, -0.33f), 0.5f)
+        }
+    }
+
+    /** Los diez sacos de tierra de arriba que bajó Osvaldo: arpillera atada, en pila (cuatro, tres, dos y uno), de lejos a cerca. */
+    private fun DrawScope.sacos(v: VistaLab) {
+        val arpillera = lerp(C.TIERRA, C.MADERA, 0.35f)
+        val capas = listOf(
+            listOf(-0.13f to 0.12f, 0.13f to 0.12f, -0.13f to -0.12f, 0.13f to -0.12f),
+            listOf(0f to 0.12f, -0.13f to -0.06f, 0.13f to -0.06f),
+            listOf(-0.07f to 0.02f, 0.07f to 0.02f),
+            listOf(0f to 0f),
+        )
+        for ((capa, sitios) in capas.withIndex()) for ((dx, dz) in sitios) {
+            val c = V3(CAJA.x + dx, 0.06f + capa * 0.13f, CAJA.z + dz); val k = CamLab.k(c); val p = CamLab.p(c)
+            val saco = Path().apply {
+                moveTo(p.x - 0.13f * k, p.y + 0.05f * k)
+                cubicTo(p.x - 0.16f * k, p.y - 0.06f * k, p.x - 0.1f * k, p.y - 0.11f * k, p.x, p.y - 0.11f * k)
+                cubicTo(p.x + 0.1f * k, p.y - 0.11f * k, p.x + 0.16f * k, p.y - 0.06f * k, p.x + 0.13f * k, p.y + 0.05f * k)
+                close()
+            }
+            drawPath(saco, androidx.compose.ui.graphics.Brush.verticalGradient(0f to v.c(c, arpillera, V3(-0.4f, 1f, -0.5f)), 1f to v.c(c, lerp(arpillera, C.SOMBRA, 0.35f), V3(-0.6f, -0.2f, -0.5f)), startY = p.y - 0.11f * k, endY = p.y + 0.05f * k))
+            drawLine(v.c(c, lerp(arpillera, C.NEGRO, 0.4f), PiezasLab.FRENTE), Offset(p.x + 0.09f * k, p.y - 0.07f * k), Offset(p.x + 0.13f * k, p.y - 0.1f * k), (0.015f * k).coerceAtLeast(0.6f))
+            drawLine(v.c(c, lerp(arpillera, C.NEGRO, 0.25f), PiezasLab.FRENTE).copy(alpha = 0.4f), Offset(p.x - 0.08f * k, p.y - 0.08f * k), Offset(p.x - 0.05f * k, p.y + 0.03f * k), 0.4f)
+        }
     }
 
     /** El catre de la cuarentena, junto a la puerta, con la sábana revuelta; la mascarilla de tela colgada en su cabecera. */
