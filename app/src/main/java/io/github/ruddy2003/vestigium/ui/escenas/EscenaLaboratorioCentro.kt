@@ -160,9 +160,9 @@ internal object CentroLab {
     fun fondo(m: Momento): Color {
         val h = m.hora.toFloat()
         val dia = when {
-            h < 10f -> lerp(Color(0xFF5A7E98), Color(0xFF6E92A6), ((h - 6.5f) / 3.5f).coerceIn(0f, 1f))
-            h < 16f -> Color(0xFF6E90A6)
-            else -> lerp(Color(0xFF6E8EA4), Color(0xFF6A6694), ((h - 16f) / 4.5f).coerceIn(0f, 1f))
+            h < 10f -> lerp(Color(0xFF285A70), Color(0xFF2F6A7E), ((h - 6.5f) / 3.5f).coerceIn(0f, 1f))
+            h < 16f -> Color(0xFF316E82)
+            else -> lerp(Color(0xFF30647C), Color(0xFF3E3C78), ((h - 16f) / 4.5f).coerceIn(0f, 1f))
         }
         val noche = if (EscenaLaboratorio.nocheLarga(m)) Color(0xFF242C4C) else Color(0xFF34406C)
         return lerp(dia, noche, penumbra(m))
@@ -174,7 +174,7 @@ internal object CentroLab {
      */
     fun difusa(m: Momento): Float {
         val h = m.hora.toFloat()
-        val dia = when { h < 13f -> 0.55f + 0.2f * ((h - 6.5f) / 6.5f).coerceIn(0f, 1f); else -> 0.75f - 0.25f * ((h - 13f) / 8f).coerceIn(0f, 1f) }
+        val dia = when { h < 13f -> 0.4f + 0.1f * ((h - 6.5f) / 6.5f).coerceIn(0f, 1f); else -> 0.5f - 0.14f * ((h - 13f) / 8f).coerceIn(0f, 1f) }
         return dia * pozo(m).fuerza.coerceAtMost(1f) * (1f - 0.7f * penumbra(m))
     }
 
@@ -188,7 +188,7 @@ internal object CentroLab {
     }
 
     /** Hacia qué color se va lo del otro lado del vacío: el aire del hall, algo verde agua. */
-    fun bruma(m: Momento): Color = lerp(lerp(Color(0xFFAEC2CA), Color(0xFFB4ACC4), ((m.hora.toFloat() - 16f) / 4f).coerceIn(0f, 1f)), Color(0xFF2E3858), penumbra(m))
+    fun bruma(m: Momento): Color = lerp(lerp(Color(0xFF7FA8B4), Color(0xFF9088B4), ((m.hora.toFloat() - 16f) / 4f).coerceIn(0f, 1f)), Color(0xFF2E3858), penumbra(m))
 
     /**
      * Cuánta luz de fondo le llega al punto [w], de 0 a 1: la luz entra por el vacío, así que lo que está bajo las galerías
@@ -274,7 +274,7 @@ internal object CuadroCentro {
         with(GaleriaCentro) { primera(v) }
         with(LuzCentro) { enLaGaleria(v) }
         with(VerdeCentro) { columnas(v) }
-        with(EstructuraCentro) { costillasLejos(v); pasarela(v); banderas(v) }
+        with(EstructuraCentro) { elevadores(v); pasarela(v); banderas(v) }
         with(LuzCentro) { haz(v) }
         with(EstructuraCentro) { costillaCerca(v) }
         with(EsquinaCentro) { esquina(v) }

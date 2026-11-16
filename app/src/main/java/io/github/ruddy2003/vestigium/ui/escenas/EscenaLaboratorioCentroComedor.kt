@@ -1,9 +1,11 @@
 package io.github.ruddy2003.vestigium.ui.escenas
 
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.CentroLab.Mesa
@@ -44,7 +46,7 @@ internal object ComedorCentro {
         MesaLarga(-6.2f, -2.0f, -1.5f), MesaLarga(2.0f, 6.5f, -1.5f),
         MesaLarga(-6.6f, -2.0f, 1.5f), MesaLarga(2.0f, 6.7f, 1.5f),
         MesaLarga(-6.0f, -0.7f, 3.7f), MesaLarga(0.7f, 6.2f, 3.7f),
-        MesaLarga(-4.4f, -0.5f, 5.8f), MesaLarga(0.5f, 4.6f, 5.8f),
+        MesaLarga(-3.6f, -0.5f, 5.8f), MesaLarga(0.5f, 3.5f, 5.8f),
     )
     const val ALTO_MESA = 0.76f
     const val ANCHO_MESA = 0.9f
@@ -67,6 +69,7 @@ internal object ComedorCentro {
         flechas(v)
         with(LuzCentro) { enElSuelo(v) }
         mostrador(v)
+        with(EstructuraCentro) { costillasEntre(v, 0f, GeoCentro.G1 - GeoCentro.LOSA) }
         with(LuzCentro) { sombrasEnElSuelo(v, esqueletos(v)) }
         cosas(v)
     }
@@ -85,7 +88,7 @@ internal object ComedorCentro {
         // La losa de la primera galería vista por debajo, desde lejos (el techo del piso de abajo): una franja oscura.
         for ((a, b) in GaleriaCentro.tramos()) cara(v, PiezasCentro.tramoH(RV, RW, alto, a, b), lerp(C.HORMIGON, C.SOMBRA, 0.25f), PiezasCentro.ABAJO, GaleriaCentro.lejos(GeoCentro.aro(RV, alto, a)))
         PiezasCentro.run { manchasEnLaPared(v, RW, 0.3f, alto - 0.2f, GeoCentro.PA1, 360f + GeoCentro.PA0, 50, "muro") }
-        for ((i, g) in GeoCentro.BOCAS.withIndex()) boca(v, g, COLORES_BOCAS[i], i == 2)
+        for ((i, g) in GeoCentro.BOCAS.withIndex()) boca(v, g, COLORES_BOCAS[i], i)
         destello(v)
     }
 
@@ -93,9 +96,10 @@ internal object ComedorCentro {
      * La boca de un pasillo: el hueco que se aleja (su suelo con la flecha que sigue), el marco con la franja de su color y,
      * encima, un rótulo sin letras con la silueta de su hoja. Por la de Botánica, al fondo, el resplandor de los jardines.
      */
-    private fun DrawScope.boca(v: VistaCentro, g: Float, color: Color, botanica: Boolean) {
-        val n = haciaDentro(g); val lj = GaleriaCentro.lejos(GeoCentro.aro(RW, 0f, g))
-        val ancho = 6.5f; val alto = 2.5f
+    private fun DrawScope.boca(v: VistaCentro, g: Float, color: Color, cual: Int) {
+        val botanica = cual == 2
+        val n = haciaDentro(g); val lj = 0.6f * GaleriaCentro.lejos(GeoCentro.aro(RW, 0f, g))
+        val ancho = 5.6f; val alto = 2.25f
         val g0 = g - ancho; val g1 = g + ancho
         // El marco, pintado del color del pasillo.
         cara(v, PiezasCentro.tramoV(RW - 0.02f, 0f, alto + 0.18f, g0 - 0.9f, g1 + 0.9f), color, n, lj, siempre = true)
@@ -103,21 +107,24 @@ internal object ComedorCentro {
         val hueco = PiezasCentro.tramoV(RW - 0.03f, 0f, alto, g0, g1)
         val f = CamCentro.forma(hueco) ?: return
         val luzFondo = if (botanica) lerp(v.colorBotanica, Color.White, 0.2f) else lerp(C.LUZ_DIA, v.fondo, 0.5f)
-        val fondo = lerp(lerp(C.SOMBRA, C.NEGRO, 0.4f), luzFondo, if (botanica) 0.65f * v.botanica else 0.3f)
+        val fondo = lerp(lerp(C.SOMBRA, C.NEGRO, 0.55f), luzFondo, if (botanica) 0.4f * v.botanica else 0.1f)
         val arriba = CamCentro.p(GeoCentro.aro(RW, alto, g)); val abajo = CamCentro.p(GeoCentro.aro(RW, 0f, g))
         drawPath(f, Brush.verticalGradient(listOf(lerp(fondo, C.NEGRO, 0.35f), fondo, lerp(fondo, color, 0.15f)), startY = arriba.y, endY = abajo.y))
         // Al fondo del pasillo, una puerta más clara (la boca de lejos), y la flecha del suelo que se mete.
         val fondoBoca = CamCentro.forma(PiezasCentro.tramoV(RW - 0.04f, 0.2f, alto * 0.62f, g - ancho * 0.3f, g + ancho * 0.3f))
-        if (fondoBoca != null) drawPath(fondoBoca, lerp(fondo, luzFondo, 0.55f))
+        if (fondoBoca != null) drawPath(fondoBoca, lerp(fondo, luzFondo, if (botanica) 0.9f else 0.6f))
         val fl = CamCentro.forma(listOf(GeoCentro.aro(RW - 0.04f, 0.01f, g - 1.2f), GeoCentro.aro(RW - 0.04f, 0.01f, g + 1.2f), GeoCentro.aro(RW - 0.04f, 0.28f, g + 0.4f), GeoCentro.aro(RW - 0.04f, 0.28f, g - 0.4f)))
         if (fl != null) drawPath(fl, lerp(color, fondo, 0.45f))
-        // El rótulo sin letras: una placa del color del pasillo, con la silueta de su hoja (roble, haya, almendro).
-        val placa = PiezasCentro.tramoV(RW - 0.03f, alto + 0.28f, alto + 0.62f, g - 2.6f, g + 2.6f)
-        cara(v, placa, lerp(color, C.TELA, 0.25f), n, lj, siempre = true)
-        val c = CamCentro.p(GeoCentro.aro(RW - 0.04f, alto + 0.45f, g)); val k = CamCentro.k(GeoCentro.aro(RW, alto, g))
-        val hoja = v.c(GeoCentro.aro(RW, alto, g), lerp(C.HOJA_OSC, C.NEGRO, 0.2f), n, lj)
-        mancha(c, 0.22f * k, 0.09f * k, hoja, 0.95f)
-        drawLine(hoja, c - Offset(0.28f * k, 0f), c + Offset(0.26f * k, 0f), 0.4f)
+        // El rótulo sin letras, colgado en lo alto de la boca (lo de encima del dintel lo tapa la losa de la galería y, más
+        // abajo, las mesas de enfrente): una placa clara con el canto del color del pasillo y, grande, la silueta de su hoja.
+        val r0 = RW - 0.35f
+        cara(v, PiezasCentro.tramoV(r0, 1.45f, 2.2f, g - 3.6f, g + 3.6f), color, n, lj, siempre = true)
+        cara(v, PiezasCentro.tramoV(r0 - 0.01f, 1.5f, 2.15f, g - 3.3f, g + 3.3f), lerp(C.TELA, color, 0.1f), n, lj, siempre = true)
+        val ch = GeoCentro.aro(r0 - 0.02f, 1.82f, g)
+        val c = CamCentro.p(ch); val k = CamCentro.k(ch)
+        val hoja = lerp(v.c(ch, C.HOJA_OSC, n, lj), C.HOJA_OSC, 0.4f)
+        drawPath(hojaDelRotulo(c, 0.24f * k, cual), hoja)
+        drawLine(lerp(hoja, C.TELA, 0.35f), c - Offset(0.22f * k, 0f), c + Offset(0.2f * k, 0f), (0.02f * k).coerceAtLeast(0.4f))
         // El resplandor de los jardines, que sale por la boca de Botánica y se tiende en el suelo.
         if (botanica && v.botanica > 0.05f) {
             val p = CamCentro.p(GeoCentro.aro(RW - 1.2f, 0f, g))
@@ -125,16 +132,43 @@ internal object ComedorCentro {
         }
     }
 
+    /**
+     * La silueta de la hoja de un rótulo, acostada, con la punta a la derecha, de largo 2 × [r]: 0 el roble (lobulada, cuatro
+     * lóbulos por lado), 1 el haya (oval, de borde liso, ancha), 2 el almendro (larga y estrecha, en lanza).
+     */
+    private fun hojaDelRotulo(c: Offset, r: Float, cual: Int): Path = Path().apply {
+        val pasos = 32
+        fun media(t: Float): Float {
+            val s = sin(t * Math.PI.toFloat()).coerceAtLeast(0f)
+            return when (cual) {
+                0 -> r * 0.5f * s * (0.62f + 0.38f * cos(t * 8f * Math.PI.toFloat()))
+                1 -> r * 0.58f * s * (1f - 0.3f * t)
+                else -> r * 0.24f * s
+            }
+        }
+        val largo = if (cual == 2) 1.25f else 1f
+        val arriba = (0..pasos).map { i -> val t = i / pasos.toFloat(); Offset(c.x - r * largo + 2f * r * largo * t, c.y - media(t) - (if (cual == 2) 0.12f * r * sin(t * Math.PI.toFloat()) else 0f)) }
+        val abajo = (0..pasos).map { i -> val t = i / pasos.toFloat(); Offset(c.x - r * largo + 2f * r * largo * t, c.y + media(t) - (if (cual == 2) 0.12f * r * sin(t * Math.PI.toFloat()) else 0f)) }
+        moveTo(arriba[0].x, arriba[0].y)
+        for (p in arriba.drop(1)) lineTo(p.x, p.y)
+        for (p in abajo.reversed()) lineTo(p.x, p.y)
+        close()
+        // El rabillo.
+        moveTo(c.x - r * largo, c.y - 0.04f * r); lineTo(c.x - r * largo - 0.3f * r, c.y + 0.05f * r); lineTo(c.x - r * largo - 0.3f * r, c.y + 0.12f * r); lineTo(c.x - r * largo, c.y + 0.04f * r); close()
+    }
+
     /** La boca de la sala del destello: una puerta redonda, con su resplandor azul que late (la parte viva lo hace latir). */
     private fun DrawScope.destello(v: VistaCentro) {
         val g = GeoCentro.DESTELLO; val n = haciaDentro(g)
-        val c = GeoCentro.aro(RW - 0.03f, 1.35f, g); val a = GeoCentro.rad(g); val t = V3(-sin(a), 0f, cos(a))
-        val aro = (0 until 24).map { i -> val b = i * 2f * Math.PI.toFloat() / 24f; c + t * (1.25f * cos(b)) + V3(0f, 1.25f * sin(b), 0f) }
-        val dentro = (0 until 24).map { i -> val b = i * 2f * Math.PI.toFloat() / 24f; c + t * (0.98f * cos(b)) + V3(0f, 0.98f * sin(b), 0f) }
-        CamCentro.forma(aro)?.let { drawPath(it, v.c(c, lerp(C.ACERO, COLOR_DESTELLO, 0.25f), n, GaleriaCentro.lejos(c))) }
+        val c = GeoCentro.aro(RW - 0.03f, 1.45f, g); val a = GeoCentro.rad(g); val t = V3(-sin(a), 0f, cos(a))
+        val aro = (0 until 28).map { i -> val b = i * 2f * Math.PI.toFloat() / 28f; c + t * (1.4f * cos(b)) + V3(0f, 1.4f * sin(b), 0f) }
+        val dentro = (0 until 28).map { i -> val b = i * 2f * Math.PI.toFloat() / 28f; c + t * (1.1f * cos(b)) + V3(0f, 1.1f * sin(b), 0f) }
+        CamCentro.forma(aro)?.let { drawPath(it, lerp(v.c(c, lerp(C.ACERO, COLOR_DESTELLO, 0.4f), n, GaleriaCentro.lejos(c)), COLOR_DESTELLO, 0.3f)) }
         val azul = lerp(Color(0xFF8FC4FF), Color.White, 0.2f)
-        CamCentro.forma(dentro)?.let { drawPath(it, lerp(lerp(C.NEGRO, C.SOMBRA, 0.3f), azul, 0.55f * v.destello + 0.1f)) }
-        if (v.destello > 0.01f) { val p = CamCentro.p(c); val k = CamCentro.k(c); mancha(p, 2.4f * k, 1.6f * k, azul, 0.22f * v.destello) }
+        // Encendida, la boca es un ojo azul; el día de la revisión, un agujero negro con las juntas del sello.
+        CamCentro.forma(dentro)?.let { drawPath(it, lerp(lerp(C.NEGRO, C.SOMBRA, 0.2f), azul, 0.75f * v.destello)) }
+        if (v.destello > 0.01f) { val p = CamCentro.p(c); val k = CamCentro.k(c); mancha(p, 2.6f * k, 1.8f * k, azul, 0.32f * v.destello) }
+        else for (i in 0 until 4) { val b = i * Math.PI.toFloat() / 4f; linea(v, c + t * (1.05f * cos(b)) + V3(0f, 1.05f * sin(b), 0f), c - t * (1.05f * cos(b)) - V3(0f, 1.05f * sin(b), 0f), lerp(C.ACERO, C.AMARILLO, 0.5f), n, 0.8f, 0.9f) }
     }
 
     // ---------------------------------------------------------------- El suelo
@@ -194,18 +228,22 @@ internal object ComedorCentro {
     /** El mostrador, contra el muro de la izquierda, bajo la galería: largo y curvo, con las cubas (humean en el desayuno y la comida) y las bandejas apiladas. */
     private fun DrawScope.mostrador(v: VistaCentro) {
         val r = RW - 1.3f
-        for (g in listOf(132f, 140f, 148f, 156f, 164f)) {
+        for (g in listOf(120f, 128f, 136f, 144f, 152f)) {
             val a = GeoCentro.rad(g); val o = GeoCentro.aro(r, 0f, g); val u = V3(-sin(a), 0f, cos(a))
             caja(v, o, u, 1.55f, 0.75f, 0.95f, lerp(C.ACERO, C.HORMIGON, 0.35f), GaleriaCentro.lejos(o), tapa = lerp(C.ACERO, Color.White, 0.25f))
         }
         val humean = v.mesa == Mesa.DESAYUNO || v.mesa == Mesa.COMIDA || v.mesa == Mesa.FIESTA
-        for ((i, g) in listOf(134f, 141f, 149f, 157f).withIndex()) {
+        val cobre = lerp(C.LATON, C.BARRO, 0.55f)
+        for ((i, g) in listOf(121f, 128f, 135f, 142f).withIndex()) {
             val c = GeoCentro.aro(r - 0.05f, 0.95f, g)
-            cilindro(v, c, 0.26f, 0.32f, lerp(C.ACERO, Color.White, 0.2f), lerp(C.ACERO, C.NEGRO, 0.4f))
-            if (humean) { val q = CamCentro.p(c + V3(0f, 0.6f, 0f)); val k = CamCentro.k(c); mancha(q, 0.35f * k, 0.5f * k, lerp(v.fondo, Color.White, 0.5f), 0.22f - 0.03f * i) }
+            cilindro(v, c, 0.28f, 0.34f, cobre, lerp(cobre, C.NEGRO, 0.5f))
+            // El brillo del cobre, del lado del vacío.
+            val qb = CamCentro.p(c + V3(0f, 0.2f, 0f)); val kb = CamCentro.k(c)
+            drawLine(lerp(cobre, Color.White, 0.5f).copy(alpha = 0.7f), qb + Offset(-0.12f * kb, -0.1f * kb), qb + Offset(-0.12f * kb, 0.08f * kb), (0.04f * kb).coerceAtLeast(0.5f))
+            if (humean) for (j in 0..2) { val q = CamCentro.p(c + V3(0f, 0.55f + 0.45f * j, 0f)); val k = CamCentro.k(c); mancha(q + Offset(j * 0.1f * k, 0f), (0.3f + 0.12f * j) * k, (0.4f + 0.1f * j) * k, lerp(v.fondo, Color.White, 0.6f), (0.3f - 0.07f * j - 0.03f * i).coerceAtLeast(0.05f)) }
         }
         // Las bandejas apiladas al final del mostrador.
-        val p = GeoCentro.aro(r, 0.95f, 162f)
+        val p = GeoCentro.aro(r, 0.95f, 150f)
         for (j in 0 until 6) caja(v, p + V3(0f, j * 0.03f, 0f), V3(0f, 0f, 1f), 0.45f, 0.35f, 0.025f, lerp(C.ACERO, C.CIAN, 0.2f), GaleriaCentro.lejos(p))
     }
 
@@ -229,6 +267,7 @@ internal object ComedorCentro {
     private fun DrawScope.cosas(v: VistaCentro) {
         val orden = (MESAS.map { CamCentro.hondo(V3((it.x0 + it.x1) / 2f, 0f, it.z)) to { mesa(v, it) } } +
             listOf(CamCentro.hondo(V3(CABECERA_X, 0f, 0.5f)) to { cabecera(v) }) +
+            VerdeCentro.TORRES.map { (x, z) -> CamCentro.hondo(V3(x, 0f, z)) to { with(VerdeCentro) { torre(v, x, z) } } } +
             (if (CentroLab.jornadas(v.m)) listOf(CamCentro.hondo(V3(5f, 0f, 0.5f)) + 0.5f to { jornadas(v) }) else emptyList()) +
             (if (v.mesa == Mesa.CENSO) listOf(CamCentro.hondo(V3(-2.8f, 0f, -0.2f)) to { censo(v) }) else emptyList()))
             .sortedByDescending { it.first }
@@ -278,6 +317,14 @@ internal object ComedorCentro {
             val c = V3(t.x0 + 0.5f + az.real() * (largo - 1f), y, t.z + az.entre(-0.1f, 0.1f))
             cilindro(v, c, 0.07f, 0.24f, lerp(C.VIDRIO, Color.White, 0.25f), lerp(C.VIDRIO, C.CIAN, 0.3f), rArriba = 0.06f)
         }
+        // Las fresas del año nuevo: un cuenco lleno en cada mesa, y otro más en las largas.
+        if (CentroLab.fresas(v.m)) for (s in if (largo > 4f) listOf(0.18f, 0.5f, 0.82f) else listOf(0.3f, 0.7f)) {
+            val c = V3(t.x0 + largo * s, y + 0.04f, t.z); val q = CamCentro.p(c); val k = CamCentro.k(c)
+            val rojo = lerp(v.c(c, C.TOMATE, ARRIBA), lerp(C.AVISO, C.TOMATE, 0.3f), 0.6f)
+            drawOval(v.c(c, C.TELA, ARRIBA), q - Offset(0.22f * k + 0.6f, 0.06f * k), Size(0.44f * k + 1.2f, 0.14f * k + 0.6f))
+            for (i in 0 until 9) { val dx = ((i * 37) % 9 - 4) * 0.04f; val dy = ((i * 11) % 3 - 1) * 0.025f
+                drawCircle(rojo, (0.06f * k).coerceAtLeast(0.9f), q + Offset(dx * k, (dy - 0.04f) * k)) }
+        }
         // El pastel de zanahoria de la Fundación, en una de cada dos mesas.
         if (CentroLab.banderas(v.m) && v.mesa == Mesa.FIESTA && az.real() > 0.4f) cilindro(v, V3((t.x0 + t.x1) / 2f, y, t.z), 0.18f, 0.1f, lerp(C.BARRO, C.AMARILLO, 0.4f), lerp(C.TELA, C.AMARILLO, 0.2f))
         // Las velas de la noche larga: tres por mesa, con su llama (la luz la pone LuzCentro).
@@ -307,6 +354,9 @@ internal object ComedorCentro {
         val madera = lerp(C.MADERA, C.BARRO, 0.15f)
         for (z in listOf(-1.5f, 2.3f)) caja(v, V3(CABECERA_X, y, z), u, 0.08f, 0.8f, ALTO_MESA - 0.05f, lerp(madera, C.NEGRO, 0.3f))
         caja(v, V3(CABECERA_X, y + ALTO_MESA - 0.05f, 0.4f), u, 4.2f, 0.95f, 0.05f, madera, tapa = lerp(madera, C.TELA, 0.2f))
+        // El paño del Consejo, que la distingue de las demás: blanco, caído por los lados, con su franja de color abajo.
+        caja(v, V3(CABECERA_X, y + ALTO_MESA - 0.3f, 0.4f), u, 4.3f, 1.05f, 0.31f, lerp(C.TELA, C.HORMIGON, 0.15f), tapa = C.TELA)
+        caja(v, V3(CABECERA_X, y + ALTO_MESA - 0.3f, 0.4f), u, 4.31f, 1.06f, 0.08f, lerp(C.CIAN, C.VIOLETA, 0.35f), tapa = C.TELA)
         // Puesta en la cena (platos y vasos) y con las lámparas bajas, que cuelgan de cables largos.
         if (v.mesa == Mesa.CENA || v.mesa == Mesa.FIESTA) {
             for (z in listOf(-1.4f, -0.5f, 0.4f, 1.3f, 2.2f)) {
@@ -352,13 +402,14 @@ internal object ComedorCentro {
     /** El censo: la mesa del censo con sus listas, y la cinta de la cola, que da la vuelta al comedor entre postes. */
     private fun DrawScope.censo(v: VistaCentro) {
         val o = V3(-2.8f, 0f, -0.2f); val u = V3(0f, 0f, 1f)
-        caja(v, o, u, 2.0f, 0.8f, ALTO_MESA, lerp(C.MADERA, C.HORMIGON, 0.2f), tapa = lerp(C.MADERA, C.TELA, 0.3f))
+        caja(v, o, u, 2.4f, 0.9f, ALTO_MESA, lerp(C.CIAN, C.NEGRO, 0.2f), tapa = lerp(C.CIAN, C.TELA, 0.2f))
         for (i in 0..3) caja(v, o + V3(0f, ALTO_MESA, -0.7f + i * 0.45f), u, 0.3f, 0.22f, 0.02f + 0.03f * (i % 2), C.TELA)
         // Los postes y la cinta, por fuera de las mesas.
         val postes = (0..26).map { i -> GeoCentro.aro(7.1f, 0f, 20f + i * 7f) } + (0..10).map { i -> GeoCentro.aro(5.2f, 0f, 195f - i * 9f) }
         for (p in postes) { if (!CamCentro.enCuadro(CamCentro.p(p))) continue; caja(v, p, V3(1f, 0f, 0f), 0.1f, 0.1f, 0.95f, lerp(C.ACERO, C.LATON, 0.5f)); cilindro(v, p, 0.2f, 0.05f, lerp(C.ACERO, C.NEGRO, 0.3f), null) }
-        trazo(v, postes.take(27).map { it + V3(0f, 0.85f, 0f) }, C.AMARILLO, ARRIBA, 0.09f, 0.95f)
-        trazo(v, postes.drop(27).map { it + V3(0f, 0.85f, 0f) }, C.AMARILLO, ARRIBA, 0.09f, 0.95f)
+        val cinta = lerp(C.AMARILLO, C.AVISO, 0.25f)
+        trazo(v, postes.take(27).map { it + V3(0f, 0.85f, 0f) }, cinta, V3(0f, 0.3f, -1f), 0.18f, 1f)
+        trazo(v, postes.drop(27).map { it + V3(0f, 0.85f, 0f) }, cinta, V3(0f, 0.3f, -1f), 0.18f, 1f)
         // Las listas largas que cuelgan de la mesa del censo, y la caja de las tarjetas.
         caja(v, o + V3(0f, ALTO_MESA, 0.6f), u, 0.4f, 0.3f, 0.18f, C.MADERA)
         trazo(v, listOf(o + V3(0.4f, ALTO_MESA, -0.4f), o + V3(0.45f, 0.4f, -0.45f), o + V3(0.5f, 0.02f, -0.3f)), C.TELA, V3(1f, 0.3f, 0f), 0.12f, 0.95f)

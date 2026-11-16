@@ -54,20 +54,20 @@ internal object GeoCentro {
     const val PA1 = 30f
     const val PY0 = 0.9f
     const val PY1 = 8.6f
-    /** Las costillas: donde están (grados). Faltan las dos que la Vigía quitó para la pared de pantallas. **[Diseño propio]** */
-    val COSTILLAS = listOf(-110f, 70f, 115f, 160f, 205f, 32f)
+    /** Las costillas: donde están (grados); la primera es la de cerca. Faltan las que tapaban la pared de pantallas y el centro del cuadro. **[Diseño propio]** */
+    val COSTILLAS = listOf(-111f, 115f, 160f, 205f, 32f)
     /** El radio de la cara de dentro de las costillas y su fondo (hacia fuera) y su grueso. */
     const val RC = 7.45f
     const val FONDO_COSTILLA = 1.15f
     const val GRUESO_COSTILLA = 0.45f
     /** La pasarela: va a la altura de la segunda galería, de un lado a otro del vacío, a [PASA_D] metros del centro. */
-    const val PASA_A0 = 92f
-    const val PASA_A1 = 208f
+    const val PASA_A0 = -42.5f
+    const val PASA_A1 = 82.5f
     const val PASA_ANCHO = 1.5f
     /** Las bocas de los tres pasillos (grados), en el piso de abajo: el Roble, el Haya y el Almendro (Botánica). */
-    val BOCAS = listOf(78f, 101f, 124f)
+    val BOCAS = listOf(60f, 78f, 96f)
     /** La boca de la sala del destello, redonda. */
-    const val DESTELLO = 146f
+    const val DESTELLO = 113f
 
     fun rad(g: Float): Float = g * PI.toFloat() / 180f
     fun aro(r: Float, y: Float, grados: Float): V3 { val a = rad(grados); return V3(r * cos(a), y, r * sin(a)) }
@@ -235,6 +235,12 @@ internal class VistaCentro(val m: Momento) {
         val arriba = 0.78f + 0.22f * nn.y
         val abrigo = CentroLab.abrigo(w)
         var r = propio.red * fondo.red * arriba * abrigo; var g = propio.green * fondo.green * arriba * abrigo; var b = propio.blue * fondo.blue * arriba * abrigo
+        // El color propio no se apaga del todo en la penumbra azul (el gouache: la sombra tiene color, y la cosa también):
+        // se suma lo que el material tiene de color, no de blanco, así que el hormigón sigue frío y el barro, la madera,
+        // las cintas y los tomates conservan el suyo.
+        val gris = (propio.red + propio.green + propio.blue) / 3f
+        val tinte = (fondo.red + fondo.green + fondo.blue) / 3f * arriba * abrigo * 1.5f
+        r += (propio.red - gris) * tinte; g += (propio.green - gris) * tinte; b += (propio.blue - gris) * tinte
         // La luz del pozo repartida: viene de lo alto del eje; no llega bajo las losas.
         if (difusa > 0.01f) {
             val dx = -w.x; val dy = GeoCentro.YO + 0.4f - w.y; val dz = -w.z
@@ -255,7 +261,8 @@ internal class VistaCentro(val m: Momento) {
             val d = f.w - w; val dist = d.largo().coerceAtLeast(0.05f); val u = d * (1f / dist)
             val lam = ((nn.punto(u) + 0.2f) / 1.2f).coerceAtLeast(0f)
             var k = f.fuerza * caida(dist, f.alcance) * lam
-            if (f.cono > 0f) k *= ((-u.y - f.cono) / 0.16f).coerceIn(0f, 1f) + 0.05f
+            // El cono de una lámpara con pantalla: [u] va del punto a la lámpara, así que lo que queda debajo tiene u.y alto.
+            if (f.cono > 0f) k *= ((u.y - f.cono) / 0.16f).coerceIn(0f, 1f) + 0.05f
             if (k <= 0.002f) continue
             r += (propio.red * 0.9f + 0.05f) * f.color.red * k; g += (propio.green * 0.9f + 0.05f) * f.color.green * k; b += (propio.blue * 0.9f + 0.05f) * f.color.blue * k
         }
@@ -269,7 +276,7 @@ internal class VistaCentro(val m: Momento) {
     fun cuanto(f: Luz3, w: V3, n: V3): Float {
         val d = f.w - w; val dist = d.largo().coerceAtLeast(0.05f); val u = d * (1f / dist)
         var k = f.fuerza * caida(dist, f.alcance) * n.unidad().punto(u).coerceAtLeast(0f)
-        if (f.cono > 0f) k *= ((-u.y - f.cono) / 0.16f).coerceIn(0f, 1f)
+        if (f.cono > 0f) k *= ((u.y - f.cono) / 0.16f).coerceIn(0f, 1f)
         return k
     }
 
@@ -303,6 +310,8 @@ internal object LucesCentro {
         if (v.consejo > 0.01f) for (z in listOf(-1.3f, 0f, 1.3f)) add(Luz3(Fuente.MESA, V3(ComedorCentro.CABECERA_X, 2.3f, z), C.LAMPARA, 1.2f * v.consejo, 1.6f, cono = 0.5f))
         // Las velas de la noche larga, en todas las mesas (una luz por mesa, para no cargar la cuenta).
         if (v.velas) for (t in ComedorCentro.MESAS) add(Luz3(Fuente.VELA, V3((t.x0 + t.x1) / 2f, 0.95f, t.z), C.VELA, 0.55f, 1.9f))
+        // Las columnas de cultivo del comedor: su tubo de luz, blanca y algo violeta.
+        if (VerdeCentro.subida(v.jardines) > 0f) for ((x, z) in VerdeCentro.TORRES) add(Luz3(Fuente.CULTIVO, V3(x, 1.4f, z), lerp(C.LUZ_DIA, C.VIOLETA, 0.3f), 0.55f, 1.4f, tumba = false))
         // La vela de su mesa, en la galería, la noche larga.
         if (v.velas) add(Luz3(Fuente.VELA, EsquinaCentro.LAMPARA, C.VELA, 0.6f, 0.9f))
     }
@@ -376,14 +385,21 @@ internal object PiezasCentro {
         val w = V3(-u.z, 0f, u.x)
         val hl = largo / 2f; val ha = ancho / 2f
         fun q(a: Float, b: Float, y: Float) = V3(o.x + u.x * a + w.x * b, o.y + y, o.z + u.z * a + w.z * b)
-        val caras = listOf(
+        for ((ps, n) in carasDeCaja(o, u, largo, ancho, alto)) cara(v, ps, propio, n, lejos)
+        cara(v, listOf(q(-hl, -ha, alto), q(hl, -ha, alto), q(hl, ha, alto), q(-hl, ha, alto)), tapa, ARRIBA, lejos)
+    }
+
+    /** Las cuatro caras de los lados de una caja (como en [caja]), cada una con su normal; los dos primeros puntos, abajo. */
+    fun carasDeCaja(o: V3, u: V3, largo: Float, ancho: Float, alto: Float): List<Pair<List<V3>, V3>> {
+        val w = V3(-u.z, 0f, u.x)
+        val hl = largo / 2f; val ha = ancho / 2f
+        fun q(a: Float, b: Float, y: Float) = V3(o.x + u.x * a + w.x * b, o.y + y, o.z + u.z * a + w.z * b)
+        return listOf(
             listOf(q(-hl, -ha, 0f), q(hl, -ha, 0f), q(hl, -ha, alto), q(-hl, -ha, alto)) to (w * -1f),
             listOf(q(-hl, ha, 0f), q(hl, ha, 0f), q(hl, ha, alto), q(-hl, ha, alto)) to w,
             listOf(q(-hl, -ha, 0f), q(-hl, ha, 0f), q(-hl, ha, alto), q(-hl, -ha, alto)) to (u * -1f),
             listOf(q(hl, -ha, 0f), q(hl, ha, 0f), q(hl, ha, alto), q(hl, -ha, alto)) to u,
         )
-        for ((ps, n) in caras) cara(v, ps, propio, n, lejos)
-        cara(v, listOf(q(-hl, -ha, alto), q(hl, -ha, alto), q(hl, ha, alto), q(-hl, ha, alto)), tapa, ARRIBA, lejos)
     }
 
     /**

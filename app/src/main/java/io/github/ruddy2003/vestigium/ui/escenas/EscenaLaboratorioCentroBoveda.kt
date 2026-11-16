@@ -63,6 +63,7 @@ internal object BovedaCentro {
         }
         juntas(v)
         manchas(v)
+        with(EstructuraCentro) { costillasEnLaBoveda(v) }
         vigia(v)
         pozo(v)
     }

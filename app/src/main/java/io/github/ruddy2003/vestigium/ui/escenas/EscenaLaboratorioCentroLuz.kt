@@ -106,11 +106,13 @@ internal object LuzCentro {
         val col = v.pozo.color
         val centro = CamCentro.p(V3(v.pozo.mancha.x, 0f, v.pozo.mancha.y)); val k = CamCentro.k(V3(v.pozo.mancha.x, 0f, v.pozo.mancha.y))
         // El halo: la luz que rebota alrededor de la mancha.
-        mancha(centro, GeoCentro.RO * 2.1f * k, GeoCentro.RO * 0.9f * k, col, 0.16f * f)
-        drawPath(forma, col.copy(alpha = (0.42f * f).coerceIn(0f, 1f)), blendMode = BlendMode.Plus)
+        mancha(centro, GeoCentro.RO * 2.1f * k, GeoCentro.RO * 0.9f * k, col, 0.2f * f)
+        drawPath(forma, col.copy(alpha = (0.62f * f).coerceIn(0f, 1f)), blendMode = BlendMode.Plus)
         clipPath(forma) {
-            mancha(centro, GeoCentro.RO * 1.1f * k, GeoCentro.RO * 0.45f * k, lerp(col, Color.White, 0.4f), 0.35f * f)
+            mancha(centro, GeoCentro.RO * 1.1f * k, GeoCentro.RO * 0.45f * k, lerp(col, Color.White, 0.4f), 0.45f * f)
         }
+        // El borde de la mancha, que se reconoce: un filo más claro (la luz del aro, nítida).
+        drawPath(forma, lerp(col, Color.White, 0.5f).copy(alpha = (0.35f * f).coerceIn(0f, 1f)), style = androidx.compose.ui.graphics.drawscope.Stroke(1.1f), blendMode = BlendMode.Plus)
     }
 
     /** La luz del haz en el suelo de la galería de enfrente, cuando la losa corta la mancha (se pinta después de la galería). */
@@ -178,7 +180,7 @@ internal object LuzCentro {
         val abajo = mancha(v, 24).map { CamCentro.p(it) }
         val forma = poligono(envolvente(arriba + abajo))
         val y0 = arriba.minOf { it.y }; val y1 = abajo.maxOf { it.y }
-        drawPath(forma, Brush.verticalGradient(0f to col.copy(alpha = (0.34f * f).coerceIn(0f, 1f)), 0.45f to col.copy(alpha = (0.17f * f).coerceIn(0f, 1f)), 1f to col.copy(alpha = (0.1f * f).coerceIn(0f, 1f)), startY = y0, endY = y1), blendMode = BlendMode.Plus)
+        drawPath(forma, Brush.verticalGradient(0f to col.copy(alpha = (0.42f * f).coerceIn(0f, 1f)), 0.45f to col.copy(alpha = (0.24f * f).coerceIn(0f, 1f)), 1f to col.copy(alpha = (0.16f * f).coerceIn(0f, 1f)), startY = y0, endY = y1), blendMode = BlendMode.Plus)
         // Un corazón más estrecho y más claro.
         val nucleo = poligono(envolvente((0 until 16).map { CamCentro.p(GeoCentro.aro(GeoCentro.RO * 0.5f, GeoCentro.YO, it * 22.5f)) } +
             (0 until 16).map { val a = it * 22.5f; CamCentro.p(V3(v.pozo.mancha.x + GeoCentro.RO * 0.5f * cos(GeoCentro.rad(a)), 0f, v.pozo.mancha.y + GeoCentro.RO * 0.5f * sin(GeoCentro.rad(a)))) }))
@@ -186,7 +188,7 @@ internal object LuzCentro {
         // El polvo quieto que brilla en el haz.
         val az = Azar(Semilla.de("laboratorio", "centro", "polvo"))
         clipPath(forma) {
-            repeat(70) {
+            repeat(130) {
                 val t = az.real(); val a = az.entre(0f, 2f * PI.toFloat()); val r = GeoCentro.RO * sqrt(az.real())
                 val y = GeoCentro.YO * (1f - t)
                 val w = V3(v.pozo.mancha.x * t + r * cos(a), y, v.pozo.mancha.y * t + r * sin(a))

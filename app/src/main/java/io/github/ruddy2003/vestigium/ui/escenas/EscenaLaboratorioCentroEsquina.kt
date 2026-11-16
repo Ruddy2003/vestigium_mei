@@ -42,7 +42,7 @@ internal object EsquinaCentro {
     /** Dónde está la mesa chica (el centro de su pie) y hacia dónde va su lado largo; su tamaño. */
     val MESA: V3 = GeoCentro.aro(8.7f, G1, -105.6f)
     val U_MESA: V3 = V3(cos(GeoCentro.rad(-15.6f)), 0f, sin(GeoCentro.rad(-15.6f)))
-    const val LADO = 0.74f
+    const val LADO = 0.86f
     const val ALTO = 0.74f
     /** La x del lienzo de la mesa, para el lado de la luz del gato. */
     const val MESA_X = 30f
@@ -71,28 +71,63 @@ internal object EsquinaCentro {
         sombras(v)
         barandilla(v, G1, GaleriaCentro.CERCA0 + 360f, GaleriaCentro.CERCA1 + 360f)
         if (CentroLab.sillasALaBarandilla(v.m)) sillasArrimadas(v)
-        carro(v)
         silla(v)
         // El objeto grande del día, de pie en el suelo junto a la mesa y recostado en su canto.
-        ObjetosLaboratorio.grande(v.m, v.pincel(PIE_GRANDE), CamCentro.p(PIE_GRANDE), CamCentro.p(enLaMesa(0.37f, -0.3f, -0.02f)), CamCentro.k(PIE_GRANDE) / 150f)?.let { it.pintar(this) }
+        val grande = ObjetosLaboratorio.grande(v.m, sitioGrande(v))
+        // Los grandes van delante de la mesa: la maceta pisa junto a su pata, más cerca de los ojos; la bata y los guantes
+        // cuelgan del canto de este lado.
         mesa(v)
         encima(v)
-        if (!ObjetosLaboratorio.esGrande(v.m)) with(ObjetosLaboratorio) { sobreElSoporte(v.m, v.pincel(CLARO), CamCentro.p(CLARO), CamCentro.k(CLARO) / 150f) }
+        if (!ObjetosLaboratorio.esGrande(v.m)) with(ObjetosLaboratorio) { sobreElSoporte(v.m, sitioChico(v)) }
+        grande?.pintar?.invoke(this)
+        with(VerdeCentro) { jardineraGrande(v) }
     }
+
+    // ---------------------------------------------------------------- Los sitios de los objetos del día
+
+    /** El canto de la mesa del lado de quien mira y a la derecha: de ahí cuelgan la bata y los guantes. */
+    fun apoyo(): V3 {
+        val w = V3(-U_MESA.z, 0f, U_MESA.x); val h = LADO / 2f
+        return listOf(U_MESA * h, U_MESA * -h, w * h, w * -h).map { MESA + it + V3(0f, ALTO, 0f) }.maxByOrNull { val q = CamCentro.p(it); q.x + 0.6f * q.y } ?: MESA
+    }
+
+    /** Las luces que tumban sombra en su esquina: la del pozo repartida, desde lo alto del eje; la noche larga, su vela. */
+    private fun sombrasDeLaEsquina(v: VistaCentro): List<Pair<V3, Float>> = buildList {
+        if (v.difusa > 0.05f) add(V3(0f, GeoCentro.YO + 0.4f, 0f) to (0.9f * v.difusa).coerceIn(0f, 1f))
+        if (v.velas) add(LAMPARA + V3(0f, 0.05f, 0f) to 0.7f)
+    }
+
+    /** El tablero de la mesa chica, en el lienzo. */
+    fun formaDelTablero(): Path? = CamCentro.forma(PiezasCentro.esquinas(MESA, U_MESA, LADO, LADO, ALTO).filterIndexed { i, _ -> i % 2 == 1 })
+
+    /** El suelo de su galería, de cerca, en el lienzo. */
+    fun formaDelSuelo(): Path? = CamCentro.forma(PiezasCentro.arco(GeoCentro.RV, G1, -125f, -60f, 20) + PiezasCentro.arco(GeoCentro.RW - 0.4f, G1, -60f, -125f, 20))
+
+    /** El sitio del objeto chico: el claro de la mesa, con la luz y la cámara del centro. */
+    fun sitioChico(v: VistaCentro): SitioObjeto = SitioObjeto(
+        o = CLARO, eje = U_MESA, ojo = CamCentro.OJO, alLienzo = { CamCentro.p(it) }, color = { w, c, n -> v.c(w, c, n) },
+        sombras = sombrasDeLaEsquina(v), recorte = formaDelTablero(), noche = v.noche,
+    )
+
+    /** El sitio del objeto grande: la maceta pisa junto a la mesa; la bata y los guantes cuelgan de su canto. */
+    fun sitioGrande(v: VistaCentro): SitioObjeto = SitioObjeto(
+        o = PIE_GRANDE, eje = U_MESA, ojo = CamCentro.OJO, alLienzo = { CamCentro.p(it) }, color = { w, c, n -> v.c(w, c, n) },
+        sombras = sombrasDeLaEsquina(v), recorte = formaDelSuelo(), noche = v.noche, apoyo = apoyo(),
+    )
 
     // ---------------------------------------------------------------- El suelo de la galería
 
     /** La flecha de color de la galería (la del pasillo del Almendro, verde) y el desgaste del paso junto a la barandilla. */
     private fun DrawScope.suelo(v: VistaCentro) {
-        val r = 7.98f; val ancho = 0.08f
+        val r = 8.02f; val ancho = 0.13f
         val ps = (0..10).map { i -> -97f + 18f * i / 10f }
         for (i in 0 until ps.size - 1) {
             val f = CamCentro.forma(listOf(GeoCentro.aro(r - ancho, G1 + 0.002f, ps[i]), GeoCentro.aro(r - ancho, G1 + 0.002f, ps[i + 1]), GeoCentro.aro(r + ancho, G1 + 0.002f, ps[i + 1]), GeoCentro.aro(r + ancho, G1 + 0.002f, ps[i]))) ?: continue
-            drawPath(f, v.c(GeoCentro.aro(r, G1, ps[i]), lerp(C.GRAMA, C.PISO, 0.4f), ARRIBA).copy(alpha = 0.7f))
+            drawPath(f, lerp(v.c(GeoCentro.aro(r, G1, ps[i]), C.GRAMA, ARRIBA), C.GRAMA, 0.25f).copy(alpha = 0.85f))
         }
         for (g in listOf(-90f, -82f)) {
-            val punta = listOf(GeoCentro.aro(r - 0.2f, G1 + 0.003f, g), GeoCentro.aro(r, G1 + 0.003f, g + 2.0f), GeoCentro.aro(r + 0.2f, G1 + 0.003f, g), GeoCentro.aro(r, G1 + 0.003f, g + 0.7f))
-            CamCentro.forma(punta)?.let { drawPath(it, v.c(GeoCentro.aro(r, G1, g), C.GRAMA, ARRIBA)) }
+            val punta = listOf(GeoCentro.aro(r - 0.3f, G1 + 0.003f, g), GeoCentro.aro(r, G1 + 0.003f, g + 2.6f), GeoCentro.aro(r + 0.3f, G1 + 0.003f, g), GeoCentro.aro(r, G1 + 0.003f, g + 0.9f))
+            CamCentro.forma(punta)?.let { drawPath(it, lerp(v.c(GeoCentro.aro(r, G1, g), C.GRAMA, ARRIBA), C.GRAMA, 0.3f)) }
         }
         // La luz del vacío, que entra por la barandilla y se tiende en el pulido; y el reflejo roto del canto del vidrio.
         for ((a, b) in GaleriaCentro.tramos(-110f + 360f, -40f + 360f, 4f)) {
@@ -110,6 +145,7 @@ internal object EsquinaCentro {
             }
             g += 3f + az0.entre(0f, 2f)
         }
+        reflejoDePantallas(v)
         // El granito del pulido: motas claras y oscuras en el suelo de cerca, y las juntas entre losas a lo ancho.
         val az1 = Azar(Semilla.de("laboratorio", "centro", "granito"))
         val claras = ArrayList<Offset>(); val oscuras = ArrayList<Offset>()
@@ -123,6 +159,35 @@ internal object EsquinaCentro {
             val w = GeoCentro.aro(az.entre(7.95f, 8.9f), G1, az.entre(-104f, -60f)); val q = CamCentro.p(w); if (!CamCentro.enCuadro(q, 0f)) return@repeat
             val k = CamCentro.k(w)
             mancha(q, az.entre(0.15f, 0.45f) * k, az.entre(0.03f, 0.08f) * k, v.c(w, lerp(C.PISO, C.SOMBRA, 0.3f), ARRIBA), 0.18f)
+        }
+    }
+
+    /**
+     * El reflejo de las pantallas en el pulido de su galería: cada punto de lo alto de la pared de pantallas, bajado como
+     * en un espejo por debajo del suelo, se ve donde la línea de los ojos a ese punto corta el suelo. Sale en franjas que
+     * bajan hacia quien mira, junto a la barandilla.
+     */
+    private fun DrawScope.reflejoDePantallas(v: VistaCentro) {
+        if (v.pantalla <= 0.01f) return
+        val ojo = CamCentro.OJO
+        fun enElSuelo(s: V3): Offset? {
+            val my = 2f * G1 - s.y; if (my >= ojo.y - 0.05f) return null
+            val t = (G1 - ojo.y) / (my - ojo.y)
+            val p = V3(ojo.x + (s.x - ojo.x) * t, G1 + 0.003f, ojo.z + (s.z - ojo.z) * t)
+            val r = kotlin.math.sqrt(p.x * p.x + p.z * p.z)
+            return if (r < GeoCentro.RV + 0.04f || r > GeoCentro.RW - 0.4f) null else CamCentro.p(p)
+        }
+        val az = Azar(Semilla.de("laboratorio", "centro", "reflejo en la galeria"))
+        var g = GeoCentro.PA0 + 1.5f
+        while (g < GeoCentro.PA1 - 1f) {
+            val col = lerp(v.colorPantalla, Color.White, az.entre(0f, 0.25f))
+            var y = 7.2f
+            while (y < GeoCentro.PY1 - 0.1f) {
+                val a = enElSuelo(GeoCentro.aro(GeoCentro.RW - 0.05f, y, g)); val b = enElSuelo(GeoCentro.aro(GeoCentro.RW - 0.05f, y + 0.3f, g))
+                if (a != null && b != null) drawLine(col.copy(alpha = (0.22f * v.pantalla * az.entre(0.4f, 1f)).coerceIn(0f, 1f)), a, b, az.entre(1.2f, 2.6f), blendMode = BlendMode.Plus)
+                y += 0.3f
+            }
+            g += 2.4f
         }
     }
 
@@ -177,8 +242,8 @@ internal object EsquinaCentro {
             val p = MESA + U_MESA * a + w * b
             linea(v, p, p + V3(0f, ALTO - 0.04f, 0f), metal, V3(0f, 0f, -1f), (0.035f * CamCentro.k(p)).coerceIn(0.8f, 7f))
         }
-        val madera = lerp(C.MADERA, C.BARRO, 0.12f)
-        caja(v, MESA + V3(0f, ALTO - 0.04f, 0f), U_MESA, LADO, LADO, 0.04f, lerp(madera, C.NEGRO, 0.15f), tapa = lerp(madera, C.TELA, 0.12f))
+        val madera = lerp(lerp(C.MADERA, C.BARRO, 0.3f), C.LAMPARA, 0.18f)
+        caja(v, MESA + V3(0f, ALTO - 0.04f, 0f), U_MESA, LADO, LADO, 0.04f, lerp(madera, C.NEGRO, 0.2f), tapa = lerp(madera, C.LAMPARA, 0.15f))
         // Las vetas y el desgaste del tablero.
         val az = Azar(Semilla.de("laboratorio", "centro", "mesa chica"))
         for (i in 0 until 9) {
@@ -222,6 +287,11 @@ internal object EsquinaCentro {
             mancha(q, 0.06f * k * queda, 0.025f * k * queda, v.c(c, col, ARRIBA), 0.95f)
             if (col == C.TOMATE) drawCircle(v.c(c, lerp(C.TOMATE, Color.White, 0.2f), ARRIBA), 0.018f * k, q + Offset(0.01f * k, -0.006f * k))
         }
+        if (CentroLab.fresas(v.m)) for (i in 0 until 10) {
+            val c = enLaMesa(0.16f + (i % 4) * 0.04f, -0.24f + (i / 4) * 0.045f, 0.02f); val q = CamCentro.p(c); val k = CamCentro.k(c)
+            drawCircle(lerp(v.c(c, C.TOMATE, ARRIBA), lerp(C.AVISO, C.TOMATE, 0.3f), 0.6f), 0.026f * k, q)
+            drawCircle(Color.White.copy(alpha = 0.3f), 0.006f * k, q + Offset(-0.008f * k, -0.008f * k))
+        }
     }
 
     /** La taza de barro gris, de borde grueso y con la muesca; la infusión que se le enfría siempre. */
@@ -262,23 +332,6 @@ internal object EsquinaCentro {
         // La esquina de resina, ámbar.
         val r = listOf(enLaMesa(0.22f, 0.28f, 0.003f), enLaMesa(0.27f, 0.28f, 0.003f), enLaMesa(0.27f, 0.23f, 0.003f))
         cara(v, r, lerp(C.LATON, C.BARRO, 0.3f), ARRIBA, siempre = true)
-    }
-
-    /** El carro de las bandejas, a la derecha, cortado por el borde: un armazón de acero con tres baldas de bandejas usadas (vacío en la cena). */
-    private fun DrawScope.carro(v: VistaCentro) {
-        val o = GeoCentro.aro(9.25f, G1, -81.5f); val a = GeoCentro.rad(-81.5f + 90f); val u = V3(cos(a), 0f, sin(a)); val w = V3(-u.z, 0f, u.x)
-        val metal = lerp(C.ACERO, C.HORMIGON, 0.15f)
-        val llenas = when (v.mesa) { Mesa.COMIDA, Mesa.FIESTA -> 3; Mesa.DESAYUNO -> 2; Mesa.CENA, Mesa.CENSO -> 0 }
-        for ((i, y) in listOf(0.18f, 0.55f, 0.92f).withIndex()) {
-            caja(v, o + V3(0f, y, 0f), u, 0.9f, 0.5f, 0.025f, metal, tapa = lerp(metal, Color.White, 0.2f))
-            if (i < llenas) for (j in 0 until 5) caja(v, o + V3(0f, y + 0.03f + j * 0.035f, 0f) + u * ((j % 2) * 0.04f - 0.02f), u, 0.46f, 0.36f, 0.03f, lerp(C.TELA, C.CIAN, 0.2f), tapa = lerp(C.TELA, Color.White, 0.3f))
-        }
-        for ((sa, sb) in listOf(-1f to -1f, 1f to -1f, 1f to 1f, -1f to 1f)) {
-            val p = o + u * (0.44f * sa) + w * (0.24f * sb)
-            linea(v, p + V3(0f, 0.08f, 0f), p + V3(0f, 1.02f, 0f), lerp(metal, C.NEGRO, 0.25f), w * -1f, (0.022f * CamCentro.k(p)).coerceIn(0.6f, 3f))
-            cilindro(v, p, 0.045f, 0.08f, C.NEGRO, null)
-        }
-        linea(v, o + u * -0.46f + w * -0.26f + V3(0f, 1.02f, 0f), o + u * -0.46f + w * 0.26f + V3(0f, 1.02f, 0f), lerp(metal, Color.White, 0.3f), PiezasCentro.ARRIBA, 1.4f)
     }
 
     /** Arriba: dos sillas arrimadas a la barandilla, de cara a la pared de pantallas, una de ellas un poco ladeada. */

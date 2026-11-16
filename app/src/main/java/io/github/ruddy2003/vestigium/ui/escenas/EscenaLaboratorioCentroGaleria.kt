@@ -68,6 +68,7 @@ internal object GaleriaCentro {
         val techo = GeoCentro.YB
         // La pared de fuera, con las puertas de las alas.
         pared(v, G2, techo, 2)
+        with(EstructuraCentro) { costillasEntre(v, G2, techo + 2f) }
         // La losa vista por debajo (lo que está sobre la primera galería), con sus luces empotradas.
         for ((a, b) in tramos()) cara(v, PiezasCentro.tramoH(RV, RW, G2 - LOSA, a, b), lerp(C.HORMIGON, C.TIERRA, 0.1f), ABAJO, lejos(GeoCentro.aro(RV, G2, a)))
         // Las juntas de los paneles del techo de la galería y la canaleta de las luces.
@@ -87,6 +88,7 @@ internal object GaleriaCentro {
     fun DrawScope.primera(v: VistaCentro) {
         // La pared de fuera, con sus puertas.
         pared(v, G1, G2 - LOSA, 1)
+        with(EstructuraCentro) { costillasEntre(v, G1, G2 - LOSA) }
         // El suelo de la galería: losas de hormigón pulido, más oscuras hacia la pared.
         val az = Azar(Semilla.de("laboratorio", "centro", "galeria"))
         for ((a, b) in tramos()) {
@@ -154,7 +156,18 @@ internal object GaleriaCentro {
             val gm = (a + b) / 2f; val n = haciaDentro(gm)
             val ps = PiezasCentro.tramoV(RV, y - LOSA, y, a, b)
             if (!CamCentro.seVe(ps[0], n)) continue
-            cara(v, ps, lerp(C.HORMIGON, C.TELA, 0.3f), V3(n.x, 0.12f, n.z), lejos(ps[0]), siempre = true)
+            cara(v, ps, lerp(C.HORMIGON, C.SOMBRA, 0.14f), V3(n.x, 0.12f, n.z), lejos(ps[0]), siempre = true)
+        }
+        // La arista de arriba, que coge la luz del pozo; y las chorreras del riego de las jardineras, que bajan por el canto.
+        val arista = (0..72).map { GeoCentro.aro(RV - 0.012f, y - 0.025f, GeoCentro.PA1 + (360f + GeoCentro.PA0 - GeoCentro.PA1) * it / 72f) }
+        trazo(v, arista, lerp(C.HORMIGON, Color.White, 0.5f), ARRIBA, 0.035f, 0.55f)
+        val az = Azar(Semilla.de("laboratorio", "centro", "chorreras", (y * 10).toInt()))
+        repeat(70) {
+            val g = az.entre(GeoCentro.PA1, 360f + GeoCentro.PA0); val n = haciaDentro(g)
+            val arriba = GeoCentro.aro(RV - 0.015f, y - 0.05f, g)
+            if (!CamCentro.seVe(arriba, n)) return@repeat
+            val largo = az.entre(0.15f, LOSA - 0.06f)
+            trazo(v, listOf(arriba, GeoCentro.aro(RV - 0.015f, y - 0.05f - largo, g + az.entre(-0.15f, 0.15f))), lerp(C.TIERRA, C.SOMBRA, 0.45f), n, az.entre(0.03f, 0.07f), az.entre(0.25f, 0.5f))
         }
         // El goterón: una línea oscura bajo el canto (la sombra de la losa) y la chorrera de la lluvia de los riegos.
         val ps = (0..72).map { GeoCentro.aro(RV - 0.01f, y - LOSA + 0.03f, GeoCentro.PA1 + (360f + GeoCentro.PA0 - GeoCentro.PA1) * it / 72f) }
@@ -171,7 +184,7 @@ internal object GaleriaCentro {
         val canto = lerp(C.VIDRIO, C.GRAMA, 0.25f)
         val pasos = tramos(desde, hasta, 3f)
         // Donde pasa una costilla, la barandilla se corta: los paños se sujetan a ella.
-        fun enCostilla(g: Float) = GeoCentro.COSTILLAS.any { c -> val d = ((g - c) % 360f + 540f) % 360f - 180f; kotlin.math.abs(d) < 2.4f }
+        fun enCostilla(g: Float) = (((g - EstructuraCentro.G_CERCA) % 360f + 540f) % 360f - 180f).let { kotlin.math.abs(it) < 3.2f }
         for ((a, b) in pasos) {
             val gm = (a + b) / 2f
             if (enCostilla(gm)) continue
@@ -242,11 +255,11 @@ internal object GaleriaCentro {
     /** El elevador quieto: una cabina de vidrio parada en la primera galería, en el carril de la costilla de [CABINA_QUIETA] grados. */
     const val CABINA_QUIETA = 115f
     /** El que se mueve (parte viva), en la costilla de [CABINA_VIVA] grados, entre la primera y la segunda galería. */
-    const val CABINA_VIVA = 70f
+    const val CABINA_VIVA = 32f
 
     /** Dónde está la cabina de [g] grados a la altura [y] (su suelo): delante de la costilla, en el vacío. */
     fun cabina(g: Float, y: Float): List<V3> {
-        val r = GeoCentro.RC - 0.15f; val a = GeoCentro.rad(g)
+        val r = RV - 0.12f; val a = GeoCentro.rad(g)
         val t = V3(-sin(a), 0f, cos(a)); val c = GeoCentro.aro(r - 0.75f, y, g)
         val w = 0.8f; val h = 2.3f; val d = 0.7f
         val cx = cos(a); val cz = sin(a)
@@ -256,7 +269,7 @@ internal object GaleriaCentro {
 
     /** El carril de un elevador: dos guías que bajan por la cara de la costilla, del suelo a la segunda galería. */
     fun DrawScope.carril(v: VistaCentro, g: Float) {
-        val a = GeoCentro.rad(g); val t = V3(-sin(a), 0f, cos(a)); val r = GeoCentro.RC - 0.04f
+        val a = GeoCentro.rad(g); val t = V3(-sin(a), 0f, cos(a)); val r = RV - 0.1f
         for (s in listOf(-0.5f, 0.5f)) {
             val p0 = GeoCentro.aro(r, 0f, g) + t * s; val p1 = GeoCentro.aro(r, G2 + 1.2f, g) + t * s
             linea(v, p0, p1, lerp(C.ACERO, C.NEGRO, 0.25f), haciaDentro(g), (0.06f * CamCentro.k(p0)).coerceIn(0.4f, 2.5f))
@@ -288,7 +301,7 @@ internal object GaleriaCentro {
         mancha(c, (q[1].x - q[0].x).let { kotlin.math.abs(it) } * 0.9f + 2f, 3f, luz, 0.3f)
         // El cable, que sube a la segunda galería.
         val top = Offset((q[4].x + q[6].x) / 2f, (q[4].y + q[6].y) / 2f)
-        val alto = CamCentro.p(GeoCentro.aro(GeoCentro.RC - 0.9f, G2 + 1.3f, g))
+        val alto = CamCentro.p(GeoCentro.aro(RV - 0.87f, G2 + 1.3f, g))
         drawLine(metal, top, alto, 0.4f)
     }
 

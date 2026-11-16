@@ -110,16 +110,18 @@ class EscenaLaboratorioCentroPrueba {
         // Cálida al alba, blanca a mediodía, dorada en la cena.
         assertTrue(p7.color.red - p7.color.blue > p13.color.red - p13.color.blue)
         assertTrue(p20.color.red - p20.color.blue > p7.color.red - p7.color.blue)
-        // El haz le da al centro de su mancha y no al otro lado del hall.
+        // El haz le da a su mancha (en la cena, la pasarela le cruza el centro: se mira lo mejor de la mancha) y no al otro
+        // lado del hall.
         for (h in listOf(7.0, 13.0, 20.0)) {
             val v = VistaCentro(momento(d, h)); val mm = v.pozo.mancha
-            assertTrue("$h", v.haz(V3(mm.x, 0.01f, mm.y)) > 0.85f)
+            val mejor = (-4..4).flatMap { i -> (-4..4).map { j -> v.haz(V3(mm.x + i * 0.35f, 0.01f, mm.y + j * 0.35f)) } }.max()
+            assertTrue("$h", mejor > 0.85f)
             assertEquals("$h", 0f, v.haz(V3(-mm.x * 0.2f - 6f * kotlin.math.sign(mm.x + 0.01f), 0.01f, -mm.y)), 0f)
         }
-        // Por la mañana la pasarela le hace sombra a la mancha; a mediodía, no.
-        val v7 = VistaCentro(momento(d, 7.0)); var sombra7 = 0
-        for (i in -10..10) for (j in -10..10) { if (i * i + j * j > 100) continue; val w = V3(v7.pozo.mancha.x + i * 0.3f, 0.01f, v7.pozo.mancha.y + j * 0.3f); if (CentroLab.sombraDeLaPasarela(w, v7.pozo.d) > 0.5f) sombra7++ }
-        assertTrue("la pasarela tapa la mancha de la mañana", sombra7 > 5)
+        // A la hora de la cena la pasarela le hace sombra a la mancha (una franja que la cruza); a mediodía, no.
+        val v20 = VistaCentro(momento(d, 20.0)); var sombra20 = 0
+        for (i in -10..10) for (j in -10..10) { if (i * i + j * j > 100) continue; val w = V3(v20.pozo.mancha.x + i * 0.3f, 0.01f, v20.pozo.mancha.y + j * 0.3f); if (CentroLab.sombraDeLaPasarela(w, v20.pozo.d) > 0.5f) sombra20++ }
+        assertTrue("la pasarela tapa la mancha de la cena", sombra20 > 5)
         val v13 = VistaCentro(momento(d, 13.0))
         assertEquals(0f, CentroLab.sombraDeLaPasarela(V3(v13.pozo.mancha.x, 0.01f, v13.pozo.mancha.y), v13.pozo.d), 0f)
     }
@@ -153,9 +155,11 @@ class EscenaLaboratorioCentroPrueba {
         // El verde sube por los hilos con los jardines.
         val subidas = Jardines.entries.map { VerdeCentro.subida(it) }
         assertEquals(subidas.sorted(), subidas); assertEquals(0f, subidas.first(), 0f); assertEquals(1f, subidas.last(), 0f)
-        // La pared de pantallas: la mancha verde en una de abajo; el humo, en una de arriba a la derecha.
+        // La pared de pantallas: la mancha verde en una suelta de un lado, a media altura (la fila de abajo la tapa la
+        // barandilla); el humo, en una de arriba a la derecha.
         assertTrue(PantallasCentro.HUMO_COL >= PantallasCentro.COLUMNAS / 2 && PantallasCentro.HUMO_FILA < PantallasCentro.FILAS / 2)
-        assertTrue(PantallasCentro.VERDE_COL in 1 until PantallasCentro.COLUMNAS - 1)
+        assertTrue(PantallasCentro.VERDE_COL == 0 || PantallasCentro.VERDE_COL == PantallasCentro.COLUMNAS - 1)
+        assertTrue(PantallasCentro.VERDE_FILA in 1 until PantallasCentro.FILAS - 1)
     }
 
     // ---------------------------------------------------------------- La cámara
