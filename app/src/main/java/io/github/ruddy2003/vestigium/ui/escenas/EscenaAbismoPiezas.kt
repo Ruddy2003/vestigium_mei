@@ -65,6 +65,23 @@ internal object PiezasAbismo {
     /** El lado del sol en el lienzo: 1 a la derecha, −1 a la izquierda. */
     private fun lado(p: Pincel): Float = if (p.solALaDerecha) 1f else -1f
 
+    /**
+     * De noche, junto a una lumbre: el color con que se enfría la cara que le da la espalda (azul hondo, con la luna
+     * detrás) y cuánto (su alfa). Transparente si no hay lumbre cerca. Así cada cosa tiene un lado naranja y otro azul: el
+     * `Pincel` deja esa cara en un pardo oscuro.
+     */
+    fun ladoFrio(p: Pincel): Color = if (p.l.noche > 0.3f && p.calida > 0.08f) lerp(C.SOMBRA, C.MAR_HONDO, 0.4f).copy(alpha = (0.6f * p.l.noche).coerceIn(0f, 0.6f)) else Color.Transparent
+
+    /** Enfría con [ladoFrio] la mitad de [forma] que da la espalda a la lumbre, en degradado desde [c] hasta [r] unidades. */
+    private fun DrawScope.enfriar(p: Pincel, forma: Path, c: Offset, r: Float) {
+        val frio = ladoFrio(p); if (frio.alpha <= 0.01f) return
+        val ld = lado(p)
+        clipPath(forma) {
+            if (ld > 0) drawRect(Brush.horizontalGradient(listOf(frio, Color.Transparent), c.x - r, c.x + r * 0.1f), Offset(c.x - r * 1.5f, c.y - r * 3f), Size(r * 1.7f, r * 6f))
+            else drawRect(Brush.horizontalGradient(listOf(Color.Transparent, frio), c.x - r * 0.1f, c.x + r), Offset(c.x - r * 0.2f, c.y - r * 3f), Size(r * 1.7f, r * 6f))
+        }
+    }
+
     // =================================================================
     //  Las esponjas
     // =================================================================
@@ -246,6 +263,7 @@ internal object PiezasAbismo {
             // La costura que une las dos mitades de la cúpula, de lado a lado.
             drawArc(sombra.copy(alpha = 0.5f), 180f, 180f, false, Offset(c.x - r * 0.12f + mira * r * 0.4f, c.y - r * 1.03f), Size(r * 0.24f + abs(mira) * r * 0.6f, r * 2f), style = Stroke(r * 0.025f))
         }
+        enfriar(p, cupula, c, r * 1.05f); enfriar(p, peto, c + Offset(0f, r * 1.1f), r * 1.3f)
         // El reflejo del cielo y del agua sobre el cobre: una franja clara curva del lado del sol.
         drawArc(lerp(brillo, Color.White, 0.2f).copy(alpha = 0.45f * p.r.contraste), if (ld > 0) 290f else 190f, 60f, false, Offset(c.x - r * 0.78f, c.y - r * 0.82f), Size(r * 1.56f, r * 1.5f), style = Stroke(r * 0.07f, cap = StrokeCap.Round))
 
@@ -462,6 +480,63 @@ internal object PiezasAbismo {
         }
     }
 
+    /**
+     * Un traje de lona colgado a secar por los hombros de un flechaste (de [a] a [b], en el lienzo), de [k] unidades por
+     * metro, como se tiende un mono: las mangas abiertas a lo largo del cabo y caídas por los codos, con sus puños de goma
+     * negra; el cuerpo flojo, sin nadie dentro; arriba, volcado sobre el cabo, el cuello de goma con su babero ancho y los
+     * agujeros de los pernos del peto, abierto y oscuro; y abajo las dos perneras con sus pies de lona, lo de abajo todavía
+     * mojado. **[Diseño propio]**: así se lee como ropa de buzo tendida, no como una persona ni como un saco.
+     */
+    fun DrawScope.trajeColgado(p: Pincel, a: Offset, b: Offset, k: Float, semilla: Long, mojado: Float = 0.5f, lejos: Float = 0f) {
+        val az = Azar(semilla)
+        val m = (a + b) * 0.5f
+        val lona = lerp(C.LONA, C.MADERA, az.entre(0.05f, 0.18f))
+        val ld = lado(p)
+        val luzL = p.luz(lona, lejos); val medioL = p.medio(lona, lejos); val sombraL = p.sombra(lona, lejos)
+        val mojadaL = p.sombra(lerp(lona, C.LONA_MOJADA, 0.85f), lejos)
+        fun tela(x0: Float, x1: Float) = Brush.horizontalGradient(listOf(if (ld > 0) sombraL else luzL, medioL, if (ld > 0) luzL else sombraL), x0, x1)
+        val hombro = 0.2f * k; val talle = 0.62f * k; val pierna = 0.82f * k; val ancho = 0.17f * k
+        val mojar = Brush.verticalGradient(listOf(Color.Transparent, mojadaL.copy(alpha = 0.8f * mojado)), m.y + talle * 0.6f, m.y + talle + pierna)
+        // Las perneras, juntas y un poco abiertas abajo, con sus pies de lona.
+        for (s in listOf(-1f, 1f)) {
+            val x0 = m.x + s * ancho * 0.45f; val y0 = m.y + talle - 0.04f * k; val g = 0.12f * k
+            val pr = Path().apply { moveTo(x0 - g * 0.5f, y0); cubicTo(x0 - g * 0.55f, y0 + pierna * 0.5f, x0 - g * 0.45f + s * 0.02f * k, y0 + pierna * 0.85f, x0 - g * 0.42f + s * 0.03f * k, y0 + pierna); lineTo(x0 + g * 0.45f + s * 0.03f * k, y0 + pierna); cubicTo(x0 + g * 0.5f + s * 0.02f * k, y0 + pierna * 0.8f, x0 + g * 0.55f, y0 + pierna * 0.4f, x0 + g * 0.5f, y0); close() }
+            drawPath(pr, tela(x0 - g * 0.6f, x0 + g * 0.6f)); drawPath(pr, mojar)
+            clipPath(pr) { repeat(3) { val y = y0 + pierna * az.entre(0.15f, 0.85f); drawArc(sombraL.copy(alpha = 0.5f), 10f, 160f, false, Offset(x0 - g * 0.5f, y), Size(g, g * 0.35f), style = Stroke(0.012f * k)) } }
+            val pie = Offset(x0 + s * 0.035f * k, y0 + pierna + 0.03f * k)
+            drawOval(lerp(medioL, mojadaL, 0.7f * mojado), Offset(pie.x - g * 0.55f, pie.y - g * 0.4f), Size(g * 1.1f, g * 0.85f))
+            drawArc(sombraL, 20f, 140f, false, Offset(pie.x - g * 0.55f, pie.y - g * 0.4f), Size(g * 1.1f, g * 0.85f), style = Stroke(0.012f * k))
+        }
+        // El cuerpo, flojo: de los hombros, en el cabo, a la cintura, con sus pliegues y un remiendo.
+        val cuerpo = Path().apply {
+            moveTo(m.x - hombro, m.y + 0.02f * k); cubicTo(m.x - ancho * 1.05f, m.y + talle * 0.35f, m.x - ancho * 0.95f, m.y + talle * 0.7f, m.x - ancho * 0.9f, m.y + talle)
+            lineTo(m.x + ancho * 0.9f, m.y + talle); cubicTo(m.x + ancho * 0.95f, m.y + talle * 0.7f, m.x + ancho * 1.05f, m.y + talle * 0.35f, m.x + hombro, m.y + 0.02f * k); close()
+        }
+        drawPath(cuerpo, tela(m.x - hombro, m.x + hombro)); drawPath(cuerpo, mojar)
+        clipPath(cuerpo) {
+            repeat(6) { val x = m.x + az.entre(-0.8f, 0.8f) * ancho; val y0 = m.y + az.entre(0.1f, 0.4f) * talle; drawLine(sombraL.copy(alpha = 0.5f), Offset(x, y0), Offset(x + az.entre(-0.01f, 0.01f) * k, y0 + az.entre(0.3f, 0.55f) * talle), 0.012f * k, StrokeCap.Round) }
+            drawLine(sombraL.copy(alpha = 0.6f), Offset(m.x - ancho, m.y + talle * 0.93f), Offset(m.x + ancho, m.y + talle * 0.95f), 0.016f * k)
+            drawRect(p.medio(lerp(C.BREA, C.LONA, 0.3f), lejos), Offset(m.x + az.entre(-0.6f, 0.2f) * ancho, m.y + talle * az.entre(0.4f, 0.65f)), Size(0.07f * k, 0.06f * k))
+        }
+        // Las mangas: abiertas por el cabo hasta el codo y caídas desde ahí, con el puño de goma negra.
+        for (s in listOf(-1f, 1f)) {
+            val h0 = Offset(m.x + s * hombro, m.y + 0.02f * k); val codo = Offset(m.x + s * (hombro + 0.2f * k), m.y + 0.04f * k); val puno = codo + Offset(s * 0.02f * k, 0.42f * k)
+            val g = 0.09f * k
+            drawLine(sombraL, h0, codo, g, StrokeCap.Round); drawLine(medioL, h0 + Offset(0f, -g * 0.15f), codo + Offset(0f, -g * 0.15f), g * 0.7f, StrokeCap.Round)
+            val manga = Path().apply { moveTo(codo.x - g * 0.5f, codo.y); cubicTo(codo.x - g * 0.55f, codo.y + 0.2f * k, puno.x - g * 0.5f, puno.y - 0.1f * k, puno.x - g * 0.45f, puno.y); lineTo(puno.x + g * 0.45f, puno.y); cubicTo(puno.x + g * 0.5f, puno.y - 0.1f * k, codo.x + g * 0.55f, codo.y + 0.2f * k, codo.x + g * 0.5f, codo.y); close() }
+            drawPath(manga, tela(codo.x - g, codo.x + g)); drawPath(manga, mojar)
+            drawLine(p.medio(C.BREA, lejos), puno + Offset(-g * 0.5f, -g * 0.15f), puno + Offset(g * 0.5f, -g * 0.15f), g * 0.55f)
+            drawLine(p.luz(C.BREA, lejos).copy(alpha = 0.55f), puno + Offset(-g * 0.35f, -g * 0.35f), puno + Offset(g * 0.25f, -g * 0.35f), g * 0.12f)
+        }
+        // El cuello de goma y su babero, volcado sobre el cabo: lo que dice que es un traje de buzo.
+        val cu = Offset(m.x, m.y - 0.02f * k); val bw = 0.19f * k; val bh = 0.1f * k
+        drawOval(p.medio(lerp(C.BREA, C.PLOMO, 0.25f), lejos), Offset(cu.x - bw, cu.y - bh * 0.55f), Size(bw * 2f, bh * 1.3f))
+        drawArc(p.luz(lerp(C.BREA, C.PLOMO, 0.55f), lejos), 190f, 150f, false, Offset(cu.x - bw, cu.y - bh * 0.55f), Size(bw * 2f, bh * 1.3f), style = Stroke(0.014f * k))
+        for (i in 0 until 9) { val an = PI.toFloat() * (1.06f + 0.88f * i / 8f); drawCircle(p.luz(C.LATON, lejos), 0.011f * k, Offset(cu.x + cos(an) * bw * 0.8f, cu.y + 0.08f * bh + sin(an) * bh * 0.45f)) }
+        drawOval(p.sombra(C.BREA, lejos), Offset(cu.x - bw * 0.42f, cu.y - bh * 0.15f), Size(bw * 0.84f, bh * 0.55f))
+        if (mojado > 0.3f) repeat(4) { drawCircle(p.luz(C.MAR_CLARO, lejos).copy(alpha = 0.6f), 0.01f * k, Offset(m.x + az.entre(-0.15f, 0.15f) * k, m.y + talle + pierna + az.entre(0.08f, 0.2f) * k)) }
+    }
+
     /** La silueta del traje colgado (para su sombra). */
     fun trajeSilueta(cuello: Offset, alto: Float): Path {
         val u = alto / 1.7f
@@ -597,6 +672,7 @@ internal object PiezasAbismo {
                 drawCircle(p.por(C.LATON, t + 0.2f, lejos), 0.04f * e, boca); drawCircle(p.sombra(C.BREA, lejos), 0.018f * e, boca)
             }
             drawPath(f, p.sombra(C.BREA, lejos).copy(alpha = 0.45f), style = Stroke((0.006f * e).coerceIn(0.3f, 1f)))
+            if (t < -0.1f) { val frio = ladoFrio(p); if (frio.alpha > 0.01f) drawPath(f, frio.copy(alpha = frio.alpha * (0.6f + 0.4f * (-0.1f - t).coerceAtMost(1f)))) }
         }
         // El eje que cruza la caja, y la rueda de delante.
         drawLine(p.sombra(C.PLOMO, lejos), s.p(cerca * BOMBA_ANCHO / 2f, RUEDA_ALTO, 0f), s.p(cerca * RUEDA_X, RUEDA_ALTO, 0f), (0.04f * e).coerceAtLeast(0.6f))
@@ -713,6 +789,7 @@ internal object PiezasAbismo {
         val madera = lerp(C.MADERA, C.MADERA_GRIS, az.entre(0.2f, 0.5f))
         val x0 = boca.minOf { it.x }; val x1 = boca.maxOf { it.x }
         drawPath(cuerpo, Brush.horizontalGradient(listOf(if (sol.sx < 0f) p.luz(madera, lejos) else p.sombra(madera, lejos), p.medio(madera, lejos), if (sol.sx < 0f) p.sombra(madera, lejos) else p.luz(madera, lejos)), x0, x1))
+        enfriar(p, cuerpo, Offset((x0 + x1) / 2f, (boca.minOf { it.y } + base.maxOf { it.y }) / 2f), (x1 - x0) * 0.5f)
         clipPath(cuerpo) {
             // Las duelas.
             for (i in 0 until 14) { val a = PI.toFloat() * (0.08f + 0.84f * i / 13f); drawLine(p.sombra(lerp(madera, C.BREA, 0.4f), lejos).copy(alpha = 0.5f), s.p(radio * cos(a), alto, -radio * sin(a)), s.p(radio * 0.9f * cos(a), 0f, -radio * 0.9f * sin(a)), (0.006f * e).coerceAtLeast(0.3f)) }
@@ -802,6 +879,38 @@ internal object PiezasAbismo {
         drawArc(p.luz(C.PLOMO, lejos).copy(alpha = 0.6f), 190f, 120f, false, Offset(aro.x - r, aro.y - r * 0.25f), Size(r * 2f, r * 0.5f), style = Stroke((0.01f * k).coerceAtLeast(0.3f)))
         drawLine(p.sombra(C.CANAMO, lejos), arriba, aro + Offset(r * 0.6f, -r * 0.2f), (0.014f * k).coerceAtLeast(0.4f))
         repeat(3) { drawCircle(p.luz(C.MAR_CLARO, lejos).copy(alpha = 0.5f), (0.008f * k).coerceAtLeast(0.3f), aro + Offset(az.entre(-0.3f, 0.3f) * r, r * (2.3f + az.entre(0f, 0.4f)))) }
+    }
+
+    /**
+     * El cordero de Pascua asándose entero en su espetón, en [pie] (en la cubierta), de [k] unidades por metro: dos
+     * horquillas de madera, el espetón de hierro con su manivela, el cordero tostado, con su brillo de grasa y las patas
+     * atadas, y debajo la cama de brasas en su bandeja de chapa, que alumbra la panza (el humo lo pone la parte viva).
+     */
+    fun DrawScope.corderoEnElEspeton(p: Pincel, pie: Offset, k: Float, lejos: Float = 0f) {
+        val largo = 0.9f * k; val alto = 0.48f * k
+        val i0 = pie + Offset(-largo * 0.5f, 0f); val i1 = pie + Offset(largo * 0.5f, -0.04f * k)
+        // La bandeja de las brasas y las brasas.
+        drawRect(p.sombra(C.PLOMO, lejos), Offset(pie.x - largo * 0.36f, pie.y - 0.06f * k), Size(largo * 0.72f, 0.06f * k))
+        val az = Azar(57)
+        repeat(14) { val q = Offset(pie.x + az.entre(-0.33f, 0.33f) * largo, pie.y - az.entre(0.05f, 0.1f) * k); drawCircle(lerp(Color(0xFFB0401E), Color(0xFFFFA040), az.real()), az.entre(0.012f, 0.025f) * k, q) }
+        resplandor(pie + Offset(0f, -0.15f * k), largo * 0.6f, 0.55f, C.LUMBRE)
+        // Las dos horquillas.
+        for (a in listOf(i0, i1)) {
+            drawLine(p.sombra(C.MADERA_OSC, lejos), a, a + Offset(0f, -alto), 0.035f * k, StrokeCap.Round)
+            drawLine(p.medio(C.MADERA_OSC, lejos), a + Offset(0f, -alto), a + Offset(-0.05f * k, -alto - 0.08f * k), 0.025f * k, StrokeCap.Round)
+            drawLine(p.medio(C.MADERA_OSC, lejos), a + Offset(0f, -alto), a + Offset(0.05f * k, -alto - 0.08f * k), 0.025f * k, StrokeCap.Round)
+        }
+        // El cordero, ensartado: un cuerpo largo y tostado, más oscuro abajo (el lado del fuego, quemado) y con su brillo arriba.
+        val e0 = i0 + Offset(-0.04f * k, -alto); val e1 = i1 + Offset(0.08f * k, -alto)
+        val c = (e0 + e1) * 0.5f + Offset(0f, 0.01f * k)
+        val cuerpo = lazo(listOf(c + Offset(-0.36f * k, 0f), c + Offset(-0.25f * k, -0.1f * k), c + Offset(0.05f * k, -0.12f * k), c + Offset(0.3f * k, -0.08f * k), c + Offset(0.38f * k, 0.01f * k), c + Offset(0.25f * k, 0.1f * k), c + Offset(-0.05f * k, 0.11f * k), c + Offset(-0.3f * k, 0.08f * k)))
+        val tostado = lerp(C.MADERA, C.ROJO, 0.25f)
+        drawPath(cuerpo, Brush.verticalGradient(listOf(p.luz(lerp(tostado, C.ESPONJA, 0.3f), lejos), p.medio(tostado, lejos), lerp(p.sombra(C.MADERA_OSC, lejos), C.LUMBRE, 0.35f)), c.y - 0.12f * k, c.y + 0.11f * k))
+        drawArc(Color.White.copy(alpha = 0.35f * p.r.contraste), 200f, 120f, false, Offset(c.x - 0.25f * k, c.y - 0.11f * k), Size(0.5f * k, 0.12f * k), style = Stroke(0.012f * k, cap = StrokeCap.Round))
+        // Las patas atadas, delante y detrás, y el espetón que lo atraviesa, con su manivela.
+        for (s in listOf(-1f, 1f)) drawLine(p.sombra(tostado, lejos), c + Offset(s * 0.3f * k, 0.04f * k), c + Offset(s * 0.42f * k, 0.12f * k), 0.025f * k, StrokeCap.Round)
+        drawLine(p.sombra(C.PLOMO, lejos), e0 + Offset(-0.06f * k, 0f), e1 + Offset(0.04f * k, 0f), 0.014f * k, StrokeCap.Round)
+        drawLine(p.medio(C.PLOMO, lejos), e1 + Offset(0.04f * k, 0f), e1 + Offset(0.04f * k, 0.08f * k), 0.012f * k, StrokeCap.Round)
     }
 
     // =================================================================

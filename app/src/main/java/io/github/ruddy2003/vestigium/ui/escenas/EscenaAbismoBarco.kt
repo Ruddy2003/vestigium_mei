@@ -121,8 +121,8 @@ internal object BarcoAbismo {
     /** La tina de lavar las esponjas, cortada por el borde de abajo, a la izquierda. */
     val SITIO_TINA = sitio(-0.3f, 2.95f, 0f)
     /** Las botas de plomo, a la derecha de la bomba: una de pie y la otra caída de lado. */
-    val SITIO_BOTA = sitio(0.66f, 3.5f, -0.5f)
-    val SITIO_BOTA2 = sitio(0.92f, 3.22f, 0.7f)
+    val SITIO_BOTA = sitio(-0.35f, 4.3f, -0.5f)
+    val SITIO_BOTA2 = sitio(-0.12f, 4.5f, 0.6f)
     /** El montón de las esponjas limpias, abajo, junto a la borda. */
     const val LIMPIAS_U = 1.0f
     const val LIMPIAS_V = 2.7f
@@ -183,7 +183,7 @@ internal object BarcoAbismo {
     internal class Lumbres(val lamparilla: Float, val farol: Float)
 
     /** Cuánto alumbra el farol «ya bajo» las primeras horas del sueño. */
-    const val FAROL_BAJO = 0.6f
+    const val FAROL_BAJO = 0.75f
     /** Hasta qué hora queda el farol bajo encendido. */
     const val FAROL_HASTA = 22.5
 
@@ -201,19 +201,40 @@ internal object BarcoAbismo {
     }
 
     /**
-     * Cuántos trajes de lona hay puestos a secar sobre la regala: uno por la mañana (los otros los llevan puestos el buzo
-     * que está abajo y el que espera su turno), dos desde que se acaba de bajar hasta el anochecer (los de la mañana,
-     * mojados), ninguno de noche (doblados, en la bodega); los días que no se baja, uno, seco **[Diseño propio]**. El día
-     * que el traje es el objeto, ninguno: lo pinta el objeto.
+     * Cuántos trajes de lona hay tendidos a secar en el cabo de las ristras: uno de día (el de recambio por la mañana, el
+     * de la última bajada por la tarde) y ninguno de noche (doblados, en la bodega) **[Diseño propio]**. Uno solo, grande y
+     * cerca, para que se lea como traje de buzo (con el cuello de goma y los puños); varios chicos no se leían. El día que el
+     * traje es el objeto, ninguno: lo pinta el objeto.
      */
     internal fun trajesASecar(m: Momento): Int {
         if (EscenaAbismo.lugar(m) != EscenaAbismo.Lugar.BARCO || !ObjetosAbismo.elCuadroPinta(m, "escafandra")) return 0
         return when (EscenaAbismo.fase(m)) {
             EscenaAbismo.Fase.SUENO -> 0
-            EscenaAbismo.Fase.ALBA, EscenaAbismo.Fase.INMERSION -> 1
-            EscenaAbismo.Fase.COMIDA, EscenaAbismo.Fase.ESPONJAS, EscenaAbismo.Fase.CORRO -> if (EscenaAbismo.diaSinBajar(m) || m.hora < 11.0) 1 else 2
+            EscenaAbismo.Fase.ALBA, EscenaAbismo.Fase.INMERSION, EscenaAbismo.Fase.COMIDA, EscenaAbismo.Fase.ESPONJAS, EscenaAbismo.Fase.CORRO -> 1
         }
     }
+
+    /**
+     * Si el casco de Nikos descansa en la cubierta, ladeado sobre su peto, junto a la tina: cuando ha subido y se lo han
+     * quitado («Arriba le quitan el casco»), hasta que lo cuelguen. Mientras está abajo lo lleva puesto; el día que el casco
+     * es el objeto, el cuadro quita este y no otro **[Diseño propio]**: así no cuelgan los tres en columna del palo.
+     */
+    internal fun cascoEnCubierta(m: Momento): Boolean =
+        EscenaAbismo.lugar(m) == EscenaAbismo.Lugar.BARCO && EscenaAbismo.cascosColgados(m) == 3 && ObjetosAbismo.elCuadroPinta(m, "casco")
+
+    /** Dónde descansa el casco de Nikos en la cubierta (u, v en metros), y su escala. */
+    const val CASCO_U = 0.62f
+    const val CASCO_V = 2.92f
+
+    /** La tostada del cordero de Pascua, en su espetón junto al hornillo de la proa: «se asa entero en cubierta… desde que amanece». */
+    internal fun cordero(m: Momento): Boolean = EscenaAbismo.lugar(m) == EscenaAbismo.Lugar.BARCO && EscenaAbismo.pascua(m) && m.hora >= 5.0 && m.hora < 15.0
+
+    /**
+     * Cuánto alumbra cada lumbre a esta hora, de 0 a 1, contando con la luz que queda fuera: el farol se nota ya al caer la
+     * tarde y manda de noche; la lamparilla, chica, solo cuando oscurece.
+     */
+    internal fun luzDelFarol(v: Vista): Float = v.lu.farol * (0.25f + 0.75f * v.l.noche)
+    internal fun luzDeLaLamparilla(v: Vista): Float = v.lu.lamparilla * (0.1f + 0.9f * v.l.noche)
 
     /**
      * El montón de esponjas ya limpias («las dejan como pan blanco»), de 0 a 1: crece mientras se limpian, por la tarde, y
@@ -266,18 +287,23 @@ internal object BarcoAbismo {
         val escora: Float = when (mar) { Mar.TORMENTA -> 0.045f; Mar.HURACAN -> 0.03f; Mar.NORTE -> 0.012f; Mar.CALMA, Mar.CLARA -> 0f }
 
         /**
-         * El pincel de lo que está en [en] (en el lienzo): de día, el del sol; de noche, con el calor de la lamparilla o
-         * del farol si están cerca, y la sombra tumbada lejos de ellos.
+         * El pincel de lo que está en [en] (en el lienzo). De día, el del sol (al caer la tarde, con el calor del farol si
+         * está encendido y cerca). De noche manda la lumbre que más alumbra ahí: la cara que la mira, naranja; la otra, azul
+         * hondo (o plata, donde la luna llega): cada cosa, un lado de cada color.
          */
         fun pincel(en: Offset): Pincel {
-            if (l.noche < 0.3f) return p
-            val fuentes = listOf(Triple(LAMPARILLA, lu.lamparilla * 0.75f, 70f), Triple(FAROL, lu.farol, 105f))
+            val fuentes = listOf(Triple(LAMPARILLA, luzDeLaLamparilla(this) * 0.9f, 85f), Triple(FAROL, luzDelFarol(this), 125f))
             var mejor: Pair<Offset, Float>? = null; var calor = 0f
             for ((q, f, alcance) in fuentes) { if (f <= 0.02f) continue; val d = (q - en).getDistance(); val kk = f / (1f + (d / alcance) * (d / alcance)); calor += kk; if (mejor == null || kk > mejor.second) mejor = q to kk }
-            if (mejor == null || calor < 0.06f) return p
+            if (mejor == null || calor < 0.04f) return p
+            val calida = (calor * 1.7f).coerceIn(0f, 0.92f)
+            if (l.noche < 0.35f) return Pincel(l, r, calida * 0.6f, C.LUMBRE)
             val rr = rayoDeFoco(Foco(mejor.first, C.LUMBRE, 1f, 60f, suelo = en.y), en, 0.4f, C.SOMBRA)
-            return Pincel(l, Rayo(rr.dia, rr.lat, rr.cot, rr.tan, rr.ax, rr.ay, rr.fuerza, rr.color, maxOf(rr.contraste, r.contraste)), (calor * 1.2f * l.noche).coerceIn(0f, 0.9f), C.LUMBRE)
+            return Pincel(l, Rayo(rr.dia, rr.lat, rr.cot, rr.tan, rr.ax, rr.ay, rr.fuerza, C.SOMBRA, 0.95f), calida, C.LUMBRE)
         }
+
+        /** La luz con la que se ve la cara de una cosa de caras planas: de noche, la de la lumbre que la alumbra (si alumbra). */
+        fun solDe(pc: Pincel): Sol3 = if (l.noche > 0.35f && pc.calida > 0.08f) Sol3(pc.r) else sol
     }
 
     /** La luz de fuera con la noche más honda a bordo: así lo que alumbran la lamparilla, el farol y la luna destaca. */
@@ -321,9 +347,14 @@ internal object BarcoAbismo {
         return LuzGato(p.r, v.l.noche) { if (p.calida > 0.05f) lerp(v.l.tono(it), mult(it, C.LUMBRE, 0.5f), p.calida * 0.4f) else v.l.tono(it) }
     }
 
-    /** En el paso del gato no hay nada plantado: la tina pisa más acá y la bomba más allá. */
-    @Suppress("UNUSED_PARAMETER")
-    fun estorbos(m: Momento): List<Float> = emptyList()
+    /**
+     * Lo plantado en el paso del gato: el casco de Nikos cuando descansa en la cubierta y el montón de las esponjas limpias
+     * a la hora de limpiar (la tina pisa más acá y la bomba más allá).
+     */
+    fun estorbos(m: Momento): List<Float> = buildList {
+        if (cascoEnCubierta(m)) add(pb(CASCO_U, 0f, CASCO_V).x)
+        if (esponjasLimpias(m) > 0.02f) add(pb(LIMPIAS_U, 0f, LIMPIAS_V).x)
+    }
 
     fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, GATO_DESDE, PISO_GATO, hasta = GATO_HASTA))

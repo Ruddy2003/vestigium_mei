@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaAbismo.Escala
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaAbismo.Fase
@@ -160,6 +161,9 @@ internal object CubiertaAbismo {
         // La proa: el hornillo, con la olla común.
         val ph = B.pb(B.EJE + 0.3f, 0f, 10.2f)
         hornillo(p, ph, B.k(B.cam(B.EJE + 0.3f, 10.2f).y), EscenaAbismo.hornillo(v.m))
+        // La Pascua: el cordero entero en su espetón, sobre las brasas, junto al hornillo («se asa entero en cubierta…
+        // desde que amanece. Los diez del barco se turnan para darle vueltas»).
+        if (B.cordero(v.m)) { val q = B.pb(0.2f, 0f, 9.2f); PiezasAbismo.run { corderoEnElEspeton(v.pincel(q), q, B.k(B.cam(0.2f, 9.2f).y)) } }
     }
 
     /**
@@ -220,8 +224,10 @@ internal object CubiertaAbismo {
             val pie0 = (0..24).map { i -> val vv2 = 0.9f + (B.RODA - 0.9f) * i / 24f; enLaBorda(vv2, 0f) }
             val pie1 = (24 downTo 0).map { i -> val vv2 = 0.9f + (B.RODA - 0.9f) * i / 24f; enLaBorda(vv2, 0.13f) }
             drawPath(poligono(pie0 + pie1), Brush.verticalGradient(listOf(Color.Transparent, p.sombra(lerp(C.VERDIN, C.BREA, 0.3f)).copy(alpha = 0.5f)), 150f, ALTO))
-            // De noche, la lamparilla tiñe la borda de su lado.
-            if (v.l.noche > 0.2f) charcoDeLuz(Foco(B.LAMPARILLA, C.LUMBRE, v.lu.lamparilla, 60f), enLaBorda(2.0f, 0.55f), 40f, 30f, pintura, 1.1f * v.l.noche)
+            // Las lumbres en la cara de la borda: la lamparilla, junto a la hornacina; el farol, enfrente de él.
+            val lam = B.luzDeLaLamparilla(v); val far = B.luzDelFarol(v)
+            if (lam > 0.04f) charcoDeLuz(Foco(B.LAMPARILLA, C.LUMBRE, lam, 60f), enLaBorda(2.0f, 0.5f), 46f, 36f, pintura, 1.5f)
+            if (far > 0.04f) charcoDeLuz(Foco(B.FAROL, C.LUMBRE, far, 90f), enLaBorda(3.0f, 0.45f), 52f, 40f, pintura, 1.3f)
         }
         // El cabillero de los obenques: un listón con sus cabillas, y de cada una cuelga la aduja de su cabo.
         cabillero(v)
@@ -236,6 +242,12 @@ internal object CubiertaAbismo {
         drawPath(curva(fuera.reversed()), p.por(C.AZUL, 0.4f), style = Stroke(1.6f))
         drawPath(curva(dentro), p.luz(C.MADERA_GRIS).copy(alpha = 0.7f), style = Stroke(0.6f))
         if (v.luna > 0.05f) drawPath(curva(dentro), B.plata(v).copy(alpha = 0.55f * v.luna), style = Stroke(1.2f))
+        // El canto de la regala encendido por la lamparilla, de su lado: un filo naranja que se apaga con la distancia.
+        val lam = B.luzDeLaLamparilla(v)
+        if (lam > 0.04f) for (i in 0 until dentro.size - 1) {
+            val d = (dentro[i] - B.LAMPARILLA).getDistance(); val f = (lam * 1.4f / (1f + (d / 55f) * (d / 55f))).coerceIn(0f, 0.9f)
+            if (f > 0.03f) drawLine(C.LUMBRE.copy(alpha = f), dentro[i], dentro[i + 1], 1.4f, StrokeCap.Round)
+        }
     }
 
     /** El cabillero junto a los obenques: el listón por dentro de la borda, las cabillas de madera y los cabos adujados colgando de ellas. */
@@ -267,11 +279,12 @@ internal object CubiertaAbismo {
     private class Sombreable(val s: Sitio, val esquinas: List<V3>)
 
     fun DrawScope.cosas(v: BarcoAbismo.Vista) {
-        val m = v.m; val p = v.p; val sol = v.sol
+        val m = v.m; val sol = v.sol
         val cosas = ArrayList<Cosa>(); val aLaLumbre = ArrayList<Sombreable>()
         val neg = EscenaAbismo.esponjasNegras(m); val limpias = B.esponjasLimpias(m)
         val carga = EscenaAbismo.carga(m)
         val fase = EscenaAbismo.fase(m)
+        val farol = B.luzDelFarol(v); val lamparilla = B.luzDeLaLamparilla(v)
         // La tapa de la escotilla, detrás de la bomba: las ristras a medio ensartar, las cartas del corro.
         val se = B.SITIO_ESCOTILLA
         val esqEscotilla = esquinas(-B.ESCOTILLA_ANCHO / 2f, B.ESCOTILLA_ANCHO / 2f, 0f, B.ESCOTILLA_ALTO, -B.ESCOTILLA_FONDO / 2f, B.ESCOTILLA_FONDO / 2f)
@@ -281,32 +294,40 @@ internal object CubiertaAbismo {
             if (EscenaAbismo.ensartando(m)) ensartando(v)
             if (fase == Fase.CORRO) corro(v)
         }
-        // La bomba del aire, con la manguera (y encima, el objeto chico del día).
+        // La bomba del aire, con la manguera (y encima, el objeto chico del día). De noche, cada cara con la lumbre que la alumbra.
         val sb = B.SITIO_BOMBA
         aLaLumbre += Sombreable(sb, PiezasAbismo.bombaEsquinas())
         cosas += Cosa(sombraDe(sb, sol, PiezasAbismo.bombaEsquinas()), sb.pie) {
             if (EscenaAbismo.manguera(m) == Manguera.ADUJADA) aduja(v.pincel(sb.pie), B.pb(0.95f, 0f, 3.05f), 0.3f * sb.k, 0.1f * sb.k, 5, 0.05f * sb.k, C.BREA, manguera = true)
-            bomba(v.pincel(sb.p(0f, 0.6f, 0f)), sb, sol, EscenaAbismo.buzoAbajo(m), 0.75f, Semilla.de("abismo", "bomba"))
+            val pb = v.pincel(sb.p(0f, 0.6f, 0f))
+            bomba(pb, sb, v.solDe(pb), EscenaAbismo.buzoAbajo(m), 0.75f, Semilla.de("abismo", "bomba"))
             if (EscenaAbismo.manguera(m) == Manguera.AL_AGUA) mangueraEnCubierta(v)
             if (v.luna > 0.05f) lunaEnLaBomba(v)
             sobreElSoporte(m, v.pincel(B.soporte()), B.soporte(), B.escalaEn(sb.z0))
         }
-        // Las botas de plomo: una de pie y otra caída de lado (el día que son el objeto, las pinta el objeto).
+        // Las botas de plomo, el par, a la izquierda de la bomba (el día que son el objeto, las pinta el objeto).
         if (ObjetosAbismo.elCuadroPinta(m, "botas")) {
             val b1 = B.SITIO_BOTA; val b2 = B.SITIO_BOTA2
-            cosas += Cosa(sombraDe(b1, sol, esquinas(-0.08f, 0.08f, 0f, 0.46f, -0.2f, 0.16f)), b1.pie) { PiezasAbismo.run { bota(v.pincel(b1.pie), b1.pie, b1.k, -1f, 3) } }
-            cosas += Cosa(sombraDe(b2, sol, esquinas(-0.08f, 0.08f, 0f, 0.46f, -0.2f, 0.16f)), b2.pie) { PiezasAbismo.run { bota(v.pincel(b2.pie), b2.pie, b2.k, -1f, 4) } }
+            cosas += Cosa(sombraDe(b1, sol, esquinas(-0.08f, 0.08f, 0f, 0.36f, -0.2f, 0.16f)), b1.pie) { PiezasAbismo.run { bota(v.pincel(b1.pie), b1.pie, b1.k, 1f, 3) } }
+            cosas += Cosa(sombraDe(b2, sol, esquinas(-0.08f, 0.08f, 0f, 0.36f, -0.2f, 0.16f)), b2.pie) { PiezasAbismo.run { bota(v.pincel(b2.pie), b2.pie, b2.k, 1f, 4) } }
         }
         // La tina de lavar, con las esponjas dentro y el mazo recostado; cortada por el borde de abajo.
         val st = B.SITIO_TINA
         aLaLumbre += Sombreable(st, PiezasAbismo.tinaEsquinas(0.42f, 0.5f))
         cosas += Cosa(sombraDe(st, sol, PiezasAbismo.tinaEsquinas(0.42f, 0.5f)), st.pie) {
-            tina(v.pincel(st.pie), st, sol, 0.42f, 0.5f, if (neg > 0f || limpias > 0f) 6 else 2, neg > 0.3f, Semilla.de("abismo", "tina"))
-            mazo(v.pincel(st.pie), B.pb(0.12f, 0f, 2.75f), st.p(0.36f, 0.5f, -0.1f), 0.11f * st.k)
+            val pt = v.pincel(st.p(0.3f, 0.5f, 0f))
+            tina(pt, st, v.solDe(pt), 0.42f, 0.5f, if (neg > 0f || limpias > 0f) 6 else 2, neg > 0.3f, Semilla.de("abismo", "tina"))
+            mazo(pt, B.pb(0.12f, 0f, 2.75f), st.p(0.36f, 0.5f, -0.1f), 0.11f * st.k)
         }
-        // Las esponjas negras recién sacadas, por limpiar: un montón que crece con la mañana y mengua con la tarde.
+        // El casco de Nikos, cuando ha subido: descansa en la cubierta, ladeado sobre su peto, junto a la tina.
+        if (B.cascoEnCubierta(m)) {
+            val s = B.sitio(B.CASCO_U, B.CASCO_V)
+            aLaLumbre += Sombreable(s, esquinas(-0.26f, 0.26f, 0f, 0.55f, -0.22f, 0.22f))
+            cosas += Cosa(sombraDe(s, sol, esquinas(-0.26f, 0.26f, 0f, 0.55f, -0.22f, 0.22f)), s.pie) { cascoEnLaCubierta(v, s) }
+        }
+        // Las esponjas negras recién sacadas, por limpiar: un montón junto a la escala, que crece con la mañana y mengua con la tarde.
         if (neg > 0.02f) {
-            val s = B.sitio(1.0f, 4.15f)
+            val s = B.sitio(1.12f, 4.55f)
             val ancho = 1.05f * s.k * (0.5f + 0.5f * neg)
             aLaLumbre += Sombreable(s, esquinas(-0.35f, 0.35f, 0f, 0.3f * neg + 0.1f, -0.25f, 0.25f))
             cosas += Cosa(sombraDe(s, sol, esquinas(-0.35f, 0.35f, 0f, 0.3f * neg + 0.1f, -0.25f, 0.25f)), s.pie) { monton(v.pincel(s.pie), s.pie, ancho, (5 + 11 * neg).toInt(), Semilla.de("abismo", "negras"), false) }
@@ -319,9 +340,9 @@ internal object CubiertaAbismo {
         // El cubo de agua de mar (para lavarse la cara, para mojar las esponjas), con su asa de cuerda.
         if (fase != Fase.SUENO) {
             val s = B.sitio(1.18f, 3.55f)
-            cosas += Cosa(sombraDe(s, sol, esquinas(-0.13f, 0.13f, 0f, 0.3f, -0.13f, 0.13f)), s.pie) { cuboDeMadera(v.pincel(s.pie), s, sol, Semilla.de("abismo", "cubo")) }
+            cosas += Cosa(sombraDe(s, sol, esquinas(-0.13f, 0.13f, 0f, 0.3f, -0.13f, 0.13f)), s.pie) { val pc = v.pincel(s.pie); cuboDeMadera(pc, s, v.solDe(pc), Semilla.de("abismo", "cubo")) }
         }
-        // Una aduja de cabo junto a la borda, de proa, y otra suelta (siempre).
+        // Una aduja de cabo junto a la borda, de proa (siempre).
         run {
             val q = B.pb(0.85f, 0f, 5.8f); val kk = kEn(5.8f)
             cosas += Cosa(Path().apply { addOval(Rect(q.x - 0.3f * kk, q.y - 0.1f * kk, q.x + 0.3f * kk, q.y + 0.08f * kk)) }, q) { aduja(v.pincel(q), q, 0.28f * kk, 0.09f * kk, 5, 0.035f * kk, C.CANAMO) }
@@ -329,7 +350,7 @@ internal object CubiertaAbismo {
         // Los sacos de esponjas secas, contra la borda (la bodega se va llenando).
         val sacos = when (carga) { EscenaAbismo.Carga.POCAS -> 0; EscenaAbismo.Carga.RACIMOS -> 2; EscenaAbismo.Carga.LLENO -> 4 }
         for (i in 0 until sacos) {
-            val vv = 5.1f + 0.62f * i; val u = B.estribor(vv) - 0.42f - 0.08f * (i % 2)
+            val vv = 5.3f + 0.62f * i; val u = B.estribor(vv) - 0.42f - 0.08f * (i % 2)
             val pie = B.pb(u, 0f, vv); val kk = B.k(B.cam(u, vv).y)
             cosas += Cosa(Path().apply { addOval(Rect(pie.x - 0.3f * kk, pie.y - 0.7f * kk, pie.x + 0.3f * kk, pie.y)) }, pie) { saco(v.pincel(pie), pie, kk, Semilla.de("abismo", "saco", i)) }
         }
@@ -341,40 +362,69 @@ internal object CubiertaAbismo {
         // El objeto grande del día, recostado en la bomba.
         grande(m, v.pincel(B.PIE_GRANDE), B.PIE_GRANDE, B.APOYO_GRANDE, B.escalaEn(B.cam(0.1f, 3.05f).y))?.let { cosas += it }
 
-        // La capa de sombras: la de cada cosa, la de la borda (con el sol de estribor) y la del aparejo.
+        // La luz de las lumbres en las tablas, antes de las sombras que la cortan: el charco del farol, grande, bajo él; el de
+        // la lamparilla, chico, junto a la hornacina.
+        if (farol > 0.04f) clipPath(suelo()) {
+            // **[Aproximación]**: el charco se centra un poco por delante del pie del farol (que cae en el borde de abajo del cuadro), donde la cubierta se ve entre las cosas.
+            val pie = B.pb(0.3f, 0f, 3.3f)
+            charcoDeLuz(Foco(B.FAROL, C.LUMBRE, farol, 120f), pie, 175f, 74f, C.MADERA, 2.2f)
+            charcoDeLuz(Foco(B.FAROL, C.LUMBRE, farol, 120f), pie + Offset(4f, 6f), 90f, 34f, C.MADERA, 1.4f)
+        }
+        if (lamparilla > 0.04f) clipPath(suelo()) {
+            charcoDeLuz(Foco(B.LAMPARILLA, C.LUMBRE, lamparilla, 70f), B.pb(1.0f, 0f, 2.55f), 70f, 24f, C.MADERA, 1.4f)
+        }
+        // La capa de sombras: la de cada cosa, la de la borda (con el sol de estribor) y la del aparejo; de día, un punto más
+        // de contraste, para que la reja de la jarcia y de las ristras se lea en las tablas.
         val orden = cosas.sortedBy { it.pie.y }
-        capaSombra(v.r) { c ->
+        capaSombra(v.r, if (v.r.dia > 0.5f) 1.3f else 1f) { c ->
             clipPath(suelo()) {
                 for (cosa in orden) sombra(cosa.forma, c)
                 sombraDeLaBorda(v, c)
                 with(AparejoAbismo) { sombras(v, c) }
             }
         }
-        // De noche, el farol tumba las suyas lejos de él (la otra luz, la de la luna, ya las tumbó en la capa de arriba).
-        if (v.lu.farol > 0.02f && v.l.noche > 0.3f) {
+        // El farol tumba las suyas lejos de él, y cortan su charco (la otra luz, la de la luna, ya las tumbó arriba).
+        if (farol > 0.04f && v.l.noche > 0.3f) {
             val lum = B.LUMBRE_FAROL
-            capaSombra(rayoFijo(0f, 45f, (0.5f * v.lu.farol * v.l.noche).coerceIn(0f, 0.6f), C.SOMBRA)) { c ->
+            capaSombra(rayoFijo(0f, 45f, (0.85f * farol).coerceIn(0f, 0.75f), C.SOMBRA)) { c ->
                 clipPath(suelo()) { for (s in aLaLumbre) drawPath(sombraALaLumbre(s.s, s.esquinas, lum), c) }
             }
         }
-        // La luz de noche en la cubierta: el charco del farol en las tablas, bajo él, y su halo en el aire.
-        if (v.l.noche > 0.2f && v.lu.farol > 0.02f) {
-            val f = v.lu.farol * v.l.noche
-            clipPath(suelo()) {
-                charcoDeLuz(Foco(B.FAROL, C.LUMBRE, f, 90f), B.pb(0.35f, 0f, 3.0f), 120f, 40f, C.MADERA, 1.5f)
-                charcoDeLuz(Foco(B.FAROL, C.LUMBRE, f, 90f), B.pb(0.2f, 0f, 4.4f), 70f, 18f, C.MADERA, 0.8f)
-            }
-        }
         for (cosa in orden) cosa.pintar(this)
+        // De día, la reja de sombra de lo que cuelga también cae sobre lo de color que hay debajo (las esponjas limpias, el
+        // cobre del casco): la franja de sol los enciende entre sombra y sombra **[Aproximación]**: la sombra se calcula en las tablas.
+        if (v.r.dia > 0.5f && v.r.fuerza > 0.1f && (limpias > 0.02f || B.cascoEnCubierta(m))) {
+            val zona = Path()
+            if (limpias > 0.02f) { val q = B.pb(B.LIMPIAS_U, 0f, B.LIMPIAS_V); val kk = kEn(B.LIMPIAS_V); zona.addOval(Rect(q.x - 0.4f * kk, q.y - 0.4f * kk, q.x + 0.4f * kk, q.y + 0.05f * kk)) }
+            if (B.cascoEnCubierta(m)) { val q = B.pb(B.CASCO_U, 0f, B.CASCO_V); val kk = B.k(B.cam(B.CASCO_U, B.CASCO_V).y); zona.addOval(Rect(q.x - 0.35f * kk, q.y - 0.62f * kk, q.x + 0.35f * kk, q.y + 0.02f * kk)) }
+            capaSombra(v.r, 0.75f) { c -> clipPath(zona) { with(AparejoAbismo) { sombras(v, c) } } }
+        }
         // Lo que pasa por la regala: la escala (echada o recogida), la cuerda de vida y la red colgada.
         escalaYCuerda(v)
         if ((fase == Fase.ESPONJAS || (fase == Fase.COMIDA && m.hora > 11.0)) && m.ficha.objeto != "red") redColgada(v)
-        if (v.l.noche > 0.2f && v.lu.farol > 0.02f) haloDeBruma(B.FAROL, 26f, 18f, C.LUMBRE, 0.55f * v.lu.farol * v.l.noche)
+        if (farol > 0.04f) haloDeBruma(B.FAROL, 34f, 24f, C.LUMBRE, 0.75f * farol)
         icono(v)
     }
 
+    /**
+     * El casco de Nikos descansando en la cubierta en [s]: ladeado sobre el canto del peto, con su sombra de contacto, el
+     * cordel suelto y, si hace sol, la franja de sombra de lo que cuelga encima. De noche, con su lado de lumbre y su lado
+     * de luna.
+     */
+    private fun DrawScope.cascoEnLaCubierta(v: BarcoAbismo.Vista, s: Sitio) {
+        val r = 0.2f * s.k; val pie = s.pie
+        val c = pie + Offset(0f, -1.6f * r)
+        val pc = v.pincel(c)
+        drawOval(pc.sombra(C.BREA).copy(alpha = 0.4f), Offset(pie.x - 1.4f * r, pie.y - 0.3f * r), Size(2.8f * r, 0.6f * r))
+        rotate(-16f, pie + Offset(-0.9f * r, 0f)) {
+            PiezasAbismo.run { casco(pc, c, r, -0.35f, Semilla.de("abismo", "casco", 2)) }
+        }
+        drawPath(Path().apply { moveTo(pie.x + 0.5f * r, pie.y - 2.4f * r); cubicTo(pie.x + 1.1f * r, pie.y - 2f * r, pie.x + 1.4f * r, pie.y - 0.6f * r, pie.x + 1.8f * r, pie.y - 0.05f * r) }, pc.sombra(C.CANAMO), style = Stroke(0.08f * r, cap = StrokeCap.Round))
+        if (v.luna > 0.05f) drawArc(B.plata(v).copy(alpha = 0.3f * v.luna), 200f, 90f, false, Offset(c.x - r * 1.0f, c.y - r * 1.0f), Size(r * 1.7f, r * 1.6f), style = Stroke(r * 0.07f, cap = StrokeCap.Round))
+    }
+
     /** Las mantas de dormir: (u0, v0, u1, v1) de cada una en la cubierta, en metros. */
-    private val MANTAS = listOf(floatArrayOf(0.35f, 2.75f, 1.0f, 3.55f), floatArrayOf(0.55f, 4.7f, 1.15f, 5.9f), floatArrayOf(-0.55f, 4.4f, -0.05f, 5.5f))
+    private val MANTAS = listOf(floatArrayOf(0.85f, 2.45f, 1.3f, 3.3f), floatArrayOf(0.55f, 4.7f, 1.15f, 5.9f), floatArrayOf(-0.55f, 4.4f, -0.05f, 5.5f))
 
     /** La sombra que tumba la lumbre [lum] (en metros de la cámara: x, alto, z) de una cosa con estas esquinas, en la cubierta. */
     private fun sombraALaLumbre(s: Sitio, esquinas: List<V3>, lum: V3): Path {
@@ -400,8 +450,9 @@ internal object CubiertaAbismo {
     private fun DrawScope.escotilla(v: BarcoAbismo.Vista) {
         val s = B.SITIO_ESCOTILLA; val p = v.pincel(s.pie); val e = s.escala(0f, 0f)
         val az = Azar(Semilla.de("abismo", "escotilla"))
+        val sol = v.solDe(p)
         for (cara in visibles(s, carasDeCaja(-B.ESCOTILLA_ANCHO / 2f, B.ESCOTILLA_ANCHO / 2f, 0f, B.ESCOTILLA_ALTO, -B.ESCOTILLA_FONDO / 2f, B.ESCOTILLA_FONDO / 2f))) {
-            val t = luzDe(s, v.sol, cara); val f = forma(s, cara)
+            val t = luzDe(s, sol, cara); val f = forma(s, cara)
             val madera = lerp(C.MADERA_GRIS, C.MADERA, if (cara.arriba) 0.2f else 0.5f)
             drawPath(f, p.por(madera, t))
             clipPath(f) {
@@ -410,6 +461,7 @@ internal object CubiertaAbismo {
                 repeat(5) { val u = az.entre(0.05f, 0.9f); val vv = az.entre(0.1f, 0.9f); linea(s, cara, u, vv, u + az.entre(0.05f, 0.15f), vv, p.luz(lerp(madera, C.BLANCO, 0.4f)).copy(alpha = 0.4f), (0.006f * e).coerceAtLeast(0.3f), StrokeCap.Round) }
             }
             drawPath(f, p.sombra(C.BREA).copy(alpha = 0.5f), style = Stroke((0.008f * e).coerceAtLeast(0.4f)))
+            if (t < -0.1f) { val frio = PiezasAbismo.ladoFrio(p); if (frio.alpha > 0.01f) drawPath(f, frio) }
             if (cara.arriba) for (u in listOf(0.2f, 0.8f)) { val q = s.p(cara.en(u, 0.15f)); drawOval(p.sombra(C.PLOMO), Offset(q.x - 0.035f * e, q.y - 0.015f * e), Size(0.07f * e, 0.03f * e), style = Stroke((0.012f * e).coerceAtLeast(0.4f))) }
         }
     }
@@ -565,11 +617,12 @@ internal object CubiertaAbismo {
         llama(B.LAMPARILLA, 0.05f * k * (0.9f + 0.1f * sin(reloj * 7f)), reloj, 3)
         if (v.lu.farol > 0.02f) llama(B.FAROL + Offset(0f, 0.04f * B.K_FAROL), 0.07f * B.K_FAROL * (0.6f + 0.4f * v.lu.farol), reloj, 5)
         if (EscenaAbismo.hornillo(m)) { val ph = B.pb(B.EJE + 0.3f, 0f, 10.2f); val kk = B.k(B.cam(B.EJE + 0.3f, 10.2f).y); humo(v.l, ph + Offset(0f, -0.6f * kk), 60f, 14f, reloj, viento = -0.4f - 0.6f * m.viento, oscuro = 0.15f, bocanadas = 6) }
+        if (B.cordero(m)) { val q = B.pb(0.2f, 0f, 9.2f); val kk = B.k(B.cam(0.2f, 9.2f).y); humo(v.l, q + Offset(0f, -0.4f * kk), 50f, 12f, reloj, viento = -0.4f - 0.6f * m.viento, oscuro = 0.1f, bocanadas = 5) }
         // El reflejo de la lamparilla en el agua, de noche, temblando bajo la hornacina.
         if (v.l.noche > 0.3f) {
             val q = MarAbismo.bordeDelAgua(B.ICONO.y + 0.9f * k)
             val pie = Offset(maxOf(q + 4f, B.ICONO.x + 6f), B.ICONO.y + 0.95f * k)
-            reflejoDeLumbre(pie, reloj, v.lu.lamparilla * v.l.noche)
+            reflejoDeLumbre(pie, reloj, B.luzDeLaLamparilla(v))
         }
     }
 

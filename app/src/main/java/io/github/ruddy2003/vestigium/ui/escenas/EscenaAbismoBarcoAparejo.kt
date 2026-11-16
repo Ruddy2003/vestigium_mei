@@ -2,6 +2,7 @@ package io.github.ruddy2003.vestigium.ui.escenas
 
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -52,6 +53,12 @@ internal object AparejoAbismo {
     val CABO_CERCA = V3(B.EJE + 0.16f, 2.95f, B.PALO_MAYOR) to obenque(0, 2.55f)
     val CABO_LEJOS = V3(B.EJE, 3.1f, B.PALO_MAYOR + 0.1f) to V3(B.EJE, 4.4f, B.TRINQUETE)
 
+    /** El tendedero: un cabo de los obenques del palo mayor a los del trinquete, por dentro de la borda de estribor. */
+    val TENDEDERO: Pair<V3, V3> get() = obenque(1, 1.85f) to obenqueProa(0, 1.85f)
+
+    /** Dónde cuelga el traje en el tendedero (de 0, el palo mayor, a 1, el trinquete). */
+    const val TRAJE_T = 0.42f
+
     /** Un punto del barco (u, h, v) en el lienzo. */
     private fun p(a: V3): Offset = B.pb(a.x, a.y, a.z)
     private fun z(a: V3): Float = B.cam(a.x, a.z).y
@@ -94,11 +101,15 @@ internal object AparejoAbismo {
         val k8 = B.k(z(OBENQUES_PROA[0]))
         for (i in OBENQUES_PROA.indices) cabo(p, listOf(p(OBENQUES_PROA[i]), p(obenqueProa(i, 7f))), 0.03f * k8, lerp(C.CANAMO, C.BREA, 0.55f))
         for (j in 1..12) { val h = 0.95f + 0.36f * j; drawLine(p.sombra(C.CANAMO).copy(alpha = 0.8f), p(obenqueProa(0, h)), p(obenqueProa(1, h)), 0.014f * k8) }
-        for (i in 0 until B.trajesASecar(m)) {
-            val h = 0.95f + 0.36f * (if (i == 0) 3 else 2)
-            val a0 = p(obenqueProa(0, h)); val a1 = p(obenqueProa(1, h)); val kk = B.k(z(obenqueProa(0, h)))
-            PiezasAbismo.run { trajeEnLaJarcia(v.pincel(a0), a0, a1, kk, Semilla.de("abismo", "traje", i), en = if (i == 0) 0.3f else 0.8f, mojado = if (EscenaAbismo.fase(m) == EscenaAbismo.Fase.INMERSION || i == 1) 0.9f else 0.35f) }
+        // El tendedero, de los obenques del palo mayor a los del trinquete, y en él, de día, el traje de lona, uno solo,
+        // colgado por los hombros, con el cuello y los puños a la vista **[Diseño propio]**.
+        val (t0, t1) = TENDEDERO
+        cabo(p, (0..10).map { p(enElCabo(t0, t1, it / 10f, 0.15f)) }, 0.5f)
+        if (B.trajesASecar(m) > 0) {
+            val a0 = p(enElCabo(t0, t1, TRAJE_T - 0.035f, 0.15f)); val a1 = p(enElCabo(t0, t1, TRAJE_T + 0.035f, 0.15f)); val kk = B.k(z(enElCabo(t0, t1, TRAJE_T, 0.15f)))
+            PiezasAbismo.run { trajeColgado(v.pincel(a0), a0, a1, kk, Semilla.de("abismo", "traje", 0), mojado = if (EscenaAbismo.fase(m) == EscenaAbismo.Fase.INMERSION) 0.3f else 0.85f) }
         }
+
         // El estay: del trinquete a la roda.
         val roda = p(V3(B.EJE, B.regala(B.RODA) + 0.2f, B.RODA + 0.3f))
         drawLine(p.sombra(C.CANAMO).copy(alpha = 0.8f), p(V3(B.EJE, 6.2f, B.TRINQUETE)), roda, 0.45f)
@@ -123,6 +134,7 @@ internal object AparejoAbismo {
         val (a, b) = CABO_CERCA
         cabo(p, (0..12).map { p(enElCabo(a, b, it / 12f, 0.22f)) }, 0.022f * B.k(z(a)))
         for (r in ristras(m).filter { it.arriba.z <= B.PALO_MAYOR + 0.05f }) pintarRistra(v, r)
+
         // El farol, colgado de una driza larga del cabo, sobre la bomba y el corro: entero de 18:00 a 20:00 y antes del alba,
         // bajo las primeras horas del sueño; si no, apagado.
         val cuelga = p(enElCabo(a, b, 0.42f, 0.22f))
@@ -138,16 +150,20 @@ internal object AparejoAbismo {
     }
 
     /**
-     * Los ganchos del palo mayor, de arriba abajo (en metros del barco: u, h, v): tres buzos, tres cascos. Cada gancho sale
-     * por un lado distinto del palo, para que los cascos no cuelguen uno encima de otro; el de abajo es el de Nikos.
+     * Los ganchos del palo mayor (en metros del barco: u, h, v): los cascos de los otros dos buzos, a alturas y distancias
+     * distintas del palo, tapándose un poco. El de Nikos no cuelga: cuando sube, descansa en la cubierta junto a la tina
+     * ([BarcoAbismo.cascoEnCubierta]); mientras está abajo, lo lleva puesto.
      */
-    internal val GANCHOS = listOf(V3(B.EJE + 0.17f, 2.25f, B.PALO_MAYOR - 0.1f), V3(B.EJE + 0.2f, 1.66f, B.PALO_MAYOR - 0.2f), V3(B.EJE + 0.16f, 1.08f, B.PALO_MAYOR - 0.08f))
+    internal val GANCHOS = listOf(V3(B.EJE + 0.17f, 2.22f, B.PALO_MAYOR - 0.1f), V3(B.EJE + 0.2f, 1.45f, B.PALO_MAYOR - 0.22f))
 
     /** Cuánto se separa del palo cada casco colgado (en metros, hacia estribor): no cuelgan a plomo uno sobre otro. */
-    private val VUELO = listOf(0.16f, 0.36f, 0.22f)
+    private val VUELO = listOf(0.13f, 0.46f)
 
-    /** Cuántos cascos cuelgan hoy de sus ganchos: los de [EscenaAbismo.cascosColgados], uno menos si el casco es el objeto del día. */
-    internal fun cascosHoy(m: Momento): Int = EscenaAbismo.cascosColgados(m) - (if (ObjetosAbismo.elCuadroPinta(m, "casco")) 0 else 1)
+    /** Cuántos cascos cuelgan del palo: los dos de los otros buzos; uno, el día que el casco es el objeto y Nikos está abajo. */
+    internal fun cascosEnElPalo(m: Momento): Int = if (EscenaAbismo.cascosColgados(m) == 3 || ObjetosAbismo.elCuadroPinta(m, "casco")) 2 else 1
+
+    /** Cuántos cascos se ven hoy en el cuadro: los del palo y el de Nikos en la cubierta. */
+    internal fun cascosHoy(m: Momento): Int = cascosEnElPalo(m) + (if (B.cascoEnCubierta(m)) 1 else 0)
 
     /**
      * El palo mayor, cerca, cortado por la izquierda y por arriba: redondo, con la cara del sol encendida y la otra en
@@ -205,10 +221,18 @@ internal object AparejoAbismo {
         }
         // Un cabo dado vuelta en una cabilla: las vueltas en ocho y el chicote que cuelga.
         run { val q = c0 + (c1 - c0) * 0.5f; drawLine(p.sombra(C.CANAMO), q + Offset(-0.05f * k, -0.05f * k), q + Offset(0.05f * k, 0.04f * k), 0.022f * k, StrokeCap.Round); drawLine(p.sombra(C.CANAMO), q + Offset(0.05f * k, -0.05f * k), q + Offset(-0.05f * k, 0.04f * k), 0.022f * k, StrokeCap.Round); drawLine(p.medio(C.CANAMO), q + Offset(0.02f * k, 0.04f * k), q + Offset(0.035f * k, 0.3f * k), 0.018f * k, StrokeCap.Round) }
-        // Los cascos: tres ganchos, y de cada uno, por su cordel, un casco girado a su manera. Mientras Nikos está abajo, el
-        // suyo (el de abajo) queda vacío, con el cordel suelto.
-        val cascos = cascosHoy(m)
-        val miras = listOf(0.5f, -0.45f, 0.15f)
+        // De noche, el palo recibe el farol por su cara de estribor (naranja, más viva a su altura) y queda azul hondo del otro lado.
+        val far = B.luzDelFarol(v)
+        if (far > 0.04f && v.l.noche > 0.2f) clipPath(forma) {
+            val cx = (pie.x + alto.x) / 2f
+            clipPath(androidx.compose.ui.graphics.Path().apply { addRect(androidx.compose.ui.geometry.Rect(cx - g0 * 0.1f, alto.y - 10f, cx + g0, pie.y + 10f)) }) {
+                drawCircle(Brush.radialGradient(listOf(C.LUMBRE.copy(alpha = (0.75f * far).coerceIn(0f, 1f)), C.LUMBRE.copy(alpha = (0.3f * far).coerceIn(0f, 1f)), Color.Transparent), Offset(cx + g0 * 0.5f, B.FAROL.y), 120f), 120f, Offset(cx + g0 * 0.5f, B.FAROL.y), blendMode = androidx.compose.ui.graphics.BlendMode.Plus)
+            }
+            drawRect(Brush.horizontalGradient(listOf(lerp(C.SOMBRA, C.MAR_HONDO, 0.4f).copy(alpha = 0.5f * v.l.noche), Color.Transparent), cx - g0 * 0.6f, cx), Offset(cx - g0, alto.y - 10f), Size(g0, pie.y - alto.y + 20f))
+        }
+        // Los cascos de los otros dos buzos, cada uno de su gancho y por su cordel, girado a su manera.
+        val cascos = cascosEnElPalo(m)
+        val miras = listOf(0.5f, -0.4f)
         for ((i, g) in GANCHOS.withIndex()) {
             val q = p(g); val kk = B.k(z(g)); val r = 0.2f * kk
             gancho(p, q, 0.13f * kk, 1f)
@@ -286,10 +310,10 @@ internal object AparejoAbismo {
         val sol = v.sol
         fun alSuelo(a: V3): Offset { val q = B.cam(a.x, a.z); val s = B.alSuelo(sol, q.x, a.y, q.y); return B.pc(s.x, 0f, s.y) }
         val k0 = B.k(z(OBENQUES[0]))
-        for (o in OBENQUES.indices) drawLine(c, alSuelo(OBENQUES[o]), alSuelo(obenque(o, 5.5f)), 0.03f * k0)
+        for (o in OBENQUES.indices) drawLine(c, alSuelo(OBENQUES[o]), alSuelo(obenque(o, 5.5f)), 0.045f * k0)
         for (o in OBENQUES_PROA.indices) drawLine(c, alSuelo(OBENQUES_PROA[o]), alSuelo(obenqueProa(o, 6f)), 0.03f * B.k(z(OBENQUES_PROA[0])))
         // Los flechastes: la escala de la jarcia, tendida en las tablas por la mañana.
-        for (j in 1..12) { val h = B.REGALA + 0.38f * j; drawLine(c, alSuelo(obenque(0, h)), alSuelo(obenque(1, h)), 0.016f * k0) }
+        for (j in 1..12) { val h = B.REGALA + 0.38f * j; drawLine(c, alSuelo(obenque(0, h)), alSuelo(obenque(1, h)), 0.024f * k0) }
         val (a, b) = CABO_CERCA
         for (t in 0 until 10) drawLine(c, alSuelo(enElCabo(a, b, t / 10f, 0.22f)), alSuelo(enElCabo(a, b, (t + 1) / 10f, 0.22f)), 0.02f * B.k(z(a)))
         val az = Azar(Semilla.de("abismo", "sombraRistras"))
@@ -298,7 +322,7 @@ internal object AparejoAbismo {
             for (i in 0 until r.cuantas) {
                 val t0 = if (r.racimo) 0.42f + 0.58f * (i + 0.5f) / r.cuantas else 0.1f + 0.9f * (i + 0.5f) / r.cuantas
                 val q = alSuelo(arriba + V3(0f, -r.largo * t0, 0f))
-                val rr = 0.08f * kk * az.entre(0.7f, 1.2f)
+                val rr = 0.105f * kk * az.entre(0.75f, 1.2f)
                 drawOval(c, Offset(q.x - rr * 1.2f, q.y - rr * 0.45f), Size(rr * 2.4f, rr * 0.9f))
             }
         }
@@ -308,10 +332,13 @@ internal object AparejoAbismo {
             drawLine(c, pie, tope, g * B.k(z(V3(B.EJE, 0f, pv))) * 0.8f, StrokeCap.Round)
         }
         for ((i, g) in GANCHOS.withIndex()) {
-            if (i >= cascosHoy(v.m)) continue
+            if (i >= cascosEnElPalo(v.m)) continue
             val q = alSuelo(V3(g.x + 0.12f, g.y - 0.32f, g.z)); val kk = B.k(z(g))
             drawOval(c, Offset(q.x - 0.2f * kk, q.y - 0.06f * kk), Size(0.4f * kk, 0.14f * kk))
         }
+        // El tendedero y el traje tendido en él: una raya y una franja.
+        run { val (t0, t1) = TENDEDERO; for (t in 0 until 10) drawLine(c, alSuelo(enElCabo(t0, t1, t / 10f, 0.15f)), alSuelo(enElCabo(t0, t1, (t + 1) / 10f, 0.15f)), 0.015f * B.k(z(t0))) }
+        if (B.trajesASecar(v.m) > 0) { val (t0, t1) = TENDEDERO; val q = enElCabo(t0, t1, TRAJE_T, 0.15f); drawLine(c, alSuelo(q), alSuelo(q + V3(0f, -1.3f, 0f)), 0.32f * B.k(z(q)), StrokeCap.Round) }
         // El farol, colgado.
         run { val q = alSuelo(V3(0.35f, B.FAROL_ALTO, 2.85f)); val kk = B.K_FAROL; drawOval(c, Offset(q.x - 0.06f * kk, q.y - 0.03f * kk), Size(0.12f * kk, 0.06f * kk)) }
     }

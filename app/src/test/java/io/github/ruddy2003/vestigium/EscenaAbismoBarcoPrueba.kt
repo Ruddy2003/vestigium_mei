@@ -57,9 +57,19 @@ class EscenaAbismoBarcoPrueba {
         assertTrue("la lamparilla: ${v.lu.lamparilla}", v.lu.lamparilla > 0.6f)
         assertTrue("la luna: ${v.luna}", v.luna > 0.05f)
         assertTrue("la luna tumba sus sombras: ${v.r.fuerza}", v.r.fuerza > 0.05f)
-        // Lo cercano al farol se tiñe de su luz; lo cercano a la lamparilla, también; y cada cosa tiene un lado de cada color.
-        assertTrue(v.pincel(BarcoAbismo.FAROL + androidx.compose.ui.geometry.Offset(0f, 40f)).calida > 0.2f)
-        assertTrue(v.pincel(BarcoAbismo.LAMPARILLA + androidx.compose.ui.geometry.Offset(-10f, 20f)).calida > 0.2f)
+        // Lo cercano al farol se tiñe de su luz (los cascos, la bomba, la tina, el palo); lo cercano a la lamparilla, también.
+        for (en in listOf(BarcoAbismo.SITIO_BOMBA.pie, BarcoAbismo.SITIO_TINA.pie, BarcoAbismo.pb(AparejoAbismo.GANCHOS[1].x, AparejoAbismo.GANCHOS[1].y - 0.4f, AparejoAbismo.GANCHOS[1].z)))
+            assertTrue("$en: ${v.pincel(en).calida}", v.pincel(en).calida > 0.35f)
+        assertTrue(v.pincel(BarcoAbismo.LAMPARILLA + androidx.compose.ui.geometry.Offset(-10f, 20f)).calida > 0.3f)
+        // Y cada una tiene un lado de cada color: la cara que mira al farol, naranja; la otra, azul violeta.
+        val pb = v.pincel(BarcoAbismo.SITIO_BOMBA.pie)
+        val luz = pb.luz(io.github.ruddy2003.vestigium.ui.escenas.ColorAbismo.COBRE); val frio = io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.ladoFrio(pb)
+        assertTrue("$luz", luz.red > luz.blue + 0.2f)
+        assertTrue("$frio", frio.alpha > 0.25f && frio.blue > frio.red)
+        // De día no hay lado frío que añadir: la sombra ya es la del sol.
+        assertEquals(0f, io.github.ruddy2003.vestigium.ui.escenas.PiezasAbismo.ladoFrio(BarcoAbismo.Vista(momento(DIA, 13.0)).pincel(BarcoAbismo.SITIO_BOMBA.pie)).alpha, 0f)
+        // Al caer la tarde (el corro), el farol ya calienta lo que tiene cerca.
+        assertTrue(BarcoAbismo.Vista(momento(DIA, 19.5)).pincel(BarcoAbismo.SITIO_BOMBA.pie).calida > 0.15f)
         // Más tarde se apaga el farol: quedan la lamparilla y la luna.
         val tarde = BarcoAbismo.Vista(momento(DIA, 23.0))
         assertEquals(0f, tarde.lu.farol, 0f)
@@ -76,19 +86,27 @@ class EscenaAbismoBarcoPrueba {
 
     @Test fun lasTresHorasSonTresCuadros() {
         val m7 = momento(DIA, 7.0); val m13 = momento(DIA, 13.0); val m21 = momento(DIA, 21.0)
-        // 7:00: se bucea. Un traje a secar, un casco menos en los ganchos, ninguna esponja limpia todavía.
+        // 7:00: se bucea. Un traje tendido, dos cascos en el palo y el de Nikos no está (lo lleva puesto), nada limpio todavía.
         assertEquals(1, BarcoAbismo.trajesASecar(m7)); assertEquals(2, AparejoAbismo.cascosHoy(m7)); assertEquals(0f, BarcoAbismo.esponjasLimpias(m7), 0f)
-        // 13:00: se limpian esponjas. Dos trajes, los tres cascos, el montón de las limpias que crece.
-        assertEquals(2, BarcoAbismo.trajesASecar(m13)); assertEquals(3, AparejoAbismo.cascosHoy(m13))
+        assertTrue(!BarcoAbismo.cascoEnCubierta(m7)); assertEquals(2, AparejoAbismo.cascosEnElPalo(m7))
+        // 13:00: se limpian esponjas. El traje, dos cascos en el palo y el de Nikos en la cubierta (no tres en columna), las limpias que crecen.
+        assertEquals(1, BarcoAbismo.trajesASecar(m13)); assertEquals(3, AparejoAbismo.cascosHoy(m13))
+        assertTrue(BarcoAbismo.cascoEnCubierta(m13)); assertEquals(2, AparejoAbismo.cascosEnElPalo(m13))
+        // Lo que se planta en el paso del gato (el casco, las limpias) está en su tramo.
+        val suelo = EscenaAbismo.anclas(m13).single { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }
+        assertEquals(2, BarcoAbismo.estorbos(m13).size)
+        for (x in BarcoAbismo.estorbos(m13)) assertTrue("$x", x in suelo.x..suelo.hasta)
         assertTrue(BarcoAbismo.esponjasLimpias(m13) > 0f && BarcoAbismo.esponjasLimpias(m13) < BarcoAbismo.esponjasLimpias(momento(DIA, 16.5)))
         // 21:00: se duerme. Las mantas, ningún traje, nada por limpiar.
         assertTrue(EscenaAbismo.mantas(m21)); assertEquals(0, BarcoAbismo.trajesASecar(m21)); assertEquals(0f, BarcoAbismo.esponjasLimpias(m21), 0f)
         assertEquals(0f, EscenaAbismo.esponjasNegras(m21), 0f)
         // El día que el objeto es el traje o el casco, el cuadro no los repite.
         assertEquals(0, BarcoAbismo.trajesASecar(momento(DIA, 13.0, objeto = "escafandra")))
-        assertEquals(2, AparejoAbismo.cascosHoy(momento(DIA, 13.0, objeto = "casco")))
-        // Un día que no se baja (Pascua) no hay esponjas que limpiar.
+        assertEquals(2, AparejoAbismo.cascosHoy(momento(DIA, 13.0, objeto = "casco"))); assertTrue(!BarcoAbismo.cascoEnCubierta(momento(DIA, 13.0, objeto = "casco")))
+        assertEquals(1, AparejoAbismo.cascosHoy(momento(DIA, 7.0, objeto = "casco")))
+        // Un día que no se baja (Pascua) no hay esponjas que limpiar; se asa el cordero en cubierta «desde que amanece».
         assertEquals(0f, BarcoAbismo.esponjasLimpias(momento("2027-05-01", 14.0)), 0f)
+        assertTrue(BarcoAbismo.cordero(momento("2027-05-01", 9.0))); assertTrue(!BarcoAbismo.cordero(momento("2027-05-01", 21.0))); assertTrue(!BarcoAbismo.cordero(momento(DIA, 9.0)))
     }
 
     @Test fun elAguaDejaVerElFondoCercaYLoTapaLejos() {
@@ -122,7 +140,7 @@ class EscenaAbismoBarcoPrueba {
                 assertTrue("$d $h", v.lu.farol in 0f..1f && v.lu.lamparilla in 0f..1f && v.luna in 0f..1f)
                 val c = BarcoAbismo.corrimientoDeLaSombra(MarAbismo.agua(v))
                 assertTrue("$d $h $c", c.x.isFinite() && c.y.isFinite())
-                assertTrue("$d $h", BarcoAbismo.trajesASecar(m) in 0..2 && AparejoAbismo.cascosHoy(m) in 1..3)
+                assertTrue("$d $h", BarcoAbismo.trajesASecar(m) in 0..1 && AparejoAbismo.cascosHoy(m) in 1..3 && AparejoAbismo.cascosEnElPalo(m) in 1..2)
             }
             d = d.plusDays(3)
         }
