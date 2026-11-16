@@ -6,8 +6,9 @@ name: Comparación de temas (rama de análisis)
 on:
   push:
     branches: [ccr-ca31af2d-ua0p3j]
-    # Solo corre cuando cambia la app o lo que se pide capturar: los documentos y el arnés no la reinician.
-    paths: ['app/**', 'gradle/**', '*.kts', '.github/comparacion.env']
+    # Solo corre cuando cambia `.github/comparacion.env` (qué capturar y el número de corrida): así los avances a medias
+    # que se van guardando en la rama no reinician una corrida en curso. Para pedir una corrida se sube `CORRIDA` ahí.
+    paths: ['.github/comparacion.env']
 
 permissions:
   contents: write

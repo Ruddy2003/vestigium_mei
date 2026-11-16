@@ -14,6 +14,8 @@ plugins {
 // La carpeta `src/main` de la app. Se puede cambiar con -Papp=/otra/ruta/app/src/main (otro clon u otro árbol de trabajo).
 val app: File = (findProperty("app") as String?)?.let { file(it) } ?: file("../../app/src/main")
 val codigo = app.resolve("java")
+// Con otra app, dibujar.sh pide otra carpeta de compilación (-PdirCompilacion=...), para no mezclar los .class.
+(findProperty("dirCompilacion") as String?)?.let { layout.buildDirectory.set(file(it)) }
 val paquete = "io/github/ruddy2003/vestigium"
 
 /**
@@ -37,7 +39,7 @@ val enlazados = listOf(
     // Los tipos que Modelo usa en sus campos.
     "$paquete/data/Catalogo.kt", "$paquete/data/Especiales.kt",
     // Los cajones del Ideario (cómo se agrupan las ideas por tema) y cómo cada tema cuenta sus fichas («7 óstraka»).
-    "$paquete/data/Ideario.kt", "$paquete/ui/ArchivoIdeas.kt",
+    "$paquete/data/Ideario.kt",
 )
 
 /**
@@ -52,6 +54,7 @@ val piezas = linkedMapOf(
     "$paquete/ui/Decoracion.kt" to listOf("piezasMano"),
     // Cómo arma FicheroIdeas los cajones del mueble y su rótulo (la llamada a MuebleIdeas se repite en arnes/Dibujar.kt).
     "$paquete/ui/pantallas/Fichero.kt" to listOf("cajones", "rotuloCajon"),
+    "$paquete/ui/ArchivoIdeas.kt" to listOf("ArchivoIdeas", "archivoIdeas"),
 )
 
 val generado = layout.buildDirectory.dir("generado/kotlin")
