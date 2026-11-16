@@ -113,11 +113,12 @@ internal object TorreOrden {
         return Ballena(V3(70f, 34f, 230f), V3(d.x, 0f, d.y), LARGO, RADIO)
     }
 
-    /** La Garza caída o cosiéndose, tendida en el patio junto a la torre, sobre sus caballetes, hacia la izquierda. */
-    fun enElPatio(): Ballena {
-        val d = CamOrden.mundo(-0.97f, 0.22f)
-        return Ballena(V3(-5f, P + RADIO + 0.6f, 51f), V3(d.x, 0f, d.y), LARGO, RADIO)
-    }
+    /**
+     * La Garza caída o cosiéndose, tendida en el patio junto a la torre, delante de la puerta de la escalera y de la sala
+     * del Código, con el morro hacia la torre y la cola hacia la izquierda, fuera del cuadro **[Diseño propio]**: así no
+     * tapa la Cámara, la cisterna, la enfermería ni el archivo.
+     */
+    fun enElPatio(): Ballena = Ballena(V3(-10.5f, P + RADIO + 0.6f, 51.5f), V3(-0.999f, 0f, 0.04f), LARGO, RADIO)
 
     /** La Garza que hay hoy en el cuadro (amarrada, en vuelo o en el patio), o null si no está. */
     fun garza(m: Momento): Ballena? = when (EscenaOrden.garza(m)) {
@@ -200,7 +201,7 @@ internal object TorreOrden {
         val b = v.garza ?: return
         when (EscenaOrden.garza(v.m)) {
             Garza.AMARRADA, Garza.VOLANDO -> { entera(v, b, 1f); if (EscenaOrden.garza(v.m) == Garza.AMARRADA) amarras(v, b) }
-            Garza.COSIENDO -> { caballetes(v, b); armazon(v, b, EscenaOrden.costura(v.m)); entera(v, b, EscenaOrden.costura(v.m)); andamios(v, b, EscenaOrden.costura(v.m)) }
+            Garza.COSIENDO -> { caballetes(v, b); armazon(v, b, 0f); entera(v, b, EscenaOrden.costura(v.m)); andamios(v, b, EscenaOrden.costura(v.m)) }
             Garza.CAIDA -> caida(v, b)
             Garza.AUSENTE -> Unit
         }
@@ -212,7 +213,11 @@ internal object TorreOrden {
     /** El ángulo del huso [j]. */
     private fun angulo(j: Int): Float = j * 2f * PI.toFloat() / HUSOS
 
-    /** Lo que se pinta de la panza (de 0 a [hasta] a lo largo): los husos de tela, con sus remiendos y sus costuras. */
+    /**
+     * La piel de la Garza: los husos de tela, con sus remiendos y sus costuras. [hasta] es cuánta piel tiene: entera con 1;
+     * mientras la cosen, de la panza hacia el lomo (los husos que quedan a menos de [hasta] media vuelta de la quilla), así
+     * se ve desde cualquier lado cuánto falta («el armazón ya tiene media piel»).
+     */
     private fun DrawScope.entera(v: VistaOrden, b: Ballena, hasta: Float) {
         if (hasta <= 0.01f) return
         val lz = v.lz; val lejos = if (EscenaOrden.garza(v.m) == Garza.VOLANDO) 0.45f else 0.12f
@@ -229,18 +234,17 @@ internal object TorreOrden {
         // Lo que va detrás de la panza: las aletas y el motor del otro lado.
         if (hasta >= 0.999f) detalles(v, b, delante = false)
         for (i in 0 until ANILLOS) {
-            val t0 = tAnillo(i); val t1 = tAnillo(i + 1)
-            if (t0 >= hasta) break
-            val tf = minOf(t1, hasta)
+            val t0 = tAnillo(i); val tf = tAnillo(i + 1)
             for (j in 0 until HUSOS) {
                 val a0 = angulo(j); val a1 = angulo(j + 1)
+                if (hasta < 0.999f && kotlin.math.abs((a0 + a1) / 2f - PI.toFloat()) > PI.toFloat() * hasta) continue
                 val p0 = b.punto(t0, a0); val p1 = b.punto(tf, a0); val p2 = b.punto(tf, a1); val p3 = b.punto(t0, a1)
                 val n = normalDeCara(p0, p1, p2, p3, b.radial((a0 + a1) / 2f))
                 val c = V3((p0.x + p2.x) / 2f, (p0.y + p2.y) / 2f, (p0.z + p2.z) / 2f)
                 if (!CamOrden.seVe(c, n)) continue
                 val q = listOf(p0, p1, p2, p3).map { CamOrden.p(it) }
                 val propio = when {
-                    nuevos && tf > hasta - 0.12f -> C.TELA_NUEVA
+                    nuevos && kotlin.math.abs((a0 + a1) / 2f - PI.toFloat()) > PI.toFloat() * (hasta - 0.12f) -> C.TELA_NUEVA
                     nuevos -> lerp(C.TELA_NUEVA, C.TELA, 0.4f + 0.2f * husos[j])
                     else -> remiendos[i to j] ?: lerp(C.TELA, if (husos[j] > 0f) C.TELA_VIEJA else C.HIERRO_CLARO, 0.25f * kotlin.math.abs(husos[j]))
                 }
@@ -424,14 +428,14 @@ internal object TorreOrden {
         val metal = v.lz.color(C.HIERRO_CLARO, V3(0f, 1f, -1f), 0.15f)
         val az = PiezasOrden.fijo("armazon")
         for (i in 1 until 12) {
-            val t = i / 12f; if (t < piel - 0.02f) continue
+            val t = i / 12f
             val tuerce = torcido * az.entre(-0.4f, 0.4f)
             val pts = (0..HUSOS).map { j -> CamOrden.p(b.punto(t, angulo(j) + tuerce) + V3(0f, -torcido * az.entre(0f, 1.6f) * (if (j % 3 == 0) 1f else 0f), 0f)) }
             val camino = Path().apply { moveTo(pts[0].x, pts[0].y); for (q in pts.drop(1)) lineTo(q.x, q.y) }
             drawPath(camino, metal, style = Stroke(0.55f, cap = StrokeCap.Round))
         }
         for (j in 0 until HUSOS step 2) {
-            val pts = (0..16).map { i -> val t = maxOf(piel, i / 16f); CamOrden.p(b.punto(t, angulo(j))) }
+            val pts = (0..16).map { i -> CamOrden.p(b.punto(i / 16f, angulo(j))) }
             val camino = Path().apply { moveTo(pts[0].x, pts[0].y); for (q in pts.drop(1)) lineTo(q.x, q.y) }
             drawPath(camino, metal.copy(alpha = 0.8f), style = Stroke(0.4f))
         }
@@ -440,12 +444,12 @@ internal object TorreOrden {
     /** Los andamios alrededor, «como costillas»: postes de madera y tablones, donde se cose. */
     private fun DrawScope.andamios(v: VistaOrden, b: Ballena, piel: Float) {
         val lz = v.lz
-        val t = (piel + 0.04f).coerceIn(0.1f, 0.95f)
-        for (dt in listOf(-0.08f, 0.04f)) {
-            val c = b.eje((t + dt).coerceIn(0.05f, 0.95f)); val r = b.r(t) + 0.8f
+        val alto = 0.25f + 0.5f * (1f - piel)
+        for (t in listOf(0.1f, 0.22f, 0.34f)) {
+            val c = b.eje(t); val r = b.r(t) + 0.8f
             val s = V3(c.x - b.lado.x * r, P, c.z - b.lado.z * r)
-            palo(lz, s, V3(s.x, c.y + r * 0.6f, s.z), 0.22f, C.MADERA, 0.15f)
-            for (h in listOf(0.35f, 0.75f)) palo(lz, V3(s.x, P + (c.y - P + r * 0.6f) * h, s.z), V3(s.x + b.dir.x * 3f, P + (c.y - P + r * 0.6f) * h, s.z + b.dir.z * 3f), 0.2f, C.MADERA_OSC, 0.15f)
+            palo(lz, s, V3(s.x, c.y + r * alto, s.z), 0.22f, C.MADERA, 0.15f)
+            for (h in listOf(0.35f, 0.75f)) palo(lz, V3(s.x, P + (c.y - P + r * alto) * h, s.z), V3(s.x + b.dir.x * 4f, P + (c.y - P + r * alto) * h, s.z + b.dir.z * 4f), 0.2f, C.MADERA_OSC, 0.15f)
         }
     }
 

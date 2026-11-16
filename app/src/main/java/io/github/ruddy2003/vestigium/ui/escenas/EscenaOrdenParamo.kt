@@ -88,7 +88,7 @@ internal object ParamoOrden {
         drawPath(llano, Brush.verticalGradient(0f to l.tono(C.PARAMO, 0.85f), 0.25f to l.tono(C.PARAMO, 0.55f), 1f to l.tono(lerp(C.PARAMO, C.ROCA, 0.25f), 0.2f), startY = H, endY = 240f))
         // Las mesetas, de la fila de atrás a la de delante.
         for (me in MESETAS) meseta(v, me, az)
-        rachas(v, az)
+        if (v.nieve > 0f) nevado(v) else rachas(v, az)
         caminoYRuinas(v)
         if (polvo > 0.01f) veloDePolvo(v, H - 10f, H + 30f, 0.55f * polvo)
         pared(v)
@@ -124,6 +124,14 @@ internal object ParamoOrden {
         val forma = poligono(listOf(Offset(x, y0 + 0.5f), Offset(x + ancho, y0 + 0.5f), Offset(x + ancho + ladeo, y0 - alto * 0.8f), Offset(x + ancho * 0.6f + ladeo, y0 - alto * 0.62f), Offset(x + ladeo + 0.4f, y0 - alto)))
         drawPath(forma, v.lz.color(lerp(C.HIERRO, C.MESETA, 0.5f), V3(if (v.p.solALaDerecha) 1f else -1f, 0f, -0.5f), lejos))
         clipPath(forma) { for (i in 1..4) drawLine(v.l.tono(C.HOLLIN, lejos).copy(alpha = 0.4f), Offset(x - 2f, y0 - alto * i / 5f), Offset(x + ancho + 3f, y0 - alto * i / 5f + ladeo * 0.1f), 0.5f) }
+    }
+
+    /** El páramo nevado: «las piedras negras asoman entre lo blanco como letras en una página». */
+    private fun DrawScope.nevado(v: VistaOrden) {
+        drawRect(Brush.verticalGradient(listOf(v.l.tono(C.NIEVE, 0.7f).copy(alpha = 0.85f), v.l.tono(C.NIEVE, 0.2f).copy(alpha = 0.92f)), H, 240f), Offset(0f, H), Size(ANCHO, 240f - H + 50f))
+        val az = PiezasOrden.fijo("piedras")
+        val negra = v.l.tono(lerp(C.HOLLIN, C.ROCA, 0.3f), 0.3f)
+        repeat(70) { val y = H + 2f + 75f * az.real() * az.real(); val k = (y - H) / 75f; val x = az.entre(120f, ANCHO); drawOval(negra.copy(alpha = 0.7f), Offset(x, y), Size(0.8f + 3f * k * az.real(), 0.4f + 1f * k)) }
     }
 
     /** Las rachas del viento en el llano: lenguas de arena más clara, tendidas, cada vez más finas hacia el horizonte. */
@@ -199,7 +207,7 @@ internal object ParamoOrden {
             // Las grietas.
             repeat(7) { val x0 = az.entre(285f, 380f); val y0 = az.entre(128f, 150f); drawLine(v.l.tono(C.HOLLIN, lejos).copy(alpha = 0.45f), Offset(x0, y0), Offset(x0 + az.entre(-4f, 4f), y0 + az.entre(15f, 45f)), 0.6f) }
             // La mesa de arriba, más clara, y el talud de abajo: un pedregal del color del llano.
-            drawPath(curva(BORDE_PARED.map { it + Offset(0f, 1.4f) }), v.l.tono(lerp(C.ARENA, C.PIEDRA, 0.4f), lejos), style = Stroke(2.2f))
+            drawPath(curva(BORDE_PARED.map { it + Offset(0f, 1.4f) }), v.l.tono(if (v.nieve > 0f) C.NIEVE else lerp(C.ARENA, C.PIEDRA, 0.4f), lejos), style = Stroke(if (v.nieve > 0f) 3.4f else 2.2f))
             val talud = Path().apply { moveTo(266f, 205f); lineTo(266f, 186f); for (k in 0..10) lineTo(270f + k * 12f, 178f + az.entre(-5f, 4f)); lineTo(396f, 205f); close() }
             drawPath(talud, Brush.verticalGradient(listOf(lerp(roca, v.l.tono(C.PARAMO, lejos), 0.6f), v.l.tono(C.PARAMO, lejos * 0.7f)), 176f, 200f))
             repeat(30) { val q = Offset(az.entre(268f, 392f), az.entre(182f, 200f)); drawOval(honda.copy(alpha = 0.5f), Offset(q.x - 1.2f, q.y - 0.4f), Size(2.4f, 0.9f)) }

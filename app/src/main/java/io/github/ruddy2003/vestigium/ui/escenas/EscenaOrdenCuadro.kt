@@ -71,7 +71,10 @@ internal object CuadroOrden {
         with(ParamoOrden) { cielo(v) }
         horaAzul(v)
         lejos(v)
+        // El polvo va por capas entre los planos: lo lejano casi se borra («a cien pasos»); el patio, a medias; lo de cerca, poco.
+        if (v.polvo > 0f) veloDePolvo(v, CamOrden.H - 50f, 215f, 0.85f * v.polvo)
         sombrasDeNubes(v)
+        with(DiasOrden) { enElParamo(v) }
         with(AdarveOrden) { cuerdaDeLaCabria(v) }
         val enVuelo = EscenaOrden.garza(m) == Garza.VOLANDO
         if (enVuelo) garza(v)
@@ -81,14 +84,16 @@ internal object CuadroOrden {
         fondo(v)
         sombrasEnElFondo(v)
         val enElPatio = EscenaOrden.garza(m) == Garza.CAIDA || EscenaOrden.garza(m) == Garza.COSIENDO
-        edificios(v)
-        sombrasSobreLosEdificios(v)
+        edificios(v, lejos = true)
         if (enElPatio) garza(v)
+        with(DiasOrden) { enElPatio(v) }
+        edificios(v, lejos = false)
+        sombrasSobreLosEdificios(v)
         cisterna(v)
         corral(v)
         fragua(v)
         luzDeLaFragua(v)
-        if (v.polvo > 0f) veloDePolvo(v, 120f, 200f, 0.4f * v.polvo)
+        if (v.polvo > 0f) veloDePolvo(v, 95f, 230f, 0.5f * v.polvo)
         // La torre y la Garza amarrada (la que se aleja va detrás de la aguja).
         val detras = EscenaOrden.garza(m) == Garza.AMARRADA && EscenaOrden.rumbo(m) > 0.25f
         if (detras) garza(v)
@@ -97,16 +102,18 @@ internal object CuadroOrden {
         luzEnElAire(v)
         // El adarve: el suelo, sus sombras, el parapeto con las almenas y el objeto del día.
         with(AdarveOrden) { suelo(v) }
+        with(DiasOrden) { mojado(v) }
         sombrasDelAdarve(v)
         parapeto(v)
         with(AdarveOrden) { enseres(v) }
         nieveEnLasAlmenas(v)
         panos(v)
+        with(DiasOrden) { enLasMurallas(v) }
         objetoDelDia(v)
         ocaso(v)
         luzDeLosCandiles(v)
-        if (v.polvo > 0f) veloDePolvo(v, 150f, 300f, 0.22f * v.polvo)
-        tiempoQuieto(v.l, m.ficha.clima, CamOrden.H, m.semilla("tiempo"))
+        if (v.polvo > 0f) veloDePolvo(v, 0f, 330f, 0.2f * v.polvo)
+        if (m.ficha.clima != Clima.POLVO) tiempoQuieto(v.l, m.ficha.clima, CamOrden.H, m.semilla("tiempo"))
         grano(Azar(Semilla.de("orden", "grano")), 0.6f + 0.4f * v.r.dia)
     }
 
@@ -134,6 +141,8 @@ internal object CuadroOrden {
             val c = AdarveOrden.candil(i); val k = CamOrden.k(c.x, c.z)
             llama(CamOrden.p(c) + Offset(0f, -0.06f * k), (0.16f * k).coerceIn(1.2f, 9f), reloj, i)
         }
+        // Las antorchas de la alarma.
+        if (EscenaOrden.alarma(m) && v.l.noche > 0.3f) for (i in 0 until 3) { val a = DiasOrden.antorcha(i); llama(CamOrden.p(a), (0.35f * CamOrden.k(a.x, a.z)).coerceIn(2f, 12f), reloj, 30 + i) }
         if (v.polvo > 0f) polvo(reloj, m.semilla("polvo"))
         tiempoVivo(v.l, m.ficha.clima, reloj, CamOrden.H, m.semilla("tiempo"))
     }
@@ -158,6 +167,6 @@ internal object CuadroOrden {
         val obj = if (ObjetosOrden.esGrande(m)) CamOrden.p(AdarveOrden.PIE_GRANDE).x else CamOrden.p(AdarveOrden.SOPORTE).x
         add(Ancla(TipoAncla.OBJETO, obj.coerceIn(AdarveOrden.GATO_DESDE + 10f, AdarveOrden.GATO_HASTA - 10f), AdarveOrden.PISO_GATO))
         add(Ancla(TipoAncla.ABRIGO, AdarveOrden.GATO_HASTA - 8f, AdarveOrden.PISO_GATO))    // al pie de la almena de delante, al abrigo del viento
-        if (EscenaOrden.fiesta(m)) add(Ancla(TipoAncla.ADORNO, CamOrden.p(CamOrden.PARAPETO, CamOrden.ALTO_ALMENA, AdarveOrden.almena(0) + 0.6f).x.coerceAtMost(372f), 150f))
+        if (EscenaOrden.fiesta(m)) { val q = CamOrden.p(AdarveOrden.PENDON); add(Ancla(TipoAncla.ADORNO, q.x.coerceIn(10f, 370f), q.y.coerceIn(10f, 275f))) }
     }
 }

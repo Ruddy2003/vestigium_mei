@@ -55,26 +55,27 @@ internal object PatioOrden {
     }
 
     /** La Cámara: «una sala de muros gruesos con una sola ventana y una puerta de hierro». Su ventana, en la cara de la derecha. */
-    val CAMARA = Edificio(-9.5f, 27f, 0.55f, 6.5f, 6f, -1.8f)
-    /** El archivo, «una sala larga sin más ventana que una alta», contra la muralla del fondo. */
-    val ARCHIVO = Edificio(-12f, 50.5f, -0.12f, 11f, 6f, -0.8f)
+    val CAMARA = Edificio(-10.5f, 28f, 0.55f, 6f, 5.5f, -1.8f)
+    /**
+     * El ala de la torre **[Diseño propio]**: contra la muralla del fondo, junto a la torre; abajo, la enfermería («en la
+     * planta baja… una ventana que da al camino de las patrullas») y arriba, el archivo, «sin más ventana que una alta».
+     */
+    val ALA = Edificio(-6.2f, 54f, -0.06f, 6.4f, 5f, -0.4f)
     /** La sala del Código y el refectorio: la nave grande, con sus ventanas altas y la espadaña de la campana. */
-    val SALA = Edificio(-31f, 46f, 0.28f, 15f, 8f, 0.2f)
-    /** La enfermería, en el ala sur, «con una ventana que da al camino de las patrullas». */
-    val ENFERMERIA = Edificio(-22f, 33f, 0.42f, 8f, 5.5f, -3.2f)
+    val SALA = Edificio(-19.5f, 52f, 0.12f, 10.5f, 7f, 0.6f)
 
-    val EDIFICIOS = listOf(SALA, ARCHIVO, ENFERMERIA, CAMARA)
+    val EDIFICIOS = listOf(SALA, ALA, CAMARA)
 
     /** La boca de la cisterna: el centro, el ancho (a través) y el largo (a lo largo de la muralla), en el patio junto a la muralla. */
-    val CISTERNA = Offset(-3.9f, 19.5f)
-    const val CISTERNA_ANCHO = 2.6f
-    const val CISTERNA_LARGO = 3.6f
+    val CISTERNA = Offset(-3.5f, 17.6f)
+    const val CISTERNA_ANCHO = 2.8f
+    const val CISTERNA_LARGO = 3.3f
     /** La fragua, arrimada a la muralla del oeste: de [FRAGUA_V0] a [FRAGUA_V1] a lo largo y hasta [FRAGUA_S] hacia dentro. */
-    const val FRAGUA_V0 = 29f
-    const val FRAGUA_V1 = 36f
+    const val FRAGUA_V0 = 21.5f
+    const val FRAGUA_V1 = 27.5f
     const val FRAGUA_S = -5.6f
     /** La puerta de la escalera de la meseta, en la muralla del fondo. */
-    const val PUERTA_S = -24f
+    const val PUERTA_S = -11.5f
 
     // ---------------------------------------------------------------- El suelo
 
@@ -107,13 +108,20 @@ internal object PatioOrden {
                 mancha(q, k * az.entre(0.8f, 2.4f), k * az.entre(0.25f, 0.6f), if (it % 2 == 0) lz.color(C.ARENA, V3(0f, 1f, 0f), 0.1f) else lz.color(C.LOSA, V3(0f, 1f, 0f), 0.1f), 0.35f)
             }
             canales(v)
+            if (v.nieve > 0f) {
+                drawPath(forma, lz.color(C.NIEVE, V3(0f, 1f, 0f), 0.1f).copy(alpha = 0.88f * v.nieve))
+                // Las sendas pisadas: de la puerta a la Cámara y a la fragua.
+                val senda = lz.color(lerp(C.NIEVE, C.ARENA, 0.45f), V3(0f, 1f, 0f), 0.1f)
+                for ((a, b) in listOf(V3(PUERTA_S, P, FONDO - 3f) to CAMARA.enCara(3, 0.5f, P), V3(PUERTA_S, P, FONDO - 3f) to V3(FRAGUA_S, P, FRAGUA_V0), CAMARA.enCara(3, 0.5f, P) to V3(CISTERNA.x, P, CISTERNA.y)))
+                    drawLine(senda.copy(alpha = 0.7f), CamOrden.p(a), CamOrden.p(b), (CamOrden.k(a.x, a.z) * 0.6f).coerceAtLeast(1f))
+            }
         }
     }
 
     /** Los canales de piedra que bajan de las azoteas y van, tapados con losas, hasta la boca de la cisterna. */
     private fun DrawScope.canales(v: VistaOrden) {
         val destino = V3(CISTERNA.x - CISTERNA_ANCHO / 2f, P, CISTERNA.y)
-        val origenes = listOf(CAMARA.enCara(3, 0.5f, P), ENFERMERIA.enCara(3, 0.3f, P), ARCHIVO.enCara(0, 0.8f, P), V3(FRAGUA_S, P, FRAGUA_V0))
+        val origenes = listOf(CAMARA.enCara(3, 0.5f, P), ALA.enCara(0, 0.8f, P), SALA.enCara(0, 0.9f, P), V3(FRAGUA_S, P, FRAGUA_V0))
         val tapa = v.lz.color(lerp(C.PIEDRA, C.ARENA, 0.3f), V3(0f, 1f, 0f), 0.1f); val canto = v.lz.color(C.PIEDRA_OSC, V3(0f, 1f, 0f), 0.1f)
         val agua = EscenaOrden.canalesCorren(v.m) || EscenaOrden.tapasLevantadas(v.m)
         for (o in origenes) {
@@ -150,8 +158,8 @@ internal object PatioOrden {
      */
     private fun DrawScope.puertaDeLaEscalera(v: VistaOrden) {
         val lz = v.lz; val s = PUERTA_S
-        caja(lz, s, FONDO - 1.2f, 0f, 6f, 3f, P, 3f, C.PIEDRA, 0.2f, arriba = C.LOSA) { i, _ ->
-            if (i == 0) sillares(V3(s - 3f, P, FONDO - 2.7f), V3(s + 3f, P, FONDO - 2.7f), 11f, lz.color(C.PIEDRA, V3(0f, 0f, -1f), 0.2f), PiezasOrden.fijo("puerta"), 0.5f, 0.8f, lejos = 0.2f)
+        caja(lz, s, FONDO - 1.2f, 0f, 4.4f, 3f, P, 3f, C.PIEDRA, 0.2f, arriba = C.LOSA) { i, _ ->
+            if (i == 0) sillares(V3(s - 2.2f, P, FONDO - 2.7f), V3(s + 2.2f, P, FONDO - 2.7f), 11f, lz.color(C.PIEDRA, V3(0f, 0f, -1f), 0.2f), PiezasOrden.fijo("puerta"), 0.5f, 0.8f, lejos = 0.2f)
         }
         val vv = FONDO - 2.71f
         val arco = Path().apply {
@@ -183,22 +191,21 @@ internal object PatioOrden {
 
     // ---------------------------------------------------------------- Los edificios
 
-    /** Los edificios de atrás adelante, con sus ventanas y lo que el cuento pone en ellos. */
-    fun DrawScope.edificios(v: VistaOrden) {
-        for (e in EDIFICIOS.sortedByDescending { CamOrden.hondo(it.s, it.v) }) {
-            val lejos = (CamOrden.hondo(e.s, e.v) / 140f).coerceIn(0f, 0.35f)
+    /** Los edificios de atrás adelante, con sus ventanas y lo que el cuento pone en ellos: los del fondo ([lejos]) o la Cámara. */
+    fun DrawScope.edificios(v: VistaOrden, lejos: Boolean) {
+        for (e in EDIFICIOS.filter { (it !== CAMARA) == lejos }.sortedByDescending { CamOrden.hondo(it.s, it.v) }) {
+            val bruma = (CamOrden.hondo(e.s, e.v) / 140f).coerceIn(0f, 0.35f)
             val az = PiezasOrden.fijo("edificio", e.s)
-            caja(v.lz, e.s, e.v, e.giro, e.ancho, e.fondo, P, e.alto, C.PIEDRA, lejos, arriba = C.LOSA) { i, _ ->
+            caja(v.lz, e.s, e.v, e.giro, e.ancho, e.fondo, P, e.alto, C.PIEDRA, bruma, arriba = if (v.nieve > 0f) C.NIEVE else C.LOSA) { i, _ ->
                 if (i < 4) {
                     val (a, b) = when (i) { 0 -> e.enCara(0, 0f, P) to e.enCara(0, 1f, P); 1 -> e.enCara(1, 0f, P) to e.enCara(1, 1f, P); 2 -> e.enCara(2, 0f, P) to e.enCara(2, 1f, P); else -> e.enCara(3, 0f, P) to e.enCara(3, 1f, P) }
-                    sillares(a, b, e.alto - P, v.lz.color(C.PIEDRA, normalDe(e, i), lejos), az, 0.5f, 0.85f, lejos = lejos)
+                    sillares(a, b, e.alto - P, v.lz.color(C.PIEDRA, normalDe(e, i), bruma), az, 0.5f, 0.85f, lejos = bruma)
                 }
             }
             when (e) {
                 CAMARA -> ventanaDeLaCamara(v)
-                ARCHIVO -> ventanaAlta(v, e, 0, 0.62f, P + 5.2f, 1.1f, 0.9f, EscenaOrden.ventanaDelArchivo(v.m))
-                SALA -> { for (u in listOf(0.2f, 0.4f, 0.6f, 0.8f)) ventanaAlta(v, e, 0, u, P + 4.2f, 0.8f, 2f, EscenaOrden.salaDelCodigo(v.m)); espadana(v) }
-                ENFERMERIA -> ventanaAlta(v, e, 3, 0.5f, P + 1.6f, 1.2f, 1.2f, EscenaOrden.enfermeria(v.m))
+                ALA -> { ventanaAlta(v, e, 0, 0.66f, P + 5.3f, 0.9f, 0.8f, EscenaOrden.ventanaDelArchivo(v.m)); ventanaAlta(v, e, 0, 0.3f, P + 1.3f, 1.2f, 1.3f, EscenaOrden.enfermeria(v.m)) }
+                SALA -> { for (u in listOf(0.2f, 0.4f, 0.6f, 0.8f)) ventanaAlta(v, e, 0, u, P + 4.6f, 0.75f, 2.2f, EscenaOrden.salaDelCodigo(v.m)); espadana(v) }
             }
         }
     }
@@ -327,7 +334,7 @@ internal object PatioOrden {
      */
     fun DrawScope.fragua(v: VistaOrden) {
         val lz = v.lz; val s0 = CamOrden.BORDE; val s1 = FRAGUA_S; val v0 = FRAGUA_V0; val v1 = FRAGUA_V1
-        val alto0 = P + 4.2f; val alto1 = P + 3f
+        val alto0 = P + 4.2f; val alto1 = P + 2.9f
         // El costado del fondo (v1) y el suelo, en sombra.
         cara(lz, listOf(V3(s1, P, v1), V3(s0, P, v1), V3(s0, alto0, v1), V3(s1, alto1, v1)), V3(0f, 0f, -1f), lerp(C.PIEDRA, C.HOLLIN, 0.35f), 0.12f)
         val dentro = poligono(listOf(V3(s1, P, v0), V3(s0, P, v0), V3(s0, alto0, v0), V3(s1, alto1, v0)).map { CamOrden.p(it) })
@@ -342,14 +349,14 @@ internal object PatioOrden {
             // El yunque, delante.
             val y = CamOrden.p(s1 + 1.6f, P + 0.8f, v0 + 2f)
             drawRect(lz.color(C.HIERRO, V3(0f, 1f, 0f), 0.1f), Offset(y.x - k * 0.5f, y.y - k * 0.15f), Size(k * 1f, k * 0.3f))
+            placas(v)
         }
         // El poste de la esquina y el tejadillo de losas, que baja hacia el patio.
         palo(lz, V3(s1, P, v0), V3(s1, alto1, v0), 0.35f, C.MADERA, 0.1f)
         val tejado = listOf(V3(s1 - 0.4f, alto1 - 0.1f, v0 - 0.5f), V3(s0, alto0 + 0.1f, v0 - 0.5f), V3(s0, alto0 + 0.1f, v1 + 0.3f), V3(s1 - 0.4f, alto1 - 0.1f, v1 + 0.3f))
-        cara(lz, tejado, V3(-0.4f, 1f, 0f), C.LOSA, 0.1f, 0.15f)?.let { t -> clipPath(t) { for (j in 0..10) drawLine(v.l.tono(C.HOLLIN).copy(alpha = 0.25f), CamOrden.p(s1 - 0.4f, alto1, v0 - 0.5f + j * 0.75f), CamOrden.p(s0, alto0, v0 - 0.5f + j * 0.75f), 0.5f) } }
+        cara(lz, tejado, V3(-0.4f, 1f, 0f), if (v.nieve > 0f) C.NIEVE else C.LOSA, 0.1f, 0.15f)?.let { t -> clipPath(t) { for (j in 0..10) drawLine(v.l.tono(C.HOLLIN).copy(alpha = 0.25f), CamOrden.p(s1 - 0.4f, alto1, v0 - 0.5f + j * 0.75f), CamOrden.p(s0, alto0, v0 - 0.5f + j * 0.75f), 0.5f) } }
         // La chimenea, pegada a la muralla, hasta por encima del adarve.
         caja(lz, s0 - 0.55f, v1 - 1.2f, 0f, 1.1f, 1.1f, alto0, 1.4f, lerp(C.PIEDRA, C.HOLLIN, 0.15f), 0.1f)
-        placas(v)
     }
 
     /** Las esquinas de la fragua (para las sombras). */
@@ -365,18 +372,20 @@ internal object PatioOrden {
      * suyo, con más remiendos y una placa de latón.
      */
     private fun DrawScope.placas(v: VistaOrden) {
-        val lz = v.lz; val v0 = FRAGUA_V0 - 0.02f; val n = V3(0f, 0f, -1f)
+        val lz = v.lz; val v1 = FRAGUA_V1 - 0.05f
         val az = PiezasOrden.fijo("placas")
         val piezas = if (EscenaOrden.caparazonDeUlises(v.m)) 6 else 4
+        val luz = EscenaOrden.fragua(v.m)
         for (j in 0 until piezas) {
-            val s = FRAGUA_S - 0.5f - j * 0.75f; val h = P + 2.3f - (j % 2) * 0.9f
-            if (s < FRAGUA_S - 4.2f) break
-            val a = CamOrden.p(s, h, v0); val k = CamOrden.k(s, v0)
-            val w = k * az.entre(0.45f, 0.6f); val alto = k * az.entre(0.5f, 0.75f)
+            val s = CamOrden.BORDE - 2.2f - j * 0.62f; val h = P + 2.5f - (j % 2) * 0.75f
+            val a = CamOrden.p(s, h, v1); val k = CamOrden.k(s, v1)
+            val w = k * az.entre(0.42f, 0.56f); val alto = k * az.entre(0.45f, 0.7f)
             val forma = Path().apply { moveTo(a.x - w / 2f, a.y); lineTo(a.x + w / 2f, a.y); cubicTo(a.x + w / 2f, a.y + alto * 0.7f, a.x + w * 0.2f, a.y + alto, a.x, a.y + alto); cubicTo(a.x - w * 0.2f, a.y + alto, a.x - w / 2f, a.y + alto * 0.7f, a.x - w / 2f, a.y); close() }
-            val color = if (j >= 4) lerp(C.HIERRO, C.LATON, 0.25f) else C.HIERRO
-            drawPath(forma, Brush.horizontalGradient(listOf(lz.color(color, V3(1f, 0f, -1f), 0.1f), lz.color(color, V3(-1f, 0f, -1f), 0.1f)), a.x - w / 2f, a.x + w / 2f))
-            drawLine(lz.color(C.HIERRO_CLARO, V3(0f, 1f, -1f), 0.1f), Offset(a.x - w * 0.3f, a.y + alto * 0.3f), Offset(a.x + w * 0.3f, a.y + alto * 0.32f), 0.5f)
+            val color = if (j >= 4) lerp(C.HIERRO, C.LATON, 0.3f) else C.HIERRO
+            val base = lz.color(color, V3(0f, 0f, -1f), 0.1f)
+            // La lumbre de la fragua les saca un filo naranja del lado del hogar.
+            drawPath(forma, Brush.horizontalGradient(listOf(lerp(base, C.FRAGUA, 0.35f * luz), lerp(base, v.l.tono(C.HOLLIN), 0.3f)), a.x + w / 2f, a.x - w / 2f))
+            drawLine(lerp(lz.color(C.HIERRO_CLARO, V3(0f, 1f, -1f), 0.1f), C.LUMBRE, 0.3f * luz), Offset(a.x - w * 0.3f, a.y + alto * 0.3f), Offset(a.x + w * 0.3f, a.y + alto * 0.32f), 0.5f)
             drawLine(v.l.tono(C.MADERA_OSC), a, a + Offset(0f, -k * 0.2f), 0.5f)
         }
     }
@@ -385,7 +394,7 @@ internal object PatioOrden {
 
     /** El corral de las cabras, abajo a la izquierda: un murete de piedra seca, el abrevadero y las cabras apretujadas. */
     fun DrawScope.corral(v: VistaOrden) {
-        val lz = v.lz; val s0 = -6.5f; val s1 = -12f; val v0 = 15.5f; val v1 = 21f
+        val lz = v.lz; val s0 = -5.6f; val s1 = -10f; val v0 = 14.2f; val v1 = 18.6f
         val az = PiezasOrden.fijo("cabras")
         // Las cabras, de atrás adelante.
         val noche = v.m.hora >= 20.0 || v.m.hora < 6.0

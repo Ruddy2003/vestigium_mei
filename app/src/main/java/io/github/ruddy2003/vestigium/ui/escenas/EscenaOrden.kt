@@ -12,7 +12,7 @@ import io.github.ruddy2003.vestigium.vidas.Clima
 import kotlin.math.abs
 
 /**
- * La paleta de Orden: catorce colores de materia y cinco de luz.
+ * La paleta de Orden: quince colores de materia y cinco de luz.
  *
  * **Manda la piedra roja**: la roca de la meseta, honda y oscura en su pared a pico, y la piedra del páramo sin labrar de
  * las murallas, más clara y cálida. La acompañan el ocre del páramo y del polvo, el gris de la tela de la Garza y el
@@ -27,7 +27,7 @@ import kotlin.math.abs
  * góndola de madera», «un vaso de latón con aceite de cabra», «un polvo ocre», «el color del cobre viejo».
  */
 internal object ColorOrden {
-    // ---- Catorce colores de materia.
+    // ---- Quince colores de materia.
     val ROCA = Color(0xFF9C4A34)                                                // la pared de la meseta
     val PIEDRA = Color(0xFFC07658)                                              // las murallas, sin labrar
     val LOSA = Color(0xFFB4705A)                                                // el suelo del adarve, gastado
@@ -42,6 +42,7 @@ internal object ColorOrden {
     val CABRA = Color(0xFFD9CCB2)                                               // las cabras claras
     val HOLLIN = Color(0xFF2E2A2C)                                              // lo más oscuro: hollín, juntas, la fragua
     val VIDRIO = Color(0xFFB4CCC6)                                              // el invernadero de la torre
+    val NIEVE = Color(0xFFEDEFF3)                                               // la nieve posada (nunca blanco puro)
 
     // ---- Las cinco luces: el candil, la fragua, el núcleo, la luna y el violeta de las sombras.
     val LUMBRE = Color(0xFFFFB45A)
@@ -322,6 +323,12 @@ internal object EscenaOrden : EscenaVida {
     /** El caparazón de Ulises, colgado en la pared de la fragua desde el 10 de junio de 2029 (`ulises`), en piezas. */
     internal fun caparazonDeUlises(m: Momento): Boolean = paso(m, 3, "06-10")
 
+    /**
+     * Las flores amarillas de las grietas: «unas flores amarillas que duran una semana», en primavera; **[Diseño propio]**
+     * la primera semana de abril.
+     */
+    internal fun flores(m: Momento): Boolean = mesDia(m) in "04-01".."04-07" && m.ficha.clima != Clima.NIEVE
+
     /** La nieve posada en el patio, el adarve y el páramo: los días que nieva («el patio amanece blanco»). */
     internal fun nieve(m: Momento): Float = if (m.ficha.clima == Clima.NIEVE) 1f else 0f
 
@@ -371,12 +378,12 @@ internal object EscenaOrden : EscenaVida {
         lugar(m), garza(m), tramoDeLaCisterna(m), nucleo(m), pila(m), candiles(m), vigilia(m), salaDelCodigo(m), puerta(m),
         postigos(m), invernaderoRoto(m), caparazonDeUlises(m), caparazonesPintados(m), mercado(m), tapasLevantadas(m),
         alarma(m), luto(m), caza(m), fiesta(m), sequia(m), granizo(m), juramento(m), inventario(m), ventanaDelArchivo(m),
-        enfermeria(m), fragua(m), nieve(m), m.ficha.clima, telaNueva(m), pozoSeco(m),
+        enfermeria(m), fragua(m), nieve(m), m.ficha.clima, telaNueva(m), pozoSeco(m), flores(m),
     ).joinToString("|")
 
     // ---------------------------------------------------------------- La luz
 
-    private fun Luces.con(alto: Color = this.alto, medio: Color = this.medio, bajo: Color = this.bajo, ambiente: Color = this.ambiente, bruma: Color = this.bruma) = Luces(
+    private fun Luces.con(alto: Color = this.alto, medio: Color = this.medio, bajo: Color = this.bajo, ambiente: Color = this.ambiente, bruma: Color = this.bruma, solFuerza: Float = this.solFuerza, brumaFuerza: Float = this.brumaFuerza) = Luces(
         alto = alto, medio = medio, bajo = bajo, ambiente = ambiente, bruma = bruma, brumaFuerza = brumaFuerza,
         solX = solX, solAltura = solAltura, solColor = solColor, solFuerza = solFuerza, lunaX = lunaX, lunaAltura = lunaAltura,
         estrellas = estrellas, noche = noche, nublado = nublado, eclipse = 0f,
@@ -393,7 +400,8 @@ internal object EscenaOrden : EscenaVida {
             Clima.POLVO -> {
                 val k = if (hoyEs(m, "tormenta_polvo") || sequia(m)) 1f else 0.7f
                 l.con(alto = lerp(l.alto, Color(0xFF8A5A3A), 0.55f * k), medio = lerp(l.medio, Color(0xFFB07A48), 0.6f * k), bajo = lerp(l.bajo, Color(0xFFC89A62), 0.6f * k),
-                    ambiente = lerp(l.ambiente, Color(0xFFE8B888), 0.35f * k * dia), bruma = lerp(l.bruma, Color(0xFFC0884E), 0.7f * k))
+                    ambiente = lerp(l.ambiente, Color(0xFFE8B888), 0.35f * k * dia), bruma = lerp(l.bruma, Color(0xFFC0884E), 0.7f * k),
+                    solFuerza = l.solFuerza * (1f - 0.85f * k), brumaFuerza = (l.brumaFuerza + 0.1f * k).coerceAtMost(1f))
             }
             Clima.TORMENTA -> l.con(alto = lerp(l.alto, Color(0xFF4A3A62), 0.5f), medio = lerp(l.medio, Color(0xFF6A5480), 0.45f), bruma = lerp(l.bruma, Color(0xFF6A5A7A), 0.4f))
             else -> l.con(alto = lerp(l.alto, Color(0xFF4C7EAE), 0.3f * dia * (1f - l.nublado)),
@@ -420,8 +428,8 @@ internal object EscenaOrden : EscenaVida {
     /** Cuánto alumbra la luna, de 0 a 1: de noche y sin nubes ni polvo. */
     internal fun luna(l: Luces): Float = (((l.estrellas - 0.3f) / 0.7f).coerceIn(0f, 1f) * (1f - l.nublado)) * l.noche
 
-    /** El sol que hay, de 0 a 1: nada de noche, con el cielo cubierto ni con polvo. */
-    internal fun sol(l: Luces): Float = (Rayo(l).fuerza / 0.72f).coerceIn(0f, 1f) * (if (l.nublado > 0.3f) 0f else 1f)
+    /** El sol que hay, de 0 a 1: nada de noche, con el cielo cubierto ni con polvo (el polvo deja el sol en menos de un tercio). */
+    internal fun sol(l: Luces): Float = (Rayo(l).fuerza / 0.72f).coerceIn(0f, 1f).let { if (l.nublado > 0.3f || it < 0.3f) 0f else it }
 
     /**
      * Las dos luces de la noche, de 0 a 1: la cálida (los candiles de las almenas, las ventanas, la fragua) y la fría (la

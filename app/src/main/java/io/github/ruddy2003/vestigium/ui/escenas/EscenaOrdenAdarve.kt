@@ -105,6 +105,12 @@ internal object AdarveOrden {
             for (i in 0 until 14) { val vv2 = 1f + i * i * 0.22f; val q = CamOrden.p(1.1f, 0f, vv2); val k = CamOrden.k(1.1f, vv2); mancha(q, k * 0.9f, k * 0.3f, v.l.tono(lerp(C.LOSA, C.ARENA, 0.5f)), 0.22f) }
             for (i in 0 until 18) { val vv2 = 0.8f + i * i * 0.13f; val q = CamOrden.p(PARAPETO - 0.25f, 0f, vv2); val k = CamOrden.k(PARAPETO, vv2); mancha(q, k * az.entre(0.3f, 0.7f), k * 0.12f, v.l.tono(C.ARENA), 0.5f) }
         }
+        // Las flores amarillas de la primavera, en las juntas al pie del parapeto.
+        if (EscenaOrden.flores(v.m)) {
+            val fl = PiezasOrden.fijo("flores"); val amarillo = v.lz.color(Color(0xFFE8C23A), V3(0f, 1f, 0f)); val hoja = v.lz.color(C.LIQUEN, V3(0f, 1f, 0f))
+            repeat(26) { val s = PARAPETO - fl.entre(0.05f, 0.5f); val vv = 0.8f + 16f * fl.real() * fl.real(); val k = CamOrden.k(s, vv); val q = CamOrden.p(s, 0f, vv)
+                drawLine(hoja, q, q + Offset(0f, -k * 0.08f), (k * 0.015f).coerceAtLeast(0.4f)); drawCircle(amarillo, (k * 0.03f).coerceAtLeast(0.5f), q + Offset(0f, -k * 0.09f)) }
+        }
         // El canto del borde de dentro: una tira de losas más claras, sin pretil, sobre la caída al patio.
         val canto = poligono(listOf(V3(BORDE, 0.02f, 0.6f), V3(BORDE + 0.3f, 0.02f, 0.6f), V3(BORDE + 0.3f, 0.02f, FIN), V3(BORDE, 0.02f, FIN)).map { CamOrden.p(it) })
         drawPath(canto, lz.color(lerp(C.PIEDRA, C.ARENA, 0.25f), arriba, 0f, 0.2f))
@@ -124,6 +130,11 @@ internal object AdarveOrden {
             clipPath(f) { sillares(V3(PARAPETO, 0f, FIN), V3(PARAPETO, 0f, 0.3f), CamOrden.ALTO_PARAPETO, lz.color(C.PIEDRA, n), PiezasOrden.fijo("parapeto"), 0.38f, 0.62f) }
         }
         cara(lz, listOf(V3(PARAPETO, CamOrden.ALTO_PARAPETO, 0.3f), V3(PARAPETO, CamOrden.ALTO_PARAPETO, FIN), V3(FUERA, CamOrden.ALTO_PARAPETO, FIN), V3(FUERA, CamOrden.ALTO_PARAPETO, 0.3f)), V3(0f, 1f, 0f), lerp(C.PIEDRA, C.ARENA, 0.2f), 0f, 0.2f)
+        // Las gárgolas del pie del parapeto, por donde sale el agua de la lluvia: una cada dos almenas.
+        for (i in 0 until EscenaOrden.ALMENAS step 2) {
+            val vv = almena(i) + ALMENA + (PASO - ALMENA) / 2f
+            drawPath(poligono(listOf(V3(PARAPETO - 0.01f, 0.02f, vv - 0.12f), V3(PARAPETO - 0.01f, 0.02f, vv + 0.12f), V3(PARAPETO - 0.01f, 0.16f, vv + 0.12f), V3(PARAPETO - 0.01f, 0.16f, vv - 0.12f)).map { CamOrden.p(it) }), v.l.tono(lerp(C.HOLLIN, C.ROCA, 0.2f)))
+        }
         for (i in EscenaOrden.ALMENAS - 1 downTo 0) { almenaEntera(v, i); if (i == CABRIA + 1) cabria(v) }
     }
 
@@ -247,12 +258,36 @@ internal object AdarveOrden {
         }
     }
 
-    /** El paño oscuro del luto, colgado de la almena de delante **[Diseño propio]**; y el pendón carmesí de las fiestas. */
+    /**
+     * El paño oscuro del luto, colgado de lo alto de la almena de delante **[Diseño propio]**; y en las fiestas, el pendón
+     * carmesí de dos puntas en su asta, en lo alto de la aguja de la torre, que ondea con el viento, con el candil de la orden bordado
+     * en latón (sin letras).
+     */
+    /** El pie del asta del pendón de las fiestas, en lo alto de la aguja de la torre, sobre la argolla. */
+    val PENDON: V3 get() = V3(TorreOrden.S, TorreOrden.ARGOLLA + 0.7f, TorreOrden.V)
+
     fun DrawScope.panos(v: VistaOrden) {
-        val a = CamOrden.p(PARAPETO - 0.02f, CamOrden.ALTO_ALMENA - 0.05f, almena(0) + 0.2f); val b = CamOrden.p(PARAPETO - 0.02f, CamOrden.ALTO_ALMENA - 0.05f, almena(0) + 1.1f)
-        val k = CamOrden.k(PARAPETO, almena(0))
-        if (EscenaOrden.luto(v.m)) pano(v.l, a, b, k * 0.9f, lerp(C.HOLLIN, C.ROCA, 0.15f))
-        else if (EscenaOrden.fiesta(v.m)) pano(v.l, a, b, k * 1.1f, C.CARMESI)
+        if (EscenaOrden.luto(v.m)) {
+            val a = CamOrden.p(PARAPETO - 0.02f, CamOrden.ALTO_ALMENA - 0.02f, almena(0) + 0.25f); val b = CamOrden.p(PARAPETO - 0.02f, CamOrden.ALTO_ALMENA - 0.02f, almena(0) + 0.75f)
+            pano(v.l, a, b, CamOrden.k(PARAPETO, almena(0)) * 0.55f, lerp(C.HOLLIN, C.ROCA, 0.15f))
+        }
+        if (!EscenaOrden.fiesta(v.m)) return
+        val lz = v.lz; val pie = PENDON; val punta = V3(pie.x, pie.y + 2.6f, pie.z)
+        palo(lz, pie, punta, 0.12f, C.HIERRO)
+        val q = CamOrden.p(punta); val k = CamOrden.k(punta.x, punta.z)
+        val largo = k * 2.6f; val ancho = k * 1.0f; val ondea = 0.15f + 0.25f * v.m.viento
+        val tela = Path().apply {
+            moveTo(q.x, q.y)
+            cubicTo(q.x - largo * 0.35f, q.y - ancho * ondea, q.x - largo * 0.65f, q.y + ancho * ondea, q.x - largo, q.y + ancho * 0.1f)
+            lineTo(q.x - largo * 0.78f, q.y + ancho * 0.5f); lineTo(q.x - largo, q.y + ancho * 0.92f)
+            cubicTo(q.x - largo * 0.65f, q.y + ancho * (1f + ondea), q.x - largo * 0.35f, q.y + ancho * (1f - ondea), q.x, q.y + ancho)
+            close()
+        }
+        drawPath(tela, Brush.horizontalGradient(listOf(lz.color(C.CARMESI, V3(0f, 0f, -1f), 0f, 0.3f), lz.color(C.CARMESI, V3(0f, 0f, 1f))), q.x - largo, q.x))
+        // El candil bordado: el vaso y la llama, de latón.
+        val c = Offset(q.x - largo * 0.38f, q.y + ancho * 0.55f)
+        drawPath(poligono(c + Offset(-ancho * 0.12f, 0f), c + Offset(ancho * 0.12f, 0f), c + Offset(ancho * 0.16f, -ancho * 0.12f), c + Offset(-ancho * 0.16f, -ancho * 0.12f)), lz.color(C.LATON, V3(0f, 0f, -1f)))
+        drawPath(poligono(c + Offset(-ancho * 0.05f, -ancho * 0.14f), c + Offset(ancho * 0.05f, -ancho * 0.14f), c + Offset(0f, -ancho * 0.34f)), lz.color(lerp(C.LATON, C.LUMBRE, 0.4f), V3(0f, 0f, -1f)))
     }
 
     /**
@@ -263,17 +298,21 @@ internal object AdarveOrden {
         val lz = v.lz
         // El rollo de cuerda, tendido en las losas: tres vueltas que se enciman.
         val c = V3(0.55f, 0.02f, 4.3f); val cuerda = lz.color(lerp(C.MADERA, C.ARENA, 0.45f), V3(0f, 1f, 0f))
+        // El cabo suelto, que se va hacia el borde.
+        val cola = listOf(V3(c.x - 0.3f, 0.02f, c.z + 0.05f), V3(c.x - 0.55f, 0.02f, c.z - 0.25f), V3(c.x - 0.62f, 0.02f, c.z - 0.7f)).map { CamOrden.p(it) }
+        drawPath(Path().apply { moveTo(cola[0].x, cola[0].y); cubicTo(cola[1].x, cola[1].y, cola[1].x, cola[1].y, cola[2].x, cola[2].y) }, cuerda, style = Stroke((CamOrden.k(c.x, c.z) * 0.05f).coerceAtLeast(0.5f), cap = StrokeCap.Round))
         for (k in 0 until 3) {
-            val r = 0.32f - k * 0.07f
-            val pts = (0..20).map { j -> val a = j * 6.2832f / 20f; CamOrden.p(c.x + r * kotlin.math.cos(a), c.y + 0.05f * k, c.z + r * kotlin.math.sin(a) * 0.9f) }
-            drawPath(Path().apply { moveTo(pts[0].x, pts[0].y); for (q in pts.drop(1)) lineTo(q.x, q.y) }, lerp(cuerda, v.l.tono(C.HOLLIN), 0.25f), style = Stroke((CamOrden.k(c.x, c.z) * 0.07f).coerceAtLeast(0.6f)))
-            drawPath(Path().apply { moveTo(pts[0].x, pts[0].y); for (q in pts.drop(1)) lineTo(q.x, q.y) }, cuerda, style = Stroke((CamOrden.k(c.x, c.z) * 0.04f).coerceAtLeast(0.4f)))
+            val r = 0.34f - k * 0.06f; val cs = c.x + 0.04f * k; val cv = c.z - 0.03f * k
+            val pts = (0..20).map { j -> val a = j * 6.2832f / 20f; val ondula = 1f + 0.06f * kotlin.math.sin(a * 3f + k); CamOrden.p(cs + r * ondula * kotlin.math.cos(a), c.y + 0.05f * k, cv + r * ondula * kotlin.math.sin(a) * 0.9f) }
+            val vuelta = Path().apply { moveTo(pts[0].x, pts[0].y); for (q in pts.drop(1)) lineTo(q.x, q.y) }
+            drawPath(vuelta, lerp(cuerda, v.l.tono(C.HOLLIN), 0.25f), style = Stroke((CamOrden.k(c.x, c.z) * 0.07f).coerceAtLeast(0.6f)))
+            drawPath(vuelta, cuerda, style = Stroke((CamOrden.k(c.x, c.z) * 0.04f).coerceAtLeast(0.4f)))
         }
         // El taburete, de tres patas, con la tapa gastada.
         val t = V3(0.25f, 0f, 6.6f)
         for (a in listOf(0.3f, 2.4f, 4.5f)) palo(lz, V3(t.x + 0.17f * kotlin.math.cos(a), 0f, t.z + 0.17f * kotlin.math.sin(a)), V3(t.x + 0.1f * kotlin.math.cos(a), 0.44f, t.z + 0.1f * kotlin.math.sin(a)), 0.05f, C.MADERA_OSC)
         caja(lz, t.x, t.z, 0.3f, 0.36f, 0.36f, 0.42f, 0.48f, C.MADERA, arriba = lerp(C.MADERA, C.ARENA, 0.3f))
-        // El cántaro, contra el parapeto, con su boca y su asa.
+        // El cántaro, contra el parapeto, con su boca.
         val j = V3(PARAPETO - 0.28f, 0f, 7.6f); val q = CamOrden.p(j); val k = CamOrden.k(j.x, j.z)
         val alto = 0.55f * k; val ancho = 0.36f * k
         val forma = Path().apply {
