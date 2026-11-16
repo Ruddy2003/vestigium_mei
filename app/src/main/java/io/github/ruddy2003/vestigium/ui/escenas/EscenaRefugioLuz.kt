@@ -219,6 +219,9 @@ internal object LuzRefugio {
                 val pc = K.p(c); val k = K.k(c)
                 charco(pc, 1.25f * k, 1.0f * k, color, 0.42f)
                 charco(pc + Offset(0f, 0.25f * k), 0.55f * k, 0.45f * k, lerp(color, Color.White, 0.3f), 0.35f)
+                // Los rayos de sombra de la jaula en la pared, alrededor de donde toca el eje.
+                for (j in 0 until 6) { val a = 2f * PI.toFloat() * j / 6 + 0.5f; val d = V3(cos(a), sin(a), 0f)
+                    Trazo3.run { barra(c + d * 0.12f, c + d * 1.1f, 0.05f, lerp(C.SOMBRA, C.TINTA, 0.2f).copy(alpha = 0.22f), StrokeCap.Butt) } }
             }
             // Y su derrame en el suelo, al pie de la pared.
             clipPath(sueloDeLaSala()) { val q = V3(c.x, 0f, S.FONDO - 0.9f); charco(K.p(q), 1.6f * K.k(q), 0.45f * K.k(q), color, 0.3f) }
@@ -232,16 +235,43 @@ internal object LuzRefugio {
             for (ancho in listOf(14f, 8f, 4f)) drawPath(forma, color.copy(alpha = 0.045f), style = Stroke(ancho), blendMode = BlendMode.Plus)
             val pc = K.p(c); val dentro = K.p(c + V3(radio, 0f, 0f))
             drawPath(forma, Brush.radialGradient(listOf(lerp(color, Color.White, 0.3f).copy(alpha = 0.5f), color.copy(alpha = 0.3f), color.copy(alpha = 0.12f)), pc, (dentro - pc).getDistance().coerceAtLeast(4f) * 1.3f), blendMode = BlendMode.Plus)
-            // Los rayos de sombra de la jaula.
-            for (k in 0 until 6) {
-                val a = 2f * PI.toFloat() * k / 6 + 0.3f
-                val d = V3(cos(a), 0f, sin(a))
-                val p0 = K.p(c + d * (radio * 0.12f)); val p1 = K.p(c + d * (radio * 1.05f))
-                val camino = Path().apply { val w0 = 0.015f * K.k(c); val w1 = 0.11f * K.k(c + d * radio); val nx = -(p1.y - p0.y); val ny = p1.x - p0.x; val l = sqrt(nx * nx + ny * ny).coerceAtLeast(0.01f)
-                    moveTo(p0.x + nx / l * w0, p0.y + ny / l * w0); lineTo(p1.x + nx / l * w1, p1.y + ny / l * w1); lineTo(p1.x - nx / l * w1, p1.y - ny / l * w1); lineTo(p0.x - nx / l * w0, p0.y - ny / l * w0); close() }
-                drawPath(camino, lerp(C.SOMBRA, C.TINTA, 0.2f).copy(alpha = 0.22f))
+            reja(c, radio, 0.22f)
+        }
+    }
+
+    /**
+     * El charco de la lámpara en la tapa de la bancada (de [x0] a [x1], de [z0] a [z1], a la altura [y]): donde su cono la
+     * toca, la madera se enciende, con la reja de sombra de los alambres de la jaula. Va con la tapa, antes de lo de encima.
+     */
+    fun DrawScope.charcoEnLaBancada(v: VistaRefugio, x0: Float, x1: Float, z0: Float, z1: Float, y: Float) {
+        val tapa = K.forma(listOf(V3(x0, y, z0), V3(x1, y, z0), V3(x1, y, z1), V3(x0, y, z1)))
+        for (o in v.obras) {
+            val b = S.bombilla(o); val e = S.haciaDonde(o); if (e.y > -0.3f) continue
+            val t = (y - b.y) / e.y; val c = b + e * t
+            val alto = b.y - y; val radio = alto * 0.95f
+            clipPath(tapa) {
+                val pc = K.p(c); val borde = K.circulo(c, K.ARRIBA, radio, 26); val forma = K.forma(borde)
+                for (ancho in listOf(10f, 5f)) drawPath(forma, C.LAMPARA.copy(alpha = 0.05f), style = Stroke(ancho), blendMode = BlendMode.Plus)
+                drawPath(forma, Brush.radialGradient(listOf(lerp(C.LAMPARA, Color.White, 0.35f).copy(alpha = 0.42f), C.LAMPARA.copy(alpha = 0.22f), C.LAMPARA.copy(alpha = 0.06f)), pc, ((K.p(c + V3(radio, 0f, 0f)) - pc).getDistance() * 1.2f).coerceAtLeast(4f)), blendMode = BlendMode.Plus)
+                reja(c, radio, 0.3f)
             }
         }
+    }
+
+    /** La reja de sombra de los seis alambres de la jaula: rayos que salen de [c] (en el plano del suelo o de una tapa), hasta [radio]. */
+    private fun DrawScope.reja(c: V3, radio: Float, fuerza: Float) {
+        for (k in 0 until 6) {
+            val a = 2f * PI.toFloat() * k / 6 + 0.3f
+            val d = V3(cos(a), 0f, sin(a))
+            val p0 = K.p(c + d * (radio * 0.1f)); val p1 = K.p(c + d * (radio * 1.05f))
+            val camino = Path().apply { val w0 = 0.012f * K.k(c); val w1 = 0.07f * K.k(c + d * radio); val nx = -(p1.y - p0.y); val ny = p1.x - p0.x; val l = sqrt(nx * nx + ny * ny).coerceAtLeast(0.01f)
+                moveTo(p0.x + nx / l * w0, p0.y + ny / l * w0); lineTo(p1.x + nx / l * w1, p1.y + ny / l * w1); lineTo(p1.x - nx / l * w1, p1.y - ny / l * w1); lineTo(p0.x - nx / l * w0, p0.y - ny / l * w0); close() }
+            drawPath(camino, lerp(C.SOMBRA, C.TINTA, 0.2f).copy(alpha = fuerza))
+        }
+        // El aro de la jaula: un anillo de sombra más tenue.
+        val anillo = K.circulo(c, K.ARRIBA, radio * 0.62f, 24).map { K.p(it) }
+        val camino = Path().apply { moveTo(anillo[0].x, anillo[0].y); for (i in 1 until anillo.size) lineTo(anillo[i].x, anillo[i].y) }
+        drawPath(camino, lerp(C.SOMBRA, C.TINTA, 0.2f).copy(alpha = fuerza * 0.6f), style = Stroke(0.04f * K.k(c)))
     }
 
     // =================================================================

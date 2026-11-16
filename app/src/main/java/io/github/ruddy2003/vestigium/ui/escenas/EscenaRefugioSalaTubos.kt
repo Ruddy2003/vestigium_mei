@@ -7,6 +7,8 @@ import kotlin.math.PI
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.lerp
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 
 /**
  * Los tubos del techo de la sala de bombas, «tubos de todos los tamaños»: de acero, de cobre, pintados de verde y forrados
@@ -26,8 +28,8 @@ internal object PiezasTubos {
 
     /** El tubo gordo: hasta dónde llega en la sala (pasa por el portón) y por dónde sigue en el pasillo. */
     private const val GORDO_X = -1.45f
-    private const val GORDO_Y = 2.48f
-    private const val GORDO_R = 0.2f
+    private const val GORDO_Y = 2.56f
+    private const val GORDO_R = 0.16f
     private const val GORDO_SUBE = 8.75f
     private const val GORDO_ARRIBA = 4.08f
 
@@ -38,7 +40,7 @@ internal object PiezasTubos {
             Tubo(V3(-2.45f, 2.82f, -1.5f), V3(-2.45f, 2.82f, S.FONDO), 0.14f, C.VERDE, 2.1f),
             Tubo(V3(-0.35f, 2.97f, -1.5f), V3(-0.35f, 2.97f, S.FONDO), 0.13f, lerp(C.PAPEL, C.ROCA, 0.3f), 0f, forrado = true),
             Tubo(V3(0.55f, 3.04f, -1.5f), V3(0.55f, 3.04f, S.FONDO), 0.075f, lerp(C.COBRE, C.TINTA, 0.25f)),
-            Tubo(V3(GORDO_X, GORDO_Y, -1.5f), V3(GORDO_X, GORDO_Y, P.BOCA), GORDO_R, lerp(C.ACERO, C.CHAPA, 0.25f), 2.4f),
+            Tubo(V3(GORDO_X, GORDO_Y, -1.5f), V3(GORDO_X, GORDO_Y, P.BOCA), GORDO_R, lerp(C.ACERO, C.PAPEL, 0.25f), 2.4f),
             // Los que cruzan la sala a lo ancho, cerca de la pared del fondo y por en medio.
             Tubo(V3(S.IZQ, 2.86f, 6.85f), V3(S.COLUMNA_X - 0.05f, 2.86f, 6.85f), 0.09f, C.VERDE, 2.2f),
             Tubo(V3(S.IZQ, 3.04f, 4.35f), V3(S.DER, 3.04f, 4.35f), 0.055f, C.COBRE),
@@ -107,8 +109,24 @@ internal object PiezasTubos {
         Trazo3.run { barra(desde + bajo, t.b + bajo, t.r * 0.18f, v.c(K.medio(desde, t.b) + bajo, K.ABAJO, lerp(t.color, Color.White, 0.3f), t.pasillo).copy(alpha = 0.55f), StrokeCap.Butt) }
     }
 
-    /** Lo de los tubos que va delante de todo (nada todavía: los tubos cercanos ya se pintan los últimos de su capa). */
-    fun DrawScope.delante(v: VistaRefugio) {}
+    /**
+     * Lo de arriba que cambia de un día a otro (regla 2, «la mitad de arriba… cambia de un día a otro»): los trapos que ella
+     * pone a secar colgados del tubo gordo (de ninguno a tres, cada día en otro sitio) **[Diseño propio]**.
+     */
+    fun DrawScope.delante(v: VistaRefugio) {
+        val az = v.m.azar("trapos")
+        val cuantos = (az.real() * 3.6f).toInt()
+        val colores = listOf(lerp(C.PAPEL, C.ROCA, 0.3f), lerp(C.ROJO, C.PAPEL, 0.45f), lerp(C.AZUL, C.PAPEL, 0.35f))
+        repeat(cuantos) { k ->
+            val z = 3.4f + 1.15f * k + az.entre(0f, 0.6f)
+            val c = V3(GORDO_X, GORDO_Y + GORDO_R, z)
+            val ancho = az.entre(0.22f, 0.34f); val cae = az.entre(0.35f, 0.55f)
+            val n = K.unidad(V3(1f, 0f, -0.5f))
+            val pts = listOf(c + V3(0f, 0.01f, -ancho / 2f), c + V3(0f, 0.01f, ancho / 2f), c + V3(0.2f, -cae, ancho / 2f + 0.03f), c + V3(0.17f, -cae * 0.9f, -ancho / 2f - 0.02f))
+            val pts2 = listOf(c + V3(0f, 0.01f, -ancho / 2f), c + V3(0f, 0.01f, ancho / 2f), c + V3(-0.2f, -cae * 0.7f, ancho / 2f), c + V3(-0.21f, -cae * 0.75f, -ancho / 2f))
+            Trazo3.run { caraDegradada(v, pts2, n * -1f, lerp(colores[k % 3], C.TINTA, 0.2f), c, c + V3(0f, -cae, 0f)); caraDegradada(v, pts, n, colores[k % 3], c, c + V3(0f, -cae, 0f)) }
+        }
+    }
 
     /** El tubo gordo en el pasillo: sube detrás del portón y corre por la bóveda hacia la Puerta. Va dentro del hueco. */
     fun DrawScope.enElPasillo(v: VistaRefugio) {

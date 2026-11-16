@@ -323,7 +323,19 @@ internal object Trazo3 {
             val n = K.unidad(dirs[i] + dirs[i + 1]); val c = K.medio(a, b) + n * r
             if (K.seVe(c, n)) Triple(i, n, K.hondo(c)) else null
         }.sortedByDescending { it.third }
-        for ((i, n, _) in tiras) {
+        // Los cuerpos cortos (un motor, un filtro, un bidón, un cubo) llevan su luz en un degradado continuo de lado a
+        // lado, como pintados con pincel, sin facetas; los tubos largos, por tiras, para que la luz cambie a lo largo.
+        val pa = K.p(a); val pb = K.p(b)
+        val corto = K.largo(b - a) < 2.2f && K.hondo(a) > K.CERCA && K.hondo(b) > K.CERCA && tiras.size >= 2 && (pb - pa).getDistance() > 0.5f
+        if (corto) {
+            val ax = pb - pa; val l = ax.getDistance(); val perp = Offset(-ax.y / l, ax.x / l)
+            val m = K.medio(a, b)
+            val marcas = tiras.map { (_, n, _) -> val q = K.p(m + n * r); (q.x - pa.x) * perp.x + (q.y - pa.y) * perp.y to v.c(m + n * r, n, propio, enPasillo) }.sortedBy { it.first }
+            val bordes = todos.map { (it.x - pa.x) * perp.x + (it.y - pa.y) * perp.y }
+            val t0 = bordes.min(); val t1 = bordes.max(); val ancho = (t1 - t0).coerceAtLeast(0.5f)
+            val paradas = (listOf(0f to marcas.first().second) + marcas.map { ((it.first - t0) / ancho).coerceIn(0f, 1f) to it.second } + listOf(1f to marcas.last().second)).distinctBy { it.first }.sortedBy { it.first }
+            if (paradas.size >= 2) drawPath(poligono(K.casco(todos)), Brush.linearGradient(*paradas.toTypedArray(), start = Offset(pa.x + perp.x * t0, pa.y + perp.y * t0), end = Offset(pa.x + perp.x * t1, pa.y + perp.y * t1)))
+        } else for ((i, n, _) in tiras) {
             val pts = listOf(a + dirs[i] * r, a + dirs[i + 1] * r, b + dirs[i + 1] * r, b + dirs[i] * r)
             caraDegradada(v, pts, n, propio, a + n * r, b + n * r, enPasillo, 2)
         }

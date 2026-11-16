@@ -40,8 +40,8 @@ internal object PiezasSala {
     /** El cubo de la gotera de la bomba grande. */
     val CUBO = V3(-2.3f, 0f, 3.65f)
     val CUBO_X: Float get() = K.p(CUBO).x.coerceAtLeast(40f)
-    /** Encima de la bomba grande, sobre la carcasa del motor: el sitio alto del gato. */
-    val MIRADOR: Offset get() = K.p(V3(-2.95f, 1.18f, 3.05f))
+    /** Encima de la voluta de la bomba grande, a la izquierda de la rueda roja: el sitio alto del gato. */
+    val MIRADOR: Offset get() = K.p(V3(-3.45f, 1.34f, 3.2f))
     /** Debajo de la bancada. */
     val ABRIGO_X: Float get() = K.p(V3(-1.0f, 0f, S.BANCADA_Z1)).x
     /** La guirnalda o el árbol: el adorno que el gato mira. */
@@ -371,11 +371,11 @@ internal object PiezasSala {
         Trazo3.run { cilindro(v, m0, m1, 0.42f, C.VERDE, lerp(C.VERDE, C.TINTA, 0.2f), lados = 22) }
         for (k in 1..5) { val z = 1.98f + 0.15f * k; Trazo3.run { aro(V3(m0.x, m0.y, z), K.FONDO, 0.43f, 0.02f, v.c(V3(m0.x + 0.43f, m0.y + 0.2f, z), K.unidad(V3(1f, 0.5f, 0f)), lerp(C.VERDE, C.PAPEL, 0.15f)), 24) } }
         // La tapa de ventilación, de cara a la sala, con su rejilla.
-        Trazo3.run { cilindro(v, m0 - K.FONDO * 0.12f, m0, 0.36f, lerp(C.VERDE, C.TINTA, 0.15f), C.VERDE_CLARO, lados = 20) }
+        Trazo3.run { cilindro(v, m0 - K.FONDO * 0.12f, m0, 0.36f, lerp(C.VERDE, C.TINTA, 0.15f), lerp(C.VERDE_CLARO, C.VERDE, 0.4f), lados = 20) }
         // La rejilla de la tapa: ranuras que salen del centro.
         for (k in 0 until 12) { val a = 2f * PI.toFloat() * k / 12; val d = V3(cos(a), sin(a), 0f); val c0 = m0 - K.FONDO * 0.125f
             Trazo3.run { barra(c0 + d * 0.09f, c0 + d * 0.3f, 0.028f, v.c(c0, K.FRENTE, lerp(C.VERDE, C.TINTA, 0.7f))) } }
-        Trazo3.run { disco(v, m0 - K.FONDO * 0.13f, K.FRENTE, 0.07f, lerp(C.VERDE, C.HIERRO, 0.4f), lados = 12) }
+        Trazo3.run { disco(v, m0 - K.FONDO * 0.13f, K.FRENTE, 0.06f, C.VERDE_CLARO, lados = 12) }
         desconchones(v, m1 + V3(0.42f, 0f, -0.45f), K.DER, 0.6f, 0.4f, "motor", 6)
         // El acoplamiento con su guarda amarilla.
         Trazo3.run { cilindro(v, V3(m0.x, 0.75f, 2.85f), V3(m0.x, 0.75f, 3.05f), 0.24f, lerp(C.AMARILLO, C.OXIDO, 0.15f), lados = 14) }
@@ -398,7 +398,7 @@ internal object PiezasSala {
         Trazo3.run { cilindro(v, V3(b.x - 0.2f, 0.45f, 3.48f), V3(b.x - 0.2f, 0.45f, 4.3f), 0.17f, lerp(C.VERDE, C.ACERO, 0.35f), lados = 14) }
         brida(v, V3(b.x - 0.2f, 0.45f, 3.6f), K.FONDO, 0.24f)
         // La llave de válvulas larga, apoyada en la bancada de la bomba, si hoy no es el objeto.
-        if (R.laSalaPinta(v.m, "llave")) llave(v, V3(b.x + 0.75f, 0.0f, 2.3f), V3(b.x + 0.62f, 0.95f, 2.55f))
+        if (R.laSalaPinta(v.m, "llave")) llave(v, V3(b.x + 1.05f, 0.0f, 2.05f), V3(b.x + 0.62f, 0.9f, 2.5f))
     }
 
     /** Un manómetro pequeño en un tubo, mirando hacia la sala. */
@@ -411,9 +411,10 @@ internal object PiezasSala {
     fun DrawScope.llave(v: VistaRefugio, pie: V3, punta: V3) {
         val d = punta - pie
         Trazo3.run {
-            barra(pie, punta, 0.035f, v.c(K.medio(pie, punta), K.NADA, C.HIERRO))
+            barra(pie, punta, 0.035f, v.c(K.medio(pie, punta), K.NADA, lerp(C.HIERRO, C.ACERO, 0.45f)))
             barra(pie, pie + d * 0.4f, 0.05f, v.c(pie + d * 0.2f, K.NADA, lerp(C.TINTA, C.AZUL, 0.35f)))
-            aro(punta, K.unidad(V3(0f, 0f, -1f)), 0.07f, 0.03f, v.c(punta, K.FRENTE, C.HIERRO), 12)
+            barra(punta - K.DER * 0.06f, punta + K.DER * 0.06f + K.ARRIBA * 0.03f, 0.05f, v.c(punta, K.FRENTE, lerp(C.ACERO, Color.White, 0.15f)), StrokeCap.Butt)
+            barra(punta - K.DER * 0.06f, punta - K.DER * 0.07f + K.ARRIBA * 0.08f, 0.03f, v.c(punta, K.FRENTE, C.ACERO)); barra(punta + K.DER * 0.06f, punta + K.DER * 0.07f + K.ARRIBA * 0.09f, 0.03f, v.c(punta, K.FRENTE, C.ACERO))
         }
     }
 
@@ -590,10 +591,16 @@ internal object PiezasSala {
         // Abajo, la caja de piezas (de madera vieja, con tubos y bridas sobrantes asomando) y un rollo de alambre.
         Trazo3.run { caja(v, x0 + 0.12f, x0 + 0.62f, 0.24f, 0.46f, z0 + 0.2f, z1 - 0.1f, lerp(C.COBRE, C.TINTA, 0.45f), lerp(C.COBRE, C.TINTA, 0.3f)) }
         Trazo3.run { barra(V3(x0 + 0.2f, 0.46f, 2.95f), V3(x0 + 0.35f, 0.62f, 3.05f), 0.04f, v.c(V3(x0, 0.5f, 3f), K.NADA, C.ACERO)); barra(V3(x0 + 0.42f, 0.46f, 3.0f), V3(x0 + 0.5f, 0.58f, 2.9f), 0.03f, v.c(V3(x0, 0.5f, 3f), K.NADA, C.COBRE)) }
-        Trazo3.run { cilindro(v, V3(x0 + 0.95f, 0.24f, 3.0f), V3(x0 + 0.95f, 0.34f, 3.0f), 0.1f, lerp(C.COBRE, C.TINTA, 0.3f), lados = 12) }
+        for (k in 0..4) Trazo3.run { aro(V3(x0 + 0.95f, 0.26f + 0.02f * k, 3.0f), K.ARRIBA, 0.1f - 0.004f * k, 0.018f, v.c(V3(x0 + 0.95f, 0.3f, 2.9f), K.FRENTE, lerp(C.COBRE, if (k % 2 == 0) C.TINTA else C.LATON, 0.25f)), 16) }
         for ((x, z) in listOf(x0 + 0.04f to z0 + 0.04f, x1 - 0.04f to z0 + 0.04f)) Trazo3.run { caja(v, x - 0.03f, x + 0.03f, 0f, y - 0.05f, z - 0.03f, z + 0.03f, C.HIERRO) }
         // La tapa: la chapa gastada, con su canto y las marcas de uso.
-        Trazo3.run { caja(v, x0, x1, y - 0.06f, y, z0, z1, lerp(C.CHAPA, C.HIERRO, 0.2f), lerp(C.ACERO, C.CREMA, 0.3f)) }
+        Trazo3.run { caja(v, x0, x1, y - 0.1f, y - 0.04f, z0, z1, lerp(C.CHAPA, C.HIERRO, 0.2f), lerp(C.CHAPA, C.HIERRO, 0.2f)) }
+        // El tablero de madera gastada, con sus vetas y el canto comido.
+        val madera = lerp(lerp(C.COBRE, C.AMARILLO, 0.25f), C.HORMIGON, 0.28f)
+        Trazo3.run { caja(v, x0 - 0.02f, x1 + 0.02f, y - 0.04f, y, z0 - 0.02f, z1 + 0.01f, lerp(madera, C.TINTA, 0.25f), madera) }
+        with(LuzRefugio) { charcoEnLaBancada(v, x0, x1, z0, z1, y) }
+        val vz = Azar(Semilla.de("refugio", "vetas"))
+        for (k in 1..6) { val z = z0 + (z1 - z0) * k / 7f + vz.entre(-0.02f, 0.02f); Trazo3.run { barra(V3(x0 + vz.entre(0f, 0.3f), y + 0.002f, z), V3(x1 - vz.entre(0f, 0.3f), y + 0.002f, z + vz.entre(-0.03f, 0.03f)), 0.008f, v.c(V3(-1f, y, z), K.ARRIBA, lerp(madera, C.TINTA, 0.35f)).copy(alpha = 0.6f)) } }
         val az = Azar(Semilla.de("refugio", "bancada"))
         repeat(8) { val a = V3(az.entre(x0 + 0.1f, x1 - 0.1f), y + 0.002f, az.entre(z0 + 0.05f, z1 - 0.05f)); Trazo3.run { barra(a, a + V3(az.entre(-0.2f, 0.2f), 0f, az.entre(-0.05f, 0.05f)), 0.006f, v.c(a, K.ARRIBA, lerp(C.ACERO, Color.White, 0.3f)).copy(alpha = 0.5f)) } }
         Trazo3.run { cara(v, listOf(V3(x0 + 0.5f, y + 0.002f, z0 + 0.2f), V3(x0 + 0.85f, y + 0.002f, z0 + 0.15f), V3(x0 + 0.8f, y + 0.002f, z0 + 0.4f), V3(x0 + 0.45f, y + 0.002f, z0 + 0.42f)), K.ARRIBA, C.TINTA, alfa = 0.25f) }

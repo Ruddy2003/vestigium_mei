@@ -121,7 +121,7 @@ internal object SalaRefugio {
 
     /** Dónde cuelga la bombilla de la lámpara de trabajo, según la obra. */
     fun bombilla(o: Obra): V3 = when (o) {
-        Obra.MANOMETROS -> V3(-4.95f, 2.2f, 6.65f)
+        Obra.MANOMETROS -> V3(-4.5f, 2.25f, 6.7f)
         Obra.BOMBA -> V3(-2.55f, 2.1f, 3.1f)
         Obra.BANCADA -> V3(-0.65f, 2.0f, 2.9f)
         Obra.FILTRO -> V3(-1.9f, 2.1f, 4.15f)
@@ -132,7 +132,7 @@ internal object SalaRefugio {
      * pared de manómetros, alumbra la pared (y un poco el suelo); en las demás obras, hacia abajo.
      */
     fun haciaDonde(o: Obra): V3 = when (o) {
-        Obra.MANOMETROS -> K.unidad(V3(0.1f, -0.55f, 1f))
+        Obra.MANOMETROS -> K.unidad(V3(-0.2f, -0.55f, 1f))
         Obra.BOMBA -> K.unidad(V3(-0.25f, -1f, 0.1f))
         Obra.BANCADA -> K.ABAJO
         Obra.FILTRO -> K.unidad(V3(0.15f, -1f, -0.2f))
@@ -326,8 +326,15 @@ internal object SalaRefugio {
         return LuzGato(rayo, v.noche.coerceIn(0f, 1f), brillo) { c -> v.c(w, K.NADA, c) }
     }
 
-    /** Lo plantado en el suelo del gato: la pata de la bancada, el cubo de la gotera y la caja de herramientas. */
-    fun estorbos(m: Momento): List<Float> = listOf(PiezasSala.PATA_BANCADA_X, PiezasSala.CUBO_X)
+    /**
+     * Lo plantado en el suelo del gato: la pata de la bancada y el cubo de la gotera; el día de la bomba tres, sus piezas en
+     * el suelo; y el objeto grande del día, de pie junto a la bancada.
+     */
+    fun estorbos(m: Momento): List<Float> = buildList {
+        add(PiezasSala.PATA_BANCADA_X); add(PiezasSala.CUBO_X)
+        if (R.bombaTres(m)) add(K.p(PiezasSala.PIEZAS).x)
+        if (ObjetosRefugio.esGrande(m)) add(K.p(PIE_GRANDE).x)
+    }
 
     fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, 24f, PISO_GATO, hasta = 362f))
