@@ -156,7 +156,8 @@ class EscenaAntiguasPrueba {
         antes = -Float.MAX_VALUE
         for (h in listOf(6.67, 7.0, 8.0, 9.0)) { val s = sombra(h); assertTrue(s.manana); val y = s.y(SitioAntiguas.COLLADO.x); assertTrue("$h", y > antes); antes = y }
         val puente = SitioAntiguas.PUENTE_ACA; val collado = SitioAntiguas.COLLADO; val cumbre = SitioAntiguas.CUMBRE
-        assertTrue(LuzAntiguas.sombraEn(sombra(18.0), puente) > 0.9f); assertTrue(LuzAntiguas.sombraEn(sombra(18.0), collado) < 0.1f)
+        assertTrue(LuzAntiguas.sombraEn(sombra(18.67), puente) > 0.9f); assertTrue(LuzAntiguas.sombraEn(sombra(18.67), collado) < 0.1f)
+        assertTrue(LuzAntiguas.sombraEn(sombra(20.0), cumbre) < 0.1f)
         assertTrue(LuzAntiguas.sombraEn(sombra(20.0), collado) > 0.3f)
         assertTrue(LuzAntiguas.sombraEn(sombra(7.0), cumbre) < 0.1f); assertTrue(LuzAntiguas.sombraEn(sombra(7.0), puente) > 0.5f)
         assertTrue(LuzAntiguas.sombraEn(sombra(10.33), puente) < 0.05f)

@@ -98,8 +98,13 @@ internal object AldeaAntiguas {
     /** La nieve de abajo: un manto que borra el prado; con el paso cerrado, las sendas entre las casas, «zanjas de nieve más altas que un niño». */
     private fun DrawScope.nieve(v: VistaAntiguas, az: Azar) {
         val p = v.p; val n = v.nieveAbajo
-        drawRect(Brush.verticalGradient(listOf(p.por(C.NIEVE, 0.4f, 0.1f), p.por(C.NIEVE, 0.15f, 0.04f)), 200f, 268f), Offset(-10f, 196f), Size(400f, 74f), alpha = (0.45f + 0.55f * n).coerceAtMost(1f))
-        if (n < 0.99f) { repeat(70) { val q = Offset(az.entre(-6f, 386f), az.entre(206f, 266f)); drawPath(borron(q, az.entre(3f, 9f), 1.2f, az, 7, 0.4f), p.medio(EscenaAntiguas.hierba(v.m), 0.08f).copy(alpha = 0.6f * (1f - n))) }; return }
+        if (n < 0.99f) {
+            // Manchas de nieve vieja o recién caída en el prado, más donde da la sombra.
+            repeat((40 + 140 * n).toInt()) { val q = Offset(az.entre(-6f, 386f), az.entre(206f, 266f)); val w = az.entre(2f, 7f) * (0.6f + n) * (0.6f + (q.y - 200f) / 70f)
+                drawPath(TrazosValle.blando(q, w, w * 0.28f, az, 8, 0.25f), p.por(C.NIEVE, 0.3f, 0.06f)); drawLine(p.sombra(C.NIEVE_SOMBRA, 0.06f).copy(alpha = 0.5f), q + Offset(-w * 0.7f, w * 0.3f), q + Offset(w * 0.7f, w * 0.3f), 0.6f) }
+            return
+        }
+        drawRect(Brush.verticalGradient(listOf(p.por(C.NIEVE, 0.4f, 0.1f), p.por(C.NIEVE, 0.15f, 0.04f)), 200f, 268f), Offset(-10f, 196f), Size(400f, 74f))
         val zanja = p.sombra(C.NIEVE_SOMBRA, 0.06f)
         for (r in listOf(pts(40f, 246f, 70f, 240f, 100f, 244f, 126f, 240f, 160f, 238f, 196f, 236f, 226f, 238f), pts(110f, 238f, 104f, 230f, 112f, 222f), pts(160f, 238f, 168f, 226f))) {
             drawPath(curva(r), zanja.copy(alpha = 0.55f), style = Stroke(3.2f, cap = StrokeCap.Round))

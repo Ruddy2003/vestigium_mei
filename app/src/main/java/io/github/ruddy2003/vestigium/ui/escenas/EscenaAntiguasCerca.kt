@@ -24,6 +24,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Cosa
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.capaSombra
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cubicTo
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.lineTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.moveTo
@@ -117,12 +118,26 @@ internal object CercaAntiguas {
     /** La nieve del primer plano: el manto con su sombra azul y, con el paso cerrado, la zanja abierta a pala de la puerta a la plaza, con las losas mojadas al fondo. */
     private fun DrawScope.nieve(v: VistaAntiguas, az: Azar) {
         val n = v.nieveAbajo; val pe = v.pincelEn(Offset(200f, 270f))
-        drawRect(Brush.verticalGradient(listOf(pe.por(C.NIEVE, 0.3f), pe.por(C.NIEVE, 0.05f)), 240f, ALTO), Offset(-10f, 228f), Size(410f, 70f), alpha = (0.5f + 0.5f * n).coerceAtMost(1f))
-        if (!v.invierno) return
-        val zanja = poligono(listOf(p(8f, 0f, 0.1f), p(13.4f, 0f, 0.1f), p(13.6f, 0f, 1.2f), p(8f, 0f, 1.6f)))
-        drawPath(zanja, pe.por(lerp(C.PIEDRA, C.ESCORIA, 0.25f), 0.2f))
-        drawPath(Path().apply { moveTo(p(8f, 0f, 1.6f)); lineTo(p(13.6f, 0f, 1.2f)) }, pe.sombra(C.NIEVE_SOMBRA), style = Stroke(3f))
-        drawPath(Path().apply { moveTo(p(8f, 0f, 1.9f)); lineTo(p(13.6f, 0f, 1.4f)) }, pe.luz(C.NIEVE).copy(alpha = 0.7f), style = Stroke(1.2f))
+        if (!v.invierno) {
+            // Nieve recién caída o vieja en manchas: se queda en las juntas, al pie del muro y donde no se pisa.
+            if (v.clima == Clima.NIEVE) drawRect(Brush.verticalGradient(0f to pe.por(C.NIEVE, 0.3f).copy(alpha = 0f), 0.15f to pe.por(C.NIEVE, 0.3f).copy(alpha = 0.6f), 1f to pe.por(C.NIEVE, 0.1f).copy(alpha = 0.7f), startY = 228f, endY = ALTO), Offset(-10f, 228f), Size(410f, 70f))
+            repeat((60 + 160 * n).toInt()) { val q = Offset(az.entre(-6f, 386f), az.entre(236f, ALTO + 4f)); val w = az.entre(2f, 6f) * (0.5f + n) * (0.6f + (q.y - 230f) / 80f)
+                drawPath(TrazosValle.blando(q, w, w * 0.25f, az, 8, 0.25f), pe.por(C.NIEVE, 0.3f)); drawLine(pe.sombra(C.NIEVE_SOMBRA).copy(alpha = 0.5f), q + Offset(-w * 0.7f, w * 0.25f), q + Offset(w * 0.7f, w * 0.25f), 0.8f) }
+            return
+        }
+        drawRect(Brush.verticalGradient(0f to pe.por(C.NIEVE, 0.3f).copy(alpha = 0f), 0.08f to pe.por(C.NIEVE, 0.3f), 1f to pe.por(C.NIEVE, 0.05f), startY = 228f, endY = ALTO), Offset(-10f, 228f), Size(410f, 70f))
+        // La zanja abierta a pala, a lo largo del muro hasta la puerta y de ahí a la plaza: las losas mojadas al fondo y
+        // las dos paredes de nieve, la de dentro en sombra azul y la de fuera con su filo de luz.
+        val zanja = poligono(listOf(p(7.8f, 0f, 0.15f), p(13.4f, 0f, 0.15f), p(13.6f, 0f, 1.0f), p(7.8f, 0f, 1.25f)))
+        drawPath(zanja, pe.por(lerp(C.PIEDRA, C.ESCORIA, 0.3f), -0.1f))
+        clipPath(zanja) {
+            var z = 7.8f
+            while (z < 13.6f) { var f = 0.15f; while (f < 1.3f) { val c = p(z + 0.25f, 0f, f + 0.25f); drawPath(TrazosValle.blando(c, FachadaPosada.escala(z) * 0.2f, FachadaPosada.escala(z) * 0.05f, az, 7, 0.2f), pe.por(lerp(C.PIEDRA, C.TIERRA, 0.3f), az.entre(-0.2f, 0.2f))); f += 0.5f }; z += 0.5f }
+            drawRect(lerp(v.l.bajo, C.LUNA, 0.3f).copy(alpha = 0.12f), Offset(150f, 220f), Size(240f, 70f))
+        }
+        val borde = (0..12).map { i -> val z = 7.8f + i * 0.48f; p(z, 0f, 1.25f - 0.02f * i) }
+        drawPath(poligono(borde + borde.reversed().map { it + Offset(0f, -FachadaPosada.escala(10f) * 0.08f) }), pe.sombra(C.NIEVE_SOMBRA))
+        drawPath(curva(borde.map { it + Offset(0f, -FachadaPosada.escala(10f) * 0.09f) }), pe.luz(C.NIEVE).copy(alpha = 0.8f), style = Stroke(1.4f))
         // Las huellas que bajan a la plaza.
         repeat(18) { val q = Offset(az.entre(220f, 300f), az.entre(244f, 262f)); drawOval(pe.sombra(C.NIEVE_SOMBRA).copy(alpha = 0.5f), Offset(q.x - 1.4f, q.y - 0.6f), Size(2.8f, 1.2f)) }
     }
@@ -133,7 +148,8 @@ internal object CercaAntiguas {
         for (k in 0..4) {
             val c = p(8.6f + k * 0.9f, 0f, az.entre(0.6f, 2.6f)); val w = az.entre(8f, 18f)
             val forma = TrazosValle.blando(c, w, w * 0.22f, az, 9, 0.2f)
-            drawPath(forma, lerp(v.l.bajo, v.l.medio, 0.4f).copy(alpha = 0.5f))
+            drawPath(forma, lerp(lerp(v.l.bajo, v.l.medio, 0.4f), C.ESCORIA, 0.35f).copy(alpha = 0.55f))
+            drawPath(forma, lerp(v.l.alto, Color.White, 0.2f).copy(alpha = 0.25f), style = Stroke(0.6f))
             clipPath(forma) { if (v.encendido.sala * v.noche > 0.1f) reflejoRoto(c.x - w * 0.4f, c.x + w * 0.2f, c.y - 2f, 6f, C.LUMBRE, 0.6f * v.noche, az) }
         }
     }

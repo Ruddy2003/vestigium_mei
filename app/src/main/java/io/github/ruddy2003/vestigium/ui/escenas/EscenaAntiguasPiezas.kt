@@ -15,6 +15,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Rayo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Clima
 import io.github.ruddy2003.vestigium.vidas.Semilla
@@ -257,6 +258,33 @@ internal object PiezasAntiguas {
         if (nieve > 0.2f) drawPath(poligono(arriba + Offset(-w * 0.5f, 1.5f * k), arriba + Offset(w * 0.5f, 1.5f * k), arriba + Offset(w * 0.2f, 0.2f * k), arriba + Offset(-w * 0.2f, 0.2f * k)), p.luz(C.NIEVE, lejos).copy(alpha = nieve))
         if (luz > 0.02f) drawCircle(Color(0xFFFFF0C8).copy(alpha = 0.7f * luz), 0.9f * k, arriba + Offset(0f, 1.6f * k + h * 0.55f), blendMode = BlendMode.Plus)
         return arriba + Offset(0f, 1.6f * k + h * 0.5f)
+    }
+
+    /**
+     * La nieve que no lo cubre todo (en primavera y en otoño): de lo alto ([arriba], en cada columna) a [limite], un manto
+     * opaco con el borde de abajo festoneado; por debajo, manchas sueltas, cada vez más raras, con su sombra azul debajo
+     * (lo que queda en las vaguadas y a la sombra). Nada de velos: la nieve es blanca o no está.
+     */
+    fun DrawScope.manchasDeNieve(p: Pincel, x0: Float, x1: Float, arriba: (Float) -> Float, limite: (Float) -> Float, az: Azar, lejos: Float, talla: Float = 1f) {
+        val nieve = p.por(C.NIEVE, 0.3f, lejos); val sombra = p.sombra(C.NIEVE_SOMBRA, lejos)
+        val paso = 5f
+        val borde = ArrayList<Offset>(); var x = x0
+        // El borde: lenguas desiguales que bajan por las vaguadas y entrantes donde asoma la roca, sin dientes iguales.
+        var lengua = 0f
+        while (x <= x1) {
+            if (az.real01() < 0.18f) lengua = az.entre(5f, 14f) * talla
+            borde += Offset(x, limite(x) + lengua + az.entre(-1.2f, 1.2f)); lengua *= 0.55f; x += paso
+        }
+        val techo = borde.map { Offset(it.x, minOf(arriba(it.x) - 3f, it.y)) }
+        drawPath(poligono(techo + borde.reversed()), nieve)
+        drawPath(io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva(borde), sombra.copy(alpha = 0.55f), style = Stroke(1.1f * talla))
+        repeat((80 * talla).toInt().coerceAtLeast(30)) {
+            val xx = az.entre(x0, x1); val hondo = az.real01()
+            val q = Offset(xx, limite(xx) + 2f + hondo * hondo * 34f * talla)
+            val w = az.entre(1.5f, 5f) * talla * (1f - 0.5f * hondo)
+            drawPath(TrazosValle.blando(q, w, w * 0.32f, az, 7, 0.25f), nieve)
+            drawLine(sombra.copy(alpha = 0.5f), q + Offset(-w * 0.7f, w * 0.3f), q + Offset(w * 0.7f, w * 0.3f), 0.6f * talla)
+        }
     }
 
     /** Una lucecita lejana (una ventana, una linterna en la ladera): un punto cálido con su halo. */

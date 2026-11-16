@@ -95,9 +95,10 @@ internal object LuzAntiguas {
 
     /**
      * Hasta dónde llega la sombra a la hora del sol [h]: por la mañana baja de 1 (al salir el sol) a 0 a las 10:00; por la
-     * tarde sube de 0 (a las 15:30) a 1 (a las 20:18, cuando el sol se pone detrás de la sierra) **[Aproximación]**.
+     * tarde sube de 0 (a las 15:30) y deja el collado a oscuras hacia las 19:50 y las cumbres al ponerse el sol, a las 20:24
+     * **[Aproximación]**.
      */
-    fun sube(h: Float): Float = if (h < 12.8f) ((10f - h) / 3.75f).coerceIn(0f, 1f) else ((h - 15.5f) / 4.8f).coerceIn(0f, 1f)
+    fun sube(h: Float): Float = if (h < 12.8f) ((10f - h) / 3.75f).coerceIn(0f, 1f) else ((h - 15.5f) / 6.1f).coerceIn(0f, 1f)
 
     fun sombra(l: Luces): Sombra {
         if (l.solAltura < -0.05f) return Sombra(0f, false, 1f)
@@ -210,8 +211,7 @@ internal object LuzAntiguas {
                 repeat(2 + az.entero(2)) {
                     val q = Offset(((az.entre(-40f, 380f) + corre * 0.8f) % 440f) - 30f, az.entre(60f, 200f))
                     val w = az.entre(28f, 54f)
-                    drawPath(TrazosValle.blando(q, w, w * 0.32f, az, 11, 0.25f), c.copy(alpha = 0.16f), blendMode = BlendMode.Plus)
-                    drawPath(TrazosValle.blando(q + Offset(2f, -1f), w * 0.6f, w * 0.18f, az, 9, 0.25f), c.copy(alpha = 0.1f), blendMode = BlendMode.Plus)
+                    for (k in 0..2) mancha(q + Offset(az.entre(-0.4f, 0.4f) * w, az.entre(-0.1f, 0.1f) * w), w * (0.6f + 0.25f * k), w * 0.22f, c, 0.12f)
                 }
             }
             Clima.NIEBLA, Clima.LLUVIA, Clima.TORMENTA, Clima.NIEVE, Clima.POLVO, Clima.SIN_CLIMA -> Unit

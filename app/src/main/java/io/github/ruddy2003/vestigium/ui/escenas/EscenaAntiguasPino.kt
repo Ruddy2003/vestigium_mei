@@ -64,7 +64,7 @@ internal object PinoAntiguas {
 
     private val RAMAS = listOf(
         Rama(pts(10f, 44f, -4f, 36f, -18f, 30f), 6f, listOf(Offset(-6f, 24f) to 20f), false),
-        Rama(pts(30f, 30f, 56f, 16f, 92f, 9f, 128f, 11f, 160f, 19f, 182f, 31f), 8f, listOf(Offset(48f, 8f) to 24f, Offset(86f, 0f) to 30f, Offset(124f, 3f) to 25f, Offset(156f, 13f) to 20f, Offset(180f, 25f) to 13f, Offset(104f, 20f) to 12f), true),
+        Rama(pts(30f, 30f, 56f, 16f, 92f, 9f, 128f, 11f, 160f, 19f, 182f, 31f), 8f, listOf(Offset(48f, 8f) to 24f, Offset(86f, 0f) to 30f, Offset(124f, 3f) to 25f, Offset(156f, 13f) to 20f, Offset(180f, 25f) to 13f, Offset(104f, 20f) to 12f), false),
         Rama(pts(32f, 70f, 64f, 73f, 100f, 81f, 138f, 84f, 168f, 77f, 188f, 69f), 7f, listOf(Offset(56f, 62f) to 20f, Offset(90f, 69f) to 24f, Offset(124f, 72f) to 19f, Offset(156f, 70f) to 20f, Offset(184f, 62f) to 13f, Offset(74f, 84f) to 10f, Offset(140f, 92f) to 9f), true),
         Rama(pts(32f, 112f, 46f, 116f, 60f, 111f), 3.4f, emptyList(), true),
     )
@@ -161,6 +161,10 @@ internal object PinoAntiguas {
             if (partido) {
                 val raja = poligono(pts(14f, -6f, 22f, 60f, 20f, 140f, 24f, 210f, 22f, 230f, 26f, 210f, 27f, 140f, 29f, 60f, 26f, -6f))
                 drawRect(pe.medio(C.QUEMADO), Offset(24f, -6f), Size(30f, 240f))
+                // El carbón: la corteza quemada en escamas, con su brillo frío.
+                var yy = 0f
+                while (yy < 232f) { var xx = 25f; while (xx < 52f) { val w = az.entre(3f, 6f); drawLine(pe.luz(lerp(C.QUEMADO, C.ROCA, 0.5f)).copy(alpha = 0.35f), Offset(xx, yy), Offset(xx + w * 0.8f, yy + az.entre(-0.5f, 0.5f)), 0.7f); xx += w }; yy += az.entre(3f, 6f) }
+                drawLine(pe.medio(C.ESCORIA), Offset(26f, -6f), Offset(28f, 232f), 1.4f)
                 drawPath(raja, pe.por(C.FRESNO, 0.3f))
                 drawPath(curva(pts(18f, -6f, 23f, 80f, 22f, 200f)), pe.medio(C.ESCORIA).copy(alpha = 0.8f), style = Stroke(1.2f))
             }

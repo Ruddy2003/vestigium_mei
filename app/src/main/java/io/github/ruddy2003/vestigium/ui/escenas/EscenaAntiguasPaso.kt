@@ -353,22 +353,33 @@ internal object PasoAntiguas {
     private fun DrawScope.nieve(v: VistaAntiguas, az: Azar) {
         val n = v.nieveLadera; if (n <= 0.02f) return
         val p = v.p
-        val limite = 108f + 100f * n
-        val borde = (160..346 step 6).map { x -> Offset(x.toFloat(), limite + 4f * sin(x * 0.21f) + 3f * sin(x * 0.07f + 1f)) }
-        val manto = poligono(listOf(Offset(160f, 100f), Offset(346f, 100f)) + borde.reversed())
-        val alfa = if (n >= 0.99f) 1f else (0.55f + 0.45f * n)
-        clipPath(manto) {
-            drawRect(Brush.verticalGradient(0f to p.por(C.NIEVE, 0.35f, LEJOS), 1f to p.por(C.NIEVE, 0.05f, LEJOS * 0.8f), startY = 108f, endY = 210f), Offset(160f, 100f), Size(190f, 115f), alpha = alfa)
-            // Los lomos de la ladera bajo la nieve: sombras azules largas, tendidas, del lado contrario al sol.
-            for ((i, y) in listOf(126f, 142f, 158f, 174f, 190f).withIndex()) {
-                val r = rota(pts(170f, y + 4f, 220f, y - 2f, 270f, y + 3f, 330f, y - 4f), az, 2f, 3)
-                drawPath(curva(r), p.sombra(C.NIEVE_SOMBRA, LEJOS).copy(alpha = 0.32f), style = Stroke(2.4f + i * 0.4f, cap = StrokeCap.Round))
-                drawPath(curva(r.map { it + Offset(0f, -2f) }), p.luz(C.NIEVE, LEJOS).copy(alpha = 0.4f * p.r.dia), style = Stroke(1f, cap = StrokeCap.Round))
-            }
-            if (n < 0.99f) drawPoints(borde.flatMap { q -> (0 until 3).map { q + Offset(az.entre(-4f, 4f), az.entre(1f, 7f)) } }, PointMode.Points, p.por(C.NIEVE, 0.3f, LEJOS), 1.1f, StrokeCap.Round)
+        if (n < 0.99f) {
+            with(PiezasAntiguas) { manchasDeNieve(p, 160f, 346f, { 100f }, { x -> 112f + 92f * n + 6f * sin(x * 0.09f) + 4f * sin(x * 0.21f) }, az, LEJOS) }
+            if (n > 0.55f) ceja(v)
+            return
         }
-        // La ceja de nieve colgada sobre la cornisa.
-        if (n > 0.6f) {
+        val manto = poligono(listOf(Offset(160f, 100f), Offset(346f, 100f), Offset(346f, 215f), Offset(160f, 215f)))
+        clipPath(manto) {
+            drawRect(Brush.verticalGradient(0f to p.por(C.NIEVE, 0.35f, LEJOS), 1f to p.por(C.NIEVE, 0.05f, LEJOS * 0.8f), startY = 108f, endY = 210f), Offset(160f, 100f), Size(190f, 115f))
+            // Los lomos y las canales de la ladera bajo la nieve: bajan en abanico desde el collado, cada uno con su lado
+            // de sombra azul y su filo de luz; abajo, la nieve se arruga en ventisqueros.
+            val lado = if (p.solALaDerecha) -1f else 1f
+            for (k in 0 until 7) {
+                val pie = Offset(176f + k * 27f + az.entre(-6f, 6f), 206f)
+                val arriba = Offset(296f + k * 3f, 116f + kotlin.math.abs(k - 4) * 4f)
+                val r = rota(listOf(arriba, arriba + (pie - arriba) * 0.35f + Offset(az.entre(-6f, 6f), 0f), arriba + (pie - arriba) * 0.7f + Offset(az.entre(-6f, 6f), 0f), pie), az, 2.2f, 2)
+                drawPath(curva(r.map { it + Offset(lado * 2.2f, 0f) }), p.sombra(C.NIEVE_SOMBRA, LEJOS).copy(alpha = 0.3f), style = Stroke(3.6f + k * 0.3f, cap = StrokeCap.Round))
+                drawPath(curva(r), p.luz(C.NIEVE, LEJOS).copy(alpha = 0.45f * p.r.dia + 0.1f), style = Stroke(1f, cap = StrokeCap.Round))
+            }
+            repeat(9) { val q = Offset(az.entre(176f, 340f), az.entre(176f, 204f)); drawPath(TrazosValle.blando(q, az.entre(6f, 14f), az.entre(1.4f, 2.4f), az, 9, 0.2f), p.sombra(C.NIEVE_SOMBRA, LEJOS).copy(alpha = 0.25f)) }
+        }
+        ceja(v)
+    }
+
+    /** La ceja de nieve colgada sobre la cornisa, «que cualquier día caerá». */
+    private fun DrawScope.ceja(v: VistaAntiguas) {
+        val p = v.p
+        run {
             val ceja = CORNISA_ARRIBA.map { it + Offset(0f, 1.6f) }
             val labio = ceja.mapIndexed { i, q -> q + Offset(-1.4f, 2.6f + 1.4f * sin(i * 1.3f)) }
             drawPath(poligono(ceja.map { it + Offset(0f, -2.4f) } + labio.reversed()), p.por(C.NIEVE, 0.45f, LEJOS))

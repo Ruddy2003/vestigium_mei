@@ -511,6 +511,7 @@ internal object EscenaAntiguas : EscenaVida {
         val v = VistaAntiguas(m)
         with(LaderaAntiguas) { cielo(v); cumbres(v) }
         with(InviernoAntiguas) { capa(v, 0) }
+        with(LaderaAntiguas) { alud(v) }
         with(PasoAntiguas) { paso(v) }
         with(InviernoAntiguas) { capa(v, 1) }
         with(VetasAntiguas) { ladera(v) }

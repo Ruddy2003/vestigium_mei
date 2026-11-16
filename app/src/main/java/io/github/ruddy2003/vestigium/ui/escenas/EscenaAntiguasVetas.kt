@@ -81,6 +81,12 @@ internal object VetasAntiguas {
             nieve(v, az)
         }
         casas(v, az)
+        // La cresta, rota por pinos sueltos y peñas, para que no sea una curva lisa.
+        for (k in 0 until 16) {
+            val x = 6f + k * 11f + az.entre(-3f, 3f); val y = alturaEn(VETAS, x) + 1f
+            if (k % 3 == 1) drawPath(TrazosValle.borron(Offset(x, y - 1.2f), az.entre(2.5f, 4.5f), 1.8f, az, 6, 0.3f, 0.8f), v.p.por(lerp(C.PIEDRA, C.TIERRA, 0.2f), v.sol.t(V3(0.4f, 0.6f, -0.7f)), LEJOS))
+            else { val h = az.entre(4f, 8f); drawPath(poligono(Offset(x, y - h), Offset(x + h * 0.3f, y + 1f), Offset(x - h * 0.3f, y + 1f)), v.p.por(lerp(C.PINO, C.ESCORIA, 0.15f), -0.1f, LEJOS)) }
+        }
         // La cresta: un filo de luz (o de luna) contra la cara norte, que queda detrás.
         drawPath(curva(VETAS.dropLast(3)), (if (v.noche > 0.4f) C.LUNA.copy(alpha = 0.35f * v.luna + 0.05f) else v.p.luz(lerp(EscenaAntiguas.hierba(v.m), C.LANA, 0.3f), LEJOS).copy(alpha = 0.6f)), style = Stroke(1f))
     }
@@ -147,10 +153,18 @@ internal object VetasAntiguas {
     private fun DrawScope.rocaRojiza(v: VistaAntiguas, az: Azar) {
         val p = v.p
         val forma = TrazosValle.cerrada(rota(pts(68f, 120f, 84f, 114f, 102f, 118f, 122f, 126f, 128f, 140f, 114f, 147f, 92f, 145f, 74f, 138f), az, 1.6f, 2))
-        drawPath(forma, p.por(C.ROJIZA, v.sol.t(V3(0.5f, 0.4f, -0.75f)), LEJOS))
+        val roca = lerp(lerp(C.ROJIZA, C.PIEDRA_OSC, 0.4f), C.TIERRA, 0.15f)
+        val t = v.sol.t(V3(0.5f, 0.4f, -0.75f))
+        drawPath(forma, p.por(roca, t - 0.2f, LEJOS))
         clipPath(forma) {
-            for (k in 0..4) drawPath(curva(rota(pts(66f, 122f + k * 5f, 96f, 120f + k * 6f, 128f, 128f + k * 5f), az, 1f, 3)), p.sombra(lerp(C.ROJIZA, C.ESCORIA, 0.4f), LEJOS).copy(alpha = 0.5f), style = Stroke(0.9f))
-            drawRect(p.luz(lerp(C.ROJIZA, C.ORO, 0.3f), LEJOS).copy(alpha = 0.35f * v.p.r.dia), Offset(if (p.solALaDerecha) 100f else 66f, 112f), Size(30f, 40f))
+            // Los bloques del crestón, cada uno con su cara de luz, y las grietas.
+            repeat(14) {
+                val q = Offset(az.entre(68f, 126f), az.entre(116f, 146f)); val w = az.entre(4f, 9f)
+                val bloque = TrazosValle.borron(q, w, w * 0.6f, az, 6, 0.25f, 0.9f)
+                drawPath(bloque, p.por(lerp(roca, C.ROJIZA, az.entre(0f, 0.4f)), t + az.entre(-0.3f, 0.2f), LEJOS))
+                drawLine(p.luz(lerp(roca, C.ORO, 0.3f), LEJOS).copy(alpha = 0.4f * p.r.dia), q + Offset(-w * 0.6f, -w * 0.4f), q + Offset(w * 0.5f, -w * 0.5f), 0.6f)
+                drawLine(p.sombra(lerp(roca, C.ESCORIA, 0.5f), LEJOS).copy(alpha = 0.7f), q + Offset(-w * 0.6f, w * 0.45f), q + Offset(w * 0.6f, w * 0.4f), 0.7f)
+            }
         }
     }
 
@@ -192,8 +206,10 @@ internal object VetasAntiguas {
     /** El montón de roca sacada de la boca: rojo, en abanico, con su lado de sombra. */
     private fun DrawScope.montonRojo(p: Pincel, q: Offset, tam: Float, az: Azar) {
         val fan = poligono(q + Offset(-2f, 0.6f), q + Offset(3f, 0.6f), q + Offset(tam * 0.9f, tam * 1.1f), q + Offset(-tam * 0.2f, tam * 1.3f), q + Offset(-tam * 0.6f, tam * 0.9f))
-        drawPath(fan, p.por(lerp(C.ROJIZA, C.TIERRA, 0.2f), 0.2f, LEJOS))
-        clipPath(fan) { drawPoints((0 until (tam * 3).toInt()).map { q + Offset(az.entre(-tam * 0.6f, tam), az.entre(0.5f, tam * 1.3f)) }, PointMode.Points, p.sombra(C.ROJIZA, LEJOS).copy(alpha = 0.7f), 0.9f, StrokeCap.Round) }
+        val tierra = lerp(lerp(C.ROJIZA, C.TIERRA, 0.35f), C.ESCORIA, 0.15f)
+        drawPath(fan, p.por(tierra, 0f, LEJOS))
+        clipPath(fan) { drawPoints((0 until (tam * 3).toInt()).map { q + Offset(az.entre(-tam * 0.6f, tam), az.entre(0.5f, tam * 1.3f)) }, PointMode.Points, p.sombra(tierra, LEJOS).copy(alpha = 0.8f), 1f, StrokeCap.Round)
+            drawPoints((0 until (tam * 2).toInt()).map { q + Offset(az.entre(-tam * 0.6f, tam), az.entre(0.5f, tam * 1.3f)) }, PointMode.Points, p.luz(lerp(tierra, C.ORO, 0.3f), LEJOS).copy(alpha = 0.6f), 0.7f, StrokeCap.Round) }
     }
 
     /** La senda de la guía: un hilo de tierra con piedras marcadas pequeñas, recién grabadas el día que la abre. */
@@ -246,12 +262,17 @@ internal object VetasAntiguas {
     private fun DrawScope.nieve(v: VistaAntiguas, az: Azar) {
         val n = v.nieveLadera; if (n <= 0.02f) return
         val p = v.p
-        val borde = (-10..190 step 6).map { x -> Offset(x.toFloat(), alturaEn(VETAS, x.toFloat()) + 10f + 130f * n + 4f * sin(x * 0.23f)) }
-        val manto = poligono(listOf(Offset(-10f, 90f), Offset(190f, 90f)) + borde.reversed())
-        clipPath(manto) {
-            drawRect(Brush.verticalGradient(listOf(p.por(C.NIEVE, 0.4f, LEJOS), p.por(C.NIEVE, 0.1f, LEJOS)), 100f, 230f), Offset(-10f, 90f), Size(200f, 150f), alpha = if (n >= 0.99f) 1f else 0.55f + 0.45f * n)
+        if (n < 0.99f) {
+            // La ladera de las vetas es más baja que el paso: la nieve se le va antes.
+            val k = ((n - 0.35f) / 0.65f); if (k <= 0f) return
+            with(PiezasAntiguas) { manchasDeNieve(p, -10f, 186f, { x -> alturaEn(VETAS, x) }, { x -> alturaEn(VETAS, x) + 6f + 120f * k + 5f * sin(x * 0.13f) }, az, LEJOS, 1.2f) }
+            for (q in VIEJAS + BOCA) if (q.y < alturaEn(VETAS, q.x) + 6f + 120f * k) boca(p, q, 2.6f)
+            return
+        }
+        run {
+            drawRect(Brush.verticalGradient(listOf(p.por(C.NIEVE, 0.4f, LEJOS), p.por(C.NIEVE, 0.1f, LEJOS)), 100f, 230f), Offset(-10f, 90f), Size(200f, 150f))
             for (x in listOf(30f, 70f, 118f, 160f)) { val y0 = alturaEn(VETAS, x); drawPath(curva(pts(x, y0 + 2f, x + 8f, y0 + 26f, x + 14f, y0 + 56f, x + 18f, y0 + 90f)), p.sombra(C.NIEVE_SOMBRA, LEJOS).copy(alpha = 0.35f), style = Stroke(5f, cap = StrokeCap.Round)) }
-            for (q in VIEJAS + BOCA) drawCircle(p.medio(C.ESCORIA, LEJOS).copy(alpha = 0.8f), 2f, q + Offset(0f, -2f))
+            for (q in VIEJAS + BOCA) { boca(p, q, 2.6f); drawPath(poligono(q + Offset(-1.5f, 1f), q + Offset(1.5f, 1f), q + Offset(4f, 10f), q + Offset(-2f, 11f)), p.medio(lerp(C.ESCORIA, C.NIEVE, 0.35f), LEJOS).copy(alpha = 0.6f)) }
         }
     }
 

@@ -107,7 +107,6 @@ internal object LaderaAntiguas {
             pieDeLaCara(v, roca, az)
             nieve(v, rotas, lejos, az)
             refugioDeLaCabra(v)
-            alud(v)
             // La bruma del valle al pie: despega las cumbres de las laderas de delante.
             drawRect(Brush.verticalGradient(0f to Color.Transparent, 1f to lerp(l.bruma, l.bajo, 0.4f).copy(alpha = 0.32f * (1f - 0.5f * l.noche)), startY = 140f, endY = 208f), Offset(0f, 140f), Size(ANCHO, 70f))
         }
@@ -260,10 +259,10 @@ internal object LaderaAntiguas {
     }
 
     /** El día del alud: la lengua de nieve sucia que baja por la cara norte desde donde estuvo el refugio de la Cabra. */
-    private fun DrawScope.alud(v: VistaAntiguas) {
+    fun DrawScope.alud(v: VistaAntiguas) {
         if (EscenaAntiguas.Senal.ALUD !in v.senales) return
         val p = v.p; val az = fijo("alud")
-        val eje = pts(CABRA.x, CABRA.y + 2f, CABRA.x - 2f, 110f, CABRA.x - 8f, 140f, CABRA.x - 16f, 168f, CABRA.x - 22f, 190f)
+        val eje = pts(CABRA.x, CABRA.y + 2f, CABRA.x - 2f, 104f, CABRA.x - 7f, 124f, CABRA.x - 13f, 142f, CABRA.x - 19f, 160f)
         val anchos = listOf(3f, 6f, 9f, 13f, 18f)
         val lengua = cinta(eje, anchos)
         drawPath(lengua, p.por(lerp(C.NIEVE, C.PIEDRA, 0.18f), 0.3f, 0.3f))

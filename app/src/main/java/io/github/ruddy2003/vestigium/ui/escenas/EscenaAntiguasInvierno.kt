@@ -43,7 +43,7 @@ internal object InviernoAntiguas {
     )
 
     /** De dónde a dónde va el banco de cada plano. */
-    private val BANDAS = listOf(40f to 205f, 100f to 214f, 150f to 226f, 196f to 258f)
+    private val BANDAS = listOf(10f to 215f, 80f to 222f, 130f to 232f, 186f to 262f)
 
     /**
      * El banco de bruma de detrás del plano [nivel] (0: detrás de las cumbres, antes de la ladera del paso; 1: antes de la
@@ -54,7 +54,7 @@ internal object InviernoAntiguas {
         val (y0, y1) = BANDAS[nivel]
         if (k > 0.01f) {
             val color = lerp(v.l.bruma, lerp(v.l.bajo, Color.White, 0.2f), 0.35f)
-            drawRect(Brush.verticalGradient(0f to color.copy(alpha = 0.55f * k), 0.6f to color.copy(alpha = k), 1f to color.copy(alpha = 0.2f * k), startY = y0, endY = y1), Offset(0f, y0), Size(ANCHO, y1 - y0))
+            drawRect(Brush.verticalGradient(0f to color.copy(alpha = 0f), 0.3f to color.copy(alpha = 0.7f * k), 0.65f to color.copy(alpha = k), 1f to color.copy(alpha = 0f), startY = y0, endY = y1), Offset(0f, y0), Size(ANCHO, y1 - y0))
             val az = v.m.azar("bancos", nivel)
             var x = -30f
             while (x < ANCHO + 30f) { val w = az.entre(50f, 100f); mancha(Offset(x, az.entre(y0 + 0.3f * (y1 - y0), y1 - 6f)), w, (y1 - y0) * 0.16f, color, (0.6f * k).coerceIn(0f, 1f)); x += w * az.entre(0.55f, 0.85f) }
@@ -85,7 +85,12 @@ internal object InviernoAntiguas {
 
     /** El tiempo quieto de la biblioteca (el velo de la lluvia, la claridad de la nieve); la niebla no: va por capas. */
     fun DrawScope.tiempo(v: VistaAntiguas) {
-        if (v.clima != Clima.NIEBLA) tiempoQuieto(v.l, v.clima, H, v.m.semilla("tiempo"))
+        when (v.clima) {
+            // La claridad lechosa de la nevada: arriba, sin cortar el cuadro a media altura.
+            Clima.NIEVE -> drawRect(Brush.verticalGradient(0f to Color.Transparent, 0.3f to v.l.tono(Color(0xFFE8EDF2)).copy(alpha = 0.24f), 1f to Color.Transparent, startY = 0f, endY = 236f), Offset.Zero, Size(ANCHO, 236f))
+            Clima.NIEBLA -> Unit
+            Clima.DESPEJADO, Clima.NUBES, Clima.LLUVIA, Clima.TORMENTA, Clima.VIENTO, Clima.POLVO, Clima.SIN_CLIMA -> tiempoQuieto(v.l, v.clima, H, v.m.semilla("tiempo"))
+        }
     }
 
     fun DrawScope.grano(v: VistaAntiguas) {
