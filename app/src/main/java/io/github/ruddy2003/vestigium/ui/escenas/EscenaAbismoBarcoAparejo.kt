@@ -102,12 +102,12 @@ internal object AparejoAbismo {
         for (i in OBENQUES_PROA.indices) cabo(p, listOf(p(OBENQUES_PROA[i]), p(obenqueProa(i, 7f))), 0.03f * k8, lerp(C.CANAMO, C.BREA, 0.55f))
         for (j in 1..12) { val h = 0.95f + 0.36f * j; drawLine(p.sombra(C.CANAMO).copy(alpha = 0.8f), p(obenqueProa(0, h)), p(obenqueProa(1, h)), 0.014f * k8) }
         // El tendedero, de los obenques del palo mayor a los del trinquete, y en él, de día, el traje de lona, uno solo,
-        // colgado por los hombros, con el cuello y los puños a la vista **[Diseño propio]**.
+        // doblado por la cintura y caído de través, con el cuello de goma y su babero a la vista **[Diseño propio]**.
         val (t0, t1) = TENDEDERO
         cabo(p, (0..10).map { p(enElCabo(t0, t1, it / 10f, 0.15f)) }, 0.5f)
         if (B.trajesASecar(m) > 0) {
             val a0 = p(enElCabo(t0, t1, TRAJE_T - 0.035f, 0.15f)); val a1 = p(enElCabo(t0, t1, TRAJE_T + 0.035f, 0.15f)); val kk = B.k(z(enElCabo(t0, t1, TRAJE_T, 0.15f)))
-            PiezasAbismo.run { trajeColgado(v.pincel(a0), a0, a1, kk, Semilla.de("abismo", "traje", 0), mojado = if (EscenaAbismo.fase(m) == EscenaAbismo.Fase.INMERSION) 0.3f else 0.85f) }
+            PiezasAbismo.run { trajeDoblado(v.pincel(a0), a0, a1, kk, Semilla.de("abismo", "traje", 0), mojado = if (EscenaAbismo.fase(m) == EscenaAbismo.Fase.INMERSION) 0.3f else 0.85f) }
         }
 
         // El estay: del trinquete a la roda.
@@ -338,7 +338,7 @@ internal object AparejoAbismo {
         }
         // El tendedero y el traje tendido en él: una raya y una franja.
         run { val (t0, t1) = TENDEDERO; for (t in 0 until 10) drawLine(c, alSuelo(enElCabo(t0, t1, t / 10f, 0.15f)), alSuelo(enElCabo(t0, t1, (t + 1) / 10f, 0.15f)), 0.015f * B.k(z(t0))) }
-        if (B.trajesASecar(v.m) > 0) { val (t0, t1) = TENDEDERO; val q = enElCabo(t0, t1, TRAJE_T, 0.15f); drawLine(c, alSuelo(q), alSuelo(q + V3(0f, -1.3f, 0f)), 0.32f * B.k(z(q)), StrokeCap.Round) }
+        if (B.trajesASecar(v.m) > 0) { val (t0, t1) = TENDEDERO; val q = enElCabo(t0, t1, TRAJE_T, 0.15f); drawLine(c, alSuelo(q), alSuelo(q + V3(0f, -0.8f, 0f)), 0.45f * B.k(z(q)), StrokeCap.Round) }
         // El farol, colgado.
         run { val q = alSuelo(V3(0.35f, B.FAROL_ALTO, 2.85f)); val kk = B.K_FAROL; drawOval(c, Offset(q.x - 0.06f * kk, q.y - 0.03f * kk), Size(0.12f * kk, 0.06f * kk)) }
     }
