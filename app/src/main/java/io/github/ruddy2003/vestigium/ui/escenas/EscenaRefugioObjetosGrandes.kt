@@ -18,6 +18,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.TrazoObjeto.sombra
 import io.github.ruddy2003.vestigium.ui.escenas.TrazoObjeto.trazo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Cosa
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
+import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
@@ -38,8 +39,8 @@ internal object GrandesRefugio {
     private val PI_F = PI.toFloat()
 
     // ---- Los pocos colores propios: mezclas de la paleta del tema.
-    private val HIERRO = lerp(C.HIERRO, C.ACERO, 0.4f)                          // la llave, de hierro forjado
-    private val CINTA = lerp(C.TINTA, C.AZUL, 0.3f)                              // la cinta del mango (la de la llave de la sala)
+    private val HIERRO = lerp(C.ACERO, C.HIERRO, 0.4f)                          // la llave, de hierro forjado
+    private val CINTA = lerp(C.TINTA, C.ROJO, 0.32f)                             // la cinta del mango, negra con algo de rojo viejo
     private val MONO = C.AZUL                                                    // la tela gruesa del mono
     private val LANA = lerp(lerp(C.ACERO, C.HORMIGON, 0.5f), C.TINTA, 0.12f)     // la manta gris
     private val MADERA = lerp(C.COBRE, C.TINTA, 0.2f)                            // la caja del tocadiscos (la del pequeño, más roja)
@@ -59,19 +60,21 @@ internal object GrandesRefugio {
      * un brazo (unos 95 cm), para que la cabeza asome por encima del canto **[Diseño propio]**.
      */
     fun llave(v: VistaRefugio, suelo: V3, canto: V3, pie: Offset): Cosa {
-        val pieLlave = suelo + V3(-0.04f, 0f, -0.06f)
-        val d = canto - pieLlave; val eje = K.unidad(d); val largo = K.largo(d) + 0.08f
+        // El pie, un palmo más al fondo que el que da el cuadro (que cae en el borde de abajo), para que el mango se vea;
+        // la cabeza, en el canto de arriba de la punta.
+        val pieLlave = suelo + V3(0f, 0f, 0.3f); val arriba = canto + V3(0.012f, 0.035f, 0.1f)
+        val d = arriba - pieLlave; val eje = K.unidad(d); val largo = K.largo(d) + 0.09f
         val f = MarcoObjeto(pieLlave, 0f, 1f)
         val ojo = K.unidad(V3(-pieLlave.x, K.OJO - pieLlave.y - largo * 0.5f, -pieLlave.z))
         var lado = K.unidad(K.cruz(eje, ojo)); if (lado.x < 0f) lado = lado * -1f
         fun en(s: Float, l: Float = 0f) = eje * s + lado * l
-        val dientes = listOf(en(largo, 0f), en(largo + 0.015f, 0.08f), en(largo - 0.07f, 0f), en(largo - 0.06f, 0.075f))
+        val dientes = listOf(en(largo, 0f), en(largo + 0.02f, 0.105f), en(largo - 0.085f, 0f), en(largo - 0.07f, 0.1f))
         val cuerpo = listOf(en(0f, -0.03f), en(0f, 0.03f), en(largo, -0.03f)) + dientes
         val forma = TrazoObjeto.silueta(f, cuerpo)
         return Cosa(forma, pie, bajoElFollaje = false) {
             sombra(v, f, TrazoObjeto.circulo(V3(0f, 0f, 0f), V3(0f, 1f, 0f), 0.04f, 8), cuerpo, 0f, null, 0.5f)
             // Donde descansa en el canto: una sombrita en la madera.
-            drawCircle(C.SOMBRA.copy(alpha = 0.35f), 0.04f * K.k(canto), K.p(canto + V3(0.01f, 0.03f, 0f)), blendMode = BlendMode.Multiply)
+            drawCircle(C.SOMBRA.copy(alpha = 0.35f), 0.045f * K.k(arriba), K.p(arriba + V3(-0.01f, -0.02f, 0f)), blendMode = BlendMode.Multiply)
             barraDeHierro(v, f, eje, lado, largo)
             mango(v, f, eje, lado)
             cabeza(v, f, eje, lado, largo)
@@ -80,34 +83,36 @@ internal object GrandesRefugio {
 
     /** La barra: cuadrada, de hierro, con el filo del lado de la luz, el óxido a trozos y el brillo gastado del medio. */
     private fun DrawScope.barraDeHierro(v: VistaRefugio, f: MarcoObjeto, eje: V3, lado: V3, largo: Float) {
-        cil(v, f, eje * 0.3f, eje * (largo - 0.09f), 0.016f, HIERRO, lados = 4)
+        cil(v, f, eje * 0.3f, eje * (largo - 0.1f), 0.021f, HIERRO, lados = 4)
         val izq = TrazoObjeto.luz(v, f, eje * 0.6f, lado * -1f, C.ACERO); val der = TrazoObjeto.luz(v, f, eje * 0.6f, lado, C.ACERO)
         val s = if (TrazoObjeto.lum(izq) > TrazoObjeto.lum(der)) -1f else 1f
-        brillo(v, f, eje * 0.32f + lado * (0.011f * s), eje * (largo - 0.1f) + lado * (0.011f * s), 0.005f, C.ACERO, lado * s, 0.75f)
+        brillo(v, f, eje * 0.32f + lado * (0.014f * s), eje * (largo - 0.11f) + lado * (0.014f * s), 0.007f, C.ACERO, lado * s, 0.8f)
         brillo(v, f, eje * 0.45f + lado * (0.004f * s), eje * 0.62f + lado * (0.004f * s), 0.008f, C.ACERO, lado * s, 0.9f)
         val az = Azar(Semilla.de("refugio", "llave", "oxido"))
         repeat(6) { val a = az.entre(0.34f, largo - 0.12f); val l = az.entre(0.02f, 0.06f); val off = az.entre(-0.01f, 0.01f)
-            rayaLuz(v, f, eje * a + lado * off, eje * (a + l) + lado * off, 0.012f, C.OXIDO, lado * s, 0.55f) }
+            rayaLuz(v, f, eje * a + lado * off, eje * (a + l) + lado * off, 0.016f, lerp(C.OXIDO, C.NARANJA, 0.3f), lado * s, 0.6f) }
     }
 
     /** El mango: las vueltas de cinta negra, en espiral, con su canto más claro, y el cabo suelto. */
     private fun DrawScope.mango(v: VistaRefugio, f: MarcoObjeto, eje: V3, lado: V3) {
-        cil(v, f, eje * 0.0f, eje * 0.32f, 0.024f, CINTA, lados = 8)
+        cil(v, f, eje * 0.0f, eje * 0.32f, 0.03f, CINTA, lados = 8)
         for (k in 0..10) { val c = eje * (0.02f + 0.028f * k)
-            rayaLuz(v, f, c + lado * 0.024f + eje * -0.006f, c - lado * 0.024f + eje * 0.009f, 0.004f, lerp(CINTA, C.PAPEL, 0.25f), V3(0f, 0f, 0f), 0.8f) }
+            rayaLuz(v, f, c + lado * 0.03f + eje * -0.007f, c - lado * 0.03f + eje * 0.011f, 0.006f, lerp(CINTA, C.PAPEL, 0.35f), V3(0f, 0f, 0f), 0.85f) }
         val c = eje * 0.32f
-        cara(v, f, listOf(c + lado * 0.024f, c + lado * 0.025f + eje * 0.016f, c + lado * 0.06f + eje * 0.0f, c + lado * 0.05f + eje * -0.02f), V3(0f, 0f, -1f), lerp(CINTA, C.PAPEL, 0.12f))
+        cara(v, f, listOf(c + lado * 0.03f, c + lado * 0.031f + eje * 0.02f, c + lado * 0.075f + eje * 0.0f, c + lado * 0.062f + eje * -0.026f), V3(0f, 0f, -1f), lerp(CINTA, C.PAPEL, 0.2f))
+        // El extremo del mango, con su agujero y un aro de alambre para colgarla.
+        Trazo3.run { aro(f.w(eje * -0.01f), f.n(lado), 0.022f, 0.005f, TrazoObjeto.luz(v, f, eje * -0.01f, lado, C.ACERO), 12) }
     }
 
     /** La cabeza en F: el tocho forjado y los dos dientes que agarran el aro de la rueda, con sus golpes y su filo. */
     private fun DrawScope.cabeza(v: VistaRefugio, f: MarcoObjeto, eje: V3, lado: V3, largo: Float) {
-        cil(v, f, eje * (largo - 0.11f), eje * largo, 0.02f, HIERRO, lerp(HIERRO, C.ACERO, 0.4f), lados = 4)
-        for ((a, b) in listOf(eje * largo to eje * (largo + 0.015f) + lado * 0.08f, eje * (largo - 0.07f) to eje * (largo - 0.06f) + lado * 0.075f)) {
-            rayaLuz(v, f, a, b, 0.03f, HIERRO, V3(0f, 0f, -1f), punta = StrokeCap.Square)
-            rayaLuz(v, f, a + eje * 0.011f, b + eje * 0.011f, 0.007f, lerp(HIERRO, C.ACERO, 0.6f), eje, 0.8f)
-            rayaLuz(v, f, b - lado * 0.012f + eje * -0.012f, b + eje * 0.016f, 0.024f, lerp(HIERRO, C.OXIDO, 0.3f), V3(0f, 0f, -1f), punta = StrokeCap.Square)
+        cil(v, f, eje * (largo - 0.12f), eje * largo, 0.027f, HIERRO, lerp(HIERRO, C.ACERO, 0.4f), lados = 4)
+        for ((a, b) in listOf(eje * largo to eje * (largo + 0.02f) + lado * 0.105f, eje * (largo - 0.085f) to eje * (largo - 0.07f) + lado * 0.1f)) {
+            rayaLuz(v, f, a, b, 0.04f, HIERRO, V3(0f, 0f, -1f), punta = StrokeCap.Square)
+            rayaLuz(v, f, a + eje * 0.015f, b + eje * 0.015f, 0.009f, lerp(HIERRO, Color.White, 0.35f), eje, 0.85f)
+            rayaLuz(v, f, b - lado * 0.016f + eje * -0.016f, b + eje * 0.022f, 0.032f, lerp(HIERRO, C.OXIDO, 0.3f), V3(0f, 0f, -1f), punta = StrokeCap.Square)
         }
-        brillo(v, f, eje * (largo - 0.1f) + lado * 0.012f, eje * (largo - 0.01f) + lado * 0.012f, 0.004f, C.ACERO, lado, 0.7f)
+        brillo(v, f, eje * (largo - 0.11f) + lado * 0.016f, eje * (largo - 0.01f) + lado * 0.016f, 0.006f, C.ACERO, lado, 0.8f)
     }
 
     // =================================================================
@@ -116,71 +121,84 @@ internal object GrandesRefugio {
 
     /**
      * El mono azul: «azul, de una tela gruesa…, con un número grande pintado en la espalda y un bolsillo para el contador…;
-     * cada uno lo distingue por los remiendos». Doblado y echado en la esquina de delante de la punta de la bancada, con una
-     * manga que cae por el canto: el bulto de tela gruesa en sus dobleces, el cuello, la tira de los botones, el bolsillo del
-     * contador con su tapeta, y los remiendos de otros azules con sus puntadas. **Sin el número** (el cuadro no lleva cifras)
-     * y **nunca con forma de cuerpo**: doblado, no colgado de los hombros **[Diseño propio]**.
+     * cada uno lo distingue por los remiendos». Doblado como se dobla una camisa, con las mangas y las perneras metidas
+     * detrás, y dejado de pie en la esquina de la bancada, recostado en lo de atrás (el tocadiscos y la botella), para que se
+     * vea su delantero: el cuello vuelto, la tira de botones, el bolsillo del contador con su tapeta, el cinturón con su
+     * hebilla, el puño de una manga que asoma, el grueso de los dobleces en el canto, y los remiendos de otros azules con sus
+     * puntadas. **Sin el número** (el cuadro no lleva cifras) y **nunca con forma de cuerpo**: un bulto doblado, sin hombros
+     * ni piernas **[Diseño propio]**.
      */
     fun mono(v: VistaRefugio, suelo: V3, canto: V3, pie: Offset): Cosa {
         val tapa = tapaDe(canto); val frente = TrazoObjeto.cantoDelante(V3(canto.x - 0.05f, tapa, canto.z))
-        val f = MarcoObjeto(V3(canto.x - 0.18f, tapa, frente + 0.15f), 0.1f, 1.1f)
-        val manga = MarcoObjeto(V3(canto.x - 0.27f, tapa, frente - 0.012f), 0.05f, 1.1f)
-        val forma = TrazoObjeto.silueta(f, listOf(V3(-0.16f, 0f, -0.13f), V3(0.15f, 0f, -0.13f), V3(0.15f, 0.09f, 0.12f), V3(-0.16f, 0.09f, 0.12f))).also {
-            it.addPath(TrazoObjeto.silueta(manga, listOf(V3(-0.06f, 0f, 0f), V3(0.06f, 0f, 0f), V3(0.07f, -0.3f, 0f), V3(-0.05f, -0.3f, 0f))))
-        }
+        val f = MarcoObjeto(V3(canto.x - 0.17f, tapa, frente + 0.17f), 0.14f, 1.15f)
+        val b = BultoMono()
+        val forma = TrazoObjeto.silueta(f, listOf(b.q(-b.ancho, 0f), b.q(b.ancho, 0f), b.q(b.ancho, b.alto), b.q(-b.ancho, b.alto), b.q(0f, b.alto + 0.02f, 0.03f)))
         return Cosa(forma, pie, bajoElFollaje = false) {
             val dentro = TrazoObjeto.tapaBajo(V3(canto.x - 0.2f, tapa, canto.z))
-            sombra(v, f, listOf(V3(-0.16f, 0f, -0.13f), V3(0.15f, 0f, -0.13f), V3(0.15f, 0f, 0.12f), V3(-0.16f, 0f, 0.12f)), listOf(V3(-0.16f, 0.09f, -0.13f), V3(0.15f, 0.09f, -0.13f), V3(0.15f, 0.09f, 0.12f), V3(-0.16f, 0.09f, 0.12f)), tapa, dentro, 0.5f)
-            bultoDelMono(v, f)
-            mangaDelMono(v, manga)
+            sombra(v, f, listOf(b.q(-b.ancho, 0f), b.q(b.ancho, 0f), b.q(b.ancho, 0f, b.grueso), b.q(-b.ancho, 0f, b.grueso)), listOf(b.q(-b.ancho, b.alto), b.q(b.ancho, b.alto), b.q(b.ancho, b.alto, b.grueso), b.q(-b.ancho, b.alto, b.grueso)), tapa, dentro, 0.5f)
+            bultoDelMono(v, f, b)
+            delanteroDelMono(v, f, b)
         }
     }
 
-    /** El bulto doblado: tres dobleces con su canto redondo, y encima el cuello, la tira de botones, el bolsillo y los remiendos. */
-    private fun DrawScope.bultoDelMono(v: VistaRefugio, f: MarcoObjeto) {
-        val x0 = -0.16f; val x1 = 0.15f; val z0 = -0.13f; val z1 = 0.12f
-        caja(v, f, x0, x1, 0f, 0.088f, z0, z1, lerp(MONO, C.TINTA, 0.15f), MONO)
-        // Los dobleces: cada uno con su canto redondo (claro arriba, el pliegue oscuro abajo).
-        for (k in 0..2) { val y = 0.088f * k / 3f; val y2 = 0.088f * (k + 1) / 3f
-            rayaLuz(v, f, V3(x0 + 0.004f, y + 0.002f, z0 - 0.001f), V3(x1 - 0.004f, y + 0.002f, z0 - 0.001f), 0.006f, lerp(MONO, C.TINTA, 0.5f), V3(0f, -0.7f, -0.7f), 0.8f)
-            rayaLuz(v, f, V3(x0 + 0.01f, y2 - 0.006f, z0 - 0.002f), V3(x1 - 0.01f, y2 - 0.006f, z0 - 0.002f), 0.008f, lerp(MONO, C.PAPEL, 0.18f), V3(0f, 0.7f, -0.7f), 0.7f)
-            rayaLuz(v, f, V3(x1 + 0.001f, y + 0.004f, z0 + 0.01f), V3(x1 + 0.001f, y + 0.004f, z1 - 0.01f), 0.005f, lerp(MONO, C.TINTA, 0.45f), V3(1f, -0.5f, 0f), 0.7f)
-        }
-        val y = 0.0885f; val arriba = V3(0f, 1f, 0f)
-        // El cuello, vuelto, en el canto de atrás; la tira de botones hasta delante.
-        cara(v, f, listOf(V3(-0.07f, y, z1 - 0.005f), V3(0.0f, y + 0.004f, z1 - 0.055f), V3(0.07f, y, z1 - 0.005f), V3(0.0f, y + 0.002f, z1 - 0.02f)), arriba, lerp(MONO, C.TINTA, 0.25f))
-        rayaLuz(v, f, V3(0f, y + 0.003f, z1 - 0.055f), V3(0f, y + 0.001f, z0 + 0.01f), 0.004f, lerp(MONO, C.TINTA, 0.4f), arriba)
-        for (k in 0..2) disco(v, f, V3(0.01f, y + 0.004f, z1 - 0.08f - 0.055f * k), arriba, 0.0065f, lerp(C.ACERO, C.LATON, 0.4f), 8)
-        // El bolsillo del contador, con su tapeta y su botón.
-        val b = listOf(V3(-0.13f, y + 0.002f, -0.06f), V3(-0.04f, y + 0.002f, -0.06f), V3(-0.04f, y + 0.002f, 0.04f), V3(-0.13f, y + 0.002f, 0.04f))
-        cara(v, f, b, arriba, lerp(MONO, C.TINTA, 0.1f))
-        cara(v, f, listOf(V3(-0.135f, y + 0.004f, 0.01f), V3(-0.035f, y + 0.004f, 0.01f), V3(-0.035f, y + 0.004f, 0.045f), V3(-0.135f, y + 0.004f, 0.045f)), arriba, lerp(MONO, C.TINTA, 0.28f))
-        disco(v, f, V3(-0.085f, y + 0.006f, 0.014f), arriba, 0.006f, lerp(C.ACERO, C.LATON, 0.4f), 8)
-        puntadas(v, f, b, arriba)
-        // Los remiendos: uno grande de azul desvaído y otro gris, cada uno con sus puntadas.
-        val r1 = listOf(V3(0.035f, y + 0.003f, -0.11f), V3(0.13f, y + 0.003f, -0.105f), V3(0.125f, y + 0.003f, -0.025f), V3(0.03f, y + 0.003f, -0.03f))
-        cara(v, f, r1, arriba, lerp(MONO, C.PAPEL, 0.4f)); puntadas(v, f, r1, arriba)
-        val r2 = listOf(V3(-0.15f, 0.06f, z0 - 0.003f), V3(-0.09f, 0.062f, z0 - 0.003f), V3(-0.092f, 0.025f, z0 - 0.003f), V3(-0.148f, 0.022f, z0 - 0.003f))
-        cara(v, f, r2, V3(0f, 0f, -1f), lerp(MONO, C.HORMIGON, 0.5f)); puntadas(v, f, r2, V3(0f, 0f, -1f))
-        // Las costuras dobles del canto y el desgaste.
-        rayaLuz(v, f, V3(x0 + 0.01f, y + 0.002f, z0 + 0.008f), V3(x1 - 0.01f, y + 0.002f, z0 + 0.008f), 0.0025f, lerp(MONO, C.PAPEL, 0.35f), arriba, 0.6f)
+    /**
+     * Las medidas del mono doblado, recostado [inclina] radianes desde la vertical: [q] da el punto a [u] de su eje, [s] metros
+     * subiendo por él y [d] metros hacia delante (su grueso, [grueso]).
+     */
+    private class BultoMono {
+        val ancho = 0.15f; val alto = 0.3f; val grueso = 0.065f; val inclina = 0.62f
+        private val si = sin(inclina); private val ci = cos(inclina)
+        fun q(u: Float, s: Float, d: Float = 0f) = V3(u, s * ci + d * si, s * si - d * ci + 0.04f)
+        /** La cara de delante mira hacia aquí. */
+        val n = V3(0f, si, -ci)
     }
 
-    /** La manga que cae por el canto de la bancada: la tela, el codo remendado, el puño con su botón y la boca oscura. */
-    private fun DrawScope.mangaDelMono(v: VistaRefugio, f: MarcoObjeto) {
-        val fr = V3(0f, 0f, -1f)
-        // Lo que cruza el canto, de la tapa hacia abajo.
-        cara(v, f, listOf(V3(-0.055f, 0.012f, 0.03f), V3(0.055f, 0.012f, 0.03f), V3(0.058f, 0f, -0.004f), V3(-0.052f, 0f, -0.004f)), V3(0f, 1f, -0.3f), MONO)
-        val tela = listOf(V3(-0.052f, 0f, -0.004f), V3(0.058f, 0f, -0.004f), V3(0.066f, -0.22f, -0.01f), V3(0.07f, -0.27f, -0.012f), V3(-0.048f, -0.27f, -0.012f), V3(-0.05f, -0.2f, -0.01f))
-        caraDegradada(v, f, tela, fr, MONO, V3(0f, 0f, -0.004f), V3(0f, -0.27f, -0.012f))
-        rayaLuz(v, f, V3(0.02f, -0.01f, -0.006f), V3(0.03f, -0.2f, -0.012f), 0.01f, lerp(MONO, C.TINTA, 0.35f), fr, 0.5f)
-        rayaLuz(v, f, V3(-0.035f, -0.02f, -0.006f), V3(-0.03f, -0.18f, -0.012f), 0.008f, lerp(MONO, C.PAPEL, 0.2f), fr, 0.5f)
-        val codo = listOf(V3(-0.035f, -0.07f, -0.013f), V3(0.04f, -0.068f, -0.013f), V3(0.042f, -0.13f, -0.013f), V3(-0.032f, -0.135f, -0.013f))
-        cara(v, f, codo, fr, lerp(MONO, C.PAPEL, 0.35f)); puntadas(v, f, codo, fr)
-        val puno = listOf(V3(-0.05f, -0.235f, -0.014f), V3(0.069f, -0.235f, -0.014f), V3(0.07f, -0.275f, -0.014f), V3(-0.048f, -0.275f, -0.014f))
-        cara(v, f, puno, fr, lerp(MONO, C.TINTA, 0.25f))
-        disco(v, f, V3(0.045f, -0.255f, -0.016f), fr, 0.006f, lerp(C.ACERO, C.LATON, 0.4f), 8)
-        cara(v, f, (0..10).map { i -> val a = PI_F * i / 10; V3(0.011f + 0.059f * cos(a), -0.275f, -0.014f + 0.016f * sin(a)) }, V3(0f, -1f, 0f), lerp(MONO, C.TINTA, 0.65f))
+    /** El bulto: el canto de los dobleces (a la derecha), los dobleces redondos de abajo y de arriba, y la cara de delante. */
+    private fun DrawScope.bultoDelMono(v: VistaRefugio, f: MarcoObjeto, b: BultoMono) {
+        val w = b.ancho; val h = b.alto; val g = b.grueso
+        // El canto de la derecha: las capas de la tela doblada.
+        caraDegradada(v, f, listOf(b.q(w, 0.01f, 0f), b.q(w, h - 0.01f, 0f), b.q(w, h - 0.01f, g), b.q(w, 0.01f, g)), V3(1f, 0f, 0f), lerp(MONO, C.TINTA, 0.25f), b.q(w, h, g), b.q(w, 0f, g))
+        for (k in 1..3) rayaLuz(v, f, b.q(w + 0.001f, 0.015f, g * k / 4f), b.q(w + 0.001f, h - 0.015f, g * k / 4f), 0.004f, lerp(MONO, if (k % 2 == 0) C.PAPEL else C.TINTA, 0.3f), V3(1f, 0f, 0f), 0.8f)
+        // Los dobleces de abajo y de arriba, redondos.
+        cil(v, f, b.q(-w + 0.012f, 0.012f, g * 0.5f), b.q(w - 0.003f, 0.012f, g * 0.5f), g * 0.5f, lerp(MONO, C.TINTA, 0.1f), lerp(MONO, C.TINTA, 0.3f), 12)
+        cil(v, f, b.q(-w + 0.02f, h - 0.012f, g * 0.45f), b.q(w - 0.02f, h - 0.012f, g * 0.45f), g * 0.45f, MONO, lerp(MONO, C.TINTA, 0.3f), 12)
+        // La cara de delante, con la luz que cae de arriba abajo, y los costados redondeados de las mangas metidas.
+        val cara = listOf(b.q(-w, 0.02f, g), b.q(w, 0.02f, g), b.q(w - 0.004f, h - 0.02f, g), b.q(-w + 0.01f, h - 0.02f, g))
+        caraDegradada(v, f, cara, b.n, MONO, b.q(0f, h, g), b.q(0f, 0f, g))
+        for (u in listOf(-w + 0.012f, w - 0.012f)) rayaLuz(v, f, b.q(u, 0.03f, g + 0.001f), b.q(u, h - 0.03f, g + 0.001f), 0.012f, lerp(MONO, C.TINTA, 0.28f), b.n, 0.7f)
+        rayaLuz(v, f, b.q(-w + 0.02f, h - 0.005f, g * 0.9f), b.q(w - 0.02f, h - 0.005f, g * 0.9f), 0.006f, lerp(MONO, C.PAPEL, 0.3f), V3(0f, 1f, -0.3f), 0.7f)
+    }
+
+    /** El delantero: el cuello, la tira de botones, el bolsillo del contador, el cinturón, el puño que asoma y los remiendos. */
+    private fun DrawScope.delanteroDelMono(v: VistaRefugio, f: MarcoObjeto, b: BultoMono) {
+        val h = b.alto; val d = b.grueso + 0.002f; val n = b.n
+        fun q(u: Float, s: Float, mas: Float = 0f) = b.q(u, s, d + mas)
+        // El cuello vuelto: la tira de atrás y las dos puntas.
+        cara(v, f, listOf(q(-0.07f, h - 0.012f), q(0.07f, h - 0.012f), q(0.06f, h - 0.035f), q(-0.06f, h - 0.035f)), n, lerp(MONO, C.TINTA, 0.35f))
+        for (lado in listOf(-1f, 1f)) cara(v, f, listOf(q(lado * 0.004f, h - 0.03f, 0.002f), q(lado * 0.075f, h - 0.018f, 0.002f), q(lado * 0.05f, h - 0.085f, 0.003f)), n, lerp(MONO, C.PAPEL, 0.12f))
+        // La tira de los botones, hasta abajo.
+        rayaLuz(v, f, q(0.012f, h - 0.05f, 0.001f), q(0.012f, 0.03f, 0.001f), 0.006f, lerp(MONO, C.TINTA, 0.45f), n)
+        for (k in 0..3) disco(v, f, q(0f, h - 0.1f - 0.052f * k, 0.002f), n, 0.0075f, lerp(C.ACERO, C.LATON, 0.5f), 8)
+        // El bolsillo del contador: el cuerpo, la tapeta y su botón.
+        val bol = listOf(q(-0.125f, 0.135f, 0.001f), q(-0.035f, 0.135f, 0.001f), q(-0.035f, 0.215f, 0.001f), q(-0.125f, 0.215f, 0.001f))
+        cara(v, f, bol, n, lerp(MONO, C.TINTA, 0.12f)); puntadas(v, f, bol, n)
+        cara(v, f, listOf(q(-0.13f, 0.2f, 0.002f), q(-0.03f, 0.2f, 0.002f), q(-0.035f, 0.228f, 0.002f), q(-0.125f, 0.228f, 0.002f)), n, lerp(MONO, C.TINTA, 0.32f))
+        disco(v, f, q(-0.08f, 0.205f, 0.003f), n, 0.0065f, lerp(C.ACERO, C.LATON, 0.5f), 8)
+        // El cinturón con su hebilla de chapa.
+        cara(v, f, listOf(q(-0.15f, 0.06f, 0.001f), q(0.15f, 0.06f, 0.001f), q(0.15f, 0.088f, 0.001f), q(-0.15f, 0.088f, 0.001f)), n, lerp(MONO, C.TINTA, 0.3f))
+        cara(v, f, listOf(q(0.022f, 0.055f, 0.003f), q(0.064f, 0.055f, 0.003f), q(0.064f, 0.093f, 0.003f), q(0.022f, 0.093f, 0.003f)), n, lerp(C.ACERO, C.LATON, 0.35f))
+        cara(v, f, listOf(q(0.03f, 0.063f, 0.004f), q(0.056f, 0.063f, 0.004f), q(0.056f, 0.085f, 0.004f), q(0.03f, 0.085f, 0.004f)), n, lerp(MONO, C.TINTA, 0.3f))
+        // El puño de una manga, que asoma abajo a la izquierda, con su botón.
+        cara(v, f, listOf(q(-0.155f, 0.012f, 0.004f), q(-0.08f, 0.012f, 0.004f), q(-0.083f, 0.05f, 0.004f), q(-0.155f, 0.05f, 0.004f)), n, lerp(MONO, C.TINTA, 0.18f))
+        rayaLuz(v, f, q(-0.155f, 0.03f, 0.005f), q(-0.083f, 0.03f, 0.005f), 0.003f, lerp(MONO, C.TINTA, 0.45f), n, 0.8f)
+        disco(v, f, q(-0.1f, 0.022f, 0.006f), n, 0.005f, lerp(C.ACERO, C.LATON, 0.5f), 6)
+        // Los remiendos: uno grande de azul desvaído en el pecho y otro gris abajo, con sus puntadas.
+        val r1 = listOf(q(0.03f, 0.13f, 0.001f), q(0.128f, 0.135f, 0.001f), q(0.125f, 0.225f, 0.001f), q(0.032f, 0.22f, 0.001f))
+        cara(v, f, r1, n, lerp(MONO, C.PAPEL, 0.42f)); puntadas(v, f, r1, n)
+        val r2 = listOf(q(0.045f, 0.012f, 0.001f), q(0.12f, 0.014f, 0.001f), q(0.118f, 0.05f, 0.001f), q(0.047f, 0.048f, 0.001f))
+        cara(v, f, r2, n, lerp(MONO, C.HORMIGON, 0.55f)); puntadas(v, f, r2, n)
+        // Las costuras de los hombros y el desgaste de los cantos.
+        for (lado in listOf(-1f, 1f)) rayaLuz(v, f, q(lado * 0.075f, h - 0.02f, 0.001f), q(lado * 0.14f, h - 0.05f, 0.001f), 0.0025f, lerp(MONO, C.PAPEL, 0.35f), n, 0.7f)
     }
 
     /** Las puntadas de un remiendo: rayitas cortas a lo largo de su borde, de hilo claro. */
@@ -204,59 +222,74 @@ internal object GrandesRefugio {
     fun manta(v: VistaRefugio, suelo: V3, canto: V3, pie: Offset): Cosa {
         val tapa = tapaDe(canto); val frente = TrazoObjeto.cantoDelante(V3(canto.x - 0.05f, tapa, canto.z))
         val f = MarcoObjeto(V3(canto.x, tapa, frente), 0f, 1.1f)
-        val caida = caidaDeLaManta()
-        val forma = TrazoObjeto.silueta(f, caida + listOf(V3(-0.4f, 0.03f, 0.28f), V3(0.02f, 0.03f, 0.28f)))
+        val caida = Caida()
+        val forma = TrazoObjeto.silueta(f, caida.abajo + caida.arriba + listOf(V3(-0.36f, 0.035f, 0.22f), V3(0.03f, 0.035f, 0.22f)))
         return Cosa(forma, pie, bajoElFollaje = false) {
             val dentro = TrazoObjeto.tapaBajo(V3(canto.x - 0.2f, tapa, canto.z))
-            sombra(v, f, listOf(V3(-0.4f, 0f, 0f), V3(0.02f, 0f, 0f), V3(0.02f, 0f, 0.28f), V3(-0.4f, 0f, 0.28f)), listOf(V3(-0.4f, 0.035f, 0.02f), V3(0.02f, 0.035f, 0.02f), V3(0.02f, 0.035f, 0.28f), V3(-0.4f, 0.035f, 0.28f)), tapa, dentro, 0.5f)
+            sombra(v, f, listOf(V3(-0.36f, 0f, 0f), V3(0.03f, 0f, 0f), V3(0.03f, 0f, 0.22f), V3(-0.36f, 0f, 0.22f)), listOf(V3(-0.36f, 0.035f, 0.02f), V3(0.03f, 0.035f, 0.02f), V3(0.03f, 0.035f, 0.22f), V3(-0.36f, 0.035f, 0.22f)), tapa, dentro, 0.5f)
+            // Lo que cuelga echa su sombra en el frente de la bancada, detrás: una franja oscura junto a su borde de arriba.
+            drawPath(TrazoObjeto.silueta(f, caida.arriba.map { it + V3(0.02f, -0.02f, 0.02f) } + caida.abajo.map { it + V3(0.03f, 0.03f, 0.02f) }), C.SOMBRA.copy(alpha = 0.3f), blendMode = BlendMode.Multiply)
             encimaDeLaTapa(v, f)
             pliegues(v, f, caida)
-            escudo(v, f, V3(-0.085f, -0.24f, -0.03f), 1.25f)
+            quemado(v, f, V3(-0.27f, -0.07f, -0.016f))
+            escudo(v, f, V3(-0.085f, -0.27f, -0.03f), 1.2f)
         }
     }
 
-    /** El borde de lo que cuelga por el canto, de izquierda a derecha, por delante: la esquina de la derecha cae más. */
-    private fun caidaDeLaManta(): List<V3> {
-        val arriba = listOf(V3(-0.41f, 0.02f, -0.012f), V3(0.035f, 0.02f, -0.012f))
-        val abajo = (0..10).map { i -> val t = i / 10f; val x = 0.035f - 0.445f * t
-            V3(x, -0.36f - 0.16f * (1f - t) * (1f - t) + 0.02f * sin(t * 13f), -0.03f - 0.012f * sin(t * 9f)) }
-        return arriba + abajo
+    /**
+     * La forma de lo que cuelga por el canto: [arriba], el canto de la tapa de izquierda a derecha; [abajo], el borde de
+     * abajo de izquierda a derecha, que baja hasta la esquina (a la derecha, la más baja) y sube por la punta.
+     */
+    private class Caida {
+        val arriba: List<V3> = (0..13).map { i -> V3(-0.36f + 0.395f * i / 13f, 0.02f, -0.012f) }
+        val abajo: List<V3> = (0..13).map { i -> val t = i / 13f
+            val y = if (t < 0.88f) -0.12f - 0.47f * Math.pow((t / 0.88f).toDouble(), 1.7).toFloat() + 0.018f * sin(t * 17f) else -0.59f + (t - 0.88f) / 0.12f * 0.22f
+            V3(-0.36f + 0.395f * t, y, -0.02f - 0.016f * sin(t * 11f)) }
     }
 
-    /** Lo que queda sobre la tapa: la manta doblada, con su doblez redondo atrás, el ribete y el agujero quemado. */
+    /** Lo que queda sobre la tapa: la manta doblada, con su doblez redondo atrás y el ribete. */
     private fun DrawScope.encimaDeLaTapa(v: VistaRefugio, f: MarcoObjeto) {
         val arriba = V3(0f, 1f, 0f); val y = 0.034f
-        caraDegradada(v, f, listOf(V3(-0.41f, y, -0.012f), V3(0.035f, y, -0.012f), V3(0.03f, y, 0.27f), V3(-0.4f, y, 0.27f)), arriba, LANA, V3(-0.2f, y, 0.27f), V3(-0.2f, y, 0f))
-        cil(v, f, V3(-0.4f, 0.018f, 0.27f), V3(0.03f, 0.018f, 0.27f), 0.018f, lerp(LANA, C.TINTA, 0.1f), lados = 10)
-        rayaLuz(v, f, V3(-0.4f, y + 0.001f, 0.25f), V3(0.03f, y + 0.001f, 0.25f), 0.012f, lerp(LANA, C.TINTA, 0.3f), arriba, 0.8f)
-        // El agujero quemado: el cerco chamuscado, el hueco y unos pelos quemados.
-        val h = V3(-0.25f, y + 0.001f, 0.08f)
-        val az = Azar(Semilla.de("refugio", "manta", "agujero"))
-        val cerco = (0 until 12).map { i -> val a = 2f * PI_F * i / 12; val r = 0.045f * az.entre(0.75f, 1.15f); h + V3(cos(a) * r, 0f, sin(a) * r * 0.9f) }
-        cara(v, f, cerco, arriba, lerp(C.COBRE, C.TINTA, 0.45f), 0.8f)
-        val hueco = (0 until 10).map { i -> val a = 2f * PI_F * i / 10; val r = 0.024f * az.entre(0.6f, 1.2f); h + V3(cos(a) * r, 0.0005f, sin(a) * r * 0.9f) }
-        cara(v, f, hueco, arriba, lerp(C.TINTA, C.SOMBRA, 0.3f))
-        for (k in 0..5) { val a = 2f * PI_F * k / 6 + 0.3f; rayaLuz(v, f, h + V3(cos(a) * 0.024f, 0.001f, sin(a) * 0.022f), h + V3(cos(a) * 0.034f, 0.002f, sin(a) * 0.03f), 0.002f, C.TINTA, arriba, 0.7f) }
-        lana(v, f, listOf(V3(-0.41f, y, -0.012f), V3(0.035f, y, -0.012f), V3(0.03f, y, 0.25f), V3(-0.4f, y, 0.25f)), arriba, "tapa")
+        caraDegradada(v, f, listOf(V3(-0.36f, y, -0.012f), V3(0.035f, y, -0.012f), V3(0.03f, y, 0.22f), V3(-0.35f, y, 0.22f)), arriba, LANA, V3(-0.2f, y, 0.22f), V3(-0.2f, y, 0f))
+        cil(v, f, V3(-0.35f, 0.018f, 0.22f), V3(0.03f, 0.018f, 0.22f), 0.018f, LANA, lados = 10)
+        rayaLuz(v, f, V3(-0.35f, y + 0.001f, 0.2f), V3(0.03f, y + 0.001f, 0.2f), 0.012f, lerp(LANA, C.TINTA, 0.3f), arriba, 0.8f)
+        lana(v, f, listOf(V3(-0.36f, y, -0.012f), V3(0.035f, y, -0.012f), V3(0.03f, y, 0.2f), V3(-0.35f, y, 0.2f)), arriba, "tapa")
     }
 
-    /** Lo que cuelga: pliegues en tiras (cada una con su luz), la lana, el ribete de punto de manta en el borde de abajo. */
-    private fun DrawScope.pliegues(v: VistaRefugio, f: MarcoObjeto, caida: List<V3>) {
-        val abajo = caida.drop(2).reversed()                                  // de izquierda a derecha
-        val n = abajo.size
-        for (i in 0 until n - 1) {
-            val a = abajo[i]; val b = abajo[i + 1]
-            val tira = listOf(V3(a.x, 0.02f, -0.012f), V3(b.x, 0.02f, -0.012f), b, a)
-            val giro = if (i % 2 == 0) 0.45f else -0.4f
-            caraDegradada(v, f, tira, V3(giro, 0.1f, -1f), LANA, V3((a.x + b.x) / 2f, 0.02f, -0.012f), V3((a.x + b.x) / 2f, (a.y + b.y) / 2f, -0.03f))
+    /**
+     * Lo que cuelga: tiras de arriba abajo con su luz, cada una un poco girada (la cresta y el valle de cada pliegue, de
+     * anchos distintos), la vuelta del canto, la lana, la línea de cada valle y el ribete de punto de manta del borde.
+     */
+    private fun DrawScope.pliegues(v: VistaRefugio, f: MarcoObjeto, c: Caida) {
+        val az = Azar(Semilla.de("refugio", "manta", "pliegues"))
+        val giros = FloatArray(c.arriba.size); var fase = 0f
+        for (i in giros.indices) { fase += az.entre(0.7f, 1.3f); giros[i] = 0.85f * sin(fase) }
+        for (i in 0 until c.arriba.size - 1) {
+            val a = c.arriba[i]; val b = c.arriba[i + 1]; val p = c.abajo[i]; val q = c.abajo[i + 1]
+            val g = (giros[i] + giros[i + 1]) / 2f
+            caraDegradada(v, f, listOf(a, b, q, p), V3(g, 0.12f, -1f), LANA, K.medio(a, b), K.medio(p, q))
+            // El valle de cada pliegue, más hondo, y la cresta, más clara: así se leen aunque la luz llegue pareja.
+            val pliegue = listOf(a, b, q, p).map { f.p(it) }
+            if (g < 0f) drawPath(poligono(pliegue), C.SOMBRA.copy(alpha = 0.35f * -g), blendMode = BlendMode.Multiply)
+            else drawPath(poligono(pliegue), lerp(LANA, C.PAPEL, 0.6f).copy(alpha = 0.16f * g))
+            if (giros[i] > 0f && giros[i + 1] <= 0f) trazo(v, f, listOf(b, b + (q - b) * 0.5f + V3(0.004f, 0f, 0f), q), 0.006f, lerp(LANA, C.TINTA, 0.4f), V3(0f, 0f, -1f), 0.55f)
         }
-        // La vuelta del canto (la manta dobla sobre la tapa) y la sombra del doblez.
-        cara(v, f, listOf(V3(-0.41f, 0.034f, -0.012f), V3(0.035f, 0.034f, -0.012f), V3(0.035f, 0.0f, -0.03f), V3(-0.41f, 0.0f, -0.03f)), V3(0f, 0.6f, -1f), lerp(LANA, C.PAPEL, 0.1f))
-        lana(v, f, listOf(V3(-0.41f, 0f, -0.03f), V3(0.035f, 0f, -0.03f)) + abajo.reversed(), V3(0f, 0f, -1f), "caida")
+        // La vuelta del canto, redonda (la manta dobla sobre la tapa).
+        cil(v, f, V3(-0.36f, 0.012f, -0.006f), V3(0.035f, 0.012f, -0.006f), 0.022f, lerp(LANA, C.PAPEL, 0.08f), lados = 10, tapas = false)
+        lana(v, f, c.arriba + c.abajo.reversed(), V3(0f, 0f, -1f), "caida")
         // El ribete: una franja más oscura por el borde de abajo, con las puntadas de punto de manta.
-        trazo(v, f, abajo.map { it + V3(0f, 0.012f, -0.003f) }, 0.022f, lerp(LANA, C.TINTA, 0.4f), V3(0f, 0f, -1f))
-        for (i in 0 until n - 1) for (k in 0..2) { val t = k / 3f; val p = abajo[i] + (abajo[i + 1] - abajo[i]) * t
-            rayaLuz(v, f, p + V3(0f, 0.0f, -0.004f), p + V3(0f, 0.026f, -0.004f), 0.0025f, lerp(LANA, C.PAPEL, 0.4f), V3(0f, 0f, -1f), 0.8f) }
+        trazo(v, f, c.abajo.map { it + V3(0f, 0.007f, -0.003f) }, 0.014f, lerp(LANA, C.TINTA, 0.25f), V3(0f, 0f, -1f))
+        for (i in 0 until c.abajo.size - 1) for (k in 0..2) { val t = k / 3f; val p = c.abajo[i] + (c.abajo[i + 1] - c.abajo[i]) * t
+            rayaLuz(v, f, p + V3(0f, 0.0f, -0.005f), p + V3(0f, 0.018f, -0.005f), 0.0025f, lerp(LANA, C.PAPEL, 0.4f), V3(0f, 0f, -1f), 0.75f) }
+    }
+
+    /** El agujero quemado en lo que cuelga: el cerco chamuscado, el hueco oscuro (se ve la bancada detrás) y los pelos quemados. */
+    private fun DrawScope.quemado(v: VistaRefugio, f: MarcoObjeto, h: V3) {
+        val fr = V3(0f, 0f, -1f)
+        val az = Azar(Semilla.de("refugio", "manta", "agujero"))
+        cara(v, f, (0 until 13).map { i -> val a = 2f * PI_F * i / 13; val r = 0.042f * az.entre(0.75f, 1.2f); h + V3(cos(a) * r, sin(a) * r, 0f) }, fr, lerp(C.COBRE, C.TINTA, 0.4f), 0.85f)
+        cara(v, f, (0 until 11).map { i -> val a = 2f * PI_F * i / 11; val r = 0.023f * az.entre(0.6f, 1.25f); h + V3(cos(a) * r, sin(a) * r, -0.0005f) }, fr, lerp(C.TINTA, C.SOMBRA, 0.25f))
+        for (k in 0..6) { val a = 2f * PI_F * k / 7 + 0.3f; rayaLuz(v, f, h + V3(cos(a) * 0.022f, sin(a) * 0.022f, -0.001f), h + V3(cos(a) * 0.034f, sin(a) * 0.033f, -0.001f), 0.0025f, C.TINTA, fr, 0.7f) }
     }
 
     /** Las bolitas y los pelos de la lana, en la forma [borde] (clara y oscura, a puntos), con una semilla fija. */
@@ -389,8 +422,11 @@ internal object GrandesRefugio {
         fun t(x: Float, s: Float, d: Float = 0f) = V3(x, bis.y + dir.y * s + nDentro.y * d, bis.z + dir.z * s + nDentro.z * d)
         // El canto de la tapa (su grueso) y la cara de dentro.
         cara(v, f, listOf(t(x0, 0f), t(x0, fondo), t(x0, fondo, 0.035f), t(x0, 0f, 0.035f)), V3(-1f, 0f, 0f), MADERA)
-        caraDegradada(v, f, listOf(t(x0, 0f, 0.035f), t(x1, 0f, 0.035f), t(x1, fondo, 0.035f), t(x0, fondo, 0.035f)), nDentro, lerp(MADERA, C.PAPEL, 0.12f), t(0f, fondo, 0.035f), t(0f, 0f, 0.035f))
-        cara(v, f, listOf(t(x0 + 0.02f, 0.02f, 0.012f), t(x1 - 0.02f, 0.02f, 0.012f), t(x1 - 0.02f, fondo - 0.02f, 0.012f), t(x0 + 0.02f, fondo - 0.02f, 0.012f)), nDentro, lerp(MADERA, C.TINTA, 0.15f))
+        caraDegradada(v, f, listOf(t(x0, 0f, 0.035f), t(x1, 0f, 0.035f), t(x1, fondo, 0.035f), t(x0, fondo, 0.035f)), nDentro, lerp(MADERA, C.PAPEL, 0.25f), t(0f, fondo, 0.035f), t(0f, 0f, 0.035f))
+        cara(v, f, listOf(t(x0 + 0.02f, 0.02f, 0.012f), t(x1 - 0.02f, 0.02f, 0.012f), t(x1 - 0.02f, fondo - 0.02f, 0.012f), t(x0 + 0.02f, fondo - 0.02f, 0.012f)), nDentro, lerp(lerp(C.COBRE, C.AMARILLO, 0.3f), C.PAPEL, 0.25f))
+        // La etiqueta de papel pegada por dentro, en blanco, con sus rayas.
+        cara(v, f, listOf(t(-0.07f, 0.22f, 0.01f), t(0.07f, 0.22f, 0.01f), t(0.07f, 0.29f, 0.01f), t(-0.07f, 0.29f, 0.01f)), nDentro, lerp(C.PAPEL, C.AMARILLO, 0.15f))
+        for (k in 0..2) rayaLuz(v, f, t(-0.055f, 0.235f + 0.018f * k, 0.009f), t(0.04f - 0.02f * k, 0.235f + 0.018f * k, 0.009f), 0.002f, lerp(C.TINTA, C.PAPEL, 0.3f), nDentro, 0.7f)
         for (k in 0..4) rayaLuz(v, f, t(x0 + 0.03f, 0.04f + 0.065f * k, 0.011f), t(x1 - 0.03f, 0.05f + 0.065f * k, 0.011f), 0.002f, lerp(MADERA, C.TINTA, 0.35f), nDentro, 0.55f)
         rayaLuz(v, f, t(x0, fondo, 0.035f), t(x1, fondo, 0.035f), 0.006f, lerp(MADERA, C.PAPEL, 0.3f), dir, 0.8f)
         // La escuadra de latón del costado.
