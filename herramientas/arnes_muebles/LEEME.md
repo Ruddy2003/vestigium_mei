@@ -17,6 +17,7 @@ herramientas/arnes_muebles/dibujar.sh hoja <ideario|biblioteca> <claro|oscuro> <
 - 1080 px de ancho y 2.625 px por dp, como el Pixel 6 de Paparazzi. El alto es el que ocupa el mueble.
 - Fondo: el color `background` del esquema del tema, liso (sin la textura de `fondoTema`).
 - `ARNES_HOY=AAAA-MM-DD` fija el «hoy» de los ejemplos (por omisión, el día lógico de hoy). Cambia las fechas de las entradas y, con ellas, cómo se reparten en el estante. Para comparar con una captura de CI, pon el día en que corrió; las de noviembre de 2026 usan `ARNES_HOY=2026-11-15`.
+- `ARNES_TEMAS=0,1,5` dibuja un Ideario por cada número de temas, uno bajo otro (es la captura `temaMueble` «_a»: sin temas, con uno y con cinco); por omisión, 9 (la «_b»). `ARNES_MAX=6` corta el Ideario a ese número de compartimentos y pone la placa «y N más» (la «_c»). **Todo Ideario nuevo se dibuja también así:** un mueble que solo se probó con 9 temas puede colgarse o romperse con 0.
 - `ARNES_SUENOS=1` dibuja la biblioteca como estante de los Sueños: es el `noche` de `EstanteTema`, aparte del claro y el oscuro (la luna en lugar del sello y la luz propia que cada tema enciende ahí). Los volúmenes salen delgados porque los días de ejemplo no traen texto de sueño.
 - `ARNES_APP=/ruta/a/app/src/main` dibuja otra copia de la app, por ejemplo otro árbol de trabajo. Compila en `build-otras/<clave>/` y no toca la compilación normal.
 

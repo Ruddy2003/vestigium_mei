@@ -34,7 +34,11 @@ jobs:
           (while true; do echo "MEMORIA $(free -m | awk '/Mem:/ {print $3 " MB usados, " $7 " MB disponibles"}')"; sleep 20; done) &
           ./gradlew :app:compileDebugUnitTestKotlin --no-daemon 2>&1 | tee compilar.log || true
           pkill -f KotlinCompileDaemon || true
-          ./gradlew :app:recordPaparazziDebug --no-daemon 2>&1 | tee capturas.log || true
+          # Vigía: si las capturas pasan de 12 minutos, algo se colgó. Guarda cada 3 minutos dónde está parado el proceso de
+          # las pruebas (su pila) para saber qué dibujo fue; a los 24 minutos se corta la corrida y se publica lo que haya.
+          (sleep 720; while true; do for p in $(pgrep -f "Gradle Test Executor"); do echo "=== $(date -u +%H:%M:%S) pid $p"; jstack "$p" | grep -A 45 '"Test worker"'; done >> pila.txt 2>&1; sleep 180; done) &
+          timeout 24m ./gradlew :app:recordPaparazziDebug --no-daemon 2>&1 | tee capturas.log || true
+          pkill -f "Gradle Test Executor" || true
       - name: Publicar en la rama comparacion-ci
         if: always()
         run: |
@@ -44,6 +48,7 @@ jobs:
           grep -E "^e: |FAILED|Exception|error:|What went wrong" "$GITHUB_WORKSPACE/compilar.log" | head -300 > errores_compilar.txt || true
           grep -E "^e: |FAILED|Exception|error:|What went wrong" "$GITHUB_WORKSPACE/capturas.log" | head -150 > errores.txt || true
           tail -80 "$GITHUB_WORKSPACE/capturas.log" > final.txt
+          cp "$GITHUB_WORKSPACE/pila.txt" . 2>/dev/null || true
           echo "${{ github.sha }} run ${{ github.run_number }} ${{ github.ref_name }}" > commit.txt
           git init -q && git checkout -q -b comparacion-ci
           git config user.name "ci" && git config user.email "ci@users.noreply.github.com"

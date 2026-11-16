@@ -67,6 +67,7 @@ private fun uso(): Nothing {
           dibujar.sh hoja <ideario|biblioteca> <claro|oscuro> <salida.png> <tema1,tema2,...>
         Temas: ${TemaId.entries.joinToString(" ") { it.id }}
         Variable ARNES_HOY=AAAA-MM-DD: el «hoy» de los ejemplos (por omisión, el día lógico de hoy; las capturas de CI usan el día en que corrieron).
+        Variables ARNES_TEMAS=0,1,5 (un Ideario por cada número de temas) y ARNES_MAX=6 (el Ideario cortado, con su placa «y N más»).
         Variable ARNES_SUENOS=1: la biblioteca como estante de los Sueños (el modo «noche» del estante, aparte de claro y oscuro).
     """.trimIndent())
     exitProcess(2)
@@ -180,13 +181,20 @@ private fun ideasConTemas(n: Int): List<Idea> {
  */
 @Composable
 private fun Ideario() {
-    val ideas = ideasConTemas(9)
-    val lista = cajones(ideas)
+    // ARNES_TEMAS=0,1,5 dibuja un mueble por cada número de temas, uno bajo otro (la captura «_a» es «0,1,5»); por omisión, 9.
+    // ARNES_MAX=6 corta el mueble a ese número de compartimentos y pone la placa «y N más» (la captura «_c»).
+    val cuantos = System.getenv("ARNES_TEMAS")?.split(',')?.mapNotNull { it.trim().toIntOrNull() }?.takeIf { it.isNotEmpty() } ?: listOf(9)
+    val max = System.getenv("ARNES_MAX")?.trim()?.toIntOrNull()
     val a = archivoIdeas(Estilo.tema)
     val d = disenoIdeas(Estilo.tema)
     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        MuebleIdeas(lista, ::rotuloCajon, { c -> a.cuenta(c.n) + (if (d.cols <= 2) c.ultima?.let { " · " + Fechas.corto(it) } ?: "" else "") },
-            mas = 0, textoMas = "y 0 ${porNumero(0, a.contenedor, a.contenedores)} más") { }   // con toque: así lleva el aura (halo) como en la app
+        cuantos.forEach { n ->
+            val todos = cajones(ideasConTemas(n))
+            val lista = if (max != null) todos.take(max) else todos
+            val mas = todos.size - lista.size
+            MuebleIdeas(lista, ::rotuloCajon, { c -> a.cuenta(c.n) + (if (d.cols <= 2) c.ultima?.let { " · " + Fechas.corto(it) } ?: "" else "") },
+                mas = mas, textoMas = "y $mas ${porNumero(mas, a.contenedor, a.contenedores)} más") { }   // con toque: así lleva el aura (halo) como en la app
+        }
     }
 }
 
