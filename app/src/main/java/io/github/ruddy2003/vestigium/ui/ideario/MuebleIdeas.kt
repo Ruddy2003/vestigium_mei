@@ -96,7 +96,7 @@ fun MuebleIdeas(cajones: List<CajonIdeas>, rotulo: (String) -> String, sub: (Caj
                 for (i in 0 until huecos) {
                     val c = cajones.getOrNull(i)
                     val lugar = Modifier.offset(x(i), y(i)).size(anchoH, altoH)
-                    if (c == null) Canvas(lugar) { with(d) { compartimento(EstadoCajon(0, false, 0f, 7919 * (i + 1), vacio = true), oscuro) } }
+                    if (c == null) Canvas(lugar) { with(d) { compartimento(EstadoCajon(0, false, 0f, 7919 * (i + 1), vacio = true, fila = i / d.cols, col = i % d.cols, filas = filas, cols = d.cols), oscuro) } }
                     else key(c.tema) {
                         val anim = remember { Animatable(0f) }
                         val toque = remember { MutableInteractionSource() }
@@ -108,7 +108,7 @@ fun MuebleIdeas(cajones: List<CajonIdeas>, rotulo: (String) -> String, sub: (Caj
                                     abrir?.invoke(c)
                                     anim.snapTo(0f)
                                 }
-                            }, abierto = { anim.value })
+                            }, abierto = { anim.value }, fila = i / d.cols, col = i % d.cols, filas = filas)
                     }
                 }
                 val placa = d.placa
@@ -144,9 +144,11 @@ fun MuebleIdeas(cajones: List<CajonIdeas>, rotulo: (String) -> String, sub: (Caj
  */
 @Composable
 fun CompartimentoIdeas(d: DisenoIdeas, n: Int, sinTema: Boolean, semilla: Int, titulo: String, sub: String, oscuro: Boolean,
-                       modifier: Modifier = Modifier, abierto: () -> Float = { 0f }) {
+                       modifier: Modifier = Modifier, abierto: () -> Float = { 0f }, fila: Int = 0, col: Int = 0, filas: Int = 1) {
     BoxWithConstraints(modifier) {
-        Canvas(Modifier.fillMaxSize().graphicsLayer()) { with(d) { compartimento(EstadoCajon(n, sinTema, abierto(), semilla), oscuro) } }
+        Canvas(Modifier.fillMaxSize().graphicsLayer()) {
+            with(d) { compartimento(EstadoCajon(n, sinTema, abierto(), semilla, fila = fila, col = col, filas = filas, cols = d.cols), oscuro) }
+        }
         val r = d.rotulo
         val altoR = maxHeight * r.height
         val tam = (altoR.value * 0.36f).coerceIn(9f, 17f)
