@@ -185,8 +185,9 @@ internal object LaderaAntiguas {
     private fun DrawScope.pieDeLaCara(v: VistaAntiguas, roca: Color, az: Azar) {
         val p = v.p
         // La garganta: una cuña honda y en sombra entre las dos laderas, oscura abajo.
-        val hondo = TrazosValle.cerrada(pts(150f, 150f, 162f, 132f, 176f, 136f, 186f, 160f, 180f, 214f, 150f, 214f))
-        drawPath(hondo, Brush.verticalGradient(listOf(p.sombra(lerp(roca, C.SOMBRA, 0.3f), 0.18f).copy(alpha = 0.5f), p.sombra(lerp(C.PINO, C.ESCORIA, 0.4f), 0.12f)), 136f, 214f))
+        // (Una cuña en V que se abre hacia abajo y se pierde arriba en el aire: nada de un arco ni de una boca en la montaña.)
+        val hondo = poligono(rota(pts(146f, 214f, 152f, 186f, 159f, 160f, 166f, 140f), az, 1.2f, 2) + rota(pts(166f, 140f, 172f, 162f, 180f, 188f, 184f, 214f), az, 1.2f, 2))
+        drawPath(hondo, Brush.verticalGradient(listOf(Color.Transparent, p.sombra(lerp(roca, C.SOMBRA, 0.3f), 0.18f).copy(alpha = 0.45f), p.sombra(lerp(C.PINO, C.ESCORIA, 0.4f), 0.12f)), 140f, 214f))
         val verde = lerp(C.PINO, C.ESCORIA, 0.15f)
         repeat(90) {
             val x = az.entre(148f, 186f); val y = az.entre(158f, 216f) + (x - 150f) * 0.05f
