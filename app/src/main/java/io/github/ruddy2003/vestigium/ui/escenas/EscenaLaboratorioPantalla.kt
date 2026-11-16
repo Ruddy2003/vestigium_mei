@@ -142,59 +142,96 @@ internal object PantallaLab {
         val dia = (1f - l.noche).coerceIn(0f, 1f)
         val solDer = l.solX > 0.5f
         val az = Azar(Semilla.de("laboratorio", "ruinas"))
-        // La luz de arriba en la piedra: la cara al sol y la de sombra.
-        fun piedra(c: Color, lejos: Float, alSol: Boolean): Color {
-            val base = Color(c.red * l.ambiente.red * 0.82f, c.green * l.ambiente.green * 0.82f, c.blue * l.ambiente.blue * 0.82f)
-            val lado = if (alSol) lerp(base, lerp(base, l.solColor, 0.5f), dia * 0.75f) else lerp(base, Color(base.red * 0.5f, base.green * 0.54f, base.blue * 0.74f), dia)
-            return lerp(lado, l.bruma, (lejos * l.brumaFuerza).coerceIn(0f, 0.9f))
+        val piedraBase = Color(0xFF8E887E); val oscura = Color(0xFF55524D)
+        // La luz de arriba en la piedra: [cara] 1, al sol; 0, de frente; −1, a la sombra. [lejos] la lleva a la bruma.
+        fun luz(c: Color, lejos: Float, cara: Int): Color {
+            val base = Color(c.red * l.ambiente.red * 0.86f, c.green * l.ambiente.green * 0.86f, c.blue * l.ambiente.blue * 0.86f)
+            val col = when {
+                cara > 0 -> lerp(base, Color((base.red * l.solColor.red * 1.3f).coerceIn(0f, 1f), (base.green * l.solColor.green * 1.25f).coerceIn(0f, 1f), (base.blue * l.solColor.blue * 1.1f).coerceIn(0f, 1f)), 0.7f * dia)
+                cara < 0 -> lerp(base, Color(base.red * 0.52f, base.green * 0.56f, base.blue * 0.74f), 0.4f + 0.5f * dia)
+                else -> base
+            }
+            return lerp(col, l.bruma, (lejos * l.brumaFuerza).coerceIn(0f, 0.92f))
         }
-        // El suelo de la ciudad, de la bruma a los escombros de delante.
+        val lado = if (solDer) 1 else -1
+        // El suelo: de la bruma del horizonte a los escombros pardos de delante.
         drawPath(forma(listOf(-0.02f to H - 0.01f, 1.02f to H - 0.01f, 1.02f to 1.02f, -0.02f to 1.02f)),
-            Brush.verticalGradient(0f to piedra(C.ESCOMBRO, 0.8f, true), 0.4f to piedra(C.ESCOMBRO, 0.4f, true), 1f to piedra(lerp(C.ESCOMBRO, C.TIERRA, 0.4f), 0f, true), startY = q(0.5f, H).y, endY = q(0.5f, 1f).y))
-        // Fila de lejos: torres partidas en la bruma.
-        var u = -0.05f
-        while (u < 1.05f) { val w = az.entre(0.04f, 0.09f); val alto = az.entre(0.08f, 0.2f)
-            drawPath(forma(torre(u, u + w, H + 0.005f, H - alto, az)), piedra(C.ESCOMBRO, 0.75f, solDer == (az.real() > 0.5f))); u += w + az.entre(0.01f, 0.06f) }
-        // Lo verde de lejos (desde el día del verde): manchas de grama entre las ruinas.
-        if (img.verde > 0.0005f) verde(img, H + 0.01f, H + 0.06f, img.verde.coerceAtLeast(0.03f), 0.6f)
-        // Fila del medio: torres más grandes, con un lado al sol, sus huecos negros y su corte quebrado.
-        for ((i, u0) in listOf(0.05f, 0.27f, 0.52f, 0.8f).withIndex()) {
-            val w = listOf(0.11f, 0.08f, 0.13f, 0.1f)[i]; val alto = listOf(0.3f, 0.2f, 0.36f, 0.24f)[i]; val base = H + 0.07f
-            val ps = torre(u0, u0 + w, base, base - alto, az)
-            drawPath(forma(ps), piedra(C.ESCOMBRO, 0.35f, !solDer))
-            // La cara de lado, al sol o en sombra.
-            val lado = if (solDer) listOf(u0 + w to base, u0 + w to base - alto + 0.05f, u0 + w + 0.025f to base - alto + 0.07f, u0 + w + 0.025f to base) else listOf(u0 to base, u0 to base - alto + 0.05f, u0 - 0.025f to base - alto + 0.07f, u0 - 0.025f to base)
-            drawPath(forma(lado), piedra(C.ESCOMBRO, 0.35f, solDer))
-            // Las ventanas vacías.
-            for (f in 1..4) for (cc in 0..2) { if (az.real() < 0.25f) continue; val wu = u0 + w * (0.15f + cc * 0.3f); val wv = base - alto * (f / 5.2f)
-                drawPath(forma(listOf(wu to wv, wu + w * 0.14f to wv, wu + w * 0.14f to wv + 0.025f, wu to wv + 0.025f)), piedra(C.NEGRO, 0.3f, false)) }
-            // El árbol torcido en lo alto de la torre caída (la segunda).
-            if (i == 1) arbolTorcido(img, u0 + w * 0.6f, base - alto)
+            Brush.verticalGradient(0f to luz(piedraBase, 0.85f, 0), 0.3f to luz(piedraBase, 0.45f, 0), 1f to luz(lerp(oscura, C.TIERRA, 0.4f), 0f, 0), startY = q(0.5f, H).y, endY = q(0.5f, 1f).y))
+        // Fila de lejos: muchas torres partidas, pálidas en la bruma.
+        var u = -0.04f
+        while (u < 1.05f) {
+            val w = az.entre(0.025f, 0.06f); val alto = az.entre(0.05f, 0.17f)
+            drawPath(forma(torre(u, u + w, H + 0.01f, H - alto, az)), luz(piedraBase, 0.72f, if (az.real() > 0.5f) lado else -lado))
+            u += w + az.entre(0.003f, 0.03f)
         }
-        // La caseta de hormigón: la boca del destello, que parece una ruina más.
-        val cu = 0.38f; val cv = H + 0.2f
-        drawPath(forma(listOf(cu to cv, cu + 0.14f to cv, cu + 0.14f to cv - 0.11f, cu to cv - 0.11f)), piedra(C.HORMIGON, 0.15f, !solDer))
-        drawPath(forma(listOf(cu + 0.14f to cv, cu + 0.18f to cv - 0.01f, cu + 0.18f to cv - 0.115f, cu + 0.14f to cv - 0.11f)), piedra(C.HORMIGON, 0.15f, solDer))
-        drawPath(forma(listOf(cu + 0.04f to cv, cu + 0.08f to cv, cu + 0.08f to cv - 0.06f, cu + 0.04f to cv - 0.06f)), piedra(C.NEGRO, 0.1f, false))
-        // Lo verde del medio, que crece con el arco.
-        if (img.verde > 0.15f) verde(img, H + 0.1f, H + 0.24f, (img.verde - 0.15f) * 2f, 0.3f)
-        // Delante: los montones de escombro, los hierros torcidos y la hierba rala y amarilla.
-        for ((i, u0) in listOf(-0.05f, 0.3f, 0.66f).withIndex()) {
-            val w = 0.32f + 0.05f * i; val base = 1.02f; val cima = 0.74f + 0.06f * i
-            val monte = listOf(u0 to base, u0 + w * 0.15f to cima + 0.06f, u0 + w * 0.4f to cima, u0 + w * 0.55f to cima + 0.04f, u0 + w * 0.8f to cima + 0.02f, u0 + w to base)
-            drawPath(forma(monte), piedra(lerp(C.ESCOMBRO, C.TIERRA, 0.3f), 0f, i % 2 == 0))
-            repeat(7) { val uu = az.entre(u0 + 0.03f, u0 + w - 0.03f); val vv = az.entre(cima + 0.04f, 0.98f); val ss = az.entre(0.012f, 0.03f)
-                drawPath(forma(listOf(uu to vv, uu + ss to vv - ss * 0.6f, uu + ss * 2f to vv)), piedra(C.ESCOMBRO, 0f, az.real() > 0.5f)) }
-            // Un hierro torcido que sale del montón.
-            val hu = u0 + w * 0.45f; val k0 = k(hu)
-            drawPath(Path().apply { val a = q(hu, cima + 0.03f); moveTo(a.x, a.y); val b = q(hu + 0.02f, cima - 0.08f); val c = q(hu + 0.07f, cima - 0.1f); val d = q(hu + 0.09f, cima - 0.04f); cubicTo(b.x, b.y, c.x, c.y, d.x, d.y) },
-                piedra(C.HIERRO, 0f, true), style = androidx.compose.ui.graphics.drawscope.Stroke(0.006f * k0 + 0.4f, cap = StrokeCap.Round))
-            // La hierba rala y amarilla.
-            repeat(14) { val uu = az.entre(u0, u0 + w); val vv = az.entre(cima + 0.03f, 1f); val p = q(uu, vv); val kk = k(uu)
-                drawLine(piedra(C.PAJA, 0f, true), p, p + Offset(az.entre(-0.01f, 0.01f) * kk, -az.entre(0.015f, 0.035f) * kk), 0.4f) }
+        // La calima entre la fila de lejos y la del medio.
+        for (i in 0 until 6) mancha(q(i / 5f, H - 0.015f), k(i / 5f) * 0.28f, k(i / 5f) * 0.03f, l.bruma, 0.55f)
+        if (img.verde > 0.0005f) verde(img, H + 0.005f, H + 0.05f, img.verde.coerceAtLeast(0.03f), 0.6f)
+        // Fila del medio: torres grandes en tres cuartos (la cara de frente y la de lado), con sus pisos, sus huecos y el
+        // corte quebrado; una tumbada, con el árbol torcido encima.
+        val torres = listOf(Triple(0.03f, 0.1f, 0.3f), Triple(0.2f, 0.07f, 0.17f), Triple(0.36f, 0.12f, 0.38f), Triple(0.57f, 0.08f, 0.24f), Triple(0.74f, 0.11f, 0.33f), Triple(0.93f, 0.09f, 0.2f))
+        for ((i, t) in torres.withIndex()) {
+            val (u0, w, alto) = t; val base = H + 0.06f + 0.012f * (i % 2); val arriba = base - alto
+            val ps = torre(u0, u0 + w, base, arriba, az)
+            drawPath(forma(ps), luz(piedraBase, 0.32f, 0))
+            // La cara de lado: hacia el centro de la imagen (la cámara está en medio), al sol o a la sombra.
+            val haciaDer = u0 + w / 2f < 0.5f; val s = if (haciaDer) 1 else -1; val ancho = w * 0.32f
+            val x0 = if (haciaDer) u0 + w else u0; val x1 = x0 + s * ancho
+            drawPath(forma(listOf(x0 to base, x0 to ps[if (haciaDer) ps.size - 2 else 1].second, x1 to ps[if (haciaDer) ps.size - 2 else 1].second + 0.025f, x1 to base - 0.01f)), luz(piedraBase, 0.32f, if (s == lado) 1 else -1))
+            // Los pisos (líneas) y los huecos negros de las ventanas, en rejilla, con alguno roto.
+            var f = base - 0.03f
+            while (f > arriba + 0.04f) {
+                drawLine(luz(oscura, 0.32f, 0).copy(alpha = 0.5f), q(u0, f), q(u0 + w, f), 0.35f)
+                for (c in 0 until 4) { if (az.real() < 0.2f) continue; val wu = u0 + w * (0.08f + c * 0.23f)
+                    drawPath(forma(listOf(wu to f - 0.024f, wu + w * 0.13f to f - 0.024f, wu + w * 0.13f to f - 0.006f, wu to f - 0.006f)), luz(Color(0xFF26262A), 0.3f, 0)) }
+                f -= 0.034f
+            }
+            // Las varillas que asoman del corte.
+            repeat(3) { val uu = u0 + w * az.entre(0.1f, 0.9f); val vv = ps.minOf { it.second } + 0.02f; drawLine(luz(C.HIERRO, 0.3f, 1), q(uu, vv + 0.01f), q(uu + az.entre(-0.01f, 0.01f), vv - 0.03f), 0.4f) }
+            if (i == 1) arbolTorcido(img, u0 + w * 0.55f, arriba + 0.02f)
         }
-        // Lo verde de cerca: desde que la grama sube, matas entre las piedras de delante.
-        if (img.verde > 0.3f) verde(img, 0.82f, 1f, (img.verde - 0.3f) * 3f, 0f)
+        // El campo de escombros del medio: bloques sueltos en filas, más grandes cuanto más cerca, cada uno con su cara al sol.
+        for (fila in 0..3) {
+            val vv = H + 0.1f + fila * 0.07f; val lejos = 0.3f - fila * 0.08f; val t = 0.008f + fila * 0.006f
+            repeat(10 + fila * 2) {
+                val uu = az.entre(-0.02f, 1.02f); val h = t * az.entre(0.6f, 1.6f); val ww = t * az.entre(1.2f, 3f)
+                drawPath(forma(listOf(uu to vv, uu + ww to vv, uu + ww * 0.85f to vv - h, uu + ww * 0.1f to vv - h * 0.8f)), luz(piedraBase, lejos, 0))
+                drawPath(forma(listOf(uu + ww * 0.85f to vv - h, uu + ww to vv, uu + ww + t * 0.6f to vv - 0.002f, uu + ww * 0.9f + t * 0.5f to vv - h * 0.9f)), luz(piedraBase, lejos, lado))
+            }
+        }
+        // La fila de cerca del medio: muros rotos, con su hueco de ventana, y la caseta de hormigón (la boca del destello).
+        for ((i, u0) in listOf(0.06f, 0.6f, 0.86f).withIndex()) {
+            val w = 0.13f + 0.03f * i; val base = H + 0.25f; val alto = 0.08f + 0.03f * (i % 2)
+            val ps = listOf(u0 to base, u0 to base - alto * 0.7f, u0 + w * 0.3f to base - alto, u0 + w * 0.55f to base - alto * 0.85f, u0 + w * 0.7f to base - alto * 0.4f, u0 + w to base - alto * 0.3f, u0 + w to base)
+            drawPath(forma(ps), luz(piedraBase, 0.12f, if (i == 1) lado else 0))
+            drawPath(forma(listOf(u0 + w * 0.3f to base - alto * 0.6f, u0 + w * 0.45f to base - alto * 0.6f, u0 + w * 0.45f to base - alto * 0.25f, u0 + w * 0.3f to base - alto * 0.25f)), luz(Color(0xFF26262A), 0.1f, 0))
+        }
+        val cu = 0.38f; val cv = H + 0.27f
+        drawPath(forma(listOf(cu to cv, cu + 0.13f to cv, cu + 0.13f to cv - 0.1f, cu to cv - 0.1f)), luz(C.HORMIGON, 0.1f, 0))
+        drawPath(forma(listOf(cu + 0.13f to cv, cu + 0.17f to cv - 0.012f, cu + 0.17f to cv - 0.11f, cu + 0.13f to cv - 0.1f)), luz(C.HORMIGON, 0.1f, lado))
+        drawPath(forma(listOf(cu - 0.01f to cv - 0.1f, cu + 0.14f to cv - 0.1f, cu + 0.18f to cv - 0.115f, cu + 0.03f to cv - 0.118f)), luz(C.HORMIGON, 0.1f, 1))
+        drawPath(forma(listOf(cu + 0.04f to cv, cu + 0.08f to cv, cu + 0.08f to cv - 0.06f, cu + 0.04f to cv - 0.06f)), luz(Color(0xFF26262A), 0.08f, 0))
+        if (img.verde > 0.15f) verde(img, H + 0.12f, H + 0.28f, (img.verde - 0.15f) * 2f, 0.25f)
+        // Delante: los montones de escombro, con losas partidas, los hierros torcidos y la hierba rala y amarilla.
+        for ((i, u0) in listOf(-0.06f, 0.28f, 0.62f).withIndex()) {
+            val w = 0.34f + 0.05f * i; val base = 1.02f; val cima = 0.76f + 0.05f * i
+            val monte = listOf(u0 to base, u0 + w * 0.12f to cima + 0.07f, u0 + w * 0.35f to cima + 0.01f, u0 + w * 0.5f to cima, u0 + w * 0.62f to cima + 0.03f, u0 + w * 0.85f to cima + 0.06f, u0 + w to base)
+            drawPath(forma(monte), luz(lerp(oscura, piedraBase, 0.5f), 0f, 0))
+            // Una losa partida, de canto, con su cara al sol.
+            val lu = u0 + w * 0.42f; val lv = cima + 0.03f
+            drawPath(forma(listOf(lu to lv + 0.05f, lu + 0.09f to lv + 0.02f, lu + 0.1f to lv - 0.02f, lu + 0.01f to lv)), luz(piedraBase, 0f, lado))
+            drawPath(forma(listOf(lu to lv + 0.05f, lu + 0.01f to lv, lu - 0.015f to lv + 0.012f, lu - 0.012f to lv + 0.06f)), luz(piedraBase, 0f, -lado))
+            repeat(9) { val uu = az.entre(u0 + 0.03f, u0 + w - 0.03f); val vv = az.entre(cima + 0.05f, 0.99f); val ss = az.entre(0.01f, 0.026f)
+                drawPath(forma(listOf(uu to vv, uu + ss to vv - ss * 0.7f, uu + ss * 2f to vv)), luz(piedraBase, 0f, if (az.real() > 0.5f) lado else 0)) }
+            // Los hierros torcidos: varillas rectas dobladas en ángulo.
+            val hu = u0 + w * 0.68f; val k0 = k(hu)
+            drawPath(Path().apply { val a = q(hu, cima + 0.04f); moveTo(a.x, a.y); val b = q(hu + 0.01f, cima - 0.06f); lineTo(b.x, b.y); val c = q(hu + 0.06f, cima - 0.09f); lineTo(c.x, c.y) },
+                luz(C.HIERRO, 0f, 1), style = androidx.compose.ui.graphics.drawscope.Stroke(0.004f * k0 + 0.45f, cap = StrokeCap.Round))
+            // La hierba rala y amarilla, en matas.
+            repeat(5) { val cu2 = az.entre(u0, u0 + w); val cv2 = az.entre(cima + 0.04f, 1f)
+                repeat(5) { j -> val p = q(cu2 + j * 0.004f, cv2); val kk = k(cu2); drawLine(luz(C.PAJA, 0f, 1), p, p + Offset((j - 2) * 0.004f * kk, -az.entre(0.012f, 0.03f) * kk), 0.4f) } }
+        }
+        if (img.verde > 0.3f) verde(img, 0.84f, 1f, (img.verde - 0.3f) * 3f, 0f)
     }
 
     /** El árbol que alguien plantó una vez en lo alto de una torre caída, y sigue allí, torcido. */
@@ -213,11 +250,13 @@ internal object PantallaLab {
      */
     private fun DrawScope.verde(img: Imagen, v0: Float, v1: Float, cuanto: Float, lejos: Float) {
         val l = img.l; val k0 = cuanto.coerceIn(0f, 1f)
-        val col = lerp(Color(C.GRAMA.red * l.ambiente.red, C.GRAMA.green * l.ambiente.green, C.GRAMA.blue * l.ambiente.blue), l.bruma, lejos * 0.5f)
+        val vivo = lerp(C.GRAMA, Color(0xFF9CD45C), 0.35f)
+        val col = lerp(Color(vivo.red * l.ambiente.red, vivo.green * l.ambiente.green, vivo.blue * l.ambiente.blue), l.bruma, lejos * 0.4f)
+        val oscuro = lerp(col, Color(C.HOJA_OSC.red * l.ambiente.red, C.HOJA_OSC.green * l.ambiente.green, C.HOJA_OSC.blue * l.ambiente.blue), 0.6f)
         val az = Azar(Semilla.de("laboratorio", "verde", (v0 * 100).toInt()))
-        val n = (4 + 26 * k0).toInt()
-        repeat(n) { val u = az.entre(0.02f, 0.2f + 0.78f * k0); val vv = az.entre(v0, v1); val kk = k(u)
-            mancha(q(u, vv), az.entre(0.015f, 0.045f) * kk, az.entre(0.006f, 0.014f) * kk, col, 0.8f) }
+        val n = (6 + 34 * k0).toInt()
+        repeat(n) { val u = az.entre(0.02f, 0.22f + 0.76f * k0); val vv = az.entre(v0, v1); val kk = k(u); val w = az.entre(0.025f, 0.07f) * kk; val h = az.entre(0.008f, 0.02f) * kk
+            mancha(q(u, vv) + Offset(0f, h * 0.4f), w, h, oscuro, 0.85f); mancha(q(u, vv), w * 0.85f, h * 0.8f, col, 0.95f) }
     }
 
     // ---------------------------------------------------------------- Arriba: el campamento

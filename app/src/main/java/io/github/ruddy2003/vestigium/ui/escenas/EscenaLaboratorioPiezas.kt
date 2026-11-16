@@ -261,12 +261,19 @@ internal object PiezasLab {
      * Un cilindro de pie, de radio [r], con su base en [c] y su altura [alto]: el costado con el color de cada lado (cada
      * luz lo alumbra por el suyo) y, si se ve, la tapa.
      */
-    fun DrawScope.cilindro(v: VistaLab, c: V3, r: Float, alto: Float, propio: Color, tapa: Color? = propio, n: Int = 8) {
+    fun DrawScope.cilindro(v: VistaLab, c: V3, r: Float, alto: Float, propio: Color, tapa: Color? = propio, n: Int = 8) = tronco(v, c, r, r, alto, propio, tapa, n)
+
+    /**
+     * Un tronco de cono de pie (una maceta, un cubo): de radio [rAbajo] en su base [c] a [rArriba] arriba. Como [cilindro];
+     * si la boca queda por debajo de los ojos se ve su [tapa] (o el hueco, si se le pasa un color oscuro).
+     */
+    fun DrawScope.tronco(v: VistaLab, c: V3, rAbajo: Float, rArriba: Float, alto: Float, propio: Color, tapa: Color? = propio, n: Int = 8) {
+        val r = (rAbajo + rArriba) / 2f
         val arriba = V3(c.x, c.y + alto, c.z)
         // El borde de arriba que se ve: el de delante si la tapa queda por encima de los ojos; si no, el de detrás (y la tapa encima).
         val sobreLosOjos = arriba.y > CamLab.OJO
-        val bordeArriba = mitad(arriba, r, cerca = sobreLosOjos).map { CamLab.p(it) }
-        val bordeAbajo = mitad(c, r, cerca = true).map { CamLab.p(it) }
+        val bordeArriba = mitad(arriba, rArriba, cerca = sobreLosOjos).map { CamLab.p(it) }
+        val bordeAbajo = mitad(c, rAbajo, cerca = true).map { CamLab.p(it) }
         val cuerpo = Path().apply {
             moveTo(bordeArriba.first().x, bordeArriba.first().y)
             for (q in bordeArriba) lineTo(q.x, q.y)
@@ -282,7 +289,7 @@ internal object PiezasLab {
             t to v.c(q, propio, V3(q.x - c.x, 0f, q.z - c.z))
         }.toTypedArray()
         drawPath(cuerpo, Brush.horizontalGradient(*paradas, startX = x0, endX = x1))
-        if (tapa != null && !sobreLosOjos) drawPath(poligono(aro(arriba, r).map { CamLab.p(it) }), v.c(arriba, tapa, ARRIBA))
+        if (tapa != null && !sobreLosOjos) drawPath(poligono(aro(arriba, rArriba).map { CamLab.p(it) }), v.c(arriba, tapa, ARRIBA))
     }
 
     /**

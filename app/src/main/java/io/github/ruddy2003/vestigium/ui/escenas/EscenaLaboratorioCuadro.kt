@@ -54,6 +54,7 @@ internal object CuadroLab {
         for (k in orden) k.pintar(this)
         // El objeto chico del día, en el claro de la mesa más cercano.
         if (!ObjetosLaboratorio.esGrande(m)) with(ObjetosLaboratorio) { sobreElSoporte(m, v.pincel(MesaLab.CLARO), CamLab.p(MesaLab.CLARO), CamLab.k(MesaLab.CLARO) / 150f) }
+        with(SalaLab) { conducto(v) }
         with(MesaLab) { lamparasDeCultivo(v) }
         with(LuzLab) { aire(v) }
         with(CosasLab) { adornos(v) }

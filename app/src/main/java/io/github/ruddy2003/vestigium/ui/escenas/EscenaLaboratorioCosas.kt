@@ -47,12 +47,14 @@ internal object CosasLab {
         val t = taburete(m)
         add(CosaLab(CamLab.hondo(t.x, t.z), PiezasLab.aro(t, 0.17f, 8) + PiezasLab.aro(t + V3(0f, 0.62f, 0f), 0.17f, 8)) { taburete(v, t) })
         if (EscenaLaboratorio.cuarentena(m)) {
-            val catre = Marco(V3(-0.1f, 0f, 6.55f), V3(1f, 0f, -0.02f))
-            add(CosaLab(CamLab.hondo(0.6f, 6.3f), listOf(catre.w(0f, 0f, 0f), catre.w(1.9f, 0f, 0f), catre.w(1.9f, 0.7f, 0f), catre.w(0f, 0.7f, 0f), catre.w(0f, 0f, 0.45f), catre.w(1.9f, 0.7f, 0.45f))) { catre(v, catre) })
-            for ((i, q) in listOf(V3(-0.85f, 0f, 6.55f), V3(-0.5f, 0f, 6.7f)).withIndex()) add(CosaLab(CamLab.hondo(q.x, q.z), PiezasLab.aro(q, 0.14f, 8) + PiezasLab.aro(q + V3(0f, 0.3f, 0f), 0.16f, 8)) { cubo(v, q, if (i == 0) C.TELA else lerp(C.TELA, C.AMARILLO, 0.2f)) })
+            // El catre, delante de la campana (ella duerme en el laboratorio), y los cubos de lejía junto a la mesa.
+            val catre = Marco(V3(0.95f, 0f, 3.3f), V3(1f, 0f, -0.04f))
+            add(CosaLab(CamLab.hondo(1.9f, 3.6f), listOf(catre.w(0f, 0f, 0f), catre.w(1.85f, 0f, 0f), catre.w(1.85f, 0.66f, 0f), catre.w(0f, 0.66f, 0f), catre.w(0f, 0f, 0.45f), catre.w(1.85f, 0.66f, 0.45f))) { catre(v, catre) })
+            for ((i, q) in listOf(V3(0.6f, 0f, 3.75f), V3(0.42f, 0f, 4.15f)).withIndex()) add(CosaLab(CamLab.hondo(q.x, q.z), PiezasLab.aro(q, 0.14f, 8) + PiezasLab.aro(q + V3(0f, 0.3f, 0f), 0.16f, 8)) { cubo(v, q, if (i == 0) C.TELA else lerp(C.TELA, C.AMARILLO, 0.2f)) })
         }
         if (EscenaLaboratorio.cierre(m)) {
-            val s = V3(0.65f, 0f, 6.55f)
+            // La silla del vigía, a la izquierda de la campana, mirando a la puerta.
+            val s = V3(0.3f, 0f, 4.35f)
             add(CosaLab(CamLab.hondo(s.x, s.z), caja3(s.x - 0.22f, s.x + 0.22f, 0f, 0.9f, s.z - 0.22f, s.z + 0.22f)) { silla(v, s) })
         }
     }
@@ -95,17 +97,33 @@ internal object CosasLab {
         val saco = V3(x0 + 0.17f, 0.5f, z0 + 0.36f)
         if (!EscenaLaboratorio.cierre(v.m)) {
             val p = CamLab.p(saco); val k = CamLab.k(saco)
-            val forma = Path().apply { moveTo(p.x - 0.14f * k, p.y); cubicTo(p.x - 0.16f * k, p.y - 0.2f * k, p.x - 0.1f * k, p.y - 0.3f * k, p.x - 0.03f * k, p.y - 0.34f * k)
-                lineTo(p.x + 0.03f * k, p.y - 0.34f * k); cubicTo(p.x + 0.1f * k, p.y - 0.3f * k, p.x + 0.16f * k, p.y - 0.2f * k, p.x + 0.14f * k, p.y); close() }
-            drawPath(forma, androidx.compose.ui.graphics.Brush.horizontalGradient(0f to v.c(saco, lerp(C.MADERA, C.AMARILLO, 0.3f), V3(-1f, 0.2f, -0.6f)), 1f to v.c(saco, lerp(C.MADERA, C.TIERRA, 0.3f), V3(0.2f, 0.2f, -1f)), startX = p.x - 0.15f * k, endX = p.x + 0.15f * k))
-            drawLine(v.c(saco, C.MADERA, IZQ), Offset(p.x - 0.04f * k, p.y - 0.3f * k), Offset(p.x + 0.04f * k, p.y - 0.3f * k), 0.02f * k)
+            // Un saco de arpillera lleno, caído hacia un lado, con el cuello atado y la boca doblada.
+            val forma = Path().apply { moveTo(p.x - 0.15f * k, p.y)
+                cubicTo(p.x - 0.19f * k, p.y - 0.1f * k, p.x - 0.15f * k, p.y - 0.24f * k, p.x - 0.05f * k, p.y - 0.27f * k)
+                lineTo(p.x - 0.03f * k, p.y - 0.31f * k); lineTo(p.x + 0.04f * k, p.y - 0.32f * k); lineTo(p.x + 0.03f * k, p.y - 0.27f * k)
+                cubicTo(p.x + 0.13f * k, p.y - 0.25f * k, p.x + 0.18f * k, p.y - 0.12f * k, p.x + 0.15f * k, p.y); close() }
+            val arpillera = lerp(C.MADERA, C.AMARILLO, 0.25f)
+            drawPath(forma, androidx.compose.ui.graphics.Brush.horizontalGradient(0f to v.c(saco, arpillera, V3(-1f, 0.3f, -0.5f)), 0.5f to v.c(saco, arpillera, V3(0f, 0.3f, -1f)), 1f to v.c(saco, lerp(arpillera, C.TIERRA, 0.4f), V3(0.6f, 0f, -0.6f)), startX = p.x - 0.18f * k, endX = p.x + 0.18f * k))
+            // La trama de la arpillera y los pliegues.
+            for (i in 1..5) drawLine(v.c(saco, lerp(arpillera, C.NEGRO, 0.3f), IZQ).copy(alpha = 0.35f), Offset(p.x - 0.13f * k + i * 0.045f * k, p.y - 0.02f * k), Offset(p.x - 0.08f * k + i * 0.03f * k, p.y - 0.24f * k), 0.4f)
+            drawLine(v.c(saco, C.MADERA, IZQ), Offset(p.x - 0.045f * k, p.y - 0.275f * k), Offset(p.x + 0.035f * k, p.y - 0.27f * k), (0.018f * k).coerceAtLeast(0.7f))
         } else {
             mancha(CamLab.p(saco), 0.12f * CamLab.k(saco), 0.03f * CamLab.k(saco), lerp(C.TIERRA, C.HORMIGON, 0.3f), 0.5f)
         }
-        // Las macetas de barro apiladas encima, en dos torres.
-        for ((j, z) in listOf(z0 + 0.35f, z0 + 0.75f).withIndex()) for (i in 0 until 4 - j) {
-            val c = V3(x0 + 0.18f, SalaLab.EY + i * 0.07f, z); cilindro(v, c, 0.1f - 0.004f * i, 0.11f, if ((i + j) % 3 == 2) lerp(C.BARRO, C.TIERRA, 0.3f) else C.BARRO, tapa = if (i == 3 - j) lerp(C.BARRO, C.NEGRO, 0.4f) else null)
+        // Las macetas de barro, metidas unas en otras en dos pilas: de cada una se ve el borde grueso; la de arriba, con su hueco.
+        for ((j, z) in listOf(z0 + 0.3f, z0 + 0.62f).withIndex()) {
+            val n = 5 - j
+            for (i in 0 until n) {
+                val c = V3(x0 + 0.17f, SalaLab.EY + i * 0.035f, z); val barro = if ((i + j) % 3 == 2) lerp(C.BARRO, C.TIERRA, 0.3f) else lerp(C.BARRO, C.MADERA, 0.12f * (i % 2))
+                PiezasLab.run { tronco(v, c, 0.068f, 0.095f, 0.12f, barro, tapa = if (i == n - 1) lerp(C.BARRO, C.NEGRO, 0.55f) else null) }
+                // El borde, más claro, que coge la luz.
+                val borde = PiezasLab.mitad(c + V3(0f, 0.12f, 0f), 0.097f, true).map { CamLab.p(it) }
+                for (h in 0 until borde.size - 1) drawLine(v.c(c + V3(0f, 0.12f, 0f), lerp(barro, C.TELA, 0.25f), IZQ), borde[h], borde[h + 1], 1.1f)
+            }
         }
+        // La de la grama de Hilda, en el suelo junto al estante: ya ha sido maceta cuatro veces.
+        val mg = V3(x0 - 0.12f, 0f, z0 + 0.1f)
+        PiezasLab.run { tronco(v, mg, 0.1f, 0.14f, 0.18f, lerp(C.BARRO, C.TIERRA, 0.2f), tapa = C.TIERRA) }
         // El cierre: la cinta amarilla, en cruz, por delante del estante.
         if (EscenaLaboratorio.cierre(v.m)) for ((a, b) in listOf(V3(x0 - 0.01f, 0.05f, z0) to V3(x0 - 0.01f, SalaLab.EY, z1), V3(x0 - 0.01f, SalaLab.EY, z0) to V3(x0 - 0.01f, 0.05f, z1)))
             drawLine(v.c((a + b) * 0.5f, C.AMARILLO, IZQ), CamLab.p(a), CamLab.p(b), (0.035f * CamLab.k((a + b) * 0.5f)).coerceAtLeast(1f))
@@ -146,9 +164,11 @@ internal object CosasLab {
         cajaEn(v, mk, 0f, 1.9f, 0f, 0.7f, 0.36f, 0.42f, lerp(C.TELA, C.CIAN, 0.15f))
         cajaEn(v, mk, 0.15f, 1.3f, 0.05f, 0.65f, 0.42f, 0.5f, lerp(C.TELA, C.TIERRA, 0.2f))
         for (a in listOf(0.05f, 1.85f)) for (b in listOf(0.05f, 0.65f)) palo(v, mk.w(a, b, 0f), mk.w(a, b, 0.36f), 0.02f, C.ACERO, filo = false)
-        // La sábana en el suelo, ante la puerta.
-        drawPath(poligono(listOf(V3(-0.7f, 0.003f, 6.2f), V3(0.35f, 0.003f, 6.1f), V3(0.45f, 0.003f, 5.8f), V3(-0.6f, 0.003f, 5.75f)).map { CamLab.p(it) }), v.c(V3(0f, 0f, 6f), C.TELA, ARRIBA))
-        val p = CamLab.p(mk.w(1.88f, 0.35f, 0.7f)); val k = CamLab.k(mk.w(1.88f, 0.35f, 0.7f))
+        // La sábana doblada a los pies y la mascarilla de tela, colgada de la cabecera.
+        cajaEn(v, mk, 1.45f, 1.75f, 0.1f, 0.56f, 0.5f, 0.58f, lerp(C.TELA, C.CIAN, 0.08f))
+        val p = CamLab.p(mk.w(0.02f, 0.35f, 0.6f)); val k = CamLab.k(mk.w(0.02f, 0.35f, 0.6f))
+        palo(v, mk.w(0.02f, 0.05f, 0.36f), mk.w(0.02f, 0.05f, 0.7f), 0.02f, C.ACERO, filo = false); palo(v, mk.w(0.02f, 0.61f, 0.36f), mk.w(0.02f, 0.61f, 0.7f), 0.02f, C.ACERO, filo = false)
+        palo(v, mk.w(0.02f, 0.05f, 0.7f), mk.w(0.02f, 0.61f, 0.7f), 0.02f, C.ACERO, filo = false)
         drawRect(v.c(mk.w(1.9f, 0.35f, 0.7f), lerp(C.TELA, C.CIAN, 0.25f), PiezasLab.FRENTE), p - Offset(0.06f * k, 0f), Size(0.12f * k, 0.07f * k))
     }
 

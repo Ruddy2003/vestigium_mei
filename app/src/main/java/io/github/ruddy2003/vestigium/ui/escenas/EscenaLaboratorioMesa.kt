@@ -195,11 +195,14 @@ internal object MesaLab {
         // De lejos a cerca: las bandejas (y el tanque o las cajas al fondo), la gradilla, la balanza, las pipetas, la lupa,
         // el microscopio, el plato negro, el cuaderno, la tableta, el altavoz, la taza, la comida y la lámpara.
         val conTanque = grama == Grama.TANQUE || grama == Grama.CAJAS
+        val conCajas = grama == Grama.CAJAS && !EscenaLaboratorio.arriba(m)
         for (bd in BANDEJAS.sortedByDescending { it.a }) {
             if (conTanque && bd.a > 3.25f) continue
+            if (conCajas && bd.a > 2.7f) continue
             bandeja(v, bd, grama)
         }
         if (conTanque) tanque(v)
+        if (conCajas) for ((i, b) in listOf(0.52f, 0.18f).withIndex()) cajaDeGrama(v, 2.78f + 0.04f * i, b)
         gradilla(v, 2.5f, 0.12f)
         balanza(v, 2.0f, 0.14f)
         pipetas(v, 1.64f, 0.14f)
@@ -285,6 +288,15 @@ internal object MesaLab {
         // El cristal de muestra: una franja de la pared del tanque es de vidrio, y se ven las capas de tierra.
     }
 
+    /** Una caja de madera con la grama ya crecida, lista para subir (desde `sube`). */
+    private fun DrawScope.cajaDeGrama(v: VistaLab, a: Float, b: Float) {
+        cajaEn(v, MK, a, a + 0.42f, b, b + 0.32f, ALTO, ALTO + 0.16f, C.MADERA) { cara, f ->
+            if (cara == 3) drawPath(f, v.c(MK.w(a + 0.2f, b + 0.16f, ALTO + 0.16f), C.TIERRA_LIMPIA, ARRIBA))
+            if (cara == 0 || cara == 2) drawLine(v.c(MK.w(a, b, ALTO + 0.08f), lerp(C.MADERA, C.NEGRO, 0.4f), MK.n(-1f, 0f, 0f)).copy(alpha = 0.6f), MK.p(a, if (cara == 0) b else b, ALTO + 0.08f), MK.p(if (cara == 0) a else a + 0.42f, if (cara == 0) b + 0.32f else b, ALTO + 0.08f), 0.5f)
+        }
+        for (i in 0 until 4) for (j in 0 until 2) grama(v, a + 0.06f + i * 0.1f, b + 0.08f + j * 0.16f, ALTO + 0.16f, 8, false)
+    }
+
     /** La gradilla de madera con sus tubos de muestra, cada uno con su tapón de color. */
     private fun DrawScope.gradilla(v: VistaLab, a: Float, b: Float) {
         cajaEn(v, MK, a, a + 0.32f, b, b + 0.12f, ALTO, ALTO + 0.03f, C.MADERA)
@@ -332,22 +344,30 @@ internal object MesaLab {
     /** El microscopio de latón y vidrio, de antes del sellado, «pesado como un niño». */
     private fun DrawScope.microscopio(v: VistaLab, a: Float, b: Float) {
         if (!SalaLab.laSalaPinta(v.m, "microscopio")) return
-        val lat = C.LATON; val neg = lerp(C.NEGRO, C.LATON, 0.15f)
-        // El pie en herradura, negro, y la platina.
-        cajaEn(v, MK, a, a + 0.2f, b, b + 0.16f, ALTO, ALTO + 0.035f, neg)
-        val col = MK.w(a + 0.16f, b + 0.08f, ALTO + 0.035f)
-        palo(v, col, col + V3(0f, 0.16f, 0f), 0.035f, lat)
-        cajaEn(v, MK, a + 0.03f, a + 0.16f, b + 0.02f, b + 0.14f, ALTO + 0.11f, ALTO + 0.125f, neg)
-        // El brazo curvo y el tubo inclinado con el ocular.
-        val brazo = col + V3(0f, 0.16f, 0f); val tubo0 = MK.w(a + 0.08f, b + 0.08f, ALTO + 0.16f); val tubo1 = MK.w(a + 0.13f, b + 0.08f, ALTO + 0.36f)
-        palo(v, brazo, MK.w(a + 0.12f, b + 0.08f, ALTO + 0.26f), 0.03f, lat)
-        palo(v, tubo0, tubo1, 0.042f, lat)
-        palo(v, tubo1, tubo1 + V3(0f, 0.04f, 0f), 0.03f, neg)
-        // El revólver de los objetivos y el tornillo que se atasca.
-        palo(v, tubo0, tubo0 + V3(0f, -0.035f, 0f), 0.02f, lerp(lat, Color.White, 0.25f))
-        val tor = MK.w(a + 0.17f, b + 0.08f, ALTO + 0.2f); drawCircle(v.c(tor, lat, MK.n(0f, -1f, 0.2f)), (0.025f * CamLab.k(tor)).coerceAtLeast(0.8f), CamLab.p(tor))
+        val lat = C.LATON; val neg = lerp(C.NEGRO, C.LATON, 0.12f); val bm = b + 0.085f
+        fun w(da: Float, y: Float, db: Float = 0f) = MK.w(a + da, bm + db, ALTO + y)
+        // El pie, negro y pesado, y la columna de latón.
+        cajaEn(v, MK, a, a + 0.21f, b, b + 0.17f, ALTO, ALTO + 0.032f, neg)
+        PiezasLab.run { tronco(v, w(0.155f, 0.032f), 0.026f, 0.022f, 0.1f, lat, tapa = null) }
+        // El espejo bajo la platina y la platina negra, con su hueco.
+        drawOval(v.c(w(0.07f, 0.07f), lerp(C.VIDRIO, Color.White, 0.3f), MK.n(-1f, 0.5f, 0f)), CamLab.p(w(0.07f, 0.075f)) - Offset(0.022f * CamLab.k(w(0f, 0f)), 0.012f * CamLab.k(w(0f, 0f))), androidx.compose.ui.geometry.Size(0.044f * CamLab.k(w(0f, 0f)), 0.024f * CamLab.k(w(0f, 0f))))
+        cajaEn(v, MK, a + 0.0f, a + 0.15f, b + 0.015f, b + 0.155f, ALTO + 0.12f, ALTO + 0.136f, neg)
+        // El brazo curvo, grueso, de la columna al tubo.
+        val brazo = listOf(w(0.155f, 0.13f), w(0.175f, 0.2f), w(0.165f, 0.27f), w(0.125f, 0.315f))
+        for (i in 0 until brazo.size - 1) palo(v, brazo[i], brazo[i + 1], 0.042f, lat)
+        // El tubo inclinado, con sus anillos, el ocular negro arriba y el objetivo abajo.
+        val t0 = w(0.065f, 0.17f); val t1 = w(0.11f, 0.385f)
+        palo(v, t0, t1, 0.055f, lat)
+        for (f in listOf(0.25f, 0.7f)) { val q = t0 + (t1 - t0) * f; palo(v, q, q + (t1 - t0) * 0.04f, 0.06f, lerp(lat, C.NEGRO, 0.35f), filo = false) }
+        palo(v, t1, t1 + V3(0f, 0.045f, 0f) + (t1 - t0) * 0.08f, 0.036f, neg)
+        palo(v, t0, t0 + V3(0f, -0.035f, 0f), 0.026f, lerp(lat, Color.White, 0.25f))
+        // Los tornillos de enfoque (el grande, que se atasca) a un lado del brazo.
+        val tor = w(0.172f, 0.2f, -0.045f); val kt = CamLab.k(tor)
+        drawCircle(v.c(tor, lat, MK.n(0f, -1f, 0.2f)), (0.032f * kt).coerceAtLeast(1f), CamLab.p(tor))
+        drawCircle(v.c(tor, lerp(lat, C.NEGRO, 0.4f), MK.n(0f, -1f, 0.2f)), (0.032f * kt).coerceAtLeast(1f), CamLab.p(tor), style = Stroke(0.5f))
+        drawCircle(v.c(tor, lat, MK.n(0f, -1f, 0.2f)), (0.016f * kt).coerceAtLeast(0.6f), CamLab.p(w(0.16f, 0.25f, -0.045f)))
         // El brillo del latón, que de noche coge la lámpara.
-        val br = CamLab.p(MK.w(a + 0.105f, b + 0.06f, ALTO + 0.28f)); drawLine(Color.White.copy(alpha = 0.4f + 0.2f * v.mesa), br, br + Offset(0.6f, -3f), 0.6f)
+        val br = CamLab.p(t0 + (t1 - t0) * 0.5f); drawLine(Color.White.copy(alpha = 0.35f + 0.3f * v.mesa), br + Offset(-1f, 0f), br + Offset(0f, -5f), 0.7f)
     }
 
     /** El plato negro con la pinza y unas semillas pardas contadas en fila. */

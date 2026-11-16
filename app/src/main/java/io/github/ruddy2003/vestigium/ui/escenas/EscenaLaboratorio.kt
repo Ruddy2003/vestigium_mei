@@ -367,7 +367,7 @@ internal object EscenaLaboratorio : EscenaVida {
     internal fun luzDeLaCampana(m: Momento): Float = when {
         apagon(m) -> if (deNoche(m)) 0f else 0.3f
         enLaCampana(m) -> if (deNoche(m)) 0.75f else 0.6f
-        deNoche(m) -> 0.3f
+        deNoche(m) -> 0.45f
         else -> 0.7f
     }
 

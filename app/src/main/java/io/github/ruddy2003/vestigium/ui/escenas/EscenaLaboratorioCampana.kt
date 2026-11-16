@@ -94,9 +94,13 @@ internal object CampanaLab {
                 val col = EscenaLaboratorio.colorDeLaCampana(m)
                 val c = CamLab.p(CENTRO.x, 1.3f, CENTRO.z); val k = CamLab.k(CENTRO)
                 drawOval(Brush.radialGradient(listOf(col.copy(alpha = 0.32f * dentro), col.copy(alpha = 0.1f * dentro), Color.Transparent), c, 1.3f * k), c - Offset(1.3f * k, 1.3f * k), Size(2.6f * k, 2.6f * k), blendMode = BlendMode.Plus)
-                // La tira de luz bajo la tapa (de día, la de cultivo; de noche, el ámbar bajo).
-                val tira = mitad(V3(CENTRO.x, ALTO - 0.2f, CENTRO.z + 0.25f), 0.55f, cerca = false, n = 10).map { CamLab.p(it) }
-                for (i in 0 until tira.size - 1) drawLine(lerp(col, Color.White, 0.5f).copy(alpha = (0.9f * dentro).coerceIn(0f, 1f)), tira[i], tira[i + 1], 1.4f, StrokeCap.Round)
+                // La lámpara de dentro: un tubo bajo la tapa, sobre el estante (de día, de cultivo; de noche, el ámbar bajo).
+                val t0 = CamLab.p(CENTRO.x - 0.5f, 2.2f, CENTRO.z + 0.1f); val t1 = CamLab.p(CENTRO.x + 0.55f, 2.2f, CENTRO.z + 0.22f)
+                drawLine(lerp(C.ACERO, C.NEGRO, 0.3f), t0 + Offset(0f, -1.2f), t1 + Offset(0f, -1.2f), 2.2f)
+                drawLine(lerp(col, Color.White, 0.55f).copy(alpha = (0.95f * dentro).coerceIn(0f, 1f)), t0, t1, 1.3f, StrokeCap.Round)
+                // Su luz cae sobre las bandejas del estante: un cono en el aire húmedo de dentro.
+                val b0 = CamLab.p(CENTRO.x - 0.6f, 0.5f, CENTRO.z + 0.1f); val b1 = CamLab.p(CENTRO.x + 0.65f, 0.5f, CENTRO.z + 0.25f)
+                drawPath(poligono(t0, t1, b1, b0), Brush.verticalGradient(0f to col.copy(alpha = 0.22f * dentro), 1f to col.copy(alpha = 0.04f * dentro), startY = t0.y, endY = b0.y), blendMode = BlendMode.Plus)
             }
             // De noche, lo de dentro se apaga y el vidrio devuelve la sala: «se vuelve un espejo».
             if (noche) drawPath(forma, lerp(C.SOMBRA, C.NEGRO, 0.4f).copy(alpha = (0.42f * (1f - 0.7f * dentro)).coerceIn(0f, 1f)))
@@ -135,7 +139,7 @@ internal object CampanaLab {
         // El suelo de dentro: la chapa del zócalo, con tierra derramada.
         drawPath(poligono(PiezasLab.aro(V3(CENTRO.x, ZOCALO, CENTRO.z), R - 0.02f, 20).map { CamLab.p(it) }), v.c(V3(CENTRO.x, ZOCALO, CENTRO.z), lerp(C.ACERO, C.TIERRA, 0.4f), ARRIBA))
         // El estante de acero con las bandejas de prueba, contra el vidrio de detrás.
-        val mk = PiezasLab.Marco(V3(CENTRO.x - 0.6f, ZOCALO, CENTRO.z + 0.3f), V3(1f, 0f, 0.12f).unidad())
+        val mk = PiezasLab.Marco(V3(CENTRO.x - 0.6f, ZOCALO, CENTRO.z + 0.12f), V3(1f, 0f, 0.12f).unidad())
         val rack = lerp(C.ACERO, C.NEGRO, 0.35f)
         for (x in listOf(0.0f, 1.2f)) for (b in listOf(0f, -0.34f)) palo(v, mk.w(x, b, 0f), mk.w(x, b, 1.95f), 0.03f, rack, filo = false)
         val tablas = if (experimento) listOf(0.55f, 1.05f, 1.55f) else listOf(0.45f, 1.0f, 1.55f)
@@ -204,7 +208,8 @@ internal object CampanaLab {
         val e0 = anguloDelanteroEn(0.22f); val e1 = anguloDelanteroEn(0.42f)
         val puertita = (0..8).map { i -> val a = e0 + (e1 - e0) * i / 8f; V3(CENTRO.x + R * cos(a), 0f, CENTRO.z + R * sin(a)) }
         val marco = puertita.map { CamLab.p(it.x, ZOCALO + 0.1f, it.z) } + puertita.reversed().map { CamLab.p(it.x, 2.05f, it.z) }
-        drawPath(poligono(marco), v.c(puertita[4] + V3(0f, 1f, 0f), C.NEGRO, puertita[4] - CENTRO).copy(alpha = 0.85f), style = Stroke(1.3f))
+        drawPath(poligono(marco), v.c(puertita[4] + V3(0f, 1f, 0f), lerp(C.ACERO, C.HORMIGON, 0.2f), puertita[4] - CENTRO), style = Stroke(1.4f))
+        drawPath(poligono(marco), v.c(puertita[4] + V3(0f, 1f, 0f), C.NEGRO, puertita[4] - CENTRO).copy(alpha = 0.6f), style = Stroke(0.45f))
         val pal = puertita[7]; val pp = CamLab.p(pal.x, 1.1f, pal.z); val kp = CamLab.k(pal)
         drawLine(v.c(pal + V3(0f, 1.1f, 0f), lerp(C.ACERO, Color.White, 0.3f), pal - CENTRO), pp, pp + Offset(0f, 0.22f * kp), (0.03f * kp).coerceAtLeast(0.8f), StrokeCap.Round)
         // El intercomunicador, en el zócalo junto a la esclusa (una rejilla y un piloto).
@@ -263,9 +268,9 @@ internal object CampanaLab {
         val d0 = mitad(V3(CENTRO.x, y0, CENTRO.z), R + 0.04f, true); val d1 = mitad(V3(CENTRO.x, y1, CENTRO.z), R + 0.04f, true)
         drawPath(poligono(d0.map { CamLab.p(it) } + d1.reversed().map { CamLab.p(it) }), Brush.horizontalGradient(0f to v.c(d0.first(), C.ACERO, d0.first() - CENTRO), 0.5f to v.c(d0[d0.size / 2], lerp(C.ACERO, C.HORMIGON, 0.2f), d0[d0.size / 2] - CENTRO), 1f to v.c(d0.last(), C.ACERO, d0.last() - CENTRO), startX = CamLab.p(d0.first()).x, endX = CamLab.p(d0.last()).x))
         for (q in mitad(V3(CENTRO.x, y0 + 0.07f, CENTRO.z), R + 0.045f, true, 12).drop(1).dropLast(1)) drawCircle(v.c(q, lerp(C.ACERO, Color.White, 0.3f), q - CENTRO), 0.5f, CamLab.p(q))
-        // La tapa (su cara de abajo, apenas) y el conducto del aire de arriba, que sube al techo con su abrazadera.
-        val tubo = V3(CENTRO.x + 0.2f, y1, CENTRO.z + 0.1f)
-        cilindro(v, tubo, 0.17f, SalaLab.TECHO - y1, lerp(C.ACERO, C.HORMIGON, 0.2f), tapa = null)
-        cilindro(v, V3(tubo.x, y1 + 0.12f, tubo.z), 0.2f, 0.06f, lerp(C.ACERO, C.NEGRO, 0.2f), tapa = null)
+        // La tapa (su cara de abajo, apenas) y el tubo del aire de arriba, que sube al conducto del techo con su abrazadera.
+        val tubo = V3(SalaLab.CONDUCTO_X, y1, CENTRO.z + 0.1f)
+        cilindro(v, tubo, 0.15f, SalaLab.CONDUCTO_Y - y1, lerp(C.ACERO, C.HORMIGON, 0.2f), tapa = null)
+        cilindro(v, V3(tubo.x, y1 + 0.05f, tubo.z), 0.19f, 0.06f, lerp(C.ACERO, C.NEGRO, 0.2f), tapa = null)
     }
 }

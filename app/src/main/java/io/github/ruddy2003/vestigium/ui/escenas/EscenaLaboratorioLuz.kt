@@ -51,7 +51,7 @@ internal object LucesLab {
         }
         // La lámpara de su mesa: cálida, baja, con su pantalla.
         if (v.mesa > 0.01f) {
-            add(Luz3(Fuente.MESA, MesaLab.LAMPARA_MESA, C.LAMPARA, 1.5f * v.mesa, 0.75f, cono = 0.5f))
+            add(Luz3(Fuente.MESA, MesaLab.LAMPARA_MESA, C.LAMPARA, 1.5f * v.mesa, 0.75f, cono = 0.68f))
             add(Luz3(Fuente.REBOTE, MesaLab.LAMPARA_MESA - V3(0f, 0.3f, 0f), C.LAMPARA, 0.35f * v.mesa, 1.0f, tumba = false))
         }
         // La pantalla de la Vigía: el color del cielo de arriba, que tiñe la pared, la campana y el suelo de su lado.
@@ -161,9 +161,9 @@ internal object LuzLab {
         val fuera = (0..16).map { i -> val a = ang - 0.75f + 1.5f * i / 16f; CamLab.p(c.x + r * 1.35f * cos(a), 0f, c.z + r * 1.35f * sin(a)) }
         val dentro = (0..16).map { i -> val a = ang - 0.75f + 1.5f * i / 16f; val e = 1.08f + 0.08f * sin(Math.PI.toFloat() * i / 16f); CamLab.p(c.x + r * e * cos(a), 0f, c.z + r * e * sin(a)) }
         val forma = poligono(fuera + dentro.reversed())
-        val k = (peso * 0.55f).coerceIn(0f, 0.9f)
-        drawPath(forma, col.copy(alpha = 0.3f * k), blendMode = BlendMode.Plus)
-        drawPath(forma, col.copy(alpha = 0.12f * k), style = Stroke(3f), blendMode = BlendMode.Plus)
+        val k = (peso * 0.8f).coerceIn(0f, 1f)
+        drawPath(forma, col.copy(alpha = 0.42f * k), blendMode = BlendMode.Plus)
+        drawPath(forma, col.copy(alpha = 0.16f * k), style = Stroke(3f), blendMode = BlendMode.Plus)
     }
 
     /**
@@ -273,7 +273,7 @@ internal object LuzLab {
             when (f.de) {
                 Fuente.CULTIVO, Fuente.MESA -> {
                     val boca = if (f.de == Fuente.MESA) 0.08f else 0.16f
-                    val alto = f.w.y - MesaLab.ALTO; val r = radio(f, alto) * 0.85f
+                    val alto = f.w.y - MesaLab.ALTO; val r = radio(f, alto) * (if (f.de == Fuente.MESA) 0.6f else 0.85f)
                     val cz = CamLab.hondo(f.w.x, f.w.z); val k = CamLab.F / cz
                     val p0 = CamLab.p(f.w); val p1 = CamLab.p(f.w.x, MesaLab.ALTO, f.w.z)
                     val haz = Path().apply { moveTo(p0.x - boca * k, p0.y); lineTo(p0.x + boca * k, p0.y); lineTo(p1.x + r * k, p1.y); lineTo(p1.x - r * k, p1.y); close() }
