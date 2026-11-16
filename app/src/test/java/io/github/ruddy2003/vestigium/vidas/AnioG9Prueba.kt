@@ -641,23 +641,98 @@ class AnioG9Prueba {
         assertFalse("Q30" in LUGARES.getValue("cartelista").wikidata)
     }
 
-    @Test fun nadaDeDrogasEnSuVidaNiEnSuCalendario() {
-        // La regla del tema, la más importante (PLAN_TEMAS, 10g; `fuentes_psicodelia.md`, sección 9): ni de lejos ni en jerga.
-        textosD.forEach { s -> JERGA_DE_DROGAS.forEach { r -> assertFalse("«${r.find(s)?.value}» en «${s.take(70)}…»", r.containsMatchIn(s)) } }
-        // Lo de la sección 9 no está en el calendario: ni la primera tienda de Haight, ni la clínica gratuita (7 de junio de 1967).
-        assertTrue(car.temporadas[2].dias.none { it.fecha == "06-07" }); assertTrue(car.temporadas[1].dias.none { it.fecha == "01-03" })
-        // Ni marcas de las salas, la radio o el festival (corrección 6), ni el nombre de las casas, que es de 1978 (corrección 1).
-        textosD.forEach { s -> MARCAS_DE_PSICODELIA.forEach { r -> assertFalse("«${r.find(s)?.value}» en «${s.take(70)}…»", r.containsMatchIn(s)) } }
-        // Del 6 de octubre de 1967, solo el entierro de mentira.
+    @Test fun loQueSeNombraEnSuVidaYEnSuCalendario() {
+        // Nunca, en ningún texto del calendario ni de «Su vida»: lo privado, la jerga que celebra, lo que sigue fuera y las
+        // marcas de las salas, la radio o el festival (corrección 6), ni el nombre de las casas, que es de 1978 (corrección 1).
+        textosD.forEach { s -> (LO_PRIVADO + JERGA_QUE_CELEBRA + LO_QUE_SIGUE_FUERA + MARCAS_DE_PSICODELIA).forEach { r -> assertFalse("«${r.find(s)?.value}» en «${s.take(70)}…»", r.containsMatchIn(s)) } }
+        // Las sustancias se nombran solo en los títulos de sus noches, en los de los cuatro días de la ciudad que lo nombran y
+        // en los resúmenes de las temporadas. «Su vida», «Un día suyo» y sus números no lo cuentan.
+        val dias = car.temporadas.flatMap { it.dias }
+        val pueden = dias.filter { it.escena in CLAVES_DE_CONSUMO || it.id in DIAS_QUE_LO_NOMBRAN }.map { it.titulo }.toSet() + car.temporadas.map { it.resumen }
+        textosD.filter { it !in pueden }.forEach { s -> NOMBRES_DE_SUSTANCIAS.forEach { r -> assertFalse("«${r.find(s)?.value}» en «${s.take(70)}…»", r.containsMatchIn(s)) } }
+        dias.filter { it.escena in CLAVES_DE_CONSUMO }.forEach { d -> assertTrue(d.id, NOMBRES_DE_SUSTANCIAS.any { it.containsMatchIn(d.titulo) }) }
+        // Los días que antes se quitaban entran ahora, con su fuente: la primera tienda de Haight (3 de enero de 1966), el día
+        // en que el LSD pasa a ser ilegal, con el encuentro del Panhandle (6 de octubre de 1966), y la clínica gratuita (7 de
+        // junio de 1967).
+        assertEquals(listOf(null, "01-03", null, null, null), fechasD("primera_tienda"))
+        assertEquals(listOf(null, "10-06", null, null, null), fechasD("ley_lsd"))
+        assertEquals(listOf(null, null, "06-07", null, null), fechasD("clinica"))
+        assertEquals("https://en.wikipedia.org/wiki/Haight-Ashbury", diaD("primera_tienda").fuente!!.second)
+        assertEquals("https://en.wikipedia.org/wiki/Love_Pageant_Rally", diaD("ley_lsd").fuente!!.second)
+        assertEquals("https://en.wikipedia.org/wiki/Summer_of_Love", diaD("clinica").fuente!!.second)
+        listOf("primera_tienda", "ley_lsd", "clinica").forEach { assertEquals(it, TipoDia.MUNDO, diaD(it).tipo) }
+        // Del 6 de octubre de 1967, solo el entierro de mentira (el arresto de los músicos sigue fuera: nadie real consume).
         assertEquals("En Buena Vista Park, el entierro de mentira del hippie, con un ataúd en hombros", diaD("entierro_hippie").titulo)
-        // Del 14 de enero, solo los poetas, las bandas y la gente en el pasto.
+        // El título del encuentro del parque no cambia; que ese día se repartió LSD lo dice su texto (`CuentoG9Prueba`).
         assertEquals("En los Polo Fields del parque, miles de personas en el pasto oyen a poetas y bandas", diaD("encuentro_parque").titulo)
+    }
+
+    /** Las noches de LSD y de hongos de la temporada [i] (de 0 a 4), con su fecha en el año de la temporada (1965 a 1969). */
+    private fun noches(i: Int) = car.temporadas[i].dias.filter { it.escena == "noche_tinta" }.map { it to MesDia.enAnio(it.fecha, 1965 + i) }
+    private fun deHongos(d: DiaEspecial) = "hongos" in d.titulo
+    private fun semana(f: LocalDate) = f.get(java.time.temporal.IsoFields.WEEK_BASED_YEAR) to f.get(java.time.temporal.IsoFields.WEEK_OF_WEEK_BASED_YEAR)
+
+    @Test fun cuantasVecesPorTemporada() {
+        // El LSD, más o menos una vez al mes: menos en 1965, recién llegado, y cada vez menos en 1969. Los hongos, pocas veces,
+        // desde 1967. Las noches del LSD dicen «LSD» en su título, y las de los hongos, «hongos».
+        val lsd = (0..4).map { i -> noches(i).count { !deHongos(it.first) } }
+        val hongos = (0..4).map { i -> noches(i).count { deHongos(it.first) } }
+        assertTrue("$lsd", lsd[0] in 4..6 && (1..3).all { lsd[it] in 10..12 } && lsd[4] in 6..8)
+        assertEquals(listOf(0, 0, 2, 3, 2), hongos)
+        (0..4).forEach { i -> noches(i).forEach { (d, _) -> assertTrue(d.id, deHongos(d) || "LSD" in d.titulo); assertEquals(d.id, 1, d.duracion) } }
+        // En 1969 se va apagando: más noches en la primera mitad del año que en la segunda.
+        val (antes, despues) = noches(4).filter { !deHongos(it.first) }.partition { it.second.monthValue <= 6 }
+        assertTrue("${antes.size} y ${despues.size}", antes.size > despues.size + 1)
+        // En 1966, hasta el 6 de octubre es legal: ocho noches antes y tres después.
+        assertEquals(8, noches(1).count { it.second < LocalDate.of(1966, 10, 6) }); assertEquals(3, noches(1).count { it.second > LocalDate.of(1966, 10, 6) })
+        // Una vez al mes, de verdad: de 1966 a 1968 no pasan más de sesenta días entre una noche y la siguiente.
+        (1..3).forEach { i -> noches(i).map { it.second }.zipWithNext().forEach { (a, b) -> assertTrue("$a → $b", java.time.temporal.ChronoUnit.DAYS.between(a, b) <= 60) } }
+        // En jueves, viernes o sábado (los días de baile) de su año; nunca dos en la misma semana, ni en la semana de Navidad,
+        // de Acción de Gracias, de la visita de su madre, de Monterey o de los tres carteles; nunca pegadas a otro día especial.
+        val cuidado = setOf("navidad", "accion_gracias", "madre_visita", "monterey", "tres_carteles")
+        (0..4).forEach { i ->
+            val t = car.temporadas[i]
+            noches(i).forEach { (d, f) -> assertTrue("${d.id}: ${f.dayOfWeek}", f.dayOfWeek in setOf(java.time.DayOfWeek.THURSDAY, java.time.DayOfWeek.FRIDAY, java.time.DayOfWeek.SATURDAY)) }
+            assertEquals("Temporada ${i + 1}: dos noches en la misma semana", noches(i).size, noches(i).map { semana(it.second) }.toSet().size)
+            t.dias.filter { it.id in cuidado }.forEach { c ->
+                val dias = (0 until c.duracion).map { MesDia.enAnio(c.fecha, 1965 + i).plusDays(it.toLong()) }
+                noches(i).forEach { (d, f) -> assertTrue("${d.id} en la semana de ${c.id}", dias.none { semana(it) == semana(f) }) }
+            }
+            noches(i).forEach { (d, f) -> t.dias.filter { it !== d }.forEach { o ->
+                val inicio = MesDia.enAnio(o.fecha, 1965 + i)
+                (0 until o.duracion).forEach { k -> assertTrue("${d.id} junto a ${o.id}", kotlin.math.abs(java.time.temporal.ChronoUnit.DAYS.between(inicio.plusDays(k.toLong()), f)) >= 2) }
+            } }
+        }
+        // Desde 2032, cuando la temporada 5 se repite y sus sucesos se mueven: ninguna noche cae en Acción de Gracias ni en
+        // Navidad, ni hay dos en la misma semana (del año real; ya no son del calendario de 1969).
+        (2032..2041).forEach { y ->
+            val inicios = FichaDelDia.inicios(car, y)
+            val fijos = inicios.filter { it.first.id in setOf("navidad", "accion_gracias") }.map { it.second }.toSet()
+            val suyas = inicios.filter { it.first.escena == "noche_tinta" }
+            suyas.forEach { (d, f) -> assertFalse("$y, ${d.id}", f in fijos) }
+            assertEquals("$y: dos noches en la misma semana", suyas.size, suyas.map { semana(it.second) }.toSet().size)
+        }
+        // La marihuana, una vez por semana: la noche de los viernes (de su año), desde la primera vez (22 de enero de 1965),
+        // salvo los viernes que ya son días especiales y los de Monterey. No es un día especial.
+        (2027..2031).forEachIndexed { i, y ->
+            val viernes = generateSequence(LocalDate.of(y, 1, 1)) { it.plusDays(1) }.takeWhile { it.year == y }.map { fichaD(it.toString()) }.filter { it.noche == "humo" }.toList()
+            assertTrue("$y: ${viernes.size} noches de los viernes", viernes.size in 45..53)
+            viernes.forEach { f ->
+                val d = LocalDate.parse(f.dia)
+                assertEquals(f.dia, java.time.DayOfWeek.FRIDAY, LocalDate.of(1965 + i, d.monthValue, d.dayOfMonth).dayOfWeek)
+                assertFalse(f.dia, f.especial); assertNull(f.dia, f.estado); assertEquals(f.dia, setOf("humo"), f.claves)
+            }
+        }
+        assertEquals(null, fichaD("2027-01-15").noche); assertEquals(setOf("humo"), fichaD("2027-01-22").claves); assertEquals("humo", fichaD("2027-01-29").noche)
+        assertEquals(null, fichaD("2029-06-16").noche)
     }
 
     @Test fun unosVeinteDiasPorTemporadaYLaHistoriaAvanzaHastaElVeranoDelAmor() {
         assertEquals(listOf("barrio", "salas", "verano", "despues", "cambio"), car.temporadas.map { it.mundo })
         car.temporadas.forEachIndexed { i, t ->
-            assertTrue("Temporada ${i + 1}: ${t.dias.size} días", t.dias.size in 18..23)
+            // Unos veinte de su vida y su ciudad, más las noches de LSD y de hongos (de cinco a catorce por temporada).
+            assertTrue("Temporada ${i + 1}: ${t.dias.size} días", t.dias.size in 25..40)
+            assertTrue("Temporada ${i + 1}: ${t.dias.count { it.escena != "noche_tinta" }} días sin contar las noches", t.dias.count { it.escena != "noche_tinta" } in 18..25)
             assertTrue("Temporada ${i + 1}: pocos días con fuente", t.dias.count { it.fuente != null } >= 5)
             assertTrue("Temporada ${i + 1}: pocos sucesos de su vida", t.dias.count { it.tipo == TipoDia.SUCESO } >= 6)
         }
@@ -704,7 +779,7 @@ class AnioG9Prueba {
         // «Histórico», solo lo que `fuentes_psicodelia.md` da con día; lo que solo tiene año, mes o estación, «aproximado» con su fuente.
         val historicos = car.temporadas.flatMap { it.dias }.filter { it.certeza == CertezaDia.HISTORICO }.map { it.id }.toSet()
         assertEquals(setOf("baile_geary", "un_numero", "periodico", "sala_grande", "entierro_dinero", "encuentro_parque", "baile_krishna", "fm_noche", "marcha",
-            "tamalpais", "monterey", "portada_time", "fm_todo_el_dia", "life", "entierro_hippie", "huelga_fm"), historicos)
+            "tamalpais", "monterey", "portada_time", "fm_todo_el_dia", "life", "entierro_hippie", "huelga_fm", "primera_tienda", "ley_lsd", "clinica"), historicos)
         car.temporadas.flatMap { it.dias }.forEach { d ->
             if (d.certeza == CertezaDia.INVENTADO) assertNull(d.id, d.fuente) else assertNotNull(d.id, d.fuente)
             d.fuente?.let { assertTrue(d.id, it.second.startsWith("https://en.wikipedia.org/wiki/")) }
@@ -767,23 +842,63 @@ class AnioG9Prueba {
     }
 }
 
-/**
- * Lo que el tema Psicodelia no dice nunca (PLAN_TEMAS, 10g; `docs/diseno/temas/psicodelia.md`; `fuentes_psicodelia.md`,
- * sección 9): las drogas, ni de lejos ni en jerga, ni el alcohol, ni el tabaco, ni lo que toca el seguimiento privado. Cada
- * entrada es una palabra entera o el principio de una («viaj» quita «viaje», «viajar» y «viajeros»), sin contar
- * mayúsculas. Algunas son palabras corrientes con otro sentido en la jerga («hierba», «hielo», «raya», «coca», «aguja»,
- * «grifo», «volado», «colocar»): el cuento no las usa nunca, aunque fuera con su sentido de siempre. La usan
- * [AnioG9Prueba] y [CuentoG9Prueba].
+/** Una lista de palabras: cada entrada es una palabra entera o el principio de una («reca[íi]d\\w*»), sin contar mayúsculas. */
+private fun palabras(vararg l: String): List<Regex> = l.map { Regex("""(?iU)(?<![\p{L}\p{N}])(?:$it)(?![\p{L}\p{N}])""") }
+
+/*
+ * Lo que vigila el consumo en el cuento de David y en el tema Psicodelia (`docs/diseno/temas/psicodelia_plan.md`, 3.2).
+ * Hasta el 16 nov 2026 era una sola lista, `JERGA_DE_DROGAS`, que no podía salir en ningún texto; el autor quitó la regla
+ * de «sin drogas» y la lista se partió en tres, más una cuarta con lo que sigue fuera. Las usan [AnioG9Prueba],
+ * [CuentoG9Prueba] y `PsicodeliaPrueba`.
  */
-internal val JERGA_DE_DROGAS: List<Regex> = listOf(
-    "drog\\w*", "viaj\\w*", "[áa]cid\\w*", "coloc\\w*", "porro\\w*", "marihuana", "mariguana", "cannabis", "hach[íi]s", "mota", "hierba\\w*", "yerba", "lsd",
-    "alucin\\w*", "psicod\\w*", "psiqued\\w*", "trip\\w*", "flip\\w*", "subid[óo]n", "volad[oa]s?", "pachec\\w*", "grif[oa]s?", "fum\\w*", "cigarr\\w*",
-    "tabaco", "pipas?", "hongos?", "peyote", "mescalin\\w*", "hero[íi]na", "coca\\w*", "anfetamin\\w*", "speed", "dealer", "camell\\w*", "pastill\\w*",
-    "dosis", "sobredosis", "sustancia\\w*", "jering\\w*", "aguja\\w*", "inyec\\w*", "liar", "mona", "polvo\\w*", "cristal\\w*", "hielo", "nieve", "perico",
-    "raya\\w*", "alcohol\\w*", "cervez\\w*", "vinos?", "whisky", "licor\\w*", "borrach\\w*", "trago\\w*", "copas?", "bebid\\w*", "embriag\\w*", "resaca",
-    "expand\\w*", "percepci\\w*", "conciencia", "cl[íi]nica\\w*", "reca[íi]d\\w*", "racha\\w*", "impulso\\w*", "high", "stoned", "kesey", "leary", "huxley",
-    "head shop",
-).map { Regex("""(?iU)(?<![\p{L}\p{N}])(?:$it)(?![\p{L}\p{N}])""") }
+
+/**
+ * Lo del seguimiento privado (rachas, recaídas, impulsos, libido, medicamentos) y las palabras que lo rozan. No sale en
+ * nada: ni en el cuento, ni en el calendario, ni en «Su vida», ni en la voz del tema. Así el cuento nunca dialoga con lo
+ * que la persona anota en privado.
+ */
+internal val LO_PRIVADO: List<Regex> = palabras(
+    "racha\\w*", "reca[íi]d\\w*", "impuls\\w*", "abstinen\\w*", "sobriedad", "malos? viajes?", "baj[óo]n\\w*", "libido", "medicament\\w*",
+)
+
+/**
+ * La jerga que celebra el consumo. No sale en ningún texto: el plan la permitía en boca de un personaje y entre comillas,
+ * pero el cuento de David solo pone entre comillas las frases comprobadas (`CuentoG9Prueba`), así que no hay excepción.
+ * «Puesto» no está, aunque lo diga el plan: es una palabra de todos los días (los puestos del recinto ferial).
+ */
+internal val JERGA_QUE_CELEBRA: List<Regex> = palabras(
+    "colocad\\w*", "flip\\w*", "subid[óo]n\\w*", "viajaz\\w*", "pedo", "high", "stoned", "trip", "tripp\\w*", "tripe[aá]\\w*", "volad[oa]s?", "pachec\\w*", "groovy",
+)
+
+/**
+ * Los nombres de las sustancias, y lo de fumar, beber y tomar. **Ya no se prohíben en el cuento**: salen solo las noches
+ * que toca (las de las claves [CLAVES_DE_CONSUMO]) y en los cuatro [DIAS_QUE_LO_NOMBRAN]. Sí se prohíben en la voz del
+ * tema («el tema muestra, no comenta»).
+ */
+internal val NOMBRES_DE_SUSTANCIAS: List<Regex> = palabras(
+    "drog\\w*", "marihuana", "mariguana", "cannabis", "hach[íi]s", "lsd", "[áa]cid[oa]s?", "hongos?", "psilocib\\w*", "peyote", "mescalin\\w*", "porros?",
+    "fum\\w*", "cigarr\\w*", "tabaco", "alcohol\\w*", "vinos?", "cervez\\w*", "whisky", "licor\\w*", "borrach\\w*", "hero[íi]na", "coca[íi]na",
+    "anfetamin\\w*", "pastill\\w*", "dosis",
+)
+
+/**
+ * Lo que sigue fuera aunque el consumo ya se nombre (`fuentes_psicodelia.md`, sección 9): la gente real que consumía o lo
+ * predicaba (nadie real consume en el cuento), el lema del encuentro del parque (es un lema, y tiene derechos), la frase del
+ * exceso de Blake, el otro nombre de la música y el nombre del tema, que no se explica.
+ */
+internal val LO_QUE_SIGUE_FUERA: List<Regex> = palabras(
+    "kesey", "leary", "huxley", "owsley", "head shop", "psicod\\w*", "psiqued\\w*", "turn on", "tune in", "drop out", "road of excess", "acid rock",
+)
+
+/** Las claves de escena de las noches de consumo: la de los viernes (la marihuana) y la de las noches de LSD y de hongos. */
+internal val CLAVES_DE_CONSUMO = setOf("humo", "noche_tinta")
+
+/**
+ * Los días de la ciudad que nombran el consumo sin que David consuma: la primera tienda de Haight (3 ene 1966), el día en
+ * que el LSD pasa a ser ilegal (6 oct 1966), el encuentro del parque, donde se repartió LSD (14 ene 1967), y la clínica
+ * gratuita (7 jun 1967).
+ */
+internal val DIAS_QUE_LO_NOMBRAN = setOf("primera_tienda", "ley_lsd", "encuentro_parque", "clinica")
 
 /**
  * Los nombres que el tema no usa (corrección 6 y 1 de `fuentes_psicodelia.md`): las salas, la radio, el festival y el

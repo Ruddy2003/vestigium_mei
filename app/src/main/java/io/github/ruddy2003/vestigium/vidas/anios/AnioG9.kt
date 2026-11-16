@@ -5,8 +5,10 @@ import io.github.ruddy2003.vestigium.vidas.Calendario
 import io.github.ruddy2003.vestigium.vidas.Clima
 import io.github.ruddy2003.vestigium.vidas.DiaEspecial
 import io.github.ruddy2003.vestigium.vidas.Estado
+import io.github.ruddy2003.vestigium.vidas.NocheDeSemana
 import io.github.ruddy2003.vestigium.vidas.TemporadaVida
 import io.github.ruddy2003.vestigium.vidas.TipoArco
+import java.time.DayOfWeek
 
 /*
  * Los calendarios del grupo 9: las otras vidas de los temas del lote 10 (`docs/diseno/PLAN_TEMAS.md`, 10a a 10g). Son
@@ -38,8 +40,9 @@ import io.github.ruddy2003.vestigium.vidas.TipoArco
  * - **Psicodelia también es una persona inventada en un mundo real,** con unos 20 días por temporada. Su historia avanza
  *   de 1965 a 1969: llega a San Francisco, los primeros carteles de las salas de baile, el verano del amor, el año de
  *   después y el barrio que cambia. Lo que vuelve cada año (la niebla del verano, el calor de septiembre, Acción de
- *   Gracias y Navidad) comparte su id y su texto. **Las drogas no aparecen nunca**, ni de lejos ni en jerga (la regla
- *   propia del tema, PLAN_TEMAS 10g, y la sección 9 de `fuentes_psicodelia.md`).
+ *   Gracias y Navidad) comparte su id y su texto. **El consumo entra en la historia** (el autor quitó la regla de «sin
+ *   drogas» el 16 nov 2026): la marihuana, los viernes, como noche de la semana (`humo`); el LSD, unas once noches al
+ *   año, y los hongos, dos o tres desde 1967, como días especiales (`noche_tinta`). Ver la sección de David, abajo.
  */
 internal object AnioG9 {
     val TODOS: List<Calendario> by lazy { listOf(AGENTE, INICIADO, APRENDIZ, LITOGRAFA, CARTELISTA) }
@@ -1138,13 +1141,31 @@ internal object AnioG9 {
     // (sección 1). Lo que allí va como «[sin verificar]» no se afirma aquí. Es una persona inventada en un mundo real
     // (10a): sus días históricos y aproximados llevan su fuente; lo de su vida es inventado.
     //
-    // **La regla del tema** (PLAN_TEMAS, 10g, y `docs/diseno/temas/psicodelia.md`): las drogas no aparecen nunca, ni de
-    // lejos, ni en otros personajes, ni insinuadas, ni en jerga. Lo de la sección 9 de las fuentes queda fuera: del encuentro
-    // del parque (14 de enero de 1967) solo salen los poetas, las bandas y la gente en el pasto, sin su lema ni su comida;
-    // no salen la primera tienda de Haight (3 de enero de 1966), la clínica gratuita (7 de junio de 1967), el autobús
-    // pintado de las fiestas de Kesey, el otro nombre de la música ni el artículo de Didion. Del 6 de octubre de 1967, solo el
-    // entierro de mentira. Tampoco hay alcohol ni tabaco. El personaje vive la música, los carteles, las luces, la calle,
-    // el trabajo y la gente.
+    // **El consumo** (el autor quitó la regla de «sin drogas» el 16 nov 2026; `docs/diseno/temas/psicodelia.md`, «Las
+    // drogas: ya no son tabú», y el plan, sección 3). David consume, con esta frecuencia, que pidió el autor:
+    // - **La marihuana, una vez por semana:** la noche de los **viernes** (un día de baile), desde la primera vez, en la
+    //   cocina (`primer_humo`, 22 de enero de 1965). No es un día especial: es la noche de la semana `humo`
+    //   ([NocheDeSemana]), con el viernes contado en el calendario de su año (1965 a 1969), que no enciende la marca ni
+    //   cambia el título. Ese día la ficha lleva la clave en `FichaDelDia.noche` y en `FichaDelDia.claves`, y el anochecer
+    //   del cuento sale de sus variantes (`Variante.noche`, en `PiezasDavid`). No toca un viernes que ya es especial ni
+    //   los días de Monterey (el estado «monterey»).
+    // - **El LSD, más o menos una vez al mes:** días especiales (`suceso`, con título) con la clave `noche_tinta`, en jueves,
+    //   viernes o sábado de su año, lejos de los días ya puestos: cinco en 1965, desde el verano (recién llegado, mira más
+    //   de lo que toma); once en 1966, ocho antes del 6 de octubre, cuando todavía es legal, y tres después; doce en 1967;
+    //   diez en 1968, y siete en 1969, cada vez más espaciados (se va apagando, y lo dice de pasada en noviembre).
+    // - **Los hongos, pocas veces:** dos en 1967, tres en 1968 y dos en 1969, también `noche_tinta`, contados como cosa
+    //   rara que alguien trae de fuera: qué tan fáciles de conseguir eran en San Francisco esos años, [sin verificar].
+    // - **Nunca** en Navidad, Acción de Gracias, la visita de su madre ni los días de Monterey o de trabajo fuerte, y nunca
+    //   dos noches de `noche_tinta` en la misma semana. Lo vigilan `AnioG9Prueba` y `CuentoG9Prueba`.
+    // - **Cómo se cuenta:** con la voz de siempre, concreta y sin adorno; lo que cambia es lo que ve y oye. Sin glorificar
+    //   (una noche no pasa nada, otra está cansado, a veces dibuja peor al día siguiente, una noche es mala para él y otra
+    //   para un amigo, y pasan sin drama) y sin sermón (ningún narrador advierte, nadie es castigado).
+    // - **Nadie real consume:** la gente real sale de lejos y solo con lo que dicen las fuentes. Con su fuente, entran los
+    //   días que antes se quitaban: la primera tienda de Haight (3 de enero de 1966), el día en que el LSD pasa a ser ilegal
+    //   y el encuentro del Panhandle (6 de octubre de 1966), la clínica gratuita (7 de junio de 1967) y, en el texto del
+    //   encuentro del parque (14 de enero de 1967), que ese día se repartió LSD. Siguen fuera el lema de ese día, el autobús
+    //   pintado de las fiestas de Kesey, el otro nombre de la música, el artículo de Didion y, del 6 de octubre de 1967,
+    //   todo lo que no sea el entierro de mentira. El alcohol y el tabaco no aparecen.
     //
     // Los nombres (corrección 6): las salas y la radio van por su calle o su frecuencia («la sala de la calle Sutter», «el
     // auditorio de Geary», «la FM del 106.9»), el periódico del barrio sin su título, y el festival como «el festival de
@@ -1197,7 +1218,8 @@ internal object AnioG9 {
     // sus letras nuevas), radio (la ventana encendida a deshoras, con la radio en el alféizar), parque (banderines y flores
     // en la calle, camino del parque), mudanza (cajas en la escalera de la entrada), luz_negra (la ventana de su cuarto con
     // el brillo violeta de la luz negra), pintura (escaleras, andamio y latas en la fachada de su casa), cerrado (la tienda
-    // de la esquina con tablas) y fiesta (luces en las ventanas). Nunca personas.
+    // de la esquina con tablas), fiesta (luces en las ventanas), humo (las noches de los viernes: ver `NocheDeSemana`) y
+    // noche_tinta (las noches de LSD y de hongos). Nunca personas.
     //
     // Arcos: casa (la casa de la señora Petrakis: 0 = gris; de 0.3 a 1, pintada de turquesa con molduras amarillas, en los
     // tres días de `pintan_casa`), calle (las otras casas pintadas de la calle: ninguna hasta `casa_pintada`; 0.1 es una
@@ -1218,6 +1240,19 @@ internal object AnioG9 {
     // - **La sala de baile (de noche):** las luces líquidas proyectadas, aceite y tinta entre dos vidrios del retroproyector
     //   (corrección 22), en el tramo del baile (de 20 a 2). Vuelve cada semana, así que, según la decisión 21, pide su
     //   cuadro; si va como cuadro propio o como la ventana de la sala vista desde la calle lo decide la tanda que lo dibuje.
+    // - **`humo` (las noches de los viernes, de 20 a 4 h):** un cambio leve. Una bruma baja y tibia, en capa plana, debajo de
+    //   la lámpara de la cocina o de su cuarto; la luz un poco más cálida y más blanda; los halos de los faroles algo más
+    //   anchos; las luces líquidas de la sala, más lentas y espesas. Nada de humo de caricatura ni de hojas.
+    // - **`noche_tinta` (las noches de LSD y de hongos, de 20 a 4 h):** el cuadro entero pasa a la manera de la cara de
+    //   noche del tema con la intensidad al máximo: la escena se imprime en tres tintas planas, las bandas fluyen desde las
+    //   luces de la pared, el registro se corre. Con el LSD (lo que el cuento ve): las superficies respiran, los dibujos de
+    //   la madera, la alfombra o la pared se mueven despacio, las luces dejan cola al moverse y echan rayos finos, los halos
+    //   crecen, las orillas de las cosas ondulan, los colores complementarios hierven en su borde. Con los hongos (cuando el
+    //   cuadro los distinga): lo de madera, tierra y planta es lo que vive (vetas que corren como agua, musgo, grietas que
+    //   echan raíces), en verdes y tierras, y se apaga antes, hacia la una. Fuera de esas horas, el cuadro es el de siempre.
+    // - **Cómo lo lee el cuadro:** `FichaDelDia.claves` (las claves de los días especiales más la de la noche de la semana).
+    //   Hoy `Momento.claves` (`ui/escenas/EscenaVida.kt`) solo lee las de los días especiales; la tanda que dibuje este
+    //   cuadro lo cambia a `ficha.claves` para que `m.con("humo")` encienda también los viernes.
 
     private val FN_HAIGHT = "Haight-Ashbury" to "${W}Haight-Ashbury"
     private val FN_PINTADAS = "Las casas victorianas pintadas de San Francisco" to "${W}Painted_ladies"
@@ -1243,6 +1278,20 @@ internal object AnioG9 {
     private val FN_GRIFFIN = "Rick Griffin" to "${W}Rick_Griffin"
     private val FN_PAZ = "El símbolo de la paz" to "${W}Peace_symbols"
     private val FN_MUNI = "Los autobuses de la ciudad" to "${W}San_Francisco_Municipal_Railway"
+    // Comprobadas el 16 nov 2026 en el wikitexto de cada página (`fuentes_psicodelia.md`, sección 9).
+    private val FN_TIENDA = "La primera tienda de la calle Haight" to "${W}Haight-Ashbury"
+    private val FN_LEY_LSD = "El encuentro del Panhandle del 6 de octubre" to "${W}Love_Pageant_Rally"
+    private val FN_CLINICA = "La clínica gratuita del barrio" to "${W}Summer_of_Love"
+
+    /** La clave de la noche de los viernes (la marihuana) y la de las noches de LSD y de hongos. */
+    private const val HUMO = "humo"
+    private const val TINTA = "noche_tinta"
+
+    /** Una noche de LSD: un suceso de su vida con la clave `noche_tinta`. */
+    private fun lsd(id: String, fecha: String, titulo: String) = suceso(id, fecha, titulo, escena = TINTA)
+
+    /** Una noche de hongos: igual que las del LSD, otra sustancia. */
+    private fun hongos(id: String, fecha: String, titulo: String) = suceso(id, fecha, titulo, escena = TINTA)
 
     /** Lo que vuelve cada año: los mismos ids, el mismo texto. Acción de Gracias es el cuarto jueves de noviembre. */
     private val NIEBLA_VERANO = mundo("niebla_verano", "06-02", "Entra la niebla del verano por el Golden Gate y se queda días sobre la ciudad", certeza = A, fuente = FN_CLIMA, clima = Clima.NIEBLA)
@@ -1266,10 +1315,11 @@ internal object AnioG9 {
         ),
         temporadas = listOf(
             TemporadaVida("1965", "barrio",
-                "David llega a San Francisco el primer día del año y alquila un cuarto en un departamento compartido de la calle Page. Entra en la imprenta del señor Okada, y el viejo Sal, un rotulista, le enseña a pintar letras con pincel y le enseña los carteles de Viena de Alfred Roller. En el barrio se habla de la autopista del Panhandle, en un sótano de la calle Page se toca música por cincuenta centavos y, en la calle, una casa pintada de azules y verdes destaca entre las grises. En la radio suenan la guitarra con distorsión y, en diciembre, un sitar. Pinta su primer escaparate, compra un tocadiscos y va al primer baile benéfico de Bill Graham en el auditorio de Geary.",
+                "David llega a San Francisco el primer día del año y alquila un cuarto en un departamento compartido de la calle Page. Entra en la imprenta del señor Okada, y el viejo Sal, un rotulista, le enseña a pintar letras con pincel y le enseña los carteles de Viena de Alfred Roller. En el barrio se habla de la autopista del Panhandle, en un sótano de la calle Page se toca música por cincuenta centavos y, en la calle, una casa pintada de azules y verdes destaca entre las grises. En la radio suenan la guitarra con distorsión y, en diciembre, un sitar. Pinta su primer escaparate, compra un tocadiscos y va al primer baile benéfico de Bill Graham en el auditorio de Geary. En enero fuma marihuana por primera vez, en la cocina, y desde entonces los viernes; desde el verano prueba unas pocas veces el LSD, que todavía es legal, y mira más de lo que toma.",
                 listOf(
                     suceso("llega", "01-01", "Llega a San Francisco en el autobús de Stockton, con una maleta y una carpeta de dibujos"),
                     suceso("imprenta", "01-11", "Entra a trabajar en la imprenta pequeña del señor Okada, cerca de Market"),
+                    suceso("primer_humo", "01-22", "En la cocina, Gil le pasa por primera vez un cigarrillo de marihuana", escena = HUMO),
                     mundo("autopista", "01-28", "Dicen que una autopista cruzará el Panhandle, y por eso los cuartos del barrio son baratos", certeza = A, fuente = FN_HAIGHT),
                     suceso("rotulista", "02-15", "Conoce al viejo Sal, el rotulista que pinta letras de oro en los escaparates"),
                     suceso("primeras_letras", "03-08", "Sal le enseña a pintar una letra con el pincel, de una sola pasada"),
@@ -1278,107 +1328,162 @@ internal object AnioG9 {
                     mundo("distorsion", "05-15", "En la radio suena un éxito con la guitarra rasposa de un pedal de distorsión", certeza = A, fuente = FN_DISTORSION),
                     NIEBLA_VERANO,
                     suceso("vitrina", "06-26", "Pinta solo su primer escaparate: el nombre de la lavandería de la esquina", escena = "rotulo"),
+                    lsd("primer_acido", "07-10", "Prueba el LSD, todavía legal, en la cocina: toma solo la mitad y mira a los demás"),
                     mundo("luces", "07-20", "Oye hablar de unas luces de colores que se proyectan sobre las bandas mientras tocan", certeza = A, fuente = FN_LUCES),
                     suceso("libro_viena", "08-14", "Sal le enseña un libro viejo con los carteles de Viena de Alfred Roller"),
+                    lsd("tejado", "08-26", "Toma LSD con Gil en el tejado y mira cómo la niebla se come la ciudad"),
                     CALOR,
+                    lsd("nada", "09-25", "Una noche de LSD en la que casi no pasa nada"),
                     suceso("tocadiscos", "10-02", "Compra en la calle Haight un tocadiscos de maleta, de segunda mano"),
                     mundo("flores", "10-16", "En Berkeley, contra la guerra, un poeta empieza a hablar del poder de las flores", certeza = A, fuente = FN_FLORES),
+                    lsd("playa", "10-28", "Toma LSD de noche en la playa del océano, con Gil, y la espuma brilla"),
                     suceso("menu_cafe", "11-06", "Le pinta a un café del barrio el pizarrón del menú, con letras que se curvan"),
+                    lsd("mesa_dibujo", "11-13", "Se pasa la noche pintando letras con LSD, y al día siguiente no sirven"),
                     accionDeGracias("11-25"),
                     mundo("baile_geary", "12-10", "Va al primer baile benéfico que organiza Bill Graham, en el auditorio de Geary", certeza = H, fuente = FN_GRAHAM),
                     mundo("sitar", "12-18", "En la radio suena por primera vez una canción pop con un sitar", certeza = A, fuente = FN_SITAR),
                     NAVIDAD,
                 )),
             TemporadaVida("1966", "salas",
-                "Gil entra a tocar el órgano en una banda del barrio. En los postes aparecen las letras que se derriten, y en la calle Sutter empiezan los bailes de cada semana, cada uno con su cartel. En el auditorio de Geary montan luces y cine en las paredes, y Bill Graham pelea su permiso de sala de baile. David dibuja su primer cartel para un baile de la calle Sutter y conoce a Ellen, que mueve las luces líquidas. Lo declaran no apto para el servicio militar por la vista. Se cancela la autopista del Panhandle. En septiembre sale el periódico del barrio, y Graham alquila una sala grande. En diciembre, unos con máscaras pasean por Haight un ataúd lleno de dinero falso.",
+                "Gil entra a tocar el órgano en una banda del barrio. En los postes aparecen las letras que se derriten, y en la calle Sutter empiezan los bailes de cada semana, cada uno con su cartel. En el auditorio de Geary montan luces y cine en las paredes, y Bill Graham pelea su permiso de sala de baile. David dibuja su primer cartel para un baile de la calle Sutter y conoce a Ellen, que mueve las luces líquidas. Lo declaran no apto para el servicio militar por la vista. Se cancela la autopista del Panhandle. En septiembre sale el periódico del barrio, y Graham alquila una sala grande. En diciembre, unos con máscaras pasean por Haight un ataúd lleno de dinero falso. En enero abre en Haight la primera tienda para los que fuman marihuana y toman LSD. Toma LSD una vez al mes; el 6 de octubre se vuelve ilegal, miles se juntan en el Panhandle, y desde entonces se consigue a escondidas. Una noche le sale mal, y Gil lo cuida.",
                 listOf(
+                    mundo("primera_tienda", "01-03", "Abre en la calle Haight la primera tienda para los que fuman marihuana y toman LSD", certeza = H, fuente = FN_TIENDA),
                     suceso("gil_banda", "01-15", "Gil, su compañero de departamento, entra a tocar el órgano en una banda del barrio"),
+                    lsd("acido_telas", "01-29", "Toma LSD con Nora en la sala, entre los retazos de tela, que se mueven"),
+                    lsd("parque_alba", "02-26", "Una noche de LSD que acaba al amanecer en el parque, entre los eucaliptos"),
                     mundo("letras_derretidas", "03-12", "En los postes aparecen carteles con letras que se doblan como si se derritieran", certeza = A, fuente = FN_LETRAS, escena = "carteles"),
+                    lsd("disco_entero", "03-31", "Con LSD, oye una cara de un disco tumbado en el suelo, y le dura una hora"),
                     mundo("permiso", "04-20", "Bill Graham pelea con la ciudad el permiso de sala de baile del auditorio de Geary", certeza = A, fuente = FN_GRAHAM),
                     mundo("sutter", "04-22", "En la calle Sutter empiezan los bailes de cada semana, cada uno con su cartel", certeza = A, fuente = FN_SUTTER, escena = "carteles"),
+                    lsd("sutter_luces", "04-30", "Va con LSD a la sala de la calle Sutter, y las luces de la pared lo envuelven"),
                     suceso("primer_cartel", "05-07", "Dibuja su primer cartel para un baile de la calle Sutter", escena = "carteles"),
                     mundo("luces_geary", "05-21", "En el auditorio de Geary montan estroboscopios, diapositivas y cine en las paredes", certeza = A, fuente = FN_GEARY),
                     NIEBLA_VERANO,
+                    lsd("mala_noche", "06-09", "Una mala noche con el LSD: el cuarto se le cierra, y Gil se queda con él"),
                     suceso("conoce_ellen", "06-18", "Conoce a Ellen, que mueve las luces líquidas de la sala con las manos manchadas"),
+                    lsd("geary_estrobo", "07-02", "En el auditorio de Geary, con LSD, entre las luces que parpadean"),
                     suceso("servicio_militar", "07-12", "Lo citan al examen médico del servicio militar, y lo declaran no apto por la vista"),
                     mundo("autopista_no", "08-06", "Se cancela la autopista del Panhandle: el parque largo se queda como está", certeza = A, fuente = FN_HAIGHT),
+                    lsd("luces_ellen", "08-25", "Con LSD, mira de cerca a Ellen mover las luces líquidas de la sala"),
                     mundo("un_numero", "09-02", "Sale un periódico del barrio de un solo número, hecho en un local de la calle Frederick", certeza = H, fuente = FN_PERIODICO),
                     CALOR,
                     mundo("periodico", "09-20", "Sale el primer número del periódico del barrio, que se vende en la calle", certeza = H, fuente = FN_PERIODICO),
                     mundo("sala_grande", "09-23", "Bill Graham alquila una sala de más de cinco mil plazas para los conciertos grandes", certeza = H, fuente = FN_SALA_GRANDE),
+                    lsd("ultima_legal", "10-01", "Toma LSD en la cocina el último sábado en que todavía es legal"),
+                    mundo("ley_lsd", "10-06", "El LSD pasa a ser ilegal en California, y miles de personas se juntan en el Panhandle", certeza = H, fuente = FN_LEY_LSD, escena = "parque"),
                     suceso("cartel_arrancado", "10-15", "Alguien arranca de un poste su cartel de la semana para llevárselo a casa"),
+                    lsd("primera_ilegal", "10-27", "La primera noche de LSD desde que es ilegal, con la persiana bajada"),
                     mundo("periodico_nuevo", "11-08", "El periódico del barrio sale con otra cara: su número tres, rediseñado", certeza = A, fuente = FN_PERIODICO),
+                    lsd("lluvia_ventana", "11-19", "Con LSD, mira llover en la ventana: cada gota lleva dentro la calle"),
                     accionDeGracias("11-24"),
                     suceso("ellen_luces", "12-03", "Ellen lo deja mover las luces una noche, y se le quedan las manos de colores"),
+                    lsd("escaparates", "12-10", "Con LSD, baja a la calle Haight a mirar las luces de Navidad de los escaparates"),
                     mundo("entierro_dinero", "12-17", "Gente con máscaras de animales pasea por Haight un ataúd lleno de dinero falso", certeza = H, fuente = FN_DIGGERS),
                     NAVIDAD,
                 )),
             TemporadaVida("1967", "verano",
-                "El verano del amor. En enero, miles de personas oyen a poetas y bandas en los Polo Fields del parque, y los Hare Krishna cantan en un baile de la calle Sutter. Desde febrero, el 106.9 pone discos enteros de medianoche a las seis, y desde agosto, a todas horas. Ellen y él salen juntos. El periódico del barrio abre su oficina en Haight, y una tienda de carteles vende reimpresos de uno suyo. Marcha contra la guerra; a las cuatro, comida gratis en el Panhandle; sus primeras tintas fluorescentes. En junio, el monte Tamalpais y tres días en Monterey. Su primo Eddie pasa con él el verano. Time pone a los hippies en portada, y Life, los carteles. En octubre, el entierro de mentira del hippie.",
+                "El verano del amor. En enero, miles de personas oyen a poetas y bandas en los Polo Fields del parque, y los Hare Krishna cantan en un baile de la calle Sutter. Desde febrero, el 106.9 pone discos enteros de medianoche a las seis, y desde agosto, a todas horas. Ellen y él salen juntos. El periódico del barrio abre su oficina en Haight, y una tienda de carteles vende reimpresos de uno suyo. Marcha contra la guerra; a las cuatro, comida gratis en el Panhandle; sus primeras tintas fluorescentes. En junio, el monte Tamalpais y tres días en Monterey. Su primo Eddie pasa con él el verano. Time pone a los hippies en portada, y Life, los carteles. En octubre, el entierro de mentira del hippie. En el parque, en enero, se reparte LSD; él no lo toma ese día. En junio abre la clínica gratuita del barrio. Toma LSD cada mes, una vez con Ellen en Buena Vista Park y otra con las luces de ella en la sala de la calle Sutter, y prueba dos veces unos hongos que alguien trae de México.",
                 listOf(
                     mundo("encuentro_parque", "01-14", "En los Polo Fields del parque, miles de personas en el pasto oyen a poetas y bandas", certeza = H, fuente = FN_PARQUE, escena = "parque"),
+                    lsd("ensayo_gil", "01-21", "Con LSD, oye ensayar a la banda de Gil en un garaje: la música le sube por el suelo"),
                     mundo("baile_krishna", "01-29", "Un baile en la sala de la calle Sutter, a dos dólares, con los cantos de los Hare Krishna", certeza = H, fuente = FN_KRISHNA),
+                    lsd("colores_tiemblan", "02-04", "Con LSD, entiende por qué tiemblan el naranja y el azul, y luego lo olvida"),
                     mundo("fm_noche", "02-12", "En el 106.9, de medianoche a las seis, un locutor empieza a poner discos enteros", certeza = H, fuente = FN_FM, escena = "radio"),
                     suceso("ellen_novia", "02-19", "Ellen y él suben a Buena Vista Park a ver entrar la niebla, y se toman de la mano"),
                     mundo("oficina_haight", "02-25", "El periódico del barrio abre su oficina en Haight, cerca de Masonic, de día y de noche", certeza = A, fuente = FN_PERIODICO),
+                    lsd("naranja", "03-09", "Una noche de LSD en la cocina, pelando una naranja que tarda una hora"),
                     suceso("tienda_carteles", "03-26", "Una tienda de carteles de Haight vende reimpresos de uno de sus carteles"),
+                    lsd("radio_noche", "04-01", "Con LSD, pasa la noche a oscuras oyendo el 106.9"),
                     mundo("marcha", "04-15", "Marcha contra la guerra de Vietnam, de Market y la calle Second al estadio Kezar", certeza = H, fuente = FN_VERANO),
+                    lsd("escaleras", "04-27", "Con LSD, cuenta los escalones de la casa, que cambian de número"),
                     mundo("comida_panhandle", "05-13", "A las cuatro, en el Panhandle, cruza el gran marco amarillo y le sirven guiso gratis", certeza = A, fuente = FN_DIGGERS),
+                    hongos("hongos_mexico", "05-20", "Unos hongos que alguien trae de México: amargos, de tierra, más cortos que el LSD"),
                     suceso("fluorescente", "05-27", "El señor Okada le imprime por primera vez un cartel con tintas fluorescentes"),
                     NIEBLA_VERANO,
+                    mundo("clinica", "06-07", "Abre en el barrio una clínica gratuita, donde atienden sin cobrar a quien llegue", certeza = H, fuente = FN_CLINICA),
                     mundo("tamalpais", "06-10", "Dos días de música al aire libre en el monte Tamalpais, al otro lado del puente", 2, certeza = H, fuente = FN_MONTEREY),
                     mundo("monterey", "06-16", "Tres días en el festival de Monterey, en el recinto ferial: de tres a seis dólares y medio", 3, certeza = H, fuente = FN_MONTEREY),
+                    lsd("buena_vista", "06-29", "Con Ellen, en Buena Vista Park, con LSD, mira entrar la niebla"),
                     mundo("portada_time", "07-07", "La revista Time pone en su portada a los hippies", certeza = H, fuente = FN_HAIGHT),
                     suceso("primo", "07-15", "Llega de Stockton su primo Eddie a pasar el verano, y duerme en el sofá"),
+                    lsd("calle_llena", "07-29", "Con LSD, la calle Haight del verano es demasiado, y vuelve pronto a casa"),
                     mundo("fm_todo_el_dia", "08-06", "El 106.9 pone rock a todas horas: se acaban sus programas en otros idiomas", certeza = H, fuente = FN_FM, escena = "radio"),
+                    lsd("trolebus", "08-10", "Con LSD, cruza la ciudad de noche en el trolebús, entre las chispas de los cables"),
                     suceso("tres_carteles", "08-19", "Dibuja tres carteles en una semana y casi no ve la luz del día"),
                     mundo("life", "09-01", "La revista Life dedica su portada a los carteles de las salas de baile", certeza = H, fuente = FN_CARTELES, escena = "carteles"),
                     suceso("recorte", "09-09", "Su madre le manda desde Stockton la página de una revista con carteles como los suyos"),
                     CALOR,
+                    lsd("sutter_ellen", "09-23", "En la sala de la calle Sutter, con LSD, le pasa los frascos a Ellen"),
                     mundo("entierro_hippie", "10-06", "En Buena Vista Park, el entierro de mentira del hippie, con un ataúd en hombros", certeza = H, fuente = FN_HAIGHT),
+                    hongos("hongos_patio", "10-19", "Unos hongos en el patio de atrás, entre la ropa tendida, con olor a tierra mojada"),
+                    lsd("canario", "11-04", "Una noche de LSD que termina oyendo cantar al canario de la señora Petrakis"),
                     accionDeGracias("11-23"),
+                    lsd("cuarto_ellen", "12-02", "Una noche de LSD en el cuarto de Ellen, con el radiador que silba"),
+                    lsd("molino", "12-16", "Una noche de LSD que acaba al amanecer junto al molino viejo de la playa"),
                     NAVIDAD,
                 )),
             TemporadaVida("1968", "despues",
-                "El año de después. Nora vuelve a Portland y Ellen se muda al departamento, con su retroproyector y sus frascos de tinta. Sale el último número del periódico del barrio, Rick Griffin empieza a dibujar para Graham y los locutores del 106.9 se declaran en huelga. David dibuja un cartel para luz negra. La señora Petrakis se rompe la muñeca y se repone. La banda de Gil graba un disco pequeño, y él le dibuja la funda. Graham deja el auditorio de Geary. Tres carteles suyos se cuelgan en una galería. Los Diggers dejan de juntarse, y el símbolo de la paz está en todas partes. Su madre viene a ver la ciudad.",
+                "El año de después. Nora vuelve a Portland y Ellen se muda al departamento, con su retroproyector y sus frascos de tinta. Sale el último número del periódico del barrio, Rick Griffin empieza a dibujar para Graham y los locutores del 106.9 se declaran en huelga. David dibuja un cartel para luz negra. La señora Petrakis se rompe la muñeca y se repone. La banda de Gil graba un disco pequeño, y él le dibuja la funda. Graham deja el auditorio de Geary. Tres carteles suyos se cuelgan en una galería. Los Diggers dejan de juntarse, y el símbolo de la paz está en todas partes. Su madre viene a ver la ciudad. Sigue tomando LSD cada mes, pero alguna noche solo está cansado; un amigo de la banda de Gil pasa una mala noche y lo cuidan entre todos. Tres veces, hongos; una le sientan mal.",
                 listOf(
+                    lsd("estufa", "01-11", "Una noche de LSD de invierno, envueltos en mantas delante de la estufa"),
                     suceso("nora_se_va", "01-20", "Nora deja el departamento y vuelve a Portland con su máquina de coser", escena = "mudanza"),
+                    lsd("manos", "02-01", "Con LSD, se pasa una hora mirándose las manos manchadas de tinta"),
                     mundo("ultimo_periodico", "02-10", "Sale el último número del periódico del barrio, el doce", certeza = A, fuente = FN_PERIODICO),
                     mundo("griffin", "02-17", "Rick Griffin, uno de los grandes de los carteles, empieza a dibujar para Graham", certeza = A, fuente = FN_GRIFFIN),
+                    lsd("cerros", "02-24", "Con LSD, sube a pie a los cerros del centro a ver la ciudad de noche"),
                     suceso("ellen_se_muda", "03-02", "Ellen se muda al departamento con su retroproyector y sus frascos de tinta", escena = "mudanza"),
                     mundo("huelga_fm", "03-18", "Los locutores del 106.9 se declaran en huelga y se van a otra emisora", certeza = H, fuente = FN_FM),
+                    lsd("retroproyector", "03-28", "Con LSD, Ellen proyecta sus luces en el techo de la cocina"),
                     suceso("luz_negra", "04-13", "Dibuja un cartel para luz negra: tinta fluorescente sobre un fondo negro de terciopelo", escena = "luz_negra"),
+                    lsd("cartel_late", "04-25", "Con LSD, mira su cartel bajo la luz negra hasta que le parece que late"),
                     suceso("petrakis_cae", "05-04", "La señora Petrakis se cae en la escalera de la entrada y se rompe la muñeca", cadena = "petrakis"),
+                    hongos("hongos_cocina", "05-16", "Unos hongos con Ellen en el suelo de la cocina: les dan calor y risa"),
                     suceso("petrakis_vuelve", "05-25", "La señora Petrakis vuelve a regar sus geranios, con la muñeca todavía vendada", cadena = "petrakis"),
                     NIEBLA_VERANO,
+                    lsd("espejo", "06-13", "Con LSD, se mira en el espejo del pasillo y no se reconoce"),
                     suceso("disco_gil", "06-22", "La banda de Gil graba un disco pequeño, y él le dibuja la funda"),
                     mundo("graham_se_va", "07-06", "Bill Graham deja el auditorio de Geary, y se acaban sus bailes en esa esquina", certeza = A, fuente = FN_GEARY),
+                    lsd("amigo_mal", "07-18", "Un amigo pasa una mala noche con el LSD, y lo cuidan hasta que amanece"),
                     suceso("galeria", "08-17", "Cuelgan tres carteles suyos en una galería pequeña del centro"),
+                    hongos("hongos_cipreses", "08-29", "Unos hongos en los acantilados del oeste, bajo los cipreses torcidos por el viento"),
                     CALOR,
+                    lsd("cansado", "09-28", "Una noche de LSD en la que solo está cansado"),
                     mundo("diggers_fin", "10-12", "Los Diggers, los del guiso gratis de las cuatro, dejan de juntarse", certeza = A, fuente = FN_DIGGERS),
+                    hongos("hongos_mal", "10-24", "Unos hongos que le sientan mal: náuseas, frío y poco más"),
                     mundo("simbolo_paz", "11-09", "El símbolo de la paz se ve ya en todas partes: en botones, en paredes y en carteles", certeza = A, fuente = FN_PAZ),
+                    lsd("palabras", "11-16", "Con LSD, repite con Gil una palabra hasta que deja de querer decir nada"),
                     accionDeGracias("11-28"),
                     suceso("madre_visita", "12-07", "Su madre viene de Stockton a ver la ciudad, y él le enseña la sala de baile vacía"),
+                    lsd("bufanda", "12-14", "Una noche de LSD tranquila, con la bufanda que le tejió su madre"),
                     NAVIDAD,
                 )),
             TemporadaVida("1969", "cambio",
-                "El barrio cambia, y él sigue dibujando. Una semana de lluvia despega los carteles. Cierra la sala de la calle Sutter, la de su primer cartel, y el pasaje del autobús sube a veinte centavos. El viejo Sal cierra su taller y le regala sus pinceles. La señora Petrakis cumple ochenta años. Gil se va a Los Ángeles con su banda. En la calle pintan otra casa de colores, y en mayo la señora Petrakis deja pintar la suya: turquesa, con las molduras amarillas. David termina su cartel número cien. Ellen y él arman un estudio en el cuarto de atrás. Cierra la tienda de carteles de la esquina. Un muchacho le pide que le enseñe las letras. En diciembre dibuja el cartel de un baile de fin de año.",
+                "El barrio cambia, y él sigue dibujando. Una semana de lluvia despega los carteles. Cierra la sala de la calle Sutter, la de su primer cartel, y el pasaje del autobús sube a veinte centavos. El viejo Sal cierra su taller y le regala sus pinceles. La señora Petrakis cumple ochenta años. Gil se va a Los Ángeles con su banda. En la calle pintan otra casa de colores, y en mayo la señora Petrakis deja pintar la suya: turquesa, con las molduras amarillas. David termina su cartel número cien. Ellen y él arman un estudio en el cuarto de atrás. Cierra la tienda de carteles de la esquina. Un muchacho le pide que le enseñe las letras. En diciembre dibuja el cartel de un baile de fin de año. El LSD se le va apagando: siete noches, cada vez más tranquilas, y en noviembre le dice a Ellen, de pasada, que ya no lo va a tomar más. Dos noches de hongos, las últimas.",
                 listOf(
                     mundo("lluvia_enero", "01-10", "Llueve una semana entera, y el agua despega los carteles de los postes", certeza = INV, clima = Clima.LLUVIA),
+                    lsd("carteles_bajo_la_lluvia", "01-16", "Con LSD, camina bajo la lluvia viendo resbalar los carteles de los postes"),
                     mundo("cierra_sutter", "01-25", "Cierra la sala de la calle Sutter, la de su primer cartel", certeza = A, fuente = FN_SUTTER),
+                    lsd("cien_eses", "02-13", "Con LSD, pinta cien eses, como le enseñó Sal, y le salen todas distintas"),
                     suceso("sal_retira", "02-22", "El viejo Sal cierra su taller de rótulos y le regala sus pinceles"),
+                    lsd("media_dosis", "03-06", "Toma solo medio LSD, y a las dos ya está en la cama"),
                     mundo("pasaje", "03-15", "El pasaje del autobús sube de quince a veinte centavos", certeza = A, fuente = FN_MUNI),
                     suceso("petrakis_cumple", "03-29", "La señora Petrakis cumple ochenta años, y él le dibuja un cartel de felicitación"),
                     suceso("gil_se_va", "04-05", "Gil se va a Los Ángeles con su banda y deja el órgano en la sala"),
                     mundo("colores_calle", "04-19", "En la calle pintan otra casa de colores, como se va haciendo en toda la ciudad", certeza = A, fuente = FN_PINTADAS),
+                    lsd("nota_larga", "04-24", "Con LSD, toca una sola nota en el órgano que Gil dejó en la sala"),
                     mundo("pintan_casa", "05-10", "Pintan la casa de la señora Petrakis: turquesa, con las molduras amarillas", 3, certeza = INV, escena = "pintura"),
+                    hongos("hongos_casa_pintada", "05-29", "Unos hongos en la escalera de la entrada, frente a la casa recién pintada"),
                     NIEBLA_VERANO,
                     suceso("cartel_cien", "06-21", "Termina su cartel número cien y lo cuelga en la pared de la cocina"),
+                    lsd("noche_quieta", "06-26", "Una noche de LSD con Ellen en la que casi no hablan, y está bien"),
                     suceso("estudio", "07-12", "Ellen y él arman un estudio en el cuarto de atrás: él dibuja y ella proyecta luces"),
                     mundo("se_venden", "08-09", "Los carteles como los suyos se venden ya en tiendas de todo el país", certeza = A, fuente = FN_LETRAS),
+                    lsd("extranos", "08-14", "Con LSD, la calle Haight de este verano está llena de desconocidos"),
                     mundo("tienda_cerrada", "08-30", "Cierra la tienda de carteles de la esquina, con tablas en el escaparate", certeza = INV, escena = "cerrado"),
                     CALOR,
+                    hongos("hongos_estudio", "09-27", "Los últimos hongos, en el estudio con Ellen: una noche corta y de cuerpo"),
                     suceso("aprendiz", "10-11", "Un muchacho recién llegado le pide que le enseñe a pintar letras, como Sal a él"),
+                    lsd("el_azul", "11-06", "Toma LSD con Ellen en el estudio, y le dice de pasada que ya no lo va a tomar más"),
                     accionDeGracias("11-27"),
                     suceso("fin_de_anio", "12-06", "Dibuja el cartel de un baile de fin de año en una sala nueva"),
                     NAVIDAD,
@@ -1402,5 +1507,7 @@ internal object AnioG9 {
         ),
         objetos = listOf("pincel", "tinta", "regla", "carpeta", "cuaderno", "gafas", "tocadiscos", "radio", "disco", "boton", "cinta", "flor"),
         estados = listOf(Estado("monterey", "monterey")),
+        // La marihuana, una vez por semana: la noche de los viernes, desde la primera vez (ver arriba, «El consumo»).
+        noches = listOf(NocheDeSemana(HUMO, DayOfWeek.FRIDAY, desde = "primer_humo")),
     )
 }

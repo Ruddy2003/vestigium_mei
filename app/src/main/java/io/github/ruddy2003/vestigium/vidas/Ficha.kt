@@ -87,15 +87,22 @@ data class EspecialDelDia(val dia: DiaEspecial, val inicio: LocalDate, val numer
  * - [objeto]: el objeto del día, o null si el calendario no tiene objetos.
  * - [estado]: el estado en que está hoy («mar»), o null si en ninguno. Lo leen el cuento y el cuadro: los dos tienen
  *   que contar lo mismo.
+ * - [noche]: la clave de la noche de la semana que toca hoy ([NocheDeSemana]), o null. No es un día especial.
  */
 data class FichaDelDia(
     val vida: String, val dia: String, val temporada: Int, val vuelta: Int, val avance: Boolean,
     val edad: Int, val anioHistorico: Int, val cuando: String, val mundo: String, val semilla: Long,
     val estacion: Estacion, val clima: Clima, val especiales: List<EspecialDelDia>, val arcos: Map<String, Double>, val objeto: String?,
-    val regimen: RegimenLuz, private val tramos: List<OtrasVidas.Tramo>, val estado: String? = null,
+    val regimen: RegimenLuz, private val tramos: List<OtrasVidas.Tramo>, val estado: String? = null, val noche: String? = null,
 ) {
-    /** Hoy es un día especial: enciende la marca del cuadro. */
+    /** Hoy es un día especial: enciende la marca del cuadro. La noche de la semana no cuenta. */
     val especial: Boolean get() = especiales.isNotEmpty()
+
+    /**
+     * Las claves de escena de hoy: las de los días especiales y la de la noche de la semana, si toca. Es lo que el
+     * cuadro tiene que leer para contar lo mismo que el cuento.
+     */
+    val claves: Set<String> get() = (especiales.map { it.dia.escena } + listOfNotNull(noche)).filter { it.isNotEmpty() }.toSet()
 
     /** El día especial que manda hoy: el más corto de los que tocan; si empatan, el que empezó después. */
     val principal: EspecialDelDia? get() = especiales.firstOrNull()
@@ -152,17 +159,41 @@ data class FichaDelDia(
             val datos = cal.temporadas[temporada - 1]
             val especiales = especialesDe(cal, d)
             val pesos = cal.clima[d.monthValue - 1]
+            val anioHistorico = Temporadas.anioHistorico(quien.anio, temporada)
+            val estado = estadoDe(cal, d)
             return FichaDelDia(
                 vida = cal.vida, dia = diaLogico, temporada = temporada, vuelta = Temporadas.vuelta(d.year), avance = Temporadas.esAvance(d.year),
-                edad = quien.edad + temporada - 1, anioHistorico = Temporadas.anioHistorico(quien.anio, temporada), cuando = datos.cuando, mundo = datos.mundo,
+                edad = quien.edad + temporada - 1, anioHistorico = anioHistorico, cuando = datos.cuando, mundo = datos.mundo,
                 semilla = Semilla.de(cal.vida, diaLogico),
                 estacion = cal.estacion(d),
                 clima = especiales.firstNotNullOfOrNull { it.dia.clima } ?: sortearClima(pesos, Azar(Semilla.de(cal.vida, diaLogico, "clima"))),
                 especiales = especiales,
                 arcos = cal.arcos.associate { it.id to it.valor(temporada, d) },
                 objeto = if (cal.objetos.isEmpty()) null else cal.objetos[Barajas.objetos(cal.vida, d.year, cal.objetos.size)[d.dayOfYear - 1]],
-                regimen = cal.luz, tramos = quien.dia, estado = estadoDe(cal, d),
+                regimen = cal.luz, tramos = quien.dia, estado = estado,
+                noche = if (especiales.isEmpty() && estado == null) nocheDe(cal, d, temporada, anioHistorico) else null,
             )
+        }
+
+        /**
+         * La noche de la semana del día [d] ([NocheDeSemana]): la primera cuyo día de la semana sea el de la fecha «MM-DD»
+         * de [d] en el año histórico [anioHistorico], y cuyo día de arranque ya haya pasado. Null si no toca ninguna. El 29
+         * de febrero de un año real cuenta como el 28 si el año histórico no es bisiesto.
+         */
+        private fun nocheDe(cal: Calendario, d: LocalDate, temporada: Int, anioHistorico: Int): String? {
+            if (cal.noches.isEmpty()) return null
+            val primero = LocalDate.of(anioHistorico, d.monthValue, 1)
+            val enSuAnio = primero.withDayOfMonth(minOf(d.dayOfMonth, primero.lengthOfMonth()))
+            val hoy = (temporada - 1) * 365 + MesDia.indice(d)
+            return cal.noches.firstOrNull { n ->
+                enSuAnio.dayOfWeek == n.dia && (n.desde == null || primeraVez(cal, n.desde)?.let { hoy >= it } == true)
+            }?.clave
+        }
+
+        /** El lugar, en la línea de los cinco años, del primer día especial con ese id; null si no existe. */
+        private fun primeraVez(cal: Calendario, id: String): Int? {
+            cal.temporadas.forEachIndexed { t, temp -> temp.dias.firstOrNull { it.id == id }?.let { return t * 365 + MesDia.indice(it.fecha) } }
+            return null
         }
 
         /**

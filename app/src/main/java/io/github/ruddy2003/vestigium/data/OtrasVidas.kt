@@ -982,7 +982,10 @@ object OtrasVidas {
         // frecuencia (6); los bailes de jueves a sábado, y el día de la agenda es uno de esos (17). Su nombre es uno de los de
         // la ficha **[Aproximación]** (corrección 19), y no es el de nadie de la escena (David, no Wes, Rick, Stanley, Alton,
         // Victor, Tom ni Michael); el apellido es inventado. La ficha dice «24 años en 1967»: tiene 22 en la temporada 1, el 1965.
-        // **Regla del tema:** nada de drogas, ni de lejos ni en jerga, y nada de alcohol ni tabaco (PLAN_TEMAS, 10g; sección 9).
+        // **El consumo** (el autor quitó la regla de «sin drogas» el 16 nov 2026): en su cuento fuma marihuana los viernes y
+        // toma LSD unas once noches al año, y algunos hongos desde 1967 (`vidas/anios/AnioG9.kt`, `vidas/piezas/PiezasDavid.kt`).
+        // «Su vida» y «Un día suyo» no lo cuentan: lo cuenta el cuento, solo esas noches. No bebe (alcohol = 0) y no fuma
+        // tabaco. Nada del seguimiento privado.
         Vida("cartelista", "David", "Dibujante de carteles de conciertos", "San Francisco, en un departamento compartido del barrio de Haight-Ashbury", "hacia 1967", 1965, "tema", "psicodelia", edad = 22,
             inspiracion = "Persona inventada. Inspirado en los dibujantes de carteles de las salas de baile de San Francisco en 1966 y 1967; las cifras son reconstrucciones.",
             historia = listOf(

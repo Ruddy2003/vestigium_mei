@@ -653,27 +653,92 @@ class CuentoG9Prueba {
         assertEquals(Cuento.NOTA_HISTORICA, cuentoD("2027-04-04").nota)
         assertTrue(piezaD.textos().count { "{nombre}" in it } > 40)
         listOf("2027-03-03", "2029-05-10", "2030-09-09", "2031-11-11").forEach { d -> assertTrue(d, "David" in todoElDiaD(d)) }
-        // Los días especiales de la temporada 1, todos, y solo ellos.
-        assertEquals(calD.temporadas[0].dias.map { it.id }.toSet(), piezaD.especiales.keys)
-        // Unas 60 a 80 variantes de todos los días, más las de los tres días de Monterey.
+        // Los días especiales de la temporada 1, todos; de las demás, solo las noches de LSD y de hongos y los días que lo
+        // nombran (sin su texto dirían el título y nada más). El resto de las temporadas 2 a 5 está por escribir.
+        val todosLosDias = calD.temporadas.flatMap { it.dias }
+        val consumo = todosLosDias.filter { it.escena in CLAVES_DE_CONSUMO || it.id in DIAS_QUE_LO_NOMBRAN }.map { it.id }.toSet()
+        assertEquals(calD.temporadas[0].dias.map { it.id }.toSet() + consumo, piezaD.especiales.keys)
+        // Unas 60 a 110 variantes de todos los días, más las de los tres días de Monterey y las del anochecer de los viernes.
         val variantes = piezaD.variantes.values.flatten()
-        assertTrue("${variantes.count { it.estado == null }} variantes", variantes.count { it.estado == null } in 60..110)
+        val deSiempre = variantes.count { it.estado == null && it.noche == null }
+        assertTrue("$deSiempre variantes", deSiempre in 60..110)
         assertTrue(variantes.count { it.estado == "monterey" } >= 10)
+        val viernes = variantes.filter { it.noche == "humo" }
+        assertTrue("${viernes.size} variantes de los viernes", viernes.size in 12..20)
+        assertTrue(viernes.all { it in piezaD.variantes.getValue(Parrafo.ANOCHECER) && it.estado == null && it.hacer == null })
+        // De ellas, al menos seis valen siempre, para que el primer año, con poca gente, no se repitan.
+        assertTrue(viernes.count { it.desde == null && it.hasta == null && it.meses == null } >= 6)
     }
 
-    @Test fun nadaDeDrogasEnElCuento() {
-        // La regla del tema, la más importante: ninguna palabra de la lista, en ningún texto, ni en los cuentos ya armados.
-        piezaD.textos().forEach { t -> JERGA_DE_DROGAS.forEach { r -> assertFalse("«${r.find(t)?.value}» en «${t.take(70)}…»", r.containsMatchIn(t)) } }
-        (dias("2027-01-01", "2027-12-31") + dias("2029-06-01", "2029-06-30")).forEach { d ->
-            val c = cuentoD(d, 22.0)
-            (c.parrafos + c.titulo).forEach { t -> JERGA_DE_DROGAS.forEach { r -> assertFalse("$d: «${r.find(t)?.value}» en «${t.take(70)}…»", r.containsMatchIn(t)) } }
-        }
-        // Ni las marcas de las salas, la radio, el festival o el periódico (corrección 6), ni el nombre de 1978 de las casas.
-        piezaD.textos().forEach { t -> MARCAS_DE_PSICODELIA.forEach { r -> assertFalse("«${r.find(t)?.value}» en «${t.take(70)}…»", r.containsMatchIn(t)) } }
+    /** Si el texto nombra alguna sustancia. */
+    private fun nombra(t: String) = NOMBRES_DE_SUSTANCIAS.any { it.containsMatchIn(t) }
+    private val cincoAnios get() = dias("2027-01-01", "2031-12-31")
+
+    @Test fun elConsumoSaleSoloLasNochesQueToca() {
+        // Nunca, en ningún texto: lo privado, la jerga que celebra, lo que sigue fuera, las marcas (corrección 6) ni el nombre
+        // de 1978 de las casas.
+        piezaD.textos().forEach { t -> (LO_PRIVADO + JERGA_QUE_CELEBRA + LO_QUE_SIGUE_FUERA + MARCAS_DE_PSICODELIA).forEach { r -> assertFalse("«${r.find(t)?.value}» en «${t.take(70)}…»", r.containsMatchIn(t)) } }
         // Las casas, casi todas grises (corrección 1): nada de calles enteras de colores.
         piezaD.textos().forEach { t -> assertFalse(t, Regex("""(?i)calles? enteras?|todas las casas (son|están) (pintadas|de colores)""").containsMatchIn(t)) }
         assertTrue(piezaD.textos().any { "Casi todas son grises" in it })
+        // Las sustancias, solo en las variantes de los viernes y en los textos de sus noches y de los días que lo nombran.
+        val ids = calD.temporadas.flatMap { it.dias }.filter { it.escena in CLAVES_DE_CONSUMO || it.id in DIAS_QUE_LO_NOMBRAN }.map { it.id }.toSet()
+        val pueden = piezaD.variantes.values.flatten().filter { it.noche != null }.map { it.texto }.toSet() +
+            piezaD.especiales.filterKeys { it in ids }.values.flatMap { t -> t.dias.flatMap { it.values } + t.sigue.values.flatten() }
+        piezaD.textos().filter { it !in pueden }.forEach { t -> assertFalse("«${NOMBRES_DE_SUSTANCIAS.firstNotNullOfOrNull { it.find(t) }?.value}» en «${t.take(70)}…»", nombra(t)) }
+        // En los cuentos armados de los cinco años: si el cuento nombra una sustancia, es una noche de consumo o uno de los
+        // cuatro días de la ciudad (el párrafo del trabajo no nombra nada, así que basta una hora).
+        cincoAnios.forEach { d ->
+            val c = cuentoD(d, 22.0)
+            if ((c.parrafos + c.titulo).any { nombra(it) })
+                assertTrue("$d: lo nombra fuera de su noche", c.ficha.claves.any { it in CLAVES_DE_CONSUMO } || c.ficha.especiales.any { it.dia.id in DIAS_QUE_LO_NOMBRAN })
+        }
+        // Nunca en Navidad, Acción de Gracias, la visita de su madre ni los días de Monterey: los días de familia o de trabajo.
+        val cuidado = setOf("navidad", "accion_gracias", "madre_visita", "monterey")
+        cincoAnios.map { FichaDelDia.de(it, david, calD) }.filter { f -> f.estado == "monterey" || f.especiales.any { it.dia.id in cuidado } }.forEach { f ->
+            assertTrue(f.dia, f.claves.none { it in CLAVES_DE_CONSUMO })
+            listOf(3.0, 15.0, 22.0).forEach { h -> cuentoD(f.dia, h).let { c -> assertFalse("${f.dia}, $h h", (c.parrafos + c.titulo).any { nombra(it) }) } }
+        }
     }
+
+    @Test fun cadaNocheLlevaSuClave() {
+        // Toda noche de consumo lo cuenta, y todo cuento que lo cuenta (salvo los cuatro días de la ciudad) es de una noche
+        // de consumo: así el cuadro, que lee las claves, cuenta lo mismo que el cuento (decisión 18).
+        val viernes = piezaD.variantes.getValue(Parrafo.ANOCHECER).filter { it.noche == "humo" }.map { Cuento.llenar(it.texto, mapOf("nombre" to david.nombre), piezaD.genero) }.toSet()
+        var noches = 0; var tinta = 0
+        cincoAnios.forEach { d ->
+            val c = cuentoD(d, 22.0); val f = c.ficha
+            val conClave = f.claves.any { it in CLAVES_DE_CONSUMO }
+            val loCuenta = (c.parrafos + c.titulo).any { nombra(it) }
+            if (conClave) assertTrue("$d: la clave sin el cuento", loCuenta)
+            if (loCuenta) assertTrue("$d: el cuento sin la clave", conClave || f.especiales.any { it.dia.id in DIAS_QUE_LO_NOMBRAN })
+            // La noche de los viernes no es un día especial: no enciende la marca ni cambia el título; su anochecer es de las suyas.
+            if (f.noche == "humo") {
+                noches++
+                assertFalse(d, c.especial); assertEquals(d, setOf("humo"), f.claves)
+                assertTrue("$d: el anochecer del viernes es el de siempre", c.parrafos[Parrafo.ANOCHECER.ordinal] in viernes)
+            } else assertFalse("$d: un anochecer de viernes fuera de su noche", c.parrafos[Parrafo.ANOCHECER.ordinal] in viernes)
+            // Las noches de LSD y de hongos son días especiales con su título y su texto.
+            if ("noche_tinta" in f.claves) {
+                tinta++
+                assertTrue(d, c.especial); assertEquals(d, "noche_tinta", f.principal!!.dia.escena)
+                assertTrue(d, piezaD.especiales.getValue(f.principal!!.dia.id).dias.first().values.any { nombra(it) })
+            }
+        }
+        assertEquals(calD.temporadas.sumOf { t -> t.dias.count { it.escena == "noche_tinta" } }, tinta)
+        assertTrue("$noches viernes", noches in 5 * 45..5 * 53)
+        // Ese día en el parque se repartió LSD, y él no lo toma: lo dice el texto, con la fuente del día.
+        val parque = cuentoD("2029-01-14")
+        assertTrue(parque.parrafos[Parrafo.GENTE.ordinal].contains("reparten LSD gratis"))
+        assertEquals("https://en.wikipedia.org/wiki/Human_Be-In", parque.notas.first().fuente!!.second)
+        // Antes del 6 de octubre de 1966 es legal, y se nota; ese día deja de serlo.
+        assertTrue("todavía es legal" in cuentoD("2027-07-10").titulo + cuentoD("2027-07-10").parrafos.joinToString(" "))
+        assertTrue(cuentoD("2028-10-06").parrafos.any { "pasa a ser ilegal" in it })
+        assertTrue(cuentoD("2028-10-27").parrafos.any { "desde que es ilegal" in it })
+        // En 1969 se le apaga, y lo dice de pasada.
+        assertTrue(cuentoD("2031-11-06").parrafos.any { "de pasada" in it && "ya no lo va a tomar más" in it })
+    }
+
 
     /**
      * Las frases que el cuento copia tal cual, en inglés, cada una con su autor y su obra al lado y su español después. Son

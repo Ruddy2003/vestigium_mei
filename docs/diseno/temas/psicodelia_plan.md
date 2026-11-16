@@ -191,6 +191,8 @@ Y pruebas nuevas, en lugar de la de ausencia:
 
 ### 3.3 Dónde y cómo entra el consumo en la historia (propuesta; no se escribe todavía)
 
+> **Ya escrito (16 nov 2026), con la frecuencia que pidió el autor** (decisión 6 de la guía), que manda sobre la tabla de abajo: la marihuana, los viernes, como noche de la semana `humo` (no es día especial: `NocheDeSemana` en `vidas/Modelos.kt`, `FichaDelDia.noche` y `FichaDelDia.claves`); el LSD, como días especiales con la clave `noche_tinta`: 5, 11, 12, 10 y 7 noches de 1965 a 1969; los hongos, 2, 3 y 2 desde 1967. Ver los comentarios de David en `vidas/anios/AnioG9.kt` y la sección 9 de `fuentes_psicodelia.md`. Para que el cuadro lea los viernes, `Momento.claves` tiene que pasar a `ficha.claves` (`ui/escenas/EscenaVida.kt`, una línea; lo hace la tanda que dibuje el cuadro).
+
 **Lo que se sabe de la época** (abierto en la sesión del 16 nov 2026; ver 3.5):
 - El LSD era **legal en California hasta el 6 de octubre de 1966**; ese día, en el Panhandle, se hizo el Love Pageant Rally contra la ley nueva, con miles de personas. Comprobado.
 - El Be-In del 14 ene 1967 fue una protesta contra esa ley, y ese día se repartió LSD. Comprobado (ya estaba en la sección 9 de las fuentes, como algo a quitar).
