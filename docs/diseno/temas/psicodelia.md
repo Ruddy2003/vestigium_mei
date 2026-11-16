@@ -316,3 +316,16 @@ Con la regla de la Versión 2 de [`MUEBLES.md`](../MUEBLES.md) para todos los te
 4. **Los títulos de la psicodelia en Chango:** ¿te convence la letra de bloque de la lámina, o prefieres algo más alto y estrecho, más cerca de Roller (habría que dibujar los títulos a mano, sin fuente)?
 5. **El cuento:** ¿qué sustancias y cuántas veces por temporada (la propuesta está en el plan: marihuana algunas noches, LSD una o dos veces por temporada desde 1966, hongos una sola vez)? ¿Y el alcohol y el tabaco, que hoy tampoco aparecen: vuelven como cosa de la época?
 6. **Los números «(17)»:** ¿te gustan entre paréntesis, o los quieres sin adorno?
+
+
+## Decisiones del autor después de ver la lámina (16 nov 2026)
+
+Mandan sobre lo que diga el resto de esta guía; al programar el tema se corrigen las secciones de arriba para que coincidan.
+
+1. **La dirección va bien** en color y en forma general. En el producto final, la cara psicodelia lleva **más formas y dibujos de cartel** (figuras, grabado fino, letras que llenan su forma), no solo bandas y el disco.
+2. **La intensidad máxima, un poco más fuerte** que la de la lámina.
+3. **Con un consumo en curso de día, entra la psicodelia en claro.** La ciudad no se tiñe: cambia la cara.
+4. **Cuenta cualquier sustancia que tenga nivel** (hoy: alcohol, cannabis y «otra»; el tabaco y la cafeína no tienen nivel). La escala: **nivel 3 da la intensidad media (0.5) y nivel 8 la máxima (1)**; entre medias, en línea recta (de 0 a 3 y de 3 a 8); por encima de 8, sigue en 1.
+5. **Si la sustancia está en la lista de ocultas, el tema reacciona igual.**
+6. **El cuento:** la marihuana, una vez por semana; el LSD, más o menos una vez al mes; los hongos, unas pocas veces al año.
+7. **Para después, con el cuadro del tema:** cada sustancia cambia la escena de una forma distinta, que intente reproducir visualmente su efecto. Solo queda anotado.

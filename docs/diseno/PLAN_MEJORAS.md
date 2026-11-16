@@ -21,6 +21,7 @@ Lo que pidió el autor el 16 de noviembre de 2026 después de comparar los 39 te
 | 6 | Fondos de pantalla con las escenas | pendiente |
 | 7 | Lo temático nuevo: el toque, la hora y el clima, los mensajes breves, las esperas, el selector de fecha y de hora | pendiente |
 | 8 | Los cuadros y los avisos: seguir personajes (con notificación y sonido propio), «Hoy en la historia» bajo el cuento, el cuadro a pantalla completa y arriba del cuento con su ambiente, la galería de cuadros y su mueble en Vida, el ronroneo del gato, y las notificaciones que hoy no suenan | pendiente |
+| 9 | Logros nuevos: revisar qué funciones de la app no tienen logros y agregar un juego nuevo (leer todos los días especiales de una historia, guardar cierta cantidad de cuadros…) | pendiente |
 
 ## Decisiones del autor, parte por parte
 
@@ -77,3 +78,9 @@ La respuesta al tocar; que el fondo y los muebles reaccionen a la hora, el clima
 6. **Nada pasa a `main` hasta que todo esté arreglado.**
 
 Además, el autor notó que **algunas notificaciones no suenan**: hay que revisarlas una por una y arreglarlas (parte 8). Lo que se ve en el código: solo cuatro canales llevan el sonido del tema (ánimo, diario, cuestionarios y fin de bloque de enfoque); el de reportes se crea con importancia baja, que en Android es sin sonido; los de recordatorios y lugares no llevan sonido del tema.
+
+## Respuestas del autor (16 nov 2026, tercera ronda)
+
+- **Psicodelia:** la lámina va bien. Sus decisiones (más dibujo de cartel, la intensidad máxima más fuerte, la psicodelia clara de día con un consumo en curso, cualquier sustancia con nivel, media con nivel 3 y máxima con nivel 8, reacciona aunque esté oculta, la frecuencia del consumo en el cuento) están al final de `temas/psicodelia.md`.
+- **Muebles de Vida:** no se redibujan; reciben noche de verdad y luz con dirección en las mismas tandas que las bibliotecas.
+- **Logros nuevos (parte 9):** un juego de logros sobre las funciones nuevas y sobre lo que hoy no tiene ninguno.
