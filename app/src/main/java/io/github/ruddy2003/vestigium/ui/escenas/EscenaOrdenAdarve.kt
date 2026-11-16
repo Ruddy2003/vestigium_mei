@@ -312,8 +312,25 @@ internal object AdarveOrden {
         val t = V3(0.25f, 0f, 6.6f)
         for (a in listOf(0.3f, 2.4f, 4.5f)) palo(lz, V3(t.x + 0.17f * kotlin.math.cos(a), 0f, t.z + 0.17f * kotlin.math.sin(a)), V3(t.x + 0.1f * kotlin.math.cos(a), 0.44f, t.z + 0.1f * kotlin.math.sin(a)), 0.05f, C.MADERA_OSC)
         caja(lz, t.x, t.z, 0.3f, 0.36f, 0.36f, 0.42f, 0.48f, C.MADERA, arriba = lerp(C.MADERA, C.ARENA, 0.3f))
-        // El cántaro, contra el parapeto, con su boca.
-        val j = V3(PARAPETO - 0.28f, 0f, 7.6f); val q = CamOrden.p(j); val k = CamOrden.k(j.x, j.z)
+        // Los cubos de la cabria, junto al torno: uno de pie y otro volcado.
+        val tv = almena(CABRIA) + ALMENA + (PASO - ALMENA) / 2f
+        for ((ds, dv) in listOf(-0.55f to -0.75f, -0.2f to -1.05f)) {
+            val b = V3(PARAPETO + ds - 0.2f, 0f, tv + dv); val qb = CamOrden.p(b); val kb = CamOrden.k(b.x, b.z)
+            val cubo = poligono(listOf(qb + Offset(-kb * 0.16f, 0f), qb + Offset(kb * 0.16f, 0f), qb + Offset(kb * 0.19f, -kb * 0.34f), qb + Offset(-kb * 0.19f, -kb * 0.34f)))
+            drawPath(cubo, Brush.horizontalGradient(listOf(lz.color(C.MADERA, V3(1f, 0f, -0.5f)), lz.color(C.MADERA, V3(-1f, 0f, -0.5f))), qb.x - kb * 0.19f, qb.x + kb * 0.19f))
+            drawLine(lz.color(C.HIERRO, V3(0f, 0f, -1f)), qb + Offset(-kb * 0.18f, -kb * 0.25f), qb + Offset(kb * 0.18f, -kb * 0.25f), (kb * 0.03f).coerceAtLeast(0.4f))
+            drawOval(v.l.tono(C.MADERA_OSC), Offset(qb.x - kb * 0.19f, qb.y - kb * 0.38f), Size(kb * 0.38f, kb * 0.08f))
+        }
+        // El banco de la guardia, arrimado al parapeto, con el candil tapado de las rondas de noche encima.
+        val b0 = 5.7f; val b1 = 7.3f
+        for (vv in listOf(b0 + 0.15f, b1 - 0.15f)) caja(lz, PARAPETO - 0.25f, vv, 0f, 0.32f, 0.1f, 0f, 0.42f, C.MADERA_OSC)
+        caja(lz, PARAPETO - 0.25f, (b0 + b1) / 2f, 0f, 0.4f, b1 - b0, 0.42f, 0.48f, C.MADERA, arriba = lerp(C.MADERA, C.ARENA, 0.3f))
+        val farol = V3(PARAPETO - 0.25f, 0.48f, b1 - 0.35f); val qf = CamOrden.p(farol); val kf = CamOrden.k(farol.x, farol.z)
+        drawRect(lz.color(C.HIERRO_CLARO, V3(-1f, 0f, -0.5f)), Offset(qf.x - kf * 0.09f, qf.y - kf * 0.26f), Size(kf * 0.18f, kf * 0.26f))
+        drawPath(poligono(qf + Offset(-kf * 0.11f, -kf * 0.26f), qf + Offset(kf * 0.11f, -kf * 0.26f), qf + Offset(0f, -kf * 0.36f)), lz.color(C.HIERRO, V3(0f, 1f, -0.5f)))
+        if (v.l.noche > 0.4f) drawLine(C.LUMBRE.copy(alpha = 0.8f), qf + Offset(-kf * 0.06f, -kf * 0.05f), qf + Offset(kf * 0.06f, -kf * 0.05f), (kf * 0.025f).coerceAtLeast(0.4f))
+        // El cántaro, contra el parapeto, delante del banco, con su boca.
+        val j = V3(PARAPETO - 0.24f, 0f, 5.3f); val q = CamOrden.p(j); val k = CamOrden.k(j.x, j.z)
         val alto = 0.55f * k; val ancho = 0.36f * k
         val forma = Path().apply {
             moveTo(q.x - ancho * 0.22f, q.y); cubicTo(q.x - ancho * 0.75f, q.y - alto * 0.1f, q.x - ancho * 0.7f, q.y - alto * 0.75f, q.x - ancho * 0.18f, q.y - alto * 0.88f)
