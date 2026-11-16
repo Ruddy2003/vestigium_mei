@@ -30,10 +30,10 @@ import kotlin.math.sin
  *
  * - **Chicos** ([ChicosRefugio], `EscenaRefugioObjetosChicos.kt`): el disco de diez pulgadas medio fuera de su funda de
  *   papel, de pie contra el tocadiscos de la sala; la linterna de dinamo tumbada, con su manivela (encendida mientras ella
- *   trabaja); el contador de radiación colgado
- *   de su correa del canto de la tapa, con su lucecita verde encendida; la ración (la tarjeta perforada apoyada en una lata
- *   de antes de la guerra); el cuaderno del turno recostado en los tomos viejos; la cajita de las pastillas de yodo,
- *   abierta; la foto de fuera en su cartón de fotógrafo, de pie; y dos flores de papel de hojas de libro, pintadas.
+ *   trabaja); el contador de radiación colgado de su correa del canto de la tapa, con su lucecita verde encendida; la
+ *   ración (la tarjeta perforada apoyada en una lata de antes de la guerra); el cuaderno del turno recostado en los tomos
+ *   viejos; la cajita de las pastillas de yodo, abierta; la foto de fuera en su cartón de fotógrafo, de pie; y dos flores
+ *   de papel de hojas de libro, pintadas.
  * - **Grandes** ([GRANDES], [GrandesRefugio], `EscenaRefugioObjetosGrandes.kt`): la llave de válvulas, recostada en el
  *   canto; el mono azul, doblado y de pie en la esquina de la punta; la manta gris, echada en esa esquina y cayendo por
  *   el canto; y el tocadiscos del comedor, de pie en el suelo junto a ella, abierto, con su pincel.
@@ -49,8 +49,9 @@ import kotlin.math.sin
  * del objeto es de papel (la de verdad, la de Noa, va en su frasco desde `vuelven`, y pueden coincidir), y el `disco` del
  * objeto es el que no tiene nadie (el de la sala va en su funda, plana junto al tocadiscos).
  *
- * **[Diseño propio]**: cómo es cada uno y dónde va; qué los acompaña; los colores. Van algo más grandes que de verdad
- * para que se lean a tamaño de teléfono (cada uno dice cuánto). Sin personas, sin letras, sin cifras.
+ * **[Diseño propio]**: cómo es cada uno y dónde va; qué los acompaña; los colores. Van más grandes que de verdad para
+ * que se lean a tamaño de teléfono: el último número del `MarcoObjeto` de cada uno dice cuánto (de 1,1 veces la manta a
+ * 3,6 la cajita de las pastillas). Sin personas, sin letras, sin cifras.
  */
 internal object ObjetosRefugio {
     /** Los doce objetos del calendario de la residente (`AnioG7.kt`). */
