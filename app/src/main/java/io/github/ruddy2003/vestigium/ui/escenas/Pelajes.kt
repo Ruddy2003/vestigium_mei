@@ -75,7 +75,7 @@ fun pelajeDe(tema: TemaId): Pelaje? = when (tema) {
     TemaId.PIRATA -> PELAJE_PIRATA
     TemaId.URSS -> PELAJE_URSS
     TemaId.REVOLUCION -> PELAJE_REVOLUCION
-    TemaId.ANTIGUAS -> null         // S18
+    TemaId.ANTIGUAS -> PELAJE_ANTIGUAS
     TemaId.CUEVA -> PELAJE_CUEVA
     TemaId.BASICO -> null           // Básico: sin cuadro
 }
