@@ -327,14 +327,39 @@ internal object SalaRefugio {
         val zc = (K.F * (K.OJO - 0f) / (en.y - K.CY).coerceAtLeast(40f)).coerceIn(2f, 8f)
         val xc = (en.x - K.CX) * zc / K.F
         val w = V3(xc * K.COS - zc * K.SIN, 0.3f, xc * K.SIN + zc * K.COS)
-        val manda = v.tumban.maxByOrNull { f -> val d = K.largo(f.p - w); f.fuerza / (1f + d * d / (f.alcance * f.alcance)) }
+        // La luz que manda en su lado claro: de día, la que más le llega (casi siempre la lámpara de jaula); de noche, la
+        // cálida que más le llega (la lámpara del turno de más, la guardia, los pilotos de las bombas). Su sombra cae al
+        // otro lado.
+        val deLaSala = v.focos.filter { it.enSala && it.fuerza > 0.05f }
+        val candidatas = if (v.dia) deLaSala else deLaSala.filter { it.color.red > it.color.blue + 0.15f }.ifEmpty { deLaSala }
+        val manda = candidatas.maxByOrNull { llegaAlGato(it, w) }
         val rayo = if (manda != null) {
             val dx = w.x - manda.p.x; val lat = if (K.p(manda.p).x <= en.x) -1f else 1f
-            val d = K.largo(manda.p - w)
-            rayoFijo(lat * (0.35f + 0.5f * (abs(dx) / 3f).coerceIn(0f, 1f)), 50f, (0.25f + 0.35f * (manda.fuerza / (1f + d * d / (manda.alcance * manda.alcance)))).coerceIn(0f, 0.7f), C.SOMBRA)
+            rayoFijo(lat * (0.35f + 0.5f * (abs(dx) / 3f).coerceIn(0f, 1f)), 50f, (0.25f + 0.35f * llegaAlGato(manda, w)).coerceIn(0f, 0.7f), C.SOMBRA)
         } else rayoFijo(0.5f, 60f, 0.2f, C.SOMBRA)
-        val brillo = if (v.obras.isNotEmpty()) lerp(Color(0xFFFFE6C2), C.LAMPARA, 0.25f) else lerp(Color(0xFFD8E4F0), C.PISCINA, 0.3f * v.noche)
-        return LuzGato(rayo, v.noche.coerceIn(0f, 1f), brillo) { c -> v.c(w, K.NADA, c) }
+        val brillo = manda?.let { lerp(it.color, Color.White, 0.35f) } ?: lerp(Color(0xFFD8E4F0), C.PISCINA, 0.3f * v.noche)
+        // Su color: de día, el suyo con toda la luz de la sala en ese sitio; de noche, la que le da por delante (la penumbra
+        // azul y lo cálido que tenga cerca), sin sumarle de frente el violeta y el azul que le llegan por la espalda desde el
+        // portón: eso queda en su lado oscuro, que el gato pinta violeta (si se sumaba todo, salía rosado lila).
+        // De noche, además, la penumbra que deja ver al gato (como la de los demás cuadros de noche): un azul más claro que
+        // el de las paredes, para que un gato claro siga claro y uno oscuro, oscuro.
+        // Bajo la lámpara del turno de más, de noche, manda la lámpara, como de día.
+        val bajoLaLampara = manda != null && manda.cono != null && llegaAlGato(manda, w) > 0.2f
+        val conTodo = v.dia || bajoLaLampara
+        val normal = if (conTodo) K.NADA else K.unidad(V3(-w.x, K.OJO - w.y, -w.z))
+        val amb = v.ambienteSala
+        val ve = lerp(amb, Color(0xFF93AAEE), 0.62f)
+        return LuzGato(rayo, v.noche.coerceIn(0f, 1f), brillo) { c ->
+            val b = v.c(w, normal, c)
+            if (conTodo) b else Color((b.red + c.red * (ve.red - amb.red)).coerceIn(0f, 1f), (b.green + c.green * (ve.green - amb.green)).coerceIn(0f, 1f), (b.blue + c.blue * (ve.blue - amb.blue)).coerceIn(0f, 1f), c.alpha)
+        }
+    }
+
+    /** Cuánto le llega al gato en [w] la luz [f] (por la distancia y, si tiene pantalla, por su cono), de 0 a 1. */
+    private fun llegaAlGato(f: FocoRefugio, w: V3): Float {
+        val d = K.largo(f.p - w); var k = f.fuerza / (1f + d * d / (f.alcance * f.alcance))
+        f.cono?.let { e -> k *= ((K.punto(K.unidad(w - f.p), e) - f.coseFuera) / (f.coseDentro - f.coseFuera)).coerceIn(0f, 1f) }
+        return k.coerceIn(0f, 1f)
     }
 
     /**
