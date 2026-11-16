@@ -88,8 +88,8 @@ object IdeasArcano : DisenoIdeas {
     private val LLAMA = Color(0xFFFFC572)
     private val FOSFORO = Color(0xFFA4EAC2)
 
-    /** La tarjeta de los rótulos de noche: lejos de la llama y cerca. Con [TINTA], la de lejos da unos 5:1 en el título. */
-    private val TARJETA_NOCHE = Color(0xFFAAA083)
+    /** La tarjeta de los rótulos de noche: lejos de la llama y cerca. Con [TINTA], la de lejos da unos 4.7:1 en el título. */
+    private val TARJETA_NOCHE = Color(0xFFA19879)
     private val TARJETA_LUZ = Color(0xFFF2DFB2)
 
     // ---------------------------------------------------------------- de la paleta de siempre (el interior y las fichas)
@@ -115,7 +115,25 @@ object IdeasArcano : DisenoIdeas {
     private val FRASCO = Offset(0.47f, 0.445f)
 
     /** Cuánto alumbra el quinqué el punto [p] (fracciones del ancho): cae con la distancia; las filas de abajo, a oscuras. */
-    private fun deQuinque(p: Offset) = (1.15f * (1f - (p - LUZ).getDistance() / 0.82f)).coerceIn(0f, 1f)
+    private fun deQuinque(p: Offset) = maxOf((1.15f * (1f - (p - LUZ).getDistance() / 0.82f)).coerceIn(0f, 1f), luzCuerpo(p))
+
+    /**
+     * La luz que el quinqué echa hacia abajo sobre la estantería: cae despacio de fila en fila (la primera, encendida; la
+     * segunda, legible; la tercera, tenue; las dos últimas, casi perdidas), un poco menos en la columna de la izquierda, más
+     * lejos de la llama. Los puntos son los centros de las filas con 9 temas, en fracciones del ancho.
+     */
+    private val CAIDA = listOf(0.6f to 0.82f, 0.77f to 0.76f, 1.08f to 0.5f, 1.38f to 0.25f, 1.69f to 0.08f, 2f to 0.04f, 2.4f to 0.03f)
+
+    private fun luzCuerpo(p: Offset): Float {
+        if (p.y < CAIDA.first().first) return 0f
+        var k = CAIDA.last().second
+        for (i in 0 until CAIDA.size - 1) {
+            val (y0, k0) = CAIDA[i]; val (y1, k1) = CAIDA[i + 1]
+            if (p.y in y0..y1) { k = k0 + (k1 - k0) * (p.y - y0) / (y1 - y0); break }
+        }
+        val lado = (1f - 0.5f * (kotlin.math.abs(p.x - LUZ.x) - 0.05f).coerceAtLeast(0f)).coerceIn(0.72f, 1f)
+        return k * lado
+    }
 
     /**
      * Un color a [k] (0 a 1) de la llama: de día, tal cual. De noche baja hacia **su propio** oscuro (conserva el matiz: el
@@ -142,7 +160,26 @@ object IdeasArcano : DisenoIdeas {
     private fun brillo(o: Boolean, a: Float, k: Float = 0f) =
         if (o) LLAMA.copy(alpha = (a * 0.9f * k).coerceIn(0f, 1f)) else LUZ_DIA.copy(alpha = a.coerceIn(0f, 1f))
 
-    private fun tarjeta(o: Boolean, k: Float) = if (o) mezcla(TARJETA_NOCHE, TARJETA_LUZ, k * 1.3f) else MANILA
+    /**
+     * El filo cálido del quinqué en una caja, de noche: en su canto de arriba y en el costado que mira a la luz ([der]: el
+     * derecho), tanto más vivo cuanto más le llega. De día no pinta nada.
+     */
+    private fun DrawScope.filo(r: Rect, o: Boolean, k: Float, der: Boolean) {
+        if (!o || k < 0.05f) return
+        val u = density
+        drawRect(LLAMA.copy(alpha = (0.85f * k).coerceAtMost(0.75f)), r.topLeft, Size(r.width, 1.5f * u))
+        drawRect(LLAMA.copy(alpha = (0.28f * k).coerceAtMost(0.28f)), Offset(r.left, r.top + 1.5f * u), Size(r.width, 3f * u))
+        val x = if (der) r.right - 1.3f * u else r.left
+        drawRect(LLAMA.copy(alpha = (0.6f * k).coerceAtMost(0.55f)), Offset(x, r.top), Size(1.3f * u, r.height))
+    }
+
+    /** El destello del quinqué en el latón, el lacre o el vidrio, de noche (de día, la luz gris crema). */
+    private fun DrawScope.destello(c: Offset, r: Float, o: Boolean, k: Float) {
+        if (o) { if (k > 0.05f) { drawCircle(LLAMA.copy(alpha = (0.35f * k).coerceAtMost(0.3f)), r * 2.2f, c); drawCircle(Color(0xFFFFF0CF).copy(alpha = (1.1f * k).coerceAtMost(0.95f)), r, c) } }
+        else drawCircle(LUZ_DIA.copy(alpha = 0.8f), r, c)
+    }
+
+    private fun tarjeta(o: Boolean, k: Float) = if (o) mezcla(TARJETA_NOCHE, TARJETA_LUZ, (1.15f * k.pow(1.4f)).coerceAtMost(1f)) else MANILA
 
     override val cols = 2
     /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoIdeas.auraEnReposo]). */
@@ -271,7 +308,11 @@ object IdeasArcano : DisenoIdeas {
             val m = Offset(LUZ.x * w, LUZ.y * w)
             mancha(m + Offset(0f, 0.04f * w), w * 0.42f, LLAMA.copy(alpha = 0.16f))
             mancha(m, w * 0.1f, LLAMA.copy(alpha = 0.5f))
-            mancha(Offset(FRASCO.x * w, FRASCO.y * w), w * 0.075f, FOSFORO.copy(alpha = 0.11f))
+            mancha(Offset(FRASCO.x * w, FRASCO.y * w), w * 0.11f, FOSFORO.copy(alpha = 0.16f))
+            // Lo que el frasco tiñe a su lado: la tapa de la estantería y la cara de la piedra que lo mira.
+            val pie = Offset(FRASCO.x * w, TAPA1 * w)
+            scale(1f, 0.2f, pie) { mancha(pie, w * 0.14f, FOSFORO.copy(alpha = 0.32f)) }
+            mancha(Offset(0.39f * w, 0.515f * w), w * 0.035f, FOSFORO.copy(alpha = 0.14f))
             bruma(pisa, alto)
         }
         granoMueble(Rect(0f, 0f, w, alto), o)
@@ -370,7 +411,7 @@ object IdeasArcano : DisenoIdeas {
         drawRect(brillo(o, 0.5f, 0.1f), Offset(0f, friso - 0.012f * w), Size(w, 1.2f * u))
         drawRect(sombra(o, 0.35f), Offset(0f, friso + 0.002f * w), Size(w, 1.6f * u))
         // Lo hinchado del pie: una línea de salitre.
-        drawLine(cc(SALITRE, o, 0.5f, 1f).copy(alpha = 0.35f), Offset(0f, pisa - 0.03f * w), Offset(w, pisa - 0.034f * w), 1.4f * u)
+        drawLine(cc(SALITRE, o, 0.5f, pisa / w).copy(alpha = 0.35f), Offset(0f, pisa - 0.03f * w), Offset(w, pisa - 0.034f * w), 1.4f * u)
     }
 
     /**
@@ -434,9 +475,9 @@ object IdeasArcano : DisenoIdeas {
         }
         // La mancha de humedad: oscura, con su cerco.
         val m = irregular(Offset(0.56f * w, pisa + 0.07f * w), 0.2f * w, 0.05f * w, 6170, 14, 0.3f)
-        drawPath(m, cc(mezcla(PINO_OSC, NOCHE, 0.3f), o, 0.56f, 1f).copy(alpha = 0.45f))
-        drawPath(m, cc(mezcla(PINO_OSC, SALOBRE, 0.3f), o, 0.56f, 1f).copy(alpha = 0.5f), style = Stroke(1.6f * u))
-        drawPath(irregular(Offset(0.5f * w, pisa + 0.06f * w), 0.1f * w, 0.025f * w, 6171, 10, 0.3f), cc(PINO_OSC, o, 0.5f, 1f).copy(alpha = 0.35f))
+        drawPath(m, cc(mezcla(PINO_OSC, NOCHE, 0.3f), o, 0.56f, pisa / w + 0.07f).copy(alpha = 0.45f))
+        drawPath(m, cc(mezcla(PINO_OSC, SALOBRE, 0.3f), o, 0.56f, pisa / w + 0.07f).copy(alpha = 0.5f), style = Stroke(1.6f * u))
+        drawPath(irregular(Offset(0.5f * w, pisa + 0.06f * w), 0.1f * w, 0.025f * w, 6171, 10, 0.3f), cc(PINO_OSC, o, 0.5f, pisa / w + 0.06f).copy(alpha = 0.35f))
         // La sombra del mueble en el piso, junto al zócalo.
         drawRect(sombra(o, if (o) 0.5f else 0.32f), Offset(IZQ * w + 0.01f * w, pisa), Size((DER - IZQ) * w + 0.02f * w, 0.012f * w))
         drawRect(sombra(o, 0.14f), Offset(IZQ * w + 0.02f * w, pisa + 0.012f * w), Size((DER - IZQ) * w + 0.03f * w, 0.016f * w))
@@ -893,11 +934,14 @@ object IdeasArcano : DisenoIdeas {
         drawPath(cuerpo, n(agua, o, k * 0.8f).copy(alpha = 0.92f))
         clipPath(cuerpo) {
             drawRect(n(mezcla(agua, LUZ_DIA, 0.2f), o, k).copy(alpha = 0.6f), Offset(l, top), Size(r - l, 0.012f * w))
-            val blando = if (o) mezcla(FOSFORO, NOCHE, 0.55f) else mezcla(PAPEL, MAR, 0.45f)
+            // Lo de dentro: formas blandas sin detalle; de noche, con una fosforescencia verde pálida que tiñe el agua.
+            if (o) mancha(Offset(0.47f * w, 0.49f * w), 0.06f * w, FOSFORO.copy(alpha = 0.3f))
+            val blando = if (o) mezcla(FOSFORO, NOCHE, 0.38f) else mezcla(PAPEL, MAR, 0.45f)
             listOf(Triple(0.462f, 0.47f, 0.032f), Triple(0.49f, 0.495f, 0.026f), Triple(0.45f, 0.515f, 0.022f)).forEachIndexed { j, (x, y, rr) ->
-                drawPath(irregular(Offset(x * w, y * w), rr * w, rr * w * 0.75f, 6410 + j, 10, 0.22f), blando.copy(alpha = if (o) 0.5f else 0.42f))
+                val forma = irregular(Offset(x * w, y * w), rr * w, rr * w * 0.75f, 6410 + j, 10, 0.22f)
+                drawPath(forma, blando.copy(alpha = if (o) 0.5f else 0.42f))
+                if (o) scale(0.55f, Offset(x * w - rr * w * 0.15f, y * w - rr * w * 0.1f)) { drawPath(forma, FOSFORO.copy(alpha = 0.2f)) }
             }
-            if (o) mancha(Offset(0.47f * w, 0.49f * w), 0.04f * w, FOSFORO.copy(alpha = 0.22f))
             // El poso del fondo y lo verdoso del vidrio a los lados.
             drawRect(n(SALOBRE, o, k).copy(alpha = 0.5f), Offset(l, pie - 0.012f * w), Size(r - l, 0.012f * w))
             drawRect(sombra(o, 0.25f), Offset(r - 0.018f * w, top), Size(0.018f * w, pie - top))
@@ -907,11 +951,14 @@ object IdeasArcano : DisenoIdeas {
         drawRect(Color.White.copy(alpha = if (o) 0.06f + 0.2f * k else 0.42f), Offset(l + 0.007f * w, top + 0.02f * w), Size(0.006f * w, pie - top - 0.035f * w))
         drawRect(Color.White.copy(alpha = if (o) 0.04f + 0.1f * k else 0.2f), Offset(l + 0.016f * w, top + 0.02f * w), Size(0.002f * w, pie - top - 0.05f * w))
         drawPath(cuerpo, n(mezcla(VERDIN, LUZ_DIA, 0.4f), o, k).copy(alpha = 0.5f), style = Stroke(1.1f * u))
+        // De noche, el vidrio teñido por dentro de verde pálido.
+        if (o) drawPath(cuerpo, FOSFORO.copy(alpha = 0.32f), style = Stroke(1.4f * u))
         // El cuello, la tapa de vidrio y la pinza de alambre.
         val cuello = Rect(l + 0.016f * w, top - 0.012f * w, r - 0.016f * w, top + 0.002f * w)
         drawRect(n(mezcla(VERDIN, LUZ_DIA, 0.3f), o, k).copy(alpha = 0.7f), cuello.topLeft, cuello.size)
         val tapa = Rect(l + 0.012f * w, top - 0.026f * w, r - 0.012f * w, top - 0.012f * w)
         drawRoundRect(n(mezcla(VERDIN, LUZ_DIA, 0.35f), o, k), tapa.topLeft, tapa.size, CornerRadius(4f * u))
+        if (o) drawRoundRect(FOSFORO.copy(alpha = 0.14f), tapa.topLeft, tapa.size, CornerRadius(4f * u))
         drawRect(brillo(o, 0.6f, k), Offset(tapa.left + 2f * u, tapa.top + 1f * u), Size(tapa.width * 0.5f, 1f * u))
         drawRect(sombra(o, 0.3f), Offset(tapa.left, tapa.bottom - 1.4f * u), Size(tapa.width, 1.4f * u))
         drawPath(Path().apply { moveTo(cuello.left, cuello.bottom); lineTo(tapa.left + tapa.width * 0.3f, tapa.top); lineTo(tapa.right - tapa.width * 0.3f, tapa.top); lineTo(cuello.right, cuello.bottom) },
@@ -921,6 +968,8 @@ object IdeasArcano : DisenoIdeas {
         rotate(-4f, et.center) {
             drawRect(sombra(o, 0.3f), Offset(et.left + 1.4f * u, et.top + 1.6f * u), et.size)
             drawRect(n(mezcla(PAPEL, SEPIA, 0.2f), o, k), et.topLeft, et.size)
+            // De noche, el papel trasluce un poco el verde de detrás, más por sus bordes.
+            if (o) { drawRect(FOSFORO.copy(alpha = 0.12f), et.topLeft, et.size); drawRect(FOSFORO.copy(alpha = 0.18f), et.topLeft, et.size, style = Stroke(0.9f * u)) }
             listOf(0.3f, 0.55f, 0.78f).forEach { f -> drawLine(n(SEPIA, o, k).copy(alpha = 0.7f), Offset(et.left + et.width * 0.12f, et.top + et.height * f), Offset(et.right - et.width * (0.15f + 0.2f * f), et.top + et.height * f), 0.8f * u) }
         }
         drawLine(n(BRAMANTE, o, k), Offset(cuello.left + 2f * u, cuello.bottom), Offset(et.left + et.width * 0.4f, et.top), 0.8f * u)
@@ -1112,6 +1161,20 @@ object IdeasArcano : DisenoIdeas {
         drawPath(asa, sombra(o, 0.35f), style = Stroke(0.009f * w, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.2f * u, 2.4f * u))))
         drawPath(asa, brillo(o, 0.4f, k), style = Stroke(0.8f * u))
         listOf(ty - 0.008f * w, ty + 0.008f * w).forEach { y -> drawRect(c(mezcla(BRAMANTE, SEPIA, 0.4f)), Offset(x1 - 0.004f * w, y - 0.004f * w), Size(0.01f * w, 0.008f * w)) }
+        // De noche, un reflejo frío (el verde pálido de la bruma) en los herrajes, la argolla, el asa y los cantos: se lee el arcón.
+        if (o) {
+            val frio = mezcla(LUZ_DIA, FOSFORO, 0.45f)
+            clipPath(cuerpo) { drawRect(frio.copy(alpha = 0.07f), Offset(x0, y0), Size((x1 - x0) * 0.55f, y1 - y0)) }
+            drawRect(frio.copy(alpha = 0.12f), Offset(tapa.left, tapa.top - 0.014f * w), Size(tapa.width, 0.016f * w))
+            drawLine(frio.copy(alpha = 0.3f), Offset(x1 - 0.034f * w, y0 + 1f * u), Offset(x1 - 0.012f * w, y0 + 1f * u), 1.2f * u)
+            drawLine(frio.copy(alpha = 0.22f), Offset(x1 - 0.03f * w, y1 - 0.03f * w), Offset(x1 - 0.004f * w, y1 - 0.03f * w), 1.1f * u)
+            drawLine(frio.copy(alpha = 0.18f), Offset(x1 - 0.012f * w, y0), Offset(x1 - 0.001f * w, y1), 1.2f * u)
+            drawRect(frio.copy(alpha = 0.25f), al.topLeft, Size(1.2f * u, al.height))
+            drawArc(frio.copy(alpha = 0.35f), 180f, 140f, false, Offset(al.center.x - 0.008f * w, al.bottom - 0.018f * w), Size(0.016f * w, 0.016f * w), style = Stroke(1.2f * u))
+            drawPath(asa, frio.copy(alpha = 0.22f), style = Stroke(1f * u))
+            drawRect(frio.copy(alpha = 0.3f), Offset(tapa.left, tapa.top - 0.014f * w), Size(tapa.width, 1.2f * u))
+            drawRect(frio.copy(alpha = 0.18f), Offset(tapa.left, tapa.top), Size(tapa.width, 1f * u))
+        }
     }
 
     /** El rollo de cuerda en el piso, cortado por el borde, con su chicote suelto. */
@@ -1167,9 +1230,10 @@ object IdeasArcano : DisenoIdeas {
     }
 
     /** El portaetiquetas de latón verdoso con su tarjeta: el marco, el verdín, las pestañas y los remaches. */
-    private fun DrawScope.portaetiquetas(r: Rect, o: Boolean, k: Float, semilla: Int) {
+    private fun DrawScope.portaetiquetas(r: Rect, o: Boolean, kc: Float, semilla: Int) {
         val u = density
         val m = 2.6f * u
+        val k = if (o) maxOf(kc, 0.12f) else 0f
         val marco = Rect(r.left - m, r.top - m, r.right + m, r.bottom + m)
         drawRect(sombra(o, 0.42f), Offset(marco.left + 1.4f * u, marco.top + 2f * u), marco.size)
         drawRect(n(mezcla(LATON, VERDIN, 0.3f), o, k), marco.topLeft, marco.size)
@@ -1179,7 +1243,9 @@ object IdeasArcano : DisenoIdeas {
             val x = marco.left + marco.width * azar(semilla, 700 + j)
             drawRect(n(mezcla(VERDIN, LATON, 0.3f), o, k).copy(alpha = 0.55f), Offset(x, if (j % 2 == 0) marco.top else marco.bottom - m), Size(marco.width * 0.05f, m * 0.7f))
         }
-        drawRect(tarjeta(o, k), r.topLeft, r.size)
+        drawRect(tarjeta(o, kc), r.topLeft, r.size)
+        // De noche, lejos de la llama, la tarjeta se apaga por los bordes (el centro, con el texto, conserva su contraste).
+        if (o && kc < 0.5f) drawRect(sombra(true, 0.3f * (1f - 2f * kc)), Offset(r.left + 1.5f * u, r.top + 1.5f * u), Size(r.width - 3f * u, r.height - 3f * u), style = Stroke(3f * u))
         // La raya roja de la ficha y la sombra del marco sobre la tarjeta.
         drawRect(n(HILO, o, k).copy(alpha = 0.45f), Offset(r.left + 2f * u, r.top + r.height * 0.13f), Size(r.width - 4f * u, 0.8f * u))
         drawRect(sombra(o, 0.18f), r.topLeft, Size(r.width, 1.4f * u))
@@ -1188,6 +1254,9 @@ object IdeasArcano : DisenoIdeas {
             drawCircle(n(mezcla(LATON, VERDIN, 0.15f), o, k), 1.2f * u, Offset(x, r.center.y))
             drawCircle(brillo(o, 0.6f, k), 0.5f * u, Offset(x - 0.3f * u, r.center.y - 0.3f * u))
         }
+        // El filo de la llama en el canto de arriba del marco y el destello en un remache.
+        filo(marco, o, kc, false)
+        destello(Offset(marco.right - m / 2, r.center.y), 1f * u, o, kc)
     }
 
     /** Los papeles que asoman: hojas de distintos papeles, ladeadas, entre [arriba] y [abajo]; más cuantas más fichas. */
@@ -1218,7 +1287,7 @@ object IdeasArcano : DisenoIdeas {
         val ab = c.abierto.coerceIn(0f, 1f)
         val k = if (o) cercaDe(c) else 0f
         // Aun la caja más lejana recoge un filo de luz en los cantos y en el latón.
-        val filo = if (o) maxOf(k, 0.22f) else 0f
+        val filo = if (o) maxOf(k, 0.1f) else 0f
         // De día, la luz de arriba a la izquierda aclara apenas las filas de arriba y la columna de la izquierda.
         val dia = if (o) 0f else 0.06f * (1f - c.fila / maxOf(1f, c.filas - 1f)) + (if (c.col == 0) 0.02f else 0f)
 
@@ -1235,7 +1304,7 @@ object IdeasArcano : DisenoIdeas {
             1 -> cajaCaudales(c, o, k, filo, dia, ab)
             else -> fajoLibros(c, o, k, filo, dia, ab)
         }
-        portaetiquetas(r, o, filo, c.semilla)
+        portaetiquetas(r, o, k, c.semilla)
         if (ab > 0f) mancha(Offset(w / 2, h * 0.3f), w * 0.4f, if (o) LLAMA.copy(alpha = 0.14f * ab * (0.3f + k)) else LUZ_DIA.copy(alpha = 0.3f * ab))
     }
 
@@ -1250,6 +1319,8 @@ object IdeasArcano : DisenoIdeas {
             papeles(cuerpo.left + 3f * u, cuerpo.right - 3f * u, cuerpo.top - sube - h * 0.04f, cuerpo.top, c.n, c.semilla, o, k)
         }
         cara(cuerpo, CARTON, o, k, dia)
+        // El filo de la llama en el canto de arriba y en el costado que la mira (en la columna de la izquierda, el derecho).
+        filo(cuerpo, o, k, c.col == 0)
         pinceladas(cuerpo, if (o) NOCHE else CARTON_OSC, c.semilla, 8, u, 0.12f)
         // La solapa del costado y las esquinas gastadas.
         listOf(cuerpo.left + w * 0.04f, cuerpo.right - w * 0.04f).forEach { x -> drawLine(sombra(o, 0.25f), Offset(x, cuerpo.top), Offset(x, cuerpo.bottom), 0.9f * u) }
@@ -1269,6 +1340,7 @@ object IdeasArcano : DisenoIdeas {
         val tapa = Rect(w * 0.035f, cuerpo.top - sube - h * 0.15f, w * 0.965f, cuerpo.top - sube + h * 0.012f)
         drawRect(sombra(o, 0.35f), Offset(tapa.left + 1.4f * u, tapa.bottom), Size(tapa.width, 2.6f * u))
         cara(tapa, mezcla(CARTON, CARTON_LUZ, 0.4f), o, k, dia + 0.03f)
+        filo(tapa, o, k, c.col == 0)
         for (j in 0 until 3) drawLine(n(HOJALATA, o, k).copy(alpha = 0.55f), Offset(tapa.left + w * (0.08f + 0.04f * j), tapa.top + tapa.height * (0.35f + 0.1f * j)), Offset(tapa.left + w * (0.11f + 0.04f * j), tapa.top + tapa.height * (0.6f - 0.1f * j)), 1.1f * u)
         // El bramante en cruz, flojo al abrirse, con su nudo y el lacre.
         val nudo = Offset(w * 0.88f, h * 0.885f)
@@ -1279,9 +1351,10 @@ object IdeasArcano : DisenoIdeas {
         drawLine(sombra(o, 0.3f), Offset(cuerpo.left, nudo.y + 1.6f * u), Offset(cuerpo.right, nudo.y + flojo + 1.6f * u), 0.8f * u)
         val lacre = irregular(nudo, w * 0.03f, w * 0.028f, c.semilla + 920, 9, 0.25f)
         translate(1.4f * u, 1.8f * u) { drawPath(lacre, sombra(o, 0.4f)) }
-        drawPath(lacre, n(LACRE, o, filo))
+        drawPath(lacre, if (o) mezcla(n(LACRE, true, filo), LACRE, 0.5f * k) else LACRE)
         drawCircle(n(mezcla(LACRE, HOJALATA, 0.35f), o, filo), w * 0.016f, nudo, style = Stroke(0.9f * u))
         drawArc(brillo(o, 0.5f, filo), 190f, 70f, false, nudo - Offset(w * 0.02f, w * 0.02f), Size(w * 0.04f, w * 0.04f), style = Stroke(1f * u))
+        destello(nudo - Offset(w * 0.01f, w * 0.01f), 1.3f * u, o, k)
     }
 
     /** La caja de caudales de hojalata negra: tapa abombada con su asa, filete dorado, la pintura saltada y el candado. */
@@ -1295,9 +1368,10 @@ object IdeasArcano : DisenoIdeas {
             papeles(cuerpo.left + 4f * u, cuerpo.right - w * 0.14f, cuerpo.top - sube - h * 0.03f, cuerpo.top, c.n, c.semilla, o, k)
         }
         cara(cuerpo, HOJALATA, o, maxOf(k, filo * 0.6f), dia, 3f * u)
+        filo(cuerpo, o, k, c.col == 0)
         // El filete dorado, desvaído.
         val fil = Rect(cuerpo.left + w * 0.03f, cuerpo.top + h * 0.05f, cuerpo.right - w * 0.03f, cuerpo.bottom - h * 0.06f)
-        drawRoundRect(n(LATON, o, filo).copy(alpha = 0.45f), fil.topLeft, fil.size, CornerRadius(4f * u), style = Stroke(0.9f * u))
+        drawRoundRect(n(LATON, o, filo).copy(alpha = if (o) 0.4f + 0.4f * k else 0.45f), fil.topLeft, fil.size, CornerRadius(4f * u), style = Stroke(0.9f * u))
         // La pintura saltada: la hojalata clara con su cerco de óxido.
         val saltos = 4 + Math.floorMod(c.semilla, 3)
         for (j in 0 until saltos) {
@@ -1326,7 +1400,7 @@ object IdeasArcano : DisenoIdeas {
         drawArc(sombra(o, 0.4f), 180f, 180f, false, asa.topLeft + Offset(1.4f * u, 2f * u), asa.size, style = Stroke(1.8f * u))
         drawArc(n(mezcla(HOJALATA, LUZ_DIA, 0.4f), o, filo), 180f, 180f, false, asa.topLeft, asa.size, style = Stroke(1.8f * u))
         // La aldaba y el candado colgando, a la derecha.
-        val ax = w * 0.912f
+        val ax = w * 0.952f
         drawRect(sombra(o, 0.4f), Offset(ax - w * 0.018f + 1.4f * u, tapa.bottom - h * 0.04f + 1.8f * u), Size(w * 0.036f, h * 0.1f))
         drawRect(n(mezcla(HOJALATA, LUZ_DIA, 0.25f), o, filo), Offset(ax - w * 0.018f, tapa.bottom - h * 0.04f), Size(w * 0.036f, h * 0.1f))
         drawRect(brillo(o, 0.5f, filo), Offset(ax - w * 0.018f, tapa.bottom - h * 0.04f), Size(w * 0.036f, 0.9f * u))
@@ -1340,6 +1414,9 @@ object IdeasArcano : DisenoIdeas {
         drawCircle(n(HOJALATA, o, 0f), 1.3f * u, Offset(cand.center.x, cand.center.y - cand.height * 0.08f))
         drawRect(n(HOJALATA, o, 0f), Offset(cand.center.x - 0.5f * u, cand.center.y - cand.height * 0.08f), Size(1f * u, cand.height * 0.25f))
         drawRect(n(VERDIN, o, filo).copy(alpha = 0.6f), Offset(cand.left, cand.bottom - cand.height * 0.2f), Size(cand.width * 0.5f, cand.height * 0.15f))
+        filo(tapa, o, k, c.col == 0)
+        destello(Offset(cand.left + cand.width * 0.3f, cand.top + cand.height * 0.25f), 1.2f * u, o, k)
+        destello(Offset(w * 0.4f, asa.top + 1f * u), 1f * u, o, k)
     }
 
     /** Una forma [p] escalada alrededor de [c], rellena de [col]: el centro claro de la pintura saltada. */
@@ -1367,6 +1444,7 @@ object IdeasArcano : DisenoIdeas {
         lomos.forEachIndexed { i, (r, col) ->
             drawRect(sombra(o, 0.35f), Offset(r.left + 1.4f * u, r.bottom - 1f * u), Size(r.width, 2.6f * u))
             cara(r, col, o, maxOf(k, filo * 0.5f), dia, 2.4f * u)
+            filo(r, o, k * (1f - 0.25f * i), c.col == 0)
             // El lomo redondeado: el brillo de arriba y la piel de las puntas.
             drawRect(brillo(o, 0.25f, filo), Offset(r.left, r.top + r.height * 0.1f), Size(r.width, r.height * 0.14f))
             listOf(r.left, r.right - r.width * 0.1f).forEach { x -> drawRect(n(mezcla(PINO_OSC, OXIDO, 0.25f), o, maxOf(k, filo * 0.5f)), Offset(x, r.top), Size(r.width * 0.1f, r.height)) }
@@ -1399,6 +1477,7 @@ object IdeasArcano : DisenoIdeas {
         drawRect(n(mezcla(LATON, VERDIN, 0.3f), o, filo), heb.topLeft, heb.size, style = Stroke(2.4f * u))
         drawLine(n(mezcla(LATON, VERDIN, 0.3f), o, filo), Offset(heb.center.x, heb.top), Offset(heb.center.x, heb.bottom), 1.6f * u)
         drawLine(brillo(o, 0.6f, filo), heb.topLeft, Offset(heb.right, heb.top), 0.9f * u)
+        destello(heb.topLeft + Offset(1.2f * u, 1.2f * u), 1.2f * u, o, k)
     }
 
     /** Sin tema: la caja de puros de cedro entreabierta, con papeles sueltos; la tarjeta clavada con una tachuela y un «?» a lápiz. */
@@ -1426,6 +1505,7 @@ object IdeasArcano : DisenoIdeas {
         // La tarjeta sin escribir, clavada con una tachuela, y la pregunta a lápiz en la esquina.
         drawRect(sombra(o, 0.4f), Offset(r.left + 1.6f * u, r.top + 2f * u), r.size)
         drawRect(tarjeta(o, k), r.topLeft, r.size)
+        if (o && k < 0.5f) drawRect(sombra(true, 0.3f * (1f - 2f * k)), Offset(r.left + 1.5f * u, r.top + 1.5f * u), Size(r.width - 3f * u, r.height - 3f * u), style = Stroke(3f * u))
         drawRect(sombra(o, 0.1f), Offset(r.right - r.width * 0.1f, r.top), Size(r.width * 0.1f, r.height))
         val q = Offset(r.right - r.width * 0.07f, r.top + r.height * 0.3f)
         val qs = r.height * 0.18f
@@ -1514,7 +1594,7 @@ object IdeasArcano : DisenoIdeas {
         }
     }
 
-    override val rotulo = Rect(0.13f, 0.45f, 0.87f, 0.77f)
+    override val rotulo = Rect(0.075f, 0.45f, 0.925f, 0.77f)
     override fun tintaRotulo(oscuro: Boolean) = TINTA
     override val letraRotulo: FontFamily = Letra.castoro
     override val salida = 0f
