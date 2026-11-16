@@ -290,6 +290,7 @@ internal object PosadaAntiguas {
         drawPath(poligono(pasos.map { p(it, aleroEn(it), 0f) } + pasos.reversed().map { p(it, aleroEn(it), vuelo) }), pe.sombra(C.MADERA_OSC))
         for (s in pasos.drop(1)) drawLine(pe.por(C.MADERA, -0.25f), p(s, aleroEn(s) - 0.01f, 0f), p(s, aleroEn(s) - 0.05f, vuelo - 0.03f), 1.2f)
         val losa = lerp(C.LOSA, C.ESCORIA, 0.1f); val t = 0.1f
+        val filos = Path(); val juntas = Path()
         // Las dos hiladas, con las juntas cruzadas: la de abajo, más salida; la de arriba, un poco más atrás.
         for ((fila, h0, h1, f) in listOf(Hilada(0, 0f, 0.08f, vuelo), Hilada(1, 0.075f, 0.155f, vuelo - 0.035f))) {
             var s = s0 + (if (fila == 1) az.entre(0.1f, 0.2f) else 0f)
@@ -298,9 +299,9 @@ internal object PosadaAntiguas {
                 val sale = f + az.entre(-0.015f, 0.03f); val cae = az.entre(-0.012f, 0.012f)
                 val forma = poligono(p(s, aleroEn(s) + h0 + cae, sale), p(e, aleroEn(e) + h0 - cae, sale), p(e, aleroEn(e) + h1, sale), p(s, aleroEn(s) + h1, sale))
                 drawPath(forma, pe.por(lerp(losa, if (az.real() < 0.5f) C.PIEDRA else C.ESCORIA, az.entre(0f, 0.3f)), t + az.entre(-0.15f, 0.2f)))
-                drawLine(pe.luz(lerp(C.LOSA, C.NIEVE, 0.4f)).copy(alpha = 0.5f), p(s + 0.02f, aleroEn(s) + h1 - 0.01f, sale), p(e - 0.02f, aleroEn(e) + h1 - 0.01f, sale), 0.6f)
-                drawLine(pe.sombra(C.ESCORIA).copy(alpha = 0.75f), p(s, aleroEn(s) + h0 + cae, sale), p(e, aleroEn(e) + h0 - cae, sale), 0.7f)
-                drawLine(pe.sombra(C.ESCORIA).copy(alpha = 0.8f), p(e, aleroEn(e) + h0, sale), p(e, aleroEn(e) + h1, sale), 0.6f)
+                p(s + 0.02f, aleroEn(s) + h1 - 0.01f, sale).let { filos.moveTo(it.x, it.y) }; p(e - 0.02f, aleroEn(e) + h1 - 0.01f, sale).let { filos.lineTo(it.x, it.y) }
+                p(s, aleroEn(s) + h0 + cae, sale).let { juntas.moveTo(it.x, it.y) }; p(e, aleroEn(e) + h0 - cae, sale).let { juntas.lineTo(it.x, it.y) }
+                p(e, aleroEn(e) + h1, sale).let { juntas.lineTo(it.x, it.y) }
                 // El musgo en el canto de algunas losas, más en la de abajo (la que se moja), y el liquen.
                 if (az.real() < (if (fila == 0) 0.45f else 0.25f)) {
                     val m = s + (e - s) * az.entre(0.2f, 0.8f)
@@ -309,6 +310,8 @@ internal object PosadaAntiguas {
                 s = e
             }
         }
+        drawPath(filos, pe.luz(lerp(C.LOSA, C.NIEVE, 0.4f)).copy(alpha = 0.5f), style = androidx.compose.ui.graphics.drawscope.Stroke(0.6f))
+        drawPath(juntas, pe.sombra(C.ESCORIA).copy(alpha = 0.75f), style = androidx.compose.ui.graphics.drawscope.Stroke(0.65f))
         if (v.nieveAbajo > 0.15f) {
             val alto = 0.08f + 0.3f * v.nieveAbajo; val a = v.nieveAbajo.coerceAtMost(1f)
             // El manto: su espesor, con el borde de arriba redondeado y un poco volado por delante del canto.

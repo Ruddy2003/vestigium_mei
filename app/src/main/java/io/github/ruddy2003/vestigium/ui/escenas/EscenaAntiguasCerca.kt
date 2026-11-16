@@ -130,6 +130,8 @@ internal object CercaAntiguas {
         return Cosa(forma, pie, bajoElFollaje = true) {
             val pe = v.pincelEn(pie + Offset(0f, -26f)); val az = fijo("leña")
             drawPath(forma, pe.sombra(C.MADERA_OSC))
+            // (Los anillos de dentro y las grietas de las testas, en un solo trazo cada uno.)
+            val anillos = Path(); val grietas = Path()
             var y = pie.y - 5f; var fila = 0
             while (y > pie.y - alto + 3f) {
                 var x = pie.x - ancho / 2f + 1f + (fila % 2) * 3.4f
@@ -138,12 +140,14 @@ internal object CercaAntiguas {
                     val c = Offset(x + r, y + az.entre(-0.6f, 0.6f))
                     drawCircle(pe.medio(C.MADERA_OSC), r + 0.6f, c)
                     drawCircle(pe.por(lerp(C.FRESNO, C.MADERA, az.entre(0.05f, 0.45f)), 0.45f), r, c)
-                    drawCircle(pe.sombra(C.MADERA).copy(alpha = 0.4f), r * 0.55f, c, style = Stroke(0.4f))
-                    drawLine(pe.sombra(C.MADERA).copy(alpha = 0.5f), c, c + Offset(r * 0.8f, -r * 0.3f), 0.4f)
+                    anillos.addOval(androidx.compose.ui.geometry.Rect(c.x - r * 0.55f, c.y - r * 0.55f, c.x + r * 0.55f, c.y + r * 0.55f))
+                    grietas.moveTo(c); grietas.lineTo(c + Offset(r * 0.8f, -r * 0.3f))
                     x += r * 2f + 0.5f
                 }
                 y -= 8f; fila++
             }
+            drawPath(anillos, pe.sombra(C.MADERA).copy(alpha = 0.4f), style = Stroke(0.4f))
+            drawPath(grietas, pe.sombra(C.MADERA).copy(alpha = 0.5f), style = Stroke(0.4f))
             // El tejadillo de losas sobre dos palos.
             val t0 = pie + Offset(-ancho / 2f - 3f, -alto - 3f); val t1 = pie + Offset(ancho / 2f + 4f, -alto + 2f)
             drawPath(poligono(t0, t1, t1 + Offset(-2f, -6f), t0 + Offset(3f, -8f)), pe.por(C.LOSA, 0.35f))

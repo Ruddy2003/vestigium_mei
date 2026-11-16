@@ -80,13 +80,14 @@ internal object PinoAntiguas {
         val az = fijo("pino")
         val partido = EscenaAntiguas.pinoPartido(v.m)
         // La rama de detrás, velada; la masa del fondo de la copa, que sale por arriba: oscura, con huecos de cielo.
-        if (!partido) { rama(v, RAMA_DE_DETRAS, false, velo = 0.32f); for ((c, w) in RAMA_DE_DETRAS.copas) copa(v, c, w, az, false, velo = 0.32f) }
+        val az2 = fijo("pino", "hondura")
+        if (!partido) { rama(v, RAMA_DE_DETRAS, false, velo = 0.32f); for ((c, w) in RAMA_DE_DETRAS.copas) copa(v, c, w, az2, false, velo = 0.32f, densidad = 0.7f, agujas = 9) }
         masaDelFondo(v, az, partido)
-        for ((c, w) in COPAS_DE_DETRAS) if (!partido || c.x < 60f) copa(v, c, w, az, false, velo = -0.32f)
+        for ((c, w) in COPAS_DE_DETRAS) if (!partido || c.x < 60f) copa(v, c, w, az2, false, velo = -0.32f, densidad = 0.7f, agujas = 9)
         for (r in RAMAS) rama(v, r, partido)
         tronco(v, az, partido)
         for (r in RAMAS) for ((c, w) in r.copas) copa(v, c, w, az, partido && r.muerta)
-        if (!partido) { rama(v, RAMA_DE_DELANTE, false, velo = -0.25f); for ((c, w) in RAMA_DE_DELANTE.copas) copa(v, c, w, az, false, velo = -0.25f) }
+        if (!partido) { rama(v, RAMA_DE_DELANTE, false, velo = -0.25f); for ((c, w) in RAMA_DE_DELANTE.copas) copa(v, c, w, az2, false, velo = -0.25f, densidad = 0.8f, agujas = 11) }
         linternas(v)
     }
 
@@ -215,11 +216,11 @@ internal object PinoAntiguas {
      * sol), con huecos de cielo entre mechón y mechón; las piñas colgadas; con nieve, un copo encima de cada mechón de
      * arriba. Muerta: las ramillas negras y quebradas, con algún mechón pardo.
      */
-    private fun DrawScope.copa(v: VistaAntiguas, c: Offset, w: Float, az: Azar, muerta: Boolean, velo: Float = 0f) {
+    private fun DrawScope.copa(v: VistaAntiguas, c: Offset, w: Float, az: Azar, muerta: Boolean, velo: Float = 0f, densidad: Float = 1f, agujas: Int = 13) {
         val pe = pincel(v, c)
         val lado = if (pe.solALaDerecha) 1f else -1f
         val h = w * 0.42f
-        val n = (w * 1.05f).toInt().coerceAtLeast(7)
+        val n = (w * 1.05f * densidad).toInt().coerceAtLeast(7)
         // Dónde va cada mechón: repartidos en el abanico de la copa, más juntos en el centro.
         val mechones = (0 until n).map { i ->
             val f = (i + az.entre(0.1f, 0.9f)) / n
@@ -239,26 +240,33 @@ internal object PinoAntiguas {
         }
         // Los mechones: el corazón oscuro y las agujas en tres pasadas (sombra, medio, luz), cada una en un solo trazo.
         val hondo = velado(v, pe.sombra(lerp(C.PINO, C.ESCORIA, 0.35f)), velo); val medio = velado(v, pe.por(C.PINO, 0f), velo); val claro = velado(v, pe.luz(lerp(C.PINO, C.ALERCE, 0.55f)), velo)
-        val agujasS = Path(); val agujasM = Path(); val agujasL = Path()
+        // (Los corazones, en un solo trazo; los mechones que quedan por encima del borde de arriba no se pintan, pero
+        // gastan su azar igual, para que los demás no cambien.)
+        val agujasS = Path(); val agujasM = Path(); val agujasL = Path(); val corazones = Path()
         for ((q, r) in mechones) {
-            drawOval(hondo, Offset(q.x - r * 0.55f, q.y - r * 0.35f), Size(r * 1.1f, r * 0.8f))
-            for (k in 0 until 13) {
-                val ang = -3.1416f + 3.1416f * (k + az.entre(-0.3f, 0.3f)) / 12f
+            if (q.y < -1.3f * r) { repeat(agujas) { az.entre(-0.3f, 0.3f); az.entre(0.8f, 1.3f) }; continue }
+            corazones.addOval(Rect(q.x - r * 0.55f, q.y - r * 0.35f, q.x + r * 0.55f, q.y + r * 0.45f))
+            for (k in 0 until agujas) {
+                val ang = -3.1416f + 3.1416f * (k + az.entre(-0.3f, 0.3f)) / (agujas - 1f)
                 val largo = r * az.entre(0.8f, 1.3f) * (if (sin(ang) > -0.3f) 0.7f else 1f)
                 val punta = q + Offset(cos(ang) * largo, sin(ang) * largo * 0.9f)
                 val destino = if (sin(ang) > -0.35f) agujasS else if (cos(ang) * lado > 0.1f && sin(ang) < -0.5f) agujasL else agujasM
                 destino.moveTo(q.x, q.y); destino.lineTo(punta.x, punta.y)
             }
         }
+        drawPath(corazones, hondo)
         drawPath(agujasS, hondo, style = Stroke(0.6f, cap = StrokeCap.Round))
         drawPath(agujasM, medio, style = Stroke(0.6f, cap = StrokeCap.Round))
         drawPath(agujasL, claro, style = Stroke(0.55f, cap = StrokeCap.Round))
         // Las piñas, colgadas bajo los mechones de abajo: escamas en rombo.
+        val pinas = Path(); val escamas = Path()
         for ((q, r) in mechones.takeLast(3).take(2)) {
             val pq = q + Offset(az.entre(-1f, 1f), r * 0.7f)
-            drawOval(pe.por(lerp(C.CUERO, C.MADERA, 0.4f), 0.15f), Offset(pq.x - 1.5f, pq.y - 0.4f), Size(3f, 4.4f))
-            for (j in 0..2) drawLine(pe.sombra(C.MADERA_OSC), pq + Offset(-1.3f, 0.8f + j * 1.2f), pq + Offset(1.3f, 0.8f + j * 1.2f), 0.35f)
+            pinas.addOval(Rect(pq.x - 1.5f, pq.y - 0.4f, pq.x + 1.5f, pq.y + 4f))
+            for (j in 0..2) { escamas.moveTo(pq + Offset(-1.3f, 0.8f + j * 1.2f)); escamas.lineTo(pq + Offset(1.3f, 0.8f + j * 1.2f)) }
         }
+        drawPath(pinas, pe.por(lerp(C.CUERO, C.MADERA, 0.4f), 0.15f))
+        drawPath(escamas, pe.sombra(C.MADERA_OSC), style = Stroke(0.35f))
         // La nieve: un copo encima de cada mechón de arriba, con su sombra azul debajo.
         if (v.nieveAbajo > 0.15f) {
             val k = v.nieveAbajo
