@@ -6,10 +6,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.TrazoObj.ARRIBA
@@ -48,14 +45,15 @@ import kotlin.math.sin
  * ([SitioObjeto]): cada cara pide su color a la luz de su sitio, la misma cuenta que la mesa o el suelo de debajo
  * (`VistaLab.c`). Así cada uno tiene su lado de la lámpara de cultivo y de la pantalla y, de noche, el de la lámpara de su
  * mesa y el del violeta de la puerta, sin pintarlos a mano; y su sombra la tumban las luces que la tumban en ese sitio.
- * Las firmas de siempre ([sobreElSoporte], [grande]) reconocen el claro de la mesa y el pie del taburete del laboratorio y
+ * (La sala mira el cono de sus lámparas al revés y no alumbra lo que tienen debajo; los objetos lo corrigen para sí, a
+ * media fuerza, mientras la sala no lo corrija: `SitioObjeto.delLaboratorio`.) Las firmas de siempre ([sobreElSoporte], [grande]) reconocen el claro de la mesa y el pie del taburete del laboratorio y
  * toman su luz de `VistaLab`; en cualquier otro sitio, si el cuadro solo da su [Pincel], se arma una luz con él
  * ([SitioObjeto.dePincel], más plana). Un cuadro con luces propias (el centro del Claustro) llama a las variantes que
  * reciben un [SitioObjeto] armado con su cámara y sus luces.
  *
  * - **Grandes** ([GRANDES]): la bata (echada sobre el apoyo, cayendo hasta el suelo, nunca con forma de cuerpo), los
  *   guantes (colgados del canto del apoyo con sus pinzas de madera, «como orejas») y la maceta de barro con su grama, de pie
- *   en el suelo. Están en `EscenaLaboratorioObjetosGrandes.kt`, con el microscopio.
+ *   en el suelo. Están en `EscenaLaboratorioObjetosGrandes.kt`, con el microscopio y lo que usan todos para pintarse ([TrazoObj]).
  * - **Chicos**: la tableta, la pipeta, el microscopio, la semilla (en su plato negro, con la pinza), la tarjeta, los
  *   auriculares, el cuaderno, la piedra y la taza.
  *
@@ -158,13 +156,18 @@ internal object ObjetosLaboratorio {
         else SitioObjeto.dePincel(p, sobre, escala)
     }
 
-    /** El sitio del grande: el pie del taburete del laboratorio (su apoyo, el canto del asiento que mira a quien mira), o uno cualquiera. */
+    /**
+     * El sitio del grande: el pie del taburete del laboratorio (su apoyo, el canto del asiento hacia donde cuelgan la bata y los
+     * guantes, [GrandesLab.GIRO]), o uno cualquiera con la luz de [p].
+     */
     fun sitioDelPie(m: Momento, p: Pincel, pie: Offset, apoyo: Offset, escala: Float): SitioObjeto {
         val w = CuadroLab.PIE_GRANDE
         if ((pie - CamLab.p(w)).getDistance() < 0.5f && abs(escala * METRO - CamLab.k(w)) < 0.5f) {
+            // El apoyo: el canto del asiento que mira hacia donde cuelgan los grandes (hacia quien mira y hacia la pantalla).
             val t = CosasLab.taburete(m)
-            val hacia = V3(-t.x, 0f, -t.z).unidad()
-            return SitioObjeto.delLaboratorio(VistaLab(m), w, V3(0f, 0f, 1f), false, t + V3(0f, 0.66f, 0f) + hacia * 0.165f)
+            val fondo = V3(w.x, 0f, w.z).unidad(); val derecha = V3(fondo.z, 0f, -fondo.x)
+            val g = GrandesLab.GIRO; val haciaDelante = (fondo * cos(g) + derecha * sin(g)) * -1f
+            return SitioObjeto.delLaboratorio(VistaLab(m), w, V3(0f, 0f, 1f), false, t + V3(0f, 0.66f, 0f) + haciaDelante * 0.165f)
         }
         return SitioObjeto.dePincel(p, pie, escala, apoyo)
     }
@@ -227,18 +230,19 @@ internal object ObjetosLaboratorio {
         for (i in 1..5) trazo(f, listOf(V3(-0.09f + i * 0.03f, y0 + 0.0003f, -0.066f), V3(-0.087f + i * 0.03f, y0 + 0.0003f, 0.064f)), lerp(T.LINO, C.TIERRA, 0.35f), 0.0008f, 0.3f)
         trazo(f, listOf(V3(-0.09f, y0 + 0.0003f, -0.01f), V3(0.09f, y0 + 0.0003f, -0.016f)), lerp(T.LINO, C.SOMBRA, 0.4f), 0.0012f, 0.35f)
         // La piedra: su sombra, la de contacto y el cuerpo liso, con la luz de cada lado.
-        val c = V3(0.004f, y0 + 0.031f, 0.004f); val rx = 0.064f; val ry = 0.032f; val rz = 0.046f
+        val c = V3(0.004f, y0 + 0.028f, 0.004f); val rx = 0.066f; val ry = 0.029f; val rz = 0.048f
         sombras(f, aro(c.x, y0, c.z, rx, rz, 12) + listOf(V3(c.x, c.y + ry, c.z), V3(c.x - 0.035f, c.y + ry * 0.7f, c.z), V3(c.x + 0.035f, c.y + ry * 0.7f, c.z)), plano = y0)
         contacto(f, c.x, c.z, rx * 0.75f, rz * 0.7f, y = y0, alfa = 0.55f)
-        val forma = elipsoide(f, c, rx, ry, rz, T.PIEDRA, 0.6f)
+        val bulto: (Float) -> Float = { ph -> 1f + 0.1f * sin(2f * ph + 0.7f) + 0.06f * cos(3f * ph - 0.4f) }
+        val forma = elipsoide(f, c, rx, ry, rz, T.PIEDRA, 0.6f, bulto)
         clipPath(forma) {
             // La veta de cuarzo que la cruza por encima, de un lado al otro.
             val ae = angOjo(f, c); val a = ae + 1.57f + 0.35f
-            val ejeA = V3(cos(a), 0f, sin(a)); val ejeB = (V3(cos(ae), 0f, sin(ae)) * 0.85f + V3(0f, 0.55f, 0f)).unidad()
+            val ejeA = V3(cos(a), 0f, sin(a)); val ejeB = (V3(cos(ae), 0f, sin(ae)) * 0.6f + V3(0f, 0.55f, 0f) + V3(cos(ae + 1.57f), 0f, sin(ae + 1.57f)) * 0.5f).unidad()
             var tramo = ArrayList<V3>()
-            fun cierra() { if (tramo.size >= 2) { val q = tramo[tramo.size / 2]; trazo(f, tramo, f.c(q, T.VETA, V3((q.x - c.x) / rx, (q.y - c.y) / ry, (q.z - c.z) / rz)), 0.0075f, 0.95f) }; tramo = ArrayList() }
-            for (i in 0..40) { val th = i * DOS_PI / 40; val u = ejeA * cos(th) + ejeB * sin(th)
-                val q = V3(c.x + rx * u.x, c.y + ry * u.y, c.z + rz * u.z)
+            fun cierra() { if (tramo.size >= 2) { val q = tramo[tramo.size / 2]; trazo(f, tramo, lerp(f.c(q, T.VETA, V3((q.x - c.x) / rx, (q.y - c.y) / ry, (q.z - c.z) / rz)), T.VETA, 0.25f), 0.0085f, 0.95f) }; tramo = ArrayList() }
+            for (i in 0..40) { val th = i * DOS_PI / 40; val u = (ejeA * cos(th) + ejeB * sin(th) + V3(0f, 0.09f * sin(4f * th), 0f)).unidad()
+                val b = bulto(atan2(u.z, u.x)); val q = V3(c.x + rx * b * u.x, c.y + ry * u.y, c.z + rz * b * u.z)
                 if (f.seVe(q, V3(u.x / rx, u.y / ry, u.z / rz))) tramo += q else cierra() }
             cierra()
             // Las motas, y el brillo frío de lo liso.
@@ -424,7 +428,8 @@ internal object ObjetosLaboratorio {
             // El día del humo: las ruinas de arriba y la columna fina y gris que se dobla con el viento.
             val ruinas = listOf(q(-0.07f, 0.05f), q(-0.07f, 0.08f), q(-0.05f, 0.08f), q(-0.05f, 0.11f), q(-0.03f, 0.1f), q(-0.02f, 0.075f), q(0.01f, 0.075f), q(0.015f, 0.13f), q(0.03f, 0.12f), q(0.035f, 0.085f), q(0.07f, 0.09f), q(0.07f, 0.05f))
             drawPath(f.forma(ruinas), lerp(T.PANTALLA, C.NEGRO, 0.6f))
-            trazo(f, listOf(q(0.025f, 0.12f, 0.0005f), q(0.02f, 0.16f, 0.0005f), q(0.0f, 0.19f, 0.0005f), q(-0.03f, 0.205f, 0.0005f)), lerp(C.ACERO, C.TELA, 0.4f), 0.006f, 0.8f)
+            for (i in 0 until 8) { val e = i / 7f
+                drawCircle(lerp(C.ACERO, C.TELA, 0.45f), (0.004f + 0.009f * e) * f.k, f.p(q(0.024f - 0.055f * e * e, 0.126f + 0.08f * e, 0.0005f)), alpha = 0.6f - 0.35f * e) }
         } else if (luz > 0.5f) {
             // Las cuentas de la grama: una rejilla, barras y una curva, sin cifras.
             for (i in 1..4) trazo(f, listOf(q(-0.065f, 0.03f + i * 0.035f, 0.0004f), q(0.065f, 0.03f + i * 0.035f, 0.0004f)), linea, 0.0007f, 0.25f)
@@ -523,8 +528,8 @@ internal object TonosObj {
     private val C = ColorLaboratorio
     val BARRO_GRIS = lerp(C.BARRO, C.TIERRA, 0.58f)                              // la taza
     val INFUSION = lerp(C.GRAMA, C.BARRO, 0.55f)                                 // la infusión de hierbas, fría
-    val PIEDRA = lerp(lerp(C.TIERRA, C.SOMBRA, 0.2f), C.HORMIGON, 0.18f)                                  // la piedra de arriba, fría
-    val VETA = lerp(C.TELA, C.TIERRA, 0.1f)                                      // su veta de cuarzo
+    val PIEDRA = lerp(lerp(C.TIERRA, C.SOMBRA, 0.1f), C.HORMIGON, 0.4f)                                  // la piedra de arriba, fría
+    val VETA = lerp(C.TELA, Color.White, 0.3f)                                      // su veta de cuarzo
     val LINO = lerp(C.TELA, C.TIERRA, 0.12f)                                     // el paño
     val PAPEL = lerp(C.TELA, C.TIERRA, 0.18f)                                    // el papel de fibra (el de la mesa)
     val TAPAS = lerp(C.HOJA_OSC, C.MADERA, 0.35f)                                // las tapas del cuaderno
@@ -681,206 +686,4 @@ internal class MarcoObj(val s: SitioObjeto, giro: Float = 0f, val amplia: Float 
     /** La dirección (en los ejes de la cosa) de [q] hacia los ojos. */
     fun alOjo(q: V3): V3 { val d = s.ojo - w(q); return V3(d.punto(x), d.y, d.punto(z)).unidad() }
     fun forma(ps: List<V3>): Path = poligono(ps.map { p(it) })
-}
-
-/** Lo que usan los objetos para pintarse en 3D con la luz de su sitio: caras, cajas, cuerpos torneados, cilindros, palos, sombras. */
-internal object TrazoObj {
-    private val C = ColorLaboratorio
-    const val DOS_PI = 6.2831855f
-    val ARRIBA = V3(0f, 1f, 0f)
-    val FRENTE = V3(0f, 0f, -1f)
-
-    fun lum(c: Color): Float = 0.3f * c.red + 0.59f * c.green + 0.11f * c.blue
-    fun cruz(a: V3, b: V3): V3 = V3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x)
-    fun media(ps: List<V3>): V3 { var x = 0f; var y = 0f; var z = 0f; for (q in ps) { x += q.x; y += q.y; z += q.z }; val n = ps.size.coerceAtLeast(1); return V3(x / n, y / n, z / n) }
-
-    /** El ángulo (en el plano de la cosa) que mira a los ojos desde [q]: los aros de delante van de él menos un cuarto a él más un cuarto. */
-    fun angOjo(f: MarcoObj, q: V3): Float { val e = f.alOjo(q); return atan2(e.z, e.x) }
-
-    /** Los puntos de un aro horizontal de la cosa: centro ([cx], [y], [cz]), radios [rx] y [rz], de [a0] a [a1]. */
-    fun aro(cx: Float, y: Float, cz: Float, rx: Float, rz: Float = rx, n: Int = 20, a0: Float = 0f, a1: Float = DOS_PI): List<V3> =
-        (0..n).map { i -> val a = a0 + (a1 - a0) * i / n; V3(cx + rx * cos(a), y, cz + rz * sin(a)) }
-
-    /** Los puntos de una curva de Bézier cúbica de la cosa. */
-    fun curva(a: V3, b: V3, c: V3, d: V3, n: Int = 12): List<V3> = (0..n).map { i -> val s = i / n.toFloat(); val u = 1f - s
-        a * (u * u * u) + b * (3f * u * u * s) + c * (3f * u * s * s) + d * (s * s * s) }
-
-    /** Una cara plana con su color a la luz del sitio (el de su centro). */
-    fun DrawScope.cara(f: MarcoObj, ps: List<V3>, propio: Color, n: V3, alfa: Float = 1f): Path {
-        val forma = f.forma(ps); drawPath(forma, f.c(media(ps), propio, n), alpha = alfa); return forma
-    }
-
-    /** Una caja de la cosa, con las caras que se ven (0 delante, 1 izquierda, 2 derecha, 3 detrás, 4 arriba). */
-    fun DrawScope.caja(f: MarcoObj, x0: Float, x1: Float, y0: Float, y1: Float, z0: Float, z1: Float, propio: Color, encima: (DrawScope.(Int, Path) -> Unit)? = null) {
-        val caras = listOf(
-            listOf(V3(x0, y0, z0), V3(x1, y0, z0), V3(x1, y1, z0), V3(x0, y1, z0)) to V3(0f, 0f, -1f),
-            listOf(V3(x0, y0, z1), V3(x0, y0, z0), V3(x0, y1, z0), V3(x0, y1, z1)) to V3(-1f, 0f, 0f),
-            listOf(V3(x1, y0, z0), V3(x1, y0, z1), V3(x1, y1, z1), V3(x1, y1, z0)) to V3(1f, 0f, 0f),
-            listOf(V3(x1, y0, z1), V3(x0, y0, z1), V3(x0, y1, z1), V3(x1, y1, z1)) to V3(0f, 0f, 1f),
-            listOf(V3(x0, y1, z0), V3(x1, y1, z0), V3(x1, y1, z1), V3(x0, y1, z1)) to ARRIBA,
-        )
-        for ((i, cn) in caras.withIndex()) { val (ps, n) = cn; if (!f.seVe(media(ps), n)) continue; val forma = cara(f, ps, propio, n); encima?.invoke(this, i, forma) }
-    }
-
-    /**
-     * Un cuerpo de caras rectas: su [contorno] en planta (x, z), de [y0] a [y1]. Los lados que se ven, de los lejanos a los
-     * cercanos, y la cara de arriba ([arriba]), que devuelve.
-     */
-    fun DrawScope.extruido(f: MarcoObj, contorno: List<Pair<Float, Float>>, y0: Float, y1: Float, propio: Color, arriba: Color = propio): Path {
-        val n = contorno.size
-        var area = 0f; for (i in 0 until n) { val (xa, za) = contorno[i]; val (xb, zb) = contorno[(i + 1) % n]; area += xa * zb - xb * za }
-        val sg = if (area > 0f) 1f else -1f
-        val lados = (0 until n).mapNotNull { i ->
-            val (xa, za) = contorno[i]; val (xb, zb) = contorno[(i + 1) % n]
-            val nn = V3((zb - za) * sg, 0f, -(xb - xa) * sg)
-            val ps = listOf(V3(xa, y0, za), V3(xb, y0, zb), V3(xb, y1, zb), V3(xa, y1, za))
-            if (f.seVe(media(ps), nn)) Triple(ps, nn, (f.w(media(ps)) - f.s.ojo).largo()) else null
-        }.sortedByDescending { it.third }
-        for ((ps, nn, _) in lados) cara(f, ps, propio, nn)
-        return cara(f, contorno.map { V3(it.first, y1, it.second) }, arriba, ARRIBA)
-    }
-
-    /**
-     * Un cuerpo torneado de eje vertical en ([cx], [cz]) (una taza, una maceta, un plato): su [perfil] son pares (alto, radio)
-     * de abajo arriba. Lo pinta con el color de cada lado a la luz del sitio y un brillo del lado que más alumbra; devuelve
-     * la silueta.
-     */
-    fun DrawScope.torneado(f: MarcoObj, cx: Float, cz: Float, perfil: List<Pair<Float, Float>>, propio: Color, brillo: Float = 0.25f, n: Int = 24): Path {
-        val anillos = perfil.map { (y, r) -> (0 until n).map { i -> val a = i * DOS_PI / n; f.p(cx + r * cos(a), y, cz + r * sin(a)) } }
-        val izq = anillos.map { ps -> ps.minByOrNull { it.x }!! }; val der = anillos.map { ps -> ps.maxByOrNull { it.x }!! }
-        val forma = Path().apply {
-            moveTo(izq[0].x, izq[0].y); for (q in izq) lineTo(q.x, q.y)
-            for (q in arco(anillos.last(), true)) lineTo(q.x, q.y)
-            for (q in der.asReversed()) lineTo(q.x, q.y)
-            for (q in arco(anillos.first(), false).asReversed()) lineTo(q.x, q.y)
-            close()
-        }
-        val (ym, rm) = perfil[perfil.size / 2]
-        val x0 = izq.minOf { it.x }; val x1 = der.maxOf { it.x }.coerceAtLeast(x0 + 0.5f)
-        val muestras = ArrayList<Triple<Float, Color, Float>>()
-        for (i in 0 until 32) { val a = i * DOS_PI / 32; val q = V3(cx + rm * cos(a), ym, cz + rm * sin(a)); val nn = V3(cos(a), 0f, sin(a))
-            if (f.seVe(q, nn)) muestras += Triple(f.p(q).x, f.c(q, propio, nn), a) }
-        muestras.sortBy { it.first }
-        if (muestras.size < 2) drawPath(forma, f.c(V3(cx, ym, cz), propio, FRENTE))
-        else { var ultimo = -1f
-            val paradas = muestras.map { (xx, col, _) -> val tt = ((xx - x0) / (x1 - x0)).coerceIn(0f, 1f).coerceAtLeast(ultimo + 0.0001f).coerceAtMost(1f); ultimo = tt; tt to col }.toTypedArray()
-            drawPath(forma, Brush.horizontalGradient(*paradas, startX = x0, endX = x1)) }
-        val mejor = muestras.maxByOrNull { lum(it.second) }
-        if (brillo > 0f && mejor != null) {
-            val a = mejor.third
-            val linea = perfil.map { (y, r) -> V3(cx + r * 0.98f * cos(a), y, cz + r * 0.98f * sin(a)) }
-            clipPath(forma) { trazo(f, linea, lerp(mejor.second, Color.White, 0.55f), 0.11f * rm, brillo * propio.alpha) }
-        }
-        return forma
-    }
-
-    /** El medio aro de [ps] que va de su punto más a la izquierda al más a la derecha, por detrás ([atras]) o por delante. */
-    private fun arco(ps: List<Offset>, atras: Boolean): List<Offset> {
-        val n = ps.size; val iL = ps.indices.minByOrNull { ps[it].x }!!; val iR = ps.indices.maxByOrNull { ps[it].x }!!
-        val una = ArrayList<Offset>(); var i = iL; while (true) { una += ps[i]; if (i == iR) break; i = (i + 1) % n }
-        val otra = ArrayList<Offset>(); i = iL; while (true) { otra += ps[i]; if (i == iR) break; i = (i - 1 + n) % n }
-        return if ((una.minOf { it.y } < otra.minOf { it.y }) == atras) una else otra
-    }
-
-    /** Un elipsoide (una piedra, una pera de goma) con su lado de luz, su sombra y un brillo; devuelve la silueta. */
-    fun DrawScope.elipsoide(f: MarcoObj, c: V3, rx: Float, ry: Float, rz: Float, propio: Color, brillo: Float = 0.3f): Path {
-        val pts = ArrayList<Offset>(); var claro: Pair<Offset, Color>? = null; var oscuro: Color? = null; var medio: Color? = null
-        var lc = -1f; var lo = 2f; var fr = -2f
-        for (i in 0..8) for (j in 0 until 16) {
-            val th = Math.PI.toFloat() * i / 8f; val ph = DOS_PI * j / 16f
-            val nx = sin(th) * cos(ph); val ny = cos(th); val nz = sin(th) * sin(ph)
-            val q = V3(c.x + rx * nx, c.y + ry * ny, c.z + rz * nz); val o = f.p(q); pts += o
-            val nn = V3(nx / rx, ny / ry, nz / rz)
-            if (!f.seVe(q, nn)) continue
-            val col = f.c(q, propio, nn); val l = lum(col)
-            if (l > lc) { lc = l; claro = o to col }
-            if (l < lo) { lo = l; oscuro = col }
-            val haciaOjo = nn.unidad().punto(f.alOjo(q)); if (haciaOjo > fr) { fr = haciaOjo; medio = col }
-        }
-        val hull = envolvente(pts); val forma = poligono(hull)
-        val (pc, cc) = claro ?: (f.p(c) to f.c(c, propio, FRENTE))
-        val radio = hull.maxOf { (it - pc).getDistance() }.coerceAtLeast(1f)
-        drawPath(forma, Brush.radialGradient(0f to lerp(cc, Color.White, brillo * 0.6f), 0.2f to cc, 0.6f to (medio ?: cc), 1f to (oscuro ?: cc), center = pc, radius = radio))
-        return forma
-    }
-
-    /** Un cilindro de eje cualquiera, de [a] a [b] (un tubo, una copa de los auriculares): el costado a la luz y la tapa que se ve. */
-    fun DrawScope.cilindroEje(f: MarcoObj, a: V3, b: V3, r: Float, propio: Color, tapa: Color? = propio, n: Int = 16, metal: Float = 0f): Path {
-        val d = (b - a).unidad()
-        val ref = if (abs(d.y) < 0.9f) ARRIBA else V3(1f, 0f, 0f)
-        val t1 = cruz(ref, d).unidad(); val t2 = cruz(d, t1)
-        fun anillo(o: V3) = (0 until n).map { i -> val ang = i * DOS_PI / n; o + (t1 * cos(ang) + t2 * sin(ang)) * r }
-        val ra = anillo(a); val rb = anillo(b)
-        val forma = poligono(envolvente((ra + rb).map { f.p(it) }))
-        val m = (a + b) * 0.5f; val pm = f.p(m); val ax = f.p(b) - f.p(a); val la = ax.getDistance()
-        val perp = if (la < 0.01f) Offset(1f, 0f) else Offset(-ax.y / la, ax.x / la)
-        val muestras = ArrayList<Pair<Float, Color>>()
-        for (i in 0 until 24) { val ang = i * DOS_PI / 24; val nn = t1 * cos(ang) + t2 * sin(ang); val q = m + nn * r
-            if (!f.seVe(q, nn)) continue; val o = f.p(q) - pm; muestras += (o.x * perp.x + o.y * perp.y) to f.c(q, propio, nn) }
-        muestras.sortBy { it.first }
-        if (muestras.size >= 2) {
-            val s0 = muestras.first().first; val s1 = muestras.last().first.coerceAtLeast(s0 + 0.3f); var ultimo = -1f
-            val paradas = muestras.map { (sv, col) -> val tt = ((sv - s0) / (s1 - s0)).coerceIn(0f, 1f).coerceAtLeast(ultimo + 0.0001f).coerceAtMost(1f); ultimo = tt; tt to col }.toTypedArray()
-            drawPath(forma, Brush.linearGradient(*paradas, start = pm + perp * s0, end = pm + perp * s1))
-        } else drawPath(forma, f.c(m, propio, FRENTE))
-        if (metal > 0f) {
-            // El brillo del metal: la generatriz que mejor devuelve la luz (la normal, algo levantada hacia las lámparas).
-            var mejor = -1f; var nb: V3? = null; var cb = propio
-            for (i in 0 until 24) { val ang = i * DOS_PI / 24; val nn = t1 * cos(ang) + t2 * sin(ang)
-                if (!f.seVe(m + nn * r, nn)) continue
-                val col = f.c(m + nn * r, propio, nn + ARRIBA * 0.8f); val l = lum(col); if (l > mejor) { mejor = l; nb = nn; cb = col } }
-            nb?.let { nn -> drawLine(lerp(cb, Color.White, 0.45f), f.p(a + nn * (r * 0.8f)), f.p(b + nn * (r * 0.8f)), (r * 0.45f * f.k).coerceAtLeast(0.4f), StrokeCap.Round, alpha = metal) }
-        }
-        if (tapa != null) {
-            if (f.seVe(b, d)) drawPath(poligono(rb.map { f.p(it) }), f.c(b, tapa, d))
-            else if (f.seVe(a, d * -1f)) drawPath(poligono(ra.map { f.p(it) }), f.c(a, tapa, d * -1f))
-        }
-        return forma
-    }
-
-    /** Un palo redondo de [a] a [b], de [grueso] metros, con su filo de luz del lado que más alumbra. */
-    fun DrawScope.palo(f: MarcoObj, a: V3, b: V3, grueso: Float, propio: Color, brillo: Float = 0.6f) {
-        val pa = f.p(a); val pb = f.p(b); val m = (a + b) * 0.5f
-        val d = (b - a).unidad(); val e = f.alOjo(m)
-        val frente = (e - d * e.punto(d)).unidad(); val lado = cruz(d, e).unidad()
-        val g = (grueso * f.k).coerceAtLeast(0.35f)
-        drawLine(f.c(m, propio, frente), pa, pb, g, StrokeCap.Round)
-        if (brillo > 0f && g > 0.8f) {
-            val c1 = f.c(m, propio, frente + lado); val c2 = f.c(m, propio, frente - lado)
-            val uno = lum(c1) >= lum(c2)
-            val off = (f.p(m + lado * (grueso * 0.28f)) - f.p(m)) * (if (uno) 1f else -1f)
-            drawLine(lerp(if (uno) c1 else c2, Color.White, 0.35f), pa + off, pb + off, g * 0.33f, StrokeCap.Round, alpha = brillo * propio.alpha)
-        }
-    }
-
-    /** Una línea por los puntos [ps] de la cosa, de [ancho] metros. */
-    fun DrawScope.trazo(f: MarcoObj, ps: List<V3>, color: Color, ancho: Float, alfa: Float = 1f) {
-        if (ps.size < 2) return
-        val camino = Path(); for ((i, q) in ps.withIndex()) { val o = f.p(q); if (i == 0) camino.moveTo(o.x, o.y) else camino.lineTo(o.x, o.y) }
-        drawPath(camino, color, alpha = alfa, style = Stroke((ancho * f.k).coerceAtLeast(0.3f), cap = StrokeCap.Round, join = StrokeJoin.Round))
-    }
-
-    /**
-     * La sombra que [esqueleto] (puntos de la cosa) arroja sobre el plano de altura [plano] (en sus ejes) con cada luz que la
-     * tumba en el sitio (la misma cuenta que las sombras del tablero), dentro de la superficie del sitio.
-     */
-    fun DrawScope.sombras(f: MarcoObj, esqueleto: List<V3>, plano: Float = 0f) {
-        val s = f.s; if (s.sombras.isEmpty()) return
-        val wy = f.w(V3(0f, plano, 0f)).y
-        val dibujar: DrawScope.() -> Unit = {
-            for ((luz, k) in s.sombras) {
-                val alto = luz.y - wy; if (alto <= 0.05f) continue
-                val ps = esqueleto.mapNotNull { q -> val w = f.w(q); val sobre = w.y - wy
-                    if (sobre >= alto - 0.05f) null else { val e = (alto / (alto - sobre)).coerceAtMost(5f); s.alLienzo(V3(luz.x + (w.x - luz.x) * e, wy, luz.z + (w.z - luz.z) * e)) } }
-                if (ps.size >= 3) drawPath(poligono(envolvente(ps)), C.SOMBRA, alpha = (0.4f * k).coerceIn(0f, 0.55f), blendMode = BlendMode.Multiply)
-            }
-        }
-        val r = s.recorte
-        if (r != null) clipPath(r) { dibujar() } else dibujar()
-    }
-
-    /** La sombra de contacto, oscura y apretada, bajo lo que se apoya. */
-    fun DrawScope.contacto(f: MarcoObj, cx: Float, cz: Float, rx: Float, rz: Float, y: Float = 0f, alfa: Float = 0.4f) {
-        drawPath(f.forma(aro(cx, y + 0.0005f, cz, rx, rz, 24)), lerp(C.SOMBRA, C.NEGRO, 0.35f), alpha = alfa, blendMode = BlendMode.Multiply)
-    }
 }
