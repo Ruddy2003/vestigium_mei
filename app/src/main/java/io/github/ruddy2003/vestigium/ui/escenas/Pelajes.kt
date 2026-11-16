@@ -55,7 +55,7 @@ fun pelajeDe(tema: TemaId): Pelaje? = when (tema) {
     TemaId.REFUGIO -> null          // S17
     TemaId.ORDEN -> null            // S18
     TemaId.VAPOR -> PELAJE_VAPOR
-    TemaId.LABORATORIO -> null      // S17
+    TemaId.LABORATORIO -> PELAJE_LABORATORIO
     TemaId.COLONOS -> null          // S19
     TemaId.NAPOLEON -> PELAJE_NAPOLEON
     TemaId.DECO -> PELAJE_DECO
