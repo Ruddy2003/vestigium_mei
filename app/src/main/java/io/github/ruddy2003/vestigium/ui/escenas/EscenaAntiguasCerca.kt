@@ -47,18 +47,21 @@ internal object CercaAntiguas {
     val TRINEO = Offset(198f, 262f)
 
     /** Cuánta lumbre de la puerta le llega de noche a [q], por su distancia al umbral (cero con la puerta cerrada). */
-    fun lumbreEn(v: VistaAntiguas, q: Offset): Float {
-        if (EscenaAntiguas.puerta(v.m) == EscenaAntiguas.Puerta.CERRADA) return 0f
-        return (v.encendido.sala * v.noche * (1f - (q - PuertaAntiguas.UMBRAL).getDistance() / 180f)).coerceIn(0f, 0.85f)
+    fun lumbreEn(v: VistaAntiguas, q: Offset): Float = lumbreEn(v.m, v.encendido.sala, v.noche, q)
+
+    fun lumbreEn(m: Momento, sala: Float, noche: Float, q: Offset): Float {
+        if (EscenaAntiguas.puerta(m) == EscenaAntiguas.Puerta.CERRADA) return 0f
+        return (sala * noche * (1f - (q - PuertaAntiguas.UMBRAL).getDistance() / 180f)).coerceIn(0f, 0.85f)
     }
 
     fun DrawScope.primerPlano(v: VistaAntiguas) {
         suelo(v)
         with(LuzAntiguas) { charcoDeLaPuerta(v) }
         posada(v)
-        val cosas = cosas(v)
+        val grande = grande(v)
+        val cosas = cosas(v) + listOfNotNull(grande)
         capaSombra(v.r) { c ->
-            for (k in cosas) { val f = 1f - v.sombraEn(k.pie); if (f > 0.02f) { val suelo = minOf(k.pie.y - 1f, ALTO - 2f); sombraArrojada(v.r, k.forma, k.pie, c.copy(alpha = f), suelo, suelo) } }
+            for (k in cosas) { val f = 1f - v.sombraEn(k.pie); if (f > 0.02f) sombraDe(v, k, c.copy(alpha = f), soloSuelo = k === grande) }
             with(PinoAntiguas) { sombraDelPino(v, c) }
         }
         for (k in cosas.sortedBy { it.pie.y }) k.pintar(this)
@@ -67,29 +70,57 @@ internal object CercaAntiguas {
         with(ObjetosAntiguas) { sobreElSoporte(v.m, v.pincelEn(sobre, lumbre = v.encendido.sala * v.noche * 0.6f), sobre, FachadaPosada.escala(-0.62f, 0.25f) / 48f) }
     }
 
+    /** Hasta dónde llega hacia el fondo la sombra de lo que está en la plaza (lo que no tiene la posada detrás). */
+    private const val FONDO_DE_LA_PLAZA = 230f
+
+    /**
+     * La sombra arrojada de una cosa: en el suelo hasta el pie del muro del zaguán (o, en la plaza, hasta su fondo) y, lo
+     * que pasa de ahí cuando la luz viene de delante, subiendo por el muro, entre la esquina y la puerta. La del objeto
+     * grande, solo en el suelo: la del muro la pinta el objeto, que sabe a qué distancia del muro está cada parte suya.
+     */
+    private fun DrawScope.sombraDe(v: VistaAntiguas, k: Cosa, c: Color, soloSuelo: Boolean) {
+        val base = FachadaPosada.baseEn(k.pie.x)?.takeIf { it < k.pie.y - 0.5f }
+        if (base == null) {
+            val suelo = minOf(maxOf(k.pie.y - 44f, FONDO_DE_LA_PLAZA), ALTO - 2f)
+            sombraArrojada(v.r, k.forma, k.pie, c, suelo, suelo)
+            return
+        }
+        val alMuro = !soloSuelo && v.r.ay < -0.02f
+        sombraArrojada(v.r, k.forma, k.pie, c, base, if (alMuro) base - 140f else base, p(FachadaPosada.S_FIN, 0f).x, p(PuertaAntiguas.PUERTA_S1, 0f).x)
+    }
+
     // ---------------------------------------------------------------- Las cosas
 
     /** Las cosas del primer plano, cada una con su silueta (para la sombra), dónde pisa y cómo se pinta. */
     private fun cosas(v: VistaAntiguas): List<Cosa> = buildList {
-        val m = v.m
+        val m = v.m; val grande = ObjetosAntiguas.esGrande(m)
         add(lena(v))
-        if (ObjetosAntiguas.elCuadroPinta(m, "montura") && m.ficha.objeto != "montura") add(caballete(v))
+        if (ObjetosAntiguas.elCuadroPinta(m, "montura")) add(caballete(v))
         add(banco(v))
-        if (EscenaAntiguas.bastonEnLaPuerta(m) && m.ficha.objeto != "baston" && ObjetosAntiguas.elCuadroPinta(m, "baston")) add(baston(v, 1.22f, 0.2f, C.FRESNO))
+        if (EscenaAntiguas.bastonEnLaPuerta(m) && ObjetosAntiguas.elCuadroPinta(m, "baston")) add(baston(v, 1.22f, 0.2f, C.FRESNO))
         if (Senal.BASTON_NUEVO in v.senales) add(baston(v, 1.05f, 0.26f, lerp(C.FRESNO, C.NIEVE, 0.35f)))
-        add(pala(v))
-        add(cubo(v))
+        // El día de un objeto grande, la pala y el cubo se apartan de su sitio (entre la esquina y la jamba): la pala, a la
+        // leña; el cubo, delante de las mulas.
+        add(if (grande) pala(v, Offset(127f, 289f), Offset(117f, 214f), 0.45f) else pala(v, p(2.12f, 0f, 0.4f), p(2.16f, 1.45f, 0.02f), 0f))
+        add(if (grande) cubo(v, 1.8f, 1.5f) else cubo(v, 1.3f, 0.42f))
         if (EscenaAntiguas.cuna(m)) add(cuna(v))
         if (v.invierno) add(trineo(v))
         if (Senal.LENA in v.senales) add(haces(v))
         if (Senal.FARDO_DEL_ARPISTA in v.senales) add(fardo(v))
-        val pieGrande = p(1.82f, 0f, 0.46f); val apoyo = p(1.82f, 1.0f, 0.02f)
-        ObjetosAntiguas.grande(m, v.pincelEn(pieGrande, lumbre = v.encendido.sala * v.noche * 0.5f), pieGrande, apoyo, FachadaPosada.escala(1.82f, 0.46f) / 48f)?.let { add(it) }
         val n = if (Senal.MULAS_DE_VUELTA in v.senales) 2 else EscenaAntiguas.mulas(m)
         if (n > 0) {
-            val (pie, alto) = MulasAntiguas.pieYAlto(MulasAntiguas.MULAS[0])
-            add(Cosa(MulasAntiguas.silueta(pie, alto), pie) { mulas(v, n, EscenaAntiguas.mulasCargadas(m)) })
+            val (pie, alto) = MulasAntiguas.pieYAlto(MulasAntiguas.mulasDe(grande)[0])
+            add(Cosa(MulasAntiguas.silueta(pie, alto), pie) { mulas(v, n, EscenaAntiguas.mulasCargadas(m), grande) })
         }
+    }
+
+    /**
+     * El objeto grande del día, recostado en el muro del zaguán junto al banco. De noche le llega la lumbre de la puerta
+     * (casi tanta como al poyo: está a tres pasos del umbral y la luz de la sala le da de lado).
+     */
+    private fun grande(v: VistaAntiguas): Cosa? {
+        val pie = p(1.82f, 0f, 0.46f); val apoyo = p(1.82f, 1.0f, 0.02f)
+        return ObjetosAntiguas.grande(v.m, v.pincelEn(pie, lumbre = v.encendido.sala * v.noche * 0.8f), pie, apoyo, FachadaPosada.escala(1.82f, 0.46f) / 48f)
     }
 
     /** El montón de leña arrimado al pie del pino, bajo su tejadillo de losas: troncos partidos, apilados, con sus testas claras; en invierno, más alto y con su nieve. */
@@ -180,24 +211,29 @@ internal object CercaAntiguas {
         }
     }
 
-    /** La pala, apoyada en la esquina del zaguán (en invierno, de madera ancha, para la nieve). */
-    private fun pala(v: VistaAntiguas): Cosa {
-        val pie = p(2.12f, 0f, 0.4f); val arriba = p(2.16f, 1.45f, 0.02f)
-        val forma = poligono(pie + Offset(-4f, 0f), pie + Offset(4f, 0f), arriba + Offset(1f, 0f), arriba + Offset(-1f, 0f))
+    /**
+     * La pala, de [pie] a [arriba] (donde se apoya): en la esquina del zaguán o, el día de un objeto grande, arrimada a la
+     * leña, [mas] veces más grande por estar más cerca. En invierno, de madera ancha, para la nieve.
+     */
+    private fun pala(v: VistaAntiguas, pie: Offset, arriba: Offset, mas: Float): Cosa {
+        val g = 1f + mas
+        val forma = poligono(pie + Offset(-4f * g, 0f), pie + Offset(4f * g, 0f), arriba + Offset(1f, 0f), arriba + Offset(-1f, 0f))
         return Cosa(forma, pie) {
-            val pe = v.pincelEn(pie + Offset(0f, -30f), lumbre = lumbreEn(v, pie))
-            drawLine(pe.por(C.FRESNO, 0.2f), pie + (arriba - pie) * 0.18f, arriba, 1.8f, StrokeCap.Round)
+            val pe = v.pincelEn(pie + (arriba - pie) * 0.4f, lumbre = lumbreEn(v, pie))
+            drawLine(pe.por(C.FRESNO, 0.2f), pie + (arriba - pie) * 0.18f, arriba, 1.8f * g, StrokeCap.Round)
             val hoja = if (v.invierno) lerp(C.MADERA, C.FRESNO, 0.4f) else C.PIEDRA_OSC
-            drawPath(poligono(pie + Offset(-4.4f, 0f), pie + Offset(4.6f, -1f), pie + (arriba - pie) * 0.2f + Offset(3f, 0f), pie + (arriba - pie) * 0.2f + Offset(-3f, 0f)), pe.por(hoja, 0.25f))
+            val cuello = pie + (arriba - pie) * 0.2f
+            drawPath(poligono(pie + Offset(-4.4f * g, 0f), pie + Offset(4.6f * g, -1f), cuello + Offset(3f * g, 0f), cuello + Offset(-3f * g, 0f)), pe.por(hoja, 0.25f))
+            drawLine(pe.luz(hoja).copy(alpha = 0.5f), pie + Offset(-4.4f * g, 0f), cuello + Offset(-3f * g, 0f), 0.6f)
         }
     }
 
-    /** El cubo de madera con sus aros de hierro, el agua de las mulas, junto a la argolla. */
-    private fun cubo(v: VistaAntiguas): Cosa {
-        val pie = p(1.3f, 0f, 0.42f); val k = FachadaPosada.escala(1.3f, 0.42f) / 55f; val w = 8f * k; val h = 11f * k
+    /** El cubo de madera con sus aros de hierro, el agua de las mulas: junto a la argolla o, el día de un objeto grande, delante de ellas. */
+    private fun cubo(v: VistaAntiguas, s: Float, fuera: Float): Cosa {
+        val pie = p(s, 0f, fuera); val k = FachadaPosada.escala(s, fuera) / 55f; val w = 8f * k; val h = 11f * k
         val forma = poligono(pie + Offset(-w / 2f, 0f), pie + Offset(w / 2f, 0f), pie + Offset(w / 2f + 1f, -h), pie + Offset(-w / 2f - 1f, -h))
         return Cosa(forma, pie) {
-            val pe = PosadaAntiguas.pincel(v, 1.3f, 0.3f, 0.42f)
+            val pe = PosadaAntiguas.pincel(v, s, 0.3f, fuera)
             drawPath(forma, Brush.horizontalGradient(listOf(pe.luz(C.MADERA), pe.sombra(C.MADERA)), pie.x - w / 2f, pie.x + w / 2f))
             for (y in listOf(-2.4f * k, -8.6f * k)) drawLine(pe.medio(C.ESCORIA), pie + Offset(-w / 2f - 0.4f, y), pie + Offset(w / 2f + 0.4f, y), 0.9f)
             drawOval(pe.sombra(if (v.invierno) C.NIEVE else C.AGUA_HONDA), Offset(pie.x - w / 2f - 1f, pie.y - h - 1.4f), Size(w + 2f, 2.8f))

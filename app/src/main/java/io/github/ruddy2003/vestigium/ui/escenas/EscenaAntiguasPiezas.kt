@@ -216,24 +216,39 @@ internal object FachadaPosada {
 
     /** A cuántos metros de los ojos está ese punto (para ordenar y para las sombras). */
     fun hondo(s: Float, fuera: Float = 0f): Float = zm(s, fuera)
+
+    /** Dónde toca el suelo el muro en la columna [x] del lienzo; null si en esa columna no hay posada delante. */
+    fun baseEn(x: Float): Float? {
+        if (x < p(S_FIN, 0f).x - 4f) return null
+        var a = S_FIN; var b = -3f
+        repeat(18) { val m = (a + b) / 2f; if (p(m, 0f).x < x) a = m else b = m }
+        return p((a + b) / 2f, 0f).y
+    }
 }
 
 /**
  * Las runas del paso: marcas inventadas de pocos trazos rectos, talladas, que no son letras de ningún alfabeto ni las de
  * ninguna obra **[Diseño propio]**. El cuento nombra cuatro («agua, peligro, refugio», y la de «camino», con «una raya más
  * que no termina» para «camino que sigue»). Nunca brillan: son talladas, y se leen por la sombra del surco.
+ *
+ * Se comprobaron una por una, de memoria **[sin verificar contra una tabla]**, contra las runas del futhark antiguo y del
+ * joven (con sus variantes de rama corta), las letras latinas y griegas, el ogam y las cifras, en sus cuatro vueltas y en
+ * espejo: ninguna tiene las ramas a los dos lados del palo a alturas distintas (camino), ni rayas sueltas que no se tocan
+ * (agua, refugio, peligro). La de «camino que sigue» es la misma marca que lleva la banderita (`BanderitaAntiguas.MARCA`,
+ * llevada a estas medidas): un palo con una raya corta que sube a cada lado, a alturas distintas, y la de abajo larga, que
+ * se va hasta el borde de la piedra; la de «camino» es esa misma sin la raya larga.
  */
 internal enum class Runa(val trazos: List<Pair<Offset, Offset>>) {
-    /** Tres rayas cortas tendidas, una debajo de otra y corridas, como agua que baja en escalones. */
-    AGUA(listOf(Offset(-0.5f, -0.6f) to Offset(0.2f, -0.6f), Offset(-0.3f, -0.05f) to Offset(0.4f, -0.05f), Offset(-0.1f, 0.5f) to Offset(0.6f, 0.5f))),
-    /** Un tejado abierto con un palo dentro: el refugio. */
-    REFUGIO(listOf(Offset(-0.6f, 0.2f) to Offset(0f, -0.6f), Offset(0f, -0.6f) to Offset(0.6f, 0.2f), Offset(0f, -0.15f) to Offset(0f, 0.65f))),
-    /** Una raya tendida con dos patas cortas abajo y un pico arriba en medio: peligro. */
-    PELIGRO(listOf(Offset(-0.6f, -0.1f) to Offset(0.6f, -0.1f), Offset(-0.45f, -0.1f) to Offset(-0.55f, 0.55f), Offset(0.45f, -0.1f) to Offset(0.55f, 0.55f), Offset(0f, -0.1f) to Offset(0.12f, -0.7f))),
-    /** Un palo con dos rayas que salen hacia delante y suben: el camino. */
-    CAMINO(listOf(Offset(-0.35f, 0.65f) to Offset(-0.35f, -0.6f), Offset(-0.35f, 0.1f) to Offset(0.4f, -0.2f), Offset(-0.35f, -0.35f) to Offset(0.4f, -0.65f))),
-    /** La de camino, «con una raya más que no termina»: la de abajo se va hasta el borde de la piedra. */
-    CAMINO_QUE_SIGUE(CAMINO.trazos + listOf(Offset(-0.35f, 0.55f) to Offset(0.75f, 0.2f))),
+    /** Tres rayas sueltas y paralelas, casi derechas y caídas hacia la derecha, cada una más larga y más baja: agua que cae. */
+    AGUA(listOf(Offset(-0.474f, -0.392f) to Offset(-0.366f, -0.048f), Offset(-0.075f, -0.238f) to Offset(0.075f, 0.238f), Offset(0.324f, -0.085f) to Offset(0.516f, 0.525f))),
+    /** Un tejado de una sola agua, un poste que no llega a tocarlo y el suelo corrido a la izquierda, sueltos: el abrigo. */
+    REFUGIO(listOf(Offset(-0.62f, -0.02f) to Offset(0.6f, -0.62f), Offset(0.34f, -0.28f) to Offset(0.34f, 0.62f), Offset(-0.6f, 0.62f) to Offset(0.06f, 0.62f))),
+    /** Un palo partido, con las dos mitades corridas, y la esquirla que salta de la rotura: peligro. */
+    PELIGRO(listOf(Offset(0.16f, -0.66f) to Offset(0.16f, -0.06f), Offset(-0.16f, 0.04f) to Offset(-0.16f, 0.66f), Offset(0.36f, 0f) to Offset(0.62f, 0.3f))),
+    /** Un palo con una raya corta que sube a cada lado, a alturas distintas (la de la derecha más arriba): el camino en zetas. */
+    CAMINO(listOf(Offset(0f, -0.65f) to Offset(0f, 0.65f), Offset(0f, -0.337f) to Offset(0.329f, -0.572f), Offset(0f, 0.024f) to Offset(-0.329f, -0.211f))),
+    /** La de camino, «con una raya más que no termina»: la de abajo, larga, sube a la derecha hasta el borde de la piedra. */
+    CAMINO_QUE_SIGUE(CAMINO.trazos + listOf(Offset(0f, 0.415f) to Offset(0.955f, 0.039f))),
 }
 
 internal object PiezasAntiguas {

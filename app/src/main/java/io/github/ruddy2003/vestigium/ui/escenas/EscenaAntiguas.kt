@@ -540,13 +540,31 @@ internal object EscenaAntiguas : EscenaVida {
     const val GATO_DESDE = 216f
     const val GATO_HASTA = 346f
 
+    /**
+     * La luz del gato donde pisa, pareja ([CuadroLab.luzPareja], como en Laboratorio): el matiz del cuadro en su sitio, no
+     * su fuerza (con la luz de mediodía la cabeza salía casi crema y el cuerpo gris violeta); en la sombra que sube, más
+     * frío. Le da de lado el sol o la luna y, de noche, delante de la puerta encendida, su lumbre: el lado de la puerta
+     * cálido, sin volverlo naranja entero (como a la mula). **[Diseño propio]**: cuánto manda la lumbre sobre la luna.
+     */
     override fun luzDelGato(m: Momento, en: Offset): LuzGato {
         val l = luces(m); val r = LuzAntiguas.rayo(l)
         val k = LuzAntiguas.sombraEn(LuzAntiguas.sombra(l), en)
-        if (k <= 0.02f) return LuzGato(r, l.noche) { l.tono(it) }
-        val r2 = Rayo(r.dia, r.lat, r.cot, r.tan, r.ax, r.ay, r.fuerza * (1f - k), r.color, r.contraste * (1f - 0.5f * k))
-        val frio = lerp(r.color, Color.White, 0.16f)
-        return LuzGato(r2, l.noche) { c -> l.tono(c).let { t -> lerp(t, Color(t.red * frio.red, t.green * frio.green, t.blue * frio.blue, t.alpha), 0.8f * k) } }
+        val blanco = l.tono(Color.White); val frio = lerp(r.color, Color.White, 0.16f)
+        val aqui = lerp(blanco, Color(blanco.red * frio.red, blanco.green * frio.green, blanco.blue * frio.blue), 0.8f * k)
+        val astro = (r.fuerza * (1f - k) / 0.6f).coerceIn(0f, 1f)
+        val lumbre = (CercaAntiguas.lumbreEn(m, encendido(m).sala, l.noche, en) / 0.5f).coerceIn(0f, 1f)
+        val dela = if (lumbre > 0.01f) lumbre / (lumbre + 0.5f * astro) else 0f
+        val filo = lerp(lerp(Color(0xFFFFF0D8), ColorAntiguas.LUNA, l.noche), ColorAntiguas.LUMBRE, dela)
+        val lat = if (dela > 0.5f) (if (PuertaAntiguas.UMBRAL.x >= en.x) 1f else -1f) else r.lat
+        val pareja = CuadroLab.luzPareja(aqui, l.noche, filo, lat, maxOf(astro, lumbre), lerp(r.color, ColorAntiguas.ESCORIA, 0.3f * dela))
+        if (dela * lumbre < 0.05f) return pareja
+        // La lumbre: más contraste del lado de la puerta, el brillo naranja y un poco de su calor en el pelo.
+        val q = pareja.rayo; val w = dela * lumbre
+        val rayo = Rayo(q.dia, q.lat, q.cot, q.tan, q.ax, q.ay, q.fuerza, q.color, (q.contraste + 0.2f * w).coerceAtMost(1f))
+        val calor = lerp(Color.White, ColorAntiguas.LUMBRE, 0.6f)
+        return LuzGato(rayo, pareja.noche, lerp(pareja.brillo, lerp(ColorAntiguas.LUMBRE, Color.White, 0.4f), w)) { c ->
+            pareja.tono(c).let { t -> lerp(t, Color(minOf(1f, t.red * 1.18f), t.green * calor.green * 1.06f, t.blue * calor.blue, t.alpha), 0.3f * w) }
+        }
     }
 
     /** Lo plantado en el suelo del gato: la cuna (en la crianza), delante del poyo, que el gato quieto no debe tapar. */
@@ -555,7 +573,9 @@ internal object EscenaAntiguas : EscenaVida {
     override fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, GATO_DESDE, PISO_GATO, hasta = GATO_HASTA))
         add(Ancla(TipoAncla.MIRADOR, CercaAntiguas.LENA.x, CercaAntiguas.LENA.y))     // en lo alto del montón de leña, al pie del pino
-        add(Ancla(TipoAncla.OBJETO, GATO_HASTA - 4f, PISO_GATO))                     // delante del poyo, donde está el objeto del día
-        add(Ancla(TipoAncla.ABRIGO, 322f, PISO_GATO))                                // delante de la puerta, en su luz
+        // El objeto del día: el grande, en su pie junto al banco; el chico, en el poyo (el ancla, apartada a la izquierda del
+        // poyo: el gato se pone a su lado mirándolo, sin taparlo).
+        add(Ancla(TipoAncla.OBJETO, if (ObjetosAntiguas.esGrande(m)) FachadaPosada.p(1.82f, 0f, 0.46f).x else 318f, PISO_GATO))
+        add(Ancla(TipoAncla.ABRIGO, 312f, PISO_GATO))                                // delante de la puerta, en su luz
     }
 }

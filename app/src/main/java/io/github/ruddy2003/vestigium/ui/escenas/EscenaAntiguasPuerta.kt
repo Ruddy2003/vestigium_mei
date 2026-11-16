@@ -57,6 +57,9 @@ internal object PuertaAntiguas {
     /** La argolla donde se atan las mulas, en el muro del zaguán, a la izquierda de la puerta. */
     val ARGOLLA: Offset get() = p(1.32f, 1.12f, 0.02f)
 
+    /** La otra argolla, en la piedra de la esquina del zaguán (la de los días en que el sitio del banco está ocupado). */
+    val ARGOLLA_ESQUINA: Offset get() = p(2.17f, 1.05f, 0.02f)
+
     /** El umbral, en el lienzo: de dónde sale la luz de la sala. */
     val UMBRAL: Offset get() = p((PUERTA_S0 + PUERTA_S1) / 2f, 0f)
 
@@ -271,9 +274,11 @@ internal object PuertaAntiguas {
 
     /** La argolla de hierro, empotrada en una piedra, con el ronzal de las mulas cuando están. */
     private fun DrawScope.argolla(v: VistaAntiguas) {
-        val pe = pincel(v, 1.32f, 1.12f)
-        drawCircle(pe.medio(C.ESCORIA), 2.4f, ARGOLLA + Offset(-0.4f, 2.2f), style = Stroke(0.9f))
-        drawCircle(pe.luz(C.PIEDRA_OSC).copy(alpha = 0.6f), 0.9f, ARGOLLA)
+        for ((s, h, en) in listOf(Triple(1.32f, 1.12f, ARGOLLA), Triple(2.17f, 1.05f, ARGOLLA_ESQUINA))) {
+            val pe = pincel(v, s, h)
+            drawCircle(pe.medio(C.ESCORIA), 2.4f, en + Offset(-0.4f, 2.2f), style = Stroke(0.9f))
+            drawCircle(pe.luz(C.PIEDRA_OSC).copy(alpha = 0.6f), 0.9f, en)
+        }
     }
 
     /** El poyo de piedra: la losa de encima, gastada y más clara, sobre dos piedras; su frente en sombra. Encima, el objeto chico del día. */

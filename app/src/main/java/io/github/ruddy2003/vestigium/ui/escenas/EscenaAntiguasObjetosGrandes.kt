@@ -72,8 +72,13 @@ internal object GrandesAntiguas {
     fun muro(lm: LuzObjeto, zm: Float): Path = poligono(lm.q(ESQUINA, 0f, zm), lm.q(JAMBA, 0f, zm), lm.q(JAMBA, 2.3f, zm), lm.q(ESQUINA, 2.3f, zm))
     fun suelo(lm: LuzObjeto, zm: Float): Path = poligono(lm.q(-1.5f, 0f, -0.9f), lm.q(1.5f, 0f, -0.9f), lm.q(1.5f, 0f, zm), lm.q(-1.5f, 0f, zm))
 
-    /** La sombra de una cosa grande en el muro y en el suelo que el cuadro no pinta (de su pie hacia el fondo). */
-    fun DrawScope.sombraGrande(lm: LuzObjeto, zm: Float, puntos: List<V3>) = sombra(lm, puntos, zm, suelo(lm, zm), muro(lm, zm), arriba = lm.s.pie.y - 1f)
+    /**
+     * La sombra de una cosa grande en el muro. La del suelo la pinta el cuadro con las de sus cosas (hasta el pie del muro),
+     * así que aquí se recorta entera ([SIN_SUELO]: un tope por encima del lienzo) para que no salga doble.
+     */
+    private const val SIN_SUELO = -40f
+
+    fun DrawScope.sombraGrande(lm: LuzObjeto, zm: Float, puntos: List<V3>) = sombra(lm, puntos, zm, suelo(lm, zm), muro(lm, zm), arriba = SIN_SUELO)
 
     /** La silueta de una cosa en el lienzo: la envolvente de sus puntos. */
     fun silueta(lm: LuzObjeto, puntos: List<V3>): Path = poligono(envolvente(puntos.map { lm.q(it) }))

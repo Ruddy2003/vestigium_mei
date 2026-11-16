@@ -34,6 +34,14 @@ internal object MulasAntiguas {
 
     val MULAS = listOf(Mula(1.12f, 0.95f, C.MULA, false, 0f), Mula(2.3f, 0.25f, C.MULA_PARDA, true, 1f))
 
+    /**
+     * El día de un objeto grande (recostado en el muro entre la esquina del zaguán y la jamba) las mulas se corren a la
+     * izquierda y se atan cortas a la argolla de la esquina, para que el objeto se vea entero **[Diseño propio]**.
+     */
+    val MULAS_CORRIDAS = listOf(Mula(1.3f, 0.95f, C.MULA, false, 0f), Mula(2.4f, 0.25f, C.MULA_PARDA, true, 1f))
+
+    fun mulasDe(grande: Boolean): List<Mula> = if (grande) MULAS_CORRIDAS else MULAS
+
     /** Dónde pisa una mula (bajo la cincha) y su alto hasta la cruz, en el lienzo. */
     fun pieYAlto(m: Mula): Pair<Offset, Float> {
         val k = FachadaPosada.escala(m.s + 1f, m.fuera)
@@ -42,16 +50,16 @@ internal object MulasAntiguas {
         return Offset(hocico.x - 0.96f * alto, FachadaPosada.p(m.s + 1f, 0f, m.fuera).y) to alto
     }
 
-    fun DrawScope.mulas(v: VistaAntiguas, n: Int, cargadas: Boolean) {
+    fun DrawScope.mulas(v: VistaAntiguas, n: Int, cargadas: Boolean, grande: Boolean) {
         if (n <= 0) return
-        for (mu in MULAS.take(n).reversed()) {
+        for (mu in mulasDe(grande).take(n).reversed()) {
             val (pie, alto) = pieYAlto(mu)
             val pe = v.pincelEn(pie + Offset(0f, -alto * 0.6f), lumbre = (v.encendido.sala * v.noche * 0.5f).coerceIn(0f, 1f))
             mula(pe, v, pie, alto, mu.pelo, mu.descansa, mu.baja, cargadas)
             // El ronzal, de la quijada a la argolla, con su comba.
             val u = alto / 100f
             val cab = pie + Offset(88f * u, (-96f + 12f * mu.baja) * u)
-            val ar = PuertaAntiguas.ARGOLLA
+            val ar = if (grande) PuertaAntiguas.ARGOLLA_ESQUINA else PuertaAntiguas.ARGOLLA
             drawPath(Path().apply { moveTo(cab); cubicTo(cab + Offset(4f, 10f), ar + Offset(-6f, 12f), ar) }, pe.medio(lerp(C.CUERO, C.LANA, 0.3f)), style = Stroke(0.8f, cap = StrokeCap.Round))
         }
     }
