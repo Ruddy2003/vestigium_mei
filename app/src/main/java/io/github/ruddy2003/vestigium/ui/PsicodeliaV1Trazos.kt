@@ -218,42 +218,6 @@ object TrazosPsicodelia {
     }
 
     /**
-     * El fondo vivo de la sala de baile (de noche) o de la calle (de día): las luces líquidas de un retroproyector, cinco
-     * manchas blandas de aceite y tinta que se cruzan despacio y respiran, y unas burbujas que suben con el calor de la lámpara. De
-     * noche, en los colores de la luz negra, que se suman donde se cruzan; de día, en tintas de cartel muy tenues, que se
-     * mezclan como en el papel. [t] da la vuelta de 0 a 1 sin salto; [fuerza] multiplica la opacidad.
-     */
-    fun DrawScope.lucesSala(t: Float, oscuro: Boolean, fuerza: Float = 1f, burbujas: Int = 9) {
-        val w = size.width; val h = size.height; val m = min(w, h)
-        val dos = 2f * PI.toFloat()
-        val colores = if (oscuro) listOf(LIMON, FLUOR_MAGENTA, FLUOR_VIOLETA, FLUOR_NARANJA, FLUOR_MAGENTA)
-            else listOf(MAGENTA, NARANJA, VERDE, AZUL, AMARILLO)
-        val k = (if (oscuro) 0.95f else 0.6f) * fuerza
-        val modo = if (oscuro) BlendMode.Screen else BlendMode.Multiply
-        // Cada mancha: dónde anda (en fracción del ancho y del alto), cuánto se aleja, su tamaño y su fase. Las vueltas de
-        // cada una son enteras, así el ciclo cierra.
-        val manchas = listOf(
-            floatArrayOf(0.14f, 0.16f, 0.12f, 0.1f, 0.48f, 0f), floatArrayOf(0.88f, 0.38f, 0.1f, 0.14f, 0.4f, 0.23f),
-            floatArrayOf(0.22f, 0.74f, 0.14f, 0.08f, 0.44f, 0.47f), floatArrayOf(0.8f, 0.9f, 0.1f, 0.08f, 0.38f, 0.71f),
-            floatArrayOf(0.55f, 0.52f, 0.2f, 0.18f, 0.26f, 0.9f),
-        )
-        manchas.forEachIndexed { i, f ->
-            val a = (t + f[5]) * dos
-            val c = Offset(w * (f[0] + f[2] * sin(a + i)), h * (f[1] + f[3] * cos(2f * a - i * 0.7f)))
-            val r = m * f[4] * (0.92f + 0.08f * sin(3f * a + i))
-            gotaBlanda(c, r, (t * (1 + i % 2) + f[5]) * dos, i, colores[i], k, modo)
-        }
-        // Las burbujas que suben, despacio, con su menisco.
-        for (b in 0 until burbujas) {
-            val sem = (b * 0.618034f) % 1f
-            val y = h * (1.08f - 1.16f * (((t * (1 + b % 2)) + sem) % 1f))
-            val x = w * ((sem * 1.7f + 0.13f * b) % 1f) + m * 0.03f * sin((t * 3f + sem) * dos)
-            val r = m * (0.012f + 0.02f * ((b * 0.37f) % 1f))
-            burbuja(Offset(x, y), r, colores[b % colores.size], (if (oscuro) 0.5f else 0.35f) * fuerza)
-        }
-    }
-
-    /**
      * La flor que vibra: [petalos] pétalos redondos de [color] sobre un halo de su complementario ([contra]), con una línea
      * del complementario por dentro de cada pétalo, como en los carteles, y el botón en el complementario con su anillo del
      * primero. [vibra] (de 0 a 1) corre un poco el halo, como cuando dos colores opuestos de igual valor se tocan.
@@ -455,24 +419,5 @@ object TrazosPsicodelia {
      */
     fun DrawScope.emblema(c: Offset, r: Float, anillo: Color = NARANJA, fondo: Color = AZUL, vibra: Float = 0f, giro: Float = 0f) {
         botonSolapa(c, r, anillo, fondo, vibra, giro / (2f * PI.toFloat()), 0f, false)
-    }
-
-    /**
-     * El emblema animado de la app, como el ícono: el botón de solapa verde con la margarita magenta y la orla naranja y
-     * azul. [t] (de 0 a 1) es la vuelta: la flor vibra (su halo se corre y vuelve), la orla gira una franja y un brillo
-     * cruza la cúpula. Movimiento contenido: nada parpadea. Pequeño (menos de 48 dp), la flor sola, que vibra. [oscuro]: la
-     * sala con luz negra, con el resplandor verde limón alrededor.
-     */
-    fun DrawScope.emblemaVivo(c: Offset, r: Float, t: Float, oscuro: Boolean) {
-        val vibra = 0.5f + 0.5f * sin(2f * PI.toFloat() * t)
-        if (r * 2 < 48f * density) {
-            if (oscuro) drawCircle(Brush.radialGradient(listOf(LIMON.copy(alpha = 0.22f), LIMON.copy(alpha = 0f)), c, r), r, c)
-            val rf = r * 0.9f
-            flor(Offset(c.x - rf * 0.03f, c.y + rf * 0.02f), rf, MAGENTA, if (oscuro) LIMON else VERDE, 8, vibra, -PI.toFloat() / 8)
-            drawCircle(AMARILLO, rf * 0.3f, Offset(c.x - rf * 0.03f, c.y + rf * 0.02f))
-            drawCircle(lerp(AMARILLO, Color.White, 0.55f), rf * 0.1f, Offset(c.x - rf * 0.1f, c.y - rf * 0.05f))
-            return
-        }
-        botonSolapa(c, r, NARANJA, VERDE, vibra, t, t, oscuro)
     }
 }

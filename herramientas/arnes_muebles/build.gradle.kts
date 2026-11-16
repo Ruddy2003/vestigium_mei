@@ -33,6 +33,8 @@ val enlazados = listOf(
     "$paquete/ui/Tema.kt", "$paquete/ui/ModoHora.kt", "$paquete/ui/Disenios.kt", "$paquete/ui/Estilo.kt",
     // La cara y la intensidad de los temas que las tienen (Psicodelia): el esquema y los dibujos las leen.
     "$paquete/ui/CaraTema.kt",
+    // Las piezas de Psicodelia v2 (tanda 2) y sus piezas comunes, para la muestra `comun psicodelia`.
+    "$paquete/ui/PsicodeliaPiezas.kt", "$paquete/ui/comun/ComunPsicodelia.kt", "$paquete/ui/IconosPestana.kt",
     // Lo que Estilo necesita para nombrar meses y fechas en cada tema.
     "$paquete/ui/Temas.kt", "$paquete/ui/Vapor.kt", "$paquete/ui/CuentaMaya.kt", "$paquete/ui/NombresNuevos.kt", "$paquete/ui/Textos.kt",
     "$paquete/ui/Claves.kt", "$paquete/ui/nombres/**/*.kt",
@@ -53,10 +55,13 @@ val piezas = linkedMapOf(
     "$paquete/ui/Escena.kt" to listOf("halo", "luzCalida"),
     "$paquete/ui/Libros.kt" to listOf("Rayas", "Pagina"),
     "$paquete/data/Mundo.kt" to listOf("CiudadVisitada", "SitioMarcado"),
-    "$paquete/ui/Decoracion.kt" to listOf("piezasMano"),
+    "$paquete/ui/Decoracion.kt" to listOf("piezasMano", "cruzPatada", "rad", "mas"),
     // Cómo arma FicheroIdeas los cajones del mueble y su rótulo (la llamada a MuebleIdeas se repite en arnes/Dibujar.kt).
     "$paquete/ui/pantallas/Fichero.kt" to listOf("cajones", "rotuloCajon"),
     "$paquete/ui/ArchivoIdeas.kt" to listOf("ArchivoIdeas", "archivoIdeas"),
+    // El contrato de las piezas comunes, sin `disenoComun` (que nombra los 40 objetos de los temas).
+    "$paquete/ui/comun/DisenoComun.kt" to listOf("DisenoComun", "EstadoAdorno", "EstadoBalanza", "EstadoMes", "EstadoAsiento", "TipoTarjeta",
+        "EstadoTarjeta", "EstadoFila", "EstadoVacio", "EstadoAviso", "EstadoCifra", "EstadoSeparador", "EstadoBotonTexto", "EstadoMarco"),
 )
 
 val generado = layout.buildDirectory.dir("generado/kotlin")

@@ -167,12 +167,8 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
             drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
         }
-        // Una margarita de ocho pétalos redondos, con el botón calado y su centro.
-        TemaId.PSICODELIA -> {
-            drawPath(TrazosPsicodelia.petalos(c, r, 8, -0.3927f, 0.27f, 0.1f), color)
-            drawCircle(hueco.copy(alpha = 0.55f), r * 0.3f, c)
-            drawCircle(color, r * 0.15f, c)
-        }
+        // El disco con su etiqueta calada (ciudad) o el disco hecho sol, con su corona (tinta).
+        TemaId.PSICODELIA -> with(PiezasPsicodelia) { figura(c, r, color, hueco, colores(false)) }
         // La flor del iris en silueta: los tres pétalos que suben y los dos que caen, con la lengua calada en el de en medio.
         TemaId.NOUVEAU -> {
             val base = Offset(c.x, c.y + r * 0.12f)

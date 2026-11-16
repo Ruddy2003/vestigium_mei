@@ -86,7 +86,6 @@ import io.github.ruddy2003.vestigium.data.alFuturo
 import io.github.ruddy2003.vestigium.data.lista
 import io.github.ruddy2003.vestigium.data.sellada
 import io.github.ruddy2003.vestigium.ui.biblioteca.bullaArcontes
-import io.github.ruddy2003.vestigium.ui.biblioteca.calcomaniaPsicodelia
 import io.github.ruddy2003.vestigium.ui.biblioteca.selloGalia
 import io.github.ruddy2003.vestigium.ui.biblioteca.vinetaNouveau
 import kotlinx.coroutines.delay
@@ -136,9 +135,9 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.TEMPLARIO -> Papeleria(Color(0xFFF1ECE0), Color(0xFFB9AE97), Color(0xFFFFFCF4), Color(0xFFB0191F), Color(0xFF7A2A16), Color(0xFF8A7650), Color(0xFF201E1B))
     // Sobre de manila de oficina, con su hilo y botones, y la tinta roja del sello de goma.
     TemaId.DISTOPIA -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
-    // La postal de 1967: cartulina crema, su sombra y su brillo, el reverso de papel de periódico, la calcomanía de flor magenta,
-    // la cinta para la frente, tejida en naranja, y la tinta violeta negra.
-    TemaId.PSICODELIA -> Papeleria(Color(0xFFF6F0E4), Color(0xFFC9BCA2), Color(0xFFFFFBF2), Color(0xFFEFE7D6), Color(0xFFE0218A), Color(0xFFFF7A1A), Color(0xFF2A1C32))
+    // La postal de 1967 impresa a dos tintas, como el periódico del barrio: cartulina crema, su sombra y su brillo, el reverso
+    // de papel de cartel, la etiqueta del disco en magenta, el cordel de la carpeta en ultramar y la tinta azul negra.
+    TemaId.PSICODELIA -> Papeleria(Color(0xFFF2E8D3), Color(0xFFC9BB9C), Color(0xFFFBF6EA), Color(0xFFE7DBC2), Color(0xFFA94870), Color(0xFF3F4C9E), Color(0xFF1E1A3A))
     // La tarjeta postal ilustrada: cartulina crema, su sombra y su brillo, el verde salvia del reverso, la viñeta engomada con el
     // iris violeta, la cinta de seda malva que ata el paquete y la tinta de la prensa.
     TemaId.NOUVEAU -> Papeleria(Color(0xFFF2E9D2), Color(0xFFC2AE86), Color(0xFFFBF6EA), Color(0xFF5E7A58), Color(0xFF7E5FA6), Color(0xFFB48AB0), Color(0xFF2A2530))
@@ -399,17 +398,17 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
             rotuloSello("ARCHIVADO", c.x, c.y + r * 0.13f, r * 0.36f, k(base.copy(alpha = 0.85f)))
         }
-        // La calcomanía de flor pegada sobre el nudo; debajo, las dos puntas de la cinta para la frente, tejida en naranja con su
-        // greca de rombos turquesa.
+        // Sobre el nudo, la etiqueta de un disco como sello (el vinilo, la etiqueta magenta y su agujero); debajo, los dos
+        // cabos del cordel de la carpeta de dibujos, en ultramar.
         TemaId.PSICODELIA -> {
-            val cinta = k(Color(0xFFFF7A1A))
-            val greca = k(Color(0xFF2BB3A8))
+            val cordel = k(Color(0xFF3F4C9E))
             listOf(Offset(-0.2f, 0.6f) to Offset(-0.7f, 1.55f), Offset(0.2f, 0.6f) to Offset(0.55f, 1.6f)).forEach { (a0, a1) ->
-                val p0 = Offset(c.x + r * a0.x, c.y + r * a0.y); val p1 = Offset(c.x + r * a1.x, c.y + r * a1.y)
-                drawLine(cinta, p0, p1, r * 0.28f, StrokeCap.Butt)
-                for (j in 1..3) { val f = j / 4f; drawCircle(greca, r * 0.06f, Offset(p0.x + (p1.x - p0.x) * f, p0.y + (p1.y - p0.y) * f)) }
+                drawLine(cordel, Offset(c.x + r * a0.x, c.y + r * a0.y), Offset(c.x + r * a1.x, c.y + r * a1.y), r * 0.09f, StrokeCap.Round)
             }
-            calcomaniaPsicodelia(c, r, base, a, 0.3f)
+            drawCircle(k(Color(0xFF1E1A3A)), r * 0.7f, c)
+            for (j in 1..3) drawCircle(k(Color(0xFFF2E8D3)).copy(alpha = 0.18f * a), r * (0.42f + 0.08f * j), c, style = Stroke(r * 0.015f))
+            drawCircle(k(base), r * 0.34f, c)
+            drawCircle(k(Color(0xFFF2E8D3)), r * 0.05f, c)
         }
         // La viñeta engomada con el iris, pegada sobre el lazo; debajo, los dos cabos de la cinta de seda malva.
         TemaId.NOUVEAU -> {
@@ -868,11 +867,11 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Hermano que serás yo:", "Escribe tu misiva, hermano…", "Misiva para %s, sellada por la casa", "Ningún hermano la abrirá antes de tiempo.", "Toca para tomar la pluma…")
     TemaId.DISTOPIA -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
         "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
-    // Las cartas son postales de 1967 con calcomanías; las de al futuro, «postales para otro verano», van atadas con una cinta
-    // para la frente y una calcomanía de flor en el nudo.
-    TemaId.PSICODELIA -> VozCarta("Llegó la postal: despega la calcomanía", "Atada con una cinta para la frente", "Para mí, en otro verano: el %s", "Yo, otro verano · %s",
+    // Las cartas son postales de 1967 impresas a dos tintas; las de al futuro, «postales para otro verano», van atadas con el
+    // cordel de la carpeta de dibujos y la etiqueta de un disco en el nudo.
+    TemaId.PSICODELIA -> VozCarta("Llegó la postal: dale la vuelta", "Atada con el cordel de la carpeta", "Para mí, en otro verano: el %s", "Yo, otro verano · %s",
         "Para mí, en otro verano", "Hola, yo del otro verano:", "Escribe al dorso: la niebla, la calle, la gente…", "Postal para %s, con su estampilla de cuatro centavos",
-        "La calcomanía no se despega antes de su verano.", "Toca y escribe tu postal…")
+        "El cordel no se desata antes de su verano.", "Toca y escribe tu postal…")
     // Las cartas son tarjetas postales ilustradas; las de al futuro, «postales para el siglo nuevo», van atadas con una cinta de
     // seda y una viñeta engomada.
     TemaId.NOUVEAU -> VozCarta("Llegó la postal: dale la vuelta", "Atada con una cinta de seda", "Para quien seré el %s", "Quien seré · %s", "Para quien seré en el siglo nuevo",

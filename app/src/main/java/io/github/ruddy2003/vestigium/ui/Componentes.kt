@@ -128,7 +128,7 @@ fun Meandro(modifier: Modifier = Modifier, color: Color = MaterialTheme.colorSch
         TemaId.MEDIEVAL -> Zarcillo(modifier)
         TemaId.TEMPLARIO -> Adarve(modifier)
         TemaId.DISTOPIA -> BandaExpediente(modifier)
-        TemaId.PSICODELIA -> BandaArcoiris(modifier)
+        TemaId.PSICODELIA -> BandaCartel(modifier)
         TemaId.NOUVEAU -> BandaNouveau(modifier)
         TemaId.GALIA -> BandaGalia(modifier)
         TemaId.ARCONTES -> BandaArcontes(modifier)
@@ -219,44 +219,15 @@ private fun BandaSampietrini(modifier: Modifier, color: Color) {
 }
 
 /**
- * Psicodelia: una cinta de tinta de arcoíris, la del tintero partido del periódico, que ondula de lado a lado y se
- * adelgaza en las puntas, rematadas en una gota; en medio la corta una margarita que vibra en colores complementarios, y
- * a cada lado de la flor, dos burbujas del show de luces. De noche, la misma cinta en las tintas de la luz negra.
+ * Psicodelia: la banda bajo el título, en las dos caras del tema (`PiezasPsicodelia.bandaTitulo`). La ciudad: los cables
+ * del trolebús con sus colgadores y la etiqueta del disco al principio. La tinta: las bandas de cartel que se abren
+ * alrededor del disco chico del centro, más hondas con la intensidad.
  */
 @Composable
-private fun BandaArcoiris(modifier: Modifier) {
+private fun BandaCartel(modifier: Modifier) {
     val oscuro = esOscuro()
-    Canvas(modifier.fillMaxWidth().height(13.dp)) { bandaArcoiris(oscuro) }
-}
-
-private fun DrawScope.bandaArcoiris(oscuro: Boolean) {
-    val u = 1.dp.toPx(); val w = size.width; val cy = size.height / 2
-    val tintas = if (oscuro) TrazosPsicodelia.ARCOIRIS_NOCHE else TrazosPsicodelia.ARCOIRIS
-    val pincel = Brush.horizontalGradient(tintas + tintas.reversed().drop(1), 0f, w)
-    val amp = 2.2f * u; val periodo = 34f * u; val grueso = 4f * u
-    val medio = w / 2; val hueco = 11f * u
-    fun tramo(x0: Float, x1: Float) {
-        if (x1 - x0 < 6f * u) return
-        val n = ((x1 - x0) / (1.5f * u)).toInt().coerceIn(8, 400)
-        fun y(x: Float) = cy + amp * sin(2f * PI.toFloat() * (x - medio) / periodo)
-        fun g(f: Float) = grueso * kotlin.math.sqrt(sin(PI.toFloat() * f).coerceAtLeast(0f)).coerceAtLeast(0.12f)
-        val cinta = Path()
-        for (k in 0..n) { val f = k / n.toFloat(); val x = x0 + (x1 - x0) * f; if (k == 0) cinta.moveTo(x, y(x) - g(f) / 2) else cinta.lineTo(x, y(x) - g(f) / 2) }
-        for (k in n downTo 0) { val f = k / n.toFloat(); val x = x0 + (x1 - x0) * f; cinta.lineTo(x, y(x) + g(f) / 2) }
-        cinta.close()
-        drawPath(cinta, pincel, alpha = if (oscuro) 0.85f else 0.8f)
-        listOf(x0, x1).forEach { x -> drawCircle(pincel, 1.5f * u, Offset(x, y(x)), alpha = 0.85f) }
-    }
-    tramo(4f * u, medio - hueco)
-    tramo(medio + hueco, w - 4f * u)
-    with(TrazosPsicodelia) {
-        listOf(-1f, 1f).forEach { lado ->
-            burbuja(Offset(medio + lado * 8.6f * u, cy - 3.6f * u), 1.4f * u, if (oscuro) FLUOR_VIOLETA else AZUL, 0.9f)
-            burbuja(Offset(medio + lado * 9.6f * u, cy + 3.4f * u), 1f * u, if (oscuro) LIMON else VERDE, 0.9f)
-        }
-        flor(Offset(medio, cy), 5.6f * u, if (oscuro) FLUOR_MAGENTA else MAGENTA, if (oscuro) LIMON else VERDE, 8, 0.4f)
-        drawCircle(AMARILLO, 1.6f * u, Offset(medio, cy))
-    }
+    val cara = caraLocal(); val i = intensidadLocal()
+    Canvas(modifier.fillMaxWidth().height(13.dp)) { with(PiezasPsicodelia) { bandaTitulo(oscuro, cara, i) } }
 }
 
 /** Expediente: barra gruesa con un tramo rojo donde mira el ojo, línea fina y el código de barras del folio. */
@@ -1331,11 +1302,12 @@ private fun crearPiel(t: TemaId): PielComponentes = when (t) {
         aviso = "⚠", igual = "| ", nulo = "SIN DATO", elegido = "☒", riel = RolColor.TINTA, quitar = "✖", listaVacia = "[ EXPEDIENTE VACÍO ]", flecha = "►",
         sufijo = ":", caja = CajaEtiqueta.MAYUSCULAS, espaciado = 1f, colorPrefijo = RolColor.PRIMARIO, renglones = false, margen = MargenEditor.NINGUNO,
         guiones = floatArrayOf(2.5f, 1f), tamBoton = 14, letraBoton = null, borde = RolColor.TINTA, grosor = 2f)
-    // El disco y el cartel: una corchea entre número y título, la sección plegada como una nota y abierta como dos, el
-    // sol del cartel en los avisos, la tilde que ondula entre clave y valor, la margarita en lo elegido, el verde (o el
-    // magenta de la luz negra) en los números, y el recuadro de «vacío» en raya y dos puntos, como las burbujas del show.
-    TemaId.PSICODELIA -> PielComponentes(sep = "  ♪  ", cerrada = "♪", abierta = "♫", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
-        aviso = "☼", igual = " ~ ", nulo = "todavía no suena", elegido = "✿", riel = RolColor.SECUNDARIO, quitar = "×", listaVacia = "~ aquí aún no suena nada ~", flecha = "→",
+    // El disco y el cartel (v2, las dos caras): el punto medio entre número y título, como en la lista de canciones del
+    // reverso; la sección plegada y abierta como las flechas de un horario; el disco (●) en lo elegido y en los avisos; los
+    // dos puntos entre clave y valor; los números en el secundario; el vacío entre paréntesis, como en un horario. Sin ✿, ♪
+    // ni tildes que ondulan (la guía, «Lo que sí y lo que no»).
+    TemaId.PSICODELIA -> PielComponentes(sep = "  ·  ", cerrada = "▸", abierta = "▾", numeral = RolColor.SECUNDARIO, centrar = false, rellena = true,
+        aviso = "●", igual = ": ", nulo = "todavía no suena", elegido = "●", riel = RolColor.SECUNDARIO, quitar = "×", listaVacia = "( aquí aún no suena nada )", flecha = "→",
         sufijo = "", caja = CajaEtiqueta.CAPITAL, espaciado = 0.3f, colorPrefijo = RolColor.TERCIARIO, renglones = false, margen = MargenEditor.BARRA,
         guiones = floatArrayOf(5f, 2.2f, 0.1f, 2.2f, 0.1f, 2.2f), tamBoton = 16, letraBoton = null, borde = RolColor.PRIMARIO, grosor = 1.6f)
     // El taller de 1900: el punto medio entre el folio y el título, la onda de la línea de látigo en la sección abierta, la
@@ -1522,18 +1494,14 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
             }.padding(bottom = 5.dp))
         // Rótulo de expediente: blanco sobre negro.
         TemaId.DISTOPIA -> Text(nombre, style = estilo, color = e.background, modifier = peso.background(e.onBackground).padding(horizontal = 6.dp, vertical = 1.dp))
-        // El título como en un cartel: la letra burbuja con su sombra corrida en el color opuesto (dos tintas que vibran) y,
-        // debajo, una onda de tinta de arcoíris que se adelgaza al final.
+        // El título de sección en las dos caras: la ciudad, el titular con el filete de periódico debajo (grueso y luego
+        // fino); la tinta, la letra en el primario que se calienta con la intensidad (a luminosidad fija: se lee igual) y,
+        // debajo, la onda a dos tintas que acaba en el disco chico. La letra no se deforma ni se corre: es texto.
         TemaId.PSICODELIA -> {
-            val corrida = with(LocalDensity.current) { 1.6.dp.toPx() }
-            Text(nombre, style = estilo.copy(shadow = androidx.compose.ui.graphics.Shadow(TrazosPsicodelia.opuesto(e.primary).copy(alpha = 0.5f), Offset(corrida, corrida), 0f)),
-                color = e.primary, modifier = peso.drawBehind {
-                    val g = 1.dp.toPx(); val y = size.height - 2.4f * g; val fin = size.width * 0.8f
-                    val noche = e.background.luminance() < 0.5f
-                    val tinta = TrazosPsicodelia.arcoiris(Offset(0f, y), Offset(fin, y), 0.75f, noche)
-                    drawPath(TrazosPsicodelia.onda(1f * g, fin, y, 1.2f * g, 24f * g), tinta, style = Stroke(1.8f * g, cap = StrokeCap.Round))
-                    drawCircle(tinta, 1.5f * g, Offset(fin + 3.5f * g, y))
-                }.padding(bottom = 7.dp))
+            val k = PiezasPsicodelia.colores(e.background.luminance() < 0.5f, caraLocal(), intensidadLocal())
+            Text(nombre, style = estilo, color = k.primario, modifier = peso.drawBehind {
+                with(PiezasPsicodelia) { subrayado(size.width * 0.8f, size.height - 2.4f * density, k) }
+            }.padding(bottom = 7.dp))
         }
         // Debajo, la línea de látigo: nace de una yema a la izquierda, ondula apenas y se enrosca al final.
         TemaId.NOUVEAU -> Text(nombre, style = estilo, modifier = peso.drawBehind {
@@ -1735,15 +1703,13 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
         moveTo(0f, 0f); lineTo(w, 0f); lineTo(w - h * 0.22f, h / 2); lineTo(w, h); lineTo(0f, h); close()
     }
     TemaId.DISTOPIA -> RectangleShape
-    // Una burbuja de letra de cartel: los extremos muy redondos y el canto de arriba y el de abajo que ondulan apenas, en
-    // contra, como algo blando que respira.
-    TemaId.PSICODELIA -> GenericShape { s, _ ->
-        val w = s.width; val h = s.height; val r = minOf(h * 0.5f, w * 0.22f); val k = minOf(h * 0.06f, w * 0.03f)
-        moveTo(r, k)
-        cubicTo(w * 0.36f, -k * 0.6f, w * 0.62f, k * 2.4f, w - r, k)
-        quadraticTo(w, k, w, h / 2); quadraticTo(w, h - k, w - r, h - k)
-        cubicTo(w * 0.64f, h - k * 2.4f, w * 0.38f, h + k * 0.6f, r, h - k)
-        quadraticTo(0f, h - k, 0f, h / 2); quadraticTo(0f, k, r, k); close()
+    // La ciudad: la pastilla redondeada de la esquina de la ventanilla (1.6 veces el radio chico del tema: 17.6 dp). La
+    // tinta: el arco del cartel, arriba redondo y abajo casi recto. Elige por la cara de ahora (se lee en la composición).
+    TemaId.PSICODELIA -> when (EstadoTema.caraDe(t)) {
+        Cara.BASE -> RoundedCornerShape(17.6.dp)
+        Cara.INTENSA -> GenericShape { s, _ ->
+            addPath(TrazosTinta.arco(Rect(0f, 0f, s.width, s.height), minOf(s.height * 0.5f, s.width * 0.25f), minOf(3f, s.height * 0.08f)))
+        }
     }
     // La placa del cartel: dos esquinas muy redondas en diagonal y dos casi rectas, como las del tema, con el canto de
     // arriba y el de abajo apenas vencidos hacia dentro, como una hoja.
@@ -2015,17 +1981,9 @@ private fun DrawScope.esquinasComp(t: TemaId, e: ColorScheme, k: Float) {
             drawLine(e.onSurface.copy(alpha = 0.7f), Offset(x + u * 0.45f, -u * 0.2f), Offset(x + u * 0.45f, u * 1.6f), fino * 1.1f)
             drawRect(e.primary.copy(alpha = 0.8f), Offset(w - i - u * 1.1f, h - i - u * 1.1f), Size(u * 1.1f, u * 1.1f), style = Stroke(fino * 1.6f))
         }
-        TemaId.PSICODELIA -> with(TrazosPsicodelia) {
-            // Arriba a la izquierda, una margarita que vibra, como pegada en la esquina; abajo a la derecha, tres burbujas del
-            // show de luces que suben.
-            val fondo = e.surface
-            val petalo = androidx.compose.ui.graphics.lerp(fondo, e.primary, 0.8f)
-            flor(Offset(i + u * 0.95f, i + u * 0.95f), u * 0.95f, petalo, androidx.compose.ui.graphics.lerp(fondo, opuesto(e.primary), 0.75f), 6, 0.5f)
-            drawCircle(androidx.compose.ui.graphics.lerp(fondo, AMARILLO, 0.85f), u * 0.24f, Offset(i + u * 0.95f, i + u * 0.95f))
-            listOf(Triple(1.0f, 0.6f, 0.42f), Triple(2.0f, 1.4f, 0.28f), Triple(0.7f, 2.1f, 0.2f)).forEachIndexed { n, (dx, dy, rr) ->
-                burbuja(Offset(w - i - u * dx, h - i - u * dy), u * rr, if (n == 1) e.secondary else e.tertiary, 0.9f)
-            }
-        }
+        // La ciudad: las esquineras de papel de un álbum de fotos. La tinta: un cuarto de corona arriba a la izquierda y un
+        // triángulo de trama abajo a la derecha.
+        TemaId.PSICODELIA -> with(PiezasPsicodelia) { esquinas(i, u, colores(e.background.luminance() < 0.5f)) }
         TemaId.NOUVEAU -> with(TrazosNouveau) {
             // Arriba a la izquierda, un tallo que dobla la esquina, con su rizo arriba y una hoja abajo; abajo a la derecha,
             // una libélula pequeña posada.
@@ -2255,7 +2213,8 @@ private fun DrawScope.marcaEscala(t: TemaId, c: Color, fondo: Color) {
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(w / 2, d * 1.6f), d * 1.2f), c)
         TemaId.DISTOPIA -> drawRect(c, Offset.Zero, Size(w, d))
         // Una margarita del color del valor, arriba, con su botón calado.
-        TemaId.PSICODELIA -> with(TrazosPsicodelia) { margarita(Offset(w / 2, d * 1.5f), d * 1.25f, c, fondo, 6) }
+        // La picadura del revisor en el pase (ciudad) o el disco hecho sol (tinta).
+        TemaId.PSICODELIA -> with(PiezasPsicodelia) { marcaEscala(c, fondo, d, colores(fondo.luminance() < 0.5f)) }
         // Un brote del color del valor: el tallo sube desde el borde de abajo, echa una hoja y se enrosca.
         TemaId.NOUVEAU -> with(TrazosNouveau) {
             val pie = Offset(w / 2 - d * 0.3f, h); val cima = Offset(w / 2 + d * 0.2f, h - d * 1.9f)
@@ -2401,13 +2360,9 @@ private fun DrawScope.adornoBoton(t: TemaId, c: Color, e: ColorScheme) {
             drawRect(c, Offset(m * 0.7f, m * 0.7f), Size(w - m * 1.4f, h - m * 1.4f), style = Stroke(fino))
             drawRect(c, Offset(m * 1.4f, m * 1.4f), Size(w - m * 2.8f, h - m * 2.8f), style = Stroke(fino * 0.6f))
         }
-        // Una margarita a la izquierda, dos burbujas a la derecha y, bajo el texto, una onda, como el sonido de la radio.
-        TemaId.PSICODELIA -> with(TrazosPsicodelia) {
-            margarita(Offset(m * 2.8f, h / 2), m * 0.95f, c, null, 6)
-            drawCircle(c, m * 0.5f, Offset(w - m * 2.6f, h / 2 - m * 0.3f), style = Stroke(fino))
-            drawCircle(c, m * 0.3f, Offset(w - m * 1.8f, h / 2 + m * 0.6f), style = Stroke(fino * 0.8f))
-            drawPath(onda(w * 0.32f, w * 0.68f, h - m * 1.5f, fino * 0.9f, m * 2.4f), c, style = Stroke(fino, cap = StrokeCap.Round))
-        }
+        // La ciudad: el filete pintado de una placa de letrero, con sus dos tornillos. La tinta: el filete de arco y, abajo,
+        // una onda corta.
+        TemaId.PSICODELIA -> with(PiezasPsicodelia) { adornoBoton(c, m, colores(e.background.luminance() < 0.5f)) }
         // A cada lado, un rizo de látigo que se abre en una línea fina por el canto de abajo, hacia el medio.
         TemaId.NOUVEAU -> with(TrazosNouveau) {
             for (lado in listOf(1f, -1f)) {

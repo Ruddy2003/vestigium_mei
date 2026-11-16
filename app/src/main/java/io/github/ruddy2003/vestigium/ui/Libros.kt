@@ -212,9 +212,12 @@ fun materia(t: TemaId): Materia = when (t) {
     TemaId.DECO -> Materia(c(0xFFF3EAD4), c(0xFFC9B48A), c(0xFFFBF6EA), c(0xFFB8952E), c(0xFF1F6B57), c(0xFFF6F0E1), c(0xFF16130E), extra = c(0xFFB5523B))
     TemaId.NAVIDAD -> Materia(c(0xFFB71C1C), c(0xFF7A1010), c(0xFFD84343), c(0xFFC9A227), c(0xFF1B5E20), c(0xFFFBF6EC), c(0xFF1E2A22), extra = c(0xFFFF5252), textoCuerpo = c(0xFFFBF6EC))
     TemaId.DISTOPIA -> Materia(c(0xFFD8C08A), c(0xFFA88F58), c(0xFFE8D4A4), c(0xFFC8102E), c(0xFF141414), c(0xFFF2EFE6), c(0xFF141414))
-    // El disco en su funda: el magenta del cartel, su sombra y su brillo, el verde que vibra a su lado, el naranja de la etiqueta,
-    // el papel de periódico de la funda interior, la tinta, el negro del vinilo y la crema de las letras.
-    TemaId.PSICODELIA -> Materia(c(0xFFE0218A), c(0xFF8E1258), c(0xFFF06AB0), c(0xFF2FBF71), c(0xFFFF7A1A), c(0xFFEFE7D6), c(0xFF2A1C32), extra = c(0xFF17131A), textoCuerpo = c(0xFFFFF8EC))
+    // El disco en su funda, según la cara del tema. La ciudad: la funda de cartón en naranja quemado, su sombra y su luz, el
+    // verde botella, la etiqueta naranja, el papel de la funda interior, la tinta café, el vinilo y la crema de las letras.
+    // La tinta: la funda impresa en magenta, el ultramar y el bermellón, el papel de cartel y la tinta que graba.
+    TemaId.PSICODELIA -> if (EstadoTema.caraDe(TemaId.PSICODELIA) == Cara.BASE)
+        Materia(c(0xFF9C4219), c(0xFF5E2810), c(0xFFC9733F), c(0xFF3D5838), c(0xFFC8662A), c(0xFFF1E4C6), c(0xFF2A2119), extra = c(0xFF1E1916), textoCuerpo = c(0xFFFFF4E8))
+        else Materia(c(0xFFA94870), c(0xFF6E2A48), c(0xFFC77A9A), c(0xFF3F4C9E), c(0xFFC56851), c(0xFFF2E8D3), c(0xFF1E1A3A), extra = c(0xFF1E1A3A), textoCuerpo = c(0xFFF9F3E6))
     // El tomo de la revista ilustrada: tela verde salvia, el verde de hierro en sombra, el oro de las letras, el violeta del iris,
     // el papel crema, la tinta de la prensa y la malva de la cinta del registro.
     TemaId.NOUVEAU -> Materia(c(0xFF5E7A58), c(0xFF3D5A48), c(0xFF8FA67E), c(0xFFD9BE7A), c(0xFF6D4C82), c(0xFFEFE8D6), c(0xFF2A2530), extra = c(0xFFB48AB0), textoCuerpo = c(0xFFF7F2E6))
@@ -275,8 +278,9 @@ private fun nocheDe(t: TemaId): NocheTema = when (t) {
     TemaId.TEMPLARIO -> NocheTema(c(0xFF0F1117), c(0xFFF0A040), 0.62f, 0.8f, c(0xFFEEE7D8))
     // Apagón bajo el reflector.
     TemaId.DISTOPIA -> NocheTema(c(0xFF15171A), c(0xFFD8DEE4), 0.74f, 0.88f, c(0xFFDDE2E6))
-    // El cuarto bajo la luz negra: el negro violeta y el violeta del tubo.
-    TemaId.PSICODELIA -> NocheTema(c(0xFF120A1C), c(0xFFAE91FF), 0.76f, 0.88f, c(0xFFF2EAF7))
+    // La ciudad: el cuarto a media luz con la lámpara de pantalla. La tinta: el negro de terciopelo y el magenta del cartel.
+    TemaId.PSICODELIA -> if (EstadoTema.caraDe(TemaId.PSICODELIA) == Cara.BASE) NocheTema(c(0xFF1B1511), c(0xFFF0A35A), 0.7f, 0.86f, c(0xFFEEE3D0))
+        else NocheTema(c(0xFF0F0C17), c(0xFFDD80A4), 0.76f, 0.88f, c(0xFFF3E9D6))
     // La calle de París de noche, azul negro, y la luz cálida de la lámpara de vidrio de colores.
     TemaId.NOUVEAU -> NocheTema(c(0xFF121519), c(0xFFF5D488), 0.68f, 0.84f, c(0xFFECE5D6))
     // El robledal de noche, verde negro, y la luz de la hoguera de la casa grande.
@@ -363,8 +367,11 @@ fun materiaNoche(t: TemaId): Materia {
         TemaId.MEDIEVAL -> materiaTenida(m, n)
         TemaId.TEMPLARIO -> materiaTenida(m, n)
         TemaId.DISTOPIA -> materiaTenida(m, n)
-        // El disco bajo la luz negra: la funda casi negra y lo que brilla, el verde limón, el magenta y el violeta.
-        TemaId.PSICODELIA -> Materia(c(0xFF2A1638), c(0xFF14091E), c(0xFF3E2452), c(0xFFC9F04A), c(0xFFFF5CBE), c(0xFF2A2035), c(0xFFF2EAF7), extra = c(0xFFAE91FF), textoCuerpo = c(0xFFF2EAF7))
+        // El disco de noche. La ciudad: la funda en la penumbra del cuarto, con la luz de la lámpara y la etiqueta naranja. La
+        // tinta: la funda impresa sobre negro de terciopelo, en magenta y ultramar, con el crema del papel.
+        TemaId.PSICODELIA -> if (EstadoTema.caraDe(TemaId.PSICODELIA) == Cara.BASE)
+            Materia(c(0xFF3A2416), c(0xFF1E140C), c(0xFF54361F), c(0xFFF0A35A), c(0xFFC8662A), c(0xFF2A221B), c(0xFFEEE3D0), extra = c(0xFF141010), textoCuerpo = c(0xFFEEE3D0))
+            else Materia(c(0xFF211B2B), c(0xFF0F0C17), c(0xFF3A3050), c(0xFFDD80A4), c(0xFF94A1DB), c(0xFF17131F), c(0xFFF3E9D6), extra = c(0xFFE0907B), textoCuerpo = c(0xFFF3E9D6))
         // El tomo a la luz de la lámpara: la tela casi negra, el oro encendido, el violeta de la lámpara y el verde de los cafés.
         TemaId.NOUVEAU -> Materia(c(0xFF1E2A24), c(0xFF101612), c(0xFF2E3C34), c(0xFFF5D488), c(0xFFBFA6DE), c(0xFF23282C), c(0xFFECE5D6), extra = c(0xFF8CCBA4), textoCuerpo = c(0xFFECE5D6))
         // El haz a la luz del fuego: el roble casi negro, la hoguera por acento y el roble bajo la luna.
@@ -420,8 +427,10 @@ fun paginaNoche(t: TemaId): Pagina {
         TemaId.MEDIEVAL -> paginaTenida(p, n)
         TemaId.TEMPLARIO -> paginaTenida(p, n)
         TemaId.DISTOPIA -> paginaTenida(p, n)
-        // La funda interior bajo la luz negra: negro violeta, la tinta clara, el verde limón y el magenta que brillan.
-        TemaId.PSICODELIA -> Pagina(p.fondo, c(0xFF1A1126), c(0xFFF2EAF7), c(0xFFB4A7C4), c(0xFFC9F04A), c(0xFFFF5CBE), p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
+        // La funda interior de noche: el cuarto a media luz (ciudad) o el negro de terciopelo (tinta), con sus colores.
+        TemaId.PSICODELIA -> if (EstadoTema.caraDe(TemaId.PSICODELIA) == Cara.BASE)
+            Pagina(p.fondo, c(0xFF1F1712), c(0xFFEEE3D0), c(0xFFB9AA94), c(0xFFE8975A), c(0xFFA3BB93), p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
+            else Pagina(p.fondo, c(0xFF17131F), c(0xFFF3E9D6), c(0xFFB9AFC4), c(0xFFDD80A4), c(0xFF94A1DB), p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
         // El papel de cartel bajo la lámpara: azul de noche, la tinta clara, el oro de la luz eléctrica y el violeta de la lámpara.
         TemaId.NOUVEAU -> Pagina(p.fondo, c(0xFF1E2230), c(0xFFECE5D6), c(0xFFADA79A), c(0xFFE8C46E), c(0xFFBFA6DE), p.texto, p.tam, p.interlinea, true, p.rayas, p.capitular)
         // La cera a la luz de la hoguera: verde negro, la tinta clara, el fuego por acento y el roble bajo la luna.
@@ -636,14 +645,15 @@ private fun DrawScope.estrellasDelTema(t: TemaId, semilla: Int, n: Int, color: C
             TemaId.MEDIEVAL -> asterisco(o, r * 1.7f, col, 6, 0.36f * u)
             TemaId.TEMPLARIO -> drawPath(cruzPatada(o, r * 1.8f), col)
             TemaId.DISTOPIA -> drawCircle(col.copy(alpha = col.alpha * 0.45f), r * 0.8f, o)
-            // Sobre la sala de luz negra, puntitos de tinta fluorescente y, de tanto en tanto, una florecita que brilla.
-            TemaId.PSICODELIA -> {
-                val tinte = listOf(TrazosPsicodelia.LIMON, TrazosPsicodelia.FLUOR_MAGENTA, TrazosPsicodelia.FLUOR_VIOLETA, TrazosPsicodelia.FLUOR_NARANJA)[i % 4].copy(alpha = col.alpha)
-                if (i % 6 == 0) {
-                    drawCircle(tinte.copy(alpha = col.alpha * 0.22f), r * 3f, o)
-                    for (k in 0 until 5) drawCircle(tinte, r * 0.7f, o + polarLibro(r * 1.25f, 2 * PI * k / 5))
-                    drawCircle(col, r * 0.5f, o)
-                } else drawCircle(tinte.copy(alpha = col.alpha * 0.7f), r * 0.7f, o)
+            // La ciudad: estrellas finas y tibias sobre los tejados, alguna con su halo de niebla. La tinta: puntos de las tres
+            // tintas y, de tanto en tanto, un disco chico con su anillo.
+            TemaId.PSICODELIA -> if (EstadoTema.caraDe(TemaId.PSICODELIA) == Cara.BASE) {
+                if (i % 7 == 0) drawCircle(col.copy(alpha = col.alpha * 0.2f), r * 2.2f, o)
+                drawCircle(col.copy(alpha = col.alpha * 0.8f), r * 0.6f, o)
+            } else {
+                val tinte = listOf(TrazosTinta.Tinta.MAGENTA, TrazosTinta.Tinta.ULTRAMAR, TrazosTinta.Tinta.BERMELLON)[i % 3].let { TrazosTinta.tinta(it, true, 0f) }.copy(alpha = col.alpha)
+                if (i % 6 == 0) { drawCircle(tinte, r * 1.6f, o, style = Stroke(0.4f * u)); drawCircle(col, r * 0.5f, o) }
+                else drawCircle(tinte.copy(alpha = col.alpha * 0.8f), r * 0.7f, o)
             }
             // Sobre los tejados, estrellas finas y, de tanto en tanto, una luz eléctrica lejana: una florecita de cuatro pétalos.
             TemaId.NOUVEAU -> if (i % 8 == 0) {
@@ -783,18 +793,23 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
             drawCircle(luna.copy(alpha = 0.75f), r, ce)
             if (!sola) drawPath(Path().apply { moveTo(ce.x - r * 2.2f, ce.y + r * 2.6f); lineTo(ce.x - r * 0.2f, ce.y - r * 1.4f); lineTo(ce.x + r * 0.8f, ce.y - r * 1.2f); close() }, luna.copy(alpha = 0.16f))
         }
-        // La luna llena sobre los tejados, con su halo de anillos ondulados como en un cartel; al lado, el frontón de una casa
-        // victoriana con la ventana de luz negra de un departamento.
+        // La luna llena sobre los tejados y, al lado, el frontón de una casa victoriana gris con una ventana encendida. En la
+        // ciudad, la luna con su halo de niebla y la ventana tibia de una lámpara; en la tinta, la luna con sus anillos que
+        // ondulan, en magenta y ultramar, y la ventana impresa en bermellón.
         TemaId.PSICODELIA -> {
-            val halos = listOf(TrazosPsicodelia.FLUOR_VIOLETA, TrazosPsicodelia.FLUOR_MAGENTA, TrazosPsicodelia.LIMON)
-            for (k in 3 downTo 1) drawPath(TrazosPsicodelia.gota(ce, r * (0.95f + 0.3f * k), 0.2f * k, 0.05f, 7), halos[k - 1].copy(alpha = 0.3f), style = Stroke(0.5f * u))
-            drawCircle(luna.copy(alpha = 0.16f), r * 1.25f, ce)
+            val ciudad = EstadoTema.caraDe(TemaId.PSICODELIA) == Cara.BASE
+            if (ciudad) drawCircle(luna.copy(alpha = 0.14f), r * 1.6f, ce)
+            else for (k in 1..3) {
+                val anillo = Path()
+                for (q in 0..72) { val a = 2 * PI * q / 72; val rr = r * (0.95f + 0.3f * k) * (1f + 0.04f * sin(8 * a + k).toFloat())
+                    val x = ce.x + rr * cos(a).toFloat(); val y = ce.y + rr * sin(a).toFloat(); if (q == 0) anillo.moveTo(x, y) else anillo.lineTo(x, y) }
+                anillo.close()
+                drawPath(anillo, TrazosTinta.tinta(if (k % 2 == 0) TrazosTinta.Tinta.ULTRAMAR else TrazosTinta.Tinta.MAGENTA, true, 0f).copy(alpha = 0.45f), style = Stroke(0.6f * u))
+            }
             drawCircle(luna, r * 0.85f, ce)
             if (!sola) {
                 val b = ce + Offset(-r * 3.8f, r * 2.7f)
-                val casa = lerp(n.cielo, Color.Black, 0.4f)
-                val violeta = TrazosPsicodelia.FLUOR_VIOLETA
-                drawCircle(Brush.radialGradient(listOf(violeta.copy(alpha = 0.3f), Color.Transparent), center = Offset(b.x - r * 0.45f, b.y - r * 0.8f), radius = r * 1.6f), r * 1.6f, Offset(b.x - r * 0.45f, b.y - r * 0.8f))
+                val casa = lerp(n.cielo, if (ciudad) TrazosCiudad.CASA_GRIS else Color.Black, if (ciudad) 0.25f else 0.4f)
                 val frente = Path().apply {
                     moveTo(b.x - r * 1.3f, b.y); lineTo(b.x - r * 1.3f, b.y - r * 1.5f); lineTo(b.x, b.y - r * 2.4f)
                     lineTo(b.x + r * 1.3f, b.y - r * 1.5f); lineTo(b.x + r * 1.3f, b.y); close()
@@ -802,9 +817,9 @@ private fun DrawScope.lunaDelTema(t: TemaId, ce: Offset, r: Float, n: NocheTema,
                 drawPath(frente, casa)
                 drawPath(Path().apply { moveTo(b.x - r * 1.45f, b.y - r * 1.42f); lineTo(b.x, b.y - r * 2.4f); lineTo(b.x + r * 1.45f, b.y - r * 1.42f) }, luna.copy(alpha = 0.3f), style = Stroke(0.5f * u))
                 drawCircle(luna.copy(alpha = 0.3f), r * 0.14f, Offset(b.x, b.y - r * 1.85f))
-                // La ventana de la luz negra de un departamento y, al lado, una de luz tibia.
-                drawRect(violeta.copy(alpha = 0.9f), Offset(b.x - r * 0.8f, b.y - r * 1.2f), Size(r * 0.6f, r * 0.7f))
-                drawRect(Color(0xFFFFC46A).copy(alpha = 0.55f), Offset(b.x + r * 0.2f, b.y - r * 1.2f), Size(r * 0.6f, r * 0.7f))
+                val ventana = if (ciudad) TrazosCiudad.LAMPARA else TrazosTinta.tinta(TrazosTinta.Tinta.BERMELLON, true, 0f)
+                drawRect(ventana.copy(alpha = 0.85f), Offset(b.x - r * 0.8f, b.y - r * 1.2f), Size(r * 0.6f, r * 0.7f))
+                drawRect(casa.copy(alpha = 0.6f), Offset(b.x + r * 0.2f, b.y - r * 1.2f), Size(r * 0.6f, r * 0.7f))
                 listOf(b.x - r * 0.5f, b.x + r * 0.5f).forEach { x -> drawLine(casa, Offset(x, b.y - r * 1.2f), Offset(x, b.y - r * 0.5f), 0.5f * u) }
             }
         }
@@ -1608,14 +1623,13 @@ fun pagina(t: TemaId): Pagina = when (t) {
     TemaId.NAVIDAD -> Pagina(R.drawable.papel_navidad, c(0xFFFBF6EC), c(0xFF1E2A22), c(0xFF5E6B62), c(0xFFB71C1C), c(0xFF1B5E20), LetraExtra.italianno, 27f, 32f, false, Rayas.NADA, LetraExtra.cinzelDeco)
     // La declaración, tecleada.
     TemaId.DISTOPIA -> Pagina(R.drawable.papel_distopia, c(0xFFECE8DC), c(0xFF141414), c(0xFF55585C), c(0xFFC8102E), c(0xFF141414), Letra.terminal, 15.5f, 24f, false, Rayas.RENGLONES)
-    // La funda interior: se lee en Fredoka, con la tinta violeta negra, el magenta y el verde de los carteles, y la capitular
-    // en las letras infladas de los títulos (la letra y los colores son de la versión 1; los cambia la tanda de los libros).
-    // El papel sigue la cara (Psicodelia v2, tanda 5): de día, el de la copia de foto de la ciudad; de noche (o con un
-    // consumo en curso), el papel crema del cartel con su trama apenas visible.
-    TemaId.PSICODELIA -> Pagina(when (EstadoTema.caraDe(t)) {
-        Cara.BASE -> R.drawable.papel_psicodelia
-        Cara.INTENSA -> R.drawable.papel_psicodelia_cartel
-    }, c(0xFFEFE7D6), c(0xFF2A1C32), c(0xFF61546A), c(0xFFB0246A), c(0xFF2E7344), LetraExtra.fredoka, 16.5f, 26f, false, Rayas.NADA, LetraExtra.modak)
+    // La funda interior, según la cara del tema. Se lee en Libre Franklin en las dos (la legibilidad no depende de la hora).
+    // La ciudad: el papel de la copia de foto, la tinta café, el naranja quemado y el verde botella; la capitular, el titular
+    // de los 70. La tinta (de noche, o con un consumo en curso): el papel crema del cartel con su trama apenas visible, la
+    // tinta azul negra, el magenta y el ultramar; la capitular, la letra de bloque.
+    TemaId.PSICODELIA -> if (EstadoTema.caraDe(TemaId.PSICODELIA) == Cara.BASE)
+        Pagina(R.drawable.papel_psicodelia, c(0xFFF3ECDD), c(0xFF2A2119), c(0xFF5C4F41), c(0xFF9C4219), c(0xFF3D5838), LetraExtra.franklin, 16.5f, 26f, false, Rayas.NADA, LetraExtra.franklinTitular)
+        else Pagina(R.drawable.papel_psicodelia_cartel, c(0xFFF9F3E6), c(0xFF1E1A3A), c(0xFF4E4868), c(0xFF974164), c(0xFF404D99), LetraExtra.franklin, 16.5f, 26f, false, Rayas.NADA, LetraExtra.bloque)
     // El papel de cartel crema con su cenefa de tallos, la tinta de la prensa, el verde salvia y el violeta del iris; se lee en
     // Brygada 1918 y la capitular va en la letra del cartel.
     TemaId.NOUVEAU -> Pagina(R.drawable.papel_nouveau, c(0xFFEFE8D6), c(0xFF2A2530), c(0xFF5E5662), c(0xFF4B6A4E), c(0xFF6D4C82), LetraExtra.brygada, 17f, 27f, false, Rayas.NADA, LetraExtra.federant)

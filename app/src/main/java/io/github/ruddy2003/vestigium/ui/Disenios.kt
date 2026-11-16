@@ -38,8 +38,8 @@ object LetraExtra {
     val dellaRespira = FontFamily(Font(R.font.vitrina_regular, FontWeight.Normal), Font(R.font.vitrina_regular, FontWeight.Medium), Font(R.font.vitrina_regular, FontWeight.SemiBold))
     /**
      * Psicodelia, versión 1: Modak (la letra burbuja) y Fredoka. **Para retirar:** la versión 2 ya no las usa en su esquema
-     * ([tipoPsicodelia]); se quedan mientras las usen `ComunPsicodelia.kt`, `IdeasPsicodelia.kt`, `BibliotecaPsicodelia.kt`,
-     * `Hoy.kt`, `Libros.kt`, `LibroDiario.kt`, `EstiloGrafica.kt`, `Reportes.kt` y `Widgets.kt` (ver
+     * ([tipoPsicodelia]); se quedan mientras las usen `IdeasPsicodelia.kt`, `BibliotecaPsicodelia.kt`, `Hoy.kt`,
+     * `EstiloGrafica.kt`, `Reportes.kt` y `Widgets.kt` (la tanda 2 ya las quitó de lo común, los libros y la libreta; ver
      * `docs/diseno/temas/psicodelia_base.md`).
      */
     val modak = FontFamily(Font(R.font.burbuja_titulo, FontWeight.Normal))

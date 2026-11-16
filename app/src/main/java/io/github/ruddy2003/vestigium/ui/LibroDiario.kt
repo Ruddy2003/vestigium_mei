@@ -153,8 +153,9 @@ object LibroDiario {
         TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.cardo_regular)
         TemaId.TEMPLARIO -> Fuentes(R.font.cruzada_titulo, R.font.regla_regular)
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
-        // Las letras infladas de los carteles (Modak) para los títulos, y Fredoka, redonda, para leer.
-        TemaId.PSICODELIA -> Fuentes(R.font.burbuja_titulo, R.font.fredoka_regular)
+        // El periódico del barrio (v2): la letra de bloque de los carteles (Bloque Vestigium) para los títulos, y Libre Franklin
+        // para leer, la misma de la app en las dos caras.
+        TemaId.PSICODELIA -> Fuentes(R.font.bloque_titulo, R.font.franklin_regular)
         // La letra de cartel de curvas de pluma (Federant) para los títulos, y Brygada 1918 para leer.
         TemaId.NOUVEAU -> Fuentes(R.font.cartel_titulo, R.font.brygada_regular)
         // La Piazzolla gruesa de los títulos, como letra grabada, y la de leer.
@@ -252,11 +253,12 @@ object LibroDiario {
             TemaId.TEMPLARIO -> "h1{text-align:center;letter-spacing:.08em}article{border-top:4px solid $s;border-bottom:1px solid $p;padding-top:10px}.fecha{letter-spacing:.06em}" +
                 ".fecha::before{content:'\\2629  ';color:$p}" + capitular("2.6em", p)
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
-            // Cada día como la funda interior de un disco: arriba, la franja de tinta de arcoíris del tintero partido; la fecha en
-            // letras infladas, impresa dos veces (el complementario corrido detrás), los datos en tinta tenue y la capitular inflada.
-            TemaId.PSICODELIA -> "h1{text-align:center;font-weight:400;text-shadow:2px 2px 0 $s}article{border-top:0;padding-top:2px}" +
-                "article::before{content:'';display:block;height:6px;border-radius:3px;margin-bottom:14px;background:linear-gradient(90deg,#E0218A,#FF7A1A,#FFD23F,#2FBF71,#2F6BFF,#7B3FD1)}" +
-                ".fecha{font-family:T,sans-serif;font-weight:400;font-size:1.2em;text-shadow:1px 1px 0 $s}.meta{color:$v}" + capitular("2.6em", p)
+            // Cada día como una página del periódico del barrio, a dos tintas: arriba, la franja del tintero partido (del magenta
+            // al ultramar, nunca de siete colores); la fecha en la letra de bloque, impresa otra vez en ultramar un poco corrida;
+            // los datos en tinta tenue y la capitular de bloque.
+            TemaId.PSICODELIA -> "h1{text-align:center;font-weight:400;text-shadow:2px 2px 0 #3F4C9E55}article{border-top:0;padding-top:2px}" +
+                "article::before{content:'';display:block;height:6px;margin-bottom:14px;background:linear-gradient(90deg,#A94870,#3F4C9E)}" +
+                ".fecha{font-family:T,sans-serif;font-weight:400;font-size:1.2em;text-shadow:1px 1px 0 #3F4C9E55}.meta{color:$v}" + capitular("2.6em", p)
             // Cada día como una página de la revista ilustrada: el marco fino con las esquinas de arriba muy redondas, como un cartel,
             // un velo violeta en los márgenes, la fecha en la letra del cartel seguida de la línea de látigo, los datos en tinta
             // tenue y la capitular de cartel en verde salvia.
@@ -873,8 +875,8 @@ object LibroDiario {
         TemaId.TEMPLARIO -> Inicial(R.font.cruzada_titulo, 1.3f, palabra = true, mayusculas = true)
         // La primera palabra en mayúsculas sobre la franja roja del formulario.
         TemaId.DISTOPIA -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
-        // La primera letra en las letras infladas de los carteles, grande, en el magenta del cartel.
-        TemaId.PSICODELIA -> Inicial(R.font.burbuja_titulo, 2.5f)
+        // La primera letra en la letra de bloque de los carteles, grande, en el magenta del cartel.
+        TemaId.PSICODELIA -> Inicial(R.font.bloque_titulo, 2.5f)
         // La primera letra en la letra de cartel, grande, como la capitular de una revista ilustrada.
         TemaId.NOUVEAU -> Inicial(R.font.cartel_titulo, 2.7f)
         // La primera letra en la Piazzolla gruesa de los títulos, grande, como tallada en la cera.
@@ -1033,20 +1035,21 @@ object LibroDiario {
                 cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
             }
             TemaId.PSICODELIA -> {
-                // Una onda de tinta de arcoíris, la del tintero partido (cada tramo de un color), y en medio la flor de seis pétalos.
-                val colores = intArrayOf(0xFFE0218A.toInt(), 0xFFFF7A1A.toInt(), 0xFFE0B020.toInt(), 0xFF2FBF71.toInt(), 0xFF2F6BFF.toInt(), 0xFF7B3FD1.toInt())
+                // Una onda a dos tintas, la del tintero partido (del magenta al ultramar), que deja en medio el disco del día con
+                // su etiqueta.
                 val pasos = 60
                 var xa = x0; var ya = y
                 for (i in 1..pasos) {
                     val f = i / pasos.toFloat()
                     val xb = x0 + (x1 - x0) * f
                     val yb = y + 2.4f * sin(f * 12f * Math.PI.toFloat())
-                    if (abs((xa + xb) / 2 - cx) > 11f) cv.drawLine(xa, ya, xb, yb, Paint(linea).apply {
-                        color = colores[(f * (colores.size - 0.001f)).toInt().coerceIn(0, colores.size - 1)]; strokeWidth = 1.3f; strokeCap = Paint.Cap.ROUND })
+                    val col = androidx.compose.ui.graphics.lerp(androidx.compose.ui.graphics.Color(0xFFA94870), androidx.compose.ui.graphics.Color(0xFF3F4C9E), f).toArgb()
+                    if (abs((xa + xb) / 2 - cx) > 11f) cv.drawLine(xa, ya, xb, yb, Paint(linea).apply { color = col; strokeWidth = 1.3f; strokeCap = Paint.Cap.ROUND })
                     xa = xb; ya = yb
                 }
-                for (k in 0 until 6) { val a = Math.PI * 2 * k / 6; cv.drawCircle(cx + 4.2f * cos(a).toFloat(), y + 4.2f * sin(a).toFloat(), 2.6f, relleno) }
-                cv.drawCircle(cx, y, 2.2f, Paint(relleno).apply { color = 0xFF2FBF71.toInt(); alpha = 220 })
+                cv.drawCircle(cx, y, 7f, Paint(relleno).apply { color = 0xFF1E1A3A.toInt() })
+                cv.drawCircle(cx, y, 2.8f, Paint(relleno).apply { color = 0xFFA94870.toInt() })
+                cv.drawCircle(cx, y, 0.8f, Paint(relleno).apply { color = 0xFFF2E8D3.toInt() })
             }
             TemaId.NOUVEAU -> {
                 // Dos líneas de látigo que nacen de un capullo al centro, corren hacia las orillas en una S tranquila y se enroscan.
@@ -1372,23 +1375,21 @@ object LibroDiario {
                 cv.drawRect(A - 130f, 36f, A - 34f, 54f, Paint(fino).apply { color = tinta; alpha = 160 })
             }
             TemaId.PSICODELIA -> {
-                // La postal: el filete de esquinas redondas, doble; arriba y abajo, la franja de tinta de arcoíris en tramos, y en cada
-                // esquina una calcomanía de flor de seis pétalos, magenta con el botón verde.
+                // La postal: el filete de esquinas redondas, doble; arriba y abajo, la franja del tintero partido a dos tintas (del
+                // magenta al ultramar), y en cada esquina el disco del día con su etiqueta.
                 cv.drawRoundRect(android.graphics.RectF(22f, 22f, A - 22f, B - 22f), 18f, 18f, trazo)
                 cv.drawRoundRect(android.graphics.RectF(27f, 27f, A - 27f, B - 27f), 14f, 14f, fino)
-                val colores = intArrayOf(0xFFE0218A.toInt(), 0xFFFF7A1A.toInt(), 0xFFE0B020.toInt(), 0xFF2FBF71.toInt(), 0xFF2F6BFF.toInt(), 0xFF7B3FD1.toInt())
-                val tramo = (A - 100f) / colores.size
-                colores.forEachIndexed { i, col ->
-                    listOf(34f, B - 38f).forEach { yy -> cv.drawRect(50f + i * tramo, yy, 50f + (i + 1) * tramo, yy + 4f, Paint(relleno).apply { color = col; alpha = 150 }) }
+                val n = 24
+                val tramo = (A - 100f) / n
+                for (i in 0 until n) {
+                    val col = androidx.compose.ui.graphics.lerp(androidx.compose.ui.graphics.Color(0xFFA94870), androidx.compose.ui.graphics.Color(0xFF3F4C9E), i / (n - 1f)).toArgb()
+                    listOf(34f, B - 38f).forEach { yy -> cv.drawRect(50f + i * tramo, yy, 50f + (i + 1) * tramo + 0.5f, yy + 4f, Paint(relleno).apply { color = col; alpha = 170 }) }
                 }
                 esquinas.forEach { (x, y) ->
                     val (sx, sy) = haciaDentro(x, y)
                     val fx = x + sx * 6f; val fy = y + sy * 6f
-                    for (k in 0 until 6) {
-                        val a = Math.PI * 2 * k / 6
-                        cv.drawCircle(fx + 4.5f * cos(a).toFloat(), fy + 4.5f * sin(a).toFloat(), 3.2f, Paint(relleno).apply { color = 0xFFE0218A.toInt(); alpha = 170 })
-                    }
-                    cv.drawCircle(fx, fy, 2.6f, Paint(relleno).apply { color = 0xFF2FBF71.toInt(); alpha = 200 })
+                    cv.drawCircle(fx, fy, 6f, Paint(relleno).apply { color = 0xFF1E1A3A.toInt(); alpha = 200 })
+                    cv.drawCircle(fx, fy, 2.4f, Paint(relleno).apply { color = 0xFFA94870.toInt(); alpha = 220 })
                 }
             }
             TemaId.NOUVEAU -> {

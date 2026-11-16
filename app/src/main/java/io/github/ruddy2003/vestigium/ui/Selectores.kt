@@ -274,23 +274,14 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     }
     // Casilla de formulario.
     TemaId.DISTOPIA -> RectangleShape
-    // Un botón de solapa blando, como las letras infladas de los carteles: los lados combados hacia fuera y, del pie, dos
-    // gotas que se escurren.
-    TemaId.PSICODELIA -> GenericShape { s, _ ->
-        val w = s.width; val h = s.height; val m = minOf(w, h)
-        val k = m * 0.06f; val r = m * 0.3f; val b = h - m * 0.11f; val pie = b - k
-        // Una gota que cuelga del pie en [dx], de [dw] de radio, hasta [hasta].
-        fun gota(dx: Float, dw: Float, hasta: Float) {
-            val cuello = minOf(dw * 0.8f, hasta - dw - pie)
-            lineTo(dx + dw * 1.8f, pie); quadraticTo(dx + dw, pie, dx + dw, pie + cuello)
-            lineTo(dx + dw, hasta - dw); arcTo(Rect(Offset(dx, hasta - dw), dw), 0f, 180f, false)
-            lineTo(dx - dw, pie + cuello); quadraticTo(dx - dw, pie, dx - dw * 1.8f, pie)
+    // La ciudad: la ventanilla, de esquinas redondas (30 % del lado menor). La tinta: el marco de arco del cartel, arriba
+    // redondo y abajo casi recto. Elige por la cara de ahora (se lee en la composición).
+    TemaId.PSICODELIA -> when (EstadoTema.caraDe(t)) {
+        Cara.BASE -> RoundedCornerShape(30)
+        Cara.INTENSA -> GenericShape { s, _ ->
+            val m = minOf(s.width, s.height)
+            addPath(TrazosTinta.arco(Rect(0f, 0f, s.width, s.height), m * 0.45f, m * 0.06f))
         }
-        moveTo(r, k); quadraticTo(w / 2, -k, w - r, k); quadraticTo(w - k, k, w - k, r)
-        quadraticTo(w + k, b / 2, w - k, b - r); quadraticTo(w - k, pie, w - r, pie)
-        gota(w * 0.7f, m * 0.075f, h)
-        gota(w * 0.38f, m * 0.05f, h - m * 0.06f)
-        lineTo(r, pie); quadraticTo(k, pie, k, b - r); quadraticTo(-k, b / 2, k, r); quadraticTo(k, k, r, k); close()
     }
     // Un vidrio de vitral de casa: el cuadro con los cuatro lados combados hacia dentro y las esquinas apenas redondas.
     TemaId.NOUVEAU -> GenericShape { s, _ ->
@@ -455,13 +446,10 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         // La cruz patada calada en el escudo.
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(s.width / 2, s.height * 0.42f), minOf(s.width, s.height) * 0.26f), fondo.copy(alpha = 0.55f))
         TemaId.DISTOPIA -> {}
-        // La margarita de la calcomanía del botón, apenas calada.
+        // El agujero de la etiqueta del disco, apenas calado, con su surco (las dos caras).
         TemaId.PSICODELIA -> {
             val l = minOf(s.width, s.height); val fc = Offset(s.width * 0.34f, s.height * 0.4f)
-            for (k in 0 until 5) {
-                val a = Math.PI * 2 * k / 5 - Math.PI / 2
-                drawCircle(fondo.copy(alpha = 0.42f), l * 0.06f, Offset(fc.x + l * 0.085f * kotlin.math.cos(a).toFloat(), fc.y + l * 0.085f * kotlin.math.sin(a).toFloat()))
-            }
+            drawCircle(fondo.copy(alpha = 0.42f), l * 0.15f, fc, style = Stroke(l * 0.03f))
             drawCircle(fondo.copy(alpha = 0.6f), l * 0.035f, fc)
         }
         // Un tallo grabado en el vidrio, que sube en curva y se enrosca en su rizo.

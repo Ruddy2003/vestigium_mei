@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -153,12 +154,16 @@ object Marcas {
         /** Art nouveau: una línea de látigo bajo la palabra, que nace de una yema, ondula apenas y se enrosca al final. */
         LATIGO,
         /**
-         * Psicodelia: la palabra dentro de una burbuja de letra de cartel, una mancha blanda de tinta con su sombra corrida en
-         * el color opuesto, como dos tintas que no casan del todo y vibran.
+         * Psicodelia: la palabra en una cartela, según la cara del tema: en la ciudad, la placa redondeada de un letrero, con
+         * su sombra corta y café; en la tinta, la cartela de arco del cartel, impresa otra vez en ultramar con el registro
+         * corrido.
          */
-        GLOBO,
-        /** Psicodelia: una onda de tinta de arcoíris bajo la palabra, la del tintero partido, que acaba en una burbuja. */
-        ARCOIRIS,
+        CARTELA,
+        /**
+         * Psicodelia: el filete bajo la palabra: en la ciudad, la raya pintada; en la tinta, la onda impresa con el tintero
+         * partido entre dos tintas (de magenta a ultramar), que acaba en el disco chico.
+         */
+        TINTERO,
     }
 
     /** Cómo se ve una marca: color de la letra, el trazo detrás y si va en negrita o cursiva. */
@@ -189,7 +194,7 @@ object Marcas {
             TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
             // La @persona, en una burbuja de cartel con su sombra en el color opuesto; el #tema, sobre la onda de tinta de arcoíris.
-            TemaId.PSICODELIA -> if (persona) Aspecto(cs.onPrimary, p, Forma.GLOBO, negrita = true) else Aspecto(s, s, Forma.ARCOIRIS)
+            TemaId.PSICODELIA -> if (persona) Aspecto(cs.onPrimary, p, Forma.CARTELA, negrita = true) else Aspecto(s, s, Forma.TINTERO)
             // La @persona, en la placa esmaltada de una entrada de metro (letras crema sobre el verde de la fundición); el #tema,
             // sobre una línea de látigo en el violeta del iris.
             TemaId.NOUVEAU -> if (persona) Aspecto(Color(0xFFF3EAD3), if (cs.background.luminance() < 0.5f) lerp(TrazosNouveau.HIERRO, Color.White, 0.08f) else TrazosNouveau.HIERRO, Forma.ESMALTE, negrita = true)
@@ -270,8 +275,8 @@ object Marcas {
         Forma.TORQUES -> Color.Unspecified
         Forma.ESMALTE -> c
         Forma.LATIGO -> Color.Unspecified
-        Forma.GLOBO -> c
-        Forma.ARCOIRIS -> Color.Unspecified
+        Forma.CARTELA -> c
+        Forma.TINTERO -> Color.Unspecified
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
@@ -299,8 +304,8 @@ object Marcas {
         Forma.TORQUES -> true
         Forma.ESMALTE -> false
         Forma.LATIGO -> true
-        Forma.GLOBO -> false
-        Forma.ARCOIRIS -> true
+        Forma.CARTELA -> false
+        Forma.TINTERO -> true
     }
 
     /** El estilo de letra de la marca. Con [conFondo], lo que no se puede dibujar (en un campo de texto) va como fondo de la letra. */
@@ -772,28 +777,38 @@ object Marcas {
                 drawPath(TrazosNouveau.cinta(todo) { f -> (1.5f - 0.9f * f) * u }, c.copy(alpha = 0.9f))
                 drawPath(TrazosNouveau.hojaLanza(Offset(x0 + 1f * u, pts[0].y), Offset(x0 - 3.6f * u, pts[0].y + 1f * u), 1.8f * u, -0.12f), c.copy(alpha = 0.9f))
             }
-            Forma.GLOBO -> {
-                // La burbuja: los extremos redondos y los cantos que ondulan apenas, en contra; detrás, la misma burbuja corrida
-                // abajo a la derecha en el color opuesto.
+            Forma.CARTELA -> {
                 val t = rr.top + h * 0.02f; val b = rr.bottom; val iz = rr.left - 5 * u; val de = rr.right + 5 * u
-                val k = (b - t) * 0.07f; val g = (b - t) / 2
-                fun burbuja(dx: Float, dy: Float) = Path().apply {
-                    moveTo(iz + g + dx, t + k + dy)
-                    cubicTo(iz + (de - iz) * 0.36f + dx, t - k * 0.4f + dy, iz + (de - iz) * 0.64f + dx, t + k * 2.2f + dy, de - g + dx, t + k + dy)
-                    quadraticTo(de + dx, t + k + dy, de + dx, (t + b) / 2 + dy); quadraticTo(de + dx, b - k + dy, de - g + dx, b - k + dy)
-                    cubicTo(iz + (de - iz) * 0.64f + dx, b - k * 2.2f + dy, iz + (de - iz) * 0.36f + dx, b + k * 0.4f + dy, iz + g + dx, b - k + dy)
-                    quadraticTo(iz + dx, b - k + dy, iz + dx, (t + b) / 2 + dy); quadraticTo(iz + dx, t + k + dy, iz + g + dx, t + k + dy); close()
+                val caja = Rect(iz, t, de, b)
+                if (EstadoTema.cara == Cara.BASE) {
+                    val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(caja, CornerRadius(minOf((b - t) * 0.3f, 6f * u)))) }
+                    translate(0.6f * u, 0.9f * u) { drawPath(forma, TrazosCiudad.SOMBRA.copy(alpha = 0.25f)) }
+                    drawPath(forma, c)
+                } else {
+                    val forma = TrazosTinta.arco(caja, minOf((b - t) * 0.5f, 10f * u), 1.2f * u)
+                    val reg = TrazosTinta.medidas(EstadoTema.intensidad).registro
+                    translate((1.2f + reg * 0.4f) * u, 1f * u) { drawPath(forma, TrazosTinta.tinta(TrazosTinta.Tinta.ULTRAMAR, c.luminance() > 0.4f, EstadoTema.intensidad).copy(alpha = 0.6f)) }
+                    drawPath(forma, c)
                 }
-                drawPath(burbuja(1.6f * u, 1.4f * u), TrazosPsicodelia.opuesto(c).copy(alpha = 0.6f))
-                drawPath(burbuja(0f, 0f), c)
-                drawLine(Color.White.copy(alpha = 0.3f), Offset(iz + g, t + k + 1.6f * u), Offset(iz + g + (de - iz) * 0.25f, t + k + 1.3f * u), 0.9f * u, StrokeCap.Round)
             }
-            Forma.ARCOIRIS -> {
-                // La onda de tinta de arcoíris bajo la palabra, que se adelgaza al final y acaba en una burbuja.
+            Forma.TINTERO -> {
                 val y = baja - 0.4f * u; val x0 = rr.left - 1f * u; val x1 = rr.right + 1f * u
-                val tinta = TrazosPsicodelia.arcoiris(Offset(x0, y), Offset(x1, y), 0.9f, c.luminance() > 0.25f)
-                drawPath(TrazosPsicodelia.onda(x0, x1, y, minOf(1.1f * u, h * 0.08f), 9f * u), tinta, style = Stroke(1.5f * u, cap = StrokeCap.Round))
-                drawCircle(c.copy(alpha = 0.7f), 1.5f * u, Offset(x1 + 2.4f * u, y - 1.4f * u), style = Stroke(0.7f * u))
+                if (EstadoTema.cara == Cara.BASE) drawLine(c.copy(alpha = 0.8f), Offset(x0, y), Offset(x1, y), 1.2f * u)
+                else {
+                    val oscuroT = c.luminance() > 0.25f
+                    val i = EstadoTema.intensidad
+                    val pincel = Brush.horizontalGradient(listOf(TrazosTinta.tinta(TrazosTinta.Tinta.MAGENTA, oscuroT, i), TrazosTinta.tinta(TrazosTinta.Tinta.ULTRAMAR, oscuroT, i)), x0, x1)
+                    val a = minOf(1.1f * u, h * 0.08f); val per = 9f * u
+                    val onda = Path()
+                    var x = x0
+                    while (x <= x1 + 0.01f) {
+                        val yy = y + a * kotlin.math.sin(2f * Math.PI.toFloat() * (x - x0) / per)
+                        if (x == x0) onda.moveTo(x, yy) else onda.lineTo(x, yy)
+                        x += 1.2f * u
+                    }
+                    drawPath(onda, pincel, style = Stroke(1.5f * u, cap = StrokeCap.Round))
+                    drawCircle(c.copy(alpha = 0.8f), 1.5f * u, Offset(x1 + 2.6f * u, y), style = Stroke(0.8f * u))
+                }
             }
             Forma.PANTALLA -> {
                 // El vidrio oscuro con su bisel de cromo, tres líneas de barrido tenues y, delante, el piloto ámbar con su halo.

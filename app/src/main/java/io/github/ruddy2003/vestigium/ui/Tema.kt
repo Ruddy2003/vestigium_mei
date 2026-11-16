@@ -971,7 +971,7 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> 16 to 16
         TemaId.TEMPLARIO -> 22 to 10
         TemaId.DISTOPIA -> 20 to 12
-        TemaId.PSICODELIA -> 12 to 20
+        TemaId.PSICODELIA -> 18 to 14
         TemaId.NOUVEAU -> 20 to 12
         TemaId.GALIA -> 20 to 12
         TemaId.ARCONTES -> 20 to 12
@@ -1116,18 +1116,10 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
         val p = s.height * 0.08f; val a = s.width * 0.42f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(s.width, p); lineTo(s.width, s.height); lineTo(0f, s.height); close()
     }
-    // Un cartel que se derrite: abajo, tres gotas que cuelgan de distinto largo.
+    // El marco de arco del cartel de la semana (Psicodelia v2): arriba redondo, abajo casi recto. Es la cara de la noche,
+    // la que el tema añade: la vista previa la enseña aunque sea de día.
     TemaId.PSICODELIA -> GenericShape { s, _ ->
-        val w = s.width; val h = s.height; val b = h * 0.86f
-        moveTo(0f, 0f); lineTo(w, 0f); lineTo(w, b)
-        val gotas = listOf(0.8f to 0.12f, 0.5f to 0.07f, 0.22f to 0.14f)
-        for ((cx, largo) in gotas) {
-            val g = w * 0.07f; val px = w * cx
-            lineTo(px + g, b)
-            cubicTo(px + g * 0.6f, b, px + g * 0.7f, b + h * largo, px, b + h * largo)
-            cubicTo(px - g * 0.7f, b + h * largo, px - g * 0.6f, b, px - g, b)
-        }
-        lineTo(0f, b); close()
+        addPath(TrazosTinta.arco(androidx.compose.ui.geometry.Rect(0f, 0f, s.width, s.height), minOf(s.width, s.height) * 0.22f, minOf(s.width, s.height) * 0.03f))
     }
     // El marco de un cartel de 1900: arriba, dos lóbulos que se juntan en el centro con una curva de látigo.
     TemaId.NOUVEAU -> GenericShape { s, _ ->
@@ -1347,14 +1339,11 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         }
         // Ficha de archivo apaisada.
         TemaId.DISTOPIA -> drawRect(c, Offset(0f, h * 0.2f), Size(w, h * 0.6f))
-        // La flor de pétalos redondos, con su centro en el color complementario.
+        // El disco del día: el vinilo con su etiqueta calada y el agujero.
         TemaId.PSICODELIA -> {
-            for (i in 0 until 5) {
-                val a = Math.toRadians((i * 72 - 90).toDouble())
-                drawCircle(c, r * 0.36f, Offset(cx + r * 0.5f * kotlin.math.cos(a).toFloat(), cy + r * 0.5f * kotlin.math.sin(a).toFloat()))
-            }
-            drawCircle(fondo.copy(alpha = 0.75f), r * 0.3f, Offset(cx, cy))
-            drawCircle(c, r * 0.17f, Offset(cx, cy))
+            drawCircle(c, r * 0.95f, Offset(cx, cy))
+            drawCircle(fondo.copy(alpha = 0.75f), r * 0.36f, Offset(cx, cy))
+            drawCircle(c, r * 0.1f, Offset(cx, cy))
         }
         // La libélula: el cuerpo largo y las cuatro alas.
         TemaId.NOUVEAU -> {

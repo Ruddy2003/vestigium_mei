@@ -130,8 +130,8 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.TEMPLARIO -> MatizMovimiento(BarridoTema.CRUZ, 820, CubicBezierEasing(0.55f, 0f, 0.3f, 1f), 0f, -12f, 1.02f, 420, 55, FastOutSlowInEasing, 1.15f, 0.95f, 1600f)
     // El ojo que se abre; los expedientes entran de lado y el sello cae seco.
     TemaId.DISTOPIA -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
-    // La gota de tinta que se ensancha desde el toque y se funde con otras; las secciones suben apenas y se asientan
-    // blandas, un poco más grandes al llegar, como una burbuja que se posa, y los botones ceden como gelatina, con rebote.
+    // La gota de tinta que se ensancha desde el toque, como la tinta en la pantalla de serigrafía; las secciones suben
+    // apenas y se asientan blandas, un poco más grandes al llegar, y los botones ceden con un rebote corto.
     TemaId.PSICODELIA -> MatizMovimiento(BarridoTema.GOTA, 1040, CubicBezierEasing(0.35f, 0f, 0.25f, 1f), 0f, 12f, 1.015f, 580, 70, CubicBezierEasing(0.25f, 0.1f, 0.25f, 1f), 1.05f, 0.45f, 420f)
     // El rizo de la línea de látigo que se desenrolla desde el toque; las secciones suben despacio y se asientan como una
     // hoja de papel sobre la piedra, y los botones ceden blandos, con un rebote apenas, como un tallo.
@@ -299,8 +299,9 @@ internal enum class VivoTema(val periodo: Int) {
     /** Art nouveau de noche: los mismos tallos, que en vez de flor llevan una tulipa de vidrio que se enciende, una tras otra. */
     LAMPARAS(64000),
     /**
-     * Psicodelia: las luces líquidas de un retroproyector, manchas de aceite y tinta que se cruzan y respiran despacio, con
-     * burbujas que suben; de noche, en los colores de la luz negra, y de día, más tenues, como tinta en el papel.
+     * Psicodelia (v2, según su cara: `PiezasPsicodelia.fondoVivo`): en la ciudad, la mancha de sol de la ventana que se
+     * corre despacio por la pared (de noche, el cono de la lámpara que respira); en la tinta, las bandas del cartel que
+     * respiran y, con la intensidad, fluyen, y el disco hecho sol que gira en la esquina.
      */
     LUCES(60000),
     /** Básico: nada se mueve detrás (no se dibuja ni se anima). */
@@ -318,7 +319,7 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.MEDIEVAL -> VivoTema.RAYO_ORO         // un rayo de luz con polvo de oro suspendido
     TemaId.TEMPLARIO -> VivoTema.ANTORCHAS        // la muralla almenada con antorchas que tiemblan y sueltan pavesas
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
-    TemaId.PSICODELIA -> VivoTema.LUCES             // las luces líquidas que se mezclan y respiran; de día, más tenues
+    TemaId.PSICODELIA -> VivoTema.LUCES             // la mancha de sol (ciudad) o las bandas del cartel (tinta)
     TemaId.NOUVEAU -> if (oscuro) VivoTema.LAMPARAS else VivoTema.TALLOS   // de día, los tallos que florecen; de noche, las lámparas que se encienden
     TemaId.GALIA -> if (oscuro) VivoTema.HOGUERAS else VivoTema.ROBLEDAL   // de día, las hojas y la niebla; de noche, las hogueras
     TemaId.ARCONTES -> if (oscuro) VivoTema.ESFERAS else VivoTema.POLVO_DORADO   // de día, el polvo en el rayo de sol; de noche, las esferas
@@ -801,7 +802,7 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
         }
         VivoTema.TALLOS -> tallosVivo(t, false, e, fuerza)
         VivoTema.LAMPARAS -> tallosVivo(t, true, e, fuerza)
-        VivoTema.LUCES -> with(TrazosPsicodelia) { lucesSala(t, oscuro, fuerza * (if (oscuro) 0.45f else 0.4f)) }
+        VivoTema.LUCES -> with(PiezasPsicodelia) { fondoVivo(t, oscuro, fuerza) }
         VivoTema.CENIZA -> motas.take(24).forEach { m ->
             // Pavesas irregulares de papel quemado que caen dando tumbos; de noche, alguna conserva una brasa.
             val k = vueltas(m)
