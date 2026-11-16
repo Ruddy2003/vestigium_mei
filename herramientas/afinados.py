@@ -2087,78 +2087,84 @@ def nouveau():
                rascar=rascado((1400, 6400), plata, aspereza=85, pasadas=((0.0, 0.27), (0.32, 0.27), (0.65, 0.29))))
 
 def psicodelia():
-    # La mixolidio (La, Si, Do#, Re, Mi, Fa#, Sol): la escala mayor con la séptima menor, el modo del pop con sitar y órgano
-    # de 1965 a 1967; el acorde de Sol (la séptima menor) le da su color y se vuelve a casa de Sol a La, sin sensible. San
-    # Francisco en el verano de 1967, desde la mesa de un dibujante de carteles de conciertos: el sitar con su zumbido y
-    # sus cuerdas simpáticas, la guitarra eléctrica con el pedal de distorsión para los logros, el órgano portátil de
-    # transistores con su vibrato, el pandero, el eco de cinta (las repeticiones que se apagan), el tocadiscos y la radio
-    # de FM de noche, todo con nombres genéricos. Ni Mi mixolidio (el de la canción con sitar más conocida de entonces),
-    # ni sintetizadores (Ciudad neón, Frente exterior), ni el vibráfono y el órgano de los cincuenta (Refugio), ni el jazz
-    # de Art déco, ni el piano y la cajita de Art nouveau, ni la cítara pentatónica (Ruta de la Seda), ni el morin juur
-    # (Mongol), ni los metales y timbales de Soviético.
+    # La mixolidio (La, Si, Do#, Re, Mi, Fa#, Sol): la escala mayor con la séptima menor; el acorde de Sol (la séptima
+    # menor) le da su color y se vuelve a casa de Sol a La, sin sensible. Psicodelia v2 tiene dos caras (ver
+    # `docs/diseno/temas/psicodelia.md`, «Sonido»), con un juego de sonidos cada una, los dos en la misma escala; aquí va
+    # la de BASE, **la ciudad** de fines de los sesenta, sobria: el cuarto con el tocadiscos de maleta y la radio de
+    # válvulas. Suenan el órgano portátil de transistores, bajo y suave (un registro y su octava, poco brillo), el
+    # pandero, el eco de cinta corto (una o dos repeticiones cercanas), el golpe de la aguja al bajar al disco y el clic
+    # de la perilla de la radio. Ni sitar ni guitarra con distorsión: esos son de la cara psicodelia ([psicodelia_tinta]).
+    # Los avisos (canales de notificación: `aviso` y `solemne`) son siempre estos, a cualquier hora, porque Android fija
+    # el sonido del canal al crearlo. Todo con nombres genéricos. Ni Mi mixolidio (el de la canción con sitar más
+    # conocida de entonces), ni sintetizadores (Ciudad neón, Frente exterior), ni el vibráfono y el órgano de los
+    # cincuenta (Refugio), ni el jazz de Art déco, ni el piano y la cajita de Art nouveau, ni los metales de Soviético.
     T = 0   # La 4
-    taraf = tuple(hz(T + n) for n in (-12, -5, 0, 2, 4, 7, 10, 12))   # las cuerdas simpáticas, afinadas en el modo
-    sit = lambda n, d=1.0, **kw: sitar(hz(n), d, taraf=taraf, **kw)
     org = lambda n, d=0.5, **kw: organo_transistor(hz(n), d, **kw)
-    gd = lambda n, d, notas=(0, 7, 12), **kw: guitarra_distorsion(hz(n), d, notas, **kw)
-    def acor(notas, d, crece=0.0, **kw):
+    # El órgano suave de la ciudad: el registro de base y, apenas, su octava; con el filtro de voz más cerrado.
+    suave = lambda n, d=0.5, **kw: organo_transistor(hz(n), d, **dict(dict(registros=((1, 1.0), (2, 0.3)), brillo=0.55, chasquido=0.5), **kw))
+    def acor(notas, d, crece=0.0, inst=None, **kw):
         """Un acorde del órgano: todas las teclas a la vez (con el mismo vibrato). [crece]: lo que tarda el pedal de volumen en abrirse."""
-        x = mezclar(*[(0, org(n, d, **kw), 1 / len(notas) ** 0.5) for n in notas])
+        inst = inst or org
+        x = mezclar(*[(0, inst(n, d, **kw), 1 / len(notas) ** 0.5) for n in notas])
         return x * (0.35 + 0.65 * np.minimum(1, np.arange(len(x)) / SR / crece) ** 1.5) if crece else x
+    def corto(x, retraso=0.13, veces=2, realim=0.32):
+        """El eco de cinta corto de la ciudad: una o dos repeticiones cercanas y apagadas, como el de un amplificador chico."""
+        return eco_cinta(x, retraso, realim, veces, 2600, 0.35)
     with azar_propio('psicodelia_base'):
         S['psicodelia'] = dict(
-            # El toque: una nota de sitar que entra apenas desde abajo, con su zumbido y un poco de las simpáticas.
-            toque=sit(T, 0.45, entra=-0.5, halo=0.12) * np.exp(-t_(0.45) * 3.5),
+            # El toque: una tecla del órgano suave, en el grave, con su eco corto.
+            toque=corto(suave(T - 12, 0.16, suelta=0.04), 0.1, 1, 0.3),
             # Elegir: una tecla del órgano, corta.
             elegir=org(T + 12, 0.15, chasquido=1.3, suelta=0.02),
             # Pasar: la funda de un disco en el cajón de la tienda.
             pasar=funda(0.3),
-            # Abrir: el sitar rasgueado de abajo arriba por las cuerdas de bordón (La, Mi, La, La), con sus simpáticas y su eco.
-            abrir=eco_cinta(domar(mezclar(*[(0.04 * i, sit(n, 1.7 - 0.04 * i, brillo=0.8, halo=0.3) * np.exp(-t_(1.7 - 0.04 * i) / 0.5), 0.45)
-                                      for i, n in enumerate([T - 12, T - 5, T, T + 12])]), 0.35, 2.5), 0.24, 0.35, 2, 2600, 0.4),
+            # Abrir: el clic de la perilla de la radio y el órgano que abre La mayor de abajo arriba (La, Mi, La, Do#) con el
+            # pedal de volumen, y el eco corto.
+            abrir=corto(mezclar((0, perilla(), 0.35),
+                                *[(0.06 + 0.07 * i, suave(T - 12 + n, 0.95 - 0.07 * i, suelta=0.25) * (1 - np.minimum(1, t_(0.95 - 0.07 * i) / (0.95 - 0.07 * i))) ** 0.6, 0.42)
+                                  for i, n in enumerate([0, 7, 12, 16])])),
             # Guardar: la aguja baja al disco y el órgano va de Sol a La (de la séptima menor a casa), con el eco de cinta.
             guardar=eco_cinta(mezclar((0, aguja(0.8, 0.45), 0.6), (0.1, acor([T - 2, T + 2, T + 5], 0.2), 0.5),
                                       (0.3, acor([T - 5, T, T + 4, T + 7], 0.42), 0.6)), 0.19, 0.4, 2, 2800, 0.45),
-            # El logro: la guitarra con el pedal de distorsión da dos golpes del acorde de quinta de Sol y el de La, que se
-            # queda sonando con vibrato y su eco; el órgano abre el acorde de La con la séptima menor (Sol) y el pandero
-            # marca el golpe y se sacude en corcheas, cada vez más suave.
-            logro=reverb(mezclar(
-                (0, pandero(1.0, 0, 0.4, 0.6), 0.4), (0, gd(T - 14, 0.17, apagar=0.12), 0.55), (0.19, gd(T - 14, 0.17, apagar=0.12), 0.5),
-                (0.38, eco_cinta(gd(T - 12, 2.2, vibrato=(0.25, 0.8)), 0.38, 0.4, 3, 2600, 0.35), 0.6),
-                (0.38, pandero(1.0, 0, 0.4, 0.6), 0.45), *[(0.38 + 0.19 * k, pandero(0.5, 0.06, 0.3, 0.0), 0.25 * 0.82 ** k) for k in range(1, 9)],
-                (0.38, acor([T - 12, T - 8, T - 5, T - 2], 2.4, 0.6), 0.32)), 1.4, 0.24),
-            # El tema: la aguja baja al disco; el órgano sostiene La y Mi, el sitar entra con una frase corta que se dobla
-            # (Mi que sube a Fa# y vuelve, y La abajo), con su eco, y el pandero se sacude y golpea.
-            tema=reverb(mezclar(
-                (0, aguja(0.7, 0.6), 0.5), (0.3, acor([T - 12, T - 5, T], 2.3, 0.5), 0.3),
-                (0.32, eco_cinta(mezclar((0, sit(T + 7, 0.9, pasos=((0, 0), (0.26, 2), (0.56, 0)), apagar=0.74), 0.6),
-                                         (0.78, sit(T, 1.5, entra=-1.0, halo=0.3), 0.6)), 0.31, 0.4, 3, 2600, 0.35), 1.0),
-                (0.3, pandero(0.7, 0.25, 0.6, 0.0), 0.28), (1.1, pandero(0.8, 0.0, 0.4, 0.4), 0.3)), 1.2, 0.24),
-            # El aviso: la radio de FM de noche. El dial pasa entre emisoras y se aquieta en la buena, donde suenan el órgano
-            # (La con la séptima menor), el pandero y el sitar, de la quinta a la tónica, que se dobla un tono abajo y vuelve,
-            # con el eco que se apaga.
-            aviso=reverb(domar(mezclar(
-                (0, sintonia(0.6, 0.45), 0.06), (0.45, pandero(1.0, 0, 0.4, 0.5), 0.35), (0.45, acor([T - 12, T - 8, T - 5, T - 2], 2.4, 0.4), 0.36),
-                (0.45, eco_cinta(mezclar((0, sit(T + 7, 0.75, entra=-1.0, apagar=0.6), 0.6),
-                                        (0.62, sit(T + 12, 1.9, pasos=((0, 0), (0.55, -2), (0.95, 0)), halo=0.3), 0.6)), 0.36, 0.42, 3, 2600, 0.35), 1.0),
-                (1.8, pandero(0.6, 0.3, 0.6, 0.0), 0.22)), 0.5, 2.0), 1.4, 0.26),
-            # Lo solemne: el órgano, despacio, por La, Mi menor (la quinta menor del modo), Re y La; encima, el sitar canta una
-            # frase lenta que se dobla en las notas largas, con su eco; el pandero se sacude en cada acorde y, al final, las
-            # cuerdas de bordón del sitar y sus simpáticas se quedan sonando.
+            # El logro: el pandero da el golpe y el órgano suave hace la vuelta del modo, Re, Sol y La (el cuarto grado, la
+            # séptima menor y casa), con la melodía arriba (Fa#, Sol, La); el último acorde se queda con el pedal de
+            # volumen que se cierra y el pandero se sacude en corcheas, cada vez más suave. Eco corto.
+            logro=reverb(corto(mezclar(
+                (0, pandero(1.0, 0, 0.4, 0.6), 0.35),
+                (0, acor([T - 7, T - 3, T], 0.36, inst=suave), 0.5), (0.38, acor([T - 10, T - 5, T - 2], 0.36, inst=suave), 0.5),
+                (0.76, acor([T - 12, T - 5, T - 2, T + 4], 1.9, inst=suave) * (1 - np.minimum(1, t_(1.9) / 1.9)) ** 1.2, 0.6),
+                (0, suave(T + 9, 0.34), 0.42), (0.38, suave(T + 10, 0.34), 0.42), (0.76, suave(T + 12, 1.5) * (1 - np.minimum(1, t_(1.5) / 1.5)), 0.46),
+                (0.76, pandero(1.0, 0, 0.4, 0.6), 0.42), *[(0.76 + 0.19 * k, pandero(0.5, 0.06, 0.3, 0.0), 0.22 * 0.8 ** k) for k in range(1, 7)]),
+                0.16, 2, 0.3), 1.2, 0.22),
+            # El tema: la aguja baja al disco; el órgano suave sostiene La y Mi y canta una frase corta (Mi, Fa#, Mi y Do#,
+            # que se posa en La), con el eco corto; el pandero se sacude y golpea al llegar.
+            tema=reverb(corto(mezclar(
+                (0, aguja(0.7, 0.6), 0.5), (0.3, acor([T - 12, T - 5, T], 2.2, 0.5, inst=suave), 0.3),
+                *[(0.32 + s, suave(T + n, d, suelta=0.05), 0.5) for s, n, d in [(0, 7, 0.26), (0.28, 9, 0.26), (0.56, 7, 0.26), (0.84, 4, 0.3), (1.16, 0, 1.0)]],
+                (0.3, pandero(0.7, 0.25, 0.6, 0.0), 0.24), (1.48, pandero(0.8, 0.0, 0.4, 0.4), 0.28))), 1.1, 0.22),
+            # El aviso: el clic de la perilla de la radio y, en la sala, el órgano suave (La con la séptima menor) y el
+            # pandero; arriba el órgano canta de la quinta a la tónica, baja un tono y vuelve, con el eco corto.
+            aviso=reverb(domar(corto(mezclar(
+                (0, perilla(), 0.3), (0.2, pandero(1.0, 0, 0.4, 0.5), 0.32), (0.2, acor([T - 12, T - 8, T - 5, T - 2], 2.6, 0.4, inst=suave), 0.38),
+                *[(0.2 + s, suave(T + n, d, suelta=0.06), 0.5) for s, n, d in [(0, 7, 0.38), (0.42, 12, 0.5), (0.95, 10, 0.32), (1.3, 12, 1.6)]],
+                (1.5, pandero(0.6, 0.3, 0.6, 0.0), 0.2)), 0.16, 2, 0.3), 0.5, 2.0), 1.3, 0.24),
+            # Lo solemne: el órgano, despacio, por La, Mi menor (la quinta menor del modo), Re y La; encima, el órgano suave
+            # canta una frase lenta con el eco corto; el pandero se sacude en cada acorde y la aguja, al final, llega al
+            # surco de salida (el golpe sordo de cada vuelta).
             solemne=reverb(domar(mezclar(
-                *[(2.2 * i, acor(ch, 2.35 if i < 3 else 2.9, 0.5, registros=((1, 1.0), (2, 0.45)), brillo=0.8), 0.34)
+                *[(2.2 * i, acor(ch, 2.35 if i < 3 else 3.2, 0.5, registros=((1, 1.0), (2, 0.45)), brillo=0.7), 0.34)
                   for i, ch in enumerate([[-12, -8, -5, 0], [-17, -14, -10, -5], [-7, -3, 0, 5], [-12, -8, -5, 0]])],
-                *[(s, eco_cinta(sit(T + n, dd, halo=0.25, apagar=dd - 0.12, **kw), 0.42, 0.38, 3, 2500, 0.3), 0.55) for s, n, dd, kw in [
-                    (0.3, 7, 1.25, dict(pasos=((0, 0), (0.55, 2), (0.9, 0)))), (1.5, 4, 0.75, {}), (2.3, 7, 0.95, {}), (3.2, 10, 1.2, dict(entra=-1.0)),
-                    (4.5, 9, 0.95, {}), (5.4, 5, 1.2, dict(pasos=((0, 0), (0.55, 2), (0.9, 4)))), (6.7, 2, 0.65, {})]],
-                (7.3, domar(mezclar((0, sit(T, 2.4, halo=0.4), 0.6), (0.04, sit(T - 12, 2.3, halo=0.4), 0.4), (0.08, sit(T - 5, 2.2, halo=0.4), 0.35)), 0.4), 1.0),
-                *[(2.2 * i, pandero(0.55, 0.3, 0.6, 0.0), 0.2) for i in range(3)], (6.6, pandero(0.9, 0.0, 0.45, 0.4), 0.28)), 0.5, 2.0), 1.8, 0.3))
+                *[(s, corto(suave(T + n, dd, suelta=0.12), 0.16, 2, 0.3), 0.5) for s, n, dd in [
+                    (0.3, 7, 1.1), (1.5, 4, 0.7), (2.3, 7, 0.85), (3.2, 10, 1.2), (4.5, 9, 0.85), (5.4, 5, 1.2), (6.7, 4, 0.65), (7.4, 0, 2.4)]],
+                *[(2.2 * i, pandero(0.55, 0.3, 0.6, 0.0), 0.2) for i in range(3)], (6.6, pandero(0.9, 0.0, 0.45, 0.4), 0.26),
+                *[(9.6 + 1.8 * k, aguja(0.35 * 0.7 ** k, 0.4, 0.4), 0.3) for k in range(2)]), 0.5, 2.0), 1.6, 0.28))
 
-    # Error: la cinta que se frena: el sitar y el órgano (Sol y Do, el Do fuera del modo) bajan de velocidad y de altura y
-    # se apagan. Cambio: la perilla de la radio de válvulas y dos teclas del órgano, de la quinta a la octava, con un eco
-    # corto. Tecla: la plumilla de acero del dibujante sobre la cartulina del cartel (las dos puntas que rascan la fibra a
+    # Error: la cinta que se frena: el órgano (Sol y Do, el Do fuera del modo) baja de velocidad y de altura y se apaga.
+    # Cambio: la perilla de la radio de válvulas y dos teclas del órgano, de la quinta a la octava, con un eco corto.
+    # Tecla: la plumilla de acero del dibujante sobre la cartulina del cartel (las dos puntas que rascan la fibra a
     # saltitos). Rascar: una moneda de diez centavos (con una de cinco se pagaba el tranvía: 15 centavos en 1967); desde
     # 1965, de cuproníquel sobre cobre, sin plata ([sin verificar]: no está en fuentes_psicodelia.md), suena corta y apagada.
+    # La moneda suena igual en las dos caras: es la misma moneda.
     with azar_propio('psicodelia'):
         t = t_(0.5); fm = hz(T + 30)
         diez = sum(a * np.sin(2 * np.pi * fm * r * t) * np.exp(-t * c) for r, a, c in ((1.0, 1.0, 7.0), (1.73, 0.4, 10.0), (2.33, 0.25, 13.0), (3.91, 0.1, 20.0))
@@ -2166,11 +2172,95 @@ def psicodelia():
         plumilla = mezclar((0, trazo((2200, 7200), 0.042, 14, 0.024), 1.0), (0, clic(0.0015, (3500, 9000)), 0.45),
                            *[(rng.uniform(0.008, 0.034), clic(0.0008, (4000, 9500)), rng.uniform(0.1, 0.3)) for _ in range(3)])
         nuevos('psicodelia',
-               error=freno_cinta(mezclar((0, sit(T + 7, 0.62, halo=0.0), 0.6), (0, acor([T - 2, T + 3], 0.62), 0.45)), 7.0),
+               error=freno_cinta(mezclar((0, suave(T + 7, 0.62), 0.55), (0, acor([T - 2, T + 3], 0.62), 0.45)), 7.0),
                cambio=mezclar((0, perilla(), 0.2),(0.03, eco_cinta(mezclar((0, org(T + 7, 0.09, chasquido=0.6), 0.5), (0.1, org(T + 12, 0.12, chasquido=0.6), 0.5)),
                                                                     0.11, 0.35, 2, 2600, 0.4), 0.8)),
                tecla=plumilla,
                rascar=rascado((1100, 5200), diez, aspereza=110, pasadas=((0.0, 0.26), (0.31, 0.26), (0.62, 0.3))))
+
+def rasero(d=0.34):
+    """El rasero de goma de la serigrafía, que arrastra la tinta por la malla del bastidor de un lado al otro: un roce
+    parejo y húmedo (la goma sobre la seda tensa, que hace de parche), con el chirrido apenas afinado de la goma que se
+    dobla, y al final el rasero que se levanta y la malla que se despega del papel."""
+    t = t_(d); n = len(t)
+    forma = np.sin(np.pi * np.minimum(1, t / (0.88 * d))) ** 0.8
+    roce = filtro(ruido(d), 'banda', (500, 4200)) * (0.7 + 0.3 * np.abs(filtro(ruido(d), 'bajo', 35))) * forma
+    roce = roce + 0.6 * banda_movil(roce, 1150 + 250 * t / d, 180) + 0.35 * resonador(roce, 2600, 300)
+    despega = filtro(ruido(0.05), 'banda', (900, 5000)) * env(int(0.05 * SR), 0.002, 0.02, 4)
+    return mezclar((0, roce / (np.abs(roce).max() + 1e-9), 0.8), (0.9 * d, despega / (np.abs(despega).max() + 1e-9), 0.35))[:n + int(0.05 * SR)]
+
+def bastidor(fuerza=1.0):
+    """El bastidor de madera de la serigrafía que baja sobre el papel: un golpe hueco de marco y la mesa de debajo."""
+    e = np.zeros(int(0.14 * SR)); e[:int(0.004 * SR)] = filtro(ruido(0.004), 'bajo', 1800)
+    g = resonador(e, 170, 45) + 0.7 * resonador(e, 390, 80) + 0.3 * resonador(e, 900, 200)
+    g = filtro(g / (np.abs(g).max() + 1e-9), 'alto', 70)
+    return fuerza * mezclar((0, g, 0.9), (0, clic(0.003, (900, 4500)), 0.3))
+
+def psicodelia_tinta():
+    # La cara INTENSA de Psicodelia: **la psicodelia de cartel**, de 21:00 a 5:00 (la cara de la hora: el sonido no cambia
+    # con la intensidad, para que un consumo no se oiga; ver `ui/Sentidos.kt`, [caraDelSonido]). La misma escala que la
+    # ciudad (La mixolidio), para que el toque recorra las mismas notas. Suenan el sitar en zumbido (la cuerda que roza
+    # la jawari, con sus cuerdas simpáticas), la guitarra eléctrica con el pedal de distorsión para los logros y el eco
+    # de cinta **largo**, el que se repite y se va apagando (de tres a cinco repeticiones, con un retraso de casi medio
+    # segundo en lo grande); y, de la mesa del cartel, el rasero y el bastidor de la serigrafía y el pincel de rotulista.
+    # Ni la aguja ni la perilla (son del cuarto de la ciudad). Sin aviso ni solemne: los canales de notificación se
+    # quedan con los de la ciudad.
+    T = 0   # La 4
+    taraf = tuple(hz(T + n) for n in (-12, -5, 0, 2, 4, 7, 10, 12))   # las cuerdas simpáticas, afinadas en el modo
+    sit = lambda n, d=1.0, **kw: sitar(hz(n), d, taraf=taraf, **kw)
+    org = lambda n, d=0.5, **kw: organo_transistor(hz(n), d, **kw)
+    gd = lambda n, d, notas=(0, 7, 12), **kw: guitarra_distorsion(hz(n), d, notas, **kw)
+    def acor(notas, d, crece=0.0, **kw):
+        x = mezclar(*[(0, org(n, d, **kw), 1 / len(notas) ** 0.5) for n in notas])
+        return x * (0.35 + 0.65 * np.minimum(1, np.arange(len(x)) / SR / crece) ** 1.5) if crece else x
+    def largo(x, retraso=0.36, veces=4, realim=0.5):
+        """El eco de cinta largo de la noche: repeticiones lejanas que se van oscureciendo y ondulan con el motor."""
+        return eco_cinta(x, retraso, realim, veces, 2400, 0.4)
+    with azar_propio('psicodelia_tinta'):
+        S['psicodelia_tinta'] = dict(
+            # El toque: una nota de sitar que entra apenas desde abajo, con su zumbido y un poco de las simpáticas, y una
+            # sola repetición del eco (en cada toque, más sería un enjambre).
+            toque=eco_cinta(domar(sit(T, 0.45, entra=-0.5, halo=0.12) * np.exp(-t_(0.45) * 3.5), 0.35, 3.0), 0.21, 0.28, 1, 2400, 0.4),
+            # Elegir: una cuerda del sitar, arriba y corta, con el zumbido de la jawari.
+            elegir=domar(sit(T + 12, 0.26, brillo=0.6, halo=0.08) * np.exp(-t_(0.26) * 7), 0.4, 3.0),
+            # Pasar: el rasero que arrastra la tinta por la malla.
+            pasar=rasero(0.32),
+            # Abrir: el sitar rasgueado de abajo arriba por las cuerdas de bordón (La, Mi, La, La), con sus simpáticas y
+            # el eco largo.
+            abrir=largo(domar(mezclar(*[(0.04 * i, sit(n, 1.7 - 0.04 * i, brillo=0.8, halo=0.3) * np.exp(-t_(1.7 - 0.04 * i) / 0.5), 0.45)
+                                       for i, n in enumerate([T - 12, T - 5, T, T + 12])]), 0.3, 3.0), 0.3, 3, 0.42),
+            # Guardar: el bastidor baja sobre el papel y el sitar va de Sol a La (de la séptima menor a casa); el La se
+            # dobla un poco al soltarlo y se va en el eco largo.
+            guardar=largo(domar(mezclar((0, bastidor(1.0), 0.55), (0.12, sit(T - 2, 0.3, apagar=0.24, halo=0.1), 0.55),
+                                        (0.34, sit(T, 1.1, pasos=((0, 0), (0.55, 0.5)), halo=0.25), 0.6)), 0.3, 3.0), 0.3, 3, 0.42),
+            # El logro: la guitarra con el pedal de distorsión da dos golpes del acorde de quinta de Sol y el de La, que se
+            # queda sonando con vibrato y su eco largo; el órgano abre el acorde de La con la séptima menor (Sol) y el
+            # pandero marca el golpe y se sacude en corcheas, cada vez más suave.
+            logro=reverb(mezclar(
+                (0, pandero(1.0, 0, 0.4, 0.6), 0.4), (0, gd(T - 14, 0.17, apagar=0.12), 0.55), (0.19, gd(T - 14, 0.17, apagar=0.12), 0.5),
+                (0.38, eco_cinta(gd(T - 12, 2.2, vibrato=(0.25, 0.8)), 0.42, 0.5, 5, 2400, 0.4), 0.6),
+                (0.38, pandero(1.0, 0, 0.4, 0.6), 0.45), *[(0.38 + 0.19 * k, pandero(0.5, 0.06, 0.3, 0.0), 0.25 * 0.82 ** k) for k in range(1, 9)],
+                (0.38, acor([T - 12, T - 8, T - 5, T - 2], 2.4, 0.6), 0.3)), 1.4, 0.24),
+            # El tema: las cuerdas de bordón del sitar (La y Mi) zumban debajo; el sitar entra con una frase corta que se
+            # dobla (Mi que sube a Fa# y vuelve, y La abajo), con el eco largo, y el pandero se sacude y golpea.
+            tema=reverb(mezclar(
+                (0, domar(mezclar((0, sit(T - 12, 2.6, halo=0.35, brillo=0.6), 0.5), (0.05, sit(T - 5, 2.5, halo=0.35, brillo=0.6), 0.4)), 0.3, 3.0), 0.45),
+                (0.32, largo(domar(mezclar((0, sit(T + 7, 0.9, pasos=((0, 0), (0.26, 2), (0.56, 0)), apagar=0.74), 0.6),
+                                           (0.78, sit(T, 1.5, entra=-1.0, halo=0.3), 0.6)), 0.3, 3.0), 0.34, 4, 0.48), 1.0),
+                (0.3, pandero(0.7, 0.25, 0.6, 0.0), 0.26), (1.1, pandero(0.8, 0.0, 0.4, 0.4), 0.28)), 1.3, 0.26))
+
+    # Error: la cinta que se frena: dos cuerdas del sitar (Sol y Do, el Do fuera del modo) bajan de velocidad y de altura
+    # y se apagan. Cambio: dos cuerdas del sitar, de la quinta a la octava, con el eco largo (tres repeticiones). Tecla:
+    # el pincel de rotulista cargado de tinta sobre la cartulina (más blando y húmedo que la plumilla de la ciudad). El
+    # rascado de la lámina es el de la ciudad (la misma moneda): no tiene archivo propio.
+    with azar_propio('psicodelia_tinta_lote6'):
+        pincel = mezclar((0, trazo((700, 3600), 0.055, 5, 0.034), 1.0),
+                         (0.002, filtro(ruido(0.02), 'bajo', 900) * env(int(0.02 * SR), 0.003, 0.01, 4), 0.35))
+        S['psicodelia_tinta'].update(
+            error=freno_cinta(mezclar((0, sit(T + 7, 0.62, halo=0.0), 0.6), (0.02, sit(T + 3, 0.6, halo=0.0), 0.45)), 7.0),
+            cambio=eco_cinta(domar(mezclar((0, sit(T + 7, 0.16, halo=0.05) * np.exp(-t_(0.16) * 8), 0.5), (0.11, sit(T + 12, 0.22, halo=0.08) * np.exp(-t_(0.22) * 7), 0.55)), 0.3, 3.0),
+                             0.2, 0.4, 3, 2400, 0.4))
+        X['s_tecla_psicodelia_tinta'] = pincel
 
 # ------------------------------------------------------------------ el aviso de los lugares especiales
 
@@ -2223,6 +2313,7 @@ if __name__ == '__main__':
         galia,
         nouveau,
         psicodelia,
+        psicodelia_tinta,
     )
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 and sys.argv[2] != 'todos' else None
     claves = sys.argv[3].split(',') if len(sys.argv) > 3 else None

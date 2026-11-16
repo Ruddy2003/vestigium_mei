@@ -666,7 +666,8 @@ def hacer_nouveau():
         ARGS['nouveau'] = (T, pz, ac, mel, dict(kw, perc=[(0, cristal(hz(T + 23), 2.2, 0.7), 0.16)]))
 
 def hacer_psicodelia():
-    # --- Psicodelia: La mixolidio (la escala mayor con la séptima menor), en cuatro por cuatro a unas 96 negras por minuto,
+    # --- Psicodelia, la cara psicodelia (INTENSA, de 21:00 a 5:00; ver [hacer_psicodelia_ciudad] para la de la ciudad):
+    # La mixolidio (la escala mayor con la séptima menor), en cuatro por cuatro a unas 96 negras por minuto,
     # como una banda de una sala de baile de San Francisco en 1967 (melodía propia: no cita ninguna canción ni ningún riff).
     # El sitar canta la melodía, una nota por vez como en una sola cuerda, con las largas que entran deslizándose desde
     # un semitono abajo, su zumbido, sus cuerdas simpáticas y el eco de cinta en el puntillo de corchea; el órgano portátil
@@ -677,15 +678,21 @@ def hacer_psicodelia():
     # de quinta de Sol y deja sonar el de La con vibrato y su eco. Ni sintetizadores (Ciudad neón), ni el vibráfono de los
     # cincuenta (Refugio), ni el charlestón (Art déco), ni el vals (Art nouveau), ni bordón y cítara pentatónica (Ruta de
     # la Seda), ni metales y timbales (Soviético). Con su propio azar.
+    # En la v2 del tema esta es la música de la cara psicodelia (`s_psicodelia_tinta_presentacion` y `_anual`), con el eco
+    # de cinta **largo** (cinco repeticiones, más realimentación). Los tonos del teléfono (`t_psicodelia_llamada` y
+    # `_notificacion`) se quedan como eran, con el eco de antes: no cambian con la cara (el teléfono los fija al
+    # instalarlos), y el azar se consume en el mismo orden que antes, así que salen iguales.
     with A.azar_propio('musica_psicodelia'):
         T = 0; pz = 0.625
         ac = [(0, [0, 4, 7], 4), (4, [-5, -2, 2], 4), (8, [-7, -3, 0], 4), (12, [-2, 2, 5], 2), (14, [0, 4, 7, 12], 2)]
         mel = frase(0, "12:1.5 10:0.5 9:1 4:1 | 7:1 10:0.5 9:0.5 7:2 | 9:1 12:0.5 14:0.5 12:1 9:1 | 10:1 14:1 12:2")
         taraf = tuple(hz(T + n) for n in (-12, -5, 0, 2, 4, 7, 10, 12))
-        def canta(f, d):
+        def canta(f, d, largo=True):
             """El sitar: cada nota dura hasta la siguiente (el dedo la suelta), mientras las simpáticas siguen; las de un
-            tiempo o más entran desde un semitono abajo. Domado apenas (ver [domar]) y con su eco de cinta."""
+            tiempo o más entran desde un semitono abajo. Domado apenas (ver [domar]) y con su eco de cinta: con [largo], el
+            de la noche (cinco repeticiones que se van apagando); sin él, el de los tonos del teléfono, como eran."""
             x = sitar(f, d + 0.9, taraf=taraf, halo=0.22, entra=-1.0 if d >= 0.9 * pz else 0.0, apagar=d + 0.05)
+            if largo: return eco_cinta(domar(x, 0.4, 2.5), 0.75 * pz, 0.5, 5, 2400, 0.36)
             return eco_cinta(domar(x, 0.4, 2.5), 0.75 * pz, 0.4, 3, 2600, 0.3)
         organo = lambda f, d: organo_transistor(f, d + 0.02, brillo=0.85)
         def cuerda_bajo(f, d):
@@ -704,11 +711,11 @@ def hacer_psicodelia():
             """El último acorde del órgano, que sigue sonando después del compás y se apaga cerrando el pedal de volumen."""
             x = acorde(organo, [T - 12 + n for n in notas], d)
             return x * (1 - np.minimum(1, np.arange(len(x)) / SR / d)) ** 1.5
-        def ritmo(acordes, cierre=True):
+        def ritmo(acordes, cierre=True, largo=True):
             """El pandero: sacudido en corcheas (más suave en el «y») y golpeado en el dos y el cuatro; con [cierre], la
             guitarra con el pedal de distorsión golpea el acorde de quinta de Sol en el tiempo anterior al último acorde y
             deja sonar el de La con vibrato y su eco, el pandero golpea con ella y el órgano sigue con el acorde de La
-            después del compás, hasta apagarse."""
+            después del compás, hasta apagarse. Con [largo], el eco de la guitarra es el largo de la noche."""
             fin = acordes[-1][0] + acordes[-1][2]
             out = []
             for b in np.arange(0, fin, 0.5):
@@ -718,19 +725,69 @@ def hacer_psicodelia():
                 ul = acordes[-1][0]
                 cierra = acor_cierre(acordes[-1][1], 3.6)
                 out += [(ul - 1, guitarra_distorsion(hz(T - 14), 0.5, (0, 7, 12), apagar=0.42), 0.2),
-                        (ul, eco_cinta(guitarra_distorsion(hz(T - 12), 3.2, (0, 7, 12), vibrato=(0.25, 1.0)), 0.75 * pz, 0.38, 3, 2600, 0.3), 0.26),
+                        (ul, eco_cinta(guitarra_distorsion(hz(T - 12), 3.2, (0, 7, 12), vibrato=(0.25, 1.0)), 0.75 * pz,
+                                       *((0.48, 5, 2400, 0.36) if largo else (0.38, 3, 2600, 0.3))), 0.26),
                         (ul, domar(pandero(1.0, 0, 0.4, 0.6), 0.4), 0.55), (ul + 2, cierra, 0.2)]
             return out
         kw = dict(inst_mel=canta, inst_ac=organo, bajo=bajo, perc=ritmo(ac), g_mel=0.62, g_ac=0.3, g_bajo=0.1,
                   oct_mel=-12, oct_ac=-12, oct_bajo=-24, legato=1.0, cola=1.8, rev=0.26)
-        # La llamada solo toma los dos primeros compases y el cierre: su ritmo se arma con esos mismos acordes.
-        kw_llamada = dict(kw, perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)]))
+        # La llamada solo toma los dos primeros compases y el cierre: su ritmo se arma con esos mismos acordes, con el eco
+        # de antes.
+        kw_llamada = dict(kw, inst_mel=lambda f, d: canta(f, d, largo=False), perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)], largo=False))
         # La notificación: el pandero y tres notas de sitar que suben (Mi, Sol, La), con su eco.
         sit = lambda f, d: sitar(f, d, taraf=taraf, halo=0.25)
         notif = mezclar((0, domar(pandero(1.0, 0, 0.35, 0.4), 0.4), 0.22), (0.02, eco_cinta(notificacion(T, sit, [7, 10, 12], 0.13, 1.1, 1.0), 0.27, 0.35, 2, 2600, 0.3), 1.0))
-        P['psicodelia'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw_llamada), notif)
+        pres = obra(T, pz, ac, mel, **kw)
+        # La cara psicodelia solo tiene presentación y música anual; los tonos del teléfono van con el nombre del tema.
+        P['psicodelia_tinta'] = (pres, None, None)
+        P['psicodelia'] = (None, llamada(T, pz, ac, mel, **kw_llamada), notif)
         # En «Tu año» la música sube un tono dos vueltas: sin la guitarra del cierre, que no subiría con ella.
+        ARGS['psicodelia_tinta'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
+
+def hacer_psicodelia_ciudad():
+    # --- Psicodelia, la cara de la ciudad (BASE, de 5:00 a 21:00): la misma La mixolidio, más despacio (unas 92 negras
+    # por minuto) y en voz baja, como el tocadiscos de maleta del cuarto con la lámpara encendida (melodía propia: no cita
+    # ninguna canción). Primero la aguja baja al disco (el golpe sordo y el surco de entrada, con sus crujidos); el órgano
+    # portátil de transistores, suave (el registro de base y apenas su octava, poco brillo), canta la melodía con un eco
+    # de cinta corto, de dos repeticiones cercanas, y sostiene los acordes más abajo; el bajo eléctrico, con púa, da la
+    # raíz y la quinta; el pandero solo golpea en el dos y el cuatro, sin sacudirse. La armonía: La, Re, Mi menor y Sol
+    # (la quinta menor y la séptima menor, que solo tiene el mixolidio) y la vuelta a casa. Al final, la perilla de la
+    # radio. Sin sitar ni guitarra con distorsión (son de la cara psicodelia, [hacer_psicodelia]). Con su propio azar.
+    with A.azar_propio('musica_psicodelia_ciudad'):
+        T = 0; pz = 0.65
+        ac = [(0, [0, 4, 7], 4), (4, [-7, -3, 0], 4), (8, [-5, -2, 2], 2), (10, [-2, 2, 5], 2), (12, [0, 4, 7, 12], 4)]
+        mel = frase(0, "4:1 7:1 9:1.5 7:0.5 | 9:1 7:0.5 5:0.5 4:2 | 7:1 10:1 5:1 2:1 | 4:1.5 2:0.5 0:2")
+        def canta(f, d):
+            """El órgano suave: cada nota hasta la siguiente, con el eco corto (dos repeticiones a un octavo de tiempo)."""
+            x = organo_transistor(f, d + 0.03, registros=((1, 1.0), (2, 0.3)), brillo=0.55, chasquido=0.5, suelta=0.05)
+            return eco_cinta(x, 0.28 * pz, 0.3, 2, 2600, 0.3)
+        organo = lambda f, d: organo_transistor(f, d + 0.02, registros=((1, 1.0), (2, 0.25)), brillo=0.5, chasquido=0.3)
+        def cuerda_bajo(f, d):
+            """Una nota del bajo eléctrico con púa, poco saturada, que la mano apaga al terminar."""
+            x = cuerda_viva(f, d + 0.06, 0.25, 0.998, punto=0.2)
+            x = filtro(filtro(np.tanh(1.3 * x / (np.abs(x).max() + 1e-12)), 'bajo', 1300), 'alto', 70)
+            t = np.arange(len(x)) / SR
+            return x * np.minimum(1, np.maximum(0, d + 0.06 - t) / 0.05)
+        def bajo(f, d):
+            """La raíz en el uno y la quinta en el tres (en los acordes de dos tiempos, solo la raíz)."""
+            figura = [(0, 0, 2), (2, 7, 2)] if d >= 3.5 * pz else [(0, 0, 2)]
+            return mezclar(*[(b * pz, cuerda_bajo(f * 2 ** (s / 12), dd * pz * 0.9), 1.0) for b, s, dd in figura])
+        def ritmo(acordes, cierre=True):
+            """El pandero golpeado en el dos y el cuatro, sin sacudirse; con [cierre], el último golpe y la perilla de la
+            radio que se apaga cuando el último acorde ya se fue."""
+            fin = acordes[-1][0] + acordes[-1][2]
+            out = [(b, domar(pandero(0.8, 0, 0.3, 0.5), 0.4), 0.32) for b in np.arange(1, fin, 2)]
+            if cierre: out += [(acordes[-1][0], domar(pandero(0.9, 0, 0.35, 0.5), 0.4), 0.36), (fin + 1.5, perilla(), 0.12)]
+            return out
+        kw = dict(inst_mel=canta, inst_ac=organo, bajo=bajo, perc=ritmo(ac), g_mel=0.55, g_ac=0.26, g_bajo=0.12,
+                  oct_mel=0, oct_ac=-12, oct_bajo=-24, legato=1.0, cola=1.4, rev=0.2)
+        # La aguja baja al disco antes de la música (medio segundo de surco).
+        pres = mezclar((0, aguja(0.9, 0.7), 0.5), (0.5, obra(T, pz, ac, mel, **kw), 1.0))
+        _, llam, notif = P['psicodelia']
+        P['psicodelia'] = (pres, llam, notif)
         ARGS['psicodelia'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
+
+
 
 def hacer_egipto():
     # --- Egipto: Mi con la segunda menor (escala propia), arpa arpegiada, flauta de caña, tambor de marco y sistro, con una
@@ -927,14 +984,17 @@ if __name__ == '__main__':
     hacer_galia()
     hacer_nouveau()
     hacer_psicodelia()
+    hacer_psicodelia_ciudad()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     # Con un tercer argumento («presentacion,anual», por ejemplo) solo se escriben esas piezas.
     piezas = sys.argv[3].split(',') if len(sys.argv) > 3 else None
     for tema, (pres, llam, notif) in P.items():
         if solo is not None and tema not in solo: continue
-        for clave, nombre, x, rms in (('presentacion', f's_{tema}_presentacion', pres, -17.0), ('llamada', f't_{tema}_llamada', parejo(llam), -15.0), ('notificacion', f't_{tema}_notificacion', parejo(notif), -15.0)):
-            if piezas is None or clave in piezas: escribir(nombre, x, calidad=4, rms_db=rms)
-        print(tema, '%.1f s' % (len(pres) / SR), '%.1f s' % (len(llam) / SR), flush=True)
+        # La cara psicodelia de Psicodelia (`psicodelia_tinta`) no tiene tonos del teléfono: van como None y no se escriben.
+        for clave, nombre, x, rms in (('presentacion', f's_{tema}_presentacion', pres, -17.0), ('llamada', f't_{tema}_llamada', llam, -15.0), ('notificacion', f't_{tema}_notificacion', notif, -15.0)):
+            if x is None: continue
+            if piezas is None or clave in piezas: escribir(nombre, x if clave == 'presentacion' else parejo(x), calidad=4, rms_db=rms)
+        print(tema, *['%.1f s' % (len(x) / SR) for x in (pres, llam) if x is not None], flush=True)
     for tema, (T, pz, ac, mel, kw) in ARGS.items():
         if solo is not None and tema not in solo: continue
         if piezas is not None and 'anual' not in piezas: continue
