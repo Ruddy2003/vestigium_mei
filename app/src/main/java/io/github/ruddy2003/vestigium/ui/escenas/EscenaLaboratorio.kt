@@ -91,8 +91,8 @@ internal object EscenaLaboratorio : EscenaVida {
     /** Dónde está la doctora. [clave] es el estado del calendario; el laboratorio es lo que queda cuando no hay ninguno. */
     internal enum class Lugar(val clave: String) { LABORATORIO(""), CUARENTENA("cuarentena"), CAMPANA("experimento"), CIERRE("cierre"), ARRIBA("arriba") }
 
-    /** Qué cuadro se pinta: por ahora uno solo, el laboratorio. */
-    internal enum class Cuadro { LABORATORIO }
+    /** Qué cuadro se pinta: el laboratorio o, a las horas de comer y en los días de lo común, el centro del Claustro ([CentroLab]). */
+    internal enum class Cuadro { LABORATORIO, CENTRO }
 
     /** Dónde está hoy, por el estado del calendario: lo vigila `EscenaLaboratorioPrueba`. Un estado que no se conoce, el laboratorio. */
     internal fun lugar(m: Momento): Lugar = Lugar.entries.firstOrNull { it.clave == m.estado } ?: Lugar.LABORATORIO
@@ -110,7 +110,8 @@ internal object EscenaLaboratorio : EscenaVida {
         Lugar.ARRIBA -> Cuadro.LABORATORIO
     }
 
-    internal fun cuadro(m: Momento): Cuadro = cuadro(lugar(m))
+    /** El cuadro de este momento: el centro del Claustro cuando [CentroLab.toca]; si no, el de su lugar. */
+    internal fun cuadro(m: Momento): Cuadro = if (CentroLab.toca(m)) Cuadro.CENTRO else cuadro(lugar(m))
 
     /**
      * Si hoy se pinta una variante provisional: arriba (28 días en 2031 y cada año desde 2032) se pinta como el laboratorio
@@ -466,16 +467,19 @@ internal object EscenaLaboratorio : EscenaVida {
     override fun DrawScope.quieta(m: Momento) {
         when (cuadro(m)) {
             Cuadro.LABORATORIO -> with(CuadroLab) { cuadro(m) }
+            Cuadro.CENTRO -> with(CuadroCentro) { cuadro(m) }
         }
     }
 
     override fun seMueve(m: Momento): Boolean = when (cuadro(m)) {
         Cuadro.LABORATORIO -> CuadroLab.seMueve(m)
+        Cuadro.CENTRO -> CuadroCentro.seMueve(m)
     }
 
     override fun DrawScope.viva(m: Momento, reloj: Float) {
         when (cuadro(m)) {
             Cuadro.LABORATORIO -> with(CuadroLab) { vivo(m, reloj) }
+            Cuadro.CENTRO -> with(CuadroCentro) { vivo(m, reloj) }
         }
     }
 
@@ -483,15 +487,18 @@ internal object EscenaLaboratorio : EscenaVida {
 
     override fun luzDelGato(m: Momento, en: Offset): LuzGato = when (cuadro(m)) {
         Cuadro.LABORATORIO -> CuadroLab.luzDelGato(m, en)
+        Cuadro.CENTRO -> CuadroCentro.luzDelGato(m, en)
     }
 
     override val tallaDelGato: Float get() = 1.2f
 
     override fun estorbos(m: Momento): List<Float> = when (cuadro(m)) {
         Cuadro.LABORATORIO -> CuadroLab.estorbos(m)
+        Cuadro.CENTRO -> CuadroCentro.estorbos(m)
     }
 
     override fun anclas(m: Momento): List<Ancla> = when (cuadro(m)) {
         Cuadro.LABORATORIO -> CuadroLab.anclas(m)
+        Cuadro.CENTRO -> CuadroCentro.anclas(m)
     }
 }
