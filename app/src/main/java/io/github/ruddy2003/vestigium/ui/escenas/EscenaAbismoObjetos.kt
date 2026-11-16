@@ -55,16 +55,17 @@ import kotlin.math.sqrt
  *   dorada, con sus ósculos, y al lado una negra todavía viva; el comboloi de cuentas de ámbar con su borla; y el pan de
  *   barco: rodajas cocidas dos veces sobre el paño de la isla, con aceitunas negras y una cebolla.
  * - **Grandes.** El traje de lona echado sobre el apoyo por el cuello de cobre, con una manga colgando y las piernas
- *   arrugadas en el suelo; las botas de plomo, el par, una de pie y otra recostada; la cuerda de vida adujada con el as
- *   de guía de la cintura encima y el chicote amarrado arriba; y la red de malla con su aro de hierro, llena de esponjas
- *   negras que chorrean (en el muelle, vacía y a medio remendar).
+ *   arrugadas en el suelo, con sus rodilleras y sus pies; las botas de plomo, el par, una delante y otra detrás recostada;
+ *   la cuerda de vida adujada con el as de guía de la cintura encima y el firme amarrado arriba; y la red de malla con su
+ *   aro de hierro, llena de esponjas negras que chorrean (en el muelle, vacía y a medio remendar). Lo que se tiende (las
+ *   piernas, la segunda bota, la aduja) va a la derecha del pie, donde los dos cuadros dejan suelo libre.
  *
  * **Lo que ya está en el cuadro** ([estaEnElCuadro]). La bomba, el icono y el barco son piezas fijas: ese día no se pinta
  * otro. Pero no siempre se ven: la bomba solo está en el barco, y el muelle del cuarto (2030) no tiene ningún barco. Esos
  * días los pinta este contrato **[Diseño propio]**:
  * - la bomba en el muelle, desarmada («los émbolos, las válvulas, el cuero de los cierres, la manguera, que se mira palmo a
  *   palmo contra la luz»): el manómetro, el cilindro con su émbolo, los cueros, la manguera adujada y una llave sobre el
- *   cajón, y una de las ruedas con su manivela apoyada en él ([grande]);
+ *   cajón, y una de las ruedas tendida en las tablas, con su manivela de pie ([grande]);
  * - el icono, cuando no está la popa con su hornacina: el pequeño de san Nicolás que Nikos «lleva colgado al cuello en una
  *   bolsita de cuero», de pie sobre la bolsita abierta;
  * - el barco, en el cuarto, no se pinta: «ningún barco: están todos en el mar».
@@ -384,12 +385,12 @@ internal object ObjetosAbismo {
         drawOval(p.por(lerp(C.ARENA, C.ESPONJA, 0.35f), 0.4f), Offset(corte.x - 0.017f * g, corte.y - 0.028f * g), Size(0.034f * g, 0.054f * g))
         repeat(7) { val q = corte + Offset(az.entre(-0.01f, 0.01f) * g, az.entre(-0.02f, 0.02f) * g); drawCircle(p.sombra(C.ESPONJA_OSC).copy(alpha = 0.7f), 0.003f * g, q) }
         // ---- La funda de bronce, detrás, de través: ahusada, con dos nervios, la boca reforzada y la presilla de la correa.
-        val S = Plano(o + Offset(0.01f * g, -0.035f * g), g, giro = 0.32f)
+        val S = Plano(o + Offset(-0.02f * g, -0.045f * g), g, giro = 0.32f)
         // La correa de cuero, que sale de la presilla y se tiende en lazo, con su hebilla.
         val c0 = S.q(-0.06f, 0.0f, 0.02f)
         val tira = Path().apply { moveTo(c0); cubicTo(S.q(-0.08f, 0.1f), S.q(0.02f, 0.13f), S.q(0.1f, 0.08f)) }
-        drawPath(tira, p.sombra(CUERO), style = Stroke(0.022f * g, cap = StrokeCap.Round))
-        drawPath(tira, p.por(CUERO, 0.3f), style = Stroke(0.015f * g, cap = StrokeCap.Round))
+        drawPath(tira, p.sombra(CUERO).copy(alpha = 0.8f), style = Stroke(0.014f * g, cap = StrokeCap.Round))
+        drawPath(tira, p.por(CUERO, 0.35f), style = Stroke(0.009f * g, cap = StrokeCap.Round))
         val hb = S.q(0.07f, 0.1f, 0.003f)
         drawRect(p.luz(C.LATON), Offset(hb.x - 0.012f * g, hb.y - 0.01f * g), Size(0.024f * g, 0.02f * g), style = Stroke(0.005f * g))
         val funda = listOf(S.q(-0.11f, -0.036f), S.q(0.05f, -0.026f), S.q(0.11f, -0.012f), S.q(0.125f, 0f), S.q(0.11f, 0.012f), S.q(0.05f, 0.026f), S.q(-0.11f, 0.038f))
@@ -408,7 +409,7 @@ internal object ObjetosAbismo {
         dosLuces(p, fundaArriba, S.q(-0.12f, 0f).x, S.q(0.13f, 0f).x, 0.6f, metal = 1f)
         // ---- El cuchillo, delante, de través hacia el otro lado: la hoja ancha y corta, de lomo recto y filo curvo hasta la
         // punta, la cruz de latón y la empuñadura de madera con sus remaches y el pomo.
-        val K = Plano(o + Offset(-0.01f * g, 0.03f * g), g, giro = -0.22f)
+        val K = Plano(o + Offset(0.025f * g, 0.045f * g), g, giro = -0.22f)
         val hz = 0.035f
         val hoja = listOf(K.q(0.0f, 0.033f, hz), K.q(0.115f, 0.033f, hz), K.q(0.158f, 0.012f, hz), K.q(0.172f, -0.002f, hz), K.q(0.135f, -0.027f, hz), K.q(0.06f, -0.034f, hz), K.q(0.0f, -0.032f, hz))
         drawPath(poligono(hoja.map { it + Offset(0f, 0.01f * g) }), p.sombra(ACERO))
@@ -832,7 +833,17 @@ internal object ObjetosAbismo {
                 // Los pliegues de través, donde la lona se arruga, y lo mojado del pie.
                 repeat(6) { val f = az.entre(0.1f, 0.95f); val q = if (f < 0.5f) desde + d1 * (f * 2f) else rod + d2 * ((f - 0.5f) * 2f); val nn = if (f < 0.5f) a else b; drawLine(p.sombra(tono).copy(alpha = 0.6f), q - nn, q + nn * 0.6f + Offset(0f, 0.02f * u), 0.018f * u, StrokeCap.Round); drawLine(p.luz(tono).copy(alpha = 0.35f), q - nn * 0.8f + Offset(0f, -0.012f * u), q + nn * 0.4f, 0.008f * u, StrokeCap.Round) }
                 drawCircle(p.sombra(C.LONA_MOJADA).copy(alpha = 0.35f + 0.3f * mojado), ancho * 1.6f, hasta)
+                // La rodillera de goma, cosida, donde el traje se gasta contra el fondo.
+                drawCircle(p.medio(lerp(GOMA, tono, 0.3f)).copy(alpha = 0.85f), ancho * 0.85f, rod)
+                drawCircle(p.luz(tono).copy(alpha = 0.45f), ancho * 0.85f, rod, style = Stroke(0.006f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.01f * u, 0.008f * u))))
+                // La costura de la pierna, a lo largo.
+                drawPath(curva(listOf(desde, rod, hasta)), p.sombra(tono).copy(alpha = 0.5f), style = Stroke(0.006f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.012f * u, 0.008f * u))))
             }
+            // El pie del traje: un calcetín de lona, más ancho, vuelto hacia arriba.
+            val dd = hasta - rod; val l = dd.getDistance().coerceAtLeast(0.01f); val dir = dd / l
+            val pieT = hasta + dir * (ancho * 0.4f) + Offset(0f, -ancho * 0.5f)
+            drawOval(p.sombra(tono), Offset(pieT.x - ancho * 0.75f, pieT.y - ancho * 0.85f), Size(ancho * 1.5f, ancho * 1.6f))
+            drawOval(p.por(tono, 0.3f), Offset(pieT.x - ancho * 0.6f, pieT.y - ancho * 0.85f), Size(ancho * 1.2f, ancho * 1.3f))
             return forma
         }
         val piernaB = pierna(t.cintura + Offset(0.08f * u * s, 0f), t.rodillaB, t.pieB, 0.09f * u, lerp(humeda, C.LONA_MOJADA, 0.15f))
