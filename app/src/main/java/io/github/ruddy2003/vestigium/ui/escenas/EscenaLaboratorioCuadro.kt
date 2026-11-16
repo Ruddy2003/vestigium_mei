@@ -8,7 +8,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.grano
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.rayoFijo
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
-import kotlin.math.abs
 
 /**
  * El laboratorio de la grama: el cuadro de Laboratorio (`composicion_laboratorio.md` de la tanda S17), de pie en un rincón
@@ -79,19 +78,54 @@ internal object CuadroLab {
     }
 
     /**
-     * La luz del gato: la de la sala donde pisa (la luz de fondo, los charcos, la pantalla, la puerta, la lámpara de su mesa),
-     * y su sombra la tumba la luz que más lo alumbra, lejos de ella.
+     * La luz del gato donde pisa, pareja ([luzPareja]): el matiz de la sala en su sitio, no su fuerza (la cuenta de una cara
+     * de la sala, en la penumbra de color, lo dejaba gris oscuro con la cabeza quemada por el brillo del lomo). De día, su
+     * color propio con el lado de la luz que más le llega (la pantalla, casi siempre; las lámparas de cultivo alumbran la
+     * mesa, no el suelo) y la sombra azul verdosa suave; de noche, el azul del Claustro con el filo violeta de la puerta y,
+     * cerca de la mesa, lo cálido de su lámpara (por el charco que deja en el suelo). Su sombra, corta y blanda, del lado
+     * contrario a esa luz.
      */
     fun luzDelGato(m: Momento, en: Offset): LuzGato {
         val v = VistaLab(m)
         val w = enElSuelo(en) + V3(0f, 0.25f, 0f)
-        val manda = v.manda(w)
-        val rayo = if (manda != null && v.cuanto(manda, w, V3(0f, 1f, -0.3f)) > 0.05f) {
-            val dx = w.x - manda.w.x; val lat = if (dx >= 0f) -1f else 1f
-            rayoFijo(lat * (0.4f + 0.5f * (abs(dx) / 2.5f).coerceIn(0f, 1f)), 50f, (0.25f + 0.4f * v.cuanto(manda, w, V3(0f, 1f, -0.3f))).coerceIn(0f, 0.7f), ColorLaboratorio.SOMBRA)
-        } else rayoFijo(0.5f, 62f, 0.22f, ColorLaboratorio.SOMBRA)
-        val brillo = manda?.color?.let { lerp(it, Color.White, 0.5f) } ?: Color(0xFFE8ECF0)
-        return LuzGato(rayo, (1f - v.general).coerceIn(0f, 1f), brillo) { c -> v.c(w, c, V3(0f, 0.4f, -1f)) }
+        // Cuánto le llega de cada luz, mirándola de frente.
+        fun cuanta(f: Luz3): Float = when (f.de) {
+            Fuente.PANEL, Fuente.REBOTE, Fuente.CAMPANA -> 0f
+            Fuente.CULTIVO -> v.cuanto(f, w, f.w - w)
+            Fuente.MESA -> { val d = (V3(f.w.x + 0.5f, 0.25f, f.w.z + 0.6f) - w).largo(); 0.6f * f.fuerza / (1f + (d / 1.1f) * (d / 1.1f)) }
+            Fuente.PANTALLA, Fuente.PUERTA, Fuente.VELA, Fuente.LINTERNA, Fuente.AVISO -> { val d = (f.w - w).largo(); f.fuerza / (1f + (d / f.alcance) * (d / f.alcance)) }
+        }
+        val manda = v.luces.maxByOrNull { cuanta(it) }
+        val k = manda?.let { cuanta(it) } ?: 0f
+        val lat = manda?.let { if (it.w.x >= w.x) 1f else -1f } ?: 0.5f
+        val noche = (1f - v.general).coerceIn(0f, 1f)
+        // El filo: el de la luz que manda; de noche, el violeta de la puerta, cálido cerca de la mesa.
+        val mesa = v.luces.firstOrNull { it.de == Fuente.MESA }?.let { (cuanta(it) / 0.25f).coerceIn(0f, 1f) } ?: 0f
+        val puerta = v.luces.firstOrNull { it.de == Fuente.PUERTA }?.color
+        val filo = if (v.noche) lerp(puerta ?: manda?.color ?: ColorLaboratorio.VIOLETA, ColorLaboratorio.LAMPARA, mesa) else manda?.color ?: Color(0xFFE8ECF0)
+        val sombra = if (v.noche) ColorLaboratorio.SOMBRA else lerp(ColorLaboratorio.SOMBRA, Color(0xFF2E6A6A), 0.5f)
+        return luzPareja(v.c(w, Color.White, V3(0f, 0.5f, -1f)), noche, filo, lat, k, sombra)
+    }
+
+    /**
+     * Una luz de gato pareja y creíble, para el laboratorio y el centro del Claustro. [aqui] es el color que toma algo blanco
+     * en su sitio (la luz de fondo y la de cada luz): se queda su matiz y no su fuerza, así el gato conserva su color propio
+     * (de día casi entero, apenas teñido; de noche, más bajo y azul) y la luz y la sombra del dibujo no lo queman. [filo] es
+     * el color de la luz que le da de lado, [lat] de qué lado viene (−1 izquierda, 1 derecha) y [k] cuánto; [sombra], el
+     * color de la sombra que deja en el suelo. **[Diseño propio]**: cuánto se tiñe, cuánto baja de noche y en un sitio de
+     * poca luz.
+     */
+    fun luzPareja(aqui: Color, noche: Float, filo: Color, lat: Float, k: Float, sombra: Color): LuzGato {
+        val n = noche.coerceIn(0f, 1f); val kk = k.coerceIn(0f, 1f)
+        val m0 = maxOf(aqui.red, aqui.green, aqui.blue).coerceAtLeast(0.05f)
+        val matiz = Color(aqui.red / m0, aqui.green / m0, aqui.blue / m0)
+        val deDia = lerp(Color.White, matiz, 0.22f)
+        val deNoche = lerp(lerp(Color.White, matiz, 0.6f), Color(0xFF8C96C8), 0.35f).let { Color(it.red * 0.72f, it.green * 0.72f, it.blue * 0.72f) }
+        // Donde la luz es poca, algo más bajo (sin llegar a la penumbra del sitio: el gato tiene que leerse).
+        val cuanta = 0.72f + 0.28f * (m0 / 0.55f).coerceIn(0f, 1f)
+        val base = lerp(deDia, deNoche, n).let { Color(it.red * cuanta, it.green * cuanta, it.blue * cuanta) }
+        val rayo = rayoFijo(lat.coerceIn(-1f, 1f) * (0.45f + 0.35f * kk), 60f - 10f * n, 0.26f + 0.24f * kk + 0.08f * n, sombra, 0.45f + 0.15f * n)
+        return LuzGato(rayo, n, lerp(filo, Color.White, 0.45f - 0.15f * n)) { c -> Color(c.red * base.red, c.green * base.green, c.blue * base.blue, c.alpha) }
     }
 
     /** Lo plantado en el suelo del gato: el taburete de Lauro, la caja de tierra y el cubo (los que caen en su tramo). */
