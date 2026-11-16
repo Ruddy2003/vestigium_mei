@@ -54,7 +54,7 @@ fun banderitaHistoria(tema: TemaId): Banderita? = when (tema) {
     TemaId.TEMPLARIO -> BanderitaTemplario
     TemaId.DISTOPIA -> BanderitaDistopia
     TemaId.REFUGIO -> BanderitaRefugio
-    TemaId.ORDEN -> null            // S18
+    TemaId.ORDEN -> BanderitaOrden
     TemaId.VAPOR -> BanderitaVapor
     TemaId.LABORATORIO -> BanderitaLaboratorio
     TemaId.COLONOS -> null          // S19
