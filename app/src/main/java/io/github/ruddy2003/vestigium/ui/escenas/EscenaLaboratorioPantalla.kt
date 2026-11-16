@@ -207,9 +207,12 @@ internal object PantallaLab {
             drawPath(forma(listOf(u0 + w * 0.3f to base - alto * 0.6f, u0 + w * 0.45f to base - alto * 0.6f, u0 + w * 0.45f to base - alto * 0.25f, u0 + w * 0.3f to base - alto * 0.25f)), luz(Color(0xFF26262A), 0.1f, 0))
         }
         val cu = 0.38f; val cv = H + 0.27f
-        drawPath(forma(listOf(cu to cv, cu + 0.13f to cv, cu + 0.13f to cv - 0.1f, cu to cv - 0.1f)), luz(C.HORMIGON, 0.1f, 0))
-        drawPath(forma(listOf(cu + 0.13f to cv, cu + 0.17f to cv - 0.012f, cu + 0.17f to cv - 0.11f, cu + 0.13f to cv - 0.1f)), luz(C.HORMIGON, 0.1f, lado))
-        drawPath(forma(listOf(cu - 0.01f to cv - 0.1f, cu + 0.14f to cv - 0.1f, cu + 0.18f to cv - 0.115f, cu + 0.03f to cv - 0.118f)), luz(C.HORMIGON, 0.1f, 1))
+        val caseta = lerp(C.HORMIGON, C.TIERRA, 0.45f)
+        drawPath(forma(listOf(cu to cv, cu + 0.13f to cv, cu + 0.13f to cv - 0.1f, cu to cv - 0.1f)), luz(caseta, 0.1f, 0))
+        drawPath(forma(listOf(cu + 0.13f to cv, cu + 0.17f to cv - 0.012f, cu + 0.17f to cv - 0.11f, cu + 0.13f to cv - 0.1f)), luz(caseta, 0.1f, lado))
+        drawPath(forma(listOf(cu - 0.01f to cv - 0.1f, cu + 0.14f to cv - 0.1f, cu + 0.18f to cv - 0.115f, cu + 0.03f to cv - 0.118f)), luz(caseta, 0.1f, 1))
+        // Las manchas de la caseta: hollín y óxido que chorrea.
+        for (i in 0..2) drawLine(luz(C.HIERRO, 0.1f, 0).copy(alpha = 0.5f), q(cu + 0.02f + i * 0.045f, cv - 0.1f), q(cu + 0.022f + i * 0.045f, cv - 0.05f), 0.5f)
         drawPath(forma(listOf(cu + 0.04f to cv, cu + 0.08f to cv, cu + 0.08f to cv - 0.06f, cu + 0.04f to cv - 0.06f)), luz(Color(0xFF26262A), 0.08f, 0))
         if (img.verde > 0.15f) verde(img, H + 0.12f, H + 0.28f, (img.verde - 0.15f) * 2f, 0.25f)
         // Delante: los montones de escombro, con losas partidas, los hierros torcidos y la hierba rala y amarilla.
@@ -285,8 +288,9 @@ internal object PantallaLab {
     /** Las líneas de barrido, la viñeta de la cámara, el brillo del vidrio y, el día del sol, el deslumbre. */
     private fun DrawScope.efectos(v: VistaLab, img: Imagen) {
         // El humo de las ruinas, el día que lo ven (la columna; la parte viva la dobla).
-        if (img.humo) for (j in 0..9) { val vv = H + 0.04f - j * 0.03f; val u = 0.86f - j * 0.012f - j * j * 0.0015f
-            mancha(q(u, vv), (0.008f + j * 0.003f) * k(u), (0.012f + j * 0.002f) * k(u), lerp(Color(0xFF8A8A88), img.l.medio, 0.3f), 0.55f - j * 0.035f) }
+        if (img.humo) for (j in 0..13) { val vv = H + 0.04f - j * 0.033f; val u = 0.52f + j * 0.006f + j * j * 0.0019f
+            val gris = lerp(Color(0xFF4A4846), img.l.medio, 0.1f + 0.045f * j)
+            mancha(q(u, vv), (0.02f + j * 0.009f) * k(u), (0.022f + j * 0.006f) * k(u), gris, 0.9f - j * 0.05f) }
         // Las líneas de barrido: la imagen es de una cámara, no una ventana.
         var vv = 0f
         while (vv < 1f) { drawLine(Color.Black.copy(alpha = 0.06f), q(0f, vv), q(1f, vv), 0.35f); vv += 0.018f }
@@ -295,7 +299,11 @@ internal object PantallaLab {
         drawPath(SalaLab.formaDeLaPantalla(), Color(0xFF7FD8E0).copy(alpha = 0.05f))
         // El reflejo de la sala en el vidrio: una franja al sesgo.
         drawPath(forma(listOf(0.55f to 0f, 0.68f to 0f, 0.48f to 1f, 0.38f to 1f)), Color.White.copy(alpha = 0.04f + 0.03f * v.general))
-        if (EscenaLaboratorio.deslumbra(v.m)) drawPath(SalaLab.formaDeLaPantalla(), Brush.radialGradient(listOf(Color(0xFFFFF4D6).copy(alpha = 0.55f), Color.Transparent), q(img.l.solX, 0.25f), k(0.5f) * 0.9f))
+        if (EscenaLaboratorio.deslumbra(v.m)) {
+            // El día del sol la cámara deslumbra: la imagen se lava de blanco cálido desde el lado del sol.
+            drawPath(SalaLab.formaDeLaPantalla(), Color(0xFFFFF4D6).copy(alpha = 0.22f))
+            drawPath(SalaLab.formaDeLaPantalla(), Brush.radialGradient(listOf(Color(0xFFFFFAEA).copy(alpha = 0.9f), Color(0xFFFFF0C8).copy(alpha = 0.4f), Color.Transparent), q(img.l.solX.coerceIn(0.1f, 0.7f), 0.12f), k(0.5f) * 1.5f))
+        }
     }
 
     // ---------------------------------------------------------------- Lo que se mueve
@@ -309,7 +317,7 @@ internal object PantallaLab {
             val u = ((reloj * 0.006f + 0.3f) % 1.3f) - 0.15f
             val kk = k(u.coerceIn(0f, 1f))
             mancha(q(u, 0.22f), 0.06f * kk, 0.018f * kk, lerp(Color.White, l.medio, 0.4f + 0.4f * l.noche), 0.35f)
-            if (img.humo) for (j in 0..4) { val f = ((reloj * 0.05f + j / 5f) % 1f); val vv = H - 0.25f * f; val uu = 0.86f - 0.12f * f * f
+            if (img.humo) for (j in 0..4) { val f = ((reloj * 0.05f + j / 5f) % 1f); val vv = H - 0.4f * f; val uu = 0.52f + 0.32f * f * f
                 mancha(q(uu + 0.01f * sin(reloj + j), vv), (0.01f + 0.03f * f) * k(uu), (0.01f + 0.015f * f) * k(uu), Color(0xFF8A8A88), 0.3f * (1f - f)) }
             if (img.arriba) for (j in 0..3) { val f = ((reloj * 0.07f + j / 4f) % 1f); val vv = H + 0.18f - 0.2f * f; val uu = 0.85f + 0.02f * f
                 mancha(q(uu, vv), (0.008f + 0.02f * f) * k(uu), (0.006f + 0.01f * f) * k(uu), lerp(Color.White, l.medio, 0.5f), 0.35f * (1f - f)) }

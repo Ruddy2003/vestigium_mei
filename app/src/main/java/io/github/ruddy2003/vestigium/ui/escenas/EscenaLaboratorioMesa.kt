@@ -211,15 +211,16 @@ internal object MesaLab {
         platoNegro(v, 1.36f, 0.3f)
         if (EscenaLaboratorio.cajaDeHilda(m)) cajaDeCarton(v, 1.0f, 0.45f)
         microscopio(v, 0.92f, 0.13f)
-        altavoz(v, 0.84f, 0.7f)
-        tableta(v, 0.62f, 0.4f)
+        altavoz(v, 0.98f, 0.7f)
+        tableta(v, 0.62f, 0.3f)
         when (v.tarea) {
-            Tarea.DESAYUNO -> desayuno(v, 0.36f, 0.66f)
-            Tarea.COMIDA -> bandejaDeComida(v, 0.34f, 0.62f)
+            Tarea.DESAYUNO -> desayuno(v, 0.46f, 0.56f)
+            Tarea.COMIDA -> bandejaDeComida(v, 0.45f, 0.56f)
             Tarea.TRABAJO, Tarea.MUSICA, Tarea.RECOGIDO -> {}
         }
-        if (SalaLab.laSalaPinta(m, "taza")) taza(v, 0.3f, 0.48f)
+        if (SalaLab.laSalaPinta(m, "taza")) taza(v, 0.36f, 0.42f)
         lamparaDeMesa(v)
+        garrafa(v, 0.3f, 0.76f)
     }
 
     /** Una bandeja de tierra gris de arriba, con su tapa (o levantada, apoyada al lado), su cinta de color y su brote. */
@@ -418,6 +419,31 @@ internal object MesaLab {
                 for (r in listOf(0.03f, 0.018f)) drawCircle(v.c(MK.w(a, b, ALTO), C.ACERO, MK.n(-1f, 0f, 0f)).copy(alpha = 0.4f), r * k, c, style = Stroke(0.4f)) }
         }
         if (v.tarea == Tarea.MUSICA) drawCircle(lerp(C.GRAMA, Color.White, 0.5f), 0.55f, MK.p(a - 0.001f, b + 0.14f, ALTO + 0.115f))
+    }
+
+    /**
+     * La garrafa del riego, en la esquina de cerca: vidrio grueso y verdoso, con el agua hasta media altura, el tapón de
+     * corcho y el tubo de goma que va, por encima de la mesa, hasta las bandejas («la manguera es demasiado bruta»).
+     */
+    private fun DrawScope.garrafa(v: VistaLab, a: Float, b: Float) {
+        val c = MK.w(a, b, ALTO); val r = 0.12f
+        val vidrio = lerp(C.VIDRIO, C.GRAMA, 0.25f)
+        // El cuerpo: un tronco ancho con el hombro redondeado y el cuello.
+        PiezasLab.run { tronco(v, c, r * 0.92f, r, 0.3f, vidrio.copy(alpha = 0.55f), tapa = null) }
+        // El agua, hasta media altura: más oscura, con su superficie.
+        PiezasLab.run { tronco(v, c + V3(0f, 0.01f, 0f), r * 0.86f, r * 0.9f, 0.16f, lerp(C.CIAN, C.VIDRIO, 0.4f).copy(alpha = 0.55f), tapa = lerp(C.CIAN, Color.White, 0.3f).copy(alpha = 0.5f)) }
+        val hombro = c + V3(0f, 0.3f, 0f)
+        PiezasLab.run { tronco(v, hombro, r, r * 0.35f, 0.09f, vidrio.copy(alpha = 0.6f), tapa = null) }
+        PiezasLab.run { tronco(v, hombro + V3(0f, 0.09f, 0f), r * 0.3f, r * 0.28f, 0.05f, vidrio.copy(alpha = 0.7f), tapa = null) }
+        PiezasLab.run { cilindro(v, hombro + V3(0f, 0.14f, 0f), r * 0.27f, 0.035f, lerp(C.MADERA, C.AMARILLO, 0.3f)) }
+        // Los brillos largos del vidrio y el canto oscuro.
+        val k = CamLab.k(c); val p = CamLab.p(c)
+        drawLine(Color.White.copy(alpha = 0.45f + 0.15f * v.general), p + Offset(-r * k * 0.55f, -0.04f * k), p + Offset(-r * k * 0.6f, -0.3f * k), (0.012f * k).coerceAtLeast(0.6f), StrokeCap.Round)
+        drawLine(Color.White.copy(alpha = 0.25f), p + Offset(r * k * 0.35f, -0.08f * k), p + Offset(r * k * 0.4f, -0.26f * k), (0.008f * k).coerceAtLeast(0.5f), StrokeCap.Round)
+        // El tubo de goma, del cuello a las bandejas, en curva por encima de la mesa.
+        val t0 = CamLab.p(hombro + V3(0f, 0.17f, 0f)); val t1 = MK.p(1.66f, 0.52f, ALTO + 0.06f)
+        val c1 = MK.p(0.5f, 0.66f, ALTO + 0.62f); val c2 = MK.p(1.3f, 0.56f, ALTO + 0.32f)
+        drawPath(Path().apply { moveTo(t0.x, t0.y); cubicTo(c1.x, c1.y, c2.x, c2.y, t1.x, t1.y) }, v.c(MK.w(0.9f, 0.6f, ALTO + 0.4f), lerp(C.NEGRO, C.BARRO, 0.25f), V3(0f, 0.6f, -1f)), style = Stroke((0.016f * k).coerceAtLeast(0.8f), cap = StrokeCap.Round))
     }
 
     /** La taza de barro gris, con el borde grueso y la muesca; la infusión, que se le enfría siempre. */

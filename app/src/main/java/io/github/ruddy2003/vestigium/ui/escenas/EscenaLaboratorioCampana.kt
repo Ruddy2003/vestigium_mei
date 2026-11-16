@@ -147,7 +147,21 @@ internal object CampanaLab {
             cajaEn(v, mk, 0f, 1.2f, -0.34f, 0f, y - 0.03f, y, rack)
             for (i in 0..3) bandejaDentro(v, mk, 0.05f + i * 0.29f, -0.26f, y, grama, ti * 4 + i)
         }
-        if (!experimento) return
+        // Las mangueras que entran por el zócalo (el agua y el aire de arriba) y el higrómetro colgado del estante.
+        val m0 = CamLab.p(CENTRO.x - 0.9f, ZOCALO + 0.05f, CENTRO.z - 0.4f)
+        val m1 = mk.p(0.1f, -0.1f, tablas.first())
+        drawPath(Path().apply { moveTo(m0.x, m0.y); cubicTo(m0.x + 6f, m0.y + 2f, m1.x - 4f, m1.y + 14f, m1.x, m1.y) }, v.c(mk.w(0f, 0f, 0.3f), lerp(C.NEGRO, C.BARRO, 0.2f), PiezasLab.FRENTE), style = Stroke(1.1f, cap = StrokeCap.Round))
+        val hg = mk.w(0.95f, 0.02f, 1.75f); val khg = CamLab.k(hg)
+        drawCircle(v.c(hg, C.LATON, PiezasLab.FRENTE), 0.05f * khg, CamLab.p(hg)); drawCircle(v.c(hg, C.TELA, PiezasLab.FRENTE), 0.038f * khg, CamLab.p(hg))
+        drawLine(v.c(hg, C.AVISO, PiezasLab.FRENTE), CamLab.p(hg), CamLab.p(hg) + Offset(0.025f * khg, -0.018f * khg), 0.5f)
+        if (!experimento) {
+            // Dos cajas de tierra de arriba en el suelo de dentro, esperando.
+            for ((i, x) in listOf(-0.7f, 0.45f).withIndex()) {
+                val cm = PiezasLab.Marco(V3(CENTRO.x + x, ZOCALO, CENTRO.z - 0.55f + 0.15f * i), V3(1f, 0f, 0.15f * (i * 2 - 1)).unidad())
+                cajaEn(v, cm, 0f, 0.4f, -0.15f, 0.15f, 0f, 0.22f, C.MADERA) { cara, f -> if (cara == 3) drawPath(f, v.c(cm.w(0.2f, 0f, 0.22f), C.TIERRA, ARRIBA).copy(alpha = 0.9f)) }
+            }
+            return
+        }
         // El catre plegable entre las cajas de tierra gris, con la manta revuelta y la mascarilla de tela.
         val catre = PiezasLab.Marco(V3(CENTRO.x - 0.6f, ZOCALO, CENTRO.z - 0.3f), V3(0.94f, 0f, -0.34f).unidad())
         cajaEn(v, catre, 0f, 1.6f, -0.3f, 0.3f, 0.38f, 0.44f, lerp(C.TELA, C.CIAN, 0.15f))

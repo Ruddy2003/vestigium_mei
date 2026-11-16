@@ -158,6 +158,16 @@ internal object SalaLab {
             drawPath(CamLab.forma(ps), v.c(punto(ss, yy), lerp(C.TIERRA, C.HORMIGON, 0.4f), n))
             drawLine(v.c(punto(ss, yy), Color.White, n).copy(alpha = 0.35f), CamLab.p(ps[1]), CamLab.p(ps[3]), 0.4f)
         }
+        // Las manchas grandes del lavado de la pintura, que no queda pareja, y las chorreras bajo los tubos y las juntas.
+        repeat(12) {
+            val ss = az.entre(s0, s1); val yy = az.entre(0.3f, TECHO - 0.3f); val q = punto(ss, yy); val k = CamLab.k(q)
+            mancha(CamLab.p(q), az.entre(0.5f, 1.3f) * k, az.entre(0.3f, 0.8f) * k, if (it % 3 == 0) lerp(C.HORMIGON, C.TIERRA, 0.5f) else lerp(C.HORMIGON, C.SOMBRA, 0.35f), 0.07f)
+        }
+        repeat(10) {
+            val ss = az.entre(s0 + 0.2f, s1 - 0.2f); val y0 = az.entre(1.2f, TECHO - 0.2f); val largo = az.entre(0.4f, 1.4f)
+            val a = punto(ss, y0); val b = punto(ss + az.entre(-0.03f, 0.03f), (y0 - largo).coerceAtLeast(0.05f))
+            drawLine(v.c(a, lerp(C.HORMIGON, C.TIERRA, 0.55f), n).copy(alpha = 0.22f), CamLab.p(a), CamLab.p(b), (0.02f * CamLab.k(a)).coerceAtLeast(0.6f), StrokeCap.Round)
+        }
         // El zócalo gastado: la pintura sucia de rozaduras y de la fregona, más oscura junto al suelo.
         for (i in 0..14) { val ss = s0 + (s1 - s0) * i / 14f; val a = punto(ss, 0f); val b = punto(ss + (s1 - s0) / 14f, 0f)
             val alto = 0.1f + 0.08f * az.real()

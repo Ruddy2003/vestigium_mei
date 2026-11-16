@@ -423,7 +423,8 @@ internal object EscenaLaboratorio : EscenaVida {
     internal fun colorDePantalla(m: Momento): Color {
         val l = lucesDeArriba(m)
         val c = lerp(lerp(l.medio, l.bajo, 0.5f), l.ambiente, 0.3f)
-        return lerp(c, Color(0xFF7E9AE0), (l.noche * 0.6f).coerceIn(0f, 1f))
+        val conSol = if (deslumbra(m)) lerp(c, Color(0xFFFFF2D4), 0.65f) else c
+        return lerp(conSol, Color(0xFF7E9AE0), (l.noche * 0.6f).coerceIn(0f, 1f))
     }
 
     /** Cuánto alumbra la pantalla la sala, de 0 a 1: poco de día (manda la luz general), más de noche; deslumbra el día del sol. */
