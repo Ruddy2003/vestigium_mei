@@ -84,3 +84,14 @@ Además, el autor notó que **algunas notificaciones no suenan**: hay que revisa
 - **Psicodelia:** la lámina va bien. Sus decisiones (más dibujo de cartel, la intensidad máxima más fuerte, la psicodelia clara de día con un consumo en curso, cualquier sustancia con nivel, media con nivel 3 y máxima con nivel 8, reacciona aunque esté oculta, la frecuencia del consumo en el cuento) están al final de `temas/psicodelia.md`.
 - **Muebles de Vida:** no se redibujan; reciben noche de verdad y luz con dirección en las mismas tandas que las bibliotecas.
 - **Logros nuevos (parte 9):** un juego de logros sobre las funciones nuevas y sobre lo que hoy no tiene ninguno.
+
+## Respuestas del autor (16 nov 2026, cuarta ronda)
+
+- **El piloto de Idearios (Laboratorio, Helénico y Gótico) queda aprobado** como vara: se sigue con los demás. El autor añade que, visto el nivel, tal vez haya que redibujar también los demás muebles (bibliotecas y Vida), no solo completarlos: se decide con el piloto de bibliotecas.
+- **Logros nuevos (parte 9):**
+  - categoría nueva para las historias y los cuadros, con su trofeo en los 39 temas;
+  - «leer» un cuento es llegar hasta el final; los días especiales ya pasados se pueden leer después, los futuros nunca; hay un logro por leerlos todos y otro que premia leer un día especial el mismo día en que ocurre;
+  - se agregan logros secretos nuevos (el autor no quiere saber cuáles);
+  - se pueden agregar logros que premien registrar; **no se borra ninguno de los que ya existen**;
+  - la opción de crear logros propios sobre sustancias se queda, pero ningún logro nuevo de la app premia un consumo;
+  - las caricias al gato siguen sin guardarse (el autor no contestó esa pregunta; vale la decisión anterior, D.190).
