@@ -1,6 +1,7 @@
 package io.github.ruddy2003.vestigium
 
 import io.github.ruddy2003.vestigium.ciencia.Campanas
+import io.github.ruddy2003.vestigium.ui.Cara
 import io.github.ruddy2003.vestigium.ui.Contenedor
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Sentidos
@@ -46,10 +47,14 @@ class UnicidadTemas {
         conEstilo("semana") { Estilo.semana.joinToString(" ") }
         conEstilo("semana_corta") { Estilo.semanaCorta.joinToString(" ") }
 
-        // Letra y forma (la del modo claro, o la única si el tema solo existe en oscuro).
-        r["letra_titulo"] = iguales { tipoDe(it, it.soloOscuro).headlineMedium.fontFamily }
-        r["letra_texto"] = iguales { tipoDe(it, it.soloOscuro).bodyLarge.fontFamily }
-        r["radio"] = iguales { radioDe(it) }
+        // Letra y forma (la del modo claro, o la única si el tema solo existe en oscuro). Los temas con caras (Psicodelia)
+        // se comparan en su cara de base y, aparte, en la intensa, sin depender de la hora a la que corre la prueba.
+        for (cara in Cara.entries) {
+            val sufijo = if (cara == Cara.BASE) "" else "_intensa"
+            r["letra_titulo$sufijo"] = iguales { tipoDe(it, it.soloOscuro, cara).headlineMedium.fontFamily }
+            r["letra_texto$sufijo"] = iguales { tipoDe(it, it.soloOscuro, cara).bodyLarge.fontFamily }
+            r["radio$sufijo"] = iguales { radioDe(it, cara) }
+        }
 
         // Sonido y vibración. La escala que falta se cuenta en la cobertura, no aquí.
         r["escala_toque"] = iguales { Sentidos.acordeToque(it).contentToString() }

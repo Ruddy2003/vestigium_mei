@@ -11,7 +11,8 @@ import java.time.LocalTime
  * - **El lado y la pista** (recurso): el lado A va de las 0 a las 11 y el lado B de las 12 a las 23; la pista es la hora
  *   dentro de su lado, de la 1 a la 12.
  * - **El mes:** «Álbum de octubre».
- * - **Los números:** entre tildes que ondulan, «~17~».
+ * - **Los números** (versión 2): entre paréntesis, como en un horario o en la lista de canciones de un disco, «(17)»; iguales
+ *   en las dos caras, para que un dato no cambie de aspecto con la hora.
  */
 object Psicodelia {
     private val DIAS = listOf("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo")
@@ -37,6 +38,6 @@ object Psicodelia {
     /** El mes como un álbum: «Álbum de octubre», «Álbum de octubre de 2026». */
     fun mes(n: Int, anio: Int? = null): String = "Álbum de " + MESES[(n - 1).coerceIn(0, 11)] + (anio?.let { " de $it" } ?: "")
 
-    /** Un número entre tildes que ondulan: «~17~». Los años y lo que pasa de 999, tal cual. */
-    fun numero(n: Int): String = if (n in 1..999) "~$n~" else n.toString()
+    /** Un número entre paréntesis, como en un horario: «(17)». Los años y lo que pasa de 999, tal cual. */
+    fun numero(n: Int): String = if (n in 1..999) "($n)" else n.toString()
 }

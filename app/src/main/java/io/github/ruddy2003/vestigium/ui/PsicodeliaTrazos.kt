@@ -1,472 +1,545 @@
 package io.github.ruddy2003.vestigium.ui
 
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
 import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.cos
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlin.math.sqrt
+
+/*
+ * Los colores y los trazos de dibujo de Psicodelia, versión 2 (`docs/diseno/temas/psicodelia.md`, «Los colores de
+ * dibujo»; resumen para las tandas en `docs/diseno/temas/psicodelia_base.md`). Uno por cara:
+ * - [TrazosCiudad]: la ciudad de fines de los sesenta vista como una foto de revista de los 70. Pocos colores, apagados;
+ *   luz de la izquierda con sombras café; grano de película y viñeta.
+ * - [TrazosTinta]: el cartel de la semana, a tres tintas planas (magenta, bermellón y ultramar) sobre papel crema o sobre
+ *   negro de terciopelo, que se calientan con la intensidad ([EstadoTema.intensidad]).
+ * Los de la versión 1 (`TrazosPsicodelia`, en `PsicodeliaV1Trazos.kt`) quedan solo para retirar.
+ *
+ * Reglas de todos los trazos de aquí: ningún bucle con paso que pueda valer 0 (los pasos se acotan a 0.5 px o más) y
+ * ninguna coordenada no finita (los tamaños vacíos o negativos no dibujan nada).
+ */
 
 /**
- * Los trazos que se repiten en las figuras de Psicodelia (`docs/diseno/temas/psicodelia.md`): sus colores de dibujo y las
- * figuras que comparten las superficies: la flor que vibra en colores complementarios, las luces líquidas, el símbolo de
- * la paz, el disco de vinilo, la casa victoriana, el botón de solapa del emblema, las burbujas del show de luces y la
- * tinta de arcoíris del periódico. Formas blandas y orgánicas, colores planos de cartel.
+ * La ciudad (cara BASE): sus colores con nombre, todos apagados, y sus trazos básicos. Color de película vieja: los negros
+ * se levantan hacia el café, las luces se van al crema, los rojos se apagan hacia el ladrillo. Nada brilla.
  */
-object TrazosPsicodelia {
-    /** Los pares complementarios que vibran (un color junto a su opuesto de igual valor, como en los carteles de 1967). */
-    val MAGENTA = Color(0xFFE0218A)
-    val VERDE = Color(0xFF2FBF71)
-    val NARANJA = Color(0xFFFF7A1A)
-    val AZUL = Color(0xFF2F6BFF)
-    val AMARILLO = Color(0xFFFFD23F)
-    val VIOLETA = Color(0xFF7B3FD1)
-    /** Las casas: la madera desteñida, el blanco gastado y los pocos colores de las que ya se pintaban. */
-    val CASA_GRIS = Color(0xFFA9A49B)
-    val CASA_BLANCA = Color(0xFFE4DED3)
-    val CASA_TURQUESA = Color(0xFF2BB3A8)
-    val CASA_ROSA = Color(0xFFF28DB2)
-    val CASA_AMARILLA = Color(0xFFF2C14E)
-    /** La niebla y el cielo de la tarde. */
-    val NIEBLA = Color(0xFFE9EDF0)
-    val CIELO_TARDE = Color(0xFFF7C99B)
-    /** La luz negra: lo que brilla sobre el negro violeta de la sala. */
-    val LIMON = Color(0xFFC9F04A)
-    val FLUOR_MAGENTA = Color(0xFFFF5CBE)
-    val FLUOR_VIOLETA = Color(0xFFAE91FF)
-    val FLUOR_NARANJA = Color(0xFFFF9F43)
-    val SALA = Color(0xFF120A1C)
-    /** El papel del periódico del barrio. */
-    val PAPEL = Color(0xFFEFE7D6)
-    /** El vinilo. */
-    val VINILO = Color(0xFF17131A)
-    /** La tinta oscura con que se contornean las figuras de los carteles (un violeta casi negro, nunca negro puro). */
-    val TINTA = Color(0xFF2A1C32)
+object TrazosCiudad {
+    // ------------------------------------------------------------------------------------------------ colores
 
-    /** La tinta de arcoíris del tintero partido: del magenta al amarillo y al azul en una sola pasada. */
-    val ARCOIRIS = listOf(MAGENTA, NARANJA, AMARILLO, VERDE, AZUL, VIOLETA)
-    /** El mismo arcoíris bajo la luz negra: del violeta al magenta, al naranja y al verde limón (sin pasar por el gris). */
-    val ARCOIRIS_NOCHE = listOf(FLUOR_VIOLETA, FLUOR_MAGENTA, FLUOR_NARANJA, LIMON)
+    /** El cielo de la tarde: de la bruma, arriba, a la luz baja, abajo; y el sol velado por la niebla. */
+    val BRUMA = Color(0xFFD9CDB6)
+    val LUZ_BAJA = Color(0xFFEDBE8C)
+    val SOL_VELADO = Color(0xFFF6DDB4)
 
-    /** El complementario de cada color de la paleta de dibujo (para que la figura vibre). */
-    fun complementario(c: Color): Color = when (c) {
-        MAGENTA -> VERDE; VERDE -> MAGENTA; NARANJA -> AZUL; AZUL -> NARANJA; AMARILLO -> VIOLETA; VIOLETA -> AMARILLO
-        LIMON -> FLUOR_MAGENTA; FLUOR_MAGENTA -> LIMON; FLUOR_VIOLETA -> FLUOR_NARANJA; FLUOR_NARANJA -> FLUOR_VIOLETA
-        else -> opuesto(c)
-    }
+    /** Las victorianas: casi todas grises cálidas; una pintada, verde azul desteñido por la foto. */
+    val CASA_GRIS = Color(0xFFA0968A)
+    val CASA_GRIS_OSCURA = Color(0xFF958B7E)
+    val CASA_GRIS_CLARA = Color(0xFFA89C8C)
+    val CASA_PINTADA = Color(0xFF7E958E)
+    /** Las fachadas en el orden de la calle de la lámina: tres grises, la pintada y vuelta a empezar. */
+    val CASAS = listOf(CASA_GRIS, CASA_GRIS_OSCURA, CASA_GRIS_CLARA, CASA_PINTADA)
 
-    /**
-     * El color opuesto de cualquier color en la rueda (el tono girado media vuelta, con la misma saturación y la misma luz):
-     * el que vibra junto a él. Sirve para los colores del esquema, que no están en la paleta de dibujo.
-     */
-    fun opuesto(c: Color): Color {
-        val mx = max(c.red, max(c.green, c.blue)); val mn = min(c.red, min(c.green, c.blue))
-        val l = (mx + mn) / 2f; val d = mx - mn
-        if (d < 0.0001f) return c
-        val s = d / (1f - abs(2f * l - 1f))
-        val h = when (mx) {
-            c.red -> 60f * (((c.green - c.blue) / d).mod(6f))
-            c.green -> 60f * ((c.blue - c.red) / d + 2f)
-            else -> 60f * ((c.red - c.green) / d + 4f)
-        }
-        val h2 = (h + 180f).mod(360f)
-        val k = (1f - abs(2f * l - 1f)) * s
-        val x = k * (1f - abs((h2 / 60f).mod(2f) - 1f))
-        val m = l - k / 2f
-        val (r, g, b) = when ((h2 / 60f).toInt()) {
-            0 -> Triple(k, x, 0f); 1 -> Triple(x, k, 0f); 2 -> Triple(0f, k, x)
-            3 -> Triple(0f, x, k); 4 -> Triple(x, 0f, k); else -> Triple(k, 0f, x)
-        }
-        return Color((r + m).coerceIn(0f, 1f), (g + m).coerceIn(0f, 1f), (b + m).coerceIn(0f, 1f), c.alpha)
-    }
+    /** Hacia dónde va lo que mira al sol de la tarde (a la izquierda) y lo que queda en sombra (sombra café, nunca gris). */
+    val AL_SOL = Color(0xFFF4E6CC)
+    val SOMBRA = Color(0xFF4A3528)
 
-    /** La tinta de arcoíris del tintero partido, de [desde] a [hasta], con la opacidad [alfa]; con [noche], la de la luz negra. */
-    fun arcoiris(desde: Offset, hasta: Offset, alfa: Float = 1f, noche: Boolean = false): Brush =
-        Brush.linearGradient((if (noche) ARCOIRIS_NOCHE else ARCOIRIS).map { it.copy(alpha = alfa) }, desde, hasta)
+    /** Los postes de madera y los cables del trolebús. */
+    val POSTE = Color(0xFF3E3128)
+    /** El pasamanos del autobús, con su brillo. */
+    val PASAMANOS = Color(0xFF8C8270)
+    val PASAMANOS_BRILLO = Color(0xFFD8CDB5)
+    /** El coche aparcado en sombra: el rojo apagado hacia el ladrillo (también el del ladrillo de [ladrillos]). */
+    val COCHE = Color(0xFF7A3424)
 
-    // ------------------------------------------------------------------------------------------------ figuras
+    /** El cuarto de noche: la pared a media luz, la pantalla plisada encendida y su luz, la madera y la etiqueta del disco. */
+    val PARED_NOCHE = Color(0xFF1F1712)
+    val LAMPARA = Color(0xFFF2C996)
+    val LAMPARA_LUZ = Color(0xFFF0A35A)
+    val MADERA = Color(0xFF6E4630)
+    val ETIQUETA = Color(0xFFC8662A)
+
+    /** El rojo de letrero (el error de la ciudad clara), para el filete de [placaLetrero]. */
+    val LETRERO = Color(0xFFA01E2C)
+
+    /** La viñeta de la foto se va hacia este café. */
+    val VINETA = Color(0xFF3A2410)
+
+    /** La fuerza del grano de película (de la lámina): de día y de noche. */
+    const val GRANO_DIA = 0.22f
+    const val GRANO_NOCHE = 0.30f
+    /** La fuerza de la viñeta (de la lámina): de día y de noche. */
+    const val VINETA_DIA = 0.28f
+    const val VINETA_NOCHE = 0.35f
+
+    // ------------------------------------------------------------------------------------------------ color de foto
+
+    /** Lo que mira al sol de la tarde: [c] aclarado hacia [AL_SOL] (0.35, como la lámina). */
+    fun alSol(c: Color, k: Float = 0.35f): Color = lerp(c, AL_SOL, k.coerceIn(0f, 1f))
+
+    /** Lo que queda en sombra: [c] llevado hacia el café [SOMBRA] (0.42, como la lámina). */
+    fun enSombra(c: Color, k: Float = 0.42f): Color = lerp(c, SOMBRA, k.coerceIn(0f, 1f))
 
     /**
-     * Una gota blanda: un círculo que se deforma con [n] lóbulos según [fase] (de 0 a 1, da la vuelta). Es la forma de las
-     * luces líquidas y de las burbujas; con [blando] = 0 es un círculo.
+     * Cualquier color pasado por la película vieja **[Diseño propio]**: los oscuros se levantan hacia el café (hasta un
+     * 18 %), las luces se van al crema (hasta un 12 %) y todo pierde un 10 % de saturación hacia su propio gris cálido.
+     * Sirve para que un color que no está en la lista no desentone; los de la lista ya están pasados.
      */
-    fun gota(c: Offset, r: Float, fase: Float = 0f, blando: Float = 0.12f, n: Int = 3, puntos: Int = 48): Path = Path().apply {
-        for (i in 0..puntos) {
-            val a = 2f * PI.toFloat() * i / puntos
-            val rr = r * (1f + blando * sin(n * a + fase * 2f * PI.toFloat()) + blando * 0.5f * cos((n + 2) * a - fase * 4f * PI.toFloat()))
-            val p = Offset(c.x + rr * cos(a), c.y + rr * sin(a))
-            if (i == 0) moveTo(p.x, p.y) else lineTo(p.x, p.y)
-        }
-        close()
+    fun pelicula(c: Color): Color {
+        val l = c.luminance()
+        val gris = lerp(Color(l, l, l, c.alpha), SOMBRA.copy(alpha = c.alpha), 0.15f)
+        val apagado = lerp(c, gris, 0.1f)
+        return lerp(lerp(apagado, SOMBRA.copy(alpha = c.alpha), 0.18f * (1f - l)), AL_SOL.copy(alpha = c.alpha), 0.12f * l)
     }
 
-    /** Una onda de [x0] a [x1] a la altura [y], de [amp] de alto y [periodo] de largo, corrida [fase] (de 0 a 1). */
-    fun onda(x0: Float, x1: Float, y: Float, amp: Float, periodo: Float, fase: Float = 0f): Path = Path().apply {
-        val paso = max(periodo / 16f, 0.5f)
-        var x = x0; var k = 0
-        while (x <= x1 + 0.01f && k < 2000) {
-            val yy = y + amp * sin(2f * PI.toFloat() * ((x - x0) / periodo + fase))
-            if (k == 0) moveTo(x, yy) else lineTo(x, yy)
-            x += paso; k++
-        }
-    }
+    // ------------------------------------------------------------------------------------------------ película
 
     /**
-     * Los pétalos redondos de una margarita, juntos en un solo trazo: [n] pétalos de punta redonda que nacen cerca del
-     * centro ([desde], en fracción de [r]) y se ensanchan hasta su punta, a [r]. [ancho] es el radio de la punta, en
-     * fracción de [r]; [giro], en radianes. Con [unidos], un solo contorno (para trazarlo sin que se crucen por dentro).
+     * El grano de película: puntos claros (crema) y oscuros (café) repartidos al azar, pero siempre igual para la misma
+     * [semilla], en celdas de [celda] dp. [fuerza]: [GRANO_DIA] o [GRANO_NOCHE] (la de la lámina). Es caro (un punto
+     * cada 1.4 dp): se dibuja una vez en caché, no en cada cuadro.
      */
-    fun petalos(c: Offset, r: Float, n: Int = 6, giro: Float = 0f, ancho: Float = 0.34f, desde: Float = 0.12f, unidos: Boolean = false): Path {
-        if (unidos) return (0 until n).fold(Path()) { p, i ->
-            Path.combine(androidx.compose.ui.graphics.PathOperation.Union, p, petalos(c, r, 1, giro + 2f * PI.toFloat() * i / n, ancho, desde))
-        }
-        return petalosSueltos(c, r, n, giro, ancho, desde)
-    }
-
-    private fun petalosSueltos(c: Offset, r: Float, n: Int, giro: Float, ancho: Float, desde: Float): Path = Path().apply {
-        val rp = r * ancho
-        for (i in 0 until n) {
-            val a = 2f * PI.toFloat() * i / n + giro
-            val d = Offset(cos(a), sin(a)); val nn = Offset(-d.y, d.x)
-            val t = c + d * (r - rp)
-            val b = c + d * (r * desde)
-            val izq = t + nn * rp
-            val k1 = c + d * (r * 0.4f) + nn * (rp * 1.02f)
-            val k2 = c + d * (r * 0.4f) - nn * (rp * 1.02f)
-            moveTo(b.x, b.y)
-            quadraticTo(k1.x, k1.y, izq.x, izq.y)
-            arcTo(Rect(t, rp), Math.toDegrees(a.toDouble()).toFloat() + 90f, -180f, false)
-            quadraticTo(k2.x, k2.y, b.x, b.y)
-            close()
-        }
-    }
-
-    /** Una margarita plana de un solo color, para lo pequeño (marcas, íconos, puntos): los pétalos y el botón calado en [centro]. */
-    fun DrawScope.margarita(c: Offset, r: Float, color: Color, centro: Color? = null, n: Int = 8, giro: Float = 0f) {
-        drawPath(petalos(c, r, n, giro, if (n >= 8) 0.25f else 0.32f, 0.1f), color)
-        if (centro != null) { drawCircle(centro, r * 0.3f, c); drawCircle(color, r * 0.16f, c) }
-    }
-
-    /**
-     * Una burbuja de aceite del show de luces: el cuerpo apenas teñido, el borde más vivo (el menisco) y el brillo de la
-     * lámpara arriba a la izquierda. [alfa] la apaga entera.
-     */
-    fun DrawScope.burbuja(c: Offset, r: Float, color: Color, alfa: Float = 1f) {
-        if (r <= 0f || alfa <= 0f) return
-        drawCircle(Brush.radialGradient(listOf(color.copy(alpha = 0.08f * alfa), color.copy(alpha = 0.18f * alfa), color.copy(alpha = 0.42f * alfa)), c, r), r, c)
-        drawCircle(color.copy(alpha = 0.55f * alfa), r, c, style = Stroke(max(r * 0.07f, 0.6f)))
-        drawArc(Color.White.copy(alpha = 0.55f * alfa), 200f, 60f, false, Offset(c.x - r * 0.66f, c.y - r * 0.66f), Size(r * 1.32f, r * 1.32f),
-            style = Stroke(max(r * 0.1f, 0.6f), cap = StrokeCap.Round))
-    }
-
-    /**
-     * Las luces líquidas: [colores] gotas grandes y translúcidas que se mezclan y respiran dentro de [tam], movidas por [fase]
-     * (de 0 a 1; la vuelta cierra sin salto). Cada gota es blanda de punta a punta, sin ningún canto: un núcleo y unos
-     * lóbulos que giran despacio a su alrededor, cada uno un resplandor que se apaga del todo antes de su borde, así la
-     * mancha cambia de forma como el aceite entre dos vidrios; dentro lleva alguna burbuja. [intensidad] baja el brillo (de
-     * día van más tenues).
-     */
-    fun DrawScope.lucesLiquidas(tam: Size, fase: Float, colores: List<Color>, intensidad: Float = 1f, origen: Offset = Offset.Zero) {
-        val dos = 2f * PI.toFloat()
-        colores.forEachIndexed { i, col ->
-            val t = fase * dos
-            val c = Offset(origen.x + tam.width * (0.5f + 0.3f * sin(t + i * 2.1f)), origen.y + tam.height * (0.5f + 0.28f * cos(2f * t + i * 1.7f)))
-            val r = min(tam.width, tam.height) * (0.3f + 0.05f * sin(t + i))
-            gotaBlanda(c, r, t, i, col, intensidad)
-        }
-    }
-
-    /**
-     * Una gota de luz líquida, blanda de punta a punta: un núcleo y [i] % 2 + 3 lóbulos que giran a su alrededor con [t] (en
-     * radianes), cada uno un resplandor de [col] que se apaga del todo antes de su borde, y una burbuja dentro. [k] es la
-     * opacidad y [modo], cómo se suma a lo de detrás.
-     */
-    private fun DrawScope.gotaBlanda(c: Offset, r: Float, t: Float, i: Int, col: Color, k: Float, modo: BlendMode = BlendMode.SrcOver) {
-        if (r <= 0f || k <= 0f) return
-        fun mancha(o: Offset, rr: Float, a: Float) = drawCircle(
-            Brush.radialGradient(0f to col.copy(alpha = a), 0.45f to col.copy(alpha = a * 0.62f), 0.75f to col.copy(alpha = a * 0.22f),
-                1f to col.copy(alpha = 0f), center = o, radius = rr), rr, o, blendMode = modo)
-        mancha(c, r * 1.02f, 0.34f * k)
-        val lobulos = 3 + i % 2
-        for (j in 0 until lobulos) {
-            val a = 2f * PI.toFloat() * j / lobulos + t * (if (i % 2 == 0) 1f else -1f) + i
-            val lejos = r * (0.42f + 0.12f * sin(2f * t + j * 1.9f + i))
-            mancha(Offset(c.x + lejos * cos(a), c.y + lejos * sin(a)), r * (0.62f + 0.08f * cos(t + j)), 0.2f * k)
-        }
-        val b = Offset(c.x + r * 0.3f * cos(t + i), c.y + r * 0.26f * sin(t + i))
-        burbuja(b, r * 0.12f, lerp(col, Color.White, 0.4f), k * 0.7f)
-    }
-
-    /**
-     * El fondo vivo de la sala de baile (de noche) o de la calle (de día): las luces líquidas de un retroproyector, cinco
-     * manchas blandas de aceite y tinta que se cruzan despacio y respiran, y unas burbujas que suben con el calor de la lámpara. De
-     * noche, en los colores de la luz negra, que se suman donde se cruzan; de día, en tintas de cartel muy tenues, que se
-     * mezclan como en el papel. [t] da la vuelta de 0 a 1 sin salto; [fuerza] multiplica la opacidad.
-     */
-    fun DrawScope.lucesSala(t: Float, oscuro: Boolean, fuerza: Float = 1f, burbujas: Int = 9) {
-        val w = size.width; val h = size.height; val m = min(w, h)
-        val dos = 2f * PI.toFloat()
-        val colores = if (oscuro) listOf(LIMON, FLUOR_MAGENTA, FLUOR_VIOLETA, FLUOR_NARANJA, FLUOR_MAGENTA)
-            else listOf(MAGENTA, NARANJA, VERDE, AZUL, AMARILLO)
-        val k = (if (oscuro) 0.95f else 0.6f) * fuerza
-        val modo = if (oscuro) BlendMode.Screen else BlendMode.Multiply
-        // Cada mancha: dónde anda (en fracción del ancho y del alto), cuánto se aleja, su tamaño y su fase. Las vueltas de
-        // cada una son enteras, así el ciclo cierra.
-        val manchas = listOf(
-            floatArrayOf(0.14f, 0.16f, 0.12f, 0.1f, 0.48f, 0f), floatArrayOf(0.88f, 0.38f, 0.1f, 0.14f, 0.4f, 0.23f),
-            floatArrayOf(0.22f, 0.74f, 0.14f, 0.08f, 0.44f, 0.47f), floatArrayOf(0.8f, 0.9f, 0.1f, 0.08f, 0.38f, 0.71f),
-            floatArrayOf(0.55f, 0.52f, 0.2f, 0.18f, 0.26f, 0.9f),
-        )
-        manchas.forEachIndexed { i, f ->
-            val a = (t + f[5]) * dos
-            val c = Offset(w * (f[0] + f[2] * sin(a + i)), h * (f[1] + f[3] * cos(2f * a - i * 0.7f)))
-            val r = m * f[4] * (0.92f + 0.08f * sin(3f * a + i))
-            gotaBlanda(c, r, (t * (1 + i % 2) + f[5]) * dos, i, colores[i], k, modo)
-        }
-        // Las burbujas que suben, despacio, con su menisco.
-        for (b in 0 until burbujas) {
-            val sem = (b * 0.618034f) % 1f
-            val y = h * (1.08f - 1.16f * (((t * (1 + b % 2)) + sem) % 1f))
-            val x = w * ((sem * 1.7f + 0.13f * b) % 1f) + m * 0.03f * sin((t * 3f + sem) * dos)
-            val r = m * (0.012f + 0.02f * ((b * 0.37f) % 1f))
-            burbuja(Offset(x, y), r, colores[b % colores.size], (if (oscuro) 0.5f else 0.35f) * fuerza)
-        }
-    }
-
-    /**
-     * La flor que vibra: [petalos] pétalos redondos de [color] sobre un halo de su complementario ([contra]), con una línea
-     * del complementario por dentro de cada pétalo, como en los carteles, y el botón en el complementario con su anillo del
-     * primero. [vibra] (de 0 a 1) corre un poco el halo, como cuando dos colores opuestos de igual valor se tocan.
-     */
-    fun DrawScope.flor(c: Offset, r: Float, color: Color = MAGENTA, contra: Color = complementario(color), petalos: Int = 6,
-                       vibra: Float = 0f, giro: Float = 0f) {
-        val ancho = if (petalos >= 8) 0.27f else if (petalos >= 7) 0.3f else 0.34f
-        // El halo complementario, corrido apenas: la vibración del borde.
-        val dx = r * (0.035f + 0.035f * vibra)
-        drawPath(petalos(Offset(c.x + dx, c.y - dx * 0.6f), r * 1.07f, petalos, giro, ancho * 1.05f, 0.1f), contra)
-        val cuerpo = petalos(c, r, petalos, giro, ancho, 0.1f)
-        drawPath(cuerpo, color)
-        // La sombra de cada pétalo junto al botón y la línea de dentro.
-        clipPath(cuerpo) { drawCircle(Brush.radialGradient(listOf(lerp(color, Color.Black, 0.22f), color.copy(alpha = 0f)), c, r * 0.62f), r * 0.62f, c) }
-        if (r > 6f) drawPath(petalos(c, r * 0.8f, petalos, giro, ancho * 0.72f, 0.36f), contra.copy(alpha = 0.85f), style = Stroke(max(r * 0.035f, 0.6f), join = StrokeJoin.Round))
-        // El botón: el disco del complementario, el anillo del primero y un brillo.
-        drawCircle(contra, r * 0.3f, c)
-        drawCircle(color, r * 0.3f, c, style = Stroke(r * 0.06f))
-        if (r > 10f) for (k in 0 until 8) drawCircle(lerp(contra, Color.White, 0.45f), r * 0.03f, Offset(c.x + r * 0.17f * cos(k * PI.toFloat() / 4 + giro), c.y + r * 0.17f * sin(k * PI.toFloat() / 4 + giro)))
-        drawCircle(lerp(contra, Color.White, 0.35f), r * 0.08f, Offset(c.x - r * 0.08f, c.y - r * 0.09f))
-    }
-
-    /** El símbolo de la paz (Holtom, 1958; de dominio público), en la versión de una sola línea: un aro con su tridente invertido. */
-    fun DrawScope.paz(c: Offset, r: Float, color: Color, grueso: Float = r * 0.16f) {
-        val st = Stroke(grueso, cap = StrokeCap.Round)
-        drawCircle(color, r, c, style = st)
-        drawLine(color, Offset(c.x, c.y - r), Offset(c.x, c.y + r), grueso, StrokeCap.Round)
-        val a = PI.toFloat() / 4
-        drawLine(color, c, Offset(c.x - r * sin(a), c.y + r * cos(a)), grueso, StrokeCap.Round)
-        drawLine(color, c, Offset(c.x + r * sin(a), c.y + r * cos(a)), grueso, StrokeCap.Round)
-    }
-
-    /** El disco de vinilo: negro con sus surcos, el canto, el brillo que gira con [giro] y la etiqueta de [etiqueta] con su flor. */
-    fun DrawScope.disco(c: Offset, r: Float, etiqueta: Color = NARANJA, giro: Float = 0f) {
-        drawCircle(VINILO, r, c)
-        var k = 0.94f; var n = 0
-        while (k > 0.42f) {
-            drawCircle(Color.White.copy(alpha = if (n % 5 == 4) 0.09f else 0.045f), r * k, c, style = Stroke(max(r * 0.006f, 0.5f)))
-            k -= 0.032f; n++
-        }
-        // El brillo de la lámpara en los surcos: dos abanicos opuestos que se esfuman a los lados.
-        val claro = Color.White.copy(alpha = 0.17f); val nada = Color.White.copy(alpha = 0f)
-        rotate(giro * 360f, c) {
-            drawCircle(Brush.sweepGradient(listOf(nada, claro, nada, nada, nada, claro, nada, nada, nada), c), r * 0.96f, c)
-        }
-        drawCircle(Color.White.copy(alpha = 0.12f), r * 0.985f, c, style = Stroke(max(r * 0.015f, 0.6f)))
-        drawCircle(VINILO, r * 0.4f, c)
-        drawCircle(etiqueta, r * 0.35f, c)
-        drawCircle(lerp(etiqueta, Color.Black, 0.25f), r * 0.35f, c, style = Stroke(max(r * 0.012f, 0.5f)))
-        drawCircle(lerp(etiqueta, Color.White, 0.3f), r * 0.3f, c, style = Stroke(max(r * 0.006f, 0.4f)))
-        flor(c, r * 0.21f, complementario(etiqueta), etiqueta, 6, 0f, giro * 2f * PI.toFloat())
-        drawCircle(lerp(etiqueta, Color.Black, 0.55f), r * 0.04f, c)
-    }
-
-    /**
-     * Una casa victoriana de San Francisco, vista de frente: el frontón con sus escamas de madera y su remate, la cornisa
-     * con sus ménsulas, el mirador saliente de dos pisos con sus tres ventanas de guillotina (el costado de la luz más
-     * claro, el otro en sombra), la tablazón de la fachada y la puerta alta con su montante, sus columnitas y la escalera.
-     * [base] es el pie de la casa, [ancho] y [alto] su tamaño, [color] la madera (casi siempre gris) y [adorno] el color
-     * de las molduras. [ventanas] colorea los vidrios (de noche, encendidos).
-     */
-    fun DrawScope.casaVictoriana(base: Offset, ancho: Float, alto: Float, color: Color = CASA_GRIS, adorno: Color = CASA_BLANCA,
-                                 ventanas: Color = Color(0xFF5E6B78)) {
-        val x0 = base.x - ancho / 2; val y0 = base.y - alto
-        val sombra = lerp(color, Color.Black, 0.28f)
-        val luz = lerp(color, Color.White, 0.12f)
-        val fino = max(ancho * 0.008f, 0.5f)
-        // El cuerpo, con la tablazón horizontal.
-        val cuerpoArriba = y0 + alto * 0.2f
-        drawRect(color, Offset(x0, cuerpoArriba), Size(ancho, alto * 0.8f))
-        var yt = cuerpoArriba + alto * 0.05f
-        while (yt < base.y - alto * 0.02f) { drawLine(sombra.copy(alpha = 0.25f), Offset(x0, yt), Offset(x0 + ancho, yt), fino); yt += alto * 0.028f }
-        // El frontón: el triángulo con sus escamas de madera en hileras y el remate redondo.
-        val fronton = Path().apply { moveTo(x0 - ancho * 0.04f, y0 + alto * 0.2f); lineTo(base.x, y0); lineTo(x0 + ancho * 1.04f, y0 + alto * 0.2f); close() }
-        drawPath(fronton, luz)
-        clipPath(fronton) {
-            val e = ancho * 0.07f; var fila = 0; var yy = y0 + alto * 0.05f
-            while (yy < y0 + alto * 0.21f) {
-                var xx = x0 - ancho * 0.04f + (if (fila % 2 == 0) 0f else e / 2)
-                while (xx < x0 + ancho * 1.05f) { drawArc(sombra.copy(alpha = 0.35f), 0f, 180f, false, Offset(xx, yy - e / 2), Size(e, e), style = Stroke(fino)); xx += e }
-                yy += e * 0.55f; fila++
+    fun DrawScope.grano(fuerza: Float, semilla: Int = 1, celda: Float = 1.4f, zona: Rect = Rect(Offset.Zero, size)) {
+        if (fuerza <= 0f || zona.width <= 0f || zona.height <= 0f || !zona.width.isFinite() || !zona.height.isFinite()) return
+        val paso = max(celda * density, 1f)
+        // Cuatro tandas: claro débil y fuerte, oscuro débil y fuerte (así son cuatro llamadas, no una por punto).
+        val tandas = List(4) { ArrayList<Offset>() }
+        var fila = 0
+        var y = zona.top + paso / 2
+        while (y < zona.bottom) {
+            var col = 0
+            var x = zona.left + paso / 2
+            while (x < zona.right) {
+                val v = azarFijo(col, fila, semilla) * 2f - 1f
+                if (abs(v) > 0.35f) tandas[(if (v > 0) 0 else 2) + (if (abs(v) > 0.75f) 1 else 0)].add(Offset(x, y))
+                x += paso; col++
             }
+            y += paso; fila++
         }
-        drawPath(Path().apply { moveTo(x0 - ancho * 0.05f, y0 + alto * 0.205f); lineTo(base.x, y0 - alto * 0.005f); lineTo(x0 + ancho * 1.05f, y0 + alto * 0.205f) },
-            adorno, style = Stroke(ancho * 0.03f, join = StrokeJoin.Round))
-        drawCircle(adorno, ancho * 0.055f, Offset(base.x, y0 + alto * 0.1f))
-        drawCircle(ventanas, ancho * 0.032f, Offset(base.x, y0 + alto * 0.1f))
-        drawLine(adorno, Offset(base.x, y0 - alto * 0.005f), Offset(base.x, y0 - alto * 0.035f), ancho * 0.02f, StrokeCap.Round)
-        // La cornisa con sus ménsulas.
-        drawRect(adorno, Offset(x0 - ancho * 0.04f, y0 + alto * 0.2f), Size(ancho * 1.08f, alto * 0.026f))
-        for (i in 0..6) drawRect(adorno, Offset(x0 + ancho * (0.02f + i * 0.155f), y0 + alto * 0.226f), Size(ancho * 0.035f, alto * 0.04f))
-        drawRect(sombra.copy(alpha = 0.4f), Offset(x0, y0 + alto * 0.266f), Size(ancho, alto * 0.008f))
-        // El mirador saliente: un trapecio con sus tres ventanas altas, en dos pisos; el costado izquierdo a la luz.
-        for (piso in 0..1) {
-            val yv = y0 + alto * (0.31f + piso * 0.27f); val h = alto * 0.22f
-            val a = x0 + ancho * 0.04f; val b = x0 + ancho * 0.13f; val c2 = x0 + ancho * 0.57f; val d = x0 + ancho * 0.66f
-            drawPath(Path().apply { moveTo(a, yv + h); lineTo(b, yv); lineTo(b, yv + h); close() }, luz)
-            drawPath(Path().apply { moveTo(c2, yv); lineTo(d, yv + h); lineTo(c2, yv + h); close() }, sombra)
-            drawRect(color, Offset(b, yv), Size(c2 - b, h))
-            drawRect(adorno, Offset(a - ancho * 0.01f, yv - alto * 0.018f), Size(d - a + ancho * 0.02f, alto * 0.018f))
-            for (v in 0..2) {
-                val vx = b + (c2 - b) * (0.08f + v * 0.32f); val vw = (c2 - b) * 0.22f
-                val vy = yv + h * 0.12f; val vh = h * 0.74f
-                drawRect(ventanas, Offset(vx, vy), Size(vw, vh))
-                drawRect(Color.White.copy(alpha = 0.12f), Offset(vx, vy), Size(vw * 0.4f, vh * 0.48f))
-                drawRect(adorno, Offset(vx, vy), Size(vw, vh), style = Stroke(ancho * 0.014f))
-                drawLine(adorno, Offset(vx, vy + vh * 0.5f), Offset(vx + vw, vy + vh * 0.5f), ancho * 0.012f)
-                drawRect(adorno, Offset(vx - vw * 0.12f, vy - h * 0.06f), Size(vw * 1.24f, h * 0.045f))
-            }
-            drawRect(adorno, Offset(a, yv + h), Size(d - a, alto * 0.02f))
-            drawRect(Color.Black.copy(alpha = 0.12f), Offset(d, yv - alto * 0.018f), Size(ancho * 0.025f, h + alto * 0.038f))
+        val claro = AL_SOL; val oscuro = SOMBRA
+        val alfas = floatArrayOf(0.22f, 0.45f, 0.22f, 0.45f)
+        tandas.forEachIndexed { i, puntos ->
+            if (puntos.isNotEmpty()) drawPoints(puntos, PointMode.Points, (if (i < 2) claro else oscuro).copy(alpha = (alfas[i] * fuerza).coerceIn(0f, 1f)),
+                strokeWidth = paso, cap = StrokeCap.Square)
         }
-        // La puerta alta con su montante, sus dos columnitas, el sombrerete y la escalera.
-        val px = x0 + ancho * 0.73f; val pw = ancho * 0.17f; val py = y0 + alto * 0.63f; val ph = alto * 0.27f
-        drawRect(sombra, Offset(px, py), Size(pw, ph))
-        drawRect(ventanas, Offset(px + pw * 0.12f, py + ph * 0.06f), Size(pw * 0.76f, ph * 0.16f))
-        drawRect(lerp(sombra, Color.Black, 0.2f), Offset(px + pw * 0.14f, py + ph * 0.3f), Size(pw * 0.72f, ph * 0.66f))
-        drawRect(adorno, Offset(px, py), Size(pw, ph), style = Stroke(ancho * 0.014f))
-        listOf(px - ancho * 0.03f, px + pw + ancho * 0.008f).forEach { cx -> drawRect(adorno, Offset(cx, py), Size(ancho * 0.022f, ph)) }
-        drawPath(Path().apply { moveTo(px - ancho * 0.045f, py); lineTo(px + pw / 2, py - alto * 0.04f); lineTo(px + pw + ancho * 0.045f, py); close() }, adorno)
-        for (e in 0..3) drawRect(lerp(adorno, Color.Black, 0.08f + e * 0.03f), Offset(px - ancho * (0.02f + e * 0.02f), base.y - alto * (0.1f - e * 0.025f)),
-            Size(pw + ancho * (0.04f + e * 0.04f), alto * 0.025f))
-        // La sombra del lado derecho y el zócalo.
-        drawRect(Color.Black.copy(alpha = 0.13f), Offset(x0 + ancho * 0.94f, y0 + alto * 0.2f), Size(ancho * 0.06f, alto * 0.8f))
-        drawRect(sombra.copy(alpha = 0.6f), Offset(x0, base.y - alto * 0.025f), Size(ancho * 0.66f, alto * 0.025f))
+    }
+
+    /** La viñeta de la foto: el centro limpio y los bordes hacia [color], con [fuerza] ([VINETA_DIA] o [VINETA_NOCHE]). */
+    fun DrawScope.vineta(fuerza: Float, color: Color = VINETA) {
+        if (fuerza <= 0f || size.minDimension <= 0f) return
+        val r = sqrt(size.width * size.width + size.height * size.height) / 2f
+        drawRect(Brush.radialGradient(0f to color.copy(alpha = 0f), 0.62f to color.copy(alpha = 0f), 1f to color.copy(alpha = fuerza.coerceIn(0f, 1f)),
+            center = center, radius = r))
+    }
+
+    // ------------------------------------------------------------------------------------------------ la calle
+
+    /**
+     * Los dos cables paralelos del trolebús, de [desde] a [hasta], que cuelgan [comba] en el medio, separados [separacion]
+     * (en vertical). [grosor] en px.
+     */
+    fun DrawScope.cables(desde: Offset, hasta: Offset, comba: Float, separacion: Float, grosor: Float, color: Color = POSTE) {
+        if (grosor <= 0f) return
+        for (k in 0..1) {
+            val dy = k * separacion
+            val medio = Offset((desde.x + hasta.x) / 2f, (desde.y + hasta.y) / 2f + dy + comba * 2f)
+            drawPath(Path().apply { moveTo(desde.x, desde.y + dy); quadraticTo(medio.x, medio.y, hasta.x, hasta.y + dy) }, color,
+                style = Stroke(grosor, cap = StrokeCap.Round))
+        }
+    }
+
+    /** Un poste de madera de [alto] px desde [base] (su pie), de [grueso] px, con su travesaño arriba y la sombra a la derecha. */
+    fun DrawScope.poste(base: Offset, alto: Float, grueso: Float, color: Color = POSTE) {
+        if (alto <= 0f || grueso <= 0f) return
+        drawRect(color, Offset(base.x - grueso / 2, base.y - alto), androidx.compose.ui.geometry.Size(grueso, alto))
+        drawRect(enSombra(color, 0.5f), Offset(base.x + grueso * 0.15f, base.y - alto), androidx.compose.ui.geometry.Size(grueso * 0.35f, alto))
+        drawRect(color, Offset(base.x - grueso * 3.2f, base.y - alto * 0.92f), androidx.compose.ui.geometry.Size(grueso * 6.4f, grueso * 0.6f))
     }
 
     /**
-     * El botón de solapa del emblema: la orla de franjas torcidas en [anillo] y su complementario, el disco de [fondo] con
-     * su trama de imprenta y su luz de cúpula, la margarita magenta que vibra y, en su botón amarillo, el símbolo de la paz.
-     * [vibra] corre el halo de la flor; [giro] (de 0 a 1) gira la orla una franja; [destello] (de 0 a 1) pasa un brillo por
-     * la cúpula; [noche] le pone el resplandor de la luz negra alrededor.
+     * Un muro de ladrillo en [zona]: hiladas de [hilada] px de alto, a soga (cada una corrida medio ladrillo), con la junta
+     * de [junta] y los ladrillos de [color] que varían un poco de tono, siempre igual para la misma [semilla].
      */
-    private fun DrawScope.botonSolapa(c: Offset, r: Float, anillo: Color, fondo: Color, vibra: Float, giro: Float, destello: Float, noche: Boolean) {
-        val ro = r * 0.95f; val ri = r * 0.78f
-        if (noche) drawCircle(Brush.radialGradient(listOf(LIMON.copy(alpha = 0.2f), LIMON.copy(alpha = 0f)), c, r * 1.05f), r * 1.05f, c)
-        drawCircle(Color.Black.copy(alpha = 0.22f), ro, Offset(c.x + r * 0.03f, c.y + r * 0.05f))
-        // La orla: franjas torcidas de los dos colores, que giran despacio.
-        val otro = complementario(anillo)
-        drawCircle(anillo, ro, c)
-        val n = 18
-        val orla = Path().apply { addOval(Rect(c, ro)); addOval(Rect(c, ri)); fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd }
-        clipPath(orla) {
-            for (k in 0 until n) {
-                val a0 = 2f * PI.toFloat() * (k + giro) / n; val paso = 2f * PI.toFloat() / n
-                val tuerce = paso * 0.9f
-                drawPath(Path().apply {
-                    moveTo(c.x + ri * cos(a0), c.y + ri * sin(a0)); lineTo(c.x + ro * 1.02f * cos(a0 + tuerce), c.y + ro * 1.02f * sin(a0 + tuerce))
-                    lineTo(c.x + ro * 1.02f * cos(a0 + tuerce + paso * 0.5f), c.y + ro * 1.02f * sin(a0 + tuerce + paso * 0.5f))
-                    lineTo(c.x + ri * cos(a0 + paso * 0.5f), c.y + ri * sin(a0 + paso * 0.5f)); close()
-                }, otro)
-            }
-            // El canto de la orla, abombado: claro arriba a la izquierda, oscuro abajo a la derecha.
-            drawCircle(Brush.linearGradient(listOf(Color.White.copy(alpha = 0.32f), Color.Transparent, Color.Black.copy(alpha = 0.3f)),
-                Offset(c.x - ro, c.y - ro), Offset(c.x + ro, c.y + ro)), ro, c)
-        }
-        drawCircle(TINTA.copy(alpha = 0.5f), ro, c, style = Stroke(max(r * 0.012f, 0.6f)))
-        // El disco, con su trama de puntos de imprenta y la luz de la cúpula.
-        drawCircle(fondo, ri, c)
-        clipPath(Path().apply { addOval(Rect(c, ri)) }) {
-            val p = max(ri * 0.075f, 2f); var y = c.y - ri; var fila = 0
-            val punto = lerp(fondo, Color.White, 0.22f).copy(alpha = 0.55f)
-            while (y < c.y + ri) {
-                var x = c.x - ri + (if (fila % 2 == 0) 0f else p / 2)
-                while (x < c.x + ri) {
-                    val f = ((x - (c.x - ri)) + (y - (c.y - ri))) / (4f * ri)
-                    val rr = p * 0.28f * (1f - f)
-                    if (rr > 0.35f) drawCircle(punto, rr, Offset(x, y))
-                    x += p
+    fun DrawScope.ladrillos(zona: Rect, hilada: Float, color: Color = COCHE, junta: Color = enSombra(color, 0.55f), semilla: Int = 3) {
+        if (zona.width <= 0f || zona.height <= 0f) return
+        val alto = max(hilada, 2f)
+        val largo = alto * 2.6f
+        val j = max(alto * 0.12f, 0.5f)
+        clipPath(Path().apply { addRect(zona) }) {
+            drawRect(junta, zona.topLeft, zona.size)
+            var fila = 0
+            var y = zona.top
+            while (y < zona.bottom) {
+                var col = 0
+                var x = zona.left - (if (fila % 2 == 0) 0f else largo / 2)
+                while (x < zona.right) {
+                    val tono = (azarFijo(col, fila, semilla) - 0.5f) * 0.16f
+                    val c = if (tono > 0) alSol(color, tono) else enSombra(color, -tono)
+                    drawRect(c, Offset(x + j / 2, y + j / 2), androidx.compose.ui.geometry.Size(largo - j, alto - j))
+                    x += largo; col++
                 }
-                y += p * 0.87f; fila++
+                y += alto; fila++
             }
-            drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.22f), Color.Transparent, Color.Black.copy(alpha = 0.25f)),
-                Offset(c.x - ri * 0.35f, c.y - ri * 0.4f), ri * 1.6f), ri, c)
-        }
-        drawCircle(TINTA.copy(alpha = 0.45f), ri, c, style = Stroke(max(r * 0.012f, 0.6f)))
-        // La margarita que vibra y, en su botón amarillo, la paz.
-        val rf = ri * 0.86f
-        flor(c, rf, MAGENTA, lerp(fondo, Color.White, 0.42f), 8, vibra, -PI.toFloat() / 8)
-        drawCircle(AMARILLO, rf * 0.32f, c)
-        drawCircle(lerp(AMARILLO, NARANJA, 0.5f), rf * 0.32f, c, style = Stroke(max(rf * 0.03f, 0.6f)))
-        if (r * 2 >= 64f * density) paz(c, rf * 0.2f, lerp(MAGENTA, TINTA, 0.35f), rf * 0.04f)
-        else drawCircle(lerp(AMARILLO, Color.White, 0.5f), rf * 0.1f, Offset(c.x - rf * 0.08f, c.y - rf * 0.08f))
-        // El brillo de la cúpula de plástico: la media luna clara de arriba y el destello que la cruza.
-        drawArc(Color.White.copy(alpha = 0.38f), 195f, 70f, false, Offset(c.x - ri * 0.78f, c.y - ri * 0.78f), Size(ri * 1.56f, ri * 1.56f),
-            style = Stroke(ri * 0.09f, cap = StrokeCap.Round))
-        drawCircle(Color.White.copy(alpha = 0.55f), ri * 0.045f, Offset(c.x - ri * 0.5f, c.y - ri * 0.56f))
-        if (destello > 0f) {
-            val a = Math.toRadians(200.0 + 70.0 * destello).toFloat()
-            val q = Offset(c.x + ri * 0.74f * cos(a), c.y + ri * 0.74f * sin(a))
-            val rb = ri * 0.32f
-            drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.45f * sin(PI.toFloat() * destello)), Color.Transparent), q, rb), rb, q)
         }
     }
 
     /**
-     * El emblema del tema: el botón de solapa con la margarita que vibra (magenta sobre su complementario), su orla de
-     * franjas de [anillo] y el disco de [fondo], con el símbolo de la paz en el botón de la flor si el tamaño lo permite.
+     * Una persiana de lamas en [zona]: [lamas] tablillas horizontales de [color], cada una con su filo claro arriba y su
+     * sombra abajo; [abierta] (de 0 a 1) separa las lamas y deja ver [detras].
      */
-    fun DrawScope.emblema(c: Offset, r: Float, anillo: Color = NARANJA, fondo: Color = AZUL, vibra: Float = 0f, giro: Float = 0f) {
-        botonSolapa(c, r, anillo, fondo, vibra, giro / (2f * PI.toFloat()), 0f, false)
+    fun DrawScope.persiana(zona: Rect, lamas: Int, color: Color = CASA_GRIS_CLARA, abierta: Float = 0f, detras: Color = PARED_NOCHE) {
+        if (zona.width <= 0f || zona.height <= 0f || lamas <= 0) return
+        drawRect(detras, zona.topLeft, zona.size)
+        val alto = zona.height / lamas
+        val lleno = alto * (1f - 0.6f * abierta.coerceIn(0f, 1f))
+        for (k in 0 until lamas) {
+            val y = zona.top + k * alto
+            drawRect(color, Offset(zona.left, y), androidx.compose.ui.geometry.Size(zona.width, lleno))
+            drawRect(alSol(color, 0.4f), Offset(zona.left, y), androidx.compose.ui.geometry.Size(zona.width, max(lleno * 0.18f, 0.5f)))
+            drawRect(enSombra(color, 0.35f), Offset(zona.left, y + lleno * 0.82f), androidx.compose.ui.geometry.Size(zona.width, max(lleno * 0.18f, 0.5f)))
+        }
     }
 
     /**
-     * El emblema animado de la app, como el ícono: el botón de solapa verde con la margarita magenta y la orla naranja y
-     * azul. [t] (de 0 a 1) es la vuelta: la flor vibra (su halo se corre y vuelve), la orla gira una franja y un brillo
-     * cruza la cúpula. Movimiento contenido: nada parpadea. Pequeño (menos de 48 dp), la flor sola, que vibra. [oscuro]: la
-     * sala con luz negra, con el resplandor verde limón alrededor.
+     * La placa de un letrero pintado (el texto lo pone quien llama): el fondo [fondo], un filete de [filete] por dentro y
+     * la esquina de [radio] px. Sin brillo ni neón: es pintura sobre lámina.
      */
-    fun DrawScope.emblemaVivo(c: Offset, r: Float, t: Float, oscuro: Boolean) {
-        val vibra = 0.5f + 0.5f * sin(2f * PI.toFloat() * t)
-        if (r * 2 < 48f * density) {
-            if (oscuro) drawCircle(Brush.radialGradient(listOf(LIMON.copy(alpha = 0.22f), LIMON.copy(alpha = 0f)), c, r), r, c)
-            val rf = r * 0.9f
-            flor(Offset(c.x - rf * 0.03f, c.y + rf * 0.02f), rf, MAGENTA, if (oscuro) LIMON else VERDE, 8, vibra, -PI.toFloat() / 8)
-            drawCircle(AMARILLO, rf * 0.3f, Offset(c.x - rf * 0.03f, c.y + rf * 0.02f))
-            drawCircle(lerp(AMARILLO, Color.White, 0.55f), rf * 0.1f, Offset(c.x - rf * 0.1f, c.y - rf * 0.05f))
-            return
-        }
-        botonSolapa(c, r, NARANJA, VERDE, vibra, t, t, oscuro)
+    fun DrawScope.placaLetrero(zona: Rect, fondo: Color = AL_SOL, filete: Color = LETRERO, radio: Float = 3f * density) {
+        if (zona.width <= 0f || zona.height <= 0f) return
+        val r = CornerRadius(max(radio, 0f))
+        drawRoundRect(enSombra(fondo, 0.5f), zona.topLeft + Offset(density, density * 1.5f), zona.size, r)
+        drawRoundRect(fondo, zona.topLeft, zona.size, r)
+        val m = min(zona.width, zona.height) * 0.08f
+        drawRoundRect(filete, zona.topLeft + Offset(m, m), androidx.compose.ui.geometry.Size(zona.width - 2 * m, zona.height - 2 * m),
+            CornerRadius(max(radio - m, 0f)), style = Stroke(max(m * 0.45f, 0.75f)))
     }
+}
+
+/**
+ * La psicodelia (cara INTENSA): las tres tintas fijas (magenta, bermellón y ultramar), el papel (crema o negro de
+ * terciopelo), la tinta de grabar, cómo se calientan con la intensidad y los trazos de cartel: las bandas que ondulan, los
+ * rayos, el grabado fino de líneas, el registro corrido, el marco de arco y las letras que llenan su forma.
+ *
+ * Cada tinta tiene un valor de reposo (i = 0), uno medio (0.5) y uno pleno (1), a la misma luminosidad (la tabla de la
+ * guía): entre medias se interpola en Oklab (`lerp` de Compose). Las tintas de dibujo nunca llevan texto (el bermellón
+ * sobre papel da 3.2:1: vale para dibujo, no para letra).
+ */
+object TrazosTinta {
+    /** Las tres tintas del cartel. */
+    enum class Tinta { MAGENTA, BERMELLON, ULTRAMAR }
+
+    /** Los tres papeles de Material que se calientan con la intensidad (los demás no cambian nunca). */
+    enum class Rol { PRIMARIO, SECUNDARIO, TERCIARIO }
+
+    /** El papel del cartel y el negro de terciopelo (son el fondo de sus esquemas). */
+    val PAPEL = Color(0xFFF2E8D3)
+    val NEGRO = Color(0xFF0F0C17)
+    /** La tinta azul negra que graba, sobre el papel. */
+    val GRABAR = Color(0xFF1E1A3A)
+    /** El crema del papel, que hace de cuarta tinta sobre el negro. */
+    val CREMA = Color(0xFFF3E9D6)
+
+    /** El papel sobre el que se imprime: crema en el claro, negro de terciopelo en el oscuro. */
+    fun papel(oscuro: Boolean): Color = if (oscuro) NEGRO else PAPEL
+
+    /** La tinta que graba (los rayos, la trama, los filetes): la azul negra sobre papel, el crema sobre negro. */
+    fun grabado(oscuro: Boolean): Color = if (oscuro) CREMA else GRABAR
+
+    // Cada tinta: reposo, media y plena. Sobre papel y sobre negro (la tabla «Las tintas y su intensidad» de la guía).
+    private val MAGENTA_PAPEL = listOf(Color(0xFFA94870), Color(0xFFB73570), Color(0xFFC50E70))
+    private val BERMELLON_PAPEL = listOf(Color(0xFFC56851), Color(0xFFD55A3C), Color(0xFFE5481E))
+    private val ULTRAMAR_PAPEL = listOf(Color(0xFF3F4C9E), Color(0xFF3A44B3), Color(0xFF3739C9))
+    private val MAGENTA_NEGRO = listOf(Color(0xFFDC7BA1), Color(0xFFEC6DA2), Color(0xFFFB5BA2))
+    private val BERMELLON_NEGRO = listOf(Color(0xFFE0907B), Color(0xFFEF876B), Color(0xFFFD7C5A))
+    private val ULTRAMAR_NEGRO = listOf(Color(0xFF8693D7), Color(0xFF8190EA), Color(0xFF7C8CFC))
+
+    // Los tres papeles de Material: reposo (los del esquema), medio y pleno (la tabla «Qué hace cada cosa con ella»).
+    private val PRIMARIO_CLARO = listOf(Color(0xFF974164), Color(0xFFA43164), Color(0xFFB11265))
+    private val SECUNDARIO_CLARO = listOf(Color(0xFF404D99), Color(0xFF3B47AD), Color(0xFF383EC1))
+    private val TERCIARIO_CLARO = listOf(Color(0xFF6A3E8E), Color(0xFF6F3399), Color(0xFF7428A6))
+    private val PRIMARIO_OSCURO = listOf(Color(0xFFDD80A4), Color(0xFFEC73A5), Color(0xFFFA63A5))
+    private val SECUNDARIO_OSCURO = listOf(Color(0xFF94A1DB), Color(0xFF909EEB), Color(0xFF8C9CFB))
+    private val TERCIARIO_OSCURO = listOf(Color(0xFFB79BE0), Color(0xFFBE95F0), Color(0xFFC58CFF))
+
+    /** De los tres valores (0, 0.5 y 1) al de [i], en dos tramos. */
+    private fun tramo(v: List<Color>, i: Float): Color {
+        val x = if (i.isNaN()) 0f else i.coerceIn(0f, 1f)
+        return if (x <= 0.5f) lerp(v[0], v[1], x * 2f) else lerp(v[1], v[2], (x - 0.5f) * 2f)
+    }
+
+    /** Una tinta de dibujo, sobre papel ([oscuro] falso) o sobre negro, con la intensidad [i] (de 0 a 1). */
+    fun tinta(t: Tinta, oscuro: Boolean, i: Float): Color = tramo(when (t) {
+        Tinta.MAGENTA -> if (oscuro) MAGENTA_NEGRO else MAGENTA_PAPEL
+        Tinta.BERMELLON -> if (oscuro) BERMELLON_NEGRO else BERMELLON_PAPEL
+        Tinta.ULTRAMAR -> if (oscuro) ULTRAMAR_NEGRO else ULTRAMAR_PAPEL
+    }, i)
+
+    /**
+     * El primario, el secundario o el terciario de la cara psicodelia con la [intensidad] (de 0 a 1), a luminosidad fija:
+     * con i = 0 son los del esquema; el contraste sobre el fondo no baja de 5.3 (claro) ni de 6.4 (oscuro). Los componentes
+     * del tema los leen de aquí en lugar del `colorScheme`, que se queda en reposo.
+     */
+    fun rol(papel: Rol, oscuro: Boolean, intensidad: Float): Color = tramo(when (papel) {
+        Rol.PRIMARIO -> if (oscuro) PRIMARIO_OSCURO else PRIMARIO_CLARO
+        Rol.SECUNDARIO -> if (oscuro) SECUNDARIO_OSCURO else SECUNDARIO_CLARO
+        Rol.TERCIARIO -> if (oscuro) TERCIARIO_OSCURO else TERCIARIO_CLARO
+    }, intensidad)
+
+    /**
+     * Lo que sale de imprimir una tinta sobre otra (el violeta de magenta sobre ultramar), como en la serigrafía: sobre
+     * papel, multiplicando (las tintas se filtran); sobre negro **[Aproximación]**, la mezcla a partes iguales, porque las
+     * tintas para luz negra se cubren más de lo que se filtran.
+     */
+    fun sobreimpresion(a: Color, b: Color, oscuro: Boolean): Color =
+        if (oscuro) lerp(a, b, 0.5f) else Color(a.red * b.red, a.green * b.green, a.blue * b.blue, max(a.alpha, b.alpha))
+
+    // ------------------------------------------------------------------------------------------------ la intensidad
+
+    /**
+     * Cuánto se mueve y se carga el cartel con la intensidad. Las medidas en dp; las velocidades, por segundo (0 = quieto).
+     * Salen de la tabla «Qué hace cada cosa con ella» de la guía, con el máximo **un poco más fuerte** que el de la lámina
+     * (decisión 2 del autor): con i = 1, 11 bandas por lado (no 10), amplitud de 32 dp (no 28), trazo de 6.5 dp (no 6),
+     * registro corrido 5 dp (no 4), 8 anillos (no 7), el título doblado por 6 dp (no 5) y corrido 3.5 (no 3), y las bandas
+     * avanzan una cada 7 s (no 8).
+     */
+    class Medidas(
+        /** Bandas a cada lado de la figura central (7 con i = 0, 9 con 0.5 y 11 con 1). */
+        val bandasPorLado: Int,
+        /** Amplitud de la onda de las bandas, en dp (6, 17, 32). */
+        val amplitud: Float,
+        /** Grosor del trazo de las bandas, en dp (3, 5, 6.5). */
+        val grosor: Float,
+        /** Cuánto se corre el registro de las tintas, en dp (0, 2, 5): el magenta a la derecha, el bermellón a la izquierda. */
+        val registro: Float,
+        /** Anillos alternos alrededor del disco (0, 5, 8). */
+        val anillos: Int,
+        /** Opacidad de la tercera tinta, el bermellón: 0 hasta i = 0.25, sube hasta 1 en i = 0.5 (con i = 0 se imprime a dos tintas). */
+        val bermellon: Float,
+        /** Con i ≥ 0.9, las bandas se salen del marco del cartel; antes, todo queda dentro. */
+        val fueraDelMarco: Boolean,
+        /** La onda que dobla los títulos grandes decorativos, en dp (0, 2, 6), y lo que se corre su segunda pasada en magenta (0, 1.5, 3.5). */
+        val ondaTitulo: Float,
+        val registroTitulo: Float,
+        /** El fondo vivo respira con esta amplitud, en dp (2, siempre), en un ciclo de 12 s. */
+        val respiro: Float,
+        /** Cuántas bandas avanzan por segundo (0 con i = 0: solo respira; 1/20 con 0.5; 1/7 con 1). */
+        val bandasPorSegundo: Float,
+        /** Cuántas vueltas da el disco por segundo (1/180 con i = 0; 1/120 con 0.5; 1/50 con 1). */
+        val vueltasPorSegundo: Float,
+    )
+
+    private fun tramo(a: Float, b: Float, c: Float, i: Float): Float {
+        val x = if (i.isNaN()) 0f else i.coerceIn(0f, 1f)
+        return if (x <= 0.5f) a + (b - a) * x * 2f else b + (c - b) * (x - 0.5f) * 2f
+    }
+
+    /** Las [Medidas] con la intensidad [i] (de 0 a 1); entre los valores de la tabla se interpola y los enteros se redondean. */
+    fun medidas(i: Float): Medidas {
+        val x = if (i.isNaN()) 0f else i.coerceIn(0f, 1f)
+        return Medidas(
+            bandasPorLado = tramo(7f, 9f, 11f, x).roundToInt(),
+            amplitud = tramo(6f, 17f, 32f, x),
+            grosor = tramo(3f, 5f, 6.5f, x),
+            registro = tramo(0f, 2f, 5f, x),
+            anillos = tramo(0f, 5f, 8f, x).roundToInt(),
+            bermellon = ((x - 0.25f) / 0.25f).coerceIn(0f, 1f),
+            fueraDelMarco = x >= 0.9f,
+            ondaTitulo = tramo(0f, 2f, 6f, x),
+            registroTitulo = tramo(0f, 1.5f, 3.5f, x),
+            respiro = 2f,
+            bandasPorSegundo = tramo(0f, 1f / 20f, 1f / 7f, x),
+            vueltasPorSegundo = tramo(1f / 180f, 1f / 120f, 1f / 50f, x),
+        )
+    }
+
+    /**
+     * Hacia dónde se corre una tinta con el registro [registro] (en dp; ver [Medidas.registro]): el magenta a la derecha y
+     * un poco arriba, el bermellón a la izquierda y un poco abajo, el ultramar queda en su sitio (como en la lámina).
+     */
+    fun corrimiento(t: Tinta, registro: Float): Offset = when (t) {
+        Tinta.MAGENTA -> Offset(registro, -registro / 2f)
+        Tinta.BERMELLON -> Offset(-registro, registro / 2f)
+        Tinta.ULTRAMAR -> Offset.Zero
+    }
+
+    /** Dibuja [bloque] corrido como la tinta [t] con el registro [registro] (en dp). */
+    inline fun DrawScope.conRegistro(t: Tinta, registro: Float, bloque: DrawScope.() -> Unit) {
+        val d = corrimiento(t, registro)
+        if (d == Offset.Zero) bloque() else translate(d.x * density, d.y * density) { bloque() }
+    }
+
+    // ------------------------------------------------------------------------------------------------ trazos
+
+    /**
+     * Las bandas que fluyen: [n] líneas a cada lado de [centro], en espejo, de arriba ([centro].y − [alto] / 2) abajo, que
+     * se juntan en los extremos y se abren alrededor de la figura central ([abre], de 0 a 1). [separacion] entre bandas,
+     * [amplitud] de la onda y [grosor] del trazo, en px; [frecuencia], ondas en todo el alto; [fase], en vueltas (de 0 a
+     * 1, cierra sin salto). Sin relleno: tinta plana, sin sombrear.
+     */
+    fun DrawScope.bandas(centro: Offset, alto: Float, n: Int, separacion: Float, amplitud: Float, grosor: Float, color: Color,
+                         frecuencia: Float = 1.4f, fase: Float = 0f, abre: Float = 0.9f) {
+        if (alto <= 0f || n <= 0 || grosor <= 0f || !alto.isFinite()) return
+        val paso = max(alto / 120f, 0.5f)
+        val arriba = centro.y - alto / 2f
+        val dos = 2f * PI.toFloat()
+        val st = Stroke(grosor, cap = StrokeCap.Round, join = StrokeJoin.Round)
+        for (lado in intArrayOf(-1, 1)) for (k in 0 until n) {
+            val p = Path()
+            var y = 0f
+            var primero = true
+            while (y <= alto + 0.01f) {
+                val t = y / alto
+                val ab = sin(PI.toFloat() * t).coerceAtLeast(0f).pow(1.6f)
+                val x = centro.x + lado * (separacion * (k + 0.6f) * (0.35f + abre * ab)) +
+                    lado * amplitud * sin(frecuencia * t * dos + fase * dos + k * 0.12f) * ab
+                if (primero) { p.moveTo(x, arriba + y); primero = false } else p.lineTo(x, arriba + y)
+                y += paso
+            }
+            drawPath(p, color, style = st)
+        }
+    }
+
+    /**
+     * Los rayos que ondulan desde [centro]: [n] sectores, de los que se llenan los pares, entre los radios [r0] y [r1]; sus
+     * bordes son ondas de [amplitud] px con [ondas] vueltas a lo largo del rayo, corridas [fase] (en radianes). [lleno] es
+     * la parte del sector que ocupa cada rayo. Devuelve el contorno, para llenarlo de tinta plena o de [trama].
+     */
+    fun rayos(centro: Offset, r0: Float, r1: Float, n: Int, amplitud: Float, ondas: Float, fase: Float = 0f, lleno: Float = 1f): Path {
+        val p = Path()
+        if (n < 2 || r1 <= r0 || r0 < 0f || !r1.isFinite()) return p
+        val dos = 2f * PI.toFloat()
+        val pasos = 40
+        for (k in 0 until n step 2) {
+            val a0 = dos * k / n
+            val a1 = a0 + dos / n * lleno.coerceIn(0f, 1f)
+            for (s in 0..pasos) {
+                val r = r0 + (r1 - r0) * s / pasos
+                val da = amplitud * sin(ondas * s / pasos * dos + fase) / max(r, 1f)
+                val x = centro.x + r * kotlin.math.cos(a0 + da); val y = centro.y + r * sin(a0 + da)
+                if (s == 0) p.moveTo(x, y) else p.lineTo(x, y)
+            }
+            for (s in pasos downTo 0) {
+                val r = r0 + (r1 - r0) * s / pasos
+                val da = amplitud * sin(ondas * s / pasos * dos + fase) / max(r, 1f)
+                p.lineTo(centro.x + r * kotlin.math.cos(a1 + da), centro.y + r * sin(a1 + da))
+            }
+            p.close()
+        }
+        return p
+    }
+
+    /**
+     * El grabado fino de líneas: llena [forma] con rayas paralelas de [grosor] px cada [paso] px, giradas [angulo] grados
+     * (0 = horizontales). Es la trama de los medios tonos del cartel a una sola tinta.
+     */
+    fun DrawScope.trama(forma: Path, paso: Float, grosor: Float, color: Color, angulo: Float = 0f) {
+        val b = forma.getBounds()
+        if (b.isEmpty || grosor <= 0f || !b.width.isFinite() || !b.height.isFinite()) return
+        val p = max(paso, 1f)
+        val r = sqrt(b.width * b.width + b.height * b.height) / 2f + p
+        val c = b.center
+        clipPath(forma) {
+            rotate(angulo, c) {
+                var y = c.y - r
+                while (y <= c.y + r) {
+                    drawLine(color, Offset(c.x - r, y), Offset(c.x + r, y), grosor)
+                    y += p
+                }
+            }
+        }
+    }
+
+    /** El marco de arco del cartel: arriba, esquinas de [radio] px; abajo, casi rectas ([poco] px). */
+    fun arco(caja: Rect, radio: Float, poco: Float = 2f): Path = Path().apply {
+        if (caja.isEmpty) return@apply
+        val r = CornerRadius(radio.coerceIn(0f, min(caja.width, caja.height) / 2f))
+        val q = CornerRadius(poco.coerceIn(0f, min(caja.width, caja.height) / 2f))
+        addRoundRect(RoundRect(caja, topLeft = r, topRight = r, bottomRight = q, bottomLeft = q))
+    }
+
+    // ------------------------------------------------------------------------------------------------ letras de bloque
+
+    /** La silueta que llenan las [Letras]: recta, en barril (más altas en el medio), en arco (arriba curva) o en cuenco. */
+    enum class FormaLetras { RECTA, BARRIL, ARCO, CUENCO }
+
+    /** De la forma a lo que ocupa la letra en la caja, a lo ancho [u] (de 0 a 1): su arriba y su abajo, en fracción del alto. */
+    private fun limites(f: FormaLetras, u: Float): Pair<Float, Float> {
+        val s = sin(PI.toFloat() * u.coerceIn(0f, 1f))
+        return when (f) {
+            FormaLetras.RECTA -> 0f to 1f
+            FormaLetras.BARRIL -> 0.2f * (1f - s) to 1f - 0.2f * (1f - s)
+            FormaLetras.ARCO -> 0.32f * (1f - s) to 1f
+            FormaLetras.CUENCO -> 0f to 1f - 0.32f * (1f - s)
+        }
+    }
+
+    /** Las letras de un título, medidas una por una, listas para [llenarForma]. Se miden una vez (en caché), no en cada cuadro. */
+    class Letras internal constructor(internal val glifos: List<TextLayoutResult>, internal val espacio: Float)
+
+    /** Mide [texto] letra por letra con [estilo] (la de títulos de la cara psicodelia, `LetraExtra.bloque`). [espacio] entre letras, en px. */
+    fun letras(medidor: TextMeasurer, texto: String, estilo: TextStyle, espacio: Float = 0f): Letras =
+        Letras(texto.map { medidor.measure(it.toString(), estilo) }, espacio)
+
+    /**
+     * Las letras que llenan su forma, como en los carteles de 1966 y 1967: el título se estira a lo ancho de [caja] y cada
+     * letra, a lo alto de la [forma] en su sitio. [onda] (en px) la dobla con [frecuencia] ondas en todo el ancho, corrida
+     * [fase] (en vueltas). Solo para títulos decorativos grandes: el texto y las cifras de datos no se deforman nunca.
+     */
+    fun DrawScope.llenarForma(letras: Letras, caja: Rect, color: Color, forma: FormaLetras = FormaLetras.RECTA, onda: Float = 0f,
+                              frecuencia: Float = 1f, fase: Float = 0f) {
+        val g = letras.glifos
+        if (g.isEmpty() || caja.isEmpty || !caja.width.isFinite() || !caja.height.isFinite()) return
+        val total = g.sumOf { it.size.width.toDouble() }.toFloat() + letras.espacio * (g.size - 1)
+        if (total <= 0f) return
+        val sx = caja.width / total
+        val dos = 2f * PI.toFloat()
+        var x = 0f
+        for (l in g) {
+            val w = l.size.width.toFloat(); val h = l.size.height.toFloat()
+            if (w > 0f && h > 0f) {
+                val u = (x + w / 2f) / total
+                val (a, b) = limites(forma, u)
+                val alto = (b - a) * caja.height
+                val dy = onda * sin(dos * (u * frecuencia + fase))
+                val sy = alto / h
+                withTransform({
+                    translate(caja.left + x * sx, caja.top + a * caja.height + dy)
+                    scale(sx, sy, Offset.Zero)
+                }) { drawText(l, color) }
+            }
+            x += w + letras.espacio
+        }
+    }
+}
+
+/** Un número de 0 a 1 que sale siempre igual de ([a], [b], [semilla]): el azar fijo del grano y de los ladrillos. */
+private fun azarFijo(a: Int, b: Int, semilla: Int): Float {
+    var h = a * 374761393 + b * 668265263 + semilla * 1442695041
+    h = (h xor (h ushr 13)) * 1274126177
+    h = h xor (h ushr 16)
+    return (h and 0xFFFFFF) / 16777215f
 }

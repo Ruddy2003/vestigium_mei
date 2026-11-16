@@ -36,10 +36,33 @@ object LetraExtra {
     val federant = FontFamily(Font(R.font.cartel_titulo, FontWeight.Normal))
     val brygada = FontFamily(Font(R.font.brygada_regular, FontWeight.Normal), Font(R.font.brygada_semibold, FontWeight.SemiBold))
     val dellaRespira = FontFamily(Font(R.font.vitrina_regular, FontWeight.Normal), Font(R.font.vitrina_regular, FontWeight.Medium), Font(R.font.vitrina_regular, FontWeight.SemiBold))
-    /** Psicodelia: Modak, la letra burbuja de los carteles, para los títulos; Fredoka para leer y, en negrita un poco ancha, para rótulos y cifras. */
+    /**
+     * Psicodelia, versión 1: Modak (la letra burbuja) y Fredoka. **Para retirar:** la versión 2 ya no las usa en su esquema
+     * ([tipoPsicodelia]); se quedan mientras las usen `ComunPsicodelia.kt`, `IdeasPsicodelia.kt`, `BibliotecaPsicodelia.kt`,
+     * `Hoy.kt`, `Libros.kt`, `LibroDiario.kt`, `EstiloGrafica.kt`, `Reportes.kt` y `Widgets.kt` (ver
+     * `docs/diseno/temas/psicodelia_base.md`).
+     */
     val modak = FontFamily(Font(R.font.burbuja_titulo, FontWeight.Normal))
     val fredoka = FontFamily(Font(R.font.fredoka_regular, FontWeight.Normal), Font(R.font.fredoka_semibold, FontWeight.SemiBold))
     val fredokaRotulo = FontFamily(Font(R.font.fredoka_semibold, FontWeight.Normal), Font(R.font.fredoka_semibold, FontWeight.Medium), Font(R.font.fredoka_semibold, FontWeight.SemiBold))
+    /**
+     * Psicodelia, versión 2 (`docs/diseno/temas/psicodelia.md`, «Letra y forma»). Libre Franklin, el grotesco americano de
+     * los periódicos y los letreros, para el texto y las cifras de las dos caras: normal (400) y seminegra (600, también en
+     * Medium); la extranegra (800) en Bold y ExtraBold. [franklinRotulo]: la seminegra en todos los pesos, para rótulos y
+     * cifras. [franklinTitular]: la extranegra sola, para los titulares de la ciudad.
+     */
+    val franklin = FontFamily(Font(R.font.franklin_regular, FontWeight.Normal), Font(R.font.franklin_semibold, FontWeight.Medium),
+        Font(R.font.franklin_semibold, FontWeight.SemiBold), Font(R.font.franklin_extrabold, FontWeight.Bold), Font(R.font.franklin_extrabold, FontWeight.ExtraBold))
+    val franklinRotulo = FontFamily(Font(R.font.franklin_semibold, FontWeight.Normal), Font(R.font.franklin_semibold, FontWeight.Medium),
+        Font(R.font.franklin_semibold, FontWeight.SemiBold), Font(R.font.franklin_extrabold, FontWeight.Bold))
+    val franklinTitular = FontFamily(Font(R.font.franklin_extrabold, FontWeight.Normal), Font(R.font.franklin_extrabold, FontWeight.Medium),
+        Font(R.font.franklin_extrabold, FontWeight.SemiBold), Font(R.font.franklin_extrabold, FontWeight.Bold), Font(R.font.franklin_extrabold, FontWeight.ExtraBold))
+    /**
+     * «Bloque Vestigium» (Chango renombrada): la letra de bloque de los carteles de la psicodelia, que llena su forma. Solo
+     * en títulos y en lo decorativo, nunca en un párrafo ni en una cifra de datos. Tiene un solo peso.
+     */
+    val bloque = FontFamily(Font(R.font.bloque_titulo, FontWeight.Normal), Font(R.font.bloque_titulo, FontWeight.Medium),
+        Font(R.font.bloque_titulo, FontWeight.SemiBold), Font(R.font.bloque_titulo, FontWeight.Bold))
     val vt323 = FontFamily(Font(R.font.vt323, FontWeight.Normal))
     val estarcido = FontFamily(Font(R.font.saira_stencil, FontWeight.Normal))
     val jost = FontFamily(Font(R.font.jost_regular, FontWeight.Normal), Font(R.font.jost_medium, FontWeight.Medium), Font(R.font.jost_semibold, FontWeight.SemiBold))
@@ -264,15 +287,95 @@ internal val nouveauOscuro = esquema(true, 0xFF121519, 0xFF1A1E22, 0xFF23282C, 0
 internal val tipoNouveau = tipografia(LetraExtra.federant, FontWeight.Normal, 1.0f, 0.3f, LetraExtra.brygada, 1.0f, LetraExtra.dellaRespira, 1.04f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
-//  Psicodelia: San Francisco en 1967. De día, la calle con la niebla y los colores de los carteles; de noche, la misma
-//  ciudad en la sala de baile con luz negra, donde manda el verde limón (docs/diseno/temas/psicodelia.md).
+//  Psicodelia, versión 2 (docs/diseno/temas/psicodelia.md, «Las cuatro paletas»): dos caras, cada una con su claro y su
+//  oscuro (ver CaraTema.kt). La ciudad: la tarde desde la ventanilla del trolebús (claro) y el cuarto con la lámpara de
+//  pantalla (oscuro), en color de película vieja. La psicodelia: el cartel impreso en papel crema (claro) y el de luz
+//  negra sobre negro de terciopelo (oscuro), a tres tintas. Contraste WCAG (calculado): la tinta da 11.9 o más sobre el
+//  fondo y 10.4 o más sobre la variante; el tenue, el primario, el secundario, el terciario y el error, 5.0 o más sobre el
+//  fondo; cada «sobre» (onPrimary, onSecondary, onTertiary, onError, onPrimaryContainer, onSecondaryContainer), 5.6 o más
+//  sobre su color. El esquema lleva los colores de reposo (intensidad 0); los componentes del tema leen el primario, el
+//  secundario y el terciario calientes de TrazosTinta.rol.
 // ---------------------------------------------------------------------
-internal val psicodeliaClaro = esquema(false, 0xFFF2ECE3, 0xFFFAF6F0, 0xFFE6DED2, 0xFFB9AC9D, 0xFF2A1C32, 0xFF61546A,
-    0xFFB0246A, 0xFFFFF4F8, 0xFFF6D3E4, 0xFF3D0624, 0xFF2E7344, 0xFFD2EBD5, 0xFFA84B0A, 0xFFB3261E)
-internal val psicodeliaOscuro = esquema(true, 0xFF120A1C, 0xFF1A1126, 0xFF251935, 0xFF43335A, 0xFFF2EAF7, 0xFFB4A7C4,
-    0xFFC9F04A, 0xFF1C2600, 0xFF33410F, 0xFFECFFB8, 0xFFFF5CBE, 0xFF4F1640, 0xFFAE91FF, 0xFFFF8A80)
-/** Títulos en Modak, la letra burbuja; texto en Fredoka; rótulos y cifras en Fredoka negrita y un poco ancha. */
-internal val tipoPsicodelia = tipografia(LetraExtra.modak, FontWeight.Normal, 0.96f, 0.2f, LetraExtra.fredoka, 1.0f, LetraExtra.fredokaRotulo, 0.98f, cifrasAlineadas = true)
+
+/** Los catorce colores de la interfaz de una variante de Psicodelia (los papeles de la tabla de la guía). */
+internal class PaletaPsicodelia(
+    val fondo: Long, val superficie: Long, val variante: Long, val borde: Long, val tinta: Long, val tenue: Long,
+    val primario: Long, val sobrePrimario: Long, val contenedor: Long, val sobreContenedor: Long,
+    val secundario: Long, val contSecundario: Long, val terciario: Long, val error: Long,
+)
+
+/** Las cuatro paletas de Psicodelia, con los colores de la lámina aprobada (`herramientas/muestras/psicodelia_caras.py`). */
+internal object PaletasPsicodelia {
+    /** Ciudad · claro: la tarde desde el trolebús. Papel de foto amarillento, café casi negro, naranja quemado, verde botella. */
+    val ciudadClaro = PaletaPsicodelia(0xFFE9DFCC, 0xFFF3ECDD, 0xFFDCD0B9, 0xFFA39478, 0xFF2A2119, 0xFF5C4F41,
+        0xFF9C4219, 0xFFFFF4E8, 0xFFF1D3BD, 0xFF3A1906, 0xFF3D5838, 0xFFD3DCC4, 0xFF7A5713, 0xFFA01E2C)
+    /** Ciudad · oscuro: el cuarto a media luz, la pantalla de la lámpara, el verde de fieltro y la luz de sodio. */
+    val ciudadOscuro = PaletaPsicodelia(0xFF1B1511, 0xFF241C16, 0xFF2F251D, 0xFF54463A, 0xFFEEE3D0, 0xFFB9AA94,
+        0xFFE8975A, 0xFF2A1103, 0xFF5A2E12, 0xFFFBDDC6, 0xFFA3BB93, 0xFF2E3B29, 0xFFD9B865, 0xFFFF8E84)
+    /** Psicodelia · claro: el cartel en papel crema, con la tinta azul negra que graba; magenta, ultramar, violeta y bermellón. */
+    val tintaClaro = PaletaPsicodelia(0xFFF2E8D3, 0xFFF9F3E6, 0xFFE7DBC2, 0xFF3A3458, 0xFF1E1A3A, 0xFF4E4868,
+        0xFF974164, 0xFFFFF2F7, 0xFFF3D3DF, 0xFF3F0520, 0xFF404D99, 0xFFD6DAF0, 0xFF6A3E8E, 0xFFA8381E)
+    /** Psicodelia · oscuro: el cartel de luz negra, las tintas sobre negro de terciopelo y el crema del papel como cuarta tinta. */
+    val tintaOscuro = PaletaPsicodelia(0xFF0F0C17, 0xFF17131F, 0xFF211B2B, 0xFF6E6488, 0xFFF3E9D6, 0xFFB9AFC4,
+        0xFFDD80A4, 0xFF2B0716, 0xFF5C1438, 0xFFFFD9EA, 0xFF94A1DB, 0xFF232C66, 0xFFB79BE0, 0xFFFF8E70)
+
+    fun de(oscuro: Boolean, cara: Cara): PaletaPsicodelia = when (cara) {
+        Cara.BASE -> if (oscuro) ciudadOscuro else ciudadClaro
+        Cara.INTENSA -> if (oscuro) tintaOscuro else tintaClaro
+    }
+}
+
+/**
+ * El esquema de Material de una paleta de Psicodelia. Como [esquema], pero con todos los «sobre» puestos: onSecondary,
+ * onTertiary y onError son el fondo en el oscuro y la superficie en el claro.
+ */
+private fun esquemaPsicodelia(p: PaletaPsicodelia, oscuro: Boolean): ColorScheme {
+    val c = { x: Long -> Color(x) }
+    val sobre = c(if (oscuro) p.fondo else p.superficie)
+    return if (oscuro) darkColorScheme(
+        primary = c(p.primario), onPrimary = c(p.sobrePrimario), primaryContainer = c(p.contenedor), onPrimaryContainer = c(p.sobreContenedor),
+        secondary = c(p.secundario), onSecondary = sobre, secondaryContainer = c(p.contSecundario), onSecondaryContainer = c(p.tinta),
+        tertiary = c(p.terciario), onTertiary = sobre, background = c(p.fondo), onBackground = c(p.tinta), surface = c(p.superficie), onSurface = c(p.tinta),
+        surfaceVariant = c(p.variante), onSurfaceVariant = c(p.tenue), outline = c(p.borde), outlineVariant = c(p.borde), error = c(p.error), onError = sobre,
+        surfaceContainer = c(p.superficie), surfaceContainerHigh = c(p.variante), surfaceContainerHighest = c(p.variante),
+        surfaceContainerLow = c(p.superficie), surfaceContainerLowest = c(p.fondo),
+    ).conInversos() else lightColorScheme(
+        primary = c(p.primario), onPrimary = c(p.sobrePrimario), primaryContainer = c(p.contenedor), onPrimaryContainer = c(p.sobreContenedor),
+        secondary = c(p.secundario), onSecondary = sobre, secondaryContainer = c(p.contSecundario), onSecondaryContainer = c(p.tinta),
+        tertiary = c(p.terciario), onTertiary = sobre, background = c(p.fondo), onBackground = c(p.tinta), surface = c(p.superficie), onSurface = c(p.tinta),
+        surfaceVariant = c(p.variante), onSurfaceVariant = c(p.tenue), outline = c(p.borde), outlineVariant = c(p.borde), error = c(p.error), onError = sobre,
+        surfaceContainer = c(p.superficie), surfaceContainerHigh = c(p.variante), surfaceContainerHighest = c(p.variante),
+        surfaceContainerLow = c(p.superficie), surfaceContainerLowest = c(p.superficie),
+    ).conInversos()
+}
+
+internal val psicodeliaCiudadClaro = esquemaPsicodelia(PaletasPsicodelia.ciudadClaro, false)
+internal val psicodeliaCiudadOscuro = esquemaPsicodelia(PaletasPsicodelia.ciudadOscuro, true)
+internal val psicodeliaTintaClaro = esquemaPsicodelia(PaletasPsicodelia.tintaClaro, false)
+internal val psicodeliaTintaOscuro = esquemaPsicodelia(PaletasPsicodelia.tintaOscuro, true)
+
+/** El esquema de Psicodelia según su [cara] (la ciudad o la psicodelia) y la claridad. */
+internal fun psicodeliaEsquema(oscuro: Boolean, cara: Cara): ColorScheme = when (cara) {
+    Cara.BASE -> if (oscuro) psicodeliaCiudadOscuro else psicodeliaCiudadClaro
+    Cara.INTENSA -> if (oscuro) psicodeliaTintaOscuro else psicodeliaTintaClaro
+}
+
+/**
+ * La ciudad: titulares en Libre Franklin extranegra con el espaciado apretado de los titulares de los 70 (unos −3.5 %:
+ * −0.9 sp en los de 27 sp); texto en Libre Franklin; rótulos y cifras en su seminegra.
+ */
+internal val tipoPsicodeliaCiudad = tipografia(LetraExtra.franklinTitular, FontWeight.ExtraBold, 1.04f, -0.9f, LetraExtra.franklin, 1.0f,
+    LetraExtra.franklinRotulo, 1.0f, cifrasAlineadas = true)
+
+/** La psicodelia: títulos en Bloque Vestigium (Chango), de bloque y muy ancha, así que un poco más chica; lo demás, como la ciudad. */
+internal val tipoPsicodeliaTinta = tipografia(LetraExtra.bloque, FontWeight.Normal, 0.86f, 0.4f, LetraExtra.franklin, 1.0f,
+    LetraExtra.franklinRotulo, 1.0f, cifrasAlineadas = true)
+
+/** La letra de Psicodelia según su cara: el texto y las cifras no cambian de noche (Libre Franklin); cambian los títulos. */
+internal fun tipoPsicodelia(cara: Cara): Typography = when (cara) {
+    Cara.BASE -> tipoPsicodeliaCiudad
+    Cara.INTENSA -> tipoPsicodeliaTinta
+}
 
 /** Títulos en Piazzolla negrita gruesa, como letra grabada; texto en Piazzolla; rótulos en Ysabeau. */
 internal val tipoGalia = tipografia(LetraExtra.piazzolla, FontWeight.ExtraBold, 1.0f, 0.4f, LetraExtra.piazzolla, 1.0f, LetraExtra.ysabeau, 1.0f, cifrasAlineadas = true)

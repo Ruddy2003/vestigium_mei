@@ -5,7 +5,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import java.time.LocalTime
 
-/** Lo que calcula el tema Psicodelia: el disco del día, el lado y la pista, el álbum del mes y los números. */
+/** Lo que calcula el tema Psicodelia: el disco del día, el lado y la pista, el álbum del mes y los números («(17)», versión 2). */
 class PsicodeliaPrueba {
     @Test fun fecha() {
         assertEquals("Disco 290 · sábado 17 de octubre", Psicodelia.fecha("2026-10-17"))
@@ -21,7 +21,8 @@ class PsicodeliaPrueba {
     @Test fun mesYNumeros() {
         assertEquals("Álbum de octubre", Psicodelia.mes(10))
         assertEquals("Álbum de junio de 1967", Psicodelia.mes(6, 1967))
-        assertEquals("~17~", Psicodelia.numero(17))
+        assertEquals("(17)", Psicodelia.numero(17))
+        assertEquals("(1)", Psicodelia.numero(1)); assertEquals("(999)", Psicodelia.numero(999)); assertEquals("1000", Psicodelia.numero(1000))
         assertEquals("2026", Psicodelia.numero(2026))
     }
 }

@@ -175,6 +175,14 @@ FUENTES = [
     ("modak/Modak-Regular.ttf", None, "burbuja_titulo", None, LATINO_CORTO),
     ("fredoka/Fredoka[wdth,wght].ttf", {"wght": 400, "wdth": 100}, "fredoka_regular", None, LATINO_CORTO),
     ("fredoka/Fredoka[wdth,wght].ttf", {"wght": 600, "wdth": 112}, "fredoka_semibold", None, LATINO_CORTO),
+    # PSI, versión 2 (16 nov 2026, docs/diseno/temas/psicodelia.md, «Letra y forma»): Libre Franklin, el grotesco americano
+    # de los periódicos y los letreros, para el texto, los rótulos y las cifras de las dos caras y para los títulos de la
+    # ciudad (no reserva su nombre); Chango, letra de bloque que llena su forma, para los títulos de la psicodelia (reserva
+    # «Chango»: se renombra). Modak y Fredoka siguen hasta que las otras tandas dejen de usarlas.
+    ("librefranklin/LibreFranklin[wght].ttf", {"wght": 400}, "franklin_regular", None, LATINO_CORTO),
+    ("librefranklin/LibreFranklin[wght].ttf", {"wght": 600}, "franklin_semibold", None, LATINO_CORTO),
+    ("librefranklin/LibreFranklin[wght].ttf", {"wght": 800}, "franklin_extrabold", None, LATINO_CORTO),
+    ("chango/Chango-Regular.ttf", None, "bloque_titulo", "Bloque Vestigium", LATINO_CORTO),
 ]
 
 

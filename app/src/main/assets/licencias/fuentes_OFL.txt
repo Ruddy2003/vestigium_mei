@@ -46,7 +46,9 @@ Vitrina Vestigium — versión reducida y renombrada de Della Respira, con algun
 Brygada 1918 (instancias estáticas, recortadas) — Copyright 2020 The Brygada 1918 Project Authors (https://github.com/kosmynkab/Brygada-1918)
 Modak (recortada, con algunos signos de Noto Sans Symbols y Noto Sans Symbols 2 añadidos) — Copyright (c) 2015 Ek Type (www.ektype.in)
 Fredoka (instancias estáticas, recortadas, con algunos signos de Noto Sans Symbols y Noto Sans Symbols 2 añadidos) — Copyright 2016 The Fredoka Project Authors (https://github.com/hafontia/Fredoka-One)
-Noto Sans Symbols y Noto Sans Symbols 2 (algunos signos, dentro de las dos anteriores) — Copyright 2022 The Noto Project Authors (https://github.com/notofonts/symbols)
+Libre Franklin (instancias estáticas, recortadas) — Copyright 2020 The Libre Franklin Project Authors (https://github.com/googlefonts/Libre-Franklin)
+Bloque Vestigium — versión reducida y renombrada de Chango: Copyright (c) 2011 Fontstage (info@fontstage.com), with Reserved Font Name "Chango"
+Noto Sans Symbols y Noto Sans Symbols 2 (algunos signos, dentro de Modak y Fredoka) — Copyright 2022 The Noto Project Authors (https://github.com/notofonts/symbols)
 Old Standard TT (recortada) — Copyright 2011 The Old Standard Project Authors (amkryukov@gmail.com)
 Poiret One (recortada) — Copyright 2011 The Poiret One Project Authors (https://github.com/alexeiva/poiretone)
 Pasaje Vestigium — instancias estáticas, reducidas y renombradas de Josefin Sans: Copyright 2010 The Josefin Sans Project Authors (https://github.com/ThomasJockin/JosefinSansFont-master), with Reserved Font Name "Josefin Sans".

@@ -351,7 +351,7 @@ object Estilo {
         // Romanos en mayúscula entre puntos, como en las cartas del siglo XII: «·XVII·».
         TemaId.TEMPLARIO -> Temas.puntos(n)
         TemaId.DISTOPIA -> if (n < 100) "Nº%02d".format(n) else "Nº$n"
-        // Entre tildes que ondulan: «~17~» (ver [Psicodelia.numero]).
+        // Entre paréntesis, como en un horario: «(17)» (ver [Psicodelia.numero]).
         TemaId.PSICODELIA -> Psicodelia.numero(n)
         // El folio de una revista ilustrada, entre rayas: «– 17 –» (ver [Nouveau.numero]).
         TemaId.NOUVEAU -> Nouveau.numero(n)
