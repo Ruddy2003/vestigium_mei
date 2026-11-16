@@ -364,5 +364,4 @@ internal object ComedorCentro {
         trazo(v, listOf(o + V3(0.4f, ALTO_MESA, -0.4f), o + V3(0.45f, 0.4f, -0.45f), o + V3(0.5f, 0.02f, -0.3f)), C.TELA, V3(1f, 0.3f, 0f), 0.12f, 0.95f)
     }
 
-    @Suppress("unused") private val nada = Offset.Zero
 }

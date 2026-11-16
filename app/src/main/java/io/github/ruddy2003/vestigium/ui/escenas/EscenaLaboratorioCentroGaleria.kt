@@ -290,5 +290,4 @@ internal object GaleriaCentro {
         drawLine(metal, top, alto, 0.4f)
     }
 
-    @Suppress("unused") private val nada = Offset.Zero
 }

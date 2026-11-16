@@ -276,5 +276,4 @@ internal object LuzCentro {
         } }
     }
 
-    @Suppress("unused") private fun usar(az: Azar) = az.real()
 }

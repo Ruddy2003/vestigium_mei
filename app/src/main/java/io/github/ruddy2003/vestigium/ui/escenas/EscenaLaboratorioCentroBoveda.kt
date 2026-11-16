@@ -1,6 +1,5 @@
 package io.github.ruddy2003.vestigium.ui.escenas
 
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -16,7 +15,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.vidas.Azar
 import io.github.ruddy2003.vestigium.vidas.Semilla
 import kotlin.math.PI
-import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -35,7 +33,7 @@ internal object BovedaCentro {
 
     /** El alto del aro del pozo (su canto de dentro) y dónde gira el ventilador. */
     const val ARO_ALTO = 0.6f
-    const val VENTILADOR_Y = GeoCentro.YO + ARO_ALTO + 0.35f
+    const val VENTILADOR_Y = GeoCentro.YO - 0.5f
     const val ASPAS = 6
 
     /** La normal de la bóveda (hacia dentro y abajo) en el punto [t] del perfil, a [g] grados. */
@@ -158,11 +156,6 @@ internal object BovedaCentro {
                 val a0 = GeoCentro.aro(ro - 0.05f, arriba, g); val a1 = GeoCentro.aro(ro - 0.05f, arriba + 3.5f, g)
                 drawLine(lerp(cielo, C.ACERO, 0.35f).copy(alpha = 0.5f), CamCentro.p(a0), CamCentro.p(a1), 0.6f)
             }
-            // Las vigas en cruz que sostienen el ventilador, a contraluz.
-            for (g in listOf(20f, 110f)) {
-                val a = GeoCentro.aro(ro, VENTILADOR_Y + 0.25f, g); val b = GeoCentro.aro(ro, VENTILADOR_Y + 0.25f, g + 180f)
-                drawLine(lerp(C.ACERO, C.NEGRO, 0.4f), CamCentro.p(a), CamCentro.p(b), (0.18f * CamCentro.k(GeoCentro.aro(0f, VENTILADOR_Y, 0f))).coerceAtLeast(0.6f))
-            }
         }
         // El canto de dentro del aro: un cilindro corto que mira al eje; se ve el de enfrente.
         val n = 36
@@ -185,6 +178,12 @@ internal object BovedaCentro {
             val f = CamCentro.forma(PiezasCentro.tramoH(ro + 0.2f, ro + 0.5f, yo - 0.01f, g0, g1)) ?: continue
             drawPath(f, lerp(lerp(v.fondo, C.ACERO, 0.4f), lerp(luz, Color.White, 0.5f), (0.25f + 0.75f * k).coerceIn(0f, 1f)))
         }
+        // Los cuatro brazos que bajan del aro y sostienen el ventilador, colgado en la boca del pozo (sus aspas giran en la parte viva).
+        for (g in listOf(30f, 120f, 210f, 300f)) {
+            val a = GeoCentro.aro(ro + 0.15f, yo - 0.02f, g); val b = GeoCentro.aro(0.6f, VENTILADOR_Y + 0.25f, g)
+            PiezasCentro.run { trazo(v, listOf(a, b), lerp(C.ACERO, C.NEGRO, 0.35f), PiezasCentro.ABAJO, 0.12f) }
+        }
+        PiezasCentro.run { cilindro(v, V3(0f, VENTILADOR_Y - 0.1f, 0f), 0.55f, 0.55f, lerp(C.ACERO, C.NEGRO, 0.3f), null) }
         // El resplandor de las lámparas en la bóveda de alrededor.
         for (i in 0 until 12) {
             val g = i * 30f + 15f; val k = lampara(v, g); if (k < 0.15f) continue
@@ -201,17 +200,16 @@ internal object BovedaCentro {
 
     /** Las aspas del ventilador del pozo, oscuras contra la luz de arriba, que giran despacio. Solo se ve su mitad de enfrente, por el hueco del aro. */
     fun DrawScope.vivo(v: VistaCentro, reloj: Float) {
-        val ro = GeoCentro.RO; val y = VENTILADOR_Y
-        val hueco = poligono((0 until 40).map { CamCentro.p(GeoCentro.aro(ro - 0.02f, GeoCentro.YO + ARO_ALTO, it * 9f)) })
-        val oscuro = lerp(lerp(C.ACERO, C.NEGRO, 0.55f), v.pozo.color, 0.12f)
-        clipPath(hueco) {
-            val giro = giro(v, reloj)
-            for (i in 0 until ASPAS) {
-                val ps = aspa(giro + i * 2f * PI.toFloat() / ASPAS, y)
-                drawPath(poligono(ps.map { CamCentro.p(it) }), oscuro)
-            }
-            val cubo = (0 until 12).map { CamCentro.p(GeoCentro.aro(0.55f, y, it * 30f)) }
-            drawPath(poligono(cubo), lerp(oscuro, C.ACERO, 0.3f))
+        val y = VENTILADOR_Y
+        // Vistas por debajo, a contraluz del pozo encendido: oscuras, con el canto de ataque algo más claro.
+        val oscuro = lerp(lerp(C.ACERO, C.NEGRO, 0.55f), v.fondo, 0.15f)
+        val canto = lerp(oscuro, lerp(v.pozo.color, Color.White, 0.3f), 0.35f)
+        val giro = giro(v, reloj)
+        for (i in 0 until ASPAS) {
+            val ps = aspa(giro + i * 2f * PI.toFloat() / ASPAS, y).map { CamCentro.p(it) }
+            if (ps.all { it.y < -2f }) continue
+            drawPath(poligono(ps), oscuro)
+            drawLine(canto, ps[0], ps[2], 0.6f)
         }
     }
 
@@ -221,9 +219,4 @@ internal object BovedaCentro {
         fun q(r: Float, da: Float) = V3(r * cos(a + da), y, r * sin(a + da))
         return listOf(q(r0, -0.32f), q(r1 * 0.6f, -0.2f), q(r1, -0.06f), q(r1, 0.1f), q(r1 * 0.6f, 0.16f), q(r0, 0.22f))
     }
-
-    /** El ángulo de la dirección hacia los ojos desde el eje (para quien lo necesite). */
-    val HACIA_OJO: Float = atan2(CamCentro.OJO.z, CamCentro.OJO.x)
-
-    @Suppress("unused") private val sinUso = Offset.Zero
 }

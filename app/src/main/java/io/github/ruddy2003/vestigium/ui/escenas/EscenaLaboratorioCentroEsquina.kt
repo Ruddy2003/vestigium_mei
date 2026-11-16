@@ -64,7 +64,7 @@ internal object EsquinaCentro {
     fun mirador(): Offset = CamCentro.p(GeoCentro.aro(GeoCentro.RV - 0.08f, G1 + GeoCentro.BARANDA + 0.08f, -93f))
 
     /** El claro de la mesa donde va el objeto chico del día. */
-    val CLARO: V3 get() = enLaMesa(0.2f, -0.12f)
+    val CLARO: V3 get() = enLaMesa(0.12f, -0.1f)
 
     fun DrawScope.esquina(v: VistaCentro) {
         suelo(v)
@@ -227,7 +227,7 @@ internal object EsquinaCentro {
     /** La taza de barro gris, de borde grueso y con la muesca; la infusión que se le enfría siempre. */
     private fun DrawScope.taza(v: VistaCentro) {
         val c = enLaMesa(0.22f, -0.24f)
-        val barro = lerp(C.TIERRA, C.BARRO, 0.25f)
+        val barro = lerp(lerp(C.TIERRA, C.BARRO, 0.2f), C.TELA, 0.5f)
         cilindro(v, c, 0.045f, 0.09f, barro, lerp(barro, C.NEGRO, 0.2f), rArriba = 0.048f)
         val q = CamCentro.p(c + V3(0f, 0.088f, 0f)); val k = CamCentro.k(c)
         drawOval(v.c(c, lerp(C.MADERA, C.GRAMA, 0.3f), ARRIBA), q - Offset(0.038f * k, 0.012f * k), androidx.compose.ui.geometry.Size(0.076f * k, 0.024f * k))
@@ -239,7 +239,7 @@ internal object EsquinaCentro {
 
     /** Los auriculares grandes, de los que tapan la oreja entera, con la espuma cambiada tres veces: echados en la mesa. */
     private fun DrawScope.auriculares(v: VistaCentro) {
-        val c1 = enLaMesa(-0.22f, -0.24f, 0.03f); val c2 = enLaMesa(-0.02f, -0.3f, 0.03f)
+        val c1 = enLaMesa(0.3f, 0.12f, 0.03f); val c2 = enLaMesa(0.31f, 0.31f, 0.03f)
         val k = CamCentro.k(c1)
         val negro = lerp(C.NEGRO, C.ACERO, 0.15f)
         val p1 = CamCentro.p(c1); val p2 = CamCentro.p(c2)

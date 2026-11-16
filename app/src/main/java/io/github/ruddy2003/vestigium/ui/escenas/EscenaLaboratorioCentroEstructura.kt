@@ -192,5 +192,4 @@ internal object EstructuraCentro {
         }
     }
 
-    @Suppress("unused") private fun usar(az: Azar) = az.real()
 }
