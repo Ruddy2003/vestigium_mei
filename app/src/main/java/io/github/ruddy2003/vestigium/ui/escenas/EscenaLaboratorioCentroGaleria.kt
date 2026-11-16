@@ -97,6 +97,8 @@ internal object GaleriaCentro {
             // La junta entre losas.
             linea(v, GeoCentro.aro(RV, G1 + 0.002f, a), GeoCentro.aro(RW, G1 + 0.002f, a), lerp(C.SOMBRA, C.PISO, 0.4f), ARRIBA, 0.4f, 0.35f)
         }
+        // La puerta del ala que queda a nuestra derecha, junto a la pared de pantallas (la de Medicina, cian).
+        puerta(v, 360f - 36.5f, G1, C.CIAN)
         // Los charcos de las luces empotradas en la losa de arriba.
         luces(v, G1 + 0.003f, false)
         canto(v, G1)

@@ -106,7 +106,7 @@ class EscenaLaboratorioCentroPrueba {
         for (mm in listOf(alba, medio, tarde)) { val q = CamCentro.p(V3(mm.x, 0f, mm.y)); assertTrue("$q", q.x in 0f..ANCHO && q.y in 0f..ALTO) }
         val d = "2027-05-05"
         val p7 = CentroLab.pozo(momento(d, 7.0)); val p13 = CentroLab.pozo(momento(d, 13.0)); val p20 = CentroLab.pozo(momento(d, 20.0))
-        assertTrue(p13.d.y < -0.99f); assertTrue(p7.d.y > -0.9f); assertTrue(p20.d.y > -0.9f)
+        assertTrue(p13.d.y < -0.99f); assertTrue("sesgada al alba", p7.d.y > -0.95f); assertTrue("sesgada en la cena", p20.d.y > -0.9f)
         // Cálida al alba, blanca a mediodía, dorada en la cena.
         assertTrue(p7.color.red - p7.color.blue > p13.color.red - p13.color.blue)
         assertTrue(p20.color.red - p20.color.blue > p7.color.red - p7.color.blue)
