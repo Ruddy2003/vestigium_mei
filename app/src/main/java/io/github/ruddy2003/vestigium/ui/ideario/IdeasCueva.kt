@@ -120,6 +120,8 @@ object IdeasCueva : DisenoIdeas {
     private fun roca(c: Color, oscuro: Boolean) = if (oscuro) mezcla(c, Color(0xFF1E150E), 0.55f) else c
 
     override val cols = 2
+    /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoIdeas.auraEnReposo]). */
+    override val auraEnReposo = false
     override val proporcion = 1.3f
     override val corona = 0.64f
     override val base = 0.3f

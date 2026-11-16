@@ -128,6 +128,8 @@ object IdeasLaboratorio : DisenoIdeas {
     }
 
     override val cols = 2
+    /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoIdeas.auraEnReposo]). */
+    override val auraEnReposo = false
     override val proporcion = 1.25f
     override val corona = 0.62f
     override val base = 0.25f

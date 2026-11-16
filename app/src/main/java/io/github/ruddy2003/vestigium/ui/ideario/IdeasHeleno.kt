@@ -140,6 +140,8 @@ object IdeasHeleno : DisenoIdeas {
     private const val SUELO = 0.8f
 
     override val cols = 3
+    /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoIdeas.auraEnReposo]). */
+    override val auraEnReposo = false
     override val proporcion = 0.64f
     override val corona = 0.56f
     override val base = 0.3f

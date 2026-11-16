@@ -140,6 +140,8 @@ object IdeasMeso : DisenoIdeas {
         if (oscuro) BRASA.copy(alpha = (a * 0.9f * k).coerceIn(0f, 1f)) else luzMueble(a)
 
     override val cols = 2
+    /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoIdeas.auraEnReposo]). */
+    override val auraEnReposo = false
     override val proporcion = 1.3f
     override val corona = 0.52f
     override val base = 0.22f

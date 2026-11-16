@@ -147,6 +147,8 @@ object IdeasGotico : DisenoIdeas {
         if (oscuro) LLAMA.copy(alpha = (a * 0.9f * k).coerceIn(0f, 1f)) else luzMueble(a)
 
     override val cols = 2
+    /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoIdeas.auraEnReposo]). */
+    override val auraEnReposo = false
     override val proporcion = 2.0f
     override val corona = 0.6f
     override val base = 0.25f

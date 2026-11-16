@@ -105,6 +105,8 @@ object IdeasNavidad : DisenoIdeas {
     private fun t(c: Color, oscuro: Boolean) = if (oscuro) mezcla(c, Color.Black, 0.3f) else c
 
     override val cols = 2
+    /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoIdeas.auraEnReposo]). */
+    override val auraEnReposo = false
     override val proporcion = 1.3f
     override val corona = 0.68f
     override val base = 0.34f

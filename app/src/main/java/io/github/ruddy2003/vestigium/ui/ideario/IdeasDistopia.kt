@@ -154,6 +154,8 @@ object IdeasDistopia : DisenoIdeas {
     private fun tarjeta(o: Boolean, k: Float) = if (o) mezcla(TARJETA_NOCHE, TARJETA_LUZ, k * 1.4f) else HUESO
 
     override val cols = 2
+    /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoIdeas.auraEnReposo]). */
+    override val auraEnReposo = false
     override val proporcion = 1.85f
     override val corona = 0.64f
     override val base = 0.24f
