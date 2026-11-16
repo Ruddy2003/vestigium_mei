@@ -115,7 +115,7 @@ internal object ChicosRefugio {
      * **[Diseño propio]**; cuando se va, apagada, con el reflector a la vista.
      */
     fun DrawScope.linterna(v: VistaRefugio, o: V3, tapa: Path) {
-        val f = MarcoObjeto(o + V3(0.03f, 0f, 0f), 0.62f, 1.9f)
+        val f = MarcoObjeto(o + V3(0.03f, 0f, 0f), 0.62f, 2.15f)
         val y = 0.03f; val encendida = !EscenaRefugio.estaFuera(v.m)
         val izq = V3(-1f, 0f, 0f)
         sombra(v, f, listOf(V3(-0.07f, 0f, -0.02f), V3(0.07f, 0f, -0.024f), V3(0.07f, 0f, 0.024f), V3(-0.07f, 0f, 0.02f)), listOf(V3(-0.078f, 0.062f, 0f), V3(0.075f, 0.052f, 0f), V3(-0.078f, 0.062f, 0.03f), V3(0.075f, 0.052f, 0.02f), V3(0.055f, 0.045f, -0.06f)), o.y, tapa)
@@ -187,7 +187,7 @@ internal object ChicosRefugio {
         val bajada = listOf(V3(-0.02f, 0.003f, zc), V3(-0.022f, -0.01f, zc - 0.006f), V3(-0.022f, -0.045f, zc - 0.008f))
         trazo(v, base, bajada, ancho, CUERO, V3(0f, 0.2f, -1f))
         // La caja, de pie, colgada.
-        val f = MarcoObjeto(base.w(-0.022f, -0.05f, zc - 0.03f), 0.12f, 2.8f)
+        val f = MarcoObjeto(base.w(-0.022f, -0.05f, zc - 0.03f), 0.12f, 3.0f)
         val x0 = -0.034f; val x1 = 0.034f; val y0 = -0.054f; val z0 = -0.012f; val z1 = 0.012f
         caja(v, f, -0.012f, 0.012f, -0.006f, 0.003f, -0.006f, 0.006f, lerp(OLIVA, C.ACERO, 0.4f))
         caja(v, f, x0, x1, y0, -0.004f, z0, z1, OLIVA, lerp(OLIVA, C.PAPEL, 0.15f))
@@ -231,7 +231,7 @@ internal object ChicosRefugio {
      * esquina cortada y sus casillas: las ya perforadas (los días gastados del mes) dejan ver lo de detrás.
      */
     fun DrawScope.racion(v: VistaRefugio, o: V3, tapa: Path) {
-        val f = MarcoObjeto(o, -0.15f, 2.0f)
+        val f = MarcoObjeto(o, -0.15f, 2.25f)
         val c = V3(0.035f, 0f, 0.035f); val r = 0.042f; val h = 0.11f
         val ancho = 0.08f; val alto = 0.072f; val inclina = 0.5f; val z0 = -0.03f
         val ci = cos(inclina); val si = sin(inclina)
@@ -351,7 +351,7 @@ internal object ChicosRefugio {
      * bancada.
      */
     fun DrawScope.pastilla(v: VistaRefugio, o: V3, tapa: Path) {
-        val f = MarcoObjeto(o, -0.4f, 3.2f)
+        val f = MarcoObjeto(o, -0.4f, 3.6f)
         val x0 = -0.034f; val x1 = 0.034f; val y1 = 0.012f; val z0 = -0.022f; val z1 = 0.022f
         val ang = 1.85f; val dir = V3(0f, sin(ang), -cos(ang)); val nTapa = V3(0f, -cos(ang), -sin(ang))
         fun l(x: Float, s: Float, d: Float = 0f) = V3(x, y1 + dir.y * s + nTapa.y * d, z1 + dir.z * s + nTapa.z * d)
@@ -464,7 +464,7 @@ internal object ChicosRefugio {
      * hoja verde con su doblez.
      */
     fun DrawScope.flor(v: VistaRefugio, o: V3, tapa: Path) {
-        val f = MarcoObjeto(o, 0f, 2.0f)
+        val f = MarcoObjeto(o, 0f, 2.3f)
         val grande = V3(-0.025f, 0.042f, -0.02f); val chica = V3(0.075f, 0.03f, 0.03f)
         val ejeG = V3(-0.2f, 0.55f, -1f); val ejeC = V3(0.35f, 0.6f, -1f)
         sombra(v, f, TrazoObjeto.circulo(grande + V3(0f, -0.04f, 0.01f), V3(0f, 1f, 0f), 0.03f, 8) + listOf(V3(0.1f, 0f, 0.15f)), TrazoObjeto.circulo(grande, CamRefugio.unidad(ejeG), 0.055f, 10) + TrazoObjeto.circulo(chica, CamRefugio.unidad(ejeC), 0.04f, 8), o.y, tapa)

@@ -83,7 +83,7 @@ internal object GrandesRefugio {
 
     /** La barra: cuadrada, de hierro, con el filo del lado de la luz, el óxido a trozos y el brillo gastado del medio. */
     private fun DrawScope.barraDeHierro(v: VistaRefugio, f: MarcoObjeto, eje: V3, lado: V3, largo: Float) {
-        cil(v, f, eje * 0.3f, eje * (largo - 0.1f), 0.021f, HIERRO, lados = 4)
+        cil(v, f, eje * 0.3f, eje * (largo - 0.1f), 0.025f, HIERRO, lados = 4)
         val izq = TrazoObjeto.luz(v, f, eje * 0.6f, lado * -1f, C.ACERO); val der = TrazoObjeto.luz(v, f, eje * 0.6f, lado, C.ACERO)
         val s = if (TrazoObjeto.lum(izq) > TrazoObjeto.lum(der)) -1f else 1f
         brillo(v, f, eje * 0.32f + lado * (0.014f * s), eje * (largo - 0.11f) + lado * (0.014f * s), 0.007f, C.ACERO, lado * s, 0.8f)
@@ -95,7 +95,7 @@ internal object GrandesRefugio {
 
     /** El mango: las vueltas de cinta negra, en espiral, con su canto más claro, y el cabo suelto. */
     private fun DrawScope.mango(v: VistaRefugio, f: MarcoObjeto, eje: V3, lado: V3) {
-        cil(v, f, eje * 0.0f, eje * 0.32f, 0.03f, CINTA, lados = 8)
+        cil(v, f, eje * 0.0f, eje * 0.32f, 0.034f, CINTA, lados = 8)
         for (k in 0..10) { val c = eje * (0.02f + 0.028f * k)
             rayaLuz(v, f, c + lado * 0.03f + eje * -0.007f, c - lado * 0.03f + eje * 0.011f, 0.006f, lerp(CINTA, C.PAPEL, 0.35f), V3(0f, 0f, 0f), 0.85f) }
         val c = eje * 0.32f
@@ -106,9 +106,9 @@ internal object GrandesRefugio {
 
     /** La cabeza en F: el tocho forjado y los dos dientes que agarran el aro de la rueda, con sus golpes y su filo. */
     private fun DrawScope.cabeza(v: VistaRefugio, f: MarcoObjeto, eje: V3, lado: V3, largo: Float) {
-        cil(v, f, eje * (largo - 0.12f), eje * largo, 0.027f, HIERRO, lerp(HIERRO, C.ACERO, 0.4f), lados = 4)
+        cil(v, f, eje * (largo - 0.12f), eje * largo, 0.032f, HIERRO, lerp(HIERRO, C.ACERO, 0.4f), lados = 4)
         for ((a, b) in listOf(eje * largo to eje * (largo + 0.02f) + lado * 0.105f, eje * (largo - 0.085f) to eje * (largo - 0.07f) + lado * 0.1f)) {
-            rayaLuz(v, f, a, b, 0.04f, HIERRO, V3(0f, 0f, -1f), punta = StrokeCap.Square)
+            rayaLuz(v, f, a, b, 0.048f, HIERRO, V3(0f, 0f, -1f), punta = StrokeCap.Square)
             rayaLuz(v, f, a + eje * 0.015f, b + eje * 0.015f, 0.009f, lerp(HIERRO, Color.White, 0.35f), eje, 0.85f)
             rayaLuz(v, f, b - lado * 0.016f + eje * -0.016f, b + eje * 0.022f, 0.032f, lerp(HIERRO, C.OXIDO, 0.3f), V3(0f, 0f, -1f), punta = StrokeCap.Square)
         }
