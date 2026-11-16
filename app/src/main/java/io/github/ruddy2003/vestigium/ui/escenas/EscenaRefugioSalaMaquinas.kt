@@ -7,7 +7,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
