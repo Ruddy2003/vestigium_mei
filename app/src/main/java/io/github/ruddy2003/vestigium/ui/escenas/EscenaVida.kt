@@ -193,7 +193,7 @@ fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
     TemaId.TEMPLARIO -> EscenaTemplario
     TemaId.DISTOPIA -> EscenaDistopia
     TemaId.REFUGIO -> EscenaRefugio
-    TemaId.ORDEN -> null            // S18
+    TemaId.ORDEN -> EscenaOrden
     TemaId.VAPOR -> EscenaVapor
     TemaId.LABORATORIO -> EscenaLaboratorio
     TemaId.COLONOS -> null          // S19
