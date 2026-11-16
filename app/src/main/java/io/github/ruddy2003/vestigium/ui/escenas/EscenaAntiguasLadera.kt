@@ -114,10 +114,11 @@ internal object LaderaAntiguas {
             bandas(v, roca, lejos, az)
             canales(v, rotas, roca, lejos)
             nieve(v, rotas, lejos, az)
-            pieDeLaCara(v, roca, az)
             refugioDeLaCabra(v)
             // El aire entre la montaña y la ladera del paso: la bruma del valle sube por el pie y la despega.
-            drawRect(Brush.verticalGradient(0f to Color.Transparent, 0.5f to lerp(l.bruma, l.bajo, 0.35f).copy(alpha = 0.22f * (1f - 0.5f * l.noche)), 1f to lerp(l.bruma, l.bajo, 0.35f).copy(alpha = 0.34f * (1f - 0.5f * l.noche)), startY = 84f, endY = 150f), Offset(0f, 84f), Size(ANCHO, 156f))
+            drawRect(Brush.verticalGradient(0f to Color.Transparent, 0.5f to lerp(l.bruma, l.bajo, 0.35f).copy(alpha = 0.18f * (1f - 0.5f * l.noche)), 1f to lerp(l.bruma, l.bajo, 0.35f).copy(alpha = 0.26f * (1f - 0.5f * l.noche)), startY = 84f, endY = 150f), Offset(0f, 84f), Size(ANCHO, 156f))
+            // La garganta, delante del aire: honda y en sombra, con su bosque.
+            pieDeLaCara(v, roca, az)
         }
         // La cresta recortada contra el cielo: un filo de luz o de luna.
         val filo = if (l.noche > 0.4f) C.LUNA.copy(alpha = 0.45f * v.luna + 0.08f) else p.luz(lerp(roca, C.NIEVE, 0.6f), lejos).copy(alpha = 0.55f)
@@ -183,12 +184,12 @@ internal object LaderaAntiguas {
     /** El pie de la cara norte, en la garganta: un canchal gris y el bosque oscuro de pinos que sube por ella. */
     private fun DrawScope.pieDeLaCara(v: VistaAntiguas, roca: Color, az: Azar) {
         val p = v.p
-        val canchal = TrazosValle.cerrada(pts(120f, 140f, 146f, 126f, 170f, 128f, 196f, 122f, 214f, 132f, 190f, 160f, 166f, 196f, 146f, 196f, 126f, 176f))
-        drawPath(canchal, p.por(lerp(roca, C.NIEVE, 0.18f), 0.1f, 0.2f).copy(alpha = 0.75f))
-        clipPath(canchal) { drawPoints((0 until 160).map { Offset(az.entre(120f, 214f), az.entre(122f, 200f)) }, PointMode.Points, p.sombra(roca, 0.2f).copy(alpha = 0.55f), 0.9f, StrokeCap.Round) }
+        // La garganta: una cuña honda y en sombra entre las dos laderas, oscura abajo.
+        val hondo = TrazosValle.cerrada(pts(150f, 150f, 162f, 132f, 176f, 136f, 186f, 160f, 180f, 214f, 150f, 214f))
+        drawPath(hondo, Brush.verticalGradient(listOf(p.sombra(lerp(roca, C.SOMBRA, 0.3f), 0.18f).copy(alpha = 0.5f), p.sombra(lerp(C.PINO, C.ESCORIA, 0.4f), 0.12f)), 136f, 214f))
         val verde = lerp(C.PINO, C.ESCORIA, 0.15f)
-        repeat(70) {
-            val x = az.entre(146f, 186f); val y = az.entre(170f, 214f) + (x - 150f) * 0.05f
+        repeat(90) {
+            val x = az.entre(148f, 186f); val y = az.entre(158f, 216f) + (x - 150f) * 0.05f
             val h = 4f + (y - 150f) * 0.09f
             drawPath(poligono(Offset(x, y - h), Offset(x + h * 0.32f, y), Offset(x - h * 0.32f, y)), p.por(verde, if (az.real() < 0.5f) 0.1f else -0.3f, 0.2f))
         }

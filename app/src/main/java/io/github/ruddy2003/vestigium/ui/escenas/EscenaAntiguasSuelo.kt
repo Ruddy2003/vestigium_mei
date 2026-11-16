@@ -158,16 +158,26 @@ internal object SueloAntiguas {
         repeat(16) { val q = Offset(az.entre(208f, 290f), az.entre(244f, 262f)); drawOval(azul.copy(alpha = 0.55f), Offset(q.x - 1.6f, q.y - 0.7f), Size(3.2f, 1.4f)) }
     }
 
-    /** Con lluvia: la tierra y las losas oscuras y brillantes, y charcos que devuelven el cielo y, de noche, la luz de la puerta. */
+    /**
+     * Con lluvia: la tierra y las losas oscuras de agua, con su brillo de cielo; los charcos, hondos y oscuros, que
+     * devuelven el cielo por su borde de allá, el muro y la puerta de la posada en rayas rotas y, de noche, la luz de la sala.
+     */
     private fun DrawScope.mojado(v: VistaAntiguas, az: Azar) {
-        drawRect(C.ESCORIA.copy(alpha = 0.2f), Offset(-10f, 228f), Size(410f, 70f))
-        drawRect(Brush.verticalGradient(listOf(lerp(v.l.medio, Color.White, 0.2f).copy(alpha = 0f), lerp(v.l.medio, Color.White, 0.2f).copy(alpha = 0.1f)), 240f, ALTO), Offset(-10f, 240f), Size(410f, 50f))
-        for ((s, f) in listOf(0.3f to 1.2f, 1.6f to 1.8f, -0.6f to 2.1f, 2.6f to 2.4f, 0.9f to 2.9f)) {
-            val c = p(s, 0f, f); val w = FachadaPosada.escala(s, f) * az.entre(0.3f, 0.5f)
-            val forma = TrazosValle.blando(c, w, w * 0.2f, az, 9, 0.2f)
-            drawPath(forma, lerp(lerp(v.l.bajo, v.l.medio, 0.4f), C.ESCORIA, 0.3f).copy(alpha = 0.6f))
-            drawPath(forma, lerp(v.l.alto, Color.White, 0.2f).copy(alpha = 0.3f), style = Stroke(0.6f))
-            clipPath(forma) { if (v.encendido.sala * v.noche > 0.1f) reflejoRoto(c.x - w * 0.5f, c.x + w * 0.3f, c.y - 2f, 6f, C.LUMBRE, 0.65f * v.noche, az) }
+        val l = v.l
+        drawRect(C.ESCORIA.copy(alpha = 0.3f), Offset(-10f, 228f), Size(410f, 70f))
+        drawRect(Brush.verticalGradient(listOf(lerp(l.medio, Color.White, 0.2f).copy(alpha = 0f), lerp(l.medio, Color.White, 0.2f).copy(alpha = 0.12f)), 240f, ALTO), Offset(-10f, 240f), Size(410f, 50f))
+        val cielo = lerp(l.alto, l.medio, 0.5f)
+        for ((s, f) in listOf(0.3f to 1.2f, 1.6f to 1.8f, -0.6f to 2.1f, 2.6f to 2.4f, 0.9f to 2.9f, -0.2f to 0.6f)) {
+            val c = p(s, 0f, f); val w = FachadaPosada.escala(s, f) * az.entre(0.32f, 0.52f)
+            val forma = TrazosValle.blando(c, w, w * 0.22f, az, 9, 0.2f)
+            drawPath(forma, lerp(lerp(l.medio, l.bajo, 0.3f), C.ESCORIA, 0.82f))
+            clipPath(forma) {
+                // El cielo por el borde de allá, y el muro de la posada que se refleja en rayas rotas.
+                drawRect(Brush.verticalGradient(listOf(cielo.copy(alpha = 0.4f), cielo.copy(alpha = 0f)), c.y - w * 0.2f, c.y - w * 0.08f), Offset(c.x - w, c.y - w * 0.3f), Size(w * 2f, w * 0.24f))
+                reflejoRoto(c.x - w * 0.8f, c.x + w * 0.8f, c.y - 1f, 4f, lerp(C.PIEDRA_OSC, C.ESCORIA, 0.4f), 0.45f, az)
+                if (v.encendido.sala * v.noche > 0.1f) reflejoRoto(c.x - w * 0.5f, c.x + w * 0.3f, c.y - 2f, 6f, C.LUMBRE, 0.75f * v.noche, az)
+            }
+            drawPath(forma, lerp(C.TIERRA, C.ESCORIA, 0.5f).copy(alpha = 0.5f), style = Stroke(0.8f))
         }
     }
 }

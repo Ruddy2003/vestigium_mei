@@ -6,16 +6,16 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Cosa
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
 
 /**
- * Los doce objetos del día de Brenna, en la puerta de la posada. Los chicos van sobre su soporte, la losa del poyo, junto a
- * la puerta, donde los toca el sol de la tarde y, de noche, la luz que sale de la sala; los grandes van de pie en el
- * suelo de losas y se recuestan en el muro, entre la puerta y el poyo.
+ * Los doce objetos del día de Brenna, en la puerta de la posada. Los chicos van sobre su soporte, la losa del poyo, a la
+ * derecha de la puerta, donde los toca el sol de la tarde y, de noche, la luz que sale de la sala; los grandes van de pie
+ * en el suelo de losas y se recuestan en el muro del zaguán, a la izquierda de la puerta, junto al banco.
  *
  * **Contrato vacío (tanda S18, primer agente):** las llamadas ya están puestas en el primer plano (`CercaAntiguas`) con
  * un soporte y un apoyo de buen tamaño, a la vista de día y de noche, en verano y en invierno; los dibujos los pondrá otro
  * agente.
  *
  * **Para que nada salga dos veces:** tres objetos son también piezas del cuadro ([YA_EN_EL_CUADRO]): el bastón de Brenna
- * (apoyado junto a la puerta), la montura de carga (en su caballete, al pie del pino) y la cuerda (que no se pinta suelta:
+ * (apoyado junto a la puerta), la montura de carga (en su caballete, en primer plano a la izquierda de la puerta) y la cuerda (que no se pinta suelta:
  * va en la montura). Mientras su id no esté en [DIBUJADOS], la pieza del cuadro es el objeto del día; cuando este contrato
  * lo dibuje en su sitio, se agrega a [DIBUJADOS] y ese día el cuadro deja de pintar la suya ([elCuadroPinta]). Otros dos
  * tienen su pareja en el cuadro y **no** se quitan: el `cuerno` del objeto es el de guía, con la boca de latón (el de la
@@ -43,8 +43,8 @@ internal object ObjetosAntiguas {
 
     /**
      * El objeto chico de hoy, sobre el soporte. No pinta nada si hoy no hay objeto o es de los grandes.
-     * [sobre] es el punto de la losa del poyo donde se apoya; [escala] 1 es el tamaño de ese sitio (unas 48 unidades del
-     * lienzo por metro). [p] trae la luz de ese sitio: el sol de la tarde, la sombra que sube, la luz de la sala de noche.
+     * [sobre] es el punto de la losa del poyo donde se apoya; [escala] es cuántas veces 48 unidades del lienzo mide allí un
+     * metro (el poyo está cerca: algo más de 1). [p] trae la luz de ese sitio: el sol de la tarde, la sombra que sube, la luz de la sala de noche.
      */
     @Suppress("UNUSED_PARAMETER")
     fun DrawScope.sobreElSoporte(m: Momento, p: Pincel, sobre: Offset, escala: Float = 1f) {}

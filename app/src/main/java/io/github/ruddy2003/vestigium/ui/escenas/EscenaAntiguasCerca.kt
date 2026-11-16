@@ -143,7 +143,11 @@ internal object CercaAntiguas {
         // Las borlas de lana de la manta, y la cincha que cuelga.
         for (k in 0..4) { val q = pie + Offset(-14f + k * 7f, -13.4f); drawLine(pe.por(C.LANA, 0.2f), q, q + Offset(0.4f, 2.6f), 1.1f, StrokeCap.Round) }
         drawPath(Path().apply { moveTo(pie + Offset(6f, -14f)); cubicTo(pie + Offset(8f, -6f), pie + Offset(4f, -4f), pie + Offset(6f, 2f)) }, pe.por(C.CUERO, 0f), style = Stroke(1.4f, cap = StrokeCap.Round))
-        if (v.nieveAbajo > 0.3f) drawLine(pe.por(C.NIEVE, 0.5f), pie + Offset(-15f, -40f), pie + Offset(14f, -40f), 2f, StrokeCap.Round)
+        if (v.nieveAbajo > 0.3f) {
+            // La nieve sobre el madero y en lo alto de los dos arcos.
+            drawLine(pe.por(C.NIEVE, 0.5f), pie + Offset(-15f, -36.6f), pie + Offset(14f, -36.6f), 1.3f, StrokeCap.Round)
+            for (dx in listOf(-9f, 8f)) drawPath(Path().apply { moveTo(pie + Offset(dx - 4.6f, -36.6f)); cubicTo(pie + Offset(dx - 4f, -40f), pie + Offset(dx + 4f, -40f), pie + Offset(dx + 4.6f, -36.6f)) }, pe.por(C.NIEVE, 0.5f), style = Stroke(1.2f, cap = StrokeCap.Round))
+        }
     }
 
     /** El banco de tablas arrimado al muro del zaguán, gastado donde se sientan. */
