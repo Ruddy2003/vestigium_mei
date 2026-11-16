@@ -158,7 +158,7 @@ internal object RioMuelle {
             if (v.luna > 0.05f && l.noche > 0.5f) {
                 // La calle de la luna: trazos claros que bajan desde el horizonte y se abren hacia quien mira; el muelle corta su
                 // lado derecho **[Aproximación]**: se corre un poco hacia el agua para que se vea.
-                val x0 = l.lunaX * ANCHO - 22f; val h = Azar(m.semilla("luna"))
+                val x0 = l.lunaX * ANCHO - 46f; val h = Azar(m.semilla("luna"))
                 mancha(Offset(x0, M.H + 30f), 18f, 30f, Color(0xFFDDE6FF), 0.16f * v.luna)
                 repeat(90) { val d = h.real(); val y = M.H + 1f + d * d * 110f; val w = 3f + 34f * d; val x = x0 + (h.real() + h.real() - 1f) * w; val largo = (2f + 10f * d) * h.entre(0.5f, 1.2f)
                     drawLine(Color(0xFFEEF3FF).copy(alpha = (v.luna * h.entre(0.3f, 0.85f) * (1f - 0.5f * d)).coerceIn(0f, 1f)), Offset(x - largo / 2f, y), Offset(x + largo / 2f, y), 0.5f + 0.9f * d, StrokeCap.Round, blendMode = BlendMode.Screen) }

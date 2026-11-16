@@ -176,8 +176,11 @@ internal object CercaMuelle {
     private fun enElSuelo(r: Offset, x: Float, h: Float, z: Float, suelo: Float = 0f): Offset = M.pm(x + r.x * (h - suelo), suelo, z + r.y * (h - suelo))
 
     /** La sombra de un palo de [a] a [b] (de [g] metros de grueso) en las tablas. */
-    private fun palo(r: Offset, a: V3, b: V3, g: Float): Path {
-        val pa = enElSuelo(r, a.x, a.y, a.z); val pb = enElSuelo(r, b.x, b.y, b.z)
+    private fun palo(r: Offset, a: V3, b: V3, g: Float): Path = paloEn(r, a, b, g, 0f)
+
+    /** La sombra de un palo de [a] a [b] en un suelo a la altura [suelo] (las tablas, la cubierta de Nikos). */
+    private fun paloEn(r: Offset, a: V3, b: V3, g: Float, suelo: Float): Path {
+        val pa = enElSuelo(r, a.x, a.y, a.z, suelo); val pb = enElSuelo(r, b.x, b.y, b.z, suelo)
         val d = pb - pa; val n = d.getDistance().coerceAtLeast(0.01f); val nn = Offset(-d.y / n, d.x / n) * (g * M.k(a.x, a.z) / 2f).coerceAtLeast(0.4f)
         return poligono(pa + nn, pb + nn, pb - nn, pa - nn)
     }
@@ -318,6 +321,14 @@ internal object CercaMuelle {
             // La sombra de la regala de estribor en la cubierta, del lado contrario al sol.
             if (v.r.fuerza > 0.05f && p.solALaDerecha) drawPath(poligono(listOf(borde(0f, CUBIERTA), M.pm(EJE + B, CUBIERTA, ze), M.pm(EJE + B - 0.6f, CUBIERTA, ze), M.pm(EJE + B - 0.6f, CUBIERTA, ZC))), C.SOMBRA.copy(alpha = 0.3f * v.r.fuerza), blendMode = BlendMode.Multiply)
         }
+        // La sombra de la botavara, de la vela y de las ristras sobre la cubierta de la popa (la reja, también en el barco).
+        v.reja?.let { r ->
+            capaSombra(v.r, 0.9f) { c -> clipPath(cub) {
+                sombra(paloEn(r, BOTAVARA_0, BOTAVARA_1, 0.36f, CUBIERTA), c)
+                for (i in 0 until M.ristrasDeLaBotavara(m)) { val a = enBotavara(tRistra(i, M.ristrasDeLaBotavara(m))); sombra(paloEn(r, a, a + V3(0f, -largoRistra(i), 0f), 0.2f, CUBIERTA), c) }
+                sombra(paloEn(r, BOTAVARA_1, BOTAVARA_1 + V3(-0.8f, 6f, -2f), 0.03f, CUBIERTA), c)
+            } }
+        }
         // La cara de dentro de la borda: la de babor y la de la popa (la de estribor da la espalda a quien mira).
         val dentro = poligono(giro.drop(n / 4).map { borde(it, REGALA) } + giro.drop(n / 4).reversed().map { borde(it, CUBIERTA) } + listOf())
         val babor = poligono(listOf(borde(PI.toFloat(), REGALA), M.pm(EJE - B, REGALA, zb), M.pm(EJE - B, CUBIERTA, zb), borde(PI.toFloat(), CUBIERTA)))
@@ -349,6 +360,17 @@ internal object CercaMuelle {
         val cubo = M.sitio(EJE + 0.55f, ZC - 0.55f, 0f, CUBIERTA); val kq = cubo.escala(0f, 0f)
         drawPath(poligono(cubo.pie + Offset(-0.15f * kq, -0.3f * kq), cubo.pie + Offset(0.15f * kq, -0.3f * kq), cubo.pie + Offset(0.12f * kq, 0f), cubo.pie + Offset(-0.12f * kq, 0f)), Brush.horizontalGradient(listOf(pc.sombra(C.MADERA_GRIS), pc.luz(C.MADERA_GRIS)), cubo.pie.x - 0.15f * kq, cubo.pie.x + 0.15f * kq))
         drawOval(pc.medio(lerp(C.MAR, l.alto, 0.4f)), Offset(cubo.pie.x - 0.14f * kq, cubo.pie.y - 0.33f * kq), Size(0.28f * kq, 0.06f * kq))
+        // La red de las esponjas echada a secar sobre la regala de babor, colgando por dentro, con su aro y sus corchos.
+        run {
+            val a0 = 1.78f; val a1 = 2.4f
+            val arriba = (0..8).map { borde(a0 + (a1 - a0) * it / 8f, REGALA + 0.04f) }
+            val abajo = (0..8).map { i -> val a = a0 + (a1 - a0) * i / 8f; M.pm(EJE + B * cos(a) * 0.82f, CUBIERTA + 0.05f + 0.1f * sin(i * 1.7f), ZC + R * sin(a) * 0.8f) }
+            val red = poligono(arriba + abajo.reversed())
+            val hilo = pc.medio(lerp(C.CANAMO, C.MADERA_OSC, 0.4f))
+            drawPath(red, hilo.copy(alpha = 0.25f))
+            clipPath(red) { for (i in 0..8) drawLine(hilo.copy(alpha = 0.8f), arriba[i], abajo[i], 0.5f); for (j in 1..5) { val t = j / 6f; drawPath(curva((0..8).map { arriba[it] + (abajo[it] - arriba[it]) * t }), hilo.copy(alpha = 0.7f), style = Stroke(0.45f)) } }
+            for (i in 0..8 step 2) drawOval(pc.por(lerp(C.ESPONJA_OSC, C.MADERA, 0.4f), 0.3f), Offset(arriba[i].x - 1.6f, arriba[i].y - 0.8f), Size(3.2f, 2f))
+        }
         // La hornacina del icono, clavada en la popa por dentro, con su lamparilla.
         hornacina(pc, ICONO, K_ICONO * 1.05f, v.lamparilla, mira = 0.4f, luto = EscenaAbismo.luto(m), velas = EscenaAbismo.hoyEs(m, "san_nicolas") || EscenaAbismo.cruz(m))
         if (l.noche > 0.2f) resplandor(ICONO, 1.0f * K_ICONO, 0.32f * l.noche, C.LUMBRE)
@@ -402,7 +424,7 @@ internal object CercaMuelle {
         // Las defensas de cuerda colgadas del canto, sin barco que proteger, y la red echada sobre el canto.
         for (z in listOf(2.2f, 4.6f)) { val q = M.pm(-0.05f, -0.45f, z); val kk = M.k(0f, z); drawLine(p.sombra(C.CANAMO), M.pm(0.1f, 0.05f, z), q, 0.025f * kk); drawOval(p.por(C.CANAMO, 0.2f), Offset(q.x - 0.1f * kk, q.y - 0.06f * kk), Size(0.2f * kk, 0.36f * kk)) }
         redTendida(p, M.pm(0.25f, 0.08f, 3.0f), M.pm(0.25f, 0.08f, 5.6f), 0.5f * M.k(0.25f, 4f))
-        if (l.noche < 0.75f) PiezasAbismoTierra.run { pelicano(p, M.pm(-2.0f, 1.5f, 2.6f), M.k(-2.0f, 2.6f), 1f, PiezasAbismoTierra.Postura.POSADO, Semilla.de("abismo", "pelicanoVacio")) }
+        if (l.noche < 0.75f) PiezasAbismoTierra.run { pelicano(p, M.pm(-3.9f, 1.5f, 6.8f), M.k(-3.9f, 6.8f), -1f, PiezasAbismoTierra.Postura.POSADO, Semilla.de("abismo", "pelicanoVacio")) }
         // La amarra de Nikos, suelta en la bita, que cae al agua: el barco no está.
         cabo(p, listOf(BITA.p(0f, 0.3f, 0f), BITA.p(-0.4f, 0.05f, -0.2f), M.pm(-0.1f, 0.0f, 3.6f), M.pm(-0.6f, M.AGUA, 3.4f)), 0.05f * BITA.k)
     }
@@ -432,9 +454,9 @@ internal object CercaMuelle {
         val vela = (0..pasos).map { i -> ejes[i] + Offset(0f, -0.16f * ks[i] * (1f - 0.35f * i / pasos)) }
         if (EscenaAbismo.hoyEs(m, "zarpa")) {
             // La mañana de zarpar: la mayor suelta de sus tomadores, colgando en senos de la botavara, lista para izar.
-            for (i in 2 until pasos - 1 step 3) { val a0 = ejes[i]; val a1 = ejes[minOf(i + 3, pasos)]; val kk = ks[i]
-                drawPath(Path().apply { moveTo(a0.x, a0.y); cubicTo(a0.x, a0.y + 0.36f * kk, a1.x, a1.y + 0.36f * kk, a1.x, a1.y); close() }, p.por(lerp(C.LONA, C.BLANCO, 0.3f), -0.1f))
-                drawLine(p.sombra(C.LONA), Offset((a0.x + a1.x) / 2f, (a0.y + a1.y) / 2f), Offset((a0.x + a1.x) / 2f, (a0.y + a1.y) / 2f + 0.24f * kk), 0.02f * kk) }
+            for (i in 2 until pasos - 1 step 2) { val a0 = ejes[i]; val a1 = ejes[minOf(i + 2, pasos)]; val kk = ks[i]
+                drawPath(Path().apply { moveTo(a0.x, a0.y); cubicTo(a0.x, a0.y + 0.16f * kk, a1.x, a1.y + 0.16f * kk, a1.x, a1.y); close() }, p.por(lerp(C.LONA, C.BLANCO, 0.3f), if (i % 4 == 2) 0.2f else -0.2f))
+                drawLine(p.sombra(C.LONA), Offset((a0.x + a1.x) / 2f, (a0.y + a1.y) / 2f), Offset((a0.x + a1.x) / 2f, (a0.y + a1.y) / 2f + 0.1f * kk), 0.02f * kk) }
         }
         for (i in 0 until pasos) {
             val g = 0.3f * ks[i] * (1f - 0.3f * i / pasos)
@@ -476,8 +498,9 @@ internal object CercaMuelle {
     private fun DrawScope.nocheEnElMuelle(v: MuelleAbismo.Vista) {
         val l = v.l
         if (l.noche < 0.2f) return
-        // El charco del farol en las tablas y su luz en el canto.
-        if (v.farol > 0.02f) { val pie = M.pm(FAROL_X, 0f, FAROL_Z); val kk = M.k(FAROL_X, FAROL_Z); mancha(pie + Offset(0.3f * kk, 0.1f * kk), 2.6f * kk, 0.7f * kk, C.LUMBRE, 0.42f * v.farol) }
+        // El charco del farol en las tablas y su luz en el canto; con las tablas mojadas, su reflejo largo hacia quien mira.
+        if (v.farol > 0.02f) { val pie = M.pm(FAROL_X, 0f, FAROL_Z); val kk = M.k(FAROL_X, FAROL_Z); mancha(pie + Offset(0.3f * kk, 0.1f * kk), 2.6f * kk, 0.7f * kk, C.LUMBRE, 0.42f * v.farol)
+            if (M.mojado(v.m)) { val az = Azar(Semilla.de("abismo", "farolMojado")); var y = pie.y + 1f; while (y < pie.y + 3.2f * kk) { val k = (y - pie.y) / (3.2f * kk); val w = (0.15f + 0.5f * k) * kk * az.entre(0.5f, 1f); drawLine(C.LUMBRE.copy(alpha = (0.45f * v.farol * (1f - k)).coerceIn(0f, 1f)), Offset(FAROL.x - w + az.entre(-1f, 1f), y), Offset(FAROL.x + w + az.entre(-1f, 1f), y), 0.9f, blendMode = BlendMode.Screen); y += 1.6f } } }
         // La luz del café de este lado, que se derrama desde el borde de la derecha por las tablas y la mesa.
         if (v.cafe > 0.02f) { mancha(Offset(ANCHO + 10f, 236f), 140f, 46f, C.LUMBRE, 0.45f * v.cafe); mancha(Offset(ANCHO, 168f), 60f, 34f, C.LUMBRE, 0.3f * v.cafe) }
     }

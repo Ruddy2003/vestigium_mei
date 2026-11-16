@@ -296,8 +296,10 @@ internal object PiezasAbismoTierra {
                 // Las chorreras de óxido y de sal, la pintura saltada.
                 if (e > 5f) repeat(if (g.pintado) 3 else 7) { val z = az.entre(0.5f, L * 0.8f); val y0 = arrufo(z, L, fr) - 0.28f; drawLine(p.sombra(lerp(g.blanco, C.COBRE_OSC, 0.35f), vida).copy(alpha = 0.4f), s.p(V3(media(z, L, M), y0, z)), s.p(V3(media(z, L, M) * 0.95f, y0 - az.entre(0.3f, 0.6f), z)), gr(0.02f)) }
             }
-            // El canto de la regala, con su filo de luz.
+            // El canto de la regala, con su filo de luz; de noche, la plata de la luna en el lomo del casco.
             drawPath(curva(regala.map { s.p(it) }), p.por(g.regala, tc + 0.3f, vida), style = Stroke(gr(0.07f, 0.5f), cap = StrokeCap.Round))
+            val luna = EscenaAbismo.luna(p.l)
+            if (luna > 0.05f) drawPath(curva(regala.map { s.p(it.copy(y = it.y - 0.3f)) }), C.LUNA.copy(alpha = (0.45f * luna).coerceIn(0f, 1f)), style = Stroke(gr(0.05f, 0.4f)))
             // Las defensas de cuerda colgadas de la borda.
             if (e > 7f) for (z in listOf(L * 0.25f, L * 0.55f)) { val q = s.p(V3(media(z, L, M) + 0.05f, arrufo(z, L, fr) - 0.35f, z)); drawOval(p.por(C.CANAMO, tc, vida), Offset(q.x - 0.12f * e, q.y - 0.2f * e), Size(0.24f * e, 0.4f * e)) }
         }
@@ -518,9 +520,10 @@ internal object PiezasAbismoTierra {
                     val puerta = frente && piso == 0 && i == nv / 2
                     val vv0 = if (puerta) 0.02f else v0
                     val hueco = poligono(listOf(cara.en(u - 0.11f / c.largo * 2.6f, vv0), cara.en(u + 0.11f / c.largo * 2.6f, vv0), cara.en(u + 0.11f / c.largo * 2.6f, v1), cara.en(u - 0.11f / c.largo * 2.6f, v1)).map { s.p(it) })
-                    val encendida = ventanas > 0.02f && az.real() < 0.75f
+                    val encendida = ventanas > 0.02f && az.real() < 0.7f
                     val cristal = if (encendida) lerp(p.sombra(C.AZUL, lejos), Color(0xFFFFC870), ventanas) else lerp(p.sombra(C.BREA, lejos), p.medio(C.AZUL, lejos), 0.25f + 0.2f * p.r.dia)
                     drawPath(hueco, if (puerta) p.por(lerp(c.postigos, C.MADERA_OSC, 0.3f), t, lejos) else cristal)
+                    if (encendida && !puerta && ventanas > 0.3f) resplandor(s.p(cara.en(u, (v0 + v1) / 2f)), gr(1.1f, 2.2f), 0.45f * ventanas, C.LUMBRE)
                     if (!puerta && e > 3f) {
                         // Los postigos abiertos a los lados, y el marco claro.
                         for (sl in listOf(-1f, 1f)) drawPath(poligono(listOf(cara.en(u + sl * 0.11f / c.largo * 2.6f, v0), cara.en(u + sl * 0.2f / c.largo * 2.6f, v0), cara.en(u + sl * 0.2f / c.largo * 2.6f, v1), cara.en(u + sl * 0.11f / c.largo * 2.6f, v1)).map { s.p(it) }), p.por(c.postigos, t, lejos))
@@ -761,7 +764,17 @@ internal object PiezasAbismoTierra {
         drawOval(p.medio(hierro, lejos), Offset(top.x - r * 1.45f, top.y - r * 0.5f), Size(r * 2.9f, r * 1.1f))
         drawOval(p.luz(hierro, lejos), Offset(top.x - r * 1.3f, top.y - r * 0.6f), Size(r * 2.6f, r * 0.8f))
         if (e > 20f) repeat(4) { mancha(base + Offset((it - 1.5f) * r * 0.5f, -r * (0.8f + 0.5f * (it % 2))), r * 0.4f, r * 0.25f, p.medio(C.COBRE_OSC, lejos), 0.45f) }
-        if (cabo) for (i in 0 until 3) drawOval(p.por(C.CANAMO, if (i == 0) 0.3f else -0.1f, lejos), Offset(base.x - r * 1.2f, top.y + r * (0.7f + 0.55f * i)), Size(r * 2.4f, r * 0.7f), style = Stroke(r * 0.32f))
+        if (cabo) {
+            // Dos vueltas del cabo alrededor del cuello, cruzadas, con el torcido de la cuerda y su lado de luz.
+            val g = r * 0.42f
+            for (i in 0 until 2) {
+                val y = top.y + r * (0.9f + 0.75f * i)
+                val vuelta = Path().apply { moveTo(base.x - r * 1.15f, y + r * 0.1f); cubicTo(base.x - r * 1.1f, y + r * 0.55f, base.x + r * 1.1f, y + r * 0.55f, base.x + r * 1.15f, y - r * 0.15f) }
+                drawPath(vuelta, p.sombra(C.CANAMO, lejos), style = Stroke(g, cap = StrokeCap.Round))
+                drawPath(vuelta, p.luz(C.CANAMO, lejos).copy(alpha = 0.7f), style = Stroke(g * 0.35f, cap = StrokeCap.Round))
+                if (e > 25f) for (k in 0 until 6) { val q = Offset(base.x - r + k * r * 0.4f, y + r * 0.32f * (1f - ((k - 2.5f) / 2.5f).let { it * it })); drawLine(p.sombra(lerp(C.CANAMO, C.BREA, 0.4f), lejos).copy(alpha = 0.6f), q + Offset(-g * 0.25f, -g * 0.3f), q + Offset(g * 0.25f, g * 0.3f), g * 0.12f) }
+            }
+        }
     }
 
     /**

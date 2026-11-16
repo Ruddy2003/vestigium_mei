@@ -105,12 +105,12 @@ internal object OrillaMuelle {
                 sombra(sombraDe(s, v.sol, esquinas(-w, w, 0f, alto, 0f, 2f)), c) }
         }
         // Las casas, los cafés y la lonja, de lejos a cerca.
-        val ventanas = (if (l.noche > 0.3f) l.noche else 0f) * (if (v.luces.cafes > 0f || m.hora >= 17.0 || m.hora < 6.0) 1f else 0.4f)
+        val ventanas = (if (l.noche > 0.3f) l.noche else 0f) * (if (v.luces.cafes > 0f || m.hora >= 17.0 || m.hora < 6.0) 1f else 0.4f) * (if (m.hora >= 23.5 || m.hora < 5.0) 0.45f else 1f)
         for (e in PUEBLO.sortedByDescending { it.z }) {
             val s = sitioDe(e); val lj = M.lejos(FACHADA, e.z)
             when (e.tipo) {
                 Tipo.LONJA -> lonja(p, s, v.sol, 16f, Semilla.de("abismo", "lonja"), v.luces.cafes * l.noche, if (EscenaAbismo.hoyEs(m, "lonja")) 1f else 0.35f, lj, cerrada = v.flota == EscenaAbismo.Flota.VACIO)
-                Tipo.CASA -> { casa(p, s, v.sol, e.casa!!, ventanas * 0.7f, lj); if (EscenaAbismo.hoyEs(m, "cuatro_julio") && e.casa.pisos > 1) banderolas(p, s, e.casa, lj) }
+                Tipo.CASA -> { casa(p, s, v.sol, e.casa!!, ventanas, lj); if (EscenaAbismo.hoyEs(m, "cuatro_julio") && e.casa.pisos > 1) banderolas(p, s, e.casa, lj) }
                 Tipo.CAFE -> {
                     casa(p, s, v.sol, e.casa!!, (v.luces.cafes * l.noche).coerceIn(0f, 1f), lj)
                     toldoDeCafe(p, s, e.casa.largo * 0.9f, 2.9f, 1.6f, if (e.z < 40f) C.AZUL else C.ROJO, lj)
@@ -222,6 +222,8 @@ internal object OrillaMuelle {
         if (v.luces.faroles > 0.02f) for (z in FAROLES) luz(-M.RIO - 0.6f, 3.3f, z)
         if (v.luces.cafes > 0.02f) for (e in PUEBLO.filter { it.tipo == Tipo.CAFE }) luz(FACHADA, 1.2f, e.z)
         if (v.luces.iglesia > 0.02f) luz(IGLESIA_X, 2.5f, IGLESIA_Z)
+        // Las ventanas encendidas de las casas, una o dos por casa, con su reflejo largo.
+        if (v.l.noche > 0.3f) for (e in PUEBLO) if (e.tipo == Tipo.CASA) { val c = e.casa!!; luz(FACHADA - e.retiro, 1.6f, e.z - c.largo * 0.2f); if (c.pisos > 1) luz(FACHADA - e.retiro, 4.7f, e.z + c.largo * 0.22f) }
         for ((x, z, i) in M.barcos(v.m)) { val g = Goleta(Semilla.de("abismo", "goleta", i)); val q = PiezasAbismoTierra.lamparillaDePopa(M.sitio(x, z, 0f, M.AGUA), g); val agua = M.pm(x + 1f, M.AGUA, z); r += Triple(q.x, agua.y, (agua.y - q.y) * 1.3f + 3f) }
         return r
     }
