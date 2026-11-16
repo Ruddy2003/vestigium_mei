@@ -3165,4 +3165,53 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("boda", "2031-02-17", listOf(13.0)),                       // la boda (en el muelle): las guirnaldas blancas en la regala de Nikos
         Triple("cuarto", "2030-06-21", listOf(13.0)),                     // el cuarto de 2030, provisional: el amarradero vacío, sin ningún barco
     ),
+    // La residente (Refugio, tanda S17): la sala de bombas, con el pasillo grande y la Puerta al fondo; cuatro estados.
+    "residente" to listOf(
+        Triple("sala", "2027-05-05", HORAS_CUADRO),                       // un día normal: la lámpara de trabajo camina (manómetros, filtro) y de noche, apagada, el pasillo azul y el violeta de los tanques
+        Triple("cultivo_sembrado", "2027-06-19", listOf(13.0)),           // el arco cultivo de 0 a 0,35: los tanques claros, recién sembrados
+        Triple("cultivo_verde", "2027-10-20", listOf(13.0)),              // de 0,35 a 0,75: verdes y espesos
+        Triple("cultivo_lleno", "2027-04-22", listOf(13.0)),              // de 0,75 a 1: oscuros y llenos
+        Triple("reserva_baja", "2028-03-14", listOf(13.0)),               // la grieta: la columna de la cisterna abajo y la alarma, sin racionar todavía
+        Triple("racionamiento", "2028-03-20", listOf(13.0, 21.0)),        // el racionamiento: las botellas en fila, el candado y, de noche, el turno de más
+        Triple("cuarentena", "2029-02-10", listOf(13.0)),                 // la cuarentena: la compuerta bajada con su luz roja, las mascarillas, dos lámparas
+        Triple("abierto", "2031-10-01", listOf(13.0, 18.5, 21.0)),        // la Puerta abierta: el sol por el pasillo, el atardecer y el fuego de fuera de noche
+        Triple("abierto_lluvia", "2031-10-15", listOf(13.0)),             // la Puerta abierta con lluvia
+        Triple("simulacro", "2027-11-11", listOf(13.0)),                  // el simulacro: las compuertas bajan, luces rojas y etiquetas en las ruedas
+        Triple("bomba_tres", "2027-02-12", listOf(13.0)),                 // la bomba tres desmontada y el agua marrón
+        Triple("filtros", "2027-04-11", listOf(13.0)),                    // el cambio de filtros: el filtro grande abierto y el barro negro
+        Triple("cosecha", "2027-05-21", listOf(13.0)),                    // la cosecha de algas: los tanques vaciándose
+        Triple("sellado", "2027-01-15", listOf(13.0)),                    // el día del sellado: las flores de papel delante de la Puerta
+        Triple("nochebuena", "2027-12-24", listOf(21.0)),                 // Nochebuena de noche: el árbol de cable con sus luces
+        Triple("sol_falso", "2027-07-20", listOf(13.0)),                  // el día del sol falso
+        Triple("objeto_grande", "2027-04-23", listOf(13.0)),              // un objeto grande: el tocadiscos del comedor junto a la bancada
+        Triple("puerta_cerrada_2032", "2032-05-05", listOf(13.0)),        // 2032: la ficha vuelve a cerrar la Puerta del 1 de enero al 19 de septiembre (fallo del calendario que el cuadro sigue)
+    ),
+    // La doctora (Laboratorio, tanda S17): el laboratorio de la grama y, a las horas de comer y en los días de lo común, el centro del Claustro.
+    "cientifica" to listOf(
+        Triple("dia", "2027-05-05", HORAS_CUADRO),                        // un día normal: a las 7:00 y las 13:00 come en el centro; a las 21:00, el laboratorio de noche
+        Triple("laboratorio", "2027-05-05", listOf(10.0, 16.0)),          // el laboratorio de día, a las horas de trabajo: las lámparas de cultivo caminan con el riego
+        Triple("cena", "2027-05-05", listOf(20.0)),                       // la cena del Consejo en el centro: la mancha del pozo en la cabecera y las lámparas bajas
+        Triple("cuarentena", "2028-03-30", listOf(10.0)),                 // la cuarentena (con los jardines vacíos): la compuerta de acero con su luz roja, el catre
+        Triple("experimento", "2029-05-10", listOf(10.0, 21.5)),          // el experimento: la campana con el catre y el farol, de día y de noche
+        Triple("cierre", "2030-10-05", listOf(10.0)),                     // el cierre: la bata de Lauro en su taburete
+        Triple("arriba", "2031-04-28", listOf(10.0, 13.0)),               // arriba, provisional: el laboratorio sin ella y el campamento en la pantalla; a mediodía, el centro
+        Triple("jardines_brotes", "2027-09-20", listOf(10.0)),            // los jardines por la puerta: brotes después de la siega
+        Triple("jardines_medio", "2027-01-20", listOf(10.0)),             // a medio crecer
+        Triple("jardines_llenos", "2027-07-20", listOf(10.0)),            // llenos
+        Triple("grama_tierra", "2027-03-05", listOf(10.0)),               // la grama en la mesa: solo tierra
+        Triple("grama_hilo", "2028-01-20", listOf(10.0)),                 // el hilo
+        Triple("grama_matas", "2029-10-05", listOf(10.0)),                // las matas
+        Triple("grama_tanque", "2030-07-30", listOf(10.0)),               // el tanque de tierra limpia
+        Triple("grama_cajas", "2031-06-10", listOf(10.0)),                // las cajas
+        Triple("superficie_02", "2031-04-10", listOf(10.0)),              // la mancha verde de las ruinas, a 0,2
+        Triple("superficie_05", "2031-12-10", listOf(10.0)),              // a 0,5
+        Triple("censo", "2027-02-12", listOf(9.0)),                       // el censo: la cola que da la vuelta al comedor grande (el centro por la mañana)
+        Triple("anio_nuevo", "2027-01-01", listOf(16.0)),                 // el año nuevo: fruta de los jardines para todos (el centro por la tarde)
+        Triple("fundacion", "2027-03-18", listOf(16.0)),                  // la Fundación: las banderas de papel de galería a galería
+        Triple("noche_larga", "2027-12-21", listOf(20.0, 21.5)),          // la noche larga: velas en las mesas del centro y en el laboratorio
+        Triple("apagon", "2027-07-08", listOf(21.5)),                     // el apagón: solo la linterna
+        Triple("luz_larga", "2027-06-21", listOf(21.5)),                   // la luz larga
+        Triple("siega", "2027-09-11", listOf(10.0)),                      // la siega: la nave de los jardines, de vidrio limpio
+        Triple("objeto_grande", "2027-04-06", listOf(10.0, 13.0)),        // un objeto grande (la bata) en cada cuadro: en el taburete de Lauro y junto a su mesa del centro
+    ),
 )
