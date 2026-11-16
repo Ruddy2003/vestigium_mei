@@ -34,6 +34,7 @@ import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.esOscuro
+import io.github.ruddy2003.vestigium.ui.ideario.sinSitio
 import io.github.ruddy2003.vestigium.ui.rememberSentir
 import kotlinx.coroutines.launch
 
@@ -104,6 +105,7 @@ fun EstanteTema(d: DisenoBiblioteca, grupos: List<GrupoEstante>, noche: Boolean,
                     },
                     ocupado = (0 until repisas).map { k -> l + (ocupado[k] ?: 0.dp).toPx() },
                 )
+                if (sinSitio()) return@Canvas
                 clipRect { with(d) { estante(disp, medidor, oscuro, noche) } }
             }
             lugares.forEach { lu ->
@@ -132,7 +134,7 @@ fun EstanteTema(d: DisenoBiblioteca, grupos: List<GrupoEstante>, noche: Boolean,
                                 abrir(dia.fecha)
                                 anim.snapTo(0f)
                             }
-                        }) { with(d) { volumen(v, medidor, oscuro) } }
+                        }) { if (!sinSitio()) with(d) { volumen(v, medidor, oscuro) } }
                 }
             }
         }

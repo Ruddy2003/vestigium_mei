@@ -1849,7 +1849,7 @@ object IdeasUrbe : DisenoIdeas {
         val yf = caja.top + h * 0.035f
         drawRect(t.c(CREMA), Offset(caja.left, yf), Size(caja.width, h * 0.05f))
         var x = caja.left + w * 0.012f
-        while (x < caja.right - w * 0.012f) { drawRect(t.c(lata), Offset(x, yf + h * 0.015f), Size(h * 0.02f, h * 0.02f)); x += h * 0.05f }
+        while (x < caja.right - w * 0.012f) { drawRect(t.c(lata), Offset(x, yf + h * 0.015f), Size(h * 0.02f, h * 0.02f)); x += maxOf(1f, h * 0.05f) }
         drawRect(t.c(ORO), Offset(caja.left, yf - 1.3f * u), Size(caja.width, 1.4f * u))
         drawRect(t.c(ORO), Offset(caja.left, yf + h * 0.05f), Size(caja.width, 1.4f * u))
         drawRect(t.c(ORO), Offset(caja.left, piso - h * 0.028f), Size(caja.width, 1.4f * u))

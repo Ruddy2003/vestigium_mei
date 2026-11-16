@@ -90,13 +90,15 @@ fun MuebleIdeas(cajones: List<CajonIdeas>, rotulo: (String) -> String, sub: (Caj
                         base = Rect(0f, size.height - altoBase.toPx(), size.width, size.height),
                         separacion = sep.toPx(), mas = mas,
                     )
-                    // El mueble no se sale de su lugar (la luz del fuego, por ejemplo, se queda en la cueva).
+                    // Sin sitio no se dibuja (ver [sinSitio]). El mueble no se sale de su lugar (la luz del fuego, por ejemplo, se
+                    // queda en la cueva).
+                    if (sinSitio()) return@Canvas
                     clipRect { with(d) { mueble(disp, oscuro) } }
                 }
                 for (i in 0 until huecos) {
                     val c = cajones.getOrNull(i)
                     val lugar = Modifier.offset(x(i), y(i)).size(anchoH, altoH)
-                    if (c == null) Canvas(lugar) { with(d) { compartimento(EstadoCajon(0, false, 0f, 7919 * (i + 1), vacio = true, fila = i / d.cols, col = i % d.cols, filas = filas, cols = d.cols), oscuro) } }
+                    if (c == null) Canvas(lugar) { if (!sinSitio()) with(d) { compartimento(EstadoCajon(0, false, 0f, 7919 * (i + 1), vacio = true, fila = i / d.cols, col = i % d.cols, filas = filas, cols = d.cols), oscuro) } }
                     else key(c.tema) {
                         val anim = remember { Animatable(0f) }
                         val toque = remember { MutableInteractionSource() }
@@ -147,7 +149,7 @@ fun CompartimentoIdeas(d: DisenoIdeas, n: Int, sinTema: Boolean, semilla: Int, t
                        modifier: Modifier = Modifier, abierto: () -> Float = { 0f }, fila: Int = 0, col: Int = 0, filas: Int = 1) {
     BoxWithConstraints(modifier) {
         Canvas(Modifier.fillMaxSize().graphicsLayer()) {
-            with(d) { compartimento(EstadoCajon(n, sinTema, abierto(), semilla, fila = fila, col = col, filas = filas, cols = d.cols), oscuro) }
+            if (!sinSitio()) with(d) { compartimento(EstadoCajon(n, sinTema, abierto(), semilla, fila = fila, col = col, filas = filas, cols = d.cols), oscuro) }
         }
         val r = d.rotulo
         val altoR = maxHeight * r.height
@@ -219,7 +221,15 @@ fun BordeCompartimento(modifier: Modifier = Modifier, alto: Dp = 26.dp, n: Int =
     BoxWithConstraints(modifier.fillMaxWidth().height(alto).clipToBounds()) {
         val completo = maxWidth / d.proporcion
         Canvas(Modifier.fillMaxWidth().wrapContentHeight(Alignment.Top, unbounded = true).requiredHeight(completo)) {
-            with(d) { compartimento(EstadoCajon(n, false, 1f, 31), oscuro) }
+            if (!sinSitio()) with(d) { compartimento(EstadoCajon(n, false, 1f, 31), oscuro) }
         }
     }
 }
+
+/**
+ * Si el lienzo se quedó sin ancho o sin alto (menos de un píxel). Pasa cuando el mueble no cabe donde lo pusieron: una
+ * columna sin desplazamiento más baja que él, una animación de tamaño. Ahí no se dibuja nada: los dibujos de los temas
+ * reparten trazos con pasos que salen del ancho y del alto, y con un alto de cero un bucle así no termina nunca (le pasó
+ * al quiosco de Urbe en las capturas, que se quedaron colgadas más de una hora).
+ */
+internal fun androidx.compose.ui.graphics.drawscope.DrawScope.sinSitio(): Boolean = !(size.width >= 1f && size.height >= 1f)
