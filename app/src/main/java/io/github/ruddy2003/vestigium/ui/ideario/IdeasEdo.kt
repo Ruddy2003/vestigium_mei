@@ -50,13 +50,13 @@ import kotlin.math.sqrt
  * tubo de bambú con una rama quebrada de ciruelo rojo, y delante un fardo envuelto en furoshiki índigo con su nudo. En la
  * pared, un sombrero de viaje de junco (sugegasa) colgado de un clavo, con su cordón. Al pie, el tatami con su trama y su
  * borde (heri) índigo, y un brasero (hibachi) de loza oscura con su ceniza, su carbón y sus palillos de hierro, cortado por
- * el borde. Cada tema es un cajón, de tres clases repartidas por su sitio (nunca dos iguales en una fila): con el papel de
+ * el borde. Cada tema es un cajón, de tres clases según la semilla (siempre el mismo para el mismo tema): con el papel de
  * washi pegado, dos tiradores colgantes (warabite) y los tanzaku pillados que cuelgan por arriba; con cerradura redonda,
  * fajas de hierro y el papel sujeto con una cinta, con los tanzaku metidos detrás en un manojo abierto; o entreabierto, con
- * su placa de mariposa y los tanzaku de pie asomando. Cambian según la semilla la madera (keyaki o keyaki viejo; uno de cada
- * cinco, un frente de kiri repuesto), la veta, el tinte del papel, el color de la cinta y los de los tanzaku; se ven más
- * tanzaku cuantas más fichas guarda. Lo que no tiene tema es una caja larga de kiri atada con cordón plano (sanada-himo), puesta en el hueco, con
- * los tanzaku detrás. Un hueco libre es un cajón cerrado, solo con su herraje y la huella de un papel viejo. Al abrir uno, el
+ * su placa de mariposa y los tanzaku de pie asomando. Cambian también según la semilla la madera (keyaki, keyaki viejo o, a
+ * veces, un frente de kiri repuesto), la veta, el tinte del papel, el color de la cinta y los de los tanzaku; se ven más
+ * tanzaku cuantas más fichas guarda. Lo que no tiene tema es una caja larga de kiri atada con cordón plano (sanada-himo),
+ * puesta en el hueco, con los tanzaku detrás. Un hueco libre es un cajón cerrado, solo con su herraje y la huella de un papel viejo. Al abrir uno, el
  * frente baja y se acerca. De noche alumbra el andon: el papel encendido desde dentro con la sombra de su armazón, un charco
  * de luz ámbar en la pared y en la tapa, el filo cálido en el hierro; la veta se apaga de fila en fila y hacia la derecha, y
  * abajo solo queda el rescoldo de las brasas del hibachi; lo demás se hunde en índigo. Por dentro, el cajón es de kiri
@@ -1300,8 +1300,15 @@ object IdeasEdo : DisenoIdeas {
         return x xor (x ushr 13)
     }
 
-    /** La madera de un cajón según su tema: 0, keyaki; 1, keyaki viejo (el kiri, 2, va por el sitio). */
-    private fun maderaDe(m: Int) = Math.floorMod(m ushr 4, 2)
+    /**
+     * La clase de cajón de un tema (0, tiradores; 1, cerradura y cinta; 2, entreabierto) y su madera (0, keyaki; 1, keyaki
+     * viejo; 2, kiri), siempre las mismas para el mismo tema. Cada una lleva su sal, elegida para que en la hoja de ejemplo
+     * ninguna clase salga más de tres veces ni dos iguales en una fila, y haya un solo frente de kiri.
+     */
+    private const val SAL_CLASE = 11
+    private const val SAL_MADERA = 5
+    private fun claseDe(semilla: Int) = Math.floorMod(mezclar(semilla + SAL_CLASE), 3)
+    private fun maderaDe(semilla: Int) = when (Math.floorMod(mezclar(semilla + SAL_MADERA) ushr 4, 5)) { 0, 1 -> 0; 2, 3 -> 1; else -> 2 }
 
     override fun DrawScope.compartimento(c: EstadoCajon, oscuro: Boolean) {
         val u = density
@@ -1319,10 +1326,9 @@ object IdeasEdo : DisenoIdeas {
         val m = mezclar(c.semilla)
         val baja = h * SALIDA * ab
         if (c.sinTema) { caja(w, h, c, m, t, baja, ab); return }
-        // La clase va por el sitio (nunca dos iguales en una fila, ninguna más de tres veces en ocho); lo demás, por la semilla.
-        val clase = if (c.vacio) Math.floorMod(c.fila + c.col, 2) else Math.floorMod(1 + 2 * c.fila + c.col, 3)
-        // Un frente de kiri, repuesto, cada tanto (por el sitio, para que se vea); los demás, keyaki nuevo o viejo según la semilla.
-        val madera = if (c.vacio) Math.floorMod(c.semilla, 2) else if (Math.floorMod(c.fila * c.cols + c.col, 5) == 3) 2 else maderaDe(m)
+        // La clase y la madera salen de la semilla: un tema es siempre el mismo cajón, esté donde esté.
+        val clase = if (c.vacio) Math.floorMod(c.fila + c.col, 2) else claseDe(c.semilla)
+        val madera = if (c.vacio) Math.floorMod(c.semilla, 2) else maderaDe(c.semilla)
         // El entreabierto asoma más cuanto más guarda; los otros, solo al abrirlos.
         val entre = if (!c.vacio && clase == 2) h * (0.12f + 0.013f * c.n.coerceIn(0, 7)) else 0f
         val arriba = entre + baja
