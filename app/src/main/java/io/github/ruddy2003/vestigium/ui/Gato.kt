@@ -132,6 +132,8 @@ object Gato {
     class Recursos(
         val indice: Indice, val meta: MetaTema, val gato: Bitmap, val fondo: Bitmap, val atras: Bitmap?, val delante: Bitmap?,
         val mov: Movimiento?, val luz: List<Bitmap>, val post: Bitmap?,
+        /** El tema y la clave de estos recursos (en un tema con caras, cada cara y escalón tiene la suya). */
+        val tema: TemaId, val clave: String,
     ) {
         /** El fondo del cuadro actual (base + mosaicos de atrás) y lo que va delante del gato. */
         val trabajo: Bitmap = fondo.copy(Bitmap.Config.ARGB_8888, true)
@@ -183,19 +185,43 @@ object Gato {
         json.decodeFromString(Indice.serializer(), ctx.assets.open("gato/gato.json").use { it.readBytes().decodeToString() })
     }.onFailure { error = "gato.json: $it" }.getOrNull()?.also { indice = it }
 
-    fun clave(tema: TemaId, oscuro: Boolean) = tema.id + if (oscuro || tema.soloOscuro) "_o" else "_c"
+    /**
+     * Los nombres de las bandas de un tema en assets/gato (cada una con su `_c` y su `_o`). Un tema sin caras tiene una,
+     * con su id. Uno con caras ([TemaId.conCaras], hoy Psicodelia) tiene además la de su cara [Cara.INTENSA] en tres
+     * escalones de intensidad: `<id>_tinta` (en reposo), `<id>_tinta_media` (i = 0.5) y `<id>_tinta_plena` (i = 1).
+     */
+    fun bandas(tema: TemaId): List<String> =
+        if (tema.conCaras) listOf(tema.id, "${tema.id}_tinta", "${tema.id}_tinta_media", "${tema.id}_tinta_plena") else listOf(tema.id)
+
+    /**
+     * La clave de los recursos de [tema] en claro u [oscuro]. En un tema con caras, la [cara] elige la banda: la de la base
+     * (la ciudad de Psicodelia) o la de la cara intensa (el cartel impreso), y en esta, la [intensidad] elige el escalón
+     * más cercano (0, 0.5 o 1: cambia en 0.25 y en 0.75). Los demás temas no miran ni la cara ni la intensidad.
+     */
+    fun clave(tema: TemaId, oscuro: Boolean, cara: Cara = Cara.BASE, intensidad: Float = 0f): String {
+        val banda = if (!tema.conCaras || cara == Cara.BASE) tema.id else {
+            val i = if (intensidad.isNaN()) 0f else intensidad
+            when {
+                i < 0.25f -> "${tema.id}_tinta"
+                i < 0.75f -> "${tema.id}_tinta_media"
+                else -> "${tema.id}_tinta_plena"
+            }
+        }
+        return banda + if (oscuro || tema.soloOscuro) "_o" else "_c"
+    }
 
     /** El último tema cargado: volver a Día no lo decodifica otra vez. */
     @Volatile private var ultimo: Pair<String, Recursos>? = null
 
-    fun enCache(tema: TemaId, oscuro: Boolean): Recursos? = ultimo?.takeIf { it.first == clave(tema, oscuro) }?.second
+    fun enCache(clave: String): Recursos? = ultimo?.takeIf { it.first == clave }?.second
+    fun enCache(tema: TemaId, oscuro: Boolean): Recursos? = enCache(clave(tema, oscuro))
 
-    /** Carga los recursos de un tema (unos 10 MB en memoria). Devuelve null si faltan. */
-    fun cargar(ctx: Context, tema: TemaId, oscuro: Boolean): Recursos? = enCache(tema, oscuro) ?: cargarDeAssets(ctx, tema, oscuro)?.also { ultimo = clave(tema, oscuro) to it }
+    /** Carga los recursos de una clave de [tema] (unos 10 MB en memoria). Devuelve null si faltan. */
+    fun cargar(ctx: Context, tema: TemaId, clave: String): Recursos? = enCache(clave) ?: cargarDeAssets(ctx, tema, clave)?.also { ultimo = clave to it }
+    fun cargar(ctx: Context, tema: TemaId, oscuro: Boolean): Recursos? = cargar(ctx, tema, clave(tema, oscuro))
 
-    private fun cargarDeAssets(ctx: Context, tema: TemaId, oscuro: Boolean): Recursos? = runCatching {
+    private fun cargarDeAssets(ctx: Context, tema: TemaId, clave: String): Recursos? = runCatching {
         val ind = indice(ctx) ?: return null
-        val clave = clave(tema, oscuro)
         val meta = ind.temas[clave] ?: return null
         val op = BitmapFactory.Options().apply { inScaled = false; inPreferredConfig = Bitmap.Config.ARGB_8888 }
         fun img(nombre: String): Bitmap? = runCatching { ctx.assets.open("gato/${clave}_$nombre.webp").use { BitmapFactory.decodeStream(it, null, op) } }
@@ -205,7 +231,7 @@ object Gato {
         val mov = if (meta.bucle > 0) runCatching { movimiento(ctx.assets.open("gato/${clave}_mov.bin").use { it.readBytes() }) }.getOrNull() else null
         val luz = meta.luz?.let { l -> (0..(l.maxOrNull() ?: -1)).mapNotNull { img("luz$it") } } ?: emptyList()
         error = null
-        Recursos(ind, meta, gato, fondo, img("atras"), img("delante"), mov, luz, if (meta.post) img("post") else null)
+        Recursos(ind, meta, gato, fondo, img("atras"), img("delante"), mov, luz, if (meta.post) img("post") else null, tema, clave)
     }.onFailure { error = "cargar: $it" }.getOrNull()
 
     private fun movimiento(b: ByteArray): Movimiento {
@@ -505,10 +531,20 @@ fun BandaGato(humor: Gato.Humor, modifier: Modifier = Modifier, tema: TemaId = E
     val ctx = LocalContext.current
     val oscuro = esOscuro() || tema.soloOscuro
     val vistaPrevia = LocalInspectionMode.current
+    // Psicodelia (los temas con caras): la banda de la cara y, en la cara intensa, la del escalón de intensidad. Con el tema
+    // en uso, la cara y la intensidad de aquí (respetan SinIntensidad); con otro (las capturas), las de EstadoTema.
+    val enUso = tema == Estilo.tema
+    val clave = if (!tema.conCaras) Gato.clave(tema, oscuro) else Gato.clave(
+        tema, oscuro,
+        if (enUso) caraLocal() else EstadoTema.caraDe(tema),
+        if (enUso) intensidadLocal() else EstadoTema.intensidad,
+    )
     // Sin animaciones (y en las capturas) se carga de una vez; si no, en segundo plano para no trabar la pantalla.
-    val rec: Gato.Recursos? = if (vistaPrevia || !Repo.config.animaciones) remember(tema, oscuro) { Gato.cargar(ctx, tema, oscuro) }
-    else produceState(Gato.enCache(tema, oscuro), tema, oscuro) {
-        value = Gato.enCache(tema, oscuro) ?: run { value = null; withContext(Dispatchers.IO) { Gato.cargar(ctx, tema, oscuro) } }
+    val rec: Gato.Recursos? = if (vistaPrevia || !Repo.config.animaciones) remember(clave) { Gato.cargar(ctx, tema, clave) }
+    else produceState(Gato.enCache(clave), clave) {
+        // Al pasar de una cara (o de un escalón) a otra del mismo tema, sigue la banda de antes mientras carga la nueva.
+        val sigue = tema.conCaras && value?.tema == tema
+        value = Gato.enCache(clave) ?: run { if (!sigue) value = null; withContext(Dispatchers.IO) { Gato.cargar(ctx, tema, clave) } }
     }.value
     val forma = MaterialTheme.shapes.medium
     val cs = MaterialTheme.colorScheme
@@ -516,7 +552,10 @@ fun BandaGato(humor: Gato.Humor, modifier: Modifier = Modifier, tema: TemaId = E
     var lienzo by remember { mutableStateOf(0f to 0f) }
     val ventana = if (rec != null && lienzo.first > 0f) Gato.ventana(rec, lienzo.first, lienzo.second) else null
     val semilla = remember { System.nanoTime() }
-    val sim = remember(rec, humor, ventana) { if (rec != null && ventana != null) Gato.Simulacion(rec.meta, humor, semilla, ventana.first, ventana.second) else null }
+    // La simulación sigue al cambiar de cara o de escalón en un tema con caras (las bandas de un tema tienen las mismas
+    // animaciones): el gato no salta al centro. En los demás temas, como siempre, se rehace con los recursos.
+    val llaveSim: Any? = if (rec != null && rec.tema.conCaras) rec.tema else rec
+    val sim = remember(llaveSim, humor, ventana) { if (rec != null && ventana != null) Gato.Simulacion(rec.meta, humor, semilla, ventana.first, ventana.second) else null }
     var tick by remember { mutableIntStateOf(0) }
     var paso by remember { mutableStateOf<Gato.Paso?>(null) }
     LaunchedEffect(sim, animar) {

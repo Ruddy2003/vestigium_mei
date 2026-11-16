@@ -84,10 +84,11 @@ class CoberturaTemas {
         superficie("arranque") { "Theme.Vestigium.Arranque.${Id(it)}\"" !in temas }
 
         // El gato de la banda de Día: claro y oscuro (solo oscuro si el tema no tiene claro), cada uno con sus 2 acciones propias.
+        // Los temas con caras (Psicodelia) tienen además la banda de su cara intensa en sus tres escalones (`Gato.bandas`).
         val gato = Pendientes.main("assets/gato/gato.json").takeIf { it.exists() }
             ?.let { runCatching { Json.parseToJsonElement(it.readText()).jsonObject["temas"]?.jsonObject }.getOrNull() }
         superficie("gato") { t ->
-            val claves = (if (t.soloOscuro) listOf("o") else listOf("c", "o")).map { "${t.id}_$it" }
+            val claves = io.github.ruddy2003.vestigium.ui.Gato.bandas(t).flatMap { b -> (if (t.soloOscuro) listOf("o") else listOf("c", "o")).map { "${b}_$it" } }
             gato == null || claves.any { k -> ((gato[k] as? kotlinx.serialization.json.JsonObject)?.get("especiales") as? JsonArray)?.size?.let { it < 2 } ?: true }
         }
 
