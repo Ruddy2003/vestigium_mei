@@ -64,7 +64,7 @@ internal object TorreOrden {
     // ---------------------------------------------------------------- La Garza en tres dimensiones
 
     /** Un cuerpo de dirigible: el morro en [morro], tendido hacia [dir] (horizontal, unitaria), con su [largo] y su [radio]. */
-    class Ballena(val morro: V3, val dir: V3, val largo: Float, val radio: Float) {
+    class Ballena(val morro: V3, val dir: V3, val largo: Float, val radio: Float, val achata: Float = 1f) {
         val lado: V3 = V3(dir.z, 0f, -dir.x)
 
         /** La forma de la panza a lo largo, de 0 (el morro) a 1 (la cola): redonda y llena delante, afilada atrás, como un pez. */
@@ -76,7 +76,8 @@ internal object TorreOrden {
 
         fun r(t: Float): Float = radio * perfil(t)
         fun eje(t: Float): V3 = morro + dir * (t * largo)
-        fun radial(a: Float): V3 = V3(lado.x * sin(a), cos(a), lado.z * sin(a))
+        /** La dirección del punto de ángulo [a] (0 el lomo, π la quilla); con [achata] menor que 1, la panza desplomada. */
+        fun radial(a: Float): V3 = V3(lado.x * sin(a), cos(a) * achata, lado.z * sin(a))
 
         /**
          * La tela no es un casco liso: entre cada dos largueros se hincha un poco (un lóbulo, como un gajo), y entre las
@@ -120,11 +121,15 @@ internal object TorreOrden {
      */
     fun enElPatio(): Ballena = Ballena(V3(-10.5f, P + RADIO + 0.6f, 51.5f), V3(-0.999f, 0f, 0.04f), LARGO, RADIO)
 
+    /** La Garza caída: la misma, desplomada sobre el patio (la tela, medio vacía, cuelga del armazón torcido). */
+    fun caida(): Ballena = Ballena(V3(-10.5f, P + RADIO * 0.55f + 0.1f, 51.5f), V3(-0.999f, 0f, 0.04f), LARGO, RADIO, achata = 0.55f)
+
     /** La Garza que hay hoy en el cuadro (amarrada, en vuelo o en el patio), o null si no está. */
     fun garza(m: Momento): Ballena? = when (EscenaOrden.garza(m)) {
         Garza.AMARRADA -> ballena(m)
         Garza.VOLANDO -> enVuelo()
-        Garza.CAIDA, Garza.COSIENDO -> enElPatio()
+        Garza.CAIDA -> caida()
+        Garza.COSIENDO -> enElPatio()
         Garza.AUSENTE -> null
     }
 
@@ -218,7 +223,7 @@ internal object TorreOrden {
      * mientras la cosen, de la panza hacia el lomo (los husos que quedan a menos de [hasta] media vuelta de la quilla), así
      * se ve desde cualquier lado cuánto falta («el armazón ya tiene media piel»).
      */
-    private fun DrawScope.entera(v: VistaOrden, b: Ballena, hasta: Float) {
+    private fun DrawScope.entera(v: VistaOrden, b: Ballena, hasta: Float, rota: Boolean = false) {
         if (hasta <= 0.01f) return
         val lz = v.lz; val lejos = if (EscenaOrden.garza(v.m) == Garza.VOLANDO) 0.45f else 0.12f
         val az = PiezasOrden.fijo("remiendos")
@@ -232,7 +237,8 @@ internal object TorreOrden {
         }
         val nuevos = EscenaOrden.garza(v.m) == Garza.COSIENDO
         // Lo que va detrás de la panza: las aletas y el motor del otro lado.
-        if (hasta >= 0.999f) detalles(v, b, delante = false)
+        if (hasta >= 0.999f && !rota) detalles(v, b, delante = false)
+        val agujeros = if (rota) (0 until 16).map { (2 + az.entero(ANILLOS - 4)) to az.entero(HUSOS) }.toSet() else emptySet()
         for (i in 0 until ANILLOS) {
             val t0 = tAnillo(i); val tf = tAnillo(i + 1)
             for (j in 0 until HUSOS) {
@@ -250,7 +256,7 @@ internal object TorreOrden {
                 }
                 // El rebote cálido del suelo en la panza y, en el lomo, el polvo que se posa.
                 val rebote = if (n.y < -0.3f) 0.14f * (-n.y) * (1f - v.l.noche) else 0f
-                val tono = lerp(lz.color(propio, n, lejos), v.l.tono(C.ARENA, lejos), rebote)
+                val tono = lerp(lz.color(propio, n, lejos), v.l.tono(C.ARENA, lejos), rebote).let { if ((i to j) in agujeros) lerp(it, v.l.tono(C.HOLLIN, lejos), 0.75f) else if (rota) lerp(it, v.l.tono(C.ARENA, lejos), 0.12f) else it }
                 val forma = poligono(q)
                 drawPath(forma, tono); drawPath(forma, tono, style = Stroke(0.6f))
                 // La costura de cada huso (más marcada cada dos: los largueros) y, en cada cuaderna, la de través.
@@ -260,7 +266,7 @@ internal object TorreOrden {
                 if (remiendos.containsKey(i to j) && (q[2] - q[0]).getDistance() > 4f) drawPath(forma, lerp(tono, v.l.tono(C.HOLLIN), 0.3f), style = Stroke(0.45f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(0.7f, 0.7f))))
             }
         }
-        if (hasta >= 0.999f) { red(v, b); morro(v, b); detalles(v, b, delante = true) }
+        if (hasta >= 0.999f && !rota) { red(v, b); morro(v, b); detalles(v, b, delante = true) }
     }
 
     /** El cinturón de la red, un poco por debajo del ecuador de la panza: de él cuelgan la góndola y los sacos de lastre. */
@@ -455,33 +461,22 @@ internal object TorreOrden {
 
     /**
      * La Garza caída: «tendida en el patio, desinflada, con la tela rota y unos andamios alrededor como costillas»; «un
-     * montón de tela gris y un armazón torcido». El armazón torcido asoma por encima de la tela desplomada.
+     * montón de tela gris y un armazón torcido». La panza desplomada, con desgarrones, y las cuadernas torcidas que asoman
+     * por encima; desde la `costura`, los rollos de tela nueva al lado.
      */
     private fun DrawScope.caida(v: VistaOrden, b: Ballena) {
         val lz = v.lz; val az = PiezasOrden.fijo("caida")
-        armazon(v, b, 0f, torcido = 1f)
-        // La tela desplomada: un montón bajo y largo, con pliegues, que sigue el eje.
-        val alto = 2.2f
-        val borde = (0..20).map { i -> val t = i / 20f; val c = b.eje(t); V3(c.x + b.lado.x * (b.r(t) + 1.5f), P, c.z + b.lado.z * (b.r(t) + 1.5f)) } +
-            (20 downTo 0).map { i -> val t = i / 20f; val c = b.eje(t); V3(c.x - b.lado.x * (b.r(t) + 1.2f), P, c.z - b.lado.z * (b.r(t) + 1.2f)) }
-        val lomo = (0..20).map { i -> val t = i / 20f; val c = b.eje(t); V3(c.x, P + alto * b.perfil(t) * az.entre(0.6f, 1.3f), c.z) }
-        val forma = poligono(borde.take(21).map { CamOrden.p(it) } + lomo.reversed().map { CamOrden.p(it) })
-        val tela = lz.color(C.TELA, V3(0.2f, 1f, -0.5f), 0.15f)
-        drawPath(poligono(borde.map { CamOrden.p(it) }), lz.color(C.TELA_VIEJA, V3(0f, 1f, 0f), 0.15f))
-        drawPath(forma, tela)
-        clipPath(poligono(borde.map { CamOrden.p(it) })) {
-            repeat(26) { val t = az.real(); val c = b.eje(t); val q = CamOrden.p(c.x + b.lado.x * az.entre(-4f, 4f), P + 0.5f, c.z + b.lado.z * az.entre(-4f, 4f)); drawLine(lz.color(C.TELA, V3(-1f, 0.3f, 0f), 0.15f), q, q + Offset(az.entre(-6f, 6f), az.entre(-1.5f, 1.5f)), 0.7f) }
-            // Los desgarrones: huecos oscuros con el borde deshilachado.
-            repeat(4) { val c = b.eje(az.entre(0.15f, 0.7f)); val q = CamOrden.p(c.x, P + 1.2f, c.z); drawOval(v.l.tono(C.HOLLIN, 0.15f).copy(alpha = 0.7f), Offset(q.x - 4f, q.y - 1.2f), androidx.compose.ui.geometry.Size(8f, 2.4f)) }
-        }
-        // Las costillas del armazón que quedaron de pie y los andamios.
-        for (i in 0 until 5) {
-            val t = 0.12f + i * 0.16f; val c = b.eje(t); val r = b.r(t)
-            val arco = (0..8).map { j -> val a = -1.2f + j * 0.3f + az.entre(-0.1f, 0.1f); CamOrden.p(c + b.radial(a) * r * az.entre(0.75f, 1f) + V3(0f, -r * 0.5f, 0f)) }
+        entera(v, b, 1f, rota = true)
+        // Las cuadernas torcidas que asoman por encima de la tela: arcos rotos, cada uno ladeado a su modo.
+        val metal = lz.color(C.HIERRO, V3(0f, 1f, -1f), 0.12f)
+        for (i in 0 until 7) {
+            val t = 0.05f + i * 0.09f; val c = b.eje(t); val r = b.r(t) * az.entre(1.1f, 1.5f); val ladeo = az.entre(-0.6f, 0.6f)
+            val arco = (0..9).map { j -> val a = -1.6f + j * (3.2f / 9f) * az.entre(0.55f, 1f) + ladeo; CamOrden.p(c + V3(b.lado.x * sin(a) * r, cos(a) * r * az.entre(0.9f, 1.4f), b.lado.z * sin(a) * r) + b.dir * az.entre(-1f, 1f)) }
             val camino = Path().apply { moveTo(arco[0].x, arco[0].y); for (q in arco.drop(1)) lineTo(q.x, q.y) }
-            drawPath(camino, lz.color(C.HIERRO_CLARO, V3(0f, 1f, -1f), 0.15f), style = Stroke(0.6f))
+            drawPath(camino, metal, style = Stroke(1.1f, cap = StrokeCap.Round))
+            drawPath(camino, lz.color(C.HIERRO_CLARO, V3(0f, 1f, 0f), 0.12f), style = Stroke(0.4f, cap = StrokeCap.Round))
         }
-        andamios(v, b, 0.3f)
+        andamios(v, enElPatio(), 0.3f)
         if (EscenaOrden.telaNueva(v.m)) {
             val c = b.eje(0.1f); val r0 = V3(c.x - b.lado.x * (b.r(0.1f) + 2.5f), P + 0.5f, c.z - b.lado.z * (b.r(0.1f) + 2.5f))
             palo(lz, r0, r0 + b.dir * 2.4f, 1f, C.TELA_NUEVA, 0.12f)

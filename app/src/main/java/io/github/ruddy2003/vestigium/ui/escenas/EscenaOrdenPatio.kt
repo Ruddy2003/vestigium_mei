@@ -69,7 +69,7 @@ internal object PatioOrden {
     /** La boca de la cisterna: el centro, el ancho (a través) y el largo (a lo largo de la muralla), en el patio junto a la muralla. */
     val CISTERNA = Offset(-3.5f, 17.6f)
     const val CISTERNA_ANCHO = 2.8f
-    const val CISTERNA_LARGO = 3.3f
+    const val CISTERNA_LARGO = 4.2f
     /** La fragua, arrimada a la muralla del oeste: de [FRAGUA_V0] a [FRAGUA_V1] a lo largo y hasta [FRAGUA_S] hacia dentro. */
     const val FRAGUA_V0 = 21.5f
     const val FRAGUA_V1 = 27.5f
@@ -302,14 +302,16 @@ internal object PatioOrden {
         drawPath(boca, v.l.tono(lerp(C.HOLLIN, C.ROCA_HONDA, 0.3f)))
         clipPath(boca) {
             // La pared del fondo del pozo (la de v1), que se ve hacia abajo, con la escalera pegada.
-            val hondo = 7f; val nivel = P - hondo * EscenaOrden.peldano(v.m) / EscenaOrden.PELDANOS.toFloat()
+            val hondo = 4.6f; val nivel = P - hondo * EscenaOrden.peldano(v.m) / EscenaOrden.PELDANOS.toFloat()
             val pared = poligono(listOf(V3(s0, P, v1), V3(s1, P, v1), V3(s1, P - hondo, v1), V3(s0, P - hondo, v1)).map { CamOrden.p(it) })
-            drawPath(pared, lz.color(C.PIEDRA_OSC, V3(0f, 0f, -1f), 0.15f).let { lerp(it, v.l.tono(C.HOLLIN), 0.45f) })
+            drawPath(pared, Brush.verticalGradient(listOf(lz.color(C.PIEDRA, V3(0f, 0f, -1f), 0.15f), lerp(lz.color(C.PIEDRA_OSC, V3(0f, 0f, -1f), 0.15f), v.l.tono(C.HOLLIN), 0.55f)), CamOrden.p(CISTERNA.x, P, v1).y, CamOrden.p(CISTERNA.x, P - 2.5f, v1).y))
             for (i in 0 until EscenaOrden.PELDANOS) {
                 val h = P - (i + 1) * hondo / EscenaOrden.PELDANOS; val sa = s0 + 0.15f + (i % 12) * 0.18f
                 val a = CamOrden.p(sa, h, v1 - 0.05f); val b = CamOrden.p(sa + 0.5f, h, v1 - 0.05f)
                 drawLine(lz.color(C.PIEDRA, V3(0f, 1f, 0f), 0.15f).let { lerp(it, v.l.tono(C.HOLLIN), 0.25f) }, a, b, 0.9f)
             }
+            // Lo mojado de la pared por debajo del agua, y la raya del nivel, clara.
+            drawPath(poligono(listOf(V3(s0, nivel, v1 - 0.01f), V3(s1, nivel, v1 - 0.01f), V3(s1, P - hondo, v1 - 0.01f), V3(s0, P - hondo, v1 - 0.01f)).map { CamOrden.p(it) }), v.l.tono(C.HOLLIN).copy(alpha = 0.35f))
             // El agua: un plano oscuro que refleja la boca; con la cisterna baja, verde y con el fondo a la vista.
             val agua = poligono(listOf(V3(s0, nivel, v0), V3(s1, nivel, v0), V3(s1, nivel, v1), V3(s0, nivel, v1)).map { CamOrden.p(it) })
             val tramo = EscenaOrden.tramoDeLaCisterna(v.m)
@@ -323,6 +325,21 @@ internal object PatioOrden {
         caja(lz, s0 - g / 2f, CISTERNA.y, 0f, g, CISTERNA_LARGO + g * 2f, P, P + alto, C.PIEDRA, 0.1f)
         caja(lz, CISTERNA.x, v0 - g / 2f, 0f, CISTERNA_ANCHO, g, P, P + alto, C.PIEDRA, 0.1f)
         caja(lz, CISTERNA.x, v1 + g / 2f, 0f, CISTERNA_ANCHO, g, P, P + alto, C.PIEDRA, 0.1f)
+        // Lo que dice el nivel desde arriba: a medias, el cubo con su cuerda en el brocal; baja, «el agua se reparte con
+        // cazo»: los cuencos en fila y el cazo, encima del brocal de delante **[Diseño propio]**.
+        when (EscenaOrden.tramoDeLaCisterna(v.m)) {
+            EscenaOrden.Cisterna.MEDIA -> {
+                val q = CamOrden.p(s0 - g / 2f, P + alto, v0 + 0.6f); val k = CamOrden.k(s0, v0)
+                drawPath(poligono(listOf(q + Offset(-k * 0.16f, 0f), q + Offset(k * 0.16f, 0f), q + Offset(k * 0.19f, -k * 0.32f), q + Offset(-k * 0.19f, -k * 0.32f))), lz.color(C.MADERA, V3(-0.5f, 0f, -1f), 0.1f))
+                drawOval(v.l.tono(C.MADERA_OSC), Offset(q.x - k * 0.19f, q.y - k * 0.36f), Size(k * 0.38f, k * 0.08f))
+            }
+            EscenaOrden.Cisterna.BAJA -> for (i in 0 until 5) {
+                val q = CamOrden.p(s0 + 0.3f + i * 0.5f, P + alto, v0 - g / 2f); val k = CamOrden.k(s0, v0)
+                drawOval(lz.color(lerp(C.ROCA, C.ARENA, 0.4f), V3(0f, 0.5f, -1f), 0.1f), Offset(q.x - k * 0.13f, q.y - k * 0.1f), Size(k * 0.26f, k * 0.12f))
+                if (i == 4) drawLine(lz.color(C.LATON, V3(0f, 1f, -1f), 0.1f), q + Offset(k * 0.15f, -k * 0.05f), q + Offset(k * 0.5f, -k * 0.2f), (k * 0.05f).coerceAtLeast(0.5f), StrokeCap.Round)
+            }
+            EscenaOrden.Cisterna.LLENA -> Unit
+        }
     }
 
     // ---------------------------------------------------------------- La fragua
