@@ -138,7 +138,8 @@ internal class VistaLab(val m: Momento) {
             val d = f.w - w; val dist = d.largo().coerceAtLeast(0.05f); val u = d * (1f / dist)
             val lam = ((nn.punto(u) + 0.15f) / 1.15f).coerceAtLeast(0f)
             var k = f.fuerza * caida(dist, f.alcance) * lam
-            if (f.cono > 0f) k *= ((-u.y - f.cono) / 0.16f).coerceIn(0f, 1f) + 0.06f
+            // El cono mira hacia abajo: [u] va del punto a la lámpara, así que lo que está debajo tiene u.y cerca de 1.
+            if (f.cono > 0f) k *= ((u.y - f.cono) / 0.16f).coerceIn(0f, 1f) + 0.06f
             if (k <= 0.002f) continue
             r += (propio.red * 0.9f + 0.05f) * f.color.red * k; g += (propio.green * 0.9f + 0.05f) * f.color.green * k; b += (propio.blue * 0.9f + 0.05f) * f.color.blue * k
         }
@@ -174,7 +175,7 @@ internal class VistaLab(val m: Momento) {
         val d = f.w - w; val dist = d.largo().coerceAtLeast(0.05f); val u = d * (1f / dist)
         val lam = n.unidad().punto(u).coerceAtLeast(0f)
         var k = f.fuerza * caida(dist, f.alcance) * lam
-        if (f.cono > 0f) k *= ((-u.y - f.cono) / 0.16f).coerceIn(0f, 1f)
+        if (f.cono > 0f) k *= ((u.y - f.cono) / 0.16f).coerceIn(0f, 1f)
         return k
     }
 

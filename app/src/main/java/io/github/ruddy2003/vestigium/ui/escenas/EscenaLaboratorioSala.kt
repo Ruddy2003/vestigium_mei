@@ -260,7 +260,7 @@ internal object SalaLab {
         if (!EscenaLaboratorio.enLaMesa(v.m) || v.tarea == EscenaLaboratorio.Tarea.MUSICA || EscenaLaboratorio.arriba(v.m) || v.tarea == EscenaLaboratorio.Tarea.DESAYUNO) {
             if (laSalaPinta(v.m, "bata")) bata(v, V3(CX0 + 0.55f, yP, zP - 0.05f), false)
         }
-        if (EscenaLaboratorio.bataDeLauro(v.m) && !EscenaLaboratorio.cierre(v.m)) bata(v, V3(CX0 + 0.25f, yP, zP - 0.07f), true)
+        if (EscenaLaboratorio.bataDeLauro(v.m) && !CosasLab.bataDeLauroEnElTaburete(v.m)) bata(v, V3(CX0 + 0.25f, yP, zP - 0.07f), true)
         if (laSalaPinta(v.m, "guantes")) guantes(v, V3(CX1 - 0.14f, yP, zP - 0.04f))
     }
 

@@ -32,6 +32,12 @@ import io.github.ruddy2003.vestigium.vidas.Semilla
 internal object CosasLab {
     private val C = ColorLaboratorio
 
+    /**
+     * Si la bata de repuesto de Lauro está echada en su taburete: en el cierre, salvo el día que el objeto es la bata o
+     * los guantes (cuelgan de ese mismo asiento); ese día sigue en la percha.
+     */
+    fun bataDeLauroEnElTaburete(m: Momento): Boolean = EscenaLaboratorio.cierre(m) && !(m.ficha.objeto == "bata" || m.ficha.objeto == "guantes")
+
     /** El taburete de Lauro: junto a la mesa; en el experimento, pegado al vidrio de la campana. */
     fun taburete(m: Momento): V3 = if (EscenaLaboratorio.enLaCampana(m)) V3(1.05f, 0f, 3.75f) else V3(1.15f, 0f, 3.02f)
 
@@ -165,7 +171,7 @@ internal object CosasLab {
         for (i in 0 until aro.size - 1) drawLine(v.c(t + V3(0f, 0.22f, 0f), C.ACERO, PiezasLab.FRENTE), aro[i], aro[i + 1], 0.8f)
         cilindro(v, t + V3(0f, alto, 0f), 0.17f, 0.04f, C.MADERA)
         // En el cierre, su bata de repuesto echada encima, con la franja gris en la manga que cuelga.
-        if (EscenaLaboratorio.cierre(v.m)) {
+        if (bataDeLauroEnElTaburete(v.m)) {
             val c = t + V3(0f, alto + 0.04f, 0f); val k = CamLab.k(c); val p = CamLab.p(c)
             fun q(x: Float, y: Float) = p + Offset(x * k, -y * k)
             val tela = v.c(c, C.TELA, V3(-0.3f, 0.6f, -1f)); val sombra = v.c(c, lerp(C.TELA, C.SOMBRA, 0.3f), V3(0.8f, 0f, -0.4f))

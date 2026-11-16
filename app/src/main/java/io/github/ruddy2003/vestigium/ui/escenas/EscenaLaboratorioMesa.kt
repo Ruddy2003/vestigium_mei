@@ -419,11 +419,13 @@ internal object MesaLab {
     private fun DrawScope.pipetas(v: VistaLab, a: Float, b: Float) {
         cajaEn(v, MK, a, a + 0.2f, b, b + 0.08f, ALTO, ALTO + 0.02f, lerp(C.ACERO, C.HORMIGON, 0.3f))
         palo(v, MK.w(a + 0.1f, b + 0.06f, ALTO), MK.w(a + 0.1f, b + 0.06f, ALTO + 0.28f), 0.01f, C.ACERO, filo = false)
+        // El día de la pipeta, la tres es el objeto del día (en el claro): ni en el soporte ni tumbada en la mesa.
+        val delDia = !SalaLab.laSalaPinta(v.m, "pipeta")
         for (i in 0 until 6) { val aa = a + 0.02f + i * 0.032f; val base = MK.w(aa, b + 0.03f, ALTO + 0.03f)
-            if (v.tarea == Tarea.TRABAJO && i == 2) continue                              // la tres, la buena, está fuera
+            if ((v.tarea == Tarea.TRABAJO || delDia) && i == 2) continue                  // la tres, la buena, está fuera
             palo(v, base, base + V3(0f, 0.24f, 0f), 0.006f, lerp(C.VIDRIO, Color.White, 0.3f), filo = false)
             drawCircle(v.c(base, lerp(C.AVISO, C.BARRO, 0.5f), ARRIBA), (0.012f * CamLab.k(base)).coerceAtLeast(0.6f), CamLab.p(base + V3(0f, 0.25f, 0f))) }
-        if (v.tarea == Tarea.TRABAJO) { val p0 = MK.w(1.95f, 0.42f, ALTO + 0.008f); palo(v, p0, MK.w(2.2f, 0.4f, ALTO + 0.008f), 0.007f, lerp(C.VIDRIO, Color.White, 0.3f), filo = false)
+        if (v.tarea == Tarea.TRABAJO && !delDia) { val p0 = MK.w(1.95f, 0.42f, ALTO + 0.008f); palo(v, p0, MK.w(2.2f, 0.4f, ALTO + 0.008f), 0.007f, lerp(C.VIDRIO, Color.White, 0.3f), filo = false)
             drawCircle(v.c(p0, lerp(C.AVISO, C.BARRO, 0.5f), ARRIBA), (0.013f * CamLab.k(p0)).coerceAtLeast(0.6f), CamLab.p(p0)) }
     }
 
@@ -470,9 +472,11 @@ internal object MesaLab {
 
     /** El plato negro con la pinza y unas semillas pardas contadas en fila. */
     private fun DrawScope.platoNegro(v: VistaLab, a: Float, b: Float) {
+        // El día de la semilla, el plato y la pinza son los del objeto (en el claro): la mesa no pinta los suyos.
+        if (!SalaLab.laSalaPinta(v.m, "semilla")) return
         val c = MK.w(a, b, ALTO); cilindro(v, c, 0.075f, 0.012f, C.NEGRO)
         val k = CamLab.k(c)
-        if (SalaLab.laSalaPinta(v.m, "semilla")) for (i in 0 until 5) drawCircle(v.c(c, lerp(C.MADERA, C.TIERRA, 0.3f), ARRIBA), (0.006f * k).coerceAtLeast(0.45f), MK.p(a - 0.03f + i * 0.015f, b, ALTO + 0.013f))
+        for (i in 0 until 5) drawCircle(v.c(c, lerp(C.MADERA, C.TIERRA, 0.3f), ARRIBA), (0.006f * k).coerceAtLeast(0.45f), MK.p(a - 0.03f + i * 0.015f, b, ALTO + 0.013f))
         palo(v, MK.w(a + 0.02f, b - 0.09f, ALTO + 0.005f), MK.w(a + 0.16f, b - 0.09f, ALTO + 0.005f), 0.006f, C.ACERO, filo = false)
     }
 

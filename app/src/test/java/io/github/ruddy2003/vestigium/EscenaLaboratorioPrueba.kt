@@ -21,8 +21,11 @@ import io.github.ruddy2003.vestigium.ui.escenas.EscenaLaboratorio.Tarea
 import io.github.ruddy2003.vestigium.ui.escenas.Fuente
 import io.github.ruddy2003.vestigium.ui.escenas.Gatuno
 import io.github.ruddy2003.vestigium.ui.escenas.Momento
+import io.github.ruddy2003.vestigium.ui.escenas.MesaLab
 import io.github.ruddy2003.vestigium.ui.escenas.ObjetosLaboratorio
+import io.github.ruddy2003.vestigium.ui.escenas.SitioObjeto
 import io.github.ruddy2003.vestigium.ui.escenas.TipoAncla
+import io.github.ruddy2003.vestigium.ui.escenas.V3
 import io.github.ruddy2003.vestigium.ui.escenas.VistaLab
 import io.github.ruddy2003.vestigium.ui.escenas.gatoQuieto
 import io.github.ruddy2003.vestigium.ui.escenas.lienzo
@@ -175,6 +178,30 @@ class EscenaLaboratorioPrueba {
         // De madrugada, sin la lámpara de la mesa, sigue habiendo una cálida (la campana) y dos frías.
         val madrugada = VistaLab(momento("2027-05-05", 2.0))
         assertTrue(madrugada.luces.any { it.de == Fuente.CAMPANA && it.color.red > it.color.blue }); assertTrue(madrugada.luces.any { it.de == Fuente.PUERTA }); assertTrue(madrugada.luces.any { it.de == Fuente.PANTALLA })
+    }
+
+    @Test fun lasLamparasConPantallaAlumbranLoQueTienenDebajo() {
+        // El cono mira hacia abajo: lo que está justo debajo de una lámpara con pantalla recibe su luz (y su sombra cae en
+        // el tablero); lo que queda a un lado, fuera del cono, no. De día, las de cultivo y la de su mesa; de noche, la de su mesa.
+        for (h in listOf(10.0, 21.5)) {
+            val v = VistaLab(momento("2027-05-05", h))
+            val conos = v.luces.filter { (it.de == Fuente.CULTIVO || it.de == Fuente.MESA) && it.fuerza > 0.01f }
+            assertTrue("hay lámparas con pantalla a las $h", conos.isNotEmpty())
+            for (f in conos) {
+                val debajo = v.cuanto(f, f.w - V3(0f, 0.4f, 0f), V3(0f, 1f, 0f))
+                assertTrue("${f.de} a las $h alumbra lo de debajo", debajo > 0.1f)
+                assertEquals("${f.de} a las $h no alumbra a un lado", 0f, v.cuanto(f, f.w + V3(1.2f, -0.4f, 0f), V3(0f, 1f, 0f)), 0f)
+                // Lo de debajo, más claro con la lámpara que con solo la luz de fondo.
+                val w = f.w - V3(0f, 0.4f, 0f)
+                assertTrue(v.c(w, Color(0xFF808080), V3(0f, 1f, 0f)).let { it.red + it.green + it.blue } > v.cFondo(w, Color(0xFF808080), V3(0f, 1f, 0f)).let { it.red + it.green + it.blue } + 0.1f)
+            }
+            // Y tumban la sombra de lo que tienen debajo sobre el tablero (la cuenta de `LuzLab.sombrasEnLaMesa`).
+            assertTrue(v.tumban.any { it.cono > 0f && v.cuanto(it, it.w.copy(y = 0.92f), V3(0f, 1f, 0f)) > 0.08f })
+            // Con el cono arreglado, los objetos ya no se corrigen la luz: en el claro, su color es el de la sala.
+            val sitio = SitioObjeto.delLaboratorio(v, MesaLab.CLARO, MesaLab.MK.u, true)
+            for (f in conos) { val w = f.w - V3(0f, 0.3f, 0f)
+                assertEquals(v.c(w, Color(0xFF808080), V3(0f, 1f, 0f)), sitio.color(w, Color(0xFF808080), V3(0f, 1f, 0f))) }
+        }
     }
 
     @Test fun losTresDiasDeLuzEspecial() {

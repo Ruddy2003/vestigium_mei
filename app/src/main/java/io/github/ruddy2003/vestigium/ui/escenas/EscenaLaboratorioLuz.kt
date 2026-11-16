@@ -52,13 +52,16 @@ internal object LucesLab {
         }
         // La lámpara de su mesa: cálida, baja, con su pantalla.
         if (v.mesa > 0.01f) {
-            add(Luz3(Fuente.MESA, MesaLab.LAMPARA_MESA, C.LAMPARA, 1.5f * v.mesa, 0.75f, cono = 0.68f))
+            add(Luz3(Fuente.MESA, MesaLab.LAMPARA_MESA, C.LAMPARA, 1.0f * v.mesa, 0.75f, cono = 0.68f))
             add(Luz3(Fuente.REBOTE, MesaLab.LAMPARA_MESA - V3(0f, 0.3f, 0f), C.LAMPARA, 0.35f * v.mesa, 1.0f, tumba = false))
         }
         // La pantalla de la Vigía: el color del cielo de arriba, que tiñe la pared, la campana y el suelo de su lado.
         if (v.pantalla > 0.01f) {
             val deslumbra = EscenaLaboratorio.deslumbra(v.m)
-            add(Luz3(Fuente.PANTALLA, V3(SalaLab.XD - 0.5f, 2.0f, 3.45f), v.colorPantalla, (if (v.noche) 0.85f else 1.25f) * v.pantalla * (if (deslumbra) 1.4f else 1f), if (deslumbra) 3.2f else 2.4f, tumba = v.noche || deslumbra))
+            val fp = (if (v.noche) 0.85f else 1.25f) * v.pantalla * (if (deslumbra) 1.4f else 1f)
+            add(Luz3(Fuente.PANTALLA, V3(SalaLab.XD - 0.5f, 2.0f, 3.45f), v.colorPantalla, fp, if (deslumbra) 3.2f else 2.4f, tumba = v.noche || deslumbra))
+            // Su mancha en el suelo pulido, junto al taburete, devuelve la luz hacia arriba: alumbra lo que cuelga del asiento.
+            add(Luz3(Fuente.REBOTE, V3(1.7f, 0.1f, 2.6f), lerp(v.colorPantalla, Color.White, 0.45f), 0.85f * fp, 1.1f, tumba = false))
         }
         // La puerta: el violeta de los jardines de noche (o su blanco, la noche de la luz larga); de día, su claridad; con aviso, el rojo.
         val kp = when { v.roja -> 0.75f; v.noche -> 0.85f * max(v.violeta, if (v.jardinBlanco) 1f else 0f); else -> 0.55f * v.general }
@@ -124,7 +127,7 @@ internal object LuzLab {
         }
         clipPath(suelo) {
             // La pantalla, en el suelo de debajo; la lámpara de su mesa, en el suelo de delante.
-            pantalla?.let { f -> charco(V3(SalaLab.XD - 0.45f, 0f, 3.7f), 1.3f, f.color, 0.5f * f.fuerza, duro = 0.3f) }
+            pantalla?.let { f -> charco(V3(SalaLab.XD - 0.45f, 0f, 3.7f), 1.3f, f.color, 0.5f * f.fuerza, duro = 0.3f); charco(V3(1.75f, 0f, 2.7f), 0.8f, lerp(f.color, Color.White, 0.3f), 0.45f * f.fuerza, duro = 0.3f) }
             v.luces.firstOrNull { it.de == Fuente.MESA }?.let { f -> charco(V3(f.w.x + 0.5f, 0f, f.w.z + 0.6f), 1.1f, f.color, 0.25f * f.fuerza) }
             // La claridad de los paneles del techo, en el suelo.
             if (v.general > 0.01f) for ((x, z) in listOf(-1.2f to 5.9f, 1.45f to 5.9f, 1.45f to 3.6f)) charco(V3(x, 0f, z), 1.2f, C.LUZ_DIA, 0.12f * v.general, duro = 0.2f)
@@ -228,7 +231,7 @@ internal object LuzLab {
                 if (f.fuerza < 0.03f) continue
                 when (f.de) {
                     Fuente.CULTIVO -> { val r = radio(f, f.w.y - MesaLab.ALTO); charco(V3(f.w.x, MesaLab.ALTO, f.w.z), r, f.color, 0.42f * f.fuerza, duro = 0.72f); charco(V3(f.w.x, MesaLab.ALTO, f.w.z), r * 0.6f, lerp(f.color, Color.White, 0.3f), 0.3f * f.fuerza, duro = 0.8f) }
-                    Fuente.MESA -> charco(V3(f.w.x, MesaLab.ALTO, f.w.z), radio(f, f.w.y - MesaLab.ALTO) * 1.2f, f.color, 0.75f * f.fuerza, duro = 0.45f)
+                    Fuente.MESA -> charco(V3(f.w.x, MesaLab.ALTO, f.w.z), radio(f, f.w.y - MesaLab.ALTO) * 1.2f, f.color, (if (v.noche) 1.1f else 0.85f) * f.fuerza, duro = 0.45f)
                     Fuente.VELA -> charco(V3(f.w.x, MesaLab.ALTO, f.w.z), 0.45f, f.color, 0.6f * f.fuerza)
                     Fuente.LINTERNA -> charco(MesaLab.MK.w(1.5f, 0.35f, MesaLab.ALTO), 0.4f, f.color, 0.7f * f.fuerza)
                     Fuente.PANTALLA, Fuente.PUERTA, Fuente.CAMPANA, Fuente.AVISO, Fuente.PANEL, Fuente.REBOTE -> {}
