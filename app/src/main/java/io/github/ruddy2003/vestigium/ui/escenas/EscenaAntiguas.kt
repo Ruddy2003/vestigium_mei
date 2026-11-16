@@ -106,8 +106,13 @@ internal object EscenaAntiguas : EscenaVida {
 
     private fun mesDia(m: Momento): String = m.ficha.dia.substring(5)
 
-    /** Si ya pasó el día [fecha] («MM-DD») de la temporada [temp]: la misma cuenta que hace el cuento con `desde` y `hasta`. */
-    internal fun paso(m: Momento, temp: Int, fecha: String): Boolean = m.ficha.temporada > temp || (m.ficha.temporada == temp && mesDia(m) >= fecha)
+    /**
+     * Si ya pasó el día [fecha] («MM-DD») de la temporada [temp]: la misma cuenta que hace el cuento con `desde` y `hasta`.
+     * Desde 2032 se repite la temporada 5, pero lo que ya pasó no se deshace (el pino sigue partido, las casas de los
+     * mineros siguen vacías) **[Diseño propio]**: con la vuelta, todo lo de la 5 cuenta como pasado.
+     */
+    internal fun paso(m: Momento, temp: Int, fecha: String): Boolean =
+        m.ficha.temporada > temp || (m.ficha.temporada == temp && (m.ficha.vuelta > 0 || mesDia(m) >= fecha))
 
     internal fun hoyEs(m: Momento, id: String): Boolean = m.ficha.especiales.any { it.dia.id == id }
 
