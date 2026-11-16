@@ -155,12 +155,21 @@ fun CompartimentoIdeas(d: DisenoIdeas, n: Int, sinTema: Boolean, semilla: Int, t
         val altoPx = with(LocalDensity.current) { maxHeight.toPx() }
         val tinta = d.tintaRotulo(oscuro)
         val letra = d.letraRotulo ?: MaterialTheme.typography.labelLarge.fontFamily
+        // La cuenta («7 páginas del cronista · jue 12 nov») es larga en algunos temas: si no cabe, la letra se achica hasta
+        // un 20 % antes de cortarse, para que la fecha no se pierda.
+        val medidor = rememberTextMeasurer()
+        val anchoLibre = with(LocalDensity.current) { (maxWidth * r.width - 6.dp).toPx() }
+        val tamSub0 = tam * 0.74f
+        val anchoSub = remember(sub, letra, tamSub0) {
+            if (sub.isEmpty()) 0 else medidor.measure(sub, TextStyle(fontFamily = letra, fontSize = tamSub0.sp), maxLines = 1, softWrap = false).size.width
+        }
+        val tamSub = if (anchoSub > anchoLibre) maxOf(tamSub0 * 0.8f, tamSub0 * anchoLibre / anchoSub * 0.98f) else tamSub0
         Column(Modifier.offset(maxWidth * r.left, maxHeight * r.top).size(maxWidth * r.width, altoR)
             .graphicsLayer { translationY = abierto() * d.salida * altoPx }.padding(horizontal = 3.dp),
             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Text(titulo, color = tinta, fontFamily = letra, fontSize = tam.sp, lineHeight = (tam * 1.12f).sp, fontWeight = FontWeight.SemiBold,
                 fontStyle = if (sinTema) FontStyle.Italic else FontStyle.Normal, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-            if (sub.isNotEmpty()) Text(sub, color = tinta.copy(alpha = 0.78f), fontFamily = letra, fontSize = (tam * 0.74f).sp, lineHeight = (tam * 0.86f).sp,
+            if (sub.isNotEmpty()) Text(sub, color = tinta.copy(alpha = 0.78f), fontFamily = letra, fontSize = tamSub.sp, lineHeight = (tam * 0.86f).sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
         }
     }
