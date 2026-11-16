@@ -158,7 +158,7 @@ object Marcas {
          * su sombra corta y café; en la tinta, la cartela de arco del cartel, impresa otra vez en ultramar con el registro
          * corrido.
          */
-        CARTELA,
+        LETRERO,
         /**
          * Psicodelia: el filete bajo la palabra: en la ciudad, la raya pintada; en la tinta, la onda impresa con el tintero
          * partido entre dos tintas (de magenta a ultramar), que acaba en el disco chico.
@@ -194,7 +194,7 @@ object Marcas {
             TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
             // La @persona, en una burbuja de cartel con su sombra en el color opuesto; el #tema, sobre la onda de tinta de arcoíris.
-            TemaId.PSICODELIA -> if (persona) Aspecto(cs.onPrimary, p, Forma.CARTELA, negrita = true) else Aspecto(s, s, Forma.TINTERO)
+            TemaId.PSICODELIA -> if (persona) Aspecto(cs.onPrimary, p, Forma.LETRERO, negrita = true) else Aspecto(s, s, Forma.TINTERO)
             // La @persona, en la placa esmaltada de una entrada de metro (letras crema sobre el verde de la fundición); el #tema,
             // sobre una línea de látigo en el violeta del iris.
             TemaId.NOUVEAU -> if (persona) Aspecto(Color(0xFFF3EAD3), if (cs.background.luminance() < 0.5f) lerp(TrazosNouveau.HIERRO, Color.White, 0.08f) else TrazosNouveau.HIERRO, Forma.ESMALTE, negrita = true)
@@ -275,7 +275,7 @@ object Marcas {
         Forma.TORQUES -> Color.Unspecified
         Forma.ESMALTE -> c
         Forma.LATIGO -> Color.Unspecified
-        Forma.CARTELA -> c
+        Forma.LETRERO -> c
         Forma.TINTERO -> Color.Unspecified
     }
 
@@ -304,7 +304,7 @@ object Marcas {
         Forma.TORQUES -> true
         Forma.ESMALTE -> false
         Forma.LATIGO -> true
-        Forma.CARTELA -> false
+        Forma.LETRERO -> false
         Forma.TINTERO -> true
     }
 
@@ -777,7 +777,7 @@ object Marcas {
                 drawPath(TrazosNouveau.cinta(todo) { f -> (1.5f - 0.9f * f) * u }, c.copy(alpha = 0.9f))
                 drawPath(TrazosNouveau.hojaLanza(Offset(x0 + 1f * u, pts[0].y), Offset(x0 - 3.6f * u, pts[0].y + 1f * u), 1.8f * u, -0.12f), c.copy(alpha = 0.9f))
             }
-            Forma.CARTELA -> {
+            Forma.LETRERO -> {
                 val t = rr.top + h * 0.02f; val b = rr.bottom; val iz = rr.left - 5 * u; val de = rr.right + 5 * u
                 val caja = Rect(iz, t, de, b)
                 if (EstadoTema.cara == Cara.BASE) {
