@@ -87,7 +87,15 @@ internal object PiezasAbismo {
             Offset(c.x + x * cos(giro) - y * sin(giro), c.y + x * sin(giro) + y * cos(giro))
         }
         val forma = if (r < 1.4f) Path().apply { addOval(Rect(c, r)) } else lazo(pts)
-        val propio = if (seca) lerp(lerp(C.ESPONJA, C.ESPONJA_OSC, az.entre(0f, 0.4f)), C.ARENA, az.entre(0f, 0.25f)) else lerp(C.ESPONJA_VIVA, C.HIERBA, az.entre(0f, 0.15f))
+        // Seca, cada una de su clase («las de lana, las amarillas, las de hierba, las de dedo»), y alguna todavía mojada.
+        val clase = az.real()
+        val propio = if (!seca) lerp(C.ESPONJA_VIVA, C.HIERBA, az.entre(0f, 0.15f)) else when {
+            clase < 0.42f -> lerp(lerp(C.ESPONJA, C.ESPONJA_OSC, az.entre(0.1f, 0.45f)), C.MADERA, az.entre(0f, 0.15f))       // de lana: tostada
+            clase < 0.64f -> lerp(C.ESPONJA, lerp(C.ARENA, C.BLANCO, 0.4f), az.entre(0.35f, 0.6f))                           // amarilla: pálida
+            clase < 0.82f -> lerp(lerp(C.ESPONJA, C.HIERBA, az.entre(0.18f, 0.32f)), C.LONA, 0.2f)                            // de hierba: verdosa
+            clase < 0.92f -> lerp(C.ESPONJA, C.ARENA, az.entre(0.1f, 0.3f))                                                  // de dedo
+            else -> lerp(C.ESPONJA_OSC, C.BREA, az.entre(0.2f, 0.35f))                                                       // mojada todavía
+        }
         val ld = lado(p)
         val foco = c + Offset(ld * r * 0.38f, -r * 0.42f)
         drawPath(forma, Brush.radialGradient(0f to p.luz(propio, lejos), 0.5f to p.medio(propio, lejos), 1f to p.sombra(propio, lejos), center = foco, radius = r * 1.55f))
@@ -333,31 +341,55 @@ internal object PiezasAbismo {
      */
     fun DrawScope.trajeEnLaBorda(p: Pincel, a: Offset, b: Offset, k: Float, semilla: Long, mojado: Float = 0.5f, lejos: Float = 0f) {
         val az = Azar(semilla)
-        val d = b - a; val largo = d.getDistance().coerceAtLeast(1f); val u = d / largo; var n = Offset(-u.y, u.x); if (n.y > 0f) n = -n
-        val g = 0.16f * k
-        val lona = lerp(C.LONA, C.MADERA_GRIS, az.entre(0f, 0.25f))
+        val d = b - a
+        val lona = lerp(C.LONA, C.MADERA, az.entre(0.05f, 0.25f))
         val ld = lado(p)
-        // La pierna que cuelga por fuera (por detrás de la regala) y la manga por dentro.
-        val pierna0 = a + d * 0.72f
-        val pierna = Path().apply { moveTo(pierna0 - u * (g * 0.8f)); cubicTo(pierna0 + Offset(g * 0.6f, g * 1.4f), pierna0 + Offset(g * 0.9f, g * 3f), pierna0 + Offset(g * 1.2f, g * 3.9f)); lineTo(pierna0 + Offset(g * 2.2f, g * 3.7f)); cubicTo(pierna0 + Offset(g * 1.8f, g * 2.6f), pierna0 + Offset(g * 1.4f, g * 1.2f), pierna0 + u * (g * 0.9f)); close() }
-        drawPath(pierna, p.sombra(lerp(lona, C.LONA_MOJADA, 0.5f * mojado), lejos))
-        val manga0 = a + d * 0.3f
-        val manga = Path().apply { moveTo(manga0 - u * (g * 0.5f)); cubicTo(manga0 + Offset(-g * 0.2f, g * 1.2f), manga0 + Offset(-g * 0.5f, g * 2.2f), manga0 + Offset(-g * 0.4f, g * 3f)); lineTo(manga0 + Offset(g * 0.35f, g * 3.05f)); cubicTo(manga0 + Offset(g * 0.3f, g * 2f), manga0 + Offset(g * 0.5f, g * 1f), manga0 + u * (g * 0.6f)); close() }
-        drawPath(manga, Brush.horizontalGradient(listOf(if (ld > 0) p.sombra(lona, lejos) else p.luz(lona, lejos), if (ld > 0) p.medio(lona, lejos) else p.sombra(lona, lejos)), manga0.x - g * 0.5f, manga0.x + g * 0.5f))
-        drawLine(p.medio(C.BREA, lejos), manga0 + Offset(-g * 0.42f, g * 2.95f), manga0 + Offset(g * 0.38f, g * 3.0f), g * 0.4f, StrokeCap.Round)
-        // El cuerpo echado sobre la regala: un bulto largo con los pliegues de través.
-        val cuerpo = lazo(listOf(a - u * g * 0.3f + n * g * 0.2f, a + d * 0.2f + n * g * 1.05f, a + d * 0.5f + n * g * 1.25f, a + d * 0.8f + n * g * 0.95f, b + u * g * 0.2f + n * g * 0.3f, b - n * g * 0.35f, a + d * 0.5f - n * g * 0.45f, a - n * g * 0.3f))
-        drawPath(cuerpo, Brush.linearGradient(listOf(p.luz(lona, lejos), p.medio(lona, lejos), p.sombra(lerp(lona, C.LONA_MOJADA, 0.4f * mojado), lejos)), a + n * g * 1.2f, a - n * g * 0.4f))
-        clipPath(cuerpo) {
-            repeat(7) { val t = az.entre(0.08f, 0.92f); val q = a + d * t; drawLine(p.sombra(lona, lejos).copy(alpha = 0.55f), q + n * g * 1.1f, q - n * g * 0.3f + u * g * az.entre(-0.4f, 0.4f), g * 0.12f, StrokeCap.Round); drawLine(p.luz(lona, lejos).copy(alpha = 0.45f), q + n * g * 1.1f + u * g * 0.15f, q + u * g * 0.2f, g * 0.06f, StrokeCap.Round) }
-            val parche = a + d * 0.6f + n * g * 0.5f
-            drawRect(p.medio(lerp(C.BREA, C.LONA, 0.3f), lejos), Offset(parche.x - g * 0.25f, parche.y - g * 0.2f), Size(g * 0.5f, g * 0.38f))
+        val alto = 0.46f * k
+        fun en(t: Float) = a + d * t
+        val luzL = p.luz(lona, lejos); val medioL = p.medio(lona, lejos); val sombraL = p.sombra(lona, lejos)
+        val mojadaL = p.sombra(lerp(lona, C.LONA_MOJADA, 0.8f), lejos)
+        fun gradiente(x0: Float, x1: Float, y0: Float, y1: Float) = Brush.linearGradient(listOf(if (ld > 0) sombraL else luzL, medioL, if (ld > 0) luzL else sombraL, lerp(medioL, mojadaL, mojado)), Offset(x0, y0), Offset(x1, y1))
+        // Las mangas, que cuelgan a los lados del cuerpo, con su puño de goma negra.
+        for ((t, largo) in listOf(0.12f to 0.86f, 0.9f to 0.8f)) {
+            val r = en(t); val g = 0.09f * k
+            val manga = Path().apply { moveTo(r.x - g * 0.5f, r.y); cubicTo(r.x - g * 0.6f, r.y + alto * 0.4f, r.x - g * 0.4f, r.y + alto * 0.7f, r.x - g * 0.42f, r.y + alto * largo); lineTo(r.x + g * 0.48f, r.y + alto * largo); cubicTo(r.x + g * 0.5f, r.y + alto * 0.6f, r.x + g * 0.6f, r.y + alto * 0.3f, r.x + g * 0.55f, r.y); close() }
+            drawPath(manga, gradiente(r.x - g, r.x + g, r.y, r.y + alto))
+            for (i in 1..3) drawArc(sombraL.copy(alpha = 0.5f), 10f, 160f, false, Offset(r.x - g * 0.5f, r.y + alto * largo * i / 4.5f), Size(g, g * 0.5f), style = Stroke(g * 0.08f))
+            drawLine(p.medio(C.BREA, lejos), Offset(r.x - g * 0.45f, r.y + alto * largo - g * 0.25f), Offset(r.x + g * 0.48f, r.y + alto * largo - g * 0.25f), g * 0.55f)       // el puño de goma
+            drawLine(p.luz(C.BREA, lejos).copy(alpha = 0.6f), Offset(r.x - g * 0.3f, r.y + alto * largo - g * 0.45f), Offset(r.x + g * 0.2f, r.y + alto * largo - g * 0.45f), g * 0.1f)
         }
-        // El cuello de goma, a un lado, abierto.
-        val cuello = a + u * g * 0.1f + n * g * 0.55f
-        drawOval(p.medio(C.BREA, lejos), Offset(cuello.x - g * 0.55f, cuello.y - g * 0.3f), Size(g * 1.1f, g * 0.6f))
-        drawOval(p.sombra(C.BREA, lejos), Offset(cuello.x - g * 0.35f, cuello.y - g * 0.15f), Size(g * 0.7f, g * 0.3f))
-        drawArc(p.luz(C.BREA, lejos), 190f, 150f, false, Offset(cuello.x - g * 0.55f, cuello.y - g * 0.3f), Size(g * 1.1f, g * 0.6f), style = Stroke(g * 0.08f))
+        // El cuerpo, colgado del revés: de la cintura en la regala baja ancho hasta el cuello, con sus pliegues y los remiendos.
+        val r0 = en(0.24f); val r1 = en(0.78f)
+        val cuerpo = Path().apply {
+            moveTo(r0.x, r0.y); cubicTo(r0.x - 0.04f * k, r0.y + alto * 0.35f, r0.x - 0.02f * k, r0.y + alto * 0.7f, r0.x + 0.03f * k, r0.y + alto)
+            lineTo(r1.x - 0.02f * k, r1.y + alto * 0.97f); cubicTo(r1.x + 0.04f * k, r1.y + alto * 0.7f, r1.x + 0.05f * k, r1.y + alto * 0.35f, r1.x, r1.y); close()
+        }
+        drawPath(cuerpo, gradiente(minOf(r0.x, r1.x), maxOf(r0.x, r1.x), r0.y, r0.y + alto))
+        clipPath(cuerpo) {
+            repeat(8) {
+                val t = az.entre(0.05f, 0.95f); val top = r0 + (r1 - r0) * t; val lg = alto * az.entre(0.35f, 0.85f)
+                drawLine(sombraL.copy(alpha = 0.55f), top + Offset(0f, alto * 0.08f), top + Offset(az.entre(-0.02f, 0.02f) * k, lg), 0.012f * k, StrokeCap.Round)
+                drawLine(luzL.copy(alpha = 0.4f), top + Offset(0.01f * k * ld, alto * 0.1f), top + Offset(0.01f * k * ld, lg * 0.9f), 0.006f * k, StrokeCap.Round)
+            }
+            val parche = (r0 + r1) * 0.5f + Offset(-0.03f * k, alto * 0.45f)
+            drawRect(p.medio(lerp(C.BREA, C.LONA, 0.3f), lejos), Offset(parche.x, parche.y), Size(0.07f * k, 0.06f * k))
+            drawRect(Brush.verticalGradient(listOf(Color.Transparent, mojadaL.copy(alpha = 0.6f * mojado)), r0.y + alto * 0.4f, r0.y + alto), Offset(minOf(r0.x, r1.x) - 0.1f * k, r0.y + alto * 0.4f), Size(kotlin.math.abs(r1.x - r0.x) + 0.2f * k, alto))
+        }
+        // El cuello de goma, abajo, con su babero ancho y los agujeros de los pernos del peto: lo que dice que es un traje de buzo.
+        val cuello = Offset((r0.x + r1.x) / 2f + 0.005f * k, maxOf(r0.y, r1.y) + alto * 0.95f)
+        val bw = 0.17f * k; val bh = 0.08f * k
+        drawOval(p.medio(lerp(C.BREA, C.PLOMO, 0.2f), lejos), Offset(cuello.x - bw, cuello.y - bh * 0.5f), Size(bw * 2f, bh * 1.4f))
+        drawArc(p.luz(lerp(C.BREA, C.PLOMO, 0.4f), lejos), 190f, 150f, false, Offset(cuello.x - bw, cuello.y - bh * 0.5f), Size(bw * 2f, bh * 1.4f), style = Stroke(0.012f * k))
+        for (i in 0 until 7) { val an = PI.toFloat() * (0.1f + 0.8f * i / 6f); drawCircle(p.luz(C.LATON, lejos).copy(alpha = 0.8f), 0.008f * k, Offset(cuello.x + cos(an) * bw * 0.8f, cuello.y + bh * 0.2f + sin(an) * bh * 0.45f)) }
+        drawOval(p.sombra(C.BREA, lejos), Offset(cuello.x - bw * 0.4f, cuello.y - bh * 0.1f), Size(bw * 0.8f, bh * 0.5f))
+        // Lo doblado sobre la regala: un bulto largo de lona, con los pliegues de través.
+        val n = Offset(-d.y, d.x).let { val l = it.getDistance().coerceAtLeast(0.01f); if (it.y > 0f) -it / l else it / l }
+        val g = 0.06f * k
+        val sobre = lazo(listOf(a + n * (g * 0.2f) - d * 0.02f, en(0.25f) + n * (g * 1.1f), en(0.55f) + n * (g * 1.3f), en(0.85f) + n * (g * 1f), b + n * (g * 0.3f) + d * 0.02f, en(0.8f) - n * (g * 0.6f), en(0.3f) - n * (g * 0.6f)))
+        drawPath(sobre, Brush.linearGradient(listOf(luzL, medioL, sombraL), a + n * g * 1.3f, a - n * g * 0.6f))
+        clipPath(sobre) { repeat(7) { val t = az.entre(0.05f, 0.95f); val q = en(t); drawLine(sombraL.copy(alpha = 0.6f), q + n * g * 1.2f, q - n * g * 0.5f + d * az.entre(-0.03f, 0.03f), g * 0.15f, StrokeCap.Round) } }
+        // Las gotas que caen (si está mojado).
+        if (mojado > 0.3f) repeat(4) { val q = cuello + Offset(az.entre(-0.12f, 0.12f) * k, az.entre(0.06f, 0.16f) * k); drawCircle(p.luz(C.MAR_CLARO, lejos).copy(alpha = 0.55f), 0.008f * k, q) }
     }
 
     /** La silueta del traje colgado (para su sombra). */
@@ -383,40 +415,46 @@ internal object PiezasAbismo {
     fun DrawScope.bota(p: Pincel, pie: Offset, k: Float, mira: Float, semilla: Long, tumbada: Boolean = false, lejos: Float = 0f) {
         val az = Azar(semilla); val m = mira; val u = k
         fun q(x: Float, y: Float) = Offset(pie.x + m * x * u, pie.y - y * u)
-        val cuero = lerp(C.MADERA_OSC, C.LONA, az.entre(0.15f, 0.35f))
+        val cuero = lerp(C.MADERA_OSC, C.LONA, az.entre(0.1f, 0.3f))
         val ld = lado(p); val deCara = ld * m > 0
-        drawOval(p.sombra(C.BREA, lejos).copy(alpha = 0.3f), Offset(pie.x - 0.2f * u, pie.y - 0.03f * u), Size(0.4f * u, 0.07f * u))
+        val plomoLuz = p.luz(lerp(C.PLOMO, C.BLANCO, 0.15f), lejos); val plomo = p.medio(C.PLOMO, lejos); val plomoSombra = p.sombra(C.PLOMO, lejos)
         if (!tumbada) {
-            // La suela de plomo: el canto (de frente) y la cara de arriba (un filo), con la puntera de latón.
-            val suela = poligono(listOf(q(-0.13f, 0f), q(0.17f, 0f), q(0.2f, 0.035f), q(0.18f, 0.07f), q(-0.13f, 0.07f)))
-            drawPath(suela, Brush.verticalGradient(listOf(p.luz(C.PLOMO, lejos), p.sombra(C.PLOMO, lejos)), pie.y - 0.07f * u, pie.y))
-            drawLine(p.luz(lerp(C.PLOMO, C.BLANCO, 0.3f), lejos), q(-0.12f, 0.068f), q(0.17f, 0.068f), 0.012f * u)
-            drawPath(poligono(listOf(q(0.1f, 0.07f), q(0.18f, 0.07f), q(0.205f, 0.035f), q(0.18f, 0f), q(0.12f, 0f))), Brush.horizontalGradient(listOf(p.medio(C.LATON, lejos), p.luz(C.LATON, lejos)), q(0.1f, 0f).x, q(0.2f, 0f).x))
-            // La caña: el pie y la pierna, de cuero y lona, con su lado de luz.
+            drawOval(p.sombra(C.BREA, lejos).copy(alpha = 0.35f), Offset(pie.x - 0.24f * u, pie.y - 0.035f * u), Size(0.48f * u, 0.08f * u))
+            // La suela de plomo: un bloque grueso, más largo que el pie, con su cara de arriba clara y el canto en sombra.
+            val canto = poligono(listOf(q(-0.16f, 0f), q(0.2f, 0f), q(0.235f, 0.03f), q(0.22f, 0.075f), q(-0.16f, 0.075f)))
+            drawPath(canto, Brush.verticalGradient(listOf(plomo, plomoSombra), pie.y - 0.075f * u, pie.y))
+            drawPath(poligono(listOf(q(-0.16f, 0.075f), q(0.22f, 0.075f), q(0.2f, 0.095f), q(-0.15f, 0.095f))), plomoLuz)
+            // Los golpes del plomo, blando.
+            repeat(3) { val x = az.entre(-0.12f, 0.15f); drawCircle(plomoSombra.copy(alpha = 0.6f), 0.01f * u, q(x, az.entre(0.02f, 0.05f))) }
+            // La puntera de latón, redonda, que asoma delante.
+            drawPath(poligono(listOf(q(0.12f, 0.095f), q(0.2f, 0.095f), q(0.25f, 0.06f), q(0.235f, 0.02f), q(0.14f, 0.075f))), Brush.horizontalGradient(listOf(p.medio(C.LATON, lejos), p.luz(C.LATON, lejos)), q(0.12f, 0f).x, q(0.25f, 0f).x))
+            // El empeine y la caña, de lona y cuero: una L clara, con el talón atrás.
             val cana = Path().apply {
-                moveTo(q(-0.11f, 0.07f)); lineTo(q(0.15f, 0.07f)); cubicTo(q(0.16f, 0.12f), q(0.08f, 0.16f), q(0.05f, 0.18f))
-                cubicTo(q(0.06f, 0.28f), q(0.07f, 0.36f), q(0.075f, 0.44f)); lineTo(q(-0.085f, 0.44f)); cubicTo(q(-0.09f, 0.33f), q(-0.11f, 0.2f), q(-0.11f, 0.07f)); close()
+                moveTo(q(-0.13f, 0.095f)); lineTo(q(0.15f, 0.095f)); cubicTo(q(0.17f, 0.15f), q(0.1f, 0.19f), q(0.04f, 0.2f))
+                cubicTo(q(0.045f, 0.3f), q(0.05f, 0.38f), q(0.06f, 0.46f)); lineTo(q(-0.08f, 0.46f)); cubicTo(q(-0.085f, 0.36f), q(-0.12f, 0.24f), q(-0.13f, 0.095f)); close()
             }
-            drawPath(cana, Brush.horizontalGradient(listOf(if (deCara) p.sombra(cuero, lejos) else p.luz(cuero, lejos), p.medio(cuero, lejos), if (deCara) p.luz(cuero, lejos) else p.sombra(cuero, lejos)), q(-0.11f, 0f).x, q(0.16f, 0f).x))
+            drawPath(cana, Brush.horizontalGradient(listOf(if (deCara) p.sombra(cuero, lejos) else p.luz(cuero, lejos), p.medio(cuero, lejos), if (deCara) p.luz(cuero, lejos) else p.sombra(cuero, lejos)), minOf(q(-0.13f, 0f).x, q(0.17f, 0f).x), maxOf(q(-0.13f, 0f).x, q(0.17f, 0f).x)))
             clipPath(cana) {
-                repeat(4) { val y = az.entre(0.2f, 0.42f); drawLine(p.sombra(cuero, lejos).copy(alpha = 0.5f), q(-0.1f, y), q(0.08f, y + az.entre(-0.02f, 0.02f)), 0.008f * u) }
-                drawRect(p.sombra(lerp(cuero, C.BREA, 0.3f), lejos).copy(alpha = 0.4f), Offset(minOf(q(-0.12f, 0f).x, q(0.16f, 0f).x), q(0f, 0.12f).y), Size(0.3f * u, 0.05f * u))
+                repeat(5) { val y = az.entre(0.22f, 0.44f); drawLine(p.sombra(cuero, lejos).copy(alpha = 0.45f), q(-0.1f, y), q(0.06f, y + az.entre(-0.02f, 0.02f)), 0.008f * u) }
+                drawRect(p.sombra(lerp(cuero, C.BREA, 0.3f), lejos).copy(alpha = 0.45f), Offset(minOf(q(-0.14f, 0f).x, q(0.18f, 0f).x), q(0f, 0.15f).y), Size(0.32f * u, 0.04f * u))
             }
-            // La boca de la caña y las correas con su hebilla de latón.
-            drawOval(p.sombra(C.BREA, lejos), Offset(minOf(q(-0.085f, 0f).x, q(0.075f, 0f).x), q(0f, 0.455f).y), Size(0.16f * u, 0.035f * u))
-            for (h in listOf(0.15f, 0.3f)) {
-                drawLine(p.sombra(C.BREA, lejos), q(-0.1f, h), q(0.08f, h + 0.01f), 0.022f * u)
-                drawRect(p.luz(C.LATON, lejos), Offset(q(0.04f, h).x - 0.015f * u, q(0.04f, h).y - 0.014f * u), Size(0.03f * u, 0.028f * u))
-            }
+            // La boca de la caña y las correas con su hebilla de latón: una sobre el empeine y otra en el tobillo.
+            drawOval(p.sombra(C.BREA, lejos), Offset(minOf(q(-0.08f, 0f).x, q(0.06f, 0f).x), q(0f, 0.475f).y), Size(0.14f * u, 0.035f * u))
+            drawLine(p.sombra(C.BREA, lejos), q(0.02f, 0.12f), q(0.14f, 0.19f), 0.022f * u, StrokeCap.Round)
+            drawLine(p.sombra(C.BREA, lejos), q(-0.12f, 0.27f), q(0.05f, 0.28f), 0.024f * u)
+            for (h in listOf(0.165f to 0.1f, 0.275f to 0.0f)) drawRect(p.luz(C.LATON, lejos), Offset(q(h.second, h.first).x - 0.016f * u, q(h.second, h.first).y - 0.015f * u), Size(0.032f * u, 0.03f * u))
         } else {
-            // Caída de lado: la suela de plomo de canto, hacia quien mira, con sus clavos, y la caña tendida detrás.
-            val cana = poligono(listOf(q(0.0f, 0.04f), q(0.36f, 0.06f), q(0.38f, 0.15f), q(0.02f, 0.16f)))
-            drawPath(cana, Brush.verticalGradient(listOf(p.luz(cuero, lejos), p.sombra(cuero, lejos)), q(0f, 0.16f).y, q(0f, 0.04f).y))
-            drawOval(p.sombra(C.BREA, lejos), Offset(q(0.36f, 0f).x - 0.02f * u, q(0f, 0.15f).y), Size(0.04f * u, 0.1f * u))
-            val suela = poligono(listOf(q(-0.2f, 0f), q(0.08f, 0f), q(0.08f, 0.14f), q(-0.2f, 0.12f)))
-            drawPath(suela, Brush.horizontalGradient(listOf(p.medio(C.PLOMO, lejos), p.luz(C.PLOMO, lejos)), q(-0.2f, 0f).x, q(0.08f, 0f).x))
-            for (i in 0 until 5) drawCircle(p.sombra(C.BREA, lejos), 0.008f * u, q(-0.16f + 0.055f * i, 0.06f + 0.02f * (i % 2)))
-            drawOval(p.luz(C.LATON, lejos), Offset(minOf(q(-0.23f, 0f).x, q(-0.17f, 0f).x), q(0f, 0.12f).y), Size(0.06f * u, 0.12f * u))
+            // Caída de lado: la suela de plomo hacia quien mira, con sus clavos y su puntera, y la caña tendida detrás.
+            drawOval(p.sombra(C.BREA, lejos).copy(alpha = 0.35f), Offset(pie.x - 0.3f * u, pie.y - 0.04f * u), Size(0.62f * u, 0.1f * u))
+            val cana = lazo(listOf(q(-0.05f, 0.03f), q(0.18f, 0.02f), q(0.4f, 0.04f), q(0.42f, 0.13f), q(0.2f, 0.15f), q(-0.02f, 0.16f)))
+            drawPath(cana, Brush.verticalGradient(listOf(p.luz(cuero, lejos), p.sombra(cuero, lejos)), q(0f, 0.16f).y, q(0f, 0.02f).y))
+            drawOval(p.sombra(C.BREA, lejos), Offset(minOf(q(0.39f, 0f).x, q(0.44f, 0f).x) - 0.01f * u, q(0f, 0.15f).y), Size(0.05f * u, 0.11f * u))
+            drawLine(p.sombra(C.BREA, lejos), q(0.2f, 0.02f), q(0.2f, 0.15f), 0.022f * u)
+            val suela = poligono(listOf(q(-0.26f, 0.0f), q(0.08f, 0.0f), q(0.1f, 0.08f), q(0.08f, 0.17f), q(-0.26f, 0.16f), q(-0.28f, 0.08f)))
+            drawPath(suela, Brush.horizontalGradient(listOf(plomoSombra, plomo, plomoLuz), minOf(q(-0.28f, 0f).x, q(0.1f, 0f).x), maxOf(q(-0.28f, 0f).x, q(0.1f, 0f).x)))
+            drawLine(plomoLuz, q(-0.25f, 0.165f), q(0.07f, 0.17f), 0.012f * u)
+            for (i in 0 until 6) drawCircle(p.sombra(C.BREA, lejos), 0.009f * u, q(-0.22f + 0.055f * i, 0.07f + 0.025f * (i % 2)))
+            drawOval(Brush.horizontalGradient(listOf(p.medio(C.LATON, lejos), p.luz(C.LATON, lejos)), minOf(q(-0.32f, 0f).x, q(-0.24f, 0f).x), maxOf(q(-0.32f, 0f).x, q(-0.24f, 0f).x)), Offset(minOf(q(-0.32f, 0f).x, q(-0.24f, 0f).x), q(0f, 0.15f).y), Size(0.08f * u, 0.14f * u))
         }
     }
 
@@ -502,8 +540,8 @@ internal object PiezasAbismo {
         val dentro = (0..32).map { s.p(rueda(ld, it * 2f * PI.toFloat() / 32f, RUEDA_R * 0.86f)) }
         val hierro = C.PLOMO
         if (marcha) {
-            // Girando: el disco borroso de los rayos.
-            drawPath(poligono(dentro), p.por(hierro, t, lejos).copy(alpha = 0.32f))
+            // Girando: los rayos corridos, como un abanico de trazos tenues (los de la rueda de delante los mueve la parte viva).
+            for (k in 0 until 18) { val a = angulo + k * PI.toFloat() / 9f; drawLine(p.por(hierro, t, lejos).copy(alpha = 0.16f), s.p(rueda(ld, a, 0.06f)), s.p(rueda(ld, a, RUEDA_R * 0.86f)), (0.035f * e).coerceAtLeast(0.6f), StrokeCap.Round) }
         } else {
             for (k in 0 until 6) { val a = angulo + k * PI.toFloat() / 3f; drawLine(p.por(hierro, t, lejos), s.p(rueda(ld, a, 0.06f)), s.p(rueda(ld, a, RUEDA_R * 0.88f)), (0.028f * e).coerceAtLeast(0.5f), StrokeCap.Round) }
         }
@@ -644,6 +682,57 @@ internal object PiezasAbismo {
         drawLine(p.sombra(C.BREA, lejos).copy(alpha = 0.5f), c + n * grueso * 0.75f + u * grueso * 0.45f, c - n * grueso * 0.75f + u * grueso * 0.45f, grueso * 0.06f)
     }
 
+    /**
+     * Un cubo de madera de duelas con su aro de hierro y su asa de cuerda, lleno de agua de mar que devuelve el cielo, en
+     * [s]: para mojar las esponjas y lavarse la cara («un cubo para lavarse la cara con agua del mar»).
+     */
+    fun DrawScope.cuboDeMadera(p: Pincel, s: Sitio, sol: Sol3, semilla: Long, lejos: Float = 0f) {
+        val az = Azar(semilla); val e = s.escala(0f, 0f)
+        val r0 = 0.13f; val r1 = 0.11f; val h = 0.3f; val n = 20
+        val boca = (0 until n).map { val a = it * 2f * PI.toFloat() / n; s.p(r0 * cos(a), h, r0 * sin(a)) }
+        val base = (0 until n).map { val a = it * 2f * PI.toFloat() / n; s.p(r1 * cos(a), 0f, r1 * sin(a)) }
+        val cuerpo = poligono(envolvente(boca + base))
+        val madera = lerp(C.MADERA, C.MADERA_GRIS, az.entre(0.3f, 0.6f))
+        val x0 = boca.minOf { it.x }; val x1 = boca.maxOf { it.x }
+        drawPath(cuerpo, Brush.horizontalGradient(listOf(if (sol.sx < 0f) p.luz(madera, lejos) else p.sombra(madera, lejos), p.medio(madera, lejos), if (sol.sx < 0f) p.sombra(madera, lejos) else p.luz(madera, lejos)), x0, x1))
+        clipPath(cuerpo) {
+            for (i in 0 until 8) { val a = PI.toFloat() * (0.1f + 0.8f * i / 7f); drawLine(p.sombra(lerp(madera, C.BREA, 0.4f), lejos).copy(alpha = 0.5f), s.p(r0 * cos(a), h, -r0 * sin(a)), s.p(r1 * cos(a), 0f, -r1 * sin(a)), (0.006f * e).coerceAtLeast(0.3f)) }
+            for (hh in listOf(0.22f, 0.8f)) drawPath(curva((0..12).map { val a = PI.toFloat() * it / 12f; val rr = r1 + (r0 - r1) * hh; s.p(rr * cos(a), h * hh, -rr * sin(a)) }), p.sombra(C.PLOMO, lejos), style = Stroke((0.02f * e).coerceAtLeast(0.5f)))
+        }
+        drawPath(poligono(boca), p.por(madera, 0.6f, lejos))
+        val aguaP = poligono((0 until n).map { val a = it * 2f * PI.toFloat() / n; s.p(r0 * 0.88f * cos(a), h * 0.88f, r0 * 0.88f * sin(a)) })
+        drawPath(aguaP, Brush.verticalGradient(listOf(lerp(p.medio(C.MAR, lejos), p.luz(C.BLANCO, lejos), 0.3f), p.sombra(C.MAR_HONDO, lejos)), boca.minOf { it.y }, boca.maxOf { it.y }))
+        // El asa de cuerda, caída de lado.
+        val a = s.p(-r0, h, 0f); val b = s.p(r0, h, 0f)
+        drawPath(Path().apply { moveTo(a); cubicTo(a + Offset(0f, 0.06f * e), b + Offset(-0.05f * e, 0.14f * e), b) }, p.sombra(C.CANAMO, lejos), style = Stroke((0.012f * e).coerceAtLeast(0.4f)))
+    }
+
+    /**
+     * La red de las esponjas colgada a escurrir de la regala en [arriba], de [k] unidades por metro: «un saco de malla
+     * gruesa, con un aro de hierro en la boca». El aro, abierto, apoyado de canto contra la borda; el saco, flojo, con la
+     * malla en rombos y una esponja negra olvidada en el fondo, y el agua que todavía gotea.
+     */
+    fun DrawScope.redDeEsponjas(p: Pincel, arriba: Offset, k: Float, semilla: Long, lejos: Float = 0f) {
+        val az = Azar(semilla)
+        val r = 0.2f * k
+        val aro = Offset(arriba.x - r * 0.3f, arriba.y + r * 0.9f)
+        // El saco: cae del aro y se abomba abajo.
+        val saco = lazo(listOf(aro + Offset(-r * 0.95f, 0f), aro + Offset(-r * 0.9f, r * 1.2f), aro + Offset(-r * 0.4f, r * 2.1f), aro + Offset(r * 0.25f, r * 2.2f), aro + Offset(r * 0.8f, r * 1.3f), aro + Offset(r * 0.95f, 0f)))
+        drawPath(saco, p.sombra(C.CANAMO, lejos).copy(alpha = 0.25f))
+        clipPath(saco) {
+            for (i in -6..6) {
+                drawLine(p.sombra(C.CANAMO, lejos).copy(alpha = 0.85f), aro + Offset(i * r * 0.32f - r, -r * 0.2f), aro + Offset(i * r * 0.32f + r * 0.6f, r * 2.4f), (0.012f * k).coerceAtLeast(0.35f))
+                drawLine(p.sombra(C.CANAMO, lejos).copy(alpha = 0.85f), aro + Offset(i * r * 0.32f + r, -r * 0.2f), aro + Offset(i * r * 0.32f - r * 0.6f, r * 2.4f), (0.012f * k).coerceAtLeast(0.35f))
+            }
+            esponja(p, aro + Offset(-r * 0.15f, r * 1.75f), r * 0.32f, semilla * 5, false, lejos)
+        }
+        drawPath(saco, p.luz(C.CANAMO, lejos).copy(alpha = 0.4f), style = Stroke((0.008f * k).coerceAtLeast(0.3f)))
+        drawOval(p.sombra(C.PLOMO, lejos), Offset(aro.x - r, aro.y - r * 0.25f), Size(r * 2f, r * 0.5f), style = Stroke((0.03f * k).coerceAtLeast(0.6f)))
+        drawArc(p.luz(C.PLOMO, lejos).copy(alpha = 0.6f), 190f, 120f, false, Offset(aro.x - r, aro.y - r * 0.25f), Size(r * 2f, r * 0.5f), style = Stroke((0.01f * k).coerceAtLeast(0.3f)))
+        drawLine(p.sombra(C.CANAMO, lejos), arriba, aro + Offset(r * 0.6f, -r * 0.2f), (0.014f * k).coerceAtLeast(0.4f))
+        repeat(3) { drawCircle(p.luz(C.MAR_CLARO, lejos).copy(alpha = 0.5f), (0.008f * k).coerceAtLeast(0.3f), aro + Offset(az.entre(-0.3f, 0.3f) * r, r * (2.3f + az.entre(0f, 0.4f)))) }
+    }
+
     // =================================================================
     //  El bote con su cubo de cristal
     // =================================================================
@@ -768,68 +857,88 @@ internal object PiezasAbismo {
      * de la tabla y [k] unidades por metro. [luto]: un paño negro sobre el marco. [velas] y [huevos]: Pascua y la Dormición.
      */
     fun DrawScope.hornacina(p: Pincel, c: Offset, k: Float, lumbre: Float, mira: Float = 0.3f, luto: Boolean = false, velas: Boolean = false, huevos: Boolean = false, lejos: Float = 0f) {
-        val w = 0.22f * k; val h = 0.28f * k; val fondo = 0.1f * k
-        val ld = lado(p)
-        val lat = mira.sign * fondo * 0.9f
-        val madera = lerp(C.AZUL, C.MADERA_GRIS, 0.3f)
-        // La caja: el lado que se ve, el fondo y el tejadillo.
-        val ladoCaja = poligono(Offset(c.x + mira.sign * w * 0.62f, c.y - h * 0.62f), Offset(c.x + mira.sign * w * 0.62f + lat, c.y - h * 0.68f), Offset(c.x + mira.sign * w * 0.62f + lat, c.y + h * 0.6f), Offset(c.x + mira.sign * w * 0.62f, c.y + h * 0.66f))
-        drawPath(ladoCaja, if (mira * ld > 0) p.luz(madera, lejos) else p.sombra(madera, lejos))
-        val marco = Rect(c.x - w * 0.62f, c.y - h * 0.62f, c.x + w * 0.62f, c.y + h * 0.66f)
-        drawRect(p.medio(madera, lejos), marco.topLeft, marco.size)
-        drawRect(p.sombra(lerp(madera, C.BREA, 0.5f), lejos), Offset(c.x - w * 0.5f, c.y - h * 0.5f), Size(w, h))
-        val tabla = Rect(c.x - w * 0.44f, c.y - h * 0.46f, c.x + w * 0.44f, c.y + h * 0.48f)
-        // La tabla del santo: el fondo de oro, la aureola, la cabeza y la barba sin facciones, el manto, el libro.
-        val oro = lerp(p.medio(C.ORO, lejos), C.LUMBRE, 0.25f * lumbre * p.l.noche)
-        drawRect(Brush.verticalGradient(listOf(lerp(oro, Color.White, 0.12f), oro), tabla.top, tabla.bottom), tabla.topLeft, tabla.size)
+        val w = 0.19f * k; val h = 0.25f * k; val fondo = 0.09f * k
+        val ld = lado(p); val s = if (mira < 0f) -1f else 1f
+        val noche = p.l.noche * lumbre
+        val madera = lerp(C.AZUL, C.MADERA_GRIS, 0.35f)
+        val x0 = c.x - w * 0.66f; val x1 = c.x + w * 0.66f; val y0 = c.y - h * 0.62f; val y1 = c.y + h * 0.7f
+        // El costado que se ve, de tablas, con su veta.
+        val lx = if (s > 0) x1 else x0
+        val costado = poligono(Offset(lx, y0), Offset(lx + s * fondo, y0 - fondo * 0.18f), Offset(lx + s * fondo, y1 - fondo * 0.22f), Offset(lx, y1))
+        drawPath(costado, if (mira * ld > 0) p.luz(madera, lejos) else p.sombra(madera, lejos))
+        for (i in 1..3) drawLine(p.sombra(madera, lejos).copy(alpha = 0.4f), Offset(lx, y0 + (y1 - y0) * i / 4f), Offset(lx + s * fondo, y0 + (y1 - y0) * i / 4f - fondo * 0.2f), (0.004f * k).coerceAtLeast(0.3f))
+        // El marco de delante, pintado de azul y gastado, con el hueco.
+        drawRect(Brush.verticalGradient(listOf(p.luz(madera, lejos), p.medio(madera, lejos)), y0, y1), Offset(x0, y0), Size(x1 - x0, y1 - y0))
+        val hx0 = c.x - w * 0.5f; val hx1 = c.x + w * 0.5f; val hy0 = c.y - h * 0.5f; val hy1 = c.y + h * 0.56f
+        val dentro = lerp(p.sombra(lerp(madera, C.BREA, 0.55f), lejos), C.LUMBRE, 0.35f * noche)
+        drawRect(dentro, Offset(hx0, hy0), Size(hx1 - hx0, hy1 - hy0))
+        // La tabla del santo, un poco metida: el fondo de oro, la aureola, la cabeza sin facciones, la barba, la ropa y el libro.
+        val tabla = Rect(hx0 + w * 0.08f, hy0 + h * 0.06f, hx1 - w * 0.08f, hy1 - h * 0.1f)
+        val oro = lerp(p.medio(C.ORO, lejos), lerp(C.ORO, C.LUMBRE, 0.4f), 0.75f * noche)
+        drawRect(Brush.verticalGradient(listOf(lerp(oro, Color.White, 0.12f), oro, lerp(oro, C.MADERA_OSC, 0.25f)), tabla.top, tabla.bottom), tabla.topLeft, tabla.size)
         clipPath(Path().apply { addRect(tabla) }) {
-            val cab = Offset(c.x, tabla.top + h * 0.3f); val rr = w * 0.15f
-            drawCircle(lerp(oro, Color.White, 0.3f), rr * 1.75f, cab)
-            drawCircle(mult(oro, C.SOMBRA, 0.4f), rr * 1.75f, cab, style = Stroke(rr * 0.12f))
-            drawOval(p.medio(lerp(C.ARENA, C.ESPONJA, 0.3f), lejos), Offset(cab.x - rr * 0.62f, cab.y - rr * 0.8f), Size(rr * 1.24f, rr * 1.5f))
-            drawOval(p.luz(C.BLANCO, lejos), Offset(cab.x - rr * 0.68f, cab.y + rr * 0.2f), Size(rr * 1.36f, rr * 1.2f))   // la barba blanca
-            val manto = Path().apply { moveTo(cab.x, cab.y + rr * 0.9f); cubicTo(cab.x - w * 0.3f, cab.y + rr, tabla.left + w * 0.05f, tabla.bottom - h * 0.3f, tabla.left + w * 0.04f, tabla.bottom); lineTo(tabla.right - w * 0.04f, tabla.bottom); cubicTo(tabla.right - w * 0.05f, tabla.bottom - h * 0.3f, cab.x + w * 0.3f, cab.y + rr, cab.x, cab.y + rr * 0.9f); close() }
-            drawPath(manto, p.medio(C.ROJO, lejos))
-            drawPath(Path().apply { moveTo(cab.x, cab.y + rr * 1.4f); lineTo(cab.x - w * 0.08f, tabla.bottom); lineTo(cab.x + w * 0.08f, tabla.bottom); close() }, p.medio(lerp(C.AZUL, C.BREA, 0.3f), lejos))
-            drawRect(p.luz(C.ROJO, lejos), Offset(cab.x + w * 0.04f, cab.y + h * 0.18f), Size(w * 0.16f, h * 0.16f))   // el libro
-            drawLine(oro, Offset(cab.x + w * 0.04f, cab.y + h * 0.26f), Offset(cab.x + w * 0.2f, cab.y + h * 0.26f), w * 0.02f)
+            val cab = Offset(c.x, tabla.top + tabla.height * 0.27f); val rr = tabla.width * 0.13f
+            drawCircle(lerp(oro, Color.White, 0.25f), rr * 1.8f, cab)
+            drawCircle(mult(oro, C.SOMBRA, 0.5f), rr * 1.8f, cab, style = Stroke(rr * 0.14f))
+            drawOval(p.medio(lerp(C.ARENA, C.MADERA, 0.35f), lejos), Offset(cab.x - rr * 0.62f, cab.y - rr * 0.85f), Size(rr * 1.24f, rr * 1.5f))
+            drawOval(p.luz(C.BLANCO, lejos), Offset(cab.x - rr * 0.7f, cab.y + rr * 0.15f), Size(rr * 1.4f, rr * 1.25f))                         // la barba blanca
+            val ropa = Path().apply { moveTo(cab.x, cab.y + rr * 1.0f); cubicTo(cab.x - tabla.width * 0.3f, cab.y + rr * 1.1f, tabla.left + tabla.width * 0.06f, tabla.bottom - tabla.height * 0.3f, tabla.left + tabla.width * 0.04f, tabla.bottom); lineTo(tabla.right - tabla.width * 0.04f, tabla.bottom); cubicTo(tabla.right - tabla.width * 0.06f, tabla.bottom - tabla.height * 0.3f, cab.x + tabla.width * 0.3f, cab.y + rr * 1.1f, cab.x, cab.y + rr * 1.0f); close() }
+            drawPath(ropa, p.medio(lerp(C.ROJO, C.MADERA_OSC, 0.25f), lejos))
+            // El palio blanco que baja por delante, con sus dos cruces pequeñas.
+            val pal = Path().apply { moveTo(cab.x - rr * 0.5f, cab.y + rr * 1.5f); lineTo(cab.x + rr * 0.5f, cab.y + rr * 1.5f); lineTo(cab.x + rr * 0.35f, tabla.bottom); lineTo(cab.x - rr * 0.35f, tabla.bottom); close() }
+            drawPath(pal, p.luz(lerp(C.BLANCO, C.ARENA, 0.2f), lejos))
+            for (t in listOf(0.55f, 0.8f)) { val q = Offset(cab.x, tabla.top + tabla.height * t); drawLine(p.sombra(C.BREA, lejos), q + Offset(-rr * 0.18f, 0f), q + Offset(rr * 0.18f, 0f), rr * 0.08f); drawLine(p.sombra(C.BREA, lejos), q + Offset(0f, -rr * 0.18f), q + Offset(0f, rr * 0.18f), rr * 0.08f) }
+            drawRect(p.medio(C.ROJO, lejos), Offset(cab.x - tabla.width * 0.36f, cab.y + tabla.height * 0.3f), Size(tabla.width * 0.2f, tabla.height * 0.17f))   // el libro
+            drawLine(oro, Offset(cab.x - tabla.width * 0.36f, cab.y + tabla.height * 0.385f), Offset(cab.x - tabla.width * 0.16f, cab.y + tabla.height * 0.385f), tabla.width * 0.02f)
             // El humo de la lamparilla, que ha ido oscureciendo lo de arriba.
-            drawRect(Brush.verticalGradient(listOf(p.sombra(C.BREA, lejos).copy(alpha = 0.35f), Color.Transparent), tabla.top, tabla.top + h * 0.3f), tabla.topLeft, Size(tabla.width, h * 0.3f))
+            drawRect(Brush.verticalGradient(listOf(p.sombra(C.BREA, lejos).copy(alpha = 0.4f), Color.Transparent), tabla.top, tabla.top + tabla.height * 0.32f), tabla.topLeft, Size(tabla.width, tabla.height * 0.32f))
         }
         drawRect(p.luz(C.ORO, lejos), tabla.topLeft, tabla.size, style = Stroke(w * 0.035f))
-        // El tejadillo a dos aguas, con su cruz pequeña.
-        val techo = poligono(Offset(c.x - w * 0.78f, c.y - h * 0.6f), Offset(c.x, c.y - h * 0.92f), Offset(c.x + w * 0.78f, c.y - h * 0.6f))
-        drawPath(techo, Brush.horizontalGradient(listOf(if (ld < 0) p.luz(madera, lejos) else p.sombra(madera, lejos), if (ld < 0) p.sombra(madera, lejos) else p.luz(madera, lejos)), c.x - w * 0.8f, c.x + w * 0.8f))
-        drawLine(p.luz(C.ORO, lejos), Offset(c.x, c.y - h * 0.92f), Offset(c.x, c.y - h * 1.12f), w * 0.04f)
-        drawLine(p.luz(C.ORO, lejos), Offset(c.x - w * 0.07f, c.y - h * 1.05f), Offset(c.x + w * 0.07f, c.y - h * 1.05f), w * 0.04f)
-        if (luto) {
-            val pano = Path().apply { moveTo(c.x - w * 0.66f, c.y - h * 0.6f); lineTo(c.x + w * 0.66f, c.y - h * 0.6f); cubicTo(c.x + w * 0.6f, c.y - h * 0.3f, c.x + w * 0.4f, c.y - h * 0.15f, c.x + w * 0.3f, c.y - h * 0.32f); cubicTo(c.x + w * 0.1f, c.y - h * 0.42f, c.x - w * 0.2f, c.y - h * 0.4f, c.x - w * 0.35f, c.y - h * 0.3f); cubicTo(c.x - w * 0.5f, c.y - h * 0.2f, c.x - w * 0.62f, c.y - h * 0.35f, c.x - w * 0.66f, c.y - h * 0.6f); close() }
-            drawPath(pano, p.medio(lerp(C.BREA, C.AZUL, 0.12f), lejos))
-        }
         // La lamparilla: el vaso rojo colgado de sus tres cadenillas, delante de la tabla.
-        val vaso = Offset(c.x, c.y + h * 0.34f)
-        for (u in listOf(-1f, 0f, 1f)) drawLine(p.sombra(C.LATON, lejos), Offset(c.x + u * w * 0.22f, c.y - h * 0.58f), vaso + Offset(u * w * 0.1f, -w * 0.08f), w * 0.015f)
-        val vasoForma = Path().apply { moveTo(vaso.x - w * 0.12f, vaso.y - w * 0.08f); cubicTo(vaso.x - w * 0.13f, vaso.y + w * 0.1f, vaso.x + w * 0.13f, vaso.y + w * 0.1f, vaso.x + w * 0.12f, vaso.y - w * 0.08f); close() }
-        drawPath(vasoForma, lerp(p.medio(C.ROJO, lejos), Color(0xFFFF5A3A), 0.7f * lumbre))
-        drawLine(p.luz(C.LATON, lejos), vaso + Offset(-w * 0.13f, -w * 0.08f), vaso + Offset(w * 0.13f, -w * 0.08f), w * 0.03f)
+        val vaso = Offset(c.x, c.y + h * 0.4f)
+        for (u in listOf(-1f, 0f, 1f)) drawLine(p.sombra(C.LATON, lejos), Offset(c.x + u * w * 0.2f, hy0 + h * 0.02f), vaso + Offset(u * w * 0.1f, -w * 0.08f), w * 0.015f)
+        val vasoForma = Path().apply { moveTo(vaso.x - w * 0.13f, vaso.y - w * 0.08f); cubicTo(vaso.x - w * 0.14f, vaso.y + w * 0.12f, vaso.x + w * 0.14f, vaso.y + w * 0.12f, vaso.x + w * 0.13f, vaso.y - w * 0.08f); close() }
+        drawPath(vasoForma, lerp(p.medio(C.ROJO, lejos), Color(0xFFFF5A3A), 0.75f * lumbre))
+        drawLine(p.luz(C.LATON, lejos), vaso + Offset(-w * 0.14f, -w * 0.08f), vaso + Offset(w * 0.14f, -w * 0.08f), w * 0.03f)
         if (lumbre > 0.02f) {
-            resplandor(vaso, w * (1.4f + 1.6f * p.l.noche), (0.3f + 0.7f * p.l.noche) * lumbre, C.LUMBRE)
+            resplandor(vaso + Offset(0f, -w * 0.1f), w * (1.1f + 1.4f * p.l.noche), (0.35f + 0.75f * p.l.noche) * lumbre, C.LUMBRE)
             drawOval(Color(0xFFFFE6A0), Offset(vaso.x - w * 0.025f, vaso.y - w * 0.16f), Size(w * 0.05f, w * 0.09f))
         }
+        // La puerta de vidrio: su bastidor, el travesaño y el reflejo del cielo (de noche, la lumbre y un brillo de luna).
+        val bast = lerp(p.medio(madera, lejos), C.LUMBRE, 0.25f * noche)
+        drawRect(bast, Offset(hx0, hy0), Size(hx1 - hx0, hy1 - hy0), style = Stroke(w * 0.07f))
+        drawLine(bast, Offset(hx0, c.y + h * 0.08f), Offset(hx1, c.y + h * 0.08f), w * 0.04f)
+        val brillo = lerp(lerp(p.l.bajo, Color.White, 0.5f), Color(0xFFE6EEFF), p.l.noche)
+        drawPath(poligono(Offset(hx0 + w * 0.08f, hy0 + h * 0.5f), Offset(hx0 + w * 0.45f, hy0 + h * 0.05f), Offset(hx0 + w * 0.58f, hy0 + h * 0.05f), Offset(hx0 + w * 0.2f, hy0 + h * 0.56f)), brillo.copy(alpha = 0.2f + 0.1f * p.r.contraste))
+        // El canto de luz del marco y su desgaste.
+        drawLine(p.luz(lerp(madera, C.BLANCO, 0.3f), lejos).copy(alpha = 0.7f), Offset(x0, y0), Offset(x0, y1), w * 0.03f)
+        drawLine(p.sombra(C.BREA, lejos).copy(alpha = 0.4f), Offset(x0, y1), Offset(x1, y1), w * 0.04f)
+        // El tejadillo a dos aguas, con su vuelo y la sombra que echa en el marco, y la cruz pequeña de latón.
+        drawRect(p.sombra(madera, lejos).copy(alpha = 0.5f), Offset(x0, y0), Size(x1 - x0, h * 0.06f))
+        val techo = poligono(Offset(x0 - w * 0.18f, y0 + h * 0.02f), Offset(c.x + s * fondo * 0.5f, y0 - h * 0.34f), Offset(x1 + w * 0.18f + s * fondo, y0 - fondo * 0.1f), Offset(x1 + w * 0.18f, y0 + h * 0.02f))
+        drawPath(techo, Brush.horizontalGradient(listOf(if (ld < 0) p.luz(madera, lejos) else p.sombra(madera, lejos), if (ld < 0) p.sombra(madera, lejos) else p.luz(madera, lejos)), x0 - w * 0.2f, x1 + w * 0.2f))
+        drawLine(p.luz(madera, lejos).copy(alpha = 0.7f), Offset(x0 - w * 0.18f, y0 + h * 0.02f), Offset(c.x + s * fondo * 0.5f, y0 - h * 0.34f), w * 0.03f)
+        val cima = Offset(c.x + s * fondo * 0.5f, y0 - h * 0.34f)
+        drawLine(p.luz(C.ORO, lejos), cima, cima + Offset(0f, -h * 0.2f), w * 0.04f)
+        drawLine(p.luz(C.ORO, lejos), cima + Offset(-w * 0.07f, -h * 0.13f), cima + Offset(w * 0.07f, -h * 0.13f), w * 0.04f)
+        if (luto) {
+            val pano = Path().apply { moveTo(x0, y0); lineTo(x1, y0); cubicTo(x1, y0 + h * 0.3f, x1 - w * 0.2f, y0 + h * 0.45f, c.x + w * 0.25f, y0 + h * 0.28f); cubicTo(c.x + w * 0.1f, y0 + h * 0.2f, c.x - w * 0.15f, y0 + h * 0.22f, c.x - w * 0.3f, y0 + h * 0.32f); cubicTo(x0 + w * 0.1f, y0 + h * 0.42f, x0, y0 + h * 0.3f, x0, y0); close() }
+            drawPath(pano, p.medio(lerp(C.BREA, C.AZUL, 0.12f), lejos))
+        }
         if (velas) for (u in listOf(-0.55f, 0.55f)) {
-            val b = Offset(c.x + u * w, c.y + h * 0.66f)
+            val b = Offset(c.x + u * w, y1)
             drawLine(p.luz(lerp(C.BLANCO, C.ESPONJA, 0.3f), lejos), b, b + Offset(0f, -h * 0.35f), w * 0.07f)
             drawOval(Color(0xFFFFE08A), Offset(b.x - w * 0.025f, b.y - h * 0.35f - w * 0.1f), Size(w * 0.05f, w * 0.09f))
             resplandor(b + Offset(0f, -h * 0.38f), w * 0.9f, 0.25f + 0.6f * p.l.noche, C.LUMBRE)
         }
         if (huevos) for (i in 0 until 3) {
-            val q = Offset(c.x - w * 0.3f + i * w * 0.28f, c.y + h * 0.66f + w * 0.03f)
+            val q = Offset(c.x - w * 0.3f + i * w * 0.28f, y1 + w * 0.03f)
             drawOval(Brush.radialGradient(listOf(p.luz(C.ROJO, lejos), p.sombra(C.ROJO, lejos)), q + Offset(-w * 0.03f, -w * 0.05f), w * 0.12f), Offset(q.x - w * 0.08f, q.y - w * 0.11f), Size(w * 0.16f, w * 0.2f))
         }
     }
 
     /** Dónde arde la lamparilla de la hornacina de centro [c] y [k] unidades por metro (para su llama en la parte viva y su luz). */
-    fun llamaDeLaLamparilla(c: Offset, k: Float): Offset = Offset(c.x, c.y + 0.28f * k * 0.34f - 0.22f * k * 0.12f)
+    fun llamaDeLaLamparilla(c: Offset, k: Float): Offset = Offset(c.x, c.y + 0.082f * k)
 
     // =================================================================
     //  El palo, los ganchos, la jarcia

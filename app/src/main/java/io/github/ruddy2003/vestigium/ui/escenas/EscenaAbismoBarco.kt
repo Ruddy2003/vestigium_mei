@@ -106,22 +106,33 @@ internal object BarcoAbismo {
 
     // ---------------------------------------------------------------- Dónde está cada cosa
 
-    /** La bomba: en medio de la cubierta, un poco a estribor, con el frente (el manómetro) hacia popa. */
-    val SITIO_BOMBA = sitio(0.32f, 3.85f, 0.62f)
-    /** La tapa de la escotilla de proa: el soporte del objeto del día. */
-    const val ESCOTILLA_U = -0.55f
-    const val ESCOTILLA_V = 5.0f
+    /**
+     * La bomba: en medio de la cubierta, un poco a estribor, con el frente (el manómetro) hacia popa, girada lo justo para
+     * que se lean a la vez la caja con su manómetro y las dos ruedas en escorzo.
+     */
+    val SITIO_BOMBA = sitio(0.32f, 3.85f, 0.2f)
+    /** La tapa de la escotilla de proa, detrás de la bomba: ahí se ensartan las ristras y se juega a las cartas en el corro. */
+    const val ESCOTILLA_U = -0.05f
+    const val ESCOTILLA_V = 6.6f
     val SITIO_ESCOTILLA = sitio(ESCOTILLA_U, ESCOTILLA_V, -0.05f)
     const val ESCOTILLA_ANCHO = 0.95f
     const val ESCOTILLA_FONDO = 0.7f
     const val ESCOTILLA_ALTO = 0.34f
     /** La tina de lavar las esponjas, cortada por el borde de abajo, a la izquierda. */
     val SITIO_TINA = sitio(-0.3f, 2.95f, 0f)
-    /** Las botas de plomo, junto a la bomba. */
-    val SITIO_BOTA = sitio(1.12f, 3.55f, -0.5f)
-    val SITIO_BOTA2 = sitio(0.98f, 3.3f, 0.9f)
-    /** La hornacina del icono, clavada por dentro en la borda de la aleta de estribor, abajo a la derecha, cortada por el borde. */
-    const val ICONO_V = 1.95f
+    /** Las botas de plomo, a la derecha de la bomba: una de pie y la otra caída de lado. */
+    val SITIO_BOTA = sitio(0.66f, 3.5f, -0.5f)
+    val SITIO_BOTA2 = sitio(0.92f, 3.22f, 0.7f)
+    /** El montón de las esponjas limpias, abajo, junto a la borda. */
+    const val LIMPIAS_U = 1.0f
+    const val LIMPIAS_V = 2.7f
+    /**
+     * La hornacina del icono, en la aleta de estribor, abajo a la derecha: clavada en lo alto de un candelero que sube de
+     * la borda, para que se vea entera sobre el agua y su lamparilla alumbre la regala, las tablas y el agua.
+     */
+    const val ICONO_V = 1.62f
+    const val ICONO_U = 0.14f
+    const val ICONO_H = 1.12f
 
     /** Dónde se pone en la borda la manguera (y la cuerda de vida) para bajar al agua. */
     const val BAJADA_V = 3.25f
@@ -132,8 +143,10 @@ internal object BarcoAbismo {
     const val GATO_HASTA = 192f
 
     /** El centro de la tabla del icono en el lienzo y su escala. */
-    val ICONO: Offset get() = pb(estribor(ICONO_V) - 0.2f, 0.42f, ICONO_V)
-    val K_ICONO: Float get() = k(cam(estribor(ICONO_V), ICONO_V).y)
+    val ICONO: Offset get() = pb(estribor(ICONO_V) - ICONO_U, ICONO_H, ICONO_V)
+    val K_ICONO: Float get() = k(cam(estribor(ICONO_V) - ICONO_U, ICONO_V).y)
+    /** Dónde arde la lamparilla, en el lienzo (la luz cálida que no se apaga nunca). */
+    val LAMPARILLA: Offset get() = PiezasAbismo.llamaDeLaLamparilla(ICONO, K_ICONO)
 
     /** La escala de los objetos del día sobre la escotilla: la de Mongol, 60 unidades por metro a escala 1. */
     fun escalaEn(z: Float): Float = k(z) / 60f
@@ -169,9 +182,73 @@ internal object BarcoAbismo {
     /** Las luces cálidas encendidas a esta hora, de 0 a 1: la lamparilla del icono y el farol. */
     internal class Lumbres(val lamparilla: Float, val farol: Float)
 
-    /** Dónde está el farol: colgado del cabo de las ristras, sobre el corro, en medio de la cubierta. */
-    val FAROL: Offset get() = pb(0.21f, 2.18f, 2.8f)
-    val K_FAROL: Float get() = k(cam(0.21f, 2.8f).y)
+    /** Cuánto alumbra el farol «ya bajo» las primeras horas del sueño. */
+    const val FAROL_BAJO = 0.45f
+    /** Hasta qué hora queda el farol bajo encendido. */
+    const val FAROL_HASTA = 22.5
+
+    /**
+     * El farol de cubierta, de 0 a 1: entero en el corro de la tarde y en el bocado de antes del alba, y la noche de Pascua
+     * ([EscenaAbismo.farol]); y **ya bajo** ([FAROL_BAJO]) las primeras horas del sueño, de las 20:00 a las 22:30, hasta
+     * que el último se duerme **[Diseño propio]** («el farol, de las 18 a las 20, ya bajo o apagado»). Así la noche de las
+     * 21:00 tiene tres luces: el farol, la lamparilla y la luna; más tarde quedan la lamparilla y la luna.
+     */
+    internal fun farolDeCubierta(m: Momento): Float = when {
+        EscenaAbismo.lugar(m) != EscenaAbismo.Lugar.BARCO -> 0f
+        EscenaAbismo.farol(m) -> 1f
+        EscenaAbismo.fase(m) == EscenaAbismo.Fase.SUENO && m.hora >= 20.0 && m.hora < FAROL_HASTA -> FAROL_BAJO
+        else -> 0f
+    }
+
+    /**
+     * Cuántos trajes de lona hay puestos a secar sobre la regala: uno por la mañana (los otros los llevan puestos el buzo
+     * que está abajo y el que espera su turno), dos desde que se acaba de bajar hasta el anochecer (los de la mañana,
+     * mojados), ninguno de noche (doblados, en la bodega); los días que no se baja, uno, seco **[Diseño propio]**. El día
+     * que el traje es el objeto, ninguno: lo pinta el objeto.
+     */
+    internal fun trajesASecar(m: Momento): Int {
+        if (EscenaAbismo.lugar(m) != EscenaAbismo.Lugar.BARCO || !ObjetosAbismo.elCuadroPinta(m, "escafandra")) return 0
+        return when (EscenaAbismo.fase(m)) {
+            EscenaAbismo.Fase.SUENO -> 0
+            EscenaAbismo.Fase.ALBA, EscenaAbismo.Fase.INMERSION -> 1
+            EscenaAbismo.Fase.COMIDA, EscenaAbismo.Fase.ESPONJAS, EscenaAbismo.Fase.CORRO -> if (EscenaAbismo.diaSinBajar(m) || m.hora < 11.0) 1 else 2
+        }
+    }
+
+    /**
+     * El montón de esponjas ya limpias («las dejan como pan blanco»), de 0 a 1: crece mientras se limpian, por la tarde, y
+     * al anochecer ya están todas ensartadas en las cuerdas.
+     */
+    internal fun esponjasLimpias(m: Momento): Float {
+        if (EscenaAbismo.lugar(m) != EscenaAbismo.Lugar.BARCO || EscenaAbismo.diaSinBajar(m)) return 0f
+        val h = m.hora.toFloat()
+        return when (EscenaAbismo.fase(m)) {
+            EscenaAbismo.Fase.ESPONJAS -> ((h - 12.5f) / 4.5f).coerceIn(0.15f, 1f)
+            EscenaAbismo.Fase.COMIDA -> if (h >= 17f) 1f else 0f
+            EscenaAbismo.Fase.ALBA, EscenaAbismo.Fase.INMERSION, EscenaAbismo.Fase.CORRO, EscenaAbismo.Fase.SUENO -> 0f
+        }
+    }
+
+    /**
+     * Cuánto se corre en el fondo (en metros de la cámara: x, z) la sombra del casco: lo que dice el agua ([AguaClara.corre])
+     * por los cuatro metros y medio que hay hasta la arena, sin pasar de unos metros, y medio metro hacia fuera **[Aproximación]**
+     * (el casco tiene pantoque: su sombra asoma por estribor aun con el sol alto). Por la mañana, con el sol por estribor,
+     * cae bajo el barco y casi no se ve; a mediodía asoma como una franja junto al costado; por la tarde se tiende hacia
+     * fuera, ancha, con la red de luz alrededor: es la mancha que camina de este cuadro.
+     */
+    internal fun corrimientoDeLaSombra(a: AguaClara): Offset {
+        val c = a.corre * (a.hondo + 0.5f)
+        return Offset((c.x + 0.5f).coerceIn(-3f, 4.5f), c.y.coerceIn(0.3f, 3.5f))
+    }
+
+    /** Dónde está el farol: colgado de una driza larga del cabo de las ristras, sobre la bomba y el corro, a la altura del pecho. */
+    private const val FAROL_U = 0.35f
+    private const val FAROL_V = 2.85f
+    const val FAROL_ALTO = 1.55f
+    val FAROL: Offset get() = pb(FAROL_U, FAROL_ALTO, FAROL_V)
+    val K_FAROL: Float get() = k(cam(FAROL_U, FAROL_V).y)
+    /** El farol en metros de la cámara (x, alto, z), para las sombras que tumba. */
+    val LUMBRE_FAROL: V3 get() { val c = cam(FAROL_U, FAROL_V); return V3(c.x, FAROL_ALTO + 0.05f, c.y) }
 
     /**
      * Todo lo que el cuadro de un momento comparte entre sus planos: la luz, el pincel, las lumbres, el mar y lo que
@@ -184,7 +261,7 @@ internal object BarcoAbismo {
         val p = Pincel(l, r, 0f, C.LUMBRE)
         val mar: Mar = EscenaAbismo.mar(m)
         val luna: Float = EscenaAbismo.luna(l)
-        val lu = Lumbres(lamparilla = 0.25f + 0.75f * l.noche, farol = if (EscenaAbismo.farol(m)) 1f else 0f)
+        val lu = Lumbres(lamparilla = 0.25f + 0.75f * l.noche, farol = farolDeCubierta(m))
         /** Cuánto se inclina el horizonte (con tormenta, el barco escora), en radianes. */
         val escora: Float = when (mar) { Mar.TORMENTA -> 0.045f; Mar.HURACAN -> 0.03f; Mar.NORTE -> 0.012f; Mar.CALMA, Mar.CLARA -> 0f }
 
@@ -194,12 +271,12 @@ internal object BarcoAbismo {
          */
         fun pincel(en: Offset): Pincel {
             if (l.noche < 0.3f) return p
-            val fuentes = listOf(ICONO to lu.lamparilla * 0.6f, FAROL to lu.farol)
+            val fuentes = listOf(Triple(LAMPARILLA, lu.lamparilla * 0.75f, 70f), Triple(FAROL, lu.farol, 105f))
             var mejor: Pair<Offset, Float>? = null; var calor = 0f
-            for ((q, f) in fuentes) { if (f <= 0.02f) continue; val d = (q - en).getDistance(); val kk = f / (1f + (d / 60f) * (d / 60f)); calor += kk; if (mejor == null || kk > mejor.second) mejor = q to kk }
+            for ((q, f, alcance) in fuentes) { if (f <= 0.02f) continue; val d = (q - en).getDistance(); val kk = f / (1f + (d / alcance) * (d / alcance)); calor += kk; if (mejor == null || kk > mejor.second) mejor = q to kk }
             if (mejor == null || calor < 0.06f) return p
             val rr = rayoDeFoco(Foco(mejor.first, C.LUMBRE, 1f, 60f, suelo = en.y), en, 0.4f, C.SOMBRA)
-            return Pincel(l, Rayo(rr.dia, rr.lat, rr.cot, rr.tan, rr.ax, rr.ay, rr.fuerza, rr.color, maxOf(rr.contraste, r.contraste)), (calor * l.noche).coerceIn(0f, 0.85f), C.LUMBRE)
+            return Pincel(l, Rayo(rr.dia, rr.lat, rr.cot, rr.tan, rr.ax, rr.ay, rr.fuerza, rr.color, maxOf(rr.contraste, r.contraste)), (calor * 1.2f * l.noche).coerceIn(0f, 0.9f), C.LUMBRE)
         }
     }
 
@@ -250,7 +327,7 @@ internal object BarcoAbismo {
 
     fun anclas(m: Momento): List<Ancla> = buildList {
         add(Ancla(TipoAncla.SUELO, GATO_DESDE, PISO_GATO, hasta = GATO_HASTA))
-        val mirador = pb(estribor(2.35f) - 0.05f, regala(2.35f), 2.35f)
+        val mirador = pb(estribor(2.85f) - 0.05f, regala(2.85f), 2.85f)
         add(Ancla(TipoAncla.MIRADOR, mirador.x, mirador.y))                       // sentado en la regala, mirando el agua
         add(Ancla(TipoAncla.OBJETO, soporte().x + 14f, PISO_GATO))
         add(Ancla(TipoAncla.ABRIGO, SITIO_BOMBA.pie.x - 26f, PISO_GATO))            // a sotavento de la bomba
