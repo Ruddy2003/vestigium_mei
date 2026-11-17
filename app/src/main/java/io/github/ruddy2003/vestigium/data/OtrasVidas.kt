@@ -863,6 +863,159 @@ object OtrasVidas {
                 "lejos" to i(600, "La ciudad donde estudió."), "estatura" to i(172), "vida" to i(55), "vida_adulto" to i(65), "hijos" to i(0), "alfabetizacion" to i(70, "En el pueblo; él lee latín y letra antigua."),
                 "lectura" to i(120, "Legajos, cartas y los libros del fondo del archivo.")),
             fuentes = emptyList()),
+
+        // ------------------------------------------------ lote 10 (docs/diseno/PLAN_TEMAS.md, 10c)
+        Vida("agente_red", "Tadeo", "Ladrón de piezas y agente de la red", "El puerto de Halde, un mundo minero bajo el Directorio", "año 212 del Directorio", 212, "tema", "frente", edad = 32, ficticia = true,
+            inspiracion = "Inspirado en Andor, de Star Wars: un ladrón al que recluta una red clandestina. El mundo, los nombres y la gente son inventados.",
+            historia = listOf(
+                "Tadeo desarma naves viejas en el desguace del puerto de Halde, un mundo minero que el Directorio exprime desde hace dos siglos: corta cascos con el soplete, saca cables, válvulas y motores, y los apila por peso. Lo que vale de verdad no llega a la báscula: se lo lleva escondido en la chaqueta y lo vende en el mercado.",
+                "Una relojera del mercado, que le compraba piezas sin preguntar de dónde salían, un día le preguntó otra cosa. Ahora, además de chatarrero, es recadero de una red clandestina que trabaja en células; la suya es la K-7. Lleva paquetes que no abre, mira siempre si lo siguen y, de noche, a la hora de la ventana, escucha una radio de maleta que habla en cifras.",
+                "Vive en un cuarto alquilado sobre un taller de motores, con una ventana que da a las grúas. Come guiso de raíz, pan negro y café de cebada en el puesto de la esquina, y se acuesta cuando se cierra la ventana de transmisión. Conoce a medio puerto y no se fía de casi nadie. Nunca ha salido de su planeta.",
+            ),
+            dia = listOf(t(2.0, 9.0, Hacer.DORMIR, "en un cuarto alquilado sobre el taller"), t(9.0, 10.0, Hacer.COMER), t(10.0, 15.0, Hacer.TRABAJO, "desarmar naves en el desguace"),
+                t(15.0, 16.0, Hacer.CAMINO, "por el mercado, mirando si lo siguen"), t(16.0, 19.0, Hacer.TRABAJO, "llevar piezas y recados"), t(19.0, 20.0, Hacer.COMER),
+                t(20.0, 22.0, Hacer.GENTE, "el bar donde se pasan los mensajes"), t(22.0, 23.0, Hacer.CAMINO), t(23.0, 2.0, Hacer.TRABAJO, "la ventana de transmisión y la misión de la noche")),
+            datos = mapOf("pasos" to i(11000, "El desguace, los recados a pie y las vueltas de más para ver si lo siguen."), "km_anio" to i(3000, "Todo a pie o en el tranvía del puerto."),
+                "kcal" to i(2800, "Cortar y cargar chatarra es trabajo pesado."), "proteina" to i(70), "azucar" to i(25, "Melaza en el café de cebada."), "fibra" to i(20, "Raíces y pan negro."),
+                "alcohol" to i(25, "Dos vasos de aguardiente de raíz en el bar."), "sueno" to i(6.5, "De madrugada a media mañana, y se despierta con las sirenas del puerto."), "dormir" to i(26.0),
+                "trabajo" to i(66, "El desguace, los recados y la misión de la noche, seis días a la semana."), "aire_libre" to i(6, "El desguace está al descubierto."),
+                "pantalla" to i(1.5, "La pantalla redonda de la radio, durante la ventana."), "notificaciones" to i(40, "Sirenas de turno, altavoces de la Prefectura y los pitidos de la radio."),
+                "musica" to i(1, "La gramola del bar."), "personas_dia" to i(45), "conocidas" to i(900), "poblacion" to i(400000, "El puerto y su barrio de ladrillo."),
+                "lejos" to i(40, "La sierra que cierra el puerto por el norte."), "estatura" to i(176), "vida" to i(52, "El polvo del mineral y los accidentes del desguace."), "vida_adulto" to i(60),
+                "hijos" to i(2.8), "alfabetizacion" to i(70), "lectura" to i(2, "Manuales de motores y papeles que no debería tener.")),
+            fuentes = emptyList()),
+
+        // ------------------------------------------------ lote 10 (docs/diseno/PLAN_TEMAS.md, 10d)
+        // Persona inventada en un mundo real (10a): no es ficción (`ficticia = false`), sus cifras son reconstrucciones
+        // (`r`) y su calendario lleva días históricos y aproximados con su fuente (`vidas/anios/AnioG9.kt`). Las fechas y las
+        // citas están comprobadas en `docs/diseno/temas/fuentes_arcontes.md`.
+        Vida("iniciado", "Eleazar", "Salador de pescado e iniciado de un círculo escondido", "Magdala, a orillas del lago de Galilea", "hacia el año 30", 28, "tema", "arcontes", edad = 28,
+            inspiracion = "Persona inventada. Los hechos siguen los evangelios y lo que la historia da por probable. Sus creencias son las de los textos gnósticos de los siglos II a IV, puestas a propósito en el siglo I.",
+            historia = listOf(
+                "Eleazar sala pescado en Magdala, un pueblo de pescadores en la orilla oeste del lago de Galilea, a una hora a pie de Tiberíades, la ciudad nueva de Herodes Antipas. Trabaja en el secadero del viejo Ezequías: abre lo que traen las barcas de noche, lo cubre de sal, lo tiende al sol y lo guarda en ánforas que se llevan las caravanas. Hay quien dice que Magdala es la Tariquea de los griegos, «el saladero»; no es seguro.",
+                "De día es un trabajador como cualquiera: reza al alba, come pan de cebada, pescado y aceitunas, y va a la sinagoga el sábado. De noche va a una reunión escondida, la de «los que saben», donde un viejo venido de Alejandría enseña que este mundo es una cárcel hecha por un dios menor, que siete arcontes guardan las puertas del cielo y que en cada persona hay una chispa de una luz que está más allá.",
+                "Su vecina es María, la que llamarán Magdalena. Pronto empezará a predicar por la orilla del lago un hombre de Nazaret. Eleazar lo verá casi siempre de lejos, de espaldas, entre la gente, y entenderá lo que ve a su manera, que no es la de los discípulos sino la de su círculo. Lo que él cree está en textos reales, aunque se escribieron de uno a tres siglos después.",
+            ),
+            dia = listOf(t(21.0, 5.0, Hacer.DORMIR), t(5.0, 6.0, Hacer.REZAR, "la oración del alba"), t(6.0, 7.0, Hacer.COMER), t(7.0, 12.0, Hacer.TRABAJO, "salar y secar el pescado de la noche"),
+                t(12.0, 13.0, Hacer.COMER), t(13.0, 17.0, Hacer.TRABAJO, "cargar ánforas para las caravanas"), t(17.0, 18.0, Hacer.CAMINO, "a la orilla, a escuchar al maestro"),
+                t(18.0, 19.0, Hacer.COMER), t(19.0, 21.0, Hacer.GENTE, "la reunión escondida de los que saben")),
+            datos = mapOf("pasos" to r(14000, "El secadero, la carga de ánforas y la orilla, todo a pie."), "km_anio" to r(2500, "A pie; algunos años, además, la subida a Jerusalén: unos 150 km por cada lado."),
+                "kcal" to r(2800, "Trabajo de carga: pan de cebada, pescado, aceite, legumbres y fruta."), "proteina" to r(85, "Pescado casi a diario, salado o fresco, y legumbres."),
+                "azucar" to r(15, "Miel de dátiles y de abejas, higos y uvas pasas."), "fibra" to r(45, "Pan de cebada, legumbres, higos y verduras."), "alcohol" to r(20, "Vino aguado en la mesa; más en las fiestas."),
+                "sueno" to r(8.0, "Se acuesta con la noche y se levanta antes que el sol."), "dormir" to r(21.0), "trabajo" to r(54, "Seis días a la semana: el sábado no se trabaja."),
+                "aire_libre" to r(8, "El secadero está al sol, en la orilla."), "pantalla" to r(0), "notificaciones" to r(4, "Los gritos de las barcas que llegan y los del mercado."),
+                "musica" to r(0.5, "Salmos en la sinagoga y cantos en las fiestas."), "personas_dia" to r(40, "Los del secadero, los de las barcas y los de la reunión."), "conocidas" to r(1000),
+                "poblacion" to r(4000, "Un pueblo de pescadores; la cifra es muy insegura."), "lejos" to r(150, "Jerusalén, en las fiestas."),
+                "estatura" to r(166, "Promedio aproximado de los hombres de Galilea de la época, según sus esqueletos."), "vida" to r(30), "vida_adulto" to r(55), "hijos" to r(5),
+                "alfabetizacion" to r(5, "Muy pocos; las estimaciones son muy discutidas."), "lectura" to r(1, "Oye leer la Ley en la sinagoga; en el círculo, unas pocas hojas copiadas a mano.")),
+            fuentes = listOf("Magdala" to "${W}Magdala", "Tariquea, el pueblo del pescado salado (se discute)" to "${W}Tarichaea",
+                "La cronología de Jesús" to "${W}Chronology_of_Jesus", "El gnosticismo" to "${W}Gnosticism", "Los arcontes" to "${W}Archon_(Gnosticism)")),
+        // ------------------------------------------------ lote 10 (docs/diseno/PLAN_TEMAS.md, 10e)
+        // Persona inventada en un mundo real (10a), como Eleazar: no es ficción (`ficticia = false`), sus cifras son
+        // reconstrucciones (`r`) y su calendario lleva días históricos y aproximados con su fuente (`vidas/anios/AnioG9.kt`).
+        // Las citas y la cronología están comprobadas en `docs/diseno/temas/fuentes_galia.md`. Su nombre es el de una
+        // dedicatoria galo-griega de Vaison (ϹΕΓΟΜΑΡΟϹ); no es el de nadie del libro 7 de César.
+        Vida("aprendiz_druida", "Segomaros", "Aprendiz de los druidas", "Gergovia, el oppidum de los arvernos, en la Galia", "54 a. C.", -54, "tema", "galia", edad = 19,
+            inspiracion = "Persona inventada. Su formación sigue lo que César cuenta de los druidas, y su guerra, el levantamiento del 52 a. C.; las cifras son reconstrucciones.",
+            historia = listOf(
+                "Segomaros es arverno, de Gergovia, el oppidum que se alza sobre una meseta en el centro de la Galia, con su muralla de madera, piedra y tierra y sus casas de paja. Su padre es un caballero con su gente. Desde niño, Segomaros aprende con los druidas en el robledal que hay al pie de la meseta: versos y más versos, de memoria, porque lo que enseñan no se escribe, aunque los galos usan letras griegas para las cuentas (César, Guerra de las Galias 6.14). Le enseñan que el alma no muere y pasa a otro cuerpo, y que por eso no hay que temer a la muerte.",
+                "En el invierno del 52 a. C. corre de campo en campo el grito de Cenabum, donde los carnutos han matado a los romanos. Vercingétorix, un noble de Gergovia, llama a la guerra: lo echan, vuelve y lo proclaman rey. Los druidas no van a la guerra (6.14), y Segomaros deja la escuela para irse con los jinetes. En primavera está en Gergovia cuando César sube al asalto y se tiene que volver.",
+                "En el verano lo sigue hasta Alesia, el oppidum de los mandubios, que César rodea con dos líneas de fosos y empalizadas. Desde la muralla ve llegar el ejército de socorro de toda la Galia, y lo ve perderse. Al otro día Vercingétorix se entrega. César cuenta que dijo haber hecho la guerra «por la defensa de la común libertad» (7.89), y Segomaros lo cuenta como lo cuentan los suyos: una victoria de honra. César devuelve a los arvernos sus cautivos, y él vuelve a su tierra y a los versos que no se escriben.",
+            ),
+            dia = listOf(t(21.0, 5.0, Hacer.DORMIR, "junto al fuego de la casa grande"), t(5.0, 6.0, Hacer.CUIDAR, "el ganado"), t(6.0, 7.0, Hacer.COMER),
+                t(7.0, 11.0, Hacer.REZAR, "aprender de memoria los versos de los druidas"), t(11.0, 12.0, Hacer.COMER), t(12.0, 16.0, Hacer.TRABAJO, "armas y caballos con los guerreros"),
+                t(16.0, 18.0, Hacer.CAMINO, "llevar mensajes de oppidum en oppidum"), t(18.0, 19.0, Hacer.COMER), t(19.0, 21.0, Hacer.GENTE, "el banquete y los bardos")),
+            datos = mapOf("pasos" to r(12000, "La escuela del robledal, el ganado y las armas, a pie; los mensajes, a caballo."),
+                "km_anio" to r(4000, "Casi todo a caballo, llevando mensajes; el año de la guerra, mucho más."),
+                "kcal" to r(3000, "Un muchacho que monta, carga y se entrena en armas, con inviernos fríos."), "proteina" to r(95, "Cerdo, vaca y oveja, leche y queso: la arqueología de los oppida da mucho hueso de cerdo."),
+                "azucar" to r(10, "Miel, poca."), "fibra" to r(40, "Pan y gachas de trigo y de cebada, habas y lentejas."), "alcohol" to r(25, "Cerveza de cebada; en los banquetes, a veces, vino de Italia, que es caro."),
+                "sueno" to r(8.0, "Duerme con la noche, junto al fuego."), "dormir" to r(21.0), "trabajo" to r(55, "Los versos, el ganado, las armas y los caballos, y los mensajes."),
+                "aire_libre" to r(9, "La escuela es en el bosque."), "pantalla" to r(0), "notificaciones" to r(5, "El cuerno, los mensajeros y los gritos que corren de campo en campo."),
+                "musica" to r(1.5, "Los bardos en el banquete y los versos dichos en voz alta."), "personas_dia" to r(50, "La casa grande de su padre, la escuela y los guerreros."), "conocidas" to r(1200),
+                "poblacion" to r(5000, "Gergovia, sobre su meseta; la cifra es muy insegura."), "lejos" to r(250, "Alesia, el año de la guerra."),
+                "estatura" to r(168, "Promedio aproximado de los hombres galos de la Edad del Hierro, según sus esqueletos."), "vida" to r(30), "vida_adulto" to r(55), "hijos" to r(5),
+                "alfabetizacion" to r(5, "Los que saben letras griegas para las cuentas son pocos: nobles, mercaderes y druidas."),
+                "lectura" to r(0, "Lo que aprende no se escribe: se dice de memoria (César, Guerra de las Galias 6.14).")),
+            fuentes = listOf("Los druidas" to "${W}Druid", "Los arvernos" to "${W}Arverni", "Vercingétorix" to "${W}Vercingetorix",
+                "La batalla de Gergovia" to "${W}Battle_of_Gergovia", "El cerco de Alesia" to "${W}Battle_of_Alesia", "La guerra de las Galias" to "${W}Gallic_Wars")),
+        // ------------------------------------------------ lote 10 (docs/diseno/PLAN_TEMAS.md, 10f)
+        // Persona inventada en un mundo real (10a), como Eleazar y Segomaros: no es ficción (`ficticia = false`), sus cifras
+        // son reconstrucciones (`r`) y su calendario lleva días históricos y aproximados con su fuente (`vidas/anios/AnioG9.kt`).
+        // Las fechas están comprobadas en `docs/diseno/temas/fuentes_nouveau.md`, con sus correcciones (sección 1): antes del
+        // 19 de julio de 1900 va a pie (8), la jornada queda por debajo del máximo de la ley de 1900 (9), y el café-concierto
+        // es La Cigale o el Divan japonais, porque Le Chat Noir cerró en 1897 (10). Su nombre es uno de la muestra de la
+        // sección 10 **[Aproximación]**; el apellido, uno francés corriente, inventado. Que el taller y su casa queden cerca de
+        // la línea 1 es **recurso** (corrección 8). La ficha dice «19 años en 1900»: tiene 17 en la temporada 1, el 1898.
+        Vida("litografa", "Marguerite", "Aprendiz de un taller de litografía", "París, en un taller de litografía que imprime carteles en color", "hacia 1900", 1898, "tema", "nouveau", edad = 17,
+            inspiracion = "Persona inventada. Inspirada en los talleres de litografía que imprimían los carteles de París hacia 1900; las cifras son reconstrucciones.",
+            historia = listOf(
+                "Marguerite Fournier entra de aprendiz a los diecisiete años en el taller de litografía de monsieur Ferrand, cerca del Palais-Royal, que imprime carteles en color. Un cartel así se hace con una piedra por cada color: cada piedra se dibuja aparte, con lápiz o tinta grasa, y la misma hoja pasa de una a otra, con marcas de registro para que cada color caiga en su sitio. Todo se basa en que el agua y la grasa se rechazan.",
+                "Vive con sus padres y su hermano en el faubourg Saint-Antoine, cerca de la Bastille: su padre es ebanista y su madre cose en casa. Va y vuelve a pie, por el camino que seguirá la primera línea del metro, cuyas obras empiezan en octubre de 1898. Algunas noches sube a pie con su amiga Berthe a un café-concierto de Montmartre, La Cigale o el Divan japonais; Le Chat Noir ya cerró, en 1897.",
+                "En 1900 París tiene la Exposición Universal, del 14 de abril al 12 de noviembre, y el 19 de julio abre el metro, entre Porte Maillot y Porte de Vincennes: desde entonces vuelve a casa en el tren, de Palais-Royal a Bastille, por quince céntimos en segunda. La ley del 30 de marzo de 1900 pone en once horas el máximo de trabajo en los talleres con mujeres; en el de Ferrand ya se hacen diez y media. Los carteles de las calles, de Mucha o de Chéret, son los de la época; ella y su gente son inventadas.",
+            ),
+            dia = listOf(t(23.0, 6.0, Hacer.DORMIR, "en el cuarto de la casa de sus padres, en el faubourg Saint-Antoine"), t(6.0, 7.0, Hacer.COMER, "café con leche y pan, con su madre"),
+                t(7.0, 7.5, Hacer.CAMINO, "al taller, cerca del Palais-Royal"), t(7.5, 12.0, Hacer.TRABAJO, "pasar las piedras de cada color por la prensa"), t(12.0, 13.0, Hacer.COMER),
+                t(13.0, 19.0, Hacer.TRABAJO, "moler la tinta, mojar las piedras y poner a secar los pliegos"), t(19.0, 19.5, Hacer.CAMINO, "a casa: a pie y, desde el 19 de julio de 1900, en el metro nuevo"),
+                t(19.5, 21.0, Hacer.CUIDAR, "la casa y la ropa, con su madre"), t(21.0, 23.0, Hacer.GENTE, "algunas noches, un café-concierto de Montmartre, La Cigale o el Divan japonais, al que sube a pie")),
+            datos = mapOf("pasos" to r(10000, "Los caminos a pie, el taller de pie todo el día y, algunas noches, la subida a Montmartre."),
+                "km_anio" to r(2200, "A pie casi todo; desde el verano de 1900, a la vuelta, unas estaciones de metro."),
+                "kcal" to r(2300, "Trabajo de pie y de carga ligera: pan, sopa, legumbres y, algunos días, carne."), "proteina" to r(65, "Pan, legumbres, queso y un poco de carne."),
+                "azucar" to r(30, "El azúcar del café con leche y, el domingo, algún dulce."), "fibra" to r(25, "Pan, sopa de verduras y legumbres."),
+                "alcohol" to r(12, "Vino aguado en la comida; un poco más en el café-concierto."), "sueno" to r(7.0, "De las once de la noche a las seis."), "dormir" to r(23.0),
+                "trabajo" to r(63, "Diez horas y media, seis días a la semana: por debajo de las 11 horas que permite la ley del 30 de marzo de 1900. El descanso semanal no fue ley para todos hasta 1906."),
+                "aire_libre" to r(1.5, "Los caminos de ida y vuelta; en el taller, la luz entra por las ventanas."), "pantalla" to r(0),
+                "notificaciones" to r(8, "La campana del taller, los pregones de la calle y los gritos de los vendedores de periódicos."),
+                "musica" to r(1.0, "Lo que se canta en el taller y, algunas noches, el café-concierto."), "personas_dia" to r(40, "El taller, el barrio y la calle."), "conocidas" to r(1200),
+                "poblacion" to r(2700000, "París hacia 1900; la cifra es aproximada."), "lejos" to r(15, "Las afueras de París: nunca ha salido de ellas."),
+                "estatura" to r(155, "Promedio aproximado de las mujeres de Francia nacidas hacia 1880."), "vida" to r(47, "Estimación para Francia hacia 1900: la bajan sobre todo los niños que mueren pequeños."),
+                "vida_adulto" to r(65), "hijos" to r(2.8, "Estimación para Francia hacia 1900."),
+                "alfabetizacion" to r(90, "En París casi todos los jóvenes saben leer."), "lectura" to r(6, "Folletines del periódico y alguna novela por entregas.")),
+            fuentes = listOf("La línea 1 del metro de París" to "https://fr.wikipedia.org/wiki/Ligne_1_du_m%C3%A9tro_de_Paris",
+                "La Exposición Universal de 1900" to "https://fr.wikipedia.org/wiki/Exposition_universelle_de_1900", "La cromolitografía" to "https://fr.wikipedia.org/wiki/Chromolithographie",
+                "La prensa litográfica" to "https://fr.wikipedia.org/wiki/Presse_lithographique", "Marzo de 1900: la ley del 30 de marzo" to "https://fr.wikipedia.org/wiki/Mars_1900",
+                "El café-concierto" to "https://fr.wikipedia.org/wiki/Caf%C3%A9-concert")),
+        // ------------------------------------------------ lote 10 (docs/diseno/PLAN_TEMAS.md, 10g)
+        // Persona inventada en un mundo real (10a), como Eleazar, Segomaros y Marguerite: no es ficción (`ficticia = false`),
+        // sus cifras son reconstrucciones (`r`) y su calendario lleva días históricos y aproximados con su fuente
+        // (`vidas/anios/AnioG9.kt`). Las fechas están comprobadas en `docs/diseno/temas/fuentes_psicodelia.md`, con sus
+        // correcciones (sección 1): las casas casi todas grises, alguna pintada (1); las salas y la radio por su calle o su
+        // frecuencia (6); los bailes de jueves a sábado, y el día de la agenda es uno de esos (17). Su nombre es uno de los de
+        // la ficha **[Aproximación]** (corrección 19), y no es el de nadie de la escena (David, no Wes, Rick, Stanley, Alton,
+        // Victor, Tom ni Michael); el apellido es inventado. La ficha dice «24 años en 1967»: tiene 22 en la temporada 1, el 1965.
+        // **El consumo** (el autor quitó la regla de «sin drogas» el 16 nov 2026): en su cuento fuma marihuana los viernes y
+        // toma LSD unas once noches al año, y algunos hongos desde 1967 (`vidas/anios/AnioG9.kt`, `vidas/piezas/PiezasDavid.kt`).
+        // «Su vida» y «Un día suyo» no lo cuentan: lo cuenta el cuento, solo esas noches. No bebe (alcohol = 0) y no fuma
+        // tabaco. Nada del seguimiento privado.
+        Vida("cartelista", "David", "Dibujante de carteles de conciertos", "San Francisco, en un departamento compartido del barrio de Haight-Ashbury", "hacia 1967", 1965, "tema", "psicodelia", edad = 22,
+            inspiracion = "Persona inventada. Inspirado en los dibujantes de carteles de las salas de baile de San Francisco en 1966 y 1967; las cifras son reconstrucciones.",
+            historia = listOf(
+                "David Hale llega a San Francisco el primer día de 1965, a los veintidós años, en el autobús que viene de Stockton, con una maleta y una carpeta de dibujos. Alquila un cuarto en un departamento compartido de la calle Page, en una casa victoriana gris dividida en departamentos, como tantas del barrio de Haight-Ashbury, donde los cuartos son baratos. De día trabaja en una imprenta pequeña, y un rotulista viejo le enseña a pintar letras con pincel.",
+                "En 1966 las salas de baile empiezan a pedir un cartel para cada baile de la semana, y él dibuja los suyos: letras de bloque que llenan toda la forma, como las de los carteles de la Secesión de Viena, y colores que vibran uno junto al otro. Los bailes son de jueves a sábado, y un día suyo es uno de esos: dibuja toda la tarde el cartel de la semana, come en la cocina del departamento y se va a la sala de la calle Sutter o al auditorio de Geary, donde las luces líquidas se mueven por las paredes.",
+                "En 1967 llega el verano del amor: los poetas y las bandas en el pasto del parque en enero, la radio FM que de noche pone discos enteros, la comida gratis de las cuatro en el Panhandle y el festival de Monterey en junio. Las casas del barrio son casi todas grises, con alguna pintada de colores fuertes. Los poetas, los músicos, los dibujantes de las salas y los que organizan los bailes son los de la época y salen de lejos; él y su gente son inventados.",
+            ),
+            dia = listOf(t(4.0, 12.0, Hacer.DORMIR, "en su cuarto del departamento, con la cortina cerrada contra la niebla"), t(12.0, 13.0, Hacer.COMER, "café, pan tostado y huevos en la cocina"),
+                t(13.0, 18.0, Hacer.TRABAJO, "dibujar el cartel de la semana"), t(18.0, 19.0, Hacer.COMER, "en la cocina del departamento compartido"),
+                t(19.0, 20.0, Hacer.CAMINO, "en trolebús o en autobús, por quince centavos, hasta la sala de baile"),
+                t(20.0, 2.0, Hacer.GENTE, "el baile y el show de luces, de jueves a sábado, en la sala de la calle Sutter o en el auditorio de Geary"),
+                t(2.0, 4.0, Hacer.LIBRE, "música en el departamento")),
+            datos = mapOf("pasos" to r(9000, "Las cuestas del barrio, la calle Haight, el camino a la sala y horas de pie en el baile."),
+                "km_anio" to r(3000, "Trolebús y autobús por la ciudad; alguna vuelta a Stockton y, en junio de 1967, Monterey."),
+                "kcal" to r(2500, "Comida barata del departamento: arroz, frijoles, pan, huevos y, algunas tardes, el guiso gratis del Panhandle."),
+                "proteina" to r(70, "Huevos, frijoles, leche y, pocas veces, carne."), "azucar" to r(55, "Refrescos, café con azúcar y pan dulce."),
+                "fibra" to r(18, "Pan blanco, arroz y poca fruta."), "alcohol" to r(0, "No bebe."),
+                "sueno" to r(8.0, "De las cuatro de la mañana al mediodía, con la cortina cerrada."), "dormir" to r(28.0),
+                "trabajo" to r(35, "Cinco horas cada tarde, seis días a la semana, y alguna noche entera cuando el cartel no sale."),
+                "aire_libre" to r(2.0, "El camino, la calle y, algunos días, el parque."), "pantalla" to r(0.5, "El televisor en blanco y negro de la cocina, a ratos."),
+                "notificaciones" to r(10, "El teléfono del pasillo, el timbre y los compañeros que lo llaman desde la escalera."),
+                "musica" to r(7.0, "Cuatro horas de baile, la radio de noche y los discos del departamento."),
+                "personas_dia" to r(60, "Los del departamento, los de la imprenta y la gente del baile."), "conocidas" to r(2000),
+                "poblacion" to r(740000, "San Francisco en los años sesenta; la cifra es aproximada."), "lejos" to r(200, "Monterey, al sur, en junio de 1967."),
+                "estatura" to r(177, "Promedio aproximado de los hombres de Estados Unidos nacidos en los años cuarenta."),
+                "vida" to r(63, "Estimación para los nacidos en Estados Unidos hacia 1943."), "vida_adulto" to r(75), "hijos" to r(2.5, "Estimación para Estados Unidos en 1967."),
+                "alfabetizacion" to r(98), "lectura" to r(15, "Libros de bolsillo de segunda mano, sobre todo de poesía, y el periódico del barrio.")),
+            fuentes = listOf("Haight-Ashbury" to "${W}Haight-Ashbury", "El verano del amor" to "${W}Summer_of_Love",
+                "Los carteles de las salas de baile" to "${W}Psychedelic_art", "Las luces líquidas" to "${W}Liquid_light_show",
+                "Las casas victorianas de San Francisco" to "${W}Painted_ladies", "Alfred Roller, de la Secesión de Viena" to "${W}Alfred_Roller")),
     )
 
     /** Las vidas que se ven con el tema [tema]: las doce de todos y la del tema (primero). */

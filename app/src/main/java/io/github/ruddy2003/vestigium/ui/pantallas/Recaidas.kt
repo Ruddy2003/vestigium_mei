@@ -65,8 +65,12 @@ import io.github.ruddy2003.vestigium.ui.estiloGrafica
  * por mes y el registro para corregir. Nada de esto sale en otra pantalla, reporte, widget, logro ni análisis (ver [Privado]);
  * sí va en la exportación para R.
  */
+// Siempre en cero: el seguimiento privado se dibuja sin intensidad y con la cara de la hora (Psicodelia; la guía, «La voz», punto 4).
 @Composable
-fun PantallaRecaidas(nav: Nav) {
+fun PantallaRecaidas(nav: Nav) = io.github.ruddy2003.vestigium.ui.SinIntensidad { PantallaRecaidasContenido(nav) }
+
+@Composable
+private fun PantallaRecaidasContenido(nav: Nav) {
     val ctx = LocalContext.current
     val c = Repo.config
     val hoy = Fechas.diaLogico()

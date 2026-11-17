@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Psicodelia, el cartel (de 21:00 a 5:00; el widget va siempre en oscuro): el cartel de luz negra, tres tintas planas sobre negro de terciopelo. El marco de arco del cartel (arriba redondo, abajo casi recto), con su filete crema por dentro; arriba a la izquierda, la marca de registro de la imprenta; arriba a la derecha, el disco del día hecho sol, crema con la etiqueta magenta y los rayos que ondulan en ultramar; abajo, dos bandas que fluyen, magenta y ultramar, con el registro un poco corrido. Tinta plana, sin sombras. Sin flores, sin paz, sin arcoíris. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F70F0C17"/>
+            <stroke android:width="1.5dp" android:color="#4A4262"/>
+            <corners android:topLeftRadius="24dp" android:topRightRadius="24dp" android:bottomRightRadius="4dp" android:bottomLeftRadius="4dp"/>
+        </shape>
+    </item>
+    <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.8dp" android:color="#40F3E9D6"/>
+            <corners android:topLeftRadius="20dp" android:topRightRadius="20dp" android:bottomRightRadius="1.5dp" android:bottomLeftRadius="1.5dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="7dp" android:height="7dp" android:top="3.4dp" android:left="13dp">
+        <vector android:width="7dp" android:height="7dp" android:viewportWidth="10" android:viewportHeight="10">
+            <path android:pathData="M7.6,5 C7.6,6.44 6.44,7.6 5,7.6 C3.56,7.6 2.4,6.44 2.4,5 C2.4,3.56 3.56,2.4 5,2.4 C6.44,2.4 7.6,3.56 7.6,5 Z" android:strokeColor="#99F3E9D6" android:strokeWidth="0.45"/>
+            <path android:pathData="M0.6,5 L9.4,5 M5,0.6 L5,9.4" android:strokeColor="#99F3E9D6" android:strokeWidth="0.45"/>
+        </vector>
+    </item>
+    <item android:gravity="top|right" android:width="16dp" android:height="16dp" android:top="4dp" android:right="8dp">
+        <vector android:width="16dp" android:height="16dp" android:viewportWidth="16" android:viewportHeight="16">
+            <path android:pathData="M12.4,8 L12.91,8.78 L13.48,8.78 L14.1,8 L14.62,7.22 L15.19,7.22 L15.8,8 M11.96,9.91 L12.08,10.83 L12.6,11.08 L13.5,10.65 L14.3,10.17 L14.82,10.42 L15.03,11.38 M10.74,11.44 L10.45,12.32 L10.81,12.77 L11.8,12.77 L12.74,12.69 L13.09,13.14 L12.86,14.1 M8.98,12.29 L8.33,12.96 L8.46,13.51 L9.36,13.95 L10.23,14.28 L10.36,14.84 L9.74,15.6 M7.02,12.29 L6.15,12.61 L6.02,13.17 L6.64,13.95 L7.28,14.63 L7.16,15.18 L6.26,15.6 M5.26,11.44 L4.33,11.35 L3.98,11.8 L4.2,12.77 L4.48,13.66 L4.12,14.11 L3.14,14.1 M4.04,9.91 L3.24,9.43 L2.73,9.68 L2.5,10.65 L2.37,11.57 L1.86,11.82 L0.97,11.38 M3.6,8 L3.09,7.22 L2.52,7.22 L1.9,8 L1.38,8.78 L0.81,8.78 L0.2,8 M4.04,6.09 L3.92,5.17 L3.4,4.92 L2.5,5.35 L1.7,5.83 L1.18,5.58 L0.97,4.62 M5.26,4.56 L5.55,3.68 L5.19,3.23 L4.2,3.23 L3.26,3.31 L2.91,2.86 L3.14,1.9 M7.02,3.71 L7.67,3.04 L7.54,2.49 L6.64,2.05 L5.77,1.72 L5.64,1.16 L6.26,0.4 M8.98,3.71 L9.85,3.39 L9.98,2.83 L9.36,2.05 L8.72,1.37 L8.84,0.82 L9.74,0.4 M10.74,4.56 L11.67,4.65 L12.02,4.2 L11.8,3.23 L11.52,2.34 L11.88,1.89 L12.86,1.9 M11.96,6.09 L12.76,6.57 L13.27,6.32 L13.5,5.35 L13.63,4.43 L14.14,4.18 L15.03,4.62" android:strokeColor="#FF8693D7" android:strokeWidth="0.75" android:strokeLineCap="round"/>
+            <path android:pathData="M11.7,8 C11.7,10.04 10.04,11.7 8,11.7 C5.96,11.7 4.3,10.04 4.3,8 C4.3,5.96 5.96,4.3 8,4.3 C10.04,4.3 11.7,5.96 11.7,8 Z" android:fillColor="#FFF3E9D6"/>
+            <path android:pathData="M10.8,8 C10.8,9.55 9.55,10.8 8,10.8 C6.45,10.8 5.2,9.55 5.2,8 C5.2,6.45 6.45,5.2 8,5.2 C9.55,5.2 10.8,6.45 10.8,8 Z" android:strokeColor="#330F0C17" android:strokeWidth="0.25"/>
+            <path android:pathData="M9.5,8 C9.5,8.83 8.83,9.5 8,9.5 C7.17,9.5 6.5,8.83 6.5,8 C6.5,7.17 7.17,6.5 8,6.5 C8.83,6.5 9.5,7.17 9.5,8 Z" android:fillColor="#FFDC7BA1"/>
+            <path android:pathData="M8.4,8 C8.4,8.22 8.22,8.4 8,8.4 C7.78,8.4 7.6,8.22 7.6,8 C7.6,7.78 7.78,7.6 8,7.6 C8.22,7.6 8.4,7.78 8.4,8 Z" android:fillColor="#FF0F0C17"/>
+        </vector>
+    </item>
+    <item android:gravity="bottom|fill_horizontal" android:height="6dp" android:left="18dp" android:right="18dp" android:bottom="1.6dp">
+        <vector android:width="100dp" android:height="6dp" android:viewportWidth="100" android:viewportHeight="10">
+            <path android:pathData="M0,3.2 L2.5,3.93 L5,4.49 L7.5,4.78 L10,4.72 L12.5,4.33 L15,3.69 L17.5,2.95 L20,2.26 L22.5,1.77 L25,1.6 L27.5,1.77 L30,2.26 L32.5,2.95 L35,3.69 L37.5,4.33 L40,4.72 L42.5,4.78 L45,4.49 L47.5,3.93 L50,3.2 L52.5,2.47 L55,1.91 L57.5,1.62 L60,1.68 L62.5,2.07 L65,2.71 L67.5,3.45 L70,4.14 L72.5,4.63 L75,4.8 L77.5,4.63 L80,4.14 L82.5,3.45 L85,2.71 L87.5,2.07 L90,1.68 L92.5,1.62 L95,1.91 L97.5,2.47 L100,3.2" android:strokeColor="#B88693D7" android:strokeWidth="1.1"/>
+            <path android:pathData="M0,6.95 L2.5,7.57 L5,7.94 L7.5,7.97 L10,7.66 L12.5,7.07 L15,6.34 L17.5,5.62 L20,5.07 L22.5,4.81 L25,4.9 L27.5,5.31 L30,5.96 L32.5,6.71 L35,7.39 L37.5,7.85 L40,8 L42.5,7.8 L45,7.29 L47.5,6.59 L50,5.85 L52.5,5.23 L55,4.86 L57.5,4.83 L60,5.14 L62.5,5.73 L65,6.46 L67.5,7.18 L70,7.73 L72.5,7.99 L75,7.9 L77.5,7.49 L80,6.84 L82.5,6.09 L85,5.41 L87.5,4.95 L90,4.8 L92.5,5 L95,5.51 L97.5,6.21 L100,6.95" android:strokeColor="#B8DC7BA1" android:strokeWidth="1.1"/>
+        </vector>
+    </item>
+</layer-list>

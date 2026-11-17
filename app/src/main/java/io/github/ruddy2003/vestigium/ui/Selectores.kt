@@ -274,6 +274,51 @@ private fun formaCeldaAfecto(t: TemaId): Shape = when (t) {
     }
     // Casilla de formulario.
     TemaId.DISTOPIA -> RectangleShape
+    // La ciudad: la ventanilla, de esquinas redondas (30 % del lado menor). La tinta: el marco de arco del cartel, arriba
+    // redondo y abajo casi recto. Elige por la cara de ahora (se lee en la composición).
+    TemaId.PSICODELIA -> when (EstadoTema.caraDe(t)) {
+        Cara.BASE -> RoundedCornerShape(30)
+        Cara.INTENSA -> GenericShape { s, _ ->
+            val m = minOf(s.width, s.height)
+            addPath(TrazosTinta.arco(Rect(0f, 0f, s.width, s.height), m * 0.45f, m * 0.06f))
+        }
+    }
+    // Un vidrio de vitral de casa: el cuadro con los cuatro lados combados hacia dentro y las esquinas apenas redondas.
+    TemaId.NOUVEAU -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val k = minOf(w, h) * 0.09f; val r = minOf(w, h) * 0.08f
+        moveTo(r, 0f); quadraticTo(w / 2, k, w - r, 0f); quadraticTo(w, 0f, w, r)
+        quadraticTo(w - k, h / 2, w, h - r); quadraticTo(w, h, w - r, h)
+        quadraticTo(w / 2, h - k, r, h); quadraticTo(0f, h, 0f, h - r)
+        quadraticTo(k, h / 2, 0f, r); quadraticTo(0f, 0f, r, 0f); close()
+    }
+    // La moneda gala: el cospel redondo y desparejo de un estátero, apenas más ancho que alto.
+    TemaId.GALIA -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val cx = w / 2; val cy = h / 2
+        val rx = minOf(w, h * 1.12f) * 0.49f; val ry = minOf(h, w) * 0.48f
+        val k = listOf(1f, 0.98f, 1.015f, 0.97f, 1f, 1.02f, 0.975f, 1.01f)
+        fun pt(i: Int): Offset {
+            val ang = Math.PI * 2 * i / 8 - Math.PI / 2
+            return Offset(cx + rx * k[i % 8] * kotlin.math.cos(ang).toFloat(), cy + ry * k[i % 8] * kotlin.math.sin(ang).toFloat())
+        }
+        val p0 = pt(0); moveTo(p0.x, p0.y)
+        for (i in 0 until 8) {
+            val b = pt(i + 1); val ang = Math.PI * 2 * (i + 0.5) / 8 - Math.PI / 2
+            val kk = (k[i % 8] + k[(i + 1) % 8]) / 2 * 1.083f
+            quadraticTo(cx + rx * kk * kotlin.math.cos(ang).toFloat(), cy + ry * kk * kotlin.math.sin(ang).toFloat(), b.x, b.y)
+        }
+        close()
+    }
+    // La gema grabada de los amuletos: un óvalo, más alto que ancho.
+    TemaId.ARCONTES -> GenericShape { s, _ ->
+        val alto = s.height * 0.96f; val ancho = minOf(s.width * 0.9f, alto * 0.84f)
+        addOval(Rect(Offset((s.width - ancho) / 2, (s.height - alto) / 2), Size(ancho, alto)))
+    }
+    // La tecla de la consola, con el canto de arriba combado.
+    TemaId.FRENTE -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height; val r = minOf(w, h) * 0.2f; val b = h * 0.06f; val q = r * 0.5f
+        moveTo(0f, r + b); quadraticTo(0f, b, r, b); quadraticTo(w / 2, -b, w - r, b); quadraticTo(w, b, w, r + b)
+        lineTo(w, h - q); quadraticTo(w, h, w - q, h); lineTo(q, h); quadraticTo(0f, h, 0f, h - q); close()
+    }
     // Píldora de luz de tablero.
     TemaId.REFUGIO -> RoundedCornerShape(50)
     // Placa ochavada.
@@ -401,6 +446,38 @@ private fun DrawScope.detalleCelda(t: TemaId, s: Size, fondo: Color) {
         // La cruz patada calada en el escudo.
         TemaId.TEMPLARIO -> drawPath(cruzPatada(Offset(s.width / 2, s.height * 0.42f), minOf(s.width, s.height) * 0.26f), fondo.copy(alpha = 0.55f))
         TemaId.DISTOPIA -> {}
+        // El agujero de la etiqueta del disco, apenas calado, con su surco (las dos caras).
+        TemaId.PSICODELIA -> {
+            val l = minOf(s.width, s.height); val fc = Offset(s.width * 0.34f, s.height * 0.4f)
+            drawCircle(fondo.copy(alpha = 0.42f), l * 0.15f, fc, style = Stroke(l * 0.03f))
+            drawCircle(fondo.copy(alpha = 0.6f), l * 0.035f, fc)
+        }
+        // Un tallo grabado en el vidrio, que sube en curva y se enrosca en su rizo.
+        TemaId.NOUVEAU -> {
+            val l = minOf(s.width, s.height)
+            val tallo = androidx.compose.ui.graphics.Path().apply { moveTo(s.width * 0.26f, s.height * 0.8f); quadraticTo(s.width * 0.68f, s.height * 0.74f, s.width * 0.6f, s.height * 0.4f) }
+            drawPath(tallo, fondo.copy(alpha = 0.4f), style = Stroke(l * 0.045f, cap = StrokeCap.Round))
+            drawCircle(fondo.copy(alpha = 0.4f), l * 0.07f, Offset(s.width * 0.53f, s.height * 0.37f), style = Stroke(l * 0.04f))
+        }
+        // La gráfila de perlas del borde de la moneda y la perla del centro, apenas grabadas.
+        TemaId.GALIA -> {
+            val l = minOf(s.width, s.height); val c = Offset(s.width / 2, s.height / 2)
+            for (k in 0 until 18) {
+                val ang = Math.PI * 2 * k / 18
+                drawCircle(fondo.copy(alpha = 0.38f), l * 0.022f, Offset(c.x + l * 0.4f * kotlin.math.cos(ang).toFloat(), c.y + l * 0.4f * kotlin.math.sin(ang).toFloat()))
+            }
+            drawCircle(fondo.copy(alpha = 0.38f), l * 0.045f, c)
+        }
+        // El bisel de la gema y, grabada al centro, la serpiente que se muerde la cola.
+        TemaId.ARCONTES -> {
+            val alto = s.height * 0.96f; val ancho = minOf(s.width * 0.9f, alto * 0.84f); val l = minOf(ancho, alto)
+            drawOval(fondo.copy(alpha = 0.3f), Offset((s.width - ancho * 0.8f) / 2, (s.height - alto * 0.8f) / 2), Size(ancho * 0.8f, alto * 0.8f), style = Stroke(l * 0.035f))
+            val rr = l * 0.17f; val cc = Offset(s.width / 2, s.height / 2); val ac = Math.toRadians(-48.0)
+            drawArc(fondo.copy(alpha = 0.42f), -40f, 310f, false, Offset(cc.x - rr, cc.y - rr), Size(rr * 2, rr * 2), style = Stroke(l * 0.05f))
+            drawCircle(fondo.copy(alpha = 0.42f), l * 0.05f, Offset(cc.x + rr * kotlin.math.cos(ac).toFloat(), cc.y + rr * kotlin.math.sin(ac).toFloat()))
+        }
+        // La ranura grabada del rótulo, arriba de la tecla.
+        TemaId.FRENTE -> drawLine(fondo.copy(alpha = 0.45f), Offset(s.width * 0.28f, s.height * 0.24f), Offset(s.width * 0.72f, s.height * 0.24f), minOf(s.width, s.height) * 0.07f, StrokeCap.Round)
         TemaId.REFUGIO -> {}
         TemaId.ORDEN -> {}
         // Dos remaches abajo, como en la placa.

@@ -213,6 +213,85 @@ private fun DrawScope.medallaTema(tema: TemaId, hecho: Boolean, metal: Color, bo
             drawCircle(sombra, r * 0.06f, c + Offset(0f, -r * 0.8f)); drawCircle(sombra, r * 0.06f, c + Offset(0f, r * 0.8f))
             drawPath(figPoligono(c, r * 0.78f, 6), luz, style = Stroke(r * 0.04f))
         }
+        // El disco de oro, en el metal del nivel. La ciudad: el disco con sus surcos, el brillo de la tarde arriba a la izquierda
+        // y la etiqueta redonda con sus dos renglones. El cartel: el disco hecho sol, con su corona de rayos que ondulan en el
+        // metal y la etiqueta lisa.
+        TemaId.PSICODELIA -> {
+            val ciudad = io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE
+            val etiqueta = if (hecho) lerp(metal, Color.White, 0.55f) else apagado
+            if (ciudad) {
+                forma(disco(c, r * 0.97f))
+                var k = 0.9f
+                while (k > 0.56f) { drawCircle(sombra.copy(alpha = sombra.alpha * 0.55f), r * k, c, style = Stroke(r * 0.018f)); k -= 0.07f }
+                drawArc(luz, 200f, 50f, false, Offset(c.x - r * 0.78f, c.y - r * 0.78f), Size(r * 1.56f, r * 1.56f), style = Stroke(r * 0.07f))
+                drawCircle(etiqueta, r * 0.42f, c)
+                drawLine(sombra, Offset(c.x - r * 0.22f, c.y - r * 0.16f), Offset(c.x + r * 0.22f, c.y - r * 0.16f), r * 0.04f)
+                drawLine(sombra, Offset(c.x - r * 0.14f, c.y + r * 0.18f), Offset(c.x + r * 0.14f, c.y + r * 0.18f), r * 0.03f)
+                drawCircle(sombra, r * 0.05f, c)
+            } else {
+                forma(Path().apply { addPath(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(c, r * 0.5f, r * 0.98f, 16, 0.5f, 0.14f, 0f)); addOval(Rect(c, r * 0.62f)) })
+                drawCircle(sombra, r * 0.62f, c, style = Stroke(r * 0.04f))
+                drawCircle(etiqueta, r * 0.34f, c)
+                drawCircle(sombra, r * 0.05f, c)
+            }
+        }
+        // La plaqueta de la Exposición de 1900: rectangular y de remate en arco, con el filete de dentro, un iris en relieve
+        // con sus hojas y la anilla de arriba.
+        TemaId.NOUVEAU -> {
+            val pl = Path().apply {
+                moveTo(c.x - r * 0.66f, c.y + r * 0.95f); lineTo(c.x - r * 0.66f, c.y - r * 0.3f)
+                cubicTo(c.x - r * 0.66f, c.y - r * 0.9f, c.x + r * 0.66f, c.y - r * 0.9f, c.x + r * 0.66f, c.y - r * 0.3f)
+                lineTo(c.x + r * 0.66f, c.y + r * 0.95f); close()
+            }
+            drawCircle(canto, r * 0.12f, c + Offset(0f, -r * 0.86f), style = Stroke(g * 0.8f))
+            forma(pl)
+            drawPath(Path().apply {
+                moveTo(c.x - r * 0.52f, c.y + r * 0.82f); lineTo(c.x - r * 0.52f, c.y - r * 0.26f)
+                cubicTo(c.x - r * 0.52f, c.y - r * 0.72f, c.x + r * 0.52f, c.y - r * 0.72f, c.x + r * 0.52f, c.y - r * 0.26f)
+                lineTo(c.x + r * 0.52f, c.y + r * 0.82f); close()
+            }, luz, style = Stroke(r * 0.035f))
+            val pie = Offset(c.x, c.y + r * 0.72f)
+            listOf(-0.32f to 0.75f, 0.26f to 0.62f).forEach { (dx, alto) -> drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.hojaLanza(pie, Offset(c.x + dx * r, pie.y - alto * r), r * 0.14f, -dx * 0.4f, espada = true), sombra) }
+            val fl = Offset(c.x + r * 0.05f, c.y - r * 0.2f)
+            drawLine(sombra, pie, fl, r * 0.05f)
+            listOf(-0.6f, 0f, 0.6f).forEach { a -> drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.petalo(fl, Offset(fl.x + kotlin.math.sin(a) * r * 0.24f, fl.y - kotlin.math.cos(a) * r * 0.26f), r * 0.18f), luz) }
+            listOf(-0.9f, 0.9f).forEach { a -> drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.petalo(fl, Offset(fl.x + kotlin.math.sin(a) * r * 0.28f, fl.y + kotlin.math.cos(a) * r * 0.26f), r * 0.2f), sombra) }
+        }
+        // La falera de los arneses: el disco con su anillo de perlas, la onda corrida repujada y los cuatro clavos.
+        TemaId.GALIA -> {
+            forma(disco(c, r * 0.95f))
+            for (k in 0 until 20) { val a = k * kotlin.math.PI / 10; drawCircle(sombra, r * 0.04f, Offset(c.x + r * 0.84f * kotlin.math.cos(a).toFloat(), c.y + r * 0.84f * kotlin.math.sin(a).toFloat())) }
+            drawPath(Path().apply {
+                for (k in 0..72) {
+                    val a = k * 2 * kotlin.math.PI / 72; val rr = r * (0.68f + 0.05f * kotlin.math.sin(a * 8).toFloat())
+                    val x = c.x + rr * kotlin.math.cos(a).toFloat(); val y = c.y + rr * kotlin.math.sin(a).toFloat()
+                    if (k == 0) moveTo(x, y) else lineTo(x, y)
+                }
+                close()
+            }, luz, style = Stroke(r * 0.04f))
+            drawCircle(sombra, r * 0.58f, c, style = Stroke(g * 0.6f))
+            listOf(45.0, 135.0, 225.0, 315.0).forEach { gr -> val a = Math.toRadians(gr); drawCircle(sombra, r * 0.06f, Offset(c.x + r * 0.84f * kotlin.math.cos(a).toFloat(), c.y + r * 0.84f * kotlin.math.sin(a).toFloat())) }
+        }
+        // El amuleto colgante: el disco de jaspe engastado en su bisel, con la argolla arriba, la serpiente que se muerde la
+        // cola grabada alrededor y un punto de luz en medio.
+        TemaId.ARCONTES -> {
+            drawCircle(canto, r * 0.13f, c + Offset(0f, -r * 0.86f), style = Stroke(r * 0.07f))
+            val e = c + Offset(0f, r * 0.06f)
+            forma(disco(e, r * 0.86f))
+            drawCircle(sombra, r * 0.7f, e, style = Stroke(r * 0.03f))
+            with(io.github.ruddy2003.vestigium.ui.TrazosArcontes) { ouroboros(e, r * 0.78f, r * 0.08f, sombra, -60f, luz) }
+            drawCircle(luz, r * 0.06f, e + Offset(-r * 0.42f, -r * 0.42f))
+        }
+        // La insignia de solapa de la red: el disco con el emblema (la chispa en el círculo roto) en relieve y, debajo, la
+        // barrita de la célula con sus dos muescas.
+        TemaId.FRENTE -> {
+            forma(Path().apply { addRoundRect(RoundRect(c.x - r * 0.5f, c.y + r * 0.62f, c.x + r * 0.5f, c.y + r * 0.98f, CornerRadius(r * 0.12f))) })
+            val e = c + Offset(0f, -r * 0.12f)
+            forma(disco(e, r * 0.84f))
+            drawCircle(sombra, r * 0.72f, e, style = Stroke(r * 0.03f))
+            with(io.github.ruddy2003.vestigium.ui.TrazosFrente) { emblemaRed(e + Offset(r * 0.03f, r * 0.03f), r * 0.42f, sombra, r * 0.09f); emblemaRed(e, r * 0.42f, luz, r * 0.09f) }
+            listOf(-0.2f, 0.2f).forEach { f -> drawRect(sombra, Offset(c.x + f * r - r * 0.04f, c.y + r * 0.7f), Size(r * 0.08f, r * 0.2f)) }
+        }
         // Botón atómico: el disco entre tres órbitas.
         TemaId.REFUGIO -> {
             for (a in listOf(0f, 60f, 120f)) rotate(a, c) { drawOval(sombra, Offset(c.x - r * 0.98f, c.y - r * 0.3f), Size(r * 1.96f, r * 0.6f), style = Stroke(r * 0.05f)) }

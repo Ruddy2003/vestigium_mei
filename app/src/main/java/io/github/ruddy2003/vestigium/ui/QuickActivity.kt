@@ -235,13 +235,14 @@ class QuickActivity : FragmentActivity() {
                         val menu: @Composable () -> Unit = { Registrar(ir, origen, animoDelMenu) { s -> sustanciaMenu = s; ir(M_CONSUMO) } }
                         when (pantalla) {
                             M_ANIMO -> Unit
-                            "privado" -> privado?.let { androidx.compose.runtime.key(it.id) { MomentoCaptura(it) } } ?: menu()
+                            // Lo privado y las sustancias, siempre en cero (Psicodelia: sin intensidad y con la cara de la hora).
+                            "privado" -> privado?.let { androidx.compose.runtime.key(it.id) { SinIntensidad { MomentoCaptura(it) } } } ?: menu()
                             M_MENU -> menu()
                             M_GASTO -> GastoRapido(catInicial, subInicial, gastoInicial)
                             M_SUENO -> SuenoRapido()
                             M_MINIMO -> Minimo()
                             M_ENFOQUE, M_SIESTA -> androidx.compose.runtime.LaunchedEffect(Unit) { abrirReloj(pantalla == M_SIESTA); terminar() }
-                            M_CONSUMO -> ConsumoRapido(consumoId, sustanciaMenu ?: sustanciaInicial, origen)
+                            M_CONSUMO -> SinIntensidad { ConsumoRapido(consumoId, sustanciaMenu ?: sustanciaInicial, origen) }
                             else -> menu()
                         }
                     }
@@ -1208,6 +1209,11 @@ private fun perfilHojaQuick(t: TemaId): Dp = when (t) {
     TemaId.MEDIEVAL -> 10.dp
     TemaId.TEMPLARIO -> 9.dp
     TemaId.DISTOPIA -> 12.dp
+    TemaId.PSICODELIA -> 16.dp
+    TemaId.NOUVEAU -> 16.dp
+    TemaId.GALIA -> 16.dp
+    TemaId.ARCONTES -> 7.dp
+    TemaId.FRENTE -> 11.dp
     TemaId.REFUGIO -> 6.dp
     TemaId.ORDEN -> 6.dp
     TemaId.VAPOR -> 7.dp
@@ -1288,6 +1294,71 @@ private fun formaHojaQuick(t: TemaId): Shape = when (t) {
     TemaId.DISTOPIA -> formaDp { w, h, u ->
         val p = 12 * u; val a = w * 0.38f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(w, p); lineTo(w, h); lineTo(0f, h); close()
+    }
+    // Una nube de luces líquidas: el borde de arriba sube en cinco gotas blandas de distinto tamaño que se funden entre sí,
+    // como el aceite y la tinta entre los dos vidrios del retroproyector.
+    TemaId.PSICODELIA -> formaDp { w, h, u ->
+        val p = 16 * u; val k = 2.6f * u
+        // Las gotas, como medias elipses que asoman sobre el borde: dónde está su centro (en fracción del ancho), su medio
+        // ancho y cuánto suben (en dp). Las vecinas se tocan y se funden en un cuello blando.
+        val gotas = listOf(Triple(0.12f, 44f, 6f), Triple(0.3f, 60f, 11f), Triple(0.52f, 74f, 16f), Triple(0.74f, 56f, 11.5f), Triple(0.9f, 36f, 6f))
+        fun alto(x: Float): Float {
+            var suma = 1f
+            for ((cx, a, sube) in gotas) {
+                val d = (x - cx * w) / (a * u); val b = a * 0.6f * u
+                if (d * d < 1f) suma += kotlin.math.exp((sube * u - b + b * kotlin.math.sqrt(1f - d * d)) / k)
+            }
+            return k * kotlin.math.ln(suma)
+    }
+    moveTo(0f, h); lineTo(0f, p - alto(0f))
+    var x = 0f
+    while (x < w) { x = minOf(x + 1.5f * u, w); lineTo(x, p - alto(x)) }
+    lineTo(w, h); close()
+    }
+    // El arco de un cartel de 1900: sube al centro en la curva larga de la línea de látigo y, en cada pie, el ojo del rizo
+    // donde se enrosca.
+    TemaId.NOUVEAU -> formaDp { w, h, u ->
+        val p = 16 * u; val ojo = 4f * u; val a = w * 0.3f; val b = w * 0.7f
+        moveTo(0f, h); lineTo(0f, p)
+        lineTo(a - 2 * ojo, p)
+        // El rizo: el borde se enrosca en un ojo pequeño y sube en la curva larga del látigo.
+        arcTo(Rect(Offset(a - ojo, p), ojo), 180f, 180f, false)
+        cubicTo(a + w * 0.06f, p, a + w * 0.04f, 0f, a + w * 0.14f, 0f)
+        lineTo(b - w * 0.14f, 0f)
+        cubicTo(b - w * 0.04f, 0f, b - w * 0.06f, p, b, p)
+        arcTo(Rect(Offset(b + ojo, p), ojo), 180f, 180f, false)
+        lineTo(w, p); lineTo(w, h); close()
+    }
+    // La meseta del oppidum: el borde sube en loma por los dos lados y arriba, en lo llano, la empalizada de estacas.
+    TemaId.GALIA -> formaDp { w, h, u ->
+        val p = 16 * u; val alto = 7 * u; val a = w * 0.24f; val b = w * 0.76f
+        moveTo(0f, h); lineTo(0f, p)
+        cubicTo(a * 0.55f, p, a * 0.6f, alto, a, alto)
+        val paso = 11 * u; val n = ((b - a) / paso).toInt(); val ini = a + ((b - a) - n * paso) / 2
+        lineTo(ini, alto)
+        for (k in 0 until n) {
+            val x = ini + k * paso
+            lineTo(x + paso * 0.14f, alto); lineTo(x + paso * 0.14f, 2.2f * u); lineTo(x + paso * 0.5f, 0f); lineTo(x + paso * 0.86f, 2.2f * u); lineTo(x + paso * 0.86f, alto)
+        }
+        lineTo(b, alto)
+        cubicTo(b + (w - b) * 0.4f, alto, b + (w - b) * 0.45f, p, w, p)
+        lineTo(w, h); close()
+    }
+    // La losa de caliza: las esquinas de arriba en el arco pequeño de los nichos y, a la derecha, la grieta fina que baja
+    // desde el borde.
+    TemaId.ARCONTES -> formaDp { w, h, u ->
+        val r = 14 * u; val gx = w * 0.72f
+        moveTo(0f, h); lineTo(0f, r); quadraticTo(0f, 0f, r, 0f)
+        lineTo(gx - 2.4f * u, 0f); lineTo(gx - 0.5f * u, 4.5f * u); lineTo(gx - 1.5f * u, 8f * u); lineTo(gx + 0.2f * u, 12.5f * u)
+        lineTo(gx + 0.5f * u, 8.4f * u); lineTo(gx + 1.3f * u, 4.8f * u); lineTo(gx + 2.3f * u, 0f)
+        lineTo(w - r, 0f); quadraticTo(w, 0f, w, r); lineTo(w, h); close()
+    }
+    // La consola curva: las esquinas grandes del mueble y, al centro, la caperuza de los instrumentos que se levanta.
+    TemaId.FRENTE -> formaDp { w, h, u ->
+        val f = 11 * u; val r = 13 * u; val s = 16 * u; val a = w * 0.3f; val b = w * 0.7f
+        moveTo(0f, h); lineTo(0f, f + r); quadraticTo(0f, f, r, f); lineTo(a - s, f)
+        cubicTo(a - s * 0.4f, f, a - s * 0.5f, 0f, a, 0f); lineTo(b, 0f); cubicTo(b + s * 0.5f, 0f, b + s * 0.4f, f, b + s, f)
+        lineTo(w - r, f); quadraticTo(w, f, w, f + r); lineTo(w, h); close()
     }
     // Pantalla de tubo, de esquinas muy redondas.
     TemaId.REFUGIO -> formaDp { w, h, u ->
@@ -1487,6 +1558,41 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     // El escudete: recto arriba y redondeado abajo.
     TemaId.TEMPLARIO -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     TemaId.DISTOPIA -> RectangleShape
+    // La ciudad: la placa redonda de la ventanilla del trolebús (las esquinas de la cara). La tinta: el marco de arco del
+    // cartel, arriba redondo y abajo casi recto. Se elige con la cara al componer.
+    TemaId.PSICODELIA -> if (EstadoTema.caraDe(t) == Cara.BASE) RoundedCornerShape(11.dp)
+        else formaDp { w, h, u -> addPath(TrazosTinta.arco(Rect(0f, 0f, w, h), minOf(14 * u, h / 2, w / 2), minOf(2f * u, h / 4))) }
+    // El frasco de perfume: los hombros se estrechan en una S hacia el tapón, esquinas suaves abajo.
+    TemaId.NOUVEAU -> formaDp { w, h, u ->
+        val d = minOf(7 * u, w * 0.1f); val m = h * 0.5f; val r = minOf(4 * u, h / 4)
+        moveTo(0f, h - r); lineTo(0f, m)
+        cubicTo(0f, m * 0.45f, d, m * 0.55f, d, r * 0.6f)
+        quadraticTo(d, 0f, d + r, 0f)
+        lineTo(w - d - r, 0f); quadraticTo(w - d, 0f, w - d, r * 0.6f)
+        cubicTo(w - d, m * 0.55f, w, m * 0.45f, w, m)
+        lineTo(w, h - r); quadraticTo(w, h, w - r, h); lineTo(r, h); quadraticTo(0f, h, 0f, h - r); close()
+    }
+    // La hoja del roble, como las esquinas del tema: dos esquinas opuestas redondas y, en las otras dos, la escotadura de
+    // entre dos lóbulos.
+    TemaId.GALIA -> formaDp { w, h, u ->
+        val r = minOf(11 * u, h / 2); val s = minOf(5 * u, h / 4)
+        moveTo(r, 0f); lineTo(w - s, 0f); quadraticTo(w - s, s, w, s)
+        lineTo(w, h - r); quadraticTo(w, h, w - r, h)
+        lineTo(s, h); quadraticTo(s, h - s, 0f, h - s)
+        lineTo(0f, r); quadraticTo(0f, 0f, r, 0f); close()
+    }
+    // La tapa de cuero del códice: el lomo redondeado a la izquierda y la solapa que asoma a la derecha, a media altura.
+    TemaId.ARCONTES -> formaDp { w, h, u ->
+        val d = minOf(7 * u, w * 0.08f); val r = minOf(3 * u, h / 4)
+        moveTo(r, 0f); lineTo(w - d, 0f); lineTo(w - d, h * 0.3f); lineTo(w, h * 0.4f); lineTo(w, h * 0.6f); lineTo(w - d, h * 0.7f); lineTo(w - d, h)
+        lineTo(r, h); quadraticTo(0f, h, 0f, h - r); lineTo(0f, r); quadraticTo(0f, 0f, r, 0f); close()
+    }
+    // La tecla de baquelita: el canto de arriba combado como la cara de la consola, esquinas grandes arriba y cortas abajo.
+    TemaId.FRENTE -> formaDp { w, h, u ->
+        val r = minOf(10 * u, h / 2); val b = minOf(3 * u, h * 0.15f); val q = minOf(4 * u, h / 4)
+        moveTo(0f, r + b); quadraticTo(0f, b, r, b); quadraticTo(w / 2, -b, w - r, b); quadraticTo(w, b, w, r + b)
+        lineTo(w, h - q); quadraticTo(w, h, w - q, h); lineTo(q, h); quadraticTo(0f, h, 0f, h - q); close()
+    }
     TemaId.REFUGIO -> RoundedCornerShape(18.dp)
     TemaId.ORDEN -> CutCornerShape(8.dp)
     TemaId.VAPOR -> RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp, bottomEnd = 2.dp, bottomStart = 2.dp)

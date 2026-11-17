@@ -58,8 +58,12 @@ fun resumenConsumo(c: Consumo): String = listOfNotNull(
  * Sustancias: alcohol, cannabis, tabaco y cafeína como un dato más. Entran en la cinta, en la tabla por hora y en los análisis;
  * lo que ocultes en Privacidad deja de verse en las pantallas pero sigue en los análisis.
  */
+// Siempre en cero: las sustancias se dibuja sin intensidad y con la cara de la hora (Psicodelia; la guía, «La voz», punto 4).
 @Composable
-fun PantallaSustancias(nav: Nav) {
+fun PantallaSustancias(nav: Nav) = io.github.ruddy2003.vestigium.ui.SinIntensidad { PantallaSustanciasContenido(nav) }
+
+@Composable
+private fun PantallaSustanciasContenido(nav: Nav) {
     val ctx = LocalContext.current
     val hoy = Fechas.diaLogico()
     val ocultas = Repo.config.sustancias_ocultas

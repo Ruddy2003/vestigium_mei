@@ -75,6 +75,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import io.github.ruddy2003.vestigium.ui.Letra
 import io.github.ruddy2003.vestigium.ui.LetraExtra
+import io.github.ruddy2003.vestigium.ui.TrazosArcontes
 import io.github.ruddy2003.vestigium.ciencia.Escalas
 import io.github.ruddy2003.vestigium.ciencia.Movilidad
 import io.github.ruddy2003.vestigium.data.Dia
@@ -454,6 +455,119 @@ fun FraseDelDia(fecha: String) {
                     }
                 }
             }
+        }
+        // La ciudad: la copia de foto mate, con su margen claro, la luz de la tarde que entra por la izquierda, el filete café y,
+        // abajo a la derecha, la etiqueta del disco del día. El cartel: el marco de arco del cartel de la semana, con su doble
+        // filete (el de magenta corrido de registro con la intensidad), la banda de ondas arriba y el disco hecho sol que asoma
+        // por la esquina de abajo. El texto va siempre sobre la superficie lisa (la regla de legibilidad de la guía).
+        TemaId.PSICODELIA -> {
+            val cara = io.github.ruddy2003.vestigium.ui.caraLocal()
+            val i = io.github.ruddy2003.vestigium.ui.intensidadLocal()
+            val oscuro = esOscuro()
+            Box(arriba.drawBehind {
+                val u = 1.dp.toPx(); val w = size.width; val h = size.height
+                val k = io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.colores(oscuro, cara, i)
+                if (k.ciudad) {
+                    val r = androidx.compose.ui.geometry.Rect(0f, 0f, w, h)
+                    val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(r, CornerRadius(11 * u))) }
+                    drawPath(Path().apply { addPath(forma, Offset(1.2f * u, 1.8f * u)) }, k.sombra)
+                    drawPath(forma, k.superficie)
+                    clipPath(forma) {
+                        drawRect(androidx.compose.ui.graphics.Brush.linearGradient(listOf(k.luz, Color.Transparent), Offset.Zero, Offset(w * 0.45f, h)), Offset.Zero, size)
+                        with(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia) {
+                            disco(Offset(w - 14 * u, h - 12 * u), 9 * u, k)
+                            granoPelicula(forma, k.grano)
+                        }
+                    }
+                    drawPath(forma, k.borde, style = Stroke(0.8f * u))
+                    drawRoundRect(k.borde.copy(alpha = 0.5f), Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u), CornerRadius(7 * u), style = Stroke(0.6f * u))
+                } else {
+                    val caja = androidx.compose.ui.geometry.Rect(0f, 0f, w, h)
+                    val forma = io.github.ruddy2003.vestigium.ui.TrazosTinta.arco(caja, minOf(26 * u, h * 0.4f), 2 * u)
+                    drawPath(forma, k.superficie)
+                    clipPath(forma) {
+                        with(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia) {
+                            ondas(14 * u, w - 14 * u, 6 * u, (1.2f + 0.05f * k.m.amplitud) * u, 24 * u, 1.3f * u, 2.4f * u, tintasBanda(k), k.m.registro * 0.5f)
+                            corona(Offset(w - 4 * u, h - 2 * u), 10 * u, 30 * u, k, n = 18)
+                            disco(Offset(w - 4 * u, h - 2 * u), 10 * u, k, sombra = false)
+                        }
+                    }
+                    with(io.github.ruddy2003.vestigium.ui.TrazosTinta) {
+                        conRegistro(io.github.ruddy2003.vestigium.ui.TrazosTinta.Tinta.MAGENTA, k.m.registro * 0.6f) { drawPath(forma, k.magenta.copy(alpha = 0.7f), style = Stroke(1.2f * u)) }
+                    }
+                    drawPath(forma, k.grabado, style = Stroke(1.4f * u))
+                }
+            }.padding(start = 16.dp, end = 34.dp, top = 16.dp, bottom = 12.dp)) {
+                CuerpoFrase(f, fecha, rotulo, "“", "”")
+            }
+        }
+        // La página de la revista ilustrada: la cartulina con dos esquinas muy redondas y dos casi rectas, el filete de dentro, un
+        // iris que sube por el margen izquierdo y una línea de látigo que se enrosca en la esquina de arriba; la frase en francés
+        // y su español, entre comillas francesas.
+        TemaId.NOUVEAU -> Box(arriba.drawBehind {
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            val g = minOf(18 * u, h * 0.3f)
+            fun pagina(m: Float) = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(androidx.compose.ui.geometry.Rect(m, m, w - m, h - m), CornerRadius(g - m), CornerRadius(2 * u), CornerRadius(g - m), CornerRadius(2 * u))) }
+            drawPath(pagina(0f), androidx.compose.ui.graphics.lerp(cs.surface, cs.primaryContainer, 0.25f))
+            drawPath(pagina(0.6f * u), cs.primary.copy(alpha = 0.55f), style = Stroke(1.2f * u))
+            drawPath(pagina(4 * u), cs.primary.copy(alpha = 0.25f), style = Stroke(0.6f * u))
+            with(io.github.ruddy2003.vestigium.ui.TrazosNouveau) {
+                iris(Offset(15 * u, h - 6 * u), minOf(h - 18 * u, 78 * u), cs.secondary, cs.primary.copy(alpha = 0.75f), cs.primary)
+                val pts = puntosLatigo(Offset(w - 60 * u, 6 * u), Offset(w - 14 * u, 12 * u), 4 * u, 0.22f, true)
+                drawPath(cinta(pts) { k -> u * (1.6f - 1.1f * k) }, cs.tertiary.copy(alpha = 0.8f))
+            }
+        }.padding(start = 34.dp, end = 16.dp, top = 14.dp, bottom = 12.dp)) {
+            CuerpoFrase(f, fecha, rotulo, "« ", " »")
+        }
+        // La tablilla de cera en su marco de roble: las vetas del marco, la cera de abeja clara donde va la cita, el cordel que
+        // la ata por el agujero de la izquierda y una hoja de roble en la esquina.
+        TemaId.GALIA -> Box(arriba.drawBehind {
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height; val b = 6 * u
+            val roble = androidx.compose.ui.graphics.lerp(Color(0xFF8A6A44), cs.surfaceVariant, 0.3f)
+            drawRoundRect(roble, Offset.Zero, size, CornerRadius(3 * u))
+            listOf(0.35f, 0.7f).forEach { f ->
+                drawLine(Color.Black.copy(alpha = 0.14f), Offset(4 * u, b * f), Offset(w - 4 * u, b * f + 0.6f * u), 0.6f * u)
+                drawLine(Color.Black.copy(alpha = 0.14f), Offset(4 * u, h - b * f), Offset(w - 4 * u, h - b * f - 0.6f * u), 0.6f * u)
+            }
+            val cera = androidx.compose.ui.graphics.lerp(cs.surface, Color(0xFFD8C48A), if (cs.surface.red + cs.surface.green + cs.surface.blue < 1.5f) 0.08f else 0.22f)
+            drawRect(cera, Offset(b, b), Size(w - 2 * b, h - 2 * b))
+            drawRect(Color.Black.copy(alpha = 0.16f), Offset(b, b), Size(w - 2 * b, 1.5f * u))
+            drawRect(Color.Black.copy(alpha = 0.1f), Offset(b, b), Size(1.5f * u, h - 2 * b))
+            drawCircle(Color.Black.copy(alpha = 0.55f), 1.4f * u, Offset(b / 2, h / 2))
+            drawPath(Path().apply { moveTo(b / 2, h / 2); quadraticTo(b * 0.05f, h * 0.68f, b * 0.6f, minOf(h - 2 * u, h / 2 + 26 * u)) }, Color(0xFFCDB98E), style = Stroke(1.1f * u, cap = StrokeCap.Round))
+            with(io.github.ruddy2003.vestigium.ui.TrazosGalia) { hojaRoble(Offset(w - 13 * u, 9 * u), 17 * u, 62f, cs.primary.copy(alpha = 0.85f), roble) }
+        }.padding(horizontal = 18.dp, vertical = 16.dp)) {
+            CuerpoFrase(f, fecha, rotulo, "«", "»")
+        }
+        // La hoja del códice: el papiro con sus fibras, el lomo de cuero cosido a la izquierda, un renglón arriba y otro abajo
+        // y, en la esquina, una grieta finísima por donde entra la luz. La frase va entre comillas; el rótulo, con los tres puntos.
+        TemaId.ARCONTES -> Box(arriba.drawBehind {
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            drawRoundRect(cs.surfaceVariant.copy(alpha = 0.55f), Offset.Zero, size, CornerRadius(5 * u))
+            var y = 5 * u; while (y < h - 2 * u) { drawLine(cs.onSurfaceVariant.copy(alpha = 0.06f), Offset(12 * u, y), Offset(w - 2 * u, y), 0.6f * u); y += 3.2f * u }
+            drawRoundRect(androidx.compose.ui.graphics.lerp(TrazosArcontes.CUERO, cs.surfaceVariant, 0.15f), Offset.Zero, Size(10 * u, h), CornerRadius(5 * u))
+            drawRect(Color.Black.copy(alpha = 0.18f), Offset(8 * u, 0f), Size(2 * u, h))
+            var k = 9 * u; while (k < h - 7 * u) { drawLine(TrazosArcontes.LINO.copy(alpha = 0.75f), Offset(2.5f * u, k), Offset(7 * u, k + 2.5f * u), 0.9f * u); k += 10 * u }
+            listOf(4 * u, h - 4 * u).forEach { yy -> drawLine(cs.primary.copy(alpha = 0.45f), Offset(18 * u, yy), Offset(w - 22 * u, yy), 0.8f * u) }
+            with(TrazosArcontes) { grieta(Offset(w - 13 * u, 3 * u), Offset(w - 9 * u, 24 * u), 0.8f * u, 0.9f, 2) }
+        }.padding(start = 22.dp, end = 18.dp, top = 12.dp, bottom = 12.dp)) {
+            CuerpoFrase(f, fecha, "∴ $rotulo", "«", "»")
+        }
+        // El despacho recibido en la consola: el panel de esquinas redondas con su bisel, las perforaciones de la cinta del
+        // teletipo a la izquierda, el piloto ámbar encendido arriba y la frase entre comillas angulares, con la ventana de
+        // transmisión del día.
+        TemaId.FRENTE -> Box(arriba.drawBehind {
+            val u = 1.dp.toPx(); val w = size.width; val h = size.height
+            drawRoundRect(cs.surfaceVariant, Offset.Zero, size, CornerRadius(13 * u))
+            drawRoundRect(cs.outline, Offset(0.5f * u, 0.5f * u), Size(w - u, h - u), CornerRadius(13 * u), style = Stroke(1 * u))
+            drawRoundRect(cs.outline.copy(alpha = 0.4f), Offset(4 * u, 4 * u), Size(w - 8 * u, h - 8 * u), CornerRadius(10 * u), style = Stroke(0.6f * u))
+            var y = 16 * u; while (y < h - 12 * u) { drawCircle(cs.onSurfaceVariant.copy(alpha = 0.35f), 1.6f * u, Offset(11 * u, y)); y += 7 * u }
+            val p = Offset(w - 16 * u, 14 * u)
+            drawCircle(androidx.compose.ui.graphics.Brush.radialGradient(listOf(cs.primary.copy(alpha = 0.45f), Color.Transparent), p, 9 * u), 9 * u, p)
+            drawCircle(cs.outline, 4 * u, p); drawCircle(cs.primary, 2.8f * u, p)
+        }.padding(start = 22.dp, end = 28.dp, top = 12.dp, bottom = 12.dp)) {
+            val ventana = runCatching { io.github.ruddy2003.vestigium.ui.Frente.ventana(Fechas.parse(fecha)) }.getOrDefault("--:--")
+            CuerpoFrase(f, fecha, "$rotulo · VENTANA $ventana", "‹ ", " ›")
         }
         // Tarjeta redonda de los cincuenta con el rótulo en una banda de color.
         TemaId.REFUGIO -> Surface(shape = RoundedCornerShape(12.dp), color = cs.surface, border = BorderStroke(2.dp, cs.primary), modifier = arriba) {
@@ -956,6 +1070,11 @@ fun estiloCifra(): androidx.compose.ui.text.TextStyle {
         TemaId.MEDIEVAL -> base.copy(fontFamily = Letra.garamond, fontWeight = FontWeight.SemiBold, fontSize = 23.sp, letterSpacing = 0.sp, fontFeatureSettings = "lnum, tnum")
         TemaId.TEMPLARIO -> c(LetraExtra.regla, FontWeight.Bold, 22f, 0.3f, "lnum, tnum")
         TemaId.DISTOPIA -> c(LetraExtra.oswald, FontWeight.Bold, 24f, 0.6f)
+        TemaId.PSICODELIA -> c(LetraExtra.franklinRotulo, FontWeight.SemiBold, 23f, 0.2f, "tnum")   // las cifras de Libre Franklin, iguales en las dos caras
+        TemaId.NOUVEAU -> c(LetraExtra.dellaRespira, FontWeight.Normal, 25f, 0.8f, "lnum")   // las cifras altas y finas de los carteles
+        TemaId.GALIA -> c(LetraExtra.ysabeau, FontWeight.SemiBold, 23f, 0.5f, "lnum")   // las cifras humanistas de los rótulos
+        TemaId.ARCONTES -> c(LetraExtra.caudex, FontWeight.Bold, 23f, 0.4f)   // las cifras de la letra de los códices
+        TemaId.FRENTE -> c(LetraExtra.chivoMono, FontWeight.Medium, 23f, 1.4f, "tnum")   // las cifras del contador de la consola
         TemaId.REFUGIO -> c(LetraExtra.vt323, FontWeight.Normal, 30f, 0.4f)
         TemaId.ORDEN -> c(LetraExtra.estarcido, FontWeight.Normal, 23f, 1.2f)
         TemaId.VAPOR -> c(LetraExtra.caldera, FontWeight.Normal, 24f, 0.4f, "lnum")
@@ -1249,6 +1368,103 @@ fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
                             pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
                             var y = top + k + 4 * u
                             while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
+                        }
+                        // La ciudad: cada día es un disco en su funda, de canto: la funda que sube tanto como dormiste, con el
+                        // disco que asoma arriba en medio círculo y su etiqueta. El cartel: la columna con el remate de arco del
+                        // cartel, la trama de la tinta en su mitad de sombra y, arriba, un disco chico con su corona de rayos.
+                        TemaId.PSICODELIA -> {
+                            val ciudad = io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE
+                            val fx = w * 0.12f; val fw = w * 0.76f
+                            if (ciudad) {
+                                val rd = minOf(fw / 2, barH * 0.4f)
+                                val cd = Offset(w / 2, top + rd)
+                                if (color != null) {
+                                    drawCircle(Color(0xFF1E1916), rd, cd)
+                                    drawCircle(androidx.compose.ui.graphics.lerp(color, Color.White, 0.25f), rd * 0.36f, cd)
+                                } else drawCircle(linea, rd, cd, style = borde)
+                                pinta(caja(fx, top + rd, fw, barH - rd))
+                                if (color != null) drawLine(Color.White.copy(alpha = 0.3f), Offset(fx + 1.2f * u, top + rd), Offset(fx + 1.2f * u, h), 1.2f * u)
+                            } else {
+                                val arcoTop = minOf(fw / 2, barH / 2)
+                                val cuerpo = Path().apply {
+                                    moveTo(fx, h); lineTo(fx, top + arcoTop)
+                                    arcTo(Rect(fx, top, fx + fw, top + 2 * arcoTop), 180f, 180f, false)
+                                    lineTo(fx + fw, h); close()
+                                }
+                                pinta(cuerpo)
+                                if (color != null) {
+                                    clipPath(cuerpo) {
+                                        var y = top + arcoTop; while (y < h) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(w * 0.55f, y), Offset(fx + fw, y), 0.7f * u); y += 2.4f * u }
+                                    }
+                                    if (barH > 3 * fw) {
+                                        val o = Offset(w / 2, top - fw * 0.55f)
+                                        drawPath(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(o, fw * 0.22f, fw * 0.5f, 10, 0.5f, 0.12f, 0f), color)
+                                        drawCircle(color, fw * 0.22f, o)
+                                    }
+                                }
+                            }
+                            sello = cs.secondary
+                        }
+                        // Cada día, un tallo que sube y abre su capullo, más alto cuanto más dormiste, con una hoja que sale de lado; el
+                        // sello de arriba, en el violeta del iris.
+                        TemaId.NOUVEAU -> {
+                            val bot = minOf(w * 1.3f, barH * 0.32f)
+                            pinta(Path().apply {
+                                moveTo(w * 0.4f, h); lineTo(w * 0.43f, top + bot * 0.8f)
+                                cubicTo(w * 0.02f, top + bot * 0.55f, w * 0.3f, top + bot * 0.12f, w * 0.5f, top)
+                                cubicTo(w * 0.7f, top + bot * 0.12f, w * 0.98f, top + bot * 0.55f, w * 0.57f, top + bot * 0.8f)
+                                lineTo(w * 0.6f, h); close()
+                            })
+                            if (color != null) {
+                                drawLine(Color.White.copy(alpha = 0.35f), Offset(w * 0.5f, top + bot * 0.15f), Offset(w * 0.5f, top + bot * 0.7f), 0.8f * u)
+                                if (barH > bot + 24 * u) {
+                                    val ya = top + bot + (barH - bot) * 0.35f
+                                    drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.hojaLanza(Offset(w * 0.5f, ya + 8 * u), Offset(w * 0.98f, ya - 4 * u), 3.4f * u, 0.2f), color)
+                                }
+                            }
+                            sello = cs.secondary
+                        }
+                        // Las estacas de la empalizada del oppidum: cada día, un tronco aguzado arriba, con la corteza en vetas y su
+                        // atadura de mimbre; el remate, en el oro de los torques.
+                        TemaId.GALIA -> {
+                            val punta = minOf(w * 0.7f, barH * 0.25f); val ex = w * 0.14f; val ew = w * 0.72f
+                            pinta(Path().apply { moveTo(ex, h); lineTo(ex, top + punta); lineTo(w / 2, top); lineTo(ex + ew, top + punta); lineTo(ex + ew, h); close() })
+                            if (color != null) {
+                                listOf(0.3f, 0.64f).forEach { f -> drawLine(Color.Black.copy(alpha = 0.18f), Offset(ex + ew * f, top + punta + 3 * u), Offset(ex + ew * f, h - 2 * u), 0.8f * u) }
+                                if (barH > punta + 16 * u) {
+                                    val ya = top + punta + 6 * u
+                                    drawLine(Color.Black.copy(alpha = 0.35f), Offset(ex - 1 * u, ya), Offset(ex + ew + 1 * u, ya + 1.5f * u), 1.4f * u)
+                                    drawLine(Color.Black.copy(alpha = 0.35f), Offset(ex - 1 * u, ya + 3 * u), Offset(ex + ew + 1 * u, ya + 4.5f * u), 1.4f * u)
+                                }
+                            }
+                            sello = cs.secondary
+                        }
+                        // Jarras de barro, una por día, más altas cuanto más dormiste: el cuerpo, el hombro con su franja pintada,
+                        // el cuello y el borde de la tapa; el sello de arriba, en el violeta de la grieta.
+                        TemaId.ARCONTES -> {
+                            val cuello = minOf(w * 0.5f, barH * 0.16f); val hombro = top + cuello
+                            pinta(Path().apply {
+                                moveTo(w * 0.34f, h)
+                                cubicTo(w * 0.02f, h - barH * 0.1f, w * 0.0f, hombro + barH * 0.22f, w * 0.18f, hombro + barH * 0.05f)
+                                quadraticTo(w * 0.28f, hombro, w * 0.36f, hombro); lineTo(w * 0.36f, top); lineTo(w * 0.64f, top); lineTo(w * 0.64f, hombro)
+                                quadraticTo(w * 0.72f, hombro, w * 0.82f, hombro + barH * 0.05f)
+                                cubicTo(w * 1f, hombro + barH * 0.22f, w * 0.98f, h - barH * 0.1f, w * 0.66f, h); close()
+                            })
+                            if (color != null && barH > w * 1.4f) drawLine(Color.Black.copy(alpha = 0.22f), Offset(w * 0.16f, hombro + barH * 0.16f), Offset(w * 0.84f, hombro + barH * 0.16f), 1.4f * u)
+                            drawLine(color ?: linea, Offset(w * 0.27f, top), Offset(w * 0.73f, top), 1.8f * u, StrokeCap.Round)
+                            sello = cs.tertiary
+                        }
+                        // Los deslizadores de la consola: la ranura de esquinas redondas, llena hasta el alto del día, con las
+                        // marcas de la escala al lado y, arriba, la perilla de baquelita con su raya hueso.
+                        TemaId.FRENTE -> {
+                            val ancho = w * 0.46f; val x0 = (w - ancho) / 2; val rr = CornerRadius(ancho / 2, ancho / 2)
+                            if (color != null) drawRoundRect(color, Offset(x0, top), Size(ancho, barH), rr) else drawRoundRect(linea, Offset(x0, top), Size(ancho, barH), rr, style = borde)
+                            var y = h - 4 * u; var k = 0
+                            while (y > top + 6 * u) { drawLine(linea.copy(alpha = 0.5f), Offset(0f, y), Offset(if (k % 4 == 0) x0 - u else w * 0.12f, y), 0.7f * u); y -= 6 * u; k++ }
+                            val perilla = io.github.ruddy2003.vestigium.ui.TrazosFrente.BAQUELITA
+                            if (color != null) drawRoundRect(perilla, Offset(0f, top - 3 * u), Size(w, 6 * u), CornerRadius(2 * u, 2 * u))
+                            else drawRoundRect(linea, Offset(0f, top - 3 * u), Size(w, 6 * u), CornerRadius(2 * u, 2 * u), style = borde)
+                            drawLine(if (color != null) io.github.ruddy2003.vestigium.ui.TrazosFrente.HUESO else linea, Offset(w * 0.15f, top), Offset(w * 0.85f, top), 0.9f * u)
                         }
                         // Medidor de segmentos, como en un tablero de control.
                         TemaId.REFUGIO -> {

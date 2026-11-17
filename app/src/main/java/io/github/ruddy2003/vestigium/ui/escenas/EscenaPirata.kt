@@ -110,6 +110,8 @@ internal object ColorPirata {
  */
 internal object EscenaPirata : EscenaVida {
     override val vidas = listOf("grumete")
+    /** La franja del fondo del teléfono ([franjaFondo]): el mástil, el cañón y el mar. */
+    override val franjaFondo: Float get() = 0.6f
 
     /** El horizonte del mar. */
     const val H = 118f

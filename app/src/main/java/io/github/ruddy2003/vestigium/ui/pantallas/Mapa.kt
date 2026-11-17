@@ -61,6 +61,10 @@ import io.github.ruddy2003.vestigium.ui.Nav
 import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.TrazosArcontes
+import io.github.ruddy2003.vestigium.ui.TrazosFrente
+import io.github.ruddy2003.vestigium.ui.TrazosGalia
+import io.github.ruddy2003.vestigium.ui.TrazosNouveau
 import io.github.ruddy2003.vestigium.ui.numeralMaya
 import androidx.compose.ui.geometry.Offset
 import kotlinx.coroutines.Dispatchers
@@ -110,6 +114,31 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
         // Distopía: gris de expediente, sin color.
         TemaId.DISTOPIA -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.82f, 0.83f, 0.84f, 4f, 4f, 4f)) }
             else { m.setSaturation(0f); m.postConcat(tinte(0.9f, 0.89f, 0.86f, 0f, 0f, 0f)) }
+        // Psicodelia. La ciudad: el plano de una guía de la ciudad vista en una foto de los 70, apagado y cálido; de noche, el
+        // café del cuarto con la lámpara. El cartel: el plano impreso en la tinta azul negra sobre el papel crema; de noche, en
+        // ultramar y crema sobre el negro de terciopelo.
+        TemaId.PSICODELIA -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) {
+            if (oscuro) { m.setSaturation(0.15f); m.postConcat(invertir); m.postConcat(tinte(0.86f, 0.74f, 0.6f, 10f, 4f, 0f)) }
+            else { m.setSaturation(0.3f); m.postConcat(tinte(1.0f, 0.94f, 0.84f, 6f, 2f, -6f)) }
+        } else {
+            if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.62f, 0.92f, 6f, 2f, 18f)) }
+            else { m.setSaturation(0f); m.postConcat(tinte(0.95f, 0.92f, 0.96f, 8f, 4f, 2f)) }
+        }
+        // Art nouveau: de día, el plano impreso en papel crema con un poco del verde salvia; de noche, la misma París con el
+        // azul negro de la calle y el oro de la luz eléctrica en las avenidas.
+        TemaId.NOUVEAU -> if (oscuro) { m.setSaturation(0.05f); m.postConcat(invertir); m.postConcat(tinte(0.84f, 0.78f, 0.6f, 4f, 4f, 10f)) }
+            else { m.setSaturation(0.3f); m.postConcat(tinte(0.98f, 0.97f, 0.86f, 2f, 6f, -2f)) }
+        // Galia: de día, el pasto y la paja al sol, con el verde del roble; de noche, el mismo campo bajo la luna, verde negro.
+        TemaId.GALIA -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.72f, 0.6f, 2f, 6f, 2f)) }
+            else { m.setSaturation(0.35f); m.postConcat(tinte(0.98f, 0.98f, 0.86f, 4f, 6f, -4f)) }
+        // Arcontes: de día, el plano en caliza al sol, con un poco del azul del lago; de noche, el mismo plano bajo el cielo
+        // antiguo, azul negro con un tinte violeta.
+        TemaId.ARCONTES -> if (oscuro) { m.setSaturation(0.1f); m.postConcat(invertir); m.postConcat(tinte(0.62f, 0.62f, 0.84f, 2f, 3f, 16f)) }
+            else { m.setSaturation(0.35f); m.postConcat(tinte(1.0f, 0.95f, 0.83f, 5f, 3f, -5f)) }
+        // Frente exterior: de día, el plano impreso sobre el hueso de la consola, casi sin color; de noche, el mismo plano
+        // en la pantalla de la sala, con el verde apagado del radar sobre el petróleo.
+        TemaId.FRENTE -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.5f, 0.68f, 0.62f, 2f, 8f, 8f)) }
+            else { m.setSaturation(0.12f); m.postConcat(tinte(1.0f, 0.96f, 0.88f, 2f, 0f, -4f)) }
         // Refugio: fósforo verde de noche; papel de folleto de día.
         TemaId.REFUGIO -> if (oscuro) { m.setSaturation(0f); m.postConcat(invertir); m.postConcat(tinte(0.18f, 0.9f, 0.38f, 0f, 6f, 0f)) }
             else { m.setSaturation(0.3f); m.postConcat(tinte(0.97f, 0.96f, 0.88f, 4f, 4f, 0f)) }
@@ -192,7 +221,8 @@ private fun filtroMapa(oscuro: Boolean): ColorMatrixColorFilter {
 
 /**
  * La forma con que cada tema marca un lugar en el mapa, una distinta por tema: tabla con asas (Romano), cursor de bloque
- * (Terminal), sol de dieciséis rayos (Helénico), sello de cera (Scriptorium), ojo (Distopía), señal de refugio (Refugio),
+ * (Terminal), sol de dieciséis rayos (Helénico), sello de cera (Scriptorium), ojo (Distopía), círculo roto con su chispa
+ * (Frente exterior), señal de refugio (Refugio),
  * escudo (Orden), anillo de benceno (Laboratorio), casita (Colonos), bicornio (Napoleónico), hoja (Botánico), abeto (Navidad),
  * moneda con agujero (Seda), arco ojival (Gótico), destello (Espacio), estrella de dos cuadrados (Al-Ándalus), corona de yurta
  * (Mongol), cuadrado con el círculo de Vitruvio (Renacimiento), estrella (Soviético), escarapela (Revolución) y gema tallada
@@ -264,6 +294,30 @@ internal object Formas {
             TemaId.TEMPLARIO -> figura(x, y, r, -0.82f, -0.9f, 0.82f, -0.9f, 0.8f, -0.1f, 0.58f, 0.5f, 0f, 1.05f, -0.58f, 0.5f, -0.8f, -0.1f)
             // El ojo que todo lo ve.
             TemaId.DISTOPIA -> { p.reset(); p.moveTo(x - r * 1.2f, y); p.quadTo(x, y - r * 1.2f, x + r * 1.2f, y); p.quadTo(x, y + r * 1.2f, x - r * 1.2f, y); p.close() }
+            // La ciudad: el disco del día, redondo. El cartel: el disco hecho sol, con doce rayos.
+            TemaId.PSICODELIA -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) { p.reset(); p.addCircle(x, y, r * 0.95f, horario) }
+                else poligono(x, y, r * 1.2f, 12, -90.0, 0.72f)
+            // El farol de la entrada de metro: el globo en forma de pera.
+            TemaId.NOUVEAU -> {
+                p.reset(); p.moveTo(x, y - r * 1.25f)
+                p.cubicTo(x + r * 0.55f, y - r * 1.1f, x + r * 1.15f, y + r * 0.1f, x + r * 0.72f, y + r * 0.78f)
+                p.quadTo(x, y + r * 1.25f, x - r * 0.72f, y + r * 0.78f)
+                p.cubicTo(x - r * 1.15f, y + r * 0.1f, x - r * 0.55f, y - r * 1.1f, x, y - r * 1.25f); p.close()
+            }
+            // El escudo largo de los galos, de tablas, con los cantos redondos.
+            TemaId.GALIA -> { p.reset(); p.addRoundRect(x - r * 0.62f, y - r * 1.15f, x + r * 0.62f, y + r * 1.15f, r * 0.55f, r * 0.62f, horario) }
+            // El ouroboros: el aro de la serpiente con la cabeza que muerde la cola, arriba a la derecha.
+            TemaId.ARCONTES -> {
+                p.reset(); p.addCircle(x, y, r, horario); p.addCircle(x, y, r * 0.58f, antihorario)
+                p.addOval(android.graphics.RectF(x + r * 0.32f, y - r * 1.22f, x + r * 1.02f, y - r * 0.55f), horario)
+            }
+            // El círculo roto del emblema de la red: el aro grueso con su hueco arriba a la derecha.
+            TemaId.FRENTE -> {
+                p.reset()
+                p.arcTo(android.graphics.RectF(x - r * 1.1f, y - r * 1.1f, x + r * 1.1f, y + r * 1.1f), -20f, 300f, true)
+                p.arcTo(android.graphics.RectF(x - r * 0.6f, y - r * 0.6f, x + r * 0.6f, y + r * 0.6f), 280f, -300f, false)
+                p.close()
+            }
             // La señal de refugio: un triángulo con la punta hacia abajo.
             TemaId.REFUGIO -> poligono(x, y, r * 1.2f, 3, 90.0)
             // El escudo de la orden.
@@ -346,6 +400,12 @@ internal object Formas {
             TemaId.TEMPLARIO -> { raya(c, x, y, r, 0f, -0.65f, 0f, 0.55f, d); raya(c, x, y, r, -0.52f, -0.15f, 0.52f, -0.15f, d)
                 raya(c, x, y, r, -0.62f, -0.75f, 0.62f, -0.75f, d) }   // la cruz del escudo y su jefe
             TemaId.DISTOPIA -> { c.drawCircle(x, y, r * 0.38f, d); c.drawCircle(x, y, r * 0.12f, d) }   // la pupila
+            TemaId.PSICODELIA -> { c.drawCircle(x, y, r * 0.42f, d); c.drawCircle(x, y, r * 0.08f, d) }   // la etiqueta del disco y su agujero
+            TemaId.NOUVEAU -> { raya(c, x, y, r, -0.42f, -0.92f, 0.42f, -0.92f, d); raya(c, x, y, r, 0f, -0.55f, 0f, 0.55f, d) }   // el collar y el filamento
+            TemaId.GALIA -> { raya(c, x, y, r, 0f, -0.95f, 0f, 0.95f, d); c.drawOval(x - r * 0.26f, y - r * 0.36f, x + r * 0.26f, y + r * 0.36f, d) }   // la espina y el umbo
+            TemaId.ARCONTES -> { c.drawCircle(x + r * 0.72f, y - r * 0.92f, r * 0.1f, d); c.drawCircle(x, y, r * 0.2f, d) }   // el ojo de la serpiente y la chispa del centro
+            // La célula en el centro y la chispa: tres trazos que salen de ella por el hueco del aro, arriba a la derecha.
+            TemaId.FRENTE -> { c.drawCircle(x, y, r * 0.14f, d); raya(c, x, y, r, 0.13f, -0.32f, 0.47f, -1.16f, d); raya(c, x, y, r, 0.23f, -0.27f, 0.93f, -1.11f, d); raya(c, x, y, r, 0.3f, -0.19f, 1.06f, -0.66f, d) }
             TemaId.REFUGIO -> { poligono(x, y, r * 0.55f, 3, 90.0); c.drawPath(p, d) }
             TemaId.ORDEN -> { raya(c, x, y, r, 0f, -0.8f, 0f, 0.95f, d); raya(c, x, y, r, -0.72f, -0.25f, 0.72f, -0.25f, d) }   // la cruz del escudo
             TemaId.VAPOR -> { c.drawCircle(x, y, r * 0.5f, d); raya(c, x, y, r, 0f, 0f, 0.32f, -0.3f, d) }   // la esfera del manómetro y su aguja
@@ -862,6 +922,111 @@ internal fun DrawScope.marcoDelMapa(tema: TemaId, u: Float, tinta: Color, acento
                 x += 6 * u; i++
             }
         }
+        TemaId.PSICODELIA -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) {
+            // La ciudad: el margen blanco de la copia de foto, con el filete; arriba, los dos cables del trolebús con sus
+            // colgadores, y en cada esquina, una esquinera de álbum.
+            filete(4 * u, tinta.copy(alpha = 0.35f), 0.8f * u)
+            with(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia) { cablesTrolebus(16 * u, w - 16 * u, 11 * u, tinta.copy(alpha = 0.45f), tramo = 90 * u) }
+            esquinas(4 * u) { o, sx, sy ->
+                drawPath(Path().apply { moveTo(o.x, o.y); lineTo(o.x + sx * 9 * u, o.y); lineTo(o.x, o.y + sy * 9 * u); close() }, tinta.copy(alpha = 0.3f))
+            }
+        } else {
+            // El cartel: el filete de la tinta que graba, una onda a dos tintas arriba y abajo (el acento y, corrida de
+            // registro, la tinta del texto) y, en cada esquina, el disco hecho sol con su corona.
+            filete(4 * u, tinta.copy(alpha = 0.4f), 1f * u)
+            listOf(9 * u, h - 9 * u).forEach { y0 ->
+                listOf(0f to acento.copy(alpha = 0.75f), 1.4f * u to tinta.copy(alpha = 0.3f)).forEach { (dy, col) ->
+                    drawPath(Path().apply {
+                        var x = 22 * u; moveTo(x, y0 + dy)
+                        while (x < w - 30 * u) { quadraticTo(x + 4 * u, y0 + dy - 3 * u, x + 8 * u, y0 + dy); quadraticTo(x + 12 * u, y0 + dy + 3 * u, x + 16 * u, y0 + dy); x += 16 * u }
+                    }, col, style = Stroke(1.4f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+                }
+            }
+            esquinas(12 * u) { o, _, _ ->
+                drawPath(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(o, 3.6f * u, 8 * u, 12, 0.5f, 0.12f, 0f), tinta.copy(alpha = 0.6f))
+                drawCircle(acento, 3.6f * u, o)
+                drawCircle(fondo, 1 * u, o)
+            }
+        }
+        TemaId.NOUVEAU -> {
+            // El marco del plano impreso de 1900: el doble filete; en cada esquina, dos líneas de látigo que salen a lo largo de los
+            // bordes y se enroscan, y abajo a la izquierda, un iris.
+            filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u); filete(8 * u, tinta.copy(alpha = 0.3f), 0.7f * u)
+            esquinas(8 * u) { o, sx, sy ->
+                listOf(Offset(o.x + sx * 34 * u, o.y + sy * 2 * u) to (sx * sy > 0), Offset(o.x + sx * 2 * u, o.y + sy * 26 * u) to (sx * sy < 0)).forEach { (hasta, horario) ->
+                    val pts = TrazosNouveau.puntosLatigo(Offset(o.x + sx * 3 * u, o.y + sy * 3 * u), hasta, 3.4f * u, 0.18f, horario)
+                    drawPath(TrazosNouveau.cinta(pts) { k -> u * (2f - 1.4f * k) }, acento.copy(alpha = 0.75f))
+                }
+                drawCircle(acento, 1.8f * u, Offset(o.x + sx * 3 * u, o.y + sy * 3 * u))
+            }
+            with(TrazosNouveau) { iris(Offset(26 * u, h - 10 * u), 30 * u, acento.copy(alpha = 0.8f), tinta.copy(alpha = 0.45f), tinta.copy(alpha = 0.6f)) }
+        }
+        TemaId.GALIA -> {
+            // El marco tallado en la viga: dos filetes con la onda corrida de La Tène entre ellos, arriba y abajo; en las esquinas,
+            // dos hojas de roble con su bellota, y abajo a la izquierda, el torques.
+            filete(4 * u, tinta.copy(alpha = 0.5f), 1.2f * u); filete(10 * u, tinta.copy(alpha = 0.3f), 0.8f * u)
+            listOf(7 * u, h - 7 * u).forEach { y ->
+                val onda = Path().apply {
+                    var x = 14 * u; moveTo(x, y)
+                    while (x < w - 26 * u) { cubicTo(x + 3 * u, y - 2.6f * u, x + 6 * u, y - 2.6f * u, x + 7 * u, y); cubicTo(x + 8 * u, y + 2.6f * u, x + 11 * u, y + 2.6f * u, x + 14 * u, y); x += 14 * u }
+                }
+                drawPath(onda, tinta.copy(alpha = 0.35f), style = Stroke(0.9f * u, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+            }
+            esquinas(7 * u) { o, sx, sy ->
+                val g = Math.toDegrees(kotlin.math.atan2(sx.toDouble(), (-sy).toDouble())).toFloat()
+                with(TrazosGalia) {
+                    hojaRoble(Offset(o.x + sx * 10 * u, o.y + sy * 4.5f * u), 16 * u, g + 35f, acento.copy(alpha = 0.7f), tinta.copy(alpha = 0.4f))
+                    hojaRoble(Offset(o.x + sx * 4.5f * u, o.y + sy * 10 * u), 16 * u, g - 35f, acento.copy(alpha = 0.7f), tinta.copy(alpha = 0.4f))
+                }
+                drawOval(tinta.copy(alpha = 0.55f), Offset(o.x - 2.2f * u, o.y - 1.2f * u), Size(4.4f * u, 5 * u))
+                drawArc(tinta.copy(alpha = 0.75f), 180f, 180f, true, Offset(o.x - 2.8f * u, o.y - 2.6f * u), Size(5.6f * u, 4.6f * u))
+            }
+            with(TrazosGalia) { torques(Offset(40 * u, h - 24 * u), 9f * u, 2.6f * u) }
+        }
+        // La hoja del códice: el doble filete de tinta con las esquinas en arco de nicho, los siete círculos que asoman en la
+        // esquina de arriba, la lámpara encendida abajo a la izquierda y, en el canto derecho, una grieta de luz finísima.
+        TemaId.ARCONTES -> {
+            val k = 12 * u
+            listOf(4 * u to 0.5f, 8 * u to 0.25f).forEach { (m, al) ->
+                val e = k - (m - 4 * u)
+                drawPath(Path().apply {
+                    moveTo(m + e, m); lineTo(w - m - e, m); arcTo(androidx.compose.ui.geometry.Rect(w - m - 2 * e, m, w - m, m + 2 * e), -90f, 90f, false)
+                    lineTo(w - m, h - m - e); arcTo(androidx.compose.ui.geometry.Rect(w - m - 2 * e, h - m - 2 * e, w - m, h - m), 0f, 90f, false)
+                    lineTo(m + e, h - m); arcTo(androidx.compose.ui.geometry.Rect(m, h - m - 2 * e, m + 2 * e, h - m), 90f, 90f, false)
+                    lineTo(m, m + e); arcTo(androidx.compose.ui.geometry.Rect(m, m, m + 2 * e, m + 2 * e), 180f, 90f, false); close()
+                }, tinta.copy(alpha = al), style = Stroke((if (al > 0.4f) 1.2f else 0.8f) * u))
+            }
+            for (i in 0 until 7) drawArc(tinta.copy(alpha = 0.32f - i * 0.03f), 0f, 90f, false, Offset(8 * u - (10 + i * 5) * u, 8 * u - (10 + i * 5) * u), Size((20 + i * 10) * u, (20 + i * 10) * u), style = Stroke(0.7f * u))
+            drawCircle(acento, 2.6f * u, Offset(8 * u, 8 * u))
+            with(TrazosArcontes) {
+                lampara(Offset(26 * u, h - 17 * u), 22 * u, if (fondo.red + fondo.green + fondo.blue < 1.5f) BARRO_CLARO else BARRO, 1f)
+                grieta(Offset(w - 6 * u, h * 0.42f), Offset(w - 5 * u, h * 0.42f + 34 * u), 0.8f * u, 0.8f, 4)
+            }
+        }
+        // El bisel de la pantalla de la sala de mando: el marco de esquinas muy redondas con su doble filo, un tornillo en
+        // cada esquina, la escala en los costados, el piloto ámbar encendido arriba con el rótulo de la carta y, abajo a la
+        // derecha, la fila de interruptores de palanca.
+        TemaId.FRENTE -> {
+            drawRoundRect(tinta.copy(alpha = 0.5f), Offset(4 * u, 4 * u), Size(w - 8 * u, h - 8 * u), androidx.compose.ui.geometry.CornerRadius(13 * u), style = Stroke(2 * u))
+            drawRoundRect(tinta.copy(alpha = 0.25f), Offset(8 * u, 8 * u), Size(w - 16 * u, h - 16 * u), androidx.compose.ui.geometry.CornerRadius(9 * u), style = Stroke(0.8f * u))
+            esquinas(11 * u) { o, sx, sy ->
+                val t = o + Offset(sx * 3 * u, sy * 3 * u)
+                drawCircle(tinta.copy(alpha = 0.4f), 2.2f * u, t); drawLine(fondo, t + Offset(-1.3f * u, 0.8f * u), t + Offset(1.3f * u, -0.8f * u), 0.6f * u)
+            }
+            var y = 30 * u; var k = 0
+            while (y < h - 30 * u) {
+                val l = if (k % 5 == 0) 5 * u else 2.5f * u
+                drawLine(tinta.copy(alpha = 0.4f), Offset(4 * u, y), Offset(4 * u + l, y), 0.8f * u); drawLine(tinta.copy(alpha = 0.4f), Offset(w - 4 * u, y), Offset(w - 4 * u - l, y), 0.8f * u)
+                y += 8 * u; k++
+            }
+            with(TrazosFrente) { piloto(Offset(24 * u, 17 * u), 2.4f * u, acento, true, tinta.copy(alpha = 0.5f)) }
+            with(io.github.ruddy2003.vestigium.ui.TrofeosMas) { mono("CARTA · K-7", 31 * u, 19.5f * u, 7 * u, tinta.copy(alpha = 0.55f)) }
+            for (i in 0 until 4) {
+                val b = Offset(w - 20 * u - i * 9 * u, h - 15 * u)
+                drawCircle(tinta.copy(alpha = 0.45f), 1.8f * u, b)
+                drawLine(tinta.copy(alpha = 0.6f), b, b + Offset((if (i % 2 == 0) 1.3f else -1.3f) * u, -6 * u), 1.4f * u, androidx.compose.ui.graphics.StrokeCap.Round)
+            }
+        }
         // Una placa de acero con remaches.
         TemaId.REFUGIO -> {
             filete(3 * u, tinta.copy(alpha = 0.6f), 3 * u)
@@ -1193,6 +1358,86 @@ internal fun DrawScope.rosaDelMapa(tema: TemaId, c: Offset, r: Float, tinta: Col
             val ojo = Path().apply { moveTo(c.x - r * 0.8f, c.y); quadraticTo(c.x, c.y - r * 0.75f, c.x + r * 0.8f, c.y); quadraticTo(c.x, c.y + r * 0.75f, c.x - r * 0.8f, c.y); close() }
             drawPath(ojo, fondo); drawPath(ojo, tenue, style = Stroke(1.4f * u))
             drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.1f, c)
+        }
+        TemaId.PSICODELIA -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) {
+            // La ciudad: la rosa sobria de una guía de la ciudad, cuatro puntas y cuatro finas, con la etiqueta del disco del día
+            // en el centro.
+            anillo(r * 0.82f, tenue.copy(alpha = 0.35f), 0.8f * u)
+            for (i in 0 until 4) punta(n + 45.0 + 90.0 * i, r * 0.5f, r * 0.07f, tenue.copy(alpha = 0.6f))
+            for (i in 0 until 4) punta(n + 90.0 * i, r * 0.95f, r * 0.15f, if (i == 0) acento else tenue)
+            drawCircle(tinta.copy(alpha = 0.85f), r * 0.24f, c); drawCircle(acento, r * 0.11f, c); drawCircle(fondo, r * 0.03f, c)
+        } else {
+            // El cartel: la rosa como el disco hecho sol, dieciséis rayos de punta redonda en dos tintas (el del norte, el más
+            // largo, con una bolita en la punta) y el disco en el centro.
+            fun rayo(g: Double, largo: Float, ancho: Float, color: Color) {
+                val q = c + rumbo(g) * largo; val b = c + rumbo(g) * (r * 0.3f)
+                val s1 = b + rumbo(g + 90.0) * ancho; val s2 = b + rumbo(g - 90.0) * ancho
+                val m1 = c + rumbo(g + 4.0) * (largo * 0.7f); val m2 = c + rumbo(g - 4.0) * (largo * 0.7f)
+                val ray = Path().apply { moveTo(s1.x, s1.y); quadraticTo(m1.x, m1.y, q.x, q.y); quadraticTo(m2.x, m2.y, s2.x, s2.y); close() }
+                drawPath(ray, color)
+            }
+            for (i in 0 until 16) {
+                val g = n + 22.5 * i
+                rayo(g, when { i == 0 -> r * 1f; i % 4 == 0 -> r * 0.8f; i % 2 == 0 -> r * 0.64f; else -> r * 0.52f }, r * (if (i % 2 == 0) 0.09f else 0.06f),
+                    when { i == 0 -> acento; i % 2 == 0 -> tenue.copy(alpha = 0.7f); else -> secundario.copy(alpha = 0.75f) })
+            }
+            drawCircle(acento, r * 0.07f, c + rumbo(n) * r)
+            drawCircle(tinta.copy(alpha = 0.85f), r * 0.3f, c); drawCircle(fondo, r * 0.26f, c, style = Stroke(0.6f * u))
+            drawCircle(acento, r * 0.12f, c); drawCircle(fondo, r * 0.03f, c)
+        }
+        TemaId.NOUVEAU -> {
+            // La rosa como una flor: cuatro pétalos grandes en los rumbos (el del norte en el color de acento), cuatro hojas de
+            // tallo en los rumbos de en medio, el anillo con su rizo y el botón del centro.
+            anillo(r * 0.92f, tenue.copy(alpha = 0.45f), 0.8f * u)
+            for (k in 0 until 4) {
+                val a = n + 90.0 * k + 45.0
+                drawPath(TrazosNouveau.hojaLanza(c + rumbo(a) * (r * 0.12f), c + rumbo(a) * (r * 0.72f), r * 0.2f, 0.15f), secundario.copy(alpha = 0.7f))
+            }
+            for (k in 0 until 4) {
+                val a = n + 90.0 * k
+                val pet = TrazosNouveau.petalo(c, c + rumbo(a) * (r * (if (k == 0) 1f else 0.82f)), r * 0.42f)
+                drawPath(pet, if (k == 0) acento else tenue.copy(alpha = 0.55f))
+                drawPath(pet, tinta.copy(alpha = 0.5f), style = Stroke(0.7f * u))
+            }
+            val pts = TrazosNouveau.puntosLatigo(c + rumbo(n + 200.0) * (r * 0.92f), c + rumbo(n + 150.0) * (r * 0.98f), r * 0.1f, 0.15f, true)
+            drawPath(TrazosNouveau.cinta(pts) { k -> u * (1.4f - 1f * k) }, tenue)
+            drawCircle(fondo, r * 0.14f, c); drawCircle(acento, r * 0.09f, c); drawCircle(tinta.copy(alpha = 0.6f), r * 0.14f, c, style = Stroke(0.8f * u))
+        }
+        TemaId.GALIA -> {
+            // La rueda votiva de bronce (como las que se ofrecían en los santuarios): el aro, los ocho rayos y el cubo, con las perlas
+            // por fuera; el norte, la punta de una lanza en hoja de laurel.
+            for (k in 0 until 16) drawCircle(tenue.copy(alpha = 0.6f), r * 0.035f, c + rumbo(k * 22.5) * (r * 0.93f))
+            anillo(r * 0.8f, tenue, 2.4f * u)
+            for (k in 0 until 8) drawLine(tenue.copy(alpha = if (k % 2 == 0) 0.85f else 0.45f), c + rumbo(k * 45.0) * (r * 0.18f), c + rumbo(k * 45.0) * (r * 0.8f), (if (k % 2 == 0) 1.6f else 0.9f) * u)
+            val q = c + rumbo(n) * (r * 1.02f); val b = c + rumbo(n) * (r * 0.38f); val l1 = c + rumbo(n) * (r * 0.62f) + rumbo(n + 90.0) * (r * 0.13f); val l2 = c + rumbo(n) * (r * 0.62f) + rumbo(n - 90.0) * (r * 0.13f)
+            drawPath(Path().apply { moveTo(q.x, q.y); quadraticTo(l1.x, l1.y, b.x, b.y); quadraticTo(l2.x, l2.y, q.x, q.y); close() }, acento)
+            drawLine(tinta.copy(alpha = 0.5f), c + rumbo(n) * (r * 0.62f), b, 0.7f * u)
+            drawLine(tinta.copy(alpha = 0.5f), c, c + rumbo(n + 180.0) * (r * 0.55f), 1.2f * u, androidx.compose.ui.graphics.StrokeCap.Round)
+            drawCircle(secundario, r * 0.16f, c); drawCircle(tinta.copy(alpha = 0.7f), r * 0.16f, c, style = Stroke(0.8f * u))
+        }
+        // El ouroboros con las siete esferas adentro: la serpiente que se muerde la cola rodea los círculos de los
+        // planetas, con la tierra al centro y la aguja del norte, fina, que sale hacia la luz.
+        TemaId.ARCONTES -> {
+            with(TrazosArcontes) {
+                esferas(c, r * 0.66f, tenue.copy(alpha = 0.45f), 0.7f * u)
+                ouroboros(c, r * 0.84f, r * 0.13f, tenue, -60f, fondo.copy(alpha = 0.6f))
+            }
+            punta(n, r * 0.98f, r * 0.08f, acento)
+            punta(n + 180.0, r * 0.5f, r * 0.06f, tinta.copy(alpha = 0.5f))
+            drawCircle(secundario, r * 0.12f, c); drawCircle(tinta.copy(alpha = 0.7f), r * 0.12f, c, style = Stroke(0.8f * u))
+        }
+        // La retícula de navegación de la consola: la pantalla redonda con sus anillos, la cruz y las marcas de cada diez
+        // grados, el barrido verde que gira con su eco y, en el borde, el norte marcado con un ángulo ámbar.
+        TemaId.FRENTE -> {
+            val verde = lerp(tinta, TrazosFrente.RADAR, 0.5f)
+            with(TrazosFrente) {
+                reticula(c, r * 0.9f, tenue.copy(alpha = 0.55f), 0.9f * u, 3)
+                barrido(c, r * 0.9f, -60f, verde, 1.4f * u)
+            }
+            val q = c + rumbo(n) * (r * 0.98f); val b1 = c + rumbo(n - 9.0) * (r * 0.72f); val b2 = c + rumbo(n + 9.0) * (r * 0.72f)
+            drawPath(Path().apply { moveTo(b1.x, b1.y); lineTo(q.x, q.y); lineTo(b2.x, b2.y) }, acento, style = Stroke(2.2f * u))
+            drawCircle(verde, r * 0.07f, c + rumbo(-35.0) * (r * 0.52f))
+            drawCircle(acento, r * 0.08f, c)
         }
         // Un manómetro: medio círculo graduado y la aguja al norte.
         TemaId.REFUGIO -> {

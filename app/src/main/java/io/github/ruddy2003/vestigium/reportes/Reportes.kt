@@ -4,7 +4,6 @@ import io.github.ruddy2003.vestigium.data.porNumero
 
 import android.content.ContentValues
 import android.content.Context
-import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -86,11 +85,8 @@ class Lienzo(private val ctx: Context, val tema: TemaId = Estilo.tema, val oscur
     fun colorAnimo(v: Double): Int { val t = (v - 1) / 6; return if (t < 0.5) mezcla(error, linea, t * 2) else mezcla(linea, primario, (t - 0.5) * 2) }
 
     companion object {
-        /** Claro u oscuro sin Compose: lo que elegiste en la app, o lo del teléfono. */
-        fun oscuroFuera(ctx: Context, tema: TemaId): Boolean = tema.soloOscuro || when (Repo.config.modo) {
-            "oscuro" -> true; "claro" -> false
-            else -> (ctx.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        }
+        /** Claro u oscuro sin Compose: la misma regla que la app ([io.github.ruddy2003.vestigium.ui.modoOscuroDe]), también con «hora». */
+        fun oscuroFuera(ctx: Context, tema: TemaId): Boolean = io.github.ruddy2003.vestigium.ui.modoOscuroDe(ctx, tema)
     }
 }
 
@@ -108,6 +104,11 @@ private fun letraCifra(tema: TemaId): Int = when (tema) {
     TemaId.MEDIEVAL -> R.font.gotica_semibold       // la gótica del copista, en su corte más claro
     TemaId.TEMPLARIO -> R.font.regla_bold           // la letra de la regla, negrita: cifras firmes
     TemaId.DISTOPIA -> R.font.oswald_bold           // números de expediente, estrechos y negros
+    TemaId.PSICODELIA -> R.font.franklin_semibold    // Libre Franklin SemiBold, la de los rótulos y las cifras en las dos caras
+    TemaId.NOUVEAU -> R.font.vitrina_regular       // Della Respira, la de los rótulos y las cifras del tema: altas y finas, de cartel
+    TemaId.GALIA -> R.font.ysabeau_semibold       // Ysabeau, la de los rótulos y las cifras del tema, de trazo humanista
+    TemaId.ARCONTES -> R.font.codice_bold           // Caudex, la letra de los códices: cifras de pluma, firmes
+    TemaId.FRENTE -> R.font.chivo_mono_medium     // las cifras grabadas de la consola, como en un contador de segmentos
     TemaId.REFUGIO -> R.font.plex_mono_semibold     // la máquina del refugio: mono, gruesa
     TemaId.ORDEN -> R.font.saira_stencil            // estarcido
     TemaId.VAPOR -> R.font.caldera_titulo           // «fat face» de cartel
@@ -147,6 +148,11 @@ private fun marcaReporte(tema: TemaId): String = when (tema) {
     TemaId.MEDIEVAL -> "Liber vestigii mei"
     TemaId.TEMPLARIO -> "Pauperes commilitones · Vestigium Mei"
     TemaId.DISTOPIA -> "EXPEDIENTE · VESTIGIUM MEI"
+    TemaId.PSICODELIA -> "Vestigium Mei · desde el Haight, con la niebla"
+    TemaId.NOUVEAU -> "Vestigium Mei · L'Atelier, revue illustrée"
+    TemaId.GALIA -> "ΝΕΜΗΤΟΝ, el bosque sagrado · Vestigium Mei"
+    TemaId.ARCONTES -> "ϫⲱⲱⲙⲉ · Vestigium Mei · el códice escondido"
+    TemaId.FRENTE -> "VESTIGIUM MEI · CÉLULA K-7"
     TemaId.REFUGIO -> "REFUGIO · BITÁCORA VESTIGIUM-MEI"
     TemaId.ORDEN -> "ARCHIVUM ORDINIS · VESTIGIUM MEI"
     TemaId.VAPOR -> "Memoria de la Compañía de Vapor Vestigium Mei"
@@ -362,6 +368,179 @@ object Reportes {
                     c.drawPath(ojo, L.trazo(L.tinta, 3f))
                     c.drawCircle(cx, yc, 10f, barra); c.drawCircle(cx, yc, 4f, L.relleno(L.tinta))
                     y += 54f
+                }
+                TemaId.PSICODELIA -> {
+                    // Dos bandas que ondulan, a dos tintas (el primario y, corrido de registro, el secundario), llegan desde las
+                    // orillas hasta el disco del día del centro: el vinilo con sus surcos y la etiqueta del primario.
+                    val yc = yy + 30f
+                    for (s0 in listOf(-1f, 1f)) {
+                        val x0 = if (s0 < 0) M else W - M
+                        val x1 = cx + s0 * 34f
+                        listOf(L.secundario to 3.5f, L.primario to 0f).forEach { (col, dy) ->
+                            val p = Path()
+                            val pasos = 48
+                            for (i in 0..pasos) {
+                                val f = i / pasos.toFloat()
+                                val x = x0 + (x1 - x0) * f
+                                val y0 = yc + dy + 5f * kotlin.math.sin(f * 4f * Math.PI.toFloat())
+                                if (i == 0) p.moveTo(x, y0) else p.lineTo(x, y0)
+                            }
+                            c.drawPath(p, L.trazo(col, 2.4f))
+                        }
+                    }
+                    c.drawCircle(cx, yc, 26f, L.relleno(0xFF1E1916.toInt()))
+                    for (k in 1..4) c.drawCircle(cx, yc, 12f + 3f * k, L.trazo(L.mezcla(0xFF1E1916.toInt(), 0xFFFFFFFF.toInt(), 0.12), 0.8f))
+                    c.drawCircle(cx, yc, 10f, L.relleno(L.primario))
+                    c.drawCircle(cx, yc, 2f, L.relleno(L.fondo))
+                    y += 64f
+                }
+                TemaId.NOUVEAU -> {
+                    // Dos líneas de látigo que llegan desde las orillas en una S tranquila, echan hojas y se enroscan junto al
+                    // medallón del centro, donde un iris abre sus pétalos entre dos hojas de espada, bajo un filete de oro.
+                    val yc = yy + 30f
+                    val rr = 26f
+                    val tallo = L.trazo(L.primario, 2.2f)
+                    val hoja = L.relleno(L.mezcla(L.primario, L.fondo, 0.15))
+                    for (s0 in listOf(-1f, 1f)) {
+                        val x0 = if (s0 < 0) M else W - M
+                        val x1 = cx + s0 * (rr + 14f)
+                        val p = Path()
+                        p.moveTo(x0, yc + 6f)
+                        p.cubicTo(x0 + (x1 - x0) * 0.35f, yc - 12f, x0 + (x1 - x0) * 0.65f, yc + 14f, x1, yc)
+                        p.cubicTo(x1 - s0 * 8f, yc - 6f, x1 - s0 * 2f, yc - 14f, x1 + s0 * 4f, yc - 10f)
+                        p.cubicTo(x1 + s0 * 8f, yc - 7f, x1 + s0 * 4f, yc - 2f, x1 + s0 * 1f, yc - 4f)
+                        c.drawPath(p, tallo)
+                        for (k in 1..3) {
+                            val f = k / 4f
+                            val hx = x0 + (x1 - x0) * f; val hy = yc + (if (k % 2 == 0) 4f else -4f)
+                            val lado = if (k % 2 == 0) 1f else -1f
+                            val q = Path()
+                            q.moveTo(hx, hy); q.quadTo(hx + s0 * 8f, hy + lado * 10f, hx + s0 * 18f, hy + lado * 12f); q.quadTo(hx + s0 * 6f, hy + lado * 3f, hx, hy); q.close()
+                            c.drawPath(q, hoja)
+                        }
+                    }
+                    c.drawCircle(cx, yc, rr, L.relleno(L.superficie2))
+                    c.drawCircle(cx, yc, rr, L.trazo(L.terciario, 2f))
+                    c.drawCircle(cx, yc, rr - 4f, L.trazo(L.mezcla(L.terciario, L.fondo, 0.4), 0.8f))
+                    val base = yc + rr - 6f
+                    c.drawLine(cx, base, cx, yc - 2f, L.trazo(L.primario, 1.6f))
+                    for (s0 in listOf(-1f, 1f)) {
+                        val q = Path()
+                        q.moveTo(cx, base); q.quadTo(cx + s0 * 4f, yc + 4f, cx + s0 * 12f, yc - 6f); q.quadTo(cx + s0 * 3f, yc + 2f, cx + s0 * 2f, base); q.close()
+                        c.drawPath(q, L.relleno(L.primario))
+                    }
+                    val flor = L.relleno(L.secundario)
+                    val claro = L.relleno(L.mezcla(L.secundario, L.fondo, 0.3))
+                    for ((ang, larg) in listOf(-90.0 to 15f, -140.0 to 12f, -40.0 to 12f, 120.0 to 11f, 60.0 to 11f)) {
+                        val a0 = Math.toRadians(ang)
+                        val px = cx + larg * Math.cos(a0).toFloat(); val py = yc - 6f + larg * Math.sin(a0).toFloat()
+                        val nx = -Math.sin(a0).toFloat() * 4.5f; val ny = Math.cos(a0).toFloat() * 4.5f
+                        val q = Path()
+                        q.moveTo(cx, yc - 6f); q.quadTo(cx + (px - cx) * 0.5f + nx, yc - 6f + (py - yc + 6f) * 0.5f + ny, px, py)
+                        q.quadTo(cx + (px - cx) * 0.5f - nx, yc - 6f + (py - yc + 6f) * 0.5f - ny, cx, yc - 6f); q.close()
+                        c.drawPath(q, if (ang == -90.0) claro else flor)
+                    }
+                    c.drawCircle(cx, yc - 6f, 2.4f, L.relleno(L.terciario))
+                    y += 64f
+                }
+                TemaId.GALIA -> {
+                    // La onda de La Tène, que suelta un zarcillo con su botón en cada cresta, corre de orilla a orilla y se abre
+                    // en medio para el torques de oro, con la torsión marcada y sus dos remates que se miran.
+                    val yc = yy + 26f
+                    val rr = 24f
+                    val tallo = L.trazo(L.primario, 2.2f)
+                    val boton = L.relleno(L.primario)
+                    val paso = 26f; val alto = 9f
+                    val onda = Path()
+                    var x = M; var arriba = true; var abierto = false
+                    while (x + paso / 2 <= W - M) {
+                        val xm = x + paso / 2
+                        if (abs(x - cx) > rr + 18f && abs(xm - cx) > rr + 18f) {
+                            val s = if (arriba) -1f else 1f
+                            if (!abierto) { onda.moveTo(x, yc); abierto = true }
+                            onda.cubicTo(x + paso * 0.15f, yc + s * alto, x + paso * 0.35f, yc + s * alto, xm, yc)
+                            c.drawCircle(x + paso * 0.3f, yc + s * alto * 0.3f, 2.4f, boton)
+                        } else abierto = false
+                        x = xm; arriba = !arriba
+                    }
+                    c.drawPath(onda, tallo)
+                    val oro = L.secundario
+                    c.drawArc(RectF(cx - rr, yc - rr, cx + rr, yc + rr), 113f, 314f, false, L.trazo(oro, 8f))
+                    val torsion = L.trazo(L.mezcla(oro, L.fondo, 0.45), 1.6f)
+                    var g = 125.0
+                    while (g < 415.0) {
+                        val a = Math.toRadians(g)
+                        val px = cx + rr * Math.cos(a).toFloat(); val py = yc + rr * Math.sin(a).toFloat()
+                        c.drawLine(px - 3f * Math.cos(a + 0.6).toFloat(), py - 3f * Math.sin(a + 0.6).toFloat(), px + 3f * Math.cos(a + 0.6).toFloat(), py + 3f * Math.sin(a + 0.6).toFloat(), torsion)
+                        g += 14.0
+                    }
+                    listOf(113.0, 67.0).forEach { gr ->
+                        val a = Math.toRadians(gr)
+                        c.drawCircle(cx + rr * Math.cos(a).toFloat(), yc + rr * Math.sin(a).toFloat(), 7f, L.relleno(oro))
+                    }
+                    y += 62f
+                }
+                TemaId.ARCONTES -> {
+                    // Como el título al final de un tratado del códice: dos filas de diplés que apuntan al centro y, en medio, las
+                    // siete esferas dentro del ouroboros, con la chispa en el centro.
+                    val yc = yy + 30f
+                    val rr = 30f
+                    val diple = L.trazo(L.primario, 2f)
+                    listOf(yc - 8f, yc + 8f).forEach { yd ->
+                        var x = M
+                        while (x + 8f <= W - M) {
+                            if (abs(x + 4f - cx) > rr + 16f) {
+                                val p = Path()
+                                if (x + 4f < cx) { p.moveTo(x, yd - 5f); p.lineTo(x + 6f, yd); p.lineTo(x, yd + 5f) } else { p.moveTo(x + 6f, yd - 5f); p.lineTo(x, yd); p.lineTo(x + 6f, yd + 5f) }
+                                c.drawPath(p, diple)
+                            }
+                            x += 12f
+                        }
+                    }
+                    for (k in 0 until 7) c.drawCircle(cx, yc, 6f + k * 3.2f, L.trazo(L.mezcla(L.terciario, L.fondo, 0.15 + 0.08 * k), 1f))
+                    c.drawArc(RectF(cx - rr, yc - rr, cx + rr, yc + rr), -45f, 330f, false, L.trazo(L.primario, 6f))
+                    val cabeza = Path().apply { addOval(RectF(cx + rr * 0.55f, yc - rr * 0.95f, cx + rr * 0.95f, yc - rr * 0.55f), Path.Direction.CW) }
+                    c.drawPath(cabeza, L.relleno(L.primario))
+                    c.drawCircle(cx + rr * 0.78f, yc - rr * 0.8f, 1.6f, L.relleno(L.fondo))
+                    c.drawCircle(cx, yc, 3.4f, L.relleno(L.terciario))
+                    y += 74f
+                }
+                TemaId.FRENTE -> {
+                    // El panel de la consola: a cada lado, una regleta curva con sus interruptores de palanca y sus pilotos; al
+                    // centro, la pantalla redonda del radar en su bisel, con la retícula, el barrido y dos ecos.
+                    val yc = yy + 32f
+                    val panel = L.relleno(L.mezcla(L.superficie2, L.tinta, 0.08))
+                    val borde = L.trazo(L.linea, 1.4f)
+                    val palanca = L.trazo(L.tenue, 2.4f)
+                    for (izquierda in listOf(true, false)) {
+                        val x0 = if (izquierda) M else cx + 42f; val x1 = if (izquierda) cx - 42f else W - M
+                        val r = RectF(x0, yc - 10f, x1, yc + 10f)
+                        c.drawRoundRect(r, 10f, 10f, panel); c.drawRoundRect(r, 10f, 10f, borde)
+                        var x = x0 + 18f; var k = 0
+                        while (x < x1 - 12f) {
+                            if (k % 4 == 3) {
+                                val luz = if (k % 8 == 3) L.primario else L.error
+                                c.drawCircle(x, yc, 6f, L.relleno(L.mezcla(luz, L.superficie2, 0.7))); c.drawCircle(x, yc, 3.4f, L.relleno(luz))
+                            } else {
+                                c.drawCircle(x, yc + 4f, 3.2f, L.relleno(L.tinta))
+                                c.drawLine(x, yc + 4f, x + (if (k % 2 == 0) 2.6f else -2.6f), yc - 6f, palanca)
+                            }
+                            x += 18f; k++
+                        }
+                    }
+                    val rr = 26f
+                    val pantalla = 0xFF0F1A16.toInt(); val radar = 0xFF9FD8A8.toInt()
+                    c.drawCircle(cx, yc, rr + 6f, L.relleno(L.mezcla(L.linea, L.tinta, 0.3)))
+                    c.drawCircle(cx, yc, rr, L.relleno(pantalla))
+                    val reticula = L.trazo(L.mezcla(radar, pantalla, 0.6), 1f)
+                    c.drawCircle(cx, yc, rr * 0.64f, reticula); c.drawCircle(cx, yc, rr * 0.3f, reticula)
+                    c.drawLine(cx - rr, yc, cx + rr, yc, reticula); c.drawLine(cx, yc - rr, cx, yc + rr, reticula)
+                    c.drawArc(RectF(cx - rr, yc - rr, cx + rr, yc + rr), -105f, 45f, true, L.relleno(L.mezcla(radar, pantalla, 0.78)))
+                    val a = Math.toRadians(-60.0)
+                    c.drawLine(cx, yc, cx + (rr * kotlin.math.cos(a)).toFloat(), yc + (rr * kotlin.math.sin(a)).toFloat(), L.trazo(radar, 1.8f))
+                    c.drawCircle(cx + 7f, yc - 14f, 2.4f, L.relleno(radar))
+                    c.drawCircle(cx - 13f, yc + 8f, 1.8f, L.relleno(L.mezcla(radar, pantalla, 0.45)))
+                    y += 74f
                 }
                 TemaId.REFUGIO -> {
                     // Optimismo atómico: el átomo al centro de una línea discontinua, como las marcas del pasillo del refugio.

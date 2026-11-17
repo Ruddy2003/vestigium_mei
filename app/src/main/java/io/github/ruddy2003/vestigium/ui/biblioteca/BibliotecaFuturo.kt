@@ -6065,17 +6065,25 @@ object EstanteOrden : DisenoBiblioteca {
 }
 
 /**
- * Laboratorio: el estante abierto sobre la mesa de trabajo, contra la pared de azulejo blanco. Arriba, pegada al azulejo, una
- * tabla periódica de cuadritos de color por bloques (sin letras); sobre la tabla de arriba del estante, los frascos de
- * reactivos: uno ámbar con su etiqueta de riesgo, uno de vidrio con líquido cian, la gradilla con sus tubos de ensayo, un
- * matraz Erlenmeyer con líquido violeta y la piseta de pico doblado; debajo de esa tabla, atornillada, la lámpara de luz
- * negra. Los postes son de acero pintado con su cremallera de ranuras, las tablas de melamina blanca con canto gris y ménsulas,
- * y cada mes va en una etiqueta impresa con su franja cian. Abajo, la mesa: la cubierta de resina negra con la llave del gas
- * y el mueble de cajones y puertas sobre el piso de vinilo. Cada entrada es un cuaderno de laboratorio de tapa dura de color,
- * con su lomo de tela negra, la etiqueta impresa con el día y el mes, el código de barras, la etiqueta de riesgo (un rombo
- * rojo con su señal) y pestañas de índice (más cuanto más escribiste). De noche se enciende la luz ultravioleta: los
- * líquidos y las etiquetas fluorescen y el cuaderno lleva una luna en lugar del rombo. Distinto del Ideario, que es el
- * armario clínico de muestras con el microscopio.
+ * Laboratorio: la estantería de los cuadernos en el despacho pequeño junto al laboratorio, donde se escribe y no se pipetea.
+ * La pared no tiene ventana: arriba, pintura mate gris verdosa con la canaleta de los cables y su regleta; de media altura
+ * abajo, azulejo blanco con su remate. La estantería es de cremallera (postes de acero pintado con sus ranuras y tornillos,
+ * ménsulas, tablas de melamina con canto de PVC, una desportillada) y cada mes va en una cinta de etiquetadora pegada al
+ * canto. Arriba, sobre la tabla alta: la centrífuga de sobremesa con la tapa abierta, sus tubos, su pantalla y sus pilotos;
+ * el flexo de brazo articulado apretado al canto; la caja de guantes con uno asomando, el rollo de cinta de etiquetas, la taza
+ * con la bolsita de té y un potos en un vaso de precipitados; en la pared, el reloj, un póster chico y torcido de la tabla
+ * periódica, notas adhesivas y, cortada por el borde, la bata colgada de su gancho. Bajo la tabla alta, el tubo de luz negra.
+ * Al pie, la encimera de resina negra con el teclado y la tableta, el mueble de cajones con uno entreabierto, el vinilo y el
+ * taburete con ruedas. En los huecos libres de las repisas, según su ancho: el sujetalibros de chapa, archivadores tumbados,
+ * la caja de puntas de pipeta y la lata de los bolígrafos. Hay tres tipos de entrada: el cuaderno de laboratorio de tapa dura
+ * (la tapa del color del ánimo, tela negra arriba y abajo, etiqueta impresa con el día, código de barras, rombo de riesgo y
+ * pestañas de índice que asoman), el archivador de palanca (más bajo, el lomo del color del ánimo, su ojal y los separadores
+ * que asoman) y la caja de archivo de cartón (la más alta, con su agarradero, la faja del color del ánimo y las hojas que
+ * asoman); lo escrito se ve en las pestañas, los separadores o las hojas. De noche el despacho se hunde en azul petróleo: el
+ * flexo encendido alumbra las dos primeras repisas, brillan la pantalla y los pilotos de la centrífuga, y lo de abajo se
+ * pierde salvo las etiquetas con el día. En los Sueños se enciende la luz negra: las etiquetas, las pestañas y los tapones
+ * fluorescen y el rombo cede su lugar a una luna. El dibujo del mueble y de las entradas está en [MuebleEstanteLaboratorio].
+ * Distinto del Ideario, que es el armario clínico de muestras con el microscopio.
  * La tapa del diario es el cuaderno de frente, con su etiqueta impresa, la de riesgo y la cinta de precaución; al
  * abrirse, deja ver la hoja cuadriculada.
  */
@@ -6087,7 +6095,6 @@ object EstanteLaboratorio : DisenoBiblioteca {
     private val GRIS_OSC = Color(0xFF6B7781)
     private val EPOXI = Color(0xFF22282D)
     private val MUEBLE = Color(0xFFD5DCE1)
-    private val VINILO = Color(0xFF9AA4AB)
     private val CIAN = Color(0xFF1FB5C9)
     private val VIOLETA = Color(0xFF7A4FD0)
     private val AMBAR = Color(0xFF8A4B14)
@@ -6123,227 +6130,24 @@ object EstanteLaboratorio : DisenoBiblioteca {
         else -> BLANCO
     }
 
-    override val corona = 0.34f
-    override val base = 0.16f
-    override val lado = 0.05f
-    override val altoRepisa: Dp = 110.dp
-    override val tabla: Dp = 14.dp
-    override val separa: Dp = 2.dp
+    override val corona = MuebleEstanteLaboratorio.CORONA
+    override val base = MuebleEstanteLaboratorio.BASE
+    override val lado = MuebleEstanteLaboratorio.LADO
+    override val altoRepisa: Dp = MuebleEstanteLaboratorio.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteLaboratorio.TABLA
+    override val separa: Dp = MuebleEstanteLaboratorio.SEPARA
     override val letra: FontFamily = LetraExtra.jost
+    /** Estante rehecho: el aura solo sale al tocar (ver [DisenoBiblioteca.auraEnReposo]). */
+    override val auraEnReposo = false
 
-    override fun ancho(palabras: Int): Dp = (22 + (palabras / 40).coerceAtMost(18)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.78f + 0.16f * azar(semilla, 6)
+    override fun ancho(palabras: Int): Dp = MuebleEstanteLaboratorio.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteLaboratorio.alto(semilla, palabras)
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // La pared de azulejo blanco, con sus juntas.
-        drawRect(c(AZULEJO), Offset.Zero, size)
-        val pieza = 16 * u
-        var jy = 0f
-        while (jy < h) { drawLine(c(JUNTA), Offset(0f, jy), Offset(w, jy), 0.8f * u); jy += pieza }
-        var jx = 0f
-        while (jx < w) { drawLine(c(JUNTA), Offset(jx, 0f), Offset(jx, h), 0.8f * u); jx += pieza }
-        // Cada repisa, abierta contra el azulejo: la sombra de la tabla de arriba.
-        d.repisas.forEach { r -> drawRect(Color.Black.copy(alpha = if (noche) 0.3f else 0.14f), r.topLeft, Size(r.width, 7 * u)) }
-        // Los postes de acero pintado, con su cremallera de ranuras.
-        listOf(d.izquierda, d.derecha).forEach { r ->
-            val p = Rect(r.left + r.width * 0.15f, d.corona.bottom - d.corona.height * 0.2f, r.right - r.width * 0.15f, d.base.top)
-            drawRect(c(GRIS), p.topLeft, p.size)
-            drawRect(Color.White.copy(alpha = 0.3f), p.topLeft, Size(p.width * 0.2f, p.height))
-            drawRect(c(GRIS_OSC).copy(alpha = 0.6f), Offset(p.right - p.width * 0.2f, p.top), Size(p.width * 0.2f, p.height))
-            var sy = p.top + 6 * u
-            while (sy < p.bottom - 6 * u) { drawRoundRect(c(GRIS_OSC), Offset(p.center.x - 1.2f * u, sy), Size(2.4f * u, 4.5f * u), CornerRadius(1.2f * u)); sy += 9 * u }
-        }
-        // Las tablas: melamina blanca con su canto gris y las ménsulas debajo.
-        d.tablas.forEach { r ->
-            drawRect(c(BLANCO), r.topLeft, r.size)
-            drawRect(c(GRIS), Offset(r.left, r.bottom - r.height * 0.35f), Size(r.width, r.height * 0.35f))
-            drawRect(Color.White.copy(alpha = 0.5f), r.topLeft, Size(r.width, 1.2f * u))
-            drawRect(Color.Black.copy(alpha = 0.16f), Offset(r.left, r.bottom), Size(r.width, 3 * u))
-            listOf(r.left to 1f, r.right to -1f).forEach { (x0, s) ->
-                drawPath(Path().apply { moveTo(x0, r.bottom); lineTo(x0 + s * 12 * u, r.bottom); lineTo(x0, r.bottom + 12 * u); close() }, c(GRIS_OSC))
-            }
-        }
-        // El rótulo de cada mes: una etiqueta impresa con su franja (de noche, fluorescente).
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRect(Color.Black.copy(alpha = 0.12f), Offset(r.left + 1 * u, r.top + 1 * u), r.size)
-            drawRect(papel(oscuro, noche), r.topLeft, r.size)
-            drawRect(if (noche) FLUOR else c(CIAN), r.topLeft, Size(r.height * 0.9f, r.height))
-            drawRect(c(GRIS), r.topLeft, r.size, style = Stroke(0.6f * u))
-            textoEn(medidor, p.texto, Rect(r.left + r.height * 1.2f, r.top, r.right - 3 * u, r.bottom), letra, c(TINTA), 10.5f, peso = FontWeight.Medium, espaciado = 0.4f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La mesa de trabajo: la cubierta de resina negra con la llave del gas y, debajo, el mueble de cajones y puertas.
-        val b = d.base
-        val cubierta = Rect(0f, b.top, w, b.top + b.height * 0.2f)
-        drawRect(c(EPOXI), cubierta.topLeft, cubierta.size)
-        drawRect(Color.White.copy(alpha = 0.12f), cubierta.topLeft, Size(w, 1.4f * u))
-        val gx = w * 0.12f
-        drawRoundRect(c(GRIS), Offset(gx - 3 * u, cubierta.center.y - 2.5f * u), Size(6 * u, 5 * u), CornerRadius(1 * u))
-        drawLine(c(AMARILLO), Offset(gx, cubierta.center.y), Offset(gx + 8 * u, cubierta.center.y), 2 * u, cap = StrokeCap.Round)
-        val piso = b.top + b.height * 0.86f
-        val mueble = Rect(w * 0.03f, cubierta.bottom, w * 0.97f, piso - b.height * 0.06f)
-        drawRect(c(MUEBLE), mueble.topLeft, mueble.size)
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(0f, cubierta.bottom), Size(w, 3 * u))
-        for (k in 0 until 3) {
-            val x0 = mueble.left + mueble.width * k / 3f + 2 * u
-            val x1 = mueble.left + mueble.width * (k + 1) / 3f - 2 * u
-            val cajon = Rect(x0, mueble.top + 4 * u, x1, mueble.top + mueble.height * 0.34f)
-            val puerta = Rect(x0, cajon.bottom + 3 * u, x1, mueble.bottom - 2 * u)
-            listOf(cajon, puerta).forEach { q ->
-                drawRect(c(BLANCO), q.topLeft, q.size)
-                drawRect(c(GRIS), q.topLeft, q.size, style = Stroke(0.7f * u))
-            }
-            drawRoundRect(c(GRIS_OSC), Offset(cajon.center.x - 8 * u, cajon.center.y - 1 * u), Size(16 * u, 2 * u), CornerRadius(1 * u))
-            drawRoundRect(c(GRIS_OSC), Offset(if (k % 2 == 0) puerta.right - 5 * u else puerta.left + 3 * u, puerta.top + 3 * u), Size(2 * u, 8 * u), CornerRadius(1 * u))
-        }
-        drawRect(c(GRIS_OSC), Offset(mueble.left + 4 * u, mueble.bottom), Size(mueble.width - 8 * u, piso - mueble.bottom))
-        drawRect(c(VINILO), Offset(0f, piso), Size(w, h - piso))
-        drawRect(Color.Black.copy(alpha = 0.18f), Offset(0f, piso), Size(w, 2 * u))
-        // De noche, la luz ultravioleta lo tiñe todo de violeta.
-        if (noche) drawRect(UV.copy(alpha = 0.08f), Offset.Zero, size)
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteLaboratorio) { estante(d, medidor, oscuro, noche) }
 
-    /** La tabla periódica, la tabla de arriba con los frascos y la lámpara de luz negra. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        /** Los líquidos: de día su color; de noche, fluorescentes. */
-        fun liquido(x: Color, brillo: Color) = if (noche) brillo else c(x)
-        // La tabla periódica pegada al azulejo: un cuadrito por elemento, por bloques de color, sin letras.
-        val cartel = Rect(r.left + r.width * 0.24f, r.top + r.height * 0.06f, r.right - r.width * 0.24f, r.top + r.height * 0.58f)
-        drawRect(Color.Black.copy(alpha = 0.12f), Offset(cartel.left + 1.5f * u, cartel.top + 1.5f * u), cartel.size)
-        drawRect(papel(oscuro, noche), cartel.topLeft, cartel.size)
-        val ins = cartel.deflate(4 * u)
-        val cw = ins.width / 18f; val ch = ins.height / 9.5f
-        fun celda(fila: Float, col: Int, k: Int) {
-            drawRect(c(BLOQUES[k]), Offset(ins.left + col * cw + 0.35f * u, ins.top + fila * ch + 0.35f * u), Size(cw - 0.7f * u, ch - 0.7f * u))
-        }
-        for (fila in 0 until 7) for (col in 0 until 18) {
-            val hay = when (fila) { 0 -> col == 0 || col == 17; 1, 2 -> col <= 1 || col >= 12; else -> true }
-            if (!hay) continue
-            val k = when {
-                fila == 0 && col == 0 -> 7
-                col == 0 -> 0
-                col == 1 -> 1
-                col == 2 && fila == 5 -> 5
-                col == 2 && fila == 6 -> 6
-                col <= 11 -> 2
-                col <= 16 -> 3
-                else -> 4
-            }
-            celda(fila.toFloat(), col, k)
-        }
-        for (col in 2 until 17) { celda(7.5f, col, 5); celda(8.5f, col, 6) }
-        // El título del cartel: una barra gris (forma, no letras).
-        drawRect(c(GRIS_OSC), Offset(ins.left + 3 * cw, ins.top + ch * 0.3f), Size(cw * 7, ch * 0.5f))
-        // La tabla de arriba del estante y la lámpara de luz negra atornillada debajo (de noche, encendida).
-        val tapa = Rect(r.left + r.width * 0.01f, r.bottom - r.height * 0.2f, r.right - r.width * 0.01f, r.bottom - r.height * 0.11f)
-        val lampara = Rect(r.left + r.width * 0.2f, tapa.bottom, r.right - r.width * 0.2f, tapa.bottom + r.height * 0.06f)
-        if (noche) mancha(Offset(lampara.center.x, lampara.bottom), r.width * 0.45f, UV.copy(alpha = 0.35f))
-        drawRect(c(GRIS_OSC), lampara.topLeft, lampara.size)
-        drawRoundRect(if (noche) Color(0xFFC9A8FF) else c(Color(0xFF4A3A70)), Offset(lampara.left + 3 * u, lampara.top + lampara.height * 0.35f), Size(lampara.width - 6 * u, lampara.height * 0.5f), CornerRadius(lampara.height * 0.25f))
-        drawRect(c(BLANCO), tapa.topLeft, tapa.size)
-        drawRect(c(GRIS), Offset(tapa.left, tapa.bottom - tapa.height * 0.35f), Size(tapa.width, tapa.height * 0.35f))
-        drawRect(Color.White.copy(alpha = 0.5f), tapa.topLeft, Size(tapa.width, 1.2f * u))
-        val y0 = tapa.top
-        val alto = r.height * 0.22f
-        // Un frasco ámbar de reactivo, con su tapa negra y su etiqueta con franja roja.
-        val f1 = Rect(r.left + r.width * 0.05f, y0 - alto, r.left + r.width * 0.12f, y0)
-        drawRoundRect(c(AMBAR), Offset(f1.left, f1.top + f1.height * 0.25f), Size(f1.width, f1.height * 0.75f), CornerRadius(f1.width * 0.18f))
-        drawRect(c(AMBAR), Offset(f1.center.x - f1.width * 0.22f, f1.top + f1.height * 0.1f), Size(f1.width * 0.44f, f1.height * 0.2f))
-        drawRect(c(TINTA), Offset(f1.center.x - f1.width * 0.28f, f1.top), Size(f1.width * 0.56f, f1.height * 0.12f))
-        val e1 = Rect(f1.left + f1.width * 0.12f, f1.top + f1.height * 0.48f, f1.right - f1.width * 0.12f, f1.top + f1.height * 0.82f)
-        drawRect(papel(oscuro, noche), e1.topLeft, e1.size)
-        drawRect(c(ROJO), e1.topLeft, Size(e1.width, e1.height * 0.25f))
-        drawRect(Color.White.copy(alpha = 0.22f), Offset(f1.left + f1.width * 0.15f, f1.top + f1.height * 0.3f), Size(f1.width * 0.1f, f1.height * 0.6f))
-        // Un frasco de vidrio con líquido cian y su tapa blanca.
-        val f2 = Rect(r.left + r.width * 0.135f, y0 - alto * 0.8f, r.left + r.width * 0.2f, y0)
-        drawRoundRect(Color.White.copy(alpha = 0.35f), Offset(f2.left, f2.top + f2.height * 0.2f), Size(f2.width, f2.height * 0.8f), CornerRadius(f2.width * 0.15f))
-        drawRoundRect(liquido(CIAN, FLUOR), Offset(f2.left + 1 * u, f2.top + f2.height * 0.5f), Size(f2.width - 2 * u, f2.height * 0.5f - 1 * u), CornerRadius(f2.width * 0.12f))
-        drawRoundRect(c(GRIS_OSC), Offset(f2.left, f2.top + f2.height * 0.2f), Size(f2.width, f2.height * 0.8f), CornerRadius(f2.width * 0.15f), style = Stroke(0.8f * u))
-        drawRect(c(BLANCO), Offset(f2.center.x - f2.width * 0.25f, f2.top), Size(f2.width * 0.5f, f2.height * 0.2f))
-        // La gradilla con sus tubos de ensayo.
-        val gr = Rect(r.center.x - r.width * 0.12f, y0 - alto * 0.8f, r.center.x + r.width * 0.12f, y0)
-        listOf(CIAN to FLUOR, VIOLETA to FLUOR_ROSA, AMARILLO to FLUOR, ROJO to FLUOR_ROSA, CIAN to FLUOR).forEachIndexed { k, (dia, brillo) ->
-            val tx = gr.left + gr.width * (0.12f + 0.19f * k)
-            val tubo = Rect(tx - 2.5f * u, gr.top, tx + 2.5f * u, gr.bottom - 1 * u)
-            drawRoundRect(Color.White.copy(alpha = 0.4f), tubo.topLeft, tubo.size, CornerRadius(2.5f * u))
-            val nivel = 0.35f + 0.3f * ((k * 37) % 10) / 10f
-            drawRoundRect(liquido(dia, brillo), Offset(tubo.left + 0.6f * u, tubo.bottom - tubo.height * nivel), Size(tubo.width - 1.2f * u, tubo.height * nivel - 0.6f * u), CornerRadius(2 * u))
-            drawRoundRect(c(GRIS_OSC), tubo.topLeft, tubo.size, CornerRadius(2.5f * u), style = Stroke(0.6f * u))
-        }
-        drawRect(c(GRIS), Offset(gr.left - 2 * u, gr.top + gr.height * 0.35f), Size(gr.width + 4 * u, 3 * u))
-        drawRect(c(GRIS), Offset(gr.left - 2 * u, gr.bottom - 3 * u), Size(gr.width + 4 * u, 3 * u))
-        listOf(gr.left - 2 * u, gr.right).forEach { x -> drawRect(c(GRIS_OSC), Offset(x, gr.top + gr.height * 0.35f), Size(2 * u, gr.height * 0.65f)) }
-        // El matraz Erlenmeyer con su líquido violeta y su tapón de corcho.
-        val m = Rect(r.right - r.width * 0.2f, y0 - alto, r.right - r.width * 0.11f, y0)
-        val matraz = Path().apply {
-            moveTo(m.center.x - m.width * 0.14f, m.top + m.height * 0.12f); lineTo(m.center.x + m.width * 0.14f, m.top + m.height * 0.12f)
-            lineTo(m.center.x + m.width * 0.14f, m.top + m.height * 0.38f); lineTo(m.right, m.bottom - 1 * u)
-            lineTo(m.left, m.bottom - 1 * u); lineTo(m.center.x - m.width * 0.14f, m.top + m.height * 0.38f); close()
-        }
-        drawPath(matraz, Color.White.copy(alpha = 0.35f))
-        clipPath(matraz) { drawRect(liquido(VIOLETA, FLUOR_ROSA), Offset(m.left, m.top + m.height * 0.64f), Size(m.width, m.height * 0.36f)) }
-        drawPath(matraz, c(GRIS_OSC), style = Stroke(0.8f * u))
-        drawRect(c(CORCHO), Offset(m.center.x - m.width * 0.12f, m.top), Size(m.width * 0.24f, m.height * 0.14f))
-        // La piseta, con su anillo de color y su pico doblado.
-        val pi = Rect(r.right - r.width * 0.095f, y0 - alto * 0.75f, r.right - r.width * 0.035f, y0)
-        drawRoundRect(c(BLANCO).copy(alpha = 0.9f), Offset(pi.left, pi.top + pi.height * 0.22f), Size(pi.width, pi.height * 0.78f), CornerRadius(pi.width * 0.3f))
-        drawRect(if (noche) FLUOR else c(CIAN), Offset(pi.left, pi.top + pi.height * 0.22f), Size(pi.width, pi.height * 0.12f))
-        drawLine(c(GRIS_OSC), Offset(pi.center.x, pi.top + pi.height * 0.22f), Offset(pi.center.x, pi.top + pi.height * 0.05f), 1.4f * u)
-        drawLine(c(GRIS_OSC), Offset(pi.center.x, pi.top + pi.height * 0.05f), Offset(pi.left - pi.width * 0.3f, pi.top + pi.height * 0.12f), 1.2f * u)
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val base = TAPAS[(v.semilla and 0x7fffffff) % TAPAS.size]
-        val tapa = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        // La tapa dura de color, con el lomo de tela negra arriba y abajo.
-        drawRoundRect(tapa, Offset.Zero, size, CornerRadius(1.2f * u))
-        drawRect(Color.White.copy(alpha = 0.1f), Offset(w * 0.06f, 0f), Size(w * 0.1f, h))
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(w * 0.86f, 0f), Size(w * 0.14f, h))
-        drawRect(c(EPOXI), Offset.Zero, Size(w, h * 0.045f))
-        drawRect(c(EPOXI), Offset(0f, h * 0.88f), Size(w, h * 0.12f))
-        // Las pestañas de índice en el canto: más cuanto más escribiste.
-        val pestanas = 1 + (v.lleno * 4).toInt()
-        for (j in 0 until pestanas) drawRect(c(BLOQUES[(j + (v.semilla ushr 2)) % 5]), Offset(w * 0.88f, h * (0.46f + 0.08f * j)), Size(w * 0.12f, h * 0.05f))
-        // La etiqueta impresa: la franja cian, el día grande y el mes.
-        val eti = Rect(w * 0.12f, h * 0.08f, w * 0.84f, h * 0.36f)
-        drawRect(papel(oscuro, v.noche), eti.topLeft, eti.size)
-        drawRect(if (v.noche) FLUOR else c(CIAN), eti.topLeft, Size(eti.width, eti.height * 0.14f))
-        textoEn(medidor, v.dia, Rect(eti.left, eti.top + eti.height * 0.16f, eti.right, eti.top + eti.height * 0.66f), letra, c(TINTA), 14f, peso = FontWeight.SemiBold)
-        textoEn(medidor, v.mes, Rect(eti.left + 0.5f * u, eti.top + eti.height * 0.66f, eti.right - 0.5f * u, eti.bottom - 0.5f * u), letra, c(TINTA).copy(alpha = 0.8f), 7f, minimo = 4f)
-        // El código de barras.
-        val cb = Rect(w * 0.12f, h * 0.4f, w * 0.84f, h * 0.53f)
-        drawRect(papel(oscuro, v.noche), cb.topLeft, cb.size)
-        var bx = cb.left + 1.5f * u; var k = 0
-        while (bx < cb.right - 1.5f * u) {
-            val g = (if (azar(v.semilla, 50 + k) > 0.5f) 1.2f else 0.6f) * u
-            drawRect(c(TINTA), Offset(bx, cb.top + 1 * u), Size(g, cb.height - 2 * u))
-            bx += g + (0.6f + azar(v.semilla, 80 + k)) * u; k++
-        }
-        // La etiqueta de riesgo: un rombo de borde rojo con su señal (barra y punto); de noche, una luna y dos estrellas.
-        val rc = Offset(w * 0.47f, h * 0.71f)
-        val rs = minOf(w * 0.3f, 8 * u)
-        if (v.noche) {
-            drawCircle(PAPEL_UV, rs * 0.6f, rc)
-            drawCircle(tapa, rs * 0.5f, Offset(rc.x + rs * 0.3f, rc.y - rs * 0.18f))
-            drawCircle(FLUOR, 0.8f * u, Offset(rc.x - rs * 0.7f, rc.y + rs * 0.6f))
-            drawCircle(FLUOR, 0.7f * u, Offset(rc.x + rs * 0.75f, rc.y + rs * 0.75f))
-        } else {
-            val rombo = Path().apply { moveTo(rc.x, rc.y - rs); lineTo(rc.x + rs, rc.y); lineTo(rc.x, rc.y + rs); lineTo(rc.x - rs, rc.y); close() }
-            drawPath(rombo, papel(oscuro, false))
-            drawPath(rombo, c(ROJO), style = Stroke(1.4f * u))
-            drawRoundRect(c(TINTA), Offset(rc.x - 0.7f * u, rc.y - rs * 0.5f), Size(1.4f * u, rs * 0.65f), CornerRadius(0.7f * u))
-            drawCircle(c(TINTA), 0.8f * u, Offset(rc.x, rc.y + rs * 0.42f))
-        }
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteLaboratorio) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 

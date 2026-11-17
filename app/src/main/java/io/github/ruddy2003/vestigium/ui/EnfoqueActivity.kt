@@ -55,6 +55,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -656,6 +657,262 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 drawLine(parpado, q, q + d * (6 * u / l), 1.5f * u)
             }
         }
+        // El disco que suena: el vinilo gira y la aguja va entintando sus surcos en el sentido del reloj. Alrededor, dieciséis
+        // pistas que se marcan una a una: en la ciudad, las rayas del dial de la radio, sobrias, con su sombra café corta; en
+        // la tinta, los rayos que ondulan del disco hecho sol, corridos de registro en el secundario. Al cerrar la vuelta, los
+        // surcos salen en las tintas del cartel (en la ciudad, en los colores de la etiqueta y del papel de foto).
+        TemaId.PSICODELIA -> {
+            val noche = e.background.luminance() < 0.5f
+            val ciudad = EstadoTema.cara == Cara.BASE
+            val n = 16
+            val rp = (R - 4 * u) * 0.16f
+            val rc = R - 4 * u - rp
+            val fuera = rc - rp - 1.5f * u; val dentro = fuera - 14 * u
+            val medio = (fuera + dentro) / 2; val banda = fuera - dentro
+            val vibra = e.secondary
+            val corrido = (if (p >= 1f) 2.2f else 1.6f) * u
+            val sector = 2f * Math.PI.toFloat() / n
+            for (k in 0 until n) {
+                // El ángulo del centro de la pista (en radianes, desde arriba en el sentido del reloj).
+                val a = ((k + 0.5f) / n * 360f - 90f) * Math.PI.toFloat() / 180f
+                val ya = pasado(k, n)
+                if (ciudad) {
+                    val q0 = en((k + 0.5f) / n, rc - rp); val q1 = en((k + 0.5f) / n, rc + rp)
+                    if (ya) drawLine(TrazosCiudad.SOMBRA.copy(alpha = 0.3f), q0 + Offset(0.8f * u, 1f * u), q1 + Offset(0.8f * u, 1f * u), 3.2f * u, StrokeCap.Round)
+                    drawLine(if (ya) color else pista, q0, q1, if (ya) 3.2f * u else 1.4f * u, StrokeCap.Round)
+                } else {
+                    // Un rayo: una cuña que ondula una vez a lo largo (como los de [PiezasPsicodelia.corona]).
+                    val ancho = sector * 0.42f; val ondea = sector * 0.18f
+                    val rayo = Path().apply {
+                        for (s in 0..12) {
+                            val f = s / 12f; val rr = rc - rp + 2 * rp * f
+                            val b = a + ondea * sin(2f * Math.PI.toFloat() * f * 0.9f) - ancho * (0.5f + 0.25f * f) / 2f
+                            if (s == 0) moveTo(c.x + rr * cos(b), c.y + rr * sin(b)) else lineTo(c.x + rr * cos(b), c.y + rr * sin(b))
+                        }
+                        for (s in 12 downTo 0) {
+                            val f = s / 12f; val rr = rc - rp + 2 * rp * f
+                            val b = a + ondea * sin(2f * Math.PI.toFloat() * f * 0.9f) + ancho * (0.5f + 0.25f * f) / 2f
+                            lineTo(c.x + rr * cos(b), c.y + rr * sin(b))
+                        }
+                        close()
+                    }
+                    if (ya) {
+                        translate(corrido, corrido * 0.6f) { drawPath(rayo, vibra) }
+                        drawPath(rayo, color)
+                    } else drawPath(rayo, pista, style = Stroke(1.1f * u))
+                }
+            }
+            // El vinilo, con su canto y el borde de la etiqueta; dentro, la etiqueta apenas teñida del color del bloque.
+            val negro = Color(0xFF1E1916)
+            val vinilo = if (noche) androidx.compose.ui.graphics.lerp(negro, Color.White, 0.05f) else negro
+            drawCircle(color.copy(alpha = if (noche) 0.03f else 0.06f), dentro, c)
+            drawCircle(vinilo, medio, c, style = Stroke(banda))
+            drawCircle(Color.White.copy(alpha = if (noche) 0.1f else 0.16f), fuera - 0.6f * u, c, style = Stroke(1.2f * u))
+            drawCircle(tenue.copy(alpha = 0.35f), dentro - 1.2f * u, c, style = Stroke(1f * u))
+            // El brillo que gira con el disco.
+            val giro = p * 720f
+            for (m in listOf(0f, 180f)) drawArc(Color.White.copy(alpha = if (noche) 0.08f else 0.13f), giro + m - 108f, 36f, false,
+                Offset(c.x - medio, c.y - medio), Size(medio * 2, medio * 2), style = Stroke(banda))
+            // Los surcos: lo que ya sonó se entinta en el color del bloque; al cerrar la vuelta, cada surco sale en una tinta.
+            val tinta = if (ciudad) listOf(TrazosCiudad.ETIQUETA, TrazosCiudad.LUZ_BAJA, TrazosCiudad.CASA_PINTADA, TrazosCiudad.SOL_VELADO)
+                else listOf(TrazosTinta.Tinta.MAGENTA, TrazosTinta.Tinta.BERMELLON, TrazosTinta.Tinta.ULTRAMAR, TrazosTinta.Tinta.MAGENTA).map { TrazosTinta.tinta(it, noche, EstadoTema.intensidad) }
+            if (p > 0f && p < 1f) arco(color.copy(alpha = 0.22f), 0f, p, medio, banda)
+            for (i in 0 until 4) {
+                val rs = dentro + banda * (0.2f + 0.2f * i)
+                drawCircle(Color.White.copy(alpha = 0.09f), rs, c, style = Stroke(0.7f * u))
+                if (p >= 1f) drawCircle(tinta[i], rs, c, style = Stroke(1.9f * u))
+                else arco(color, 0f, p, rs, 1.7f * u, StrokeCap.Round)
+            }
+            // La aguja: la punta del brazo del tocadiscos, del color del bloque, con su brillo, donde va sonando.
+            if (p > 0f && p < 1f) {
+                val q = en(p, medio)
+                drawCircle(color.copy(alpha = 0.3f), 8 * u, q)
+                drawCircle(androidx.compose.ui.graphics.lerp(color, Color.White, 0.2f), 4.2f * u, q)
+                drawCircle(Color.White.copy(alpha = 0.8f), 1.4f * u, Offset(q.x - 1.5f * u, q.y - 1.5f * u))
+            }
+        }
+        // El tallo que da la vuelta: se enrosca al aro de fundición de una entrada de metro, echa hojas conforme pasa el
+        // bloque y lo sujetan cuatro ataduras de oro; delante vuela la libélula. Arriba espera el capullo de iris, que florece
+        // al cerrar la vuelta, y la libélula se posa a su lado.
+        TemaId.NOUVEAU -> {
+            val noche = e.background.luminance() < 0.5f
+            val sombra = androidx.compose.ui.graphics.lerp(color, e.background, if (noche) 0.45f else 0.35f)
+            val hierro = if (noche) androidx.compose.ui.graphics.lerp(TrazosNouveau.HIERRO, Color.White, 0.18f) else TrazosNouveau.HIERRO
+            val oro = if (noche) TrazosNouveau.ORO else e.tertiary
+            // El aro de fundición que sostiene el tallo: dos filetes, el de fuera más firme.
+            val aro = r + g * 0.2f
+            drawCircle(hierro.copy(alpha = if (noche) 0.7f else 0.45f), aro, c, style = Stroke(2.2f * u))
+            drawCircle(hierro.copy(alpha = if (noche) 0.3f else 0.18f), r - g * 0.75f, c, style = Stroke(0.8f * u))
+            // El tallo: ondula despacio alrededor del aro; lo que falta, apenas marcado.
+            fun radio(f: Float) = aro + sin(f * 2 * Math.PI.toFloat() * 9) * g * 0.38f
+            val todo = List(241) { i -> en(i / 240f, radio(i / 240f)) }
+            drawPath(Path().apply { todo.forEachIndexed { i, q -> if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y) } }, pista, style = Stroke(1.4f * u))
+            // Las hojas, alternas por fuera y por dentro: sale cada una cuando el tallo pasa por ella; las que faltan, una yema.
+            val n = 18
+            for (k in 0 until n) {
+                val f = (k + 0.5f) / n
+                val base = en(f, radio(f))
+                val crece = ((p - f) / 0.035f).coerceIn(0f, 1f)
+                if (crece <= 0f) { drawCircle(pista, 1.8f * u, base); continue }
+                val s = if (k % 2 == 0) 1f else -1f
+                val a = Math.toRadians(f * 360.0 - 90.0)
+                val fuera = Offset(cos(a).toFloat(), sin(a).toFloat()); val avance = Offset(-sin(a).toFloat(), cos(a).toFloat())
+                val l = 17 * u * crece
+                val punta = base + avance * (l * 0.8f) + fuera * (s * l * 0.55f)
+                drawPath(with(TrazosNouveau) { hojaLanza(base, punta, l * 0.4f, 0.16f * s) }, if (s > 0) color else sombra)
+            }
+            if (p > 0f) {
+                val m = maxOf(2, (240 * p).toInt() + 1)
+                val pts = todo.subList(0, minOf(m, todo.size))
+                val grueso = 3.8f * u
+                with(TrazosNouveau) {
+                    drawPath(cinta(pts) { t -> grueso * (0.35f + 0.65f * ((1f - t) * pts.size / 14f).coerceIn(0f, 1f)) }, color)
+                    // El brillo del tallo, del lado de la luz.
+                    drawPath(cinta(pts.map { Offset(it.x - 0.5f * u, it.y - 0.6f * u) }) { t -> grueso * 0.28f * ((1f - t) * pts.size / 20f).coerceIn(0f, 1f) },
+                        androidx.compose.ui.graphics.lerp(color, Color.White, 0.4f).copy(alpha = 0.5f))
+                }
+            }
+            // Las cuatro ataduras de oro que sujetan el tallo al aro, a cada cuarto.
+            for (k in 0 until 4) {
+                val q = en(k / 4f, aro)
+                drawCircle(if (k / 4f <= p && p > 0f) oro else pista, 3.2f * u, q)
+                drawCircle(e.background, 1.2f * u, q)
+            }
+            // Arriba, el capullo de iris que espera; al cerrar la vuelta, florece.
+            val cima = en(0f, aro)
+            val flor = if (noche) androidx.compose.ui.graphics.lerp(TrazosNouveau.IRIS, Color.White, 0.3f) else TrazosNouveau.IRIS
+            with(TrazosNouveau) {
+                if (p >= 1f) {
+                    val fc = Offset(cima.x, cima.y - 7 * u)
+                    listOf(-0.5f, 0.5f, 0f).forEach { ang ->
+                        val q = Offset(fc.x + sin(ang) * 14 * u, fc.y - cos(ang) * 14 * u * (if (ang == 0f) 1.1f else 0.85f))
+                        drawPath(petalo(fc, q, 10.5f * u), if (ang == 0f) androidx.compose.ui.graphics.lerp(flor, Color.White, 0.25f) else flor)
+                    }
+                    listOf(-1.15f, 1.15f).forEach { ang ->
+                        val q = Offset(fc.x + sin(ang) * 15 * u, fc.y - cos(ang) * 15 * u + 4 * u)
+                        drawPath(petalo(Offset(fc.x, fc.y + u), q, 11.5f * u), androidx.compose.ui.graphics.lerp(flor, Color.Black, 0.22f))
+                        drawLine(TrazosNouveau.IRIS_LENGUA, Offset(fc.x, fc.y + u), Offset(fc.x + (q.x - fc.x) * 0.4f, fc.y + u + (q.y - fc.y - u) * 0.4f), 1.6f * u, StrokeCap.Round)
+                    }
+                    drawCircle(androidx.compose.ui.graphics.lerp(flor, Color.Black, 0.45f), 2.2f * u, fc)
+                } else {
+                    drawPath(petalo(Offset(cima.x, cima.y + 2 * u), Offset(cima.x + 1.5f * u, cima.y - 12 * u), 7.5f * u), flor.copy(alpha = if (p > 0f) 0.85f else 0.5f))
+                    drawPath(hojaLanza(Offset(cima.x, cima.y + 2 * u), Offset(cima.x - 6 * u, cima.y - 7 * u), 4 * u, -0.2f), sombra)
+                }
+                // La libélula vuela delante del tallo; al terminar, se posa junto a la flor.
+                val alas = if (noche) TrazosNouveau.NACAR.copy(alpha = 0.9f) else TrazosNouveau.NACAR
+                val contorno = if (noche) null else TrazosNouveau.PLUMA.copy(alpha = 0.45f)
+                if (p >= 1f) libelula(en(0.075f, aro + g * 0.3f), 23 * u, 60f, 0.2f, ala = alas, contorno = contorno)
+                else libelula(en(p + 0.03f, aro - 2 * u), 25 * u, p * 360f + 90f, 0.6f, ala = alas, contorno = contorno)
+            }
+        }
+        // El torques de oro, abierto abajo: el aro sin luz se va dorando del primer remate al segundo conforme pasa el
+        // bloque; por dentro, la cuenta en el color del bloque, con la marca que parte en dos los meses de Coligny
+        // (ATENOVX) arriba; en el hueco, la hoguera que se aviva. Al cerrar la vuelta se encienden los dos remates.
+        TemaId.GALIA -> {
+            val noche = e.background.luminance() < 0.5f
+            val gr = 7.5f * u
+            val hueco = 44f; val inicio = 90f + hueco / 2; val barrido = 360f - hueco
+            with(TrazosGalia) {
+                torques(c, r, gr, androidx.compose.ui.graphics.lerp(ORO, e.background, if (noche) 0.72f else 0.6f),
+                    androidx.compose.ui.graphics.lerp(ORO_BRILLO, e.background, if (noche) 0.7f else 0.55f))
+            }
+            if (p > 0f) {
+                val cuna = Path().apply {
+                    moveTo(c.x, c.y)
+                    arcTo(Rect(c, R * 1.2f), inicio - 14f, 14f + (barrido + 14f) * p, false)
+                    close()
+                }
+                clipPath(cuna) { with(TrazosGalia) { torques(c, r, gr) } }
+            }
+            val ri = r - 15 * u
+            val esqi = Offset(c.x - ri, c.y - ri); val ladoi = Size(ri * 2, ri * 2)
+            drawArc(pista, inicio, barrido, false, esqi, ladoi, style = Stroke(2.5f * u, cap = StrokeCap.Round))
+            if (p > 0f) drawArc(color, inicio, barrido * p, false, esqi, ladoi, style = Stroke(3.2f * u, cap = StrokeCap.Round))
+            val mitad = en(0f, ri)
+            drawLine(if (p >= 0.5f) color else tenue.copy(alpha = 0.55f), Offset(mitad.x, mitad.y - 5 * u), Offset(mitad.x, mitad.y + 5 * u), 1.4f * u, StrokeCap.Round)
+            val a = Math.toRadians((inicio + barrido * p).toDouble())
+            val punta = Offset(c.x + ri * cos(a).toFloat(), c.y + ri * sin(a).toFloat())
+            if (p > 0f && p < 1f) { drawCircle(color.copy(alpha = 0.25f), 6 * u, punta); drawCircle(color, 3.4f * u, punta) }
+            with(TrazosGalia) { hoguera(Offset(c.x, c.y + r + 2f * u), 23 * u, p) }
+            if (p >= 1f) for (ang in listOf(inicio, inicio + barrido)) {
+                val rad = Math.toRadians(ang.toDouble())
+                val q = Offset(c.x + r * cos(rad).toFloat(), c.y + r * sin(rad).toFloat())
+                drawCircle(TrazosGalia.ORO_BRILLO.copy(alpha = if (noche) 0.22f else 0.3f), gr * 1.7f, q)
+                drawCircle(TrazosGalia.ORO_BRILLO.copy(alpha = if (noche) 0.3f else 0.4f), gr * 1.15f, q)
+            }
+        }
+        // El ouroboros, la serpiente que se muerde la cola: el cuerpo, tenue, se enciende de la cola a la nuca conforme pasa
+        // el bloque y, al cerrar la vuelta, la cabeza muerde la cola. Por dentro, las siete esferas, muy tenues detrás de la
+        // cuenta (las ya cruzadas, en el violeta de la grieta), y la chispa del alma que sube de una a otra.
+        TemaId.ARCONTES -> {
+            val noche = e.background.luminance() < 0.5f
+            val grueso = g * 0.62f; val cabeza = -90f; val hueco = 16f; val inicio = cabeza + hueco / 2
+            val esq = Offset(c.x - r, c.y - r); val lado = Size(r * 2, r * 2)
+            val r0 = r * 0.52f; val r6 = r - g * 0.95f
+            fun esfera(k: Int) = r0 + (r6 - r0) * k / 6f
+            for (k in 0 until 7) drawCircle(if (pasado(k, 7)) e.tertiary.copy(alpha = if (noche) 0.3f else 0.24f) else tenue.copy(alpha = 0.12f), esfera(k), c, style = Stroke(0.8f * u))
+            with(TrazosArcontes) { ouroboros(c, r, grueso, tenue.copy(alpha = if (noche) 0.22f else 0.16f), cabeza) }
+            // Lo recorrido, con el mismo grosor que el cuerpo: fino en la cola, grueso en la nuca.
+            val hasta = -90f + p * 360f
+            val pasos = 72
+            for (i in 0 until pasos) {
+                val t0 = i / pasos.toFloat()
+                val a0 = inicio + t0 * (360f - hueco)
+                if (a0 >= hasta) break
+                val barrido = minOf((360f - hueco) / pasos + 0.6f, hasta - a0)
+                drawArc(color, a0, barrido, false, esq, lado, style = Stroke(grueso * (0.35f + 0.65f * t0)))
+            }
+            if (p >= 1f) with(TrazosArcontes) { ouroboros(c, r, grueso, color, cabeza, escamas = e.background.copy(alpha = 0.45f)) }
+            else {
+                // Los anillos del lomo, a lo largo de toda la serpiente.
+                var a = inicio + 12f
+                while (a < inicio + 360f - hueco - 8f) {
+                    val gr = grueso * (0.35f + 0.65f * (a - inicio) / (360f - hueco))
+                    val f = (a + 90f) / 360f
+                    drawLine(e.background.copy(alpha = 0.35f), en(f, r - gr * 0.32f), en(f, r + gr * 0.32f), 0.8f * u)
+                    a += 10f
+                }
+            }
+            val q = en(p, esfera((p * 7).toInt().coerceIn(0, 6)))
+            // De noche, la chispa blanca del tema; de día, en el violeta de la grieta, para que se vea sobre la caliza.
+            if (noche) with(TrazosArcontes) { chispa(q, 5.5f * u) }
+            else {
+                drawCircle(e.tertiary.copy(alpha = 0.16f), 6 * u, q)
+                drawCircle(e.tertiary.copy(alpha = 0.3f), 3.4f * u, q)
+                drawCircle(e.tertiary, 1.7f * u, q)
+            }
+        }
+        // La perilla de sintonía de la consola: la falda de baquelita moleteada con su filo de cromo y la raya de hueso que
+        // gira con el bloque; por dentro, el aro de pilotos ámbar que se encienden uno a uno, roto arriba, donde espera el
+        // piloto rojo que se prende al cerrar la transmisión.
+        TemaId.FRENTE -> {
+            val noche = e.background.luminance() < 0.5f
+            val baquelita = if (noche) Color(0xFF34302B) else Color(0xFF2A2622)
+            val cromo = Color(0xFFB9B6AE)
+            val rf = r + g * 0.45f
+            drawCircle(baquelita.copy(alpha = if (noche) 0.95f else 0.88f), rf, c, style = Stroke(g * 0.9f))
+            for (k in 0 until 60) { val f = k / 60f; drawLine(Color.Black.copy(alpha = 0.32f), en(f, rf + g * 0.05f), en(f, rf + g * 0.42f), 1.1f * u) }
+            arco(Color.White.copy(alpha = if (noche) 0.07f else 0.12f), 0.83f, 1.05f, rf - g * 0.2f, 2 * u)
+            drawCircle(cromo.copy(alpha = 0.75f), rf - g * 0.45f, c, style = Stroke(1.3f * u))
+            drawCircle(cromo.copy(alpha = 0.35f), R - 0.6f * u, c, style = Stroke(0.8f * u))
+            drawLine(Color(0xFFE7E1D4), en(p, rf - g * 0.3f), en(p, rf + g * 0.4f), 2.6f * u, StrokeCap.Round)
+            val n = 20; val rl = r - 7 * u
+            for (k in 0 until n) {
+                val f = 0.05f + 0.9f * k / (n - 1); val q = en(f, rl)
+                if (p > 0f && f <= p) {
+                    drawCircle(color.copy(alpha = if (noche) 0.3f else 0.2f), 6.5f * u, q)
+                    drawCircle(color, 3.2f * u, q)
+                    drawCircle(Color.White.copy(alpha = 0.6f), 1.1f * u, Offset(q.x - u, q.y - u))
+                } else {
+                    drawCircle(pista, 3.2f * u, q)
+                    drawCircle(tenue.copy(alpha = 0.35f), 3.2f * u, q, style = Stroke(0.8f * u))
+                }
+            }
+            val rojo = en(0f, rl)
+            if (p >= 1f) drawCircle(Color(0xFFD9372B).copy(alpha = 0.3f), 7 * u, rojo)
+            drawCircle(if (p >= 1f) Color(0xFFD9372B) else Color(0xFFD9372B).copy(alpha = 0.3f), 3.6f * u, rojo)
+            drawCircle(cromo.copy(alpha = 0.6f), 4.6f * u, rojo, style = Stroke(u))
+        }
         // Medidor de aguja de tres cuartos de vuelta, con la zona roja al final y la aguja corta en la orilla.
         TemaId.REFUGIO -> {
             val ini = 135f; val barrido = 270f
@@ -1187,6 +1444,76 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
         TemaId.DISTOPIA -> {
             addRect(Rect(x, y, x + w, y + h))
             if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
+        }
+        // La ciudad: una placa de la ventanilla del trolebús, con las esquinas redondas de la cara. La tinta: un tramo del
+        // marco de arco del cartel, arriba redondo y abajo casi recto.
+        TemaId.PSICODELIA -> {
+            if (EstadoTema.cara == Cara.BASE) addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(x, y, x + w, y + h), CornerRadius(minOf(h / 2, w / 2, 11f * u))))
+            else addPath(TrazosTinta.arco(Rect(x, y, x + w, y + h), minOf(h / 2, w / 2), minOf(2f * u, h / 4)))
+        }
+        // Un tramo de tallo: el borde de arriba ondula despacio y dos esquinas opuestas se redondean, como las del tema.
+        TemaId.NOUVEAU -> {
+            val rr = minOf(h / 2, w / 2)
+            val a = h * 0.14f
+            moveTo(x, y + h); lineTo(x, y + rr)
+            quadraticTo(x, y, x + rr, y)
+            // El borde de arriba ondula como un tallo, una onda cada tres alturas.
+            val paso = maxOf(h * 3f, 6f * u)
+            var xx = x + rr
+            while (xx < x + w - 1f) {
+                val sig = minOf(xx + paso / 2, x + w)
+                quadraticTo((xx + sig) / 2, y + (if (((xx - x - rr) / (paso / 2)).toInt() % 2 == 0) -a else a), sig, y)
+                xx = sig
+            }
+            lineTo(x + w, y + h - rr); quadraticTo(x + w, y + h, x + w - rr, y + h)
+            close()
+        }
+        // Un tramo de torques: la barra torcida, con los surcos de la torsión arriba y abajo, entre dos remates de disco;
+        // las piezas muy cortas quedan en una moneda.
+        TemaId.GALIA -> {
+            val rc = h / 2; val b = h * 0.36f; val cy = y + h / 2
+            if (w < h * 2.6f) addOval(Rect(x + maxOf(0f, (w - h) / 2), y, x + maxOf(0f, (w - h) / 2) + minOf(w, h), y + h))
+            else {
+                val dx = sqrt(rc * rc - b * b)
+                val ang = Math.toDegrees(Math.asin((b / rc).toDouble())).toFloat()
+                val x0 = x + rc; val x1 = x + w - rc
+                val paso = maxOf(h * 0.95f, 4f * u); val hondo = b * 0.32f
+                arcTo(Rect(Offset(x0, cy), rc), ang, 360f - 2 * ang, true)
+                var xx = x0 + dx + paso * 0.5f
+                while (xx + paso * 0.5f < x1 - dx) { lineTo(xx, cy - b); lineTo(xx + paso * 0.22f, cy - b + hondo); lineTo(xx + paso * 0.44f, cy - b); xx += paso }
+                lineTo(x1 - dx, cy - b)
+                arcTo(Rect(Offset(x1, cy), rc), 180f + ang, 360f - 2 * ang, false)
+                xx = x1 - dx - paso * 0.5f
+                while (xx - paso * 0.5f > x0 + dx) { lineTo(xx, cy + b); lineTo(xx - paso * 0.22f, cy + b - hondo); lineTo(xx - paso * 0.44f, cy + b); xx -= paso }
+                lineTo(x0 + dx, cy + b)
+                close()
+            }
+        }
+        // Un sillar de caliza con el arco pequeño de los nichos arriba y, en los tramos largos, la grieta fina por donde pasa
+        // la luz.
+        TemaId.ARCONTES -> {
+            val a = minOf(h * 0.45f, w / 2)
+            moveTo(x, y + h); lineTo(x, y + a); quadraticTo(x, y, x + a, y); lineTo(x + w - a, y); quadraticTo(x + w, y, x + w, y + a); lineTo(x + w, y + h); close()
+            if (w > h * 2f) {
+                val gx = x + w * 0.7f; val d = maxOf(0.6f * u, h * 0.04f); val k = h * 0.1f
+                val espina = listOf(0f to 0.14f, 0.6f to 0.36f, -0.4f to 0.56f, 0.3f to 0.74f, -0.1f to 0.88f)
+                val ancho = listOf(0f, 1f, 1.2f, 0.7f, 0f)
+                espina.forEachIndexed { i, (ox, f) -> val px = gx + ox * k + d * ancho[i]; val py = y + h * f; if (i == 0) moveTo(px, py) else lineTo(px, py) }
+                for (i in espina.indices.reversed()) { val (ox, f) = espina[i]; lineTo(gx + ox * k - d * ancho[i], y + h * f) }
+                close()
+                fillType = PathFillType.EvenOdd
+            }
+        }
+        // El cartucho de datos: la esquina de arriba cortada y, en los tramos largos, la muesca de protección abajo. Sin la
+        // ventana de la etiqueta: en la tira, tan baja, el hueco se leía como una letra.
+        TemaId.FRENTE -> {
+            val k = minOf(h * 0.35f, w / 3)
+            moveTo(x, y); lineTo(x + w - k, y); lineTo(x + w, y + k); lineTo(x + w, y + h)
+            if (w > h * 3f) {
+                val nw = h * 0.5f; val nd = h * 0.22f; val n0 = x + h * 0.5f
+                lineTo(n0 + nw, y + h); lineTo(n0 + nw, y + h - nd); lineTo(n0, y + h - nd); lineTo(n0, y + h)
+            }
+            lineTo(x, y + h); close()
         }
         TemaId.REFUGIO -> addRoundRect(RoundRect(x, y, x + w, y + h, CornerRadius(minOf(h, w) / 2)))
         TemaId.ORDEN -> {

@@ -348,6 +348,9 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                     cambiar { it.copy(sonidos = v) }
                     if (v) io.github.ruddy2003.vestigium.ui.Sentidos.preparar(ctx)
                 }
+                // Parte 8 (esquema 27, encargo B): el ambiente del cuadro al abrir el cuento. No depende de «Sonidos»: tiene su
+                // propio interruptor y solo calla con el teléfono en silencio o en vibración (`ReglasAmbiente`).
+                Interruptor("Ambiente del cuadro", c.ambiente_cuadro, "Al abrir el cuento suena el lugar de su cuadro, suave.", explica = "Al abrir el cuento suena, suave y en bucle, el lugar de su cuadro: el río, la lluvia, el taller. Suena aunque «Sonidos» esté apagado. Se calla al salir del cuento, al apagar la pantalla, con una llamada y con el teléfono en silencio o en vibración. También se apaga con el altavoz del cuadro.") { v -> cambiar { it.copy(ambiente_cuadro = v) } }
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
                     io.github.ruddy2003.vestigium.ui.Sentidos.Evento.entries.filter { it.name in setOf("TOQUE", "ELEGIR", "PASAR", "ABRIR", "GUARDAR", "LOGRO") }
                         .map { it.name.lowercase() to it }.forEach { (n, e) ->
@@ -381,13 +384,13 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
             }
         }
         if (parte == "avisos") Seccion("Sonido de las notificaciones", "Cada tema suena a su manera.",
-            explica = "Cada tema suena a su manera, siempre grave y solemne: campanas, órgano, coros, synthwave. Los avisos de ánimo usan un sonido corto; el diario, los sueños, las cartas y los cuestionarios, uno más largo.") {
+            explica = "Cada tema suena a su manera, siempre grave y solemne: campanas, órgano, coros, synthwave. Lo breve usa un sonido corto: el ánimo, el fin de un bloque, los recordatorios, los lugares y los respaldos. El diario, los sueños, las cartas, los cuestionarios y el reporte listo, uno más largo.") {
             Tarjeta {
-                Interruptor("Usar el sonido del tema", c.sonido_avisos, "Si lo apagas, suena el del teléfono.", explica = "Si lo apagas, suenan con el sonido normal del teléfono. Si silencias un tipo de aviso en los ajustes de Android, sigue en silencio aunque cambies de tema.") { v ->
+                Interruptor("Usar el sonido del tema", c.sonido_avisos, "Si lo apagas, suena el del teléfono.", explica = "Si lo apagas, suenan con el sonido normal del teléfono. Si silencias un tipo de aviso en los ajustes de Android (Sonido: ninguno), sigue en silencio aunque cambies de tema. Para que vuelva a sonar, elige ahí cualquier sonido: desde el siguiente cambio de tema vuelve el del tema.") { v ->
                     cambiar { it.copy(sonido_avisos = v) }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
-                    listOf("probar aviso" to io.github.ruddy2003.vestigium.avisos.Avisos.CANAL_ANIMO, "probar solemne" to io.github.ruddy2003.vestigium.avisos.Avisos.CANAL_DIARIO).forEach { (n, canal) ->
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
+                    listOf("probar aviso" to io.github.ruddy2003.vestigium.avisos.Avisos.CANAL_ANIMO, "probar solemne" to io.github.ruddy2003.vestigium.avisos.Avisos.CANAL_DIARIO, "probar historia" to io.github.ruddy2003.vestigium.avisos.Avisos.CANAL_HISTORIA).forEach { (n, canal) ->
                         BotonSecundario(n) {
                             io.github.ruddy2003.vestigium.avisos.Avisos.sonido(canal)?.let { r ->
                                 runCatching {
@@ -405,6 +408,8 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
         if (parte == "avisos") Seccion("Avisos de ánimo durante el día", "Horas al azar dentro de la ventana.", explica = "Horas aleatorias dentro de la ventana, separadas entre sí. Lo aleatorio evita que solo registres los momentos predecibles.") {
             Tarjeta {
                 Interruptor("Avisos activos", c.avisos) { v -> cambiar { it.copy(avisos = v) } }
+                // Parte 8 (esquema 27, encargo A): el aviso del día especial de un personaje que sigues.
+                Interruptor("Días especiales de quien sigues", c.avisos_historia, "Un aviso cuando un personaje que sigues tiene un día especial.") { v -> cambiar { it.copy(avisos_historia = v) } }
                 Etiqueta("Avisos por día: ${c.muestreos_por_dia}")
                 Deslizador(value = c.muestreos_por_dia.toFloat(), onValueChange = { v -> cambiar { it.copy(muestreos_por_dia = v.toInt(), plan_muestreo = emptyMap()) } }, valueRange = 0f..6f, steps = 5)
                 Etiqueta("Ventana: de ${c.ventana_inicio}:00 a ${c.ventana_fin}:00")
@@ -977,8 +982,9 @@ private fun DriveTarjeta(tarea: (suspend () -> String) -> Unit) {
 }
 
 /**
- * Claro, oscuro o como el teléfono. Está en Apariencia y arriba en «Más» (13 nov 2026; antes, además, el sol o la luna iba
- * junto al título de cada pantalla y amontonaba el encabezado). El tema que solo existe en oscuro lo dice.
+ * Claro, oscuro, como el teléfono o según la hora (16 nov 2026). Está en Apariencia y arriba en «Más» (13 nov 2026; antes,
+ * además, el sol o la luna iba junto al título de cada pantalla y amontonaba el encabezado). Con cuatro fichas ya no caben
+ * en una línea: bajan a la siguiente, como las demás filas de fichas de Ajustes. El tema que solo existe en oscuro lo dice.
  */
 @Composable
 fun SelectorModo(modifier: Modifier = Modifier) {
@@ -986,12 +992,20 @@ fun SelectorModo(modifier: Modifier = Modifier) {
     if (tema.soloOscuro) { Ayuda("El tema ${tema.nombre} solo existe en oscuro.", modifier); return }
     val ctx = LocalContext.current
     val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
-    Row(modifier, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        listOf("sistema" to "Como el teléfono", "claro" to "Claro", "oscuro" to "Oscuro").forEach { (id, nombre) ->
-            Ficha(nombre, Repo.config.modo == id) {
-                sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.CAMBIO)
-                Repo.cambiarConfig { it.copy(modo = id) }; runCatching { Widgets.actualizar(ctx) }
+    Column(modifier) {
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            listOf("sistema" to "Como el teléfono", "claro" to "Claro", "oscuro" to "Oscuro", "hora" to "Según la hora").forEach { (id, nombre) ->
+                Ficha(nombre, Repo.config.modo == id) {
+                    sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.CAMBIO)
+                    // Con «hora», que el primer cuadro ya salga con la hora de ahora.
+                    if (id == "hora") io.github.ruddy2003.vestigium.ui.RelojModo.actualizar()
+                    Repo.cambiarConfig { it.copy(modo = id) }; runCatching { Widgets.actualizar(ctx) }
+                }
             }
+        }
+        if (Repo.config.modo == "hora") {
+            val o = io.github.ruddy2003.vestigium.ui.ModoHora.OSCURECE; val a = io.github.ruddy2003.vestigium.ui.ModoHora.AMANECE
+            Ayuda("Claro de $a:00 a $o:00 y oscuro de $o:00 a $a:00; cambia solo.", Modifier.padding(top = 6.dp))
         }
     }
 }

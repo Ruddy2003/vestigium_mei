@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Frente exterior: el panel de la consola de noche, en penumbra, con la curva grande de las consolas, un filete hueso apagado, tres pilotos (dos ámbar y uno rojo), el emblema (la chispa en el círculo roto) y abajo la escala de una pantalla de radar. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F71A1F23"/>
+            <stroke android:width="1.5dp" android:color="#4A5259"/>
+            <corners android:radius="13dp"/>
+        </shape>
+    </item>
+    <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.8dp" android:color="#55A69E8E"/>
+            <corners android:radius="9.5dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="4.5dp" android:height="4.5dp" android:top="9dp" android:left="11dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFF2A33A"/>
+            <stroke android:width="0.6dp" android:color="#FF2A2622"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="4.5dp" android:height="4.5dp" android:top="9dp" android:left="18dp">
+        <shape android:shape="oval">
+            <solid android:color="#88F2A33A"/>
+            <stroke android:width="0.6dp" android:color="#FF2A2622"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="4.5dp" android:height="4.5dp" android:top="9dp" android:left="25dp">
+        <shape android:shape="oval">
+            <solid android:color="#FFD9372B"/>
+            <stroke android:width="0.6dp" android:color="#FF2A2622"/>
+        </shape>
+    </item>
+    <item android:gravity="top|right" android:width="14dp" android:height="14dp" android:top="5dp" android:right="7dp">
+        <vector android:width="14dp" android:height="14dp" android:viewportWidth="16" android:viewportHeight="16">
+            <path android:pathData="M13.99,6.4 A6.2,6.2 0 1,1 9.6,2.01" android:strokeColor="#FFF0A04B" android:strokeWidth="1.3" android:strokeLineCap="round"/>
+            <path android:pathData="M6.84,9.16 L10.37,5.63 M6.12,8.9 L5.83,5.52 M7.1,9.88 L10.48,10.17" android:strokeColor="#FFF0A04B" android:strokeWidth="1.2" android:strokeLineCap="round"/>
+        </vector>
+    </item>
+    <item android:gravity="bottom|fill_horizontal" android:height="4dp" android:left="14dp" android:right="14dp" android:bottom="3dp">
+        <shape android:shape="line">
+            <stroke android:width="3dp" android:color="#668FC79A" android:dashWidth="0.8dp" android:dashGap="5dp"/>
+        </shape>
+    </item>
+</layer-list>

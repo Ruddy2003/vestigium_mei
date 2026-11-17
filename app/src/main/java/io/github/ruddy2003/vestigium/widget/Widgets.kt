@@ -21,6 +21,10 @@ import io.github.ruddy2003.vestigium.ui.MainActivity
 import io.github.ruddy2003.vestigium.ui.QuickActivity
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.Cara
+import io.github.ruddy2003.vestigium.ui.ModoHora
+import io.github.ruddy2003.vestigium.ui.caraSegun
+import java.time.LocalTime
 
 /** Widgets siempre oscuros, con los colores y rótulos del tema elegido. */
 object Widgets {
@@ -67,6 +71,41 @@ object Widgets {
             0xFFE0262F.toInt(), 0xFFE8E6E0.toInt(), 0xFFA8A8A1.toInt(), 0xFF4A4D50.toInt(),
             intArrayOf(0xFFE0262F.toInt(), 0xFFD45A5E.toInt(), 0xFFC79A98.toInt(), 0xFFE8E6E0.toInt(), 0xFFC4CACE.toInt(), 0xFFA9B4BB.toInt(), 0xFF8E9CA5.toInt()),
             0xFF222527.toInt(), 0xFFFFFFFF.toInt())
+        // Psicodelia tiene dos caras (`docs/diseno/temas/psicodelia.md`): la elige la hora cada vez que se pinta el widget (la
+        // tarea de 15 minutos lo vuelve a pintar), nunca un consumo. Las dos, en oscuro.
+        TemaId.PSICODELIA -> when (caraSegun(TemaId.PSICODELIA, ModoHora.esDeNoche(LocalTime.now()), 0f)) {
+            // La ciudad: el cuarto de noche con la lámpara de pantalla. La luz de la pantalla, el papel claro a su luz y, en el
+            // ánimo, del rojo de letrero al verde de fieltro.
+            Cara.BASE -> Colores(R.drawable.widget_fondo_psicodelia, R.drawable.widget_boton_psicodelia, R.drawable.widget_boton_activo_psicodelia, R.drawable.widget_boton_ambar_psicodelia,
+                0xFFE8975A.toInt(), 0xFFEEE3D0.toInt(), 0xFFB9AA94.toInt(), 0xFF54463A.toInt(),
+                intArrayOf(0xFFFF8E84.toInt(), 0xFFF4AE96.toInt(), 0xFFEFCBB0.toInt(), 0xFFEEE3D0.toInt(), 0xFFD0D8BC.toInt(), 0xFFB9CBA6.toInt(), 0xFFA3BB93.toInt()),
+                0xFF2F251D.toInt(), 0xFF2A1103.toInt())
+            // El cartel de luz negra: el magenta, el crema del papel y, en el ánimo, del bermellón al ultramar.
+            Cara.INTENSA -> Colores(R.drawable.widget_fondo_psicodelia_tinta, R.drawable.widget_boton_psicodelia_tinta, R.drawable.widget_boton_activo_psicodelia_tinta, R.drawable.widget_boton_ambar_psicodelia_tinta,
+                0xFFDD80A4.toInt(), 0xFFF3E9D6.toInt(), 0xFFB9AFC4.toInt(), 0xFF3A3350.toInt(),
+                intArrayOf(0xFFFF8E70.toInt(), 0xFFF5AA92.toInt(), 0xFFEFCBB6.toInt(), 0xFFF3E9D6.toInt(), 0xFFCFD2E6.toInt(), 0xFFB1BAE0.toInt(), 0xFF94A1DB.toInt()),
+                0xFF211B2B.toInt(), 0xFF2B0716.toInt())
+        }
+        // La misma París de noche: la luz eléctrica, el papel crema a su luz y, en el ánimo, de la amapola al verde de los cafés.
+        TemaId.NOUVEAU -> Colores(R.drawable.widget_fondo_nouveau, R.drawable.widget_boton_nouveau, R.drawable.widget_boton_activo_nouveau, R.drawable.widget_boton_ambar_nouveau,
+            0xFFE8C46E.toInt(), 0xFFECE5D6.toInt(), 0xFFADA79A.toInt(), 0xFF3E4548.toInt(),
+            intArrayOf(0xFFE57F7A.toInt(), 0xFFD99BB4.toInt(), 0xFFD2BEDC.toInt(), 0xFFECE5D6.toInt(), 0xFFC8DDB8.toInt(), 0xFFA6CFA6.toInt(), 0xFF7FC39B.toInt()),
+            0xFF1A1E22.toInt(), 0xFF2B1E00.toInt())
+        // El robledal de noche: la hoguera, la lana clara a su luz y, en el ánimo, de las brasas al roble bajo la luna.
+        TemaId.GALIA -> Colores(R.drawable.widget_fondo_galia, R.drawable.widget_boton_galia, R.drawable.widget_boton_activo_galia, R.drawable.widget_boton_ambar_galia,
+            0xFFEBA53F.toInt(), 0xFFE6E1CF.toInt(), 0xFFA2A78F.toInt(), 0xFF3A4636.toInt(),
+            intArrayOf(0xFFE8735A.toInt(), 0xFFE99778.toInt(), 0xFFE6BC9E.toInt(), 0xFFE6E1CF.toInt(), 0xFFC9D6B0.toInt(), 0xFFB2CC98.toInt(), 0xFF9DC383.toInt()),
+            0xFF1E261C.toInt(), 0xFF2A1700.toInt())
+        // La noche de Galilea: la llama de la lámpara, lino a su luz y, en el ánimo, del rojo del jaspe al lago bajo la luna.
+        TemaId.ARCONTES -> Colores(R.drawable.widget_fondo_arcontes, R.drawable.widget_boton_arcontes, R.drawable.widget_boton_activo_arcontes, R.drawable.widget_boton_ambar_arcontes,
+            0xFFE9B04F.toInt(), 0xFFECE4CF.toInt(), 0xFFA09CB0.toInt(), 0xFF343A5A.toInt(),
+            intArrayOf(0xFFFF8A7A.toInt(), 0xFFF9A896.toInt(), 0xFFF2C6B3.toInt(), 0xFFECE4CF.toInt(), 0xFFCAD6CE.toInt(), 0xFFA8C9CC.toInt(), 0xFF86BBCB.toInt()),
+            0xFF1C2038.toInt(), 0xFF2B1A00.toInt())
+        // La consola de noche, con las luces bajas: pilotos ámbar, rótulos color hueso y, en el ánimo, del rojo de botón al verde de radar.
+        TemaId.FRENTE -> Colores(R.drawable.widget_fondo_frente, R.drawable.widget_boton_frente, R.drawable.widget_boton_activo_frente, R.drawable.widget_boton_ambar_frente,
+            0xFFF0A04B.toInt(), 0xFFE7E1D4.toInt(), 0xFFA8A49A.toInt(), 0xFF3A4249.toInt(),
+            intArrayOf(0xFFFF7A6E.toInt(), 0xFFF79C90.toInt(), 0xFFEFBFB2.toInt(), 0xFFE7E1D4.toInt(), 0xFFCAD8C1.toInt(), 0xFFACD0AD.toInt(), 0xFF8FC79A.toInt()),
+            0xFF252B30.toInt(), 0xFF2A1600.toInt())
         TemaId.REFUGIO -> Colores(R.drawable.widget_fondo_refugio, R.drawable.widget_boton_refugio, R.drawable.widget_boton_activo_refugio, R.drawable.widget_boton_ambar_refugio,
             0xFF3DFF7F.toInt(), 0xFF9CF5B0.toInt(), 0xFF55B872.toInt(), 0xFF1C3A24.toInt(),
             intArrayOf(0xFFFFB23F.toInt(), 0xFFE0B04A.toInt(), 0xFFB8C060.toInt(), 0xFF9CF5B0.toInt(), 0xFF7CF098.toInt(), 0xFF5CF88A.toInt(), 0xFF3DFF7F.toInt()),
@@ -210,6 +249,11 @@ object Widgets {
         TemaId.MEDIEVAL -> "Agora" to "Scriptura"
         TemaId.TEMPLARIO -> "Vigilia" to "Al rol"
         TemaId.DISTOPIA -> "CONTROL" to "FORMULARIO"
+        TemaId.PSICODELIA -> "Ahora suena" to "Al periódico"
+        TemaId.NOUVEAU -> "En el taller" to "Al carnet"
+        TemaId.GALIA -> "Junto al fuego" to "A la tablilla"
+        TemaId.ARCONTES -> "En esta hora" to "Al códice"
+        TemaId.FRENTE -> "SEÑAL" to "TELETIPO"
         TemaId.REFUGIO -> "CHEQUEO" to "ENTRADA"
         TemaId.ORDEN -> "RELEVO" to "ACTA"
         TemaId.VAPOR -> "A todo vapor" to "Al cuaderno"
@@ -253,6 +297,11 @@ object Widgets {
             TemaId.MEDIEVAL -> R.font.gotica_regular to 1.1f
             TemaId.TEMPLARIO -> R.font.cruzada_titulo to 1.0f
             TemaId.DISTOPIA -> R.font.oswald_medium to 1.05f
+            TemaId.PSICODELIA -> R.font.franklin_semibold to 1.0f   // Libre Franklin SemiBold: rótulos y cifras en las dos caras
+            TemaId.NOUVEAU -> R.font.vitrina_regular to 1.04f     // Della Respira, la de los rótulos
+            TemaId.GALIA -> R.font.ysabeau_semibold to 1.02f      // Ysabeau, la de los rótulos
+            TemaId.ARCONTES -> R.font.codice_regular to 1.0f       // Caudex, la letra de los códices
+            TemaId.FRENTE -> R.font.chivo_mono_medium to 1.0f       // las cifras de la consola, no la letra ancha de los títulos
             TemaId.REFUGIO -> R.font.vt323 to 1.35f
             TemaId.ORDEN -> R.font.saira_stencil to 1.0f
             TemaId.VAPOR -> R.font.caldera_titulo to 0.96f

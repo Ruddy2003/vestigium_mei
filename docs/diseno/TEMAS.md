@@ -51,6 +51,7 @@ Van en el orden de `TemaId` (el que usan las pruebas y las capturas).
 | 7 | Limpieza y cierre: sin `else`, sin ramas agrupadas, pruebas sin pendientes, todo en P | hecho 30 oct 2026 (queda el gato, del lote 9) |
 | 8 | Terminal y 13 temas nuevos (de 21 a 34) | hecho: 11 temas el 30 oct 2026; Vapor y Art déco, el 2 nov 2026 |
 | 9 | El gato de cada tema | hecho 2 nov 2026: los 21 originales completos (9a) y los 13 nuevos (9b) |
+| 10 | Cinco temas nuevos (de 34 a 39): Frente exterior, Arcontes, Galia, Art nouveau y Psicodelia | fichas escritas el 14 nov 2026 (`PLAN_TEMAS.md`, lote 10); sin programar. Primera tanda: Frente exterior. Sus cuadros, después de S19 |
 | Cuadro de Hoy | La escena, el gato y la banderita de cada tema (plan `docs/plan_historia_y_escenas.md`; aquí, la sección «Historia y escenas») | en curso: Helénico tiene escena y banderita desde la tanda P4a (11 nov 2026); Gótico y Ciudad neón, desde la P4b (11 nov 2026); el gato de los tres, con su pelaje, desde la P5b (12 nov 2026) |
 
 ## Resumen por tema

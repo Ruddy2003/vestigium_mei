@@ -271,6 +271,16 @@ class Pulso(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, param
             if (l.isNotEmpty()) Avisos.especial(ctx, l.map { io.github.ruddy2003.vestigium.data.Especiales.frase(it) })
         }
 
+        // Los días especiales de los personajes que sigues (parte 8): en el mismo horario, un solo aviso que junta a todos.
+        // No usa `disparos` (se olvidan a los 40 días): cada día especial se recuerda por su inicio en `historia_avisada`,
+        // así uno de 30 días avisa una sola vez (`HistoriaPendiente`).
+        intentar {
+            HistoriaPendiente.decidir(c, diaLog, ahora.hour)?.let { a ->
+                Repo.cambiarConfig { cc -> HistoriaPendiente.anotar(cc, a, Fechas.ahoraIso(), diaLog) }
+                Avisos.historia(ctx, a)
+            }
+        }
+
         // Lo de anoche: una hora después de tu hora de despertar, si quedó un consumo sin completar.
         if (ahora.hour >= (c.hora_sueno + 1).coerceAtMost(13) && ahora.hour < 15 && !yaFue("anoche:$hoy")) {
             val l = io.github.ruddy2003.vestigium.data.Sustancias.porCompletar(diaLog)

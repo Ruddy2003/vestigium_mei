@@ -34,6 +34,18 @@ Barlow (recortada) — Copyright 2017 The Barlow Project Authors (https://github
 Saira (instancias estáticas, recortadas) — Copyright 2020 The Saira Project Authors (https://github.com/Omnibus-Type/Saira)
 Caldera Vestigium — versión reducida y renombrada de Abril Fatface: Copyright (c) 2011, TypeTogether (www.type-together.com), with Reserved Font Names "Abril" and "Abril Fatface"
 Bitter (instancias estáticas, recortadas) — Copyright 2011 The Bitter Project Authors (https://github.com/solmatas/BitterPro)
+Michroma (recortada) — Copyright 2011 The Michroma Project Authors (https://github.com/googlefonts/Michroma-font)
+Chivo y Chivo Mono (instancias estáticas, recortadas) — Copyright 2019 The Chivo Project Authors (https://github.com/Omnibus-Type/Chivo)
+Codice Vestigium — versión reducida y renombrada de Caudex, con letras de Noto Serif Hebrew y Noto Sans Coptic añadidas: Copyright (c) 2011, Hjort Nidudsson (http://caudex.sf.net), with Reserved Font Name Caudex.
+Literata (instancias estáticas, recortadas, con letras de Noto Serif Hebrew y Noto Sans Coptic y algunos signos de Caudex añadidos) — Copyright 2017 The Literata Project Authors (https://github.com/googlefonts/literata)
+Noto Serif Hebrew y Noto Sans Coptic (sus letras hebreas y coptas, dentro de las dos anteriores) — Copyright 2022 The Noto Project Authors (https://github.com/notofonts/hebrew, https://github.com/notofonts/coptic)
+Piazzolla (instancias estáticas, recortadas) — Copyright 2018 The Piazzolla Project Authors (https://github.com/huertatipografica/piazzolla)
+Ysabeau (instancia estática, recortada) — Copyright 2023 The Ysabeau Project Authors (https://github.com/CatharsisFonts/Ysabeau)
+Cartel Vestigium — versión reducida y renombrada de Federant, con algunos signos de Brygada 1918 añadidos: Copyright (c) 2011, Cyreal (www.cyreal.org), with Reserved Font Name 'Federant'.
+Vitrina Vestigium — versión reducida y renombrada de Della Respira, con algunos signos de Brygada 1918 añadidos: Copyright (c) 2011-2012, Nathan Willis (nwillis@glyphography.com), with Reserved Font Names "Della Respira".
+Brygada 1918 (instancias estáticas, recortadas) — Copyright 2020 The Brygada 1918 Project Authors (https://github.com/kosmynkab/Brygada-1918)
+Libre Franklin (instancias estáticas, recortadas) — Copyright 2020 The Libre Franklin Project Authors (https://github.com/googlefonts/Libre-Franklin)
+Bloque Vestigium — versión reducida y renombrada de Chango: Copyright (c) 2011 Fontstage (info@fontstage.com), with Reserved Font Name "Chango"
 Old Standard TT (recortada) — Copyright 2011 The Old Standard Project Authors (amkryukov@gmail.com)
 Poiret One (recortada) — Copyright 2011 The Poiret One Project Authors (https://github.com/alexeiva/poiretone)
 Pasaje Vestigium — instancias estáticas, reducidas y renombradas de Josefin Sans: Copyright 2010 The Josefin Sans Project Authors (https://github.com/ThomasJockin/JosefinSansFont-master), with Reserved Font Name "Josefin Sans".

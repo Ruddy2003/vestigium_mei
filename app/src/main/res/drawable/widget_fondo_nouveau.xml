@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Art nouveau: la misma París de noche, en el azul negro de la calle, con las esquinas del marco de un cartel (dos muy redondas y dos casi rectas) y un filete fino de la luz eléctrica; arriba a la izquierda, una lámpara de vidrio de Nancy encendida (la pantalla violeta que se funde en ámbar, sobre su pie de hierro verde); arriba a la derecha, el farol de una entrada de metro de Guimard (desde 1901), colgado de su tallo de hierro; abajo a la derecha, la línea de látigo en oro pálido, que se enrosca, con una hoja de salvia. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#F7121519"/>
+            <stroke android:width="1.5dp" android:color="#3E4548"/>
+            <corners android:topLeftRadius="14dp" android:topRightRadius="3.5dp" android:bottomRightRadius="14dp" android:bottomLeftRadius="3.5dp"/>
+        </shape>
+    </item>
+    <item android:top="4dp" android:left="4dp" android:right="4dp" android:bottom="4dp">
+        <shape android:shape="rectangle">
+            <stroke android:width="0.8dp" android:color="#55E8C46E"/>
+            <corners android:topLeftRadius="10.5dp" android:topRightRadius="2dp" android:bottomRightRadius="10.5dp" android:bottomLeftRadius="2dp"/>
+        </shape>
+    </item>
+    <item android:gravity="top|left" android:width="16dp" android:height="16dp" android:top="3dp" android:left="8dp">
+        <vector android:width="16dp" android:height="16dp" android:viewportWidth="16" android:viewportHeight="16">
+            <path android:pathData="M8,-0.6 a7.2,7.2 0 1,1 0,14.4 a7.2,7.2 0 1,1 0,-14.4" android:fillColor="#12FFE9B8"/>
+            <path android:pathData="M8,1.8 a4.8,4.8 0 1,1 0,9.6 a4.8,4.8 0 1,1 0,-9.6" android:fillColor="#22FFE9B8"/>
+            <path android:pathData="M3.2,9.7 a4.8,1.4 0 1,0 9.6,0 a4.8,1.4 0 1,0 -9.6,0" android:fillColor="#40F5D488"/>
+            <path android:pathData="M8,9.0 L8,13.2" android:strokeColor="#FF4E7258" android:strokeWidth="1.1" android:strokeLineCap="round"/>
+            <path android:pathData="M8,12.0 C9.2,12.0 9.8,11.2 9.4,10.6" android:strokeColor="#FF4E7258" android:strokeWidth="0.55" android:strokeLineCap="round"/>
+            <path android:pathData="M4.8,13.9 a3.2,0.95 0 1,0 6.4,0 a3.2,0.95 0 1,0 -6.4,0" android:fillColor="#FF3D5A48"/>
+            <path android:pathData="M5.8,13.55 a2.2,0.35 0 1,0 4.4,0 a2.2,0.35 0 1,0 -4.4,0" android:fillColor="#88D9BE7A"/>
+            <path android:pathData="M2.4,8.6 C2.6,4.6 5.0,2.2 8,2.2 C11.0,2.2 13.4,4.6 13.6,8.6 C11.8,9.4 10.0,8.6 8,9.3 C6.0,8.6 4.2,9.4 2.4,8.6 Z" android:fillColor="#FF7E5FA6"/>
+            <path android:pathData="M3.0,7.6 C4.6,8.2 6.0,7.7 8,8.3 C10.0,7.7 11.4,8.2 13.0,7.6 C13.2,8.1 13.4,8.4 13.6,8.6 C11.8,9.4 10.0,8.6 8,9.3 C6.0,8.6 4.2,9.4 2.4,8.6 C2.6,8.2 2.8,7.9 3.0,7.6 Z" android:fillColor="#AAD9A14A"/>
+            <path android:pathData="M4.4,7.6 C4.8,4.8 6.2,3.4 8,3.4 C9.8,3.4 11.2,4.8 11.6,7.6 C10.2,7.9 9.2,7.7 8,8.0 C6.8,7.7 5.8,7.9 4.4,7.6 Z" android:fillColor="#77B49AE0"/>
+            <path android:pathData="M5.0,7.1 a3.0,1.9 0 1,0 6.0,0 a3.0,1.9 0 1,0 -6.0,0" android:fillColor="#40FFE9B8"/>
+            <path android:pathData="M6.2,7.3 a1.8,1.1 0 1,0 3.6,0 a1.8,1.1 0 1,0 -3.6,0" android:fillColor="#88FFF3D6"/>
+            <path android:pathData="M4.6,4.6 C5.2,3.6 6.2,3.0 7.0,2.9" android:strokeColor="#88F2E8FA" android:strokeWidth="0.45" android:strokeLineCap="round"/>
+            <path android:pathData="M2.4,8.6 C4.2,9.4 6.0,8.6 8,9.3 C10.0,8.6 11.8,9.4 13.6,8.6" android:strokeColor="#FFD9BE7A" android:strokeWidth="0.5" android:strokeLineCap="round"/>
+            <path android:pathData="M8,1.15 a0.75,0.75 0 1,1 0,1.5 a0.75,0.75 0 1,1 0,-1.5" android:fillColor="#FFD9BE7A"/>
+        </vector>
+    </item>
+    <item android:gravity="top|right" android:width="15dp" android:height="15dp" android:top="4dp" android:right="7dp">
+        <vector android:width="15dp" android:height="15dp" android:viewportWidth="16" android:viewportHeight="16">
+            <path android:pathData="M4.8,3.4 a4.6,4.6 0 1,1 0,9.2 a4.6,4.6 0 1,1 0,-9.2" android:fillColor="#1CF2B55A"/>
+            <path android:pathData="M4.8,4.9 a3.1,3.1 0 1,1 0,6.2 a3.1,3.1 0 1,1 0,-6.2" android:fillColor="#30F2B55A"/>
+            <path android:pathData="M13.6,16.2 C14.5,10.2 13.4,4.6 9.8,2.7 C7.7,1.6 5.6,2.3 4.8,4.2" android:strokeColor="#FF4E7258" android:strokeWidth="1.2" android:strokeLineCap="round"/>
+            <path android:pathData="M13.9,11.8 C12.3,11.1 11.5,9.6 11.7,8.3 C12.9,9.0 13.7,10.2 13.9,11.8 Z" android:fillColor="#FF4E7258"/>
+            <path android:pathData="M4.8,4.6 C6.6,5.6 6.9,8.4 5.9,10.2 C5.5,10.9 5.1,11.2 4.8,11.4 C4.5,11.2 4.1,10.9 3.7,10.2 C2.7,8.4 3.0,5.6 4.8,4.6 Z" android:fillColor="#FFF2B55A"/>
+            <path android:pathData="M4.8,6.0 C5.8,6.8 5.9,8.6 5.3,9.7 C5.1,10.0 4.9,10.2 4.8,10.3 C4.7,10.2 4.5,10.0 4.3,9.7 C3.7,8.6 3.8,6.8 4.8,6.0 Z" android:fillColor="#FFFFE2A8"/>
+            <path android:pathData="M3.5,5.4 C4.1,4.3 5.5,4.3 6.1,5.4" android:strokeColor="#FF3D5A48" android:strokeWidth="1.0" android:strokeLineCap="round"/>
+            <path android:pathData="M4.8,11.3 L4.8,12.3" android:strokeColor="#FF3D5A48" android:strokeWidth="0.7" android:strokeLineCap="round"/>
+        </vector>
+    </item>
+    <item android:gravity="bottom|right" android:width="24dp" android:height="12dp" android:bottom="7.5dp" android:right="10dp">
+        <vector android:width="24dp" android:height="12dp" android:viewportWidth="24" android:viewportHeight="12">
+            <path android:pathData="M0,10.9 C6,11.1 13,10.5 17.4,8.7 C20.6,7.3 21.6,4.3 19.6,2.9 C17.8,1.7 15.6,2.9 16.0,4.9 C16.3,6.3 18.0,6.5 18.6,5.3" android:strokeColor="#B3D9BE7A" android:strokeWidth="0.8" android:strokeLineCap="round"/>
+            <path android:pathData="M8.6,10.8 C10.0,8.7 12.4,7.9 14.2,8.3 C12.8,9.9 10.8,10.8 8.6,10.8 Z" android:fillColor="#B38FA67E"/>
+            <path android:pathData="M18.6,5.3 a0.6,0.6 0 1,1 0.01,0" android:fillColor="#B3D9BE7A"/>
+        </vector>
+    </item>
+</layer-list>

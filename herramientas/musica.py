@@ -477,6 +477,318 @@ def hacer_abismo():
         P['abismo'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw), notificacion(T, lambda f, d: seno(f, d) * env(int(d * SR), 0.002, d * 0.55, 3), [18, 14, 22], 0.22, 0.8, 1.6))
         ARGS['abismo'] = (T, pz, ac, mel, kw)
 
+def hacer_frente():
+    # --- Frente exterior: Fa menor, un tema de espionaje tenso a 100 negras por minuto (melodía propia), con el color de
+    # la séptima mayor (Fa menor con Mi) y la novena menor del acorde de Do. Todo es un sintetizador analógico de los
+    # setenta: la melodía en sierras con filtro resonante, un arpegio lento que se abre y cierra, y un bajo de secuenciador
+    # que late en corcheas sobre un colchón de quintas. De fondo, el golpe sordo del bombo analógico, relés en el pulso
+    # débil, el teletipo que entra al empezar y el pitido de la consola al cerrar la transmisión. Con su propio azar.
+    with A.azar_propio('musica_frente'):
+        T = -4; pz = 0.6
+        ac = compases([0, 3, 7, 11], [-4, 0, 3, 7], [-5, -1, 2, 8], [0, 3, 7, 14])
+        mel = frase(0, "0:0.5 0:0.5 11:1.5 7:0.5 8:1 | 7:2 3:1 5:1 | 8:1.5 7:0.5 2:1 -1:1 | 0:3 r:1")
+        lead = lambda f, d: analogico(f, d, (500, 2600, 1300), 0.03, 0.25, 2.6, 0.012, 0.8, 0.4, 0.1, 0.004)
+        arp = lambda f, d: analogico(f, d, (300, 2200, 500), 0.006, 0.14, 3.2, 0.004, 0.0, 0.22, 0.1)
+        def bajo(f, d):
+            """El secuenciador: ocho corcheas por compás (raíz, octava y quinta), cada una con su filtro que se abre y se
+            cierra y con acentos; debajo, un colchón de quinta, una octava arriba, que entra despacio."""
+            paso = d / 8
+            pulsos = [(i * paso, analogico(f * 2 ** (s / 12), paso * 0.9, (180, 1300 * a, 220), 0.004, 0.06, 3.4, 0.003, 0.0, 0.1, 0.03), 0.9 * a)
+                      for i, (s, a) in enumerate(zip((0, 0, 12, 0, 0, 12, 0, 7), (1.0, 0.6, 0.8, 0.6, 0.9, 0.6, 0.8, 0.7)))]
+            colchon = [(0, analogico(f * 2 * 2 ** (s / 12), d, (200, 1100, 800), d * 0.5, d * 0.5, 1.4, 0.3, 1.0, 1.0, min(0.4, d * 0.2), 0.006), 0.22) for s in (0, 7)]
+            return mezclar(*pulsos, *colchon)
+        def ritmo(acordes, cierre=True):
+            """El bombo analógico en el uno y en el «y» del tres, relés en el dos y el cuatro, el teletipo que entra al empezar;
+            con [cierre], dos pitidos de la consola y el relé que corta el canal al final."""
+            out = [(0, teletipo(8, 12), 0.16)]
+            for (b, _, d) in acordes:
+                out += [(b, tambor(hz(T - 24), 0.3, 0.08), 0.4), (b + 2.5, tambor(hz(T - 24), 0.25, 0.08), 0.28),
+                        (b + 1, rele(0.8, hz(T + 36)), 0.3), (b + 3, rele(0.8, hz(T + 36)), 0.3)]
+            if cierre:
+                fin = acordes[-1][0]
+                out += [(fin + 2, consola(hz(T + 24), 0.07), 0.12), (fin + 2.25, consola(hz(T + 24), 0.07), 0.12), (fin + 3.5, rele(1.0, hz(T + 36)), 0.35)]
+            return out
+        kw = dict(inst_mel=lead, inst_ac=arp, arpegio=True, bajo=bajo, perc=ritmo(ac), g_mel=0.38, g_ac=0.42, g_bajo=0.4,
+                  oct_mel=0, oct_ac=-12, legato=0.92, cola=1.8, rev=0.3)
+        # La llamada solo toma los dos primeros compases y el cierre: su ritmo se arma con esos mismos acordes.
+        kw_llamada = dict(kw, perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)]))
+        bip = lambda f, d: mezclar((0, consola(f, d), 0.7), (0, analogico(f / 2, 0.6, (300, 2000, 400), 0.005, 0.12, 3.0, 0.003, 0.0, 0.2, 0.1), 0.35))
+        P['frente'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw_llamada), notificacion(T, bip, [12, 23, 19], 0.13, 0.12, 1.2))
+        # En «Tu año» la música sube un tono dos vueltas: sin los pitidos del cierre, que no subirían con ella.
+        ARGS['frente'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
+
+def hacer_arcontes():
+    # --- Arcontes: La bemol mixolidio con la sexta menor, quieta, a unas 86 negras por minuto (melodía propia). El kinnor
+    # canta la melodía; otro kinnor, más grave, rasguea despacio dos veces por compás; debajo, una sola voz de hombre
+    # salmodia a media voz el bordón (la tónica y su quinta) y toma aire en cada compás. La armonía no se mueve como una
+    # canción: el acorde de la tónica (el dorado), el cuarto grado menor sobre el bordón (la sombra) y el acorde aumentado
+    # del sexto grado (la grieta), y vuelta a casa. En ese tercer compás crece el zumbido hondo de los arcontes; los
+    # crótalos marcan el principio de cada compás y, al final, entra la nota limpia y alta del Pleroma. Las cuerdas van
+    # domadas (ver [domar]) para que la música no suene más baja que la de los otros temas. Con su propio azar.
+    with A.azar_propio('musica_arcontes'):
+        T = -1; pz = 0.7
+        ac = compases([0, 4, 7], [0, 5, 8], [0, 4, 8], [0, 4, 7, 12])
+        mel = frase(0, "7:2 8:1 7:1 | 5:1.5 4:0.5 5:1 8:1 | 12:2 10:1 8:1 | 7:1 5:0.5 4:0.5 0:2")
+        canta = lambda f, d: domar(kinnor(f, max(d, 0.9), 0.35, 0.997))
+        def rasguea(f, d):
+            """El kinnor grave: cada cuerda un poco después que la de abajo (la púa baja por ellas), en el uno y, más suave, en el tres."""
+            tarde = 0.004 * max(0.0, 12 * np.log2(f / hz(T - 24)))
+            una = lambda g: domar(kinnor(f, min(d * 0.55, 1.6), 0.3, 0.996)) * g
+            return mezclar((tarde, una(1.0), 1.0), (d / 2 + tarde, una(0.55), 1.0))
+        def bordon(f, d):
+            """La voz que salmodia la tónica y la quinta; dura un poco más que el compás y respira entre uno y otro."""
+            return mezclar((0, salmodia(f, d + 0.35, 'o'), 1.0), (0.05, salmodia(f * 2 ** (7 / 12), d + 0.3, 'u'), 0.55))
+        def ritmo(acordes, cierre=True):
+            """Los crótalos al principio de cada compás (más fuertes en los impares); con [cierre], el zumbido de los
+            arcontes que crece bajo el penúltimo compás y la nota del Pleroma con un último crótalo en el tres del último."""
+            out = [(b, crotalos(hz(T + 24), 1.2), 0.2 if i % 2 == 0 else 0.13) for i, (b, _, _) in enumerate(acordes)]
+            if cierre:
+                pen, fin = acordes[-2][0], acordes[-1][0]
+                out += [(pen - 0.5, zumbido_hondo(hz(T - 36), (acordes[-2][2] + 1) * pz, entra=0.6, sale=0.4), 0.6),
+                        (fin + 2, pleroma(hz(T + 24), 3.6, 0.4), 0.25), (fin + 2, crotalos(hz(T + 24), 1.6), 0.18)]
+            return out
+        kw = dict(inst_mel=canta, inst_ac=rasguea, bajo=bordon, perc=ritmo(ac), g_mel=0.5, g_ac=0.3, g_bajo=0.26,
+                  oct_mel=0, oct_ac=-12, oct_bajo=-24, legato=1.0, cola=2.2, rev=0.34)
+        # La llamada solo toma los dos primeros compases y el cierre: su ritmo se arma con esos mismos acordes.
+        kw_llamada = dict(kw, perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)]))
+        notif = mezclar((0, crotalos(hz(T + 24), 1.0), 0.15), (0.06, notificacion(T, lambda f, d: kinnor(f, d, 0.55, 0.995), [12, 8, 7], 0.15, 1.0, 1.3), 1.0))
+        P['arcontes'] = (obra(T, pz, ac, mel, **kw), llamada(T, pz, ac, mel, **kw_llamada), notif)
+        # En «Tu año» la música sube un tono dos vueltas: sin el zumbido ni la nota del Pleroma, que no subirían con ella.
+        ARGS['arcontes'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
+
+def hacer_galia():
+    # --- Galia: Do sostenido eolio (el menor natural, sin sensible), una canción de bardo a unas 108 negras por minuto
+    # (melodía propia). La lira de los bardos (Diodoro 5.31), pulsada con la yema, canta la melodía con sus cuerdas al aire
+    # que resuenan solas; otra lira, más grave, pulsa la quinta al aire con el pulgar en el uno, en el tres y en el «y» del
+    # cuatro, que empuja al compás siguiente. Debajo murmura la asamblea (varias voces de hombre, ninguna igual) por la raíz
+    # de cada acorde: la tónica, la séptima menor y la sexta menor, que bajan por tonos (Do#, Si, La) y vuelven a casa por
+    # la séptima, sin sensible (Si–Do#). El ritmo es de madera y de hierro: la lanza en el escudo en el uno, el martillo en
+    # el yunque en el tres y un toque suave en el cuatro; al cierre, la asamblea golpea las armas y suena el carnyx (Diodoro
+    # 5.30). Sin gaitas, arpas ni flautas, sin tambores ni el dórico de la música «celta» de hoy. Con su propio azar.
+    with A.azar_propio('musica_galia'):
+        T = -8; pz = 0.555
+        ac = compases([0, 7, 12], [-2, 2, 5], [-4, 0, 3], [0, 7, 12])
+        mel = frase(0, "0:1 3:0.5 5:0.5 7:2 | 10:1.5 7:0.5 5:1 2:1 | 3:1 7:1 8:1.5 7:0.5 | 5:1 2:0.5 -2:0.5 0:2")
+        al_aire = (hz(T - 12), hz(T - 17))
+        canta = lambda f, d: domar(lira_bardo(f, max(d, 0.9) + 0.3, 0.4, 0.997, al_aire=al_aire, halo=0.15), 0.3)
+        def pulsa(f, d):
+            """El pulgar en las cuerdas graves: en el uno, más suave en el tres y apenas en el «y» del cuatro."""
+            una = lambda g, dd: domar(lira_bardo(f, dd, 0.3, 0.996, al_aire=al_aire, halo=0.1), 0.3) * g
+            return mezclar((0, una(1.0, min(d * 0.6, 1.4)), 1.0), (d / 2, una(0.6, min(d * 0.45, 1.2)), 1.0), (d * 7 / 8, una(0.35, d / 8 + 0.4), 1.0))
+        def murmullo(f, d):
+            """La asamblea: cinco voces de hombre en la raíz del acorde, que se dan la mano con las del compás siguiente."""
+            return domar(asamblea(f, d + 0.2, 'o', 5), 0.4)
+        def ritmo(acordes, cierre=True):
+            """La lanza en el escudo en el uno, el martillo en el yunque (en la tónica) en el tres y un toque suave en el cuatro;
+            con [cierre], la asamblea golpea las armas y el carnyx brama sobre el último compás. Los golpes van domados (ver
+            [domar]): sin el chasquido de más, la música suena al mismo volumen que la de los otros temas."""
+            out = []
+            for i, (b, _, _) in enumerate(acordes):
+                out += [(b, domar(escudo(1.0, 0.3), 0.3), 0.32 if i % 2 == 0 else 0.26), (b + 2, domar(yunque(hz(T + 12), 0.7, 0.8), 0.3), 0.22), (b + 3, yunque(hz(T + 12), 0.5, 0.4), 0.09)]
+            if cierre:
+                fin = acordes[-1][0]
+                out += [(fin - 0.5, choque_armas(1.0, 12, 0.9), 0.3), (fin, carnyx(hz(T - 12), 4 * pz + 1.0, sube=3.0, crece=0.5, bramido=0.35), 0.24)]
+            return out
+        kw = dict(inst_mel=canta, inst_ac=pulsa, bajo=murmullo, perc=ritmo(ac), g_mel=0.5, g_ac=0.32, g_bajo=0.5,
+                  oct_mel=12, oct_ac=-12, oct_bajo=-12, legato=1.0, cola=2.0, rev=0.3)
+        # La llamada solo toma los dos primeros compases y el cierre: su ritmo se arma con esos mismos acordes.
+        kw_llamada = dict(kw, perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)]))
+        lira = lambda f, d: lira_bardo(f, d, 0.45, 0.996, al_aire=al_aire)
+        notif = mezclar((0, yunque(hz(T + 12), 0.6, 0.5), 0.2), (0.05, notificacion(T, lira, [7, 10, 12], 0.13, 1.1, 1.3), 1.0))
+        # La presentación, con la mezcla apenas domada (los golpes de las cuerdas y del escudo coinciden en el uno): así llega
+        # al volumen de las de los otros temas sin recortar nada.
+        P['galia'] = (domar(obra(T, pz, ac, mel, **kw), 0.5, 2.0), llamada(T, pz, ac, mel, **kw_llamada), notif)
+        # En «Tu año» la música sube un tono dos vueltas: sin el carnyx ni el choque de las armas, que no subirían con ella.
+        ARGS['galia'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
+
+def hacer_nouveau():
+    # --- Art nouveau: Mi bemol mayor, un vals lento de salón en 3/4 a unas 136 negras por minuto (melodía propia: no cita
+    # ningún vals). El piano de salón lo toca todo, como en una casa de 1900: la mano izquierda hace el «um» del bajo en
+    # octavas en el uno y el «pa-pa» del acorde en el dos y el tres; la derecha canta, apenas después del bajo, como tocan
+    # los pianistas de salón. La armonía es la de 1900, no la de los años veinte: el acorde de séptima mayor que no
+    # resuelve (Mi bemol con Re), Do menor con novena, Fa menor con novena, Si bemol con novena, Sol menor con séptima y
+    # La bemol con séptima mayor, que se vuelve La bemol menor con sexta (el cuarto grado menor, que suspira) y llega a casa
+    # por la cadencia plagal, sin dominante, en Mi bemol con séptima mayor y novena. Las campanillas de cristal de la lámpara
+    # abren la primera y la quinta vuelta; en la segunda mitad, la cajita de música (el peine de acero) contesta la
+    # melodía una octava arriba, y al final las campanillas bajan sobre el último acorde mientras a la cajita se le acaba
+    # la cuerda. Ni el charlestón ni el piano pulsado de Art déco, ni la cajita armónica de Navidad. Con su propio azar.
+    with A.azar_propio('musica_nouveau'):
+        T = -6; pz = 0.44
+        ac = [(3 * i, c, 3) for i, c in enumerate([[0, 4, 7, 11], [-3, 0, 4, 7, 11], [2, 5, 9, 12, 16], [-5, -1, 2, 5, 9],
+                                                    [4, 7, 11, 14], [5, 9, 12, 16], [5, 8, 12, 14]])] + [(21, [0, 4, 7, 11, 14], 6)]
+        mel = frase(0, "11:2 14:1 | 12:1.5 11:0.5 7:1 | 9:2 12:1 | 9:1.5 7:0.5 5:1 | 7:1 11:1 14:1 | 19:2 16:1 | 17:1 20:1 14:1 | 16:3")
+        largo_ac = 3.5 * pz   # un acorde que dura más que un compás es el último: se toca rodado y con pedal
+        def canta(f, d):
+            """La mano derecha: entra 12 ms después del bajo y liga con el pedal. Domada apenas (ver [domar]): sin el golpe
+            de más del macillo, la música suena al volumen de la de los otros temas sin recortar nada."""
+            return np.concatenate([np.zeros(int(0.012 * SR)), domar(piano_salon(f, max(d, 0.5) + 0.3, 0.62), 0.5, 2.0)])
+        def papa(f, d):
+            """El «pa-pa» de la mano izquierda: el acorde, corto, en el dos y el tres (el tres un poco más suave). En el
+            último acorde, rodado de abajo arriba y con pedal."""
+            if d > largo_ac:
+                tarde = 0.03 * max(0.0, 12 * np.log2(f / hz(T - 24))) / 12
+                return mezclar((tarde, piano_salon(f, d * 0.75, 0.5), 1.0))
+            b = d / 3
+            return mezclar((b, piano_salon(f, b * 1.1, 0.4, apagar=b * 0.72), 1.0), (2 * b, piano_salon(f, b * 1.1, 0.34, apagar=b * 0.72), 1.0))
+        def um(f, d):
+            """El «um» del bajo en octavas en el uno, sostenido con el pedal hasta el tres; en el último acorde, largo."""
+            if d > largo_ac:
+                return domar(mezclar((0, piano_salon(f, d * 0.8, 0.55), 0.8), (0, piano_salon(f * 2, d * 0.8, 0.5), 0.6)), 0.5, 2.0)
+            return domar(mezclar((0, piano_salon(f, d * 0.8, 0.55, apagar=d * 0.66), 0.8), (0.004, piano_salon(f * 2, d * 0.8, 0.5, apagar=d * 0.66), 0.6)), 0.5, 2.0)
+        def ritmo(acordes, melodia, cierre=True):
+            """Las campanillas de cristal en el uno de la primera y la quinta vuelta; la cajita que contesta la melodía de
+            la segunda mitad una octava arriba; con [cierre], las campanillas que bajan sobre el último acorde y la cajita
+            que se queda sin cuerda (sus dos últimas notas se arrastran)."""
+            fin = acordes[-1][0]
+            out = [(0, cristal(hz(T + 23), 2.2, 0.7), 0.2)]
+            if len(acordes) > 5: out.append((acordes[4][0], cristal(hz(T + 26), 2.0, 0.6), 0.16))
+            mitad = acordes[len(acordes) // 2][0]
+            out += [(b + 0.5, peine(hz(T + 12 + n), 1.0, 0.8), 0.11) for b, n, _ in melodia if mitad <= b < fin]
+            if cierre:
+                out += [(fin + 0.5 + 0.45 * i, cristal(hz(T + n), 2.4, 0.65), 0.2) for i, n in enumerate([31, 26, 23, 19])]
+                out += [(fin + 2.6, peine(hz(T + 26), 1.2, 0.8, cae=0.3), 0.12), (fin + 3.9, peine(hz(T + 23), 1.4, 0.7, cae=0.7), 0.1)]
+            return out
+        kw = dict(inst_mel=canta, inst_ac=papa, bajo=um, perc=ritmo(ac, mel), g_mel=0.5, g_ac=0.3, g_bajo=0.3,
+                  oct_mel=0, oct_ac=-12, oct_bajo=-24, legato=1.0, cola=1.8, rev=0.28)
+        # La llamada: la primera frase (tres compases) y el cierre (los tres últimos), un poco más viva, dos veces, con un
+        # compás de respiro entre una y otra (en 3/4: la [llamada] común es de compases de cuatro).
+        pr = pz * 0.85
+        ac_ll = ac[:3] + [(9 + b - 15, c, d) for b, c, d in ac[5:]]
+        mel_ll = [x for x in mel if x[0] < 9] + [(9 + b - 15, n, d) for b, n, d in mel if b >= 15]
+        una = obra(T, pr, ac_ll, mel_ll, **dict(kw, perc=ritmo(ac_ll, mel_ll)))
+        llam = mezclar((0, una, 1), (21 * pr, una, 1))
+        # La notificación: un acorde de piano rodado (la tónica con la séptima mayor) y tres campanillas que suben.
+        notif = reverb(mezclar(*[(0.03 * i, piano_salon(hz(T + n), 1.3, 0.45), 0.22) for i, n in enumerate([-12, -5, -1, 4])],
+                               *[(0.06 + 0.13 * i, cristal(hz(T + n), 1.1, 0.75), 0.55) for i, n in enumerate([19, 23, 26])]), 1.0, 0.25)
+        P['nouveau'] = (obra(T, pz, ac, mel, **kw), llam, notif)
+        # En «Tu año» la música sube un tono dos vueltas: sin la cajita ni las campanillas del cierre, que no subirían con
+        # ella; queda la campanilla del principio de cada vuelta, sobre la tónica.
+        ARGS['nouveau'] = (T, pz, ac, mel, dict(kw, perc=[(0, cristal(hz(T + 23), 2.2, 0.7), 0.16)]))
+
+def hacer_psicodelia():
+    # --- Psicodelia, la cara psicodelia (INTENSA, de 21:00 a 5:00; ver [hacer_psicodelia_ciudad] para la de la ciudad):
+    # La mixolidio (la escala mayor con la séptima menor), en cuatro por cuatro a unas 96 negras por minuto,
+    # como una banda de una sala de baile de San Francisco en 1967 (melodía propia: no cita ninguna canción ni ningún riff).
+    # El sitar canta la melodía, una nota por vez como en una sola cuerda, con las largas que entran deslizándose desde
+    # un semitono abajo, su zumbido, sus cuerdas simpáticas y el eco de cinta en el puntillo de corchea; el órgano portátil
+    # de transistores sostiene los acordes con su vibrato rápido; el bajo eléctrico, con púa, camina por la raíz, la
+    # quinta, la octava y la séptima menor; el pandero se sacude en corcheas y golpea en el dos y el cuatro. La armonía es
+    # la del modo: La, Mi menor (la quinta menor, que solo tiene el mixolidio), Re, y la vuelta a casa de Sol a La (de la
+    # séptima menor a la tónica, sin sensible). Al cierre, la guitarra eléctrica con el pedal de distorsión da el acorde
+    # de quinta de Sol y deja sonar el de La con vibrato y su eco. Ni sintetizadores (Ciudad neón), ni el vibráfono de los
+    # cincuenta (Refugio), ni el charlestón (Art déco), ni el vals (Art nouveau), ni bordón y cítara pentatónica (Ruta de
+    # la Seda), ni metales y timbales (Soviético). Con su propio azar.
+    # En la v2 del tema esta es la música de la cara psicodelia (`s_psicodelia_tinta_presentacion` y `_anual`), con el eco
+    # de cinta **largo** (cinco repeticiones, más realimentación). Los tonos del teléfono (`t_psicodelia_llamada` y
+    # `_notificacion`) se quedan como eran, con el eco de antes: no cambian con la cara (el teléfono los fija al
+    # instalarlos), y el azar se consume en el mismo orden que antes, así que salen iguales.
+    with A.azar_propio('musica_psicodelia'):
+        T = 0; pz = 0.625
+        ac = [(0, [0, 4, 7], 4), (4, [-5, -2, 2], 4), (8, [-7, -3, 0], 4), (12, [-2, 2, 5], 2), (14, [0, 4, 7, 12], 2)]
+        mel = frase(0, "12:1.5 10:0.5 9:1 4:1 | 7:1 10:0.5 9:0.5 7:2 | 9:1 12:0.5 14:0.5 12:1 9:1 | 10:1 14:1 12:2")
+        taraf = tuple(hz(T + n) for n in (-12, -5, 0, 2, 4, 7, 10, 12))
+        def canta(f, d, largo=True):
+            """El sitar: cada nota dura hasta la siguiente (el dedo la suelta), mientras las simpáticas siguen; las de un
+            tiempo o más entran desde un semitono abajo. Domado apenas (ver [domar]) y con su eco de cinta: con [largo], el
+            de la noche (cinco repeticiones que se van apagando); sin él, el de los tonos del teléfono, como eran."""
+            x = sitar(f, d + 0.9, taraf=taraf, halo=0.22, entra=-1.0 if d >= 0.9 * pz else 0.0, apagar=d + 0.05)
+            if largo: return eco_cinta(domar(x, 0.4, 2.5), 0.75 * pz, 0.5, 5, 2400, 0.36)
+            return eco_cinta(domar(x, 0.4, 2.5), 0.75 * pz, 0.4, 3, 2600, 0.3)
+        organo = lambda f, d: organo_transistor(f, d + 0.02, brillo=0.85)
+        def cuerda_bajo(f, d):
+            """Una nota del bajo eléctrico con púa: la cuerda gruesa, un poco saturada por el amplificador (así se oye por sus
+            armónicos en un altavoz pequeño), que la mano apaga al terminar."""
+            x = cuerda_viva(f, d + 0.06, 0.3, 0.998, punto=0.2)
+            x = filtro(filtro(np.tanh(1.8 * x / (np.abs(x).max() + 1e-12)), 'bajo', 1600), 'alto', 70)
+            t = np.arange(len(x)) / SR
+            return x * np.minimum(1, np.maximum(0, d + 0.06 - t) / 0.05)
+        def bajo(f, d):
+            """La figura del bajo en cada acorde: la raíz en el uno y en el «y» del dos, la quinta en el tres, la octava y la
+            séptima menor en el cuatro; en los acordes de dos tiempos, la raíz y la quinta."""
+            figura = [(0, 0, 1.5), (1.5, 0, 0.5), (2, 7, 1), (3, 12, 0.5), (3.5, 10, 0.5)] if d >= 3.5 * pz else [(0, 0, 1), (1, 7, 1)]
+            return mezclar(*[(b * pz, cuerda_bajo(f * 2 ** (s / 12), dd * pz * 0.92), 1.0) for b, s, dd in figura])
+        def acor_cierre(notas, d):
+            """El último acorde del órgano, que sigue sonando después del compás y se apaga cerrando el pedal de volumen."""
+            x = acorde(organo, [T - 12 + n for n in notas], d)
+            return x * (1 - np.minimum(1, np.arange(len(x)) / SR / d)) ** 1.5
+        def ritmo(acordes, cierre=True, largo=True):
+            """El pandero: sacudido en corcheas (más suave en el «y») y golpeado en el dos y el cuatro; con [cierre], la
+            guitarra con el pedal de distorsión golpea el acorde de quinta de Sol en el tiempo anterior al último acorde y
+            deja sonar el de La con vibrato y su eco, el pandero golpea con ella y el órgano sigue con el acorde de La
+            después del compás, hasta apagarse. Con [largo], el eco de la guitarra es el largo de la noche."""
+            fin = acordes[-1][0] + acordes[-1][2]
+            out = []
+            for b in np.arange(0, fin, 0.5):
+                if b % 2 == 1: out.append((b, domar(pandero(1.0, 0, 0.35, 0.5), 0.4), 0.5))
+                else: out.append((b, pandero(0.5, 0.05, 0.25, 0.0), 0.3 if b % 1 == 0 else 0.2))
+            if cierre:
+                ul = acordes[-1][0]
+                cierra = acor_cierre(acordes[-1][1], 3.6)
+                out += [(ul - 1, guitarra_distorsion(hz(T - 14), 0.5, (0, 7, 12), apagar=0.42), 0.2),
+                        (ul, eco_cinta(guitarra_distorsion(hz(T - 12), 3.2, (0, 7, 12), vibrato=(0.25, 1.0)), 0.75 * pz,
+                                       *((0.48, 5, 2400, 0.36) if largo else (0.38, 3, 2600, 0.3))), 0.26),
+                        (ul, domar(pandero(1.0, 0, 0.4, 0.6), 0.4), 0.55), (ul + 2, cierra, 0.2)]
+            return out
+        kw = dict(inst_mel=canta, inst_ac=organo, bajo=bajo, perc=ritmo(ac), g_mel=0.62, g_ac=0.3, g_bajo=0.1,
+                  oct_mel=-12, oct_ac=-12, oct_bajo=-24, legato=1.0, cola=1.8, rev=0.26)
+        # La llamada solo toma los dos primeros compases y el cierre: su ritmo se arma con esos mismos acordes, con el eco
+        # de antes.
+        kw_llamada = dict(kw, inst_mel=lambda f, d: canta(f, d, largo=False), perc=ritmo([c for c in ac if c[0] < 8] + [(8, ac[-1][1], 4)], largo=False))
+        # La notificación: el pandero y tres notas de sitar que suben (Mi, Sol, La), con su eco.
+        sit = lambda f, d: sitar(f, d, taraf=taraf, halo=0.25)
+        notif = mezclar((0, domar(pandero(1.0, 0, 0.35, 0.4), 0.4), 0.22), (0.02, eco_cinta(notificacion(T, sit, [7, 10, 12], 0.13, 1.1, 1.0), 0.27, 0.35, 2, 2600, 0.3), 1.0))
+        pres = obra(T, pz, ac, mel, **kw)
+        # La cara psicodelia solo tiene presentación y música anual; los tonos del teléfono van con el nombre del tema.
+        P['psicodelia_tinta'] = (pres, None, None)
+        P['psicodelia'] = (None, llamada(T, pz, ac, mel, **kw_llamada), notif)
+        # En «Tu año» la música sube un tono dos vueltas: sin la guitarra del cierre, que no subiría con ella.
+        ARGS['psicodelia_tinta'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
+
+def hacer_psicodelia_ciudad():
+    # --- Psicodelia, la cara de la ciudad (BASE, de 5:00 a 21:00): la misma La mixolidio, más despacio (unas 92 negras
+    # por minuto) y en voz baja, como el tocadiscos de maleta del cuarto con la lámpara encendida (melodía propia: no cita
+    # ninguna canción). Primero la aguja baja al disco (el golpe sordo y el surco de entrada, con sus crujidos); el órgano
+    # portátil de transistores, suave (el registro de base y apenas su octava, poco brillo), canta la melodía con un eco
+    # de cinta corto, de dos repeticiones cercanas, y sostiene los acordes más abajo; el bajo eléctrico, con púa, da la
+    # raíz y la quinta; el pandero solo golpea en el dos y el cuatro, sin sacudirse. La armonía: La, Re, Mi menor y Sol
+    # (la quinta menor y la séptima menor, que solo tiene el mixolidio) y la vuelta a casa. Al final, la perilla de la
+    # radio. Sin sitar ni guitarra con distorsión (son de la cara psicodelia, [hacer_psicodelia]). Con su propio azar.
+    with A.azar_propio('musica_psicodelia_ciudad'):
+        T = 0; pz = 0.65
+        ac = [(0, [0, 4, 7], 4), (4, [-7, -3, 0], 4), (8, [-5, -2, 2], 2), (10, [-2, 2, 5], 2), (12, [0, 4, 7, 12], 4)]
+        mel = frase(0, "4:1 7:1 9:1.5 7:0.5 | 9:1 7:0.5 5:0.5 4:2 | 7:1 10:1 5:1 2:1 | 4:1.5 2:0.5 0:2")
+        def canta(f, d):
+            """El órgano suave: cada nota hasta la siguiente, con el eco corto (dos repeticiones a un octavo de tiempo)."""
+            x = organo_transistor(f, d + 0.03, registros=((1, 1.0), (2, 0.3)), brillo=0.55, chasquido=0.5, suelta=0.05)
+            return eco_cinta(x, 0.28 * pz, 0.3, 2, 2600, 0.3)
+        organo = lambda f, d: organo_transistor(f, d + 0.02, registros=((1, 1.0), (2, 0.25)), brillo=0.5, chasquido=0.3)
+        def cuerda_bajo(f, d):
+            """Una nota del bajo eléctrico con púa, poco saturada, que la mano apaga al terminar."""
+            x = cuerda_viva(f, d + 0.06, 0.25, 0.998, punto=0.2)
+            x = filtro(filtro(np.tanh(1.3 * x / (np.abs(x).max() + 1e-12)), 'bajo', 1300), 'alto', 70)
+            t = np.arange(len(x)) / SR
+            return x * np.minimum(1, np.maximum(0, d + 0.06 - t) / 0.05)
+        def bajo(f, d):
+            """La raíz en el uno y la quinta en el tres (en los acordes de dos tiempos, solo la raíz)."""
+            figura = [(0, 0, 2), (2, 7, 2)] if d >= 3.5 * pz else [(0, 0, 2)]
+            return mezclar(*[(b * pz, cuerda_bajo(f * 2 ** (s / 12), dd * pz * 0.9), 1.0) for b, s, dd in figura])
+        def ritmo(acordes, cierre=True):
+            """El pandero golpeado en el dos y el cuatro, sin sacudirse; con [cierre], el último golpe y la perilla de la
+            radio que se apaga cuando el último acorde ya se fue."""
+            fin = acordes[-1][0] + acordes[-1][2]
+            out = [(b, domar(pandero(0.8, 0, 0.3, 0.5), 0.4), 0.32) for b in np.arange(1, fin, 2)]
+            if cierre: out += [(acordes[-1][0], domar(pandero(0.9, 0, 0.35, 0.5), 0.4), 0.36), (fin + 1.5, perilla(), 0.12)]
+            return out
+        kw = dict(inst_mel=canta, inst_ac=organo, bajo=bajo, perc=ritmo(ac), g_mel=0.55, g_ac=0.26, g_bajo=0.12,
+                  oct_mel=0, oct_ac=-12, oct_bajo=-24, legato=1.0, cola=1.4, rev=0.2)
+        # La aguja baja al disco antes de la música (medio segundo de surco).
+        pres = mezclar((0, aguja(0.9, 0.7), 0.5), (0.5, obra(T, pz, ac, mel, **kw), 1.0))
+        _, llam, notif = P['psicodelia']
+        P['psicodelia'] = (pres, llam, notif)
+        ARGS['psicodelia'] = (T, pz, ac, mel, dict(kw, perc=ritmo(ac, cierre=False)))
+
+
+
 def hacer_egipto():
     # --- Egipto: Mi con la segunda menor (escala propia), arpa arpegiada, flauta de caña, tambor de marco y sistro, con una
     # melodía propia de ocho compases. Con su propio azar, para no mover el de los temas que van después.
@@ -667,14 +979,22 @@ if __name__ == '__main__':
     hacer_arcano()
     hacer_enriquecidos()
     hacer_abismo()
+    hacer_frente()
+    hacer_arcontes()
+    hacer_galia()
+    hacer_nouveau()
+    hacer_psicodelia()
+    hacer_psicodelia_ciudad()
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 else None
     # Con un tercer argumento («presentacion,anual», por ejemplo) solo se escriben esas piezas.
     piezas = sys.argv[3].split(',') if len(sys.argv) > 3 else None
     for tema, (pres, llam, notif) in P.items():
         if solo is not None and tema not in solo: continue
-        for clave, nombre, x, rms in (('presentacion', f's_{tema}_presentacion', pres, -17.0), ('llamada', f't_{tema}_llamada', parejo(llam), -15.0), ('notificacion', f't_{tema}_notificacion', parejo(notif), -15.0)):
-            if piezas is None or clave in piezas: escribir(nombre, x, calidad=4, rms_db=rms)
-        print(tema, '%.1f s' % (len(pres) / SR), '%.1f s' % (len(llam) / SR), flush=True)
+        # La cara psicodelia de Psicodelia (`psicodelia_tinta`) no tiene tonos del teléfono: van como None y no se escriben.
+        for clave, nombre, x, rms in (('presentacion', f's_{tema}_presentacion', pres, -17.0), ('llamada', f't_{tema}_llamada', llam, -15.0), ('notificacion', f't_{tema}_notificacion', notif, -15.0)):
+            if x is None: continue
+            if piezas is None or clave in piezas: escribir(nombre, x if clave == 'presentacion' else parejo(x), calidad=4, rms_db=rms)
+        print(tema, *['%.1f s' % (len(x) / SR) for x in (pres, llam) if x is not None], flush=True)
     for tema, (T, pz, ac, mel, kw) in ARGS.items():
         if solo is not None and tema not in solo: continue
         if piezas is not None and 'anual' not in piezas: continue

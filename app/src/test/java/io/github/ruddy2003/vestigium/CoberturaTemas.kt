@@ -41,6 +41,8 @@ class CoberturaTemas {
 
         // Mapas que todavía van por texto (hasta que pasen a `when (tema)` exhaustivos).
         superficie("sonidos_mapa") { it.id !in Sentidos.SONIDOS }
+        // Los temas con caras (Psicodelia) tienen además el juego de su cara intensa, con los 11 sonidos.
+        superficie("sonidos_mapa_intensa") { it.conCaras && Sentidos.SONIDOS_INTENSA[it.id]?.size != Sentidos.SONIDOS[it.id]?.size }
         superficie("avisos_mapa") { it.id !in Avisos.SONIDOS }
         superficie("campana_titulos") { it.id !in Campanas.TITULOS }
         superficie("campana_etapas") { Campanas.ETAPAS[it.id]?.size != 7 }
@@ -62,24 +64,31 @@ class CoberturaTemas {
         superficie("icono_alias") { "android:name=\".Icono${Id(it)}\"" !in manifiesto }
         superficie("ic_launcher") { !Pendientes.main("res/mipmap-anydpi-v26/ic_launcher_${it.id}.xml").exists() }
         listOf("logo", "logo_fondo", "huella", "huella_fondo", "papel").forEach { r -> superficie(r) { !recurso("drawable-nodpi", "${r}_${it.id}") } }
+        // Un tema con caras (Psicodelia) lleva los de su cara intensa con «_tinta» al final (`docs/diseno/temas/psicodelia_base.md`).
         superficie("widget_drawables") { t ->
-            val suf = if (t == TemaId.ROMANO) "" else "_${t.id}"
-            listOf("widget_fondo", "widget_boton", "widget_boton_activo", "widget_boton_ambar").any { !recurso("drawable", it + suf) } ||
-                !recurso("drawable-v31", "widget_fondo$suf")
+            val base = if (t == TemaId.ROMANO) "" else "_${t.id}"
+            (if (t.conCaras) listOf(base, base + "_tinta") else listOf(base)).any { suf ->
+                listOf("widget_fondo", "widget_boton", "widget_boton_activo", "widget_boton_ambar").any { !recurso("drawable", it + suf) } ||
+                    !recurso("drawable-v31", "widget_fondo$suf")
+            }
         }
+        // Y su papel de la cara intensa: `papel_<id>_cartel` (el de la cara base es `papel_<id>`, arriba).
+        superficie("papel_cara") { t -> t.conCaras && !recurso("drawable-nodpi", "papel_${t.id}_cartel") }
         superficie("sonidos") { t -> SONIDOS_TEMA.any { !recurso("raw", it.replace("<id>", t.id)) } }
         superficie("sonido_tecla") { !recurso("raw", "s_tecla_${it.id}") }
         superficie("sonido_error") { !recurso("raw", "s_${it.id}_error") }
         superficie("sonido_cambio") { !recurso("raw", "s_${it.id}_cambio") }
         superficie("sonido_rascar") { !recurso("raw", "s_rascar_${it.id}") }
+        superficie("sonidos_intensa") { t -> t.conCaras && SONIDOS_INTENSA.any { !recurso("raw", it.replace("<id>", t.id)) } }
         val temas = Pendientes.main("res/values/themes.xml").readText()
         superficie("arranque") { "Theme.Vestigium.Arranque.${Id(it)}\"" !in temas }
 
         // El gato de la banda de Día: claro y oscuro (solo oscuro si el tema no tiene claro), cada uno con sus 2 acciones propias.
+        // Los temas con caras (Psicodelia) tienen además la banda de su cara intensa en sus tres escalones (`Gato.bandas`).
         val gato = Pendientes.main("assets/gato/gato.json").takeIf { it.exists() }
             ?.let { runCatching { Json.parseToJsonElement(it.readText()).jsonObject["temas"]?.jsonObject }.getOrNull() }
         superficie("gato") { t ->
-            val claves = (if (t.soloOscuro) listOf("o") else listOf("c", "o")).map { "${t.id}_$it" }
+            val claves = io.github.ruddy2003.vestigium.ui.Gato.bandas(t).flatMap { b -> (if (t.soloOscuro) listOf("o") else listOf("c", "o")).map { "${b}_$it" } }
             gato == null || claves.any { k -> ((gato[k] as? kotlinx.serialization.json.JsonObject)?.get("especiales") as? JsonArray)?.size?.let { it < 2 } ?: true }
         }
 
@@ -96,21 +105,31 @@ class CoberturaTemas {
     companion object {
         val CLAVES_WIDGET = listOf("animo", "momento", "gasto", "sueno", "habitos", "hoy", "cifra", "foto", "enfoque")
 
-        /** Los 13 sonidos de cada tema (`<id>` se cambia por el id). */
+        /** Los 14 sonidos de cada tema (`<id>` se cambia por el id). El de historia, desde la parte 8 (el día especial de quien sigues). */
         val SONIDOS_TEMA = listOf("toque", "guardar", "logro", "pasar", "elegir", "abrir", "tema", "presentacion", "anual").map { "s_<id>_$it" } +
-            listOf("n_<id>_aviso", "n_<id>_solemne", "t_<id>_llamada", "t_<id>_notificacion")
+            listOf("n_<id>_aviso", "n_<id>_solemne", "n_<id>_historia", "t_<id>_llamada", "t_<id>_notificacion")
 
         /** Los del lote 6: error, cambio, la tecla del diario y el rascado de la lámina. */
         val SONIDOS_LOTE6 = listOf("s_<id>_error", "s_<id>_cambio", "s_tecla_<id>", "s_rascar_<id>")
 
-        /** El único tema que todavía no tiene su cuadro de Hoy: Helénico lo tiene desde la tanda P4a; Gótico y Ciudad neón, desde la P4b; Romano y Al-Ándalus, desde la S1; Pirata, desde la S2; Espacio y Distopía, desde la S3; Horror cósmico y Ciudad verde, desde la S4; Roma, desde la S5; Scriptorium, desde la S6; Renacimiento, desde la S6; Ruta de la Seda, desde la S7; Revolución francesa, desde la S8; Vapor victoriano, desde la S8; Mesoamérica, desde la S9; Egipto, desde la S9; Prehistoria, desde la S10; Templario y Japón Edo, desde la S11; Mongol, desde la S12; Botánico, desde la S13 (sus dos cuadros siguen en revisión, pero ya tiene escena, banderita y gato); Napoleónico, desde la S14 (la retirada y el vivac); Art déco y Soviético, desde la S15 (el club y la cocina); Abismo, desde la S16 (el barco y el muelle); Refugio, desde la S17 (la sala de bombas); Laboratorio, desde la S17 (el laboratorio y el centro del Claustro); Orden, desde la S18 (Peñaseca); Tierras Antiguas, desde la S18 (la posada del Cuerno); siguen las demás tandas S. */
+        /**
+         * El juego de la cara intensa de los temas con caras (Psicodelia v2, tanda 7): lo que suena dentro de la app. Sin
+         * avisos ni tonos del teléfono (se quedan los de la cara de base) y sin rascado (la misma moneda en las dos caras).
+         */
+        val SONIDOS_INTENSA = listOf("toque", "guardar", "logro", "pasar", "elegir", "abrir", "tema", "presentacion", "anual", "error", "cambio").map { "s_<id>_tinta_$it" } +
+            listOf("s_tecla_<id>_tinta")
+
+        /** El único tema que todavía no tiene su cuadro de Hoy: Helénico lo tiene desde la tanda P4a; Gótico y Ciudad neón, desde la P4b; Romano y Al-Ándalus, desde la S1; Pirata, desde la S2; Espacio y Distopía, desde la S3; Horror cósmico y Ciudad verde, desde la S4; Roma, desde la S5; Scriptorium, desde la S6; Renacimiento, desde la S6; Ruta de la Seda, desde la S7; Revolución francesa, desde la S8; Vapor victoriano, desde la S8; Mesoamérica, desde la S9; Egipto, desde la S9; Prehistoria, desde la S10; Templario y Japón Edo, desde la S11; Mongol, desde la S12; Botánico, desde la S13 (sus dos cuadros siguen en revisión, pero ya tiene escena, banderita y gato); Napoleónico, desde la S14 (la retirada y el vivac); Art déco y Soviético, desde la S15 (el club y la cocina); Abismo, desde la S16 (el barco y el muelle); Refugio, desde la S17 (la sala de bombas); Laboratorio, desde la S17 (el laboratorio y el centro del Claustro); Orden, desde la S18 (Peñaseca); Tierras Antiguas, desde la S18 (la posada del Cuerno); queda Colonos (S19); los cinco temas nuevos del lote 10 van aparte, en [SIN_CUADRO_LOTE10]. */
         private val SIN_CUADRO = setOf("colonos")
+
+        /** Los temas nuevos del lote 10 (`docs/diseno/PLAN_TEMAS.md`): sus cuadros van después de la tanda S19. */
+        private val SIN_CUADRO_LOTE10 = setOf("frente", "arcontes", "galia", "nouveau", "psicodelia")
 
         /**
          * Lo que falta hoy, por superficie. Del plan de diseño no falta nada desde el lote 9. Lo que queda es del plan de
          * historia y escenas: el cuadro de Hoy (la escena, la banderita y el pelaje del gato) de cada tema, que va llegando por tandas.
          */
-        val PENDIENTES: Map<String, Set<String>> = mapOf("cuadro_escena" to SIN_CUADRO, "cuadro_banderita" to SIN_CUADRO, "cuadro_gato" to SIN_CUADRO)
+        val PENDIENTES: Map<String, Set<String>> = mapOf("cuadro_escena" to SIN_CUADRO + SIN_CUADRO_LOTE10, "cuadro_banderita" to SIN_CUADRO + SIN_CUADRO_LOTE10, "cuadro_gato" to SIN_CUADRO + SIN_CUADRO_LOTE10)
 
         /** Despachos que el compilador no vigila, por archivo y tipo. Cada lote baja los suyos. */
         val DESPACHOS: Map<String, Int> = emptyMap()

@@ -31,6 +31,28 @@ object NombresNuevos {
         TemaId.DISTOPIA to mapOf("La cinta" to "REGISTRO HORARIO", "Constelación" to "RED DE CONTACTOS", "Hall de logros" to "SALA DE CONDECORACIONES", "Campañas" to "PLANES DE CUMPLIMIENTO",
             "Impulsos y recaídas" to "INFRACCIONES PRIVADAS", "Estado de los datos" to "ESTADO DE LA VIGILANCIA", "Enfoque y siestas" to "PRODUCTIVIDAD Y DESCANSO", "Ver tu vida" to "INFORMES VISUALES",
             "Tus atajos" to "ACCESOS AUTORIZADOS", "Logro conseguido" to "CONDECORACIÓN OTORGADA", "Este día hace un año" to "ARCHIVO: HACE UN AÑO", "Elegir campaña" to "ASIGNAR PLAN", "Campañas anteriores" to "PLANES CERRADOS"),
+        // Psicodelia: las horas del disco, lado A y lado B; tu gente como las manchas de las luces líquidas; la pared de los
+        // discos de oro y el recorrido de la calle Haight a Monterey. «Impulsos y recaídas» se queda con el nombre de la app
+        // (`NombresPsicodelia.NEUTROS`).
+        TemaId.PSICODELIA to mapOf("La cinta" to "Las horas, lado A y lado B", "Constelación" to "Tu gente, en luces líquidas", "Hall de logros" to "La pared de los discos de oro", "Campañas" to "De la calle Haight a Monterey",
+            "Estado de los datos" to "Cómo llegan los datos a la redacción", "Enfoque y siestas" to "La mesa de dibujo y el colchón", "Ver tu vida" to "Tu vida, pegada en la pared",
+            "Tus atajos" to "Tus atajos por el Panhandle", "Logro conseguido" to "¡Un disco de oro más!", "Este día hace un año" to "Este disco, hace un año", "Elegir campaña" to "Elegir el recorrido de la semana", "Campañas anteriores" to "Recorridos de otras semanas"),
+        // Art nouveau: el friso de las horas, el ramo de tu gente, el pabellón de las medallas y la primera línea del metro.
+        TemaId.NOUVEAU to mapOf("La cinta" to "El friso de las horas", "Constelación" to "El ramo de tu gente", "Hall de logros" to "El pabellón de las medallas", "Campañas" to "La línea del Métropolitain",
+            "Impulsos y recaídas" to "El cuaderno del cajón con llave", "Estado de los datos" to "Cómo va la tinta en cada piedra", "Enfoque y siestas" to "La mesa de dibujo y el diván", "Ver tu vida" to "Tu vida en láminas",
+            "Tus atajos" to "Los pasajes cubiertos", "Logro conseguido" to "Una medalla nueva para la vitrina", "Este día hace un año" to "Esta página hace un año", "Elegir campaña" to "Elegir el viaje en metro", "Campañas anteriores" to "Los billetes de otras semanas"),
+        // Galia: las horas que empiezan por la noche, los fuegos de la tribu, la casa de los torques y el levantamiento del 52 a. C.
+        TemaId.GALIA to mapOf("La cinta" to "Las horas, de la noche al día", "Constelación" to "Los fuegos de tu tribu", "Hall de logros" to "La casa de los torques", "Campañas" to "El levantamiento",
+            "Impulsos y recaídas" to "Lo que se calla junto al fuego", "Estado de los datos" to "Qué llega a las tablillas", "Enfoque y siestas" to "La memoria y el descanso", "Ver tu vida" to "Tu vida vista desde la colina",
+            "Tus atajos" to "Las sendas del bosque", "Logro conseguido" to "¡Un torques nuevo!", "Este día hace un año" to "Esta noche hace un año", "Elegir campaña" to "Elegir la marcha de la semana", "Campañas anteriores" to "Marchas de otras semanas"),
+        // Arcontes: las horas del alba a la vigilia, las chispas de los tuyos, la hornacina de los amuletos y el ascenso del alma.
+        TemaId.ARCONTES to mapOf("La cinta" to "Las horas, del alba a la vigilia", "Constelación" to "Las chispas que conoces", "Hall de logros" to "La hornacina de los amuletos", "Campañas" to "El ascenso del alma",
+            "Impulsos y recaídas" to "La hoja que no se enseña", "Estado de los datos" to "Qué llega a la jarra", "Enfoque y siestas" to "La lámpara y el reposo", "Ver tu vida" to "Tu vida, vista desde lo alto",
+            "Tus atajos" to "Los senderos cortos", "Logro conseguido" to "Un amuleto nuevo, grabado", "Este día hace un año" to "Este cielo hace un año", "Elegir campaña" to "Elegir el ascenso de la semana", "Campañas anteriores" to "Ascensos de otras semanas"),
+        // Frente exterior: la tira del teletipo, la célula, las rutas de salto y la sala donde se cuelgan los parches.
+        TemaId.FRENTE to mapOf("La cinta" to "TIRA DEL TELETIPO", "Constelación" to "MAPA DE LA CÉLULA", "Hall de logros" to "SALA DE PARCHES", "Campañas" to "RUTAS DE SALTO",
+            "Impulsos y recaídas" to "CANAL RESERVADO", "Estado de los datos" to "ESTADO DEL EQUIPO", "Enfoque y siestas" to "TURNOS DE CONSOLA Y CABEZADAS", "Ver tu vida" to "VISTAS DE RECONOCIMIENTO",
+            "Tus atajos" to "RUTAS CORTAS DE LA RED", "Logro conseguido" to "PARCHE COSIDO", "Este día hace un año" to "HACE UN AÑO, EN LA RED", "Elegir campaña" to "TRAZAR RUTA", "Campañas anteriores" to "RUTAS CUMPLIDAS"),
         TemaId.REFUGIO to mapOf("La cinta" to "BITÁCORA HORARIA", "Constelación" to "RED DE RESIDENTES", "Hall de logros" to "VITRINA DEL REFUGIO", "Campañas" to "EXPEDICIONES",
             "Impulsos y recaídas" to "REGISTRO PRIVADO", "Estado de los datos" to "DIAGNÓSTICO DE SISTEMAS", "Enfoque y siestas" to "TURNOS Y DESCANSO", "Ver tu vida" to "VISUALIZACIONES",
             "Tus atajos" to "ACCESOS RÁPIDOS", "Logro conseguido" to "INSIGNIA OBTENIDA", "Este día hace un año" to "HACE UN AÑO", "Elegir campaña" to "ELEGIR EXPEDICIÓN", "Campañas anteriores" to "EXPEDICIONES PASADAS"),

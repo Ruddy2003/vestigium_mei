@@ -57,7 +57,7 @@ import kotlin.math.sin
 
 /**
  * El «corazón» de la frase del día, con la forma de cada tema (laurel, corazón de píxeles, sol de Vergina, cuadrifolio,
- * ojo, estrella atómica, escudo, anillo de benceno, casa, abeja, hoja, copo, moneda, flor de lis, destello, estrella de
+ * ojo, flor de iris, muérdago, lámpara de aceite, estrella atómica, escudo, anillo de benceno, casa, abeja, hoja, copo, moneda, flor de lis, destello, estrella de
  * ocho puntas, yurta, corazón con trazos de construcción, estrella roja, escarapela, gema): late al tocarlo y suelta una
  * chispa de puntos cuando se guarda. Guardada, va rellena; sin guardar, solo el contorno.
  */
@@ -197,6 +197,72 @@ private fun DrawScope.formaCorazon(tema: TemaId, u: Float, color: Color, lleno: 
             moveTo(1f * u, 12f * u); quadraticTo(12f * u, 1.5f * u, 23f * u, 12f * u); quadraticTo(12f * u, 22.5f * u, 1f * u, 12f * u); close()
             circulo(this, 12f, 12f, 4.4f); circulo(this, 12f, 12f, 1.9f)
         }, 1.4f)
+        // La ciudad: el disco del día, con su etiqueta calada; guardado, relleno, con el agujero en medio. El cartel: el disco
+        // hecho sol, con doce rayos; guardado, relleno.
+        TemaId.PSICODELIA -> {
+            if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) pinta(Path().apply { fillType = PathFillType.EvenOdd; circulo(this, 12f, 12f, 10.5f); circulo(this, 12f, 12f, 3.6f) }, 1.3f)
+            else pinta(estrella(12f, 12f, 12, 11.5f, 7.6f).also { it.fillType = PathFillType.EvenOdd; circulo(it, 12f, 12f, 3.4f) }, 1.2f)
+            if (lleno) drawCircle(color, 1.4f * u, p(12f, 12f))
+        }
+        // La flor de iris: tres pétalos que suben y dos que caen, sobre su tallo; guardada, con las venas de los que caen.
+        TemaId.NOUVEAU -> {
+            drawLine(if (lleno) color else color.copy(alpha = 0.7f), p(12f, 13f), p(12.6f, 22.5f), 1.4f * u, StrokeCap.Round)
+            pinta(Path().also { c ->
+                hoja(c, p(12f, 13f), p(12f, 1.8f), 1.7f)
+                hoja(c, p(12f, 12.4f), p(6.6f, 3.6f), 1.35f); hoja(c, p(12f, 12.4f), p(17.4f, 3.6f), 1.35f)
+                hoja(c, p(12f, 12.6f), p(2.6f, 16.6f), 1.6f); hoja(c, p(12f, 12.6f), p(21.4f, 16.6f), 1.6f)
+            }, 1.2f)
+            if (lleno) listOf(4.6f to 15.9f, 19.4f to 15.9f).forEach { (x, y) -> drawLine(Color.White.copy(alpha = 0.55f), p(12f, 12.8f), p(x, y), 0.9f * u, StrokeCap.Round) }
+        }
+        // El muérdago que se corta del roble (Plinio 16.249–251): el tallo que se ahorquilla, un par de hojas largas y romas
+        // en cada punta y las tres bayas entre las dos ramas; guardada, rellena, con el brillo de las bayas.
+        TemaId.GALIA -> {
+            val col = if (lleno) color else color.copy(alpha = 0.7f)
+            val t = (if (lleno) 1.6f else 1.3f) * u
+            drawLine(col, p(12f, 22.5f), p(12f, 15.2f), t, StrokeCap.Round)
+            drawLine(col, p(12f, 15.2f), p(7.2f, 10.8f), t, StrokeCap.Round)
+            drawLine(col, p(12f, 15.2f), p(16.8f, 10.8f), t, StrokeCap.Round)
+            pinta(Path().also { c ->
+                hoja(c, p(7.2f, 10.8f), p(1.4f, 7.2f), 1.25f); hoja(c, p(7.2f, 10.8f), p(5.4f, 2f), 1.25f)
+                hoja(c, p(16.8f, 10.8f), p(22.6f, 7.2f), 1.25f); hoja(c, p(16.8f, 10.8f), p(18.6f, 2f), 1.25f)
+            }, 1.2f)
+            for ((x, y, r) in listOf(Triple(12f, 11.9f, 1.55f), Triple(10.2f, 9.2f, 1.3f), Triple(13.8f, 9.2f, 1.3f))) {
+                if (lleno) { drawCircle(color, r * u, p(x, y)); drawCircle(Color.White.copy(alpha = 0.6f), r * 0.4f * u, p(x - r * 0.3f, y - r * 0.3f)) }
+                else drawCircle(col, r * u, p(x, y), style = Stroke(1f * u))
+            }
+        }
+        // La lámpara de aceite de barro, de pico, con el asa a la izquierda; guardada, encendida, con su llama y su halo.
+        TemaId.ARCONTES -> {
+            val col = if (lleno) color else color.copy(alpha = 0.7f)
+            pinta(Path().apply {
+                moveTo(3f * u, 15.6f * u)
+                cubicTo(3f * u, 11.2f * u, 9.6f * u, 10.2f * u, 13.2f * u, 12.4f * u)
+                lineTo(20.4f * u, 12.7f * u)
+                quadraticTo(22.2f * u, 13.5f * u, 20.8f * u, 14.7f * u)
+                lineTo(13.6f * u, 17.1f * u)
+                cubicTo(11f * u, 19.8f * u, 4f * u, 19.8f * u, 3f * u, 15.6f * u)
+                close()
+                // El agujero por donde se echa el aceite.
+                if (lleno) { fillType = PathFillType.EvenOdd; addOval(Rect(p(7.6f, 12.6f), Size(2f * u, 1.6f * u))) }
+            }, 1.4f)
+            drawArc(col, 90f, 180f, false, p(1f, 13f), Size(3.6f * u, 4.4f * u), style = Stroke(1.3f * u, cap = StrokeCap.Round))
+            if (lleno) {
+                drawCircle(color.copy(alpha = 0.18f), 2.8f * u, p(21.2f, 9f))
+                drawPath(Path().apply { moveTo(20.1f * u, 12.2f * u); quadraticTo(19.3f * u, 8.6f * u, 21.5f * u, 4.4f * u); quadraticTo(23.3f * u, 8.8f * u, 22.3f * u, 12.2f * u); close() }, color)
+            } else drawCircle(col, 0.9f * u, p(21.2f, 11.4f))
+        }
+        // El emblema de la red: la chispa de tres trazos en el círculo roto; guardada, el aro grueso y la señal que se escapa.
+        TemaId.FRENTE -> {
+            val col = if (lleno) color else color.copy(alpha = 0.7f)
+            drawArc(col, -22f, 304f, false, p(2.5f, 2.5f), Size(19f * u, 19f * u), style = Stroke((if (lleno) 2.6f else 1.6f) * u))
+            // La célula en el centro y la chispa: tres trazos que salen de ella por el hueco del aro (arriba a la derecha).
+            drawCircle(col, (if (lleno) 1.9f else 1.4f) * u, p(12f, 12f))
+            listOf(-66.0 to 0.86f, -50.0 to (if (lleno) 1.16f else 1.0f), -34.0 to 0.86f).forEach { (g, largo) ->
+                val a = Math.toRadians(g)
+                drawLine(col, p(12f + 3.2f * Math.cos(a).toFloat(), 12f + 3.2f * Math.sin(a).toFloat()),
+                    p(12f + 9.5f * largo * Math.cos(a).toFloat(), 12f + 9.5f * largo * Math.sin(a).toFloat()), (if (lleno) 2.2f else 1.5f) * u, StrokeCap.Round)
+            }
+        }
         // Estrella atómica de los cincuenta: rayos largos y cortos alternados.
         TemaId.REFUGIO -> pinta(Path().apply {
             for (i in 0 until 16) {

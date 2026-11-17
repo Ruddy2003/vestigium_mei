@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Una tecla de piedra en la penumbra: el azul negro de la noche, con su borde y la sombra abajo. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FF1C2038"/>
+            <stroke android:width="1dp" android:color="#FF343A5A"/>
+            <corners android:radius="7dp"/>
+        </shape>
+    </item>
+    <item android:gravity="bottom|fill_horizontal" android:height="1.5dp" android:left="5dp" android:right="5dp" android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FF0B0D1C"/>
+            <corners android:radius="1dp"/>
+        </shape>
+    </item>
+</layer-list>

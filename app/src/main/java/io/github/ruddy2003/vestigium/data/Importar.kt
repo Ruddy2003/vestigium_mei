@@ -228,7 +228,8 @@ object Importar {
             respaldo_verificado = c.respaldo_verificado, respaldo_detalle = c.respaldo_detalle, respaldo_error = c.respaldo_error, respaldo_conteo = c.respaldo_conteo,
             respaldo_ensayo = c.respaldo_ensayo, respaldo_ensayo_resultado = c.respaldo_ensayo_resultado, bd_revision = c.bd_revision, bd_revision_ok = c.bd_revision_ok)
         val perfilVacio = c.perfil == Perfil()
-        return c.copy(
+        // Lo del esquema 27 (seguidos, cuentos leídos, días de uso, cuadros guardados y avisos de historia), en `combinarHistorias`.
+        return combinarHistorias(c, r).copy(
             habitos = (c.habitos + r.habitos).distinctBy { it.id }, equivalencias = r.equivalencias + c.equivalencias,
             categorias = (c.categorias + r.categorias).distinct(), categorias_ingreso = (c.categorias_ingreso + r.categorias_ingreso).distinct(),
             frases_guardadas = (c.frases_guardadas + r.frases_guardadas).distinctBy { it.texto + it.autor },

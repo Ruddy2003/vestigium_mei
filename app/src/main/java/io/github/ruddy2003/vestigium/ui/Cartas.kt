@@ -85,6 +85,9 @@ import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.data.alFuturo
 import io.github.ruddy2003.vestigium.data.lista
 import io.github.ruddy2003.vestigium.data.sellada
+import io.github.ruddy2003.vestigium.ui.biblioteca.bullaArcontes
+import io.github.ruddy2003.vestigium.ui.biblioteca.selloGalia
+import io.github.ruddy2003.vestigium.ui.biblioteca.vinetaNouveau
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.PI
@@ -132,6 +135,20 @@ fun papeleria(t: TemaId): Papeleria = when (t) {
     TemaId.TEMPLARIO -> Papeleria(Color(0xFFF1ECE0), Color(0xFFB9AE97), Color(0xFFFFFCF4), Color(0xFFB0191F), Color(0xFF7A2A16), Color(0xFF8A7650), Color(0xFF201E1B))
     // Sobre de manila de oficina, con su hilo y botones, y la tinta roja del sello de goma.
     TemaId.DISTOPIA -> Papeleria(Color(0xFFD8C08A), Color(0xFFA88F58), Color(0xFFE8D4A4), Color(0xFFB9A26E), Color(0xFFC8102E), Color(0xFF3A3A3A), Color(0xFF141414))
+    // La postal de 1967 impresa a dos tintas, como el periódico del barrio: cartulina crema, su sombra y su brillo, el reverso
+    // de papel de cartel, la etiqueta del disco en magenta, el cordel de la carpeta en ultramar y la tinta azul negra.
+    TemaId.PSICODELIA -> Papeleria(Color(0xFFF2E8D3), Color(0xFFC9BB9C), Color(0xFFFBF6EA), Color(0xFFE7DBC2), Color(0xFFA94870), Color(0xFF3F4C9E), Color(0xFF1E1A3A))
+    // La tarjeta postal ilustrada: cartulina crema, su sombra y su brillo, el verde salvia del reverso, la viñeta engomada con el
+    // iris violeta, la cinta de seda malva que ata el paquete y la tinta de la prensa.
+    TemaId.NOUVEAU -> Papeleria(Color(0xFFF2E9D2), Color(0xFFC2AE86), Color(0xFFFBF6EA), Color(0xFF5E7A58), Color(0xFF7E5FA6), Color(0xFFB48AB0), Color(0xFF2A2530))
+    // El mensaje que corre de oppidum en oppidum: la funda de cuero de la tablilla, por dentro de gamuza, el sello de barro con
+    // el caballo de quien lo manda y el cordel de lana roja.
+    TemaId.GALIA -> Papeleria(Color(0xFF9A7048), Color(0xFF6E4A2C), Color(0xFFB88A5E), Color(0xFFD8B88E), Color(0xFFA4704A), Color(0xFF8E3B2A), Color(0xFF20251A))
+    // La carta entre comunidades escondidas: papiro doblado en paquete, por dentro la tinta de lo escrito, la bula de barro
+    // cocido claro con el ouroboros y el cordel de pelo de cabra.
+    TemaId.ARCONTES -> Papeleria(Color(0xFFE6D8B4), Color(0xFFAE9A6E), Color(0xFFF4EAD0), Color(0xFFCDB98C), Color(0xFFB9774A), Color(0xFF3B3026), Color(0xFF1E1A2B))
+    // La funda de la transmisión: cartón hueso de consola forrado de acero, el sello ámbar de la célula y la correa de baquelita.
+    TemaId.FRENTE -> Papeleria(Color(0xFFCFC7B5), Color(0xFF9D9584), Color(0xFFE6E0D2), Color(0xFF3E4C57), Color(0xFFE8902C), Color(0xFF2A2622), Color(0xFF23252A))
     // Crema del optimismo atómico, forro verde azulado, la estampa amarilla y la banda naranja.
     TemaId.REFUGIO -> Papeleria(Color(0xFFF1E8CF), Color(0xFFB8AC88), Color(0xFFFFF8E6), Color(0xFF1C6E6A), Color(0xFFE8B83A), Color(0xFFD9572B), Color(0xFF1F2A2A))
     // Papel gris acero, forro carmesí, la placa de latón y la cinta carmesí.
@@ -380,6 +397,64 @@ internal fun DrawScope.selloCarta(t: TemaId, c: Offset, r: Float, color: Color, 
             drawRect(k(base.copy(alpha = 0.85f)), Offset(c.x - r * 1.25f, c.y - r * 0.6f), Size(r * 2.5f, r * 1.2f), style = Stroke(r * 0.1f))
             drawRect(k(base.copy(alpha = 0.7f)), Offset(c.x - r * 1.06f, c.y - r * 0.42f), Size(r * 2.12f, r * 0.84f), style = Stroke(r * 0.04f))
             rotuloSello("ARCHIVADO", c.x, c.y + r * 0.13f, r * 0.36f, k(base.copy(alpha = 0.85f)))
+        }
+        // Sobre el nudo, la etiqueta de un disco como sello (el vinilo, la etiqueta magenta y su agujero); debajo, los dos
+        // cabos del cordel de la carpeta de dibujos, en ultramar.
+        TemaId.PSICODELIA -> {
+            val cordel = k(Color(0xFF3F4C9E))
+            listOf(Offset(-0.2f, 0.6f) to Offset(-0.7f, 1.55f), Offset(0.2f, 0.6f) to Offset(0.55f, 1.6f)).forEach { (a0, a1) ->
+                drawLine(cordel, Offset(c.x + r * a0.x, c.y + r * a0.y), Offset(c.x + r * a1.x, c.y + r * a1.y), r * 0.09f, StrokeCap.Round)
+            }
+            drawCircle(k(Color(0xFF1E1A3A)), r * 0.7f, c)
+            for (j in 1..3) drawCircle(k(Color(0xFFF2E8D3)).copy(alpha = 0.18f * a), r * (0.42f + 0.08f * j), c, style = Stroke(r * 0.015f))
+            drawCircle(k(base), r * 0.34f, c)
+            drawCircle(k(Color(0xFFF2E8D3)), r * 0.05f, c)
+        }
+        // La viñeta engomada con el iris, pegada sobre el lazo; debajo, los dos cabos de la cinta de seda malva.
+        TemaId.NOUVEAU -> {
+            val seda = k(Color(0xFFB48AB0))
+            drawLine(seda, Offset(c.x - r * 0.2f, c.y + r * 0.6f), Offset(c.x - r * 0.75f, c.y + r * 1.55f), r * 0.22f, StrokeCap.Butt)
+            drawLine(seda, Offset(c.x + r * 0.2f, c.y + r * 0.6f), Offset(c.x + r * 0.6f, c.y + r * 1.6f), r * 0.22f, StrokeCap.Butt)
+            vinetaNouveau(c, r, Color(0xFFF2E9D2), base, a)
+        }
+        // El sello de barro sobre el nudo, con la marca de quien lo manda (el caballo de las monedas); debajo, los dos cabos del
+        // cordel de lana roja.
+        TemaId.GALIA -> {
+            val lana = k(Color(0xFF8E3B2A))
+            drawLine(lana, Offset(c.x - r * 0.2f, c.y + r * 0.6f), Offset(c.x - r * 0.8f, c.y + r * 1.5f), r * 0.11f, StrokeCap.Round)
+            drawLine(lana, Offset(c.x + r * 0.2f, c.y + r * 0.6f), Offset(c.x + r * 0.5f, c.y + r * 1.62f), r * 0.11f, StrokeCap.Round)
+            selloGalia(c, r, base, a, 5)
+        }
+        // La bula: el disco de barro apretado sobre el cordel, con el ouroboros hundido y la chispa en el centro; debajo, los
+        // dos cabos del cordel de pelo de cabra.
+        TemaId.ARCONTES -> {
+            val pelo = k(Color(0xFF3B3026))
+            drawLine(pelo, Offset(c.x - r * 0.2f, c.y + r * 0.6f), Offset(c.x - r * 0.75f, c.y + r * 1.5f), r * 0.1f, StrokeCap.Round)
+            drawLine(pelo, Offset(c.x + r * 0.2f, c.y + r * 0.6f), Offset(c.x + r * 0.55f, c.y + r * 1.6f), r * 0.1f, StrokeCap.Round)
+            bullaArcontes(c, r, base, a, 5)
+        }
+        TemaId.FRENTE -> {
+            // El sello de la célula: una oblea de precinto con el bisel graduado de una perilla de consola, el emblema troquelado
+            // (la chispa de tres trazos que se escapa por el hueco del círculo roto) y, debajo, la célula.
+            drawCircle(sombra, r * 0.98f, c + Offset(r * 0.05f, r * 0.08f))
+            drawCircle(col, r * 0.98f, c)
+            drawCircle(Brush.radialGradient(listOf(Color.White.copy(alpha = 0.3f * a), Color.Transparent), center = c - Offset(r * 0.35f, r * 0.4f), radius = r), r * 0.98f, c)
+            drawCircle(hondo, r * 0.98f, c, style = Stroke(r * 0.05f))
+            for (j in 0 until 36) {
+                val ang = j * PI / 18; val dentro = if (j % 6 == 0) 0.72f else 0.8f
+                drawLine(hondo, Offset(c.x + (r * 0.9f * cos(ang)).toFloat(), c.y + (r * 0.9f * sin(ang)).toFloat()),
+                    Offset(c.x + (r * dentro * cos(ang)).toFloat(), c.y + (r * dentro * sin(ang)).toFloat()), r * 0.035f)
+            }
+            drawCircle(hondo, r * 0.66f, c, style = Stroke(r * 0.035f))
+            val ce = Offset(c.x, c.y - r * 0.1f); val rr = r * 0.34f
+            drawArc(hondo, -20f, 300f, false, Offset(ce.x - rr, ce.y - rr), Size(rr * 2, rr * 2), style = Stroke(r * 0.09f, cap = StrokeCap.Round))
+            listOf(-74.0 to 1.05f, -50.0 to 1.3f, -26.0 to 1.05f).forEach { (g, l) ->
+                val ang = Math.toRadians(g)
+                drawLine(hondo, Offset(ce.x + (rr * 0.12f * cos(ang)).toFloat(), ce.y + (rr * 0.12f * sin(ang)).toFloat()),
+                    Offset(ce.x + (rr * l * cos(ang)).toFloat(), ce.y + (rr * l * sin(ang)).toFloat()), r * 0.08f, StrokeCap.Round)
+            }
+            drawCircle(claro, r * 0.05f, ce)
+            rotuloSello("K-7", c.x, c.y + r * 0.52f, r * 0.2f, hondo)
         }
         TemaId.REFUGIO -> {
             // La estampa del optimismo atómico: un sol dentado amarillo con el átomo y su núcleo naranja.
@@ -792,6 +867,26 @@ internal fun vozCarta(t: TemaId): VozCarta = when (t) {
         "Hermano que serás yo:", "Escribe tu misiva, hermano…", "Misiva para %s, sellada por la casa", "Ningún hermano la abrirá antes de tiempo.", "Toca para tomar la pluma…")
     TemaId.DISTOPIA -> VozCarta("DESCLASIFICADA: PUEDE ABRIRSE", "Clasificada", "DESTINATARIO: CIUDADANO DEL %s", "DEST.: CIUDADANO DE %s", "DESTINATARIO: CIUDADANO FUTURO",
         "Ciudadano del futuro:…", "Redacte su comunicado…", "Comunicado para %s archivado", "El Ministerio prohíbe abrirla antes.", "TOQUE PARA REDACTAR")
+    // Las cartas son postales de 1967 impresas a dos tintas; las de al futuro, «postales para otro verano», van atadas con el
+    // cordel de la carpeta de dibujos y la etiqueta de un disco en el nudo.
+    TemaId.PSICODELIA -> VozCarta("Llegó la postal: dale la vuelta", "Atada con el cordel de la carpeta", "Para mí, en otro verano: el %s", "Yo, otro verano · %s",
+        "Para mí, en otro verano", "Hola, yo del otro verano:", "Escribe al dorso: la niebla, la calle, la gente…", "Postal para %s, con su estampilla de cuatro centavos",
+        "El cordel no se desata antes de su verano.", "Toca y escribe tu postal…")
+    // Las cartas son tarjetas postales ilustradas; las de al futuro, «postales para el siglo nuevo», van atadas con una cinta de
+    // seda y una viñeta engomada.
+    TemaId.NOUVEAU -> VozCarta("Llegó la postal: dale la vuelta", "Atada con una cinta de seda", "Para quien seré el %s", "Quien seré · %s", "Para quien seré en el siglo nuevo",
+        "Querido yo del siglo nuevo:", "Escribe tu postal, con letra pequeña…", "Postal para %s, ya en el buzón de la esquina", "La cinta no se desata antes de su día.",
+        "Toca para escribir al dorso de la postal…")
+    // Los galos echaban cartas a la pira para sus muertos, porque creían que el alma vuelve a vivir (Diodoro 5.28): la carta al
+    // futuro va para el que uno volverá a ser. Las demás corren de oppidum en oppidum, como el grito (César 7.3).
+    TemaId.GALIA -> VozCarta("Llegó el mensajero: rompe el sello", "Atada con lana roja y sellada", "Para el que volveré a ser el %s", "El que volveré a ser · %s", "Para el que volveré a ser",
+        "A ti, que vuelves a vivir:", "Raya tu mensaje para el otro oppidum…", "Mensaje para %s: ya corre de oppidum en oppidum", "El sello no se rompe antes de su noche.",
+        "Toca para rayar la cera con el estilo…")
+    TemaId.ARCONTES -> VozCarta("Ya puedes romper el barro: ábrela", "Atada y sellada con barro", "Para el iniciado que seré el %s", "Iniciado de %s", "Para el iniciado que seré",
+        "Al que seré, de parte del que soy:", "Escribe para la otra comunidad…", "Carta para %s, atada y escondida", "El barro no se rompe antes de su día.",
+        "Toca para escribir a la luz de la lámpara…")
+    TemaId.FRENTE -> VozCarta("VENTANA ABIERTA: DESCÍFRALA", "Cifrada con la clave de la célula", "PARA EL AGENTE QUE SERÁS EL %s", "AGENTE · %s", "PARA EL AGENTE QUE SERÁS",
+        "Agente, si lees esto, la red sigue en pie:", "Cifra tu mensaje para el contacto…", "Transmisión para %s cifrada y en cola", "La clave no se libera antes de su ventana.", "TOCA PARA ABRIR EL CANAL")
     TemaId.REFUGIO -> VozCarta("¡Lista para abrir!", "Sellada en la bóveda", "Para el residente del %s", "Residente de %s", "Para el residente del mañana",
         "¡Hola, yo del mañana!…", "Escribe tu mensaje al vecino…", "Mensaje para %s en la bóveda", "La bóveda no se abre antes de tiempo.", "Toca para escribir con optimismo…")
     TemaId.ORDEN -> VozCarta("SELLO LEVANTADO: ABRIR", "Remachada", "AL CUSTODIO DEL %s", "CUSTODIO DE %s", "AL CUSTODIO QUE VENDRÁ",

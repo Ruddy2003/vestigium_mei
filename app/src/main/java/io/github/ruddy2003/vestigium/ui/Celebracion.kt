@@ -158,6 +158,17 @@ private fun nivelesLogro(t: TemaId): List<String> = when (t) {
     TemaId.MEDIEVAL -> listOf("en tinta", "en minio", "en pan de oro", "códice purpúreo")
     TemaId.TEMPLARIO -> listOf("hermano sargento", "freire caballero", "comendador", "maestre del Temple")
     TemaId.DISTOPIA -> listOf("clase C", "clase B", "clase A", "alto secreto")
+    // El cartel de la semana, cada vez más lejos: pegado en un poste, en la vitrina de la tienda, sonando en la radio de
+    // noche y, lo más alto, en el festival de Monterey (igual en las dos caras).
+    TemaId.PSICODELIA -> listOf("cartel en un poste", "en la vitrina de la tienda", "suena en la FM de noche", "en el festival de Monterey")
+    // Los pasos de una estampa en el taller: la prueba, el «bueno para imprimir» que firma el artista, la prueba firmada y,
+    // lo más alto, el cartel pegado en todas las paredes de París.
+    TemaId.NOUVEAU -> listOf("épreuve d'essai", "bon à tirer", "épreuve signée", "sur tous les murs de Paris")
+    // Los torques que se ganan, del metal más humilde al oro; y lo más alto, que los bardos lo canten (Diodoro 5.31).
+    TemaId.GALIA -> listOf("torques de bronce", "torques de plata", "torques de oro", "lo cantan los bardos")
+    // Las tres clases de personas de los valentinianos, según Ireneo (Contra las herejías 1.7.5), y la Ogdóada, adonde sube el alma.
+    TemaId.ARCONTES -> listOf("de materia (hílico)", "de alma (psíquico)", "de espíritu (pneumático)", "en la Ogdóada")
+    TemaId.FRENTE -> listOf("señal débil", "señal clara", "canal seguro", "la red entera te oye")
     TemaId.REFUGIO -> listOf("residente", "jefe de turno", "jefe de sector", "director del refugio")
     TemaId.ORDEN -> listOf("escudero", "caballero", "paladín", "gran maestre")
     TemaId.VAPOR -> listOf("mención del jurado", "medalla de plata de la Exposición", "gran medalla de oro", "miembro de la Real Sociedad")
@@ -379,6 +390,114 @@ private fun DrawScope.motivoLogro(t: TemaId, c: Offset, giro: Float, cs: ColorSc
             val a = m * 0.62f; val k = m * 0.8f
             drawPath(Path().apply { moveTo(c.x - a, c.y); quadraticTo(c.x, c.y - k, c.x + a, c.y); quadraticTo(c.x, c.y + k, c.x - a, c.y); close() }, cs.primary.copy(alpha = 0.16f), style = Stroke(2f * u))
             drawCircle(cs.primary.copy(alpha = 0.12f), m * 0.36f, c, style = Stroke(1.5f * u))
+        }
+        TemaId.PSICODELIA -> with(PiezasPsicodelia) {
+            // Según la cara del tema. La ciudad: el disco del logro en el plato, con la etiqueta que gira, y dos haces de la
+            // luz de la tarde que entran por la izquierda. La tinta: el disco hecho sol del cartel, con su corona de rayos que
+            // gira una sexta de vuelta por vuelta del motivo (24 rayos: cierra sin salto) y, con la intensidad, sus anillos
+            // alternos. Todo tenue, en su propia capa, detrás del logro.
+            val k = colores(oscuro)
+            val radio = m * 0.44f
+            val caja = androidx.compose.ui.geometry.Rect(c.x - radio * 1.5f, c.y - radio * 1.5f, c.x + radio * 1.5f, c.y + radio * 1.5f)
+            drawContext.canvas.saveLayer(caja, androidx.compose.ui.graphics.Paint().apply { alpha = if (oscuro) 0.5f else 0.4f })
+            if (k.ciudad) {
+                for (j in 0..1) {
+                    val x0 = c.x - radio * (1.4f - j * 0.5f)
+                    drawPath(Path().apply { moveTo(x0, c.y - radio * 1.4f); lineTo(x0 + radio * 0.3f, c.y - radio * 1.4f)
+                        lineTo(x0 + radio * 1.3f, c.y + radio * 1.4f); lineTo(x0 + radio * 0.9f, c.y + radio * 1.4f); close() },
+                        Brush.verticalGradient(listOf(TrazosCiudad.LUZ_BAJA.copy(alpha = 0.7f), Color.Transparent), c.y - radio * 1.4f, c.y + radio * 1.4f))
+                }
+                disco(c, radio * 0.8f, k, giro = giro)
+            } else {
+                rotate(giro / 6f, c) { corona(c, radio * 0.52f, radio * 1.15f, k, n = 24) }
+                for (a in 1..k.m.anillos) drawCircle(if (a % 2 == 0) k.magenta else k.ultramar, radio * 1.15f + a * 5f * u, c, style = Stroke(2.2f * u))
+                disco(c, radio * 0.5f, k)
+            }
+            drawContext.canvas.restore()
+        }
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            // El aro de látigo del sello, grande y tenue, que gira despacio; por dentro, dos iris que suben desde la yema; y una
+            // libélula que da la vuelta alrededor del logro. De noche, en el centro, la luz de una lámpara de vidrio.
+            val fondo = cs.background
+            fun tenue(col: Color, k: Float) = androidx.compose.ui.graphics.lerp(fondo, col, k)
+            if (oscuro) drawCircle(Brush.radialGradient(listOf(LUZ.copy(alpha = 0.18f), VIDRIO_AMBAR.copy(alpha = 0.06f), Color.Transparent), c, m * 0.44f), m * 0.44f, c)
+            val ra = m * 0.46f
+            val oro = if (oscuro) ORO else androidx.compose.ui.graphics.lerp(ORO, Color(0xFF7A5810), 0.3f)
+            rotate(giro / 8f, c) { anilloLatigo(c, ra, m * 0.03f, tenue(oro, 0.55f), tenue(ORO_BRILLO, 0.5f), sombra = false, filete = false) }
+            iris(Offset(c.x - ra * 0.56f, c.y + ra * 0.94f), ra * 0.95f, tenue(IRIS, 0.38f), tenue(TALLO, 0.38f), tenue(TALLO_SOMBRA, 0.38f))
+            iris(Offset(c.x - ra * 0.28f, c.y + ra * 0.98f), ra * 0.62f, tenue(MALVA, 0.34f), tenue(TALLO, 0.34f), tenue(TALLO_SOMBRA, 0.34f))
+            val p = pt(ra * 0.8f, Math.toRadians(giro.toDouble() - 60.0))
+            libelula(p, m * 0.12f, giro + 120f, 0f, tenue(LIBELULA, 0.5f), tenue(NACAR, 0.6f), tenue(ORO, 0.5f))
+        }
+        TemaId.GALIA -> with(TrazosGalia) {
+            // El torques que se gana: en el centro, la luz de la hoguera; alrededor, una corona de hojas de roble que gira
+            // despacio; por fuera, el torques de oro; y debajo, junto al hueco del torques, dos carnyx de pie que se miran y
+            // braman, con las ondas del bramido que suben desde la boca del jabalí.
+            val fondo = cs.background
+            fun mezcla(c: Color, k: Float) = androidx.compose.ui.graphics.lerp(fondo, c, k)
+            drawCircle(Brush.radialGradient(listOf(FUEGO.copy(alpha = if (oscuro) 0.26f else 0.16f), Color.Transparent), c, m * 0.36f), m * 0.36f, c)
+            val hoja = mezcla(if (oscuro) cs.secondary else ROBLE, if (oscuro) 0.3f else 0.24f)
+            rotate(giro / 14f, c) {
+                for (k in 0 until 14) {
+                    val a = Math.toRadians(k * 360.0 / 14)
+                    hojaRoble(pt(m * 0.37f, a), m * 0.085f, (k * 360f / 14) + 90f + 25f, hoja, mezcla(ROBLE_SOMBRA, if (oscuro) 0.3f else 0.3f))
+                }
+            }
+            torques(c, m * 0.46f, m * 0.028f, mezcla(ORO, if (oscuro) 0.5f else 0.55f), mezcla(ORO_BRILLO, if (oscuro) 0.55f else 0.6f))
+            val bronce = mezcla(BRONCE, if (oscuro) 0.45f else 0.4f)
+            for (lado in listOf(-1f, 1f)) {
+                val alto = m * 0.5f; val uu = alto / 100f
+                val pie = Offset(c.x - lado * m * 0.33f, c.y + m * 0.98f)
+                carnyx(pie, alto, bronce, null, lado)
+                val boca = Offset(pie.x + lado * 41f * uu, pie.y - 86f * uu)
+                val hacia = -90f + lado * 35f
+                for (k in 0 until 3) {
+                    val f = (giro / 360f * 8f + k / 3f) % 1f
+                    val r = (4f + 34f * f) * u
+                    drawArc(bronce.copy(alpha = 0.7f * sin(PI * f).toFloat()), hacia - 28f, 56f, false, Offset(boca.x - r, boca.y - r), Size(2 * r, 2 * r), style = Stroke(1.6f * u, cap = StrokeCap.Round))
+                }
+            }
+        }
+        TemaId.ARCONTES -> {
+            // El alma que sube: en el centro, la luz blanca y violeta de lo alto; alrededor, las siete esferas, cada una con su
+            // marca que gira a su paso (unas a un lado y otras al otro, la de dentro más deprisa); y por fuera, el ouroboros que
+            // encierra el mundo, que da una vuelta lenta.
+            val anillo = if (oscuro) TrazosArcontes.ESFERA else cs.primary
+            drawCircle(Brush.radialGradient(listOf(cs.tertiary.copy(alpha = if (oscuro) 0.24f else 0.14f), Color.Transparent), c, m * 0.34f), m * 0.34f, c)
+            val pasos = listOf(3, 2, -2, 1, -1, 1, -1)
+            for (k in 0 until 7) {
+                val r = m * (0.2f + 0.045f * k)
+                drawCircle(anillo.copy(alpha = (if (oscuro) 0.3f else 0.18f) - k * 0.015f), r, c, style = Stroke(1.2f * u))
+                val p = pt(r, Math.toRadians(giro * pasos[k] + k * 51.0))
+                drawCircle(Brush.radialGradient(listOf(anillo.copy(alpha = 0.35f), Color.Transparent), p, 7f * u), 7f * u, p)
+                drawCircle(anillo.copy(alpha = 0.55f), 2.4f * u, p)
+            }
+            rotate(-giro, c) { with(TrazosArcontes) { ouroboros(c, m * 0.5f, m * 0.032f, cs.primary.copy(alpha = if (oscuro) 0.2f else 0.15f), -90f) } }
+        }
+        TemaId.FRENTE -> {
+            // El parche de misión bordado sobre la pantalla de radar: los anillos de distancia y la cruz, el barrido que da
+            // dos vueltas mientras el motivo da una, la orla de puntadas del parche, rota arriba a la derecha como el canal
+            // del emblema, y las ondas de la señal que se escapan por la rotura.
+            val radar = if (oscuro) Color(0xFF9FD8A8) else cs.tertiary
+            listOf(0.2f, 0.3f, 0.4f).forEach { k -> drawCircle(radar.copy(alpha = 0.13f), m * k, c, style = Stroke(1.2f * u)) }
+            drawLine(radar.copy(alpha = 0.1f), Offset(c.x - m * 0.42f, c.y), Offset(c.x + m * 0.42f, c.y), 1f * u)
+            drawLine(radar.copy(alpha = 0.1f), Offset(c.x, c.y - m * 0.42f), Offset(c.x, c.y + m * 0.42f), 1f * u)
+            rotate(giro * 2f, c) {
+                drawCircle(Brush.sweepGradient(0f to Color.Transparent, 0.78f to Color.Transparent, 1f to radar.copy(alpha = if (oscuro) 0.2f else 0.16f), center = c), m * 0.42f, c)
+                drawLine(radar.copy(alpha = 0.3f), c, Offset(c.x + m * 0.42f, c.y), 1.4f * u)
+            }
+            val hueco = -50.0
+            for (i in 0 until 96) {
+                val g = i * 3.75
+                if (abs(((g - hueco + 540.0) % 360.0) - 180.0) < 16.0) continue
+                val a = Math.toRadians(g)
+                drawLine(cs.primary.copy(alpha = if (oscuro) 0.22f else 0.18f), pt(m * 0.44f, a + 0.02), pt(m * 0.49f, a - 0.02), 2f * u, StrokeCap.Round)
+            }
+            for (k in 0 until 3) {
+                val f = (giro / 360f * 6f + k / 3f) % 1f
+                val r = m * (0.4f + 0.18f * f)
+                drawArc(radar.copy(alpha = 0.3f * sin(PI * f).toFloat()), hueco.toFloat() - 14f, 28f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(2.2f * u, cap = StrokeCap.Round))
+            }
         }
         TemaId.REFUGIO -> {
             // Un átomo: tres órbitas con su electrón y el núcleo, el emblema del optimismo atómico.

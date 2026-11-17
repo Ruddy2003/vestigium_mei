@@ -68,6 +68,7 @@ import io.github.ruddy2003.vestigium.ui.Tonos
 import io.github.ruddy2003.vestigium.ui.esOscuro
 import io.github.ruddy2003.vestigium.ui.figEstrella
 import io.github.ruddy2003.vestigium.ui.figOndulado
+import io.github.ruddy2003.vestigium.ui.biblioteca.caballoGalia
 import io.github.ruddy2003.vestigium.ui.figPoligono
 import io.github.ruddy2003.vestigium.ui.figuraTema
 import java.time.LocalDate
@@ -255,6 +256,12 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
     TemaId.MEDIEVAL -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 7.dp, bottomStart = 1.dp)
     TemaId.TEMPLARIO -> CutCornerShape(topStart = 0.dp, topEnd = 0.dp, bottomEnd = 5.dp, bottomStart = 5.dp)
     TemaId.DISTOPIA -> RectangleShape
+    // La ciudad: la copia de foto de esquinas apenas redondas. El cartel: el marco de arco (arriba redondo, abajo casi recto).
+    TemaId.PSICODELIA -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) RoundedCornerShape(5.dp) else RoundedCornerShape(topStart = 10.dp, topEnd = 10.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
+    TemaId.NOUVEAU -> RoundedCornerShape(topStart = 2.dp, topEnd = 14.dp, bottomEnd = 5.dp, bottomStart = 5.dp)   // la hoja del almanaque, como un cartel de esquina redonda
+    TemaId.GALIA -> RoundedCornerShape(topStart = 2.dp, topEnd = 5.dp, bottomEnd = 5.dp, bottomStart = 5.dp)   // la tablilla de roble, de esquinas gastadas
+    TemaId.ARCONTES -> RoundedCornerShape(topStart = 3.dp, topEnd = 12.dp, bottomEnd = 3.dp, bottomStart = 6.dp)   // un sillar de caliza, gastado
+    TemaId.FRENTE -> RoundedCornerShape(topStart = 2.dp, topEnd = 10.dp, bottomEnd = 10.dp, bottomStart = 2.dp)   // la tecla curva de la consola
     TemaId.REFUGIO -> RoundedCornerShape(7.dp)
     TemaId.ORDEN -> CutCornerShape(topEnd = 8.dp)
     TemaId.VAPOR -> RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp, bottomEnd = 2.dp, bottomStart = 2.dp)
@@ -290,7 +297,7 @@ private fun formaCelda(tema: TemaId): Shape = when (tema) {
  * (ánimo y diario del día, como en la hoja de la noche) pone el sello del día a la derecha, con la figura del tema impresa.
  * Todo va pegado al borde o en el hueco de la derecha, para no tapar el número ni las marcas.
  */
-private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sellado: Boolean, linea: Color, acento: Color, oro: Color, sobre: Color) {
+private fun DrawScope.marcoCelda(tema: TemaId, fecha: String, forma: Shape, hoy: Boolean, sellado: Boolean, linea: Color, acento: Color, oro: Color, sobre: Color) {
     val s = density
     val w = size.width; val h = size.height
     val borde = forma.createOutline(size, layoutDirection, this)
@@ -382,6 +389,121 @@ private fun DrawScope.marcoCelda(tema: TemaId, forma: Shape, hoy: Boolean, sella
                 val tinta = Color(0xFFB3261E)
                 drawRect(tinta, Offset(pc.x - 5.5f * s, pc.y - 3.6f * s), Size(11f * s, 7.2f * s), style = Stroke(s))
                 figuraTema(tema, tinta, pc, 2.6f * s, Color.White)
+            }
+        }
+        // Cada día es un disco (recurso): a la derecha asoman los surcos del vinilo alrededor de su etiqueta, de las tintas que le
+        // tocan por su número de disco (`Psicodelia.disco`). La ciudad: la etiqueta naranja quemado, verde botella u ocre, y hoy
+        // el brazo del tocadiscos baja sobre el surco; el día sellado lleva en la etiqueta el agujero y su renglón. El cartel: la
+        // etiqueta en magenta o ultramar con su corona de rayos, y el día sellado, el disco hecho sol entero.
+        TemaId.PSICODELIA -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.4f else 0.6f)
+            val dia = runCatching { io.github.ruddy2003.vestigium.data.Fechas.parse(fecha) }.getOrNull()
+            val n = dia?.let { io.github.ruddy2003.vestigium.ui.Psicodelia.disco(it) } ?: 1
+            val ciudad = io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE
+            val etiqueta = if (ciudad) listOf(Color(0xFF9C4219), Color(0xFF3D5838), Color(0xFFA77A2A))[n % 3]
+                else listOf(io.github.ruddy2003.vestigium.ui.TrazosTinta.tinta(io.github.ruddy2003.vestigium.ui.TrazosTinta.Tinta.MAGENTA, false, 0f),
+                    io.github.ruddy2003.vestigium.ui.TrazosTinta.tinta(io.github.ruddy2003.vestigium.ui.TrazosTinta.Tinta.ULTRAMAR, false, 0f))[n % 2]
+            val c0 = Offset(w - 7.5f * s, h * 0.56f)
+            for (k in 1..4) drawCircle(linea.copy(alpha = if (hoy) 0.5f else 0.32f), (4.8f + k * 2.3f) * s, c0, style = Stroke(0.4f * s))
+            if (ciudad) {
+                if (hoy) drawArc(acento.copy(alpha = 0.45f), 200f, 50f, false, Offset(c0.x - 11f * s, c0.y - 11f * s), Size(22f * s, 22f * s), style = Stroke(1.2f * s))
+                drawCircle(etiqueta, 4.2f * s, c0)
+                if (sellado) drawLine(sobre.copy(alpha = 0.8f), Offset(c0.x - 2.4f * s, c0.y - 1.6f * s), Offset(c0.x + 2.4f * s, c0.y - 1.6f * s), 0.6f * s)
+                drawCircle(sobre, 0.6f * s, c0)
+                if (hoy) {
+                    // El brazo del tocadiscos, desde la esquina de arriba, con la cápsula sobre el surco.
+                    val eje = Offset(w - 2.2f * s, 2.8f * s)
+                    val punta = Offset(c0.x - 3.5f * s, c0.y - 8.5f * s)
+                    drawCircle(oro, 1.4f * s, eje)
+                    drawLine(oro, eje, punta, 0.8f * s)
+                    drawRect(oro, Offset(punta.x - 1.4f * s, punta.y - 0.6f * s), Size(2.6f * s, 1.8f * s))
+                }
+            } else {
+                if (hoy || sellado) drawPath(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(c0, 4.4f * s, (if (sellado) 9.5f else 7.5f) * s, 12, 0.5f, 0.12f, 0f), if (hoy) acento else etiqueta.copy(alpha = 0.8f))
+                drawCircle(etiqueta, 4.2f * s, c0)
+                drawCircle(sobre, 0.6f * s, c0)
+            }
+        }
+        // La hoja del almanaque de flores: la fila de agujeros por donde se arranca del taco, arriba, y a la derecha la flor del día
+        // (la de La Tour que le toca, con tantos pétalos y el color que le da su nombre: recurso de dibujo). Hoy, el borde en
+        // acento y un látigo de oro bajo los agujeros; el día sellado lleva el medallón esmaltado en lugar de la flor.
+        TemaId.NOUVEAU -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.3f else 0.6f)
+            var x = 2.2f * s
+            while (x < w - 2 * s) { drawCircle((if (hoy) acento else linea).copy(alpha = 0.55f), 0.5f * s, Offset(x, 1.3f * s)); x += 2.4f * s }
+            if (hoy) {
+                val l = Offset(w - 12f * s, 3.4f * s)
+                drawPath(Path().apply { moveTo(l.x - 5f * s, l.y); cubicTo(l.x - 1f * s, l.y - 1.2f * s, l.x + 3f * s, l.y + 1.6f * s, l.x + 6f * s, l.y + 0.6f * s); cubicTo(l.x + 8f * s, l.y, l.x + 7.5f * s, l.y + 2.6f * s, l.x + 6.2f * s, l.y + 2.2f * s) },
+                    oro, style = Stroke(0.7f * s))
+            }
+            if (sellado) sello(acento)
+            else {
+                val dia = runCatching { io.github.ruddy2003.vestigium.data.Fechas.parse(fecha) }.getOrNull()
+                if (dia != null) {
+                    val flor = io.github.ruddy2003.vestigium.ui.Nouveau.flor(dia)
+                    val k = Math.floorMod(flor.nombre.hashCode(), 12)
+                    val color = listOf(io.github.ruddy2003.vestigium.ui.TrazosNouveau.IRIS, io.github.ruddy2003.vestigium.ui.TrazosNouveau.MALVA,
+                        io.github.ruddy2003.vestigium.ui.TrazosNouveau.VIDRIO_AMBAR, io.github.ruddy2003.vestigium.ui.TrazosNouveau.ORO_BRILLO)[k % 4]
+                    val hoja = io.github.ruddy2003.vestigium.ui.TrazosNouveau.TALLO_SOMBRA
+                    val pie = Offset(w - 6f * s, h - 3f * s)
+                    val cima = Offset(w - 7f * s, h * 0.42f)
+                    drawLine(hoja, pie, cima, 0.6f * s)
+                    drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.hojaLanza(Offset(pie.x - 0.4f * s, pie.y - 3f * s), Offset(pie.x - 4f * s, pie.y - 7f * s), 1.4f * s, 0.2f), hoja)
+                    val petalos = 3 + k % 3
+                    for (j in 0 until petalos) {
+                        val ang = -kotlin.math.PI / 2 + (j - (petalos - 1) / 2f) * 0.75
+                        val punta = Offset(cima.x + (3.6f * s * kotlin.math.cos(ang)).toFloat(), cima.y + (3.6f * s * kotlin.math.sin(ang)).toFloat())
+                        drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.petalo(cima, punta, 2.6f * s), color)
+                    }
+                    drawCircle(androidx.compose.ui.graphics.lerp(color, Color.Black, 0.35f), 0.7f * s, cima)
+                }
+            }
+        }
+        // Una tablilla: el marco de roble y, por dentro, el filo de la cera; hoy, el marco se dora y lleva arriba a la derecha las
+        // muescas de la noche. El día sellado lleva el sello de barro con el caballo de las monedas.
+        TemaId.GALIA -> {
+            val g = (if (hoy) 2.4f else 1.8f) * s
+            contorno(if (hoy) oro else linea, if (hoy) 1.4f else 0.9f)
+            drawRect((if (hoy) oro else linea).copy(alpha = 0.4f), Offset(g, g), Size(w - 2 * g, h - 2 * g), style = Stroke(0.6f * s))
+            if (hoy) for (k in 0 until 3) drawLine(oro, Offset(w - (4.5f + k * 1.7f) * s, 2.6f * s), Offset(w - (4.5f + k * 1.7f) * s, 6.6f * s), 0.7f * s)
+            if (sellado) {
+                val barro = Color(0xFFA4704A)
+                drawPath(figOndulado(pc, 5.4f * s, 9, 0.1f), barro)
+                drawCircle(Color.Black.copy(alpha = 0.25f), 5.4f * s, pc, style = Stroke(0.5f * s))
+                caballoGalia(pc, 3.7f * s, Color(0xFF5E3519))
+            }
+        }
+        // Un sillar de caliza: el borde fino y tres marcas del cincel abajo; hoy, la luz de la lámpara entra por la esquina y
+        // una grieta fina de luz cruza el canto. El día sellado lleva la bula de barro con la figura del tema.
+        TemaId.ARCONTES -> {
+            contorno(if (hoy) acento else linea, if (hoy) 1.3f else 0.6f)
+            for (k in 0 until 3) drawLine(linea.copy(alpha = 0.6f), Offset((3f + k * 1.6f) * s, h - 2f * s), Offset((4.4f + k * 1.6f) * s, h - 5.5f * s), 0.5f * s)
+            if (hoy) {
+                drawCircle(Brush.radialGradient(listOf(Color(0xFFFFD98A).copy(alpha = 0.45f), Color.Transparent), Offset(w, 0f), w * 0.55f), w * 0.55f, Offset(w, 0f))
+                with(io.github.ruddy2003.vestigium.ui.TrazosArcontes) { grieta(Offset(w - 3f * s, 1.5f * s), Offset(w - 5.5f * s, 9f * s), 0.45f * s, 0.9f, 11) }
+            }
+            if (sellado) {
+                val barro = Color(0xFFB9774A)
+                drawPath(figOndulado(pc, 5.4f * s, 9, 0.08f), barro)
+                drawCircle(Color.Black.copy(alpha = 0.25f), 5.4f * s, pc, style = Stroke(0.5f * s))
+                figuraTema(tema, Color(0xFF5E3519), pc, 3.2f * s, barro)
+            }
+        }
+        // Tecla de consola: el piloto apagado arriba a la derecha y la placa grabada al pie; hoy, el piloto ámbar encendido con
+        // su halo. El día sellado lleva una pantallita de radar con su barrido y un eco.
+        TemaId.FRENTE -> {
+            if (hoy) { contorno(acento.copy(alpha = 0.3f), 2.6f); contorno(acento, 1.2f) } else contorno(linea, 0.7f)
+            drawLine(linea.copy(alpha = 0.45f), Offset(3f * s, h - 2.6f * s), Offset(w * 0.6f, h - 2.6f * s), 0.6f * s)
+            val piloto = Offset(w - 5f * s, 5f * s)
+            if (hoy) { drawCircle(Color(0xFFF2A33A).copy(alpha = 0.3f), 3.4f * s, piloto); drawCircle(Color(0xFFF2A33A), 1.6f * s, piloto) }
+            else drawCircle(linea.copy(alpha = 0.5f), 1.3f * s, piloto, style = Stroke(0.5f * s))
+            if (sellado) {
+                val verde = Color(0xFF9FD8A8)
+                drawCircle(Color(0xFF0F1A16), 5.2f * s, pc)
+                drawCircle(verde.copy(alpha = 0.7f), 4.6f * s, pc, style = Stroke(0.5f * s))
+                drawCircle(verde.copy(alpha = 0.35f), 2.4f * s, pc, style = Stroke(0.4f * s))
+                drawLine(verde, pc, pc + Offset(3.3f * s, -3.3f * s), 0.6f * s)
+                drawCircle(verde, 0.8f * s, pc + Offset(-1.8f * s, 1.4f * s))
             }
         }
         // Mampara del refugio: esquinas redondas y remaches; hoy, el fósforo encendido.
@@ -649,7 +771,7 @@ private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean,
     val cs = MaterialTheme.colorScheme
     Box(
         modifier.aspectRatio(0.78f).clip(forma).background(relleno)
-            .drawWithContent { drawContent(); if (avisos) { val g = 3.dp.toPx(); drawRect(fondo, Offset(g / 2, g / 2), Size(size.width - g, size.height - g), style = Stroke(g)) }; marcoCelda(tema, forma, hoy, sellado, cs.outline, cs.primary, cs.tertiary, cs.onPrimary) }
+            .drawWithContent { drawContent(); if (avisos) { val g = 3.dp.toPx(); drawRect(fondo, Offset(g / 2, g / 2), Size(size.width - g, size.height - g), style = Stroke(g)) }; marcoCelda(tema, fecha, forma, hoy, sellado, cs.outline, cs.primary, cs.tertiary, cs.onPrimary) }
             .clickable(onClick = onClick),
     ) {
         if (conFoto) {

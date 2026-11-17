@@ -78,6 +78,13 @@ fun pelajeDe(tema: TemaId): Pelaje? = when (tema) {
     TemaId.ANTIGUAS -> PELAJE_ANTIGUAS
     TemaId.CUEVA -> PELAJE_CUEVA
     TemaId.BASICO -> null           // Básico: sin cuadro
+    TemaId.FRENTE -> null           // lote 10: su cuadro va después de S19
+    TemaId.ARCONTES -> null         // lote 10: su cuadro va después de S19
+    TemaId.GALIA -> null            // lote 10: su cuadro va después de S19
+    TemaId.NOUVEAU -> null          // lote 10: su cuadro va después de S19
+    // Lote 10: su cuadro va después de S19. Su pelaje, cuando llegue, sale del gato de pixel de la versión 2 (la ciudad):
+    // atigrado naranja, sin gafas ni cinta ni ningún accesorio, con las patas manchadas de tinta.
+    TemaId.PSICODELIA -> null
 }
 
 // ---------------------------------------------------------------- Piezas para vestir al gato

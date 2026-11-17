@@ -27,8 +27,10 @@ enum class Genero { MASCULINO, FEMENINO }
  * - [desde] y [hasta]: el id de un día especial del calendario. La variante vale desde el día en que pasa [desde] y
  *   hasta la víspera de [hasta] («su padre», hasta el día en que muere; «la niña», desde que nace).
  * - [meses]: solo sale en esos meses (de 1 a 12), todos los años: lo que solo se hace en verano o solo en invierno.
+ * - [noche]: solo sale la noche de la semana con esa clave ([NocheDeSemana]), y esa noche manda sobre las demás de su
+ *   lugar. No es de todos los días.
  */
-class Variante(val texto: String, val estado: String? = null, val hacer: OtrasVidas.Hacer? = null, val desde: String? = null, val hasta: String? = null, val meses: Set<Int>? = null)
+class Variante(val texto: String, val estado: String? = null, val hacer: OtrasVidas.Hacer? = null, val desde: String? = null, val hasta: String? = null, val meses: Set<Int>? = null, val noche: String? = null)
 
 /**
  * Un objeto del día. [el] y [un]: su nombre con artículo, en minúsculas («el remo», «un remo»). [titulo]: el título
@@ -74,15 +76,16 @@ class Piezas(
 
         Parrafo.entries.forEach { lugar ->
             val l = variantes[lugar].orEmpty()
-            val deSiempre = l.filter { it.estado == null && it.desde == null && it.hasta == null && it.meses == null }
+            val deSiempre = l.filter { it.estado == null && it.desde == null && it.hasta == null && it.meses == null && it.noche == null }
             if (lugar == Parrafo.TRABAJO) quien.dia.map { it.que }.toSet().forEach { h ->
                 if (deSiempre.count { it.hacer == h } < 3) p += "${lugar.nombre}: hacen falta 3 variantes de todos los días para «${h.nombre}»"
             } else if (deSiempre.size < 5) p += "${lugar.nombre}: hacen falta al menos 5 variantes que valgan todos los días y todo el año (hay ${deSiempre.size})"
-            if (lugar != Parrafo.TRABAJO && l.count { it.estado == null } < 6) p += "${lugar.nombre}: hacen falta 6 variantes (hay ${l.count { it.estado == null }})"
+            if (lugar != Parrafo.TRABAJO && l.count { it.estado == null && it.noche == null } < 6) p += "${lugar.nombre}: hacen falta 6 variantes (hay ${l.count { it.estado == null && it.noche == null }})"
         }
         variantes.values.flatten().forEach { v ->
             listOfNotNull(v.desde, v.hasta).forEach { if (it !in ids) p += "Una variante depende del día «$it», que no está en el calendario" }
             if (v.estado != null && cal.estados.none { it.clave == v.estado }) p += "Una variante es del estado «${v.estado}», que no está en el calendario"
+            if (v.noche != null && cal.noches.none { it.clave == v.noche }) p += "Una variante es de la noche «${v.noche}», que no está en el calendario"
             if (v.meses != null && (v.meses.isEmpty() || v.meses.any { it !in 1..12 })) p += "Una variante tiene meses que no van de 1 a 12"
         }
         entornos.forEach { e -> if (cal.arcos.none { it.id == e.arco }) p += "Un entorno depende del arco «${e.arco}», que no existe"; if (e.frases.isEmpty()) p += "El entorno del arco «${e.arco}» no tiene frases" }
@@ -163,7 +166,7 @@ data class Cuento(val vida: String, val dia: String, val titulo: String, val par
                 suyos.forEach { (lugar, texto) -> if (lugar !in cambios && (i == 0 || cambios.size < 4)) cambios[lugar] = texto }
             }
 
-            val candidatas = Parrafo.entries.map { lugar -> candidatas(piezas.variantes[lugar].orEmpty(), cal, hoy, estado, hacer, d.monthValue) }
+            val candidatas = Parrafo.entries.map { lugar -> candidatas(piezas.variantes[lugar].orEmpty(), cal, hoy, estado, hacer, d.monthValue, ficha.noche) }
             val cuales = ficha.piezas(candidatas.map { maxOf(1, it.size) })
             val objeto = piezas.objetos.firstOrNull { it.clave == ficha.objeto }
             fun elegir(l: List<String>?, que: String): String = if (l.isNullOrEmpty()) "" else l[Azar(Semilla.de(ficha.vida, ficha.dia, que)).entero(l.size)]
@@ -194,19 +197,27 @@ data class Cuento(val vida: String, val dia: String, val titulo: String, val par
         }
 
         /**
-         * Las variantes de un lugar que pueden salir hoy. Primero se quitan las que aún no valen o ya no valen. De las
-         * que quedan se prefieren, en este orden: las del estado y la actividad de ahora; las de todos los días con esa
-         * actividad; las del estado sin actividad; las de todos los días sin actividad.
+         * Las variantes de un lugar que pueden salir hoy. Primero se quitan las que aún no valen o ya no valen, y las de
+         * una noche de la semana que no es la de hoy. Si hoy toca una [noche] y el lugar tiene variantes suyas que valen
+         * para el estado y la actividad de ahora, salen solo esas. Si no, de las demás se prefieren, en este orden: las
+         * del estado y la actividad de ahora; las de todos los días con esa actividad; las del estado sin actividad; las
+         * de todos los días sin actividad.
          */
-        internal fun candidatas(todas: List<Variante>, cal: Calendario, hoy: Int, estado: String?, hacer: OtrasVidas.Hacer?, mes: Int): List<Variante> {
+        internal fun candidatas(todas: List<Variante>, cal: Calendario, hoy: Int, estado: String?, hacer: OtrasVidas.Hacer?, mes: Int, noche: String? = null): List<Variante> {
             val vigentes = todas.filter { v ->
-                (v.meses == null || mes in v.meses) && (v.desde == null || lugarDe(cal, v.desde)?.let { hoy >= it } == true) && (v.hasta == null || lugarDe(cal, v.hasta)?.let { hoy < it } == true)
+                (v.noche == null || v.noche == noche) &&
+                    (v.meses == null || mes in v.meses) && (v.desde == null || lugarDe(cal, v.desde)?.let { hoy >= it } == true) && (v.hasta == null || lugarDe(cal, v.hasta)?.let { hoy < it } == true)
             }
+            if (noche != null) {
+                val deLaNoche = vigentes.filter { it.noche == noche && (it.estado == null || it.estado == estado) && (it.hacer == null || it.hacer == hacer) }
+                if (deLaNoche.isNotEmpty()) return deLaNoche
+            }
+            val comunes = vigentes.filter { it.noche == null }
             for ((e, h) in listOf(estado to hacer, null to hacer, estado to null, null to null).distinct()) {
-                val l = vigentes.filter { it.estado == e && it.hacer == h }
+                val l = comunes.filter { it.estado == e && it.hacer == h }
                 if (l.isNotEmpty()) return l
             }
-            return vigentes.filter { it.estado == null }.ifEmpty { vigentes }
+            return comunes.filter { it.estado == null }.ifEmpty { comunes }.ifEmpty { vigentes }
         }
 
         /** Llena los huecos de [texto]: los de [huecos] y los de género (`{cansado|cansada}`). Quita los espacios que sobren. */

@@ -287,6 +287,188 @@ object Frases {
         f("La visibilité est un piège.", "La visibilidad es una trampa.", "Michel Foucault, Vigilar y castigar, 1975"),
     )
 
+    /**
+     * Psicodelia: lo que se leía en el barrio en 1967. Los textos de ese año tienen derechos de autor, así que son los de
+     * dominio público que la contracultura leía y citaba: Blake, Whitman, Thoreau, Emerson, Gibran, el *Tao Te Ching*, la
+     * *Gita*, Kabir y Rumi en traducciones viejas, cada uno comprobado letra por letra en Wikisource (ortografía tal cual).
+     * Ver `docs/diseno/temas/fuentes_psicodelia.md`, sección 10. Las traducciones son propias. Desde la versión 2 del tema
+     * entra también la n.º 1 de esa sección, la de las puertas de la percepción (sin explicar de dónde le vino la fama, como
+     * pide la sección 9); la del exceso («The road of excess…») sigue fuera, por el seguimiento de impulsos y recaídas.
+     */
+    val PSICODELIA = listOf(
+        f("If the doors of perception were cleansed every thing would appear to man as it is, infinite.", "Si se limpiaran las puertas de la percepción, todo se le aparecería al hombre como es: infinito.", "William Blake, El matrimonio del cielo y el infierno, hacia 1793"),
+        f("Without Contraries is no progression.", "Sin contrarios no hay progreso.", "William Blake, El matrimonio del cielo y el infierno, hacia 1793"),
+        f("Energy is Eternal Delight", "La energía es deleite eterno", "William Blake, El matrimonio del cielo y el infierno, hacia 1793"),
+        f("Eternity is in love with the productions of time.", "La eternidad está enamorada de las obras del tiempo.", "William Blake, «Proverbios del infierno», hacia 1793"),
+        f("What is now proved was once, only imagind.", "Lo que hoy está probado antes fue solo imaginado.", "William Blake, «Proverbios del infierno», hacia 1793"),
+        f("The cistern contains: the fountain overflows", "La cisterna contiene; la fuente desborda", "William Blake, «Proverbios del infierno», hacia 1793"),
+        f("The tygers of wrath are wiser than the horses of instruction", "Los tigres de la ira son más sabios que los caballos de la instrucción", "William Blake, «Proverbios del infierno», hacia 1793"),
+        f("Exuberance is Beauty.", "La exuberancia es belleza.", "William Blake, «Proverbios del infierno», hacia 1793"),
+        f("To see a World in a Grain of Sand / And a Heaven in a Wild Flower / Hold Infinity in the palm of your hand / And Eternity in an hour", "Ver un mundo en un grano de arena / y un cielo en una flor silvestre, / tener el infinito en la palma de la mano / y la eternidad en una hora", "William Blake, «Augurios de inocencia», hacia 1801–1803"),
+        f("I loafe and invite my soul,", "Holgazaneo e invito a mi alma", "Walt Whitman, Hojas de hierba, 1855"),
+        f("A child said, What is the grass? fetching it to me with full hands;", "Un niño dijo: ¿qué es la hierba?, y me la trajo a manos llenas", "Walt Whitman, Hojas de hierba, 1855"),
+        f("I believe a leaf of grass is no less than the journeywork of the stars,", "Creo que una hoja de hierba no es menos que el trabajo de las estrellas", "Walt Whitman, Hojas de hierba, 1855"),
+        f("Do I contradict myself? / Very well then .... I contradict myself; / I am large .... I contain multitudes.", "¿Me contradigo? / Muy bien, entonces me contradigo; / soy grande, contengo multitudes.", "Walt Whitman, Hojas de hierba, 1855"),
+        f("I sound my barbaric yawp over the roofs of the world.", "Lanzo mi grito bárbaro sobre los tejados del mundo.", "Walt Whitman, Hojas de hierba, 1855"),
+        f("I went to the woods because I wished to live deliberately, to front only the essential facts of life,", "Me fui al bosque porque quería vivir a conciencia, enfrentarme solo a los hechos esenciales de la vida", "Henry David Thoreau, Walden, 1854"),
+        f("Simplicity, simplicity, simplicity!", "¡Sencillez, sencillez, sencillez!", "Henry David Thoreau, Walden, 1854"),
+        f("Time is but the stream I go a-fishing in.", "El tiempo no es más que el arroyo donde voy a pescar.", "Henry David Thoreau, Walden, 1854"),
+        f("If a man does not keep pace with his companions, perhaps it is because he hears a different drummer.", "Si un hombre no lleva el paso de sus compañeros, quizá sea porque oye otro tambor.", "Henry David Thoreau, Walden, 1854"),
+        f("Things do not change; we change.", "Las cosas no cambian; cambiamos nosotros.", "Henry David Thoreau, Walden, 1854"),
+        f("The sun is but a morning star.", "El sol no es más que una estrella de la mañana.", "Henry David Thoreau, Walden, 1854"),
+        f("Trust thyself: every heart vibrates to that iron string.", "Confía en ti: todo corazón vibra con esa cuerda de hierro.", "Ralph Waldo Emerson, «Confianza en uno mismo», 1841"),
+        f("Whoso would be a man must be a nonconformist.", "Quien quiera ser hombre ha de ser inconforme.", "Ralph Waldo Emerson, «Confianza en uno mismo», 1841"),
+        f("Nothing can bring you peace but yourself.", "Nada puede traerte la paz sino tú mismo.", "Ralph Waldo Emerson, «Confianza en uno mismo», 1841"),
+        f("Your children are not your children. / They are the sons and daughters of Life's longing for itself.", "Tus hijos no son tus hijos. / Son los hijos y las hijas del anhelo de la Vida por sí misma.", "Kahlil Gibran, El profeta, 1923"),
+        f("But let there be spaces in your togetherness, / And let the winds of the heavens dance between you.", "Pero que haya espacios en vuestra unión, / y que los vientos del cielo dancen entre vosotros.", "Kahlil Gibran, El profeta, 1923"),
+        f("Work is love made visible.", "El trabajo es el amor hecho visible.", "Kahlil Gibran, El profeta, 1923"),
+        f("Your joy is your sorrow unmasked.", "Tu alegría es tu tristeza sin máscara.", "Kahlil Gibran, El profeta, 1923"),
+        f("He who knows other men is discerning; he who knows himself is intelligent.", "Quien conoce a los demás es perspicaz; quien se conoce a sí mismo es inteligente.", "Laozi, Tao Te Ching, trad. de James Legge, 1891"),
+        f("Let right deeds be / Thy motive, not the fruit which comes from them.", "Que las obras rectas sean / tu motivo, no el fruto que viene de ellas.", "Bhagavad Gita, trad. de Edwin Arnold, 1885"),
+        f("O servant, where dost thou seek Me? / Lo! I am beside thee.", "Oh siervo, ¿dónde me buscas? / ¡Mira! Estoy a tu lado.", "Kabir, trad. de Rabindranath Tagore, 1915"),
+        f("I laugh when I hear that the fish in the water is thirsty:", "Me río cuando oigo que el pez en el agua tiene sed", "Kabir, trad. de Rabindranath Tagore, 1915"),
+        f("HEARKEN to the reed-flute, how it complains, / Lamenting its banishment from its home:", "Escucha a la flauta de caña, cómo se queja, / lamentando su destierro de su casa", "Rumi, Masnavi, trad. de E. H. Whinfield, 1898"),
+    )
+
+
+    /**
+     * Art nouveau: lo que se leía en París hacia 1900. Solo las frases que `docs/diseno/temas/fuentes_nouveau.md` (sección
+     * 11) comprobó letra por letra en el texto de la obra, en Wikisource, con su edición y su página; las de Baudelaire son
+     * anteriores (1857), pero se leían. Las traducciones son propias; todos los autores son de dominio público.
+     */
+    val NOUVEAU = listOf(
+        f("La vérité est en marche, et rien ne l'arrêtera.", "La verdad está en marcha, y nada la detendrá.", "Émile Zola, «M. Scheurer-Kestner», Le Figaro, 1897"),
+        f("Le monde est fait pour aboutir à un beau livre.", "El mundo está hecho para acabar en un hermoso libro.", "Stéphane Mallarmé, a Jules Huret, Encuesta sobre la evolución literaria, 1891"),
+        f("Je dis : une fleur ! et […] musicalement se lève, idée rieuse ou altière, l'absente de tous bouquets.",
+            "Digo: ¡una flor!, y […] se levanta, musical, idea risueña o altiva, la ausente de todos los ramos.", "Stéphane Mallarmé, prólogo al Tratado del verbo de René Ghil, 1886"),
+        f("La chair est triste, hélas ! et j'ai lu tous les livres.", "La carne es triste, ¡ay!, y he leído todos los libros.", "Stéphane Mallarmé, «Brisa marina», 1866"),
+        f("De la musique avant toute chose.", "La música antes que nada.", "Paul Verlaine, «Arte poética», Jadis et Naguère, 1884"),
+        f("Car nous voulons la Nuance encor, / Pas la Couleur, rien que la nuance !", "Porque aún queremos el Matiz, / ¡no el Color, nada más que el matiz!", "Paul Verlaine, «Arte poética», 1884"),
+        f("De la musique encore et toujours !", "¡Música, otra vez y siempre!", "Paul Verlaine, «Arte poética», 1884"),
+        f("Le désir fleurit, la possession flétrit toutes choses.", "El deseo hace florecer todas las cosas; la posesión las marchita.", "Marcel Proust, Los placeres y los días, 1896"),
+        f("Il vaut mieux rêver sa vie que la vivre.", "Más vale soñar la vida que vivirla.", "Marcel Proust, Los placeres y los días, 1896"),
+        f("Pour une famille vraiment vivante où chacun pense, aime et agit, avoir un jardin est une douce chose.",
+            "Para una familia de verdad viva, donde cada uno piensa, ama y obra, tener un jardín es una cosa dulce.", "Marcel Proust, Los placeres y los días, 1896"),
+        f("Au jardin des Tuileries, ce matin, le soleil s'est endormi tour à tour sur toutes les marches de pierre.",
+            "En el jardín de las Tullerías, esta mañana, el sol se ha dormido por turnos en todos los escalones de piedra.", "Marcel Proust, Los placeres y los días, 1896"),
+        f("Les paradoxes d'aujourd'hui sont les préjugés de demain.", "Las paradojas de hoy son los prejuicios de mañana.", "Marcel Proust, Los placeres y los días, 1896"),
+        f("La flatterie n'est parfois que l'épanchement de la tendresse.", "La adulación a veces no es más que el desahogo de la ternura.", "Marcel Proust, Los placeres y los días, 1896"),
+        f("J'ai décidé d'être admirable, en tout, pour tout !", "¡He decidido ser admirable, en todo, para todo!", "Edmond Rostand, Cyrano de Bergerac, acto I, 1897"),
+        f("Ci-gît Hercule-Savinien / De Cyrano de Bergerac / Qui fut tout, et qui ne fut rien.",
+            "Aquí yace Hercule-Savinien / de Cyrano de Bergerac, / que lo fue todo, y no fue nada.", "Edmond Rostand, Cyrano de Bergerac, acto V, 1897"),
+        f("Quand même.", "A pesar de todo.", "Sarah Bernhardt, su divisa, en Mi doble vida, 1907"),
+        f("Tout le monde m'avait donné des conseils. Personne ne m'avait donné un conseil.", "Todo el mundo me había dado consejos. Nadie me había dado un consejo.", "Sarah Bernhardt, Mi doble vida, 1907"),
+        f("Là, tout n'est qu'ordre et beauté, / Luxe, calme et volupté.", "Allí, todo es orden y belleza, / lujo, calma y voluptuosidad.", "Charles Baudelaire, «La invitación al viaje», Las flores del mal, 1857"),
+        f("Les plus rares fleurs / Mêlant leurs odeurs / Aux vagues senteurs de l'ambre", "Las flores más raras, / mezclando sus olores / con los vagos aromas del ámbar", "Charles Baudelaire, «La invitación al viaje», 1857"),
+        f("La Nature est un temple où de vivants piliers / Laissent parfois sortir de confuses paroles", "La Naturaleza es un templo donde pilares vivos / dejan a veces salir confusas palabras", "Charles Baudelaire, «Correspondencias», Las flores del mal, 1857"),
+        f("Les parfums, les couleurs et les sons se répondent.", "Los perfumes, los colores y los sonidos se responden.", "Charles Baudelaire, «Correspondencias», 1857"),
+    )
+
+
+    /**
+     * Galia: lo que los antiguos contaron de los galos. César, en la traducción de José Goya y Muniain (1798; edición de
+     * 1919 en Wikisource, de dominio público), copiada tal cual; Plutarco, en la de Antonio Ranz Romanillos; Lucano,
+     * Diodoro y Estrabón, traducidos aquí de las inglesas de dominio público (Ridley, Booth, Hamilton y Falconer). Varios
+     * eran enemigos de los galos: se citan como lo que ellos dicen. Ver `docs/diseno/temas/fuentes_galia.md`.
+     */
+    val GALIA = listOf(
+        f(null, "Dícese que allí aprenden gran número de versos. Así es que algunos gastan los veinte años en la escuela.", "César, Guerra de las Galias 6.14 (trad. Goya)"),
+        f(null, "No tienen por lícito escribir lo que aprenden.", "César, Guerra de las Galias 6.14 (trad. Goya), sobre los druidas"),
+        f(null, "Esméranse, sobre todo, en persuadir la inmortalidad de las almas y su transmigración de unos cuerpos a otros, cuya creencia juzgan ser grandísimo incentivo para el valor, poniendo aparte el temor de la muerte.", "César, Guerra de las Galias 6.14 (trad. Goya)"),
+        f(null, "Hacen el cómputo de los tiempos no por días, sino por noches; y así en sus cumpleaños como en los principios de meses y años, siempre la noche precede al día.", "César, Guerra de las Galias 6.18 (trad. Goya)"),
+        f(null, "Siempre que sucede alguna cosa ruidosa y muy notable, la pregonan por los campos y caminos; los primeros que oyen pasan a otros la noticia.", "César, Guerra de las Galias 7.3 (trad. Goya)"),
+        f(null, "No haber emprendido él esta guerra por sus propios intereses, sino por la defensa de la común libertad.", "Vercingétorix, según César, Guerra de las Galias 7.89 (trad. Goya)"),
+        f(null, "Tomó las armas más hermosas que tenía, enjaezó ricamente su caballo, y saliendo en él por las puertas dio una vuelta alrededor de César.", "Plutarco, César 27 (trad. Ranz Romanillos), sobre Vercingétorix en Alesia"),
+        f(null, "Era esto en la estación del invierno, y los ríos helados, las selvas cubiertas de nieve.", "Plutarco, César 25 (trad. Ranz Romanillos)"),
+        f(null, "A ustedes solos les toca conocer, o no conocer, a los dioses y los astros; sus casas son los bosques apartados.", "Lucano, Farsalia I, a los druidas (traducción propia)"),
+        f(null, "La muerte está en medio de una larga vida.", "Lucano, Farsalia I, sobre lo que creen los galos (traducción propia)"),
+        f(null, "Y ustedes, bardos, que con sus cantos de guerra mandan a los tiempos lejanos la fama de las hazañas.", "Lucano, Farsalia I (traducción propia)"),
+        f(null, "Tienen poetas que cantan con instrumentos parecidos a liras; los llaman bardos, y alaban a unos y vituperan a otros.", "Diodoro Sículo V, 31 (traducción propia)"),
+        f(null, "Creen que las almas de los hombres no mueren y que, pasado cierto tiempo, vuelven a vivir en otro cuerpo.", "Diodoro Sículo V, 28 (traducción propia)"),
+        f(null, "Dicen que el alma no se destruye, ni tampoco el mundo.", "Estrabón IV, 4, 4 (traducción propia)"),
+        f(null, "Hay tres clases de hombres a los que veneran: los bardos, los vates y los druidas.", "Estrabón IV, 4, 4 (traducción propia)"),
+        f(null, "A su escuela concurre gran número de jóvenes a instruirse.", "César, Guerra de las Galias 6.13 (trad. Goya), sobre los druidas"),
+        f(null, "Abriéndose camino por seis pies de nieve.", "César, Guerra de las Galias 7.8 (trad. Goya), al cruzar las Cevenas en lo más duro del invierno"),
+        f(null, "Arrojando al suelo la armadura se sentó a los pies de César y se mantuvo inmóvil.", "Plutarco, César 27 (trad. Ranz Romanillos), sobre Vercingétorix en Alesia"),
+        f(null, "Hasta Marte respeta a las Musas.", "Diodoro Sículo V, 31 (traducción propia), sobre los bardos que detienen las batallas"),
+        f(null, "Los bardos componen y cantan himnos; los vates se ocupan de los sacrificios y del estudio de la naturaleza.", "Estrabón IV, 4, 4 (traducción propia)"),
+    )
+
+    /**
+     * Arcontes: dichos que el iniciado tendría por suyos. Los de Nag Hammadi, el papiro de Berlín e Hipólito se traducen
+     * aquí (no hay traducción al español de dominio público); el sentido de cada pasaje se comprobó en las páginas
+     * citadas en `docs/diseno/temas/fuentes_arcontes.md`. Los de los evangelios canónicos van con el texto exacto de la
+     * Reina-Valera 1909, copiado de Wikisource (sección 14 de ese archivo, con su ortografía de 1909); en Juan 18:36 y
+     * Mateo 6:22 se toma solo el principio del versículo, y el punto final cierra lo que allí sigue con dos puntos.
+     */
+    val ARCONTES = listOf(
+        f(null, "Estas son las palabras escondidas que dijo Jesús, el que vive, y que escribió Dídimo Judas Tomás.", "Evangelio de Tomás, prólogo (Nag Hammadi II,2; traducción propia)"),
+        f(null, "Quien encuentre el sentido de estas palabras no probará la muerte.", "Evangelio de Tomás, dicho 1 (traducción propia)"),
+        f(null, "Que el que busca no deje de buscar hasta que encuentre. Cuando encuentre, se turbará; y cuando se turbe, se asombrará, y reinará sobre el todo.", "Evangelio de Tomás, dicho 2 (traducción propia)"),
+        f(null, "El reino está dentro de ustedes y está fuera de ustedes. Cuando se conozcan a sí mismos, serán conocidos.", "Evangelio de Tomás, dicho 3 (traducción propia)"),
+        f(null, "Si no se conocen a sí mismos, viven en la pobreza, y ustedes son la pobreza.", "Evangelio de Tomás, dicho 3 (traducción propia)"),
+        f(null, "El anciano de muchos días no dudará en preguntarle a un niño de siete días por el lugar de la vida, y vivirá.", "Evangelio de Tomás, dicho 4 (traducción propia)"),
+        f(null, "Les daré lo que ningún ojo ha visto, lo que ningún oído ha oído, lo que ninguna mano ha tocado y lo que no ha subido al corazón humano.", "Evangelio de Tomás, dicho 17 (traducción propia)"),
+        f(null, "Quien me busque me hallará en los niños de siete años en adelante; porque allí, escondido en el eón catorce, me manifiesto.", "Un pasaje de Tomás que cita Hipólito, Refutación 5.7.20 (traducción propia)"),
+        f(null, "La verdad es la madre, y el conocimiento, el padre.", "Evangelio de Felipe (Nag Hammadi II,3; traducción propia)"),
+        f(null, "Quien tiene el conocimiento de la verdad es libre.", "Evangelio de Felipe (traducción propia)"),
+        f(null, "No se mostró como era, sino de la manera en que podrían verlo.", "Evangelio de Felipe (traducción propia)"),
+        f(null, "Viste el Espíritu y te volviste espíritu. Viste a Cristo y te volviste Cristo.", "Evangelio de Felipe (traducción propia)"),
+        f(null, "Cuando un ciego y uno que ve están juntos en la tiniebla, no se distinguen uno del otro.", "Evangelio de Felipe (traducción propia)"),
+        f(null, "Quien recibe la luz no será visto, ni podrán retenerlo.", "Evangelio de Felipe (traducción propia)"),
+        f(null, "Donde está el entendimiento, allí está el tesoro.", "Evangelio de María (papiro de Berlín 8502; traducción propia)"),
+        f(null, "Dichosa tú, que no vacilaste al verme.", "Evangelio de María (traducción propia)"),
+        f(null, "La enseñanza del Salvador, y la revelación de los misterios y de lo que está escondido en el silencio.", "Apócrifo de Juan, primeras palabras (traducción propia)"),
+        f(null, "Y la luz en las tinieblas resplandece; mas las tinieblas no la comprendieron.", "Juan 1:5 (Reina-Valera 1909)"),
+        f(null, "Y conoceréis la verdad, y la verdad os libertará.", "Juan 8:32 (Reina-Valera 1909)"),
+        f(null, "Mi reino no es de este mundo.", "Juan 18:36 (Reina-Valera 1909)"),
+        f(null, "Porque no hay nada oculto que no haya de ser manifestado, ni secreto que no haya de descubrirse.", "Marcos 4:22 (Reina-Valera 1909)"),
+        f(null, "La lámpara del cuerpo es el ojo.", "Mateo 6:22 (Reina-Valera 1909)"),
+        f(null, "Pedid, y se os dará; buscad, y hallaréis; llamad, y se os abrirá.", "Mateo 7:7 (Reina-Valera 1909)"),
+    )
+
+    /**
+     * Frente exterior: la resistencia, la libertad y el valor de seguir, dichos por gente que los vivió (resistentes, presos,
+     * pilotos, disidentes). Ninguna repite las de Distopía, que hablan del Estado que vigila; estas hablan de quien resiste.
+     */
+    val FRENTE = listOf(
+        f("Quoi qu'il arrive, la flamme de la résistance française ne doit pas s'éteindre et ne s'éteindra pas.",
+            "Pase lo que pase, la llama de la resistencia no debe apagarse y no se apagará.", "Charles de Gaulle, llamamiento del 18 de junio de 1940"),
+        f("Je me révolte, donc nous sommes.", "Me rebelo, luego somos.", "Albert Camus, El hombre rebelde, 1951"),
+        f("Il faut imaginer Sisyphe heureux.", "Hay que imaginarse a Sísifo feliz.", "Albert Camus, El mito de Sísifo, 1942"),
+        f("Wir schweigen nicht, wir sind Euer böses Gewissen; die Weiße Rose läßt Euch keine Ruhe!",
+            "No callamos: somos su mala conciencia. ¡La Rosa Blanca no los dejará en paz!", "La Rosa Blanca, cuarta hoja volante, 1942"),
+        f("Et par le pouvoir d'un mot / Je recommence ma vie / Je suis né pour te connaître / Pour te nommer / Liberté.",
+            "Y por el poder de una palabra vuelvo a empezar mi vida: nací para conocerte, para nombrarte, libertad.", "Paul Éluard, «Liberté», 1942, lanzado desde el aire sobre Francia"),
+        f("Injustice anywhere is a threat to justice everywhere.", "La injusticia en cualquier parte es una amenaza para la justicia en todas partes.",
+            "Martin Luther King Jr., carta desde la cárcel de Birmingham, 1963"),
+        f(null, "La esperanza no es lo mismo que el optimismo. No es la convicción de que algo saldrá bien, sino la certeza de que algo tiene sentido, salga como salga.",
+            "Václav Havel, Interrogatorio a distancia, 1986"),
+        f(null, "Que la mentira lo cubra todo y lo domine todo, pero no a través de mí.", "Alexandr Solzhenitsyn, «Vivir sin mentira», 1974"),
+        f("L'attention est la forme la plus rare et la plus pure de la générosité.", "La atención es la forma más rara y más pura de la generosidad.",
+            "Simone Weil, carta a Joë Bousquet, 1942"),
+        f("Être homme, c'est précisément être responsable.", "Ser hombre es, precisamente, ser responsable.", "Antoine de Saint-Exupéry, Tierra de hombres, 1939"),
+        f("Unglücklich das Land, das Helden nötig hat.", "Desdichada la tierra que necesita héroes.", "Bertolt Brecht, Vida de Galileo, 1939"),
+        f("Niemand hat das Recht zu gehorchen.", "Nadie tiene derecho a obedecer.", "Hannah Arendt, entrevista con Joachim Fest, 1964"),
+        f("If liberty means anything at all, it means the right to tell people what they do not want to hear.",
+            "Si la libertad significa algo, es el derecho a decirle a la gente lo que no quiere oír.", "George Orwell, «La libertad de prensa», 1945"),
+        f("We live in capitalism. Its power seems inescapable. So did the divine right of kings.",
+            "Vivimos en el capitalismo. Su poder parece ineludible. También lo parecía el derecho divino de los reyes.", "Ursula K. Le Guin, discurso al recibir la medalla del National Book Award, 2014"),
+        f("All we have to decide is what to do with the time that is given us.", "Lo único que podemos decidir es qué hacer con el tiempo que se nos ha dado.",
+            "J. R. R. Tolkien, La Comunidad del Anillo, 1954"),
+        f("On résiste à l'invasion des armées ; on ne résiste pas à l'invasion des idées.", "Se resiste a la invasión de los ejércitos; no se resiste a la invasión de las ideas.",
+            "Victor Hugo, Historia de un crimen, 1877"),
+        f("Freiheit ist immer Freiheit der Andersdenkenden.", "La libertad es siempre la libertad del que piensa distinto.", "Rosa Luxemburgo, La revolución rusa, 1918"),
+        f("If there is no struggle there is no progress.", "Si no hay lucha, no hay progreso.", "Frederick Douglass, discurso de Canandaigua, 1857"),
+        f("Under a government which imprisons any unjustly, the true place for a just man is also a prison.",
+            "Bajo un gobierno que encarcela a alguien injustamente, el verdadero lugar de un hombre justo es también la cárcel.", "Henry David Thoreau, La desobediencia civil, 1849"),
+        f("Nicht das Beliebige, sondern das Rechte tun und wagen, nicht im Möglichen schweben, das Wirkliche tapfer ergreifen.",
+            "No hacer lo que se antoja, sino atreverse a lo justo; no flotar en lo posible, sino tomar lo real con valor.", "Dietrich Bonhoeffer, «Estaciones en el camino a la libertad», 1944"),
+        f(null, "Todo se le puede quitar a un ser humano, menos una cosa: la última de las libertades, elegir su actitud ante cualquier circunstancia.",
+            "Viktor Frankl, El hombre en busca de sentido, 1946"),
+        f("The only tired I was, was tired of giving in.", "Del único cansancio que estaba cansada era de ceder.", "Rosa Parks, Mi historia, 1992"),
+    )
+
     val REFUGIO = listOf(
         f("Keep calm and carry on.", "Mantén la calma y sigue adelante.", "Cartel del Ministerio de Información británico, 1939"),
         f("The only thing we have to fear is fear itself.", "A lo único que debemos temer es al miedo mismo.", "Franklin D. Roosevelt, 1933"),
@@ -1057,6 +1239,11 @@ object Frases {
         TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.TEMPLARIO -> TEMPLARIO
         TemaId.DISTOPIA -> DISTOPIA
+        TemaId.PSICODELIA -> PSICODELIA
+        TemaId.NOUVEAU -> NOUVEAU
+        TemaId.GALIA -> GALIA
+        TemaId.ARCONTES -> ARCONTES
+        TemaId.FRENTE -> FRENTE
         TemaId.REFUGIO -> REFUGIO
         TemaId.ORDEN -> ORDEN
         TemaId.VAPOR -> VAPOR
@@ -1110,6 +1297,11 @@ object Frases {
         TemaId.MEDIEVAL -> "Sentencia del día"
         TemaId.TEMPLARIO -> "Lectura del refectorio"
         TemaId.DISTOPIA -> "CONSIGNA DEL DÍA"
+        TemaId.PSICODELIA -> "Lo que se leía en el barrio"
+        TemaId.NOUVEAU -> "Lo que se leía en París"
+        TemaId.GALIA -> "Lo que contaron de los galos"
+        TemaId.ARCONTES -> "Palabras escondidas"
+        TemaId.FRENTE -> "PALABRA DE LA RED"
         TemaId.REFUGIO -> "MENSAJE DEL DÍA"
         TemaId.ORDEN -> "ORDEN DEL DÍA"
         TemaId.VAPOR -> "Sentencia del horario"

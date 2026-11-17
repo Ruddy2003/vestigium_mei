@@ -5,7 +5,8 @@ Baja cada fuente de Google Fonts (repositorio google/fonts, todas con la SIL Ope
 estáticas de las fuentes variables, las recorta al alfabeto latino (y al cirílico en las de los temas soviético y mongol)
 y las guarda en app/src/main/res/font/. Las que reservan su nombre en la licencia se renombran, como pide la OFL.
 
-Uso:  pip install fonttools  &&  python3 herramientas/fuentes.py [carpeta_de_descargas]
+Uso:  pip install fonttools  &&  python3 herramientas/fuentes.py [carpeta_de_descargas] [--solo salida1,salida2]
+      Con --solo se hacen solo esas salidas (las de un tema nuevo) y las demás no se tocan.
 """
 import io
 import os
@@ -21,6 +22,12 @@ DESTINO = os.path.join(RAIZ, "app", "src", "main", "res", "font")
 GF = "https://raw.githubusercontent.com/google/fonts/main/ofl/"
 
 LATINO = "U+0000-024F,U+0259,U+02B0-02FF,U+0300-036F,U+1D00-1DBF,U+1E00-1EFF,U+2000-206F,U+2070-209F,U+20A0-20CF,U+2100-214F,U+2150-218F,U+2190-21FF,U+2200-22FF,U+2460-24FF,U+25A0-25FF,U+2600-27BF,U+FB00-FB06"
+# Un latino más corto para las letras que pesan mucho (Caudex, Literata): el español, el latín extendido A (con las
+# vocales largas de las transcripciones) y las pocas letras con punto debajo de las transcripciones del hebreo
+# (ḥ ṣ ṭ), sin el resto de la tabla vietnamita ni el latín extendido B.
+LATINO_CORTO = "U+0000-017F,U+0259,U+02B0-02FF,U+0300-036F,U+1E24-1E25,U+1E62-1E63,U+1E6C-1E6D,U+2000-206F,U+2070-209F,U+20A0-20CF,U+2100-214F,U+2190-21FF,U+2200-22FF,U+25A0-25FF,U+FB00-FB06"
+# El griego entero (Galia escribe palabras galas con letras griegas, como las inscripciones galo-griegas).
+GRIEGO = "U+0370-03FF"
 CIRILICO = LATINO + ",U+0400-052F,U+1C80-1C8F,U+2DE0-2DFF,U+A640-A69F"
 # Japón Edo: solo los kanji, kana y signos que usa el tema (las fuentes japonesas completas pesan varios megas).
 KANJI_EDO = ("※、。々〆「」『』〔〕あいえおかがきぎくけこさしじすずせそただちつづてでとどなにのはひびふまみむめもやゆよらりるれわをんコマ・一七万世中也予事五人代令会体作使便元光入八兵具出分"
@@ -139,6 +146,38 @@ FUENTES = [
     ("uncialantiqua/UncialAntiqua-Regular.ttf", None, "camino_titulo", "Camino Vestigium", LATINO),
     ("playfairdisplay/PlayfairDisplay[wght].ttf", {"wght": 400}, "convencion_titulo", "Convencion Vestigium", LATINO),
     ("playfairdisplay/PlayfairDisplay[wght].ttf", {"wght": 700}, "convencion_negrita", "Convencion Vestigium", LATINO),
+    # FRE: Frente exterior (lote 10). Títulos en Michroma, la ancha de la ciencia ficción de los años 70; texto en Chivo,
+    # grotesca firme; rótulos y cifras en Chivo Mono, como lo grabado en una consola
+    ("michroma/Michroma-Regular.ttf", None, "michroma_titulo", None, LATINO),
+    ("chivo/Chivo[wght].ttf", {"wght": 400}, "chivo_regular", None, LATINO),
+    ("chivo/Chivo[wght].ttf", {"wght": 600}, "chivo_semibold", None, LATINO),
+    ("chivomono/ChivoMono[wght].ttf", {"wght": 500}, "chivo_mono_medium", None, LATINO),
+    # ARC: Arcontes (lote 10). Títulos y rótulos en Caudex, la letra de los códices (su licencia reserva el nombre: va
+    # renombrada); texto en Literata. Las cuatro llevan dentro el hebreo y el copto (ver CON_HEBREO_COPTO)
+    ("caudex/Caudex-Bold.ttf", None, "codice_bold", "Codice Vestigium", LATINO_CORTO),
+    ("caudex/Caudex-Regular.ttf", None, "codice_regular", "Codice Vestigium", LATINO_CORTO),
+    ("literata/Literata[opsz,wght].ttf", {"wght": 400, "opsz": 12}, "literata_regular", None, LATINO_CORTO),
+    ("literata/Literata[opsz,wght].ttf", {"wght": 600, "opsz": 12}, "literata_semibold", None, LATINO_CORTO),
+    # GAL: Galia (lote 10). Títulos y texto en Piazzolla, serifa afilada como letra grabada; rótulos en Ysabeau. Las tres
+    # con el griego (para las palabras galas escritas con letras griegas) y la sigma de luna (ver CON_SIGMA_LUNA)
+    ("piazzolla/Piazzolla[opsz,wght].ttf", {"wght": 800, "opsz": 30}, "piazzolla_titulo", None, LATINO_CORTO + "," + GRIEGO),
+    ("piazzolla/Piazzolla[opsz,wght].ttf", {"wght": 400, "opsz": 14}, "piazzolla_regular", None, LATINO_CORTO + "," + GRIEGO),
+    ("ysabeau/Ysabeau[wght].ttf", {"wght": 600}, "ysabeau_semibold", None, LATINO_CORTO + "," + GRIEGO),
+    # NOU: Art nouveau (lote 10). Títulos en Federant (la Feder Antiqua de 1911, letra de cartel), texto en Brygada 1918 y
+    # rótulos y cifras en Della Respira (la Della Robbia de 1902). Federant y Della Respira reservan su nombre: van
+    # renombradas. A las dos les faltan signos que el tema usa: se les copian de Brygada (ver CON_SIGNOS_BRYGADA)
+    ("federant/Federant-Regular.ttf", None, "cartel_titulo", "Cartel Vestigium", LATINO_CORTO),
+    ("brygada1918/Brygada1918[wght].ttf", {"wght": 400}, "brygada_regular", None, LATINO_CORTO),
+    ("brygada1918/Brygada1918[wght].ttf", {"wght": 600}, "brygada_semibold", None, LATINO_CORTO),
+    ("dellarespira/DellaRespira-Regular.ttf", None, "vitrina_regular", "Vitrina Vestigium", LATINO_CORTO),
+    # PSI: Psicodelia, versión 2 (16 nov 2026, docs/diseno/temas/psicodelia.md, «Letra y forma»): Libre Franklin, el grotesco americano
+    # de los periódicos y los letreros, para el texto, los rótulos y las cifras de las dos caras y para los títulos de la
+    # ciudad (no reserva su nombre); Chango, letra de bloque que llena su forma, para los títulos de la psicodelia (reserva
+    # «Chango»: se renombra). Las letras de la versión 1 se retiraron en el cierre de la versión 2.
+    ("librefranklin/LibreFranklin[wght].ttf", {"wght": 400}, "franklin_regular", None, LATINO_CORTO),
+    ("librefranklin/LibreFranklin[wght].ttf", {"wght": 600}, "franklin_semibold", None, LATINO_CORTO),
+    ("librefranklin/LibreFranklin[wght].ttf", {"wght": 800}, "franklin_extrabold", None, LATINO_CORTO),
+    ("chango/Chango-Regular.ttf", None, "bloque_titulo", "Bloque Vestigium", LATINO_CORTO),
 ]
 
 
@@ -175,6 +214,97 @@ def anadir_mayas(f, cache):
     t12 = CmapSubtable.newSubtable(12)
     t12.platformID, t12.platEncID, t12.language, t12.cmap = 3, 10, 0, base
     f["cmap"].tables = [t for t in f["cmap"].tables if not (t.platformID == 3 and t.platEncID == 10)] + [t12]
+    f["maxp"].numGlyphs = len(orden)
+
+
+# Las salidas que llevan, además, las letras hebreas (con el geresh y el gershayim, para escribir números) y las coptas,
+# copiadas de Noto Serif Hebrew y Noto Sans Coptic (OFL). Android trae esas escrituras solo en letra de palo; el tema
+# Arcontes las quiere con su serifa y a la medida de la suya. Se copian ya dibujadas (sin componentes), escaladas a la
+# altura de las mayúsculas de cada fuente, con el peso más cercano.
+CON_HEBREO_COPTO = {"codice_bold": 700, "codice_regular": 400, "literata_regular": 400, "literata_semibold": 600}
+HEBREO = "notoserifhebrew/NotoSerifHebrew[wdth,wght].ttf"
+COPTO = "notosanscoptic/NotoSansCoptic-Regular.ttf"
+RANGOS_HEBREO = list(range(0x05D0, 0x05EB)) + [0x05F3, 0x05F4]
+RANGOS_COPTO = list(range(0x2C80, 0x2CF4)) + list(range(0x2CF9, 0x2D00)) + list(range(0x03E2, 0x03F0))
+SIGNOS_ARCONTES = [ord(c) for c in "◌⁘∴∵∷※⁂▪▫▹◃"]
+# Las salidas a las que les falta la sigma de luna (Ϲ ϲ, U+03F9 y U+03F2), la de las inscripciones galo-griegas: se les
+# da la forma de su propia «C» y «c» latina, que es la misma letra.
+# Art nouveau: los signos que Federant y Della Respira no traen (la comilla y el apóstrofo curvos, los puntos suspensivos
+# y las flechas), copiados de Brygada 1918 con su peso.
+CON_SIGNOS_BRYGADA = {"cartel_titulo": 500, "vitrina_regular": 400}
+SIGNOS_BRYGADA = [ord(c) for c in "’”…←→↑↓"]
+CON_SIGMA_LUNA = {"piazzolla_titulo", "piazzolla_regular", "ysabeau_semibold"}
+
+
+def anadir_sigma_luna(f):
+    """Apunta Ϲ y ϲ al mismo glifo que C y c (si la fuente no los trae)."""
+    cm = f.getBestCmap()
+    extra = {cp: cm[ord(lat)] for cp, lat in ((0x03F9, "C"), (0x03F2, "c")) if cp not in cm and ord(lat) in cm}
+    for t in f["cmap"].tables:
+        if t.isUnicode():
+            t.cmap.update(extra)
+
+
+def altura_mayus(f):
+    """La altura de las mayúsculas: la de la tabla OS/2 o, si no la trae, la de la «H»."""
+    os2 = f["OS/2"]
+    if getattr(os2, "sCapHeight", 0):
+        return os2.sCapHeight
+    gs = f.getGlyphSet()
+    from fontTools.pens.boundsPen import BoundsPen
+    b = BoundsPen(gs)
+    gs[f.getBestCmap()[ord("H")]].draw(b)
+    return b.bounds[3]
+
+
+def anadir_escritura(f, origen, puntos, ejes, cache, prefijo, solo_faltan=False):
+    """Copia a [f] los glifos de [puntos] de la fuente [origen] (instanciada en [ejes]), dibujados de nuevo sin componentes
+    y escalados para que su altura de mayúsculas quede igual a la de [f]."""
+    from fontTools.pens.ttGlyphPen import TTGlyphPen
+    from fontTools.pens.recordingPen import DecomposingRecordingPen
+    from fontTools.pens.transformPen import TransformPen
+    from fontTools.ttLib.tables._c_m_a_p import CmapSubtable
+    m = TTFont(bajar(origen, cache))
+    if ejes and "fvar" in m:
+        validos = {a.axisTag for a in m["fvar"].axes}
+        m = instancer.instantiateVariableFont(m, {k: v for k, v in ejes.items() if k in validos})
+    escala = altura_mayus(f) / altura_mayus(m)
+    gs = m.getGlyphSet()
+    cm = m.getBestCmap()
+    orden = list(f.getGlyphOrder())
+    nuevos = {}
+    ya = f.getBestCmap()
+    for cp in puntos:
+        if cp not in cm or (solo_faltan and cp in ya):
+            continue
+        origen_g = cm[cp]
+        nombre = "%s%04X" % (prefijo, cp)
+        pen = TTGlyphPen(None)
+        rec = DecomposingRecordingPen(gs)  # los glifos hechos de componentes (como en Brygada) se copian ya descompuestos
+        gs[origen_g].draw(rec)
+        rec.replay(TransformPen(pen, (escala, 0, 0, escala, 0, 0)))
+        g = pen.glyph()
+        g.recalcBounds(None)
+        ancho, _ = m["hmtx"][origen_g]
+        orden.append(nombre)
+        f["glyf"][nombre] = g
+        f["hmtx"][nombre] = (round(ancho * escala), getattr(g, "xMin", 0))
+        if "vmtx" in f:  # Literata trae métricas verticales: cada glifo nuevo necesita las suyas
+            f["vmtx"][nombre] = (f["head"].unitsPerEm, 0)
+        nuevos[cp] = nombre
+    f.setGlyphOrder(orden)
+    f["glyf"].glyphOrder = orden
+    base = dict(f.getBestCmap())
+    base.update(nuevos)
+    for t in f["cmap"].tables:
+        if t.isUnicode():
+            if t.format == 4 and any(cp > 0xFFFF for cp in base):
+                continue
+            t.cmap = {cp: n for cp, n in base.items() if t.format != 4 or cp <= 0xFFFF}
+    if not any(t.platformID == 3 and t.platEncID in (1, 10) for t in f["cmap"].tables):
+        t4 = CmapSubtable.newSubtable(4)
+        t4.platformID, t4.platEncID, t4.language, t4.cmap = 3, 1, 0, {cp: n for cp, n in base.items() if cp <= 0xFFFF}
+        f["cmap"].tables.append(t4)
     f["maxp"].numGlyphs = len(orden)
 
 
@@ -354,6 +484,17 @@ def hacer(origen, ejes, salida, nombre, letras, cache):
         anadir_mayas(f, cache)
     if salida in CON_ADORNOS:
         anadir_adornos(f)
+    if salida in CON_SIGMA_LUNA:
+        anadir_sigma_luna(f)
+    if salida in CON_SIGNOS_BRYGADA:
+        anadir_escritura(f, "brygada1918/Brygada1918[wght].ttf", SIGNOS_BRYGADA, {"wght": CON_SIGNOS_BRYGADA[salida]}, cache, "bry", solo_faltan=True)
+    if salida in CON_HEBREO_COPTO:
+        peso = CON_HEBREO_COPTO[salida]
+        anadir_escritura(f, HEBREO, RANGOS_HEBREO, {"wght": peso, "wdth": 100}, cache, "heb")
+        anadir_escritura(f, COPTO, RANGOS_COPTO, None, cache, "cop")
+        if salida.startswith("literata"):
+            # Los signos que Arcontes usa en sus textos (◌ ⁘ ∴ ∵ ∷ ※ ⁂ ▪ ▫ ▹ ◃) y que Literata no trae: de Caudex.
+            anadir_escritura(f, "caudex/Caudex-Bold.ttf" if peso >= 600 else "caudex/Caudex-Regular.ttf", SIGNOS_ARCONTES, None, cache, "sig", solo_faltan=True)
     if nombre:
         peso = salida.split("_")[-1]
         renombrar(f, nombre, {"regular": "Regular", "titulo": "Regular", "medium": "Medium", "semibold": "SemiBold", "bold": "Bold", "negrita": "Bold"}[peso])
@@ -363,10 +504,17 @@ def hacer(origen, ejes, salida, nombre, letras, cache):
 
 
 if __name__ == "__main__":
-    cache = sys.argv[1] if len(sys.argv) > 1 else os.path.join(RAIZ, "build", "fuentes")
+    args = [a for a in sys.argv[1:] if not a.startswith("--solo")]
+    solo = next((a.split("=", 1)[1] if "=" in a else sys.argv[sys.argv.index(a) + 1] for a in sys.argv[1:] if a.startswith("--solo")), None)
+    if solo and solo in args:
+        args.remove(solo)
+    solo = set(solo.split(",")) if solo else None
+    cache = args[0] if args else os.path.join(RAIZ, "build", "fuentes")
     os.makedirs(cache, exist_ok=True)
     total = 0
     for origen, ejes, salida, nombre, letras in FUENTES:
+        if solo is not None and salida not in solo:
+            continue
         n = hacer(origen, ejes, salida, nombre, letras, cache)
         total += n
         print(f"{salida:22s} {n // 1024:4d} KB")

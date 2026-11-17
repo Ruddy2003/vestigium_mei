@@ -95,6 +95,8 @@ internal object ColorDistopia {
  */
 internal object EscenaDistopia : EscenaVida {
     override val vidas = listOf("funcionario")
+    /** La franja del fondo del teléfono ([franjaFondo]): la avenida y la torre del ojo. */
+    override val franjaFondo: Float get() = 0.5f
 
     /** El horizonte: la altura de los ojos de quien mira. */
     const val H = 128f

@@ -84,6 +84,16 @@ private enum class BarridoTema {
     GRADAS,
     /** Vapor victoriano: una bocanada de vapor que se hincha desde el toque. */
     BOCANADA,
+    /** Frente exterior: la pantalla redonda del radar que se enciende desde el toque, con sus anillos de distancia por delante. */
+    RADAR,
+    /** Arcontes: el velo que se rasga de arriba abajo por donde tocaste, y la raja se abre con los bordes deshilachados. */
+    VELO,
+    /** Galia: un remolino de hojas de roble que se abre desde el toque, como las que arranca el viento del robledal. */
+    ROBLE,
+    /** Art nouveau: el rizo de una línea de látigo que se desenrolla desde el toque, como un helecho que se abre. */
+    RIZO,
+    /** Psicodelia: una gota de tinta de color entre dos vidrios que se ensancha desde el toque y se junta con otras gotitas. */
+    GOTA,
 }
 
 /**
@@ -120,6 +130,21 @@ private fun matizDe(t: TemaId): MatizMovimiento = when (t) {
     TemaId.TEMPLARIO -> MatizMovimiento(BarridoTema.CRUZ, 820, CubicBezierEasing(0.55f, 0f, 0.3f, 1f), 0f, -12f, 1.02f, 420, 55, FastOutSlowInEasing, 1.15f, 0.95f, 1600f)
     // El ojo que se abre; los expedientes entran de lado y el sello cae seco.
     TemaId.DISTOPIA -> MatizMovimiento(BarridoTema.OJO, 700, CubicBezierEasing(0.7f, 0f, 0.9f, 0.6f), -16f, 0f, 1f, 300, 45, LinearEasing, 1.1f, 1f, 1800f)
+    // La gota de tinta que se ensancha desde el toque, como la tinta en la pantalla de serigrafía; las secciones suben
+    // apenas y se asientan blandas, un poco más grandes al llegar, y los botones ceden con un rebote corto.
+    TemaId.PSICODELIA -> MatizMovimiento(BarridoTema.GOTA, 1040, CubicBezierEasing(0.35f, 0f, 0.25f, 1f), 0f, 12f, 1.015f, 580, 70, CubicBezierEasing(0.25f, 0.1f, 0.25f, 1f), 1.05f, 0.45f, 420f)
+    // El rizo de la línea de látigo que se desenrolla desde el toque; las secciones suben despacio y se asientan como una
+    // hoja de papel sobre la piedra, y los botones ceden blandos, con un rebote apenas, como un tallo.
+    TemaId.NOUVEAU -> MatizMovimiento(BarridoTema.RIZO, 960, CubicBezierEasing(0.4f, 0f, 0.2f, 1f), 0f, 10f, 0.995f, 560, 75, CubicBezierEasing(0.3f, 0f, 0.2f, 1f), 0.95f, 0.7f, 600f)
+    // El remolino de hojas de roble que se abre desde el toque; las secciones bajan de lado, meciéndose como hojas que
+    // caen, y los botones ceden como la madera, con un rebote corto.
+    TemaId.GALIA -> MatizMovimiento(BarridoTema.ROBLE, 900, CubicBezierEasing(0.35f, 0f, 0.25f, 1f), -10f, 12f, 0.99f, 500, 65, LinearOutSlowInEasing, 1.05f, 0.6f, 750f)
+    // El velo que se rasga de arriba abajo y deja ver lo de detrás; las secciones suben apenas y se aclaran despacio, como
+    // la luz de una lámpara que se aviva, y los botones ceden blandos, sin rebote.
+    TemaId.ARCONTES -> MatizMovimiento(BarridoTema.VELO, 940, CubicBezierEasing(0.45f, 0f, 0.25f, 1f), 0f, 8f, 0.99f, 540, 70, LinearOutSlowInEasing, 0.9f, 0.85f, 650f)
+    // La pantalla del radar que se enciende desde el toque; las secciones bajan un poco y asientan como la imagen de un
+    // tubo que se estabiliza, y los botones hacen clic seco, como un interruptor de palanca.
+    TemaId.FRENTE -> MatizMovimiento(BarridoTema.RADAR, 760, CubicBezierEasing(0.4f, 0f, 0.2f, 1f), 0f, -10f, 1f, 360, 50, LinearOutSlowInEasing, 1.25f, 0.85f, 2200f)
     // Escotilla octogonal que gira al abrirse; resortes de caricatura.
     TemaId.REFUGIO -> MatizMovimiento(BarridoTema.ESCOTILLA, 780, CubicBezierEasing(0.7f, 0f, 0.3f, 1f), 0f, 22f, 1f, 380, 50, FastOutSlowInEasing, 1f, 0.4f, 900f)
     // Engrane que gira; acero pesado.
@@ -250,6 +275,35 @@ internal enum class VivoTema(val periodo: Int) {
     TZOLKIN(260000),
     /** Vapor victoriano: el hollín de las chimeneas y, de noche, el gas de alumbrado. */
     HOLLIN(20000),
+    /**
+     * Frente exterior: el barrido lento de una pantalla de radar sobre su retícula, con los ecos que deja al pasar; de noche,
+     * el mismo barrido con menos luz y la antena de la estación, con su luz roja que parpadea.
+     */
+    RADAR(24000),
+    /** Arcontes de día: el polvo dorado que flota en el rayo de sol de una ventana alta. */
+    POLVO_DORADO(36000),
+    /**
+     * Arcontes de noche: los círculos de las siete esferas que giran despacio, una sombra que cruza sin verse entera y, muy de
+     * vez en cuando, la grieta que late.
+     */
+    ESFERAS(180000),
+    /** Galia de día: hojas de roble que caen y bancos de niebla que pasan entre los troncos del robledal. */
+    ROBLEDAL(48000),
+    /**
+     * Galia de noche: el mismo robledal a la luz de las hogueras, que tiembla; el humo que sube, las pavesas y, lejos, en
+     * el horizonte, las hogueras del campamento romano.
+     */
+    HOGUERAS(12000),
+    /** Art nouveau de día: tallos que crecen despacio por los bordes, echan sus hojas y abren su flor; y una libélula que pasa. */
+    TALLOS(64000),
+    /** Art nouveau de noche: los mismos tallos, que en vez de flor llevan una tulipa de vidrio que se enciende, una tras otra. */
+    LAMPARAS(64000),
+    /**
+     * Psicodelia (v2, según su cara: `PiezasPsicodelia.fondoVivo`): en la ciudad, la mancha de sol de la ventana que se
+     * corre despacio por la pared (de noche, el cono de la lámpara que respira); en la tinta, las bandas del cartel que
+     * respiran y, con la intensidad, fluyen, y el disco hecho sol que gira en la esquina.
+     */
+    LUCES(60000),
     /** Básico: nada se mueve detrás (no se dibuja ni se anima). */
     NINGUNO(60000),
 }
@@ -265,6 +319,11 @@ internal fun vivoTema(t: TemaId, oscuro: Boolean): VivoTema = when (t) {
     TemaId.MEDIEVAL -> VivoTema.RAYO_ORO         // un rayo de luz con polvo de oro suspendido
     TemaId.TEMPLARIO -> VivoTema.ANTORCHAS        // la muralla almenada con antorchas que tiemblan y sueltan pavesas
     TemaId.DISTOPIA -> VivoTema.CENIZA           // ceniza de archivo que cae dando tumbos
+    TemaId.PSICODELIA -> VivoTema.LUCES             // la mancha de sol (ciudad) o las bandas del cartel (tinta)
+    TemaId.NOUVEAU -> if (oscuro) VivoTema.LAMPARAS else VivoTema.TALLOS   // de día, los tallos que florecen; de noche, las lámparas que se encienden
+    TemaId.GALIA -> if (oscuro) VivoTema.HOGUERAS else VivoTema.ROBLEDAL   // de día, las hojas y la niebla; de noche, las hogueras
+    TemaId.ARCONTES -> if (oscuro) VivoTema.ESFERAS else VivoTema.POLVO_DORADO   // de día, el polvo en el rayo de sol; de noche, las esferas
+    TemaId.FRENTE -> VivoTema.RADAR            // el barrido lento del radar; de noche, además, la antena que parpadea
     TemaId.REFUGIO -> VivoTema.VAPOR             // vapor que sube, de día y de noche
     TemaId.ORDEN -> VivoTema.FRAGUA              // chispas de fragua en parábola
     TemaId.VAPOR -> VivoTema.HOLLIN              // copos de hollín que caen girando; de noche, el halo del gas de alumbrado
@@ -392,6 +451,56 @@ private fun DrawScope.resplandorVivo(color: Color, centro: Offset, radio: Float,
 }
 
 /**
+ * Art nouveau: el fondo vivo. Seis tallos suben desde abajo por los dos bordes, cada uno a su paso: crecen despacio, echan
+ * sus hojas y un zarcillo, abren la flor, la sostienen y se desvanecen para volver a crecer. De día, de vez en cuando cruza
+ * una libélula. De noche, en vez de flor, cada tallo lleva una tulipa de vidrio que se enciende cuando el tallo termina de
+ * crecer, una tras otra. Los colores se mezclan con el fondo (no se transparentan), para que las hojas no se manchen al
+ * cruzarse.
+ */
+private fun DrawScope.tallosVivo(t: Float, noche: Boolean, e: ColorScheme, fuerza: Float) {
+    val w = size.width; val h = size.height; val u = 1.dp.toPx()
+    fun tinte(c: Color, a: Float) = androidx.compose.ui.graphics.lerp(e.background, c, (a * fuerza).coerceIn(0f, 1f))
+    // Cada tallo: dónde nace (fracción del ancho), su alto (fracción del alto), hacia dónde se curva y su fase.
+    val tallos = listOf(
+        floatArrayOf(0.035f, 0.46f, 1f, 0f), floatArrayOf(0.11f, 0.3f, 1f, 0.38f), floatArrayOf(0.2f, 0.17f, -1f, 0.71f),
+        floatArrayOf(0.97f, 0.52f, -1f, 0.2f), floatArrayOf(0.89f, 0.33f, -1f, 0.55f), floatArrayOf(0.8f, 0.19f, 1f, 0.88f),
+    )
+    val a = if (noche) 0.2f else 0.24f
+    for (k in tallos.indices) {
+        val (fx, fa, lado, fase) = tallos[k]
+        val ciclo = fraccionVivo(t + fase)
+        // Crece en la primera mitad (suave al empezar y al llegar), se queda y, al final, se desvanece.
+        val g = (ciclo / 0.5f).coerceIn(0f, 1f); val crecido = g * g * (3f - 2f * g)
+        val queda = if (ciclo > 0.86f) 1f - (ciclo - 0.86f) / 0.14f else 1f
+        val alto = minOf(h * fa, w * 1.1f)
+        val base = Offset(w * fx, h + 4f * u)
+        val al = a * queda
+        with(TrazosNouveau) {
+            tallo(base, alto, crecido, lado, maxOf(alto * 0.014f, 1.6f * u), tinte(if (noche) CAFE else TALLO, al), tinte(if (noche) HIERRO else TALLO_SOMBRA, al * 1.1f),
+                tinte(MALVA, al * 1.2f), capullo = !noche, corazon = tinte(IRIS_LENGUA, al))
+            if (noche && crecido >= 0.999f) {
+                // La tulipa se enciende poco a poco y se apaga con el tallo.
+                val luz = ((ciclo - 0.5f) / 0.08f).coerceIn(0f, 1f) * queda
+                tulipa(puntaTallo(base, alto, lado), maxOf(alto * 0.07f, 9f * u), luz * fuerza * 0.8f,
+                    tinte(VIDRIO_AMBAR, 0.3f + 0.4f * luz), tinte(VIDRIO_VIOLETA, 0.3f + 0.3f * luz), tinte(ORO, 0.35f))
+            }
+        }
+    }
+    // De día, una libélula que cruza despacio por arriba, una vez por vuelta, con su vuelo que sube y baja.
+    if (!noche) {
+        val q = ((fraccionVivo(t + 0.1f) - 0.3f) / 0.32f)
+        if (q in 0f..1f) {
+            val x = -0.08f * w + 1.16f * w * q
+            val y = h * (0.2f + 0.05f * senoVuelta(q * 1.5f)) + 6f * u * senoVuelta(q * 9f)
+            val rumbo = 90f + 12f * cosenoVuelta(q * 1.5f)
+            with(TrazosNouveau) {
+                libelula(Offset(x, y), 30f * u, rumbo, 0.5f + 0.5f * senoVuelta(t * 400f), tinte(LIBELULA, 0.3f), tinte(NACAR, 0.45f), tinte(ORO, 0.3f))
+            }
+        }
+    }
+}
+
+/**
  * Dibuja un instante [t] (0 a 1, una vuelta del [VivoTema.periodo]) del fondo vivo. Los movimientos dan vueltas enteras
  * por periodo, así el ciclo vuelve a empezar sin salto. [fuerza] multiplica la opacidad (el teléfono, sin nada encima, va más visible).
  */
@@ -511,6 +620,189 @@ internal fun DrawScope.pintarVivoTema(v: VivoTema, t: Float, oscuro: Boolean, e:
                 drawCircle(al(oro, (if (oscuro) 0.55f else 0.4f) * brillo), 1.1f * u * m.tam, Offset(xi + (xd - xi) * l, s * h))
             }
         }
+        VivoTema.RADAR -> {
+            // El panel de vidrio grabado de la base, iluminado por el canto: rectas largas que lo cruzan en ángulos distintos,
+            // tres órbitas abiertas y una espiral de anillos que se cierran hacia un punto. Por cada recta corre despacio un
+            // pulso de luz, y en cada órbita gira su marca. De noche el vidrio brilla más, como en la penumbra de la sala.
+            val vidrio = if (oscuro) Color(0xFF8FF0D2) else e.tertiary
+            val base = if (oscuro) 0.07f else 0.06f
+            val halo = if (oscuro) 0.05f else 0.03f
+            // Las rectas: entran por un borde y salen por el otro; su ángulo y su altura salen de las motas (fijas por tema).
+            motas.take(7).forEachIndexed { k, m ->
+                val ang = Math.toRadians((if (k % 2 == 0) -1 else 1) * (16.0 + 58.0 * m.x))
+                val y0 = (0.05f + 0.9f * m.y) * h
+                val dx = cos(ang).toFloat(); val dy = sin(ang).toFloat()
+                val largo = (w + h) * 1.2f
+                val a = Offset(w * 0.5f - dx * largo / 2, y0 - dy * largo / 2); val b = Offset(w * 0.5f + dx * largo / 2, y0 + dy * largo / 2)
+                drawLine(al(vidrio, halo), a, b, 5f * u)
+                drawLine(al(vidrio, base), a, b, 1f * u)
+                // El pulso de luz que corre por el grabado: un tramo corto que se apaga hacia atrás.
+                val f = fraccionVivo(t * (0.5f + 0.5f * m.tam) + m.fase)
+                for (q in 0 until 6) {
+                    val f0 = f - q * 0.012f; val f1 = f0 - 0.012f
+                    if (f1 < 0f) break
+                    val p0 = Offset(a.x + (b.x - a.x) * f0, a.y + (b.y - a.y) * f0); val p1 = Offset(a.x + (b.x - a.x) * f1, a.y + (b.y - a.y) * f1)
+                    drawLine(al(vidrio, (if (oscuro) 0.32f else 0.2f) * (1f - q / 6f)), p0, p1, 1.6f * u, StrokeCap.Round)
+                }
+            }
+            // Las órbitas abiertas, centradas a la derecha, y la marca que gira en cada una.
+            val c = Offset(w * 0.64f, h * 0.38f)
+            for (k in 0 until 3) {
+                val rx = (0.3f + 0.17f * k) * w; val ry = rx * (0.62f + 0.08f * k)
+                val inicio = -150f + 40f * k; val barrido = 250f - 30f * k
+                drawArc(al(vidrio, halo), inicio, barrido, false, Offset(c.x - rx, c.y - ry), Size(2 * rx, 2 * ry), style = Stroke(5f * u))
+                drawArc(al(vidrio, base), inicio, barrido, false, Offset(c.x - rx, c.y - ry), Size(2 * rx, 2 * ry), style = Stroke(1f * u))
+                val g = Math.toRadians((inicio + barrido * fraccionVivo(t * (1 + k) + 0.3f * k)).toDouble())
+                val pm = Offset(c.x + rx * cos(g).toFloat(), c.y + ry * sin(g).toFloat())
+                resplandorVivo(vidrio, pm, 10f * u, (if (oscuro) 0.25f else 0.14f) * fuerza)
+                drawCircle(al(vidrio, (if (oscuro) 0.55f else 0.35f)), 1.8f * u, pm)
+            }
+            // La espiral: anillos que se achican y se corren hacia un punto, como un rumbo que se cierra sobre el blanco.
+            val ce = Offset(w * 0.3f, h * 0.7f)
+            for (k in 0 until 6) {
+                val r = (64f - k * 9.5f) * u; val o = Offset(ce.x + k * 4f * u, ce.y + k * 2.5f * u)
+                drawCircle(al(vidrio, base * (0.6f + 0.08f * k)), r, o, style = Stroke(0.9f * u))
+            }
+            // Los cantos del panel: el marco de abajo, oscuro, y la luz que entra por el borde de arriba.
+            drawLine(al(vidrio, (if (oscuro) 0.12f else 0.08f)), Offset(0f, 2f * u), Offset(w, 2f * u), 2f * u)
+            if (oscuro) {
+                // La lámpara de cúpula de la esquina, encendida: su charco de luz cálida.
+                resplandorVivo(Color(0xFFF2D7A6), Offset(w * 0.9f, h * 0.06f), 120f * u, 0.07f * fuerza)
+            }
+        }
+        VivoTema.POLVO_DORADO -> {
+            // El rayo de sol que entra por una ventana alta de la casa, de arriba a la derecha hacia abajo a la izquierda, con su
+            // borde suave; dentro, el polvo dorado flota y da vueltas, y cada mota brilla cuando gira de cara a la luz. Las que
+            // quedan fuera del rayo apenas se ven.
+            val oro = TrazosArcontes.ORO_DEMIURGO
+            val calido = Color(0xFFFFE6A6)
+            val respira = 0.85f + 0.15f * senoVuelta(t * 2)
+            fun haz(abre: Float) = Path().apply {
+                moveTo((0.58f - abre) * w, -2f * u); lineTo((0.86f + abre) * w, -2f * u); lineTo((0.38f + abre * 2) * w, h); lineTo((-0.1f - abre * 2) * w, h); close()
+            }
+            drawPath(haz(0.06f), Brush.verticalGradient(listOf(al(calido, (if (oscuro) 0.03f else 0.07f) * respira), al(calido, 0.012f)), 0f, h))
+            drawPath(haz(0f), Brush.verticalGradient(listOf(al(calido, (if (oscuro) 0.05f else 0.11f) * respira), al(calido, 0.02f)), 0f, h))
+            motas.forEach { m ->
+                val k = vueltas(m)
+                val y = (m.y + 0.02f * senoVuelta(t * k + m.fase) + 0.01f * senoVuelta(t * (k + 2) + m.fase * 3)) * h
+                val s = (y / h).coerceIn(0f, 1f)
+                val xi = (0.58f - 0.68f * s) * w; val xd = (0.86f - 0.48f * s) * w
+                val l = m.x * 1.5f - 0.25f + 0.05f * senoVuelta(t * (k + 1) + m.fase * 5)
+                val luz = if (l in 0f..1f) 1f - abs(l - 0.5f) * 0.8f else 0.12f
+                val gira = (0.5f + 0.5f * senoVuelta(t * k * 4 + m.fase * 7)).let { it * it }
+                val p = Offset(xi + (xd - xi) * l, y)
+                drawCircle(al(oro, (0.12f + 0.7f * luz * gira) * (if (oscuro) 0.4f else 0.6f)), 0.9f * u * m.tam, p)
+                if (luz * gira > 0.65f) resplandorVivo(calido, p, 4.5f * u * m.tam, 0.3f * luz * gira * fuerza)
+            }
+        }
+        VivoTema.ESFERAS -> {
+            // De noche, sobre la casa: los círculos de las siete esferas (recurso: el diagrama de los ofitas) giran despacio, cada
+            // uno con su marca, la de dentro más deprisa; entre ellos titila alguna estrella. A ratos una sombra de arconte cruza
+            // por arriba sin verse entera, tapando los círculos, y muy de vez en cuando la grieta de abajo late con su luz.
+            val esfera = TrazosArcontes.ESFERA
+            val c = Offset(w * 0.82f, h * 0.16f)
+            val rMax = maxOf(w, h) * 0.95f
+            for (i in 0 until 7) {
+                val ri = rMax * (0.14f + 0.86f * i / 6f)
+                drawCircle(al(esfera, 0.1f - i * 0.007f), ri, c, style = Stroke(0.8f * u))
+                val a = 2 * PI * fraccionVivo(t * (7 - i) + i * 0.137f)
+                val p = Offset(c.x + ri * cos(a).toFloat(), c.y + ri * sin(a).toFloat())
+                resplandorVivo(Color(0xFF8E88D0), p, 7f * u, 0.16f * fuerza)
+                drawCircle(al(Color(0xFFC9C4F0), 0.42f), 1.4f * u, p)
+            }
+            motas.take(18).forEach { m ->
+                val brillo = 0.5f + 0.5f * senoVuelta(t * vueltas(m) * 9 + m.fase)
+                drawCircle(al(TrazosArcontes.GRIETA, 0.08f + 0.2f * brillo), 0.7f * u * m.tam, Offset(m.x * w, m.y * h))
+            }
+            // La sombra: entra por la izquierda, cruza por arriba y se va; se ve solo a medias, contra los círculos.
+            val f = (t - 0.45f) / 0.3f
+            if (f in 0f..1f) {
+                val vis = sin(PI * f).toFloat()
+                val cab = Offset(-0.35f * w + 1.7f * w * f, h * 0.05f)
+                val alto = h * 0.17f
+                with(TrazosArcontes) {
+                    sombraArconte(cab, alto * 1.04f, al(TrazosArcontes.GRIETA_HALO, 0.04f * vis), desvanece = true)
+                    for (k in 0..2) sombraArconte(cab, alto * (1f - k * 0.025f), al(TrazosArcontes.CIELO_ANTIGUO, 0.32f * vis), desvanece = true)
+                }
+            }
+            // La grieta que late: una vez por vuelta, breve.
+            val g = (1f - abs(t - 0.9f) / 0.04f).coerceIn(0f, 1f)
+            if (g > 0f) with(TrazosArcontes) { grieta(Offset(w * 0.1f, h * 0.98f), Offset(w * 0.3f, h * 0.8f), 1.1f * u, (g * 0.5f * fuerza).coerceAtMost(1f), 23) }
+        }
+        VivoTema.ROBLEDAL -> {
+            // El robledal de día: los troncos, más tenues cuanto más lejos; los bancos de niebla que pasan despacio entre ellos;
+            // y las hojas de roble, verdes y alguna ya ocre, que caen dando vueltas y se mecen.
+            val tinta = e.onBackground
+            fun tronco(x: Float, g: Float, a: Float, lado: Float) {
+                drawPath(troncoRoble(x, g, w, h, lado), al(tinta, a))
+            }
+            tronco(w * 0.33f, 11f * u, 0.022f, 1f); tronco(w * 0.6f, 16f * u, 0.028f, -1f)
+            for (k in 0 until 3) {
+                val y = h * (0.32f + 0.26f * k)
+                for (j in 0 until 3) {
+                    val x = (fraccionVivo(j / 3f + t * (if (k == 1) -1 else 1) + k * 0.21f) * 1.6f - 0.3f) * w
+                    withTransform({ scale(3.2f, 1f, Offset(x, y)) }) { resplandorVivo(Color.White, Offset(x, y), (34f + 8f * j) * u, 0.22f * fuerza) }
+                }
+            }
+            tronco(w * 0.05f, 30f * u, 0.045f, 1f); tronco(w * 0.92f, 24f * u, 0.04f, -1f)
+            motas.take(10).forEach { m ->
+                val k = vueltas(m)
+                val caida = fraccionVivo(m.y + t * k)
+                val y = caida * (h + 40f * u) - 20f * u
+                val x = (m.x + 0.08f * caida + 0.04f * senoVuelta(t * 3 * k + m.fase)) * w
+                val l = 13f * u * (0.8f + m.tam * 0.35f)
+                val color = when (m.tono) { 0 -> TrazosGalia.ROBLE; 1 -> TrazosGalia.LANA_OCRE; else -> TrazosGalia.BRONCE }
+                scale(0.3f + 0.7f * abs(cosenoVuelta(t * 2 * k + m.fase)), 1f, Offset(x, y)) {
+                    with(TrazosGalia) { hojaRoble(Offset(x, y), l, 360f * fraccionVivo(t * k + m.fase), al(color, 0.17f), al(TrazosGalia.ROBLE_SOMBRA, 0.12f)) }
+                }
+            }
+        }
+        VivoTema.HOGUERAS -> {
+            // El robledal de noche: la hoguera de abajo a la izquierda alumbra y tiembla; los troncos se recortan a contraluz con
+            // la orilla encendida; el humo sube en dos columnas que el viento tuerce; las pavesas suben y se apagan; y lejos, en
+            // el horizonte, titilan en fila las hogueras del campamento romano.
+            val fuego = TrazosGalia.FUEGO; val halo = TrazosGalia.FUEGO_HALO
+            val temblor = 0.8f + 0.12f * senoVuelta(t * 17) + 0.08f * senoVuelta(t * 29 + 0.4f)
+            val foco = Offset(-w * 0.04f, h * 1.02f)
+            resplandorVivo(fuego, foco, maxOf(w, h) * 0.8f, 0.13f * temblor * fuerza)
+            resplandorVivo(halo, foco, w * 0.55f, 0.09f * temblor * fuerza)
+            for (k in 0 until 9) {
+                val p = Offset(w * (0.44f + k * 0.052f), h * 0.2f + (k % 3) * 0.7f * u)
+                val b = 0.5f + 0.5f * senoVuelta(t * (5 + k) + k * 0.37f)
+                resplandorVivo(e.tertiary, p, 5f * u, (0.05f + 0.05f * b) * fuerza)
+                drawCircle(al(e.tertiary, 0.1f + 0.14f * b), 0.8f * u, p)
+            }
+            fun tronco(x: Float, g: Float, a: Float, lado: Float) {
+                drawPath(troncoRoble(x, g, w, h, lado), al(Color.Black, a))
+                val orilla = Path().apply { moveTo(x - g * 0.48f, h * 0.35f); cubicTo(x - g * 0.44f, h * 0.55f, x - g * 0.6f, h * 0.8f, x - g * 0.95f, h + 2f) }
+                drawPath(orilla, al(fuego, 0.16f * temblor * (1f - x / w)), style = Stroke(1.6f * u))
+            }
+            tronco(w * 0.34f, 11f * u, 0.1f, 1f); tronco(w * 0.62f, 16f * u, 0.12f, -1f)
+            for (col in 0 until 2) {
+                val bx = w * (if (col == 0) 0.14f else 0.8f)
+                for (j in 0 until 16) {
+                    val f = fraccionVivo(t * (2 + col) + j / 16f)
+                    val y = h * 1.02f - f * h * 0.85f
+                    val x = bx + 22f * u * senoVuelta(f * 1.3f + col * 0.3f + t) * f + f * f * w * 0.14f
+                    resplandorVivo(TrazosGalia.HUMO, Offset(x, y), (14f + 46f * f) * u, 0.04f * sin(PI * f).toFloat() * fuerza)
+                }
+            }
+            tronco(w * 0.06f, 30f * u, 0.2f, 1f); tronco(w * 0.93f, 24f * u, 0.17f, -1f)
+            motas.take(12).forEach { m ->
+                val k = vueltas(m)
+                val sube = fraccionVivo(m.y + t * k)
+                val y = h * (1.02f - sube * 0.6f)
+                val x = (0.02f + 0.3f * m.x + 0.05f * senoVuelta(t * 3 * k + m.fase) * sube) * w
+                val a = (1f - sube) * (0.6f + 0.4f * senoVuelta(t * 11 * k + m.fase))
+                if (a > 0.02f) {
+                    resplandorVivo(fuego, Offset(x, y), 3.5f * u * m.tam, 0.2f * a * fuerza)
+                    drawCircle(al(halo, 0.55f * a), 0.9f * u, Offset(x, y))
+                }
+            }
+        }
+        VivoTema.TALLOS -> tallosVivo(t, false, e, fuerza)
+        VivoTema.LAMPARAS -> tallosVivo(t, true, e, fuerza)
+        VivoTema.LUCES -> with(PiezasPsicodelia) { fondoVivo(t, oscuro, fuerza) }
         VivoTema.CENIZA -> motas.take(24).forEach { m ->
             // Pavesas irregulares de papel quemado que caen dando tumbos; de noche, alguna conserva una brasa.
             val k = vueltas(m)
@@ -1172,6 +1464,56 @@ private fun Path.poligonoBarrido(c: Offset, puntas: Int, fuera: Float, dentro: F
 }
 
 /**
+ * Galia: el tronco de un roble del fondo vivo, en [x] y de [g] de grueso abajo: sube algo torcido, se ensancha en el pie
+ * y, arriba, suelta una rama gruesa hacia [lado] (1, a la derecha; -1, a la izquierda) que se sale de la pantalla.
+ */
+private fun troncoRoble(x: Float, g: Float, w: Float, h: Float, lado: Float): Path = Path().apply {
+    val y0 = h * (0.12f + 0.1f * ((x / w * 7f) % 1f))
+    moveTo(x - g * 0.42f, -2f)
+    cubicTo(x - g * 0.3f, h * 0.35f, x - g * 0.65f, h * 0.7f, x - g * 0.6f, h * 0.92f)
+    quadraticTo(x - g * 0.75f, h + 1f, x - g * 1.5f, h + 2f)
+    lineTo(x + g * 1.4f, h + 2f)
+    quadraticTo(x + g * 0.7f, h + 1f, x + g * 0.55f, h * 0.92f)
+    cubicTo(x + g * 0.5f, h * 0.7f, x + g * 0.62f, h * 0.35f, x + g * 0.44f, -2f)
+    close()
+    // La rama: sale del tronco y sube hacia fuera, adelgazando.
+    val b = x + lado * g * 0.4f
+    moveTo(b, y0 + g * 0.9f)
+    quadraticTo(b + lado * g * 1.6f, y0 + g * 0.3f, b + lado * minOf(w * 0.2f, g * 5f), y0 - h * 0.16f)
+    lineTo(b + lado * (minOf(w * 0.2f, g * 5f) - g * 0.35f), y0 - h * 0.16f)
+    quadraticTo(b + lado * g * 1.2f, y0 - g * 0.5f, b, y0 - g * 0.1f)
+    close()
+}
+
+/**
+ * Galia: el contorno de una hoja de roble en [ruta], con el rabillo en [c] y de [largo], girada [angulo] grados (0 =
+ * hacia arriba): ancha arriba, con cuatro pares de lóbulos redondos que apuntan un poco hacia la punta.
+ */
+private fun hojaRobleBarrido(ruta: Path, c: Offset, largo: Float, angulo: Float) {
+    val a = Math.toRadians(angulo.toDouble()); val ca = cos(a).toFloat(); val sa = sin(a).toFloat()
+    fun ancho(s: Float, fase: Float): Float {
+        val env = 0.31f * Math.pow(sin(PI * Math.pow(s.toDouble(), 0.78)).coerceAtLeast(0.0), 0.62).toFloat()
+        val lob = 0.5f + 0.5f * cos(2 * PI.toFloat() * (4f * s - 0.12f) + fase)
+        return env * (0.4f + 0.6f * Math.pow(lob.toDouble(), 0.75).toFloat())
+    }
+    // En coordenadas de la hoja: x de lado, y del rabillo (0) a la punta (-1); se gira y se lleva a [c].
+    fun punto(x: Float, y: Float) = Offset(c.x + (x * ca - y * sa) * largo, c.y + (x * sa + y * ca) * largo)
+    val pasos = 40
+    // En el mismo sentido que el óvalo del núcleo, para que al juntarse se sumen y no se recorten.
+    for (i in 0..pasos) {
+        val s = i / pasos.toFloat(); val an = ancho(s, 0.9f)
+        val q = punto(an, -0.08f - 0.92f * s - 0.3f * an)
+        if (i == 0) ruta.moveTo(q.x, q.y) else ruta.lineTo(q.x, q.y)
+    }
+    for (i in pasos downTo 0) {
+        val s = i / pasos.toFloat(); val an = ancho(s, 0f)
+        val q = punto(-an, -0.08f - 0.92f * s - 0.3f * an)
+        ruta.lineTo(q.x, q.y)
+    }
+    ruta.close()
+}
+
+/**
  * El hueco por donde se ve el tema nuevo, en el avance [p] (0 a 1). [r0]: la distancia del toque a la esquina más lejana;
  * cada forma crece lo bastante para cubrir un círculo de radio [r0]·[p], así al llegar a 1 cubre toda la pantalla.
  */
@@ -1397,6 +1739,105 @@ private fun agujeroTema(b: BarridoTema, c: Offset, r0: Float, p: Float, w: Float
         BarridoTema.ABANICO -> {
             if (p >= 0.995f) ruta.addRect(Rect(0f, 0f, w, h))
             else if (p > 0f) { ruta.moveTo(c.x, c.y); ruta.arcTo(Rect(c, r0 * 1.05f), -90f, 360f * p, false); ruta.close() }
+        }
+        BarridoTema.RADAR -> {
+            // La pantalla redonda y, por delante, dos anillos de distancia con las cuatro marcas de rumbo entre ellos. Con
+            // pares e impares, el hueco entre el disco y los anillos queda con el tema de antes.
+            ruta.fillType = androidx.compose.ui.graphics.PathFillType.EvenOdd
+            ruta.addOval(Rect(c, r * 1.02f))
+            ruta.addOval(Rect(c, r * 1.34f)); ruta.addOval(Rect(c, r * 1.28f))
+            ruta.addOval(Rect(c, r * 1.64f)); ruta.addOval(Rect(c, r * 1.6f))
+            val g = 2.5f * u
+            listOf(Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f), Offset(0f, -1f)).forEach { d ->
+                val a = c + d * (r * 1.38f); val b = c + d * (r * 1.56f)
+                ruta.addRect(Rect(minOf(a.x, b.x) - g, minOf(a.y, b.y) - g, maxOf(a.x, b.x) + g, maxOf(a.y, b.y) + g))
+            }
+        }
+        BarridoTema.VELO -> {
+            // El velo que se rasga de arriba abajo (Marcos 15:38): una raja vertical por el toque, que primero se alarga y
+            // luego se abre, con los bordes deshilachados (fijos, para que no tiemblen).
+            if (p >= 0.985f) ruta.addRect(Rect(0f, 0f, w, h))
+            else if (p > 0f) {
+                val alto = h * 1.1f * minOf(1f, p * 2.2f)
+                val abre = ((p - 0.15f) / 0.85f).coerceIn(0f, 1f)
+                val ancho = r0 * 1.15f * abre * abre + 6f * u * minOf(1f, p * 6f)
+                val n = 30
+                fun borde(k: Int, lado: Float): Offset {
+                    val y = c.y - alto + 2 * alto * k / n
+                    val q = ((y - c.y) / alto)
+                    val env = sqrt((1f - q * q).coerceAtLeast(0f))
+                    val fleco = 1f + 0.2f * sin(k * 2.7f + (if (lado > 0f) 1.3f else 4.1f))
+                    return Offset(c.x + lado * ancho * env * fleco, y)
+                }
+                for (k in 0..n) { val b = borde(k, 1f); if (k == 0) ruta.moveTo(b.x, b.y) else ruta.lineTo(b.x, b.y) }
+                for (k in n downTo 0) { val b = borde(k, -1f); ruta.lineTo(b.x, b.y) }
+                ruta.close()
+            }
+        }
+        BarridoTema.ROBLE -> {
+            // Un núcleo que cubre el círculo de radio r y, alrededor, cinco hojas de roble que salen del toque y giran al abrirse.
+            if (p >= 0.985f) ruta.addRect(Rect(0f, 0f, w, h))
+            else if (p > 0f) {
+                // Juntas en un solo contorno, para que el filete de color corra solo por fuera.
+                var junto = Path().apply { addOval(Rect(c, r * 1.02f)) }
+                for (k in 0 until 5) {
+                    val hoja = Path(); hojaRobleBarrido(hoja, c, r * 2.3f, k * 72f + 18f + 70f * p)
+                    junto = Path.combine(androidx.compose.ui.graphics.PathOperation.Union, junto, hoja)
+                }
+                ruta.addPath(junto)
+            }
+        }
+        BarridoTema.RIZO -> {
+            // El rizo de una línea de látigo que se desenrolla desde el toque: una cinta en espiral de vuelta y media que gira
+            // al abrirse y engorda hasta cerrarse sobre sí misma, junta con un círculo de radio r en el centro (así, al
+            // llegar a 1, cubre toda la pantalla).
+            if (p >= 0.985f) ruta.addRect(Rect(0f, 0f, w, h))
+            else if (p > 0f) {
+                val vueltas = 1.6f
+                val grande = r * 1.3f + 10f * u
+                val a = grande / (vueltas * 2f * PI.toFloat())
+                val banda = 2f * PI.toFloat() * a * (0.35f + 0.65f * minOf(1f, p * 1.3f))
+                val giro = -2f + 2.6f * p
+                val n = 90
+                val espiral = Path()
+                for (k in 0..n) {
+                    val th = vueltas * 2f * PI.toFloat() * k / n
+                    // La punta de la cinta se afina, como la de un trazo de pluma.
+                    val rr = a * th + banda * minOf(1f, (n - k) / (0.14f * n)).coerceAtLeast(0.05f)
+                    val x = c.x + rr * cos(th + giro); val y = c.y + rr * sin(th + giro)
+                    if (k == 0) espiral.moveTo(x, y) else espiral.lineTo(x, y)
+                }
+                for (k in n downTo 0) {
+                    val th = vueltas * 2f * PI.toFloat() * k / n
+                    val rr = a * th
+                    espiral.lineTo(c.x + rr * cos(th + giro), c.y + rr * sin(th + giro))
+                }
+                espiral.close()
+                ruta.addPath(Path.combine(androidx.compose.ui.graphics.PathOperation.Union, espiral, Path().apply { addOval(Rect(c, r)) }))
+            }
+        }
+        BarridoTema.GOTA -> {
+            // La gota de tinta entre los dos vidrios del proyector: un núcleo blando que se ensancha desde el toque, con sus
+            // lóbulos que se mueven, y tres gotitas que llegan de los lados y se le juntan (cubre el círculo de radio r).
+            if (p >= 0.985f) ruta.addRect(Rect(0f, 0f, w, h))
+            else if (p > 0f) {
+                val n = 72
+                var junto = Path()
+                for (k in 0..n) {
+                    val a = 2.0 * PI * k / n
+                    val rr = r * (1.22f + 0.14f * sin(3 * a + 5.0 * p).toFloat() + 0.07f * cos(5 * a - 3.0 * p).toFloat())
+                    val x = c.x + (rr * cos(a)).toFloat(); val y = c.y + (rr * sin(a)).toFloat()
+                    if (k == 0) junto.moveTo(x, y) else junto.lineTo(x, y)
+                }
+                junto.close()
+                for (k in 0 until 3) {
+                    val a = Math.toRadians(k * 120.0 + 35.0 + 30.0 * p)
+                    val lejos = r * 1.25f + r0 * 0.2f * (1f - p)
+                    val q = Offset(c.x + (lejos * cos(a)).toFloat(), c.y + (lejos * sin(a)).toFloat())
+                    junto = Path.combine(androidx.compose.ui.graphics.PathOperation.Union, junto, Path().apply { addOval(Rect(q, r * 0.36f + 12f * u * p)) })
+                }
+                ruta.addPath(junto)
+            }
         }
         BarridoTema.SELLO -> {
             // El sello hanko que se estampa: un cuadrado de esquinas redondeadas que crece desde el toque.

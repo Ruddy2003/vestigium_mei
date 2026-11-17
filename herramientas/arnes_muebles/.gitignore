@@ -1,0 +1,6 @@
+# Lo que genera el arnés al compilar y dibujar: nada de esto va al repositorio.
+build/
+build-otras/
+.gradle/
+.kotlin/
+*.png

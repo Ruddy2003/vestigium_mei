@@ -151,6 +151,20 @@ object Campanas {
         TemaId.MEDIEVAL -> listOf("Peregrinación a Compostela", "La copia del códice", "El camino de los monasterios", "La feria de Champaña")
         TemaId.TEMPLARIO -> listOf("La marcha de las atalayas", "Relevo en Montalbar", "La escolta de los peregrinos", "Cabalgada al Pozo del Halcón")
         TemaId.DISTOPIA -> listOf("PLAN TRIMESTRAL Nº 7", "CUOTA DEL MINISTERIO", "OPERACIÓN DISCIPLINA", "DIRECTIVA 451")
+        // De la calle Haight al festival de Monterey, en 1967 (`docs/diseno/temas/fuentes_psicodelia.md`, secciones 2 y 3): del
+        // encuentro de los Polo Fields (14 de enero) al último día del festival (18 de junio), el verano que tomó su nombre esa
+        // primavera y los tres días de junio en el recinto ferial de Monterey.
+        TemaId.PSICODELIA -> listOf("De la calle Haight a Monterey", "Del 14 de enero al 18 de junio", "Hacia el verano del amor", "Tres días de junio en Monterey")
+        // La primera línea del metro de París, la «ligne A», abierta al público el 19 de julio de 1900 a la una de la tarde,
+        // durante la Exposición, de Porte Maillot a Porte de Vincennes; la segunda clase costaba 15 céntimos, fuera cual fuera
+        // el trayecto (`docs/diseno/temas/fuentes_nouveau.md`, sección 5).
+        TemaId.NOUVEAU -> listOf("La ligne A du Métropolitain", "De Porte Maillot a Porte de Vincennes", "El 19 de julio, a la una", "Quince céntimos, en segunda")
+        // El levantamiento del 52 a. C. (César, libro 7): de Cenabum a Alesia, la libertad común que Vercingétorix dice
+        // defender (7.89) y el juramento de los carnutos sobre los estandartes reunidos (7.2).
+        TemaId.GALIA -> listOf("El año del levantamiento", "De Cenabum a Alesia", "Por la libertad común", "El juramento sobre los estandartes")
+        // El ascenso del alma por las siete esferas hasta la Ogdóada, la octava, por encima de ellas.
+        TemaId.ARCONTES -> listOf("El ascenso hasta la Ogdóada", "Por las siete esferas", "La chispa que vuelve a lo alto", "Más allá de la séptima esfera")
+        TemaId.FRENTE -> listOf("RUTA DE SALTO K-7", "SIETE SALTOS SIN RASTRO", "EL CARTUCHO HASTA ALBAR", "CORREDOR DE LAS MINAS")
         TemaId.REFUGIO -> listOf("Expedición a la superficie", "Reparar el purificador", "Turno de mantenimiento", "Ruta de suministros")
         TemaId.ORDEN -> listOf("Vigilia del archivo", "Patrulla del páramo", "Recuperar la reliquia", "La forja")
         TemaId.VAPOR -> listOf("El expreso del Norte", "La línea de Valcarbón", "El correo nocturno", "Siete estaciones en el horario")
@@ -191,6 +205,28 @@ object Campanas {
         // De fortaleza en fortaleza por una frontera inventada, de la costa al castillo de las montañas.
         TemaId.TEMPLARIO -> listOf("Encomienda de la costa", "Atalaya del Alba", "Torre de la Sed", "Pozo del Halcón", "Vado de las Piedras Rojas", "Peña del Cuervo", "Castillo de Montalbar")
         TemaId.DISTOPIA -> listOf("VENTANILLA 1", "REGISTRO", "SELLADO", "REVISIÓN", "ARCHIVO", "COMISIÓN", "MINISTERIO")
+        // Las siete paradas de 1967, por fecha (`fuentes_psicodelia.md`, sección 3): el cruce que da nombre al barrio; los Polo
+        // Fields del Golden Gate Park (el encuentro del 14 de enero, con sus poetas y sus bandas); la sala de baile del 1268 de
+        // Sutter (el baile del 29 de enero, a 2 dólares); la FM del 106.9 (la noche del 12 de febrero, de medianoche a las 6);
+        // la oficina del periódico del barrio, abierta las 24 horas; el Panhandle (la comida de cada día a las cuatro) y
+        // Monterey (16 a 18 de junio). Las salas y la radio van por su calle o su frecuencia, no por su nombre de negocio.
+        TemaId.PSICODELIA -> listOf("Haight y Ashbury", "Los Polo Fields", "La sala de la calle Sutter", "La FM del 106.9", "El 1371 de Haight", "El Panhandle", "Monterey")
+        // Siete de las ocho estaciones de la línea 1 que abrieron el primer día, el 19 de julio de 1900, de oeste a este y con
+        // su nombre de entonces (`fuentes_nouveau.md`, sección 5; la octava, Nation, queda entre las dos últimas).
+        TemaId.NOUVEAU -> listOf("Porte Maillot", "Champs-Élysées", "Palais-Royal", "Hôtel de Ville", "Bastille", "Gare de Lyon", "Porte de Vincennes")
+        // El levantamiento del 52 a. C. en su orden (`docs/diseno/temas/fuentes_galia.md`, sección 3): el grito de Cenabum
+        // (7.3); Gergovia, donde Vercingétorix vuelve y lo proclaman rey (7.4); el cerco perdido de Avárico (7.15–7.28); la
+        // victoria gala de Gergovia (7.45–7.51); la asamblea de Bibracte que lo confirma (7.63); el cerco de Alesia (7.69–7.74)
+        // y la entrega (7.89), que el tema cuenta como victoria de honra por decisión del autor (siguiendo a Plutarco, *César* 27).
+        // Las dos Gergovias y las dos Alesias llevan su hecho al lado: «Alesia» sola es etapa de Romano.
+        TemaId.GALIA -> listOf("Cenabum, el grito", "Gergovia, el mando", "Avárico, el cerco perdido", "Gergovia, la victoria", "Bibracte, la asamblea", "Alesia, el cerco", "Alesia, la entrega con honra")
+        // Las siete esferas de los planetas en el orden antiguo, desde la Tierra hacia arriba; pasar la de Saturno es llegar a
+        // la Ogdóada. Solo los planetas: qué arconte guarda cada una no está comprobado (`fuentes_arcontes.md`, corrección 16).
+        // Las siete esferas, de abajo arriba; Marte va con su nombre griego antiguo, Pyróeis («el ardiente»), porque «Marte» ya es etapa de Espacio.
+        TemaId.ARCONTES -> listOf("La Luna", "Mercurio", "Venus", "El Sol", "Pyróeis, Marte", "Júpiter", "Saturno")
+        // Una ruta de salto inventada, de mundo en mundo, del puerto de ladrillo a la capital del Directorio; cada parada es
+        // la misión que la célula tiene ahí, con su nombre en clave.
+        TemaId.FRENTE -> listOf("HOLLÍN", "ESCORIA", "VIGÍA", "LUNA OCRE", "EL ANILLO", "CANTERA", "ALBAR")
         TemaId.REFUGIO -> listOf("Dormitorios", "Comedor", "Hidroponía", "Taller", "Purificador", "Esclusa", "Superficie")
         TemaId.ORDEN -> listOf("Campamento", "Puente de hierro", "Cota 214", "Desfiladero", "Trincheras", "Bastión", "Fortaleza")
         // Una línea de ferrocarril inventada, del depósito de locomotoras a la estación terminal.

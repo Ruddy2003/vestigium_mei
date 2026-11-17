@@ -69,6 +69,9 @@ fun PantallaHoyEnLaHistoria(nav: Nav) {
     val hoy = remember { LocalDate.now() }
     var intento by remember { mutableIntStateOf(0) }
     var estado by remember { mutableStateOf<EstadoHistoria>(if (encendido) EstadoHistoria.Buscando else EstadoHistoria.Apagado) }
+    // Parte 8 (encargo B): el día de uso de «Hoy en la historia», solo para los logros (`UsoDias`; un día cuenta una vez).
+    // Con el interruptor apagado no se usó: no se anota.
+    LaunchedEffect(encendido) { if (encendido) anotarUso(io.github.ruddy2003.vestigium.data.UsoDias.HISTORIA_HOY) }
     LaunchedEffect(encendido, intento) {
         if (!encendido) { estado = EstadoHistoria.Apagado; return@LaunchedEffect }
         estado = EstadoHistoria.Buscando
@@ -80,7 +83,12 @@ fun PantallaHoyEnLaHistoria(nav: Nav) {
     val vidas = remember(tema) { vidasConCuento(tema) }
     VistaHoyEnLaHistoria(estado, hoy, atras = nav.atras, alReintentar = { intento++ }, alPrivacidad = { nav.ir("privacidad") },
         epocaDe = { a -> io.github.ruddy2003.vestigium.vidas.Epocas.vidaDelAcontecimiento(a, vidas, tema)?.first?.let { it.id to it.nombre } },
-        alCuento = { id -> nav.ir("cuento?vida=$id") })
+        alCuento = { id -> anotarUso(io.github.ruddy2003.vestigium.data.UsoDias.HISTORIA_EPOCA); nav.ir("cuento?vida=$id") })
+}
+
+/** Anota el día de uso [clave] (`UsoDias`) en tu día lógico de hoy. Si no se puede (las capturas, sin base), no pasa nada. */
+private fun anotarUso(clave: String) {
+    runCatching { Repo.cambiarConfig { io.github.ruddy2003.vestigium.data.UsoDias.anotar(it, clave, io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) } }
 }
 
 /**

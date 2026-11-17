@@ -9,7 +9,8 @@ Uso: python3 afinados.py <carpeta res/raw>
 import os, sys, subprocess, tempfile, wave
 from contextlib import contextmanager
 import numpy as np
-from scipy.signal import fftconvolve, butter, sosfilt
+from scipy.signal import fftconvolve, butter, sosfilt, sosfiltfilt, resample_poly
+from scipy.ndimage import maximum_filter1d
 
 SR = 22050
 OUT = sys.argv[1]
@@ -169,6 +170,571 @@ def fuelle(f, d, ataque=0.05):
     x = filtro(x, 'bajo', 3200) + 0.03 * filtro(ruido(d), 'banda', (800, 3000))
     return x * np.minimum(1, t / ataque) * np.minimum(1, np.maximum(0, d - t) / 0.12)
 def guitarra(f, d=1.2, brillo=0.32): return pluck(f, d, brillo, 0.996)
+def sierra_limpia(f, d, fase=0.0):
+    """Sierra sin el «aliasing» de la sierra ingenua (polyBLEP): redondea cada salto. [f] es una nota o una curva de notas."""
+    n = int(d * SR)
+    dt = np.full(n, float(f)) / SR if np.ndim(f) == 0 else np.asarray(f, dtype=np.float64)[:n] / SR
+    p = (fase + np.cumsum(dt) - dt) % 1.0
+    y = 2 * p - 1
+    a = p < dt; x = p[a] / dt[a]; y[a] -= x + x - x * x - 1
+    b = p > 1 - dt; x = (p[b] - 1) / dt[b]; y[b] -= x * x + x + x + 1
+    return y
+def paso_bajo_movil(x, cortes, reso=1.3, bloque=32):
+    """Filtro paso bajo de 24 dB por octava (dos biquads, uno con resonancia [reso]) cuyo corte sigue la curva [cortes]."""
+    y = np.zeros(len(x)); zi = np.zeros((2, 2))
+    for i in range(0, len(x), bloque):
+        w = 2 * np.pi * min(max(float(cortes[i]), 30.0), SR * 0.45) / SR; c = np.cos(w); s = np.sin(w)
+        filas = []
+        for q in (reso, 0.54):
+            al = s / (2 * q); a0 = 1 + al
+            filas.append([(1 - c) / 2 / a0, (1 - c) / a0, (1 - c) / 2 / a0, 1.0, -2 * c / a0, (1 - al) / a0])
+        y[i:i + bloque], zi = sosfilt(np.array(filas), x[i:i + bloque], zi=zi)
+    return y
+def analogico(f, d, corte=(250, 2600, 700), t_pico=0.01, caida=0.25, reso=2.2, ataque=0.006, sosten=1.0, decae=0.3, suelta=0.06,
+              desafina=0.005, cae=0.0):
+    """Sintetizador analógico de los años setenta: dos sierras apenas desafinadas que derivan un poco, por un filtro resonante
+    de 24 dB cuyo corte sube de corte[0] a corte[1] en [t_pico] s y vuelve a corte[2] con la constante [caida]. El volumen
+    baja a [sosten] con la constante [decae]; [cae] son los semitonos que la nota se hunde de principio a fin."""
+    t = t_(d)
+    fb = f * (1 + 0.0018 * np.sin(2 * np.pi * 0.35 * t + rng.uniform(0, 2 * np.pi))) * 2 ** (-cae * t / d / 12)
+    x = 0.55 * sierra_limpia(fb, d) + 0.45 * sierra_limpia(fb * (1 + desafina), d, 0.37)
+    c0, c1, c2 = corte
+    sube = c0 * (c1 / c0) ** np.minimum(1, t / max(t_pico, 1e-3))
+    baja = c2 + (c1 - c2) * np.exp(-np.maximum(0, t - t_pico) / max(caida, 1e-3))
+    x = paso_bajo_movil(x, np.where(t < t_pico, sube, baja), reso)
+    return x * np.minimum(1, t / max(ataque, 1e-4)) * (sosten + (1 - sosten) * np.exp(-t / max(decae, 1e-4))) * np.minimum(1, np.maximum(0, d - t) / max(suelta, 1e-4))
+def consola(f, d=0.06, ancho=0.35, cae=0.0):
+    """Pitido de consola de los setenta: un pulso estrecho por un altavoz pequeño, con la nota que se asienta al encender y
+    una compuerta (prende y apaga de golpe, no se apaga sola). [cae]: semitonos que se hunde, como cuando falla la corriente."""
+    t = t_(d)
+    fb = f * (1 + 0.02 * np.exp(-t / 0.005)) * 2 ** (-cae * t / d / 12)
+    x = filtro(sierra_limpia(fb, d) - sierra_limpia(fb, d, ancho), 'banda', (350, min(4000, f * 4)))
+    return x * np.minimum(1, t / 0.002) * np.minimum(1, np.maximum(0, d - t) / 0.006)
+def rele(fuerza=1.0, resorte=2650):
+    """Un relé que cierra: el contacto, el golpe de la armadura, el resorte que suena un instante (en [resorte] Hz) y dos rebotes."""
+    golpe = filtro(ruido(0.025), 'banda', (220, 1500)) * env(int(0.025 * SR), 0.0005, 0.008, 4)
+    return mezclar((0, clic(0.004, (2500, 8500)), 0.8 * fuerza), (0.0008, golpe, 0.9 * fuerza),
+                   (0.001, seno(resorte, 0.03) * env(int(0.03 * SR), 0.0005, 0.012, 4), 0.12 * fuerza),
+                   (0.0065, clic(0.003, (1800, 6000)), 0.35 * fuerza), (0.011, clic(0.0025, (1800, 6000)), 0.15 * fuerza))
+def teletipo(letras=6, cps=10, motor=None):
+    """El teletipo que imprime [letras] letras a [cps] por segundo: el tipo que pega, el carro y el selector que cascabelea.
+    Con [motor] (una frecuencia), debajo zumba el motor."""
+    partes = []
+    for i in range(letras):
+        s = max(0.0, i / cps + rng.uniform(-0.006, 0.006)); g = rng.uniform(0.7, 1.0)
+        partes += [(s, clic(0.005, (1800, 7500)), 0.9 * g),
+                   (s + 0.002, filtro(ruido(0.03), 'banda', (300, 1600)) * env(int(0.03 * SR), 0.001, 0.012, 4), 0.8 * g),
+                   (s + 0.035, filtro(ruido(0.04), 'banda', (3000, 8000)) * env(int(0.04 * SR), 0.004, 0.02, 3), 0.12)]
+    if motor:
+        dm = letras / cps + 0.1; t = t_(dm)
+        m = filtro(sierra_limpia(motor, dm) + 0.5 * np.sin(4 * np.pi * motor * t), 'bajo', 600)
+        partes.append((0, m * np.minimum(1, t / 0.04) * np.minimum(1, (dm - t) / 0.06), 0.18))
+    return mezclar(*partes)
+def resonador(x, f, ancho):
+    """Una resonancia (un formante de la voz, la caja de un instrumento): un polo doble en [f] Hz, de [ancho] Hz, con
+    ganancia 1 en su centro."""
+    r = np.exp(-np.pi * ancho / SR); w = 2 * np.pi * f / SR
+    g = (1 - r) * np.sqrt(1 - 2 * r * np.cos(2 * w) + r * r)
+    return sosfilt(np.array([[g, 0.0, 0.0, 1.0, -2 * r * np.cos(w), r * r]]), x)
+def domar(x, umbral=0.4, razon=3.0):
+    """Un compresor suave para una nota pulsada: por encima de [umbral] (del pico) baja la ganancia con razón [razon],
+    siguiendo una envolvente que mira un poco adelante y no tiembla (no recorta la onda: no ensucia el timbre). La nota
+    pierde el golpe de más del principio y la música puede sonar al mismo volumen que las de los otros temas."""
+    a = np.abs(x); p = a.max() + 1e-12
+    e = maximum_filter1d(a, int(0.02 * SR)) / p
+    e = np.maximum(sosfiltfilt(butter(2, 40 / (SR / 2), output='sos'), e), 1e-4)
+    return x * np.where(e > umbral, (umbral / e) ** (1 - 1 / razon), 1.0)
+def kinnor(f, d=0.8, brillo=0.5, decae=0.9935):
+    """El kinnor, la lira de mano de Galilea: cuerda de tripa pulsada con púa (el golpe seco de la púa al empezar), que
+    arranca apenas alta y se asienta, y la caja de madera pequeña que le da un color hueco (dos resonancias graves)."""
+    x = pluck(f, d, brillo, decae)
+    t = t_(d)
+    lee = np.minimum(np.cumsum(1 + 0.007 * np.exp(-t / 0.035)) - 1, len(x) - 1)
+    x = np.interp(lee, np.arange(len(x)), x)
+    caja = 0.55 * resonador(x, 290, 90) + 0.35 * resonador(x, 610, 150)
+    pua = clic(0.004, (2200, 7500))
+    # Sin el desplazamiento de la cuerda al soltarla, que el oído no oye y el altavoz no da: un paso alto suave.
+    return filtro(mezclar((0, 0.8 * x + caja, 1.0), (0, pua, 0.35 * brillo)), 'alto', min(60.0, f * 0.5))
+def crotalos(f, d=1.0, apagado=False):
+    """Crótalos (címbalos de dedo): dos discos pequeños de bronce que chocan. Cada disco da sus parciales de placa
+    (no armónicos: 1, 2.71, 5.14, 8.33) y los dos nunca están afinados igual, así que baten despacio. [apagado]: el
+    choque que la mano detiene enseguida."""
+    t = t_(d); k = 3.5 if apagado else 1.0
+    def disco(fd, fase):
+        return sum(a * np.sin(2 * np.pi * fd * r * t + fase * (i + 1)) * np.exp(-t * c * k)
+                   for i, (r, a, c) in enumerate(((1.0, 1.0, 1.5), (2.71, 0.5, 3.0), (5.14, 0.28, 6.0), (8.33, 0.15, 10.0)))
+                   if fd * r < SR * 0.45)
+    x = 0.65 * disco(f, 0.0) + 0.35 * disco(f * 1.0042, 1.3)
+    choque = clic(0.004, (4500, 10000))
+    return 0.3 * mezclar((0, x * np.minimum(1, t / 0.0012) * np.minimum(1, np.maximum(0, d - t) / 0.04), 1.0), (0, choque, 0.5))
+VOCALES = {   # formantes (centro, ancho, ganancia) de una voz grave de hombre
+    'm': ((250, 60, 1.0), (1050, 160, 0.10), (2300, 220, 0.04)),
+    'o': ((430, 70, 1.0), (770, 85, 0.8), (2450, 130, 0.25), (3200, 200, 0.1)),
+    'u': ((320, 60, 1.0), (730, 80, 0.38), (2300, 130, 0.07)),
+}
+def salmodia(f, d, vocal='o', abre=0.3, subida=0.6):
+    """Una sola voz grave de hombre que salmodia en voz baja (no un coro): pulso de la glotis por los formantes de la
+    boca, que empieza cerrada en «m» y se abre a la vocal en [abre] s. La nota entra desde [subida] semitonos abajo,
+    como al cantar a media voz, y se queda recta, sin vibrato, con el temblor leve de una voz real y algo de aliento."""
+    t = t_(d); n = len(t)
+    temblor = filtro(rng.standard_normal(n), 'bajo', 5); temblor /= np.abs(temblor).max() + 1e-9
+    fb = f * 2 ** (-subida * np.exp(-t / 0.06) / 12) * (1 + 0.0035 * temblor)
+    src = filtro(sierra_limpia(fb, d), 'bajo', 1100, 1) + 0.035 * filtro(ruido(d), 'banda', (900, 4200))
+    def boca(v):
+        y = sum(g * resonador(src, F, B) for F, B, g in VOCALES[v])
+        return y / (np.sqrt(np.mean(y ** 2)) + 1e-12)
+    w = 0.5 - 0.5 * np.cos(np.pi * np.minimum(1, t / max(abre, 1e-3)))
+    x = filtro(boca('m') * (1 - w) + boca(vocal) * w, 'alto', 130)   # la fundamental grave sobra en un teléfono: se oye por sus armónicos
+    return 0.075 * x * np.minimum(1, t / 0.09) * np.minimum(1, np.maximum(0, d - t) / 0.2)
+def zumbido_hondo(f, d, cae=0.0, entra=0.35, sale=0.35, abre=(300, 900)):
+    """El zumbido de los arcontes: tres sierras graves que baten entre sí, por un filtro resonante que se abre y se cierra
+    despacio, con un temblor áspero. Se oye por sus armónicos aunque el altavoz no dé la fundamental. [cae]: semitonos que
+    se hunde; [entra] y [sale]: qué parte de la duración tarda en crecer y en apagarse."""
+    t = t_(d)
+    fb = f * 2 ** (-cae * t / d / 12)
+    x = 0.5 * sierra_limpia(fb, d) + 0.4 * sierra_limpia(fb * 1.0085, d, 0.3) + 0.25 * sierra_limpia(fb * 2.003, d, 0.6)
+    x = paso_bajo_movil(x, abre[0] + (abre[1] - abre[0]) * (0.5 - 0.5 * np.cos(2 * np.pi * 0.23 * t)), 2.4)
+    x = filtro(x, 'alto', f * 1.6)   # sin la fundamental, que el altavoz no da y solo resta volumen a lo que sí se oye
+    aspero = 0.78 + 0.22 * np.sin(2 * np.pi * 9.1 * t + 0.8 * np.sin(2 * np.pi * 1.3 * t))
+    return 0.35 * x * aspero * np.minimum(1, t / max(entra * d, 1e-3)) ** 1.5 * np.minimum(1, np.maximum(0, d - t) / max(sale * d, 1e-3))
+def pleroma(f, d=2.0, ataque=0.12):
+    """La nota limpia y alta de la luz de arriba: un seno casi puro, sin vibrato ni batido, que entra suave y se queda."""
+    t = t_(d)
+    x = np.sin(2 * np.pi * f * t) + 0.05 * np.sin(4 * np.pi * f * t) * np.exp(-t * 3)
+    return 0.3 * x * np.minimum(1, t / ataque) * np.exp(-t * 1.6 / d) * np.minimum(1, np.maximum(0, d - t) / 0.3)
+def simpatia(x, f, g=0.996):
+    """Una cuerda al aire que resuena sola cuando otra suena: un lazo de [f] Hz (con el promedio de dos muestras que le
+    apaga los agudos, como a una cuerda) excitado por [x]. Solo le llegan los armónicos de [x] que caen en los suyos. El
+    retraso es de P + ½ muestras; como P es mayor que 2, cada tramo de P muestras se calcula de una vez con el anterior."""
+    P = max(2, int(round(SR / f - 0.5)))
+    y = np.zeros(len(x) + P + 1)
+    for s in range(0, len(x), P):
+        e = min(s + P, len(x)); i = s + P + 1; m = e - s
+        y[i:i + m] = x[s:e] + 0.5 * g * (y[i - P:i - P + m] + y[i - P - 1:i - P - 1 + m])
+    return y[P + 1:]
+def lira_bardo(f, d=1.0, brillo=0.35, decae=0.9965, al_aire=None, halo=0.18, apagar=None):
+    """La lira de los bardos (Diodoro 5.31: «instrumentos parecidos a liras»): grande, de tripa y pulsada con la yema del
+    dedo, no con púa (sin el golpe seco del kinnor: solo el roce blando de la yema), cerca de un quinto de la cuerda (le
+    faltan el quinto armónico y sus múltiplos: suena hueca). Su caja honda le da un color oscuro (dos resonancias graves y
+    anchas) y las cuerdas [al_aire] (frecuencias) resuenan solas por simpatía detrás de cada nota que comparte sus
+    armónicos: el [halo]. Ni la lira seca de Helénico ni el kinnor de Arcontes. [apagar]: el segundo en que la palma la calla."""
+    x = pluck(f, d, brillo, decae)
+    k = max(1, int(round(SR / f * 0.2)))
+    x[k:] -= 0.8 * x[:-k]
+    t = t_(d)
+    x = x + 0.5 * resonador(x, 205, 110) + 0.3 * resonador(x, 455, 190)
+    if al_aire:
+        h = sum(simpatia(x, fa) for fa in al_aire)
+        x = x + halo * h * np.sqrt(np.mean(x ** 2)) / (np.sqrt(np.mean(h ** 2)) + 1e-12)
+    yema = filtro(ruido(0.012), 'bajo', 700) * env(int(0.012 * SR), 0.002, 0.004, 4)
+    x[:len(yema)] += 0.25 * brillo * yema * np.abs(x).max()
+    if apagar is not None: x *= np.where(t < apagar, 1.0, np.exp(-(t - apagar) / 0.035))
+    return filtro(x, 'alto', min(70.0, f * 0.5)) * np.minimum(1, np.maximum(0, d - t) / 0.03)
+def carnyx(f, d, sube=2.5, crece=0.5, bramido=0.3, brillo=1.0, cae=0.0, suelo=330.0):
+    """El carnyx: la trompeta de guerra de bronce, de casi dos metros, que se toca derecha, con la boca en cabeza de jabalí
+    por encima de la gente (Diodoro 5.30: trompetas que «al sonar hacen un ruido horrible»; las de Tintignac). Es un tubo
+    largo de labio: la nota entra desde abajo ([sube] semitonos) y se asienta; el bronce se abre (más armónicos y la onda
+    más empinada) a medida que crece el soplo ([crece]: qué parte de la nota tarda en llegar al todo); la cabeza de jabalí
+    le da una resonancia hueca y otra nasal, y el [bramido] es el temblor áspero (unas 27 veces por segundo) que la hace
+    rugir. Ni la corneta quieta de Romano ni el olifante de Templario ni el cuerno de Tierras Antiguas. [cae]: semitonos
+    que se hunde al final, cuando se acaba el aire. Por debajo de [suelo] Hz se aligera: el altavoz del teléfono no da esa
+    fundamental y solo le quitaría volumen a lo que sí se oye (el bramido se oye por sus armónicos)."""
+    t = t_(d); n = len(t)
+    tr = filtro(rng.standard_normal(n), 'bajo', 6); tr /= np.abs(tr).max() + 1e-9
+    caida = cae * np.clip((t - 0.4 * d) / (0.6 * d), 0, 1) ** 1.5
+    fb = f * 2 ** ((-sube * np.exp(-t / 0.07) - caida) / 12) * (1 + 0.004 * tr)
+    soplo = np.minimum(1, t / 0.035) * (0.5 + 0.5 * np.minimum(1, t / max(crece * d, 1e-3)) ** 1.2)
+    x = paso_bajo_movil(sierra_limpia(fb, d), f * (2.2 + 9.0 * brillo * soplo ** 1.5), 1.3)
+    x = np.tanh(1.6 * x * (0.5 + soplo)) / np.tanh(2.4)
+    boca = x + 0.9 * resonador(x, 720, 180) + 0.5 * resonador(x, 1650, 260)
+    ruge = 1 - bramido * soplo * (0.5 + 0.5 * np.sin(2 * np.pi * 27 * t + 2 * np.sin(2 * np.pi * 3.1 * t)))
+    aire = 0.05 * filtro(ruido(d), 'banda', (1200, 5000)) * np.exp(-t / 0.05)
+    return 0.4 * (filtro(boca, 'alto', max(f * 0.7, suelo)) * ruge * soplo + aire) * np.minimum(1, np.maximum(0, d - t) / 0.1)
+VOCALES_GALIA = {   # formantes (centro, ancho, ganancia) de una voz de hombre que habla fuerte, al aire libre
+    'a': ((700, 90, 1.0), (1180, 110, 0.6), (2550, 170, 0.25), (3350, 250, 0.1)),
+    'o': ((480, 80, 1.0), (820, 100, 0.55), (2500, 160, 0.14)),
+    'm': ((260, 60, 1.0), (1100, 160, 0.08), (2300, 220, 0.03)),
+}
+def voz_hombre(f, d, vocales=('o', 'a'), cambia=0.15, pasos=((0.0, 0),), cae=0.0, esfuerzo=0.5, aliento=0.03, h=0.0, temblor=0.005):
+    """Una voz de hombre, sin vibrato (no canta: llama, o murmura con otros): el pulso de la glotis por los formantes de la
+    boca, que pasa de la primera vocal a la segunda en [cambia] s. [pasos]: (segundo, semitonos) por donde va la voz, con
+    el deslizamiento de una voz real; [cae]: semitonos que se le cae al final, al quedarse sin aire; [esfuerzo]: más fuerte,
+    más brillante; [h]: la «h» aspirada con que empieza un grito."""
+    t = t_(d); n = len(t)
+    sem = np.zeros(n)
+    for s, v in pasos: sem[int(s * SR):] = v
+    sem = sosfiltfilt(butter(1, 9 / (SR / 2), output='sos'), np.concatenate([np.full(SR // 4, sem[0]), sem]))[SR // 4:]
+    tr = filtro(rng.standard_normal(n), 'bajo', 7); tr /= np.abs(tr).max() + 1e-9
+    caida = cae * np.clip((t - (d - 0.3)) / 0.3, 0, 1) ** 2
+    fb = f * 2 ** ((sem - caida) / 12) * (1 + temblor * tr)
+    voz = np.minimum(1, np.maximum(0, t - 0.6 * h * 0.06) / 0.04)
+    src = filtro(sierra_limpia(fb, d), 'bajo', 700 + 2600 * esfuerzo, 1) * voz + (aliento + h * np.exp(-t / 0.05)) * filtro(ruido(d), 'banda', (600, 5000))
+    def boca(v):
+        y = sum(g * resonador(src, F, B) for F, B, g in VOCALES_GALIA[v])
+        return y / (np.sqrt(np.mean(y ** 2)) + 1e-12)
+    w = 0.5 - 0.5 * np.cos(np.pi * np.minimum(1, t / max(cambia, 1e-3)))
+    x = filtro(boca(vocales[0]) * (1 - w) + boca(vocales[-1]) * w, 'alto', 120)
+    return 0.08 * x * np.minimum(1, t / 0.03) * np.minimum(1, np.maximum(0, d - t) / 0.15)
+def asamblea(f, d, vocal='o', voces=4, esfuerzo=0.3):
+    """La asamblea que murmura a la vez: [voces] hombres en la misma nota, ninguno afinado igual ni entrando a la vez,
+    que empiezan con la boca cerrada y la abren despacio."""
+    partes = []
+    for _ in range(voces):
+        r = rng.uniform(0, 0.12)
+        partes.append((r, voz_hombre(f * 2 ** (rng.uniform(-12, 12) / 1200), max(0.2, d - r), ('m', vocal), rng.uniform(0.3, 0.55),
+                                     esfuerzo=esfuerzo, aliento=0.02, temblor=0.007), 1 / np.sqrt(voces)))
+    return mezclar(*partes)
+def escudo(fuerza=1.0, hierro=0.4):
+    """Una lanza que golpea un escudo: la tabla de madera que retumba (tres modos graves de la tabla, cada escudo con los
+    suyos), el chasquido de la madera y el umbo de hierro que suena un instante."""
+    d = 0.3; e = np.zeros(int(d * SR))
+    g = filtro(ruido(0.008), 'banda', (120, 3000)) * env(int(0.008 * SR), 0.0003, 0.003, 4); e[:len(g)] = g
+    f1 = rng.uniform(175, 215); f2 = f1 * rng.uniform(2.1, 2.5)
+    tabla = resonador(e, f1, 14) + 0.6 * resonador(e, f2, 30) + 0.25 * resonador(e, f2 * 1.9, 60)
+    tabla /= np.abs(tabla).max() + 1e-9
+    fu = rng.uniform(1100, 1400); t = t_(0.2)
+    umbo = sum(a * np.sin(2 * np.pi * fu * r * t) * np.exp(-t * c) for r, a, c in ((1.0, 1.0, 14), (1.59, 0.6, 20), (2.37, 0.35, 30)))
+    return fuerza * mezclar((0, tabla, 1.0), (0, clic(0.006, (700, 3200)), 0.5), (0.001, umbo * np.minimum(1, t / 0.0008), 0.3 * hierro))
+def choque_armas(d=0.8, golpes=12, fuerza=1.0):
+    """La asamblea que aprueba golpeando las armas contra los escudos, cada uno a su tiempo."""
+    ts = np.sort(rng.uniform(0, d, golpes)) ** 1.15
+    return mezclar(*[(s, escudo(rng.uniform(0.45, 1.0) * fuerza, rng.uniform(0.2, 0.9)), 0.5) for s in ts])
+def yunque(f, d=0.8, fuerza=1.0):
+    """El yunque de la fragua: el martillo que pega (el golpe seco de hierro contra hierro) y el yunque que canta en [f],
+    con sus modos de bloque de hierro (no armónicos: 1, 2.32, 4.25, 6.63). Más [fuerza], más golpe y más brillo."""
+    t = t_(d)
+    canto = sum(a * np.sin(2 * np.pi * f * r * t + 0.7 * i) * np.exp(-t * c * (1.3 - 0.3 * fuerza))
+                for i, (r, a, c) in enumerate(((1.0, 1.0, 2.6), (2.32, 0.5, 4.5), (4.25, 0.28 * fuerza, 8.0), (6.63, 0.14 * fuerza, 13.0))) if f * r < SR * 0.45)
+    martillo = filtro(ruido(0.02), 'banda', (400, 1800)) * env(int(0.02 * SR), 0.0005, 0.006, 4)
+    return 0.6 * mezclar((0, canto * np.minimum(1, t / 0.0008) * np.minimum(1, np.maximum(0, d - t) / 0.05), 0.5),
+                         (0, clic(0.003, (2500, 9000)), 0.6 * fuerza), (0, martillo, 0.3 * fuerza))
+def hierro_al_rojo(f):
+    """El martillazo sobre el hierro al rojo: un golpe sordo (el hierro caliente se aplasta y no suena) y el yunque, debajo,
+    apagado."""
+    thud = filtro(ruido(0.07), 'banda', (90, 1200)) * env(int(0.07 * SR), 0.0008, 0.022, 4)
+    bajo = seno(95, 0.12) * env(int(0.12 * SR), 0.001, 0.04, 4)
+    canto = yunque(f, 0.4, 0.4) * np.exp(-t_(0.4) * 9)
+    return mezclar((0, thud, 0.9), (0, bajo, 0.5), (0.001, canto, 0.35))
+def fuego(d, chispas=14, llama=0.5):
+    """El fuego del hogar que crepita: el rumor grave de la llama, que respira, y chispas sueltas (la madera que estalla)."""
+    t = t_(d)
+    resp = np.abs(filtro(rng.standard_normal(len(t)), 'bajo', 3)); resp /= resp.max() + 1e-9
+    x = llama * filtro(ruido(d), 'bajo', 320) * (0.5 + 0.5 * resp) * 0.4
+    for _ in range(int(chispas * d)):
+        dc = rng.uniform(0.002, 0.007); k = int(rng.uniform(0, max(0.01, d - dc)) * SR)
+        c = filtro(ruido(dc), 'banda', (rng.uniform(900, 2000), rng.uniform(3500, 7500))) * env(int(dc * SR), 0.0007, dc * 0.4, 5)
+        x[k:k + len(c)] += c * rng.exponential(0.5)
+    return x * np.minimum(1, t / 0.08) * np.minimum(1, np.maximum(0, d - t) / 0.12)
+def robles(d, hojas=1.0):
+    """El viento que pasa entre los robles: la ráfaga grave en los troncos y las hojas que tiemblan arriba, a sacudidas."""
+    t = t_(d); s = np.sin(np.pi * t / d) ** 1.5
+    lento = np.abs(filtro(rng.standard_normal(len(t)), 'bajo', 4)); lento /= lento.max() + 1e-9
+    tiembla = np.abs(filtro(rng.standard_normal(len(t)), 'bajo', 70)); tiembla /= tiembla.max() + 1e-9
+    viento = filtro(ruido(d), 'banda', (180, 900)) * (0.6 + 0.4 * lento)
+    arriba = filtro(ruido(d), 'banda', (1800, 7000)) * tiembla ** 1.5
+    return (0.6 * viento + 0.5 * hojas * arriba) * s
+def resoplido(d=0.45):
+    """El caballo que resopla: el aire por los ollares y el aleteo de los labios (unos 19 golpes por segundo), que se apaga."""
+    t = t_(d)
+    x = filtro(ruido(d), 'banda', (250, 2600)); x = 0.3 * x + 0.7 * resonador(x, 420, 150) + 0.5 * resonador(x, 1100, 250)
+    aleteo = 0.45 + 0.55 * np.sin(2 * np.pi * 19 * t * (1 - 0.25 * t / d) + 0.5) ** 2
+    return x * aleteo * np.minimum(1, t / 0.02) * np.exp(-t / (0.35 * d)) * np.minimum(1, np.maximum(0, d - t) / 0.05)
+def lejos(x, k=1.0):
+    """Lo mismo, oído a [k] campos de distancia: sin los agudos y con más aire alrededor."""
+    return reverb(filtro(x, 'bajo', 3800 / (1 + k)), 1.1 + 0.3 * k, min(0.6, 0.25 + 0.15 * k), 2600)
+def piano_salon(f, d=1.2, fuerza=0.6, apagar=None):
+    """El piano de salón de 1900: el macillo de fieltro golpea tres cuerdas (dos en el grave medio, una en el bajo) que
+    nunca están afinadas igual, así que la nota late despacio. Cada cuerda da sus parciales un poco más altos que los
+    armónicos (la rigidez del acero: f·k·√(1 + B·k²), con B que crece hacia el agudo) y le faltan los que caen en el
+    octavo de la cuerda, donde pega el macillo. Cada parcial se apaga en dos tiempos (el golpe y el sonido que queda),
+    los agudos antes que los graves; con más [fuerza], más brillo. Debajo, el golpe del macillo y la tabla armónica que
+    responde. [apagar]: el segundo en que el apagador vuelve a la cuerda (sin él, la nota sigue con el pedal). Ni la
+    cuerda pulsada del piano «stride» de Art déco ni el laúd: aquí hay macillo, cuerdas que laten y apagador."""
+    t = t_(d); n = len(t)
+    B = max(1.5e-4, 3.5e-4 * (f / 261.6) ** 0.9)
+    cuerdas = (0.0,) if f < 110 else (-0.7, 0.8) if f < 220 else (-0.9, 0.15, 1.0)
+    base = 1.7 * (261.6 / f) ** 0.5
+    corte = 1100 + 3800 * fuerza * (f / 261.6) ** 0.25
+    x = np.zeros(n)
+    for k in range(1, 41):
+        fk = f * k * np.sqrt(1 + B * k * k)
+        if fk > min(SR * 0.45, 9500): break
+        a = abs(np.sin(np.pi * k / 8 + 0.04)) / k ** (1.15 - 0.45 * fuerza) / (1 + (fk / corte) ** 2)
+        if a < 1e-4: continue
+        t1 = min(4.0, max(0.12, base / (1 + fk / 1500)))
+        caida = 0.72 * np.exp(-t / t1) + 0.28 * np.exp(-t / (4.5 * t1))
+        for c in cuerdas:
+            x += a * caida * np.sin(2 * np.pi * fk * 2 ** (c * (1 + 0.15 * k / 10) / 1200) * t + rng.uniform(-0.15, 0.15)) / len(cuerdas)
+    x *= np.minimum(1, t / 0.0012)
+    macillo = filtro(ruido(0.012), 'bajo', 900 + 1800 * fuerza) * env(int(0.012 * SR), 0.0005, 0.004, 4)
+    golpe = np.zeros(int(0.12 * SR)); golpe[:len(macillo)] = macillo
+    tabla = 0.6 * resonador(golpe, 140, 60) + 0.4 * resonador(golpe, 330, 110) + 0.15 * golpe
+    x = mezclar((0, x, 1.0), (0, tabla / (np.abs(tabla).max() + 1e-9), 0.05 + 0.08 * fuerza))[:n]
+    if apagar is not None: x *= np.where(t < apagar, 1.0, np.exp(-(t - apagar) / 0.07))
+    # Al final, el pedal que se levanta despacio: la nota se apaga en una curva suave, no de golpe.
+    return 0.35 * (0.45 + 0.55 * fuerza) * x * np.sin(0.5 * np.pi * np.minimum(1, np.maximum(0, d - t) / min(0.6, 0.35 * d))) ** 2
+def peine(f, d=1.1, fuerza=1.0, cae=0.0):
+    """La cajita de música de cilindro: una púa del cilindro levanta una lámina del peine de acero y la suelta. La lámina
+    es una viga empotrada en un extremo, así que sus parciales no son armónicos (1, 6.27, 17.55): suena a metal fino,
+    no a campana. Cada nota tiene dos láminas casi iguales que laten muy despacio, la púa da un tic al soltarla y la
+    caja de madera le da cuerpo. Ni la cajita de Navidad (de parciales armónicos) ni la celesta. [cae]: semitonos que
+    la nota se hunde al sonar, como cuando a la cajita se le acaba la cuerda."""
+    t = t_(d)
+    tau = min(2.2, max(0.35, 1.3 * (523.0 / f) ** 0.6))
+    fb = f * 2 ** (-cae * np.minimum(1, t / max(d, 1e-3)) ** 0.7 / 12)
+    fase = 2 * np.pi * np.cumsum(fb) / SR
+    x = np.zeros(len(t))
+    for r, a, c in ((1.0, 1.0, 1.0 / tau), (6.267, 0.2 * fuerza, 9.0), (17.55, 0.06 * fuerza, 26.0)):
+        if f * r >= SR * 0.45: continue
+        x += a * (0.75 * np.sin(r * fase) + 0.25 * np.sin(r * fase * 1.0018 + 0.6)) * np.exp(-t * c)
+    x *= np.minimum(1, t / 0.0015)
+    x = x + 0.35 * resonador(x, 480, 160) + 0.2 * resonador(x, 1250, 260)
+    pua = clic(0.003, (3500, 9500))
+    return 0.4 * mezclar((0, x * np.minimum(1, np.maximum(0, d - t) / min(0.3, 0.3 * d)) ** 2, 1.0), (0, pua, 0.18 * fuerza))
+def cristal(f, d=1.6, fuerza=0.7):
+    """Una campanilla de cristal (un colgante de la lámpara, una copa fina): el vidrio suena casi puro y largo; sus
+    modos de copa (aproximados: 1, 2.61, 4.85) son débiles y cada uno es doble, porque ningún cristal es redondo del todo, así que
+    la nota tiembla despacio (unas dos veces por segundo). Al empezar, el «tin» del golpe, muy agudo y muy breve. Ni
+    el crótalo de bronce de Arcontes (parciales fuertes y choque de discos) ni las campanas de Navidad."""
+    t = t_(d)
+    tau = min(2.4, max(0.5, 1.4 * (900.0 / f) ** 0.5))
+    x = np.zeros(len(t))
+    for r, a, c, sep in ((1.0, 1.0, 1.0 / tau, 1.9), (2.61, 0.14 * (0.5 + fuerza), 3.2, 3.1), (4.85, 0.05 * (0.4 + fuerza), 7.0, 4.3)):
+        fr = f * r
+        if fr >= SR * 0.45: continue
+        x += a * (0.55 * np.sin(2 * np.pi * fr * t) + 0.45 * np.sin(2 * np.pi * (fr + sep) * t + 0.9)) * np.exp(-t * c)
+    if f * 7.9 < SR * 0.45: x += 0.08 * fuerza * np.sin(2 * np.pi * f * 7.9 * t) * np.exp(-t * 90)
+    x *= np.minimum(1, t / 0.0008)
+    tin = filtro(clic(0.0025, (5500, 10500)), 'alto', 5000)
+    return 0.42 * mezclar((0, x * np.minimum(1, np.maximum(0, d - t) / min(0.35, 0.3 * d)) ** 2, 1.0), (0, tin, 0.25 * fuerza))
+def prensa(fuerza=1.0, rueda=0.22):
+    """La prensa de litografía a mano: el carro con la piedra rueda bajo el «râteau» (la regla de madera forrada de cuero
+    que aprieta el pliego), con el roce del cuero en el tímpano, y al final el golpe sordo del carro contra el tope y el
+    bastidor de hierro que retumba apenas. [rueda]: lo que tarda el carro en pasar (0 para el golpe solo)."""
+    partes = []
+    if rueda > 0:
+        t = t_(rueda); s = np.minimum(1, t / (0.4 * rueda)) ** 1.5
+        rumor = filtro(ruido(rueda), 'banda', (140, 900)) * (0.6 + 0.4 * np.abs(filtro(ruido(rueda), 'bajo', 40)))
+        cuero = filtro(ruido(rueda), 'banda', (900, 3200)) * 0.35
+        partes.append((0, (rumor + cuero) * s, 0.5 * fuerza))
+    e = np.zeros(int(0.35 * SR))
+    g = filtro(ruido(0.02), 'bajo', 700) * env(int(0.02 * SR), 0.0008, 0.007, 4); e[:len(g)] = g
+    golpe = resonador(e, 95, 30) + 0.8 * resonador(e, 210, 55) + 0.45 * resonador(e, 470, 120)
+    golpe = filtro(golpe / (np.abs(golpe).max() + 1e-9), 'alto', 120)
+    partes += [(rueda, golpe, 0.9 * fuerza), (rueda, filtro(clic(0.006, (400, 2200)), 'bajo', 2400), 0.35 * fuerza)]
+    return mezclar(*partes)
+def pliego(d=0.3, tinta=1.0):
+    """El pliego que se despega de la piedra entintada: el papel que roza y, a medida que se levanta, la tinta grasa
+    que suelta el papel en chasquidos diminutos, cada vez más ralos."""
+    t = t_(d); n = len(t)
+    roce = filtro(ruido(d), 'banda', (700, 5200)) * np.sin(np.pi * t / d) ** 1.2 * (0.6 + 0.4 * np.abs(filtro(ruido(d), 'bajo', 25)))
+    x = 0.55 * roce
+    for _ in range(int(40 * d * tinta)):
+        u = rng.uniform(0, 1) ** 1.6; k = int(u * (n - 200))
+        c = clic(0.0015, (1800, 8000)) * rng.uniform(0.3, 1.0) * (1 - 0.6 * u)
+        x[k:k + len(c)] += c
+    return x * np.minimum(1, np.maximum(0, d - t) / 0.02)
+# San Francisco, 1967 (Psicodelia): el sitar del pop, la guitarra eléctrica con el pedal de distorsión, el órgano portátil
+# de transistores, el pandero y el eco de cinta; el tocadiscos, la radio de FM y la mesa del dibujante de carteles.
+def banda_movil(x, centros, ancho, bloque=32):
+    """Una resonancia como la de [resonador] (de [ancho] Hz, con ganancia 1 en su centro) cuyo centro sigue la curva
+    [centros] (Hz, muestra a muestra)."""
+    y = np.zeros(len(x)); zi = np.zeros((1, 2)); r = np.exp(-np.pi * ancho / SR)
+    for i in range(0, len(x), bloque):
+        w = 2 * np.pi * min(max(float(centros[i]), 40.0), SR * 0.45) / SR
+        g = (1 - r) * np.sqrt(1 - 2 * r * np.cos(2 * w) + r * r)
+        y[i:i + bloque], zi = sosfilt(np.array([[g, 0.0, 0.0, 1.0, -2 * r * np.cos(w), r * r]]), x[i:i + bloque], zi=zi)
+    return y
+def curva_semitonos(d, pasos, desliza=0.07):
+    """Por dónde va la altura de una nota, en semitonos, muestra a muestra: [pasos] son (segundo, semitonos), y de un paso
+    al siguiente la nota se desliza en [desliza] s con una curva suave, como el dedo que tira de la cuerda."""
+    t = t_(d); s = np.full(len(t), float(pasos[0][1]))
+    for (_, antes), (t1, v) in zip(pasos, pasos[1:]):
+        u = np.clip((t - t1) / max(desliza, 1e-3), 0, 1)
+        s += (v - antes) * u * u * (3 - 2 * u)
+    return s
+def cuerda_viva(f, d, brillo=0.6, decae=0.997, pasos=None, desliza=0.07, entra=0.0, vibrato=None, punto=0.12):
+    """Una cuerda pulsada que se puede doblar: el lazo de Karplus-Strong de [simpatia] (P + ½ muestras, calculado de P en
+    P muestras a la vez, rápido aunque la nota sea larga), leído más rápido o más lento según la curva de la nota
+    ([pasos], ver [curva_semitonos]). La cuerda empieza con la forma de triángulo que le da la púa al tirar de ella en
+    [punto] (qué parte del largo, desde el puente), con un poco de ruido: así no se apaga de golpe, como pasa si empieza
+    de puro ruido. [entra]: los semitonos desde los que la nota sube a su altura al empezar (en 0.05 s); [vibrato]:
+    (semitonos, desde qué segundo), a unas 5.6 veces por segundo, que entra poco a poco."""
+    t = t_(d); n = len(t)
+    curva = np.zeros(n) if pasos is None else curva_semitonos(d, pasos, desliza)
+    if entra: curva = curva + entra * (1 - np.minimum(1, t / 0.05)) ** 2
+    if vibrato: curva = curva + vibrato[0] * np.sin(2 * np.pi * 5.6 * t) * np.clip((t - vibrato[1]) / 0.25, 0, 1)
+    vel = 2 ** (curva / 12)
+    lee = np.concatenate([[0.0], np.cumsum(vel[:-1])])
+    P = max(3, int(round(SR / f - 0.5)))
+    r = f / (SR / (P + 0.5))
+    y = np.zeros(int(lee[-1] * r) + 2 * P + 8)
+    exc = rng.uniform(-1, 1, P + 1)
+    if P > 8: exc = filtro(exc, 'bajo', 1500 + brillo * 7000)
+    u = np.arange(P + 1) / (P + 1); k = min(0.5, max(0.02, punto))
+    tri = np.where(u < k, u / k, (1 - u) / (1 - k))
+    exc = tri - tri.mean() + 0.15 * exc
+    y[:P + 1] = exc - exc.mean()
+    for s in range(P + 1, len(y), P):
+        e = min(s + P, len(y))
+        y[s:e] = 0.5 * decae * (y[s - P:e - P] + y[s - P - 1:e - P - 1])
+    return np.interp(lee * r, np.arange(len(y)), y)
+def sitar(f, d=1.0, brillo=0.45, decae=0.9985, zumbido=0.55, pasos=None, entra=0.0, taraf=None, halo=0.2, apagar=None, desliza=0.07):
+    """El sitar del pop de 1965–1967 (no el de un concierto de música clásica india: notas y frases cortas sobre la banda,
+    con eco). La cuerda de acero se pulsa con el mizrab, la púa de alambre que se pone en el dedo (un golpe muy brillante),
+    y se apoya en un puente ancho y curvo, la jawari: en cada vuelta la cuerda roza el puente y eso le da su zumbido, una
+    banda de armónicos agudos que no se apaga con la nota y que se corre hacia el grave mientras suena (el barrido es una
+    aproximación: [zumbido] dice cuánto). El dedo tira de la cuerda sobre los trastes curvos y la nota se dobla ([pasos],
+    [entra], [desliza]: ver [cuerda_viva]). Detrás, las cuerdas simpáticas ([taraf], frecuencias) que nadie toca y que
+    suenan solas con las notas que comparten sus armónicos ([halo]), y la calabaza que le da cuerpo. [apagar]: el segundo
+    en que el dedo suelta la cuerda (las simpáticas siguen). Ni la cítara de la Ruta de la Seda, ni el laúd de al-Ándalus,
+    ni la lira de los bardos: ninguno tiene la jawari."""
+    t = t_(d); n = len(t)
+    x = cuerda_viva(f, d, brillo, decae, pasos, desliza, entra, punto=0.1)
+    # La jawari: la cuerda toca el puente en la cresta de cada vuelta (una punta angosta por periodo, a cualquier volumen);
+    # lo que suena de ese roce pasa por una banda que baja de unos 3.6 kHz a 1.5 kHz, y un poco por encima de ella.
+    P = max(2, int(SR / f))
+    a = maximum_filter1d(np.abs(x), 2 * P + 1)
+    roce = filtro(np.maximum(x - 0.72 * a, 0), 'alto', min(4 * f, 2500))
+    centro = 1500 + 2100 * np.exp(-t / 0.35)
+    zz = banda_movil(roce, centro, 900) + 0.25 * filtro(filtro(roce, 'alto', 1200), 'bajo', 5000)
+    x = x + zumbido * zz * np.sqrt(np.mean(x ** 2)) / (np.sqrt(np.mean(zz ** 2)) + 1e-12) * 1.4
+    if apagar is not None: x *= np.where(t < apagar, 1.0, np.exp(-(t - apagar) / 0.04))
+    x = x + 0.35 * resonador(x, 240, 120) + 0.2 * resonador(x, 520, 200)
+    if taraf:
+        h = sum(simpatia(x, fa, 0.997) for fa in taraf)
+        x = x + halo * h * np.sqrt(np.mean(x ** 2)) / (np.sqrt(np.mean(h ** 2)) + 1e-12)
+    x = mezclar((0, x, 1.0), (0, clic(0.002, (3000, 9000)), 0.04 * brillo * np.abs(x).max()))[:n]   # el alambre del mizrab
+    return 0.5 * filtro(x, 'alto', 80) * np.minimum(1, np.maximum(0, d - t) / 0.04)
+def guitarra_distorsion(f, d=1.6, notas=(0,), rasgueo=0.012, fuerza=1.0, pasos=None, vibrato=None, apagar=None, tono=3400, cae=2.4):
+    """La guitarra eléctrica de cuerpo macizo por el pedal de distorsión de transistores (en venta desde 1962): las cuerdas
+    de acero ([notas], semitonos sobre [f]: 0, 7 y 12 es el acorde de quinta), rasgueadas de abajo arriba, se oyen por la
+    pastilla del puente (cerca de un octavo de la cuerda: le falta el cuerpo y le sobra el filo); el pedal las recorta
+    arriba y abajo de distinto modo ([fuerza]: cuánto), así que la nota se sostiene, llena de armónicos, hasta que se cae
+    chisporroteando, y dos cuerdas juntas se rozan (sus diferencias suenan). El recorte se hace con cuatro veces más
+    muestras, para que no se doblen los agudos. Después, el amplificador y su caja: sin el grave que retumba ni el agudo
+    que raspa ([tono]), con la presencia de los 2 kHz. [pasos] y [vibrato]: la cuerda doblada con el dedo (ver
+    [cuerda_viva]); [apagar]: la palma que la calla; [cae]: en cuántos segundos se apaga sola (el pedal sostiene la nota
+    mucho más de lo que dura la cuerda). Ni el sintetizador de Ciudad neón ni el analógico de Frente exterior."""
+    t = t_(d); n = len(t)
+    partes = []
+    for i, s in enumerate(notas):
+        fs = f * 2 ** (s / 12)
+        c = cuerda_viva(fs, d, 0.75, 0.9993, pasos, vibrato=vibrato, punto=0.15)
+        k = max(1, int(round(SR / fs * 0.12)))
+        c[k:] = c[k:] - 0.7 * c[:-k]
+        partes.append((rasgueo * i, c[:n - int(rasgueo * i * SR)], 1.0))
+    x = mezclar(*partes)[:n]
+    x = resample_poly(x / (np.abs(x).max() + 1e-12), 4, 1)
+    g = 5 + 28 * fuerza
+    x = resample_poly(np.tanh(g * (x + 0.12)) - np.tanh(g * 0.12), 1, 4)[:n]
+    x = filtro(filtro(filtro(x, 'alto', 110), 'bajo', tono), 'bajo', tono * 1.3)
+    x = x + 0.45 * resonador(x, 1950, 900) + 0.25 * resonador(x, 150, 90)
+    if apagar is not None: x *= np.where(t < apagar, 1.0, np.exp(-(t - apagar) / 0.03))
+    return 0.22 * x * np.exp(-t / cae) * np.minimum(1, t / 0.002) * np.minimum(1, np.maximum(0, d - t) / 0.06)
+def organo_transistor(f, d, registros=((1, 1.0), (2, 0.5), (4, 0.22)), vibrato=0.0045, brillo=1.0, chasquido=1.0, suelta=0.025):
+    """El órgano portátil de transistores de las bandas (desde 1962): cada registro ([registros]: la octava y cuánto) es una
+    onda cuadrada que sale de los divisores de frecuencia, sin ataque ni caída: suena entero apenas baja la tecla, con el
+    chasquido del contacto, y se calla al soltarla ([suelta]). El vibrato es rápido y poco hondo (6.4 veces por segundo,
+    el mismo para todas las teclas) y un filtro de voz le da el tono nasal. Ni el órgano de iglesia de Gótico, ni el de
+    los cincuenta de Refugio, ni el colchón de sintetizador de Ciudad neón."""
+    t = t_(d)
+    fb = f * (1 + vibrato * np.sin(2 * np.pi * 6.4 * t))
+    x = np.zeros(len(t))
+    for k, a in registros:
+        if f * k < SR * 0.3: x += 0.5 * a * (sierra_limpia(fb * k, d) - sierra_limpia(fb * k, d, 0.5))
+    x = filtro(x, 'alto', 160)
+    x = filtro(0.6 * x + 0.5 * resonador(x, 1250, 700), 'bajo', 4800 * brillo)
+    e = np.minimum(1, t / 0.003) * np.minimum(1, np.maximum(0, d - t) / suelta)
+    return 0.3 * mezclar((0, x * e, 1.0), (0, clic(0.004, (1500, 7000)), 0.25 * chasquido))
+def pandero(fuerza=1.0, sacude=0.0, d=0.4, parche=0.4, pares=8):
+    """El pandero: un aro de madera con pares de sonajas de latón (y el parche, si la mano le pega). Cada par choca varias
+    veces mientras rebota, cada vez más suave, y cada sonaja suena con sus modos de chapa, que no son armónicos y caen
+    arriba de los 3 kHz; encima, el siseo del choque. [sacude]: el pandero que se sacude en vez de golpearse (los choques
+    se reparten en ese tiempo, en s). Ni los cascabeles de Navidad, ni el sistro de Egipto, ni los crótalos de Arcontes."""
+    n = int(d * SR); x = np.zeros(n); todos = np.zeros(n)
+    for _ in range(pares):
+        e = np.zeros(n); s = rng.uniform(0, 0.004) + rng.uniform(0, sacude); a = rng.uniform(0.6, 1.0)
+        for _ in range(int(rng.integers(3, 7))):
+            k = int(s * SR)
+            if k >= n: break
+            e[k] += a * rng.choice((-1.0, 1.0)); s += rng.uniform(0.004, 0.016); a *= rng.uniform(0.35, 0.65)
+        base = rng.uniform(3300, 4300)
+        for r, gm, b in ((1.0, 1.0, 9), (1.47, 0.7, 14), (2.09, 0.5, 20), (2.56, 0.3, 28)):
+            fr = base * r * rng.uniform(0.98, 1.02)
+            if fr < SR * 0.45: x += gm * resonador(e, fr, b)
+        todos += np.abs(e)
+    x /= np.abs(x).max() + 1e-9
+    caida = np.exp(-np.arange(int(0.03 * SR) * 5) / (0.03 * SR))
+    chis = filtro(ruido(d), 'alto', 4500) * fftconvolve(todos, caida)[:n]
+    chis /= np.abs(chis).max() + 1e-9
+    e = np.zeros(int(0.12 * SR)); e[:int(0.004 * SR)] = filtro(ruido(0.004), 'bajo', 1500)
+    golpe = resonador(e, 190, 40) + 0.5 * resonador(e, 420, 70)
+    golpe /= np.abs(golpe).max() + 1e-9
+    return 0.5 * fuerza * mezclar((0, x, 0.6), (0, chis, 0.4), (0, golpe, parche * (1 - min(1.0, sacude * 4))))[:n] * np.minimum(1, np.maximum(0, d - t_(d)) / 0.03)
+def eco_cinta(x, retraso=0.33, realim=0.45, veces=6, oscuro=3000, mezcla=0.5, wow=1.0):
+    """El eco de cinta (desde 1959): una cabeza graba en un lazo de cinta y otra, más allá, lo vuelve a tocar; parte de lo
+    que sale se vuelve a grabar, así que cada repetición llega [retraso] s después de la anterior, más baja ([realim]),
+    con menos agudos y menos graves ([oscuro]: la cinta pierde los dos en cada pasada) y un poco saturada; y como el motor
+    nunca gira parejo, cada repetición ondula apenas de altura (el «wow», lento, y el «flutter», rápido)."""
+    n = len(x); pico = np.abs(x).max() + 1e-12
+    out = np.zeros(n + int(retraso * veces * SR) + 1); out[:n] += x
+    y = x.copy(); i = np.arange(n, dtype=np.float64)
+    for k in range(1, veces + 1):
+        y = filtro(filtro(y, 'bajo', oscuro), 'alto', 180)
+        y = pico * np.tanh(1.3 * y / pico) / 1.3
+        tt = i / SR
+        dm = wow * (0.0009 * np.sin(2 * np.pi * 0.55 * tt + 1.7 * k) + 0.00025 * np.sin(2 * np.pi * 6.3 * tt + 0.9 * k))
+        y = np.interp(i - dm * SR, i, y) * realim
+        s = int(round(k * retraso * SR)); out[s:s + n] += mezcla * y
+    return out
+def freno_cinta(x, baja=7.0, cierra=(6000, 700)):
+    """La cinta que se frena (el motor que se queda sin corriente): lo grabado baja de velocidad y de altura a la vez, hasta
+    [baja] semitonos, pierde los agudos ([cierra]: el corte de principio a fin, en Hz) y se apaga."""
+    n = len(x); t = np.arange(n) / SR; d = n / SR
+    u = t / d
+    vel = 2 ** (-baja * u ** 1.4 / 12)
+    y = np.interp(np.concatenate([[0.0], np.cumsum(vel[:-1])]), np.arange(n), x)
+    y = paso_bajo_movil(y, cierra[0] * (cierra[1] / cierra[0]) ** u, 0.9)
+    return y * (1 - u) ** 1.2
+def aguja(fuerza=1.0, d=0.6, crujidos=1.0):
+    """La aguja del tocadiscos que baja al disco: el golpe sordo que el preamplificador agranda, el surco de entrada (la
+    espiral lisa antes de la música) que sisea apenas, y los crujidos del vinilo (el polvo en el surco), cada vez más ralos."""
+    t = t_(d); n = len(t)
+    e = np.zeros(n); g = filtro(ruido(0.01), 'bajo', 900) * env(int(0.01 * SR), 0.0005, 0.004, 4); e[:len(g)] = g
+    golpe = resonador(e, 110, 35) + 0.8 * resonador(e, 240, 70) + 0.3 * resonador(e, 600, 160)
+    golpe = filtro(golpe / (np.abs(golpe).max() + 1e-9), 'alto', 80)
+    surco = filtro(ruido(d), 'banda', (1500, 5500)) * 0.022 * np.minimum(1, t / 0.03)
+    for _ in range(int(26 * d * crujidos)):
+        u = rng.uniform(0, 1) ** 1.3; k = int(u * (n - 100))
+        c = clic(rng.uniform(0.0006, 0.0018), (900, 7000)) * min(0.5, rng.exponential(0.15)) * (1 - 0.5 * u)
+        surco[k:k + len(c)] += c
+    return fuerza * mezclar((0, golpe, 0.9), (0, clic(0.002, (1000, 6000)), 0.3), (0.012, surco[:n - int(0.012 * SR)], 1.0)) * np.minimum(1, np.maximum(0, d - t) / 0.05)
+def funda(d=0.3):
+    """La funda de cartón de un disco que se pasa en el cajón de la tienda: el cartón roza con la funda de al lado (un roce
+    más grave y más seco que el del papel) y al final cae contra las otras con un golpe hueco."""
+    t = t_(d); n = len(t)
+    forma = np.sin(np.pi * np.minimum(1, t / (0.82 * d))) ** 1.4
+    roce = filtro(ruido(d), 'banda', (380, 3200)) * (0.55 + 0.45 * np.abs(filtro(ruido(d), 'bajo', 55))) * forma
+    roce = roce + 0.4 * resonador(roce, 900, 400)
+    e = np.zeros(int(0.09 * SR)); e[:int(0.003 * SR)] = filtro(ruido(0.003), 'bajo', 2500)
+    golpe = resonador(e, 260, 60) + 0.6 * resonador(e, 610, 110)
+    golpe /= np.abs(golpe).max() + 1e-9
+    return mezclar((0, roce / (np.abs(roce).max() + 1e-9), 0.8), (0.8 * d, golpe, 0.5), (0.8 * d, clic(0.003, (700, 3500)), 0.3))
+def sintonia(d=0.7, calla=0.55):
+    """El dial de la radio de FM, de noche: entre una emisora y otra, el soplido parejo del receptor y una emisora que pasa
+    de largo en un chirrido; al llegar a la buena, el soplido se calla de golpe hacia [calla] s (el receptor se aquieta)."""
+    t = t_(d)
+    u = np.clip((t - (calla - 0.08)) / 0.08, 0, 1)
+    soplo = filtro(ruido(d), 'banda', (600, 6000)) * (1 - u * u * (3 - 2 * u))
+    pasa = np.tanh(3 * barrido(2200, 700, 0.1)) * np.sin(np.pi * t_(0.1) / 0.1) ** 2
+    return mezclar((0, soplo * np.minimum(1, t / 0.02), 0.5), (0.2 * calla, filtro(pasa, 'banda', (500, 3500)), 0.25))
+def perilla():
+    """La perilla de encendido de la radio de válvulas (el interruptor de giro detrás del volumen): el resorte que salta con
+    un clac firme y la caja de madera que lo agranda."""
+    e = np.concatenate([clic(0.003, (1200, 6000)), np.zeros(int(0.05 * SR))])
+    caja = resonador(e, 340, 80) + 0.5 * resonador(e, 820, 150)
+    return mezclar((0, clic(0.003, (1500, 7000)), 0.7), (0.0005, caja / (np.abs(caja).max() + 1e-9), 0.45), (0.009, clic(0.002, (2500, 8000)), 0.3))
 def acorde(inst, notas, d, g=1.0, arpegio=0.0, **kw):
     return mezclar(*[(i * arpegio, inst(hz(n), d, **kw), g / len(notas) ** 0.5) for i, n in enumerate(notas)])
 def melodia(inst, notas, paso, d, g=0.5, **kw):
@@ -1258,6 +1824,444 @@ def cueva():
                tecla=mezclar((0, trazo((450, 2000), 0.06, 9, 0.04), 1), (0, filtro(ruido(0.015), 'bajo', 600) * env(int(0.015 * SR), 0.001, 0.008), 0.4)),
                rascar=rascado((700, 3800), laja(T + 12, 0.5), aspereza=40))
 
+def frente():
+    # Fa menor con la séptima mayor (Fa, La bemol, Do, Mi): la red clandestina, en una ciencia ficción de los setenta hecha
+    # a mano. Relés que cierran, el pitido corto de la consola (un pulso estrecho por un altavoz pequeño), el teletipo con
+    # su motor afinado en Fa, el chasquido del interruptor de baquelita y un sintetizador analógico de sierras con filtro
+    # resonante que se abre y se cierra. Ni senos limpios (Espacio), ni blips cuadrados (Terminal), ni sierras quietas
+    # (Ciudad neón, Laboratorio).
+    T = -4   # Fa4
+    interruptor = lambda: mezclar((0, clic(0.003, (3000, 9500)), 1.0), (0.0006, filtro(ruido(0.03), 'banda', (140, 800)) * env(int(0.03 * SR), 0.0005, 0.012, 4), 0.9),
+                                  (0.005, clic(0.005, (900, 3200)), 0.35))
+    rel = lambda g=1.0: rele(g, hz(T + 36))
+    pit = lambda n, d=0.07, **kw: consola(hz(n), d, **kw)
+    # El sintetizador: pulsado (el filtro se abre de golpe y se cierra) y en colchón (el filtro se abre despacio).
+    pulsado = lambda f, d, brillo=3000: analogico(f, d, (300, brillo, 650), 0.008, 0.16, 3.0, 0.004, 0.0, 0.28, 0.08)
+    colchon = lambda f, d, brillo=1700: analogico(f, d, (220, brillo, brillo * 0.6), d * 0.45, d * 0.4, 1.8, 0.09, 1.0, 1.0, min(0.5, d * 0.4), 0.006)
+    motor = hz(T - 24)
+    with azar_propio('frente_base'):
+        S['frente'] = dict(
+            toque=mezclar((0, pit(T + 12, 0.055), 0.85), (0, clic(0.003, (3500, 9000)), 0.15)),
+            elegir=mezclar((0, interruptor(), 0.7), (0.014, pit(T + 19, 0.06), 0.6)),
+            pasar=teletipo(3, 13, motor),
+            abrir=mezclar(*[(0.045 * i, rel(1 - 0.2 * i), 0.7) for i in range(3)],
+                          (0.1, acorde(lambda f, d: analogico(f, d, (160, 2600, 900), 0.32, 0.25, 3.0, 0.03, 1.0, 0.3, 0.14), [T - 12, T - 5], 0.55), 0.55),
+                          (0.52, pit(T + 19, 0.07), 0.3)),
+            guardar=mezclar((0, rel(), 0.8), (0.03, analogico(hz(T - 24), 0.3, (120, 900, 140), 0.008, 0.08, 2.0, 0.004, 0.0, 0.12, 0.05), 0.5),
+                            (0.03, pit(T + 7, 0.06), 0.55), (0.12, pit(T + 12, 0.13), 0.55)),
+            logro=reverb(mezclar(*[(0.13 * i, pulsado(hz(T + n), 0.5), 0.42) for i, n in enumerate([-12, -9, -5, -1, 0, 3, 7])],
+                                 (0.9, acorde(colchon, [T - 12, T - 5, T, T + 2, T + 3], 1.3), 0.55), (0.9, pulsado(hz(T - 24), 0.6, 900), 0.4),
+                                 (0.9, rel(), 0.35), (1.5, pit(T + 24, 0.07), 0.18), (1.62, pit(T + 24, 0.07), 0.18)), 1.4, 0.26),
+            tema=reverb(mezclar((0, interruptor(), 0.4), (0.06, rel(), 0.4), (0.1, acorde(colchon, [T - 12, T - 9, T - 5, T - 1], 1.15, brillo=2400), 0.6),
+                                (0.1, pulsado(hz(T - 24), 0.7, 1100), 0.45), (0.62, pit(T + 24, 0.07), 0.25), (0.72, pit(T + 19, 0.11), 0.25)), 1.2, 0.24),
+            aviso=reverb(mezclar((0, teletipo(7, 11, motor), 0.7), (0.75, colchon(hz(T - 12), 1.2), 0.35), (0.75, colchon(hz(T - 5), 1.2), 0.25),
+                                 (0.78, pit(T + 19, 0.09), 0.4), (0.9, pit(T + 19, 0.09), 0.4), (1.04, pit(T + 24, 0.24), 0.4)), 1.4, 0.26),
+            solemne=reverb(mezclar(*[(0.95 * i, acorde(colchon, [T - 12 + a for a in ch], 1.6 if i == 4 else 1.05), 0.5)
+                                     for i, ch in enumerate([[0, 3, 7, 11], [-4, 0, 3, 7], [1, 5, 8, 12], [-5, -1, 2, 8], [0, 3, 7, 12]])],
+                                   *[(0.95 * i, pulsado(hz(T - 24 + r), 0.9, 700), 0.4) for i, r in enumerate([0, -4, 1, -5, 0])],
+                                   *[(0.95 * i + 0.24 * k, pulsado(hz(T + ch[k]), 0.45, 2400), 0.16)
+                                     for i, ch in enumerate([[0, 3, 7, 11], [-4, 0, 3, 7], [1, 5, 8, 12], [-5, -1, 2, 8]]) for k in range(4)],
+                                   (0, rel(), 0.4), (4.4, pit(T + 24, 0.08), 0.2), (4.55, pit(T + 24, 0.08), 0.2)), 2.4, 0.34))
+
+    # Error: el pitido que cae a la sensible y se hunde al fallar la corriente, el relé que zumba y el sintetizador que se
+    # cierra. Cambio: el interruptor y el piloto que sube una cuarta. Tecla: el teclado del teletipo (el tipo, el carro y el
+    # selector). Rascar: la chapa esmaltada color hueso de la consola, con su eco de metal.
+    with azar_propio('frente'):
+        nuevos('frente',
+               error=mezclar((0, pit(T + 12, 0.08), 0.5), (0.1, pit(T + 11, 0.32, cae=1.5), 0.5), (0.1, mezclar(*[(k / 34, rel(0.6), 1.0) for k in range(5)]), 0.45),
+                             (0.1, analogico(hz(T - 13), 0.35, (1400, 1400, 120), 0.001, 0.1, 2.5, 0.004, 0.0, 0.2, 0.06, cae=2.0), 0.35)),
+               cambio=mezclar((0, interruptor(), 0.8), (0.025, pit(T + 15, 0.05), 0.5), (0.085, pit(T + 20, 0.07), 0.5)),
+               tecla=mezclar((0, clic(0.005, (1600, 6500)), 1), (0.0012, filtro(ruido(0.02), 'banda', (280, 1300)) * env(int(0.02 * SR), 0.0006, 0.007, 4), 0.6),
+                             (0.009, clic(0.0035, (2400, 7500)), 0.3)),
+               rascar=rascado((1100, 5200), mezclar((0, campana(hz(T + 24), 0.5, 1.41, 1.2, 6), 1.0), (0.02, pit(T + 24, 0.05), 0.2)), aspereza=75))
+
+def arcontes():
+    # La bemol mixolidio con la sexta menor (La bemol, Si bemol, Do, Re bemol, Mi bemol, Fa bemol, Sol bemol): la tercera
+    # mayor es el dorado del mundo de abajo y la sexta menor, que cae a la quinta, lo que hay debajo. Galilea en el siglo I
+    # vista por un iniciado: el kinnor (lira de mano de tripa, con púa y caja de madera), los crótalos de bronce que baten,
+    # una sola voz grave que salmodia a media voz (no un coro), un zumbido hondo para los arcontes y una nota limpia y alta
+    # para el Pleroma. Ni la lira de dedos en pentatónica mayor (Helénico), ni la segunda menor del arpa (Egipto), ni el
+    # hiyaz del laúd (Al-Ándalus), ni el frigio con tritono (Horror cósmico), ni órgano ni coro (Gótico, Scriptorium).
+    T = -1   # La bemol 4
+    kin = lambda n, d=0.8, b=0.5: kinnor(hz(n), d, b)
+    crot = lambda n=T + 24, d=1.1, apagado=False: crotalos(hz(n), d, apagado)
+    voz = lambda n, d, v='o': salmodia(hz(n), d, v)
+    hondo = lambda d, **kw: zumbido_hondo(hz(T - 36), d, **kw)
+    luz = lambda n, d=2.0: pleroma(hz(n), d)
+    rasgueo = lambda notas, d=1.0, paso=0.03, b=0.45: mezclar(*[(paso * i, kin(n, d, b), 0.5) for i, n in enumerate(notas)])
+    def velo(d=0.3):
+        """El velo de lino que se corre: un roce suave y grave, con un hilo de aire arriba."""
+        t = t_(d); s = np.sin(np.pi * t / d) ** 2
+        tela = np.abs(filtro(ruido(d), 'bajo', 25)); tela /= tela.max() + 1e-9
+        return filtro(ruido(d), 'banda', (380, 2600)) * s * (0.6 + 0.4 * tela) + 0.12 * filtro(ruido(d), 'alto', 5000) * s ** 3
+    def jarra():
+        """La tapa de barro que asienta en la boca de la jarra: el golpe de barro y el hueco de la jarra que responde."""
+        hueco = resonador(filtro(ruido(0.35), 'bajo', 900), hz(T - 12), 18) * env(int(0.35 * SR), 0.002, 0.12, 3)
+        return mezclar((0, clic(0.012, (700, 3200)), 0.8), (0.001, hueco / (np.abs(hueco).max() + 1e-9), 0.6),
+                       (0.002, seno(hz(T - 12), 0.25) * env(int(0.25 * SR), 0.002, 0.08, 3), 0.3))
+    with azar_propio('arcontes_base'):
+        S['arcontes'] = dict(
+            toque=kin(T + 12, 0.28, 0.6),
+            elegir=crot(T + 24, 0.4, apagado=True),
+            pasar=velo(0.3),
+            abrir=mezclar((0, velo(0.22), 0.55), (0.12, rasgueo([T - 12, T - 5, T, T + 4, T + 7], 0.9), 1.0)),
+            guardar=mezclar((0, jarra(), 0.7), (0.06, kin(T + 7, 0.7, 0.45), 0.45), (0.22, kin(T + 12, 0.9, 0.5), 0.45)),
+            logro=reverb(mezclar((0, voz(T - 24, 2.6), 0.4), (0, voz(T - 17, 2.6), 0.22),
+                                 *[(0.11 * i, kin(T + n, 0.9, 0.55), 0.42) for i, n in enumerate([0, 4, 7, 12, 16])],
+                                 (0.6, crot(T + 24, 1.4), 0.12), (0.6, luz(T + 24, 2.6), 0.2), (0.6, luz(T + 36, 2.0), 0.05)), 1.6, 0.3),
+            tema=reverb(mezclar((0, hondo(0.9, entra=0.4, sale=0.6), 0.35), (0.25, crot(T + 24, 1.0), 0.2), (0.3, voz(T - 24, 1.5), 0.45),
+                                *[(0.35 + 0.22 * i, kin(T + n, 0.8 if i < 2 else 1.1, 0.5), 0.45) for i, n in enumerate([12, 8, 7])]), 1.3, 0.28),
+            aviso=reverb(mezclar((0, crot(T + 24, 1.0), 0.28), (0.24, crot(T + 24, 1.2), 0.24), (0.5, voz(T - 24, 2.0), 0.45), (0.5, voz(T - 17, 2.0), 0.25),
+                                 *[(0.5 + 0.2 * i, kin(T + n, 0.7 if i < 4 else 1.2, 0.5), 0.45) for i, n in enumerate([12, 8, 7, 4, 7])]), 1.4, 0.28),
+            # Lo solemne: abre el zumbido de los arcontes; una voz salmodia sobre el bordón de otra (sube a su nota de recitar,
+            # la repite y cae a la tónica), el kinnor marca los cambios y, al final, queda la nota limpia del Pleroma.
+            solemne=reverb(mezclar(
+                (0, hondo(2.6, entra=0.45, sale=0.5), 0.4),
+                (0.4, voz(T - 24, 6.2, 'u'), 0.35),
+                *[(0.6 + 0.42 * i, voz(T - 12 + n, 0.46 if i < 11 else 1.4), 0.5) for i, n in enumerate([0, 2, 4, 4, 4, 4, 5, 4, 2, 4, 2, 0])],
+                *[(0.6 + 0.42 * i, domar(rasgueo([T - 12 + a for a in ch], 1.6, 0.035, 0.4)), 0.5) for i, ch in ((0, [0, 7, 12]), (4, [-4, 0, 4]), (8, [-7, 0, 5]), (11, [0, 4, 7, 12]))],
+                (5.75, crot(T + 24, 1.6), 0.18), (5.75, luz(T + 24, 2.6), 0.25)), 2.4, 0.34))
+
+    # Error: los arcontes: el zumbido hondo que crece de golpe y se hunde un semitono, con dos cuerdas apagadas que bajan
+    # de la sexta menor a la sexta menor grave. Cambio: dos crótalos apagados, de la quinta a la octava. Tecla: la caña con
+    # tinta de hollín sobre el papiro, que salta en sus fibras. Rascar: una moneda de bronce de Herodes Antipas (acuñada en
+    # Tiberíades) sobre la lámina, y un crótalo que queda sonando.
+    with azar_propio('arcontes'):
+        nuevos('arcontes',
+               error=mezclar((0, kin(T + 8, 0.14, 0.2), 0.4), (0.05, hondo(0.5, cae=1.0, entra=0.12, sale=0.6, abre=(450, 1300)), 0.75), (0.15, kin(T - 4, 0.35, 0.15), 0.45)),
+               cambio=mezclar((0, crot(T + 19, 0.3, apagado=True), 0.5), (0.08, crot(T + 24, 0.35, apagado=True), 0.5)),
+               tecla=mezclar((0, trazo((900, 4200), 0.045, 6, 0.03), 1), *[(0.011 * k, clic(0.002, (2500, 7000)), 0.25 - 0.06 * k) for k in range(3)]),
+               rascar=rascado((750, 4300), 3.0 * crot(T + 31, 0.8), aspereza=45, pasadas=((0.0, 0.26), (0.31, 0.3), (0.66, 0.28))))
+
+def galia():
+    # Do sostenido eolio, el menor natural (Do#, Re#, Mi, Fa#, Sol#, La, Si): sin sensible, la séptima menor sube a la
+    # tónica (Si–Do#) y la sexta menor (La) le da su sombra. La Galia del 52 a. C., desde un oppidum arverno: el carnyx de
+    # bronce con su bramido para los logros (Diodoro 5.30), la lira de los bardos pulsada con la yema y con sus cuerdas al
+    # aire que resuenan solas (Diodoro 5.31), el yunque y el martillo de la fragua, las lanzas contra los escudos de madera,
+    # el viento entre los robles, el fuego del hogar, el caballo y las voces de hombre: el grito que corre de campo en campo
+    # (César 7.3) y la asamblea. Nada de gaitas, arpas irlandesas ni flautas «celtas»: ni el dórico ni el mixolidio que las
+    # evocan (Tierras Antiguas, Templario), ni la lira seca en pentatónica (Helénico), ni el kinnor con púa (Arcontes), ni
+    # la corneta quieta (Romano), ni tambores (Romano, Templario, Prehistoria) ni cascos de caballo (Mongol).
+    T = -8   # Do sostenido 4
+    al_aire = (hz(T - 12), hz(T - 17))   # las cuerdas graves de la lira que resuenan solas: Do#3 y Sol#2
+    lir = lambda n, d=1.0, b=0.35, **kw: lira_bardo(hz(n), d, b, al_aire=al_aire, **kw)
+    rueda = lambda notas, d=1.2, paso=0.05, b=0.35: mezclar(*[(paso * i, lir(n, d, b), 0.5) for i, n in enumerate(notas)])
+    cx = lambda n, d, **kw: carnyx(hz(n), d, **kw)
+    yun = lambda n, d=0.8, fuerza=1.0: yunque(hz(n), d, fuerza)
+    def grito(n, d=0.8):
+        """Un hombre que llama a los del campo de al lado: «¡ho-a!», de la quinta de abajo a la tónica, y la voz que se le cae al final."""
+        return filtro(voz_hombre(hz(n), d, ('o', 'a'), 0.18, ((0.0, -5), (0.14, 0)), cae=3.0, esfuerzo=0.85, aliento=0.05, h=0.5), 'alto', 200)
+    with azar_propio('galia_base'):
+        S['galia'] = dict(
+            toque=lir(T + 12, 0.3, 0.45),
+            elegir=mezclar((0, lir(T + 7, 0.3, 0.4, apagar=0.07), 1.0), (0.07, clic(0.006, (500, 2200)), 0.12)),
+            pasar=robles(0.32),
+            abrir=rueda([T - 12, T - 5, T, T + 3, T + 7], 1.1),
+            guardar=mezclar((0, hierro_al_rojo(hz(T + 12)), 0.8), (0.16, yun(T + 12, 0.7, 0.7), 0.55), (0.3, yun(T + 19, 0.55, 0.45), 0.35)),
+            # El logro: la asamblea golpea las armas y el carnyx sube por sus armónicos (Do#, Sol#, Do#) hasta el bramido.
+            logro=reverb(mezclar((0, choque_armas(0.7, 10), 0.55),
+                                 (0.15, cx(T - 12, 0.42, sube=3.0, crece=0.3), 0.5), (0.55, cx(T - 5, 0.42, sube=2.0, crece=0.3), 0.5),
+                                 (0.95, cx(T, 1.7, sube=2.5, crece=0.55, bramido=0.38), 0.55), (0.95, escudo(1.0, 0.8), 0.6),
+                                 (1.0, rueda([T - 12, T - 5, T, T + 3, T + 7, T + 12], 1.5, 0.045), 0.35)), 1.8, 0.3),
+            # El tema: el caballo resopla, pasa el viento por los robles, suena un carnyx a lo lejos y responde la lira.
+            tema=reverb(mezclar((0, resoplido(0.5), 0.35), (0.1, robles(1.5, 0.8), 0.22), (0.3, lejos(cx(T - 12, 1.1, crece=0.5), 0.6), 0.5),
+                                (0.75, rueda([T, T + 3, T + 7], 1.2, 0.07), 0.55)), 1.4, 0.28),
+            # El aviso: el grito que corre de campo en campo (César 7.3): uno llama cerca y otros, cada vez más lejos, lo pasan.
+            aviso=reverb(mezclar((0, rueda([T - 5, T + 7], 1.0, 0.04), 0.3), (0.1, grito(T, 0.85), 0.7),
+                                 (0.75, lejos(grito(T, 0.8), 1.0), 0.45), (1.4, lejos(grito(T, 0.8), 2.0), 0.28)), 1.3, 0.24),
+            # Lo solemne: la asamblea alrededor del hogar murmura la tónica y la quinta, el bardo canta con la lira y, al
+            # final, la asamblea aprueba golpeando las armas (César 7.21, de memoria: no está en fuentes_galia.md, [sin verificar])
+            # y un carnyx responde a lo lejos.
+            solemne=reverb(mezclar(
+                (0, asamblea(hz(T - 12), 7.2, 'o', 5), 0.4), (0.3, asamblea(hz(T - 5), 6.6, 'o', 4), 0.24), (0, fuego(7.6, 5), 0.1),
+                *[(0.5 + 0.48 * i, domar(lir(T + n, 1.3 if i < 8 else 2.4, 0.4)), 0.5) for i, n in enumerate([7, 8, 7, 3, 5, 3, 2, -2, 0])],
+                *[(0.5 + 0.48 * i, domar(rueda([T + a for a in ch], 1.8, 0.06, 0.3)), 0.4) for i, ch in ((0, [-12, -5, 0]), (3, [-16, -12, -9]), (6, [-14, -10, -7]), (8, [-12, -5, 0, 3]))],
+                (5.3, choque_armas(0.9, 12, 0.9), 0.4), (5.4, lejos(cx(T - 12, 1.8, crece=0.6), 1.2), 0.4)), 2.4, 0.34))
+
+    # Error: la lanza que da sordo en el escudo y el carnyx que se ahoga medio tono abajo y se hunde al quedarse sin aire.
+    # Cambio: el martillo que toca dos veces el yunque, de la quinta a la octava. Tecla: el estilo que escribe letras griegas
+    # en la tablilla (que fuera de cera es un recurso) y el marco de madera. Rascar: un estátero arverno del caballo, de oro
+    # con plata y cobre, que suena más claro que el oro puro.
+    with azar_propio('galia'):
+        tablilla = resonador(np.concatenate([clic(0.004, (300, 2500)), np.zeros(int(0.04 * SR))]), 520, 60)
+        t = t_(0.6); fe = hz(T + 31)
+        estatero = sum(a * np.sin(2 * np.pi * fe * r * t) * np.exp(-t * c) for r, a, c in ((1.0, 1.0, 5.0), (2.31, 0.45, 8.0), (3.93, 0.2, 13.0))) * np.minimum(1, t / 0.001)
+        nuevos('galia',
+               error=mezclar((0, escudo(0.9, 0.1), 0.5), (0.03, cx(T, 0.13, sube=1.0, crece=0.2), 0.4),
+                             (0.15, cx(T - 1, 0.42, sube=0.0, crece=0.15, cae=1.5, bramido=0.45, brillo=0.6) * np.exp(-t_(0.42) / 0.16), 0.55)),
+               cambio=mezclar((0, yun(T + 19, 0.3, 0.5), 0.6), (0.085, yun(T + 24, 0.35, 0.6), 0.6)),
+               tecla=mezclar((0, trazo((650, 3000), 0.05, 5, 0.03), 1), (0, tablilla / (np.abs(tablilla).max() + 1e-9), 0.25)),
+               rascar=rascado((1300, 5800), estatero, aspereza=60))
+
+def nouveau():
+    # Mi bemol mayor con la séptima mayor y la novena (Mi bemol, Sol, Si bemol, Re, Fa): el color de los salones de 1900,
+    # el acorde de séptima mayor que se queda sin resolver, y la cadencia plagal con el cuarto grado menor (La bemol menor
+    # con sexta) que suspira antes de volver a casa. París hacia 1900, desde un taller de litografía: el piano de salón
+    # (macillo de fieltro y tres cuerdas que laten), la cajita de música de cilindro con su peine de acero, las campanillas
+    # de cristal de la lámpara, el pliego que se despega de la piedra entintada y el golpe sordo de la prensa a mano. Ni
+    # la sexta y la novena del jazz ni el piano pulsado (Art déco), ni la cajita armónica y los cascabeles (Navidad), ni
+    # el silbato y el latón (Vapor victoriano), ni corneta y tambor (Napoleónico, Revolución), ni laúd (Renacimiento), ni
+    # guitarra y grillos (Botánico), ni el crótalo de bronce (Arcontes).
+    T = -6   # Mi bemol 4
+    pia = lambda n, d=1.2, fuerza=0.6, apagar=None: piano_salon(hz(n), d, fuerza, apagar)
+    caja = lambda n, d=1.0, fuerza=1.0, cae=0.0: peine(hz(n), d, fuerza, cae)
+    cri = lambda n, d=1.6, fuerza=0.7: cristal(hz(n), d, fuerza)
+    def rodado(notas, d=1.6, paso=0.035, fuerza=0.55):
+        """Un acorde de piano rodado de abajo arriba, con el pedal puesto."""
+        return mezclar(*[(paso * i, pia(n, d - paso * i, fuerza), 0.5) for i, n in enumerate(notas)])
+    def interruptor():
+        """El interruptor de llave de 1900: la llave de latón que gira y encaja en la base de porcelana."""
+        return mezclar((0, filtro(clic(0.004, (1800, 6500)), 'bajo', 6000), 0.6), (0.0008, filtro(ruido(0.018), 'banda', (500, 2600)) * env(int(0.018 * SR), 0.0006, 0.006, 4), 0.7),
+                       (0.012, clic(0.002, (3000, 8500)), 0.2))
+    def cuerda(clics=5, cps=11):
+        """La llave que da cuerda a la cajita de música: el trinquete que salta diente a diente, dentro de la caja de madera."""
+        partes = []
+        for i in range(clics):
+            e = np.concatenate([clic(0.0025, (2500, 8000)), np.zeros(int(0.03 * SR))])
+            caja_m = resonador(e, 900, 140)
+            partes += [(i / cps + rng.uniform(-0.004, 0.004), e, 0.6), (i / cps, caja_m / (np.abs(caja_m).max() + 1e-9), 0.25)]
+        return mezclar(*partes)
+    with azar_propio('nouveau_base'):
+        S['nouveau'] = dict(
+            # El toque: un colgante de cristal de la lámpara.
+            toque=cri(T + 12, 0.34, 0.6) * np.exp(-t_(0.34) * 6),
+            # Elegir: una sola lámina de la cajita de música.
+            elegir=caja(T + 19, 0.32, 0.9) * np.exp(-t_(0.32) / 0.09),
+            # Pasar: el pliego que se despega de la piedra.
+            pasar=pliego(0.3),
+            # Abrir: un acorde de piano rodado (Mi bemol con séptima mayor y novena) y el cristal arriba.
+            abrir=mezclar((0, rodado([T - 12, T - 5, T + 2, T + 4, T + 11], 1.25, 0.04, 0.5), 1.0), (0.2, cri(T + 26, 1.0, 0.5), 0.3)),
+            # Guardar: la prensa baja sobre el pliego, y el piano da la quinta y la tónica.
+            guardar=mezclar((0, domar(prensa(1.0, 0.16), 0.35), 0.75), (0.2, pia(T + 7, 0.6, 0.5, apagar=0.45), 0.5), (0.31, pia(T + 12, 0.55, 0.55), 0.55)),
+            # El logro: un barrido de piano de salón por el acorde, un poco teatral, que cae en el acorde con pedal; un compás
+            # de vals por debajo (el «um» en el uno, el «pa-pa» en el dos y el tres), las campanillas de cristal que bajan y
+            # la cajita que contesta arriba.
+            logro=reverb(mezclar(
+                *[(0.052 * i, pia(T - 12 + n, 0.5, 0.45 + 0.03 * i, apagar=0.3), 0.36) for i, n in enumerate([0, 7, 11, 14, 16, 19, 23, 26, 28, 31])],
+                (0.56, rodado([T - 24, T - 12, T - 5, T + 4, T + 11, T + 14], 2.9, 0.025, 0.6), 0.9), (0.56, pia(T + 23, 2.7, 0.65), 0.35),
+                (0.98, acorde(lambda f, d: piano_salon(f, d, 0.35, 0.26), [T - 1, T + 4, T + 7], 0.5), 0.35),
+                (1.4, acorde(lambda f, d: piano_salon(f, d, 0.32, 0.26), [T - 1, T + 4, T + 7], 0.5), 0.3),
+                *[(0.62 + 0.16 * i, cri(T + n, 1.8, 0.7), 0.26) for i, n in enumerate([31, 26, 23, 19])],
+                (1.55, caja(T + 26, 1.2), 0.22), (1.7, caja(T + 31, 1.2), 0.18)), 1.6, 0.28),
+            # El tema: se le da cuerda a la cajita y suena la vuelta del vals (Re, Fa, Mi bemol); el cristal cierra.
+            tema=reverb(mezclar((0, cuerda(4, 13), 0.35),
+                                (0.36, caja(T + 23, 1.0), 0.5), (0.36 + 0.32 * 2, caja(T + 26, 0.8), 0.45), (0.36 + 0.32 * 3, caja(T + 24, 1.1), 0.5),
+                                (0.36, pia(T - 12, 1.3, 0.35), 0.3), (0.36 + 0.32 * 3, rodado([T - 12, T - 5, T - 1, T + 4], 1.1, 0.03, 0.35), 0.35),
+                                (0.36 + 0.32 * 3, cri(T + 31, 1.1, 0.5), 0.2)), 1.1, 0.24),
+            # El aviso: las campanillas de cristal bajan en un compás de vals sobre el piano (Si bemol con novena: el «um» y
+            # el «pa-pa») y se posan en la tónica con la séptima mayor.
+            aviso=reverb(mezclar(
+                (0, pia(T - 17, 1.2, 0.5, apagar=0.36), 0.42), (0.42, acorde(lambda f, d: piano_salon(f, d, 0.35, 0.3), [T - 1, T + 5, T + 9], 0.5), 0.3),
+                (0.84, acorde(lambda f, d: piano_salon(f, d, 0.32, 0.3), [T - 1, T + 5, T + 9], 0.5), 0.26),
+                *[(0.42 * i, cri(T + n, 1.6, 0.7), 0.4) for i, n in enumerate([19, 14, 11])],
+                (1.26, rodado([T - 24, T - 12, T - 5, T + 4, T + 11], 2.3, 0.03, 0.5), 0.75), (1.26, cri(T + 12, 2.2, 0.75), 0.45),
+                (1.5, caja(T + 26, 1.2, 0.8), 0.16)), 1.4, 0.26),
+            # Lo solemne: un vals lento de piano (Mi bemol con séptima mayor, Do menor con novena, La bemol menor con sexta y
+            # vuelta a casa), con el «um-pa-pa» y la melodía, que se posa en la quinta; las campanillas cierran y la cajita,
+            # lejos, repite la última vuelta.
+            solemne=reverb(mezclar(*(lambda pz: [
+                *[(3 * pz * i, pia(T + b, 3 * pz + 0.4, 0.5, apagar=3 * pz * 0.9), 0.4) for i, b in enumerate([-12, -15, -19])],
+                *[(3 * pz * i + pz * k, acorde(lambda f, d: piano_salon(f, d, 0.32, pz * 0.8), [T - 12 + a for a in ch], pz * 1.2), 0.26 - 0.03 * (k - 1))
+                  for i, ch in enumerate([[4, 7, 11], [0, 4, 9], [5, 8, 14]]) for k in (1, 2)],
+                *[(pz * b, pia(T + n, (dd * pz + 0.6) if b < 9 else 3.6, 0.55, apagar=None if b >= 9 else dd * pz + 0.1), 0.5)
+                  for b, n, dd in [(0, 14, 2), (2, 12, 1), (3, 11, 2), (5, 7, 1), (6, 8, 2), (8, 5, 1), (9, 7, 3)]],
+                (9 * pz, rodado([T - 24, T - 12, T - 5, T + 4, T + 11, T + 14], 3.6, 0.04, 0.5), 0.7),
+                *[(9 * pz + 0.35 + 0.22 * i, cri(T + n, 1.8, 0.6), 0.25) for i, n in enumerate([26, 23, 19])],
+                *[(9 * pz + 0.9 + 0.8 * pz * b, lejos(caja(T + 24 + n, 0.9, 0.8), 0.7), 0.3) for b, n in [(0, 2), (2, 0), (3, -1), (5, -5)]]])(0.56)), 2.0, 0.32))
+
+    # Error: la cajita a la que se le acaba la cuerda (la nota que se arrastra medio tono abajo y se hunde) sobre el piano
+    # apagado en el grave. Cambio: el interruptor de llave y la lámpara que se enciende: dos cristales, de la quinta a la
+    # octava. Tecla: el lápiz graso de litógrafo sobre la piedra graneada (sale a saltitos, por el grano). Rascar: una
+    # moneda de plata de un franco (de 1900; cuál, [sin verificar]: no está en fuentes_nouveau.md), que suena clara.
+    with azar_propio('nouveau'):
+        t = t_(0.7); fp = hz(T + 33)
+        plata = sum(a * np.sin(2 * np.pi * fp * r * t) * np.exp(-t * c) for r, a, c in ((1.0, 1.0, 4.0), (1.73, 0.35, 6.0), (2.33, 0.3, 8.0), (3.91, 0.12, 14.0))
+                    if fp * r < SR * 0.45) * np.minimum(1, t / 0.001)
+        grano = lambda: mezclar((0, trazo((700, 3400), 0.045, 4, 0.028), 1.0),
+                                *[(rng.uniform(0.002, 0.038), clic(0.0012, (1500, 5500)), rng.uniform(0.15, 0.4)) for _ in range(6)])
+        nuevos('nouveau',
+               error=mezclar((0, caja(T + 19, 0.2, 0.9), 0.5), (0.15, caja(T + 18, 0.45, 0.7, cae=0.8) * np.exp(-t_(0.45) / 0.2), 0.55),
+                             (0.13, pia(T - 18, 0.4, 0.35, apagar=0.16), 0.55)),
+               cambio=mezclar((0, interruptor(), 0.3), (0.03, cri(T + 19, 0.4, 0.55) * np.exp(-t_(0.4) * 5), 0.45), (0.11, cri(T + 24, 0.45, 0.55) * np.exp(-t_(0.45) * 4), 0.45)),
+               tecla=grano(),
+               rascar=rascado((1400, 6400), plata, aspereza=85, pasadas=((0.0, 0.27), (0.32, 0.27), (0.65, 0.29))))
+
+def psicodelia():
+    # La mixolidio (La, Si, Do#, Re, Mi, Fa#, Sol): la escala mayor con la séptima menor; el acorde de Sol (la séptima
+    # menor) le da su color y se vuelve a casa de Sol a La, sin sensible. Psicodelia v2 tiene dos caras (ver
+    # `docs/diseno/temas/psicodelia.md`, «Sonido»), con un juego de sonidos cada una, los dos en la misma escala; aquí va
+    # la de BASE, **la ciudad** de fines de los sesenta, sobria: el cuarto con el tocadiscos de maleta y la radio de
+    # válvulas. Suenan el órgano portátil de transistores, bajo y suave (un registro y su octava, poco brillo), el
+    # pandero, el eco de cinta corto (una o dos repeticiones cercanas), el golpe de la aguja al bajar al disco y el clic
+    # de la perilla de la radio. Ni sitar ni guitarra con distorsión: esos son de la cara psicodelia ([psicodelia_tinta]).
+    # Los avisos (canales de notificación: `aviso` y `solemne`) son siempre estos, a cualquier hora, porque Android fija
+    # el sonido del canal al crearlo. Todo con nombres genéricos. Ni Mi mixolidio (el de la canción con sitar más
+    # conocida de entonces), ni sintetizadores (Ciudad neón, Frente exterior), ni el vibráfono y el órgano de los
+    # cincuenta (Refugio), ni el jazz de Art déco, ni el piano y la cajita de Art nouveau, ni los metales de Soviético.
+    T = 0   # La 4
+    org = lambda n, d=0.5, **kw: organo_transistor(hz(n), d, **kw)
+    # El órgano suave de la ciudad: el registro de base y, apenas, su octava; con el filtro de voz más cerrado.
+    suave = lambda n, d=0.5, **kw: organo_transistor(hz(n), d, **dict(dict(registros=((1, 1.0), (2, 0.3)), brillo=0.55, chasquido=0.5), **kw))
+    def acor(notas, d, crece=0.0, inst=None, **kw):
+        """Un acorde del órgano: todas las teclas a la vez (con el mismo vibrato). [crece]: lo que tarda el pedal de volumen en abrirse."""
+        inst = inst or org
+        x = mezclar(*[(0, inst(n, d, **kw), 1 / len(notas) ** 0.5) for n in notas])
+        return x * (0.35 + 0.65 * np.minimum(1, np.arange(len(x)) / SR / crece) ** 1.5) if crece else x
+    def corto(x, retraso=0.13, veces=2, realim=0.32):
+        """El eco de cinta corto de la ciudad: una o dos repeticiones cercanas y apagadas, como el de un amplificador chico."""
+        return eco_cinta(x, retraso, realim, veces, 2600, 0.35)
+    with azar_propio('psicodelia_base'):
+        S['psicodelia'] = dict(
+            # El toque: una tecla del órgano suave, en el grave, con su eco corto.
+            toque=corto(suave(T - 12, 0.16, suelta=0.04), 0.1, 1, 0.3),
+            # Elegir: una tecla del órgano, corta.
+            elegir=org(T + 12, 0.15, chasquido=1.3, suelta=0.02),
+            # Pasar: la funda de un disco en el cajón de la tienda.
+            pasar=funda(0.3),
+            # Abrir: el clic de la perilla de la radio y el órgano que abre La mayor de abajo arriba (La, Mi, La, Do#) con el
+            # pedal de volumen, y el eco corto.
+            abrir=corto(mezclar((0, perilla(), 0.35),
+                                *[(0.06 + 0.07 * i, suave(T - 12 + n, 0.95 - 0.07 * i, suelta=0.25) * (1 - np.minimum(1, t_(0.95 - 0.07 * i) / (0.95 - 0.07 * i))) ** 0.6, 0.42)
+                                  for i, n in enumerate([0, 7, 12, 16])])),
+            # Guardar: la aguja baja al disco y el órgano va de Sol a La (de la séptima menor a casa), con el eco de cinta.
+            guardar=eco_cinta(mezclar((0, aguja(0.8, 0.45), 0.6), (0.1, acor([T - 2, T + 2, T + 5], 0.2), 0.5),
+                                      (0.3, acor([T - 5, T, T + 4, T + 7], 0.42), 0.6)), 0.19, 0.4, 2, 2800, 0.45),
+            # El logro: el pandero da el golpe y el órgano suave hace la vuelta del modo, Re, Sol y La (el cuarto grado, la
+            # séptima menor y casa), con la melodía arriba (Fa#, Sol, La); el último acorde se queda con el pedal de
+            # volumen que se cierra y el pandero se sacude en corcheas, cada vez más suave. Eco corto.
+            logro=reverb(corto(mezclar(
+                (0, pandero(1.0, 0, 0.4, 0.6), 0.35),
+                (0, acor([T - 7, T - 3, T], 0.36, inst=suave), 0.5), (0.38, acor([T - 10, T - 5, T - 2], 0.36, inst=suave), 0.5),
+                (0.76, acor([T - 12, T - 5, T - 2, T + 4], 1.9, inst=suave) * (1 - np.minimum(1, t_(1.9) / 1.9)) ** 1.2, 0.6),
+                (0, suave(T + 9, 0.34), 0.42), (0.38, suave(T + 10, 0.34), 0.42), (0.76, suave(T + 12, 1.5) * (1 - np.minimum(1, t_(1.5) / 1.5)), 0.46),
+                (0.76, pandero(1.0, 0, 0.4, 0.6), 0.42), *[(0.76 + 0.19 * k, pandero(0.5, 0.06, 0.3, 0.0), 0.22 * 0.8 ** k) for k in range(1, 7)]),
+                0.16, 2, 0.3), 1.2, 0.22),
+            # El tema: la aguja baja al disco; el órgano suave sostiene La y Mi y canta una frase corta (Mi, Fa#, Mi y Do#,
+            # que se posa en La), con el eco corto; el pandero se sacude y golpea al llegar.
+            tema=reverb(corto(mezclar(
+                (0, aguja(0.7, 0.6), 0.5), (0.3, acor([T - 12, T - 5, T], 2.2, 0.5, inst=suave), 0.3),
+                *[(0.32 + s, suave(T + n, d, suelta=0.05), 0.5) for s, n, d in [(0, 7, 0.26), (0.28, 9, 0.26), (0.56, 7, 0.26), (0.84, 4, 0.3), (1.16, 0, 1.0)]],
+                (0.3, pandero(0.7, 0.25, 0.6, 0.0), 0.24), (1.48, pandero(0.8, 0.0, 0.4, 0.4), 0.28))), 1.1, 0.22),
+            # El aviso: el clic de la perilla de la radio y, en la sala, el órgano suave (La con la séptima menor) y el
+            # pandero; arriba el órgano canta de la quinta a la tónica, baja un tono y vuelve, con el eco corto.
+            aviso=reverb(domar(corto(mezclar(
+                (0, perilla(), 0.3), (0.2, pandero(1.0, 0, 0.4, 0.5), 0.32), (0.2, acor([T - 12, T - 8, T - 5, T - 2], 2.6, 0.4, inst=suave), 0.38),
+                *[(0.2 + s, suave(T + n, d, suelta=0.06), 0.5) for s, n, d in [(0, 7, 0.38), (0.42, 12, 0.5), (0.95, 10, 0.32), (1.3, 12, 1.6)]],
+                (1.5, pandero(0.6, 0.3, 0.6, 0.0), 0.2)), 0.16, 2, 0.3), 0.5, 2.0), 1.3, 0.24),
+            # Lo solemne: el órgano, despacio, por La, Mi menor (la quinta menor del modo), Re y La; encima, el órgano suave
+            # canta una frase lenta con el eco corto; el pandero se sacude en cada acorde y la aguja, al final, llega al
+            # surco de salida (el golpe sordo de cada vuelta).
+            solemne=reverb(domar(mezclar(
+                *[(2.2 * i, acor(ch, 2.35 if i < 3 else 3.2, 0.5, registros=((1, 1.0), (2, 0.45)), brillo=0.7), 0.34)
+                  for i, ch in enumerate([[-12, -8, -5, 0], [-17, -14, -10, -5], [-7, -3, 0, 5], [-12, -8, -5, 0]])],
+                *[(s, corto(suave(T + n, dd, suelta=0.12), 0.16, 2, 0.3), 0.5) for s, n, dd in [
+                    (0.3, 7, 1.1), (1.5, 4, 0.7), (2.3, 7, 0.85), (3.2, 10, 1.2), (4.5, 9, 0.85), (5.4, 5, 1.2), (6.7, 4, 0.65), (7.4, 0, 2.4)]],
+                *[(2.2 * i, pandero(0.55, 0.3, 0.6, 0.0), 0.2) for i in range(3)], (6.6, pandero(0.9, 0.0, 0.45, 0.4), 0.26),
+                *[(9.6 + 1.8 * k, aguja(0.35 * 0.7 ** k, 0.4, 0.4), 0.3) for k in range(2)]), 0.5, 2.0), 1.6, 0.28))
+
+    # Error: la cinta que se frena: el órgano (Sol y Do, el Do fuera del modo) baja de velocidad y de altura y se apaga.
+    # Cambio: la perilla de la radio de válvulas y dos teclas del órgano, de la quinta a la octava, con un eco corto.
+    # Tecla: la plumilla de acero del dibujante sobre la cartulina del cartel (las dos puntas que rascan la fibra a
+    # saltitos). Rascar: una moneda de diez centavos (con una de cinco se pagaba el tranvía: 15 centavos en 1967); desde
+    # 1965, de cuproníquel sobre cobre, sin plata ([sin verificar]: no está en fuentes_psicodelia.md), suena corta y apagada.
+    # La moneda suena igual en las dos caras: es la misma moneda.
+    with azar_propio('psicodelia'):
+        t = t_(0.5); fm = hz(T + 30)
+        diez = sum(a * np.sin(2 * np.pi * fm * r * t) * np.exp(-t * c) for r, a, c in ((1.0, 1.0, 7.0), (1.73, 0.4, 10.0), (2.33, 0.25, 13.0), (3.91, 0.1, 20.0))
+                   if fm * r < SR * 0.45) * np.minimum(1, t / 0.001)
+        plumilla = mezclar((0, trazo((2200, 7200), 0.042, 14, 0.024), 1.0), (0, clic(0.0015, (3500, 9000)), 0.45),
+                           *[(rng.uniform(0.008, 0.034), clic(0.0008, (4000, 9500)), rng.uniform(0.1, 0.3)) for _ in range(3)])
+        nuevos('psicodelia',
+               error=freno_cinta(mezclar((0, suave(T + 7, 0.62), 0.55), (0, acor([T - 2, T + 3], 0.62), 0.45)), 7.0),
+               cambio=mezclar((0, perilla(), 0.2),(0.03, eco_cinta(mezclar((0, org(T + 7, 0.09, chasquido=0.6), 0.5), (0.1, org(T + 12, 0.12, chasquido=0.6), 0.5)),
+                                                                    0.11, 0.35, 2, 2600, 0.4), 0.8)),
+               tecla=plumilla,
+               rascar=rascado((1100, 5200), diez, aspereza=110, pasadas=((0.0, 0.26), (0.31, 0.26), (0.62, 0.3))))
+
+def rasero(d=0.34):
+    """El rasero de goma de la serigrafía, que arrastra la tinta por la malla del bastidor de un lado al otro: un roce
+    parejo y húmedo (la goma sobre la seda tensa, que hace de parche), con el chirrido apenas afinado de la goma que se
+    dobla, y al final el rasero que se levanta y la malla que se despega del papel."""
+    t = t_(d); n = len(t)
+    forma = np.sin(np.pi * np.minimum(1, t / (0.88 * d))) ** 0.8
+    roce = filtro(ruido(d), 'banda', (500, 4200)) * (0.7 + 0.3 * np.abs(filtro(ruido(d), 'bajo', 35))) * forma
+    roce = roce + 0.6 * banda_movil(roce, 1150 + 250 * t / d, 180) + 0.35 * resonador(roce, 2600, 300)
+    despega = filtro(ruido(0.05), 'banda', (900, 5000)) * env(int(0.05 * SR), 0.002, 0.02, 4)
+    return mezclar((0, roce / (np.abs(roce).max() + 1e-9), 0.8), (0.9 * d, despega / (np.abs(despega).max() + 1e-9), 0.35))[:n + int(0.05 * SR)]
+
+def bastidor(fuerza=1.0):
+    """El bastidor de madera de la serigrafía que baja sobre el papel: un golpe hueco de marco y la mesa de debajo."""
+    e = np.zeros(int(0.14 * SR)); e[:int(0.004 * SR)] = filtro(ruido(0.004), 'bajo', 1800)
+    g = resonador(e, 170, 45) + 0.7 * resonador(e, 390, 80) + 0.3 * resonador(e, 900, 200)
+    g = filtro(g / (np.abs(g).max() + 1e-9), 'alto', 70)
+    return fuerza * mezclar((0, g, 0.9), (0, clic(0.003, (900, 4500)), 0.3))
+
+def psicodelia_tinta():
+    # La cara INTENSA de Psicodelia: **la psicodelia de cartel**, de 21:00 a 5:00 (la cara de la hora: el sonido no cambia
+    # con la intensidad, para que un consumo no se oiga; ver `ui/Sentidos.kt`, [caraDelSonido]). La misma escala que la
+    # ciudad (La mixolidio), para que el toque recorra las mismas notas. Suenan el sitar en zumbido (la cuerda que roza
+    # la jawari, con sus cuerdas simpáticas), la guitarra eléctrica con el pedal de distorsión para los logros y el eco
+    # de cinta **largo**, el que se repite y se va apagando (de tres a cinco repeticiones, con un retraso de casi medio
+    # segundo en lo grande); y, de la mesa del cartel, el rasero y el bastidor de la serigrafía y el pincel de rotulista.
+    # Ni la aguja ni la perilla (son del cuarto de la ciudad). Sin aviso ni solemne: los canales de notificación se
+    # quedan con los de la ciudad.
+    T = 0   # La 4
+    taraf = tuple(hz(T + n) for n in (-12, -5, 0, 2, 4, 7, 10, 12))   # las cuerdas simpáticas, afinadas en el modo
+    sit = lambda n, d=1.0, **kw: sitar(hz(n), d, taraf=taraf, **kw)
+    org = lambda n, d=0.5, **kw: organo_transistor(hz(n), d, **kw)
+    gd = lambda n, d, notas=(0, 7, 12), **kw: guitarra_distorsion(hz(n), d, notas, **kw)
+    def acor(notas, d, crece=0.0, **kw):
+        x = mezclar(*[(0, org(n, d, **kw), 1 / len(notas) ** 0.5) for n in notas])
+        return x * (0.35 + 0.65 * np.minimum(1, np.arange(len(x)) / SR / crece) ** 1.5) if crece else x
+    def largo(x, retraso=0.36, veces=4, realim=0.5):
+        """El eco de cinta largo de la noche: repeticiones lejanas que se van oscureciendo y ondulan con el motor."""
+        return eco_cinta(x, retraso, realim, veces, 2400, 0.4)
+    with azar_propio('psicodelia_tinta'):
+        S['psicodelia_tinta'] = dict(
+            # El toque: una nota de sitar que entra apenas desde abajo, con su zumbido y un poco de las simpáticas, y una
+            # sola repetición del eco (en cada toque, más sería un enjambre).
+            toque=eco_cinta(domar(sit(T, 0.45, entra=-0.5, halo=0.12) * np.exp(-t_(0.45) * 3.5), 0.35, 3.0), 0.21, 0.28, 1, 2400, 0.4),
+            # Elegir: una cuerda del sitar, arriba y corta, con el zumbido de la jawari.
+            elegir=domar(sit(T + 12, 0.26, brillo=0.6, halo=0.08) * np.exp(-t_(0.26) * 7), 0.4, 3.0),
+            # Pasar: el rasero que arrastra la tinta por la malla.
+            pasar=rasero(0.32),
+            # Abrir: el sitar rasgueado de abajo arriba por las cuerdas de bordón (La, Mi, La, La), con sus simpáticas y
+            # el eco largo.
+            abrir=largo(domar(mezclar(*[(0.04 * i, sit(n, 1.7 - 0.04 * i, brillo=0.8, halo=0.3) * np.exp(-t_(1.7 - 0.04 * i) / 0.5), 0.45)
+                                       for i, n in enumerate([T - 12, T - 5, T, T + 12])]), 0.3, 3.0), 0.3, 3, 0.42),
+            # Guardar: el bastidor baja sobre el papel y el sitar va de Sol a La (de la séptima menor a casa); el La se
+            # dobla un poco al soltarlo y se va en el eco largo.
+            guardar=largo(domar(mezclar((0, bastidor(1.0), 0.55), (0.12, sit(T - 2, 0.3, apagar=0.24, halo=0.1), 0.55),
+                                        (0.34, sit(T, 1.1, pasos=((0, 0), (0.55, 0.5)), halo=0.25), 0.6)), 0.3, 3.0), 0.3, 3, 0.42),
+            # El logro: la guitarra con el pedal de distorsión da dos golpes del acorde de quinta de Sol y el de La, que se
+            # queda sonando con vibrato y su eco largo; el órgano abre el acorde de La con la séptima menor (Sol) y el
+            # pandero marca el golpe y se sacude en corcheas, cada vez más suave.
+            logro=reverb(mezclar(
+                (0, pandero(1.0, 0, 0.4, 0.6), 0.4), (0, gd(T - 14, 0.17, apagar=0.12), 0.55), (0.19, gd(T - 14, 0.17, apagar=0.12), 0.5),
+                (0.38, eco_cinta(gd(T - 12, 2.2, vibrato=(0.25, 0.8)), 0.42, 0.5, 5, 2400, 0.4), 0.6),
+                (0.38, pandero(1.0, 0, 0.4, 0.6), 0.45), *[(0.38 + 0.19 * k, pandero(0.5, 0.06, 0.3, 0.0), 0.25 * 0.82 ** k) for k in range(1, 9)],
+                (0.38, acor([T - 12, T - 8, T - 5, T - 2], 2.4, 0.6), 0.3)), 1.4, 0.24),
+            # El tema: las cuerdas de bordón del sitar (La y Mi) zumban debajo; el sitar entra con una frase corta que se
+            # dobla (Mi que sube a Fa# y vuelve, y La abajo), con el eco largo, y el pandero se sacude y golpea.
+            tema=reverb(mezclar(
+                (0, domar(mezclar((0, sit(T - 12, 2.6, halo=0.35, brillo=0.6), 0.5), (0.05, sit(T - 5, 2.5, halo=0.35, brillo=0.6), 0.4)), 0.3, 3.0), 0.45),
+                (0.32, largo(domar(mezclar((0, sit(T + 7, 0.9, pasos=((0, 0), (0.26, 2), (0.56, 0)), apagar=0.74), 0.6),
+                                           (0.78, sit(T, 1.5, entra=-1.0, halo=0.3), 0.6)), 0.3, 3.0), 0.34, 4, 0.48), 1.0),
+                (0.3, pandero(0.7, 0.25, 0.6, 0.0), 0.26), (1.1, pandero(0.8, 0.0, 0.4, 0.4), 0.28)), 1.3, 0.26))
+
+    # Error: la cinta que se frena: dos cuerdas del sitar (Sol y Do, el Do fuera del modo) bajan de velocidad y de altura
+    # y se apagan. Cambio: dos cuerdas del sitar, de la quinta a la octava, con el eco largo (tres repeticiones). Tecla:
+    # el pincel de rotulista cargado de tinta sobre la cartulina (más blando y húmedo que la plumilla de la ciudad). El
+    # rascado de la lámina es el de la ciudad (la misma moneda): no tiene archivo propio.
+    with azar_propio('psicodelia_tinta_lote6'):
+        pincel = mezclar((0, trazo((700, 3600), 0.055, 5, 0.034), 1.0),
+                         (0.002, filtro(ruido(0.02), 'bajo', 900) * env(int(0.02 * SR), 0.003, 0.01, 4), 0.35))
+        S['psicodelia_tinta'].update(
+            error=freno_cinta(mezclar((0, sit(T + 7, 0.62, halo=0.0), 0.6), (0.02, sit(T + 3, 0.6, halo=0.0), 0.45)), 7.0),
+            cambio=eco_cinta(domar(mezclar((0, sit(T + 7, 0.16, halo=0.05) * np.exp(-t_(0.16) * 8), 0.5), (0.11, sit(T + 12, 0.22, halo=0.08) * np.exp(-t_(0.22) * 7), 0.55)), 0.3, 3.0),
+                             0.2, 0.4, 3, 2400, 0.4))
+        X['s_tecla_psicodelia_tinta'] = pincel
+
 # ------------------------------------------------------------------ el aviso de los lugares especiales
 
 def lugar():
@@ -1304,6 +2308,12 @@ if __name__ == '__main__':
         revolucion,
         antiguas,
         cueva,
+        frente,
+        arcontes,
+        galia,
+        nouveau,
+        psicodelia,
+        psicodelia_tinta,
     )
     solo = sys.argv[2].split(',') if len(sys.argv) > 2 and sys.argv[2] != 'todos' else None
     claves = sys.argv[3].split(',') if len(sys.argv) > 3 else None

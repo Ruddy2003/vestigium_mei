@@ -210,6 +210,71 @@
             <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
         </activity-alias>
         <activity-alias
+            android:name=".IconoPsicodelia"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_psicodelia"
+            android:roundIcon="@mipmap/ic_launcher_psicodelia"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoNouveau"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_nouveau"
+            android:roundIcon="@mipmap/ic_launcher_nouveau"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoGalia"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_galia"
+            android:roundIcon="@mipmap/ic_launcher_galia"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoArcontes"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_arcontes"
+            android:roundIcon="@mipmap/ic_launcher_arcontes"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
+            android:name=".IconoFrente"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_frente"
+            android:roundIcon="@mipmap/ic_launcher_frente"
+            android:targetActivity=".ui.MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/accesos" />
+        </activity-alias>
+        <activity-alias
             android:name=".IconoRefugio"
             android:enabled="false"
             android:exported="true"

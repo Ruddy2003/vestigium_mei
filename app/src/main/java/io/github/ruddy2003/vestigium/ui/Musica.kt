@@ -36,6 +36,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -58,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -74,7 +76,12 @@ object Musica {
     /** El tema no tiene música ni tonos propios (Básico): no suena nada y no hay tono que instalar. */
     const val SIN_SONIDO = 0
 
-    fun presentacion(t: TemaId): Int = when (t) {
+    /**
+     * La música de la presentación de [t]. Los temas con caras ([TemaId.conCaras], hoy Psicodelia) tienen una por [cara]
+     * (la ciudad: el órgano suave y la aguja; la psicodelia: el sitar, la guitarra con distorsión y el eco largo); por
+     * omisión, la cara de la hora ([Sentidos.caraDelSonido]), nunca la de la intensidad: un consumo no debe oírse.
+     */
+    fun presentacion(t: TemaId, cara: Cara = Sentidos.caraDelSonido(t)): Int = when (t) {
         TemaId.ROMANO -> R.raw.s_romano_presentacion
         TemaId.URBE -> R.raw.s_urbe_presentacion
         TemaId.CIBER -> R.raw.s_ciber_presentacion
@@ -84,6 +91,14 @@ object Musica {
         TemaId.MEDIEVAL -> R.raw.s_medieval_presentacion
         TemaId.TEMPLARIO -> R.raw.s_templario_presentacion
         TemaId.DISTOPIA -> R.raw.s_distopia_presentacion
+        TemaId.PSICODELIA -> when (cara) {
+            Cara.BASE -> R.raw.s_psicodelia_presentacion
+            Cara.INTENSA -> R.raw.s_psicodelia_tinta_presentacion
+        }
+        TemaId.NOUVEAU -> R.raw.s_nouveau_presentacion
+        TemaId.GALIA -> R.raw.s_galia_presentacion
+        TemaId.ARCONTES -> R.raw.s_arcontes_presentacion
+        TemaId.FRENTE -> R.raw.s_frente_presentacion
         TemaId.REFUGIO -> R.raw.s_refugio_presentacion
         TemaId.ORDEN -> R.raw.s_orden_presentacion
         TemaId.VAPOR -> R.raw.s_vapor_presentacion
@@ -111,8 +126,8 @@ object Musica {
         TemaId.CUEVA -> R.raw.s_cueva_presentacion
         TemaId.BASICO -> SIN_SONIDO
     }
-    /** La música larga de «Tu año»: la frase del tema que va creciendo (~1 min y medio). */
-    fun anual(t: TemaId): Int = when (t) {
+    /** La música larga de «Tu año»: la frase del tema que va creciendo (~1 min y medio). Por [cara], como [presentacion]. */
+    fun anual(t: TemaId, cara: Cara = Sentidos.caraDelSonido(t)): Int = when (t) {
         TemaId.ROMANO -> R.raw.s_romano_anual
         TemaId.URBE -> R.raw.s_urbe_anual
         TemaId.CIBER -> R.raw.s_ciber_anual
@@ -122,6 +137,14 @@ object Musica {
         TemaId.MEDIEVAL -> R.raw.s_medieval_anual
         TemaId.TEMPLARIO -> R.raw.s_templario_anual
         TemaId.DISTOPIA -> R.raw.s_distopia_anual
+        TemaId.PSICODELIA -> when (cara) {
+            Cara.BASE -> R.raw.s_psicodelia_anual
+            Cara.INTENSA -> R.raw.s_psicodelia_tinta_anual
+        }
+        TemaId.NOUVEAU -> R.raw.s_nouveau_anual
+        TemaId.GALIA -> R.raw.s_galia_anual
+        TemaId.ARCONTES -> R.raw.s_arcontes_anual
+        TemaId.FRENTE -> R.raw.s_frente_anual
         TemaId.REFUGIO -> R.raw.s_refugio_anual
         TemaId.ORDEN -> R.raw.s_orden_anual
         TemaId.VAPOR -> R.raw.s_vapor_anual
@@ -149,6 +172,7 @@ object Musica {
         TemaId.CUEVA -> R.raw.s_cueva_anual
         TemaId.BASICO -> SIN_SONIDO
     }
+    /** Los tonos del teléfono ([llamada], [notificacion]): uno por tema, sin caras (el teléfono los fija al instalarlos). */
     fun llamada(t: TemaId): Int = when (t) {
         TemaId.ROMANO -> R.raw.t_romano_llamada
         TemaId.URBE -> R.raw.t_urbe_llamada
@@ -159,6 +183,11 @@ object Musica {
         TemaId.MEDIEVAL -> R.raw.t_medieval_llamada
         TemaId.TEMPLARIO -> R.raw.t_templario_llamada
         TemaId.DISTOPIA -> R.raw.t_distopia_llamada
+        TemaId.PSICODELIA -> R.raw.t_psicodelia_llamada
+        TemaId.NOUVEAU -> R.raw.t_nouveau_llamada
+        TemaId.GALIA -> R.raw.t_galia_llamada
+        TemaId.ARCONTES -> R.raw.t_arcontes_llamada
+        TemaId.FRENTE -> R.raw.t_frente_llamada
         TemaId.REFUGIO -> R.raw.t_refugio_llamada
         TemaId.ORDEN -> R.raw.t_orden_llamada
         TemaId.VAPOR -> R.raw.t_vapor_llamada
@@ -196,6 +225,11 @@ object Musica {
         TemaId.MEDIEVAL -> R.raw.t_medieval_notificacion
         TemaId.TEMPLARIO -> R.raw.t_templario_notificacion
         TemaId.DISTOPIA -> R.raw.t_distopia_notificacion
+        TemaId.PSICODELIA -> R.raw.t_psicodelia_notificacion
+        TemaId.NOUVEAU -> R.raw.t_nouveau_notificacion
+        TemaId.GALIA -> R.raw.t_galia_notificacion
+        TemaId.ARCONTES -> R.raw.t_arcontes_notificacion
+        TemaId.FRENTE -> R.raw.t_frente_notificacion
         TemaId.REFUGIO -> R.raw.t_refugio_notificacion
         TemaId.ORDEN -> R.raw.t_orden_notificacion
         TemaId.VAPOR -> R.raw.t_vapor_notificacion
@@ -248,14 +282,15 @@ object Musica {
     /** Para «Tu año»: la música larga, que se puede bajar poco a poco y se repite si las historias duran más. */
     fun anualTocar(ctx: Context, t: TemaId): MediaPlayer? {
         detener()
-        if (anual(t) == SIN_SONIDO) return null
+        val res = anual(t)
+        if (res == SIN_SONIDO) return null
         if (!Repo.config.sonidos) return null
         val audio = ctx.getSystemService(AudioManager::class.java)
         if (audio != null && audio.ringerMode != AudioManager.RINGER_MODE_NORMAL) return null
         return runCatching {
             val mp = MediaPlayer()
             mp.setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
-            ctx.resources.openRawResourceFd(anual(t)).use { fd -> mp.setDataSource(fd.fileDescriptor, fd.startOffset, fd.length) }
+            ctx.resources.openRawResourceFd(res).use { fd -> mp.setDataSource(fd.fileDescriptor, fd.startOffset, fd.length) }
             mp.isLooping = true
             mp.prepare(); mp.start()
             reproductor = mp
@@ -485,6 +520,159 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawRect(e.primary.copy(alpha = 0.7f), Offset(centro.x - u * 46, centro.y - u * 17), Size(u * 92, u * 34), style = Stroke(u * 2.2f))
             drawRect(e.primary.copy(alpha = 0.5f), Offset(centro.x - u * 41, centro.y - u * 12), Size(u * 82, u * 24), style = Stroke(u))
             drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
+        }
+    }
+    // Psicodelia, en la cara que toque. La ciudad: la copia de foto de los setenta, con su margen claro, la luz de la tarde
+    // (de noche, la de la lámpara) que entra por la izquierda, los cables del trolebús arriba, grano y el disco del día en la
+    // esquina de abajo. La tinta: el cartel de la semana, con el marco de arco, la corona de rayos que ondulan alrededor del
+    // emblema y las bandas que se abren al pie (con la intensidad, a tres tintas y corridas de registro).
+    TemaId.PSICODELIA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre,
+        if (EstadoTema.caraDe(t) == Cara.BASE) "Toca y que suene el lado A" else "Toca y que suene el lado B",
+        comillas = "« " to " »", emblema = 124.dp, arriba = 66.dp, abajo = 74.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val k = PiezasPsicodelia.colores(e.background.luminance() < 0.5f)
+        with(PiezasPsicodelia) {
+            if (k.ciudad) {
+                val g = u * 11
+                fun marco(m: Float) = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(androidx.compose.ui.geometry.Rect(m, m, w - m, h - m), CornerRadius(maxOf(g - m, u)))) }
+                val foto = marco(u * 2)
+                clipPath(foto) {
+                    drawRect(androidx.compose.ui.graphics.Brush.linearGradient(listOf(k.luz, Color.Transparent), Offset.Zero, Offset(w * 0.7f, h * 0.5f)), Offset.Zero, Size(w, h))
+                    cablesTrolebus(0f, w, u * 22, k.tenue.copy(alpha = 0.55f))
+                }
+                granoPelicula(foto, k.grano * 0.4f)
+                drawPath(foto, k.borde, style = Stroke(u * 1.4f))
+                drawPath(marco(u * 9), k.borde.copy(alpha = 0.45f), style = Stroke(u * 0.8f))
+                disco(Offset(w - u * 30, h - u * 30), u * 14, k)
+            } else {
+                val caja = androidx.compose.ui.geometry.Rect(u * 2, u * 2, w - u * 2, h - u * 2)
+                val cartel = TrazosTinta.arco(caja, u * 60, u * 4)
+                val linea = if (k.oscuro) TrazosTinta.CREMA else k.grabado
+                clipPath(cartel) {
+                    corona(Offset(w / 2, u * 128), u * 70, minOf(w * 0.48f, u * 150), k, n = 24)
+                    ondas(u * 8, w - u * 8, h - u * 30, (2f + 0.14f * k.m.amplitud) * u, u * 64, u * 2.2f, u * 5f, tintasBanda(k), k.m.registro)
+                }
+                with(TrazosTinta) { conRegistro(TrazosTinta.Tinta.MAGENTA, k.m.registro) { drawPath(cartel, k.magenta.copy(alpha = 0.8f), style = Stroke(u * 1.6f)) } }
+                drawPath(cartel, linea, style = Stroke(u * 2.2f))
+                drawPath(TrazosTinta.arco(caja.deflate(u * 7), u * 53, u * 2), linea.copy(alpha = 0.5f), style = Stroke(u * 0.8f))
+            }
+        }
+    }
+    // El cartel del taller recién impreso: el marco con dos esquinas muy redondas y dos casi rectas, el filete de dentro, dos
+    // líneas de látigo que nacen arriba en medio y se enroscan hacia los lados, un iris que sube por cada margen, la libélula
+    // que pasa y, abajo, la banda de la letra del cartel. El título arriba, como en un cartel; el emblema y la frase, debajo.
+    TemaId.NOUVEAU -> DisenoPresentacion(OrdenPresentacion.TITULO_ARRIBA, false, t.nombre, "Toca: la piedra está entintada",
+        comillas = "« " to " »", emblema = 118.dp, arriba = 70.dp, abajo = 64.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val g = u * 30
+        fun marco(m: Float) = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(androidx.compose.ui.geometry.Rect(m, m, w - m, h - m), CornerRadius(g - m), CornerRadius(u * 3), CornerRadius(g - m), CornerRadius(u * 3))) }
+        drawPath(marco(u), e.tertiary.copy(alpha = 0.75f), style = Stroke(u * 1.6f))
+        drawPath(marco(u * 7), e.tertiary.copy(alpha = 0.35f), style = Stroke(u * 0.7f))
+        with(TrazosNouveau) {
+            latigo(Offset(w / 2, u * 16), Offset(w * 0.18f, u * 34), u * 7, u * 2.4f, e.primary.copy(alpha = 0.75f), comba = 0.2f, horario = false, sombra = false)
+            latigo(Offset(w / 2, u * 16), Offset(w * 0.82f, u * 34), u * 7, u * 2.4f, e.primary.copy(alpha = 0.75f), comba = -0.2f, horario = true, sombra = false)
+            iris(Offset(u * 24, h - u * 26), minOf(h * 0.4f, u * 190), e.secondary.copy(alpha = 0.8f), e.primary.copy(alpha = 0.55f), e.primary.copy(alpha = 0.75f))
+            iris(Offset(w - u * 26, h - u * 26), minOf(h * 0.32f, u * 150), e.secondary.copy(alpha = 0.7f), e.primary.copy(alpha = 0.55f), e.primary.copy(alpha = 0.75f))
+            libelula(Offset(w - u * 46, u * 70), u * 30, 35f, 0.2f, e.primary.copy(alpha = 0.8f), e.surface.copy(alpha = 0.85f), e.tertiary)
+        }
+        drawCircle(e.primary.copy(alpha = 0.75f), u * 3, Offset(w / 2, u * 16))
+        // La banda de la letra del cartel, abajo.
+        drawRect(e.secondary.copy(alpha = 0.18f), Offset(u * 10, h - u * 22), Size(w - u * 20, u * 12))
+        var x = u * 50; var k = 0
+        while (x < w - u * 50) { val a = u * (5f + (k * 7) % 5); drawRect(e.secondary.copy(alpha = 0.45f), Offset(x, h - u * 18), Size(a, u * 4)); x += a + u * 3; k++ }
+    }
+    // La puerta de la casa grande: los dos postes de roble con su corteza, el dintel con la onda de La Tène tallada y el torques
+    // colgado en medio, el umbral de tierra y una hoguera al pie de cada poste. Primero la frase, como la diría el bardo.
+    TemaId.GALIA -> DisenoPresentacion(OrdenPresentacion.FRASE_ARRIBA, false, t.nombre, "Toca, y que corra el grito",
+        emblema = 116.dp, arriba = 76.dp, abajo = 78.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val madera = androidx.compose.ui.graphics.lerp(TrazosGalia.MADERA, e.surface, 0.2f)
+        val linea = e.onSurface.copy(alpha = 0.35f)
+        // Los postes.
+        listOf(u * 4, w - u * 16).forEach { x ->
+            drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(androidx.compose.ui.graphics.lerp(madera, Color.White, 0.15f), madera, androidx.compose.ui.graphics.lerp(madera, Color.Black, 0.35f)), x, x + u * 12), Offset(x, u * 22), Size(u * 12, h - u * 28))
+            var y = u * 30; var k = 0
+            while (y < h - u * 10) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(x + u * (3 + (k % 3) * 3), y), Offset(x + u * (3.5f + (k % 3) * 3), y + u * 16), u * 0.8f); y += u * 11; k++ }
+        }
+        // El dintel, con la onda tallada.
+        drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(androidx.compose.ui.graphics.lerp(madera, Color.White, 0.18f), madera, androidx.compose.ui.graphics.lerp(madera, Color.Black, 0.3f)), u * 8, u * 24), Offset(0f, u * 8), Size(w, u * 16))
+        val onda = Path().apply {
+            var x = u * 20; moveTo(x, u * 16)
+            while (x < w - u * 30) { cubicTo(x + u * 4, u * 11, x + u * 8, u * 11, x + u * 9, u * 16); cubicTo(x + u * 10, u * 21, x + u * 14, u * 21, x + u * 18, u * 16); x += u * 18 }
+        }
+        drawPath(onda, Color.Black.copy(alpha = 0.35f), style = Stroke(u * 1.2f, cap = StrokeCap.Round))
+        drawPath(Path().apply { addPath(onda, Offset(-u * 0.6f, -u * 0.6f)) }, Color.White.copy(alpha = 0.2f), style = Stroke(u * 0.8f, cap = StrokeCap.Round))
+        // El torques colgado del dintel.
+        drawLine(linea, Offset(w / 2, u * 24), Offset(w / 2, u * 30), u)
+        with(TrazosGalia) { torques(Offset(w / 2, u * 42), u * 12, u * 3.4f) }
+        // Las hojas de roble en los postes.
+        with(TrazosGalia) {
+            hojaRoble(Offset(u * 22, u * 36), u * 18, 140f, e.primary.copy(alpha = 0.7f), madera)
+            hojaRoble(Offset(w - u * 26, u * 36), u * 18, -140f, e.primary.copy(alpha = 0.7f), madera)
+        }
+        // El umbral y las hogueras.
+        drawLine(linea, Offset(0f, h - u * 6), Offset(w, h - u * 6), u * 1.4f)
+        drawLine(linea.copy(alpha = 0.18f), Offset(u * 4, h - u * 2), Offset(w - u * 4, h - u * 2), u * 0.8f)
+        with(TrazosGalia) {
+            hoguera(Offset(u * 36, h - u * 8), u * 22, 0.9f)
+            hoguera(Offset(w - u * 40, h - u * 8), u * 22, 1f)
+        }
+    }
+    // La entrada de la sala escondida: el arco rebajado tallado en la caliza, con su dovela clave y el doble filo; dentro
+    // del arco, los siete círculos de las esferas apenas trazados; una grieta finísima en la jamba de la derecha y, al pie,
+    // dos lámparas encendidas a los lados del umbral. El amuleto va abajo, como un sello; los títulos, en voz baja.
+    TemaId.ARCONTES -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ABAJO, false, t.nombre, "∴  toca, y que la lámpara no se apague",
+        emblema = 112.dp, arriba = 86.dp, abajo = 74.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.tertiary.copy(alpha = 0.7f); val l = u * 1.4f
+        val flecha = u * 52
+        val arco = Path().apply {
+            moveTo(u * 8, h - u * 6); lineTo(u * 8, flecha)
+            quadraticTo(w / 2, -flecha * 0.55f, w - u * 8, flecha)
+            lineTo(w - u * 8, h - u * 6)
+        }
+        drawPath(arco, c, style = Stroke(l))
+        drawPath(Path().apply { moveTo(u * 16, h - u * 6); lineTo(u * 16, flecha + u * 6); quadraticTo(w / 2, -flecha * 0.38f, w - u * 16, flecha + u * 6); lineTo(w - u * 16, h - u * 6) },
+            c.copy(alpha = 0.3f), style = Stroke(u * 0.8f))
+        // La dovela clave, arriba en el centro.
+        drawPath(Path().apply { moveTo(w / 2 - u * 9, u * 6); lineTo(w / 2 + u * 9, u * 6); lineTo(w / 2 + u * 6, u * 26); lineTo(w / 2 - u * 6, u * 26); close() }, c, style = Stroke(l))
+        // Las siete esferas, que asoman por debajo de la clave.
+        for (i in 0 until 7) drawArc(c.copy(alpha = 0.32f - i * 0.03f), 20f, 140f, false, Offset(w / 2 - (14 + i * 9) * u, u * 26 - (14 + i * 9) * u), Size((28 + i * 18) * u, (28 + i * 18) * u), style = Stroke(u * 0.8f))
+        // El umbral y las dos lámparas.
+        drawLine(c, Offset(0f, h - u * 6), Offset(w, h - u * 6), l)
+        drawLine(c.copy(alpha = 0.4f), Offset(u * 4, h - u * 2), Offset(w - u * 4, h - u * 2), u * 0.8f)
+        with(TrazosArcontes) {
+            lampara(Offset(u * 34, h - u * 14), u * 30, BARRO_CLARO, 1f)
+            lampara(Offset(w - u * 38, h - u * 14), u * 30, BARRO_CLARO, 1f)
+            grieta(Offset(w - u * 12, h * 0.42f), Offset(w - u * 11, h * 0.42f + u * 44), u * 0.9f, 0.85f, 6)
+        }
+    }
+    // La pantalla redonda de la sala de mando: el emblema en el centro de la retícula, con el barrido verde que gira, el
+    // bisel de esquinas de consola alrededor de todo, la fila de pilotos al pie (dos ámbar encendidos y el rojo) y los
+    // interruptores de palanca a los lados.
+    TemaId.FRENTE -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre.uppercase(), "TOCA PARA ENTRAR EN LA SALA",
+        comillas = "‹ " to " ›", emblema = 120.dp, arriba = 46.dp, abajo = 58.dp) { e ->
+        val u = 1.dp.toPx(); val w = size.width; val h = size.height
+        val c = e.secondary.copy(alpha = 0.6f)
+        drawRoundRect(c, Offset(u * 4, u * 4), Size(w - u * 8, h - u * 8), CornerRadius(u * 26), style = Stroke(u * 2.2f))
+        drawRoundRect(c.copy(alpha = 0.3f), Offset(u * 10, u * 10), Size(w - u * 20, h - u * 20), CornerRadius(u * 20), style = Stroke(u))
+        val centro = Offset(w / 2, u * (46 + 60)); val radio = u * 84
+        drawCircle(TrazosFrente.PANTALLA.copy(alpha = 0.18f), radio, centro)
+        with(TrazosFrente) {
+            reticula(centro, radio, c.copy(alpha = 0.5f), u * 0.9f, 4)
+            barrido(centro, radio, -35f, e.tertiary.copy(alpha = 0.75f), u * 1.4f)
+        }
+        drawCircle(e.tertiary.copy(alpha = 0.8f), u * 2.4f, Offset(centro.x + radio * 0.52f, centro.y - radio * 0.3f))
+        val n = 5; val paso = u * 18; val x0 = w / 2 - paso * (n - 1) / 2
+        for (i in 0 until n) with(TrazosFrente) {
+            piloto(Offset(x0 + i * paso, h - u * 22), u * 3.2f, if (i == 4) PILOTO_ROJO else e.primary, i == 0 || i == 1 || i == 4, c)
+        }
+        listOf(u * 26, w - u * 26).forEach { x ->
+            for (k in 0 until 3) {
+                val b = Offset(x, h * 0.42f + k * u * 22)
+                drawCircle(c, u * 3.4f, b)
+                drawLine(TrazosFrente.BAQUELITA, b, b + Offset((if (k == 1) -1f else 1f) * u * 2.5f, -u * 10), u * 2.6f, StrokeCap.Round)
+            }
         }
     }
     // Compuerta: mampara redondeada con remaches y una franja de peligro al pie.

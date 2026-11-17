@@ -47,6 +47,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
@@ -439,9 +441,16 @@ internal fun vidasConCuento(tema: String): List<OtrasVidas.Vida> = OtrasVidas.vi
  * retrato y «Su vida»). Lo demás de «Otras vidas» se queda en su pantalla, en la pestaña Vida. No lee ningún dato tuyo.
  *
  * Abre en [vidaId]; si esa vida no tiene cuento, en la primera que lo tenga.
+ *
+ * Parte 8 (`docs/diseno/CUADROS_PLAN.md`): con [dia] (ruta `cuento?vida=<id>&dia=<AAAA-MM-DD>`) abre el cuento de ese día,
+ * para leer un día especial pasado; un día futuro no se abre nunca (`CuentosLeidos.sePuedeLeer`) y se queda en hoy. Con un
+ * día pasado no sale la fila de vidas: es el cuento de esa vida. Debajo del retrato va el botón para seguirla (encargo A).
  */
 @Composable
-fun PantallaCuento(nav: Nav, vidaId: String) {
+fun PantallaCuento(nav: Nav, vidaId: String, dia: String? = null, horaFija: Double? = null) {
+    val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+    val diaCuento = dia?.takeIf { io.github.ruddy2003.vestigium.data.CuentosLeidos.sePuedeLeer(it, hoy) } ?: hoy
+    val pasado = diaCuento != hoy
     val tema = Estilo.tema.id
     val vidas = remember(tema, vidaId) {
         val l = vidasConCuento(tema)
@@ -451,29 +460,75 @@ fun PantallaCuento(nav: Nav, vidaId: String) {
     }
     var elegida by rememberSaveable(tema, vidaId) { mutableStateOf(vidas.firstOrNull { it.id == vidaId }?.id ?: vidas.firstOrNull()?.id ?: "") }
     val v = vidas.firstOrNull { it.id == elegida }
-    Hoja("El cuento de hoy", nav.atras) {
+    Hoja(io.github.ruddy2003.vestigium.ui.escenas.LecturaCuento.tituloPantalla(diaCuento, hoy), nav.atras) {
         if (v == null) { Ayuda("Todavía no hay cuentos para las vidas de este tema.", Modifier.padding(top = 12.dp)); return@Hoja }
-        if (vidas.size > 1) LineaDeVidas(vidas, v.id) { elegida = it }
+        if (vidas.size > 1 && !pasado) LineaDeVidas(vidas, v.id) { elegida = it }
+        // Parte 8 (encargo B): el cuadro de su vida ese día, con su gato y su «me gusta», y el ambiente de su lugar.
+        val hora = horaFija ?: io.github.ruddy2003.vestigium.ui.escenas.horaDeAhora()
+        val cuadro = cuadroDeLaVida(v.id, diaCuento, aqui = horaFija != null)
+        if (cuadro != null) {
+            val ctx = LocalContext.current
+            val conAmbiente = remember(cuadro.tema) { runCatching { io.github.ruddy2003.vestigium.ui.escenas.AmbienteCuadro.elegir(ctx, cuadro.tema.id, false) != null }.getOrDefault(false) }
+            io.github.ruddy2003.vestigium.ui.escenas.CuadroDelCuento(cuadro, hora, Modifier.padding(top = 14.dp), conAmbiente = conAmbiente, animar = if (horaFija != null) false else null)
+        } else if (io.github.ruddy2003.vestigium.ui.escenas.tieneCuadro(v.id)) io.github.ruddy2003.vestigium.ui.escenas.SitioDelCuadro(Modifier.padding(top = 14.dp))
+        io.github.ruddy2003.vestigium.ui.escenas.AmbienteDelCuadro(cuadro?.tema?.id,
+            cuadro != null && io.github.ruddy2003.vestigium.ui.escenas.ReglasAmbiente.esNoche(cuadro.ficha.luz(hora).franja))
         RetratoVida(v, numeros = false)
-        HoyEnSuVida(v)
+        io.github.ruddy2003.vestigium.ui.seguir.BotonSeguir(v, Modifier.padding(top = 8.dp))
+        // Leer es llegar al final: cuando el final del cuento queda a la vista, una vez por apertura (decisión del director).
+        val enVivo = !androidx.compose.ui.platform.LocalInspectionMode.current
+        var marcado by remember(v.id, diaCuento) { mutableStateOf(false) }
+        HoyEnSuVida(v, dia = diaCuento, hora = hora, hoy = hoy, alLlegarAlFinal = { ficha ->
+            if (!marcado && enVivo) {
+                marcado = true
+                val especiales = io.github.ruddy2003.vestigium.ui.escenas.LecturaCuento.especiales(ficha)
+                runCatching {
+                    io.github.ruddy2003.vestigium.data.Repo.cambiarConfig {
+                        io.github.ruddy2003.vestigium.data.CuentosLeidos.marcar(it, v.id, diaCuento, io.github.ruddy2003.vestigium.data.Fechas.diaLogico(),
+                            io.github.ruddy2003.vestigium.data.Fechas.ahoraIso(), especiales)
+                    }
+                }
+            }
+        })
         SuVida(v)
         androidx.compose.foundation.layout.Spacer(Modifier.height(28.dp))
     }
 }
 
 /**
+ * Parte 8: el cuadro de [vida] el día [dia] (`cuadroDeVida`), calculado fuera del hilo de la pantalla; null mientras se
+ * calcula o si no tiene (los doce comunes, los temas sin escena). En las capturas ([aqui], que llegan con la hora fija) y
+ * en la vista previa se calcula ahí mismo.
+ */
+@Composable
+private fun cuadroDeLaVida(vida: String, dia: String, aqui: Boolean = false): io.github.ruddy2003.vestigium.ui.escenas.CuadroHoy? {
+    if (aqui || androidx.compose.ui.platform.LocalInspectionMode.current)
+        return remember(vida, dia) { runCatching { io.github.ruddy2003.vestigium.ui.escenas.cuadroDeVida(vida, dia) }.getOrNull() }
+    val c by produceState<io.github.ruddy2003.vestigium.ui.escenas.CuadroHoy?>(null, vida, dia) {
+        value = withContext(Dispatchers.Default) { runCatching { io.github.ruddy2003.vestigium.ui.escenas.cuadroDeVida(vida, dia) }.getOrNull() }
+    }
+    return c
+}
+
+/**
  * «Hoy, en su vida»: el cuento del día del personaje, con la edad que avanza cada año, lo que hoy tiene de especial
  * (y qué tan cierto es) y sus fuentes al pie. No sale nada si el personaje todavía no tiene cuento. El texto es el
  * mismo todo el día, salvo el párrafo de lo que hace a esta [hora]. No lee ningún dato tuyo.
+ *
+ * Parte 8 (encargo B): con [hoy] (tu día lógico), el título dice qué día es si [dia] es otro («El 21 de marzo, en su
+ * vida»); sin él, «Hoy, en su vida», como siempre. Con [alLlegarAlFinal], un marcador de 1 dp justo debajo del último
+ * párrafo avisa (con la ficha del día) cada vez que queda a la vista: quien lo llama decide si ya contó.
  */
 @Composable
 internal fun HoyEnSuVida(v: OtrasVidas.Vida, dia: String = io.github.ruddy2003.vestigium.data.Fechas.diaLogico(),
-                         hora: Double = java.time.LocalTime.now().let { it.hour + it.minute / 60.0 }, modifier: Modifier = Modifier) {
+                         hora: Double = java.time.LocalTime.now().let { it.hour + it.minute / 60.0 }, modifier: Modifier = Modifier,
+                         hoy: String? = null, alLlegarAlFinal: ((io.github.ruddy2003.vestigium.vidas.FichaDelDia) -> Unit)? = null) {
     val cuento = remember(v.id, dia, (hora * 2).toInt()) { runCatching { io.github.ruddy2003.vestigium.vidas.Cuento.de(dia, v.id, hora) }.getOrNull() } ?: return
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val ficha = cuento.ficha
-    Seccion("Hoy, en su vida", modifier = modifier) {
+    val titulo = if (hoy == null) "Hoy, en su vida" else io.github.ruddy2003.vestigium.ui.escenas.LecturaCuento.tituloSeccion(dia, hoy)
+    Seccion(titulo, modifier = modifier) {
         Tarjeta {
             cuento.notas.firstOrNull()?.let { Text("día especial · ${it.tipo.nombre}", style = MaterialTheme.typography.labelMedium, color = cs.primary) }
             Text(cuento.titulo, style = MaterialTheme.typography.titleLarge)
@@ -481,6 +536,14 @@ internal fun HoyEnSuVida(v: OtrasVidas.Vida, dia: String = io.github.ruddy2003.v
                 style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
             if (ficha.avance) Ayuda("Es un avance: su año empieza el 1 de enero. Hasta entonces verás cómo será el primero.", Modifier.padding(top = 6.dp))
             cuento.parrafos.forEach { Text(it, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 10.dp)) }
+            if (alLlegarAlFinal != null) {
+                val vista = androidx.compose.ui.platform.LocalView.current
+                val avisar by androidx.compose.runtime.rememberUpdatedState(alLlegarAlFinal)
+                Spacer(Modifier.fillMaxWidth().height(1.dp).onGloballyPositioned { donde ->
+                    val r = donde.boundsInWindow()
+                    if (io.github.ruddy2003.vestigium.ui.escenas.LecturaCuento.alaVista(r.top, r.bottom, vista.rootView.height.toFloat())) avisar(ficha)
+                })
+            }
 
             // ---- El pie: qué tan cierto es lo de hoy, la advertencia de siempre y las fuentes.
             cuento.notas.forEachIndexed { i, n ->
@@ -668,6 +731,77 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawRect(color.copy(alpha = 0.35f), Offset.Zero, Size(fw, h))
                 clipRect(right = fw) { var x = -h; while (x < fw) { drawLine(color, Offset(x, h), Offset(x + h, 0f), 1.6f * d); x += 3.2f * d } }
                 drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
+            }
+        }
+        // La ciudad: el pasamanos del trolebús, la pista y lo recorrido con el brillo de la tarde arriba y una sombra café
+        // corta. La tinta: la barra a dos tintas, con la segunda pasada corrida de registro y una onda fina impresa encima.
+        TemaId.PSICODELIA -> {
+            drawRoundRect(pista, Offset.Zero, size, androidx.compose.ui.geometry.CornerRadius(h / 2))
+            if (fw > 0f) {
+                if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) {
+                    drawRoundRect(io.github.ruddy2003.vestigium.ui.TrazosCiudad.SOMBRA.copy(alpha = 0.18f), Offset(0.6f * d, 0.8f * d), Size(fw, h), androidx.compose.ui.geometry.CornerRadius(h / 2))
+                    drawRoundRect(color, Offset.Zero, Size(fw, h), androidx.compose.ui.geometry.CornerRadius(h / 2))
+                    if (fw > 6f * d) drawLine(claro, Offset(h * 0.5f, h * 0.3f), Offset(fw - h * 0.5f, h * 0.3f), 0.8f * d, StrokeCap.Round)
+                } else {
+                    drawRoundRect(color.copy(alpha = 0.45f), Offset(1.2f * d, 0.6f * d), Size(fw, h), androidx.compose.ui.geometry.CornerRadius(h / 2))
+                    drawRoundRect(color, Offset.Zero, Size(fw, h), androidx.compose.ui.geometry.CornerRadius(h / 2))
+                    if (fw > 8f * d) drawPath(Path().apply {
+                        var x = h * 0.5f; moveTo(x, h * 0.5f)
+                        while (x < fw - h * 0.6f) { quadraticTo(x + 2.5f * d, h * 0.3f, x + 5f * d, h * 0.5f); quadraticTo(x + 7.5f * d, h * 0.7f, x + 10f * d, h * 0.5f); x += 10f * d }
+                    }, claro, style = Stroke(0.9f * d, cap = StrokeCap.Round))
+                }
+            }
+        }
+        // Una tira de vidrio de Nancy: la pista pálida con su filete; lo lleno, el vidrio que pasa de claro a hondo, con su brillo
+        // arriba, y en la punta un rizo de látigo que se enrosca.
+        TemaId.NOUVEAU -> {
+            drawRoundRect(pista, Offset.Zero, size, androidx.compose.ui.geometry.CornerRadius(h / 2))
+            if (fw > 0f) {
+                drawRoundRect(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(lerp(color, Color.White, 0.45f), color, lerp(color, Color.Black, 0.25f)), 0f, fw), Offset.Zero, Size(fw, h), androidx.compose.ui.geometry.CornerRadius(h / 2))
+                if (fw > 6f * d) drawLine(claro, Offset(h * 0.5f, h * 0.28f), Offset(fw - h * 0.5f, h * 0.28f), 0.8f * d, StrokeCap.Round)
+                if (fw > 10f * d) {
+                    val pts = io.github.ruddy2003.vestigium.ui.TrazosNouveau.puntosLatigo(Offset(fw - h * 1.6f, h * 0.75f), Offset(fw - h * 0.4f, h * 0.5f), h * 0.22f, 0.2f, false)
+                    drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.cinta(pts) { k -> d * (1f - 0.6f * k) }, oscuro)
+                }
+            }
+        }
+        // La faja de lana a cuadros, tejida: la pista es la urdimbre clara y lo lleno, la lana del color con sus cuadros cruzados
+        // y los flecos al final.
+        TemaId.GALIA -> {
+            drawRect(pista, Offset.Zero, size)
+            var xp = 2f * d; while (xp < w) { drawLine(color.copy(alpha = 0.12f), Offset(xp, 0f), Offset(xp, h), 0.6f * d); xp += 3f * d }
+            if (fw > 0f) {
+                drawRect(color, Offset.Zero, Size(fw, h))
+                clipRect(right = fw) {
+                    var x = 2f * d
+                    while (x < fw) { drawRect(oscuro, Offset(x, 0f), Size(3f * d, h)); drawLine(claro, Offset(x + 5f * d, 0f), Offset(x + 5f * d, h), 0.6f * d); x += 9f * d }
+                    drawRect(oscuro, Offset(0f, h * 0.35f), Size(fw, h * 0.3f))
+                    drawLine(claro, Offset(0f, h * 0.2f), Offset(fw, h * 0.2f), 0.6f * d); drawLine(claro, Offset(0f, h * 0.8f), Offset(fw, h * 0.8f), 0.6f * d)
+                }
+                if (fw > 4f * d) { var y = 1f * d; while (y < h) { drawLine(color, Offset(fw, y), Offset(fw + 2.5f * d, y + 0.5f * d), 0.8f * d, StrokeCap.Round); y += 2f * d } }
+            }
+        }
+        // El ascenso por las siete esferas: el hilo fino del camino con los siete aros, uno por esfera; lo recorrido, en el
+        // color del tema, con los aros que ya se cruzaron llenos, y en la punta, la chispa que sube.
+        TemaId.ARCONTES -> {
+            drawLine(color.copy(alpha = 0.3f), Offset(0f, h / 2), Offset(w, h / 2), 0.8f * d)
+            if (fw > 0f) drawLine(color, Offset(0f, h / 2), Offset(fw, h / 2), h * 0.28f, StrokeCap.Round)
+            for (k in 0 until 7) {
+                val x = w * (k + 0.5f) / 7f; val rr = h * 0.36f
+                if (x <= fw) drawCircle(color, rr, Offset(x, h / 2)) else drawCircle(pista.copy(alpha = 0.6f), rr, Offset(x, h / 2))
+                drawCircle(color.copy(alpha = if (x <= fw) 1f else 0.45f), rr, Offset(x, h / 2), style = Stroke(0.8f * d))
+            }
+            if (fw > 0f) with(io.github.ruddy2003.vestigium.ui.TrazosArcontes) { chispa(Offset(fw, h / 2), h * 0.7f, 1f, GRIETA, GRIETA_HALO) }
+        }
+        // El dial de sintonía de la radio de maleta: la escala con sus marcas, la franja de lo recorrido y la aguja roja
+        // donde llega.
+        TemaId.FRENTE -> {
+            drawRoundRect(pista, Offset.Zero, size, CornerRadius(h * 0.3f))
+            var x = 2f * d; var k = 0
+            while (x < w - d) { val l = if (k % 5 == 0) h * 0.5f else h * 0.28f; drawLine(color.copy(alpha = 0.45f), Offset(x, 0f), Offset(x, l), 0.7f * d); x += 3f * d; k++ }
+            if (fw > 0f) {
+                drawRoundRect(color, Offset(0f, h * 0.58f), Size(fw, h * 0.42f), CornerRadius(h * 0.21f))
+                drawLine(io.github.ruddy2003.vestigium.ui.TrazosFrente.PILOTO_ROJO, Offset(fw, -0.5f * d), Offset(fw, h + 0.5f * d), 1.4f * d)
             }
         }
         // Medidor de esfera alargada, con sus décimos y el brillo del vidrio.
@@ -1070,6 +1204,78 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawPath(Path().apply { moveTo(c.x - l, c.y); quadraticTo(c.x, c.y - l * 0.9f, c.x + l, c.y); quadraticTo(c.x, c.y + l * 0.9f, c.x - l, c.y); close() }, tinta.copy(alpha = 0.5f), style = Stroke(1.5f * d))
             drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)
             marcas(24, 4f * d, 2.2f * d, tinta.copy(alpha = 0.6f))
+        }
+        // El día como un disco: el vinilo con sus surcos y el brillo, la etiqueta en el color del tema con sus dos renglones
+        // impresos y, alrededor, las horas como puntos (los de las 0, 6, 12 y 18, más grandes): lado A de mañana, lado B de tarde.
+        TemaId.PSICODELIA -> {
+            val vinilo = Color(0xFF1E1916)
+            drawCircle(vinilo.copy(alpha = 0.85f), rc, c)
+            var k = 0.95f
+            while (k > 0.4f) { drawCircle(Color.White.copy(alpha = 0.07f), rc * k, c, style = Stroke(0.5f * d)); k -= 0.06f }
+            listOf(-40f, 140f).forEach { a -> drawArc(Color.White.copy(alpha = 0.12f), a, 28f, true, Offset(c.x - rc * 0.95f, c.y - rc * 0.95f), Size(rc * 1.9f, rc * 1.9f)) }
+            drawCircle(cs.primary, rc * 0.36f, c)
+            val renglon = cs.onPrimary.copy(alpha = 0.55f)
+            drawLine(renglon, Offset(c.x - rc * 0.2f, c.y - rc * 0.15f), Offset(c.x + rc * 0.2f, c.y - rc * 0.15f), maxOf(0.6f * d, rc * 0.03f))
+            drawLine(renglon, Offset(c.x - rc * 0.13f, c.y + rc * 0.16f), Offset(c.x + rc * 0.13f, c.y + rc * 0.16f), maxOf(0.5f * d, rc * 0.025f))
+            drawCircle(vinilo, rc * 0.035f, c)
+            for (h in 0 until 24) drawCircle(tinta.copy(alpha = if (h % 6 == 0) 0.85f else 0.5f), if (h % 6 == 0) 2.2f * d else 1.2f * d, polarFig(c, ro + 3f * d, h * 15f - 90f))
+        }
+        // La esfera como un medallón de 1900: la libélula en el centro, el anillo de hojas que la rodea y, por fuera, una hoja
+        // chica en cada hora (las de 0, 6, 12 y 18, más largas).
+        TemaId.NOUVEAU -> {
+            drawCircle(cs.primary.copy(alpha = 0.06f), rc, c)
+            drawCircle(linea.copy(alpha = 0.5f), rc * 0.86f, c, style = Stroke(0.8f * d))
+            for (k in 0 until 12) {
+                val a = k * 30f - 75f
+                drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.hojaLanza(polarFig(c, rc * 0.86f, a - 12f), polarFig(c, rc * 0.9f, a + 12f), rc * 0.08f, 0.3f), cs.primary.copy(alpha = 0.35f))
+            }
+            with(io.github.ruddy2003.vestigium.ui.TrazosNouveau) { libelula(c, rc * 0.95f, -20f, 0f, cs.primary.copy(alpha = 0.75f), cs.surface.copy(alpha = 0.8f), cs.tertiary.copy(alpha = 0.8f)) }
+            for (k in 0 until 24) {
+                val a = k * 15f - 90f; val largo = if (k % 6 == 0) 6f * d else 3f * d
+                drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.hojaLanza(polarFig(c, ro + 1.5f * d, a), polarFig(c, ro + 1.5f * d + largo, a), largo * 0.4f), linea.copy(alpha = if (k % 6 == 0) 0.9f else 0.6f))
+            }
+        }
+        // La noche antes que el día (César 6.18): la mitad de la noche, de las 18 a las 6, en una banda más oscura con la luna
+        // arriba, y en el centro la rueda votiva; la hoguera del banquete a las 20.
+        TemaId.GALIA -> {
+            drawArc(tinta.copy(alpha = 0.08f), 180f, 180f, true, Offset(c.x - rc, c.y - rc), Size(rc * 2, rc * 2))
+            drawCircle(linea.copy(alpha = 0.55f), rc * 0.36f, c, style = Stroke(1.6f * d))
+            for (k in 0 until 6) drawLine(linea.copy(alpha = 0.45f), polarFig(c, rc * 0.08f, k * 60f), polarFig(c, rc * 0.36f, k * 60f), 0.9f * d)
+            drawCircle(cs.primary, rc * 0.08f, c)
+            val lu = polarFig(c, rc * 0.68f, -90f)
+            drawCircle(io.github.ruddy2003.vestigium.ui.TrazosGalia.LUNA.copy(alpha = 0.9f), rc * 0.1f, lu)
+            drawCircle(tinta.copy(alpha = 0.4f), rc * 0.1f, lu, style = Stroke(0.7f * d))
+            with(io.github.ruddy2003.vestigium.ui.TrazosGalia) { hoguera(polarFig(c, ro + 7f * d, 20 * 15f - 90f), 7f * d, 0.8f) }
+            marcas(24, 2.5f * d, 0.9f * d, linea)
+        }
+        // Las siete esferas al centro, con la tierra en medio, y en el canto las horas; las de la noche, partidas en las
+        // cuatro vigilias de Marcos 13:35 (la tarde, la medianoche, el canto del gallo y la mañana), cada una con su llamita en
+        // medio.
+        TemaId.ARCONTES -> {
+            with(io.github.ruddy2003.vestigium.ui.TrazosArcontes) { esferas(c, rc * 0.82f, linea.copy(alpha = 0.45f), 0.8f * d) }
+            drawCircle(io.github.ruddy2003.vestigium.ui.TrazosArcontes.LAGO.copy(alpha = 0.6f), rc * 0.12f, c)
+            marcas(24, 2f * d, 0.8f * d, linea)
+            listOf(19.5f, 22.5f, 1.5f, 4.5f).forEach { hora ->
+                val p = polarFig(c, ro + 5f * d, hora * 15f - 90f)
+                drawPath(Path().apply { moveTo(p.x - 1.6f * d, p.y + 1.8f * d); quadraticTo(p.x - 2f * d, p.y - 0.6f * d, p.x, p.y - 3.2f * d); quadraticTo(p.x + 2f * d, p.y - 0.6f * d, p.x + 1.6f * d, p.y + 1.8f * d); close() },
+                    io.github.ruddy2003.vestigium.ui.TrazosArcontes.LLAMA)
+            }
+        }
+        // El reloj de la sala de mando: el emblema de la red al centro, el anillo punteado de bronce de la hora de la capital,
+        // un piloto ámbar cada seis horas y, en el canto, la ventana de transmisión de hoy marcada en ámbar.
+        TemaId.FRENTE -> {
+            with(io.github.ruddy2003.vestigium.ui.TrazosFrente) { emblemaRed(c, rc * 0.38f, tinta.copy(alpha = 0.45f), 1.4f * d) }
+            drawCircle(io.github.ruddy2003.vestigium.ui.TrazosFrente.BRONCE.copy(alpha = 0.5f), rc * 0.8f, c, style = Stroke(0.7f * d, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.2f * d, 2.2f * d))))
+            for (k in 0 until 24) {
+                val a = k * 15f - 90f
+                if (k % 6 == 0) drawCircle(cs.primary.copy(alpha = 0.8f), 1.6f * d, polarFig(c, ro + 3f * d, a))
+                else drawLine(linea, polarFig(c, ro + 1.5f * d, a), polarFig(c, ro + 4f * d, a), 0.8f * d)
+            }
+            val ventana = runCatching {
+                val t = io.github.ruddy2003.vestigium.ui.Frente.ventana(io.github.ruddy2003.vestigium.data.Fechas.parse(io.github.ruddy2003.vestigium.data.Fechas.diaLogico()))
+                t.substring(0, 2).toInt() + t.substring(3, 5).toInt() / 60f
+            }.getOrNull()
+            if (ventana != null) { val rv = ro + 6f * d; drawArc(cs.primary, ventana * 15f - 90f, 7.5f, false, Offset(c.x - rv, c.y - rv), Size(2 * rv, 2 * rv), style = Stroke(3f * d, cap = StrokeCap.Round)) }
         }
         // Medidor: marcas largas cada tres horas y el átomo al centro.
         TemaId.REFUGIO -> {

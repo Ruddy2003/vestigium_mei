@@ -66,6 +66,7 @@ import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 private fun rad(g: Double) = Math.toRadians(g).toFloat()
 private fun Offset.mas(r: Float, ang: Float) = Offset(x + r * cos(ang), y + r * sin(ang))
@@ -81,6 +82,11 @@ private fun periodo(t: TemaId) = when (t) {
     TemaId.MEDIEVAL -> 5000
     TemaId.TEMPLARIO -> 4400
     TemaId.DISTOPIA -> 7000
+    TemaId.PSICODELIA -> 11200                 // la etiqueta del disco da una vuelta (ciudad) o la corona del sol, media (tinta)
+    TemaId.NOUVEAU -> 9400                     // el destello recorre el aro de látigo, del brote al rizo, y el nácar de la libélula tornasola
+    TemaId.GALIA -> 8000                       // el brillo da la vuelta al torques y el caballo galopa dos trancos
+    TemaId.ARCONTES -> 10500                   // el destello cruza la piedra y las siete estrellas se encienden una tras otra
+    TemaId.FRENTE -> 5600                      // dos destellos de la chispa y tres ondas que se escapan por la rotura
     TemaId.REFUGIO -> 3200
     TemaId.ORDEN -> 2600
     TemaId.VAPOR -> 3200          // el engrane da una doceava de vuelta por ciclo; la aguja tiembla tres veces
@@ -146,6 +152,11 @@ internal fun DrawScope.dibujarEmblema(tema: TemaId, t: Float, e: ColorScheme, os
         TemaId.MEDIEVAL -> roseton(c, r, e.primary, e.secondary, e.tertiary, t)
         TemaId.TEMPLARIO -> escudoTemplario(c, r, e.primary, e.secondary, e.tertiary, if (oscuro) Color(0xFFEEE7D8) else Color.White, t)
         TemaId.DISTOPIA -> ojo(c, r, e.onBackground, e.primary, e.background, t)
+        TemaId.PSICODELIA -> with(PiezasPsicodelia) { emblema(c, r, t, oscuro) }
+        TemaId.NOUVEAU -> with(TrazosNouveau) { medallon(c, r, t, oscuro) }
+        TemaId.GALIA -> with(TrazosGalia) { emblema(c, r, t, oscuro) }
+        TemaId.ARCONTES -> with(TrazosArcontes) { emblema(c, r, t, e.primary) }
+        TemaId.FRENTE -> chispaCanal(c, r, e.primary, e.onBackground, e.tertiary, e.background, t, oscuro)
         TemaId.REFUGIO -> atomo(c, r, e.primary, e.secondary, t)
         TemaId.ORDEN -> escudo(c, r, e.primary, e.secondary, t)
         TemaId.VAPOR -> engraneManometro(c, r, e.primary, lerp(e.primary, e.onBackground, 0.35f), if (oscuro) Color(0xFFEADCC0) else e.surface, Color(0xFF231B14), e.tertiary, t)
@@ -1205,6 +1216,55 @@ private fun DrawScope.ojo(c: Offset, r: Float, tinta: Color, rojo: Color, fondo:
 }
 
 /**
+ * Frente exterior: una chispa de tres trazos dentro de un círculo roto. El círculo es el canal, con su escala grabada y
+ * dos pilotos (rojo y ámbar) engastados en el aro; está roto arriba a la derecha, y por la rotura se escapan las ondas
+ * de la señal. La chispa da dos destellos por vuelta, como una transmisión corta, y el piloto rojo parpadea.
+ */
+private fun DrawScope.chispaCanal(c: Offset, r: Float, canal: Color, chispa: Color, senal: Color, fondo: Color, t: Float, oscuro: Boolean) {
+    val radio = r * 0.8f
+    val hueco = -50f; val abre = 56f
+    val caja = Offset(c.x - radio, c.y - radio); val lado = Size(radio * 2, radio * 2)
+    // La escala grabada por fuera del aro, salvo en la rotura.
+    for (i in 0 until 24) {
+        val g = i * 15.0
+        val dist = abs(((g - hueco + 540.0) % 360.0) - 180.0)
+        if (dist < abre / 2 + 6) continue
+        val a = rad(g)
+        drawLine(canal.copy(alpha = 0.55f), c.mas(r * 0.93f, a), c.mas(r * (if (i % 2 == 0) 1f else 0.97f), a), r * 0.035f)
+    }
+    // El aro y su bisel de dentro.
+    drawArc(canal, hueco + abre / 2, 360f - abre, false, caja, lado, style = Stroke(r * 0.11f, cap = StrokeCap.Round))
+    val ri = radio * 0.84f
+    drawArc(canal.copy(alpha = 0.4f), hueco + abre / 2 + 6f, 360f - abre - 12f, false, Offset(c.x - ri, c.y - ri), Size(ri * 2, ri * 2), style = Stroke(r * 0.03f))
+    // Las ondas de la señal: nacen junto a la chispa y salen por la rotura, apagándose.
+    for (k in 0 until 3) {
+        val f = ((t * 2f + k / 3f) % 1f)
+        val ro = r * (0.46f + 0.56f * f)
+        val al = (sin(PI * f).toFloat() * (if (oscuro) 0.9f else 0.75f)).coerceIn(0f, 1f)
+        drawArc(senal.copy(alpha = al), hueco - 20f, 40f, false, Offset(c.x - ro, c.y - ro), Size(ro * 2, ro * 2), style = Stroke(r * 0.06f, cap = StrokeCap.Round))
+    }
+    // La chispa: la célula en el centro y tres trazos que salen de ella por la rotura; destella dos veces seguidas por vuelta.
+    fun pulso(t0: Float) = (1f - abs(t - t0) / 0.03f).coerceIn(0f, 1f)
+    val destello = maxOf(pulso(0.08f), pulso(0.16f))
+    if (destello > 0f) drawCircle(Brush.radialGradient(listOf(canal.copy(alpha = 0.45f * destello), Color.Transparent), center = c, radius = r * 0.62f), r * 0.62f, c)
+    val tinta = lerp(chispa, canal, destello)
+    drawCircle(tinta, r * 0.1f, c)
+    listOf(-18f to 0.9f, 0f to 1.08f, 18f to 0.9f).forEach { (d, largo) ->
+        val a = rad((hueco + d).toDouble())
+        drawLine(tinta, c.mas(r * 0.4f, a), c.mas(r * largo, a), r * 0.08f, StrokeCap.Round)
+    }
+    // Los dos pilotos engastados en el aro, abajo a la izquierda: el rojo parpadea, el ámbar queda fijo.
+    listOf(128.0 to Color(0xFFD9372B), 152.0 to Color(0xFFF2A33A)).forEachIndexed { i, (g, luz) ->
+        val p = c.mas(radio, rad(g))
+        val encendido = if (i == 0) (if ((t * 4f) % 1f < 0.55f) 1f else 0.3f) else 1f
+        drawCircle(fondo, r * 0.13f, p)
+        if (oscuro && encendido > 0.5f) drawCircle(Brush.radialGradient(listOf(luz.copy(alpha = 0.5f), Color.Transparent), center = p, radius = r * 0.2f), r * 0.2f, p)
+        drawCircle(lerp(fondo, luz, encendido), r * 0.08f, p)
+        drawCircle(canal, r * 0.1f, p, style = Stroke(r * 0.03f))
+    }
+}
+
+/**
  * Átomo de la era atómica: un destello de ocho puntas detrás, como en los anuncios de los años cincuenta, tres órbitas,
  * un núcleo de protones y neutrones que late, y tres electrones que dejan una estela al girar.
  */
@@ -1851,6 +1911,333 @@ private fun Path.espiralFondo(c: Offset, r: Float, a0: Float, vueltas: Float, s:
 }
 
 /**
+ * Arcontes: la caliza del fondo, en tres trazos. [vetas]: los lechos de la piedra, casi horizontales y de a dos o tres, una
+ * costura dentada (estilolito) y algún fósil diminuto en espiral. [poros]: de día, los poros de la piedra; de noche, el aura de
+ * la grieta. [grieta]: la raja finísima que entra por el borde derecho, se quiebra y suelta una rama, y otra corta abajo.
+ */
+private fun calizaFondo(w: Float, h: Float, u: Float, oscuro: Boolean, vetas: Path, poros: Path, grieta: Path) {
+    val az = java.util.Random(30)
+    // Los lechos.
+    var y = (20 + az.nextFloat() * 40) * u
+    while (y < h) {
+        val n = 1 + az.nextInt(3)
+        val x0 = -10 * u + az.nextFloat() * w * 0.3f
+        val x1 = w * (0.55f + az.nextFloat() * 0.6f)
+        val incl = (az.nextFloat() - 0.5f) * 30 * u
+        for (k in 0 until n) {
+            val dy = k * (3 + az.nextFloat() * 4) * u
+            val a = (1.5f + az.nextFloat() * 3) * u
+            var x = x0 + k * az.nextFloat() * 20 * u
+            val paso = (40 + az.nextFloat() * 30) * u
+            vetas.moveTo(x, y + dy + incl * x / w)
+            var lado = 1f
+            while (x < x1 - k * 15 * u) {
+                val nx = x + paso
+                vetas.quadraticTo(x + paso / 2, y + dy + incl * (x + paso / 2) / w + lado * a, nx, y + dy + incl * nx / w + (az.nextFloat() - 0.5f) * a * 0.6f)
+                x = nx; lado = -lado
+            }
+        }
+        y += (34 + az.nextFloat() * 56) * u
+    }
+    // Una veta larga de calcita que cruza en diagonal, curva (una sola: dos se cruzarían en aspa).
+    run {
+        val ya = h * (0.2f + az.nextFloat() * 0.4f); val yb = ya + h * (0.15f + az.nextFloat() * 0.25f)
+        vetas.moveTo(-4 * u, ya)
+        vetas.cubicTo(w * 0.3f, ya + (az.nextFloat() - 0.5f) * h * 0.1f, w * 0.65f, yb + (az.nextFloat() - 0.5f) * h * 0.1f, w + 4 * u, yb)
+    }
+    // Las costuras dentadas: los dientes de la piedra que se apretó al hacerse.
+    repeat((h / (420 * u)).toInt().coerceIn(1, 3)) {
+        var x = az.nextFloat() * w * 0.5f
+        val fin = x + w * (0.25f + az.nextFloat() * 0.3f)
+        val yy = az.nextFloat() * h
+        vetas.moveTo(x, yy)
+        while (x < fin) {
+            val p = (2.5f + az.nextFloat() * 3.5f) * u
+            val alto = (0.8f + az.nextFloat() * 2.2f) * u * (if (az.nextBoolean()) 1f else -1f)
+            vetas.lineTo(x, yy + alto); vetas.lineTo(x + p * 0.6f, yy + alto); vetas.lineTo(x + p * 0.6f, yy); vetas.lineTo(x + p, yy)
+            x += p
+        }
+    }
+    // Los fósiles diminutos: una espiral de vuelta y media.
+    repeat(((w * h) / (90000f * u * u)).toInt().coerceIn(2, 12)) {
+        val cx = az.nextFloat() * w; val cy = az.nextFloat() * h; val r = (2f + az.nextFloat() * 1.8f) * u; val a0 = az.nextFloat() * 6.28f
+        for (k in 0..18) {
+            val f = k / 18f; val a = a0 + f * 3f * PI.toFloat(); val rr = r * (1f - 0.75f * f)
+            if (k == 0) vetas.moveTo(cx + rr * cos(a), cy + rr * sin(a)) else vetas.lineTo(cx + rr * cos(a), cy + rr * sin(a))
+        }
+    }
+    // Los poros, sueltos y en grumos (solo de día: de noche la piedra apenas se ve).
+    if (!oscuro) repeat(((w * h) / (1100f * u * u)).toInt().coerceIn(40, 1200)) {
+        val x = az.nextFloat() * w; val yy = az.nextFloat() * h
+        val grumo = if (az.nextFloat() < 0.3f) 2 + az.nextInt(3) else 1
+        repeat(grumo) {
+            val px = x + (az.nextFloat() - 0.5f) * 6 * u * (grumo - 1); val py = yy + (az.nextFloat() - 0.5f) * 5 * u * (grumo - 1)
+            val r = (0.35f + az.nextFloat() * az.nextFloat() * az.nextFloat() * 1.3f) * u
+            poros.addOval(Rect(px - r, py - r * 0.8f, px + r, py + r * 0.8f))
+        }
+    }
+    // Las grietas: quebradas, más abiertas donde entran y cada vez más finas; el cuerpo va con los poros (de noche, su aura).
+    fun raja(x0: Float, y0: Float, rumbo: Float, largo: Float, abre: Float, rama: Boolean) {
+        val nudos = ArrayList<Offset>(); var x = x0; var yy = y0; var hecho = 0f; var dir = rumbo
+        nudos.add(Offset(x, yy))
+        while (hecho < largo) {
+            // Un paso corto que se tuerce poco a poco y, de vez en cuando, quiebra de golpe.
+            val p = (3f + az.nextFloat() * 4f) * u
+            dir += (az.nextFloat() - 0.5f) * (if (az.nextFloat() < 0.06f) 0.9f else 0.32f)
+            dir = dir * 0.85f + rumbo * 0.15f
+            x += cos(dir) * p; yy += sin(dir) * p; hecho += p
+            nudos.add(Offset(x, yy))
+        }
+        grieta.moveTo(nudos[0].x, nudos[0].y)
+        for (k in 1 until nudos.size) grieta.lineTo(nudos[k].x, nudos[k].y)
+        val ancho = if (oscuro) abre * 4f else abre
+        val izq = ArrayList<Offset>(); val der = ArrayList<Offset>()
+        for (k in nudos.indices) {
+            val a = nudos[maxOf(k - 1, 0)]; val b = nudos[minOf(k + 1, nudos.size - 1)]
+            val l = (b - a).getDistance().coerceAtLeast(0.001f)
+            val nx = -(b.y - a.y) / l; val ny = (b.x - a.x) / l
+            val m = ancho * (1f - k / (nudos.size - 1f)) / 2
+            izq.add(Offset(nudos[k].x + nx * m, nudos[k].y + ny * m)); der.add(Offset(nudos[k].x - nx * m, nudos[k].y - ny * m))
+        }
+        poros.moveTo(izq[0].x, izq[0].y)
+        for (k in 1 until izq.size) poros.lineTo(izq[k].x, izq[k].y)
+        for (k in der.indices.reversed()) poros.lineTo(der[k].x, der[k].y)
+        poros.close()
+        if (rama && nudos.size > 6) {
+            val de = nudos[nudos.size * 2 / 5]
+            val lado = if (az.nextBoolean()) 1f else -1f
+            grieta.moveTo(de.x, de.y)
+            var bx = de.x; var by = de.y
+            var d = rumbo + lado * 0.9f
+            repeat(7 + az.nextInt(6)) {
+                d += (az.nextFloat() - 0.5f) * 0.6f; val p = (2.5f + az.nextFloat() * 3.5f) * u
+                bx += cos(d) * p; by += sin(d) * p; grieta.lineTo(bx, by)
+            }
+        }
+    }
+    raja(w + 2 * u, h * (0.3f + az.nextFloat() * 0.12f), PI.toFloat() * 0.9f, w * 0.42f, 1.8f * u, true)
+    raja(w * (0.04f + az.nextFloat() * 0.1f), h + 2 * u, -PI.toFloat() * 0.38f, h * 0.12f, 1.2f * u, false)
+}
+
+/**
+ * Art nouveau: la cenefa del papel del taller (como `papel_nouveau.jpg`). A cada lado, dos tallos finos que suben desde
+ * abajo ondulando apenas y arriba se enroscan hacia dentro, en [lineas]; hojas de sauce alternas, en [hojas]; y algún
+ * lirio (tres pétalos que suben y dos que caen) con su capullo, en contorno, en [flores]. En medio, la fibra del papel:
+ * hebras cortas y sueltas, casi invisibles.
+ */
+private fun cenefaNouveau(w: Float, h: Float, u: Float, lineas: Path, hojas: Path, flores: Path) {
+    val azar = java.util.Random(1900)
+    for (lado in listOf(-1f, 1f)) {
+        val orilla = if (lado < 0f) 0f else w
+        for (k in 0 until 2) {
+            val x0 = orilla - lado * (10f + 12f * k) * u
+            val tope = h * (0.07f + 0.09f * k + if (lado > 0f) 0.03f else 0f)
+            val amp = (3f + 1.5f * k) * u; val onda = h * (0.55f + 0.2f * k); val fase = k * 1.7f + (if (lado > 0f) 0.9f else 0f)
+            fun x(y: Float) = x0 + amp * sin((y / onda) * 2f * PI.toFloat() + fase)
+            // El tallo, de abajo arriba.
+            var y = h + 2f * u
+            lineas.moveTo(x(y), y)
+            while (y > tope) { y -= 6f * u; lineas.lineTo(x(maxOf(y, tope)), maxOf(y, tope)) }
+            // Arriba, el rizo hacia dentro de la página.
+            val fin = Offset(x(tope), tope)
+            val rizo = with(TrazosNouveau) { puntosRizo(fin, Offset(-lado * 0.35f, -1f), (6f + 2f * k) * u, lado < 0f, 1.25f, 30) }
+            rizo.forEach { q -> lineas.lineTo(q.x, q.y) }
+            // Las hojas de sauce, alternas, con su rabillo.
+            var yh = h - (30f + 22f * k) * u; var n = 0
+            while (yh > tope + 40f * u) {
+                val s = if (n % 2 == 0) 1f else -1f
+                val p = Offset(x(yh), yh)
+                val l = (16f + 6f * azar.nextFloat()) * u
+                val punta = Offset(p.x + s * l * 0.62f, p.y - l * 0.8f)
+                hojas.addPath(TrazosNouveau.hojaLanza(p, punta, l * 0.26f, -0.18f * s))
+                yh -= (52f + 30f * azar.nextFloat()) * u; n++
+            }
+            // Un lirio por tallo, a distinta altura, y el capullo que le sigue.
+            val yf = h * (0.36f + 0.22f * k + (if (lado > 0f) 0.08f else 0f))
+            val pf = Offset(x(yf), yf)
+            val sale = Offset(pf.x - lado * 7f * u, pf.y - 6f * u)
+            lineas.moveTo(pf.x, pf.y); lineas.quadraticTo(pf.x - lado * 2f * u, pf.y - 5f * u, sale.x, sale.y)
+            val r = 7f * u
+            listOf(-0.5f, 0f, 0.5f).forEach { a -> flores.addPath(TrazosNouveau.petalo(sale, Offset(sale.x + sin(a) * r * 1.2f, sale.y - cos(a) * r * (if (a == 0f) 1.35f else 1.1f)), r * 0.85f)) }
+            listOf(-1.25f, 1.25f).forEach { a -> flores.addPath(TrazosNouveau.petalo(sale, Offset(sale.x + sin(a) * r * 1.2f, sale.y + r * 0.55f), r * 0.75f)) }
+            val yc = yf - 46f * u
+            if (yc > tope + 16f * u) {
+                val pc = Offset(x(yc), yc)
+                val cc = Offset(pc.x + lado * 5f * u, pc.y - 5f * u)
+                lineas.moveTo(pc.x, pc.y); lineas.lineTo(cc.x, cc.y)
+                flores.addPath(TrazosNouveau.petalo(cc, Offset(cc.x + lado * 2f * u, cc.y - 9f * u), 4.6f * u))
+            }
+        }
+    }
+    // La fibra del papel: hebras cortas, sueltas y curvas.
+    repeat(((w * h) / 9000f).toInt().coerceIn(20, 160)) {
+        val cx = azar.nextFloat() * w; val cy = azar.nextFloat() * h
+        val l = (2f + 4f * azar.nextFloat()) * u; val a = azar.nextFloat() * PI.toFloat()
+        hojas.addOval(if (a < 1.6f) Rect(cx - l * 0.5f, cy - 0.25f * u, cx + l * 0.5f, cy + 0.25f * u) else Rect(cx - 0.25f * u, cy - l * 0.5f, cx + 0.25f * u, cy + l * 0.5f))
+    }
+}
+
+/**
+ * Galia: la pared de la casa grande del oppidum, en tres trazos. Arriba, el barro con la paja picada que lleva dentro
+ * ([paja], briznas y poros, en relleno), sus grietas de secado y, donde el barro se cayó, el borde mellado del hueco
+ * ([lineas]) y el zarzo: las estacas y las varas tejidas entre ellas ([zarzo]). Abajo, el tablado: la viga con sus
+ * clavijas y las tablas de pie, con su veta ([zarzo]) y algún nudo.
+ */
+private fun paredGalia(w: Float, h: Float, u: Float, lineas: Path, paja: Path, zarzo: Path) {
+    val az = java.util.Random(52)
+    val tablado = h - minOf(h * 0.24f, 150 * u)
+    // La paja picada: briznas finas y cortas, más bien tumbadas, y los poros del barro.
+    val briznas = ((w * tablado) / (24f * 24f * u * u)).toInt().coerceIn(40, 1200)
+    repeat(briznas) {
+        val x = az.nextFloat() * w; val y = az.nextFloat() * tablado
+        val a = (az.nextFloat() - 0.5f) * 2.2f
+        val l = (4f + az.nextFloat() * 10f) * u; val g = (0.4f + az.nextFloat() * 0.5f) * u
+        val dx = cos(a) * l / 2; val dy = sin(a) * l / 2; val nx = -sin(a) * g / 2; val ny = cos(a) * g / 2
+        paja.moveTo(x - dx + nx, y - dy + ny); paja.lineTo(x + dx + nx * 0.3f, y + dy + ny * 0.3f)
+        paja.lineTo(x + dx - nx * 0.3f, y + dy - ny * 0.3f); paja.lineTo(x - dx - nx, y - dy - ny); paja.close()
+    }
+    repeat(briznas / 5) {
+        val x = az.nextFloat() * w; val y = az.nextFloat() * tablado; val r = (0.5f + az.nextFloat() * 0.8f) * u
+        paja.addOval(Rect(x - r, y - r * 0.8f, x + r, y + r * 0.8f))
+    }
+    // Las grietas de secado: quebradas, con alguna rama.
+    repeat(((w * tablado) / (260f * 260f * u * u)).toInt().coerceIn(2, 7)) {
+        var x = az.nextFloat() * w; var y = az.nextFloat() * tablado * 0.9f
+        var rumbo = az.nextFloat() * 2 * PI.toFloat()
+        lineas.moveTo(x, y)
+        val pasos = 6 + az.nextInt(8)
+        for (k in 0 until pasos) {
+            rumbo += (az.nextFloat() - 0.5f) * 1.1f; val p = (4f + az.nextFloat() * 7f) * u
+            x += cos(rumbo) * p; y += sin(rumbo) * p; lineas.lineTo(x, y)
+            if (k == pasos / 2 && az.nextBoolean()) {
+                var bx = x; var by = y; var br = rumbo + (if (az.nextBoolean()) 1f else -1f) * 1.1f
+                repeat(3 + az.nextInt(3)) { br += (az.nextFloat() - 0.5f) * 0.8f; bx += cos(br) * 4 * u; by += sin(br) * 4 * u; lineas.lineTo(bx, by) }
+                lineas.moveTo(x, y)
+            }
+        }
+    }
+    // Donde el barro se cayó, el zarzo: el borde mellado del hueco, las estacas de pie y las varas que pasan por delante y
+    // por detrás de cada una.
+    repeat(if (w * tablado > 160000f * u * u) 2 else 1) { k ->
+        val cx = w * (if (k == 0) 0.78f else 0.16f) + (az.nextFloat() - 0.5f) * 30 * u
+        val cy = tablado * (if (k == 0) 0.3f else 0.72f) + (az.nextFloat() - 0.5f) * 40 * u
+        val rx = (38f + az.nextFloat() * 22f) * u; val ry = (24f + az.nextFloat() * 12f) * u
+        val borde = 34
+        var x0 = 0f; var y0 = 0f
+        for (i in 0 until borde) {
+            val a = 2 * PI.toFloat() * i / borde
+            val m = 0.8f + az.nextFloat() * 0.3f + 0.08f * sin(a * 3f)
+            val px = cx + cos(a) * rx * m; val py = cy + sin(a) * ry * m
+            if (i == 0) { lineas.moveTo(px, py); x0 = px; y0 = py } else lineas.lineTo(px, py)
+        }
+        lineas.lineTo(x0, y0)
+        val paso = 13 * u
+        var ex = cx - rx * 0.75f
+        while (ex < cx + rx * 0.8f) {
+            val med = 1f - ((ex - cx) / rx).let { it * it }
+            if (med > 0.05f) {
+                val alto = ry * sqrt(med) * 0.8f
+                zarzo.moveTo(ex, cy - alto); zarzo.lineTo(ex, cy + alto)
+            }
+            ex += paso * 2
+        }
+        var vy = cy - ry * 0.7f; var fila = 0
+        while (vy < cy + ry * 0.7f) {
+            val med = 1f - ((vy - cy) / ry).let { it * it }
+            val ancho = rx * sqrt(med.coerceAtLeast(0f)) * 0.78f
+            var x = cx - ancho
+            zarzo.moveTo(x, vy)
+            var tramo = fila
+            while (x < cx + ancho) {
+                val sig = minOf(x + paso, cx + ancho)
+                val lado = if (tramo % 2 == 0) 1f else -1f
+                zarzo.quadraticTo((x + sig) / 2, vy + lado * 2.4f * u, sig, vy)
+                x = sig; tramo++
+            }
+            vy += 5.5f * u; fila++
+        }
+    }
+    // El tablado: la viga con sus clavijas y las tablas de pie, cada una con su veta, que rodea los nudos.
+    lineas.moveTo(0f, tablado); lineas.lineTo(w, tablado)
+    lineas.moveTo(0f, tablado + 11 * u); lineas.lineTo(w, tablado + 11 * u)
+    var x = -az.nextFloat() * 20 * u
+    while (x < w) {
+        val ancho = (24f + az.nextFloat() * 14f) * u
+        val sig = x + ancho
+        lineas.moveTo(sig, tablado + 11 * u); lineas.lineTo(sig + (az.nextFloat() - 0.5f) * 1.5f * u, h)
+        paja.addOval(Rect(x + ancho / 2 - 1.6f * u, tablado + 4 * u, x + ancho / 2 + 1.6f * u, tablado + 7.2f * u))
+        val nudo = if (az.nextFloat() < 0.3f) Offset(x + ancho * (0.3f + az.nextFloat() * 0.4f), tablado + 20 * u + az.nextFloat() * (h - tablado - 30 * u)) else null
+        if (nudo != null) lineas.addOval(Rect(nudo.x - 2.6f * u, nudo.y - 4f * u, nudo.x + 2.6f * u, nudo.y + 4f * u))
+        val vetas = 2 + az.nextInt(2)
+        for (v in 0 until vetas) {
+            var vx = x + ancho * (v + 1) / (vetas + 1f)
+            var vy = tablado + 13 * u
+            val fase = az.nextFloat() * 6f
+            zarzo.moveTo(vx, vy)
+            while (vy < h) {
+                vy += 6 * u
+                var dx = sin(vy / (23 * u) + fase) * 0.9f * u
+                if (nudo != null) {
+                    val d = vy - nudo.y
+                    if (abs(d) < 12 * u) dx += (if (vx < nudo.x) -1f else 1f) * (5f * u) * (1f - abs(d) / (12 * u))
+                }
+                vx += (az.nextFloat() - 0.5f) * 0.3f * u
+                zarzo.lineTo(vx + dx, vy)
+            }
+        }
+        x = sig
+    }
+}
+
+/**
+ * Psicodelia v2: el fondo del tema, según su cara ([cara]).
+ * - La ciudad: el papel de foto, con su grano en [puntos] (motas finas, al azar, siempre las mismas) y, en [fibras], las
+ *   fibras cortas del papel. De día la luz de la tarde entra por la izquierda; de noche, la de la lámpara (la pone
+ *   `fondoTema` con su `luz`).
+ * - La tinta: el papel de cartel (o el negro de terciopelo) con la trama de líneas apenas visible: en [lineas], la trama en
+ *   diagonal que se apaga desde la esquina de arriba a la derecha; en [fibras], los rayos que ondulan del sol del cartel
+ *   que asoma por esa esquina, en línea fina.
+ */
+private fun fondoPsicodelia(w: Float, h: Float, u: Float, cara: Cara, lineas: Path, puntos: Path, fibras: Path) {
+    val azar = java.util.Random(1967)
+    when (cara) {
+        Cara.BASE -> {
+            repeat(((w * h) / (900f * u * u)).toInt().coerceIn(200, 2400)) {
+                val x = azar.nextFloat() * w; val y = azar.nextFloat() * h; val rr = (0.35f + azar.nextFloat() * 0.5f) * u
+                puntos.addOval(Rect(x - rr, y - rr, x + rr, y + rr))
+            }
+            repeat(((w * h) / (6000f * u * u)).toInt().coerceIn(30, 360)) {
+                val x = azar.nextFloat() * w; val yy = azar.nextFloat() * h; val l = (1.5f + azar.nextFloat() * 4f) * u; val a = azar.nextFloat() * 6.283f
+                fibras.moveTo(x, yy); fibras.quadraticTo(x + l * 0.5f * cos(a + 0.6f), yy + l * 0.5f * sin(a + 0.6f), x + l * cos(a), yy + l * sin(a))
+            }
+        }
+        Cara.INTENSA -> {
+            // La trama: diagonales cada 6 dp en el triángulo de arriba a la derecha (hasta 60 % del lado menor).
+            val lado = minOf(w, h, 520f * u) * 0.6f
+            val paso = maxOf(6f * u, 1f)
+            var d = 0f
+            while (d < lado) {
+                lineas.moveTo(w - lado + d, 0f); lineas.lineTo(w, lado - d)
+                d += paso
+            }
+            // Los rayos del sol que asoma por la esquina: líneas que ondulan, de 1.1 a 2.4 veces el radio.
+            val o = Offset(w, 0f); val r = minOf(w, h) * 0.22f
+            for (k in 0 until 18) {
+                val a0 = (PI / 2 + PI / 2 * (k + 0.5) / 18).toFloat()
+                var t = 0f; var primero = true
+                while (t <= 1.001f) {
+                    val rr = r * (1.1f + 1.3f * t)
+                    val an = a0 + 0.05f * sin(t * 2f * PI.toFloat() * 1.5f)
+                    val x = o.x + rr * cos(an); val y = o.y + rr * sin(an)
+                    if (primero) { fibras.moveTo(x, y); primero = false } else fibras.lineTo(x, y)
+                    t += 0.05f
+                }
+            }
+        }
+    }
+}
+
+/**
  * Una textura muy tenue detrás de todo: vetas de mármol, retícula de terminal, guijarros de Pela, renglones de pergamino,
  * trama de imprenta, papel tapiz atómico o líneas de pantalla antigua, papel milimétrico… Cada tema tiene la suya.
  * Se dibuja una sola vez y se reutiliza.
@@ -1866,6 +2253,8 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
     var color3 = Color.Transparent
     // El grosor del trazo, en dp: igual de fino en cualquier pantalla. Las texturas muy tupidas lo bajan para no empastar.
     var grosor = 0.6f
+    // Una luz por debajo de la textura, para el tema que la pide (la hoguera de Galia).
+    var luz: Brush? = null
     val w = size.width; val h = size.height
     when (tema) {
         TemaId.CIBER -> {
@@ -1997,6 +2386,122 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
                     x += p
                 }
                 y += p * 0.87f; fila++
+            }
+        }
+        TemaId.PSICODELIA -> {
+            // La ciudad: el papel de foto con su grano y sus fibras, y la luz de la tarde por la izquierda (de noche, la de la
+            // lámpara arriba a la izquierda). La tinta: el papel de cartel (o el negro de terciopelo) con la trama de líneas
+            // y los rayos del sol que asoma por la esquina de arriba, apenas visibles. Lee la cara (`EstadoTema`): al cambiar,
+            // la caché de este dibujo se rehace sola.
+            val cara = EstadoTema.caraDe(tema)
+            fondoPsicodelia(w, h, 1.dp.toPx(), cara, trazo, puntos, trazo2)
+            when (cara) {
+                Cara.BASE -> {
+                    color2 = (if (oscuro) TrazosCiudad.LAMPARA else TrazosCiudad.SOMBRA).copy(alpha = if (oscuro) 0.05f else 0.07f)
+                    color3 = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.06f)
+                    grosor = 0.6f
+                    luz = if (oscuro) Brush.radialGradient(listOf(TrazosCiudad.LAMPARA_LUZ.copy(alpha = 0.07f), Color.Transparent), Offset(w * 0.1f, -h * 0.02f), maxOf(w, h) * 0.8f)
+                    else Brush.horizontalGradient(listOf(TrazosCiudad.AL_SOL.copy(alpha = 0.35f), Color.Transparent), 0f, w * 0.7f)
+                }
+                Cara.INTENSA -> {
+                    color = TrazosTinta.grabado(oscuro).copy(alpha = if (oscuro) 0.05f else 0.045f)
+                    color3 = TrazosTinta.tinta(TrazosTinta.Tinta.MAGENTA, oscuro, 0f).copy(alpha = if (oscuro) 0.08f else 0.07f)
+                    grosor = 0.7f
+                }
+            }
+        }
+        TemaId.NOUVEAU -> {
+            // El papel crema del taller, con su fibra apenas visible, y a cada lado una cenefa de tallos que suben y se
+            // enroscan arriba, con hojas de sauce y algún lirio. De día, la luz difusa que entra por el vidrio del taller; de
+            // noche, el mismo papel bajo una lámpara de vidrio: la luz ámbar arriba que se va al violeta en la orilla.
+            color = esquema.primary.copy(alpha = if (oscuro) 0.08f else 0.13f)
+            color2 = esquema.primary.copy(alpha = if (oscuro) 0.06f else 0.08f)
+            color3 = esquema.secondary.copy(alpha = if (oscuro) 0.13f else 0.16f)
+            grosor = 0.8f
+            luz = if (oscuro) Brush.radialGradient(listOf(TrazosNouveau.LUZ.copy(alpha = 0.1f), TrazosNouveau.VIDRIO_AMBAR.copy(alpha = 0.05f),
+                TrazosNouveau.VIDRIO_VIOLETA.copy(alpha = 0.035f), Color.Transparent), Offset(w * 0.5f, -h * 0.04f), maxOf(w, h) * 0.75f)
+            else Brush.radialGradient(listOf(Color.White.copy(alpha = 0.2f), Color.Transparent), Offset(w * 0.3f, 0f), maxOf(w, h) * 0.7f)
+            cenefaNouveau(w, h, 1.dp.toPx(), trazo, puntos, trazo2)
+        }
+        TemaId.GALIA -> {
+            // La pared de la casa grande: el barro con su paja, sus grietas y, donde se cayó, el zarzo; abajo, el tablado de
+            // madera. De día, el sol que entra de arriba; de noche, el mismo muro a la luz de la hoguera, que llega de abajo.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.05f else 0.06f)
+            color2 = if (oscuro) esquema.primary.copy(alpha = 0.06f) else esquema.secondary.copy(alpha = 0.1f)
+            color3 = esquema.onBackground.copy(alpha = if (oscuro) 0.06f else 0.07f)
+            grosor = 0.6f
+            luz = if (oscuro) Brush.radialGradient(listOf(esquema.primary.copy(alpha = 0.1f), esquema.primary.copy(alpha = 0.035f), Color.Transparent),
+                Offset(w * 0.12f, h * 1.02f), maxOf(w, h) * 0.85f)
+            else Brush.radialGradient(listOf(Color.White.copy(alpha = 0.18f), Color.Transparent), Offset(w * 0.2f, 0f), maxOf(w, h) * 0.7f)
+            paredGalia(w, h, 1.dp.toPx(), trazo, puntos, trazo2)
+        }
+        TemaId.ARCONTES -> {
+            // La caliza de las casas de Galilea: los lechos de la piedra, que ondulan apenas; alguna costura dentada; los poros
+            // y algún fósil diminuto; y una grieta finísima que entra por el borde. De noche, la misma piedra apenas vista, y
+            // por la grieta, un hilo de la luz blanca y violeta.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.035f else 0.05f)
+            color2 = if (oscuro) esquema.tertiary.copy(alpha = 0.06f) else esquema.onBackground.copy(alpha = 0.07f)
+            color3 = if (oscuro) esquema.tertiary.copy(alpha = 0.3f) else esquema.onBackground.copy(alpha = 0.12f)
+            grosor = 0.6f
+            calizaFondo(w, h, 1.dp.toPx(), oscuro, trazo, puntos, trazo2)
+        }
+        TemaId.FRENTE -> {
+            // El muro de la base: sillares viejos a soga, con las juntas gastadas y alguna esquina desportillada; manchas de
+            // humedad y de musgo pegadas a las juntas de arriba; y, desde el borde de arriba, raíces que cuelgan entre las
+            // piedras, se tuercen y sueltan alguna rama fina.
+            color = esquema.onBackground.copy(alpha = if (oscuro) 0.06f else 0.05f)
+            color2 = esquema.tertiary.copy(alpha = if (oscuro) 0.06f else 0.05f)
+            color3 = esquema.onBackground.copy(alpha = if (oscuro) 0.12f else 0.09f)
+            grosor = 0.6f
+            val u = 1.dp.toPx(); val alto = 38 * u
+            val azar = java.util.Random(1977)
+            var y = 0f; var fila = 0
+            while (y < h) {
+                // La junta de la hilada, que no es del todo recta: se quiebra un poco en cada sillar.
+                var x = -(azar.nextFloat() * 60 * u) - (if (fila % 2 == 0) 0f else 40 * u)
+                while (x < w) {
+                    val ancho = (56 + azar.nextFloat() * 70) * u
+                    val caida = (azar.nextFloat() - 0.5f) * 2.4f * u
+                    trazo.moveTo(x + 2 * u, y + alto + caida); trazo.lineTo(x + ancho - 2 * u, y + alto - caida)
+                    trazo.moveTo(x + ancho, y + 3 * u); trazo.lineTo(x + ancho + (azar.nextFloat() - 0.5f) * 2 * u, y + alto - 3 * u)
+                    // Una esquina desportillada: el corte en diagonal y una grieta corta.
+                    if (azar.nextFloat() < 0.22f) {
+                        val ex = x + ancho - 2 * u; val ey = y + alto - 2 * u; val d = (4 + azar.nextFloat() * 6) * u
+                        trazo.moveTo(ex - d, ey); trazo.lineTo(ex, ey - d)
+                        if (azar.nextFloat() < 0.5f) { trazo.moveTo(ex - d * 0.5f, ey - d * 0.5f); trazo.lineTo(ex - d * 1.6f, ey - d * 1.4f) }
+                    }
+                    // La humedad y el musgo, en grumos de puntos bajo la junta de arriba.
+                    if (azar.nextFloat() < 0.18f) {
+                        val mx = x + azar.nextFloat() * ancho; val my = y + 3 * u
+                        repeat(6 + azar.nextInt(8)) {
+                            val rr = (0.5f + azar.nextFloat() * 1.3f) * u
+                            val px = mx + (azar.nextFloat() - 0.5f) * 22 * u; val py = my + azar.nextFloat() * 9 * u
+                            puntos.addOval(Rect(px - rr, py - rr, px + rr, py + rr))
+                        }
+                    }
+                    x += ancho
+                }
+                y += alto; fila++
+            }
+            // Las raíces: bajan desde arriba culebreando; las más largas sueltan una o dos ramas finas.
+            repeat(((w / (130 * u)).toInt()).coerceIn(2, 7)) { k ->
+                var px = (k + 0.2f + azar.nextFloat() * 0.6f) * w / ((w / (130 * u)).toInt().coerceIn(2, 7))
+                var py = -2 * u
+                val largo = h * (0.18f + azar.nextFloat() * 0.34f)
+                trazo2.moveTo(px, py)
+                var recorrido = 0f; var lado = if (azar.nextBoolean()) 1f else -1f
+                while (recorrido < largo) {
+                    val paso = (14 + azar.nextFloat() * 16) * u
+                    val nx = px + lado * (3 + azar.nextFloat() * 7) * u; val ny = py + paso
+                    trazo2.quadraticTo(px + lado * 6 * u, py + paso * 0.5f, nx, ny)
+                    if (azar.nextFloat() < 0.16f && recorrido > largo * 0.3f) {
+                        // Una rama fina que se abre y se acaba.
+                        val bx = nx; val by = ny; val bl = (16 + azar.nextFloat() * 22) * u
+                        trazo2.moveTo(bx, by); trazo2.quadraticTo(bx - lado * bl * 0.4f, by + bl * 0.3f, bx - lado * bl * 0.6f, by + bl)
+                        trazo2.moveTo(nx, ny)
+                    }
+                    px = nx; py = ny; recorrido += paso; lado = -lado
+                }
             }
         }
         TemaId.REFUGIO -> if (oscuro) {
@@ -2685,6 +3190,7 @@ fun Modifier.fondoTema(tema: TemaId, esquema: ColorScheme): Modifier = drawWithC
         // Recortado a la caja: varias texturas arrancan fuera de la orilla (diagonales, buses, engranes) y no deben
         // asomar sobre lo vecino cuando el fondo va en una caja chica (vista previa del tapiz, la tarjeta del año).
         clipRect {
+            luz?.let { drawRect(it) }
             if (color.alpha > 0f) drawPath(trazo, color, style = Stroke(ancho))
             if (color2.alpha > 0f) drawPath(puntos, color2)
             if (color3.alpha > 0f) drawPath(trazo2, color3, style = Stroke(ancho, cap = StrokeCap.Round, join = StrokeJoin.Round))
@@ -2750,6 +3256,48 @@ private fun formaBoton(t: TemaId): Shape = when (t) {
     TemaId.TEMPLARIO -> poligonoBoton(0.12f to 1f, 0.12f to 0.04f, 0.3f to 0.04f, 0.3f to 0.2f, 0.41f to 0.2f, 0.41f to 0.04f, 0.59f to 0.04f,
         0.59f to 0.2f, 0.7f to 0.2f, 0.7f to 0.04f, 0.88f to 0.04f, 0.88f to 1f)
     TemaId.DISTOPIA -> poligonoBoton(0.04f to 0.12f, 0.4f to 0.12f, 0.48f to 0.24f, 0.96f to 0.24f, 0.96f to 0.92f, 0.04f to 0.92f)
+    // La ciudad: la etiqueta redonda del disco. La tinta: el marco de arco del cartel (arriba redondo, abajo casi recto).
+    TemaId.PSICODELIA -> when (EstadoTema.caraDe(t)) {
+        Cara.BASE -> CircleShape
+        Cara.INTENSA -> GenericShape { s, _ ->
+            val l = minOf(s.width, s.height)
+            addPath(TrazosTinta.arco(Rect(0f, 0f, s.width, s.height), l * 0.5f, l * 0.12f))
+        }
+    }
+    // Un jarrón de vidrio de Nancy: el cuello con su labio, los hombros y la panza redonda sobre un pie corto.
+    TemaId.NOUVEAU -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(0.28f * w, 0.02f * h); lineTo(0.72f * w, 0.02f * h)
+        cubicTo(0.64f * w, 0.09f * h, 0.62f * w, 0.17f * h, 0.74f * w, 0.25f * h)
+        cubicTo(1.01f * w, 0.4f * h, 1.02f * w, 0.8f * h, 0.74f * w, 0.93f * h)
+        lineTo(0.68f * w, 0.98f * h); lineTo(0.32f * w, 0.98f * h); lineTo(0.26f * w, 0.93f * h)
+        cubicTo(-0.02f * w, 0.8f * h, -0.01f * w, 0.4f * h, 0.26f * w, 0.25f * h)
+        cubicTo(0.38f * w, 0.17f * h, 0.36f * w, 0.09f * h, 0.28f * w, 0.02f * h); close()
+    }
+    // El escudo galo, largo y de lados casi rectos, con los extremos redondeados.
+    TemaId.GALIA -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(0.5f * w, 0.02f * h)
+        cubicTo(0.74f * w, 0.02f * h, 0.84f * w, 0.12f * h, 0.85f * w, 0.32f * h); lineTo(0.85f * w, 0.68f * h)
+        cubicTo(0.84f * w, 0.88f * h, 0.74f * w, 0.98f * h, 0.5f * w, 0.98f * h)
+        cubicTo(0.26f * w, 0.98f * h, 0.16f * w, 0.88f * h, 0.15f * w, 0.68f * h); lineTo(0.15f * w, 0.32f * h)
+        cubicTo(0.16f * w, 0.12f * h, 0.26f * w, 0.02f * h, 0.5f * w, 0.02f * h); close()
+    }
+    // La tapa de cuero de un códice cerrado, con la solapa en punta que la envuelve por delante, como los de Nag Hammadi.
+    TemaId.ARCONTES -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(0.06f * w, 0.14f * h); lineTo(0.72f * w, 0.14f * h); quadraticTo(0.8f * w, 0.14f * h, 0.84f * w, 0.24f * h)
+        lineTo(0.97f * w, 0.5f * h); lineTo(0.84f * w, 0.76f * h); quadraticTo(0.8f * w, 0.86f * h, 0.72f * w, 0.86f * h)
+        lineTo(0.06f * w, 0.86f * h); quadraticTo(0.03f * w, 0.86f * h, 0.03f * w, 0.8f * h); lineTo(0.03f * w, 0.2f * h)
+        quadraticTo(0.03f * w, 0.14f * h, 0.06f * w, 0.14f * h); close()
+    }
+    // El frente de la consola curva: la tapa arqueada arriba y los costados que se cierran hacia el pie redondeado.
+    TemaId.FRENTE -> GenericShape { s, _ ->
+        val w = s.width; val h = s.height
+        moveTo(0.04f * w, 0.32f * h); quadraticTo(0.5f * w, -0.1f * h, 0.96f * w, 0.32f * h)
+        lineTo(0.89f * w, 0.84f * h); quadraticTo(0.87f * w, 0.97f * h, 0.76f * w, 0.97f * h)
+        lineTo(0.24f * w, 0.97f * h); quadraticTo(0.13f * w, 0.97f * h, 0.11f * w, 0.84f * h); close()
+    }
     TemaId.REFUGIO -> RoundedCornerShape(30)
     TemaId.ORDEN -> GenericShape { s, _ ->
         moveTo(0.1f * s.width, 0.06f * s.height); lineTo(0.9f * s.width, 0.06f * s.height); lineTo(0.9f * s.width, 0.5f * s.height)
@@ -2860,6 +3408,11 @@ private fun textoMas(t: TemaId): String = when (t) {
     TemaId.MEDIEVAL -> "Ítem"
     TemaId.TEMPLARIO -> "Armería"
     TemaId.DISTOPIA -> "Anexo"
+    TemaId.PSICODELIA -> "Trastienda"            // lo demás está en la trastienda de la tienda de discos
+    TemaId.NOUVEAU -> "L'Atelier"              // lo demás está en el taller de litografía
+    TemaId.GALIA -> "Oppidum"                 // lo demás está en el pueblo de la colina
+    TemaId.ARCONTES -> "Apócrifo"                // «escondido»: lo que no se lee en voz alta
+    TemaId.FRENTE -> "Consola"
     TemaId.REFUGIO -> "Menú"
     TemaId.ORDEN -> "Taller"
     TemaId.VAPOR -> "Depósito"
@@ -2954,6 +3507,33 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
             // Sol tachado por el censor.
             TemaId.DISTOPIA -> { drawCircle(color, r * 0.62f, c); listOf(-0.3f, 0f, 0.3f).forEach { dy -> drawRect(fondo, Offset(c.x - r, c.y + r * dy - r * 0.05f), Size(r * 2, r * 0.1f)) }
                 drawCircle(color, r * 0.9f, c, style = Stroke(r * 0.08f)) }
+            // El sol de los carteles: el disco y, alrededor, una corona blanda de diez lóbulos, como una gota que hierve.
+            TemaId.PSICODELIA -> { drawCircle(color, r * 0.36f, c)
+                drawPath(Path().apply {
+                    for (i in 0..80) { val a = 2 * PI * i / 80; val rr = r * (0.74f + 0.14f * sin(10 * a).toFloat())
+                        val x = c.x + rr * cos(a).toFloat(); val y = c.y + rr * sin(a).toFloat(); if (i == 0) moveTo(x, y) else lineTo(x, y) }
+                    close()
+                }, color, style = Stroke(r * 0.11f, join = StrokeJoin.Round)) }
+            // El sol del cartel: el disco y, alrededor, ocho mechones que ondulan y se enroscan, como un pelo al viento.
+            TemaId.NOUVEAU -> { drawCircle(color, r * 0.34f, c)
+                for (i in 0 until 8) {
+                    val a = rad(45.0 * i - 90.0); val d = Offset(cos(a), sin(a)); val n = Offset(-sin(a), cos(a))
+                    val p0 = c + d * (r * 0.46f); val p1 = c + d * (r * 0.66f) + n * (r * 0.12f); val p2 = c + d * (r * 0.86f) - n * (r * 0.02f)
+                    drawPath(Path().apply { moveTo(p0.x, p0.y); quadraticTo(p1.x, p1.y, p2.x, p2.y) }, color, style = Stroke(r * 0.085f, cap = StrokeCap.Round))
+                    drawCircle(color, r * 0.065f, p2 + n * (r * 0.06f))
+                } }
+            // El astro de las monedas galas: la perla grande en el centro y el corro de perlas, dentro de su anillo.
+            TemaId.GALIA -> { drawCircle(color, r * 0.3f, c)
+                for (i in 0 until 8) drawCircle(color, r * 0.11f, c.mas(r * 0.58f, rad(45.0 * i - 90.0)))
+                drawCircle(color, r * 0.88f, c, style = Stroke(r * 0.07f)) }
+            // El Sol en su esfera: el disco con doce rayos, encerrado en el círculo fino que lo lleva.
+            TemaId.ARCONTES -> { drawCircle(color, r * 0.3f, c)
+                for (i in 0 until 12) { val a = rad(30.0 * i - 90.0); drawLine(color, c.mas(r * 0.42f, a), c.mas(r * (if (i % 2 == 0) 0.7f else 0.58f), a), r * 0.07f, StrokeCap.Round) }
+                drawCircle(color, r * 0.9f, c, style = Stroke(r * 0.045f)); drawCircle(color, r * 0.08f, c.mas(r * 0.9f, rad(-35.0))) }
+            // El piloto ámbar encendido: la lámpara, su bisel de cromo partido por cuatro tornillos y ocho destellos cortos.
+            TemaId.FRENTE -> { drawCircle(color, r * 0.36f, c); drawCircle(fondo, r * 0.12f, c + Offset(-r * 0.12f, -r * 0.12f))
+                for (k in 0 until 4) drawArc(color, 45f * (2 * k) + 12f, 66f, false, Offset(c.x - r * 0.56f, c.y - r * 0.56f), Size(r * 1.12f, r * 1.12f), style = Stroke(r * 0.1f))
+                for (i in 0 until 8) { val a = rad(45.0 * i + 22.5); drawLine(color, c.mas(r * 0.74f, a), c.mas(r * 0.96f, a), r * 0.1f, StrokeCap.Round) } }
             // Destello atómico de ocho puntas.
             TemaId.REFUGIO -> { for (i in 0 until 8) espina(rad(45.0 * i + 22.5), 0.2f, if (i % 2 == 0) 0.98f else 0.66f, 0.4f); drawCircle(color, r * 0.26f, c) }
             // Engrane.
@@ -3073,6 +3653,39 @@ private fun DrawScope.astroModo(tema: TemaId, esSol: Boolean, color: Color, fond
                 drawRect(color, Offset(c.x - r * 0.9f, c.y + r * 0.8f), Size(r * 1.8f, r * 0.16f)) }
             // Luna tras los barrotes.
             TemaId.DISTOPIA -> { luna(); listOf(-0.45f, 0f, 0.45f).forEach { dx -> drawLine(color, Offset(c.x + r * dx, c.y - r * 0.95f), Offset(c.x + r * dx, c.y + r * 0.95f), r * 0.08f) } }
+            // La luna creciente y una corchea: la radio que suena de noche.
+            TemaId.PSICODELIA -> { luna(0.62f, 0.3f, -0.26f, c + Offset(-r * 0.2f, -r * 0.12f))
+                val nota = c + Offset(r * 0.5f, r * 0.62f)
+                drawOval(color, Offset(nota.x - r * 0.2f, nota.y - r * 0.13f), Size(r * 0.34f, r * 0.26f))
+                drawLine(color, Offset(nota.x + r * 0.12f, nota.y - r * 0.02f), Offset(nota.x + r * 0.12f, nota.y - r * 0.72f), r * 0.08f, StrokeCap.Round)
+                drawPath(Path().apply { moveTo(nota.x + r * 0.12f, nota.y - r * 0.72f); quadraticTo(nota.x + r * 0.42f, nota.y - r * 0.55f, nota.x + r * 0.34f, nota.y - r * 0.3f) },
+                    color, style = Stroke(r * 0.08f, cap = StrokeCap.Round)) }
+            // La luna creciente y, desde abajo, un tallo que sube hacia ella y se enrosca, con una hoja de sauce.
+            TemaId.NOUVEAU -> { luna(0.56f, 0.3f, -0.24f, c + Offset(-r * 0.18f, -r * 0.2f))
+                val pie = c + Offset(r * 0.5f, r * 0.95f)
+                val cima = c + Offset(r * 0.62f, r * 0.02f)
+                drawPath(Path().apply { moveTo(pie.x, pie.y); quadraticTo(c.x + r * 0.34f, c.y + r * 0.5f, cima.x, cima.y) }, color, style = Stroke(r * 0.08f, cap = StrokeCap.Round))
+                val rizo = TrazosNouveau.puntosRizo(cima, Offset(0.3f, -1f), r * 0.16f, false, 1.2f, 18)
+                drawPath(TrazosNouveau.linea(listOf(cima) + rizo), color, style = Stroke(r * 0.07f, cap = StrokeCap.Round))
+                drawPath(TrazosNouveau.hojaLanza(c + Offset(r * 0.44f, r * 0.58f), c + Offset(r * 0.02f, r * 0.42f), r * 0.17f, 0.14f), color) }
+            // La luna del sexto día, la del muérdago (Plinio 16.250): la creciente, y abajo una ramita con sus dos hojas y la baya.
+            TemaId.GALIA -> { luna(0.62f, 0.3f, -0.26f, c + Offset(-r * 0.14f, -r * 0.16f))
+                val b = c + Offset(r * 0.42f, r * 0.5f)
+                drawLine(color, b + Offset(0f, r * 0.4f), b, r * 0.08f, StrokeCap.Round)
+                for (lado in listOf(-1f, 1f)) rotate(lado * 40f, b) { drawOval(color, Offset(b.x - r * 0.09f, b.y - r * 0.44f), Size(r * 0.18f, r * 0.42f)) }
+                drawCircle(fondo, r * 0.1f, b); drawCircle(color, r * 0.07f, b) }
+            // La Luna en la suya, la esfera más baja, y a su lado una chispa de cuatro puntas.
+            TemaId.ARCONTES -> { luna(0.5f, 0.3f, -0.22f, c + Offset(-r * 0.08f, r * 0.04f))
+                drawCircle(color, r * 0.9f, c, style = Stroke(r * 0.045f)); drawCircle(color, r * 0.08f, c.mas(r * 0.9f, rad(145.0)))
+                val q = c + Offset(r * 0.46f, -r * 0.36f)
+                drawPath(Path().apply { moveTo(q.x, q.y - r * 0.22f); quadraticTo(q.x, q.y, q.x + r * 0.15f, q.y); quadraticTo(q.x, q.y, q.x, q.y + r * 0.22f)
+                    quadraticTo(q.x, q.y, q.x - r * 0.15f, q.y); quadraticTo(q.x, q.y, q.x, q.y - r * 0.22f); close() }, color) }
+            // La luna dentro del canal roto, y por la rotura se asoma una chispa.
+            TemaId.FRENTE -> { luna(0.5f, 0.26f, -0.2f)
+                drawArc(color, -22f, 304f, false, Offset(c.x - r * 0.9f, c.y - r * 0.9f), Size(r * 1.8f, r * 1.8f), style = Stroke(r * 0.09f, cap = StrokeCap.Round))
+                val q = c.mas(r * 0.9f, rad(-50.0))
+                drawPath(Path().apply { moveTo(q.x + r * 0.08f, q.y - r * 0.2f); lineTo(q.x - r * 0.06f, q.y + r * 0.01f); lineTo(q.x + r * 0.06f, q.y - r * 0.01f); lineTo(q.x - r * 0.08f, q.y + r * 0.2f) },
+                    color, style = Stroke(r * 0.07f, cap = StrokeCap.Round, join = StrokeJoin.Round)) }
             // Luna con una órbita de átomo.
             TemaId.REFUGIO -> { luna(0.62f, 0.3f, -0.24f); rotate(-30f, c) { drawOval(color, Offset(c.x - r * 0.95f, c.y - r * 0.32f), Size(r * 1.9f, r * 0.64f), style = Stroke(r * 0.06f)) } }
             // Luna remachada.
@@ -3198,6 +3811,35 @@ private fun DrawScope.lupaTema(tema: TemaId, color: Color) {
         // Cruz de mira en el cristal.
         TemaId.DISTOPIA -> { lente(); mango()
             drawLine(color, Offset(c.x - lr * 0.6f, c.y), Offset(c.x + lr * 0.6f, c.y), r * 0.05f); drawLine(color, Offset(c.x, c.y - lr * 0.6f), Offset(c.x, c.y + lr * 0.6f), r * 0.05f) }
+        // La lupa del cartelista sobre el disco: en el cristal, la etiqueta con su agujero y un surco.
+        TemaId.PSICODELIA -> { lente(); mango(0.86f, 0.13f)
+            drawCircle(color, lr * 0.32f, c)
+            drawCircle(color, lr * 0.62f, c, style = Stroke(r * 0.03f)) }
+        // El aro de la lupa y el mango que es un tallo: baja en curva, echa una hoja y acaba en un rizo.
+        TemaId.NOUVEAU -> { lente()
+            val a = Offset(r * 0.63f, r * 0.63f); val b = Offset(r * 0.86f, r * 0.9f)
+            drawPath(Path().apply { moveTo(a.x, a.y); quadraticTo(r * 0.82f, r * 0.68f, b.x, b.y) }, color, style = Stroke(r * 0.13f, cap = StrokeCap.Round))
+            drawPath(TrazosNouveau.linea(listOf(b) + TrazosNouveau.puntosRizo(b, Offset(0.3f, 1f), r * 0.07f, false, 1.1f, 14)), color, style = Stroke(r * 0.07f, cap = StrokeCap.Round))
+            drawPath(TrazosNouveau.hojaLanza(Offset(r * 0.72f, r * 0.72f), Offset(r * 0.52f, r * 0.94f), r * 0.11f, -0.15f), color)
+            drawCircle(color, r * 0.045f, c + Offset(-lr * 0.35f, -lr * 0.35f)) }
+        // El aro torcido como un torques, de vueltas sesgadas, y el mango rematado en el disco del tampón.
+        TemaId.GALIA -> { mango(0.84f, 0.12f)
+            for (i in 0 until 16) { val a = 22.5f * i; val p = c.mas(lr, rad(a.toDouble()))
+                rotate(a + 125f, p) { drawOval(color, Offset(p.x - g * 0.85f, p.y - g * 0.42f), Size(g * 1.7f, g * 0.84f)) } }
+            rotate(45f, Offset(r * 0.88f, r * 0.88f)) { drawOval(color, Offset(r * 0.8f, r * 0.76f), Size(r * 0.16f, r * 0.24f)) } }
+        // El que busca, que no deje de buscar hasta que halle (Evangelio de Tomás, dicho 2): la chispa dentro del cristal, y
+        // el mango de caña, con sus nudos.
+        TemaId.ARCONTES -> { lente(); mango(0.92f, 0.11f)
+            drawPath(Path().apply { moveTo(c.x, c.y - lr * 0.62f); quadraticTo(c.x, c.y, c.x + lr * 0.42f, c.y); quadraticTo(c.x, c.y, c.x, c.y + lr * 0.62f)
+                quadraticTo(c.x, c.y, c.x - lr * 0.42f, c.y); quadraticTo(c.x, c.y, c.x, c.y - lr * 0.62f); close() }, color)
+            listOf(0.74f, 0.84f).forEach { k -> drawLine(color, Offset(r * k - r * 0.07f, r * k + r * 0.07f), Offset(r * k + r * 0.07f, r * k - r * 0.07f), r * 0.04f) } }
+        // La pantalla de radar por cristal, con su barrido y un eco; el mango es de baquelita, con su anillo de cromo.
+        TemaId.FRENTE -> { lente()
+            drawArc(color.copy(alpha = 0.55f), -105f, 60f, true, Offset(c.x - lr * 0.78f, c.y - lr * 0.78f), Size(lr * 1.56f, lr * 1.56f))
+            drawLine(color, c, c.mas(lr * 0.78f, rad(-45.0)), r * 0.04f); drawCircle(color, r * 0.03f, c)
+            drawCircle(color, r * 0.035f, c.mas(lr * 0.5f, rad(160.0)))
+            mango(0.92f, 0.15f, 0.66f)
+            drawLine(color, Offset(r * 0.66f, r * 0.8f), Offset(r * 0.8f, r * 0.66f), r * 0.05f) }
         // Mango con dos aros y un brillo en el cristal.
         TemaId.REFUGIO -> { lente(); mango(); listOf(0.74f, 0.83f).forEach { k -> val p = Offset(r * k, r * k); drawLine(color, p + Offset(-r * 0.08f, r * 0.08f), p + Offset(r * 0.08f, -r * 0.08f), r * 0.05f) }
             drawCircle(color, r * 0.05f, c + Offset(-lr * 0.35f, -lr * 0.35f)) }
@@ -3295,7 +3937,7 @@ fun BotonModo(modifier: Modifier = Modifier) {
     val color = MaterialTheme.colorScheme.primary
     val fondo = MaterialTheme.colorScheme.background
     val borde = MaterialTheme.colorScheme.outline
-    val forma = remember(tema) { formaBoton(tema) }
+    val forma = remember(tema, EstadoTema.caraDe(tema)) { formaBoton(tema) }
     Box(
         // 48 dp de espacio para el dedo alrededor del marco de 36 (N-27).
         modifier.padding(start = 4.dp).minimumInteractiveComponentSize().size(36.dp).clip(forma).border(1.dp, borde, forma).clickable {
@@ -3316,7 +3958,7 @@ fun BotonBuscar(modifier: Modifier = Modifier, onClick: () -> Unit) {
     val color = MaterialTheme.colorScheme.primary
     val borde = MaterialTheme.colorScheme.outline
     val sentir = rememberSentir()
-    val forma = remember(tema) { formaBoton(tema) }
+    val forma = remember(tema, EstadoTema.caraDe(tema)) { formaBoton(tema) }
     Box(
         modifier.minimumInteractiveComponentSize().size(36.dp).clip(forma).border(1.dp, borde, forma).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
             .semantics { contentDescription = "Buscar en todo" },
@@ -3335,7 +3977,7 @@ fun BotonDia(anterior: Boolean, modifier: Modifier = Modifier, onClick: () -> Un
     val tema = Estilo.tema
     val borde = MaterialTheme.colorScheme.outline
     val sentir = rememberSentir()
-    val forma = remember(tema) { formaBoton(tema) }
+    val forma = remember(tema, EstadoTema.caraDe(tema)) { formaBoton(tema) }
     val d = io.github.ruddy2003.vestigium.ui.comun.disenoComun(tema)
     val oscuro = esOscuro()
     Box(
@@ -3360,7 +4002,7 @@ fun BotonCalendario(modifier: Modifier = Modifier, onClick: () -> Unit) {
     val fondo = MaterialTheme.colorScheme.background
     val borde = MaterialTheme.colorScheme.outline
     val sentir = rememberSentir()
-    val forma = remember(tema) { formaBoton(tema) }
+    val forma = remember(tema, EstadoTema.caraDe(tema)) { formaBoton(tema) }
     Box(
         modifier.minimumInteractiveComponentSize().size(40.dp).clip(forma).border(1.dp, borde, forma).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
             .semantics { contentDescription = "Abrir el calendario" },
@@ -3404,6 +4046,11 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> false
     TemaId.TEMPLARIO -> false
     TemaId.DISTOPIA -> false
+    TemaId.PSICODELIA -> false         // el caleidoscopio se abre desde el centro: ni sube ni cae
+    TemaId.NOUVEAU -> false            // los pétalos de iris, las hojas de sauce y los rizos de oro caen
+    TemaId.GALIA -> false             // las hojas de roble, los estáteros y el muérdago caen
+    TemaId.ARCONTES -> true            // las chispas vuelven arriba, a la luz de donde vinieron
+    TemaId.FRENTE -> false           // la cinta perforada y sus confetis caen del teletipo
     TemaId.REFUGIO -> false
     TemaId.ORDEN -> false
     TemaId.VAPOR -> true                        // bocanadas de vapor y engranes que suben
@@ -3437,7 +4084,7 @@ private fun fiestaSube(tema: TemaId): Boolean = when (tema) {
  * soles de Vergina (HEL), gotas de tinta y de rúbrica (MED), tiras de expediente (DIS), átomos (REF), galones (ORD),
  * burbujas (LAB), brasas que suben (COL), abejas (NAP), escarabajos (BOT), copos (NAV), monedas (SED), esquirlas de
  * vitral (GOT), destellos (ESP), estrellas de lazo (AND), flechas (MON), marcas de compás (REN), estrellas rojas (URS),
- * escarapelas (REV) y gemas (ANT).
+ * escarapelas (REV), gemas (ANT) y hojas de roble, estáteros y muérdago (GAL).
  * [fijo]: un instante quieto de la lluvia (entre 0 y 1), para las capturas de diseño.
  */
 @Composable
@@ -3518,6 +4165,78 @@ fun CapaFiesta(fijo: Float? = null) {
                     TemaId.DISTOPIA -> { drawRect(col, Offset(pos.x - s * 0.7f, pos.y - s * 0.45f), Size(s * 1.4f, s * 0.9f))
                         drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y - s * 0.15f), Offset(pos.x + s * 0.5f, pos.y - s * 0.15f), s * 0.1f)
                         drawLine(e.background.copy(alpha = a * 0.8f), Offset(pos.x - s * 0.5f, pos.y + s * 0.15f), Offset(pos.x + s * 0.2f, pos.y + s * 0.15f), s * 0.1f) }
+                    // Según la cara. La ciudad: los pases de autobús picados que caen, como papelitos. La tinta: un caleidoscopio que
+                    // se abre (cada figura se repite doce veces en espejo alrededor del centro y el dibujo entero gira despacio):
+                    // el disco con su etiqueta, un rayo que ondula y un trozo de banda.
+                    TemaId.PSICODELIA -> if (EstadoTema.cara == Cara.BASE) {
+                        drawRect(col, Offset(pos.x - s * 0.8f, pos.y - s * 0.45f), Size(s * 1.6f, s * 0.9f))
+                        drawRect(e.background.copy(alpha = a * 0.35f), Offset(pos.x - s * 0.8f, pos.y - s * 0.45f), Size(s * 1.6f, s * 0.22f))
+                        drawCircle(e.background.copy(alpha = a * 0.9f), s * 0.14f, pos + Offset(s * 0.4f, s * 0.1f))
+                    } else if (p.retraso < 0.12f) rotate(-p.giro * t, pos) {
+                        val centro = Offset(size.width / 2, size.height * 0.42f)
+                        val lejos = p.vel * alcance * t * 0.95f
+                        val gajo = (((p.ang % (PI / 3).toFloat()) + (PI / 3).toFloat()) % (PI / 3).toFloat())
+                        val angulo = abs(gajo - (PI / 6).toFloat())
+                        val vuelta = rad(40.0 * t)
+                        for (k in 0 until 12) {
+                            val g = rad(30.0 * k) + (if (k % 2 == 0) angulo else (PI / 6).toFloat() - angulo) + vuelta
+                            val q = Offset(centro.x + lejos * cos(g), centro.y + lejos * sin(g))
+                            when (p.tono) {
+                                0 -> { drawCircle(col, s * 0.6f, q); drawCircle(e.background.copy(alpha = a * 0.9f), s * 0.22f, q) }
+                                1 -> drawPath(PiezasPsicodelia.cunas(q, s * 0.2f, s * 1.1f, 4, 0.45f, 0.3f, g), col)
+                                else -> rotate(Math.toDegrees(g.toDouble()).toFloat(), q) { drawRect(col, Offset(q.x - s * 0.6f, q.y - s * 0.12f), Size(s * 1.2f, s * 0.24f)) }
+                            }
+                        }
+                    } else Unit
+                    // Pétalos de iris con su lengua amarilla, hojas de sauce con su nervio y rizos de oro, como los de los marcos.
+                    TemaId.NOUVEAU -> with(TrazosNouveau) {
+                        val noche = e.background.luminance() < 0.5f
+                        when (p.tono) {
+                            0 -> { val iris = (if (noche) lerp(IRIS, Color.White, 0.3f) else IRIS).copy(alpha = a)
+                                drawPath(petalo(pos + Offset(0f, s * 0.8f), pos - Offset(0f, s * 0.9f), s * 1.1f), iris)
+                                drawLine(IRIS_LENGUA.copy(alpha = a), pos + Offset(0f, s * 0.7f), pos + Offset(0f, s * 0.1f), s * 0.2f, StrokeCap.Round) }
+                            1 -> drawPath(linea(listOf(pos + Offset(-s * 1.3f, s * 0.9f)) + puntosRizo(pos + Offset(-s * 1.3f, s * 0.9f), Offset(1f, -0.6f), s * 0.8f, true, 1.2f, 18)),
+                                (if (noche) LUZ else lerp(ORO, Color(0xFF7A5810), 0.4f)).copy(alpha = a), style = Stroke(s * 0.24f, cap = StrokeCap.Round))
+                            else -> { val hoja = (if (noche) lerp(TALLO, Color.White, 0.1f) else TALLO_SOMBRA).copy(alpha = a)
+                                drawPath(hojaLanza(pos + Offset(0f, s), pos - Offset(0f, s), s * 0.62f, 0.15f), hoja)
+                                drawLine(lerp(TALLO, Color.White, 0.4f).copy(alpha = a * 0.7f), pos + Offset(0f, s * 0.9f), pos - Offset(0f, s * 0.5f), s * 0.07f) }
+                        }
+                    }
+                    // Hojas de roble que caen dando vueltas, estáteros de oro con su caballo y ramitas de muérdago.
+                    TemaId.GALIA -> with(TrazosGalia) {
+                        val noche = e.background.luminance() < 0.5f
+                        when (p.tono) {
+                            0 -> hojaRoble(pos, s * 2.2f, 0f, (if (noche) e.secondary else ROBLE).copy(alpha = a), (if (noche) ROBLE else ROBLE_SOMBRA).copy(alpha = a))
+                            1 -> { drawCircle(lerp(ORO, Color.Black, 0.4f).copy(alpha = a), s * 0.82f, pos); drawCircle(ORO.copy(alpha = a), s * 0.74f, pos)
+                                caballo(pos, s * 1.15f, lerp(ORO, Color.Black, 0.35f).copy(alpha = a))
+                                drawCircle(ORO_BRILLO.copy(alpha = a * 0.6f), s * 0.6f, pos, style = Stroke(s * 0.06f)) }
+                            else -> muerdago(pos, s * 1.8f, 0f, MUERDAGO.copy(alpha = a), BAYA.copy(alpha = a))
+                        }
+                    }
+                    // Chispas de luz blanca y violeta que suben, llamitas de lámpara y granos del oro de más que se apagan al subir.
+                    TemaId.ARCONTES -> when (p.tono) {
+                        0 -> { drawCircle(Brush.radialGradient(listOf(TrazosArcontes.GRIETA_HALO.copy(alpha = 0.45f * a), Color.Transparent), pos, s * 1.4f), s * 1.4f, pos)
+                            drawPath(Path().apply { moveTo(pos.x, pos.y - s); quadraticTo(pos.x, pos.y, pos.x + s * 0.6f, pos.y); quadraticTo(pos.x, pos.y, pos.x, pos.y + s)
+                                quadraticTo(pos.x, pos.y, pos.x - s * 0.6f, pos.y); quadraticTo(pos.x, pos.y, pos.x, pos.y - s); close() }, TrazosArcontes.GRIETA.copy(alpha = a)) }
+                        1 -> { drawCircle(TrazosArcontes.LLAMA_HALO.copy(alpha = a * 0.3f), s * 0.8f, pos)
+                            drawPath(Path().apply { moveTo(pos.x, pos.y - s * 0.9f); quadraticTo(pos.x + s * 0.5f, pos.y, pos.x, pos.y + s * 0.5f); quadraticTo(pos.x - s * 0.5f, pos.y, pos.x, pos.y - s * 0.9f); close() },
+                                TrazosArcontes.LLAMA.copy(alpha = a)) }
+                        else -> { drawCircle(oro.copy(alpha = a), s * 0.26f, pos); drawCircle(oro.copy(alpha = a * 0.5f), s * 0.6f, pos, style = Stroke(s * 0.08f)) }
+                    }
+                    // Del teletipo: tramos de cinta perforada de colores, los confetis redondos del perforador y alguna
+                    // chispa de tres trazos en verde de radar.
+                    TemaId.FRENTE -> when (p.tono) {
+                        0 -> { drawRect(col, Offset(pos.x - s * 1.1f, pos.y - s * 0.32f), Size(s * 2.2f, s * 0.64f))
+                            for (k in 0 until 5) {
+                                val x = pos.x - s * 0.88f + k * s * 0.44f
+                                drawCircle(e.background.copy(alpha = a), s * 0.09f, Offset(x, pos.y - s * 0.12f))
+                                if (k % 2 == 0) drawCircle(e.background.copy(alpha = a), s * 0.09f, Offset(x, pos.y + s * 0.16f))
+                                drawCircle(e.background.copy(alpha = a * 0.7f), s * 0.04f, Offset(x + s * 0.22f, pos.y + s * 0.02f))
+                            } }
+                        1 -> drawCircle(oro.copy(alpha = a), s * 0.26f, pos)
+                        else -> drawPath(Path().apply { moveTo(pos.x + s * 0.3f, pos.y - s * 0.75f); lineTo(pos.x - s * 0.2f, pos.y + s * 0.05f); lineTo(pos.x + s * 0.2f, pos.y - s * 0.05f); lineTo(pos.x - s * 0.3f, pos.y + s * 0.75f) },
+                            e.tertiary.copy(alpha = a), style = Stroke(s * 0.2f, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                    }
                     // Galones de la Orden.
                     TemaId.ORDEN -> drawPath(Path().apply { moveTo(pos.x - s, pos.y - s * 0.3f); lineTo(pos.x, pos.y + s * 0.4f); lineTo(pos.x + s, pos.y - s * 0.3f) },
                         col, style = Stroke(s * 0.3f, join = StrokeJoin.Miter))
@@ -3617,7 +4336,7 @@ fun CapaFiesta(fijo: Float? = null) {
 fun BotonAjustes(modifier: Modifier = Modifier, onClick: () -> Unit) {
     val sentir = rememberSentir()
     val tema = Estilo.tema
-    val forma = remember(tema) { formaBoton(tema) }
+    val forma = remember(tema, EstadoTema.caraDe(tema)) { formaBoton(tema) }
     // 48 dp para el dedo y la palabra «Más» debajo, para que no sea solo un ícono (N-21).
     androidx.compose.foundation.layout.Column(
         modifier.size(48.dp).clip(MaterialTheme.shapes.small).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }

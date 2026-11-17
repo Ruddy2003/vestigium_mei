@@ -4,6 +4,7 @@ import io.github.ruddy2003.vestigium.data.porNumero
 
 import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.ui.nombres.NombresPsicodelia
 import java.text.Normalizer
 
 /**
@@ -31,6 +32,11 @@ object Estilo {
         TemaId.MEDIEVAL -> "¶ "
         TemaId.TEMPLARIO -> "☩ "
         TemaId.DISTOPIA -> "▪ "
+        TemaId.PSICODELIA -> "◉ "          // el disco del día, el emblema de las dos caras
+        TemaId.NOUVEAU -> "• "          // el punto de las listas de los almanaques
+        TemaId.GALIA -> "› "
+        TemaId.ARCONTES -> "◌ "        // un círculo de puntos: una de las esferas del cielo
+        TemaId.FRENTE -> "+ "          // la cruz de la retícula del radar
         TemaId.REFUGIO -> "> "
         TemaId.ORDEN -> "‡ "
         TemaId.VAPOR -> "☛ "
@@ -73,6 +79,11 @@ object Estilo {
         TemaId.MEDIEVAL -> false       // gótica de libro
         TemaId.TEMPLARIO -> false       // letra de estandarte, en minúsculas
         TemaId.DISTOPIA -> true        // cartel
+        TemaId.PSICODELIA -> false       // titular de periódico de día y letra de bloque de noche, con mayúsculas y minúsculas
+        TemaId.NOUVEAU -> false       // letra de cartel, con mayúsculas y minúsculas
+        TemaId.GALIA -> false       // letra de libro, con mayúsculas y minúsculas
+        TemaId.ARCONTES -> false       // la letra de los códices, con mayúsculas y minúsculas
+        TemaId.FRENTE -> true          // rótulo grabado en la consola
         TemaId.REFUGIO -> true         // pantalla de fósforo
         TemaId.ORDEN -> true           // estarcido
         TemaId.VAPOR -> false          // «fat face» de cartel: en minúsculas ya pesa bastante
@@ -117,6 +128,17 @@ object Estilo {
             TemaId.HELENO -> null
             TemaId.EGIPTO -> if (igual) null else "☥ $t"
             TemaId.DISTOPIA -> if (pantalla) "EXPEDIENTE Nº %04d · %s".format(folio(titulo, 1000, 9000), t) else if (igual) null else "▪ $t"
+            // Cada pantalla es una pista fija del disco: de día suena el lado A, de noche (o con la cara del cartel) el lado B.
+            // Lo privado y lo de Sustancias van sin comentario, con la voz de la app (`NombresPsicodelia.NEUTROS`).
+            TemaId.PSICODELIA -> if (titulo in NombresPsicodelia.NEUTROS) null
+                else if (pantalla) "Lado %s · pista %d · %s".format(if (EstadoTema.cara == Cara.INTENSA) "B" else "A", folio(titulo, 1, 12), t)
+                else if (igual) null else "◉ $t"
+            TemaId.NOUVEAU -> if (pantalla) "Planche %d · %s".format(folio(titulo, 1, 120), t) else if (igual) null else "• $t"
+            TemaId.GALIA -> if (igual) null else "› $t"
+            // Cada pantalla es uno de los 365 cielos de Basílides, siempre el mismo: «Cielo 212 · Momentos».
+            TemaId.ARCONTES -> if (pantalla) "Cielo %d · %s".format(folio(titulo, 1, 365), t) else if (igual) null else "◌ $t"
+            // Cada pantalla es un canal de la red, siempre el mismo: «canal 07 · momentos».
+            TemaId.FRENTE -> if (pantalla) "CANAL %02d · %s".format(folio(titulo, 1, 99), t) else if (igual) null else "+ $t"
             TemaId.LABORATORIO -> if (pantalla) "protocolo VM-%03d · %s".format(folio(titulo, 100, 900), t) else if (igual) null else "· $t"
             TemaId.REFUGIO -> if (igual) null else "[ $t ]"
             TemaId.ORDEN -> if (igual) null else "— $t —"
@@ -167,6 +189,11 @@ object Estilo {
             TemaId.MEDIEVAL -> propio(titulo, true)
             TemaId.TEMPLARIO -> propio(titulo, true)
             TemaId.DISTOPIA -> propio(titulo, true)
+            TemaId.PSICODELIA -> propio(titulo, true)
+            TemaId.NOUVEAU -> propio(titulo, true)
+            TemaId.GALIA -> propio(titulo, true)
+            TemaId.ARCONTES -> propio(titulo, true)
+            TemaId.FRENTE -> propio(titulo, true)
             TemaId.REFUGIO -> propio(titulo, true)
             TemaId.ORDEN -> propio(titulo, true)
             TemaId.VAPOR -> propio(titulo, true)
@@ -205,6 +232,11 @@ object Estilo {
     /** ¿El comentario de la pantalla dice algo más que el nombre en español? (el número de expediente, el protocolo). */
     private val comentarioConFolio: Boolean get() = when (tema) {
         TemaId.DISTOPIA -> true
+        TemaId.PSICODELIA -> true
+        TemaId.NOUVEAU -> true
+        TemaId.GALIA -> false
+        TemaId.ARCONTES -> true
+        TemaId.FRENTE -> true
         TemaId.LABORATORIO -> true
         TemaId.ROMANO -> false
         TemaId.URBE -> true
@@ -277,6 +309,11 @@ object Estilo {
             TemaId.MEDIEVAL -> propio(titulo, false)
             TemaId.TEMPLARIO -> propio(titulo, false)
             TemaId.DISTOPIA -> propio(titulo, false)
+            TemaId.PSICODELIA -> propio(titulo, false)
+            TemaId.NOUVEAU -> propio(titulo, false)
+            TemaId.GALIA -> propio(titulo, false)
+            TemaId.ARCONTES -> propio(titulo, false)
+            TemaId.FRENTE -> propio(titulo, false)
             TemaId.REFUGIO -> propio(titulo, false)
             TemaId.ORDEN -> propio(titulo, false)
             TemaId.VAPOR -> propio(titulo, false)
@@ -319,6 +356,16 @@ object Estilo {
         // Romanos en mayúscula entre puntos, como en las cartas del siglo XII: «·XVII·».
         TemaId.TEMPLARIO -> Temas.puntos(n)
         TemaId.DISTOPIA -> if (n < 100) "Nº%02d".format(n) else "Nº$n"
+        // Entre paréntesis, como en un horario: «(17)» (ver [Psicodelia.numero]).
+        TemaId.PSICODELIA -> Psicodelia.numero(n)
+        // El folio de una revista ilustrada, entre rayas: «– 17 –» (ver [Nouveau.numero]).
+        TemaId.NOUVEAU -> Nouveau.numero(n)
+        // Los ordinales galos de La Graufesenque del 1 al 10; por encima, romanos (ver [Galia.numero]).
+        TemaId.GALIA -> Galia.numero(n)
+        // Con letras hebreas que valen números: «כ״ג» (ver [Arcontes.numero]).
+        TemaId.ARCONTES -> Arcontes.numero(n)
+        // El contador mecánico de la consola, siempre de cuatro cifras: «0017».
+        TemaId.FRENTE -> Frente.contador(n)
         TemaId.REFUGIO -> if (n < 100) "#%02d".format(n) else "#$n"
         // Ordinal de regimiento y de batallón: «17º».
         TemaId.ORDEN -> if (n in 1..999) "${n}º" else "$n"
@@ -386,6 +433,14 @@ object Estilo {
                 (if (iso == Fechas.diaLogico()) Temas.vigilia(java.time.LocalTime.now().hour)?.let { " · $it" } ?: "" else "")
         }.getOrDefault(iso)
         TemaId.DISTOPIA -> runCatching { val d = Fechas.parse(iso); "JORNADA %03d · AÑO %d".format(d.dayOfYear, d.year) }.getOrDefault(iso)
+        TemaId.PSICODELIA -> Psicodelia.fecha(iso)
+        TemaId.NOUVEAU -> Nouveau.fecha(iso)
+        // La noche del año y el mes de Coligny con su marca: «Noche 290 · Cantlos ANM» (ver [Galia]).
+        TemaId.GALIA -> Galia.fecha(iso)
+        // El cielo del día, su planeta y la fecha hebrea: «Cielo 290 · Saturno · 6 de jeshván» (ver [Arcontes]).
+        TemaId.ARCONTES -> Arcontes.fecha(iso)
+        // La operación del día, con su nombre en clave: «OPERACIÓN GARZA · 14.11.2026» (ver [Frente]).
+        TemaId.FRENTE -> Frente.fecha(iso)
         TemaId.REFUGIO -> runCatching {
             val d = Fechas.parse(iso)
             "%02d.%s.%d".format(d.dayOfMonth, MESES_ES[d.monthValue - 1], d.year) + (diasDesdeInicio(iso)?.takeIf { it > 0 }?.let { " · DÍA $it" } ?: "")
@@ -478,6 +533,14 @@ object Estilo {
             TemaId.MEDIEVAL -> Temas.MESES_MEDIEVALES[i]
             TemaId.TEMPLARIO -> MESES_LARGOS[i] + " juliano" + (anio?.let { " · " + Temas.puntos(it) } ?: "")
             TemaId.DISTOPIA -> "MES %02d".format(n) + (anio?.let { " · $it" } ?: "")
+            TemaId.PSICODELIA -> Psicodelia.mes(n, anio)
+            TemaId.NOUVEAU -> Nouveau.mes(n, anio)
+            // El mes de Coligny con su marca (recurso: Samonios es noviembre; ver [Galia]).
+            TemaId.GALIA -> Galia.mes(n).let { "${it.nombre} ${it.marca}" } + (anio?.let { " · $it" } ?: "")
+            // Los meses por su número, como en la Biblia hebrea («el mes séptimo»). Recurso: aquí se cuentan desde enero.
+            TemaId.ARCONTES -> "Mes " + ORDINALES_MES[(n - 1).coerceIn(0, 11)] + (anio?.let { " · $it" } ?: "")
+            // El mes es un ciclo de la red: «CICLO 10 · 2026».
+            TemaId.FRENTE -> "CICLO %02d".format(n) + (anio?.let { " · $it" } ?: "")
             TemaId.REFUGIO -> MESES_LARGOS[i].uppercase() + (anio?.let { " $it" } ?: "")
             // Mes y número, como en los partes: «OCT-10».
             TemaId.ORDEN -> MESES_ES[i] + "-%02d".format(n) + (anio?.let { " · $it" } ?: "")
@@ -549,6 +612,14 @@ object Estilo {
         TemaId.TEMPLARIO -> listOf("Luns", "Mars", "Mecr", "Jues", "Venr", "Same", "Diem")
         // Las letras de los formularios oficiales (con la X del miércoles).
         TemaId.DISTOPIA -> listOf("L", "M", "X", "J", "V", "S", "D")
+        // En el inglés de la calle, como en los carteles.
+        TemaId.PSICODELIA -> listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+        TemaId.NOUVEAU -> listOf("Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam.", "Dim.")
+        TemaId.GALIA -> listOf("Lun.", "Mar.", "Mié.", "Jue.", "Vie.", "Sáb.", "Dom.")
+        // Los días de la semana judía, que se cuentan desde el domingo (א׳) hasta el sábado (ש׳, el sábado).
+        TemaId.ARCONTES -> listOf("ב׳", "ג׳", "ד׳", "ה׳", "ו׳", "ש׳", "א׳")
+        // Los rótulos de la consola, de dos letras.
+        TemaId.FRENTE -> listOf("LU", "MA", "MI", "JU", "VI", "SÁ", "DO")
         TemaId.REFUGIO -> listOf("LU", "MA", "MI", "JU", "VI", "SA", "DO")
         // Abreviatura de parte militar, solo consonantes.
         TemaId.ORDEN -> listOf("LNS", "MRT", "MCL", "JVS", "VRN", "SBD", "DMG")
@@ -600,6 +671,12 @@ object Estilo {
         TemaId.MEDIEVAL -> listOf("ij", "iij", "iv", "v", "vj", "Sb", "Dm")
         TemaId.TEMPLARIO -> listOf("Lu", "Ma", "Me", "Ju", "Ve", "Sa", "Di")
         TemaId.DISTOPIA -> semana
+        TemaId.PSICODELIA -> semana
+        TemaId.NOUVEAU -> semana
+        TemaId.GALIA -> semana
+        TemaId.ARCONTES -> semana
+        // Una letra entre corchetes, como la tecla de la consola que pone el día.
+        TemaId.FRENTE -> listOf("[L]", "[M]", "[X]", "[J]", "[V]", "[S]", "[D]")
         TemaId.REFUGIO -> semana
         TemaId.ORDEN -> semana.map { it.take(2) }
         TemaId.VAPOR -> listOf("L", "M", "Mi", "J", "V", "S", "D")
@@ -642,6 +719,11 @@ object Estilo {
         TemaId.MEDIEVAL -> "${porNumero(n, "1 día seguido", "$n días seguidos")} en el libro"
         TemaId.TEMPLARIO -> "$n jornadas de guardia en la muralla"
         TemaId.DISTOPIA -> "CONTINUIDAD ACREDITADA: $n DÍAS"
+        TemaId.PSICODELIA -> "${porNumero(n, "Un día", "$n días")} sin que pare el disco"
+        TemaId.NOUVEAU -> "${porNumero(n, "Un día", "$n días")} de flor en flor"
+        TemaId.GALIA -> "${porNumero(n, "Una noche", "$n noches")} sin que se apague la hoguera"
+        TemaId.ARCONTES -> "${porNumero(n, "Un día", "$n días")} sin que se apague la lámpara"
+        TemaId.FRENTE -> "ENLACE SIN CORTES: $n DÍAS"
         TemaId.REFUGIO -> "DÍAS SIN INCIDENTES: $n"
         TemaId.ORDEN -> "$n VIGILIAS SIN FALTA"
         TemaId.VAPOR -> "${porNumero(n, "1 día", "$n días")} con la caldera encendida"
@@ -681,6 +763,12 @@ object Estilo {
         TemaId.MEDIEVAL -> "← tornar"
         TemaId.TEMPLARIO -> "← volver grupas"
         TemaId.DISTOPIA -> "◄ RETROCEDER"
+        // De día se vuelve a la calle; de noche, a la sala del baile.
+        TemaId.PSICODELIA -> if (EstadoTema.cara == Cara.INTENSA) "← de vuelta a la sala" else "← de vuelta a la calle"
+        TemaId.NOUVEAU -> "‹ à l'atelier"
+        TemaId.GALIA -> "‹ de vuelta al oppidum"
+        TemaId.ARCONTES -> "← de regreso"
+        TemaId.FRENTE -> "‹ REPLEGARSE"
         TemaId.REFUGIO -> "< SALIR"
         TemaId.ORDEN -> "« REPLEGARSE"
         TemaId.VAPOR -> "← marcha atrás"
@@ -718,6 +806,11 @@ object Estilo {
         TemaId.MEDIEVAL -> "¶ "
         TemaId.TEMPLARIO -> "✚ "
         TemaId.DISTOPIA -> "▪ "
+        TemaId.PSICODELIA -> "‣ "          // la viñeta de imprenta de los programas de mano
+        TemaId.NOUVEAU -> "~ "          // la línea de látigo
+        TemaId.GALIA -> "— "
+        TemaId.ARCONTES -> "⁘ "
+        TemaId.FRENTE -> "× "          // la marca de lo ya cifrado
         TemaId.REFUGIO -> "> "
         TemaId.ORDEN -> "▸ "
         TemaId.VAPOR -> "⊙ "
@@ -760,6 +853,11 @@ object Estilo {
         TemaId.MEDIEVAL -> ""
         TemaId.TEMPLARIO -> ""
         TemaId.DISTOPIA -> ""
+        TemaId.PSICODELIA -> ""
+        TemaId.NOUVEAU -> ""
+        TemaId.GALIA -> ""
+        TemaId.ARCONTES -> ""
+        TemaId.FRENTE -> ""
         TemaId.REFUGIO -> ""
         TemaId.ORDEN -> ""
         TemaId.VAPOR -> ""
@@ -802,6 +900,12 @@ object Estilo {
         TemaId.MEDIEVAL -> EstiloFecha(1.1f, 0.3f)
         TemaId.TEMPLARIO -> EstiloFecha(1.08f, 1.0f, abre = "☩")
         TemaId.DISTOPIA -> EstiloFecha(1.12f, 1.6f, peso = 700, abre = "▼")
+        TemaId.PSICODELIA -> EstiloFecha(0.98f, 0.3f, abre = "◉")
+        TemaId.NOUVEAU -> EstiloFecha(1.04f, 0.5f, abre = "~")
+        TemaId.GALIA -> EstiloFecha(1.06f, 0.5f, peso = 800, abre = "›")
+        TemaId.ARCONTES -> EstiloFecha(1.06f, 0.4f, peso = 700, abre = "⁘")
+        // Michroma es ancha y de un solo peso: más chica y poco abierta.
+        TemaId.FRENTE -> EstiloFecha(0.86f, 0.8f, abre = "+")
         TemaId.REFUGIO -> EstiloFecha(1.15f, 0.8f, abre = "▼")
         TemaId.ORDEN -> EstiloFecha(1.08f, 2.4f)
         TemaId.VAPOR -> EstiloFecha(1.16f, 0.4f, abre = "⇓")
@@ -855,6 +959,11 @@ object Estilo {
             TemaId.MEDIEVAL -> Claves.CASTELLANO_ANTIGUO[k]
             TemaId.TEMPLARIO -> Claves.ANCIEN_FRANCES[k]
             TemaId.DISTOPIA -> es(Claves.DISTOPIA)?.uppercase()
+            TemaId.PSICODELIA -> es(Claves.PSICODELIA)
+            TemaId.NOUVEAU -> es(Claves.NOUVEAU)
+            TemaId.GALIA -> es(Claves.GALIA)
+            TemaId.ARCONTES -> es(Claves.ARCONTES)
+            TemaId.FRENTE -> es(Claves.FRENTE)?.uppercase()
             TemaId.REFUGIO -> es(Claves.REFUGIO)
             TemaId.ORDEN -> es(Claves.ORDEN)?.uppercase()
             TemaId.VAPOR -> es(Claves.VAPOR)
@@ -1006,6 +1115,8 @@ object Estilo {
     private val SEMANA_LARGA = listOf("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo")
     private val MESES_ES = listOf("ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC")
     private val MESES_LARGOS = listOf("enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre")
+    /** Arcontes: los meses por su número ordinal, como los cuenta la Biblia hebrea. */
+    private val ORDINALES_MES = listOf("primero", "segundo", "tercero", "cuarto", "quinto", "sexto", "séptimo", "octavo", "noveno", "décimo", "undécimo", "duodécimo")
 }
 
 /**

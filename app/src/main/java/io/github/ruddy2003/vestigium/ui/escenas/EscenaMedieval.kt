@@ -84,6 +84,8 @@ internal object ColorMedieval {
  */
 internal object EscenaMedieval : EscenaVida {
     override val vidas = listOf("copista")
+    /** La franja del fondo del teléfono ([franjaFondo]): las ventanas y los pupitres. */
+    override val franjaFondo: Float get() = 0.5f
 
     private val C = ColorMedieval
 

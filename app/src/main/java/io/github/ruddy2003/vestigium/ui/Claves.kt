@@ -191,6 +191,49 @@ internal object Claves {
         "imagines" to "evidencia", "iter" to "trayecto", "orbis" to "territorio", "themata" to "asuntos", "memorabilia" to "hechos",
     )
 
+    /** El barrio en 1967. Lo que no está aquí queda en el español común. */
+    val PSICODELIA: Map<String, String> = mapOf(
+        "somnus" to "dormir con la niebla", "animus" to "ánimo", "svmptvs" to "lo que costó", "cor" to "el pulso del baile", "loca" to "esquinas",
+        "personae" to "tu gente", "consuetudo" to "costumbres", "palmae" to "discos de oro", "telephonum" to "lo que te roba el teléfono", "telephon" to "lo que te roba el teléfono",
+        "iudicium" to "juicio", "epistulae" to "postales", "reditus" to "lo que entró", "momenta" to "lo que brilló",
+        "imagines" to "fotos", "iter" to "la calle", "orbis" to "el mundo", "themata" to "temas", "memorabilia" to "fechas que se recuerdan",
+    )
+
+
+    /** El taller de litografía de 1900. Lo que no está aquí queda en el español común. */
+    val NOUVEAU: Map<String, String> = mapOf(
+        "somnus" to "sueño bajo el tragaluz", "animus" to "ánimo", "svmptvs" to "gastos del bolsillo", "cor" to "pulso", "loca" to "rincones",
+        "personae" to "gente del taller", "consuetudo" to "costumbres", "palmae" to "medallas", "telephonum" to "las vitrinas del teléfono", "telephon" to "las vitrinas del teléfono",
+        "iudicium" to "juicio", "epistulae" to "postales", "reditus" to "ingresos", "momenta" to "bocetos",
+        "imagines" to "placas", "iter" to "paseo", "orbis" to "el mundo", "themata" to "asuntos", "memorabilia" to "fechas grabadas",
+    )
+
+
+    /** Jerga del ministerio. Lo que no está aquí queda en el español común. */
+    val GALIA: Map<String, String> = mapOf(
+        "somnus" to "sueño junto al fuego", "animus" to "ánimo", "svmptvs" to "monedas", "cor" to "pulso de guerrero", "loca" to "parajes",
+        "personae" to "los de tu tribu", "consuetudo" to "costumbres", "palmae" to "torques", "telephonum" to "lo que roba horas", "telephon" to "lo que roba horas",
+        "iudicium" to "juicio", "epistulae" to "mensajes", "reditus" to "botín", "momenta" to "chispas",
+        "imagines" to "lo que viste", "iter" to "camino", "orbis" to "las tierras", "themata" to "asuntos", "memorabilia" to "hazañas",
+    )
+
+    /** Jerga del ministerio. Lo que no está aquí queda en el español común. */
+    val ARCONTES: Map<String, String> = mapOf(
+        "somnus" to "sueño del cuerpo", "animus" to "alma", "svmptvs" to "monedas", "cor" to "latido", "loca" to "lugares",
+        "personae" to "los tuyos", "consuetudo" to "prácticas", "palmae" to "amuletos", "telephonum" to "lo que distrae", "telephon" to "lo que distrae",
+        "iudicium" to "discernimiento", "epistulae" to "cartas escondidas", "reditus" to "jornal", "momenta" to "destellos",
+        "imagines" to "imágenes", "iter" to "camino", "orbis" to "la tierra", "themata" to "asuntos", "memorabilia" to "señales",
+    )
+
+    /** Jerga del ministerio. Lo que no está aquí queda en el español común. */
+    /** Frente exterior: la jerga de la radio y del campo. */
+    val FRENTE: Map<String, String> = mapOf(
+        "somnus" to "catre", "animus" to "moral", "svmptvs" to "fondos", "cor" to "pulso", "loca" to "posiciones",
+        "personae" to "contactos", "consuetudo" to "rutinas", "palmae" to "insignias", "telephonum" to "terminal", "telephon" to "terminal",
+        "iudicium" to "evaluación", "epistulae" to "transmisiones", "reditus" to "ingresos", "momenta" to "momentos en clave",
+        "imagines" to "fotos de reconocimiento", "iter" to "ruta", "orbis" to "mundos", "themata" to "frentes", "memorabilia" to "hechos clave",
+    )
+
     /** Jerga del refugio. Lo que no está aquí queda en el español común. */
     val REFUGIO: Map<String, String> = mapOf(
         "somnus" to "ciclo_sueño", "animus" to "estado", "svmptvs" to "suministros", "aer" to "calidad_aire", "caelum" to "exterior",

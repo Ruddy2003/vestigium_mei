@@ -1,0 +1,53 @@
+name: Temas nuevos (rama de trabajo)
+
+# Compila y saca capturas de la rama de los temas nuevos (lote 10) sin tocar las ramas compartidas `ci-log` y `capturas`,
+# que usan las sesiones de escenas. Corre con cada push a esta rama; qué capturas saca lo dice `.github/temas-nuevos.env`.
+# Publica todo en la rama `temas-nuevos-ci`. No publica ninguna versión. Se borra al pasar los temas a `main`.
+on:
+  push:
+    branches: [ccr-90a636d4-rjzhjc]
+    paths: ['app/**', 'gradle/**', '*.kts', '.github/workflows/temas-nuevos.yml', '.github/temas-nuevos.env']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: temas-nuevos
+  cancel-in-progress: true
+
+jobs:
+  temas:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Compilar, probar y sacar capturas
+        run: |
+          chmod +x gradlew
+          set -a; . .github/temas-nuevos.env; set +a
+          (while true; do echo "MEMORIA $(free -m | awk '/Mem:/ {print $3 " MB usados, " $7 " MB disponibles"}')"; sleep 20; done) &
+          ./gradlew :app:compileDebugUnitTestKotlin --no-daemon 2>&1 | tee compilar.log || true
+          pkill -f KotlinCompileDaemon || true
+          if [ "$COMPILAR_RELEASE" = "true" ]; then ./gradlew :app:assembleRelease --no-daemon 2>&1 | tee release.log || true; pkill -f KotlinCompileDaemon || true; fi
+          ./gradlew :app:recordPaparazziDebug --no-daemon 2>&1 | tee capturas.log || true
+      - name: Publicar en la rama temas-nuevos-ci
+        if: always()
+        run: |
+          mkdir -p /tmp/cap && cd /tmp/cap
+          cp "$GITHUB_WORKSPACE"/app/src/test/snapshots/images/*.png . 2>/dev/null || true
+          cp "$GITHUB_WORKSPACE"/app/build/temas/*.txt . 2>/dev/null || true
+          for f in "$GITHUB_WORKSPACE"/app/build/test-results/testDebugUnitTest/*.xml; do grep -A 25 "<failure" "$f" | head -60; done > fallas.txt 2>/dev/null || true
+          grep -E "^e: |FAILED|Exception|error:|What went wrong" "$GITHUB_WORKSPACE/compilar.log" | head -300 > errores_compilar.txt || true
+          grep -E "^e: |error:|What went wrong|AAPT|resource .* not found|Manifest merger" "$GITHUB_WORKSPACE/release.log" 2>/dev/null | head -200 > errores_release.txt || true
+          grep -E "^e: |FAILED|Exception|error:|What went wrong" "$GITHUB_WORKSPACE/capturas.log" | head -150 > errores.txt || true
+          grep -E "^w: .*(TemaId|Frente|Arcontes|Galia|Nouveau|Psicodelia)" "$GITHUB_WORKSPACE/compilar.log" | head -100 > avisos.txt || true
+          tail -80 "$GITHUB_WORKSPACE/capturas.log" > final.txt
+          echo "${{ github.sha }} run ${{ github.run_number }} ${{ github.ref_name }}" > commit.txt
+          git init -q && git checkout -q -b temas-nuevos-ci
+          git config user.name "ci" && git config user.email "ci@users.noreply.github.com"
+          git add . && git commit -qm "temas nuevos ${{ github.run_number }}"
+          git push -qf "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" temas-nuevos-ci

@@ -16,13 +16,17 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
@@ -130,6 +134,36 @@ object Marcas {
         ABEJA,
         /** Imperio: una rama de laurel bajo la palabra, con las hojas por pares y la baya al final. */
         LAUREL,
+        /** Frente exterior: la pantalla de fósforo de la consola, con su bisel, sus líneas de barrido y el piloto ámbar delante. */
+        PANTALLA,
+        /** Frente exterior: la traza del osciloscopio bajo la palabra, plana hasta que da el pulso de un eco. */
+        TRAZA,
+        /** Arcontes: la palabra grabada en un cabujón de jaspe, con sus motas rojas y su bisel de oro, como un amuleto. */
+        GEMA,
+        /** Arcontes: una raja de luz bajo la palabra, con su halo, que se quiebra apenas y suelta una rama al final. */
+        RAJA,
+        /** Galia: la palabra acuñada en un estátero de oro, una pastilla con su brillo arriba y la gráfila de perlas. */
+        ESTATER,
+        /** Galia: un torques que abraza la palabra por debajo: la cuerda de oro torcida que sube a los lados y acaba en sus discos. */
+        TORQUES,
+        /**
+         * Art nouveau: la palabra en una placa de lava esmaltada, como la de las entradas de metro: el verde de la fundición,
+         * dos esquinas muy redondas y dos casi rectas, el filete de oro por dentro y un rizo en cada punta.
+         */
+        ESMALTE,
+        /** Art nouveau: una línea de látigo bajo la palabra, que nace de una yema, ondula apenas y se enrosca al final. */
+        LATIGO,
+        /**
+         * Psicodelia: la palabra en una cartela, según la cara del tema: en la ciudad, la placa redondeada de un letrero, con
+         * su sombra corta y café; en la tinta, la cartela de arco del cartel, impresa otra vez en ultramar con el registro
+         * corrido.
+         */
+        LETRERO,
+        /**
+         * Psicodelia: el filete bajo la palabra: en la ciudad, la raya pintada; en la tinta, la onda impresa con el tintero
+         * partido entre dos tintas (de magenta a ultramar), que acaba en el disco chico.
+         */
+        TINTERO,
     }
 
     /** Cómo se ve una marca: color de la letra, el trazo detrás y si va en negrita o cursiva. */
@@ -159,6 +193,20 @@ object Marcas {
                 else Aspecto(s, s, Forma.CALDERON, cursiva = true)
             TemaId.TEMPLARIO -> if (persona) Aspecto(p, s, Forma.ESCUDETE, negrita = true) else Aspecto(s, s, Forma.DOBLE, cursiva = true)
             TemaId.DISTOPIA -> if (persona) Aspecto(cs.background, cs.onBackground, Forma.BARRA, negrita = true) else Aspecto(p, p, Forma.GOMA)
+            // La @persona, en una burbuja de cartel con su sombra en el color opuesto; el #tema, sobre la onda de tinta de arcoíris.
+            TemaId.PSICODELIA -> if (persona) Aspecto(cs.onPrimary, p, Forma.LETRERO, negrita = true) else Aspecto(s, s, Forma.TINTERO)
+            // La @persona, en la placa esmaltada de una entrada de metro (letras crema sobre el verde de la fundición); el #tema,
+            // sobre una línea de látigo en el violeta del iris.
+            TemaId.NOUVEAU -> if (persona) Aspecto(Color(0xFFF3EAD3), if (cs.background.luminance() < 0.5f) lerp(TrazosNouveau.HIERRO, Color.White, 0.08f) else TrazosNouveau.HIERRO, Forma.ESMALTE, negrita = true)
+                else Aspecto(s, s, Forma.LATIGO)
+            // La @persona, acuñada en un estátero de oro; el #tema, abrazado por un torques (de oro de día, de fuego de noche).
+            TemaId.GALIA -> if (persona) Aspecto(Color(0xFF2E1F06), TrazosGalia.ORO, Forma.ESTATER, negrita = true)
+                else (if (cs.background.luminance() < 0.5f) p else s).let { Aspecto(it, it, Forma.TORQUES) }
+            // La @persona, grabada en su amuleto de jaspe; el #tema, sobre la raja de luz violeta de la grieta.
+            TemaId.ARCONTES -> if (persona) Aspecto(TrazosArcontes.LINO, TrazosArcontes.JASPE_VERDE, Forma.GEMA, negrita = true) else Aspecto(t, t, Forma.RAJA)
+            // La @persona, como un indicativo en la pantalla de fósforo (verde de radar sobre el vidrio oscuro); el #tema, sobre la
+            // traza del osciloscopio que da su eco al final.
+            TemaId.FRENTE -> if (persona) Aspecto(Color(0xFF9FD8A8), Color(0xFF0F1A16), Forma.PANTALLA, negrita = true) else Aspecto(t, t, Forma.TRAZA)
             // La @persona, en la cinta de la rotuladora con las letras en relieve; el #tema, en la línea de órdenes de la terminal.
             TemaId.REFUGIO -> if (persona) Aspecto(cs.onPrimary, p, Forma.ROTULADORA, negrita = true) else Aspecto(s, s, Forma.PROMPT)
             TemaId.ORDEN -> if (persona) Aspecto(p, p, Forma.PLACA, negrita = true) else Aspecto(t, t, Forma.DOBLE)
@@ -219,6 +267,16 @@ object Marcas {
         Forma.CALDERON, Forma.PROMPT -> c.copy(alpha = 0.12f)
         Forma.ROTULADORA -> c
         Forma.ABEJA -> c.copy(alpha = 0.14f)
+        Forma.PANTALLA -> c
+        Forma.TRAZA -> Color.Unspecified
+        Forma.GEMA -> c
+        Forma.RAJA -> Color.Unspecified
+        Forma.ESTATER -> c
+        Forma.TORQUES -> Color.Unspecified
+        Forma.ESMALTE -> c
+        Forma.LATIGO -> Color.Unspecified
+        Forma.LETRERO -> c
+        Forma.TINTERO -> Color.Unspecified
     }
 
     /** En un campo de texto, las formas que van debajo de la palabra se quedan en un subrayado. */
@@ -238,6 +296,16 @@ object Marcas {
         Forma.VIA -> true
         Forma.RUBRICA, Forma.CINCEL, Forma.CUADRIFOLIO, Forma.LAUREL -> true
         Forma.CALDERON, Forma.ROTULADORA, Forma.PROMPT, Forma.ABEJA -> false
+        Forma.PANTALLA -> false
+        Forma.TRAZA -> true
+        Forma.GEMA -> false
+        Forma.RAJA -> true
+        Forma.ESTATER -> false
+        Forma.TORQUES -> true
+        Forma.ESMALTE -> false
+        Forma.LATIGO -> true
+        Forma.LETRERO -> false
+        Forma.TINTERO -> true
     }
 
     /** El estilo de letra de la marca. Con [conFondo], lo que no se puede dibujar (en un campo de texto) va como fondo de la letra. */
@@ -636,6 +704,134 @@ object Marcas {
                 }
                 drawCircle(c.copy(alpha = 0.9f), 0.9f * u, Offset(rr.right + 1.4f * u, y - 0.9f * u))
                 drawCircle(c.copy(alpha = 0.9f), 0.9f * u, Offset(rr.right + 1.8f * u, y + 1f * u))
+            }
+            Forma.GEMA -> {
+                // El cabujón: la piedra verde con la luz arriba, sus motas rojas, el bisel de oro y un brillo a lo largo.
+                val t = rr.top + h * 0.04f; val b = rr.bottom - h * 0.02f; val iz = rr.left - 5 * u; val de = rr.right + 5 * u
+                val radio = CornerRadius((b - t) / 2, (b - t) / 2)
+                drawRoundRect(Brush.verticalGradient(listOf(lerp(c, Color.White, 0.18f), c, lerp(c, Color.Black, 0.32f)), t, b), Offset(iz, t), Size(de - iz, b - t), radio)
+                var k = 0; var x = iz + 4 * u
+                while (x < de - 4 * u && k < 200) {
+                    drawCircle(TrazosArcontes.JASPE_ROJO.copy(alpha = 0.6f), (0.45f + (k * 37 % 5) * 0.12f) * u, Offset(x, t + (b - t) * (0.22f + (k * 53 % 7) / 10f)))
+                    x += (5f + (k * 29 % 4)) * u; k++
+                }
+                drawRoundRect(TrazosArcontes.ORO_DEMIURGO.copy(alpha = 0.9f), Offset(iz, t), Size(de - iz, b - t), radio, style = Stroke(1.1f * u))
+                drawLine(Color.White.copy(alpha = 0.25f), Offset(iz + (b - t) * 0.5f, t + 1.8f * u), Offset(de - (b - t) * 0.5f, t + 1.8f * u), 0.8f * u, StrokeCap.Round)
+            }
+            Forma.RAJA -> {
+                val y = rr.bottom - h * 0.08f
+                val raja = tramo(rr.left, rr.right, 3.2f * u) { x, nx, k -> if (k == 0) moveTo(x, y); lineTo(nx, y + (if (k % 3 == 1) -0.9f else if (k % 3 == 2) 0.6f else 0f) * u) }
+                drawPath(raja, c.copy(alpha = 0.18f), style = Stroke(3.6f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawPath(raja, c.copy(alpha = 0.9f), style = Stroke(1f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawLine(c.copy(alpha = 0.7f), Offset(rr.right - 4 * u, y), Offset(rr.right - 1 * u, y + 2.2f * u), 0.7f * u, StrokeCap.Round)
+            }
+            Forma.ESTATER -> {
+                // El estátero: la pastilla de oro con la luz arriba, la gráfila de perlas por dentro del canto y el canto en sombra.
+                val t = rr.top + h * 0.04f; val b = rr.bottom - h * 0.02f; val iz = rr.left - 5 * u; val de = rr.right + 5 * u
+                val radio = CornerRadius((b - t) / 2, (b - t) / 2)
+                drawRoundRect(Brush.verticalGradient(listOf(lerp(c, Color.White, 0.38f), c, lerp(c, Color.Black, 0.22f)), t, b), Offset(iz, t), Size(de - iz, b - t), radio)
+                val perla = lerp(c, Color.Black, 0.38f).copy(alpha = 0.55f)
+                var x = iz + (b - t) * 0.45f; var k = 0
+                while (x < de - (b - t) * 0.45f && k < 300) {
+                    drawCircle(perla, 0.55f * u, Offset(x, t + 1.7f * u)); drawCircle(perla, 0.55f * u, Offset(x, b - 1.7f * u))
+                    x += 2.6f * u; k++
+                }
+                drawRoundRect(lerp(c, Color.Black, 0.42f), Offset(iz, t), Size(de - iz, b - t), radio, style = Stroke(0.9f * u))
+            }
+            Forma.TORQUES -> {
+                // La cuerda de oro bajo la palabra, que sube por los lados, con los surcos de la torsión y un disco en cada punta.
+                val y = baja - 0.2f * u; val x0 = rr.left - 2f * u; val x1 = rr.right + 2f * u; val sube = minOf(h * 0.42f, 6f * u)
+                val p = Path().apply { moveTo(x0, y - sube); quadraticTo(x0, y, x0 + sube, y); lineTo(x1 - sube, y); quadraticTo(x1, y, x1, y - sube) }
+                drawPath(p, c.copy(alpha = 0.9f), style = Stroke(1.7f * u, cap = StrokeCap.Round))
+                var x = x0 + sube; var k = 0
+                while (x < x1 - sube && k < 300) { drawLine(lerp(c, Color.White, 0.5f).copy(alpha = 0.8f), Offset(x, y + 0.75f * u), Offset(x + 1f * u, y - 0.75f * u), 0.5f * u); x += 2.2f * u; k++ }
+                drawCircle(c, 1.4f * u, Offset(x0, y - sube)); drawCircle(c, 1.4f * u, Offset(x1, y - sube))
+            }
+            Forma.ESMALTE -> {
+                // La placa de lava esmaltada: el verde de la fundición, con dos esquinas muy redondas y dos casi rectas, la luz
+                // arriba, el filete de oro por dentro y un rizo de oro en cada punta.
+                val t = rr.top + h * 0.04f; val b = rr.bottom - h * 0.02f; val iz = rr.left - 5 * u; val de = rr.right + 5 * u
+                val g = (b - t) * 0.5f; val p = (b - t) * 0.12f
+                val placa = Path().apply {
+                    moveTo(iz + g, t); lineTo(de - p, t); quadraticTo(de, t, de, t + p); lineTo(de, b - g); quadraticTo(de, b, de - g, b)
+                    lineTo(iz + p, b); quadraticTo(iz, b, iz, b - p); lineTo(iz, t + g); quadraticTo(iz, t, iz + g, t); close()
+                }
+                drawPath(placa, Brush.verticalGradient(listOf(lerp(c, Color.White, 0.16f), c, lerp(c, Color.Black, 0.2f)), t, b))
+                val oro = TrazosNouveau.ORO
+                drawPath(placa, lerp(c, Color.Black, 0.35f), style = Stroke(0.8f * u))
+                drawLine(oro.copy(alpha = 0.75f), Offset(iz + g * 0.8f, b - 1.6f * u), Offset(de - g * 0.8f, b - 1.6f * u), 0.6f * u)
+                for (lado in listOf(-1f, 1f)) {
+                    val x = if (lado < 0f) iz + 2.4f * u else de - 2.4f * u
+                    val q = Offset(x, (t + b) / 2 + 0.6f * u)
+                    drawPath(TrazosNouveau.linea(TrazosNouveau.puntosRizo(q, Offset(0f, -1f), minOf(1.6f * u, (b - t) * 0.18f), lado > 0f, 1.1f, 14)), oro.copy(alpha = 0.85f),
+                        style = Stroke(0.7f * u, cap = StrokeCap.Round))
+                }
+            }
+            Forma.LATIGO -> {
+                // La línea de látigo bajo la palabra: nace de una yema, ondula una vez y se enrosca hacia arriba al final.
+                val y = baja - 0.3f * u; val x0 = rr.left - 1f * u; val x1 = rr.right + 1.5f * u
+                val a = minOf(1.3f * u, h * 0.1f)
+                val pts = List(25) { k -> val f = k / 24f; Offset(x0 + (x1 - x0) * f, y + a * kotlin.math.sin(f * 2f * Math.PI.toFloat() + 0.3f) * (1f - 0.5f * f)) }
+                val fin = pts.last(); val antes = pts[pts.size - 3]
+                val todo = pts + TrazosNouveau.puntosRizo(fin, Offset(fin.x - antes.x, fin.y - antes.y), minOf(2.2f * u, h * 0.17f), false, 1.2f, 16)
+                drawPath(TrazosNouveau.cinta(todo) { f -> (1.5f - 0.9f * f) * u }, c.copy(alpha = 0.9f))
+                drawPath(TrazosNouveau.hojaLanza(Offset(x0 + 1f * u, pts[0].y), Offset(x0 - 3.6f * u, pts[0].y + 1f * u), 1.8f * u, -0.12f), c.copy(alpha = 0.9f))
+            }
+            Forma.LETRERO -> {
+                val t = rr.top + h * 0.02f; val b = rr.bottom; val iz = rr.left - 5 * u; val de = rr.right + 5 * u
+                val caja = Rect(iz, t, de, b)
+                if (EstadoTema.cara == Cara.BASE) {
+                    val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(caja, CornerRadius(minOf((b - t) * 0.3f, 6f * u)))) }
+                    translate(0.6f * u, 0.9f * u) { drawPath(forma, TrazosCiudad.SOMBRA.copy(alpha = 0.25f)) }
+                    drawPath(forma, c)
+                } else {
+                    val forma = TrazosTinta.arco(caja, minOf((b - t) * 0.5f, 10f * u), 1.2f * u)
+                    val reg = TrazosTinta.medidas(EstadoTema.intensidad).registro
+                    translate((1.2f + reg * 0.4f) * u, 1f * u) { drawPath(forma, TrazosTinta.tinta(TrazosTinta.Tinta.ULTRAMAR, c.luminance() > 0.4f, EstadoTema.intensidad).copy(alpha = 0.6f)) }
+                    drawPath(forma, c)
+                }
+            }
+            Forma.TINTERO -> {
+                val y = baja - 0.4f * u; val x0 = rr.left - 1f * u; val x1 = rr.right + 1f * u
+                if (EstadoTema.cara == Cara.BASE) drawLine(c.copy(alpha = 0.8f), Offset(x0, y), Offset(x1, y), 1.2f * u)
+                else {
+                    val oscuroT = c.luminance() > 0.25f
+                    val i = EstadoTema.intensidad
+                    val pincel = Brush.horizontalGradient(listOf(TrazosTinta.tinta(TrazosTinta.Tinta.MAGENTA, oscuroT, i), TrazosTinta.tinta(TrazosTinta.Tinta.ULTRAMAR, oscuroT, i)), x0, x1)
+                    val a = minOf(1.1f * u, h * 0.08f); val per = 9f * u
+                    val onda = Path()
+                    var x = x0
+                    while (x <= x1 + 0.01f) {
+                        val yy = y + a * kotlin.math.sin(2f * Math.PI.toFloat() * (x - x0) / per)
+                        if (x == x0) onda.moveTo(x, yy) else onda.lineTo(x, yy)
+                        x += 1.2f * u
+                    }
+                    drawPath(onda, pincel, style = Stroke(1.5f * u, cap = StrokeCap.Round))
+                    drawCircle(c.copy(alpha = 0.8f), 1.5f * u, Offset(x1 + 2.6f * u, y), style = Stroke(0.8f * u))
+                }
+            }
+            Forma.PANTALLA -> {
+                // El vidrio oscuro con su bisel de cromo, tres líneas de barrido tenues y, delante, el piloto ámbar con su halo.
+                // Con un interlineado amplio (la hoja del dosier va a 25 sobre 15), el renglón deja aire arriba de la letra: el
+                // vidrio se mide desde abajo para no subirse sobre la línea de antes.
+                val b = rr.bottom + (if (h > 24f * u) 2f * u else -h * 0.04f); val t = maxOf(rr.top + h * 0.06f, b - 19f * u); val iz = rr.left - 3 * u; val de = rr.right + 3 * u
+                drawRoundRect(c, Offset(iz, t), Size(de - iz, b - t), CornerRadius(2.4f * u, 2.4f * u))
+                drawRoundRect(Color(0xFFB9B6AE).copy(alpha = 0.75f), Offset(iz, t), Size(de - iz, b - t), CornerRadius(2.4f * u, 2.4f * u), style = Stroke(0.8f * u))
+                var y = t + 2f * u; var n = 0
+                while (y < b - 1f * u && n < 30) { drawLine(Color(0xFF9FD8A8).copy(alpha = 0.07f), Offset(iz + 1.5f * u, y), Offset(de - 1.5f * u, y), 0.6f * u); y += 2.2f * u; n++ }
+                val luz = Offset(iz - 3.4f * u, (t + b) / 2)
+                drawCircle(Color(0xFFF2A33A).copy(alpha = 0.25f), 2.6f * u, luz)
+                drawCircle(Color(0xFFF2A33A), 1.3f * u, luz)
+            }
+            Forma.TRAZA -> {
+                // La traza: plana bajo la palabra, un pulso de eco (sube, baja hondo y vuelve) cerca del final y un punto donde termina.
+                val y = baja - 0.4f * u; val x0 = rr.left; val x1 = rr.right + 2 * u; val pico = x0 + (x1 - x0) * 0.78f; val a = minOf(2.6f * u, h * 0.22f)
+                val p = Path().apply {
+                    moveTo(x0, y); lineTo(pico - 2.4f * u, y); lineTo(pico - 1.2f * u, y - a); lineTo(pico + 0.2f * u, y + a * 0.9f)
+                    lineTo(pico + 1.4f * u, y - a * 0.35f); lineTo(pico + 2.4f * u, y); lineTo(x1, y)
+                }
+                drawPath(p, c.copy(alpha = 0.9f), style = Stroke(1f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+                drawCircle(c, 1.1f * u, Offset(x1, y))
             }
         }
     }

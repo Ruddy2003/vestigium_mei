@@ -145,6 +145,87 @@ object Textos {
         "widget_discreto_momento" to "DECLARAR",
     )
 
+    /**
+     * Psicodelia (versión 2): el barrio, el periódico y el disco. Iguales en las dos caras: las pestañas y los widgets no
+     * cambian de nombre con la hora.
+     */
+    private val PSICODELIA: Map<String, String> = mapOf(
+        "pestana_dia" to "Hoy",
+        "pestana_diario" to "Periódico",
+        "pestana_registrar" to "Anotar",
+        "pestana_vida" to "Calle",
+        "pestana_entender" to "Surcos",
+        "escala_vacia" to "Todavía sin sonar · toca o desliza",
+        "lista_anadir" to "+ sumar otro",
+        "palabras" to "%d palabras en el periódico",
+        "widget_animo" to "¿Cómo andas ahora?",
+        "widget_momento" to "Ahora mismo suena…",
+        "widget_discreto_animo" to "Ánimo",
+        "widget_discreto_momento" to "Instantánea",
+    )
+
+
+    private val NOUVEAU: Map<String, String> = mapOf(
+        "pestana_dia" to "Hoy",
+        "pestana_diario" to "Carnet",
+        "pestana_registrar" to "Anotar",
+        "pestana_vida" to "Taller",
+        "pestana_entender" to "Mirar",
+        "escala_vacia" to "Aún sin color · toca o desliza",
+        "lista_anadir" to "+ añadir al cuaderno",
+        "palabras" to "%d palabras en el carnet",
+        "widget_animo" to "¿De qué color está tu ánimo?",
+        "widget_momento" to "En este momento…",
+        "widget_discreto_animo" to "Ánimo",
+        "widget_discreto_momento" to "Boceto",
+    )
+
+
+    private val GALIA: Map<String, String> = mapOf(
+        "pestana_dia" to "Hoy",
+        "pestana_diario" to "Tablillas",
+        "pestana_registrar" to "Contar",
+        "pestana_vida" to "Hoguera",
+        "pestana_entender" to "Señales",
+        "escala_vacia" to "Aún sin contar · toca o desliza",
+        "lista_anadir" to "+ añadir a la tablilla",
+        "palabras" to "%d palabras en las tablillas",
+        "widget_animo" to "¿Cómo anda tu ánimo?",
+        "widget_momento" to "Ahora mismo siento…",
+        "widget_discreto_animo" to "Ánimo",
+        "widget_discreto_momento" to "Chispa",
+    )
+
+    private val ARCONTES: Map<String, String> = mapOf(
+        "pestana_dia" to "Hoy",
+        "pestana_diario" to "Códice",
+        "pestana_registrar" to "Escribir",
+        "pestana_vida" to "Lámpara",
+        "pestana_entender" to "Conocer",
+        "escala_vacia" to "Aún sin escribir · toca o desliza",
+        "lista_anadir" to "+ añadir a la hoja",
+        "palabras" to "%d palabras en el códice",
+        "widget_animo" to "¿Cómo está tu alma?",
+        "widget_momento" to "En esta hora siento…",
+        "widget_discreto_animo" to "Alma",
+        "widget_discreto_momento" to "Destello",
+    )
+
+    private val FRENTE: Map<String, String> = mapOf(
+        "pestana_dia" to "ENLACE",
+        "pestana_diario" to "DESPACHOS",
+        "pestana_registrar" to "TRANSMITIR",
+        "pestana_vida" to "CUARTEL",
+        "pestana_entender" to "DESCIFRAR",
+        "escala_vacia" to "SIN LECTURA · TOCA O DESLIZA",
+        "lista_anadir" to "+ AGREGAR AL CANAL",
+        "palabras" to "%d PALABRAS TRANSMITIDAS",
+        "widget_animo" to "¿CÓMO ESTÁ LA MORAL?",
+        "widget_momento" to "REPORTE: AHORA SIENTO…",
+        "widget_discreto_animo" to "MORAL",
+        "widget_discreto_momento" to "REPORTE",
+    )
+
     private val REFUGIO: Map<String, String> = mapOf(
         "pestana_dia" to "BITÁCORA",
         "pestana_diario" to "CUADERNO",
@@ -546,6 +627,11 @@ object Textos {
         TemaId.MEDIEVAL -> MEDIEVAL
         TemaId.TEMPLARIO -> TEMPLARIO
         TemaId.DISTOPIA -> DISTOPIA
+        TemaId.PSICODELIA -> PSICODELIA
+        TemaId.NOUVEAU -> NOUVEAU
+        TemaId.GALIA -> GALIA
+        TemaId.ARCONTES -> ARCONTES
+        TemaId.FRENTE -> FRENTE
         TemaId.REFUGIO -> REFUGIO
         TemaId.ORDEN -> ORDEN
         TemaId.VAPOR -> VAPOR
