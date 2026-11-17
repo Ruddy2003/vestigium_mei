@@ -79,7 +79,8 @@ import kotlin.math.sqrt
  * Social (9 nov 2026): Tu gente, la Red y la Constelación en un solo lugar. Las dos vistas del grafo usan las mismas
  * menciones, los mismos colores por relación y la misma ficha; cambia solo cómo se acomodan las personas:
  * - **red**: un gráfico de fuerzas (Fruchterman–Reingold, `RedPersonas.acomodar`); las líneas firmes son lo que dijiste en
- *   Tu gente y las finas, personas que aparecen juntas al menos dos días;
+ *   Tu gente y las finas, personas que aparecen juntas al menos dos días. Tres filtros ([GrafoSocial.filtro]): todo, solo
+ *   lo que dije y (17 nov 2026) solo lo que escribí: las co-menciones, más gruesas cuantas más veces aparecen juntas;
  * - **cielo**: más cerca del centro, más reciente; más grande, más días mencionada (`Constelacion.calcular`).
  * El grafo se abre en pantalla completa y se navega como el mapa: pellizcar, arrastrar, − / + / «todo» y doble toque.
  */
@@ -87,25 +88,41 @@ object GrafoSocial {
     /** La vista y el periodo que se recuerdan al entrar (las rutas viejas «red» y «constelacion» eligen su vista). */
     var vista by mutableStateOf("red")
     var periodo by mutableStateOf(365)
-    var soloDichas by mutableStateOf(false)
+    /** El filtro de la red: [COMPLETA] (todo), [DICHOS] (solo lo que dijiste en Tu gente) o [ESCRITOS] (solo las co-menciones). */
+    var filtro by mutableStateOf(COMPLETA)
+
+    const val COMPLETA = "todo"
+    const val DICHOS = "dichos"
+    const val ESCRITOS = "escritos"
 
     /** Una persona del grafo, con su lugar en un cuadrado de 0 a 1. */
     class Nodo(val nombre: String, val dias: Int, val ultima: String?, val relacion: String?, val grupo: String?, val grado: Int, val x: Float, val y: Float)
     /** Una línea: [firme] si la dijiste en Tu gente. */
     class Lazo(val a: String, val b: String, val tipo: String?, val juntos: Int)
-    class Modelo(val vista: String, val nodos: List<Nodo>, val lazos: List<Lazo>, val grupos: Int) {
+    /** [porJuntos]: el grosor de cada línea sigue cuántos días aparecen juntas (el filtro [ESCRITOS]). */
+    class Modelo(val vista: String, val nodos: List<Nodo>, val lazos: List<Lazo>, val grupos: Int, val porJuntos: Boolean = false) {
         val porNombre: Map<String, Nodo> = nodos.associateBy { it.nombre }
         val maxDias: Int = nodos.maxOfOrNull { it.dias }?.coerceAtLeast(1) ?: 1
+        val maxJuntos: Int = lazos.maxOfOrNull { it.juntos }?.coerceAtLeast(2) ?: 2
     }
 
-    fun red(soloDichas: Boolean): Modelo {
-        val (n, a) = RedPersonas.calcular(minJuntos = 2)
-        val aa = (if (soloDichas) a.filter { it.tipo != null } else a)
+    /**
+     * La red con el [filtro]: con [ESCRITOS] quedan solo los pares que aparecen juntos al menos dos días (también los que
+     * dijiste en Tu gente, pero sin su tipo: cuenta la co-mención) y solo las personas mencionadas alguna vez.
+     */
+    fun red(filtro: String): Modelo {
+        val (n0, a) = RedPersonas.calcular(minJuntos = 2)
+        val n = if (filtro == ESCRITOS) n0.filter { it.dias > 0 } else n0
+        val aa = when (filtro) {
+            DICHOS -> a.filter { it.tipo != null }
+            ESCRITOS -> a.filter { it.juntos >= 2 }.map { RedPersonas.Arista(it.a, it.b, null, it.juntos) }
+            else -> a
+        }
         RedPersonas.grados(n, aa)
         RedPersonas.acomodar(n, aa)
         val grupos = RedPersonas.componentes(n, aa)
         val lazos = aa.filter { RedPersonas.une(it.tipo) }.map { Lazo(it.a, it.b, it.tipo, it.juntos) }
-        return Modelo("red", n.map { Nodo(it.nombre, it.dias, null, it.relacion, it.grupo, it.grado, it.x, it.y) }, lazos, grupos)
+        return Modelo("red", n.map { Nodo(it.nombre, it.dias, null, it.relacion, it.grupo, it.grado, it.x, it.y) }, lazos, grupos, porJuntos = filtro == ESCRITOS)
     }
 
     /** El cielo de la Constelación, con las mismas reglas que tenía su pantalla, en coordenadas de 0 a 1. */
@@ -173,10 +190,13 @@ internal fun DrawScope.dibujarGrafo(m: GrafoSocial.Modelo, zoom: Float, pan: Off
             m.lazos.forEach { l ->
                 val a = m.porNombre[l.a] ?: return@forEach; val b = m.porNombre[l.b] ?: return@forEach
                 val res = elegido != null && (l.a == elegido || l.b == elegido)
-                val col = if (l.tipo != null) cs.primary else cs.onSurfaceVariant
-                val colLazo = col.copy(alpha = if (res) 0.9f else if (l.tipo != null) 0.55f else 0.22f)
+                val col = if (l.tipo != null || m.porJuntos) cs.primary else cs.onSurfaceVariant
+                // Con «solo lo que escribí», la fuerza es cuántos días aparecen juntas, frente al par que más: de 0 a 1.
+                val juntas = if (m.porJuntos) sqrt(l.juntos.toFloat() / m.maxJuntos).coerceIn(0f, 1f) else 0f
+                val colLazo = col.copy(alpha = if (res) 0.9f else if (m.porJuntos) 0.3f + 0.4f * juntas else if (l.tipo != null) 0.55f else 0.22f)
                 // El grosor sigue la fuerza del vínculo: pareja y familia 3, amigos 2.6, colegas 2.2, se conocen 1.6; sin tipo, 1.
-                val ancho = (if (l.tipo != null) 1f + 2f * RedPersonas.peso(l.tipo) else 1f) * density
+                // Con «solo lo que escribí», de 1 a 4 según los días juntas.
+                val ancho = (if (m.porJuntos) 1f + 3f * juntas else if (l.tipo != null) 1f + 2f * RedPersonas.peso(l.tipo) else 1f) * density
                 // Los colegas conservan su guion propio (distingue el tipo de lazo); los demás llevan el trazo del tema.
                 if (l.tipo == "colegas") drawLine(colLazo, pos(a), pos(b), ancho, pathEffect = PathEffect.dashPathEffect(floatArrayOf(6f * density, 4f * density)))
                 else lineaGrafica(eg, listOf(pos(a), pos(b)), colLazo, ancho)
@@ -214,12 +234,13 @@ private fun tocada(m: GrafoSocial.Modelo, o: Offset, w: Float, h: Float, zoom: F
 /** El modelo de la vista elegida, calculado fuera del hilo principal (el acomodo de fuerzas son 300 vueltas). */
 @Composable
 internal fun rememberModelo(vistaFija: String? = null): GrafoSocial.Modelo? {
-    val vista = vistaFija ?: GrafoSocial.vista; val periodo = GrafoSocial.periodo; val solo = GrafoSocial.soloDichas
+    val vista = vistaFija ?: GrafoSocial.vista; val periodo = GrafoSocial.periodo
+    val filtro = GrafoSocial.filtro
     // En las capturas (síncrono) se calcula de una vez, como en Logros y Cobertura.
     val sinc = io.github.ruddy2003.vestigium.ciencia.TusNumeros.sincrono
-    val inicial = if (sinc) runCatching { if (vista == "cielo") GrafoSocial.cielo(periodo) else GrafoSocial.red(solo) }.getOrNull() else null
-    val m by produceState(inicial, Repo.dias, Repo.momentos, Repo.config.vinculos, Repo.config.personas, vista, periodo, solo) {
-        if (!sinc) value = withContext(Dispatchers.Default) { runCatching { if (vista == "cielo") GrafoSocial.cielo(periodo) else GrafoSocial.red(solo) }.getOrNull() }
+    val inicial = if (sinc) runCatching { if (vista == "cielo") GrafoSocial.cielo(periodo) else GrafoSocial.red(filtro) }.getOrNull() else null
+    val m by produceState(inicial, Repo.dias, Repo.momentos, Repo.config.vinculos, Repo.config.personas, vista, periodo, filtro) {
+        if (!sinc) value = withContext(Dispatchers.Default) { runCatching { if (vista == "cielo") GrafoSocial.cielo(periodo) else GrafoSocial.red(filtro) }.getOrNull() }
     }
     return m?.takeIf { it.vista == vista }
 }
@@ -231,8 +252,9 @@ private fun SelectorVista(alCambiar: () -> Unit = {}) {
         Ficha("cielo", GrafoSocial.vista == "cielo") { GrafoSocial.vista = "cielo"; alCambiar() }
         Text("·", color = MaterialTheme.colorScheme.outline, modifier = Modifier.align(Alignment.CenterVertically))
         if (GrafoSocial.vista == "red") {
-            Ficha("todo", !GrafoSocial.soloDichas) { GrafoSocial.soloDichas = false; alCambiar() }
-            Ficha("solo lo que dije", GrafoSocial.soloDichas) { GrafoSocial.soloDichas = true; alCambiar() }
+            Ficha("todo", GrafoSocial.filtro == GrafoSocial.COMPLETA) { GrafoSocial.filtro = GrafoSocial.COMPLETA; alCambiar() }
+            Ficha("solo lo que dije", GrafoSocial.filtro == GrafoSocial.DICHOS) { GrafoSocial.filtro = GrafoSocial.DICHOS; alCambiar() }
+            Ficha("solo lo que escribí", GrafoSocial.filtro == GrafoSocial.ESCRITOS) { GrafoSocial.filtro = GrafoSocial.ESCRITOS; alCambiar() }
         } else listOf(90 to "3 meses", 365 to "un año", 0 to "siempre").forEach { (d, n) -> Ficha(n, GrafoSocial.periodo == d) { GrafoSocial.periodo = d; alCambiar() } }
     }
 }
