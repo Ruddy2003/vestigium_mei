@@ -47,6 +47,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.layout.boundsInWindow
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
@@ -445,7 +447,7 @@ internal fun vidasConCuento(tema: String): List<OtrasVidas.Vida> = OtrasVidas.vi
  * día pasado no sale la fila de vidas: es el cuento de esa vida. Debajo del retrato va el botón para seguirla (encargo A).
  */
 @Composable
-fun PantallaCuento(nav: Nav, vidaId: String, dia: String? = null) {
+fun PantallaCuento(nav: Nav, vidaId: String, dia: String? = null, horaFija: Double? = null) {
     val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
     val diaCuento = dia?.takeIf { io.github.ruddy2003.vestigium.data.CuentosLeidos.sePuedeLeer(it, hoy) } ?: hoy
     val pasado = diaCuento != hoy
@@ -458,30 +460,70 @@ fun PantallaCuento(nav: Nav, vidaId: String, dia: String? = null) {
     }
     var elegida by rememberSaveable(tema, vidaId) { mutableStateOf(vidas.firstOrNull { it.id == vidaId }?.id ?: vidas.firstOrNull()?.id ?: "") }
     val v = vidas.firstOrNull { it.id == elegida }
-    Hoja("El cuento de hoy", nav.atras) {
+    Hoja(io.github.ruddy2003.vestigium.ui.escenas.LecturaCuento.tituloPantalla(diaCuento, hoy), nav.atras) {
         if (v == null) { Ayuda("Todavía no hay cuentos para las vidas de este tema.", Modifier.padding(top = 12.dp)); return@Hoja }
         if (vidas.size > 1 && !pasado) LineaDeVidas(vidas, v.id) { elegida = it }
+        // Parte 8 (encargo B): el cuadro de su vida ese día, con su gato y su «me gusta», y el ambiente de su lugar.
+        val hora = horaFija ?: io.github.ruddy2003.vestigium.ui.escenas.horaDeAhora()
+        val cuadro = cuadroDeLaVida(v.id, diaCuento)
+        if (cuadro != null) {
+            io.github.ruddy2003.vestigium.ui.escenas.CuadroDelCuento(cuadro, hora, Modifier.padding(top = 14.dp))
+        } else if (io.github.ruddy2003.vestigium.ui.escenas.tieneCuadro(v.id)) io.github.ruddy2003.vestigium.ui.escenas.SitioDelCuadro(Modifier.padding(top = 14.dp))
         RetratoVida(v, numeros = false)
         io.github.ruddy2003.vestigium.ui.seguir.BotonSeguir(v, Modifier.padding(top = 8.dp))
-        HoyEnSuVida(v, dia = diaCuento)
+        // Leer es llegar al final: cuando el final del cuento queda a la vista, una vez por apertura (decisión del director).
+        val enVivo = !androidx.compose.ui.platform.LocalInspectionMode.current
+        var marcado by remember(v.id, diaCuento) { mutableStateOf(false) }
+        HoyEnSuVida(v, dia = diaCuento, hora = hora, hoy = hoy, alLlegarAlFinal = { ficha ->
+            if (!marcado && enVivo) {
+                marcado = true
+                val especiales = io.github.ruddy2003.vestigium.ui.escenas.LecturaCuento.especiales(ficha)
+                runCatching {
+                    io.github.ruddy2003.vestigium.data.Repo.cambiarConfig {
+                        io.github.ruddy2003.vestigium.data.CuentosLeidos.marcar(it, v.id, diaCuento, io.github.ruddy2003.vestigium.data.Fechas.diaLogico(),
+                            io.github.ruddy2003.vestigium.data.Fechas.ahoraIso(), especiales)
+                    }
+                }
+            }
+        })
         SuVida(v)
         androidx.compose.foundation.layout.Spacer(Modifier.height(28.dp))
     }
 }
 
 /**
+ * Parte 8: el cuadro de [vida] el día [dia] (`cuadroDeVida`), calculado fuera del hilo de la pantalla; null mientras se
+ * calcula o si no tiene (los doce comunes, los temas sin escena). En las capturas se calcula ahí mismo.
+ */
+@Composable
+private fun cuadroDeLaVida(vida: String, dia: String): io.github.ruddy2003.vestigium.ui.escenas.CuadroHoy? {
+    if (androidx.compose.ui.platform.LocalInspectionMode.current)
+        return remember(vida, dia) { runCatching { io.github.ruddy2003.vestigium.ui.escenas.cuadroDeVida(vida, dia) }.getOrNull() }
+    val c by produceState<io.github.ruddy2003.vestigium.ui.escenas.CuadroHoy?>(null, vida, dia) {
+        value = withContext(Dispatchers.Default) { runCatching { io.github.ruddy2003.vestigium.ui.escenas.cuadroDeVida(vida, dia) }.getOrNull() }
+    }
+    return c
+}
+
+/**
  * «Hoy, en su vida»: el cuento del día del personaje, con la edad que avanza cada año, lo que hoy tiene de especial
  * (y qué tan cierto es) y sus fuentes al pie. No sale nada si el personaje todavía no tiene cuento. El texto es el
  * mismo todo el día, salvo el párrafo de lo que hace a esta [hora]. No lee ningún dato tuyo.
+ *
+ * Parte 8 (encargo B): con [hoy] (tu día lógico), el título dice qué día es si [dia] es otro («El 21 de marzo, en su
+ * vida»); sin él, «Hoy, en su vida», como siempre. Con [alLlegarAlFinal], un marcador de 1 dp justo debajo del último
+ * párrafo avisa (con la ficha del día) cada vez que queda a la vista: quien lo llama decide si ya contó.
  */
 @Composable
 internal fun HoyEnSuVida(v: OtrasVidas.Vida, dia: String = io.github.ruddy2003.vestigium.data.Fechas.diaLogico(),
-                         hora: Double = java.time.LocalTime.now().let { it.hour + it.minute / 60.0 }, modifier: Modifier = Modifier) {
+                         hora: Double = java.time.LocalTime.now().let { it.hour + it.minute / 60.0 }, modifier: Modifier = Modifier,
+                         hoy: String? = null, alLlegarAlFinal: ((io.github.ruddy2003.vestigium.vidas.FichaDelDia) -> Unit)? = null) {
     val cuento = remember(v.id, dia, (hora * 2).toInt()) { runCatching { io.github.ruddy2003.vestigium.vidas.Cuento.de(dia, v.id, hora) }.getOrNull() } ?: return
     val ctx = LocalContext.current
     val cs = MaterialTheme.colorScheme
     val ficha = cuento.ficha
-    Seccion("Hoy, en su vida", modifier = modifier) {
+    val titulo = if (hoy == null) "Hoy, en su vida" else io.github.ruddy2003.vestigium.ui.escenas.LecturaCuento.tituloSeccion(dia, hoy)
+    Seccion(titulo, modifier = modifier) {
         Tarjeta {
             cuento.notas.firstOrNull()?.let { Text("día especial · ${it.tipo.nombre}", style = MaterialTheme.typography.labelMedium, color = cs.primary) }
             Text(cuento.titulo, style = MaterialTheme.typography.titleLarge)
@@ -489,6 +531,14 @@ internal fun HoyEnSuVida(v: OtrasVidas.Vida, dia: String = io.github.ruddy2003.v
                 style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
             if (ficha.avance) Ayuda("Es un avance: su año empieza el 1 de enero. Hasta entonces verás cómo será el primero.", Modifier.padding(top = 6.dp))
             cuento.parrafos.forEach { Text(it, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(top = 10.dp)) }
+            if (alLlegarAlFinal != null) {
+                val vista = androidx.compose.ui.platform.LocalView.current
+                val avisar by androidx.compose.runtime.rememberUpdatedState(alLlegarAlFinal)
+                Spacer(Modifier.fillMaxWidth().height(1.dp).onGloballyPositioned { donde ->
+                    val r = donde.boundsInWindow()
+                    if (io.github.ruddy2003.vestigium.ui.escenas.LecturaCuento.alaVista(r.top, r.bottom, vista.rootView.height.toFloat())) avisar(ficha)
+                })
+            }
 
             // ---- El pie: qué tan cierto es lo de hoy, la advertencia de siempre y las fuentes.
             cuento.notas.forEachIndexed { i, n ->
