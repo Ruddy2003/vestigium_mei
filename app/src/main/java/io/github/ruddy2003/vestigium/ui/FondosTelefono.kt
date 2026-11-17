@@ -68,7 +68,14 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.ruddy2003.vestigium.R
+import io.github.ruddy2003.vestigium.data.Fechas
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.ui.escenas.EscenaVida
+import io.github.ruddy2003.vestigium.ui.escenas.Momento
+import io.github.ruddy2003.vestigium.ui.escenas.escenaDe
+import io.github.ruddy2003.vestigium.ui.escenas.momentoDelFondo
+import io.github.ruddy2003.vestigium.ui.escenas.pintarFondosDelCuadro
+import io.github.ruddy2003.vestigium.ui.escenas.recorteFranja
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -103,7 +110,11 @@ object FondosTelefono {
         else runCatching { Cara.valueOf(prefs(ctx).getString("cara_${t.id}", null) ?: Cara.BASE.name) }.getOrDefault(Cara.BASE)
 
     /** Guarda la cara elegida para el fondo de [t] (solo en un tema con caras). */
-    fun elegirCara(ctx: Context, t: TemaId, c: Cara) { if (t.conCaras) prefs(ctx).edit().putString("cara_${t.id}", c.name).apply() }
+    fun elegirCara(ctx: Context, t: TemaId, c: Cara) {
+        if (!t.conCaras || cara(ctx, t) == c) return
+        prefs(ctx).edit().putString("cara_${t.id}", c.name).apply()
+        cambios.intValue++
+    }
 
     fun guardar(ctx: Context, bmp: Bitmap, tema: TemaId, oscuro: Boolean, variante: String) {
         val f = archivo(ctx, tema, oscuro, variante)
@@ -120,13 +131,21 @@ object FondosTelefono {
         true
     }.getOrDefault(false)
 
-    /** Tamaño real de la pantalla (con las barras del sistema), en píxeles. Desde el pulso no hay ventana: se usa la del sistema. */
-    private fun pantalla(ctx: Context): android.graphics.Point = runCatching {
-        val r = ctx.getSystemService(android.view.WindowManager::class.java).maximumWindowMetrics.bounds
-        android.graphics.Point(r.width(), r.height())
-    }.getOrElse {
-        val m = android.content.res.Resources.getSystem().displayMetrics
-        android.graphics.Point(m.widthPixels, m.heightPixels)
+    /**
+     * Tamaño real de la pantalla (con las barras del sistema), en píxeles y siempre en vertical (el fondo es vertical aunque
+     * el teléfono esté acostado). Desde el pulso no hay ventana: si la ventana no lo dice, la pantalla del sistema.
+     */
+    private fun pantalla(ctx: Context): android.graphics.Point {
+        val p = runCatching {
+            val r = ctx.getSystemService(android.view.WindowManager::class.java).maximumWindowMetrics.bounds
+            android.graphics.Point(r.width(), r.height())
+        }.getOrNull()?.takeIf { it.x > 0 && it.y > 0 } ?: runCatching {
+            val m = android.util.DisplayMetrics()
+            @Suppress("DEPRECATION")
+            ctx.getSystemService(android.hardware.display.DisplayManager::class.java).getDisplay(android.view.Display.DEFAULT_DISPLAY).getRealMetrics(m)
+            android.graphics.Point(m.widthPixels, m.heightPixels)
+        }.getOrNull()?.takeIf { it.x > 0 && it.y > 0 } ?: android.content.res.Resources.getSystem().displayMetrics.let { android.graphics.Point(it.widthPixels, it.heightPixels) }
+        return android.graphics.Point(minOf(p.x, p.y), maxOf(p.x, p.y))
     }
 
     /**
@@ -170,27 +189,86 @@ object FondosTelefono {
         }
     }
 
-    /** Qué tema se aplicó la última vez como fondo fijo (para cambiarlo solo al cambiar de tema). */
+    /** Las preferencias de los fondos: ajustes de este teléfono, no datos (no van a la base ni a la exportación). */
     private fun prefs(ctx: Context) = ctx.getSharedPreferences("fondos", Context.MODE_PRIVATE)
-    fun ultimo(ctx: Context): String? = prefs(ctx).getString("ultimo", null)
-    fun marcarUltimo(ctx: Context, clave: String) { prefs(ctx).edit().putString("ultimo", clave).apply() }
-
-    /** «romano/false»: el tema y si va en oscuro, la clave de un fondo; en un tema con caras, también la cara («psicodelia/true/intensa»). */
-    fun clave(t: TemaId, oscuro: Boolean, cara: Cara = Cara.BASE) = if (t.conCaras) "${t.id}/$oscuro/${cara.name.lowercase()}" else "${t.id}/$oscuro"
 
     /**
-     * Los fondos que conviene tener pintados en archivo: el del tema de hoy en sus dos modos y, si el tema cambia solo cada
-     * día, el de mañana (su tema ya se sabe: [RotacionTema.deDia] siempre da el mismo). Así el pulso de las 5:00 puede
-     * ponerlo aunque la app esté cerrada. El que se ve ahora va primero.
+     * Sube cada vez que cambia algo de las preferencias de los fondos que decide qué se pinta (el estilo, la cara): quien
+     * lo lee en Compose ([CapturaFondoTelefono]) vuelve a mirar qué falta.
+     */
+    val cambios = androidx.compose.runtime.mutableIntStateOf(0)
+
+    /** El último fondo fijo que se puso (ver [ClaveFondo]); null si no se sabe o si se guardó con la clave de antes. */
+    fun ultimo(ctx: Context): ClaveFondo? = ClaveFondo.leer(prefs(ctx).getString("ultimo", null))
+
+    /** Anota que se acaba de poner el fondo [clave], y a qué hora (para no cambiar la luz más de una vez por pulso). */
+    fun marcarUltimo(ctx: Context, clave: ClaveFondo) {
+        prefs(ctx).edit().putString("ultimo", clave.texto()).putLong("ultimo_ms", System.currentTimeMillis()).apply()
+    }
+
+    private fun msDesdeUltimo(ctx: Context): Long = System.currentTimeMillis() - prefs(ctx).getLong("ultimo_ms", 0L)
+
+    /**
+     * El estilo del fondo fijo que se eligió en la pantalla de los fondos: [ESTILO_CUADRO] (el cuadro del tema, si lo tiene)
+     * o [ESTILO_PAPEL]. Sin elegir, el cuadro. Vale para todos los temas: uno sin cuadro sigue con su papel.
+     */
+    fun estilo(ctx: Context): String = prefs(ctx).getString("estilo", null)?.takeIf { it == ESTILO_PAPEL } ?: ESTILO_CUADRO
+
+    fun elegirEstilo(ctx: Context, e: String) {
+        if (e != ESTILO_CUADRO && e != ESTILO_PAPEL) return
+        prefs(ctx).edit().putString("estilo", e).apply()
+        cambios.intValue++
+    }
+
+    /** La escena con la que se pinta el fondo de [t]: la de su cuadro, si lo tiene y se eligió el cuadro; si no, null (el papel). */
+    fun escenaDelFondo(ctx: Context, t: TemaId): EscenaVida? = if (estilo(ctx) == ESTILO_CUADRO) escenaDe(t) else null
+
+    /** La hora de ahora, de 0 a 24 con decimales, como la lee el cuadro de Hoy. */
+    fun horaAhora(): Double = java.time.LocalTime.now().let { it.hour + it.minute / 60.0 + it.second / 3600.0 }
+
+    /**
+     * El fondo que tocaría tener puesto ahora con el tema [t] en el modo [oscuro]: con el cuadro, el del día lógico [dia] y
+     * el tramo de luz de la [hora] ([Momento.luz]); con el papel (o si al personaje le falta el calendario), el del tema.
+     */
+    fun claveAhora(ctx: Context, t: TemaId, oscuro: Boolean, dia: String = Fechas.diaLogico(), hora: Double = horaAhora()): ClaveFondo {
+        val c = if (t.conCaras) cara(ctx, t).name.lowercase() else ""
+        val m = escenaDelFondo(ctx, t)?.let { e -> runCatching { momentoDelFondo(e, dia, hora) }.getOrNull() }
+        return if (m != null) ClaveFondo(t.id, oscuro, c, cuadro = true, dia = dia, luz = m.luz.franja.name) else ClaveFondo(t.id, oscuro, c)
+    }
+
+    /**
+     * Los dos fondos del cuadro de [t] (inicio, bloqueo) del día [dia] a la [hora], del tamaño de la pantalla; null si no
+     * va con cuadro. Pinta fuera de la pantalla ([pintarFondosDelCuadro]): pesado (unas décimas de segundo y unos 20 MB), así
+     * que se llama desde un hilo de trabajo, y quien los recibe los suelta ([Bitmap.recycle]) en cuanto los pone.
+     */
+    fun pintarCuadro(ctx: Context, t: TemaId, dia: String, hora: Double): Pair<Bitmap, Bitmap>? {
+        val e = escenaDelFondo(ctx, t) ?: return null
+        val m = momentoDelFondo(e, dia, hora) ?: return null
+        val p = pantalla(ctx)
+        val r = recorteFranja(p.x, p.y, e.franjaFondo)
+        // El velo de inicio es el fondo del tema en oscuro: los nombres de los íconos son blancos (ver VELO_INICIO_DIA).
+        val velo = esquemaDe(t, true, cara(ctx, t)).background
+        val f = pintarFondosDelCuadro(e, m, r, ctx.resources.displayMetrics.density, velo)
+        return f.inicio.asAndroidBitmap() to f.bloqueo.asAndroidBitmap()
+    }
+
+    /**
+     * Los fondos de papel que conviene tener pintados en archivo: el del tema de hoy en sus dos modos y, si el tema cambia
+     * solo cada día, el de mañana (su tema ya se sabe: [RotacionTema.deDia] siempre da el mismo). Así el pulso de las 5:00
+     * puede ponerlo aunque la app esté cerrada. El que se ve ahora va primero. Un tema que va con su cuadro no necesita
+     * papel (el cuadro se pinta cuando hace falta, también desde el pulso), salvo con el fondo vivo puesto, que dibuja
+     * encima del papel.
      */
     fun necesarios(ctx: Context): List<Pair<TemaId, Boolean>> {
         val c = Repo.config
         val hoy = Estilo.tema
         val ahora = modoOscuroDe(ctx, hoy)
-        fun modos(t: TemaId, primero: Boolean) = if (t.soloOscuro) listOf(t to true) else listOf(t to primero, t to !primero)
+        val vivo = vivoActivo(ctx)
+        fun modos(t: TemaId, primero: Boolean) =
+            if (!vivo && escenaDelFondo(ctx, t) != null) emptyList() else if (t.soloOscuro) listOf(t to true) else listOf(t to primero, t to !primero)
         val l = modos(hoy, ahora).toMutableList()
         if (c.tema_rotar) {
-            val manana = RotacionTema.deDia(io.github.ruddy2003.vestigium.data.Fechas.sumar(io.github.ruddy2003.vestigium.data.Fechas.diaLogico(), 1), hoy.id, c)
+            val manana = RotacionTema.deDia(Fechas.sumar(Fechas.diaLogico(), 1), hoy.id, c)
             l += modos(manana, ahora)
         }
         return l.distinct()
@@ -206,24 +284,58 @@ object FondosTelefono {
         File(ctx.filesDir, "fondos").listFiles()?.forEach { f -> if (f.name !in guardar) f.delete() }
     }
 
+    /** Lo que pasó al revisar el fondo fijo ([revisar]). */
+    enum class Revision {
+        /** No tocaba (apagado, fondo vivo, o ya está puesto el que toca). */
+        NADA,
+        /** Se puso el fondo nuevo. */
+        PUESTO,
+        /** Toca el papel y todavía no está pintado: lo pinta la app al abrirse ([CapturaFondoTelefono]) y vuelve a llamar. */
+        FALTA_PAPEL,
+        /** Tocaba y falló (al pintar el cuadro o al ponerlo): se puede reintentar. */
+        FALLO,
+    }
+
     /**
-     * Sin abrir la app: si pediste que el fondo fijo cambie con el tema, pone el del tema de hoy desde su archivo, ya pintado
-     * con la app abierta. Lo llama el pulso de 15 minutos (también cuando el teléfono pasa a claro u oscuro). Con el fondo
-     * vivo puesto no hace nada: ese ya cambia solo, y ponerle encima uno fijo lo quitaría. true si cambió el fondo.
+     * Si pediste que el fondo fijo cambie con el tema, pone el que toca ahora, también con la app cerrada. Lo llaman el pulso
+     * de 15 minutos ([RotacionTema.propagar], también cuando el teléfono pasa a claro u oscuro) y la app al cambiar de tema
+     * o al volver a ella.
+     * - **Con cuadro** (el tema lo tiene y se eligió el cuadro): lo pinta aquí mismo, fuera de la pantalla, y lo pone. Cambia
+     *   con el tema, el modo, el día y el tramo de luz, nunca más de una vez por pulso ([tocaCambiarFondo]).
+     * - **Con papel:** lo pone desde su archivo, pintado con la app abierta; si todavía no está, [Revision.FALTA_PAPEL].
+     * - Con el fondo vivo puesto no hace nada: ese ya cambia solo, y ponerle encima uno fijo lo quitaría.
+     *
+     * De uno en uno (el pulso y la app pueden llamar a la vez): el segundo ve que ya está puesto.
      */
-    fun alDia(ctx: Context): Boolean {
+    @Synchronized
+    fun revisar(ctx: Context): Revision {
         val c = Repo.config
-        if (!c.fondo_telefono_auto || Repo.errorAlAbrir != null || vivoActivo(ctx)) return false
+        if (!c.fondo_telefono_auto || Repo.errorAlAbrir != null || vivoActivo(ctx)) return Revision.NADA
         val t = Estilo.tema
         val o = modoOscuroDe(ctx, t)
-        val k = clave(t, o, cara(ctx, t))
-        if (ultimo(ctx) == k || !pintado(ctx, t, o)) return false
-        val bi = runCatching { BitmapFactory.decodeFile(archivo(ctx, t, o, "inicio").absolutePath) }.getOrNull()
-        val bb = runCatching { BitmapFactory.decodeFile(archivo(ctx, t, o, "bloqueo").absolutePath) }.getOrNull()
-        if ((bi == null && bb == null) || !poner(ctx, bi, bb, c.fondo_telefono_donde)) return false
+        val dia = Fechas.diaLogico(); val hora = horaAhora()
+        val k = claveAhora(ctx, t, o, dia, hora)
+        if (!tocaCambiarFondo(ultimo(ctx), k, msDesdeUltimo(ctx))) return Revision.NADA
+        val donde = c.fondo_telefono_donde
+        if (k.cuadro) {
+            val (bi, bb) = runCatching { pintarCuadro(ctx, t, dia, hora) }.getOrNull() ?: return Revision.FALLO
+            try {
+                if (!poner(ctx, bi, bb, donde)) return Revision.FALLO
+            } finally { bi.recycle(); bb.recycle() }
+        } else {
+            if (!pintado(ctx, t, o)) return Revision.FALTA_PAPEL
+            val bi = runCatching { BitmapFactory.decodeFile(archivo(ctx, t, o, "inicio").absolutePath) }.getOrNull()
+            val bb = runCatching { BitmapFactory.decodeFile(archivo(ctx, t, o, "bloqueo").absolutePath) }.getOrNull()
+            try {
+                if ((bi == null && bb == null) || !poner(ctx, bi, bb, donde)) return Revision.FALLO
+            } finally { bi?.recycle(); bb?.recycle() }
+        }
         marcarUltimo(ctx, k)
-        return true
+        return Revision.PUESTO
     }
+
+    /** Como [revisar]: true si cambió el fondo. */
+    fun alDia(ctx: Context): Boolean = revisar(ctx) == Revision.PUESTO
 
     /** Lo que lleva escrito el fondo bajo el emblema: el nombre de la app en la voz de cada tema. */
     fun marca(t: TemaId): String = when (t) {
@@ -1135,7 +1247,7 @@ fun PantallaFondoTelefono(nav: Nav) {
                                     bi?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "inicio") }; bb?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "bloqueo") }
                                     FondosTelefono.poner(ctx, bi, bb, id)
                                 }
-                                if (ok) { FondosTelefono.marcarUltimo(ctx, FondosTelefono.clave(tema, oscuro, cara)); Repo.cambiarConfig { it.copy(fondo_telefono_donde = id) }; sentir(Sentidos.Evento.GUARDAR) }
+                                if (ok) { FondosTelefono.marcarUltimo(ctx, ClaveFondo(tema.id, oscuro, if (tema.conCaras) cara.name.lowercase() else "")); Repo.cambiarConfig { it.copy(fondo_telefono_donde = id) }; sentir(Sentidos.Evento.GUARDAR) }
                                 mensaje = if (ok) "Listo: " + when (id) { "inicio" -> "el limpio ya es tu fondo de inicio."; "bloqueo" -> "ya es tu fondo de bloqueo."; else -> "el limpio en inicio y el completo en bloqueo." } else "El teléfono no dejó cambiar el fondo."
                                 ocupado = false
                             }
@@ -1164,10 +1276,17 @@ fun PantallaFondoTelefono(nav: Nav) {
 }
 
 /**
- * Detrás de todo, sin verse: con el fondo vivo puesto o con «el fondo cambia con el tema» encendido, deja pintados en
- * archivo los fondos de hoy y de mañana (ver [FondosTelefono.necesarios]), uno por uno, y pone el fijo de hoy si hace
- * falta. Antes solo pintaba el del tema de ahora, exigía haber puesto un fondo a mano alguna vez y no reintentaba si
- * fallaba; y como el tema de cada día cambia a las 5:00 con la app cerrada, el fondo se quedaba con el de ayer.
+ * Detrás de todo, sin verse: con el fondo vivo puesto o con «el fondo cambia con el tema» encendido.
+ *
+ * 1. **El fijo de hoy, en el momento** ([FondosTelefono.revisar]): al cambiar de tema o de modo, al cambiar el estilo o la
+ *    cara, y cada vez que se vuelve a la app. Con cuadro, lo pinta fuera de la pantalla y lo pone ahí mismo; con papel,
+ *    en cuanto está pintado el suyo (sin esperar a los demás). Si falla, lo reintenta tres veces, cada vez más espaciadas.
+ * 2. **El papel que falta en archivo** (ver [FondosTelefono.necesarios]): uno por uno, el de hoy primero. Una foto que
+ *    falla se vuelve a poner al final de la fila (hasta tres vueltas) y, si aun así no sale, se intenta otra vez la
+ *    próxima vez que se vuelve a la app.
+ *
+ * Antes no ponía nada hasta haber pintado todos (si salías enseguida de la app, el fondo no cambiaba), no reintentaba una
+ * foto fallida hasta que cambiara el tema, y el pulso solo podía poner un archivo ya pintado.
  */
 @Composable
 fun CapturaFondoTelefono() {
@@ -1176,25 +1295,33 @@ fun CapturaFondoTelefono() {
     val oscuroAhora = modoOscuro(tema)
     val c = Repo.config
     val auto = c.fondo_telefono_auto
-    val vivo = remember(tema, oscuroAhora) { FondosTelefono.vivoActivo(ctx) }
+    val vuelta = vueltasALaApp()
+    val cambios = FondosTelefono.cambios.intValue
+    val vivo = remember(tema, oscuroAhora, vuelta) { FondosTelefono.vivoActivo(ctx) }
     if (!auto && !vivo) return
-    // Lo que falta pintar, en orden; se vuelve a mirar al cambiar el tema, el modo o la rotación.
-    val pendientes = remember(tema, oscuroAhora, c.tema_rotar, c.temas_rotacion, auto, vivo) {
+    // Sube cuando se acaba de pintar el papel de hoy: entonces se pone sin esperar a los demás.
+    var papelHoy by remember { mutableStateOf(0) }
+    LaunchedEffect(tema, oscuroAhora, auto, vuelta, cambios, papelHoy) {
+        if (!auto) return@LaunchedEffect
+        for (intento in 0 until 3) {
+            val r = withContext(Dispatchers.Default) { runCatching { FondosTelefono.revisar(ctx) }.getOrDefault(FondosTelefono.Revision.FALLO) }
+            if (r != FondosTelefono.Revision.FALLO) break
+            delay(5_000L * (intento + 1))
+        }
+    }
+    // Lo que falta pintar de papel, en orden; se vuelve a mirar al cambiar el tema, el modo, la rotación, el estilo o al volver.
+    val pendientes = remember(tema, oscuroAhora, c.tema_rotar, c.temas_rotacion, auto, vivo, vuelta, cambios) {
         androidx.compose.runtime.mutableStateListOf<Pair<TemaId, Boolean>>().apply {
             addAll(FondosTelefono.necesarios(ctx).filterNot { (t, o) -> FondosTelefono.pintado(ctx, t, o) })
         }
     }
-    val claveHoy = FondosTelefono.clave(tema, oscuroAhora, FondosTelefono.cara(ctx, tema))
-    var intentos by remember(claveHoy, auto) { mutableStateOf(0) }
+    val fallos = remember(pendientes) { mutableMapOf<Pair<TemaId, Boolean>, Int>() }
+    // Sube al terminar cada foto: si el mismo fondo vuelve a la fila, su intento se lanza de nuevo.
+    var ronda by remember(pendientes) { mutableStateOf(0) }
     val actual = pendientes.firstOrNull()
     if (actual == null) {
-        // Todo pintado: poner el fijo de hoy si toca (con reintentos) y borrar lo que sobra.
-        LaunchedEffect(claveHoy, auto, intentos) {
-            withContext(Dispatchers.IO) { FondosTelefono.limpiar(ctx, FondosTelefono.necesarios(ctx)) }
-            if (!auto || FondosTelefono.ultimo(ctx) == claveHoy || intentos >= 3) return@LaunchedEffect
-            val ok = withContext(Dispatchers.IO) { FondosTelefono.alDia(ctx) }
-            if (!ok && !FondosTelefono.vivoActivo(ctx)) { delay(5_000L * (intentos + 1)); intentos++ }
-        }
+        // Todo pintado: borrar lo que sobra.
+        LaunchedEffect(tema, oscuroAhora, vuelta, cambios) { withContext(Dispatchers.IO) { FondosTelefono.limpiar(ctx, FondosTelefono.necesarios(ctx)) } }
         return
     }
     val (t, o) = actual
@@ -1202,7 +1329,7 @@ fun CapturaFondoTelefono() {
     val capaBloqueo = rememberGraphicsLayer()
     // Con la cara que se eligió para el fondo de ese tema (la ciudad si nunca se eligió): no la de la hora.
     Box(Modifier.fillMaxSize()) { DosFondos(t, o, FondosTelefono.cara(ctx, t), null, capaInicio, capaBloqueo) }
-    LaunchedEffect(t, o) {
+    LaunchedEffect(actual, pendientes, ronda) {
         var hecho = false
         for (vez in 0 until 3) {
             delay(600L + 900L * vez)
@@ -1211,12 +1338,35 @@ fun CapturaFondoTelefono() {
                 hecho = withContext(Dispatchers.IO) {
                     runCatching { FondosTelefono.guardar(ctx, bi, t, o, "inicio"); FondosTelefono.guardar(ctx, bb, t, o, "bloqueo"); true }.getOrDefault(false)
                 }
+                bi.recycle(); bb.recycle()
                 if (hecho) break
             }
         }
-        // Aunque no haya salido, se pasa al siguiente: no se insiste en este hasta que algo cambie.
         pendientes.remove(actual)
+        if (hecho) {
+            // El de hoy ya está: ponerlo ya, sin esperar a pintar los demás.
+            if (t == tema && o == oscuroAhora) papelHoy++
+        } else {
+            // Al final de la fila, para otra vuelta (hasta tres); después, la próxima vez que se vuelva a la app.
+            val n = (fallos[actual] ?: 0) + 1
+            fallos[actual] = n
+            if (n < 3) pendientes.add(actual)
+        }
+        ronda++
     }
+}
+
+/** Cuántas veces se ha vuelto a la app (sube con cada regreso a primer plano): para volver a revisar lo que quedó pendiente. */
+@Composable
+private fun vueltasALaApp(): Int {
+    var n by remember { mutableStateOf(0) }
+    val ciclo = androidx.compose.ui.platform.LocalLifecycleOwner.current
+    androidx.compose.runtime.DisposableEffect(ciclo) {
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e -> if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) n++ }
+        ciclo.lifecycle.addObserver(obs)
+        onDispose { ciclo.lifecycle.removeObserver(obs) }
+    }
+    return n
 }
 
 // =====================================================================
