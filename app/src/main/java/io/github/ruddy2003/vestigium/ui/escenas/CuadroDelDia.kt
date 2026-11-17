@@ -77,8 +77,9 @@ import kotlin.math.sin
 
 /**
  * Si ya existe la pantalla «Hoy en la historia» (la ruta `historia_hoy`). La creó la tanda H1 del plan (13 nov 2026),
- * que puso esto en `true`: desde entonces el cuadro lleva la banderita y atiende la pulsación larga, salvo con el
- * interruptor de Ajustes › Privacidad apagado (`Config.historia_hoy`). El gesto es el de [VistaEscena], `alMantener`.
+ * que puso esto en `true`: desde entonces sale su botón debajo del cuento, salvo con el interruptor de Ajustes ›
+ * Privacidad apagado (`Config.historia_hoy`). Desde el 17 nov 2026 la pulsación larga del cuadro ya no la abre (abre el
+ * cuadro a pantalla completa) y la banderita del cuadro solo sale en los días especiales del personaje.
  */
 const val HAY_HISTORIA_HOY = true
 
@@ -88,13 +89,15 @@ const val HAY_HISTORIA_HOY = true
  * - [tema] y [hoy] (tu día lógico) dicen qué cuadro toca. Se prepara fuera del hilo de la pantalla: mientras tanto
  *   su sitio queda reservado, para que Hoy no dé un tirón al abrirse ni salte cuando el cuadro llega. Solo debe
  *   llamarse si [hayCuadroEnHoy]; si al final no hay cuadro (o una escena falla al dibujar), sale el gato de pixel.
- * - **La marca de día especial** es un distintivo pequeño montado sobre el borde de arriba del cuadro, a la derecha,
- *   fuera del dibujo. Dura todo el día.
+ * - **La marca de día especial** (17 nov 2026) es la banderita del tema, llena, colgada dentro del cuadro arriba a la
+ *   izquierda: solo sale cuando hoy es un día especial en la vida del personaje (`FichaDelDia.especial`) y dura todo el
+ *   día. Antes la banderita salía siempre (era la de «Hoy en la historia») y el día especial lo decía una estrellita
+ *   montada sobre el borde de arriba; la estrellita queda solo para un tema con cuadro y sin banderita, que hoy no hay.
  * - **El botón del cuento** ([BotonCuento]) lleva el título del cuento de hoy y «leer el cuento»; todo él abre el
- *   cuento ([alLeer], con el id del personaje).
+ *   cuento ([alLeer], con el id del personaje). Con [alHistoria], debajo va el de «Hoy en la historia» ([BotonHistoria]).
  * - **Gestos sobre el cuadro:** un toque corto en el gato lo acaricia (una vibración corta, si las vibraciones están
- *   encendidas) y en otro sitio lo llama; con [alHistoria], mantener el dedo 700 ms llena la banderita y abre «Hoy en
- *   la historia». Sin [alHistoria] no hay banderita ni pulsación larga.
+ *   encendidas) y en otro sitio lo llama; mantener el dedo 700 ms abre el cuadro a pantalla completa ([CuadroAmpliado]).
+ *   Ya no lleva el botón de ampliar en la esquina.
  * - **Se detiene solo:** con las animaciones apagadas o con ahorro de energía queda quieto, y mientras está fuera de
  *   la vista (al desplazar Hoy hacia abajo) no traza nada.
  *
@@ -141,17 +144,17 @@ fun CuadroDelDia(
                 VistaEscena(
                     c.escena, c.ficha, hora,
                     Modifier.fillMaxWidth().onGloballyPositioned { donde -> val r = donde.boundsInWindow(); seVe = r.width > 1f && r.height > 1f },
-                    forma, animar = animar, banderita = if (alHistoria != null) c.banderita else null,
+                    // La banderita, solo en un día especial del personaje, y siempre llena.
+                    forma, animar = animar, banderita = if (c.especial) c.banderita else null, lleno = 1f,
                     alFallar = { fallo = true }, humor = animo, pelaje = c.pelaje, pasoGato = pasoGato,
                     toques = true, alAcariciar = { acariciar(ctx) },
-                    alMantener = alHistoria?.let { abrir -> { sentir(Sentidos.Evento.ABRIR); abrir() } }, pausa = !seVe,
+                    alMantener = { sentir(Sentidos.Evento.ABRIR); ampliar() }, pausa = !seVe,
                     descripcion = "El cuadro de hoy: el entorno de ${quien.nombre}, ${quien.lugar}." + if (c.especial) " Hoy es un día especial en su vida." else "",
                     acciones = listOf("Leer el cuento de hoy" to leer, "Ver el cuadro a pantalla completa" to ampliar),
                     enSegundoPlano = enVivo, fondo = cs.surfaceVariant.copy(alpha = 0.35f),
                 )
-                if (c.especial) MarcaEspecial(Modifier.align(Alignment.TopEnd).offset(x = (-12).dp, y = (-8).dp))
-                // Parte 8: ampliar, sobre la esquina de abajo (los toques del cuadro ya son del gato y de la historia).
-                BotonAmpliar(ampliar, Modifier.align(Alignment.BottomEnd).padding(8.dp))
+                // Un tema con cuadro y sin banderita (hoy no hay ninguno) conserva la estrellita del día especial.
+                if (c.especial && c.banderita == null) MarcaEspecial(Modifier.align(Alignment.TopEnd).offset(x = (-12).dp, y = (-8).dp))
             }
             BotonCuento(c.titulo, c.especial, leer, Modifier.padding(top = 8.dp), de = quien.nombre, tema = tema)
             // Parte 8: «Hoy en la historia», también como botón (la pulsación larga sigue).

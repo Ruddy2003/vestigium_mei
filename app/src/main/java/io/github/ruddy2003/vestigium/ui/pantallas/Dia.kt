@@ -248,7 +248,7 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
             val temaDeHoy = io.github.ruddy2003.vestigium.ui.Estilo.tema
             if (c.gato && io.github.ruddy2003.vestigium.ui.escenas.hayCuadroEnHoy(temaDeHoy, c.gato_estilo)) io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(
                 temaDeHoy, hoy, alLeer = { vida -> nav.ir("cuento?vida=$vida") },
-                // La pulsación larga abre «Hoy en la historia» cuando exista esa pantalla (tanda H1) y esté encendida en Ajustes.
+                // El botón «Hoy en la historia», debajo del cuento, cuando exista esa pantalla (tanda H1) y esté encendida en Ajustes.
                 alHistoria = if (io.github.ruddy2003.vestigium.ui.escenas.HAY_HISTORIA_HOY && c.historia_hoy) { { nav.ir("historia_hoy") } } else null,
             )
             else io.github.ruddy2003.vestigium.ui.GatoDelDia(hoy)
