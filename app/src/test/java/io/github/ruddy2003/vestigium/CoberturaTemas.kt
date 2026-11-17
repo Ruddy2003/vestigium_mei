@@ -105,9 +105,9 @@ class CoberturaTemas {
     companion object {
         val CLAVES_WIDGET = listOf("animo", "momento", "gasto", "sueno", "habitos", "hoy", "cifra", "foto", "enfoque")
 
-        /** Los 13 sonidos de cada tema (`<id>` se cambia por el id). */
+        /** Los 14 sonidos de cada tema (`<id>` se cambia por el id). El de historia, desde la parte 8 (el día especial de quien sigues). */
         val SONIDOS_TEMA = listOf("toque", "guardar", "logro", "pasar", "elegir", "abrir", "tema", "presentacion", "anual").map { "s_<id>_$it" } +
-            listOf("n_<id>_aviso", "n_<id>_solemne", "t_<id>_llamada", "t_<id>_notificacion")
+            listOf("n_<id>_aviso", "n_<id>_solemne", "n_<id>_historia", "t_<id>_llamada", "t_<id>_notificacion")
 
         /** Los del lote 6: error, cambio, la tecla del diario y el rascado de la lámina. */
         val SONIDOS_LOTE6 = listOf("s_<id>_error", "s_<id>_cambio", "s_tecla_<id>", "s_rascar_<id>")

@@ -39,10 +39,38 @@ class AvisosTemaPrueba {
             .forEach { assertEquals(it, "n_romano_aviso", Avisos.nombreSonido(it, "romano")) }
         listOf(Avisos.CANAL_DIARIO, Avisos.CANAL_ESCALAS, Avisos.CANAL_REPORTES)
             .forEach { assertEquals(it, "n_romano_solemne", Avisos.nombreSonido(it, "romano")) }
+        // El día especial de quien sigues, el suyo (parte 8): distinto de los otros dos.
+        assertEquals("n_romano_historia", Avisos.nombreSonido(Avisos.CANAL_HISTORIA, "romano"))
+        // Cada familia tiene uno de los tres tonos: una sin tono tendría canal por tema sin sonido del tema.
+        Avisos.FAMILIAS.forEach { assertTrue(it, Avisos.tono(it) in setOf("aviso", "solemne", "historia")) }
         // Ninguna familia nace con importancia baja (en Android, baja es sin sonido): «reportes» nacía así.
         Avisos.FAMILIAS.forEach { assertTrue(it, Avisos.importancia(it) >= android.app.NotificationManager.IMPORTANCE_DEFAULT) }
         // Las familias no se pisan: ninguna es el principio de otra («enfoque» no es familia; «enfoque_aviso» sí).
         Avisos.FAMILIAS.forEach { a -> Avisos.FAMILIAS.filter { it != a }.forEach { b -> assertFalse("$a/$b", b.startsWith(a + "_")) } }
+    }
+
+    @Test fun cadaTemaConSonidosTieneElDeHistoria() {
+        // La familia del día especial de quien sigues (parte 8) tiene su canal por tema y su sonido propio en cada tema con
+        // sonidos: el archivo existe, es el mismo del `when` de los recursos y no es el corto ni el solemne.
+        assertTrue(Avisos.CANAL_HISTORIA in Avisos.FAMILIAS)
+        TemaId.entries.filterNot { it.sinDiseno }.forEach { t ->
+            val nombre = Avisos.nombreSonido(Avisos.CANAL_HISTORIA, t.id)
+            assertEquals("n_${t.id}_historia", nombre)
+            assertTrue("falta res/raw/$nombre.ogg", Pendientes.main("res/raw/$nombre.ogg").exists())
+            val r = Avisos.sonido(Avisos.CANAL_HISTORIA, t.id)!!
+            assertEquals(nombre, nombreDeRecurso(r))
+            assertNotEquals(t.id, Avisos.sonido(Avisos.CANAL_ANIMO, t.id), r)
+            assertNotEquals(t.id, Avisos.sonido(Avisos.CANAL_DIARIO, t.id), r)
+        }
+        // Básico: el del teléfono, como en las demás familias.
+        assertNull(Avisos.nombreSonido(Avisos.CANAL_HISTORIA, TemaId.BASICO.id))
+        assertNull(Avisos.sonido(Avisos.CANAL_HISTORIA, TemaId.BASICO.id))
+        // La familia no se confunde con otra al buscar sus canales: «historia_<tema>_<serie>».
+        val id = Avisos.idCanalNuevo(Avisos.CANAL_HISTORIA, "heleno", 12_345L)
+        assertEquals(12_345L, Avisos.serialDe(id, Avisos.CANAL_HISTORIA))
+        assertEquals(id, Avisos.canalVigente(listOf(id, Avisos.idCanalNuevo(Avisos.CANAL_ANIMO, "heleno", 99_999L)), Avisos.CANAL_HISTORIA, "heleno"))
+        // Su voz: cada tema tiene un título para el aviso (Psicodelia se queda con el de omisión).
+        TemaId.entries.filterNot { it == TemaId.PSICODELIA }.forEach { assertTrue(it.id, Avisos.voz(it).historia.isNotBlank()) }
     }
 
     @Test fun ningunAvisoSaleDeUnCanalFijo() {
