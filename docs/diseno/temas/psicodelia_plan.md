@@ -1,6 +1,17 @@
 # Psicodelia v2: el plan técnico
 
-Cómo llevar al código la guía [`psicodelia.md`](psicodelia.md) (versión 2, 16 nov 2026). **Aquí no se programa nada todavía**: es el orden de trabajo, dónde va cada cosa y qué pruebas cambian. Las rutas de código son de `app/src/main/java/io/github/ruddy2003/vestigium/`.
+> **Plan ejecutado (17 nov 2026).** Las ocho tandas y el cierre están programados; lo que de verdad quedó, con sus nombres de código, está en [`psicodelia_base.md`](psicodelia_base.md), y la guía [`psicodelia.md`](psicodelia.md) ya dice lo que se hizo. Este plan se deja como historia. **Lo que cambió respecto de él** (por las decisiones del autor del 16 nov 2026, que mandan):
+> - **La intensidad** cuenta cualquier sustancia con nivel (alcohol, cannabis, «otra»), no solo el cannabis; va por tramos (nivel 3 → 0.5, nivel 8 o más → 1; sin nivel anotado, 3) y **no** lee `sustancias_ocultas`. `Intensidad.de(consumos, ahora)` no recibe las ocultas (1.2 queda superado; los casos de `IntensidadPrueba` son los nuevos).
+> - **La cara** pasa a la psicodelia también de día con un consumo en curso: `caraSegun(tema, noche, intensidad)`. La ciudad no se tiñe (no hay fuga de luz ni grano de color).
+> - **El máximo, un poco más fuerte** que en la lámina (`TrazosTinta.medidas`: 11 bandas, 32 dp, registro de 5 dp, 8 anillos), y la cara psicodelia con más dibujo de cartel.
+> - **Las paletas** viven en `ui/Disenios.kt`, no en `ui/Tema.kt`.
+> - **`SinIntensidad`**, además del `CompositionLocal`, pone `EstadoTema` «en cero» mientras una pantalla privada o de Sustancias está abierta (un contador), así que también se enteran los dibujos que leen `EstadoTema` directamente.
+> - **El sonido** sigue la cara de la hora, no la cara que trae un consumo.
+> - **Las capturas** fuerzan las dos caras en las capturas por tema (y la intensidad 1 en las superficies donde importa), no las cuatro variantes más i = 0.5.
+> - **Las listas de las pruebas** (`LO_PRIVADO`, `JERGA_QUE_CELEBRA`, `NOMBRES_DE_SUSTANCIAS`) viven en una sola copia, `ListasConsumo.kt`, compartida por la voz del tema y el cuento.
+> - **La versión 1** (`TrazosPsicodelia`, Modak y Fredoka) se borró entera.
+
+Cómo llevar al código la guía [`psicodelia.md`](psicodelia.md) (versión 2, 16 nov 2026). Cuando se escribió, aquí no se programaba nada todavía: es el orden de trabajo, dónde va cada cosa y qué pruebas cambian. Las rutas de código son de `app/src/main/java/io/github/ruddy2003/vestigium/`.
 
 **Lo que no cambia en ningún momento:** no se guarda nada nuevo (no sube `SCHEMA_V`, no se tocan `Exportar`, `Diccionario` ni `vestigium.R`); el tema solo **lee** `Repo.consumos`, `Repo.config` y la hora. No cambia ningún cálculo que el paper describa: la intensidad es una lectura nueva de `Sustancias.nivelEn`, que ya existe, y no se exporta. Tampoco se toca la firma.
 

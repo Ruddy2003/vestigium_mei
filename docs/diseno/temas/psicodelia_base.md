@@ -1,4 +1,4 @@
-# Psicodelia v2: la base (tanda 1)
+# Psicodelia v2: la base (tanda 1) y lo que quedó al cerrar
 
 Lo que dejó la tanda 1 para las tandas siguientes: qué nombres existen, cómo se leen la cara y la intensidad, cómo se guarda en caché y qué queda de la versión 1 por retirar. La guía es [`psicodelia.md`](psicodelia.md) (manda su última sección, «Decisiones del autor después de ver la lámina»); el plan, [`psicodelia_plan.md`](psicodelia_plan.md). Las rutas de código son de `app/src/main/java/io/github/ruddy2003/vestigium/`.
 
@@ -101,7 +101,7 @@ when (cara) {
 
 **Fuera de Compose** (avisos, widgets, arranque, reportes): `esquemaDe(tema, oscuro)` lee `EstadoTema`, que fuera de la app puede estar viejo (`RelojModo` solo se pone al día con la app abierta). Para elegir por hora ahí, `caraSegun(tema, ModoHora.esDeNoche(LocalTime.now()), 0f)` y `esquemaDe(tema, oscuro, cara)` (plan, 1.3).
 
-**Pruebas y capturas:** `EstadoTema.forzar(Cara.X, i)` y luego `forzar(null, null)`. `UnicidadTemas` ya compara la letra y las esquinas de las dos caras de Psicodelia con la versión de `tipoDe`/`radioDe` con cara explícita. **Las capturas de Paparazzi (`Capturas.kt`) todavía no fuerzan nada**: Psicodelia sale con la cara de la hora a la que corra CI. La tanda que haga sus capturas debe forzar las cuatro variantes más i = 0.5 y 1.
+**Pruebas y capturas:** `EstadoTema.forzar(Cara.X, i)` y luego `forzar(null, null)`. `UnicidadTemas` ya compara la letra y las esquinas de las dos caras de Psicodelia con la versión de `tipoDe`/`radioDe` con cara explícita. **Las capturas de Paparazzi (`Capturas.kt`, desde el cierre)** fuerzan la cara en las capturas por tema (`porTema`): un tema con caras sale como `<tema>_<claro|oscuro>_ciudad` y `…_tinta` (i = 0) y, en `mueble`, `bibliotecas`, `componentes`, `decoracion`, `vida` y `gatoCuadro`, además `…_tinta_i1` (i = 1); siempre se restablece `forzar(null, null)`. Los otros 38 temas, con los nombres de siempre. `gatoCuadro`, para un tema con caras sin cuadro (Psicodelia), saca la banda del gato en sus dos acciones. Las capturas «de siempre» (las que no son por tema) no fuerzan nada: Psicodelia sale ahí con la cara de la hora a la que corra CI.
 
 ## El ícono, el sello, el papel, los widgets y los fondos (tanda 5)
 
@@ -116,18 +116,21 @@ when (cara) {
 - **Dos voces, por cara:** el comentario de cada pantalla («Lado A · pista 4 · hoy» en la ciudad, «Lado B · pista 4 · hoy» en el cartel; `Estilo.comentarioNuevo`), «atrás» («← de vuelta a la calle» / «← de vuelta a la sala»), la vista previa del selector y los avisos (`Avisos.vozPsicodelia(cara)` y `Avisos.vozEnfoquePsicodelia(cara)`, elegidos con `caraSegun(tema, ModoHora.esDeNoche(LocalTime.now()), 0f)`: un aviso nunca cambia por un consumo). Dentro de la app, `Estilo` lee `EstadoTema.cara`. Los títulos de pantalla, las pestañas y los widgets son los mismos en las dos caras.
 - **Signos:** comentario «◉ » (el disco del día), prefijo «‣ », la fecha grande abre con «◉».
 - **Lo privado y lo de Sustancias van con la voz de la app:** `NombresPsicodelia.NEUTROS` (sin nombre ni comentario del tema; esos títulos ya no están en ningún diccionario de Psicodelia).
-- **La prueba:** `app/src/test/.../VozPsicodeliaPrueba.kt` (`laVozDelTemaNoHablaDelConsumo` y tres más) define `LO_PRIVADO`, `JERGA_QUE_CELEBRA` y `NOMBRES_DE_SUSTANCIAS` en el paquete raíz de las pruebas y recorre los nombres, `Estilo` en las dos caras, `Textos`, los widgets, las claves, los avisos y las campañas. Fuera quedan las frases del día, las fechas del calendario y el cuento. `UnicidadTemas` compara los textos de `Estilo` también con la cara intensa fijada.
+- **La prueba:** `app/src/test/.../VozPsicodeliaPrueba.kt` (`laVozDelTemaNoHablaDelConsumo` y tres más) usa `LO_PRIVADO`, `JERGA_QUE_CELEBRA`, `JERGA_SOLO_EN_LA_VOZ` y `NOMBRES_DE_SUSTANCIAS`, que desde el cierre viven en una sola copia (`ListasConsumo.kt`, en el paquete raíz de las pruebas) compartida con las pruebas del cuento de David, y recorre los nombres, `Estilo` en las dos caras, `Textos`, los widgets, las claves, los avisos y las campañas. Fuera quedan las frases del día, las fechas del calendario y el cuento. `UnicidadTemas` compara los textos de `Estilo` también con la cara intensa fijada.
 
 ## Lo de la versión 1 que queda por retirar
 
-| Qué | Dónde | Quién lo usa todavía |
-|---|---|---|
-| `TrazosPsicodelia` entero (la flor, la paz, el arcoíris, el verde limón, las burbujas, la casa victoriana de colores, el botón de solapa) | `ui/PsicodeliaV1Trazos.kt` (la tanda 2 quitó `lucesSala` y `emblemaVivo`, que ya nadie usaba) | `ideario/IdeasPsicodelia.kt`, `biblioteca/BibliotecaPsicodelia.kt`, `vida/VidaPsicodelia.kt`, `Musica.kt`, `MainActivity.kt`, `EnfoqueActivity.kt`, `pantallas/OtrasVidas.kt` (las tandas 2 y 4 ya no lo usan) |
-| `LetraExtra.modak`, `fredoka`, `fredokaRotulo` y los archivos `burbuja_titulo`, `fredoka_regular`, `fredoka_semibold` (con sus entradas en `herramientas/fuentes.py`, `CON_SIGNOS_NOTO` y la licencia) | `ui/Disenios.kt`, `res/font/` | `ideario/IdeasPsicodelia.kt`, `biblioteca/BibliotecaPsicodelia.kt`, `reportes/Reportes.kt`, `widget/Widgets.kt` (si aún los nombran; la tanda 4 los quitó de `Hoy.kt` y `EstiloGrafica.kt`) |
-| Los textos con «✿», «♪», «~» y la descripción de `TemaId.PSICODELIA` | `Estilo.kt`, `Tema.kt` y otros (tanda 8) | — |
-| ~~La vista previa del tema (la forma del cartel que se derrite y la flor)~~ | `Tema.kt` | Hecho en la tanda 2: el marco de arco y el disco |
+**Nada** (cierre, 17 nov 2026). Lo que había en esta tabla se retiró así:
 
-Cuando el último de una fila deje de usarlo, se borra (y, para las letras, se quitan sus salidas de `fuentes.py` y su línea de la licencia).
+| Qué | Cómo quedó |
+|---|---|
+| `TrazosPsicodelia` entero (`ui/PsicodeliaV1Trazos.kt`) | Borrado. Sus últimos usuarios pasaron a la base nueva: el interior, las fichas y las marcas del Ideario (`IdeasPsicodelia.kt`, sin `IdeasPsicodeliaV1`), toda la biblioteca de alrededor (`BibliotecaPsicodelia.kt`), el bloqueo, el divisor, el indicador y el botón central (`MainActivity.kt`), la presentación (`Musica.kt`), el reloj de enfoque y la tira (`EnfoqueActivity.kt`), el disco y la barra de Otras vidas (`pantallas/OtrasVidas.kt`). |
+| `LetraExtra.modak`, `fredoka`, `fredokaRotulo`; `res/font/burbuja_titulo`, `fredoka_regular`, `fredoka_semibold` | Borrados, con sus salidas y los signos de Noto Sans Symbols que solo llevaban ellas en `herramientas/fuentes.py` y sus tres líneas de `assets/licencias/fuentes_OFL.txt`. Comprobado con grep: ninguna referencia en `app/` ni en `herramientas/` (código, XML ni pruebas). |
+| Los textos con «✿», «☮», «♪», «~» | Fuera también los últimos: el sello del día («Fin del lado B ◉»), el lema del bloqueo («◉ Hoy hay baile…») y las comillas de la presentación. |
+| Las figuras de tópico en otras ramas | Fuera: la flor y la paz del reporte en PDF (`reportes/Reportes.kt`), la flor del reloj de enfoque, las gotas que se derriten de la hoja rápida y de la tira del enfoque, la burbuja de la barra de Otras vidas, el botón de solapa del botón central. El archivo de ideas ya no es «la caja de sencillos del mostrador de la tienda de discos» sino «el cajón de planos» con sus «pliegos» (`ArchivoIdeas.kt`). |
+| ~~La vista previa del tema (la forma del cartel que se derrite y la flor)~~ | Hecho en la tanda 2: el marco de arco y el disco |
+
+Lo que se queda a propósito (no son tópicos ni de la versión 1): el barrido de la gota de tinta (`BarridoTema.GOTA`), el sol y la luna del botón de modo, el frasco y el pincel del ícono del editor (tanda 2), y la nube de luces líquidas del borde de la hoja rápida (`QuickActivity.formaHojaQuick`, que la tanda 2 pinta en las dos caras).
 
 ## Lo que dejó la tanda 2 (decoración y componentes)
 
