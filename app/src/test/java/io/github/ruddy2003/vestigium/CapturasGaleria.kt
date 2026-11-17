@@ -82,7 +82,7 @@ class CapturasGaleria {
         paparazzi.snapshot(nombre) { Lienzo(contenido) }
     }
 
-    @Test fun galeria() {
+    @Test fun temaGaleria() {
         CapturasAPedido.pedida("galeria")
         CapturasAPedido.temas().forEach { t ->
             (if (t.soloOscuro) listOf(true) else listOf(false, true)).forEach { o ->
