@@ -123,6 +123,8 @@ import kotlin.math.sin
  */
 internal object EscenaHeleno : EscenaVida {
     override val vidas = listOf("remero")
+    /** La franja del fondo del teléfono ([franjaFondo]): la trirreme, el puerto y la tinaja. */
+    override val franjaFondo: Float get() = 0.5f
 
     /** Dónde está el horizonte del mar. */
     private const val H = 128f

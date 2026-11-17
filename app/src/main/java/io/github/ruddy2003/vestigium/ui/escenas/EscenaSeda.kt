@@ -99,6 +99,8 @@ internal class SolSeda(val l: Luces, val r: Rayo, val calida: Float = 0f) {
  */
 internal object EscenaSeda : EscenaVida {
     override val vidas = listOf("mercader_sogdiano")
+    /** La franja del fondo del teléfono ([franjaFondo]): el camello y el poste del farol. */
+    override val franjaFondo: Float get() = 0.7f
 
     private val C = ColorSeda
 

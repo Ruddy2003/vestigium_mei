@@ -111,6 +111,8 @@ internal object ColorArcano {
  */
 internal object EscenaArcano : EscenaVida {
     override val vidas = listOf("archivista")
+    /** La franja del fondo del teléfono ([franjaFondo]): el faro y la mesa del archivo. */
+    override val franjaFondo: Float get() = 0.5f
 
     /** El horizonte: la altura de los ojos de quien mira desde la galería. */
     const val H = 120f

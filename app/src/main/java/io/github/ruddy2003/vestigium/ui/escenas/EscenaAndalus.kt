@@ -112,6 +112,8 @@ import kotlin.math.sin
  */
 internal object EscenaAndalus : EscenaVida {
     override val vidas = listOf("cordobesa")
+    /** La franja del fondo del teléfono ([franjaFondo]): la fuente y el brasero, con la ciudad detrás. */
+    override val franjaFondo: Float get() = 0.5f
 
     // La vista de la ciudad está dibujada en sus propias medidas (las de [HV], con el lomo de la tapia en 176 y la
     // esquina del muro en 184) y se pone en el cuadro agrandada [KV] veces: así se puede acercar o alejar entera.

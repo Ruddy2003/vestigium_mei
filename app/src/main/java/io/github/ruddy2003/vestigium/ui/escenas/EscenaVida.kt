@@ -168,6 +168,13 @@ interface EscenaVida {
      * las cosas del primer plano; por omisión va algo más grande, para que se le vea bien en un cuadro tan pequeño.
      */
     val tallaDelGato: Float get() = 1.3f
+
+    /**
+     * Dónde va la franja del cuadro cuando es el fondo del teléfono ([recorteFranja]): su centro, en fracción del ancho
+     * del cuadro (0 la orilla izquierda, 1 la derecha). Cada escena pone el de su sitio interesante, sin cortar por la
+     * mitad lo principal; por omisión, el centro.
+     */
+    val franjaFondo: Float get() = 0.5f
 }
 
 /**

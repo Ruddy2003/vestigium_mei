@@ -116,6 +116,8 @@ internal class PincelVapor(val l: Luces, val r: Rayo, val a: Alumbrado) {
  */
 internal object EscenaVapor : EscenaVida {
     override val vidas = listOf("fogonero")
+    /** La franja del fondo del teléfono ([franjaFondo]): la locomotora delante del depósito. */
+    override val franjaFondo: Float get() = 0.58f
 
     /** El horizonte: la altura de los ojos de quien mira. */
     const val H = 120f

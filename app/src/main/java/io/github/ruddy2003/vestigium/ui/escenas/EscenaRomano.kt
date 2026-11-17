@@ -120,6 +120,8 @@ internal object ColorRomano {
  */
 internal object EscenaRomano : EscenaVida {
     override val vidas = listOf("legionario")
+    /** La franja del fondo del teléfono ([franjaFondo]): el campamento, el escudo y el río. */
+    override val franjaFondo: Float get() = 0.45f
 
     /** La línea de la otra orilla contra el cielo. */
     const val H = 112f
