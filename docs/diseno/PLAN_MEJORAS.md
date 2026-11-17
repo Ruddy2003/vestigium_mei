@@ -20,7 +20,7 @@ Lo que pidió el autor el 16 de noviembre de 2026 después de comparar los 39 te
 | 3 | Los otros 31 Idearios, y un piloto de tres bibliotecas rehechas | **hecho.** Los 34 Idearios están rehechos, compilados y capturados en Actions (corridas 12, 13 y 14, sin fallas). Bibliotecas piloto hechas: Helénico, Laboratorio y Gótico (`ui/biblioteca/MuebleEstante<Tema>.kt`). **Las otras 36 bibliotecas no se empiezan** hasta que el autor diga, vistos los tres pilotos |
 | 4 | Los muebles de Vida | **no se hace ahora**: queda escrita abajo |
 | 5 | Psicodelia nueva | **en curso**, por tandas (`temas/psicodelia_plan.md`). Hecha la base (`ui/CaraTema.kt`, las cuatro paletas, `temas/psicodelia_base.md`); en curso: componentes, Ideario, textos y el cuento de David |
-| 6 | Fondos de pantalla con las escenas | después de la 5; el fallo del cambio automático ya está diagnosticado (abajo) |
+| 6 | Fondos de pantalla con las escenas | **hecho (17 nov 2026)**, sin compilar todavía en Actions; **falta probarlo en el teléfono** (lista abajo) |
 | 7 | Lo temático nuevo: el toque, la hora y el clima, los mensajes breves, las esperas, el selector de fecha y de hora | **no se hace ahora**: queda escrita abajo |
 | 8 | Los cuadros: seguir personajes (con notificación y sonido propio), «Hoy en la historia» bajo el cuento, el cuadro a pantalla completa y arriba del cuento con su ambiente, la galería y su mueble en Vida, el ronroneo del gato. Deja puestos los campos que necesita la parte 9 | después de la 6 |
 | 9 | Logros nuevos | **no se hace ahora**: queda escrita abajo y en `LOGROS_NUEVOS.md` |
@@ -63,6 +63,33 @@ Orden de los Idearios, de los más simples a los que ya tenían carácter:
 5. El modo nuevo «según la hora» cambia el fondo a las 21:00 y a las 5:00 también con el pulso: mismo retraso.
 
 **Cómo se arregla en esta parte:** las escenas se dibujan con código puro (sin componer pantallas), así que el fondo nuevo se puede pintar **fuera de la pantalla, desde el pulso**, cualquier tema a cualquier hora y con la app cerrada. Con eso desaparecen 1, 2 y 3. Además: poner el fondo de hoy en cuanto esté pintado el suyo (no esperar a los demás) y, al cambiar de tema dentro de la app, pintarlo y ponerlo en el momento.
+
+**Lo que se hizo (17 nov 2026).** No cambia nada de lo que se guarda ni de la exportación: la elección del fondo va en las preferencias de los fondos del teléfono (`getSharedPreferences("fondos")`), no en `Config`, y no sube `SCHEMA_V`.
+
+- **El cuadro como fondo** (`ui/escenas/FondoCuadro.kt`). El cuadro (4:3) se pinta a la altura de la pantalla (en el Pixel 10, 3232 × 2424) y se toma una franja vertical del ancho de la pantalla (1080), un tercio del cuadro. Solo se pinta la franja: el lienzo se corre y lo de fuera no ocupa memoria (unos 10 MB por imagen). Se pinta la parte quieta y la viva en un instante fijo, sin gato.
+  - **Bloqueo:** la franja tal cual, con una sombra suave en el 42 % de arriba (donde va el reloj) y otra más leve abajo (los accesos).
+  - **Inicio:** la misma franja bajo un velo del color de fondo del tema **en oscuro** (46 % de día, 28 % de noche). Se probó un velo claro en los temas claros y los nombres blancos de los íconos no se leían sobre el cielo; con el oscuro se leen en los 16 cuadros.
+  - **La franja de cada cuadro** (`EscenaVida.franjaFondo`, el centro en fracción del ancho; 0.5 por omisión), escogida mirando cada cuadro de día y de noche: Al-Ándalus 0.5 (la fuente y el brasero), Horror cósmico 0.5 (el faro y la mesa), Distopía 0.5 (la avenida y la torre), Espacio 0.55 (la escotilla y la consola), Gótico 0.4 (el portal y la grúa), Helénico 0.5 (la trirreme y la tinaja), Medieval 0.5 (ventanas y pupitres), Ciudad neón 0.3 (el puesto de fideos), Pirata 0.6 (el mástil y el cañón), Renacimiento 0.45 (la cúpula por la ventana y la mesa), Revolución 0.4 (la catedral y la tina), Romano 0.45 (el campamento y el escudo), Ruinas 0.45 (el árbol y la torre inclinada), Ruta de la Seda 0.7 (el camello y el farol), Roma 0.5 (el altar y el andamio), Vapor 0.58 (la locomotora). Las escenas que cambian de lugar según el día (la azotea de Roma, el cayo de Pirata, Chang'an) usan la misma franja.
+- **Cuándo cambia** (`ui/FondoCambio.kt`, `ClaveFondo` y `tocaCambiarFondo`). El fondo puesto se anota con su tema, su modo, su cara (Psicodelia), su estilo y, con cuadro, el día lógico y el **tramo de luz** del cuadro (`Momento.luz.franja`: amanecer de 5 a 8, mañana de 8 a 12, mediodía de 12 a 16, tarde de 16 a 19, atardecer de 19 a 21 y noche de 21 a 5; Espacio, encendido y tenue). Si el que tocaría ahora es el mismo, no se pone (ponerlo no es gratis: el teléfono recalcula sus colores y puede parpadear). Otro tema, modo, cara o estilo se pone en el momento. Solo otra luz u otro día, como pronto diez minutos después del anterior: como el pulso es de 15, como mucho una vez por pulso. Un día normal con cuadro son **seis cambios** (prueba `conElPulsoDe15MinutosCadaTramoNuevoSePone`). Lo dice la pantalla bajo el interruptor.
+- **El arreglo del automático** (`FondosTelefono.revisar`, que llaman el pulso por `RotacionTema.propagar` y la app):
+  - con cuadro, lo pinta él mismo fuera de la pantalla y lo pone, también con la app cerrada (causas 1, 2 y 3);
+  - con papel (temas sin cuadro, o si se eligió el papel), pone el archivo ya pintado; `CapturaFondoTelefono` pinta el de hoy primero y lo pone **en cuanto está**, sin esperar a los demás; una foto que falla vuelve al final de la fila (hasta tres vueltas) y se reintenta cada vez que se vuelve a la app;
+  - al cambiar de tema, modo, estilo o cara dentro de la app, y al volver a ella, revisa en el momento (con tres reintentos si falla);
+  - de uno en uno (`@Synchronized`): si el pulso y la app llegan a la vez, el segundo ve que ya está puesto;
+  - las causas 4 y 5 (el pulso que el teléfono retrasa en reposo) siguen: llega, pero tarde. Al abrir la app se pone al día.
+  - El papel de los temas con cuadro ya no se deja pintado en archivo (salvo con el fondo vivo puesto, que dibuja encima del papel).
+- **La pantalla de fondos:** «el cuadro» o «el papel» (si el tema tiene cuadro), la vista previa de bloqueo e inicio a pantalla completa (con el cuadro, pintado a la hora de ahora) y ponerlo en inicio, bloqueo o los dos. La elección se guarda al poner el fondo y es la que sigue el automático. Con el cuadro no salen claro/oscuro ni las caras: el cuadro es el mismo en los dos modos.
+- **El fondo vivo** no cambió: sigue con el papel, y el fijo no lo pisa (`vivoActivo`).
+- **Pruebas:** `FondoTelefonoPrueba` (11, JUnit puro): la clave, cuándo cambia, el recorte de la franja (nunca se sale, guarda la proporción, cubre la pantalla) y la franja de cada cuadro. Pasan en un arnés de escritorio; en Actions, falta correrlas.
+
+**Qué falta probar en el Pixel 10:**
+1. Que la franja salga a la medida exacta en bloqueo y en inicio (sin corrimiento hacia un lado, que es lo que arreglaba `setBitmapWithCrops`), y que el reloj se lea.
+2. Que los nombres de los íconos se lean sobre el fondo de inicio con el cuadro de día (con velo oscuro) en un tema claro.
+3. Que con la app cerrada el fondo cambie solo: al pasar de un tramo de luz a otro (por ejemplo a las 8:00 o a las 21:00) y a las 5:00 con la rotación de temas. Mirar a qué hora llegó (el pulso puede retrasarse).
+4. Que al cambiar de tema dentro de la app y salir enseguida, el fondo ya haya cambiado (con cuadro, en uno o dos segundos).
+5. Cuánto tarda en pintarse el cuadro en el teléfono (en el escritorio, unas 0,5 s por cuadro) y si se nota un parpadeo al ponerlo.
+6. Con un tema sin cuadro (Terminal, Navidad): que el papel se siga poniendo como antes.
+7. Que el fondo vivo siga funcionando y que el automático no lo quite.
 
 ### Lo temático nuevo (parte 7)
 

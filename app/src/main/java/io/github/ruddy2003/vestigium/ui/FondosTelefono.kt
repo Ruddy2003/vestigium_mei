@@ -246,7 +246,8 @@ object FondosTelefono {
     /**
      * Los dos fondos del cuadro de [t] (inicio, bloqueo) del día [dia] a la [hora], del tamaño de la pantalla; null si [t]
      * no tiene cuadro. Pinta fuera de la pantalla ([pintarFondosDelCuadro]): pesado (unas décimas de segundo y unos 20 MB),
-     * así que se llama desde un hilo de trabajo, y quien los recibe los suelta ([Bitmap.recycle]) en cuanto los pone.
+     * así que se llama desde un hilo de trabajo. [revisar] los suelta ([Bitmap.recycle]) en cuanto los pone; la pantalla de
+     * los fondos los guarda mientras se ven y los deja al recolector de basura.
      */
     fun pintarCuadro(ctx: Context, t: TemaId, dia: String, hora: Double): Pair<Bitmap, Bitmap>? {
         val e = escenaDe(t) ?: return null
