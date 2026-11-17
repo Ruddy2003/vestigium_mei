@@ -1,5 +1,8 @@
 package io.github.ruddy2003.vestigium.vidas
 
+import io.github.ruddy2003.vestigium.JERGA_QUE_CELEBRA
+import io.github.ruddy2003.vestigium.LO_PRIVADO
+import io.github.ruddy2003.vestigium.NOMBRES_DE_SUSTANCIAS
 import io.github.ruddy2003.vestigium.data.OtrasVidas
 import io.github.ruddy2003.vestigium.vidas.anios.Calendarios
 import io.github.ruddy2003.vestigium.vidas.piezas.PiezasIniciado

@@ -28,7 +28,7 @@ class VozPsicodeliaPrueba {
         val textos = textosDelTema()
         assertTrue("La prueba no encontró textos del tema", textos.size > 200)
         val fallos = textos.flatMap { (donde, texto) ->
-            (LO_PRIVADO + JERGA_QUE_CELEBRA + NOMBRES_DE_SUSTANCIAS).mapNotNull { r -> r.find(texto)?.let { "$donde: «${it.value}» en «$texto»" } }
+            (LO_PRIVADO + JERGA_QUE_CELEBRA + JERGA_SOLO_EN_LA_VOZ + NOMBRES_DE_SUSTANCIAS).mapNotNull { r -> r.find(texto)?.let { "$donde: «${it.value}» en «$texto»" } }
         }
         assertTrue(fallos.joinToString("\n"), fallos.isEmpty())
     }
@@ -36,7 +36,7 @@ class VozPsicodeliaPrueba {
     /** La descripción del selector puede decir, con sobriedad, que el tema se enciende con un consumo; nada más. */
     @Test fun laDescripcionNoCelebraNiTocaLoPrivado() {
         val d = TemaId.PSICODELIA.descripcion
-        (LO_PRIVADO + JERGA_QUE_CELEBRA).forEach { r -> assertNull("«${r.find(d)?.value}» en la descripción", r.find(d)) }
+        (LO_PRIVADO + JERGA_QUE_CELEBRA + JERGA_SOLO_EN_LA_VOZ).forEach { r -> assertNull("«${r.find(d)?.value}» en la descripción", r.find(d)) }
         (NOMBRES_DE_SUSTANCIAS - CONSUMO).forEach { r -> assertNull("«${r.find(d)?.value}» en la descripción", r.find(d)) }
     }
 
@@ -119,29 +119,5 @@ class VozPsicodeliaPrueba {
     }
 }
 
-private fun regexDePalabras(vararg p: String): List<Regex> = p.map { Regex("""(?iU)(?<![\p{L}\p{N}])(?:$it)(?![\p{L}\p{N}])""") }
-
-/*
- * Las tres listas del plan de Psicodelia (`docs/diseno/temas/psicodelia_plan.md`, 3.2), que parten la vieja `JERGA_DE_DROGAS`
- * de `vidas/AnioG9Prueba.kt` según lo que vigilan. Cada entrada es una palabra entera o el principio de una («impuls»
- * quita «impulso» e «impulsos»), sin contar mayúsculas. Se usan aquí, en la voz del tema; el cuento de David tiene las suyas.
- */
-
-/** Lo que toca el seguimiento privado: prohibido en todo lo del tema (y en el cuento). */
-internal val LO_PRIVADO: List<Regex> = regexDePalabras(
-    "rachas?", "reca[íi]d\\w*", "impuls\\w*", "abstinen\\w*", "sobriedad", "libido", "medicament\\w*", "mal viaje", "malos viajes",
-    "baj[óo]n", "detonantes?", "antojos?",
-)
-
-/** La jerga que celebra: prohibida en la voz del tema (en el cuento, solo entre comillas, en boca de un personaje). */
-internal val JERGA_QUE_CELEBRA: List<Regex> = regexDePalabras(
-    "coloc\\w*", "flip\\w*", "subid[óo]n", "viajaz\\w*", "buen viaje", "pedo", "puest[oa]s?", "high", "stoned", "trip", "tripp\\w*",
-    "tripe\\w*", "pachec\\w*", "volad[oa]s?", "groovy",
-)
-
-/** Los nombres de las sustancias y del consumo: ya no se prohíben en el cuento, sí en la voz del tema («muestra, no comenta»). */
-internal val NOMBRES_DE_SUSTANCIAS: List<Regex> = regexDePalabras(
-    "drog\\w*", "marihuana", "mariguana", "cannabis", "hach[íi]s", "porros?", "lsd", "[áa]cidos?", "hongos?", "psilocib\\w*",
-    "peyote", "mescalin\\w*", "fum\\w*", "cigarr\\w*", "tabaco", "alcohol\\w*", "vinos?", "cervez\\w*", "licor\\w*", "whisky",
-    "cafe[íi]na", "sustancias?", "consum\\w*", "dosis", "pastillas?",
-)
+// Las listas (LO_PRIVADO, JERGA_QUE_CELEBRA, JERGA_SOLO_EN_LA_VOZ, NOMBRES_DE_SUSTANCIAS) están en `ListasConsumo.kt`,
+// compartidas con las pruebas del cuento de David.

@@ -1,5 +1,8 @@
 package io.github.ruddy2003.vestigium.vidas
 
+import io.github.ruddy2003.vestigium.JERGA_QUE_CELEBRA
+import io.github.ruddy2003.vestigium.LO_PRIVADO
+import io.github.ruddy2003.vestigium.NOMBRES_DE_SUSTANCIAS
 import io.github.ruddy2003.vestigium.data.OtrasVidas
 import io.github.ruddy2003.vestigium.vidas.anios.AnioG9
 import io.github.ruddy2003.vestigium.vidas.anios.Calendarios
@@ -846,40 +849,10 @@ class AnioG9Prueba {
 private fun palabras(vararg l: String): List<Regex> = l.map { Regex("""(?iU)(?<![\p{L}\p{N}])(?:$it)(?![\p{L}\p{N}])""") }
 
 /*
- * Lo que vigila el consumo en el cuento de David y en el tema Psicodelia (`docs/diseno/temas/psicodelia_plan.md`, 3.2).
- * Hasta el 16 nov 2026 era una sola lista, `JERGA_DE_DROGAS`, que no podía salir en ningún texto; el autor quitó la regla
- * de «sin drogas» y la lista se partió en tres, más una cuarta con lo que sigue fuera. Las usan [AnioG9Prueba],
- * [CuentoG9Prueba] y `PsicodeliaPrueba`.
+ * Lo que vigila el consumo en el cuento de David y en el tema Psicodelia (`docs/diseno/temas/psicodelia_plan.md`, 3.2): las
+ * tres listas ([io.github.ruddy2003.vestigium.LO_PRIVADO], `JERGA_QUE_CELEBRA` y `NOMBRES_DE_SUSTANCIAS`) están en
+ * `ListasConsumo.kt`, en la raíz de las pruebas, compartidas con `VozPsicodeliaPrueba`. Aquí, lo que es solo del cuento.
  */
-
-/**
- * Lo del seguimiento privado (rachas, recaídas, impulsos, libido, medicamentos) y las palabras que lo rozan. No sale en
- * nada: ni en el cuento, ni en el calendario, ni en «Su vida», ni en la voz del tema. Así el cuento nunca dialoga con lo
- * que la persona anota en privado.
- */
-internal val LO_PRIVADO: List<Regex> = palabras(
-    "racha\\w*", "reca[íi]d\\w*", "impuls\\w*", "abstinen\\w*", "sobriedad", "malos? viajes?", "baj[óo]n\\w*", "libido", "medicament\\w*",
-)
-
-/**
- * La jerga que celebra el consumo. No sale en ningún texto: el plan la permitía en boca de un personaje y entre comillas,
- * pero el cuento de David solo pone entre comillas las frases comprobadas (`CuentoG9Prueba`), así que no hay excepción.
- * «Puesto» no está, aunque lo diga el plan: es una palabra de todos los días (los puestos del recinto ferial).
- */
-internal val JERGA_QUE_CELEBRA: List<Regex> = palabras(
-    "colocad\\w*", "flip\\w*", "subid[óo]n\\w*", "viajaz\\w*", "pedo", "high", "stoned", "trip", "tripp\\w*", "tripe[aá]\\w*", "volad[oa]s?", "pachec\\w*", "groovy",
-)
-
-/**
- * Los nombres de las sustancias, y lo de fumar, beber y tomar. **Ya no se prohíben en el cuento**: salen solo las noches
- * que toca (las de las claves [CLAVES_DE_CONSUMO]) y en los cuatro [DIAS_QUE_LO_NOMBRAN]. Sí se prohíben en la voz del
- * tema («el tema muestra, no comenta»).
- */
-internal val NOMBRES_DE_SUSTANCIAS: List<Regex> = palabras(
-    "drog\\w*", "marihuana", "mariguana", "cannabis", "hach[íi]s", "lsd", "[áa]cid[oa]s?", "hongos?", "psilocib\\w*", "peyote", "mescalin\\w*", "porros?",
-    "fum\\w*", "cigarr\\w*", "tabaco", "alcohol\\w*", "vinos?", "cervez\\w*", "whisky", "licor\\w*", "borrach\\w*", "hero[íi]na", "coca[íi]na",
-    "anfetamin\\w*", "pastill\\w*", "dosis",
-)
 
 /**
  * Lo que sigue fuera aunque el consumo ya se nombre (`fuentes_psicodelia.md`, sección 9): la gente real que consumía o lo
