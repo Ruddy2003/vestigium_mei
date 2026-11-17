@@ -19,8 +19,8 @@ Lo que pidió el autor el 16 de noviembre de 2026 después de comparar los 39 te
 | 2 | Piloto de Idearios (Laboratorio, Helénico y Gótico) | hecho y aprobado por el autor |
 | 3 | Los otros 31 Idearios, y un piloto de tres bibliotecas rehechas | **hecho.** Los 34 Idearios están rehechos, compilados y capturados en Actions (corridas 12, 13 y 14, sin fallas). Bibliotecas piloto hechas: Helénico, Laboratorio y Gótico (`ui/biblioteca/MuebleEstante<Tema>.kt`). **Las otras 36 bibliotecas no se empiezan** hasta que el autor diga, vistos los tres pilotos |
 | 4 | Los muebles de Vida | **no se hace ahora**: queda escrita abajo |
-| 5 | Psicodelia nueva | **en curso**, por tandas (`temas/psicodelia_plan.md`). Hecha la base (`ui/CaraTema.kt`, las cuatro paletas, `temas/psicodelia_base.md`); en curso: componentes, Ideario, textos y el cuento de David |
-| 6 | Fondos de pantalla con las escenas | **hecho (17 nov 2026)**, sin compilar todavía en Actions; **falta probarlo en el teléfono** (lista abajo) |
+| 5 | Psicodelia nueva | **hecho (17 nov 2026).** Las dos caras (ciudad y tinta), cada una en claro y oscuro, con la intensidad por consumo en curso; componentes, muebles, biblioteca, Ideario, textos, sonidos, gato, widgets y el cuento de David. La versión 1 está borrada entera. Lo que se hizo y lo que cambió respecto del plan: `temas/psicodelia.md`, `temas/psicodelia_plan.md` y `temas/psicodelia_base.md`. **Falta:** el cuadro de David (lo dibuja otro agente; ver «Para quien dibuje los cuadros…») y probar en el teléfono el cambio de cara al anochecer y la intensidad con un consumo abierto |
+| 6 | Fondos de pantalla con las escenas | **hecho (17 nov 2026)** y compilado en Actions (corrida 23); **falta probarlo en el teléfono** (lista abajo) |
 | 7 | Lo temático nuevo: el toque, la hora y el clima, los mensajes breves, las esperas, el selector de fecha y de hora | **no se hace ahora**: queda escrita abajo |
 | 8 | Los cuadros: seguir personajes (con notificación y sonido propio), «Hoy en la historia» bajo el cuento, el cuadro a pantalla completa y arriba del cuento con su ambiente, la galería y su mueble en Vida, el ronroneo del gato. Deja puestos los campos que necesita la parte 9 | **en curso**: hecha la base (17 nov 2026): el plan técnico (`CUADROS_PLAN.md`), lo que se guarda (`SCHEMA_V` = 27, D.199) y los puntos de enganche; faltan los encargos A, B y C |
 | 9 | Logros nuevos | **no se hace ahora**: queda escrita abajo y en `LOGROS_NUEVOS.md` |
@@ -175,6 +175,10 @@ Los dos temas nuevos que todavía no tienen cuadro en «Otras vidas» son **Psic
 - La firma (`app/vestigium.jks`, `signingConfigs`) y los flujos de `.github/`.
 
 **Lo que sí toca:** archivos nuevos `ui/escenas/EscenaPsicodelia*.kt`, `EscenaFrente*.kt`, `PelajePsicodelia.kt`, `PelajeFrente.kt`, `BanderitaPsicodelia.kt`, `BanderitaFrente.kt`, sus imágenes de referencia en `docs/diseno/escenas/`, y **una línea por tema** en los tres repartos: `EscenaVida.kt` (los dos `when`), `Banderitas.kt` y `Pelajes.kt`.
+
+**Dos cosas que un cuadro nuevo trae consigo desde las partes 6 y 8** (las dos se encuentran solas, sin tocar ningún reparto):
+- **La franja del fondo del teléfono:** `override val franjaFondo` en la escena (de 0 a 1: dónde cae, a lo ancho del cuadro, la franja vertical que se usa de fondo de pantalla). Se elige donde esté lo que cuenta la escena; modelos en `EscenaHeleno.kt` y `EscenaRomano.kt`.
+- **El ambiente del cuento:** `res/raw/a_<tema>_ambiente.ogg` y, si la noche suena distinto, `a_<tema>_ambiente_noche.ogg`. Se generan con `herramientas/ambientes.py` (agregando el tema al guion) y la app los busca por nombre. Sin archivo, ese cuento simplemente no suena. Al agregarlo, pon también el tema en la lista de `CuentoReglasPrueba.losAmbientesQueHayEnElRepositorio`.
 
 **Ojo con `main`:** otras ramas de escenas trabajan sobre `main` y esos tres repartos y `paisaje/` son justo donde pueden chocar. Conviene que quien dibuje estos dos cuadros traiga `main` a su rama antes de empezar (`git merge origin/main`) y diga qué chocó; y que su trabajo vuelva a esta rama, no a `main` directamente.
 
