@@ -183,8 +183,8 @@ internal object VidaPsicodelia : DisenoVida {
     /** El fondo de la impresión: el papel o el negro de terciopelo. */
     private fun Pincel.fondoTinta(): Color = TrazosTinta.papel(o)
 
-    /** Cuánto se corre la tinta [t] con el registro de la intensidad, en píxeles. */
-    private fun DrawScope.corrido(p: Pincel, t: Ti): Offset = when (t) {
+    /** Cuánto se corre la [tinta] con el registro de la intensidad, en píxeles. */
+    private fun DrawScope.corrido(p: Pincel, tinta: Ti): Offset = when (tinta) {
         Ti.MAGENTA -> TrazosTinta.corrimiento(TrazosTinta.Tinta.MAGENTA, p.m.registro) * density
         Ti.BERMELLON -> TrazosTinta.corrimiento(if (p.m.bermellon > 0f) TrazosTinta.Tinta.BERMELLON else TrazosTinta.Tinta.MAGENTA, p.m.registro) * density
         else -> Offset.Zero
