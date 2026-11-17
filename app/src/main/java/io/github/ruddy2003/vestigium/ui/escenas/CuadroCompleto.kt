@@ -158,7 +158,8 @@ internal fun CuadroAmpliado(cuadro: CuadroHoy, hora: Double, alSalir: () -> Unit
 
 /**
  * Lo que va dentro de la pantalla completa (sin la ventana, para las capturas). [humor] y [animar] los fijan las
- * capturas; en la app salen del ánimo del gato y de los ajustes (animaciones, ahorro de energía).
+ * capturas; en la app salen del ánimo del gato y de los ajustes (animaciones, ahorro de energía). Con [animar] en false
+ * (las capturas) el cuadro se traza ahí mismo, no en segundo plano: si no, la captura saldría antes que el cuadro.
  */
 @Composable
 internal fun ContenidoCuadroCompleto(cuadro: CuadroHoy, hora: Double, alSalir: () -> Unit, humor: Gato.Humor? = null, animar: Boolean? = null, pasoGato: PasoGato? = null) {
@@ -176,7 +177,7 @@ internal fun ContenidoCuadroCompleto(cuadro: CuadroHoy, hora: Double, alSalir: (
                 cuadro.escena, cuadro.ficha, hora, Modifier.width(ancho), animar = seAnima, humor = animo, pelaje = cuadro.pelaje, pasoGato = pasoGato,
                 toques = true, alAcariciar = { caricias++; acariciar(ctx) },
                 descripcion = "El cuadro de ${quien.nombre}, ${quien.lugar}, a pantalla completa.",
-                acciones = listOf("Cerrar" to alSalir), enSegundoPlano = enVivo, fondo = Color.Black,
+                acciones = listOf("Cerrar" to alSalir), enSegundoPlano = enVivo && animar != false, fondo = Color.Black,
             )
         }
         // La ✕, arriba a la izquierda; el «me gusta», arriba a la derecha (lo dibuja la galería).
@@ -216,7 +217,7 @@ internal fun CuadroDelCuento(cuadro: CuadroHoy, hora: Double, modifier: Modifier
             toques = true, alAcariciar = { caricias++; acariciar(ctx) },
             descripcion = "El cuadro de ${quien.nombre}: ${quien.lugar}." + if (cuadro.especial) " Es un día especial en su vida." else "",
             acciones = listOf("Ver el cuadro a pantalla completa" to ampliar),
-            enSegundoPlano = enVivo, fondo = cs.surfaceVariant.copy(alpha = 0.35f),
+            enSegundoPlano = enVivo && animar != false, fondo = cs.surfaceVariant.copy(alpha = 0.35f),
         )
         BotonMeGusta(cuadro, hora, Modifier.align(Alignment.TopEnd).padding(8.dp))
         if (conAmbiente) {

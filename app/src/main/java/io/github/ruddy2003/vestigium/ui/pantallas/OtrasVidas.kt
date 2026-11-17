@@ -465,11 +465,11 @@ fun PantallaCuento(nav: Nav, vidaId: String, dia: String? = null, horaFija: Doub
         if (vidas.size > 1 && !pasado) LineaDeVidas(vidas, v.id) { elegida = it }
         // Parte 8 (encargo B): el cuadro de su vida ese día, con su gato y su «me gusta», y el ambiente de su lugar.
         val hora = horaFija ?: io.github.ruddy2003.vestigium.ui.escenas.horaDeAhora()
-        val cuadro = cuadroDeLaVida(v.id, diaCuento)
+        val cuadro = cuadroDeLaVida(v.id, diaCuento, aqui = horaFija != null)
         if (cuadro != null) {
             val ctx = LocalContext.current
             val conAmbiente = remember(cuadro.tema) { runCatching { io.github.ruddy2003.vestigium.ui.escenas.AmbienteCuadro.elegir(ctx, cuadro.tema.id, false) != null }.getOrDefault(false) }
-            io.github.ruddy2003.vestigium.ui.escenas.CuadroDelCuento(cuadro, hora, Modifier.padding(top = 14.dp), conAmbiente = conAmbiente)
+            io.github.ruddy2003.vestigium.ui.escenas.CuadroDelCuento(cuadro, hora, Modifier.padding(top = 14.dp), conAmbiente = conAmbiente, animar = if (horaFija != null) false else null)
         } else if (io.github.ruddy2003.vestigium.ui.escenas.tieneCuadro(v.id)) io.github.ruddy2003.vestigium.ui.escenas.SitioDelCuadro(Modifier.padding(top = 14.dp))
         io.github.ruddy2003.vestigium.ui.escenas.AmbienteDelCuadro(cuadro?.tema?.id,
             cuadro != null && io.github.ruddy2003.vestigium.ui.escenas.ReglasAmbiente.esNoche(cuadro.ficha.luz(hora).franja))
@@ -497,11 +497,12 @@ fun PantallaCuento(nav: Nav, vidaId: String, dia: String? = null, horaFija: Doub
 
 /**
  * Parte 8: el cuadro de [vida] el día [dia] (`cuadroDeVida`), calculado fuera del hilo de la pantalla; null mientras se
- * calcula o si no tiene (los doce comunes, los temas sin escena). En las capturas se calcula ahí mismo.
+ * calcula o si no tiene (los doce comunes, los temas sin escena). En las capturas ([aqui], que llegan con la hora fija) y
+ * en la vista previa se calcula ahí mismo.
  */
 @Composable
-private fun cuadroDeLaVida(vida: String, dia: String): io.github.ruddy2003.vestigium.ui.escenas.CuadroHoy? {
-    if (androidx.compose.ui.platform.LocalInspectionMode.current)
+private fun cuadroDeLaVida(vida: String, dia: String, aqui: Boolean = false): io.github.ruddy2003.vestigium.ui.escenas.CuadroHoy? {
+    if (aqui || androidx.compose.ui.platform.LocalInspectionMode.current)
         return remember(vida, dia) { runCatching { io.github.ruddy2003.vestigium.ui.escenas.cuadroDeVida(vida, dia) }.getOrNull() }
     val c by produceState<io.github.ruddy2003.vestigium.ui.escenas.CuadroHoy?>(null, vida, dia) {
         value = withContext(Dispatchers.Default) { runCatching { io.github.ruddy2003.vestigium.ui.escenas.cuadroDeVida(vida, dia) }.getOrNull() }
