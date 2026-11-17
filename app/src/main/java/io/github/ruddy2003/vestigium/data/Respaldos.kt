@@ -289,6 +289,8 @@ object Respaldos {
             else poner("LEEME.txt") { it.write("Respaldo completo de Vestigium Mei (${Fechas.ahoraIso()}).\nPara restaurarlo: Más → Datos → Respaldo completo → Restaurar desde un archivo.\nmanifiesto.json dice qué trae y la huella de cada archivo.\n".toByteArray()) }
             Portadas.carpeta(ctx).listFiles()?.forEach { p -> poner("portadas/" + p.name) { o -> p.inputStream().use { it.copyTo(o) } } }
             FotoDelDia.carpeta(ctx).listFiles()?.forEach { p -> poner("fotos_dia/" + p.name) { o -> p.inputStream().use { it.copyTo(o) } } }
+            // Esquema 27: las imágenes de los cuadros guardados (las a medio escribir, «.nuevo», no).
+            CarpetaCuadros.de(ctx).listFiles()?.filter { it.isFile && !it.name.endsWith(".nuevo") }?.forEach { p -> poner("cuadros/" + p.name) { o -> p.inputStream().use { it.copyTo(o) } } }
             val m = Manifiesto(Fechas.ahoraIso(), SCHEMA_V, version(ctx), conteoDe(r), huellas)
             z.putNextEntry(ZipEntry(MANIFIESTO)); z.write(JSON.encodeToString(Manifiesto.serializer(), m).toByteArray()); z.closeEntry()
             m
@@ -682,10 +684,19 @@ object Respaldos {
                     val p = File(fotosDia, x.name.substringAfterLast('/'))
                     if (!p.exists()) { z.getInputStream(x).use { i -> p.outputStream().use { i.copyTo(it) } }; nFd++ }
                 }
+                // Esquema 27: las imágenes de los cuadros guardados. Solo nombres de imagen válidos, y lo que ya está no se pisa.
+                var nCu = 0
+                val cuadros = CarpetaCuadros.de(ctx)
+                z.entries().asSequence().filter { !it.isDirectory && it.name.contains("cuadros/") }.forEach { x ->
+                    val n = x.name.substringAfterLast('/')
+                    if (!n.endsWith(".jpg") || !CuadrosGuardados.idValido(n.removeSuffix(".jpg"))) return@forEach
+                    val p = File(cuadros, n)
+                    if (!p.exists()) { z.getInputStream(x).use { i -> p.outputStream().use { i.copyTo(it) } }; nCu++ }
+                }
                 // La papelera, los ajustes ilegibles y lo que no se pudo leer (esquema 22).
                 val nEx = z.entradaQueTermina(EXTRA)?.let { x -> runCatching { z.getInputStream(x).use { aplicarExtra(JSON.decodeFromStream(Extra.serializer(), it)) } }.getOrDefault(0) } ?: 0
                 return Lectura.Listo(msg + " Ubicaciones nuevas: %,d. Fotos con lugar: %,d. Portadas: %d.".format(nUb, nFo, nPo) +
-                    (if (nFd > 0) " Fotos del día: %,d.".format(nFd) else "") + (if (nEx > 0) " En la papelera y aparte: %,d.".format(nEx) else ""))
+                    (if (nFd > 0) " Fotos del día: %,d.".format(nFd) else "") + (if (nCu > 0) " Cuadros guardados: %,d.".format(nCu) else "") + (if (nEx > 0) " En la papelera y aparte: %,d.".format(nEx) else ""))
             }
         } catch (e: Exception) {
             return Lectura.Error("No pude abrir el respaldo: ${e.message}")

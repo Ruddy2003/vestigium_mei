@@ -29,8 +29,9 @@ class EsquemaCatorcePrueba {
     // el 23, un solo ánimo de cierre por noche y la fecha de visita de lo marcado a mano en Mundo (SitioMarcado.visita);
     // el 24, dos preferencias de interfaz en Config: dónde vive el gato (gato_estilo) y «Hoy en la historia» (historia_hoy);
     // el 25, un valor nuevo en la postura de las ideas: «hecho» (hecho comprobado);
-    // el 26, un valor nuevo en la preferencia de claro u oscuro (Config.modo): «hora» (ver ModoHoraPrueba).
-    @Test fun esquema() = assertEquals(26, SCHEMA_V)
+    // el 26, un valor nuevo en la preferencia de claro u oscuro (Config.modo): «hora» (ver ModoHoraPrueba);
+    // el 27, los cuadros y las historias en Config: seguidos, cuentos leídos, días de uso y cuadros guardados (ver EsquemaVeintisietePrueba).
+    @Test fun esquema() = assertEquals(27, SCHEMA_V)
 
     @Test fun configDeAntesTraeElCuadroYLaHistoriaEncendidos() {
         // Una configuración guardada antes del esquema 24 no trae los dos ajustes nuevos: toman su valor por omisión.
