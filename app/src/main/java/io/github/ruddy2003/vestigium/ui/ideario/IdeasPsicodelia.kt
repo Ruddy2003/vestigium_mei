@@ -9,6 +9,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
@@ -20,6 +21,7 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -28,7 +30,6 @@ import io.github.ruddy2003.vestigium.ui.EstadoTema
 import io.github.ruddy2003.vestigium.ui.LetraExtra
 import io.github.ruddy2003.vestigium.ui.Pagina
 import io.github.ruddy2003.vestigium.ui.TrazosCiudad
-import io.github.ruddy2003.vestigium.ui.TrazosPsicodelia
 import io.github.ruddy2003.vestigium.ui.TrazosTinta
 import io.github.ruddy2003.vestigium.ui.TrazosTinta.bandas
 import io.github.ruddy2003.vestigium.ui.TrazosTinta.conRegistro
@@ -82,7 +83,9 @@ import kotlin.math.sqrt
  *   magenta, ultramar y bermellón, que el retroproyector, ahora encendido, echa sobre el yeso): encienden los cantos de lo que
  *   tienen delante. Con la intensidad ([EstadoTema.intensidad]), las manchas crecen y suben de croma, la trama ondula, el
  *   registro de los carteles se corre y la de bermellón aparece desde i = 0.5.
- * Por dentro (sin cambios), la caja de sencillos vista desde arriba; las fichas son fundas de papel de sencillo.
+ * Por dentro, el cajón abierto visto desde arriba, con los pliegos de otras semanas y la regla ([interior]); las fichas son los
+ * pliegos del cajón: papel de dibujo con cinta de pintor en la ciudad, prueba de imprenta con sus marcas de registro en la
+ * tinta ([adornoFicha]).
  */
 object IdeasPsicodelia : DisenoIdeas {
     // ---------------------------------------------------------------- la paleta de la ciudad (sale de `TrazosCiudad`)
@@ -1753,15 +1756,162 @@ object IdeasPsicodelia : DisenoIdeas {
     override val placa: Rect = Rect(0.36f, 0.06f, 0.64f, 0.3f)
     override fun tintaPlaca(oscuro: Boolean) = tintaRotulo(oscuro)
 
-    // ---------------------------------------------------------------- el interior y las fichas (sin cambios, de la versión 1)
+    // ---------------------------------------------------------------- el interior: el cajón abierto, visto desde arriba
 
-    override fun DrawScope.interior(oscuro: Boolean) = with(IdeasPsicodeliaV1) { interior(oscuro) }
-    override fun tintaInterior(oscuro: Boolean) = IdeasPsicodeliaV1.tintaInterior(oscuro)
+    /** La tinta del texto de la ciudad en la noche del cuarto (la de la paleta de ciudad · oscuro). */
+    private val TEXTO_NOCHE = Color(0xFFEEE3D0)
+
+    /**
+     * El cajón de la planera abierto, visto desde arriba: el fondo forrado de papel marfil, dos pliegos de otras semanas un
+     * poco torcidos y un cartel impreso de David que asoma abajo a la derecha, la regla de acero metida a lo largo y las cuatro
+     * paredes de roble. La ciudad: la luz de la tarde que entra de arriba a la izquierda, sombra café, la veta del roble y
+     * grano; de noche, la lámpara de brazo por arriba y el fondo en penumbra (bajo, para que el texto claro se lea encima). La
+     * tinta: el cajón impreso a tintas planas con la línea de grabar y la trama en las paredes de sombra; de noche, sobre
+     * negro, con dos manchas de luz líquida (y la de bermellón, con la intensidad).
+     */
+    override fun DrawScope.interior(oscuro: Boolean) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 40f * u || h < 40f * u) return
+        val ciudadCara = EstadoTema.cara == Cara.BASE
+        // De noche la luz es pareja y baja dentro del cajón (para que el texto claro se lea sobre el fondo).
+        empezar(oscuro, w, 0f, 0f, if (!oscuro) -1f else if (ciudadCara) 0.2f else 0.1f)
+        val pl = 18f * u; val pa = 26f * u; val pf = 22f * u
+        val fondo = Rect(pl, pa, w - pl, h - pf)
+        drawRect(c(Mat.MARFIL, fondo.center), fondo.topLeft, fondo.size)
+        clipRect(fondo.left, fondo.top, fondo.right, fondo.bottom) {
+            // Los pliegos de abajo, con su sombra corta.
+            val ancho = fondo.width
+            val pliegos = listOf(
+                Triple(Rect(fondo.left - 6f * u, fondo.top + ancho * 0.12f, fondo.left + ancho * 0.66f, fondo.top + ancho * 0.92f), -2.4f, Mat.PAPEL),
+                Triple(Rect(fondo.left + ancho * 0.4f, fondo.top + ancho * 0.7f, fondo.right + 10f * u, fondo.top + ancho * 1.5f), 1.8f, Mat.GRIS),
+            )
+            pliegos.forEach { (r, giro, m) ->
+                rotate(giro, r.center) {
+                    drawRect(s(0.16f), Offset(r.left + 1.5f * u, r.top + 2f * u), r.size)
+                    pieza(caja(r), m, r, TUMBADO, 0.6f)
+                }
+            }
+            // El cartel impreso de otra semana, que asoma por abajo a la derecha.
+            val cartel = Rect(fondo.right - ancho * 0.56f, fondo.bottom - ancho * 0.62f, fondo.right + ancho * 0.04f, fondo.bottom + ancho * 0.18f)
+            rotate(-3f, cartel.center) {
+                drawRect(s(0.18f), Offset(cartel.left + 1.5f * u, cartel.top + 2f * u), cartel.size)
+                drawRect(c(Mat.PAPEL, cartel.center), cartel.topLeft, cartel.size)
+                disenoCartel(cartel, false, 29, 1)
+                linea(caja(cartel), cartel.center, 0.8f)
+            }
+            // La regla de acero, metida a lo largo junto a la pared izquierda, con sus marcas.
+            val regla = Rect(fondo.left + 6f * u, fondo.top + 10f * u, fondo.left + 6f * u + maxOf(9f * u, ancho * 0.045f), fondo.bottom - 14f * u)
+            pieza(caja(regla), Mat.CROMO, regla, REDONDO, 0.8f)
+            val marca = if (tinta) (if (o) CREMA.copy(alpha = 0.5f) else GRABAR) else s(0.55f)
+            var y = regla.top + 6f * u
+            var k = 0
+            while (y < regla.bottom - 4f * u) {
+                drawLine(marca, Offset(regla.right, y), Offset(regla.right - regla.width * (if (k % 5 == 0) 0.6f else 0.3f), y), 0.6f * u)
+                y += 6f * u; k++
+            }
+        }
+        // La luz de noche: en la ciudad, la lámpara de brazo por arriba a la izquierda; en la tinta, las manchas de luz líquida.
+        if (o && !tinta) drawRect(Brush.radialGradient(listOf(LAMPARA_LUZ.copy(alpha = 0.12f), Color.Transparent), Offset(w * 0.3f, 0f), maxOf(w, h) * 0.6f), Offset.Zero, Size(w, h))
+        if (o && tinta) {
+            mancha(Offset(w * 0.72f, h * 0.16f), w * 0.55f, MAG.copy(alpha = 0.09f + 0.05f * ii))
+            mancha(Offset(w * 0.22f, h * 0.62f), w * 0.45f, ULT.copy(alpha = 0.08f + 0.04f * ii))
+            if (med.bermellon > 0f) mancha(Offset(w * 0.6f, h * 0.86f), w * 0.4f, BER.copy(alpha = 0.08f * med.bermellon))
+        }
+        // Las paredes del cajón vistas desde arriba: la de atrás y la de la izquierda en sombra (la luz viene de arriba a la
+        // izquierda: por dentro, esas dos le dan la espalda), las otras dos a la luz.
+        val atras = poligono(0f, 0f, w, 0f, w - pl, pa, pl, pa)
+        val izq = poligono(0f, 0f, pl, pa, pl, h - pf, 0f, h)
+        val der = poligono(w, 0f, w, h, w - pl, h - pf, w - pl, pa)
+        val delante = poligono(0f, h, pl, h - pf, w - pl, h - pf, w, h)
+        listOf(Triple(atras, Rect(0f, 0f, w, pa), 0.28f), Triple(izq, Rect(0f, 0f, pl, h), 0.2f), Triple(der, Rect(w - pl, 0f, w, h), -0.12f), Triple(delante, Rect(0f, h - pf, w, h), -0.2f))
+            .forEachIndexed { n, (pared, r, sombra) ->
+                drawPath(pared, c(Mat.ROBLE, r.center))
+                clipPath(pared) {
+                    if (!tinta) vetas(r, s(0.3f), 860 + n, densidad = 0.5f, vertical = n == 1 || n == 2, grosor = 0.7f, ondulacion = 0.7f)
+                    if (sombra > 0f) {
+                        if (tinta && !o) rayado(r, 2.6f * u, 0.8f * u, GRABAR)
+                        else drawRect(s(sombra), r.topLeft, r.size)
+                    } else drawRect(b(-sombra, r.center), r.topLeft, r.size)
+                }
+                linea(pared, r.center, 0.9f)
+            }
+        sombraInterior(fondo, 20f * u, if (o) 0.45f else 0.25f)
+        // Los tornillos de latón de las esquinas, que unen las paredes.
+        for ((x, yy) in listOf(pl * 0.5f to pa * 0.45f, w - pl * 0.5f to pa * 0.45f, pl * 0.5f to h - pf * 0.45f, w - pl * 0.5f to h - pf * 0.45f)) {
+            drawCircle(c(Mat.LATON, Offset(x, yy)), 1.5f * u, Offset(x, yy))
+            drawCircle(s(0.4f), 1.5f * u, Offset(x, yy), style = Stroke(0.4f * u))
+        }
+        if (!tinta) granoMueble(Rect(0f, 0f, w, h), oscuro, 0.7f)
+    }
+
+    override fun tintaInterior(oscuro: Boolean): Color =
+        if (EstadoTema.cara == Cara.INTENSA) (if (oscuro) TrazosTinta.CREMA else TrazosTinta.GRABAR) else (if (oscuro) TEXTO_NOCHE else TINTA)
     override val pared: Dp = 20.dp
     override val columnas = 2
     override val lineas = 4
-    override fun forma(semilla: Int): Shape = IdeasPsicodeliaV1.forma(semilla)
-    override fun DrawScope.adornoFicha(p: Pagina, grande: Boolean, semilla: Int) = with(IdeasPsicodeliaV1) { adornoFicha(p, grande, semilla) }
+
+    // ---------------------------------------------------------------- las fichas: los pliegos del cajón
+
+    /** Un pliego de papel: rectángulo con las esquinas apenas romas. */
+    override fun forma(semilla: Int): Shape = GenericShape { s, _ ->
+        val e = minOf(s.width, s.height) * 0.012f
+        addRoundRect(RoundRect(Rect(0f, 0f, s.width, s.height), CornerRadius(e)))
+    }
+
+    /**
+     * Lo que lleva cada pliego por encima del papel, siempre en los márgenes (nada pasa por detrás del texto). La ciudad: el
+     * pliego de papel de dibujo con la luz de la tarde que entra de arriba a la izquierda, la sombra del canto, dos tiras de
+     * cinta de pintor en las esquinas de arriba y el cajetín del plano a lápiz, abajo a la derecha. La tinta: la prueba de
+     * imprenta, con las cuatro marcas de registro en las esquinas y, al pie, la tira de control de las tintas (el bermellón,
+     * solo con la intensidad; la cuarta, la sobreimpresión).
+     */
+    override fun DrawScope.adornoFicha(p: Pagina, grande: Boolean, semilla: Int) {
+        val u = density
+        val w = size.width; val h = size.height
+        if (w < 30f * u || h < 30f * u) return
+        val g = if (grande) 1.3f else 1f
+        if (EstadoTema.cara == Cara.BASE) {
+            drawRect(Brush.linearGradient(listOf(luzMueble(0.22f), Color.Transparent), Offset.Zero, Offset(w * 0.55f, h * 0.55f)), Offset.Zero, Size(w, h))
+            drawRect(sombraMueble(0.05f), Offset(0f, h * 0.96f), Size(w, h * 0.04f))
+            drawRect(sombraMueble(0.035f), Offset(w * 0.97f, 0f), Size(w * 0.03f, h))
+            val cinta = CINTA.copy(alpha = 0.6f)
+            listOf(w * 0.07f to 34f, w * 0.93f to -34f).forEachIndexed { k, (x, giro) ->
+                rotate(giro + (azar(semilla, k) - 0.5f) * 8f, Offset(x, 0f)) {
+                    drawRect(cinta, Offset(x - 10f * u * g, -3.5f * u * g), Size(20f * u * g, 7f * u * g))
+                    drawRect(sombraMueble(0.08f), Offset(x - 10f * u * g, 3.5f * u * g), Size(20f * u * g, 0.6f * u))
+                }
+            }
+            val lapiz = p.tenue.copy(alpha = 0.2f)
+            val cj = Rect(w - 44f * u * g, h - 19f * u * g, w - 9f * u * g, h - 8f * u * g)
+            drawRect(lapiz, cj.topLeft, cj.size, style = Stroke(0.6f * u))
+            drawLine(lapiz, Offset(cj.left + cj.width * 0.55f, cj.top), Offset(cj.left + cj.width * 0.55f, cj.bottom), 0.5f * u)
+            drawLine(lapiz, Offset(cj.left, cj.center.y), Offset(cj.left + cj.width * 0.55f, cj.center.y), 0.5f * u)
+        } else {
+            val oscuroP = p.color.luminance() < 0.5f
+            val grab = TrazosTinta.grabado(oscuroP).copy(alpha = 0.34f)
+            val rm = 3.2f * u * g
+            val m = 8f * u * g
+            listOf(Offset(m, m), Offset(w - m, m), Offset(m, h - m), Offset(w - m, h - m)).forEach { q ->
+                drawCircle(grab, rm, q, style = Stroke(0.6f * u))
+                drawLine(grab, Offset(q.x - rm * 1.6f, q.y), Offset(q.x + rm * 1.6f, q.y), 0.6f * u)
+                drawLine(grab, Offset(q.x, q.y - rm * 1.6f), Offset(q.x, q.y + rm * 1.6f), 0.6f * u)
+            }
+            val i = EstadoTema.intensidad.let { if (it.isNaN()) 0f else it.coerceIn(0f, 1f) }
+            val mm = TrazosTinta.medidas(i)
+            val mag = TrazosTinta.tinta(TrazosTinta.Tinta.MAGENTA, oscuroP, i)
+            val ult = TrazosTinta.tinta(TrazosTinta.Tinta.ULTRAMAR, oscuroP, i)
+            val tiras = listOf(mag, ult, TrazosTinta.tinta(TrazosTinta.Tinta.BERMELLON, oscuroP, i).copy(alpha = mm.bermellon), TrazosTinta.sobreimpresion(mag, ult, oscuroP))
+            val lado = 4.5f * u * g
+            val sep = 1.5f * u * g
+            val x0 = w / 2 - (tiras.size * lado + (tiras.size - 1) * sep) / 2
+            tiras.forEachIndexed { k, col ->
+                val r = Rect(x0 + k * (lado + sep), h - m - lado / 2, x0 + k * (lado + sep) + lado, h - m + lado / 2)
+                if (col.alpha > 0f) drawRect(col.copy(alpha = col.alpha * 0.6f), r.topLeft, r.size)
+                drawRect(grab, r.topLeft, r.size, style = Stroke(0.5f * u))
+            }
+        }
+    }
     override val margenes = MargenesFicha(17.dp, 15.dp, 16.dp, 26.dp, 26.dp, 30.dp)
     override val proporcionFicha = 0.94f
     override val anchoGrande = 0.92f
@@ -1769,356 +1919,66 @@ object IdeasPsicodelia : DisenoIdeas {
     override val barra = false
     override fun altoBarra(grande: Boolean): Dp = 0.dp
     override val apilado = false
-    override fun DrawScope.marcaPostura(id: String, p: Pagina) = with(IdeasPsicodeliaV1) { marcaPostura(id, p) }
-    override fun DrawScope.marcaFijada(p: Pagina) = with(IdeasPsicodeliaV1) { marcaFijada(p) }
-    override val desorden = 2.5f
-}
-
-/**
- * Lo que queda de la versión 1 del Ideario de Psicodelia (la caja de sencillos vista desde arriba, las fundas de papel de las
- * fichas y sus marcas), copiado tal cual con sus colores y ayudantes: lo rehace, si hace falta, otra tanda.
- */
-private object IdeasPsicodeliaV1 {
-    // ---------------------------------------------------------------- la paleta de la tienda
-    private val MAGENTA = TrazosPsicodelia.MAGENTA
-    private val VERDE = TrazosPsicodelia.VERDE
-    private val NARANJA = TrazosPsicodelia.NARANJA
-    private val AZUL = TrazosPsicodelia.AZUL
-    private val AMARILLO = TrazosPsicodelia.AMARILLO
-    private val VIOLETA = TrazosPsicodelia.VIOLETA
-    /** La luz negra: lo que brilla sobre el negro violeta. */
-    private val LIMON = TrazosPsicodelia.LIMON
-    private val FMAGENTA = TrazosPsicodelia.FLUOR_MAGENTA
-    private val FVIOLETA = TrazosPsicodelia.FLUOR_VIOLETA
-    private val FNARANJA = TrazosPsicodelia.FLUOR_NARANJA
-    private val FAZUL = Color(0xFF6CF0C8)
-    private val SALA = TrazosPsicodelia.SALA
-    private val VINILO = TrazosPsicodelia.VINILO
-    /** La tinta de las figuras: un violeta casi negro. */
-    private val TINTA = TrazosPsicodelia.TINTA
-    /** La pared de la tienda, pintada de crema, y su sombra. */
-    private val PARED = Color(0xFFF1E6D3)
-    private val PARED_SOMBRA = Color(0xFFCDBDA6)
-    /** El mostrador, pintado a mano de violeta: su luz y su sombra. */
-    private val MOSTRADOR = Color(0xFF4E2D80)
-    private val MOSTRADOR_LUZ = Color(0xFF6C4AA6)
-    private val MOSTRADOR_OSC = Color(0xFF2C1752)
-    /** El pino de las cajas y de la cubierta, y sus nudos. */
-    private val PINO = Color(0xFFCFA673)
-    private val PINO_LUZ = Color(0xFFE8CB98)
-    private val PINO_OSC = Color(0xFF8C6A42)
-    private val NUDO = Color(0xFF7A532E)
-    /** La cubierta del mostrador, de pino barnizado, más oscura. */
-    private val CUBIERTA = Color(0xFFB98652)
-    /** La duela del piso. */
-    private val DUELA = Color(0xFF9A6B42)
-    /** El papel de las fundas: el del periódico, el blanco, el cartón y la estraza. */
-    private val PAPEL = TrazosPsicodelia.PAPEL
-    private val BLANCO = Color(0xFFFBF6EC)
-    private val CARTON = Color(0xFFC9A877)
-    /** La tarjeta del rótulo: cartulina crema; bajo la luz negra, el papel que se enciende de lila. */
-    private val CARTULINA = Color(0xFFF7EEDC)
-    private val CARTULINA_NOCHE = Color(0xFFD2C4F2)
-    /** Las casas pintadas que se ven por la ventana. */
-    private val CASA_GRIS = TrazosPsicodelia.CASA_GRIS
-    private val CASA_BLANCA = TrazosPsicodelia.CASA_BLANCA
-    private val CASA_ROSA = TrazosPsicodelia.CASA_ROSA
-    private val CASA_TURQUESA = TrazosPsicodelia.CASA_TURQUESA
-    private val CASA_AMARILLA = TrazosPsicodelia.CASA_AMARILLA
-    private val NIEBLA = TrazosPsicodelia.NIEBLA
-    /** El metal: el cromo de la caja registradora y del tocadiscos. */
-    private val CROMO = Color(0xFFC9CDD0)
-    private val CROMO_OSC = Color(0xFF7D8388)
-    /** El oro del disco de oro. */
-    private val ORO = Color(0xFFE2B33C)
-    private val ORO_OSC = Color(0xFF9A7419)
-
-    /** Los pares que vibran: un color y su complementario, como en los carteles. */
-    private val PARES = listOf(MAGENTA to VERDE, NARANJA to AZUL, AMARILLO to VIOLETA, VERDE to MAGENTA, AZUL to NARANJA, VIOLETA to AMARILLO)
-
-    /** El color de lo que no brilla: de día, tal cual; de noche, hundido en el negro violeta de la luz negra. */
-    private fun t(c: Color, oscuro: Boolean, k: Float = 0.8f): Color = if (oscuro) mezcla(c, SALA, k) else c
-
-    /** Lo que se pintó o se imprimió en tinta fluorescente: de día, su color; bajo la luz negra, el que brilla. */
-    private fun fluor(c: Color, oscuro: Boolean): Color = if (!oscuro) c else when (c) {
-        MAGENTA -> FMAGENTA
-        VERDE -> LIMON
-        NARANJA -> FNARANJA
-        AMARILLO -> LIMON
-        AZUL -> FAZUL
-        VIOLETA -> FVIOLETA
-        else -> mezcla(c, FVIOLETA, 0.45f)
-    }
-
-    /** La sombra con color: de día, el violeta hondo de los muebles; de noche, el negro violeta de la sala. */
-    private fun sombra(oscuro: Boolean, a: Float) = if (oscuro) SALA.copy(alpha = (a * 1.15f).coerceIn(0f, 1f)) else sombraMueble(a)
-
-    /** El brillo de lo que mira a la luz: de día, crema; de noche, el lila apagado del tubo de luz negra. */
-    private fun brillo(oscuro: Boolean, a: Float) = if (oscuro) FVIOLETA.copy(alpha = (a * 0.35f).coerceIn(0f, 1f)) else luzMueble(a)
-
-    /** El halo de algo que brilla (la luz negra, la lámpara de cera, la tinta fluorescente). */
-    private fun DrawScope.resplandor(c: Offset, r: Float, col: Color, fuerza: Float = 1f) {
-        mancha(c, r, col.copy(alpha = (0.18f * fuerza).coerceIn(0f, 1f)))
-        mancha(c, r * 0.45f, col.copy(alpha = (0.22f * fuerza).coerceIn(0f, 1f)))
-    }
-
-    /** Una forma que brilla bajo la luz negra: el halo de su color alrededor y la forma encima. */
-    private fun DrawScope.brilla(p: Path, col: Color, g: Float) {
-        drawPath(p, col.copy(alpha = 0.1f * col.alpha), style = Stroke(g * 3.2f, join = StrokeJoin.Round))
-        drawPath(p, col.copy(alpha = 0.22f * col.alpha), style = Stroke(g * 1.4f, join = StrokeJoin.Round))
-        drawPath(p, col)
-    }
-
-    // ---------------------------------------------------------------- ayudantes de la tienda
-
-    /** Una tabla de pino en [r], con su veta, algún nudo y el canto de arriba a la luz. */
-    private fun DrawScope.pino(r: Rect, base: Color, semilla: Int, oscuro: Boolean, vertical: Boolean = false, nudos: Int = 1) {
-        val u = density
-        drawRect(base, r.topLeft, r.size)
-        clipRect(r.left, r.top, r.right, r.bottom) {
-            vetas(r, t(NUDO, oscuro, 0.7f).copy(alpha = if (oscuro) 0.4f else 0.26f), semilla, densidad = 0.5f, vertical = vertical, grosor = 0.7f, ondulacion = 0.7f)
-            for (k in 0 until nudos) {
-                if (azar(semilla, k + 50) < 0.35f) continue
-                val p = Offset(r.left + r.width * (0.15f + 0.7f * azar(semilla, k + 51)), r.top + r.height * (0.25f + 0.5f * azar(semilla, k + 52)))
-                val a = minOf(r.width, r.height) * 0.16f
-                val tam = if (vertical) Size(a * 0.8f, a * 1.6f) else Size(a * 1.6f, a * 0.8f)
-                drawOval(t(NUDO, oscuro, 0.7f).copy(alpha = 0.55f), Offset(p.x - tam.width / 2, p.y - tam.height / 2), tam)
-                drawOval(t(NUDO, oscuro, 0.7f).copy(alpha = 0.3f), Offset(p.x - tam.width, p.y - tam.height), Size(tam.width * 2, tam.height * 2), style = Stroke(0.6f * u))
-            }
-        }
-    }
-
-    /**
-     * Una funda de sencillo vista de frente en [r] (sin girar), con [estilo]: 0, papel del periódico; 1, papel blanco; 2,
-     * cartón; 3, la funda impresa de un color con su franja; 4, la funda ilustrada. Con [agujero], se ve el agujero redondo
-     * con la etiqueta de [etiqueta] (para el sencillo que se sacó a medias).
-     */
-    private fun DrawScope.funda(r: Rect, estilo: Int, color: Color, oscuro: Boolean, agujero: Float = 0f, etiqueta: Color = NARANJA, semilla: Int = 0) {
-        val u = density
-        val base = when (estilo) { 0 -> PAPEL; 1 -> BLANCO; 2 -> CARTON; 3 -> mezcla(color, Color.White, 0.35f); else -> mezcla(color, Color.White, 0.15f) }
-        val col = if (oscuro) (if (estilo <= 1) mezcla(base, SALA, 0.68f) else mezcla(fluor(color, true), SALA, 0.72f)) else base
-        drawRect(col, r.topLeft, r.size)
-        clipRect(r.left, r.top, r.right, r.bottom) {
-            when (estilo) {
-                3 -> drawRect(fluor(color, oscuro).let { if (oscuro) mezcla(it, SALA, 0.4f) else mezcla(it, Color.Black, 0.12f) }, Offset(r.left, r.top + r.height * 0.1f), Size(r.width, minOf(r.height * 0.12f, 3f * u)))
-                4 -> {
-                    val c2 = fluor(TrazosPsicodelia.complementario(color), oscuro).let { if (oscuro) mezcla(it, SALA, 0.35f) else it }
-                    for (k in 0 until 3) drawPath(TrazosPsicodelia.onda(r.left, r.right, r.top + 3f * u + k * 3.2f * u, 1f * u, r.width * 0.3f, k * 0.2f), c2, style = Stroke(1.2f * u))
-                }
-            }
-            // La muesca del pulgar, arriba, por donde asoma el canto del disco.
-            if (estilo <= 2 && r.width > 12f * u) {
-                val cm = Offset(r.center.x + r.width * (azar(semilla, 7) - 0.5f) * 0.5f, r.top)
-                val rm = minOf(r.width * 0.09f, 5f * u)
-                drawCircle(VINILO, rm, cm)
-                drawArc(Color.White.copy(alpha = 0.15f), 20f, 140f, false, Offset(cm.x - rm * 0.7f, cm.y - rm * 0.7f), Size(rm * 1.4f, rm * 1.4f), style = Stroke(0.4f * u))
-            }
-            if (agujero > 0f) {
-                val ca = Offset(r.center.x, r.top + agujero)
-                val ra = r.width * 0.3f
-                drawCircle(VINILO, ra, ca)
-                val e = fluor(etiqueta, oscuro)
-                if (oscuro) drawCircle(e.copy(alpha = 0.35f), ra * 0.85f, ca)
-                drawCircle(e, ra * 0.72f, ca)
-                drawCircle(mezcla(e, Color.White, 0.35f), ra * 0.58f, ca, style = Stroke(0.5f * u))
-                drawCircle(col, ra * 0.26f, ca)
-                drawArc(sombra(oscuro, 0.4f), 180f, 150f, false, Offset(ca.x - ra, ca.y - ra), Size(ra * 2, ra * 2), style = Stroke(1.2f * u))
-            }
-        }
-        // El canto de arriba, a la luz; de noche, el papel blanco se enciende un poco con la luz negra.
-        drawLine(if (oscuro) FVIOLETA.copy(alpha = if (estilo <= 1) 0.55f else 0.25f) else luzMueble(0.75f), Offset(r.left, r.top + 0.4f * u), Offset(r.right, r.top + 0.4f * u), 0.8f * u)
-        drawLine(sombra(oscuro, 0.25f), Offset(r.left, r.top), Offset(r.left, r.bottom), 0.5f * u)
-    }
-
-    // ---------------------------------------------------------------- el interior: la caja vista desde arriba
-
-    fun DrawScope.interior(oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        val pl = 18f * u; val pa = 30f * u; val pf = 24f * u
-        val fondo = Rect(pl, pa, w - pl, h - pf)
-        // El fondo de la caja, en sombra.
-        drawRect(t(mezcla(PINO, PINO_OSC, 0.6f), oscuro, 0.82f), fondo.topLeft, fondo.size)
-        // Los sencillos de canto, del fondo (arriba) hacia el frente (abajo): de cada uno se ve el canto de la funda y un poco
-        // de su cara; cada tanto, el separador de un tema con su pestaña, y un hueco donde falta uno.
-        val colores = listOf(MAGENTA, NARANJA, AMARILLO, VERDE, AZUL, VIOLETA)
-        var y = fondo.top + 6f * u
-        var k = 0
-        while (y < fondo.bottom) {
-            val alto = (8f + 12f * azar(801, k)) * u
-            val giro = (azar(802, k) - 0.5f) * 1.6f
-            val dxs = (azar(803, k) - 0.5f) * 6f * u
-            val r = Rect(fondo.left + 3f * u + dxs, y, fondo.right - 3f * u + dxs, y + alto + 8f * u)
-            val hueco = k % 23 == 11
-            val divisor = k % 14 == 6
-            rotate(giro, r.center) {
-                if (hueco) {
-                    drawRect(sombra(oscuro, 0.5f), r.topLeft, Size(r.width, alto))
-                } else if (divisor) {
-                    val par = PARES[Math.floorMod(k / 14, PARES.size)]
-                    val col = if (oscuro) fluor(par.first, true) else mezcla(par.first, PAPEL, 0.45f)
-                    val izq = k % 28 == 6
-                    val pw = r.width * 0.24f
-                    val px = if (izq) r.left + r.width * 0.08f else r.right - r.width * 0.08f - pw
-                    val tab = Path().apply {
-                        addRect(Rect(r.left, r.top, r.right, r.bottom))
-                        addRoundRect(RoundRect(Rect(px, r.top - 9f * u, px + pw, r.top + 2f * u), CornerRadius(3f * u)))
-                    }
-                    drawPath(tab, sombra(oscuro, 0.3f), style = Stroke(2.4f * u))
-                    if (oscuro) drawRoundRect(col.copy(alpha = 0.22f), Offset(px - 3f * u, r.top - 12f * u), Size(pw + 6f * u, 14f * u), CornerRadius(5f * u))
-                    drawRect(if (oscuro) mezcla(col, SALA, 0.55f) else col, r.topLeft, r.size)
-                    drawRoundRect(col, Offset(px, r.top - 9f * u), Size(pw, 11f * u), CornerRadius(3f * u))
-                    with(TrazosPsicodelia) { margarita(Offset(px + pw / 2, r.top - 3.5f * u), 3.4f * u, fluor(par.second, oscuro), fluor(AMARILLO, oscuro), 6) }
-                } else {
-                    val a = azar(804, k)
-                    val estilo = when { a < 0.44f -> 0; a < 0.62f -> 1; a < 0.8f -> 2; a < 0.92f -> 3; else -> 4 }
-                    funda(r, estilo, mezcla(colores[Math.floorMod(k * 5, colores.size)], PAPEL, 0.45f), oscuro, semilla = 811 + k)
-                }
-                // La sombra que le echa la funda de adelante, abajo.
-                drawRect(Brush.verticalGradient(listOf(Color.Transparent, sombra(oscuro, 0.35f)), r.top + alto - 4f * u, r.top + alto), Offset(r.left, r.top + alto - 4f * u), Size(r.width, 4f * u))
-            }
-            y += alto; k++
-        }
-        // De noche, la luz negra cae desde arriba y deja hundidas las esquinas.
-        if (oscuro) {
-            mancha(Offset(w * 0.6f, h * 0.2f), maxOf(w, h) * 0.7f, FVIOLETA.copy(alpha = 0.08f))
-            drawRect(Brush.radialGradient(listOf(Color.Transparent, SALA.copy(alpha = 0.55f)), Offset(w * 0.55f, h * 0.35f), maxOf(w, h) * 0.75f))
-        }
-        // Las paredes de la caja vistas desde arriba: la de atrás y la de la izquierda en sombra, las otras a la luz.
-        val atras = Path().apply { moveTo(0f, 0f); lineTo(w, 0f); lineTo(w - pl, pa); lineTo(pl, pa); close() }
-        val izq = Path().apply { moveTo(0f, 0f); lineTo(pl, pa); lineTo(pl, h - pf); lineTo(0f, h); close() }
-        val der = Path().apply { moveTo(w, 0f); lineTo(w, h); lineTo(w - pl, h - pf); lineTo(w - pl, pa); close() }
-        val delante = Path().apply { moveTo(0f, h); lineTo(pl, h - pf); lineTo(w - pl, h - pf); lineTo(w, h); close() }
-        listOf(Triple(atras, Rect(0f, 0f, w, pa), mezcla(PINO_LUZ, Color.Black, 0.12f)), Triple(izq, Rect(0f, 0f, pl, h), mezcla(PINO, Color.Black, 0.22f)),
-            Triple(der, Rect(w - pl, 0f, w, h), PINO), Triple(delante, Rect(0f, h - pf, w, h), PINO_LUZ)).forEachIndexed { i, (p, rr, col) ->
-            clipPath(p) { pino(rr, t(col, oscuro, 0.78f), 850 + i, oscuro, vertical = i == 1 || i == 2, nudos = 2) }
-            drawPath(p, sombra(oscuro, 0.3f), style = Stroke(0.6f * u))
-        }
-        sombraInterior(fondo, 20f * u, if (oscuro) 0.45f else 0.28f)
-        drawRect(brillo(oscuro, 0.5f), Offset.Zero, Size(w, 1.2f * u))
-        // Los clavos de las esquinas.
-        for ((x, yy) in listOf(pl * 0.5f to pa * 0.4f, w - pl * 0.5f to pa * 0.4f, pl * 0.5f to h - pf * 0.4f, w - pl * 0.5f to h - pf * 0.4f)) {
-            drawCircle(t(Color(0xFF4A4440), oscuro, 0.6f), 1.3f * u, Offset(x, yy))
-            drawCircle(brillo(oscuro, 0.5f), 0.5f * u, Offset(x - 0.4f * u, yy - 0.4f * u))
-        }
-        // Una margarita pintada a mano en la tabla de delante.
-        val cm = Offset(w * 0.5f, h - pf * 0.5f)
-        if (oscuro) resplandor(cm, pf * 1.2f, LIMON, 0.5f)
-        with(TrazosPsicodelia) { margarita(cm, pf * 0.32f, fluor(AMARILLO, oscuro), fluor(NARANJA, oscuro), 8) }
-        granoMueble(Rect(0f, 0f, w, h), oscuro, 0.7f)
-    }
-
-    fun tintaInterior(oscuro: Boolean) = if (oscuro) Color(0xFFF2EAF7) else TINTA
-    val pared: Dp = 20.dp
-    val columnas = 2
-    val lineas = 4
-
-    // ---------------------------------------------------------------- las fichas: fundas de papel de sencillo
-
-    fun forma(semilla: Int): Shape = GenericShape { s, _ ->
-        val e = minOf(s.width, s.height) * 0.012f
-        addRoundRect(RoundRect(Rect(0f, 0f, s.width, s.height), CornerRadius(e)))
-    }
-
-    fun DrawScope.adornoFicha(p: Pagina, grande: Boolean, semilla: Int) {
-        val u = density
-        val w = size.width; val h = size.height
-        val g = if (grande) 1.4f else 1f
-        val m = minOf(w, h)
-        // La solapa pegada por detrás, que se transparenta a la izquierda y abajo.
-        drawRect(sombraMueble(0.045f), Offset.Zero, Size(w * 0.05f, h))
-        drawRect(sombraMueble(0.04f), Offset(0f, h - h * 0.045f), Size(w, h * 0.045f))
-        drawLine(p.tenue.copy(alpha = 0.16f), Offset(w * 0.05f, 0f), Offset(w * 0.05f, h), 0.6f * u)
-        // La marca del aro del disco, que se fue marcando en el papel.
-        val cd = Offset(w * 0.5f, h * 0.54f)
-        drawCircle(sombraMueble(0.05f), m * 0.44f, cd, style = Stroke(3f * u * g))
-        drawCircle(luzMueble(0.35f), m * 0.44f - 2f * u * g, cd, style = Stroke(1f * u * g))
-        // El agujero redondo de la funda, con la etiqueta del disco y su agujero grande, tenues para que se lea encima.
-        val ra = m * (if (grande) 0.17f else 0.2f)
-        val et = PARES[Math.floorMod(semilla, PARES.size)]
-        drawCircle(p.tinta.copy(alpha = 0.07f), ra, cd)
-        drawCircle(et.first.copy(alpha = 0.18f), ra * 0.8f, cd)
-        drawCircle(et.second.copy(alpha = 0.16f), ra * 0.62f, cd, style = Stroke(0.8f * u * g))
-        drawCircle(p.color, ra * 0.28f, cd)
-        drawCircle(p.tinta.copy(alpha = 0.12f), ra * 0.28f, cd, style = Stroke(0.6f * u))
-        // El filo del corte: la sombra del papel arriba a la izquierda y la luz abajo a la derecha.
-        drawArc(sombraMueble(0.22f), 160f, 160f, false, Offset(cd.x - ra, cd.y - ra), Size(ra * 2, ra * 2), style = Stroke(1.1f * u * g))
-        drawArc(luzMueble(0.7f), -20f, 160f, false, Offset(cd.x - ra, cd.y - ra), Size(ra * 2, ra * 2), style = Stroke(0.8f * u * g))
-        // La muesca del pulgar, arriba, por donde asoma el canto negro del disco.
-        val rm = m * 0.07f
-        val cm = Offset(w * 0.5f, 0f)
-        drawCircle(VINILO, rm, cm)
-        for (k in 1..3) drawArc(Color.White.copy(alpha = 0.1f), 20f, 140f, false, Offset(cm.x - rm * (1f - 0.22f * k), cm.y - rm * (1f - 0.22f * k)), Size(rm * 2 * (1f - 0.22f * k), rm * 2 * (1f - 0.22f * k)), style = Stroke(0.4f * u))
-        drawArc(luzMueble(0.8f), 0f, 180f, false, Offset(cm.x - rm, cm.y - rm), Size(rm * 2, rm * 2), style = Stroke(0.8f * u))
-        // La onda de arcoíris que imprime la tienda en sus fundas, abajo.
-        val yo = h - 7f * u * g
-        drawPath(TrazosPsicodelia.onda(w * 0.1f, w * 0.9f, yo, 1.4f * u * g, 14f * u * g), TrazosPsicodelia.arcoiris(Offset(w * 0.1f, yo), Offset(w * 0.9f, yo), 0.55f), style = Stroke(1.3f * u * g, cap = StrokeCap.Round))
-        // En la grande, el sello de goma de la tienda: una margarita en su aro de ondas, magenta, abajo a la izquierda.
-        if (grande) {
-            val cs = Offset(30f * u, h - 34f * u)
-            val rs = 15f * u
-            rotate(-14f, cs) {
-                val tinta = MAGENTA.copy(alpha = 0.32f)
-                drawCircle(tinta, rs, cs, style = Stroke(1.3f * u))
-                drawCircle(tinta, rs * 0.78f, cs, style = Stroke(0.6f * u))
-                for (k in 0 until 18) {
-                    val a = 2f * PI.toFloat() * k / 18
-                    drawCircle(tinta, 0.7f * u, Offset(cs.x + rs * 0.89f * cos(a), cs.y + rs * 0.89f * sin(a)))
-                }
-                with(TrazosPsicodelia) { margarita(cs, rs * 0.55f, tinta, null, 8) }
-                drawCircle(tinta, rs * 0.13f, cs)
-            }
-        }
-    }
-
-    fun DrawScope.marcaPostura(id: String, p: Pagina) {
+    /** Cómo la tienes, con el disco del día: hecho, convence, piensa, duda o desacuerdo. Iguales en las dos caras. */
+    override fun DrawScope.marcaPostura(id: String, p: Pagina) {
         val s = size.minDimension; val c = center
+        val vinilo = Color(0xFF1E1916)
         when (id) {
-            // El disco de oro: ya está hecho.
+            // El disco del día con su etiqueta: ya está hecho.
             "hecho" -> {
-                drawCircle(Brush.radialGradient(listOf(mezcla(ORO, Color.White, 0.45f), ORO, ORO_OSC), c - Offset(s * 0.15f, s * 0.15f), s * 0.6f), s * 0.46f, c)
-                drawCircle(ORO_OSC, s * 0.36f, c, style = Stroke(s * 0.035f))
-                drawCircle(MAGENTA, s * 0.18f, c)
-                drawCircle(mezcla(ORO, Color.White, 0.5f), s * 0.06f, c)
-                drawCircle(ORO_OSC, s * 0.46f, c, style = Stroke(s * 0.05f))
+                drawCircle(vinilo, s * 0.46f, c)
+                drawCircle(p.tenue.copy(alpha = 0.5f), s * 0.46f, c, style = Stroke(s * 0.03f))
+                for (k in 1..3) drawCircle(Color.White.copy(alpha = 0.08f), s * (0.24f + 0.06f * k), c, style = Stroke(s * 0.015f))
+                drawArc(Color.White.copy(alpha = 0.2f), 200f, 50f, false, Offset(c.x - s * 0.38f, c.y - s * 0.38f), Size(s * 0.76f, s * 0.76f), style = Stroke(s * 0.04f, cap = StrokeCap.Round))
+                drawCircle(p.acento, s * 0.2f, c)
+                drawCircle(p.color, s * 0.04f, c)
             }
-            // La flor que vibra: convence.
-            "convence" -> with(TrazosPsicodelia) { flor(c, s * 0.46f, MAGENTA, VERDE, 6, 0.6f) }
+            // El disco hecho sol, con los rayos que ondulan: convence.
+            "convence" -> {
+                drawPath(TrazosTinta.rayos(c, s * 0.18f, s * 0.49f, 20, s * 0.03f, 1.2f, lleno = 0.7f), p.acento)
+                drawCircle(p.color, s * 0.21f, c)
+                drawCircle(p.acento, s * 0.16f, c)
+                drawCircle(p.color, s * 0.04f, c)
+            }
             // El disco que gira y sus dos estelas: le sigue dando vueltas.
             "piensa" -> {
-                drawCircle(VINILO, s * 0.3f, c)
+                drawCircle(vinilo, s * 0.3f, c)
+                drawCircle(p.tenue.copy(alpha = 0.5f), s * 0.3f, c, style = Stroke(s * 0.03f))
                 drawCircle(p.acento, s * 0.12f, c)
                 drawCircle(p.color, s * 0.04f, c)
                 drawArc(p.acento, -150f, 80f, false, Offset(c.x - s * 0.44f, c.y - s * 0.44f), Size(s * 0.88f, s * 0.88f), style = Stroke(s * 0.08f, cap = StrokeCap.Round))
                 drawArc(p.acento, 30f, 80f, false, Offset(c.x - s * 0.44f, c.y - s * 0.44f), Size(s * 0.88f, s * 0.88f), style = Stroke(s * 0.08f, cap = StrokeCap.Round))
             }
-            // Dos burbujas de aceite que flotan: todavía no se asienta.
+            // El disco todavía a lápiz, en trazos sueltos: no se asienta.
             "duda" -> {
-                drawCircle(p.tenue, s * 0.27f, Offset(c.x - s * 0.1f, c.y + s * 0.1f), style = Stroke(s * 0.08f))
-                drawCircle(p.tenue, s * 0.13f, Offset(c.x + s * 0.27f, c.y - s * 0.25f), style = Stroke(s * 0.07f))
-                drawArc(p.tenue, 200f, 60f, false, Offset(c.x - s * 0.28f, c.y - s * 0.08f), Size(s * 0.36f, s * 0.36f), style = Stroke(s * 0.06f, cap = StrokeCap.Round))
+                drawCircle(p.tenue, s * 0.36f, c, style = Stroke(s * 0.07f, pathEffect = PathEffect.dashPathEffect(floatArrayOf(s * 0.16f, s * 0.1f))))
+                drawCircle(p.tenue, s * 0.1f, c, style = Stroke(s * 0.06f))
             }
             // El disco partido: así no.
             "desacuerdo" -> {
                 val r = s * 0.42f
                 val disco = Path().apply { moveTo(c.x, c.y); arcTo(Rect(c, r), -40f, 290f, false); close() }
-                drawPath(disco, VINILO)
-                drawCircle(MAGENTA, r * 0.38f, c)
+                drawPath(disco, vinilo)
+                drawCircle(p.acento, r * 0.38f, c)
                 drawCircle(p.color, r * 0.1f, c)
-                val pedazo = Path().apply { val o = c + Offset(s * 0.1f, -s * 0.08f); moveTo(o.x, o.y); arcTo(Rect(o, r), -95f, 45f, false); close() }
-                drawPath(pedazo, VINILO)
+                val pedazo = Path().apply { val q = c + Offset(s * 0.1f, -s * 0.08f); moveTo(q.x, q.y); arcTo(Rect(q, r), -95f, 45f, false); close() }
+                drawPath(pedazo, vinilo)
+                drawPath(disco, p.tenue.copy(alpha = 0.5f), style = Stroke(s * 0.03f))
+                drawPath(pedazo, p.tenue.copy(alpha = 0.5f), style = Stroke(s * 0.03f))
             }
             else -> {}
         }
     }
 
-    /** Una chincheta de plástico en forma de margarita, clavada de lado: así se clavan las tarjetas de las cajas. */
-    fun DrawScope.marcaFijada(p: Pagina) {
+    /** Una chincheta redonda clavada de lado, como las del cartel de la pared: así se fija un pliego. */
+    override fun DrawScope.marcaFijada(p: Pagina) {
         val s = size.minDimension; val c = center + Offset(s * 0.06f, -s * 0.06f)
-        // La aguja, que entra en diagonal, y la sombra de la cabeza.
         drawLine(Color(0xFF8A8C88), c, c + Offset(-s * 0.4f, s * 0.4f), s * 0.08f, StrokeCap.Round)
         drawCircle(sombraMueble(0.25f), s * 0.34f, c + Offset(s * 0.05f, s * 0.07f))
-        with(TrazosPsicodelia) { margarita(c, s * 0.4f, MAGENTA, AMARILLO, 6, 0.3f) }
-        drawCircle(Color.White.copy(alpha = 0.55f), s * 0.07f, c + Offset(-s * 0.15f, -s * 0.17f))
+        drawCircle(p.acento, s * 0.36f, c)
+        drawCircle(lerp(p.acento, Color.Black, 0.25f), s * 0.36f, c, style = Stroke(s * 0.05f))
+        if (EstadoTema.cara == Cara.BASE) drawCircle(Color.White.copy(alpha = 0.45f), s * 0.07f, c + Offset(-s * 0.14f, -s * 0.16f))
+        else drawCircle(p.color, s * 0.08f, c)
     }
+    override val desorden = 2.5f
 }

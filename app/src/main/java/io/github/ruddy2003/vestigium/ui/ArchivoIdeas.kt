@@ -53,10 +53,9 @@ fun archivoIdeas(t: TemaId): ArchivoIdeas = when (t) {
     TemaId.RUINAS -> ArchivoIdeas("lata", "latas", "nota", "notas", true, "la estantería rescatada")
     TemaId.NAVIDAD -> ArchivoIdeas("caja de galletas", "cajas de galletas", "tarjeta de felicitación", "tarjetas de felicitación", true, "la alacena de la cocina")
     TemaId.DISTOPIA -> ArchivoIdeas("gaveta", "gavetas", "expediente", "expedientes", true, "el archivo del ministerio")
-    // Las ideas, cortas como un sencillo: cada una un disco de 45 en su funda de papel, guardado en las cajas de sencillos del
-    // mostrador de la tienda de discos (la tienda es recurso: las del Haight de 1967 no se comprobaron). Las del diario son los
-    // discos de larga duración de la repisa del departamento.
-    TemaId.PSICODELIA -> ArchivoIdeas("caja de sencillos", "cajas de sencillos", "sencillo", "sencillos", true, "el mostrador de la tienda de discos")
+    // Las ideas, como los pliegos de dibujo que David guarda sin doblar en los cajones anchos y bajos de su cajonera de planos
+    // (Psicodelia v2: la cajonera del Ideario; la guía, «Los muebles»).
+    TemaId.PSICODELIA -> ArchivoIdeas("cajón de planos", "cajones de planos", "pliego", "pliegos", false, "la cajonera de planos del dibujante")
     // Las ideas, como pruebas de imprenta guardadas en los cajones planos del mueble de láminas del taller de litografía, donde se
     // guardan los carteles sin doblar.
     TemaId.NOUVEAU -> ArchivoIdeas("cajón de láminas", "cajones de láminas", "prueba de imprenta", "pruebas de imprenta", false, "el mueble de cajones planos del taller")
