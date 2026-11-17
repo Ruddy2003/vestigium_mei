@@ -340,8 +340,30 @@ fun PantallaEntrada(nav: Nav) {
                 if (d != null) EdicionIdea.abrir(nav, io.github.ruddy2003.vestigium.data.Ideario.deDiario(d.nota, fecha, Fechas.ahoraIso(), Repo.nuevoId()),
                     contexto = "Del diario del ${Fechas.titulo(fecha).lowercase()}. Deja solo la parte que quieres conservar; el diario no cambia.")
             },
-        ))
+        ),
+        pie = { if (d != null && Texto.personas(d.nota).isNotEmpty()) PersonasDelDia(d) })
     if (escribiendo) io.github.ruddy2003.vestigium.ui.EscribirDia(fecha) { escribiendo = false }
+}
+
+/**
+ * Debajo de una entrada abierta en la Biblioteca (17 nov 2026): «Personas de este día», plegado al empezar, con las mismas
+ * fichas que en Hoy ([ChipsPresencia]) para decir cómo estuviste con cada @persona de ESE día (no del de hoy): estuve
+ * con, pensé en o mensajes (que incluye las llamadas). Se guarda como en «¿Estuviste o pensaste?»: el día tal cual, con
+ * sus presencias, y queda revisado. [abiertoAlEmpezar] lo abre (las capturas).
+ */
+@Composable
+internal fun PersonasDelDia(d: Dia, abiertoAlEmpezar: Boolean = false) {
+    var abierto by remember(d.fecha) { mutableStateOf(abiertoAlEmpezar) }
+    val n = Texto.personas(d.nota).distinct().size
+    Column(Modifier.fillMaxWidth().padding(top = 18.dp)) {
+        io.github.ruddy2003.vestigium.ui.comun.BotonTexto(onClick = { abierto = !abierto }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
+            Text((if (abierto) "− " else "+ ") + "Personas de este día ($n)", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        }
+        if (abierto) {
+            ChipsPresencia(d) { nuevo -> Repo.importarDias(listOf(nuevo), sobrescribir = true) }
+            Ayuda("Toca un nombre si ese día solo pensaste en esa persona o hablaron por mensaje o llamada.", Modifier.padding(top = 4.dp))
+        }
+    }
 }
 
 /**

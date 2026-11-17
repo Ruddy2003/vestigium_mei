@@ -11,7 +11,9 @@ object Presencias {
     const val MENSAJES = "mensajes"
 
     val OPCIONES = listOf(Opcion(ESTUVE, "estuve con", "La viste en persona"), Opcion(PENSE, "pensé en", "No la viste: pensaste en ella o la recordaste"),
-        Opcion(MENSAJES, "mensajes", "Hablaron por mensaje o llamada, sin verse"))
+        Opcion(MENSAJES, "mensaje o llamada", "Hablaron por mensaje o llamada, sin verse"))
+    // El nombre visible dice «mensaje o llamada» desde el 17 nov 2026 (antes «mensajes»): el valor guardado sigue siendo
+    // «mensajes» y siempre incluyó las llamadas. Una llamada aparte sería otro valor y cambiaría `personas_mensajes`.
 
     fun nombre(id: String): String = OPCIONES.firstOrNull { it.id == id }?.nombre ?: OPCIONES[0].nombre
 

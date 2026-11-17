@@ -1848,10 +1848,13 @@ internal fun BotonGuardarTema(texto: String, p: Pagina, oscuro: Boolean, noche: 
             .padding(horizontal = 16.dp, vertical = 9.dp))
 }
 
-/** Una entrada abierta a pantalla completa con el diseño del tema. */
+/**
+ * Una entrada abierta a pantalla completa con el diseño del tema. [pie] va debajo del texto, antes del colofón (en la
+ * Biblioteca del diario: «Personas de este día»).
+ */
 @Composable
 fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Unit)?, siguiente: (() -> Unit)?, acciones: List<Pair<String, () -> Unit>>,
-                tema: TemaId = Estilo.tema, modo: Escrito = Escrito.DIARIO, capitular: Boolean = true) {
+                tema: TemaId = Estilo.tema, modo: Escrito = Escrito.DIARIO, capitular: Boolean = true, pie: (@Composable () -> Unit)? = null) {
     val sueno = modo == Escrito.SUENO
     val p = if (sueno) paginaNoche(tema) else pagina(tema)
     val cuerpo = if (sueno) d?.sueno_texto.orEmpty() else d?.nota.orEmpty()
@@ -1917,6 +1920,7 @@ fun LecturaTema(fecha: String, d: Dia?, volver: () -> Unit, anterior: (() -> Uni
                             fontStyle = androidx.compose.ui.text.font.FontStyle.Italic, modifier = Modifier.padding(top = 18.dp))
                         LibroDiario.meta(d).takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = p.tenue, modifier = Modifier.padding(top = 22.dp)) }
                     }
+                    pie?.invoke()
                     Text(if (sueno) colofonSueno(tema) else colofon(tema), color = p.acento, style = MaterialTheme.typography.labelLarge, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(top = 26.dp))
                 }
             }
