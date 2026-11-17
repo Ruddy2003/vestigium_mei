@@ -31,9 +31,11 @@ import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.BotonSecundario
+import io.github.ruddy2003.vestigium.ui.Cara
 import io.github.ruddy2003.vestigium.ui.CapaDeshacer
 import io.github.ruddy2003.vestigium.ui.Cifra
 import io.github.ruddy2003.vestigium.ui.Clave
+import io.github.ruddy2003.vestigium.ui.EstadoTema
 import io.github.ruddy2003.vestigium.ui.Etiqueta
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
@@ -495,10 +497,9 @@ class Capturas {
      * El mueble del Ideario: vacío, con 1 y con 5 temas; con 9; y la vista corta (6 y «y N más»). En tres capturas: con muchos
      * degradados en una sola imagen, el simulador de Paparazzi pinta de negro los últimos (en el teléfono no pasa).
      */
-    private fun mueble(t: TemaId, oscuro: Boolean) {
-        val modo = if (oscuro) "oscuro" else "claro"
+    private fun mueble(t: TemaId, oscuro: Boolean, etiqueta: String = "${t.id}_${if (oscuro) "oscuro" else "claro"}") {
         listOf("a" to listOf(0, 1, 5), "b" to listOf(9), "c" to emptyList()).forEach { (parte, ns) ->
-            pantalla(t, oscuro, 2600, "tema_${t.id}_${modo}_$parte") {
+            pantalla(t, oscuro, 2600, "tema_${etiqueta}_$parte") {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     ns.forEach { n -> io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(n)) }
                     if (ns.isEmpty()) io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(9), max = 6)
@@ -1930,12 +1931,30 @@ class Capturas {
      * entrada `temas`) solo salen esos temas (ver [CapturasAPedido]).
      */
     // Un alto menor que el ancho (1080) hace que Paparazzi gire la captura: aquí ninguna baja de 1200.
+    //
+    // Los temas con caras (Psicodelia) salen en las dos, forzadas con EstadoTema.forzar: `<tema>_<claro|oscuro>_ciudad`
+    // (la cara base) y `<tema>_<claro|oscuro>_tinta` (la intensa, con i = 0); en las superficies donde la intensidad
+    // cambia el dibujo ([CON_INTENSIDAD]), además `<tema>_<claro|oscuro>_tinta_i1` (la intensa con i = 1). Los otros
+    // temas, como siempre (`<tema>_<claro|oscuro>`), sin forzar nada.
     private fun porTema(superficie: String, captura: (tema: TemaId, oscuro: Boolean, nombre: String) -> Unit) {
         CapturasAPedido.pedida(superficie)
         CapturasAPedido.temas().forEach { t ->
-            (if (t.soloOscuro) listOf(true) else listOf(false, true)).forEach { o -> captura(t, o, "${t.id}_${if (o) "oscuro" else "claro"}") }
+            (if (t.soloOscuro) listOf(true) else listOf(false, true)).forEach { o ->
+                val base = "${t.id}_${if (o) "oscuro" else "claro"}"
+                if (!t.conCaras) captura(t, o, base)
+                else carasDeCaptura(t, superficie).forEach { (cara, i, sufijo) ->
+                    EstadoTema.forzar(cara, i)
+                    try { captura(t, o, "${base}_$sufijo") } finally { EstadoTema.forzar(null, null) }
+                }
+            }
         }
     }
+    /** Las superficies por tema donde la intensidad cambia el dibujo: en ellas, la cara intensa sale además con i = 1. */
+    private val CON_INTENSIDAD = setOf("mueble", "bibliotecas", "componentes", "decoracion", "vida", "gatoCuadro")
+    /** Las variantes de un tema con caras en [superficie]: la cara, la intensidad forzada y el sufijo del nombre. */
+    private fun carasDeCaptura(t: TemaId, superficie: String): List<Triple<Cara, Float, String>> =
+        listOf(Triple(Cara.BASE, 0f, "ciudad"), Triple(Cara.INTENSA, 0f, "tinta")) +
+            (if (t.conIntensidad && superficie in CON_INTENSIDAD) listOf(Triple(Cara.INTENSA, 1f, "tinta_i1")) else emptyList())
     private val logroEjemplo = io.github.ruddy2003.vestigium.ciencia.Logros.Logro("paises_5", "Pasaporte con sellos", "Visita 5 países", "⚐", "Mundo", 2, 5.0, 5.0, "2026-10-19")
 
     // Campaña, salón, hall y trofeos.
@@ -1946,7 +1965,7 @@ class Capturas {
     @Test fun temaCampana() = porTema("campana") { t, o, n -> campanas(t, o, n) }
     @Test fun temaLibreta() = porTema("libreta") { t, o, n -> libreta(t, o, n) }
     @Test fun temaArchivo() = porTema("archivo") { t, o, n -> archivo(t, o, n) }
-    @Test fun temaMueble() = porTema("mueble") { t, o, _ -> mueble(t, o) }
+    @Test fun temaMueble() = porTema("mueble") { t, o, n -> mueble(t, o, n) }
 
     // Animación y celebración: un instante quieto de cada una.
     @Test fun temaFondoVivo() = porTema("fondoVivo") { t, o, n -> captura(t, o, 2400, n) { io.github.ruddy2003.vestigium.ui.FondoVivo(t, fijo = 0.4f) } }
@@ -2279,17 +2298,32 @@ class Capturas {
      * `…_temaGatoCuadro_<tema>_reacciones.png`, con el gato en el mirador, oliendo el objeto, junto al fuego, mirando el
      * adorno de una fiesta, guarecido de la lluvia y dejándose acariciar. Cada uno con el pelaje de su tema.
      */
-    @Test fun temaGatoCuadro() = porTema("gatoCuadro") { t, o, _ ->
+    @Test fun temaGatoCuadro() = porTema("gatoCuadro") { t, o, n ->
         val escena = io.github.ruddy2003.vestigium.ui.escenas.escenaDe(t)
+        // Un tema con caras que aún no tiene cuadro (Psicodelia): la banda de su gato, quieta en sus dos acciones propias,
+        // en cada cara y, en la intensa, con su escalón de intensidad (`…_temaGatoCuadro_<tema>_<claro|oscuro>_<cara>_banda`).
+        if (escena == null && t.conCaras && io.github.ruddy2003.vestigium.ui.Gato.tieneGato(t)) captura(t, o, 1200, n + "_banda") {
+            Column(Modifier.padding(8.dp)) {
+                listOf(0, 1).forEach { k ->
+                    Text(n, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onBackground)
+                    io.github.ruddy2003.vestigium.ui.BandaGato(
+                        io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false), tema = t,
+                        fijo = io.github.ruddy2003.vestigium.ui.Gato.Paso("esp_${t.id}_$k", 1, 90f + 160f * k, if (k == 0) 1 else -1),
+                    )
+                }
+            }
+        }
+        // Con caras, el nombre lleva la cara (para que no choquen); sin caras, como siempre.
+        val pre = if (t.conCaras) n else t.id
         if (escena != null && o == t.soloOscuro) {
             val pelaje = io.github.ruddy2003.vestigium.ui.escenas.pelajeDe(t) ?: io.github.ruddy2003.vestigium.ui.escenas.Pelaje.COMUN
-            hojaDePosesGato(t, o, "${t.id}_poses", pelaje)
+            hojaDePosesGato(t, o, "${pre}_poses", pelaje)
             val vida = escena.vidas.first()
             val (_, dia, horas) = DIAS_CUADRO[vida].orEmpty().first()
             val ficha = io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(dia, vida)!!
             val humor = io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false)
             val poses = listOf(Triple(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.CAMINAR, 2, 1), Triple(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.SENTADO, 0, -1), Triple(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.DORMIR, 1, 1))
-            captura(t, o, alto = 140 + horas.size * 900, nombre = "${t.id}_escena") {
+            captura(t, o, alto = 140 + horas.size * 900, nombre = "${pre}_escena") {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     horas.forEachIndexed { i, hora ->
                         val suelo = escena.anclas(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, hora)).first { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }
@@ -2310,7 +2344,7 @@ class Capturas {
                     else hs.firstNotNullOfOrNull { h -> gatoReaccionando(escena, f, h, tipo)?.let { Triple(f, h, it) to "gato: ${tipo.name.lowercase()}" } }
                 }
             }
-            captura(t, o, alto = 140 + (celdas.size + 1) * 900, nombre = "${t.id}_reacciones") {
+            captura(t, o, alto = 140 + (celdas.size + 1) * 900, nombre = "${pre}_reacciones") {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     celdas.forEach { (donde, rotulo) ->
                         val (f, h, paso) = donde
@@ -2334,12 +2368,14 @@ class Capturas {
      * caen en tres luces distintas. La escena es igual en claro y en oscuro, así que sale una vez por tema. Se llaman
      * `…_temaCuadro_<tema>_<vida>_<día>.png`.
      */
-    @Test fun temaCuadro() = porTema("cuadro") { t, o, _ ->
+    @Test fun temaCuadro() = porTema("cuadro") { t, o, n ->
         val escena = io.github.ruddy2003.vestigium.ui.escenas.escenaDe(t)
+        // Con caras, el nombre lleva la cara (para que no choquen); sin caras, como siempre.
+        val pre = if (t.conCaras) n else t.id
         if (escena != null && o == t.soloOscuro) escena.vidas.forEach { vida ->
             DIAS_CUADRO[vida].orEmpty().forEach { (nombre, dia, horas) ->
                 val ficha = io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(dia, vida)!!
-                cuadros(t, o, "${t.id}_${vida}_$nombre", io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), horas.map { Triple(escena, ficha, it) })
+                cuadros(t, o, "${pre}_${vida}_$nombre", io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), horas.map { Triple(escena, ficha, it) })
             }
         }
     }
