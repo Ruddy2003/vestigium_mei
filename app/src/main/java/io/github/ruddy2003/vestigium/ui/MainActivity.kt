@@ -2410,6 +2410,9 @@ private fun Raiz(pedida: String?, apilar: Boolean, consumir: () -> Unit) {
                     "tus_apps" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTusApps(nav)
                     "otras_vidas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(nav)
                     "historia_hoy" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaHoyEnLaHistoria(nav)
+                    // Parte 8 (`docs/diseno/CUADROS_PLAN.md`): los personajes que sigues (encargo A) y la galería de cuadros (encargo C).
+                    "seguidos" -> io.github.ruddy2003.vestigium.ui.seguir.PantallaSeguidos(nav)
+                    "galeria_cuadros" -> io.github.ruddy2003.vestigium.ui.galeria.PantallaGaleriaCuadros(nav)
                     "logros" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(nav)
                     "tu_anio" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTuAnio(nav)
                     "carta" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCarta(nav)
@@ -2472,7 +2475,12 @@ private fun Raiz(pedida: String?, apilar: Boolean, consumir: () -> Unit) {
                     "red" -> { remember { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "red"; 0 }; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(nav) }
                     else -> if (actual.startsWith("guia_uso")) io.github.ruddy2003.vestigium.ui.pantallas.PantallaGuiaUso(nav, actual.substringAfter(':', ""))
                         // «cuento?vida=<id>»: el cuento de hoy de ese personaje, solo, con su retrato y su vida (se llega desde el cuadro de Hoy).
-                        else if (actual.startsWith("cuento?")) io.github.ruddy2003.vestigium.ui.pantallas.PantallaCuento(nav, actual.substringAfter("vida=", "").substringBefore('&'))
+                        // Con «&dia=<AAAA-MM-DD>», el de ese día (un día especial pasado; nunca uno futuro).
+                        else if (actual.startsWith("cuento?")) io.github.ruddy2003.vestigium.ui.pantallas.PantallaCuento(nav, actual.substringAfter("vida=", "").substringBefore('&'),
+                            actual.substringAfter("&dia=", "").substringBefore('&').ifEmpty { null })
+                        // «cuadro?tema=<id>&dia=<AAAA-MM-DD>»: el cuadro a pantalla completa (parte 8, encargo B).
+                        else if (actual.startsWith("cuadro?")) io.github.ruddy2003.vestigium.ui.escenas.PantallaCuadroCompleto(nav,
+                            actual.substringAfter("tema=", "").substringBefore('&'), actual.substringAfter("dia=", "").substringBefore('&'))
                         else Text("Pantalla desconocida: $actual")
                 }
                 }

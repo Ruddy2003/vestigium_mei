@@ -91,6 +91,23 @@ interface DisenoVida {
 
     /** El color del texto escrito sobre una nota del tablero. */
     fun tintaNota(oscuro: Boolean): Color
+
+    /**
+     * Parte 8 (`docs/diseno/CUADROS_PLAN.md`, encargo C): el nicho del mueble de la galería, donde la pantalla pone las
+     * miniaturas de los últimos cuadros guardados (4:3 cada una). No es una entrada de [MuebleVida] a propósito: agregarla
+     * obligaría a tocar el `area` de los temas que lo reescriben. Por omisión, el mismo de [MuebleVida.OTRAS_VIDAS].
+     */
+    fun areaGaleria(): Rect = Rect(0.06f, 0.16f, 0.94f, 0.82f)
+
+    /**
+     * Parte 8: la galería de cuadros, a todo el lienzo (≈ 360 × 190 dp): el mueble donde cuelgan o se apoyan los cuadros
+     * guardados. Las miniaturas van en su nicho ([areaGaleria]). Por omisión, el dibujo común con los colores del tema
+     * ([MuebleGaleriaComun]), que vale para los 39; cada tema puede reescribirlo después en su `Vida<Tema>.kt`.
+     */
+    fun DrawScope.muebleGaleria(e: EstadoMueble, oscuro: Boolean) {
+        val nicho = areaGaleria()
+        with(MuebleGaleriaComun) { dibujar(e, oscuro, nicho) }
+    }
 }
 
 /** Los muebles que tienen nicho para un contenido. */

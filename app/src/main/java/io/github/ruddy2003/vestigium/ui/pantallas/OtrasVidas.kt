@@ -439,9 +439,16 @@ internal fun vidasConCuento(tema: String): List<OtrasVidas.Vida> = OtrasVidas.vi
  * retrato y «Su vida»). Lo demás de «Otras vidas» se queda en su pantalla, en la pestaña Vida. No lee ningún dato tuyo.
  *
  * Abre en [vidaId]; si esa vida no tiene cuento, en la primera que lo tenga.
+ *
+ * Parte 8 (`docs/diseno/CUADROS_PLAN.md`): con [dia] (ruta `cuento?vida=<id>&dia=<AAAA-MM-DD>`) abre el cuento de ese día,
+ * para leer un día especial pasado; un día futuro no se abre nunca (`CuentosLeidos.sePuedeLeer`) y se queda en hoy. Con un
+ * día pasado no sale la fila de vidas: es el cuento de esa vida. Debajo del retrato va el botón para seguirla (encargo A).
  */
 @Composable
-fun PantallaCuento(nav: Nav, vidaId: String) {
+fun PantallaCuento(nav: Nav, vidaId: String, dia: String? = null) {
+    val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+    val diaCuento = dia?.takeIf { io.github.ruddy2003.vestigium.data.CuentosLeidos.sePuedeLeer(it, hoy) } ?: hoy
+    val pasado = diaCuento != hoy
     val tema = Estilo.tema.id
     val vidas = remember(tema, vidaId) {
         val l = vidasConCuento(tema)
@@ -453,9 +460,10 @@ fun PantallaCuento(nav: Nav, vidaId: String) {
     val v = vidas.firstOrNull { it.id == elegida }
     Hoja("El cuento de hoy", nav.atras) {
         if (v == null) { Ayuda("Todavía no hay cuentos para las vidas de este tema.", Modifier.padding(top = 12.dp)); return@Hoja }
-        if (vidas.size > 1) LineaDeVidas(vidas, v.id) { elegida = it }
+        if (vidas.size > 1 && !pasado) LineaDeVidas(vidas, v.id) { elegida = it }
         RetratoVida(v, numeros = false)
-        HoyEnSuVida(v)
+        io.github.ruddy2003.vestigium.ui.seguir.BotonSeguir(v, Modifier.padding(top = 8.dp))
+        HoyEnSuVida(v, dia = diaCuento)
         SuVida(v)
         androidx.compose.foundation.layout.Spacer(Modifier.height(28.dp))
     }

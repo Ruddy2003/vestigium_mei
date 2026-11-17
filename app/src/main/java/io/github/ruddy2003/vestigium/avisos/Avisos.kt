@@ -40,6 +40,12 @@ object Avisos {
     const val CANAL_RECORDATORIOS = "recordatorios"
     /** Respaldos que no salen o vienen incompletos, Drive sin permiso, la base dañada. Antes salían por «reportes», sin sonido. */
     const val CANAL_RESPALDOS = "respaldos"
+    /**
+     * Parte 8 (`docs/diseno/CUADROS_PLAN.md`, encargo A): el día especial de un personaje que sigues. Una familia más, con su
+     * canal por tema («historia_<tema>_<serie>») y su sonido propio, `n_<tema>_historia`. **Todavía no está en [FAMILIAS] ni en
+     * [tono]**: entra cuando existan los 38 sonidos (si entrara antes, el canal nacería con un sonido que no existe).
+     */
+    const val CANAL_HISTORIA = "historia"
     const val ID_IMPORTAR = 2020
     const val ID_METAS = 2021
     const val ID_LUGAR = 2030

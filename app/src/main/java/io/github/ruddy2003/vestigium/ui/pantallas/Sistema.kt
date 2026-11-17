@@ -348,6 +348,8 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                     cambiar { it.copy(sonidos = v) }
                     if (v) io.github.ruddy2003.vestigium.ui.Sentidos.preparar(ctx)
                 }
+                // Parte 8 (esquema 27, encargo B): el ambiente del cuadro al abrir el cuento.
+                if (c.sonidos) Interruptor("Ambiente del cuadro", c.ambiente_cuadro, "Al abrir el cuento suena el lugar de su cuadro, suave.") { v -> cambiar { it.copy(ambiente_cuadro = v) } }
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
                     io.github.ruddy2003.vestigium.ui.Sentidos.Evento.entries.filter { it.name in setOf("TOQUE", "ELEGIR", "PASAR", "ABRIR", "GUARDAR", "LOGRO") }
                         .map { it.name.lowercase() to it }.forEach { (n, e) ->
@@ -405,6 +407,8 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
         if (parte == "avisos") Seccion("Avisos de ánimo durante el día", "Horas al azar dentro de la ventana.", explica = "Horas aleatorias dentro de la ventana, separadas entre sí. Lo aleatorio evita que solo registres los momentos predecibles.") {
             Tarjeta {
                 Interruptor("Avisos activos", c.avisos) { v -> cambiar { it.copy(avisos = v) } }
+                // Parte 8 (esquema 27, encargo A): el aviso del día especial de un personaje que sigues.
+                Interruptor("Días especiales de quien sigues", c.avisos_historia, "Un aviso cuando un personaje que sigues tiene un día especial.") { v -> cambiar { it.copy(avisos_historia = v) } }
                 Etiqueta("Avisos por día: ${c.muestreos_por_dia}")
                 Deslizador(value = c.muestreos_por_dia.toFloat(), onValueChange = { v -> cambiar { it.copy(muestreos_por_dia = v.toInt(), plan_muestreo = emptyMap()) } }, valueRange = 0f..6f, steps = 5)
                 Etiqueta("Ventana: de ${c.ventana_inicio}:00 a ${c.ventana_fin}:00")

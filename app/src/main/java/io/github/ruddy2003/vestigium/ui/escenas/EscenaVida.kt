@@ -329,3 +329,19 @@ fun cuadroEnMemoria(tema: TemaId, dia: String): CuadroHoy? = ultimoCuadro?.takeI
  * personaje le falta el calendario), Hoy pone el gato de pixel.
  */
 fun hayCuadroEnHoy(tema: TemaId, estilo: String = GATO_EN_CUADRO): Boolean = estilo == GATO_EN_CUADRO && escenaDe(tema) != null
+
+/**
+ * Parte 8 (`docs/diseno/CUADROS_PLAN.md`): el cuadro del personaje [vida] para el día lógico [dia], aunque el tema puesto sea
+ * otro: el de la escena de su tema (`OtrasVidas.Vida.tema`), con su ficha de ese día. Lo usan el cuadro arriba del cuento y
+ * el cuadro a pantalla completa. Null si su tema no tiene escena, la escena no lo pinta (los doce comunes no tienen) o le
+ * falta el calendario. No pasa por la memoria de [cuadroDeHoy]: tarda un poco, así que se pide fuera del hilo de la pantalla.
+ * En Ciudad neón, cada uno de los dos sale con su propia ficha aunque ese día le toque al otro en Hoy.
+ */
+fun cuadroDeVida(vida: String, dia: String): CuadroHoy? {
+    val quien = OtrasVidas.porId(vida) ?: return null
+    val tema = TemaId.entries.firstOrNull { it.id == quien.tema } ?: return null
+    val escena = escenaDe(tema)?.takeIf { vida in it.vidas } ?: return null
+    val ficha = FichaDelDia.de(dia, vida) ?: return null
+    val titulo = Cuento.de(dia, vida, 12.0)?.titulo ?: quien.nombre
+    return CuadroHoy(tema, escena, quien, ficha, titulo, pelajeDe(tema) ?: Pelaje.COMUN, banderitaHistoria(tema))
+}
