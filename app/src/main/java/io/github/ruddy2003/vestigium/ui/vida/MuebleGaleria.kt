@@ -111,7 +111,7 @@ internal object MuebleGaleriaComun {
         if (n.width < 8f || n.height < 8f) return emptyList()
         val u = min(ancho / 360f, alto / 190f)
         val e = FloatArray(4) { (MOLDURA[it] + PASPARTU[it]) * u }
-        val alturaUtil = n.height * 0.70f
+        val alturaUtil = n.height * 0.78f
         val vertical = 5f * u
         // Las alturas de las imágenes (4:3): la grande llena la altura útil, las dos chicas se apilan y la mediana es 3/4 de la grande.
         var hA = alturaUtil - 2 * e[0]
@@ -145,7 +145,7 @@ internal object MuebleGaleriaComun {
         val b1 = marco(1, x + (anchoB - hB * 4f / 3f - 2 * e[1]) / 2f, arriba + n.height * 0.05f, hB)
         val b2 = marco(2, x + (anchoB - hB * 4f / 3f - 2 * e[2]) / 2f, b1.marco.bottom + vertical, hB)
         x += anchoB + hueco
-        val c = marco(3, x, arriba + n.height * 0.12f, hC)
+        val c = marco(3, x, arriba + n.height * 0.04f, hC)
         return listOf(a, c, b1, b2)
     }
 
@@ -161,12 +161,13 @@ internal object MuebleGaleriaComun {
      */
     private class Paleta(e: EstadoMueble, val oscuro: Boolean) {
         val f = e.fondo; val t = e.tinta; val a = e.acento; val s = e.secundario
-        val pared: Color = if (!oscuro) lerp(lerp(f, t, 0.10f), s, 0.07f) else lerp(lerp(f, NOCHE_MUEBLE, 0.45f), t, 0.05f)
+        val pared: Color = if (!oscuro) lerp(lerp(lerp(f, t, 0.13f), s, 0.05f), FILO_MUEBLE, 0.08f) else lerp(lerp(f, NOCHE_MUEBLE, 0.45f), t, 0.05f)
         val paredHonda: Color = if (!oscuro) lerp(pared, t, 0.14f) else lerp(pared, Color.Black, 0.35f)
-        val madera: Color = if (!oscuro) lerp(lerp(f, t, 0.52f), a, 0.22f) else lerp(lerp(f, t, 0.20f), a, 0.16f)
-        val maderaClara: Color = lerp(madera, if (!oscuro) f else t, 0.28f)
+        // La madera: entre el fondo y la tinta, con algo del acento y entibiada hacia el ámbar de la luz (si no, sale gris).
+        val madera: Color = if (!oscuro) lerp(lerp(lerp(f, t, 0.50f), a, 0.10f), FILO_MUEBLE, 0.36f) else lerp(lerp(lerp(f, t, 0.22f), a, 0.10f), FILO_MUEBLE, 0.12f)
+        val maderaClara: Color = lerp(madera, if (!oscuro) f else t, if (!oscuro) 0.28f else 0.08f)
         val maderaHonda: Color = lerp(madera, if (!oscuro) t else Color.Black, 0.38f)
-        val metal: Color = if (!oscuro) lerp(lerp(f, t, 0.30f), a, 0.30f) else lerp(lerp(f, t, 0.30f), a, 0.30f)
+        val metal: Color = if (!oscuro) lerp(lerp(lerp(f, t, 0.45f), a, 0.20f), FILO_MUEBLE, 0.18f) else lerp(lerp(lerp(f, t, 0.32f), a, 0.22f), FILO_MUEBLE, 0.12f)
         val lienzo: Color = if (!oscuro) lerp(lerp(f, Color(0xFFFFF6E6), 0.45f), t, 0.05f) else lerp(f, t, 0.30f)
         val papel: Color = if (!oscuro) lerp(f, Color(0xFFFFF8EC), 0.6f) else lerp(f, t, 0.36f)
         val cordel: Color = if (!oscuro) lerp(lerp(f, t, 0.45f), a, 0.10f) else lerp(f, t, 0.40f)
@@ -202,9 +203,9 @@ internal object MuebleGaleriaComun {
         // 1. La pared: pintada a mano, con la mancha de luz arriba a la izquierda (de día) y más honda abajo.
         drawRect(p.pared)
         drawRect(Brush.verticalGradient(listOf(Color.Transparent, p.paredHonda.copy(alpha = 0.55f)), startY = h * 0.35f, endY = h))
-        pinceladas(todo, p.paredHonda, e.semilla, 30, u, if (oscuro) 0.10f else 0.09f)
-        pinceladas(todo, p.luz(p.pared, 1f), e.semilla + 5, 18, u, if (oscuro) 0.025f else 0.07f)
-        if (!oscuro) drawRect(Brush.radialGradient(listOf(luzMueble(0.34f), luzMueble(0.10f), Color.Transparent), Offset(w * 0.10f, -h * 0.15f), w * 0.75f))
+        pinceladas(todo, p.paredHonda, e.semilla, 46, u * 1.4f, if (oscuro) 0.12f else 0.13f)
+        pinceladas(todo, p.luz(p.pared, 1f), e.semilla + 5, 26, u * 1.4f, if (oscuro) 0.03f else 0.10f)
+        if (!oscuro) drawRect(Brush.radialGradient(listOf(luzMueble(0.50f), luzMueble(0.16f), Color.Transparent), Offset(w * 0.08f, -h * 0.10f), w * 0.80f))
         // El zócalo, cortado por el borde de abajo.
         val zocalo = Rect(0f, h * 0.955f, w, h)
         drawRect(p.maderaHonda, zocalo.topLeft, zocalo.size)
@@ -221,8 +222,9 @@ internal object MuebleGaleriaComun {
         drawRect(p.sombra(p.madera, 0.25f), Offset(0f, riel.bottom - riel.height * 0.22f), Size(w, riel.height * 0.22f))
         pinceladas(riel, p.maderaHonda, e.semilla + 9, 12, u * 0.5f, 0.18f)
 
-        // 3. Los cordeles, de cada gancho a las dos armellas de su marco (detrás de los marcos).
-        cs.forEach { c ->
+        // 3. Los cordeles, de cada gancho a las dos armellas de su marco (detrás de los marcos). El chico de abajo no lleva:
+        // va clavado a la pared, debajo del otro.
+        cs.take(3).forEach { c ->
             val g = Offset(c.marco.center.x, riel.bottom - 0.6f * u)
             val izq = Offset(c.marco.left + c.marco.width * 0.16f, c.marco.top + c.moldura * 0.5f)
             val der = Offset(c.marco.right - c.marco.width * 0.16f, c.marco.top + c.moldura * 0.5f)
@@ -234,8 +236,8 @@ internal object MuebleGaleriaComun {
 
         // 4. La repisa con sus ménsulas: la tabla vista un poco desde arriba, con su canto y su sombra en la pared.
         val tablaY = max(n.bottom + 1.5f * u, h * 0.835f)
-        val tabla = Rect(w * 0.025f, tablaY, w * 0.975f, tablaY + 2.6f * u)
-        val canto = Rect(tabla.left, tabla.bottom, tabla.right, tabla.bottom + 5.2f * u)
+        val tabla = Rect(w * 0.025f, tablaY, w * 0.975f, tablaY + 3.6f * u)
+        val canto = Rect(tabla.left, tabla.bottom, tabla.right, tabla.bottom + 6.8f * u)
         drawRect(sombraMueble(if (oscuro) 0.40f else 0.24f), Offset(tabla.left + 3f * u, canto.bottom), Size(tabla.width, 4.5f * u))
         listOf(0.13f, 0.87f).forEach { fx ->
             val x = w * fx
@@ -246,6 +248,11 @@ internal object MuebleGaleriaComun {
             drawPath(m, sombraMueble(if (oscuro) 0.35f else 0.20f), blendMode = BlendMode.SrcOver)
             drawRect(sombraMueble(if (oscuro) 0.35f else 0.20f), Offset(x + 2.4f * u, canto.bottom), Size(2.6f * u, 14f * u))
             drawRect(p.madera, Offset(x - 2.4f * u, canto.bottom), Size(4.8f * u, 15f * u))
+            // El tornapunta: la pieza en diagonal que sostiene la tabla, hacia afuera.
+            val lado = if (fx < 0.5f) 1f else -1f
+            drawLine(sombraMueble(if (oscuro) 0.35f else 0.18f), Offset(x + 2.5f * u, canto.bottom + 13f * u), Offset(x + lado * 12f * u + 2.5f * u, canto.bottom + 1.6f * u), 2.6f * u)
+            drawLine(p.madera, Offset(x, canto.bottom + 12.5f * u), Offset(x + lado * 12f * u, canto.bottom), 2.6f * u)
+            drawLine(p.luz(p.madera, 0.25f), Offset(x - 0.6f * u, canto.bottom + 11.8f * u), Offset(x + lado * 12f * u - 0.6f * u, canto.bottom - 0.4f * u), 0.6f * u)
             drawRect(p.luz(p.madera, 0.22f), Offset(x - 2.4f * u, canto.bottom), Size(1.4f * u, 15f * u))
             drawRect(p.sombra(p.madera, 0.30f), Offset(x + 1.2f * u, canto.bottom), Size(1.2f * u, 15f * u))
         }
@@ -263,14 +270,16 @@ internal object MuebleGaleriaComun {
             if (alto > 8f * u) Rect(w * 0.955f - ancho, tabla.top - alto, w * 0.955f, tabla.top + 0.8f * u) else null
         }
         if (apoyado != null) cuadroApoyado(p, apoyado, u)
-        carrete(p, Offset(w * 0.075f, tabla.top + 0.6f * u), u)
-        lata(p, Offset(w * 0.47f, tabla.top + 0.6f * u), u, e.semilla)
-        martillo(p, Offset(w * 0.20f, tabla.top + 0.4f * u), u)
+        // Los objetos, a su tamaño real junto a los marcos (un poco mayores que el trazo del mueble).
+        val o = u * 2.0f
+        carrete(p, Offset(w * 0.08f, tabla.top + 1.2f * u), o)
+        lata(p, Offset(w * 0.50f, tabla.top + 1.2f * u), o, e.semilla)
+        martillo(p, Offset(w * 0.22f, tabla.top + 1f * u), o)
 
         // 6. Los marcos, con su sombra en la pared y el lienzo en blanco dentro.
         cs.forEach { c -> marco(p, c, u) }
         // Los ganchos, encima del riel.
-        cs.forEach { c -> gancho(p, Offset(c.marco.center.x, riel.bottom - 0.6f * u), u) }
+        cs.take(3).forEach { c -> gancho(p, Offset(c.marco.center.x, riel.bottom - 0.6f * u), u) }
 
         // 7. La lámpara de cuadro, sobre el marco grande, prendida del riel.
         cs.firstOrNull()?.let { lampara(p, it, riel, u) }
@@ -332,7 +341,7 @@ internal object MuebleGaleriaComun {
     /** La luz de la noche: alrededor del marco grande, la de la lámpara; lejos, la pared se hunde. */
     private fun DrawScope.nocheDeLampara(a: Colgado, w: Float, h: Float) {
         val foco = focoLampara(a)
-        drawRect(Brush.radialGradient(listOf(Color.Transparent, Color(0xFF0B0A12).copy(alpha = 0.30f), Color(0xFF0B0A12).copy(alpha = 0.62f)), foco, w * 0.85f))
+        drawRect(Brush.radialGradient(listOf(Color.Transparent, Color(0xFF0B0A12).copy(alpha = 0.34f), Color(0xFF0B0A12).copy(alpha = 0.70f)), foco, w * 0.80f))
         drawRect(Brush.radialGradient(listOf(FILO_MUEBLE.copy(alpha = 0.34f), FILO_MUEBLE.copy(alpha = 0.10f), Color.Transparent), foco, max(a.marco.width, a.marco.height) * 1.15f), blendMode = BlendMode.Screen)
     }
 
@@ -423,8 +432,8 @@ internal object MuebleGaleriaComun {
     private fun DrawScope.lampara(p: Paleta, a: Colgado, riel: Rect, u: Float) {
         val cx = a.marco.center.x + a.marco.width * 0.12f
         val pantallaY = a.marco.top - 3.2f * u
-        val largo = min(a.marco.width * 0.52f, 46f * u)
-        val pantalla = Rect(cx - largo / 2f, pantallaY - 3.4f * u, cx + largo / 2f, pantallaY)
+        val largo = min(a.marco.width * 0.56f, 52f * u)
+        val pantalla = Rect(cx - largo / 2f, pantallaY - 5f * u, cx + largo / 2f, pantallaY)
         // El brazo: baja del riel y se dobla hacia la pantalla.
         val base = Offset(cx + 2f * u, riel.bottom)
         drawRect(sombraMueble(0.3f), Offset(base.x + 1.2f * u, base.y), Size(1.4f * u, pantalla.top - base.y + 1f * u))
@@ -465,19 +474,19 @@ internal object MuebleGaleriaComun {
             val i = Rect(r.left + m, r.top + m, r.right - m, r.bottom - m)
             if (i.width > 2f && i.height > 2f) clipRect(i.left, i.top, i.right, i.bottom) {
                 // Un paisajito sencillo con los colores del tema: cielo, un sol bajo, dos lomas.
-                val cielo = lerp(p.s, if (p.oscuro) p.t else p.f, if (p.oscuro) 0.25f else 0.55f)
+                val cielo = if (p.oscuro) lerp(p.s, p.f, 0.45f) else lerp(p.s, p.f, 0.55f)
                 drawRect(cielo, i.topLeft, i.size)
-                drawCircle(lerp(p.a, Color(0xFFFFE8B0), 0.5f), i.height * 0.13f, Offset(i.left + i.width * 0.68f, i.top + i.height * 0.42f))
+                drawCircle(lerp(p.a, if (p.oscuro) p.f else Color(0xFFFFE8B0), 0.5f), i.height * 0.13f, Offset(i.left + i.width * 0.68f, i.top + i.height * 0.42f))
                 val loma1 = Path().apply {
                     moveTo(i.left, i.top + i.height * 0.62f); quadraticTo(i.left + i.width * 0.35f, i.top + i.height * 0.40f, i.right, i.top + i.height * 0.70f)
                     lineTo(i.right, i.bottom); lineTo(i.left, i.bottom); close()
                 }
-                drawPath(loma1, lerp(p.s, p.t, 0.35f))
+                drawPath(loma1, if (p.oscuro) lerp(p.s, p.f, 0.65f) else lerp(p.s, p.t, 0.35f))
                 val loma2 = Path().apply {
                     moveTo(i.left, i.top + i.height * 0.86f); quadraticTo(i.left + i.width * 0.6f, i.top + i.height * 0.62f, i.right, i.top + i.height * 0.82f)
                     lineTo(i.right, i.bottom); lineTo(i.left, i.bottom); close()
                 }
-                drawPath(loma2, lerp(p.a, p.t, 0.45f))
+                drawPath(loma2, if (p.oscuro) lerp(p.a, p.f, 0.7f) else lerp(p.a, p.t, 0.45f))
                 drawRect(sombraMueble(0.25f), i.topLeft, Size(i.width, 1.2f * u))
             }
         }

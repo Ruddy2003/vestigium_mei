@@ -54,6 +54,15 @@ ARNES_CARA=intensa ARNES_INTENSIDAD=1 dibujar.sh vida psicodelia oscuro tinta_os
 
 Enlaza la carpeta entera `ui/vida/**` (así un `Vida<Tema>.kt` nuevo entra solo).
 
+## El modo galería
+
+```
+herramientas/arnes_muebles/dibujar.sh galeria <tema> <claro|oscuro> <salida.png>
+herramientas/arnes_muebles/dibujar.sh hoja galeria <claro|oscuro> <salida.png> heleno,laboratorio,gotico
+```
+
+El mueble de la galería de cuadros de la pestaña Vida (parte 8, `docs/diseno/CUADROS_PLAN.md`), en `arnes/Galeria.kt`: el recuadro de 190 dp con el composable real `ParedDeCuadros` (`ui/vida/MuebleGaleria.kt`), que pone el mueble del tema (`DisenoVida.muebleGaleria`; por omisión, `MuebleGaleriaComun`), las miniaturas en sus huecos y la luz encima. Uno bajo otro con 0, 1 y 5 cuadros; `ARNES_CUADROS=0,1,5` elige cuántos. Las miniaturas son cinco paisajes de relleno pintados en el arnés (las escenas no se compilan aquí): sirven para ver cómo caen en los marcos y con la luz.
+
 ## Cuánto tarda (medido en esta máquina, 4 núcleos)
 
 - Primera vez, desde cero (descarga de dependencias aparte): **~1 min 45 s**. Arranca el daemon de Gradle y compila unas 90 000 líneas.
