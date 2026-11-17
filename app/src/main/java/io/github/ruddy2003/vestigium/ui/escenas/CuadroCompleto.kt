@@ -245,6 +245,7 @@ internal fun tieneCuadro(vida: String): Boolean {
 /** Una caricia al gato: la vibración corta de siempre y el ronroneo (con sonidos encendidos). No se guarda (D.190). */
 internal fun acariciar(ctx: android.content.Context) {
     Sentidos.vibrarEvento(ctx, Sentidos.Evento.TOQUE)
+    runCatching { Ronroneo.sonar(ctx) }
 }
 
 // ---------------------------------------------------------------- el toque que no es caricia

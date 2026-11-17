@@ -467,8 +467,12 @@ fun PantallaCuento(nav: Nav, vidaId: String, dia: String? = null, horaFija: Doub
         val hora = horaFija ?: io.github.ruddy2003.vestigium.ui.escenas.horaDeAhora()
         val cuadro = cuadroDeLaVida(v.id, diaCuento)
         if (cuadro != null) {
-            io.github.ruddy2003.vestigium.ui.escenas.CuadroDelCuento(cuadro, hora, Modifier.padding(top = 14.dp))
+            val ctx = LocalContext.current
+            val conAmbiente = remember(cuadro.tema) { runCatching { io.github.ruddy2003.vestigium.ui.escenas.AmbienteCuadro.elegir(ctx, cuadro.tema.id, false) != null }.getOrDefault(false) }
+            io.github.ruddy2003.vestigium.ui.escenas.CuadroDelCuento(cuadro, hora, Modifier.padding(top = 14.dp), conAmbiente = conAmbiente)
         } else if (io.github.ruddy2003.vestigium.ui.escenas.tieneCuadro(v.id)) io.github.ruddy2003.vestigium.ui.escenas.SitioDelCuadro(Modifier.padding(top = 14.dp))
+        io.github.ruddy2003.vestigium.ui.escenas.AmbienteDelCuadro(cuadro?.tema?.id,
+            cuadro != null && io.github.ruddy2003.vestigium.ui.escenas.ReglasAmbiente.esNoche(cuadro.ficha.luz(hora).franja))
         RetratoVida(v, numeros = false)
         io.github.ruddy2003.vestigium.ui.seguir.BotonSeguir(v, Modifier.padding(top = 8.dp))
         // Leer es llegar al final: cuando el final del cuento queda a la vista, una vez por apertura (decisión del director).
