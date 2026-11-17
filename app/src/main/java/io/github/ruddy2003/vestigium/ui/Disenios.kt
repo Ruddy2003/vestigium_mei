@@ -37,15 +37,6 @@ object LetraExtra {
     val brygada = FontFamily(Font(R.font.brygada_regular, FontWeight.Normal), Font(R.font.brygada_semibold, FontWeight.SemiBold))
     val dellaRespira = FontFamily(Font(R.font.vitrina_regular, FontWeight.Normal), Font(R.font.vitrina_regular, FontWeight.Medium), Font(R.font.vitrina_regular, FontWeight.SemiBold))
     /**
-     * Psicodelia, versión 1: Modak (la letra burbuja) y Fredoka. **Para retirar:** la versión 2 ya no las usa en su esquema
-     * ([tipoPsicodelia]); se quedan mientras las usen `IdeasPsicodelia.kt`, `BibliotecaPsicodelia.kt`, `Hoy.kt`,
-     * `EstiloGrafica.kt`, `Reportes.kt` y `Widgets.kt` (la tanda 2 ya las quitó de lo común, los libros y la libreta; ver
-     * `docs/diseno/temas/psicodelia_base.md`).
-     */
-    val modak = FontFamily(Font(R.font.burbuja_titulo, FontWeight.Normal))
-    val fredoka = FontFamily(Font(R.font.fredoka_regular, FontWeight.Normal), Font(R.font.fredoka_semibold, FontWeight.SemiBold))
-    val fredokaRotulo = FontFamily(Font(R.font.fredoka_semibold, FontWeight.Normal), Font(R.font.fredoka_semibold, FontWeight.Medium), Font(R.font.fredoka_semibold, FontWeight.SemiBold))
-    /**
      * Psicodelia, versión 2 (`docs/diseno/temas/psicodelia.md`, «Letra y forma»). Libre Franklin, el grotesco americano de
      * los periódicos y los letreros, para el texto y las cifras de las dos caras: normal (400) y seminegra (600, también en
      * Medium); la extranegra (800) en Bold y ExtraBold. [franklinRotulo]: la seminegra en todos los pesos, para rótulos y

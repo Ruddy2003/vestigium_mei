@@ -5238,7 +5238,7 @@ def fondo_nouveau(t):
 
 
 # ---------------------------------------------------------------------
-#  Psicodelia: una calle de San Francisco en el verano de 1967 (docs/diseno/temas/psicodelia.md, `TrazosPsicodelia`; las
+#  Psicodelia: una calle de San Francisco en el verano de 1967 (docs/diseno/temas/psicodelia.md, `TrazosCiudad` y `TrazosTinta`; las
 #  casas, el clima y el transporte, en docs/diseno/temas/fuentes_psicodelia.md, sección 4). Las casas victorianas son casi
 #  todas grises o desteñidas (la moda de pintarlas empezó en 1963; las calles enteras de colores son de los 70): aquí, de
 #  once, dos pintadas (turquesa con molduras rosas y amarillas, y una amarilla). Al fondo, la cuesta con sus casitas en

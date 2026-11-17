@@ -170,15 +170,10 @@ FUENTES = [
     ("brygada1918/Brygada1918[wght].ttf", {"wght": 400}, "brygada_regular", None, LATINO_CORTO),
     ("brygada1918/Brygada1918[wght].ttf", {"wght": 600}, "brygada_semibold", None, LATINO_CORTO),
     ("dellarespira/DellaRespira-Regular.ttf", None, "vitrina_regular", "Vitrina Vestigium", LATINO_CORTO),
-    # PSI: Psicodelia (lote 10). Títulos en Modak, la letra burbuja de los carteles; texto y rótulos en Fredoka (normal y
-    # negrita un poco ancha). A las tres se les agregan los signos del tema de Noto Sans Symbols (ver CON_SIGNOS_NOTO)
-    ("modak/Modak-Regular.ttf", None, "burbuja_titulo", None, LATINO_CORTO),
-    ("fredoka/Fredoka[wdth,wght].ttf", {"wght": 400, "wdth": 100}, "fredoka_regular", None, LATINO_CORTO),
-    ("fredoka/Fredoka[wdth,wght].ttf", {"wght": 600, "wdth": 112}, "fredoka_semibold", None, LATINO_CORTO),
-    # PSI, versión 2 (16 nov 2026, docs/diseno/temas/psicodelia.md, «Letra y forma»): Libre Franklin, el grotesco americano
+    # PSI: Psicodelia, versión 2 (16 nov 2026, docs/diseno/temas/psicodelia.md, «Letra y forma»): Libre Franklin, el grotesco americano
     # de los periódicos y los letreros, para el texto, los rótulos y las cifras de las dos caras y para los títulos de la
     # ciudad (no reserva su nombre); Chango, letra de bloque que llena su forma, para los títulos de la psicodelia (reserva
-    # «Chango»: se renombra). Modak y Fredoka siguen hasta que las otras tandas dejen de usarlas.
+    # «Chango»: se renombra). Las letras de la versión 1 se retiraron en el cierre de la versión 2.
     ("librefranklin/LibreFranklin[wght].ttf", {"wght": 400}, "franklin_regular", None, LATINO_CORTO),
     ("librefranklin/LibreFranklin[wght].ttf", {"wght": 600}, "franklin_semibold", None, LATINO_CORTO),
     ("librefranklin/LibreFranklin[wght].ttf", {"wght": 800}, "franklin_extrabold", None, LATINO_CORTO),
@@ -238,11 +233,6 @@ SIGNOS_ARCONTES = [ord(c) for c in "◌⁘∴∵∷※⁂▪▫▹◃"]
 # y las flechas), copiados de Brygada 1918 con su peso.
 CON_SIGNOS_BRYGADA = {"cartel_titulo": 500, "vitrina_regular": 400}
 SIGNOS_BRYGADA = [ord(c) for c in "’”…←→↑↓"]
-# Psicodelia: la flor y el sol (de Noto Sans Symbols 2) y la nota, la paz y las flechas (de Noto Sans Symbols, con el peso
-# de cada salida), que Modak y Fredoka no traen.
-CON_SIGNOS_NOTO = {"burbuja_titulo": 700, "fredoka_regular": 400, "fredoka_semibold": 600}
-SIGNOS_NOTO_2 = [ord(c) for c in "✿☼"]
-SIGNOS_NOTO_1 = [ord(c) for c in "♪♫☮←→↑↓"]
 CON_SIGMA_LUNA = {"piazzolla_titulo", "piazzolla_regular", "ysabeau_semibold"}
 
 
@@ -496,12 +486,6 @@ def hacer(origen, ejes, salida, nombre, letras, cache):
         anadir_adornos(f)
     if salida in CON_SIGMA_LUNA:
         anadir_sigma_luna(f)
-    if salida in CON_SIGNOS_NOTO:
-        anadir_escritura(f, "notosanssymbols2/NotoSansSymbols2-Regular.ttf", SIGNOS_NOTO_2, None, cache, "ns2", solo_faltan=True)
-        anadir_escritura(f, "notosanssymbols/NotoSansSymbols[wght].ttf", SIGNOS_NOTO_1, {"wght": CON_SIGNOS_NOTO[salida]}, cache, "ns1", solo_faltan=True)
-        if salida == "burbuja_titulo":
-            # Las cifras de Modak se confunden en tamaño chico (el 8 parece una S): las de Fredoka en negrita y ancha.
-            anadir_escritura(f, "fredoka/Fredoka[wdth,wght].ttf", [ord(c) for c in "0123456789"], {"wght": 700, "wdth": 118}, cache, "fre")
     if salida in CON_SIGNOS_BRYGADA:
         anadir_escritura(f, "brygada1918/Brygada1918[wght].ttf", SIGNOS_BRYGADA, {"wght": CON_SIGNOS_BRYGADA[salida]}, cache, "bry", solo_faltan=True)
     if salida in CON_HEBREO_COPTO:

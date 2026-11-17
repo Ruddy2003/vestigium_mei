@@ -38,7 +38,7 @@ import kotlin.math.sqrt
  *   luz de la izquierda con sombras café; grano de película y viñeta.
  * - [TrazosTinta]: el cartel de la semana, a tres tintas planas (magenta, bermellón y ultramar) sobre papel crema o sobre
  *   negro de terciopelo, que se calientan con la intensidad ([EstadoTema.intensidad]).
- * Los de la versión 1 (`TrazosPsicodelia`, en `PsicodeliaV1Trazos.kt`) quedan solo para retirar.
+ * Reemplazan a los trazos de la versión 1, retirados en el cierre de la versión 2.
  *
  * Reglas de todos los trazos de aquí: ningún bucle con paso que pueda valer 0 (los pasos se acotan a 0.5 px o más) y
  * ninguna coordenada no finita (los tamaños vacíos o negativos no dibujan nada).
