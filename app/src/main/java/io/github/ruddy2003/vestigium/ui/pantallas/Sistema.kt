@@ -348,8 +348,9 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                     cambiar { it.copy(sonidos = v) }
                     if (v) io.github.ruddy2003.vestigium.ui.Sentidos.preparar(ctx)
                 }
-                // Parte 8 (esquema 27, encargo B): el ambiente del cuadro al abrir el cuento.
-                if (c.sonidos) Interruptor("Ambiente del cuadro", c.ambiente_cuadro, "Al abrir el cuento suena el lugar de su cuadro, suave.") { v -> cambiar { it.copy(ambiente_cuadro = v) } }
+                // Parte 8 (esquema 27, encargo B): el ambiente del cuadro al abrir el cuento. No depende de «Sonidos»: tiene su
+                // propio interruptor y solo calla con el teléfono en silencio o en vibración (`ReglasAmbiente`).
+                Interruptor("Ambiente del cuadro", c.ambiente_cuadro, "Al abrir el cuento suena el lugar de su cuadro, suave.", explica = "Al abrir el cuento suena, suave y en bucle, el lugar de su cuadro: el río, la lluvia, el taller. Suena aunque «Sonidos» esté apagado. Se calla al salir del cuento, al apagar la pantalla, con una llamada y con el teléfono en silencio o en vibración. También se apaga con el altavoz del cuadro.") { v -> cambiar { it.copy(ambiente_cuadro = v) } }
                 androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
                     io.github.ruddy2003.vestigium.ui.Sentidos.Evento.entries.filter { it.name in setOf("TOQUE", "ELEGIR", "PASAR", "ABRIR", "GUARDAR", "LOGRO") }
                         .map { it.name.lowercase() to it }.forEach { (n, e) ->
@@ -388,8 +389,8 @@ fun PantallaAjustes(nav: Nav, parte: String = "apariencia") {
                 Interruptor("Usar el sonido del tema", c.sonido_avisos, "Si lo apagas, suena el del teléfono.", explica = "Si lo apagas, suenan con el sonido normal del teléfono. Si silencias un tipo de aviso en los ajustes de Android (Sonido: ninguno), sigue en silencio aunque cambies de tema. Para que vuelva a sonar, elige ahí cualquier sonido: desde el siguiente cambio de tema vuelve el del tema.") { v ->
                     cambiar { it.copy(sonido_avisos = v) }
                 }
-                Row(horizontalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
-                    listOf("probar aviso" to io.github.ruddy2003.vestigium.avisos.Avisos.CANAL_ANIMO, "probar solemne" to io.github.ruddy2003.vestigium.avisos.Avisos.CANAL_DIARIO).forEach { (n, canal) ->
+                androidx.compose.foundation.layout.FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 4.dp)) {
+                    listOf("probar aviso" to io.github.ruddy2003.vestigium.avisos.Avisos.CANAL_ANIMO, "probar solemne" to io.github.ruddy2003.vestigium.avisos.Avisos.CANAL_DIARIO, "probar historia" to io.github.ruddy2003.vestigium.avisos.Avisos.CANAL_HISTORIA).forEach { (n, canal) ->
                         BotonSecundario(n) {
                             io.github.ruddy2003.vestigium.avisos.Avisos.sonido(canal)?.let { r ->
                                 runCatching {

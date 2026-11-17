@@ -1026,8 +1026,8 @@ data class Config(
     /** Los cuadros guardados con «me gusta»: sus datos; la imagen va en `files/cuadros/` ([CuadrosGuardados]). */
     val cuadros_guardados: List<CuadroGuardado> = emptyList(),
     /**
-     * Si al abrir el cuento suena el ambiente de su cuadro. Solo suena además con [sonidos] encendido y el teléfono en modo
-     * normal; esto deja apagar el ambiente sin apagar los demás sonidos.
+     * Si al abrir el cuento suena el ambiente de su cuadro. No depende de [sonidos]: suena con este interruptor y el teléfono
+     * en modo normal (ni silencio ni vibración).
      */
     val ambiente_cuadro: Boolean = true,
 )
