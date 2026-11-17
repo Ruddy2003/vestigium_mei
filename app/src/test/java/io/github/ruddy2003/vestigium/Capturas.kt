@@ -3214,4 +3214,27 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("siega", "2027-09-11", listOf(10.0)),                      // la siega: la nave de los jardines, de vidrio limpio
         Triple("objeto_grande", "2027-04-06", listOf(10.0, 13.0)),        // un objeto grande (la bata) en cada cuadro: en el taburete de Lauro y junto a su mesa del centro
     ),
+    // La escriba (Orden, tanda S18): Peñaseca desde el adarve, con el cubo de la esquina, el patio, la torre y la Garza.
+    "escriba" to listOf(
+        Triple("penaseca", "2027-05-05", HORAS_CUADRO),                   // un día normal: la Garza amarrada, la sombra que cruza el patio y, de noche, la corona de candiles
+        Triple("expedicion", "2028-05-10", listOf(13.0)),                 // la expedición, provisional: Peñaseca sin la Garza
+        Triple("encierro", "2029-03-01", listOf(13.0)),                   // el encierro en el archivo
+        Triple("herida", "2030-05-10", listOf(13.0)),                     // la herida: la enfermería, con la Garza a medio coser
+        Triple("garza_caida", "2029-07-31", listOf(13.0)),                // la Garza caída en el patio, con el armazón torcido y la tela rota
+        Triple("garza_cosiendose", "2030-02-15", listOf(13.0)),           // la Garza cosiéndose: la tela nueva sobre el armazón
+        Triple("polvo", "2027-04-03", listOf(13.0)),                      // la tormenta de polvo: el muro de polvo y los candiles encendidos de día
+        Triple("candil", "2027-02-10", listOf(21.0)),                     // el día del candil: el del soporte arde y las hornacinas de delante y del cubo, vacías
+        Triple("fundacion", "2027-03-15", listOf(13.0)),                  // la Fundación: los caparazones pintados en el patio
+        Triple("objeto_grande", "2027-01-15", listOf(21.0)),              // un objeto grande de noche: el soldador en su braserillo
+    ),
+    // Brenna (Tierras Antiguas, tanda S18): la posada del Cuerno al pie del paso, desde la plaza.
+    "guia_caminos" to listOf(
+        Triple("paso_abierto", "2027-06-26", HORAS_CUADRO),               // verano con el paso abierto: la sombra que sube por el paso y, de noche, la sala encendida
+        Triple("paso_cerrado", "2027-01-20", HORAS_CUADRO),               // invierno con el paso cerrado: la nieve, la ladera de las vetas tapada y los carámbanos
+        Triple("travesia", "2029-08-01", listOf(13.0)),                   // la travesía a Torremuda, provisional: la posada sin ella
+        Triple("crianza", "2031-05-01", listOf(13.0)),                    // la crianza: la cuna junto a la puerta
+        Triple("crianza_2032", "2032-05-01", listOf(13.0)),               // 2032: la crianza se repite cada año (el calendario repite la temporada 5)
+        Triple("lluvia", "2027-07-20", listOf(13.0)),                     // la compañía de verano con lluvia
+        Triple("objeto_grande", "2027-06-22", listOf(13.0, 21.0)),        // un objeto grande (la montura en el banco), de día y de noche
+    ),
 )
