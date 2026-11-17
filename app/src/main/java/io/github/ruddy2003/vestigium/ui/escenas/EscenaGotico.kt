@@ -109,6 +109,8 @@ import kotlin.math.sin
  */
 internal object EscenaGotico : EscenaVida {
     override val vidas = listOf("cantero")
+    /** La franja del fondo del teléfono ([franjaFondo]): el portal de la iglesia y la grúa. */
+    override val franjaFondo: Float get() = 0.4f
 
     /** El horizonte. */
     private const val H = 124f

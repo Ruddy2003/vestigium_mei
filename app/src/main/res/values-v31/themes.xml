@@ -97,10 +97,60 @@
         <item name="android:windowSplashScreenBackground">@color/arranque_distopia</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_distopia</item>
     </style>
+    <style name="Theme.Vestigium.Arranque.Psicodelia" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_psicodelia</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_psicodelia</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_psicodelia</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Nouveau" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_nouveau</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_nouveau</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_nouveau</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Galia" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_galia</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_galia</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_galia</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Arcontes" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_arcontes</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_arcontes</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_arcontes</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Frente" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_frente</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_frente</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_frente</item>
+    </style>
     <style name="Theme.Vestigium.Arranque.Distopia.Oscuro" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_distopia_oscuro</item>
         <item name="android:windowSplashScreenBackground">@color/arranque_distopia_oscuro</item>
         <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_distopia</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Frente.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_frente_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_frente_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_frente</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Arcontes.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_arcontes_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_arcontes_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_arcontes</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Nouveau.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_nouveau_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_nouveau_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_nouveau</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Psicodelia.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_psicodelia_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_psicodelia_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_psicodelia</item>
+    </style>
+    <style name="Theme.Vestigium.Arranque.Galia.Oscuro" parent="Theme.Vestigium.Arranque">
+        <item name="android:windowBackground">@color/arranque_galia_oscuro</item>
+        <item name="android:windowSplashScreenBackground">@color/arranque_galia_oscuro</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_galia</item>
     </style>
     <style name="Theme.Vestigium.Arranque.Refugio" parent="Theme.Vestigium.Arranque">
         <item name="android:windowBackground">@color/arranque_refugio</item>

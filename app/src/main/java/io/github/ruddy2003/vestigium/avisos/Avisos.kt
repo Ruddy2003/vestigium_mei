@@ -15,31 +15,47 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.compose.ui.graphics.toArgb
 import io.github.ruddy2003.vestigium.R
+import io.github.ruddy2003.vestigium.ui.Cara
 import io.github.ruddy2003.vestigium.ui.Estilo
 import io.github.ruddy2003.vestigium.ui.MainActivity
+import io.github.ruddy2003.vestigium.ui.ModoHora
 import io.github.ruddy2003.vestigium.ui.QuickActivity
 import io.github.ruddy2003.vestigium.ui.TemaId
+import io.github.ruddy2003.vestigium.ui.caraSegun
 import io.github.ruddy2003.vestigium.ui.esquemaDe
+import java.time.LocalTime
 
 object Avisos {
     const val CANAL_ANIMO = "animo"
     const val CANAL_DIARIO = "diario"
     const val CANAL_ESCALAS = "escalas"
+    /** El reporte semanal o mensual ya está listo. Hasta el 16 nov 2026, un canal fijo con importancia baja (sin sonido). */
     const val CANAL_REPORTES = "reportes"
-    /** Lugares especiales: canal propio con su sonido (se cambia en los ajustes de Android). */
-    const val CANAL_LUGARES = "lugares_especiales_2"
-    /** El canal de lugares de antes, con el sonido guardado por número: se reemplaza por [CANAL_LUGARES]. */
-    private const val CANAL_LUGARES_V1 = "lugares_especiales"
-    /** Importaciones, metas y notas de recordatorio. */
+    /**
+     * Lugares especiales. Antes eran dos canales fijos, «lugares_especiales» (sonido por número) y «lugares_especiales_2»
+     * (`n_lugar`); los dos son de esta familia («lugares_…») y se mudan al canal por tema la primera vez.
+     */
+    const val CANAL_LUGARES = "lugares"
+    /** Importaciones, metas, notas de recordatorio y suplementos. Hasta el 16 nov 2026, un canal fijo con el sonido del teléfono. */
     const val CANAL_RECORDATORIOS = "recordatorios"
+    /** Respaldos que no salen o vienen incompletos, Drive sin permiso, la base dañada. Antes salían por «reportes», sin sonido. */
+    const val CANAL_RESPALDOS = "respaldos"
+    /**
+     * Parte 8 (`docs/diseno/CUADROS_PLAN.md`, encargo A): el día especial de un personaje que sigues. Una familia más, con su
+     * canal por tema («historia_<tema>_<serie>») y su sonido propio, `n_<tema>_historia` (uno por tema con sonidos, hecho con
+     * `herramientas/sonidos_historia.py`), distinto del corto y del solemne. Lo publica [historia].
+     */
+    const val CANAL_HISTORIA = "historia"
     const val ID_IMPORTAR = 2020
     const val ID_METAS = 2021
     const val ID_LUGAR = 2030
     const val ID_SUPLEMENTOS = 2040
+    /** El aviso de los días especiales de quien sigues: uno solo, que junta a todos los del día. */
+    const val ID_HISTORIA = 2050
 
     /**
-     * Sonido de cada tema: el de los avisos de ánimo y el solemne (diario, sueños, cartas, cuestionarios). null: el tema no
-     * tiene sonidos propios (Básico) y los avisos suenan con el sonido normal del teléfono.
+     * Sonido de cada tema: el corto (`aviso`) y el solemne; qué familia lleva cuál, en [tono]. null: el tema no tiene sonidos
+     * propios (Básico) y los avisos suenan con el sonido normal del teléfono.
      */
     private fun sonidosDe(t: TemaId): Pair<Int, Int>? = when (t) {
         TemaId.ROMANO -> R.raw.n_romano_aviso to R.raw.n_romano_solemne
@@ -51,6 +67,11 @@ object Avisos {
         TemaId.MEDIEVAL -> R.raw.n_medieval_aviso to R.raw.n_medieval_solemne
         TemaId.TEMPLARIO -> R.raw.n_templario_aviso to R.raw.n_templario_solemne
         TemaId.DISTOPIA -> R.raw.n_distopia_aviso to R.raw.n_distopia_solemne
+        TemaId.PSICODELIA -> R.raw.n_psicodelia_aviso to R.raw.n_psicodelia_solemne
+        TemaId.NOUVEAU -> R.raw.n_nouveau_aviso to R.raw.n_nouveau_solemne
+        TemaId.GALIA -> R.raw.n_galia_aviso to R.raw.n_galia_solemne
+        TemaId.ARCONTES -> R.raw.n_arcontes_aviso to R.raw.n_arcontes_solemne
+        TemaId.FRENTE -> R.raw.n_frente_aviso to R.raw.n_frente_solemne
         TemaId.REFUGIO -> R.raw.n_refugio_aviso to R.raw.n_refugio_solemne
         TemaId.ORDEN -> R.raw.n_orden_aviso to R.raw.n_orden_solemne
         TemaId.VAPOR -> R.raw.n_vapor_aviso to R.raw.n_vapor_solemne
@@ -79,6 +100,54 @@ object Avisos {
         TemaId.BASICO -> null                                                // sin sonido propio: el del teléfono
     }
 
+    /**
+     * El sonido del día especial de quien sigues ([CANAL_HISTORIA]), por tema: tres notas que suben y una campanilla, unos 2 s
+     * y su cola (de 2,3 a 4 s en total), con los instrumentos del tema (`herramientas/sonidos_historia.py`). null: sin sonido
+     * propio (Básico).
+     */
+    private fun historiaDe(t: TemaId): Int? = when (t) {
+        TemaId.ROMANO -> R.raw.n_romano_historia
+        TemaId.URBE -> R.raw.n_urbe_historia
+        TemaId.CIBER -> R.raw.n_ciber_historia
+        TemaId.NEON -> R.raw.n_neon_historia
+        TemaId.HELENO -> R.raw.n_heleno_historia
+        TemaId.EGIPTO -> R.raw.n_egipto_historia
+        TemaId.MEDIEVAL -> R.raw.n_medieval_historia
+        TemaId.TEMPLARIO -> R.raw.n_templario_historia
+        TemaId.DISTOPIA -> R.raw.n_distopia_historia
+        TemaId.PSICODELIA -> R.raw.n_psicodelia_historia
+        TemaId.NOUVEAU -> R.raw.n_nouveau_historia
+        TemaId.GALIA -> R.raw.n_galia_historia
+        TemaId.ARCONTES -> R.raw.n_arcontes_historia
+        TemaId.FRENTE -> R.raw.n_frente_historia
+        TemaId.REFUGIO -> R.raw.n_refugio_historia
+        TemaId.ORDEN -> R.raw.n_orden_historia
+        TemaId.VAPOR -> R.raw.n_vapor_historia
+        TemaId.LABORATORIO -> R.raw.n_laboratorio_historia
+        TemaId.COLONOS -> R.raw.n_colonos_historia
+        TemaId.NAPOLEON -> R.raw.n_napoleon_historia
+        TemaId.DECO -> R.raw.n_deco_historia
+        TemaId.BOTANICO -> R.raw.n_botanico_historia
+        TemaId.RUINAS -> R.raw.n_ruinas_historia
+        TemaId.NAVIDAD -> R.raw.n_navidad_historia
+        TemaId.SEDA -> R.raw.n_seda_historia
+        TemaId.EDO -> R.raw.n_edo_historia
+        TemaId.URSS -> R.raw.n_urss_historia
+        TemaId.GOTICO -> R.raw.n_gotico_historia
+        TemaId.ARCANO -> R.raw.n_arcano_historia
+        TemaId.ESPACIO -> R.raw.n_espacio_historia
+        TemaId.ABISMO -> R.raw.n_abismo_historia
+        TemaId.ANDALUS -> R.raw.n_andalus_historia
+        TemaId.MESO -> R.raw.n_meso_historia
+        TemaId.MONGOL -> R.raw.n_mongol_historia
+        TemaId.RENACIMIENTO -> R.raw.n_renacimiento_historia
+        TemaId.PIRATA -> R.raw.n_pirata_historia
+        TemaId.REVOLUCION -> R.raw.n_revolucion_historia
+        TemaId.ANTIGUAS -> R.raw.n_antiguas_historia
+        TemaId.CUEVA -> R.raw.n_cueva_historia
+        TemaId.BASICO -> null                                                // sin sonido propio: el del teléfono
+    }
+
     /** Los mismos sonidos por id de tema (lo revisa la prueba de cobertura). Sale del `when` de arriba: no puede faltar ninguno. */
     internal val SONIDOS: Map<String, Pair<Int, Int>> get() = TemaId.entries.mapNotNull { t -> sonidosDe(t)?.let { t.id to it } }.toMap()
 
@@ -98,25 +167,53 @@ object Avisos {
         return esquemaDe(t, t.soloOscuro || noche).primary.toArgb()
     }
 
+    /** Las familias de avisos que tienen un canal por tema (ver [canal]): todas las que avisan de algo que hay que notar. */
+    internal val FAMILIAS = listOf(CANAL_ANIMO, CANAL_DIARIO, CANAL_ESCALAS, CANAL_REPORTES, CANAL_RECORDATORIOS, CANAL_LUGARES,
+        CANAL_RESPALDOS, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO, CANAL_HISTORIA)
+
+    /**
+     * Qué sonido del tema lleva cada familia: el corto (`aviso`) para lo breve y frecuente, que pide un gesto rápido (ánimo,
+     * fin de bloque, recordatorios, lugares, respaldos); el largo (`solemne`) para lo ceremonioso o de fin de día (diario,
+     * sueños, cartas, logros, cuestionarios, el reporte listo); y uno propio (`historia`) para el día especial de quien sigues,
+     * que tiene que sonar distinto de los demás avisos del tema. null: la familia no tiene canal por tema (el cronómetro fijo).
+     */
+    internal fun tono(base: String): String? = when (base) {
+        CANAL_ANIMO, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO, CANAL_RECORDATORIOS, CANAL_LUGARES, CANAL_RESPALDOS -> "aviso"
+        CANAL_DIARIO, CANAL_ESCALAS, CANAL_REPORTES -> "solemne"
+        CANAL_HISTORIA -> "historia"
+        else -> null
+    }
+
     private fun nombreCanal(base: String) = when (base) {
         CANAL_ANIMO -> "Ánimo durante el día"; CANAL_DIARIO -> "Diario y sueños"; CANAL_ESCALAS -> "Escalas periódicas"
+        CANAL_RECORDATORIOS -> "Importaciones y metas"; CANAL_LUGARES -> "Lugares especiales"
+        CANAL_RESPALDOS -> "Respaldos y estado de los datos"; CANAL_HISTORIA -> "Días especiales de quien sigues"
         io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "Meta del bloque o del descanso"; else -> "Reportes"
     }
     private fun descripcionCanal(base: String) = when (base) {
         CANAL_ANIMO -> "Avisos breves para registrar cómo te sientes"; CANAL_DIARIO -> "Recordatorio de la mañana y de la noche"
-        io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "Avisa cuando un bloque o un descanso llega a su meta (y sigue contando) y cuando suena la siesta"; else -> "Cuestionarios que tocan"
+        CANAL_ESCALAS -> "Cuestionarios que tocan"
+        CANAL_RECORDATORIOS -> "Un aviso por semana con lo que toca importar, las metas y notas que toca revisar y los suplementos"
+        CANAL_LUGARES -> "«¿Es un lugar especial?» cuando llevas un rato en un sitio nuevo"
+        CANAL_RESPALDOS -> "Cuando un respaldo no sale o viene incompleto, Drive pide permiso o la base de datos tiene un problema"
+        CANAL_HISTORIA -> "Una vez por cada día especial en la historia de los personajes que sigues, entre tu hora de despertar y las 21:00"
+        io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "Avisa cuando un bloque o un descanso llega a su meta (y sigue contando) y cuando suena la siesta"
+        else -> "Tu reporte semanal o mensual, cuando ya está listo"
     }
-    private fun importancia(base: String) = when (base) {
+    /** La importancia con la que nace el canal de una familia. Todas suenan; ánimo y fin de bloque, además, asoman en pantalla. */
+    internal fun importancia(base: String) = when (base) {
         CANAL_ANIMO, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> NotificationManager.IMPORTANCE_HIGH
-        CANAL_REPORTES -> NotificationManager.IMPORTANCE_LOW; else -> NotificationManager.IMPORTANCE_DEFAULT
+        else -> NotificationManager.IMPORTANCE_DEFAULT
     }
 
     /** Recurso de sonido para un canal según el tema elegido (null = sonido normal del teléfono). */
     fun sonido(base: String, tema: String = runCatching { io.github.ruddy2003.vestigium.data.Repo.config.tema }.getOrDefault("romano")): Int? {
-        val par = sonidosDe(temaDe(tema)) ?: return null
-        return when (base) {
-            CANAL_ANIMO, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> par.first
-            CANAL_DIARIO, CANAL_ESCALAS -> par.second
+        val t = temaDe(tema)
+        val par = sonidosDe(t) ?: return null
+        return when (tono(base)) {
+            "aviso" -> par.first
+            "solemne" -> par.second
+            "historia" -> historiaDe(t)
             else -> null
         }
     }
@@ -128,11 +225,7 @@ object Avisos {
     internal fun nombreSonido(base: String, tema: String): String? {
         val t = temaDe(tema)
         if (sonidosDe(t) == null) return null
-        return when (base) {
-            CANAL_ANIMO, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO -> "n_${t.id}_aviso"
-            CANAL_DIARIO, CANAL_ESCALAS -> "n_${t.id}_solemne"
-            else -> null
-        }
+        return tono(base)?.let { "n_${t.id}_$it" }
     }
 
     /** Para oír un sonido ahora mismo (la prueba de sonido de Ajustes). */
@@ -144,9 +237,6 @@ object Avisos {
      * el archivo de otro tema.
      */
     fun uriSonido(ctx: Context, nombre: String): Uri = Uri.parse("android.resource://${ctx.packageName}/raw/$nombre")
-
-    /** Un sonido que puso la app (por número o por nombre), no uno que eligió la persona en los ajustes de Android. */
-    private fun esNuestro(ctx: Context, u: Uri?): Boolean = u != null && u.toString().startsWith("android.resource://${ctx.packageName}/")
 
     /** El principio del id de los canales de [base] con [clave] (el tema, o «sistema»): «animo_medieval_». */
     internal fun prefijoCanal(base: String, clave: String) = base + "_" + clave + "_"
@@ -167,6 +257,61 @@ object Avisos {
     /** De [ids], los canales de la familia de [base] que sobran (todos menos [vigente]). «enfoque» no es de «enfoque_aviso». */
     internal fun canalesQueSobran(ids: Collection<String>, base: String, vigente: String): List<String> =
         ids.filter { (it == base || it.startsWith(base + "_")) && it != vigente }
+
+    /** Las claves que puede llevar un canal por tema: los temas, «sistema» (sin sonido propio) y «muertos» (un id de antes). */
+    private val CLAVES: Set<String> by lazy { TemaId.entries.map { it.id }.toSet() + "sistema" + "muertos" }
+
+    /**
+     * La serie de un canal por tema de [base] («animo_romano_<serie>»), o null si no es uno de ellos: los canales fijos de
+     * antes («recordatorios», «lugares_especiales_2») y los de antes de la serie («animo_romano»). Solo cuenta si la clave
+     * es un tema o «sistema»: en «lugares_especiales_2», «especiales» no es un tema y ese «2» no es una serie.
+     */
+    internal fun serialDe(id: String, base: String): Long? {
+        if (!id.startsWith(base + "_")) return null
+        val resto = id.removePrefix(base + "_")
+        val clave = resto.substringBeforeLast('_', "")
+        if (clave !in CLAVES) return null
+        return resto.substringAfterLast('_').toLongOrNull(36)
+    }
+
+    /**
+     * De [ids] (canales de la familia de [base]), el más reciente: el de serie más alta; los de antes de la serie, al final, y
+     * entre ellos el de nombre más largo («lugares_especiales_2» va después de «lugares_especiales»). Android no devuelve los
+     * canales en ningún orden, y desde que los viejos se borran unos segundos después ([borrarLuego]) puede haber varios vivos.
+     */
+    internal fun masReciente(ids: Collection<String>, base: String): String? =
+        ids.maxWithOrNull(compareBy<String>({ serialDe(it, base) ?: -1L }, { it.length }))
+
+    /**
+     * Lo que se recuerda de una familia después de mirar uno de sus canales: true, lo silenciaste tú (sin sonido y Android
+     * dice que el sonido lo cambiaste tú en sus ajustes); false, suena (si lo habías silenciado, ya le devolviste un sonido);
+     * null, no se sabe nada nuevo (sin sonido, y no lo tocaste tú en ese canal o Android no lo dice).
+     */
+    internal fun recordarSilencio(sinSonido: Boolean, loElegisteTu: Boolean?): Boolean? = when {
+        !sinSonido -> false
+        loElegisteTu == true -> true
+        else -> null
+    }
+
+    /**
+     * ¿El canal que sigue nace en silencio? Solo si el anterior está sin sonido y ese silencio es tuyo: lo pusiste tú en ese
+     * canal, o en uno anterior de la familia ([recordado]). Un silencio que nadie pidió (lo heredó de canal en canal desde un
+     * error) se deja: vuelve el sonido del tema. En Android 11 no se puede saber quién lo silenció ([loElegisteTu] null) y se
+     * respeta, como antes.
+     */
+    internal fun naceEnSilencio(sinSonido: Boolean, loElegisteTu: Boolean?, recordado: Boolean): Boolean =
+        sinSonido && ((recordarSilencio(sinSonido, loElegisteTu) ?: recordado) || loElegisteTu == null)
+
+    /**
+     * La importancia del canal nuevo. Un canal por tema trae la del anterior (lo que decidiste, heredado de canal en canal;
+     * todos nacen con [deFabrica]). Un canal fijo de antes solo la pasa si la cambiaste tú en sus ajustes: «reportes» nació
+     * con importancia baja, que en Android es sin sonido, y no se hereda.
+     */
+    internal fun importanciaNueva(previa: Int?, deLaSerie: Boolean, laCambiasteTu: Boolean, deFabrica: Int): Int = when {
+        previa == null -> deFabrica
+        deLaSerie || laCambiasteTu -> previa
+        else -> deFabrica
+    }
 
     /** Lo que le queda a un aviso antes de borrarse solo: null si no tiene plazo; 0 o menos si ya venció. */
     internal fun plazoRestante(timeoutAfter: Long, postTime: Long, ahora: Long): Long? = if (timeoutAfter <= 0L) null else timeoutAfter - (ahora - postTime)
@@ -194,34 +339,77 @@ object Avisos {
     private val atributosSonido: android.media.AudioAttributes get() = android.media.AudioAttributes.Builder()
         .setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION).setContentType(android.media.AudioAttributes.CONTENT_TYPE_SONIFICATION).build()
 
+    /** Las familias que silenciaste tú (para que el silencio siga en los canales de los temas que vienen). */
+    private fun silencios(ctx: Context) = ctx.getSharedPreferences("avisos_silencio", Context.MODE_PRIVATE)
+
+    /** ¿Android dice que el sonido de [ch] lo cambiaste tú? null en Android 11, que no lo dice. */
+    private fun sonidoTuyo(ch: NotificationChannel): Boolean? =
+        if (android.os.Build.VERSION.SDK_INT >= 31) runCatching { ch.hasUserSetSound() }.getOrNull() else null
+
+    /** Mira [ch] (de [base]), guarda lo que haya cambiado ([recordarSilencio]) y dice si su silencio es tuyo. */
+    private fun silencioDe(ctx: Context, base: String, ch: NotificationChannel, tuyo: Boolean?): Boolean {
+        val sinSonido = ch.sound == null
+        val p = silencios(ctx)
+        val antes = p.getBoolean(base, false)
+        val ahora = recordarSilencio(sinSonido, tuyo) ?: antes
+        if (ahora != antes) p.edit().putBoolean(base, ahora).apply()
+        return naceEnSilencio(sinSonido, tuyo, antes)
+    }
+
+    /** Familias cuyo canal vigente ya se rehízo en este proceso por estar mudo sin que lo pidieras (para no rehacerlo en bucle). */
+    private val rehechos = mutableSetOf<String>()
+
     /**
      * El canal de [base] para el tema de hoy. Android no deja cambiar el sonido de un canal ya creado, así que hay uno por
      * tema («animo_medieval_<serie>»). Al cambiar de tema se crea uno nuevo, con id que nunca se usó, copiando lo que hayas
-     * decidido en el anterior (silencio, importancia, vibración); se le pasan los avisos que seguían en la cortina y se
-     * borran los viejos. Lo usa también el aviso de fin de bloque del enfoque («enfoque_aviso_<tema>_<serie>»).
+     * decidido en el más reciente de los anteriores ([masReciente]): importancia, vibración y, si lo silenciaste tú, el
+     * silencio ([naceEnSilencio]); se le pasan los avisos que seguían en la cortina y se borran los viejos. Un canal vigente
+     * que se quedó mudo sin que lo pidieras (un silencio heredado) se rehace una vez, con sonido. Lo usa también el aviso de
+     * fin de bloque del enfoque («enfoque_aviso_<tema>_<serie>»). La primera vez, los canales fijos de antes de la familia
+     * («recordatorios», «reportes», «lugares_especiales_2») se mudan aquí del mismo modo.
      */
     @Synchronized
     fun canal(ctx: Context, base: String): String {
-        if (base == CANAL_REPORTES) return base
         val nm = ctx.getSystemService(NotificationManager::class.java)
         // Red de seguridad: el tema de hoy, aunque quien avisa no lo haya revisado.
         runCatching { io.github.ruddy2003.vestigium.ui.RotacionTema.revisar() }
         val ids = runCatching { nm.notificationChannels.map { it.id } }.getOrDefault(emptyList())
-        // Con la base sin abrir bien, la configuración en memoria es la de fábrica: no se crea ni se borra nada.
-        if (io.github.ruddy2003.vestigium.data.Repo.errorAlAbrir != null)
-            return ids.filter { it == base || it.startsWith(base + "_") }.maxOrNull() ?: base
+        // Con la base sin abrir bien, la configuración en memoria es la de fábrica: no se cambia nada de lo que hay. Solo si la
+        // familia no tiene ningún canal se crea uno con el sonido del teléfono, para que el aviso no se pierda.
+        if (io.github.ruddy2003.vestigium.data.Repo.errorAlAbrir != null) {
+            masReciente(canalesQueSobran(ids, base, ""), base)?.let { return it }
+            val id = idCanalNuevo(base, "sistema", System.currentTimeMillis())
+            runCatching { nm.createNotificationChannel(NotificationChannel(id, nombreCanal(base), importancia(base)).apply { description = descripcionCanal(base) }) }
+            return id
+        }
         val c = runCatching { io.github.ruddy2003.vestigium.data.Repo.config }.getOrNull()
         val propio = c?.sonido_avisos ?: true
         val tema = c?.tema ?: "romano"
         val clave = if (propio) tema else "sistema"
-        canalVigente(ids, base, clave)?.let { return it }
+        canalVigente(ids, base, clave)?.let { vigente ->
+            val ch = runCatching { nm.getNotificationChannel(vigente) }.getOrNull()
+            // Se mira siempre: así se recuerda si lo silenciaste tú, o si ya le devolviste un sonido.
+            val tuSilencio = ch?.let { silencioDe(ctx, base, it, sonidoTuyo(it)) }
+            val mudoSinPedirlo = ch != null && ch.sound == null && tuSilencio == false && base !in rehechos
+            if (!mudoSinPedirlo) {
+                // Si quedó algún canal viejo sin borrar (la app se cerró antes de [borrarLuego]), se borra ahora, ya sin avisos dentro.
+                borrarVacios(nm, canalesQueSobran(ids, base, vigente))
+                return vigente
+            }
+            rehechos += base           // sigue abajo: un canal nuevo del mismo tema, con sonido, que hereda lo demás de este
+        }
         val viejos = canalesQueSobran(ids, base, "")
-        val previo = viejos.firstNotNullOfOrNull { nm.getNotificationChannel(it) }
+        val previo = masReciente(viejos, base)?.let { runCatching { nm.getNotificationChannel(it) }.getOrNull() }
+        val deLaSerie = previo != null && serialDe(previo.id, base) != null
+        // Un canal fijo de antes nunca nació sin sonido: si no tiene, lo quitaste tú.
+        val tuyo = previo?.let { if (!deLaSerie && it.sound == null) true else sonidoTuyo(it) }
+        val silencio = previo != null && silencioDe(ctx, base, previo, tuyo)
+        val imp = importanciaNueva(previo?.importance, deLaSerie, previo?.let { runCatching { it.hasUserSetImportance() }.getOrNull() } ?: false, importancia(base))
         val id = idCanalNuevo(base, clave, System.currentTimeMillis())
-        val ch = NotificationChannel(id, nombreCanal(base), previo?.importance ?: importancia(base)).apply {
+        val ch = NotificationChannel(id, nombreCanal(base), imp).apply {
             description = descripcionCanal(base)
             when {
-                previo != null && previo.sound == null -> setSound(null, null)          // lo habías silenciado: sigue en silencio
+                silencio -> setSound(null, null)          // lo silenciaste tú: sigue en silencio
                 propio -> nombreSonido(base, tema)?.let { setSound(uriSonido(ctx, it), atributosSonido) }
             }
             if (previo != null) { enableVibration(previo.shouldVibrate()); setShowBadge(previo.canShowBadge()) }
@@ -229,32 +417,41 @@ object Avisos {
         }
         nm.createNotificationChannel(ch)
         mudarAvisos(ctx, nm, viejos, id)
-        viejos.forEach { runCatching { nm.deleteNotificationChannel(it) } }
+        borrarLuego(nm, viejos)
         return id
     }
 
+    /** Lo que se espera antes de borrar los canales viejos: lo que tarda Android en recibir los avisos mudados. */
+    private const val ESPERA_BORRAR_MS = 6000L
+
+    /**
+     * Borra los canales [viejos] un poco después, no enseguida. Android publica un aviso con retraso (lo pasa antes por su
+     * asistente) y borrar un canal cancela al instante sus avisos: si el canal viejo se borraba justo después de mudar, el
+     * aviso se cancelaba antes de que llegara su copia, la copia entraba como aviso **nuevo** y sonaba con el sonido del tema
+     * recién elegido, encima de la música de la presentación. Con el canal viejo todavía vivo, la copia entra como una
+     * actualización del mismo aviso y `setOnlyAlertOnce` la deja en silencio.
+     */
+    private fun borrarLuego(nm: NotificationManager, viejos: Collection<String>) {
+        if (viejos.isEmpty()) return
+        val lista = viejos.toList()
+        // Sin hilo principal (una prueba) no se programa nada: quedan para la próxima llamada a [canal], que los borra al encontrarlos.
+        runCatching { android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ borrarVacios(nm, lista) }, ESPERA_BORRAR_MS) }
+    }
+
+    /** De [ids], borra los canales que ya no tienen avisos en la cortina; los que todavía tienen alguno se dejan para después. */
+    private fun borrarVacios(nm: NotificationManager, ids: Collection<String>) {
+        if (ids.isEmpty()) return
+        val conAvisos = runCatching { nm.activeNotifications.map { it.notification.channelId }.toSet() }.getOrNull() ?: return
+        ids.filter { it !in conAvisos }.forEach { runCatching { nm.deleteNotificationChannel(it) } }
+    }
+
+    /**
+     * Crea (o pone al día con el tema de hoy) el canal de cada familia. Ya no se crean canales fijos: «reportes»,
+     * «recordatorios» y los de lugares se mudan al canal por tema de su familia la primera vez que pasa por [canal], y crearlos
+     * otra vez los resucitaría (Android devuelve un canal borrado, con sus ajustes de entonces, si se crea con el mismo id).
+     */
     fun crearCanales(ctx: Context) {
-        val nm = ctx.getSystemService(NotificationManager::class.java)
-        nm.createNotificationChannel(NotificationChannel(CANAL_REPORTES, nombreCanal(CANAL_REPORTES), importancia(CANAL_REPORTES)))
-        nm.createNotificationChannel(NotificationChannel(CANAL_RECORDATORIOS, "Importaciones y metas", NotificationManager.IMPORTANCE_DEFAULT).apply {
-            description = "Un aviso por semana con lo que toca importar, y las metas y notas que toca revisar"
-        })
-        if (nm.getNotificationChannel(CANAL_LUGARES) == null && io.github.ruddy2003.vestigium.data.Repo.errorAlAbrir == null) {
-            // El canal de antes guardaba su sonido por número (ver [uriSonido]); este lo guarda por nombre. Se copia lo que
-            // decidiste en el anterior, incluido un sonido que hayas elegido tú en los ajustes de Android.
-            val viejo = nm.getNotificationChannel(CANAL_LUGARES_V1)
-            nm.createNotificationChannel(NotificationChannel(CANAL_LUGARES, "Lugares especiales", viejo?.importance ?: NotificationManager.IMPORTANCE_DEFAULT).apply {
-                description = "«¿Es un lugar especial?» cuando llevas un rato en un sitio nuevo"
-                when {
-                    viejo != null && viejo.sound == null -> setSound(null, null)
-                    viejo != null && !esNuestro(ctx, viejo.sound) -> setSound(viejo.sound, atributosSonido)
-                    else -> setSound(uriSonido(ctx, "n_lugar"), atributosSonido)
-                }
-                if (viejo != null) { enableVibration(viejo.shouldVibrate()); setShowBadge(viejo.canShowBadge()) }
-            })
-            if (viejo != null) { mudarAvisos(ctx, nm, listOf(CANAL_LUGARES_V1), CANAL_LUGARES); runCatching { nm.deleteNotificationChannel(CANAL_LUGARES_V1) } }
-        }
-        listOf(CANAL_ANIMO, CANAL_DIARIO, CANAL_ESCALAS, io.github.ruddy2003.vestigium.data.Enfoque.CANAL_AVISO).forEach { runCatching { canal(ctx, it) } }
+        FAMILIAS.forEach { runCatching { canal(ctx, it) } }
     }
 
     /** Lo que dicen los avisos en la voz de cada tema; los datos (nombres, números) se agregan en cada aviso. */
@@ -264,7 +461,38 @@ object Avisos {
         val carta: String, val cartaTexto: String, val logro: String, val logros: String,
         /** Lleva %d para el año. */
         val anio: String, val anioTexto: String,
+        /**
+         * El título del aviso del día especial de quien sigues (parte 8); el texto, con los nombres y los títulos, lo pone
+         * `HistoriaPendiente.texto`. Con valor por omisión: Psicodelia (sus dos voces, en [vozPsicodelia]) se queda con él.
+         */
+        val historia: String = "Un día especial en la historia de quien sigues",
     )
+
+    /**
+     * Las dos voces de Psicodelia (versión 2; `docs/diseno/temas/psicodelia.md`, «La voz»). La cara la decide solo la hora
+     * del aviso (`caraSegun(tema, noche, 0f)`): un aviso no dice nada de un consumo, ni con las palabras ni con la voz.
+     * - [Cara.BASE], la ciudad: la del barrio y del oficio, tranquila y concreta (la niebla, la mesa de dibujo, el periódico
+     *   del barrio, el cartel que sale de la imprenta).
+     * - [Cara.INTENSA], el cartel: la de la sala y la radio, un poco más suelta (la luz que se mueve en la pared, el 106.9,
+     *   el lado B).
+     * Ninguna nombra sustancias, celebra con jerga ni toca lo privado (lo vigila `VozPsicodeliaPrueba`).
+     */
+    internal fun vozPsicodelia(cara: Cara): Voz = when (cara) {
+        Cara.BASE -> Voz("¿Cómo andas ahora?", "Dos toques, como quien levanta la vista de la mesa de dibujo: cuánto agrado y cuánta energía.",
+            "Todavía no se retira la niebla · ¿qué soñaste?", "Anótalo antes de levantarte: se va como la niebla a mediodía.",
+            "Se cierra la edición del barrio: ¿cómo te fue hoy?", "Escribe tu día para el periódico. Si fue de niebla espesa, basta con un número.",
+            "Día de niebla espesa: un número", "Las preguntas del periódico, hoy:",
+            "Llegó una postal de tu yo de antes", "Es el día que escogiste para abrirla. Toca para leer lo que te dejaste dicho.",
+            "Disco de oro", "discos de oro nuevos",
+            "Sale de la imprenta el cartel de tu %d", "Todo tu año en un cartel: lo que más sonó, lo único, lo curioso. Toca para verlo.")
+        Cara.INTENSA -> Voz("Lado B · ¿cómo andas ahora?", "Dos toques, al compás de lo que suene: cuánto agrado y cuánta energía.",
+            "Se despide el 106.9 · ¿qué soñaste?", "Anótalo antes de levantarte: se borra como la luz de la pared cuando apagan el proyector.",
+            "Se encienden las luces de la pared: ¿cómo te fue hoy?", "Pasa tu día al periódico antes de que cierre. Si fue pesado, basta con un número.",
+            "Día pesado: solo un número", "Las preguntas de la sala, hoy:",
+            "Te llegó una postal de otra temporada", "Es la fecha que escogiste para abrirla. Toca para leerla con calma.",
+            "Disco de oro", "discos de oro nuevos",
+            "Sale el cartel de tu %d, a tres tintas", "Tu año entero en un cartel de concierto: lo que más sonó, lo único, lo curioso. Toca para verlo.")
+    }
 
     /**
      * Los avisos de cuidado (respaldos, Drive, importaciones, metas, suplementos, lugares, lo de anoche) no cambian de voz:
@@ -277,245 +505,319 @@ object Avisos {
             "Día duro: solo un número", "Hodie:",
             "EPISTVLA · te escribe tu yo del pasado", "Llegó la fecha que fijaste para abrirla.",
             "Triunfo", "triunfos nuevos",
-            "ANNALES %d · tu año está listo", "Un año entero en historias: lo que más hiciste, lo único, lo curioso. Toca para leerlo.")
+            "ANNALES %d · tu año está listo", "Un año entero en historias: lo que más hiciste, lo único, lo curioso. Toca para leerlo.",
+            historia = "FASTI · hoy es día señalado")
         TemaId.URBE -> Voz("COME STAI? · ¿cómo te sientes ahora?", "Dos toques, como quien mira el cielo antes de salir: qué tan agradable y cuánta energía.",
             "STANOTTE · ¿qué soñaste?", "Anótalo antes del primer café: el sueño se va con el ruido de las motonetas.",
             "LA GIORNATA · ¿cómo fue tu día?", "Cierra la jornada. Si fue pesada, basta con un número.",
             "Giornataccia: solo un número", "Oggi:",
             "POSTA · llegó una cartolina de tu yo del pasado", "Es la fecha que pusiste en el matasellos.",
             "Medaglia", "medaglie nuove",
-            "IL TUO ANNO %d · ya está en el quiosco", "Un año entero en historias, como el anuario del periódico: lo que más hiciste, lo único, lo curioso. Toca para leerlo.")
+            "IL TUO ANNO %d · ya está en el quiosco", "Un año entero en historias, como el anuario del periódico: lo que más hiciste, lo único, lo curioso. Toca para leerlo.",
+            historia = "OGGI SI FESTEGGIA · un día especial")
         TemaId.CIBER -> Voz("> ping ánimo", "Dos toques: qué tan agradable y cuánta energía. _",
             "> dump de sueños", "Guárdalo antes de levantarte: la memoria se libera en minutos.",
             "> cierre del día", "Llena el día. Si fue un mal día, basta con un número.",
             "modo mínimo: 1 número", "> pendiente:",
             "> mensaje en cola de tu yo del pasado", "Se cumplió la fecha programada. Toca para descifrarlo.",
             "> logro desbloqueado", "logros desbloqueados",
-            "> informe_%d listo", "Un año entero en historias: lo más frecuente, lo único, lo raro. Toca para ejecutar.")
+            "> informe_%d listo", "Un año entero en historias: lo más frecuente, lo único, lo raro. Toca para ejecutar.",
+            historia = "> evento en la línea temporal")
         TemaId.NEON -> Voz("¿Cómo va la noche?", "Dos toques: qué tan bien estás y cuánta pila te queda.",
             "Lo que soñaste entre el ruido", "Apúntalo antes de salir a la calle: se borra rápido.",
             "Se apagan los letreros", "Cierra el ticket del día. Si fue malo, basta con un número.",
             "modo de guardia: 1 número", "Te falta:",
             "Llegó un recado de tu yo de antes", "Ya es la fecha: el repartidor trae tu carta. Toca para abrirla.",
             "¡Ficha nueva!", "fichas ganadas",
-            "Tu año %d, en letreros", "Un año entero en historias: lo de siempre, lo único, lo raro. Toca para entrar.")
+            "Tu año %d, en letreros", "Un año entero en historias: lo de siempre, lo único, lo raro. Toca para entrar.",
+            historia = "Se enciende un letrero: hoy es un día especial")
         TemaId.HELENO -> Voz("Πῶς ἔχεις; · ¿cómo te sientes ahora?", "Dos toques: cuánto agrado y cuánta energía.",
             "ὌΝΕΙΡΟΣ · ¿qué te mostró el sueño?", "Anótalo antes de levantarte; Hipnos se lo lleva en minutos.",
             "ἩΜΕΡΑ · ¿cómo fue tu día?", "Llena el día. Si fue difícil, basta con un número.",
             "Día difícil: un número", "Hoy consulta:",
             "ἘΠΙΣΤΟΛΗ · carta de tu yo del pasado", "Llegó el día que elegiste para abrirla.",
             "Corona de olivo", "coronas de olivo nuevas",
-            "Tu %d ya es historia", "Un año entero en historias, como en Heródoto: lo que más hiciste, lo único, lo curioso.")
+            "Tu %d ya es historia", "Un año entero en historias, como en Heródoto: lo que más hiciste, lo único, lo curioso.",
+            historia = "ἙΟΡΤΗ · hoy es un día señalado")
         TemaId.EGIPTO -> Voz("☥ El heraldo pregunta: ¿cómo está tu corazón?", "Dos toques: cuánto agrado y cuánta fuerza tiene tu ka.",
             "☥ Lo que mostró la noche", "Anótalo antes de dejar la estera: los sueños se van con la primera luz de Ra.",
             "☥ El papiro de hoy", "Llena el día antes de que se ponga el sol. Si fue un día torcido, basta con un número.",
             "Día torcido: un número", "La Casa de la Vida pregunta hoy:",
             "☥ Un papiro sellado de tu yo del pasado", "Llegó el día del año civil que elegiste para romper el sello.",
             "Amuleto de oro ganado", "amuletos de oro nuevos",
-            "Los anales de %d están escritos", "Un año entero en relieves, como en los muros de un templo: lo que más hiciste, lo único, lo curioso.")
+            "Los anales de %d están escritos", "Un año entero en relieves, como en los muros de un templo: lo que más hiciste, lo único, lo curioso.",
+            historia = "☥ Un día marcado en el calendario del templo")
         TemaId.MEDIEVAL -> Voz("¶ ¿Cómo está tu ánima agora?", "Dos toques: cuán placentero y cuánto brío.",
             "¶ De las visiones de la noche", "Asiéntalas antes de levantarte, que el recuerdo se borra como tinta fresca.",
             "¶ Completas: ¿cómo fue el día?", "Asienta el día. Si fue de pesar, basta con un número.",
             "Día de pesar: un número", "Por la regla, hoy:",
             "¶ Epístola de tu yo de antaño", "Llegó el día señalado para romper el sello.",
             "Gesta cumplida", "gestas nuevas",
-            "El anuario de %d está iluminado", "Un año entero en historias: lo más hecho, lo único, lo curioso. Toca para leer el códice.")
+            "El anuario de %d está iluminado", "Un año entero en historias: lo más hecho, lo único, lo curioso. Toca para leer el códice.",
+            historia = "¶ Día señalado en el calendario")
         TemaId.TEMPLARIO -> Voz("☩ Relevo de guardia: ¿cómo está tu ánimo?", "Dos toques, hermano: cuánto agrado y cuánto brío.",
             "☩ Lo que viste en la vigilia", "Inscríbelo antes de ensillar: el sueño se va como la arena entre los dedos.",
             "☩ Se cierra la puerta del castillo: ¿cómo fue la jornada?", "Rinde la jornada. Si fue dura, basta con un número.",
             "Jornada dura: un número", "Según la regla, hoy:",
             "☩ Misiva de tu yo de otro tiempo", "Llegó la jornada señalada para romper el sello de la casa.",
             "Hecho de armas", "hechos de armas nuevos",
-            "La crónica del año %d está asentada", "Un año entero en la frontera: lo más hecho, lo único, lo curioso. Toca para leer la crónica.")
+            "La crónica del año %d está asentada", "Un año entero en la frontera: lo más hecho, lo único, lo curioso. Toca para leer la crónica.",
+            historia = "☩ Jornada señalada en la crónica")
         TemaId.DISTOPIA -> Voz("DECLARE SU ESTADO ACTUAL", "Dos toques obligatorios: agrado y energía.",
             "REPORTE ONÍRICO PENDIENTE", "Declare lo soñado antes de levantarse. El recuerdo caduca en minutos.",
             "DECLARACIÓN NOCTURNA", "Complete el parte del día. En jornada difícil se acepta un solo número.",
             "Jornada difícil: un número", "INTERROGATORIO PENDIENTE:",
             "CORRESPONDENCIA DESCLASIFICADA", "Su yo del pasado le escribió. Se cumplió la fecha de apertura.",
             "CONDECORACIÓN", "condecoraciones nuevas",
-            "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.")
+            "BALANCE ANUAL %d DISPONIBLE", "Un año entero en expedientes: lo más frecuente, lo único, lo anómalo.",
+            historia = "AVISO DE EFEMÉRIDE AUTORIZADA")
+        // Psicodelia: dos voces, la de la cara que toca a la hora del aviso (sin contar ningún consumo: ver [vozPsicodelia]).
+        TemaId.PSICODELIA -> vozPsicodelia(caraSegun(t, ModoHora.esDeNoche(LocalTime.now()), 0f))
+        // Art nouveau: la campanilla de cristal del taller, la piedra litográfica que se moja antes de entintar, las vitrinas
+        // que se encienden de noche, la postal ilustrada, las medallas de la Exposición y el cartel recién salido de la prensa.
+        TemaId.NOUVEAU -> Voz("Suena la campanilla de cristal: ¿cómo estás ahora?", "Dos toques, como dos golpes de pincel: cuánto agrado y cuánta energía.",
+            "Croquis de la noche · ¿qué soñaste?", "Dibújalo con palabras antes de levantarte: el sueño se seca como el agua sobre la piedra.",
+            "Se encienden las vitrinas: ¿cómo fue tu día?", "Pasa el día a la página del carnet. Si fue gris, basta con un número.",
+            "Día gris: un número", "Las preguntas del almanaque, hoy:",
+            "Llegó una postal de tu yo de antes", "Es el día que elegiste para leerla. Toca para darle la vuelta.",
+            "Medalla de la Exposición", "medallas de la Exposición",
+            "Tu %d ya salió de la prensa", "Un año entero en carteles, recién impresos: lo que más hiciste, lo único, lo curioso. Toca para leerlo.",
+            historia = "Una fecha con guirnalda en el almanaque")
+        // Galia: el grito que corre de campo en campo (César 7.3: lo de Cenabum, al amanecer, lo sabían antes de acabar la
+        // primera guardia de la noche a 160 millas); la hoguera de la casa grande, el mensajero, los torques y los bardos.
+        TemaId.GALIA -> Voz("Corre el grito: ¿cómo anda tu ánimo?", "Pasa de campo en campo hasta llegar a ti. Dos toques: cuánto agrado y cuánta energía.",
+            "¿Qué te contó la noche?", "Dilo antes de dejar el manto: el sueño se va con la niebla de la mañana.",
+            "Se enciende la hoguera: ¿cómo fue la jornada?", "Cuenta el día junto al fuego. Si fue jornada de lluvia y barro, basta con un número.",
+            "Jornada de barro: un número", "Lo que hoy preguntan los druidas:",
+            "Llega el mensajero: trae palabras de tu yo de antes", "Es la noche que elegiste para abrir su tablilla. Toca para leerla.",
+            "Torques ganado", "torques ganados",
+            "Los bardos ya cantan tu %d", "Un año entero en cantos, como los que guardan los bardos: lo que más hiciste, lo único, lo curioso. Toca para leerlo.",
+            historia = "Los bardos anuncian un día señalado")
+        // Arcontes: la voz baja del círculo de Magdala; la lámpara de la noche, el códice, la jarra sellada y los amuletos.
+        TemaId.ARCONTES -> Voz("¿Cómo está tu alma en esta hora?", "Dos toques, en voz baja: cuánto agrado sientes y cuánta energía te queda.",
+            "Lo que viste mientras dormía el cuerpo", "Escríbelo antes de levantarte: lo que se ve de noche se va con la primera luz.",
+            "Se enciende la lámpara: ¿cómo fue el día?", "Escribe el día en el códice. Si fue pesado, basta con un número.",
+            "Día de sombra: un número", "Las preguntas de los guardianes, hoy:",
+            "Se rompe el sello de la jarra", "Es el cielo que elegiste para leer la carta que te dejaste.",
+            "Amuleto grabado", "amuletos grabados nuevos",
+            "La vuelta del año %d ya está escrita", "Un año entero en historias, como las hojas de un códice: lo que más hiciste, lo único, lo curioso. Toca para leerlo.",
+            historia = "Se abre un día señalado en el códice")
+        TemaId.FRENTE -> Voz("CANAL ABIERTO · ¿CÓMO ESTÁS AHORA?", "Dos toques y cortas: qué tan agradable y cuánta energía.",
+            "SEÑAL DE LA NOCHE · ¿QUÉ SOÑASTE?", "Transmítelo antes de levantarte. La señal se pierde en minutos.",
+            "SE ABRE LA VENTANA · ¿CÓMO FUE EL DÍA?", "Transmite el día antes de cortar. Si fue malo, basta con un número.",
+            "Día malo: solo un número", "CUESTIONARIOS DE CONTROL:",
+            "LLEGÓ UN MENSAJE DIFERIDO", "Lo cifraste tú hace tiempo, para abrirlo hoy. Toca para descifrarlo.",
+            "PARCHE NUEVO", "parches nuevos",
+            "INFORME DEL AÑO %d · LISTO", "Un año entero de transmisiones: lo que más hiciste, lo único, lo raro. Toca para leerlo.",
+            historia = "SEÑAL ENTRANTE · DÍA ESPECIAL")
         TemaId.REFUGIO -> Voz("> CHEQUEO DE ESTADO, RESIDENTE", "Dos toques en el panel: agrado y energía.",
             "> REGISTRO DE SUEÑOS", "Anótalo antes de salir de la litera; el recuerdo se borra en minutos.",
             "> INFORME DE CIERRE", "Llena el día. Si el turno fue duro, basta con un número.",
             "Turno duro: un número", "> EVALUACIÓN PROGRAMADA:",
             "> CÁPSULA DEL TIEMPO ABIERTA", "Tu yo del pasado dejó un mensaje para hoy.",
             "INSIGNIA OBTENIDA", "insignias nuevas",
-            "> REGISTRO ANUAL %d LISTO", "Un año bajo tierra en historias: lo más hecho, lo único, lo curioso.")
+            "> REGISTRO ANUAL %d LISTO", "Un año bajo tierra en historias: lo más hecho, lo único, lo curioso.",
+            historia = "> FECHA DESTACADA EN EL REGISTRO")
         TemaId.ORDEN -> Voz("INFORME DE MORAL", "Dos toques: agrado y energía. Sin demora.",
             "PARTE DE VIGILIA", "Reporta lo soñado antes de levantarte; se pierde en minutos.",
             "PARTE DE CIERRE", "Reporta el día. Si la jornada fue dura, basta con un número.",
             "Jornada dura: un número", "EVALUACIÓN:",
             "ÓRDENES SELLADAS DE TU YO DEL PASADO", "Llegó la fecha de abrirlas.",
             "Mérito ganado", "méritos nuevos",
-            "PARTE DE CAMPAÑA %d LISTO", "Un año de campaña en historias: lo más hecho, lo único, lo curioso.")
+            "PARTE DE CAMPAÑA %d LISTO", "Un año de campaña en historias: lo más hecho, lo único, lo curioso.",
+            historia = "PARTE DEL DÍA: FECHA SEÑALADA")
         TemaId.VAPOR -> Voz("☛ Lectura del manómetro · ¿qué presión marca tu ánimo?", "Dos toques en la esfera: qué tan agradable y cuánto vapor tienes.",
             "☛ Al encender la caldera · ¿qué soñaste?", "Anótalo antes de que silbe el primer tren: el sueño se va con el humo.",
             "☛ Fin del turno · ¿cómo fue la jornada?", "Asienta el día en el cuaderno. Si fue de carbón y sudor, basta con un número.",
             "Jornada de mucho carbón: un número", "Lecturas de este turno:",
             "☛ Telegrama de tu yo del pasado", "El cartero de la estación lo trae en la fecha que pusiste.",
             "Patente concedida", "patentes nuevas",
-            "La memoria de la compañía, ejercicio %d", "Un año entero en estampas de viaje: lo que más hiciste, lo único, lo curioso. Toca para leerla.")
+            "La memoria de la compañía, ejercicio %d", "Un año entero en estampas de viaje: lo que más hiciste, lo único, lo curioso. Toca para leerla.",
+            historia = "☛ Telegrama: hoy es día señalado")
         TemaId.LABORATORIO -> Voz("Medición de ánimo · t = ahora", "Dos toques: qué tan agradable (valencia) y cuánta energía (activación).",
             "Muestra onírica", "Regístrala antes de levantarte: se degrada en minutos.",
             "Cierre de sesión", "Llena el día. Si fue difícil, basta con un dato.",
             "Sesión difícil: un dato", "Protocolo pendiente:",
             "Muestra sellada: carta de tu yo del pasado", "Se cumplió la fecha de apertura del protocolo.",
             "Hito registrado", "hitos registrados",
-            "Informe anual %d listo", "Un año de datos en historias: lo más frecuente, lo único, lo atípico.")
+            "Informe anual %d listo", "Un año de datos en historias: lo más frecuente, lo único, lo atípico.",
+            historia = "Evento registrado en la serie temporal")
         TemaId.COLONOS -> Voz("¿Qué tal el ánimo, vecino?", "Dos toques: qué tan a gusto y cuánta energía.",
             "¿Qué soñaste anoche?", "Apúntalo antes de levantarte; se olvida antes del café.",
             "La jornada de hoy", "Llena el día. Si fue pesado, basta con un número.",
             "Día pesado: un número", "Hoy, en la junta:",
             "Llegó carta de tu yo del pasado", "El cartero la trajo en la fecha que pediste.",
             "Mención en la gaceta", "menciones en la gaceta",
-            "Edición especial: tu %d", "Un año entero en la gaceta: lo que más hiciste, lo único, lo curioso.")
+            "Edición especial: tu %d", "Un año entero en la gaceta: lo que más hiciste, lo único, lo curioso.",
+            historia = "Edición extra de la gaceta: un día especial")
         TemaId.NAPOLEON -> Voz("Rapport · ¿cómo está tu moral?", "Dos toques para el boletín: agrado y energía.",
             "Rêves de bivouac", "Anótalo antes de la diana; el recuerdo se va en minutos.",
             "Boletín del día", "Llena el día. Si fue una derrota, basta con un número.",
             "Día de derrota: un número", "Por orden del cuartel general:",
             "Despacho de tu yo del pasado", "El correo imperial lo entrega en la fecha fijada.",
             "Légion d’honneur", "honores nuevos",
-            "Boletín de la campaña de %d", "La campaña entera en historias: lo más hecho, lo único, lo curioso.")
+            "Boletín de la campaña de %d", "La campaña entera en historias: lo más hecho, lo único, lo curioso.",
+            historia = "Ordre du jour · un día señalado")
         TemaId.DECO -> Voz("Timbre del camarote · ¿qué tal la velada?", "Dos toques, como dos compases: agrado y energía.",
             "Lo que soñaste en el camarote", "Anótalo antes del desayuno en cubierta; los sueños se van con la bruma.",
             "El carnet de esta noche", "Llena el día antes de que baje el telón. Si fue una mala función, basta con un número.",
             "Mala función: un número", "El sobrecargo te entrega el programa:",
             "Telegrama de tu yo del pasado", "La radio de a bordo lo recibe el día fijado.",
             "¡Ovación!", "ovaciones nuevas",
-            "La temporada de %d en noticiero", "Toda la temporada en historias: lo más hecho, lo único, lo curioso.")
+            "La temporada de %d en noticiero", "Toda la temporada en historias: lo más hecho, lo único, lo curioso.",
+            historia = "Esta noche hay función especial")
         TemaId.BOTANICO -> Voz("Observación · ¿cómo te sientes?", "Dos toques, como una muestra de campo: agrado y energía.",
             "Latencia · ¿qué soñaste?", "Anótalo antes de levantarte; se marchita en minutos.",
             "Entrada del herbario", "Llena el día. Si fue difícil, basta con un número.",
             "Día difícil: un número", "Muestreo de hoy:",
             "Una carta prensada por tu yo del pasado", "Llegó la estación que elegiste para abrirla.",
             "Especie nueva en la colección", "especies nuevas",
-            "El herbario de %d está listo", "Un año entero en láminas: lo más hecho, lo único, lo curioso.")
+            "El herbario de %d está listo", "Un año entero en láminas: lo más hecho, lo único, lo curioso.",
+            historia = "Floración señalada en el calendario")
         TemaId.RUINAS -> Voz("❦ ¿Cuánto aguante te queda?", "Dos toques, como dos marcas de tiza: agrado y energía.",
             "❦ ¿Qué soñaste en la azotea?", "Apúntalo antes de bajar; se lo lleva el viento en minutos.",
             "❦ Una hoja más del cuaderno", "Llena el día junto a la fogata. Si fue difícil, basta con un número.",
             "Día difícil: una marca basta", "La ronda de hoy:",
             "Un mensaje tapiado por tu yo del pasado", "Llegó la estación que elegiste para destapiarlo.",
             "Rescate nuevo entre los escombros", "rescates nuevos",
-            "Las hojas prensadas de %d están listas", "Un año entero tras el silencio: lo que más hiciste, lo único, lo raro.")
+            "Las hojas prensadas de %d están listas", "Un año entero tras el silencio: lo que más hiciste, lo único, lo raro.",
+            historia = "❦ Una marca de tiza en la pared: día especial")
         TemaId.NAVIDAD -> Voz("✦ ¿Cómo te sientes ahora?", "Dos toques junto al fuego: agrado y energía.",
             "✦ ¿Qué soñaste esta noche?", "Anótalo antes de salir de las cobijas; se derrite en minutos.",
             "✦ ¿Cómo estuvo tu día?", "Llena el día. Si fue difícil, con un número basta.",
             "Día difícil: con un número basta", "En la lista de hoy:",
             "✦ Una carta de tu yo del pasado", "Llegó el día de abrirla, como un regalo.",
             "Un regalo para ti", "regalos nuevos",
-            "Tu %d, envuelto y listo", "Un año entero en historias: lo más hecho, lo único, lo curioso. Toca para abrirlo.")
+            "Tu %d, envuelto y listo", "Un año entero en historias: lo más hecho, lo único, lo curioso. Toca para abrirlo.",
+            historia = "✦ Hoy hay algo especial en el calendario")
         TemaId.SEDA -> Voz("◇ Alto en la ruta: ¿cómo va tu espíritu?", "Dos toques: agrado y fuerza para el camino.",
             "◇ Sueños de caravasar", "Anótalo antes de levantar el campamento; se lo lleva el viento.",
             "◇ Relato de la jornada", "Llena el día. Si el camino fue duro, basta con un número.",
             "Camino duro: un número", "En la posta de hoy:",
             "◇ Un mensajero trae carta de tu yo del pasado", "Llegó en la fecha convenida.",
             "Mercancía rara", "tesoros nuevos",
-            "El rollo de %d está listo", "Un año entero de camino en historias: lo más hecho, lo único, lo curioso.")
+            "El rollo de %d está listo", "Un año entero de camino en historias: lo más hecho, lo único, lo curioso.",
+            historia = "◇ La caravana trae noticias de un día señalado")
         TemaId.EDO -> Voz("※ Un alto en la casa de té: ¿cómo late tu corazón?", "Dos toques, como dos sellos: agrado y fuerza para el camino.",
             "※ ¿Qué soñaste en la posada?", "Anótalo antes de doblar el futón; los sueños se van con el rocío.",
             "※ La hoja de la jornada", "Llena el día a pincel. Si la cuesta fue dura, basta un número.",
             "Cuesta dura: basta un número", "En el tablón de la posta:",
             "※ El correo a pie trae carta de tu yo del pasado", "Llegó en la estación convenida.",
             "Un sello nuevo en tu cuaderno", "sellos nuevos",
-            "Las estampas de %d ya están impresas", "Un año entero del camino en ukiyo-e: lo más hecho, lo único, lo curioso.")
+            "Las estampas de %d ya están impresas", "Un año entero del camino en ukiyo-e: lo más hecho, lo único, lo curioso.",
+            historia = "※ En el tablón de la posta: un día señalado")
         TemaId.URSS -> Voz("★ ¡Camarada! ¿Cómo está tu moral?", "Dos toques: agrado y energía para el plan.",
             "★ Informe de descanso", "Anota lo soñado antes del turno; el recuerdo se va en minutos.",
             "★ Balance de la jornada", "Llena el día. Si fue duro, basta con una cifra.",
             "Jornada dura: una cifra", "Norma de hoy:",
             "★ Carta de tu yo del pasado", "Llegó la fecha fijada en el plan.",
             "Norma superada", "normas superadas",
-            "Plan %d cumplido", "Un año entero en historias: lo más hecho, lo único, lo curioso.")
+            "Plan %d cumplido", "Un año entero en historias: lo más hecho, lo único, lo curioso.",
+            historia = "★ Fecha señalada en el calendario")
         TemaId.GOTICO -> Voz("✠ Ad horam · ¿cómo está tu ánima?", "Dos toques entre una hora y otra: agrado y energía.",
             "✠ Maitines · ¿qué soñaste?", "Escríbelo antes de levantarte; las visiones se apagan como una vela.",
             "✠ Completas · el día", "Llena el día. Si fue de penitencia, basta con un número.",
             "Día de penitencia: un número", "Lectio de hoy:",
             "✠ Carta lacrada de tu yo del pasado", "Llegó la fiesta señalada para abrirla.",
             "Vidriera completa", "vidrieras nuevas",
-            "El libro de horas de %d", "Un año entero en historias: lo más hecho, lo único, lo curioso.")
+            "El libro de horas de %d", "Un año entero en historias: lo más hecho, lo único, lo curioso.",
+            historia = "✠ Festum · un día señalado")
         TemaId.ARCANO -> Voz("† Una nota al margen · ¿cómo están tus nervios?", "Dos toques antes de que se te olvide: agrado y energía.",
             "† Lo que soñaste anoche", "Anótalo antes de levantarte: lo que se sueña cerca del mar se borra con la primera luz.",
             "† Cierra el legajo del día", "Asienta la jornada. Si fue de las turbias, basta con una cifra.",
             "Jornada turbia: una cifra", "Lo que hoy toca vigilar:",
             "† Llegó una carta lacrada de tu yo del pasado", "La trajo la marea en la fecha convenida. Rompe el lacre.",
             "Prueba hallada", "pruebas nuevas en el archivo",
-            "Crónica del caso, %d", "Un año entero en recortes: lo más repetido, lo inexplicable, lo curioso.")
+            "Crónica del caso, %d", "Un año entero en recortes: lo más repetido, lo inexplicable, lo curioso.",
+            historia = "† Una fecha marcada en el legajo")
         TemaId.ESPACIO -> Voz("CONTROL · estado de la tripulación", "Dos toques: agrado y energía. Cambio.",
             "BITÁCORA DE SUEÑO", "Regístralo antes de dejar la litera; la señal se pierde en minutos.",
             "FIN DE ÓRBITA", "Llena el día. Si hubo turbulencia, basta con un número.",
             "Turbulencia: un número", "SECUENCIA PROGRAMADA:",
             "TRANSMISIÓN DIFERIDA de tu yo del pasado", "La señal llegó en la fecha calculada.",
             "Hito de misión", "hitos de misión",
-            "Misión %d · informe listo", "Una vuelta completa al Sol en historias: lo más hecho, lo único, lo curioso.")
+            "Misión %d · informe listo", "Una vuelta completa al Sol en historias: lo más hecho, lo único, lo curioso.",
+            historia = "CONTROL · evento en la bitácora")
         TemaId.ABISMO -> Voz("SONDEO · ¿cómo está el buzo?", "Dos toques en el panel de la góndola: agrado y energía.",
             "BITÁCORA DE SUPERFICIE · ¿qué soñaste?", "Anótalo antes de dejar la litera; los sueños suben y se pierden como burbujas.",
             "FIN DE LA INMERSIÓN · el día", "Llena el día. Si hubo mar de fondo, basta con un número.",
             "Mar de fondo: un número", "SONDEO PROGRAMADO:",
             "Boya lastrada de tu yo del pasado", "Soltó su lastre y subió en la fecha fijada.",
             "Nueva cota", "cotas nuevas",
-            "Bitácora de inmersiones de %d", "Un año entero bajo el agua en historias: lo más hecho, lo único, lo curioso.")
+            "Bitácora de inmersiones de %d", "Un año entero bajo el agua en historias: lo más hecho, lo único, lo curioso.",
+            historia = "SONDEO · señal en la bitácora: día especial")
         TemaId.ANDALUS -> Voz("الآن · ¿cómo te sientes?", "Dos toques: cuánta dulzura y cuánta fuerza.",
             "المنام · ¿qué soñaste?", "Escríbelo antes de levantarte; el sueño se va como el agua de la acequia.",
             "النهار · ¿cómo fue el día?", "Llena el día. Si fue duro, basta con un número.",
             "Día duro: un número", "Hoy, en la madraza:",
             "رسالة · carta de tu yo del pasado", "Llegó el día que elegiste para abrirla.",
             "Azulejo nuevo en tu patio", "azulejos nuevos",
-            "El libro de %d está listo", "Un año entero en historias: lo más hecho, lo único, lo curioso.")
+            "El libro de %d está listo", "Un año entero en historias: lo más hecho, lo único, lo curioso.",
+            historia = "عيد · un día señalado")
         TemaId.MESO -> Voz("⁘ Suena la caracola: ¿cómo está tu corazón?", "Dos toques: cuánto agrado y cuánta fuerza trae este día del tzolk'in.",
             "⁘ Lo que pintó la noche", "Anótalo antes de dejar el petate: los sueños se van con el humo del copal.",
             "⁘ La página de hoy del códice", "Pinta el día antes de que el sol baje al inframundo. Si fue un día pesado, basta con un número de puntos y barras.",
             "Día pesado: un número", "El guardián de los días pregunta hoy:",
             "⁘ Un códice atado de tu yo del pasado", "Llegó el día de la cuenta que elegiste para desatarlo.",
             "Pluma de quetzal ganada", "plumas de quetzal nuevas",
-            "El códice de %d está pintado", "Un año entero pintado como en las páginas de un biombo: lo que más hiciste, lo único, lo curioso.")
+            "El códice de %d está pintado", "Un año entero pintado como en las páginas de un biombo: lo que más hiciste, lo único, lo curioso.",
+            historia = "⁘ El guardián de los días marca una fecha")
         TemaId.MONGOL -> Voz("СЭТГЭЛ · ¿cómo va tu espíritu?", "Dos toques: agrado y fuerza, como el viento de la estepa.",
             "ЗҮҮД · ¿qué soñaste en la yurta?", "Anótalo antes de salir; el sueño se lo lleva el viento.",
             "ӨДӨР · ¿cómo fue la jornada?", "Llena el día. Si fue dura, basta con un número.",
             "Jornada dura: solo un número", "Hoy, en el campamento:",
             "Un jinete trae carta de tu yo del pasado", "Cabalgó hasta la fecha que elegiste.",
             "Estandarte ganado", "estandartes nuevos",
-            "La crónica del año %d", "Un año entero en historias: lo más hecho, lo único, lo curioso.")
+            "La crónica del año %d", "Un año entero en historias: lo más hecho, lo único, lo curioso.",
+            historia = "Un jinete trae noticias de un día señalado")
         TemaId.RENACIMIENTO -> Voz("❧ Come stai? · ¿cómo te sientes?", "Dos toques: cuánto agrado y cuánto vigor.",
             "❧ Sogni · ¿qué soñaste?", "Escríbelo antes de levantarte; se borra como el carboncillo.",
             "❧ La giornata", "Llena el día. Si fue difícil, basta con un número.",
             "Giornata difficile: un número", "Estudio de hoy:",
             "❧ Lettera de tu yo del pasado", "Llegó el día que elegiste para abrirla.",
             "Invención lograda", "invenciones nuevas",
-            "El cuaderno de %d está listo", "Un año entero en láminas: lo más hecho, lo único, lo curioso.")
+            "El cuaderno de %d está listo", "Un año entero en láminas: lo más hecho, lo único, lo curioso.",
+            historia = "❧ Festa · un día señalado")
         TemaId.PIRATA -> Voz("✷ Toque de campana · ¿qué cariz trae tu ánimo?", "Dos toques en la carta: cuánta bonanza y cuánto viento en las velas.",
             "✷ Desde el coy · ¿qué soñaste?", "Asiéntalo antes de saltar a cubierta; el sueño se va como la espuma.",
             "✷ Fin de la singladura", "Llena la bitácora. Si hubo temporal, basta con un número.",
             "Singladura con temporal: un número", "Órdenes de esta guardia:",
             "✷ Una botella llegó a la playa: te escribe tu yo del pasado", "La marea la trajo en la fecha que elegiste.",
             "Botín a bordo", "botines nuevos",
-            "La bitácora de %d, encuadernada", "Un año entero de travesía: lo más hecho, lo único, lo curioso.")
+            "La bitácora de %d, encuadernada", "Un año entero de travesía: lo más hecho, lo único, lo curioso.",
+            historia = "✷ Banderas en el palo mayor: día señalado")
         TemaId.REVOLUCION -> Voz("✶ Citoyen, ¿cómo te sientes?", "Dos toques, libremente: agrado y energía.",
             "✶ ¿Qué soñaste, ciudadano?", "Anótalo antes de levantarte; el recuerdo se va en minutos.",
             "✶ Cuaderno de quejas del día", "Llena el día. Si fue duro, basta con un número.",
             "Día duro: basta un número", "Orden del día:",
             "✶ Carta de tu yo del pasado", "Llegó la fecha que decretaste para abrirla.",
             "Virtud cívica", "virtudes nuevas",
-            "Los anales del año %d", "Un año entero en historias: lo más hecho, lo único, lo curioso.")
+            "Los anales del año %d", "Un año entero en historias: lo más hecho, lo único, lo curioso.",
+            historia = "✶ Fête · un día señalado del calendario")
         TemaId.ANTIGUAS -> Voz("⟡ Alto en el camino: ¿cómo va tu temple?", "Dos toques: agrado y fuerza para la jornada.",
             "⟡ Visiones de la noche", "Anótalas antes de levantarte; se desvanecen como niebla en el bosque.",
             "⟡ La crónica del día", "Llena el día. Si fue una jornada oscura, basta con un número.",
             "Jornada oscura: un número", "Prueba de hoy:",
             "⟡ Un pergamino de tu yo del pasado", "Llegó la luna que elegiste para abrirlo.",
             "Gema hallada", "gemas nuevas",
-            "La crónica de %d está escrita", "Un año entero en historias: lo más hecho, lo único, lo curioso.")
+            "La crónica de %d está escrita", "Un año entero en historias: lo más hecho, lo único, lo curioso.",
+            historia = "⟡ Un día señalado en la crónica")
         TemaId.CUEVA -> Voz("⁘ Junto al fuego · ¿cómo arde tu aliento?", "Dos toques en la piedra: cuánto agrado y cuánta fuerza.",
             "⁘ Lo que se ve con los ojos cerrados", "Cuéntalo antes de salir del abrigo; el sueño se va como el humo.",
             "⁘ Cae el sol sobre el valle", "Pinta el día. Si fue de mala caza, basta con un número.",
             "Sol de mala caza: un número", "Lo que hay que hacer este sol:",
             "⁘ Desenterraste una piedra marcada por tu yo de otras lunas", "Llegó la luna que elegiste para sacarla.",
             "Presa nueva en la pared", "presas nuevas",
-            "Las lunas de %d ya están en la pared", "Un año entero en pinturas: lo más hecho, lo único, lo curioso.")
+            "Las lunas de %d ya están en la pared", "Un año entero en pinturas: lo más hecho, lo único, lo curioso.",
+            historia = "⁘ Una luna marcada en la pared")
         TemaId.BASICO -> Voz("¿Cómo te sientes ahora?", "Dos toques: qué tan agradable y cuánta energía.",
             "¿Qué soñaste?", "Anótalo antes de levantarte; los sueños se olvidan rápido.",
             "¿Cómo fue tu día?", "Llena el día. Si fue difícil, basta con un número.",
             "Día difícil: solo un número", "Hoy:",
             "Carta de tu yo del pasado", "Llegó la fecha que elegiste para abrirla.",
             "Logro nuevo", "logros nuevos",
-            "Tu año %d está listo", "Un año entero en historias: lo que más hiciste, lo único, lo curioso. Toca para leerlo.")
+            "Tu año %d está listo", "Un año entero en historias: lo que más hiciste, lo único, lo curioso. Toca para leerlo.",
+            historia = "Un día especial en la historia de quien sigues")
     }
 
     /**
@@ -523,6 +825,20 @@ object Avisos {
      * [meta] (esquema 21): el aviso de que un bloque llegó a su meta; desde ahí sigue contando hasta que pases al descanso o termines.
      */
     internal class VozEnfoque(val descanso: String, val consejo: String, val finDescanso: String, val despertar: String, val terminaste: String, val meta: String)
+
+    /**
+     * El cronómetro de enfoque de Psicodelia, en la voz de la cara que toca a la hora del aviso (sin contar ningún consumo):
+     * de día, la mesa de dibujo, la niebla y el cartel que va a la imprenta; de noche, el disco que se da vuelta en la sala y
+     * el cartel recién impreso. El descanso es darle la vuelta al disco en las dos.
+     */
+    internal fun vozEnfoquePsicodelia(cara: Cara): VozEnfoque = when (cara) {
+        Cara.BASE -> VozEnfoque("Intermedio: dale la vuelta al disco", "Suelta la plumilla, asómate a la ventana y bebe un vaso de agua.",
+            "Suena el otro lado: de vuelta a la mesa", "La niebla ya cruzó el puente: hora de despertar",
+            "Cartel listo para la imprenta: terminaste", "Fin de la pista: llegaste a la meta")
+        Cara.INTENSA -> VozEnfoque("Intermedio: el disco, del otro lado", "Deja la plumilla, abre la ventana y bebe un vaso de agua.",
+            "Vuelve a girar el disco: de vuelta a la mesa", "Se prende la luz de la sala: hora de despertar",
+            "El cartel queda impreso: terminaste", "Se acaba la pista: llegaste a la meta")
+    }
 
     internal fun vozEnfoque(t: TemaId = temaActual()): VozEnfoque = when (t) {
         TemaId.ROMANO -> VozEnfoque("Otium", "Levántate y bebe agua, como en las termas.", "Se acabó el otium", "Surge: hora de despertar", "Opus perfectum: terminaste", "Ad metam: llegaste a la meta")
@@ -534,6 +850,16 @@ object Avisos {
         TemaId.MEDIEVAL -> VozEnfoque("Recreo", "Deja la pluma, bebe agua.", "Se acabó el recreo", "Hora de levantarse", "Laus Deo: terminaste", "Explicit: llegaste a la meta")
         TemaId.TEMPLARIO -> VozEnfoque("Alto en la marcha", "Desciñe la espada y bebe agua del aljibe.", "Se acabó el alto: a la silla", "Toca a maitines: hora de levantarse", "Non nobis: guardia cumplida", "Llegaste al castillo: meta cumplida")
         TemaId.DISTOPIA -> VozEnfoque("PAUSA AUTORIZADA", "Hidrátese. Regrese a su puesto a tiempo.", "FIN DE LA PAUSA AUTORIZADA", "TOQUE DE DIANA", "CUOTA CUMPLIDA", "OBJETIVO DEL BLOQUE ALCANZADO")
+        // Psicodelia: dos voces, la de la cara que toca a la hora del aviso (ver [vozEnfoquePsicodelia]).
+        TemaId.PSICODELIA -> vozEnfoquePsicodelia(caraSegun(t, ModoHora.esDeNoche(LocalTime.now()), 0f))
+        // Art nouveau: el respiro en la terraza del café, la mesa de dibujo, la luz del tragaluz, la piedra entintada y el iris
+        // que se abre en la esfera del reloj.
+        TemaId.NOUVEAU -> VozEnfoque("Un respiro en la terraza", "Deja el lápiz, sal a la calle un momento y bebe un vaso de agua.", "De vuelta a la mesa de dibujo", "Entra la luz por el tragaluz: hora de despertar", "La piedra está entintada: terminaste", "Se abre el iris: llegaste a la meta")
+        // Galia: el alto a la sombra del roble, los versos que se aprenden de memoria (César 6.14), la noche que va antes del
+        // día (6.18) y el carnyx que suena al llegar.
+        TemaId.GALIA -> VozEnfoque("Alto a la sombra del roble", "Suelta la tablilla, estira las piernas y bebe agua del manantial.", "Se acabó el alto: de vuelta a los versos", "Tras la noche viene el día: hora de despertar", "Ya lo sabes de memoria: terminaste", "Suena el carnyx: llegaste a la meta")
+        TemaId.ARCONTES -> VozEnfoque("Baja la mecha: descanso", "Deja el códice, sal a la orilla y bebe agua de la jarra.", "Sube la mecha: de vuelta al códice", "Clarea sobre el lago: hora de despertar", "Hoja terminada: cierra el códice", "Una esfera más: llegaste a la meta")
+        TemaId.FRENTE -> VozEnfoque("SILENCIO DE RADIO", "Suelta los mandos. Agua y estira la espalda.", "SE REABRE EL CANAL", "SE ENCIENDE LA CONSOLA: HORA DE DESPERTAR", "TRANSMISIÓN CERRADA: TERMINASTE", "EN POSICIÓN: LLEGASTE A LA META")
         TemaId.REFUGIO -> VozEnfoque("DESCANSO DE TURNO", "Levántate, bebe agua filtrada.", "FIN DEL DESCANSO", "HORA DE DESPERTAR, RESIDENTE", "TURNO COMPLETADO", "META DE TURNO ALCANZADA")
         TemaId.ORDEN -> VozEnfoque("ALTO", "Rompan filas: agua y estiramiento.", "FIN DEL ALTO", "DIANA", "MISIÓN CUMPLIDA", "OBJETIVO ALCANZADO")
         TemaId.VAPOR -> VozEnfoque("Parada en la estación", "Baja al andén: estira las piernas y bebe agua del aguador.", "¡Viajeros al tren!", "Silba la locomotora: hora de despertar", "Llegada a destino: terminaste", "Estación a la vista: llegaste a la meta")
@@ -674,6 +1000,22 @@ object Avisos {
         mostrar(ctx, 2005, b)
     }
 
+    /**
+     * El día especial de los personajes que sigues (parte 8): un solo aviso que junta a todos los de hoy ([aviso], que decide
+     * `HistoriaPendiente.decidir`). Solo lleva el nombre del personaje y el título de su día, nada tuyo. Abre el cuento si es
+     * uno solo, o Hoy (con sus banderitas) si son varios.
+     */
+    fun historia(ctx: Context, aviso: HistoriaPendiente.Aviso) {
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_HISTORIA))
+            .setSmallIcon(R.drawable.ic_stat)
+            .setContentTitle(voz().historia)
+            .setContentText(aviso.texto)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(aviso.texto))
+            .setContentIntent(abrirApp(ctx, ID_HISTORIA, aviso.destino))
+            .setAutoCancel(true)
+        mostrar(ctx, ID_HISTORIA, b)
+    }
+
     /** Un día especial (I-6): cumpleaños, aniversario o fecha propia. Abre Tu gente. */
     fun especial(ctx: Context, lineas: List<String>) {
         val titulo = "Hoy: " + lineas.first() + if (lineas.size > 1) " y ${lineas.size - 1} más" else ""
@@ -690,7 +1032,7 @@ object Avisos {
     fun reporte(ctx: Context, titulo: String, uri: Uri, mime: String) {
         val ver = Intent(Intent.ACTION_VIEW).setDataAndType(uri, mime).addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
         val pi = PendingIntent.getActivity(ctx, 2006, ver, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_REPORTES))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(titulo)
             .setContentText("Toca para verlo. Está guardado en tu galería.")
@@ -724,10 +1066,9 @@ object Avisos {
     /** Una vez por semana: lo que toca importar, con «Recordar mañana». */
     fun importar(ctx: Context, fuentes: List<String>) {
         if (fuentes.isEmpty()) return
-        crearCanales(ctx)
         val manana = PendingIntent.getBroadcast(ctx, 2022, Intent(ctx, RecordatorioReceiver::class.java).putExtra(Recordatorios.ACCION, Recordatorios.MANANA),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RECORDATORIOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(if (fuentes.size == 1) "Toca importar ${fuentes[0].substringBefore(" (")}" else "Toca importar ${fuentes.size} fuentes")
             .setContentText(fuentes.joinToString(" · "))
@@ -741,13 +1082,12 @@ object Avisos {
 
     /** Metas que toca revisar y notas de recordatorio que llegaron a su fecha. */
     fun metas(ctx: Context, metas: List<String>, notas: List<String>) {
-        crearCanales(ctx)
         val titulo = when {
             metas.isNotEmpty() && notas.isEmpty() -> if (metas.size == 1) "Revisa tu meta: ${metas[0]}" else "Toca revisar ${porNumero(metas.size, "1 meta", "${metas.size} metas")}"
             metas.isEmpty() -> if (notas.size == 1) "Recordatorio: ${notas[0]}" else "${notas.size} recordatorios para hoy"
             else -> "Metas y recordatorios para hoy"
         }
-        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RECORDATORIOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(titulo)
             .setContentText((metas + notas).take(4).joinToString(" · "))
@@ -758,10 +1098,9 @@ object Avisos {
 
     /** El recordatorio diario de suplementos: «Ya los tomé» los anota con su dosis habitual; «En una hora» lo repite. */
     fun suplementos(ctx: Context, nombres: List<String>) {
-        crearCanales(ctx)
         fun accion(req: Int, a: String) = PendingIntent.getBroadcast(ctx, req, Intent(ctx, RecordatorioReceiver::class.java).putExtra(Recordatorios.ACCION, a),
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RECORDATORIOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle(if (nombres.size == 1) "¿Ya tomaste ${nombres[0].lowercase()}?" else "¿Ya tomaste tus suplementos?")
             .setContentText(nombres.joinToString(" · "))
@@ -774,10 +1113,9 @@ object Avisos {
 
     /** Lo que anotaron «Ya los tomé» o el mosaico, con «deshacer» durante 10 minutos. */
     fun tomasAnotadas(ctx: Context, tomas: List<io.github.ruddy2003.vestigium.data.TomaSuplemento>) {
-        crearCanales(ctx)
         val quitar = PendingIntent.getBroadcast(ctx, 2043, Intent(ctx, RecordatorioReceiver::class.java).putExtra(Recordatorios.ACCION, Recordatorios.DESHACER_TOMAS)
             .putExtra(Recordatorios.TOMAS, tomas.map { it.id }.toTypedArray()), PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        val b = NotificationCompat.Builder(ctx, CANAL_RECORDATORIOS)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RECORDATORIOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("Anotado")
             .setContentText(io.github.ruddy2003.vestigium.data.Suplementos.resumen(tomas))
@@ -791,9 +1129,8 @@ object Avisos {
 
     /** «¿Es un lugar especial?»: abre la hoja para nombrarlo, ignorarlo o dejarlo para después. */
     fun lugar(ctx: Context, sugerencia: String, minutos: Int) {
-        crearCanales(ctx)
         val discreto = io.github.ruddy2003.vestigium.data.Repo.config.discreto
-        val b = NotificationCompat.Builder(ctx, CANAL_LUGARES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_LUGARES))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("¿Es un lugar especial?")
             .setContentText(if (discreto || sugerencia.isBlank()) "Llevas $minutos minutos aquí. Toca para nombrarlo o ignorarlo." else "Llevas $minutos minutos cerca de $sugerencia. Toca para nombrarlo.")
@@ -805,7 +1142,7 @@ object Avisos {
 
     /** Los respaldos automáticos dejaron de salir: hay datos privados y no hay contraseña. */
     fun respaldoPausado(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RESPALDOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("Tus respaldos están en pausa")
             .setContentText("Llevan datos privados y no tienen contraseña. Toca para ponerla.")
@@ -816,7 +1153,7 @@ object Avisos {
 
     /** El respaldo automático a la carpeta lleva días sin poder escribirse. */
     fun respaldoFallido(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RESPALDOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("Tu respaldo automático no está saliendo")
             .setContentText("Lleva más de 2 días sin poder guardarse en tu carpeta. Toca para revisarlo.")
@@ -829,7 +1166,7 @@ object Avisos {
 
     /** El respaldo a la carpeta vino mucho más pobre que el anterior y se guardó aparte (9 nov 2026). */
     fun respaldoEmpobrecido(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RESPALDOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("No reemplacé tu respaldo")
             .setContentText("El de hoy trae muchos menos días o momentos que el anterior. Toca para revisarlo.")
@@ -841,7 +1178,7 @@ object Avisos {
 
     /** La revisión semanal encontró la base de datos dañada (9 nov 2026). */
     fun baseDanada(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RESPALDOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("La base de datos tiene un problema")
             .setContentText("Haz un respaldo a mano ahora y no borres tus copias. Toca para ver el detalle.")
@@ -852,7 +1189,7 @@ object Avisos {
 
     /** El respaldo automático de Drive vino mucho más pobre que el último y se guardó aparte. */
     fun driveEmpobrecido(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RESPALDOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("No reemplacé tu respaldo de Drive")
             .setContentText("El nuevo trae muchos menos días o momentos. Toca para revisarlo.")
@@ -863,7 +1200,7 @@ object Avisos {
     }
 
     fun drive(ctx: Context) {
-        val b = NotificationCompat.Builder(ctx, CANAL_REPORTES)
+        val b = NotificationCompat.Builder(ctx, canal(ctx, CANAL_RESPALDOS))
             .setSmallIcon(R.drawable.ic_stat)
             .setContentTitle("El respaldo en Drive necesita tu permiso")
             .setContentText("Google pidió confirmar el acceso. Toca para volver a conectar.")

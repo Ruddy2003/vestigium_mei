@@ -53,8 +53,11 @@ class Momento(val ficha: FichaDelDia, horaExacta: Double) {
     /** Qué hace el personaje a esta hora, según «Un día suyo»: se nota en su entorno (el fuego a la hora de comer). */
     val hacer: OtrasVidas.Hacer? = ficha.tramo(horaExacta)?.que
 
-    /** Las claves de escena de todos los días especiales de hoy («fiesta», «humo», «partida»…). */
-    val claves: Set<String> = ficha.especiales.map { it.dia.escena }.filter { it.isNotEmpty() }.toSet()
+    /**
+     * Las claves de escena de hoy: las de todos los días especiales («fiesta», «partida»…) y la de la noche fija de la semana
+     * del personaje, si la tiene y toca hoy («humo», los viernes de David). Las junta la ficha ([FichaDelDia.claves]).
+     */
+    val claves: Set<String> = ficha.claves
 
     /** El estado del personaje («mar»), o vacío. */
     val estado: String get() = ficha.estado ?: ""
@@ -165,6 +168,13 @@ interface EscenaVida {
      * las cosas del primer plano; por omisión va algo más grande, para que se le vea bien en un cuadro tan pequeño.
      */
     val tallaDelGato: Float get() = 1.3f
+
+    /**
+     * Dónde va la franja del cuadro cuando es el fondo del teléfono ([recorteFranja]): su centro, en fracción del ancho
+     * del cuadro (0 la orilla izquierda, 1 la derecha). Cada escena pone el de su sitio interesante, sin cortar por la
+     * mitad lo principal; por omisión, el centro.
+     */
+    val franjaFondo: Float get() = 0.5f
 }
 
 /**
@@ -188,36 +198,41 @@ fun escenaDe(tema: TemaId): EscenaVida? = when (tema) {
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> EscenaNeon
     TemaId.HELENO -> EscenaHeleno
-    TemaId.EGIPTO -> null           // S9
+    TemaId.EGIPTO -> EscenaEgipto
     TemaId.MEDIEVAL -> EscenaMedieval
-    TemaId.TEMPLARIO -> null        // S11
+    TemaId.TEMPLARIO -> EscenaTemplario
     TemaId.DISTOPIA -> EscenaDistopia
-    TemaId.REFUGIO -> null          // S17
-    TemaId.ORDEN -> null            // S18
+    TemaId.REFUGIO -> EscenaRefugio
+    TemaId.ORDEN -> EscenaOrden
     TemaId.VAPOR -> EscenaVapor
-    TemaId.LABORATORIO -> null      // S17
+    TemaId.LABORATORIO -> EscenaLaboratorio
     TemaId.COLONOS -> null          // S19
-    TemaId.NAPOLEON -> null         // S14
-    TemaId.DECO -> null             // S15
-    TemaId.BOTANICO -> null         // S13
+    TemaId.NAPOLEON -> EscenaNapoleon
+    TemaId.DECO -> EscenaDeco
+    TemaId.BOTANICO -> EscenaBotanico
     TemaId.RUINAS -> EscenaRuinas
     TemaId.NAVIDAD -> null          // Navidad: sin cuadro
     TemaId.SEDA -> EscenaSeda
-    TemaId.EDO -> null              // S11
+    TemaId.EDO -> EscenaEdo
     TemaId.GOTICO -> EscenaGotico
     TemaId.ARCANO -> EscenaArcano
     TemaId.ESPACIO -> EscenaEspacio
-    TemaId.ABISMO -> null           // S16
+    TemaId.ABISMO -> EscenaAbismo
     TemaId.ANDALUS -> EscenaAndalus
-    TemaId.MESO -> null             // S9
-    TemaId.MONGOL -> null           // S12
+    TemaId.MESO -> EscenaMeso
+    TemaId.MONGOL -> EscenaMongol
     TemaId.RENACIMIENTO -> EscenaRenacimiento
     TemaId.PIRATA -> EscenaPirata
-    TemaId.URSS -> null             // S15
+    TemaId.URSS -> EscenaUrss
     TemaId.REVOLUCION -> EscenaRevolucion
-    TemaId.ANTIGUAS -> null         // S18
-    TemaId.CUEVA -> null            // S10
+    TemaId.ANTIGUAS -> EscenaAntiguas
+    TemaId.CUEVA -> EscenaCueva
     TemaId.BASICO -> null           // Básico: sin cuadro
+    TemaId.FRENTE -> null           // lote 10: su cuadro va después de S19
+    TemaId.ARCONTES -> null         // lote 10: su cuadro va después de S19
+    TemaId.GALIA -> null            // lote 10: su cuadro va después de S19
+    TemaId.NOUVEAU -> null          // lote 10: su cuadro va después de S19
+    TemaId.PSICODELIA -> null       // lote 10: su cuadro va después de S19
 }
 
 /** Los temas que no tendrán cuadro nunca (decisión 1 del plan): los demás que hoy dan null están pendientes. */
@@ -257,6 +272,11 @@ fun sinCuadro(tema: TemaId): Boolean = when (tema) {
     TemaId.ANTIGUAS -> false
     TemaId.CUEVA -> false
     TemaId.BASICO -> true
+    TemaId.FRENTE -> false
+    TemaId.ARCONTES -> false
+    TemaId.GALIA -> false
+    TemaId.NOUVEAU -> false
+    TemaId.PSICODELIA -> false
 }
 
 // =====================================================================
@@ -309,3 +329,19 @@ fun cuadroEnMemoria(tema: TemaId, dia: String): CuadroHoy? = ultimoCuadro?.takeI
  * personaje le falta el calendario), Hoy pone el gato de pixel.
  */
 fun hayCuadroEnHoy(tema: TemaId, estilo: String = GATO_EN_CUADRO): Boolean = estilo == GATO_EN_CUADRO && escenaDe(tema) != null
+
+/**
+ * Parte 8 (`docs/diseno/CUADROS_PLAN.md`): el cuadro del personaje [vida] para el día lógico [dia], aunque el tema puesto sea
+ * otro: el de la escena de su tema (`OtrasVidas.Vida.tema`), con su ficha de ese día. Lo usan el cuadro arriba del cuento y
+ * el cuadro a pantalla completa. Null si su tema no tiene escena, la escena no lo pinta (los doce comunes no tienen) o le
+ * falta el calendario. No pasa por la memoria de [cuadroDeHoy]: tarda un poco, así que se pide fuera del hilo de la pantalla.
+ * En Ciudad neón, cada uno de los dos sale con su propia ficha aunque ese día le toque al otro en Hoy.
+ */
+fun cuadroDeVida(vida: String, dia: String): CuadroHoy? {
+    val quien = OtrasVidas.porId(vida) ?: return null
+    val tema = TemaId.entries.firstOrNull { it.id == quien.tema } ?: return null
+    val escena = escenaDe(tema)?.takeIf { vida in it.vidas } ?: return null
+    val ficha = FichaDelDia.de(dia, vida) ?: return null
+    val titulo = Cuento.de(dia, vida, 12.0)?.titulo ?: quien.nombre
+    return CuadroHoy(tema, escena, quien, ficha, titulo, pelajeDe(tema) ?: Pelaje.COMUN, banderitaHistoria(tema))
+}

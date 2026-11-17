@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Una tecla de la consola en penumbra: acero oscuro con su borde y la sombra de la baquelita abajo. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FF252B30"/>
+            <stroke android:width="1dp" android:color="#FF3A4249"/>
+            <corners android:radius="9dp"/>
+        </shape>
+    </item>
+    <item android:gravity="bottom|fill_horizontal" android:height="1.5dp" android:left="5dp" android:right="5dp" android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FF151A1E"/>
+            <corners android:radius="1dp"/>
+        </shape>
+    </item>
+</layer-list>

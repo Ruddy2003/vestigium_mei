@@ -71,6 +71,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -262,6 +263,40 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
     }, 7.dp, 0.dp, true, 1.4.dp)
     // Hoja de expediente: recta y con borde grueso.
     TemaId.DISTOPIA -> PielDialogo(RectangleShape, 0.dp, 0.dp, false, 2.dp)
+    // La ciudad: la ventanilla del trolebús, de esquinas redondas (11 dp, como el tema). La tinta: el marco de arco del
+    // cartel, arriba muy redondo (24 dp) y abajo casi recto. La forma lee la cara al abrirse el diálogo.
+    TemaId.PSICODELIA -> PielDialogo(FormaDp { w, h, d ->
+        when (EstadoTema.caraDe(TemaId.PSICODELIA)) {
+            Cara.BASE -> addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, w, h, androidx.compose.ui.geometry.CornerRadius(minOf(11 * d, w / 2, h / 2))))
+            Cara.INTENSA -> addPath(TrazosTinta.arco(androidx.compose.ui.geometry.Rect(0f, 0f, w, h), 24 * d, 3 * d))
+        }
+    }, 3.dp, 3.dp, true, 1.4.dp)
+    // El cartel enmarcado: el canto de arriba sube en medio en una curva suave, como el letrero de las entradas de metro, la
+    // esquina de arriba a la izquierda y la de abajo a la derecha muy redondas, y las otras dos casi rectas.
+    TemaId.NOUVEAU -> PielDialogo(FormaDp { w, h, d ->
+        val a = 9 * d; val g = 22 * d; val p = 5 * d
+        moveTo(0f, a + g); quadraticTo(0f, a, g, a); lineTo(w * 0.36f, a)
+        cubicTo(w * 0.45f, a, w * 0.44f, 0f, w / 2, 0f); cubicTo(w * 0.56f, 0f, w * 0.55f, a, w * 0.64f, a)
+        lineTo(w - p, a); quadraticTo(w, a, w, a + p)
+        lineTo(w, h - g); quadraticTo(w, h, w - g, h); lineTo(p, h); quadraticTo(0f, h, 0f, h - p); close()
+    }, 8.dp, 0.dp, false, 1.2.dp)
+    // La tablilla en su marco de roble, con las esquinas de hoja del tema: dos muy redondas en diagonal y dos casi rectas.
+    TemaId.GALIA -> PielDialogo(RoundedCornerShape(topStart = 22.dp, topEnd = 5.dp, bottomEnd = 22.dp, bottomStart = 5.dp), 0.dp, 0.dp, false, 1.4.dp)
+    // La hoja de papiro de un códice: los lados rectos y los cantos de arriba y de abajo rotos, cada uno a su manera.
+    TemaId.ARCONTES -> PielDialogo(FormaDp { w, h, d ->
+        val a = 3.5f * d; val paso = 7 * d
+        moveTo(0f, a); var x = 0f
+        while (x < w) { val nx = minOf(x + paso, w); lineTo(nx, a * (0.5f + 0.5f * sin(nx / d * 0.37f) * cos(nx / d * 0.11f))); x = nx }
+        lineTo(w, h - a); x = w
+        while (x > 0f) { val nx = maxOf(x - paso, 0f); lineTo(nx, h - a * (0.5f + 0.5f * sin(nx / d * 0.29f + 1.7f) * cos(nx / d * 0.13f))); x = nx }
+        close()
+    }, 4.dp, 4.dp, true, 1.2.dp)
+    // El monitor de la consola: la cara de arriba arqueada como el mueble curvo, esquinas grandes arriba y pequeñas abajo.
+    TemaId.FRENTE -> PielDialogo(FormaDp { w, h, d ->
+        val r = 22 * d; val a = 7 * d; val q = 10 * d
+        moveTo(0f, r + a); quadraticTo(0f, a, r, a); quadraticTo(w / 2, -a, w - r, a); quadraticTo(w, a, w, r + a)
+        lineTo(w, h - q); quadraticTo(w, h, w - q, h); lineTo(q, h); quadraticTo(0f, h, 0f, h - q); close()
+    }, 8.dp, 0.dp, false, 1.6.dp)
     // Panel redondeado de refugio.
     TemaId.REFUGIO -> PielDialogo(RoundedCornerShape(24.dp), 0.dp, 0.dp, false, 1.5.dp)
     // Placa de acero ochavada.
@@ -485,6 +520,64 @@ private fun DrawScope.marcoDialogo(t: TemaId, e: ColorScheme) {
                 drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 8 * d), Offset(o.x + 40 * d, o.y + 8 * d), 2 * d)
                 drawLine(e.primary.copy(alpha = 0.5f), Offset(o.x + 8 * d, o.y + 13 * d), Offset(o.x + 30 * d, o.y + 13 * d), 2 * d)
             }
+        }
+        // La ciudad: los cables del trolebús por dentro del canto de arriba, con su poste, y el pase de autobús abajo a la
+        // izquierda. La tinta: el sol del cartel que asoma arriba a la derecha, las bandas que lo enmarcan y el disco chico.
+        TemaId.PSICODELIA -> with(PiezasPsicodelia) { marcoDialogo(colores(e.background.luminance() < 0.5f), d) }
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            // El filete de oro del cartel, por dentro y siguiendo la curva de arriba; en la curva, un capullo; abajo a la
+            // izquierda, un iris que sube desde la esquina; y arriba a la derecha, un rizo de látigo.
+            val oro = (if (e.background.luminance() < 0.5f) e.primary else e.tertiary).copy(alpha = 0.45f)
+            val a = 15 * d; val g = 16 * d
+            drawPath(Path().apply {
+                moveTo(6 * d, a + g); quadraticTo(6 * d, a, 6 * d + g, a); lineTo(w * 0.37f, a)
+                cubicTo(w * 0.45f, a, w * 0.44f, 6 * d, w / 2, 6 * d); cubicTo(w * 0.56f, 6 * d, w * 0.55f, a, w * 0.63f, a)
+                lineTo(w - 9 * d, a); lineTo(w - 6 * d, a + 3 * d); lineTo(w - 6 * d, h - 6 * d - g); quadraticTo(w - 6 * d, h - 6 * d, w - 6 * d - g, h - 6 * d)
+                lineTo(9 * d, h - 6 * d); lineTo(6 * d, h - 9 * d); close()
+            }, oro, style = Stroke(0.8f * d))
+            val fondo = e.surface
+            fun tenue(c: Color, k: Float) = androidx.compose.ui.graphics.lerp(fondo, c, k)
+            iris(Offset(22 * d, h - 7 * d), 44 * d, tenue(IRIS, 0.5f), tenue(TALLO, 0.5f), tenue(TALLO_SOMBRA, 0.5f))
+            latigo(Offset(w - 46 * d, a + 6 * d), Offset(w - 20 * d, a + 18 * d), 5 * d, 2.2f * d, oro, comba = 0.22f, horario = true, sombra = false)
+        }
+        TemaId.GALIA -> {
+            // El marco de roble de la tablilla, por dentro; arriba a la derecha, la «S» de las monedas; abajo a la izquierda,
+            // dos hojas de roble con su bellota.
+            val linea = e.primary.copy(alpha = 0.28f)
+            drawRoundRect(linea, Offset(6 * d, 6 * d), Size(w - 12 * d, h - 12 * d), CornerRadius(16 * d), style = Stroke(0.8f * d))
+            with(TrazosGalia) {
+                esse(Offset(w - 24 * d, 18 * d), 18 * d, 2.4f * d, e.secondary.copy(alpha = 0.7f))
+                val hoja = e.primary.copy(alpha = 0.4f)
+                hojaRoble(Offset(20 * d, h - 22 * d), 18 * d, -40f, hoja, e.surface.copy(alpha = 0.5f))
+                hojaRoble(Offset(30 * d, h - 16 * d), 15 * d, 25f, hoja, e.surface.copy(alpha = 0.5f))
+                val b = Offset(26 * d, h - 27 * d)
+                drawOval(e.secondary.copy(alpha = 0.55f), Offset(b.x - 2.6f * d, b.y - 3.6f * d), Size(5.2f * d, 7.2f * d))
+                drawArc(e.secondary.copy(alpha = 0.8f), 180f, 180f, true, Offset(b.x - 3.2f * d, b.y - 5.2f * d), Size(6.4f * d, 5.2f * d))
+            }
+        }
+        TemaId.ARCONTES -> {
+            // Las fibras del papiro, de través y apenas a lo largo; la chispa arriba a la derecha y el ouroboros abajo a la izquierda.
+            var y = 10 * d
+            while (y < h - 8 * d) { drawLine(e.onSurface.copy(alpha = 0.045f), Offset(4 * d, y), Offset(w - 4 * d, y + (y % 3f) * 0.3f * d), 0.8f * d); y += 4.5f * d }
+            var x = 22 * d
+            while (x < w - 10 * d) { drawLine(e.onSurface.copy(alpha = 0.03f), Offset(x, 6 * d), Offset(x - 1.5f * d, h - 6 * d), 0.7f * d); x += 31 * d }
+            with(TrazosArcontes) {
+                if (e.background.luminance() < 0.5f) chispa(Offset(w - 18 * d, 20 * d), 5 * d, 0.9f) else chispa(Offset(w - 18 * d, 20 * d), 5 * d, 0.9f, e.tertiary, e.tertiary.copy(alpha = 0.4f))
+                ouroboros(Offset(20 * d, h - 20 * d), 7 * d, 2.6f * d, e.primary.copy(alpha = 0.45f), -90f)
+            }
+        }
+        TemaId.FRENTE -> {
+            // La fila de pilotos de estado arriba a la izquierda (rojo, ámbar y verde de radar, con su bisel), la rejilla del
+            // altavoz arriba a la derecha y, al pie, la regla de la consola con su escala.
+            listOf(Color(0xFFD9372B), Color(0xFFF2A33A), e.tertiary).forEachIndexed { k, luz ->
+                val c = Offset(20 * d + k * 10 * d, 22 * d)
+                drawCircle(e.onSurface.copy(alpha = 0.35f), 3.6f * d, c, style = Stroke(d))
+                drawCircle(luz.copy(alpha = 0.8f), 2.3f * d, c)
+            }
+            for (k in 0 until 4) drawLine(e.onSurface.copy(alpha = 0.3f), Offset(w - 46 * d, 17 * d + k * 3.4f * d), Offset(w - 18 * d, 17 * d + k * 3.4f * d), 1.4f * d, StrokeCap.Round)
+            drawLine(e.onSurface.copy(alpha = 0.25f), Offset(14 * d, h - 8 * d), Offset(w - 14 * d, h - 8 * d), 0.8f * d)
+            var x = 14 * d; var k = 0
+            while (x < w - 14 * d) { drawLine(e.onSurface.copy(alpha = 0.25f), Offset(x, h - 8 * d), Offset(x, h - (if (k % 5 == 0) 13f else 10.5f) * d), 0.8f * d); x += 7 * d; k++ }
         }
         TemaId.REFUGIO -> {
             // Panel con su línea interior, cuatro pernos y un manómetro arriba.
@@ -826,6 +919,45 @@ private fun DrawScope.fileteDialogo(t: TemaId, e: ColorScheme) {
         TemaId.DISTOPIA -> {
             drawRect(e.onSurface, Offset(0f, cy - 3 * d), Size(w, 3 * d))
             drawRect(e.primary, Offset(0f, cy + 2 * d), Size(w * 0.4f, 1.2f * d))
+        }
+        // Los cables con su colgador (ciudad) o dos ondas que llegan al disco chico (tinta).
+        TemaId.PSICODELIA -> with(PiezasPsicodelia) { filete(4 * d, w - 4 * d, cy, colores(e.background.luminance() < 0.5f)) }
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            // Dos líneas de látigo que llegan desde las puntas y se enroscan antes del medio, donde se posa una libélula.
+            val oro = (if (e.background.luminance() < 0.5f) e.primary else e.tertiary).copy(alpha = 0.7f)
+            for (lado in listOf(-1f, 1f)) {
+                val desde = Offset(if (lado < 0f) 4 * d else w - 4 * d, cy)
+                val hasta = Offset(w / 2 + lado * 20 * d, cy - 1.5f * d)
+                val pts = bezier(desde, Offset(desde.x + (hasta.x - desde.x) * 0.35f, cy + 2.6f * d), Offset(desde.x + (hasta.x - desde.x) * 0.7f, cy - 2.6f * d), hasta, 30)
+                drawPath(cinta(pts + puntosRizo(hasta, Offset(-lado, -0.2f), 2.6f * d, lado < 0f, 1.2f, 16)) { t -> (0.5f + 1f * sin(t * PI.toFloat())) * d }, oro)
+            }
+            libelula(Offset(w / 2, cy + 1 * d), 19 * d, 90f, 0f, LIBELULA, androidx.compose.ui.graphics.lerp(NACAR, e.surface, 0.2f), ORO)
+        }
+        TemaId.GALIA -> {
+            // Una raya de oro a cada lado, con su perla en la punta, y en medio un torques pequeño.
+            val oro = e.secondary.copy(alpha = 0.6f)
+            drawLine(oro, Offset(4 * d, cy), Offset(w / 2 - 12 * d, cy), d); drawLine(oro, Offset(w / 2 + 12 * d, cy), Offset(w - 4 * d, cy), d)
+            drawCircle(oro, 1.8f * d, Offset(3 * d, cy)); drawCircle(oro, 1.8f * d, Offset(w - 3 * d, cy))
+            drawArc(e.primary.copy(alpha = 0.8f), 117f, 306f, false, Offset(w / 2 - 7 * d, cy - 7 * d), Size(14 * d, 14 * d), style = Stroke(1.6f * d, cap = StrokeCap.Round))
+            listOf(117.0, 63.0).forEach { g -> val a = Math.toRadians(g); drawCircle(e.primary.copy(alpha = 0.8f), 1.6f * d, Offset(w / 2 + 7 * d * cos(a).toFloat(), cy + 7 * d * sin(a).toFloat())) }
+        }
+        TemaId.ARCONTES -> {
+            // Un hilo que se enciende hacia el centro, donde está la chispa entre dos esferas.
+            drawLine(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(e.primary.copy(alpha = 0f), e.primary.copy(alpha = 0.7f), e.primary.copy(alpha = 0f))), Offset(0f, cy), Offset(w, cy), d)
+            drawCircle(e.surface, 9 * d, Offset(w / 2, cy))
+            drawCircle(e.primary.copy(alpha = 0.6f), 8 * d, Offset(w / 2, cy), style = Stroke(0.8f * d))
+            drawCircle(e.primary.copy(alpha = 0.35f), 11 * d, Offset(w / 2, cy), style = Stroke(0.6f * d))
+            val q = Offset(w / 2, cy)
+            drawPath(Path().apply { moveTo(q.x, q.y - 5 * d); quadraticTo(q.x, q.y, q.x + 3.4f * d, q.y); quadraticTo(q.x, q.y, q.x, q.y + 5 * d)
+                quadraticTo(q.x, q.y, q.x - 3.4f * d, q.y); quadraticTo(q.x, q.y, q.x, q.y - 5 * d); close() }, e.tertiary)
+        }
+        // La regla de la consola con su escala, tres pilotos delante y el tramo ámbar del nivel al final.
+        TemaId.FRENTE -> {
+            drawLine(e.onSurface.copy(alpha = 0.45f), Offset(30 * d, cy + 2 * d), Offset(w, cy + 2 * d), 0.8f * d)
+            var x = 30 * d; var k = 0
+            while (x < w * 0.8f) { drawLine(e.onSurface.copy(alpha = 0.35f), Offset(x, cy + 2 * d), Offset(x, cy - (if (k % 5 == 0) 3f else 0.5f) * d), 0.7f * d); x += 5 * d; k++ }
+            listOf(Color(0xFFD9372B), Color(0xFFF2A33A), e.tertiary).forEachIndexed { n, luz -> drawCircle(luz, 2.4f * d, Offset(5 * d + n * 8 * d, cy)) }
+            drawRect(e.primary, Offset(w * 0.82f, cy), Size(w * 0.18f, 2.4f * d))
         }
         // Línea redonda con un destello atómico en medio.
         TemaId.REFUGIO -> {
@@ -1217,6 +1349,58 @@ internal fun DrawScope.rielTema(t: TemaId, e: ColorScheme, f: Float, pasos: Int,
             drawRect(inactivo, Offset(0f, cy - g / 2), Size(w, g), style = Stroke(maxOf(g * 0.15f, 0.8f * d)))
             for (k in 1 until 10) drawLine(e.onSurface.copy(alpha = 0.5f), Offset(w * k / 10f, cy - g / 2), Offset(w * k / 10f, cy + g / 2), maxOf(g * 0.12f, 0.6f * d))
         }
+        // Lo que falta, un hilo fino; lo recorrido, el pasamanos del autobús (ciudad) o la onda del cartel, más honda con la
+        // intensidad (tinta).
+        TemaId.PSICODELIA -> with(PiezasPsicodelia) { riel(x, cy, g, activo, inactivo, colores(e.background.luminance() < 0.5f)) }
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            // Lo que falta, un hilo fino; lo recorrido, un tallo que crece hasta donde va, echando hojas alternas, con su
+            // capullo en la punta.
+            linea(inactivo, x, w, maxOf(g * 0.22f, 0.7f * d), cap = StrokeCap.Round)
+            if (x > 0f) {
+                drawLine(activo, Offset(0f, cy), Offset(x, cy), maxOf(g * 0.5f, 1.2f * d), cap = StrokeCap.Round)
+                val paso = maxOf(g * 3.2f, 9f * d); var px = paso * 0.6f; var k = 0
+                while (px < x - g * 1.6f) {
+                    val s = if (k % 2 == 0) -1f else 1f; val l = maxOf(g * 1.3f, 3.6f * d)
+                    drawPath(hojaLanza(Offset(px, cy), Offset(px - l * 0.75f, cy + s * l * 0.7f), l * 0.5f, 0.15f * s), activo)
+                    px += paso; k++
+                }
+                drawPath(petalo(Offset(x - g * 0.2f, cy), Offset(x + maxOf(g * 1.3f, 3.4f * d), cy), maxOf(g * 0.9f, 2.4f * d)), activo)
+            }
+        }
+        TemaId.GALIA -> {
+            // Lo que falta, una hebra fina; lo recorrido, la cuerda de oro de un torques, con los surcos de la torsión, que
+            // acaba en el disco del tampón.
+            linea(inactivo, x, w, maxOf(g * 0.24f, 0.7f * d), cap = StrokeCap.Round)
+            if (x > 0f) {
+                drawLine(activo, Offset(0f, cy), Offset(x, cy), g * 0.75f, cap = StrokeCap.Round)
+                val paso = maxOf(g * 1.1f, 3f * d); var px = paso * 0.5f
+                while (px < x - paso * 0.5f) { drawLine(e.surface.copy(alpha = 0.45f), Offset(px - g * 0.2f, cy + g * 0.3f), Offset(px + g * 0.2f, cy - g * 0.3f), maxOf(g * 0.12f, 0.5f * d)); px += paso }
+                drawOval(activo, Offset(x - g * 0.3f, cy - g * 0.75f), Size(g * 0.6f, g * 1.5f))
+            }
+        }
+        TemaId.ARCONTES -> {
+            // El hilo que sube por las siete esferas: lo recorrido, una barra de luz con su halo; las esferas que ya pasó, llenas.
+            linea(inactivo, x, w, maxOf(g * 0.22f, 0.7f * d))
+            if (x > 0f) {
+                drawLine(activo.copy(alpha = activo.alpha * 0.25f), Offset(0f, cy), Offset(x, cy), g * 1.3f, cap = StrokeCap.Round)
+                drawLine(activo, Offset(0f, cy), Offset(x, cy), g * 0.55f, cap = StrokeCap.Round)
+            }
+            for (k in 1..7) {
+                val px = w * k / 8f; val r = maxOf(g * 0.42f, 1.6f * d)
+                if (px <= x) drawCircle(activo, r, Offset(px, cy)) else { drawCircle(e.surface, r, Offset(px, cy)); drawCircle(inactivo, r, Offset(px, cy), style = Stroke(maxOf(g * 0.14f, 0.6f * d))) }
+            }
+        }
+        // El medidor de segmentos de la consola: barritas apagadas por recorrer y encendidas, con su halo, hasta donde va.
+        TemaId.FRENTE -> {
+            val paso = maxOf(g * 0.9f, 2.5f * d); val ancho = paso * 0.58f
+            var px = 0f
+            while (px + ancho <= w + 0.5f) {
+                val encendida = px + ancho / 2 <= x
+                if (encendida) drawRoundRect(activo.copy(alpha = activo.alpha * 0.3f), Offset(px - ancho * 0.3f, cy - g * 0.75f), Size(ancho * 1.6f, g * 1.5f), CornerRadius(ancho * 0.5f))
+                drawRoundRect(if (encendida) activo else inactivo, Offset(px, cy - g / 2), Size(ancho, g), CornerRadius(ancho * 0.3f))
+                px += paso
+            }
+        }
         // Tubo de indicador con luces encendidas por dentro.
         TemaId.REFUGIO -> {
             drawRoundRect(inactivo, Offset(0f, cy - g / 2), Size(w, g), CornerRadius(g / 2), style = Stroke(maxOf(g * 0.15f, 0.8f * d)))
@@ -1498,6 +1682,41 @@ internal fun DrawScope.perillaTema(t: TemaId, e: ColorScheme, c: Offset, r: Floa
         TemaId.DISTOPIA -> {
             drawPath(Path().apply { moveTo(c.x - r * 0.7f, c.y - r * 0.9f); lineTo(c.x + r * 0.7f, c.y - r * 0.9f); lineTo(c.x, c.y + r * 0.1f); close() }, color)
             drawLine(color, c, Offset(c.x, c.y + r * 0.95f), r * 0.16f)
+        }
+        // La etiqueta del disco, con su brillo (ciudad), o el disco hecho sol (tinta).
+        TemaId.PSICODELIA -> with(PiezasPsicodelia) { perilla(c, r, color, hueco, colores(e.background.luminance() < 0.5f)) }
+        TemaId.NOUVEAU -> {
+            // Un cabujón de vidrio de Nancy: el disco con su reflejo arriba a la izquierda y, calado en medio, un capullo.
+            drawCircle(color, r * 0.9f, c)
+            drawArc(hueco.copy(alpha = 0.5f), 200f, 70f, false, Offset(c.x - r * 0.62f, c.y - r * 0.62f), Size(r * 1.24f, r * 1.24f), style = Stroke(r * 0.13f, cap = StrokeCap.Round))
+            drawPath(TrazosNouveau.petalo(Offset(c.x, c.y + r * 0.42f), Offset(c.x + r * 0.06f, c.y - r * 0.38f), r * 0.42f), hueco.copy(alpha = 0.65f))
+        }
+        TemaId.GALIA -> {
+            // Un estátero: la moneda con su gráfila de perlas y la perla grande en el centro.
+            drawCircle(color, r * 0.92f, c)
+            for (k in 0 until 10) { val a = k * PI / 5; drawCircle(hueco.copy(alpha = 0.55f), r * 0.08f, Offset(c.x + r * 0.66f * cos(a).toFloat(), c.y + r * 0.66f * sin(a).toFloat())) }
+            drawCircle(hueco.copy(alpha = 0.6f), r * 0.2f, c)
+        }
+        TemaId.ARCONTES -> {
+            // La llama de la lámpara, con su corazón claro.
+            drawPath(Path().apply {
+                moveTo(c.x, c.y - r * 0.98f); quadraticTo(c.x + r * 0.95f, c.y + r * 0.05f, c.x + r * 0.42f, c.y + r * 0.72f)
+                quadraticTo(c.x, c.y + r * 1.02f, c.x - r * 0.42f, c.y + r * 0.72f); quadraticTo(c.x - r * 0.95f, c.y + r * 0.05f, c.x, c.y - r * 0.98f); close()
+            }, color)
+            drawPath(Path().apply {
+                moveTo(c.x, c.y - r * 0.2f); quadraticTo(c.x + r * 0.4f, c.y + r * 0.35f, c.x, c.y + r * 0.66f); quadraticTo(c.x - r * 0.4f, c.y + r * 0.35f, c.x, c.y - r * 0.2f); close()
+            }, hueco.copy(alpha = 0.6f))
+        }
+        // La perilla de baquelita: el disco con su canto moleteado y la raya que marca hacia arriba.
+        TemaId.FRENTE -> {
+            drawCircle(color, r * 0.86f, c)
+            for (k in 0 until 18) {
+                val ang = k * PI / 9
+                drawLine(hueco.copy(alpha = 0.55f), Offset(c.x + r * 0.7f * cos(ang).toFloat(), c.y + r * 0.7f * sin(ang).toFloat()),
+                    Offset(c.x + r * 0.86f * cos(ang).toFloat(), c.y + r * 0.86f * sin(ang).toFloat()), r * 0.07f)
+            }
+            drawCircle(hueco.copy(alpha = 0.3f), r * 0.5f, c, style = Stroke(r * 0.06f))
+            drawLine(hueco, c, Offset(c.x, c.y - r * 0.62f), r * 0.16f, cap = StrokeCap.Round)
         }
         // Perilla de tablero con un destello.
         TemaId.REFUGIO -> {

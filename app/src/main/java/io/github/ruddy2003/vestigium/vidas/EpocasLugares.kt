@@ -90,5 +90,30 @@ val LUGARES: Map<String, LugarDeVida> = mapOf(
         listOf("Florida", "Tarpon Springs", "Grecia", "Kálimnos", "griego", "griegos")),
     "fogonero" to LugarDeVida(INGLATERRA_XIX, PALABRAS_INGLATERRA_XIX),
     "pintora_cueva" to LugarDeVida(emptySet(), listOf("Lascaux", "Altamira")),
+    // Eleazar, el iniciado de Arcontes (lote 10). Los identificadores salen de Wikidata, por el título de cada página de
+    // Wikipedia en español (`wbgetentities` con `sites=eswiki`, 15 nov 2026). Sin el Imperio romano: los sucesos de Roma
+    // de su época no son de su lugar.
+    "iniciado" to LugarDeVida(setOf("Q83241", "Q4880851", "Q1218", "Q126982", "Q1003997", "Q151920", "Q1294629"), // Galilea, Magdala, Jerusalén, Mar de Galilea, Judea (provincia romana), Tiberíades, Samaria
+        listOf("Galilea", "Judea", "Jerusalén", "Magdala", "Tiberíades", "Samaria", "Herodes", "Poncio Pilato", "Caifás", "judío", "judíos", "galileo", "galileos")),
+    // Segomaros, el aprendiz de los druidas de Galia (lote 10). Los identificadores salen de Wikidata, por el título de cada
+    // página de Wikipedia (el `wgWikibaseItemId` de la página, 15 nov 2026): Galia, Arvernos y Auvernia en español; Gergovia
+    // y Alesia en inglés, porque en español «Gergovia» es el pueblo de hoy y «Alesia», una desambiguación. Francia va porque
+    // Wikidata pone ahí los sitios de las batallas; Roma no, porque lo de Roma no es de su lugar. La Galia Cisalpina está en
+    // Italia: no cuenta.
+    "aprendiz_druida" to LugarDeVida(setOf("Q38060", "Q382553", "Q55950714", "Q835966", "Q650053", "Q1152", "Q142"), // Galia, Arvernos, Gergovia (el oppidum), Alesia (la ciudad), Bibracte, Auvernia, Francia
+        listOf("Galia", "Vercingétorix", "Gergovia", "Alesia", "Bibracte", "Avárico", "Auvernia", "arvernos", "galos", "galas"), listOf("Galia Cisalpina")),
+    // Marguerite, la aprendiz de litografía de Art nouveau (lote 10). Los identificadores salen de Wikidata, por el título
+    // de cada página de Wikipedia en español (el `wgWikibaseItemId` de la página, 15 nov 2026). París y Francia son los
+    // mismos de Pierre y de la lavandera; sus épocas no se tocan con la suya (1868 a 1928).
+    "litografa" to LugarDeVida(setOf("Q90", "Q142", "Q70802", "Q50716", "Q753646", "Q186115"), // París, Francia, Tercera República Francesa, Metro de París, Exposición Universal de París (1900), Montmartre
+        listOf("París", "Francia", "Montmartre", "Tercera República", "Metro de París", "parisino", "parisina", "parisinos", "francés", "francesa", "franceses")),
+    // David, el dibujante de carteles de Psicodelia (lote 10). Los identificadores salen de Wikidata, por el título de cada
+    // página de Wikipedia en español (el `wgWikibaseItemId` de la página, 15 nov 2026). Sin Estados Unidos: a David le
+    // toca lo de su ciudad y de su estado, no lo de todo el país **[Diseño propio]**. «San Francisco de Asís» y los demás
+    // santos no son su ciudad, ni la Baja California ni el golfo de California, que son de México; «Monterrey», con dos
+    // erres, es la de Rosa.
+    "cartelista" to LugarDeVida(setOf("Q62", "Q99", "Q1027700", "Q635559", "Q932701"), // San Francisco (California), California, Haight-Ashbury, Golden Gate Park, Verano del Amor
+        listOf("San Francisco", "California", "Haight-Ashbury", "Haight", "Golden Gate", "Berkeley", "Monterey", "Verano del Amor", "californiano", "californiana", "californianos"),
+        listOf("San Francisco de Asís", "San Francisco Javier", "San Francisco de Sales", "San Francisco de Borja", "San Francisco de Paula", "San Francisco de Quito", "San Francisco de Macorís", "Baja California", "Golfo de California", "golfo de California")),
     // Tom (escribiente) y Carmen (operadora) no tienen cuento, así que no hace falta su lugar.
 )

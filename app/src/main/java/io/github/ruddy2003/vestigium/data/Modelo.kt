@@ -10,7 +10,7 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 25
+const val SCHEMA_V = 27
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -840,7 +840,10 @@ data class Config(
     /** Esquema 22: la revisión semanal de la base de datos (PRAGMA quick_check): cuándo y si salió bien. */
     val bd_revision: String? = null,
     val bd_revision_ok: Boolean = true,
-    /** Claro u oscuro: «sistema» sigue al teléfono, «claro» u «oscuro» lo fijan dentro de la app. */
+    /**
+     * Claro u oscuro: «sistema» sigue al teléfono, «claro» u «oscuro» lo fijan dentro de la app y, desde el esquema 26
+     * (16 nov 2026), «hora» va en claro de 5:00 a 21:00 y en oscuro de 21:00 a 5:00 (`ui/ModoHora.kt`).
+     */
     val modo: String = "sistema",
     /** Emblemas que se mueven, transiciones y barras que crecen. */
     val animaciones: Boolean = true,
@@ -998,6 +1001,69 @@ data class Config(
     val zonas: List<CambioZona> = emptyList(),
     /** Mostrar «Una idea de antes» del Ideario en la pantalla del día (esquema 16). */
     val ideas_resurgir: Boolean = true,
+    // ---- Esquema 27 (17 nov 2026): los cuadros y las historias de «Otras vidas» (parte 8 del plan de mejoras) y los datos que
+    // necesitarán los logros nuevos (parte 9). Todo es estado de la app: nada de esto es una medida ni se exporta a CSV (viaja
+    // en el respaldo, dentro de la configuración). Cómo se lee y se escribe cada campo: `data/Historias.kt`.
+    /**
+     * Los personajes que sigues, con desde cuándo. Un personaje se sigue mientras su entrada no tiene [Seguido.hasta]; dejar de
+     * seguirlo le pone la fecha y no la borra (los logros necesitan saber desde cuándo). Como mucho [Seguir.TOPE] a la vez.
+     */
+    val seguidos: List<Seguido> = emptyList(),
+    /** Si los días especiales de los personajes que sigues avisan también con una notificación del teléfono. */
+    val avisos_historia: Boolean = true,
+    /**
+     * Los días especiales de los que ya se avisó: «vida|id del día especial|día en que empezó» → instante del aviso (ISO).
+     * Para no repetir el aviso de un día especial que dura varios días; se olvidan solos al año ([Seguir.podarAvisos]).
+     */
+    val historia_avisada: Map<String, String> = emptyMap(),
+    /** Los cuentos de «Otras vidas» leídos hasta el final: uno por personaje y día del cuento, el de la primera lectura. */
+    val cuentos_leidos: List<CuentoLeido> = emptyList(),
+    /**
+     * En qué días lógicos se usó cada función que no deja otro rastro (solo para logros): clave → días AAAA-MM-DD, sin
+     * repetir y en orden. Las claves posibles están en [UsoDias]; nunca una de Privado ni de Sustancias.
+     */
+    val uso_dias: Map<String, List<String>> = emptyMap(),
+    /** Los cuadros guardados con «me gusta»: sus datos; la imagen va en `files/cuadros/` ([CuadrosGuardados]). */
+    val cuadros_guardados: List<CuadroGuardado> = emptyList(),
+    /**
+     * Si al abrir el cuento suena el ambiente de su cuadro. No depende de [sonidos]: suena con este interruptor y el teléfono
+     * en modo normal (ni silencio ni vibración).
+     */
+    val ambiente_cuadro: Boolean = true,
+)
+
+/**
+ * Esquema 27: un personaje de «Otras vidas» que sigues ([vida], su id en `OtrasVidas`), desde el día lógico [desde] y, si ya
+ * no lo sigues, hasta el día lógico [hasta].
+ */
+@Serializable
+data class Seguido(val vida: String, val desde: String, val hasta: String? = null) {
+    val activo: Boolean get() = hasta == null
+}
+
+/**
+ * Esquema 27: un cuento leído hasta el final. [vida]: el personaje. [dia]: el día del cuento (AAAA-MM-DD; un día especial
+ * pasado se puede leer después). [leido]: el día lógico en que lo leíste; si es [dia], lo leíste el mismo día. [ts]: el
+ * instante (ISO). [especiales]: los días especiales que ese día tenía, tal como eran al leerlo (si un calendario se corrige
+ * después, lo leído no cambia).
+ */
+@Serializable
+data class CuentoLeido(val vida: String, val dia: String, val leido: String, val ts: String? = null, val especiales: List<EspecialLeido> = emptyList())
+
+/** Un día especial de un cuento leído: su [id] en el calendario y el día real en que empezó ([inicio], AAAA-MM-DD). */
+@Serializable
+data class EspecialLeido(val id: String, val inicio: String)
+
+/**
+ * Esquema 27: un cuadro guardado con «me gusta», tal cual se veía. [id]: único. [tema], [vida], [dia] (día lógico del cuadro)
+ * y [hora] (de 0 a 24 con decimales: la del momento pintado). [guardado]: el instante en que se guardó (ISO). [archivo]: el
+ * nombre de la imagen en `files/cuadros/` ([CuadrosGuardados.ANCHO] × [CuadrosGuardados.ALTO], JPEG). [claves]: las claves de
+ * escena de ese día (fiesta, luto…), tal como eran al guardarlo.
+ */
+@Serializable
+data class CuadroGuardado(
+    val id: String, val tema: String, val vida: String, val dia: String, val hora: Double, val guardado: String, val archivo: String,
+    val claves: List<String> = emptyList(),
 )
 
 /** Desde [desde] (ISO) el teléfono estuvo en la zona [zona] («America/Mexico_City», o un desfase fijo como «-05:00»). */

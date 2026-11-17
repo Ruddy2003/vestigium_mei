@@ -100,6 +100,8 @@ fun PantallaVida(nav: Nav) {
             RecuadroMapas(nav)
             RecuadroObras(nav)
             RecuadroOtrasVidas(nav)
+            // Parte 8 (encargo C): el mueble de los cuadros guardados con «me gusta».
+            io.github.ruddy2003.vestigium.ui.galeria.RecuadroGaleria(nav)
         }
     }
 }

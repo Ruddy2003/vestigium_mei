@@ -33,10 +33,14 @@ class AnioPilotoPrueba {
     }
 
     @Test fun cadaTemporadaTieneUnosVeinteDiasYNoTodosSonFiestas() {
+        // El iniciado de Arcontes lleva el doble, de 35 a 40 (PLAN_TEMAS, 10d): su historia avanza con ellos. David, el de
+        // Psicodelia, suma a sus unos veinte días las noches de LSD y de hongos (de 5 a 14 por temporada): de 25 a 40.
+        val doble = setOf("iniciado")
+        val conNoches = setOf("cartelista")
         todos.forEach { c ->
             c.temporadas.forEachIndexed { i, t ->
                 val donde = "${c.vida}, temporada ${i + 1}"
-                assertTrue("$donde: ${t.dias.size} días especiales", t.dias.size in 16..26)
+                assertTrue("$donde: ${t.dias.size} días especiales", t.dias.size in (if (c.vida in doble) 35..40 else if (c.vida in conNoches) 25..40 else 16..26))
                 assertTrue("$donde: faltan sucesos de su vida", t.dias.count { it.tipo == TipoDia.SUCESO } >= 3)
                 assertTrue("$donde: demasiadas fiestas", t.dias.count { it.tipo == TipoDia.FIESTA } <= t.dias.size * 2 / 3)
                 assertTrue("$donde: falta el resumen", t.resumen.length > 40)

@@ -49,36 +49,41 @@ fun banderitaHistoria(tema: TemaId): Banderita? = when (tema) {
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> BanderitaNeon
     TemaId.HELENO -> BanderitaHeleno
-    TemaId.EGIPTO -> null           // S9
+    TemaId.EGIPTO -> BanderitaEgipto
     TemaId.MEDIEVAL -> BanderitaMedieval
-    TemaId.TEMPLARIO -> null        // S11
+    TemaId.TEMPLARIO -> BanderitaTemplario
     TemaId.DISTOPIA -> BanderitaDistopia
-    TemaId.REFUGIO -> null          // S17
-    TemaId.ORDEN -> null            // S18
+    TemaId.REFUGIO -> BanderitaRefugio
+    TemaId.ORDEN -> BanderitaOrden
     TemaId.VAPOR -> BanderitaVapor
-    TemaId.LABORATORIO -> null      // S17
+    TemaId.LABORATORIO -> BanderitaLaboratorio
     TemaId.COLONOS -> null          // S19
-    TemaId.NAPOLEON -> null         // S14
-    TemaId.DECO -> null             // S15
-    TemaId.BOTANICO -> null         // S13
+    TemaId.NAPOLEON -> BanderitaNapoleon
+    TemaId.DECO -> BanderitaDeco
+    TemaId.BOTANICO -> BanderitaBotanico
     TemaId.RUINAS -> BanderitaRuinas
     TemaId.NAVIDAD -> null          // Navidad: sin cuadro
     TemaId.SEDA -> BanderitaSeda
-    TemaId.EDO -> null              // S11
+    TemaId.EDO -> BanderitaEdo
     TemaId.GOTICO -> BanderitaGotico
     TemaId.ARCANO -> BanderitaArcano
     TemaId.ESPACIO -> BanderitaEspacio
-    TemaId.ABISMO -> null           // S16
+    TemaId.ABISMO -> BanderitaAbismo
     TemaId.ANDALUS -> BanderitaAndalus
-    TemaId.MESO -> null             // S9
-    TemaId.MONGOL -> null           // S12
+    TemaId.MESO -> BanderitaMeso
+    TemaId.MONGOL -> BanderitaMongol
     TemaId.RENACIMIENTO -> BanderitaRenacimiento
     TemaId.PIRATA -> BanderitaPirata
-    TemaId.URSS -> null             // S15
+    TemaId.URSS -> BanderitaUrss
     TemaId.REVOLUCION -> BanderitaRevolucion
-    TemaId.ANTIGUAS -> null         // S18
-    TemaId.CUEVA -> null            // S10
+    TemaId.ANTIGUAS -> BanderitaAntiguas
+    TemaId.CUEVA -> BanderitaCueva
     TemaId.BASICO -> null           // Básico: sin cuadro
+    TemaId.FRENTE -> null           // lote 10: su cuadro va después de S19
+    TemaId.ARCONTES -> null         // lote 10: su cuadro va después de S19
+    TemaId.GALIA -> null            // lote 10: su cuadro va después de S19
+    TemaId.NOUVEAU -> null          // lote 10: su cuadro va después de S19
+    TemaId.PSICODELIA -> null       // lote 10: su cuadro va después de S19
 }
 
 /** Pone el lienzo de la banderita en sus 26 × 40 unidades, sea cual sea la densidad de la pantalla. */

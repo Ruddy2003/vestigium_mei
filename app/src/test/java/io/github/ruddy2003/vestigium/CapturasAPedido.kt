@@ -17,6 +17,10 @@ import org.junit.runners.model.Statement
  *   más corta, pero la rama `capturas` queda solo con esas imágenes hasta la siguiente corrida completa.
  *
  * Sin ninguna de las tres, todo queda como antes: corren las de siempre y se saltan las de a pedido.
+ *
+ * Un tema con caras (`TemaId.conCaras`, hoy Psicodelia) sale en las capturas por tema con cada cara forzada
+ * (`EstadoTema.forzar`): `<tema>_<claro|oscuro>_ciudad`, `…_tinta` y, en las superficies donde importa la intensidad,
+ * `…_tinta_i1`. Así `CAPTURAS_TEMAS=psicodelia` da las cuatro variantes y la intensidad máxima, sea la hora que sea.
  */
 object CapturasAPedido {
     private fun lista(variable: String) = (System.getenv(variable) ?: "").split(',').map { it.trim() }.filter { it.isNotEmpty() }

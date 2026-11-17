@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
@@ -102,8 +103,13 @@ enum class Epoca(val nombre: String) {
     FANTASIA("Fantasía"),
 }
 
-/** Los temas. Terminal (id «ciber») solo existe en oscuro. El orden de la lista es el del selector dentro de cada [Epoca]. */
-enum class TemaId(val id: String, val nombre: String, val descripcion: String, val epoca: Epoca, val soloOscuro: Boolean = false) {
+/**
+ * Los temas. Terminal (id «ciber») solo existe en oscuro. El orden de la lista es el del selector dentro de cada [Epoca].
+ * [conCaras]: el tema tiene dos caras ([Cara]) que decide la hora, aparte del claro y el oscuro (ver `CaraTema.kt`).
+ * [conIntensidad]: el tema lee la intensidad de los consumos en curso ([Intensidad]). Hoy, las dos solo en Psicodelia.
+ */
+enum class TemaId(val id: String, val nombre: String, val descripcion: String, val epoca: Epoca, val soloOscuro: Boolean = false,
+                  val conCaras: Boolean = false, val conIntensidad: Boolean = false) {
     ROMANO("romano", "Romano", "Mármol, pórfido y oro. Títulos en latín, fechas romanas, corona de laurel.", Epoca.ANTIGUEDAD),
     URBE("urbe", "Roma", "La Roma de hoy, en capas: placas de mármol en las esquinas, ocre y travertino, cúpulas, fuentes y motonetas entre las ruinas. Fecha en italiano con el año de la fundación, y los rioni.", Epoca.CONTEMPORANEA),
     CIBER("ciber", "Terminal", "Pura consola: cian sobre negro, cursor parpadeante, ASCII y volcados de memoria. Todo en código. Solo oscuro.", Epoca.CONTEMPORANEA, soloOscuro = true),
@@ -140,6 +146,12 @@ enum class TemaId(val id: String, val nombre: String, val descripcion: String, v
     REVOLUCION("revolucion", "Revolución francesa", "Papel de cartel, tinta y la escarapela azul, blanca y roja. Cuadernos de quejas, el árbol de la libertad y el calendario republicano.", Epoca.EDAD_MODERNA),
     ANTIGUAS("antiguas", "Tierras Antiguas", "Salones de piedra, runas inventadas, mapas y gemas. Una compañía que cruza aldeas, bosques, montañas y minas, contando el tiempo por lunas.", Epoca.FANTASIA),
     CUEVA("cueva", "Prehistoria", "Ocre, carbón y caliza: manos en negativo y bisontes en la pared de una cueva. Las lunas se cuentan desde el primer registro y los números son muescas en un hueso.", Epoca.ANTIGUEDAD),
+    FRENTE("frente", "Frente exterior", "Una red clandestina contra el Directorio, entre mundos ocupados: consolas color hueso, pantallas de radar y pilotos ámbar de los años setenta. Cada día es una operación con su nombre en clave y su ventana de transmisión.", Epoca.FUTURO),
+    ARCONTES("arcontes", "Arcontes", "Galilea en el siglo I, vivida por un iniciado que cree el mito gnóstico: el mundo visible es una cárcel dorada, siete arcontes guardan las esferas y la luz verdadera se asoma por las grietas. Cada día es uno de los 365 cielos de Basílides.", Epoca.FANTASIA),
+    GALIA("galia", "Galia", "La Galia del 52 a. C., el año del levantamiento de Vercingétorix: el oppidum en su colina, el robledal sagrado, el oro de los torques y el humo; de noche, las hogueras y, al fondo, las del campamento romano. Los días se cuentan por noches.", Epoca.ANTIGUEDAD),
+    NOUVEAU("nouveau", "Art nouveau", "París hacia 1900, cuando el hierro, el vidrio y la luz eléctrica aprendieron a parecer plantas: papel crema, verde salvia, iris violeta y oro pálido; de noche, los escaparates, las lámparas de vidrio y el verde de los cafés. Cada día trae su flor y lo que significa.", Epoca.CONTEMPORANEA),
+    PSICODELIA("psicodelia", "Psicodelia", "San Francisco a fines de los sesenta, con dos caras. De día, la ciudad como en una foto vieja: casas victorianas grises, cables del trolebús, niebla, naranja quemado y café. De noche, el cartel de concierto: tres tintas planas sobre papel crema o sobre negro, rayos que ondulan y letras de bloque. Con un consumo anotado en curso, el cartel sale también de día y sube de color. Cada día es un disco, con su lado A y su lado B.", Epoca.CONTEMPORANEA,
+        conCaras = true, conIntensidad = true),
     /**
      * Básico: sin diseño, a propósito, para probar la app de forma más fluida. Material 3 limpio: grises con un acento azul
      * ([PaletaBasica]), la letra del sistema, esquinas estándar, nombres y fechas en español normal, sin emblema, sin fondo
@@ -441,8 +453,17 @@ private fun formas(e: Esquinas) = Shapes(
     extraSmall = forma(e, 0.75f), small = forma(e, 1f), medium = forma(e, 1.5f), large = forma(e, 2f), extraLarge = forma(e, 2.5f),
 )
 
-/** Colores, letra y redondez de cada tema. */
-internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
+/** Las formas de Material de [tema] en una [cara] concreta (la usa [SinIntensidad]). */
+internal fun formasDe(tema: TemaId, cara: Cara): Shapes = formas(radioDe(tema, cara))
+
+/**
+ * Colores, letra y redondez de cada tema. Los temas con caras ([TemaId.conCaras], hoy Psicodelia) eligen por la cara que
+ * toca ahora ([EstadoTema.caraDe]); las versiones con `cara` sirven para pedir una cara concreta.
+ */
+internal fun esquemaDe(tema: TemaId, oscuro: Boolean): ColorScheme = esquemaDe(tema, oscuro, EstadoTema.caraDe(tema))
+
+/** El esquema de [tema] en la [cara] dada (solo cambia en los temas con caras). */
+internal fun esquemaDe(tema: TemaId, oscuro: Boolean, cara: Cara): ColorScheme = when (tema) {
     TemaId.ROMANO -> if (oscuro) romanoOscuro else romanoClaro
     TemaId.URBE -> if (oscuro) urbeOscuro else urbeClaro
     TemaId.CIBER -> ciber
@@ -452,6 +473,11 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.MEDIEVAL -> if (oscuro) medievalOscuro else medievalClaro
     TemaId.TEMPLARIO -> if (oscuro) templarioOscuro else templarioClaro
     TemaId.DISTOPIA -> if (oscuro) distopiaOscuro else distopiaClaro
+    TemaId.PSICODELIA -> psicodeliaEsquema(oscuro, cara)
+    TemaId.NOUVEAU -> if (oscuro) nouveauOscuro else nouveauClaro
+    TemaId.GALIA -> if (oscuro) galiaOscuro else galiaClaro
+    TemaId.ARCONTES -> if (oscuro) arcontesOscuro else arcontesClaro
+    TemaId.FRENTE -> if (oscuro) frenteOscuro else frenteClaro
     TemaId.REFUGIO -> if (oscuro) refugioOscuro else refugioClaro
     TemaId.ORDEN -> if (oscuro) ordenOscuro else ordenClaro
     TemaId.VAPOR -> if (oscuro) vaporOscuro else vaporClaro
@@ -480,7 +506,10 @@ internal fun esquemaDe(tema: TemaId, oscuro: Boolean) = when (tema) {
     TemaId.BASICO -> if (oscuro) basicoOscuro else basicoClaro
 }
 
-internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
+internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = tipoDe(tema, oscuro, EstadoTema.caraDe(tema))
+
+/** La letra de [tema] en la [cara] dada (solo cambia en los temas con caras). */
+internal fun tipoDe(tema: TemaId, oscuro: Boolean, cara: Cara): Typography = when (tema) {
     TemaId.ROMANO -> tipoRomano
     TemaId.URBE -> tipoUrbe
     TemaId.CIBER -> tipoCiber
@@ -490,6 +519,11 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.MEDIEVAL -> tipoMedieval
     TemaId.TEMPLARIO -> tipoTemplario
     TemaId.DISTOPIA -> tipoDistopia
+    TemaId.PSICODELIA -> tipoPsicodelia(cara)
+    TemaId.NOUVEAU -> tipoNouveau
+    TemaId.GALIA -> tipoGalia
+    TemaId.ARCONTES -> tipoArcontes
+    TemaId.FRENTE -> tipoFrente
     TemaId.REFUGIO -> if (oscuro) tipoRefugioOscuro else tipoRefugioClaro
     TemaId.ORDEN -> tipoOrden
     TemaId.VAPOR -> tipoVapor
@@ -516,7 +550,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
     TemaId.ANTIGUAS -> tipoAntiguas
     TemaId.CUEVA -> tipoCueva
     TemaId.BASICO -> tipoBasico
-}.conReloj(tema)
+}.conReloj(tema, cara)
 
 /**
  * La letra grande (`displayLarge`): la del reloj de Enfoque y la del año en «Tu año». Es la letra de título del tema
@@ -524,7 +558,7 @@ internal fun tipoDe(tema: TemaId, oscuro: Boolean): Typography = when (tema) {
  * baile al pasar los segundos. El tamaño, en sp, compensa lo ancha o angosta que es cada letra: «25:00» ocupa más o
  * menos lo mismo en todos los temas. El segundo número es el espaciado entre letras, en sp.
  */
-private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
+private fun letraReloj(tema: TemaId, cara: Cara): Pair<Float, Float> = when (tema) {
     TemaId.ROMANO -> 58f to 1f          // Cinzel: capitales anchas
     TemaId.URBE -> 64f to 0.5f          // Titillium, semiangosta
     TemaId.CIBER -> 62f to 0f           // Share Tech Mono
@@ -534,6 +568,14 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.MEDIEVAL -> 66f to 0.5f      // gótica
     TemaId.TEMPLARIO -> 60f to 1.2f      // letra de estandarte (MedievalSharp)
     TemaId.DISTOPIA -> 70f to 1f        // Oswald, angosta
+    TemaId.PSICODELIA -> when (cara) {
+        Cara.BASE -> 62f to -0.4f        // Libre Franklin ExtraBold, el titular apretado de la ciudad
+        Cara.INTENSA -> 50f to 0.6f      // Bloque Vestigium (Chango): de bloque, muy ancha
+    }
+    TemaId.NOUVEAU -> 62f to 0.4f       // Federant, letra de cartel con curvas de pluma
+    TemaId.GALIA -> 60f to 0.5f         // Piazzolla, serifa afilada
+    TemaId.ARCONTES -> 60f to 0.5f      // Caudex, la letra de los códices
+    TemaId.FRENTE -> 46f to 1f        // Michroma, muy ancha: más chica, como la cifra de un panel
     TemaId.REFUGIO -> 74f to 0f         // VT323, de píxeles
     TemaId.ORDEN -> 60f to 1.5f         // estarcido
     TemaId.VAPOR -> 58f to 0.4f         // Caldera (Abril Fatface), «fat face» de cartel, ancha y de contraste alto
@@ -562,12 +604,15 @@ private fun letraReloj(tema: TemaId): Pair<Float, Float> = when (tema) {
     TemaId.BASICO -> 64f to 0f           // la letra del sistema
 }
 
-private fun Typography.conReloj(tema: TemaId): Typography {
-    val (tam, esp) = letraReloj(tema)
+private fun Typography.conReloj(tema: TemaId, cara: Cara): Typography {
+    val (tam, esp) = letraReloj(tema, cara)
     return copy(displayLarge = displaySmall.copy(fontSize = tam.sp, lineHeight = (tam * 1.15f).sp, letterSpacing = esp.sp, fontFeatureSettings = "lnum, tnum"))
 }
 
-internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
+internal fun radioDe(tema: TemaId): Esquinas = radioDe(tema, EstadoTema.caraDe(tema))
+
+/** Las esquinas de [tema] en la [cara] dada (solo cambian en los temas con caras). */
+internal fun radioDe(tema: TemaId, cara: Cara): Esquinas = when (tema) {
     TemaId.ROMANO -> Esquinas(4, Esquina.REDONDA)
     TemaId.URBE -> Esquinas(6, Esquina.ARCO)               // el arco de un portón romano
     TemaId.CIBER -> Esquinas(1, Esquina.REDONDA)
@@ -577,6 +622,14 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.MEDIEVAL -> Esquinas(3, Esquina.REDONDA)
     TemaId.TEMPLARIO -> Esquinas(5, Esquina.CORTADA)       // el sillar tallado de la muralla
     TemaId.DISTOPIA -> Esquinas(4, Esquina.CORTADA)        // la carpeta del expediente
+    TemaId.PSICODELIA -> when (cara) {
+        Cara.BASE -> Esquinas(11, Esquina.REDONDA)        // la ventanilla del trolebús, la pantalla de la tele de entonces
+        Cara.INTENSA -> Esquinas(13, Esquina.ARCO)        // el marco de arco del cartel
+    }
+    TemaId.NOUVEAU -> Esquinas(14, Esquina.HOJA)           // el marco del cartel, que se curva como un tallo
+    TemaId.GALIA -> Esquinas(9, Esquina.HOJA)              // la hoja del roble
+    TemaId.ARCONTES -> Esquinas(5, Esquina.ARCO)           // el arco pequeño de los nichos tallados en la caliza
+    TemaId.FRENTE -> Esquinas(13, Esquina.REDONDA)       // la curva grande de las consolas de la sala de control
     TemaId.REFUGIO -> Esquinas(10, Esquina.REDONDA)
     TemaId.ORDEN -> Esquinas(6, Esquina.CORTADA)           // placa de acero
     TemaId.VAPOR -> Esquinas(9, Esquina.ARCO)              // la placa de nombre de una locomotora, de remate curvo
@@ -605,24 +658,32 @@ internal fun radioDe(tema: TemaId): Esquinas = when (tema) {
     TemaId.BASICO -> Esquinas(8, Esquina.REDONDA)          // las de Material 3: 8 dp los botones, 12 dp las tarjetas
 }
 
-/** ¿Va en oscuro? Lo decide el botón de la app (claro, oscuro o como el teléfono); Terminal y Ciudad neón siempre son oscuros. */
-/** Lo mismo que [modoOscuro], fuera de Compose: el arranque, el fondo vivo, el pulso y los avisos. */
-fun modoOscuroDe(ctx: android.content.Context, tema: TemaId = Estilo.tema): Boolean = tema.soloOscuro || when (Repo.config.modo) {
-    "claro" -> false
-    "oscuro" -> true
-    else -> (ctx.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES
-}
+/**
+ * Lo mismo que [modoOscuro], fuera de Compose: el arranque, el fondo vivo, el pulso, los reportes y los avisos. Con el
+ * modo «hora» mira la hora en cada llamada ([ModoHora]).
+ */
+fun modoOscuroDe(ctx: android.content.Context, tema: TemaId = Estilo.tema): Boolean = oscuroSegun(
+    Repo.config.modo, tema.soloOscuro,
+    (ctx.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK) == android.content.res.Configuration.UI_MODE_NIGHT_YES,
+    ModoHora.esDeNoche(java.time.LocalTime.now()),
+)
 
+/**
+ * ¿Va en oscuro? Lo decide el ajuste de la app (claro, oscuro, como el teléfono o según la hora, ver [oscuroSegun]);
+ * Terminal y Ciudad neón siempre son oscuros. Con «hora», el cambio llega solo al cruzar la hora ([RelojModo]).
+ */
 @Composable
-fun modoOscuro(tema: TemaId = Estilo.tema): Boolean = tema.soloOscuro || when (Repo.config.modo) {
-    "claro" -> false
-    "oscuro" -> true
-    else -> isSystemInDarkTheme()
-}
+fun modoOscuro(tema: TemaId = Estilo.tema): Boolean = oscuroSegun(Repo.config.modo, tema.soloOscuro, isSystemInDarkTheme(), RelojModo.noche)
 
 @Composable
 fun TemaVestigium(content: @Composable () -> Unit) {
     val tema = Estilo.tema
+    // Con el modo «hora», el reloj que pasa de claro a oscuro (y al revés) sin reiniciar la app. Un tema con caras lo
+    // necesita con cualquier modo: su cara cambia a las 21:00 y a las 5:00 (ver CaraTema.kt).
+    val enVista = !LocalView.current.isInEditMode
+    if ((Repo.config.modo == "hora" || tema.conCaras) && !tema.soloOscuro && enVista) RelojDelModo()
+    // La intensidad de los consumos en curso, solo en los temas que la leen.
+    if (tema.conIntensidad && enVista) MedidorIntensidad()
     val oscuro = modoOscuro(tema)
     val esquema = esquemaDe(tema, oscuro)
     // Íconos de la barra de estado legibles aunque el teléfono esté en modo claro y el tema sea oscuro.
@@ -823,6 +884,12 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> "Del día"
         TemaId.TEMPLARIO -> "Guardia"
         TemaId.DISTOPIA -> "PARTE"
+        // La etiqueta del disco de día; el lado B del cartel de noche.
+        TemaId.PSICODELIA -> if (EstadoTema.caraDe(tema) == Cara.INTENSA) "Lado B" else "Disco 290"
+        TemaId.NOUVEAU -> "Almanach"
+        TemaId.GALIA -> "ΝΕΜΗΤΟΝ"
+        TemaId.ARCONTES -> "ⲡⲉϩⲟⲟⲩ"
+        TemaId.FRENTE -> "ENLACE"
         TemaId.REFUGIO -> "DIARIO"
         TemaId.ORDEN -> "CAMPO"
         TemaId.VAPOR -> "Salida"
@@ -860,6 +927,11 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> "xvij de otubre"
         TemaId.TEMPLARIO -> "iv oct. · juliano"
         TemaId.DISTOPIA -> "EXP. 0290"
+        TemaId.PSICODELIA -> if (EstadoTema.caraDe(tema) == Cara.INTENSA) "Disco 290 · pista 10" else "sábado 17 de octubre"
+        TemaId.NOUVEAU -> "samedi 17 octobre"
+        TemaId.GALIA -> "Noche 290 · Cantlos"
+        TemaId.ARCONTES -> "cielo 290 · Saturno"
+        TemaId.FRENTE -> "K-7 · 21:40"
         TemaId.REFUGIO -> "DÍA 290"
         TemaId.ORDEN -> "17 OCT 26"
         TemaId.VAPOR -> "tren n.º 290 · 2.32 t."
@@ -899,6 +971,11 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> 16 to 16
         TemaId.TEMPLARIO -> 22 to 10
         TemaId.DISTOPIA -> 20 to 12
+        TemaId.PSICODELIA -> 18 to 14
+        TemaId.NOUVEAU -> 20 to 12
+        TemaId.GALIA -> 20 to 12
+        TemaId.ARCONTES -> 20 to 12
+        TemaId.FRENTE -> 16 to 16
         TemaId.REFUGIO -> 16 to 16
         TemaId.ORDEN -> 16 to 16
         TemaId.VAPOR -> 22 to 10
@@ -937,6 +1014,11 @@ fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: a
         TemaId.MEDIEVAL -> 10
         TemaId.TEMPLARIO -> 12
         TemaId.DISTOPIA -> 10
+        TemaId.PSICODELIA -> 10
+        TemaId.NOUVEAU -> 10
+        TemaId.GALIA -> 10
+        TemaId.ARCONTES -> 10
+        TemaId.FRENTE -> 10
         TemaId.REFUGIO -> 12
         TemaId.ORDEN -> 12
         TemaId.VAPOR -> 11
@@ -1034,6 +1116,36 @@ private fun formaPrevia(tema: TemaId): Shape = when (tema) {
         val p = s.height * 0.08f; val a = s.width * 0.42f
         moveTo(0f, 0f); lineTo(a, 0f); lineTo(a + p, p); lineTo(s.width, p); lineTo(s.width, s.height); lineTo(0f, s.height); close()
     }
+    // El marco de arco del cartel de la semana (Psicodelia v2): arriba redondo, abajo casi recto. Es la cara de la noche,
+    // la que el tema añade: la vista previa la enseña aunque sea de día.
+    TemaId.PSICODELIA -> GenericShape { s, _ ->
+        addPath(TrazosTinta.arco(androidx.compose.ui.geometry.Rect(0f, 0f, s.width, s.height), minOf(s.width, s.height) * 0.22f, minOf(s.width, s.height) * 0.03f))
+    }
+    // El marco de un cartel de 1900: arriba, dos lóbulos que se juntan en el centro con una curva de látigo.
+    TemaId.NOUVEAU -> GenericShape { s, _ ->
+        val a = s.height * 0.16f; val w = s.width
+        moveTo(0f, s.height); lineTo(0f, a * 0.8f)
+        cubicTo(w * 0.1f, -a * 0.3f, w * 0.4f, -a * 0.2f, w * 0.5f, a * 0.35f)
+        cubicTo(w * 0.6f, -a * 0.2f, w * 0.9f, -a * 0.3f, w, a * 0.8f)
+        lineTo(w, s.height); close()
+    }
+    // La casa del oppidum: arriba, el tejado alto de paja (en la Galia, las casas eran de planta rectangular).
+    TemaId.GALIA -> GenericShape { s, _ ->
+        val a = s.height * 0.16f
+        moveTo(0f, s.height); lineTo(0f, a)
+        quadraticTo(s.width * 0.5f, -a * 0.6f, s.width, a)
+        lineTo(s.width, s.height); close()
+    }
+    // Un nicho tallado en la caliza: arriba, un arco rebajado.
+    TemaId.ARCONTES -> GenericShape { s, _ ->
+        val a = s.height * 0.2f
+        moveTo(0f, s.height); lineTo(0f, a)
+        arcTo(androidx.compose.ui.geometry.Rect(0f, 0f, s.width, a * 2), 180f, 180f, false)
+        lineTo(s.width, s.height); close()
+    }
+    // El panel de una consola curva: esquinas muy redondas arriba y el frente que se inclina hacia quien lo usa
+    // (abajo, las esquinas más chicas, como el borde del tablero).
+    TemaId.FRENTE -> RoundedCornerShape(topStart = 22.dp, topEnd = 22.dp, bottomEnd = 10.dp, bottomStart = 10.dp)
     // Pantalla de tubo, muy redonda.
     TemaId.REFUGIO -> RoundedCornerShape(18.dp)
     // Compuerta de esquinas cortadas.
@@ -1227,6 +1339,42 @@ private fun DrawScope.cuadritoPrevia(tema: TemaId, c: Color, fondo: Color, borde
         }
         // Ficha de archivo apaisada.
         TemaId.DISTOPIA -> drawRect(c, Offset(0f, h * 0.2f), Size(w, h * 0.6f))
+        // El disco del día: el vinilo con su etiqueta calada y el agujero.
+        TemaId.PSICODELIA -> {
+            drawCircle(c, r * 0.95f, Offset(cx, cy))
+            drawCircle(fondo.copy(alpha = 0.75f), r * 0.36f, Offset(cx, cy))
+            drawCircle(c, r * 0.1f, Offset(cx, cy))
+        }
+        // La libélula: el cuerpo largo y las cuatro alas.
+        TemaId.NOUVEAU -> {
+            drawOval(c.copy(alpha = 0.75f), Offset(cx - r * 0.98f, cy - r * 0.42f), Size(r * 0.9f, r * 0.3f))
+            drawOval(c.copy(alpha = 0.75f), Offset(cx + r * 0.08f, cy - r * 0.42f), Size(r * 0.9f, r * 0.3f))
+            drawOval(c.copy(alpha = 0.6f), Offset(cx - r * 0.82f, cy - r * 0.08f), Size(r * 0.74f, r * 0.26f))
+            drawOval(c.copy(alpha = 0.6f), Offset(cx + r * 0.08f, cy - r * 0.08f), Size(r * 0.74f, r * 0.26f))
+            drawRoundRect(c, Offset(cx - w * 0.045f, cy - r * 0.55f), Size(w * 0.09f, r * 1.5f), CornerRadius(w * 0.045f))
+            drawCircle(c, w * 0.08f, Offset(cx, cy - r * 0.62f))
+        }
+        // El torques: el aro abierto de oro con sus dos remates.
+        TemaId.GALIA -> {
+            drawArc(c, 120f, 300f, false, Offset(cx - r * 0.72f, cy - r * 0.72f), Size(r * 1.44f, r * 1.44f), style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.13f, cap = StrokeCap.Round))
+            val a1 = Math.toRadians(120.0); val a2 = Math.toRadians(60.0)
+            drawCircle(c, r * 0.17f, Offset(cx + r * 0.72f * kotlin.math.cos(a1).toFloat(), cy + r * 0.72f * kotlin.math.sin(a1).toFloat()))
+            drawCircle(c, r * 0.17f, Offset(cx + r * 0.72f * kotlin.math.cos(a2).toFloat(), cy + r * 0.72f * kotlin.math.sin(a2).toFloat()))
+        }
+        // El ouroboros, la serpiente que se muerde la cola, con la chispa en el centro.
+        TemaId.ARCONTES -> {
+            drawCircle(c, r * 0.72f, style = androidx.compose.ui.graphics.drawscope.Stroke(w * 0.13f))
+            drawCircle(c, r * 0.2f, Offset(cx + r * 0.72f, cy - r * 0.08f))
+            drawCircle(c, r * 0.2f)
+        }
+        // La pantalla redonda de radar, con su retícula y el barrido.
+        TemaId.FRENTE -> {
+            drawCircle(c, r * 0.92f)
+            drawCircle(fondo.copy(alpha = 0.5f), r * 0.56f, style = fino)
+            drawLine(fondo.copy(alpha = 0.5f), Offset(cx - r * 0.8f, cy), Offset(cx + r * 0.8f, cy), w * 0.05f)
+            drawLine(fondo.copy(alpha = 0.5f), Offset(cx, cy - r * 0.8f), Offset(cx, cy + r * 0.8f), w * 0.05f)
+            drawLine(fondo, Offset(cx, cy), Offset(cx + r * 0.62f, cy - r * 0.5f), w * 0.09f, cap = StrokeCap.Round)
+        }
         // Botón de consola.
         TemaId.REFUGIO -> drawRoundRect(c, cornerRadius = CornerRadius(w * 0.3f))
         // Tuerca.

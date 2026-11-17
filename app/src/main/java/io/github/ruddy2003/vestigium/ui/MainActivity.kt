@@ -64,6 +64,7 @@ import androidx.compose.animation.slideIn
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -84,6 +85,7 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate as girar
@@ -261,6 +263,20 @@ internal fun Bloqueo(reintentar: () -> Unit) {
         TemaId.TEMPLARIO -> BloqueoMarco(TextosBloqueo("La puerta de la encomienda", "☩ El rastrillo está echado: solo un hermano de la casa lo levanta.", "Levantar el rastrillo"), arriba = 18, reintentar = reintentar) { cs -> bloqueoRastrillo(cs) }
         TemaId.DISTOPIA -> BloqueoExpediente(TextosBloqueo("EXPEDIENTE PERSONAL", "▪ Acceso restringido. El diario permanece sellado por orden del Ministerio de Registro.", "IDENTIFICARSE",
             listOf("MINISTERIO DE REGISTRO", "EXP. Nº 0001-VM", "CLASIFICADO")), reintentar)
+        // La puerta de la sala de baile, cerrada: el sello bajo los cables del trolebús (de noche, bajo la corona de rayos del
+        // cartel) y el disco del día abajo.
+        TemaId.PSICODELIA -> BloqueoSala(TextosBloqueo("La sala está cerrada", "◉ Hoy hay baile, pero la puerta solo se abre con tu huella.", "Mostrar mi entrada"), reintentar)
+        // La entrada del metro, de noche o antes de abrir: el sello entre los dos candelabros de fundición, bajo el letrero,
+        // con la barandilla delante; abajo, la página del almanaque.
+        TemaId.NOUVEAU -> BloqueoMetro(TextosBloqueo("L'atelier est fermé", "La piedra está entintada, pero la prensa solo corre con tu mano.", "Abrir el taller"), reintentar)
+        // La puerta de la casa grande, atrancada: el sello dentro del torques, entre ramas de roble, y la noche del año abajo.
+        TemaId.GALIA -> BloqueoTorques(TextosBloqueo("La puerta está atrancada", "Lo que no se escribe, se recuerda. La tranca solo la quita la mano de quien vive aquí.",
+            "Quitar la tranca"), reintentar)
+        // La jarra sellada: el sello dentro de las siete esferas y del ouroboros, con el cielo del día arriba.
+        TemaId.ARCONTES -> BloqueoEsferas(TextosBloqueo("El códice está sellado", "⁂ Lo de abajo no lo sabe. Para abrir el códice, da la contraseña.", "Dar la contraseña"), reintentar)
+        // La consola de la célula con el canal cerrado: el sello en la pantalla de radar, el estado de la línea y la llave.
+        TemaId.FRENTE -> BloqueoCanal(TextosBloqueo("TRANSMISIÓN CIFRADA", "— Canal cerrado. La célula no abre la frecuencia sin la huella del titular.", "ABRIR EL CANAL",
+            listOf("CANAL", "CIFRADO", "VENTANA", "", "OPERADOR", "SIN CONFIRMAR")), reintentar)
         TemaId.REFUGIO -> BloqueoMarco(TextosBloqueo("VESTIGIUM MEI", "[ esclusa sellada ] identifíquese, residente", "ABRIR ESCLUSA"), arriba = 6, reintentar = reintentar) { cs -> bloqueoMampara(cs) }
         TemaId.ORDEN -> BloqueoMarco(TextosBloqueo("ARCHIVO DE LA ORDEN", "— acceso reservado a hermanos acreditados —", "PRESENTAR CREDENCIAL"), arriba = 14, reintentar = reintentar) { cs -> bloqueoCompuerta(cs) }
         // La puerta de la caja fuerte de la compañía: remate en arco, bisagras, remaches y el dial de la combinación arriba.
@@ -392,6 +408,187 @@ private fun BloqueoExpediente(tx: TextosBloqueo, reintentar: () -> Unit) {
         Text(tx.lineas.getOrElse(2) { "" }, style = MaterialTheme.typography.titleLarge, color = cs.primary,
             modifier = Modifier.padding(top = 22.dp, bottom = 24.dp, start = 12.dp).rotate(-7f).border(2.dp, cs.primary).padding(horizontal = 10.dp, vertical = 3.dp))
         BotonPrincipal(tx.boton, Modifier.fillMaxWidth()) { reintentar() }
+    }
+}
+
+/**
+ * Frente exterior: la consola del radiooperador. Arriba, la célula y el nombre en clave de la operación del día; en medio,
+ * el sello en la pantalla de radar dentro de su bisel; abajo, el estado de la línea, cada renglón con su piloto, y la
+ * llave para abrir el canal. La ventana de transmisión del día llena el renglón que viene vacío.
+ */
+@Composable
+private fun BloqueoCanal(tx: TextosBloqueo, reintentar: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val hoy = remember { runCatching { io.github.ruddy2003.vestigium.data.Fechas.parse(io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) }.getOrElse { java.time.LocalDate.now() } }
+    val lineas = tx.lineas.map { it.ifEmpty { Frente.ventana(hoy) } }
+    Column(Modifier.fillMaxSize().padding(horizontal = 26.dp, vertical = 34.dp), verticalArrangement = Arrangement.Center) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Text("CÉLULA K-7", style = MaterialTheme.typography.labelSmall, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
+            Text("OPERACIÓN ${Frente.clave(hoy)}", style = MaterialTheme.typography.labelSmall, color = cs.primary)
+        }
+        Canvas(Modifier.fillMaxWidth().padding(top = 6.dp).height(7.dp)) {
+            val u = 1.dp.toPx(); val y = size.height - 0.5f * u
+            drawLine(cs.onSurface.copy(alpha = 0.5f), Offset(0f, y), Offset(size.width, y), 1f * u)
+            var x = 0f; var k = 0
+            while (x <= size.width) { drawLine(cs.onSurface.copy(alpha = 0.4f), Offset(x, y), Offset(x, y - (if (k % 5 == 0) 6f else 3f) * u), 0.8f * u); x += 6 * u; k++ }
+        }
+        Box(Modifier.fillMaxWidth().padding(vertical = 20.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(200.dp).drawBehind { bloqueoBiselRadar(cs) }, contentAlignment = Alignment.Center) { SelloHuella(Modifier.size(140.dp)) }
+        }
+        Text(tx.titulo, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth())
+        LemaBloqueo(tx.lema, modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 14.dp))
+        val pilotos = listOf(Color(0xFFD9372B), cs.tertiary, Color(0xFFF2A33A))
+        lineas.chunked(2).forEachIndexed { i, par ->
+            Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), verticalAlignment = Alignment.CenterVertically) {
+                Canvas(Modifier.size(10.dp)) {
+                    drawCircle(cs.onSurface.copy(alpha = 0.35f), size.minDimension / 2, style = Stroke(1.dp.toPx()))
+                    drawCircle(pilotos[i % pilotos.size], size.minDimension / 2 - 2.dp.toPx())
+                }
+                Text(par[0], style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(start = 10.dp).weight(1f))
+                Text(par.getOrElse(1) { "" }, style = MaterialTheme.typography.labelLarge, color = cs.primary)
+            }
+            Box(Modifier.fillMaxWidth().height(1.dp).background(cs.outline.copy(alpha = 0.6f)))
+        }
+        BotonPrincipal(tx.boton, Modifier.padding(top = 22.dp).fillMaxWidth()) { reintentar() }
+    }
+}
+
+/**
+ * Arcontes: arriba, el cielo del día de los 365 y su planeta; en medio, el sello dentro de las siete esferas y del ouroboros,
+ * con la grieta de luz que asoma por abajo; luego el título, la banda, el lema y el botón de la contraseña.
+ */
+@Composable
+private fun BloqueoEsferas(tx: TextosBloqueo, reintentar: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val hoy = remember { runCatching { io.github.ruddy2003.vestigium.data.Fechas.parse(io.github.ruddy2003.vestigium.data.Fechas.diaLogico()) }.getOrElse { java.time.LocalDate.now() } }
+    Column(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 34.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Text("Cielo ${Arcontes.cielo(hoy)} de 365 · ${Arcontes.planeta(hoy)}", style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant)
+        Box(Modifier.padding(vertical = 16.dp).size(236.dp).drawBehind { bloqueoEsferas(cs) }, contentAlignment = Alignment.Center) { SelloHuella(Modifier.size(132.dp)) }
+        Text(tx.titulo, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+        Meandro(Modifier.padding(horizontal = 40.dp, vertical = 8.dp))
+        LemaBloqueo(tx.lema)
+        BotonPrincipal(tx.boton, Modifier.padding(top = 20.dp)) { reintentar() }
+    }
+}
+
+/**
+ * Galia: la puerta de la casa grande, atrancada. Arriba, el título como en el dintel; en medio, el sello dentro del torques
+ * de oro, con dos ramas de roble que lo abrazan por abajo; luego la banda, el lema y el botón; y al pie, la noche del año y
+ * el mes de Coligny, como se cuenta en el tema.
+ */
+@Composable
+private fun BloqueoTorques(tx: TextosBloqueo, reintentar: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val hoy = remember { runCatching { io.github.ruddy2003.vestigium.data.Fechas.diaLogico() }.getOrElse { java.time.LocalDate.now().toString() } }
+    Column(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 34.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Text(tx.titulo, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+        Meandro(Modifier.padding(horizontal = 40.dp, vertical = 8.dp))
+        Box(Modifier.padding(vertical = 14.dp).size(240.dp).drawBehind { bloqueoTorques(cs) }, contentAlignment = Alignment.Center) { SelloHuella(Modifier.size(132.dp)) }
+        LemaBloqueo(tx.lema)
+        BotonPrincipal(tx.boton, Modifier.padding(top = 20.dp)) { reintentar() }
+        Text(Galia.fecha(hoy), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.padding(top = 18.dp))
+    }
+}
+
+/**
+ * Art nouveau: el taller cerrado, a la entrada del metro. Arriba, el título; en medio, el sello entre los dos candelabros
+ * de fundición de Guimard (con sus faroles, apagados de día y encendidos de noche), bajo el letrero y detrás de la
+ * barandilla; luego la banda, el lema y el botón; y al pie, la página del almanaque del día, con su flor.
+ */
+@Composable
+private fun BloqueoMetro(tx: TextosBloqueo, reintentar: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val hoy = remember { runCatching { io.github.ruddy2003.vestigium.data.Fechas.diaLogico() }.getOrElse { java.time.LocalDate.now().toString() } }
+    Column(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 34.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Text(tx.titulo, style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+        Meandro(Modifier.padding(horizontal = 40.dp, vertical = 8.dp))
+        Box(Modifier.padding(vertical = 14.dp).size(260.dp, 250.dp).drawBehind { bloqueoMetro(cs) }, contentAlignment = Alignment.Center) {
+            SelloHuella(Modifier.padding(top = 40.dp).size(132.dp))
+        }
+        LemaBloqueo(tx.lema)
+        BotonPrincipal(tx.boton, Modifier.padding(top = 20.dp)) { reintentar() }
+        Text(Nouveau.fecha(hoy), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 18.dp))
+    }
+}
+
+/**
+ * Art nouveau: la entrada de metro alrededor del sello. Los dos candelabros de fundición suben por los lados y se doblan
+ * hacia dentro con su farol (encendido de noche, con su halo); entre las dos puntas, el letrero esmaltado con su filete de
+ * oro y un rizo en cada extremo; y abajo, la barandilla de fundición, con sus barrotes en S.
+ */
+private fun DrawScope.bloqueoMetro(cs: ColorScheme) {
+    val w = size.width; val h = size.height; val u = 1.dp.toPx(); val cx = w / 2
+    val oscuro = cs.background.luminance() < 0.5f
+    with(TrazosNouveau) {
+        val hierro = if (oscuro) androidx.compose.ui.graphics.lerp(HIERRO, Color.White, 0.12f) else HIERRO
+        if (oscuro) drawCircle(androidx.compose.ui.graphics.Brush.radialGradient(listOf(FAROL.copy(alpha = 0.1f), Color.Transparent), Offset(cx, h * 0.3f), w * 0.48f), w * 0.48f, Offset(cx, h * 0.3f))
+        // La barandilla: el pasamanos y los barrotes en S entre dos postes.
+        val yb = h * 0.84f
+        drawLine(hierro, Offset(w * 0.12f, yb), Offset(w * 0.88f, yb), 2.2f * u, StrokeCap.Round)
+        drawLine(hierro, Offset(w * 0.12f, h - 2f * u), Offset(w * 0.88f, h - 2f * u), 1.6f * u, StrokeCap.Round)
+        var x = w * 0.16f; var k = 0
+        while (x < w * 0.86f) {
+            val s = if (k % 2 == 0) 1f else -1f
+            drawPath(Path().apply { moveTo(x, yb); cubicTo(x + s * 5f * u, yb + (h - yb) * 0.3f, x - s * 5f * u, yb + (h - yb) * 0.7f, x, h - 2f * u) }, hierro.copy(alpha = 0.8f), style = Stroke(1.2f * u))
+            x += 10f * u; k++
+        }
+        val alto = h * 0.92f
+        // El letrero esmaltado entre los dos candelabros (detrás de los faroles): la placa verde de puntas redondas, con su filete de oro y dos rizos.
+        val yl = h - alto * 0.79f
+        val iz = w * 0.12f; val de = w * 0.88f; val al = 15f * u
+        drawRoundRect(androidx.compose.ui.graphics.lerp(hierro, Color.Black, 0.25f), Offset(iz, yl - al / 2), Size(de - iz, al), CornerRadius(al / 2))
+        drawRoundRect(if (oscuro) LUZ.copy(alpha = 0.8f) else ORO, Offset(iz + 2.5f * u, yl - al / 2 + 2.5f * u), Size(de - iz - 5f * u, al - 5f * u), CornerRadius(al / 2), style = Stroke(0.8f * u))
+        val oro = if (oscuro) LUZ else ORO
+        for (lado in listOf(-1f, 1f)) {
+            val q = Offset(cx + lado * (de - iz) * 0.36f, yl + 2.6f * u)
+            drawPath(linea(listOf(Offset(cx + lado * 4f * u, yl + 2.6f * u), q) + puntosRizo(q, Offset(lado, -0.3f), 2.4f * u, lado < 0f, 1.15f, 16)), oro, style = Stroke(1.1f * u, cap = StrokeCap.Round))
+        }
+        drawPath(petalo(Offset(cx, yl + 3.4f * u), Offset(cx, yl - 4.4f * u), 4.6f * u), oro)
+        // Los dos candelabros, que se doblan hacia dentro con su farol, delante del letrero.
+        candelabro(Offset(w * 0.1f, h), alto, 1f, hierro, if (oscuro) 1f else 0f)
+        candelabro(Offset(w * 0.9f, h), alto, -1f, hierro, if (oscuro) 1f else 0f)
+    }
+}
+
+/**
+ * Psicodelia: la puerta de la sala de baile, cerrada. Arriba, el título como en un cartel; en medio, el sello con lo que lo
+ * rodea en la cara que toque ([bloqueoSala]); luego la banda, el lema y el botón; y al pie, el disco del día, con su lado y
+ * su pista.
+ */
+@Composable
+private fun BloqueoSala(tx: TextosBloqueo, reintentar: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val hoy = remember { runCatching { io.github.ruddy2003.vestigium.data.Fechas.diaLogico() }.getOrElse { java.time.LocalDate.now().toString() } }
+    Column(Modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 34.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Text(tx.titulo, style = MaterialTheme.typography.headlineMedium, color = cs.primary, textAlign = TextAlign.Center)
+        Meandro(Modifier.padding(horizontal = 40.dp, vertical = 8.dp))
+        Box(Modifier.padding(vertical = 14.dp).size(260.dp, 240.dp).drawBehind { bloqueoSala(cs) }, contentAlignment = Alignment.Center) {
+            SelloHuella(Modifier.padding(top = 30.dp).size(132.dp))
+        }
+        LemaBloqueo(tx.lema)
+        BotonPrincipal(tx.boton, Modifier.padding(top = 20.dp)) { reintentar() }
+        Text(Psicodelia.fecha(hoy), style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 18.dp))
+    }
+}
+
+/**
+ * Psicodelia: lo que rodea al sello en la puerta de la sala, en la cara que toque. La ciudad: la mancha de la tarde (de noche,
+ * el halo de la lámpara) detrás del sello, los cables del trolebús que cruzan arriba y un poste a cada lado. La tinta: la
+ * corona de rayos que ondulan del disco hecho sol y, al pie, las bandas de cartel (con la intensidad, a tres tintas).
+ */
+private fun DrawScope.bloqueoSala(cs: ColorScheme) {
+    val w = size.width; val h = size.height; val u = 1.dp.toPx(); val cx = w / 2
+    val k = PiezasPsicodelia.colores(cs.background.luminance() < 0.5f)
+    val centro = Offset(cx, h / 2 + 15 * u)
+    with(PiezasPsicodelia) {
+        if (k.ciudad) {
+            drawCircle(k.luz, 96 * u, centro)
+            cablesTrolebus(0f, w, 16 * u, TrazosCiudad.POSTE.copy(alpha = 0.75f))
+            for (lado in listOf(-1f, 1f)) with(TrazosCiudad) { poste(Offset(cx + lado * 116 * u, h), h - 6 * u, 4 * u, TrazosCiudad.POSTE.copy(alpha = 0.85f)) }
+        } else {
+            corona(centro, 72 * u, 118 * u, k, n = 24)
+            ondas(0f, w, h - 14 * u, (2f + 0.12f * k.m.amplitud) * u, 54 * u, 2f * u, 4.5f * u, tintasBanda(k), k.m.registro)
+        }
     }
 }
 
@@ -568,6 +765,54 @@ private fun BloqueoCartel(tx: TextosBloqueo, inclinado: Boolean, tricolor: Boole
 // Marcos del bloqueo: cada uno se dibuja detrás de la columna, del tamaño de la columna.
 
 /** Fachada de templo: frontón arriba, arquitrabe y dos pilastras con estrías. */
+/**
+ * Galia: el torques de oro alrededor del sello, con el hueco abajo; dos ramas de roble que suben por los lados desde el
+ * hueco, con sus hojas y una bellota; y de noche, la luz de la hoguera que viene de abajo.
+ */
+private fun DrawScope.bloqueoTorques(cs: ColorScheme) {
+    val c = center; val m = size.minDimension / 2; val u = 1.dp.toPx()
+    val oscuro = cs.background.luminance() < 0.5f
+    if (oscuro) drawCircle(androidx.compose.ui.graphics.Brush.radialGradient(listOf(TrazosGalia.FUEGO.copy(alpha = 0.18f), Color.Transparent), Offset(c.x, c.y + m), m * 1.2f), m * 1.2f, Offset(c.x, c.y + m))
+    with(TrazosGalia) {
+        val hoja = androidx.compose.ui.graphics.lerp(if (oscuro) cs.secondary else ROBLE, cs.background, 0.35f)
+        val nervio = androidx.compose.ui.graphics.lerp(ROBLE_SOMBRA, cs.background, 0.3f)
+        // Las ramas suben por fuera del aro, una por cada lado, con las hojas cada vez más chicas hacia arriba.
+        for (lado in listOf(-1f, 1f)) {
+            val rr = m * 0.93f
+            drawArc(nervio, if (lado < 0) 90f - 112f else 90f + 22f, 90f, false, Offset(c.x - rr, c.y - rr), Size(2 * rr, 2 * rr), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+            for (k in 0 until 4) {
+                val g = 90.0 + lado * (30.0 + k * 24.0)
+                val a = Math.toRadians(g)
+                val p = Offset(c.x + m * 0.93f * kotlin.math.cos(a).toFloat(), c.y + m * 0.93f * kotlin.math.sin(a).toFloat())
+                val sube = if (lado < 0) g.toFloat() else g.toFloat() + 180f
+                hojaRoble(p, m * (0.27f - k * 0.025f), sube + lado * 28f, hoja, nervio)
+            }
+        }
+        torques(Offset(c.x, c.y - m * 0.02f), m * 0.8f, m * 0.08f, if (oscuro) ORO else androidx.compose.ui.graphics.lerp(ORO, cs.secondary, 0.25f))
+        // La bellota en el hueco, entre los dos remates.
+        val b = Offset(c.x, c.y + m * 0.8f)
+        drawOval(androidx.compose.ui.graphics.lerp(BRONCE, cs.background, 0.15f), Offset(b.x - 4.4f * u, b.y - 3f * u), Size(8.8f * u, 11f * u))
+        drawArc(androidx.compose.ui.graphics.lerp(MADERA, cs.background, 0.1f), 180f, 180f, true, Offset(b.x - 5.4f * u, b.y - 6f * u), Size(10.8f * u, 8.4f * u))
+    }
+}
+
+/** Arcontes: las siete esferas alrededor del sello, cada una con su astro; el ouroboros por fuera; y la grieta que baja. */
+private fun DrawScope.bloqueoEsferas(cs: ColorScheme) {
+    val c = center; val m = size.minDimension / 2; val u = 1.dp.toPx()
+    val oscuro = cs.background.luminance() < 0.5f
+    for (k in 0 until 7) {
+        val r = m * (0.62f + 0.045f * k)
+        drawCircle(cs.primary.copy(alpha = 0.34f - k * 0.03f), r, c, style = Stroke(0.9f * u))
+        val a = Math.toRadians(-90.0 + k * 51.4)
+        drawCircle(cs.primary.copy(alpha = 0.7f), 2.2f * u, Offset(c.x + r * kotlin.math.cos(a).toFloat(), c.y + r * kotlin.math.sin(a).toFloat()))
+    }
+    with(TrazosArcontes) {
+        ouroboros(c, m * 0.95f, m * 0.07f, cs.primary, -90f, cs.background)
+        // La grieta cruza las esferas abajo a la derecha, entre el sello y el ouroboros.
+        grieta(Offset(c.x + m * 0.32f, c.y + m * 0.5f), Offset(c.x + m * 0.6f, c.y + m * 0.68f), 1.3f * u, if (oscuro) 0.9f else 0.75f, 5)
+    }
+}
+
 private fun DrawScope.bloqueoFronton(cs: ColorScheme) {
     val u = 1.dp.toPx(); val w = size.width; val h = size.height; val c = cs.primary.copy(alpha = 0.7f)
     val alto = 50 * u
@@ -909,6 +1154,38 @@ private fun DrawScope.bloqueoReticula(cs: ColorScheme) {
     drawLine(c.copy(alpha = 0.4f), Offset(0f, h / 2), Offset(10 * u, h / 2), 1f * u); drawLine(c.copy(alpha = 0.4f), Offset(w - 10 * u, h / 2), Offset(w, h / 2), 1f * u)
 }
 
+/**
+ * El bisel de la pantalla de radar del bloqueo: la placa de la consola con su luz arriba, el aro grueso alrededor del
+ * sello con su escala de grados, un tornillo en cada esquina, dos pilotos abajo a la izquierda y la perilla de sintonía
+ * abajo a la derecha.
+ */
+private fun DrawScope.bloqueoBiselRadar(cs: ColorScheme) {
+    val u = 1.dp.toPx(); val w = size.width; val h = size.height; val c = center
+    val cromo = Color(0xFFB9B6AE); val baquelita = Color(0xFF2A2622)
+    drawRoundRect(cs.surfaceVariant, Offset.Zero, size, CornerRadius(32 * u))
+    drawRoundRect(Color.White.copy(alpha = 0.12f), Offset(3 * u, 3 * u), Size(w - 6 * u, h * 0.45f), CornerRadius(28 * u))
+    drawRoundRect(cs.outline, Offset.Zero, size, CornerRadius(32 * u), style = Stroke(1.5f * u))
+    for (k in 0 until 36) {
+        val a = Math.toRadians(k * 10.0)
+        val r0 = 76 * u; val r1 = if (k % 3 == 0) 83 * u else 80 * u
+        drawLine(cs.onSurface.copy(alpha = 0.55f), Offset(c.x + (r0 * kotlin.math.cos(a)).toFloat(), c.y + (r0 * kotlin.math.sin(a)).toFloat()),
+            Offset(c.x + (r1 * kotlin.math.cos(a)).toFloat(), c.y + (r1 * kotlin.math.sin(a)).toFloat()), 1f * u)
+    }
+    drawCircle(baquelita.copy(alpha = 0.85f), 72 * u, c, style = Stroke(4 * u))
+    drawCircle(cromo, 74 * u, c, style = Stroke(1f * u))
+    listOf(Offset(16 * u, 16 * u), Offset(w - 16 * u, 16 * u), Offset(16 * u, h - 16 * u), Offset(w - 16 * u, h - 16 * u)).forEach { t ->
+        drawCircle(cromo, 4.5f * u, t); drawCircle(baquelita.copy(alpha = 0.5f), 4.5f * u, t, style = Stroke(0.8f * u))
+        drawLine(baquelita.copy(alpha = 0.7f), t + Offset(-3 * u, 1.6f * u), t + Offset(3 * u, -1.6f * u), 1.1f * u)
+    }
+    listOf(Color(0xFFD9372B) to Offset(26 * u, h - 30 * u), Color(0xFFF2A33A) to Offset(38 * u, h - 22 * u)).forEach { (luz, p) ->
+        drawCircle(luz.copy(alpha = 0.3f), 7 * u, p); drawCircle(cromo, 4.6f * u, p); drawCircle(luz, 3.4f * u, p)
+        drawCircle(Color.White.copy(alpha = 0.6f), 1f * u, p + Offset(-1.2f * u, -1.2f * u))
+    }
+    val perilla = Offset(w - 28 * u, h - 28 * u)
+    drawCircle(baquelita, 8.5f * u, perilla)
+    drawLine(cromo, perilla, perilla + Offset(-4 * u, -5.5f * u), 1.6f * u, StrokeCap.Round)
+}
+
 /** Escotilla: doble aro con pernos alrededor del sello. */
 private fun DrawScope.bloqueoEscotilla(cs: ColorScheme) {
     val u = 1.dp.toPx(); val r = size.minDimension / 2 - 2 * u
@@ -1041,6 +1318,11 @@ private fun indicadorRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> false
+    TemaId.PSICODELIA -> true         // la gota de tinta, llena
+    TemaId.NOUVEAU -> false           // las dos líneas de látigo que abrazan el ícono, en trazo
+    TemaId.GALIA -> false             // el torques alrededor del ícono, en trazo
+    TemaId.ARCONTES -> false          // el nicho de piedra, en trazo
+    TemaId.FRENTE -> false            // la retícula que fija el blanco, en trazo
     TemaId.REFUGIO -> true
     TemaId.ORDEN -> true
     TemaId.VAPOR -> true
@@ -1080,6 +1362,11 @@ private fun centroRelleno(tema: TemaId): Boolean = when (tema) {
     TemaId.MEDIEVAL -> true
     TemaId.TEMPLARIO -> true
     TemaId.DISTOPIA -> true
+    TemaId.PSICODELIA -> true         // el disco del día, lleno
+    TemaId.NOUVEAU -> true            // el cabujón de esmalte en su aro de látigo, lleno
+    TemaId.GALIA -> true              // el estátero de oro, lleno
+    TemaId.ARCONTES -> true           // el amuleto de oro, lleno
+    TemaId.FRENTE -> true             // el pulsador ámbar de transmitir, encendido
     TemaId.REFUGIO -> true
     TemaId.ORDEN -> true
     TemaId.VAPOR -> true
@@ -1185,6 +1472,66 @@ private fun DrawScope.indicadorBarra(tema: TemaId, cs: ColorScheme, p: Float) {
         TemaId.DISTOPIA -> girar(-5f, Offset(cx, cy)) {
             drawRect(c, Offset(cx - 23 * u, 2 * u), Size(46 * u, 26 * u), style = Stroke(1.8f * u))
             drawRect(c, Offset(cx - 20.5f * u, 4.5f * u), Size(41 * u, 21 * u), style = Stroke(0.8f * u))
+        }
+        // Una gota de tinta llena detrás del ícono, blanda, con su sombra corrida en el color opuesto; crece al aparecer.
+        TemaId.PSICODELIA -> {
+            val r = 14f * u * (0.55f + 0.45f * p)
+            fun mancha(o: Offset) = Path().apply {
+                for (k in 0..48) {
+                    val a = 2 * Math.PI * k / 48
+                    val x = o.x + r * 1.55f * (1f + 0.06f * kotlin.math.sin(3 * a + 0.8).toFloat()) * kotlin.math.cos(a).toFloat()
+                    val y = o.y + r * (1f + 0.08f * kotlin.math.cos(2 * a + 0.3).toFloat()) * kotlin.math.sin(a).toFloat()
+                    if (k == 0) moveTo(x, y) else lineTo(x, y)
+                }
+                close()
+            }
+            // La segunda pasada, corrida de registro como en la serigrafía, en la tinta de al lado (el secundario).
+            drawPath(mancha(Offset(cx + 1.6f * u, cy + 1.4f * u)), cs.secondary.copy(alpha = 0.45f * p))
+            drawPath(mancha(Offset(cx, cy)), c)
+        }
+        // Dos líneas de látigo que nacen juntas bajo el ícono, lo abrazan por los lados y se enroscan arriba, cada una hacia
+        // fuera; crecen al aparecer.
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            val pie = Offset(cx, h + 1f * u)
+            for (lado in listOf(-1f, 1f)) {
+                val pts = puntosLatigo(pie, Offset(cx + lado * 15f * u, 5f * u), 3f * u, -lado * 0.2f, lado < 0f)
+                val n = maxOf(2, (pts.size * (0.35f + 0.65f * p)).toInt())
+                drawPath(cinta(pts.subList(0, minOf(n, pts.size))) { t -> (0.6f + 1.2f * kotlin.math.sin(t * Math.PI.toFloat()).coerceAtLeast(0f)) * u }, c)
+            }
+            drawCircle(c, 1.8f * u, pie)
+        }
+        // Un torques alrededor del ícono, que se cierra al aparecer, con un disco en cada punta del hueco de abajo.
+        TemaId.GALIA -> {
+            val r = 13.5f * u; val hueco = 52f; val barrido = (360f - hueco) * (0.55f + 0.45f * p)
+            val desde = 90f + hueco / 2 + (360f - hueco - barrido) / 2
+            drawArc(c, desde, barrido, false, Offset(cx - r, cy - r), Size(2 * r, 2 * r), style = Stroke(2.2f * u, cap = StrokeCap.Round))
+            for (g in listOf(desde, desde + barrido)) {
+                val a = Math.toRadians(g.toDouble())
+                drawCircle(c, 2.4f * u, Offset(cx + r * kotlin.math.cos(a).toFloat(), cy + r * kotlin.math.sin(a).toFloat()))
+            }
+            var ang = desde + 14f
+            while (ang < desde + barrido - 10f) {
+                val a = Math.toRadians(ang.toDouble()); val b = Math.toRadians(ang + 7.0)
+                drawLine(cs.surface.copy(alpha = 0.6f * p), Offset(cx + (r - 1.1f * u) * kotlin.math.cos(a).toFloat(), cy + (r - 1.1f * u) * kotlin.math.sin(a).toFloat()),
+                    Offset(cx + (r + 1.1f * u) * kotlin.math.cos(b).toFloat(), cy + (r + 1.1f * u) * kotlin.math.sin(b).toFloat()), 0.6f * u)
+                ang += 16f
+            }
+        }
+        // El nicho de piedra alrededor del ícono, con la luz que lo baña desde dentro y la chispa en la clave del arco.
+        TemaId.ARCONTES -> {
+            val x0 = cx - 21 * u; val x1 = cx + 21 * u; val a = 9 * u
+            val nicho = Path().apply { moveTo(x0, h + 1 * u); lineTo(x0, a); quadraticTo(cx, -a + 2 * u, x1, a); lineTo(x1, h + 1 * u) }
+            drawCircle(androidx.compose.ui.graphics.Brush.radialGradient(listOf(cs.tertiary.copy(alpha = 0.22f * p), Color.Transparent), Offset(cx, cy), 22 * u), 22 * u, Offset(cx, cy))
+            drawPath(nicho, c, style = Stroke(1.4f * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            drawCircle(cs.tertiary.copy(alpha = p), 1.8f * u, Offset(cx, 1.2f * u))
+        }
+        // La retícula del radar que fija el blanco: el aro alrededor del ícono, la cuña del barrido y las cuatro marcas de rumbo.
+        TemaId.FRENTE -> {
+            val r = 13.5f * u * (0.7f + 0.3f * p)
+            drawArc(c.copy(alpha = c.alpha * 0.22f), -100f, 60f, true, Offset(cx - r, cy - r), Size(2 * r, 2 * r))
+            drawCircle(c, r, Offset(cx, cy), style = Stroke(1.4f * u))
+            listOf(Offset(1f, 0f), Offset(-1f, 0f)).forEach { d -> drawLine(c, Offset(cx + d.x * (r + 2 * u), cy), Offset(cx + d.x * (r + 9 * u), cy), 1.4f * u, StrokeCap.Round) }
+            listOf(Offset(0f, 1f), Offset(0f, -1f)).forEach { d -> drawLine(c, Offset(cx, cy + d.y * (r + 1 * u)), Offset(cx, cy + d.y * (r + 2.5f * u)), 1.4f * u, StrokeCap.Round) }
         }
         // Tubo de fósforo encendido, con líneas de barrido.
         TemaId.REFUGIO -> {
@@ -1436,6 +1783,70 @@ private fun DrawScope.botonCentral(tema: TemaId, cs: ColorScheme) {
             drawRect(c, Offset(5 * u, 5 * u), Size(w - 10 * u, h - 10 * u))
             drawRect(sobre.copy(alpha = 0.6f), Offset(8.5f * u, 8.5f * u), Size(w - 17 * u, h - 17 * u), style = Stroke(1f * u))
         }
+        // El disco del día, con la etiqueta del color del tema (en la ciudad, el vinilo con su brillo de la tarde; en la
+        // tinta, el disco impreso).
+        TemaId.PSICODELIA -> with(PiezasPsicodelia) {
+            disco(Offset(cx, cy), 25 * u, colores(cs.background.luminance() < 0.5f), etiqueta = c)
+        }
+        // Un cabujón de esmalte del color del tema, con su reflejo de vidrio, dentro del aro de látigo de oro del sello.
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            val o = Offset(cx, cy)
+            val oscuro = cs.background.luminance() < 0.5f
+            drawCircle(Color.Black.copy(alpha = 0.18f), 21.5f * u, o + Offset(0.8f * u, 1.2f * u))
+            drawCircle(androidx.compose.ui.graphics.Brush.linearGradient(listOf(androidx.compose.ui.graphics.lerp(c, Color.White, 0.22f), c, androidx.compose.ui.graphics.lerp(c, Color.Black, 0.28f)),
+                Offset(cx - 21f * u, cy - 21f * u), Offset(cx + 21f * u, cy + 21f * u)), 21.5f * u, o)
+            drawArc(Color.White.copy(alpha = 0.22f), 200f, 70f, false, Offset(cx - 17f * u, cy - 17f * u), Size(34f * u, 34f * u), style = Stroke(2f * u, cap = StrokeCap.Round))
+            anilloLatigo(o, 24f * u, 2.6f * u, if (oscuro) ORO else androidx.compose.ui.graphics.lerp(ORO, Color(0xFF7A5810), 0.25f), ORO_BRILLO)
+        }
+        // El estátero de oro: el cospel batido a mano, no del todo redondo, con su canto en sombra, la gráfila de perlas
+        // por dentro y el brillo del roce arriba a la izquierda.
+        TemaId.GALIA -> {
+            val oro = if (cs.background.luminance() < 0.5f) TrazosGalia.ORO else cs.secondary
+            fun cospel(r: Float) = Path().apply {
+                for (k in 0..48) {
+                    val a = k * Math.PI / 24
+                    val rr = r * (1f + 0.03f * kotlin.math.sin(3 * a + 0.7).toFloat() + 0.02f * kotlin.math.sin(5 * a + 2.1).toFloat())
+                    val x = cx + rr * kotlin.math.cos(a).toFloat(); val y = cy + rr * kotlin.math.sin(a).toFloat()
+                    if (k == 0) moveTo(x, y) else lineTo(x, y)
+                }
+                close()
+            }
+            drawPath(cospel(25 * u), androidx.compose.ui.graphics.lerp(oro, Color.Black, 0.35f))
+            drawPath(cospel(23.4f * u), oro)
+            for (k in 0 until 18) {
+                val a = Math.toRadians(k * 20.0 + 5.0)
+                drawCircle(sobre.copy(alpha = 0.42f), 1.25f * u, Offset(cx + 20 * u * kotlin.math.cos(a).toFloat(), cy + 20 * u * kotlin.math.sin(a).toFloat()))
+            }
+            drawArc(Color.White.copy(alpha = 0.25f), 195f, 75f, false, Offset(cx - 21.5f * u, cy - 21.5f * u), Size(43 * u, 43 * u), style = Stroke(1.6f * u, cap = StrokeCap.Round))
+        }
+        // Un amuleto de oro: el disco con su borde granulado y el ouroboros grabado alrededor del cálamo.
+        TemaId.ARCONTES -> {
+            val o = Offset(cx, cy)
+            drawCircle(androidx.compose.ui.graphics.lerp(c, Color.Black, 0.25f), 25 * u, o)
+            drawCircle(c, 23.5f * u, o)
+            for (k in 0 until 32) {
+                val an = Math.toRadians(k * 11.25)
+                drawCircle(sobre.copy(alpha = 0.45f), 0.8f * u, Offset(cx + 22 * u * kotlin.math.cos(an).toFloat(), cy + 22 * u * kotlin.math.sin(an).toFloat()))
+            }
+            with(TrazosArcontes) { ouroboros(o, 18 * u, 2.4f * u, sobre.copy(alpha = 0.35f), -90f) }
+            drawArc(Color.White.copy(alpha = 0.22f), 200f, 70f, false, Offset(cx - 20 * u, cy - 20 * u), Size(40 * u, 40 * u), style = Stroke(1.6f * u, cap = StrokeCap.Round))
+        }
+        // El pulsador de transmitir: la escala grabada alrededor, el bisel de cromo y el botón ámbar encendido, con su
+        // brillo arriba y su sombra abajo.
+        TemaId.FRENTE -> {
+            val o = Offset(cx, cy)
+            for (k in 0 until 24) {
+                val a = Math.toRadians(k * 15.0)
+                val r1 = if (k % 6 == 0) 23.5f * u else 24.8f * u
+                drawLine(cs.outline, Offset(cx + (r1 * kotlin.math.cos(a)).toFloat(), cy + (r1 * kotlin.math.sin(a)).toFloat()),
+                    Offset(cx + (26.5f * u * kotlin.math.cos(a)).toFloat(), cy + (26.5f * u * kotlin.math.sin(a)).toFloat()), 1f * u)
+            }
+            drawCircle(Color(0xFFB9B6AE), 22 * u, o)
+            drawCircle(Color(0xFF2A2622).copy(alpha = 0.35f), 22 * u, o, style = Stroke(0.8f * u))
+            drawCircle(c, 19 * u, o)
+            drawArc(Color.White.copy(alpha = 0.28f), 200f, 80f, false, Offset(cx - 15.5f * u, cy - 15.5f * u), Size(31 * u, 31 * u), style = Stroke(2 * u, cap = StrokeCap.Round))
+            drawArc(Color.Black.copy(alpha = 0.18f), 20f, 140f, false, Offset(cx - 17 * u, cy - 17 * u), Size(34 * u, 34 * u), style = Stroke(2.2f * u))
+        }
         // Botón de consola de refugio, con bisel claro arriba.
         TemaId.REFUGIO -> {
             drawRoundRect(c, Offset(2 * u, 7 * u), Size(w - 4 * u, h - 14 * u), CornerRadius(12 * u))
@@ -1646,6 +2057,34 @@ private fun DrawScope.divisorBarra(tema: TemaId, cs: ColorScheme) {
         }
         // Barra gruesa de cartel.
         TemaId.DISTOPIA -> drawRect(cs.primary, Offset.Zero, Size(w, 3 * u))
+        // El filete y, debajo, en la ciudad, los cables del trolebús; en la tinta, una onda fina a dos tintas de punta a punta.
+        TemaId.PSICODELIA -> { filete()
+            val k = PiezasPsicodelia.colores(cs.background.luminance() < 0.5f)
+            with(PiezasPsicodelia) {
+                if (k.ciudad) cablesTrolebus(0f, w, 3.2f * u, cs.onSurfaceVariant.copy(alpha = 0.6f), grosor = 0.7f * u)
+                else ondas(0f, w, 3.2f * u, 0.8f * u, 40f * u, 1.1f * u, 1.4f * u, tintasBanda(k).takeLast(2), k.m.registro * 0.3f, adelgaza = false)
+            } }
+        // El filete y, debajo, una línea de látigo de punta a punta: una sola onda larga, que se enrosca en cada extremo.
+        TemaId.NOUVEAU -> with(TrazosNouveau) {
+            filete()
+            val pts = List(61) { k -> val f = k / 60f; Offset(10f * u + (w - 20f * u) * f, 3.2f * u + 1f * u * kotlin.math.sin(2 * Math.PI.toFloat() * f)) }
+            val ini = pts.first(); val fin = pts.last()
+            val todo = puntosRizo(ini, Offset(-1f, 0.3f), 1.5f * u, false, 1.1f, 12).reversed() + pts + puntosRizo(fin, Offset(1f, -0.3f), 1.5f * u, false, 1.1f, 12)
+            drawPath(linea(todo), acento, style = Stroke(1f * u, cap = StrokeCap.Round))
+        }
+        // El filete y, debajo, la cuerda de oro de un torques, con los surcos de la torsión.
+        TemaId.GALIA -> { filete(); drawLine(acento, Offset(0f, 3.2f * u), Offset(w, 3.2f * u), 1.6f * u)
+            var x = 0f; while (x < w) { drawLine(cs.surface.copy(alpha = 0.7f), Offset(x, 4f * u), Offset(x + 1.2f * u, 2.4f * u), 0.6f * u); x += 3.2f * u } }
+        // El filete y, cada tanto, una esfera pequeña en el hilo de oro.
+        TemaId.ARCONTES -> { filete(); drawLine(acento, Offset(0f, 3 * u), Offset(w, 3 * u), 0.6f * u)
+            var x = 24 * u; while (x < w) { drawCircle(cs.surface, 2.2f * u, Offset(x, 3 * u)); drawCircle(acento, 1.8f * u, Offset(x, 3 * u), style = Stroke(0.8f * u)); x += 56 * u } }
+        // El canto de la consola: el filete, la escala grabada y dos pilotos encendidos a la izquierda.
+        TemaId.FRENTE -> {
+            filete()
+            var x = 30 * u; var k = 0
+            while (x < w) { drawLine(base, Offset(x, 1 * u), Offset(x, if (k % 5 == 0) 4.5f * u else 2.8f * u), 0.8f * u); x += 6 * u; k++ }
+            drawCircle(Color(0xFFF2A33A), 1.7f * u, Offset(10 * u, 2.6f * u)); drawCircle(Color(0xFFD9372B), 1.7f * u, Offset(18 * u, 2.6f * u))
+        }
         // Filete grueso con remaches.
         TemaId.REFUGIO -> { filete(1 * u, 1.4f * u); var x = 24 * u; while (x < w) { drawCircle(acento, 1.3f * u, Offset(x, 2.6f * u)); x += 48 * u } }
         // Franja de aviso: rayas oblicuas.
@@ -1956,6 +2395,9 @@ private fun Raiz(pedida: String?, apilar: Boolean, consumir: () -> Unit) {
                     "tus_apps" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTusApps(nav)
                     "otras_vidas" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaOtrasVidas(nav)
                     "historia_hoy" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaHoyEnLaHistoria(nav)
+                    // Parte 8 (`docs/diseno/CUADROS_PLAN.md`): los personajes que sigues (encargo A) y la galería de cuadros (encargo C).
+                    "seguidos" -> io.github.ruddy2003.vestigium.ui.seguir.PantallaSeguidos(nav)
+                    "galeria_cuadros" -> io.github.ruddy2003.vestigium.ui.galeria.PantallaGaleriaCuadros(nav)
                     "logros" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaLogros(nav)
                     "tu_anio" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaTuAnio(nav)
                     "carta" -> io.github.ruddy2003.vestigium.ui.pantallas.PantallaCarta(nav)
@@ -2018,7 +2460,12 @@ private fun Raiz(pedida: String?, apilar: Boolean, consumir: () -> Unit) {
                     "red" -> { remember { io.github.ruddy2003.vestigium.ui.pantallas.GrafoSocial.vista = "red"; 0 }; io.github.ruddy2003.vestigium.ui.pantallas.PantallaSocial(nav) }
                     else -> if (actual.startsWith("guia_uso")) io.github.ruddy2003.vestigium.ui.pantallas.PantallaGuiaUso(nav, actual.substringAfter(':', ""))
                         // «cuento?vida=<id>»: el cuento de hoy de ese personaje, solo, con su retrato y su vida (se llega desde el cuadro de Hoy).
-                        else if (actual.startsWith("cuento?")) io.github.ruddy2003.vestigium.ui.pantallas.PantallaCuento(nav, actual.substringAfter("vida=", "").substringBefore('&'))
+                        // Con «&dia=<AAAA-MM-DD>», el de ese día (un día especial pasado; nunca uno futuro).
+                        else if (actual.startsWith("cuento?")) io.github.ruddy2003.vestigium.ui.pantallas.PantallaCuento(nav, actual.substringAfter("vida=", "").substringBefore('&'),
+                            actual.substringAfter("&dia=", "").substringBefore('&').ifEmpty { null })
+                        // «cuadro?tema=<id>&dia=<AAAA-MM-DD>»: el cuadro a pantalla completa (parte 8, encargo B).
+                        else if (actual.startsWith("cuadro?")) io.github.ruddy2003.vestigium.ui.escenas.PantallaCuadroCompleto(nav,
+                            actual.substringAfter("tema=", "").substringBefore('&'), actual.substringAfter("dia=", "").substringBefore('&'))
                         else Text("Pantalla desconocida: $actual")
                 }
                 }
@@ -2070,6 +2517,11 @@ private fun origenTransicion(tema: TemaId, atras: Boolean): Alignment = when (te
     TemaId.MEDIEVAL -> Alignment.TopStart
     TemaId.TEMPLARIO -> Alignment.TopStart
     TemaId.DISTOPIA -> Alignment.TopStart
+    TemaId.PSICODELIA -> Alignment.TopCenter                                   // las luces se funden desde el centro
+    TemaId.NOUVEAU -> if (atras) Alignment.TopEnd else Alignment.TopStart                // la hoja se posa desde su esquina
+    TemaId.GALIA -> Alignment.TopCenter                                        // la pantalla sale de la niebla desde el centro
+    TemaId.ARCONTES -> Alignment.TopCenter                                     // el velo se abre desde el centro
+    TemaId.FRENTE -> Alignment.TopCenter                                       // la imagen rueda y se asienta en el tubo, desde el centro
     TemaId.REFUGIO -> Alignment.TopStart
     TemaId.ORDEN -> Alignment.TopStart
     TemaId.VAPOR -> Alignment.TopStart
@@ -2137,6 +2589,39 @@ private fun transicion(tema: TemaId, de: Destino, a: Destino, animar: Boolean): 
             (scaleOut(t(240), targetScale = 0.97f) + fadeOut(t(200)))
         // Cajón de archivo: cae de golpe desde arriba.
         TemaId.DISTOPIA -> (slideInVertically(t(170, lineal)) { -it / 10 } + fadeIn(t(120, lineal))) togetherWith fadeOut(t(80, lineal))
+        // Las luces que se funden: la pantalla nueva llega apenas más grande y se asienta blanda mientras se aclara sobre la
+        // anterior, que se apaga despacio, como dos imágenes de proyector que se mezclan.
+        TemaId.PSICODELIA -> {
+            val blanda = androidx.compose.animation.core.CubicBezierEasing(0.25f, 0.1f, 0.25f, 1f)
+            (scaleIn(tween(440, 0, blanda), initialScale = 1.03f, transformOrigin = TransformOrigin(0.5f, 0.3f)) + fadeIn(t(400))) togetherWith
+                (fadeOut(t(360)) + scaleOut(t(360), targetScale = 0.985f, transformOrigin = TransformOrigin(0.5f, 0.3f)))
+        }
+        // La hoja que sale de la piedra litográfica: la pantalla nueva se posa desde su esquina de arriba, bajando un poco en
+        // una curva suave, y se aclara como la tinta al secarse; la de antes se aparta despacio.
+        TemaId.NOUVEAU -> {
+            val posa = androidx.compose.animation.core.CubicBezierEasing(0.3f, 0f, 0.15f, 1f)
+            (slideIn(tween(420, 0, posa)) { androidx.compose.ui.unit.IntOffset(dir * it.width / 18, -it.height / 40) } +
+                scaleIn(tween(420, 0, posa), initialScale = 0.97f, transformOrigin = TransformOrigin(if (atras) 1f else 0f, 0f)) + fadeIn(t(360))) togetherWith
+                (fadeOut(t(260)) + scaleOut(t(260), targetScale = 0.99f))
+        }
+        // La niebla del robledal: la pantalla nueva sale de la niebla meciéndose apenas de lado, como una hoja que se asienta,
+        // y la de antes se deshace hacia arriba, como el humo.
+        TemaId.GALIA -> {
+            val mece = androidx.compose.animation.core.Easing { f -> val b = 1f - (1f - f) * (1f - f) * (1f - f); b + 0.06f * kotlin.math.sin(f * 2f * Math.PI.toFloat()) * (1f - f) }
+            (slideInHorizontally(tween(380, 0, mece)) { dir * it / 16 } + slideInVertically(t(380, frena)) { -it / 40 } + fadeIn(t(320))) togetherWith
+                (scaleOut(t(260), targetScale = 1.03f, transformOrigin = TransformOrigin(0.5f, 0f)) + slideOutVertically(t(260)) { -it / 30 } + fadeOut(t(220)))
+        }
+        // El velo que se abre: la pantalla nueva aparece por una raja en el centro que se ensancha, y se aclara despacio, como
+        // la luz que entra; la de antes se apaga sin moverse.
+        TemaId.ARCONTES -> (expandHorizontally(t(380, frena), expandFrom = Alignment.CenterHorizontally) { it / 14 } + fadeIn(t(340))) togetherWith fadeOut(t(220))
+        // El monitor de la consola que se sintoniza: la imagen nueva rueda un poco en vertical y se asienta con un temblor,
+        // tras un parpadeo de encendido; la de antes se encoge hacia el centro, como un tubo que se apaga.
+        TemaId.FRENTE -> {
+            val sintonia = androidx.compose.animation.core.Easing { f -> val b = 1f - (1f - f) * (1f - f); b + 0.08f * kotlin.math.sin(f * 3f * Math.PI.toFloat()) * (1f - f) }
+            val encendido = androidx.compose.animation.core.Easing { f -> when { f < 0.15f -> f * 3f; f < 0.25f -> 0.3f; else -> f } }
+            (slideInVertically(tween(320, 0, sintonia)) { dir * it / 14 } + fadeIn(tween(260, 0, encendido))) togetherWith
+                (scaleOut(t(160, lineal), targetScale = 0.97f) + fadeOut(t(140, lineal)))
+        }
         // Pantalla de tubo que se enciende desde una línea horizontal en el centro.
         TemaId.REFUGIO -> (expandVertically(t(260), expandFrom = Alignment.CenterVertically) { it / 14 } + fadeIn(t(200))) togetherWith fadeOut(t(120))
         // Persiana de acero: baja desde arriba, seca; la anterior sube un poco al irse.

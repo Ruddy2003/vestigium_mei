@@ -1,6 +1,7 @@
 package io.github.ruddy2003.vestigium.vidas
 
 import io.github.ruddy2003.vestigium.data.OtrasVidas
+import java.time.DayOfWeek
 import java.time.LocalDate
 
 /*
@@ -210,6 +211,18 @@ class TemporadaVida(val cuando: String, val mundo: String, val resumen: String, 
 class Estado(val clave: String, val desde: String, val hasta: String? = null)
 
 /**
+ * Una noche que vuelve cada semana sin ser un día especial: no enciende la marca del cuadro, no cambia el título del
+ * cuento ni lleva nota al pie. Lleva su [clave] de escena, que se suma a las de los días especiales en
+ * [FichaDelDia.claves] (lo que lee el cuadro), y deja salir las variantes marcadas con ella ([Variante.noche]).
+ *
+ * - [dia]: el día de la semana, contado en el **año histórico** de la temporada (la fecha «MM-DD» de hoy en
+ *   [FichaDelDia.anioHistorico]), como los días especiales, que se eligen con el calendario de su época.
+ * - [desde]: el id de un día especial; la noche vale desde el día en que pasa la primera vez (sin él, desde el principio).
+ * - No toca un día que ya es especial (ese día lo cuenta su propio texto) ni mientras el personaje está en un [Estado].
+ */
+class NocheDeSemana(val clave: String, val dia: DayOfWeek, val desde: String? = null)
+
+/**
  * El calendario de un personaje: sus cinco temporadas, escritas de una vez para que la historia sea continua.
  *
  * - [vida]: el id del personaje en [OtrasVidas].
@@ -220,10 +233,12 @@ class Estado(val clave: String, val desde: String, val hasta: String? = null)
  * - [arcos]: lo que cambia despacio en la escena.
  * - [objetos]: las claves de los objetos que pueden salir como «objeto del día».
  * - [estados]: los estados por los que pasa (ver [Estado]). Manda el primero que se cumple.
+ * - [noches]: las noches que vuelven cada semana (ver [NocheDeSemana]). Manda la primera que se cumple.
  */
 class Calendario(
     val vida: String, val estaciones: List<Pair<String, Estacion>>, val clima: List<Map<Clima, Int>>, val luz: RegimenLuz = RegimenLuz.SEIS_FRANJAS,
     val temporadas: List<TemporadaVida>, val arcos: List<Arco> = emptyList(), val objetos: List<String> = emptyList(), val estados: List<Estado> = emptyList(),
+    val noches: List<NocheDeSemana> = emptyList(),
 ) {
     /** La estación del día [d]: la del último cambio que ya pasó; antes del primero del año, la que venía del año anterior. */
     fun estacion(d: LocalDate): Estacion {
@@ -303,6 +318,12 @@ class Calendario(
                 if (b == null) p += "Estado «${e.clave}», temporada ${i + 1}: empieza con «${e.desde}» y falta «${e.hasta}» para terminarlo"
                 else if (MesDia.valido(a.fecha) && MesDia.valido(b.fecha) && MesDia.indice(b.fecha) <= MesDia.indice(a.fecha)) p += "Estado «${e.clave}», temporada ${i + 1}: «${e.hasta}» va antes que «${e.desde}»"
             }
+        }
+
+        noches.forEach { n ->
+            if (!CLAVE.matches(n.clave)) p += "Noche «${n.clave}»: debe ser una clave en minúsculas"
+            if (n.desde != null && temporadas.none { t -> t.dias.any { it.id == n.desde } }) p += "Noche «${n.clave}»: ninguna temporada tiene el día «${n.desde}»"
+            if (estados.any { it.clave == n.clave }) p += "Noche «${n.clave}»: ya hay un estado con esa clave"
         }
 
         if (objetos.size != objetos.toSet().size) p += "Hay objetos repetidos"

@@ -116,6 +116,11 @@ fun disenoLogros(t: TemaId): DisenoLogros = when (t) {
     TemaId.MEDIEVAL -> LogrosMedieval
     TemaId.TEMPLARIO -> LogrosTemplario
     TemaId.DISTOPIA -> LogrosDistopia
+    TemaId.PSICODELIA -> LogrosPsicodelia
+    TemaId.NOUVEAU -> LogrosNouveau
+    TemaId.GALIA -> LogrosGalia
+    TemaId.ARCONTES -> LogrosArcontes
+    TemaId.FRENTE -> LogrosFrente
     TemaId.REFUGIO -> LogrosRefugio
     TemaId.ORDEN -> LogrosOrden
     TemaId.VAPOR -> LogrosVapor

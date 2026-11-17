@@ -26,6 +26,7 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 from arte import ruido, ruido_rect, col, mezcla, a_img, a_rgba, relieve
 import maestra
+from iconos import cinta, ouroboros, nube, tallado, suavizar, oro_relieve
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 FUENTES = os.path.join(AQUI, 'fuentes')
@@ -899,6 +900,944 @@ def vapor(tam):
     base.alpha_composite(capa)
     guardar(fondo, base, 'vapor')
 
+# ------------------------------------------------------------------ Frente exterior
+def frente(tam):
+    """La pantalla redonda de radar de una consola de los 70. Por fuera, el bisel de la consola, color hueso, moldeado y
+    con su piel de naranja, la escala de rumbos grabada, cuatro tornillos y, abajo, un piloto ámbar encendido, uno rojo y
+    la perilla de baquelita. Por dentro, el vidrio verde oscuro con la retícula, los anillos de distancia, unos ecos y el
+    barrido que deja su estela. La huella es el eco que el barrido acaba de pintar: verde pálido de fósforo, casi blanco
+    donde pasó la línea y apagándose hacia atrás."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    cx = cy = tam / 2
+    dx, dy = xx - cx, yy - cy
+    rr = np.sqrt(dx ** 2 + dy ** 2) / (tam / 2)
+    ang = np.arctan2(dy, dx)
+    R_VIDRIO = 0.87                                  # radio del vidrio, en fracción del radio del sello
+    BARRIDO = math.radians(-38)                       # la línea de barrido, arriba a la derecha; gira en el sentido del reloj
+    atras = (BARRIDO - ang) % (2 * math.pi)           # cuánto hace que pasó la línea por cada ángulo
+    estela = np.exp(-atras / 0.9)
+
+    # --- El bisel: hueso de consola, moldeado (luz arriba a la izquierda), con piel de naranja y desgaste.
+    hueso = mezcla(col('#E6DFD0'), col('#CFC6B4'), ruido(tam, tam / 14, 401) * 0.7)
+    hueso = hueso * (0.965 + 0.05 * ruido(tam, 1.2, 402)[..., None] + 0.02 * ruido(tam, 0.5, 403)[..., None])
+    hueso = mezcla(hueso, col('#B9B0A0'), np.clip((ruido(tam, tam / 25, 404) - 0.62) * 2.5, 0, 1) * 0.35)
+    t_bisel = np.clip((rr - R_VIDRIO) / (1 - R_VIDRIO), 0, 1)
+    perfil = np.sin(t_bisel * math.pi)                # el lomo del bisel
+    luz = (-(dx + dy) / (rr * tam / 2 + 1e-3) / math.sqrt(2))   # 1 arriba a la izquierda, -1 abajo a la derecha
+    hueso = hueso * (0.97 + 0.16 * luz[..., None] * (0.35 + 0.65 * perfil[..., None]) + 0.05 * perfil[..., None])
+    # El labio interior: una sombra que cae sobre el vidrio del lado de la luz y un filo claro del otro.
+    hueso = mezcla(hueso, col('#8C8474'), np.clip(1 - (rr - R_VIDRIO) / 0.018, 0, 1) * 0.55)
+    hueso = mezcla(hueso, col('#5C564C'), np.clip((rr - 0.985) * 70, 0, 1) * 0.8)
+
+    # --- El vidrio: verde casi negro, más claro en el centro, con un poco de grano de fósforo.
+    vidrio = mezcla(col('#18291F'), col('#0B140F'), np.clip(rr / R_VIDRIO, 0, 1) ** 1.6)
+    vidrio = vidrio * (0.94 + 0.1 * ruido(tam, 0.6, 405)[..., None])
+    vidrio = mezcla(vidrio, col('#2F6B45'), np.clip(np.exp(-atras / 0.75) * 0.7 * (rr < R_VIDRIO), 0, 1) * np.clip(rr / R_VIDRIO * 1.6, 0, 1))
+    # Sombra del bisel sobre el vidrio, más ancha abajo a la derecha (la luz viene de arriba a la izquierda).
+    borde_sombra = np.clip(1 - (R_VIDRIO - rr) / (0.06 + 0.04 * np.clip(-luz, 0, 1)), 0, 1) ** 2
+    vidrio = mezcla(vidrio, col('#030605'), borde_sombra * 0.75)
+    dentro = (rr < R_VIDRIO).astype(np.float32)
+    dentro = np.asarray(Image.fromarray((dentro * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8)), np.float32) / 255
+    base = mezcla(hueso, vidrio, dentro)
+    fondo = a_img(base).convert('RGBA')
+
+    # --- Lo que se dibuja con líneas, al triple y reducido.
+    k = 3; S = tam * k; c3 = S / 2
+    capa = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(capa, 'RGBA')
+    rv = R_VIDRIO * S / 2
+    verde = (159, 216, 168)
+    def P(a, r): return (c3 + r * math.cos(a), c3 + r * math.sin(a))
+    # La retícula: anillos de distancia, la cruz y las diagonales punteadas.
+    for f in (0.25, 0.5, 0.75):
+        d.ellipse([c3 - rv * f, c3 - rv * f, c3 + rv * f, c3 + rv * f], outline=verde + (46,), width=2 * k // 2 + 1)
+    for a in (0, math.pi / 2):
+        d.line([P(a, rv * 0.97), P(a + math.pi, rv * 0.97)], fill=verde + (40,), width=k)
+    for a in (math.pi / 4, 3 * math.pi / 4, 5 * math.pi / 4, 7 * math.pi / 4):
+        for s in np.arange(0.06, 0.95, 0.045):
+            d.line([P(a, rv * s), P(a, rv * (s + 0.018))], fill=verde + (30,), width=k)
+    # La escala de rumbos por dentro del vidrio: cada 5°, más larga cada 30°.
+    for i in range(72):
+        a = math.radians(i * 5); l = rv * (0.06 if i % 6 == 0 else 0.03)
+        d.line([P(a, rv * 0.985), P(a, rv * 0.985 - l)], fill=verde + (120 if i % 6 == 0 else 70,), width=k * (2 if i % 6 == 0 else 1))
+    # La línea de barrido, con un leve halo.
+    for w, al in ((10, 30), (5, 70), (2, 230)):
+        d.line([P(BARRIDO, rv * 0.02), P(BARRIDO, rv * 0.975)], fill=(214, 248, 218, al), width=w * k // 2)
+    # Ecos sueltos: más vivos los que el barrido acaba de tocar.
+    r_ = np.random.default_rng(406)
+    for _ in range(9):
+        a = r_.random() * 2 * math.pi; dist = rv * (0.3 + r_.random() * 0.62)
+        viva = math.exp(-((BARRIDO - a) % (2 * math.pi)) / 1.1)
+        s = (2.2 + r_.random() * 2.5) * k
+        x, y = P(a, dist)
+        d.ellipse([x - s * 2.6, y - s * 2.6, x + s * 2.6, y + s * 2.6], fill=verde + (int(30 + 50 * viva),))
+        d.ellipse([x - s, y - s, x + s, y + s], fill=(200, 245, 205, int(90 + 160 * viva)))
+    # Los grabados del bisel: escala de rumbos cada 10° (larga cada 30°) y triángulos en los cuatro rumbos principales.
+    r_esc = S / 2 * 0.912
+    for i in range(36):
+        a = math.radians(i * 10 - 90); l = S / 2 * (0.032 if i % 3 == 0 else 0.016)
+        d.line([P(a, r_esc - l / 2), P(a, r_esc + l / 2)], fill=(70, 64, 55, 225), width=k * (3 if i % 3 == 0 else 2))
+    for i in range(4):
+        a = math.radians(i * 90 - 90); q = S / 2 * 0.018
+        x, y = P(a, S / 2 * 0.962)
+        u, v = math.cos(a), math.sin(a)
+        d.polygon([(x - u * q, y - v * q), (x + u * q - v * q, y + v * q + u * q), (x + u * q + v * q, y + v * q - u * q)], fill=(78, 72, 62, 210))
+    # Cuatro tornillos de cabeza ranurada, en las diagonales.
+    for i in range(4):
+        a = math.radians(45 + i * 90 + 12); x, y = P(a, S / 2 * 0.937); s = S / 2 * 0.022
+        d.ellipse([x - s, y - s, x + s, y + s], fill=(170, 164, 152, 255), outline=(96, 90, 80, 255), width=k)
+        d.ellipse([x - s * 0.8, y - s * 0.8, x + s * 0.2, y + s * 0.2], fill=(236, 232, 222, 120))
+        g = math.radians(30 + i * 47)
+        d.line([(x - s * 0.75 * math.cos(g), y - s * 0.75 * math.sin(g)), (x + s * 0.75 * math.cos(g), y + s * 0.75 * math.sin(g))], fill=(70, 64, 56, 255), width=int(k * 2.2))
+    fondo.alpha_composite(capa.resize((tam, tam), Image.LANCZOS))
+
+    # --- Pilotos y perilla, abajo, sobre el bisel: el ámbar encendido (con su resplandor), el rojo apagado a medias, la perilla.
+    k = 3; capa = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(capa, 'RGBA')
+    resplandor = Image.new('RGBA', (S, S), (0, 0, 0, 0)); dr = ImageDraw.Draw(resplandor, 'RGBA')
+    for grados, luz_c, viva in ((118, (242, 163, 58), 1.0), (130, (217, 55, 43), 0.75)):
+        x, y = P(math.radians(grados), S / 2 * 0.936); s = S / 2 * 0.031
+        dr.ellipse([x - s * 2.4, y - s * 2.4, x + s * 2.4, y + s * 2.4], fill=luz_c + (int(110 * viva),))
+        d.ellipse([x - s * 1.25, y - s * 1.25, x + s * 1.25, y + s * 1.25], fill=(185, 182, 174, 255), outline=(110, 104, 94, 255), width=k)
+        d.ellipse([x - s, y - s, x + s, y + s], fill=(42, 38, 34, 255))
+        d.ellipse([x - s * 0.78, y - s * 0.78, x + s * 0.78, y + s * 0.78], fill=tuple(int(v * (0.6 + 0.4 * viva)) for v in luz_c) + (255,))
+        d.ellipse([x - s * 0.42, y - s * 0.42, x + s * 0.42, y + s * 0.42], fill=tuple(min(255, int(v * 1.25 + 30)) for v in luz_c) + (int(200 * viva),))
+        d.ellipse([x - s * 0.55, y - s * 0.6, x - s * 0.1, y - s * 0.2], fill=(255, 250, 235, 170))
+    x, y = P(math.radians(72), S / 2 * 0.936); s = S / 2 * 0.038
+    d.ellipse([x - s * 1.12 + k * 3, y - s * 1.12 + k * 4, x + s * 1.12 + k * 3, y + s * 1.12 + k * 4], fill=(40, 34, 28, 110))
+    for i in range(24):                                # la perilla estriada de baquelita
+        a = 2 * math.pi * i / 24
+        d.polygon([(x + s * math.cos(a - 0.1), y + s * math.sin(a - 0.1)), (x + s * 1.1 * math.cos(a), y + s * 1.1 * math.sin(a)),
+                   (x + s * math.cos(a + 0.1), y + s * math.sin(a + 0.1))], fill=(42, 38, 34, 255))
+    d.ellipse([x - s, y - s, x + s, y + s], fill=(42, 38, 34, 255))
+    d.ellipse([x - s * 0.72, y - s * 0.72, x + s * 0.72, y + s * 0.72], fill=(58, 52, 46, 255))
+    d.ellipse([x - s * 0.62, y - s * 0.66, x + s * 0.05, y - s * 0.05], fill=(120, 112, 100, 70))
+    g = math.radians(-120)
+    d.line([(x + s * 0.2 * math.cos(g), y + s * 0.2 * math.sin(g)), (x + s * 0.68 * math.cos(g), y + s * 0.68 * math.sin(g))], fill=(236, 230, 216, 230), width=int(k * 2.4))
+    fondo.alpha_composite(resplandor.filter(ImageFilter.GaussianBlur(S * 0.012)).resize((tam, tam), Image.LANCZOS))
+    fondo.alpha_composite(capa.resize((tam, tam), Image.LANCZOS))
+    # Un reflejo de la sala en el vidrio, arriba a la izquierda: una media luna clara y muy tenue.
+    refl = np.clip(1 - np.abs(np.sqrt((xx - cx + tam * 0.06) ** 2 + (yy - cy + tam * 0.07) ** 2) / (tam / 2) - 0.66) / 0.1, 0, 1)
+    refl = refl * np.clip(-np.sin(ang + math.radians(45)) * 1.3 - 0.35, 0, 1) * (rr < R_VIDRIO - 0.02)
+    arr = np.asarray(fondo.convert('RGB'), np.float32)
+    arr = mezcla(arr, col('#E8F2EA'), desenfocar(refl.astype(np.float32), 6) * 0.13)
+    fondo = a_img(arr)
+
+    # --- La huella: el eco en fósforo. Casi blanca donde acaba de pasar la línea, verde pálido y más tenue hacia atrás.
+    viva = np.exp(-atras / 1.6)
+    fosforo = mezcla(col('#5FA66F'), col('#9FD8A8'), np.clip(0.35 + viva, 0, 1))
+    fosforo = mezcla(fosforo, col('#EAFBEA'), np.clip(np.exp(-atras / 0.35) * 0.85, 0, 1))
+    grano = ruido(tam, 0.7, 407)
+    nucleo = np.clip((desenfocar(m, 2.2) - 0.55) / 0.45, 0, 1)
+    rgb = fosforo * (0.88 + 0.16 * nucleo[..., None]) * (0.95 + 0.1 * grano[..., None])
+    alfa = m * np.clip(0.55 + 0.45 * viva + 0.06 * (grano - 0.5), 0, 1)
+    capa = a_rgba(rgb, alfa)
+    halo = a_rgba(np.zeros((tam, tam, 3)) + col('#7FD08F'), np.clip(desenfocar(m, 7) * 1.25, 0, 1) * (1 - m) * (0.18 + 0.6 * viva))
+    halo.alpha_composite(capa)
+    guardar(fondo, halo, 'frente')
+
+# ------------------------------------------------------------------ Arcontes
+def bezier(p0, p1, p2, p3, n=40):
+    return [tuple((1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b + 3 * (1 - t) * t ** 2 * c + t ** 3 * e
+                  for a, b, c, e in zip(p0, p1, p2, p3)) for t in (i / n for i in range(n + 1))]
+
+
+def abraxas(d, x0, y0, u, c, hueco):
+    """Abraxas como en las gemas grabadas (siglos II–IV): cabeza de gallo de perfil, torso con coraza y faldellín de tiras,
+    las dos piernas de serpiente que se abren y levantan la cabeza a los lados, el látigo en alto en la mano de fuera y el
+    escudo redondo en la otra. Mira a la derecha. Origen en la cintura; [u] = px por unidad (la figura mide unas 88 de alto
+    y 62 de ancho). [c] es el color del grabado y [hueco] el de los cortes de detalle."""
+    def P(x, y): return (x0 + x * u, y0 + y * u)
+    def circ(x, y, r, f=c):
+        cx, cy = P(x, y); d.ellipse([cx - r * u, cy - r * u, cx + r * u, cy + r * u], fill=f)
+    def linea(pts, w, f=c):
+        q = [P(*p) for p in pts]
+        d.line(q, fill=f, width=max(1, int(w * u)), joint='curve')
+        for (a, b) in (q[0], q[-1]):
+            r = w * u / 2; d.ellipse([a - r, b - r, a + r, b + r], fill=f)
+    # --- Las piernas de serpiente: salen del faldellín, bajan, se abren y suben con la cabeza hacia fuera.
+    for lado in (-1, 1):
+        pts = bezier((lado * 3.5, 4), (lado * 5, 22), (lado * 22, 31), (lado * 22.5, 13), 60)
+        cinta(d, [P(*p) for p in pts], 6.8 * u, 4.4 * u, c)
+        # escamas: cortes cortos de través
+        for i in range(8, 56, 6):
+            (ax, ay), (bx, by) = pts[i - 1], pts[i + 1]
+            l = math.hypot(bx - ax, by - ay) or 1; nx, ny = -(by - ay) / l, (bx - ax) / l
+            w = 6.8 - 2.4 * i / 60
+            mx, my = pts[i]
+            linea([(mx - nx * w * 0.28 - (bx - ax) / l * 0.6, my - ny * w * 0.28 - (by - ay) / l * 0.6),
+                   (mx + (bx - ax) / l * 0.5, my + (by - ay) / l * 0.5),
+                   (mx + nx * w * 0.28 - (bx - ax) / l * 0.6, my + ny * w * 0.28 - (by - ay) / l * 0.6)], 0.55, hueco)
+        # la cabeza de la serpiente, levantada y mirando hacia fuera, con la boca abierta
+        hx, hy = pts[-1]
+        cab = [(hx - lado * 2.6, hy + 1.0), (hx - lado * 2.8, hy - 2.6), (hx - lado * 0.6, hy - 5.2), (hx + lado * 2.6, hy - 5.4),
+               (hx + lado * 6.4, hy - 4.2), (hx + lado * 4.0, hy - 2.8), (hx + lado * 6.0, hy - 1.4), (hx + lado * 2.0, hy + 0.2)]
+        d.polygon([P(*p) for p in cab], fill=c)
+        circ(hx + lado * 1.4, hy - 3.4, 0.75, hueco)
+        linea([(hx + lado * 6.8, hy - 2.8), (hx + lado * 8.2, hy - 3.4)], 0.5)            # la lengua
+        linea([(hx + lado * 8.2, hy - 3.4), (hx + lado * 8.9, hy - 4.4)], 0.4)
+        linea([(hx + lado * 8.2, hy - 3.4), (hx + lado * 9.1, hy - 2.7)], 0.4)
+    # --- El faldellín de tiras (pteryges) y el torso con la coraza musculada.
+    d.polygon([P(-8.5, -5), P(8.5, -5), P(10.5, 6), P(-10.5, 6)], fill=c)
+    for k in range(-3, 4):
+        linea([(k * 2.7, -3.6), (k * 3.1, 5.2)], 0.55, hueco)
+    d.polygon([P(-12.5, -27), P(12.5, -27), P(10.5, -16), P(7.5, -5), P(-7.5, -5), P(-10.5, -16)], fill=c)
+    linea([(-7.5, -6.4), (7.5, -6.4)], 0.7, hueco)                 # el cinturón
+    d.arc([*P(-8.2, -26), *P(0.6, -16)], 20, 160, fill=hueco, width=max(1, int(0.6 * u)))    # pectorales
+    d.arc([*P(-0.6, -26), *P(8.2, -16)], 20, 160, fill=hueco, width=max(1, int(0.6 * u)))
+    for lado in (-1, 1):                                             # el vientre de la coraza: dos curvas cortas
+        d.arc([*P(lado * 3.0 - 3.6, -14.5), *P(lado * 3.0 + 3.6, -9.5)], 30, 150, fill=hueco, width=max(1, int(0.45 * u)))
+    circ(0, -8.8, 0.6, hueco)
+    # --- El brazo de fuera, levantado, con el látigo (un mango y tres correas que caen hacia fuera).
+    linea([(-11, -25), (-19, -30), (-18.5, -40)], 4.4)
+    circ(-18.5, -41.5, 2.8)
+    linea([(-18.2, -43), (-16.4, -52)], 1.5)
+    for k, (c1, c2, fin) in enumerate((((-19.5, -57), (-25.5, -55), (-28, -47)), ((-20.5, -55), (-27, -50), (-29, -39.5)),
+                                        ((-20.5, -53), (-25.5, -45.5), (-26.5, -32)))):
+        linea(bezier((-16.4, -52), c1, c2, fin, 30), 1.05 - k * 0.12)
+    # --- El brazo del escudo y el escudo redondo, con su borde, su anillo y el umbo.
+    linea([(11, -25), (16, -21), (18, -17)], 4.4)
+    circ(19.5, -17, 10.6)
+    d.ellipse([*P(19.5 - 8.7, -17 - 8.7), *P(19.5 + 8.7, -17 + 8.7)], outline=hueco, width=max(1, int(0.8 * u)))
+    d.ellipse([*P(19.5 - 5.1, -17 - 5.1), *P(19.5 + 5.1, -17 + 5.1)], outline=hueco, width=max(1, int(0.6 * u)))
+    circ(19.5, -17, 1.9, hueco); circ(19.5, -17, 1.05)
+    # --- El cuello y la cabeza de gallo, de perfil, mirando a la derecha: cresta, pico, barba y ojo.
+    d.polygon([P(-4.2, -26), P(4.4, -26), P(4.0, -33), P(-3.0, -34)], fill=c)
+    circ(0.8, -37.2, 5.6)
+    for (cx, cy, r) in ((4.0, -42.6, 1.9), (1.6, -44.2, 2.2), (-1.2, -44.0, 2.1), (-3.6, -42.2, 1.8)):
+        circ(cx, cy, r)
+    d.polygon([P(4.6, -41.6), P(-4.6, -41.4), P(-2.6, -38.4), P(3.8, -38.4)], fill=c)
+    d.polygon([P(5.2, -39.6), P(11.4, -37.0), P(5.4, -35.2)], fill=c)              # pico
+    d.polygon([P(4.4, -35.4), P(7.0, -35.0), P(6.6, -31.0), P(5.0, -30.4), P(4.0, -32.6)], fill=c)   # barba
+    circ(2.6, -38.4, 1.15, hueco)
+    for k in range(4):                                                               # plumas del cuello, en escamas
+        for j in range(2):
+            cx, cy = -2.6 + k * 2.1 + j * 1.0, -31.6 + j * 2.6
+            d.arc([*P(cx - 1.1, cy - 1.4), *P(cx + 1.1, cy + 1.0)], 20, 160, fill=hueco, width=max(1, int(0.42 * u)))
+
+
+def estrella(d, x, y, r, c, puntas=8, agudo=0.36, giro=0.0):
+    pts = []
+    for k in range(puntas * 2):
+        a = giro - math.pi / 2 + k * math.pi / puntas; rr = r if k % 2 == 0 else r * agudo
+        pts.append((x + rr * math.cos(a), y + rr * math.sin(a)))
+    d.polygon(pts, fill=c)
+
+
+def arcontes(tam):
+    """Arcontes: una gema de heliotropo (el jaspe verde oscuro con motas rojas de las gemas de Abraxas), pulida en cabujón y
+    montada en un bisel de oro granulado. Grabados en hueco, como en esas gemas: el ouroboros alrededor (la serpiente que se
+    muerde la cola: el borde del mundo), Abraxas a la izquierda (cabeza de gallo, coraza, piernas de serpiente, látigo y
+    escudo), la luna creciente sobre él y, a la derecha, las siete estrellas de las siete esferas. Abajo a la derecha, una
+    grieta finísima en la piedra deja pasar la luz blanca y violeta (la grieta del tema). La huella es un grabado más: el
+    corte mate y claro en la piedra, con la luz de arriba a la izquierda."""
+    m = mascara_sello(tam)
+    yy, xx = np.mgrid[0:tam, 0:tam].astype(np.float32)
+    c = tam / 2
+    rr = np.sqrt((xx - c) ** 2 + (yy - c) ** 2) / c
+    # --- La piedra: nubes verdes, vetas finas, motas rojas y el abombado del cabujón (luz arriba a la izquierda).
+    nubes = nube(501, 4, tam) * 0.8 + nube(502, 10, tam) * 0.45 + nube(503, 26, tam) * 0.22 + nube(504, 160, tam) * 0.12
+    v = nube(505, 6, tam) + nube(506, 17, tam) * 0.3
+    vetas = np.exp(-(v / 0.02) ** 2) * np.clip(nube(507, 5, tam) * 2, 0, 1)
+    roja = np.clip((nube(508, 110, tam) + nube(509, 240, tam) * 0.5 - 0.78) * 4.0, 0, 1) * np.clip(nube(510, 4, tam) * 2 + 0.2, 0, 1)
+    piedra = col('#2B4636')[None, None, :] + nubes[..., None] * np.array([9, 14, 11], np.float32)
+    piedra = piedra + vetas[..., None] * np.array([7, 9, 8], np.float32)
+    piedra = mezcla(piedra, col('#7E3428'), roja * 0.6)
+    luz = np.clip(1 - np.sqrt((xx - tam * 0.34) ** 2 + (yy - tam * 0.3) ** 2) / (tam * 0.6), 0, 1) ** 2
+    piedra = piedra + luz[..., None] * np.array([18, 24, 20], np.float32) - (rr ** 3)[..., None] * np.array([16, 22, 18], np.float32)
+    fondo = a_img(piedra).convert('RGBA')
+    # --- Los grabados (todo lo que no es la huella), al triple y reducidos.
+    k = 3; S = tam * k
+    g = Image.new('L', (S, S), 0); d = ImageDraw.Draw(g)
+    ouroboros(d, S / 2, S / 2, 0.868 * c * k, 25 * k, 7 * k, 255, hueco=0)
+    abraxas(d, 119 * k, 368 * k, 1.65 * k, 255, 0)
+    # La luna creciente sobre Abraxas y las siete estrellas a la derecha, en arco.
+    lx, ly, lr = 178 * k, 196 * k, 21 * k
+    d.ellipse([lx - lr, ly - lr, lx + lr, ly + lr], fill=255)
+    d.ellipse([lx - lr * 0.62, ly - lr * 1.08, lx + lr * 1.28, ly + lr * 0.72], fill=0)
+    for i in range(7):
+        a = math.radians(-36 + i * 12.3)
+        estrella(d, (c + 252 * math.cos(a)) * k, (c + 252 * math.sin(a)) * k, 12.5 * k, 255, 8, 0.34, giro=i * 0.21)
+    grab = np.asarray(g.resize((tam, tam), Image.LANCZOS), np.float32) / 255
+    # La grieta: una raja finísima en la piedra, abajo a la derecha, por donde se filtra la luz blanca y violeta del Pleroma.
+    rg = np.random.default_rng(514)
+    a0 = math.radians(57); x, y = c + 306 * math.cos(a0), c + 306 * math.sin(a0); pts = [(x, y)]
+    rumbo = a0 + math.pi + 0.25
+    for i in range(10):
+        rumbo += (rg.random() - 0.5) * 1.1; l = 5 + rg.random() * 4
+        x += l * math.cos(rumbo); y += l * math.sin(rumbo); pts.append((x, y))
+    halo = Image.new('RGBA', (S, S), (0, 0, 0, 0)); dh = ImageDraw.Draw(halo, 'RGBA')
+    dh.line([(px * k, py * k) for px, py in pts], fill=(156, 123, 255, 230), width=int(8 * k), joint='curve')
+    fondo.alpha_composite(halo.filter(ImageFilter.GaussianBlur(4.5 * k)).resize((tam, tam), Image.LANCZOS))
+    fondo.alpha_composite(halo.filter(ImageFilter.GaussianBlur(10 * k)).resize((tam, tam), Image.LANCZOS))
+    nucleo = Image.new('RGBA', (S, S), (0, 0, 0, 0)); dn = ImageDraw.Draw(nucleo, 'RGBA')
+    for i in range(len(pts) - 1):                      # se afina hacia la punta
+        w = max(1, int((1.9 - 1.4 * i / len(pts)) * k))
+        dn.line([(pts[i][0] * k, pts[i][1] * k), (pts[i + 1][0] * k, pts[i + 1][1] * k)], fill=(244, 241, 255, 255), width=w)
+    fondo.alpha_composite(nucleo.filter(ImageFilter.GaussianBlur(0.6 * k)).resize((tam, tam), Image.LANCZOS))
+    fondo.alpha_composite(tallado(grab, '#D9D6BE', 511, suave=1.9))
+    # --- El bisel de oro: una banda redonda (luz arriba a la izquierda), con su granulado por dentro y la sombra en la piedra.
+    r_in, r_out = 0.952, 1.0
+    t_ = np.clip((rr - r_in) / (r_out - r_in), 0, 1)
+    dentro = (rr >= r_in).astype(np.float32)
+    dentro = np.asarray(Image.fromarray((dentro * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.7)), np.float32) / 255
+    lado = -((xx - c) + (yy - c)) / (rr * c + 1e-3) / math.sqrt(2)          # 1 arriba a la izquierda
+    # La banda es redonda: la cara de dentro mira al centro y la de fuera hacia afuera; brilla la que mira a la luz.
+    normal = np.cos(t_ * math.pi)                                           # 1 en el borde de dentro, -1 en el de fuera
+    brillo = np.clip(-lado * normal, -1, 1)                                 # la cara de dentro de abajo a la derecha mira a la luz
+    oro = mezcla(col('#6E4E0E'), col('#C99A2E'), np.clip(0.5 + 0.45 * brillo, 0, 1))
+    oro = mezcla(oro, col('#FFF0B8'), np.clip(brillo - 0.55, 0, 1) ** 1.5 * 1.6)
+    oro = oro * (0.95 + 0.07 * ruido(tam, 0.8, 512)[..., None])
+    arr = np.asarray(fondo.convert('RGB'), np.float32)
+    sombra = np.clip(1 - (r_in - rr) / 0.03, 0, 1) * (rr < r_in) * (0.45 + 0.35 * np.clip(lado, 0, 1))
+    arr = mezcla(arr, col('#06100A'), sombra * 0.8)
+    arr = mezcla(arr, oro, dentro)
+    fondo = a_img(arr).convert('RGBA')
+    gr = Image.new('RGBA', (S, S), (0, 0, 0, 0)); dg = ImageDraw.Draw(gr, 'RGBA')
+    n = 132; rb = (r_in - 0.004) * c * k; q = 3.6 * k
+    for i in range(n):
+        a = 2 * math.pi * i / n; x, y = c * k + rb * math.cos(a), c * k + rb * math.sin(a)
+        dg.ellipse([x - q * 1.1 + k, y - q * 1.1 + k, x + q * 1.1 + k, y + q * 1.1 + k], fill=(20, 16, 6, 140))
+        dg.ellipse([x - q, y - q, x + q, y + q], fill=(110, 78, 16, 255))
+        dg.ellipse([x - q * 0.82, y - q * 0.82, x + q * 0.62, y + q * 0.62], fill=(196, 150, 48, 255))
+        dg.ellipse([x - q * 0.6, y - q * 0.6, x - q * 0.08, y - q * 0.08], fill=(255, 238, 176, 230))
+    fondo.alpha_composite(gr.resize((tam, tam), Image.LANCZOS))
+    # --- La huella, grabada como lo demás.
+    guardar(fondo, tallado(m, '#D9D6BE', 513, suave=1.9), 'arcontes')
+
+
+# ------------------------------------------------------------------ Galia
+def caballo(d, x0, y0, u, c, hueco, giro=0.0):
+    """El caballo de los estáteros galos, al galope hacia la izquierda: el cuerpo liso como una almendra, el cuello alto y
+    arqueado con la crin de perlas, la cabeza pequeña con el ojo grande, el hombro y la grupa como dos glóbulos, las patas
+    finas con la rodilla en bolita y el casco en media luna, y la cola que se abre en hebras con su perla al final."""
+    cg, sg = math.cos(giro), math.sin(giro)
+    def P(x, y): return (x0 + (x * cg - y * sg) * u, y0 + (x * sg + y * cg) * u)
+    def circ(x, y, r, f=c):
+        X, Y = P(x, y); d.ellipse([X - r * u, Y - r * u, X + r * u, Y + r * u], fill=f)
+    def trazo(pts, w0, w1, f=c, bolas=True):
+        q = [P(*p) for p in pts]
+        cinta(d, q, w0 * u, w1 * u, f)
+        if bolas:
+            for (X, Y), w in ((q[0], w0), (q[-1], w1)):
+                r = w * u / 2; d.ellipse([X - r, Y - r, X + r, Y + r], fill=f)
+    # El cuerpo: lomo, grupa, nalga, vientre y pecho.
+    cuerpo = (bezier((-30, -4), (-26, -16), (-14, -15), (2, -12))[:-1] + bezier((2, -12), (14, -10), (22, -17), (32, -13))[:-1]
+              + bezier((32, -13), (40, -10), (41, 4), (33, 9))[:-1] + bezier((33, 9), (24, 15), (8, 15), (-6, 14))[:-1]
+              + bezier((-6, 14), (-18, 14), (-28, 12), (-33, 4))[:-1] + bezier((-33, 4), (-34, 0), (-32, -2), (-30, -4)))
+    d.polygon([P(*p) for p in cuerpo], fill=c)
+    # El cuello, ancho en la cruz, alto y arqueado hacia la cabeza.
+    cuello = (bezier((-12, -14), (-16, -30), (-26, -42), (-38, -45))[:-1] + bezier((-38, -45), (-43, -44), (-47, -38), (-47, -30))[:-1]
+              + bezier((-47, -30), (-44, -18), (-38, -8), (-33, 3)))
+    d.polygon([P(*p) for p in cuello], fill=c)
+    # La cabeza, inclinada: la frente, el hueso de la nariz que baja, el belfo romo y la quijada.
+    cabeza = (bezier((-37, -46), (-45, -48), (-52, -42), (-56, -34))[:-1] + bezier((-56, -34), (-59, -28), (-63, -24), (-61, -19))[:-1]
+              + bezier((-61, -19), (-59, -15), (-53, -16), (-50, -19))[:-1] + bezier((-50, -19), (-46, -22), (-44, -26), (-44, -32)))
+    d.polygon([P(*p) for p in cabeza], fill=c)
+    d.polygon([P(-41, -43), P(-38.5, -50), P(-36.5, -54), P(-34.5, -50), P(-33, -44)], fill=c)        # oreja
+    # El ojo grande, en anillo, y la boca.
+    X, Y = P(-49, -35); r = 3.8 * u; d.ellipse([X - r, Y - r, X + r, Y + r], fill=hueco)
+    circ(-49, -35, 2.3)
+    d.line([P(-62, -20), P(-56, -20)], fill=hueco, width=max(1, int(0.9 * u)))
+    # La crin: perlas a lo largo del cuello, por fuera.
+    for i, (x, y) in enumerate(bezier((-14, -19), (-17, -32), (-25, -42), (-34, -47), 6)):
+        circ(x - 1.8, y - 2.0, 3.0 - i * 0.2)
+    # El hombro y la grupa, glóbulos marcados con un surco en media luna (por detrás y por debajo).
+    for gx, gy, gr, a0, a1 in ((-21, 1, 8.0, -20, 200), (22, -1, 9.6, -40, 160)):
+        X, Y = P(gx, gy); r = gr * u
+        d.arc([X - r, Y - r, X + r, Y + r], a0 + math.degrees(giro), a1 + math.degrees(giro), fill=hueco, width=max(1, int(1.1 * u)))
+    # Las patas: las de delante estiradas hacia delante, las de atrás hacia atrás; rodillas en bolita y cascos.
+    patas = [
+        ([(-28, 8), (-38, 13), (-46, 18)], [(-46, 18), (-54, 16), (-60, 11)], (-61, 10)),   # mano de este lado, estirada
+        ([(-20, 11), (-24, 20), (-30, 26)], [(-30, 26), (-26, 32), (-22, 37)], (-21, 38)),  # mano de allá, doblada
+        ([(28, 6), (36, 14), (40, 21)], [(40, 21), (48, 27), (56, 31)], (57, 31)),            # pata de este lado, atrás
+        ([(17, 12), (21, 21), (20, 27)], [(20, 27), (15, 32), (11, 38)], (10, 39)),           # pata de allá, recogida
+    ]
+    for arriba, abajo, casco in patas:
+        trazo(arriba, 6.5, 4.2, bolas=False)
+        trazo(abajo, 3.6, 2.8, bolas=False)
+        circ(*arriba[-1], 3.4)                                                # la rodilla
+        X, Y = P(*casco); r = 3.0 * u
+        d.ellipse([X - r, Y - r, X + r, Y + r], fill=c)                       # el casco
+    # La cola: tres hebras que salen de la grupa, suben y se abren hacia atrás, cada una con su perla.
+    for k, (c1, c2, fin) in enumerate((((42, -25), (52, -30), (57, -23)), ((46, -19), (55, -19), (58, -11)), ((43, -11), (50, -5), (53, 1)))):
+        pts = bezier((35, -11), c1, c2, fin, 20)
+        trazo(pts, 3.4 - k * 0.3, 1.8, bolas=False)
+        circ(*fin, 2.4)
+
+
+def rueda(d, x0, y0, u, r, c, hueco, radios=4, giro=0.3):
+    """La rueda (la «rouelle»): llanta, cubo y radios. Bajo el caballo de las monedas galas suele leerse como lo que quedó
+    del carro de dos caballos del estátero de Filipo, que copiaban."""
+    def P(a, rr): return (x0 + rr * u * math.cos(a), y0 + rr * u * math.sin(a))
+    X, Y = x0, y0
+    d.ellipse([X - r * u, Y - r * u, X + r * u, Y + r * u], fill=c)
+    ri = r * 0.68
+    d.ellipse([X - ri * u, Y - ri * u, X + ri * u, Y + ri * u], fill=hueco)
+    for k in range(radios):
+        a = giro + k * math.pi / radios * 2
+        d.line([P(a, 0), P(a, ri + 0.5)], fill=c, width=int(r * 0.24 * u))
+    rc = r * 0.3; d.ellipse([X - rc * u, Y - rc * u, X + rc * u, Y + rc * u], fill=c)
+    rh = r * 0.1; d.ellipse([X - rh * u, Y - rh * u, X + rh * u, Y + rh * u], fill=hueco)
+
+
+def lira(d, x0, y0, u, c, hueco, giro=0.0):
+    """La lira de los bardos (Diodoro 5.31): la caja redonda abajo, los dos brazos que se abren y vuelven a cerrarse con un
+    botón en la punta, el travesaño arriba y cuatro cuerdas. Ponerla en la moneda es recurso de dibujo (que haya liras en
+    monedas galas está sin comprobar)."""
+    cg, sg = math.cos(giro), math.sin(giro)
+    def P(x, y): return (x0 + (x * cg - y * sg) * u, y0 + (x * sg + y * cg) * u)
+    def circ(x, y, r, f=c):
+        X, Y = P(x, y); d.ellipse([X - r * u, Y - r * u, X + r * u, Y + r * u], fill=f)
+    caja = bezier((-17, 14), (-19, 34), (19, 34), (17, 14), 30) + bezier((17, 14), (10, 10), (-10, 10), (-17, 14), 20)
+    d.polygon([P(*p) for p in caja], fill=c)
+    d.arc([*P(-11, 15), *P(11, 29)], 20, 160, fill=hueco, width=max(1, int(1.0 * u)))
+    for lado in (-1, 1):
+        pts = bezier((lado * 13, 16), (lado * 30, 2), (lado * 26, -30), (lado * 12, -40), 40)
+        cinta(d, [P(*p) for p in pts], 7.5 * u, 4.2 * u, c)
+        circ(lado * 12.5, -41.5, 3.6)
+    d.line([P(-20, -31), P(20, -31)], fill=c, width=int(4.2 * u))
+    for lado in (-1, 1): circ(lado * 21, -31, 2.6)
+    for k in range(4):
+        x = -7.5 + k * 5
+        d.line([P(x, -29), P(x * 0.85, 13)], fill=c, width=max(1, int(1.5 * u)))
+
+
+def esse(d, x0, y0, u, w, c, giro=0.0):
+    """La «S» tumbada de las monedas galas: un trazo en S que engruesa en el medio, con una perla en cada punta."""
+    cg, sg = math.cos(giro), math.sin(giro)
+    def P(x, y): return (x0 + (x * cg - y * sg) * u, y0 + (x * sg + y * cg) * u)
+    pts = bezier((-16, 4), (-14, -12), (2, -8), (0, 0), 20)[:-1] + bezier((0, 0), (-2, 8), (14, 12), (16, -4), 20)
+    q = [P(*p) for p in pts]
+    n = len(q)
+    izq, der = [], []
+    for i, (x, y) in enumerate(q):
+        a = q[max(i - 1, 0)]; b = q[min(i + 1, n - 1)]
+        dx, dy = b[0] - a[0], b[1] - a[1]; l = math.hypot(dx, dy) or 1
+        ww = w * u * (0.55 + 0.45 * math.sin(math.pi * i / (n - 1))) / 2
+        izq.append((x - dy / l * ww, y + dx / l * ww)); der.append((x + dy / l * ww, y - dx / l * ww))
+    d.polygon(izq + der[::-1], fill=c)
+    for (x, y) in (q[0], q[-1]):
+        r = w * u * 0.62; d.ellipse([x - r, y - r, x + r, y + r], fill=c)
+
+
+def astro(d, x0, y0, u, c, n=6, r=7.0, rp=2.3):
+    """El «astro» de las monedas: una perla en el centro y un corro de perlas alrededor."""
+    d.ellipse([x0 - rp * 1.25 * u, y0 - rp * 1.25 * u, x0 + rp * 1.25 * u, y0 + rp * 1.25 * u], fill=c)
+    for k in range(n):
+        a = k * 2 * math.pi / n - math.pi / 2
+        x, y = x0 + r * u * math.cos(a), y0 + r * u * math.sin(a)
+        d.ellipse([x - rp * u, y - rp * u, x + rp * u, y + rp * u], fill=c)
+
+
+# El electro de las monedas de Vercingétorix (oro con plata): más pálido y frío que el oro de los torques.
+# El electro: oro con mucha plata, más pálido y menos amarillo que el oro fino; como tinta vieja, sin saturar, para que el
+# sello quede en la familia de los demás.
+ELECTRO = [(0.0, '#22180D'), (0.22, '#543D1D'), (0.42, '#8C6D32'), (0.57, '#B29149'), (0.7, '#CCAD61'), (0.83, '#E2CA89'),
+           (0.93, '#F2E4B7'), (1.0, '#FDF7E2')]
+
+
+def galia(tam):
+    """Galia: un estátero arverno de electro (oro pálido, con plata: las monedas de Vercingétorix tienen «environ 40 %
+    d'or») sobre un cuero curtido. El cospel, batido a mano, no es del todo redondo y tiene el canto redondeado; la gráfila
+    de perlas corre por dentro. En el campo, en relieve, como en el reverso de los estáteros galos: a la izquierda el
+    caballo al galope, con la crin de perlas, la perla sobre el lomo y debajo la rueda (los estáteros galos copian el de
+    Filipo de Macedonia, con su carro de dos caballos, que se fue volviendo un solo caballo); a la derecha la lira de los
+    bardos (Diodoro 5.31; en la moneda es recurso), la «S» tumbada y el astro de perlas. En los huecos, la pátina rojiza
+    del oro; en lo alto, el brillo del roce. La huella va acuñada en el centro, en el mismo metal, con su sombra corta (la
+    luz viene de arriba a la izquierda)."""
+    k = 2; S = tam * k; c = S / 2
+    yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
+    dx, dy = xx - c, yy - c
+    rr = np.sqrt(dx ** 2 + dy ** 2) / c
+    ang = np.arctan2(dy, dx)
+    # --- El cospel: el contorno irregular y el canto redondeado; un leve abombado.
+    rf = 0.95 + 0.011 * np.sin(3 * ang + 0.7) + 0.007 * np.sin(7 * ang + 2.1) + 0.004 * np.sin(13 * ang + 0.3)
+    dentro_px = (rf - rr) * c
+    moneda = np.clip(dentro_px / (1.0 * k) + 0.5, 0, 1)
+    # El reverso de los estáteros galos es cóncavo: el campo baja hacia el centro como un cuenco poco hondo.
+    alto_cospel = np.clip(dentro_px / (19 * k), 0, 1) ** 0.5 - 1.4 * np.clip(1 - (rr / 0.93) ** 2, 0, 1) ** 1.5
+    # --- Lo que va en relieve (sin la huella), dibujado a la escala del lienzo.
+    g = Image.new('L', (S, S), 0); d = ImageDraw.Draw(g)
+    rg = np.random.default_rng(611)
+    caballo(d, 111 * k, 291 * k, 1.3 * k, 255, 0, giro=-0.13)
+    rueda(d, 140 * k, 466 * k, 1.0 * k, 21, 255, 0)
+    d.ellipse([(130 - 6) * k, (204 - 6) * k, (130 + 6) * k, (204 + 6) * k], fill=255)        # la perla sobre el lomo
+    lira(d, 614 * k, 352 * k, 1.55 * k, 255, 0)
+    esse(d, 598 * k, 204 * k, 1.5 * k, 5.0, 255, giro=-0.35)
+    astro(d, 596 * k, 512 * k, 1.5 * k, 255)
+    figuras = np.asarray(g, np.float32) / 255
+    cerca = suavizar(figuras, 4 * k) > 0.04
+    n = 62
+    for i in range(n):                                       # la gráfila: perlas desparejas, alguna mal acuñada; donde
+        a = 2 * math.pi * i / n + 0.02                       # pasa una figura, la figura se come la perla
+        rb = 0.882 * c + rg.normal(0, 0.6 * k); rp = (0.0185 + rg.normal(0, 0.0012)) * c
+        x, y = c + rb * math.cos(a), c + rb * math.sin(a)
+        if cerca[min(S - 1, int(y)), min(S - 1, int(x))]: continue
+        d.ellipse([x - rp, y - rp, x + rp, y + rp], fill=int(255 * (0.55 if rg.random() < 0.12 else 1.0)))
+    rel = np.asarray(g, np.float32) / 255
+    rel = rel * moneda
+    alto_rel = (suavizar(rel, 1.6 * k) * 0.3 + suavizar(rel, 3.2 * k) * 0.5 + suavizar(rel, 9 * k) * 0.35) * (0.3 + 0.7 * rel)
+    # --- El campo: rayas finas de uso, golpecitos y un grano muy fino.
+    marcas = Image.new('L', (S, S), 0); dm = ImageDraw.Draw(marcas)
+    for _ in range(70):
+        x, y = rg.random() * S, rg.random() * S; a = rg.random() * math.pi; l = (6 + rg.random() * 40) * k
+        dm.line([(x, y), (x + l * math.cos(a), y + l * math.sin(a))], fill=int(60 + rg.random() * 120), width=1)
+    for _ in range(40):
+        x, y = rg.random() * S, rg.random() * S; r_ = (1 + rg.random() * 3) * k
+        dm.ellipse([x - r_, y - r_, x + r_, y + r_], fill=int(80 + rg.random() * 120))
+    golpes = suavizar(np.asarray(marcas, np.float32) / 255, 0.7 * k)
+    # Una grieta del cospel en el canto, abajo a la derecha, como las que abre el golpe del cuño en el metal frío.
+    grieta = Image.new('L', (S, S), 0); dg = ImageDraw.Draw(grieta)
+    a0 = math.radians(38); x, y = c + 0.97 * c * math.cos(a0), c + 0.97 * c * math.sin(a0); pts = [(x, y)]
+    rumbo = a0 + math.pi
+    for i in range(8):
+        rumbo += rg.normal(0, 0.18); l = (5 + rg.random() * 4) * k
+        x += l * math.cos(rumbo); y += l * math.sin(rumbo); pts.append((x, y))
+    for i in range(len(pts) - 1):
+        dg.line([pts[i], pts[i + 1]], fill=255, width=max(1, int((4.6 - 3.8 * i / len(pts)) * k)))
+    grieta = suavizar(np.asarray(grieta, np.float32) / 255, 0.5 * k)
+    moneda = moneda * (1 - np.clip(grieta * 1.6, 0, 1) * np.clip(1 - dentro_px / (9 * k), 0, 1))     # la boca de la grieta en el canto
+    alto = alto_cospel * 0.9 + alto_rel * 0.8 - golpes * 0.025 + suavizar(rg.standard_normal((S, S)).astype(np.float32), 1.2 * k) * 0.006
+    alto = (alto - grieta * 0.35) * np.clip(moneda * 1.2, 0, 1)
+    color = oro_relieve(suavizar(alto, 0.5 * k), 24.0 * k, 612, tonos=ELECTRO, grano=0.02, ambiente=0.75, plano=0.34)
+    # El roce: lo más alto del relieve, pulido por las manos, más claro.
+    color = mezcla(color, col('#ECD795'), np.clip(alto_rel * 1.6 - 0.45, 0, 1) * 0.3)
+    # El campo no es parejo: tonos más cálidos y más fríos en manchas grandes, y la luz que cae hacia abajo a la derecha.
+    color = color * (0.94 + 0.1 * nube(616, 3, S)[..., None] + 0.04 * nube(617, 9, S)[..., None])
+    color = color * (1.06 - 0.16 * np.clip((dx + dy) / (2 * c) + 0.5, 0, 1))[..., None]
+    # La pátina: rojiza en los huecos junto al relieve y por dentro del canto; el campo, un poco más mate que lo alto.
+    hueco = np.clip(suavizar(rel, 5 * k) * 1.5 - rel * 1.2, 0, 1)
+    color = mezcla(color, col('#6A4221'), hueco * 0.42)
+    color = mezcla(color, col('#6A4221'), np.clip(1 - dentro_px / (34 * k), 0, 1) * np.clip(dentro_px / (6 * k), 0, 1) * 0.18)
+    color = color * (0.93 + 0.07 * np.clip(alto_rel * 2, 0, 1))[..., None]
+    color = mezcla(color, col('#2E1C08'), np.clip(grieta * 1.6, 0, 1) * 0.85)
+    # El campo, con la pátina de siglos: más pardo y apagado que lo alto, con manchas rojizas.
+    campo = 1 - np.clip(alto_rel * 3, 0, 1)
+    color = mezcla(color, col('#6D5028'), campo * 0.22)
+    color = mezcla(color, col('#8A522E'), np.clip(nube(618, 5, S) * 1.6 - 0.2, 0, 1) * 0.18 * campo)
+    # --- El cuero de fuera: pardo oscuro, con su flor (el grano) y la sombra de la moneda.
+    cuero = col('#2B1D13')[None, None, :] * (0.9 + 0.12 * nube(613, 6, S)[..., None] + 0.06 * nube(614, 40, S)[..., None])
+    flor = suavizar(rg.standard_normal((S, S)).astype(np.float32), 1.6 * k)
+    cuero = cuero * (1 + 0.5 * np.clip(flor, -0.2, 0.2)[..., None])
+    sombra = suavizar(np.roll(np.roll(moneda, 6 * k, 0), 4 * k, 1), 7 * k)
+    cuero = cuero * (1 - 0.55 * sombra)[..., None]
+    fondo = mezcla(cuero, color, moneda)
+    fondo = a_img(fondo).resize((tam, tam), Image.LANCZOS)
+    # --- La huella, acuñada: el mismo metal, más pulida en lo alto, con la pátina y la sombra alrededor.
+    m = mascara_sello(S)
+    alto_h = suavizar(m, 4.6 * k) * (0.25 + 0.75 * m)
+    alto_h = alto_h / max(1e-3, float(alto_h.max()))        # cada cresta, un hilo redondo y no una tira plana
+    color_h = oro_relieve(suavizar(alto_cospel * 0.9 + alto_h * 0.8, 0.5 * k), 24.0 * k, 615, tonos=ELECTRO, grano=0.02, ambiente=0.75, plano=0.56)
+    color_h = mezcla(color_h, col('#ECD795'), np.clip(alto_h * 1.6 - 0.6, 0, 1) * 0.3)
+    color_h = color_h * (0.94 + 0.1 * nube(616, 3, S)[..., None] + 0.04 * nube(617, 9, S)[..., None])
+    color_h = color_h * (1.06 - 0.16 * np.clip((dx + dy) / (2 * c) + 0.5, 0, 1))[..., None]
+    capa = a_rgba(color_h, m)
+    halo = np.clip(suavizar(m, 4 * k) * 1.5 - m, 0, 1)
+    sombra_h = np.clip(suavizar(np.roll(np.roll(m, 3 * k, 0), 2 * k, 1), 2.4 * k) - m, 0, 1)
+    base = a_rgba(np.zeros((S, S, 3)) + col('#4A2A0E'), np.clip(halo * 0.22 + sombra_h * 0.5, 0, 1))
+    base.alpha_composite(capa)
+    huella = base.convert('RGBa').resize((tam, tam), Image.LANCZOS).convert('RGBA')
+    guardar(fondo, huella, 'galia')
+
+
+# ------------------------------------------------------------------ Art nouveau
+def _rot(x0, y0, u, giro):
+    cg, sg = math.cos(giro), math.sin(giro)
+    return lambda x, y: (x0 + (x * cg - y * sg) * u, y0 + (x * sg + y * cg) * u)
+
+
+def _cerrar(d, pts, w, c):
+    """El contorno cerrado de [pts] como un hilo de oro de ancho [w], con las uniones redondas."""
+    d.line(list(pts) + [pts[0], pts[1]], fill=c, width=max(1, int(w)), joint='curve')
+
+
+def ala(P, base, ang, largo, ancho, frente, n=48):
+    """El contorno de un ala de libélula, en coordenadas locales: nace en [base] hacia [ang]; el borde de delante (el
+    lado [frente], +1 o −1) casi recto y el de atrás curvo y más ancho cerca de la base; la punta redondeada. Devuelve
+    (el contorno, una función que da el punto a [t] del largo y a [f] del ancho: f = 1 en el borde de delante, −1 en el
+    de atrás)."""
+    dx, dy = math.cos(ang), math.sin(ang); nx, ny = -dy * frente, dx * frente
+    def borde_del(t): return ancho * (0.16 + 0.18 * math.sin(math.pi * t ** 0.9)) * (1 - t ** 10) ** 0.5
+    def borde_atr(t): return ancho * (0.22 + 0.78 * math.sin(math.pi * min(1, t ** 0.75 * 0.98))) * 0.6 * (1 - t ** 7) ** 0.5
+    def punto(t, f):
+        b = borde_del(t) if f >= 0 else borde_atr(t)
+        x = base[0] + dx * largo * t + nx * b * f; y = base[1] + dy * largo * t + ny * b * f
+        return P(x, y)
+    ts = np.linspace(0, 1, n)
+    contorno = [punto(t, 1) for t in ts] + [punto(t, -1) for t in ts[::-1]]
+    return contorno, punto
+
+
+def libelula(dd, x0, y0, u, giro=0.0):
+    """La libélula de las joyas de 1900, vista desde arriba, con la cabeza hacia −y: los dos ojos grandes, el tórax, el
+    abdomen largo en diez anillos y las cuatro alas de esmalte translúcido (nácar) con su nervadura de oro y la mancha del
+    pterostigma cerca de la punta. [dd] es un diccionario de lápices: 'oro' (lo que va en oro: los tabiques, las nervaduras,
+    los anillos), 'ala', 'cuerpo', 'ojo' y 'mancha'. Origen en el centro del tórax; [u] px por unidad (mide unas 110 de
+    largo; con las alas echadas hacia delante y hacia atrás, unas 80 de ancho)."""
+    P = _rot(x0, y0, u, giro)
+    w_hilo = 1.5 * u
+    # --- Las alas: las de delante echadas hacia delante y las de atrás hacia atrás, para que quepan junto a la huella.
+    for lado in (-1, 1):
+        for base, a, largo, ancho in (((lado * 3.2, -6.0), (0 if lado > 0 else math.pi) - lado * 0.95, 66, 15.5),
+                                      ((lado * 3.6, 2.5), (0 if lado > 0 else math.pi) + lado * 1.0, 61, 19.0)):
+            contorno, punto = ala(P, base, a, largo, ancho, -lado)       # el borde de delante mira hacia la cabeza
+            dd['ala'].polygon(contorno, fill=255)
+            # Las nervaduras largas: tres, que salen de la base y se abren hacia la punta.
+            for f in (0.55, -0.15, -0.6):
+                dd['oro'].line([punto(t, f) for t in np.linspace(0.03, 0.9 - abs(f) * 0.12, 30)], fill=255, width=max(1, int(w_hilo * 0.75)), joint='curve')
+            # Las de través, en tresbolillo, que dejan las celdas del esmalte.
+            for i, t in enumerate(np.arange(0.12, 0.86, 0.085)):
+                tramos = ((1.0, 0.55), (-0.15, -0.6)) if i % 2 else ((0.55, -0.15), (-0.6, -1.0))
+                for f0, f1 in tramos:
+                    dd['oro'].line([punto(t, f0), punto(t + 0.025, f1)], fill=255, width=max(1, int(w_hilo * 0.6)))
+            # El pterostigma: una celda llena cerca de la punta, en el borde de delante.
+            dd['mancha'].polygon([punto(0.8, 1.0), punto(0.89, 1.0), punto(0.885, 0.45), punto(0.805, 0.45)], fill=255)
+            _cerrar(dd['oro'], contorno, w_hilo * 1.15, 255)
+    # --- El abdomen: diez anillos que se afinan, cada uno con su tabique de oro; al final, los dos apéndices.
+    y = 9.0
+    for i in range(10):
+        h = 8.6 - i * 0.35; w = 7.6 - i * 0.36
+        if i == 0: w = 8.0
+        seg = [P(x_ * w / 2, y + (y_ + 1) / 2 * h) for x_, y_ in
+               [(math.cos(t) * (0.93 if abs(math.sin(t)) < 0.9 else 0.8), math.sin(t)) for t in np.linspace(0, 2 * math.pi, 24)[:-1]]]
+        dd['cuerpo'].polygon(seg, fill=255)
+        _cerrar(dd['oro'], seg, w_hilo, 255)
+        y += h - 0.6
+    for lado in (-1, 1):
+        dd['oro'].line([P(lado * 0.8, y - 0.5), P(lado * 2.6, y + 4.5), P(lado * 2.2, y + 6.5)], fill=255, width=max(1, int(w_hilo * 1.1)), joint='curve')
+    # --- El tórax: un óvalo con su tabique y las bases de las alas.
+    tor = [P(6.8 * math.cos(t), -1.5 + 9.5 * math.sin(t)) for t in np.linspace(0, 2 * math.pi, 36)[:-1]]
+    dd['cuerpo'].polygon(tor, fill=255); _cerrar(dd['oro'], tor, w_hilo * 1.2, 255)
+    dd['oro'].line([P(0, -9.5), P(0, 7.0)], fill=255, width=max(1, int(w_hilo * 0.8)))
+    # --- La cabeza: los dos ojos grandes que casi se tocan y la cara entre ellos.
+    for lado in (-1, 1):
+        ojo = [P(lado * 4.6 + 5.0 * math.cos(t), -15.5 + 4.8 * math.sin(t)) for t in np.linspace(0, 2 * math.pi, 30)[:-1]]
+        dd['ojo'].polygon(ojo, fill=255); _cerrar(dd['oro'], ojo, w_hilo * 1.1, 255)
+    cara = [P(3.2 * math.cos(t), -11.2 + 2.4 * math.sin(t)) for t in np.linspace(0, 2 * math.pi, 20)[:-1]]
+    dd['cuerpo'].polygon(cara, fill=255); _cerrar(dd['oro'], cara, w_hilo, 255)
+
+
+def petalo(P, raiz, punta, ancho, curva=0.0, n=40, panza=0.55, ondula=0.0):
+    """El contorno de un pétalo (o de una hoja ancha): de [raiz] a [punta], con el ancho máximo a [panza] del largo y el
+    eje curvado [curva] (fracción del largo, hacia la izquierda del avance); [ondula] riza el borde, como el de los
+    pétalos del iris."""
+    (x0, y0), (x1, y1) = raiz, punta
+    l = math.hypot(x1 - x0, y1 - y0); dx, dy = (x1 - x0) / l, (y1 - y0) / l; nx, ny = -dy, dx
+    izq, der = [], []
+    for t in np.linspace(0, 1, n):
+        cx = x0 + dx * l * t + nx * curva * l * math.sin(math.pi * t)
+        cy = y0 + dy * l * t + ny * curva * l * math.sin(math.pi * t)
+        w = ancho / 2 * math.sin(math.pi * min(1, (t / panza) * 0.5 if t < panza else 0.5 + (t - panza) / (1 - panza) * 0.5)) ** 0.7
+        w = w * (1 - t ** 6) ** 0.4 + 0.3
+        wi = w * (1 + ondula * math.sin(t * math.pi * 6.0) * t); wd = w * (1 + ondula * math.sin(t * math.pi * 6.0 + 1.9) * t)
+        izq.append(P(cx + nx * wi, cy + ny * wi)); der.append(P(cx - nx * wd, cy - ny * wd))
+    return izq + der[::-1]
+
+
+def eje_petalo(P, raiz, punta, curva, t0=0.0, t1=1.0, n=30):
+    """El eje (la nervadura del medio) del pétalo de [petalo], de [t0] a [t1] del largo."""
+    (x0, y0), (x1, y1) = raiz, punta
+    l = math.hypot(x1 - x0, y1 - y0); dx, dy = (x1 - x0) / l, (y1 - y0) / l; nx, ny = -dy, dx
+    return [P(x0 + dx * l * t + nx * curva * l * math.sin(math.pi * t), y0 + dy * l * t + ny * curva * l * math.sin(math.pi * t))
+            for t in np.linspace(t0, t1, n)]
+
+
+def iris_flor(dd, x0, y0, u, giro=0.0):
+    """Un iris barbado de perfil, como adorno: tres pétalos que suben y se cierran arriba (el estandarte), tres que caen
+    (las caídas), cada caída con su barba amarilla, y debajo la espata verde. Lápices: 'oro', 'estandarte', 'caida',
+    'vena' (las venas finas, más oscuras), 'barba' y 'verde'. Origen donde se juntan los pétalos; mide unas 70 de ancho y 100 de alto."""
+    P = _rot(x0, y0, u, giro)
+    w = 1.5 * u
+    # El estandarte: el de atrás, al centro, y los dos de los lados, que se curvan hacia dentro y se juntan arriba en una
+    # cúpula, con el borde rizado.
+    for raiz, punta, ancho, curva in (((0, -3), (0.5, -48), 28, 0.0), ((-5, -2), (-7, -45), 24, -0.2), ((5, -2), (7, -45), 24, 0.2)):
+        pts = petalo(P, raiz, punta, ancho, curva, panza=0.66, ondula=0.07)
+        dd['estandarte'].polygon(pts, fill=255); _cerrar(dd['oro'], pts, w, 255)
+        dd['vena'].line(eje_petalo(P, raiz, punta, curva, 0.2, 0.8), fill=255, width=max(1, int(w * 0.6)))
+    # Las caídas: la de delante, que cuelga, y las de los lados, que se abren y bajan.
+    for raiz, punta, ancho, curva in (((-4, 2), (-34, 30), 22, 0.22), ((4, 2), (34, 30), 22, -0.22), ((0, 3), (1, 50), 27, 0.04)):
+        pts = petalo(P, raiz, punta, ancho, curva, panza=0.6, ondula=0.05)
+        dd['caida'].polygon(pts, fill=255); _cerrar(dd['oro'], pts, w, 255)
+        # las venas finas de la caída, que salen de la barba
+        (xa, ya), (xb, yb) = raiz, punta
+        for kk in (-0.22, 0.0, 0.22):
+            q0 = (xa + (xb - xa) * 0.4, ya + (yb - ya) * 0.4); q1 = (xa + (xb - xa) * 0.82 + kk * (yb - ya) * 0.35, ya + (yb - ya) * 0.82 - kk * (xb - xa) * 0.35)
+            dd['vena'].line([P(*q0), P(*q1)], fill=255, width=max(1, int(w * 0.6)))
+        # la barba: una franja de pelillos amarillos sobre el eje de la mitad de arriba, que se afina hacia la punta
+        eje = eje_petalo(P, raiz, punta, curva, 0.05, 0.45, 14)
+        cinta(dd['barba'], eje, 4.6 * u, 1.2 * u, 255)
+        for i, (bx, by) in enumerate(eje[1:-1]):
+            r_ = (1.6 - 0.07 * i) * u
+            for lado in (-1, 1):
+                dd['barba'].ellipse([bx - r_ + lado * 1.6 * u, by - r_, bx + r_ + lado * 1.6 * u, by + r_], fill=255)
+    # La espata: dos hojitas verdes que abrazan la base.
+    for raiz, punta, curva in (((-1, 30), (-8, 6), 0.1), ((1, 32), (7, 9), -0.12)):
+        pts = petalo(P, raiz, punta, 7.5, curva, panza=0.4)
+        dd['verde'].polygon(pts, fill=255); _cerrar(dd['oro'], pts, w, 255)
+
+
+def nouveau(tam):
+    """Art nouveau: un medallón de orfebre de 1900, de esmalte y oro pálido. El campo es esmalte translúcido sobre un
+    guilloché de ondas (las líneas talladas en el metal se ven por debajo, como en las joyas de la época), con los colores
+    del vidrio de Nancy que se funden: el violeta del iris arriba y el verde del hierro de Guimard abajo. El marco es la
+    línea de látigo: un tallo de oro que nace abajo a la izquierda, da la vuelta y se cierra abajo a la derecha en un rizo;
+    del mismo pie suben, a la izquierda, las hojas de espada y el iris barbado (malva, violeta, con su barba amarilla); a la
+    derecha vuela la libélula entera, con las alas de nácar, la nervadura de oro y el cuerpo verde azul. Todo con tabiques
+    de oro, como un esmalte. Un bisel de oro cierra el medallón. La huella va en nácar, engastada en un hilo de oro, como
+    en el ícono; la luz viene de arriba a la izquierda."""
+    from iconos import nacar, ORO_PALIDO, latigo_puntos, cinta_var, hoja_lanza
+    k = 2; S = tam * k; c = S / 2
+    yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
+    dx, dy = xx - c, yy - c
+    rr = np.sqrt(dx ** 2 + dy ** 2) / c
+    ang = np.arctan2(dy, dx)
+    rg = np.random.default_rng(701)
+    # --- Los lápices: cada material en su máscara, a la escala del lienzo.
+    nombres = ('oro', 'tallo', 'ala', 'cuerpo', 'ojo', 'mancha', 'estandarte', 'caida', 'barba', 'vena', 'verde', 'hoja')
+    capas = {n: Image.new('L', (S, S), 0) for n in nombres}
+    dd = {n: ImageDraw.Draw(capas[n]) for n in nombres}
+    # El marco de látigo (el tallo grueso, de oro macizo).
+    R_TALLO = 0.892 * c
+    pts, avance = latigo_puntos(c, c, R_TALLO, a0=math.radians(121), a1=math.radians(408), centro_rizo=None,
+                                rizo=(0.14, 0.028, 1.6), onda=0.014)
+    anchos = [(6.4 + 15.0 * (1 - a) ** 1.25) * k * min(1.0, 0.3 + a / 0.03) for a in avance]
+    cinta_var(dd['tallo'], pts, anchos, 255)
+    x, y = pts[-1]; r_ = anchos[-1] * 0.7; dd['tallo'].ellipse([x - r_, y - r_, x + r_, y + r_], fill=255)
+    # La hoja que brota en el pie del tallo, hacia atrás.
+    tx, ty = pts[1][0] - pts[0][0], pts[1][1] - pts[0][1]
+    hoja_lanza(dd['tallo'], pts[0][0], pts[0][1], math.atan2(ty, tx) + math.radians(146), 0.2 * R_TALLO, 0.06 * R_TALLO, 255, -0.35)
+    # El bisel.
+    dd['oro'].ellipse([c - 0.985 * c, c - 0.985 * c, c + 0.985 * c, c + 0.985 * c], outline=255, width=int(6.5 * k))
+    # Del pie del tallo suben las hojas de espada del iris y su vara.
+    pie = (pts[0][0] / k + 6, pts[0][1] / k - 10)
+    for (x1, y1), ancho, curva in (((60, 330), 30, 0.1), ((132, 412), 24, -0.12), ((40, 470), 20, 0.05)):
+        hoja = petalo(lambda x, y: (x * k, y * k), pie, (x1, y1), ancho, curva, panza=0.3)
+        dd['hoja'].polygon(hoja, fill=255); _cerrar(dd['oro'], hoja, 1.5 * k, 255)
+        dd['oro'].line(eje_petalo(lambda x, y: (x * k, y * k), pie, (x1, y1), curva, 0.06, 0.82), fill=255, width=int(1.1 * k), joint='curve')
+    flor = (106, 296)
+    vara = bezier(pie, (pie[0] - 10, pie[1] - 120), (flor[0] + 14, flor[1] + 120), (flor[0] + 2, flor[1] + 36), 40)
+    q = [(x * k, y * k) for x, y in vara]
+    anchos_v = [(7.0 - 2.4 * i / 40) * k for i in range(41)]
+    cinta_var(dd['verde'], q, anchos_v, 255)
+    n_ = len(q); izq, der = [], []
+    for i, (x, y) in enumerate(q):
+        a_ = q[max(i - 1, 0)]; b_ = q[min(i + 1, n_ - 1)]
+        tx, ty = b_[0] - a_[0], b_[1] - a_[1]; l = math.hypot(tx, ty) or 1
+        izq.append((x - ty / l * anchos_v[i] / 2, y + tx / l * anchos_v[i] / 2)); der.append((x + ty / l * anchos_v[i] / 2, y - tx / l * anchos_v[i] / 2))
+    for lado_ in (izq, der): dd['oro'].line(lado_, fill=255, width=int(1.4 * k), joint='curve')
+    iris_flor(dd, flor[0] * k, flor[1] * k, 1.6 * k, giro=-0.08)
+    # La libélula, a la derecha, un poco ladeada, con la cabeza hacia arriba.
+    libelula(dd, 610 * k, 266 * k, 1.6 * k, giro=-0.3)
+    M = {n: np.asarray(capas[n], np.float32) / 255 for n in nombres}
+    # --- El campo: esmalte translúcido sobre el guilloché, con los colores del vidrio de Nancy que se funden.
+    v = (dx * 0.3 + dy * 0.95) / S + 0.5 + nube(702, 3, S) * 0.12 + nube(703, 8, S) * 0.04
+    # Los tonos, apagados como un esmalte viejo (no el violeta de una lámpara nueva), para quedar en la familia de los sellos.
+    tonos = [(0.0, '#55486F'), (0.3, '#443A5C'), (0.5, '#39334D'), (0.64, '#333944'), (0.78, '#2D3B35'), (1.0, '#202D26')]
+    xs = [p for p, _ in tonos]; cs = np.array([col(t) for _, t in tonos])
+    campo = np.stack([np.interp(v, xs, cs[:, j]) for j in range(3)], -1)
+    # Arriba a la izquierda, donde la luz atraviesa el esmalte, el violeta se calienta hacia el ámbar (como en el vidrio).
+    ambar = np.clip(1 - np.sqrt((xx - c * 0.45) ** 2 + (yy - c * 0.28) ** 2) / (c * 0.75), 0, 1) ** 1.6
+    campo = mezcla(campo, col('#93705F'), ambar * 0.42)
+    # El guilloché: ondas concéntricas talladas en el metal, que se ven por debajo del esmalte (más claro en la cresta).
+    ondas = np.sin(2 * math.pi * (rr * c / (4.6 * k) + 0.55 * np.sin(ang * 9 + rr * 7)))
+    campo = campo * (0.9 + 0.1 * (0.5 + 0.5 * ondas))[..., None]
+    # El esmalte es más hondo (más oscuro) junto al bisel y deja pasar más luz en el centro; el brillo de la ventana arriba.
+    campo = campo * (1.08 - 0.22 * np.clip(rr / 0.98, 0, 1) ** 3)[..., None]
+    brillo = np.exp(-((np.sqrt((xx - c * 0.62) ** 2 + (yy - c * 0.5) ** 2) / c - 0.62) / 0.05) ** 2) * np.clip(-(dx + dy) / (rr * c + 1) * 1.2, 0, 1)
+    campo = mezcla(campo, col('#E9E2F2'), desenfocar(brillo.astype(np.float32), 6 * k) * 0.18)
+    campo = campo * (0.97 + 0.04 * suavizar(rg.standard_normal((S, S)).astype(np.float32), 0.8 * k)[..., None])
+
+    def domo(m_, s_=2.2):
+        """La luz sobre un esmalte abombado de máscara [m_]: claro arriba a la izquierda, con su brillo."""
+        h = suavizar(m_, s_ * k)
+        gy, gx = np.gradient(h)
+        f = np.clip(-(gx + gy) * 11 * k, -1, 1)
+        esp = np.clip(f - 0.45, 0, 1) ** 2
+        return f, esp
+    def esmalte(base, m_, color, alfa=1.0, s_=2.2, fuerza=0.22):
+        f, esp = domo(m_, s_)
+        tinte = color * (1 + fuerza * f)[..., None] + esp[..., None] * 90
+        return mezcla(base, tinte, m_ * alfa)
+    # --- Sombras de todo lo que está en relieve (la luz de arriba a la izquierda).
+    alto_todo = np.clip(sum(M[n] for n in nombres), 0, 1)
+    sombra = suavizar(np.roll(np.roll(alto_todo, int(4 * k), 0), int(3 * k), 1), 3.2 * k) * (1 - alto_todo)
+    campo = campo * (1 - 0.5 * sombra)[..., None]
+    # --- El tallo de látigo, de oro macizo y redondo: va debajo de todo lo demás (el iris y la libélula lo cruzan).
+    alto_t = suavizar(M['tallo'], 2.4 * k) * 0.45 + suavizar(M['tallo'], 5.5 * k) * 0.55
+    alto_t = alto_t * (0.35 + 0.65 * M['tallo'])
+    oro_t = oro_relieve(suavizar(alto_t, 0.5 * k), 14.0 * k, 705, tonos=ORO_PALIDO, grano=0.02, ambiente=0.65, plano=0.55)
+    img = mezcla(campo, oro_t, M['tallo'])
+    # La sombra que echan sobre el tallo el iris y la libélula, que van encima.
+    encima = np.clip(sum(M[n] for n in nombres if n not in ('tallo',)), 0, 1)
+    sombra2 = suavizar(np.roll(np.roll(encima, int(4 * k), 0), int(3 * k), 1), 3 * k) * (1 - encima) * M['tallo']
+    img = img * (1 - 0.45 * sombra2)[..., None]
+    # --- Los esmaltes de colores.
+    yy_n = yy / S
+    hoja_c = mezcla(col('#9AB287'), col('#5C7A52'), np.clip((yy_n - 0.4) / 0.5, 0, 1))
+    img = esmalte(img, M['hoja'], hoja_c)
+    img = esmalte(img, M['verde'], col('#6E9064'))
+    caida_c = mezcla(col('#876FA6'), col('#574278'), np.clip(suavizar(M['caida'], 4 * k) * 1.4, 0, 1))
+    img = esmalte(img, M['caida'], caida_c)
+    img = mezcla(img, col('#3E2766'), M['vena'] * M['caida'] * 0.75)
+    est_c = mezcla(col('#D6BEE6'), col('#B08AB8'), np.clip(suavizar(M['estandarte'], 4 * k) * 1.3, 0, 1))
+    img = esmalte(img, M['estandarte'], est_c)
+    barba = M['barba'] * np.clip(0.75 + 0.5 * suavizar(rg.random((S, S)).astype(np.float32), 0.6 * k), 0, 1)
+    img = esmalte(img, barba, col('#E8BE52'), s_=1.2)
+    # Las alas: el nácar translúcido, que deja ver un poco lo de debajo.
+    perla = nacar(suavizar(M['ala'], 3 * k) * 0.6, 3.0 * k, 704)
+    img = mezcla(img, perla * 0.9 + img * 0.1, M['ala'] * 0.86)
+    img = esmalte(img, M['mancha'], col('#D9A14A'), s_=1.0)
+    cuerpo_c = mezcla(col('#4FA0A4'), col('#235A66'), np.clip(suavizar(M['cuerpo'], 3 * k) * 1.2, 0, 1))
+    img = esmalte(img, M['cuerpo'], cuerpo_c, s_=2.0, fuerza=0.3)
+    img = esmalte(img, M['ojo'], col('#3E8E8A'), s_=2.6, fuerza=0.45)
+    # --- Los tabiques de oro, las nervaduras y el bisel, encima de los esmaltes.
+    alto_o = (suavizar(M['oro'], 0.8 * k) * 0.7 + suavizar(M['oro'], 1.8 * k) * 0.3) * (0.4 + 0.6 * M['oro'])
+    oro = oro_relieve(suavizar(alto_o, 0.4 * k), 9.0 * k, 709, tonos=ORO_PALIDO, grano=0.02, ambiente=0.65, plano=0.6)
+    img = mezcla(img, oro, M['oro'])
+    # --- Fuera del bisel, el terciopelo del estuche (casi no se ve: el sello se recorta en círculo).
+    fuera = np.clip((rr - 0.995) * c / 1.0, 0, 1)
+    terciopelo = col('#1A1424')[None, None, :] * (0.9 + 0.15 * nube(706, 6, S)[..., None])
+    img = mezcla(img, terciopelo, fuera)
+    fondo = a_img(img).resize((tam, tam), Image.LANCZOS)
+    # --- La huella: nácar engastado en un hilo de oro, en relieve, con su sombra sobre el esmalte.
+    m = mascara_sello(S)
+    alto_h = np.clip(suavizar(m, 2.4 * k) * 1.35, 0, 1) * (0.3 + 0.7 * m)       # el nácar abombado, pero de lomo ancho
+    perla = nacar(suavizar(alto_h, 0.6 * k), 7.0 * k, 707, cuanto=0.6)
+    nucleo = np.clip((suavizar(m, 1.6 * k) - 0.8) / 0.1, 0, 1) * m
+    hilo = oro_relieve(suavizar(alto_h, 0.6 * k), 9.0 * k, 708, tonos=ORO_PALIDO, grano=0.0, ambiente=0.5, plano=0.6)
+    color_h = hilo * (1 - nucleo[..., None]) + perla * nucleo[..., None]
+    capa = a_rgba(color_h, m)
+    sombra_h = np.clip(suavizar(np.roll(np.roll(m, int(4 * k), 0), int(3 * k), 1), 3 * k) - m, 0, 1)
+    base = a_rgba(np.zeros((S, S, 3)) + col('#0E0A18'), np.clip(sombra_h * 0.6, 0, 1))
+    base.alpha_composite(capa)
+    huella = base.convert('RGBa').resize((tam, tam), Image.LANCZOS).convert('RGBA')
+    guardar(fondo, huella, 'nouveau')
+
+
+# ------------------------------------------------------------------ Psicodelia
+# La ciudad de fines de los sesenta, vista como en una foto de revista de los 70 (`docs/diseno/temas/psicodelia.md`, v2):
+# el sello es fijo y de la ciudad, aunque la app esté en la cara del cartel (lo archivado no depende de la hora).
+CIUDAD_PSICODELIA = dict(
+    etiqueta='#B9612F', etiqueta_luz='#D07A42', tinta='#2A2119', crema='#F3ECDD', vinilo='#17110D', brillo='#B8A890',
+    vineta='#3A2410', sombra='#4A3528', fuera='#1B1511')
+
+
+def psicodelia(tam):
+    """Psicodelia: el disco del día, de cerca, como en una foto de revista de los 70. Llena el sello la etiqueta de papel
+    naranja quemado, satinada, con el roce en anillos del plato y su fibra; impresa en dos tintas, el café casi negro y el
+    crema: cerca del borde, la banda crema entre dos filetes con la leyenda menuda alrededor; arriba «DISCO DEL DÍA» en letra de titular, y
+    a los lados «LADO A» y «33⅓ R.P.M.», donde la huella deja sitio. La huella va impresa en el café, con la tinta cargada
+    en el borde de cada cresta, como la tipografía. Fuera de la etiqueta, el vinilo: la zona lisa de salida y los surcos,
+    con las dos cuñas de brillo de la luz de la tarde. Todo con la luz de la izquierda, la viñeta hacia el café y el grano
+    de película. Sin flores, sin paz, sin arcoíris."""
+    from iconos import letra, texto_en_arco
+    P = {n: col(h) for n, h in CIUDAD_PSICODELIA.items()}
+    k = 2; S = tam * k; c = S / 2
+    yy, xx = np.mgrid[0:S, 0:S].astype(np.float32)
+    dx, dy = xx - c, yy - c
+    rr = np.sqrt(dx ** 2 + dy ** 2)
+    r = rr / c
+    ang = np.arctan2(dy, dx)
+    rg = np.random.default_rng(1969)
+    R_ETIQUETA = 0.915          # en fracción del radio del sello
+    R_SALIDA = 0.952            # hasta aquí, la zona lisa; después, los surcos
+    # --- El vinilo: casi negro y cálido, liso junto a la etiqueta y con surcos después; las dos cuñas de brillo.
+    surcos = 0.5 + 0.5 * np.sin(rr / k * 2 * math.pi / 1.6 + nube(1970, 40, S) * 1.5)
+    lisa = np.clip((R_SALIDA - r) * c / (1.5 * k), 0, 1)
+    def cuña(a0, w): return np.exp(-(np.angle(np.exp(1j * (ang - a0))) / w) ** 2)
+    brillo = cuña(math.radians(-138), 0.34) + cuña(math.radians(42), 0.28) * 0.6
+    tono = 0.05 + 0.06 * surcos * (1 - lisa) + brillo * (0.5 + 0.45 * surcos * (1 - lisa) + 0.42 * lisa)
+    vinilo = P['vinilo'] * (1 - brillo[..., None] * 0.6) + P['brillo'] * np.clip(tono, 0, 1)[..., None]
+    # El borde del disco, apenas redondeado, y lo de fuera (el plato en sombra; el sello se recorta en círculo).
+    canto_disco = np.exp(-((r - 0.995) / 0.004) ** 2) * np.clip(-(dx + dy) / (rr + 1), 0, 1)
+    vinilo = vinilo + canto_disco[..., None] * 60
+    # --- La etiqueta: el papel naranja quemado, satinado, con su fibra, el roce del plato y la luz de la tarde.
+    fibra = suavizar(rg.standard_normal((S, S)).astype(np.float32), 0.7 * k)
+    roce = np.sin(rr / k * 1.3 + nube(1971, 6, S) * 4) * np.clip(nube(1972, 4, S) + 0.3, 0, 1)
+    satinado = np.clip(1 - np.sqrt((xx - c * 0.55) ** 2 + (yy - c * 0.45) ** 2) / (c * 1.0), 0, 1) ** 1.6
+    papel = P['etiqueta'] * (1 + 0.035 * fibra[..., None] + 0.03 * roce[..., None])
+    papel = mezcla(papel, P['etiqueta_luz'], satinado * 0.45)
+    # El desgaste: un cerco más claro donde roza el disco de arriba en la pila, y manchitas de uso.
+    gastado = np.exp(-((r - 0.62) / 0.05) ** 2) * np.clip(nube(1973, 7, S) + 0.1, 0, 1) * 0.3
+    papel = mezcla(papel, col('#D9A07A'), gastado)
+    manchas = np.clip((nube(1974, 22, S) - 0.75) * 3, 0, 1) * 0.25
+    papel = mezcla(papel, col('#8E4A24'), manchas)
+    dentro = np.clip((R_ETIQUETA - r) * c / (0.9 * k) + 0.5, 0, 1)
+    img = mezcla(vinilo, papel, dentro)
+    # El canto de la etiqueta: un filo claro del lado de la luz y una sombra del otro.
+    canto = np.exp(-((r - R_ETIQUETA + 0.002) / 0.003) ** 2) * np.clip(-(dx * 0.8 + dy) / (rr + 1), -0.7, 1)
+    img = img * (1 + 0.22 * canto[..., None])
+    # --- Lo impreso, en sus dos tintas. Cada tinta en su máscara, dibujada al tamaño grande.
+    def lapiz(dibujo):
+        im = Image.new('L', (S, S), 0); dibujo(im, ImageDraw.Draw(im)); return np.asarray(im, np.float32) / 255
+    def filetes(im, d):
+        # La banda de la leyenda, entre dos filetes: el de fuera más grueso.
+        for rf, g in ((0.906, 2.4), (0.862, 1.1)):
+            q = rf * c; d.ellipse([c - q, c - q, c + q, c + q], outline=255, width=int(g * k))
+    def leyendas(im, d):
+        # La leyenda menuda da la vuelta entera: el espaciado se ajusta para que cierre justo.
+        f = letra('franklin_semibold.ttf', 9.2 * k)
+        frase = 'VESTIGIUM MEI · DISCOS DE LA CIUDAD · HECHO EN SAN FRANCISCO, CALIF. · LARGA DURACIÓN · '
+        rl = 0.874 * c
+        vueltas = 1
+        while sum(d.textlength(ch, font=f) for ch in frase * (vueltas + 1)) * 1.1 < 2 * math.pi * rl: vueltas += 1
+        leyenda = frase * vueltas
+        ancho = sum(d.textlength(ch, font=f) for ch in leyenda)
+        espacio = max(0.0, (2 * math.pi * rl - ancho) / len(leyenda) / f.size)
+        texto_en_arco(im, leyenda, c, c, rl, -math.pi / 2, f, 255, espacio=espacio)
+        # Arriba, el nombre del sello discográfico (propio, inventado): DISCO DEL DÍA, en el titular de la ciudad.
+        g = letra('franklin_extrabold.ttf', 25 * k)
+        d.text((c, 0.108 * S), 'DISCO DEL DÍA', font=g, fill=255, anchor='mm')
+        # A los lados, donde la huella deja sitio: el lado y la velocidad.
+        chica = letra('franklin_semibold.ttf', 12 * k); grande = letra('franklin_extrabold.ttf', 52 * k)
+        xi, xd, ym = 0.135 * S, 0.865 * S, 0.5 * S
+        d.text((xi, ym - 34 * k), 'LADO', font=chica, fill=255, anchor='mm')
+        d.text((xi, ym + 8 * k), 'A', font=grande, fill=255, anchor='mm')
+        d.text((xd - 8 * k, ym + 8 * k), '33', font=grande, fill=255, anchor='mm')
+        # El tercio, a mano (la letra no trae el signo ⅓): 1, la barra y 3, chicos, arriba a la derecha del 33.
+        fx, fy = xd + 30 * k, ym - 6 * k
+        mini = letra('franklin_semibold.ttf', 11 * k)
+        d.text((fx - 4 * k, fy - 6 * k), '1', font=mini, fill=255, anchor='mm')
+        d.line([(fx - 6 * k, fy + 7 * k), (fx + 6 * k, fy - 9 * k)], fill=255, width=int(1.4 * k))
+        d.text((fx + 4 * k, fy + 6 * k), '3', font=mini, fill=255, anchor='mm')
+        d.text((xd, ym - 34 * k), 'R.P.M.', font=chica, fill=255, anchor='mm')
+        # Dos rayas finas bajo cada lado, como las de las etiquetas de entonces.
+        for x0 in (xi, xd):
+            d.line([(x0 - 34 * k, ym + 44 * k), (x0 + 34 * k, ym + 44 * k)], fill=255, width=int(1.2 * k))
+    def crema(im, d):
+        # La segunda tinta: la banda crema de la leyenda, entre los dos filetes (se imprime antes que el café, que va encima).
+        q0, q1 = 0.906 * c, 0.862 * c
+        d.ellipse([c - q0, c - q0, c + q0, c + q0], fill=255)
+        d.ellipse([c - q1, c - q1, c + q1, c + q1], fill=0)
+    m_crema = lapiz(crema)
+    m_cafe = np.clip(lapiz(filetes) + lapiz(leyendas), 0, 1)
+    # El registro de la segunda tinta, un poco corrido (la prensa de una fábrica chica): el crema 1 px a la izquierda.
+    m_crema = np.roll(m_crema, -int(1.0 * k), 1)
+    tinta_gastada = np.clip(0.9 + 0.12 * fibra, 0.7, 1)
+    img = mezcla(img, P['crema'] * (0.95 + 0.05 * satinado[..., None]), m_crema * tinta_gastada * dentro)
+    img = mezcla(img, P['tinta'], m_cafe * tinta_gastada * dentro)
+    # --- La luz de la tarde (de la izquierda), la viñeta hacia el café y el grano: el fondo y la huella, igual.
+    luz = np.clip(0.5 - (dx * 0.8 + dy * 0.45) / S, 0, 1)
+    vin = np.clip((r / 1.25) ** 2.4, 0, 1)
+    grano = suavizar(rg.standard_normal((S, S)).astype(np.float32), 0.6 * k)
+    def foto(x):
+        x = x * (0.86 + 0.24 * luz[..., None])
+        x = x * (1 - vin[..., None] * 0.32) + P['vineta'] * vin[..., None] * 0.32
+        x = x + grano[..., None] * np.array([9.0, 8.0, 6.5], np.float32)
+        return x
+    afuera = np.clip((r - 0.999) * c / 1.5, 0, 1)
+    fondo = a_img(mezcla(foto(img), P['fuera'], afuera)).resize((tam, tam), Image.LANCZOS)
+    # --- La huella, en el café de la imprenta: la tinta se carga en el borde de la cresta y se gasta donde hay poro.
+    m = mascara_sello(S)
+    b = suavizar(m, 1.6 * k)
+    borde = np.clip(1 - np.abs(b - 0.5) * 2.2, 0, 1) * m
+    hcol = P['tinta'] * (1 - 0.2 * borde[..., None]) + P['etiqueta'] * 0.06
+    alfa = np.clip(suavizar(m, 0.9 * k) * 1.6, 0, 1) * np.clip(0.95 + 0.1 * fibra - np.clip(roce, 0, 1) * 0.04, 0.78, 1)
+    huella = a_rgba(foto(hcol), alfa)
+    huella = huella.convert('RGBa').resize((tam, tam), Image.LANCZOS).convert('RGBA')
+    guardar(fondo, huella, 'psicodelia')
+
+
 # ------------------------------------------------------------------ Tierras Antiguas
 def runas_pil(d, x, y, ancho, alto, n, color, grosor, semilla):
     """Signos inventados (trazos rectos y ángulos), como en TrofeosMas.runas."""
@@ -1314,6 +2253,11 @@ SIETE = [
     'cueva',
     'templario',
     'vapor',
+    'frente',
+    'arcontes',
+    'galia',
+    'nouveau',
+    'psicodelia',
 ]
 ORDEN = [
     'romano',
@@ -1325,6 +2269,11 @@ ORDEN = [
     'medieval',
     'templario',
     'distopia',
+    'galia',
+    'arcontes',
+    'frente',
+    'nouveau',
+    'psicodelia',
     'refugio',
     'orden',
     'vapor',

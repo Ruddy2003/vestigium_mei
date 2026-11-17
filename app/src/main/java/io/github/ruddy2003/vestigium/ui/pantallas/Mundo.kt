@@ -224,6 +224,17 @@ internal fun laminaRascar(t: TemaId): LaminaRascar = when (t) {
     TemaId.TEMPLARIO -> LaminaRascar(0xFF2E3338.toInt(), 0xFF7E868E.toInt(), 0xFFDCE2E6.toInt())
     // Gris de ministerio: chapa sin brillo.
     TemaId.DISTOPIA -> LaminaRascar(0xFF46443F.toInt(), 0xFF8E8A82.toInt(), 0xFFD9D5CC.toInt())
+    // La ciudad: la plata gastada de una moneda vieja, apagada por la foto, del café al crema. El cartel: el tintero partido entre
+    // dos tintas, del ultramar hondo al magenta y al papel crema.
+    TemaId.PSICODELIA -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(t) == io.github.ruddy2003.vestigium.ui.Cara.BASE) LaminaRascar(0xFF4A3528.toInt(), 0xFFA0968A.toInt(), 0xFFF4E6CC.toInt())
+        else LaminaRascar(0xFF232A6E.toInt(), 0xFFA94870.toInt(), 0xFFF2E8D3.toInt())
+    // El vidrio de Nancy: del violeta hondo al ámbar, con su brillo.
+    TemaId.NOUVEAU -> LaminaRascar(0xFF4A3466.toInt(), 0xFFB08A4E.toInt(), 0xFFF2E2B0.toInt())
+    TemaId.GALIA -> LaminaRascar(0xFF2E2A1C.toInt(), 0xFF9A6A3A.toInt(), 0xFFE2B87E.toInt())   // el bronce del caldero
+    // El oro de más del mundo de abajo, el del Demiurgo, con la sombra violeta de lo que hay debajo.
+    TemaId.ARCONTES -> LaminaRascar(0xFF3A2A40.toInt(), 0xFFD4A62A.toInt(), 0xFFFFF0B8.toInt())
+    // La chapa esmaltada color hueso de la consola, con el filo gastado hasta el metal.
+    TemaId.FRENTE -> LaminaRascar(0xFF5C5446.toInt(), 0xFFB8AD96.toInt(), 0xFFEFE7D6.toInt())
     // Chapa galvanizada, azulada.
     TemaId.REFUGIO -> LaminaRascar(0xFF4A5560.toInt(), 0xFF98A7B3.toInt(), 0xFFE3EBF0.toInt())
     // Acero pavonado.
@@ -412,6 +423,91 @@ private fun motivoLamina(t: TemaId, c: android.graphics.Canvas, l: Float, linea:
             val s = l * 0.15f
             c.drawPath(Path().apply { moveTo(x - s * 1.4f, y); quadTo(x, y - s * 1.1f, x + s * 1.4f, y); quadTo(x, y + s * 1.1f, x - s * 1.4f, y); close() }, linea)
             c.drawCircle(x, y, s * 0.42f, relleno)
+        }
+        TemaId.PSICODELIA -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(t) == io.github.ruddy2003.vestigium.ui.Cara.BASE) {
+            // La ciudad: el disco del día al tresbolillo (el vinilo, sus surcos y la etiqueta) y, entre uno y otro, los dos cables
+            // del trolebús que cruzan.
+            tresbolillo { x, y ->
+                val s = l * 0.13f
+                c.drawCircle(x, y, s, linea)
+                c.drawCircle(x, y, s * 0.7f, linea)
+                c.drawCircle(x, y, s * 0.36f, relleno)
+            }
+            c.drawLine(0f, l * 0.25f, l, l * 0.3f, linea); c.drawLine(0f, l * 0.29f, l, l * 0.34f, linea)
+        } else {
+            // El cartel: el disco hecho sol al tresbolillo, con doce rayos, y entre uno y otro, la onda que ondula.
+            tresbolillo { x, y ->
+                val s = l * 0.12f
+                val rayos = android.graphics.Path()
+                for (k in 0 until 24) {
+                    val a = k * Math.PI / 12; val rr = if (k % 2 == 0) s * 1.25f else s * 0.72f
+                    val px = x + rr * Math.cos(a).toFloat(); val py = y + rr * Math.sin(a).toFloat()
+                    if (k == 0) rayos.moveTo(px, py) else rayos.lineTo(px, py)
+                }
+                rayos.close()
+                c.drawPath(rayos, linea)
+                c.drawCircle(x, y, s * 0.42f, relleno)
+            }
+            for ((x, y) in listOf(l / 2 to 0f, l / 2 to l, 0f to l / 2, l to l / 2)) {
+                val s = l * 0.09f
+                c.drawPath(android.graphics.Path().apply { moveTo(x - s * 1.5f, y); quadTo(x - s * 0.75f, y - s * 0.7f, x, y); quadTo(x + s * 0.75f, y + s * 0.7f, x + s * 1.5f, y) }, linea)
+            }
+        }
+        TemaId.NOUVEAU -> {
+            // El vidrio grabado: un iris al tresbolillo (las hojas de espada, el tallo y la flor) y, entre uno y otro, la línea de
+            // látigo que se enrosca.
+            tresbolillo { x, y ->
+                val s = l * 0.12f
+                c.drawLine(x, y + s * 1.2f, x, y - s * 0.3f, linea)
+                c.drawPath(Path().apply { moveTo(x - s * 0.15f, y + s * 1.2f); quadTo(x - s * 0.9f, y + s * 0.4f, x - s * 0.8f, y - s * 0.2f); quadTo(x - s * 0.4f, y + s * 0.5f, x - s * 0.15f, y + s * 1.2f); close() }, relleno)
+                c.drawPath(Path().apply {
+                    moveTo(x, y - s * 0.3f); quadTo(x - s * 0.5f, y - s * 0.9f, x, y - s * 1.3f); quadTo(x + s * 0.5f, y - s * 0.9f, x, y - s * 0.3f); close()
+                    moveTo(x, y - s * 0.3f); quadTo(x - s * 0.9f, y - s * 0.6f, x - s * 0.8f, y + s * 0.1f); close()
+                    moveTo(x, y - s * 0.3f); quadTo(x + s * 0.9f, y - s * 0.6f, x + s * 0.8f, y + s * 0.1f); close()
+                }, relleno)
+            }
+            for ((x, y) in listOf(l / 2 to 0f, l / 2 to l, 0f to l / 2, l to l / 2)) {
+                val s = l * 0.1f
+                c.drawPath(Path().apply { moveTo(x - s * 1.4f, y + s * 0.4f); cubicTo(x - s * 0.6f, y - s * 0.8f, x + s * 0.6f, y + s * 0.8f, x + s * 0.9f, y - s * 0.2f); quadTo(x + s * 1.1f, y - s * 0.8f, x + s * 0.55f, y - s * 0.7f); quadTo(x + s * 0.35f, y - s * 0.35f, x + s * 0.7f, y - s * 0.3f) }, linea)
+            }
+        }
+        TemaId.GALIA -> {
+            // La rueda votiva al tresbolillo (el aro, los cuatro rayos y el cubo) y, entre una y otra, la onda de La Tène en ese.
+            tresbolillo { x, y ->
+                val s = l * 0.13f
+                c.drawCircle(x, y, s, linea)
+                c.drawLine(x - s, y, x + s, y, linea); c.drawLine(x, y - s, x, y + s, linea)
+                c.drawCircle(x, y, l * 0.03f, relleno)
+            }
+            for ((x, y) in listOf(l / 2 to 0f, l / 2 to l, 0f to l / 2, l to l / 2)) {
+                val s = l * 0.09f
+                c.drawPath(Path().apply { moveTo(x - s, y + s * 0.3f); cubicTo(x - s, y - s * 0.9f, x, y - s * 0.9f, x, y); cubicTo(x, y + s * 0.9f, x + s, y + s * 0.9f, x + s, y - s * 0.3f) }, linea)
+                c.drawCircle(x - s, y + s * 0.3f, l * 0.018f, relleno); c.drawCircle(x + s, y - s * 0.3f, l * 0.018f, relleno)
+            }
+        }
+        TemaId.ARCONTES -> {
+            // El ouroboros al tresbolillo, con la cabeza que muerde la cola, y entre uno y otro las siete esferas, chiquitas.
+            tresbolillo { x, y ->
+                val s = l * 0.15f
+                c.drawArc(RectF(x - s, y - s, x + s, y + s), -48f, 336f, false, linea)
+                val a = Math.toRadians(-60.0)
+                c.drawCircle(x + s * Math.cos(a).toFloat(), y + s * Math.sin(a).toFloat(), l * 0.034f, relleno)
+            }
+            val fino = Paint(linea).apply { strokeWidth = l * 0.014f }
+            for ((x, y) in listOf(l / 2 to 0f, l / 2 to l, 0f to l / 2, l to l / 2)) {
+                for (k in 1..3) c.drawCircle(x, y, l * 0.024f * k, fino)
+                c.drawCircle(x, y, l * 0.012f, relleno)
+            }
+        }
+        TemaId.FRENTE -> {
+            // El emblema de la red al tresbolillo (el círculo roto con la chispa de tres trazos) y, entre uno y otro, los
+            // pilotos de la consola en su bisel.
+            tresbolillo { x, y ->
+                val s = l * 0.14f
+                c.drawArc(RectF(x - s, y - s, x + s, y + s), -20f, 300f, false, linea)
+                c.drawPath(Path().apply { moveTo(x + s * 0.2f, y - s * 0.6f); lineTo(x - s * 0.24f, y + s * 0.06f); lineTo(x + s * 0.24f, y - s * 0.06f); lineTo(x - s * 0.2f, y + s * 0.6f) }, linea)
+            }
+            for ((x, y) in listOf(l / 2 to 0f, l / 2 to l, 0f to l / 2, l to l / 2)) { c.drawCircle(x, y, l * 0.065f, linea); c.drawCircle(x, y, l * 0.03f, relleno) }
         }
         TemaId.REFUGIO -> {
             // Chapa estriada: lágrimas en relieve, alternando su inclinación.

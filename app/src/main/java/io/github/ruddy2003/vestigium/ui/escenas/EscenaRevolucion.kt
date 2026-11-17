@@ -104,6 +104,8 @@ internal object ColorRevolucion {
  */
 internal object EscenaRevolucion : EscenaVida {
     override val vidas = listOf("lavandera")
+    /** La franja del fondo del teléfono ([franjaFondo]): la catedral al otro lado del río y la tina. */
+    override val franjaFondo: Float get() = 0.4f
 
     /** El horizonte: la altura de los ojos de quien mira, de pie en la popa del barco. */
     const val H = 124f

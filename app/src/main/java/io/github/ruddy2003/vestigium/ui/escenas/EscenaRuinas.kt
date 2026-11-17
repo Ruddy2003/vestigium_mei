@@ -92,6 +92,8 @@ internal object ColorRuinas {
  */
 internal object EscenaRuinas : EscenaVida {
     override val vidas = listOf("semillera")
+    /** La franja del fondo del teléfono ([franjaFondo]): el árbol y la torre inclinada. */
+    override val franjaFondo: Float get() = 0.45f
 
     /** El horizonte: la altura de los ojos de quien mira, de pie en la azotea. */
     const val H = 120f

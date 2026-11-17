@@ -15,14 +15,8 @@ App personal de Android (Kotlin + Jetpack Compose) para registrar, a lo largo de
 - `herramientas/`: scripts de Python para generar recursos (íconos, sonidos, arte).
 - `docs/paper/`: el paper metodológico (ver abajo).
 - `docs/diseno/ESCENAS.md`: la guía de arte de las escenas (ver abajo). `docs/plan_historia_y_escenas.md`: el plan de sus tandas.
+- `docs/PENDIENTES.md`: lo que queda pendiente, cómo se trabaja y la vara. `docs/diseno/PLAN_MEJORAS.md`: el plan de mejoras de noviembre de 2026 (muebles, modo claro y oscuro, Psicodelia, fondos de pantalla, cuadros); la guía de cada tema nuevo, en `docs/diseno/temas/<tema>.md`, y sus fichas, en `docs/diseno/PLAN_TEMAS.md`.
 - `.github/workflows/`: `apk.yml` compila y publica la APK; `capturas.yml` genera capturas de diseño (Paparazzi) en la rama `capturas`.
-
-## Trabajo en curso fuera de `main` (noviembre de 2026)
-
-- **Los cinco temas nuevos todavía no están en `main`:** Frente exterior (`frente`, el del espía de la red entre mundos), Arcontes (`arcontes`), Galia (`galia`), Art nouveau (`nouveau`) y Psicodelia (`psicodelia`). Su código, sus «otras vidas» y sus cuentos están en la rama **`ccr-ca31af2d-ua0p3j`**, junto con los Idearios rehechos y el resto del plan de mejoras.
-- **Qué leer:** el plan y el estado, en `docs/diseno/PLAN_MEJORAS.md`; la guía de cada tema nuevo, en `docs/diseno/temas/<tema>.md` (Psicodelia tiene además `psicodelia_plan.md`); sus fichas, en `docs/diseno/PLAN_TEMAS.md`.
-- **Para trabajar en esos temas** (por ejemplo, dibujar sus escenas), parte de esa rama, no de `main`: `git fetch origin ccr-ca31af2d-ua0p3j`.
-- Este apartado se quita cuando el código pase a `main`.
 
 ## Compilar y publicar
 
@@ -46,7 +40,8 @@ App personal de Android (Kotlin + Jetpack Compose) para registrar, a lo largo de
 ## Las escenas de «Otras vidas» (`ui/escenas/`)
 
 - **Antes de dibujar o cambiar una escena, lee entera `docs/diseno/ESCENAS.md`.** Son las decisiones de aspecto que tomó el autor: estilo gouache y diez reglas (luz con dirección y sombras, cielo con vida, paleta corta, agua con profundidad, primer plano grande y con uso, algo que cruce y enmarque, grano, la noche al nivel del día, bordes naturales, lejanía con profundidad).
-- **La vara de calidad es el cuadro de Helénico** (`EscenaHeleno.kt`; su imagen, en `docs/diseno/escenas/referencia_heleno.jpg`). Toda escena nueva se dibuja en el arnés al lado de esa y no puede verse más pobre en ningún punto. Si no alcanza el tiempo, se entregan menos escenas bien hechas, no más escenas peores.
+- **El cuadro de Helénico es el piso, no el techo** (`EscenaHeleno.kt`; su imagen, en `docs/diseno/escenas/referencia_heleno.jpg`): en cada aspecto, el nivel es el del cuadro aprobado que mejor lo hace (`ESCENAS.md`, sección 2 bis). Toda escena nueva se dibuja en el arnés al lado de esos cuadros y no puede verse más pobre en ningún punto. Si no alcanza el tiempo, se entregan menos escenas bien hechas, no más escenas peores.
+- Un agente no se queda esperando un trabajo en segundo plano; y una mezcla se compila entera antes de subirla.
 - **Las reglas se adaptan al tema, no se quitan:** si el tema no tiene cielo, sol o agua, se cumple el propósito de la regla con lo que sí tiene (la guía dice cómo) y se anota en el informe.
 - **No cambies cómo se ve una pieza de `paisaje/` que ya usa una escena aprobada** sin volver a dibujar esas escenas y enseñárselas al autor. Agregar piezas nuevas sí se puede.
 - El autor ve cada escena nueva junto a la de Helénico antes de darla por buena.

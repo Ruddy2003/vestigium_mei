@@ -48,36 +48,43 @@ fun pelajeDe(tema: TemaId): Pelaje? = when (tema) {
     TemaId.CIBER -> null            // Terminal: sin cuadro
     TemaId.NEON -> PELAJE_NEON
     TemaId.HELENO -> PELAJE_HELENO
-    TemaId.EGIPTO -> null           // S9
+    TemaId.EGIPTO -> PELAJE_EGIPTO
     TemaId.MEDIEVAL -> PELAJE_MEDIEVAL
-    TemaId.TEMPLARIO -> null        // S11
+    TemaId.TEMPLARIO -> PELAJE_TEMPLARIO
     TemaId.DISTOPIA -> PELAJE_DISTOPIA
-    TemaId.REFUGIO -> null          // S17
-    TemaId.ORDEN -> null            // S18
+    TemaId.REFUGIO -> PELAJE_REFUGIO
+    TemaId.ORDEN -> PELAJE_ORDEN
     TemaId.VAPOR -> PELAJE_VAPOR
-    TemaId.LABORATORIO -> null      // S17
+    TemaId.LABORATORIO -> PELAJE_LABORATORIO
     TemaId.COLONOS -> null          // S19
-    TemaId.NAPOLEON -> null         // S14
-    TemaId.DECO -> null             // S15
-    TemaId.BOTANICO -> null         // S13
+    TemaId.NAPOLEON -> PELAJE_NAPOLEON
+    TemaId.DECO -> PELAJE_DECO
+    TemaId.BOTANICO -> PELAJE_BOTANICO
     TemaId.RUINAS -> PELAJE_RUINAS
     TemaId.NAVIDAD -> null          // Navidad: sin cuadro
     TemaId.SEDA -> PELAJE_SEDA
-    TemaId.EDO -> null              // S11
+    TemaId.EDO -> PELAJE_EDO
     TemaId.GOTICO -> PELAJE_GOTICO
     TemaId.ARCANO -> PELAJE_ARCANO
     TemaId.ESPACIO -> PELAJE_ESPACIO
-    TemaId.ABISMO -> null           // S16
+    TemaId.ABISMO -> PELAJE_ABISMO
     TemaId.ANDALUS -> PELAJE_ANDALUS
-    TemaId.MESO -> null             // S9
-    TemaId.MONGOL -> null           // S12
+    TemaId.MESO -> PELAJE_MESO
+    TemaId.MONGOL -> PELAJE_MONGOL
     TemaId.RENACIMIENTO -> PELAJE_RENACIMIENTO
     TemaId.PIRATA -> PELAJE_PIRATA
-    TemaId.URSS -> null             // S15
+    TemaId.URSS -> PELAJE_URSS
     TemaId.REVOLUCION -> PELAJE_REVOLUCION
-    TemaId.ANTIGUAS -> null         // S18
-    TemaId.CUEVA -> null            // S10
+    TemaId.ANTIGUAS -> PELAJE_ANTIGUAS
+    TemaId.CUEVA -> PELAJE_CUEVA
     TemaId.BASICO -> null           // Básico: sin cuadro
+    TemaId.FRENTE -> null           // lote 10: su cuadro va después de S19
+    TemaId.ARCONTES -> null         // lote 10: su cuadro va después de S19
+    TemaId.GALIA -> null            // lote 10: su cuadro va después de S19
+    TemaId.NOUVEAU -> null          // lote 10: su cuadro va después de S19
+    // Lote 10: su cuadro va después de S19. Su pelaje, cuando llegue, sale del gato de pixel de la versión 2 (la ciudad):
+    // atigrado naranja, sin gafas ni cinta ni ningún accesorio, con las patas manchadas de tinta.
+    TemaId.PSICODELIA -> null
 }
 
 // ---------------------------------------------------------------- Piezas para vestir al gato

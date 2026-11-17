@@ -19,6 +19,41 @@ import io.github.ruddy2003.vestigium.R
 object LetraExtra {
     val gotica = FontFamily(Font(R.font.gotica_regular, FontWeight.Normal), Font(R.font.gotica_semibold, FontWeight.SemiBold))
     val oswald = FontFamily(Font(R.font.oswald_medium, FontWeight.Medium), Font(R.font.oswald_bold, FontWeight.Bold))
+    /** Frente exterior: Michroma para los títulos, Chivo para leer y Chivo Mono para rótulos y cifras. */
+    val michroma = FontFamily(Font(R.font.michroma_titulo, FontWeight.Normal))
+    val chivo = FontFamily(Font(R.font.chivo_regular, FontWeight.Normal), Font(R.font.chivo_semibold, FontWeight.SemiBold))
+    val chivoMono = FontFamily(Font(R.font.chivo_mono_medium, FontWeight.Medium), Font(R.font.chivo_mono_medium, FontWeight.Normal))
+    /** Arcontes: Caudex (como «Códice Vestigium») para títulos y rótulos y Literata para leer; las dos con hebreo y copto dentro. */
+    val caudex = FontFamily(Font(R.font.codice_regular, FontWeight.Normal), Font(R.font.codice_bold, FontWeight.Bold))
+    val literata = FontFamily(Font(R.font.literata_regular, FontWeight.Normal), Font(R.font.literata_semibold, FontWeight.SemiBold))
+    /** Galia: Piazzolla para títulos (negrita gruesa) y texto, e Ysabeau para rótulos y cifras; las tres con griego y sigma de luna. */
+    val piazzolla = FontFamily(Font(R.font.piazzolla_regular, FontWeight.Normal), Font(R.font.piazzolla_titulo, FontWeight.ExtraBold))
+    val ysabeau = FontFamily(Font(R.font.ysabeau_semibold, FontWeight.SemiBold), Font(R.font.ysabeau_semibold, FontWeight.Normal))
+    /**
+     * Art nouveau: Federant (como «Cartel Vestigium», la Feder Antiqua de 1911) para los títulos, Brygada 1918 para leer y
+     * Della Respira (como «Vitrina Vestigium», la Della Robbia de 1902) para rótulos y cifras. La de rótulos tiene un solo peso.
+     */
+    val federant = FontFamily(Font(R.font.cartel_titulo, FontWeight.Normal))
+    val brygada = FontFamily(Font(R.font.brygada_regular, FontWeight.Normal), Font(R.font.brygada_semibold, FontWeight.SemiBold))
+    val dellaRespira = FontFamily(Font(R.font.vitrina_regular, FontWeight.Normal), Font(R.font.vitrina_regular, FontWeight.Medium), Font(R.font.vitrina_regular, FontWeight.SemiBold))
+    /**
+     * Psicodelia, versión 2 (`docs/diseno/temas/psicodelia.md`, «Letra y forma»). Libre Franklin, el grotesco americano de
+     * los periódicos y los letreros, para el texto y las cifras de las dos caras: normal (400) y seminegra (600, también en
+     * Medium); la extranegra (800) en Bold y ExtraBold. [franklinRotulo]: la seminegra en todos los pesos, para rótulos y
+     * cifras. [franklinTitular]: la extranegra sola, para los titulares de la ciudad.
+     */
+    val franklin = FontFamily(Font(R.font.franklin_regular, FontWeight.Normal), Font(R.font.franklin_semibold, FontWeight.Medium),
+        Font(R.font.franklin_semibold, FontWeight.SemiBold), Font(R.font.franklin_extrabold, FontWeight.Bold), Font(R.font.franklin_extrabold, FontWeight.ExtraBold))
+    val franklinRotulo = FontFamily(Font(R.font.franklin_semibold, FontWeight.Normal), Font(R.font.franklin_semibold, FontWeight.Medium),
+        Font(R.font.franklin_semibold, FontWeight.SemiBold), Font(R.font.franklin_extrabold, FontWeight.Bold))
+    val franklinTitular = FontFamily(Font(R.font.franklin_extrabold, FontWeight.Normal), Font(R.font.franklin_extrabold, FontWeight.Medium),
+        Font(R.font.franklin_extrabold, FontWeight.SemiBold), Font(R.font.franklin_extrabold, FontWeight.Bold), Font(R.font.franklin_extrabold, FontWeight.ExtraBold))
+    /**
+     * «Bloque Vestigium» (Chango renombrada): la letra de bloque de los carteles de la psicodelia, que llena su forma. Solo
+     * en títulos y en lo decorativo, nunca en un párrafo ni en una cifra de datos. Tiene un solo peso.
+     */
+    val bloque = FontFamily(Font(R.font.bloque_titulo, FontWeight.Normal), Font(R.font.bloque_titulo, FontWeight.Medium),
+        Font(R.font.bloque_titulo, FontWeight.SemiBold), Font(R.font.bloque_titulo, FontWeight.Bold))
     val vt323 = FontFamily(Font(R.font.vt323, FontWeight.Normal))
     val estarcido = FontFamily(Font(R.font.saira_stencil, FontWeight.Normal))
     val jost = FontFamily(Font(R.font.jost_regular, FontWeight.Normal), Font(R.font.jost_medium, FontWeight.Medium), Font(R.font.jost_semibold, FontWeight.SemiBold))
@@ -197,6 +232,144 @@ internal val distopiaClaro = esquema(false, 0xFFDEDBD2, 0xFFECE9E1, 0xFFCFCBC0, 
 internal val distopiaOscuro = esquema(true, 0xFF0F1011, 0xFF17191A, 0xFF222527, 0xFF34383B, 0xFFE8E6E0, 0xFFA8A8A1,
     0xFFE0262F, 0xFFFFFFFF, 0xFF3A1012, 0xFFF2E0DF, 0xFF9FB0BA, 0xFF24313A, 0xFFB7B37A, 0xFFFF6B6B)
 internal val tipoDistopia = tipografia(LetraExtra.oswald, FontWeight.Bold, 1.05f, 1.4f, LetraExtra.barlow, 1.02f, LetraExtra.barlow, 1.04f)
+
+// ---------------------------------------------------------------------
+//  Frente exterior: la sala de mando de una red clandestina, escondida en unas ruinas de piedra, en la ciencia ficción de
+//  los años 70. Hormigón y piedra verdosos, consolas blancas y oscuras, el verde turquesa del vidrio grabado y el ámbar
+//  y el óxido de las lámparas y el sillón. De noche, la misma base en penumbra. (docs/diseno/temas/frente.md)
+// ---------------------------------------------------------------------
+internal val frenteClaro = esquema(false, 0xFFDADBD2, 0xFFECEBE4, 0xFFC9CBC1, 0xFF979B91, 0xFF1E2523, 0xFF535B57,
+    0xFFB5561C, 0xFFFFF7EF, 0xFFF1D9C6, 0xFF2E1406, 0xFF2C5A52, 0xFFC6DAD3, 0xFF3E8C76, 0xFFA8201A)
+internal val frenteOscuro = esquema(true, 0xFF0E1614, 0xFF15201D, 0xFF1D2A26, 0xFF33433E, 0xFFDCE5DF, 0xFF92A29B,
+    0xFFEE9A4A, 0xFF2A1300, 0xFF4A2A10, 0xFFFBE2C6, 0xFF86D9C2, 0xFF1E3A33, 0xFF6FD1B4, 0xFFFF7A6E)
+/** Títulos en Michroma, ancha y en mayúsculas: se achica un poco y se abre poco, porque ya es ancha. */
+internal val tipoFrente = tipografia(LetraExtra.michroma, FontWeight.Normal, 0.86f, 0.6f, LetraExtra.chivo, 1.0f, LetraExtra.chivoMono, 0.98f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
+//  Arcontes: Galilea en el siglo I, vista por un iniciado gnóstico. De día, caliza, lino, el oro de más del mundo
+//  visible y el lago; de noche, la misma Galilea bajo el cielo antiguo, con la lámpara y la luz violeta de la grieta.
+//  (docs/diseno/temas/arcontes.md)
+// ---------------------------------------------------------------------
+internal val arcontesClaro = esquema(false, 0xFFEEE3C6, 0xFFF7F0DD, 0xFFE3D4AF, 0xFFBBA673, 0xFF1E1A2B, 0xFF57506A,
+    0xFF87590F, 0xFFFFF8E8, 0xFFF1DDA8, 0xFF2E1E02, 0xFF2B5B6C, 0xFFCCDFE3, 0xFF5A3B8F, 0xFF9E2B25)
+internal val arcontesOscuro = esquema(true, 0xFF0B0D1C, 0xFF13162A, 0xFF1C2038, 0xFF343A5A, 0xFFECE4CF, 0xFFA09CB0,
+    0xFFE9B04F, 0xFF2B1A00, 0xFF4A3410, 0xFFFBE6BE, 0xFF86BBCB, 0xFF1B3542, 0xFFC4B0FF, 0xFFFF8A7A)
+/** Títulos en Caudex (renombrada «Códice Vestigium»), la letra de los códices; texto en Literata; rótulos en Caudex. */
+internal val tipoArcontes = tipografia(LetraExtra.caudex, FontWeight.Bold, 1.0f, 0.3f, LetraExtra.literata, 1.0f, LetraExtra.caudex, 1.0f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
+//  Galia: el oppidum arverno y su robledal en el 52 a. C. De día, el verde del roble, el barro y la paja, el oro de los
+//  torques y el humo; de noche, el mismo bosque con la luna, las hogueras y, al fondo, las del campamento romano.
+//  (docs/diseno/temas/galia.md)
+// ---------------------------------------------------------------------
+internal val galiaClaro = esquema(false, 0xFFE6DFC6, 0xFFF2ECDA, 0xFFD9D0B0, 0xFFA89A6E, 0xFF20251A, 0xFF555B44,
+    0xFF3E5F24, 0xFFF6F3E6, 0xFFD3DFC0, 0xFF14200A, 0xFF7E590C, 0xFFEEDDB0, 0xFF94431F, 0xFFA3261C)
+internal val galiaOscuro = esquema(true, 0xFF0F1410, 0xFF171E17, 0xFF212A20, 0xFF3A4636, 0xFFE6E1CF, 0xFFA2A78F,
+    0xFFEBA53F, 0xFF2A1700, 0xFF4A3311, 0xFFFBE5C0, 0xFFA9C795, 0xFF22311D, 0xFFE58A5C, 0xFFFF8A7A)
+// ---------------------------------------------------------------------
+//  Art nouveau: París hacia 1900. De día, el taller con la luz que entra por el vidrio; de noche, la misma calle con la
+//  luz eléctrica de los escaparates, las lámparas de vidrio y el verde de los cafés (docs/diseno/temas/nouveau.md).
+// ---------------------------------------------------------------------
+internal val nouveauClaro = esquema(false, 0xFFEFE8D6, 0xFFF7F2E6, 0xFFE2D8C0, 0xFFB3A586, 0xFF2A2530, 0xFF5E5662,
+    0xFF4B6A4E, 0xFFF7F3E8, 0xFFD6E3CF, 0xFF16261A, 0xFF6D4C82, 0xFFE6DAEE, 0xFF7A5810, 0xFFA1302A)
+internal val nouveauOscuro = esquema(true, 0xFF121519, 0xFF1A1E22, 0xFF23282C, 0xFF3E4548, 0xFFECE5D6, 0xFFADA79A,
+    0xFFE8C46E, 0xFF2B1E00, 0xFF4A3A14, 0xFFFBEBC4, 0xFFBFA6DE, 0xFF2F2540, 0xFF8CCBA4, 0xFFFF8B7E)
+/** Títulos en Federant, la letra de cartel con curvas de pluma; texto en Brygada 1918; rótulos y cifras en Della Respira. */
+internal val tipoNouveau = tipografia(LetraExtra.federant, FontWeight.Normal, 1.0f, 0.3f, LetraExtra.brygada, 1.0f, LetraExtra.dellaRespira, 1.04f, cifrasAlineadas = true)
+
+// ---------------------------------------------------------------------
+//  Psicodelia, versión 2 (docs/diseno/temas/psicodelia.md, «Las cuatro paletas»): dos caras, cada una con su claro y su
+//  oscuro (ver CaraTema.kt). La ciudad: la tarde desde la ventanilla del trolebús (claro) y el cuarto con la lámpara de
+//  pantalla (oscuro), en color de película vieja. La psicodelia: el cartel impreso en papel crema (claro) y el de luz
+//  negra sobre negro de terciopelo (oscuro), a tres tintas. Contraste WCAG (calculado): la tinta da 11.9 o más sobre el
+//  fondo y 10.4 o más sobre la variante; el tenue, el primario, el secundario, el terciario y el error, 5.0 o más sobre el
+//  fondo; cada «sobre» (onPrimary, onSecondary, onTertiary, onError, onPrimaryContainer, onSecondaryContainer), 5.6 o más
+//  sobre su color. El esquema lleva los colores de reposo (intensidad 0); los componentes del tema leen el primario, el
+//  secundario y el terciario calientes de TrazosTinta.rol.
+// ---------------------------------------------------------------------
+
+/** Los catorce colores de la interfaz de una variante de Psicodelia (los papeles de la tabla de la guía). */
+internal class PaletaPsicodelia(
+    val fondo: Long, val superficie: Long, val variante: Long, val borde: Long, val tinta: Long, val tenue: Long,
+    val primario: Long, val sobrePrimario: Long, val contenedor: Long, val sobreContenedor: Long,
+    val secundario: Long, val contSecundario: Long, val terciario: Long, val error: Long,
+)
+
+/** Las cuatro paletas de Psicodelia, con los colores de la lámina aprobada (`herramientas/muestras/psicodelia_caras.py`). */
+internal object PaletasPsicodelia {
+    /** Ciudad · claro: la tarde desde el trolebús. Papel de foto amarillento, café casi negro, naranja quemado, verde botella. */
+    val ciudadClaro = PaletaPsicodelia(0xFFE9DFCC, 0xFFF3ECDD, 0xFFDCD0B9, 0xFFA39478, 0xFF2A2119, 0xFF5C4F41,
+        0xFF9C4219, 0xFFFFF4E8, 0xFFF1D3BD, 0xFF3A1906, 0xFF3D5838, 0xFFD3DCC4, 0xFF7A5713, 0xFFA01E2C)
+    /** Ciudad · oscuro: el cuarto a media luz, la pantalla de la lámpara, el verde de fieltro y la luz de sodio. */
+    val ciudadOscuro = PaletaPsicodelia(0xFF1B1511, 0xFF241C16, 0xFF2F251D, 0xFF54463A, 0xFFEEE3D0, 0xFFB9AA94,
+        0xFFE8975A, 0xFF2A1103, 0xFF5A2E12, 0xFFFBDDC6, 0xFFA3BB93, 0xFF2E3B29, 0xFFD9B865, 0xFFFF8E84)
+    /** Psicodelia · claro: el cartel en papel crema, con la tinta azul negra que graba; magenta, ultramar, violeta y bermellón. */
+    val tintaClaro = PaletaPsicodelia(0xFFF2E8D3, 0xFFF9F3E6, 0xFFE7DBC2, 0xFF3A3458, 0xFF1E1A3A, 0xFF4E4868,
+        0xFF974164, 0xFFFFF2F7, 0xFFF3D3DF, 0xFF3F0520, 0xFF404D99, 0xFFD6DAF0, 0xFF6A3E8E, 0xFFA8381E)
+    /** Psicodelia · oscuro: el cartel de luz negra, las tintas sobre negro de terciopelo y el crema del papel como cuarta tinta. */
+    val tintaOscuro = PaletaPsicodelia(0xFF0F0C17, 0xFF17131F, 0xFF211B2B, 0xFF6E6488, 0xFFF3E9D6, 0xFFB9AFC4,
+        0xFFDD80A4, 0xFF2B0716, 0xFF5C1438, 0xFFFFD9EA, 0xFF94A1DB, 0xFF232C66, 0xFFB79BE0, 0xFFFF8E70)
+
+    fun de(oscuro: Boolean, cara: Cara): PaletaPsicodelia = when (cara) {
+        Cara.BASE -> if (oscuro) ciudadOscuro else ciudadClaro
+        Cara.INTENSA -> if (oscuro) tintaOscuro else tintaClaro
+    }
+}
+
+/**
+ * El esquema de Material de una paleta de Psicodelia. Como [esquema], pero con todos los «sobre» puestos: onSecondary,
+ * onTertiary y onError son el fondo en el oscuro y la superficie en el claro.
+ */
+private fun esquemaPsicodelia(p: PaletaPsicodelia, oscuro: Boolean): ColorScheme {
+    val c = { x: Long -> Color(x) }
+    val sobre = c(if (oscuro) p.fondo else p.superficie)
+    return if (oscuro) darkColorScheme(
+        primary = c(p.primario), onPrimary = c(p.sobrePrimario), primaryContainer = c(p.contenedor), onPrimaryContainer = c(p.sobreContenedor),
+        secondary = c(p.secundario), onSecondary = sobre, secondaryContainer = c(p.contSecundario), onSecondaryContainer = c(p.tinta),
+        tertiary = c(p.terciario), onTertiary = sobre, background = c(p.fondo), onBackground = c(p.tinta), surface = c(p.superficie), onSurface = c(p.tinta),
+        surfaceVariant = c(p.variante), onSurfaceVariant = c(p.tenue), outline = c(p.borde), outlineVariant = c(p.borde), error = c(p.error), onError = sobre,
+        surfaceContainer = c(p.superficie), surfaceContainerHigh = c(p.variante), surfaceContainerHighest = c(p.variante),
+        surfaceContainerLow = c(p.superficie), surfaceContainerLowest = c(p.fondo),
+    ).conInversos() else lightColorScheme(
+        primary = c(p.primario), onPrimary = c(p.sobrePrimario), primaryContainer = c(p.contenedor), onPrimaryContainer = c(p.sobreContenedor),
+        secondary = c(p.secundario), onSecondary = sobre, secondaryContainer = c(p.contSecundario), onSecondaryContainer = c(p.tinta),
+        tertiary = c(p.terciario), onTertiary = sobre, background = c(p.fondo), onBackground = c(p.tinta), surface = c(p.superficie), onSurface = c(p.tinta),
+        surfaceVariant = c(p.variante), onSurfaceVariant = c(p.tenue), outline = c(p.borde), outlineVariant = c(p.borde), error = c(p.error), onError = sobre,
+        surfaceContainer = c(p.superficie), surfaceContainerHigh = c(p.variante), surfaceContainerHighest = c(p.variante),
+        surfaceContainerLow = c(p.superficie), surfaceContainerLowest = c(p.superficie),
+    ).conInversos()
+}
+
+internal val psicodeliaCiudadClaro = esquemaPsicodelia(PaletasPsicodelia.ciudadClaro, false)
+internal val psicodeliaCiudadOscuro = esquemaPsicodelia(PaletasPsicodelia.ciudadOscuro, true)
+internal val psicodeliaTintaClaro = esquemaPsicodelia(PaletasPsicodelia.tintaClaro, false)
+internal val psicodeliaTintaOscuro = esquemaPsicodelia(PaletasPsicodelia.tintaOscuro, true)
+
+/** El esquema de Psicodelia según su [cara] (la ciudad o la psicodelia) y la claridad. */
+internal fun psicodeliaEsquema(oscuro: Boolean, cara: Cara): ColorScheme = when (cara) {
+    Cara.BASE -> if (oscuro) psicodeliaCiudadOscuro else psicodeliaCiudadClaro
+    Cara.INTENSA -> if (oscuro) psicodeliaTintaOscuro else psicodeliaTintaClaro
+}
+
+/**
+ * La ciudad: titulares en Libre Franklin extranegra con el espaciado apretado de los titulares de los 70 (unos −3.5 %:
+ * −0.9 sp en los de 27 sp); texto en Libre Franklin; rótulos y cifras en su seminegra.
+ */
+internal val tipoPsicodeliaCiudad = tipografia(LetraExtra.franklinTitular, FontWeight.ExtraBold, 1.04f, -0.9f, LetraExtra.franklin, 1.0f,
+    LetraExtra.franklinRotulo, 1.0f, cifrasAlineadas = true)
+
+/** La psicodelia: títulos en Bloque Vestigium (Chango), de bloque y muy ancha, así que un poco más chica; lo demás, como la ciudad. */
+internal val tipoPsicodeliaTinta = tipografia(LetraExtra.bloque, FontWeight.Normal, 0.86f, 0.4f, LetraExtra.franklin, 1.0f,
+    LetraExtra.franklinRotulo, 1.0f, cifrasAlineadas = true)
+
+/** La letra de Psicodelia según su cara: el texto y las cifras no cambian de noche (Libre Franklin); cambian los títulos. */
+internal fun tipoPsicodelia(cara: Cara): Typography = when (cara) {
+    Cara.BASE -> tipoPsicodeliaCiudad
+    Cara.INTENSA -> tipoPsicodeliaTinta
+}
+
+/** Títulos en Piazzolla negrita gruesa, como letra grabada; texto en Piazzolla; rótulos en Ysabeau. */
+internal val tipoGalia = tipografia(LetraExtra.piazzolla, FontWeight.ExtraBold, 1.0f, 0.4f, LetraExtra.piazzolla, 1.0f, LetraExtra.ysabeau, 1.0f, cifrasAlineadas = true)
 
 // ---------------------------------------------------------------------
 //  Refugio: optimismo atómico de los cincuenta de día; pantalla de fósforo verde de noche.
@@ -450,6 +623,14 @@ internal fun juegoTonos(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFFC9473B, 0xFF2A2016, 0xFF8DA5E0, 0xFFD5A84A) else listOf(0xFF9E1B1B, 0xFFE5D6B4, 0xFF1F3F8F, 0xFFA97C1E)
     TemaId.TEMPLARIO -> if (oscuro) listOf(0xFFD0453A, 0xFF262219, 0xFF9AA8B4, 0xFFDAAE68) else listOf(0xFFA8181E, 0xFFE2D6BC, 0xFF46525D, 0xFFA2763A)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFFE0262F, 0xFF2A2C2E, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFFB3121B, 0xFFCFCBC0, 0xFF2E3B44, 0xFFB3121B)
+    TemaId.PSICODELIA -> if (oscuro) listOf(0xFFC9F04A, 0xFF251935, 0xFFFF5CBE, 0xFFAE91FF) else listOf(0xFFB0246A, 0xFFE6DED2, 0xFF2E7344, 0xFFA84B0A)
+    TemaId.NOUVEAU -> if (oscuro) listOf(0xFFBFA6DE, 0xFF23282C, 0xFFE8C46E, 0xFFE8C46E) else listOf(0xFF4B6A4E, 0xFFE2D8C0, 0xFF6D4C82, 0xFF6D4C82)
+    // Del verde del roble al oro del torques, sobre el barro; de noche, del roble bajo la luna a la hoguera.
+    TemaId.GALIA -> if (oscuro) listOf(0xFFA9C795, 0xFF212A20, 0xFFEBA53F, 0xFFEBA53F) else listOf(0xFF3E5F24, 0xFFD9D0B0, 0xFF7E590C, 0xFF7E590C)
+    // Del azul del lago al oro del mundo visible, sobre la caliza; de noche, del lago bajo la luna a la llama.
+    TemaId.ARCONTES -> if (oscuro) listOf(0xFF86BBCB, 0xFF1C2038, 0xFFE9B04F, 0xFFE9B04F) else listOf(0xFF2B5B6C, 0xFFE3D4AF, 0xFF87590F, 0xFF87590F)
+    // Del verde turquesa del vidrio grabado al ámbar de las lámparas, sobre la consola; fuerte, el ámbar encendido.
+    TemaId.FRENTE -> if (oscuro) listOf(0xFF6FD1B4, 0xFF1D2A26, 0xFFEE9A4A, 0xFFF2A33A) else listOf(0xFF3E8C76, 0xFFC9CBC1, 0xFFB5561C, 0xFFB5561C)
     TemaId.REFUGIO -> if (oscuro) listOf(0xFFFFB23F, 0xFF112016, 0xFF3DFF7F, 0xFF3DFF7F) else listOf(0xFFD9572B, 0xFFE6DAB8, 0xFF1C6E6A, 0xFF1C6E6A)
     TemaId.ORDEN -> if (oscuro) listOf(0xFFD0333B, 0xFF262A30, 0xFF8FB3C8, 0xFFD6B25A) else listOf(0xFF9E1B22, 0xFFD3D7DC, 0xFF2F4858, 0xFF7E6219)
     // Del ladrillo (bajo) al cardenillo (alto), pasando por el papel de plano o el hollín; fuerte, el latón.
@@ -490,6 +671,11 @@ internal fun juegoCalor(tema: TemaId, oscuro: Boolean): List<Color> = when (tema
     TemaId.MEDIEVAL -> if (oscuro) listOf(0xFF8DA5E0, 0xFFD5A84A, 0xFFC9473B) else listOf(0xFF1F3F8F, 0xFFA97C1E, 0xFF9E1B1B)
     TemaId.TEMPLARIO -> if (oscuro) listOf(0xFF9AA8B4, 0xFFDAAE68, 0xFFE2453B) else listOf(0xFF46525D, 0xFFB98A45, 0xFFB0191F)
     TemaId.DISTOPIA -> if (oscuro) listOf(0xFF6D7377, 0xFFCFCFC8, 0xFFE0262F) else listOf(0xFF6D7377, 0xFF2E3B44, 0xFFB3121B)
+    TemaId.PSICODELIA -> if (oscuro) listOf(0xFFAE91FF, 0xFFC9F04A, 0xFFFF5CBE) else listOf(0xFF2E7344, 0xFFA84B0A, 0xFFB0246A)   // verde, naranja y magenta de cartel
+    TemaId.NOUVEAU -> if (oscuro) listOf(0xFF8CCBA4, 0xFFE8C46E, 0xFFFF8B7E) else listOf(0xFF4B6A4E, 0xFF6D4C82, 0xFFA1302A)   // salvia, iris, tinta roja
+    TemaId.GALIA -> if (oscuro) listOf(0xFFA9C795, 0xFFEBA53F, 0xFFFF8A7A) else listOf(0xFF3E5F24, 0xFF7E590C, 0xFFA3261C)   // roble, oro, sangre
+    TemaId.ARCONTES -> if (oscuro) listOf(0xFF86BBCB, 0xFFE9B04F, 0xFFFF8A7A) else listOf(0xFF2B5B6C, 0xFF87590F, 0xFF8E3A2E)   // lago, ocre, jaspe rojo
+    TemaId.FRENTE -> if (oscuro) listOf(0xFF4FA88F, 0xFFEE9A4A, 0xFFFF7A6E) else listOf(0xFF3E8C76, 0xFFB5561C, 0xFFA8201A)   // vidrio, lámpara ámbar, botón rojo
     TemaId.REFUGIO -> if (oscuro) listOf(0xFF1E8A45, 0xFF3DFF7F, 0xFFFFB23F) else listOf(0xFF1C6E6A, 0xFFB98A15, 0xFFD9572B)
     TemaId.ORDEN -> if (oscuro) listOf(0xFF8FB3C8, 0xFFD6B25A, 0xFFD0333B) else listOf(0xFF2F4858, 0xFF7E6219, 0xFF9E1B22)
     // Como una caldera que se calienta: cardenillo frío, latón tibio, ladrillo al rojo.

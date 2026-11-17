@@ -25,9 +25,11 @@ import io.github.ruddy2003.vestigium.ui.TemaId
 /**
  * Un día guardado en el estante, tal como se dibuja: el número del día y el mes como los nombra el tema, cuántas palabras
  * tiene, el color de su ánimo (o del sueño, de noche; null si no se marcó), una semilla para sus irregularidades y si es
- * de noche. [lleno] va de 0 a 1 con las palabras (800 o más es lleno).
+ * de noche. [lleno] va de 0 a 1 con las palabras (800 o más es lleno). Para la luz: en qué [repisa] está (0 es la de
+ * arriba) de cuántas ([repisas]) y dónde cae su centro a lo ancho del hueco ([centro], de 0 a la izquierda a 1 a la derecha).
  */
-class Volumen(val dia: String, val mes: String, val palabras: Int, val tono: Color?, val semilla: Int, val noche: Boolean) {
+class Volumen(val dia: String, val mes: String, val palabras: Int, val tono: Color?, val semilla: Int, val noche: Boolean,
+              val repisa: Int = 0, val repisas: Int = 1, val centro: Float = 0.5f) {
     val lleno: Float get() = (palabras / 800f).coerceIn(0f, 1f)
 }
 
@@ -36,11 +38,12 @@ class PlacaEstante(val r: Rect, val texto: String)
 
 /**
  * Dónde va cada parte del estante, en píxeles del lienzo: la corona, el hueco de cada repisa (donde se paran los volúmenes),
- * la tabla bajo cada repisa, los costados, la base y los rótulos de los meses.
+ * la tabla bajo cada repisa, los costados, la base y los rótulos de los meses. [ocupado] dice, por repisa, hasta qué x del
+ * lienzo llegan sus volúmenes (el borde derecho del último): de ahí al costado derecho el hueco está libre para lo del tema.
  */
 class DisposicionEstante(
     val corona: Rect, val repisas: List<Rect>, val tablas: List<Rect>, val izquierda: Rect, val derecha: Rect, val base: Rect,
-    val placas: List<PlacaEstante>,
+    val placas: List<PlacaEstante>, val ocupado: List<Float> = emptyList(),
 )
 
 /**
@@ -65,6 +68,12 @@ interface DisenoBiblioteca {
     val separa: Dp
     /** La letra de los rótulos y de los volúmenes. */
     val letra: FontFamily
+
+    /**
+     * Si los volúmenes llevan su aura también en reposo (`Modifier.halo()`). Los estantes rehechos (MUEBLES.md, versión 2)
+     * la apagan: ya tienen su propia luz y el aura les dejaba un contorno pálido, sobre todo de noche. Al tocar sale igual.
+     */
+    val auraEnReposo: Boolean get() = true
 
     /** El mueble: la corona, el fondo de cada repisa, las tablas con sus rótulos, los costados y la base. */
     fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean)
@@ -286,6 +295,11 @@ fun disenoBiblioteca(t: TemaId): DisenoBiblioteca = when (t) {
     TemaId.MEDIEVAL -> EstanteMedieval
     TemaId.TEMPLARIO -> EstanteTemplario
     TemaId.DISTOPIA -> EstanteDistopia
+    TemaId.PSICODELIA -> EstantePsicodelia
+    TemaId.NOUVEAU -> EstanteNouveau
+    TemaId.GALIA -> EstanteGalia
+    TemaId.ARCONTES -> EstanteArcontes
+    TemaId.FRENTE -> EstanteFrente
     TemaId.REFUGIO -> EstanteRefugio
     TemaId.ORDEN -> EstanteOrden
     TemaId.VAPOR -> EstanteVapor

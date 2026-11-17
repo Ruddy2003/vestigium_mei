@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Una tecla de roble en la oscuridad del bosque: el verde negro, con su borde y la sombra abajo. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="#FF1E261C"/>
+            <stroke android:width="1dp" android:color="#FF3A4636"/>
+            <corners android:radius="6dp"/>
+        </shape>
+    </item>
+    <item android:gravity="bottom|fill_horizontal" android:height="1.5dp" android:left="5dp" android:right="5dp" android:bottom="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="#FF0A0E0A"/>
+            <corners android:radius="1dp"/>
+        </shape>
+    </item>
+</layer-list>

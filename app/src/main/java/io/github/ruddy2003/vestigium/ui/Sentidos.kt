@@ -117,6 +117,51 @@ object Sentidos {
             Evento.CAMBIO -> listOf(g(CLICK, 0.9f), g(CLICK, 0.5f, 30)); Evento.ERROR -> listOf(g(CLICK, 0.9f), g(CLICK, 0.9f, 140))
             Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.8f), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(CLICK, 0.8f, 80), g(THUD, 0.9f, 120))
         }
+        // La cuerda del sitar con su zumbido, la aguja en el disco, el órgano, la guitarra con distorsión y el pandero.
+        TemaId.PSICODELIA -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 0.62f), g(TICK, 0.14f, 24), g(TICK, 0.1f, 24)); Evento.PASAR -> listOf(g(SUBE_LENTO, 0.18f), g(TICK_GRAVE, 0.3f, 190))
+            Evento.GUARDAR -> listOf(g(THUD, 0.6f), g(CLICK, 0.4f, 100), g(CLICK, 0.62f, 200), g(TICK, 0.2f, 190), g(TICK, 0.12f, 190))
+            Evento.ELEGIR -> listOf(g(CLICK, 0.42f), g(TICK_GRAVE, 0.18f, 140)); Evento.ABRIR -> listOf(g(TICK, 0.36f), g(TICK, 0.4f, 40), g(TICK, 0.44f, 40), g(CLICK, 0.5f, 40), g(TICK, 0.2f, 120))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.7f), g(TICK, 0.32f, 30), g(TICK, 0.4f, 100))
+            Evento.ERROR -> listOf(g(CLICK, 0.46f), g(BAJA, 0.56f, 40), g(BAJA, 0.3f, 160))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(THUD, 0.62f), g(THUD, 0.62f, 190), g(THUD, 0.92f, 190), g(TICK, 0.36f, 190), g(TICK, 0.3f, 190), g(TICK, 0.24f, 190), g(TICK, 0.18f, 190))
+        }
+        // El colgante de cristal de la lámpara, la lámina de la cajita de música, el golpe de la prensa y el vals.
+        TemaId.NOUVEAU -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 0.58f), g(TICK, 0.18f, 30)); Evento.PASAR -> listOf(g(TICK, 0.22f), g(TICK, 0.16f, 34), g(TICK, 0.12f, 40))
+            Evento.GUARDAR -> listOf(g(SUBE_LENTO, 0.24f), g(THUD, 0.94f, 150), g(TICK, 0.34f, 60), g(TICK, 0.4f, 110))
+            Evento.ELEGIR -> listOf(g(TICK, 0.46f), g(TICK_GRAVE, 0.2f, 12)); Evento.ABRIR -> listOf(g(TICK_GRAVE, 0.4f), g(TICK, 0.3f, 40), g(TICK, 0.26f, 40), g(SUBE_LENTO, 0.3f, 30))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.52f), g(TICK, 0.42f, 30), g(TICK, 0.5f, 80))
+            Evento.ERROR -> listOf(g(TICK, 0.48f), g(BAJA, 0.44f, 150), g(THUD, 0.5f, 30))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(TICK, 0.3f), g(TICK, 0.36f, 52), g(TICK, 0.42f, 52), g(TICK, 0.48f, 52), g(THUD, 0.7f, 360), g(TICK, 0.3f, 420), g(TICK, 0.28f, 440))
+        }
+        // La cuerda de la lira, el martillo en el yunque, la lanza contra el escudo y el bramido del carnyx.
+        TemaId.GALIA -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 0.66f), g(CLICK, 0.2f, 22)); Evento.PASAR -> listOf(g(SUBE_LENTO, 0.22f), g(TICK, 0.2f, 60))
+            Evento.GUARDAR -> listOf(g(THUD, 0.92f), g(CLICK, 0.6f, 120), g(CLICK, 0.4f, 90))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.52f)); Evento.ABRIR -> listOf(g(THUD, 0.5f), g(TICK, 0.36f, 44), g(SUBE_LENTO, 0.28f, 30))
+            Evento.CAMBIO -> listOf(g(CLICK, 0.7f), g(CLICK, 0.46f, 110))
+            Evento.ERROR -> listOf(g(THUD, 0.8f), g(BAJA, 0.6f, 40))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(CLICK, 0.7f), g(CLICK, 0.74f, 60), g(THUD, 0.8f, 60), g(SUBE, 0.62f, 80), g(SUBE_LENTO, 0.5f, 60))
+        }
+        // La cuerda del kinnor que se pulsa con la púa, los crótalos, la tapa de barro de la jarra y el zumbido de abajo.
+        TemaId.ARCONTES -> when (e) {
+            Evento.TOQUE -> listOf(g(TICK, 0.7f), g(TICK_GRAVE, 0.22f, 18)); Evento.PASAR -> listOf(g(TICK, 0.3f), g(TICK, 0.24f, 48))
+            Evento.GUARDAR -> listOf(g(THUD, 0.78f), g(TICK_GRAVE, 0.4f, 34), g(TICK, 0.32f, 40))
+            Evento.ELEGIR -> listOf(g(TICK, 0.56f), g(TICK, 0.3f, 26)); Evento.ABRIR -> listOf(g(TICK_GRAVE, 0.44f), g(SUBE_LENTO, 0.3f, 36))
+            Evento.CAMBIO -> listOf(g(TICK, 0.5f), g(TICK, 0.44f, 22), g(TICK_GRAVE, 0.3f, 22))
+            Evento.ERROR -> listOf(g(BAJA, 0.52f), g(TICK_GRAVE, 0.6f, 90), g(TICK_GRAVE, 0.5f, 120))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(TICK, 0.4f), g(TICK, 0.48f, 70), g(TICK, 0.56f, 70), g(TICK, 0.64f, 70), g(SUBE, 0.5f, 90))
+        }
+        // Relés de consola que cierran con su rebote, el chasquido de un interruptor de palanca y el contactor grande.
+        TemaId.FRENTE -> when (e) {
+            Evento.TOQUE -> listOf(g(CLICK, 0.82f), g(TICK, 0.28f, 14)); Evento.PASAR -> listOf(g(CLICK, 0.46f), g(CLICK, 0.38f, 32), g(CLICK, 0.31f, 32))
+            Evento.GUARDAR -> listOf(g(SUBE, 0.36f), g(CLICK, 0.95f, 8), g(TICK_GRAVE, 0.52f, 26))
+            Evento.ELEGIR -> listOf(g(TICK_GRAVE, 0.48f), g(CLICK, 0.74f, 22)); Evento.ABRIR -> listOf(g(CLICK, 0.62f), g(TICK, 0.26f, 12), g(SUBE_LENTO, 0.34f, 30))
+            Evento.CAMBIO -> listOf(g(TICK_GRAVE, 0.62f), g(CLICK, 0.92f, 18), g(TICK, 0.22f, 11))
+            Evento.ERROR -> listOf(g(CLICK, 0.78f), g(CLICK, 0.77f, 28), g(CLICK, 0.76f, 28), g(CLICK, 0.75f, 28), g(BAJA, 0.46f, 40))
+            Evento.LOGRO, Evento.TEMA -> listOf(g(TICK, 0.5f), g(TICK, 0.52f, 36), g(CLICK, 0.7f, 36), g(CLICK, 0.88f, 60), g(THUD, 0.72f, 24))
+        }
         // Relé y contador Geiger.
         TemaId.REFUGIO -> when (e) {
             Evento.TOQUE -> listOf(g(TICK, 0.9f)); Evento.PASAR -> listOf(g(TICK_GRAVE, 0.7f))
@@ -384,8 +429,13 @@ object Sentidos {
      * Por tema, en este orden: toque, guardar, logro, pasar (cambiar de pantalla), elegir, abrir, el sonido del propio tema
      * (al elegirlo), error, cambio (encender o apagar algo), la tecla del diario y el rascado de la lámina del mapa.
      * Todos salen de `herramientas/afinados.py`.
+     *
+     * Los temas con caras ([TemaId.conCaras], hoy Psicodelia) tienen un juego por [cara]: en Psicodelia, BASE es la ciudad
+     * (el órgano de transistores suave, el pandero, el eco de cinta corto, la aguja y la perilla de la radio) e INTENSA, la
+     * psicodelia (el sitar en zumbido, la guitarra con distorsión de los logros, el eco de cinta largo). Los demás temas no
+     * miran [cara]. Qué cara suena la decide [caraDelSonido].
      */
-    private fun sonidos(tema: TemaId): IntArray = when (tema) {
+    private fun sonidos(tema: TemaId, cara: Cara): IntArray = when (tema) {
         TemaId.ROMANO -> intArrayOf(R.raw.s_romano_toque, R.raw.s_romano_guardar, R.raw.s_romano_logro, R.raw.s_romano_pasar, R.raw.s_romano_elegir, R.raw.s_romano_abrir, R.raw.s_romano_tema, R.raw.s_romano_error, R.raw.s_romano_cambio, R.raw.s_tecla_romano, R.raw.s_rascar_romano)
         TemaId.URBE -> intArrayOf(R.raw.s_urbe_toque, R.raw.s_urbe_guardar, R.raw.s_urbe_logro, R.raw.s_urbe_pasar, R.raw.s_urbe_elegir, R.raw.s_urbe_abrir, R.raw.s_urbe_tema, R.raw.s_urbe_error, R.raw.s_urbe_cambio, R.raw.s_tecla_urbe, R.raw.s_rascar_urbe)
         TemaId.CIBER -> intArrayOf(R.raw.s_ciber_toque, R.raw.s_ciber_guardar, R.raw.s_ciber_logro, R.raw.s_ciber_pasar, R.raw.s_ciber_elegir, R.raw.s_ciber_abrir, R.raw.s_ciber_tema, R.raw.s_ciber_error, R.raw.s_ciber_cambio, R.raw.s_tecla_ciber, R.raw.s_rascar_ciber)
@@ -395,6 +445,15 @@ object Sentidos {
         TemaId.MEDIEVAL -> intArrayOf(R.raw.s_medieval_toque, R.raw.s_medieval_guardar, R.raw.s_medieval_logro, R.raw.s_medieval_pasar, R.raw.s_medieval_elegir, R.raw.s_medieval_abrir, R.raw.s_medieval_tema, R.raw.s_medieval_error, R.raw.s_medieval_cambio, R.raw.s_tecla_medieval, R.raw.s_rascar_medieval)
         TemaId.TEMPLARIO -> intArrayOf(R.raw.s_templario_toque, R.raw.s_templario_guardar, R.raw.s_templario_logro, R.raw.s_templario_pasar, R.raw.s_templario_elegir, R.raw.s_templario_abrir, R.raw.s_templario_tema, R.raw.s_templario_error, R.raw.s_templario_cambio, R.raw.s_tecla_templario, R.raw.s_rascar_templario)
         TemaId.DISTOPIA -> intArrayOf(R.raw.s_distopia_toque, R.raw.s_distopia_guardar, R.raw.s_distopia_logro, R.raw.s_distopia_pasar, R.raw.s_distopia_elegir, R.raw.s_distopia_abrir, R.raw.s_distopia_tema, R.raw.s_distopia_error, R.raw.s_distopia_cambio, R.raw.s_tecla_distopia, R.raw.s_rascar_distopia)
+        TemaId.PSICODELIA -> when (cara) {
+            Cara.BASE -> intArrayOf(R.raw.s_psicodelia_toque, R.raw.s_psicodelia_guardar, R.raw.s_psicodelia_logro, R.raw.s_psicodelia_pasar, R.raw.s_psicodelia_elegir, R.raw.s_psicodelia_abrir, R.raw.s_psicodelia_tema, R.raw.s_psicodelia_error, R.raw.s_psicodelia_cambio, R.raw.s_tecla_psicodelia, R.raw.s_rascar_psicodelia)
+            // La moneda del mapa es la misma de día y de noche: el rascado es el de la ciudad.
+            Cara.INTENSA -> intArrayOf(R.raw.s_psicodelia_tinta_toque, R.raw.s_psicodelia_tinta_guardar, R.raw.s_psicodelia_tinta_logro, R.raw.s_psicodelia_tinta_pasar, R.raw.s_psicodelia_tinta_elegir, R.raw.s_psicodelia_tinta_abrir, R.raw.s_psicodelia_tinta_tema, R.raw.s_psicodelia_tinta_error, R.raw.s_psicodelia_tinta_cambio, R.raw.s_tecla_psicodelia_tinta, R.raw.s_rascar_psicodelia)
+        }
+        TemaId.NOUVEAU -> intArrayOf(R.raw.s_nouveau_toque, R.raw.s_nouveau_guardar, R.raw.s_nouveau_logro, R.raw.s_nouveau_pasar, R.raw.s_nouveau_elegir, R.raw.s_nouveau_abrir, R.raw.s_nouveau_tema, R.raw.s_nouveau_error, R.raw.s_nouveau_cambio, R.raw.s_tecla_nouveau, R.raw.s_rascar_nouveau)
+        TemaId.GALIA -> intArrayOf(R.raw.s_galia_toque, R.raw.s_galia_guardar, R.raw.s_galia_logro, R.raw.s_galia_pasar, R.raw.s_galia_elegir, R.raw.s_galia_abrir, R.raw.s_galia_tema, R.raw.s_galia_error, R.raw.s_galia_cambio, R.raw.s_tecla_galia, R.raw.s_rascar_galia)
+        TemaId.ARCONTES -> intArrayOf(R.raw.s_arcontes_toque, R.raw.s_arcontes_guardar, R.raw.s_arcontes_logro, R.raw.s_arcontes_pasar, R.raw.s_arcontes_elegir, R.raw.s_arcontes_abrir, R.raw.s_arcontes_tema, R.raw.s_arcontes_error, R.raw.s_arcontes_cambio, R.raw.s_tecla_arcontes, R.raw.s_rascar_arcontes)
+        TemaId.FRENTE -> intArrayOf(R.raw.s_frente_toque, R.raw.s_frente_guardar, R.raw.s_frente_logro, R.raw.s_frente_pasar, R.raw.s_frente_elegir, R.raw.s_frente_abrir, R.raw.s_frente_tema, R.raw.s_frente_error, R.raw.s_frente_cambio, R.raw.s_tecla_frente, R.raw.s_rascar_frente)
         TemaId.REFUGIO -> intArrayOf(R.raw.s_refugio_toque, R.raw.s_refugio_guardar, R.raw.s_refugio_logro, R.raw.s_refugio_pasar, R.raw.s_refugio_elegir, R.raw.s_refugio_abrir, R.raw.s_refugio_tema, R.raw.s_refugio_error, R.raw.s_refugio_cambio, R.raw.s_tecla_refugio, R.raw.s_rascar_refugio)
         TemaId.ORDEN -> intArrayOf(R.raw.s_orden_toque, R.raw.s_orden_guardar, R.raw.s_orden_logro, R.raw.s_orden_pasar, R.raw.s_orden_elegir, R.raw.s_orden_abrir, R.raw.s_orden_tema, R.raw.s_orden_error, R.raw.s_orden_cambio, R.raw.s_tecla_orden, R.raw.s_rascar_orden)
         TemaId.VAPOR -> intArrayOf(R.raw.s_vapor_toque, R.raw.s_vapor_guardar, R.raw.s_vapor_logro, R.raw.s_vapor_pasar, R.raw.s_vapor_elegir, R.raw.s_vapor_abrir, R.raw.s_vapor_tema, R.raw.s_vapor_error, R.raw.s_vapor_cambio, R.raw.s_tecla_vapor, R.raw.s_rascar_vapor)
@@ -422,7 +481,25 @@ object Sentidos {
         TemaId.BASICO -> intArrayOf()   // sin sonidos propios: el toque suena con el clic del sistema
         TemaId.REVOLUCION -> intArrayOf(R.raw.s_revolucion_toque, R.raw.s_revolucion_guardar, R.raw.s_revolucion_logro, R.raw.s_revolucion_pasar, R.raw.s_revolucion_elegir, R.raw.s_revolucion_abrir, R.raw.s_revolucion_tema, R.raw.s_revolucion_error, R.raw.s_revolucion_cambio, R.raw.s_tecla_revolucion, R.raw.s_rascar_revolucion)
     }
-    internal val SONIDOS: Map<String, IntArray> = TemaId.entries.associate { it.id to sonidos(it) }
+    /** Los sonidos de cada tema en su cara de base (la única, para los temas sin caras). */
+    internal val SONIDOS: Map<String, IntArray> = TemaId.entries.associate { it.id to sonidos(it, Cara.BASE) }
+    /** Los de la cara intensa, solo de los temas con caras ([TemaId.conCaras]). */
+    internal val SONIDOS_INTENSA: Map<String, IntArray> = TemaId.entries.filter { it.conCaras }.associate { it.id to sonidos(it, Cara.INTENSA) }
+
+    /** Los sonidos de [tema] en la [cara] dada: los de la cara intensa si el tema tiene caras; si no, los de siempre. */
+    internal fun sonidosDe(tema: TemaId, cara: Cara): IntArray? =
+        if (cara == Cara.INTENSA && tema.conCaras) SONIDOS_INTENSA[tema.id] else SONIDOS[tema.id]
+
+    /**
+     * La cara cuyos sonidos tocan ahora en [tema]: la **de la hora**, nunca la de la intensidad ([EstadoTema.caraSinIntensidad]).
+     * Con un consumo en curso de día, Psicodelia se ve en su cara psicodelia pero sigue sonando a la ciudad: un sonido lo
+     * oye quien esté cerca, y un consumo no debe oírse (la guía, «Sonido»). La música de la presentación y la de «Tu año»
+     * siguen la misma regla ([Musica.presentacion], [Musica.anual]).
+     */
+    fun caraDelSonido(tema: TemaId): Cara = EstadoTema.caraSinIntensidad(tema)
+
+    /** Los sonidos que tocan ahora en [tema]. */
+    private fun sonidosAhora(tema: TemaId): IntArray? = sonidosDe(tema, caraDelSonido(tema))
     private const val TECLA = 9
     private const val RASCAR = 10
 
@@ -442,10 +519,15 @@ object Sentidos {
             pool = p
         }
 
-    /** Deja listos los sonidos del tema para que el primero no llegue tarde. */
+    /** Deja listos los sonidos del tema para que el primero no llegue tarde (los de sus dos caras, si las tiene: la cara cambia sola con la hora). */
     fun preparar(ctx: Context) {
         if (!Repo.config.sonidos) return
-        runCatching { SONIDOS[Estilo.tema.id]?.take(TECLA)?.forEach { r -> if (r !in cargados) cargados[r] = pool().load(ctx.applicationContext, r, 1) } }
+        val tema = Estilo.tema
+        runCatching {
+            listOfNotNull(SONIDOS[tema.id], SONIDOS_INTENSA[tema.id]).forEach { juego ->
+                juego.take(TECLA).forEach { r -> if (r !in cargados) cargados[r] = pool().load(ctx.applicationContext, r, 1) }
+            }
+        }
     }
 
     /**
@@ -482,6 +564,18 @@ object Sentidos {
         TemaId.TEMPLARIO -> Afinacion(st(-5, -2, 0, 5), st(-7, 0, 5, 7), pasarRuido = true, elegirRuido = false)
         // Do menor; la máquina de escribir, un semitono abajo y un tono arriba.
         TemaId.DISTOPIA -> Afinacion(st(-1, 0, 2), null, pasarRuido = true, elegirRuido = true)
+        // La mixolidio, la misma en las dos caras: el toque es una tecla del órgano en la ciudad y una cuerda de sitar en la
+        // psicodelia; pasar es ruido (la funda del disco, el rasero de la serigrafía) y elegir tiene nota (la tecla del
+        // órgano, la cuerda del sitar).
+        TemaId.PSICODELIA -> Afinacion(st(-2, 0, 2, 4, 7, 10), st(-7, -5, -2, 0), pasarRuido = true, elegirRuido = false)
+        // Mi bemol mayor con la novena (abajo, para no pasar del doble de velocidad) y la séptima mayor: la campanilla de cristal; el pliego de pasar es ruido, elegir es la lámina de la cajita.
+        TemaId.NOUVEAU -> Afinacion(st(-5, 0, 2, 4, 7, 11), st(-7, -5, 0, 4), pasarRuido = true, elegirRuido = false)
+        // Do# eolio sin sensible: la lira de los bardos; pasar es el viento en los robles, elegir una cuerda apagada con la palma.
+        TemaId.GALIA -> Afinacion(st(-4, -2, 0, 3, 7), st(-7, -5, 0, 3), pasarRuido = true, elegirRuido = false)
+        // La bemol mixolidio con la sexta menor: el kinnor con púa; el velo de lino de pasar es ruido, elegir es el crótalo.
+        TemaId.ARCONTES -> Afinacion(st(-2, 0, 4, 7, 8), st(-5, -2, 0, 4), pasarRuido = true, elegirRuido = false)
+        // Fa menor con la séptima mayor (Fa, La bemol, Do, Mi): el pitido de la consola; el teletipo de pasar es ruido.
+        TemaId.FRENTE -> Afinacion(st(-5, 0, 3, 7, 11), st(-8, -7, -4, 0), pasarRuido = true, elegirRuido = false)
         // Fa pentatónico; el relé sube por tonos enteros.
         TemaId.REFUGIO -> Afinacion(st(0, 2, 4), null, pasarRuido = true, elegirRuido = true)
         // Sol menor; el servo baja a la cuarta.
@@ -576,7 +670,7 @@ object Sentidos {
         if (audio != null && audio.ringerMode != AudioManager.RINGER_MODE_NORMAL) return
         // Un tema sin sonidos propios (Básico) solo da el clic del sistema al tocar, y solo si el teléfono tiene activados
         // los sonidos al tocar (playSoundEffect lo respeta).
-        val r = SONIDOS[tema.id]?.getOrNull(i) ?: run { if (i == 0) audio?.playSoundEffect(AudioManager.FX_KEY_CLICK); return }
+        val r = sonidosAhora(tema)?.getOrNull(i) ?: run { if (i == 0) audio?.playSoundEffect(AudioManager.FX_KEY_CLICK); return }
         val vol = when (i) { 0, 4 -> 0.45f; 3 -> 0.38f; 5, 7 -> 0.6f; 8 -> 0.5f; 6 -> 0.75f; else -> 0.8f }
         val escala = notas(tema, i)
         val tono = when {
@@ -602,7 +696,7 @@ object Sentidos {
     /** Una tecla del diario, propia de cada tema: estilo sobre cera, cálamo, pluma, lápiz, pincel, máquina de escribir, consola… */
     fun tecla(ctx: Context, tema: TemaId) {
         if (!puedeSonar(ctx)) return
-        val r = SONIDOS[tema.id]?.getOrNull(TECLA) ?: return
+        val r = sonidosAhora(tema)?.getOrNull(TECLA) ?: return
         runCatching { tocar(ctx, r, 0.32f, 0.95f + azar.nextFloat() * 0.1f) }
     }
 
@@ -621,6 +715,11 @@ object Sentidos {
         TemaId.MEDIEVAL -> pasadas(TICK_GRAVE, 0.5f, 70, 3)   // pan de oro
         TemaId.TEMPLARIO -> pasadas(CLICK, 0.65f, 50, 4)   // hierro de cota de malla
         TemaId.DISTOPIA -> pasadas(CLICK, 0.5f, 60, 3)   // chapa de ministerio
+        TemaId.PSICODELIA -> pasadas(TICK, 0.57f, 42, 5)   // una moneda de diez centavos
+        TemaId.NOUVEAU -> pasadas(TICK, 0.53f, 48, 4)   // un franco de plata
+        TemaId.GALIA -> pasadas(TICK, 0.48f, 66, 4)   // el estátero de oro arverno
+        TemaId.ARCONTES -> pasadas(TICK_GRAVE, 0.44f, 58, 3)   // la moneda de bronce de Herodes Antipas
+        TemaId.FRENTE -> pasadas(CLICK, 0.56f, 44, 4)   // chapa esmaltada de consola
         TemaId.REFUGIO -> pasadas(TICK, 0.8f, 35, 4)   // chapa galvanizada
         TemaId.ORDEN -> pasadas(CLICK, 0.8f, 45, 3)   // acero pavonado
         TemaId.VAPOR -> pasadas(CLICK, 0.66f, 38, 4)   // latón remachado
@@ -653,7 +752,7 @@ object Sentidos {
     fun rascar(ctx: Context) {
         val tema = Estilo.tema
         if (Repo.config.vibracion) runCatching { vibrar(ctx, patronRascar(tema)) }
-        if (puedeSonar(ctx)) runCatching { SONIDOS[tema.id]?.getOrNull(RASCAR)?.let { tocar(ctx, it, 0.7f) } }
+        if (puedeSonar(ctx)) runCatching { sonidosAhora(tema)?.getOrNull(RASCAR)?.let { tocar(ctx, it, 0.7f) } }
     }
 }
 

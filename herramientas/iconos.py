@@ -6,6 +6,7 @@ adaptativo (66 %). Cada tema añade solo tres cosas (lote 1 del plan de diseño)
 2. la tinta de la huella en el color del tema, con un acabado discreto (dorado, tinta ferrogálica, fósforo…);
 3. un anillo fino con el motivo del tema en miniatura, siempre del mismo grosor y radio.
 Uso: python3 iconos.py ../app/src/main/res/drawable-nodpi [hoja.png]
+     python3 iconos.py ../app/src/main/res/drawable-nodpi --temas frente,vapor    solo esos (sin logo_mono ni hoja)
 """
 import math, sys, os
 import numpy as np
@@ -97,6 +98,56 @@ def hollin_plano(sem):   # Vapor victoriano: papel de patente con nubes de holl�
     motas = np.asarray(Image.fromarray(((ruido(sem + 5, 1, 0) > 2.6) * 255).astype(np.uint8)).filter(ImageFilter.MaxFilter(3)), np.float32) / 255 * -0.9
     regla = ((np.abs(X - 40) < 1) | (np.abs(X - 46) < 0.8) | (np.abs(Y - 40) < 1) | (np.abs(Y - 46) < 0.8)) * -0.6
     return nubes + motas + regla + ruido(sem + 2, 0.25, 2)
+
+def consola(sem):        # Frente exterior: el panel de una consola de los 70, color hueso, con la piel de naranja de la pintura
+    # al horno, el desgaste de las manos en manchas grandes, las juntas de los paneles arriba y abajo y sus tornillos.
+    piel = ruido(sem, 0.55, 1.4) + ruido(sem + 1, 0.3, 0.5)
+    uso = np.clip(ruido(sem + 2, 1.0, 34), -2, 0.6) * 0.75
+    junta = np.zeros((TAM, TAM), np.float32)
+    for y0 in (TAM * 0.135, TAM * 0.865):
+        junta += (np.abs(Y - y0) < 1.1) * -1.6 + (np.abs(Y - y0 - 2.2) < 0.9) * 0.9
+    for x0, y0 in ((TAM * 0.2, TAM * 0.09), (TAM * 0.8, TAM * 0.09), (TAM * 0.2, TAM * 0.91), (TAM * 0.8, TAM * 0.91)):
+        d = np.sqrt((X - x0) ** 2 + (Y - y0) ** 2)
+        junta += (d < 5.5) * -0.9 + (np.abs(d - 5.5) < 0.9) * -1.2 + ((np.abs(X - x0) < 0.8) & (d < 4.5)) * -1.4
+    return piel + uso + junta
+
+def nube(sem, celdas, tam=TAM):
+    """Un campo suave de -1 a 1 aprox.: ruido de [celdas] × [celdas] puntos, ampliado con interpolación bicúbica."""
+    r = np.random.default_rng(sem).random((celdas, celdas)).astype(np.float32)
+    im = Image.fromarray(r, 'F').resize((tam, tam), Image.BICUBIC)
+    a = np.asarray(im, np.float32)
+    return (a - a.mean()) / (a.std() + 1e-6) * 0.5
+
+def lino_codice(sem):    # Arcontes: el lino claro en que se envolvían los códices: tafetán fino, algún hilo más grueso
+    # (los nudos del hilado, rayas cortas más claras o más oscuras) y manchas suaves de uso.
+    trama = np.sin(X * 2.3 + ruido(sem, 0.9, 2)) * 0.16 + np.sin(Y * 2.1 + ruido(sem + 1, 0.9, 2)) * 0.16
+    rng = np.random.default_rng(sem + 2)
+    nudos = np.zeros((TAM, TAM), np.float32)
+    for _ in range(26):
+        y0 = rng.uniform(0, TAM); x0 = rng.uniform(-40, TAM); l = rng.uniform(20, 90)
+        nudos += (np.abs(Y - y0) < 0.9) * np.clip(1 - np.abs(X - x0 - l / 2) / (l / 2), 0, 1) * rng.choice([-1, 1]) * 0.55
+    return trama + nudos + ruido(sem + 3, 0.7, 22) + ruido(sem + 4, 0.25)
+
+def barro_paja(sem):     # Galia: el revoque de barro de las casas, alisado a mano, con la paja picada que asoma
+    rng = np.random.default_rng(sem)
+    capa = Image.new('L', (TAM, TAM), 128); d = ImageDraw.Draw(capa)
+    for _ in range(170):
+        x, y = rng.uniform(0, TAM, 2); a = rng.uniform(0, math.pi); l = rng.uniform(4, 15)
+        d.line([(x, y), (x + l * math.cos(a), y + l * math.sin(a))], fill=int(rng.choice([175, 185, 95])), width=1)
+    paja = (np.asarray(capa.filter(ImageFilter.GaussianBlur(0.5)), np.float32) - 128) / 40
+    llana = np.sin((X * 0.5 + Y * 0.8) * 0.045 + ruido(sem + 1, 2.0, 18)) * 0.3       # las pasadas de la mano
+    return paja * 0.9 + llana + ruido(sem + 2, 0.7, 10) + ruido(sem + 3, 0.3, 1)
+
+def papel_cartel(sem):   # Art nouveau: el papel crema de los carteles, con el grano del lápiz litográfico
+    grano = (ruido(sem, 1, 0.7) > 1.1) * -0.55
+    return grano + ruido(sem + 1, 0.6, 16) + ruido(sem + 2, 0.3, 2)
+
+def papel_etiqueta(sem):  # Psicodelia: el papel satinado de la etiqueta del disco, con su fibra corta, el roce circular
+    # del plato (la etiqueta gira contra la goma y se pule en anillos) y un desgaste suave
+    rr = np.sqrt((X - TAM / 2) ** 2 + (Y - TAM / 2) ** 2)
+    roce = np.sin(rr * 0.9 + ruido(sem, 2.5, 10)) * 0.12 * np.clip(ruido(sem + 1, 1.0, 26) + 0.4, 0, 1.4)
+    fibras = (np.abs(np.sin(X * 0.33 + Y * 0.12 + ruido(sem + 2, 6, 6))) < 0.035) * -0.35
+    return roce + fibras + ruido(sem + 3, 0.45, 1.2) + ruido(sem + 4, 0.55, 22)
 
 def cuadricula(sem):     # Laboratorio: papel de laboratorio cuadriculado
     fino = ((X % 18 < 1) | (Y % 18 < 1)) * -0.6
@@ -332,6 +383,377 @@ def _engrane_manometro(d, c, n=16):   # Vapor victoriano: dientes de engrane por
         g = math.radians(300)
         d.line([(x, y), (x + r * 0.55 * math.cos(g), y + r * 0.55 * math.sin(g))], fill=(156, 61, 36, 255), width=int(K * 2))
 
+def _canal(d, c, hueco=0.52, centro=-0.95):   # Frente exterior: el emblema del tema, el canal (un círculo roto) y la chispa
+    # de tres trazos que se escapa por el hueco. El aro engruesa hacia el corte para que se lea roto; por dentro, solo los
+    # rumbos de 30° de una pantalla de radar, y abajo a la izquierda, dos pilotos.
+    caja = [(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K]
+    a0, a1 = centro + hueco / 2, centro - hueco / 2 + 2 * math.pi
+    d.arc(caja, math.degrees(a0), math.degrees(a1), fill=c, width=int(GROSOR * K * 1.35))
+    for fin, sentido in ((a0, -1), (a1, 1)):     # los cabos: engruesan hacia el corte y acaban redondos
+        tramo = 0.34
+        pts_fuera, pts_dentro = [], []
+        for k in range(25):
+            s = k / 24
+            a = fin - sentido * tramo * (1 - s)
+            w = GROSOR / 2 * (1.35 + 1.75 * s ** 1.6)
+            pts_fuera.append(_pos(a, RADIO + w)); pts_dentro.append(_pos(a, RADIO - w))
+        d.polygon(pts_fuera + pts_dentro[::-1], fill=c)
+        x, y = _pos(fin); r = GROSOR / 2 * 3.1 * K
+        d.ellipse([x - r, y - r, x + r, y + r], fill=c)
+    for i in range(12):                      # rumbos cada 30°, solo donde hay canal
+        a = 2 * math.pi * i / 12
+        if abs((a - centro + math.pi) % (2 * math.pi) - math.pi) < hueco / 2 + 0.4: continue
+        d.line([_pos(a, RADIO - 2), _pos(a, RADIO - 8)], fill=c, width=int(K * 1.7))
+    # La chispa: tres trazos gruesos que se abren hacia fuera desde el hueco, el del centro más largo.
+    ox, oy = _pos(centro, RADIO - 24)        # el foco de la chispa queda dentro del canal; los trazos nacen ya separados
+    for da, l0, l1, g in ((0, 13.0, 38.5, 3.0), (-0.52, 16.0, 35.0, 2.7), (0.52, 16.0, 35.0, 2.7)):
+        u = centro + da
+        p0 = (ox + l0 * K * math.cos(u), oy + l0 * K * math.sin(u)); p1 = (ox + l1 * K * math.cos(u), oy + l1 * K * math.sin(u))
+        d.line([p0, p1], fill=c, width=int(GROSOR * K * g))
+        for (x, y) in (p0, p1):
+            r = GROSOR * K * g / 2; d.ellipse([x - r, y - r, x + r, y + r], fill=c)
+    # Dos pilotos sobre el canal, en su aro de baquelita: el ámbar encendido y el rojo.
+    for a, luz in ((math.radians(124), (242, 163, 58, 255)), (math.radians(146), (217, 55, 43, 255))):
+        x, y = _pos(a); r = 8.4 * K
+        d.ellipse([x - r, y - r, x + r, y + r], fill=(42, 38, 34, 255))
+        r2 = 6.0 * K; d.ellipse([x - r2, y - r2, x + r2, y + r2], fill=luz)
+        r3 = 1.8 * K; d.ellipse([x - r2 * 0.42 - r3, y - r2 * 0.42 - r3, x - r2 * 0.42 + r3, y - r2 * 0.42 + r3], fill=(255, 248, 230, 200))
+
+def cinta(d, pts, w0, w1, c):
+    """Un trazo de ancho variable (de w0 a w1, en px del lienzo) a lo largo de los puntos [pts], con los extremos lisos."""
+    n = len(pts); izq, der = [], []
+    for i, (x, y) in enumerate(pts):
+        a = pts[max(i - 1, 0)]; b = pts[min(i + 1, n - 1)]
+        dx, dy = b[0] - a[0], b[1] - a[1]; l = math.hypot(dx, dy) or 1
+        w = (w0 + (w1 - w0) * i / (n - 1)) / 2
+        izq.append((x - dy / l * w, y + dx / l * w)); der.append((x + dy / l * w, y - dx / l * w))
+    d.polygon(izq + der[::-1], fill=c)
+
+
+def cinta_var(d, pts, anchos, c):
+    """Como [cinta], pero con un ancho por punto (en px del lienzo)."""
+    n = len(pts); izq, der = [], []
+    for i, (x, y) in enumerate(pts):
+        a = pts[max(i - 1, 0)]; b = pts[min(i + 1, n - 1)]
+        dx, dy = b[0] - a[0], b[1] - a[1]; l = math.hypot(dx, dy) or 1
+        w = anchos[i] / 2
+        izq.append((x - dy / l * w, y + dx / l * w)); der.append((x + dy / l * w, y - dx / l * w))
+    d.polygon(izq + der[::-1], fill=c)
+
+
+def ouroboros(d, cx, cy, radio, w_cabeza, w_cola, c, hueco=(0, 0, 0, 0), cabeza=-math.pi / 2, escamas=True):
+    """La serpiente que se muerde la cola, en coordenadas del lienzo: el cuerpo sigue el círculo de [radio] en el sentido
+    del reloj, de la cola (fina, ancho w_cola) al cuello (w_cabeza). La cabeza va de perfil en el ángulo [cabeza], con la
+    mandíbula de arriba por fuera y la de abajo por dentro, cerradas sobre la cola, que le entra por la boca. Las escamas
+    son medias lunas en hileras alternas, con el borde libre hacia la cola. [hueco] es el color con que se recortan las
+    escamas, la boca y el ojo (transparente en una capa RGBA, 0 en una máscara)."""
+    L = w_cabeza * 2.0; W = w_cabeza * 1.12
+    cola0 = cabeza + L * 0.3 / radio                  # la punta de la cola, metida en la boca
+    cuello = cabeza - L * 0.5 / radio + 2 * math.pi   # donde el cuerpo se vuelve cabeza
+    n = 720
+    angs = [cola0 + (cuello - cola0) * i / n for i in range(n + 1)]
+    pts = [(cx + radio * math.cos(a), cy + radio * math.sin(a)) for a in angs]
+    # El cuerpo engruesa rápido al salir de la boca y luego despacio hasta el cuello.
+    anchos = [w_cola + (w_cabeza - w_cola) * (i / n) ** 0.55 for i in range(n + 1)]
+    izq, der = [], []
+    for (x, y), a, w in zip(pts, angs, anchos):
+        nx, ny = math.cos(a), math.sin(a)
+        izq.append((x + nx * w / 2, y + ny * w / 2)); der.append((x - nx * w / 2, y - ny * w / 2))
+    d.polygon(izq + der[::-1], fill=c)
+    largo = (cuello - cola0) * radio
+    if escamas:
+        # Hileras de escamas: una media luna cada [paso], alternando entre dos y tres por el ancho del cuerpo.
+        paso = w_cabeza * 0.34
+        k = 0; t = L * 0.75
+        while t < largo - paso:
+            i = int(t / largo * n); a = angs[i]; w = anchos[i]
+            nx, ny = math.cos(a), math.sin(a); tx, ty = -ny, nx          # t: hacia la cabeza
+            x, y = pts[i]
+            r = w * 0.2
+            # dos escamas por hilera, corridas media escama de una hilera a la otra (como tejas)
+            for g in ((-0.22, 0.22) if k % 2 == 0 else (0.0,)):
+                bx, by = x + nx * g * w, y + ny * g * w
+                arco = [(bx - (math.cos(u) * tx - math.sin(u) * nx) * r, by - (math.cos(u) * ty - math.sin(u) * ny) * r)
+                        for u in np.linspace(-1.2, 1.2, 9)]
+                d.line(arco, fill=hueco, width=max(1, int(w * 0.07)), joint='curve')
+            t += paso; k += 1
+    # La cabeza, en el marco del cuello: t hacia donde avanza, n hacia fuera del círculo.
+    hx, hy = cx + radio * math.cos(cabeza), cy + radio * math.sin(cabeza)
+    tx, ty = -math.sin(cabeza), math.cos(cabeza); nx, ny = math.cos(cabeza), math.sin(cabeza)
+    def Q(f, g): return (hx + tx * f * L + nx * g * W, hy + ty * f * L + ny * g * W)
+    lab = w_cola / W / 2 + 0.07                       # dónde cierran los labios: apenas por fuera de la cola
+    # Cráneo y mandíbula de arriba (por fuera): sube del cuello, se redondea sobre el ojo y baja al hocico romo.
+    d.polygon([Q(-0.62, 0.46), Q(-0.4, 0.6), Q(-0.1, 0.68), Q(0.22, 0.64), Q(0.5, 0.55), Q(0.7, 0.46), Q(0.82, 0.38),
+               Q(0.89, 0.29), Q(0.9, 0.2), Q(0.87, lab + 0.03), Q(0.8, lab), Q(0.3, lab), Q(0.3, -lab), Q(-0.62, -0.46)], fill=c)
+    # Mandíbula de abajo (por dentro), un poco más corta, cerrada bajo la cola.
+    d.polygon([Q(-0.62, -0.46), Q(-0.3, -0.58), Q(0.1, -0.56), Q(0.44, -0.46), Q(0.66, -0.34), Q(0.78, -0.22),
+               Q(0.76, -lab), Q(0.3, -lab), Q(0.3, lab), Q(-0.62, 0.46)], fill=c)
+    # Las comisuras: un corte fino que sigue los labios por encima y por debajo de la cola y se abre hacia atrás.
+    for s_ in (1, -1):
+        d.line([Q(0.84 if s_ > 0 else 0.72, s_ * (lab - 0.02)), Q(0.12, s_ * (lab - 0.02)), Q(-0.16, s_ * (lab + 0.14))],
+               fill=hueco, width=max(1, int(W * 0.055)), joint='curve')
+    # Ojo con su pupila, y dos cortes de las escamas grandes de la cabeza.
+    ex, ey = Q(0.12, 0.38); r = W * 0.15
+    d.ellipse([ex - r, ey - r, ex + r, ey + r], fill=hueco)
+    r2 = r * 0.5; d.ellipse([ex - r2 + r * 0.25, ey - r2, ex + r2 + r * 0.25, ey + r2], fill=c)
+    d.line([Q(-0.52, 0.3), Q(-0.24, 0.5)], fill=hueco, width=max(1, int(W * 0.06)))
+    d.line([Q(-0.52, -0.3), Q(-0.24, -0.45)], fill=hueco, width=max(1, int(W * 0.06)))
+    d.line([Q(0.62, 0.36), Q(0.74, 0.3)], fill=hueco, width=max(1, int(W * 0.05)))      # la fosa de la nariz
+
+
+def _ouroboros(d, c, hueco=0):         # Arcontes: el anillo es el ouroboros, fino: la serpiente que se muerde la cola
+    # Del grosor del anillo; la cola se afina al entrar en la boca y la cabeza, chica, arriba, de perfil.
+    cx = cy = TAM / 2 * K; r = RADIO * K; w = GROSOR * K
+    cab = -math.pi / 2
+    L, W = 10.5 * K, 6.2 * K                 # largo y ancho de la cabeza
+    cola0 = cab + L * 0.25 / r               # la punta de la cola, metida en la boca
+    cuello = cab - L * 0.55 / r + 2 * math.pi
+    n = 900
+    izq, der = [], []
+    for i in range(n + 1):
+        u = i / n; a = cola0 + (cuello - cola0) * u
+        ww = w * (0.42 + 0.58 * min(1, u / 0.22) ** 0.8) * (1 + 0.35 * max(0, (u - 0.93) / 0.07) ** 1.5) / 2
+        izq.append((cx + (r + ww) * math.cos(a), cy + (r + ww) * math.sin(a)))
+        der.append((cx + (r - ww) * math.cos(a), cy + (r - ww) * math.sin(a)))
+    d.polygon(izq + der[::-1], fill=c)
+    hx, hy = cx + r * math.cos(cab), cy + r * math.sin(cab)
+    tx, ty = -math.sin(cab), math.cos(cab); nx, ny = math.cos(cab), math.sin(cab)
+    def Q(f, g): return (hx + tx * f * L + nx * g * W, hy + ty * f * L + ny * g * W)
+    lab = w * 0.42 / W / 2 + 0.06            # los labios, cerrados sobre la cola
+    d.polygon([Q(-0.7, 0.4), Q(-0.35, 0.62), Q(0.1, 0.7), Q(0.5, 0.6), Q(0.82, 0.42), Q(0.95, 0.2), Q(0.9, lab), Q(0.3, lab),
+               Q(0.3, -lab), Q(0.8, -lab), Q(0.78, -0.28), Q(0.45, -0.5), Q(0.0, -0.58), Q(-0.4, -0.52), Q(-0.7, -0.4)], fill=c)
+    ex, ey = Q(0.16, 0.3); re_ = W * 0.14
+    d.ellipse([ex - re_, ey - re_, ex + re_, ey + re_], fill=hueco)
+
+def torques(d, cx, cy, radio, w, c, hueco=(0, 0, 0, 0), abre=0.27, paso=None):
+    """El torques galo visto de frente, en coordenadas del lienzo: el aro de oro torcido (una barra retorcida, con los surcos
+    en diagonal de la torsión) que se abre abajo, y en cada punta su remate de tope (el tipo «buffer» de los torques de la
+    Edad del Hierro): un collarín, una trompeta que se ensancha y el tope, un disco que se ve de canto, con los dos discos
+    mirándose a través de la abertura. El aro es más delgado atrás (arriba) y engruesa hacia los remates. [w] es el ancho
+    del aro junto a los remates; [abre], la mitad de la abertura en radianes; [hueco], el color de los surcos."""
+    paso = paso or w * 0.62
+    a0, a1 = math.pi / 2 + abre, math.pi / 2 + 2 * math.pi - abre      # el aro va de un remate al otro pasando por arriba
+    largo_rem = w * 1.7                                                 # lo que ocupan collarín y trompeta, a lo largo del aro
+    b0, b1 = a0 + largo_rem / radio, a1 - largo_rem / radio
+    n = 900
+    angs = [b0 + (b1 - b0) * i / n for i in range(n + 1)]
+    def ancho(a):
+        lejos = min(a - a0, a1 - a) / math.pi                            # 0 en los remates, 1 arriba
+        return w * (1 - 0.3 * min(1, lejos) ** 1.2)
+    fuera = [(cx + (radio + ancho(a) / 2) * math.cos(a), cy + (radio + ancho(a) / 2) * math.sin(a)) for a in angs]
+    dentro = [(cx + (radio - ancho(a) / 2) * math.cos(a), cy + (radio - ancho(a) / 2) * math.sin(a)) for a in angs]
+    d.polygon(fuera + dentro[::-1], fill=c)
+    # La torsión: surcos en diagonal, un poco curvos (la hélice de la barra vista de frente).
+    s = 0.0; total = (b1 - b0) * radio
+    while s < total:
+        a = b0 + s / radio; wa = ancho(a)
+        pts = []
+        for k in range(7):
+            t = k / 6 - 0.5                                              # de dentro (-0.5) a fuera (0.5)
+            desliz = (t + 0.5) * wa * 0.95 - 0.12 * wa * math.sin((t + 0.5) * math.pi)
+            aa = a + desliz / radio
+            pts.append((cx + (radio + t * wa * 1.04) * math.cos(aa), cy + (radio + t * wa * 1.04) * math.sin(aa)))
+        d.line(pts, fill=hueco, width=max(1, int(wa * 0.14)), joint='curve')
+        s += paso
+    # Los remates.
+    for fin, sentido in ((a0, -1), (a1, 1)):         # sentido: hacia dónde queda el aro desde el remate
+        tx, ty = -math.sin(fin) * sentido, math.cos(fin) * sentido       # tangente hacia la abertura
+        nx, ny = math.cos(fin), math.sin(fin)                            # hacia fuera
+        bx, by = cx + radio * math.cos(b0 if sentido < 0 else b1), cy + radio * math.sin(b0 if sentido < 0 else b1)
+        def P(f, g): return (bx + tx * f * w + nx * g * w, by + ty * f * w + ny * g * w)
+        # collarín
+        d.polygon([P(-0.08, -0.7), P(0.32, -0.7), P(0.32, 0.7), P(-0.08, 0.7)], fill=c)
+        d.line([P(-0.08, -0.66), P(-0.08, 0.66)], fill=hueco, width=max(1, int(w * 0.13)))
+        d.line([P(0.32, -0.64), P(0.32, 0.64)], fill=hueco, width=max(1, int(w * 0.11)))
+        # trompeta que se abre hasta el tope
+        pts_a = [P(0.32 + 1.0 * u, 0.48 + 0.75 * u ** 2.2) for u in np.linspace(0, 1, 14)]
+        pts_b = [P(0.32 + 1.0 * u, -0.48 - 0.75 * u ** 2.2) for u in np.linspace(0, 1, 14)]
+        d.polygon(pts_a + pts_b[::-1], fill=c)
+        # el tope: un disco de canto, más alto que la trompeta, con el borde redondeado y una moldura en la cara
+        g0, g1, h_in, h_out = 1.3, 2.1, 1.55, 0.82      # el disco asoma más hacia dentro (por fuera queda el borde del ícono)
+        d.polygon([P(g0, -h_in), P(g1, -h_in), P(g1, h_out), P(g0, h_out)], fill=c)
+        for g_ in (h_out, -h_in):
+            x_, y_ = P((g0 + g1) / 2, g_); r_ = (g1 - g0) / 2 * w
+            d.ellipse([x_ - r_, y_ - r_, x_ + r_, y_ + r_], fill=c)
+        d.line([P(g0, -h_in * 0.97), P(g0, h_out * 0.96)], fill=hueco, width=max(1, int(w * 0.12)))
+
+
+def _torques(d, c, hueco=0):            # Galia: el anillo es un torques fino, abierto abajo, con sus dos remates pequeños
+    # El aro, del grosor del anillo arriba, engruesa apenas hacia los remates; los surcos de la torsión se ven de cerca.
+    torques(d, TAM / 2 * K, TAM / 2 * K, RADIO * K, GROSOR * 1.6 * K, c, hueco, abre=0.2)
+
+
+def latigo_puntos(cx, cy, radio, a0=math.radians(116), a1=math.radians(366), centro_rizo=(math.radians(46), 0.9),
+                  rizo=(0.24, 0.05, 1.45), onda=0.022):
+    """La línea de látigo como marco: un tallo que nace abajo a la izquierda (en [a0]), da la vuelta al círculo de
+    [radio] en el sentido del reloj, ondulando apenas ([onda]), y al llegar abajo a la derecha ([a1]) no cierra: se
+    dobla sobre sí mismo y termina en un rizo, una espiral que se cierra alrededor de [centro_rizo] (ángulo, radio en
+    fracción de [radio]). [rizo] = (radio inicial y final de la espiral, en fracción de [radio], y vueltas). Devuelve
+    los puntos del eje y, para cada uno, cuánto va del tallo (0 en la base, 1 en la punta del rizo)."""
+    pts = []
+    n = 700
+    for i in range(n + 1):
+        u = i / n; a = a0 + (a1 - a0) * u
+        r = radio * (1 + onda * math.sin(u * 2 * math.pi * 1.5 + 0.6))
+        pts.append((cx + r * math.cos(a), cy + r * math.sin(a)))
+    # El rizo: una espiral que se cierra en el sentido del reloj alrededor de su centro. Sin [centro_rizo], el centro
+    # queda en el mismo radio que la punta del arco, por dentro, y el tallo entra en la espiral sin quiebre: solo se
+    # curva de golpe más cerrado (el chasquido del látigo).
+    r0, r1, vueltas = rizo
+    if centro_rizo is None:
+        ccx, ccy = pts[-1][0] - radio * r0 * math.cos(a1), pts[-1][1] - radio * r0 * math.sin(a1); f0 = a1
+    else:
+        ac, rc = centro_rizo
+        ccx, ccy = cx + radio * rc * math.cos(ac), cy + radio * rc * math.sin(ac)
+        f0 = ac - math.radians(40)                # la espiral empieza por fuera del centro, del lado de donde viene el tallo
+    espiral = []
+    m = 360
+    for i in range(m + 1):
+        t = i / m; f = f0 + vueltas * 2 * math.pi * t
+        rr = radio * (r0 + (r1 - r0) * (1 - (1 - t) ** 1.6))
+        espiral.append((ccx + rr * math.cos(f), ccy + rr * math.sin(f)))
+    if centro_rizo is None:
+        pts = pts + espiral[1:]
+        largos = [0.0]
+        for i in range(1, len(pts)):
+            largos.append(largos[-1] + math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]))
+        return pts, [x / largos[-1] for x in largos]
+    # El paso del arco a la espiral: una curva de Bézier que sigue la tangente de los dos.
+    p0 = pts[-1]; t0 = (-math.sin(a1), math.cos(a1))
+    p3 = espiral[0]; t3 = (-math.sin(f0), math.cos(f0))
+    l = math.hypot(p3[0] - p0[0], p3[1] - p0[1])
+    p1 = (p0[0] + t0[0] * l * 0.55, p0[1] + t0[1] * l * 0.55)
+    p2 = (p3[0] - t3[0] * l * 0.55, p3[1] - t3[1] * l * 0.55)
+    paso = [tuple((1 - t) ** 3 * a + 3 * (1 - t) ** 2 * t * b + 3 * (1 - t) * t ** 2 * c_ + t ** 3 * e
+                  for a, b, c_, e in zip(p0, p1, p2, p3)) for t in np.linspace(0, 1, 40)[1:-1]]
+    pts = pts + paso + espiral
+    # Cuánto va del tallo, por largo recorrido.
+    largos = [0.0]
+    for i in range(1, len(pts)):
+        largos.append(largos[-1] + math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]))
+    return pts, [x / largos[-1] for x in largos]
+
+
+def hoja_lanza(d, x, y, ang, largo, ancho, c, curva=0.0, n=40):
+    """Una hoja lanceolada (como la del iris o la del lirio) que nace en (x, y) hacia [ang] y se curva [curva] (radianes
+    de giro acumulado hasta la punta, + en el sentido del reloj)."""
+    eje = [(x, y)]; a = ang; paso = largo / n
+    for i in range(n):
+        a += curva / n
+        x += paso * math.cos(a); y += paso * math.sin(a); eje.append((x, y))
+    anchos = [ancho * math.sin(math.pi * (i / n) ** 0.7) ** 0.85 + 0.4 for i in range(n + 1)]
+    cinta_var(d, eje, anchos, c)
+    return eje
+
+
+def latigo(d, cx, cy, radio, w0, w1, c, hojas=((0.0, math.radians(152), 0.44, 0.13, -0.3),), **kw):
+    """Dibuja la línea de látigo de [latigo_puntos]: el tallo engruesa en la base (w0) y se afina hasta la punta del rizo
+    (w1), con la punta redonda. [hojas]: (dónde nace, en fracción del tallo; giro respecto del tallo; largo y ancho, en
+    fracción de [radio]; curva)."""
+    pts, avance = latigo_puntos(cx, cy, radio, **kw)
+    anchos = [(w1 + (w0 - w1) * (1 - a) ** 1.15) * min(1.0, 0.25 + a / 0.035) for a in avance]   # brota fino junto a la hoja
+    cinta_var(d, pts, anchos, c)
+    x, y = pts[-1]; r = anchos[-1] * 0.7; d.ellipse([x - r, y - r, x + r, y + r], fill=c)
+    for donde, giro, largo, ancho, curva in hojas:
+        i = min(len(pts) - 2, int(donde * (len(pts) - 1)))
+        tx, ty = pts[i + 1][0] - pts[i][0], pts[i + 1][1] - pts[i][1]
+        hoja_lanza(d, pts[i][0], pts[i][1], math.atan2(ty, tx) + giro, largo * radio, ancho * radio, c, curva)
+    return pts
+
+
+def _latigo(d, c, hueco=0):             # Art nouveau: el anillo es la línea de látigo, fina: un tallo con su hoja que da la
+    # vuelta y se cierra abajo a la derecha en un rizo pequeño.
+    latigo(d, TAM / 2 * K, TAM / 2 * K, RADIO * K, GROSOR * 1.7 * K, GROSOR * 0.75 * K, c,
+           hojas=((0.0, math.radians(150), 0.2, 0.055, -0.3),),
+           a0=math.radians(112), a1=math.radians(392), centro_rizo=(math.radians(64), 0.93), rizo=(0.1, 0.025, 1.3), onda=0.012)
+
+
+FUENTES_APP = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'app', 'src', 'main', 'res', 'font')
+
+
+def letra(nombre, px):
+    """Una letra de `res/font` (las mismas de la app), a [px] de alto de cuerpo."""
+    from PIL import ImageFont
+    return ImageFont.truetype(os.path.join(FUENTES_APP, nombre), int(round(px)))
+
+
+def texto_en_arco(lienzo, texto, cx, cy, r, centro, fuente, color, espacio=0.0, abajo=False):
+    """Escribe [texto] sobre el arco de radio [r] alrededor de (cx, cy), centrado en el ángulo [centro] (radianes, 0 a la
+    derecha, en el sentido del reloj, como en la pantalla). Arriba se lee de izquierda a derecha por fuera; con [abajo],
+    también de izquierda a derecha, con la base de las letras hacia fuera (como las leyendas de abajo de una moneda).
+    [espacio]: el espaciado entre letras, en fracción del cuerpo. Pinta sobre [lienzo] (imagen L o RGBA)."""
+    medidor = ImageDraw.Draw(Image.new('L', (1, 1)))
+    anchos = [medidor.textlength(ch, font=fuente) for ch in texto]
+    sep = espacio * fuente.size
+    total = sum(anchos) + sep * (len(texto) - 1)
+    sentido = -1 if abajo else 1
+    a = centro - sentido * total / 2 / r
+    for ch, w in zip(texto, anchos):
+        medio = a + sentido * (w / 2) / r
+        if ch.strip():
+            caja = int(fuente.size * 2)
+            g = Image.new('L', (caja, caja), 0)
+            ImageDraw.Draw(g).text((caja / 2, caja / 2), ch, font=fuente, fill=255, anchor='mm')
+            giro = -math.degrees(medio) - 90 if not abajo else -math.degrees(medio) + 90
+            g = g.rotate(giro, resample=Image.BICUBIC)
+            x, y = cx + r * math.cos(medio), cy + r * math.sin(medio)
+            capa = Image.new(lienzo.mode, g.size, color)
+            lienzo.paste(capa, (int(round(x - caja / 2)), int(round(y - caja / 2))), g)
+        a += sentido * (w + sep) / r
+
+
+def _etiqueta(m, c=255):               # Psicodelia: el anillo es el filete impreso de la etiqueta del disco del día, con su
+    # leyenda en letra de molde fina: arriba «DISCO DEL DÍA», abajo «LADO A · LARGA DURACIÓN». Se dibuja sobre la máscara [m] (no sobre
+    # un ImageDraw), porque las letras se giran una por una.
+    d = ImageDraw.Draw(m)
+    caja = [(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K]
+    d.ellipse(caja, outline=c, width=int(GROSOR * K))
+    r2 = RADIO - 5.2
+    d.ellipse([(TAM / 2 - r2) * K, (TAM / 2 - r2) * K, (TAM / 2 + r2) * K, (TAM / 2 + r2) * K], outline=c, width=int(GROSOR * K * 0.38))
+    f = letra('franklin_semibold.ttf', 7.6 * K)
+    rt = (RADIO - 13.5) * K
+    texto_en_arco(m, 'DISCO DEL DÍA', TAM / 2 * K, TAM / 2 * K, rt, -math.pi / 2, f, c, espacio=0.16)
+    texto_en_arco(m, 'LADO A · LARGA DURACIÓN', TAM / 2 * K, TAM / 2 * K, rt + 2.4 * K, math.pi / 2, f, c, espacio=0.16, abajo=True)
+    # Dos puntos que separan las leyendas, a los lados (como en las etiquetas de entonces).
+    for a in (0.0, math.pi):
+        x, y = _pos(a, RADIO - 12.5); q = 1.7 * K
+        d.ellipse([x - q, y - q, x + q, y + q], fill=c)
+
+
+def oro_relieve(alto, fuerza, sem, luz=(-0.55, -0.7, 1.0), brillo=40, tonos=None, grano=0.035, ambiente=0.0, plano=None):
+    """Metal en relieve a partir de un campo de alturas [alto] (0–1, ya suavizado): la luz viene de arriba a la izquierda;
+    lo que mira a la luz brilla, lo plano queda en el oro medio y lo que le da la espalda se hunde en el pardo. [fuerza]
+    escala las pendientes (más, relieve más marcado). [ambiente] mezcla el reflejo del cuarto (claro arriba a la
+    izquierda, oscuro abajo a la derecha), que es lo que hace que el metal parezca metal; [plano], si se da, es el tono
+    (0–1) de lo que mira de frente. Devuelve el RGB (float)."""
+    gy, gx = np.gradient(alto)
+    nx, ny, nz = -gx * fuerza, -gy * fuerza, np.ones_like(alto)
+    nn = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2); nx, ny, nz = nx / nn, ny / nn, nz / nn
+    lx, ly, lz = luz; ll = math.sqrt(lx * lx + ly * ly + lz * lz); lx, ly, lz = lx / ll, ly / ll, lz / ll
+    dif = np.clip(nx * lx + ny * ly + nz * lz, 0, 1)
+    hx, hy, hz = lx, ly, lz + 1; hh = math.sqrt(hx * hx + hy * hy + hz * hz)
+    esp = np.clip((nx * hx + ny * hy + nz * hz) / hh, 0, 1) ** brillo
+    tonos = tonos or [(0.0, '#2A1A05'), (0.3, '#6E4A10'), (0.52, '#A87A22'), (0.68, '#C9962B'), (0.82, '#E2B850'),
+                      (0.93, '#F0D27A'), (1.0, '#FBEBB4')]
+    t = dif
+    if ambiente:
+        # El reflejo de la mirada (de frente) en la superficie, buscado en un cuarto con una ventana grande arriba a la
+        # izquierda, una luz de relleno tenue a la derecha y lo demás en penumbra; lo que mira de frente refleja [plano].
+        rx, ry = 2 * nz * nx, 2 * nz * ny
+        ventana = np.clip(1 - np.sqrt((rx + 0.55) ** 2 + (ry + 0.62) ** 2) / 0.62, 0, 1) ** 0.8
+        relleno = np.clip(1 - np.sqrt((rx - 0.75) ** 2 + (ry - 0.1) ** 2) / 0.45, 0, 1) ** 1.5
+        sombra = np.clip(np.sqrt(rx ** 2 + ry ** 2) * 1.4, 0, 1) * np.clip((rx + ry) * 1.5 + 0.3, 0, 1)
+        refl = np.clip((0.5 if plano is None else plano) + 0.55 * ventana + 0.18 * relleno - 0.45 * sombra, 0, 1)
+        t = (1 - ambiente) * dif + ambiente * refl
+    if grano:
+        g = np.random.default_rng(sem).standard_normal(alto.shape).astype(np.float32)
+        g = np.asarray(Image.fromarray(np.clip(g * 40 + 128, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.0)), np.float32)
+        t = np.clip(t + (g - 128) / 40 * grano, 0, 1)
+    xs = [p for p, _ in tonos]; cs = np.array([rgb(c) for _, c in tonos])
+    col = np.stack([np.interp(t, xs, cs[:, k]) for k in range(3)], -1)
+    return col + esp[..., None] * np.array([70, 62, 40], np.float32)
+
+
 def _cuerda(d, c, n=56):              # cuerda trenzada
     for i in range(n):
         a = 2 * math.pi * i / n
@@ -487,7 +909,10 @@ def _manos(d, c, n=24):                 # Prehistoria: puntos de ocre de tamaño
 
 # tema: (textura, fondo, tinta, fuerza de la textura en el fondo y en la huella, acabado, motivo)
 # Acabados: 'tinta' (se asienta en el soporte), 'dorado' (brillo metálico leve), 'ferrogalica' (sepia que se aclara
-# donde la pluma tenía menos tinta), 'fosforo' (resplandor de pantalla), 'esmalte' (relieve suave).
+# donde la pluma tenía menos tinta), 'fosforo' (resplandor de pantalla), 'esmalte' (relieve suave), 'grabado' (talla en
+# hueco sobre piedra pulida, con el anillo: la huella y el motivo son un solo grabado), 'oro' (oro fundido en relieve, con
+# su sombra: el anillo y la huella son una sola pieza), 'nacar' (nácar engastado en oro pálido) e 'impreso' (tipografía
+# sobre papel satinado: la tinta se carga en el borde de cada cresta y se gasta un poco en el medio).
 TEMAS = {
     'romano':       (travertino,    '#E5E1D9', '#6E5424',  10, 6, 'dorado',      _hojitas),
     'urbe':         (revoque,       '#E7C793', '#7A2E1C',  13, 5, 'tinta',       _cupolas),
@@ -498,6 +923,11 @@ TEMAS = {
     'medieval':     (vitela,        '#E8E2D6', '#33261A',   9, 6, 'ferrogalica', _cuadrifolios),
     'templario':    (lino,          '#EDE6D6', '#9A1A1F',   8, 5, 'esmalte',     _cruces_patadas),
     'distopia':     (papel,         '#EFE9DA', '#1A1A1A',  10, 6, 'tinta',       _marcas),
+    'frente':       (consola,       '#E4DED1', '#B85C0F',  10, 4, 'piloto',      _canal),
+    'arcontes':     (lino_codice,   '#ECE4CF', '#2E2541',   9, 5, 'tinta',       _ouroboros),
+    'galia':        (barro_paja,    '#E4D9BA', '#7E590C',  10, 6, 'dorado',      _torques),
+    'nouveau':      (papel_cartel,  '#EFE8D6', '#4B6A4E',   9, 5, 'esmalte',     _latigo),
+    'psicodelia':   (papel_etiqueta, '#B9612F', '#2A2119',  9, 4, 'impreso',     _etiqueta),
     'refugio':      (hormigon,      '#1B1C1A', '#9BE8AE',   8, 5, 'fosforo',     _dientes),
     'orden':        (acero,         '#16171A', '#C2A15E',   9, 5, 'dorado',      _remaches),
     'vapor':        (hollin_plano,  '#E6D9BD', '#7A4E12',  10, 5, 'dorado',      _engrane_manometro),
@@ -531,21 +961,135 @@ VARIANTES = {
 }
 
 
+EN_MASCARA = (_ouroboros, _torques, _latigo)
+# Los que escriben (giran letras una por una): reciben la máscara misma, no un ImageDraw.
+CON_LETRAS = (_etiqueta,)
+
+
+def disco_icono(bg, sem):
+    """Psicodelia: la etiqueta del disco del día ([bg], el papel naranja quemado) puesta en su disco, como en una foto de
+    revista de los 70: alrededor de la etiqueta asoma el vinilo negro café, con sus surcos y el brillo de la luz de la
+    tarde que entra por la izquierda (dos cuñas opuestas, la de arriba a la izquierda más fuerte). Encima, la luz con
+    dirección (la izquierda más clara), una viñeta hacia el café y el grano de película."""
+    cx = cy = TAM / 2
+    dx, dy = X - cx, Y - cy
+    r = np.sqrt(dx ** 2 + dy ** 2); ang = np.arctan2(dy, dx)
+    r_etiqueta = RADIO + 6.5
+    # El vinilo: casi negro y cálido, los surcos (finos, con la pista de entrada más lisa) y las dos cuñas de brillo.
+    # Junto a la etiqueta, la zona lisa de salida (brilla más y sin rayas); después, los surcos de la última pista.
+    surcos = 0.5 + 0.5 * np.sin(r * 2 * math.pi / 2.1 + ruido(sem + 30, 0.6, 3))
+    lisa = np.clip(((r_etiqueta + 9) - r) / 1.5, 0, 1)
+    def cuña(a0, w): return np.exp(-(np.angle(np.exp(1j * (ang - a0))) / w) ** 2)
+    brillo = cuña(math.radians(-140), 0.36) * 1.0 + cuña(math.radians(40), 0.3) * 0.5
+    tono = 20 + 10 * surcos * (1 - lisa) + brillo * (52 + 46 * surcos * (1 - lisa) + 40 * lisa)
+    vinilo = np.stack([tono * 1.08, tono * 0.92, tono * 0.78], -1)
+    # El canto de la etiqueta: el papel acaba con un borde un poco levantado, que la luz de la izquierda aclara.
+    dentro = np.clip((r_etiqueta - r) / 0.9 + 0.5, 0, 1)
+    out = vinilo * (1 - dentro[..., None]) + bg * dentro[..., None]
+    canto = np.exp(-((r - r_etiqueta + 0.8) / 0.9) ** 2) * np.clip(-(dx + dy * 0.8) / (r + 1), -0.6, 1)
+    out = out * (1 + 0.16 * canto[..., None])
+    # La luz de la tarde, de la izquierda y un poco de arriba; la viñeta hacia el café; el grano.
+    luz = np.clip(0.5 - (dx * 0.8 + dy * 0.45) / TAM, 0, 1)
+    out = out * (0.88 + 0.22 * luz[..., None])
+    vin = np.clip((r / (TAM * 0.62)) ** 2.2, 0, 1)
+    out = out * (1 - vin[..., None] * 0.35) + rgb('#3A2410')[None, None, :] * vin[..., None] * 0.35
+    g = ruido(sem + 40, 1.0, 0.6)
+    out = out + g[..., None] * np.array([7.0, 6.2, 5.0], np.float32)
+    return out
+
+
+# Los temas cuyo fondo no es solo un color con textura: reciben el fondo ya texturado y lo completan.
+FONDOS_PROPIOS = {'psicodelia': disco_icono}
+
+
 def anillo(tema, color):
     """El anillo fino y su motivo, en una capa RGBA de TAM × TAM."""
     capa = Image.new('RGBA', (TAM * K, TAM * K), (0, 0, 0, 0)); d = ImageDraw.Draw(capa, 'RGBA')
     c = tuple(int(v) for v in color) + (235,)
     caja = [(TAM / 2 - RADIO) * K, (TAM / 2 - RADIO) * K, (TAM / 2 + RADIO) * K, (TAM / 2 + RADIO) * K]
     motivo = TEMAS[tema][6]
+    if motivo in EN_MASCARA or motivo in CON_LETRAS:
+        # Llevan huecos (el ojo de la serpiente, los surcos del torques) o letras: se dibujan en una máscara y se tiñen,
+        # con la misma opacidad que los demás anillos.
+        m = Image.new('L', (TAM * K, TAM * K), 0)
+        if motivo in CON_LETRAS: motivo(m, 255)
+        else: motivo(ImageDraw.Draw(m), 255, 0)
+        a = np.asarray(m.resize((TAM, TAM), Image.LANCZOS), np.float32) / 255 * 235
+        return Image.fromarray(np.dstack([np.broadcast_to(np.asarray(color, np.float32), (TAM, TAM, 3)), a]).astype(np.uint8), 'RGBA')
     if motivo is _tricolor:
         _tricolor(d, [(31, 42, 110, 235), (245, 245, 245, 235), (178, 34, 52, 235)])
         d.ellipse(caja, outline=c, width=int(GROSOR * K * 0.5))
         return capa.resize((TAM, TAM), Image.LANCZOS)
-    if motivo is not _rayas:
+    if motivo not in (_rayas, _canal):
         d.ellipse(caja, outline=c, width=int(GROSOR * K))
     if motivo is _monedas: _monedas(d, c, (0, 0, 0, 0))
     else: motivo(d, c, **VARIANTES.get(tema, {}))
     return capa.resize((TAM, TAM), Image.LANCZOS)
+
+
+def tallado(m, tinta, sem, sombra='#0E1A13', suave=1.1):
+    """Un grabado en hueco sobre piedra pulida (máscara [m], 0–1, de cualquier tamaño): el fondo del corte, mate y más
+    claro que la piedra (la piedra cortada se ve blanquecina); la pared de arriba a la izquierda, en sombra, y la de abajo a
+    la derecha, con luz (la luz viene de arriba a la izquierda); y un filo oscuro alrededor, donde el pulido se rompe.
+    [suave] es el ancho de las paredes en px (1.1 a 432; más en lienzos más grandes)."""
+    alto, ancho = m.shape
+    b = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(suave)), np.float32) / 255
+    gy, gx = np.gradient(b)
+    pend = (gx + gy) * suave / 1.1                    # > 0 en la pared de arriba a la izquierda (por dentro del corte)
+    grano = np.random.default_rng(sem + 21).standard_normal((alto, ancho)).astype(np.float32)
+    # El grano del corte, apenas desenfocado: más fino que un píxel suelto (y el WebP sin pérdida pesa menos).
+    grano = np.asarray(Image.fromarray(np.clip(grano * 40 + 128, 0, 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(0.8 if suave > 1.5 else 0.6)), np.float32)
+    grano = (grano - 128) / 16
+    col = rgb(tinta)[None, None, :] * (0.93 + 0.05 * grano[..., None])
+    col = col * (1 - np.clip(pend * 2.4, 0, 0.55))[..., None]
+    col = col + (np.clip(-pend * 2.0, 0, 0.3) * 60)[..., None]
+    capa = Image.fromarray(np.dstack([np.clip(col, 0, 255), m * 255]).astype(np.uint8), 'RGBA')
+    filo = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(suave * 1.45)), np.float32) / 255
+    base = Image.fromarray(np.dstack([np.broadcast_to(rgb(sombra), (alto, ancho, 3)), np.clip(filo * 1.5, 0, 1) * (1 - m) * 0.55 * 255]).astype(np.uint8), 'RGBA')
+    base.alpha_composite(capa)
+    return base
+
+
+def suavizar(a, s):
+    """Desenfoque gaussiano de un campo en coma flotante (sin pasar por 8 bits, para que las pendientes no se escalonen)."""
+    p = int(3 * s) + 1
+    b = np.pad(a, p, mode='edge')
+    fy = np.fft.fftfreq(b.shape[0])[:, None]; fx = np.fft.rfftfreq(b.shape[1])[None, :]
+    g = np.exp(-2 * (math.pi * s) ** 2 * (fx ** 2 + fy ** 2))
+    return np.fft.irfft2(np.fft.rfft2(b) * g, s=b.shape)[p:p + a.shape[0], p:p + a.shape[1]].astype(np.float32)
+
+
+# Piezas de metal y nácar que usan los sellos (sellos.py) de Galia y Art nouveau.
+# El oro pálido de Art nouveau (#D9BE7A, con su brillo #F2E2B0): más claro y más frío que el oro de Galia.
+ORO_PALIDO = [(0.0, '#2E2410'), (0.25, '#6A5628'), (0.45, '#A08850'), (0.6, '#C2A86A'), (0.74, '#D9BE7A'), (0.86, '#E8D49C'),
+              (0.94, '#F2E2B0'), (1.0, '#FFF7DE')]
+
+
+def nacar(alto, fuerza, sem, base='#E6E3EC', luz=(-0.55, -0.7, 1.0), cuanto=0.78):
+    """El nácar en relieve a partir de un campo de alturas: blanco perla, con los colores del arco que cambian según hacia
+    dónde mira la superficie (rosa, lila, verde de agua, crema) y en manchas grandes; brillo suave arriba a la izquierda."""
+    gy, gx = np.gradient(alto)
+    nx, ny, nz = -gx * fuerza, -gy * fuerza, np.ones_like(alto)
+    nn = np.sqrt(nx ** 2 + ny ** 2 + nz ** 2); nx, ny, nz = nx / nn, ny / nn, nz / nn
+    lx, ly, lz = luz; ll = math.sqrt(lx * lx + ly * ly + lz * lz); lx, ly, lz = lx / ll, ly / ll, lz / ll
+    dif = np.clip(nx * lx + ny * ly + nz * lz, 0, 1)
+    hx, hy, hz = lx, ly, lz + 1; hh = math.sqrt(hx * hx + hy * hy + hz * hz)
+    esp = np.clip((nx * hx + ny * hy + nz * hz) / hh, 0, 1) ** 26
+    tam = alto.shape[0]
+    fase = (nx * 2.6 + ny * 1.8) + nube(sem, 5, tam) * 1.6 + nube(sem + 1, 13, tam) * 0.5
+    arco = [rgb('#F7C4DA'), rgb('#CEC2F8'), rgb('#B6E8D5'), rgb('#F7DFB0')]
+    t = (fase % 4.0)
+    i0 = np.floor(t).astype(int) % 4; f = (t - np.floor(t))[..., None]
+    f = f * f * (3 - 2 * f)
+    tinte = np.stack(arco)[i0] * (1 - f) + np.stack(arco)[(i0 + 1) % 4] * f
+    col = rgb(base)[None, None, :] * (1 - cuanto) + tinte * cuanto
+    col = col * (0.66 + 0.4 * dif[..., None]) + esp[..., None] * np.array([70, 68, 72], np.float32)
+    return col
+
+
+def mezclar(a, b, t):
+    """Pone el color [b] sobre [a] con la cobertura [t] (0–1, un campo)."""
+    return a * (1 - t[..., None]) + b * t[..., None]
 
 
 def hacer(tema, salida):
@@ -554,6 +1098,7 @@ def hacer(tema, salida):
     tex = textura(sem)
     # Fondo: el color con la textura (pocos niveles arriba y abajo).
     bg = rgb(fondo)[None, None, :] + tex[..., None] * f_fondo
+    if tema in FONDOS_PROPIOS: bg = FONDOS_PROPIOS[tema](bg, sem)
     Image.fromarray(np.clip(bg, 0, 255).astype(np.uint8)).save(os.path.join(salida, f'logo_fondo_{tema}.jpg'), quality=92)
     # Huella: la forma fija, con la misma textura muy leve y el acabado del tema.
     m = mascara()
@@ -575,7 +1120,23 @@ def hacer(tema, salida):
         b = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.4)), np.float32) / 255
         gy, gx = np.gradient(b)
         col = col * (1 + np.clip((gx + gy) * -5, -0.25, 0.25))[..., None]
+    elif acabado == 'impreso':
+        # La plancha aprieta el papel: el borde de la cresta junta más tinta (más oscuro) y el medio se gasta donde el papel
+        # tiene poro (la textura del soporte asoma).
+        b = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.3)), np.float32) / 255
+        borde = np.clip(1 - np.abs(b - 0.5) * 2.2, 0, 1) * m
+        col = col * (1 - 0.18 * borde[..., None])
+        alfa = alfa * np.clip(0.97 - np.clip(t2 - 0.6, 0, 2) * 0.12, 0.78, 1)
     capa = Image.fromarray(np.dstack([np.clip(col, 0, 255), alfa * 255]).astype(np.uint8), 'RGBA')
+    if acabado == 'piloto':
+        # El cristal ámbar de un piloto encendido: el centro de cada cresta más claro, como luz que pasa, y un halo cálido.
+        b = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(1.8)), np.float32) / 255
+        nucleo = np.clip((b - 0.62) / 0.38, 0, 1) ** 1.5 * 0.55
+        luz = col * (1 - nucleo[..., None]) + rgb('#F2A33A')[None, None, :] * nucleo[..., None]
+        capa = Image.fromarray(np.dstack([np.clip(luz, 0, 255), alfa * 255]).astype(np.uint8), 'RGBA')
+        g = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(4)), np.float32) / 255
+        halo = Image.fromarray(np.dstack([np.broadcast_to(rgb('#E8862A'), (TAM, TAM, 3)), np.clip(g * 0.18, 0, 1) * 255]).astype(np.uint8), 'RGBA')
+        halo.alpha_composite(capa); capa = halo
     if acabado == 'fosforo':
         # Resplandor de pantalla alrededor de las crestas.
         g = np.asarray(Image.fromarray((m * 255).astype(np.uint8)).filter(ImageFilter.GaussianBlur(5)), np.float32) / 255
@@ -618,8 +1179,15 @@ def muestra(salida, archivo, cel=160):
     hoja_de_contacto(imagenes, archivo, cel=cel, mascaras=[c.crop(caja)] * len(imagenes))
 
 if __name__ == '__main__':
-    salida = sys.argv[1]
+    args = sys.argv[1:]
+    salida = args[0]
+    if '--temas' in args:
+        # Solo los temas pedidos: los demás íconos y logo_mono quedan como están.
+        pedidos = args[args.index('--temas') + 1].split(',')
+        for t in pedidos: hacer(t, salida)
+        print('listo', ', '.join(pedidos))
+        sys.exit()
     for t in TEMAS: hacer(t, salida)
     mono(salida)
-    if len(sys.argv) > 2: muestra(salida, sys.argv[2])
+    if len(args) > 1: muestra(salida, args[1])
     print('listo', len(TEMAS))

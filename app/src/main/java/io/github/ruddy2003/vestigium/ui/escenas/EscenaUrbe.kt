@@ -91,6 +91,8 @@ internal object ColorUrbe {
  */
 internal object EscenaUrbe : EscenaVida {
     override val vidas = listOf("restauradora")
+    /** La franja del fondo del teléfono ([franjaFondo]): el altar y el andamio. */
+    override val franjaFondo: Float get() = 0.5f
 
     private val C = ColorUrbe
 

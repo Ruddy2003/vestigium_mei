@@ -71,7 +71,7 @@ private class Cosa(val pista: Int, val a: Long, val b: Long?, val color: Color, 
 private class PistaCinta(val nombre: String, val icono: String)
 
 /** Lo que se pinta dentro de un bloque de la cinta. */
-private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA }
+private enum class RellenoCinta { LISO, FILETE, RAYAS, DIAGONAL, PUNTOS, CONTORNO, DEGRADADO, SEGMENTOS, PUNTADA, PERFORADA, PAPIRO, CUADROS, VIDRIO, CABLES, ONDAS }
 
 /**
  * Cómo se ve la cinta en cada tema: la esquina de los bloques ([radio] en dp; [cortado], en chaflán), lo que llevan dentro,
@@ -99,6 +99,21 @@ private fun pielCinta(tema: TemaId): PielCinta = when (tema) {
     TemaId.TEMPLARIO -> PielCinta(2.5f, true, RellenoCinta.FILETE, floatArrayOf(2f, 4f), StrokeCap.Square)
     // Sello rayado del expediente.
     TemaId.DISTOPIA -> PielCinta(0f, false, RellenoCinta.DIAGONAL, floatArrayOf(8f, 2f), StrokeCap.Square)
+    // La ciudad: tramos de esquina redonda, como la ventanilla del trolebús, con los dos cables que corren por dentro; las
+    // horas menores en raya larga. El cartel: tramos con el arco del cartel y la onda a dos tintas dentro; las horas menores en
+    // punto y raya.
+    TemaId.PSICODELIA -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) PielCinta(5f, false, RellenoCinta.CABLES, floatArrayOf(6f, 2f), StrokeCap.Round)
+        else PielCinta(8f, false, RellenoCinta.ONDAS, floatArrayOf(0.1f, 3f, 3f, 3f), StrokeCap.Round)
+    // El vidrio de Nancy: tramos de esquinas muy redondas, con la luz que pasa de un lado al otro y un tallo grabado que sube y
+    // se curva; las horas menores, en punto y raya larga, como la pluma del cartel.
+    TemaId.NOUVEAU -> PielCinta(9f, false, RellenoCinta.VIDRIO, floatArrayOf(0.1f, 2.4f, 7f, 2.4f), StrokeCap.Round)
+    // La lana a cuadros de los mantos, con las horas menores en puntadas de hilo.
+    TemaId.GALIA -> PielCinta(3f, false, RellenoCinta.CUADROS, floatArrayOf(5f, 1.5f, 1.5f, 1.5f), StrokeCap.Round)
+    // Tiras de papiro: las fibras a lo largo, alguna de través, y las horas en raya y punto, como el renglón del copista.
+    TemaId.ARCONTES -> PielCinta(4f, false, RellenoCinta.PAPIRO, floatArrayOf(6f, 2f, 0.1f, 2f), StrokeCap.Round)
+    // La cinta perforada del teletipo: tramos de esquinas redondas con la fila de arrastre al centro y los agujeros del
+    // mensaje a los lados; las horas, punteadas como en el plóter de la carta estelar.
+    TemaId.FRENTE -> PielCinta(5f, false, RellenoCinta.PERFORADA, floatArrayOf(0.1f, 2.6f), StrokeCap.Round)
     // Indicador en segmentos.
     TemaId.REFUGIO -> PielCinta(6f, false, RellenoCinta.SEGMENTOS, floatArrayOf(3f, 3f), StrokeCap.Round)
     // Placa de acero en chaflán.
@@ -180,6 +195,64 @@ private fun DrawScope.bloqueCinta(p: PielCinta, color: Color, a: Offset, t: Size
             RellenoCinta.SEGMENTOS -> { var x = a.x + 7f * d; while (x < der) { drawLine(oscuro.copy(alpha = 0.45f), Offset(x, a.y), Offset(x, abajo), 1.4f * d); x += 7f * d } }
             RellenoCinta.PUNTADA -> if (t.width > 5f * d) drawLine(claro.copy(alpha = 0.7f), Offset(a.x + 2f * d, a.y + t.height / 2), Offset(der - 2f * d, a.y + t.height / 2), 1f * d,
                 pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f * d, 2.5f * d)))
+            RellenoCinta.PERFORADA -> {
+                val cy = a.y + t.height / 2
+                var x = a.x + 3f * d; var k = 0
+                while (x < der) {
+                    drawCircle(oscuro, 0.7f * d, Offset(x, cy))
+                    if (t.height > 8f * d) {
+                        if ((k * 5) % 3 != 1) drawCircle(claro, 1.2f * d, Offset(x, cy - t.height * 0.28f))
+                        if ((k * 7) % 4 == 0) drawCircle(claro, 1.2f * d, Offset(x, cy + t.height * 0.28f))
+                    }
+                    x += 3.6f * d; k++
+                }
+            }
+            RellenoCinta.PAPIRO -> {
+                // Las fibras de la capa de arriba, a lo largo y desparejas, y alguna de la capa de abajo, de través.
+                var y = a.y + 1.2f * d; var k = 0
+                while (y < abajo) { drawLine(if (k % 3 == 1) oscuro.copy(alpha = 0.14f) else claro.copy(alpha = 0.22f), Offset(a.x, y), Offset(der, y), 0.6f * d); y += (1.6f + (k * 7 % 3) * 0.6f) * d; k++ }
+                var x = a.x + 5f * d
+                while (x < der) { drawLine(oscuro.copy(alpha = 0.12f), Offset(x, a.y), Offset(x, abajo), 0.8f * d); x += 23f * d }
+            }
+            RellenoCinta.VIDRIO -> {
+                // La luz del vidrio que se va oscureciendo hacia la derecha, el filo claro de arriba y el tallo grabado en ola.
+                drawRect(Brush.horizontalGradient(listOf(claro, Color.Transparent, oscuro.copy(alpha = 0.18f)), a.x, der), a, t)
+                drawLine(Color.White.copy(alpha = 0.4f), Offset(a.x + 3f * d, a.y + 1.2f * d), Offset(der - 3f * d, a.y + 1.2f * d), 0.8f * d, StrokeCap.Round)
+                if (t.width > 12f * d && t.height > 6f * d) {
+                    val tallo = Path().apply {
+                        var x = a.x + 2f * d; val y = a.y + t.height * 0.62f; moveTo(x, y)
+                        while (x < der) { cubicTo(x + 4f * d, y - t.height * 0.3f, x + 8f * d, y + t.height * 0.25f, x + 12f * d, y); x += 12f * d }
+                    }
+                    drawPath(tallo, oscuro.copy(alpha = 0.3f), style = Stroke(0.8f * d, cap = StrokeCap.Round))
+                }
+            }
+            RellenoCinta.CUADROS -> {
+                // Los cuadros de la lana: bandas anchas que se cruzan, más oscuras donde se montan, y el hilo fino entre ellas.
+                var x = a.x + 2f * d
+                while (x < der) { drawRect(oscuro.copy(alpha = 0.16f), Offset(x, a.y), Size(4f * d, t.height)); drawLine(claro.copy(alpha = 0.4f), Offset(x + 6.5f * d, a.y), Offset(x + 6.5f * d, abajo), 0.6f * d); x += 11f * d }
+                var y = a.y + 2f * d
+                while (y < abajo) { drawRect(oscuro.copy(alpha = 0.16f), Offset(a.x, y), Size(t.width, 4f * d)); drawLine(claro.copy(alpha = 0.4f), Offset(a.x, y + 6.5f * d), Offset(der, y + 6.5f * d), 0.6f * d); y += 11f * d }
+            }
+            RellenoCinta.CABLES -> {
+                // Los dos cables del trolebús, finos, a lo largo del tramo, con un colgador de trecho en trecho.
+                val cy = a.y + t.height * 0.42f
+                drawLine(oscuro.copy(alpha = 0.35f), Offset(a.x + 2f * d, cy - 1f * d), Offset(der - 2f * d, cy - 1f * d), 0.6f * d)
+                drawLine(oscuro.copy(alpha = 0.35f), Offset(a.x + 2f * d, cy + 1f * d), Offset(der - 2f * d, cy + 1f * d), 0.6f * d)
+                var x = a.x + 14f * d
+                while (x < der - 6f * d) { drawLine(oscuro.copy(alpha = 0.3f), Offset(x, a.y + 1f * d), Offset(x, cy + 1f * d), 0.6f * d); x += 28f * d }
+                drawRect(claro, a, Size(1.2f * d, t.height))
+            }
+            RellenoCinta.ONDAS -> {
+                // La onda del cartel, a dos tintas (la clara y, corrida, la oscura), de punta a punta del tramo.
+                val cy = a.y + t.height / 2
+                val amp = minOf(t.height * 0.2f, 2.4f * d)
+                listOf(claro.copy(alpha = 0.55f) to 0f, oscuro.copy(alpha = 0.35f) to 1.2f * d).forEach { (col, dy) ->
+                    val onda = Path()
+                    var x = a.x; onda.moveTo(x, cy + dy)
+                    while (x < der) { onda.quadraticTo(x + 3f * d, cy + dy - amp, x + 6f * d, cy + dy); onda.quadraticTo(x + 9f * d, cy + dy + amp, x + 12f * d, cy + dy); x += 12f * d }
+                    drawPath(onda, col, style = Stroke(1.1f * d, cap = StrokeCap.Round))
+                }
+            }
         }
     }
 }

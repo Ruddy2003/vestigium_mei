@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.inset
@@ -166,6 +167,45 @@ internal fun DrawScope.figuraTema(tema: TemaId, color: Color, c: Offset, r: Floa
             drawPath(Path().apply { moveTo(c.x - r, c.y); quadraticTo(c.x, c.y - r * 1.15f, c.x + r, c.y); quadraticTo(c.x, c.y + r * 1.15f, c.x - r, c.y); close() }, color)
             drawCircle(hueco, r * 0.4f, c); drawCircle(color, r * 0.2f, c)
         }
+        // El disco con su etiqueta calada (ciudad) o el disco hecho sol, con su corona (tinta).
+        TemaId.PSICODELIA -> with(PiezasPsicodelia) { figura(c, r, color, hueco, colores(false)) }
+        // La flor del iris en silueta: los tres pétalos que suben y los dos que caen, con la lengua calada en el de en medio.
+        TemaId.NOUVEAU -> {
+            val base = Offset(c.x, c.y + r * 0.12f)
+            drawPath(TrazosNouveau.petalo(base, Offset(c.x, c.y - r), r * 0.72f), color)
+            for (s in listOf(-1f, 1f)) {
+                drawPath(TrazosNouveau.petalo(base, Offset(c.x + s * r * 0.74f, c.y - r * 0.58f), r * 0.5f), color)
+                drawPath(TrazosNouveau.petalo(base, Offset(c.x + s * r * 0.92f, c.y + r * 0.78f), r * 0.6f), color)
+            }
+            drawLine(hueco.copy(alpha = 0.55f), Offset(c.x, c.y - r * 0.22f), Offset(c.x, c.y - r * 0.72f), r * 0.11f, StrokeCap.Round)
+            drawCircle(hueco.copy(alpha = 0.5f), r * 0.13f, base)
+        }
+        // Un estátero arverno: la moneda de oro con la gráfila de perlas y el caballo al galope, calados.
+        TemaId.GALIA -> {
+            drawCircle(color, r, c)
+            for (k in 0 until 16) drawCircle(hueco.copy(alpha = 0.5f), r * 0.065f, polarFig(c, r * 0.84f, k * 22.5f))
+            with(TrazosGalia) { caballo(Offset(c.x, c.y + r * 0.04f), r * 1.3f, androidx.compose.ui.graphics.lerp(color, hueco, 0.62f), null, -1f, 1.6f) }
+        }
+        // La lámpara de aceite de barro, llena, con el agujero de llenar calado y la llama sobre el pico.
+        TemaId.ARCONTES -> {
+            drawPath(Path().apply {
+                moveTo(c.x - r * 0.95f, c.y + r * 0.2f)
+                quadraticTo(c.x - r * 0.95f, c.y - r * 0.45f, c.x - r * 0.2f, c.y - r * 0.45f)
+                quadraticTo(c.x + r * 0.2f, c.y - r * 0.45f, c.x + r * 0.35f, c.y - r * 0.2f)
+                lineTo(c.x + r * 0.86f, c.y - r * 0.14f)
+                quadraticTo(c.x + r * 1.02f, c.y, c.x + r * 0.86f, c.y + r * 0.16f)
+                lineTo(c.x + r * 0.3f, c.y + r * 0.32f)
+                quadraticTo(c.x, c.y + r * 0.62f, c.x - r * 0.35f, c.y + r * 0.56f)
+                quadraticTo(c.x - r * 0.95f, c.y + r * 0.5f, c.x - r * 0.95f, c.y + r * 0.2f); close()
+            }, color)
+            drawCircle(hueco.copy(alpha = 0.55f), r * 0.13f, Offset(c.x - r * 0.3f, c.y - r * 0.12f))
+            drawPath(Path().apply {
+                moveTo(c.x + r * 0.68f, c.y - r * 0.24f); quadraticTo(c.x + r * 0.52f, c.y - r * 0.62f, c.x + r * 0.78f, c.y - r * 1.02f)
+                quadraticTo(c.x + r * 1.02f, c.y - r * 0.58f, c.x + r * 0.86f, c.y - r * 0.24f); close()
+            }, color)
+        }
+        // El emblema de la red: el aro roto arriba a la derecha, la célula en el centro y los tres trazos que se escapan por el hueco.
+        TemaId.FRENTE -> with(TrazosFrente) { emblemaRed(Offset(c.x - r * 0.12f, c.y + r * 0.14f), r * 0.7f, color, r * 0.2f) }
         // El átomo: núcleo y tres órbitas.
         TemaId.REFUGIO -> {
             for (a in listOf(0f, 60f, 120f)) rotate(a, c) { drawOval(color, Offset(c.x - r, c.y - r * 0.34f), Size(r * 2, r * 0.68f), style = Stroke(r * 0.13f)) }

@@ -31,9 +31,11 @@ import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.Ayuda
 import io.github.ruddy2003.vestigium.ui.BotonPrincipal
 import io.github.ruddy2003.vestigium.ui.BotonSecundario
+import io.github.ruddy2003.vestigium.ui.Cara
 import io.github.ruddy2003.vestigium.ui.CapaDeshacer
 import io.github.ruddy2003.vestigium.ui.Cifra
 import io.github.ruddy2003.vestigium.ui.Clave
+import io.github.ruddy2003.vestigium.ui.EstadoTema
 import io.github.ruddy2003.vestigium.ui.Etiqueta
 import io.github.ruddy2003.vestigium.ui.Ficha
 import io.github.ruddy2003.vestigium.ui.Hoja
@@ -495,10 +497,9 @@ class Capturas {
      * El mueble del Ideario: vacío, con 1 y con 5 temas; con 9; y la vista corta (6 y «y N más»). En tres capturas: con muchos
      * degradados en una sola imagen, el simulador de Paparazzi pinta de negro los últimos (en el teléfono no pasa).
      */
-    private fun mueble(t: TemaId, oscuro: Boolean) {
-        val modo = if (oscuro) "oscuro" else "claro"
+    private fun mueble(t: TemaId, oscuro: Boolean, etiqueta: String = "${t.id}_${if (oscuro) "oscuro" else "claro"}") {
         listOf("a" to listOf(0, 1, 5), "b" to listOf(9), "c" to emptyList()).forEach { (parte, ns) ->
-            pantalla(t, oscuro, 2600, "tema_${t.id}_${modo}_$parte") {
+            pantalla(t, oscuro, 2600, "tema_${etiqueta}_$parte") {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     ns.forEach { n -> io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(n)) }
                     if (ns.isEmpty()) io.github.ruddy2003.vestigium.ui.pantallas.FicheroIdeas(navVacia, ideasConTemas(9), max = 6)
@@ -1930,12 +1931,30 @@ class Capturas {
      * entrada `temas`) solo salen esos temas (ver [CapturasAPedido]).
      */
     // Un alto menor que el ancho (1080) hace que Paparazzi gire la captura: aquí ninguna baja de 1200.
+    //
+    // Los temas con caras (Psicodelia) salen en las dos, forzadas con EstadoTema.forzar: `<tema>_<claro|oscuro>_ciudad`
+    // (la cara base) y `<tema>_<claro|oscuro>_tinta` (la intensa, con i = 0); en las superficies donde la intensidad
+    // cambia el dibujo ([CON_INTENSIDAD]), además `<tema>_<claro|oscuro>_tinta_i1` (la intensa con i = 1). Los otros
+    // temas, como siempre (`<tema>_<claro|oscuro>`), sin forzar nada.
     private fun porTema(superficie: String, captura: (tema: TemaId, oscuro: Boolean, nombre: String) -> Unit) {
         CapturasAPedido.pedida(superficie)
         CapturasAPedido.temas().forEach { t ->
-            (if (t.soloOscuro) listOf(true) else listOf(false, true)).forEach { o -> captura(t, o, "${t.id}_${if (o) "oscuro" else "claro"}") }
+            (if (t.soloOscuro) listOf(true) else listOf(false, true)).forEach { o ->
+                val base = "${t.id}_${if (o) "oscuro" else "claro"}"
+                if (!t.conCaras) captura(t, o, base)
+                else carasDeCaptura(t, superficie).forEach { (cara, i, sufijo) ->
+                    EstadoTema.forzar(cara, i)
+                    try { captura(t, o, "${base}_$sufijo") } finally { EstadoTema.forzar(null, null) }
+                }
+            }
         }
     }
+    /** Las superficies por tema donde la intensidad cambia el dibujo: en ellas, la cara intensa sale además con i = 1. */
+    private val CON_INTENSIDAD = setOf("mueble", "bibliotecas", "componentes", "decoracion", "vida", "gatoCuadro")
+    /** Las variantes de un tema con caras en [superficie]: la cara, la intensidad forzada y el sufijo del nombre. */
+    private fun carasDeCaptura(t: TemaId, superficie: String): List<Triple<Cara, Float, String>> =
+        listOf(Triple(Cara.BASE, 0f, "ciudad"), Triple(Cara.INTENSA, 0f, "tinta")) +
+            (if (t.conIntensidad && superficie in CON_INTENSIDAD) listOf(Triple(Cara.INTENSA, 1f, "tinta_i1")) else emptyList())
     private val logroEjemplo = io.github.ruddy2003.vestigium.ciencia.Logros.Logro("paises_5", "Pasaporte con sellos", "Visita 5 países", "⚐", "Mundo", 2, 5.0, 5.0, "2026-10-19")
 
     // Campaña, salón, hall y trofeos.
@@ -1946,7 +1965,7 @@ class Capturas {
     @Test fun temaCampana() = porTema("campana") { t, o, n -> campanas(t, o, n) }
     @Test fun temaLibreta() = porTema("libreta") { t, o, n -> libreta(t, o, n) }
     @Test fun temaArchivo() = porTema("archivo") { t, o, n -> archivo(t, o, n) }
-    @Test fun temaMueble() = porTema("mueble") { t, o, _ -> mueble(t, o) }
+    @Test fun temaMueble() = porTema("mueble") { t, o, n -> mueble(t, o, n) }
 
     // Animación y celebración: un instante quieto de cada una.
     @Test fun temaFondoVivo() = porTema("fondoVivo") { t, o, n -> captura(t, o, 2400, n) { io.github.ruddy2003.vestigium.ui.FondoVivo(t, fijo = 0.4f) } }
@@ -2279,17 +2298,32 @@ class Capturas {
      * `…_temaGatoCuadro_<tema>_reacciones.png`, con el gato en el mirador, oliendo el objeto, junto al fuego, mirando el
      * adorno de una fiesta, guarecido de la lluvia y dejándose acariciar. Cada uno con el pelaje de su tema.
      */
-    @Test fun temaGatoCuadro() = porTema("gatoCuadro") { t, o, _ ->
+    @Test fun temaGatoCuadro() = porTema("gatoCuadro") { t, o, n ->
         val escena = io.github.ruddy2003.vestigium.ui.escenas.escenaDe(t)
+        // Un tema con caras que aún no tiene cuadro (Psicodelia): la banda de su gato, quieta en sus dos acciones propias,
+        // en cada cara y, en la intensa, con su escalón de intensidad (`…_temaGatoCuadro_<tema>_<claro|oscuro>_<cara>_banda`).
+        if (escena == null && t.conCaras && io.github.ruddy2003.vestigium.ui.Gato.tieneGato(t)) captura(t, o, 1200, n + "_banda") {
+            Column(Modifier.padding(8.dp)) {
+                listOf(0, 1).forEach { k ->
+                    Text(n, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onBackground)
+                    io.github.ruddy2003.vestigium.ui.BandaGato(
+                        io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false), tema = t,
+                        fijo = io.github.ruddy2003.vestigium.ui.Gato.Paso("esp_${t.id}_$k", 1, 90f + 160f * k, if (k == 0) 1 else -1),
+                    )
+                }
+            }
+        }
+        // Con caras, el nombre lleva la cara (para que no choquen); sin caras, como siempre.
+        val pre = if (t.conCaras) n else t.id
         if (escena != null && o == t.soloOscuro) {
             val pelaje = io.github.ruddy2003.vestigium.ui.escenas.pelajeDe(t) ?: io.github.ruddy2003.vestigium.ui.escenas.Pelaje.COMUN
-            hojaDePosesGato(t, o, "${t.id}_poses", pelaje)
+            hojaDePosesGato(t, o, "${pre}_poses", pelaje)
             val vida = escena.vidas.first()
             val (_, dia, horas) = DIAS_CUADRO[vida].orEmpty().first()
             val ficha = io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(dia, vida)!!
             val humor = io.github.ruddy2003.vestigium.ui.Gato.Humor(io.github.ruddy2003.vestigium.ui.Gato.Animo.NORMAL, cansado = false, noche = false)
             val poses = listOf(Triple(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.CAMINAR, 2, 1), Triple(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.SENTADO, 0, -1), Triple(io.github.ruddy2003.vestigium.ui.escenas.AnimGato.DORMIR, 1, 1))
-            captura(t, o, alto = 140 + horas.size * 900, nombre = "${t.id}_escena") {
+            captura(t, o, alto = 140 + horas.size * 900, nombre = "${pre}_escena") {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     horas.forEachIndexed { i, hora ->
                         val suelo = escena.anclas(io.github.ruddy2003.vestigium.ui.escenas.Momento(ficha, hora)).first { it.tipo == io.github.ruddy2003.vestigium.ui.escenas.TipoAncla.SUELO }
@@ -2310,7 +2344,7 @@ class Capturas {
                     else hs.firstNotNullOfOrNull { h -> gatoReaccionando(escena, f, h, tipo)?.let { Triple(f, h, it) to "gato: ${tipo.name.lowercase()}" } }
                 }
             }
-            captura(t, o, alto = 140 + (celdas.size + 1) * 900, nombre = "${t.id}_reacciones") {
+            captura(t, o, alto = 140 + (celdas.size + 1) * 900, nombre = "${pre}_reacciones") {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     celdas.forEach { (donde, rotulo) ->
                         val (f, h, paso) = donde
@@ -2334,12 +2368,14 @@ class Capturas {
      * caen en tres luces distintas. La escena es igual en claro y en oscuro, así que sale una vez por tema. Se llaman
      * `…_temaCuadro_<tema>_<vida>_<día>.png`.
      */
-    @Test fun temaCuadro() = porTema("cuadro") { t, o, _ ->
+    @Test fun temaCuadro() = porTema("cuadro") { t, o, n ->
         val escena = io.github.ruddy2003.vestigium.ui.escenas.escenaDe(t)
+        // Con caras, el nombre lleva la cara (para que no choquen); sin caras, como siempre.
+        val pre = if (t.conCaras) n else t.id
         if (escena != null && o == t.soloOscuro) escena.vidas.forEach { vida ->
             DIAS_CUADRO[vida].orEmpty().forEach { (nombre, dia, horas) ->
                 val ficha = io.github.ruddy2003.vestigium.vidas.FichaDelDia.de(dia, vida)!!
-                cuadros(t, o, "${t.id}_${vida}_$nombre", io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), horas.map { Triple(escena, ficha, it) })
+                cuadros(t, o, "${pre}_${vida}_$nombre", io.github.ruddy2003.vestigium.ui.escenas.banderitaHistoria(t), horas.map { Triple(escena, ficha, it) })
             }
         }
     }
@@ -2974,5 +3010,267 @@ private val DIAS_CUADRO: Map<String, List<Triple<String, String, List<Double>>>>
         Triple("viaducto", "2030-09-10", HORAS_CUADRO),                   // el viaducto terminado, a las tres horas
         Triple("krakatoa", "2030-12-05", listOf(19.34)),                  // el atardecer rojo
         Triple("maquinista", "2031-10-06", listOf(10.0)),                 // ya es maquinista: la aceitera y la chaqueta de otro fogonero
+    ),
+    // K'an (Mesoamérica, tanda S9): el patio de su casa bajo la ceiba, con el códice en el banco, y la plaza con el templo, el palacio, la estela que se talla y se levanta, y la milpa en la ladera.
+    "escriba_maya" to listOf(
+        Triple("normal", "2027-09-10", HORAS_CUADRO),                     // el patio, la estela en su andamio, la milpa alta; bruma, sol y noche con luciérnagas
+        Triple("sin_estela", "2027-01-15", listOf(10.0)),                 // el sitio marcado; secas, la ceiba aún con hoja
+        Triple("piedra", "2027-03-05", listOf(10.0)),                     // la piedra tumbada; la ceiba pelada y con frutos
+        Triple("juego", "2027-03-10", listOf(13.0)),                      // el juego de pelota con sus banderas
+        Triple("wayeb", "2027-01-26", listOf(13.0, 21.0)),                // los días sin nombre: nada encendido
+        Triple("fin_katun", "2028-05-03", listOf(10.0)),                  // la estela levantada, copal y estandartes (decisión 18)
+        Triple("huracan", "2028-09-05", listOf(13.0)),                    // la tormenta; desde ese día, la milpa tumbada
+        Triple("embajada", "2029-04-20", listOf(10.0, 20.4)),             // variante: la casa sin él (decisión 21)
+        Triple("luto", "2029-07-15", listOf(10.0)),                       // el códice tapado y el incensario
+        Triple("guerra", "2029-11-20", listOf(17.0)),                     // escudos en el palacio y humo al oeste
+        Triple("quema", "2030-04-06", listOf(17.0)),                      // la milpa arde: humo y sol rojo
+        Triple("elotes", "2030-08-15", listOf(19.4)),                     // fiesta al anochecer: antorchas y guirnaldas
+        Triple("cosecha", "2030-10-28", listOf(10.0)),                    // la cosecha a medias y la estela ya de siempre
+    ),
+    // Pay (Egipto, tanda S9): la azotea de su casa en la aldea de los obreros, con la montaña, la tumba del rey que avanza y el valle del Nilo, que cambia con la crecida.
+    "escriba_tumba" to listOf(
+        Triple("normal", "2027-05-06", HORAS_CUADRO),                     // un día corriente y despejado: las tres luces; de noche, las esteras tendidas
+        Triple("crecida", "2027-09-15", listOf(13.0)),                    // el valle hecho un lago, los pueblos como islas, los racimos de la palmera
+        Triple("verde", "2027-12-20", listOf(13.0)),                      // el valle verde de la siembra
+        Triple("espiga", "2027-04-01", listOf(13.0)),                     // el valle dorado de la cosecha
+        Triple("fiesta_valle", "2027-03-20", listOf(13.0, 21.0)),         // guirnaldas, la barca de Amón en el río, flores y lámparas en las capillas
+        Triple("amenhotep", "2027-01-10", listOf(13.0)),                  // las andas en la ladera
+        Triple("polvo", "2027-05-10", listOf(13.0)),                      // el viento del desierto: el toldo enrollado
+        Triple("opet", "2027-08-02", listOf(21.0)),                       // las luces de la otra orilla
+        Triple("joiak", "2027-10-04", listOf(21.0)),                      // las lámparas de las capillas
+        Triple("racion", "2027-11-28", listOf(19.0)),                     // los cuatro sacos y la medida; la lumbre y el senet
+        Triple("luto", "2029-02-05", listOf(13.0)),                       // la banda blanca; la capilla nueva de Tiy
+        Triple("paso", "2030-04-01", listOf(7.0, 21.0)),                  // variante: la cuadrilla duerme en el paso (decisión 21)
+        Triple("entierro", "2030-05-11", listOf(13.0)),                   // el trineo del rey; sin andamio
+        Triple("sellada", "2030-05-20", listOf(13.0)),                    // la boca tapiada (decisión 18)
+        Triple("tumba_nueva", "2030-06-25", listOf(13.0)),                // la boca nueva, recién cortada
+        Triple("tumba_nueva_crece", "2031-12-30", listOf(13.0)),          // la boca nueva, año y medio después
+        Triple("telar", "2030-10-25", listOf(13.0)),                      // el telar de Tamit
+        Triple("lluvia", "2031-11-20", listOf(13.0)),                     // la lluvia en el desierto: el agua por las barrancas, los charcos
+    ),
+    // Ama (Prehistoria, tanda S10): dos cuadros, el abrigo de roca con su hogar y el friso que va pintando, y el campamento de verano en la meseta.
+    "pintora_cueva" to listOf(
+        Triple("abrigo", "2029-11-05", HORAS_CUADRO),                     // el abrigo en otoño: mancha de sol larga, sol alto, fuego que manda
+        Triple("meseta", "2027-07-10", HORAS_CUADRO),                     // el campamento de verano en la meseta (decisión 21: vuelve cada año)
+        Triple("nieve", "2028-01-15", listOf(13.0, 21.0)),                // todo nevado y el río helado
+        Triple("deshielo", "2028-04-15", listOf(13.0)),                   // el río crecido con placas sueltas
+        Triple("caza", "2028-10-05", listOf(13.0)),                       // los renos en el vado, la carne puesta a secar
+        Triple("fuego", "2028-12-21", listOf(20.0)),                      // la noche más larga: fuego grande
+        Triple("luto", "2029-02-10", listOf(17.0)),                       // el túmulo con su lámpara
+        Triple("reunion", "2029-07-02", listOf(13.0, 21.4)),              // las tiendas de los otros grupos y sus fuegos
+        Triple("aurora", "2031-01-20", listOf(22.0)),                     // la aurora por la boca del abrigo
+        Triple("friso_mitad", "2029-11-10", listOf(17.0)),                // tres figuras, los puntos y la cuarta empezada
+        Triple("friso_fin", "2031-10-28", listOf(19.0)),                  // las seis figuras, la hilera de lámparas y el fuego grande (decisión 18)
+        Triple("salmones", "2028-07-25", listOf(13.0)),                   // el pescado en el secadero
+        Triple("mamuts", "2027-05-05", listOf(10.0)),                     // los mamuts en el llano de enfrente
+    ),
+    // Bernat (Templario, tanda S11): el patio del castillo de Safed, con la capilla, la cisterna, la higuera, la torre del sur que se levanta y el lago de Galilea abajo.
+    "sargento" to listOf(
+        Triple("normal", "2027-05-05", HORAS_CUADRO),                     // un día corriente: la torre es un muñón con su grúa de rueda
+        Triple("mansura", "2027-02-26", listOf(13.0)),                    // el luto: el estandarte a media asta y el paño negro en la puerta
+        Triple("pascua", "2027-03-27", listOf(10.0)),                     // las campanas: la campana a vuelo, palomas y gallardetes
+        Triple("siega", "2027-05-12", listOf(10.0)),                      // la siega: los campos a medio segar con sus gavillas
+        Triple("brasero", "2027-12-20", listOf(20.0)),                    // una noche de invierno: la higuera pelada y el brasero
+        Triple("nieve", "2028-01-20", listOf(10.0, 21.0)),                // la nevada: el patio, las almenas y el Hermón blancos
+        Triple("ataque", "2028-06-12", listOf(10.0)),                     // el armero sin lanzas, el campo que arde y el fuego de aviso (decisión 18)
+        Triple("herido", "2028-07-01", listOf(10.0)),                     // variante: la muleta y las vendas de la enfermería (decisión 21)
+        Triple("temblor", "2029-01-28", listOf(10.0)),                    // los sillares caídos y la grieta de la capilla
+        Triple("acre", "2029-09-20", listOf(10.0)),                       // variante: su escudo falta del armero (decisión 21)
+        Triple("fin_torre", "2030-07-10", listOf(13.0, 21.0)),            // la torre terminada con su cruz y su guirnalda; de noche, el fuego de guardia
+        Triple("jamsin", "2030-05-28", listOf(13.0)),                     // el viento del desierto: el lago no se ve
+        Triple("muro_este", "2031-04-20", listOf(17.0)),                  // los andamios en el muro del este
+    ),
+    // Ochiyo (Japón Edo, tanda S11): la casa de té a la entrada de la posta, con el camino real, las casas de enfrente, los arrozales y el Fuji.
+    "posadera" to listOf(
+        Triple("normal", "2027-09-05", HORAS_CUADRO),                     // un día corriente: los arrozales dorados
+        Triple("okage", "2027-05-05", listOf(13.0, 21.0)),                // los peregrinos de Ise: sandalias rotas, la mesa de los ricos y, de noche, la fila de faroles (decisión 18)
+        Triple("procesion", "2027-05-10", listOf(10.0)),                  // la procesión de un daimio: conos de arena, cubos, cortinas y postigos cerrados
+        Triple("tanabata", "2027-08-24", listOf(13.0)),                   // el bambú con los papeles de colores
+        Triple("bon", "2027-08-30", listOf(20.0)),                        // los faroles de Bon
+        Triple("tsukimi", "2027-10-01", listOf(19.0)),                    // la luna de otoño: los dulces y las espigas en el banco
+        Triple("invierno", "2028-01-05", listOf(10.0)),                   // el Fuji blanco hasta media ladera y el arrozal seco
+        Triple("ola", "2028-05-01", listOf(13.0)),                        // la estampa del Fuji con la ola, clavada en el poste; el arrozal plantado
+        Triple("rio_cerrado", "2028-09-08", listOf(13.0)),                // las lluvias: el río crecido y el vado cerrado
+        Triple("nieve_fuji", "2029-10-10", listOf(10.0)),                 // la nieve temprana en el Fuji
+        Triple("mijo", "2030-12-20", listOf(13.0)),                       // el hambre de Tenpō: un saco de arroz y el de mijo
+        Triple("boda", "2031-11-08", listOf(19.0)),                       // la boda: los barriles de sake y la cortina roja y blanca
+    ),
+    // Bat (Mongol, tanda S12): dos cuadros, el valle de invierno al abrigo del cerro, con el río helado, y el campamento de verano en el llano, junto al río.
+    "pastor_mongol" to listOf(
+        Triple("valle", "2027-01-12", HORAS_CUADRO),                      // un día corriente de invierno: la nieve, el río helado, el ovoo en el cerro y, de noche, la puerta y el Negro atado
+        Triple("verano", "2027-08-01", HORAS_CUADRO),                     // el campamento de verano: la carreta, la cuerda de las yeguas, el odre y el río (decisión 21: vuelve cada año)
+        Triple("mes_blanco", "2027-02-06", listOf(13.0, 19.0)),           // el año nuevo: cintas azules, la puerta entreabierta y la lumbre de fuera a la hora de las visitas
+        Triple("paricion", "2027-04-01", listOf(13.0)),                   // la parición: las madres con sus corderos en el corral (llueve: el gato se guarece)
+        Triple("bujara", "2027-04-20", listOf(10.0)),                     // la guerra: el caballo del correo, ensillado junto a la tienda; el río suelta el hielo
+        Triple("hielo", "2030-02-15", listOf(13.0)),                      // el invierno malo: la costra de hielo, todo blanco y nevando
+        Triple("luto", "2030-03-08", listOf(13.0)),                       // muere la madre: la puerta cerrada y, en vez de su tienda, la tierra quemada
+        Triple("matanza", "2027-11-29", listOf(13.0)),                    // la matanza: la carne en las carretas y la olla grande al fuego
+        Triple("noche_larga", "2027-12-22", listOf(21.0)),                // la noche más larga: todos en la tienda de la madre de Bolad; la de Bat, en brasas
+        Triple("sube_verano", "2027-05-25", listOf(15.0)),                // la mudanza: las tiendas del llano a medio armar, las carretas cargadas
+        Triple("esquila", "2027-06-28", listOf(13.0)),                    // la esquila: la lana colgada de la cuerda y los fardos en la carreta
+        Triple("ovoo", "2027-07-12", listOf(13.0)),                       // el día del ovoo: las cintas azules de la cuerda
+        Triple("fieltro", "2027-09-07", listOf(13.0)),                    // la semana del fieltro: las tiras de fieltro nuevo colgadas
+        Triple("temur", "2031-07-28", listOf(13.0, 21.0)),                // vuelve Temür: su tienda junto a la de Bat, y la fiesta de noche junto al fuego
+    ),
+    // El joven naturalista (Botánico, tanda S13): dos cuadros, el bergantín (la popa, con la mesa de trabajo y la costa del tramo del viaje) y la selva (la galería de la casa de Botafogo).
+    "naturalista" to listOf(
+        Triple("barco", "2027-03-21", HORAS_CUADRO),                      // a bordo, navegando a lo largo de la costa de Brasil: la mesa, los cajones y, de noche, el farol y la luna
+        Triple("selva", "2027-06-12", HORAS_CUADRO),                      // la galería de Botafogo con la colección viva, la selva y la bahía (decisión 21: 71 días)
+        Triple("puerto", "2027-04-10", listOf(13.0, 21.0)),               // fondeado en Río: el puerto de cerca y, de noche, sus luces
+        Triple("fiesta", "2028-01-01", listOf(13.0, 21.0)),               // el año nuevo: el barco empavesado con banderas de señales
+        Triple("nieve", "2027-12-18", listOf(10.0)),                      // Tierra del Fuego: montañas negras, nieve en las cumbres y escarcha a bordo
+        Triple("cabo_hornos", "2027-12-28", listOf(10.0)),                // la tormenta del cabo de Hornos: velas aferradas y el horizonte inclinado
+        Triple("volcan", "2029-12-01", listOf(21.0)),                     // el volcán de la costa echando fuego en la noche
+        Triple("envio", "2027-08-19", listOf(13.0)),                      // el primer cajón sale hacia Inglaterra: los cajones casi vacíos
+        Triple("ruinas", "2030-03-04", listOf(13.0)),                     // Concepción en ruinas, después del terremoto
+        Triple("calma", "2031-03-10", listOf(13.0)),                      // la calma chicha del Índico: el mar como un plato y las velas caídas
+        Triple("islas", "2030-09-25", listOf(13.0)),                      // las Galápagos, todavía sin cuadro propio: el bergantín fondeado frente a ellas, sin la mesa
+        Triple("botafogo", "2027-04-25", listOf(13.0)),                   // la mudanza a Botafogo: los libros mojados al sol y el bergantín en la bahía
+        Triple("escarabajos", "2027-05-20", listOf(13.0)),                // el día de los escarabajos: el paraguas al revés y los escarabajos en la mesa
+    ),
+    // Jean-Baptiste (Napoleónico, tanda S14): dos cuadros con una base que no se mueve y un paisaje que cambia con la marcha: la retirada de Rusia, en seis tramos, y el vivac de la compañía, en trece tramos de la campaña.
+    "granadero" to listOf(
+        Triple("retirada", "2027-11-24", HORAS_CUADRO),                   // la retirada en el tramo de la nieve: el cañón abandonado, el alto junto al fuego y, de noche, el fuego contra la luna
+        Triple("vivac", "2027-07-15", HORAS_CUADRO),                      // el vivac en el llano ruso de verano: la tienda, la fila de pabellones, el rancho y, de noche, la compañía entera con sus fuegos
+        Triple("salida", "2027-10-19", listOf(13.0)),                     // la salida de Moscú (tramo 1): la carroza volcada, el botín tirado y las ruinas de Moscú al fondo
+        Triple("maloyaroslavets", "2027-10-24", listOf(13.0, 21.0)),      // tramo 2: la isba quemada y el pueblo que arde
+        Triple("krasnoi", "2027-11-17", listOf(13.0)),                    // tramo 4: el pino tronchado y la batería en la colina
+        Triple("berezina", "2027-11-26", listOf(13.0, 21.0)),             // tramo 5: el río con el hielo suelto, los puentes y las fogatas
+        Triple("final", "2027-12-05", listOf(13.0)),                      // tramo 6, hacia el Niemen: el bosque cerrado y la nieve honda
+        Triple("nevando", "2027-11-06", listOf(13.0)),                    // empieza a nevar y ya no para: la nieve cuaja a lo largo de la mañana
+        Triple("moscu", "2027-09-16", listOf(21.0)),                      // Moscú ardiendo de noche: la tercera luz, roja (variante del vivac)
+        Triple("smolensk", "2027-08-17", listOf(21.0)),                   // Smolensk arde en el horizonte
+        Triple("borodino", "2027-09-07", listOf(13.0)),                   // la batalla: el humo de los cañones
+        Triple("niemen", "2027-06-24", listOf(13.0)),                     // el cruce del Niemen: los puentes de barcas
+        Triple("san_napoleon", "2027-08-15", listOf(13.0, 21.0)),         // la fiesta: la bandera bajo el águila, la corona de laurel y el fuego grande
+        Triple("cuartel", "2027-02-10", listOf(13.0)),                    // el cuartel, provisional: la ciudad con su convento al fondo
+        Triple("hospital", "2028-02-15", listOf(13.0)),                   // el hospital de Prusia, provisional: sin la compañía, la ciudad nevada (decisión 21: tendrá su cuadro)
+        Triple("pueblo", "2029-08-10", listOf(13.0)),                     // el pueblo de Borgoña, provisional: la parra de su puerta y las viñas (decisión 21: tendrá su cuadro)
+    ),
+    // Lou (Art déco, tanda S15): el sótano del club de Sully, desde el piano hacia la escalera de la calle, con las mesas según el público.
+    "pianista" to listOf(
+        Triple("club", "2030-06-05", HORAS_CUADRO),                       // un día de público alto: cerrado por la mañana, el sol en la pista a mediodía y, de noche, a tres luces
+        Triple("ensayo", "2030-06-05", listOf(15.5)),                     // el ensayo: solo la lámpara verde del piano, con su charco en la partitura
+        Triple("madrugada", "2030-06-05", listOf(2.0)),                   // la madrugada con el club lleno: el humo espeso y los sombreros
+        Triple("publico_bajo", "2030-12-15", listOf(23.0)),               // después del crac: pocas mesas puestas y sillas patas arriba
+        Triple("nochevieja", "2027-12-31", listOf(23.0)),                 // la fiesta: serpentinas, globos y gorros de papel
+        Triple("boda", "2031-09-14", listOf(22.0)),                       // la boda: farolillos y flores blancas (el club nuevo)
+        Triple("luto", "2027-08-24", listOf(23.0)),                       // muere Valentino: el crespón en el piano y las lámparas a media luz
+        Triple("nevada", "2031-01-20", listOf(13.0)),                     // la nevada: nieve contra las ventanas y abrigos nevados
+        Triple("lluvia", "2030-10-01", listOf(13.0, 23.0)),               // la lluvia: agua en los cristales y el neón reflejado en la acera
+        Triple("gira", "2029-07-10", listOf(13.0)),                       // la gira, provisional: el club cerrado con el piano bajo su funda
+        Triple("sin_club", "2031-03-10", listOf(22.0)),                   // sin club, provisional: el club cerrado de noche
+        Triple("club_nuevo", "2031-06-10", listOf(23.0)),                 // el club nuevo, más pequeño: la pared jade y cuatro mesas
+    ),
+    // Liudmila (Soviético, tanda S15): la cocina, con su ventana al patio; la cocina es la base y lo de fuera cambia con las estaciones y la mudanza.
+    "obrera_moscu" to listOf(
+        Triple("invierno", "2027-02-19", HORAS_CUADRO),                   // un día de invierno despejado: la nieve, la escarcha de la mañana, la mancha de sol y, de noche, la lámpara contra la nieve
+        Triple("verano", "2027-07-07", HORAS_CUADRO),                     // un día de verano: los árboles con hojas, la ventana abierta y la luz verde
+        Triple("ventanas", "2028-01-10", listOf(17.5)),                   // las 17:30 de invierno: anochece y se encienden las ventanas de enfrente
+        Triple("anio_nuevo", "2028-01-01", listOf(21.0)),                 // Año Nuevo: las mandarinas, el champán y la rama de abeto
+        Triple("desfile", "2027-05-01", listOf(13.0)),                    // el 1 de mayo: banderas en las farolas y en los balcones, y la pancarta sin letras
+        Triple("escarcha", "2028-01-16", listOf(7.0)),                    // el frío: las flores de escarcha en el cristal
+        Triple("nevando", "2027-02-10", listOf(13.0)),                    // nevando: la claridad blanca y la lámpara encendida a mediodía
+        Triple("pelusa", "2027-06-17", listOf(13.0)),                     // la pelusa de los álamos de junio
+        Triple("mudanza", "2029-06-25", listOf(13.0)),                    // la mudanza: las cajas, la bombilla sin pantalla y los bloques nuevos por la ventana
+        Triple("casa_nueva", "2030-01-20", listOf(21.0)),                 // la casa nueva de noche: el noveno piso y la ciudad encendida
+        Triple("sanatorio", "2028-07-15", listOf(13.0)),                  // el sanatorio, provisional: la cocina sin ella, con el visillo corrido
+    ),
+    // Nikos (Abismo, tanda S16): el barco fondeado sobre el banco, con el agua tan clara que se ve el fondo; y el muelle de Tarpon Springs.
+    "buzo_esponjas" to listOf(
+        Triple("barco", "2027-05-05", HORAS_CUADRO),                      // un día normal: las inmersiones, limpiar esponjas y el sueño con el farol bajo
+        Triple("agua_clara", "2027-04-12", listOf(13.0)),                 // despejado: el fondo a la vista, con la sombra del bote y los peces
+        Triple("norte", "2027-03-06", listOf(13.0)),                      // el viento del norte: olas cortas y el fondo que ya no se ve
+        Triple("tormenta", "2027-05-20", listOf(13.0)),                   // tormenta: el mar blanco y la lluvia
+        Triple("huracan", "2027-10-18", listOf(9.0)),                     // el huracán de 1910: el cielo amarillo y la ensenada entre manglares
+        Triple("esponjas_pocas", "2027-02-16", listOf(15.0)),             // el arco esponjas de 0 a 0,2: las cuerdas casi vacías
+        Triple("esponjas_racimos", "2027-04-14", listOf(15.0)),           // de 0,2 a 0,6: «como racimos»
+        Triple("esponjas_llenas", "2027-06-18", listOf(15.0)),            // de 0,6 a 1: «colgadas de todas partes»
+        Triple("farol", "2027-04-12", listOf(21.0)),                      // la noche con el farol bajo y su charco, la lamparilla y la luna
+        Triple("luna", "2027-04-12", listOf(23.5)),                       // la noche con el farol apagado: la luna y la lamparilla
+        Triple("pascua", "2028-04-23", listOf(13.0, 23.5)),               // Pascua: el cordero en el espetón; a medianoche, las velas y los huevos rojos
+        Triple("luto", "2029-04-17", listOf(13.0)),                       // luto (el Titanic): el gallardete a media asta y el paño negro en el icono
+        Triple("objeto_grande", "2027-04-17", listOf(13.0)),              // un objeto grande (la escafandra, doblada en montón junto a la bomba)
+        Triple("muelle", "2027-01-12", HORAS_CUADRO),                     // el muelle en invierno: la flota amarrada, el pueblo enfrente y San Nicolás
+        Triple("vuelta", "2027-12-18", listOf(13.0)),                     // la vuelta a puerto: los barcos «cargados de esponjas hasta los palos»
+        Triple("epifania", "2027-01-19", listOf(11.0, 21.0)),             // la Epifanía: la cruz y las coronas en el río, los cirios encendidos de noche
+        Triple("fin_anio", "2027-12-31", listOf(23.0)),                   // fin de año: los farolillos en los barcos y los cohetes
+        Triple("cuatro_julio", "2027-07-04", listOf(13.0)),               // el 4 de julio (en el muelle): las dos banderas sin letras
+        Triple("lonja", "2028-06-26", listOf(13.0)),                      // la lonja de junio (en el muelle): los sacos y los montones fuera
+        Triple("zarpa", "2027-01-26", listOf(8.0)),                       // la mañana de zarpar: los barcos que salen y los barriles en el muelle
+        Triple("boda", "2031-02-17", listOf(13.0)),                       // la boda (en el muelle): las guirnaldas blancas en la regala de Nikos
+        Triple("cuarto", "2030-06-21", listOf(13.0)),                     // el cuarto de 2030, provisional: el amarradero vacío, sin ningún barco
+    ),
+    // La residente (Refugio, tanda S17): la sala de bombas, con el pasillo grande y la Puerta al fondo; cuatro estados.
+    "residente" to listOf(
+        Triple("sala", "2027-05-05", HORAS_CUADRO),                       // un día normal: la lámpara de trabajo camina (manómetros, filtro) y de noche, apagada, el pasillo azul y el violeta de los tanques
+        Triple("cultivo_sembrado", "2027-06-19", listOf(13.0)),           // el arco cultivo de 0 a 0,35: los tanques claros, recién sembrados
+        Triple("cultivo_verde", "2027-10-20", listOf(13.0)),              // de 0,35 a 0,75: verdes y espesos
+        Triple("cultivo_lleno", "2027-04-22", listOf(13.0)),              // de 0,75 a 1: oscuros y llenos
+        Triple("reserva_baja", "2028-03-14", listOf(13.0)),               // la grieta: la columna de la cisterna abajo y la alarma, sin racionar todavía
+        Triple("racionamiento", "2028-03-20", listOf(13.0, 21.0)),        // el racionamiento: las botellas en fila, el candado y, de noche, el turno de más
+        Triple("cuarentena", "2029-02-10", listOf(13.0)),                 // la cuarentena: la compuerta bajada con su luz roja, las mascarillas, dos lámparas
+        Triple("abierto", "2031-10-01", listOf(13.0, 18.5, 21.0)),        // la Puerta abierta: el sol por el pasillo, el atardecer y el fuego de fuera de noche
+        Triple("abierto_lluvia", "2031-10-15", listOf(13.0)),             // la Puerta abierta con lluvia
+        Triple("simulacro", "2027-11-11", listOf(13.0)),                  // el simulacro: las compuertas bajan, luces rojas y etiquetas en las ruedas
+        Triple("bomba_tres", "2027-02-12", listOf(13.0)),                 // la bomba tres desmontada y el agua marrón
+        Triple("filtros", "2027-04-11", listOf(13.0)),                    // el cambio de filtros: el filtro grande abierto y el barro negro
+        Triple("cosecha", "2027-05-21", listOf(13.0)),                    // la cosecha de algas: los tanques vaciándose
+        Triple("sellado", "2027-01-15", listOf(13.0)),                    // el día del sellado: las flores de papel delante de la Puerta
+        Triple("nochebuena", "2027-12-24", listOf(21.0)),                 // Nochebuena de noche: el árbol de cable con sus luces
+        Triple("sol_falso", "2027-07-20", listOf(13.0)),                  // el día del sol falso
+        Triple("objeto_grande", "2027-04-23", listOf(13.0)),              // un objeto grande: el tocadiscos del comedor junto a la bancada
+        Triple("puerta_cerrada_2032", "2032-05-05", listOf(13.0)),        // 2032: la ficha vuelve a cerrar la Puerta del 1 de enero al 19 de septiembre (fallo del calendario que el cuadro sigue)
+    ),
+    // La doctora (Laboratorio, tanda S17): el laboratorio de la grama y, a las horas de comer y en los días de lo común, el centro del Claustro.
+    "cientifica" to listOf(
+        Triple("dia", "2027-05-05", HORAS_CUADRO),                        // un día normal: a las 7:00 y las 13:00 come en el centro; a las 21:00, el laboratorio de noche
+        Triple("laboratorio", "2027-05-05", listOf(10.0, 16.0)),          // el laboratorio de día, a las horas de trabajo: las lámparas de cultivo caminan con el riego
+        Triple("cena", "2027-05-05", listOf(20.0)),                       // la cena del Consejo en el centro: la mancha del pozo en la cabecera y las lámparas bajas
+        Triple("cuarentena", "2028-03-30", listOf(10.0)),                 // la cuarentena (con los jardines vacíos): la compuerta de acero con su luz roja, el catre
+        Triple("experimento", "2029-05-10", listOf(10.0, 21.5)),          // el experimento: la campana con el catre y el farol, de día y de noche
+        Triple("cierre", "2030-10-05", listOf(10.0)),                     // el cierre: la bata de Lauro en su taburete
+        Triple("arriba", "2031-04-28", listOf(10.0, 13.0)),               // arriba, provisional: el laboratorio sin ella y el campamento en la pantalla; a mediodía, el centro
+        Triple("jardines_brotes", "2027-09-20", listOf(10.0)),            // los jardines por la puerta: brotes después de la siega
+        Triple("jardines_medio", "2027-01-20", listOf(10.0)),             // a medio crecer
+        Triple("jardines_llenos", "2027-07-20", listOf(10.0)),            // llenos
+        Triple("grama_tierra", "2027-03-05", listOf(10.0)),               // la grama en la mesa: solo tierra
+        Triple("grama_hilo", "2028-01-20", listOf(10.0)),                 // el hilo
+        Triple("grama_matas", "2029-10-05", listOf(10.0)),                // las matas
+        Triple("grama_tanque", "2030-07-30", listOf(10.0)),               // el tanque de tierra limpia
+        Triple("grama_cajas", "2031-06-10", listOf(10.0)),                // las cajas
+        Triple("superficie_02", "2031-04-10", listOf(10.0)),              // la mancha verde de las ruinas, a 0,2
+        Triple("superficie_05", "2031-12-10", listOf(10.0)),              // a 0,5
+        Triple("censo", "2027-02-12", listOf(9.0)),                       // el censo: la cola que da la vuelta al comedor grande (el centro por la mañana)
+        Triple("anio_nuevo", "2027-01-01", listOf(16.0)),                 // el año nuevo: fruta de los jardines para todos (el centro por la tarde)
+        Triple("fundacion", "2027-03-18", listOf(16.0)),                  // la Fundación: las banderas de papel de galería a galería
+        Triple("noche_larga", "2027-12-21", listOf(20.0, 21.5)),          // la noche larga: velas en las mesas del centro y en el laboratorio
+        Triple("apagon", "2027-07-08", listOf(21.5)),                     // el apagón: solo la linterna
+        Triple("luz_larga", "2027-06-21", listOf(21.5)),                   // la luz larga
+        Triple("siega", "2027-09-11", listOf(10.0)),                      // la siega: la nave de los jardines, de vidrio limpio
+        Triple("objeto_grande", "2027-04-06", listOf(10.0, 13.0)),        // un objeto grande (la bata) en cada cuadro: en el taburete de Lauro y junto a su mesa del centro
+    ),
+    // La escriba (Orden, tanda S18): Peñaseca desde el adarve, con el cubo de la esquina, el patio, la torre y la Garza.
+    "escriba" to listOf(
+        Triple("penaseca", "2027-05-05", HORAS_CUADRO),                   // un día normal: la Garza amarrada, la sombra que cruza el patio y, de noche, la corona de candiles
+        Triple("expedicion", "2028-05-10", listOf(13.0)),                 // la expedición, provisional: Peñaseca sin la Garza
+        Triple("encierro", "2029-03-01", listOf(13.0)),                   // el encierro en el archivo
+        Triple("herida", "2030-05-10", listOf(13.0)),                     // la herida: la enfermería, con la Garza a medio coser
+        Triple("garza_caida", "2029-07-31", listOf(13.0)),                // la Garza caída en el patio, con el armazón torcido y la tela rota
+        Triple("garza_cosiendose", "2030-02-15", listOf(13.0)),           // la Garza cosiéndose: la tela nueva sobre el armazón
+        Triple("polvo", "2027-04-03", listOf(13.0)),                      // la tormenta de polvo: el muro de polvo y los candiles encendidos de día
+        Triple("candil", "2027-02-10", listOf(21.0)),                     // el día del candil: el del soporte arde y las hornacinas de delante y del cubo, vacías
+        Triple("fundacion", "2027-03-15", listOf(13.0)),                  // la Fundación: los caparazones pintados en el patio
+        Triple("objeto_grande", "2027-01-15", listOf(21.0)),              // un objeto grande de noche: el soldador en su braserillo
+    ),
+    // Brenna (Tierras Antiguas, tanda S18): la posada del Cuerno al pie del paso, desde la plaza.
+    "guia_caminos" to listOf(
+        Triple("paso_abierto", "2027-06-26", HORAS_CUADRO),               // verano con el paso abierto: la sombra que sube por el paso y, de noche, la sala encendida
+        Triple("paso_cerrado", "2027-01-20", HORAS_CUADRO),               // invierno con el paso cerrado: la nieve, la ladera de las vetas tapada y los carámbanos
+        Triple("travesia", "2029-08-01", listOf(13.0)),                   // la travesía a Torremuda, provisional: la posada sin ella
+        Triple("crianza", "2031-05-01", listOf(13.0)),                    // la crianza: la cuna junto a la puerta
+        Triple("crianza_2032", "2032-05-01", listOf(13.0)),               // 2032: la crianza se repite cada año (el calendario repite la temporada 5)
+        Triple("lluvia", "2027-07-20", listOf(13.0)),                     // la compañía de verano con lluvia
+        Triple("objeto_grande", "2027-06-22", listOf(13.0, 21.0)),        // un objeto grande (la montura en el banco), de día y de noche
     ),
 )

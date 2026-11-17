@@ -97,6 +97,8 @@ internal object ColorEspacio {
  */
 internal object EscenaEspacio : EscenaVida {
     override val vidas = listOf("astronauta")
+    /** La franja del fondo del teléfono ([franjaFondo]): la escotilla y la consola. */
+    override val franjaFondo: Float get() = 0.55f
 
     private val C = ColorEspacio
 

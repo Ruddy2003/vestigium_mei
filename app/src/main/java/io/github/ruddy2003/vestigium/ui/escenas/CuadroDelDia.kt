@@ -130,24 +130,54 @@ fun CuadroDelDia(
             val hora = horaFija ?: horaDeAhora()
             val animar = horaFija == null && enVivo && Repo.config.animaciones && !ahorroDeEnergia(ctx)
             var seVe by remember { mutableStateOf(true) }
+            var ampliado by remember(c) { mutableStateOf(false) }
             val quien = c.quien
             val leer = { sentir(Sentidos.Evento.ABRIR); alLeer(quien.id) }
+            val ampliar = { ampliado = true }
             Box {
                 VistaEscena(
                     c.escena, c.ficha, hora,
                     Modifier.fillMaxWidth().onGloballyPositioned { donde -> val r = donde.boundsInWindow(); seVe = r.width > 1f && r.height > 1f },
                     forma, animar = animar, banderita = if (alHistoria != null) c.banderita else null,
                     alFallar = { fallo = true }, humor = animo, pelaje = c.pelaje, pasoGato = pasoGato,
-                    toques = true, alAcariciar = { Sentidos.vibrarEvento(ctx, Sentidos.Evento.TOQUE) },
+                    toques = true, alAcariciar = { acariciar(ctx) },
                     alMantener = alHistoria?.let { abrir -> { sentir(Sentidos.Evento.ABRIR); abrir() } }, pausa = !seVe,
                     descripcion = "El cuadro de hoy: el entorno de ${quien.nombre}, ${quien.lugar}." + if (c.especial) " Hoy es un día especial en su vida." else "",
-                    acciones = listOf("Leer el cuento de hoy" to leer),
+                    acciones = listOf("Leer el cuento de hoy" to leer, "Ver el cuadro a pantalla completa" to ampliar),
                     enSegundoPlano = enVivo, fondo = cs.surfaceVariant.copy(alpha = 0.35f),
                 )
                 if (c.especial) MarcaEspecial(Modifier.align(Alignment.TopEnd).offset(x = (-12).dp, y = (-8).dp))
+                // Parte 8: ampliar, sobre la esquina de abajo (los toques del cuadro ya son del gato y de la historia).
+                BotonAmpliar(ampliar, Modifier.align(Alignment.BottomEnd).padding(8.dp))
             }
             BotonCuento(c.titulo, c.especial, leer, Modifier.padding(top = 8.dp), de = quien.nombre)
+            // Parte 8: «Hoy en la historia», también como botón (la pulsación larga sigue).
+            if (alHistoria != null) BotonHistoria(c.banderita, { sentir(Sentidos.Evento.ABRIR); alHistoria() }, Modifier.padding(top = 6.dp))
+            if (ampliado) CuadroAmpliado(c, hora) { ampliado = false }
         }
+    }
+}
+
+/**
+ * «Hoy en la historia», debajo del botón del cuento (parte 8): más bajo que él, del color secundario del tema, con la
+ * banderita del tema pequeña a la izquierda (si el tema tiene) y una flecha a la derecha. Abre la pantalla con [alAbrir].
+ */
+@Composable
+internal fun BotonHistoria(banderita: Banderita?, alAbrir: () -> Unit, modifier: Modifier = Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val tinta = cs.onSecondary
+    Row(
+        modifier.fillMaxWidth().heightIn(min = 44.dp).clip(MaterialTheme.shapes.medium).background(cs.secondary)
+            .clickable(onClickLabel = "abrir «Hoy en la historia»", role = Role.Button, onClick = alAbrir)
+            .semantics(mergeDescendants = true) { contentDescription = "Hoy en la historia: lo que pasó un día como hoy" }
+            .padding(start = 14.dp, end = 14.dp, top = 6.dp, bottom = 6.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        // La banderita a la mitad de su tamaño (se dibuja en unidades de su ancho), llena.
+        if (banderita != null) Canvas(Modifier.size((Banderita.ANCHO * 0.6f).dp, (Banderita.ALTO * 0.6f).dp).clearAndSetSemantics { }) { with(banderita) { dibujar(1f) } }
+        Text("Hoy en la historia", style = MaterialTheme.typography.titleSmall, color = tinta, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(start = if (banderita != null) 12.dp else 0.dp).weight(1f))
+        Text("›", style = MaterialTheme.typography.titleMedium, color = tinta.copy(alpha = 0.8f), modifier = Modifier.clearAndSetSemantics { })
     }
 }
 
@@ -232,7 +262,7 @@ private fun DrawScope.libroAbierto(tinta: Color) {
 
 /** La hora de ahora, de 0 a 24 con decimales. Se vuelve a mirar cada veinte segundos, solo mientras la app está en pantalla. */
 @Composable
-private fun horaDeAhora(): Double {
+internal fun horaDeAhora(): Double {
     fun ahora() = LocalTime.now().let { it.hour + it.minute / 60.0 }
     val hora by produceState(ahora()) {
         while (true) { delay(20_000); withFrameMillis { }; value = ahora() }

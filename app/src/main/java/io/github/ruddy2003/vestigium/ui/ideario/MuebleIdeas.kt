@@ -90,25 +90,27 @@ fun MuebleIdeas(cajones: List<CajonIdeas>, rotulo: (String) -> String, sub: (Caj
                         base = Rect(0f, size.height - altoBase.toPx(), size.width, size.height),
                         separacion = sep.toPx(), mas = mas,
                     )
-                    // El mueble no se sale de su lugar (la luz del fuego, por ejemplo, se queda en la cueva).
+                    // Sin sitio no se dibuja (ver [sinSitio]). El mueble no se sale de su lugar (la luz del fuego, por ejemplo, se
+                    // queda en la cueva).
+                    if (sinSitio()) return@Canvas
                     clipRect { with(d) { mueble(disp, oscuro) } }
                 }
                 for (i in 0 until huecos) {
                     val c = cajones.getOrNull(i)
                     val lugar = Modifier.offset(x(i), y(i)).size(anchoH, altoH)
-                    if (c == null) Canvas(lugar) { with(d) { compartimento(EstadoCajon(0, false, 0f, 7919 * (i + 1), vacio = true), oscuro) } }
+                    if (c == null) Canvas(lugar) { if (!sinSitio()) with(d) { compartimento(EstadoCajon(0, false, 0f, 7919 * (i + 1), vacio = true, fila = i / d.cols, col = i % d.cols, filas = filas, cols = d.cols), oscuro) } }
                     else key(c.tema) {
                         val anim = remember { Animatable(0f) }
                         val toque = remember { MutableInteractionSource() }
                         CompartimentoIdeas(d, c.n, c.tema.isEmpty(), c.tema.hashCode(), rotulo(c.tema), sub(c), oscuro,
-                            lugar.then(if (abrir != null) Modifier.halo() else Modifier).clickable(toque, null, enabled = abrir != null) {
+                            lugar.then(if (abrir != null) Modifier.halo(reposo = d.auraEnReposo) else Modifier).clickable(toque, null, enabled = abrir != null) {
                                 alcance.launch {
                                     sentir(Sentidos.Evento.ABRIR)
                                     anim.animateTo(1f, tween(260))
                                     abrir?.invoke(c)
                                     anim.snapTo(0f)
                                 }
-                            }, abierto = { anim.value })
+                            }, abierto = { anim.value }, fila = i / d.cols, col = i % d.cols, filas = filas)
                     }
                 }
                 val placa = d.placa
@@ -144,21 +146,32 @@ fun MuebleIdeas(cajones: List<CajonIdeas>, rotulo: (String) -> String, sub: (Caj
  */
 @Composable
 fun CompartimentoIdeas(d: DisenoIdeas, n: Int, sinTema: Boolean, semilla: Int, titulo: String, sub: String, oscuro: Boolean,
-                       modifier: Modifier = Modifier, abierto: () -> Float = { 0f }) {
+                       modifier: Modifier = Modifier, abierto: () -> Float = { 0f }, fila: Int = 0, col: Int = 0, filas: Int = 1) {
     BoxWithConstraints(modifier) {
-        Canvas(Modifier.fillMaxSize().graphicsLayer()) { with(d) { compartimento(EstadoCajon(n, sinTema, abierto(), semilla), oscuro) } }
+        Canvas(Modifier.fillMaxSize().graphicsLayer()) {
+            if (!sinSitio()) with(d) { compartimento(EstadoCajon(n, sinTema, abierto(), semilla, fila = fila, col = col, filas = filas, cols = d.cols), oscuro) }
+        }
         val r = d.rotulo
         val altoR = maxHeight * r.height
         val tam = (altoR.value * 0.36f).coerceIn(9f, 17f)
         val altoPx = with(LocalDensity.current) { maxHeight.toPx() }
         val tinta = d.tintaRotulo(oscuro)
         val letra = d.letraRotulo ?: MaterialTheme.typography.labelLarge.fontFamily
+        // La cuenta («7 páginas del cronista · jue 12 nov») es larga en algunos temas: si no cabe, la letra se achica hasta
+        // un 20 % antes de cortarse, para que la fecha no se pierda.
+        val medidor = rememberTextMeasurer()
+        val anchoLibre = with(LocalDensity.current) { (maxWidth * r.width - 6.dp).toPx() }
+        val tamSub0 = tam * 0.74f
+        val anchoSub = remember(sub, letra, tamSub0) {
+            if (sub.isEmpty()) 0 else medidor.measure(sub, TextStyle(fontFamily = letra, fontSize = tamSub0.sp), maxLines = 1, softWrap = false).size.width
+        }
+        val tamSub = if (anchoSub > anchoLibre) maxOf(tamSub0 * 0.8f, tamSub0 * anchoLibre / anchoSub * 0.98f) else tamSub0
         Column(Modifier.offset(maxWidth * r.left, maxHeight * r.top).size(maxWidth * r.width, altoR)
             .graphicsLayer { translationY = abierto() * d.salida * altoPx }.padding(horizontal = 3.dp),
             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Text(titulo, color = tinta, fontFamily = letra, fontSize = tam.sp, lineHeight = (tam * 1.12f).sp, fontWeight = FontWeight.SemiBold,
                 fontStyle = if (sinTema) FontStyle.Italic else FontStyle.Normal, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-            if (sub.isNotEmpty()) Text(sub, color = tinta.copy(alpha = 0.78f), fontFamily = letra, fontSize = (tam * 0.74f).sp, lineHeight = (tam * 0.86f).sp,
+            if (sub.isNotEmpty()) Text(sub, color = tinta.copy(alpha = 0.78f), fontFamily = letra, fontSize = tamSub.sp, lineHeight = (tam * 0.86f).sp,
                 maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
         }
     }
@@ -208,7 +221,15 @@ fun BordeCompartimento(modifier: Modifier = Modifier, alto: Dp = 26.dp, n: Int =
     BoxWithConstraints(modifier.fillMaxWidth().height(alto).clipToBounds()) {
         val completo = maxWidth / d.proporcion
         Canvas(Modifier.fillMaxWidth().wrapContentHeight(Alignment.Top, unbounded = true).requiredHeight(completo)) {
-            with(d) { compartimento(EstadoCajon(n, false, 1f, 31), oscuro) }
+            if (!sinSitio()) with(d) { compartimento(EstadoCajon(n, false, 1f, 31), oscuro) }
         }
     }
 }
+
+/**
+ * Si el lienzo se quedó sin ancho o sin alto (menos de un píxel). Pasa cuando el mueble no cabe donde lo pusieron: una
+ * columna sin desplazamiento más baja que él, una animación de tamaño. Ahí no se dibuja nada: los dibujos de los temas
+ * reparten trazos con pasos que salen del ancho y del alto, y con un alto de cero un bucle así no termina nunca (le pasó
+ * al quiosco de Urbe en las capturas, que se quedaron colgadas más de una hora).
+ */
+internal fun androidx.compose.ui.graphics.drawscope.DrawScope.sinSitio(): Boolean = !(size.width >= 1f && size.height >= 1f)

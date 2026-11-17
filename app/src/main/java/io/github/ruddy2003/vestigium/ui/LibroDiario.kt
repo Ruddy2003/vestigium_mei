@@ -153,6 +153,17 @@ object LibroDiario {
         TemaId.MEDIEVAL -> Fuentes(R.font.gotica_regular, R.font.cardo_regular)
         TemaId.TEMPLARIO -> Fuentes(R.font.cruzada_titulo, R.font.regla_regular)
         TemaId.DISTOPIA -> Fuentes(R.font.oswald_bold, R.font.barlow_regular)
+        // El periódico del barrio (v2): la letra de bloque de los carteles (Bloque Vestigium) para los títulos, y Libre Franklin
+        // para leer, la misma de la app en las dos caras.
+        TemaId.PSICODELIA -> Fuentes(R.font.bloque_titulo, R.font.franklin_regular)
+        // La letra de cartel de curvas de pluma (Federant) para los títulos, y Brygada 1918 para leer.
+        TemaId.NOUVEAU -> Fuentes(R.font.cartel_titulo, R.font.brygada_regular)
+        // La Piazzolla gruesa de los títulos, como letra grabada, y la de leer.
+        TemaId.GALIA -> Fuentes(R.font.piazzolla_titulo, R.font.piazzolla_regular)
+        // Caudex, la letra de los códices, para los títulos, y Literata para leer (las dos con las letras hebreas y coptas).
+        TemaId.ARCONTES -> Fuentes(R.font.codice_bold, R.font.literata_regular)
+        // Los rótulos anchos de la consola y la hoja de despacho mecanografiada.
+        TemaId.FRENTE -> Fuentes(R.font.michroma_titulo, R.font.chivo_mono_medium)
         TemaId.REFUGIO -> Fuentes(R.font.vt323, R.font.courier_regular)
         TemaId.ORDEN -> Fuentes(R.font.saira_stencil, R.font.saira_regular)
         TemaId.VAPOR -> Fuentes(R.font.caldera_titulo, R.font.bitter_regular)
@@ -242,6 +253,35 @@ object LibroDiario {
             TemaId.TEMPLARIO -> "h1{text-align:center;letter-spacing:.08em}article{border-top:4px solid $s;border-bottom:1px solid $p;padding-top:10px}.fecha{letter-spacing:.06em}" +
                 ".fecha::before{content:'\\2629  ';color:$p}" + capitular("2.6em", p)
             TemaId.DISTOPIA -> "article{border-top:6px solid $v;border-bottom:2px solid $p}.fecha{text-transform:uppercase;letter-spacing:.06em}.meta{background:$p;color:$b;display:inline-block;padding:0 6px}"
+            // Cada día como una página del periódico del barrio, a dos tintas: arriba, la franja del tintero partido (del magenta
+            // al ultramar, nunca de siete colores); la fecha en la letra de bloque, impresa otra vez en ultramar un poco corrida;
+            // los datos en tinta tenue y la capitular de bloque.
+            TemaId.PSICODELIA -> "h1{text-align:center;font-weight:400;text-shadow:2px 2px 0 #3F4C9E55}article{border-top:0;padding-top:2px}" +
+                "article::before{content:'';display:block;height:6px;margin-bottom:14px;background:linear-gradient(90deg,#A94870,#3F4C9E)}" +
+                ".fecha{font-family:T,sans-serif;font-weight:400;font-size:1.2em;text-shadow:1px 1px 0 #3F4C9E55}.meta{color:$v}" + capitular("2.6em", p)
+            // Cada día como una página de la revista ilustrada: el marco fino con las esquinas de arriba muy redondas, como un cartel,
+            // un velo violeta en los márgenes, la fecha en la letra del cartel seguida de la línea de látigo, los datos en tinta
+            // tenue y la capitular de cartel en verde salvia.
+            TemaId.NOUVEAU -> "h1{text-align:center;letter-spacing:.02em;font-weight:400}article{border:1px solid $p;border-radius:28px 28px 3px 3px;padding:18px 22px 20px;margin-bottom:22px;" +
+                "background:linear-gradient(90deg,${s}14,transparent 16%,transparent 84%,${s}14)}.fecha{font-family:T,serif;font-size:1.15em;font-weight:400}" +
+                ".fecha::after{content:' ~';color:$s}.meta{color:$v;letter-spacing:.03em}" + capitular("2.8em", p)
+            // Cada día en su tablilla: el marco de roble alrededor de la cera, con su sombra hundida, la onda de La Tène sobre la
+            // fecha (arcos que se encadenan), el mes de Coligny en oro viejo y la capitular en la Piazzolla gruesa.
+            TemaId.GALIA -> "h1{text-align:center;letter-spacing:.02em}article{border:7px solid #8A6A40;border-radius:4px;background:#EADFC1;color:#20251A;" +
+                "padding:14px 20px 18px;margin-bottom:20px;box-shadow:inset 0 3px 6px #0004,0 2px 3px #0003}" +
+                "article::before{content:'';display:block;height:8px;margin-bottom:10px;background:radial-gradient(circle at 50% 0,transparent 4px,$s 4px 5.4px,transparent 5.4px) 0 0/14px 8px repeat-x}" +
+                ".fecha{color:#20251A}.dia{color:#555B44}.meta{color:#7E590C;letter-spacing:.03em}.extra{color:#555B44}" + capitular("2.6em", "#3E5F24")
+            // Cada día como un tratado del códice: una fila de diplés que apuntan al centro sobre la entrada, los cuatro puntos
+            // antes de la fecha, los datos en cursiva tenue y la capitular de Caudex en ocre.
+            TemaId.ARCONTES -> "h1{text-align:center;letter-spacing:.03em}article{border-top:0;padding-top:4px}" +
+                "article::before{content:'›››››››››››› · ‹‹‹‹‹‹‹‹‹‹‹‹';display:block;text-align:center;font-family:T,serif;color:$p;letter-spacing:.14em;margin-bottom:10px}" +
+                ".fecha{color:$tinta}.fecha::before{content:'⁘ ';color:$p}.meta{color:$v;font-style:italic}" + capitular("2.7em", p)
+            // Cada día en su tramo de papel continuo de teletipo: las tiras de agujeros de arrastre a los lados, las franjas pálidas,
+            // la cruz de la retícula antes de la fecha y la casilla de «cifrado» en los datos.
+            TemaId.FRENTE -> "h1{letter-spacing:.14em;font-size:1.5em}article{border-top:2px solid $p;border-bottom:1px dashed $v;padding:16px 30px 20px;margin-bottom:16px;" +
+                "background:radial-gradient(circle,${v}66 3px,transparent 3.6px) left 6px top 6px/12px 18px repeat-y,radial-gradient(circle,${v}66 3px,transparent 3.6px) right 6px top 6px/12px 18px repeat-y," +
+                "repeating-linear-gradient(180deg,${s}14 0 36px,transparent 36px 72px)}.fecha{font-size:1.1em;letter-spacing:.1em;text-transform:uppercase}.fecha::before{content:'+ ';color:$p}" +
+                ".meta{border:1px solid $p;color:$p;display:inline-block;padding:0 6px;letter-spacing:.04em}.meta::before{content:'CIFRADO · '}" + capitular("2.2em", p)
             TemaId.REFUGIO -> "article{border:1px solid $p;border-radius:14px;padding:18px;margin-bottom:18px}.nota::first-letter{background:$p;color:$b;font-size:1.6em;padding:0 3px;margin-right:2px}"
             TemaId.ORDEN -> "article{border-top:3px solid $p;outline:1px solid $v;outline-offset:6px;margin:18px 0;padding:18px}.fecha{text-transform:uppercase;letter-spacing:.1em}" + capitular("2.6em", p)
             // La lámina del plano: cuadrícula tenue, filete doble arriba y la fecha con el «⊙» del manómetro.
@@ -775,6 +815,11 @@ object LibroDiario {
             TemaId.MEDIEVAL -> Medidas(12.5f, aire)
             TemaId.TEMPLARIO -> Medidas(12f, if (carta) 1.5f else 1.44f)
             TemaId.DISTOPIA -> Medidas(11f, aire)
+            TemaId.PSICODELIA -> Medidas(if (carta) 12f else 11.2f, aire + 0.02f)
+            TemaId.NOUVEAU -> Medidas(if (carta) 12.4f else 11.6f, aire + 0.04f)
+            TemaId.GALIA -> Medidas(if (carta) 12.2f else 11.4f, aire + 0.03f)
+            TemaId.ARCONTES -> Medidas(if (carta) 12.2f else 11.6f, aire + 0.02f)
+            TemaId.FRENTE -> Medidas(if (carta) 10.8f else 10.2f, if (carta) 1.55f else 1.5f)
             TemaId.REFUGIO -> Medidas(11f, 1.35f)
             TemaId.ORDEN -> Medidas(11f, aire)
             TemaId.VAPOR -> Medidas(11.5f, aire)
@@ -830,6 +875,16 @@ object LibroDiario {
         TemaId.TEMPLARIO -> Inicial(R.font.cruzada_titulo, 1.3f, palabra = true, mayusculas = true)
         // La primera palabra en mayúsculas sobre la franja roja del formulario.
         TemaId.DISTOPIA -> Inicial(R.font.oswald_bold, 1f, palabra = true, mayusculas = true, invertida = true)
+        // La primera letra en la letra de bloque de los carteles, grande, en el magenta del cartel.
+        TemaId.PSICODELIA -> Inicial(R.font.bloque_titulo, 2.5f)
+        // La primera letra en la letra de cartel, grande, como la capitular de una revista ilustrada.
+        TemaId.NOUVEAU -> Inicial(R.font.cartel_titulo, 2.7f)
+        // La primera letra en la Piazzolla gruesa de los títulos, grande, como tallada en la cera.
+        TemaId.GALIA -> Inicial(R.font.piazzolla_titulo, 2.4f)
+        // Los cuatro puntos con que los copistas abrían un párrafo y la primera letra en Caudex, grande y en ocre.
+        TemaId.ARCONTES -> Inicial(R.font.codice_bold, 2.3f, prefijo = "⁘ ")
+        // La primera letra en los rótulos anchos de la consola, en ámbar de piloto (como la capitular de la hoja en la app).
+        TemaId.FRENTE -> Inicial(R.font.michroma_titulo, 1.9f, mayusculas = true)
         // Una letra grande de fósforo en video inverso.
         TemaId.REFUGIO -> Inicial(R.font.vt323, 1.9f, invertida = true)
         // La letra de estarcido.
@@ -978,6 +1033,104 @@ object LibroDiario {
                 // La barra negra del formulario y la línea roja de debajo.
                 cv.drawLine(x0, y - 1.5f, x1, y - 1.5f, Paint(linea).apply { color = tinta; strokeWidth = 2.4f })
                 cv.drawLine(x0, y + 2f, x1, y + 2f, Paint(linea).apply { strokeWidth = 0.8f })
+            }
+            TemaId.PSICODELIA -> {
+                // Una onda a dos tintas, la del tintero partido (del magenta al ultramar), que deja en medio el disco del día con
+                // su etiqueta.
+                val pasos = 60
+                var xa = x0; var ya = y
+                for (i in 1..pasos) {
+                    val f = i / pasos.toFloat()
+                    val xb = x0 + (x1 - x0) * f
+                    val yb = y + 2.4f * sin(f * 12f * Math.PI.toFloat())
+                    val col = androidx.compose.ui.graphics.lerp(androidx.compose.ui.graphics.Color(0xFFA94870), androidx.compose.ui.graphics.Color(0xFF3F4C9E), f).toArgb()
+                    if (abs((xa + xb) / 2 - cx) > 11f) cv.drawLine(xa, ya, xb, yb, Paint(linea).apply { color = col; strokeWidth = 1.3f; strokeCap = Paint.Cap.ROUND })
+                    xa = xb; ya = yb
+                }
+                cv.drawCircle(cx, y, 7f, Paint(relleno).apply { color = 0xFF1E1A3A.toInt() })
+                cv.drawCircle(cx, y, 2.8f, Paint(relleno).apply { color = 0xFFA94870.toInt() })
+                cv.drawCircle(cx, y, 0.8f, Paint(relleno).apply { color = 0xFFF2E8D3.toInt() })
+            }
+            TemaId.NOUVEAU -> {
+                // Dos líneas de látigo que nacen de un capullo al centro, corren hacia las orillas en una S tranquila y se enroscan.
+                val tallo = Paint(trazo).apply { strokeWidth = 0.9f; strokeCap = Paint.Cap.ROUND }
+                listOf(-1f, 1f).forEach { sg ->
+                    val fin = if (sg < 0) x0 + 6f else x1 - 6f
+                    val largo = abs(fin - cx) - 8f
+                    cv.drawPath(ruta {
+                        moveTo(cx + sg * 8f, y)
+                        cubicTo(cx + sg * (8f + largo * 0.3f), y - 4f, cx + sg * (8f + largo * 0.65f), y + 4f, fin, y)
+                        cubicTo(fin + sg * 4f, y - 0.2f, fin + sg * 4f, y - 5f, fin, y - 5f)
+                        cubicTo(fin - sg * 3f, y - 5f, fin - sg * 3f, y - 1.6f, fin - sg * 0.6f, y - 2f)
+                    }, tallo)
+                }
+                listOf(-1f, 1f).forEach { sg -> cv.drawPath(ruta { moveTo(cx, y + 1.5f); quadTo(cx + sg * 5f, y - 0.5f, cx + sg * 6.5f, y - 3.5f); quadTo(cx + sg * 2f, y - 2.5f, cx, y + 1.5f); close() }, relleno) }
+                cv.drawPath(ruta { moveTo(cx, y + 1.5f); quadTo(cx - 2.6f, y - 3f, cx, y - 7f); quadTo(cx + 2.6f, y - 3f, cx, y + 1.5f); close() }, Paint(relleno).apply { color = tinta })
+            }
+            TemaId.GALIA -> {
+                // La onda de La Tène, que en cada cresta suelta un zarcillo con su botón, y en medio el torques con sus dos remates.
+                val tallo = Paint(trazo).apply { strokeWidth = 0.9f; strokeCap = Paint.Cap.ROUND }
+                val paso = 10f; val alto = 3.4f
+                val onda = android.graphics.Path()
+                var x = x0; var arriba = true; var abierto = false
+                while (x + paso / 2 <= x1) {
+                    val xm = x + paso / 2
+                    if (abs(x - cx) > 13f && abs(xm - cx) > 13f) {
+                        val s = if (arriba) -1f else 1f
+                        if (!abierto) { onda.moveTo(x, y); abierto = true }
+                        onda.cubicTo(x + paso * 0.15f, y + s * alto, x + paso * 0.35f, y + s * alto, xm, y)
+                        cv.drawCircle(x + paso * 0.3f, y + s * alto * 0.3f, 0.9f, relleno)
+                    } else abierto = false
+                    x = xm; arriba = !arriba
+                }
+                cv.drawPath(onda, tallo)
+                val aro = Paint(trazo).apply { strokeWidth = 2f; strokeCap = Paint.Cap.ROUND }
+                cv.drawArc(cx - 7f, y - 7f, cx + 7f, y + 7f, 113f, 314f, false, aro)
+                listOf(113.0, 67.0).forEach { g ->
+                    val a = Math.toRadians(g)
+                    cv.drawCircle(cx + 7f * cos(a).toFloat(), y + 7f * sin(a).toFloat(), 2.2f, relleno)
+                }
+            }
+            TemaId.ARCONTES -> {
+                // Las filas de diplés con que se enmarcaban los títulos de los tratados, que apuntan al centro, y en medio el
+                // ouroboros con la chispa.
+                val diple = Paint(trazo).apply { strokeWidth = 0.8f; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
+                var x = x0
+                while (x + 2.4f <= x1) {
+                    if (abs(x + 1.2f - cx) > 12f) {
+                        val haciaDer = x + 1.2f < cx
+                        cv.drawPath(ruta {
+                            if (haciaDer) { moveTo(x, y - 2.4f); lineTo(x + 2.4f, y); lineTo(x, y + 2.4f) } else { moveTo(x + 2.4f, y - 2.4f); lineTo(x, y); lineTo(x + 2.4f, y + 2.4f) }
+                        }, diple)
+                    }
+                    x += 4.4f
+                }
+                cv.drawArc(cx - 6f, y - 6f, cx + 6f, y + 6f, -40f, 320f, false, Paint(trazo).apply { strokeWidth = 1.6f; strokeCap = Paint.Cap.ROUND })
+                cv.drawOval(cx + 2.2f, y - 6.4f, cx + 5.8f, y - 3.4f, relleno)
+                cv.drawCircle(cx, y, 1.2f, relleno)
+            }
+            TemaId.FRENTE -> {
+                // La cinta perforada del teletipo, con su fila de arrastre y los agujeros del mensaje; al centro, el emblema de la
+                // célula: la chispa de tres trazos que se escapa por el hueco del círculo roto.
+                val borde = Paint(linea).apply { strokeWidth = 0.5f; alpha = 150 }
+                cv.drawLine(x0, y - 4f, cx - 11f, y - 4f, borde); cv.drawLine(cx + 11f, y - 4f, x1, y - 4f, borde)
+                cv.drawLine(x0, y + 4f, cx - 11f, y + 4f, borde); cv.drawLine(cx + 11f, y + 4f, x1, y + 4f, borde)
+                val tenue = Paint(relleno).apply { alpha = 120 }
+                var x = x0 + 2f; var k = 0
+                while (x < x1 - 1f) {
+                    if (abs(x - cx) > 13f) {
+                        cv.drawCircle(x, y, 0.55f, tenue)
+                        val bits = Math.floorMod(k * k * 7 + k * 13 + 5, 4)
+                        if ((bits and 1) != 0) cv.drawCircle(x, y - 2.2f, 0.95f, relleno)
+                        if ((bits and 2) != 0) cv.drawCircle(x, y + 2.2f, 0.95f, relleno)
+                    }
+                    x += 3.2f; k++
+                }
+                cv.drawArc(cx - 5f, y - 5f, cx + 5f, y + 5f, -20f, 300f, false, Paint(trazo).apply { strokeWidth = 1.1f; strokeCap = Paint.Cap.ROUND })
+                listOf(-74.0 to 6f, -50.0 to 7.6f, -26.0 to 6f).forEach { (g, l) ->
+                    val a = Math.toRadians(g)
+                    cv.drawLine(cx + 0.8f * cos(a).toFloat(), y + 0.8f * sin(a).toFloat(), cx + l * cos(a).toFloat(), y + l * sin(a).toFloat(), Paint(linea).apply { strokeWidth = 1f; strokeCap = Paint.Cap.ROUND })
+                }
             }
             TemaId.REFUGIO -> {
                 // Una fila de puntos y el átomo al centro.
@@ -1220,6 +1373,106 @@ object LibroDiario {
                 rect(22f, Paint(trazo).apply { color = tinta; strokeWidth = 1.6f; alpha = 220 })
                 cv.drawRect(22f, 22f, A - 22f, 30f, Paint(relleno).apply { alpha = 220 })
                 cv.drawRect(A - 130f, 36f, A - 34f, 54f, Paint(fino).apply { color = tinta; alpha = 160 })
+            }
+            TemaId.PSICODELIA -> {
+                // La postal: el filete de esquinas redondas, doble; arriba y abajo, la franja del tintero partido a dos tintas (del
+                // magenta al ultramar), y en cada esquina el disco del día con su etiqueta.
+                cv.drawRoundRect(android.graphics.RectF(22f, 22f, A - 22f, B - 22f), 18f, 18f, trazo)
+                cv.drawRoundRect(android.graphics.RectF(27f, 27f, A - 27f, B - 27f), 14f, 14f, fino)
+                val n = 24
+                val tramo = (A - 100f) / n
+                for (i in 0 until n) {
+                    val col = androidx.compose.ui.graphics.lerp(androidx.compose.ui.graphics.Color(0xFFA94870), androidx.compose.ui.graphics.Color(0xFF3F4C9E), i / (n - 1f)).toArgb()
+                    listOf(34f, B - 38f).forEach { yy -> cv.drawRect(50f + i * tramo, yy, 50f + (i + 1) * tramo + 0.5f, yy + 4f, Paint(relleno).apply { color = col; alpha = 170 }) }
+                }
+                esquinas.forEach { (x, y) ->
+                    val (sx, sy) = haciaDentro(x, y)
+                    val fx = x + sx * 6f; val fy = y + sy * 6f
+                    cv.drawCircle(fx, fy, 6f, Paint(relleno).apply { color = 0xFF1E1A3A.toInt(); alpha = 200 })
+                    cv.drawCircle(fx, fy, 2.4f, Paint(relleno).apply { color = 0xFFA94870.toInt(); alpha = 220 })
+                }
+            }
+            TemaId.NOUVEAU -> {
+                // El marco de un cartel: un filete doble con las esquinas de arriba muy redondas; de cada esquina de abajo sube un
+                // tallo que echa dos hojas y se enrosca, y al pie del marco, el capullo con dos hojitas.
+                fun marcoCartel(m: Float, r: Float) = android.graphics.Path().apply {
+                    moveTo(m, B - m); lineTo(m, m + r); quadTo(m, m, m + r, m); lineTo(A - m - r, m); quadTo(A - m, m, A - m, m + r); lineTo(A - m, B - m); close()
+                }
+                cv.drawPath(marcoCartel(22f, 46f), trazo)
+                cv.drawPath(marcoCartel(27f, 41f), fino)
+                val tallo = Paint(trazo).apply { strokeWidth = 1f; strokeCap = Paint.Cap.ROUND }
+                listOf(1f, -1f).forEach { sg ->
+                    val x = if (sg > 0) 34f else A - 34f
+                    cv.drawPath(android.graphics.Path().apply {
+                        moveTo(x, B - 30f); cubicTo(x + sg * 8f, B - 90f, x - sg * 4f, B - 140f, x + sg * 6f, B - 180f)
+                        cubicTo(x + sg * 12f, B - 194f, x + sg * 2f, B - 200f, x + sg * 1f, B - 190f)
+                    }, tallo)
+                    listOf(B - 70f to 1f, B - 120f to -1f).forEach { (yy, lado) ->
+                        val hx = x + sg * 3f
+                        cv.drawPath(android.graphics.Path().apply {
+                            moveTo(hx, yy); quadTo(hx + sg * lado * 10f, yy - 12f, hx + sg * lado * 16f, yy - 18f); quadTo(hx + sg * lado * 4f, yy - 14f, hx, yy); close()
+                        }, Paint(relleno).apply { alpha = 110 })
+                    }
+                }
+                val cxm = A / 2; val ym = B - 22f
+                cv.drawPath(android.graphics.Path().apply { moveTo(cxm, ym + 3f); quadTo(cxm - 4f, ym - 3f, cxm, ym - 10f); quadTo(cxm + 4f, ym - 3f, cxm, ym + 3f); close() }, relleno)
+                listOf(-1f, 1f).forEach { sg -> cv.drawPath(android.graphics.Path().apply { moveTo(cxm, ym + 2f); quadTo(cxm + sg * 8f, ym, cxm + sg * 11f, ym - 5f); quadTo(cxm + sg * 4f, ym - 3f, cxm, ym + 2f); close() }, Paint(relleno).apply { alpha = 120 }) }
+            }
+            TemaId.GALIA -> {
+                // La tablilla: el marco de roble ancho alrededor de la cera, con su filo hundido; a la izquierda, los agujeros de las
+                // bisagras con su tiento, y arriba y abajo, la onda de La Tène, apenas.
+                rect(26f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF8A6A40.toInt(); style = Paint.Style.STROKE; strokeWidth = 10f; alpha = 210 })
+                rect(31.5f, Paint(fino).apply { color = tinta; alpha = 110 })
+                rect(20.5f, Paint(fino).apply { color = tinta; alpha = 80 })
+                val tiento = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFF5A3A22.toInt(); style = Paint.Style.STROKE; strokeWidth = 2.2f; strokeCap = Paint.Cap.ROUND }
+                listOf(B * 0.27f, B * 0.73f).forEach { yy ->
+                    cv.drawCircle(26f, yy - 6f, 2f, Paint(relleno).apply { color = tinta; alpha = 180 }); cv.drawCircle(26f, yy + 6f, 2f, Paint(relleno).apply { color = tinta; alpha = 180 })
+                    cv.drawArc(14f, yy - 6f, 38f, yy + 6f, 90f, 180f, false, tiento)
+                }
+                listOf(42f, B - 42f).forEach { yy ->
+                    val onda = android.graphics.Path(); var x = 50f; var arriba = true
+                    onda.moveTo(x, yy)
+                    while (x + 6f <= A - 50f) { val s = if (arriba) -1f else 1f; onda.cubicTo(x + 1.8f, yy + s * 3f, x + 4.2f, yy + s * 3f, x + 6f, yy); x += 6f; arriba = !arriba }
+                    cv.drawPath(onda, Paint(fino).apply { strokeWidth = 0.8f; alpha = 110 })
+                }
+            }
+            TemaId.ARCONTES -> {
+                // La hoja de papiro del códice: un filete fino, una fila de diplés arriba y otra abajo, y en cada esquina las
+                // siete esferas, pequeñas.
+                rect(24f, fino)
+                val diple = Paint(trazo).apply { strokeWidth = 0.7f; alpha = 140 }
+                listOf(34f, B - 34f).forEach { y ->
+                    var x = 40f
+                    while (x + 3f <= A - 40f) {
+                        val p = android.graphics.Path().apply { if (x < A / 2) { moveTo(x, y - 3f); lineTo(x + 3f, y); lineTo(x, y + 3f) } else { moveTo(x + 3f, y - 3f); lineTo(x, y); lineTo(x + 3f, y + 3f) } }
+                        if (abs(x + 1.5f - A / 2) > 10f) cv.drawPath(p, diple)
+                        x += 5.5f
+                    }
+                    cv.drawCircle(A / 2, y, 1.6f, relleno)
+                }
+                esquinas.forEach { (x, y) -> for (k in 0 until 4) cv.drawCircle(x, y, 2.5f + k * 2.2f, Paint(fino).apply { strokeWidth = 0.5f; alpha = 110 - k * 18 }) }
+            }
+            TemaId.FRENTE -> {
+                // El papel continuo del teleimpresor ya trae sus agujeros de arrastre, el picado y el emblema en seco: encima va el
+                // formulario de la transmisión, con su recuadro fino, la cinta perforada de la cabecera (los agujeros del código)
+                // y la cruz de la retícula en cada esquina.
+                val recuadro = Paint(trazo).apply { color = tinta; strokeWidth = 0.7f; alpha = 120 }
+                cv.drawRect(40f, 26f, A - 40f, B - 26f, recuadro)
+                val y0 = 36f; val agujero = Paint(relleno).apply { color = tinta; alpha = 120 }
+                val canto = Paint(fino).apply { color = tinta; alpha = 110 }
+                cv.drawLine(46f, y0 - 5f, A * 0.62f, y0 - 5f, canto); cv.drawLine(46f, y0 + 5f, A * 0.62f, y0 + 5f, canto)
+                var x = 50f; var k = 0
+                while (x < A * 0.62f - 3f) {
+                    cv.drawCircle(x, y0, 0.6f, agujero)
+                    val bits = Math.floorMod(k * k * 5 + k * 11 + 3, 4)
+                    if ((bits and 1) != 0) cv.drawCircle(x, y0 - 2.6f, 1.1f, relleno)
+                    if ((bits and 2) != 0) cv.drawCircle(x, y0 + 2.6f, 1.1f, relleno)
+                    x += 3.6f; k++
+                }
+                val cruz = Paint(trazo).apply { color = tinta; strokeWidth = 0.8f; alpha = 160 }
+                listOf(48f to 48f, A - 48f to 48f, 48f to B - 48f, A - 48f to B - 48f).forEach { (cxx, cyy) ->
+                    cv.drawLine(cxx - 6f, cyy, cxx + 6f, cyy, cruz); cv.drawLine(cxx, cyy - 6f, cxx, cyy + 6f, cruz); cv.drawCircle(cxx, cyy, 3.2f, cruz)
+                }
             }
             TemaId.REFUGIO -> {
                 // Esquinas redondas, como el cristal de una pantalla.

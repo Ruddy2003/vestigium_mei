@@ -111,6 +111,8 @@ import kotlin.math.sin
  */
 internal object EscenaNeon : EscenaVida {
     override val vidas = listOf("repartidora", "fideos")
+    /** La franja del fondo del teléfono ([franjaFondo]): el puesto de fideos con su letrero. */
+    override val franjaFondo: Float get() = 0.3f
 
     // ---------------------------------------------------------------- El lugar
     /** Donde la fachada del puesto toca el suelo, y la esquina de su edificio. */

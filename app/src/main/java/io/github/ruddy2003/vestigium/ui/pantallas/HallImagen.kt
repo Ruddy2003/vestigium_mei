@@ -116,6 +116,18 @@ object HallImagen {
         TemaId.MEDIEVAL -> "Liber vestigiorum meorum" to "Explicit liber · Deo gratias"
         TemaId.TEMPLARIO -> "Domus Templi · Vestigium Mei" to "Non nobis, Domine, sed nomini tuo da gloriam"
         TemaId.DISTOPIA -> "EXPEDIENTE 07-118 · VESTIGIUM MEI" to "DOCUMENTO REVISADO · ARCHÍVESE"
+        // La ciudad: la etiqueta del disco, lado A, y la aguja que vuelve a su sitio. El cartel: lo alto del cartel de la semana,
+        // lado B, y las luces de la pared que se apagan.
+        TemaId.PSICODELIA -> if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE)
+            "◉ Lado A · los discos de oro de Vestigium Mei" to "Fin del lado A · la aguja vuelve a su sitio"
+        else "◉ Lado B · el cartel de la semana de Vestigium Mei" to "Fin del lado B · se apagan las luces de la pared"
+        // El rótulo de la vitrina en la Exposición de 1900 y, al pie, la mención del jurado para lo que ya no compite.
+        TemaId.NOUVEAU -> "Exposition des souvenirs · Vestigium Mei" to "Médaille d'or, hors concours"
+        // Lo que se ofrece, como en la dedicatoria galo-griega de Orgon (ΔΕΔΕ, «dio»), y el canto de los bardos (Diodoro 5.31).
+        TemaId.GALIA -> "ΔΕΔΕ («ofreció») · Vestigium Mei" to "Colgado en la casa grande, que lo cante el bardo"
+        // Lo que el iniciado guarda en la jarra, y lo que se dice en voz baja al cerrarla.
+        TemaId.ARCONTES -> "Lo guardado en la jarra · Vestigium Mei" to "Lo de abajo no lo sabe"
+        TemaId.FRENTE -> "CÉLULA K-7 · SALA DE MANDO · VESTIGIUM MEI" to "Transmisión cerrada · quema esta copia"
         TemaId.REFUGIO -> "REFUGIO · REGISTRO DEL RESIDENTE" to "Todo en orden bajo tierra"
         TemaId.ORDEN -> "CODEX ORDINIS · VESTIGIUM MEI" to "AD SCIENTIAM CUSTODIENDAM"
         TemaId.VAPOR -> "Gran Exposición de Vestigium Mei · catálogo oficial" to "Fin del catálogo · a todo vapor"

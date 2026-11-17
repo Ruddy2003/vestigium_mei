@@ -104,8 +104,12 @@ fun Escena(
  * teñido del color del aura, en anillos cada vez más anchos y tenues (2 o 4); encima va el objeto tal cual. Donde el objeto es
  * transparente no hay aura. Las 16 direcciones y los 4 anillos son solo para el aura ya encendida del todo; mientras se
  * enciende o se apaga van las mismas 8 y 2 que en reposo (a esa velocidad no se notan los escalones).
+ *
+ * Con [reposo] en false el aura solo existe mientras se toca: en reposo no se dibuja nada alrededor. Lo usan los muebles
+ * rehechos del Ideario (`docs/diseno/MUEBLES.md`, versión 2), donde el aura en reposo se veía como un marco de color
+ * alrededor de cada cajón o un contorno pálido alrededor de cada vasija, sobre todo de noche.
  */
-fun Modifier.halo(realce: Boolean = false): Modifier = composed {
+fun Modifier.halo(realce: Boolean = false, reposo: Boolean = true): Modifier = composed {
     val cs = MaterialTheme.colorScheme
     val oscuro = esOscuro()
     // Con [realce], en los modos oscuros el objeto toma la luz de la lámpara: en reposo el aura es cálida, algo más viva, y
@@ -145,8 +149,9 @@ fun Modifier.halo(realce: Boolean = false): Modifier = composed {
             }
         }
         .drawWithContent {
+            if (!reposo && luz <= 0.001f) { drawContent(); return@drawWithContent }
             val alcance = ((if (toma) 3.2f else 2.5f) + 4.5f * luz).dp.toPx()
-            val total = (if (toma) 0.30f else 0.16f) + 0.50f * luz
+            val total = (if (toma) 0.30f else 0.16f) * (if (reposo) 1f else luz) + 0.50f * luz
             val sube = if (toma) alcance * 0.55f * (1f - luz) else 0f
             // En reposo el aura es angosta y bastan pocas copias; encendida es más ancha y lleva más para que no se vean escalones.
             val anillos = if (luz > 0.98f) 4 else 2

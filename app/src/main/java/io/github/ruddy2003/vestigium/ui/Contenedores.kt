@@ -59,6 +59,16 @@ enum class Contenedor(val nombre: String, val hoja: String) {
     VUELO("Bitácora de vuelo", "órbita"),
     INMERSION("Bitácora del batiscafo", "inmersión"),
     TETRAD("Cuaderno escolar", "hoja"),
+    /** Frente exterior: el cartucho de datos de la célula, un bloque de baquelita con su etiqueta y su muesca. */
+    CARTUCHO("Cartucho de datos", "bloque"),
+    /** Arcontes: la jarra alta de barro, sellada, con el códice de papiro dentro, como la que guardó los de Nag Hammadi. */
+    JARRA("Jarra de los destellos", "hoja de papiro"),
+    /** Galia: el haz de tablillas enceradas en su estuche de cuero (que fueran de cera es recurso: César no dice el material). */
+    HAZ("Haz de tablillas", "tablilla encerada"),
+    /** Art nouveau: el carnet de bocetos del taller de litografía, de tapas de cartón jaspeado, lomo de tela y una cinta de seda. */
+    BOCETOS("Carnet de bocetos", "boceto"),
+    /** Psicodelia: el periódico alternativo del barrio, «La Niebla» (nombre inventado), en papel barato con su tinta de arcoíris. */
+    PERIODICO("Periódico del barrio", "edición"),
     /** Básico: una libreta lisa, sin dibujo propio (el papel es la superficie del esquema). */
     SIMPLE("Libreta de momentos", "página"),
 }
@@ -90,6 +100,11 @@ fun contenedorDe(t: TemaId): Contenedor = when (t) {
     TemaId.CUEVA -> Contenedor.BOLSA
     TemaId.BASICO -> Contenedor.SIMPLE
     TemaId.DISTOPIA -> Contenedor.EXPEDIENTE
+    TemaId.PSICODELIA -> Contenedor.PERIODICO
+    TemaId.NOUVEAU -> Contenedor.BOCETOS
+    TemaId.GALIA -> Contenedor.HAZ
+    TemaId.ARCONTES -> Contenedor.JARRA
+    TemaId.FRENTE -> Contenedor.CARTUCHO
     TemaId.CIBER -> Contenedor.CONSOLA
     TemaId.NEON -> Contenedor.TICKETS
     TemaId.REFUGIO -> Contenedor.CARPETA
@@ -153,6 +168,11 @@ object Contenedores {
         Contenedor.SUPERVIVIENTE -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.TICKETS -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.PATENTES -> ContenedoresMas.papel(c, cs, oscuro)
+        Contenedor.CARTUCHO -> ContenedoresMas.papel(c, cs, oscuro)
+        Contenedor.JARRA -> ContenedoresMas.papel(c, cs, oscuro)
+        Contenedor.HAZ -> ContenedoresMas.papel(c, cs, oscuro)
+        Contenedor.BOCETOS -> ContenedoresMas.papel(c, cs, oscuro)
+        Contenedor.PERIODICO -> ContenedoresMas.papel(c, cs, oscuro)
         Contenedor.SIMPLE -> cs.surface
     }
 
@@ -345,6 +365,11 @@ object Contenedores {
             Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.TICKETS -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.PATENTES -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
+            Contenedor.CARTUCHO -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
+            Contenedor.JARRA -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
+            Contenedor.HAZ -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
+            Contenedor.BOCETOS -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
+            Contenedor.PERIODICO -> with(ContenedoresMas) { fondoHojaMas(c, cs, oscuro, renglon, margen) }
             Contenedor.SIMPLE -> {}   // la hoja lisa
         }
     }
@@ -438,6 +463,11 @@ object Contenedores {
             Contenedor.SUPERVIVIENTE -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.TICKETS -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.PATENTES -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
+            Contenedor.CARTUCHO -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
+            Contenedor.JARRA -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
+            Contenedor.HAZ -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
+            Contenedor.BOCETOS -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
+            Contenedor.PERIODICO -> with(ContenedoresMas) { encuadernacionMas(c, cs, oscuro) }
             Contenedor.SIMPLE -> {}   // sin encuadernación
         }
     }

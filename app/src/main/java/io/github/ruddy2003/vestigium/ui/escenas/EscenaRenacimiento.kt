@@ -97,6 +97,8 @@ internal object ColorRenacimiento {
  */
 internal object EscenaRenacimiento : EscenaVida {
     override val vidas = listOf("aprendiz")
+    /** La franja del fondo del teléfono ([franjaFondo]): la ventana a la cúpula y la mesa del taller. */
+    override val franjaFondo: Float get() = 0.45f
 
     private val C = ColorRenacimiento
     private val T get() = TallerRenacimiento

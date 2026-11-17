@@ -252,6 +252,8 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
                 alHistoria = if (io.github.ruddy2003.vestigium.ui.escenas.HAY_HISTORIA_HOY && c.historia_hoy) { { nav.ir("historia_hoy") } } else null,
             )
             else io.github.ruddy2003.vestigium.ui.GatoDelDia(hoy)
+            // Parte 8 (encargo A): las banderitas de los personajes que sigues y hoy tienen un día especial.
+            io.github.ruddy2003.vestigium.ui.seguir.AvisosSeguidos(hoy, nav)
         }
         // En lugar del personaje: tus últimos días, de un vistazo (N-28). Tocar un día lo abre; hoy abre «Llenar el día».
         if (esHoy) FranjaDias(hoy, abrir = { f -> if (f == hoy) abrirNoche() else { if (sucio) { Repo.guardarDia(d); sucio = false }; Seleccion.abrir(nav, f) } }) { ponerte() }

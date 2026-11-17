@@ -22,9 +22,12 @@ import io.github.ruddy2003.vestigium.ui.TemaId
 /**
  * Lo que se sabe de un compartimento al dibujarlo: cuántas fichas guarda ([n]), si es el de las ideas sin tema, cuánto está
  * abierto (de 0 a 1, para la animación al tocarlo) y una [semilla] para que cada uno tenga sus irregularidades, siempre las
- * mismas. [vacio] es un hueco del mueble que no tiene tema: se dibuja cerrado y sin rótulo.
+ * mismas. [vacio] es un hueco del mueble que no tiene tema: se dibuja cerrado y sin rótulo. [fila] y [col] dicen en qué lugar
+ * del mueble está (desde 0, de arriba abajo y de izquierda a derecha), de [filas] por [cols]: sirven para que la luz no sea
+ * la misma en todos (más encendido cerca de la lámpara, más perdido lejos). Fuera del mueble (una muestra suelta) valen 0 de 1.
  */
-class EstadoCajon(val n: Int, val sinTema: Boolean, val abierto: Float, val semilla: Int, val vacio: Boolean = false)
+class EstadoCajon(val n: Int, val sinTema: Boolean, val abierto: Float, val semilla: Int, val vacio: Boolean = false,
+                  val fila: Int = 0, val col: Int = 0, val filas: Int = 1, val cols: Int = 1)
 
 /**
  * Dónde quedó cada parte del mueble, en píxeles del lienzo entero: la corona, cada fila, cada hueco y la base. [mas] es
@@ -56,6 +59,12 @@ interface DisenoIdeas {
 
     /** El mueble sin sus compartimentos: el cuerpo, la corona, los travesaños entre filas y la base. */
     fun DrawScope.mueble(d: Disposicion, oscuro: Boolean)
+
+    /**
+     * Si los compartimentos llevan el aura tenue también en reposo ([io.github.ruddy2003.vestigium.ui.halo]). Los muebles
+     * rehechos la apagan (solo sale al tocar): sobre un mueble con luz y sombra se veía como un marco de color.
+     */
+    val auraEnReposo: Boolean get() = true
 
     /** Un compartimento, en un lienzo del tamaño de su hueco. Puede salirse un poco (el cajón que sale al abrirse). */
     fun DrawScope.compartimento(c: EstadoCajon, oscuro: Boolean)
@@ -120,6 +129,11 @@ fun disenoIdeas(t: TemaId): DisenoIdeas = when (t) {
     TemaId.MEDIEVAL -> IdeasMedieval
     TemaId.TEMPLARIO -> IdeasTemplario
     TemaId.DISTOPIA -> IdeasDistopia
+    TemaId.PSICODELIA -> IdeasPsicodelia
+    TemaId.NOUVEAU -> IdeasNouveau
+    TemaId.GALIA -> IdeasGalia
+    TemaId.ARCONTES -> IdeasArcontes
+    TemaId.FRENTE -> IdeasFrente
     TemaId.REFUGIO -> IdeasRefugio
     TemaId.ORDEN -> IdeasOrden
     TemaId.VAPOR -> IdeasVapor

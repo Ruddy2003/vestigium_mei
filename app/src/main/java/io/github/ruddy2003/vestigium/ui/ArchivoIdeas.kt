@@ -53,6 +53,20 @@ fun archivoIdeas(t: TemaId): ArchivoIdeas = when (t) {
     TemaId.RUINAS -> ArchivoIdeas("lata", "latas", "nota", "notas", true, "la estantería rescatada")
     TemaId.NAVIDAD -> ArchivoIdeas("caja de galletas", "cajas de galletas", "tarjeta de felicitación", "tarjetas de felicitación", true, "la alacena de la cocina")
     TemaId.DISTOPIA -> ArchivoIdeas("gaveta", "gavetas", "expediente", "expedientes", true, "el archivo del ministerio")
+    // Las ideas, como los pliegos de dibujo que David guarda sin doblar en los cajones anchos y bajos de su cajonera de planos
+    // (Psicodelia v2: la cajonera del Ideario; la guía, «Los muebles»).
+    TemaId.PSICODELIA -> ArchivoIdeas("cajón de planos", "cajones de planos", "pliego", "pliegos", false, "la cajonera de planos del dibujante")
+    // Las ideas, como pruebas de imprenta guardadas en los cajones planos del mueble de láminas del taller de litografía, donde se
+    // guardan los carteles sin doblar.
+    TemaId.NOUVEAU -> ArchivoIdeas("cajón de láminas", "cajones de láminas", "prueba de imprenta", "pruebas de imprenta", false, "el mueble de cajones planos del taller")
+    // Las ideas, rayadas en tablillas de haya que se guardan en cestas de mimbre, en el granero sobre pilotes del oppidum (las
+    // del diario van en el haz de tablillas de la casa grande).
+    TemaId.GALIA -> ArchivoIdeas("cesta de mimbre", "cestas de mimbre", "tablilla de haya", "tablillas de haya", true, "el granero sobre pilotes")
+    // Las ideas sueltas de la comunidad, en hojas de papiro guardadas en arquetas de olivo (como las hojas sueltas que se
+    // hallaron metidas en la tapa de un códice de Nag Hammadi), en la cueva donde se reúnen.
+    TemaId.ARCONTES -> ArchivoIdeas("arqueta de olivo", "arquetas de olivo", "hoja suelta", "hojas sueltas", true, "la cueva de la reunión escondida")
+    // Las ideas de la red, fotografiadas en microfilm: cada una un fotograma, guardado en latas detrás de un panel falso.
+    TemaId.FRENTE -> ArchivoIdeas("lata de microfilm", "latas de microfilm", "fotograma", "fotogramas", true, "el panel falso de la sala de radar")
     TemaId.REFUGIO -> ArchivoIdeas("cartucho", "cartuchos", "registro", "registros", false, "el armario de cartuchos")
     TemaId.CIBER -> ArchivoIdeas("directorio", "directorios", "archivo", "archivos", false, "la terminal")
     TemaId.NEON -> ArchivoIdeas("riel", "rieles", "ticket", "tickets", false, "la barra del puesto")

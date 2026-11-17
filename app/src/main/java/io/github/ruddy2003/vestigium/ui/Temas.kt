@@ -241,6 +241,49 @@ object Temas {
         "09-27" to "Champollion", "11-04" to "Tutankamón")
     private val MARCAS_DISTOPIA = mapOf("01-01" to "CENSO", "04-15" to "DECLARACIÓN", "05-01" to "CUOTA", "07-01" to "INVENTARIO",
         "10-01" to "PLAN", "11-15" to "REVISIÓN", "12-31" to "CIERRE")
+
+    /**
+     * Psicodelia: los días de 1967 que el tema recuerda, comprobados en `docs/diseno/temas/fuentes_psicodelia.md`: el
+     * encuentro del parque (14 de enero; solo poetas y bandas), la primera noche de la FM libre (12 de febrero), el festival
+     * de Monterey (16 de junio), la FM a tiempo completo (6 de agosto) y el entierro de mentira del hippie (6 de octubre).
+     */
+    private val MARCAS_PSICODELIA = mapOf("01-14" to "El encuentro del parque", "02-12" to "La FM de medianoche", "06-16" to "Monterey",
+        "08-06" to "La FM, todo el día", "10-06" to "El entierro del hippie")
+
+    /**
+     * Art nouveau: los días de 1900 que el tema recuerda, todos comprobados en `docs/diseno/temas/fuentes_nouveau.md`: se
+     * abre la Exposición Universal (14 de abril), se abre la primera línea del metro (19 de julio, a la una de la tarde) y
+     * se cierra la Exposición (12 de noviembre); y el 1 de enero, el día de 1895 en que el cartel de *Gismonda* salió a
+     * las calles de París.
+     */
+    private val MARCAS_NOUVEAU = mapOf("01-01" to "Gismonda, en las calles", "04-14" to "Ouverture de l'Exposition", "07-19" to "Le Métropolitain",
+        "11-12" to "Clôture de l'Exposition")
+
+    /**
+     * Galia: el comienzo del año de Coligny tal como lo pone el tema (Samonios = noviembre, recurso) con sus «tres noches
+     * de Samonios», que el bronce marca (TRINOX SAMONI); y dos días del 52 a. C., aproximados: la muerte de Clodio en Roma
+     * (18 de enero, en el calendario romano de entonces), que los galos vieron como la ocasión, y la entrega en Alesia
+     * (hacia el 27 de septiembre, según Brunaux). Ver `docs/diseno/temas/fuentes_galia.md`.
+     */
+    private val MARCAS_GALIA = mapOf("11-01" to "Samonios", "11-17" to "Tres noches de Samonios", "01-18" to "Muere Clodio",
+        "09-27" to "La entrega en Alesia")
+
+    /**
+     * Arcontes: solo fechas fijas reales. La noche del bautismo, que los basilidianos velaban leyendo (Clemente de
+     * Alejandría, *Stromata* 1.21: el 11 o el 15 de tybi, el 6 o el 10 de enero); y los dos equinoccios y los dos
+     * solsticios, que el libro astronómico de Enoc sigue por las puertas por donde sale el sol (1 Enoc 72; el versículo,
+     * a comprobar). Las fiestas judías no van aquí porque se mueven con la luna (ver la historia del iniciado).
+     */
+    private val MARCAS_ARCONTES = mapOf("01-06" to "Noche del bautismo", "03-20" to "Día igual a la noche", "06-21" to "El día más largo",
+        "09-22" to "Noche igual al día", "12-21" to "La noche más larga")
+
+    /**
+     * Frente exterior: los días de la red, todos inventados. El cambio de claves de año nuevo; la noche más corta y la más
+     * larga (la que menos y la que más oscuridad da para transmitir); y los aniversarios de la propia red: el primer enlace,
+     * el apagón del puerto, la fuga de la cárcel de la luna y el día de los caídos.
+     */
+    private val MARCAS_FRENTE = mapOf("01-01" to "CAMBIO DE CLAVES", "03-17" to "PRIMER ENLACE", "05-09" to "EL APAGÓN",
+        "06-21" to "NOCHE CORTA", "08-30" to "LA FUGA", "11-02" to "LOS CAÍDOS", "12-21" to "NOCHE LARGA")
     private val MARCAS_REFUGIO = mapOf("01-15" to "FILTROS", "04-01" to "SIMULACRO", "06-01" to "INVENTARIO", "07-16" to "TRINITY",
         "10-23" to "SIMULACRO", "12-02" to "REACTOR")
     private val MARCAS_ORDEN = mapOf("01-15" to "JURAMENTO", "03-01" to "LEVA", "04-23" to "S. JORGE", "06-15" to "TORNEO",
@@ -317,6 +360,11 @@ object Temas {
             TemaId.MEDIEVAL -> FIESTAS[md]
             TemaId.TEMPLARIO -> Temas.mdJuliano(fecha)?.let { MARCAS_TEMPLARIO[it] }
             TemaId.DISTOPIA -> MARCAS_DISTOPIA[md]
+            TemaId.PSICODELIA -> MARCAS_PSICODELIA[md]
+            TemaId.NOUVEAU -> MARCAS_NOUVEAU[md]
+            TemaId.GALIA -> MARCAS_GALIA[md]
+            TemaId.ARCONTES -> MARCAS_ARCONTES[md]
+            TemaId.FRENTE -> MARCAS_FRENTE[md]
             TemaId.REFUGIO -> MARCAS_REFUGIO[md]
             TemaId.ORDEN -> MARCAS_ORDEN[md]
             TemaId.VAPOR -> MARCAS_VAPOR[md]
@@ -499,6 +547,11 @@ object Temas {
         TemaId.MEDIEVAL -> MEDIEVAL[titulo]
         TemaId.TEMPLARIO -> TEMPLARIO[titulo]
         TemaId.DISTOPIA -> DISTOPIA[titulo]
+        TemaId.PSICODELIA -> PSICODELIA[titulo]
+        TemaId.NOUVEAU -> NOUVEAU[titulo]
+        TemaId.GALIA -> GALIA[titulo]
+        TemaId.ARCONTES -> ARCONTES[titulo]
+        TemaId.FRENTE -> FRENTE[titulo]
         TemaId.REFUGIO -> REFUGIO[titulo]
         TemaId.ORDEN -> ORDEN[titulo]
         // El Vapor victoriano tiene todo su diccionario en `NombresVapor` (ver [NombresCompletos]).
@@ -540,6 +593,18 @@ object Temas {
             TemaId.MEDIEVAL -> mapOf("animo" to "Del ánima", "momento" to "Crónica", "gasto" to "Cuentas", "sueno" to "Del sueño", "habitos" to "Regla", "hoy" to "Del día", "cifra" to "Cuenta", "foto" to "Miniatura", "enfoque" to "Estudio")
             TemaId.TEMPLARIO -> mapOf("animo" to "Ánimo del freire", "momento" to "Crónica de la casa", "gasto" to "Tesorería", "sueno" to "Reposo", "habitos" to "La regla", "hoy" to "Guardia", "cifra" to "Recuento", "foto" to "Desde la torre", "enfoque" to "Instrucción")
             TemaId.DISTOPIA -> mapOf("animo" to "ESTADO", "momento" to "INCIDENCIA", "gasto" to "RACIÓN", "sueno" to "DESCANSO", "habitos" to "CUOTAS", "hoy" to "PARTE", "cifra" to "CIFRA OFICIAL", "foto" to "EVIDENCIA", "enfoque" to "PRODUCTIVIDAD")
+            // Psicodelia: la pregunta de la calle, los destellos, lo que costó, el sueño con la niebla, lo de cada día en el barrio,
+            // el disco del día, su número, la instantánea y el cartel de la semana en la mesa de dibujo.
+            TemaId.PSICODELIA -> mapOf("animo" to "¿Cómo andas?", "momento" to "Destellos de la calle", "gasto" to "Lo que costó", "sueno" to "Bajo la niebla", "habitos" to "Cada día, en el barrio", "hoy" to "El disco de hoy", "cifra" to "El número de hoy", "foto" to "La instantánea", "enfoque" to "Al cartel de la semana")
+            // Art nouveau: el ánimo en color, los bocetos, el bolsillo, el sueño bajo el tragaluz del taller, lo de cada mañana, la
+            // página del almanaque, el folio de la revista, la placa fotográfica y la mesa de dibujo.
+            TemaId.NOUVEAU -> mapOf("animo" to "Tu ánimo, en color", "momento" to "Bocetos", "gasto" to "Del bolsillo", "sueno" to "Bajo el tragaluz", "habitos" to "Lo de cada mañana", "hoy" to "La página de hoy", "cifra" to "El folio", "foto" to "La placa", "enfoque" to "A la mesa de dibujo")
+            // Galia: el ánimo, las chispas de la hoguera, las monedas del caballo, el sueño bajo el manto, lo de cada día, el oppidum, la cuenta,
+            // lo que viste y los versos de memoria.
+            TemaId.GALIA -> mapOf("animo" to "El ánimo de hoy", "momento" to "Chispas", "gasto" to "Monedas del caballo", "sueno" to "Bajo el manto", "habitos" to "Lo de cada día", "hoy" to "En el oppidum", "cifra" to "Tu cuenta", "foto" to "Lo que viste", "enfoque" to "De memoria")
+            // Arcontes: el alma, los destellos, las monedas, el sueño del cuerpo, las prácticas, el día en Magdala, la cuenta, lo visible y la lámpara.
+            TemaId.ARCONTES -> mapOf("animo" to "El alma", "momento" to "Destellos", "gasto" to "Las monedas", "sueno" to "Sueño del cuerpo", "habitos" to "Las prácticas", "hoy" to "Hoy, en Magdala", "cifra" to "La cuenta", "foto" to "Lo visible", "enfoque" to "Junto a la lámpara")
+            TemaId.FRENTE -> mapOf("animo" to "MORAL", "momento" to "REPORTE", "gasto" to "FONDOS", "sueno" to "CALIDAD DEL REPOSO", "habitos" to "RUTINAS DE CAMPO", "hoy" to "ENLACE", "cifra" to "CONTADOR", "foto" to "FOTO DE RECONOCIMIENTO", "enfoque" to "TURNO DE CONSOLA")
             TemaId.REFUGIO -> mapOf("animo" to "ESTADO", "momento" to "SUCESO", "gasto" to "SUMINISTROS", "sueno" to "DESCANSO", "habitos" to "PROTOCOLOS", "hoy" to "BITÁCORA", "cifra" to "LECTURA", "foto" to "FOTO", "enfoque" to "TURNO")
             TemaId.ORDEN -> mapOf("animo" to "MORAL", "momento" to "BITÁCORA", "gasto" to "INTENDENCIA", "sueno" to "DESCANSO", "habitos" to "DISCIPLINA", "hoy" to "PARTE", "cifra" to "CIFRA", "foto" to "IMAGEN", "enfoque" to "VIGILIA")
             TemaId.VAPOR -> mapOf("animo" to "Presión", "momento" to "Asiento", "gasto" to "Libro mayor", "sueno" to "Caldera en reposo", "habitos" to "Mantenimiento", "hoy" to "Salida", "cifra" to "Lectura", "foto" to "Daguerrotipo", "enfoque" to "Plena marcha")
@@ -637,6 +702,131 @@ object Temas {
         "Cifras" to "CIFRAS OFICIALES", "Fotos del día" to "EVIDENCIA FOTOGRÁFICA", "Medicamentos" to "SUMINISTRO MÉDICO",
         "Seguimiento privado" to "EXPEDIENTE RESERVADO", "Momentos de la semana" to "INCIDENCIAS DE LA SEMANA", "Momentos de este día" to "INCIDENCIAS DEL DÍA",
         "Lo mejor y lo peor" to "MÉRITOS Y FALTAS", "Personas, temas e hitos" to "PERSONAS DE INTERÉS", "Respaldo automático" to "COPIA DE SEGURIDAD",
+    )
+
+    /**
+     * Psicodelia (versión 2): la voz del barrio a fines de los sesenta, con el disco del día, el periódico del barrio, la
+     * radio y los carteles; la misma en las dos caras. Lo privado y lo de Sustancias no se renombra
+     * (`NombresPsicodelia.NEUTROS`). Visible para la prueba de la voz (`VozPsicodeliaPrueba`).
+     */
+    internal val PSICODELIA = mapOf(
+        "Mundo" to "El mundo, desde la calle Haight", "Patrimonio Mundial" to "Lugares que hay que ver una vez", "Mapa para rascar" to "El mapa que vas pintando",
+        "Ciudades visitadas" to "Ciudades de tu mochila", "Biblioteca de sueños" to "Los sueños, en su carpeta", "Cartas" to "Postales del barrio", "Escribir una carta" to "Mandar una postal",
+        "Carta" to "Una postal", "Conocerte" to "Quién eres, visto de cerca", "Brújula política" to "Lo que se discute en el parque", "Mapas" to "Mapas del barrio",
+        "Salud" to "El cuerpo que baila", "Tus apps" to "Lo que te roba el día", "Otras vidas" to "Otras canciones", "Logros" to "Discos de oro", "Tu año en historias" to "El año, cartel por cartel",
+        "Anoche" to "Lo que sonó anoche", "Selladas" to "Guardadas en la funda", "Listas para abrir" to "Ya se pueden poner", "A otras personas" to "Para tu gente",
+        "Del pasado" to "Las que llegan del pasado", "Hoy" to "El disco de hoy", "Línea de tiempo" to "El surco de los días", "Ahora mismo estoy…" to "Ahora mismo, en la calle…",
+        "Entender" to "Mirar los surcos", "Registros especiales" to "Las caras B", "Apariencia" to "Los colores de la funda", "Avisos y recordatorios" to "El pandero que te llama",
+        "Llenar el día" to "Llenar el disco del día", "Biblioteca del diario" to "La discoteca del diario", "Entrada" to "Hoja del periódico", "Día" to "El disco del día", "Momentos" to "Destellos de la calle",
+        "Gastos" to "Lo que costó", "Explorar" to "Salir a la calle", "Más" to "El departamento", "Hábitos" to "Lo de cada día en el barrio", "Cartas al futuro" to "Postales para otro verano",
+        "Experimentos personales" to "Probar algo nuevo", "Cómo leer tus datos" to "Cómo leer tus surcos", "Guía científica" to "Lo que dicen los que saben",
+        "Cuestionarios" to "Las preguntas del periódico", "Prueba de reacción" to "La prueba del pandero", "Lugares" to "Esquinas del barrio", "Datos" to "El archivo del departamento",
+        "Permisos y sensores" to "Lo que escucha el teléfono", "Ajustes" to "Afinar la guitarra", "Reportes" to "Carteles para pegar", "Bienvenido" to "Pasa, la puerta está abierta",
+        "Calendario" to "Los discos del año", "Obras" to "Discos, libros y películas", "Tu año" to "Tu año en vinilo", "Privacidad" to "Lo que no se pega en la pared",
+        "Sueño" to "Dormir con la niebla", "Contexto" to "Lo que suena alrededor", "Hitos" to "Fechas que se recuerdan", "Ánimo y cuerpo" to "Ánimo y cuerpo, lado a lado",
+        "Diario" to "El periódico del barrio", "Predicción" to "Lo que viene sonando", "Este día hace un año" to "Este disco, hace un año", "Lo que registró el teléfono" to "Lo que el teléfono fue apuntando",
+        "Registrar" to "Poner en el periódico", "Las relaciones más marcadas" to "La gente que más suena", "Mapa" to "El mapa de tus calles", "Mapa emocional" to "El ánimo por las calles",
+        "Tablero" to "La mesa del departamento", "Tu día" to "Las pistas del día", "Tu día en 24 horas" to "Las pistas del día", "Te falta hoy" to "Lo que falta en el disco",
+        "Datos que faltan" to "Surcos en blanco", "Tema" to "Los colores de la funda", "Recordatorios" to "Lo que la radio te recuerda", "Resumen semanal" to "La semana en un cartel",
+        "Totales" to "La cuenta del departamento", "Gimnasio" to "Mover el cuerpo", "Buscar" to "Buscar en el periódico", "Cifras" to "Los números del barrio", "Fotos del día" to "Las fotos del día",
+        "Momentos de la semana" to "Chispazos de la semana",
+        "Momentos de este día" to "Chispazos de este día", "Lo mejor y lo peor" to "Lo que brilla y lo que se apaga", "Personas, temas e hitos" to "Gente, temas y fechas",
+        "Respaldo automático" to "Una copia en otra cinta",
+    )
+
+    /** Art nouveau: la voz de un taller de litografía de París hacia 1900, con su almanaque de flores, sus postales y sus cafés. */
+    private val NOUVEAU = mapOf(
+        "Mundo" to "El mundo en láminas", "Patrimonio Mundial" to "Pabellones del mundo", "Mapa para rascar" to "El plano que vas iluminando", "Ciudades visitadas" to "Ciudades de tus postales",
+        "Biblioteca de sueños" to "Los sueños, en acuarela", "Cartas" to "Tarjetas postales", "Escribir una carta" to "Escribir una postal", "Carta" to "Postal ilustrada",
+        "Conocerte" to "Tu retrato a la pluma", "Brújula política" to "Lo que se discute en el café", "Mapas" to "Planos y láminas", "Salud" to "El cuerpo, como un tallo",
+        "Tus apps" to "Las vitrinas que te detienen", "Otras vidas" to "Otras siluetas", "Logros" to "Medallas de la Exposición", "Tu año en historias" to "El año en carteles",
+        "Anoche" to "La noche de ayer, bajo las lámparas", "Selladas" to "Cerradas con lacre", "Listas para abrir" to "El lacre ya cede", "A otras personas" to "A quienes quieres",
+        "Del pasado" to "Las que mandó el tiempo", "Hoy" to "La flor de hoy", "Línea de tiempo" to "El tallo de los días", "Ahora mismo estoy…" to "En este momento, en el taller…",
+        "Entender" to "Mirar de cerca", "Registros especiales" to "Láminas aparte", "Apariencia" to "Los colores del cartel", "Avisos y recordatorios" to "Campanillas de cristal",
+        "Llenar el día" to "Llenar la página del día", "Biblioteca del diario" to "Los cuadernos encuadernados", "Entrada" to "Página del cuaderno", "Día" to "La página del almanaque",
+        "Momentos" to "Bocetos", "Gastos" to "Las cuentas del bolsillo", "Explorar" to "Flâner", "Más" to "El taller entero", "Hábitos" to "Lo de cada mañana",
+        "Cartas al futuro" to "Postales para el siglo nuevo", "Experimentos personales" to "Pruebas de taller", "Cómo leer tus datos" to "Cómo leer tus láminas",
+        "Guía científica" to "Lo que dicen los sabios", "Cuestionarios" to "Las preguntas del almanaque", "Prueba de reacción" to "La prueba del pulso firme", "Lugares" to "Rincones de la ciudad",
+        "Datos" to "El archivo del taller", "Permisos y sensores" to "Lo que el teléfono puede ver", "Ajustes" to "Ajustar la prensa", "Reportes" to "Láminas para enseñar",
+        "Bienvenido" to "Bienvenue à l'atelier", "Calendario" to "El almanaque de las flores", "Obras" to "Carteles y libros", "Tu año" to "El año en flor", "Privacidad" to "Lo que queda en el cajón",
+        "Sueño" to "Dormir bajo el tragaluz", "Contexto" to "Lo que rodea la página", "Hitos" to "Fechas grabadas", "Ánimo y cuerpo" to "Ánimo y cuerpo, en color", "Diario" to "Carnet de croquis",
+        "Predicción" to "Lo que viene, en boceto", "Este día hace un año" to "Esta página hace un año", "Lo que registró el teléfono" to "Lo que anotó el teléfono", "Registrar" to "Anotar",
+        "Las relaciones más marcadas" to "Los lazos que más se notan", "Mapa" to "El plano de tus paseos", "Mapa emocional" to "El ánimo por los barrios", "Tablero" to "La mesa de dibujo",
+        "Tu día" to "Las horas del taller", "Tu día en 24 horas" to "Las horas del taller", "Te falta hoy" to "Lo que falta en la página", "Datos que faltan" to "Páginas en blanco",
+        "Tema" to "Los colores del cartel", "Recordatorios" to "Notas en el marco del espejo", "Resumen semanal" to "La semana en una lámina", "Totales" to "La cuenta del taller",
+        "Gimnasio" to "La sala de gimnasia", "Buscar" to "Buscar en los cuadernos", "Cifras" to "Las cifras del almanaque", "Fotos del día" to "Lo que fijó la placa",
+        "Medicamentos" to "Frascos de la farmacia", "Seguimiento privado" to "Lo que se guarda en el cajón con llave", "Momentos de la semana" to "Bocetos de la semana",
+        "Momentos de este día" to "Bocetos de este día", "Lo mejor y lo peor" to "Lo que florece y lo que se marchita", "Personas, temas e hitos" to "Gente, asuntos y fechas grabadas",
+        "Respaldo automático" to "Una copia en otra piedra",
+    )
+
+    /** Galia: la voz del oppidum arverno y del bosque, de la asamblea y del grito que corre de campo en campo. */
+    private val GALIA = mapOf(
+        "Mundo" to "Las tierras de la Galia y más allá", "Patrimonio Mundial" to "Lugares que guardan a sus muertos", "Mapa para rascar" to "Las tierras que has pisado", "Ciudades visitadas" to "Oppida de tu camino",
+        "Biblioteca de sueños" to "Lo que trae la noche", "Cartas" to "Mensajes de oppidum en oppidum", "Escribir una carta" to "Mandar un mensajero", "Carta" to "Mensaje del mensajero", "Conocerte" to "Quién eres junto al fuego", "Brújula política" to "En la asamblea", "Mapas" to "Mapas del país", "Salud" to "El cuerpo del guerrero", "Tus apps" to "Lo que te roba las horas", "Otras vidas" to "Otras almas", "Logros" to "Torques ganados", "Tu año en historias" to "El año que cantan los bardos", "Anoche" to "La noche que se fue", "Selladas" to "Guardadas para otra noche", "Listas para abrir" to "Ya se pueden leer", "A otras personas" to "A los tuyos", "Del pasado" to "Las que trajo el tiempo",
+        "Hoy" to "La noche y el día de hoy", "Línea de tiempo" to "Las noches en fila", "Ahora mismo estoy…" to "Junto al fuego, ahora…",
+        "Entender" to "Leer las señales", "Registros especiales" to "Lo que se cuenta aparte", "Apariencia" to "El manto", "Avisos y recordatorios" to "El grito que corre",
+        "Llenar el día" to "Contar el día junto al fuego", "Biblioteca del diario" to "Las tablillas del diario", "Entrada" to "Tablilla",
+        "Día" to "La noche y su jornada", "Momentos" to "Chispas de la hoguera", "Gastos" to "Las monedas del caballo", "Explorar" to "Salir al bosque", "Más" to "La casa grande",
+        "Hábitos" to "Lo de cada día", "Cartas al futuro" to "Mensajes para otra luna", "Experimentos personales" to "Pruebas de valor",
+        "Cómo leer tus datos" to "Cómo leer lo que cuentas", "Guía científica" to "Lo que enseñan los que saben", "Cuestionarios" to "Las preguntas de los druidas", "Prueba de reacción" to "La prueba del jinete", "Lugares" to "Vados y caminos",
+        "Datos" to "Lo que se ha contado", "Permisos y sensores" to "Lo que oye el teléfono", "Ajustes" to "La fragua", "Reportes" to "Relatos para la asamblea",
+        "Bienvenido" to "Entra en la casa grande", "Calendario" to "Las noches y las lunas", "Obras" to "Cantos y relatos", "Tu año" to "La vuelta de las lunas",
+        "Privacidad" to "Lo que no se escribe", "Sueño" to "El descanso del guerrero", "Contexto" to "Lo que rodea la jornada", "Hitos" to "Piedras del camino",
+        "Ánimo y cuerpo" to "Ánimo y brazo", "Diario" to "Las tablillas", "Predicción" to "Lo que se ve venir", "Este día hace un año" to "Esta noche hace un año",
+        "Lo que registró el teléfono" to "Lo que contó el teléfono", "Registrar" to "Contar", "Las relaciones más marcadas" to "Los lazos de sangre y de juramento",
+        "Mapa" to "Mapa de tus caminos", "Mapa emocional" to "El ánimo por las tierras", "Tablero" to "El hogar", "Tu día" to "Las horas de la jornada", "Tu día en 24 horas" to "Las horas de la jornada",
+        "Te falta hoy" to "Lo que falta contar", "Datos que faltan" to "Tablillas en blanco", "Tema" to "El manto", "Recordatorios" to "Lo que se dice de memoria",
+        "Resumen semanal" to "Siete noches", "Totales" to "La cuenta de la tribu", "Gimnasio" to "La práctica de las armas", "Buscar" to "Buscar en las tablillas",
+        "Cifras" to "Las cuentas del oppidum", "Fotos del día" to "Lo que vieron tus ojos", "Medicamentos" to "Hierbas y remedios",
+        "Seguimiento privado" to "Lo que se guarda en silencio", "Momentos de la semana" to "Chispas de la semana", "Momentos de este día" to "Chispas de esta jornada",
+        "Lo mejor y lo peor" to "Lo que se canta y lo que se calla", "Personas, temas e hitos" to "Gente, asuntos y piedras del camino", "Respaldo automático" to "Copia en el escondite del bosque",
+    )
+
+    /** Arcontes: la voz baja de un círculo escondido de Galilea, con la lámpara, el códice, la jarra y los 365 cielos. */
+    private val ARCONTES = mapOf(
+        "Mundo" to "Los caminos del mundo", "Patrimonio Mundial" to "Lugares que guardan memoria", "Mapa para rascar" to "La tierra que has pisado", "Ciudades visitadas" to "Ciudades de tu camino",
+        "Biblioteca de sueños" to "Visiones de la noche", "Cartas" to "Cartas entre los escondidos", "Escribir una carta" to "Escribir a los hermanos", "Carta" to "Carta escondida", "Conocerte" to "Conócete a ti mismo", "Brújula política" to "Entre el César y el Templo", "Mapas" to "Mapas de la tierra", "Salud" to "El cuerpo que te viste", "Tus apps" to "Lo que te distrae", "Otras vidas" to "Otras chispas", "Logros" to "Amuletos grabados", "Tu año en historias" to "Lo que trajo el año", "Anoche" to "La vigilia de anoche", "Selladas" to "Selladas en la jarra", "Listas para abrir" to "Listas para romper el sello", "A otras personas" to "A otros que saben", "Del pasado" to "Las que ya hablaron",
+        "Hoy" to "El cielo de hoy", "Línea de tiempo" to "El hilo de los días", "Ahora mismo estoy…" to "En esta hora…",
+        "Entender" to "Conocer", "Registros especiales" to "Lo que se guarda aparte", "Apariencia" to "La vestidura", "Avisos y recordatorios" to "Avisos de la lámpara",
+        "Llenar el día" to "Escribir el día en el códice", "Biblioteca del diario" to "Los códices del diario", "Entrada" to "Hoja del códice",
+        "Día" to "Cielo del día", "Momentos" to "Destellos", "Gastos" to "Las monedas", "Explorar" to "Salir a ver", "Más" to "Lo escondido",
+        "Hábitos" to "Las prácticas", "Cartas al futuro" to "Cartas para los que vendrán", "Experimentos personales" to "Pruebas del alma",
+        "Cómo leer tus datos" to "Cómo leer las señales", "Guía científica" to "Cómo leer las señales", "Cuestionarios" to "Las preguntas de los guardianes", "Prueba de reacción" to "La prueba de los reflejos", "Lugares" to "Lugares de paso",
+        "Datos" to "Lo que se ha escrito", "Permisos y sensores" to "Lo que el teléfono percibe", "Ajustes" to "El taller", "Reportes" to "Relatos para los hermanos",
+        "Bienvenido" to "Entra en la reunión", "Calendario" to "Los 365 cielos", "Obras" to "Libros y cantos", "Tu año" to "La vuelta del año",
+        "Privacidad" to "Bajo sello", "Sueño" to "El sueño del cuerpo", "Contexto" to "Lo que rodea al día", "Hitos" to "Señales en el camino",
+        "Ánimo y cuerpo" to "Alma y cuerpo", "Diario" to "El códice", "Predicción" to "Lo que se adivina", "Este día hace un año" to "Este cielo hace un año",
+        "Lo que registró el teléfono" to "Lo que anotó el teléfono", "Registrar" to "Escribir", "Las relaciones más marcadas" to "Los lazos más fuertes",
+        "Mapa" to "Mapa de tus pasos", "Mapa emocional" to "Mapa del alma", "Tablero" to "La mesa", "Tu día" to "Las horas del día", "Tu día en 24 horas" to "Las horas del día",
+        "Te falta hoy" to "Lo que falta escribir", "Datos que faltan" to "Hojas en blanco", "Tema" to "La vestidura", "Recordatorios" to "Lo que no se olvida",
+        "Resumen semanal" to "La semana de los siete planetas", "Totales" to "La cuenta", "Gimnasio" to "El ejercicio del cuerpo", "Buscar" to "Buscar y hallar",
+        "Cifras" to "Las cuentas", "Fotos del día" to "Imágenes del día", "Medicamentos" to "Remedios",
+        "Seguimiento privado" to "Lo que se lleva en secreto", "Momentos de la semana" to "Destellos de la semana", "Momentos de este día" to "Destellos de este día",
+        "Lo mejor y lo peor" to "Luz y tiniebla", "Personas, temas e hitos" to "Personas, asuntos y señales", "Respaldo automático" to "Copia en la jarra",
+    )
+
+    /** Frente exterior: la red clandestina habla en clave de radio y de operación, sin palabras de la saga que lo inspira. */
+    private val FRENTE = mapOf(
+        "Mundo" to "MUNDOS RECORRIDOS", "Patrimonio Mundial" to "SITIOS PROTEGIDOS", "Mapa para rascar" to "CARTA DE MUNDOS", "Ciudades visitadas" to "PUERTOS DE PASO",
+        "Biblioteca de sueños" to "SUEÑOS CIFRADOS", "Cartas" to "CORREO CIFRADO", "Escribir una carta" to "CIFRAR UN MENSAJE", "Carta" to "MENSAJE CIFRADO", "Conocerte" to "FICHA DEL AGENTE", "Brújula política" to "POSICIÓN POLÍTICA", "Mapas" to "CARTAS DE POSICIÓN", "Salud" to "ESTADO DEL AGENTE", "Tus apps" to "EQUIPOS EN USO", "Otras vidas" to "VIDAS DE OTROS FRENTES", "Logros" to "PARCHES DE MISIÓN", "Tu año en historias" to "INFORME DEL AÑO", "Anoche" to "LA ÚLTIMA ESCUCHA", "Selladas" to "CIFRADAS", "Listas para abrir" to "LISTAS PARA DESCIFRAR", "A otras personas" to "A OTROS AGENTES", "Del pasado" to "DESCIFRADAS",
+        "Hoy" to "OPERACIÓN DE HOY", "Línea de tiempo" to "REGISTRO DE OPERACIONES", "Ahora mismo estoy…" to "POSICIÓN ACTUAL…",
+        "Entender" to "DESCIFRAR", "Registros especiales" to "REGISTROS RESERVADOS", "Apariencia" to "CAMUFLAJE", "Avisos y recordatorios" to "SEÑALES Y ALERTAS",
+        "Llenar el día" to "INFORME DE LA NOCHE", "Biblioteca del diario" to "ARCHIVO DE DESPACHOS", "Entrada" to "DESPACHO",
+        "Día" to "OPERACIÓN", "Momentos" to "MOMENTOS EN CLAVE", "Gastos" to "FONDOS DE LA RED", "Explorar" to "SALIDAS DE RECONOCIMIENTO", "Más" to "CUARTEL",
+        "Hábitos" to "RUTINAS DE CAMPO", "Cartas al futuro" to "MENSAJES DIFERIDOS", "Experimentos personales" to "PRUEBAS DE CAMPO",
+        "Cómo leer tus datos" to "MANUAL DE CLAVES", "Guía científica" to "MANUAL DE CLAVES", "Cuestionarios" to "CUESTIONARIOS DE CONTROL", "Prueba de reacción" to "REFLEJOS DE PILOTO", "Lugares" to "POSICIONES",
+        "Datos" to "BANCO DE DATOS", "Permisos y sensores" to "SENSORES Y PERMISOS", "Ajustes" to "AJUSTE DE CONSOLA", "Reportes" to "INFORMES DE CAMPO",
+        "Bienvenido" to "INGRESO A LA RED", "Calendario" to "CALENDARIO DE OPERACIONES", "Obras" to "MATERIAL INTERCEPTADO", "Tu año" to "BALANCE DEL AÑO",
+        "Privacidad" to "BAJO CLAVE", "Sueño" to "HORAS DE CATRE", "Contexto" to "CIRCUNSTANCIAS DEL ENLACE", "Hitos" to "HECHOS CLAVE",
+        "Ánimo y cuerpo" to "MORAL Y PULSO", "Diario" to "DESPACHOS CIFRADOS", "Predicción" to "PRONÓSTICO DE CAMPO", "Este día hace un año" to "HACE UN AÑO EN LA RED",
+        "Lo que registró el teléfono" to "LO QUE CAPTARON LOS SENSORES", "Registrar" to "TRANSMITIR", "Las relaciones más marcadas" to "ENLACES MÁS FUERTES",
+        "Mapa" to "CARTA DE POSICIONES", "Mapa emocional" to "CARTA DEL ÁNIMO", "Tablero" to "CONSOLA", "Tu día" to "RELOJ DE GUARDIA", "Tu día en 24 horas" to "RELOJ DE GUARDIA",
+        "Te falta hoy" to "PENDIENTE DE TRANSMITIR", "Datos que faltan" to "SEÑALES PERDIDAS", "Tema" to "CAMUFLAJE", "Recordatorios" to "ALERTAS",
+        "Resumen semanal" to "PARTE CIFRADO DE LA SEMANA", "Totales" to "RECUENTO", "Gimnasio" to "PREPARACIÓN FÍSICA", "Buscar" to "RASTREO DE SEÑAL",
+        "Cifras" to "LECTURAS DE CONSOLA", "Fotos del día" to "FOTOS DE RECONOCIMIENTO", "Medicamentos" to "BOTIQUÍN DE CAMPAÑA",
+        "Seguimiento privado" to "SEGUIMIENTO RESERVADO", "Momentos de la semana" to "LA SEMANA EN CLAVE", "Momentos de este día" to "EL DÍA EN CLAVE",
+        "Lo mejor y lo peor" to "ACIERTOS Y BAJAS", "Personas, temas e hitos" to "CONTACTOS, ASUNTOS Y HECHOS", "Respaldo automático" to "COPIA EN EL ESCONDITE",
     )
 
     private val REFUGIO = mapOf(

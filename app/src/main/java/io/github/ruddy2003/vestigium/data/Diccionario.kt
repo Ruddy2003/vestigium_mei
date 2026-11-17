@@ -484,6 +484,11 @@ object Diccionario {
      * después de la 248 (la última con el esquema 24).
      */
     private const val VERSION_ESQUEMA_25 = 270
+    // Los esquemas 26 y 27 no agregan ni cambian columnas. El 26 es una preferencia de interfaz (`Config.modo`, D.198). El 27
+    // (D.199) guarda en `Config` los personajes que sigues, los cuentos leídos, los días de uso de algunas funciones y los
+    // cuadros guardados: es estado de la app (qué leíste, qué te gustó), no una medida de tu día, y no se exporta a CSV ni a
+    // R; viaja en vm_respaldo.json, dentro de config. Si algún día se quiere analizar, se exporta en una tabla nueva sin
+    // tocar las que ya existen.
 
     private val DESDE: Map<String, Pair<Int, String>> = mapOf(
         "momentos_intensidad" to (85 to "sin momentos privados: ya no incluye impulsos (D.4)"),
