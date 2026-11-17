@@ -22,7 +22,7 @@ Lo que pidió el autor el 16 de noviembre de 2026 después de comparar los 39 te
 | 5 | Psicodelia nueva | **en curso**, por tandas (`temas/psicodelia_plan.md`). Hecha la base (`ui/CaraTema.kt`, las cuatro paletas, `temas/psicodelia_base.md`); en curso: componentes, Ideario, textos y el cuento de David |
 | 6 | Fondos de pantalla con las escenas | **hecho (17 nov 2026)**, sin compilar todavía en Actions; **falta probarlo en el teléfono** (lista abajo) |
 | 7 | Lo temático nuevo: el toque, la hora y el clima, los mensajes breves, las esperas, el selector de fecha y de hora | **no se hace ahora**: queda escrita abajo |
-| 8 | Los cuadros: seguir personajes (con notificación y sonido propio), «Hoy en la historia» bajo el cuento, el cuadro a pantalla completa y arriba del cuento con su ambiente, la galería y su mueble en Vida, el ronroneo del gato. Deja puestos los campos que necesita la parte 9 | después de la 6 |
+| 8 | Los cuadros: seguir personajes (con notificación y sonido propio), «Hoy en la historia» bajo el cuento, el cuadro a pantalla completa y arriba del cuento con su ambiente, la galería y su mueble en Vida, el ronroneo del gato. Deja puestos los campos que necesita la parte 9 | **en curso**: hecha la base (17 nov 2026): el plan técnico (`CUADROS_PLAN.md`), lo que se guarda (`SCHEMA_V` = 27, D.199) y los puntos de enganche; faltan los encargos A, B y C |
 | 9 | Logros nuevos | **no se hace ahora**: queda escrita abajo y en `LOGROS_NUEVOS.md` |
 
 ## Decisiones del autor, parte por parte
