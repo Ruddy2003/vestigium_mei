@@ -267,3 +267,9 @@ Cinco cosas que hoy ningún tema tiene y que el autor pidió para los 39 (son so
 
 - Cuando estén las partes 3, 5, 6 y 8 se avisa al autor y **se espera su visto bueno**.
 - Antes de mezclar: traer `main` a la rama (`git fetch origin main && git merge origin/main`), revisar los choques y contárselos al autor. Los choques más probables: `ui/escenas/` (las ramas de escenas trabajan ahí), `ui/Tema.kt`, `data/Modelo.kt` (`SCHEMA_V`) y `docs/paper/apendiceD_cambios.md` (números de fila).
+- **Ensayo del 17 nov 2026.** `main` ya está traído a la rama (solo aportó documentos; sin choques). Lo que todavía no está en `main` y chocará cuando entre:
+  - **La rama grande de escenas** (`ccr-e50e410b-nuv2vd`, tandas hasta la S18: unos 235 commits, 216 archivos en `ui/escenas/`). Mezclada de prueba con esta rama, choca solo en dos archivos, los dos fáciles:
+    - `gradle.properties`: las dos subieron la memoria del compilador (aquí a 9 GB, allá a 8 GB). Se queda la mayor, y hay que comprobar en Actions que con las escenas **y** los Idearios juntos alcanza.
+    - `app/src/test/.../CoberturaTemas.kt`: la lista `SIN_CUADRO`. Allá queda solo `colonos`; aquí se agregaron los temas nuevos que aún no tienen cuadro. Se toma la de allá y se le suman los temas nuevos sin cuadro (`psicodelia`, `frente` y los que falten).
+  - **Dos ramas más viejas de escenas** (`ccr-ef0ce532-g0omes`, S11, y `claude/gallant-goldberg-bsc3pm`, S10) chocan en el mismo `CoberturaTemas.kt`; parecen estar ya contenidas en la grande.
+  - **Lo que no sale como choque pero hay que mirar después de mezclar:** que los cuadros nuevos compilen contra `EscenaVida` de esta rama (`claves`, `franjaFondo`); que cada cuadro nuevo tenga una franja de fondo razonable (por omisión toma el centro); que los cuentos de los cuadros nuevos no tienen ambiente (no suena nada: se agregan con `herramientas/ambientes.py`); y las pruebas de guarda (`CoberturaTemas`, `UnicidadTemas`).
