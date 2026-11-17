@@ -55,6 +55,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.lerp
@@ -230,19 +231,25 @@ object FondosTelefono {
      * El fondo que tocaría tener puesto ahora con el tema [t] en el modo [oscuro]: con el cuadro, el del día lógico [dia] y
      * el tramo de luz de la [hora] ([Momento.luz]); con el papel (o si al personaje le falta el calendario), el del tema.
      */
-    fun claveAhora(ctx: Context, t: TemaId, oscuro: Boolean, dia: String = Fechas.diaLogico(), hora: Double = horaAhora()): ClaveFondo {
-        val c = if (t.conCaras) cara(ctx, t).name.lowercase() else ""
-        val m = escenaDelFondo(ctx, t)?.let { e -> runCatching { momentoDelFondo(e, dia, hora) }.getOrNull() }
-        return if (m != null) ClaveFondo(t.id, oscuro, c, cuadro = true, dia = dia, luz = m.luz.franja.name) else ClaveFondo(t.id, oscuro, c)
+    fun claveAhora(ctx: Context, t: TemaId, oscuro: Boolean, dia: String = Fechas.diaLogico(), hora: Double = horaAhora()): ClaveFondo =
+        (if (estilo(ctx) == ESTILO_CUADRO) claveDelCuadro(ctx, t, oscuro, dia, hora) else null) ?: clavePapel(ctx, t, oscuro)
+
+    /** La clave del papel de [t] en el modo [oscuro] (con su cara, en un tema con caras). */
+    fun clavePapel(ctx: Context, t: TemaId, oscuro: Boolean): ClaveFondo = ClaveFondo(t.id, oscuro, if (t.conCaras) cara(ctx, t).name.lowercase() else "")
+
+    /** La clave del cuadro de [t] el día [dia] a la [hora], aunque no sea el estilo elegido; null si [t] no tiene cuadro ese día. */
+    fun claveDelCuadro(ctx: Context, t: TemaId, oscuro: Boolean, dia: String, hora: Double): ClaveFondo? {
+        val m = escenaDe(t)?.let { e -> runCatching { momentoDelFondo(e, dia, hora) }.getOrNull() } ?: return null
+        return clavePapel(ctx, t, oscuro).copy(cuadro = true, dia = dia, luz = m.luz.franja.name)
     }
 
     /**
-     * Los dos fondos del cuadro de [t] (inicio, bloqueo) del día [dia] a la [hora], del tamaño de la pantalla; null si no
-     * va con cuadro. Pinta fuera de la pantalla ([pintarFondosDelCuadro]): pesado (unas décimas de segundo y unos 20 MB), así
-     * que se llama desde un hilo de trabajo, y quien los recibe los suelta ([Bitmap.recycle]) en cuanto los pone.
+     * Los dos fondos del cuadro de [t] (inicio, bloqueo) del día [dia] a la [hora], del tamaño de la pantalla; null si [t]
+     * no tiene cuadro. Pinta fuera de la pantalla ([pintarFondosDelCuadro]): pesado (unas décimas de segundo y unos 20 MB),
+     * así que se llama desde un hilo de trabajo, y quien los recibe los suelta ([Bitmap.recycle]) en cuanto los pone.
      */
     fun pintarCuadro(ctx: Context, t: TemaId, dia: String, hora: Double): Pair<Bitmap, Bitmap>? {
-        val e = escenaDelFondo(ctx, t) ?: return null
+        val e = escenaDe(t) ?: return null
         val m = momentoDelFondo(e, dia, hora) ?: return null
         val p = pantalla(ctx)
         val r = recorteFranja(p.x, p.y, e.franjaFondo)
@@ -1199,7 +1206,16 @@ private fun DosFondos(tema: TemaId, oscuro: Boolean, cara: Cara, visible: String
 private suspend fun foto(capa: androidx.compose.ui.graphics.layer.GraphicsLayer): Bitmap? =
     runCatching { capa.toImageBitmap().asAndroidBitmap().copy(Bitmap.Config.ARGB_8888, false) }.getOrNull()
 
-/** Pantalla para ver los fondos a tamaño real y ponerlos. */
+/**
+ * Pantalla para ver los fondos a tamaño real y ponerlos.
+ * - **Qué fondo:** «el cuadro» (si el tema lo tiene: la franja del cuadro de Hoy, a la hora de ahora) o «el papel» (el
+ *   emblema y el marco del tema). La elección se guarda al poner el fondo, en las preferencias de los fondos de este
+ *   teléfono ([FondosTelefono.elegirEstilo]), y es la que sigue el cambio automático.
+ * - La vista previa de bloqueo o de inicio, a pantalla completa; con el papel, también en claro u oscuro y, en un tema con
+ *   caras, con la cara elegida.
+ * - Ponerlo en inicio, en bloqueo o en los dos; el fondo vivo (que va siempre con el papel) y el interruptor del cambio
+ *   automático, con cuándo cambia.
+ */
 @Composable
 fun PantallaFondoTelefono(nav: Nav) {
     val ctx = LocalContext.current
@@ -1209,15 +1225,38 @@ fun PantallaFondoTelefono(nav: Nav) {
     var oscuro by remember { mutableStateOf(oscuroInicial) }
     // En un tema con caras (Psicodelia), la que se elige para el fondo: empieza en la que se puso la última vez.
     var cara by remember { mutableStateOf(FondosTelefono.cara(ctx, tema)) }
+    val tieneCuadro = remember(tema) { escenaDe(tema) != null }
+    var estilo by remember { mutableStateOf(if (tieneCuadro) FondosTelefono.estilo(ctx) else ESTILO_PAPEL) }
+    val conCuadro = tieneCuadro && estilo == ESTILO_CUADRO
     var ver by remember { mutableStateOf("bloqueo") }
     var mensaje by remember { mutableStateOf<String?>(null) }
     var ocupado by remember { mutableStateOf(false) }
     val capaInicio = rememberGraphicsLayer()
     val capaBloqueo = rememberGraphicsLayer()
     val sentir = rememberSentir()
+    // El cuadro, pintado fuera de la pantalla a la hora de ahora: (inicio, bloqueo), el día y la hora con que se pintó.
+    var cuadro by remember { mutableStateOf<Triple<Pair<Bitmap, Bitmap>, String, Double>?>(null) }
+    var cuadroFallo by remember { mutableStateOf(false) }
+    LaunchedEffect(tema, conCuadro) {
+        if (!conCuadro || cuadro != null) return@LaunchedEffect
+        val dia = Fechas.diaLogico(); val hora = FondosTelefono.horaAhora()
+        val par = withContext(Dispatchers.Default) { runCatching { FondosTelefono.pintarCuadro(ctx, tema, dia, hora) }.getOrNull() }
+        cuadroFallo = par == null
+        if (par != null) cuadro = Triple(par, dia, hora)
+    }
 
     Box(Modifier.fillMaxSize()) {
-        DosFondos(tema, oscuro, cara, ver, capaInicio, capaBloqueo)
+        // El papel siempre se compone (el fondo vivo y «poner» con papel le sacan la foto); con el cuadro, no se ve.
+        DosFondos(tema, oscuro, cara, if (conCuadro) null else ver, capaInicio, capaBloqueo)
+        if (conCuadro) {
+            val par = cuadro?.first
+            if (par != null) androidx.compose.foundation.Image(
+                (if (ver == "inicio") par.first else par.second).asImageBitmap(), contentDescription = null,
+                modifier = Modifier.fillMaxSize(), contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+            ) else Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
+                Text(if (cuadroFallo) "No se pudo pintar el cuadro." else "Pintando el cuadro…", color = MaterialTheme.colorScheme.onBackground)
+            }
+        }
         Row(Modifier.fillMaxWidth().statusBarsPadding().padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Surface(shape = RoundedCornerShape(50), color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)) {
                 BotonTexto(onClick = nav.atras) { Text(Estilo.atras, color = MaterialTheme.colorScheme.primary) }
@@ -1227,28 +1266,47 @@ fun PantallaFondoTelefono(nav: Nav) {
             color = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)) {
             Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Fondo del teléfono", style = MaterialTheme.typography.titleMedium)
-                Ayuda(mensaje ?: "Dos fondos del tema ${tema.nombre}: el de bloqueo con el emblema y el marco, y uno más limpio para la pantalla de inicio, para que no se sature con las apps.")
+                Ayuda(mensaje ?: if (conCuadro) "El cuadro de ${tema.nombre} a esta hora, en una franja: en bloqueo tal cual, con sombra arriba para el reloj; en inicio, calmado para que se lean las apps."
+                    else "Dos fondos del tema ${tema.nombre}: el de bloqueo con el emblema y el marco, y uno más limpio para la pantalla de inicio, para que no se sature con las apps.")
+                if (tieneCuadro) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Ficha("el cuadro", estilo == ESTILO_CUADRO) { estilo = ESTILO_CUADRO; mensaje = null }
+                    Ficha("el papel", estilo == ESTILO_PAPEL) { estilo = ESTILO_PAPEL; mensaje = null }
+                }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Ficha("bloqueo", ver == "bloqueo") { ver = "bloqueo" }; Ficha("inicio", ver == "inicio") { ver = "inicio" }
-                    if (!tema.soloOscuro) { Ficha("claro", !oscuro) { oscuro = false }; Ficha("oscuro", oscuro) { oscuro = true } }
+                    // El cuadro es igual en claro y en oscuro (su luz es la de la hora): el modo solo cambia el papel.
+                    if (!tema.soloOscuro && !conCuadro) { Ficha("claro", !oscuro) { oscuro = false }; Ficha("oscuro", oscuro) { oscuro = true } }
                 }
                 // Las dos caras del tema, para elegir: el fondo se queda en la elegida, no cambia solo con la hora.
-                if (tema.conCaras) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (tema.conCaras && !conCuadro) Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Ficha("la ciudad", cara == Cara.BASE) { cara = Cara.BASE }; Ficha("el cartel", cara == Cara.INTENSA) { cara = Cara.INTENSA }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf("inicio" to "poner en inicio", "bloqueo" to "en bloqueo", "ambas" to "en los dos").forEach { (id, n) ->
-                        BotonSecundario(n, Modifier.weight(1f), habilitado = !ocupado) {
+                        BotonSecundario(n, Modifier.weight(1f), habilitado = !ocupado && (!conCuadro || cuadro != null)) {
                             ocupado = true
                             scope.launch {
-                                FondosTelefono.elegirCara(ctx, tema, cara)
-                                val bi = foto(capaInicio); val bb = foto(capaBloqueo)
-                                val ok = (bi != null || bb != null) && withContext(Dispatchers.IO) {
-                                    bi?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "inicio") }; bb?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "bloqueo") }
-                                    FondosTelefono.poner(ctx, bi, bb, id)
+                                val ok: Boolean
+                                if (conCuadro) {
+                                    val (par, dia, hora) = cuadro!!
+                                    ok = withContext(Dispatchers.IO) { FondosTelefono.poner(ctx, par.first, par.second, id) }
+                                    // La clave con el modo de ahora del teléfono: así el cambio automático no lo vuelve a poner.
+                                    if (ok) FondosTelefono.claveDelCuadro(ctx, tema, modoOscuroDe(ctx, tema), dia, hora)?.let { FondosTelefono.marcarUltimo(ctx, it) }
+                                } else {
+                                    FondosTelefono.elegirCara(ctx, tema, cara)
+                                    val bi = foto(capaInicio); val bb = foto(capaBloqueo)
+                                    ok = (bi != null || bb != null) && withContext(Dispatchers.IO) {
+                                        bi?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "inicio") }; bb?.let { FondosTelefono.guardar(ctx, it, tema, oscuro, "bloqueo") }
+                                        FondosTelefono.poner(ctx, bi, bb, id)
+                                    }
+                                    if (ok) FondosTelefono.marcarUltimo(ctx, FondosTelefono.clavePapel(ctx, tema, oscuro))
                                 }
-                                if (ok) { FondosTelefono.marcarUltimo(ctx, ClaveFondo(tema.id, oscuro, if (tema.conCaras) cara.name.lowercase() else "")); Repo.cambiarConfig { it.copy(fondo_telefono_donde = id) }; sentir(Sentidos.Evento.GUARDAR) }
-                                mensaje = if (ok) "Listo: " + when (id) { "inicio" -> "el limpio ya es tu fondo de inicio."; "bloqueo" -> "ya es tu fondo de bloqueo."; else -> "el limpio en inicio y el completo en bloqueo." } else "El teléfono no dejó cambiar el fondo."
+                                if (ok) {
+                                    // El estilo se guarda después de marcar el fondo puesto: el cambio automático ya lo encuentra al día.
+                                    if (tieneCuadro) FondosTelefono.elegirEstilo(ctx, estilo)
+                                    Repo.cambiarConfig { it.copy(fondo_telefono_donde = id) }; sentir(Sentidos.Evento.GUARDAR)
+                                }
+                                mensaje = if (ok) "Listo: " + when (id) { "inicio" -> "ya es tu fondo de inicio."; "bloqueo" -> "ya es tu fondo de bloqueo."; else -> "en inicio y en bloqueo." } else "El teléfono no dejó cambiar el fondo."
                                 ocupado = false
                             }
                         }
@@ -1258,7 +1316,7 @@ fun PantallaFondoTelefono(nav: Nav) {
                     ocupado = true
                     scope.launch {
                         FondosTelefono.elegirCara(ctx, tema, cara)
-                        // El fondo vivo dibuja encima de estas mismas imágenes; se guardan en claro y en oscuro de una vez.
+                        // El fondo vivo dibuja encima de estas mismas imágenes (el papel); se guardan en claro y en oscuro de una vez.
                         suspend fun guardarAmbas() {
                             foto(capaInicio)?.let { b -> withContext(Dispatchers.IO) { FondosTelefono.guardar(ctx, b, tema, oscuro, "inicio") } }
                             foto(capaBloqueo)?.let { b -> withContext(Dispatchers.IO) { FondosTelefono.guardar(ctx, b, tema, oscuro, "bloqueo") } }
@@ -1269,7 +1327,9 @@ fun PantallaFondoTelefono(nav: Nav) {
                         FondosTelefono.elegirVivo(ctx)
                     }
                 }
-                Interruptor("El fondo del teléfono cambia con el tema", Repo.config.fondo_telefono_auto, "Inicio y bloqueo, también cuando el tema cambia solo.") { v -> Repo.cambiarConfig { it.copy(fondo_telefono_auto = v) } }
+                Interruptor("El fondo del teléfono cambia con el tema", Repo.config.fondo_telefono_auto,
+                    if (conCuadro) "Inicio y bloqueo, también cuando el tema cambia solo. El cuadro sigue la luz del día: cambia al pasar de un tramo a otro (amanecer, mañana, mediodía, tarde, atardecer y noche), no a cada rato, y lo pone el teléfono en su revisión de cada 15 minutos."
+                    else "Inicio y bloqueo, también cuando el tema cambia solo.") { v -> Repo.cambiarConfig { it.copy(fondo_telefono_auto = v) } }
             }
         }
     }
