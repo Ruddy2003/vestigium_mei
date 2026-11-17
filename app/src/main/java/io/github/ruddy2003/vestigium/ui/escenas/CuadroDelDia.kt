@@ -157,7 +157,7 @@ fun CuadroDelDia(
                 if (c.especial && c.banderita == null) MarcaEspecial(Modifier.align(Alignment.TopEnd).offset(x = (-12).dp, y = (-8).dp))
             }
             BotonCuento(c.titulo, c.especial, leer, Modifier.padding(top = 8.dp), de = quien.nombre, tema = tema)
-            // Parte 8: «Hoy en la historia», también como botón (la pulsación larga sigue).
+            // Parte 8: «Hoy en la historia», como botón (desde el 17 nov 2026, solo así: la pulsación larga amplía el cuadro).
             if (alHistoria != null) BotonHistoria({ sentir(Sentidos.Evento.ABRIR); alHistoria() }, Modifier.padding(top = 8.dp))
             if (ampliado) CuadroAmpliado(c, hora) { ampliado = false }
         }
