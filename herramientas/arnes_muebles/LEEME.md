@@ -28,6 +28,32 @@ herramientas/arnes_muebles/dibujar.sh logros psicodelia <claro|oscuro> <salida.p
 - `logros`: una hoja de muestra de los logros de Psicodelia v2 (`arnes/MuestraLogros.kt`): los nueve trofeos sobre su pedestal (`ui/logros/LogrosPsicodelia.kt`) en los cuatro metales, a 150 y a 56 dp y uno sin ganar, el pedestal y la placa del hall, el salón, el plano de la campaña (`ui/PsicodeliaPantallas.kt`) con el camino, las paradas, el trolebús y la meta, y los objetos de Tu año. Según `ARNES_CARA` y `ARNES_INTENSIDAD`.
 - `ARNES_APP=/ruta/a/app/src/main` dibuja otra copia de la app, por ejemplo otro árbol de trabajo. Compila en `build-otras/<clave>/` y no toca la compilación normal.
 
+## El modo vida
+
+```
+herramientas/arnes_muebles/dibujar.sh vida <tema> <claro|oscuro> <salida.png>
+```
+
+Dibuja, uno bajo otro, lo que cada tema pone en la pestaña Vida a través de `DisenoVida` (`ui/vida/Vida<Tema>.kt`, elegido con `disenoVida`), para cualquiera de los 39 temas:
+
+- Social (230 dp, semilla 5), Mapas (220 dp, semilla 9) y Otras vidas (190 dp, semilla 7), cada uno con su título encima como `Recuadro` (`ui/pantallas/Galerias.kt`) y en una escena como la de la app: el mismo degradado de fondo, las mismas esquinas y, en los modos oscuros, la lámpara de la escena en Social y Otras vidas (`luzEnPared` y `luzEnMueble`, sacadas tal cual de `Escena.kt` con `piezas`). Falta la textura de la pared (`paredTema`), que el mueble tapa casi entera porque ocupa toda la escena.
+- Los tres íconos de «Tus mapas» (`iconoMapa`: `unesco`, `rascar` y `lugares`), cada uno en su lienzo de 70 dp de alto dentro de una tarjeta, sin el marco del mapa (`marcoDelMapa`).
+- El tablero de notas de la pestaña Diario con el composable real `TableroDeNotas` (`ui/vida/MuebleNotas.kt`) y las cuatro notas de `Capturas.notasYMetas` (una idea fijada, un propósito, un recordatorio y un pensamiento), en su escena con 10 dp de relleno.
+
+Lo que va dentro de los nichos (el grafo de tu gente, el mapa para rascar, las medallas) son figuras de relleno con los colores del esquema, en `arnes/Vida.kt`: esas pantallas no se compilan aquí. Sirven para ver dónde cae el contenido y si se lee sobre el nicho. Las notas, en cambio, son las de verdad, con su texto.
+
+Funcionan igual `ARNES_HOY` (la fecha de las notas), `ARNES_APP`, `ARNES_CARA` y `ARNES_INTENSIDAD`; por ejemplo, las cuatro variantes de Psicodelia y la intensidad máxima:
+
+```
+dibujar.sh vida psicodelia claro ciudad_claro.png
+dibujar.sh vida psicodelia oscuro ciudad_oscuro.png
+ARNES_CARA=intensa dibujar.sh vida psicodelia claro tinta_claro.png
+ARNES_CARA=intensa dibujar.sh vida psicodelia oscuro tinta_oscuro.png
+ARNES_CARA=intensa ARNES_INTENSIDAD=1 dibujar.sh vida psicodelia oscuro tinta_oscuro_i1.png
+```
+
+Enlaza la carpeta entera `ui/vida/**` (así un `Vida<Tema>.kt` nuevo entra solo).
+
 ## Cuánto tarda (medido en esta máquina, 4 núcleos)
 
 - Primera vez, desde cero (descarga de dependencias aparte): **~1 min 45 s**. Arranca el daemon de Gradle y compila unas 90 000 líneas.
@@ -50,6 +76,7 @@ Probado con 3 llamadas en paralelo justo después de editar un archivo: las 3 sa
 
 - `ui/ideario/**`, `ui/biblioteca/**` y `ui/muebles/**`: las carpetas enteras, así un archivo nuevo entra solo.
 - `ui/PsicodeliaPiezas.kt`, `ui/comun/ComunPsicodelia.kt` e `ui/IconosPestana.kt` (para la muestra `comun`); `ui/logros/LogrosPsicodelia.kt` y `ui/PsicodeliaPantallas.kt` (para la muestra `logros`).
+- `ui/vida/**` (modo `vida`): los muebles de Vida de los 39 temas, `DisenoVida`, `MuebleNotas` y `Nicho`.
 - `ui/*Trazos.kt`, `ui/Galia.kt`, `Nouveau.kt`, `Psicodelia.kt`, `Frente.kt` y `Arcontes.kt`.
 - `ui/Tema.kt` (`TemaId`, `Letra`, los esquemas, `tipoDe`, `Tonos`, `PaletaBasica`), `ui/ModoHora.kt` y `ui/CaraTema.kt` (la cara y la intensidad: `Cara`, `EstadoTema`, `Intensidad`).
 - `ui/Disenios.kt` (`LetraExtra` y las escalas de color de los volúmenes).
@@ -64,6 +91,7 @@ Algunos archivos no compilan enteros en escritorio. Para esos, Gradle copia en c
 | Archivo | Declaraciones |
 |---|---|
 | `Escena.kt` | `halo` y `luzCalida` (el aura de los objetos que se tocan) |
+| `Escena.kt` | `luzEnPared` y `luzEnMueble` (la lámpara de la escena en los modos oscuros; modo `vida`) |
 | `Libros.kt` | `Pagina` y `Rayas` |
 | `data/Mundo.kt` | `CiudadVisitada` y `SitioMarcado` |
 | `Decoracion.kt` | `piezasMano`, `cruzPatada`, `rad` y `mas` (la cruz la usa `IconosPestana.kt`) |

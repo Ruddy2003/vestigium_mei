@@ -4,6 +4,7 @@
 #   dibujar.sh ideario <tema> <claro|oscuro> <salida.png>
 #   dibujar.sh biblioteca <tema> <claro|oscuro> <salida.png>
 #   dibujar.sh hoja <ideario|biblioteca> <claro|oscuro> <salida.png> <tema1,tema2,...>
+#   dibujar.sh vida <tema> <claro|oscuro> <salida.png>   (los muebles de la pestaña Vida y el tablero de notas)
 #
 # Primero compila lo que haya cambiado (Gradle, con su daemon y compilación incremental) bajo un candado, para que varias
 # llamadas a la vez no compilen encima unas de otras; luego suelta el candado y dibuja con una copia fija del jar, así cada

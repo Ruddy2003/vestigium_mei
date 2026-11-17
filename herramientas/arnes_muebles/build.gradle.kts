@@ -26,6 +26,8 @@ val enlazados = listOf(
     "$paquete/ui/ideario/**/*.kt",
     "$paquete/ui/biblioteca/**/*.kt",
     "$paquete/ui/muebles/**/*.kt",
+    // Los muebles de la pestaña Vida y el tablero de notas (modo `vida` de Dibujar.kt): la carpeta entera.
+    "$paquete/ui/vida/**/*.kt",
     // Los trazos y la cuenta de los temas de la tanda nueva (los usan sus muebles).
     "$paquete/ui/*Trazos.kt",
     "$paquete/ui/Galia.kt", "$paquete/ui/Nouveau.kt", "$paquete/ui/Psicodelia.kt", "$paquete/ui/Frente.kt", "$paquete/ui/Arcontes.kt",
@@ -54,7 +56,9 @@ val enlazados = listOf(
  * Archivo de la app -> nombres de las declaraciones de nivel superior que se toman.
  */
 val piezas = linkedMapOf(
-    "$paquete/ui/Escena.kt" to listOf("halo", "luzCalida"),
+    "$paquete/ui/Escena.kt" to listOf("halo", "luzCalida",
+        // La lámpara de la escena en los modos oscuros (modo `vida`: los recuadros de Social y Otras vidas la llevan).
+        "luzEnPared", "luzEnMueble"),
     "$paquete/ui/Libros.kt" to listOf("Rayas", "Pagina"),
     "$paquete/data/Mundo.kt" to listOf("CiudadVisitada", "SitioMarcado"),
     "$paquete/ui/Decoracion.kt" to listOf("piezasMano", "cruzPatada", "rad", "mas"),
