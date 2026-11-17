@@ -370,39 +370,28 @@ object Reportes {
                     y += 54f
                 }
                 TemaId.PSICODELIA -> {
-                    // Dos ondas de tinta de arcoíris (la del tintero partido, cada tramo de un color) llegan desde las orillas hasta la
-                    // flor del centro, que vibra: los pétalos del primario sobre su complementario corrido, el botón y el símbolo de
-                    // la paz.
+                    // Dos bandas que ondulan, a dos tintas (el primario y, corrido de registro, el secundario), llegan desde las
+                    // orillas hasta el disco del día del centro: el vinilo con sus surcos y la etiqueta del primario.
                     val yc = yy + 30f
-                    val colores = intArrayOf(0xFFE0218A.toInt(), 0xFFFF7A1A.toInt(), 0xFFE0B020.toInt(), 0xFF2FBF71.toInt(), 0xFF2F6BFF.toInt(), 0xFF7B3FD1.toInt())
                     for (s0 in listOf(-1f, 1f)) {
                         val x0 = if (s0 < 0) M else W - M
-                        val x1 = cx + s0 * 36f
-                        val pasos = 48
-                        var xa = x0; var ya = yc
-                        for (i in 1..pasos) {
-                            val f = i / pasos.toFloat()
-                            val xb = x0 + (x1 - x0) * f
-                            val yb = yc + 6f * kotlin.math.sin(f * 4f * Math.PI.toFloat())
-                            val col = colores[((if (s0 < 0) f else 1f - f) * (colores.size - 0.001f)).toInt().coerceIn(0, colores.size - 1)]
-                            c.drawLine(xa, ya, xb, yb, L.trazo(L.mezcla(col, L.fondo, 0.1), 3f))
-                            xa = xb; ya = yb
+                        val x1 = cx + s0 * 34f
+                        listOf(L.secundario to 3.5f, L.primario to 0f).forEach { (col, dy) ->
+                            val p = Path()
+                            val pasos = 48
+                            for (i in 0..pasos) {
+                                val f = i / pasos.toFloat()
+                                val x = x0 + (x1 - x0) * f
+                                val y0 = yc + dy + 5f * kotlin.math.sin(f * 4f * Math.PI.toFloat())
+                                if (i == 0) p.moveTo(x, y0) else p.lineTo(x, y0)
+                            }
+                            c.drawPath(p, L.trazo(col, 2.4f))
                         }
                     }
-                    val contra = L.relleno(L.secundario); val petalo = L.relleno(L.primario)
-                    for (k in 0 until 6) {
-                        val a = Math.PI * 2 * k / 6
-                        c.drawCircle(cx + 15f * kotlin.math.cos(a).toFloat() + 2f, yc + 15f * kotlin.math.sin(a).toFloat() + 1.5f, 10f, contra)
-                    }
-                    for (k in 0 until 6) {
-                        val a = Math.PI * 2 * k / 6
-                        c.drawCircle(cx + 15f * kotlin.math.cos(a).toFloat(), yc + 15f * kotlin.math.sin(a).toFloat(), 9.5f, petalo)
-                    }
-                    c.drawCircle(cx, yc, 10f, L.relleno(L.terciario))
-                    val paz = L.trazo(L.fondo, 1.6f)
-                    c.drawCircle(cx, yc, 6.5f, paz)
-                    c.drawLine(cx, yc - 6.5f, cx, yc + 6.5f, paz)
-                    c.drawLine(cx, yc, cx - 4.6f, yc + 4.6f, paz); c.drawLine(cx, yc, cx + 4.6f, yc + 4.6f, paz)
+                    c.drawCircle(cx, yc, 26f, L.relleno(0xFF1E1916.toInt()))
+                    for (k in 1..4) c.drawCircle(cx, yc, 12f + 3f * k, L.trazo(L.mezcla(0xFF1E1916.toInt(), 0xFFFFFFFF.toInt(), 0.12), 0.8f))
+                    c.drawCircle(cx, yc, 10f, L.relleno(L.primario))
+                    c.drawCircle(cx, yc, 2f, L.relleno(L.fondo))
                     y += 64f
                 }
                 TemaId.NOUVEAU -> {
