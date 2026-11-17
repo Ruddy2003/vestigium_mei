@@ -465,11 +465,12 @@ fun FraseDelDia(fecha: String) {
         // por la esquina de abajo. El texto va siempre sobre la superficie lisa (la regla de legibilidad de la guía).
         TemaId.PSICODELIA -> {
             val cara = io.github.ruddy2003.vestigium.ui.caraLocal()
-            val i = io.github.ruddy2003.vestigium.ui.intensidadLocal()
+            // La intensidad se lee al trazar: mientras anima, la tarjeta se vuelve a trazar sin recomponerse.
+            val i = io.github.ruddy2003.vestigium.ui.intensidadAlDibujar()
             val oscuro = esOscuro()
             Box(arriba.drawBehind {
                 val u = 1.dp.toPx(); val w = size.width; val h = size.height
-                val k = io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.colores(oscuro, cara, i)
+                val k = io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.colores(oscuro, cara, i())
                 if (k.ciudad) {
                     val r = androidx.compose.ui.geometry.Rect(0f, 0f, w, h)
                     val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(r, CornerRadius(11 * u))) }

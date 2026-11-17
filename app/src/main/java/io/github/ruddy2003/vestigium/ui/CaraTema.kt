@@ -10,6 +10,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -197,6 +198,29 @@ fun caraLocal(): Cara = LocalCaraFija.current
 /** La intensidad que deben pintar los componentes del tema aquí: la de [EstadoTema], o 0 con una cara fija o dentro de [SinIntensidad]. */
 @Composable
 fun intensidadLocal(): Float = if (LocalSinIntensidad.current || LocalCaraFija.current != null) 0f else EstadoTema.intensidad
+
+/**
+ * Como [intensidadLocal], pero para leerla **al dibujar** (17 nov 2026): devuelve una función que la da en el momento del
+ * trazo. Mientras la intensidad anima (4 s al subir, 10 s al caer: [MedidorIntensidad]), solo se vuelve a trazar lo que la
+ * usa, sin recomponer la pieza en cada cuadro como pasaba al leerla al componer.
+ */
+@Composable
+fun intensidadAlDibujar(): () -> Float {
+    val cero = LocalSinIntensidad.current || LocalCaraFija.current != null
+    return remember(cero) { { if (cero) 0f else EstadoTema.intensidad } }
+}
+
+/**
+ * Como [intensidadLocal], en 32 escalones, para lo que no se puede leer al dibujar (el color de un texto): la pieza se
+ * recompone solo al pasar de un escalón a otro (unas 32 veces en una animación entera, no en cada cuadro). Un escalón de
+ * 1/32 de la intensidad no se distingue a la vista.
+ */
+@Composable
+fun intensidadEnEscalones(): Float {
+    val cero = LocalSinIntensidad.current || LocalCaraFija.current != null
+    val i by remember { derivedStateOf { (EstadoTema.intensidad * 32f).roundToInt() / 32f } }
+    return if (cero) 0f else i
+}
 
 /**
  * Las pantallas que se dibujan siempre como si no hubiera ningún consumo en curso (la guía, «La regla de legibilidad»,

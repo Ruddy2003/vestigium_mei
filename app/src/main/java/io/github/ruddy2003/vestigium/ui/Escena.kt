@@ -105,11 +105,18 @@ fun Escena(
  * transparente no hay aura. Las 16 direcciones y los 4 anillos son solo para el aura ya encendida del todo; mientras se
  * enciende o se apaga van las mismas 8 y 2 que en reposo (a esa velocidad no se notan los escalones).
  *
- * Con [reposo] en false el aura solo existe mientras se toca: en reposo no se dibuja nada alrededor. Lo usan los muebles
- * rehechos del Ideario (`docs/diseno/MUEBLES.md`, versión 2), donde el aura en reposo se veía como un marco de color
- * alrededor de cada cajón o un contorno pálido alrededor de cada vasija, sobre todo de noche.
+ * Con [reposo] en false el aura solo existe mientras se toca: en reposo no se dibuja nada alrededor. Lo usaban primero los
+ * muebles rehechos del Ideario (`docs/diseno/MUEBLES.md`, versión 2), donde el aura en reposo se veía como un marco de
+ * color alrededor de cada cajón o un contorno pálido alrededor de cada vasija, sobre todo de noche.
+ *
+ * **Desde el 17 nov 2026 es lo de siempre, en todos los temas** ([reposo] vale false por omisión, y también
+ * `DisenoBiblioteca.auraEnReposo` y `DisenoIdeas.auraEnReposo`): el autor pidió quitar el brillo de los objetos que se
+ * tocan porque los temas con muebles nuevos iban lentos. El aura en reposo no se animaba, pero cada objeto se trazaba 17
+ * veces (8 direcciones × 2 anillos, más el objeto) cada vez que algo lo obligaba a redibujarse: con los muebles del
+ * lote 10, de decenas de degradados cada uno, y con la cinta del lacre de un sobre latiendo encima, eso era en cada
+ * cuadro. Al tocar, el aura sale igual que antes.
  */
-fun Modifier.halo(realce: Boolean = false, reposo: Boolean = true): Modifier = composed {
+fun Modifier.halo(realce: Boolean = false, reposo: Boolean = false): Modifier = composed {
     val cs = MaterialTheme.colorScheme
     val oscuro = esOscuro()
     // Con [realce], en los modos oscuros el objeto toma la luz de la lámpara: en reposo el aura es cálida, algo más viva, y

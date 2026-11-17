@@ -72,8 +72,9 @@ interface DisenoBiblioteca {
     /**
      * Si los volúmenes llevan su aura también en reposo (`Modifier.halo()`). Los estantes rehechos (MUEBLES.md, versión 2)
      * la apagan: ya tienen su propia luz y el aura les dejaba un contorno pálido, sobre todo de noche. Al tocar sale igual.
+     * Desde el 17 nov 2026 va apagada en todos (ver `Modifier.halo`): el aura en reposo hacía lentos los temas con muebles nuevos.
      */
-    val auraEnReposo: Boolean get() = true
+    val auraEnReposo: Boolean get() = false
 
     /** El mueble: la corona, el fondo de cada repisa, las tablas con sus rótulos, los costados y la base. */
     fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean)

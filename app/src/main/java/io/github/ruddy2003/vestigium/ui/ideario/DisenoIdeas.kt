@@ -63,8 +63,9 @@ interface DisenoIdeas {
     /**
      * Si los compartimentos llevan el aura tenue también en reposo ([io.github.ruddy2003.vestigium.ui.halo]). Los muebles
      * rehechos la apagan (solo sale al tocar): sobre un mueble con luz y sombra se veía como un marco de color.
+     * Desde el 17 nov 2026 va apagada en todos (ver `io.github.ruddy2003.vestigium.ui.halo`): hacía lentos los temas con muebles nuevos.
      */
-    val auraEnReposo: Boolean get() = true
+    val auraEnReposo: Boolean get() = false
 
     /** Un compartimento, en un lienzo del tamaño de su hueco. Puede salirse un poco (el cajón que sale al abrirse). */
     fun DrawScope.compartimento(c: EstadoCajon, oscuro: Boolean)
