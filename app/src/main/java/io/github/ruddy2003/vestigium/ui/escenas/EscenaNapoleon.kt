@@ -96,6 +96,8 @@ internal object ColorNapoleon {
  */
 internal object EscenaNapoleon : EscenaVida {
     override val vidas = listOf("granadero")
+    /** La franja del fondo del teléfono ([franjaFondo]): en la retirada, el camino y el fuego del alto; en el vivac, la tienda y los pabellones. */
+    override val franjaFondo: Float get() = 0.4f
 
     // ---------------------------------------------------------------- Dónde está
 

@@ -96,6 +96,8 @@ internal object ColorRefugio {
  */
 internal object EscenaRefugio : EscenaVida {
     override val vidas = listOf("residente")
+    /** La franja del fondo del teléfono ([franjaFondo]): la bancada y, por el portón, el pasillo con la Puerta al fondo. */
+    override val franjaFondo: Float get() = 0.65f
 
     // ---------------------------------------------------------------- El estado
 

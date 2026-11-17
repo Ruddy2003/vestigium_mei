@@ -85,6 +85,8 @@ internal object ColorMeso {
  */
 internal object EscenaMeso : EscenaVida {
     override val vidas = listOf("escriba_maya")
+    /** La franja del fondo del teléfono ([franjaFondo]): el templo rojo, la plaza y la estela. */
+    override val franjaFondo: Float get() = 0.6f
 
     /** El horizonte: la altura de los ojos de quien mira, de pie en el patio. */
     const val H = 122f

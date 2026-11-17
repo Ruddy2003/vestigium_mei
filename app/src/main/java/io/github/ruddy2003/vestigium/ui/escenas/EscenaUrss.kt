@@ -93,6 +93,8 @@ internal object ColorUrss {
  */
 internal object EscenaUrss : EscenaVida {
     override val vidas = listOf("obrera_moscu")
+    /** La franja del fondo del teléfono ([franjaFondo]): la mesa de la cocina y la ventana al patio. */
+    override val franjaFondo: Float get() = 0.55f
 
     // ---------------------------------------------------------------- Dónde está
 

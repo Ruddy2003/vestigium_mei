@@ -103,6 +103,8 @@ internal class SolEgipto(val l: Luces, val r: Rayo, val calida: Float = 0f) {
  */
 internal object EscenaEgipto : EscenaVida {
     override val vidas = listOf("escriba_tumba")
+    /** La franja del fondo del teléfono ([franjaFondo]): la aldea, la azotea de Pay y la montaña con la tumba del rey. */
+    override val franjaFondo: Float get() = 0.45f
 
     private val C = ColorEgipto
 

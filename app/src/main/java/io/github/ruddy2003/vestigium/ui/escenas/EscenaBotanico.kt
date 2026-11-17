@@ -103,6 +103,8 @@ internal object ColorBotanico {
  */
 internal object EscenaBotanico : EscenaVida {
     override val vidas = listOf("naturalista")
+    /** La franja del fondo del teléfono ([franjaFondo]): en el bergantín, la mesa de trabajo y la costa; en la galería, la colección viva. */
+    override val franjaFondo: Float get() = 0.45f
 
     // ---------------------------------------------------------------- Dónde está
 

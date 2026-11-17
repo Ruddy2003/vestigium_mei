@@ -101,6 +101,8 @@ internal object ColorOrden {
  */
 internal object EscenaOrden : EscenaVida {
     override val vidas = listOf("escriba")
+    /** La franja del fondo del teléfono ([franjaFondo]): la torre de amarre con la Garza y el patio. */
+    override val franjaFondo: Float get() = 0.4f
 
     // ---------------------------------------------------------------- Dónde está
 

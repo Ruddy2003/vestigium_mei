@@ -101,6 +101,8 @@ internal object ColorAbismo {
  */
 internal object EscenaAbismo : EscenaVida {
     override val vidas = listOf("buzo_esponjas")
+    /** La franja del fondo del teléfono ([franjaFondo]): en el barco, la cubierta de trabajo y el agua con el fondo; en el muelle, la fila de barcos y el río. */
+    override val franjaFondo: Float get() = 0.4f
 
     // ---------------------------------------------------------------- Dónde está
 

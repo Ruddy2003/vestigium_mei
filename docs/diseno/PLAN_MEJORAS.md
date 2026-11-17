@@ -2,12 +2,12 @@
 
 Lo que pidió el autor el 16 de noviembre de 2026 después de comparar los 39 temas en capturas.
 
-> **Dónde está el código.** Todo este trabajo, y también **los cinco temas nuevos** (Frente exterior `frente` —el del espía de la red entre mundos—, Arcontes `arcontes`, Galia `galia`, Art nouveau `nouveau` y Psicodelia `psicodelia`), está en la rama **`ccr-ca31af2d-ua0p3j`**, que parte de la rama de los temas nuevos (`ccr-90a636d4-rjzhjc`). **En `main` todavía no hay código de nada de esto**: solo estos documentos, para que se puedan encontrar. El código pasa a `main` cuando el autor dé su visto bueno (ver «Paso a `main`» al final). Dos documentos que este plan cita, `MUEBLES.md` en su versión 2 y `LOGROS_NUEVOS.md`, también están solo en la rama, porque describen código que `main` aún no tiene.
+> **Dónde está el código.** Todo este trabajo, y también **los cinco temas nuevos** (Frente exterior `frente` —el del espía de la red entre mundos—, Arcontes `arcontes`, Galia `galia`, Art nouveau `nouveau` y Psicodelia `psicodelia`), **está en `main` desde el 17 nov 2026**: se mezcló la rama del plan (`ccr-ca31af2d-ua0p3j`) con la de escenas (`ccr-e50e410b-nuv2vd`, tandas hasta la S18) y de ahí pasó a `main` (ver «Paso a `main`» al final). `MUEBLES.md` en su versión 2 y `LOGROS_NUEVOS.md` también están ya en `main`.
 
 ## Cómo se trabaja
 
 - El dibujo y el código los hacen agentes; quien dirige la sesión escribe el encargo de cada uno, mira cada imagen (composición, luz, sentido) y pide que se rehaga lo que no convenza. **Los agentes van con Opus** (decisión del autor: usar lo menos posible el modelo más caro sin perder calidad).
-- Los muebles se ven en el arnés de `herramientas/arnes_muebles/` (lee su `LEEME.md`); la compilación y las capturas de la app, en GitHub Actions (`comparacion.yml`, que publica en la rama `comparacion-ci`; es temporal).
+- Los muebles se ven en el arnés de `herramientas/arnes_muebles/` (lee su `LEEME.md`); la compilación y las capturas de la app, en GitHub Actions (`apk.yml` y `capturas.yml`; el flujo temporal `comparacion.yml` se borró al pasar el código a `main`).
 - Nada de esto cambia lo que se registra ni cómo se calcula. Lo único nuevo que se guarda es opcional y va en campos nuevos: se anota en cada parte y en el Apéndice D.
 
 ## Las partes
@@ -165,7 +165,7 @@ Además, el autor notó que **algunas notificaciones no suenan**: hay que revisa
 
 Los dos temas nuevos que todavía no tienen cuadro en «Otras vidas» son **Psicodelia** (`psicodelia`; David, dibujante de carteles, San Francisco, 1965–1969) y **Frente exterior** (`frente`, el del espía; Tadeo, ladrón de piezas y agente de la red, en el puerto de Halde). Esto es lo que necesita quien los dibuje.
 
-**Dónde está el código.** En la rama **`ccr-ca31af2d-ua0p3j`** (no en `main`): `git fetch origin ccr-ca31af2d-ua0p3j` y parte de ahí. En `main` no existen esos dos temas, ni sus vidas, ni sus cuentos.
+**Dónde está el código.** En `main`, desde el 17 nov 2026 (antes estaba en la rama `ccr-ca31af2d-ua0p3j`).
 
 **Qué leer, en este orden:**
 1. `CLAUDE.md` (el apartado de las escenas) y **entera** `docs/diseno/ESCENAS.md`: el estilo, las diez reglas, la vara (el cuadro de Helénico) y la receta para dibujar en el arnés de escenas (`docs/historia/informes/P4a.md`).
@@ -256,10 +256,10 @@ Cinco cosas que hoy ningún tema tiene y que el autor pidió para los 39 (son so
 
 ### Limpieza antes de pasar el código a `main`
 
-- **Quitar de `CLAUDE.md` el puntero** «Trabajo en curso fuera de `main`», que solo vale mientras el código esté en la rama.
-- **Borrar el flujo temporal de capturas:** `.github/workflows/comparacion.yml`, `.github/comparacion.env` y la rama `comparacion-ci` (ya existe `capturas.yml` para lo de siempre).
-- **Revisar `gradle.properties`:** se subió la memoria del compilador (`kotlin.daemon.jvmargs=-Xmx9g`, `org.gradle.jvmargs=-Xmx3g`) porque con los Idearios nuevos 6 GB ya no alcanzaban. Hay que comprobar que `apk.yml` compila con eso.
-- **Actualizar `MUEBLES.md`:** su sección «Cómo se revisa» ya apunta al arnés; falta decir que la vara son los Idearios rehechos, no Galia y Art nouveau.
+- **Quitar de `CLAUDE.md` el puntero** «Trabajo en curso fuera de `main`», que solo vale mientras el código esté en la rama. **Pendiente:** el cambio de `CLAUDE.md` lo aplica quien dirige (17 nov 2026).
+- **Borrar el flujo temporal de capturas:** `.github/workflows/comparacion.yml`, `.github/comparacion.env` y la rama `comparacion-ci` (ya existe `capturas.yml` para lo de siempre). **Hecho el 17 nov 2026** con los archivos, y también con `temas-nuevos.yml` y `.github/temas-nuevos.env` (decía «se borra al pasar los temas a `main`»); las ramas remotas `comparacion-ci` y `temas-nuevos-ci` siguen ahí: las borra el autor si quiere.
+- **Revisar `gradle.properties`:** se subió la memoria del compilador (`kotlin.daemon.jvmargs=-Xmx9g`, `org.gradle.jvmargs=-Xmx3g`) porque con los Idearios nuevos 6 GB ya no alcanzaban. Hay que comprobar que `apk.yml` compila con eso. **Comprobado el 17 nov 2026**: con las escenas y los Idearios juntos, `apk.yml` compila.
+- **Actualizar `MUEBLES.md`:** su sección «Cómo se revisa» ya apunta al arnés; falta decir que la vara son los Idearios rehechos, no Galia y Art nouveau. **Hecho el 17 nov 2026.**
 - **El paper:** nada de esto cambia la metodología, salvo los campos nuevos (Apéndice D: fila D.198 del modo «hora» y la de la parte 8).
 - **Probar en el teléfono** lo de la parte 1 (el aviso doble al estrenar tema, las notificaciones que no sonaban, el modo «según la hora»).
 
@@ -267,6 +267,7 @@ Cinco cosas que hoy ningún tema tiene y que el autor pidió para los 39 (son so
 
 - Cuando estén las partes 3, 5, 6 y 8 se avisa al autor y **se espera su visto bueno**.
 - Antes de mezclar: traer `main` a la rama (`git fetch origin main && git merge origin/main`), revisar los choques y contárselos al autor. Los choques más probables: `ui/escenas/` (las ramas de escenas trabajan ahí), `ui/Tema.kt`, `data/Modelo.kt` (`SCHEMA_V`) y `docs/paper/apendiceD_cambios.md` (números de fila).
+- **Mezcla del 17 nov 2026.** Se trajo esta rama y `main` a la rama de escenas (`ccr-e50e410b-nuv2vd`): chocaron `gradle.properties` (se quedó Kotlin 9 GB y Gradle 3 GB) y `CoberturaTemas.kt` (`SIN_CUADRO` = `colonos`, más los cinco temas nuevos en `SIN_CUADRO_LOTE10`). Las escenas de S9 a S18 llevan ya su franja de fondo. De ahí pasa a `main`.
 - **Ensayo del 17 nov 2026.** `main` ya está traído a la rama (solo aportó documentos; sin choques). Lo que todavía no está en `main` y chocará cuando entre:
   - **La rama grande de escenas** (`ccr-e50e410b-nuv2vd`, tandas hasta la S18: unos 235 commits, 216 archivos en `ui/escenas/`). Mezclada de prueba con esta rama, choca solo en dos archivos, los dos fáciles:
     - `gradle.properties`: las dos subieron la memoria del compilador (aquí a 9 GB, allá a 8 GB). Se queda la mayor, y hay que comprobar en Actions que con las escenas **y** los Idearios juntos alcanza.

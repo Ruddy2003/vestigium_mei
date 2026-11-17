@@ -86,6 +86,8 @@ internal object ColorEdo {
  */
 internal object EscenaEdo : EscenaVida {
     override val vidas = listOf("posadera")
+    /** La franja del fondo del teléfono ([franjaFondo]): el banco del fieltro rojo, el camino real y el Fuji. */
+    override val franjaFondo: Float get() = 0.45f
 
     // ---------------------------------------------------------------- Lo que el cuento mueve
 

@@ -84,6 +84,8 @@ internal object ColorTemplario {
  */
 internal object EscenaTemplario : EscenaVida {
     override val vidas = listOf("sargento")
+    /** La franja del fondo del teléfono ([franjaFondo]): el patio con la capilla, la torre del sur y la higuera. */
+    override val franjaFondo: Float get() = 0.5f
 
     // ---------------------------------------------------------------- Lo que el cuento mueve
 

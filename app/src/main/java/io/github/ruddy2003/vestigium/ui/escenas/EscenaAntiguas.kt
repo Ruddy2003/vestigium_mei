@@ -84,6 +84,8 @@ internal object ColorAntiguas {
  */
 internal object EscenaAntiguas : EscenaVida {
     override val vidas = listOf("guia_caminos")
+    /** La franja del fondo del teléfono ([franjaFondo]): la ladera del paso y la puerta de la posada. */
+    override val franjaFondo: Float get() = 0.6f
 
     // ---------------------------------------------------------------- Dónde está
 

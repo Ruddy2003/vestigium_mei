@@ -89,6 +89,8 @@ internal object ColorMongol {
  */
 internal object EscenaMongol : EscenaVida {
     override val vidas = listOf("pastor_mongol")
+    /** La franja del fondo del teléfono ([franjaFondo]): en el valle, su tienda y el cerro del ovoo; en el verano, la tienda, la carreta y el río. */
+    override val franjaFondo: Float get() = 0.45f
 
     private val C = ColorMongol
 

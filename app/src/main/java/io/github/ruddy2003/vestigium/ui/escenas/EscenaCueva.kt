@@ -112,6 +112,8 @@ internal class LuzCueva(val fuera: Luces, val dentro: Luces, val sol: Rayo, val 
  */
 internal object EscenaCueva : EscenaVida {
     override val vidas = listOf("pintora_cueva")
+    /** La franja del fondo del teléfono ([franjaFondo]): en el abrigo, el friso de caballos y el hogar; en la meseta, las tiendas. */
+    override val franjaFondo: Float get() = 0.4f
 
     private val C = ColorCueva
 

@@ -85,6 +85,8 @@ internal object ColorLaboratorio {
  */
 internal object EscenaLaboratorio : EscenaVida {
     override val vidas = listOf("cientifica")
+    /** La franja del fondo del teléfono ([franjaFondo]): en el laboratorio, la campana y la mesa; en el centro, el pozo y el comedor. */
+    override val franjaFondo: Float get() = 0.5f
 
     // ---------------------------------------------------------------- Dónde está
 

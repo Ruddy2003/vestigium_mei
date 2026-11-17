@@ -80,6 +80,8 @@ internal object ColorDeco {
  */
 internal object EscenaDeco : EscenaVida {
     override val vidas = listOf("pianista")
+    /** La franja del fondo del teléfono ([franjaFondo]): el piano de Lou, la pista y las mesas. */
+    override val franjaFondo: Float get() = 0.45f
 
     // ---------------------------------------------------------------- Dónde está
 

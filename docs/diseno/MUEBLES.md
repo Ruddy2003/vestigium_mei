@@ -97,6 +97,7 @@ Son las diez de `ESCENAS.md` llevadas a un interior sin ventana. Si una no se pu
 ## Cómo se revisa
 
 - **Arnés de escritorio** en `herramientas/arnes_muebles/` (ver su `LEEME.md`): dibuja el Ideario y la biblioteca de cualquier tema, en claro y en oscuro, con los archivos reales de la app.
+- **La vara son los Idearios rehechos** (noviembre de 2026), no Galia y Art nouveau: un mueble nuevo no puede verse más pobre que ellos.
 - Cada mueble se dibuja, se mira y se corrige al menos tres veces antes de entregarlo, en claro y en oscuro.
 - Se compara al lado del Ideario de Galia y del de Art nouveau, y con el cuadro del tema si lo tiene.
 - El autor ve cada tanda antes de darla por buena. El piloto es Laboratorio, Helénico y Gótico.
