@@ -1116,7 +1116,7 @@ object EstantePsicodelia : DisenoBiblioteca {
             } else {
                 drawRect(k.papel, il.topLeft, il.size)
                 val cc = il.center
-                drawPath(TrazosTinta.rayos(cc, il.height * 0.2f, il.width, 12, il.width * 0.03f, 1.3f, i * 0.7f), if (i % 2 == 0) k.ultramar else k.magenta)
+                drawPath(TrazosTinta.rayos(cc, il.height * 0.2f, il.width, 24, il.width * 0.02f, 1.3f, i * 0.7f, lleno = 0.6f), if (i % 2 == 0) k.ultramar else k.magenta)
                 drawCircle(k.papel, il.height * 0.22f, cc)
                 drawCircle(if (i % 2 == 0) k.magenta else k.ultramar, il.height * 0.16f, cc)
             }
