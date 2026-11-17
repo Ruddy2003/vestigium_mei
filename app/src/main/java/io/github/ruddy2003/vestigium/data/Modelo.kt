@@ -927,7 +927,7 @@ data class Config(
     val enfoque_plan: PlanEnfoque? = null,
     /** Lo último que elegiste al planear un enfoque, para proponerlo de nuevo. */
     val enfoque_ultimo: PlanEnfoque? = null,
-    /** «Tus últimos días» en Hoy (N-28; antes, el personaje del tema). El nombre se queda para no perder el ajuste guardado. */
+    /** Los colores de la barra de la semana en Hoy (17 nov 2026; antes «Tus últimos días», N-28, y antes el personaje del tema). El nombre se queda para no perder el ajuste guardado. */
     val personaje: Boolean = true,
     /** Logros que pusiste en tu hall (ids), en orden. */
     val hall_logros: List<String> = emptyList(),

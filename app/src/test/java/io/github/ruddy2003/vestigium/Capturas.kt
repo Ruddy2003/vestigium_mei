@@ -2600,8 +2600,8 @@ class Capturas {
     }
     @Test fun temaDia() = porTema("dia") { t, o, n -> v73(t, o, 4200, nombre = n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaDia(navVacia) } }
     /**
-     * Frase, franja y cifras de Hoy; en oscuro la frase va guardada, para ver el corazón relleno. En los temas que ya
-     * tienen escena va también el cuadro del día en su sitio, entre la frase y la franja (tanda P6), a las 13:00 de hoy.
+     * Frase, barra de la semana (antes la franja) y cifras de Hoy; en oscuro la frase va guardada, para ver el corazón
+     * relleno. En los temas que ya tienen escena va también el cuadro del día, entre la frase y la barra, a las 13:00 de hoy.
      */
     @Test fun temaHoy() = porTema("hoy") { t, o, n ->
         val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
@@ -2611,7 +2611,7 @@ class Capturas {
             Column(Modifier.padding(16.dp)) {
                 io.github.ruddy2003.vestigium.ui.pantallas.FraseDelDia(hoy)
                 if (cuadro != null) io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(t, hoy, alLeer = {}, cuadro = cuadro, horaFija = 13.0)
-                io.github.ruddy2003.vestigium.ui.pantallas.FranjaDias(hoy, abrir = {}, ponerse = {})
+                io.github.ruddy2003.vestigium.ui.pantallas.SemanaEnCurso(hoy, abrir = {}, abrirCalendario = {}, ponerse = {})
                 io.github.ruddy2003.vestigium.ui.pantallas.Tablero(hoy, max = 4)
             }
         }

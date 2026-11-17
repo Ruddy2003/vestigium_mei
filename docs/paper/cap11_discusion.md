@@ -144,7 +144,7 @@ Tres observaciones sobre la tabla:
 **Reactividad** es que medir algo cambie lo que se mide (capítulo 3, sección 3.14). En esta app tiene cuatro fuentes, y la cuarta es buscada a propósito.
 
 1. **Registrar.** El autoseguimiento tiende a aumentar las conductas deseables y reducir las indeseables (Korotitsch y Nelson-Gray, 1999). En el ánimo y el dolor el efecto parece pequeño (Cruise et al., 1996); poner nombre a una emoción puede bajar su intensidad (Lieberman et al., 2007).
-2. **Lo que la pantalla muestra.** Los valores de tus avisos al calificar el día (desde `version_noche = 2`, solo después de elegir la valencia), la franja «Tus últimos días» en Hoy, la predicción de tu ánimo medio en enero, la hipótesis y el criterio escritos del experimento (efecto expectativa) (capítulos 3, 8 y 9).
+2. **Lo que la pantalla muestra.** Los valores de tus avisos al calificar el día (desde `version_noche = 2`, solo después de elegir la valencia), la barra de la semana en Hoy (antes, la franja «Tus últimos días»), la predicción de tu ánimo medio en enero, la hipótesis y el criterio escritos del experimento (efecto expectativa) (capítulos 3, 8 y 9).
 3. **Los premios.** Logros y campañas dan premios por registrar, por conductas y, en dos logros secretos, por valores de la valencia (H-8-6; se quedan por decisión del autor, D.117). La ley de Campbell (1979) dice que un indicador que se usa para premiar se distorsiona (capítulo 9, sección 9.7).
 4. **El propósito mismo.** La app quiere que te conozcas y, con eso, que cambies: dormir más tras ver tu sueño, gastar menos tras ver tus gastos. Eso es bueno para la vida y malo para la observación: los datos no describen una vida «sin intervenir», sino una vida que se observa a sí misma.
 

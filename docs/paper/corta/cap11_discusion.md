@@ -97,7 +97,7 @@ Tres observaciones. **Los sesgos no son independientes**: un día difícil es a 
 **Reactividad** es que medir algo cambie lo que se mide (capítulo 3). Aquí tiene cuatro fuentes:
 
 1. **Registrar.** El autoseguimiento tiende a aumentar las conductas deseables y reducir las indeseables (Korotitsch y Nelson-Gray, 1999); en el ánimo y el dolor el efecto parece pequeño (Cruise et al., 1996); poner nombre a una emoción puede bajar su intensidad (Lieberman et al., 2007).
-2. **Lo que la pantalla muestra**: los valores de tus avisos al calificar el día (desde `version_noche = 2`, solo después de elegir la valencia), la franja «Tus últimos días», la hipótesis y el criterio escritos del experimento (efecto expectativa).
+2. **Lo que la pantalla muestra**: los valores de tus avisos al calificar el día (desde `version_noche = 2`, solo después de elegir la valencia), la barra de la semana en Hoy (antes, la franja «Tus últimos días»), la hipótesis y el criterio escritos del experimento (efecto expectativa).
 3. **Los premios.** Logros y campañas premian registrar, conductas y, en dos logros secretos, valores de la valencia (H-8-6; se quedan por decisión del autor). La ley de Campbell (1979) dice que un indicador que se usa para premiar se distorsiona (capítulo 9).
 4. **El propósito mismo.** La app quiere que te conozcas y, con eso, que cambies. Eso es bueno para la vida y malo para la observación: los datos describen una vida que se observa a sí misma.
 

@@ -571,6 +571,7 @@ Reglas exactas:
 - Las conductas que quieres cambiar (hábitos, sustancias, el seguimiento privado) son las más expuestas.
 - Ver tus propios números antes de responder (sección 3.4) es una forma de reactividad dentro del mismo día.
 - Desde la entrega N4 de la revisión de navegación, Hoy muestra **«Tus últimos días»**: 14 hilos con el color de la valencia de cada día, el alto del sueño frente a tu normal y si el día quedó sellado (`FranjaDias`, en `ui/pantallas/Hoy.kt`). Pone tu historial de ánimo en primer plano. Para no influir en cómo calificas el día, el hilo de hoy no se colorea hasta que tiene valencia y diario, y la franja no aparece en la hoja de la noche. Aun así, puede influir; se puede apagar en Apariencia. **[Diseño propio]**.
+- Desde el 17 de noviembre de 2026 la franja se reemplazó por **la barra de la semana en curso** (`SemanaEnCurso`, en `ui/pantallas/Hoy.kt`), debajo de la fecha de Día: siete cuadros de lunes a domingo, como los del calendario, con el color de la valencia que le pusiste a cada día en el diario (un día sin valencia en el diario queda vacío, aunque el calendario use la media de los avisos; los días que vienen, vacíos). Ya no muestra el sueño de cada noche ni las dos semanas anteriores. Se conservan las dos precauciones: hoy no se colorea hasta tener valencia y diario, y la barra no aparece en la hoja de la noche. Los colores (y la línea de la semana de abajo) se apagan en Apariencia, «Colores de la semana» (el mismo ajuste de antes). **[Diseño propio]**.
 
 ---
 
