@@ -235,13 +235,14 @@ class QuickActivity : FragmentActivity() {
                         val menu: @Composable () -> Unit = { Registrar(ir, origen, animoDelMenu) { s -> sustanciaMenu = s; ir(M_CONSUMO) } }
                         when (pantalla) {
                             M_ANIMO -> Unit
-                            "privado" -> privado?.let { androidx.compose.runtime.key(it.id) { MomentoCaptura(it) } } ?: menu()
+                            // Lo privado y las sustancias, siempre en cero (Psicodelia: sin intensidad y con la cara de la hora).
+                            "privado" -> privado?.let { androidx.compose.runtime.key(it.id) { SinIntensidad { MomentoCaptura(it) } } } ?: menu()
                             M_MENU -> menu()
                             M_GASTO -> GastoRapido(catInicial, subInicial, gastoInicial)
                             M_SUENO -> SuenoRapido()
                             M_MINIMO -> Minimo()
                             M_ENFOQUE, M_SIESTA -> androidx.compose.runtime.LaunchedEffect(Unit) { abrirReloj(pantalla == M_SIESTA); terminar() }
-                            M_CONSUMO -> ConsumoRapido(consumoId, sustanciaMenu ?: sustanciaInicial, origen)
+                            M_CONSUMO -> SinIntensidad { ConsumoRapido(consumoId, sustanciaMenu ?: sustanciaInicial, origen) }
                             else -> menu()
                         }
                     }

@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -124,11 +125,23 @@ object EstadoTema {
     private var animada by mutableFloatStateOf(0f)
     private var objetivo by mutableFloatStateOf(0f)
 
-    /** La intensidad que se dibuja, de 0 a 1, ya animada (4 s al subir, 10 s al caer a 0; ver [MedidorIntensidad]). */
-    val intensidad: Float get() = intensidadForzada ?: animada
+    /**
+     * Cuántas pantallas «en cero» ([SinIntensidad]) hay en composición. Mientras haya alguna, [intensidad] e
+     * [intensidadObjetivo] dan 0 y la cara es la de la hora (o la forzada): así se enteran también los dibujos que leen
+     * este objeto directamente (las piezas de `DisenoComun`, los muebles, `Estilo`), que no pueden leer
+     * [LocalSinIntensidad]. Es un contador, no un sí o no, para que dos pantallas que se solapan en una transición no se
+     * pisen al salir una.
+     */
+    private var pantallasEnCero by mutableIntStateOf(0)
 
-    /** La intensidad a la que va la animación (la de [Intensidad.de] ahora mismo). */
-    val intensidadObjetivo: Float get() = intensidadForzada ?: objetivo
+    /** ¿Hay alguna pantalla en cero en composición? */
+    val enCero: Boolean get() = pantallasEnCero > 0
+
+    /** La intensidad que se dibuja, de 0 a 1, ya animada (4 s al subir, 10 s al caer a 0; ver [MedidorIntensidad]). 0 con una pantalla en cero. */
+    val intensidad: Float get() = if (enCero) 0f else intensidadForzada ?: animada
+
+    /** La intensidad a la que va la animación (la de [Intensidad.de] ahora mismo). 0 con una pantalla en cero. */
+    val intensidadObjetivo: Float get() = if (enCero) 0f else intensidadForzada ?: objetivo
 
     /** La cara del tema en uso ([Estilo.tema]). */
     val cara: Cara get() = caraDe(Estilo.tema)
@@ -149,6 +162,10 @@ object EstadoTema {
         caraForzada = cara
         intensidadForzada = intensidad?.let { if (it.isNaN()) 0f else it.coerceIn(0f, 1f) }
     }
+
+    /** [SinIntensidad] avisa aquí al entrar y al salir de la composición. */
+    internal fun entrarEnCero() { pantallasEnCero += 1 }
+    internal fun salirDeCero() { pantallasEnCero = (pantallasEnCero - 1).coerceAtLeast(0) }
 
     /** El medidor pone aquí la intensidad a la que va y la animada. */
     internal fun poner(objetivo: Float, animada: Float) {
@@ -184,14 +201,23 @@ fun intensidadLocal(): Float = if (LocalSinIntensidad.current || LocalCaraFija.c
 /**
  * Las pantallas que se dibujan siempre como si no hubiera ningún consumo en curso (la guía, «La regla de legibilidad»,
  * punto 4): las del seguimiento privado y las de registrar sustancias. Dentro, [intensidadLocal] da 0 y [caraLocal] la cara
- * de la hora; si la cara de la hora no es la que lleva la app (un consumo de día), el contenido va además con el esquema,
- * la letra y las esquinas de esa cara. Los dibujos que lean [EstadoTema] directamente no se enteran: dentro de estas
- * pantallas, los componentes del tema leen [caraLocal] e [intensidadLocal].
+ * de la hora.
+ *
+ * Además, mientras esté en composición, pone [EstadoTema] «en cero» (un contador): toda la app lee intensidad 0 y la cara
+ * de la hora, también los dibujos que leen [EstadoTema] directamente (las piezas de `DisenoComun`, los muebles, `Estilo`)
+ * y el esquema de `TemaVestigium`. El contador sube después de la primera composición (en un efecto), así que en ese
+ * primer cuadro, si la cara de la hora no es la que lleva la app (un consumo de día), el contenido va con el esquema, la
+ * letra y las esquinas de la cara de la hora; desde el segundo cuadro las dos coinciden. Los otros temas no tienen
+ * intensidad ni caras: para ellos no cambia nada.
  */
 @Composable
 fun SinIntensidad(contenido: @Composable () -> Unit) {
     val tema = Estilo.tema
     val deLaHora = EstadoTema.caraSinIntensidad(tema)
+    DisposableEffect(Unit) {
+        EstadoTema.entrarEnCero()
+        onDispose { EstadoTema.salirDeCero() }
+    }
     CompositionLocalProvider(LocalSinIntensidad provides true) {
         if (deLaHora == EstadoTema.caraDe(tema)) contenido()
         else {
