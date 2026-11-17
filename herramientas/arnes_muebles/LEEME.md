@@ -10,6 +10,7 @@ herramientas/arnes_muebles/dibujar.sh biblioteca <tema> <claro|oscuro> <salida.p
 herramientas/arnes_muebles/dibujar.sh hoja <ideario|biblioteca> <claro|oscuro> <salida.png> <tema1,tema2,...>
 herramientas/arnes_muebles/dibujar.sh trazos psicodelia <claro|oscuro> <salida.png>
 herramientas/arnes_muebles/dibujar.sh comun psicodelia <claro|oscuro> <salida.png>
+herramientas/arnes_muebles/dibujar.sh logros psicodelia <claro|oscuro> <salida.png>
 ```
 
 - `<tema>` es el id de `TemaId` (`heleno`, `gotico`, `laboratorio`, `galia`…). Con un id que no existe, el script dice cuáles hay.
@@ -24,6 +25,7 @@ herramientas/arnes_muebles/dibujar.sh comun psicodelia <claro|oscuro> <salida.pn
 - `ARNES_CARA=base|intensa` y `ARNES_INTENSIDAD=0..1` fijan la cara y la intensidad de los temas que las tienen (hoy, Psicodelia: `base` es la ciudad, `intensa` la psicodelia; ver `ui/CaraTema.kt` y `docs/diseno/temas/psicodelia_base.md`). Llaman a `EstadoTema.forzar` antes de dibujar. **Por omisión, `base` y 0**, así el dibujo no depende de la hora a la que se corre (en la app, la cara la decide la hora). Las cuatro variantes de Psicodelia son `base` y `intensa`, cada una en `claro` y `oscuro`; por ejemplo, `ARNES_CARA=intensa ARNES_INTENSIDAD=1 dibujar.sh ideario psicodelia oscuro salida.png`. Los temas sin caras no cambian con ellas.
 - `trazos`: una hoja de muestra de los trazos de Psicodelia (`ui/PsicodeliaTrazos.kt`, en `arnes/MuestraTrazos.kt`): con `ARNES_CARA=base`, los de la ciudad (`TrazosCiudad`: casas, poste, cables, viñeta, grano, ladrillo, persiana, letrero y los colores); con `intensa`, los de la tinta (`TrazosTinta`: rayos con trama, bandas a tres tintas con su registro, anillos, marco de arco, letras que llenan su forma y los colores), según `ARNES_INTENSIDAD`. No es un mueble: sirve para ver la base antes de usarla.
 - `comun`: una hoja de muestra de las piezas de la tanda 2 de Psicodelia (`arnes/MuestraComun.kt`): todas las de `ui/comun/ComunPsicodelia.kt` a su tamaño de uso (campos en sus cinco estados, separadores, botones de texto, filas, vacío, avisos, cifras, las cuatro tarjetas, la balanza, el mes, los asientos, la hoja rápida, las relaciones, el marco de la cinta), con un texto de ejemplo encima para ver que se lee; las de `ui/PsicodeliaPiezas.kt` (emblema, banda bajo el título, subrayado, esquinas, marca de escala, botón, perilla y riel, diálogo, fondo vivo) y los ocho íconos de pestaña (`ui/IconosPestana.kt`). Según `ARNES_CARA` y `ARNES_INTENSIDAD`.
+- `logros`: una hoja de muestra de los logros de Psicodelia v2 (`arnes/MuestraLogros.kt`): los nueve trofeos sobre su pedestal (`ui/logros/LogrosPsicodelia.kt`) en los cuatro metales, a 150 y a 56 dp y uno sin ganar, el pedestal y la placa del hall, el salón, el plano de la campaña (`ui/PsicodeliaPantallas.kt`) con el camino, las paradas, el trolebús y la meta, y los objetos de Tu año. Según `ARNES_CARA` y `ARNES_INTENSIDAD`.
 - `ARNES_APP=/ruta/a/app/src/main` dibuja otra copia de la app, por ejemplo otro árbol de trabajo. Compila en `build-otras/<clave>/` y no toca la compilación normal.
 
 ## Cuánto tarda (medido en esta máquina, 4 núcleos)
@@ -47,7 +49,7 @@ Probado con 3 llamadas en paralelo justo después de editar un archivo: las 3 sa
 ## Qué enlaza (tal cual, desde `app/src/main/java/...`)
 
 - `ui/ideario/**`, `ui/biblioteca/**` y `ui/muebles/**`: las carpetas enteras, así un archivo nuevo entra solo.
-- `ui/PsicodeliaPiezas.kt`, `ui/comun/ComunPsicodelia.kt` e `ui/IconosPestana.kt` (para la muestra `comun`).
+- `ui/PsicodeliaPiezas.kt`, `ui/comun/ComunPsicodelia.kt` e `ui/IconosPestana.kt` (para la muestra `comun`); `ui/logros/LogrosPsicodelia.kt` y `ui/PsicodeliaPantallas.kt` (para la muestra `logros`).
 - `ui/*Trazos.kt`, `ui/Galia.kt`, `Nouveau.kt`, `Psicodelia.kt`, `Frente.kt` y `Arcontes.kt`.
 - `ui/Tema.kt` (`TemaId`, `Letra`, los esquemas, `tipoDe`, `Tonos`, `PaletaBasica`), `ui/ModoHora.kt` y `ui/CaraTema.kt` (la cara y la intensidad: `Cara`, `EstadoTema`, `Intensidad`).
 - `ui/Disenios.kt` (`LetraExtra` y las escalas de color de los volúmenes).
@@ -65,6 +67,7 @@ Algunos archivos no compilan enteros en escritorio. Para esos, Gradle copia en c
 | `Libros.kt` | `Pagina` y `Rayas` |
 | `data/Mundo.kt` | `CiudadVisitada` y `SitioMarcado` |
 | `Decoracion.kt` | `piezasMano`, `cruzPatada`, `rad` y `mas` (la cruz la usa `IconosPestana.kt`) |
+| `logros/DisenoLogros.kt` | el contrato `DisenoLogros` y sus clases de estado, sin `disenoLogros` |
 | `comun/DisenoComun.kt` | el contrato `DisenoComun` y sus clases de estado, sin `disenoComun` (que nombra los 40 objetos) |
 | `pantallas/Fichero.kt` | `cajones` y `rotuloCajon` |
 | `ArchivoIdeas.kt` | `ArchivoIdeas` y `archivoIdeas` («7 óstraka») |
