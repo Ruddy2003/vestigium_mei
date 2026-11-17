@@ -28,14 +28,11 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.curva
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.humo
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.lineTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.moveTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.vidas.Azar
-import io.github.ruddy2003.vestigium.vidas.Clima
 import kotlin.math.sin
 
 /**

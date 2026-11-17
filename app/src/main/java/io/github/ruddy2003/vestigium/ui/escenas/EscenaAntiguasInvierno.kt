@@ -12,7 +12,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ANCHO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.grano
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.tiempoQuieto
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.tiempoVivo
 import io.github.ruddy2003.vestigium.vidas.Azar

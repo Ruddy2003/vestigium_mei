@@ -37,7 +37,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.paisaje.humo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.llama
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mult
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.polvo
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.tiempoQuieto
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.tiempoVivo
 import io.github.ruddy2003.vestigium.vidas.Azar

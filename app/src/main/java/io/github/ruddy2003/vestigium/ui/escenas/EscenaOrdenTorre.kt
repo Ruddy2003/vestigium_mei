@@ -1,7 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.escenas
 
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -19,7 +18,6 @@ import io.github.ruddy2003.vestigium.ui.escenas.PiezasOrden.palo
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasOrden.sillares
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.real
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.cos

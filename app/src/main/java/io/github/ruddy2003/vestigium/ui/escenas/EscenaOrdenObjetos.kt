@@ -43,10 +43,9 @@ import kotlin.math.sqrt
  *   tela abierta; la cantimplora abollada con su correa; y el soldador de cobre en su braserillo.
  *
  * **El candil.** Es objeto del día y también la lámpara de cada almena (la orden lo tiene por signo). El día que es el
- * objeto, el cuadro deja vacía la hornacina de la almena de delante ([elCuadroPinta]) y el candil está en el soporte; de
- * noche alumbra desde ahí (su llama, su halo y su charco) **[Diseño propio]**. Arde con la corona de candiles
- * ([candilEncendido]). **Pendiente del cuadro** (tanda S18): el candil que deja de pintar es el de la almena 0, que cae
- * fuera del lienzo; el que se ve junto al objeto es el de la almena 1 (`AdarveOrden.candil(1)`).
+ * objeto, el cuadro deja vacías la hornacina de la almena de delante (`AdarveOrden.candil(1)`) y la del cubo
+ * ([elCuadroPinta]), y el candil está en el soporte, la manta del banco de la guardia; de noche alumbra desde ahí (su
+ * llama, su halo y su charco) **[Diseño propio]**. Arde con la corona de candiles ([candilEncendido]).
  *
  * Sin personas, letras ni números: los renglones son rayas, el nombre rayado de la cantimplora son rayas, la rosa de la
  * brújula lleva marcas sin letras. **[Diseño propio]**: cómo es cada uno, qué lo acompaña y los colores (mezclas de

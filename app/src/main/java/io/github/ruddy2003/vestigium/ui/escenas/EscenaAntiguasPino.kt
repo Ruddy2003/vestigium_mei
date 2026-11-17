@@ -14,7 +14,6 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.lerp
 import io.github.ruddy2003.vestigium.ui.escenas.PiezasAntiguas.linterna
 import io.github.ruddy2003.vestigium.ui.escenas.SitioAntiguas.fijo
-import io.github.ruddy2003.vestigium.ui.escenas.TrazosValle.borron
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosValle.pts
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.ALTO
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel

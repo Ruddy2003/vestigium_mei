@@ -7,7 +7,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.lerp
-import io.github.ruddy2003.vestigium.ui.escenas.ChicosAntiguas.CANTO
 import io.github.ruddy2003.vestigium.ui.escenas.ChicosAntiguas.CLAVO
 import io.github.ruddy2003.vestigium.ui.escenas.ChicosAntiguas.MURO
 import io.github.ruddy2003.vestigium.ui.escenas.TrazosObjetos.contacto

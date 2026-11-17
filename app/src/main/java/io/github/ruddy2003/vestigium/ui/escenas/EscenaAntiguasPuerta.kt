@@ -5,7 +5,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -20,10 +19,8 @@ import io.github.ruddy2003.vestigium.ui.escenas.FachadaPosada.tapa
 import io.github.ruddy2003.vestigium.ui.escenas.PosadaAntiguas.luzDeCara
 import io.github.ruddy2003.vestigium.ui.escenas.PosadaAntiguas.pincel
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.Pincel
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.cubicTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.entre
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.mancha
-import io.github.ruddy2003.vestigium.ui.escenas.paisaje.moveTo
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.poligono
 import io.github.ruddy2003.vestigium.ui.escenas.paisaje.resplandor
 import io.github.ruddy2003.vestigium.vidas.Azar
