@@ -13,7 +13,7 @@ import io.github.ruddy2003.vestigium.ui.escenas.AdarveOrden
 import io.github.ruddy2003.vestigium.ui.escenas.CamOrden
 import io.github.ruddy2003.vestigium.ui.escenas.CuboOrden
 import io.github.ruddy2003.vestigium.ui.escenas.EscenaOrden
-import io.github.ruddy2003.vestigium.ui.escenas.LuzObjeto
+import io.github.ruddy2003.vestigium.ui.escenas.LuzObjetoOrden
 import io.github.ruddy2003.vestigium.ui.escenas.Momento
 import io.github.ruddy2003.vestigium.ui.escenas.ObjetosOrden
 import io.github.ruddy2003.vestigium.ui.escenas.ObjetosOrden.Sitio
@@ -136,7 +136,7 @@ class EscenaOrdenObjetosPrueba {
         var d = LocalDate.of(2027, 1, 1); var m = momento(d.toString(), 23.0)
         while (EscenaOrden.luna(EscenaOrden.luces(m)) < 0.3f && d.year == 2027) { d = d.plusDays(1); m = momento(d.toString(), 23.0) }
         assertTrue("hay una noche con luna en 2027", EscenaOrden.luna(EscenaOrden.luces(m)) >= 0.3f)
-        val lo = LuzObjeto(m, VistaOrden(m).p)
+        val lo = LuzObjetoOrden(m, VistaOrden(m).p)
         val en = TrazoOrden.aCamara(AdarveOrden.SOPORTE) + V3(0f, 0.1f, 0f)
         val candil = TrazoOrden.aCamara(CuboOrden.CANDIL)
         val haciaElCandil = TrazoOrden.unidad(candil - en)
@@ -178,7 +178,7 @@ class EscenaOrdenObjetosPrueba {
             val enElSoporte = caja(pintado { with(ObjetosOrden) { sobreElSoporte(m, VistaOrden(m).p, sobre, escalaChico) } })
             if (o == null || o in ObjetosOrden.GRANDES) { assertNull("$o $h", enElSoporte); continue }
             assertNotNull("$o $h: no se pinta", enElSoporte)
-            val suelto = caja(pintado { with(ObjetosOrden) { chico(LuzObjeto(m, VistaOrden(m).p), o, libre, escalaChico) } })!!
+            val suelto = caja(pintado { with(ObjetosOrden) { chico(LuzObjetoOrden(m, VistaOrden(m).p), o, libre, escalaChico) } })!!
             val ancho = suelto[2] - suelto[0]; val alto = suelto[3] - suelto[1]
             assertTrue("$o $h: es muy chico para leerse ($ancho × $alto)", ancho >= 18 && alto >= 12)
             assertTrue("$o $h: no está en su sitio (${suelto.toList()})", kotlin.math.abs((suelto[0] + suelto[2]) / 2f - libre.x) < 30f && suelto[1] < libre.y && suelto[3] > libre.y - 10f)
@@ -212,7 +212,7 @@ class EscenaOrdenObjetosPrueba {
         val img = Canvas(ImageBitmap(380, 285))
         for ((dia, _) in ESTADOS) for (h in listOf(3.0, 7.0, 13.0, 21.0)) for (clima in listOf<Clima?>(null, Clima.NIEVE, Clima.POLVO)) {
             for (escala in listOf(0.5f, 0.66f, 1.2f)) for (o in ObjetosOrden.TODOS + listOf(null, "otro")) {
-                val m = conObjeto(dia, h, o, clima); val lo = LuzObjeto(m, VistaOrden(m).p)
+                val m = conObjeto(dia, h, o, clima); val lo = LuzObjetoOrden(m, VistaOrden(m).p)
                 try {
                     CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, img, Size(380f, 285f)) {
                         with(ObjetosOrden) { chico(lo, o, sobre, escala) }

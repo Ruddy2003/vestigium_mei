@@ -28,7 +28,7 @@ import kotlin.math.sqrt
  *
  * **Se pintan en la ciudadela, con su luz.** El punto que da el cuadro y su escala se vuelven a llevar a los metros de la
  * cámara ([enLaCamara]: la escala dice a qué hondo está el punto), cada objeto se arma en metros, en tres cuartos, con un
- * [MarcoOrden], y cada cara toma su color con la luz del cuadro ([LuzObjeto]): el sol o la luna por su lado (`LuzPlana`, la
+ * [MarcoOrden], y cada cara toma su color con la luz del cuadro ([LuzObjetoOrden]): el sol o la luna por su lado (`LuzPlana`, la
  * misma cuenta que las almenas y el cubo), la sombra violeta del otro, la sombra que les echan el parapeto, las almenas y
  * el cubo, y de noche el lado naranja de los candiles cercanos (el grande del cubo y el de la almena) frente al lado frío
  * de la luna. Cada uno tumba su sombra en su soporte y, los grandes, también en la cara del parapeto.
@@ -90,15 +90,15 @@ internal object ObjetosOrden {
     /**
      * El objeto chico de hoy, sobre el soporte. No pinta nada si hoy no hay objeto, si es de los grandes o si ya está en el
      * cuadro. [sobre] es el centro de la cara de arriba del soporte; [escala] 1 es el tamaño de primer plano (60 unidades
-     * por metro). La luz la saca del momento y del pincel del cuadro ([LuzObjeto]).
+     * por metro). La luz la saca del momento y del pincel del cuadro ([LuzObjetoOrden]).
      */
     fun DrawScope.sobreElSoporte(m: Momento, p: Pincel, sobre: Offset, escala: Float = 1f) {
         if (sitio(m) != Sitio.SOPORTE) return
-        chico(LuzObjeto(m, p), m.ficha.objeto, sobre, escala)
+        chico(LuzObjetoOrden(m, p), m.ficha.objeto, sobre, escala)
     }
 
     /** El objeto chico [id] sobre [sobre], con la luz [lo] (lo mismo que [sobreElSoporte]; para las pruebas y las hojas). */
-    fun DrawScope.chico(lo: LuzObjeto, id: String?, sobre: Offset, escala: Float = 1f) {
+    fun DrawScope.chico(lo: LuzObjetoOrden, id: String?, sobre: Offset, escala: Float = 1f) {
         if (id == null || id in GRANDES || id in EN_EL_CUADRO || id !in TODOS) return
         val o = enLaCamara(sobre, escala)
         detrasDeLaAlmena(o) {
@@ -123,11 +123,11 @@ internal object ObjetosOrden {
      */
     fun grande(m: Momento, p: Pincel, pie: Offset, apoyo: Offset, escala: Float = 1f): Cosa? {
         if (sitio(m) != Sitio.GRANDE) return null
-        return grande(LuzObjeto(m, p), m.ficha.objeto, pie, apoyo, escala)
+        return grande(LuzObjetoOrden(m, p), m.ficha.objeto, pie, apoyo, escala)
     }
 
     /** El objeto grande [id] con la luz [lo] (lo mismo que el de arriba; para las pruebas y las hojas). */
-    fun grande(lo: LuzObjeto, id: String?, pie: Offset, apoyo: Offset, escala: Float = 1f): Cosa? {
+    fun grande(lo: LuzObjetoOrden, id: String?, pie: Offset, apoyo: Offset, escala: Float = 1f): Cosa? {
         if (id == null || id !in GRANDES) return null
         val suelo = enLaCamara(pie, escala)
         // El apoyo, al hondo del pie [Aproximación]: lo que importa de él es hacia dónde queda la pared y a qué altura.
@@ -185,7 +185,7 @@ internal class Lumbre(val en: V3, val fuerza: Float, val alcance: Float)
  * La luz de los objetos en su sitio: la del sol o la luna con [LuzPlana] (la misma que el cuadro), la sombra que les echan
  * el parapeto, las almenas y el cubo, y las [lumbres] cercanas. Todos los puntos y normales van en metros de la cámara.
  */
-internal class LuzObjeto(val m: Momento, val p: Pincel, private val extra: List<Lumbre> = emptyList()) {
+internal class LuzObjetoOrden(val m: Momento, val p: Pincel, private val extra: List<Lumbre> = emptyList()) {
     private val C = ColorOrden
     val l = p.l
     val lz = LuzPlana(p, Sol3(p.r), EscenaOrden.luna(p.l))
@@ -204,7 +204,7 @@ internal class LuzObjeto(val m: Momento, val p: Pincel, private val extra: List<
     }
 
     /** La misma luz con otra lumbre más (la del propio candil, la de las brasas). */
-    fun con(otra: Lumbre) = LuzObjeto(m, p, extra + otra)
+    fun con(otra: Lumbre) = LuzObjetoOrden(m, p, extra + otra)
 
     /** El color de [c] en el punto [en] con la cara mirando a [n]. [claro] sube o baja la cara hacia la luz. */
     fun color(c: Color, en: V3, n: V3, claro: Float = 0f): Color {
@@ -373,7 +373,7 @@ internal object TrazoOrden {
      * Una cara plana del objeto: sus puntos y su normal, en las medidas del objeto. Si da la espalda se alumbra por el otro
      * lado (el papel, la tela y la chapa se ven por las dos caras). Devuelve su forma en el lienzo.
      */
-    fun DrawScope.cara(lo: LuzObjeto, f: MarcoOrden, pts: List<V3>, n: V3, c: Color, alfa: Float = 1f, claro: Float = 0f): Path {
+    fun DrawScope.cara(lo: LuzObjetoOrden, f: MarcoOrden, pts: List<V3>, n: V3, c: Color, alfa: Float = 1f, claro: Float = 0f): Path {
         val w = pts.map { f.w(it) }; val forma = forma(w)
         val ce = centro(w); var nn = f.n(n); if (!seVe(ce, nn)) nn = nn * -1f
         val col = lo.color(c, ce, nn, claro).copy(alpha = (c.alpha * alfa).coerceIn(0f, 1f))
@@ -383,7 +383,7 @@ internal object TrazoOrden {
     }
 
     /** Una cara con un degradado entre la luz de su punto [a] y la de [b] (del objeto). */
-    fun DrawScope.caraDegradada(lo: LuzObjeto, f: MarcoOrden, pts: List<V3>, n: V3, c: Color, a: V3, b: V3, claroA: Float = 0f, claroB: Float = 0f): Path {
+    fun DrawScope.caraDegradada(lo: LuzObjetoOrden, f: MarcoOrden, pts: List<V3>, n: V3, c: Color, a: V3, b: V3, claroA: Float = 0f, claroB: Float = 0f): Path {
         val w = pts.map { f.w(it) }; val forma = forma(w)
         var nn = f.n(n); if (!seVe(centro(w), nn)) nn = nn * -1f
         val pa = f.p(a); val pb = f.p(b)
@@ -393,7 +393,7 @@ internal object TrazoOrden {
     }
 
     /** Una caja del objeto: las caras que se ven, cada una con su luz; [arriba] es el color de la tapa. Devuelve sus formas. */
-    fun DrawScope.caja(lo: LuzObjeto, f: MarcoOrden, x0: Float, x1: Float, y0: Float, y1: Float, z0: Float, z1: Float, c: Color, arriba: Color = c,
+    fun DrawScope.caja(lo: LuzObjetoOrden, f: MarcoOrden, x0: Float, x1: Float, y0: Float, y1: Float, z0: Float, z1: Float, c: Color, arriba: Color = c,
                        encima: (DrawScope.(Int, Path) -> Unit)? = null) {
         val caras = listOf(
             listOf(V3(x0, y1, z0), V3(x1, y1, z0), V3(x1, y1, z1), V3(x0, y1, z1)) to V3(0f, 1f, 0f),
@@ -421,7 +421,7 @@ internal object TrazoOrden {
     }
 
     /** Un disco plano del objeto; con [luz] falso, de su propio color (lo que da luz). */
-    fun DrawScope.disco(lo: LuzObjeto, f: MarcoOrden, c: V3, n: V3, r: Float, color: Color, lados: Int = 18, luz: Boolean = true, alfa: Float = 1f): Path {
+    fun DrawScope.disco(lo: LuzObjetoOrden, f: MarcoOrden, c: V3, n: V3, r: Float, color: Color, lados: Int = 18, luz: Boolean = true, alfa: Float = 1f): Path {
         val pts = circulo(c, n, r, lados).dropLast(1)
         return if (luz) cara(lo, f, pts, n, color, alfa) else forma(pts.map { f.w(it) }).also { drawPath(it, color.copy(alpha = alfa)) }
     }
@@ -430,7 +430,7 @@ internal object TrazoOrden {
      * Un cuerpo de revolución alrededor del eje que va de [a] a [b] (del objeto): [perfil] da el radio en cada tramo del eje
      * (de 0 en [a] a 1 en [b]). Se pintan las tiras que se ven, cada una con su luz, y la tapa de arriba si se ve.
      */
-    fun DrawScope.revolucion(lo: LuzObjeto, f: MarcoOrden, a: V3, b: V3, perfil: List<Pair<Float, Float>>, c: Color, tapa: Color? = c, lados: Int = 14, claro: Float = 0f) {
+    fun DrawScope.revolucion(lo: LuzObjetoOrden, f: MarcoOrden, a: V3, b: V3, perfil: List<Pair<Float, Float>>, c: Color, tapa: Color? = c, lados: Int = 14, claro: Float = 0f) {
         val eje = b - a; val largo = sqrt(punto(eje, eje)).coerceAtLeast(1e-4f); val u = eje * (1f / largo)
         val anillos = perfil.map { (t, r) -> circulo(a + eje * t, u, r, lados) }
         val tiras = ArrayList<Pair<Float, () -> Unit>>()
@@ -449,7 +449,7 @@ internal object TrazoOrden {
     }
 
     /** Un cilindro del objeto, de [a] a [b], de radio [r]. */
-    fun DrawScope.cilindro(lo: LuzObjeto, f: MarcoOrden, a: V3, b: V3, r: Float, c: Color, tapa: Color? = c, lados: Int = 12) =
+    fun DrawScope.cilindro(lo: LuzObjetoOrden, f: MarcoOrden, a: V3, b: V3, r: Float, c: Color, tapa: Color? = c, lados: Int = 12) =
         revolucion(lo, f, a, b, listOf(0f to r, 1f to r), c, tapa, lados)
 
     /** Una raya (un borde, un hilo, una costura) de [a] a [b], de [grueso] metros del objeto, de un color ya hecho. */
@@ -458,7 +458,7 @@ internal object TrazoOrden {
     }
 
     /** Una línea por los puntos [pts] del objeto, con la luz de su medio mirando a [n] (nula: hacia los ojos y arriba). */
-    fun DrawScope.trazo(lo: LuzObjeto, f: MarcoOrden, pts: List<V3>, grueso: Float, c: Color, n: V3? = null, alfa: Float = 1f, claro: Float = 0f) {
+    fun DrawScope.trazo(lo: LuzObjetoOrden, f: MarcoOrden, pts: List<V3>, grueso: Float, c: Color, n: V3? = null, alfa: Float = 1f, claro: Float = 0f) {
         if (pts.size < 2) return
         val q = pts.map { f.p(it) }
         val camino = Path().apply { moveTo(q[0].x, q[0].y); for (i in 1 until q.size) lineTo(q[i].x, q[i].y) }
@@ -473,7 +473,7 @@ internal object TrazoOrden {
     }
 
     /** Un brillo: una pincelada clara de [a] a [b], más fuerte cuanto más luz le llega a [n]. */
-    fun DrawScope.brillo(lo: LuzObjeto, f: MarcoOrden, a: V3, b: V3, grueso: Float, c: Color, n: V3, fuerza: Float = 0.7f) {
+    fun DrawScope.brillo(lo: LuzObjetoOrden, f: MarcoOrden, a: V3, b: V3, grueso: Float, c: Color, n: V3, fuerza: Float = 0.7f) {
         val col = lo.color(lerp(c, Color.White, 0.6f), f.w(medio(a, b)), f.n(n))
         val l = 0.3f * col.red + 0.59f * col.green + 0.11f * col.blue
         raya(f, a, b, grueso, col.copy(alpha = (fuerza * (0.2f + 0.9f * l)).coerceIn(0f, 1f)))
@@ -492,7 +492,7 @@ internal object TrazoOrden {
      * [pared] (la `s` de la cara del parapeto), lo que pasa de ella sube por la pared, recortado a [enLaPared]
      * **[Aproximación]**: la envolvente de los puntos tumbados, no la sombra exacta de cada parte.
      */
-    fun DrawScope.sombra(lo: LuzObjeto, base: List<V3>, cuerpo: List<V3>, suelo: Float, dentro: Path?, contacto: Float = 0.4f,
+    fun DrawScope.sombra(lo: LuzObjetoOrden, base: List<V3>, cuerpo: List<V3>, suelo: Float, dentro: Path?, contacto: Float = 0.4f,
                          pared: Float? = null, enLaPared: Path? = null) {
         val pies = base.map { pc(it) }
         val fuerza = lo.fuerzaDeSombra * (if (base.isEmpty()) 1f else lo.alSol(centro(base) + V3(0f, 0.05f, 0f)))
