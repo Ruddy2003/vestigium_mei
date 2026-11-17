@@ -732,17 +732,23 @@ private fun DrawScope.barraTema(tema: TemaId, color: Color, f: Float) {
                 drawRect(color, Offset.Zero, Size(fw, h), style = Stroke(1.4f * d))
             }
         }
-        // Una burbuja estirada: la pista y la barra de esquinas del todo redondas, el reflejo que ondula como la tinta y, en la
-        // punta, dos burbujas que se sueltan.
+        // La ciudad: el pasamanos del trolebús, la pista y lo recorrido con el brillo de la tarde arriba y una sombra café
+        // corta. La tinta: la barra a dos tintas, con la segunda pasada corrida de registro y una onda fina impresa encima.
         TemaId.PSICODELIA -> {
             drawRoundRect(pista, Offset.Zero, size, androidx.compose.ui.geometry.CornerRadius(h / 2))
             if (fw > 0f) {
-                drawRoundRect(color, Offset.Zero, Size(fw, h), androidx.compose.ui.geometry.CornerRadius(h / 2))
-                if (fw > 8f * d) drawPath(Path().apply {
-                    var x = h * 0.5f; moveTo(x, h * 0.32f)
-                    while (x < fw - h * 0.6f) { quadraticTo(x + 2.5f * d, h * 0.18f, x + 5f * d, h * 0.32f); quadraticTo(x + 7.5f * d, h * 0.46f, x + 10f * d, h * 0.32f); x += 10f * d }
-                }, claro, style = Stroke(0.9f * d, cap = StrokeCap.Round))
-                if (fw < w - h) { drawCircle(color.copy(alpha = 0.55f), h * 0.22f, Offset(fw + h * 0.35f, h * 0.35f)); drawCircle(color.copy(alpha = 0.35f), h * 0.14f, Offset(fw + h * 0.75f, h * 0.65f)) }
+                if (io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE) {
+                    drawRoundRect(io.github.ruddy2003.vestigium.ui.TrazosCiudad.SOMBRA.copy(alpha = 0.18f), Offset(0.6f * d, 0.8f * d), Size(fw, h), androidx.compose.ui.geometry.CornerRadius(h / 2))
+                    drawRoundRect(color, Offset.Zero, Size(fw, h), androidx.compose.ui.geometry.CornerRadius(h / 2))
+                    if (fw > 6f * d) drawLine(claro, Offset(h * 0.5f, h * 0.3f), Offset(fw - h * 0.5f, h * 0.3f), 0.8f * d, StrokeCap.Round)
+                } else {
+                    drawRoundRect(color.copy(alpha = 0.45f), Offset(1.2f * d, 0.6f * d), Size(fw, h), androidx.compose.ui.geometry.CornerRadius(h / 2))
+                    drawRoundRect(color, Offset.Zero, Size(fw, h), androidx.compose.ui.geometry.CornerRadius(h / 2))
+                    if (fw > 8f * d) drawPath(Path().apply {
+                        var x = h * 0.5f; moveTo(x, h * 0.5f)
+                        while (x < fw - h * 0.6f) { quadraticTo(x + 2.5f * d, h * 0.3f, x + 5f * d, h * 0.5f); quadraticTo(x + 7.5f * d, h * 0.7f, x + 10f * d, h * 0.5f); x += 10f * d }
+                    }, claro, style = Stroke(0.9f * d, cap = StrokeCap.Round))
+                }
             }
         }
         // Una tira de vidrio de Nancy: la pista pálida con su filete; lo lleno, el vidrio que pasa de claro a hondo, con su brillo
@@ -1198,16 +1204,19 @@ private fun DrawScope.esferaDia(tema: TemaId, c: Offset, r: Float, ancho: Float,
             drawCircle(tinta.copy(alpha = 0.5f), rc * 0.25f, c, style = Stroke(1.5f * d)); drawCircle(cs.primary, rc * 0.1f, c)
             marcas(24, 4f * d, 2.2f * d, tinta.copy(alpha = 0.6f))
         }
-        // El día como un disco: el vinilo con sus surcos y el brillo, la etiqueta con la flor en el color del tema y, alrededor,
-        // las horas como puntos (los de las 0, 6, 12 y 18, más grandes): lado A de mañana, lado B de tarde.
+        // El día como un disco: el vinilo con sus surcos y el brillo, la etiqueta en el color del tema con sus dos renglones
+        // impresos y, alrededor, las horas como puntos (los de las 0, 6, 12 y 18, más grandes): lado A de mañana, lado B de tarde.
         TemaId.PSICODELIA -> {
-            drawCircle(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia.VINILO.copy(alpha = 0.85f), rc, c)
+            val vinilo = Color(0xFF1E1916)
+            drawCircle(vinilo.copy(alpha = 0.85f), rc, c)
             var k = 0.95f
             while (k > 0.4f) { drawCircle(Color.White.copy(alpha = 0.07f), rc * k, c, style = Stroke(0.5f * d)); k -= 0.06f }
             listOf(-40f, 140f).forEach { a -> drawArc(Color.White.copy(alpha = 0.12f), a, 28f, true, Offset(c.x - rc * 0.95f, c.y - rc * 0.95f), Size(rc * 1.9f, rc * 1.9f)) }
             drawCircle(cs.primary, rc * 0.36f, c)
-            with(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia) { flor(c, rc * 0.24f, cs.secondary, cs.primary, 6) }
-            drawCircle(io.github.ruddy2003.vestigium.ui.TrazosPsicodelia.VINILO, rc * 0.035f, c)
+            val renglon = cs.onPrimary.copy(alpha = 0.55f)
+            drawLine(renglon, Offset(c.x - rc * 0.2f, c.y - rc * 0.15f), Offset(c.x + rc * 0.2f, c.y - rc * 0.15f), maxOf(0.6f * d, rc * 0.03f))
+            drawLine(renglon, Offset(c.x - rc * 0.13f, c.y + rc * 0.16f), Offset(c.x + rc * 0.13f, c.y + rc * 0.16f), maxOf(0.5f * d, rc * 0.025f))
+            drawCircle(vinilo, rc * 0.035f, c)
             for (h in 0 until 24) drawCircle(tinta.copy(alpha = if (h % 6 == 0) 0.85f else 0.5f), if (h % 6 == 0) 2.2f * d else 1.2f * d, polarFig(c, ro + 3f * d, h * 15f - 90f))
         }
         // La esfera como un medallón de 1900: la libélula en el centro, el anillo de hojas que la rodea y, por fuera, una hoja

@@ -59,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -521,33 +522,39 @@ private fun disenoPresentacion(t: TemaId): DisenoPresentacion = when (t) {
             drawLine(e.primary.copy(alpha = 0.6f), Offset(centro.x - u * 30, centro.y), Offset(centro.x + u * 30, centro.y), u * 3)
         }
     }
-    // El cartel de la sala de baile: la burbuja del marco con su contorno que vibra (el color y, corrida, su segunda tinta),
-    // la franja de arcoíris del tintero partido arriba, las luces líquidas muy tenues en el fondo, una flor que vibra en cada
-    // esquina y, abajo, la banda de letras infladas que se derriten. El emblema arriba, como la imagen del cartel.
-    TemaId.PSICODELIA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre, "Toca y que suene el lado A",
-        comillas = "✿ " to " ✿", emblema = 124.dp, arriba = 66.dp, abajo = 74.dp) { e ->
+    // Psicodelia, en la cara que toque. La ciudad: la copia de foto de los setenta, con su margen claro, la luz de la tarde
+    // (de noche, la de la lámpara) que entra por la izquierda, los cables del trolebús arriba, grano y el disco del día en la
+    // esquina de abajo. La tinta: el cartel de la semana, con el marco de arco, la corona de rayos que ondulan alrededor del
+    // emblema y las bandas que se abren al pie (con la intensidad, a tres tintas y corridas de registro).
+    TemaId.PSICODELIA -> DisenoPresentacion(OrdenPresentacion.EMBLEMA_ARRIBA, false, t.nombre,
+        if (EstadoTema.caraDe(t) == Cara.BASE) "Toca y que suene el lado A" else "Toca y que suene el lado B",
+        comillas = "« " to " »", emblema = 124.dp, arriba = 66.dp, abajo = 74.dp) { e ->
         val u = 1.dp.toPx(); val w = size.width; val h = size.height
-        val g = u * 34
-        fun marco(m: Float) = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(androidx.compose.ui.geometry.Rect(m, m, w - m, h - m), CornerRadius(maxOf(g - m, u)))) }
-        with(TrazosPsicodelia) { lucesLiquidas(Size(w, h), 0.3f, listOf(e.primary, e.tertiary, e.secondary), 0.22f) }
-        clipPath(marco(u * 2)) {
-            drawRect(androidx.compose.ui.graphics.Brush.horizontalGradient(TrazosPsicodelia.ARCOIRIS.map { it.copy(alpha = 0.8f) }, 0f, w), Offset.Zero, Size(w, u * 9))
-            // Las letras infladas de abajo: bloques blandos que llenan la banda y gotean hacia arriba del borde.
-            var x = u * 40; var k = 0
-            while (x < w - u * 40) {
-                val a = u * (16f + (k * 7) % 3 * 6f)
-                drawRoundRect(e.primary.copy(alpha = 0.5f), Offset(x, h - u * 28), Size(a, u * 16), CornerRadius(u * 7))
-                drawRoundRect(e.surface.copy(alpha = 0.6f), Offset(x + a * 0.38f, h - u * 24), Size(a * 0.24f, u * 7), CornerRadius(u * 3))
-                if (k % 2 == 0) { drawRect(e.primary.copy(alpha = 0.5f), Offset(x + a * 0.6f, h - u * 34), Size(u * 3, u * 7)); drawCircle(e.primary.copy(alpha = 0.5f), u * 2.6f, Offset(x + a * 0.6f + u * 1.5f, h - u * 34)) }
-                x += a + u * 3; k++
-            }
-        }
-        drawPath(Path().apply { addPath(marco(u * 2), Offset(u * 2, u * 1.6f)) }, e.secondary.copy(alpha = 0.6f), style = Stroke(u * 1.8f))
-        drawPath(marco(u * 2), e.primary.copy(alpha = 0.85f), style = Stroke(u * 2.2f))
-        drawPath(marco(u * 9), e.primary.copy(alpha = 0.3f), style = Stroke(u * 0.8f))
-        with(TrazosPsicodelia) {
-            listOf(Offset(u * 18, u * 20), Offset(w - u * 18, u * 20), Offset(u * 18, h - u * 18), Offset(w - u * 18, h - u * 18)).forEachIndexed { i, o ->
-                flor(o, u * 15, if (i % 2 == 0) e.primary else e.secondary, if (i % 2 == 0) e.secondary else e.primary, 6, 0.6f, i * 0.4f)
+        val k = PiezasPsicodelia.colores(e.background.luminance() < 0.5f)
+        with(PiezasPsicodelia) {
+            if (k.ciudad) {
+                val g = u * 11
+                fun marco(m: Float) = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(androidx.compose.ui.geometry.Rect(m, m, w - m, h - m), CornerRadius(maxOf(g - m, u)))) }
+                val foto = marco(u * 2)
+                clipPath(foto) {
+                    drawRect(androidx.compose.ui.graphics.Brush.linearGradient(listOf(k.luz, Color.Transparent), Offset.Zero, Offset(w * 0.7f, h * 0.5f)), Offset.Zero, Size(w, h))
+                    cablesTrolebus(0f, w, u * 22, k.tenue.copy(alpha = 0.55f))
+                }
+                granoPelicula(foto, k.grano * 0.4f)
+                drawPath(foto, k.borde, style = Stroke(u * 1.4f))
+                drawPath(marco(u * 9), k.borde.copy(alpha = 0.45f), style = Stroke(u * 0.8f))
+                disco(Offset(w - u * 30, h - u * 30), u * 14, k)
+            } else {
+                val caja = androidx.compose.ui.geometry.Rect(u * 2, u * 2, w - u * 2, h - u * 2)
+                val cartel = TrazosTinta.arco(caja, u * 60, u * 4)
+                val linea = if (k.oscuro) TrazosTinta.CREMA else k.grabado
+                clipPath(cartel) {
+                    corona(Offset(w / 2, u * 128), u * 70, minOf(w * 0.48f, u * 150), k, n = 24)
+                    ondas(u * 8, w - u * 8, h - u * 30, (2f + 0.14f * k.m.amplitud) * u, u * 64, u * 2.2f, u * 5f, tintasBanda(k), k.m.registro)
+                }
+                with(TrazosTinta) { conRegistro(TrazosTinta.Tinta.MAGENTA, k.m.registro) { drawPath(cartel, k.magenta.copy(alpha = 0.8f), style = Stroke(u * 1.6f)) } }
+                drawPath(cartel, linea, style = Stroke(u * 2.2f))
+                drawPath(TrazosTinta.arco(caja.deflate(u * 7), u * 53, u * 2), linea.copy(alpha = 0.5f), style = Stroke(u * 0.8f))
             }
         }
     }

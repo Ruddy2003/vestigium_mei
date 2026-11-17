@@ -55,6 +55,7 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -656,36 +657,54 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 drawLine(parpado, q, q + d * (6 * u / l), 1.5f * u)
             }
         }
-        // El disco que suena: el vinilo gira y la aguja va entintando sus surcos en el sentido del reloj; alrededor, la flor
-        // de dieciséis pétalos redondos que se abren uno a uno, cada uno sobre su sombra corrida en el complementario, que
-        // vibra como en los carteles. Al cerrar la vuelta, los surcos salen en el arcoíris del tintero partido.
+        // El disco que suena: el vinilo gira y la aguja va entintando sus surcos en el sentido del reloj. Alrededor, dieciséis
+        // pistas que se marcan una a una: en la ciudad, las rayas del dial de la radio, sobrias, con su sombra café corta; en
+        // la tinta, los rayos que ondulan del disco hecho sol, corridos de registro en el secundario. Al cerrar la vuelta, los
+        // surcos salen en las tintas del cartel (en la ciudad, en los colores de la etiqueta y del papel de foto).
         TemaId.PSICODELIA -> {
             val noche = e.background.luminance() < 0.5f
+            val ciudad = EstadoTema.cara == Cara.BASE
             val n = 16
-            // Los pétalos casi se tocan: su radio sale del de la vuelta.
-            val s = sin(Math.PI / n).toFloat() * 0.96f
-            val rp = (R - 4 * u) * s / (1 + s)
+            val rp = (R - 4 * u) * 0.16f
             val rc = R - 4 * u - rp
-            val fuera = rc + 2.5f * u; val dentro = fuera - 14 * u
+            val fuera = rc - rp - 1.5f * u; val dentro = fuera - 14 * u
             val medio = (fuera + dentro) / 2; val banda = fuera - dentro
             val vibra = e.secondary
-            val corrido = (if (p >= 1f) 3f else 2.2f) * u
-            // Los pétalos: los de las pistas que ya sonaron, abiertos sobre su sombra corrida en el complementario; los que
-            // faltan, apenas el contorno.
+            val corrido = (if (p >= 1f) 2.2f else 1.6f) * u
+            val sector = 2f * Math.PI.toFloat() / n
             for (k in 0 until n) {
-                val f = (k + 0.5f) / n
-                val q = en(f, rc)
-                if (pasado(k, n)) {
-                    if (noche) drawCircle(color.copy(alpha = 0.11f), rp * 1.25f, q)
-                    drawCircle(vibra, rp, Offset(q.x + corrido, q.y + corrido * 0.8f))
-                    drawCircle(color, rp, q)
+                // El ángulo del centro de la pista (en radianes, desde arriba en el sentido del reloj).
+                val a = ((k + 0.5f) / n * 360f - 90f) * Math.PI.toFloat() / 180f
+                val ya = pasado(k, n)
+                if (ciudad) {
+                    val q0 = en((k + 0.5f) / n, rc - rp); val q1 = en((k + 0.5f) / n, rc + rp)
+                    if (ya) drawLine(TrazosCiudad.SOMBRA.copy(alpha = 0.3f), q0 + Offset(0.8f * u, 1f * u), q1 + Offset(0.8f * u, 1f * u), 3.2f * u, StrokeCap.Round)
+                    drawLine(if (ya) color else pista, q0, q1, if (ya) 3.2f * u else 1.4f * u, StrokeCap.Round)
                 } else {
-                    drawCircle(e.background, rp, q)
-                    drawCircle(pista, rp, q, style = Stroke(1.2f * u))
+                    // Un rayo: una cuña que ondula una vez a lo largo (como los de [PiezasPsicodelia.corona]).
+                    val ancho = sector * 0.42f; val ondea = sector * 0.18f
+                    val rayo = Path().apply {
+                        for (s in 0..12) {
+                            val f = s / 12f; val rr = rc - rp + 2 * rp * f
+                            val b = a + ondea * sin(2f * Math.PI.toFloat() * f * 0.9f) - ancho * (0.5f + 0.25f * f) / 2f
+                            if (s == 0) moveTo(c.x + rr * cos(b), c.y + rr * sin(b)) else lineTo(c.x + rr * cos(b), c.y + rr * sin(b))
+                        }
+                        for (s in 12 downTo 0) {
+                            val f = s / 12f; val rr = rc - rp + 2 * rp * f
+                            val b = a + ondea * sin(2f * Math.PI.toFloat() * f * 0.9f) + ancho * (0.5f + 0.25f * f) / 2f
+                            lineTo(c.x + rr * cos(b), c.y + rr * sin(b))
+                        }
+                        close()
+                    }
+                    if (ya) {
+                        translate(corrido, corrido * 0.6f) { drawPath(rayo, vibra) }
+                        drawPath(rayo, color)
+                    } else drawPath(rayo, pista, style = Stroke(1.1f * u))
                 }
             }
             // El vinilo, con su canto y el borde de la etiqueta; dentro, la etiqueta apenas teñida del color del bloque.
-            val vinilo = if (noche) androidx.compose.ui.graphics.lerp(TrazosPsicodelia.VINILO, Color.White, 0.05f) else TrazosPsicodelia.VINILO
+            val negro = Color(0xFF1E1916)
+            val vinilo = if (noche) androidx.compose.ui.graphics.lerp(negro, Color.White, 0.05f) else negro
             drawCircle(color.copy(alpha = if (noche) 0.03f else 0.06f), dentro, c)
             drawCircle(vinilo, medio, c, style = Stroke(banda))
             drawCircle(Color.White.copy(alpha = if (noche) 0.1f else 0.16f), fuera - 0.6f * u, c, style = Stroke(1.2f * u))
@@ -694,10 +713,9 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
             val giro = p * 720f
             for (m in listOf(0f, 180f)) drawArc(Color.White.copy(alpha = if (noche) 0.08f else 0.13f), giro + m - 108f, 36f, false,
                 Offset(c.x - medio, c.y - medio), Size(medio * 2, medio * 2), style = Stroke(banda))
-            // Los surcos: lo que ya sonó se entinta en el color del bloque; al cerrar la vuelta, cada surco sale en un color del
-            // arcoíris del tintero partido.
-            val tinta = if (noche) listOf(TrazosPsicodelia.FLUOR_MAGENTA, TrazosPsicodelia.FLUOR_NARANJA, TrazosPsicodelia.LIMON, TrazosPsicodelia.FLUOR_VIOLETA)
-                else listOf(TrazosPsicodelia.MAGENTA, TrazosPsicodelia.NARANJA, TrazosPsicodelia.AMARILLO, TrazosPsicodelia.AZUL)
+            // Los surcos: lo que ya sonó se entinta en el color del bloque; al cerrar la vuelta, cada surco sale en una tinta.
+            val tinta = if (ciudad) listOf(TrazosCiudad.ETIQUETA, TrazosCiudad.LUZ_BAJA, TrazosCiudad.CASA_PINTADA, TrazosCiudad.SOL_VELADO)
+                else listOf(TrazosTinta.Tinta.MAGENTA, TrazosTinta.Tinta.BERMELLON, TrazosTinta.Tinta.ULTRAMAR, TrazosTinta.Tinta.MAGENTA).map { TrazosTinta.tinta(it, noche, EstadoTema.intensidad) }
             if (p > 0f && p < 1f) arco(color.copy(alpha = 0.22f), 0f, p, medio, banda)
             for (i in 0 until 4) {
                 val rs = dentro + banda * (0.2f + 0.2f * i)
@@ -705,11 +723,11 @@ private fun DrawScope.esferaEnfoque(t: TemaId, p: Float, color: Color, e: ColorS
                 if (p >= 1f) drawCircle(tinta[i], rs, c, style = Stroke(1.9f * u))
                 else arco(color, 0f, p, rs, 1.7f * u, StrokeCap.Round)
             }
-            // La aguja: una gota del color del bloque, con su brillo, donde va sonando.
+            // La aguja: la punta del brazo del tocadiscos, del color del bloque, con su brillo, donde va sonando.
             if (p > 0f && p < 1f) {
                 val q = en(p, medio)
                 drawCircle(color.copy(alpha = 0.3f), 8 * u, q)
-                drawPath(TrazosPsicodelia.gota(q, 5 * u, p * 3f, 0.14f), androidx.compose.ui.graphics.lerp(color, Color.White, 0.2f))
+                drawCircle(androidx.compose.ui.graphics.lerp(color, Color.White, 0.2f), 4.2f * u, q)
                 drawCircle(Color.White.copy(alpha = 0.8f), 1.4f * u, Offset(q.x - 1.5f * u, q.y - 1.5f * u))
             }
         }
@@ -1427,40 +1445,11 @@ private fun piezaTira(t: TemaId, x: Float, y: Float, w: Float, h: Float, u: Floa
             addRect(Rect(x, y, x + w, y + h))
             if (w > h) { addOval(Rect(Offset(x + h * 0.45f, y + h / 2), h * 0.18f)); fillType = PathFillType.EvenOdd }
         }
-        // Un tramo de letra de cartel que se derrite: el borde de arriba, inflado, y del de abajo cuelgan gotas, una larga y una
-        // corta; las piezas muy cortas quedan en una sola gota que cae.
+        // La ciudad: una placa de la ventanilla del trolebús, con las esquinas redondas de la cara. La tinta: un tramo del
+        // marco de arco del cartel, arriba redondo y abajo casi recto.
         TemaId.PSICODELIA -> {
-            if (w < h * 1.4f) {
-                // Una sola gota que cae: la punta arriba y la panza redonda abajo.
-                val cx = x + w / 2; val rr = minOf(w / 2, h * 0.38f)
-                moveTo(cx, y)
-                quadraticTo(cx + rr * 0.2f, y + (h - rr) * 0.5f, cx + rr, y + h - rr)
-                arcTo(Rect(Offset(cx, y + h - rr), rr), 0f, 180f, false)
-                quadraticTo(cx - rr * 0.2f, y + (h - rr) * 0.5f, cx, y)
-                close()
-            } else {
-                val ond = h * 0.08f; val arriba = y + ond; val pie = y + h * 0.74f; val rr = (pie - arriba) / 2
-                val xa = x + rr; val xb = x + w - rr
-                moveTo(xa, pie)
-                arcTo(Rect(Offset(xa, arriba + rr), rr), 90f, 180f, false)
-                // El borde de arriba, inflado como la letra de un cartel.
-                val m = maxOf(1, ((xb - xa) / (h * 2.4f)).toInt()); val paso = (xb - xa) / m
-                for (i in 0 until m) quadraticTo(xa + paso * (i + 0.5f), y - ond, xa + paso * (i + 1), arriba)
-                arcTo(Rect(Offset(xb, arriba + rr), rr), 270f, 180f, false)
-                // Las gotas que cuelgan del borde de abajo, de derecha a izquierda, una larga y una corta.
-                val dw = h * 0.12f
-                var dx = xb - h * 0.55f; var k = 0
-                while (dx > xa + h * 0.4f) {
-                    val largo = (y + h - pie) * (if (k % 2 == 0) 1f else 0.6f)
-                    val cuello = minOf(dw * 0.8f, largo - dw)
-                    lineTo(dx + dw * 1.8f, pie); quadraticTo(dx + dw, pie, dx + dw, pie + cuello)
-                    lineTo(dx + dw, pie + largo - dw); arcTo(Rect(Offset(dx, pie + largo - dw), dw), 0f, 180f, false)
-                    lineTo(dx - dw, pie + cuello); quadraticTo(dx - dw, pie, dx - dw * 1.8f, pie)
-                    dx -= h * 2.6f; k++
-                }
-                lineTo(xa, pie)
-                close()
-            }
+            if (EstadoTema.cara == Cara.BASE) addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(x, y, x + w, y + h), CornerRadius(minOf(h / 2, w / 2, 11f * u))))
+            else addPath(TrazosTinta.arco(Rect(x, y, x + w, y + h), minOf(h / 2, w / 2), minOf(2f * u, h / 4)))
         }
         // Un tramo de tallo: el borde de arriba ondula despacio y dos esquinas opuestas se redondean, como las del tema.
         TemaId.NOUVEAU -> {

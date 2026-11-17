@@ -1558,26 +1558,10 @@ private fun formaPiezaQuick(t: TemaId): Shape = when (t) {
     // El escudete: recto arriba y redondeado abajo.
     TemaId.TEMPLARIO -> RoundedCornerShape(topStart = 1.dp, topEnd = 1.dp, bottomEnd = 14.dp, bottomStart = 14.dp)
     TemaId.DISTOPIA -> RectangleShape
-    // El botón blando de un cartel que se derrite: las esquinas infladas, el canto de arriba apenas combado y, del de abajo,
-    // dos gotas que se escurren.
-    TemaId.PSICODELIA -> formaDp { w, h, u ->
-        val g = minOf(5.5f * u, h * 0.14f); val b = h - g
-        val r = minOf(14 * u, b / 2, w / 4); val f = minOf(1.8f * u, b * 0.05f)
-        fun gota(dx: Float, largo: Float, dw: Float) {
-            val cuello = minOf(dw * 0.8f, largo - dw)
-            lineTo(dx + dw * 1.8f, b); quadraticTo(dx + dw, b, dx + dw, b + cuello)
-            lineTo(dx + dw, b + largo - dw); arcTo(Rect(Offset(dx, b + largo - dw), dw), 0f, 180f, false)
-            lineTo(dx - dw, b + cuello); quadraticTo(dx - dw, b, dx - dw * 1.8f, b)
-    }
-    moveTo(0f, r + f); quadraticTo(0f, f, r, f)
-    quadraticTo(w / 2, -f, w - r, f)
-    quadraticTo(w, f, w, r + f)
-    lineTo(w, b - r); quadraticTo(w, b, w - r, b)
-    gota(w * 0.74f, g, minOf(2.2f * u, g * 0.4f))
-    gota(w * 0.3f, g * 0.62f, minOf(1.6f * u, g * 0.3f))
-    lineTo(r, b); quadraticTo(0f, b, 0f, b - r)
-    close()
-    }
+    // La ciudad: la placa redonda de la ventanilla del trolebús (las esquinas de la cara). La tinta: el marco de arco del
+    // cartel, arriba redondo y abajo casi recto. Se elige con la cara al componer.
+    TemaId.PSICODELIA -> if (EstadoTema.caraDe(t) == Cara.BASE) RoundedCornerShape(11.dp)
+        else formaDp { w, h, u -> addPath(TrazosTinta.arco(Rect(0f, 0f, w, h), minOf(14 * u, h / 2, w / 2), minOf(2f * u, h / 4))) }
     // El frasco de perfume: los hombros se estrechan en una S hacia el tapón, esquinas suaves abajo.
     TemaId.NOUVEAU -> formaDp { w, h, u ->
         val d = minOf(7 * u, w * 0.1f); val m = h * 0.5f; val r = minOf(4 * u, h / 4)
