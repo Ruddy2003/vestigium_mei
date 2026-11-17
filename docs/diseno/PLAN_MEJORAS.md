@@ -256,7 +256,7 @@ Cinco cosas que hoy ningún tema tiene y que el autor pidió para los 39 (son so
 
 ### Limpieza antes de pasar el código a `main`
 
-- **Quitar de `CLAUDE.md` el puntero** «Trabajo en curso fuera de `main`», que solo vale mientras el código esté en la rama. **Pendiente:** el cambio de `CLAUDE.md` lo aplica quien dirige (17 nov 2026).
+- **Quitar de `CLAUDE.md` el puntero** «Trabajo en curso fuera de `main`», que solo vale mientras el código esté en la rama. **Hecho** (17 nov 2026).
 - **Borrar el flujo temporal de capturas:** `.github/workflows/comparacion.yml`, `.github/comparacion.env` y la rama `comparacion-ci` (ya existe `capturas.yml` para lo de siempre). **Hecho el 17 nov 2026** con los archivos, y también con `temas-nuevos.yml` y `.github/temas-nuevos.env` (decía «se borra al pasar los temas a `main`»); las ramas remotas `comparacion-ci` y `temas-nuevos-ci` siguen ahí: las borra el autor si quiere.
 - **Revisar `gradle.properties`:** se subió la memoria del compilador (`kotlin.daemon.jvmargs=-Xmx9g`, `org.gradle.jvmargs=-Xmx3g`) porque con los Idearios nuevos 6 GB ya no alcanzaban. Hay que comprobar que `apk.yml` compila con eso. **Comprobado el 17 nov 2026**: con las escenas y los Idearios juntos, `apk.yml` compila.
 - **Actualizar `MUEBLES.md`:** su sección «Cómo se revisa» ya apunta al arnés; falta decir que la vara son los Idearios rehechos, no Galia y Art nouveau. **Hecho el 17 nov 2026.**
