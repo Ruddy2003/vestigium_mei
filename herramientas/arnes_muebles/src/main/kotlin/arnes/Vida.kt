@@ -114,7 +114,7 @@ private fun notasEjemplo(): List<Nota> {
 
 /** Como `Recuadro` de ui/pantallas/Galerias.kt: el título y el detalle encima, y el dibujo en su escena. */
 @Composable
-private fun RecuadroArnes(titulo: String, detalle: String, alto: Dp, luz: Boolean, dibujo: @Composable BoxScope.() -> Unit) {
+internal fun RecuadroArnes(titulo: String, detalle: String, alto: Dp, luz: Boolean, dibujo: @Composable BoxScope.() -> Unit) {
     val cs = MaterialTheme.colorScheme
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {

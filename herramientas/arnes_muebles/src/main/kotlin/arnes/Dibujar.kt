@@ -71,6 +71,7 @@ private fun uso(): Nothing {
           dibujar.sh comun psicodelia <claro|oscuro> <salida.png>    (las piezas comunes y de decoración de Psicodelia, según ARNES_CARA)
           dibujar.sh logros psicodelia <claro|oscuro> <salida.png>   (los trofeos, el hall, el salón y la campaña de Psicodelia, según ARNES_CARA)
           dibujar.sh vida <tema> <claro|oscuro> <salida.png>   (los muebles de la pestaña Vida y el tablero de notas)
+          dibujar.sh galeria <tema> <claro|oscuro> <salida.png>   (el mueble de la galería de cuadros; ARNES_CUADROS=0,1,5)
         Temas: ${TemaId.entries.joinToString(" ") { it.id }}
         Variable ARNES_HOY=AAAA-MM-DD: el «hoy» de los ejemplos (por omisión, el día lógico de hoy; las capturas de CI usan el día en que corrieron).
         Variables ARNES_TEMAS=0,1,5 (un Ideario por cada número de temas) y ARNES_MAX=6 (el Ideario cortado, con su placa «y N más»).
@@ -94,8 +95,10 @@ fun main(args: Array<String>) {
         "ideario", "biblioteca", "trazos", "comun", "logros" -> dibujar(args[0], tema(args[1]), oscuro, null)
         // El modo vida (arnes/Vida.kt): los muebles de la pestaña Vida y el tablero de notas de un tema.
         "vida" -> dibujar("vida", tema(args[1]), oscuro, null)
+        // El mueble de la galería de cuadros (arnes/Galeria.kt), con 0, 1 y 5 cuadros (ARNES_CUADROS).
+        "galeria" -> dibujar("galeria", tema(args[1]), oscuro, null)
         "hoja" -> {
-            if (args.size < 5 || args[1] !in setOf("ideario", "biblioteca")) uso()
+            if (args.size < 5 || args[1] !in setOf("ideario", "biblioteca", "galeria")) uso()
             val temas = args[4].split(',').filter { it.isNotBlank() }.map(::tema)
             juntar(temas.map { t -> dibujar(args[1], t, oscuro, t.nombre + " (" + t.id + ")") })
         }
@@ -153,6 +156,7 @@ private fun dibujar(que: String, t: TemaId, oscuro: Boolean, titulo: String?): I
                     "comun" -> MuestraComun(o)
                     "logros" -> MuestraLogros(o)
                     "vida" -> Vida()
+                    "galeria" -> GaleriaArnes()
                     else -> Biblioteca()
                 }
             }
