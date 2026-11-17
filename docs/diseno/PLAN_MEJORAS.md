@@ -117,6 +117,40 @@ Además, el autor notó que **algunas notificaciones no suenan**: hay que revisa
 6. **El código no pasa a `main` sin avisar al autor.** Hay otras ramas trabajando sobre `main` (las de escenas): antes de mezclar se trae `main` a la rama, se revisan los choques y se le cuenta al autor qué se encontró.
 7. **Los agentes, con Opus.**
 
+## Para quien dibuje los cuadros de Psicodelia y de Frente exterior
+
+Los dos temas nuevos que todavía no tienen cuadro en «Otras vidas» son **Psicodelia** (`psicodelia`; David, dibujante de carteles, San Francisco, 1965–1969) y **Frente exterior** (`frente`, el del espía; Tadeo, ladrón de piezas y agente de la red, en el puerto de Halde). Esto es lo que necesita quien los dibuje.
+
+**Dónde está el código.** En la rama **`ccr-ca31af2d-ua0p3j`** (no en `main`): `git fetch origin ccr-ca31af2d-ua0p3j` y parte de ahí. En `main` no existen esos dos temas, ni sus vidas, ni sus cuentos.
+
+**Qué leer, en este orden:**
+1. `CLAUDE.md` (el apartado de las escenas) y **entera** `docs/diseno/ESCENAS.md`: el estilo, las diez reglas, la vara (el cuadro de Helénico) y la receta para dibujar en el arnés de escenas (`docs/historia/informes/P4a.md`).
+2. `docs/plan_historia_y_escenas.md`: cómo se reparten las tandas y la decisión 18 (el cuento y el cuadro cuentan lo mismo).
+3. La guía de cada tema: `docs/diseno/temas/psicodelia.md` (empezando por su última sección, «Decisiones del autor») con `psicodelia_base.md` (los nombres de colores y trazos que ya existen: `TrazosCiudad`, `TrazosTinta`, `EstadoTema`), y `docs/diseno/temas/frente.md`. Sus fichas, en `PLAN_TEMAS.md`.
+4. La historia de cada personaje, que es lo que el cuadro tiene que contar:
+   - David: `vidas/anios/AnioG9.kt` (busca el comentario «Lo que el cuadro tiene que mostrar»: ahí están todas las claves de escena) y `vidas/piezas/PiezasDavid.kt`.
+   - Tadeo: `vidas/piezas/PiezasTadeo.kt` y su año, también en `vidas/anios/AnioG9.kt` (busca `agente_red` y su comentario «Lo que el cuadro tiene que mostrar»).
+5. Un cuadro reciente como modelo de código: `ui/escenas/EscenaNeon.kt` o `EscenaVapor*.kt`, y `ui/escenas/EscenaVida.kt` (`Momento`: la hora, `m.hacer`, `m.con("clave")`).
+
+**Lo propio de Psicodelia:**
+- **El cuadro no lee la cara ni la intensidad del tema.** La cara y la intensidad dependen de la hora y de lo que anota la persona; el cuadro cuenta la vida de David. Lo que cambia el cuadro son las claves de su día.
+- **Dos claves nuevas, ya escritas en el calendario** (y vigiladas por pruebas): `humo`, los viernes por la noche (marihuana: de 20 a 4 h, una bruma baja y tibia, las luces un poco más vivas; cambio leve) y `noche_tinta`, las noches de LSD y de hongos (de 20 a 4 h **el cuadro entero pasa a la manera del cartel**: tres tintas planas, bandas que fluyen desde las luces de la pared, el registro corrido). El comentario de `AnioG9.kt` describe qué cambia en cada una y en qué se distinguen el LSD y los hongos.
+- **Anotado por el autor para después:** que cada sustancia cambie la escena de una forma distinta, intentando reproducir visualmente su efecto. Los textos de esas noches en `PiezasDavid.kt` ya lo describen con detalle; el cuadro puede apoyarse en ellos.
+- De día el cuadro es la ciudad sobria (la calle de casas victorianas grises, la niebla, los cables del trolebús); sin tópicos (flores, símbolo de la paz, arcoíris, furgonetas).
+- El gato: en `ui/escenas/Pelajes.kt` la rama de Psicodelia está en `null` porque no había cuadro; el pelaje nuevo es el atigrado naranja de la banda (`herramientas/gato/`).
+
+**Archivos que NO debe tocar** (otros trabajos dependen de ellos tal como están):
+- `ui/escenas/paisaje/**`: no se cambia cómo se ve ninguna pieza que ya usa un cuadro aprobado. Agregar piezas nuevas sí se puede.
+- Los cuadros de los demás temas (`Escena<Tema>*.kt`), `GatoCuadro.kt`, `GatoDibujo.kt`, `GatoEsqueleto.kt`.
+- `vidas/**` (las historias y sus pruebas): si al cuadro le falta una clave, se pide; no se cambia la historia para acomodar el dibujo.
+- `data/Modelo.kt` y `SCHEMA_V` (un cuadro no guarda nada), `data/OtrasVidas.kt` salvo que haga falta una clave de escena.
+- Todo lo de los muebles y del tema: `ui/ideario/**`, `ui/biblioteca/**`, `ui/vida/**`, `ui/comun/**`, `ui/CaraTema.kt`, `ui/PsicodeliaTrazos.kt`, `ui/PsicodeliaPiezas.kt`, `ui/Tema.kt`, `herramientas/arnes_muebles/**`.
+- La firma (`app/vestigium.jks`, `signingConfigs`) y los flujos de `.github/`.
+
+**Lo que sí toca:** archivos nuevos `ui/escenas/EscenaPsicodelia*.kt`, `EscenaFrente*.kt`, `PelajePsicodelia.kt`, `PelajeFrente.kt`, `BanderitaPsicodelia.kt`, `BanderitaFrente.kt`, sus imágenes de referencia en `docs/diseno/escenas/`, y **una línea por tema** en los tres repartos: `EscenaVida.kt` (los dos `when`), `Banderitas.kt` y `Pelajes.kt`.
+
+**Ojo con `main`:** otras ramas de escenas trabajan sobre `main` y esos tres repartos y `paisaje/` son justo donde pueden chocar. Conviene que quien dibuje estos dos cuadros traiga `main` a su rama antes de empezar (`git merge origin/main`) y diga qué chocó; y que su trabajo vuelva a esta rama, no a `main` directamente.
+
 ## Lo que queda pendiente, para quien lo retome
 
 Todo lo de esta sección está sin hacer. Cada punto dice qué decidió el autor, dónde está el código y cómo se trabaja, para poder retomarlo sin la conversación original.
