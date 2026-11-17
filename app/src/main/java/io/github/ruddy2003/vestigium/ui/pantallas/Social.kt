@@ -245,9 +245,11 @@ internal fun rememberModelo(vistaFija: String? = null): GrafoSocial.Modelo? {
     return m?.takeIf { it.vista == vista }
 }
 
+/** La vista (red o cielo) y, a su lado, sus filtros. Van en filas que se parten (17 nov 2026): con tres filtros, el último ya no cabía y había que desplazar para verlo. */
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 private fun SelectorVista(alCambiar: () -> Unit = {}) {
-    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    androidx.compose.foundation.layout.FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Ficha("red", GrafoSocial.vista == "red") { GrafoSocial.vista = "red"; alCambiar() }
         Ficha("cielo", GrafoSocial.vista == "cielo") { GrafoSocial.vista = "cielo"; alCambiar() }
         Text("·", color = MaterialTheme.colorScheme.outline, modifier = Modifier.align(Alignment.CenterVertically))

@@ -163,7 +163,7 @@ class CapturasInterfaz {
                     }
                 }
             }
-            captura(c, oscuro, 2600, "${n}_gente") {
+            captura(c, oscuro, 4400, "${n}_gente") {
                 Column(Modifier.padding(16.dp)) { TarjetaQuienEs(vinculosAbiertos = true) }
             }
             // La entrada con tres personas: @luis, «pensé en»; @marta, «mensaje o llamada»; @ana, «estuve con».
