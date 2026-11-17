@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -51,7 +52,9 @@ import io.github.ruddy2003.vestigium.ui.GatoDelDia
 import io.github.ruddy2003.vestigium.ui.Sentidos
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.ahorroDeEnergia
+import io.github.ruddy2003.vestigium.ui.iconoPestana
 import io.github.ruddy2003.vestigium.ui.rememberSentir
+import io.github.ruddy2003.vestigium.ui.tieneIconoDeDiario
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -150,34 +153,39 @@ fun CuadroDelDia(
                 // Parte 8: ampliar, sobre la esquina de abajo (los toques del cuadro ya son del gato y de la historia).
                 BotonAmpliar(ampliar, Modifier.align(Alignment.BottomEnd).padding(8.dp))
             }
-            BotonCuento(c.titulo, c.especial, leer, Modifier.padding(top = 8.dp), de = quien.nombre)
+            BotonCuento(c.titulo, c.especial, leer, Modifier.padding(top = 8.dp), de = quien.nombre, tema = tema)
             // Parte 8: «Hoy en la historia», también como botón (la pulsación larga sigue).
-            if (alHistoria != null) BotonHistoria(c.banderita, { sentir(Sentidos.Evento.ABRIR); alHistoria() }, Modifier.padding(top = 6.dp))
+            if (alHistoria != null) BotonHistoria({ sentir(Sentidos.Evento.ABRIR); alHistoria() }, Modifier.padding(top = 8.dp))
             if (ampliado) CuadroAmpliado(c, hora) { ampliado = false }
         }
     }
 }
 
 /**
- * «Hoy en la historia», debajo del botón del cuento (parte 8): más bajo que él, del color secundario del tema, con la
- * banderita del tema pequeña a la izquierda (si el tema tiene) y una flecha a la derecha. Abre la pantalla con [alAbrir].
+ * «Hoy en la historia», debajo del botón del cuento (parte 8). Desde el 17 nov 2026, del mismo tamaño y el mismo peso que
+ * el del cuento: una franja del color secundario del tema, de 64 dp de alto, con el mismo filete por dentro, un reloj de
+ * arena a la izquierda (el mismo en todos los temas, del trazo del libro del cuento) y, debajo del nombre, su renglón
+ * pequeño. Ya no lleva la banderita: la banderita del cuadro dice ahora que el personaje tiene un día especial. Abre la
+ * pantalla con [alAbrir].
  */
 @Composable
-internal fun BotonHistoria(banderita: Banderita?, alAbrir: () -> Unit, modifier: Modifier = Modifier) {
+internal fun BotonHistoria(alAbrir: () -> Unit, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
     val tinta = cs.onSecondary
     Row(
-        modifier.fillMaxWidth().heightIn(min = 44.dp).clip(MaterialTheme.shapes.medium).background(cs.secondary)
+        modifier.fillMaxWidth().heightIn(min = 64.dp).clip(MaterialTheme.shapes.medium).background(cs.secondary)
+            .drawBehind { fileteDeTapa(tinta) }
             .clickable(onClickLabel = "abrir «Hoy en la historia»", role = Role.Button, onClick = alAbrir)
             .semantics(mergeDescendants = true) { contentDescription = "Hoy en la historia: lo que pasó un día como hoy" }
-            .padding(start = 14.dp, end = 14.dp, top = 6.dp, bottom = 6.dp),
+            .padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // La banderita a la mitad de su tamaño (se dibuja en unidades de su ancho), llena.
-        if (banderita != null) Canvas(Modifier.size((Banderita.ANCHO * 0.6f).dp, (Banderita.ALTO * 0.6f).dp).clearAndSetSemantics { }) { with(banderita) { dibujar(1f) } }
-        Text("Hoy en la historia", style = MaterialTheme.typography.titleSmall, color = tinta, maxLines = 1, overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(start = if (banderita != null) 12.dp else 0.dp).weight(1f))
-        Text("›", style = MaterialTheme.typography.titleMedium, color = tinta.copy(alpha = 0.8f), modifier = Modifier.clearAndSetSemantics { })
+        Canvas(Modifier.size(34.dp, 30.dp).clearAndSetSemantics { }) { relojDeArena(tinta) }
+        Column(Modifier.padding(start = 12.dp).weight(1f)) {
+            Text("Hoy en la historia", style = MaterialTheme.typography.titleMedium, color = tinta, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text("lo que pasó un día como hoy ›", style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 0.8.sp),
+                color = tinta.copy(alpha = 0.82f), modifier = Modifier.padding(top = 2.dp))
+        }
     }
 }
 
@@ -191,9 +199,14 @@ private const val TITULO_CORTO = 30
  * como el de una tapa y una cinta de marcapáginas que cuelga a la derecha. Con [especial], el renglón pequeño lo dice.
  * Sin [alLeer] (mientras el cuadro se prepara) queda apagado y vacío, con su tamaño. [pie] cambia el renglón pequeño
  * (lo usa la entrada «Los cuentos de hoy» de «Otras vidas»).
+ *
+ * Con [tema] (17 nov 2026), en lugar del libro abierto va el ícono del Diario de ese tema en la barra de abajo (la
+ * tablilla de cera, el códice, el expediente…), salvo en los temas cuyo ícono de Diario es el de Momentos reciclado
+ * (`tieneIconoDeDiario`): esos siguen con el libro.
  */
 @Composable
-internal fun BotonCuento(titulo: String, especial: Boolean, alLeer: (() -> Unit)?, modifier: Modifier = Modifier, de: String = "", pie: String = "leer el cuento ›") {
+internal fun BotonCuento(titulo: String, especial: Boolean, alLeer: (() -> Unit)?, modifier: Modifier = Modifier, de: String = "", pie: String = "leer el cuento ›",
+                         tema: TemaId? = null) {
     val cs = MaterialTheme.colorScheme
     val forma = MaterialTheme.shapes.medium
     val tinta = cs.onPrimary
@@ -210,7 +223,10 @@ internal fun BotonCuento(titulo: String, especial: Boolean, alLeer: (() -> Unit)
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (!apagado) {
-            Canvas(Modifier.size(34.dp, 26.dp).clearAndSetSemantics { }) { libroAbierto(tinta) }
+            if (tema != null && tieneIconoDeDiario(tema)) Canvas(Modifier.size(34.dp, 30.dp).clearAndSetSemantics { }) {
+                // El ícono va en un cuadrado del alto del lienzo, centrado a lo ancho.
+                translate(left = (size.width - size.height) / 2f) { iconoPestana("diario", tema, tinta) }
+            } else Canvas(Modifier.size(34.dp, 26.dp).clearAndSetSemantics { }) { libroAbierto(tinta) }
             Column(Modifier.padding(start = 12.dp).weight(1f)) {
                 val letra = if (titulo.length > TITULO_CORTO) MaterialTheme.typography.titleSmall else MaterialTheme.typography.titleMedium
                 Text(titulo, style = letra, color = tinta, maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -221,12 +237,17 @@ internal fun BotonCuento(titulo: String, especial: Boolean, alLeer: (() -> Unit)
     }
 }
 
+/** El filete de una tapa, por dentro del borde, con las esquinas apenas redondeadas: lo llevan el botón del cuento y el de la historia. */
+private fun DrawScope.fileteDeTapa(tinta: Color) {
+    val u = 1.dp.toPx()
+    drawRoundRect(tinta.copy(alpha = 0.32f), Offset(4 * u, 4 * u), Size(size.width - 8 * u, size.height - 8 * u),
+        androidx.compose.ui.geometry.CornerRadius(3 * u), style = Stroke(0.9f * u))
+}
+
 /** Lo que el botón del cuento lleva pintado detrás del texto: el filete de la tapa y la cinta de marcapáginas. */
 private fun DrawScope.adornoDeCuento(tinta: Color, cinta: Color) {
     val u = 1.dp.toPx()
-    // El filete, por dentro del borde, con las esquinas apenas redondeadas.
-    drawRoundRect(tinta.copy(alpha = 0.32f), Offset(4 * u, 4 * u), Size(size.width - 8 * u, size.height - 8 * u),
-        androidx.compose.ui.geometry.CornerRadius(3 * u), style = Stroke(0.9f * u))
+    fileteDeTapa(tinta)
     // La cinta: cuelga del borde de arriba, con su muesca en pico.
     val x = size.width - 28 * u; val ancho = 11 * u; val largo = minOf(size.height * 0.62f, 40 * u)
     val forma = Path().apply {
@@ -258,6 +279,39 @@ private fun DrawScope.libroAbierto(tinta: Color) {
         }
     }
     drawLine(tinta, Offset(medio, h * 0.2f), Offset(medio, h * 0.94f), 1.5.dp.toPx(), cap = StrokeCap.Round)
+}
+
+/**
+ * Un reloj de arena, con el trazo del libro del cuento: los dos travesaños, el vidrio que se estrecha al centro, lo que
+ * queda de arena arriba, el hilo que cae y el montón de abajo. Es el ícono de «Hoy en la historia» en todos los temas.
+ */
+private fun DrawScope.relojDeArena(tinta: Color) {
+    val w = size.width; val h = size.height; val c = w / 2
+    val a = minOf(w, h * 0.8f)
+    val trazo = Stroke(1.5.dp.toPx(), cap = StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
+    val arriba = h * 0.12f; val abajo = h * 0.88f; val medio = h * 0.5f
+    val x0 = c - a * 0.34f; val x1 = c + a * 0.34f
+    val vidrio = Path().apply {
+        moveTo(x0, arriba); lineTo(x1, arriba)
+        cubicTo(x1, h * 0.34f, c + a * 0.07f, h * 0.42f, c + a * 0.05f, medio)
+        cubicTo(c + a * 0.07f, h * 0.58f, x1, h * 0.66f, x1, abajo)
+        lineTo(x0, abajo)
+        cubicTo(x0, h * 0.66f, c - a * 0.07f, h * 0.58f, c - a * 0.05f, medio)
+        cubicTo(c - a * 0.07f, h * 0.42f, x0, h * 0.34f, x0, arriba)
+        close()
+    }
+    drawPath(vidrio, tinta.copy(alpha = 0.16f))
+    // Lo que queda arriba: un embudo de arena que baja hasta el cuello.
+    drawPath(Path().apply {
+        moveTo(c - a * 0.2f, h * 0.31f); lineTo(c + a * 0.2f, h * 0.31f)
+        quadraticTo(c + a * 0.07f, h * 0.42f, c, medio - h * 0.03f); quadraticTo(c - a * 0.07f, h * 0.42f, c - a * 0.2f, h * 0.31f); close()
+    }, tinta.copy(alpha = 0.7f))
+    // El montón de abajo y el hilo que cae sobre él.
+    drawPath(Path().apply { moveTo(c - a * 0.29f, abajo); quadraticTo(c, h * 0.6f, c + a * 0.29f, abajo); close() }, tinta.copy(alpha = 0.7f))
+    drawLine(tinta.copy(alpha = 0.7f), Offset(c, medio), Offset(c, h * 0.73f), 1.dp.toPx(), cap = StrokeCap.Round)
+    drawPath(vidrio, tinta, style = trazo)
+    // Los travesaños, más anchos que el vidrio.
+    for (y in listOf(arriba, abajo)) drawLine(tinta, Offset(c - a * 0.46f, y), Offset(c + a * 0.46f, y), 2.dp.toPx(), cap = StrokeCap.Round)
 }
 
 /** La hora de ahora, de 0 a 24 con decimales. Se vuelve a mirar cada veinte segundos, solo mientras la app está en pantalla. */
