@@ -1,12 +1,12 @@
 # Psicodelia (`psicodelia`): guía de diseño
 
-**Versión 2 (16 nov 2026).** Reescrita con lo que decidió el autor al ver el tema terminado. La versión 1 (la del 15 nov 2026: Modak, Fredoka, el verde limón de la luz negra, la flor que vibra) queda en la historia de git y resumida en la ficha (`docs/diseno/PLAN_TEMAS.md`, lote 10g). El plan para llevar esta guía al código está en [`psicodelia_plan.md`](psicodelia_plan.md); la lámina de muestra, en [`muestras/psicodelia_caras.png`](muestras/psicodelia_caras.png) (la dibuja `herramientas/muestras/psicodelia_caras.py`).
+**Versión 2 (16 nov 2026), al día con lo programado (17 nov 2026).** Reescrita con lo que decidió el autor al ver el tema terminado; después de ver la lámina, el autor contestó las preguntas de la guía (al final, «Decisiones del autor después de ver la lámina») y las secciones de abajo ya dicen lo que se programó. Lo técnico (los nombres del código, la caché, cómo se lee la cara) está en [`psicodelia_base.md`](psicodelia_base.md). La versión 1 (la del 15 nov 2026: Modak, Fredoka, el verde limón de la luz negra, la flor que vibra) queda en la historia de git y resumida en la ficha (`docs/diseno/PLAN_TEMAS.md`, lote 10g). El plan para llevar esta guía al código está en [`psicodelia_plan.md`](psicodelia_plan.md); la lámina de muestra, en [`muestras/psicodelia_caras.png`](muestras/psicodelia_caras.png) (la dibuja `herramientas/muestras/psicodelia_caras.py`).
 
 Si algo de aquí choca con la ficha, manda la ficha; si choca con `UnicidadTemas`, se cambia aquí y se anota. Las fechas, los lugares y las frases se comprueban en [`fuentes_psicodelia.md`](fuentes_psicodelia.md): lo que esa tabla no sostiene no se usa.
 
 ## La idea, en una frase
 
-**Una ciudad de los 70, sobria y gastada, que de noche se vuelve cartel.** El tema sigue en San Francisco a fines de los 60, con David Hale y su calendario de 1965 a 1969 (de las fotos de los 70 se toma el aspecto, no la época ni la ciudad). De día es la ciudad: la ventanilla del trolebús por la tarde, las casas victorianas grises, el papel de foto amarillento, el naranja quemado, el verde botella y el café. De noche es la psicodelia: tres tintas planas, como de serigrafía, sobre papel crema o sobre negro de terciopelo, con rayos que ondulan, bandas que fluyen y letras de bloque que llenan su forma. **Y con un consumo de cannabis en curso, la noche se satura**: las tintas suben de croma, las bandas se mueven y se salen del marco, el registro se corre. El texto y los datos se leen igual siempre.
+**Una ciudad de los 70, sobria y gastada, que de noche se vuelve cartel.** El tema sigue en San Francisco a fines de los 60, con David Hale y su calendario de 1965 a 1969 (de las fotos de los 70 se toma el aspecto, no la época ni la ciudad). De día es la ciudad: la ventanilla del trolebús por la tarde, las casas victorianas grises, el papel de foto amarillento, el naranja quemado, el verde botella y el café. De noche es la psicodelia: tres tintas planas, como de serigrafía, sobre papel crema o sobre negro de terciopelo, con rayos que ondulan, bandas que fluyen y letras de bloque que llenan su forma. **Y con un consumo en curso, entra el cartel también de día y se satura**: las tintas suben de croma, las bandas se mueven y se salen del marco, el registro se corre. El texto y los datos se leen igual siempre.
 
 Lo que el autor pidió, en sus palabras: «una base de los años 70 sobria, urbana, pero que a veces se haga súper psicodélico»; «una psicodelia más seria pero sí colorida, pero pensada»; «no imágenes estereotipadas de los 70».
 
@@ -22,7 +22,7 @@ Lo que el autor pidió, en sus palabras: «una base de los años 70 sobria, urba
 | La lámpara de cera | Tópico, y su forma es marca (corrección 11) | Las **luces líquidas** del retroproyector (comprobado, sección 5), dibujadas como manchas planas de tinta |
 | La letra burbuja (Modak) y la redonda blanda (Fredoka) | Lo que el autor llamó «colorido y bonito»; la burbuja no es la letra de los carteles | Letra de bloque que llena su forma (Chango) y un grotesco americano sobrio (Libre Franklin) |
 | El «hippie» de disfraz: cinta en la frente, gafas redondas de colores, chaleco de flecos, teñido anudado, la camioneta pintada | Disfraz de fiesta temática | Gente que no se dibuja (regla de siempre), objetos con uso: plumillas, frascos de tinta, carpetas, pases de autobús |
-| La hoja de cannabis, los hongos de caricatura, la espiral hipnótica, la cara sonriente, el ojo en la pirámide | Tópicos de camiseta; además, la hoja haría del consumo un adorno | Nada. El consumo no se dibuja: se nota en cómo se ve la noche (ver «La intensidad») |
+| La hoja de cannabis, los hongos de caricatura, la espiral hipnótica, la cara sonriente, el ojo en la pirámide | Tópicos de camiseta; además, la hoja haría del consumo un adorno | Nada. El consumo no se dibuja: se nota en cómo se ve el cartel (ver «La intensidad») |
 | El verde limón de la luz negra y el magenta de neón juntos | Acercaba el oscuro a Ciudad neón | Negro de terciopelo con magenta, bermellón y ultramar, y el crema del papel |
 | Las tildes que ondulan en los números («~17~») | Adorno de chiste | Números entre paréntesis, como en un horario: «(17)» |
 | Las calles enteras de casas de colores | Son de los 70, no de 1967 (corrección 1) | Casi todas grises; una pintada, desteñida por la foto |
@@ -40,7 +40,7 @@ Lo que el autor pidió, en sus palabras: «una base de los años 70 sobria, urba
 
 ### Lo que se va
 
-La flor que vibra (emblema), la paz como adorno, la lámpara de cera (trofeo, gato, Ideario), la cinta de la frente y las gafas del gato, las margaritas del mostrador y de la maceta, el arcoíris pintado en el vidrio, la calcomanía de flor de las postales, el tubo de luz negra como objeto de cada mueble, Modak, Fredoka y los colores de la v1 (`TrazosPsicodelia` entero).
+La flor que vibra (emblema), la paz como adorno, la lámpara de cera (trofeo, gato, Ideario), la cinta de la frente y las gafas del gato, las margaritas del mostrador y de la maceta, el arcoíris pintado en el vidrio, la calcomanía de flor de las postales, el tubo de luz negra como objeto de cada mueble, Modak, Fredoka y los colores de la v1 (`TrazosPsicodelia` entero). **Todo eso ya se retiró del código** (cierre de la versión 2, 17 nov 2026): el archivo, las letras y sus recursos se borraron.
 
 ### Las drogas: ya no son tabú, pero el tema no las vende
 
@@ -48,12 +48,12 @@ El autor quitó la regla de «sin drogas» (16 nov 2026): el personaje consume e
 
 ## Las dos caras
 
-Hasta ahora, en todos los temas, el claro y el oscuro eran el mismo mundo con otra luz (ficha 10a). Psicodelia agrega un segundo eje: **la cara**, que decide la hora. Cada cara es un mundo propio y tiene su claro y su oscuro, que sí son el mismo mundo con otra luz. Son cuatro variantes.
+Hasta ahora, en todos los temas, el claro y el oscuro eran el mismo mundo con otra luz (ficha 10a). Psicodelia agrega un segundo eje: **la cara**, que deciden la hora y los consumos en curso. Cada cara es un mundo propio y tiene su claro y su oscuro, que sí son el mismo mundo con otra luz. Son cuatro variantes.
 
 | | Claro | Oscuro |
 |---|---|---|
-| **Ciudad** (de 5:00 a 21:00) | La calle por la tarde, desde la ventanilla del trolebús | El cuarto con la lámpara de pantalla encendida y el tocadiscos de maleta |
-| **Psicodelia** (de 21:00 a 5:00) | El cartel impreso: tintas planas sobre papel crema | El cartel de luz negra: tintas sobre negro de terciopelo |
+| **Ciudad** (de 5:00 a 21:00, sin consumo en curso) | La calle por la tarde, desde la ventanilla del trolebús | El cuarto con la lámpara de pantalla encendida y el tocadiscos de maleta |
+| **Psicodelia** (de 21:00 a 5:00, o con un consumo en curso a cualquier hora) | El cartel impreso: tintas planas sobre papel crema | El cartel de luz negra: tintas sobre negro de terciopelo |
 
 Las horas son las de `ModoHora` (`OSCURECE = 21`, `AMANECE = 5`), las mismas del cuadro de «Otras vidas» y del día lógico. Así, con el modo «hora», el tema pone la ciudad clara de día y la psicodelia oscura de noche, como pidió el autor.
 
@@ -75,6 +75,7 @@ Las horas son las de `ModoHora` (`OSCURECE = 21`, `AMANECE = 5`), las mismas del
   - de los dos, la **simetría** y una **figura central** (aquí, siempre el disco del día, nunca una cara ni un cuerpo).
 - **Motivos:** el disco del día como sol; los rayos que ondulan; las bandas que fluyen; la trama de líneas; el marco de arco del cartel; las luces líquidas como manchas planas; las letras de bloque. Sin flores, sin paz, sin ojos.
 - **El fondo vivo:** las bandas respiran (amplitud de 2 dp, un ciclo de 12 s) y el disco gira a la vista una vuelta cada 3 minutos (33 ⅓ es demasiado: marea). Lo que hace la intensidad, abajo.
+- **Más dibujo de cartel** (decisión 1 del autor): además de las bandas y el disco, la cara lleva figuras de cartel en todo lo que dibuja (la corona de rayos que ondulan del disco hecho sol, el marco de arco, la trama de grabado fino, las letras de bloque que llenan su forma, las luces líquidas como manchas planas, las marcas de registro de la prueba de imprenta); cada mueble y cada pieza se imprime, no solo se colorea.
 
 ### Las cuatro paletas
 
@@ -136,26 +137,32 @@ Las tintas de dibujo nunca llevan texto. El bermellón sobre papel da 3.2 (vale 
 
 ### De dónde sale
 
-Una sola cifra, `i`, de 0 a 1, que el tema **solo lee** de lo que ya está anotado; no registra ni pregunta nada.
+Una sola cifra, `i`, de 0 a 1, que el tema **solo lee** de lo que ya está anotado; no registra ni pregunta nada (`Intensidad.de`, en `ui/CaraTema.kt`; pruebas en `IntensidadPrueba`).
 
 ```
-i(ahora) = mín(1, máx sobre c de nivel(c, ahora) / 10)
+i(ahora) = deNivel(máx sobre c de nivel(c, ahora))      (0 si no hay ninguno)
 
   donde c recorre Repo.consumos con:
-    c.sustancia == "cannabis"
-    "cannabis" no está en config.sustancias_ocultas
+    la sustancia de c tiene nivel (Catalogo.Sustancia.conNivel: hoy alcohol, cannabis y «otra»)
     millis(c.inicio) ≤ ahora ≤ Sustancias.finEfectivo(c, ahora)
 
-  y nivel(c, ahora) = Sustancias.nivelEn(c, ahora) ?: 5.0
+  nivel(c, ahora) = Sustancias.nivelEn(c, ahora, ahora) ?: 3
+
+  deNivel(n) = 0                       si n ≤ 0
+             = 0.5 · n / 3             si 0 < n ≤ 3
+             = 0.5 + 0.5 · (n − 3) / 5 si 3 < n < 8
+             = 1                       si n ≥ 8
 ```
 
-- `Sustancias.nivelEn` (en `data/Sustancias.kt`) es la misma interpolación que usa la exportación (`Exportar.nivelSustancia`, columna `cannabis_nivel`): une las lecturas de nivel (0 a 10) con rectas; si solo hay máximo, sube de 0 al máximo en el primer 35 % del episodio, se queda hasta el 65 % y baja a 0 al final; mientras el consumo sigue abierto, se queda en la última lectura.
+- **Cualquier sustancia con nivel** (decisión 4 del autor): el alcohol, el cannabis y la «otra». El tabaco y la cafeína no tienen nivel y no cuentan.
+- **La escala, por tramos:** nivel 3 da la intensidad media (0.5) y nivel 8 la máxima (1); entre medias, en línea recta; por encima de 8, sigue en 1.
+- `Sustancias.nivelEn` (en `data/Sustancias.kt`) es la misma interpolación que usa la exportación (`Exportar.nivelSustancia`): une las lecturas de nivel (0 a 10) con rectas; si solo hay máximo, sube de 0 al máximo en el primer 35 % del episodio, se queda hasta el 65 % y baja a 0 al final; mientras el consumo sigue abierto, se queda en la última lectura.
 - `Sustancias.finEfectivo`: el fin anotado; si sigue abierto y empezó hace menos de 18 horas, «ahora»; si quedó abierto de otro día, 4 horas después del inicio. Así un consumo que se olvidó cerrar no deja el tema encendido para siempre.
-- **Sin nivel anotado** (`nivelEn` da null porque no hay lecturas ni máximo): cuenta como 5, i = 0.5. Se sabe que hay un consumo en curso, no cuánto.
+- **Sin nivel anotado:** cuenta como nivel 3 (i = 0.5). Se sabe que hay un consumo en curso, no cuánto.
 - **Varios consumos a la vez:** el mayor (como `nivelSustancia`).
-- **Se respeta `sustancias_ocultas`:** si el cannabis está oculto en las pantallas, el tema no reacciona. Ese interruptor existe para que nadie que mire el teléfono lo vea; un tema que se enciende lo delataría.
-- **Solo cannabis**, como pidió el autor. El alcohol y la sustancia «otra» no cuentan (ver «Lo que debe decidir el autor»).
-- **En la pantalla:** el cambio de `i` se anima en 4 s (y en 10 s cuando un consumo se cierra y cae a 0), para que no salte.
+- **Reacciona aunque la sustancia esté en `sustancias_ocultas`** (decisión 5 del autor).
+- **En la pantalla:** el cambio de `i` se anima en 4 s (y en 10 s cuando un consumo se cierra y cae a 0), para que no salte (`MedidorIntensidad`). El medidor vuelve a mirar al cambiar los consumos, al volver a la app y, solo con un consumo abierto, cada 2 minutos.
+- **No se guarda ni se exporta:** no sube `SCHEMA_V` ni cambia `Exportar`, `Diccionario` ni `vestigium.R`.
 
 ### Qué hace cada cosa con ella (cara psicodelia)
 
@@ -165,14 +172,14 @@ i(ahora) = mín(1, máx sobre c de nivel(c, ahora) / 10)
 | Primario, secundario, terciario (oscuro) | `#DD80A4`, `#94A1DB`, `#B79BE0` | `#EC73A5`, `#909EEB`, `#BE95F0` | `#FA63A5`, `#8C9CFB`, `#C58CFF` |
 | Primario, secundario, terciario (claro) | `#974164`, `#404D99`, `#6A3E8E` | `#A43164`, `#3B47AD`, `#6F3399` | `#B11265`, `#383EC1`, `#7428A6` |
 | Tintas en uso | dos (magenta y ultramar) + la del papel | las tres | las tres |
-| Bandas del motivo | 7 por lado, amplitud 6 dp, trazo de 3 dp | 9 por lado, 17 dp, 5 dp | 10 por lado, 28 dp, 6 dp |
-| Movimiento del fondo vivo | respira: 2 dp, ciclo de 12 s | fluye: las bandas avanzan una banda cada 20 s | fluye una banda cada 8 s; el disco gira una vuelta por minuto |
-| Registro de las tintas | exacto | corrido 2 dp | corrido 4 dp (magenta a la derecha, bermellón a la izquierda) |
-| Anillos alrededor del disco | no | 5, alternando tintas | 7 |
-| El marco del cartel | todo dentro | todo dentro | las bandas se salen del marco |
-| Títulos grandes de bloque (solo los decorativos) | rectos | doblados por una onda de 2 dp, con una segunda pasada en magenta corrida 1.5 dp | onda de 5 dp, segunda pasada corrida 3 dp |
+| Bandas del motivo | 7 por lado, amplitud 6 dp, trazo de 3 dp | 9 por lado, 17 dp, 5 dp | 11 por lado, 32 dp, 6.5 dp |
+| Movimiento del fondo vivo | respira: 2 dp, ciclo de 12 s; el disco, una vuelta cada 3 min | fluye: las bandas avanzan una banda cada 20 s; el disco, una vuelta cada 2 min | fluye una banda cada 7 s; el disco gira una vuelta cada 50 s |
+| Registro de las tintas | exacto | corrido 2 dp | corrido 5 dp (magenta a la derecha, bermellón a la izquierda) |
+| Anillos alrededor del disco | no | 5, alternando tintas | 8 |
+| El marco del cartel | todo dentro | todo dentro | desde i = 0.9, las bandas se salen del marco |
+| Títulos grandes de bloque (solo los decorativos) | rectos | doblados por una onda de 2 dp, con una segunda pasada en magenta corrida 1.5 dp | onda de 6 dp, segunda pasada corrida 3.5 dp |
 
-Con valores intermedios se interpola (el número de bandas se redondea). La lámina dibuja las tres columnas.
+Con valores intermedios se interpola (el número de bandas se redondea). La lámina dibuja i = 0, 0.5 y 1 con los valores de antes; los de i = 1 se subieron un poco (decisión 2 del autor: el máximo, un poco más fuerte que en la lámina) y son los de esta tabla (`TrazosTinta.medidas`). El bermellón entra desde i = 0.25 y está entero desde i = 0.5.
 
 **Con las animaciones apagadas** (`config.animaciones`) **o con ahorro de energía:** cambian los colores, el registro, los anillos y la onda de los títulos; nada se mueve.
 
@@ -182,21 +189,17 @@ El texto y los datos **nunca** pierden contraste, aunque todo lo demás vibre:
 1. `fondo`, `superficie`, `variante`, `borde`, `tinta`, `tenue`, los «sobre» y los contenedores **no cambian con `i`**. Solo cambian el primario, el secundario y el terciario, a luminosidad fija (la tabla de arriba: ninguno baja de 6.4 en el oscuro ni de 5.3 en el claro).
 2. Las letras del texto y de las cifras **no se deforman nunca**: lo que se dobla son los títulos decorativos grandes (la presentación, el encabezado del día, el logro).
 3. Ningún dibujo pasa por detrás de un texto sin una placa opaca (`superficie`) entre medias: los motivos van en las cabeceras, los márgenes y los huecos.
-4. Las pantallas del **seguimiento privado** (impulsos, recaídas, libido, medicamentos) y las de registrar sustancias se dibujan siempre con i = 0 (ver «La voz»).
+4. Las pantallas del **seguimiento privado** (impulsos, recaídas, libido, medicamentos) y las de Sustancias se dibujan siempre con i = 0 y con la cara de la hora (ver «La voz»). En el código, `SinIntensidad` envuelve `PantallaRecaidas`, `PantallaSustancias` y, en la hoja rápida, la captura de lo privado y la de un consumo; mientras una de ellas está abierta, toda la app lee i = 0 y la cara de la hora.
 
 ### De día, con un consumo en curso
 
-**La cara la sigue decidiendo la hora: de día, la ciudad no se convierte en psicodelia.** Pero se tiñe, poco y con tope:
-- una **fuga de luz** de película (el borde que se veló al cargar el carrete) en bermellón de reposo, desde la esquina de arriba a la derecha de los motivos, con una opacidad de `0.18 × i` (0.09 con i = 0.5; 0.18 con i = 1);
-- el grano pasa de monocromo a **grano de color** (la fuerza sube de 0.22 a `0.22 + 0.1 × i`);
-- en el motivo, los cables del trolebús y los bordes de las casas se **corren de registro** como en la cara de noche, pero solo 1 dp con i = 1.
-- Los colores de la interfaz de la ciudad no cambian.
+**Entra la psicodelia** (decisión 3 del autor): la ciudad no se tiñe, cambia la cara. Con el modo «hora» o «claro», de día sale el cartel en papel crema; con «oscuro», el cartel de luz negra. Cuando el consumo se cierra (o el medidor lo da por terminado con `finEfectivo`), la cara vuelve a la de la hora en cuanto la intensidad a la que va (`intensidadObjetivo`) llega a 0, y los colores bajan en 10 s.
 
-**Por qué:** las caras y la intensidad son dos ejes distintos, y así se mantienen previsibles: la hora dice qué mundo es; el consumo, cuánto se calienta. Si un consumo de mediodía trajera la noche, el tema dejaría de decir la hora, que es para lo que el autor lo pidió. La fuga de luz es lo que le pasa a una foto de verdad, así que la ciudad se altera sin dejar de ser ciudad, y la psicodelia queda como lo que el autor quiso: algo que llega «a veces».
+Lo que **no** cambia con un consumo de día: el sonido (sigue la cara de la hora: un consumo no debe oírse), los avisos (eligen su voz por la hora), los widgets (por la hora, sin intensidad), el ícono y el sello (fijos, de la ciudad) y las pantallas privadas y de Sustancias (siempre con la cara de la hora y i = 0).
 
 ## Cuándo sale cada cara
 
-La cara la decide siempre la hora (`ModoHora.esDeNoche`); la claridad, el modo de la app (`oscuroSegun`). Las 8 combinaciones:
+La cara la deciden la hora (`ModoHora.esDeNoche`, de 21:00 a 5:00) y los consumos en curso (`caraSegun(tema, noche, intensidad)`: INTENSA si es de noche **o** si la intensidad es mayor que 0); la claridad, el modo de la app (`oscuroSegun`). Sin consumo, las 8 combinaciones:
 
 | `config.modo` | De 5:00 a 21:00 | De 21:00 a 5:00 |
 |---|---|---|
@@ -205,7 +208,7 @@ La cara la decide siempre la hora (`ModoHora.esDeNoche`); la claridad, el modo d
 | «hora» | ciudad · claro | psicodelia · oscuro |
 | «sistema» (o un valor desconocido) | ciudad · claro u oscuro, como el teléfono | psicodelia · claro u oscuro, como el teléfono |
 
-La intensidad se suma encima de cualquiera de las cuatro: entera en la psicodelia y como fuga de luz en la ciudad.
+Con un consumo en curso, la columna de 5:00 a 21:00 pasa a la psicodelia con la misma claridad (con «hora», psicodelia · claro). La intensidad se suma encima, solo en la psicodelia.
 
 ## Letra y forma
 
@@ -218,7 +221,7 @@ La intensidad se suma encima de cualquiera de las cuatro: entera en la psicodeli
   - **Texto, rótulos y cifras:** Libre Franklin, igual que la ciudad.
 - **¿Una sola familia para las dos caras?** Para leer, sí: **Libre Franklin en todo el texto y en todas las cifras de las dos caras.** El texto no cambia de noche porque la legibilidad no debe depender de la hora, y porque así se nota que es la misma ciudad. Lo que cambia es la voz grande: el titular sobrio de día, el bloque de cartel de noche. Una sola familia para todo (por ejemplo, Franklin Black de noche) no alcanza: no llena su forma y no se distinguiría de un periódico.
 - **Comprobado en la sesión (16 nov 2026):** las dos están en `google/fonts` con OFL (`ofl/librefranklin`, `ofl/chango`); ninguna está en `res/font/` (se revisaron los nombres internos de sus 135 archivos). Chango se separa de las de títulos pesados que ya hay (Russo One, Oswald, Abril Fatface, Londrina): es ancha y de huecos cerrados. Libre Franklin se separa de Chivo (Frente exterior), que es más geométrica, y de Overpass y Space Grotesk.
-- **Comprobado también:** las dos traen ¿ ¡ ñ Ñ, las vocales con tilde y diéresis, « » ’ … · — – (se leyó su tabla de caracteres). **Por revisar al recortarlas:** la forma del 8 de Chango en tamaño chico (si se confunde, las cifras de los títulos salen de Libre Franklin Black, como se hizo con Modak).
+- **Comprobado también:** las dos traen ¿ ¡ ñ Ñ, las vocales con tilde y diéresis, « » ’ … · — – (se leyó su tabla de caracteres). **Revisado al recortarlas:** el 8 de Chango a 12, 14 y 18 sp no se confunde con la S; las cifras de los títulos se quedan en Chango.
 - **Signos:** los dos traen · • — – « » ’ … ¿ ¡. No se usan ✿ ☮ ♪ como adorno de texto.
 - **Esquinas:**
   - **Ciudad:** `Esquinas(11, Esquina.REDONDA)`, la ventanilla del trolebús y la pantalla de la tele de entonces. Libre en `UnicidadTemas` (las redondas de 11 y 12 están libres).
@@ -261,21 +264,22 @@ Dos registros de la misma persona: **de día**, la del barrio y del oficio, tran
 
 ## Los muebles
 
-Con la regla de la Versión 2 de [`MUEBLES.md`](../MUEBLES.md) para todos los temas: solo el mueble y la pared de detrás, sin ventanas ni paisajes; objetos con uso; luz con dirección; noche de verdad. Los muebles de la v1 tenían ventana (Vida e Ideario), lámpara de cera, margaritas y arcoíris: se rehacen.
+Con la regla de la Versión 2 de [`MUEBLES.md`](../MUEBLES.md) para todos los temas: solo el mueble y la pared de detrás, sin ventanas ni paisajes; objetos con uso; luz con dirección; noche de verdad. Los muebles de la v1 tenían ventana (Vida e Ideario), lámpara de cera, margaritas y arcoíris: se rehicieron todos.
 
-**El mismo mueble en las dos caras, pintado de dos maneras.** La forma, los objetos y su sitio son los mismos (un solo dibujo de geometría); lo que cambia es el pintor: la ciudad lo pinta con luz, sombra de color y grano; la psicodelia lo imprime en tintas planas con trama. Así no se dibujan seis muebles dos veces, y el autor ve que es su mismo cuarto de noche.
+**El mismo mueble en las dos caras, pintado de dos maneras.** La forma, los objetos y su sitio son los mismos (un solo dibujo de geometría); lo que cambia es el pintor: la ciudad lo pinta con luz, sombra de color y grano; la psicodelia lo imprime en tintas planas con trama. El autor ve que es su mismo cuarto de noche.
 
-- **Biblioteca (Diario): la repisa de tablas sobre ladrillos** (se completa, no se rehace: es la de la v1 sin la lámpara de cera, las margaritas ni la calcomanía de arcoíris).
+- **Biblioteca (Diario): la repisa de tablas sobre ladrillos** (`MuebleEstantePsicodelia.kt`).
   - Tres tipos de entrada: el disco de larga duración en su funda impresa a dos tintas; la carpeta de cartón con carteles, atada con cinta; el cuaderno de bocetos de tapa negra.
-  - Objetos: el tocadiscos de maleta con un disco a medias, la lata de café con plumillas y pinceles, dos frascos de tinta (uno destapado), la regla T apoyada contra la pared, el rollo de cinta de pintor, el cartel de la semana clavado con chinchetas (propio, a tres tintas), un pase de autobús metido en el canto de una tabla.
-- **Ideario: la cajonera de planos del dibujante** (reemplaza al mostrador de la tienda de discos, que era recurso sin comprobar y tenía ventana). Cada tema es un cajón ancho y bajo, con su tarjeta de rótulo en el tirador de latón; dentro, los pliegos de las fichas, más cuanto más lleno, uno que asoma; el «sin tema» es la caja de cartón de los recortes. Encima: la mesa de dibujo inclinada con el cartel a medias, el retroproyector de Ellen apagado, los frascos de tinta.
+  - Objetos: el tocadiscos de maleta con un disco a medias, la lámpara de pantalla plisada, la lata de café con plumillas y pinceles, dos frascos de tinta (uno destapado), la regla T apoyada contra la pared, el rollo de cinta de pintor, el cartel de la semana clavado con chinchetas, un pase de autobús metido en el canto de una tabla.
+  - Lo de alrededor (`BibliotecaPsicodelia.kt`): la tapa es el disco del día como un álbum (la portada es una foto de la calle de victorianas en la ciudad, o el cartel del disco hecho sol en la tinta); la página, la funda interior con la etiqueta del disco; la libreta, el periódico del barrio, «La Niebla», a dos tintas de tintero partido, sobre la mesa de la cocina contra la pared con el cartel de la semana (sin ventana); las cartas, postales de 1967 atadas con bramante y selladas con una etiqueta de disco; el buscador, el dial de la radio que se va al 106.9; las pestañas, los separadores de una caja de discos; las obras, apoyadas en la tabla sobre ladrillos bajo los carteles de David; el recuerdo, un volante de mimeógrafo (en la tinta, a dos tintas).
+- **Ideario: la cajonera de planos del dibujante** (`IdeasPsicodelia.kt`; reemplaza al mostrador de la tienda de discos). Cada tema es un cajón ancho y bajo, con su tarjeta en el portatarjetas de latón; dentro, los pliegos; el «sin tema» es la caja de cartón de los recortes. Encima: la mesa de dibujo inclinada con el cartel a medias, la lámpara de brazo, el retroproyector de las luces líquidas, los frascos de tinta. **Por dentro**, el cajón abierto visto desde arriba (los pliegos de otras semanas, un cartel impreso, la regla de acero, las paredes de roble); **las fichas son los pliegos**: papel de dibujo con cinta de pintor y su cajetín a lápiz en la ciudad, prueba de imprenta con sus marcas de registro y la tira de las tintas en la tinta. Las marcas de postura van con el disco del día (hecho, convence con su corona de rayos, piensa, duda a lápiz, desacuerdo partido) y la de fijada es una chincheta redonda. El archivo se llama «cajón de planos» y cada ficha, «pliego».
+- **Vida: la mesa de dibujo contra la pared, con su lámpara de brazo** (`VidaPsicodelia.kt`), sin la ventana de guillotina: Social (el pliego de estraza clavado sobre la mesa), Mapas (la mesa de dibujo de frente), Otras vidas (la caja de tipos de imprenta).
 - **Tablero (Vida y Diario): el corcho sobre la mesa de dibujo**, con las notas clavadas, los bocetos, una entrada de baile, un recorte del periódico del barrio.
-- **Vida: la mesa de dibujo contra la pared**, con su lámpara de brazo, sin la ventana de guillotina.
 - **La luz:**
   - **Ciudad · claro:** la luz de la tarde entra de arriba a la izquierda desde fuera del cuadro; mancha clara en la pared, sombras café.
-  - **Ciudad · oscuro:** la lámpara de pantalla, sobre la repisa o la mesa, es la luz: halo en la pared, filo cálido en los cantos que la miran, lo lejano se pierde.
+  - **Ciudad · oscuro:** la lámpara de pantalla (en la biblioteca) o la de brazo (en el Ideario y en Vida) es la luz: halo en la pared, filo cálido en los cantos que la miran, lo lejano se pierde.
   - **Psicodelia · claro:** el mueble impreso: tintas planas, trama de líneas en las sombras, el papel en las luces. La luz sigue viniendo de la izquierda (la trama va a la derecha de cada volumen).
-  - **Psicodelia · oscuro:** la luz es **la proyección de las luces líquidas en la pared** (el retroproyector queda fuera del cuadro): tres manchas planas de tinta, magenta, bermellón y ultramar, que encienden los cantos de lo que tienen delante. Es luz del tema dibujada en la pared, no una ventana. Con la intensidad, las manchas se mueven más y suben de croma, y la de bermellón aparece desde i = 0.5.
+  - **Psicodelia · oscuro:** la luz es **la proyección de las luces líquidas en la pared** (el retroproyector queda fuera del cuadro o apagado): manchas planas de tinta, magenta y ultramar, que encienden los cantos de lo que tienen delante. Con la intensidad, las manchas crecen y suben de croma, y la de bermellón aparece desde i = 0.5.
 
 ## El fondo, el ícono, el sello y los widgets
 
@@ -283,20 +287,22 @@ Con la regla de la Versión 2 de [`MUEBLES.md`](../MUEBLES.md) para todos los te
 - **El ícono** de la app: fijo, la etiqueta del disco del día en sobrio (ciudad). Cambiar el ícono dos veces al día reordena el lanzador y no se hace.
 - **El sello del día** (`huella_psicodelia`): fijo, el de la ciudad. Lo que se archiva no depende de la hora ni de un consumo.
 - **Los widgets** (siempre oscuros): cara por hora, con la tarea de cada 15 minutos (ciudad · oscuro de día, psicodelia · oscuro de noche). Sin intensidad.
-- **Los fondos del teléfono:** las dos caras, para que se elija; no cambian solos.
+- **Los fondos del teléfono:** las dos caras («la ciudad» y «el cartel»), para que se elija; la elegida se guarda en las preferencias de los fondos y no cambia sola con la hora ni con un consumo.
+- **La pantalla de bloqueo, la presentación y el reloj de enfoque** también tienen sus dos caras: la puerta de la sala con los cables y los postes o con la corona de rayos; la copia de foto o el cartel de arco; las pistas del disco como rayas del dial o como rayos que ondulan.
 
 ## El gato
 
-- **Ciudad:** el atigrado naranja de la v1, pintado como en una foto de los 70: sin gafas ni cinta. Con las patas manchadas de tinta (las manos manchadas de los operadores de luces, comprobado en `fuentes`, sección 5).
-- **Psicodelia:** el mismo gato impreso a dos tintas, con las rayas en trama; con intensidad, las rayas ondulan (en la banda del gato, con la misma tabla).
+- **Ciudad:** el atigrado naranja de la v1, pintado como en una foto de los 70: sin gafas ni cinta. Con las patas manchadas de tinta (las manos manchadas de los operadores de luces, comprobado en `fuentes`, sección 5). Banda `psicodelia`.
+- **Psicodelia:** el mismo gato impreso a dos tintas, con las rayas en trama; con la intensidad, la banda cambia de escalón (`psicodelia_tinta`, `_tinta_media` desde i = 0.25 y `_tinta_plena` desde i = 0.75): más croma, la tercera tinta, el registro corrido y las rayas que ondulan (`Gato.clave`, pruebas en `GatoClavePrueba`).
 - **Acciones especiales** (reemplazan a la lámpara de cera y a las burbujas): persigue las manchas de luz líquida que se mueven por la pared · se sienta sobre el cartel recién impreso y deja sus huellas de tinta.
+- En las pantallas privadas y de Sustancias, la banda va con i = 0 y la cara de la hora.
 
 ## Sonido
 
-- **Cambia con la cara, no con la intensidad.** Un sonido lo oye quien esté cerca; un consumo no debe oírse.
-- **Ciudad:** el órgano de transistores bajo y suave, el pandero, el eco de cinta corto, el golpe de la aguja al bajar al disco, el clic de la perilla de la radio.
-- **Psicodelia:** el sitar en zumbido, la guitarra con distorsión (para los logros), el eco de cinta largo que se repite.
-- Los sonidos de los avisos van por canal de notificación (Android fija el sonido del canal al crearlo): se quedan los de la ciudad. Todos los instrumentos ya existían en 1967 (`fuentes`, sección 8); nombres genéricos; música propia.
+- **Sigue la cara de la hora, nunca la intensidad** (`Sentidos.caraDelSonido`): con un consumo de día, la pantalla pasa al cartel, pero se sigue oyendo la ciudad. Un sonido lo oye quien esté cerca; un consumo no debe oírse.
+- **Ciudad** (`s_psicodelia_<evento>`): el órgano de transistores bajo y suave, el pandero, el eco de cinta corto, el golpe de la aguja al bajar al disco, el clic de la perilla de la radio.
+- **Psicodelia** (`s_psicodelia_tinta_<evento>`): el sitar en zumbido, la guitarra con distorsión (para los logros), el eco de cinta largo que se repite, el rasero de la serigrafía, el pincel de rotulista.
+- Los sonidos de los avisos van por canal de notificación (Android fija el sonido del canal al crearlo): se quedan los de la ciudad, como los tonos del teléfono. Todos los instrumentos ya existían en 1967 (`fuentes`, sección 8); nombres genéricos; música propia.
 
 ## Se distingue de
 
@@ -308,19 +314,20 @@ Con la regla de la Versión 2 de [`MUEBLES.md`](../MUEBLES.md) para todos los te
 - **Soviético y Distopía:** cartel de Estado, rojo y negro, ministerio; aquí, cartel de concierto, tres tintas, nadie da órdenes.
 - **Roma (Urbe):** la ciudad de hoy en capas de piedra y ocre; aquí, la ciudad de madera y foto vieja de hace sesenta años.
 
-## Lo que debe decidir el autor
+## Lo que decidió el autor
 
-1. **¿Solo cannabis?** La intensidad lee solo el cannabis, como pediste. ¿Debe contar también la sustancia «otra» (por ejemplo, hongos anotados ahí), y con qué peso? El alcohol queda fuera salvo que digas lo contrario.
-2. **`sustancias_ocultas`:** si ocultas el cannabis en las pantallas, el tema no reacciona. ¿Te sirve así, o prefieres que reaccione igual?
-3. **De día, con un consumo:** la propuesta es que la ciudad solo se tiña (fuga de luz, grano de color) y la psicodelia no entre antes de las 21:00. ¿O prefieres que, desde cierto nivel (por ejemplo 7), la psicodelia entre también de día?
-4. **Los títulos de la psicodelia en Chango:** ¿te convence la letra de bloque de la lámina, o prefieres algo más alto y estrecho, más cerca de Roller (habría que dibujar los títulos a mano, sin fuente)?
-5. **El cuento:** ¿qué sustancias y cuántas veces por temporada (la propuesta está en el plan: marihuana algunas noches, LSD una o dos veces por temporada desde 1966, hongos una sola vez)? ¿Y el alcohol y el tabaco, que hoy tampoco aparecen: vuelven como cosa de la época?
-6. **Los números «(17)»:** ¿te gustan entre paréntesis, o los quieres sin adorno?
+Las seis preguntas que esta guía dejó abiertas se contestaron el 16 nov 2026 (abajo, en «Decisiones del autor después de ver la lámina») y ya están programadas:
 
+1. **¿Solo cannabis?** No: cuenta cualquier sustancia con nivel (alcohol, cannabis, «otra»), con la escala por tramos.
+2. **`sustancias_ocultas`:** el tema reacciona igual.
+3. **De día, con un consumo:** entra la psicodelia (en claro con el modo «hora»), no una ciudad teñida.
+4. **Los títulos en Chango:** se quedan (la dirección «va bien»).
+5. **El cuento:** la marihuana una vez por semana; el LSD, más o menos una vez al mes; los hongos, unas pocas veces al año.
+6. **Los números «(17)»:** se quedan.
 
 ## Decisiones del autor después de ver la lámina (16 nov 2026)
 
-Mandan sobre lo que diga el resto de esta guía; al programar el tema se corrigen las secciones de arriba para que coincidan.
+Mandan sobre lo que diga el resto de esta guía. Las secciones de arriba ya se corrigieron para que coincidan (cierre de la versión 2, 17 nov 2026).
 
 1. **La dirección va bien** en color y en forma general. En el producto final, la cara psicodelia lleva **más formas y dibujos de cartel** (figuras, grabado fino, letras que llenan su forma), no solo bandas y el disco.
 2. **La intensidad máxima, un poco más fuerte** que la de la lámina.

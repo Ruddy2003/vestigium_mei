@@ -21,7 +21,7 @@ Comprobación de los datos de la ficha del tema (`docs/diseno/PLAN_TEMAS.md`, lo
 - **Qué no se pudo abrir:** `www.ssa.gov` (los nombres de la Seguridad Social: el proxy responde «403» a la conexión). La API de MediaWiki (`api.php`) respondió con error; las búsquedas se hicieron con la página normal de búsqueda (`Special:Search`). No se intentaron otros sitios.
 - **Wikipedia resume a los estudiosos; no es la fuente original.** Varias páginas de este tema llevan avisos: *Liquid light show* está marcada «Disputed» y «Essay-like»; *Haight-Ashbury*, «More citations needed»; *Painted ladies* y *Avalon Ballroom* tienen frases con «citation needed». Se dice en cada caso.
 - **Dominio público.** Se razona como en Galia y Art nouveau: en EE. UU., obra publicada antes de 1931; en el resto, autor muerto hace más de 70 años. No es consejo legal **[Aproximación]**.
-- **Las drogas.** Siguiendo la regla de la ficha y el encargo, **no se investigaron**. Donde una página abierta las relaciona con algo de la ficha, solo se anota para quitarlo (sección 9).
+- **Las drogas.** En la primera sesión (15 nov 2026), siguiendo la regla de la ficha, **no se investigaron**: donde una página las relacionaba con algo de la ficha, solo se anotó para quitarlo. El 16 nov 2026 el autor quitó la regla de «sin drogas», y el cuento de David las cuenta: lo que se comprobó entonces está en la sección 14, y la sección 9 dice ahora qué se usa con su fuente y qué sigue fuera.
 
 ## 1. Correcciones que se proponen a la ficha
 
@@ -63,9 +63,9 @@ Comprobación de los datos de la ficha del tema (`docs/diseno/PLAN_TEMAS.md`, lo
 | Desde el n.º 6 | El arcoíris de tinta | Con Howard Quinn Printers, los artistas iban los domingos y probaban la prensa: «the revolutionary split-fountain rainbow inking effect was perfected», con presas de madera en el tintero para meter varias tintas a la vez | Ídem | Comprobado |
 | — | Tiradas | De 3000 ejemplares al principio a 15 000 (n.º 4), 50 000 (n.º 5), 60–75 000 (n.º 6); «At its peak, the publication's print run was about 125,000»; los editores calculaban más de medio millón de lectores | Ídem | Comprobado |
 | n.º 12 (feb 1968) | El último | «Issue #12, which was to be the last» | Ídem | Comprobado |
-| 3 ene 1966 | Abre en Haight Street la primera tienda «head shop» | Ver la sección 9: es una tienda de artículos de droga | [Haight-Ashbury](https://en.wikipedia.org/wiki/Haight-Ashbury) | Comprobado. **No usar** |
+| 3 ene 1966 | Abre en Haight Street la primera tienda «head shop» | «offering hippies a spot to purchase marijuana and LSD» (sección 14) | [Haight-Ashbury](https://en.wikipedia.org/wiki/Haight-Ashbury) | Comprobado. Se usa en el cuento de David desde el 16 nov 2026, sin su nombre (sección 9) |
 | 17 dic 1966 | Los Diggers: «The Death of Money» | «dressed in animal masks and carried a large coffin full of fake money down Haight Street» | [Diggers (theater)](https://en.wikipedia.org/wiki/Diggers_(theater)) | Comprobado |
-| **14 ene 1967** | **Human Be-In** | «an event held in San Francisco's Golden Gate Park Polo Fields on January 14, 1967»; «Possibly 20,000–30,000 people»; tocaron bandas de la ciudad y leyeron poetas (Ginsberg, Snyder, McClure, Ferlinghetti, Kandel); el cartel es de Stanley Mouse y Michael Bowen | [Human Be-In](https://en.wikipedia.org/wiki/Human_Be-In); [Polo Fields](https://en.wikipedia.org/wiki/Polo_Fields) | Comprobado. Ver la sección 9 sobre lo que no se usa |
+| **14 ene 1967** | **Human Be-In** | «an event held in San Francisco's Golden Gate Park Polo Fields on January 14, 1967»; «Possibly 20,000–30,000 people»; tocaron bandas de la ciudad y leyeron poetas (Ginsberg, Snyder, McClure, Ferlinghetti, Kandel); el cartel es de Stanley Mouse y Michael Bowen | [Human Be-In](https://en.wikipedia.org/wiki/Human_Be-In); [Polo Fields](https://en.wikipedia.org/wiki/Polo_Fields) | Comprobado. Ver la sección 9: se usa que se repartió LSD; su lema, no |
 | 29 ene 1967 | Mantra-Rock Dance en el Avalon | «held on January 29, 1967, at the Avalon Ballroom»; empezó a las 8 PM; «Admission was fixed at $2»; luces líquidas con imágenes de Krishna | [Mantra-Rock Dance](https://en.wikipedia.org/wiki/Mantra-Rock_Dance) | Comprobado |
 | 6 feb 1967 | *Newsweek*: «Dropouts on a Mission» | | [Summer of Love](https://en.wikipedia.org/wiki/Summer_of_Love) | Comprobado |
 | **12 feb 1967** | **Nace la FM libre en KMPX** | «On February 12, 1967, on-air personality Larry Miller was given the shift» (de medianoche a las 6), «where he played his preferred folk rock music programming» | [KFRC-FM, historia de KMPX](https://en.wikipedia.org/wiki/KFRC-FM) | Comprobado |
@@ -73,7 +73,7 @@ Comprobación de los datos de la ficha del tema (`docs/diseno/PLAN_TEMAS.md`, lo
 | Primavera 1967 | Nace el nombre «Summer of Love» | «originated with the formation of the Council for the Summer of Love during the spring of 1967»; el consejo lo formaban Family Dog, el Straight Theatre, los Diggers, el *Oracle* y unas 25 personas | Ídem | Comprobado |
 | 15 abr 1967 | Marcha contra la guerra de Vietnam, de la calle Second y Market al estadio Kezar | Pie de foto | Ídem | Comprobado |
 | 13 may 1967 | Sale la canción que promociona Monterey y a los «flower children» | (no se cita: tiene derechos) | Ídem | Comprobado |
-| 7 jun 1967 | Abre la clínica gratuita del Haight | «Haight Ashbury Free Clinics was founded on June 7, 1967» | Ídem | Comprobado. Ver la sección 9 |
+| 7 jun 1967 | Abre la clínica gratuita del Haight | «Haight Ashbury Free Clinics was founded on June 7, 1967» | Ídem | Comprobado. Se usa en el cuento de David desde el 16 nov 2026 (sección 9) |
 | 10–11 jun 1967 | Fantasy Fair and Magic Mountain, en el monte Tamalpais (Marin) | «The first American hippie-style rock festival was held June 10–11 at Mount Tamalpais» | [Monterey International Pop Festival](https://en.wikipedia.org/wiki/Monterey_International_Pop_Festival) | Comprobado |
 | **16–18 jun 1967** | **Festival de Monterey** | «a three-day music festival held June 16–18, 1967, at the Monterey County Fairgrounds»; Wikipedia en francés: «du 16 au 18 juin 1967» | Ídem; [Festival international de musique pop de Monterey](https://fr.wikipedia.org/wiki/Festival_international_de_musique_pop_de_Monterey) | Comprobado (dos páginas) |
 | — | Monterey: entradas y público | Cinco conciertos (viernes noche, sábado tarde y noche, domingo tarde y noche); «Ticket prices varied by seating area, and ranged from $3 to $6.50»; el ruedo tenía permiso para 7000 y entraron unas 8500 el sábado. Público: «from 25,000 to 90,000» (*Monterey*) o «approximately 30,000 […] for the first day […] 60,000 on the final day» (*Summer of Love*) | Ídem; [Summer of Love](https://en.wikipedia.org/wiki/Summer_of_Love) | Comprobado. Las cifras de público, **dudosas** (no cuadran entre sí) |
@@ -93,7 +93,7 @@ Comprobación de los datos de la ficha del tema (`docs/diseno/PLAN_TEMAS.md`, lo
 - **La tienda gratis:** la primera, «in a six-car garage on Page Street that they found filled with empty picture frames»; otra en la esquina de Cole y Carl; luego «Trip Without a Ticket» en Frederick Street.
 - **El pan:** «Digger Bread was baked in coffee cans at the Free Bakery in the basement of Episcopal All Saints Church on 1350 Waller Street».
 - **Sus hojas:** las *Digger Papers*, impresas en mimeógrafo; de ellas salen «Do your own thing» y «Today is the first day of the rest of your life» (son de 1965–1968: **tienen derechos [Aproximación]**, no se usan como frase).
-- **Cuidado:** la página cuenta también que el reparto de los Diggers en el Be-In llevaba droga (sección 9).
+- **El Be-In:** la página cuenta también que el reparto de los Diggers en el Be-In llevaba LSD. El cuento lo usa solo como reparto, sin nombres de quién lo hizo ni lo tomó (sección 9).
 
 **Haight-Ashbury y el Panhandle.** Comprobado ([Haight-Ashbury](https://en.wikipedia.org/wiki/Haight-Ashbury); [Panhandle (San Francisco)](https://en.wikipedia.org/wiki/Panhandle_(San_Francisco))):
 - El barrio toma su nombre del cruce de Haight y Ashbury. Lo limitan Stanyan y el Golden Gate Park al oeste, Oak y el Panhandle al norte, Baker y Buena Vista Park al este, y Frederick al sur.
@@ -266,26 +266,41 @@ Las fechas sirven para saber que cada sonido ya existía en 1967. No se nombran 
 
 **Para la app:** guitarra con distorsión, sitar, órgano de transistores, eco de cinta y pandero, con nombres genéricos. El sitar va bien sobre todo en la etapa de Monterey.
 
-## 9. Lo que toca las drogas (para quitarlo)
+## 9. Lo que toca las drogas: lo que se usa con fuente y lo que sigue fuera
 
-Nada de esto se investigó: solo se anota lo que dicen las páginas abiertas para otras cosas, para que la app no lo use.
+Hasta el 16 nov 2026 esta sección decía qué había que quitar, porque el tema no podía nombrar las drogas. Ese día el autor quitó la regla: David consume en el cuento (la marihuana, los viernes; el LSD, más o menos una vez al mes; los hongos, pocas veces desde 1967), y el tema puede aludir a ello, con la línea que fija `psicodelia.md` («La voz»). Lo que se comprobó para el cuento está en la sección 14.
 
-| Dato de la ficha o de las fuentes | Qué lo relaciona con drogas | Página | Propuesta |
+**Lo que ahora se usa, con su fuente** (en el calendario de David, `vidas/anios/AnioG9.kt`, y en su cuento, `vidas/piezas/PiezasDavid.kt`):
+
+| Dato | Cómo se usa | Página | Certeza en el calendario |
 |---|---|---|---|
-| «el viaje visual» (regla propia) | «Viaje» es la palabra de la jerga | — | Quitar la palabra (corrección 4) |
-| El nombre «Psicodelia» | La palabra se acuñó en 1956 para nombrar una clase de drogas («as an alternative descriptor for hallucinogenic drugs») | [Psychedelia](https://en.wikipedia.org/wiki/Psychedelia) | Dejar el nombre, que es también el del estilo artístico, pero **no explicarlo nunca** en la app |
-| El Be-In (etapa del parque) | Su motivo fue una ley contra una droga; la página cuenta un reparto de droga ese día y que los sándwiches de los Diggers la llevaban; la frase famosa de Leary de ese día es un lema de drogas | [Human Be-In](https://en.wikipedia.org/wiki/Human_Be-In) | Mostrar solo poetas, bandas y gente en el pasto. Ni el lema ni comida |
-| La camioneta pintada | El autobús pintado de Kesey y sus fiestas con droga | [Summer of Love](https://en.wikipedia.org/wiki/Summer_of_Love) | Camioneta genérica (corrección 10) |
-| La lámpara de lava | «commonly associated with hippie, psychedelia, and cannabis cultures» | [Lava lamp](https://en.wikipedia.org/wiki/Lava_lamp) | Lámpara de cera, sin comentario (corrección 11) |
-| La primera tienda del Haight (3 ene 1966) | Era una tienda de artículos para drogas | [Haight-Ashbury](https://en.wikipedia.org/wiki/Haight-Ashbury) | No usarla ni nombrarla |
-| La clínica gratuita (7 jun 1967) | La página la liga a los problemas de drogas del barrio | [Summer of Love](https://en.wikipedia.org/wiki/Summer_of_Love) | No usarla como etapa |
-| La «muerte del hippie» (6 oct 1967) | Se anunció dos días después de un arresto de músicos | [Haight-Ashbury](https://en.wikipedia.org/wiki/Haight-Ashbury) | Si se usa, solo el entierro de mentira |
-| Mouse y Kelley citaban en sus carteles una marca de papel de liar | | [Stanley Mouse](https://en.wikipedia.org/wiki/Stanley_Mouse) | Nada de eso en los carteles de la app |
-| «Acid rock», el otro nombre de la música | Nombre de droga | [Psychedelic rock](https://en.wikipedia.org/wiki/Psychedelic_rock) | No usarlo |
-| La frase de Blake «If the doors of perception were cleansed» | La frase es de 1790–1793 y no habla de drogas, pero su fama en 1967 viene de un libro de 1954 sobre una droga que tomó de ella el título | [William Blake](https://en.wikipedia.org/wiki/William_Blake) (cita a Huxley entre los que la usaron) | Se puede usar la frase, **sin** explicar de dónde le vino la fama |
-| La frase de Blake «The road of excess leads to the palace of wisdom» | Elogia el exceso: choca con el seguimiento de impulsos y recaídas | — | **No se incluyó** en la sección 10 |
+| La primera tienda del Haight (3 ene 1966), «a spot to purchase marijuana and LSD» | Día de la ciudad: abre una tienda para los que fuman marihuana y toman LSD. Sin su nombre (lleva la palabra del tema) | [Haight-Ashbury](https://en.wikipedia.org/wiki/Haight-Ashbury) | Histórico |
+| El 6 oct 1966: el LSD pasa a ser ilegal en California, y el Love Pageant Rally en el Panhandle | Día de la ciudad: miles en el Panhandle, a una cuadra de su casa. David no toma nada ese día. Antes de esa fecha el cuento dice que es legal; después, se consigue a escondidas | [Love Pageant Rally](https://en.wikipedia.org/wiki/Love_Pageant_Rally) | Histórico |
+| El Be-In (14 ene 1967) fue contra esa ley, y ese día se repartió LSD | El texto del día cuenta que unos muchachos lo reparten; a David le dan uno y lo guarda. El título del día no cambia. No se nombra a nadie | [Human Be-In](https://en.wikipedia.org/wiki/Human_Be-In) | Histórico (ya estaba) |
+| La clínica gratuita (7 jun 1967) | Día de la ciudad: abre la clínica, con cola en la escalera | [Summer of Love](https://en.wikipedia.org/wiki/Summer_of_Love) | Histórico |
+| El cannabis, muy usado esos años, junto con el LSD | La noche de los viernes (la clave `humo`) | [Summer of Love](https://en.wikipedia.org/wiki/Summer_of_Love) | Recurso: la frecuencia es la que pidió el autor |
+| Los hongos de psilocibina, conocidos en EE. UU. desde 1957 | Unas pocas noches desde 1967, como cosa rara que alguien trae de México o «del sur» | [Psilocybin mushroom](https://en.wikipedia.org/wiki/Psilocybin_mushroom) | Inventado (son sucesos de su vida). Que se consiguieran en San Francisco entonces, **[sin verificar]** |
+| La lámpara de lava, ligada al cannabis | Sigue siendo una lámpara de cera, sin comentario (corrección 11): es un tópico, no una droga | [Lava lamp](https://en.wikipedia.org/wiki/Lava_lamp) | — |
+| La frase de Blake «If the doors of perception were cleansed» | Se puede usar sin el cuidado de antes (sigue sin explicarse de dónde le vino la fama) | [William Blake](https://en.wikipedia.org/wiki/William_Blake) | — |
 
-**Lo cultural que sí se puede mostrar sin referirse a ellas** (todo comprobado arriba): los carteles y sus letras (Roller, la Secesión, el art nouveau), los colores fluorescentes y la luz negra, las luces líquidas con aceite y tinta, la FM de noche, el periódico de tinta arcoíris, la comida gratis de los Diggers, las flores y el símbolo de la paz, la marcha contra la guerra, los poetas, los Hare Krishna, el sitar y Monterey, la niebla y las casas victorianas.
+**Lo que sigue fuera, y por qué:**
+
+| Dato | Por qué sigue fuera | Página |
+|---|---|---|
+| El lema famoso del Be-In | Es un lema, y tiene derechos **[Aproximación]**; además pone en boca de alguien real una invitación a consumir | [Human Be-In](https://en.wikipedia.org/wiki/Human_Be-In) |
+| Quién repartió el LSD del Be-In, quién lo hacía y quién lo tomó | **Nadie real consume en el cuento**: la gente real sale de lejos y solo con lo que dicen las fuentes | Ídem |
+| La frase de Blake «The road of excess leads to the palace of wisdom» | Elogia el exceso: choca con el seguimiento de impulsos y recaídas | — |
+| El autobús pintado de Kesey y sus fiestas | Gente real que consume, y un tópico gastado (la furgoneta) | [Summer of Love](https://en.wikipedia.org/wiki/Summer_of_Love) |
+| El arresto de músicos del 4 oct 1967, ligado a la «muerte del hippie» | Gente real; del 6 de octubre de 1967 solo sale el entierro de mentira | [Haight-Ashbury](https://en.wikipedia.org/wiki/Haight-Ashbury) |
+| «Acid rock», el otro nombre de la música | Sigue sin usarse: la música se describe | [Psychedelic rock](https://en.wikipedia.org/wiki/Psychedelic_rock) |
+| El nombre «Psicodelia» | Se queda, pero no se explica nunca en la app | [Psychedelia](https://en.wikipedia.org/wiki/Psychedelia) |
+| La marca de papel de liar de los carteles de Mouse y Kelley | Una marca. En los carteles de la app, nada de eso | [Stanley Mouse](https://en.wikipedia.org/wiki/Stanley_Mouse) |
+| El ensayo de Didion | Tiene derechos **[Aproximación]**; ya estaba fuera del calendario | [Haight-Ashbury](https://en.wikipedia.org/wiki/Haight-Ashbury) |
+| La jerga que celebra, lo del seguimiento privado, el alcohol y el tabaco | La jerga y lo privado no salen nunca (las listas `JERGA_QUE_CELEBRA` y `LO_PRIVADO` de las pruebas). El alcohol y el tabaco no aparecen en el cuento de David: no bebe y no fuma tabaco | — |
+
+**Cómo lo vigilan las pruebas** (`AnioG9Prueba`, `CuentoG9Prueba`): los nombres de las sustancias salen solo las noches que toca (las de las claves `humo` y `noche_tinta`) y en los cuatro días de la ciudad de arriba; nunca en Navidad, Acción de Gracias, la visita de su madre ni Monterey; nunca dos noches de LSD o de hongos en la misma semana; toda noche de consumo lleva su clave, y toda clave es de una noche de consumo. En la voz del tema (los textos de la interfaz) no sale ninguno: esa prueba, `laVozDelTemaNoHablaDelConsumo`, queda escrita y desactivada hasta la tanda de textos, porque hoy «Sustancias» se dice «Alcohol, tabaco y lo demás que anotas».
+
+**Lo cultural que se sigue mostrando sin referirse a ellas** (todo comprobado arriba): los carteles y sus letras (Roller, la Secesión, el art nouveau), los colores fluorescentes y la luz negra, las luces líquidas con aceite y tinta, la FM de noche, el periódico de tinta arcoíris, la comida gratis de los Diggers, la marcha contra la guerra, los poetas, los Hare Krishna, el sitar y Monterey, la niebla y las casas victorianas.
 
 ## 10. Frases del día
 
@@ -389,3 +404,21 @@ Ninguna de las dos está en `app/src/main/assets/licencias/` (comprobado con `gr
 - **Si los derechos de Gibran** siguen vigentes en el Líbano.
 - **El clima de 1967** (los datos de la página son promedios de hoy).
 - **Las cifras de público** de Monterey (25 000 a 90 000, o 30 000 a 60 000).
+- **Qué tan fáciles de conseguir eran los hongos de psilocibina** en San Francisco entre 1965 y 1969 (la página habla de una «explosión» de su uso, sin fecha), y desde cuándo se cultivaban en casa.
+- **Las penas de California por marihuana** en 1967.
+- **Cómo se vendía el LSD** en San Francisco en 1965 y 1966 (en terrones de azúcar, en papelitos): el cuento lo cuenta así como recurso.
+
+## 14. El consumo en la época: fuentes del cuento de David
+
+Abiertas el 16 nov 2026 en el wikitexto de cada página (`?action=raw`), para el plan (`psicodelia_plan.md`, 3.5), y **comprobadas otra vez en la sesión del mismo día que escribió el cuento**, con las citas de abajo. Las páginas citan sobre todo a otros (la del Love Pageant Rally, a un sitio de 2008 y a un libro): Wikipedia resume, no es la fuente original.
+
+| Dato | Cita | Página | Veredicto |
+|---|---|---|---|
+| El LSD, ilegal en California desde el 6 oct 1966; el Love Pageant Rally en el Panhandle ese día | «took place on October 6, 1966—the day LSD became illegal—in the 'panhandle' of Golden Gate Park»; «The Love Pageant Rally drew several thousand people» | [Love Pageant Rally](https://en.wikipedia.org/wiki/Love_Pageant_Rally) | Comprobado. La misma página dice que muchos tomaron LSD a la vez ese día: no se usa (gente real) |
+| El motivo del Be-In | «The occasion was a new California law banning the use of the psychedelic drug LSD that had come into effect on October 6, 1966» | [Human Be-In](https://en.wikipedia.org/wiki/Human_Be-In) | Comprobado (dos páginas dan la misma fecha) |
+| El reparto de LSD en el Be-In | Se repartió gratis, con los sándwiches de los Diggers (la página nombra a quien lo hizo) | Ídem | Comprobado. Solo se usa el reparto, sin nombres |
+| El cannabis en el verano del amor | «Along with LSD, cannabis started to be much used during this period» | [Summer of Love](https://en.wikipedia.org/wiki/Summer_of_Love) | Comprobado |
+| La clínica gratuita | «Haight Ashbury Free Clinics was founded on June 7, 1967, where medical treatment was provided» | Ídem | Comprobado (ya en la sección 2) |
+| La primera tienda de Haight | «opened on Haight Street on January 3, 1966, offering hippies a spot to purchase marijuana and LSD» | [Haight-Ashbury](https://en.wikipedia.org/wiki/Haight-Ashbury) | Comprobado |
+| Los hongos en EE. UU. | «even publishing an article on their experiences in Life on May 13, 1957» | [Psilocybin mushroom](https://en.wikipedia.org/wiki/Psilocybin_mushroom) | Comprobado. Su uso en San Francisco en 1965–1969: **[sin verificar]** |
+| La prohibición federal de 1937 | «the Marihuana Tax Act of 1937» | [Legal history of cannabis in the United States](https://en.wikipedia.org/wiki/Legal_history_of_cannabis_in_the_United_States) | Comprobado. Las penas de California en 1967: **[sin verificar]** |

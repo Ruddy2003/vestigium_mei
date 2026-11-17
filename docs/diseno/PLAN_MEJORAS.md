@@ -17,12 +17,12 @@ Lo que pidió el autor el 16 de noviembre de 2026 después de comparar los 39 te
 | 0 | Este plan, las reglas de los muebles rehechos (`MUEBLES.md`, versión 2) y el arnés | hecho |
 | 1 | Arreglos: el aviso que sonaba junto con la música al estrenar tema; las notificaciones que no sonaban; el modo claro de día y oscuro de noche | hecho y compilado en Actions; **falta probarlo en el teléfono** |
 | 2 | Piloto de Idearios (Laboratorio, Helénico y Gótico) | hecho y aprobado por el autor |
-| 3 | Los otros 31 Idearios, y un piloto de tres bibliotecas rehechas | Idearios: 33 de 34 en la rama, falta la segunda vuelta de Revolución. Bibliotecas piloto: Helénico hecha; Laboratorio y Gótico, terminándose. **Las otras 36 bibliotecas no se empiezan** hasta que el autor vea los tres pilotos |
+| 3 | Los otros 31 Idearios, y un piloto de tres bibliotecas rehechas | **hecho.** Los 34 Idearios están rehechos, compilados y capturados en Actions (corridas 12, 13 y 14, sin fallas). Bibliotecas piloto hechas: Helénico, Laboratorio y Gótico (`ui/biblioteca/MuebleEstante<Tema>.kt`). **Las otras 36 bibliotecas no se empiezan** hasta que el autor diga, vistos los tres pilotos |
 | 4 | Los muebles de Vida | **no se hace ahora**: queda escrita abajo |
-| 5 | Psicodelia nueva | siguiente; guía y plan técnico escritos, nada programado |
-| 6 | Fondos de pantalla con las escenas | después de la 5; el fallo del cambio automático ya está diagnosticado (abajo) |
+| 5 | Psicodelia nueva | **hecho (17 nov 2026).** Compilado y capturado en Actions (corrida 26). Las dos caras (ciudad y tinta), cada una en claro y oscuro, con la intensidad por consumo en curso; componentes, muebles, biblioteca, Ideario, textos, sonidos, gato, widgets y el cuento de David. La versión 1 está borrada entera. Lo que se hizo y lo que cambió respecto del plan: `temas/psicodelia.md`, `temas/psicodelia_plan.md` y `temas/psicodelia_base.md`. **Falta:** el cuadro de David (lo dibuja otro agente; ver «Para quien dibuje los cuadros…») y probar en el teléfono el cambio de cara al anochecer y la intensidad con un consumo abierto |
+| 6 | Fondos de pantalla con las escenas | **hecho (17 nov 2026)** y compilado en Actions (corrida 23); **falta probarlo en el teléfono** (lista abajo) |
 | 7 | Lo temático nuevo: el toque, la hora y el clima, los mensajes breves, las esperas, el selector de fecha y de hora | **no se hace ahora**: queda escrita abajo |
-| 8 | Los cuadros: seguir personajes (con notificación y sonido propio), «Hoy en la historia» bajo el cuento, el cuadro a pantalla completa y arriba del cuento con su ambiente, la galería y su mueble en Vida, el ronroneo del gato. Deja puestos los campos que necesita la parte 9 | después de la 6 |
+| 8 | Los cuadros: seguir personajes (con notificación y sonido propio), «Hoy en la historia» bajo el cuento, el cuadro a pantalla completa y arriba del cuento con su ambiente, la galería y su mueble en Vida, el ronroneo del gato. Deja puestos los campos que necesita la parte 9 | **hecho (17 nov 2026)**; seguir personajes y el cuento con su cuadro, compilados en Actions (corridas 24 y 26); la galería, compilándose (corrida 27). **Falta probarlo en el teléfono** (lista abajo, en «Los cuadros (parte 8)»). El plan técnico y lo que se guarda: `CUADROS_PLAN.md` (`SCHEMA_V` = 27, D.199). Los logros no se hicieron (parte 9) |
 | 9 | Logros nuevos | **no se hace ahora**: queda escrita abajo y en `LOGROS_NUEVOS.md` |
 
 ## Decisiones del autor, parte por parte
@@ -64,6 +64,33 @@ Orden de los Idearios, de los más simples a los que ya tenían carácter:
 
 **Cómo se arregla en esta parte:** las escenas se dibujan con código puro (sin componer pantallas), así que el fondo nuevo se puede pintar **fuera de la pantalla, desde el pulso**, cualquier tema a cualquier hora y con la app cerrada. Con eso desaparecen 1, 2 y 3. Además: poner el fondo de hoy en cuanto esté pintado el suyo (no esperar a los demás) y, al cambiar de tema dentro de la app, pintarlo y ponerlo en el momento.
 
+**Lo que se hizo (17 nov 2026).** No cambia nada de lo que se guarda ni de la exportación: la elección del fondo va en las preferencias de los fondos del teléfono (`getSharedPreferences("fondos")`), no en `Config`, y no sube `SCHEMA_V`.
+
+- **El cuadro como fondo** (`ui/escenas/FondoCuadro.kt`). El cuadro (4:3) se pinta a la altura de la pantalla (en el Pixel 10, 3232 × 2424) y se toma una franja vertical del ancho de la pantalla (1080), un tercio del cuadro. Solo se pinta la franja: el lienzo se corre y lo de fuera no ocupa memoria (unos 10 MB por imagen). Se pinta la parte quieta y la viva en un instante fijo, sin gato.
+  - **Bloqueo:** la franja tal cual, con una sombra suave en el 42 % de arriba (donde va el reloj) y otra más leve abajo (los accesos).
+  - **Inicio:** la misma franja bajo un velo del color de fondo del tema **en oscuro** (46 % de día, 28 % de noche). Se probó un velo claro en los temas claros y los nombres blancos de los íconos no se leían sobre el cielo; con el oscuro se leen en los 16 cuadros.
+  - **La franja de cada cuadro** (`EscenaVida.franjaFondo`, el centro en fracción del ancho; 0.5 por omisión), escogida mirando cada cuadro de día y de noche: Al-Ándalus 0.5 (la fuente y el brasero), Horror cósmico 0.5 (el faro y la mesa), Distopía 0.5 (la avenida y la torre), Espacio 0.55 (la escotilla y la consola), Gótico 0.4 (el portal y la grúa), Helénico 0.5 (la trirreme y la tinaja), Medieval 0.5 (ventanas y pupitres), Ciudad neón 0.3 (el puesto de fideos), Pirata 0.6 (el mástil y el cañón), Renacimiento 0.45 (la cúpula por la ventana y la mesa), Revolución 0.4 (la catedral y la tina), Romano 0.45 (el campamento y el escudo), Ruinas 0.45 (el árbol y la torre inclinada), Ruta de la Seda 0.7 (el camello y el farol), Roma 0.5 (el altar y el andamio), Vapor 0.58 (la locomotora). Las escenas que cambian de lugar según el día (la azotea de Roma, el cayo de Pirata, Chang'an) usan la misma franja.
+- **Cuándo cambia** (`ui/FondoCambio.kt`, `ClaveFondo` y `tocaCambiarFondo`). El fondo puesto se anota con su tema, su modo, su cara (Psicodelia), su estilo y, con cuadro, el día lógico y el **tramo de luz** del cuadro (`Momento.luz.franja`: amanecer de 5 a 8, mañana de 8 a 12, mediodía de 12 a 16, tarde de 16 a 19, atardecer de 19 a 21 y noche de 21 a 5; Espacio, encendido y tenue). Si el que tocaría ahora es el mismo, no se pone (ponerlo no es gratis: el teléfono recalcula sus colores y puede parpadear). Otro tema, modo, cara o estilo se pone en el momento. Solo otra luz u otro día, como pronto diez minutos después del anterior: como el pulso es de 15, como mucho una vez por pulso. Un día normal con cuadro son **seis cambios** (prueba `conElPulsoDe15MinutosCadaTramoNuevoSePone`). Lo dice la pantalla bajo el interruptor.
+- **El arreglo del automático** (`FondosTelefono.revisar`, que llaman el pulso por `RotacionTema.propagar` y la app):
+  - con cuadro, lo pinta él mismo fuera de la pantalla y lo pone, también con la app cerrada (causas 1, 2 y 3);
+  - con papel (temas sin cuadro, o si se eligió el papel), pone el archivo ya pintado; `CapturaFondoTelefono` pinta el de hoy primero y lo pone **en cuanto está**, sin esperar a los demás; una foto que falla vuelve al final de la fila (hasta tres vueltas) y se reintenta cada vez que se vuelve a la app;
+  - al cambiar de tema, modo, estilo o cara dentro de la app, y al volver a ella, revisa en el momento (con tres reintentos si falla);
+  - de uno en uno (`@Synchronized`): si el pulso y la app llegan a la vez, el segundo ve que ya está puesto;
+  - las causas 4 y 5 (el pulso que el teléfono retrasa en reposo) siguen: llega, pero tarde. Al abrir la app se pone al día.
+  - El papel de los temas con cuadro ya no se deja pintado en archivo (salvo con el fondo vivo puesto, que dibuja encima del papel).
+- **La pantalla de fondos:** «el cuadro» o «el papel» (si el tema tiene cuadro), la vista previa de bloqueo e inicio a pantalla completa (con el cuadro, pintado a la hora de ahora) y ponerlo en inicio, bloqueo o los dos. La elección se guarda al poner el fondo y es la que sigue el automático. Con el cuadro no salen claro/oscuro ni las caras: el cuadro es el mismo en los dos modos.
+- **El fondo vivo** no cambió: sigue con el papel, y el fijo no lo pisa (`vivoActivo`).
+- **Pruebas:** `FondoTelefonoPrueba` (11, JUnit puro): la clave, cuándo cambia, el recorte de la franja (nunca se sale, guarda la proporción, cubre la pantalla) y la franja de cada cuadro. Pasan en un arnés de escritorio; en Actions, falta correrlas.
+
+**Qué falta probar en el Pixel 10:**
+1. Que la franja salga a la medida exacta en bloqueo y en inicio (sin corrimiento hacia un lado, que es lo que arreglaba `setBitmapWithCrops`), y que el reloj se lea.
+2. Que los nombres de los íconos se lean sobre el fondo de inicio con el cuadro de día (con velo oscuro) en un tema claro.
+3. Que con la app cerrada el fondo cambie solo: al pasar de un tramo de luz a otro (por ejemplo a las 8:00 o a las 21:00) y a las 5:00 con la rotación de temas. Mirar a qué hora llegó (el pulso puede retrasarse).
+4. Que al cambiar de tema dentro de la app y salir enseguida, el fondo ya haya cambiado (con cuadro, en uno o dos segundos).
+5. Cuánto tarda en pintarse el cuadro en el teléfono (en el escritorio, unas 0,5 s por cuadro) y si se nota un parpadeo al ponerlo.
+6. Con un tema sin cuadro (Terminal, Navidad): que el papel se siga poniendo como antes.
+7. Que el fondo vivo siga funcionando y que el automático no lo quite.
+
 ### Lo temático nuevo (parte 7)
 
 La respuesta al tocar; que el fondo y los muebles reaccionen a la hora, el clima o la estación; los mensajes breves; las esperas; el interior del selector de fecha y de hora. Sonido de ambiente: poco y opcional (por definir).
@@ -74,6 +101,23 @@ La respuesta al tocar; que el fondo y los muebles reaccionen a la hora, el clima
 - **«Hoy en la historia»:** un botón debajo del del cuento.
 - **Galería:** «me gusta» a un cuadro para guardarlo tal cual (el tema, la vida, el día y la hora); se ven en un mueble nuevo de la pestaña Vida.
 - **El gato del cuadro** suena al acariciarlo.
+
+**Cómo quedó hecho (17 nov 2026):**
+- **Seguir** (`ui/seguir/`, `data/Historias.kt`, `vidas/DiasEspeciales.kt`, `avisos/HistoriaPendiente.kt`): el botón va debajo del retrato, en el cuento; las banderitas, en Hoy; la lista con los días pasados, en la ruta `seguidos`. La notificación sale una vez por día especial, entre la hora de despertar y las 21:00, por el canal «Días especiales de quien sigues», con un sonido por tema (`n_<tema>_historia.ogg`, de `herramientas/sonidos_historia.py`).
+- **El cuento** (`ui/pantallas/OtrasVidas.kt`, `ui/escenas/CuadroCompleto.kt`, `AmbienteCuadro.kt`, `CuentoReglas.kt`): el cuadro va arriba, con su gato, el «me gusta», el botón de ampliar y un altavoz. La pantalla completa es una ventana encima de donde estés; se sale tocando fuera del gato, con la ✕ o con «atrás». «Leído» se marca al llegar al final, sin tiempo mínimo.
+- **El ambiente** (31 archivos `a_<tema>_ambiente[_noche].ogg`, de `herramientas/ambientes.py`): suena solo en el cuento, en bucle y suave. **No depende del interruptor «Sonidos»**: tiene el suyo («Ambiente del cuadro», en Sistema, y el altavoz del cuadro) y calla con el teléfono en silencio o en vibración, con una llamada, al apagar la pantalla y al salir. El ronroneo sí depende de «Sonidos».
+- **La galería** (`ui/galeria/`, `ui/vida/MuebleGaleria.kt`, `data/CarpetaCuadros.kt`): el «me gusta» pinta el cuadro a 1200 × 900 con su gato sentado y lo guarda como JPEG en `files/cuadros/`, con sus datos en `Config.cuadros_guardados`. El mueble de Vida es una pared de cuadros con los cuatro últimos; es **uno solo para todos los temas** (toma sus colores). Si más adelante se quiere uno por tema, cada tema reescribe `DisenoVida.muebleGaleria` dejando los marcos en los sitios de `MuebleGaleriaComun.huecos`.
+- **Las caricias no se guardan** (D.190 sigue igual).
+- **De los días de uso** (`Config.uso_dias`) solo se anotan ya los dos de esta parte: abrir «Hoy en la historia» y abrir un cuento desde «en la época de…». Los demás nombres existen en `UsoDias` pero nadie los anota todavía (respaldo verificado, ensayo, exportación, widget, fondo con escena y tema del día): eso es de la parte 9.
+
+**Qué probar en el teléfono:**
+- Seguir a un personaje y dejarlo; llenar los seis y ver el aviso del tope. Con «probar historia» (Sistema, avisos) se oye el sonido nuevo sin esperar a un día especial.
+- Un día especial de alguien que sigues: que salga su banderita en Hoy y llegue la notificación una sola vez.
+- El cuento: que el cuadro salga arriba, que el ambiente empiece suave, que el bucle empalme sin chasquido y que se calle al salir, al apagar la pantalla, con una llamada, en silencio y al poner música. Los ambientes están sintetizados y nadie los ha oído: los más dudosos son la fuente de Al-Ándalus, la pluma de Medieval y los murmullos de gente.
+- La pantalla completa, en vertical y en horizontal: sin barras, y que un toque fuera del gato salga. Al tocar el cuadro fuera del gato, el gato da un paso hacia ahí antes de abrirse: decir si molesta.
+- El ronroneo, con «Sonidos» encendido.
+- El «me gusta»: que se note mientras pinta, que el cuadro guardado sea igual al de la pantalla, quitarlo y deshacer, y que el mueble de Vida muestre los últimos.
+- Un respaldo completo y su restauración, con cuadros guardados.
 
 ## Respuestas del autor (16 nov 2026, segunda ronda)
 
@@ -116,6 +160,44 @@ Además, el autor notó que **algunas notificaciones no suenan**: hay que revisa
 5. **A `main` pasan ya solo los documentos** que hacen falta para encontrar los temas nuevos (las guías de `docs/diseno/temas/`, este plan y un puntero en `CLAUDE.md`). Sin código.
 6. **El código no pasa a `main` sin avisar al autor.** Hay otras ramas trabajando sobre `main` (las de escenas): antes de mezclar se trae `main` a la rama, se revisan los choques y se le cuenta al autor qué se encontró.
 7. **Los agentes, con Opus.**
+
+## Para quien dibuje los cuadros de Psicodelia y de Frente exterior
+
+Los dos temas nuevos que todavía no tienen cuadro en «Otras vidas» son **Psicodelia** (`psicodelia`; David, dibujante de carteles, San Francisco, 1965–1969) y **Frente exterior** (`frente`, el del espía; Tadeo, ladrón de piezas y agente de la red, en el puerto de Halde). Esto es lo que necesita quien los dibuje.
+
+**Dónde está el código.** En la rama **`ccr-ca31af2d-ua0p3j`** (no en `main`): `git fetch origin ccr-ca31af2d-ua0p3j` y parte de ahí. En `main` no existen esos dos temas, ni sus vidas, ni sus cuentos.
+
+**Qué leer, en este orden:**
+1. `CLAUDE.md` (el apartado de las escenas) y **entera** `docs/diseno/ESCENAS.md`: el estilo, las diez reglas, la vara (el cuadro de Helénico) y la receta para dibujar en el arnés de escenas (`docs/historia/informes/P4a.md`).
+2. `docs/plan_historia_y_escenas.md`: cómo se reparten las tandas y la decisión 18 (el cuento y el cuadro cuentan lo mismo).
+3. La guía de cada tema: `docs/diseno/temas/psicodelia.md` (empezando por su última sección, «Decisiones del autor») con `psicodelia_base.md` (los nombres de colores y trazos que ya existen: `TrazosCiudad`, `TrazosTinta`, `EstadoTema`), y `docs/diseno/temas/frente.md`. Sus fichas, en `PLAN_TEMAS.md`.
+4. La historia de cada personaje, que es lo que el cuadro tiene que contar:
+   - David: `vidas/anios/AnioG9.kt` (busca el comentario «Lo que el cuadro tiene que mostrar»: ahí están todas las claves de escena) y `vidas/piezas/PiezasDavid.kt`.
+   - Tadeo: `vidas/piezas/PiezasTadeo.kt` y su año, también en `vidas/anios/AnioG9.kt` (busca `agente_red` y su comentario «Lo que el cuadro tiene que mostrar»).
+5. Un cuadro reciente como modelo de código: `ui/escenas/EscenaNeon.kt` o `EscenaVapor*.kt`, y `ui/escenas/EscenaVida.kt` (`Momento`: la hora, `m.hacer`, `m.con("clave")`).
+
+**Lo propio de Psicodelia:**
+- **El cuadro no lee la cara ni la intensidad del tema.** La cara y la intensidad dependen de la hora y de lo que anota la persona; el cuadro cuenta la vida de David. Lo que cambia el cuadro son las claves de su día.
+- **Dos claves nuevas, ya escritas en el calendario** (y vigiladas por pruebas): `humo`, los viernes por la noche (marihuana: de 20 a 4 h, una bruma baja y tibia, las luces un poco más vivas; cambio leve) y `noche_tinta`, las noches de LSD y de hongos (de 20 a 4 h **el cuadro entero pasa a la manera del cartel**: tres tintas planas, bandas que fluyen desde las luces de la pared, el registro corrido). El comentario de `AnioG9.kt` describe qué cambia en cada una y en qué se distinguen el LSD y los hongos.
+- **Anotado por el autor para después:** que cada sustancia cambie la escena de una forma distinta, intentando reproducir visualmente su efecto. Los textos de esas noches en `PiezasDavid.kt` ya lo describen con detalle; el cuadro puede apoyarse en ellos.
+- De día el cuadro es la ciudad sobria (la calle de casas victorianas grises, la niebla, los cables del trolebús); sin tópicos (flores, símbolo de la paz, arcoíris, furgonetas).
+- El gato: en `ui/escenas/Pelajes.kt` la rama de Psicodelia está en `null` porque no había cuadro; el pelaje nuevo es el atigrado naranja de la banda (`herramientas/gato/`).
+
+**Archivos que NO debe tocar** (otros trabajos dependen de ellos tal como están):
+- `ui/escenas/paisaje/**`: no se cambia cómo se ve ninguna pieza que ya usa un cuadro aprobado. Agregar piezas nuevas sí se puede.
+- Los cuadros de los demás temas (`Escena<Tema>*.kt`), `GatoCuadro.kt`, `GatoDibujo.kt`, `GatoEsqueleto.kt`.
+- `vidas/**` (las historias y sus pruebas): si al cuadro le falta una clave, se pide; no se cambia la historia para acomodar el dibujo.
+- `data/Modelo.kt` y `SCHEMA_V` (un cuadro no guarda nada), `data/OtrasVidas.kt` salvo que haga falta una clave de escena.
+- Todo lo de los muebles y del tema: `ui/ideario/**`, `ui/biblioteca/**`, `ui/vida/**`, `ui/comun/**`, `ui/CaraTema.kt`, `ui/PsicodeliaTrazos.kt`, `ui/PsicodeliaPiezas.kt`, `ui/Tema.kt`, `herramientas/arnes_muebles/**`.
+- La firma (`app/vestigium.jks`, `signingConfigs`) y los flujos de `.github/`.
+
+**Lo que sí toca:** archivos nuevos `ui/escenas/EscenaPsicodelia*.kt`, `EscenaFrente*.kt`, `PelajePsicodelia.kt`, `PelajeFrente.kt`, `BanderitaPsicodelia.kt`, `BanderitaFrente.kt`, sus imágenes de referencia en `docs/diseno/escenas/`, y **una línea por tema** en los tres repartos: `EscenaVida.kt` (los dos `when`), `Banderitas.kt` y `Pelajes.kt`.
+
+**Dos cosas que un cuadro nuevo trae consigo desde las partes 6 y 8** (las dos se encuentran solas, sin tocar ningún reparto):
+- **La franja del fondo del teléfono:** `override val franjaFondo` en la escena (de 0 a 1: dónde cae, a lo ancho del cuadro, la franja vertical que se usa de fondo de pantalla). Se elige donde esté lo que cuenta la escena; modelos en `EscenaHeleno.kt` y `EscenaRomano.kt`.
+- **El ambiente del cuento:** `res/raw/a_<tema>_ambiente.ogg` y, si la noche suena distinto, `a_<tema>_ambiente_noche.ogg`. Se generan con `herramientas/ambientes.py` (agregando el tema al guion) y la app los busca por nombre. Sin archivo, ese cuento simplemente no suena. Al agregarlo, pon también el tema en la lista de `CuentoReglasPrueba.losAmbientesQueHayEnElRepositorio`.
+
+**Ojo con `main`:** otras ramas de escenas trabajan sobre `main` y esos tres repartos y `paisaje/` son justo donde pueden chocar. Conviene que quien dibuje estos dos cuadros traiga `main` a su rama antes de empezar (`git merge origin/main`) y diga qué chocó; y que su trabajo vuelva a esta rama, no a `main` directamente.
 
 ## Lo que queda pendiente, para quien lo retome
 
