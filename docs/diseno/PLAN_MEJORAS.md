@@ -22,7 +22,7 @@ Lo que pidió el autor el 16 de noviembre de 2026 después de comparar los 39 te
 | 5 | Psicodelia nueva | **hecho (17 nov 2026).** Las dos caras (ciudad y tinta), cada una en claro y oscuro, con la intensidad por consumo en curso; componentes, muebles, biblioteca, Ideario, textos, sonidos, gato, widgets y el cuento de David. La versión 1 está borrada entera. Lo que se hizo y lo que cambió respecto del plan: `temas/psicodelia.md`, `temas/psicodelia_plan.md` y `temas/psicodelia_base.md`. **Falta:** el cuadro de David (lo dibuja otro agente; ver «Para quien dibuje los cuadros…») y probar en el teléfono el cambio de cara al anochecer y la intensidad con un consumo abierto |
 | 6 | Fondos de pantalla con las escenas | **hecho (17 nov 2026)** y compilado en Actions (corrida 23); **falta probarlo en el teléfono** (lista abajo) |
 | 7 | Lo temático nuevo: el toque, la hora y el clima, los mensajes breves, las esperas, el selector de fecha y de hora | **no se hace ahora**: queda escrita abajo |
-| 8 | Los cuadros: seguir personajes (con notificación y sonido propio), «Hoy en la historia» bajo el cuento, el cuadro a pantalla completa y arriba del cuento con su ambiente, la galería y su mueble en Vida, el ronroneo del gato. Deja puestos los campos que necesita la parte 9 | **en curso**: hecha la base (17 nov 2026): el plan técnico (`CUADROS_PLAN.md`), lo que se guarda (`SCHEMA_V` = 27, D.199) y los puntos de enganche; faltan los encargos A, B y C |
+| 8 | Los cuadros: seguir personajes (con notificación y sonido propio), «Hoy en la historia» bajo el cuento, el cuadro a pantalla completa y arriba del cuento con su ambiente, la galería y su mueble en Vida, el ronroneo del gato. Deja puestos los campos que necesita la parte 9 | **hecho (17 nov 2026)**; **falta probarlo en el teléfono** (lista abajo, en «Los cuadros (parte 8)»). El plan técnico y lo que se guarda: `CUADROS_PLAN.md` (`SCHEMA_V` = 27, D.199). Los logros no se hicieron (parte 9) |
 | 9 | Logros nuevos | **no se hace ahora**: queda escrita abajo y en `LOGROS_NUEVOS.md` |
 
 ## Decisiones del autor, parte por parte
@@ -101,6 +101,23 @@ La respuesta al tocar; que el fondo y los muebles reaccionen a la hora, el clima
 - **«Hoy en la historia»:** un botón debajo del del cuento.
 - **Galería:** «me gusta» a un cuadro para guardarlo tal cual (el tema, la vida, el día y la hora); se ven en un mueble nuevo de la pestaña Vida.
 - **El gato del cuadro** suena al acariciarlo.
+
+**Cómo quedó hecho (17 nov 2026):**
+- **Seguir** (`ui/seguir/`, `data/Historias.kt`, `vidas/DiasEspeciales.kt`, `avisos/HistoriaPendiente.kt`): el botón va debajo del retrato, en el cuento; las banderitas, en Hoy; la lista con los días pasados, en la ruta `seguidos`. La notificación sale una vez por día especial, entre la hora de despertar y las 21:00, por el canal «Días especiales de quien sigues», con un sonido por tema (`n_<tema>_historia.ogg`, de `herramientas/sonidos_historia.py`).
+- **El cuento** (`ui/pantallas/OtrasVidas.kt`, `ui/escenas/CuadroCompleto.kt`, `AmbienteCuadro.kt`, `CuentoReglas.kt`): el cuadro va arriba, con su gato, el «me gusta», el botón de ampliar y un altavoz. La pantalla completa es una ventana encima de donde estés; se sale tocando fuera del gato, con la ✕ o con «atrás». «Leído» se marca al llegar al final, sin tiempo mínimo.
+- **El ambiente** (31 archivos `a_<tema>_ambiente[_noche].ogg`, de `herramientas/ambientes.py`): suena solo en el cuento, en bucle y suave. **No depende del interruptor «Sonidos»**: tiene el suyo («Ambiente del cuadro», en Sistema, y el altavoz del cuadro) y calla con el teléfono en silencio o en vibración, con una llamada, al apagar la pantalla y al salir. El ronroneo sí depende de «Sonidos».
+- **La galería** (`ui/galeria/`, `ui/vida/MuebleGaleria.kt`, `data/CarpetaCuadros.kt`): el «me gusta» pinta el cuadro a 1200 × 900 con su gato sentado y lo guarda como JPEG en `files/cuadros/`, con sus datos en `Config.cuadros_guardados`. El mueble de Vida es una pared de cuadros con los cuatro últimos; es **uno solo para todos los temas** (toma sus colores). Si más adelante se quiere uno por tema, cada tema reescribe `DisenoVida.muebleGaleria` dejando los marcos en los sitios de `MuebleGaleriaComun.huecos`.
+- **Las caricias no se guardan** (D.190 sigue igual).
+- **De los días de uso** (`Config.uso_dias`) solo se anotan ya los dos de esta parte: abrir «Hoy en la historia» y abrir un cuento desde «en la época de…». Los demás nombres existen en `UsoDias` pero nadie los anota todavía (respaldo verificado, ensayo, exportación, widget, fondo con escena y tema del día): eso es de la parte 9.
+
+**Qué probar en el teléfono:**
+- Seguir a un personaje y dejarlo; llenar los seis y ver el aviso del tope. Con «probar historia» (Sistema, avisos) se oye el sonido nuevo sin esperar a un día especial.
+- Un día especial de alguien que sigues: que salga su banderita en Hoy y llegue la notificación una sola vez.
+- El cuento: que el cuadro salga arriba, que el ambiente empiece suave, que el bucle empalme sin chasquido y que se calle al salir, al apagar la pantalla, con una llamada, en silencio y al poner música. Los ambientes están sintetizados y nadie los ha oído: los más dudosos son la fuente de Al-Ándalus, la pluma de Medieval y los murmullos de gente.
+- La pantalla completa, en vertical y en horizontal: sin barras, y que un toque fuera del gato salga. Al tocar el cuadro fuera del gato, el gato da un paso hacia ahí antes de abrirse: decir si molesta.
+- El ronroneo, con «Sonidos» encendido.
+- El «me gusta»: que se note mientras pinta, que el cuadro guardado sea igual al de la pantalla, quitarlo y deshacer, y que el mueble de Vida muestre los últimos.
+- Un respaldo completo y su restauración, con cuadros guardados.
 
 ## Respuestas del autor (16 nov 2026, segunda ronda)
 
