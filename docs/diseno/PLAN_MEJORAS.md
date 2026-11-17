@@ -17,7 +17,7 @@ Lo que pidió el autor el 16 de noviembre de 2026 después de comparar los 39 te
 | 0 | Este plan, las reglas de los muebles rehechos (`MUEBLES.md`, versión 2) y el arnés | hecho |
 | 1 | Arreglos: el aviso que sonaba junto con la música al estrenar tema; las notificaciones que no sonaban; el modo claro de día y oscuro de noche | hecho y compilado en Actions; **falta probarlo en el teléfono** |
 | 2 | Piloto de Idearios (Laboratorio, Helénico y Gótico) | hecho y aprobado por el autor |
-| 3 | Los otros 31 Idearios, y un piloto de tres bibliotecas rehechas | **hecho.** Los 34 Idearios están rehechos, compilados y capturados en Actions (corridas 12, 13 y 14, sin fallas). Bibliotecas piloto hechas: Helénico, Laboratorio y Gótico (`ui/biblioteca/MuebleEstante<Tema>.kt`). **Las otras 36 bibliotecas no se empiezan** hasta que el autor diga, vistos los tres pilotos |
+| 3 | Los otros 31 Idearios, y un piloto de tres bibliotecas rehechas | **hecho.** Los 34 Idearios están rehechos, compilados y capturados en Actions (corridas 12, 13 y 14, sin fallas). Bibliotecas piloto hechas: Helénico, Laboratorio y Gótico (`ui/biblioteca/MuebleEstante<Tema>.kt`). **Las otras 36 bibliotecas se rehacen:** el autor lo aprobó el 17 nov 2026, vistos los tres pilotos (con ellas, las libretas de momentos y el tablero de notas); falta hacerlo |
 | 4 | Los muebles de Vida | **no se hace ahora**: queda escrita abajo |
 | 5 | Psicodelia nueva | **hecho (17 nov 2026).** Compilado y capturado en Actions (corrida 26). Las dos caras (ciudad y tinta), cada una en claro y oscuro, con la intensidad por consumo en curso; componentes, muebles, biblioteca, Ideario, textos, sonidos, gato, widgets y el cuento de David. La versión 1 está borrada entera. Lo que se hizo y lo que cambió respecto del plan: `temas/psicodelia.md`, `temas/psicodelia_plan.md` y `temas/psicodelia_base.md`. **Falta:** el cuadro de David (lo dibuja otro agente; ver «Para quien dibuje los cuadros…») y probar en el teléfono el cambio de cara al anochecer y la intensidad con un consumo abierto |
 | 6 | Fondos de pantalla con las escenas | **hecho (17 nov 2026)** y compilado en Actions (corrida 23); **falta probarlo en el teléfono** (lista abajo) |
@@ -212,9 +212,9 @@ Todo lo de esta sección está sin hacer. Cada punto dice qué decidió el autor
 - **La clase de cada recipiente sale de la semilla (el tema), nunca de su sitio**; el sitio (`fila`, `col`, `repisa`, `centro`) es solo para la luz.
 - **Seguridad:** ningún bucle cuyo paso pueda valer cero. Cada mueble se dibuja también con 0, 1 y 5 temas (`ARNES_TEMAS=0,1,5`) y cortado con su placa (`ARNES_MAX=6`), y al final se pide una corrida de capturas en Actions: ahí salió un cuelgue que el arnés no veía.
 
-### Las bibliotecas (36 por rehacer, si el autor lo aprueba)
+### Las bibliotecas (36 por rehacer, aprobado por el autor el 17 nov 2026)
 
-- **Decisión pendiente del autor:** ver los tres pilotos (Helénico, Laboratorio, Gótico) y decir si se rehacen las demás. Hasta entonces no se toca ninguna.
+- **Aprobado por el autor el 17 nov 2026,** vistos los tres pilotos (Helénico, Laboratorio, Gótico): se rehacen las demás. Con ellas se rehacen también las libretas de momentos (`DisenoBiblioteca.libreta()`, en el mismo `Estante<Tema>`; la escena es `ui/pantallas/LibretaMomentos.kt`) y el tablero de notas (`DisenoVida.tableroNotas()` y `notaTablero()`, en `ui/vida/Vida<Tema>.kt`), con la misma receta.
 - **Qué es rehacer una:** solo `estante()` y `volumen()` del objeto `Estante<Tema>` (en `ui/biblioteca/Biblioteca<Época>.kt`), que pasan a un archivo nuevo `ui/biblioteca/MuebleEstante<Tema>.kt` al que el objeto delega; más `override val auraEnReposo = false`. La tapa, la libreta, el sobre, el buzón y lo demás no se tocan.
 - **Qué pide el autor:** solo el mueble y la pared, sin ventanas; nivel de los Idearios rehechos; tres tipos de entrada que sean objetos distintos del tema; objetos arriba y en los huecos libres de las repisas; noche de verdad.
 - **Lo que ya está preparado en el contrato** (`DisenoBiblioteca.kt`, `EstanteBiblioteca.kt`): `Volumen.repisa`, `repisas` y `centro` (para apagar cada volumen con la distancia a la luz), `DisposicionEstante.ocupado` (hasta dónde llegan los volúmenes de cada repisa: de ahí al costado, el hueco está libre para objetos) y `auraEnReposo`.
@@ -225,7 +225,7 @@ Todo lo de esta sección está sin hacer. Cada punto dice qué decidió el autor
 ### Parte 4 · Los muebles de Vida
 
 - **Qué son:** los muebles de la pestaña Vida (el de las notas y los nichos), un archivo por tema en `ui/vida/Vida<Tema>.kt`, contrato en `ui/vida/DisenoVida.kt`. El arnés todavía no los dibuja: hay que añadirle un modo `vida` (como se hizo con `ideario` y `biblioteca`, en `herramientas/arnes_muebles/src/main/kotlin/arnes/Dibujar.kt`).
-- **Lo decidido:** primero se dijo «no se redibujan; reciben noche de verdad y luz con dirección». Después de ver los Idearios rehechos, el autor añadió que tal vez haya que redibujarlos también. **Se decide junto con las bibliotecas**, cuando vea los pilotos: si las bibliotecas se rehacen, lo coherente es rehacer Vida con las mismas reglas.
+- **Lo decidido:** primero se dijo «no se redibujan; reciben noche de verdad y luz con dirección». Después de ver los Idearios rehechos, el autor añadió que tal vez haya que redibujarlos también. **Se decide junto con las bibliotecas**, cuando vea los pilotos: si las bibliotecas se rehacen, lo coherente es rehacer Vida con las mismas reglas. El 17 nov 2026 el autor aprobó rehacer las bibliotecas y, de Vida, el tablero de notas.
 - **Además, un mueble nuevo en Vida** para la galería de cuadros guardados: ese sí se hace, en la parte 8.
 
 ### Parte 7 · Lo temático nuevo
@@ -247,7 +247,7 @@ Cinco cosas que hoy ningún tema tiene y que el autor pidió para los 39 (son so
 
 ### Preguntas abiertas al autor
 
-1. **Bibliotecas y Vida:** ¿se rehacen las otras 36 bibliotecas y los muebles de Vida? (Esperan a que vea los tres pilotos.)
+1. **Bibliotecas y Vida:** ¿se rehacen las otras 36 bibliotecas y los muebles de Vida? **Contestada el 17 nov 2026:** se rehacen las bibliotecas, las libretas de momentos y el tablero de notas.
 2. **Al-Ándalus (Ideario):** el interior del compartimento usa un alicatado nazarí, posterior a la época del tema: ¿se cambia? ¿Se quita la puerta de lacería?
 3. **Templario (Ideario):** el escudo es de lágrima; hacia 1250 ya era triangular: ¿se cambia?
 4. **Urbe (Ideario):** es el quiosco de periódicos arrimado a un muro romano, sin cielo ni calle, pero es un mueble de exterior: ¿vale, o se cambia por un interior?
