@@ -17,6 +17,13 @@ App personal de Android (Kotlin + Jetpack Compose) para registrar, a lo largo de
 - `docs/diseno/ESCENAS.md`: la guía de arte de las escenas (ver abajo). `docs/plan_historia_y_escenas.md`: el plan de sus tandas.
 - `.github/workflows/`: `apk.yml` compila y publica la APK; `capturas.yml` genera capturas de diseño (Paparazzi) en la rama `capturas`.
 
+## Trabajo en curso fuera de `main` (noviembre de 2026)
+
+- **Los cinco temas nuevos todavía no están en `main`:** Frente exterior (`frente`, el del espía de la red entre mundos), Arcontes (`arcontes`), Galia (`galia`), Art nouveau (`nouveau`) y Psicodelia (`psicodelia`). Su código, sus «otras vidas» y sus cuentos están en la rama **`ccr-ca31af2d-ua0p3j`**, junto con los Idearios rehechos y el resto del plan de mejoras.
+- **Qué leer:** el plan y el estado, en `docs/diseno/PLAN_MEJORAS.md`; la guía de cada tema nuevo, en `docs/diseno/temas/<tema>.md` (Psicodelia tiene además `psicodelia_plan.md`); sus fichas, en `docs/diseno/PLAN_TEMAS.md`.
+- **Para trabajar en esos temas** (por ejemplo, dibujar sus escenas), parte de esa rama, no de `main`: `git fetch origin ccr-ca31af2d-ua0p3j`.
+- Este apartado se quita cuando el código pase a `main`.
+
 ## Compilar y publicar
 
 - No hay SDK de Android en el entorno de Claude: **la compilación se verifica en GitHub Actions**. Cada push a `main` compila la APK y publica un Release (`versionCode` = número de ejecución). Los errores de compilación quedan en la rama `ci-log`; las capturas, en la rama `capturas`.
