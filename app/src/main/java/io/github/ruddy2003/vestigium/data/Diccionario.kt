@@ -487,10 +487,11 @@ object Diccionario {
      */
     private const val VERSION_ESQUEMA_25 = 270
     /**
-     * La versión que trae el esquema 28 («llamada» aparte de «mensajes» en las presencias, 18 nov 2026). **Estimada** (la
-     * corrida de la compilación de `main` que se espera al mezclar): se corrige con el número de la primera versión
-     * publicada con el esquema 28. La fila del Apéndice D del paper (D.200) está reservada y todavía no escrita: el paper se
-     * pone al día después, por decisión del autor (docs/PENDIENTES.md).
+     * La versión que trae el esquema 28 («llamada» aparte de «mensajes» en las presencias, 18 nov 2026): la v292, la
+     * compilación de `main` al mezclar el PR que lo trae, calculada antes de mezclar como la siguiente corrida de `apk.yml`
+     * (la última en la rama fue la 291). Si la primera versión publicada con el esquema 28 resulta otra, se corrige aquí. La
+     * fila del Apéndice D del paper (D.200) está reservada y todavía no escrita: el paper se pone al día después, por
+     * decisión del autor (docs/PENDIENTES.md, «Máxima prioridad»).
      */
     private const val VERSION_ESQUEMA_28 = 292
     // Los esquemas 26 y 27 no agregan ni cambian columnas. El 26 es una preferencia de interfaz (`Config.modo`, D.198). El 27
