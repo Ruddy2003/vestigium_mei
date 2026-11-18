@@ -18,7 +18,8 @@ import org.junit.Test
  * sigue leyendo igual, con los campos nuevos vacíos; y lo nuevo va y vuelve sin perder nada. Todo con datos inventados.
  */
 class EsquemaVeintisietePrueba {
-    @Test fun esquema() = assertEquals(27, SCHEMA_V)
+    // El esquema que trae esto es el 27; el número vigente lo comprueba EsquemaCatorcePrueba (desde el 28, «llamada»).
+    @Test fun esquema() = assertTrue(SCHEMA_V >= 27)
 
     @Test fun configDeAntesSeLeeConLoNuevoVacio() {
         // Una configuración del esquema 26: trae lo suyo y nada de lo nuevo.
