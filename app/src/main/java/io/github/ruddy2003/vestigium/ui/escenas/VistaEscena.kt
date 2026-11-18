@@ -66,7 +66,7 @@ const val RELOJ_QUIETO = 3.7f
 /** Cada cuántos milisegundos se vuelve a trazar la parte viva: unos 15 cuadros por segundo. */
 private const val PASO_MS = 66L
 
-/** Cuánto hay que mantener el dedo sobre el cuadro para abrir «Hoy en la historia» (decisión 13 del plan). */
+/** Cuánto hay que mantener el dedo sobre el cuadro para la pulsación larga (decisión 13 del plan; desde el 17 nov 2026, en Hoy abre el cuadro a pantalla completa). */
 const val MS_MANTENER = 700L
 
 /** Lo que tarda la banderita en empezar a llenarse: un toque corto o el arranque de un desplazamiento no la encienden. */
@@ -91,10 +91,10 @@ const val HOLGURA_DEDO_DP = 8
  *   se traza una vez, en el instante [relojFijo], y queda quieta. El reloj se detiene solo mientras la app no está
  *   en pantalla. Con [pausa] (el cuadro quedó fuera de la vista al desplazar la pantalla) todo se detiene donde iba
  *   y sigue desde ahí al volver: no gasta batería mientras no se ve.
- * - **La banderita** «Hoy en la historia» del tema ([banderita]) cuelga dentro, arriba a la izquierda. Con
- *   [alMantener], mantener el dedo [MS_MANTENER] ms sobre el cuadro la va llenando y, al llenarse, llama a
- *   [alMantener]; se cancela si el dedo se mueve más de [HOLGURA_DEDO_DP] dp. [lleno], de 0 a 1, la pinta llena a
- *   mano (las capturas).
+ * - **La banderita** del tema ([banderita]) cuelga dentro, arriba a la izquierda; en Hoy, desde el 17 nov 2026, solo en
+ *   un día especial del personaje, y llena ([lleno] en 1). Con [alMantener], mantener el dedo [MS_MANTENER] ms sobre el
+ *   cuadro llama a [alMantener] (en Hoy, el cuadro a pantalla completa); mientras, una banderita sin llenar se iría
+ *   llenando. Se cancela si el dedo se mueve más de [HOLGURA_DEDO_DP] dp. [lleno], de 0 a 1, la pinta llena a mano.
  * - **El gato** va en una tercera capa, encima de las dos, si se da su [humor] (el de `Gato.humor`): camina por el
  *   suelo de la escena con el [pelaje] de su tema. Sin [animar] queda sentado; [pasoGato] lo fija en un cuadro
  *   concreto (las capturas). Sin [humor] no hay gato. Con [toques] responde al dedo: un toque corto sobre él es una
@@ -103,7 +103,7 @@ const val HOLGURA_DEDO_DP = 8
  * - **Todos los gestos los recoge un solo detector,** el del cuadro entero: el toque corto va al gato y la pulsación
  *   larga a [alMantener]. Dos detectores, uno dentro de otro, se quitarían los toques.
  * - **Para lectores de pantalla,** con [descripcion] el cuadro se anuncia con ese texto y ofrece sus acciones con
- *   nombre: acariciar al gato, abrir «Hoy en la historia» y las de [acciones] (leer el cuento).
+ *   nombre: acariciar al gato y las de [acciones] (leer el cuento, verlo a pantalla completa).
  * - **Si una escena falla al dibujar,** el cuadro se queda con lo que llevaba pintado y avisa por [alFallar]: un
  *   adorno no puede tumbar la pantalla de Hoy.
  */
@@ -152,9 +152,9 @@ fun VistaEscena(
     }
     val voz = if (descripcion == null) Modifier else Modifier.semantics {
         contentDescription = descripcion
+        // La pulsación larga no lleva acción propia: quien la da ofrece lo mismo con nombre en [acciones].
         customActions = listOfNotNull(
             if (toques && humor != null) CustomAccessibilityAction("Acariciar al gato") { dedo.alMimar?.invoke(); true } else null,
-            mantener?.let { abrir -> CustomAccessibilityAction("Abrir «Hoy en la historia»") { abrir(); true } },
         ) + acciones.map { (nombre, hacer) -> CustomAccessibilityAction(nombre) { hacer(); true } }
     }
     // La parte quieta pintada en segundo plano (o null si se traza aquí mismo, o si todavía no está).

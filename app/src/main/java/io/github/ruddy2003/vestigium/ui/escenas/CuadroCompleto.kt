@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.escenas
 
+import android.os.SystemClock
 import android.view.ViewGroup
 import android.view.WindowManager
 import androidx.compose.foundation.Canvas
@@ -7,6 +8,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.calculateCentroid
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.aspectRatio
@@ -22,7 +26,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -32,14 +38,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
@@ -82,6 +91,8 @@ import kotlinx.coroutines.withContext
 // - **A pantalla completa** ([CuadroAmpliado]): fondo negro, sin barras del sistema, el cuadro centrado a todo lo que
 //   quepa (4:3; en horizontal ocupa el alto entero), con su gato y sus caricias, la parte viva animada y el «me gusta»
 //   de la galería en una esquina. Sale con un toque fuera del gato (en el cuadro o en lo negro), con la ✕ o con «atrás».
+//   Desde el 17 nov 2026 se acerca con dos dedos, hasta 4× ([acercarCuadro]); acercado, un toque ya no sale (sí la ✕ y
+//   «atrás») y dos toques lo devuelven a 1×. En Hoy se abre manteniendo el dedo sobre el cuadro.
 //   Va en una ventana propia encima de la pantalla en la que estás: así la pantalla del cuento sigue debajo (con su
 //   ambiente y su lugar de lectura) y Hoy no necesita una ruta para abrirla. La ruta `cuadro?tema=…&dia=…`
 //   ([PantallaCuadroCompleto]) abre lo mismo.
@@ -168,13 +179,24 @@ internal fun ContenidoCuadroCompleto(cuadro: CuadroHoy, hora: Double, alSalir: (
     val animo = humor ?: remember { Gato.humor() }
     val seAnima = animar ?: (enVivo && Repo.config.animaciones && !ahorroDeEnergia(ctx))
     var caricias by remember { mutableIntStateOf(0) }
+    // El acercamiento ([acercarCuadro]): la escala, lo corrido y cuándo volvió a 1× con dos toques (ese toque no cierra).
+    var escala by remember { mutableFloatStateOf(1f) }
+    var corrido by remember { mutableStateOf(Offset.Zero) }
+    var vueltaA1 by remember { mutableLongStateOf(0L) }
     val quien = cuadro.quien
     Box(Modifier.fillMaxSize().background(Color.Black)) {
-        // Todo lo negro y el cuadro: un toque que no fue caricia sale.
-        BoxWithConstraints(Modifier.fillMaxSize().toqueSinCaricia({ caricias }, alSalir), contentAlignment = Alignment.Center) {
+        // Todo lo negro y el cuadro: un toque que no fue caricia sale, salvo con el cuadro acercado.
+        BoxWithConstraints(
+            Modifier.fillMaxSize()
+                .acercarCuadro({ escala }, { corrido }) { e, d, reinicio -> escala = e; corrido = d; if (reinicio) vueltaA1 = SystemClock.uptimeMillis() }
+                .toqueSinCaricia({ caricias }) { if (escala <= 1f && SystemClock.uptimeMillis() - vueltaA1 > 400L) alSalir() },
+            contentAlignment = Alignment.Center,
+        ) {
             val ancho = if (maxWidth * 3f / 4f <= maxHeight) maxWidth else maxHeight * 4f / 3f
             VistaEscena(
-                cuadro.escena, cuadro.ficha, hora, Modifier.width(ancho), animar = seAnima, humor = animo, pelaje = cuadro.pelaje, pasoGato = pasoGato,
+                cuadro.escena, cuadro.ficha, hora,
+                Modifier.width(ancho).graphicsLayer { scaleX = escala; scaleY = escala; translationX = corrido.x; translationY = corrido.y },
+                animar = seAnima, humor = animo, pelaje = cuadro.pelaje, pasoGato = pasoGato,
                 toques = true, alAcariciar = { caricias++; acariciar(ctx) },
                 descripcion = "El cuadro de ${quien.nombre}, ${quien.lugar}, a pantalla completa.",
                 acciones = listOf("Cerrar" to alSalir), enSegundoPlano = enVivo && animar != false, fondo = Color.Black,
@@ -278,6 +300,56 @@ internal fun Modifier.toqueSinCaricia(caricias: () -> Int, alTocar: () -> Unit):
                 }
                 if (vale) launch { delay(80); if (cuenta() == antes) tocar() }
             }
+        }
+    }
+}
+
+// ---------------------------------------------------------------- acercar con dos dedos
+
+/** Hasta cuánto se acerca el cuadro a pantalla completa. */
+private const val MAX_ACERCAR = 4f
+
+/** Cuánto pueden separarse dos toques, en milisegundos, para contar como doble toque. */
+private const val MS_DOBLE_TOQUE = 300L
+
+/**
+ * Acercar el cuadro a pantalla completa (17 nov 2026): con dos dedos se pellizca, de 1× a [MAX_ACERCAR]×, alrededor del
+ * punto entre los dedos; ya acercado, un dedo lo arrastra, sin correrlo más de lo que sobresale de la pantalla; dos
+ * toques seguidos con el cuadro acercado lo devuelven a 1× (avisa con `reinicio`). Mira los toques antes que el cuadro
+ * (pasada inicial) y solo se queda con los de dos dedos y con el arrastre de uno ya acercado: el toque corto sigue siendo
+ * del gato y, a 1×, de cerrar. [poner] recibe la escala y lo corrido nuevos.
+ */
+private fun Modifier.acercarCuadro(escala: () -> Float, corrido: () -> Offset, poner: (Float, Offset, Boolean) -> Unit): Modifier = pointerInput(Unit) {
+    val holgura = HOLGURA_DEDO_DP.dp.toPx()
+    var ultimoToque = 0L
+    // Lo más que se puede correr con la escala [e]: lo que el cuadro (4:3, centrado) sobresale de la pantalla, la mitad por lado.
+    fun acotar(e: Float, d: Offset): Offset {
+        val w = minOf(size.width.toFloat(), size.height * 4f / 3f); val h = w * 3f / 4f
+        val mx = maxOf(0f, (e * w - size.width) / 2f); val my = maxOf(0f, (e * h - size.height) / 2f)
+        return Offset(d.x.coerceIn(-mx, mx), d.y.coerceIn(-my, my))
+    }
+    awaitEachGesture {
+        val abajo = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+        var movido = false; var varios = false; var fin = abajo.uptimeMillis
+        while (true) {
+            val ev = awaitPointerEvent(PointerEventPass.Initial)
+            val puestos = ev.changes.count { it.pressed }
+            fin = ev.changes.maxOfOrNull { it.uptimeMillis } ?: fin
+            if (puestos == 0) break
+            if (puestos > 1) varios = true
+            if (!movido && ev.changes.any { it.pressed && (it.position - abajo.position).getDistance() > holgura }) movido = true
+            val e = escala()
+            val antes = ev.calculateCentroid(useCurrent = false)
+            if ((puestos > 1 || (movido && e > 1f)) && antes.isSpecified) {
+                // El punto del cuadro que estaba bajo los dedos se queda bajo los dedos.
+                val c = antes - Offset(size.width / 2f, size.height / 2f)
+                val nueva = (e * ev.calculateZoom()).coerceIn(1f, MAX_ACERCAR); val k = nueva / e
+                poner(nueva, acotar(nueva, corrido() * k + c * (1f - k) + ev.calculatePan()), false)
+                ev.changes.forEach { if (it.positionChanged()) it.consume() }
+            }
+        }
+        if (!movido && !varios) {
+            if (escala() > 1f && fin - ultimoToque < MS_DOBLE_TOQUE) { poner(1f, Offset.Zero, true); ultimoToque = 0L } else ultimoToque = fin
         }
     }
 }

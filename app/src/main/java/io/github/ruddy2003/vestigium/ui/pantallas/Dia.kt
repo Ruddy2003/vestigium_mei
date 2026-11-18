@@ -186,9 +186,9 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
         val (nombreT, espanolT, _) = if (fecha == hoy) est.pantallaEnLinea("Hoy", "HODIE") else est.pantallaEnLinea("Día", "DIES")
         io.github.ruddy2003.vestigium.ui.Encabezado(io.github.ruddy2003.vestigium.ui.tituloEnLinea(nombreT, espanolT),
             atras = if (apilado) nav.atras else null, buscar = { nav.ir("buscar") }, ajustes = { nav.ir("mas") }, tamEmblema = 34.dp)
-        // La fecha, entre dos flechas grandes y con el calendario a la vista (13 nov 2026). Antes las flechas eran «‹ ›» de
-        // texto, muy chicas, y el calendario solo se abría tocando la fecha, sin nada que lo dijera. Tocar la fecha lo sigue
-        // abriendo, y deslizar a los lados sigue cambiando de día.
+        // La fecha, entre dos flechas grandes (13 nov 2026). Antes las flechas eran «‹ ›» de texto, muy chicas. Tocar la fecha
+        // abre el calendario, y deslizar a los lados cambia de día. El botón chico del calendario que iba aquí pasó a ser la
+        // barra de la semana, debajo (17 nov 2026).
         // Su tamaño, espaciado, peso e inclinación son de cada tema (Estilo.fechaGrande).
         val ef = est.fechaGrande
         val base = MaterialTheme.typography.titleLarge
@@ -203,7 +203,6 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             ), color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.weight(1f).clickable(onClickLabel = "Abrir el calendario") { abrirCalendario() }.padding(horizontal = 4.dp, vertical = 4.dp))
-            io.github.ruddy2003.vestigium.ui.BotonCalendario { abrirCalendario() }
             io.github.ruddy2003.vestigium.ui.BotonDia(anterior = false) { irA(Fechas.sumar(fecha, 1)) }
         }
         // Debajo, en chico: el día, qué tan lejos está, la luna y la racha. «guardado» ya no se dice (siempre se guarda solo);
@@ -230,6 +229,9 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
             Text("⏱ cambio de horario: de ${utc(a)} a ${utc(b)} · el día duró ${"%.1f".format(24 - dif).removeSuffix(".0").removeSuffix(",0")} h",
                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+        // La semana en curso, de lunes a domingo, con la flecha del calendario (17 nov 2026): reemplaza al botón chico del
+        // calendario y a «Tus últimos días». Tocar un día lo abre aquí mismo; en hoy, estando en hoy, abre «Llenar el día».
+        SemanaEnCurso(hoy, abrir = { f -> val ya = f == fecha; if (!ya) irA(f); if (ya && f == hoy) abrirNoche() }, abrirCalendario = { abrirCalendario() }, ponerse = { ponerte() })
     }) {
         // El contador vive dentro del bloque para que la numeración se reinicie en cada recomposición.
         var k = 0
@@ -248,15 +250,14 @@ fun PantallaDia(nav: Nav, apilado: Boolean = false, nivel: Int = 0) {
             val temaDeHoy = io.github.ruddy2003.vestigium.ui.Estilo.tema
             if (c.gato && io.github.ruddy2003.vestigium.ui.escenas.hayCuadroEnHoy(temaDeHoy, c.gato_estilo)) io.github.ruddy2003.vestigium.ui.escenas.CuadroDelDia(
                 temaDeHoy, hoy, alLeer = { vida -> nav.ir("cuento?vida=$vida") },
-                // La pulsación larga abre «Hoy en la historia» cuando exista esa pantalla (tanda H1) y esté encendida en Ajustes.
+                // El botón «Hoy en la historia», debajo del cuento, cuando exista esa pantalla (tanda H1) y esté encendida en Ajustes.
                 alHistoria = if (io.github.ruddy2003.vestigium.ui.escenas.HAY_HISTORIA_HOY && c.historia_hoy) { { nav.ir("historia_hoy") } } else null,
             )
             else io.github.ruddy2003.vestigium.ui.GatoDelDia(hoy)
             // Parte 8 (encargo A): las banderitas de los personajes que sigues y hoy tienen un día especial.
             io.github.ruddy2003.vestigium.ui.seguir.AvisosSeguidos(hoy, nav)
         }
-        // En lugar del personaje: tus últimos días, de un vistazo (N-28). Tocar un día lo abre; hoy abre «Llenar el día».
-        if (esHoy) FranjaDias(hoy, abrir = { f -> if (f == hoy) abrirNoche() else { if (sucio) { Repo.guardarDia(d); sucio = false }; Seleccion.abrir(nav, f) } }) { ponerte() }
+        // «Tus últimos días» (N-28) iba aquí; desde el 17 nov 2026 es la barra de la semana, arriba, debajo de la fecha.
         if (esHoy) SugerirSemanaCorta(hoy)
 
         val bloqueSueno: @Composable () -> Unit = {
@@ -552,10 +553,10 @@ fun PantallaNoche(nav: Nav) {
                 BotonDictado { t -> cambiar(d.copy(nota = (d.nota + " " + t).trim())) }
             }
             Detectados(d.nota, fecha) { nuevo -> cambiar(d.copy(nota = nuevo)) }
-            // Ver a alguien no es lo mismo que pensar en esa persona: un toque cambia entre «estuve con», «pensé en» y «mensajes».
+            // Ver a alguien no es lo mismo que pensar en esa persona: un toque cambia entre «estuve con», «pensé en», «mensaje» y «llamada».
             if (Texto.personas(d.nota).isNotEmpty()) {
                 ChipsPresencia(d) { n -> cambiar(n) }
-                Ayuda("Toca un nombre si solo pensaste en esa persona o hablaron por mensaje.", Modifier.padding(top = 4.dp))
+                Ayuda("Toca un nombre si solo pensaste en esa persona o hablaron por mensaje o por llamada.", Modifier.padding(top = 4.dp))
             }
             BotonTexto(onClick = { nav.ir("biblioteca_diario") }) { Text("abrir la biblioteca del diario →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }

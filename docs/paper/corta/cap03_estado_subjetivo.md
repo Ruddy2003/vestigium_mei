@@ -211,7 +211,7 @@ Al nombrar a una @persona en el diario, un toque sobre el nombre dice cómo fue:
 
 ## 3.13 Reactividad: medir cambia lo medido
 
-**Reactividad** es que registrar cambie lo registrado: porque te hace prestar atención, porque nombrar una emoción la modifica o porque quieres verte bien en tus datos (capítulo 9). En pacientes con dolor crónico que lo registraban cada hora durante una semana, el registro no cambió en promedio el dolor reportado (Cruise et al., 1996). **[Validado]** que puede no haber reactividad apreciable en el ánimo o el dolor; no se puede descartar para hábitos y conductas. Conviene no sacar conclusiones de las primeras semanas de cada medición nueva. «Tus últimos días» en Hoy pone tu historial de valencia en primer plano; el hilo de hoy no se colorea hasta tener valencia y diario, y se puede apagar. **[Diseño propio]**.
+**Reactividad** es que registrar cambie lo registrado: porque te hace prestar atención, porque nombrar una emoción la modifica o porque quieres verte bien en tus datos (capítulo 9). En pacientes con dolor crónico que lo registraban cada hora durante una semana, el registro no cambió en promedio el dolor reportado (Cruise et al., 1996). **[Validado]** que puede no haber reactividad apreciable en el ánimo o el dolor; no se puede descartar para hábitos y conductas. Conviene no sacar conclusiones de las primeras semanas de cada medición nueva. La barra de la semana en Hoy (desde el 17 nov 2026; antes, la franja «Tus últimos días») pone tu valencia de la semana en primer plano; hoy no se colorea hasta tener valencia y diario, y los colores se pueden apagar. **[Diseño propio]**.
 
 ---
 

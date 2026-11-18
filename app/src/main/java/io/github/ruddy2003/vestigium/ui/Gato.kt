@@ -255,7 +255,7 @@ object Gato {
 
     /**
      * El sueño cuenta desde la mañana: menos de 6 h o calidad 2 o menos es cansado. El ánimo solo cuando el día ya está
-     * completo (valencia y diario, la misma regla que «Tus últimos días»), para no devolverte el ánimo mientras lo
+     * completo (valencia y diario, la misma regla que la barra de la semana de Hoy), para no devolverte el ánimo mientras lo
      * calificas: 6 o más, alegre; 2 o menos, triste; si además anotaste enojo o frustración en un momento de hoy y la
      * valencia no pasa de 4, enojado. De 22:00 a 5:00 es de noche.
      */

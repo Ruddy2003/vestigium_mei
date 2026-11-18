@@ -45,6 +45,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -462,11 +465,12 @@ fun FraseDelDia(fecha: String) {
         // por la esquina de abajo. El texto va siempre sobre la superficie lisa (la regla de legibilidad de la guía).
         TemaId.PSICODELIA -> {
             val cara = io.github.ruddy2003.vestigium.ui.caraLocal()
-            val i = io.github.ruddy2003.vestigium.ui.intensidadLocal()
+            // La intensidad se lee al trazar: mientras anima, la tarjeta se vuelve a trazar sin recomponerse.
+            val i = io.github.ruddy2003.vestigium.ui.intensidadAlDibujar()
             val oscuro = esOscuro()
             Box(arriba.drawBehind {
                 val u = 1.dp.toPx(); val w = size.width; val h = size.height
-                val k = io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.colores(oscuro, cara, i)
+                val k = io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.colores(oscuro, cara, i())
                 if (k.ciudad) {
                     val r = androidx.compose.ui.geometry.Rect(0f, 0f, w, h)
                     val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(r, CornerRadius(11 * u))) }
@@ -1247,511 +1251,102 @@ fun abrirAviso(ctx: Context) {
 }
 
 // =====================================================================
-//  Tus últimos días (N-28)
+//  La semana en curso (17 nov 2026; antes «Tus últimos días», N-28, y el botón chico del calendario)
 // =====================================================================
 
 /**
- * «Tus últimos días»: los 13 días anteriores y hoy como hilos verticales, en lugar del personaje.
- * - Color: la valencia del día, con la paleta divergente del calendario (`Tonos.valencia`).
- * - Alto: las horas de sueño de esa noche frente a tu normal (promedio de los 28 días anteriores; 7 h si hay menos de 5).
- * - Remate: un sello si el día tiene valencia y diario; un punto si solo tiene diario. Un día sin nada queda hueco.
- * - Hoy se va llenando (sueño → ánimo → diario) y no muestra su color hasta tener valencia y diario, para no influir en
- *   cómo lo calificas (capítulo 3, sección 3.14). Por lo mismo, la franja no sale en la hoja de la noche.
- * Solo usa la valencia, el sueño y si hay diario: nada privado. Cada tema la dibuja a su manera.
+ * La barra de la semana en curso, en Día, debajo de la fecha: de lunes a domingo, un cuadro por día como los del
+ * calendario ([Celda]), con el color de la valencia de ese día. Reemplaza al botón chico del calendario (estaba junto a la
+ * fecha) y a «Tus últimos días» (N-28, los 14 hilos que iban debajo del cuadro, en Hoy).
+ * - **Color:** la valencia que le pusiste al día en el diario (`Dia.valencia`), con la paleta del calendario
+ *   (`Tonos.valencia`). Un día sin valencia en el diario queda vacío, aunque el calendario lo pinte con la media de los
+ *   avisos.
+ * - **Hoy**, con el marco de hoy del calendario, no se colorea hasta tener valencia y diario, para no influir en cómo lo
+ *   calificas (capítulo 3, sección 3.14), como la franja de antes. Los días que vienen, vacíos y más tenues; no se abren.
+ * - Con «Colores de la semana» apagado en Apariencia (`Config.personaje`, el ajuste de la franja de antes), ningún día
+ *   lleva color ni sale la línea de abajo.
+ * - Tocar un día lo abre ([abrir]); a la derecha, una flecha ancha y chata hacia abajo abre el calendario ([abrirCalendario]).
+ * - Debajo, en chico: el ánimo y el sueño de esta semana frente a la pasada y cuántos días faltan por llenar ([ponerse]),
+ *   lo mismo que llevaba la franja.
+ * La semana es la del día lógico [hoy] (`Fechas.diaLogico`), también cuando Día muestra otra fecha. Solo usa la valencia,
+ * si hay diario y el sueño: nada privado.
  */
 @Composable
-fun FranjaDias(hoy: String, abrir: (String) -> Unit, ponerse: () -> Unit) {
-    if (!Repo.config.personaje) return
-    val oscuro = esOscuro()
+fun SemanaEnCurso(hoy: String, abrir: (String) -> Unit, abrirCalendario: () -> Unit, ponerse: () -> Unit, modifier: Modifier = Modifier) {
     val cs = MaterialTheme.colorScheme
-    val tema = Estilo.tema
-    val dias = (13 downTo 0).map { Fechas.sumar(hoy, -it.toLong()) }
-    val normal = (1..28).mapNotNull { Repo.salud[Fechas.sumar(hoy, -it.toLong())]?.sueno_min }.takeIf { it.size >= 5 }?.average() ?: 420.0
-    val oro = Tonos.secuencial(1f, oscuro)
-    val letras = listOf("L", "M", "M", "J", "V", "S", "D")
-    Column(Modifier.fillMaxWidth().padding(top = 12.dp)) {
-        Etiqueta("Tus últimos días")
-        Row(Modifier.fillMaxWidth().height(118.dp).padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            dias.forEach { f ->
-                val d = Repo.dias[f]
-                val esHoy = f == hoy
-                val conDiario = d?.nota?.isNotBlank() == true
-                val completo = d?.valencia != null && conDiario
-                val sueno = Repo.salud[f]?.sueno_min
-                val alto = ((sueno?.div(normal))?.toFloat() ?: 0.8f).coerceIn(0.45f, 1.25f) / 1.25f
-                val color = if (esHoy && !completo) null else Tonos.valencia(d?.valencia?.toDouble(), oscuro)
-                val avance = if (!esHoy) 0f else listOf(d?.sueno_calidad != null || sueno != null, d?.valencia != null, conDiario).count { it } / 3f
-                val marca = if (completo) 2 else if (conDiario) 1 else 0
-                Canvas(Modifier.weight(1f).fillMaxHeight().clickable { abrir(f) }) {
-                    val w = size.width; val h = size.height
-                    val remate = 14.dp.toPx()
-                    val barH = (h - remate) * alto
-                    val top = h - barH
-                    val borde = Stroke(1.dp.toPx())
-                    val linea = if (esHoy) cs.primary else cs.outline
-                    val u = 1.dp.toPx()
-                    // Con color, se rellena; sin él (hoy, todavía), solo el contorno.
-                    fun pinta(p: Path) { if (color != null) drawPath(p, color) else drawPath(p, linea, style = borde) }
-                    fun caja(x: Float, y: Float, ancho: Float, altoCaja: Float) = Path().apply { addRect(Rect(x, y, x + ancho, y + altoCaja)) }
-                    // El color del sello de arriba (día con valencia y diario).
-                    var sello = cs.primary
-                    when (tema) {
-                        // Columnas: fuste, capitel y basa.
-                        TemaId.ROMANO -> {
-                            val fx = w * 0.18f; val fw = w * 0.64f; val cap = 3.dp.toPx()
-                            if (color != null) drawRect(color, Offset(fx, top + cap), Size(fw, barH - 2 * cap)) else drawRect(linea, Offset(fx, top + cap), Size(fw, barH - 2 * cap), style = borde)
-                            if (color != null) for (k in 1..2) drawLine(Color.Black.copy(alpha = 0.18f), Offset(fx + fw * k / 3, top + cap), Offset(fx + fw * k / 3, h - cap), 1.dp.toPx())
-                            drawRect(color ?: linea, Offset(0f, top), Size(w, cap), style = if (color == null) borde else Fill)
-                            drawRect(color ?: linea, Offset(0f, h - cap), Size(w, cap), style = if (color == null) borde else Fill)
-                        }
-                        // Cada día es un edificio con su cúpula: el cuerpo con las ventanas y el casquete arriba.
-                        TemaId.URBE -> {
-                            val fx = w * 0.14f; val fw = w * 0.72f
-                            val cuerpo = Path().apply { moveTo(fx, h); lineTo(fx, top + fw / 2); arcTo(Rect(fx, top, fx + fw, top + fw), 180f, 180f, false); lineTo(fx + fw, h); close() }
-                            pinta(cuerpo)
-                            if (color != null) {
-                                var y = top + fw * 0.8f
-                                while (y < h - 5 * u) { drawRect(Color.Black.copy(alpha = 0.2f), Offset(fx + fw * 0.3f, y), Size(fw * 0.4f, 3 * u)); y += 7 * u }
-                            }
-                            drawRect(linea, Offset(w / 2 - 1 * u, top - 3 * u), Size(2 * u, 3 * u))
-                        }
-                        // Barras con líneas de escaneo.
-                        TemaId.CIBER -> {
-                            if (color != null) {
-                                drawRect(color, Offset(0f, top), Size(w, barH))
-                                var y = top + 2.dp.toPx()
-                                while (y < h) { drawLine(Color.Black.copy(alpha = 0.28f), Offset(0f, y), Offset(w, y), 1f); y += 3.dp.toPx() }
-                            } else drawRect(linea, Offset(0f, top), Size(w, barH), style = borde)
-                        }
-                        // Tubos de neón verticales: el halo y el núcleo; vacío, solo el tubo apagado.
-                        TemaId.NEON -> {
-                            val cx = w / 2; val g = w * 0.32f
-                            if (color != null) {
-                                drawLine(color.copy(alpha = 0.3f), Offset(cx, top + g), Offset(cx, h - g), g * 2.6f, StrokeCap.Round)
-                                drawLine(color, Offset(cx, top + g), Offset(cx, h - g), g, StrokeCap.Round)
-                            } else drawLine(linea, Offset(cx, top + g), Offset(cx, h - g), g * 0.6f, StrokeCap.Round)
-                        }
-                        // Estelas: un cuerpo de piedra con su frontón triangular.
-                        TemaId.HELENO -> {
-                            val fr = minOf(w * 0.45f, barH * 0.3f)
-                            pinta(caja(w * 0.12f, top + fr, w * 0.76f, barH - fr))
-                            pinta(Path().apply { moveTo(0f, top + fr); lineTo(w / 2, top); lineTo(w, top + fr); close() })
-                            drawLine(if (color != null) Color.Black.copy(alpha = 0.22f) else linea, Offset(0f, top + fr), Offset(w, top + fr), u)
-                        }
-                        // Obeliscos: el fuste que se adelgaza y el piramidión en la punta, separado por una línea.
-                        TemaId.EGIPTO -> {
-                            val pp = minOf(w * 0.5f, barH * 0.25f)
-                            pinta(Path().apply { moveTo(w * 0.1f, top + barH); lineTo(w * 0.2f, top + pp); lineTo(w / 2, top); lineTo(w * 0.8f, top + pp); lineTo(w * 0.9f, top + barH); close() })
-                            drawLine(if (color != null) Color.Black.copy(alpha = 0.22f) else linea, Offset(w * 0.2f, top + pp), Offset(w * 0.8f, top + pp), u)
-                        }
-                        // Franjas iluminadas: arco de medio punto y filete dorado.
-                        TemaId.MEDIEVAL -> {
-                            val r = CornerRadius(w / 2, w / 2)
-                            if (color != null) {
-                                drawRoundRect(color, Offset(0f, top), Size(w, barH), r)
-                                drawRoundRect(oro, Offset(0f, top), Size(w, barH), r, style = Stroke(1.5f * u))
-                            } else drawRoundRect(linea, Offset(0f, top), Size(w, barH), r, style = borde)
-                            sello = oro
-                        }
-                        // Torres de la muralla: dos merlones arriba y, en las jornadas registradas, la cruz pintada.
-                        TemaId.TEMPLARIO -> {
-                            val m = minOf(w * 0.3f, barH * 0.14f)
-                            pinta(Path().apply {
-                                moveTo(0f, h); lineTo(0f, top); lineTo(w * 0.36f, top); lineTo(w * 0.36f, top + m); lineTo(w * 0.64f, top + m); lineTo(w * 0.64f, top); lineTo(w, top); lineTo(w, h); close()
-                            })
-                            if (color != null && barH > w * 1.6f) drawPath(io.github.ruddy2003.vestigium.ui.cruzPatada(Offset(w / 2, top + m + w * 0.55f), w * 0.3f), Color.White.copy(alpha = 0.75f))
-                            sello = cs.secondary
-                        }
-                        // Fichas perforadas: esquina cortada y una hilera de agujeros.
-                        TemaId.DISTOPIA -> {
-                            val k = minOf(w * 0.35f, barH * 0.2f)
-                            pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w - k, top); lineTo(w, top + k); lineTo(w, h); close() })
-                            var y = top + k + 4 * u
-                            while (y < h - 4 * u) { drawRect(if (color != null) cs.background.copy(alpha = 0.55f) else linea.copy(alpha = 0.5f), Offset(w * 0.4f, y), Size(w * 0.2f, 2.5f * u)); y += 9 * u }
-                        }
-                        // La ciudad: cada día es un disco en su funda, de canto: la funda que sube tanto como dormiste, con el
-                        // disco que asoma arriba en medio círculo y su etiqueta. El cartel: la columna con el remate de arco del
-                        // cartel, la trama de la tinta en su mitad de sombra y, arriba, un disco chico con su corona de rayos.
-                        TemaId.PSICODELIA -> {
-                            val ciudad = io.github.ruddy2003.vestigium.ui.EstadoTema.caraDe(tema) == io.github.ruddy2003.vestigium.ui.Cara.BASE
-                            val fx = w * 0.12f; val fw = w * 0.76f
-                            if (ciudad) {
-                                val rd = minOf(fw / 2, barH * 0.4f)
-                                val cd = Offset(w / 2, top + rd)
-                                if (color != null) {
-                                    drawCircle(Color(0xFF1E1916), rd, cd)
-                                    drawCircle(androidx.compose.ui.graphics.lerp(color, Color.White, 0.25f), rd * 0.36f, cd)
-                                } else drawCircle(linea, rd, cd, style = borde)
-                                pinta(caja(fx, top + rd, fw, barH - rd))
-                                if (color != null) drawLine(Color.White.copy(alpha = 0.3f), Offset(fx + 1.2f * u, top + rd), Offset(fx + 1.2f * u, h), 1.2f * u)
-                            } else {
-                                val arcoTop = minOf(fw / 2, barH / 2)
-                                val cuerpo = Path().apply {
-                                    moveTo(fx, h); lineTo(fx, top + arcoTop)
-                                    arcTo(Rect(fx, top, fx + fw, top + 2 * arcoTop), 180f, 180f, false)
-                                    lineTo(fx + fw, h); close()
-                                }
-                                pinta(cuerpo)
-                                if (color != null) {
-                                    clipPath(cuerpo) {
-                                        var y = top + arcoTop; while (y < h) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(w * 0.55f, y), Offset(fx + fw, y), 0.7f * u); y += 2.4f * u }
-                                    }
-                                    if (barH > 3 * fw) {
-                                        val o = Offset(w / 2, top - fw * 0.55f)
-                                        drawPath(io.github.ruddy2003.vestigium.ui.PiezasPsicodelia.cunas(o, fw * 0.22f, fw * 0.5f, 10, 0.5f, 0.12f, 0f), color)
-                                        drawCircle(color, fw * 0.22f, o)
-                                    }
-                                }
-                            }
-                            sello = cs.secondary
-                        }
-                        // Cada día, un tallo que sube y abre su capullo, más alto cuanto más dormiste, con una hoja que sale de lado; el
-                        // sello de arriba, en el violeta del iris.
-                        TemaId.NOUVEAU -> {
-                            val bot = minOf(w * 1.3f, barH * 0.32f)
-                            pinta(Path().apply {
-                                moveTo(w * 0.4f, h); lineTo(w * 0.43f, top + bot * 0.8f)
-                                cubicTo(w * 0.02f, top + bot * 0.55f, w * 0.3f, top + bot * 0.12f, w * 0.5f, top)
-                                cubicTo(w * 0.7f, top + bot * 0.12f, w * 0.98f, top + bot * 0.55f, w * 0.57f, top + bot * 0.8f)
-                                lineTo(w * 0.6f, h); close()
-                            })
-                            if (color != null) {
-                                drawLine(Color.White.copy(alpha = 0.35f), Offset(w * 0.5f, top + bot * 0.15f), Offset(w * 0.5f, top + bot * 0.7f), 0.8f * u)
-                                if (barH > bot + 24 * u) {
-                                    val ya = top + bot + (barH - bot) * 0.35f
-                                    drawPath(io.github.ruddy2003.vestigium.ui.TrazosNouveau.hojaLanza(Offset(w * 0.5f, ya + 8 * u), Offset(w * 0.98f, ya - 4 * u), 3.4f * u, 0.2f), color)
-                                }
-                            }
-                            sello = cs.secondary
-                        }
-                        // Las estacas de la empalizada del oppidum: cada día, un tronco aguzado arriba, con la corteza en vetas y su
-                        // atadura de mimbre; el remate, en el oro de los torques.
-                        TemaId.GALIA -> {
-                            val punta = minOf(w * 0.7f, barH * 0.25f); val ex = w * 0.14f; val ew = w * 0.72f
-                            pinta(Path().apply { moveTo(ex, h); lineTo(ex, top + punta); lineTo(w / 2, top); lineTo(ex + ew, top + punta); lineTo(ex + ew, h); close() })
-                            if (color != null) {
-                                listOf(0.3f, 0.64f).forEach { f -> drawLine(Color.Black.copy(alpha = 0.18f), Offset(ex + ew * f, top + punta + 3 * u), Offset(ex + ew * f, h - 2 * u), 0.8f * u) }
-                                if (barH > punta + 16 * u) {
-                                    val ya = top + punta + 6 * u
-                                    drawLine(Color.Black.copy(alpha = 0.35f), Offset(ex - 1 * u, ya), Offset(ex + ew + 1 * u, ya + 1.5f * u), 1.4f * u)
-                                    drawLine(Color.Black.copy(alpha = 0.35f), Offset(ex - 1 * u, ya + 3 * u), Offset(ex + ew + 1 * u, ya + 4.5f * u), 1.4f * u)
-                                }
-                            }
-                            sello = cs.secondary
-                        }
-                        // Jarras de barro, una por día, más altas cuanto más dormiste: el cuerpo, el hombro con su franja pintada,
-                        // el cuello y el borde de la tapa; el sello de arriba, en el violeta de la grieta.
-                        TemaId.ARCONTES -> {
-                            val cuello = minOf(w * 0.5f, barH * 0.16f); val hombro = top + cuello
-                            pinta(Path().apply {
-                                moveTo(w * 0.34f, h)
-                                cubicTo(w * 0.02f, h - barH * 0.1f, w * 0.0f, hombro + barH * 0.22f, w * 0.18f, hombro + barH * 0.05f)
-                                quadraticTo(w * 0.28f, hombro, w * 0.36f, hombro); lineTo(w * 0.36f, top); lineTo(w * 0.64f, top); lineTo(w * 0.64f, hombro)
-                                quadraticTo(w * 0.72f, hombro, w * 0.82f, hombro + barH * 0.05f)
-                                cubicTo(w * 1f, hombro + barH * 0.22f, w * 0.98f, h - barH * 0.1f, w * 0.66f, h); close()
-                            })
-                            if (color != null && barH > w * 1.4f) drawLine(Color.Black.copy(alpha = 0.22f), Offset(w * 0.16f, hombro + barH * 0.16f), Offset(w * 0.84f, hombro + barH * 0.16f), 1.4f * u)
-                            drawLine(color ?: linea, Offset(w * 0.27f, top), Offset(w * 0.73f, top), 1.8f * u, StrokeCap.Round)
-                            sello = cs.tertiary
-                        }
-                        // Los deslizadores de la consola: la ranura de esquinas redondas, llena hasta el alto del día, con las
-                        // marcas de la escala al lado y, arriba, la perilla de baquelita con su raya hueso.
-                        TemaId.FRENTE -> {
-                            val ancho = w * 0.46f; val x0 = (w - ancho) / 2; val rr = CornerRadius(ancho / 2, ancho / 2)
-                            if (color != null) drawRoundRect(color, Offset(x0, top), Size(ancho, barH), rr) else drawRoundRect(linea, Offset(x0, top), Size(ancho, barH), rr, style = borde)
-                            var y = h - 4 * u; var k = 0
-                            while (y > top + 6 * u) { drawLine(linea.copy(alpha = 0.5f), Offset(0f, y), Offset(if (k % 4 == 0) x0 - u else w * 0.12f, y), 0.7f * u); y -= 6 * u; k++ }
-                            val perilla = io.github.ruddy2003.vestigium.ui.TrazosFrente.BAQUELITA
-                            if (color != null) drawRoundRect(perilla, Offset(0f, top - 3 * u), Size(w, 6 * u), CornerRadius(2 * u, 2 * u))
-                            else drawRoundRect(linea, Offset(0f, top - 3 * u), Size(w, 6 * u), CornerRadius(2 * u, 2 * u), style = borde)
-                            drawLine(if (color != null) io.github.ruddy2003.vestigium.ui.TrazosFrente.HUESO else linea, Offset(w * 0.15f, top), Offset(w * 0.85f, top), 0.9f * u)
-                        }
-                        // Medidor de segmentos, como en un tablero de control.
-                        TemaId.REFUGIO -> {
-                            val seg = 7 * u; val hueco = 2 * u; val r = CornerRadius(2 * u, 2 * u)
-                            var y = h
-                            while (y > top + 0.5f) {
-                                val alto2 = minOf(seg, y - top)
-                                if (color != null) drawRoundRect(color, Offset(0f, y - alto2), Size(w, alto2), r) else drawRoundRect(linea, Offset(0f, y - alto2), Size(w, alto2), r, style = borde)
-                                y -= seg + hueco
-                            }
-                        }
-                        // Espadas con la punta arriba, la guarda y el puño abajo.
-                        TemaId.ORDEN -> {
-                            val punta = minOf(w * 0.6f, barH * 0.3f); val bx = w * 0.22f; val bw = w * 0.56f
-                            pinta(Path().apply { moveTo(bx, h - 6 * u); lineTo(bx, top + punta); lineTo(w / 2, top); lineTo(bx + bw, top + punta); lineTo(bx + bw, h - 6 * u); close() })
-                            if (color != null) drawLine(Color.Black.copy(alpha = 0.22f), Offset(w / 2, top + punta), Offset(w / 2, h - 7 * u), u)
-                            drawRect(color ?: linea, Offset(0f, h - 6 * u), Size(w, 2 * u))
-                            drawRect(color ?: linea, Offset(w * 0.4f, h - 4 * u), Size(w * 0.2f, 4 * u))
-                            sello = cs.secondary
-                        }
-                        // Chimeneas de fábrica: el fuste de ladrillo que se angosta, el remate más ancho arriba y las hiladas.
-                        TemaId.VAPOR -> {
-                            val bx = w * 0.2f; val bw = w * 0.6f; val cap = minOf(4 * u, barH * 0.2f); val ala = w * 0.08f
-                            pinta(Path().apply {
-                                moveTo(bx, h); lineTo(bx + bw * 0.1f, top + cap); lineTo(bx - ala, top + cap); lineTo(bx - ala, top)
-                                lineTo(bx + bw + ala, top); lineTo(bx + bw + ala, top + cap); lineTo(bx + bw * 0.9f, top + cap); lineTo(bx + bw, h); close()
-                            })
-                            if (color != null) { var y = top + cap + 5 * u; while (y < h - 2 * u) { drawLine(Color.Black.copy(alpha = 0.18f), Offset(bx + bw * 0.1f, y), Offset(bx + bw * 0.9f, y), 0.6f * u); y += 5 * u } }
-                            sello = cs.tertiary
-                        }
-                        // Probetas de fondo redondo, con su borde y un brillo de vidrio.
-                        TemaId.LABORATORIO -> {
-                            val tx = w * 0.15f; val tw = w * 0.7f; val rr = tw / 2
-                            val tubo = Path().apply { moveTo(tx, top); lineTo(tx, h - rr); arcTo(Rect(tx, h - 2 * rr, tx + tw, h), 180f, -180f, false); lineTo(tx + tw, top); close() }
-                            pinta(tubo)
-                            if (color != null) {
-                                drawPath(tubo, cs.outline, style = borde)
-                                drawLine(Color.White.copy(alpha = 0.35f), Offset(tx + tw * 0.28f, top + 3 * u), Offset(tx + tw * 0.28f, h - rr), u)
-                            }
-                            drawLine(linea, Offset(tx - 1.5f * u, top), Offset(tx + tw + 1.5f * u, top), 1.5f * u)
-                        }
-                        // Muros de ladrillo, hilada por hilada.
-                        TemaId.COLONOS -> {
-                            pinta(caja(0f, top, w, barH))
-                            if (color != null) {
-                                val junta = cs.background.copy(alpha = 0.6f); val hl = 5 * u
-                                var y = h; var fila = 0
-                                while (y - hl > top) {
-                                    drawLine(junta, Offset(0f, y - hl), Offset(w, y - hl), 0.8f * u)
-                                    val juntas = if (fila % 2 == 0) listOf(w * 0.5f) else listOf(w * 0.2f, w * 0.8f)
-                                    juntas.forEach { x -> drawLine(junta, Offset(x, y - hl), Offset(x, y), 0.8f * u) }
-                                    y -= hl; fila++
-                                }
-                            }
-                        }
-                        // Bastones de mariscal: casquillos de oro y una hilera de abejas (puntos).
-                        TemaId.NAPOLEON -> {
-                            val bx = w * 0.18f; val bw = w * 0.64f; val r = CornerRadius(bw / 2, bw / 2)
-                            if (color != null) drawRoundRect(color, Offset(bx, top), Size(bw, barH), r) else drawRoundRect(linea, Offset(bx, top), Size(bw, barH), r, style = borde)
-                            drawRect(oro, Offset(bx, top + bw * 0.5f), Size(bw, 2.5f * u))
-                            drawRect(oro, Offset(bx, h - bw * 0.5f - 2.5f * u), Size(bw, 2.5f * u))
-                            if (color != null) { var y = top + bw * 0.5f + 8 * u; while (y < h - bw * 0.5f - 6 * u) { drawCircle(oro, 1.1f * u, Offset(w / 2, y)); y += 7 * u } }
-                            sello = oro
-                        }
-                        // Rascacielos: cada día es una torre con su corona escalonada, la aguja y una columna de ventanas encendidas.
-                        TemaId.DECO -> {
-                            val m = minOf(w * 0.18f, barH * 0.12f)
-                            pinta(Path().apply {
-                                moveTo(0f, h); lineTo(0f, top + 2 * m); lineTo(w * 0.16f, top + 2 * m); lineTo(w * 0.16f, top + m); lineTo(w * 0.32f, top + m); lineTo(w * 0.32f, top)
-                                lineTo(w * 0.68f, top); lineTo(w * 0.68f, top + m); lineTo(w * 0.84f, top + m); lineTo(w * 0.84f, top + 2 * m); lineTo(w, top + 2 * m); lineTo(w, h); close()
-                            })
-                            drawLine(color ?: linea, Offset(w / 2, top), Offset(w / 2, top - m), 1.2f * u)
-                            if (color != null) { var y = top + 2 * m + 5 * u; while (y < h - 4 * u) { drawRect(oro, Offset(w * 0.44f, y), Size(w * 0.12f, 2 * u)); y += 6 * u } }
-                            sello = oro
-                        }
-                        // Plantas: tallo con hojas alternas y un capullo arriba.
-                        TemaId.BOTANICO -> {
-                            drawLine(color ?: linea, Offset(w / 2, h), Offset(w / 2, top + w * 0.35f), 1.5f * u)
-                            var y = h - 8 * u; var lado = 1f
-                            while (y > top + w * 0.9f) { pinta(hojaFrase(Offset(w / 2, y), Offset(w / 2 + lado * w * 0.45f, y - 5 * u), 1.4f * u)); y -= 9 * u; lado = -lado }
-                            pinta(Path().apply { addOval(Rect(w / 2 - w * 0.3f, top, w / 2 + w * 0.3f, top + w * 0.75f)) })
-                        }
-                        TemaId.RUINAS -> {
-                            // Un edificio roto: la azotea quebrada a la altura del día, ventanas vacías y una mata de hiedra al pie.
-                            pinta(Path().apply { moveTo(0f, h); lineTo(0f, top + 3 * u); lineTo(w * 0.35f, top); lineTo(w * 0.55f, top + 4 * u); lineTo(w, top + 1.5f * u); lineTo(w, h); close() })
-                            if (color != null) {
-                                var y = top + 8 * u
-                                while (y < h - 6 * u) { drawRect(cs.background.copy(alpha = 0.5f), Offset(w * 0.25f, y), Size(w * 0.18f, 3 * u)); drawRect(cs.background.copy(alpha = 0.5f), Offset(w * 0.58f, y), Size(w * 0.18f, 3 * u)); y += 7 * u }
-                            }
-                            drawCircle(Color(0xFF4F7A33).copy(alpha = 0.8f), w * 0.22f, Offset(w * 0.12f, h - w * 0.1f))
-                        }
-                        // Velas con su llama.
-                        TemaId.NAVIDAD -> {
-                            val llama = minOf(w * 0.9f, barH * 0.3f); val vx = w * 0.15f; val vw = w * 0.7f
-                            pinta(caja(vx, top + llama, vw, barH - llama))
-                            drawLine(cs.onSurfaceVariant, Offset(w / 2, top + llama), Offset(w / 2, top + llama - 2.5f * u), u)
-                            drawPath(Path().apply { moveTo(w / 2, top); quadraticTo(w / 2 + w * 0.32f, top + llama * 0.6f, w / 2, top + llama - 2.5f * u); quadraticTo(w / 2 - w * 0.32f, top + llama * 0.6f, w / 2, top); close() },
-                                if (color != null) oro else linea.copy(alpha = 0.5f))
-                            if (color != null) drawCircle(color, vw * 0.14f, Offset(vx + vw * 0.25f, top + llama + 2 * u))
-                        }
-                        // Cañas de bambú con sus nudos.
-                        TemaId.SEDA -> {
-                            val bx = w * 0.15f; val bw = w * 0.7f
-                            pinta(caja(bx, top, bw, barH))
-                            val nudo = if (color != null) Color.Black.copy(alpha = 0.25f) else linea
-                            var y = h - 12 * u
-                            while (y > top + 4 * u) { drawLine(nudo, Offset(bx - 1.5f * u, y), Offset(bx + bw + 1.5f * u, y), 1.6f * u); y -= 12 * u }
-                            pinta(hojaFrase(Offset(bx + bw, top + 8 * u), Offset(w, top + 2 * u), 1.2f * u))
-                        }
-                        // Tanzaku: la tira de papel de los deseos, colgada de su cordón, con trazos de pincel.
-                        TemaId.EDO -> {
-                            val bx = w * 0.2f; val bw = w * 0.6f
-                            pinta(caja(bx, top, bw, barH))
-                            drawLine(linea, Offset(w / 2, top), Offset(w / 2, top - 4 * u), 0.8f * u)
-                            val trazo = if (color != null) Color.White.copy(alpha = 0.55f) else linea
-                            var y = top + 7 * u
-                            while (y < h - 6 * u) { drawLine(trazo, Offset(w / 2, y), Offset(w / 2, y + 3.5f * u), 1.2f * u); y += 7 * u }
-                        }
-                        // Lancetas: ventana apuntada con su filete de oro y el parteluz.
-                        TemaId.GOTICO -> {
-                            val r = minOf(w, barH * 0.5f)
-                            val p = Path().apply { moveTo(0f, h); lineTo(0f, top + r); quadraticTo(0f, top + r * 0.3f, w / 2, top); quadraticTo(w, top + r * 0.3f, w, top + r); lineTo(w, h); close() }
-                            pinta(p)
-                            if (color != null) { drawPath(p, oro, style = Stroke(1.2f * u)); drawLine(oro, Offset(w / 2, top + r * 0.6f), Offset(w / 2, h), 0.8f * u) }
-                            sello = oro
-                        }
-                        // Legajos de pie: la carpeta con su pestaña arriba, el cordel que la cruza y la ficha.
-                        TemaId.ARCANO -> {
-                            val pest = minOf(5 * u, barH * 0.3f)
-                            val p = Path().apply { moveTo(0f, h); lineTo(0f, top + pest); lineTo(w * 0.15f, top + pest); lineTo(w * 0.25f, top); lineTo(w * 0.7f, top); lineTo(w * 0.8f, top + pest); lineTo(w, top + pest); lineTo(w, h); close() }
-                            pinta(p)
-                            if (color != null) {
-                                drawLine(cs.onSurface.copy(alpha = 0.35f), Offset(0f, top + (h - top) * 0.55f), Offset(w, top + (h - top) * 0.55f), 0.9f * u)
-                                if (barH > 18 * u) drawRect(cs.surface.copy(alpha = 0.7f), Offset(w * 0.2f, top + pest + 3 * u), Size(w * 0.6f, minOf(6 * u, barH * 0.2f)))
-                            }
-                            sello = cs.tertiary
-                        }
-                        // Cohetes: cuerpo, ojiva, aletas y una ventanilla.
-                        TemaId.ESPACIO -> {
-                            val bx = w * 0.22f; val bw = w * 0.56f; val nariz = minOf(w * 0.8f, barH * 0.3f); val aleta = minOf(9 * u, barH * 0.2f)
-                            pinta(Path().apply { moveTo(bx, h - 2 * u); lineTo(bx, top + nariz); quadraticTo(bx, top + nariz * 0.2f, w / 2, top); quadraticTo(bx + bw, top + nariz * 0.2f, bx + bw, top + nariz); lineTo(bx + bw, h - 2 * u); close() })
-                            pinta(Path().apply { moveTo(bx, h - aleta - 2 * u); lineTo(0f, h); lineTo(bx, h); close(); moveTo(bx + bw, h - aleta - 2 * u); lineTo(w, h); lineTo(bx + bw, h); close() })
-                            drawCircle(if (color != null) cs.background.copy(alpha = 0.8f) else linea, bw * 0.22f, Offset(w / 2, top + nariz + bw * 0.4f), style = if (color != null) Fill else borde)
-                        }
-                        // Algas gigantes: el tallo que ondula hacia la luz, las vejigas de aire a los lados y la más grande arriba.
-                        TemaId.ABISMO -> {
-                            val tallo = Path(); var y = h
-                            tallo.moveTo(w / 2, h)
-                            while (y > top + w * 0.5f) { y -= 2 * u; tallo.lineTo(w / 2 + w * 0.12f * kotlin.math.sin((h - y) / (7 * u)), y) }
-                            drawPath(tallo, color ?: linea, style = Stroke(1.6f * u))
-                            var yy = h - 9 * u; var lado = 1f
-                            while (yy > top + w * 1.1f) { pinta(Path().apply { addOval(Rect(Offset(w / 2 + lado * w * 0.26f, yy), w * 0.13f)) }); yy -= 10 * u; lado = -lado }
-                            pinta(Path().apply { addOval(Rect(Offset(w / 2, top + w * 0.3f), w * 0.28f)) })
-                        }
-                        // Arcos de herradura: el círculo de arriba se cierra más allá de las jambas.
-                        TemaId.ANDALUS -> {
-                            val r = w / 2; val bx = w * 0.14f; val bw = w * 0.72f
-                            val p = Path().apply {
-                                moveTo(bx, h); lineTo(bx, top + r + r * 0.695f)
-                                arcTo(Rect(0f, top, w, top + 2 * r), 136f, 268f, false)
-                                lineTo(bx + bw, h); close()
-                            }
-                            pinta(p)
-                            if (color != null) drawPath(p, oro, style = Stroke(u))
-                        }
-                        // Estelas: la piedra de remate redondo con su columna de bloques de glifos.
-                        TemaId.MESO -> {
-                            val bx = w * 0.16f; val bw = w * 0.68f; val curva = minOf(bw * 0.35f, barH * 0.4f)
-                            val p = Path().apply {
-                                moveTo(bx, h); lineTo(bx, top + curva); quadraticTo(bx, top, bx + bw / 2, top); quadraticTo(bx + bw, top, bx + bw, top + curva)
-                                lineTo(bx + bw, h); close()
-                            }
-                            pinta(p)
-                            val marca = if (color != null) Color.Black.copy(alpha = 0.22f) else linea
-                            var y = top + curva + 2 * u
-                            while (y + bw * 0.5f < h - 2 * u) {
-                                drawRoundRect(marca, Offset(bx + bw * 0.2f, y), Size(bw * 0.6f, bw * 0.5f), androidx.compose.ui.geometry.CornerRadius(bw * 0.14f), style = Stroke(0.8f * u))
-                                y += maxOf(bw * 0.66f, 1f)
-                            }
-                        }
-                        // Estandartes de la estepa: lanza arriba y crines que cuelgan.
-                        TemaId.MONGOL -> {
-                            val bx = w * 0.2f; val bw = w * 0.6f; val punta = minOf(w * 0.8f, barH * 0.28f)
-                            pinta(caja(bx, top + punta, bw, barH - punta))
-                            drawPath(Path().apply { moveTo(w / 2, top); lineTo(w / 2 + bw * 0.35f, top + punta * 0.55f); lineTo(w / 2, top + punta * 0.8f); lineTo(w / 2 - bw * 0.35f, top + punta * 0.55f); close() },
-                                if (color != null) cs.onSurfaceVariant else linea)
-                            for (k in -3..3) drawLine(color ?: linea, Offset(w / 2, top + punta * 0.8f), Offset(w / 2 + k * w * 0.07f, top + punta + 6 * u), 0.8f * u)
-                        }
-                        // Barras sombreadas a plumilla, con su contorno, como en los cuadernos.
-                        TemaId.RENACIMIENTO -> {
-                            val x0 = w * 0.08f; val bw = w * 0.84f
-                            val r = caja(x0, top, bw, barH)
-                            if (color != null) {
-                                drawPath(r, color.copy(alpha = 0.3f))
-                                clipPath(r) { var k = 0f; while (k < barH + bw) { drawLine(color, Offset(x0, top + k), Offset(x0 + bw, top + k - bw), 0.9f * u); k += 3.5f * u } }
-                                drawPath(r, color, style = borde)
-                            } else drawPath(r, linea, style = borde)
-                        }
-                        // La franja como un tablón de cubierta: sus vetas a lo largo y los dos clavos de los extremos.
-                        TemaId.PIRATA -> {
-                            val x0 = w * 0.08f; val bw = w * 0.84f
-                            val r = caja(x0, top, bw, barH)
-                            if (color != null) {
-                                drawPath(r, color.copy(alpha = 0.32f))
-                                clipPath(r) { var k = 0; var y = top + barH * 0.25f; while (y < top + barH) { drawLine(color.copy(alpha = 0.7f), Offset(x0, y), Offset(x0 + bw, y + (if (k % 2 == 0) 1f else -1f) * u), 0.7f * u); y += maxOf(barH * 0.25f, 1f); k++ } }
-                                drawPath(r, color, style = borde)
-                                listOf(x0 + 3 * u, x0 + bw - 3 * u).forEach { x -> drawCircle(color, 1.2f * u, Offset(x, top + barH / 2)) }
-                            } else drawPath(r, linea, style = borde)
-                        }
-                        // Bloques constructivistas: el corte en diagonal arriba y una base negra.
-                        TemaId.URSS -> {
-                            val inc = minOf(w * 0.7f, barH * 0.25f)
-                            pinta(Path().apply { moveTo(0f, h); lineTo(0f, top); lineTo(w, top + inc); lineTo(w, h); close() })
-                            if (color != null) drawRect(Color.Black.copy(alpha = 0.3f), Offset(0f, h - 4 * u), Size(w, 4 * u))
-                        }
-                        // Árboles de la libertad: tronco y copa.
-                        TemaId.REVOLUCION -> {
-                            val copa = w / 2
-                            drawRect(if (color != null) cs.onSurfaceVariant.copy(alpha = 0.7f) else linea, Offset(w / 2 - w * 0.09f, top + copa), Size(w * 0.18f, h - top - copa))
-                            drawLine(if (color != null) cs.onSurfaceVariant.copy(alpha = 0.7f) else linea, Offset(w * 0.2f, h), Offset(w * 0.8f, h), 1.5f * u)
-                            pinta(Path().apply { addOval(Rect(0f, top, w, top + 2 * copa)) })
-                        }
-                        // Cristales tallados, con sus facetas.
-                        TemaId.ANTIGUAS -> {
-                            val pc = minOf(w * 0.7f, barH * 0.25f)
-                            pinta(Path().apply { moveTo(w * 0.18f, h); lineTo(w * 0.06f, top + pc); lineTo(w / 2, top); lineTo(w * 0.94f, top + pc); lineTo(w * 0.82f, h); close() })
-                            val faceta = if (color != null) Color.White.copy(alpha = 0.3f) else linea.copy(alpha = 0.5f)
-                            drawLine(faceta, Offset(w / 2, top), Offset(w / 2, h), 0.7f * u)
-                            drawLine(faceta, Offset(w * 0.06f, top + pc), Offset(w / 2, top + pc * 1.6f), 0.7f * u)
-                            drawLine(faceta, Offset(w * 0.94f, top + pc), Offset(w / 2, top + pc * 1.6f), 0.7f * u)
-                            sello = cs.tertiary
-                        }
-                        // Estalagmitas: crecen desde el suelo de la cueva, con un punto de ocre en la punta.
-                        TemaId.CUEVA -> {
-                            pinta(Path().apply {
-                                moveTo(w * 0.08f, h); quadraticTo(w * 0.16f, top + barH * 0.45f, w * 0.42f, top + 2 * u); quadraticTo(w * 0.5f, top - u, w * 0.58f, top + 2 * u)
-                                quadraticTo(w * 0.84f, top + barH * 0.45f, w * 0.92f, h); close()
-                            })
-                            val veta = if (color != null) Color.Black.copy(alpha = 0.15f) else linea.copy(alpha = 0.4f)
-                            for (k in 1..2) { val y = top + barH * k / 3f; drawLine(veta, Offset(w * 0.3f, y), Offset(w * 0.7f, y + 1.5f * u), 0.7f * u) }
-                            sello = cs.primary
-                        }
-                        TemaId.BASICO -> {
-                            pinta(caja(w * 0.15f, top, w * 0.7f, barH))
-                            sello = cs.primary
-                        }
+    val oscuro = esOscuro()
+    val colores = Repo.config.personaje
+    val lunes = Fechas.lunesDe(hoy)
+    val dias = (0..6).map { Fechas.sumar(lunes, it.toLong()) }
+    Column(modifier.fillMaxWidth().padding(top = 10.dp)) {
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+            Column(Modifier.weight(1f)) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Estilo.semana.forEach { l ->
+                        Text(l, Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, textAlign = TextAlign.Center, color = cs.onSurfaceVariant, maxLines = 1)
                     }
-                    // Hoy: se llena desde abajo con lo que ya anotaste, sin el color del ánimo.
-                    if (esHoy && color == null && avance > 0f) drawRect(cs.primary.copy(alpha = 0.35f), Offset(0f, h - barH * avance), Size(w, barH * avance))
-                    val cx = w / 2; val cy = remate / 2
-                    when (marca) {
-                        2 -> { drawCircle(sello, w.coerceAtMost(remate) * 0.42f, Offset(cx, cy))
-                               drawCircle(cs.background, w.coerceAtMost(remate) * 0.16f, Offset(cx, cy)) }
-                        1 -> drawCircle(cs.onSurfaceVariant, 2.dp.toPx(), Offset(cx, cy))
+                }
+                Row(Modifier.fillMaxWidth().padding(top = 2.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    dias.forEach { f ->
+                        val d = Repo.dias[f]
+                        val futuro = f > hoy
+                        val completo = d?.valencia != null && d.nota.isNotBlank()
+                        val color = if (!colores || futuro || (f == hoy && !completo)) null else Tonos.valencia(d?.valencia?.toDouble(), oscuro)
+                        Celda(Modifier.weight(1f).alpha(if (futuro) 0.45f else 1f), f, color ?: cs.surface, hoy = f == hoy, futuro = futuro, verFotos = false) {
+                            if (!futuro) abrir(f)
+                        }
                     }
                 }
             }
+            FlechaCalendario(abrirCalendario, Modifier.padding(start = 6.dp))
         }
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            dias.forEach { f ->
-                Text(letras[Fechas.parse(f).dayOfWeek.value - 1], style = MaterialTheme.typography.labelSmall, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    color = if (f == hoy) cs.primary else cs.onSurfaceVariant, modifier = Modifier.weight(1f))
-            }
-        }
-        // La semana en una línea, contra la anterior: de lunes a hoy (como Resumen semanal y Vida), frente a los mismos días de
-        // la semana pasada, con el ánimo de las vistas (Periodo.animoDia: diario o, si falta, avisos). Hoy cuenta solo si ya
-        // tiene valencia y diario, para no influir en cómo lo calificas.
-        val periodo = io.github.ruddy2003.vestigium.ciencia.Periodo
-        val semanaHoy = periodo.fechasDe(Fechas.lunesDe(hoy), hoy)
-        val hoyCompleto = Repo.dias[hoy]?.let { it.valencia != null && it.nota.isNotBlank() } == true
-        val diasAnimo = if (hoyCompleto) semanaHoy else semanaHoy.dropLast(1)
-        val animosSemana = periodo.animoDias(diasAnimo)
-        val conAvisos = animosSemana.any { it?.deAvisos == true }
-        val esta = animosSemana.mapNotNull { it?.valor }.takeIf { it.isNotEmpty() }?.average()
-        val antes = periodo.animoMedio(diasAnimo.map { Fechas.sumar(it, -7) })
-        val sueno = periodo.suenoMedioH(semanaHoy)?.let { (it * 60).toInt() }
-        val faltan = Pendientes.faltantes(hoy).size
-        val partes = listOfNotNull(
-            esta?.let { e -> "ánimo ${"%.1f".format(e)}" + (antes?.let { a -> val x = e - a; if (abs(x) >= 0.05) " (${if (x > 0) "↑" else "↓"}${"%.1f".format(abs(x))})" else "" } ?: "") + (if (conAvisos) " · con avisos" else "") },
-            sueno?.let { "sueño ${it / 60} h ${"%02d".format(it % 60)}" },
-        )
-        Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(if (partes.isEmpty()) "Esta semana todavía no hay datos." else "esta semana: " + partes.joinToString(" · "),
-                style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
-            if (faltan > 0) BotonTexto(onClick = ponerse) {
-                Text(if (faltan == 1) "1 día sin llenar →" else "$faltan días sin llenar →", style = MaterialTheme.typography.labelMedium, color = cs.primary)
-            }
+        if (colores) LineaDeLaSemana(hoy, ponerse)
+    }
+}
+
+/** La flecha del calendario: una «V» ancha y chata hacia abajo, en el color del tema, del alto de los cuadros de la semana. */
+@Composable
+private fun FlechaCalendario(alTocar: () -> Unit, modifier: Modifier = Modifier) {
+    val cs = MaterialTheme.colorScheme
+    val sentir = io.github.ruddy2003.vestigium.ui.rememberSentir()
+    Canvas(
+        modifier.size(width = 44.dp, height = 54.dp).clip(MaterialTheme.shapes.small)
+            .clickable(onClickLabel = "abrir el calendario", role = androidx.compose.ui.semantics.Role.Button) { sentir(io.github.ruddy2003.vestigium.ui.Sentidos.Evento.TOQUE); alTocar() }
+            .semantics { contentDescription = "Abrir el calendario" },
+    ) {
+        val w = size.width; val h = size.height
+        val v = Path().apply { moveTo(w * 0.1f, h * 0.42f); lineTo(w * 0.5f, h * 0.6f); lineTo(w * 0.9f, h * 0.42f) }
+        drawPath(v, cs.primary, style = Stroke(3.2.dp.toPx(), cap = StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+    }
+}
+
+/**
+ * La semana en una línea, contra la anterior: de lunes a hoy (como Resumen semanal y Vida), frente a los mismos días de la
+ * semana pasada, con el ánimo de las vistas (`Periodo.animoDia`: diario o, si falta, avisos). Hoy cuenta solo si ya tiene
+ * valencia y diario, para no influir en cómo lo calificas. A la derecha, los días sin llenar ([ponerse]).
+ */
+@Composable
+private fun LineaDeLaSemana(hoy: String, ponerse: () -> Unit) {
+    val cs = MaterialTheme.colorScheme
+    val periodo = io.github.ruddy2003.vestigium.ciencia.Periodo
+    val semanaHoy = periodo.fechasDe(Fechas.lunesDe(hoy), hoy)
+    val hoyCompleto = Repo.dias[hoy]?.let { it.valencia != null && it.nota.isNotBlank() } == true
+    val diasAnimo = if (hoyCompleto) semanaHoy else semanaHoy.dropLast(1)
+    val animosSemana = periodo.animoDias(diasAnimo)
+    val conAvisos = animosSemana.any { it?.deAvisos == true }
+    val esta = animosSemana.mapNotNull { it?.valor }.takeIf { it.isNotEmpty() }?.average()
+    val antes = periodo.animoMedio(diasAnimo.map { Fechas.sumar(it, -7) })
+    val sueno = periodo.suenoMedioH(semanaHoy)?.let { (it * 60).toInt() }
+    val faltan = Pendientes.faltantes(hoy).size
+    val partes = listOfNotNull(
+        esta?.let { e -> "ánimo ${"%.1f".format(e)}" + (antes?.let { a -> val x = e - a; if (abs(x) >= 0.05) " (${if (x > 0) "↑" else "↓"}${"%.1f".format(abs(x))})" else "" } ?: "") + (if (conAvisos) " · con avisos" else "") },
+        sueno?.let { "sueño ${it / 60} h ${"%02d".format(it % 60)}" },
+    )
+    Row(Modifier.fillMaxWidth().padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(if (partes.isEmpty()) "Esta semana todavía no hay datos." else "esta semana: " + partes.joinToString(" · "),
+            style = MaterialTheme.typography.labelMedium, color = cs.onSurfaceVariant, modifier = Modifier.weight(1f))
+        if (faltan > 0) BotonTexto(onClick = ponerse) {
+            Text(if (faltan == 1) "1 día sin llenar →" else "$faltan días sin llenar →", style = MaterialTheme.typography.labelMedium, color = cs.primary)
         }
     }
 }

@@ -10,7 +10,8 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 27
+/** Esquema 28 (18 nov 2026): «llamada» como tipo de presencia aparte de «mensajes» ([Dia.presencias], `Presencias.LLAMADA`). */
+const val SCHEMA_V = 28
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -77,7 +78,8 @@ data class Dia(
     val nota: String = "",
     /**
      * Cómo estuviste con cada @persona que nombras ese día (clave sin @, en minúsculas): «pense» si solo pensaste en ella,
-     * «mensajes» si fue por mensaje o llamada. Sin entrada = estuviste con ella (lo de siempre).
+     * «mensajes» si fue por mensaje, «llamada» si fue por llamada (desde el esquema 28; antes, las llamadas iban en
+     * «mensajes»). Sin entrada = estuviste con ella (lo de siempre).
      */
     val presencias: Map<String, String> = emptyMap(),
     /** Ya revisaste a quién viste y en quién solo pensaste ese día (los días de antes de la versión 10 quedan sin revisar). */
@@ -927,7 +929,7 @@ data class Config(
     val enfoque_plan: PlanEnfoque? = null,
     /** Lo último que elegiste al planear un enfoque, para proponerlo de nuevo. */
     val enfoque_ultimo: PlanEnfoque? = null,
-    /** «Tus últimos días» en Hoy (N-28; antes, el personaje del tema). El nombre se queda para no perder el ajuste guardado. */
+    /** Los colores de la barra de la semana en Hoy (17 nov 2026; antes «Tus últimos días», N-28, y antes el personaje del tema). El nombre se queda para no perder el ajuste guardado. */
     val personaje: Boolean = true,
     /** Logros que pusiste en tu hall (ids), en orden. */
     val hall_logros: List<String> = emptyList(),

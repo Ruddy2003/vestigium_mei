@@ -412,16 +412,20 @@ private fun SuVida(v: OtrasVidas.Vida) {
     }
 }
 
-/** La fila de vidas para elegir una: su medalla, «tu tema» o su año, y su nombre. */
+/**
+ * La fila de vidas para elegir una: su medalla, «tu tema» o su año, y su nombre. Una vida de otro tema (un personaje que
+ * sigues, en la pantalla del cuento) dice «sigues» en lugar de «tu tema».
+ */
 @Composable
 private fun LineaDeVidas(vidas: List<OtrasVidas.Vida>, elegida: String, alElegir: (String) -> Unit) {
     val sentir = rememberSentir()
+    val temaPuesto = Estilo.tema.id
     Row(Modifier.padding(top = 16.dp).horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         vidas.forEach { x ->
             Column(Modifier.width(76.dp).clip(RoundedCornerShape(10.dp)).clickable { sentir(Sentidos.Evento.ELEGIR); alElegir(x.id) }.padding(vertical = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally) {
                 MedallaVida(x, 54.dp, elegida = x.id == elegida)
-                Text(if (x.tema != null) "tu tema" else anio(x.anio), style = MaterialTheme.typography.labelSmall, color = if (x.tema != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                Text(if (x.tema == null) anio(x.anio) else if (x.tema == temaPuesto) "tu tema" else "sigues", style = MaterialTheme.typography.labelSmall, color = if (x.tema != null) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1, modifier = Modifier.padding(top = 3.dp))
                 Text(x.nombre, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
             }
@@ -452,11 +456,17 @@ fun PantallaCuento(nav: Nav, vidaId: String, dia: String? = null, horaFija: Doub
     val diaCuento = dia?.takeIf { io.github.ruddy2003.vestigium.data.CuentosLeidos.sePuedeLeer(it, hoy) } ?: hoy
     val pasado = diaCuento != hoy
     val tema = Estilo.tema.id
-    val vidas = remember(tema, vidaId) {
+    val seguidos = io.github.ruddy2003.vestigium.data.Seguir.activos(io.github.ruddy2003.vestigium.data.Repo.config)
+    val vidas = remember(tema, vidaId, seguidos) {
         val l = vidasConCuento(tema)
         // La pedida entra aunque el tema no la deje ver (el cuadro de Hoy manda): va primero.
         val pedida = OtrasVidas.porId(vidaId)?.takeIf { p -> l.none { it.id == p.id } && io.github.ruddy2003.vestigium.vidas.anios.Calendarios.de(p.id) != null }
-        listOfNotNull(pedida) + l
+        // Al final, los personajes que sigues (de cualquier tema) que todavía no están en la fila y tienen cuento (17 nov 2026).
+        val ya = (listOfNotNull(pedida) + l).map { it.id }.toSet()
+        val deSeguidos = seguidos.filter { it !in ya }.mapNotNull { OtrasVidas.porId(it) }.filter {
+            io.github.ruddy2003.vestigium.vidas.anios.Calendarios.de(it.id) != null && io.github.ruddy2003.vestigium.vidas.piezas.TodasLasPiezas.de(it.id) != null
+        }
+        listOfNotNull(pedida) + l + deSeguidos
     }
     var elegida by rememberSaveable(tema, vidaId) { mutableStateOf(vidas.firstOrNull { it.id == vidaId }?.id ?: vidas.firstOrNull()?.id ?: "") }
     val v = vidas.firstOrNull { it.id == elegida }

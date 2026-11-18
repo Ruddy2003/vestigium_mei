@@ -146,13 +146,17 @@ private fun CampoFechaPersona(rotulo: String, ok: String?, poner: (String) -> Un
     }
 }
 
-/** La tarjeta de «¿Quién es @x?»: una persona a la vez, la más mencionada primero. */
+/**
+ * La tarjeta de «¿Quién es @x?»: una persona a la vez, la más mencionada primero. Debajo, «vincular con otros» (17 nov
+ * 2026) despliega «¿A quién conoce?» ([AQuienConoce]), lo mismo que en su ficha; plegado al empezar.
+ */
 @Composable
-fun TarjetaQuienEs(modifier: Modifier = Modifier, compacta: Boolean = false, abrirTodo: (() -> Unit)? = null) {
+fun TarjetaQuienEs(modifier: Modifier = Modifier, compacta: Boolean = false, vinculosAbiertos: Boolean = false, abrirTodo: (() -> Unit)? = null) {
     val c = Repo.config
     val pend = remember(Repo.dias, Repo.momentos, Repo.tramos, c.personas, c.personas_omitidas, c.equivalencias) { Personas.pendientes() }
     val (nombre, n) = pend.firstOrNull() ?: return
     var abierta by remember(nombre) { mutableStateOf(!compacta) }
+    var vincular by remember(nombre) { mutableStateOf(vinculosAbiertos) }
     Tarjeta(modifier) {
         Text("¿Quién es @$nombre?", style = MaterialTheme.typography.titleMedium)
         Ayuda("La mencionaste en ${porNumero(n, "1 día", "$n días")}." + if (pend.size > 1) " Faltan ${pend.size - 1} más." else "")
@@ -164,6 +168,11 @@ fun TarjetaQuienEs(modifier: Modifier = Modifier, compacta: Boolean = false, abr
             if (compacta) BotonTexto(onClick = { Personas.posponer() }) { Text("después") }
             if (abrirTodo != null && pend.size > 1) BotonTexto(onClick = abrirTodo) { Text("todas") }
         }
+        // Los vínculos se guardan al tocar cada ficha (`RedPersonas.poner`), como en la ficha de la persona.
+        BotonTexto(onClick = { vincular = !vincular }, modifier = Modifier.padding(top = 4.dp)) {
+            Text(if (vincular) "− vincular con otros" else "+ vincular con otros", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        }
+        if (vincular) AQuienConoce(nombre)
     }
 }
 

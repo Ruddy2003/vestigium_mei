@@ -316,6 +316,8 @@ object Estadistica {
         if (Repo.dias.values.any { it.presencias.isNotEmpty() } || Repo.momentos.any { "pensando_en" in Catalogo.pensamientosDe(it) && Texto.personas(it.texto).isNotEmpty() }) {
             v += Variable("personas_vistas", "Personas con las que estuve", "Social"); v += Variable("personas_pensadas", "Personas en las que pensé sin verlas", "Social")
             v += Variable("personas_mensajes", "Personas con las que hablé por mensaje o llamada", "Social")
+            if (Repo.dias.values.any { d -> d.presencias.values.any { it == io.github.ruddy2003.vestigium.data.Presencias.LLAMADA } })
+                v += Variable("personas_llamadas", "De ellas, por llamada", "Social")
             if (Repo.config.personas.any { it.relacion == "pareja" } || Repo.config.perfil.pareja.isNotBlank()) v += Variable("penso_en_pareja", "Pensé en mi pareja sin verla (0/1)", "Social")
             if (hayEx) v += Variable("penso_en_expareja", "Pensé en una expareja sin verla (0/1)", "Social")
             v += Variable("penso_en_familia", "Pensé en mi familia sin verla (0/1)", "Social"); v += Variable("penso_en_amistades", "Pensé en una amistad sin verla (0/1)", "Social")
@@ -755,6 +757,9 @@ object Estadistica {
             val momentosPorDia = Repo.momentos.groupBy { it.fecha }
             // Con el nombre unido (P-25), como los nombres del día.
             val convivientes = perfil.convivientes.map { Texto.canon(it.lowercase().removePrefix("@"), eq) }.toSet()
+            // Esquema 28: «llamada» aparte de «mensajes». `personas_llamadas` existe desde el primer día con una llamada marcada
+            // (antes, las llamadas iban dentro de «mensajes» y no se sabe cuáles fueron): vacía antes de ese día.
+            val primeraLlamada = Repo.dias.values.filter { d -> d.presencias.values.any { it == io.github.ruddy2003.vestigium.data.Presencias.LLAMADA } }.minOfOrNull { it.fecha }
             for (f in (Repo.dias.keys + momentosPorDia.keys).toSet()) {
                 if (f !in sociales) continue
                 // Quién estuvo de verdad, en quién solo pensaste y con quién hablaste por mensaje (el diario manda).
@@ -772,7 +777,9 @@ object Estadistica {
                 r["cercania_media"] = media(nombres.mapNotNull { Personas.cercaniaEn(it, f)?.toDouble() })
                 r["personas_vistas"] = estados.count { it.value == io.github.ruddy2003.vestigium.data.Presencias.ESTUVE }.toDouble()
                 r["personas_pensadas"] = estados.count { it.value == io.github.ruddy2003.vestigium.data.Presencias.PENSE }.toDouble()
-                r["personas_mensajes"] = estados.count { it.value == io.github.ruddy2003.vestigium.data.Presencias.MENSAJES }.toDouble()
+                // Mensaje o llamada, como siempre: una llamada (esquema 28) cuenta aquí igual que un mensaje.
+                r["personas_mensajes"] = estados.count { io.github.ruddy2003.vestigium.data.Presencias.aDistancia(it.value) }.toDouble()
+                if (primeraLlamada != null && f >= primeraLlamada) r["personas_llamadas"] = estados.count { it.value == io.github.ruddy2003.vestigium.data.Presencias.LLAMADA }.toDouble()
                 r["penso_en_pareja"] = b(pensados.any { it.second == "pareja" }); r["penso_en_expareja"] = b(pensados.any { it.second == "expareja" })
                 r["penso_en_familia"] = b(pensados.any { it.second == "familia" }); r["penso_en_amistades"] = b(pensados.any { it.second == "amistad" })
             }
@@ -1054,9 +1061,9 @@ object Estadistica {
         setOf("cannabis", "cannabis_nivel_max", "cannabis_horas"),
         setOf("cafeina_mg", "cafeina_total_mg", "cafeina_ultima_h", "cafeina_al_dormir_mg"),
         setOf("cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_expareja", "vi_trabajo", "cercania_media", "personas"),
-        setOf("personas", "personas_vistas", "personas_pensadas", "personas_mensajes", "cercanos"),
+        setOf("personas", "personas_vistas", "personas_pensadas", "personas_mensajes", "personas_llamadas", "cercanos"),
         // Haber revisado las presencias solo existe en días con personas: se mueve con ellas por construcción.
-        setOf("presencias_revisado", "personas", "personas_vistas", "personas_pensadas", "personas_mensajes", "cercanos", "palabras"),
+        setOf("presencias_revisado", "personas", "personas_vistas", "personas_pensadas", "personas_mensajes", "personas_llamadas", "cercanos", "palabras"),
         setOf("personas_pensadas", "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades"),
     )
 

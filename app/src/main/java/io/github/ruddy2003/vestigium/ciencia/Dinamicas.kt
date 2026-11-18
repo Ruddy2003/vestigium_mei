@@ -21,7 +21,7 @@ object Dinamicas {
     /** Prefijo de cada familia → variables fijas que la resumen (pares obvios: «minutos en Instagram» con «minutos de pantalla»). */
     val AGREGADOS: Map<String, Set<String>> = mapOf(
         "per_" to setOf("personas", "cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes", "palabras", "cartas_otros",
-            "personas_vistas", "personas_pensadas", "personas_mensajes", "vi_expareja", "vi_trabajo", "cercania_media", "presencias_revisado",
+            "personas_vistas", "personas_pensadas", "personas_mensajes", "personas_llamadas", "vi_expareja", "vi_trabajo", "cercania_media", "presencias_revisado",
             "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades"),
         "pen_" to setOf("personas", "personas_pensadas", "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades"),
         "tema_" to setOf("palabras"),

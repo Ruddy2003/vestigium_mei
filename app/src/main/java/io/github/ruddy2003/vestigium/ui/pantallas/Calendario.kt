@@ -754,8 +754,12 @@ private object MomentosPorDia {
     }
 }
 
+/**
+ * Un día del calendario: su número, su marca, el diario, las fechas señaladas, los momentos y la foto, sobre el color [fondo];
+ * hoy, con el marco del tema. También va en la barra de la semana de Día (`SemanaEnCurso`, 17 nov 2026).
+ */
 @Composable
-private fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean, futuro: Boolean, verFotos: Boolean, avisos: Boolean = false, onClick: () -> Unit) {
+internal fun Celda(modifier: Modifier, fecha: String, fondo: Color, hoy: Boolean, futuro: Boolean, verFotos: Boolean, avisos: Boolean = false, onClick: () -> Unit) {
     val d = Repo.dias[fecha]
     // Con «fotos», los días con foto del día la muestran de fondo (las letras van en blanco sobre una sombra).
     val conFoto = verFotos && d?.foto != null

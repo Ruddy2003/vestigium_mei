@@ -124,13 +124,20 @@ object FondosTelefono {
         tmp.renameTo(f)
     }
 
-    /** Pone los fondos: el limpio en inicio y el completo en bloqueo. [donde]: «inicio», «bloqueo» o «ambas». */
-    fun poner(ctx: Context, inicio: Bitmap?, bloqueo: Bitmap?, donde: String): Boolean = runCatching {
-        val wm = WallpaperManager.getInstance(ctx)
-        if (donde != "bloqueo" && inicio != null) ponerUno(ctx, wm, inicio, WallpaperManager.FLAG_SYSTEM)
-        if (donde != "inicio" && bloqueo != null) ponerUno(ctx, wm, bloqueo, WallpaperManager.FLAG_LOCK)
-        true
-    }.getOrDefault(false)
+    /**
+     * Pone los fondos: el limpio en inicio y el completo en bloqueo. [donde]: «inicio», «bloqueo» o «ambas». Desde el 17 nov
+     * 2026, cada pantalla por su lado: si el teléfono rechaza una, la otra se pone igual, y el error queda en la Bitácora
+     * («fondo de inicio» o «fondo de bloqueo», en Estado de los datos). Antes las dos iban en un mismo intento y un error
+     * se tragaba sin dejar rastro. Devuelve true solo si se pusieron todas las pedidas.
+     */
+    fun poner(ctx: Context, inicio: Bitmap?, bloqueo: Bitmap?, donde: String): Boolean {
+        val wm = runCatching { WallpaperManager.getInstance(ctx) }.getOrNull() ?: return false
+        fun uno(b: Bitmap, cual: Int, paso: String): Boolean = runCatching { ponerUno(ctx, wm, b, cual) }
+            .onFailure { e -> io.github.ruddy2003.vestigium.avisos.Bitacora.anotar(ctx, paso, e) }.isSuccess
+        val enInicio = if (donde != "bloqueo" && inicio != null) uno(inicio, WallpaperManager.FLAG_SYSTEM, "fondo de inicio") else true
+        val enBloqueo = if (donde != "inicio" && bloqueo != null) uno(bloqueo, WallpaperManager.FLAG_LOCK, "fondo de bloqueo") else true
+        return enInicio && enBloqueo
+    }
 
     /**
      * Tamaño real de la pantalla (con las barras del sistema), en píxeles y siempre en vertical (el fondo es vertical aunque
@@ -159,12 +166,13 @@ object FondosTelefono {
         val img = ajustar(b, p.x, p.y)
         val todo = android.graphics.Rect(0, 0, img.width, img.height)
         // Android 15+: un recorte explícito por tamaño de pantalla (si el sistema lo ofrece); si no, la pista de recorte de siempre.
+        // Cuenta como hecho solo si el sistema devolvió el número del fondo nuevo (0 es que no lo puso): si no, se intenta
+        // por el camino de siempre, y si tampoco, es un error (antes un 0 pasaba por bueno y no quedaba rastro).
         val hecho = android.os.Build.VERSION.SDK_INT >= 35 && runCatching {
             val m = WallpaperManager::class.java.getMethod("setBitmapWithCrops", Bitmap::class.java, Map::class.java, Boolean::class.javaPrimitiveType, Int::class.javaPrimitiveType)
-            m.invoke(wm, img, mapOf(android.graphics.Point(img.width, img.height) to todo), true, cual)
-            true
+            ((m.invoke(wm, img, mapOf(android.graphics.Point(img.width, img.height) to todo), true, cual) as? Int) ?: 0) != 0
         }.getOrDefault(false)
-        if (!hecho) wm.setBitmap(img, todo, true, cual)
+        if (!hecho && wm.setBitmap(img, todo, true, cual) == 0) error("el teléfono no aceptó el fondo (${if (cual == WallpaperManager.FLAG_SYSTEM) "inicio" else "bloqueo"})")
     }
 
     /** Escala y recorta al centro para llenar justo [w]×[h] (como «cubrir»). */
@@ -324,7 +332,10 @@ object FondosTelefono {
         val dia = Fechas.diaLogico(); val hora = horaAhora()
         val k = claveAhora(ctx, t, o, dia, hora)
         if (!tocaCambiarFondo(ultimo(ctx), k, msDesdeUltimo(ctx))) return Revision.NADA
-        val donde = c.fondo_telefono_donde
+        // El cambio automático pone siempre los dos, como dice su interruptor («Inicio y bloqueo»). Hasta el 17 nov 2026 usaba
+        // `fondo_telefono_donde`, que es lo último que se tocó a mano en la pantalla de los fondos: después de un «en bloqueo»
+        // (para probar cómo se ve), cada cambio de tema ponía solo el de bloqueo y el de inicio se quedaba, sin que nada lo dijera.
+        val donde = "ambas"
         if (k.cuadro) {
             val (bi, bb) = runCatching { pintarCuadro(ctx, t, dia, hora) }.getOrNull() ?: return Revision.FALLO
             try {

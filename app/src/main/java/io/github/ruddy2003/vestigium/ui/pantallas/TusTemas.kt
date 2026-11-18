@@ -180,7 +180,7 @@ fun PantallaPresencias(nav: Nav) {
     var listos by remember { mutableStateOf(emptySet<String>()) }
     val pendientes = lista.filter { it.fecha !in listos }
     var cuantos by remember { mutableIntStateOf(20) }
-    Hoja("¿Estuviste o pensaste?", nav.atras, "Toca cada nombre: «estuve con», «pensé en» o «mensajes».") {
+    Hoja("¿Estuviste o pensaste?", nav.atras, "Toca cada nombre: «estuve con», «pensé en», «mensaje» o «llamada».") {
         Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             Ficha("por revisar", !todos) { todos = false; listos = emptySet() }
             Ficha("todos los días", todos) { todos = true; listos = emptySet() }
@@ -209,7 +209,7 @@ fun PantallaPresencias(nav: Nav) {
     }
 }
 
-/** Una ficha por @persona del diario de ese día; cada toque cambia entre «estuve con», «pensé en» y «mensajes». */
+/** Una ficha por @persona del diario de ese día; cada toque cambia entre «estuve con», «pensé en», «mensaje» y «llamada». */
 @Composable
 fun ChipsPresencia(d: io.github.ruddy2003.vestigium.data.Dia, revisado: Boolean = true, onCambio: (io.github.ruddy2003.vestigium.data.Dia) -> Unit) {
     val eq = Repo.equivalencias()

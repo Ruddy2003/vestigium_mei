@@ -3991,37 +3991,6 @@ fun BotonDia(anterior: Boolean, modifier: Modifier = Modifier, onClick: () -> Un
     }
 }
 
-/**
- * El calendario, a la vista junto a la fecha de Hoy (13 nov 2026): antes solo se abría tocando la fecha, sin nada que lo
- * dijera. Una hoja de calendario con la figura del tema (la del sello del día en el calendario), en el marco de los botones.
- */
-@Composable
-fun BotonCalendario(modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val tema = Estilo.tema
-    val color = MaterialTheme.colorScheme.primary
-    val fondo = MaterialTheme.colorScheme.background
-    val borde = MaterialTheme.colorScheme.outline
-    val sentir = rememberSentir()
-    val forma = remember(tema, EstadoTema.caraDe(tema)) { formaBoton(tema) }
-    Box(
-        modifier.minimumInteractiveComponentSize().size(40.dp).clip(forma).border(1.dp, borde, forma).clickable { sentir(Sentidos.Evento.TOQUE); onClick() }
-            .semantics { contentDescription = "Abrir el calendario" },
-        contentAlignment = Alignment.Center,
-    ) {
-        Canvas(Modifier.size(22.dp)) { hojaCalendario(tema, color, fondo) }
-    }
-}
-
-/** Una hoja de calendario: el marco, la franja de arriba con sus dos anillas y, al centro, la figura del tema. */
-private fun DrawScope.hojaCalendario(tema: TemaId, color: Color, fondo: Color) {
-    val w = size.width; val h = size.height; val g = w * 0.08f
-    val arriba = h * 0.14f
-    drawRoundRect(color, Offset(g / 2, arriba), Size(w - g, h - arriba - g / 2), CornerRadius(w * 0.12f), style = Stroke(g))
-    drawRect(color, Offset(g / 2, arriba), Size(w - g, h * 0.18f))
-    listOf(0.3f, 0.7f).forEach { fx -> drawLine(color, Offset(w * fx, g), Offset(w * fx, arriba + h * 0.1f), g * 1.3f, StrokeCap.Round) }
-    figuraTema(tema, color, Offset(w / 2, h * 0.64f), w * 0.19f, fondo)
-}
-
 // =====================================================================
 //  Celebración: cuando se completa el día o la racha llega a una semana
 // =====================================================================

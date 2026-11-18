@@ -142,7 +142,7 @@ fun PantallaMas(nav: Nav) {
         Seccion("Sistema", numero = 4, plegable = true, abrir = abrir[3], modifier = Modifier.bringIntoViewRequester(req[3])) {
             Tarjeta {
                 // La guía está arriba de todo, junto al modo claro u oscuro (13 nov 2026).
-                FilaMas("apariencia", "Apariencia", "Tema, claro u oscuro, ícono, letra, animaciones, tus últimos días, semana corta, vibraciones y sonidos", ir)
+                FilaMas("apariencia", "Apariencia", "Tema, claro u oscuro, ícono, letra, animaciones, colores de la semana, semana corta, vibraciones y sonidos", ir)
                 Separador()
                 FilaMas("avisos", "Avisos y recordatorios", "Avisos de ánimo, horas del diario y del sueño, cuestionarios", ir)
                 Separador()

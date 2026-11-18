@@ -226,8 +226,9 @@ private fun BandaSampietrini(modifier: Modifier, color: Color) {
 @Composable
 private fun BandaCartel(modifier: Modifier) {
     val oscuro = esOscuro()
-    val cara = caraLocal(); val i = intensidadLocal()
-    Canvas(modifier.fillMaxWidth().height(13.dp)) { with(PiezasPsicodelia) { bandaTitulo(oscuro, cara, i) } }
+    // La intensidad se lee al trazar: mientras anima, la banda se vuelve a trazar sin recomponerse.
+    val cara = caraLocal(); val i = intensidadAlDibujar()
+    Canvas(modifier.fillMaxWidth().height(13.dp)) { with(PiezasPsicodelia) { bandaTitulo(oscuro, cara, i()) } }
 }
 
 /** Expediente: barra gruesa con un tramo rojo donde mira el ojo, línea fina y el código de barras del folio. */
@@ -1498,9 +1499,13 @@ private fun TituloSeccion(nombre: String, t: TemaId, peso: Modifier) {
         // fino); la tinta, la letra en el primario que se calienta con la intensidad (a luminosidad fija: se lee igual) y,
         // debajo, la onda a dos tintas que acaba en el disco chico. La letra no se deforma ni se corre: es texto.
         TemaId.PSICODELIA -> {
-            val k = PiezasPsicodelia.colores(e.background.luminance() < 0.5f, caraLocal(), intensidadLocal())
+            // La letra, con la intensidad en escalones de 1/32 (se recompone 32 veces por animación, no en cada cuadro); la
+            // onda de debajo, con la intensidad leída al trazar.
+            val oscuroPsi = e.background.luminance() < 0.5f
+            val cara = caraLocal(); val alDibujar = intensidadAlDibujar()
+            val k = PiezasPsicodelia.colores(oscuroPsi, cara, intensidadEnEscalones())
             Text(nombre, style = estilo, color = k.primario, modifier = peso.drawBehind {
-                with(PiezasPsicodelia) { subrayado(size.width * 0.8f, size.height - 2.4f * density, k) }
+                with(PiezasPsicodelia) { subrayado(size.width * 0.8f, size.height - 2.4f * density, PiezasPsicodelia.colores(oscuroPsi, cara, alDibujar())) }
             }.padding(bottom = 7.dp))
         }
         // Debajo, la línea de látigo: nace de una yema a la izquierda, ondula apenas y se enrosca al final.

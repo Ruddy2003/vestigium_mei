@@ -31,6 +31,25 @@ fun IconoPestana(id: String, tema: TemaId = Estilo.tema, nombre: String = id) {
     Canvas(Modifier.size(24.dp).semantics { contentDescription = nombre }) { Trazo(this, color).dibujar(id, tema) }
 }
 
+/**
+ * El ícono [id] de la barra de [tema], trazado en este lienzo con [color] (sin el `Canvas` ni su nombre para lectores de
+ * pantalla). Lo usa el botón del cuento de Hoy, que lleva el ícono del Diario del tema.
+ */
+fun DrawScope.iconoPestana(id: String, tema: TemaId, color: Color) = Trazo(this, color).dibujar(id, tema)
+
+/**
+ * Los temas cuyo ícono de Diario no es suyo sino el de Momentos, reciclado (ver `diario`): para ellos el botón del cuento
+ * sigue con su libro abierto. Si un tema de esta lista recibe su propio ícono de Diario, sale de aquí.
+ */
+private val DIARIO_RECICLADO = setOf(
+    TemaId.HELENO, TemaId.REFUGIO, TemaId.ORDEN, TemaId.LABORATORIO, TemaId.COLONOS, TemaId.NAPOLEON, TemaId.BOTANICO, TemaId.RUINAS,
+    TemaId.NAVIDAD, TemaId.SEDA, TemaId.EDO, TemaId.GOTICO, TemaId.ESPACIO, TemaId.ANDALUS, TemaId.MONGOL, TemaId.RENACIMIENTO,
+    TemaId.PIRATA, TemaId.URSS, TemaId.REVOLUCION, TemaId.ANTIGUAS,
+)
+
+/** Si el ícono de Diario de [tema] es suyo (la tablilla, el códice, el expediente…) y no el de Momentos reciclado. */
+fun tieneIconoDeDiario(tema: TemaId): Boolean = tema !in DIARIO_RECICLADO
+
 /** Pequeño lápiz sobre una cuadrícula de 24 × 24. */
 private class Trazo(val s: DrawScope, val c: Color) {
     val u = s.size.minDimension / 24f
@@ -175,6 +194,7 @@ private class Trazo(val s: DrawScope, val c: Color) {
     } }
 
     // ------------------------------------------------------------ Diario
+    // Los que dicen `momentos(tm)` reciclan el de Momentos: están en DIARIO_RECICLADO (arriba del archivo).
     private fun diario(tm: TemaId) { when (tm) {
         TemaId.ROMANO -> { r(4f, 3f, 16f, 18f, 1.5f); l(7.5f, 8f, 16.5f, 8f); l(7.5f, 12f, 16.5f, 12f); l(7.5f, 16f, 13f, 16f) }          // tablilla de cera
         TemaId.URBE -> { r(4.5f, 3f, 14f, 18f, 1.5f); l(15.5f, 3f, 15.5f, 21f, 1.2f); r(6.8f, 6.5f, 6f, 4f, 0.6f); l(7.5f, 14.5f, 13f, 14.5f, 1.1f); l(7.5f, 17.5f, 11.5f, 17.5f, 1.1f) } // cuaderno con su elástico

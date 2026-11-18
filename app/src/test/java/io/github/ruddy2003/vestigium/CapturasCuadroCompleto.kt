@@ -31,8 +31,8 @@ import org.junit.Test
 
 /**
  * Parte 8, encargo B (`docs/diseno/CUADROS_PLAN.md`), con `CAPTURAS=cuadro_completo` (y `CAPTURAS_TEMAS` para algunos):
- * - `…_temaCuadroCompleto_<tema>_<modo>_hoy.png`: el cuadro de Hoy con el botón de ampliar y, debajo del cuento,
- *   «Hoy en la historia»;
+ * - `…_temaCuadroCompleto_<tema>_<modo>_hoy.png`: el cuadro de Hoy (sin botón de ampliar desde el 17 nov 2026) y,
+ *   debajo del cuento, «Hoy en la historia»;
  * - `…_vertical.png` y `…_horizontal.png`: el cuadro a pantalla completa (sin la ventana: lo de dentro), con la ✕;
  * - `…_cuento.png`: la pantalla del cuento con su cuadro arriba; `…_pasado.png`: el cuento de un día pasado (el título
  *   dice el día).
@@ -74,7 +74,7 @@ class CapturasCuadroCompleto {
                 val c = cuadroDeHoy(t, dia) ?: return@forEach
                 captura(t, o, "${n}_hoy", alto = 3000) {
                     Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
-                        Text("Hoy: el botón de ampliar abajo a la derecha y «Hoy en la historia» debajo del cuento", style = MaterialTheme.typography.labelSmall)
+                        Text("Hoy: sin botón de ampliar (se mantiene el dedo); la banderita, solo en día especial; «Hoy en la historia» debajo del cuento", style = MaterialTheme.typography.labelSmall)
                         CuadroDelDia(t, dia, alLeer = {}, alHistoria = {}, cuadro = c, humor = humor, horaFija = 13.0)
                         Text("Sin el interruptor de «Hoy en la historia»: sin su botón", style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 14.dp))
                         CuadroDelDia(t, dia, alLeer = {}, cuadro = c, humor = humor, horaFija = 21.5)
