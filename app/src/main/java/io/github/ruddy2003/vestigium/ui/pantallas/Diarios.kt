@@ -348,7 +348,7 @@ fun PantallaEntrada(nav: Nav) {
 /**
  * Debajo de una entrada abierta en la Biblioteca (17 nov 2026): «Personas de este día», plegado al empezar, con las mismas
  * fichas que en Hoy ([ChipsPresencia]) para decir cómo estuviste con cada @persona de ESE día (no del de hoy): estuve
- * con, pensé en o mensajes (que incluye las llamadas). Se guarda como en «¿Estuviste o pensaste?»: el día tal cual, con
+ * con, pensé en, mensaje o llamada. Se guarda como en «¿Estuviste o pensaste?»: el día tal cual, con
  * sus presencias, y queda revisado. [abiertoAlEmpezar] lo abre (las capturas).
  */
 @Composable
@@ -361,7 +361,7 @@ internal fun PersonasDelDia(d: Dia, abiertoAlEmpezar: Boolean = false) {
         }
         if (abierto) {
             ChipsPresencia(d) { nuevo -> Repo.importarDias(listOf(nuevo), sobrescribir = true) }
-            Ayuda("Toca un nombre si ese día solo pensaste en esa persona o hablaron por mensaje o llamada.", Modifier.padding(top = 4.dp))
+            Ayuda("Toca un nombre si ese día solo pensaste en esa persona o hablaron por mensaje o por llamada.", Modifier.padding(top = 4.dp))
         }
     }
 }

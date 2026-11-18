@@ -2,23 +2,35 @@ package io.github.ruddy2003.vestigium.data
 
 /**
  * Pensar en alguien no es verlo. Cada @persona del día tiene un estado: estuviste con ella (lo normal), solo pensaste en
- * ella, o hablaron por mensaje o llamada. El diario manda (lo marcas con un toque debajo del texto); si alguien solo
+ * ella, o hablaron por mensaje o por llamada. El diario manda (lo marcas con un toque debajo del texto); si alguien solo
  * aparece en momentos, cuenta como «pensé» cuando ese momento era «pensando en…» o un recuerdo y estabas solo.
+ *
+ * **La llamada** ([LLAMADA], esquema 28, 18 nov 2026) es un valor nuevo. Hasta el esquema 27 las llamadas se marcaban como
+ * [MENSAJES] («por mensaje o llamada»), así que todo lo que ya existía sigue tratándola **igual que un mensaje**
+ * ([aDistancia], [comoAntes]): `personas_mensajes` sigue contando mensajes y llamadas, y la columna `presencias` de la
+ * exportación la escribe como «mensajes». Lo nuevo, cuántas fueron llamada, va aparte (`personas_llamadas`,
+ * `vm_dias.csv:presencias_llamada`).
  */
 object Presencias {
     const val ESTUVE = "estuve"
     const val PENSE = "pense"
     const val MENSAJES = "mensajes"
+    /** Esquema 28: hablaron por llamada (o videollamada), sin verse. Antes, eso iba en [MENSAJES]. */
+    const val LLAMADA = "llamada"
 
     val OPCIONES = listOf(Opcion(ESTUVE, "estuve con", "La viste en persona"), Opcion(PENSE, "pensé en", "No la viste: pensaste en ella o la recordaste"),
-        Opcion(MENSAJES, "mensaje o llamada", "Hablaron por mensaje o llamada, sin verse"))
-    // El nombre visible dice «mensaje o llamada» desde el 17 nov 2026 (antes «mensajes»): el valor guardado sigue siendo
-    // «mensajes» y siempre incluyó las llamadas. Una llamada aparte sería otro valor y cambiaría `personas_mensajes`.
+        Opcion(MENSAJES, "mensaje", "Se escribieron, sin verse"), Opcion(LLAMADA, "llamada", "Hablaron por llamada o videollamada, sin verse"))
 
     fun nombre(id: String): String = OPCIONES.firstOrNull { it.id == id }?.nombre ?: OPCIONES[0].nombre
 
-    /** El que sigue al tocar el chip: estuve → pensé → mensajes → estuve. */
-    fun siguiente(id: String): String = when (id) { ESTUVE -> PENSE; PENSE -> MENSAJES; else -> ESTUVE }
+    /** El que sigue al tocar el chip: estuve → pensé → mensaje → llamada → estuve. */
+    fun siguiente(id: String): String = when (id) { ESTUVE -> PENSE; PENSE -> MENSAJES; MENSAJES -> LLAMADA; else -> ESTUVE }
+
+    /** Si [estado] es hablar sin verse: un mensaje o una llamada. Lo que ya contaba «mensajes» cuenta así, para que valga igual antes y después del esquema 28. */
+    fun aDistancia(estado: String): Boolean = estado == MENSAJES || estado == LLAMADA
+
+    /** El estado como se escribía hasta el esquema 27: la llamada, como «mensajes» (para las columnas que ya existían). */
+    fun comoAntes(estado: String): String = if (estado == LLAMADA) MENSAJES else estado
 
     /** Cómo estuviste con [persona] (sin @, en minúsculas) según lo que marcaste en el diario de [d]. */
     fun enDiario(d: Dia?, persona: String, eq: Map<String, String> = Repo.equivalencias()): String {

@@ -97,7 +97,7 @@ object Pantallas {
         P("gastos", "Gastos", "Gastos e ingresos, por mes y por categoría", "dinero ingresos gasto mes mensual categorías"),
         P("personas", "Tu gente", "Quién es cada @persona para ti", "personas amigos familia relaciones cercanía"),
         P("temas", "Tus temas", "Tus #temas: unir, renombrar, pasar a fecha señalada", "temas etiquetas hashtag # normalizar duplicados renombrar"),
-        P("presencias", "¿Estuviste o pensaste?", "Quién estuvo de verdad y en quién solo pensaste", "personas ver pensar mensajes presencia"),
+        P("presencias", "¿Estuviste o pensaste?", "Quién estuvo de verdad y en quién solo pensaste", "personas ver pensar mensajes llamada presencia"),
         P("sustancias", "Sustancias", "Alcohol, cannabis, tabaco, cafeína", "alcohol pedo cannabis weed mota cafeína café tabaco vape cruda"),
         P("biblioteca_momentos", "Libreta de momentos", "Un día por hoja, con todo lo que sentiste; toca un renglón para corregirlo", "momentos ánimo emociones registros lista editar hora"),
         P("campanas", "Campañas", "Retos de la semana", "retos semana metas"),

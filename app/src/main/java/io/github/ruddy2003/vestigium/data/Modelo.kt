@@ -10,7 +10,8 @@ val JSON = Json {
     isLenient = true
 }
 
-const val SCHEMA_V = 27
+/** Esquema 28 (18 nov 2026): «llamada» como tipo de presencia aparte de «mensajes» ([Dia.presencias], `Presencias.LLAMADA`). */
+const val SCHEMA_V = 28
 
 /**
  * Orden de las preguntas de la hoja de la noche (esquema 14): se guarda en cada día que pasa por ella ([Dia.version_noche]).
@@ -77,7 +78,8 @@ data class Dia(
     val nota: String = "",
     /**
      * Cómo estuviste con cada @persona que nombras ese día (clave sin @, en minúsculas): «pense» si solo pensaste en ella,
-     * «mensajes» si fue por mensaje o llamada. Sin entrada = estuviste con ella (lo de siempre).
+     * «mensajes» si fue por mensaje, «llamada» si fue por llamada (desde el esquema 28; antes, las llamadas iban en
+     * «mensajes»). Sin entrada = estuviste con ella (lo de siempre).
      */
     val presencias: Map<String, String> = emptyMap(),
     /** Ya revisaste a quién viste y en quién solo pensaste ese día (los días de antes de la versión 10 quedan sin revisar). */

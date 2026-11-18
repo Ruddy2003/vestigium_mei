@@ -125,8 +125,11 @@ object Exportar {
             Repo.config.habitos.forEach { h -> r["hab_${h.id}"] = when { d.habitos[h.id] == true -> true; h.desde.isNotBlank() && d.fecha < h.desde -> null; d.habitos_tri && h.id !in d.habitos -> null; else -> false } }
             r["habitos_tri"] = d.habitos_tri; r["ctx_otro"] = d.ctx_otro
             r["personas"] = Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct()
-            // Cómo estuviste con cada persona: «ana:estuve|luis:pense|mama:mensajes».
-            r["presencias"] = Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct().map { "$it:" + Presencias.enDiario(d, it, eq) }
+            // Cómo estuviste con cada persona: «ana:estuve|luis:pense|mama:mensajes». Una llamada (esquema 28) sale como «mensajes»,
+            // como antes, y aparte, en presencias_llamada, quiénes fueron por llamada.
+            val presentes = Texto.personas(d.nota).map { Texto.canon(it, eq) }.distinct()
+            r["presencias"] = presentes.map { "$it:" + Presencias.comoAntes(Presencias.enDiario(d, it, eq)) }
+            r["presencias_llamada"] = presentes.filter { Presencias.enDiario(d, it, eq) == Presencias.LLAMADA }
             r["presencias_revisado"] = d.presencias_ok
             r["temas"] = Texto.temas(d.nota).map { Texto.canon(it, eq) }.distinct()
             r["palabras"] = Texto.palabras(d.nota)
@@ -734,7 +737,7 @@ object Exportar {
         // Cultura, mundo, cartas y cercanos: se calculan igual que en los análisis.
         val nuevas = listOf("obras_dia", "lectura", "vi_pelicula_serie", "jugue", "obra_terminada", "calificacion_obra", "citas_dia", "ciudades_dia", "fuera_de_casa",
             "extranjero", "ciudad_nueva", "unesco", "carta_escrita", "sueno_palabras", "cercanos", "vi_familia", "vi_pareja", "vi_amistades", "vi_convivientes",
-            "vi_expareja", "vi_trabajo", "cercania_media", "personas_vistas", "personas_pensadas", "personas_mensajes",
+            "vi_expareja", "vi_trabajo", "cercania_media", "personas_vistas", "personas_pensadas", "personas_mensajes", "personas_llamadas",
             "penso_en_pareja", "penso_en_expareja", "penso_en_familia", "penso_en_amistades", "animo_valencia", "animo_activacion", "registros_animo",
             "alcohol", "alcohol_bebidas", "alcohol_nivel_max", "alcohol_horas", "alcohol_estimado_max", "alcohol_al_dormir", "cannabis", "cannabis_nivel_max", "cannabis_horas",
             "tabaco_n", "otra_sustancia", "cruda", "cafeina_total_mg", "cafeina_al_dormir_mg",

@@ -166,10 +166,10 @@ class CapturasInterfaz {
             captura(c, oscuro, 4400, "${n}_gente") {
                 Column(Modifier.padding(16.dp)) { TarjetaQuienEs(vinculosAbiertos = true) }
             }
-            // La entrada con tres personas: @luis, «pensé en»; @marta, «mensaje o llamada»; @ana, «estuve con».
+            // La entrada con cuatro personas: @ana, «estuve con»; @luis, «pensé en»; @marta, «mensaje»; @pablo, «llamada» (esquema 28).
             val fEntrada = Fechas.sumar(Fechas.lunesDe(dia), -8)
-            val entrada = Dia(fecha = fEntrada, valencia = 5, nota = "Comida larga con @ana. Pensé en @luis toda la tarde y en la noche escribí a @marta; hablamos por teléfono un buen rato.",
-                presencias = mapOf("luis" to "pense", "marta" to "mensajes"), presencias_ok = true)
+            val entrada = Dia(fecha = fEntrada, valencia = 5, nota = "Comida larga con @ana. Pensé en @luis toda la tarde; en la noche escribí a @marta y hablé por teléfono con @pablo un buen rato.",
+                presencias = mapOf("luis" to "pense", "marta" to "mensajes", "pablo" to "llamada"), presencias_ok = true)
             Repo.diasEnMemoria(dias + (fEntrada to entrada))
             captura(c, oscuro, 2400, "${n}_entrada") {
                 io.github.ruddy2003.vestigium.ui.LecturaTema(fEntrada, entrada, volver = {}, anterior = {}, siguiente = null, acciones = emptyList(),

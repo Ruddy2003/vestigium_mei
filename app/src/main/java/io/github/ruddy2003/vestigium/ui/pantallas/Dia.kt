@@ -553,10 +553,10 @@ fun PantallaNoche(nav: Nav) {
                 BotonDictado { t -> cambiar(d.copy(nota = (d.nota + " " + t).trim())) }
             }
             Detectados(d.nota, fecha) { nuevo -> cambiar(d.copy(nota = nuevo)) }
-            // Ver a alguien no es lo mismo que pensar en esa persona: un toque cambia entre «estuve con», «pensé en» y «mensaje o llamada».
+            // Ver a alguien no es lo mismo que pensar en esa persona: un toque cambia entre «estuve con», «pensé en», «mensaje» y «llamada».
             if (Texto.personas(d.nota).isNotEmpty()) {
                 ChipsPresencia(d) { n -> cambiar(n) }
-                Ayuda("Toca un nombre si solo pensaste en esa persona o hablaron por mensaje o llamada.", Modifier.padding(top = 4.dp))
+                Ayuda("Toca un nombre si solo pensaste en esa persona o hablaron por mensaje o por llamada.", Modifier.padding(top = 4.dp))
             }
             BotonTexto(onClick = { nav.ir("biblioteca_diario") }) { Text("abrir la biblioteca del diario →", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary) }
         }

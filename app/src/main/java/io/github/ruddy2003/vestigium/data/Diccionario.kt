@@ -252,7 +252,8 @@ object Diccionario {
         "vi_familia" to "Estuviste con tu familia (0/1)", "vi_pareja" to "Estuviste con tu pareja (0/1)", "vi_amistades" to "Estuviste con una amistad (0/1)",
         "vi_convivientes" to "Estuviste con quien vive contigo (0/1)",
         "personas_vistas" to "Personas con las que estuviste ese día (diario y momentos)", "personas_pensadas" to "Personas en las que pensaste sin verlas",
-        "personas_mensajes" to "Personas con las que hablaste por mensaje o llamada, sin verlas", "penso_en_pareja" to "Pensaste en tu pareja sin verla (0/1)",
+        "personas_mensajes" to "Personas con las que hablaste por mensaje o llamada, sin verlas (una llamada marcada aparte desde el esquema 28 cuenta aquí igual)",
+        "personas_llamadas" to "De personas_mensajes, cuántas fueron por llamada (desde el esquema 28; vacío antes del primer día con una llamada marcada, porque hasta entonces las llamadas se marcaban como mensaje)", "penso_en_pareja" to "Pensaste en tu pareja sin verla (0/1)",
         "penso_en_expareja" to "Pensaste en una expareja sin verla (0/1)", "penso_en_familia" to "Pensaste en tu familia sin verla (0/1)",
         "penso_en_amistades" to "Pensaste en una amistad sin verla (0/1)",
         // Lote 2: lugares, cierre, barómetro, libido, notas y metas.
@@ -323,7 +324,8 @@ object Diccionario {
         "vm_red_vinculos.csv:une" to "Si el par cuenta como línea de la red (0/1): todo menos sin_trato y no_se_conocen",
         "vm_red_vinculos.csv:peso" to "Fuerza del vínculo según su tipo, de 0 a 1: pareja y familia 1, amigos 0.8, colegas 0.6, se conocen o sin tipo 0.3, sin trato y no se conocen 0. Solo para el dibujo y la restricción ponderada",
         "dias_juntos" to "Días en que aparecen las dos el mismo día", "vm_laptop.csv:minutos" to "Minutos usados ese día", "vm_laptop.csv:categoria" to "Categoría (productivo, ocio, social, otro)",
-        "presencias" to "Cómo estuviste con cada @persona del diario: persona:estuve, persona:pense o persona:mensajes (lista)",
+        "presencias" to "Cómo estuviste con cada @persona del diario: persona:estuve, persona:pense o persona:mensajes (lista); mensajes es por mensaje o llamada, también desde el esquema 28 (quiénes fueron llamada, en presencias_llamada)",
+        "presencias_llamada" to "Las @personas del diario con las que ese día hablaste por llamada, sin verlas (lista; desde el esquema 28: antes, las llamadas iban solo en presencias, como mensajes)",
         "presencias_revisado" to "Ya revisaste ese día quién estuvo y en quién solo pensaste (0/1); antes de la versión 10 todo cuenta como «estuve»",
         // Entrega 10b (esquema 13): avisos de ánimo, campañas, experimentos, ventana del día, días especiales y Tu gente.
         "avisos_planeados" to "Avisos de ánimo planeados ese día (desde el esquema 13; vacío = sin registro o con los avisos apagados)",
@@ -484,6 +486,13 @@ object Diccionario {
      * después de la 248 (la última con el esquema 24).
      */
     private const val VERSION_ESQUEMA_25 = 270
+    /**
+     * La versión que trae el esquema 28 («llamada» aparte de «mensajes» en las presencias, 18 nov 2026). **Estimada** (la
+     * corrida de la compilación de `main` que se espera al mezclar): se corrige con el número de la primera versión
+     * publicada con el esquema 28. La fila del Apéndice D del paper (D.200) está reservada y todavía no escrita: el paper se
+     * pone al día después, por decisión del autor (docs/PENDIENTES.md).
+     */
+    private const val VERSION_ESQUEMA_28 = 292
     // Los esquemas 26 y 27 no agregan ni cambian columnas. El 26 es una preferencia de interfaz (`Config.modo`, D.198). El 27
     // (D.199) guarda en `Config` los personajes que sigues, los cuentos leídos, los días de uso de algunas funciones y los
     // cuadros guardados: es estado de la app (qué leíste, qué te gustó), no una medida de tu día, y no se exporta a CSV ni a
@@ -716,6 +725,8 @@ object Diccionario {
         "vm_mundo.csv:desde" to (VERSION_ESQUEMA_23 to "en los sitios del Patrimonio marcados a mano, el día de la visita si lo dijiste (vacío si no); antes, el día en que lo marcaste (D.178)"),
         "unesco" to (VERSION_ESQUEMA_23 to "un sitio marcado a mano cuenta en el día de la visita, si lo dijiste, no en el día en que lo marcaste (D.178)"),
         "vm_ideas.csv:postura" to (VERSION_ESQUEMA_25 to "valor nuevo: hecho (hecho comprobado); los demás no cambian (D.193)"),
+        "personas_llamadas" to (VERSION_ESQUEMA_28 to "nueva: cuántas de personas_mensajes fueron llamada; vacía antes del primer día con una llamada marcada (D.200)"),
+        "vm_dias.csv:presencias_llamada" to (VERSION_ESQUEMA_28 to "nueva: con quiénes fue llamada; en presencias siguen saliendo como mensajes (D.200)"),
     )
 
     // Las claves con «*», como patrones; la más larga primero, para que «app_min_*» gane a «app_*».
