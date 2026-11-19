@@ -3,7 +3,9 @@
 //
 //   dibujar ideario <tema> <claro|oscuro> <salida.png>
 //   dibujar biblioteca <tema> <claro|oscuro> <salida.png>
-//   dibujar hoja <ideario|biblioteca> <claro|oscuro> <salida.png> <tema1,tema2,...>
+//   dibujar hoja <ideario|biblioteca|galeria|tapa|libreta> <claro|oscuro> <salida.png> <tema1,tema2,...>
+//   dibujar tapa <tema> <claro|oscuro|hoja> <salida.png>      (el libro del día; arnes/TapaLibreta.kt)
+//   dibujar libreta <tema> <claro|oscuro|hoja> <salida.png>   (la libreta de momentos con su índice)
 //
 // Ver LEEME.md.
 package arnes
@@ -66,7 +68,9 @@ private fun uso(): Nothing {
         Uso:
           dibujar.sh ideario <tema> <claro|oscuro> <salida.png>
           dibujar.sh biblioteca <tema> <claro|oscuro> <salida.png>
-          dibujar.sh hoja <ideario|biblioteca> <claro|oscuro> <salida.png> <tema1,tema2,...>
+          dibujar.sh hoja <ideario|biblioteca|galeria|tapa|libreta> <claro|oscuro> <salida.png> <tema1,tema2,...>
+          dibujar.sh tapa <tema> <claro|oscuro|hoja> <salida.png>      (el libro del día con su texto encima; «hoja»: claro y oscuro lado a lado)
+          dibujar.sh libreta <tema> <claro|oscuro|hoja> <salida.png>   (la libreta de momentos con su índice; «hoja»: claro y oscuro lado a lado)
           dibujar.sh trazos psicodelia <claro|oscuro> <salida.png>   (muestra de TrazosCiudad o TrazosTinta, según ARNES_CARA)
           dibujar.sh comun psicodelia <claro|oscuro> <salida.png>    (las piezas comunes y de decoración de Psicodelia, según ARNES_CARA)
           dibujar.sh logros psicodelia <claro|oscuro> <salida.png>   (los trofeos, el hall, el salón y la campaña de Psicodelia, según ARNES_CARA)
@@ -77,6 +81,9 @@ private fun uso(): Nothing {
         Variables ARNES_TEMAS=0,1,5 (un Ideario por cada número de temas) y ARNES_MAX=6 (el Ideario cortado, con su placa «y N más»).
         Variable ARNES_SUENOS=1: la biblioteca como estante de los Sueños (el modo «noche» del estante, aparte de claro y oscuro).
         Variables ARNES_CARA=base|intensa (la cara de los temas que la tienen; por omisión, base) y ARNES_INTENSIDAD=0..1 (por omisión, 0).
+        Tapa y libreta: ARNES_TAPA=vacio,corto,largo,noche,noche_vacio,abierto (los estados de la tapa), ARNES_MOMENTOS=0,pocos,muchos,40
+          (los conjuntos de la libreta), ARNES_MESES=3 (meses del índice), ARNES_ABIERTO=0..1, ARNES_LUGAR=diario|suelto|biblioteca
+          y ARNES_ANCHO=411 (el ancho de la pantalla en dp; por omisión, el del Pixel 6).
     """.trimIndent())
     exitProcess(2)
 }
@@ -88,22 +95,35 @@ private fun tema(id: String): TemaId = TemaId.entries.firstOrNull { it.id == id.
 
 fun main(args: Array<String>) {
     if (args.size < 4) uso()
-    val oscuro = when (args[2]) { "claro" -> false; "oscuro" -> true; else -> uso() }
     val salida = File(args[3])
     val inicio = System.nanoTime()
+    // La tapa y la libreta de un tema con «hoja» en lugar del modo: el claro y el oscuro lado a lado (los de solo oscuro, solo el oscuro).
+    if (args[0] in setOf("tapa", "libreta") && args[2] == "hoja") {
+        val t = tema(args[1])
+        val modos = if (t.soloOscuro) listOf(true) else listOf(false, true)
+        escribir(juntar(modos.map { o -> dibujar(args[0], t, o, "${t.nombre} (${t.id}) · ${if (o) "oscuro" else "claro"}") }), salida, inicio)
+    }
+    val oscuro = when (args[2]) { "claro" -> false; "oscuro" -> true; else -> uso() }
     val imagen = when (args[0]) {
         "ideario", "biblioteca", "trazos", "comun", "logros" -> dibujar(args[0], tema(args[1]), oscuro, null)
         // El modo vida (arnes/Vida.kt): los muebles de la pestaña Vida y el tablero de notas de un tema.
         "vida" -> dibujar("vida", tema(args[1]), oscuro, null)
         // El mueble de la galería de cuadros (arnes/Galeria.kt), con 0, 1 y 5 cuadros (ARNES_CUADROS).
         "galeria" -> dibujar("galeria", tema(args[1]), oscuro, null)
+        // El libro del día y la libreta de momentos con su índice (arnes/TapaLibreta.kt).
+        "tapa", "libreta" -> dibujar(args[0], tema(args[1]), oscuro, null)
         "hoja" -> {
-            if (args.size < 5 || args[1] !in setOf("ideario", "biblioteca", "galeria")) uso()
+            if (args.size < 5 || args[1] !in setOf("ideario", "biblioteca", "galeria", "tapa", "libreta")) uso()
             val temas = args[4].split(',').filter { it.isNotBlank() }.map(::tema)
             juntar(temas.map { t -> dibujar(args[1], t, oscuro, t.nombre + " (" + t.id + ")") })
         }
         else -> uso()
     }
+    escribir(imagen, salida, inicio)
+}
+
+/** Escribe [imagen] en [salida] como PNG y termina. */
+private fun escribir(imagen: Image, salida: File, inicio: Long): Nothing {
     salida.absoluteFile.parentFile?.mkdirs()
     // Se escribe en un temporal y se renombra: quien mire el archivo nunca lo ve a medias.
     val tmp = File(salida.absoluteFile.parentFile, ".${salida.name}.${ProcessHandle.current().pid()}.tmp")
@@ -114,7 +134,7 @@ fun main(args: Array<String>) {
 }
 
 /** El «hoy» de los ejemplos. Las capturas de CI usan el día lógico del momento en que corrieron. */
-private fun hoy(): String = System.getenv("ARNES_HOY")?.takeIf { it.isNotBlank() } ?: Fechas.diaLogico()
+internal fun hoy(): String = System.getenv("ARNES_HOY")?.takeIf { it.isNotBlank() } ?: Fechas.diaLogico()
 
 /** La configuración de las capturas (`Capturas.config`): el tema, el modo y sin animaciones. */
 private fun configurar(t: TemaId, oscuro: Boolean) {
@@ -143,7 +163,9 @@ private fun dibujar(que: String, t: TemaId, oscuro: Boolean, titulo: String?): I
     configurar(t, oscuro)
     val o = t.soloOscuro || oscuro
     var alto = 0
-    val escena = ImageComposeScene(ANCHO, ALTO_MAXIMO, Density(DENSIDAD, 1f)) {
+    // La tapa y la libreta se pueden dibujar en un teléfono más angosto (ARNES_ANCHO, en dp); los demás, siempre a 1080 px.
+    val ancho = if (que == "tapa" || que == "libreta") anchoArnes() else ANCHO
+    val escena = ImageComposeScene(ancho, ALTO_MAXIMO, Density(DENSIDAD, 1f)) {
         // Como `TemaVestigium` de la app (Tema.kt), sin lo que toca la ventana del teléfono.
         MaterialTheme(colorScheme = esquemaDe(t, o), typography = tipoDe(t, o)) {
             Column(Modifier.fillMaxWidth().wrapContentHeight(Alignment.Top, unbounded = true).background(MaterialTheme.colorScheme.background)
@@ -157,6 +179,8 @@ private fun dibujar(que: String, t: TemaId, oscuro: Boolean, titulo: String?): I
                     "logros" -> MuestraLogros(o)
                     "vida" -> Vida()
                     "galeria" -> GaleriaArnes()
+                    "tapa" -> TapasArnes()
+                    "libreta" -> LibretaArnes()
                     else -> Biblioteca()
                 }
             }
@@ -165,9 +189,15 @@ private fun dibujar(que: String, t: TemaId, oscuro: Boolean, titulo: String?): I
     return escena.use { s ->
         s.render(0)
         val img = s.render(16_000_000)
-        recortar(img, ANCHO, alto.coerceIn(1, ALTO_MAXIMO))
+        recortar(img, ancho, alto.coerceIn(1, ALTO_MAXIMO))
     }
 }
+
+/** ARNES_ANCHO=dp: el ancho de la pantalla para la tapa y la libreta (por omisión, 411.4 dp: los 1080 px del Pixel 6). */
+private fun anchoArnes(): Int = System.getenv("ARNES_ANCHO")?.trim()?.takeIf { it.isNotEmpty() }?.let {
+    val dp = it.toFloatOrNull()?.takeIf { v -> v.isFinite() && v in 200f..900f } ?: run { System.err.println("ARNES_ANCHO debe ser un ancho en dp, de 200 a 900."); uso() }
+    kotlin.math.round(dp * DENSIDAD).toInt()
+} ?: ANCHO
 
 private fun recortar(img: Image, w: Int, h: Int): Image {
     val sup = Surface.makeRasterN32Premul(w, h)

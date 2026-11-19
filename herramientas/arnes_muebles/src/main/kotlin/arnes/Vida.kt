@@ -133,7 +133,7 @@ internal fun RecuadroArnes(titulo: String, detalle: String, alto: Dp, luz: Boole
  * las mismas esquinas y la misma lámpara de los modos oscuros (`luzEnPared` y `luzEnMueble`, sacadas tal cual con `piezas`).
  */
 @Composable
-private fun EscenaArnes(modifier: Modifier, relleno: PaddingValues = PaddingValues(0.dp), luz: Boolean, llena: Boolean, contenido: @Composable BoxScope.() -> Unit) {
+internal fun EscenaArnes(modifier: Modifier, relleno: PaddingValues = PaddingValues(0.dp), luz: Boolean, llena: Boolean, contenido: @Composable BoxScope.() -> Unit) {
     val cs = MaterialTheme.colorScheme
     val tema = Estilo.tema
     val oscuro = esOscuro()

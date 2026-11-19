@@ -1,13 +1,15 @@
 # Arnés de los muebles
 
-Dibuja en PNG, en esta máquina y sin Android, los muebles de la pestaña Diario: el mueble del Ideario y el estante del diario. Usa los archivos reales de la app, enlazados desde `app/src/main` (no copiados), y los composables reales `MuebleIdeas` y `EstanteTema`, con los mismos datos de ejemplo que las capturas de Paparazzi (`Capturas.kt`). Sirve para redibujar un mueble y ver el resultado en segundos, sin esperar a CI.
+Dibuja en PNG, en esta máquina y sin Android, los muebles de la pestaña Diario: el mueble del Ideario, el estante del diario, el libro del día y la libreta de momentos con su índice. Usa los archivos reales de la app, enlazados desde `app/src/main` (no copiados), y los composables reales `MuebleIdeas` y `EstanteTema`, con los mismos datos de ejemplo que las capturas de Paparazzi (`Capturas.kt`). Sirve para redibujar un mueble y ver el resultado en segundos, sin esperar a CI.
 
 ## Uso
 
 ```
 herramientas/arnes_muebles/dibujar.sh ideario <tema> <claro|oscuro> <salida.png>
 herramientas/arnes_muebles/dibujar.sh biblioteca <tema> <claro|oscuro> <salida.png>
-herramientas/arnes_muebles/dibujar.sh hoja <ideario|biblioteca> <claro|oscuro> <salida.png> <tema1,tema2,...>
+herramientas/arnes_muebles/dibujar.sh hoja <ideario|biblioteca|galeria|tapa|libreta> <claro|oscuro> <salida.png> <tema1,tema2,...>
+herramientas/arnes_muebles/dibujar.sh tapa <tema> <claro|oscuro|hoja> <salida.png>
+herramientas/arnes_muebles/dibujar.sh libreta <tema> <claro|oscuro|hoja> <salida.png>
 herramientas/arnes_muebles/dibujar.sh trazos psicodelia <claro|oscuro> <salida.png>
 herramientas/arnes_muebles/dibujar.sh comun psicodelia <claro|oscuro> <salida.png>
 herramientas/arnes_muebles/dibujar.sh logros psicodelia <claro|oscuro> <salida.png>
@@ -63,13 +65,75 @@ herramientas/arnes_muebles/dibujar.sh hoja galeria <claro|oscuro> <salida.png> h
 
 El mueble de la galería de cuadros de la pestaña Vida (parte 8, `docs/diseno/CUADROS_PLAN.md`), en `arnes/Galeria.kt`: el recuadro de 190 dp con el composable real `ParedDeCuadros` (`ui/vida/MuebleGaleria.kt`), que pone el mueble del tema (`DisenoVida.muebleGaleria`; por omisión, `MuebleGaleriaComun`), las miniaturas en sus huecos y la luz encima. Uno bajo otro con 0, 1 y 5 cuadros; `ARNES_CUADROS=0,1,5` elige cuántos. Las miniaturas son cinco paisajes de relleno pintados en el arnés (las escenas no se compilan aquí): sirven para ver cómo caen en los marcos y con la luz.
 
-## Medir
+## Los modos tapa y libreta
+
+```
+herramientas/arnes_muebles/dibujar.sh tapa <tema> <claro|oscuro|hoja> <salida.png>
+herramientas/arnes_muebles/dibujar.sh libreta <tema> <claro|oscuro|hoja> <salida.png>
+```
+
+Dibujan, en `arnes/TapaLibreta.kt`, los dos muebles de la pestaña Diario que faltaban, montados como en la app y con datos inventados:
+
+- **`tapa`**: el libro del día (el diario de hoy, cerrado) con el composable real `TapaDiario` (ui/Libros.kt, sacado tal cual con `piezas`): el objeto del tema (`DisenoBiblioteca.tapa`, con `EstadoTapa`) recortado a su lienzo de `altoTapa` y, encima, el texto que pone la pantalla en `cajaTapa` (`letraTapa`, `tamTapa`, renglones de 1.28 × `tamTapa`, hasta `lineasTapa` con «…», `centradoTapa`, `tintaTapa` con alfa 0.92 si hay texto y 0.62 si es la pista, centrado en la caja a lo alto, y se desvanece al abrirse). El texto es lo escrito en un renglón, hasta 160 letras; vacío, la pista del tema (`pistaDia` o, de noche, `pistaNoche`). La fecha es la de `ARNES_HOY`.
+- **`libreta`**: la pestaña Momentos de la biblioteca (`BibliotecaMomentosLibreta`, ui/pantallas/LibretaMomentos.kt) sin las pestañas de las bibliotecas de arriba: la libreta con el composable real `LibretaCerrada` (sacado tal cual), con 16 dp arriba; la ayuda; el buscador real (`CampoTema`); y el índice: por cada mes (los 3 más recientes), su rótulo (`rotuloMes`, en una franja de 34 dp con 18 dp arriba y 8 abajo) y sus días como pestañas (`pestana`, 44×56 dp, en un `FlowRow` con 6 dp entre columnas y 8 entre filas), cada una con el número del día, la letra de su semana y el color del ánimo medio de sus registros (`Tonos.valencia`; sin ánimo, `null`), como lo calcula la pantalla. Si quedan más meses, «ver más meses».
+- **`hoja`** en lugar de `claro|oscuro`: el claro y el oscuro lado a lado, con los mismos estados (los temas de solo oscuro, solo el oscuro). Con el modo `hoja` de siempre (`dibujar.sh hoja tapa claro salida.png heleno,medieval,espacio`), varios temas lado a lado.
+- 1080 px de ancho (411 dp) salvo con `ARNES_ANCHO`. Encima de cada estado va un rótulo chico que dice qué estado es y dónde va montado (no es de la app).
+
+Variables (todas opcionales):
+
+| Variable | Qué hace | Por omisión |
+|---|---|---|
+| `ARNES_TAPA=vacio,corto,largo,noche,noche_vacio,abierto` | Los estados de la tapa, uno bajo otro. `vacio`: sin escribir (la pista); `corto`: el texto de la captura de CI (52 palabras); `largo`: una entrada inventada de 4 808 palabras; `noche`: el sueño escrito (`EstadoTapa.noche`); `noche_vacio`: el sueño sin escribir; `abierto`: el corto a medio abrir (0.55, como en CI). | `vacio,corto,largo,noche` |
+| `ARNES_MOMENTOS=0,pocos,muchos,40` | Los conjuntos de momentos de la libreta, uno bajo otro. `pocos`: los de la captura `libreta` de CI (hoy y ayer); `muchos`: 150 días hacia atrás con huecos (123 días en 6 meses, de los que se ven 3; uno de cada seis días sin ánimo); un número: tantos días seguidos; `0`: sin momentos (la pantalla solo pone el aviso de vacío; debajo, aparte, la libreta con 0 hojas como prueba). | `pocos,muchos` |
+| `ARNES_MESES=N` | Cuántos meses del índice se ven (la pantalla enseña 3 y «ver más meses»). | 3 |
+| `ARNES_ABIERTO=0..1` | Cuánto se ha abierto el objeto (la animación de 300 ms al tocarlo), en todos los estados. | el del estado (0) |
+| `ARNES_LUGAR=diario\|suelto\|biblioteca` | Dónde va montado. Tapa: `diario` la pone en la escena de la pestaña Diario (sección «Hoy»: `Escena` con 12 dp de relleno a los lados y 14 arriba y abajo, y la lámpara de los modos oscuros), `suelto` a todo el ancho de la pantalla (Biblioteca de sueños, formulario del sueño, pantalla Día). Libreta: `diario` la pone en la escena de la pestaña Diario (sección «Libreta de momentos», sin relleno ni lámpara y sin índice); si no, la de la biblioteca con su índice. | Como en la app: la tapa de día en la escena de Diario y la de noche suelta; la libreta en la biblioteca. |
+| `ARNES_ANCHO=dp` | El ancho de la pantalla en dp (de 200 a 900), para probar teléfonos angostos (360, 320). Solo en estos dos modos. | 411.4 (1080 px) |
+
+Además valen `ARNES_HOY`, `ARNES_APP`, `ARNES_CARA` e `ARNES_INTENSIDAD`.
+
+Ejemplos (desde la raíz del repositorio):
+
+```
+# Los estados principales de un tema, en claro y oscuro, en una sola imagen:
+herramientas/arnes_muebles/dibujar.sh tapa heleno hoja tapa_heleno.png
+herramientas/arnes_muebles/dibujar.sh libreta heleno hoja libreta_heleno.png
+# Solo vacío y escrito, en oscuro; y el sueño sin escribir y el objeto a medio abrir:
+ARNES_TAPA=vacio,corto herramientas/arnes_muebles/dibujar.sh tapa medieval oscuro tapa.png
+ARNES_TAPA=noche_vacio,abierto herramientas/arnes_muebles/dibujar.sh tapa medieval claro tapa_extremos.png
+# Los casos extremos: sin momentos, un teléfono de 320 dp, la entrada larguísima:
+ARNES_MOMENTOS=0,1,muchos ARNES_ANCHO=320 herramientas/arnes_muebles/dibujar.sh libreta espacio claro libreta_extremos.png
+ARNES_TAPA=largo ARNES_ANCHO=320 herramientas/arnes_muebles/dibujar.sh tapa espacio oscuro tapa_angosta.png
+# La libreta como se ve en la pestaña Diario, abriéndose:
+ARNES_LUGAR=diario ARNES_ABIERTO=0.55 ARNES_MOMENTOS=pocos herramientas/arnes_muebles/dibujar.sh libreta espacio oscuro libreta_diario.png
+# Para comparar con las capturas de CI del día en que corrieron:
+ARNES_HOY=2026-11-19 ARNES_MOMENTOS=pocos herramientas/arnes_muebles/dibujar.sh libreta heleno claro libreta_ci.png
+# Medir la tapa y la libreta con su índice de tres temas:
+herramientas/arnes_muebles/medir.sh tapa,libreta,indice heleno,medieval,espacio
+```
+
+Lo que distingue cada estado (lo que el tema recibe para dibujar):
+
+- `EstadoTapa`: la fecha como la escribe el tema (`Estilo.fecha`), cuántas palabras, si está en blanco, si es de noche (el sueño), cuánto se ha abierto y una semilla (`fecha.hashCode()`). No lleva ánimo. El tema dibuja dentro la fecha y `palabrasTapa(n)`; el extracto o la pista los pone la pantalla encima.
+- `EstadoLibreta`: el nombre del contenedor del tema («Tablillas de momentos», «Códice de momentos», «Bitácora de vuelo»), la cuenta («2 tablillas · desde el mié 18 nov»), cuántas hojas (engorda con ellas), cuánto se ha abierto y una semilla (`hojas × 31 + 7`). El tema los dibuja dentro.
+- `EstadoPestana`: el número del día, la letra de la semana (L M X J V S D), el color del ánimo medio (o `null`) y una semilla (`fecha.hashCode()`). No hay pestaña «elegida» ni «hoy»: todas son iguales salvo por esos datos.
+- `rotuloMes`: el texto de `Estilo.mesConComun` («ΔΙΟΣ · noviembre de 2026», «otubre · octubre de 2026», «NOV · 2026»).
+
+Comparado con las capturas de CI del 19 nov 2026 (`libretaA3*_…_biblioteca`, `tapaA2*`), en Helénico, Scriptorium y Espacio, en claro y en oscuro: la libreta coincide (diferencia media de 0.3 a 0.7 sobre 255); la ayuda, el buscador y el índice, de 1.8 a 6.7 (casi todo es la textura del fondo de CI, que aquí no está); la tapa, de 3.3 a 6.7, porque el extracto es texto de Compose y aquí sale de 1 a 3 % más ancho (corta el renglón una palabra antes; ver abajo). Además, la queraía de los números griegos de Helénico («ΙΘʹ») sale con otra letra de respaldo: en el teléfono y en CI la pone la letra del sistema.
+
+En qué difiere de la app:
+
+- La escena de la pestaña Diario es la de `EscenaArnes` (arnes/Vida.kt): el mismo degradado, las mismas esquinas y la misma lámpara de los modos oscuros (`luzEnPared` detrás y `luzEnMueble` encima del mueble, sacadas tal cual), sin la textura de la pared (`paredTema`). Sin el título de la sección («Hoy», «Libreta de momentos») ni lo que va debajo.
+- En la libreta, el aviso de vacío (`Vacio`) es solo su texto, y «ver más meses» es solo su texto (en la app, un `BotonTexto` del tema): esas piezas comunes no se compilan aquí. Faltan arriba el título y las pestañas de las bibliotecas.
+- Con `ARNES_ABIERTO`, la libreta no es `LibretaCerrada` (que lo anima con un `Animatable` propio) sino la misma llamada a `libreta()` con ese valor fijo; la tapa sí es `TapaDiario`, que lo recibe.
+- Sin consumos: los días de la libreta salen solo de los momentos (en la app también cuentan los días con una sustancia anotada).
+
 
 ```
 herramientas/arnes_muebles/medir.sh [grupo,grupo,...] [tema,tema,...]
 ```
 
-Mide el «peso» del dibujo (`arnes/Medir.kt`, 19 nov 2026) y saca una tabla separada por tabuladores. Grupos: `biblioteca` (el estante con las 35 entradas, armado con la escena real y un espía que anota cada llamada de `DisenoBiblioteca`), `ideario` (el mueble con 9 temas y sus compartimentos, con la cuenta de lugares de `MuebleIdeas`), `vida` (Social, Mapas y Otras vidas), `comun` (una mezcla de piezas comunes como la de una pantalla), `decoracion` (emblema, banda, subrayado y filete de Psicodelia) y `fondo` (un cuadro del fondo vivo de Psicodelia). Temas: por omisión Psicodelia en sus ocho variantes (las dos caras, claro y oscuro, intensidad 0, 0.5 y 1), Helénico, Laboratorio y los otros cuatro del lote 10.
+Mide el «peso» del dibujo (`arnes/Medir.kt`, 19 nov 2026) y saca una tabla separada por tabuladores. Grupos: `biblioteca` (el estante con las 35 entradas, armado con la escena real y un espía que anota cada llamada de `DisenoBiblioteca`), `ideario` (el mueble con 9 temas y sus compartimentos, con la cuenta de lugares de `MuebleIdeas`), `vida` (Social, Mapas y Otras vidas), `comun` (una mezcla de piezas comunes como la de una pantalla), `decoracion` (emblema, banda, subrayado y filete de Psicodelia), `fondo` (un cuadro del fondo vivo de Psicodelia), `tapa` (el libro del día: solo `DisenoBiblioteca.tapa`, recortado a su lienzo, al ancho de la escena de Diario; el estado es el primero de `ARNES_TAPA`, por omisión `corto`; el extracto es un `Text` de Compose, igual en todos los diseños, y no se cuenta), `libreta` (la libreta y su índice: `libreta`, el rótulo de cada mes visible y una pestaña por día, con el primer conjunto de `ARNES_MOMENTOS`, por omisión `muchos`: unas 65 pestañas en 3 meses) e `indice` (solo los rótulos y las pestañas). `ARNES_ABIERTO` y `ARNES_MESES` también valen aquí. Temas: por omisión Psicodelia en sus ocho variantes (las dos caras, claro y oscuro, intensidad 0, 0.5 y 1), Helénico, Laboratorio y los otros cuatro del lote 10.
 
 - `grabar_us`: lo que tarda en correr el código de dibujo y grabarse como lista de operaciones de Skia (en el teléfono, lo que pasa en el hilo de la interfaz cada vez que la pieza se vuelve a dibujar). Mediana de hasta 200 vueltas.
 - `pintar_us`: pintar esa lista en píxeles con Skia en la CPU (en el teléfono lo hace la GPU; sirve para comparar, no como cifra del teléfono).
@@ -124,6 +188,9 @@ Algunos archivos no compilan enteros en escritorio. Para esos, Gradle copia en c
 | `comun/DisenoComun.kt` | el contrato `DisenoComun` y sus clases de estado, sin `disenoComun` (que nombra los 40 objetos) |
 | `pantallas/Fichero.kt` | `cajones` y `rotuloCajon` |
 | `ArchivoIdeas.kt` | `ArchivoIdeas` y `archivoIdeas` («7 óstraka») |
+| `Libros.kt` | `TapaDiario`, `pistaDia` y `pistaNoche` (la tapa con su texto encima; modo `tapa`) |
+| `pantallas/LibretaMomentos.kt` | `LibretaCerrada` y `pluralHoja` (la libreta con su nombre y su cuenta; modo `libreta`) |
+| `Contenedores.kt` | `Contenedor` y `contenedorDe` (el nombre de la libreta y de sus hojas en cada tema) |
 
 `R` también se genera, a partir de `res/font` y de `res/drawable*`.
 
@@ -138,6 +205,7 @@ Algunos archivos no compilan enteros en escritorio. Para esos, Gradle copia en c
 - `sustitutos/Sustancias.kt`: `Sustancias.finEfectivo` y `nivelEn`, que no hacen nada (las nombra `Intensidad`, en `CaraTema.kt`; el `Sustancias` real arrastra la base de datos). `Repo.consumos` está vacío: la intensidad se fija con `ARNES_INTENSIDAD`.
 - `android/*.kt`: cascarones de `Activity`, `Context`, `Configuration`, `View`, `Window`, `WindowCompat` y `LocalView`, solo para que `Tema.kt` compile entero.
 - `arnes/Dibujar.kt`: el programa. Reproduce la llamada de `FicheroIdeas` a `MuebleIdeas` y la de `BibliotecaDiario`/`EstantePorMeses` a `EstanteTema`, y en lugar de `TemaVestigium` usa `MaterialTheme(esquemaDe, tipoDe)`.
+- `arnes/TapaLibreta.kt`: los modos `tapa` y `libreta`, con sus datos de ejemplo; reproduce el índice de `BibliotecaMomentosLibreta` (ver «Los modos tapa y libreta»).
 
 ## Diferencias que quedan frente a las capturas de CI
 
@@ -162,7 +230,7 @@ Nunca se cambia la app para que el arnés compile.
 
 ## Limitaciones
 
-- Solo el mueble del Ideario (la vista «_b», con 9 temas) y el estante del diario. No dibuja las vistas «_a» y «_c» del Ideario, los interiores, las fichas, la tapa, la libreta ni las cartas. Agregarlos es repetir en `Dibujar.kt` la llamada de su pantalla.
+- Dibuja el mueble del Ideario, el estante del diario, la tapa, la libreta con su índice y los muebles de Vida. No dibuja los interiores, las fichas, la página abierta, la hoja de la libreta ni las cartas. Agregarlos es repetir en `Dibujar.kt` la llamada de su pantalla.
 - Sin la textura del fondo (`fondoTema`), sin la escala de letra del usuario (siempre 1) y sin animaciones: es un instante quieto, como en las capturas.
 - No es Paparazzi: la tipografía se parece mucho pero no es idéntica (ver arriba). Para la aprobación final siguen valiendo las capturas de CI.
 - Compose Multiplatform 1.7.3 con Kotlin 2.1.0. La app usa Compose de Android 1.7.6 (BOM 2024.12.01).
