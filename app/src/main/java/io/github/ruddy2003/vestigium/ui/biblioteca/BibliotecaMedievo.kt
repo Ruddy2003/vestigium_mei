@@ -3150,25 +3150,24 @@ object EstanteTemplario : DisenoBiblioteca {
 }
 
 /**
- * Ruta de la Seda: el estante de laca roja de cinabrio, con postes y tablas de laca, filetes de oro, esquineras en forma de
- * nube en lo alto de cada repisa y un fondo de laca negra con volutas de oro. Arriba, bajo un alero de laca negra con sus
- * tejas redondas, el panel rojo con la puerta de luna: un círculo de celosía de laca sobre papel, entre dos nubes de oro
- * talladas; delante cuelga una lámpara de papel con sus costillas de bambú y su borla, que de noche se enciende. Abajo, el
- * zócalo con su faldón de nube y patas de casco, sobre ladrillo gris. Cada mes va en una placa de marfil enmarcada en laca.
- * Cada entrada es un rollo de pie envuelto en seda labrada (índigo, verde, oro, ciruela, verde mar, ladrillo), con la perilla
- * de jade del rodillo arriba, la tira de papel con el mes en columna, el cordón que lo ata (una vuelta más cuanto más
- * escribiste) y la tarjeta de marfil colgando con el día; abajo, el sello rojo del dueño, y de noche una luna en su lugar.
- * Distinto del Ideario, que es el muro de ladrillo del caravasar con su gran arco y las cajas de laca.
+ * Ruta de la Seda: el almacén de Nanai-vandak, mercader sogdiano, en un caravasar hacia el 750 (el dibujo del mueble y de las
+ * entradas está en [MuebleEstanteSeda]). Una alacena honda abierta en el muro de adobe encalado: las jambas redondeadas a
+ * mano, un dintel de álamo desbastado que hace de vasar, tablas de álamo reseco empotradas y, al fondo de cada hueco, el barro
+ * sin encalar. Arriba, bajo las vigas del techo, el sol entra por una reja que queda fuera del cuadro y deja su dibujo en la
+ * cal, sobre los vidrios que vende (la botella tallada y el cuenco); con ellos, los melocotones, el cayado del camellero, la
+ * sarta de orejones, las jornadas rayadas con carbón, las cartas a casa con el tintero y la lámpara de bronce colgada, que de
+ * noche alumbra mientras la luna entra por la misma reja. Al pie, la tinaja del vino y el fieltro enrollado. Cada entrada es,
+ * según su semilla, un haz de rollos envuelto en seda labrada, un fajo de cartas envuelto en paño y atado en cruz o una bolsa
+ * de cuero fruncida: el color del ánimo es la seda, el paño o el cuero; el día cuelga en su tablilla y el mes va en columna;
+ * el sello del mercader se vuelve luna en los Sueños. Distinto del Ideario, que es el nicho de arco con la balanza y las sedas.
  * La tapa es ese rollo tumbado y grande, envuelto en seda con nubes de oro, el rótulo de papel con la fecha y lo
  * escrito, el cordón y la tarjeta de marfil; al abrirse corre a la derecha y deja tendida la pintura con sus columnas de
  * escritura (de noche, una luna en la tarjeta y la luz de la lámpara).
  */
 object EstanteSeda : DisenoBiblioteca {
     private val LACA = Color(0xFFA8261C)
-    private val LACA_LUZ = Color(0xFFC9402E)
     private val LACA_OSC = Color(0xFF6E1610)
     private val NEGRO_LACA = Color(0xFF1E1412)
-    private val TEJA = Color(0xFF3A3632)
     private val ORO = Color(0xFFD2AE5A)
     private val PAPEL = Color(0xFFF1E6CC)
     private val MURO = Color(0xFFDCD0B6)
@@ -3193,16 +3192,18 @@ object EstanteSeda : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.3f
-    override val base = 0.1f
-    override val lado = 0.05f
-    override val altoRepisa: Dp = 112.dp
-    override val tabla: Dp = 16.dp
-    override val separa: Dp = 3.dp
+    override val corona = MuebleEstanteSeda.CORONA
+    override val base = MuebleEstanteSeda.BASE
+    override val lado = MuebleEstanteSeda.LADO
+    override val altoRepisa: Dp = MuebleEstanteSeda.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteSeda.TABLA
+    override val separa: Dp = MuebleEstanteSeda.SEPARA
     override val letra: FontFamily = LetraExtra.almendra
+    /** Estante rehecho: el aura solo sale al tocar (ver [DisenoBiblioteca.auraEnReposo]). */
+    override val auraEnReposo = false
 
-    override fun ancho(palabras: Int): Dp = (20 + (palabras / 50).coerceAtMost(14)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.82f + 0.14f * azar(semilla, 1)
+    override fun ancho(palabras: Int): Dp = MuebleEstanteSeda.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteSeda.alto(semilla, palabras)
 
     /** Una nube de oro tallada (ruyi): tres lóbulos y su tallo. */
     private fun DrawScope.nube(c0: Offset, s: Float, color: Color, grosor: Float) {
@@ -3212,233 +3213,11 @@ object EstanteSeda : DisenoBiblioteca {
         drawLine(color, Offset(c0.x, c0.y + s * 0.2f), Offset(c0.x, c0.y + s * 1.1f), grosor)
     }
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El fondo de laca negra.
-        val cuerpo = Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, d.base.top)
-        drawRect(c(NEGRO_LACA), cuerpo.topLeft, cuerpo.size)
-        d.repisas.forEachIndexed { k, r ->
-            // Volutas de oro tenues en el fondo.
-            for (j in 0 until 3) {
-                val cx = r.left + r.width * (0.18f + 0.3f * j + 0.08f * azar(k, j))
-                val cy = r.top + r.height * (0.3f + 0.3f * azar(k, j + 5))
-                drawArc(c(ORO).copy(alpha = 0.2f), 180f, 180f, false, Offset(cx - 8 * u, cy - 5 * u), Size(16 * u, 10 * u), style = Stroke(0.8f * u))
-                drawArc(c(ORO).copy(alpha = 0.2f), 180f, 180f, false, Offset(cx + 4 * u, cy - 3 * u), Size(10 * u, 6 * u), style = Stroke(0.8f * u))
-            }
-            drawRect(Color.Black.copy(alpha = if (noche) 0.4f else 0.3f), r.topLeft, Size(r.width, 9 * u))
-            // Las esquineras en forma de nube, arriba en las dos puntas.
-            val s = 13 * u
-            val izq = Path().apply { moveTo(r.left, r.top); lineTo(r.left + s, r.top); quadraticTo(r.left + s * 0.2f, r.top + s * 0.2f, r.left, r.top + s); close() }
-            val der = Path().apply { moveTo(r.right, r.top); lineTo(r.right - s, r.top); quadraticTo(r.right - s * 0.2f, r.top + s * 0.2f, r.right, r.top + s); close() }
-            listOf(izq, der).forEach { esq -> drawPath(esq, c(LACA)); drawPath(esq, c(ORO), style = Stroke(0.7f * u)) }
-        }
-        // Los postes de laca roja, con su filete de oro y los remates de laca negra.
-        listOf(d.izquierda, d.derecha).forEach { r ->
-            drawRect(c(LACA), r.topLeft, r.size)
-            drawRect(c(LACA_LUZ).copy(alpha = 0.6f), Offset(r.left + r.width * 0.15f, r.top), Size(r.width * 0.15f, r.height))
-            drawRect(c(LACA_OSC).copy(alpha = 0.6f), Offset(r.right - r.width * 0.2f, r.top), Size(r.width * 0.2f, r.height))
-            drawLine(c(ORO), Offset(r.center.x, r.top + 6 * u), Offset(r.center.x, r.bottom - 6 * u), 0.8f * u)
-            drawRect(c(NEGRO_LACA), r.topLeft, Size(r.width, 5 * u))
-            drawRect(c(NEGRO_LACA), Offset(r.left, r.bottom - 5 * u), Size(r.width, 5 * u))
-        }
-        // Las tablas: laca roja con un filete de oro y el canto de laca negra.
-        d.tablas.forEach { r ->
-            drawRect(c(LACA), r.topLeft, r.size)
-            drawRect(c(LACA_LUZ).copy(alpha = 0.7f), r.topLeft, Size(r.width, 1.8f * u))
-            drawLine(c(ORO), Offset(r.left, r.top + r.height * 0.32f), Offset(r.right, r.top + r.height * 0.32f), 0.7f * u)
-            drawRect(c(NEGRO_LACA), Offset(r.left, r.bottom - r.height * 0.22f), Size(r.width, r.height * 0.22f))
-            drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, r.bottom), Size(r.width, 3 * u))
-        }
-        // El rótulo de cada mes: una placa de marfil enmarcada en laca negra.
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRect(Color.Black.copy(alpha = 0.2f), Offset(r.left + 1.2f * u, r.top + 1.2f * u), r.size)
-            val marco = r.inflate(1.4f * u)
-            drawRect(c(NEGRO_LACA), marco.topLeft, marco.size)
-            drawRect(c(MARFIL), r.topLeft, r.size)
-            val filete = r.deflate(1.2f * u)
-            drawRect(c(ORO), filete.topLeft, filete.size, style = Stroke(0.6f * u))
-            textoEn(medidor, p.texto, r.deflate(2 * u), letra, c(TINTA), 11f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: ladrillo gris y el zócalo de laca con su faldón de nube y patas de casco.
-        val b = d.base
-        val piso = b.top + b.height * 0.62f
-        drawRect(c(LADRILLO), Offset(0f, piso), Size(w, h - piso))
-        var y = piso; var fila = 0
-        while (y < h) {
-            drawLine(Color.Black.copy(alpha = 0.25f), Offset(0f, y), Offset(w, y), 0.8f * u)
-            var x = if (fila % 2 == 0) 0f else 11 * u
-            while (x < w) { drawLine(Color.Black.copy(alpha = 0.25f), Offset(x, y), Offset(x, minOf(y + 6 * u, h)), 0.8f * u); x += 22 * u }
-            y += 6 * u; fila++
-        }
-        // La sombra bajo el mueble, que se ve por el faldón recortado.
-        drawRect(c(mezcla(LADRILLO, NEGRO_LACA, 0.65f)), Offset(b.left, b.top), Size(b.width, piso - b.top))
-        val ya = b.top + b.height * 0.36f
-        val zocalo = Path().apply {
-            moveTo(b.left, b.top); lineTo(b.right, b.top); lineTo(b.right, piso)
-            lineTo(b.right - b.width * 0.06f, piso)
-            cubicTo(b.right - b.width * 0.08f, ya, b.left + b.width * 0.6f, ya, b.center.x + b.width * 0.06f, ya)
-            quadraticTo(b.center.x, ya + b.height * 0.2f, b.center.x - b.width * 0.06f, ya)
-            cubicTo(b.left + b.width * 0.4f, ya, b.left + b.width * 0.08f, ya, b.left + b.width * 0.06f, piso)
-            lineTo(b.left, piso); close()
-        }
-        drawPath(zocalo, c(LACA))
-        drawPath(zocalo, c(ORO), style = Stroke(0.8f * u))
-        drawRect(c(NEGRO_LACA), Offset(b.left, b.top), Size(b.width, 3 * u))
-        listOf(b.left + b.width * 0.03f, b.right - b.width * 0.03f).forEach { px -> drawCircle(c(NEGRO_LACA), 2.6f * u, Offset(px, piso - 2.6f * u)) }
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(b.left + b.width * 0.06f, piso), Size(b.width * 0.88f, 3 * u))
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteSeda) { estante(d, medidor, oscuro, noche) }
 
-    /** El alero de tejas, el panel con la puerta de luna y la lámpara de papel. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        drawRect(c(MURO), r.topLeft, r.size)
-        // El alero de laca negra, con las puntas alzadas y la fila de tejas redondas encima.
-        val alero = r.top + r.height * 0.16f
-        val viga = Path().apply {
-            moveTo(r.left, alero - r.height * 0.11f)
-            quadraticTo(r.left + r.width * 0.07f, alero, r.left + r.width * 0.2f, alero)
-            lineTo(r.right - r.width * 0.2f, alero)
-            quadraticTo(r.right - r.width * 0.07f, alero, r.right, alero - r.height * 0.11f)
-            lineTo(r.right, alero + r.height * 0.06f); lineTo(r.left, alero + r.height * 0.06f); close()
-        }
-        var tx = r.left + r.width * 0.2f
-        while (tx < r.right - r.width * 0.2f) {
-            drawRect(c(TEJA), Offset(tx - 3 * u, alero - 6 * u), Size(6 * u, 5 * u))
-            drawCircle(c(TEJA), 3 * u, Offset(tx, alero - 1 * u))
-            drawCircle(c(MURO).copy(alpha = 0.35f), 1.8f * u, Offset(tx, alero - 1 * u), style = Stroke(0.6f * u))
-            tx += 8 * u
-        }
-        drawPath(viga, c(NEGRO_LACA))
-        drawLine(c(ORO), Offset(r.left + r.width * 0.2f, alero + r.height * 0.025f), Offset(r.right - r.width * 0.2f, alero + r.height * 0.025f), 0.9f * u)
-        // El panel de laca roja.
-        val panel = Rect(r.left + r.width * 0.02f, alero + r.height * 0.06f, r.right - r.width * 0.02f, r.bottom - r.height * 0.03f)
-        drawRect(c(LACA), panel.topLeft, panel.size)
-        drawRect(c(LACA_LUZ).copy(alpha = 0.5f), panel.topLeft, Size(panel.width, 1.6f * u))
-        val filete = panel.deflate(4 * u)
-        drawRect(c(ORO), filete.topLeft, filete.size, style = Stroke(0.8f * u))
-        // La puerta de luna: celosía de laca sobre papel.
-        val rv = panel.height * 0.42f
-        val cv = panel.center
-        val luna = Path().apply { addOval(Rect(cv, rv)) }
-        drawPath(luna, if (noche) mezcla(PAPEL, NOCHE, 0.5f) else c(PAPEL))
-        clipPath(luna) {
-            val paso = rv / 3f
-            var gx = cv.x - rv; var i = 0
-            while (gx < cv.x + rv) {
-                var gy = cv.y - rv; var j = 0
-                while (gy < cv.y + rv) {
-                    if ((i + j) % 2 == 0) drawRect(c(LACA_OSC), Offset(gx + paso * 0.3f, gy + paso * 0.3f), Size(paso * 0.4f, paso * 0.4f), style = Stroke(1.2f * u))
-                    gy += paso; j++
-                }
-                drawLine(c(LACA_OSC), Offset(gx, cv.y - rv), Offset(gx, cv.y + rv), 1.8f * u)
-                drawLine(c(LACA_OSC), Offset(cv.x - rv, cv.y - rv + paso * i), Offset(cv.x + rv, cv.y - rv + paso * i), 1.8f * u)
-                gx += paso; i++
-            }
-        }
-        drawCircle(c(LACA_OSC), rv, cv, style = Stroke(4 * u))
-        drawCircle(c(ORO), rv + 3 * u, cv, style = Stroke(0.8f * u))
-        // Las nubes de oro a los lados.
-        val sn = panel.height * 0.18f
-        nube(Offset(panel.left + panel.width * 0.14f, cv.y + sn * 0.6f), sn, c(ORO), 1f * u)
-        nube(Offset(panel.right - panel.width * 0.14f, cv.y), sn, c(ORO), 1f * u)
-        // La lámpara de papel, colgada del alero; de noche, encendida.
-        val lx = r.left + r.width * 0.14f
-        val lt = alero + r.height * 0.16f
-        val lw = r.width * 0.09f; val lh = lw * 1.25f
-        drawLine(c(NEGRO_LACA), Offset(lx, alero + r.height * 0.06f), Offset(lx, lt), 1f * u)
-        val globo = Rect(lx - lw / 2, lt + 3 * u, lx + lw / 2, lt + 3 * u + lh)
-        if (noche) mancha(globo.center, lw * 2.2f, LAMPARA.copy(alpha = 0.5f))
-        drawOval(if (noche) mezcla(PAPEL, LAMPARA, 0.5f) else c(PAPEL), globo.topLeft, globo.size)
-        if (!noche) drawOval(Color.Black.copy(alpha = 0.1f), Offset(globo.center.x, globo.top), Size(globo.width / 2, globo.height))
-        for (k in 1..3) {
-            val dx = globo.width * 0.5f * k / 4f
-            drawOval(c(BAMBU).copy(alpha = 0.6f), Offset(globo.left + dx, globo.top), Size(globo.width - 2 * dx, globo.height), style = Stroke(0.6f * u))
-        }
-        listOf(0.3f, 0.5f, 0.7f).forEach { f ->
-            val yy = globo.top + globo.height * f
-            val medio = globo.width / 2 * kotlin.math.sqrt(1f - (2 * f - 1) * (2 * f - 1))
-            drawLine(c(BAMBU).copy(alpha = 0.6f), Offset(lx - medio, yy), Offset(lx + medio, yy), 0.6f * u)
-        }
-        drawRect(c(LACA), Offset(lx - lw * 0.3f, lt), Size(lw * 0.6f, 3.4f * u))
-        drawRect(c(LACA), Offset(lx - lw * 0.3f, globo.bottom - 1 * u), Size(lw * 0.6f, 3.4f * u))
-        drawLine(c(ORO), Offset(lx - lw * 0.3f, lt + 1.7f * u), Offset(lx + lw * 0.3f, lt + 1.7f * u), 0.6f * u)
-        val borla = globo.bottom + 2.4f * u
-        drawLine(c(CORDON), Offset(lx, borla), Offset(lx, borla + 3 * u), 1f * u)
-        for (k in -2..2) drawLine(c(CORDON), Offset(lx + k * 0.6f * u, borla + 3 * u), Offset(lx + k * 1.1f * u, borla + 11 * u), 0.8f * u)
-        drawCircle(c(CORDON), 1.8f * u, Offset(lx, borla + 3.2f * u))
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val tinte = SEDAS[(v.semilla and 0x7fffffff) % SEDAS.size]
-        val seda = c(if (v.tono != null) mezcla(tinte, v.tono, 0.22f) else tinte)
-        // La perilla de jade del rodillo, asomando arriba.
-        drawRoundRect(c(JADE), Offset(w * 0.3f, 0f), Size(w * 0.4f, h * 0.06f), CornerRadius(1.5f * u))
-        drawRect(Color.White.copy(alpha = 0.25f), Offset(w * 0.36f, h * 0.008f), Size(w * 0.06f, h * 0.04f))
-        // El rollo envuelto: un cilindro de seda de pie, con su luz y su sombra.
-        val rad = w * 0.18f
-        val cuerpo = Rect(0f, h * 0.045f, w, h)
-        drawRoundRect(seda, cuerpo.topLeft, cuerpo.size, CornerRadius(rad))
-        val recto = Rect(0f, cuerpo.top + rad, w, cuerpo.bottom - rad)
-        drawRect(Color.White.copy(alpha = 0.14f), Offset(w * 0.16f, recto.top), Size(w * 0.14f, recto.height))
-        drawRect(Color.Black.copy(alpha = 0.24f), Offset(w * 0.8f, recto.top), Size(w * 0.2f, recto.height))
-        drawOval(Color.Black.copy(alpha = 0.2f), Offset(0f, cuerpo.top), Size(w, rad * 1.2f))
-        // El labrado de la seda: rombos tenues.
-        clipRect(0f, recto.top, w, recto.bottom) {
-            var k = -h
-            while (k < w + h) {
-                drawLine(Color.White.copy(alpha = 0.07f), Offset(k, recto.bottom), Offset(k + recto.height, recto.top), 0.6f * u)
-                drawLine(Color.White.copy(alpha = 0.07f), Offset(k, recto.top), Offset(k + recto.height, recto.bottom), 0.6f * u)
-                k += 5 * u
-            }
-        }
-        // El borde de la envoltura, que da la vuelta en diagonal.
-        drawLine(c(ORO).copy(alpha = 0.6f), Offset(0f, h * 0.2f), Offset(w, h * 0.13f), 1.2f * u)
-        drawLine(Color.Black.copy(alpha = 0.25f), Offset(0f, h * 0.2f + 1.4f * u), Offset(w, h * 0.13f + 1.4f * u), 0.8f * u)
-        // La tira de papel con el mes, en columna.
-        val tira = Rect(w * 0.26f, h * 0.17f, w * 0.74f, h * 0.47f)
-        drawRect(c(PAPEL), tira.topLeft, tira.size)
-        drawRect(c(TINTA).copy(alpha = 0.5f), tira.topLeft, tira.size, style = Stroke(0.5f * u))
-        val signos = v.mes.filter { !it.isWhitespace() }.map { it.toString() }
-        if (signos.size in 1..4) {
-            val paso = tira.height / signos.size
-            signos.forEachIndexed { k, s -> textoEn(medidor, s, Rect(tira.left, tira.top + paso * k, tira.right, tira.top + paso * (k + 1)), letra, c(TINTA), 9f, minimo = 4f) }
-        } else {
-            textoEn(medidor, v.mes, tira.deflate(0.5f * u), letra, c(TINTA), 8f, vertical = true, minimo = 4.5f)
-        }
-        // El cordón que lo ata: una vuelta más cuanto más escribiste.
-        val vueltas = 1 + (v.lleno * 2).toInt()
-        for (j in 0 until vueltas) {
-            val y = h * 0.52f + j * 1.8f * u
-            drawLine(c(CORDON), Offset(0f, y), Offset(w, y), 1.1f * u)
-        }
-        val nudo = Offset(w * 0.5f, h * 0.52f + vueltas * 1.8f * u)
-        drawCircle(c(CORDON), 1.6f * u, nudo)
-        // La tarjeta de marfil colgando, con el día.
-        val tarjeta = Rect(w * 0.18f, nudo.y + 3.2f * u, w * 0.82f, nudo.y + 3.2f * u + h * 0.18f)
-        drawLine(c(CORDON), nudo, Offset(nudo.x, tarjeta.top + 1.6f * u), 0.9f * u)
-        drawRoundRect(Color.Black.copy(alpha = 0.22f), Offset(tarjeta.left + 0.8f * u, tarjeta.top + 0.8f * u), tarjeta.size, CornerRadius(1.4f * u))
-        drawRoundRect(c(MARFIL), tarjeta.topLeft, tarjeta.size, CornerRadius(1.4f * u))
-        drawCircle(c(TINTA).copy(alpha = 0.5f), 0.9f * u, Offset(tarjeta.center.x, tarjeta.top + 1.6f * u))
-        textoEn(medidor, v.dia, Rect(tarjeta.left, tarjeta.top + 2.8f * u, tarjeta.right, tarjeta.bottom - 0.5f * u), letra, c(TINTA), 12f, peso = FontWeight.Bold)
-        // Abajo, el sello rojo del dueño; de noche, la luna.
-        val cs = Offset(w * 0.5f, h * 0.89f)
-        val s = minOf(w * 0.34f, 7 * u)
-        if (v.noche) {
-            drawCircle(LUNA, s * 0.5f, cs)
-            drawCircle(seda, s * 0.42f, Offset(cs.x + s * 0.22f, cs.y - s * 0.12f))
-        } else {
-            drawRect(c(BERMELLON), Offset(cs.x - s / 2, cs.y - s / 2), Size(s, s))
-            drawRect(c(PAPEL).copy(alpha = 0.8f), Offset(cs.x - s * 0.32f, cs.y - s * 0.32f), Size(s * 0.64f, s * 0.64f), style = Stroke(0.6f * u))
-        }
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteSeda) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
