@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontWeight
 import io.github.ruddy2003.vestigium.ui.ideario.azar
@@ -152,14 +153,17 @@ internal object VolumenesEstanteEspacio {
         val e = Rect(cuerpo.left + cuerpo.width * 0.06f, top + 4f * u, cuerpo.right - cuerpo.width * 0.06f, top + 4f * u + minOf(22f * u, (h - top) * 0.26f))
         val pico = minOf(2.2f * u, e.width * 0.1f)
         poligonoEnEspacio(trazo, e.left, e.top, e.right, e.top, e.right - pico, e.center.y, e.right, e.bottom, e.left, e.bottom, e.left + pico, e.center.y)
-        translate(0.8f * u, 1f * u) { drawPath(trazo, a.sombra(0.35f)) }
+        // Con un ánimo muy pálido, la tela casi es del color de la etiqueta: la etiqueta lleva su filete y la goma va naranja.
+        val palida = tela.luminance() > 0.55f
+        translate(0.8f * u, 1f * u) { drawPath(trazo, a.sombra(if (palida) 0.5f else 0.35f)) }
         drawPath(trazo, a.etiqueta(l))
+        drawPath(trazo, mezcla(tela, P.TINTA, 0.55f).copy(alpha = if (palida) 0.8f else 0.45f), style = Stroke(0.8f * u))
         drawRect(a.claro(0.4f), Offset(e.left + pico, e.top), Size(e.width - 2 * pico, 0.7f * u))
         fecha(v, medidor, Rect(e.left + pico * 0.5f, e.top, e.right - pico * 0.5f, e.bottom), P.TINTA)
         // La goma que la cierra, un poco más ancha que el lomo donde aprieta.
         val gy = top + (h - top) * 0.47f
         drawRect(a.sombra(0.35f), Offset(cuerpo.left, gy + 2.8f * u), Size(cuerpo.width, 1.4f * u))
-        drawRoundRect(a.luz(if (variante == 2) P.NARANJA else P.GOMA, l), Offset(cuerpo.left - 0.5f * u, gy), Size(cuerpo.width + 1f * u, 3f * u), CornerRadius(1.2f * u))
+        drawRoundRect(a.luz(if (variante == 2 || palida) P.NARANJA else P.GOMA, l), Offset(cuerpo.left - 0.5f * u, gy), Size(cuerpo.width + 1f * u, 3f * u), CornerRadius(1.2f * u))
         drawRect(a.claro(0.3f), Offset(cuerpo.left + 0.5f * u, gy + 0.5f * u), Size(cuerpo.width - 1f * u, 0.6f * u))
         // El lápiz metido en la goma, junto al canto derecho.
         if (variante == 0) {
@@ -317,6 +321,7 @@ internal object VolumenesEstanteEspacio {
         rotate(if (s % 2 == 0) -3.5f else 3f, pg.center) {
             drawRoundRect(a.sombra(0.32f), pg.topLeft + Offset(0.6f * u, 0.8f * u), pg.size, CornerRadius(1.6f * u))
             drawRoundRect(a.etiqueta(l), pg.topLeft, pg.size, CornerRadius(1.6f * u))
+            drawRoundRect(mezcla(lamina, P.TINTA, 0.55f).copy(alpha = if (lamina.luminance() > 0.55f) 0.8f else 0.4f), pg.topLeft, pg.size, CornerRadius(1.6f * u), style = Stroke(0.8f * u))
             fecha(v, medidor, Rect(pg.left, pg.top + 0.6f * u, pg.right, pg.bottom), P.TINTA)
         }
         // La estrella (o la luna), entre la pegatina y el cabo, o abajo, en el abombado.

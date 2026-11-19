@@ -167,56 +167,80 @@ internal object ArribaEstanteEspacio {
     }
 
     /**
-     * El ventilador del aire, de recambio y a medio arreglar: un tambor de chapa azul de la nave, tumbado sobre la tabla alta
-     * con su boca hacia nosotros y un poco hacia la izquierda, sujeto con dos correas naranjas. La brida delantera con sus
-     * pernos (faltan los de la rejilla), la boca abierta con las siete aspas y el motor, las aletas del tambor, la brida de
-     * atrás y el mazo de cables que sale por detrás y flota en lazos.
+     * El ventilador del aire, de recambio y a medio arreglar: el tramo de conducto con su ventilador, tumbado sobre la tabla
+     * alta con la boca hacia nosotros y un poco hacia la izquierda, sujeto con dos correas naranjas. Delante, la brida con sus
+     * pernos (faltan los de la rejilla, que flota arriba), la boca abierta con las siete aspas y el motor; detrás, el tambor de
+     * chapa azul de la nave con su costura, la brida de atrás, un tramo de manguera plegada con su abrazadera y la boca suelta,
+     * y el mazo de cables que sale por detrás y flota en lazos.
      */
     fun DrawScope.ventilador(c: Offset, r: Float, a: AireEstanteEspacio, luz: (Offset) -> LuzEstanteEspacio, caida: Offset) {
         val u = density
-        val largo = r * 1.45f
-        val sx = 0.7f
+        val largo = r * 0.95f
+        val sx = 0.62f
         val l = luz(c)
         val lt = luz(c + Offset(largo, -r))
         val chapa = mezcla(P.TELA_AZUL, P.ACERO, 0.22f)
         val cuerpo = Rect(c.x, c.y - r * 0.84f, c.x + largo, c.y + r * 0.84f)
         val atras = Rect(c.x + largo - r * 0.24f, c.y - r * 0.96f, c.x + largo + r * 0.24f, c.y + r * 0.96f)
-        // La sombra del tambor en el acolchado y en la tabla.
+        // La manguera plegada: sale de la brida de atrás hacia la derecha, un poco caída, y termina en su boca suelta.
+        val h0 = c.x + largo + r * 0.12f; val h1 = h0 + r * 0.52f
+        val hr = r * 0.66f
+        val hy = c.y + r * 0.08f
+        val manguera = Rect(h0, hy - hr, h1, hy + hr)
+        // Las sombras del conjunto en el acolchado y en la tabla.
         translate(caida.x, caida.y) {
-            drawRect(a.sombra(if (a.lumbre) 0.4f else 0.22f), cuerpo.topLeft, cuerpo.size)
-            drawOval(a.sombra(if (a.lumbre) 0.4f else 0.22f), atras.topLeft, atras.size)
+            val sm = a.sombra(if (a.lumbre) 0.4f else 0.22f)
+            drawRect(sm, cuerpo.topLeft, cuerpo.size)
+            drawOval(sm, atras.topLeft, atras.size)
+            drawRoundRect(sm, manguera.topLeft, manguera.size, CornerRadius(r * 0.2f))
         }
-        contactoEspacio(Offset(c.x + largo * 0.5f, c.y + r), largo * 2.2f, r * 0.12f, a, 0.42f)
-        // El mazo de cables, que sale de atrás y flota en dos lazos, con su conector suelto (detrás del tambor).
-        val m0 = Offset(atras.center.x + r * 0.1f, atras.top + r * 0.3f)
+        contactoEspacio(Offset(c.x + largo * 0.6f, c.y + r), (largo + r * 0.7f) * 1.9f, r * 0.12f, a, 0.42f)
+        // El mazo de cables, que sale de atrás y flota en dos lazos, con su conector suelto (detrás de todo).
+        val m0 = Offset(atras.center.x, atras.top + r * 0.25f)
         val mazo = Path().apply {
             moveTo(m0.x, m0.y)
-            cubicTo(m0.x + r * 0.9f, m0.y - r * 0.5f, m0.x + r * 0.2f, m0.y - r * 1.3f, m0.x + r * 0.7f, m0.y - r * 1.2f)
-            cubicTo(m0.x + r * 1.2f, m0.y - r * 1.1f, m0.x + r * 0.9f, m0.y - r * 0.4f, m0.x + r * 1.35f, m0.y - r * 0.55f)
+            cubicTo(m0.x + r * 0.5f, m0.y - r * 0.9f, m0.x - r * 0.1f, m0.y - r * 1.4f, m0.x + r * 0.5f, m0.y - r * 1.35f)
+            cubicTo(m0.x + r * 1.0f, m0.y - r * 1.3f, m0.x + r * 0.7f, m0.y - r * 0.6f, m0.x + r * 1.15f, m0.y - r * 0.75f)
         }
         listOf(P.ROJO to -1f, P.GOMA to 0f, P.TELA to 1f).forEach { (col, d) ->
             drawPath(corridoEspacio(mazo, d * u, d * 0.6f * u), a.luz(col, lt), style = Stroke(1.1f * u, cap = StrokeCap.Round))
         }
-        val fin = Offset(m0.x + r * 1.35f, m0.y - r * 0.55f)
+        val fin = Offset(m0.x + r * 1.15f, m0.y - r * 0.75f)
         drawRoundRect(a.luz(mezcla(P.PAPEL, P.ACERO, 0.4f), lt), Offset(fin.x - 2f * u, fin.y - 3.5f * u), Size(6f * u, 7f * u), CornerRadius(1f * u))
+        // La manguera: tela gris engomada, con sus pliegues (cada uno con su luz y su sombra) y el borde ondulado.
+        val tela = mezcla(P.ACOLCHADO, P.GOMA, 0.32f)
+        drawRect(a.luz(tela, lt), manguera.topLeft, manguera.size)
+        val paso = maxOf(1f, r * 0.1f)
+        var px = h0 + paso * 0.5f
+        while (px < h1) {
+            drawLine(a.sombra(0.32f), Offset(px, manguera.top + 1f * u), Offset(px, manguera.bottom - 1f * u), 1.6f * u)
+            drawLine(a.claro(0.3f), Offset(px + paso * 0.45f, manguera.top + 1f * u), Offset(px + paso * 0.45f, manguera.bottom - 1f * u), 1.1f * u)
+            drawCircle(a.luz(tela, lt), paso * 0.32f, Offset(px + paso * 0.45f, manguera.top))
+            drawCircle(a.luz(mezcla(tela, P.TINTA, 0.2f), lt), paso * 0.32f, Offset(px + paso * 0.45f, manguera.bottom))
+            px += paso
+        }
+        drawRect(a.claro(0.25f), Offset(h0, manguera.top + hr * 0.2f), Size(h1 - h0, hr * 0.25f))
+        drawRect(a.sombra(0.25f), Offset(h0, manguera.bottom - hr * 0.45f), Size(h1 - h0, hr * 0.45f))
+        // La boca suelta de la manguera, de canto, y la abrazadera de acero junto a la brida.
+        val bocaM = Rect(h1 - r * 0.13f, hy - hr, h1 + r * 0.13f, hy + hr)
+        drawOval(a.luz(tela, lt), bocaM.topLeft, bocaM.size)
+        drawOval(a.luz(mezcla(P.GOMA, P.TINTA, 0.4f), LuzEstanteEspacio(lt.k * 0.5f, lt.f * 0.5f)), bocaM.deflate(r * 0.05f).topLeft, bocaM.deflate(r * 0.05f).size)
+        drawRect(a.luz(P.ACERO, lt), Offset(h0 - r * 0.02f, manguera.top - 1f * u), Size(r * 0.08f, manguera.height + 2f * u))
+        drawRect(a.claro(0.4f), Offset(h0 - r * 0.02f, manguera.top - 1f * u), Size(0.8f * u, manguera.height + 2f * u))
         // La brida de atrás, que asoma por arriba y por abajo del tambor.
         drawOval(a.luz(mezcla(chapa, P.TINTA, 0.3f), l), atras.topLeft, atras.size)
-        // El tambor: la chapa con su luz arriba, su sombra abajo y las aletas de enfriar.
+        // El tambor: la chapa lisa con su luz arriba, su sombra abajo y una sola costura remachada.
         drawRect(a.luz(chapa, l), cuerpo.topLeft, cuerpo.size)
         drawRect(a.claro(0.3f), Offset(cuerpo.left, cuerpo.top + r * 0.12f), Size(largo, r * 0.22f))
         drawRect(a.sombra(0.28f), Offset(cuerpo.left, cuerpo.bottom - r * 0.4f), Size(largo, r * 0.4f))
         drawRect(a.sombra(0.2f), Offset(cuerpo.left, cuerpo.bottom - r * 0.15f), Size(largo, r * 0.15f))
-        var fx = cuerpo.left + r * 0.18f
-        while (fx < cuerpo.right - r * 0.06f) {
-            drawLine(a.sombra(0.3f), Offset(fx, cuerpo.top + 1f * u), Offset(fx, cuerpo.bottom - 1f * u), 1.4f * u)
-            drawLine(a.claro(0.25f), Offset(fx + 1.4f * u, cuerpo.top + 1f * u), Offset(fx + 1.4f * u, cuerpo.bottom - 1f * u), 0.7f * u)
-            fx += maxOf(1f, r * 0.14f)
-        }
+        val cx = cuerpo.right - r * 0.12f
+        drawLine(a.sombra(0.35f), Offset(cx, cuerpo.top), Offset(cx, cuerpo.bottom), 1f * u)
+        for (k in 0 until 3) remacheEspacio(Offset(cx - 2f * u, cuerpo.top + cuerpo.height * (0.25f + 0.25f * k)), 1f * u, a.luz(P.ACERO, l), a)
         // La pintura gastada del tambor: el aluminio que asoma en el canto de arriba.
-        drawRect(a.luz(mezcla(P.ACERO, P.PAPEL, 0.3f), l), Offset(cuerpo.left + largo * 0.3f, cuerpo.top), Size(largo * 0.25f, 1.4f * u))
-        // Las dos correas naranjas que lo sujetan a la tabla, con su hebilla.
-        listOf(0.6f, 0.88f).forEach { f ->
-            val x = cuerpo.left + largo * f
+        drawRect(a.luz(mezcla(P.ACERO, P.PAPEL, 0.3f), l), Offset(cuerpo.left + largo * 0.62f, cuerpo.top), Size(largo * 0.22f, 1.4f * u))
+        // Las dos correas naranjas que lo sujetan a la tabla: una sobre el tambor, otra sobre la manguera, con su hebilla.
+        listOf(cuerpo.left + largo * 0.72f, h0 + (h1 - h0) * 0.42f).forEach { x ->
             drawRect(a.sombra(0.3f), Offset(x + 1.5f * u, cuerpo.top - r * 0.06f), Size(r * 0.16f, r * 1.9f))
             drawRect(a.luz(P.NARANJA, l), Offset(x, cuerpo.top - r * 0.08f), Size(r * 0.16f, r * 1.92f))
             drawRect(a.claro(0.3f), Offset(x, cuerpo.top - r * 0.08f), Size(1f * u, r * 1.92f))

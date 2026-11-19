@@ -71,17 +71,40 @@ internal object PiezasEstanteEspacio {
             pinceladas(r, a.sombra(1f), sm, 12, u, 0.1f)
             pinceladas(r, a.claro(1f), sm + 1, 8, u, 0.08f)
         }
-        // El parche cosido bajo el ojo de buey, un poco torcido, con su puntada.
-        val pc = Rect(w * 0.05f, w * 0.425f, w * 0.15f, w * 0.495f)
+        // El parche cosido bajo el ojo de buey, un poco torcido: la misma tela acolchada, algo más azul, con su costura y su
+        // botón (el capitoné de la pared se interrumpe), puntadas desparejas y la esquina de arriba que se levanta.
+        val pc = Rect(w * 0.05f, w * 0.425f, w * 0.15f, w * 0.5f)
+        val lp = luz(pc.center)
+        val tp = a.luz(mezcla(P.ACOLCHADO, P.TELA_AZUL, 0.3f), lp)
         rotate(-5f, pc.center) {
-            drawRect(a.sombra(0.3f), pc.topLeft + Offset(1.2f * u, 1.5f * u), pc.size)
-            drawRect(a.luz(mezcla(P.ACOLCHADO, P.TELA_AZUL, 0.45f), luz(pc.center)), pc.topLeft, pc.size)
-            drawRect(a.claro(0.2f), pc.topLeft, Size(pc.width, 1f * u))
+            val q = pc.width * 0.22f
+            drawRect(a.sombra(0.22f), pc.topLeft + Offset(1f * u, 1.2f * u), pc.size)
+            drawPath(poligonoEspacio(pc.left, pc.top, pc.right - q, pc.top, pc.right, pc.top + q, pc.right, pc.bottom, pc.left, pc.bottom), tp)
+            drawLine(a.sombra(0.16f), Offset(pc.left + pc.width * 0.15f, pc.bottom), Offset(pc.left + pc.width * 0.75f, pc.top), 3f * u)
+            drawLine(mezcla(tp, P.TINTA, 0.4f).copy(alpha = 0.5f), Offset(pc.left + pc.width * 0.15f, pc.bottom), Offset(pc.left + pc.width * 0.75f, pc.top), 0.7f * u)
+            drawLine(a.claro(0.18f), Offset(pc.left + pc.width * 0.22f, pc.bottom), Offset(pc.left + pc.width * 0.82f, pc.top), 2f * u)
+            drawCircle(a.sombra(0.35f), 1.8f * u, Offset(pc.left + pc.width * 0.42f, pc.top + pc.height * 0.6f))
+            // Las puntadas, desparejas, a mano.
             val d = pc.deflate(2f * u)
+            val hilo = a.luz(P.TELA, lp)
+            var k = 0
             var px = d.left
-            while (px < d.right) { drawLine(a.luz(P.TELA, luz(pc.center)), Offset(px, d.top), Offset(px + 1.6f * u, d.top), 0.7f * u); drawLine(a.luz(P.TELA, luz(pc.center)), Offset(px, d.bottom), Offset(px + 1.6f * u, d.bottom), 0.7f * u); px += maxOf(1f, 3f * u) }
+            while (px < d.right - q) {
+                val lg = (1.2f + 1.2f * azar(761, k)) * u
+                drawLine(hilo, Offset(px, d.top + (azar(762, k) - 0.5f) * u), Offset(px + lg, d.top + (azar(763, k) - 0.5f) * u), 0.7f * u)
+                drawLine(hilo, Offset(px, d.bottom + (azar(764, k) - 0.5f) * u), Offset(px + lg, d.bottom + (azar(765, k) - 0.5f) * u), 0.7f * u)
+                px += maxOf(1f, lg + (1.4f + 1.2f * azar(766, k)) * u); k++
+            }
             var py = d.top
-            while (py < d.bottom) { drawLine(a.luz(P.TELA, luz(pc.center)), Offset(d.left, py), Offset(d.left, py + 1.6f * u), 0.7f * u); drawLine(a.luz(P.TELA, luz(pc.center)), Offset(d.right, py), Offset(d.right, py + 1.6f * u), 0.7f * u); py += maxOf(1f, 3f * u) }
+            while (py < d.bottom) {
+                val lg = (1.2f + 1.2f * azar(767, k)) * u
+                drawLine(hilo, Offset(d.left + (azar(768, k) - 0.5f) * u, py), Offset(d.left + (azar(769, k) - 0.5f) * u, py + lg), 0.7f * u)
+                if (py > d.top + q) drawLine(hilo, Offset(d.right, py), Offset(d.right, py + lg), 0.7f * u)
+                py += maxOf(1f, lg + (1.4f + 1.2f * azar(770, k)) * u); k++
+            }
+            // La esquina levantada: el revés de la tela, más claro, y su sombra en la pared.
+            drawPath(poligonoEspacio(pc.right - q, pc.top, pc.right, pc.top + q, pc.right + q * 0.25f, pc.top - q * 0.35f), a.sombra(0.3f))
+            drawPath(poligonoEspacio(pc.right - q, pc.top, pc.right, pc.top + q, pc.right - q * 0.1f, pc.top - q * 0.45f), a.luz(mezcla(P.ACOLCHADO, P.TELA, 0.5f), lp))
         }
         velcro(Rect(w * 0.64f, w * 0.06f, w * 0.69f, w * 0.076f), a, luz(Offset(w * 0.66f, w * 0.07f)), 741)
     }
@@ -209,7 +232,12 @@ internal object PiezasEstanteEspacio {
                 mancha(lamp, w * 1.0f, P.AMBAR.copy(alpha = 0.3f))
                 mancha(lamp + Offset(-w * 0.16f, w * 0.24f), w * 0.5f, LUZ_MUEBLE.copy(alpha = 0.22f))
             }
-        } else mancha(Offset(w * 0.5f, ch * 0.2f), w * 0.9f, P.GUARDIA.copy(alpha = 0.08f * f))
+        } else if (a.oscuro) mancha(Offset(w * 0.5f, ch * 0.2f), w * 0.9f, P.GUARDIA.copy(alpha = 0.08f))
+        else {
+            // El anochecer en claro: la luz lila entra por el ojo de buey y el otro lado de la pared se queda en penumbra.
+            mancha(vent + Offset(w * 0.05f, w * 0.06f), w * 0.5f, P.CREPUSCULO.copy(alpha = 0.32f))
+            mancha(Offset(w * 1.0f, ch * 0.55f), w * 0.75f, a.sombra(0.4f))
+        }
     }
 
     // ---------------------------------------------------------------- el ojo de buey

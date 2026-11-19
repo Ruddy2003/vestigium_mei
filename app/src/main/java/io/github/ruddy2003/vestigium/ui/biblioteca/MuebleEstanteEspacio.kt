@@ -81,6 +81,9 @@ internal object PaletaEstanteEspacio {
     val ANOCHECER = Color(0xFF3A3570)
     /** La luz del anochecer de la nave que entra por el ojo de buey en los Sueños en claro: lila. */
     val CREPUSCULO = Color(0xFFB79AE0)
+    /** Lo que multiplica cada color en los Sueños en claro: en la penumbra del anochecer y donde llega alguna luz. */
+    val PENUMBRA_SUENOS = Color(0xFF6E679C)
+    val LUZ_SUENOS = Color(0xFFF1EDFF)
 }
 
 /**
@@ -106,10 +109,12 @@ internal class AireEstanteEspacio(val oscuro: Boolean, val noche: Boolean) {
         val k = l.k.coerceIn(0f, 1f); val f = l.f.coerceIn(0f, 1f)
         if (!oscuro) {
             if (!noche) return if (f > 0.02f) mezcla(c, P.LUZ_FRIA, 0.1f * f) else c
-            // El anochecer de la nave: violeta y más bajo, con la luz lila que entra por el ojo de buey; donde llega el piloto,
-            // un charco de luz azul clara.
-            val v = mezcla(c, P.ANOCHECER, (0.64f - 0.5f * k - 0.2f * f).coerceIn(0.08f, 0.64f))
-            return mezcla(mezcla(mezcla(v, P.CREPUSCULO, 0.18f * f), P.GUARDIA, 0.08f + 0.18f * k), P.LUZ_FRIA, 0.3f * k)
+            // El anochecer de la nave: la luz violeta **multiplica** cada color (como en los cuadros), así el crema sigue crema,
+            // la tela gris y las correas naranjas, solo que más bajos; donde da la luz lila del ojo de buey o el charco del
+            // piloto, casi a su color de día, y lo demás en penumbra.
+            val luz = mezcla(P.PENUMBRA_SUENOS, P.LUZ_SUENOS, (0.95f * k + 0.8f * f).coerceIn(0f, 1f))
+            val v = Color(c.red * luz.red, c.green * luz.green, c.blue * luz.blue, c.alpha)
+            return mezcla(mezcla(v, P.GUARDIA, 0.12f * k), P.CREPUSCULO, 0.1f * f)
         }
         if (noche) {
             val v = mezcla(c, hondo, (0.92f - 0.86f * k.pow(0.7f) - 0.25f * f).coerceIn(0.08f, 0.92f))
@@ -136,14 +141,18 @@ internal class AireEstanteEspacio(val oscuro: Boolean, val noche: Boolean) {
      */
     fun animo(t: Color, l: LuzEstanteEspacio): Color {
         val k = maxOf(l.k, l.f * 0.8f).coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(t, P.ANOCHECER, 0.32f - 0.26f * k) else t
+        if (!oscuro) {
+            if (!noche) return t
+            val luz = mezcla(P.PENUMBRA_SUENOS, P.LUZ_SUENOS, (0.35f + 0.65f * k).coerceIn(0f, 1f))
+            return Color(t.red * luz.red, t.green * luz.green, t.blue * luz.blue, t.alpha)
+        }
         val bajo = Color(t.red * (0.42f + 0.58f * k), t.green * (0.42f + 0.58f * k), t.blue * (0.42f + 0.58f * k), t.alpha)
         return mezcla(mezcla(bajo, hondo, 0.22f * (1f - k)), foco, 0.08f * l.k.coerceIn(0f, 1f))
     }
     /** El papel de las etiquetas: casi no se apaga, para que el día se lea siempre. */
     fun etiqueta(l: LuzEstanteEspacio): Color {
         val k = maxOf(l.k, l.f * 0.6f).coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(P.PAPEL, P.ANOCHECER, 0.26f - 0.22f * k) else P.PAPEL
+        if (!oscuro) return if (noche) mezcla(P.PAPEL, P.PENUMBRA_SUENOS, 0.3f - 0.26f * k) else P.PAPEL
         if (noche) return mezcla(mezcla(P.PAPEL, hondo, 0.4f - 0.3f * k), P.ESTRELLAS, 0.1f + 0.1f * k)
         return mezcla(mezcla(P.PAPEL, hondo, 0.42f - 0.32f * k), P.AMBAR, 0.12f * l.k.coerceIn(0f, 1f))
     }
