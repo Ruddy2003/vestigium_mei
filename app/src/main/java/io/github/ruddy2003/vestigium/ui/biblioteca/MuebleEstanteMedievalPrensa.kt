@@ -35,10 +35,8 @@ internal object PrensaEstanteMedieval {
         val trav = Rect(x0 - an * 0.02f, izq.top + an * 0.06f, x1 + an * 0.02f, izq.top + an * 0.2f)
         val platina = Rect(izq.right + 1f * u, pie.y - an * 0.5f, der.left - 1f * u, pie.y - an * 0.41f)
         val tornillo = Rect(pie.x - an * 0.065f, trav.top - an * 0.2f, pie.x + an * 0.065f, platina.top)
-        // La sombra en el muro: la silueta de la prensa corrida.
-        val sombra = a.frio(if (a.oscuro) 0.16f else 0.2f)
-        val c = Offset(caida.x * (if (a.oscuro) 1.2f else 2.2f), minOf(caida.y, an * 0.02f))
-        for (r in listOf(izq, der, trav, tornillo)) drawRect(sombra, r.topLeft + c, r.size)
+        // La sombra en el muro, con la forma de la prensa (pies, travesaño, husillo y barra) y su penumbra; de noche, del candil.
+        sombraPrensa(izq, der, trav, tornillo, an, a, caida)
         contactoMedieval(Offset(pie.x + 3f * u, pie.y), an * 1.15f, 6f * u, a, 0.42f)
         // La base.
         tablon(base, roble, a, 1501, k)
@@ -66,6 +64,23 @@ internal object PrensaEstanteMedieval {
             clavoMedieval(Offset(x, base.center.y), 1.3f * u, a.luz(P.HIERRO_LUZ, k), a, k)
         }
         barra(tornillo, an, a, k)
+    }
+
+    /** La sombra de la prensa en el muro: su silueta corrida, de color, con una penumbra más corrida y más tenue. */
+    private fun DrawScope.sombraPrensa(izq: Rect, der: Rect, trav: Rect, tornillo: Rect, an: Float, a: AireMedieval, caida: Offset) {
+        val u = density
+        val color = if (a.oscuro) Color(0xFF14152A) else P.FRIO
+        for ((paso, alfa) in listOf(1.35f to 0.1f, 1f to 0.2f)) {
+            val c = Offset(caida.x * (if (a.oscuro) 1.1f else 2f) * paso, minOf(caida.y * paso, an * 0.03f))
+            val sc = color.copy(alpha = if (a.oscuro) alfa * 1.6f else alfa)
+            for (r in listOf(izq, der, trav)) drawRect(sc, r.topLeft + c, r.size)
+            drawRect(sc, Offset(tornillo.left + tornillo.width * 0.15f, tornillo.top) + c, Size(tornillo.width * 0.7f, tornillo.height))
+            val cabeza = Rect(tornillo.left - an * 0.025f, tornillo.top - an * 0.09f, tornillo.right + an * 0.025f, tornillo.top + an * 0.02f)
+            drawRoundRect(sc, cabeza.topLeft + c, cabeza.size, CornerRadius(3f * u))
+            rotate(-8f, cabeza.center + c) {
+                drawLine(sc, cabeza.center + c + Offset(-an * 0.36f, 0f), cabeza.center + c + Offset(an * 0.36f, 0f), an * 0.05f, StrokeCap.Round)
+            }
+        }
     }
 
     /** Un tablón de roble: su cara, la veta, el canto de arriba con luz y el de abajo en sombra. */

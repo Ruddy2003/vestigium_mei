@@ -275,15 +275,42 @@ internal object VolumenEstanteMedieval {
         val s = v.semilla and 0x7fffffff
         val capas = 3 + (v.lleno * 4f).toInt()
         val yCarpeta = h * 0.2f
-        // Las cartas que asoman por arriba, cada una a su altura y algo ladeada.
+        // Las cartas que asoman por arriba: cada una a su altura, de canto desparejo, alguna con la esquina doblada.
         for (j in capas - 1 downTo 0) {
-            val top = (1f + 6f * azar(s, 20 + j)) * u
-            val x0 = 1.6f * u + j * 0.9f * u; val x1 = w - 1.6f * u - (capas - 1 - j) * 0.7f * u
-            val inc = (azar(s, 40 + j) - 0.5f) * 2f * u
-            val hoja = poligonoMedieval(x0, top + inc, x1, top - inc, x1, yCarpeta + 4f * u, x0, yCarpeta + 4f * u)
+            val top = (1f + 7f * azar(s, 20 + j)) * u
+            val x0 = 1.4f * u + j * 0.9f * u; val x1 = w - 1.4f * u - (capas - 1 - j) * 0.7f * u
+            val inc = (azar(s, 40 + j) - 0.5f) * 2.4f * u
+            val hoja = Path().apply {
+                moveTo(x0, yCarpeta + 4f * u)
+                lineTo(x0, top + inc)
+                for (q in 1..4) lineTo(x0 + (x1 - x0) * q / 5f, top + inc * (1f - 2f * q / 5f) + (azar(s, 60 + j * 5 + q) - 0.5f) * 1.6f * u)
+                lineTo(x1, top - inc)
+                lineTo(x1, yCarpeta + 4f * u)
+                close()
+            }
             drawPath(hoja, a.luz(mezcla(P.PERGAMINO, P.PERG_OSC, 0.15f + 0.6f * azar(s, 30 + j)), k))
-            drawLine(a.frio(0.35f), Offset(x0, top + inc + 0.6f * u), Offset(x1, top - inc + 0.6f * u), 0.6f * u)
+            drawLine(a.frio(0.3f), Offset(x0, top + inc + 0.6f * u), Offset(x1, top - inc + 0.6f * u), 0.5f * u)
+            drawLine(a.frio(0.25f), Offset(x1 - 0.5f * u, top - inc), Offset(x1 - 0.5f * u, yCarpeta), 0.6f * u)
+            // La esquina doblada: el revés más oscuro y la sombra del doblez.
+            if (azar(s, 50 + j) > 0.62f) {
+                val e = minOf(5f * u, (x1 - x0) * 0.3f)
+                val izq = azar(s, 55 + j) > 0.5f
+                val xe = if (izq) x0 else x1; val sx = if (izq) 1f else -1f
+                val ye = if (izq) top + inc else top - inc
+                drawPath(poligonoMedieval(xe, ye + e, xe + sx * e, ye, xe + sx * e * 0.9f, ye + e * 0.9f), a.luz(mezcla(P.PERG_OSC, P.CUERO, 0.25f), k))
+                drawLine(a.frio(0.35f), Offset(xe, ye + e), Offset(xe + sx * e, ye), 0.6f * u)
+            }
         }
+        // La correa que las ciñe por encima de la carpeta y las muerde: los pliegues que se forman a su orilla.
+        val yM = yCarpeta - 4f * u
+        var xm = 3f * u
+        while (xm < w - 2f * u) {
+            drawLine(a.frio(0.3f), Offset(xm, yM), Offset(xm + 0.8f * u, yM - 2.6f * u - 1.6f * u * azar(s, 70 + xm.toInt())), 0.6f * u)
+            xm += 3.4f * u
+        }
+        drawRect(a.frio(0.4f), Offset(0f, yM + 2.6f * u), Size(w, 1f * u))
+        drawRect(a.luz(mezcla(P.CUERO, P.NOGAL_OSC, 0.2f), k), Offset(0f, yM), Size(w, 2.8f * u))
+        drawRect(a.claro(0.3f), Offset(0f, yM), Size(w * 0.6f, 0.6f * u))
         // La carpeta: badana teñida, con su redondez.
         val badana = cuerpo(v, a, k, P.BADANA)
         val hondo = mezcla(badana, a.hondo, 0.35f)

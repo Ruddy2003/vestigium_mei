@@ -52,9 +52,9 @@ internal object PaletaMedieval {
     /** El bronce de la campanilla. */
     val BRONCE = Color(0xFFA7793B)
     /** Los colores de la pintura románica del armario: almagre, ocre, verde y negro, y el blanco de cal de los puntos. */
-    val ALMAGRE = Color(0xFF9A3B26)
-    val OCRE_PINTURA = Color(0xFFC99A45)
-    val VERDE = Color(0xFF4C6B4A)
+    val ALMAGRE = Color(0xFF8E4D3B)
+    val OCRE_PINTURA = Color(0xFFB09564)
+    val VERDE = Color(0xFF5D6B58)
     val NEGRO = Color(0xFF1E1B1C)
     /** El pergamino y su cara amarilla, la tinta y la rúbrica. */
     val PERGAMINO = Color(0xFFEFE3C5)

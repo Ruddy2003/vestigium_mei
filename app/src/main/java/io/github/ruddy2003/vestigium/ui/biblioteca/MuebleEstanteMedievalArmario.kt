@@ -48,11 +48,11 @@ internal object ArmarioEstanteMedieval {
     }
 
     /** Las manchas donde la pintura se ha ido y asoma la madera. */
-    private fun DrawScope.gastado(r: Rect, semilla: Int, cuantas: Int) {
+    private fun DrawScope.gastado(r: Rect, semilla: Int, cuantas: Int, tam: Float = 1f) {
         val u = density
         for (i in 0 until cuantas) {
             val c = Offset(r.left + r.width * azar(semilla, i), r.top + r.height * azar(semilla, 40 + i))
-            val s = (2f + 5f * azar(semilla, 80 + i)) * u
+            val s = (2f + 5f * azar(semilla, 80 + i)) * u * tam
             drawPath(poligonoMedieval(c.x - s, c.y, c.x - s * 0.2f, c.y - s * 0.6f, c.x + s * 0.9f, c.y - s * 0.2f, c.x + s * 0.4f, c.y + s * 0.5f), mezcla(P.NOGAL, P.NOGAL_LUZ, 0.3f).copy(alpha = 0.85f))
         }
     }
@@ -81,8 +81,8 @@ internal object ArmarioEstanteMedieval {
                 drawRect(a.sombra(0.6f), Offset(x - 0.7f * u, r.top), Size(1.6f * u, r.height))
                 drawLine(a.claro(0.16f), Offset(x + 1.4f * u, r.top), Offset(x + 1.4f * u, r.bottom), 0.8f * u)
                 // Las huellas de la azuela.
-                for (g in 0 until 4) {
-                    val gy = r.top + r.height * (0.25f + 0.18f * g + 0.08f * azar(1402 + k, i * 7 + g))
+                for (g in 0 until 2) {
+                    val gy = r.top + r.height * (0.3f + 0.3f * g + 0.08f * azar(1402 + k, i * 7 + g))
                     val gx = x + ancho * (0.15f + 0.5f * azar(1403 + k, i * 7 + g))
                     drawArc(a.sombra(0.18f), 200f, 140f, false, Offset(gx, gy), Size(ancho * 0.4f, 4f * u), style = Stroke(0.8f * u))
                 }
@@ -94,7 +94,6 @@ internal object ArmarioEstanteMedieval {
                 // Los clavos de cabeza que la sujetan al travesaño de atrás.
                 val kc = cerca(Offset(x + ancho / 2, r.top + 16f * u))
                 clavoMedieval(Offset(x + ancho * 0.5f, r.top + 17f * u), 1.5f * u, a.luz(P.HIERRO, kc), a, kc)
-                clavoMedieval(Offset(x + ancho * 0.5f, r.bottom - 7f * u), 1.5f * u, a.luz(P.HIERRO, kc * 0.7f), a, kc)
                 x += ancho; i++
             }
             vetas(r, P.NOGAL_OSC.copy(alpha = if (a.oscuro) 0.4f else 0.5f), 1404 + k, densidad = 0.5f, vertical = true, grosor = 0.8f)
@@ -122,8 +121,9 @@ internal object ArmarioEstanteMedieval {
     /** Una cenefa de rombos encadenados: fondo ocre, rombos de almagre con su filete negro y un punto de cal en cada uno. */
     private fun DrawScope.cenefaRombos(r: Rect, semilla: Int, a: AireMedieval, cerca: (Offset) -> Float) {
         val u = density
-        val paso = 14f * u
-        drawRect(P.OCRE_PINTURA, r.topLeft, r.size)
+        val paso = 11f * u
+        drawRect(mezcla(P.NOGAL, P.NOGAL_LUZ, 0.2f), r.topLeft, r.size)
+        drawRect(P.OCRE_PINTURA.copy(alpha = 0.5f), r.topLeft, r.size)
         val rombos = Path(); val linea = Path()
         var x = r.left - azar(semilla, 1) * paso
         while (x < r.right) {
@@ -132,13 +132,13 @@ internal object ArmarioEstanteMedieval {
             linea.moveTo(c.x - paso / 2, c.y); linea.lineTo(c.x, r.top); linea.lineTo(c.x + paso / 2, c.y); linea.lineTo(c.x, r.bottom); linea.close()
             x += paso
         }
-        drawPath(rombos, P.ALMAGRE)
-        drawPath(linea, P.NEGRO, style = Stroke(0.8f * u))
+        drawPath(rombos, P.ALMAGRE.copy(alpha = 0.55f))
+        drawPath(linea, P.NEGRO.copy(alpha = 0.4f), style = Stroke(0.7f * u))
         x = r.left - azar(semilla, 1) * paso
-        while (x < r.right) { drawCircle(P.CAL, 1f * u, Offset(x + paso / 2, r.center.y)); x += paso }
-        drawLine(P.NEGRO, Offset(r.left, r.top), Offset(r.right, r.top), 0.8f * u)
-        drawLine(P.NEGRO, Offset(r.left, r.bottom), Offset(r.right, r.bottom), 0.8f * u)
-        gastado(r, semilla, (r.width / (40f * u)).toInt().coerceIn(1, 30))
+        while (x < r.right) { drawCircle(P.CAL.copy(alpha = 0.45f), 0.8f * u, Offset(x + paso / 2, r.center.y)); x += paso }
+        drawLine(P.NEGRO.copy(alpha = 0.4f), Offset(r.left, r.top), Offset(r.right, r.top), 0.7f * u)
+        drawLine(P.NEGRO.copy(alpha = 0.4f), Offset(r.left, r.bottom), Offset(r.right, r.bottom), 0.7f * u)
+        gastado(r, semilla, (r.width / (22f * u)).toInt().coerceIn(1, 40), 1.7f)
         velo(r, a, false, cerca)
     }
 
@@ -263,32 +263,35 @@ internal object ArmarioEstanteMedieval {
         val hoja = poligonoMedieval(gozne, y0, fuera, y0 - sobra, fuera, y1 + sobra, gozne, y1)
         val caja = Rect(minOf(gozne, fuera), y0 - sobra, maxOf(gozne, fuera), y1 + sobra)
         drawPath(hoja, P.NOGAL)
-        clipPath(hoja) {
+        // La pintura se recorta con el rectángulo del canto del gozne (más barato que recortar con la forma): en las cuñas del
+        // canto libre, que el borde corta, solo queda la madera.
+        clipRect(caja.left, y0, caja.right, y1) {
             vetas(caja, P.NOGAL_OSC.copy(alpha = 0.5f), if (derecho) 1441 else 1442, densidad = 0.7f, vertical = true, grosor = 0.7f)
-            // La pintura: el campo de almagre, la cenefa verde con sus puntos de cal y los filetes negros.
-            val ancho = caja.width
-            val borde = 4f * u
-            val dentro = if (derecho) caja.left + 2f * u else caja.left - 10f * u
-            drawRect(P.VERDE, Offset(dentro, caja.top + 4f * u), Size(ancho + 8f * u, caja.height - 8f * u))
-            val campo = Rect(dentro + borde + 3f * u, caja.top + borde + 7f * u, dentro + ancho + 8f * u - borde - 3f * u, caja.bottom - borde - 7f * u)
-            drawRect(P.ALMAGRE, campo.topLeft, campo.size)
-            drawRect(P.NEGRO, campo.topLeft, campo.size, style = Stroke(1f * u))
-            var yp = caja.top + 8f * u
-            while (yp < caja.bottom - 6f * u) {
-                drawCircle(P.CAL, 1f * u, Offset(if (derecho) caja.left + 5.5f * u else caja.right - 5.5f * u, yp)); yp += 7f * u
+            // Las juntas de los tablones de la hoja y sus clavos.
+            val tablon = 13f * u
+            var xt = caja.left + tablon * azar(if (derecho) 1445 else 1446, 1)
+            while (xt < caja.right) { drawLine(a.sombra(0.4f), Offset(xt, caja.top), Offset(xt, caja.bottom), 1f * u); xt += tablon }
+            // La pintura vieja: un lavado de almagre que se ha ido en buena parte, el filete del marco junto al gozne y una
+            // hilera de rombos menudos; deja ver la madera.
+            val hacia = if (derecho) 1f else -1f
+            val marco = if (derecho) caja.left + 4f * u else caja.right - 4f * u
+            val campo = Rect(caja.left, caja.top + 8f * u, caja.right, caja.bottom - 8f * u)
+            drawRect(P.ALMAGRE.copy(alpha = 0.32f), campo.topLeft, campo.size)
+            drawLine(P.VERDE.copy(alpha = 0.5f), Offset(marco, caja.top + 6f * u), Offset(marco, caja.bottom - 6f * u), 3f * u)
+            drawLine(P.NEGRO.copy(alpha = 0.35f), Offset(marco + hacia * 2.4f * u, caja.top + 8f * u), Offset(marco + hacia * 2.4f * u, caja.bottom - 8f * u), 0.7f * u)
+            drawLine(P.VERDE.copy(alpha = 0.45f), Offset(caja.left, caja.top + 7f * u), Offset(caja.right, caja.top + 7f * u), 2.4f * u)
+            drawLine(P.VERDE.copy(alpha = 0.45f), Offset(caja.left, caja.bottom - 7f * u), Offset(caja.right, caja.bottom - 7f * u), 2.4f * u)
+            val cx = marco + hacia * 9f * u
+            val rombos = Path()
+            var y = campo.top + 10f * u
+            while (y < campo.bottom - 8f * u) {
+                rombos.addPath(poligonoMedieval(cx - 3f * u, y, cx, y - 4.5f * u, cx + 3f * u, y, cx, y + 4.5f * u))
+                y += 13f * u
             }
-            // Los rombos de ocre a lo alto del campo, cada uno con su punto.
-            val paso = 34f * u
-            var y = campo.top + paso / 2
-            val cx = campo.center.x
-            while (y < campo.bottom - 10f * u) {
-                val rom = poligonoMedieval(cx - 9f * u, y, cx, y - 14f * u, cx + 9f * u, y, cx, y + 14f * u)
-                drawPath(rom, P.OCRE_PINTURA)
-                drawPath(rom, P.NEGRO, style = Stroke(0.9f * u))
-                drawCircle(P.CAL, 1.6f * u, Offset(cx, y))
-                y += paso
-            }
-            gastado(caja, if (derecho) 1443 else 1444, (caja.height / (60f * u)).toInt().coerceIn(2, 30))
+            drawPath(rombos, P.OCRE_PINTURA.copy(alpha = 0.5f))
+            drawPath(rombos, P.NEGRO.copy(alpha = 0.3f), style = Stroke(0.6f * u))
+            gastado(caja, if (derecho) 1443 else 1444, (caja.height / (16f * u)).toInt().coerceIn(4, 90), 2.8f)
+            vetas(caja, P.NOGAL_OSC.copy(alpha = 0.25f), if (derecho) 1447 else 1448, densidad = 0.5f, vertical = true, grosor = 0.6f)
             // La luz: la hoja de la izquierda la recibe mejor de día; de noche, el velo del candil.
             if (!a.oscuro) drawRect(if (derecho) a.frio(0.18f) else a.claro(0.1f), caja.topLeft, caja.size)
             velo(caja, a, true, cerca)
@@ -397,7 +400,8 @@ internal object ArmarioEstanteMedieval {
         }
         // La cenefa: triángulos de almagre hacia abajo y de verde hacia arriba, separados por el zigzag negro y un punto de cal.
         val banda = Rect(r.left, r.top + 3f * u, r.right, r.bottom - 3.4f * u)
-        drawRect(P.OCRE_PINTURA, banda.topLeft, banda.size)
+        drawRect(P.NOGAL, banda.topLeft, banda.size)
+        drawRect(P.OCRE_PINTURA.copy(alpha = 0.55f), banda.topLeft, banda.size)
         val paso = 13f * u
         val rojos = Path(); val verdes = Path(); val zig = Path()
         var x = banda.left
@@ -408,14 +412,14 @@ internal object ArmarioEstanteMedieval {
             zig.lineTo(x + paso / 2, banda.bottom); zig.lineTo(x + paso, banda.top)
             x += paso
         }
-        drawPath(rojos, P.ALMAGRE)
-        drawPath(verdes, P.VERDE)
-        drawPath(zig, P.NEGRO, style = Stroke(1f * u))
+        drawPath(rojos, P.ALMAGRE.copy(alpha = 0.6f))
+        drawPath(verdes, P.VERDE.copy(alpha = 0.55f))
+        drawPath(zig, P.NEGRO.copy(alpha = 0.45f), style = Stroke(0.9f * u))
         x = banda.left
-        while (x < banda.right) { drawCircle(P.CAL, 1.1f * u, Offset(x + paso / 2, banda.top + banda.height * 0.33f)); x += paso }
-        drawLine(P.NEGRO, Offset(banda.left, banda.top), Offset(banda.right, banda.top), 1f * u)
-        drawLine(P.NEGRO, Offset(banda.left, banda.bottom), Offset(banda.right, banda.bottom), 1f * u)
-        gastado(banda, 1452, 14)
+        while (x < banda.right) { drawCircle(P.CAL.copy(alpha = 0.5f), 0.9f * u, Offset(x + paso / 2, banda.top + banda.height * 0.33f)); x += paso }
+        drawLine(P.NEGRO.copy(alpha = 0.45f), Offset(banda.left, banda.top), Offset(banda.right, banda.top), 0.9f * u)
+        drawLine(P.NEGRO.copy(alpha = 0.45f), Offset(banda.left, banda.bottom), Offset(banda.right, banda.bottom), 0.9f * u)
+        gastado(banda, 1452, 24, 1.7f)
         if (!a.oscuro) drawRect(a.claro(0.08f), banda.topLeft, Size(banda.width * 0.5f, banda.height))
         velo(banda, a, false, cerca)
         drawRect(a.claro(0.32f), Offset(r.left, r.top), Size(r.width, 1.3f * u))
@@ -439,18 +443,18 @@ internal object ArmarioEstanteMedieval {
         while (x < r.right) {
             val m = Rect(x + an + 1.5f * u, r.top + 2f * u, x + paso - 1.5f * u, r.bottom - 2f * u)
             if (m.width > 2f) {
-                drawRect(if (i % 2 == 0) P.VERDE else P.OCRE_PINTURA, m.topLeft, m.size)
-                drawRect(P.NEGRO, m.topLeft, m.size, style = Stroke(0.9f * u))
+                drawRect((if (i % 2 == 0) P.VERDE else P.OCRE_PINTURA).copy(alpha = 0.5f), m.topLeft, m.size)
+                drawRect(P.NEGRO.copy(alpha = 0.35f), m.topLeft, m.size, style = Stroke(0.8f * u))
                 val c = m.center; val rr = minOf(m.width, m.height) * 0.3f
-                drawCircle(if (i % 2 == 0) P.OCRE_PINTURA else P.ALMAGRE, rr, c)
+                drawCircle((if (i % 2 == 0) P.OCRE_PINTURA else P.ALMAGRE).copy(alpha = 0.5f), rr, c)
                 for (j in 0 until 6) {
                     val ang = Math.toRadians(60.0 * j)
-                    drawCircle(P.CAL, 0.9f * u, c + Offset((rr * 0.62f * kotlin.math.cos(ang)).toFloat(), (rr * 0.62f * kotlin.math.sin(ang)).toFloat()))
+                    drawCircle(P.CAL.copy(alpha = 0.45f), 0.8f * u, c + Offset((rr * 0.62f * kotlin.math.cos(ang)).toFloat(), (rr * 0.62f * kotlin.math.sin(ang)).toFloat()))
                 }
             }
             x += paso; i++
         }
-        gastado(r, 1461, 10)
+        gastado(r, 1461, 16, 1.5f)
         velo(r, a, false, cerca)
         // La sombra del tablero sobre las metopas.
         drawRect(a.frio(0.45f), r.topLeft, Size(r.width, r.height * 0.3f))

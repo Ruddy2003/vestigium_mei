@@ -11,7 +11,6 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
-import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 import kotlin.math.cos
 import kotlin.math.sin
@@ -80,7 +79,14 @@ internal object MuroEstanteMedieval {
         enlucido(Offset(w * 0.42f, w * 0.03f), w * 0.13f, w * 0.07f, 1340, a, 0.8f * cerca(Offset(w * 0.42f, w * 0.05f)))
         enlucido(Offset(w * 0.04f, w * 0.42f), w * 0.12f, w * 0.08f, 1360, a, 0.8f * cerca(Offset(w * 0.06f, w * 0.42f)))
         // La luz de día, más clara arriba a la izquierda (la ventana y la galería que no se ve).
-        if (!a.oscuro) mancha(Offset(w * 0.1f, w * 0.05f), w * 0.7f, luzMueble(if (a.noche) 0.06f else 0.12f))
+        // La luz de día baja de arriba a la izquierda (la ventana y la galería que no se ve): el muro se enfría hacia abajo, junto
+        // al tablero que vuela, y alrededor de la ventana, que se come la luz.
+        if (!a.oscuro) {
+            drawRect(a.frio(0.1f), Offset(0f, alto - w * 0.07f), Size(w, w * 0.07f))
+            drawRect(a.frio(0.1f), Offset(0f, alto - w * 0.035f), Size(w, w * 0.035f))
+            drawRect(a.frio(0.12f), Offset(0f, alto - w * 0.012f), Size(w, w * 0.012f))
+            drawOval(a.frio(0.08f), Offset(w * (M.VENT_X - 0.17f), w * 0.0f), Size(w * 0.34f, w * 0.42f))
+        }
         // El hollín que el candil ha dejado encima de donde cuelga.
         val hollin = Offset(w * M.LAMP_X, w * (M.LAMP_Y - 0.1f))
         val tizne = mezcla(P.NOGAL_OSC, P.NEGRO, 0.5f)
@@ -107,7 +113,7 @@ internal object MuroEstanteMedieval {
         val p = poligonoMedieval(*pts)
         val sorteo = azar(s, 15)
         val otro = when { sorteo > 0.75f -> P.PIEDRA_CLARA; sorteo > 0.5f -> P.OCRE; sorteo > 0.25f -> P.GRIS; else -> P.PIEDRA_OSC }
-        val tono = mezcla(P.PIEDRA, otro, 0.25f + 0.55f * azar(s, 16))
+        val tono = mezcla(mezcla(P.PIEDRA, otro, 0.3f + 0.6f * azar(s, 16)), P.PIEDRA_OSC, if (azar(s, 19) > 0.7f) 0.25f else 0f)
         // La sombra que deja en el mortero, el canto (lo que sobresale) y la cara.
         drawPath(corridoMedieval(p, 1.4f * u, 1.7f * u), a.frio(if (a.oscuro) 0.3f else 0.26f))
         drawPath(p, a.luz(mezcla(tono, P.FRIO, 0.4f), k))
@@ -118,54 +124,69 @@ internal object MuroEstanteMedieval {
         // El filo de arriba a la izquierda, que mira a la luz.
         drawLine(a.claro(0.38f), Offset(pts[14] - u, pts[15] - u), Offset(pts[0] - u, pts[1] - u), 0.9f * u)
         drawLine(a.claro(0.38f), Offset(pts[0] - u, pts[1] - u), Offset(pts[2] - u, pts[3] - u), 0.9f * u)
-        for (i in 0 until 3) drawCircle(a.frio(0.18f), (0.5f + 0.5f * azar(s, 30 + i)) * u, Offset(r.left + r.width * azar(s, 33 + i), r.top + r.height * azar(s, 36 + i)))
+        if (azar(s, 29) > 0.5f) drawCircle(a.frio(0.18f), (0.5f + 0.5f * azar(s, 30)) * u, Offset(r.left + r.width * azar(s, 33), r.top + r.height * azar(s, 36)))
     }
 
-    /** Un paño de enlucido de cal viejo: borde roto con su grueso en sombra, grietas, manchas y desconchones donde asoma la piedra. */
+    /**
+     * Un paño de enlucido de cal viejo: el borde se deshace (una película más fina que deja ver la piedra, migas de cal sueltas
+     * y el canto con su sombra fina), con grietas, churretes de humedad y desconchones donde la cal se adelgaza y asoma la piedra.
+     */
     private fun DrawScope.enlucido(c: Offset, rx: Float, ry: Float, s: Int, a: AireMedieval, k: Float) {
         val u = density
-        val n = 36
-        val p = Path()
-        for (i in 0 until n) {
-            val ang = 2.0 * Math.PI * i / n
-            val f = (0.82f + 0.22f * azar(s, i)) * (if (azar(s, 100 + i) > 0.8f) 0.72f else 1f)
-            val q = Offset(c.x + (rx * f * cos(ang)).toFloat(), c.y + (ry * f * sin(ang)).toFloat())
-            if (i == 0) p.moveTo(q.x, q.y) else p.lineTo(q.x, q.y)
+        val n = 40
+        fun contorno(escala: Float, semilla: Int) = Path().apply {
+            for (i in 0 until n) {
+                val ang = 2.0 * Math.PI * i / n
+                val f = escala * (0.84f + 0.2f * azar(semilla, i)) * (if (azar(semilla, 100 + i) > 0.82f) 0.8f else 1f)
+                val q = Offset(c.x + (rx * f * cos(ang)).toFloat(), c.y + (ry * f * sin(ang)).toFloat())
+                if (i == 0) moveTo(q.x, q.y) else lineTo(q.x, q.y)
+            }
+            close()
         }
-        p.close()
-        val caja = Rect(c.x - rx * 1.2f, c.y - ry * 1.2f, c.x + rx * 1.2f, c.y + ry * 1.2f)
-        drawPath(corridoMedieval(p, 1.3f * u, 1.6f * u), a.frio(0.32f))
-        drawPath(p, a.luz(mezcla(mezcla(P.CAL, P.MORTERO, 0.5f), P.PIEDRA, 0.26f), k))
+        val cal = a.luz(mezcla(mezcla(P.CAL, P.MORTERO, 0.5f), P.PIEDRA, 0.24f), k)
+        val p = contorno(1f, s)
+        val caja = Rect(c.x - rx * 1.25f, c.y - ry * 1.25f, c.x + rx * 1.25f, c.y + ry * 1.25f)
+        // La película fina de cal alrededor, que ya deja ver la piedra: la transición.
+        drawPath(contorno(1.12f, s + 7), cal.copy(alpha = 0.32f))
+        // El paño, con el canto en sombra fina abajo a la derecha.
+        drawPath(corridoMedieval(p, 0.7f * u, 0.9f * u), a.frio(0.22f))
+        drawPath(p, cal)
         clipPath(p) {
-            pinceladas(caja, a.sombra(1f), s, 16, u, 0.08f)
+            pinceladas(caja, a.sombra(1f), s, 16, u, 0.07f)
             pinceladas(caja, a.claro(1f), s + 1, 8, u, 0.1f)
-            // Más sucio abajo, donde la cal se ha ido comiendo.
-            drawRect(a.sombra(0.08f), Offset(caja.left, c.y), Size(caja.width, caja.height))
-            // La humedad: churretes que bajan.
+            drawRect(a.sombra(0.07f), Offset(caja.left, c.y), Size(caja.width, caja.height))
             for (i in 0 until 3) {
                 val x = caja.left + caja.width * (0.2f + 0.3f * i + 0.1f * azar(s, 200 + i))
                 val largo = caja.height * (0.4f + 0.5f * azar(s, 210 + i))
-                drawPath(poligonoMedieval(x, caja.top, x + 4f * u, caja.top, x + 2.5f * u, caja.top + largo, x + 0.5f * u, caja.top + largo * 0.9f), a.frio(0.08f))
+                drawPath(poligonoMedieval(x, caja.top, x + 4f * u, caja.top, x + 2.5f * u, caja.top + largo, x + 0.5f * u, caja.top + largo * 0.9f), a.frio(0.07f))
             }
-            // Las grietas.
             for (i in 0 until 3) {
                 val g0 = Offset(caja.left + caja.width * azar(s, 220 + i), caja.top + caja.height * azar(s, 230 + i))
                 val g = Path().apply {
                     moveTo(g0.x, g0.y)
                     lineTo(g0.x + 5f * u, g0.y + 3f * u); lineTo(g0.x + 7f * u, g0.y + 9f * u); lineTo(g0.x + 12f * u, g0.y + 11f * u)
                 }
-                drawPath(g, a.sombra(0.32f), style = Stroke(0.7f * u))
+                drawPath(g, a.sombra(0.26f), style = Stroke(0.6f * u))
             }
-            // Los desconchones: la piedra que asoma, con el borde roto en sombra.
-            for (i in 0 until 5) {
-                val d0 = Offset(caja.left + caja.width * (0.15f + 0.7f * azar(s, 240 + i)), caja.top + caja.height * (0.2f + 0.6f * azar(s, 250 + i)))
-                val t = (4f + 6f * azar(s, 260 + i)) * u
-                val hueco = poligonoMedieval(d0.x - t, d0.y, d0.x - t * 0.3f, d0.y - t * 0.6f, d0.x + t * 0.8f, d0.y - t * 0.3f, d0.x + t, d0.y + t * 0.4f, d0.x, d0.y + t * 0.6f)
-                drawPath(hueco, a.luz(mezcla(P.PIEDRA, P.PIEDRA_OSC, 0.3f), k))
-                drawPath(corridoMedieval(hueco, -0.8f * u, -0.8f * u), a.frio(0.22f), style = Stroke(0.9f * u))
+            // Los desconchones: la cal se adelgaza y asoma la piedra, con el labio de cal que toma la luz arriba a la izquierda.
+            for (i in 0 until 4) {
+                val d0 = Offset(caja.left + caja.width * (0.18f + 0.64f * azar(s, 240 + i)), caja.top + caja.height * (0.25f + 0.5f * azar(s, 250 + i)))
+                val t = (3f + 5f * azar(s, 260 + i)) * u
+                val hueco = poligonoMedieval(d0.x - t, d0.y, d0.x - t * 0.3f, d0.y - t * 0.55f, d0.x + t * 0.8f, d0.y - t * 0.3f, d0.x + t, d0.y + t * 0.35f, d0.x, d0.y + t * 0.55f)
+                drawPath(hueco, a.luz(P.PIEDRA, k).copy(alpha = 0.55f))
+                drawLine(a.claro(0.4f), Offset(d0.x - t, d0.y - 0.6f * u), Offset(d0.x - t * 0.3f, d0.y - t * 0.55f - 0.6f * u), 0.7f * u)
+                drawLine(a.frio(0.14f), Offset(d0.x + t, d0.y + t * 0.35f), Offset(d0.x, d0.y + t * 0.55f), 0.7f * u)
             }
         }
-            }
+        // Las migas de cal sueltas en el borde, y algún punto de piedra que asoma dentro.
+        for (i in 0 until 14) {
+            val ang = 2.0 * Math.PI * azar(s, 300 + i)
+            val f = 1f + 0.12f * azar(s, 330 + i)
+            val q = Offset(c.x + (rx * f * cos(ang)).toFloat(), c.y + (ry * f * sin(ang)).toFloat())
+            val t = (0.8f + 1.6f * azar(s, 360 + i)) * u
+            drawPath(poligonoMedieval(q.x - t, q.y, q.x, q.y - t * 0.7f, q.x + t, q.y, q.x, q.y + t * 0.7f), cal.copy(alpha = 0.85f))
+        }
+    }
 
     /** Una mancha de humedad que baja por el muro, fría y deshecha. */
     private fun DrawScope.humedad(arriba: Offset, ancho: Float, largo: Float, s: Int, a: AireMedieval) {
