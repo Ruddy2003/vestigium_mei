@@ -126,7 +126,7 @@ Así lo hicieron las tres de la tanda del 19 nov 2026: Scriptorium (la ventana a
 ## Cómo se revisa
 
 - **Arnés de escritorio** en `herramientas/arnes_muebles/` (ver su `LEEME.md`): dibuja el Ideario y la biblioteca de cualquier tema, en claro y en oscuro, con los archivos reales de la app.
-- **Capturas en Actions** de una biblioteca: superficie `bibliotecas` (la del diario) y, desde el 19 nov 2026, `suenos` (el estante de los Sueños con 14 sueños de ejemplo, que en el arnés sale con volúmenes delgados), con `temas=<los de la tanda>`.
+- **Capturas en Actions** de una biblioteca: superficie `bibliotecas` (la del diario) y, desde el 19 nov 2026, `suenos` (el estante de los Sueños con 14 sueños de ejemplo, que en el arnés sale con volúmenes delgados), con `temas=<los de la tanda>`. El libro del día: superficie `tapa`; la libreta de momentos con su índice: superficie `libreta` (la pestaña Momentos de la biblioteca, con dos días).
 - **La vara son los Idearios rehechos** (noviembre de 2026), no Galia y Art nouveau: un mueble nuevo no puede verse más pobre que ellos.
 - Cada mueble se dibuja, se mira y se corrige al menos tres veces antes de entregarlo, en claro y en oscuro.
 - Se compara al lado del Ideario de Galia y del de Art nouveau, y con el cuadro del tema si lo tiene.

@@ -1964,6 +1964,24 @@ class Capturas {
     @Test fun temaHallImagen() = porTema("hallImagen") { t, o, n -> hallImagen(t, o, true, n) }
     @Test fun temaCampana() = porTema("campana") { t, o, n -> campanas(t, o, n) }
     @Test fun temaLibreta() = porTema("libreta") { t, o, n -> libreta(t, o, n) }
+    /**
+     * El libro del día de cada tema, montado como en la app (lo mismo que `dibujar.sh tapa <tema>` del arnés de los muebles):
+     * vacío, escrito y con una entrada larguísima, cada uno en la escena de la sección «Hoy» de la pestaña Diario (con la
+     * lámpara en oscuro), y el sueño de anoche suelto, a todo el ancho, como en la Biblioteca de sueños.
+     */
+    @Test fun temaTapa() = porTema("tapa") { t, o, n -> captura(t, o, 2800, n) { tapaDelDia(t) } }
+    @Composable
+    private fun tapaDelDia(t: TemaId) {
+        val hoy = io.github.ruddy2003.vestigium.data.Fechas.diaLogico()
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            listOf("", TEXTO, (TEXTO + " ").repeat(90)).forEach { texto ->
+                io.github.ruddy2003.vestigium.ui.Escena(Modifier.fillMaxWidth(), relleno = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp, vertical = 14.dp), luz = true) {
+                    io.github.ruddy2003.vestigium.ui.TapaDiario(hoy, texto, tema = t)
+                }
+            }
+            io.github.ruddy2003.vestigium.ui.TapaDiario(hoy, "Volaba sobre un río y el agua subía hasta el puente.", tema = t, noche = true)
+        }
+    }
     @Test fun temaArchivo() = porTema("archivo") { t, o, n -> archivo(t, o, n) }
     @Test fun temaMueble() = porTema("mueble") { t, o, n -> mueble(t, o, n) }
 

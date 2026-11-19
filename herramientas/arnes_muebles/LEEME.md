@@ -119,6 +119,8 @@ Lo que distingue cada estado (lo que el tema recibe para dibujar):
 - `EstadoPestana`: el número del día, la letra de la semana (L M X J V S D), el color del ánimo medio (o `null`) y una semilla (`fecha.hashCode()`). No hay pestaña «elegida» ni «hoy»: todas son iguales salvo por esos datos.
 - `rotuloMes`: el texto de `Estilo.mesConComun` («ΔΙΟΣ · noviembre de 2026», «otubre · octubre de 2026», «NOV · 2026»).
 
+En Actions, lo mismo sale con las superficies `tapa` (el libro del día: vacío, escrito y larguísimo en la escena de Diario, y el sueño suelto) y `libreta` (la pestaña Momentos de la biblioteca con los dos días de `pocos`) de `capturas.yml`.
+
 Comparado con las capturas de CI del 19 nov 2026 (`libretaA3*_…_biblioteca`, `tapaA2*`), en Helénico, Scriptorium y Espacio, en claro y en oscuro: la libreta coincide (diferencia media de 0.3 a 0.7 sobre 255); la ayuda, el buscador y el índice, de 1.8 a 6.7 (casi todo es la textura del fondo de CI, que aquí no está); la tapa, de 3.3 a 6.7, porque el extracto es texto de Compose y aquí sale de 1 a 3 % más ancho (corta el renglón una palabra antes; ver abajo). Además, la queraía de los números griegos de Helénico («ΙΘʹ») sale con otra letra de respaldo: en el teléfono y en CI la pone la letra del sistema.
 
 En qué difiere de la app:
