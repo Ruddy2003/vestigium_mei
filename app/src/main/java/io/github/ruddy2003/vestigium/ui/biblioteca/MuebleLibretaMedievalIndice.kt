@@ -9,7 +9,12 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.luminance
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.text.font.FontWeight
 import io.github.ruddy2003.vestigium.ui.LetraExtra
 import io.github.ruddy2003.vestigium.ui.ideario.azar
@@ -65,6 +70,28 @@ internal object IndiceLibretaMedieval {
     private fun formas(w: Float, h: Float, u: Float): FormasPestanaMedieval =
         formas?.takeIf { it.w == w && it.h == h } ?: FormasPestanaMedieval(w, h, u).also { formas = it }
 
+    /**
+     * Los números de los días ya medidos (del 1 al 31, con la letra gótica del índice). El medidor de texto de la pantalla guarda
+     * solo 8 medidas y el índice tiene decenas de días: sin esto, cada pestaña volvía a medir su número en cada dibujo. Se
+     * vacía si cambian la densidad o la escala de la letra.
+     */
+    private val numeros = HashMap<String, TextLayoutResult>()
+    private var escalaNumeros = 0f to 0f
+
+    /** El número del día, centrado en [caja]: medido una vez y reutilizado; si no cabe (letra muy grande), lo achica [textoEn]. */
+    private fun DrawScope.numeroDia(medidor: TextMeasurer, dia: String, caja: Rect) {
+        if (escalaNumeros.first != density || escalaNumeros.second != fontScale) { numeros.clear(); escalaNumeros = density to fontScale }
+        val capa = numeros.getOrPut(dia) {
+            medidor.measure(dia, TextStyle(fontFamily = LetraExtra.gotica, fontSize = 19.sp, lineHeight = (19f * 1.05f).sp, textAlign = TextAlign.Center),
+                maxLines = 1, softWrap = false)
+        }
+        if (capa.size.width > caja.width || capa.size.height > caja.height) {
+            textoEn(medidor, dia, caja, LetraExtra.gotica, P.TINTA, 19f, minimo = 10f)
+            return
+        }
+        drawText(capa, color = P.TINTA, topLeft = Offset(caja.center.x - capa.size.width / 2f, caja.center.y - capa.size.height / 2f))
+    }
+
     /** El pergamino de las pestañas y del rótulo: en oscuro se hunde un poco, sin dejar de leerse. */
     private fun pergamino(oscuro: Boolean, sem: Int): Color {
         val base = mezcla(P.PERGAMINO, P.PERG_OSC, 0.12f + 0.2f * azar(sem, 2))
@@ -97,6 +124,8 @@ internal object IndiceLibretaMedieval {
                 val leng = f.lenguetas[(s / 3) % 3]
                 translate1(leng, 0.8f * u, 1f * u) { drawPath(it, sombra.copy(alpha = sombra.alpha * 0.7f)) }
                 drawPath(leng, cuero)
+                // Un cuero muy hondo (en oscuro, los ánimos neutros) lleva su filo claro, para que no se pierda en el fondo.
+                if (cuero.luminance() < 0.06f) drawPath(leng, mezcla(cuero, P.PERGAMINO, 0.42f), style = Stroke(1.1f * u))
                 drawPath(f.costura, (if (cuero.luminance() > 0.4f) P.CUERO else P.BADANA).copy(alpha = 0.7f), style = Stroke(0.7f * u))
                 // Dos tintas fijas (no una por pestaña), para que el medidor de texto reutilice lo ya medido.
                 val letra = if (cuero.luminance() > 0.42f) P.TINTA else P.PERGAMINO
@@ -105,7 +134,7 @@ internal object IndiceLibretaMedieval {
                 // Sin ánimo: sin lengüeta; la letra de la semana, de rúbrica, en la orilla de la hoja.
                 textoEn(medidor, e.semana, f.cajaSemanaSola, P.LETRA, P.RUBRICA.copy(alpha = if (oscuro) 0.85f else 0.9f), 8.5f, peso = FontWeight.Bold)
             }
-            textoEn(medidor, e.dia, f.cajaDia, LetraExtra.gotica, P.TINTA, 19f, minimo = 10f)
+            numeroDia(medidor, e.dia, f.cajaDia)
         }
     }
 

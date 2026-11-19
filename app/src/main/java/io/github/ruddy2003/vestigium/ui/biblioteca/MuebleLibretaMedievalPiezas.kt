@@ -41,12 +41,15 @@ internal object PiezasLibretaMedieval {
         drawRect(a.claro(0.4f), r.topLeft, Size(r.width, 1.2f * u))
         drawRect(a.frio(0.4f), Offset(r.left, r.bottom - 1.4f * u), Size(r.width, 1.4f * u))
         // Las estaquillas: la bolsa a la izquierda del facistol, las velas a la derecha y alguna libre.
+        // La bolsa entre el pilar y el facistol; las velas de repuesto a la derecha del candelero, si hay sitio.
         val izq = (s.pilar.right + s.tablero.left) / 2
-        val der = (s.tablero.right + s.candelero.x) / 2
-        val libres = listOf(s.tablero.left + 14f * u, s.tablero.right - 10f * u)
-        for (x in listOf(izq, der) + libres) if (x < s.candelero.x - 8f * u) estaquilla(Offset(x, s.percha), s, a)
+        val der = (s.candelero.x + s.w) / 2
+        val hayVelas = s.w - s.candelero.x > 52f * u
+        val libres = listOf(s.tablero.left + 14f * u, s.tablero.right - 12f * u)
+        for (x in listOf(izq) + libres) estaquilla(Offset(x, s.percha), s, a)
+        if (hayVelas) estaquilla(Offset(der, s.percha), s, a)
         bolsa(Offset(izq, s.percha + 1f * u), minOf(34f * u, (s.tablero.left - s.pilar.right) * 0.68f), s, a)
-        if (s.candelero.x - s.tablero.right > 34f * u) velas(Offset(der, s.percha + 1f * u), s, a)
+        if (hayVelas) velas(Offset(der, s.percha + 1f * u), s, a)
         for (y in listOf(r.center.y)) clavoMedieval(Offset(s.pilar.right + 7f * u, y), 1.6f * u, a.luz(P.HIERRO, 0.3f), a)
     }
 
@@ -130,8 +133,9 @@ internal object PiezasLibretaMedieval {
     // ---------------------------------------------------------------- el candelero
 
     /**
-     * El candelero de hierro de pie: las tres patas curvas, el vástago con su nudo, el platillo que recoge la cera y la vela
-     * gruesa clavada en su púa, con sus chorreones. De día, la mecha apagada; de noche, la llama, que es la luz de todo.
+     * El candelero de hierro de pie, detrás del facistol: las tres patas curvas, el vástago con sus nudos, el platillo que
+     * recoge la cera y la vela gruesa clavada en su púa, con sus chorreones. De día, la mecha apagada; de noche, la cera se
+     * enciende arriba y el platillo toma la luz (la llama va aparte, encima de todo).
      */
     fun DrawScope.candelero(s: SitioLibretaMedieval, a: AireMedieval) {
         val u = s.u
@@ -139,46 +143,44 @@ internal object PiezasLibretaMedieval {
         val k = cerca(Offset(b.x, s.h * 0.5f), s, a)
         val hierro = a.luz(P.HIERRO, maxOf(k, 0.5f))
         val luz = a.luz(P.HIERRO_LUZ, maxOf(k, 0.5f))
-        val plato = s.h * 0.36f
-        val nudo = s.h * 0.88f
-        contactoMedieval(Offset(b.x + 4f * u, b.y + 1f * u), 40f * u, 6f * u, a, 0.32f)
-        // La sombra en el muro, de día.
-        if (!a.oscuro) drawLine(a.sombra(0.14f), Offset(b.x + 9f * u, plato + 8f * u), Offset(b.x + 16f * u, s.suelo), 2.4f * u)
-        // Las patas.
+        val plato = s.llama.y + 50f * u
+        val nudo = s.h * 0.86f
+        contactoMedieval(Offset(b.x + 4f * u, b.y + 1f * u), 40f * u, 6f * u, a, 0.34f)
+        if (!a.oscuro) drawLine(a.sombra(0.16f), Offset(b.x + 9f * u, plato + 8f * u), Offset(b.x + 18f * u, s.suelo), 2.6f * u)
         val patas = Path()
         for (dx in listOf(-15f, 15f, 4f)) {
             patas.moveTo(b.x, nudo); patas.cubicTo(b.x + dx * 0.3f * u, nudo + 4f * u, b.x + dx * 0.8f * u, b.y - 6f * u, b.x + dx * u, b.y - (if (dx == 4f) -1f else 1f) * u)
         }
-        drawPath(patas, hierro, style = Stroke(2.2f * u, cap = StrokeCap.Round))
-        // El vástago con su nudo.
-        drawLine(hierro, Offset(b.x, nudo), Offset(b.x, plato), 2.6f * u)
+        drawPath(patas, hierro, style = Stroke(2.4f * u, cap = StrokeCap.Round))
+        drawLine(hierro, Offset(b.x, nudo), Offset(b.x, plato), 2.8f * u)
         drawLine(luz, Offset(b.x - 0.8f * u, nudo), Offset(b.x - 0.8f * u, plato), 0.7f * u)
-        for (y in listOf(nudo, s.h * 0.62f)) {
-            drawOval(hierro, Offset(b.x - 4f * u, y - 3f * u), Size(8f * u, 6f * u))
-            drawCircle(luz, 1.2f * u, Offset(b.x - 1.5f * u, y - 1.2f * u))
+        if (a.oscuro) drawLine(a.filo(0.5f), Offset(b.x - 1f * u, plato + 4f * u), Offset(b.x - 1f * u, plato + s.h * 0.2f), 0.8f * u)
+        for (y in listOf(nudo, (nudo + plato) / 2)) {
+            drawOval(hierro, Offset(b.x - 4.5f * u, y - 3.2f * u), Size(9f * u, 6.4f * u))
+            drawCircle(luz, 1.2f * u, Offset(b.x - 1.6f * u, y - 1.3f * u))
         }
-        // El platillo y la vela gruesa con sus chorreones.
-        val cera = a.luz(mezcla(P.BADANA, Color(0xFFF2C46B), 0.2f), maxOf(k, 0.85f))
-        val vela = Rect(b.x - 5f * u, s.llama.y + 3f * u, b.x + 5f * u, plato - 1f * u)
+        // La vela gruesa de cera, tibia, y sus chorreones.
+        val cera = a.luz(mezcla(P.BADANA, Color(0xFFF2C46B), 0.35f), maxOf(k, 0.9f))
+        val vela = Rect(b.x - 5.5f * u, s.llama.y + 3f * u, b.x + 5.5f * u, plato - 1f * u)
         drawRect(cera, vela.topLeft, vela.size)
-        drawRect(Brush.horizontalGradient(listOf(a.claro(0.3f), Color.Transparent, a.frio(0.3f)), vela.left, vela.right), vela.topLeft, vela.size)
+        drawRect(Brush.horizontalGradient(listOf(a.claro(0.3f), Color.Transparent, a.frio(0.32f)), vela.left, vela.right), vela.topLeft, vela.size)
+        if (a.lumbre) drawRect(Brush.verticalGradient(listOf(P.FUEGO.copy(alpha = 0.55f), Color.Transparent), vela.top, vela.top + 14f * u), vela.topLeft, Size(vela.width, 14f * u))
         val chorreones = Path().apply {
-            moveTo(vela.left, vela.top + 2f * u); lineTo(vela.left - 1.2f * u, vela.top + 9f * u); lineTo(vela.left + 0.4f * u, vela.top + 12f * u)
-            moveTo(vela.right - 2f * u, vela.top + 1f * u); lineTo(vela.right - 1.6f * u, vela.top + 16f * u)
+            moveTo(vela.left, vela.top + 2f * u); lineTo(vela.left - 1.2f * u, vela.top + 9f * u); lineTo(vela.left + 0.4f * u, vela.top + 13f * u)
+            moveTo(vela.right - 2f * u, vela.top + 1f * u); lineTo(vela.right - 1.6f * u, vela.top + 17f * u)
         }
         drawPath(chorreones, cera, style = Stroke(1.6f * u, cap = StrokeCap.Round))
-        drawOval(mezcla(cera, P.LLAMA, if (a.lumbre) 0.35f else 0f), Offset(vela.left, vela.top - 1.5f * u), Size(vela.width, 3f * u))
-        drawOval(hierro, Offset(b.x - 11f * u, plato - 3f * u), Size(22f * u, 6f * u))
-        drawArc(luz, 180f, 180f, false, Offset(b.x - 11f * u, plato - 3f * u), Size(22f * u, 6f * u), style = Stroke(0.8f * u))
+        drawOval(mezcla(cera, P.LLAMA, if (a.lumbre) 0.4f else 0f), Offset(vela.left, vela.top - 1.5f * u), Size(vela.width, 3f * u))
+        drawOval(hierro, Offset(b.x - 12f * u, plato - 3f * u), Size(24f * u, 6f * u))
+        drawArc(if (a.lumbre) P.LLAMA.copy(alpha = 0.7f) else luz, 180f, 180f, false, Offset(b.x - 12f * u, plato - 3f * u), Size(24f * u, 6f * u), style = Stroke(0.9f * u))
         drawLine(a.luz(P.NEGRO, 1f), Offset(b.x, vela.top), Offset(b.x + 0.4f * u, vela.top - 3.4f * u), 1f * u)
-        if (a.lumbre) llama(s, a)
     }
 
     /** La llama de la vela y su resplandor, encima de todo, con su propio color. */
-    private fun DrawScope.llama(s: SitioLibretaMedieval, a: AireMedieval) {
+    fun DrawScope.llama(s: SitioLibretaMedieval) {
         val p = s.llama
-        val t = 10f * s.u
-        drawCircle(P.FUEGO.copy(alpha = 0.22f), t * 1.4f, p - Offset(0f, t * 0.5f))
+        val t = 11f * s.u
+        drawCircle(P.FUEGO.copy(alpha = 0.25f), t * 1.4f, p - Offset(0f, t * 0.5f))
         val lengua = Path().apply {
             moveTo(p.x - t * 0.24f, p.y)
             cubicTo(p.x - t * 0.36f, p.y - t * 0.42f, p.x - t * 0.06f, p.y - t * 0.72f, p.x - t * 0.02f, p.y - t * 1.25f)

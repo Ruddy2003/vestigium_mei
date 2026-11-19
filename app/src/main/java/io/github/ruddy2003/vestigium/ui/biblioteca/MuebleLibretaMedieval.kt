@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.biblioteca
 
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -17,7 +18,9 @@ import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.muebles.granoMueble
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
+import kotlin.math.cos
 import kotlin.math.pow
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
@@ -31,19 +34,23 @@ internal class SitioLibretaMedieval(val w: Float, val h: Float, val u: Float, ho
     val pilar = Rect(0f, 0f, (w * 0.12f).coerceIn(38f * u, 52f * u), suelo)
     /** La percha de roble clavada al muro, de lado a lado. */
     val percha = h * 0.17f
-    /** Lo grueso del códice: de 4 dp con un folio a 18 con 240 o más. */
-    val grueso = (4f + 14f * sqrt(hojas.coerceIn(0, 240) / 240f)) * u
-    /** El códice: la tapa (su cara), sobre el listón del facistol. */
-    private val ancho = minOf(140f * u, w * 0.46f)
-    val liston = h * 0.705f
-    val codice = Rect(w * 0.53f - ancho / 2 - grueso * 0.5f, liston - ancho * 1.13f, w * 0.53f + ancho / 2 - grueso * 0.5f, liston)
-    /** El tablero inclinado del facistol, detrás del códice. */
-    val tablero = Rect(codice.left - 11f * u, codice.top - grueso * 0.5f - 9f * u, codice.right + grueso + 12f * u, liston + 3f * u)
+    /** Lo grueso del códice: de 3 dp en blanco a 25 con 240 hojas o más (a ojos vistas entre 2, 30 y 123). */
+    val grueso = (3f + 22f * sqrt(hojas.coerceIn(0, 240) / 240f)) * u
+    /** Hacia dónde se ve lo grueso: el canto de delante, a la derecha, y el de abajo. */
+    val canto = Offset(grueso * 0.62f, grueso * 0.42f)
+    /** Donde descansa el libro: el borde de arriba del reborde del facistol. */
+    val liston = h * 0.72f
+    private val ancho = minOf(132f * u, w * 0.4f)
+    private val cx = w * 0.51f
+    /** El códice: la cara de la tapa; lo grueso sale a la derecha y abajo, hasta el reborde. */
+    val codice = Rect(cx - ancho / 2 - canto.x / 2, liston - canto.y - 1.5f * u - ancho * 1.17f, cx + ancho / 2 - canto.x / 2, liston - canto.y - 1.5f * u)
+    /** El tablero inclinado del facistol, alrededor del códice, con margen a la vista. */
+    val tablero = Rect(codice.left - 9f * u, codice.top - 10f * u, codice.right + canto.x + 10f * u, liston + 2f * u)
     /** El eje del pie torneado. */
-    val eje = codice.center.x + grueso * 0.5f
-    /** El candelero de pie, a la derecha: dónde pisa y dónde arde la vela. */
-    val candelero = Offset(w - (w * 0.1f).coerceIn(34f * u, 46f * u), h * 0.975f)
-    val llama = Offset(candelero.x, h * 0.085f)
+    val eje = tablero.center.x
+    /** El candelero de pie, detrás y a la derecha del facistol: dónde pisa y dónde arde la vela. */
+    val candelero = Offset(minOf(w - 36f * u, tablero.right + 46f * u), h * 0.95f)
+    val llama = Offset(candelero.x, h * 0.2f)
 }
 
 /**
@@ -52,16 +59,18 @@ internal class SitioLibretaMedieval(val w: Float, val h: Float, val u: Float, ho
  * el mismo muro de cal sobre sillarejo, el mismo barro en el suelo, la misma ventana (fuera del cuadro, arriba a la izquierda)
  * y la misma noche.
  *
- * El facistol es de roble: el tablero inclinado con su listón, el faldón y el pie torneado sobre tres patas. El códice va en
- * tablas de roble desnudas con media piel en el lomo, clavada, y su correa con broche; en la tabla, la etiqueta de pergamino
- * con el nombre y la cuenta. Engorda con las hojas: el canto y la cabeza, cada vez más gruesos, más cédulas que asoman por
- * arriba y más registros que cuelgan del listón. Alrededor, con uso: la percha de roble con la bolsa de cuero de llevar el
- * libro y las velas de repuesto colgadas por la mecha; el candelero de hierro de pie con su vela gruesa; en el listón, el plomo
- * de pautar; al pie, los cuadernillos todavía sin coser, atados, y los juncos del suelo.
+ * El facistol es de nogal: el tablero inclinado con su canto y su reborde, el faldón y el pie torneado sobre tres patas. El
+ * códice va en tablas de roble con media piel en el lomo (sus nervios en relieve), dos manecillas de latón y la etiqueta de
+ * pergamino con el nombre y la cuenta. Se lee libro por lo grueso: el bloque de las hojas por el canto de delante y por el de
+ * abajo, que engorda a ojos vistas con las hojas, más cédulas que asoman por arriba y más registros que cuelgan del reborde.
+ * Alrededor, con uso: la percha de roble con la bolsa de cuero de llevar el libro y las velas de repuesto colgadas por la
+ * mecha; detrás, el candelero de hierro de pie con su vela; en el reborde, el plomo de pautar; al pie, los cuadernillos
+ * todavía sin coser, atados, y los juncos del suelo de barro.
  *
- * La luz: de día, la de la ventana, que dibuja su arco en el muro y echa a la derecha las sombras del pilar, del facistol y de
- * lo que cuelga. De noche (modo oscuro) arde la vela del candelero: lo cercano se enciende (el códice, su etiqueta, la percha)
- * y lo lejano se pierde en la noche del tema, y por la ventana entra la luna, fría, en el muro de la izquierda.
+ * La luz: de día, la de la ventana, que dibuja su arco de sol en el muro (con la sombra del pilar, de la percha y de la bolsa
+ * dentro) y en el suelo, y echa a la derecha las sombras; el resto del muro, más frío. De noche (modo oscuro) arde la vela del
+ * candelero: su charco tibio enciende el muro, el canto del libro, la etiqueta y el suelo cercano, y se apaga con la
+ * distancia; la izquierda (el pilar, la bolsa) queda en la luna, fría y honda.
  */
 internal object MuebleLibretaMedieval {
     private val P = PaletaMedieval
@@ -70,7 +79,7 @@ internal object MuebleLibretaMedieval {
     fun cerca(p: Offset, s: SitioLibretaMedieval, a: AireMedieval): Float {
         if (!a.lumbre) return 1f
         val dx = (p.x - s.llama.x) / s.h; val dy = (p.y - s.llama.y) / s.h
-        return (1f - sqrt(dx * dx * 0.8f + dy * dy) / 1.45f).coerceIn(0f, 1f).pow(1.25f)
+        return (1f - sqrt(dx * dx * 0.85f + dy * dy) / 1.2f).coerceIn(0f, 1f).pow(1.2f)
     }
 
     fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) {
@@ -83,11 +92,16 @@ internal object MuebleLibretaMedieval {
             muro(s, a)
             suelo(s, a, e.semilla)
             ventana(s, a)
-            if (a.lumbre) mancha(s.llama, h * 0.95f, P.LLAMA.copy(alpha = 0.16f))
+            if (a.lumbre) {
+                mancha(Offset(s.llama.x, s.h * 0.95f), h * 0.32f, P.LLAMA.copy(alpha = 0.14f))
+            }
             with(PiezasLibretaMedieval) { percha(s, a) }
             pilar(s, a)
+            if (a.oscuro) lunaFria(s)
+            with(PiezasLibretaMedieval) { candelero(s, a) }
             with(FacistolLibretaMedieval) { facistol(s, a, e, medidor) }
-            with(PiezasLibretaMedieval) { alPie(s, a, e.semilla); candelero(s, a) }
+            with(PiezasLibretaMedieval) { alPie(s, a, e.semilla) }
+            with(PiezasLibretaMedieval) { if (a.lumbre) llama(s) }
             granoMueble(Rect(0f, 0f, w, h), oscuro)
         }
     }
@@ -97,54 +111,62 @@ internal object MuebleLibretaMedieval {
      * con la distancia (un solo degradado).
      */
     fun DrawScope.alumbrado(r: Rect, color: Color, s: SitioLibretaMedieval, a: AireMedieval) {
-        drawRect(a.luz(color, if (a.lumbre) 0.02f else 1f), r.topLeft, r.size)
+        val lejos = a.luz(color, if (a.lumbre) 0.02f else 1f)
+        drawRect(lejos, r.topLeft, r.size)
         if (!a.lumbre) return
-        drawRect(Brush.radialGradient(0f to a.luz(color, 0.95f), 0.25f to a.luz(color, 0.62f).copy(alpha = 0.9f), 0.55f to a.luz(color, 0.3f).copy(alpha = 0.5f),
-            1f to Color.Transparent, center = s.llama, radius = s.h * 1.45f), r.topLeft, r.size)
+        // La luz, un degradado de dos colores y solo donde llega (los degradados grandes son lo que más pesa al pintar).
+        val radio = s.h * 1.05f
+        val caja = Rect(maxOf(r.left, s.llama.x - radio), maxOf(r.top, s.llama.y - radio), minOf(r.right, s.llama.x + radio), minOf(r.bottom, s.llama.y + radio))
+        if (caja.width > 0f && caja.height > 0f) drawRect(Brush.radialGradient(listOf(a.luz(color, 0.92f), lejos), center = s.llama, radius = radio), caja.topLeft, caja.size)
+        mancha(s.llama, s.h * 0.3f, a.luz(color, 1f).copy(alpha = 0.6f))
     }
 
     // ---------------------------------------------------------------- el muro, el suelo y la ventana
 
     /**
-     * El muro: cal vieja sobre el sillarejo (las hiladas se adivinan debajo), dos faltas donde asoman las piedras, la humedad
-     * que sube del suelo y, de noche, el hollín de la vela sobre el candelero.
+     * El muro: cal vieja sobre el sillarejo (las hiladas se adivinan debajo), con pinceladas y desgaste, dos faltas donde
+     * asoman las piedras, la humedad que sube del suelo y el hollín de la vela sobre el candelero.
      */
     private fun DrawScope.muro(s: SitioLibretaMedieval, a: AireMedieval) {
         val u = s.u
         val r = Rect(0f, 0f, s.w, s.suelo)
         alumbrado(r, P.CAL, s, a)
-        pinceladas(r, a.luz(P.PIEDRA_OSC, 0.4f), 3101, 26, u, 0.07f)
-        pinceladas(r, a.claro(1f), 3102, 14, u, 0.08f)
+        pinceladas(r, a.luz(P.PIEDRA_OSC, 0.45f), 3101, 34, u, 0.08f)
+        pinceladas(r, a.luz(P.OCRE, 0.5f), 3103, 12, u, 0.07f)
+        pinceladas(r, a.claro(1f), 3102, 16, u, 0.09f)
         // Las hiladas bajo la cal: un relieve leve, la llaga en sombra y su filo de luz.
-        val sombra = a.frio(0.12f); val luz = a.claro(0.3f)
         val llagas = Path(); val filos = Path()
         var y = s.h * 0.06f; var f = 0
         while (y < s.suelo - 4f * u) {
             var x = -s.w * 0.08f * azar(3110, f); var j = 0
             while (x < s.w) {
                 val largo = s.w * (0.08f + 0.1f * azar(3111 + f, j)) + 8f * u
-                if (azar(3112 + f, j) > 0.3f) {
+                if (azar(3112 + f, j) > 0.25f) {
                     val dy = 2f * u * (azar(3113 + f, j) - 0.5f)
                     llagas.moveTo(x, y + dy); llagas.lineTo(x + largo * 0.86f, y + dy + 1f * u * (azar(3114 + f, j) - 0.5f))
-                    filos.moveTo(x, y + dy + 1.2f * u); filos.lineTo(x + largo * 0.86f, y + dy + 1.2f * u)
+                    filos.moveTo(x, y + dy + 1.3f * u); filos.lineTo(x + largo * 0.86f, y + dy + 1.3f * u)
                 }
-                if (azar(3115 + f, j) > 0.5f) { llagas.moveTo(x + largo, y); llagas.lineTo(x + largo + 1f * u, y + s.h * 0.08f * azar(3116 + f, j)) }
+                if (azar(3115 + f, j) > 0.45f) { llagas.moveTo(x + largo, y); llagas.lineTo(x + largo + 1f * u, y + s.h * 0.08f * azar(3116 + f, j)) }
                 x += largo; j++
             }
             y += s.h * (0.085f + 0.03f * azar(3117, f)); f++
         }
-        drawPath(llagas, sombra, style = Stroke(1f * u, cap = StrokeCap.Round))
-        drawPath(filos, luz, style = Stroke(0.7f * u, cap = StrokeCap.Round))
-        falta(Offset((s.pilar.right + s.tablero.left) / 2, s.h * 0.7f), 15f * u, 10f * u, 3120, s, a)
-        falta(Offset(s.w * 0.93f, s.h * 0.55f), 13f * u, 15f * u, 3140, s, a)
-        // La humedad y el roce que suben del suelo.
-        drawRect(Brush.verticalGradient(listOf(Color.Transparent, a.frio(0.22f)), s.suelo - s.h * 0.22f, s.suelo), Offset(0f, s.suelo - s.h * 0.22f), Size(s.w, s.h * 0.22f))
+        drawPath(llagas, a.frio(0.16f), style = Stroke(1.1f * u, cap = StrokeCap.Round))
+        drawPath(filos, a.claro(0.32f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
+        falta(Offset((s.pilar.right + s.tablero.left) / 2, s.h * 0.72f), 15f * u, 10f * u, 3120, s, a)
+        falta(Offset(s.w * 0.94f, s.h * 0.6f), 12f * u, 14f * u, 3140, s, a)
+        // La humedad y el roce que suben del suelo, a manchas.
+        drawRect(Brush.verticalGradient(listOf(Color.Transparent, a.frio(0.26f)), s.suelo - s.h * 0.24f, s.suelo), Offset(0f, s.suelo - s.h * 0.24f), Size(s.w, s.h * 0.24f))
+        for (i in 0 until 5) {
+            val c = Offset(s.w * (0.1f + 0.2f * i + 0.08f * azar(3130, i)), s.suelo - s.h * (0.02f + 0.06f * azar(3131, i)))
+            drawOval(a.frio(0.05f), Offset(c.x - s.w * 0.08f, c.y - s.h * 0.03f), Size(s.w * 0.16f, s.h * 0.06f))
+        }
         // El hollín de la vela, en el muro encima del candelero.
         val tizne = mezcla(P.NOGAL_OSC, P.NEGRO, 0.5f)
         for (i in 0 until 4) {
             val t = i / 3f
-            val c = Offset(s.llama.x + 2f * u * (t - 0.5f), s.llama.y - 6f * u - s.h * 0.1f * t)
-            drawOval(tizne.copy(alpha = 0.09f - 0.04f * t), Offset(c.x - (4f + 8f * t) * u, c.y - (6f + 6f * t) * u), Size((8f + 16f * t) * u, (12f + 12f * t) * u))
+            val c = Offset(s.llama.x + 2f * u * (t - 0.5f), s.llama.y - 8f * u - s.h * 0.11f * t)
+            drawOval(tizne.copy(alpha = 0.06f - 0.03f * t), Offset(c.x - (4f + 9f * t) * u, c.y - (6f + 7f * t) * u), Size((8f + 18f * t) * u, (12f + 14f * t) * u))
         }
     }
 
@@ -160,7 +182,7 @@ internal object MuebleLibretaMedieval {
             for (i in 0 until n) {
                 val ang = i * 6.2832f / n
                 val f = 0.72f + 0.42f * azar(sem, i)
-                val x = c.x + kotlin.math.cos(ang) * rx * f; val y = c.y + kotlin.math.sin(ang) * ry * f
+                val x = c.x + cos(ang) * rx * f; val y = c.y + sin(ang) * ry * f
                 if (i == 0) moveTo(x, y) else lineTo(x, y)
             }
             close()
@@ -181,28 +203,37 @@ internal object MuebleLibretaMedieval {
         drawPath(borde, a.frio(0.25f), style = Stroke(0.7f * u))
     }
 
-    /** El suelo de baldosas de barro, gastadas, con sus juntas, y los juncos que se echan encima. */
+    /**
+     * El suelo de ladrillo de barro, a soga, con sus juntas que fugan, unos ladrillos más tostados que otros, el desgaste del paso
+     * y los juncos que se echan encima; de día, el sol de la ventana en el suelo de la izquierda.
+     */
     private fun DrawScope.suelo(s: SitioLibretaMedieval, a: AireMedieval, sem: Int) {
         val u = s.u
         val r = Rect(0f, s.suelo, s.w, s.h)
         alumbrado(r, P.BARRO, s, a)
-        // Las juntas: hiladas que se acercan, y las llagas que fugan hacia el centro.
-        val juntas = Path()
-        val filas = listOf(0f, 0.28f, 0.6f, 1f)
-        for (f in filas) { val y = r.top + r.height * f; juntas.moveTo(0f, y); juntas.lineTo(s.w, y) }
-        for (i in 0 until 3) {
+        val filas = listOf(0f, 0.22f, 0.47f, 0.74f, 1f)
+        val juntas = Path(); val tostados = Path()
+        for (i in 0 until filas.size - 1) {
             val y0 = r.top + r.height * filas[i]; val y1 = r.top + r.height * filas[i + 1]
-            var x = -s.w * 0.04f * (i + 1); val paso = s.w * (0.11f + 0.025f * i)
+            juntas.moveTo(0f, y0); juntas.lineTo(s.w, y0)
+            val paso = s.w * (0.075f + 0.02f * i)
+            var x = -paso * (if (i % 2 == 0) 0.5f else 0f); var j = 0
             while (x < s.w + paso) {
-                val fuga = (x - s.w * 0.5f) * 0.06f
-                juntas.moveTo(x - fuga * filas[i], y0); juntas.lineTo(x + fuga * (1f - filas[i + 1]), y1)
-                x += paso
+                val fuga0 = (x - s.w * 0.5f) * 0.05f * filas[i]; val fuga1 = (x - s.w * 0.5f) * 0.05f * filas[i + 1]
+                juntas.moveTo(x + fuga0, y0); juntas.lineTo(x + fuga1, y1)
+                if (azar(sem + 3150 + i, j) > 0.62f) tostados.addRect(Rect(x + fuga0 + 1f * u, y0 + 1f * u, x + paso + fuga1 - 1f * u, y1 - 1f * u))
+                x += paso; j++
             }
         }
-        drawPath(juntas, a.sombra(0.3f), style = Stroke(1f * u))
-        pinceladas(r, a.claro(1f), 3160, 10, u, 0.08f)
-        pinceladas(r, a.sombra(1f), 3161, 8, u, 0.08f)
-        // Los juncos secos echados en el suelo.
+        drawPath(tostados, a.sombra(0.14f))
+        drawPath(juntas, a.sombra(0.32f), style = Stroke(1f * u))
+        pinceladas(r, a.claro(1f), 3160, 12, u, 0.09f)
+        pinceladas(r, a.sombra(1f), 3161, 9, u, 0.08f)
+        // El paso: el centro, más gastado y claro.
+        drawOval(a.claro(0.08f), Offset(s.w * 0.25f, r.top + r.height * 0.35f), Size(s.w * 0.5f, r.height * 0.5f))
+        // De día, la luz de la ventana en el suelo, a la izquierda.
+        if (!a.oscuro) drawPath(poligonoMedieval(s.pilar.right + s.w * 0.02f, r.top, s.pilar.right + s.w * 0.2f, r.top, s.pilar.right + s.w * 0.3f, s.h,
+            s.pilar.right + s.w * 0.06f, s.h), P.SOL.copy(alpha = 0.22f))
         val juncos = Path()
         for (i in 0 until 22) {
             val x = s.w * azar(sem + 3170, i); val y = r.top + r.height * (0.15f + 0.8f * azar(sem + 3171, i))
@@ -215,40 +246,43 @@ internal object MuebleLibretaMedieval {
     }
 
     /**
-     * La luz de la ventana en el muro, por encima de todo lo que queda contra él: de día, el arco de sol que dibuja la ventana
-     * (que queda arriba a la izquierda, fuera del cuadro) y el muro que se enfría hacia la derecha; de noche, la luna, fría y
-     * tenue, en el mismo sitio.
+     * La luz de la ventana en el muro, antes de lo que queda contra él (así sus sombras caen dentro): de día, el arco de sol que
+     * dibuja la ventana (arriba a la izquierda, fuera del cuadro), con su borde blando y la raya del parteluz, sobre un muro que
+     * se enfría lejos de él; de noche, la luna, fría y tenue, en el mismo sitio.
      */
     private fun DrawScope.ventana(s: SitioLibretaMedieval, a: AireMedieval) {
         val u = s.u
-        val x0 = s.pilar.right + s.w * 0.04f; val x1 = x0 + s.w * 0.2f
-        val y0 = s.h * 0.05f; val y1 = s.h * 0.62f
+        val x0 = s.pilar.right + s.w * 0.035f; val x1 = x0 + maxOf(s.w * 0.22f, 70f * u)
+        val y0 = s.h * 0.04f; val y1 = s.h * 0.66f
+        if (!a.oscuro) {
+            drawRect(Brush.horizontalGradient(listOf(Color.Transparent, a.frio(0.22f)), x1, s.w), Offset(x1, 0f), Size(s.w - x1, s.suelo))
+        }
         val arco = medioPuntoMedieval(x0, x1, y0, y1)
-        val inclinado = Path().apply { addPath(arco) }
-        val color = if (a.oscuro) P.LUNA else P.SOL
-        val fuerza = if (a.oscuro) 0.12f else 0.5f
-        drawPath(corridoMedieval(inclinado, -3f * u, -2f * u), color.copy(alpha = fuerza * 0.4f))
-        drawPath(inclinado, color.copy(alpha = fuerza))
-        // El parteluz de la ventana deja su raya de sombra en medio.
-        drawLine(a.frio(if (a.oscuro) 0.2f else 0.12f), Offset((x0 + x1) / 2, y0 + (x1 - x0) * 0.3f), Offset((x0 + x1) / 2 + 2f * u, y1), 3f * u)
-        if (!a.oscuro) drawRect(Brush.horizontalGradient(listOf(Color.Transparent, a.frio(0.18f)), s.w * 0.5f, s.w), Offset(s.w * 0.5f, 0f), Size(s.w * 0.5f, s.suelo))
+        val color = if (a.oscuro) P.LUNA else mezcla(P.SOL, P.LLAMA, 0.12f)
+        val fuerza = if (a.oscuro) 0.13f else 0.62f
+        drawPath(corridoMedieval(arco, -4f * u, -3f * u), color.copy(alpha = fuerza * 0.3f))
+        drawPath(arco, color.copy(alpha = fuerza * 0.5f), style = Stroke(5f * u))
+        drawPath(arco, color.copy(alpha = fuerza))
+        drawLine(if (a.oscuro) a.sombra(0.25f) else a.frio(0.16f), Offset((x0 + x1) / 2, y0 + (x1 - x0) * 0.3f), Offset((x0 + x1) / 2 + 2f * u, y1), 3.4f * u)
+    }
+
+    /** De noche, lo que la vela no alcanza queda en la luna: la izquierda, fría y bastante más honda. */
+    private fun DrawScope.lunaFria(s: SitioLibretaMedieval) {
+        drawRect(Brush.horizontalGradient(listOf(P.NOCHE_SUENOS.copy(alpha = 0.5f), Color.Transparent), 0f, s.w * 0.5f), Offset.Zero, Size(s.w * 0.5f, s.h))
     }
 
     // ---------------------------------------------------------------- el pilar
 
     /**
      * El pilar de sillería con su media columna adosada: los sillares del machón, el fuste redondo (la luz de la ventana en su
-     * lado, la sombra fría del otro; de noche, casi perdido), la basa con su toro sobre el plinto, y la sombra que echa en el muro.
+     * lado, la sombra fría del otro), la basa con su toro sobre el plinto, y la sombra que echa en el muro y en el arco de sol.
      */
     private fun DrawScope.pilar(s: SitioLibretaMedieval, a: AireMedieval) {
         val u = s.u
         val p = s.pilar
         val k = cerca(p.center, s, a)
-        // La sombra en el muro, a la derecha (de día, de la ventana; de noche, la de la vela cae hacia la izquierda y no se ve).
-        if (!a.oscuro) drawPath(poligonoMedieval(p.right, 0f, p.right + s.w * 0.06f, 0f, p.right + s.w * 0.1f, s.suelo, p.right, s.suelo), a.sombra(0.16f))
-        val piedra = a.luz(mezcla(P.PIEDRA, P.PIEDRA_CLARA, 0.3f), k)
-        drawRect(piedra, p.topLeft, p.size)
-        // Los sillares del machón, por hiladas regulares.
+        if (!a.oscuro) drawPath(poligonoMedieval(p.right, 0f, p.right + s.w * 0.05f, 0f, p.right + s.w * 0.11f, s.suelo, p.right, s.suelo), a.sombra(0.22f))
+        drawRect(a.luz(mezcla(P.PIEDRA, P.PIEDRA_CLARA, 0.3f), k), p.topLeft, p.size)
         val juntas = Path()
         var y = s.h * 0.04f; var f = 0
         while (y < p.bottom) {
@@ -258,22 +292,20 @@ internal object MuebleLibretaMedieval {
             y += s.h * 0.11f; f++
         }
         drawPath(juntas, a.frio(0.35f), style = Stroke(1f * u))
-        // La media columna: el fuste con su luz y su sombra, y las juntas de los tambores.
+        pinceladas(p, a.frio(1f), 3190, 6, u, 0.08f)
         val fuste = Rect(p.left + p.width * 0.14f, 0f, p.right - p.width * 0.1f, s.suelo - 13f * u)
         drawRect(a.luz(mezcla(P.PIEDRA_CLARA, P.OCRE, 0.2f), k), fuste.topLeft, fuste.size)
-        drawRect(Brush.horizontalGradient(listOf(a.claro(0.3f), Color.Transparent, a.frio(0.35f), a.frio(0.5f)), fuste.left, fuste.right), fuste.topLeft, fuste.size)
+        drawRect(Brush.horizontalGradient(listOf(a.claro(0.34f), Color.Transparent, a.frio(0.38f), a.frio(0.55f)), fuste.left, fuste.right), fuste.topLeft, fuste.size)
         var t = s.h * 0.1f
         while (t < fuste.bottom - 4f * u) {
             drawArc(a.frio(0.3f), 10f, 160f, false, Offset(fuste.left, t - 3f * u), Size(fuste.width, 6f * u), style = Stroke(0.9f * u))
             t += s.h * 0.22f
         }
-        // La basa: el toro, la escocia y el plinto.
         val plinto = Rect(p.left, s.suelo - 6f * u, p.right + 3f * u, s.suelo + 4f * u)
         drawRect(a.luz(P.PIEDRA, k), plinto.topLeft, plinto.size)
         drawRect(a.frio(0.3f), Offset(plinto.left, plinto.bottom - 3f * u), Size(plinto.width, 3f * u))
-        drawRoundRect(a.luz(P.PIEDRA_CLARA, k), Offset(fuste.left - 3f * u, s.suelo - 12f * u), Size(fuste.width + 6f * u, 6.5f * u), androidx.compose.ui.geometry.CornerRadius(3f * u))
+        drawRoundRect(a.luz(P.PIEDRA_CLARA, k), Offset(fuste.left - 3f * u, s.suelo - 12f * u), Size(fuste.width + 6f * u, 6.5f * u), CornerRadius(3f * u))
         drawRect(a.frio(0.25f), Offset(fuste.left - 3f * u, s.suelo - 7f * u), Size(fuste.width + 6f * u, 1.2f * u))
         drawLine(a.claro(0.4f), Offset(fuste.left - 2f * u, s.suelo - 11.4f * u), Offset(fuste.right, s.suelo - 11.4f * u), 0.8f * u)
-        if (a.oscuro) drawRect(a.filo(0.18f * k), Offset(p.right - 2f * u, 0f), Size(2f * u, p.bottom))
     }
 }
