@@ -86,8 +86,8 @@ internal fun DrawScope.muroSeda(a: AireSeda, ch: Float, fondo: Float, suelo: Flo
         drawCircle(cal.copy(alpha = 0.45f), (0.6f + 1.1f * azar(711, k)) * u, o)
     }
     // Los desconchones, chicos: la cal saltó y se ve el adobe con su paja.
-    val sitios = listOf(Offset(w * 0.93f, w * 0.17f) to 0.026f, Offset(w * 0.4f, w * 0.1f) to 0.02f, Offset(w * 0.04f, ch + w * 0.42f) to 0.02f,
-        Offset(w * 0.96f, ch + w * 1.1f) to 0.018f, Offset(w * 0.3f, zoc - w * 0.022f) to 0.024f, Offset(w * 0.62f, w * 0.47f) to 0.016f)
+    val sitios = listOf(Offset(w * 0.37f, w * 0.105f) to 0.022f, Offset(w * 0.04f, ch + w * 0.45f) to 0.016f,
+        Offset(w * 0.96f, ch + w * 1.1f) to 0.015f, Offset(w * 0.3f, zoc - w * 0.02f) to 0.022f)
     sitios.forEachIndexed { i, (o, t) ->
         val seVe = o.y < ch || o.x < x0 || o.x > x1 || o.y > fondo
         if (seVe && o.y < zoc - w * 0.01f) desconchonSeda(o, w * t, 720 + i, a, lejos)
@@ -115,34 +115,47 @@ internal fun DrawScope.brochazosSeda(r: Rect, color: Color, semilla: Int, cuanto
     }
 }
 
-/** Un desconchón chico de la cal: el adobe con paja que asoma, su borde en sombra arriba y la luz en el de abajo. */
+/**
+ * Un desconchón de la cal: la cal se va adelgazando hacia el borde (un cerco donde se transparenta el barro), y donde saltó
+ * asoma el adobe con su paja y sus hoyitos; el canto de la cal deja una sombra fina dentro, del lado de la luz, y alrededor
+ * quedan migas: cal suelta sobre el barro y barro sobre la cal.
+ */
 internal fun DrawScope.desconchonSeda(o: Offset, s: Float, semilla: Int, a: AireSeda, lejos: Float) {
     val u = density
-    val p = Path()
-    // Un borde irregular y blando, más largo que alto (la cal salta en lajas): puntos al azar unidos con curvas.
-    val lados = 11
-    val q = List(lados) { k ->
-        val ang = 6.283f * k / lados
-        val rr = s * (0.62f + 0.5f * azar(semilla, k))
-        Offset(o.x + rr * kotlin.math.cos(ang) * 1.8f, o.y + rr * kotlin.math.sin(ang) * 0.72f)
+    fun contorno(escala: Float, sem: Int): Path {
+        val q = List(10) { k ->
+            val ang = 6.283f * k / 10
+            val rr = s * escala * (0.66f + 0.46f * azar(sem, k))
+            Offset(o.x + rr * kotlin.math.cos(ang) * 1.8f, o.y + rr * kotlin.math.sin(ang) * 0.72f)
+        }
+        return Path().apply { moveTo(q[0].x, q[0].y); suaveSeda(this, q + q[0]); close() }
     }
-    p.moveTo(q[0].x, q[0].y)
-    suaveSeda(p, q + q[0])
-    p.close()
-    drawPath(p, a.luz(mezcla(SedaTinta.ADOBE, SedaTinta.CAL, 0.15f), lejos + 0.05f))
+    // La cal adelgazada alrededor: dos cercos, cada vez más del color del barro.
+    drawPath(contorno(1.7f, semilla + 1), a.luz(mezcla(SedaTinta.CAL, SedaTinta.ADOBE, 0.25f), lejos).copy(alpha = 0.55f))
+    drawPath(contorno(1.3f, semilla + 2), a.luz(mezcla(SedaTinta.CAL, SedaTinta.ADOBE, 0.5f), lejos).copy(alpha = 0.6f))
+    val p = contorno(1f, semilla)
+    drawPath(p, a.luz(SedaTinta.ADOBE, lejos + 0.05f))
     clipPath(p) {
-        // Los hoyitos del adobe y la paja que asoma.
-        for (k in 0 until 4) {
+        for (k in 0 until 3) {
             val q = Offset(o.x + s * 2.2f * (azar(semilla + 7, k) - 0.5f), o.y + s * 1.1f * (azar(semilla + 8, k) - 0.5f))
             drawOval(a.luz(mezcla(SedaTinta.ADOBE, SedaTinta.BARRO, 0.7f), lejos), Offset(q.x - s * 0.12f, q.y - s * 0.08f), Size(s * 0.24f, s * 0.16f))
         }
-        for (k in 0 until 9) {
+        for (k in 0 until 7) {
             val q = Offset(o.x + s * 2.4f * (azar(semilla + 3, k) - 0.5f), o.y + s * 1.4f * (azar(semilla + 4, k) - 0.5f))
             drawLine(a.luz(SedaTinta.PAJA, lejos + 0.1f), q, q + Offset(s * (0.4f + 0.4f * azar(semilla + 5, k)), s * (azar(semilla + 6, k) - 0.5f) * 0.5f), 0.6f * u)
         }
     }
-    drawPath(bordeSeda(p, 0.9f * u, 1.1f * u), a.sombra(0.3f))
-    drawPath(bordeSeda(p, -0.6f * u, -0.7f * u), a.luz(mezcla(SedaTinta.CAL, LUZ_MUEBLE, 0.5f), lejos + 0.2f).copy(alpha = 0.7f))
+    // El canto de la cal: sombra fina dentro arriba y a la izquierda; abajo, la arista que toma la luz.
+    drawPath(bordeSeda(p, 0.7f * u, 0.8f * u), a.sombra(0.32f))
+    drawPath(bordeSeda(p, -0.5f * u, -0.6f * u), a.luz(mezcla(SedaTinta.CAL, LUZ_MUEBLE, 0.5f), lejos + 0.2f).copy(alpha = 0.7f))
+    // Las migas: cal suelta y barro alrededor.
+    for (k in 0 until 6) {
+        val ang = 6.283f * azar(semilla + 11, k)
+        val d = s * (1.1f + 0.9f * azar(semilla + 12, k))
+        val q = Offset(o.x + d * kotlin.math.cos(ang) * 1.8f, o.y + d * kotlin.math.sin(ang) * 0.8f)
+        val r = (0.5f + 0.6f * azar(semilla + 13, k)) * u
+        drawCircle(a.luz(if (k % 2 == 0) SedaTinta.ADOBE else mezcla(SedaTinta.CAL, LUZ_MUEBLE, 0.4f), lejos), r, q)
+    }
 }
 
 /** Una grieta fina que baja zigzagueando, con su labio de luz. */
@@ -208,8 +221,8 @@ internal fun DrawScope.techoSeda(a: AireSeda) {
  */
 internal fun DrawScope.luzRejaSeda(a: AireSeda, apoyo: Float) {
     val w = size.width
-    val incl = if (a.oscuro) 0.2f else if (a.noche) 0.1f else 0.26f
-    val xa = w * 0.02f; val xb = w * (if (a.noche && !a.oscuro) 0.56f else 0.47f)
+    val incl = if (a.oscuro) 0.3f else if (a.noche) 0.14f else 0.38f
+    val xa = w * 0.02f; val xb = w * (if (a.noche && !a.oscuro) 0.6f else 0.53f)
     val ya = w * (if (a.oscuro) (if (a.noche) 0.15f else 0.1f) else if (a.noche) 0.21f else 0.095f)
     val alto = w * (if (a.oscuro) (if (a.noche) 0.4f else 0.3f) else if (a.noche) 0.24f else 0.31f)
     val color = when {
@@ -224,17 +237,21 @@ internal fun DrawScope.luzRejaSeda(a: AireSeda, apoyo: Float) {
     // Los palos: desiguales, a distancias distintas y torcidos (abajo no caen en la misma x que arriba).
     val ancho = xb - xa
     val n = 4
-    val xs = FloatArray(n) { j -> xa + ancho * ((j + 1f) / (n + 1f) + (azar(1301, j) - 0.5f) * 0.13f) }
+    // A distancias claramente distintas: dos palos juntos, un claro ancho, otro palo y el último claro.
+    val donde = floatArrayOf(0.13f, 0.27f, 0.6f, 0.76f)
+    val xs = FloatArray(n) { j -> xa + ancho * (donde[j] + (azar(1301, j) - 0.5f) * 0.03f) }
     val ladeo = FloatArray(n) { j -> (azar(1302, j) - 0.5f) * ancho * 0.09f }
     val grueso = FloatArray(n) { j -> ancho * (0.03f + 0.03f * azar(1303, j)) }
     // Donde cada palo cruza el travesaño se dobla un poco (son palos, no listones).
     val codo = FloatArray(n) { j -> (azar(1304, j) - 0.5f) * ancho * 0.05f }
     // El travesaño, atado a los palos y algo caído hacia la derecha.
-    val tc = 0.43f; val caida = alto * 0.05f; val gt = ancho * 0.038f
+    val tc = 0.4f; val caida = alto * 0.14f; val gt = ancho * 0.034f
     fun yCruce(x: Float) = yArriba(x) + alto * tc + caida * (x - xa) / ancho
-    // Lo que se alumbra: entre palo y palo, arriba y abajo del travesaño (cuadriláteros, sin operaciones entre formas).
-    val luz = Path()
+    // Lo que se alumbra: entre palo y palo, arriba y abajo del travesaño (cuadriláteros, sin operaciones entre formas). Cada
+    // columna en su trazo, para que la mancha se deshaga hacia la derecha.
+    val columnas = List(n + 1) { Path() }
     for (j in 0..n) {
+        val luz = columnas[j]
         val lTop = if (j == 0) xa else xs[j - 1] + grueso[j - 1] / 2
         val lBot = if (j == 0) xa else xs[j - 1] + ladeo[j - 1] + grueso[j - 1] / 2
         val rTop = if (j == n) xb else xs[j] - grueso[j] / 2
@@ -247,10 +264,14 @@ internal fun DrawScope.luzRejaSeda(a: AireSeda, apoyo: Float) {
         // El borde blando: la misma mancha corrida en varias direcciones, cada vez más tenue.
         drawPath(corridoSeda(mancha, -w * 0.014f, -w * 0.01f), color.copy(alpha = color.alpha * 0.1f))
         drawPath(corridoSeda(mancha, w * 0.014f, w * 0.016f), color.copy(alpha = color.alpha * 0.1f))
-        drawPath(corridoSeda(luz, -w * 0.005f, -w * 0.004f), color.copy(alpha = color.alpha * 0.3f))
-        drawPath(corridoSeda(luz, w * 0.005f, w * 0.005f), color.copy(alpha = color.alpha * 0.3f))
-        drawPath(luz, color.copy(alpha = color.alpha * 0.7f))
-        // De día, el corazón de la mancha aún más claro.
-        if (!a.oscuro && !a.noche) drawPath(luz, LUZ_MUEBLE.copy(alpha = 0.22f))
+        columnas.forEachIndexed { j, luz ->
+            val f = 1f - 0.62f * (j / n.toFloat())
+            val blando = w * (0.004f + 0.008f * j / n)
+            drawPath(corridoSeda(luz, -blando, -blando * 0.8f), color.copy(alpha = color.alpha * 0.28f * f))
+            drawPath(corridoSeda(luz, blando, blando), color.copy(alpha = color.alpha * 0.28f * f))
+            drawPath(luz, color.copy(alpha = color.alpha * 0.75f * f))
+            // De día, el corazón de la mancha aún más claro.
+            if (!a.oscuro && !a.noche) drawPath(luz, LUZ_MUEBLE.copy(alpha = 0.22f * f))
+        }
     }
 }

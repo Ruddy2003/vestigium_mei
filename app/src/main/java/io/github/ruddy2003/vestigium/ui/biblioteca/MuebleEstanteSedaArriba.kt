@@ -144,54 +144,112 @@ internal fun DrawScope.llamaSeda(p: Offset, w: Float, a: AireSeda) {
     drawPath(lengua(0.4f, 0f), Color(0xFFFFF6DC))
 }
 
-/** Los pliegues de una tela que cuelga: bandas de sombra y, al lado, el brillo de la seda en la cresta de cada pliegue. */
-private fun DrawScope.plieguesSeda(xa: Float, xb: Float, arriba: (Float) -> Float, abajo: Float, cuantos: Int, abre: Float, a: AireSeda, semilla: Int, brillo: Float) {
-    val u = density
-    val paso = (xb - xa) / cuantos
-    for (j in 0 until cuantos) {
-        val xt = xa + paso * (j + 0.5f) + (azar(semilla, j) - 0.5f) * paso * 0.3f
-        val xbj = xt + (xt - (xa + xb) / 2) * abre + (azar(semilla, j + 9) - 0.5f) * paso * 0.4f
-        val yt = arriba(xt)
-        val g = paso * (0.18f + 0.1f * azar(semilla, j + 20))
-        drawPath(poligonoSeda(xt - g * 0.3f, yt, xt + g * 0.3f, yt, xbj + g, abajo, xbj - g, abajo), a.sombra(0.22f))
-        drawPath(poligonoSeda(xt + g * 0.35f, yt + 2f * u, xt + g * 0.7f, yt + 2f * u, xbj + g * 2.1f, abajo, xbj + g * 1.3f, abajo), Color.White.copy(alpha = brillo))
+/**
+ * Una tela echada sobre la vara, de [xa] a [xb]: cae en pocos pliegues anchos y desiguales (las crestas en [crestas], en
+ * fracciones del ancho), con una punta más larga que la otra ([largoIzq], [largoDer]); con [doblez], el canto de la derecha
+ * se dobla hacia delante en un tramo y enseña el revés. El brillo de la seda sigue cada pliegue.
+ */
+private fun DrawScope.telaSeda(xa: Float, xb: Float, yVara: (Float) -> Float, largoIzq: Float, largoDer: Float, crestas: FloatArray, color: Color,
+                               orla: Color, doblez: Boolean, semilla: Int, a: AireSeda, cerca: Float, frio: Float, corr: Offset, brillo: Float) {
+    val u = density; val w = size.width
+    val an = xb - xa
+    val abreI = an * 0.12f; val abreD = an * 0.2f
+    val ya = yVara(xa); val yb = yVara(xb)
+    val puntaI = Offset(xa - abreI, ya + largoIzq); val puntaD = Offset(xb + abreD, yb + largoDer)
+    // El dobladillo: de la punta derecha a la izquierda, más bajo en cada cresta y más alto en cada valle.
+    val bajo = mutableListOf(puntaD)
+    for (j in crestas.indices.reversed()) {
+        val f = crestas[j]
+        val x = puntaI.x + (puntaD.x - puntaI.x) * f
+        val y = puntaI.y + (puntaD.y - puntaI.y) * f
+        bajo.add(Offset(x, y + an * (0.07f + 0.04f * azar(semilla, j))))
+        if (j > 0) {
+            val fv = (crestas[j] + crestas[j - 1]) / 2
+            bajo.add(Offset(puntaI.x + (puntaD.x - puntaI.x) * fv, puntaI.y + (puntaD.y - puntaI.y) * fv - an * 0.02f))
+        }
     }
+    bajo.add(puntaI)
+    val forma = Path().apply {
+        moveTo(xa, ya - 1.2f * u)
+        lineTo(xb, yb - 1.2f * u)
+        cubicTo(xb + abreD * 0.2f, yb + largoDer * 0.35f, xb + abreD * 0.8f, yb + largoDer * 0.7f, puntaD.x, puntaD.y)
+        suaveSeda(this, bajo)
+        cubicTo(xa - abreI * 0.9f, ya + largoIzq * 0.7f, xa - abreI * 0.2f, ya + largoIzq * 0.35f, xa, ya - 1.2f * u)
+        close()
+    }
+    drawPath(corridoSeda(forma, corr.x, corr.y), a.sombra(if (a.oscuro) 0.3f else 0.16f))
+    val seda = a.luz(color, cerca, frio)
+    val honda = mezcla(seda, a.hondo, 0.3f)
+    drawPath(forma, seda)
+    clipPath(forma) {
+        // La luz de la izquierda y la sombra de la derecha.
+        drawRect(a.claro(0.18f), Offset(xa - abreI, ya), Size(an * 0.3f, largoIzq + an))
+        drawRect(a.sombra(0.14f), Offset(xb - an * 0.15f, yb), Size(an * 0.5f, largoDer + an))
+        // Los valles entre cresta y cresta: estrechos arriba, donde la tela se junta en la vara, y anchos abajo.
+        for (j in 0 until crestas.size - 1) {
+            val fv = (crestas[j] + crestas[j + 1]) / 2
+            val xt = xa + an * (0.12f + 0.76f * fv)
+            val xh = puntaI.x + (puntaD.x - puntaI.x) * fv
+            val yh = puntaI.y + (puntaD.y - puntaI.y) * fv
+            val g = an * (crestas[j + 1] - crestas[j]) * 0.42f
+            drawPath(poligonoSeda(xt - 0.6f * u, yVara(xt) + 2f * u, xt + 0.6f * u, yVara(xt) + 2f * u, xh + g * 0.6f, yh + an * 0.1f, xh - g, yh + an * 0.1f), a.sombra(0.26f))
+            drawPath(poligonoSeda(xt - 0.3f * u, yVara(xt) + 2f * u, xt + 0.3f * u, yVara(xt) + 2f * u, xh + g * 0.2f, yh + an * 0.1f, xh - g * 0.4f, yh + an * 0.1f), a.sombra(0.18f))
+        }
+        // El brillo de la seda, que sigue cada cresta (una línea fina y una más ancha y tenue, combadas como el pliegue).
+        crestas.forEachIndexed { j, f ->
+            val xt = xa + an * (0.1f + 0.8f * f)
+            val xh = puntaI.x + (puntaD.x - puntaI.x) * f
+            val yh = puntaI.y + (puntaD.y - puntaI.y) * f + an * 0.05f
+            val curva = Path().apply {
+                moveTo(xt, yVara(xt) + 3f * u)
+                quadraticTo((xt + xh) / 2 + an * (0.05f + 0.04f * azar(semilla, 30 + j)), (yVara(xt) + yh) / 2, xh, yh)
+            }
+            drawPath(curva, Color.White.copy(alpha = brillo * 0.4f), style = Stroke(4f * u))
+            drawPath(curva, Color.White.copy(alpha = brillo), style = Stroke(1.2f * u, cap = StrokeCap.Round))
+        }
+        // La orla tejida, que sigue el dobladillo un poco más arriba.
+        val dobladillo = Path().apply { moveTo(puntaD.x, puntaD.y); suaveSeda(this, bajo) }
+        drawPath(corridoSeda(dobladillo, 0f, -w * 0.02f), a.luz(orla, cerca, frio).copy(alpha = 0.85f), style = Stroke(w * 0.01f))
+        // La sombra bajo la vara.
+        drawRect(a.sombra(0.3f), Offset(xa - abreI, minOf(ya, yb) - 2f * u), Size(an + abreI + abreD, 4f * u))
+    }
+    // El canto doblado hacia delante en un tramo: se ve el revés, más mate, con su arista a la luz.
+    if (doblez) {
+        val y0 = yb + largoDer * 0.3f; val y1 = yb + largoDer * 0.72f
+        val x0 = xb + abreD * 0.3f; val x1 = xb + abreD * 0.75f
+        val pico = Offset(xb - an * 0.18f, (y0 + y1) / 2 + largoDer * 0.08f)
+        val vuelta = poligonoSeda(x0, y0, pico.x, pico.y, x1, y1)
+        drawPath(corridoSeda(vuelta, -1.4f * u, 1.6f * u), a.sombra(0.3f))
+        drawPath(vuelta, mezcla(seda, if (a.oscuro) a.hondo else Color.White, 0.16f))
+        drawLine(Color.White.copy(alpha = brillo), Offset(x0, y0), pico, 1f * u)
+        drawLine(honda, pico, Offset(x1, y1), 0.8f * u)
+    }
+    // La tela que da la vuelta sobre la vara.
+    drawRoundRect(mezcla(seda, if (a.oscuro) a.hondo else Color.White, 0.12f), Offset(xa, minOf(ya, yb) - 3.4f * u), Size(an, 4.2f * u), CornerRadius(2f * u))
+    // Los flecos del dobladillo.
+    val flecos = Path()
+    for (i in 0 until bajo.size - 1) {
+        val p0 = bajo[i]; val p1 = bajo[i + 1]
+        val tramos = ((p0 - p1).getDistance() / (1.8f * u)).toInt().coerceIn(1, 40)
+        for (k in 0 until tramos) {
+            val q = p0 + (p1 - p0) * (k / tramos.toFloat())
+            flecos.moveTo(q.x, q.y); flecos.lineTo(q.x + 0.4f * u, q.y + 3.4f * u)
+        }
+    }
+    drawPath(flecos, honda, style = Stroke(0.6f * u))
+    if (a.oscuro && cerca > 0.05f && !a.brasa) drawPath(corridoSeda(forma, 0.8f * u, 0f), FILO_MUEBLE.copy(alpha = 0.3f * cerca), style = Stroke(0.8f * u))
 }
 
 /**
  * Las sedas que compra, echadas sobre una vara de álamo colgada del muro por dos estacas: un largo de seda azafrán, que cae
- * en pliegues con su orla y sus flecos, y delante uno bermellón, más corto y con el dobladillo sesgado. Las dos con el brillo
- * de la seda en la cresta de cada pliegue y su sombra en la cal.
+ * en tres pliegues anchos y desiguales con la punta de la izquierda más larga, y delante uno bermellón, más corto, con la
+ * punta de la derecha caída y el canto doblado hacia delante. Las dos con su orla, sus flecos y su sombra en la cal.
  */
 internal fun DrawScope.sedaColgadaSeda(p0: Offset, p1: Offset, w: Float, a: AireSeda, cerca: Float, frio: Float) {
     val u = density
     fun yVara(x: Float) = p0.y + (p1.y - p0.y) * ((x - p0.x) / (p1.x - p0.x))
     val corr = if (a.oscuro && !a.brasa) Offset(-w * 0.014f, w * 0.01f) else Offset(w * 0.016f, w * 0.014f)
-    val brillo = if (a.oscuro) 0.06f + 0.14f * cerca else if (a.noche) 0.16f else 0.24f
-    // Las dos telas: [xa, xb] a lo ancho de la vara, hasta dónde caen y cuánto se sesga el dobladillo.
-    class Tela(val xa: Float, val xb: Float, val largo: Float, val sesgo: Float, val color: Color, val orla: Color, val semilla: Int)
-    val telas = listOf(
-        Tela(p0.x + w * 0.025f, p0.x + w * 0.13f, w * 0.23f, -w * 0.02f, SedaTinta.AZAFRAN, SedaTinta.ANIL, 1201),
-        Tela(p0.x + w * 0.12f, p0.x + w * 0.215f, w * 0.17f, w * 0.07f, SedaTinta.BERMELLON, SedaTinta.AZAFRAN, 1202),
-    )
-    fun forma(t: Tela) = Path().apply {
-        val ya = yVara(t.xa); val yb = yVara(t.xb)
-        // Arriba se junta sobre la vara; abajo se abre (la tela pesa) y el dobladillo ondula con los pliegues.
-        val abre = (t.xb - t.xa) * 0.16f
-        moveTo(t.xa, ya - 1.2f * u)
-        lineTo(t.xb, yb - 1.2f * u)
-        cubicTo(t.xb + abre * 0.2f, yb + t.largo * 0.3f, t.xb + abre * 0.9f, yb + t.largo * 0.7f, t.xb + abre, ya + t.largo - t.sesgo)
-        val n = 5
-        for (j in n - 1 downTo 0) {
-            val x0 = t.xa - abre + (t.xb - t.xa + 2 * abre) * j / n
-            val y = ya + t.largo - t.sesgo * (j / n.toFloat()) + (if (j % 2 == 0) w * 0.006f else 0f)
-            quadraticTo(x0 + (t.xb - t.xa + 2 * abre) / n * 0.5f, y + w * 0.014f, x0, y)
-        }
-        cubicTo(t.xa - abre * 0.9f, ya + t.largo * 0.7f, t.xa - abre * 0.2f, ya + t.largo * 0.3f, t.xa, ya - 1.2f * u)
-        close()
-    }
-    // La sombra de las telas y de la vara en la cal.
-    telas.forEach { t -> drawPath(corridoSeda(forma(t), corr.x, corr.y), a.sombra(if (a.oscuro) 0.3f else 0.16f)) }
+    val brillo = if (a.oscuro) 0.06f + 0.16f * cerca else if (a.noche) 0.2f else 0.3f
     drawLine(a.sombra(0.25f), p0 + corr, p1 + corr, 3f * u)
     // Las estacas y la vara.
     listOf(p0 + Offset(w * 0.012f, 0f), p1 - Offset(w * 0.012f, 0f)).forEach { e ->
@@ -200,36 +258,10 @@ internal fun DrawScope.sedaColgadaSeda(p0: Offset, p1: Offset, w: Float, a: Aire
     }
     drawLine(a.luz(mezcla(SedaTinta.ALAMO, SedaTinta.ALAMO_OSC, 0.25f), cerca, frio), p0, p1, 3.2f * u, StrokeCap.Round)
     drawLine(a.claro(0.4f), p0 - Offset(0f, 1f * u), p1 - Offset(0f, 1f * u), 0.7f * u)
-    telas.forEach { t ->
-        val f = forma(t)
-        val seda = a.luz(t.color, cerca, frio)
-        drawPath(f, seda)
-        clipPath(f) {
-            val abajo = yVara(t.xa) + t.largo + maxOf(0f, -t.sesgo) + w * 0.01f
-            plieguesSeda(t.xa, t.xb, { x -> yVara(x) }, abajo + w * 0.02f, 5, 0.45f, a, t.semilla, brillo)
-            // La orla tejida de abajo y la sombra bajo la vara.
-            val abre = (t.xb - t.xa) * 0.16f
-            val yo = yVara(t.xa) + t.largo - w * 0.028f
-            drawPath(poligonoSeda(t.xa - abre - 2f * u, yo, t.xb + abre + 2f * u, yo - t.sesgo, t.xb + abre + 2f * u, yo - t.sesgo + w * 0.011f, t.xa - abre - 2f * u, yo + w * 0.011f), a.luz(t.orla, cerca, frio).copy(alpha = 0.85f))
-            drawRect(a.sombra(0.3f), Offset(t.xa - 2f * u, yVara(t.xa) - 2f * u), Size(t.xb - t.xa + 4f * u, 4f * u))
-            // El lado de la tela que da a la luz y el que no.
-            drawRect(a.claro(0.2f), Offset(t.xa - (t.xb - t.xa) * 0.2f, yVara(t.xa)), Size((t.xb - t.xa) * 0.3f, t.largo + w * 0.04f))
-            drawRect(a.sombra(0.14f), Offset(t.xb - (t.xb - t.xa) * 0.12f, yVara(t.xb)), Size((t.xb - t.xa) * 0.4f, t.largo + w * 0.04f))
-        }
-        // La tela que da la vuelta sobre la vara.
-        drawRoundRect(mezcla(seda, if (a.oscuro) a.hondo else Color.White, 0.12f), Offset(t.xa, yVara(t.xa) - 3.4f * u), Size(t.xb - t.xa, 4.2f * u), CornerRadius(2f * u))
-        // Los flecos del dobladillo.
-        val flecos = Path()
-        val abreF = (t.xb - t.xa) * 0.16f
-        var x = t.xa - abreF + 2f * u
-        while (x < t.xb + abreF - 1f * u) {
-            val y = yVara(t.xa) + t.largo - t.sesgo * ((x - t.xa + abreF) / (t.xb - t.xa + 2 * abreF)) + w * 0.008f
-            flecos.moveTo(x, y); flecos.lineTo(x + 0.4f * u, y + 3.2f * u)
-            x += 1.8f * u
-        }
-        drawPath(flecos, mezcla(seda, a.hondo, 0.25f), style = Stroke(0.6f * u))
-        if (a.oscuro && cerca > 0.05f && !a.brasa) drawPath(corridoSeda(f, 0.8f * u, 0f), FILO_MUEBLE.copy(alpha = 0.3f * cerca), style = Stroke(0.8f * u))
-    }
+    telaSeda(p0.x + w * 0.02f, p0.x + w * 0.135f, { x -> yVara(x) }, w * 0.25f, w * 0.18f, floatArrayOf(0.1f, 0.42f, 0.86f),
+        SedaTinta.AZAFRAN, SedaTinta.ANIL, false, 1201, a, cerca, frio, corr, brillo)
+    telaSeda(p0.x + w * 0.125f, p0.x + w * 0.215f, { x -> yVara(x) }, w * 0.12f, w * 0.2f, floatArrayOf(0.22f, 0.8f),
+        SedaTinta.BERMELLON, SedaTinta.AZAFRAN, true, 1202, a, cerca, frio, corr, brillo)
 }
 
 /**

@@ -121,9 +121,9 @@ internal fun DrawScope.sueloSeda(a: AireSeda, suelo: Float, cerca: (Offset) -> F
 }
 
 /**
- * La tinaja del vino (Nanai-vandak vende vino, y su pueblo tiene fama de beberlo): un khum de barro, ovoide, metido en la
- * tierra hasta media panza, con sus estrías del torno, el chorreón de vino en el hombro, la tapa de álamo con una piedra y el
- * cazo de calabaza apoyado.
+ * La tinaja del vino (Nanai-vandak vende vino, y su pueblo tiene fama de beberlo): un khum de barro, ovoide, apoyado en la
+ * tierra con el cerco húmedo de lo que se derrama, con sus estrías del torno, el chorreón de vino en el hombro, las dos asas,
+ * la tapa de álamo con su agarradera y el cazo de calabaza apoyado.
  */
 internal fun DrawScope.tinajaSeda(pie: Offset, w: Float, a: AireSeda, cerca: Float, frio: Float) {
     val u = density
@@ -131,6 +131,9 @@ internal fun DrawScope.tinajaSeda(pie: Offset, w: Float, a: AireSeda, cerca: Flo
     val forma = perfilSeda(pie.x, pie.y - s, s, floatArrayOf(0.18f, 0f, 0.2f, 0.04f, 0.3f, 0.1f, 0.42f, 0.28f, 0.44f, 0.5f, 0.38f, 0.75f, 0.28f, 0.9f))
     // La sombra en el muro, a la derecha.
     translate(if (a.oscuro) w * 0.012f else w * 0.035f, -w * 0.01f) { drawPath(forma, a.sombra(if (a.oscuro) 0.4f else 0.22f)) }
+    // Donde pisa: el cerco húmedo del vino que se derrama al sacarlo y la sombra de contacto en la tierra.
+    drawOval(a.luz(mezcla(TIERRA, BARRO, 0.55f), 0.04f, frio).copy(alpha = 0.5f), Offset(pie.x - s * 0.55f, pie.y - s * 0.15f), Size(s * 1.2f, s * 0.12f))
+    contactoSeda(Offset(pie.x + s * 0.06f, pie.y - s * 0.1f), s * 0.8f, s * 0.06f, a, 0.45f)
     drawPath(forma, a.luz(ARCILLA, cerca, frio))
     clipPath(forma) {
         // Las estrías del torno y el chorreón de vino seco.
@@ -147,16 +150,6 @@ internal fun DrawScope.tinajaSeda(pie: Offset, w: Float, a: AireSeda, cerca: Flo
         pinceladas(Rect(pie.x - s * 0.5f, pie.y - s, pie.x + s * 0.5f, pie.y), a.luz(mezcla(ARCILLA, CAL, 0.4f), cerca, frio), 951, 10, u, 0.12f)
     }
     redondoSeda(forma, a, cerca, 1f, fuerza = 1.2f)
-    // La tierra arrimada a la panza: la tinaja está metida en el suelo.
-    val monte = Path().apply {
-        moveTo(pie.x - s * 0.62f, pie.y + 2f * u)
-        cubicTo(pie.x - s * 0.5f, pie.y - s * 0.12f, pie.x - s * 0.2f, pie.y - s * 0.16f, pie.x, pie.y - s * 0.15f)
-        cubicTo(pie.x + s * 0.24f, pie.y - s * 0.16f, pie.x + s * 0.5f, pie.y - s * 0.1f, pie.x + s * 0.64f, pie.y + 2f * u)
-        close()
-    }
-    drawPath(monte, a.luz(mezcla(TIERRA, BARRO, 0.3f), maxOf(cerca, 0.04f), frio))
-    pinceladas(Rect(pie.x - s * 0.6f, pie.y - s * 0.16f, pie.x + s * 0.6f, pie.y), a.luz(mezcla(TIERRA, LUZ_MUEBLE, 0.4f), 0.04f), 952, 8, u, 0.2f)
-    drawPath(bordeSeda(monte, 0f, 1.6f * u), a.claro(0.3f))
     // Las dos asas del hombro, de barro, con su sombra.
     listOf(-1f, 1f).forEach { l ->
         val c0 = Offset(pie.x + l * s * 0.33f, pie.y - s * 0.86f)
@@ -250,6 +243,56 @@ internal fun DrawScope.fieltroSeda(pie: Offset, w: Float, a: AireSeda, cerca: Fl
     drawOval(a.luz(FIELTRO, cerca), cab.topLeft, cab.size, style = Stroke(2.2f * u))
     drawArc(a.luz(ANIL, cerca), 200f, 140f, false, Offset(cab.left + cab.width * 0.18f, cab.top + cab.height * 0.18f), Size(cab.width * 0.64f, cab.height * 0.64f), style = Stroke(1.2f * u))
     drawOval(a.sombra(0.5f), Offset(cab.center.x - cab.width * 0.08f, cab.center.y - cab.height * 0.06f), Size(cab.width * 0.16f, cab.height * 0.12f))
+}
+
+/**
+ * Lo que cuelga de la estaca de la derecha, a media sombra y cortado por el borde: la soga de pelo de camello enrollada en
+ * vueltas flojas, con su cabo suelto, y la calabaza del agua atada por la cintura, con su tapón de madera.
+ */
+internal fun DrawScope.colgadoSeda(estaca: Offset, w: Float, a: AireSeda, cerca: Float, frio: Float) {
+    val u = density
+    val sombraDia = if (a.oscuro) 0f else 0.14f
+    val corr = if (a.oscuro && !a.brasa) Offset(-w * 0.012f, w * 0.008f) else Offset(w * 0.014f, w * 0.012f)
+    val soga = a.luz(Color(0xFF8A6A48), cerca, frio)
+    val sogaOsc = mezcla(soga, a.hondo, 0.35f)
+    // Las vueltas de la soga: óvalos flojos que cuelgan de la estaca, cada uno un poco corrido.
+    val vueltas = listOf(Triple(0.055f, 0.13f, 0.004f), Triple(0.062f, 0.145f, -0.006f), Triple(0.05f, 0.125f, 0.01f), Triple(0.058f, 0.14f, 0.0f))
+    val lazo = Path()
+    vueltas.forEach { (rx, alto, dx) ->
+        val r = Rect(estaca.x - w * rx + w * dx, estaca.y - w * 0.004f, estaca.x + w * rx + w * dx, estaca.y + w * alto)
+        lazo.addOval(r)
+    }
+    drawPath(corridoSeda(lazo, corr.x, corr.y), a.sombra(0.22f), style = Stroke(2.6f * u))
+    drawPath(lazo, sogaOsc, style = Stroke(3f * u))
+    drawPath(lazo, soga, style = Stroke(2f * u))
+    drawPath(corridoSeda(lazo, -0.6f * u, -0.6f * u), a.claro(0.25f), style = Stroke(0.6f * u))
+    // El cabo suelto, que cuelga más abajo, y la atadura en la estaca.
+    val cabo = Path().apply {
+        moveTo(estaca.x - w * 0.01f, estaca.y + w * 0.02f)
+        cubicTo(estaca.x - w * 0.03f, estaca.y + w * 0.1f, estaca.x + w * 0.004f, estaca.y + w * 0.15f, estaca.x - w * 0.016f, estaca.y + w * 0.2f)
+    }
+    drawPath(corridoSeda(cabo, corr.x, corr.y), a.sombra(0.2f), style = Stroke(2.4f * u))
+    drawPath(cabo, soga, style = Stroke(2.4f * u, cap = StrokeCap.Round))
+    drawCircle(sogaOsc, 3.6f * u, estaca + Offset(0f, 1.6f * u))
+    // La calabaza: dos panzas, la de abajo mayor, colgada de un cordel por la cintura.
+    val c = Offset(estaca.x - w * 0.06f, estaca.y + w * 0.105f)
+    val s = w * 0.07f
+    val cal = perfilSeda(c.x, c.y - s, s, floatArrayOf(0.08f, 0f, 0.1f, 0.06f, 0.22f, 0.22f, 0.18f, 0.42f, 0.13f, 0.5f, 0.3f, 0.7f, 0.36f, 0.92f, 0.26f, 1.1f, 0.12f, 1.18f))
+    drawLine(sogaOsc, estaca, Offset(c.x, c.y - s * 0.5f), 1f * u)
+    drawPath(corridoSeda(cal, corr.x, corr.y), a.sombra(0.22f))
+    val piel = a.luz(Color(0xFFC79A52), cerca, frio)
+    drawPath(cal, piel)
+    redondoSeda(cal, a, cerca, -1f, fuerza = 1.1f)
+    clipPath(cal) {
+        // Las vetas de la cáscara seca y una mancha de uso.
+        for (j in 0 until 3) drawLine(a.sombra(0.14f), Offset(c.x - s * 0.1f + j * s * 0.12f, c.y - s * 0.4f), Offset(c.x - s * 0.2f + j * s * 0.2f, c.y + s * 0.15f), 0.6f * u)
+        drawOval(a.luz(Color(0xFF8A6034), cerca, frio).copy(alpha = 0.4f), Offset(c.x + s * 0.02f, c.y - s * 0.05f), Size(s * 0.22f, s * 0.14f))
+    }
+    // El cordel de la cintura y el tapón de madera.
+    drawLine(sogaOsc, Offset(c.x - s * 0.14f, c.y - s * 0.5f), Offset(c.x + s * 0.14f, c.y - s * 0.48f), 1.6f * u)
+    drawRoundRect(a.luz(SedaTinta.ALAMO_OSC, cerca, frio), Offset(c.x - s * 0.06f, c.y - s * 1.08f), Size(s * 0.12f, s * 0.1f), CornerRadius(1f * u))
+    // A media sombra: el rincón de la derecha no lo alcanza el sol.
+    if (sombraDia > 0f) drawPath(cal, a.sombra(sombraDia))
 }
 
 // ---------------------------------------------------------------- en los huecos libres
