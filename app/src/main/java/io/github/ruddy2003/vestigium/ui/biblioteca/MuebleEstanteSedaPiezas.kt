@@ -86,8 +86,24 @@ internal fun DrawScope.sueloSeda(a: AireSeda, suelo: Float, cerca: (Offset) -> F
     val u = density; val w = size.width; val h = size.height
     if (h <= suelo) return
     drawRect(a.luz(TIERRA, 0.04f), Offset(0f, suelo), Size(w, h - suelo))
-    pinceladas(Rect(0f, suelo, w, h), a.luz(mezcla(TIERRA, SOMBRA_MUEBLE, 0.4f), 0.04f), 941, 24, u, 0.12f)
-    pinceladas(Rect(0f, suelo, w, h), a.luz(mezcla(TIERRA, LUZ_MUEBLE, 0.5f), 0.04f), 942, 16, u, 0.12f)
+    val tierra = Rect(0f, suelo, w, h)
+    // Lo apisonado: manchas más hondas y más claras, tendidas (el suelo se ve de canto), y el barro de la humedad.
+    pinceladas(tierra, a.luz(mezcla(TIERRA, SOMBRA_MUEBLE, 0.4f), 0.04f), 941, 30, u, 0.14f)
+    pinceladas(tierra, a.luz(mezcla(TIERRA, LUZ_MUEBLE, 0.5f), 0.04f), 942, 22, u, 0.14f)
+    pinceladas(tierra, a.luz(mezcla(TIERRA, BARRO, 0.5f), 0.04f), 950, 16, u, 0.16f)
+    drawOval(a.luz(mezcla(TIERRA, BARRO, 0.6f), 0.04f).copy(alpha = 0.45f), Offset(w * 0.02f, suelo + (h - suelo) * 0.55f), Size(w * 0.3f, (h - suelo) * 0.3f))
+    // Las grietas finas de la tierra seca.
+    val grietas = Path()
+    for (k in 0 until 7) {
+        var q = Offset(w * azar(951, k), suelo + (h - suelo) * (0.3f + 0.6f * azar(952, k)))
+        grietas.moveTo(q.x, q.y)
+        for (j in 0 until 4) {
+            q += Offset((6f + 8f * azar(953 + j, k)) * u, (azar(957 + j, k) - 0.5f) * 3f * u)
+            grietas.lineTo(q.x, q.y)
+        }
+    }
+    drawPath(grietas, a.sombra(0.3f), style = Stroke(0.6f * u))
+    drawPath(corridoSeda(grietas, 0f, 0.8f * u), a.claro(0.25f), style = Stroke(0.5f * u))
     for (k in 0 until 26) {
         val p = Offset(w * azar(943, k), suelo + (h - suelo) * (0.15f + 0.8f * azar(944, k)))
         val ang = azar(945, k) * 3.14f
@@ -111,7 +127,7 @@ internal fun DrawScope.sueloSeda(a: AireSeda, suelo: Float, cerca: (Offset) -> F
  */
 internal fun DrawScope.tinajaSeda(pie: Offset, w: Float, a: AireSeda, cerca: Float, frio: Float) {
     val u = density
-    val s = w * 0.18f
+    val s = w * 0.24f
     val forma = perfilSeda(pie.x, pie.y - s, s, floatArrayOf(0.18f, 0f, 0.2f, 0.04f, 0.3f, 0.1f, 0.42f, 0.28f, 0.44f, 0.5f, 0.38f, 0.75f, 0.28f, 0.9f))
     // La sombra en el muro, a la derecha.
     translate(if (a.oscuro) w * 0.012f else w * 0.035f, -w * 0.01f) { drawPath(forma, a.sombra(if (a.oscuro) 0.4f else 0.22f)) }
@@ -141,18 +157,27 @@ internal fun DrawScope.tinajaSeda(pie: Offset, w: Float, a: AireSeda, cerca: Flo
     drawPath(monte, a.luz(mezcla(TIERRA, BARRO, 0.3f), maxOf(cerca, 0.04f), frio))
     pinceladas(Rect(pie.x - s * 0.6f, pie.y - s * 0.16f, pie.x + s * 0.6f, pie.y), a.luz(mezcla(TIERRA, LUZ_MUEBLE, 0.4f), 0.04f), 952, 8, u, 0.2f)
     drawPath(bordeSeda(monte, 0f, 1.6f * u), a.claro(0.3f))
-    // La tapa de álamo, la piedra encima y el cazo de calabaza apoyado.
-    val tapa = Rect(pie.x - s * 0.24f, pie.y - s * 1.03f, pie.x + s * 0.24f, pie.y - s * 0.97f)
+    // Las dos asas del hombro, de barro, con su sombra.
+    listOf(-1f, 1f).forEach { l ->
+        val c0 = Offset(pie.x + l * s * 0.33f, pie.y - s * 0.86f)
+        drawArc(a.sombra(0.3f), if (l < 0) 90f else -90f, 180f, false, Offset(c0.x - s * 0.06f + 1.5f * u, c0.y - s * 0.07f + 1.5f * u), Size(s * 0.12f, s * 0.14f), style = Stroke(s * 0.035f))
+        drawArc(a.luz(mezcla(ARCILLA, CAL, 0.1f), cerca, frio), if (l < 0) 90f else -90f, 180f, false, Offset(c0.x - s * 0.06f + l * s * 0.03f, c0.y - s * 0.07f), Size(s * 0.12f, s * 0.14f), style = Stroke(s * 0.035f))
+    }
+    // La tapa: un disco de álamo con su agarradera, un poco ladeada; el cazo de calabaza apoyado en el borde.
+    val tapa = Rect(pie.x - s * 0.25f, pie.y - s * 1.04f, pie.x + s * 0.25f, pie.y - s * 0.97f)
     drawRect(a.sombra(0.3f), Offset(tapa.left + 2f * u, tapa.bottom), Size(tapa.width, 2f * u))
-    drawRoundRect(a.luz(ALAMO, cerca, frio), tapa.topLeft, tapa.size, CornerRadius(1.5f * u))
+    drawRoundRect(a.luz(ALAMO, cerca, frio), tapa.topLeft, tapa.size, CornerRadius(2f * u))
     drawRect(a.claro(0.4f), tapa.topLeft, Size(tapa.width, 1f * u))
-    val piedra = Offset(pie.x - s * 0.06f, tapa.top)
-    drawOval(a.luz(Color(0xFF8C8A84), cerca, frio), Offset(piedra.x - s * 0.08f, piedra.y - s * 0.07f), Size(s * 0.16f, s * 0.08f))
-    drawOval(a.claro(0.4f), Offset(piedra.x - s * 0.06f, piedra.y - s * 0.065f), Size(s * 0.07f, s * 0.025f))
-    val m0 = Offset(pie.x + s * 0.1f, tapa.top + 1f * u); val m1 = Offset(pie.x + s * 0.62f, pie.y - s * 1.16f)
-    drawLine(a.luz(mezcla(PAJA, ALAMO, 0.5f), cerca, frio), m0, m1, 2.2f * u, StrokeCap.Round)
-    drawOval(a.luz(Color(0xFFC79A52), cerca, frio), Offset(m0.x - s * 0.12f, m0.y - s * 0.06f), Size(s * 0.16f, s * 0.09f))
-    drawOval(a.sombra(0.25f), Offset(m0.x - s * 0.1f, m0.y - s * 0.05f), Size(s * 0.11f, s * 0.04f))
+    drawLine(a.sombra(0.25f), Offset(tapa.left + tapa.width * 0.3f, tapa.top), Offset(tapa.left + tapa.width * 0.3f, tapa.bottom), 0.6f * u)
+    drawLine(a.sombra(0.25f), Offset(tapa.left + tapa.width * 0.65f, tapa.top), Offset(tapa.left + tapa.width * 0.65f, tapa.bottom), 0.6f * u)
+    val agarre = Rect(pie.x - s * 0.08f, tapa.top - s * 0.05f, pie.x + s * 0.08f, tapa.top + 1f * u)
+    drawRoundRect(a.luz(mezcla(ALAMO, ALAMO_OSC, 0.3f), cerca, frio), agarre.topLeft, agarre.size, CornerRadius(2f * u))
+    drawRect(a.claro(0.4f), agarre.topLeft, Size(agarre.width, 0.8f * u))
+    val m0 = Offset(pie.x + s * 0.18f, tapa.top + 1f * u); val m1 = Offset(pie.x + s * 0.56f, pie.y - s * 1.12f)
+    drawLine(a.sombra(0.3f), m0 + Offset(1.5f * u, 1.5f * u), m1 + Offset(1.5f * u, 1.5f * u), 2.4f * u, StrokeCap.Round)
+    drawLine(a.luz(mezcla(PAJA, ALAMO, 0.5f), cerca, frio), m0, m1, 2.4f * u, StrokeCap.Round)
+    drawOval(a.luz(Color(0xFFC79A52), cerca, frio), Offset(m0.x - s * 0.1f, m0.y - s * 0.05f), Size(s * 0.15f, s * 0.08f))
+    drawOval(a.sombra(0.25f), Offset(m0.x - s * 0.08f, m0.y - s * 0.04f), Size(s * 0.1f, s * 0.035f))
 }
 
 /**
@@ -207,16 +232,24 @@ internal fun DrawScope.fieltroSeda(pie: Offset, w: Float, a: AireSeda, cerca: Fl
         drawLine(a.sombra(0.2f), Offset(xs + 3f * u, cuerpo.top + 1f * u), Offset(xs + 3f * u, cuerpo.bottom - 1f * u), 1f * u)
     }
     // La cabeza del rollo, vista apenas de lado: la espiral de las vueltas, con las orillas roja y añil.
-    val cab = Rect(cuerpo.left - r * 0.3f, cuerpo.top, cuerpo.left + r * 0.6f, cuerpo.bottom)
+    val cab = Rect(cuerpo.left - r * 0.45f, cuerpo.top - r * 0.04f, cuerpo.left + r * 0.75f, cuerpo.bottom + r * 0.04f)
     drawOval(a.luz(mezcla(gris, SOMBRA_MUEBLE, 0.12f), cerca), cab.topLeft, cab.size)
-    // Las vueltas del fieltro, gruesas y blandas: cada una corrida un poco, con su orilla de color.
-    for (i in 0 until 5) {
-        val f = 1f - i * 0.17f
-        val c = cab.center + Offset(cab.width * 0.04f * i, -cab.height * 0.02f * i)
-        val col = when (i % 3) { 0 -> FIELTRO; 1 -> mezcla(Color(0xFFC9B48E), SOMBRA_MUEBLE, 0.2f); else -> ANIL }
-        drawOval(a.luz(col, cerca).copy(alpha = 0.85f), Offset(c.x - cab.width / 2 * f, c.y - cab.height / 2 * f), Size(cab.width * f, cab.height * f), style = Stroke(1.8f * u))
+    // Las vueltas del fieltro, gruesas y blandas: una espiral ancha que se cierra hacia el hueco del centro; la vuelta de
+    // fuera lleva su orilla de fieltro rojo y la de dentro, la de añil.
+    val espiral = Path()
+    val pasos = 40
+    for (j in 0..pasos) {
+        val t = j / pasos.toFloat()
+        val ang = 4.2f + 6.283f * 2.6f * t
+        val fr = 0.9f - 0.78f * t
+        val q = Offset(cab.center.x + cab.width / 2 * fr * cos(ang), cab.center.y + cab.height / 2 * fr * sin(ang))
+        if (j == 0) espiral.moveTo(q.x, q.y) else espiral.lineTo(q.x, q.y)
     }
-    drawOval(a.sombra(0.4f), Offset(cab.center.x - cab.width * 0.1f, cab.center.y - cab.height * 0.08f), Size(cab.width * 0.2f, cab.height * 0.16f))
+    drawPath(espiral, a.sombra(0.4f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
+    drawPath(corridoSeda(espiral, -0.9f * u, -0.6f * u), a.luz(mezcla(Color(0xFFC9B48E), LUZ_MUEBLE, 0.3f), cerca), style = Stroke(0.8f * u))
+    drawOval(a.luz(FIELTRO, cerca), cab.topLeft, cab.size, style = Stroke(2.2f * u))
+    drawArc(a.luz(ANIL, cerca), 200f, 140f, false, Offset(cab.left + cab.width * 0.18f, cab.top + cab.height * 0.18f), Size(cab.width * 0.64f, cab.height * 0.64f), style = Stroke(1.2f * u))
+    drawOval(a.sombra(0.5f), Offset(cab.center.x - cab.width * 0.08f, cab.center.y - cab.height * 0.06f), Size(cab.width * 0.16f, cab.height * 0.12f))
 }
 
 // ---------------------------------------------------------------- en los huecos libres

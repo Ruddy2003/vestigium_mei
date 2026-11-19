@@ -58,7 +58,7 @@ internal fun DrawScope.muroSeda(a: AireSeda, ch: Float, fondo: Float, suelo: Flo
         pinceladas(z, a.luz(mezcla(SedaTinta.CAL, SedaTinta.ADOBE, 0.5f), lejos), 705 + 11 * i, n(18), u, 0.12f)
         // Los brochazos de la cal: arcos largos, unos más claros y otros más fríos.
         brochazosSeda(z, a.luz(mezcla(SedaTinta.CAL, LUZ_MUEBLE, 0.7f), lejos), 702 + 11 * i, n(26), 0.3f)
-        brochazosSeda(z, a.luz(mezcla(SedaTinta.CAL, SOMBRA_MUEBLE, 0.3f), lejos), 701 + 11 * i, n(20), 0.14f)
+        brochazosSeda(z, a.luz(mezcla(SedaTinta.CAL, SedaTinta.ADOBE, 0.45f), lejos), 701 + 11 * i, n(20), 0.16f)
     }
     // Hacia la derecha la cal se va quedando en penumbra (solo donde se ve: arriba, la jamba derecha y el pie).
     if (!a.oscuro) listOf(Rect(w * 0.55f, 0f, w, ch), Rect(x1, ch, w, fondo), Rect(w * 0.55f, fondo, w, suelo)).forEach { z ->
@@ -68,7 +68,7 @@ internal fun DrawScope.muroSeda(a: AireSeda, ch: Float, fondo: Float, suelo: Flo
         }
     }
     // El zócalo: la mano de barro que protege el pie del muro, con su orilla irregular.
-    val zoc = suelo - w * 0.07f
+    val zoc = suelo - w * 0.1f
     val orilla = Path().apply {
         moveTo(0f, suelo)
         lineTo(0f, zoc)
@@ -86,8 +86,12 @@ internal fun DrawScope.muroSeda(a: AireSeda, ch: Float, fondo: Float, suelo: Flo
         drawCircle(cal.copy(alpha = 0.45f), (0.6f + 1.1f * azar(711, k)) * u, o)
     }
     // Los desconchones, chicos: la cal saltó y se ve el adobe con su paja.
-    val sitios = listOf(Offset(w * 0.52f, w * 0.2f), Offset(w * 0.95f, w * 0.44f), Offset(w * 0.035f, ch + w * 0.55f), Offset(w * 0.965f, ch + w * 1.3f))
-    sitios.forEachIndexed { i, o -> if (o.y < zoc - w * 0.03f) desconchonSeda(o, w * (0.011f + 0.003f * i), 720 + i, a, lejos) }
+    val sitios = listOf(Offset(w * 0.93f, w * 0.17f) to 0.026f, Offset(w * 0.4f, w * 0.1f) to 0.02f, Offset(w * 0.04f, ch + w * 0.42f) to 0.02f,
+        Offset(w * 0.96f, ch + w * 1.1f) to 0.018f, Offset(w * 0.3f, zoc - w * 0.022f) to 0.024f, Offset(w * 0.62f, w * 0.47f) to 0.016f)
+    sitios.forEachIndexed { i, (o, t) ->
+        val seVe = o.y < ch || o.x < x0 || o.x > x1 || o.y > fondo
+        if (seVe && o.y < zoc - w * 0.01f) desconchonSeda(o, w * t, 720 + i, a, lejos)
+    }
     // Grietas finas que bajan del techo y de las esquinas del vano.
     grietaSeda(Offset(w * 0.66f, w * 0.055f), w * 0.12f, 731, a)
     grietaSeda(Offset(x1 + w * 0.025f, ch + 2f * u), w * 0.16f, 732, a)
@@ -115,17 +119,24 @@ internal fun DrawScope.brochazosSeda(r: Rect, color: Color, semilla: Int, cuanto
 internal fun DrawScope.desconchonSeda(o: Offset, s: Float, semilla: Int, a: AireSeda, lejos: Float) {
     val u = density
     val p = Path()
+    // Un borde irregular y blando, más largo que alto (la cal salta en lajas): puntos al azar unidos con curvas.
     val lados = 11
-    for (k in 0 until lados) {
+    val q = List(lados) { k ->
         val ang = 6.283f * k / lados
-        val rr = s * (0.55f + 0.6f * azar(semilla, k))
-        val q = Offset(o.x + rr * kotlin.math.cos(ang) * 1.5f, o.y + rr * kotlin.math.sin(ang) * 0.8f)
-        if (k == 0) p.moveTo(q.x, q.y) else p.lineTo(q.x, q.y)
+        val rr = s * (0.62f + 0.5f * azar(semilla, k))
+        Offset(o.x + rr * kotlin.math.cos(ang) * 1.8f, o.y + rr * kotlin.math.sin(ang) * 0.72f)
     }
+    p.moveTo(q[0].x, q[0].y)
+    suaveSeda(p, q + q[0])
     p.close()
     drawPath(p, a.luz(mezcla(SedaTinta.ADOBE, SedaTinta.CAL, 0.15f), lejos + 0.05f))
     clipPath(p) {
-        for (k in 0 until 6) {
+        // Los hoyitos del adobe y la paja que asoma.
+        for (k in 0 until 4) {
+            val q = Offset(o.x + s * 2.2f * (azar(semilla + 7, k) - 0.5f), o.y + s * 1.1f * (azar(semilla + 8, k) - 0.5f))
+            drawOval(a.luz(mezcla(SedaTinta.ADOBE, SedaTinta.BARRO, 0.7f), lejos), Offset(q.x - s * 0.12f, q.y - s * 0.08f), Size(s * 0.24f, s * 0.16f))
+        }
+        for (k in 0 until 9) {
             val q = Offset(o.x + s * 2.4f * (azar(semilla + 3, k) - 0.5f), o.y + s * 1.4f * (azar(semilla + 4, k) - 0.5f))
             drawLine(a.luz(SedaTinta.PAJA, lejos + 0.1f), q, q + Offset(s * (0.4f + 0.4f * azar(semilla + 5, k)), s * (azar(semilla + 6, k) - 0.5f) * 0.5f), 0.6f * u)
         }
@@ -189,19 +200,20 @@ internal fun DrawScope.techoSeda(a: AireSeda) {
 // ---------------------------------------------------------------- la luz de la reja
 
 /**
- * La mancha que deja en la cal la reja de palos de la ventana que queda a la izquierda, fuera del cuadro: un paralelogramo
- * con los cantos verticales (los de la ventana) y los de arriba y abajo inclinados, cruzado por la sombra de cuatro palos
- * y de un travesaño. De día es el sol, tibio y fuerte; en los Sueños en claro, el sol bajo del atardecer, más largo y
- * anaranjado; de noche, la luna, fría.
+ * La mancha que deja en la cal la reja de la ventana que queda a la izquierda, fuera del cuadro: un paralelogramo sesgado (los
+ * cantos verticales son los de la ventana; los de arriba y abajo, inclinados) con el borde blando, cruzado por la sombra de
+ * cinco palos de álamo desiguales, torcidos y a distancias distintas, y de un travesaño atado a ellos con cuerda. De día es el
+ * sol, tibio y fuerte; en los Sueños en claro, el sol bajo del atardecer, más largo y anaranjado; de noche, la luna, fría; en
+ * los Sueños de noche, la luna manda y baja hasta el canto del vasar.
  */
 internal fun DrawScope.luzRejaSeda(a: AireSeda, apoyo: Float) {
     val w = size.width
     val incl = if (a.oscuro) 0.2f else if (a.noche) 0.1f else 0.26f
     val xa = w * 0.02f; val xb = w * (if (a.noche && !a.oscuro) 0.56f else 0.47f)
-    val ya = w * (if (a.oscuro) (if (a.noche) 0.13f else 0.1f) else if (a.noche) 0.21f else 0.095f)
-    val alto = w * (if (a.oscuro) (if (a.noche) 0.36f else 0.3f) else if (a.noche) 0.24f else 0.31f)
+    val ya = w * (if (a.oscuro) (if (a.noche) 0.15f else 0.1f) else if (a.noche) 0.21f else 0.095f)
+    val alto = w * (if (a.oscuro) (if (a.noche) 0.4f else 0.3f) else if (a.noche) 0.24f else 0.31f)
     val color = when {
-        a.oscuro -> SedaTinta.LUNA.copy(alpha = if (a.noche) 0.26f else 0.18f)
+        a.oscuro -> SedaTinta.LUNA.copy(alpha = if (a.noche) 0.3f else 0.18f)
         a.noche -> SedaTinta.OCASO.copy(alpha = 0.5f)
         else -> SedaTinta.SOL.copy(alpha = 0.78f)
     }
@@ -209,25 +221,36 @@ internal fun DrawScope.luzRejaSeda(a: AireSeda, apoyo: Float) {
     val mancha = Path().apply {
         moveTo(xa, yArriba(xa)); lineTo(xb, yArriba(xb)); lineTo(xb, yArriba(xb) + alto); lineTo(xa, yArriba(xa) + alto); close()
     }
-    // Los palos de la reja y el travesaño dejan su sombra dentro de la mancha: lo que se alumbra son diez cuarterones,
-    // cada uno un paralelogramo (sin operaciones entre formas, que pesan).
-    val ancho = (xb - xa)
-    val medioPalo = ancho * 0.02f
-    val yt = alto * 0.4f; val gt = ancho * 0.045f
-    val luz2 = Path()
-    for (j in 0 until 5) {
-        val xl = xa + ancho * j / 5f + (if (j > 0) medioPalo else 0f)
-        val xr = xa + ancho * (j + 1) / 5f - (if (j < 4) medioPalo else 0f)
-        for ((y0, y1) in listOf(0f to yt, yt + gt to alto)) {
-            luz2.moveTo(xl, yArriba(xl) + y0); luz2.lineTo(xr, yArriba(xr) + y0); luz2.lineTo(xr, yArriba(xr) + y1); luz2.lineTo(xl, yArriba(xl) + y1); luz2.close()
-        }
+    // Los palos: desiguales, a distancias distintas y torcidos (abajo no caen en la misma x que arriba).
+    val ancho = xb - xa
+    val n = 4
+    val xs = FloatArray(n) { j -> xa + ancho * ((j + 1f) / (n + 1f) + (azar(1301, j) - 0.5f) * 0.13f) }
+    val ladeo = FloatArray(n) { j -> (azar(1302, j) - 0.5f) * ancho * 0.09f }
+    val grueso = FloatArray(n) { j -> ancho * (0.03f + 0.03f * azar(1303, j)) }
+    // Donde cada palo cruza el travesaño se dobla un poco (son palos, no listones).
+    val codo = FloatArray(n) { j -> (azar(1304, j) - 0.5f) * ancho * 0.05f }
+    // El travesaño, atado a los palos y algo caído hacia la derecha.
+    val tc = 0.43f; val caida = alto * 0.05f; val gt = ancho * 0.038f
+    fun yCruce(x: Float) = yArriba(x) + alto * tc + caida * (x - xa) / ancho
+    // Lo que se alumbra: entre palo y palo, arriba y abajo del travesaño (cuadriláteros, sin operaciones entre formas).
+    val luz = Path()
+    for (j in 0..n) {
+        val lTop = if (j == 0) xa else xs[j - 1] + grueso[j - 1] / 2
+        val lBot = if (j == 0) xa else xs[j - 1] + ladeo[j - 1] + grueso[j - 1] / 2
+        val rTop = if (j == n) xb else xs[j] - grueso[j] / 2
+        val rBot = if (j == n) xb else xs[j] + ladeo[j] - grueso[j] / 2
+        val lC = lTop + (lBot - lTop) * tc + (if (j == 0) 0f else codo[j - 1]); val rC = rTop + (rBot - rTop) * tc + (if (j == n) 0f else codo[j])
+        luz.moveTo(lTop, yArriba(lTop)); luz.lineTo(rTop, yArriba(rTop)); luz.lineTo(rC, yCruce(rC) - gt / 2); luz.lineTo(lC, yCruce(lC) - gt / 2); luz.close()
+        luz.moveTo(lC, yCruce(lC) + gt / 2); luz.lineTo(rC, yCruce(rC) + gt / 2); luz.lineTo(rBot, yArriba(rBot) + alto); luz.lineTo(lBot, yArriba(lBot) + alto); luz.close()
     }
     clipRect(0f, w * 0.055f, w, apoyo + w * 0.07f) {
-        // La penumbra: la misma mancha, un poco más grande y más tenue.
-        drawPath(corridoSeda(mancha, -w * 0.006f, -w * 0.005f), color.copy(alpha = color.alpha * 0.22f))
-        drawPath(corridoSeda(mancha, w * 0.006f, w * 0.007f), color.copy(alpha = color.alpha * 0.22f))
-        drawPath(luz2, color)
+        // El borde blando: la misma mancha corrida en varias direcciones, cada vez más tenue.
+        drawPath(corridoSeda(mancha, -w * 0.014f, -w * 0.01f), color.copy(alpha = color.alpha * 0.1f))
+        drawPath(corridoSeda(mancha, w * 0.014f, w * 0.016f), color.copy(alpha = color.alpha * 0.1f))
+        drawPath(corridoSeda(luz, -w * 0.005f, -w * 0.004f), color.copy(alpha = color.alpha * 0.3f))
+        drawPath(corridoSeda(luz, w * 0.005f, w * 0.005f), color.copy(alpha = color.alpha * 0.3f))
+        drawPath(luz, color.copy(alpha = color.alpha * 0.7f))
         // De día, el corazón de la mancha aún más claro.
-        if (!a.oscuro && !a.noche) drawPath(luz2, LUZ_MUEBLE.copy(alpha = 0.25f))
+        if (!a.oscuro && !a.noche) drawPath(luz, LUZ_MUEBLE.copy(alpha = 0.22f))
     }
 }

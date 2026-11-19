@@ -35,6 +35,7 @@ import io.github.ruddy2003.vestigium.ui.biblioteca.SedaTinta.FIELTRO
 import io.github.ruddy2003.vestigium.ui.biblioteca.SedaTinta.HUESO
 import io.github.ruddy2003.vestigium.ui.biblioteca.SedaTinta.PAJA
 import io.github.ruddy2003.vestigium.ui.biblioteca.SedaTinta.PAPEL
+import io.github.ruddy2003.vestigium.ui.biblioteca.SedaTinta.PAPEL_VIEJO
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.muebles.FILO_MUEBLE
@@ -52,9 +53,10 @@ internal fun DrawScope.volumenSeda(v: Volumen, medidor: TextMeasurer, oscuro: Bo
     val a = AireSeda(oscuro, v.noche)
     val fx = MuebleEstanteSeda.LADO + v.centro * (1f - 2 * MuebleEstanteSeda.LADO)
     val pos = v.repisa + 0.55f
-    val k = if (a.lumbre) cercaCuerpoSeda(pos, v.repisas, fx) else 1f
+    val k = if (a.lumbre) cercaCuerpoSeda(pos, v.repisas, fx, a.brasa) else 1f
     val f = if (a.oscuro) frioCuerpoSeda(pos, v.repisas, fx) else 0f
-    val hacia = if (a.lumbre) (if (MuebleEstanteSeda.LAMP_X >= fx) 1f else -1f) else -1f
+    // De dónde viene la luz cálida: la lámpara (a la derecha) o, en los Sueños de noche, el brasero (a la izquierda).
+    val hacia = if (a.brasa) -1f else if (a.lumbre) (if (MuebleEstanteSeda.LAMP_X >= fx) 1f else -1f) else -1f
     when (MuebleEstanteSeda.clase(v.semilla)) {
         0 -> rolloSeda(v, medidor, a, k, f, hacia)
         1 -> fajoSeda(v, medidor, a, k, f, hacia)
@@ -96,17 +98,27 @@ private object TelasSeda {
     }
     private fun rehacer(u: Float) {
         densidad = u
-        val l1 = (12f * u).roundToInt().coerceAtLeast(4)
+        val l1 = (15f * u).roundToInt().coerceAtLeast(4)
         seda = baldosa(l1) { l ->
-            val claro = Color.White.copy(alpha = 0.2f); val hondo = Color(0xFF1A1426).copy(alpha = 0.24f)
-            val g = (0.5f * u).coerceAtLeast(0.6f)
-            for (c in listOf(-l, -l / 2, 0f, l / 2, l)) {
-                drawLine(claro, Offset(c, 0f), Offset(c + l, l), g)
-                drawLine(hondo, Offset(c + l, 0f), Offset(c, l), g)
+            // Medallones de perlas al tresbolillo (el labrado de las sedas de Sogdiana): un anillo de perlas claras, dentro una
+            // flor de cuatro pétalos en hondo, y entre medallón y medallón una estrellita.
+            val claro = Color.White.copy(alpha = 0.26f); val hondo = Color(0xFF1A1426).copy(alpha = 0.26f)
+            val rm = l * 0.2f
+            for (c in listOf(Offset(l * 0.25f, l * 0.25f), Offset(l * 0.75f, l * 0.75f))) {
+                for (j in 0 until 10) {
+                    val ang = 6.283f * j / 10
+                    drawCircle(claro, 0.55f * u, c + Offset(rm * kotlin.math.cos(ang), rm * kotlin.math.sin(ang)))
+                }
+                drawCircle(hondo, rm * 0.72f, c)
+                for (j in 0 until 4) {
+                    val ang = 1.5708f * j
+                    drawCircle(claro, rm * 0.2f, c + Offset(rm * 0.34f * kotlin.math.cos(ang), rm * 0.34f * kotlin.math.sin(ang)))
+                }
             }
-            // La flor en el centro de cada rombo y las perlas en los cruces.
-            for (cx in listOf(l / 4, l * 3 / 4)) for (cy in listOf(0f, l / 2, l)) drawCircle(claro, 0.8f * u, Offset(cx, cy))
-            for (cx in listOf(0f, l / 2, l)) for (cy in listOf(l / 4, l * 3 / 4)) drawCircle(hondo, 0.5f * u, Offset(cx, cy))
+            for (c in listOf(Offset(l * 0.75f, l * 0.25f), Offset(l * 0.25f, l * 0.75f))) {
+                drawLine(hondo, c - Offset(rm * 0.4f, 0f), c + Offset(rm * 0.4f, 0f), (0.6f * u).coerceAtLeast(0.6f))
+                drawLine(hondo, c - Offset(0f, rm * 0.4f), c + Offset(0f, rm * 0.4f), (0.6f * u).coerceAtLeast(0.6f))
+            }
         }
         val l2 = (11.2f * u).roundToInt().coerceAtLeast(4)
         pano = baldosa(l2) { l ->
@@ -223,27 +235,37 @@ private fun DrawScope.rolloSeda(v: Volumen, medidor: TextMeasurer, a: AireSeda, 
     val yEnv = h * 0.15f
     val caida = h * 0.075f
     val papel = a.luz(PAPEL, k + 0.05f, f)
-    val madera = a.luz(mezcla(ALAMO_OSC, FIELTRO, 0.3f), k, f)
+    val madera = a.luz(mezcla(ALAMO_OSC, ALAMO, 0.3f), k, f)
     // Las cabezas de los rollos, de atrás adelante: el papel enrollado, sus vueltas y la perilla del rodillo.
     val cabezas = if (v.lleno > 0.55f) 3 else 2
     val anc = if (cabezas == 2) w * 0.52f else w * 0.42f
     for (i in 0 until cabezas) {
         val cx = w * 0.27f + w * 0.46f * i / (cabezas - 1)
-        val top = (5f + 4f * azar(s, 30 + i)) * u
+        val top = (3.5f + 7f * azar(s, 30 + i)) * u
         val ell = anc * 0.44f
         val fondo = yEnv + caida * (1f - cx / w) + 4f * u
         drawRect(papel, Offset(cx - anc / 2, top + ell / 2), Size(anc, fondo - top - ell / 2))
         drawRect(a.claro(0.3f), Offset(cx - anc * 0.36f, top + ell / 2), Size(anc * 0.16f, fondo - top - ell / 2))
         drawRect(a.sombra(0.22f), Offset(cx + anc * 0.2f, top + ell / 2), Size(anc * 0.3f, fondo - top - ell / 2))
         drawLine(a.sombra(0.3f), Offset(cx + anc * 0.5f, top + ell / 2), Offset(cx + anc * 0.5f, fondo), 0.6f * u)
-        drawOval(a.luz(mezcla(PAPEL, HUESO, 0.5f), k + 0.1f, f), Offset(cx - anc / 2, top), Size(anc, ell))
-        drawOval(a.sombra(0.3f), Offset(cx - anc / 2, top), Size(anc, ell), style = Stroke(0.6f * u))
-        drawOval(a.sombra(0.2f), Offset(cx - anc * 0.32f, top + ell * 0.18f), Size(anc * 0.64f, ell * 0.64f), style = Stroke(0.5f * u))
-        drawOval(madera, Offset(cx - anc * 0.16f, top + ell * 0.3f), Size(anc * 0.32f, ell * 0.4f))
-        // La perilla, torneada, que sobresale.
-        val pk = Rect(cx - anc * 0.13f, top + ell * 0.5f - 4.6f * u, cx + anc * 0.13f, top + ell * 0.5f)
-        drawRoundRect(madera, pk.topLeft, pk.size, CornerRadius(pk.width * 0.45f))
-        drawRect(a.claro(0.45f), Offset(pk.left + pk.width * 0.18f, pk.top + 0.8f * u), Size(pk.width * 0.18f, pk.height * 0.6f))
+        drawOval(a.luz(mezcla(PAPEL, PAPEL_VIEJO, 0.4f), k + 0.1f, f), Offset(cx - anc / 2, top), Size(anc, ell))
+        drawOval(a.sombra(0.32f), Offset(cx - anc / 2, top), Size(anc, ell), style = Stroke(0.6f * u))
+        // Los cantos del papel enrollado: una espiral que se cierra hacia el palo, con la orilla de la hoja de fuera.
+        val vueltas = 2.2f + v.lleno * 1.6f + azar(s, 40 + i) * 0.6f
+        val pasos = (vueltas * 9).toInt().coerceIn(8, 60)
+        val espiral = Path()
+        for (j in 0..pasos) {
+            val t = j / pasos.toFloat()
+            val ang = 0.6f + 6.283f * vueltas * t
+            val fr = 0.94f - 0.74f * t
+            val q = Offset(cx + anc / 2 * fr * kotlin.math.cos(ang), top + ell / 2 + ell / 2 * fr * kotlin.math.sin(ang))
+            if (j == 0) espiral.moveTo(q.x, q.y) else espiral.lineTo(q.x, q.y)
+        }
+        drawPath(espiral, a.luz(mezcla(PAPEL_VIEJO, ALAMO_OSC, 0.45f), k, f), style = Stroke(0.5f * u))
+        // El cabo del palo, que asoma un poco por el centro, con su corte claro.
+        val cabo = Rect(cx - anc * 0.09f, top + ell * 0.5f - 2.8f * u, cx + anc * 0.09f, top + ell * 0.5f)
+        drawRect(madera, cabo.topLeft, cabo.size)
+        drawOval(a.luz(mezcla(SedaTinta.ALAMO, PAPEL_VIEJO, 0.3f), k + 0.1f, f), Offset(cabo.left, cabo.top - cabo.width * 0.25f), Size(cabo.width, cabo.width * 0.5f))
     }
     // La envoltura: de pie, con el borde de arriba que da la vuelta en diagonal y la panza redonda abajo.
     val cuerpo = Path().apply {
@@ -275,6 +297,8 @@ private fun DrawScope.rolloSeda(v: Volumen, medidor: TextMeasurer, a: AireSeda, 
         drawOval(hondoSeda.copy(alpha = 0.22f), Offset(w * (0.45f + 0.2f * azar(s, 3)), h * (0.66f + 0.1f * azar(s, 4))), Size(w * 0.32f, h * 0.06f))
         drawOval(claroSeda.copy(alpha = 0.3f), Offset(w * 0.05f, h * (0.86f + 0.03f * azar(s, 5))), Size(w * 0.45f, h * 0.05f))
         bultoSeda(a, k, f, hacia, yEnv, h)
+        // El brillo de la seda en la cresta del bulto, fino y largo.
+        drawRect(Color.White.copy(alpha = if (a.oscuro) 0.06f + 0.14f * k else if (v.noche) 0.18f else 0.26f), Offset(w * 0.23f, yEnv), Size(1.1f * u, h - yEnv))
     }
     // Los hilos sueltos de la orla.
     for (j in 0 until 3) {
@@ -285,7 +309,7 @@ private fun DrawScope.rolloSeda(v: Volumen, medidor: TextMeasurer, a: AireSeda, 
     // La tira de papel con el mes, en columna, y el sello de bermellón (en los Sueños, la luna).
     val tira = Rect(w * 0.1f, yEnv + caida + 7f * u, w * 0.44f, yEnv + caida + 7f * u + (h - yEnv) * 0.36f)
     drawRect(a.sombra(0.3f), tira.topLeft + Offset(0.8f * u, 0.8f * u), tira.size)
-    drawRect(a.etiqueta(k, PAPEL), tira.topLeft, tira.size)
+    drawRect(a.etiqueta(k, PAPEL_VIEJO), tira.topLeft, tira.size)
     drawRect(a.sombra(0.12f), Offset(tira.right - tira.width * 0.22f, tira.top), Size(tira.width * 0.22f, tira.height))
     val ss = minOf(tira.width * 0.64f, 5.4f * u)
     val sello = Offset(tira.center.x, tira.bottom - ss * 0.85f)
@@ -296,7 +320,7 @@ private fun DrawScope.rolloSeda(v: Volumen, medidor: TextMeasurer, a: AireSeda, 
         drawCircle(a.luz(mezcla(ANIL, a.hondo, 0.3f), k, f), ss * 0.36f, sello + Offset(ss * 0.2f, -ss * 0.14f))
     } else {
         drawRect(a.luz(BERMELLON, maxOf(k, 0.3f), f), Offset(sello.x - ss / 2, sello.y - ss / 2), Size(ss, ss))
-        drawRect(a.etiqueta(k, PAPEL), Offset(sello.x - ss * 0.3f, sello.y - ss * 0.3f), Size(ss * 0.6f, ss * 0.6f), style = Stroke(0.5f * u))
+        drawRect(a.etiqueta(k, PAPEL_VIEJO), Offset(sello.x - ss * 0.3f, sello.y - ss * 0.3f), Size(ss * 0.6f, ss * 0.6f), style = Stroke(0.5f * u))
     }
     // La cinta de seda, que da vueltas (más cuanto más escribiste) y cuelga con la tira de marfil.
     val cinta = if (seda.luminance() > 0.35f) a.luz(FIELTRO, k, f) else a.luz(mezcla(BRONCE, HUESO, 0.4f), k, f)
@@ -310,7 +334,7 @@ private fun DrawScope.rolloSeda(v: Volumen, medidor: TextMeasurer, a: AireSeda, 
     }
     val ojal = Offset(w * 0.66f, yc + vc * 2.6f * u)
     drawLine(cinta, Offset(w * 0.74f, yc), ojal + Offset(0f, 2.5f * u), 1.5f * u, StrokeCap.Round)
-    etiquetaDiaSeda(v, medidor, a, k, ojal + Offset(0f, 2f * u), Offset(w * 0.6f, ojal.y + 3.5f * u), mezcla(HUESO, Color.White, 0.25f), (azar(s, 8) - 0.5f) * 10f, 0)
+    etiquetaDiaSeda(v, medidor, a, k, ojal + Offset(0f, 2f * u), Offset(w * 0.6f, ojal.y + 3.5f * u), HUESO, (azar(s, 8) - 0.5f) * 10f, 0)
     drawRect(a.sombra(0.3f), Offset(0f, h - 1.3f * u), Size(w, 1.3f * u))
 }
 
@@ -380,7 +404,7 @@ private fun DrawScope.fajoSeda(v: Volumen, medidor: TextMeasurer, a: AireSeda, k
     // La tira con el mes, metida bajo el cordón.
     val tira = Rect(w * 0.28f, yPano + 6f * u, w * 0.72f, h * 0.48f)
     drawRect(a.sombra(0.28f), tira.topLeft + Offset(0.8f * u, 0.8f * u), tira.size)
-    drawRect(a.etiqueta(k, PAPEL), tira.topLeft, tira.size)
+    drawRect(a.etiqueta(k, PAPEL_VIEJO), tira.topLeft, tira.size)
     mesSeda(medidor, v.mes, tira.deflate(1f * u), a.tinta, 8.5f)
     // El cordón en cruz, con su torsión.
     val cord = a.luz(mezcla(PAJA, CUERO, 0.25f), k, f)
@@ -475,7 +499,7 @@ private fun DrawScope.bolsaSeda(v: Volumen, medidor: TextMeasurer, a: AireSeda, 
     // La etiqueta de cuero claro, cosida en la panza, con el mes.
     val et = Rect(w * 0.3f, h * 0.5f, w * 0.7f, h * 0.88f)
     drawRect(a.sombra(0.3f), et.topLeft + Offset(0.8f * u, 0.8f * u), et.size)
-    drawRoundRect(a.etiqueta(k, mezcla(PAPEL, CUERO, 0.18f)), et.topLeft, et.size, CornerRadius(1.2f * u))
+    drawRoundRect(a.etiqueta(k, mezcla(PAPEL_VIEJO, CUERO, 0.15f)), et.topLeft, et.size, CornerRadius(1.2f * u))
     val hilo = Path()
     var py = et.top + 1.5f * u
     while (py < et.bottom - 1f * u) {

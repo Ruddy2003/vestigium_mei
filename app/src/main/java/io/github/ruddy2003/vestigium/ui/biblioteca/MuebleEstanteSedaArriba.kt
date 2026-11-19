@@ -33,6 +33,7 @@ import io.github.ruddy2003.vestigium.ui.biblioteca.SedaTinta.TIERRA
 import io.github.ruddy2003.vestigium.ui.biblioteca.SedaTinta.TINTA
 import io.github.ruddy2003.vestigium.ui.biblioteca.SedaTinta.VIDRIO
 import io.github.ruddy2003.vestigium.ui.ideario.azar
+import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.muebles.FILO_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
@@ -46,77 +47,92 @@ import kotlin.math.sin
 // ---------------------------------------------------------------- arriba
 
 /**
- * La lámpara de bronce colgada de una estaca del muro por tres cadenas: el cuenco en forma de barca, el pico largo hacia la
- * izquierda (donde arde la mecha, en [llama]) y la anilla de atrás. De día, apagada; de noche, la llama la pone [llamaSeda].
+ * La lámpara de barro de un pico, sin vidriar, sobre una ménsula de palo clavada en el adobe: dos estacas de álamo con su
+ * tablilla encima, la mancha de aceite en la tablilla, la lámpara con el pico hacia la izquierda (donde arde la mecha, en
+ * [llama]) y su asita atrás. De día, apagada; la llama la pone [llamaSeda].
  */
-internal fun DrawScope.lamparaSeda(estaca: Offset, llama: Offset, w: Float, a: AireSeda) {
+internal fun DrawScope.lamparaBarroSeda(llama: Offset, w: Float, a: AireSeda) {
     val u = density
-    val k = if (a.lumbre) 0.95f else 0f
-    val an = w * 0.1f
-    val c = Offset(llama.x + an * 0.62f, llama.y + w * 0.014f)
-    val alto = an * 0.3f
-    // La sombra de la lámpara y de las cadenas en la cal: de día a la derecha y abajo; de noche no hay (la luz es ella).
-    val anillo = Offset(estaca.x, estaca.y + w * 0.018f)
-    val puntas = listOf(Offset(c.x - an * 0.36f, c.y - alto * 0.4f), Offset(c.x + an * 0.06f, c.y - alto * 0.5f), Offset(c.x + an * 0.4f, c.y - alto * 0.36f))
-    if (!a.oscuro) translate(w * 0.02f, w * 0.014f) {
-        val sc = a.sombra(0.16f)
-        puntas.forEach { drawLine(sc, anillo, it, 1f * u) }
-        drawOval(sc, Offset(c.x - an * 0.4f, c.y - alto * 0.4f), Size(an * 0.8f, alto))
+    val k = if (a.lumbre && !a.brasa) 0.95f else 0.08f
+    val f = if (a.oscuro) frioSeda(llama.x / w - MuebleEstanteSeda.REJA_X, llama.y / w - MuebleEstanteSeda.REJA_Y) else 0f
+    val tabla = Rect(llama.x - w * 0.018f, llama.y + w * 0.036f, llama.x + w * 0.11f, llama.y + w * 0.05f)
+    val corr = if (a.oscuro && !a.brasa) Offset(0f, w * 0.006f) else Offset(w * 0.014f, w * 0.012f)
+    // Las dos estacas, metidas en el muro, que asoman por debajo de la tablilla; y la sombra de todo en la cal.
+    val estacas = listOf(tabla.left + tabla.width * 0.2f, tabla.left + tabla.width * 0.78f)
+    estacas.forEach { x ->
+        drawRect(a.sombra(0.3f), Offset(x - 1.6f * u + corr.x, tabla.bottom + corr.y), Size(4f * u, 5f * u))
     }
-    // La estaca de álamo clavada en el muro, con su sombra.
-    drawOval(a.sombra(0.35f), Offset(estaca.x - 3f * u, estaca.y - 1f * u), Size(9f * u, 6f * u))
-    drawRoundRect(a.luz(ALAMO, k * 0.6f), Offset(estaca.x - 3.4f * u, estaca.y - 3.4f * u), Size(6.8f * u, 6.8f * u), CornerRadius(3.4f * u))
-    drawCircle(a.luz(ALAMO_OSC, k * 0.6f), 1.6f * u, estaca)
-    // La anilla y las tres cadenas, eslabón por eslabón.
-    val bronce = a.luz(BRONCE, k)
-    val bronceOsc = a.luz(mezcla(BRONCE, ALAMO_OSC, 0.55f), k)
-    drawCircle(bronceOsc, 2.4f * u, anillo, style = Stroke(1.1f * u))
-    drawLine(bronceOsc, estaca, anillo, 1f * u)
-    puntas.forEach { p ->
-        val v = p - anillo; val largo = v.getDistance()
-        val pasos = (largo / (3.2f * u)).toInt().coerceIn(2, 60)
-        for (j in 0 until pasos) {
-            val q = anillo + v * ((j + 0.5f) / pasos)
-            if (j % 2 == 0) drawOval(bronceOsc, Offset(q.x - 0.9f * u, q.y - 1.6f * u), Size(1.8f * u, 3.2f * u), style = Stroke(0.6f * u))
-            else drawLine(bronceOsc, q - Offset(0f, 1.2f * u), q + Offset(0f, 1.2f * u), 0.7f * u)
-        }
+    drawRect(a.sombra(if (a.oscuro) 0.3f else 0.22f), tabla.topLeft + corr, tabla.size)
+    estacas.forEach { x ->
+        drawRoundRect(a.luz(SedaTinta.ALAMO_OSC, k, f), Offset(x - 2f * u, tabla.bottom - 1f * u), Size(4f * u, 5f * u), CornerRadius(1.6f * u))
+        drawCircle(a.luz(mezcla(SedaTinta.ALAMO, SedaTinta.ALAMO_OSC, 0.4f), k, f), 1.8f * u, Offset(x, tabla.bottom + 3.6f * u))
     }
-    // El cuenco: una barca de bronce, ancha y baja, con el borde vuelto; el pico, un caño que se afina y se alza en la punta.
+    drawRect(a.luz(mezcla(SedaTinta.ALAMO, LUZ_MUEBLE, 0.2f), k, f), tabla.topLeft, Size(tabla.width, tabla.height * 0.35f))
+    drawRect(a.luz(SedaTinta.ALAMO, k, f), Offset(tabla.left, tabla.top + tabla.height * 0.35f), Size(tabla.width, tabla.height * 0.65f))
+    drawLine(a.sombra(0.4f), Offset(tabla.left, tabla.bottom), Offset(tabla.right, tabla.bottom), 0.8f * u)
+    // El aceite que goteó por el canto de la tablilla.
+    drawRoundRect(a.luz(mezcla(SedaTinta.ALAMO_OSC, SedaTinta.HOLLIN, 0.4f), k, f).copy(alpha = 0.6f), Offset(llama.x + w * 0.004f, tabla.top + tabla.height * 0.35f), Size(2.4f * u, tabla.height * 0.65f + 3f * u), CornerRadius(1.2f * u))
+    // La lámpara: el cuenco bajo, el pico pellizcado hacia la izquierda y la asita atrás.
+    val c = Offset(llama.x + w * 0.056f, tabla.top - w * 0.015f)
+    val an = w * 0.084f; val al = w * 0.03f
+    val barro = a.luz(SedaTinta.ARCILLA, k, f)
     val pico = Path().apply {
-        moveTo(c.x - an * 0.3f, c.y - alto * 0.38f)
-        cubicTo(c.x - an * 0.45f, c.y - alto * 0.3f, llama.x + an * 0.06f, llama.y + alto * 0.36f, llama.x - an * 0.02f, llama.y + alto * 0.02f)
-        lineTo(llama.x + an * 0.05f, llama.y - alto * 0.04f)
-        cubicTo(llama.x + an * 0.12f, llama.y + alto * 0.5f, c.x - an * 0.4f, c.y + alto * 0.1f, c.x - an * 0.28f, c.y + alto * 0.08f)
+        moveTo(c.x - an * 0.3f, c.y - al * 0.4f)
+        cubicTo(c.x - an * 0.45f, c.y - al * 0.45f, llama.x + an * 0.12f, llama.y + al * 0.7f, llama.x - an * 0.02f, llama.y + al * 0.3f)
+        lineTo(llama.x + an * 0.05f, llama.y + al * 0.12f)
+        cubicTo(llama.x + an * 0.2f, llama.y + al * 1.2f, c.x - an * 0.38f, c.y + al * 0.35f, c.x - an * 0.26f, c.y + al * 0.4f)
         close()
     }
-    drawPath(pico, bronce)
-    drawPath(bordeSeda(pico, 0f, -alto * 0.12f), a.sombra(0.35f))
-    val cuenco = Path().apply {
-        moveTo(c.x - an * 0.4f, c.y - alto * 0.42f)
-        lineTo(c.x + an * 0.42f, c.y - alto * 0.42f)
-        cubicTo(c.x + an * 0.44f, c.y + alto * 0.2f, c.x + an * 0.2f, c.y + alto * 0.6f, c.x, c.y + alto * 0.6f)
-        cubicTo(c.x - an * 0.24f, c.y + alto * 0.6f, c.x - an * 0.42f, c.y + alto * 0.2f, c.x - an * 0.4f, c.y - alto * 0.42f)
-        close()
-    }
-    drawPath(cuenco, bronce)
-    redondoSeda(cuenco, a, k, -1f, fuerza = 1.2f)
-    // El borde vuelto, con su luz, y la boca del aceite.
-    drawOval(a.luz(mezcla(BRONCE, LUZ_MUEBLE, 0.35f), k), Offset(c.x - an * 0.42f, c.y - alto * 0.56f), Size(an * 0.86f, alto * 0.3f))
-    drawOval(a.luz(mezcla(BRONCE, ALAMO_OSC, 0.75f), k), Offset(c.x - an * 0.34f, c.y - alto * 0.5f), Size(an * 0.7f, alto * 0.18f))
-    // La anilla de atrás, para colgarla o tomarla.
-    drawCircle(bronce, an * 0.07f, Offset(c.x + an * 0.47f, c.y - alto * 0.2f), style = Stroke(1.4f * u))
-    // El cardenillo en el pie del cuenco y la mecha en la punta del pico.
-    drawOval(a.luz(Color(0xFF5E8A74), k).copy(alpha = 0.5f), Offset(c.x - an * 0.12f, c.y + alto * 0.3f), Size(an * 0.2f, alto * 0.2f))
-    drawLine(a.luz(TINTA, k), Offset(llama.x + an * 0.01f, llama.y + alto * 0.02f), Offset(llama.x - an * 0.005f, llama.y - alto * 0.22f), 1.4f * u, StrokeCap.Round)
-    if (a.oscuro) drawArc(FILO_MUEBLE.copy(alpha = 0.7f), 200f, 120f, false, Offset(c.x - an * 0.42f, c.y - alto * 0.56f), Size(an * 0.86f, alto * 0.3f), style = Stroke(1f * u))
+    drawPath(corridoSeda(pico, corr.x * 0.6f, corr.y * 0.6f), a.sombra(0.2f))
+    drawPath(pico, barro)
+    drawPath(bordeSeda(pico, 0f, -al * 0.2f), a.sombra(0.3f))
+    val cuerpo = Path().apply { addOval(Rect(c.x - an / 2, c.y - al / 2, c.x + an / 2, c.y + al / 2)) }
+    drawPath(corridoSeda(cuerpo, corr.x * 0.6f, corr.y * 0.6f), a.sombra(0.25f))
+    drawPath(cuerpo, barro)
+    redondoSeda(cuerpo, a, k, if (a.oscuro && !a.brasa) -1f else -1f)
+    // La boca del cuenco, con el aceite oscuro, y el labio a la luz.
+    drawOval(a.luz(mezcla(SedaTinta.ARCILLA, SedaTinta.HOLLIN, 0.55f), k, f), Offset(c.x - an * 0.36f, c.y - al * 0.5f), Size(an * 0.72f, al * 0.42f))
+    drawArc(a.claro(0.5f), 180f, 110f, false, Offset(c.x - an * 0.4f, c.y - al * 0.55f), Size(an * 0.8f, al * 0.5f), style = Stroke(0.8f * u))
+    // La asita, atrás.
+    drawArc(barro, -80f, 180f, false, Offset(c.x + an * 0.38f, c.y - al * 0.45f), Size(an * 0.22f, al * 0.8f), style = Stroke(1.6f * u))
+    // El hollín del pico y la mecha.
+    drawOval(a.luz(SedaTinta.HOLLIN, k, f).copy(alpha = 0.6f), Offset(llama.x - an * 0.04f, llama.y - al * 0.1f), Size(an * 0.18f, al * 0.5f))
+    drawLine(a.luz(SedaTinta.TINTA, k, f), llama + Offset(0f, al * 0.2f), llama - Offset(an * 0.01f, al * 0.3f), 1.3f * u, StrokeCap.Round)
+    if (a.lumbre && !a.brasa && a.oscuro) drawArc(FILO_MUEBLE.copy(alpha = 0.7f), 180f, 140f, false, Offset(c.x - an * 0.4f, c.y - al * 0.55f), Size(an * 0.8f, al * 0.5f), style = Stroke(1f * u))
 }
 
-/** La llama de la lámpara, con su color propio; en los Sueños de noche, más baja. */
+/** El hollín de tantas noches: sube de la mecha hasta el techo, abriéndose, en la cal. */
+internal fun DrawScope.hollinSeda(llama: Offset, w: Float, a: AireSeda) {
+    val techo = w * 0.055f
+    val alto = llama.y - techo
+    if (alto <= 0f) return
+    val col = if (a.oscuro) mezcla(SedaTinta.HOLLIN, a.hondo, 0.3f) else SedaTinta.HOLLIN
+    // El tizne: un cerco blando que sube de la mecha y se abre, más cargado contra el techo, donde el humo se detiene (tres
+    // manchas, sin bordes).
+    val f = if (a.oscuro) 1.2f else 1f
+    mancha(Offset(llama.x + w * 0.004f, llama.y - alto * 0.22f), alto * 0.24f, col.copy(alpha = 0.3f * f))
+    mancha(Offset(llama.x + w * 0.012f, llama.y - alto * 0.55f), alto * 0.32f, col.copy(alpha = 0.26f * f))
+    mancha(Offset(llama.x + w * 0.02f, techo + alto * 0.08f), alto * 0.42f, col.copy(alpha = 0.32f * f))
+}
+
+/** La llama de la lámpara, con su color propio; en los Sueños de noche, en rescoldo: la brasa de la mecha y su hilo de humo. */
 internal fun DrawScope.llamaSeda(p: Offset, w: Float, a: AireSeda) {
-    val s = w * (if (a.oscuro && a.noche) 0.024f else 0.03f)
+    val u = density
+    if (a.brasa) {
+        drawCircle(SedaTinta.BRASA.copy(alpha = 0.35f), w * 0.008f, p)
+        drawCircle(Color(0xFFFF6A2A), w * 0.003f, p)
+        val humo = Path().apply {
+            moveTo(p.x, p.y - w * 0.004f)
+            cubicTo(p.x - w * 0.012f, p.y - w * 0.03f, p.x + w * 0.014f, p.y - w * 0.05f, p.x - w * 0.004f, p.y - w * 0.085f)
+            cubicTo(p.x - w * 0.016f, p.y - w * 0.1f, p.x + w * 0.006f, p.y - w * 0.12f, p.x + w * 0.002f, p.y - w * 0.14f)
+        }
+        drawPath(humo, SedaTinta.LUNA.copy(alpha = 0.22f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+        return
+    }
+    val s = w * 0.027f
     val q = p - Offset(0f, w * 0.004f)
-    drawCircle(LLAMA.copy(alpha = 0.16f), s * 1.1f, q - Offset(0f, s * 0.5f))
-    drawCircle(LLAMA.copy(alpha = 0.22f), s * 0.66f, q - Offset(0f, s * 0.5f))
+    drawCircle(SedaTinta.LLAMA.copy(alpha = 0.16f), s * 1.1f, q - Offset(0f, s * 0.5f))
+    drawCircle(SedaTinta.LLAMA.copy(alpha = 0.22f), s * 0.66f, q - Offset(0f, s * 0.5f))
     fun lengua(k: Float, ladeo: Float) = Path().apply {
         moveTo(q.x - s * 0.17f * k, q.y)
         cubicTo(q.x - s * 0.3f * k, q.y - s * 0.4f * k, q.x + ladeo * s - s * 0.05f * k, q.y - s * 0.7f * k, q.x + ladeo * s, q.y - s * 1.15f * k)
@@ -124,8 +140,147 @@ internal fun DrawScope.llamaSeda(p: Offset, w: Float, a: AireSeda) {
         close()
     }
     drawPath(lengua(1f, -0.06f), Color(0xFFFF9A2E))
-    drawPath(lengua(0.72f, -0.04f), LLAMA)
+    drawPath(lengua(0.72f, -0.04f), SedaTinta.LLAMA)
     drawPath(lengua(0.4f, 0f), Color(0xFFFFF6DC))
+}
+
+/** Los pliegues de una tela que cuelga: bandas de sombra y, al lado, el brillo de la seda en la cresta de cada pliegue. */
+private fun DrawScope.plieguesSeda(xa: Float, xb: Float, arriba: (Float) -> Float, abajo: Float, cuantos: Int, abre: Float, a: AireSeda, semilla: Int, brillo: Float) {
+    val u = density
+    val paso = (xb - xa) / cuantos
+    for (j in 0 until cuantos) {
+        val xt = xa + paso * (j + 0.5f) + (azar(semilla, j) - 0.5f) * paso * 0.3f
+        val xbj = xt + (xt - (xa + xb) / 2) * abre + (azar(semilla, j + 9) - 0.5f) * paso * 0.4f
+        val yt = arriba(xt)
+        val g = paso * (0.18f + 0.1f * azar(semilla, j + 20))
+        drawPath(poligonoSeda(xt - g * 0.3f, yt, xt + g * 0.3f, yt, xbj + g, abajo, xbj - g, abajo), a.sombra(0.22f))
+        drawPath(poligonoSeda(xt + g * 0.35f, yt + 2f * u, xt + g * 0.7f, yt + 2f * u, xbj + g * 2.1f, abajo, xbj + g * 1.3f, abajo), Color.White.copy(alpha = brillo))
+    }
+}
+
+/**
+ * Las sedas que compra, echadas sobre una vara de álamo colgada del muro por dos estacas: un largo de seda azafrán, que cae
+ * en pliegues con su orla y sus flecos, y delante uno bermellón, más corto y con el dobladillo sesgado. Las dos con el brillo
+ * de la seda en la cresta de cada pliegue y su sombra en la cal.
+ */
+internal fun DrawScope.sedaColgadaSeda(p0: Offset, p1: Offset, w: Float, a: AireSeda, cerca: Float, frio: Float) {
+    val u = density
+    fun yVara(x: Float) = p0.y + (p1.y - p0.y) * ((x - p0.x) / (p1.x - p0.x))
+    val corr = if (a.oscuro && !a.brasa) Offset(-w * 0.014f, w * 0.01f) else Offset(w * 0.016f, w * 0.014f)
+    val brillo = if (a.oscuro) 0.06f + 0.14f * cerca else if (a.noche) 0.16f else 0.24f
+    // Las dos telas: [xa, xb] a lo ancho de la vara, hasta dónde caen y cuánto se sesga el dobladillo.
+    class Tela(val xa: Float, val xb: Float, val largo: Float, val sesgo: Float, val color: Color, val orla: Color, val semilla: Int)
+    val telas = listOf(
+        Tela(p0.x + w * 0.025f, p0.x + w * 0.13f, w * 0.23f, -w * 0.02f, SedaTinta.AZAFRAN, SedaTinta.ANIL, 1201),
+        Tela(p0.x + w * 0.12f, p0.x + w * 0.215f, w * 0.17f, w * 0.07f, SedaTinta.BERMELLON, SedaTinta.AZAFRAN, 1202),
+    )
+    fun forma(t: Tela) = Path().apply {
+        val ya = yVara(t.xa); val yb = yVara(t.xb)
+        // Arriba se junta sobre la vara; abajo se abre (la tela pesa) y el dobladillo ondula con los pliegues.
+        val abre = (t.xb - t.xa) * 0.16f
+        moveTo(t.xa, ya - 1.2f * u)
+        lineTo(t.xb, yb - 1.2f * u)
+        cubicTo(t.xb + abre * 0.2f, yb + t.largo * 0.3f, t.xb + abre * 0.9f, yb + t.largo * 0.7f, t.xb + abre, ya + t.largo - t.sesgo)
+        val n = 5
+        for (j in n - 1 downTo 0) {
+            val x0 = t.xa - abre + (t.xb - t.xa + 2 * abre) * j / n
+            val y = ya + t.largo - t.sesgo * (j / n.toFloat()) + (if (j % 2 == 0) w * 0.006f else 0f)
+            quadraticTo(x0 + (t.xb - t.xa + 2 * abre) / n * 0.5f, y + w * 0.014f, x0, y)
+        }
+        cubicTo(t.xa - abre * 0.9f, ya + t.largo * 0.7f, t.xa - abre * 0.2f, ya + t.largo * 0.3f, t.xa, ya - 1.2f * u)
+        close()
+    }
+    // La sombra de las telas y de la vara en la cal.
+    telas.forEach { t -> drawPath(corridoSeda(forma(t), corr.x, corr.y), a.sombra(if (a.oscuro) 0.3f else 0.16f)) }
+    drawLine(a.sombra(0.25f), p0 + corr, p1 + corr, 3f * u)
+    // Las estacas y la vara.
+    listOf(p0 + Offset(w * 0.012f, 0f), p1 - Offset(w * 0.012f, 0f)).forEach { e ->
+        drawCircle(a.sombra(0.35f), 2.8f * u, e + Offset(1.4f * u, 1.6f * u))
+        drawCircle(a.luz(SedaTinta.ALAMO_OSC, cerca, frio), 2.6f * u, e + Offset(0f, 1.4f * u))
+    }
+    drawLine(a.luz(mezcla(SedaTinta.ALAMO, SedaTinta.ALAMO_OSC, 0.25f), cerca, frio), p0, p1, 3.2f * u, StrokeCap.Round)
+    drawLine(a.claro(0.4f), p0 - Offset(0f, 1f * u), p1 - Offset(0f, 1f * u), 0.7f * u)
+    telas.forEach { t ->
+        val f = forma(t)
+        val seda = a.luz(t.color, cerca, frio)
+        drawPath(f, seda)
+        clipPath(f) {
+            val abajo = yVara(t.xa) + t.largo + maxOf(0f, -t.sesgo) + w * 0.01f
+            plieguesSeda(t.xa, t.xb, { x -> yVara(x) }, abajo + w * 0.02f, 5, 0.45f, a, t.semilla, brillo)
+            // La orla tejida de abajo y la sombra bajo la vara.
+            val abre = (t.xb - t.xa) * 0.16f
+            val yo = yVara(t.xa) + t.largo - w * 0.028f
+            drawPath(poligonoSeda(t.xa - abre - 2f * u, yo, t.xb + abre + 2f * u, yo - t.sesgo, t.xb + abre + 2f * u, yo - t.sesgo + w * 0.011f, t.xa - abre - 2f * u, yo + w * 0.011f), a.luz(t.orla, cerca, frio).copy(alpha = 0.85f))
+            drawRect(a.sombra(0.3f), Offset(t.xa - 2f * u, yVara(t.xa) - 2f * u), Size(t.xb - t.xa + 4f * u, 4f * u))
+            // El lado de la tela que da a la luz y el que no.
+            drawRect(a.claro(0.2f), Offset(t.xa - (t.xb - t.xa) * 0.2f, yVara(t.xa)), Size((t.xb - t.xa) * 0.3f, t.largo + w * 0.04f))
+            drawRect(a.sombra(0.14f), Offset(t.xb - (t.xb - t.xa) * 0.12f, yVara(t.xb)), Size((t.xb - t.xa) * 0.4f, t.largo + w * 0.04f))
+        }
+        // La tela que da la vuelta sobre la vara.
+        drawRoundRect(mezcla(seda, if (a.oscuro) a.hondo else Color.White, 0.12f), Offset(t.xa, yVara(t.xa) - 3.4f * u), Size(t.xb - t.xa, 4.2f * u), CornerRadius(2f * u))
+        // Los flecos del dobladillo.
+        val flecos = Path()
+        val abreF = (t.xb - t.xa) * 0.16f
+        var x = t.xa - abreF + 2f * u
+        while (x < t.xb + abreF - 1f * u) {
+            val y = yVara(t.xa) + t.largo - t.sesgo * ((x - t.xa + abreF) / (t.xb - t.xa + 2 * abreF)) + w * 0.008f
+            flecos.moveTo(x, y); flecos.lineTo(x + 0.4f * u, y + 3.2f * u)
+            x += 1.8f * u
+        }
+        drawPath(flecos, mezcla(seda, a.hondo, 0.25f), style = Stroke(0.6f * u))
+        if (a.oscuro && cerca > 0.05f && !a.brasa) drawPath(corridoSeda(f, 0.8f * u, 0f), FILO_MUEBLE.copy(alpha = 0.3f * cerca), style = Stroke(0.8f * u))
+    }
+}
+
+/**
+ * Las piezas de seda dobladas, apiladas en el vasar: añil, verde, grana y azafrán, cada una con su canto doblado redondo, el
+ * brillo de la seda a lo largo y las capas del doblez en la punta; la de arriba deja caer una esquina por delante.
+ */
+internal fun DrawScope.sedasDobladasSeda(pie: Offset, w: Float, a: AireSeda, cerca: Float, frio: Float, haciaX: Float) {
+    val u = density
+    val g = w * 0.023f
+    val an = w * 0.2f
+    val colores = listOf(SedaTinta.ANIL, SedaTinta.VERDE, mezcla(SedaTinta.BERMELLON, SedaTinta.FIELTRO, 0.4f), SedaTinta.AZAFRAN)
+    val brillo = if (a.oscuro) 0.06f + 0.18f * cerca else if (a.noche) 0.2f else 0.32f
+    val corr = if (a.oscuro && !a.brasa) Offset(-w * 0.03f, w * 0.004f) else Offset(w * 0.03f, w * 0.004f)
+    val alto = g * colores.size
+    drawRect(a.sombra(if (a.oscuro) 0.3f else 0.18f), Offset(pie.x - an / 2 + corr.x, pie.y - alto + corr.y), Size(an, alto))
+    contactoSeda(Offset(pie.x + 3f * u, pie.y), an * 1.1f, w * 0.012f, a, 0.34f)
+    colores.forEachIndexed { j, col ->
+        val dx = (azar(1210, j) - 0.5f) * w * 0.014f
+        val r = Rect(pie.x - an / 2 + dx, pie.y - g * (j + 1), pie.x + an / 2 + dx - w * 0.006f * azar(1211, j), pie.y - g * j)
+        val seda = a.luz(col, cerca, frio)
+        drawRoundRect(seda, r.topLeft, r.size, CornerRadius(g * 0.45f))
+        // El brillo a lo largo del canto doblado y la sombra entre capa y capa.
+        drawRect(Color.White.copy(alpha = brillo), Offset(r.left + g * 0.5f, r.top + g * 0.28f), Size(r.width - g, g * 0.14f))
+        drawRect(a.sombra(0.28f), Offset(r.left + g * 0.3f, r.bottom - g * 0.2f), Size(r.width - g * 0.6f, g * 0.2f))
+        // Las capas del doblez en la punta de la izquierda, y el lado de la sombra.
+        for (i in 1..3) drawArc(mezcla(seda, a.hondo, 0.35f), 90f, 180f, false, Offset(r.left + i * 1.6f * u, r.top + g * 0.12f), Size(g * 0.8f, g * 0.76f), style = Stroke(0.6f * u))
+        drawRect(a.sombra(0.16f), Offset(r.right - r.width * 0.16f, r.top + 1f * u), Size(r.width * 0.16f - g * 0.3f, g - 2f * u))
+        if (a.oscuro && cerca > 0.05f && !a.brasa) drawRect(FILO_MUEBLE.copy(alpha = 0.4f * cerca), Offset(r.right - g * 0.5f, r.top + g * 0.2f), Size(1.2f * u, g * 0.6f))
+    }
+    // La cara de arriba de la pila, vista apenas, y la esquina de la de arriba que cae por delante en un pliegue blando.
+    val arriba = pie.y - alto
+    val col = a.luz(colores.last(), cerca, frio)
+    drawRoundRect(mezcla(col, Color.White, if (a.oscuro) 0.04f else 0.14f), Offset(pie.x - an / 2 + w * 0.004f, arriba - g * 0.3f), Size(an - w * 0.01f, g * 0.42f), CornerRadius(g * 0.2f))
+    val caida = Path().apply {
+        val x0 = pie.x - an * 0.36f
+        moveTo(x0, arriba)
+        lineTo(x0 + an * 0.24f, arriba)
+        cubicTo(x0 + an * 0.25f, arriba + g * 1.2f, x0 + an * 0.2f, arriba + g * 2.2f, x0 + an * 0.14f, arriba + g * 2.6f)
+        lineTo(x0 + an * 0.02f, arriba + g * 2.2f)
+        cubicTo(x0 + an * 0.04f, arriba + g * 1.4f, x0 - an * 0.01f, arriba + g * 0.6f, x0, arriba)
+        close()
+    }
+    drawPath(corridoSeda(caida, 1.4f * u, 1.6f * u), a.sombra(0.3f))
+    drawPath(caida, col)
+    clipPath(caida) {
+        val x0 = pie.x - an * 0.36f
+        drawPath(poligonoSeda(x0 + an * 0.1f, arriba, x0 + an * 0.14f, arriba, x0 + an * 0.11f, arriba + g * 2.6f, x0 + an * 0.07f, arriba + g * 2.6f), Color.White.copy(alpha = brillo))
+        drawPath(poligonoSeda(x0 + an * 0.17f, arriba, x0 + an * 0.25f, arriba, x0 + an * 0.2f, arriba + g * 2.6f, x0 + an * 0.13f, arriba + g * 2.6f), a.sombra(0.22f))
+    }
+    // La orla de añil en el borde de la esquina.
+    drawLine(a.luz(SedaTinta.ANIL, cerca, frio), Offset(pie.x - an * 0.36f + an * 0.02f, arriba + g * 2.2f), Offset(pie.x - an * 0.36f + an * 0.14f, arriba + g * 2.6f), 1.6f * u, StrokeCap.Round)
 }
 
 /**
@@ -373,39 +528,6 @@ internal fun DrawScope.cayadoSeda(pie: Offset, tope: Offset, w: Float, a: AireSe
     val lazo = Path().apply { moveTo(c.x - 1.5f * u, c.y + 1f * u); cubicTo(c.x - w * 0.02f, c.y + w * 0.05f, c.x + w * 0.03f, c.y + w * 0.055f, c.x + 2f * u, c.y + 1f * u) }
     drawPath(corridoSeda(lazo, corr.x * 0.5f, corr.y * 0.5f), a.sombra(0.2f), style = Stroke(1.6f * u))
     drawPath(lazo, cuero, style = Stroke(1.8f * u, cap = StrokeCap.Round))
-}
-
-/**
- * La sarta de orejones de albaricoque, colgada en guirnalda entre dos estacas del muro para que acaben de secarse: el cordel
- * combado y los orejones ensartados, aplastados, de naranja a pardo; su sombra en la cal.
- */
-internal fun DrawScope.sartaSeda(p0: Offset, p1: Offset, comba: Float, w: Float, a: AireSeda, cerca: Float, frio: Float) {
-    val u = density
-    val c = Offset((p0.x + p1.x) / 2, maxOf(p0.y, p1.y) + comba)
-    fun punto(t: Float): Offset {
-        val m = 1f - t
-        return p0 * (m * m) + c * (2 * m * t) + p1 * (t * t)
-    }
-    val cuerda = Path().apply { moveTo(p0.x, p0.y); quadraticTo(c.x, c.y, p1.x, p1.y) }
-    val corr = if (a.oscuro) Offset(-w * 0.012f, w * 0.008f) else Offset(w * 0.016f, w * 0.012f)
-    drawPath(corridoSeda(cuerda, corr.x, corr.y), a.sombra(0.2f), style = Stroke(1f * u))
-    drawPath(cuerda, a.luz(mezcla(PAJA, CUERO, 0.4f), cerca, frio), style = Stroke(0.9f * u))
-    val n = 12
-    for (j in 1 until n) {
-        val t = j / n.toFloat()
-        val q = punto(t)
-        val rr = w * (0.014f + 0.004f * azar(980, j))
-        drawOval(a.sombra(0.22f), Offset(q.x - rr + corr.x * 0.6f, q.y - rr * 0.7f + corr.y * 0.6f), Size(rr * 2f, rr * 1.4f))
-        val col = mezcla(Color(0xFFE08A3A), Color(0xFF8A4A22), 0.2f + 0.6f * azar(981, j))
-        drawOval(a.luz(col, cerca, frio), Offset(q.x - rr, q.y - rr * 0.7f), Size(rr * 2f, rr * 1.4f))
-        drawOval(a.luz(mezcla(col, Color(0xFF5A2A14), 0.5f), cerca, frio), Offset(q.x - rr * 0.35f, q.y - rr * 0.2f), Size(rr * 0.7f, rr * 0.45f))
-        drawArc(a.claro(0.5f), 200f, 90f, false, Offset(q.x - rr * 0.8f, q.y - rr * 0.6f), Size(rr * 1.6f, rr * 1.1f), style = Stroke(0.6f * u))
-    }
-    listOf(p0, p1).forEach { p ->
-        drawOval(a.sombra(0.35f), Offset(p.x - 2f * u, p.y - 0.6f * u), Size(6f * u, 4.4f * u))
-        drawCircle(a.luz(ALAMO, cerca, frio), 2.6f * u, p)
-        drawCircle(a.luz(ALAMO_OSC, cerca, frio), 1.2f * u, p)
-    }
 }
 
 /** Las cuentas del camino rayadas con carbón en la cal: palotes en grupos, uno por jornada, y algunos tachados. */
