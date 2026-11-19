@@ -69,7 +69,7 @@ Los cuadros de S9 a S18 tal como están; las acciones de los gatos cambiadas res
 
 ### Del plan de mejoras (`docs/diseno/PLAN_MEJORAS.md`)
 - **Probar en el teléfono:** los arreglos de avisos y el modo según la hora (parte 1), Psicodelia (el cambio de cara y la intensidad), los fondos de pantalla con las escenas (parte 6) y lo nuevo de los cuadros (parte 8).
-- **Decidido el 17 nov 2026:** se rehacen las otras 36 bibliotecas, las libretas de momentos y el tablero de notas (sección 4, al final). Los demás muebles de Vida, como estaba escrito en `PLAN_MEJORAS.md`.
+- **Decidido el 17 nov 2026:** se rehacen las otras 36 bibliotecas, las libretas de momentos y el tablero de notas (sección 4, al final; cómo van, en «Las bibliotecas: en qué van (19 nov 2026)»). Los demás muebles de Vida, como estaba escrito en `PLAN_MEJORAS.md`.
 - **Sin hacer:** lo temático nuevo (parte 7) y los logros nuevos (parte 9).
 - **Sus preguntas abiertas** sobre los Idearios.
 
@@ -116,6 +116,15 @@ El autor, con la v292: «sigue súper bugueado y lento el de Psicodelia». Se mi
 - **Las libretas de momentos:** el objeto de la libreta cerrada sobre su soporte, en la escena de la Libreta de momentos (`ui/pantallas/LibretaMomentos.kt`). Lo dibuja cada tema en `DisenoBiblioteca.libreta()` (con `pestanaDia()` y `rotuloMes()` del índice), dentro del mismo `Estante<Tema>` de `ui/biblioteca/Biblioteca<Época>.kt`, no en `ui/vida/`.
 - **Las notas:** el tablero de notas y cada nota (`DisenoVida.tableroNotas()` y `notaTablero()`, en `ui/vida/Vida<Tema>.kt`; lo monta `ui/vida/MuebleNotas.kt`).
 - **Cómo:** la receta de `PLAN_MEJORAS.md`, «Cómo se rehace un mueble» (las reglas de `MUEBLES.md`, versión 2; la vara, los 34 Idearios rehechos y las tres bibliotecas piloto; un agente por mueble con su dirección de arte; quien dirige mira cada imagen en claro y en oscuro; no más de cuatro agentes a la vez; la clase de cada recipiente sale de la semilla; los casos de 0, 1 y 5 temas y una corrida de capturas en Actions). El arnés ya dibuja los muebles de Vida y el tablero de notas (`herramientas/arnes_muebles`, modo `vida`); la libreta todavía no: hay que añadirle ese modo, como se hizo con `ideario` y `biblioteca`.
+
+### Las bibliotecas: en qué van (19 nov 2026)
+
+- **El orden lo pidió el autor:** primero Scriptorium, Roma contemporánea, Ruta de la Seda, Al-Ándalus y Espacio; las demás, como sean.
+- **Hechas y mezcladas** en `ccr-e50e410b-nuv2vd`, tres rondas cada una, aprobadas por quien dirige: Espacio (mezcla `79be8247`), Al-Ándalus (`1ac9562a`) y Scriptorium (`6a5b656c`). Juntas compilan (APK en Actions, corrida 299, sin publicar) y tienen sus capturas (corrida 327, superficie `bibliotecas`, claro y oscuro, sin fallas en las pruebas); en el arnés salen igual al píxel que las hojas aprobadas. Antes ya estaban las tres piloto (Helénico, Laboratorio y Gótico) y la de Psicodelia. **Falta que el autor las vea** junto a la de Helénico.
+- **En curso:** Roma contemporánea (`urbe`) y Ruta de la Seda (`seda`).
+- **Quedan 32** de los 39 temas sin su `ui/biblioteca/MuebleEstante<Tema>.kt` (Básico no cuenta: es sin diseño). Contando las dos en curso: Romano, Roma contemporánea, Terminal, Ciudad neón, Egipto, Templario, Distopía, Refugio, Orden, Vapor victoriano, Colonos, Napoleónico, Art déco, Botánico, Ciudad verde, Navidad, Ruta de la Seda, Japón Edo, Horror cósmico, Abismo, Mesoamérica, Mongol, Renacimiento, Pirata, Soviético, Revolución francesa, Tierras Antiguas, Prehistoria, Frente exterior, Arcontes, Galia y Art nouveau.
+- **Siguen pendientes** las libretas de momentos y el tablero de notas (arriba).
+- **Reglas nuevas de esta tanda** (en `docs/diseno/MUEBLES.md`): las bibliotecas no pierden las ventanas (decisión del autor del 19 nov 2026: con lógica y no en todos los temas; donde la haya, es la luz de día, cambia de noche y no se come el mueble); el peso del dibujo (lo fijo no se recalcula, menos de 1.5 veces Helénico, y vigilar las operaciones); y la lista de lo que más se devolvió.
 
 ## 5. Pendientes de otros documentos
 
