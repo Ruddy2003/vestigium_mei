@@ -50,15 +50,13 @@ import kotlin.math.sin
 // =====================================================================
 
 /**
- * Urbe: la librería del barrio. Bajo un arco rebajado de travertino, con sus dovelas y su clave, un estante de montantes de
- * hierro pintado y tablas de nogal sobre escuadras, contra un muro de revoque ocre. En el tímpano del arco, la ventana con sus
- * persianas verdes de lamas abiertas a los lados; sobre la tabla de arriba, una cafetera moka y una maceta de albahaca.
- * Abajo, el zócalo de travertino y el piso de granito. Los meses van en portaprecios de lata con su tarjeta blanca. Cada
- * entrada es un quaderno de tapa dura de pie, con su liga elástica, la etiqueta blanca con el día y el mes, el sello en seco
- * de la tapa y boletos de autobús que asoman por arriba (más cuanto más escribiste); de noche, una luna en lugar del sello.
- * De noche, la luz de los faroles de la calle entra por las lamas y raya el muro. Distinto del Ideario, que es la edícola de
- * hierro verde de los periódicos.
- * La tapa es ese quaderno tumbado y grande, con los boletos asomando, «QUADERNO» en su franja, la etiqueta blanca con la
+ * Urbe: la librería del piso de Giulia, la restauradora de frescos, en un edificio viejo de Roma. Una librería de nogal ya sin
+ * barniz en los cantos, con su cornisa, el fondo de tablillas pintado de azul «papel de azúcar» y las baldas combadas por el
+ * peso, contra el muro de estuco de almagra desconchado; arriba a la izquierda, la ventana honda con su persiana verde, que de
+ * día deja el sol rayado por las lamas en la cornisa y en la primera repisa; de noche alumbra la lámpara de pantalla plisada.
+ * Las entradas son el libro de bolsillo, la caja de fotos y la carpeta de cartón con su goma, del color del ánimo. El dibujo del
+ * mueble y de las entradas está en [MuebleEstanteUrbe]. Distinto del Ideario, que es la edícola de hierro verde de los periódicos.
+ * La tapa es un quaderno tumbado y grande, con los boletos asomando, «QUADERNO» en su franja, la etiqueta blanca con la
  * fecha y las parole, y la liga que se suelta al abrirlo.
  */
 object EstanteUrbe : DisenoBiblioteca {
@@ -76,13 +74,9 @@ object EstanteUrbe : DisenoBiblioteca {
     private val PERSIANA_LUZ = Color(0xFF5E8C63)
     private val VIDRIO = Color(0xFF9DB4BF)
     private val ALUMINIO = Color(0xFFB4B8BA)
-    private val BARRO = Color(0xFFB4643A)
-    private val ALBAHACA = Color(0xFF4F8A3A)
-    private val ALBAHACA_LUZ = Color(0xFF7FB25A)
     private val PAPEL = Color(0xFFF6F3EA)
     private val TINTA = Color(0xFF1E2224)
     private val ROJO = Color(0xFFB0413A)
-    private val GRANITO = Color(0xFF9A948A)
     /** Las tapas de los quaderni: negro, rojo, ocre, petróleo, azul de Prusia y verde salvia. */
     private val TAPAS = listOf(Color(0xFF26272A), Color(0xFFA2382E), Color(0xFFC08A3A), Color(0xFF2C5A60), Color(0xFF283F66), Color(0xFF6E8768))
     /** Los boletos: amarillo, naranja, rosa y verde claro. */
@@ -100,16 +94,18 @@ object EstanteUrbe : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.3f
-    override val base = 0.1f
-    override val lado = 0.06f
-    override val altoRepisa: Dp = 110.dp
-    override val tabla: Dp = 15.dp
-    override val separa: Dp = 3.dp
+    override val corona = MuebleEstanteUrbe.CORONA
+    override val base = MuebleEstanteUrbe.BASE
+    override val lado = MuebleEstanteUrbe.LADO
+    override val altoRepisa: Dp = MuebleEstanteUrbe.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteUrbe.TABLA
+    override val separa: Dp = MuebleEstanteUrbe.SEPARA
     override val letra: FontFamily = Letra.placa
+    /** Estante rehecho: el aura solo sale al tocar (ver [DisenoBiblioteca.auraEnReposo]). */
+    override val auraEnReposo = false
 
-    override fun ancho(palabras: Int): Dp = (22 + (palabras / 45).coerceAtMost(18)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.78f + 0.16f * azar(semilla, 3)
+    override fun ancho(palabras: Int): Dp = MuebleEstanteUrbe.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteUrbe.alto(semilla, palabras)
 
     /** Los poros del travertino: rayitas horizontales al azar. */
     private fun DrawScope.poros(r: Rect, color: Color, semilla: Int) {
@@ -123,273 +119,11 @@ object EstanteUrbe : DisenoBiblioteca {
         }
     }
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El muro del fondo: revoque ocre, con sus manchas de humedad y una grieta.
-        val cuerpo = Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, d.base.top)
-        drawRect(c(REVOQUE), cuerpo.topLeft, cuerpo.size)
-        for (k in 0 until 7) {
-            val o = Offset(cuerpo.left + cuerpo.width * azar(5, k), cuerpo.top + cuerpo.height * azar(6, k))
-            drawOval(c(REVOQUE_SOMBRA).copy(alpha = 0.22f), Offset(o.x - 18 * u, o.y - 10 * u), Size(36 * u, 20 * u))
-        }
-        val grieta = Path().apply {
-            moveTo(cuerpo.left + cuerpo.width * 0.72f, cuerpo.top + 20 * u)
-            lineTo(cuerpo.left + cuerpo.width * 0.7f, cuerpo.top + 34 * u)
-            lineTo(cuerpo.left + cuerpo.width * 0.74f, cuerpo.top + 46 * u)
-            lineTo(cuerpo.left + cuerpo.width * 0.72f, cuerpo.top + 62 * u)
-        }
-        drawPath(grieta, c(REVOQUE_SOMBRA), style = Stroke(0.8f * u))
-        // De noche, la luz de los faroles entra por las lamas de las persianas y raya el muro de arriba.
-        if (noche) {
-            val alcanceLuz = minOf(cuerpo.bottom, cuerpo.top + 300 * u)
-            clipRect(cuerpo.left, cuerpo.top, cuerpo.right, alcanceLuz) {
-                var y = cuerpo.top - cuerpo.width * 0.35f
-                while (y < alcanceLuz) {
-                    val franja = Path().apply {
-                        moveTo(cuerpo.left, y); lineTo(cuerpo.right, y + cuerpo.width * 0.35f)
-                        lineTo(cuerpo.right, y + cuerpo.width * 0.35f + 6 * u); lineTo(cuerpo.left, y + 6 * u); close()
-                    }
-                    drawPath(franja, FAROL.copy(alpha = 0.1f))
-                    y += 15 * u
-                }
-            }
-        }
-        // Cada repisa: la sombra de la tabla de arriba y de los montantes.
-        d.repisas.forEach { rep ->
-            drawRect(Color.Black.copy(alpha = if (noche) 0.3f else 0.2f), rep.topLeft, Size(rep.width, 6 * u))
-            drawRect(Color.Black.copy(alpha = 0.1f), rep.topLeft, Size(rep.width, 14 * u))
-            drawRect(Color.Black.copy(alpha = 0.12f), rep.topLeft, Size(6 * u, rep.height))
-            drawRect(Color.Black.copy(alpha = 0.12f), Offset(rep.right - 6 * u, rep.top), Size(6 * u, rep.height))
-        }
-        // Los costados: las jambas de travertino del arco, con el montante de hierro perforado por dentro.
-        listOf(d.izquierda to true, d.derecha to false).forEach { (lad, izq) ->
-            drawRect(c(TRAVERTINO), lad.topLeft, lad.size)
-            poros(lad, c(TRAVERTINO_PORO), if (izq) 61 else 62)
-            var yy = lad.top + 34 * u
-            while (yy < lad.bottom) { drawLine(c(TRAVERTINO_SOMBRA), Offset(lad.left, yy), Offset(lad.right, yy), 1f * u); yy += 34 * u }
-            val m = lad.width * 0.3f
-            val mx = if (izq) lad.right - m else lad.left
-            drawRect(c(HIERRO), Offset(mx, lad.top), Size(m, lad.height))
-            drawLine(c(HIERRO_LUZ), Offset(mx + m * 0.25f, lad.top), Offset(mx + m * 0.25f, lad.bottom), 0.8f * u)
-            var hy = lad.top + 6 * u
-            while (hy < lad.bottom - 6 * u) {
-                drawRoundRect(Color.Black.copy(alpha = 0.6f), Offset(mx + m * 0.42f, hy), Size(m * 0.32f, 4 * u), CornerRadius(1 * u))
-                hy += 9 * u
-            }
-            bisel(lad, Color.White.copy(alpha = 0.16f), Color.Black.copy(alpha = 0.16f), 1.2f * u)
-        }
-        // Las tablas de nogal sobre sus escuadras de hierro.
-        d.tablas.forEachIndexed { k, tb ->
-            drawRect(c(NOGAL), tb.topLeft, tb.size)
-            vetas(tb, c(NOGAL_VETA).copy(alpha = 0.45f), 70 + k, densidad = 0.7f, grosor = 0.7f)
-            drawRect(c(NOGAL_LUZ), tb.topLeft, Size(tb.width, 2 * u))
-            drawRect(Color.Black.copy(alpha = 0.22f), Offset(tb.left, tb.bottom), Size(tb.width, 3 * u))
-            listOf(tb.left + 12 * u, tb.right - 12 * u).forEach { x ->
-                val escuadra = Path().apply { moveTo(x - 6 * u, tb.bottom); lineTo(x + 6 * u, tb.bottom); lineTo(x, tb.bottom + 7 * u); close() }
-                drawPath(escuadra, c(HIERRO))
-            }
-        }
-        // El portaprecios de lata de cada mes, con su tarjeta blanca y un filete verde.
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRect(Color.Black.copy(alpha = 0.2f), Offset(r.left + 1 * u, r.top + 1.2f * u), r.size)
-            drawRect(c(ALUMINIO), r.inflate(1.4f * u).topLeft, r.inflate(1.4f * u).size)
-            drawRect(c(PAPEL), r.topLeft, r.size)
-            drawLine(c(PERSIANA), Offset(r.left, r.top + 1.2f * u), Offset(r.right, r.top + 1.2f * u), 1.2f * u)
-            textoEn(medidor, p.texto, Rect(r.left + 4 * u, r.top + 1.5f * u, r.right - 4 * u, r.bottom), letra, c(TINTA), 10f, peso = FontWeight.SemiBold, espaciado = 1f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el zócalo de travertino con su moldura y el piso de granito moteado.
-        val b = d.base
-        val piso = b.top + b.height * 0.6f
-        drawRect(c(GRANITO), Offset(0f, piso), Size(w, h - piso))
-        for (k in 0 until 120) {
-            val o = Offset(w * azar(81, k), piso + (h - piso) * azar(82, k))
-            val col = when (k % 3) { 0 -> TRAVERTINO; 1 -> TINTA; else -> BARRO }
-            drawCircle(c(col).copy(alpha = 0.55f), (0.6f + 1.2f * azar(83, k)) * u, o)
-        }
-        drawRect(c(TRAVERTINO), b.topLeft, Size(b.width, piso - b.top))
-        poros(Rect(b.left, b.top, b.right, piso), c(TRAVERTINO_PORO), 84)
-        drawRect(c(TRAVERTINO_SOMBRA), b.topLeft, Size(b.width, 2.5f * u))
-        drawLine(c(TRAVERTINO_SOMBRA), Offset(b.left, b.top + (piso - b.top) * 0.45f), Offset(b.right, b.top + (piso - b.top) * 0.45f), 1f * u)
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(b.left, piso), Size(b.width, 3 * u))
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteUrbe) { estante(d, medidor, oscuro, noche) }
 
-    /** El arco de travertino, la ventana con sus persianas, y la moka y la albahaca sobre la tabla de arriba. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El paño de travertino en hiladas.
-        drawRect(c(TRAVERTINO), r.topLeft, r.size)
-        poros(r, c(TRAVERTINO_PORO), 63)
-        var y = r.top + r.height * 0.18f
-        while (y < r.bottom) { drawLine(c(TRAVERTINO_SOMBRA), Offset(r.left, y), Offset(r.right, y), 1f * u); y += r.height * 0.18f }
-        // El vano del arco rebajado: el muro ocre por dentro.
-        val izq = r.left + r.width * lado; val der = r.right - r.width * lado
-        val flecha = r.height * 0.55f
-        val clave = r.top + r.height * 0.14f
-        val vano = Path().apply {
-            moveTo(izq, r.bottom); lineTo(izq, clave + flecha)
-            arcTo(Rect(izq, clave, der, clave + flecha * 2), 180f, 180f, false)
-            lineTo(der, r.bottom); close()
-        }
-        drawPath(vano, c(REVOQUE))
-        // Las dovelas: juntas que salen del intradós, la rosca y la clave.
-        val e = r.height * 0.1f
-        val cx = r.center.x; val cy = clave + flecha
-        val ax = (der - izq) / 2; val ay = flecha
-        for (k in 0..14) {
-            val a = (Math.PI * (1.0 + k / 14.0)).toFloat()
-            val co = cos(a); val si = sin(a)
-            drawLine(c(TRAVERTINO_SOMBRA), Offset(cx + ax * co, cy + ay * si), Offset(cx + (ax + e) * co, cy + (ay + e) * si), 1f * u)
-        }
-        drawArc(c(TRAVERTINO_SOMBRA), 180f, 180f, false, Offset(izq - e, clave - e), Size(der - izq + 2 * e, flecha * 2 + 2 * e), style = Stroke(1f * u))
-        drawPath(vano, c(TRAVERTINO_SOMBRA), style = Stroke(1.6f * u))
-        val piedraClave = Path().apply {
-            moveTo(cx - e * 0.45f, clave - e * 1.15f); lineTo(cx + e * 0.45f, clave - e * 1.15f)
-            lineTo(cx + e * 0.32f, clave + e * 0.1f); lineTo(cx - e * 0.32f, clave + e * 0.1f); close()
-        }
-        drawPath(piedraClave, c(TRAVERTINO))
-        drawPath(piedraClave, c(TRAVERTINO_SOMBRA), style = Stroke(1f * u))
-        // La ventana del tímpano: de día, el vidrio con el reflejo; de noche, la calle con su farol.
-        val tope = r.bottom - r.height * 0.1f
-        val win = Rect(cx - r.width * 0.08f, clave + flecha * 0.4f, cx + r.width * 0.08f, tope - r.height * 0.1f)
-        drawRect(if (noche) Color(0xFF1C2742) else c(VIDRIO), win.topLeft, win.size)
-        clipRect(win.left, win.top, win.right, win.bottom) {
-            if (noche) {
-                val f = Offset(win.left + win.width * 0.68f, win.top + win.height * 0.36f)
-                mancha(f, win.width * 0.6f, FAROL.copy(alpha = 0.55f))
-                drawLine(CALLE, Offset(win.right, f.y - win.height * 0.2f), Offset(f.x, f.y - win.height * 0.2f), 1.6f * u)
-                drawLine(CALLE, Offset(f.x, f.y - win.height * 0.2f), Offset(f.x, f.y - win.height * 0.12f), 1.2f * u)
-                val farol = Path().apply {
-                    moveTo(f.x - win.width * 0.07f, f.y - win.height * 0.12f); lineTo(f.x + win.width * 0.07f, f.y - win.height * 0.12f)
-                    lineTo(f.x + win.width * 0.05f, f.y + win.height * 0.08f); lineTo(f.x - win.width * 0.05f, f.y + win.height * 0.08f); close()
-                }
-                drawPath(farol, FAROL)
-                drawPath(farol, CALLE, style = Stroke(1f * u))
-                // Los edificios de enfrente, con alguna ventana encendida.
-                drawRect(CALLE, Offset(win.left, win.top + win.height * 0.62f), Size(win.width, win.height * 0.38f))
-                for (j in 0 until 3) drawRect(FAROL.copy(alpha = 0.5f), Offset(win.left + win.width * (0.12f + 0.3f * j), win.top + win.height * 0.72f), Size(win.width * 0.1f, win.height * 0.1f))
-            } else {
-                drawRect(c(TRAVERTINO_SOMBRA).copy(alpha = 0.6f), Offset(win.left, win.top + win.height * 0.62f), Size(win.width, win.height * 0.38f))
-                drawLine(Color.White.copy(alpha = 0.35f), Offset(win.left, win.top + win.height * 0.7f), Offset(win.left + win.width * 0.6f, win.top), 4 * u)
-            }
-        }
-        drawLine(c(PERSIANA), Offset(win.center.x, win.top), Offset(win.center.x, win.bottom), 2 * u)
-        drawLine(c(PERSIANA), Offset(win.left, win.top + win.height * 0.4f), Offset(win.right, win.top + win.height * 0.4f), 2 * u)
-        drawRect(c(PERSIANA), win.topLeft, win.size, style = Stroke(2.4f * u))
-        // Las persianas verdes abiertas a los lados, con sus lamas.
-        listOf(win.left - win.width * 0.48f to win.left, win.right to win.right + win.width * 0.48f).forEach { (a, b) ->
-            val hoja = Rect(a, win.top - 1 * u, b, win.bottom + 1 * u)
-            drawRect(c(PERSIANA), hoja.topLeft, hoja.size)
-            var ly = hoja.top + 3 * u
-            while (ly < hoja.bottom - 2 * u) {
-                drawLine(c(PERSIANA_LUZ), Offset(hoja.left + 2 * u, ly), Offset(hoja.right - 2 * u, ly), 1f * u)
-                drawLine(Color.Black.copy(alpha = 0.35f), Offset(hoja.left + 2 * u, ly + 1.2f * u), Offset(hoja.right - 2 * u, ly + 1.2f * u), 0.6f * u)
-                ly += 3.2f * u
-            }
-            drawRect(Color.Black.copy(alpha = 0.4f), hoja.topLeft, hoja.size, style = Stroke(1f * u))
-        }
-        // El alféizar.
-        drawRect(c(TRAVERTINO), Offset(win.left - win.width * 0.55f, win.bottom), Size(win.width * 2.1f, 3.5f * u))
-        drawRect(Color.Black.copy(alpha = 0.18f), Offset(win.left - win.width * 0.55f, win.bottom + 3.5f * u), Size(win.width * 2.1f, 2 * u))
-        // La tabla de arriba, de nogal con su labio de hierro.
-        val alta = Rect(izq, tope, der, r.bottom)
-        drawRect(c(NOGAL), alta.topLeft, alta.size)
-        vetas(alta, c(NOGAL_VETA).copy(alpha = 0.45f), 64, densidad = 0.7f, grosor = 0.7f)
-        drawRect(c(HIERRO), Offset(izq, r.bottom - 2.5f * u), Size(der - izq, 2.5f * u))
-        // La moka: dos cuerpos ochavados de aluminio, la cintura, la tapa con su perilla, el pico y el asa negra.
-        val mx = izq + (der - izq) * 0.16f
-        val s = r.height * 0.36f
-        val inferior = Path().apply { moveTo(mx - s * 0.32f, tope); lineTo(mx + s * 0.32f, tope); lineTo(mx + s * 0.22f, tope - s * 0.42f); lineTo(mx - s * 0.22f, tope - s * 0.42f); close() }
-        val superior = Path().apply { moveTo(mx - s * 0.22f, tope - s * 0.47f); lineTo(mx + s * 0.22f, tope - s * 0.47f); lineTo(mx + s * 0.3f, tope - s * 0.86f); lineTo(mx - s * 0.3f, tope - s * 0.86f); close() }
-        val pico = Path().apply { moveTo(mx - s * 0.28f, tope - s * 0.86f); lineTo(mx - s * 0.42f, tope - s * 0.92f); lineTo(mx - s * 0.26f, tope - s * 0.72f); close() }
-        val asa = Path().apply { moveTo(mx + s * 0.27f, tope - s * 0.82f); lineTo(mx + s * 0.46f, tope - s * 0.8f); lineTo(mx + s * 0.4f, tope - s * 0.52f); lineTo(mx + s * 0.22f, tope - s * 0.54f) }
-        drawPath(asa, c(TINTA), style = Stroke(3 * u))
-        drawPath(inferior, c(ALUMINIO)); drawPath(superior, c(ALUMINIO)); drawPath(pico, c(ALUMINIO))
-        listOf(-0.08f, 0.08f).forEach { f -> drawLine(Color.Black.copy(alpha = 0.2f), Offset(mx + s * f, tope), Offset(mx + s * f * 1.2f, tope - s * 0.86f), 0.8f * u) }
-        drawLine(Color.White.copy(alpha = 0.35f), Offset(mx - s * 0.14f, tope - s * 0.05f), Offset(mx - s * 0.12f, tope - s * 0.8f), 1f * u)
-        drawRect(c(HIERRO_LUZ), Offset(mx - s * 0.24f, tope - s * 0.48f), Size(s * 0.48f, s * 0.05f))
-        val tapa = Path().apply { moveTo(mx - s * 0.3f, tope - s * 0.86f); lineTo(mx + s * 0.3f, tope - s * 0.86f); lineTo(mx + s * 0.18f, tope - s * 0.96f); lineTo(mx - s * 0.18f, tope - s * 0.96f); close() }
-        drawPath(tapa, c(ALUMINIO))
-        drawPath(tapa, Color.Black.copy(alpha = 0.25f), style = Stroke(0.7f * u))
-        drawCircle(c(TINTA), s * 0.05f, Offset(mx, tope - s * 0.99f))
-        // Dos libros tumbados en medio.
-        listOf(Triple(0.42f, 0.2f, TAPAS[1]), Triple(0.44f, 0.17f, TAPAS[4])).forEachIndexed { k, (x0, an, col) ->
-            val alto0 = r.height * 0.055f
-            val top = tope - alto0 * (k + 1)
-            drawRect(c(col), Offset(izq + (der - izq) * x0, top), Size((der - izq) * an, alto0))
-            drawRect(c(PAPEL).copy(alpha = 0.85f), Offset(izq + (der - izq) * (x0 + an * 0.9f), top + alto0 * 0.15f), Size((der - izq) * an * 0.08f, alto0 * 0.7f))
-        }
-        // La maceta de albahaca.
-        val px = der - (der - izq) * 0.17f
-        val pa = r.height * 0.26f
-        val boca = tope - pa * 0.72f
-        val maceta = Path().apply { moveTo(px - pa * 0.42f, tope - pa * 0.62f); lineTo(px + pa * 0.42f, tope - pa * 0.62f); lineTo(px + pa * 0.3f, tope); lineTo(px - pa * 0.3f, tope); close() }
-        val hojas = (0 until 11).map { k ->
-            val a = (Math.PI * (1.05 + 0.9 * k / 10.0)).toFloat()
-            val rr = pa * (0.35f + 0.35f * azar(77, k))
-            Offset(px + rr * cos(a) * 1.2f, boca + rr * sin(a))
-        }
-        hojas.forEach { o -> drawLine(c(ALBAHACA).copy(alpha = 0.8f), Offset(px, boca), o, 0.7f * u) }
-        hojas.forEachIndexed { k, o ->
-            rotate((k * 33f) % 180f - 90f, o) {
-                drawOval(c(if (k % 3 == 0) ALBAHACA else ALBAHACA_LUZ), Offset(o.x - pa * 0.13f, o.y - pa * 0.07f), Size(pa * 0.26f, pa * 0.14f))
-            }
-        }
-        drawPath(maceta, c(BARRO))
-        drawRect(c(BARRO), Offset(px - pa * 0.48f, boca), Size(pa * 0.96f, pa * 0.14f))
-        drawRect(Color.Black.copy(alpha = 0.18f), Offset(px - pa * 0.48f, boca + pa * 0.14f), Size(pa * 0.96f, pa * 0.04f))
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val base = TAPAS[(v.semilla and 0x7fffffff) % TAPAS.size]
-        val tapa = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        val arriba = h * 0.07f
-        // Los boletos de autobús que asoman por arriba: más cuanto más escribiste.
-        val boletos = 1 + (v.lleno * 3).toInt()
-        for (j in 0 until boletos) {
-            val bw = w * 0.28f
-            val bx = w * 0.16f + (w * 0.56f - bw) * azar(v.semilla, 20 + j) + w * 0.06f * j
-            val sale = arriba * (0.5f + 0.5f * azar(v.semilla, 30 + j))
-            val boleto = Rect(bx.coerceAtMost(w * 0.8f - bw), arriba - sale, bx.coerceAtMost(w * 0.8f - bw) + bw, arriba + 2 * u)
-            drawRect(c(BOLETOS[(j + (v.semilla and 3)) % BOLETOS.size]), boleto.topLeft, boleto.size)
-            drawLine(c(TINTA).copy(alpha = 0.4f), Offset(boleto.left + bw * 0.2f, boleto.top + sale * 0.45f), Offset(boleto.right - bw * 0.2f, boleto.top + sale * 0.45f), 0.6f * u)
-        }
-        // La tapa dura, con el lomo de tela a la izquierda.
-        drawRoundRect(tapa, Offset(0f, arriba), Size(w, h - arriba), CornerRadius(2.5f * u))
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(0f, arriba), Size(w * 0.14f, h - arriba))
-        drawLine(Color.White.copy(alpha = 0.12f), Offset(w * 0.15f, arriba), Offset(w * 0.15f, h), 0.8f * u)
-        drawRect(Color.White.copy(alpha = 0.07f), Offset(w * 0.18f, arriba), Size(w * 0.1f, h - arriba))
-        // La etiqueta blanca con el día y el mes.
-        val et = Rect(w * 0.22f, h * 0.16f, w * 0.78f, h * 0.62f)
-        drawRect(c(PAPEL), et.topLeft, et.size)
-        drawRect(c(TINTA).copy(alpha = 0.5f), et.topLeft, et.size, style = Stroke(0.6f * u))
-        drawLine(c(ROJO), Offset(et.left, et.top + et.height * 0.1f), Offset(et.right, et.top + et.height * 0.1f), 0.7f * u)
-        textoEn(medidor, v.dia, Rect(et.left, et.top + et.height * 0.12f, et.right, et.top + et.height * 0.4f), letra, c(TINTA), 14f, peso = FontWeight.Bold)
-        textoEn(medidor, v.mes, Rect(et.left + 1 * u, et.top + et.height * 0.42f, et.right - 1 * u, et.bottom - 2 * u), letra, c(TINTA).copy(alpha = 0.85f), 8f, vertical = true, minimo = 4.5f)
-        // La liga elástica que cierra el cuaderno.
-        drawRect(Color.Black.copy(alpha = 0.55f), Offset(w * 0.83f, arriba), Size(w * 0.07f, h - arriba))
-        drawLine(Color.White.copy(alpha = 0.18f), Offset(w * 0.845f, arriba), Offset(w * 0.845f, h), 0.6f * u)
-        // Abajo, el sello en seco de la tapa; de noche, una luna.
-        val cs = Offset(w * 0.5f, h * 0.8f)
-        val s = minOf(w * 0.4f, 10 * u)
-        if (v.noche) {
-            drawCircle(LUNA, s * 0.42f, cs)
-            drawCircle(tapa, s * 0.36f, Offset(cs.x + s * 0.18f, cs.y - s * 0.1f))
-            drawCircle(LUNA.copy(alpha = 0.8f), 0.8f * u, Offset(cs.x - s * 0.6f, cs.y + s * 0.5f))
-        } else {
-            drawRoundRect(Color.White.copy(alpha = 0.14f), Offset(cs.x - s / 2, cs.y - s * 0.3f), Size(s, s * 0.6f), CornerRadius(s * 0.3f), style = Stroke(0.8f * u))
-            drawLine(Color.White.copy(alpha = 0.14f), Offset(cs.x - s * 0.25f, cs.y), Offset(cs.x + s * 0.25f, cs.y), 0.8f * u)
-        }
-        // Las esquinas redondeadas un poco gastadas.
-        drawRect(Color.White.copy(alpha = 0.06f), Offset(0f, h - 2 * u), Size(w, 2 * u))
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteUrbe) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
