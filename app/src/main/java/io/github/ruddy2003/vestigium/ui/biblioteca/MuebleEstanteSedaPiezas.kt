@@ -252,7 +252,7 @@ internal fun DrawScope.fieltroSeda(pie: Offset, w: Float, a: AireSeda, cerca: Fl
 internal fun DrawScope.colgadoSeda(estaca: Offset, w: Float, a: AireSeda, cerca: Float, frio: Float) {
     val u = density
     val sombraDia = if (a.oscuro) 0f else 0.14f
-    val corr = if (a.oscuro && !a.brasa) Offset(-w * 0.012f, w * 0.008f) else Offset(w * 0.014f, w * 0.012f)
+    val corr = if (a.oscuro) Offset(-w * 0.012f, w * 0.008f) else Offset(w * 0.014f, w * 0.012f)
     val soga = a.luz(Color(0xFF8A6A48), cerca, frio)
     val sogaOsc = mezcla(soga, a.hondo, 0.35f)
     // Las vueltas de la soga: óvalos flojos que cuelgan de la estaca, cada uno un poco corrido.

@@ -43,7 +43,8 @@ import kotlin.math.sqrt
  */
 internal fun DrawScope.muroSeda(a: AireSeda, ch: Float, fondo: Float, suelo: Float, x0: Float, x1: Float) {
     val u = density; val w = size.width
-    val lejos = 0.1f
+    // En los Sueños de noche la cal lejos de la lámpara se hunde del todo: solo la alumbran su charco y la reja de la luna.
+    val lejos = if (a.lunar) 0f else 0.1f
     val cal = a.luz(SedaTinta.CAL, lejos, 0.1f)
     // De día la cal es fría donde no da el sol: el color de fondo ya lleva esa penumbra lila.
     drawRect(if (a.oscuro) cal else mezcla(cal, SOMBRA_MUEBLE, if (a.noche) 0.14f else 0.11f), Offset.Zero, Size(w, suelo))
@@ -226,7 +227,7 @@ internal fun DrawScope.luzRejaSeda(a: AireSeda, apoyo: Float) {
     val ya = w * (if (a.oscuro) (if (a.noche) 0.15f else 0.1f) else if (a.noche) 0.21f else 0.095f)
     val alto = w * (if (a.oscuro) (if (a.noche) 0.4f else 0.3f) else if (a.noche) 0.24f else 0.31f)
     val color = when {
-        a.oscuro -> SedaTinta.LUNA.copy(alpha = if (a.noche) 0.3f else 0.18f)
+        a.oscuro -> SedaTinta.LUNA.copy(alpha = if (a.noche) 0.42f else 0.18f)
         a.noche -> SedaTinta.OCASO.copy(alpha = 0.5f)
         else -> SedaTinta.SOL.copy(alpha = 0.78f)
     }

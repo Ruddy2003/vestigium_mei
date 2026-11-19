@@ -154,14 +154,15 @@ private fun biblioteca(v: Variante): List<Llamada> {
             with(real) { volumen(v, medidor, oscuro) }
         }
     }
-    Repo.dias = diasEjemplo()
-    val todas = Repo.dias.values.filter { it.nota.isNotBlank() }.sortedByDescending { it.fecha }
+    // ARNES_SUENOS=1: el estante de los Sueños, con los mismos 14 sueños que dibuja `dibujar.sh`.
+    Repo.dias = if (conSuenos) suenosEjemplo(diasEjemplo()) else diasEjemplo()
+    val todas = Repo.dias.values.filter { if (conSuenos) it.sueno_texto.isNotBlank() else it.nota.isNotBlank() }.sortedByDescending { it.fecha }
     val porMes = todas.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
     val grupos = porMes.entries.take(6).map { (mes, lista) -> GrupoEstante(Estilo.mesConComun(mes.drop(5).toInt(), mes.take(4).toInt()), lista) }
     val o = v.tema.soloOscuro || v.oscuro
     ImageComposeScene(ANCHO_M, 9000, densidad) {
         MaterialTheme(colorScheme = esquemaDe(v.tema, o), typography = tipoDe(v.tema, o)) {
-            Box(Modifier.padding(horizontal = 16.dp)) { EstanteTema(espia, grupos, false, {}) }
+            Box(Modifier.padding(horizontal = 16.dp)) { EstanteTema(espia, grupos, conSuenos, {}) }
         }
     }.use { it.render(0) }
     anotando = false

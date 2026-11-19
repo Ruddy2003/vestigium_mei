@@ -74,19 +74,14 @@ internal object SedaTinta {
     val ATARDECER = Color(0xFF4B3C6A)
     val LLAMA = Color(0xFFFFD58A)
     val LUNA = Color(0xFFBFD0F2)
-    /** La luna de los Sueños de noche, más azul. */
-    val LUNA_SUENOS = Color(0xFF9DB8F6)
     val SOL = Color(0xFFFFF0C8)
     val OCASO = Color(0xFFFFB47A)
-    /** El brasero del patio, que en los Sueños de noche se refleja en la jamba. */
-    val BRASA = Color(0xFFFF9A4A)
 }
 
 /**
  * El aire del momento en el almacén: de día (sol por la reja de la izquierda), de noche (el modo oscuro: la lámpara de barro
  * a la derecha y la luna por la misma reja) y en los Sueños ([noche]: el atardecer en claro, con el color de cada cosa; la
- * noche honda en oscuro, con la lámpara en rescoldo, la luna mandando y el brasero del patio reflejado en la jamba). [cerca]
- * es cuánto llega de la luz cálida (0 a 1) y [frio] cuánto de la luna.
+ * noche honda en oscuro, [lunar]). [cerca] es cuánto llega de la luz cálida (0 a 1) y [frio] cuánto de la luna.
  */
 internal class AireSeda(val oscuro: Boolean, val noche: Boolean) {
     /** Si arde la lámpara. */
@@ -94,20 +89,26 @@ internal class AireSeda(val oscuro: Boolean, val noche: Boolean) {
     /** El color en que se hunde lo que no se alumbra. */
     val hondo: Color get() = if (oscuro) (if (noche) SedaTinta.NOCHE_SUENOS else SedaTinta.NOCHE) else SOMBRA_MUEBLE
     /**
-     * Los Sueños de noche: la lámpara está en rescoldo, manda la luna por la reja y lo único cálido es el brasero del patio,
-     * que se refleja en la jamba de la izquierda ([cerca] es entonces cuánto llega de él).
+     * Los Sueños de noche: dos luces de temperatura contraria. La lámpara arde, pero alcanza menos que en el diario: hace su
+     * charco cálido en la cal y en lo cercano de la primera repisa, y lo que queda lejos de ella se hunde en la noche azul de
+     * verdad. La luna entra por la reja con más fuerza: enfría lo que alumbra (lo tiñe, no le echa un velo encima) y deja su
+     * dibujo en la cal.
      */
-    val brasa: Boolean get() = oscuro && noche
-    private val luna: Float get() = if (brasa) 1.7f else 1f
+    val lunar: Boolean get() = oscuro && noche
+    private val luna: Float get() = if (lunar) 1.35f else 1f
+
+    /** Lo que alumbra la luna de los Sueños, enfriado: le quita rojo y le da azul sin levantar los negros. */
+    private fun lunada(c: Color, f: Float): Color =
+        if (f <= 0f) c else Color(c.red * (1f - 0.3f * f), c.green * (1f - 0.12f * f), (c.blue * (1f + 0.14f * f)).coerceAtMost(1f), c.alpha)
 
     fun luz(c: Color, cerca: Float, frio: Float = 0f): Color {
         val k = cerca.coerceIn(0f, 1f)
         // Al atardecer cada cosa conserva su color: solo un poco de la luz lila del cielo y el sol bajo en lo que mira a la reja.
         if (!oscuro) return if (noche) mezcla(mezcla(c, SedaTinta.ATARDECER, 0.13f), FILO_MUEBLE, 0.08f * k) else c
         val f = (frio * luna).coerceIn(0f, 1f) * (1f - k)
+        if (lunar) return lunada(mezcla(mezcla(c, hondo, 0.9f - 0.8f * k.pow(0.95f) - 0.22f * f), FILO_MUEBLE, 0.3f * k), f)
         val base = mezcla(c, hondo, 0.87f - 0.77f * k.pow(0.95f) - 0.18f * f)
-        val calido = if (brasa) SedaTinta.BRASA else FILO_MUEBLE
-        return mezcla(mezcla(base, calido, 0.2f * k), if (brasa) SedaTinta.LUNA_SUENOS else SedaTinta.LUNA, (if (brasa) 0.26f else 0.14f) * f)
+        return mezcla(mezcla(base, FILO_MUEBLE, 0.2f * k), SedaTinta.LUNA, 0.14f * f)
     }
     fun sombra(a: Float): Color = if (oscuro) hondo.copy(alpha = (a * 1.15f).coerceIn(0f, 1f)) else sombraMueble(if (noche) a * 1.15f else a)
     fun claro(a: Float): Color = luzMueble(if (oscuro) a * 0.15f else if (noche) a * 0.55f else a)
@@ -120,14 +121,22 @@ internal class AireSeda(val oscuro: Boolean, val noche: Boolean) {
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) mezcla(mezcla(t, SedaTinta.ATARDECER, 0.07f), FILO_MUEBLE, 0.05f * k) else t
         val f = (frio * luna).coerceIn(0f, 1f) * (1f - k)
-        val calido = if (brasa) SedaTinta.BRASA else FILO_MUEBLE
-        return mezcla(mezcla(mezcla(t, hondo, 0.58f - 0.48f * k - 0.14f * f), calido, 0.1f * k), if (brasa) SedaTinta.LUNA_SUENOS else SedaTinta.LUNA, (if (brasa) 0.16f else 0.1f) * f)
+        if (lunar) {
+            // En los Sueños el ánimo se oscurece sin cambiar de color (se multiplica, no se mezcla con el azul de la noche, que
+            // lo volvería malva): apenas un velo de noche, el charco de la lámpara y el frío de la luna.
+            val d = 0.56f - 0.56f * k
+            val s = 1f - 0.72f * d
+            return lunada(mezcla(mezcla(Color(t.red * s, t.green * s, t.blue * s), hondo, 0.4f * d), FILO_MUEBLE, 0.3f * k), f * 0.7f)
+        }
+        return mezcla(mezcla(mezcla(t, hondo, 0.58f - 0.48f * k - 0.14f * f), FILO_MUEBLE, 0.1f * k), SedaTinta.LUNA, 0.1f * f)
     }
     /** El hueso o el papel donde va el día: casi no se apaga, para que el número se lea siempre. */
     fun etiqueta(cerca: Float, base: Color = SedaTinta.HUESO): Color {
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) mezcla(base, SedaTinta.ATARDECER, 0.08f) else base
-        return mezcla(mezcla(base, hondo, 0.4f - 0.32f * k), if (brasa) SedaTinta.BRASA else FILO_MUEBLE, 0.14f * k)
+        // En los Sueños de noche también el hueso se apaga lejos de la lámpara y se entibia cerca (sin dejar de leerse).
+        if (lunar) return mezcla(mezcla(base, hondo, 0.46f - 0.42f * k), FILO_MUEBLE, 0.22f * k)
+        return mezcla(mezcla(base, hondo, 0.4f - 0.32f * k), FILO_MUEBLE, 0.14f * k)
     }
     val tinta: Color get() = if (oscuro) mezcla(SedaTinta.TINTA, hondo, 0.4f) else SedaTinta.TINTA
 }
@@ -139,8 +148,9 @@ internal class AireSeda(val oscuro: Boolean, val noche: Boolean) {
  * de álamo desbastado a azuela que hace de vasar, tablas de álamo reseco empotradas en el barro y, al fondo de cada hueco, el
  * barro sin encalar. Arriba, las vigas del techo con su estera de caña. La luz de día entra por una reja de palos que queda
  * fuera del cuadro, a la izquierda, y deja su dibujo en la cal; de noche, por la misma reja entra la luna y alumbra la lámpara
- * de barro sobre su ménsula de palo, a la derecha. Todo el dibujo sale de [estante] y de [volumen]; la luz de la noche de los
- * dos sale de las mismas curvas ([alcanceSeda], [brasaSeda] y [frioSeda]). El muro está en `MuebleEstanteSedaMuro.kt`, lo de
+ * de barro sobre su ménsula de palo, a la derecha (en los Sueños de noche, con un charco más corto y la luna más fuerte: ver
+ * [AireSeda.lunar]). Todo el dibujo sale de [estante] y de [volumen]; la luz de la noche de los dos sale de las mismas curvas
+ * ([alcanceSeda] y [frioSeda]). El muro está en `MuebleEstanteSedaMuro.kt`, lo de
  * arriba en `MuebleEstanteSedaArriba.kt`, lo del pie y de los huecos en `MuebleEstanteSedaPiezas.kt` y los volúmenes en
  * `MuebleEstanteSedaVolumenes.kt`.
  */
@@ -185,9 +195,6 @@ internal object MuebleEstanteSeda {
     const val FILA = 125f
     /** En la base: dónde empieza el suelo, en fracción de su alto. */
     const val SUELO = 0.5f
-    /** El reflejo del brasero del patio en la jamba izquierda (los Sueños de noche), en anchos del mueble. */
-    const val BRASA_X = -0.05f
-    const val BRASA_Y = CORONA + 0.35f * FILA / ANCHO_NOMINAL
 
     // ---------------------------------------------------------------- el estante
 
@@ -202,11 +209,8 @@ internal object MuebleEstanteSeda {
         val suelo = b.top + b.height * SUELO
         val fila = if (n > 0) d.repisas[0].height + d.tablas[0].height else FILA * u
         val llama = Offset(w * LAMP_X, w * LAMP_Y)
-        fun cerca(p: Offset): Float = when {
-            a.brasa -> brasaSeda(p.x / w - BRASA_X, p.y / w - BRASA_Y)
-            p.y <= ch -> alcanceSeda((p.x - llama.x) / w, (p.y - llama.y) / w, n)
-            else -> cercaCuerpoSeda((p.y - ch) / fila, n, p.x / w)
-        }
+        fun cerca(p: Offset): Float =
+            if (p.y <= ch) alcanceSeda((p.x - llama.x) / w, (p.y - llama.y) / w, n, a.lunar) else cercaCuerpoSeda((p.y - ch) / fila, n, p.x / w, a.lunar)
         fun frio(p: Offset): Float =
             if (p.y <= ch) frioSeda(p.x / w - REJA_X, p.y / w - REJA_Y) else frioCuerpoSeda((p.y - ch) / fila, n, p.x / w)
         val x0 = d.izquierda.right; val x1 = d.derecha.left
@@ -217,7 +221,13 @@ internal object MuebleEstanteSeda {
 
         muroSeda(a, ch, fondo, suelo, x0, x1)
         luzRejaSeda(a, apoyo)
-        if (a.lumbre && !a.brasa) {
+        if (a.lunar) {
+            // En los Sueños de noche, el charco de la lámpara: más corto y más encendido en el centro, para que la cal de la
+            // izquierda quede para la luna.
+            mancha(llama, w * 0.75f, FILO_MUEBLE.copy(alpha = 0.2f))
+            mancha(llama, w * 0.36f, FILO_MUEBLE.copy(alpha = 0.34f))
+            mancha(llama, w * 0.15f, SedaTinta.LLAMA.copy(alpha = 0.5f))
+        } else if (a.lumbre) {
             // El halo de la lámpara en la cal: unas pocas manchas, no un velo.
             val f = if (oscuro) 1f else 0.45f
             mancha(llama, w * 1.2f, FILO_MUEBLE.copy(alpha = 0.16f * f))
@@ -239,12 +249,6 @@ internal object MuebleEstanteSeda {
         }
         // ---- las jambas: la cal redondeada a mano en las aristas del vano, gastada donde roza
         jambasSeda(a, d, x0, x1, ch, fondo, n, fila)
-        // En los Sueños de noche, el brasero del patio se refleja en la jamba de la izquierda: lo único cálido, y lejano.
-        if (a.brasa) {
-            val b0 = Offset(w * BRASA_X, w * BRASA_Y)
-            mancha(b0, w * 0.75f, SedaTinta.BRASA.copy(alpha = 0.16f))
-            mancha(b0, w * 0.3f, SedaTinta.BRASA.copy(alpha = 0.3f))
-        }
 
         // ---- lo que hay en los huecos libres
         d.repisas.forEachIndexed { k, r ->
@@ -262,7 +266,7 @@ internal object MuebleEstanteSeda {
         drawRect(a.sombra(0.16f), Offset(x0, ch + 3.5f * u), Size(x1 - x0, 6f * u))
 
         // ---- lo de arriba, de atrás adelante: el cayado, las sedas, la lámpara, los vidrios al sol, las cartas, los melocotones
-        val lado = { p: Offset -> if (a.brasa) -1f else if (oscuro || noche) (if (llama.x >= p.x) 1f else -1f) else -1f }
+        val lado = { p: Offset -> if (oscuro || noche) (if (llama.x >= p.x) 1f else -1f) else -1f }
         val pieCayado = Offset(w * 0.035f, apoyo)
         cayadoSeda(pieCayado, Offset(w * 0.2f, w * 0.075f), w, a, { p -> cerca(p) }, { p -> frio(p) })
         // El hollín de la lámpara en la cal, que sube hasta el techo, y las jornadas del camino rayadas con carbón.
@@ -284,11 +288,11 @@ internal object MuebleEstanteSeda {
         val pieFruta = Offset(w * 0.13f, apoyo)
         melocotonesSeda(pieFruta, w, a, cerca(pieFruta - Offset(0f, w * 0.03f)), frio(pieFruta - Offset(0f, w * 0.03f)))
 
-        // ---- al pie: la tinaja del vino y el fieltro enrollado
+        // ---- al pie: la tinaja del vino y el fieltro enrollado (en los Sueños de noche, más hundidos: quedan lejos de la lámpara)
         val pieTinaja = Offset(w * 0.125f, suelo + w * 0.075f)
-        tinajaSeda(pieTinaja, w, a, maxOf(cerca(pieTinaja - Offset(0f, w * 0.1f)), 0.12f), frio(pieTinaja))
+        tinajaSeda(pieTinaja, w, a, maxOf(cerca(pieTinaja - Offset(0f, w * 0.1f)), if (a.lunar) 0.07f else 0.12f), frio(pieTinaja))
         val pieFieltro = Offset(w * 0.68f, suelo + w * 0.105f)
-        fieltroSeda(pieFieltro, w, a, maxOf(cerca(pieFieltro + Offset(w * 0.15f, -w * 0.05f)), 0.14f))
+        fieltroSeda(pieFieltro, w, a, maxOf(cerca(pieFieltro + Offset(w * 0.15f, -w * 0.05f)), if (a.lunar) 0.05f else 0.14f))
 
         // ---- la llama, encima de todo, con su propio color
         if (a.lumbre) llamaSeda(llama, w, a)
@@ -394,7 +398,7 @@ internal object MuebleEstanteSeda {
         for (t in 0 until tramos) {
             val ya = ch + (fondo - ch) * t / tramos; val yb = ch + (fondo - ch) * (t + 1) / tramos + 0.6f
             val pos = ((ya + yb) / 2 - ch) / fila
-            val kl = cercaCuerpoSeda(pos, n, x0 / w, a.brasa); val kr = cercaCuerpoSeda(pos, n, x1 / w, a.brasa)
+            val kl = cercaCuerpoSeda(pos, n, x0 / w, a.lunar); val kr = cercaCuerpoSeda(pos, n, x1 / w, a.lunar)
             val fl = frioCuerpoSeda(pos, n, x0 / w); val fr = frioCuerpoSeda(pos, n, x1 / w)
             // La arista de la izquierda se va hacia dentro (en sombra de día); la de la derecha mira a la ventana.
             // Los cantos redondeados a mano: en tres pasos, de la cara del muro hacia dentro del vano.
@@ -420,7 +424,7 @@ internal object MuebleEstanteSeda {
                     }
                     close()
                 }
-                val kk = cercaCuerpoSeda((t.center.y - ch) / fila, n, x / w, a.brasa)
+                val kk = cercaCuerpoSeda((t.center.y - ch) / fila, n, x / w, a.lunar)
                 drawPath(p, a.luz(mezcla(SedaTinta.ADOBE, SedaTinta.CAL, 0.25f), kk, frioCuerpoSeda((t.center.y - ch) / fila, n, x / w)))
                 drawPath(bordeSeda(p, 0.8f * u, 1f * u), a.sombra(0.3f))
             }
@@ -432,7 +436,7 @@ internal object MuebleEstanteSeda {
             val x = if (izq) x0 - r * 0.5f else x1 + r * 0.4f
             val pos = (y - ch) / fila
             val l = (6f + 10f * azar(861, j)) * u
-            drawRoundRect(a.luz(SedaTinta.ADOBE, cercaCuerpoSeda(pos, n, x / w, a.brasa), frioCuerpoSeda(pos, n, x / w)).copy(alpha = 0.75f), Offset(x - 1.4f * u, y), Size(2.8f * u, l), CornerRadius(1.4f * u))
+            drawRoundRect(a.luz(SedaTinta.ADOBE, cercaCuerpoSeda(pos, n, x / w, a.lunar), frioCuerpoSeda(pos, n, x / w)).copy(alpha = 0.75f), Offset(x - 1.4f * u, y), Size(2.8f * u, l), CornerRadius(1.4f * u))
         }
     }
 
@@ -515,25 +519,22 @@ internal object MuebleEstanteSeda {
 
 /**
  * La curva de la luz de la lámpara: cuánta llega (de 1 a 0) a un punto que está a [dx] y [dy] de la llama, en anchos del
- * mueble. En un estante corto la luz se acaba antes, para que la última repisa quede siempre en penumbra.
+ * mueble. En un estante corto la luz se acaba antes, para que la última repisa quede siempre en penumbra. Con [corto] (los
+ * Sueños de noche), el charco es más chico: lo lejano se apaga de verdad.
  */
-internal fun alcanceSeda(dx: Float, dy: Float, repisas: Int): Float {
+internal fun alcanceSeda(dx: Float, dy: Float, repisas: Int, corto: Boolean = false): Float {
     val radio = 1.0f + 0.1f * repisas.coerceIn(2, 5)
-    return (1f - sqrt(dx * dx + dy * dy) / radio).coerceIn(0f, 1f)
+    return (1f - sqrt(dx * dx + dy * dy) / (if (corto) radio * 0.8f else radio)).coerceIn(0f, 1f)
 }
 
 /**
  * La luz cálida en el cuerpo del mueble: [pos] cuenta repisas desde la de arriba (1.5 es media altura de la segunda). Es la
- * de la lámpara; con [brasa] (los Sueños de noche), la del brasero del patio reflejada en la jamba.
+ * de la lámpara; con [corto], la de los Sueños de noche (ver [alcanceSeda]).
  */
-internal fun cercaCuerpoSeda(pos: Float, repisas: Int, fx: Float, brasa: Boolean = false): Float {
+internal fun cercaCuerpoSeda(pos: Float, repisas: Int, fx: Float, corto: Boolean = false): Float {
     val y = MuebleEstanteSeda.CORONA + pos * MuebleEstanteSeda.FILA / MuebleEstanteSeda.ANCHO_NOMINAL
-    return if (brasa) brasaSeda(fx - MuebleEstanteSeda.BRASA_X, y - MuebleEstanteSeda.BRASA_Y)
-    else alcanceSeda(fx - MuebleEstanteSeda.LAMP_X, y - MuebleEstanteSeda.LAMP_Y, repisas)
+    return alcanceSeda(fx - MuebleEstanteSeda.LAMP_X, y - MuebleEstanteSeda.LAMP_Y, repisas, corto)
 }
-
-/** Lo que llega del brasero del patio (los Sueños de noche) a un punto a [dx] y [dy] de su reflejo: poco y cerca. */
-internal fun brasaSeda(dx: Float, dy: Float): Float = ((1f - sqrt(dx * dx + dy * dy) / 0.85f) * 0.66f).coerceIn(0f, 1f)
 
 /** Cuánta luna (o sol bajo) entra por la reja hasta un punto a [dx] y [dy] del centro de su mancha, en anchos del mueble. */
 internal fun frioSeda(dx: Float, dy: Float): Float = ((1f - sqrt(dx * dx * 0.8f + dy * dy) / 0.95f) * 0.9f).coerceIn(0f, 1f)

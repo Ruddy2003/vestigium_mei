@@ -53,10 +53,10 @@ import kotlin.math.sin
  */
 internal fun DrawScope.lamparaBarroSeda(llama: Offset, w: Float, a: AireSeda) {
     val u = density
-    val k = if (a.lumbre && !a.brasa) 0.95f else 0.08f
+    val k = if (a.lumbre) 0.95f else 0.08f
     val f = if (a.oscuro) frioSeda(llama.x / w - MuebleEstanteSeda.REJA_X, llama.y / w - MuebleEstanteSeda.REJA_Y) else 0f
     val tabla = Rect(llama.x - w * 0.018f, llama.y + w * 0.036f, llama.x + w * 0.11f, llama.y + w * 0.05f)
-    val corr = if (a.oscuro && !a.brasa) Offset(0f, w * 0.006f) else Offset(w * 0.014f, w * 0.012f)
+    val corr = if (a.oscuro) Offset(0f, w * 0.006f) else Offset(w * 0.014f, w * 0.012f)
     // Las dos estacas, metidas en el muro, que asoman por debajo de la tablilla; y la sombra de todo en la cal.
     val estacas = listOf(tabla.left + tabla.width * 0.2f, tabla.left + tabla.width * 0.78f)
     estacas.forEach { x ->
@@ -89,7 +89,7 @@ internal fun DrawScope.lamparaBarroSeda(llama: Offset, w: Float, a: AireSeda) {
     val cuerpo = Path().apply { addOval(Rect(c.x - an / 2, c.y - al / 2, c.x + an / 2, c.y + al / 2)) }
     drawPath(corridoSeda(cuerpo, corr.x * 0.6f, corr.y * 0.6f), a.sombra(0.25f))
     drawPath(cuerpo, barro)
-    redondoSeda(cuerpo, a, k, if (a.oscuro && !a.brasa) -1f else -1f)
+    redondoSeda(cuerpo, a, k, -1f)
     // La boca del cuenco, con el aceite oscuro, y el labio a la luz.
     drawOval(a.luz(mezcla(SedaTinta.ARCILLA, SedaTinta.HOLLIN, 0.55f), k, f), Offset(c.x - an * 0.36f, c.y - al * 0.5f), Size(an * 0.72f, al * 0.42f))
     drawArc(a.claro(0.5f), 180f, 110f, false, Offset(c.x - an * 0.4f, c.y - al * 0.55f), Size(an * 0.8f, al * 0.5f), style = Stroke(0.8f * u))
@@ -98,7 +98,7 @@ internal fun DrawScope.lamparaBarroSeda(llama: Offset, w: Float, a: AireSeda) {
     // El hollín del pico y la mecha.
     drawOval(a.luz(SedaTinta.HOLLIN, k, f).copy(alpha = 0.6f), Offset(llama.x - an * 0.04f, llama.y - al * 0.1f), Size(an * 0.18f, al * 0.5f))
     drawLine(a.luz(SedaTinta.TINTA, k, f), llama + Offset(0f, al * 0.2f), llama - Offset(an * 0.01f, al * 0.3f), 1.3f * u, StrokeCap.Round)
-    if (a.lumbre && !a.brasa && a.oscuro) drawArc(FILO_MUEBLE.copy(alpha = 0.7f), 180f, 140f, false, Offset(c.x - an * 0.4f, c.y - al * 0.55f), Size(an * 0.8f, al * 0.5f), style = Stroke(1f * u))
+    if (a.oscuro) drawArc(FILO_MUEBLE.copy(alpha = 0.7f), 180f, 140f, false, Offset(c.x - an * 0.4f, c.y - al * 0.55f), Size(an * 0.8f, al * 0.5f), style = Stroke(1f * u))
 }
 
 /** El hollín de tantas noches: sube de la mecha hasta el techo, abriéndose, en la cal. */
@@ -115,20 +115,8 @@ internal fun DrawScope.hollinSeda(llama: Offset, w: Float, a: AireSeda) {
     mancha(Offset(llama.x + w * 0.02f, techo + alto * 0.08f), alto * 0.42f, col.copy(alpha = 0.32f * f))
 }
 
-/** La llama de la lámpara, con su color propio; en los Sueños de noche, en rescoldo: la brasa de la mecha y su hilo de humo. */
+/** La llama de la lámpara, con su color propio. */
 internal fun DrawScope.llamaSeda(p: Offset, w: Float, a: AireSeda) {
-    val u = density
-    if (a.brasa) {
-        drawCircle(SedaTinta.BRASA.copy(alpha = 0.35f), w * 0.008f, p)
-        drawCircle(Color(0xFFFF6A2A), w * 0.003f, p)
-        val humo = Path().apply {
-            moveTo(p.x, p.y - w * 0.004f)
-            cubicTo(p.x - w * 0.012f, p.y - w * 0.03f, p.x + w * 0.014f, p.y - w * 0.05f, p.x - w * 0.004f, p.y - w * 0.085f)
-            cubicTo(p.x - w * 0.016f, p.y - w * 0.1f, p.x + w * 0.006f, p.y - w * 0.12f, p.x + w * 0.002f, p.y - w * 0.14f)
-        }
-        drawPath(humo, SedaTinta.LUNA.copy(alpha = 0.22f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
-        return
-    }
     val s = w * 0.027f
     val q = p - Offset(0f, w * 0.004f)
     drawCircle(SedaTinta.LLAMA.copy(alpha = 0.16f), s * 1.1f, q - Offset(0f, s * 0.5f))
@@ -237,7 +225,7 @@ private fun DrawScope.telaSeda(xa: Float, xb: Float, yVara: (Float) -> Float, la
         }
     }
     drawPath(flecos, honda, style = Stroke(0.6f * u))
-    if (a.oscuro && cerca > 0.05f && !a.brasa) drawPath(corridoSeda(forma, 0.8f * u, 0f), FILO_MUEBLE.copy(alpha = 0.3f * cerca), style = Stroke(0.8f * u))
+    if (a.oscuro && cerca > 0.05f) drawPath(corridoSeda(forma, 0.8f * u, 0f), FILO_MUEBLE.copy(alpha = 0.3f * cerca), style = Stroke(0.8f * u))
 }
 
 /**
@@ -248,7 +236,7 @@ private fun DrawScope.telaSeda(xa: Float, xb: Float, yVara: (Float) -> Float, la
 internal fun DrawScope.sedaColgadaSeda(p0: Offset, p1: Offset, w: Float, a: AireSeda, cerca: Float, frio: Float) {
     val u = density
     fun yVara(x: Float) = p0.y + (p1.y - p0.y) * ((x - p0.x) / (p1.x - p0.x))
-    val corr = if (a.oscuro && !a.brasa) Offset(-w * 0.014f, w * 0.01f) else Offset(w * 0.016f, w * 0.014f)
+    val corr = if (a.oscuro) Offset(-w * 0.014f, w * 0.01f) else Offset(w * 0.016f, w * 0.014f)
     val brillo = if (a.oscuro) 0.06f + 0.16f * cerca else if (a.noche) 0.2f else 0.3f
     drawLine(a.sombra(0.25f), p0 + corr, p1 + corr, 3f * u)
     // Las estacas y la vara.
@@ -274,7 +262,7 @@ internal fun DrawScope.sedasDobladasSeda(pie: Offset, w: Float, a: AireSeda, cer
     val an = w * 0.2f
     val colores = listOf(SedaTinta.ANIL, SedaTinta.VERDE, mezcla(SedaTinta.BERMELLON, SedaTinta.FIELTRO, 0.4f), SedaTinta.AZAFRAN)
     val brillo = if (a.oscuro) 0.06f + 0.18f * cerca else if (a.noche) 0.2f else 0.32f
-    val corr = if (a.oscuro && !a.brasa) Offset(-w * 0.03f, w * 0.004f) else Offset(w * 0.03f, w * 0.004f)
+    val corr = if (a.oscuro) Offset(-w * 0.03f, w * 0.004f) else Offset(w * 0.03f, w * 0.004f)
     val alto = g * colores.size
     drawRect(a.sombra(if (a.oscuro) 0.3f else 0.18f), Offset(pie.x - an / 2 + corr.x, pie.y - alto + corr.y), Size(an, alto))
     contactoSeda(Offset(pie.x + 3f * u, pie.y), an * 1.1f, w * 0.012f, a, 0.34f)
@@ -289,7 +277,7 @@ internal fun DrawScope.sedasDobladasSeda(pie: Offset, w: Float, a: AireSeda, cer
         // Las capas del doblez en la punta de la izquierda, y el lado de la sombra.
         for (i in 1..3) drawArc(mezcla(seda, a.hondo, 0.35f), 90f, 180f, false, Offset(r.left + i * 1.6f * u, r.top + g * 0.12f), Size(g * 0.8f, g * 0.76f), style = Stroke(0.6f * u))
         drawRect(a.sombra(0.16f), Offset(r.right - r.width * 0.16f, r.top + 1f * u), Size(r.width * 0.16f - g * 0.3f, g - 2f * u))
-        if (a.oscuro && cerca > 0.05f && !a.brasa) drawRect(FILO_MUEBLE.copy(alpha = 0.4f * cerca), Offset(r.right - g * 0.5f, r.top + g * 0.2f), Size(1.2f * u, g * 0.6f))
+        if (a.oscuro && cerca > 0.05f) drawRect(FILO_MUEBLE.copy(alpha = 0.4f * cerca), Offset(r.right - g * 0.5f, r.top + g * 0.2f), Size(1.2f * u, g * 0.6f))
     }
     // La cara de arriba de la pila, vista apenas, y la esquina de la de arriba que cae por delante en un pliegue blando.
     val arriba = pie.y - alto

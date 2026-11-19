@@ -53,10 +53,10 @@ internal fun DrawScope.volumenSeda(v: Volumen, medidor: TextMeasurer, oscuro: Bo
     val a = AireSeda(oscuro, v.noche)
     val fx = MuebleEstanteSeda.LADO + v.centro * (1f - 2 * MuebleEstanteSeda.LADO)
     val pos = v.repisa + 0.55f
-    val k = if (a.lumbre) cercaCuerpoSeda(pos, v.repisas, fx, a.brasa) else 1f
+    val k = if (a.lumbre) cercaCuerpoSeda(pos, v.repisas, fx, a.lunar) else 1f
     val f = if (a.oscuro) frioCuerpoSeda(pos, v.repisas, fx) else 0f
-    // De dónde viene la luz cálida: la lámpara (a la derecha) o, en los Sueños de noche, el brasero (a la izquierda).
-    val hacia = if (a.brasa) -1f else if (a.lumbre) (if (MuebleEstanteSeda.LAMP_X >= fx) 1f else -1f) else -1f
+    // De dónde viene la luz cálida: la lámpara (a la derecha de casi todo).
+    val hacia = if (a.lumbre) (if (MuebleEstanteSeda.LAMP_X >= fx) 1f else -1f) else -1f
     when (MuebleEstanteSeda.clase(v.semilla)) {
         0 -> rolloSeda(v, medidor, a, k, f, hacia)
         1 -> fajoSeda(v, medidor, a, k, f, hacia)

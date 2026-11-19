@@ -2903,7 +2903,7 @@ object EstanteTemplario : DisenoBiblioteca {
  * en la cal, sobre los vidrios que vende (la botella tallada y el cuenco); con ellos, los melocotones, el cayado del camellero,
  * las sedas teñidas echadas sobre una vara y las piezas dobladas en el vasar, las jornadas rayadas con carbón, las cartas a casa
  * con el tintero y la lámpara de barro sobre su ménsula de palo, que de noche alumbra mientras la luna entra por la misma reja;
- * en los Sueños de noche la lámpara queda en rescoldo y el brasero del patio se refleja en la jamba. Al pie, la tinaja del vino
+ * en los Sueños de noche la lámpara hace un charco más corto y la luna entra con más fuerza. Al pie, la tinaja del vino
  * y el fieltro enrollado. Cada entrada es,
  * según su semilla, un haz de rollos envuelto en seda labrada, un fajo de cartas envuelto en paño y atado en cruz o una bolsa
  * de cuero fruncida: el color del ánimo es la seda, el paño o el cuero; el día cuelga en su tablilla y el mes va en columna;

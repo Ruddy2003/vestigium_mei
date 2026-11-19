@@ -126,7 +126,7 @@ El autor, con la v292: «sigue súper bugueado y lento el de Psicodelia». Se mi
   - Espacio: los pliegues de la manguera y el charco del piloto en los Sueños en claro.
   - Al-Ándalus: el estuche con ánimos muy pálidos.
   - Scriptorium: el paño grande de enlucido y, de noche, los volúmenes de abajo a la izquierda casi negros.
-  - Ruta de la Seda: la mancha de la reja a tamaño de teléfono y las cinco repisas.
+  - Ruta de la Seda: la mancha de la reja a tamaño de teléfono y las cinco repisas. El velo azul parejo de los Sueños en oscuro ya se arregló (19 nov): la lámpara arde y hace su charco, la luna enfría sin velar y lo lejano se apaga.
   - Roma contemporánea: el sol que dora mucho la caja crema y el rosa discreto de los Sueños en claro.
 - **Quedan 30** de los 39 temas sin su `ui/biblioteca/MuebleEstante<Tema>.kt` (Básico no cuenta: es sin diseño): Romano, Terminal, Ciudad neón, Egipto, Templario, Distopía, Refugio, Orden, Vapor victoriano, Colonos, Napoleónico, Art déco, Botánico, Ciudad verde, Navidad, Japón Edo, Horror cósmico, Abismo, Mesoamérica, Mongol, Renacimiento, Pirata, Soviético, Revolución francesa, Tierras Antiguas, Prehistoria, Frente exterior, Arcontes, Galia y Art nouveau.
 - **Siguen pendientes** las libretas de momentos y el tablero de notas (arriba).
