@@ -7,10 +7,12 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -48,160 +50,21 @@ import kotlin.math.sqrt
 // =====================================================================
 
 /**
- * La paleta de la biblioteca de Urbe (sale de la de los cuadros de Roma, en otra disposición que el Ideario): el estuco de
- * almagra con su capa de ocre debajo y el enlucido, el nogal viejo, el azul «papel de azúcar» del fondo, el blanco de la
- * ventana, el verde de la persiana, el travertino, el cielo y la teja de los tejados, el papel, el latón y la lona.
- */
-internal object PaletaUrbe {
-    /** El estuco de almagra del muro, la mano de ocre que asoma debajo, el enlucido de yeso y la teja (también el ladrillo y el barro). */
-    val ALMAGRA = Color(0xFFAE5638)
-    val OCRE = Color(0xFFD99B55)
-    val YESO = Color(0xFFE3D7BE)
-    val TEJA = Color(0xFFB8633D)
-    /** El nogal viejo de la librería, encerado, y su sombra honda. */
-    val NOGAL = Color(0xFF6E4529)
-    val NOGAL_OSC = Color(0xFF3B2416)
-    /** El fondo de tablillas machihembradas, pintado de azul «papel de azúcar» hace mucho. */
-    val AZUCAR = Color(0xFF8EA2AE)
-    /** La pintura de la ventana y del papel (crema), el verde de la persiana y el de las hojas, y el travertino del alféizar. */
-    val CREMA = Color(0xFFEFE6D1)
-    val PERSIANA = Color(0xFF3D5E47)
-    val HOJA = Color(0xFF5C8A44)
-    val TRAVERTINO = Color(0xFFE2D6BC)
-    /** El cielo de Roma de día. */
-    val CIELO = Color(0xFF9DC3DD)
-    /** El yeso de los calcos, la tierra verde del pigmento y el vidriado verde cobre de la lámpara. */
-    val GESSO = Color(0xFFE9E0CC)
-    val TIERRA_VERDE = Color(0xFF6F8A62)
-    val VIDRIADO = Color(0xFF3F7C6E)
-    /** La tinta, el latón, la lona del bolso y el azul de ultramar del pigmento. */
-    val TINTA = Color(0xFF2A2320)
-    val LATON = Color(0xFFC19A4C)
-    val TELA = Color(0xFFB3A27C)
-    val ULTRAMAR = Color(0xFF2F4F93)
-
-    // Las luces: el sol que entra por la persiana, la lámpara, la luna, la noche del cuarto y la de los Sueños, el anochecer.
-    val SOL = Color(0xFFFFE4A8)
-    val LAMPARA = Color(0xFFFFC77A)
-    val LUNA = Color(0xFFC6D5F4)
-    val NOCHE = Color(0xFF181429)
-    val NOCHE_SUENOS = Color(0xFF0E1531)
-    val ANOCHECER = Color(0xFF5B4A80)
-    val CREPUSCULO = Color(0xFF3A3463)
-    val OCASO = Color(0xFFF0A585)
-}
-
-/**
- * El aire del momento en el cuarto de Giulia. De día, la luz del sol por la ventana; de noche (el modo oscuro), la lámpara de
- * la cornisa; en los Sueños en claro ([ocaso]), el anochecer por la ventana con la lámpara recién encendida; en los Sueños en
- * oscuro ([luna]), la luna por la ventana con la lámpara apagada. De él salen el color de cada cosa según cuánta luz le llega
- * (de 0 a 1), la sombra, el claro y el filo.
- */
-internal class AireUrbe(val oscuro: Boolean, val noche: Boolean) {
-    private companion object {
-        /** El aire del anochecer, que multiplica: baja y enfría cada color sin quitarle el suyo. */
-        val AIRE_OCASO = Color(0xFF8A82B4)
-        fun multiplica(c: Color, m: Color) = Color(c.red * m.red, c.green * m.green, c.blue * m.blue, c.alpha)
-    }
-
-    /** Si alumbra una luz dibujada (la lámpara o la luna). */
-    val lumbre: Boolean get() = oscuro || noche
-    /** Los Sueños en oscuro: la luna entra por la ventana y la lámpara está apagada. */
-    val luna: Boolean get() = oscuro && noche
-    /** Los Sueños en claro: el anochecer. */
-    val ocaso: Boolean get() = !oscuro && noche
-    /** Si la lámpara está encendida: de noche y al anochecer. */
-    val lampara: Boolean get() = lumbre && !luna
-    /** El color en que se hunde lo que no se alumbra. */
-    val hondo: Color get() = if (oscuro) (if (noche) NOCHE_SUENOS else NOCHE) else SOMBRA_MUEBLE
-    /** El color de la luz que manda. */
-    val foco: Color get() = if (luna) LUNA else LAMPARA
-
-    fun luz(c: Color, cerca: Float): Color {
-        val k = cerca.coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(multiplica(c, mezcla(Color.White, AIRE_OCASO, 0.9f * (1f - k))), LAMPARA, 0.12f * k) else c
-        return mezcla(mezcla(c, hondo, 0.92f - 0.84f * k.pow(0.75f)), foco, (if (luna) 0.08f else 0.24f) * k)
-    }
-    fun sombra(a: Float): Color = when {
-        oscuro -> hondo.copy(alpha = (a * 1.15f).coerceIn(0f, 1f))
-        noche -> mezcla(SOMBRA_MUEBLE, CREPUSCULO, 0.4f).copy(alpha = a.coerceIn(0f, 1f))
-        else -> sombraMueble(a)
-    }
-    fun claro(a: Float): Color = luzMueble(if (oscuro) a * 0.12f else if (noche) a * 0.5f else a)
-    fun filo(a: Float): Color = foco.copy(alpha = if (oscuro) a.coerceIn(0f, 1f) else if (noche) (a * 0.5f).coerceIn(0f, 1f) else 0f)
-    /** El color del ánimo: de noche se apaga menos que lo demás, para que se siga adivinando en la repisa más lejana. */
-    fun animo(t: Color, cerca: Float): Color {
-        val k = cerca.coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(multiplica(t, mezcla(Color.White, AIRE_OCASO, 0.55f * (1f - k))), LAMPARA, 0.06f * k) else t
-        return mezcla(mezcla(t, hondo, 0.6f - 0.52f * k), foco, (if (luna) 0.06f else 0.2f) * k)
-    }
-    /** El papel de las etiquetas, donde va el día: casi no se apaga, para que el número se lea siempre. */
-    fun etiqueta(cerca: Float): Color {
-        val k = cerca.coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(CREMA, CREPUSCULO, 0.22f * (1f - k)) else CREMA
-        return mezcla(mezcla(CREMA, hondo, 0.4f - 0.32f * k), foco, 0.14f * k)
-    }
-    /** La tinta de lo escrito. */
-    val tinta: Color get() = if (oscuro) mezcla(TINTA, hondo, 0.3f) else TINTA
-    /**
-     * La luz que dibuja la ventana en el mueble, que se pinta en modo pantalla (aclara y calienta sin velar ni borrar el color
-     * de lo que toca): el sol de día y la luna en los Sueños en oscuro. Al anochecer la luz es difusa y de noche no entra.
-     */
-    val rayo: Color? get() = when {
-        luna -> Color(0xFF7E96D0).copy(alpha = 0.46f)
-        lumbre -> null
-        else -> Color(0xFFFFC070).copy(alpha = 0.52f)
-    }
-}
-
-/** Las formas comunes de la biblioteca de Urbe. */
-internal object TrazoUrbe {
-    fun corrido(p: Path, dx: Float, dy: Float = 0f) = Path().apply { addPath(p, Offset(dx, dy)) }
-
-    /** Lo que queda de [p] al quitarle la misma forma corrida: una media luna en el borde contrario al corrimiento. */
-    fun borde(p: Path, dx: Float, dy: Float) = Path().apply { op(p, corrido(p, dx, dy), PathOperation.Difference) }
-
-    fun poligono(vararg xy: Float) = Path().apply {
-        moveTo(xy[0], xy[1])
-        for (i in 1 until xy.size / 2) lineTo(xy[2 * i], xy[2 * i + 1])
-        close()
-    }
-
-    /** La sombra de lo que pisa: un óvalo corrido hacia donde cae la luz. */
-    fun DrawScope.contacto(centro: Offset, ancho: Float, alto: Float, a: AireUrbe, fuerza: Float = 0.34f) =
-        drawOval(a.sombra(if (a.oscuro) fuerza * 1.3f else fuerza), Offset(centro.x - ancho * 0.42f, centro.y - alto / 2), Size(ancho, alto))
-
-    /**
-     * El volumen de gouache sobre algo redondo ya pintado: la media luna de sombra del lado contrario a la luz y el claro del otro.
-     * De día la luz viene de la izquierda; de noche, de donde esté la luz que manda ([haciaX]: 1 a la derecha, -1 a la izquierda).
-     */
-    fun DrawScope.redondo(forma: Path, a: AireUrbe, cerca: Float, haciaX: Float, fuerza: Float = 1f) {
-        val r = forma.getBounds(); val an = r.width; val hh = r.height
-        val sl = if (a.oscuro) -haciaX else 1f
-        drawPath(borde(forma, -sl * an * 0.24f, -hh * 0.02f), a.sombra(fuerza * 0.2f))
-        drawPath(borde(forma, -sl * an * 0.1f, -hh * 0.01f), a.sombra(fuerza * 0.16f))
-        clipPath(forma) {
-            drawOval(if (a.oscuro) a.filo(0.24f * cerca) else a.claro(0.24f), Offset(if (sl > 0) r.left + an * 0.1f else r.right - an * 0.34f, r.top + hh * 0.08f), Size(an * 0.24f, hh * 0.7f))
-        }
-        if (a.lumbre && cerca > 0.04f) drawPath(borde(forma, sl * an * 0.05f, hh * 0.03f), a.filo((0.06f + 0.55f * cerca).coerceAtMost(0.6f)))
-    }
-}
-
-/**
  * El dibujo del estante del diario de Urbe (lo usa `EstanteUrbe`, en `BibliotecaContemporanea.kt`): la librería del piso de
  * Giulia, la restauradora de frescos, en un edificio viejo de Roma. Una librería de nogal ya sin barniz en los cantos, con su
  * cornisa, los costados gruesos, el fondo de tablillas machihembradas pintado de azul «papel de azúcar» y las baldas combadas
- * por el peso; abajo, el mueble bajo de dos puertas sobre el suelo de baldosas hidráulicas. Detrás, el muro de estuco de
- * almagra desconchado, con el ocre de antes y el enlucido asomando. Arriba a la izquierda, la ventana honda del muro grueso,
- * con su marco blanco y su persiana verde: la hoja izquierda cerrada, la derecha abierta a los tejados. De día es la luz: el
- * sol entra sesgado y deja en la cornisa y en la primera repisa la forma de la ventana, rayada por las lamas. De noche alumbra
- * la lámpara de pantalla plisada de la cornisa, a la derecha, y por la ventana se ven las ventanas encendidas y las antenas.
- * En los Sueños, en claro, el anochecer rosa por la ventana con la lámpara recién encendida; en oscuro, la luna, que dibuja
- * la ventana en frío, con la lámpara apagada. Las entradas son el libro de bolsillo, la caja de fotos forrada de papel y la
- * carpeta de cartón con su goma, todas del color del ánimo. Todo el dibujo sale de [estante] y de [volumen]; la luz de los
- * dos sale de las mismas curvas ([cerca]) y del mismo dibujo de la ventana ([RAYOS]). La pared, la ventana, los objetos y el
- * pie, en `MuebleEstanteUrbePiezas.kt` y `MuebleEstanteUrbeObjetos.kt`; lo de los huecos libres, en `MuebleEstanteUrbeHuecos.kt`, y las
- * entradas, en `MuebleEstanteUrbeVolumenes.kt`.
+ * por el peso; abajo, dos cajones con tiradores de asa sobre el suelo de baldosas hidráulicas. Detrás, el muro de estuco de
+ * almagra, con aguas y desconchones. Arriba a la izquierda, la ventana honda del muro grueso, con su marco blanco y su
+ * persiana verde: la hoja izquierda cerrada, la derecha abierta a los tejados. En el medio de la cornisa, un trozo de fresco
+ * arrancado en su bastidor. De día es la luz: el sol entra sesgado y deja en el mueble la forma de la ventana, rayada por las
+ * lamas, que se quiebra en cada canto. De noche alumbra la lámpara de pantalla plisada de la cornisa, a la derecha, y por la
+ * ventana entra el frío de la ciudad. En los Sueños, en claro, el anochecer rosa por la ventana con la lámpara recién
+ * encendida; en oscuro, la luna, que dibuja la ventana en frío, con la lámpara apagada. Las entradas son el libro de bolsillo,
+ * la caja de fotos y la carpeta de cartón con su goma, todas del color del ánimo. Todo el dibujo sale de [estante] y de
+ * [volumen]; la luz de los dos sale de las mismas curvas ([cerca]) y de las mismas formas de la ventana ([FORMAS_RAYO]). La
+ * paleta, el aire y las formas comunes están en `MuebleEstanteUrbeAire.kt`; la pared y la ventana, en
+ * `MuebleEstanteUrbePiezas.kt`; lo de la cornisa, en `MuebleEstanteUrbeObjetos.kt`; el pie, en `MuebleEstanteUrbePie.kt`; lo
+ * de los huecos libres, en `MuebleEstanteUrbeHuecos.kt`, y las entradas, en `MuebleEstanteUrbeVolumenes.kt`.
  */
 internal object MuebleEstanteUrbe {
     internal val LETRA: FontFamily = Letra.placa
@@ -223,11 +86,11 @@ internal object MuebleEstanteUrbe {
         return if (k < 3) 0 else if (k < 5) 1 else 2
     }
 
-    /** El libro, mediano; la caja, la más baja y ancha de hombros; la carpeta, la más alta (con los papeles que asoman). */
+    /** El libro, bajo y grueso; la caja, la más baja y ancha; la carpeta, alta y delgada (con los papeles que asoman). */
     fun alto(semilla: Int, palabras: Int): Float = when (clase(semilla)) {
-        0 -> 0.79f + 0.07f * azar(semilla, 1)
-        1 -> 0.66f + 0.06f * azar(semilla, 1)
-        else -> 0.84f + 0.07f * azar(semilla, 1)
+        0 -> 0.7f + 0.06f * azar(semilla, 1)
+        1 -> 0.58f + 0.05f * azar(semilla, 1)
+        else -> 0.92f + 0.05f * azar(semilla, 1)
     }
 
     // ---------------------------------------------------------------- la luz
@@ -240,42 +103,83 @@ internal object MuebleEstanteUrbe {
     internal const val COSTADO = 0.014f
 
     /** El hueco de la ventana con vidrio (dentro del marco), en anchos desde la esquina de arriba a la izquierda. */
-    internal const val VEN_IZQ = 0.095f
-    internal const val VEN_DER = 0.305f
-    internal const val VEN_ARR = 0.085f
-    internal const val VEN_ABA = 0.435f
+    internal const val VEN_IZQ = 0.088f
+    internal const val VEN_DER = 0.332f
+    internal const val VEN_ARR = 0.07f
+    internal const val VEN_ABA = 0.44f
     /** El montante del medio y el travesaño de las hojas, en anchos. */
     internal const val VEN_MEDIO = (VEN_IZQ + VEN_DER) / 2
     internal const val VEN_TRAVESANO = VEN_ARR + (VEN_ABA - VEN_ARR) * 0.36f
     /** Cuántas lamas tiene la hoja cerrada de la persiana. */
     internal const val LAMAS = 13
-    /** Cuánto se corre la forma de la ventana al caer en el mueble: el sol entra alto y desde la izquierda. */
-    internal const val RAYO_DX = 0.105f
+    /** Cuánto se corre la forma de la ventana al caer en el frente de los volúmenes: el sol entra alto y desde la izquierda. */
+    internal const val RAYO_DX = 0.11f
     internal const val RAYO_DY = 0.47f
+    /** Cuánto baja la forma por cada ancho que avanza a la derecha: el sol de la tarde la sesga y tuerce las lamas. */
+    internal const val SESGO = 0.3f
+    /** Lo que se corre la luz en el fondo de los casilleros (más hondo) y en los cantos (más cerca), en anchos. */
+    internal const val FONDO_DX = 0.026f
+    internal const val FONDO_DY = 0.03f
+    internal const val CANTO_DX = -0.008f
+    internal const val CANTO_DY = -0.01f
 
     /** Dónde está la bombilla de la lámpara (el medio de la pantalla), en anchos. */
     internal const val LAMP_X = 0.8f
     internal const val LAMP_Y = 0.432f
-    /** Dónde manda la luna en los Sueños: el medio de la ventana dibujada en el mueble. */
+    /** Dónde manda la luna en los Sueños (y el frío de la ventana de noche): el medio de la ventana dibujada en el mueble. */
     internal const val LUNA_X = (VEN_IZQ + VEN_DER) / 2 + RAYO_DX
-    internal const val LUNA_Y = (VEN_ARR + VEN_ABA) / 2 + RAYO_DY
+    internal const val LUNA_Y = (VEN_ARR + VEN_ABA) / 2 + RAYO_DY + SESGO * (VEN_DER - VEN_IZQ) / 2
 
     /**
-     * Los trozos de luz que la ventana deja en el mueble, en anchos: la hoja abierta (dos paños, partidos por la sombra del
-     * travesaño) y, en la hoja cerrada, la luz que pasa entre las lamas. Es la ventana corrida ([RAYO_DX], [RAYO_DY]): sobre un
-     * plano paralelo al muro, la sombra de algo plano no se deforma. Se calcula una sola vez y la usan el mueble y cada volumen.
+     * Los trozos de luz que deja la ventana, sin sesgar, en anchos: la hoja abierta (dos paños, partidos por la sombra del
+     * travesaño) y, en la hoja cerrada, la luz que pasa entre las lamas; corridos por [RAYO_DX] y [RAYO_DY]. Con ellos se traza el
+     * haz en el aire; la luz que se pinta es [FORMAS_RAYO].
      */
     internal val RAYOS: List<Rect> = buildList {
         val alto = VEN_ABA - VEN_ARR
-        val medio = 0.008f
+        val medio = 0.009f
         add(Rect(VEN_MEDIO + medio, VEN_ARR, VEN_DER, VEN_TRAVESANO - 0.004f))
         add(Rect(VEN_MEDIO + medio, VEN_TRAVESANO + 0.004f, VEN_DER, VEN_ABA))
         val paso = alto / LAMAS
-        for (i in 0 until LAMAS) add(Rect(VEN_IZQ, VEN_ARR + paso * (i + 0.56f), VEN_MEDIO - medio, VEN_ARR + paso * (i + 1)))
+        for (i in 0 until LAMAS) add(Rect(VEN_IZQ, VEN_ARR + paso * (i + 0.5f), VEN_MEDIO - medio, VEN_ARR + paso * (i + 1)))
     }.map { it.translate(RAYO_DX, RAYO_DY) }
 
-    /** Lo que ocupa toda la forma de la ventana en el mueble, en anchos. */
-    internal val RAYO_TODO = Rect(VEN_IZQ + RAYO_DX, VEN_ARR + RAYO_DY, VEN_DER + RAYO_DX, VEN_ABA + RAYO_DY)
+    /** Dónde empieza el sesgo: el borde izquierdo de la forma, en anchos. */
+    internal const val SESGO_X0 = VEN_IZQ + RAYO_DX
+
+    /** Un punto de la forma, sesgado: lo que está más a la derecha cae más abajo. */
+    internal fun sesga(x: Float, y: Float) = Offset(x, y + SESGO * (x - SESGO_X0))
+
+    /**
+     * La luz de la ventana en el frente de los volúmenes, en anchos: cada trozo de [RAYOS] hecho paralelogramo con [sesga], con
+     * las lamas torcidas. Se arma una sola vez y la comparten el mueble (corrida para el fondo y los cantos) y todos los volúmenes.
+     */
+    internal val FORMAS_RAYO: List<Path> by lazy {
+        RAYOS.map { r ->
+            val a = sesga(r.left, r.top); val b = sesga(r.right, r.top); val c = sesga(r.right, r.bottom); val d = sesga(r.left, r.bottom)
+            Path().apply { moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c.x, c.y); lineTo(d.x, d.y); close() }
+        }
+    }
+
+    /** Lo que ocupa toda la luz de la ventana en el frente, ya sesgada, en anchos. */
+    internal val RAYO_TODO = Rect(VEN_IZQ + RAYO_DX, VEN_ARR + RAYO_DY, VEN_DER + RAYO_DX, VEN_ABA + RAYO_DY + SESGO * (VEN_DER - VEN_IZQ))
+
+    /**
+     * Pinta [FORMAS_RAYO] en modo pantalla, pasadas al lienzo: un punto en anchos (x, y) cae en ((x - [ox]) * [escala],
+     * (y - [oy]) * [escala]). El borde es blando: un trazo tenue alrededor de cada forma, sin desenfoque.
+     */
+    internal fun DrawScope.pintaRayo(c: Color, escala: Float, ox: Float, oy: Float) {
+        if (escala <= 0f) return
+        val fino = Stroke(width = 3.2f * density / escala, join = StrokeJoin.Round)
+        val cerca = c.copy(alpha = c.alpha * 0.2f)
+        val cuerpo = c.copy(alpha = c.alpha * 0.85f)
+        withTransform({ scale(escala, escala, Offset.Zero); translate(-ox, -oy) }) {
+            for (p in FORMAS_RAYO) {
+                drawPath(p, cerca, style = fino, blendMode = BlendMode.Screen)
+                drawPath(p, cuerpo, blendMode = BlendMode.Screen)
+            }
+        }
+    }
 
     /**
      * Cuánto alumbra la lámpara (de 1 a 0) un punto que está a [dx] y [dy] de la bombilla, en anchos del mueble. En un estante
@@ -283,7 +187,7 @@ internal object MuebleEstanteUrbe {
      */
     fun alcanceLampara(dx: Float, dy: Float, repisas: Int): Float {
         val radio = 0.8f + 0.1f * repisas.coerceIn(2, 5)
-        return (1f - sqrt(dx * dx * 0.85f + dy * dy) / radio).coerceIn(0f, 1f).pow(1.3f)
+        return (1f - sqrt(dx * dx * 1.6f + dy * dy) / radio).coerceIn(0f, 1f).pow(1.3f)
     }
 
     /** Cuánto alumbra la luna, desde la forma de la ventana en el mueble: llega menos lejos y más fría. */
@@ -353,6 +257,10 @@ internal object MuebleEstanteUrbe {
         // ---- la cornisa, con su sombra sobre la primera repisa
         cornisa(Rect(0f, ch - gT, w, ch), fT, a, { p -> cerca(p) })
 
+        // ---- de noche, el charco de la lámpara sobre el mueble (arriba a la derecha) y el frío de la ventana (a la izquierda)
+        if (a.lampara) mancha(Offset(w * (LAMP_X + 0.02f), ch + w * 0.04f), w * 0.46f, LAMPARA.copy(alpha = if (a.oscuro) 0.2f else 0.12f))
+        if (a.oscuro && !a.noche) mancha(Offset(w * LUNA_X, w * LUNA_Y), w * 0.4f, PaletaUrbe.FRIO.copy(alpha = 0.1f))
+
         // ---- lo que hay sobre la cornisa, de atrás adelante
         cornisaUrbe(apoyo, ch, a, { p -> cerca(p) })
 
@@ -360,7 +268,7 @@ internal object MuebleEstanteUrbe {
         pieUrbe(d, suelo, a, { p -> cerca(p) })
 
         // ---- la luz de la ventana en el mueble y su haz en el aire
-        a.rayo?.let { c -> rayoUrbe(c, a, { f -> py(f) }, ch - gT - fT) }
+        a.rayo?.let { c -> rayoUrbe(c, a, d, ch - gT - fT, ch - gT) }
 
         // ---- lo que alumbra por sí mismo, encima de todo
         if (a.lampara) brilloLamparaUrbe(a, apoyo)
@@ -384,7 +292,7 @@ internal object MuebleEstanteUrbe {
             val tramos = if (a.lumbre) 10 else 1
             for (t in 0 until tramos) {
                 val xa = r.left + r.width * t / tramos; val xb = r.left + r.width * (t + 1) / tramos + 0.6f
-                drawRect(a.luz(AZUCAR, cerca(Offset((xa + xb) / 2, r.center.y))), Offset(xa, r.top), Size(xb - xa, r.height))
+                drawRect(a.luz(AZUCAR, cerca(Offset((xa + xb) / 2, r.center.y)) * (if (a.oscuro) 0.7f else 1f)), Offset(xa, r.top), Size(xb - xa, r.height))
             }
             // Las juntas de las tablillas: una línea fina y su labio de luz, cada 24 dp.
             val paso = maxOf(1f, 24f * u)
@@ -576,31 +484,31 @@ internal object MuebleEstanteUrbe {
         val a = AireUrbe(oscuro, v.noche)
         val fx = LADO + v.centro * (1f - 2 * LADO)
         val k = if (a.lumbre) cerca(fx, CORONA + (v.repisa * FILA + ALTO_REPISA.value * 0.55f) / ANCHO_NOMINAL, v.repisas, a) else 1f
-        val arriba = when (clase(v.semilla)) {
+        val cuerpo = when (clase(v.semilla)) {
             0 -> libroUrbe(v, medidor, a, k)
             1 -> cajaFotosUrbe(v, medidor, a, k)
             else -> carpetaUrbe(v, medidor, a, k)
         }
-        a.rayo?.let { rayoEnVolumen(v, it, arriba) }
+        a.rayo?.let { rayoEnVolumen(v, it, cuerpo) }
+        if (a.oscuro && !a.noche) frioEnVolumen(v, cuerpo)
     }
 
-    /** La luz de la ventana sobre un volumen de la primera repisa: los mismos trozos que en el mueble, pasados a su lienzo. */
-    private fun DrawScope.rayoEnVolumen(v: Volumen, color: Color, arriba: Float) {
+    /** La luz de la ventana sobre un volumen: las mismas formas que en el mueble, pasadas a su lienzo y solo sobre su cuerpo. */
+    private fun DrawScope.rayoEnVolumen(v: Volumen, color: Color, cuerpo: Rect) {
         val wn = ANCHO_NOMINAL * density
         val x0 = LADO + v.centro * (1f - 2 * LADO) - size.width / 2 / wn
         val y1 = pieRepisa(v.repisa)
-        val y0 = y1 - (size.height - arriba) / wn
+        val y0 = y1 - size.height / wn
         val x1 = x0 + size.width / wn
         if (RAYO_TODO.right <= x0 || RAYO_TODO.left >= x1 || RAYO_TODO.bottom <= y0 || RAYO_TODO.top >= y1) return
-        for (t in RAYOS) {
-            val l = maxOf(t.left, x0); val r = minOf(t.right, x1)
-            val a = maxOf(t.top, y0); val b = minOf(t.bottom, y1)
-            if (r > l && b > a) {
-                val o = Offset((l - x0) * wn, arriba + (a - y0) * wn); val t2 = Size((r - l) * wn, (b - a) * wn)
-                val m = 0.7f * density
-                drawRect(color.copy(alpha = color.alpha * 0.4f), o - Offset(m, m), Size(t2.width + 2 * m, t2.height + 2 * m), blendMode = BlendMode.Screen)
-                drawRect(color, o, t2, blendMode = BlendMode.Screen)
-            }
-        }
+        clipRect(cuerpo.left, cuerpo.top, cuerpo.right, cuerpo.bottom) { pintaRayo(color, wn, x0, y0) }
+    }
+
+    /** De noche, el frío de la ventana sobre los volúmenes que le quedan cerca (arriba a la izquierda): la otra temperatura. */
+    private fun DrawScope.frioEnVolumen(v: Volumen, cuerpo: Rect) {
+        val fx = LADO + v.centro * (1f - 2 * LADO)
+        val fy = CORONA + (v.repisa * FILA + ALTO_REPISA.value * 0.55f) / ANCHO_NOMINAL
+        val kf = alcanceLuna(fx - LUNA_X, fy - LUNA_Y, v.repisas)
+        if (kf > 0.02f) drawRect(PaletaUrbe.FRIO.copy(alpha = 0.26f * kf), cuerpo.topLeft, cuerpo.size, blendMode = BlendMode.Screen)
     }
 }

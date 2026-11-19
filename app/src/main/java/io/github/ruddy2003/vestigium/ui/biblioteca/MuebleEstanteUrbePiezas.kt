@@ -57,9 +57,10 @@ import kotlin.math.sin
 // =====================================================================
 
 /**
- * El muro de estuco de almagra, desconchado: donde saltó, asoma la mano de ocre de antes y, más adentro, el enlucido de yeso y
- * algún ladrillo; una grieta que baja de la ventana y el calco de una voluta pegado con cinta. De día, la luz del cuarto es
- * más clara cerca de la ventana y se apaga hacia la derecha; de noche, el halo de la lámpara y el frío de la ciudad por la
+ * El muro de estuco de almagra, viejo: a manchas y con aguas (las de una gotera que bajan del techo y la línea de una humedad
+ * antigua), más gastado y más claro abajo, donde se roza; los desconchones con su borde, el enlucido de yeso y el ladrillo
+ * debajo; una grieta que baja de la ventana y el calco de una voluta pegado con cinta. De día, la luz del cuarto es más clara
+ * cerca de la ventana y se apaga hacia la derecha; de noche, el abanico de la pantalla y el frío de la ciudad por la
  * ventana; en los Sueños, el frío de la luna junto a la ventana.
  */
 internal fun DrawScope.paredUrbe(a: AireUrbe, ch: Float, suelo: Float, cerca: (Offset) -> Float) {
@@ -68,66 +69,115 @@ internal fun DrawScope.paredUrbe(a: AireUrbe, ch: Float, suelo: Float, cerca: (O
     drawRect(a.luz(ALMAGRA, lejos), Offset.Zero, Size(w, suelo))
     val veces = (suelo / (w * 0.5f)).coerceIn(1f, 12f)
     val pano = Rect(0f, 0f, w, ch)
+    // El estuco a manchas: la cal se secó desigual y la almagra no cubre igual en todas partes.
+    for (j in 0 until 14) {
+        val c = Offset(w * azar(815, j), ch * azar(816, j))
+        val rx = w * (0.08f + 0.16f * azar(817, j)); val ry = rx * (0.45f + 0.35f * azar(818, j))
+        val col = if (j % 3 == 0) mezcla(ALMAGRA, OCRE, 0.6f) else if (j % 3 == 1) mezcla(ALMAGRA, SOMBRA_MUEBLE, 0.4f) else mezcla(ALMAGRA, TEJA, 0.5f)
+        drawOval(a.luz(col, lejos).copy(alpha = 0.08f + 0.06f * azar(819, j)), Offset(c.x - rx, c.y - ry), Size(2 * rx, 2 * ry))
+    }
     pinceladas(pano, a.luz(mezcla(ALMAGRA, SOMBRA_MUEBLE, 0.4f), lejos), 811, 40, u, 0.1f)
     pinceladas(pano, a.luz(mezcla(ALMAGRA, OCRE, 0.55f), lejos), 812, 30, u, 0.13f)
-    pinceladas(pano, a.luz(mezcla(ALMAGRA, LUZ_MUEBLE, 0.3f), lejos), 813, 14, u, 0.09f)
     pinceladas(Rect(0f, ch, w, suelo), a.luz(mezcla(ALMAGRA, SOMBRA_MUEBLE, 0.4f), lejos), 814, (10 * veces).toInt(), u, 0.1f)
-    // El estuco a manchas: la cal se secó desigual y la almagra no cubre igual en todas partes.
-    for (j in 0 until 12) {
-        val c = Offset(w * azar(815, j), ch * azar(816, j))
-        val rx = w * (0.1f + 0.16f * azar(817, j)); val ry = rx * (0.5f + 0.3f * azar(818, j))
-        val col = if (j % 3 == 0) mezcla(ALMAGRA, OCRE, 0.6f) else if (j % 3 == 1) mezcla(ALMAGRA, SOMBRA_MUEBLE, 0.35f) else mezcla(ALMAGRA, TEJA, 0.5f)
-        drawOval(a.luz(col, lejos).copy(alpha = 0.07f + 0.05f * azar(819, j)), Offset(c.x - rx, c.y - ry), Size(2 * rx, 2 * ry))
+    // Las aguas: lo que bajó de una gotera, en lenguas largas y más oscuras, con su cerco.
+    listOf(0.71f to 0.34f, 0.76f to 0.22f, 0.46f to 0.16f).forEachIndexed { j, (x, largo) ->
+        val ancho = w * (0.028f + 0.012f * j)
+        val agua = Path().apply {
+            moveTo(w * x - ancho, 0f)
+            cubicTo(w * x - ancho * 1.1f, w * largo * 0.4f, w * x - ancho * 0.5f, w * largo * 0.8f, w * x + ancho * 0.1f, w * largo)
+            cubicTo(w * x + ancho * 0.5f, w * largo * 0.85f, w * x + ancho * 1.2f, w * largo * 0.4f, w * x + ancho, 0f)
+            close()
+        }
+        drawPath(agua, a.luz(mezcla(ALMAGRA, SOMBRA_MUEBLE, 0.3f), lejos).copy(alpha = 0.16f))
+        drawPath(agua, a.luz(mezcla(ALMAGRA, TINTA, 0.35f), lejos).copy(alpha = 0.22f), style = Stroke(0.8f * u))
+    }
+    // La línea de una humedad vieja y, debajo, el estuco más gastado y claro, rozado por lo que se apoya en la cornisa.
+    val marea = Path().apply {
+        moveTo(0f, w * 0.4f)
+        var x = 0f; var j = 0
+        while (x < w) {
+            val x2 = x + w * 0.08f
+            cubicTo(x + w * 0.03f, w * (0.39f + 0.02f * azar(820, j)), x2 - w * 0.03f, w * (0.41f - 0.02f * azar(821, j)), x2, w * (0.4f + 0.012f * (azar(822, j) - 0.5f)))
+            x = x2; j++
+        }
+    }
+    drawPath(marea, a.luz(mezcla(ALMAGRA, TINTA, 0.3f), lejos).copy(alpha = 0.3f), style = Stroke(1f * u))
+    clipRect(0f, w * 0.4f, w, ch) {
+        drawRect(a.luz(mezcla(ALMAGRA, OCRE, 0.45f), lejos).copy(alpha = 0.22f), Offset(0f, w * 0.4f), Size(w, ch - w * 0.4f))
+        pinceladas(Rect(0f, w * 0.4f, w, ch), a.luz(mezcla(ALMAGRA, YESO, 0.45f), lejos), 823, 26, u, 0.16f)
     }
     // Los desconchones y la grieta.
-    desconchon(Offset(w * 0.46f, w * 0.09f), w * 0.045f, 821, a, cerca(Offset(w * 0.46f, w * 0.09f)))
-    desconchon(Offset(w * 0.7f, w * 0.05f), w * 0.032f, 822, a, cerca(Offset(w * 0.7f, w * 0.05f)))
-    desconchon(Offset(w * 0.02f, w * 0.52f), w * 0.04f, 823, a, cerca(Offset(w * 0.02f, w * 0.52f)))
+    desconchon(Offset(w * 0.43f, w * 0.06f), w * 0.04f, 826, a, cerca(Offset(w * 0.43f, w * 0.06f)), false)
+    desconchon(Offset(w * 0.66f, w * 0.31f), w * 0.05f, 824, a, cerca(Offset(w * 0.66f, w * 0.31f)), true)
+    desconchon(Offset(w * 0.015f, w * 0.53f), w * 0.04f, 825, a, cerca(Offset(w * 0.015f, w * 0.53f)), false)
     val grieta = Path().apply {
-        moveTo(w * 0.338f, w * 0.47f)
-        lineTo(w * 0.36f, w * 0.49f); lineTo(w * 0.355f, w * 0.51f); lineTo(w * 0.375f, w * 0.535f)
+        moveTo(w * 0.37f, w * 0.475f)
+        lineTo(w * 0.385f, w * 0.495f); lineTo(w * 0.38f, w * 0.51f); lineTo(w * 0.395f, w * 0.53f); lineTo(w * 0.39f, w * 0.545f)
     }
-    drawPath(grieta, a.sombra(0.45f), style = Stroke(0.8f * u, cap = StrokeCap.Round))
-    drawPath(corrido(grieta, 0.8f * u, 0.6f * u), a.claro(0.25f), style = Stroke(0.5f * u))
+    drawPath(grieta, a.sombra(0.5f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
+    drawPath(corrido(grieta, 0.8f * u, 0.7f * u), a.claro(0.3f), style = Stroke(0.5f * u))
     // El calco en papel de seda de una voluta, pegado con cinta: lo que Giulia se trajo de la obra.
-    lucido(Offset(w * 0.59f, w * 0.22f), w * 0.125f, a, cerca(Offset(w * 0.59f, w * 0.22f)))
+    lucido(Offset(w * 0.555f, w * 0.13f), w * 0.11f, a, cerca(Offset(w * 0.555f, w * 0.13f)))
     // La luz del cuarto.
     if (!a.oscuro) {
         // De día: la claridad que rebota de la ventana, arriba a la izquierda; a la derecha y abajo, penumbra.
-        mancha(Offset(w * 0.2f, w * 0.25f), w * 0.85f, luzMueble(if (a.noche) 0.1f else 0.34f))
+        mancha(Offset(w * 0.2f, w * 0.25f), w * 0.85f, luzMueble(if (a.noche) 0.08f else 0.34f))
         mancha(Offset(w * 1.05f, w * 0.5f), w * 0.8f, sombraMueble(if (a.noche) 0.12f else 0.16f))
-        if (a.noche) mancha(Offset(w * 0.2f, w * 0.25f), w * 0.6f, OCASO.copy(alpha = 0.16f))
+        if (a.noche) {
+            mancha(Offset(w * 0.22f, w * 0.3f), w * 0.7f, OCASO.copy(alpha = 0.26f))
+            mancha(Offset(w * 0.3f, w * 0.62f), w * 0.5f, OCASO.copy(alpha = 0.16f))
+        }
     }
-    if (a.lampara) {
-        val f = if (a.oscuro) 1f else 0.75f
-        val l = Offset(w * MuebleEstanteUrbe.LAMP_X, w * MuebleEstanteUrbe.LAMP_Y)
-        mancha(l, w * 1.1f, LAMPARA.copy(alpha = 0.16f * f))
-        mancha(l, w * 0.55f, LAMPARA.copy(alpha = 0.26f * f))
-        // La pantalla deja su forma en el muro: un abanico de luz hacia arriba, con el borde marcado.
-        val ab = poligono(l.x - w * 0.05f, l.y - w * 0.04f, l.x + w * 0.05f, l.y - w * 0.04f, l.x + w * 0.2f, -w * 0.02f, l.x - w * 0.2f, -w * 0.02f)
-        clipPath(ab) { mancha(Offset(l.x, l.y - w * 0.05f), w * 0.5f, LAMPARA.copy(alpha = 0.34f * f)) }
-    }
+    if (a.lampara) abanicoLampara(a, w)
     if (a.oscuro && !a.noche) {
         // De noche, el resplandor frío de la ciudad por la ventana: la otra temperatura.
-        mancha(Offset(w * (VEN_IZQ + VEN_DER) / 2, w * (VEN_ARR + VEN_ABA) / 2), w * 0.45f, Color(0xFF4A5C94).copy(alpha = 0.2f))
+        mancha(Offset(w * (VEN_IZQ + VEN_DER) / 2, w * (VEN_ARR + VEN_ABA) / 2), w * 0.55f, PaletaUrbe.FRIO.copy(alpha = 0.24f))
     }
     if (a.luna) {
         val c = Offset(w * (VEN_IZQ + VEN_DER) / 2, w * (VEN_ARR + VEN_ABA) / 2)
         mancha(c, w * 0.75f, LUNA.copy(alpha = 0.14f))
-        mancha(c + Offset(w * RAYO_DX, w * RAYO_DY), w * 0.6f, LUNA.copy(alpha = 0.12f))
+        mancha(Offset(w * MuebleEstanteUrbe.LUNA_X, w * MuebleEstanteUrbe.LUNA_Y), w * 0.6f, LUNA.copy(alpha = 0.12f))
     }
 }
 
-/** Un desconchón: el estuco que saltó, con la mano de ocre debajo, el enlucido y el canto del estuco que coge la luz. */
-private fun DrawScope.desconchon(c: Offset, r: Float, semilla: Int, a: AireUrbe, cerca: Float) {
+/**
+ * La luz de la lámpara en el muro: el halo y la forma de la pantalla, un abanico que se abre hacia arriba desde la boca de
+ * arriba, con el borde blando (tres pasos, de más fuerte a más tenue) y el tope curvo.
+ */
+private fun DrawScope.abanicoLampara(a: AireUrbe, w: Float) {
+    val f = if (a.oscuro) 1f else 0.75f
+    val l = Offset(w * MuebleEstanteUrbe.LAMP_X, w * MuebleEstanteUrbe.LAMP_Y)
+    mancha(l, w * 1.05f, LAMPARA.copy(alpha = 0.15f * f))
+    mancha(l, w * 0.5f, LAMPARA.copy(alpha = 0.24f * f))
+    val sup = w * 0.052f; val al = w * 0.098f
+    val boca = l.y - al * 0.5f
+    listOf(1.25f to 0.1f, 1.12f to 0.16f, 1f to 0.24f).forEach { (e, alfa) ->
+        val abre = w * 0.13f * e; val alto = w * 0.27f * e
+        val forma = Path().apply {
+            moveTo(l.x - sup * 0.9f, boca)
+            lineTo(l.x - sup - abre, boca - alto * 0.86f)
+            cubicTo(l.x - sup - abre * 0.6f, boca - alto * 1.04f, l.x + sup + abre * 0.6f, boca - alto * 1.04f, l.x + sup + abre, boca - alto * 0.86f)
+            lineTo(l.x + sup * 0.9f, boca)
+            close()
+        }
+        clipPath(forma) { mancha(Offset(l.x, boca), alto * 1.05f, LAMPARA.copy(alpha = alfa * 1.6f * f)) }
+    }
+}
+
+/**
+ * Un desconchón del estuco: el borde quebrado del estuco con su canto (la sombra que hace dentro arriba a la izquierda y la luz
+ * en el labio de abajo), el enlucido de yeso con su grano y, más hondo, el revoque basto y, si [ladrillo], las hiladas de
+ * ladrillo con su llaga; unas escamas sueltas alrededor.
+ */
+private fun DrawScope.desconchon(c: Offset, r: Float, semilla: Int, a: AireUrbe, cerca: Float, ladrillo: Boolean) {
     val u = density
     fun forma(escala: Float, s: Int): Path {
         val p = Path()
-        val n = 9
+        val n = 15
         for (k in 0 until n) {
-            val ang = 6.283f * k / n + azar(s, k) * 0.5f
-            val rr = r * escala * (0.6f + 0.5f * azar(s, k + 20))
-            val o = Offset(c.x + rr * cos(ang) * 1.3f, c.y + rr * sin(ang) * 0.8f)
+            val ang = 6.283f * k / n + azar(s, k) * 0.3f
+            val rr = r * escala * (0.68f + 0.32f * azar(s, k + 20) - (if (k % 4 == 1) 0.12f else 0f))
+            val o = Offset(c.x + rr * cos(ang) * 1.35f, c.y + rr * sin(ang) * 0.85f)
             if (k == 0) p.moveTo(o.x, o.y) else p.lineTo(o.x, o.y)
         }
         p.close()
@@ -136,16 +186,35 @@ private fun DrawScope.desconchon(c: Offset, r: Float, semilla: Int, a: AireUrbe,
     val k = if (a.lumbre) cerca.coerceAtLeast(0.1f) else 1f
     val fuera = forma(1f, semilla)
     val dentro = forma(0.62f, semilla + 3)
-    drawPath(fuera, a.luz(mezcla(OCRE, ALMAGRA, 0.45f), k))
-    drawPath(dentro, a.luz(mezcla(YESO, ALMAGRA, 0.22f), k))
-    clipPath(dentro) {
-        pinceladas(Rect(c.x - r * 1.4f, c.y - r, c.x + r * 1.4f, c.y + r), a.luz(mezcla(ALMAGRA, TINTA, 0.3f), k), semilla + 9, 8, u, 0.14f)
-        // Un ladrillo que asoma.
-        if (semilla % 2 == 0) drawRect(a.luz(mezcla(TEJA, ALMAGRA, 0.3f), k), Offset(c.x - r * 0.2f, c.y - r * 0.1f), Size(r * 0.7f, r * 0.26f))
+    val yeso = a.luz(mezcla(YESO, ALMAGRA, 0.12f), k)
+    drawPath(fuera, yeso)
+    clipPath(fuera) {
+        for (j in 0 until 18) drawCircle(a.luz(mezcla(YESO, TINTA, 0.25f), k).copy(alpha = 0.4f), (0.4f + 0.5f * azar(semilla, 40 + j)) * u, Offset(c.x + r * 1.3f * (azar(semilla, 41 + j) * 2 - 1), c.y + r * 0.8f * (azar(semilla, 42 + j) * 2 - 1)))
     }
-    // El escalón del estuco: sombra en el borde de arriba, luz en el de abajo.
-    drawPath(corrido(fuera, 0f, 0f), a.sombra(0.3f), style = Stroke(0.9f * u))
-    drawPath(corrido(fuera, 0.6f * u, 1f * u), a.claro(0.3f), style = Stroke(0.6f * u))
+    drawPath(dentro, a.luz(mezcla(YESO, OCRE, 0.4f), k))
+    clipPath(dentro) {
+        pinceladas(Rect(c.x - r * 1.4f, c.y - r, c.x + r * 1.4f, c.y + r), a.luz(mezcla(OCRE, TINTA, 0.35f), k), semilla + 9, 10, u, 0.2f)
+        if (ladrillo) {
+            // Tres hiladas de ladrillo, con la llaga de mortero.
+            val alto = r * 0.3f
+            for (f in 0 until 3) {
+                val y = c.y - r * 0.35f + f * alto
+                drawRect(a.luz(mezcla(TEJA, ALMAGRA, 0.25f), k), Offset(c.x - r * 1.4f, y), Size(r * 2.8f, alto - 1f * u))
+                var x = c.x - r * 1.4f + (if (f % 2 == 0) 0f else r * 0.35f)
+                while (x < c.x + r * 1.4f) { drawLine(a.luz(mezcla(YESO, OCRE, 0.3f), k), Offset(x, y), Offset(x, y + alto - 1f * u), 1f * u); x += maxOf(1f, r * 0.7f) }
+                drawLine(a.claro(0.25f), Offset(c.x - r * 1.4f, y), Offset(c.x + r * 1.4f, y), 0.6f * u)
+            }
+        }
+    }
+    // El canto del estuco: su sombra dentro, arriba a la izquierda, y la luz en el labio de abajo a la derecha.
+    drawPath(TrazoUrbe.borde(fuera, 1.6f * u, 1.8f * u), a.sombra(0.42f))
+    drawPath(TrazoUrbe.borde(corrido(fuera, 1.2f * u, 1.4f * u), -1.2f * u, -1.4f * u), a.luz(mezcla(ALMAGRA, CREMA, 0.4f), k))
+    // Escamas sueltas alrededor, a punto de caer.
+    for (j in 0 until 3) {
+        val ang = 6.283f * azar(semilla, 60 + j)
+        val p = Offset(c.x + r * 1.6f * cos(ang), c.y + r * 1.0f * sin(ang))
+        drawPath(poligono(p.x, p.y, p.x + r * 0.16f, p.y + r * 0.04f, p.x + r * 0.1f, p.y + r * 0.13f), yeso)
+    }
 }
 
 /**
@@ -207,8 +276,8 @@ private fun DrawScope.lucido(c: Offset, an: Float, a: AireUrbe, cerca: Float) {
  */
 internal fun DrawScope.ventanaUrbe(a: AireUrbe, cerca: (Offset) -> Float) {
     val u = density; val w = size.width
-    val hueco = Rect(w * 0.06f, w * 0.05f, w * 0.34f, w * 0.463f)
-    val marco = Rect(w * 0.083f, w * 0.071f, w * 0.317f, w * 0.449f)
+    val hueco = Rect(w * (VEN_IZQ - 0.034f), w * (VEN_ARR - 0.034f), w * (VEN_DER + 0.034f), w * (VEN_ABA + 0.027f))
+    val marco = Rect(w * (VEN_IZQ - 0.012f), w * (VEN_ARR - 0.013f), w * (VEN_DER + 0.012f), w * (VEN_ABA + 0.013f))
     val vid = Rect(w * VEN_IZQ, w * VEN_ARR, w * VEN_DER, w * VEN_ABA)
     val medio = w * VEN_MEDIO
     val k = if (a.lumbre) cerca(hueco.center) else 1f
@@ -332,23 +401,29 @@ private fun DrawScope.vistaUrbe(r: Rect, a: AireUrbe) {
         val ave = Path().apply { moveTo(p.x - s, p.y - s * 0.3f); cubicTo(p.x - s * 0.6f, p.y - s * 0.6f, p.x - s * 0.2f, p.y - s * 0.4f, p.x, p.y); cubicTo(p.x + s * 0.2f, p.y - s * 0.4f, p.x + s * 0.6f, p.y - s * 0.6f, p.x + s, p.y - s * 0.3f) }
         drawPath(ave, (if (a.ocaso) TINTA else mezcla(TINTA, CIELO, 0.3f)).copy(alpha = 0.7f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
     }
-    // El pino: el tronco que sube torcido y la copa de paraguas, cortada por el borde.
-    val pinoOsc = if (noche) Color(0xFF0E1426) else mezcla(PERSIANA, TINTA, 0.25f)
+    // El pino: el tronco que sube casi derecho por detrás de los tejados, con dos ramas, y la copa de paraguas en dos pisos,
+    // cortada por el borde derecho.
+    val pinoOsc = if (noche) Color(0xFF0E1426) else if (a.ocaso) mezcla(PERSIANA, ANOCHECER, 0.35f) else mezcla(PERSIANA, TINTA, 0.25f)
     val pinoLuz = if (noche) Color(0xFF1A2440) else if (a.ocaso) mezcla(HOJA, OCASO, 0.3f) else HOJA
-    val tronco = Path().apply {
-        moveTo(r.left + w * 0.55f, r.top + h * 0.7f)
-        cubicTo(r.left + w * 0.6f, r.top + h * 0.5f, r.left + w * 0.72f, r.top + h * 0.4f, r.left + w * 0.8f, r.top + h * 0.28f)
-    }
-    drawPath(tronco, if (noche) pinoOsc else mezcla(TEJA, TINTA, 0.45f), style = Stroke(2.2f * u, cap = StrokeCap.Round))
-    val copa = r.top + h * 0.24f
-    for (j in 0 until 7) {
-        val cx = r.left + w * (0.38f + 0.14f * j)
-        val cy = copa + h * 0.02f * (azar(848, j) - 0.5f)
-        drawOval(pinoOsc, Offset(cx - w * 0.16f, cy - h * 0.035f), Size(w * 0.32f, h * 0.075f))
-    }
+    val corteza = if (noche) pinoOsc else mezcla(TEJA, TINTA, 0.45f)
+    val pie = Offset(r.left + w * 0.8f, r.top + h * 0.6f)
+    val cruz = Offset(r.left + w * 0.74f, r.top + h * 0.33f)
+    drawLine(corteza, pie, cruz, 2.4f * u, StrokeCap.Round)
+    drawLine(corteza, cruz, Offset(r.left + w * 0.52f, r.top + h * 0.27f), 1.4f * u, StrokeCap.Round)
+    drawLine(corteza, cruz, Offset(r.left + w * 0.95f, r.top + h * 0.26f), 1.6f * u, StrokeCap.Round)
+    val copa = r.top + h * 0.25f
     for (j in 0 until 6) {
-        val cx = r.left + w * (0.42f + 0.13f * j)
-        drawOval(pinoLuz, Offset(cx - w * 0.11f, copa - h * 0.045f), Size(w * 0.22f, h * 0.04f))
+        val cx = r.left + w * (0.42f + 0.16f * j)
+        val cy = copa + h * 0.012f * (azar(848, j) - 0.5f)
+        drawOval(pinoOsc, Offset(cx - w * 0.17f, cy - h * 0.03f), Size(w * 0.34f, h * 0.06f))
+    }
+    for (j in 0 until 5) {
+        val cx = r.left + w * (0.5f + 0.15f * j)
+        drawOval(pinoLuz, Offset(cx - w * 0.12f, copa - h * 0.05f), Size(w * 0.24f, h * 0.035f))
+    }
+    for (j in 0 until 3) {
+        val cx = r.left + w * (0.62f + 0.18f * j)
+        drawOval(mezcla(pinoLuz, CREMA, if (noche) 0f else 0.2f), Offset(cx - w * 0.07f, copa - h * 0.06f), Size(w * 0.14f, h * 0.018f))
     }
     // La antena de un tejado.
     val ant = Offset(r.left + w * 0.24f, r.top + h * 0.6f)
@@ -455,33 +530,43 @@ internal fun DrawScope.cableadoUrbe(a: AireUrbe, apoyo: Float, cerca: (Offset) -
 }
 
 /**
- * La luz de la ventana en el mueble ([MuebleEstanteUrbe.RAYOS], en anchos, pasados al lienzo con [py]) y, en el aire, el haz
- * que la trae desde la ventana: una banda tenue por cada rendija de la persiana y otra por la hoja abierta.
+ * La luz de la ventana en el mueble y, en el aire, el haz que la trae. Es la misma forma sesgada que cae en los volúmenes
+ * ([MuebleEstanteUrbe.FORMAS_RAYO]), pero sigue el relieve: en el fondo de los casilleros, que está más hondo, cae más abajo y
+ * más a la derecha; en los cantos de la cornisa y de las baldas, que están más cerca, un poco antes; así se quiebra en cada
+ * canto y sube por los lomos. El haz es una banda tenue por cada rendija de la persiana y otra por la hoja abierta.
+ * [cornisa] es donde empieza el canto de la cornisa y [arriba], su cara de arriba.
  */
-internal fun DrawScope.rayoUrbe(c: Color, a: AireUrbe, py: (Float) -> Float, arriba: Float) {
+internal fun DrawScope.rayoUrbe(c: Color, a: AireUrbe, d: DisposicionEstante, arriba: Float, cornisa: Float) {
     val w = size.width
-    clipRect(0f, arriba, w, size.height) {
-        val m = 0.7f * density
-        for (t in RAYOS) {
-            val o = Offset(t.left * w, py(t.top)); val tam = Size(t.width * w, py(t.bottom) - py(t.top))
-            drawRect(c.copy(alpha = c.alpha * 0.4f), o - Offset(m, m), Size(tam.width + 2 * m, tam.height + 2 * m), blendMode = BlendMode.Screen)
-            drawRect(c, o, tam, blendMode = BlendMode.Screen)
-        }
+    val todo = MuebleEstanteUrbe.RAYO_TODO
+    fun toca(r: Rect) = r.right / w > todo.left - 0.04f && r.left / w < todo.right + 0.04f && r.bottom / w > todo.top - 0.04f && r.top / w < todo.bottom + 0.05f
+    // En el fondo de los casilleros.
+    with(MuebleEstanteUrbe) {
+        for (r in d.repisas) if (toca(r)) clipRect(r.left, r.top, r.right, r.bottom) { pintaRayo(c, w, -FONDO_DX, -FONDO_DY) }
+        // En los cantos: la cornisa (con su cara de arriba), las baldas y el costado izquierdo.
+        clipRect(0f, arriba, w, d.corona.bottom) { pintaRayo(c, w, -CANTO_DX, -CANTO_DY) }
+        for (t in d.tablas) if (toca(t)) clipRect(t.left, t.top, t.right, t.bottom + 4f * density) { pintaRayo(c, w, -CANTO_DX, -CANTO_DY) }
+        if (toca(d.izquierda)) clipRect(d.izquierda.left, d.izquierda.top, d.izquierda.right, d.izquierda.bottom) { pintaRayo(c, w, -CANTO_DX, -CANTO_DY) }
     }
     // El haz en el aire, del vidrio al mueble, por encima de la cornisa.
-    val aire = c.copy(alpha = c.alpha * (if (a.oscuro) 0.12f else 0.1f))
+    val aire = c.copy(alpha = c.alpha * (if (a.oscuro) 0.13f else 0.11f))
     clipRect(0f, w * VEN_ABA * 0.5f, w, arriba) {
         for (t in RAYOS) {
             val x0 = (t.left - RAYO_DX) * w; val x1 = (t.right - RAYO_DX) * w
             val y0 = (t.top - RAYO_DY) * w; val y1 = (t.bottom - RAYO_DY) * w
-            drawPath(poligono(x0, y0, x1, y0, t.right * w, py(t.top), t.right * w, py(t.bottom), t.left * w, py(t.bottom), x0, y1), aire, blendMode = BlendMode.Screen)
+            val b = MuebleEstanteUrbe.sesga(t.right, t.top) * w
+            val e = MuebleEstanteUrbe.sesga(t.right, t.bottom) * w
+            val f = MuebleEstanteUrbe.sesga(t.left, t.bottom) * w
+            drawPath(poligono(x0, y0, x1, y0, b.x, b.y, e.x, e.y, f.x, f.y, x0, y1), aire, blendMode = BlendMode.Screen)
         }
         // Las motas de polvo que flotan en el haz.
-        if (!a.oscuro) for (j in 0 until 14) {
-            val f = azar(861, j)
-            val x = (VEN_IZQ + (VEN_DER - VEN_IZQ) * azar(862, j) + RAYO_DX * f) * w
-            val y = (VEN_ARR + (VEN_ABA - VEN_ARR) * azar(863, j)) * w + (py(VEN_ABA + RAYO_DY) - VEN_ABA * w) * f
-            drawCircle(luzMueble(0.5f + 0.4f * azar(864, j)), (0.5f + 0.6f * azar(865, j)) * density, Offset(x, y))
+        if (!a.oscuro) for (j in 0 until 16) {
+            val g = azar(861, j)
+            val x0 = VEN_IZQ + (VEN_DER - VEN_IZQ) * azar(862, j)
+            val y0 = VEN_ARR + (VEN_ABA - VEN_ARR) * azar(863, j)
+            val fin = MuebleEstanteUrbe.sesga(x0 + RAYO_DX, y0 + RAYO_DY)
+            val p = Offset(x0 + (fin.x - x0) * g, y0 + (fin.y - y0) * g) * w
+            drawCircle(luzMueble(0.5f + 0.4f * azar(864, j)), (0.5f + 0.6f * azar(865, j)) * density, p)
         }
     }
 }

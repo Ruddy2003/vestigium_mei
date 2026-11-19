@@ -55,10 +55,11 @@ import kotlin.math.sin
 
 
 /**
- * Lo de Giulia sobre la cornisa, de izquierda a derecha: el potos en su maceta de barro, con las guías que caen por el costado;
- * la tablilla de yeso con las pruebas de color del fresco, apoyada en el muro; los botes de pigmento y el bote de los pinceles
- * con los hisopos; el calco de yeso de un florón, roto; la lámpara de pantalla plisada; y dos libros tumbados, cortados por el
- * borde.
+ * Lo de Giulia sobre la cornisa. Lo principal, en el medio y atrás: un trozo de fresco arrancado de una bóveda, montado en su
+ * bastidor y apoyado contra el muro. Delante y a los lados, a distintas profundidades: el potos en su maceta de barro, con las
+ * guías que caen por el costado; la tablilla de yeso con las pruebas de color, bajo la ventana; los botes de pigmento delante
+ * del fresco; el bote de los pinceles con los hisopos; el calco de un florón, roto; la lámpara de pantalla plisada; y dos libros
+ * tumbados, cortados por el borde.
  */
 internal fun DrawScope.cornisaUrbe(apoyo: Float, ch: Float, a: AireUrbe, cerca: (Offset) -> Float) {
     val w = size.width
@@ -69,15 +70,117 @@ internal fun DrawScope.cornisaUrbe(apoyo: Float, ch: Float, a: AireUrbe, cerca: 
         return Offset(v.x / dd * largo * 2.6f, minOf(v.y / dd * largo * 2.6f, largo * 0.5f))
     }
     fun hacia(x: Float) = if (a.luna) (if (w * MuebleEstanteUrbe.LUNA_X >= x) 1f else -1f) else if (w * LAMP_X >= x) 1f else -1f
+    val pFresco = Offset(w * 0.505f, apoyo)
+    frescoUrbe(pFresco, w * 0.27f, w * 0.235f, a, { p -> cerca(p) }, caida(pFresco - Offset(0f, w * 0.12f), w * 0.016f))
     val pTabla = Offset(w * 0.255f, apoyo)
-    pruebaColor(pTabla, w * 0.105f, a, cerca(pTabla - Offset(0f, w * 0.04f)), caida(pTabla, w * 0.008f))
-    val pRoseta = Offset(w * 0.625f, apoyo)
-    rosetaUrbe(pRoseta, w * 0.046f, a, cerca(pRoseta - Offset(0f, w * 0.05f)), caida(pRoseta, w * 0.01f), entera = false)
-    botesPigmentoUrbe(Offset(w * 0.385f, apoyo), w * 0.03f, a, cerca(Offset(w * 0.4f, apoyo - w * 0.02f)), hacia(w * 0.4f), 0)
-    botePincelesUrbe(Offset(w * 0.505f, apoyo), w * 0.042f, a, cerca(Offset(w * 0.5f, apoyo - w * 0.04f)), hacia(w * 0.5f), caida(Offset(w * 0.5f, apoyo), w * 0.008f))
+    pruebaColor(pTabla, w * 0.1f, a, cerca(pTabla - Offset(0f, w * 0.04f)), caida(pTabla, w * 0.008f))
+    val pRoseta = Offset(w * 0.69f, apoyo)
+    rosetaUrbe(pRoseta, w * 0.036f, a, cerca(pRoseta - Offset(0f, w * 0.04f)), caida(pRoseta, w * 0.008f), entera = false)
+    botesPigmentoUrbe(Offset(w * 0.39f, apoyo + w * 0.002f), w * 0.03f, a, cerca(Offset(w * 0.4f, apoyo - w * 0.02f)), hacia(w * 0.4f), 0)
+    botePincelesUrbe(Offset(w * 0.6f, apoyo + w * 0.002f), w * 0.042f, a, cerca(Offset(w * 0.6f, apoyo - w * 0.04f)), hacia(w * 0.6f), caida(Offset(w * 0.6f, apoyo), w * 0.008f))
     librosTumbadosUrbe(Offset(w * 0.885f, apoyo), w * 0.15f, 2, a, cerca(Offset(w * 0.93f, apoyo)), 5)
     lamparaUrbe(apoyo, a, caida(Offset(w * LAMP_X, apoyo - w * 0.06f), w * 0.012f))
     potos(Offset(w * 0.115f, apoyo), w * 0.07f, ch, a, cerca(Offset(w * 0.1f, apoyo - w * 0.03f)), hacia(w * 0.11f))
+}
+
+/**
+ * El trozo de fresco arrancado (un «stacco») de la bóveda de una capilla, pasado a un soporte nuevo y montado en su bastidor de
+ * abeto, apoyado contra el muro: el borde quebrado del fresco sobre el enlucido liso del soporte; el azul de la bóveda con sus
+ * estrellas doradas de ocho puntas; la banda de almagra del nervio con su filete blanco; las faltas, rellenas con el rayado
+ * fino de la restauración (el «rigatino»), y las grietas del craquelado. Ninguna obra en particular: una bóveda estrellada
+ * cualquiera, como la del cuadro de Giulia.
+ */
+private fun DrawScope.frescoUrbe(pie: Offset, an: Float, al: Float, a: AireUrbe, cerca: (Offset) -> Float, caida: Offset) {
+    val u = density
+    val k = cerca(pie - Offset(0f, al * 0.5f))
+    val kd = cerca(pie + Offset(an * 0.4f, -al * 0.5f))
+    // Apoyado: arriba se va un poco hacia atrás y se estrecha.
+    val ent = an * 0.025f
+    val marco = poligono(pie.x - an / 2 + ent, pie.y - al, pie.x + an / 2 - ent, pie.y - al, pie.x + an / 2, pie.y, pie.x - an / 2, pie.y)
+    translate(caida.x, caida.y) { drawPath(marco, a.sombra(if (a.lumbre) 0.42f else 0.26f)) }
+    contacto(Offset(pie.x + an * 0.05f, pie.y), an * 1.04f, an * 0.04f, a, 0.4f)
+    // El canto del bastidor, a la derecha y abajo, y su cara de abeto.
+    val abeto = mezcla(PaletaUrbe.NOGAL, CREMA, 0.55f)
+    drawPath(TrazoUrbe.corrido(marco, 2.2f * u, 1.2f * u), a.luz(mezcla(abeto, TINTA, 0.35f), kd))
+    drawPath(marco, a.luz(abeto, k))
+    val barra = an * 0.05f
+    val panel = poligono(pie.x - an / 2 + ent + barra, pie.y - al + barra, pie.x + an / 2 - ent - barra, pie.y - al + barra, pie.x + an / 2 - barra, pie.y - barra, pie.x - an / 2 + barra, pie.y - barra)
+    // Las vetas del abeto y los ingletes de las esquinas.
+    clipPath(marco) {
+        for (j in 0 until 6) drawLine(a.luz(mezcla(abeto, TINTA, 0.25f), k).copy(alpha = 0.4f), Offset(pie.x - an / 2, pie.y - al + barra * (0.2f + 0.12f * j)), Offset(pie.x + an / 2, pie.y - al + barra * (0.25f + 0.12f * j)), 0.5f * u)
+        drawRect(a.claro(0.35f), Offset(pie.x - an / 2, pie.y - al), Size(an, 1f * u))
+    }
+    // El soporte nuevo: enlucido liso, gris cálido.
+    val soporte = a.luz(mezcla(YESO, CREMA, 0.4f), k)
+    drawPath(panel, soporte)
+    // El fresco: un borde quebrado, que no llega a las esquinas.
+    val r = Rect(pie.x - an / 2 + barra, pie.y - al + barra, pie.x + an / 2 - barra, pie.y - barra)
+    val trozo = Path()
+    val n = 18
+    for (j in 0 until n) {
+        val ang = 6.283f * j / n
+        val rr = 0.8f + 0.14f * azar(910, j) - (if (j % 5 == 2) 0.14f else 0f)
+        // Un rectángulo de esquinas rotas: el radio crece hacia las diagonales, sin pasar del soporte.
+        val esq = 1f + 0.32f * (kotlin.math.abs(cos(ang) * sin(ang)) * 2f)
+        val q = Offset(r.center.x + r.width * 0.5f * minOf(1f, rr * esq) * cos(ang) * 0.98f, r.center.y + r.height * 0.5f * minOf(1f, rr * esq) * sin(ang) * 0.98f)
+        if (j == 0) trozo.moveTo(q.x, q.y) else trozo.lineTo(q.x, q.y)
+    }
+    trozo.close()
+    drawPath(TrazoUrbe.corrido(trozo, 1f * u, 1.2f * u), a.sombra(0.3f))
+    val azul = a.luz(mezcla(PaletaUrbe.ULTRAMAR, CIELO, 0.25f), k)
+    drawPath(trozo, azul)
+    clipPath(trozo) {
+        // El azul a manchas, como se pinta al fresco: más hondo en unas partes, más gastado en otras.
+        for (j in 0 until 7) drawOval(a.luz(if (j % 2 == 0) PaletaUrbe.ULTRAMAR else mezcla(CIELO, CREMA, 0.3f), k).copy(alpha = 0.22f), Offset(r.left + r.width * azar(911, j) - an * 0.1f, r.top + r.height * azar(912, j) - an * 0.06f), Size(an * 0.22f, an * 0.12f))
+        // La banda de almagra del nervio, abajo, con su filete blanco y una línea de ocre.
+        val yb = r.top + r.height * 0.72f
+        drawRect(a.luz(ALMAGRA, k), Offset(r.left, yb), Size(r.width, r.height * 0.28f))
+        drawRect(a.luz(CREMA, k), Offset(r.left, yb - 1.4f * u), Size(r.width, 1.6f * u))
+        drawRect(a.luz(OCRE, k), Offset(r.left, yb + r.height * 0.12f), Size(r.width, 1.2f * u))
+        // Las estrellas de ocho puntas, de oro gastado.
+        val oro = a.luz(mezcla(LATON, CREMA, 0.25f), k)
+        listOf(Offset(0.22f, 0.2f), Offset(0.58f, 0.14f), Offset(0.82f, 0.38f), Offset(0.4f, 0.48f), Offset(0.12f, 0.58f)).forEachIndexed { j, f ->
+            val c = Offset(r.left + r.width * f.x, r.top + r.height * f.y)
+            val s = an * (0.038f + 0.012f * azar(913, j))
+            drawLine(oro, c - Offset(s, 0f), c + Offset(s, 0f), 1.2f * u, StrokeCap.Round)
+            drawLine(oro, c - Offset(0f, s), c + Offset(0f, s), 1.2f * u, StrokeCap.Round)
+            drawLine(oro, c - Offset(s * 0.65f, s * 0.65f), c + Offset(s * 0.65f, s * 0.65f), 1f * u, StrokeCap.Round)
+            drawLine(oro, c - Offset(s * 0.65f, -s * 0.65f), c + Offset(s * 0.65f, -s * 0.65f), 1f * u, StrokeCap.Round)
+            drawCircle(oro, s * 0.3f, c)
+        }
+        // Las faltas, rellenas con el rayado fino de la restauración, en azul y en ocre.
+        listOf(Rect(r.left + r.width * 0.6f, r.top + r.height * 0.42f, r.left + r.width * 0.86f, r.top + r.height * 0.66f), Rect(r.left + r.width * 0.2f, r.top + r.height * 0.74f, r.left + r.width * 0.42f, r.top + r.height * 0.95f)).forEachIndexed { j, f ->
+            val falta = Path().apply {
+                moveTo(f.left, f.top + f.height * 0.3f); lineTo(f.left + f.width * 0.4f, f.top); lineTo(f.right, f.top + f.height * 0.2f)
+                lineTo(f.right - f.width * 0.1f, f.bottom); lineTo(f.left + f.width * 0.2f, f.bottom - f.height * 0.1f); close()
+            }
+            drawPath(falta, a.luz(mezcla(CREMA, YESO, 0.5f), k))
+            clipPath(falta) {
+                var x = f.left
+                var i = 0
+                while (x < f.right) {
+                    drawLine(a.luz(if (j == 0) mezcla(PaletaUrbe.ULTRAMAR, CREMA, 0.35f) else mezcla(ALMAGRA, CREMA, 0.3f), k).copy(alpha = 0.8f), Offset(x, f.top), Offset(x, f.bottom), 0.6f * u)
+                    x += maxOf(1f, 1.5f * u); i++
+                }
+            }
+            drawPath(falta, a.sombra(0.25f), style = Stroke(0.6f * u))
+        }
+        // El craquelado.
+        for (j in 0 until 5) {
+            val p0 = Offset(r.left + r.width * azar(914, j), r.top + r.height * azar(915, j) * 0.7f)
+            val grieta = Path().apply { moveTo(p0.x, p0.y); lineTo(p0.x + an * 0.04f, p0.y + an * 0.02f); lineTo(p0.x + an * 0.05f, p0.y + an * 0.06f); lineTo(p0.x + an * 0.09f, p0.y + an * 0.07f) }
+            drawPath(grieta, a.sombra(0.3f), style = Stroke(0.5f * u))
+        }
+        // La luz de día por la izquierda; el lado contrario, en sombra.
+        drawRect(a.claro(0.12f), Offset(r.left, r.top), Size(r.width * 0.3f, r.height))
+        drawRect(a.sombra(0.14f), Offset(r.right - r.width * 0.25f, r.top), Size(r.width * 0.25f, r.height))
+    }
+    // El borde del fresco: un poco más alto que el soporte, que coge la luz.
+    drawPath(trozo, a.claro(0.4f), style = Stroke(0.8f * u))
+    // Las cuñas de las esquinas del bastidor, por detrás, y la etiqueta de inventario de la obra (una tira sin letras).
+    drawRect(a.luz(CREMA, k), Offset(pie.x + an * 0.18f, pie.y - barra * 0.75f), Size(an * 0.18f, barra * 0.5f))
+    drawLine(a.luz(TINTA, k).copy(alpha = 0.5f), Offset(pie.x + an * 0.2f, pie.y - barra * 0.5f), Offset(pie.x + an * 0.33f, pie.y - barra * 0.5f), 0.6f * u)
+    if (a.lumbre) drawPath(TrazoUrbe.borde(marco, -2f * u, 0f), a.filo(0.45f * kd))
 }
 
 /**
@@ -399,199 +502,4 @@ internal fun DrawScope.brilloLamparaUrbe(a: AireUrbe, apoyo: Float) {
     // El charco de luz en la cornisa, bajo la boca de la pantalla.
     val charco = poligono(c.x - w * 0.084f, c.y + w * 0.049f, c.x + w * 0.084f, c.y + w * 0.049f, c.x + w * 0.16f, apoyo + w * 0.004f, c.x - w * 0.16f, apoyo + w * 0.004f)
     clipPath(charco) { mancha(Offset(c.x, apoyo), w * 0.2f, LAMPARA.copy(alpha = 0.5f * f)) }
-}
-
-// ---------------------------------------------------------------- al pie
-
-/**
- * El pie de la librería: el mueble bajo de dos puertas con su cuarterón, la llave puesta con su borla y la puerta de la
- * izquierda entornada; las patas torneadas, el suelo de baldosas hidráulicas con su dibujo gastado, el bolso de lona de la
- * obra, caído, y una pila de libros grandes de arte en el suelo, cortada por el borde.
- */
-internal fun DrawScope.pieUrbe(d: DisposicionEstante, suelo: Float, a: AireUrbe, cerca: (Offset) -> Float) {
-    val u = density; val w = size.width; val h = size.height
-    val b = d.base
-    val costado = w * MuebleEstanteUrbe.COSTADO
-    val pata = w * 0.016f
-    val mueble = Rect(costado, b.top, w - costado, suelo - pata)
-    // El suelo de baldosas hidráulicas: dos filas, en escorzo.
-    baldosas(Rect(0f, suelo, w, h), a, cerca)
-    // La sombra del mueble en el suelo, corrida a la derecha.
-    drawRect(a.sombra(if (a.lumbre) 0.5f else 0.34f), Offset(costado + w * 0.01f, suelo), Size(w - costado, (h - suelo) * 0.3f))
-    drawRect(a.sombra(0.15f), Offset(costado + w * 0.02f, suelo + (h - suelo) * 0.3f), Size(w - costado, (h - suelo) * 0.2f))
-    // Las patas.
-    listOf(costado + w * 0.02f, w / 2 - w * 0.015f, w - costado - w * 0.05f).forEach { x ->
-        val k = cerca(Offset(x, suelo))
-        drawRoundRect(a.luz(NOGAL_OSC, k), Offset(x, suelo - pata - 1f * u), Size(w * 0.03f, pata + 1f * u), CornerRadius(w * 0.01f))
-        drawRect(a.claro(0.2f), Offset(x + w * 0.004f, suelo - pata), Size(w * 0.005f, pata))
-    }
-    // El cuerpo, por tramos (de noche, cada uno con su luz).
-    val tramos = if (a.lumbre) 20 else 1
-    for (t in 0 until tramos) {
-        val xa = mueble.left + mueble.width * t / tramos; val xb = mueble.left + mueble.width * (t + 1) / tramos + 0.6f
-        drawRect(a.luz(NOGAL, cerca(Offset((xa + xb) / 2, mueble.center.y))), Offset(xa, mueble.top), Size(xb - xa, mueble.height))
-    }
-    // El larguero de arriba y el zócalo de abajo.
-    drawRect(a.claro(0.25f), mueble.topLeft, Size(mueble.width, 1.4f * u))
-    drawRect(a.sombra(0.3f), Offset(mueble.left, mueble.top + w * 0.014f), Size(mueble.width, 1f * u))
-    drawRect(a.sombra(0.3f), Offset(mueble.left, mueble.bottom - w * 0.02f), Size(mueble.width, w * 0.02f))
-    drawRect(a.claro(0.2f), Offset(mueble.left, mueble.bottom - w * 0.02f), Size(mueble.width, 1f * u))
-    // Los dos cajones: el de la izquierda, entreabierto, con el trapo de la obra que asoma.
-    val m = w * 0.03f
-    val medio = w / 2
-    val cajones = listOf(Rect(mueble.left + m, mueble.top + w * 0.022f, medio - 1.2f * u, mueble.bottom - w * 0.026f), Rect(medio + 1.2f * u, mueble.top + w * 0.022f, mueble.right - m, mueble.bottom - w * 0.026f))
-    cajones.forEachIndexed { i, p ->
-        val k = cerca(p.center)
-        val abierto = i == 0
-        if (abierto) drawRect(a.luz(NOGAL_OSC, k * 0.3f), Offset(p.left, p.top - 1.5f * u), Size(p.width, 5f * u))
-        drawRect(a.sombra(0.3f), Offset(p.left + 1.5f * u, p.top + 1.5f * u), p.size)
-        val f = if (abierto) p.translate(0f, 2.5f * u) else p
-        drawRect(a.luz(NOGAL, k), f.topLeft, f.size)
-        vetas(f, a.luz(NOGAL_OSC, k).copy(alpha = 0.5f), 897 + i, densidad = 0.35f, grosor = 0.8f)
-        // El tablero rehundido del frente, con su moldura.
-        val cuart = f.deflate(minOf(f.width, f.height) * 0.16f)
-        if (cuart.width > 2f && cuart.height > 2f) {
-            drawRect(a.luz(mezcla(NOGAL, NOGAL_OSC, 0.25f), k), cuart.topLeft, cuart.size)
-            vetas(cuart, a.luz(mezcla(NOGAL, CREMA, 0.2f), k).copy(alpha = 0.35f), 899 + i, densidad = 0.5f, grosor = 0.7f)
-            drawRect(a.sombra(0.22f), cuart.topLeft, Size(cuart.width, 2f * u))
-            drawRect(a.sombra(0.16f), cuart.topLeft, Size(2f * u, cuart.height))
-            drawRect(a.claro(0.25f), Offset(cuart.left, cuart.bottom - 1.4f * u), Size(cuart.width, 1.4f * u))
-            drawRect(a.claro(0.2f), Offset(cuart.right - 1.4f * u, cuart.top), Size(1.4f * u, cuart.height))
-        }
-        drawRect(a.claro(0.3f), f.topLeft, Size(f.width, 1f * u))
-        drawRect(a.claro(0.2f), f.topLeft, Size(1f * u, f.height))
-        drawRect(a.sombra(0.3f), Offset(f.right - 1.2f * u, f.top), Size(1.2f * u, f.height))
-        if (a.lumbre && k > 0.05f) drawRect(a.filo(0.4f * k), f.topLeft, Size(f.width, 1f * u))
-        // Los dos pomos de latón.
-        listOf(0.25f, 0.75f).forEach { t ->
-            val c = Offset(f.left + f.width * t, f.center.y)
-            val kk = maxOf(k, 0.15f)
-            drawCircle(a.sombra(0.35f), w * 0.011f, c + Offset(1.4f * u, 1.8f * u))
-            drawCircle(a.luz(mezcla(LATON, NOGAL_OSC, 0.2f), kk), w * 0.011f, c)
-            drawCircle(a.luz(LATON, kk), w * 0.007f, c - Offset(w * 0.002f, w * 0.002f))
-            drawCircle(a.claro(0.6f), w * 0.0025f, c - Offset(w * 0.004f, w * 0.004f))
-        }
-        if (abierto) trapo(f, a, k)
-    }
-    // El escudo de la cerradura del cajón de la derecha y la llave con su borla.
-    val ce = Offset(cajones[1].center.x, cajones[1].center.y - w * 0.004f)
-    val kc = maxOf(cerca(ce), 0.15f)
-    drawRoundRect(a.luz(LATON, kc), Offset(ce.x - w * 0.009f, ce.y - w * 0.016f), Size(w * 0.018f, w * 0.032f), CornerRadius(w * 0.006f))
-    drawCircle(a.claro(0.5f), 1f * u, ce - Offset(w * 0.004f, w * 0.009f))
-    drawRect(a.luz(mezcla(LATON, TINTA, 0.3f), kc), Offset(ce.x - 0.8f * u, ce.y - w * 0.006f), Size(1.6f * u, w * 0.016f))
-    drawCircle(a.luz(LATON, kc), w * 0.008f, ce + Offset(0f, -w * 0.002f), style = Stroke(1.4f * u))
-    val borla = Path().apply { moveTo(ce.x, ce.y + w * 0.006f); cubicTo(ce.x + w * 0.004f, ce.y + w * 0.02f, ce.x - w * 0.002f, ce.y + w * 0.03f, ce.x + w * 0.002f, ce.y + w * 0.04f) }
-    drawPath(borla, a.luz(ALMAGRA, kc), style = Stroke(1f * u))
-    drawPath(poligono(ce.x - w * 0.006f, ce.y + w * 0.04f, ce.x + w * 0.01f, ce.y + w * 0.04f, ce.x + w * 0.012f, ce.y + w * 0.062f, ce.x - w * 0.008f, ce.y + w * 0.062f), a.luz(ALMAGRA, kc))
-    drawRect(a.luz(mezcla(ALMAGRA, OCRE, 0.4f), kc), Offset(ce.x - w * 0.006f, ce.y + w * 0.04f), Size(w * 0.016f, w * 0.005f))
-    // El bolso de lona de la obra, caído contra el cajón, y los libros grandes del suelo.
-    bolso(Offset(w * 0.17f, h - (h - suelo) * 0.22f), w * 0.2f, a, maxOf(cerca(Offset(w * 0.17f, suelo)), 0.12f))
-    librosTumbadosUrbe(Offset(w * 0.79f, h - (h - suelo) * 0.2f), w * 0.24f, 3, a, maxOf(cerca(Offset(w * 0.85f, suelo)), 0.12f), 2)
-}
-
-/** El trapo de algodón de la obra, con manchas de pigmento, que cuelga blando por el canto del cajón entreabierto. */
-private fun DrawScope.trapo(f: Rect, a: AireUrbe, k: Float) {
-    val u = density
-    val x0 = f.left + f.width * 0.42f; val x1 = f.left + f.width * 0.66f
-    val tela = Path().apply {
-        moveTo(x0, f.top - 2.5f * u)
-        cubicTo(x0 + f.width * 0.08f, f.top - 4f * u, x1 - f.width * 0.06f, f.top - 3f * u, x1, f.top - 2f * u)
-        cubicTo(x1 + 1.5f * u, f.top + f.height * 0.3f, x1 - f.width * 0.03f, f.top + f.height * 0.5f, x1 - f.width * 0.05f, f.top + f.height * 0.62f)
-        cubicTo(x1 - f.width * 0.09f, f.top + f.height * 0.56f, x0 + f.width * 0.08f, f.top + f.height * 0.7f, x0 + f.width * 0.04f, f.top + f.height * 0.48f)
-        cubicTo(x0 + f.width * 0.01f, f.top + f.height * 0.3f, x0 - 1f * u, f.top + f.height * 0.1f, x0, f.top - 2.5f * u)
-        close()
-    }
-    drawPath(corrido(tela, 1.6f * u, 2f * u), a.sombra(0.3f))
-    val c = a.luz(mezcla(CREMA, YESO, 0.4f), k)
-    drawPath(tela, c)
-    clipPath(tela) {
-        // Los pliegues blandos y las manchas de pigmento.
-        listOf(0.3f, 0.55f, 0.75f).forEachIndexed { j, t ->
-            val x = x0 + (x1 - x0) * t
-            drawLine(a.sombra(0.16f), Offset(x, f.top - 2f * u), Offset(x - (x1 - x0) * 0.08f * (j - 1), f.top + f.height * 0.6f), 1.2f * u)
-            drawLine(a.claro(0.3f), Offset(x - 1.2f * u, f.top - 2f * u), Offset(x - 1.2f * u - (x1 - x0) * 0.08f * (j - 1), f.top + f.height * 0.5f), 0.6f * u)
-        }
-        drawOval(a.luz(OCRE, k).copy(alpha = 0.7f), Offset(x0 + (x1 - x0) * 0.2f, f.top + f.height * 0.1f), Size((x1 - x0) * 0.3f, f.height * 0.14f))
-        drawOval(a.luz(ULTRAMAR, k).copy(alpha = 0.6f), Offset(x0 + (x1 - x0) * 0.55f, f.top + f.height * 0.32f), Size((x1 - x0) * 0.2f, f.height * 0.1f))
-        drawOval(a.luz(ALMAGRA, k).copy(alpha = 0.5f), Offset(x0 + (x1 - x0) * 0.3f, f.top + f.height * 0.42f), Size((x1 - x0) * 0.16f, f.height * 0.08f))
-    }
-}
-
-/** El suelo de baldosas hidráulicas: cada una con un rombo gris azulado y cuartos de círculo de teja en las esquinas, gastadas. */
-private fun DrawScope.baldosas(r: Rect, a: AireUrbe, cerca: (Offset) -> Float) {
-    val u = density
-    val k = if (a.lumbre) maxOf(cerca(Offset(r.center.x, r.top)), 0.08f) else 1f
-    val fondo = a.luz(mezcla(CREMA, YESO, 0.5f), k)
-    drawRect(fondo, r.topLeft, r.size)
-    val filas = listOf(0f to 0.42f, 0.42f to 1f)
-    clipRect(r.left, r.top, r.right, r.bottom) {
-        filas.forEachIndexed { f, (t0, t1) ->
-            val y0 = r.top + r.height * t0; val y1 = r.top + r.height * t1
-            val lado = maxOf(4f * u, r.width * (0.11f + 0.03f * f))
-            var x = r.left - lado * (0.3f + 0.4f * f)
-            var j = 0
-            while (x < r.right) {
-                val c = Offset(x + lado / 2, (y0 + y1) / 2)
-                val rx = lado * 0.32f; val ry = (y1 - y0) * 0.32f
-                drawPath(poligono(c.x, c.y - ry, c.x + rx, c.y, c.x, c.y + ry, c.x - rx, c.y), a.luz(mezcla(AZUCAR, TINTA, 0.2f), k).copy(alpha = 0.65f))
-                listOf(Offset(x, y0), Offset(x + lado, y0), Offset(x, y1), Offset(x + lado, y1)).forEach { e ->
-                    drawOval(a.luz(mezcla(TEJA, CREMA, 0.3f), k).copy(alpha = 0.55f), Offset(e.x - lado * 0.2f, e.y - (y1 - y0) * 0.22f), Size(lado * 0.4f, (y1 - y0) * 0.44f))
-                }
-                drawLine(a.sombra(0.25f), Offset(x, y0), Offset(x, y1), 0.7f * u)
-                x += lado; j++
-            }
-            drawLine(a.sombra(0.25f), Offset(r.left, y1), Offset(r.right, y1), 0.7f * u)
-        }
-        // El gastado de las pisadas y la cera vieja.
-        pinceladas(r, a.claro(1f), 895, 16, u, 0.14f)
-        pinceladas(r, a.sombra(1f), 896, 10, u, 0.08f)
-    }
-}
-
-/**
- * El bolso de lona de la obra, caído: la lona blanda que se dobla, la boca abierta con un rollo de papel y un pincel ancho que
- * asoman, el asa que cae por delante y el bolsillo con una mancha de cal.
- */
-private fun DrawScope.bolso(pie: Offset, an: Float, a: AireUrbe, cerca: Float) {
-    val u = density
-    val al = an * 0.6f
-    val lona = a.luz(TELA, cerca)
-    val lonaOsc = a.luz(mezcla(TELA, NOGAL_OSC, 0.35f), cerca)
-    // Lo que asoma de la boca: un rollo de papel y la brocha.
-    drawLine(a.luz(CREMA, cerca), Offset(pie.x - an * 0.12f, pie.y - al * 0.8f), Offset(pie.x - an * 0.3f, pie.y - al * 1.25f), an * 0.09f, StrokeCap.Round)
-    drawCircle(a.luz(mezcla(CREMA, OCRE, 0.2f), cerca), an * 0.045f, Offset(pie.x - an * 0.3f, pie.y - al * 1.25f))
-    drawLine(a.luz(NOGAL, cerca), Offset(pie.x + an * 0.12f, pie.y - al * 0.7f), Offset(pie.x + an * 0.2f, pie.y - al * 1.18f), an * 0.035f, StrokeCap.Round)
-    drawRect(a.luz(mezcla(TINTA, NOGAL, 0.4f), cerca), Offset(pie.x + an * 0.16f, pie.y - al * 1.3f), Size(an * 0.1f, al * 0.12f))
-    contacto(Offset(pie.x + an * 0.08f, pie.y), an * 1.15f, al * 0.14f, a, 0.42f)
-    // La lona: ancha abajo, la boca hundida y el lado derecho que se dobla hacia dentro.
-    val cuerpo = Path().apply {
-        moveTo(pie.x - an * 0.46f, pie.y)
-        cubicTo(pie.x - an * 0.52f, pie.y - al * 0.4f, pie.x - an * 0.44f, pie.y - al * 0.78f, pie.x - an * 0.36f, pie.y - al * 0.86f)
-        cubicTo(pie.x - an * 0.15f, pie.y - al * 0.74f, pie.x + an * 0.1f, pie.y - al * 0.78f, pie.x + an * 0.3f, pie.y - al * 0.92f)
-        cubicTo(pie.x + an * 0.36f, pie.y - al * 0.7f, pie.x + an * 0.5f, pie.y - al * 0.35f, pie.x + an * 0.48f, pie.y)
-        close()
-    }
-    drawPath(cuerpo, lona)
-    clipPath(cuerpo) {
-        // El pliegue grande y la sombra del lado contrario a la luz.
-        val pliegue = Path().apply { moveTo(pie.x + an * 0.06f, pie.y - al * 0.8f); cubicTo(pie.x + an * 0.12f, pie.y - al * 0.5f, pie.x + an * 0.02f, pie.y - al * 0.3f, pie.x + an * 0.1f, pie.y) }
-        drawPath(pliegue, lonaOsc.copy(alpha = 0.6f), style = Stroke(2.4f * u))
-        drawPath(corrido(pliegue, -1.6f * u, 0f), a.claro(0.25f), style = Stroke(1f * u))
-        drawRect(a.sombra(0.22f), Offset(pie.x + an * 0.22f, pie.y - al), Size(an * 0.4f, al))
-        drawRect(a.claro(0.2f), Offset(pie.x - an * 0.46f, pie.y - al), Size(an * 0.12f, al))
-        // La trama de la lona.
-        pinceladas(Rect(pie.x - an / 2, pie.y - al, pie.x + an / 2, pie.y), lonaOsc, 897, 10, u, 0.12f)
-        // El bolsillo, con su costura y una mancha de cal.
-        val bol = Rect(pie.x - an * 0.3f, pie.y - al * 0.5f, pie.x + an * 0.02f, pie.y - al * 0.12f)
-        drawRect(mezcla(lona, lonaOsc, 0.25f), bol.topLeft, bol.size)
-        drawRect(lonaOsc, bol.topLeft, Size(bol.width, 1.2f * u))
-        drawOval(a.luz(GESSO, cerca).copy(alpha = 0.6f), Offset(bol.left + bol.width * 0.5f, bol.top + bol.height * 0.4f), Size(bol.width * 0.35f, bol.height * 0.3f))
-        // La boca: el borde hundido, en sombra.
-        drawPath(Path().apply { moveTo(pie.x - an * 0.36f, pie.y - al * 0.86f); cubicTo(pie.x - an * 0.15f, pie.y - al * 0.74f, pie.x + an * 0.1f, pie.y - al * 0.78f, pie.x + an * 0.3f, pie.y - al * 0.92f) }, lonaOsc, style = Stroke(2.6f * u))
-    }
-    // El asa, que cae por delante en curva floja.
-    val asa = Path().apply { moveTo(pie.x - an * 0.3f, pie.y - al * 0.82f); cubicTo(pie.x - an * 0.4f, pie.y - al * 0.3f, pie.x + an * 0.05f, pie.y - al * 0.15f, pie.x + an * 0.22f, pie.y - al * 0.88f) }
-    drawPath(corrido(asa, 1.5f * u, 2f * u), a.sombra(0.25f), style = Stroke(2.6f * u))
-    drawPath(asa, lonaOsc, style = Stroke(2.6f * u, cap = StrokeCap.Round))
-    drawPath(corrido(asa, -0.6f * u, -0.6f * u), a.claro(0.2f), style = Stroke(0.7f * u))
 }
