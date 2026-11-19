@@ -44,16 +44,17 @@ import io.github.ruddy2003.vestigium.ui.ideario.vetas
 // =====================================================================
 
 /**
- * Medieval: la librería encadenada. Atriles de roble en pendiente bajo cada repisa y, a lo largo de cada una, la barra de
- * hierro donde se enganchan las cadenas, trabada en los costados con su cerradura. Arriba, un muro de sillares con un arco
- * románico de dovelas y columnillas sobre una viga de roble pintada en zigzag de bermellón y lapislázuli; en el vano, una
- * saetera por donde entra el día y una vela en su palmatoria, que de noche se enciende. Cada entrada es un libro de cuero
- * sobre tablas con sus nervios, un bollón de latón arriba (de noche, una luna de oro), el broche con su chapa y la etiqueta
- * de pergamino con el día, el mes dorado entre nervios y la cadena que baja del canto hasta la barra, que pasa por delante.
- * Distinto del Ideario, que es el armario cerrado del scriptorium con su arquería pintada.
- * La tapa es ese libro encadenado de frente: cuero gofrado con rombos, bollones y broches de latón, la fecha en oro,
- * la etiqueta de pergamino pautada en rojo para lo escrito y la cuenta dorada en el lomo; al abrirse gira y deja ver la
- * hoja a dos columnas con su capital (de noche, una luna de oro y la luz de la vela).
+ * Medieval (Scriptorium): el armario de nogal de la celda del armarius, en una abadía benedictina hacia 1150. Está contra un
+ * muro de sillarejo de arenisca rosada, con una ventana abocinada arriba a la izquierda por donde entra el rayo de sol (en
+ * los Sueños de noche, el de la luna); el tablero de arriba vuela sobre una fila de canecillos de rollos y los pies derechos
+ * llevan un fleje de hierro con sus rizos en cada tabla. Encima, la campanilla, el registro de Cuaresma con la lista de los
+ * libros prestados, el rollo de pieles y la alcuza; en el muro, el candil de hierro (que de noche es la única luz) y las
+ * llaves del arca; al pie, la escoba y el arca de las cartas. Cada entrada es, según el día, un códice románico de badana
+ * teñida, un libro en su camisa de lana o un legajo de cartas selladas. El dibujo del mueble y de las entradas está en
+ * [MuebleEstanteMedieval]. Distinto del Ideario, que es el armario cerrado del scriptorium con su arquería pintada.
+ * La tapa es el libro encadenado de la librería, de frente: cuero gofrado con rombos, bollones y broches de latón, la fecha
+ * en oro, la etiqueta de pergamino pautada en rojo para lo escrito y la cuenta dorada en el lomo; al abrirse gira y deja ver
+ * la hoja a dos columnas con su capital (de noche, una luna de oro y la luz de la vela).
  */
 object EstanteMedieval : DisenoBiblioteca {
     private val ROBLE = Color(0xFF6E4A2A)
@@ -79,8 +80,6 @@ object EstanteMedieval : DisenoBiblioteca {
     /** Los cueros de las tapas: castaño, tabaco, rojo de rubia, oliva y leonado. */
     private val CUEROS = listOf(Color(0xFF6B3A22), Color(0xFF4B2C1C), Color(0xFF7A3024), Color(0xFF574A30), Color(0xFF5E4029))
     private val NOCHE = Color(0xFF1B1626)
-    /** A cuántos dp del piso de la repisa corre la barra de las cadenas (la misma en el mueble y en cada libro). */
-    private val BARRA = 7f
 
     /** El color con la luz del momento: en modo oscuro, más hundido; de noche, en la penumbra de la vela. */
     private fun t(c: Color, oscuro: Boolean, noche: Boolean): Color {
@@ -90,279 +89,24 @@ object EstanteMedieval : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.3f
-    override val base = 0.1f
-    override val lado = 0.05f
-    override val altoRepisa: Dp = 114.dp
-    override val tabla: Dp = 18.dp
-    override val separa: Dp = 3.dp
+    override val corona = MuebleEstanteMedieval.CORONA
+    override val base = MuebleEstanteMedieval.BASE
+    override val lado = MuebleEstanteMedieval.LADO
+    override val altoRepisa: Dp = MuebleEstanteMedieval.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteMedieval.TABLA
+    override val separa: Dp = MuebleEstanteMedieval.SEPARA
     override val letra: FontFamily = LetraExtra.cardo
+    /** Estante rehecho: el aura solo sale al tocar (ver [DisenoBiblioteca.auraEnReposo]). */
+    override val auraEnReposo = false
 
-    override fun ancho(palabras: Int): Dp = (24 + (palabras / 40).coerceAtMost(20)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.78f + 0.16f * azar(semilla, 1)
+    override fun ancho(palabras: Int): Dp = MuebleEstanteMedieval.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteMedieval.alto(semilla, palabras)
 
-    /** La barra de hierro de las cadenas, de [x0] a [x1] a la altura [y]: la dibujan igual el mueble y cada libro. */
-    private fun DrawScope.barra(x0: Float, x1: Float, y: Float, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        drawLine(t(HIERRO, oscuro, noche), Offset(x0, y), Offset(x1, y), 2.4f * u)
-        drawLine(t(HIERRO_LUZ, oscuro, noche), Offset(x0, y - 0.7f * u), Offset(x1, y - 0.7f * u), 0.6f * u)
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteMedieval) { estante(d, medidor, oscuro, noche) }
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El fondo: tablas de roble a lo alto, ensambladas, en la penumbra de la sala.
-        val cuerpo = Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, d.base.top)
-        drawRect(c(ROBLE_OSC), cuerpo.topLeft, cuerpo.size)
-        vetas(cuerpo, c(VETA).copy(alpha = 0.5f), 12, densidad = 0.6f, vertical = true, grosor = 0.8f)
-        var x = cuerpo.left + 34 * u
-        while (x < cuerpo.right) {
-            drawLine(Color.Black.copy(alpha = 0.35f), Offset(x, cuerpo.top), Offset(x, cuerpo.bottom), 1.2f * u)
-            drawLine(Color.White.copy(alpha = 0.05f), Offset(x + 1.2f * u, cuerpo.top), Offset(x + 1.2f * u, cuerpo.bottom), 0.6f * u)
-            x += 34 * u
-        }
-        // Cada repisa: la sombra de la tabla de arriba y la barra de las cadenas con sus grapas en las puntas.
-        d.repisas.forEach { r ->
-            drawRect(Color.Black.copy(alpha = if (noche) 0.4f else 0.28f), r.topLeft, Size(r.width, 11 * u))
-            drawRect(Color.Black.copy(alpha = 0.18f), r.topLeft, Size(r.width, 4 * u))
-            val yb = r.bottom - BARRA * u
-            listOf(r.left + 4 * u, r.right - 4 * u).forEach { gx ->
-                drawRect(c(HIERRO), Offset(gx - 2 * u, yb - 4 * u), Size(4 * u, 4 * u + BARRA * u))
-            }
-            barra(r.left, r.right, yb, oscuro, noche)
-        }
-        // Los costados: roble con la cerradura donde se traba la barra de cada repisa.
-        listOf(d.izquierda, d.derecha).forEachIndexed { k, r ->
-            drawRect(c(ROBLE), r.topLeft, r.size)
-            vetas(r, c(VETA).copy(alpha = 0.55f), 3 + k, densidad = 1.2f, vertical = true, grosor = 0.8f)
-            bisel(r, Color.White.copy(alpha = 0.14f), Color.Black.copy(alpha = 0.3f), 1.4f * u)
-            d.repisas.forEach { rp ->
-                val yb = rp.bottom - BARRA * u
-                val chapa = Rect(r.left + r.width * 0.18f, yb - 7 * u, r.right - r.width * 0.18f, yb + 5 * u)
-                drawRect(c(HIERRO), chapa.topLeft, chapa.size)
-                drawRect(c(HIERRO_LUZ), chapa.topLeft, Size(chapa.width, 0.8f * u))
-                drawCircle(Color.Black, 1.2f * u, Offset(chapa.center.x, chapa.center.y - 1 * u))
-                drawLine(Color.Black, Offset(chapa.center.x, chapa.center.y - 0.5f * u), Offset(chapa.center.x, chapa.center.y + 2.4f * u), 1f * u)
-                listOf(chapa.top + 1.8f * u, chapa.bottom - 1.8f * u).forEach { yy -> drawCircle(c(HIERRO_LUZ), 0.8f * u, Offset(chapa.left + 1.6f * u, yy)) }
-            }
-        }
-        // Las tablas son atriles: el tablero en pendiente (más ancho por delante) y su canto con moldura.
-        d.tablas.forEachIndexed { k, r ->
-            val canto = r.top + r.height * 0.5f
-            val atril = Path().apply {
-                moveTo(r.left, r.top); lineTo(r.right, r.top)
-                lineTo(r.right + 2.5f * u, canto); lineTo(r.left - 2.5f * u, canto); close()
-            }
-            drawPath(atril, c(ROBLE_LUZ))
-            clipPath(atril) { vetas(Rect(r.left - 3 * u, r.top, r.right + 3 * u, canto), c(VETA).copy(alpha = 0.4f), 20 + k, densidad = 0.7f, grosor = 0.6f) }
-            drawLine(Color.Black.copy(alpha = 0.3f), Offset(r.left, r.top), Offset(r.right, r.top), 1f * u)
-            drawRect(c(ROBLE), Offset(r.left - 2.5f * u, canto), Size(r.width + 5 * u, r.bottom - canto))
-            drawRect(c(ROBLE_LUZ).copy(alpha = 0.7f), Offset(r.left - 2.5f * u, canto), Size(r.width + 5 * u, 1.2f * u))
-            drawRect(Color.Black.copy(alpha = 0.2f), Offset(r.left - 2.5f * u, r.bottom - 2 * u), Size(r.width + 5 * u, 2 * u))
-            drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, r.bottom), Size(r.width, 3 * u))
-        }
-        // El rótulo de cada mes: un pergamino clavado al atril, pautado en rojo.
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRect(Color.Black.copy(alpha = 0.2f), Offset(r.left + 1.2f * u, r.top + 1.4f * u), r.size)
-            drawRect(c(PERGAMINO), r.topLeft, r.size)
-            val pauta = r.deflate(1.8f * u)
-            drawRect(c(BERMELLON).copy(alpha = 0.7f), pauta.topLeft, pauta.size, style = Stroke(0.6f * u))
-            listOf(r.left + 3.5f * u, r.right - 3.5f * u).forEach { cx -> drawCircle(c(HIERRO), 1.4f * u, Offset(cx, r.center.y)) }
-            textoEn(medidor, p.texto, Rect(r.left + 7 * u, r.top, r.right - 7 * u, r.bottom), letra, c(TINTA), 11f, peso = FontWeight.Bold)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el zócalo de roble con su banda de hierro claveteada, sobre baldosas de barro en damero.
-        val b = d.base
-        val piso = b.top + b.height * 0.6f
-        drawRect(c(BALDOSA), Offset(0f, piso), Size(w, h - piso))
-        val losa = 14 * u
-        var fx = 0f; var col = 0
-        while (fx < w) {
-            var fy = piso; var fila = 0
-            while (fy < h) {
-                if ((col + fila) % 2 == 0) drawRect(Color.Black.copy(alpha = 0.2f), Offset(fx, fy), Size(losa, losa * 0.5f))
-                fy += losa * 0.5f; fila++
-            }
-            fx += losa; col++
-        }
-        val zocalo = Rect(b.left, b.top, b.right, piso)
-        drawRect(c(ROBLE), zocalo.topLeft, zocalo.size)
-        vetas(zocalo, c(VETA).copy(alpha = 0.5f), 41, densidad = 0.8f, grosor = 0.8f)
-        drawRect(c(ROBLE_LUZ), zocalo.topLeft, Size(zocalo.width, 2.4f * u))
-        val yb = zocalo.top + zocalo.height * 0.55f
-        drawRect(c(HIERRO), Offset(zocalo.left, yb - 2.5f * u), Size(zocalo.width, 5 * u))
-        var nx = zocalo.left + 10 * u
-        while (nx < zocalo.right - 4 * u) { drawCircle(c(HIERRO_LUZ), 1.2f * u, Offset(nx, yb)); nx += 18 * u }
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(zocalo.left, piso), Size(zocalo.width, 3 * u))
-    }
-
-    /** El muro de sillares, el arco románico con su vela y la viga pintada. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El muro de sillares, cada hilada corrida media pieza.
-        drawRect(c(PIEDRA), r.topLeft, r.size)
-        val fila = r.height / 6f
-        val pieza = 42 * u
-        var y = r.top; var k = 0
-        while (y < r.bottom) {
-            var x = r.left - (if (k % 2 == 0) 0f else pieza / 2)
-            var j = 0
-            while (x < r.right) {
-                val x0 = maxOf(x, r.left); val x1 = minOf(x + pieza, r.right)
-                if (azar(k * 17 + j, 3) > 0.6f && x1 > x0) drawRect(c(PIEDRA_OSC).copy(alpha = 0.5f), Offset(x0, y), Size(x1 - x0, fila))
-                drawLine(c(JUNTA), Offset(x, y), Offset(x, y + fila), 1f * u)
-                x += pieza; j++
-            }
-            drawLine(c(JUNTA), Offset(r.left, y), Offset(r.right, y), 1f * u)
-            y += fila; k++
-        }
-        val cornisa = Rect(r.left, r.bottom - r.height * 0.2f, r.right, r.bottom)
-        // El arco románico: la arquivolta de dovelas, las columnillas y el vano en sombra.
-        val altoVano = cornisa.top - (r.top + r.height * 0.1f)
-        val anchoVano = minOf(r.width * 0.3f, altoVano * 1.15f)
-        val vano = Rect(r.center.x - anchoVano / 2, cornisa.top - altoVano, r.center.x + anchoVano / 2, cornisa.top)
-        val rad = anchoVano / 2
-        val centro = Offset(vano.center.x, vano.top + rad)
-        val grueso = 9 * u
-        drawPath(arcoMedioPunto(Rect(vano.left - grueso, vano.top - grueso, vano.right + grueso, vano.bottom)), c(PIEDRA_OSC))
-        for (j in 0..12) {
-            val a = Math.toRadians(180.0 + j * 15.0)
-            val cs = kotlin.math.cos(a).toFloat(); val sn = kotlin.math.sin(a).toFloat()
-            drawLine(c(JUNTA), Offset(centro.x + cs * rad, centro.y + sn * rad), Offset(centro.x + cs * (rad + grueso), centro.y + sn * (rad + grueso)), 1f * u)
-        }
-        drawArc(c(JUNTA), 180f, 180f, false, Offset(centro.x - rad - grueso, centro.y - rad - grueso), Size((rad + grueso) * 2, (rad + grueso) * 2), style = Stroke(1f * u))
-        val hueco = arcoMedioPunto(vano)
-        drawPath(hueco, c(HUECO))
-        clipPath(hueco) {
-            if (noche) {
-                // La luz de la vela llena el nicho.
-                mancha(Offset(centro.x, vano.bottom - 22 * u), vano.height * 0.8f, LLAMA.copy(alpha = 0.42f))
-            } else {
-                // La saetera por donde entra el día.
-                drawRect(DIA.copy(alpha = if (oscuro) 0.05f else 0.08f), vano.topLeft, vano.size)
-                val saetera = Rect(centro.x - 2.6f * u, vano.top + vano.height * 0.22f, centro.x + 2.6f * u, vano.top + vano.height * 0.6f)
-                drawPath(arcoMedioPunto(saetera), c(DIA))
-            }
-        }
-        listOf(vano.left - grueso / 2, vano.right + grueso / 2).forEach { cx ->
-            val fuste = cornisa.top - centro.y - 2 * u
-            drawRect(c(PIEDRA), Offset(cx - grueso * 0.32f, centro.y + 2 * u), Size(grueso * 0.64f, fuste))
-            drawRect(Color.Black.copy(alpha = 0.15f), Offset(cx + grueso * 0.12f, centro.y + 2 * u), Size(grueso * 0.2f, fuste))
-            drawRect(c(PIEDRA), Offset(cx - grueso * 0.6f, centro.y - 1.5f * u), Size(grueso * 1.2f, 3.5f * u))
-            drawRect(c(JUNTA), Offset(cx - grueso * 0.6f, centro.y - 1.5f * u), Size(grueso * 1.2f, 3.5f * u), style = Stroke(0.6f * u))
-        }
-        // La viga de roble: banda pintada en zigzag y canecillos debajo.
-        drawRect(c(ROBLE), cornisa.topLeft, cornisa.size)
-        vetas(cornisa, c(VETA).copy(alpha = 0.5f), 61, densidad = 0.7f, grosor = 0.8f)
-        drawRect(c(ROBLE_LUZ), cornisa.topLeft, Size(cornisa.width, 2.2f * u))
-        val banda = Rect(cornisa.left, cornisa.top + 3 * u, cornisa.right, cornisa.top + cornisa.height * 0.5f)
-        val paso = banda.height * 1.3f
-        var zx = banda.left; var zk = 0
-        while (zx < banda.right) {
-            val tri = Path().apply { moveTo(zx, banda.bottom); lineTo(zx + paso / 2, banda.top); lineTo(zx + paso, banda.bottom); close() }
-            drawPath(tri, c(if (zk % 2 == 0) BERMELLON else LAPIZ).copy(alpha = 0.85f))
-            zx += paso; zk++
-        }
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(cornisa.left, cornisa.top + cornisa.height * 0.52f), Size(cornisa.width, 1.2f * u))
-        val arranque = cornisa.top + cornisa.height * 0.56f
-        var mx = cornisa.left + 10 * u
-        while (mx < cornisa.right - 8 * u) {
-            drawRect(c(ROBLE_OSC), Offset(mx, arranque), Size(7 * u, cornisa.bottom - arranque))
-            drawRect(Color.Black.copy(alpha = 0.3f), Offset(mx + 5 * u, arranque), Size(2 * u, cornisa.bottom - arranque))
-            mx += 22 * u
-        }
-        // La vela en su palmatoria de hierro, a un lado del vano (no bajo la saetera); de noche, encendida.
-        val pie = cornisa.top
-        val vx = centro.x + 13 * u
-        drawOval(c(HIERRO), Offset(vx - 8 * u, pie - 3 * u), Size(16 * u, 3 * u))
-        drawCircle(c(HIERRO), 2.6f * u, Offset(vx + 9.5f * u, pie - 2 * u), style = Stroke(1.2f * u))
-        drawRect(c(HIERRO), Offset(vx - 1 * u, pie - 7 * u), Size(2 * u, 5 * u))
-        drawRect(c(HIERRO), Offset(vx - 5 * u, pie - 8.6f * u), Size(10 * u, 1.8f * u))
-        val vela = Rect(vx - 4 * u, pie - 23 * u, vx + 4 * u, pie - 8.6f * u)
-        drawRect(if (noche) CERA else c(CERA), vela.topLeft, vela.size)
-        drawRect(Color.Black.copy(alpha = 0.15f), Offset(vela.right - 2.2f * u, vela.top), Size(2.2f * u, vela.height))
-        // Los chorretones de cera.
-        drawRoundRect(if (noche) CERA else c(CERA), Offset(vela.left - 0.8f * u, vela.top + 1.5f * u), Size(1.8f * u, 6 * u), CornerRadius(0.9f * u))
-        drawRoundRect(if (noche) CERA else c(CERA), Offset(vela.left + 2.4f * u, vela.top + 1 * u), Size(1.6f * u, 3.5f * u), CornerRadius(0.8f * u))
-        drawLine(c(HIERRO), Offset(vela.center.x, vela.top), Offset(vela.center.x, vela.top - 2.6f * u), 1f * u)
-        if (noche) {
-            val ly = vela.top - 2 * u
-            val llama = Path().apply {
-                moveTo(vela.center.x, ly - 9 * u)
-                quadraticTo(vela.center.x + 3.4f * u, ly - 2.5f * u, vela.center.x, ly)
-                quadraticTo(vela.center.x - 3.4f * u, ly - 2.5f * u, vela.center.x, ly - 9 * u); close()
-            }
-            drawPath(llama, LLAMA)
-            drawOval(Color.White.copy(alpha = 0.8f), Offset(vela.center.x - 1 * u, ly - 4.5f * u), Size(2 * u, 3.6f * u))
-            drawRect(CERA, Offset(vela.left - 0.6f * u, vela.top + 2 * u), Size(1.2f * u, 5 * u))
-        }
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val tinte = CUEROS[(v.semilla and 0x7fffffff) % CUEROS.size]
-        val cuero = c(if (v.tono != null) mezcla(tinte, v.tono, 0.22f) else tinte)
-        // El cuero sobre tablas: un filo de luz, uno de sombra, las cofias oscuras y alguna rozadura.
-        drawRoundRect(cuero, Offset.Zero, size, CornerRadius(2f * u))
-        drawRect(Color.White.copy(alpha = 0.1f), Offset(w * 0.08f, 0f), Size(w * 0.14f, h))
-        drawRect(Color.Black.copy(alpha = 0.26f), Offset(w * 0.84f, 0f), Size(w * 0.16f, h))
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset.Zero, Size(w, h * 0.03f))
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(0f, h * 0.97f), Size(w, h * 0.03f))
-        for (j in 0 until 3) {
-            val o = Offset(w * azar(v.semilla, 20 + j), h * azar(v.semilla, 30 + j))
-            drawOval(Color.Black.copy(alpha = 0.08f), Offset(o.x - 2.5f * u, o.y - 1.5f * u), Size(5 * u, 3 * u))
-        }
-        // Los nervios: las cuerdas de la costura, en relieve bajo el cuero.
-        listOf(0.1f, 0.26f, 0.56f, 0.8f).forEach { f ->
-            val y = h * f
-            drawRect(Color.White.copy(alpha = 0.18f), Offset(0f, y - 1.6f * u), Size(w, 1.4f * u))
-            drawRect(Color.Black.copy(alpha = 0.32f), Offset(0f, y - 0.2f * u), Size(w, 1.4f * u))
-        }
-        // Arriba, el bollón de latón; de noche, una luna de oro.
-        val cb = Offset(w * 0.5f, h * 0.064f)
-        val rb = minOf(w * 0.16f, h * 0.026f)
-        if (v.noche) {
-            drawCircle(c(ORO), rb * 1.2f, cb)
-            drawCircle(cuero, rb, Offset(cb.x + rb * 0.5f, cb.y - rb * 0.3f))
-        } else {
-            drawCircle(c(LATON), rb, cb)
-            drawCircle(Color.White.copy(alpha = 0.35f), rb * 0.4f, Offset(cb.x - rb * 0.3f, cb.y - rb * 0.3f))
-        }
-        // Los filetes dorados del primer entrenervio: uno más por cada cuarto de página escrito.
-        val filetes = 1 + (v.lleno * 3).toInt()
-        for (j in 0 until filetes) {
-            val y = h * (0.135f + 0.03f * j)
-            drawLine(c(ORO).copy(alpha = 0.75f), Offset(w * 0.2f, y), Offset(w * 0.8f, y), 0.6f * u)
-        }
-        // El broche: la correa que cruza, la chapa de latón y su etiqueta de pergamino con el día.
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(0f, h * 0.37f), Size(w, h * 0.06f))
-        val chapa = Rect(w * 0.1f, h * 0.3f, w * 0.9f, h * 0.5f)
-        drawRect(c(LATON), chapa.topLeft, chapa.size)
-        drawRect(Color.Black.copy(alpha = 0.3f), chapa.topLeft, chapa.size, style = Stroke(0.8f * u))
-        val etiqueta = chapa.deflate(minOf(chapa.width, chapa.height) * 0.14f)
-        drawRect(c(PERGAMINO), etiqueta.topLeft, etiqueta.size)
-        textoEn(medidor, v.dia, etiqueta, letra, c(TINTA), 14f, peso = FontWeight.Bold)
-        // El mes, dorado a lo largo del segundo entrenervio.
-        textoEn(medidor, v.mes, Rect(w * 0.18f, h * 0.585f, w * 0.82f, h * 0.775f), letra, mezcla(c(ORO), ORO, 0.4f), 9f, vertical = true, minimo = 5f)
-        // La cadena: de la grapa del canto hasta la barra, que pasa por delante del libro.
-        val yb = h - BARRA * u
-        val argolla = Offset(w * 0.5f, h * 0.85f)
-        drawRect(c(HIERRO), Offset(argolla.x - 2.6f * u, argolla.y - 3.4f * u), Size(5.2f * u, 2.4f * u))
-        drawCircle(c(HIERRO_LUZ), 2.2f * u, argolla, style = Stroke(1.1f * u))
-        var ly = argolla.y + 1.8f * u
-        var j = 0
-        while (ly < yb - 1.2f * u) {
-            if (j % 2 == 0) drawOval(c(HIERRO_LUZ), Offset(argolla.x - 1.3f * u, ly), Size(2.6f * u, 3.6f * u), style = Stroke(0.9f * u))
-            else drawLine(c(HIERRO_LUZ), Offset(argolla.x, ly), Offset(argolla.x, ly + 3.6f * u), 1.1f * u)
-            ly += 2.8f * u; j++
-        }
-        barra(0f, w, yb, oscuro, v.noche)
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteMedieval) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
