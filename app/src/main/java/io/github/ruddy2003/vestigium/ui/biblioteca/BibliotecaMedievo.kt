@@ -44,14 +44,16 @@ import io.github.ruddy2003.vestigium.ui.ideario.vetas
 // =====================================================================
 
 /**
- * Medieval (Scriptorium): el armario de nogal de la celda del armarius, en una abadía benedictina hacia 1150. Está contra un
- * muro de sillarejo de arenisca rosada, con una ventana abocinada arriba a la izquierda por donde entra el rayo de sol (en
- * los Sueños de noche, el de la luna); el tablero de arriba vuela sobre una fila de canecillos de rollos y los pies derechos
- * llevan un fleje de hierro con sus rizos en cada tabla. Encima, la campanilla, el registro de Cuaresma con la lista de los
- * libros prestados, el rollo de pieles y la alcuza; en el muro, el candil de hierro (que de noche es la única luz) y las
- * llaves del arca; al pie, la escoba y el arca de las cartas. Cada entrada es, según el día, un códice románico de badana
- * teñida, un libro en su camisa de lana o un legajo de cartas selladas. El dibujo del mueble y de las entradas está en
- * [MuebleEstanteMedieval]. Distinto del Ideario, que es el armario cerrado del scriptorium con su arquería pintada.
+ * Medieval (Scriptorium): el armarium de nogal de la celda del armarius, en una abadía benedictina hacia 1150, con las dos
+ * hojas de la puerta abiertas a los lados (pintadas de almagre, verde y ocre, con bisagras de hierro en volutas), el tablero
+ * con su cenefa de dientes de sierra sobre canecillos de rollos y metopas pintadas, bocel sogueado en las tablas y una cenefa
+ * de rombos arriba de cada repisa. Está contra un muro de sillarejo con paños de cal vieja y una ventana abocinada arriba a la
+ * izquierda, por donde entra el rayo de sol (en los Sueños de noche, el de la luna). Encima, la prensa de encuadernar con un
+ * libro cogido, el registro de Cuaresma con la lista de préstamos, la campanilla y la alcuza; en el muro, el candil de hierro
+ * (que de noche es la única luz) y las llaves; al pie, la escoba y el arca de las cartas. Cada entrada es, según el día, un
+ * códice románico de badana teñida, un libro en su camisa de lana atada o un legajo de cartas en su carpeta de badana; el
+ * color del ánimo es su cuerpo entero. El dibujo del mueble y de las entradas está en [MuebleEstanteMedieval]. Distinto del
+ * Ideario, que es el armario cerrado del scriptorium con su arquería pintada.
  * La tapa es el libro encadenado de la librería, de frente: cuero gofrado con rombos, bollones y broches de latón, la fecha
  * en oro, la etiqueta de pergamino pautada en rojo para lo escrito y la cuenta dorada en el lomo; al abrirse gira y deja ver
  * la hoja a dos columnas con su capital (de noche, una luna de oro y la luz de la vela).

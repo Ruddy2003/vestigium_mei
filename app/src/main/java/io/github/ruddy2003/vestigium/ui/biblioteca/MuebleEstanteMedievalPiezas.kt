@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import io.github.ruddy2003.vestigium.ui.ideario.azar
@@ -17,10 +18,11 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
 
 /**
- * Los objetos del estante de Scriptorium ([MuebleEstanteMedieval]): sobre el tablero, la campanilla de bronce, el registro
- * de Cuaresma con la lista de los libros prestados colgando, el rollo de pieles para pergamino y la alcuza del aceite del
- * candil; en el muro, el candil y el manojo de llaves del arca; al pie, la escoba de brezo y el arca de las cartas; en los
- * huecos de las repisas, lo del encuadernador (las tablas para tapas, el ovillo de cáñamo con su aguja y el pote de cola).
+ * Los objetos del estante de Scriptorium ([MuebleEstanteMedieval]): sobre el tablero, la campanilla de bronce, el registro de
+ * Cuaresma con la lista de los libros prestados colgando, la prensa de encuadernar ([PrensaEstanteMedieval]) y la alcuza del
+ * aceite del candil; en el muro, el candil y el manojo de llaves del arca; al pie, la escoba de brezo y el arca de las
+ * cartas; en los huecos de las repisas, lo del encuadernador (las tablas para tapas, el ovillo de cáñamo con su aguja y el
+ * pote de cola).
  */
 internal object PiezasEstanteMedieval {
     private val P = PaletaMedieval
@@ -30,15 +32,17 @@ internal object PiezasEstanteMedieval {
     fun DrawScope.arriba(a: AireMedieval, apoyo: Float, cerca: (Offset) -> Float, caida: (Offset, Float) -> Offset) {
         val w = size.width
         fun dePie(p: Offset, largo: Float): Offset = caida(p, largo).let { Offset(it.x, minOf(it.y, largo * 0.4f)) }
-        val pieLlaves = Offset(w * 0.935f, w * 0.17f)
+        val pieLlaves = Offset(w * 0.95f, w * 0.15f)
         llaves(pieLlaves, w * 0.05f, a, cerca(pieLlaves + Offset(0f, w * 0.06f)), caida(pieLlaves, w * 0.01f))
-        val piePieles = Offset(w * 0.672f, apoyo)
-        pieles(piePieles, w * 0.072f, w * 0.235f, a, cerca(piePieles - Offset(0f, w * 0.1f)), dePie(piePieles, w * 0.014f))
-        val pieAlcuza = Offset(w * 0.79f, apoyo)
-        alcuza(pieAlcuza, w * 0.074f, a, cerca(pieAlcuza - Offset(0f, w * 0.03f)), dePie(pieAlcuza, w * 0.01f))
-        val pieReg = Offset(w * 0.255f, apoyo)
-        registro(pieReg, w * 0.335f, a, cerca(pieReg + Offset(w * 0.15f, -w * 0.02f)), dePie(pieReg + Offset(w * 0.15f, 0f), w * 0.012f))
-        val pieCamp = Offset(w * 0.13f, apoyo)
+        // En medio, la prensa de encuadernar: lo primero que se ve arriba.
+        val piePrensa = Offset(w * 0.645f, apoyo + w * 0.003f)
+        with(PrensaEstanteMedieval) { prensa(piePrensa, w * 0.27f, a, cerca(piePrensa - Offset(0f, w * 0.12f)), dePie(piePrensa, w * 0.016f)) }
+        // Delante, la alcuza del aceite, bajo el candil.
+        val pieAlcuza = Offset(w * 0.895f, apoyo + w * 0.004f)
+        alcuza(pieAlcuza, w * 0.07f, a, cerca(pieAlcuza - Offset(0f, w * 0.03f)), dePie(pieAlcuza, w * 0.01f))
+        val pieReg = Offset(w * 0.24f, apoyo)
+        registro(pieReg, w * 0.27f, a, cerca(pieReg + Offset(w * 0.13f, -w * 0.02f)), dePie(pieReg + Offset(w * 0.13f, 0f), w * 0.012f))
+        val pieCamp = Offset(w * 0.15f, apoyo + w * 0.004f)
         campanilla(pieCamp, w * 0.07f, a, cerca(pieCamp - Offset(0f, w * 0.03f)), dePie(pieCamp, w * 0.01f))
     }
 
@@ -146,33 +150,6 @@ internal object PiezasEstanteMedieval {
             drawRect(Color.White.copy(alpha = 0.25f), Offset(izq.x + largo * 0.25f, y0 + tabla), Size(largo * 0.5f, g - 2 * tabla))
         }
         if (a.oscuro && k > 0.05f) drawRect(a.filo(0.6f * k), Offset(izq.x + largo * 0.3f, y0), Size(largo * 0.7f, 1f * u))
-    }
-
-    /** El rollo de pieles para pergamino, de pie y apoyado en el muro, atado con dos cordeles. */
-    private fun DrawScope.pieles(pie: Offset, d: Float, alto: Float, a: AireMedieval, k: Float, caida: Offset) {
-        val u = density
-        rotate(-5f, pie) {
-            val r = Rect(pie.x - d / 2, pie.y - alto, pie.x + d / 2, pie.y)
-            drawRoundRect(a.sombra(if (a.oscuro) 0.3f else 0.18f), r.topLeft + Offset(caida.x * 2.4f, -caida.y * 0.2f), r.size, CornerRadius(d * 0.3f))
-            drawRoundRect(a.luz(mezcla(P.BADANA, P.PERG_OSC, 0.4f), k), r.topLeft, r.size, CornerRadius(d * 0.25f))
-            // El cilindro: la luz a un lado, la sombra al otro, y la última vuelta de la piel, que se despega.
-            drawRect(a.claro(0.35f), Offset(r.left + d * 0.12f, r.top + 3f * u), Size(d * 0.16f, alto - 6f * u))
-            drawRect(a.sombra(0.28f), Offset(r.right - d * 0.32f, r.top + 2f * u), Size(d * 0.32f, alto - 4f * u))
-            drawLine(a.sombra(0.4f), Offset(r.left + d * 0.62f, r.top + 2f * u), Offset(r.left + d * 0.66f, r.bottom - 2f * u), 0.9f * u)
-            // La boca de arriba, con la espiral de la piel.
-            drawOval(a.luz(P.PERGAMINO, k), Offset(r.left, r.top - d * 0.16f), Size(d, d * 0.34f))
-            drawOval(a.sombra(0.3f), Offset(r.left + d * 0.22f, r.top - d * 0.08f), Size(d * 0.56f, d * 0.18f), style = Stroke(0.8f * u))
-            drawOval(a.sombra(0.5f), Offset(r.left + d * 0.4f, r.top - d * 0.03f), Size(d * 0.2f, d * 0.08f))
-            // El borde de la piel, con sus barbas, que asoma por arriba.
-            drawPath(poligonoMedieval(r.right - d * 0.1f, r.top, r.right + d * 0.06f, r.top - d * 0.3f, r.right + d * 0.12f, r.top - d * 0.18f, r.right, r.top + d * 0.2f), a.luz(P.BADANA, k))
-            // Los cordeles.
-            for (f in listOf(0.24f, 0.7f)) {
-                val y = r.top + alto * f
-                drawLine(a.luz(P.CUERO, k), Offset(r.left - 0.5f * u, y), Offset(r.right + 0.5f * u, y + 1.4f * u), 1.6f * u)
-                drawLine(a.claro(0.3f), Offset(r.left, y - 0.6f * u), Offset(r.left + d * 0.4f, y - 0.2f * u), 0.5f * u)
-            }
-            if (a.oscuro && k > 0.05f) drawRect(a.filo(0.55f * k), Offset(r.right - 1.4f * u, r.top + 2f * u), Size(1.2f * u, alto - 4f * u))
-        }
     }
 
     /** La alcuza de barro del aceite del candil, con su pico, el asa y el chorreón. */
@@ -306,8 +283,8 @@ internal object PiezasEstanteMedieval {
         val w = size.width
         val alto = h - suelo
         if (alto < 2f) return
-        escoba(Offset(w * 0.03f, h - alto * 0.12f), d.izquierda.right * 0.8f, d.base.top - w * 0.06f, a, maxOf(cerca(Offset(w * 0.05f, suelo)), 0.1f))
-        arca(Offset(w * 0.64f, h - alto * 0.1f), w * 0.42f, w * 0.15f, a, maxOf(cerca(Offset(w * 0.8f, suelo)), 0.1f))
+        escoba(Offset(w * 0.04f, h - alto * 0.1f), w * 0.1f, d.base.top - w * 0.12f, a, maxOf(cerca(Offset(w * 0.05f, suelo)), 0.1f))
+        arca(Offset(w * 0.6f, h - alto * 0.06f), w * 0.5f, w * 0.2f, a, maxOf(cerca(Offset(w * 0.8f, suelo)), 0.1f))
     }
 
     /** La escoba de brezo apoyada en el pie derecho de la izquierda, con su atadura de mimbre. */
@@ -331,51 +308,90 @@ internal object PiezasEstanteMedieval {
     }
 
     /**
-     * El arca de las cartas, cortada por el borde: tablones de roble con sus pies, flejes de hierro con los rizos, la
-     * cerradura con su aldaba y, encima, un legajo atado.
+     * El arca de las cartas, grande y cortada por el borde: un arcón de montantes (los pies son su prolongación), dos tablones
+     * con su junta, flejes de hierro con rizos y clavos, la tapa que vuela, la cerradura recortada con su aldaba y, encima, un
+     * legajo atado con su sello.
      */
     private fun DrawScope.arca(izq: Offset, an: Float, alto: Float, a: AireMedieval, k: Float) {
         val u = density
         val r = Rect(izq.x, izq.y - alto, izq.x + an, izq.y - alto * 0.12f)
-        contactoMedieval(Offset(r.center.x, izq.y), an * 1.1f, 8f * u, a, 0.45f)
-        // Los pies (la prolongación de los montantes).
-        for (x in listOf(r.left, r.left + an * 0.62f)) {
-            drawRect(a.luz(mezcla(P.NOGAL, P.PINO, 0.3f), k), Offset(x, r.bottom), Size(an * 0.1f, izq.y - r.bottom))
-            drawRect(a.sombra(0.3f), Offset(x + an * 0.07f, r.bottom), Size(an * 0.03f, izq.y - r.bottom))
+        val roble = a.luz(P.ROBLE, k)
+        val robleOsc = a.luz(mezcla(P.ROBLE, P.NOGAL_OSC, 0.4f), k)
+        contactoMedieval(Offset(r.center.x, izq.y), an * 1.15f, 9f * u, a, 0.5f)
+        drawRect(a.frio(0.35f), Offset(r.left + 6f * u, r.bottom), Size(an, izq.y - r.bottom))
+        // El frente: dos tablones con su junta, y los montantes que bajan hasta el suelo.
+        drawRect(roble, r.topLeft, r.size)
+        clipRect(r.left, r.top, r.right, r.bottom) { vetas(r, P.NOGAL_OSC.copy(alpha = 0.4f), 1521, densidad = 0.8f, grosor = 0.7f) }
+        drawRect(a.frio(0.5f), Offset(r.left, r.center.y - 0.8f * u), Size(an, 1.6f * u))
+        drawRect(a.claro(0.2f), Offset(r.left, r.center.y + 0.8f * u), Size(an, 0.8f * u))
+        for (x in listOf(r.left, r.left + an * 0.78f)) {
+            val m = Rect(x, r.top, x + an * 0.13f, izq.y)
+            drawRect(robleOsc, m.topLeft, m.size)
+            clipRect(m.left, m.top, m.right, m.bottom) { vetas(m, P.NOGAL_OSC.copy(alpha = 0.45f), 1522 + x.toInt(), densidad = 0.9f, vertical = true, grosor = 0.6f) }
+            drawRect(a.claro(0.3f), m.topLeft, Size(1.6f * u, m.height))
+            drawRect(a.frio(0.4f), Offset(m.right - 2.4f * u, m.top), Size(2.4f * u, m.height))
+            drawPath(poligonoMedieval(m.left + m.width * 0.3f, izq.y, m.left + m.width * 0.5f, izq.y - m.width * 0.4f, m.left + m.width * 0.7f, izq.y), a.frio(0.6f))
         }
-        val roble = mezcla(P.NOGAL, P.PINO, 0.3f)
-        drawRect(a.luz(roble, k), r.topLeft, r.size)
-        vetas(r, P.NOGAL_OSC.copy(alpha = 0.45f), 1521, densidad = 0.7f, grosor = 0.7f)
-        // La tapa, que vuela un poco.
-        drawRect(a.luz(mezcla(roble, P.NOGAL_LUZ, 0.4f), k), Offset(r.left - 3f * u, r.top - 6f * u), Size(an + 6f * u, 7f * u))
-        drawRect(a.claro(0.35f), Offset(r.left - 3f * u, r.top - 6f * u), Size(an + 6f * u, 1.2f * u))
-        drawRect(a.sombra(0.4f), Offset(r.left, r.top + 1f * u), Size(an, 2.5f * u))
-        // Las juntas de los tablones y los montantes.
-        drawLine(a.sombra(0.4f), Offset(r.left, r.center.y), Offset(r.right, r.center.y), 1f * u)
-        drawRect(a.sombra(0.25f), Offset(r.left + an * 0.1f, r.top), Size(1.2f * u, r.height))
-        // Los flejes, de arriba abajo, con sus clavos y sus rizos.
-        for (x in listOf(r.left + an * 0.2f, r.left + an * 0.52f)) {
-            drawRect(a.luz(P.HIERRO, k), Offset(x, r.top - 6f * u), Size(5f * u, r.height + 6f * u))
-            drawRect(a.claro(0.25f), Offset(x, r.top - 6f * u), Size(1f * u, r.height + 6f * u))
-            for (j in 0 until 4) clavoMedieval(Offset(x + 2.5f * u, r.top + r.height * (0.12f + 0.25f * j)), 1f * u, a.luz(P.HIERRO_LUZ, k), a, k)
-            for (s in listOf(-1f, 1f)) drawArc(a.luz(P.HIERRO, k), if (s < 0) 180f else 0f, 180f, false, Offset(x + 2.5f * u + s * 3f * u - 3f * u, r.bottom - 6f * u), Size(6f * u, 6f * u), style = Stroke(1.4f * u))
+        // La tapa, que vuela, con su cara de arriba.
+        val tapa = Rect(r.left - 4f * u, r.top - alto * 0.13f, r.right + 4f * u, r.top)
+        drawRect(a.luz(mezcla(P.ROBLE, P.NOGAL_LUZ, 0.3f), k), Offset(tapa.left, tapa.top - 3f * u), Size(tapa.width, 3f * u))
+        drawRect(roble, tapa.topLeft, tapa.size)
+        drawRect(a.claro(0.35f), Offset(tapa.left, tapa.top - 3f * u), Size(tapa.width, 1f * u))
+        drawRect(a.frio(0.45f), Offset(tapa.left, tapa.bottom - 2f * u), Size(tapa.width, 2f * u))
+        drawRect(a.frio(0.4f), Offset(r.left, r.top), Size(an, 3f * u))
+        // Los flejes: dos a lo largo, con sus clavos y los rizos, y dos que bajan de la tapa.
+        for (f in listOf(0.27f, 0.74f)) {
+            val y = r.top + r.height * f
+            drawLine(a.frio(0.45f), Offset(r.left, y + 1.5f * u), Offset(r.right, y + 1.5f * u), 4.6f * u)
+            drawLine(a.luz(P.HIERRO, k), Offset(r.left, y), Offset(r.right, y), 4.6f * u)
+            drawLine(a.claro(0.25f), Offset(r.left, y - 1.6f * u), Offset(r.right, y - 1.6f * u), 0.7f * u)
+            var x = r.left + 5f * u
+            while (x < r.right) { clavoMedieval(Offset(x, y), 1.1f * u, a.luz(P.HIERRO_LUZ, k), a, k); x += 11f * u }
+            for (xr in listOf(r.left + an * 0.2f, r.left + an * 0.62f)) volutaArca(Offset(xr, y), a, k)
         }
-        // La cerradura con su aldaba.
-        val c = Offset(r.left + an * 0.36f, r.top + r.height * 0.32f)
-        drawRect(a.sombra(0.4f), Offset(c.x - 6f * u, c.y - 6f * u) + Offset(1f * u, 1.4f * u), Size(12f * u, 14f * u))
-        drawRect(a.luz(P.HIERRO, k), Offset(c.x - 6f * u, c.y - 6f * u), Size(12f * u, 14f * u))
-        drawRect(a.claro(0.25f), Offset(c.x - 6f * u, c.y - 6f * u), Size(12f * u, 1f * u))
-        drawCircle(a.sombra(0.7f), 1.4f * u, c + Offset(0f, 2f * u))
-        drawRect(a.sombra(0.7f), Offset(c.x - 0.6f * u, c.y + 2f * u), Size(1.2f * u, 3.5f * u))
-        drawRect(a.luz(P.HIERRO_LUZ, k), Offset(c.x - 2f * u, r.top - 6f * u), Size(4f * u, 10f * u))
-        // El legajo atado encima de la tapa.
-        val lg = Rect(r.left + an * 0.04f, r.top - 6f * u - 9f * u, r.left + an * 0.3f, r.top - 6f * u)
-        drawRect(a.sombra(0.3f), lg.topLeft + Offset(3f * u, 1f * u), lg.size)
+        for (x in listOf(r.left + an * 0.065f, r.left + an * 0.845f)) {
+            drawRect(a.luz(P.HIERRO, k), Offset(x - 2.5f * u, tapa.top), Size(5f * u, r.height * 0.9f + tapa.height))
+            drawRect(a.claro(0.25f), Offset(x - 2.5f * u, tapa.top), Size(1f * u, r.height * 0.9f + tapa.height))
+        }
+        // La cerradura recortada en lóbulos, con su ojo, y la aldaba que baja de la tapa.
+        val c = Offset(r.left + an * 0.42f, r.top + r.height * 0.5f)
+        val chapa = Path().apply {
+            moveTo(c.x - 8f * u, c.y + 9f * u); lineTo(c.x - 8f * u, c.y - 5f * u)
+            cubicTo(c.x - 8f * u, c.y - 11f * u, c.x - 2f * u, c.y - 9f * u, c.x, c.y - 12f * u)
+            cubicTo(c.x + 2f * u, c.y - 9f * u, c.x + 8f * u, c.y - 11f * u, c.x + 8f * u, c.y - 5f * u)
+            lineTo(c.x + 8f * u, c.y + 9f * u); close()
+        }
+        drawPath(corridoMedieval(chapa, 1.4f * u, 1.8f * u), a.frio(0.5f))
+        drawPath(chapa, a.luz(P.HIERRO, k))
+        drawPath(chapa, a.claro(0.2f), style = Stroke(0.8f * u))
+        drawCircle(a.sombra(0.8f), 1.6f * u, c + Offset(0f, 1f * u))
+        drawRect(a.sombra(0.8f), Offset(c.x - 0.7f * u, c.y + 1f * u), Size(1.4f * u, 4.5f * u))
+        drawRoundRect(a.luz(P.HIERRO_LUZ, k), Offset(c.x - 2.4f * u, tapa.top + 2f * u), Size(4.8f * u, maxOf(2f * u, c.y - 10f * u - tapa.top)), CornerRadius(1.5f * u))
+        for (p in listOf(Offset(c.x - 5f * u, c.y + 6f * u), Offset(c.x + 5f * u, c.y + 6f * u))) clavoMedieval(p, 1f * u, a.luz(P.HIERRO_LUZ, k), a, k)
+        // El legajo atado encima de la tapa, con su sello colgando por delante.
+        val lg = Rect(r.left + an * 0.1f, tapa.top - 3f * u - 12f * u, r.left + an * 0.34f, tapa.top - 3f * u)
+        drawRect(a.frio(0.3f), lg.topLeft + Offset(4f * u, 1f * u), lg.size)
         drawRect(a.luz(P.PERG_OSC, k), lg.topLeft, lg.size)
-        for (j in 1 until 4) drawLine(a.sombra(0.25f), Offset(lg.left, lg.top + lg.height * j / 4f), Offset(lg.right, lg.top + lg.height * j / 4f), 0.5f * u)
-        drawRect(a.luz(P.CUERO, k), Offset(lg.left + lg.width * 0.4f, lg.top - 0.5f * u), Size(3f * u, lg.height + 1f * u))
-        drawCircle(a.luz(P.CERAS[1], k), 3.2f * u, Offset(lg.left + lg.width * 0.7f, lg.bottom + 3f * u))
-        drawRect(a.sombra(0.25f), Offset(r.right - an * 0.15f, r.top), Size(an * 0.15f, r.height))
+        for (j in 1 until 5) drawLine(a.sombra(0.25f), Offset(lg.left, lg.top + lg.height * j / 5f), Offset(lg.right, lg.top + lg.height * j / 5f), 0.5f * u)
+        drawRect(a.luz(P.CUERO, k), Offset(lg.left + lg.width * 0.4f, lg.top - 0.5f * u), Size(3.4f * u, lg.height + 1f * u))
+        drawLine(a.luz(P.PERG_OSC, k), Offset(lg.left + lg.width * 0.7f, lg.bottom), Offset(lg.left + lg.width * 0.72f, tapa.top + 6f * u), 1.8f * u)
+        drawCircle(a.luz(P.CERAS[1], k), 4f * u, Offset(lg.left + lg.width * 0.72f, tapa.top + 9f * u))
+        drawCircle(a.claro(0.4f), 1.2f * u, Offset(lg.left + lg.width * 0.72f - 1.4f * u, tapa.top + 7.6f * u))
+        if (a.oscuro && k > 0.05f) drawRect(a.filo(0.5f * k), Offset(tapa.left, tapa.top - 3f * u), Size(tapa.width, 1f * u))
+    }
+
+    /** Dos pares de rizos de hierro que salen de un fleje del arca, arriba y abajo. */
+    private fun DrawScope.volutaArca(c: Offset, a: AireMedieval, k: Float) {
+        val u = density
+        for (s in listOf(-1f, 1f)) for (h in listOf(-1f, 1f)) {
+            val p = Path().apply {
+                moveTo(c.x, c.y)
+                cubicTo(c.x + h * 3f * u, c.y + s * 1f * u, c.x + h * 7f * u, c.y + s * 5f * u, c.x + h * 4f * u, c.y + s * 8f * u)
+                cubicTo(c.x + h * 2f * u, c.y + s * 9f * u, c.x + h * 1f * u, c.y + s * 6.5f * u, c.x + h * 2.8f * u, c.y + s * 5.5f * u)
+            }
+            drawPath(corridoMedieval(p, 0.8f * u, 1f * u), a.frio(0.4f), style = Stroke(1.8f * u, cap = StrokeCap.Round))
+            drawPath(p, a.luz(P.HIERRO, k), style = Stroke(1.6f * u, cap = StrokeCap.Round))
+        }
     }
 
     // ---------------------------------------------------------------- los huecos libres de las repisas
@@ -468,13 +484,13 @@ internal object PiezasEstanteMedieval {
             cubicTo(pie.x + an * 0.5f, pie.y - alto * 0.86f, pie.x + an * 0.56f, pie.y - alto * 0.5f, pie.x + an * 0.42f, pie.y)
             close()
         }
-        drawPath(cuerpo, a.luz(mezcla(P.BARRO, P.ARENISCA_OSC, 0.3f), k))
+        drawPath(cuerpo, a.luz(mezcla(P.BARRO, P.PIEDRA_OSC, 0.3f), k))
         clipPath(cuerpo) {
             drawRect(a.claro(0.3f), Offset(pie.x - an * 0.4f, pie.y - alto), Size(an * 0.14f, alto))
             drawRect(a.sombra(0.3f), Offset(pie.x + an * 0.12f, pie.y - alto), Size(an * 0.5f, alto))
             drawLine(a.luz(P.BADANA, k).copy(alpha = 0.7f), Offset(pie.x - an * 0.2f, pie.y - alto), Offset(pie.x - an * 0.22f, pie.y - alto * 0.55f), 1.6f * u)
         }
-        drawOval(a.luz(mezcla(P.BARRO, P.ARENISCA_CLARA, 0.3f), k), Offset(pie.x - an * 0.5f, pie.y - alto - 2f * u), Size(an, 4f * u))
+        drawOval(a.luz(mezcla(P.BARRO, P.PIEDRA_CLARA, 0.3f), k), Offset(pie.x - an * 0.5f, pie.y - alto - 2f * u), Size(an, 4f * u))
         drawOval(a.luz(P.BADANA, k * 0.8f), Offset(pie.x - an * 0.38f, pie.y - alto - 1f * u), Size(an * 0.76f, 2.4f * u))
         if (a.oscuro && k > 0.05f) drawPath(cuerpo, a.filo(0.4f * k), style = Stroke(0.7f * u))
     }
