@@ -18,16 +18,12 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -36,10 +32,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.data.Repo
 import io.github.ruddy2003.vestigium.ui.pantallas.paredTema
-import kotlin.math.PI
-import kotlin.math.cos
 import kotlin.math.hypot
-import kotlin.math.sin
 
 /**
  * La escena de un mueble u objeto de las pestañas Diario y Vida: el mismo fondo para todos (9 nov 2026). Detrás va la
@@ -94,41 +87,29 @@ fun Escena(
 }
 
 /**
- * El aura de un objeto que se toca por sí solo (un volumen del estante, el diario de hoy, un cajón del Ideario, un sobre):
- * sigue su silueta, no un rectángulo. Es muy tenue, del acento del tema, y se enciende mientras el dedo está encima (al
- * tocar o al pasar el puntero); al soltar se apaga. Solo mira los toques: no los consume. Si el dedo se mueve más de lo que
- * cuenta como toque (estás desplazando la pantalla), se apaga: antes cada objeto que pasaba bajo el dedo se encendía y se
- * volvía a trazar 65 veces por cuadro justo mientras la pantalla se movía.
+ * La respuesta al toque de un objeto que se toca por sí solo (un volumen del estante, un cajón del Ideario, el diario de
+ * hoy, un sobre). **Desde el 19 nov 2026 ya no hay aura ni brillo, en ningún tema ni en ningún mueble** (el autor: «quitar
+ * el brillo en todos los temas y todos los muebles»): mientras el dedo está encima, el objeto se hunde un poco (se encoge
+ * a 0.965 de su tamaño, desde el centro) y al soltar vuelve, en 120 ms. Es una propiedad de su capa (`graphicsLayer`): el
+ * objeto no se vuelve a trazar ni se copia, solo se pega un poco más chico.
  *
- * Cómo se dibuja: el objeto se vuelve a dibujar varias veces, corrido en varias direcciones (8 en reposo, 16 encendido) y
- * teñido del color del aura, en anillos cada vez más anchos y tenues (2 o 4); encima va el objeto tal cual. Donde el objeto es
- * transparente no hay aura. Las 16 direcciones y los 4 anillos son solo para el aura ya encendida del todo; mientras se
- * enciende o se apaga van las mismas 8 y 2 que en reposo (a esa velocidad no se notan los escalones).
+ * Antes era el aura: el objeto se volvía a dibujar 8 o 16 veces corrido en varias direcciones y teñido del acento, en 2 o
+ * 4 anillos (hasta 65 trazados por cuadro mientras se encendía), con una capa fuera de pantalla por anillo. Con los muebles
+ * del lote 10, de decenas de degradados cada uno, eso hacía que tocar un volumen o un cajón se sintiera pesado.
  *
- * Con [reposo] en false el aura solo existe mientras se toca: en reposo no se dibuja nada alrededor. Lo usaban primero los
- * muebles rehechos del Ideario (`docs/diseno/MUEBLES.md`, versión 2), donde el aura en reposo se veía como un marco de
- * color alrededor de cada cajón o un contorno pálido alrededor de cada vasija, sobre todo de noche.
+ * Como antes, solo mira los toques (no los consume) y, si el dedo se mueve más de lo que cuenta como toque (estás
+ * desplazando la pantalla), no responde: así los objetos que pasan bajo el dedo al desplazar no se mueven.
  *
- * **Desde el 17 nov 2026 es lo de siempre, en todos los temas** ([reposo] vale false por omisión, y también
- * `DisenoBiblioteca.auraEnReposo` y `DisenoIdeas.auraEnReposo`): el autor pidió quitar el brillo de los objetos que se
- * tocan porque los temas con muebles nuevos iban lentos. El aura en reposo no se animaba, pero cada objeto se trazaba 17
- * veces (8 direcciones × 2 anillos, más el objeto) cada vez que algo lo obligaba a redibujarse: con los muebles del
- * lote 10, de decenas de degradados cada uno, y con la cinta del lacre de un sobre latiendo encima, eso era en cada
- * cuadro. Al tocar, el aura sale igual que antes.
+ * [realce] y [reposo] ya no hacen nada (el aura cálida de los modos oscuros y el aura en reposo): se quedan para no tocar a
+ * quien los pasa (`DisenoBiblioteca.auraEnReposo` y `DisenoIdeas.auraEnReposo` siguen en los contratos, sin efecto).
  */
 fun Modifier.halo(realce: Boolean = false, reposo: Boolean = false): Modifier = composed {
-    val cs = MaterialTheme.colorScheme
-    val oscuro = esOscuro()
-    // Con [realce], en los modos oscuros el objeto toma la luz de la lámpara: en reposo el aura es cálida, algo más viva, y
-    // asoma por el borde de arriba y los costados (de donde viene la luz) en vez de rodearlo parejo. Al tocarlo vuelve a
-    // centrarse y crece como las demás.
-    val toma = realce && oscuro && !Estilo.tema.sinDiseno
-    val color = if (toma) luzCalida(cs.primary) else if (oscuro) lerp(cs.primary, Color.White, 0.18f) else cs.primary
     var tocando by remember { mutableStateOf(false) }
     var puntero by remember { mutableStateOf(false) }
     val encendido = tocando || puntero
     val animar = Repo.config.animaciones
-    val luz by animateFloatAsState(if (encendido) 1f else 0f, tween(if (!animar) 0 else if (encendido) 140 else 260), label = "halo")
+    // Se lee solo dentro de `graphicsLayer`: mientras anima no se recompone ni se vuelve a trazar nada.
+    val hundido = animateFloatAsState(if (encendido) 1f else 0f, tween(if (!animar) 0 else 120), label = "toque")
     this
         .pointerInput(Unit) {
             awaitPointerEventScope {
@@ -155,27 +136,9 @@ fun Modifier.halo(realce: Boolean = false, reposo: Boolean = false): Modifier = 
                 }
             }
         }
-        .drawWithContent {
-            if (!reposo && luz <= 0.001f) { drawContent(); return@drawWithContent }
-            val alcance = ((if (toma) 3.2f else 2.5f) + 4.5f * luz).dp.toPx()
-            val total = (if (toma) 0.30f else 0.16f) * (if (reposo) 1f else luz) + 0.50f * luz
-            val sube = if (toma) alcance * 0.55f * (1f - luz) else 0f
-            // En reposo el aura es angosta y bastan pocas copias; encendida es más ancha y lleva más para que no se vean escalones.
-            val anillos = if (luz > 0.98f) 4 else 2
-            val direcciones = if (luz > 0.98f) 16 else 8
-            val lienzo = drawContext.canvas
-            val borde = Rect(-alcance - 2f, -alcance - 2f - sube, size.width + alcance + 2f, size.height + alcance + 2f)
-            for (k in anillos downTo 1) {
-                val r = alcance * k / anillos
-                val pincel = Paint().apply { colorFilter = ColorFilter.tint(color, BlendMode.SrcIn); alpha = (total / anillos * 1.4f * (if (anillos == 2) 1.2f else 1f)).coerceAtMost(1f) }
-                lienzo.saveLayer(borde, pincel)
-                for (j in 0 until direcciones) {
-                    val a = 2 * PI * j / direcciones
-                    translate((r * cos(a)).toFloat(), (r * sin(a)).toFloat() - sube) { this@drawWithContent.drawContent() }
-                }
-                lienzo.restore()
-            }
-            drawContent()
+        .graphicsLayer {
+            val k = 1f - 0.035f * hundido.value
+            scaleX = k; scaleY = k
         }
 }
 

@@ -73,6 +73,8 @@ interface DisenoBiblioteca {
      * Si los volúmenes llevan su aura también en reposo (`Modifier.halo()`). Los estantes rehechos (MUEBLES.md, versión 2)
      * la apagan: ya tienen su propia luz y el aura les dejaba un contorno pálido, sobre todo de noche. Al tocar sale igual.
      * Desde el 17 nov 2026 va apagada en todos (ver `Modifier.halo`): el aura en reposo hacía lentos los temas con muebles nuevos.
+     * **Desde el 19 nov 2026 no tiene efecto**: ya no hay aura, ni en reposo ni al tocar (al tocar, el volumen se hunde un
+     * poco). Se queda en el contrato para no romper los estantes que la declaran.
      */
     val auraEnReposo: Boolean get() = false
 
