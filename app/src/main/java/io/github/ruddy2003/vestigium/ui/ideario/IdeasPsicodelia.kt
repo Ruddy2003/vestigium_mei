@@ -388,6 +388,11 @@ object IdeasPsicodelia : DisenoIdeas {
     /**
      * Rayas paralelas sobre [r] (dentro del recorte que ya haya), giradas [angulo] grados: la trama de grabado del cartel. Con
      * la intensidad, ondulan. El paso nunca baja de 1 px.
+     *
+     * Si las rayas no se pueden tocar (más delgadas que lo que queda entre dos, con la onda), van todas en un solo camino y
+     * un solo trazo (19 nov 2026): antes era una operación por raya, miles en el mueble de la tinta clara, que el teléfono
+     * volvía a pintar en cada cuadro. Si se pueden tocar, sueltas como antes (en un solo trazo, lo que se pisa no se
+     * oscurecería dos veces).
      */
     private fun DrawScope.rayado(r: Rect, paso: Float, grosor: Float, color: Color, angulo: Float = -45f, onda: Float = ii * 1.7f) {
         if (r.width <= 0f || r.height <= 0f || !r.width.isFinite() || !r.height.isFinite()) return
@@ -396,14 +401,19 @@ object IdeasPsicodelia : DisenoIdeas {
         val rad = sqrt(r.width * r.width + r.height * r.height) / 2f + p
         val cc = r.center
         val amp = onda * u
+        val ondula = amp >= 0.3f
+        val juntas = grosor < p - (if (ondula) 2f * amp else 0f)
+        val todas = if (juntas) Path() else null
         clipRect(r.left, r.top, r.right, r.bottom) {
             rotate(angulo, cc) {
                 var y = cc.y - rad
                 var k = 0
                 while (y <= cc.y + rad) {
-                    if (amp < 0.3f) drawLine(color, Offset(cc.x - rad, y), Offset(cc.x + rad, y), grosor)
-                    else {
-                        val q = Path()
+                    if (!ondula) {
+                        if (todas != null) { todas.moveTo(cc.x - rad, y); todas.lineTo(cc.x + rad, y) }
+                        else drawLine(color, Offset(cc.x - rad, y), Offset(cc.x + rad, y), grosor)
+                    } else {
+                        val q = todas ?: Path()
                         val pasoX = maxOf(6f * u, 1f)
                         var x = cc.x - rad
                         q.moveTo(x, y)
@@ -411,10 +421,11 @@ object IdeasPsicodelia : DisenoIdeas {
                             x += pasoX
                             q.lineTo(x, y + amp * sin(x / (11f * u) + k * 0.7f))
                         }
-                        drawPath(q, color, style = Stroke(grosor))
+                        if (todas == null) drawPath(q, color, style = Stroke(grosor))
                     }
                     y += p; k++
                 }
+                if (todas != null) drawPath(todas, color, style = Stroke(grosor))
             }
         }
     }

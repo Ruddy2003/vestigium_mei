@@ -501,6 +501,11 @@ object TrazosTinta {
     /**
      * El grabado fino de líneas: llena [forma] con rayas paralelas de [grosor] px cada [paso] px, giradas [angulo] grados
      * (0 = horizontales). Es la trama de los medios tonos del cartel a una sola tinta.
+     *
+     * Las rayas van en un solo camino, con un solo trazo (19 nov 2026): antes era una línea suelta por raya, y en la tinta
+     * clara el Ideario, el estante y los muebles de Vida llevaban miles de operaciones que el teléfono volvía a pintar en
+     * cada cuadro. Si las rayas se tocan (más gruesas que su paso), van sueltas como antes: en un solo trazo, lo que se
+     * pisa no se oscurecería dos veces.
      */
     fun DrawScope.trama(forma: Path, paso: Float, grosor: Float, color: Color, angulo: Float = 0f) {
         val b = forma.getBounds()
@@ -510,10 +515,20 @@ object TrazosTinta {
         val c = b.center
         clipPath(forma) {
             rotate(angulo, c) {
-                var y = c.y - r
-                while (y <= c.y + r) {
-                    drawLine(color, Offset(c.x - r, y), Offset(c.x + r, y), grosor)
-                    y += p
+                if (grosor < p) {
+                    val rayas = Path()
+                    var y = c.y - r
+                    while (y <= c.y + r) {
+                        rayas.moveTo(c.x - r, y); rayas.lineTo(c.x + r, y)
+                        y += p
+                    }
+                    drawPath(rayas, color, style = Stroke(grosor))
+                } else {
+                    var y = c.y - r
+                    while (y <= c.y + r) {
+                        drawLine(color, Offset(c.x - r, y), Offset(c.x + r, y), grosor)
+                        y += p
+                    }
                 }
             }
         }
