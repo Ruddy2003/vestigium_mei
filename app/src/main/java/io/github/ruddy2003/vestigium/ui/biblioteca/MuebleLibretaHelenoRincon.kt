@@ -69,7 +69,7 @@ internal class AireLibretaHeleno(val oscuro: Boolean) {
     fun luz(c: Color, k: Float, l: Float = 0f): Color {
         if (!oscuro) return c
         val kk = k.coerceIn(0f, 1f)
-        return mezcla(mezcla(mezcla(c, PaletaLibretaHeleno.NOCHE, 0.9f - 0.76f * kk.pow(0.9f)), PaletaLibretaHeleno.LUNA, 0.1f * l), PaletaLibretaHeleno.BRASA, 0.24f * kk)
+        return mezcla(mezcla(mezcla(c, PaletaLibretaHeleno.NOCHE, 0.94f - 0.8f * kk.pow(0.85f)), PaletaLibretaHeleno.LUNA, 0.12f * l), PaletaLibretaHeleno.BRASA, 0.26f * kk)
     }
     /** Lo claro donde va un texto (la tapa de las tablillas): de noche se hunde menos, para que se siga leyendo. */
     fun panel(c: Color, k: Float): Color {
@@ -88,6 +88,7 @@ internal object RinconLibretaHeleno {
     private val P = PaletaLibretaHeleno
 
     private fun translatePath(p: Path, dx: Float, dy: Float) = Path().apply { addPath(p, Offset(dx, dy)) }
+    private val LUZ_HUMO = Color(0xFFE8E4DC)
 
     /**
      * El telar de pesas, arrimado al muro a la izquierda y cortado por el borde: el poste de la derecha, el enjulio de arriba
@@ -296,14 +297,16 @@ internal object RinconLibretaHeleno {
         }
         // La boca: el labio y el carbón (de día, con su ceniza; de noche, las ascuas).
         drawOval(a.luz(mezcla(P.TERRACOTA, P.ARCILLA, 0.15f), k, l), Offset(pie.x - rx, boca - ry), Size(rx * 2, ry * 2))
-        drawOval(a.luz(P.CARBON, k, l), Offset(pie.x - rx * 0.86f, boca - ry * 0.8f), Size(rx * 1.72f, ry * 1.5f))
-        // El carbón: terrones de cantos rotos. De día, con la ceniza encima; de noche, con la brasa en las grietas.
+        // El lecho: de día, la ceniza clara; de noche, el carbón con la brasa debajo.
+        drawOval(if (a.oscuro) a.luz(P.CARBON, k, l) else mezcla(P.CENIZA, P.LANA, 0.35f), Offset(pie.x - rx * 0.86f, boca - ry * 0.8f), Size(rx * 1.72f, ry * 1.5f))
+        if (!a.oscuro) drawOval(P.CENIZA.copy(alpha = 0.6f), Offset(pie.x - rx * 0.5f, boca - ry * 0.2f), Size(rx * 1.1f, ry * 0.7f))
+        // El carbón: terrones de cantos rotos. De día, medio hundidos en la ceniza, alguno con rescoldo; de noche, con la brasa en las grietas.
         if (a.oscuro) {
             drawOval(P.BRASA.copy(alpha = 0.9f), Offset(pie.x - rx * 0.8f, boca - ry * 0.7f), Size(rx * 1.6f, ry * 1.3f))
             drawOval(P.ASCUA.copy(alpha = 0.8f), Offset(pie.x - rx * 0.45f, boca - ry * 0.45f), Size(rx * 0.9f, ry * 0.7f))
         }
-        for (j in 0 until 8) {
-            val p = Offset(pie.x + rx * (-0.66f + 1.32f * (j + azar(751, j) * 0.6f) / 8.6f), boca - ry * (0.75f - 1.1f * azar(752, j)))
+        for (j in 0 until (if (a.oscuro) 8 else 5)) {
+            val p = Offset(pie.x + rx * (-0.66f + 1.32f * (j + azar(751, j) * 0.6f) / 8.6f) * (if (a.oscuro) 1f else 1.4f), boca - ry * (0.75f - 1.1f * azar(752, j)))
             val r = s * (0.014f + 0.008f * azar(753, j))
             val terron = Path().apply {
                 for (q in 0 until 5) {
@@ -319,9 +322,11 @@ internal object RinconLibretaHeleno {
                 drawPath(terron, P.BRASA.copy(alpha = 0.85f), style = Stroke(0.9f * u))
                 if (j % 3 == 1) drawLine(P.ASCUA, p - Offset(r * 0.4f, 0f), p + Offset(r * 0.3f, r * 0.15f), 0.8f * u)
             } else {
-                drawPath(terron, a.luz(mezcla(P.CARBON, P.CENIZA, 0.15f + 0.2f * azar(756, j)), k, l))
-                drawPath(translatePath(terron, -r * 0.18f, -r * 0.16f), P.CENIZA.copy(alpha = 0.55f))
-                drawPath(terron, a.sombra(0.4f), style = Stroke(0.6f * u))
+                drawPath(terron, a.luz(mezcla(P.CARBON, P.CENIZA, 0.1f + 0.15f * azar(756, j)), k, l))
+                // La ceniza que los cubre por arriba y, en dos, el rescoldo que todavía brilla.
+                drawPath(translatePath(terron, -r * 0.1f, -r * 0.3f), mezcla(P.CENIZA, P.LANA, 0.3f).copy(alpha = 0.75f))
+                if (j == 1 || j == 3) drawCircle(P.BRASA, r * 0.28f, p + Offset(r * 0.15f, r * 0.12f))
+                if (j == 1) drawCircle(P.ASCUA, r * 0.12f, p + Offset(r * 0.15f, r * 0.12f))
             }
         }
         // Las tres orejas del borde.
@@ -331,6 +336,13 @@ internal object RinconLibretaHeleno {
             drawRect(if (a.oscuro) a.filo(0.7f) else a.claro(0.3f), Offset(p.x - s * 0.012f, p.y - s * 0.025f), Size(s * 0.024f, s * 0.006f))
         }
         if (a.oscuro) drawArc(a.filo(0.75f), 180f, 180f, false, Offset(pie.x - rx, boca - ry), Size(rx * 2, ry * 2), style = Stroke(1.2f * u))
+        else {
+            // De día, un hilo de humo que sube del rescoldo, quieto.
+            val h0 = Offset(pie.x - rx * 0.3f, boca - ry * 0.6f)
+            val humo = Path().apply { moveTo(h0.x, h0.y); cubicTo(h0.x - s * 0.03f, h0.y - s * 0.06f, h0.x + s * 0.04f, h0.y - s * 0.1f, h0.x + s * 0.005f, h0.y - s * 0.17f); cubicTo(h0.x - s * 0.02f, h0.y - s * 0.21f, h0.x + s * 0.03f, h0.y - s * 0.24f, h0.x + s * 0.02f, h0.y - s * 0.28f) }
+            drawPath(humo, LUZ_HUMO.copy(alpha = 0.35f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
+            drawPath(humo, LUZ_HUMO.copy(alpha = 0.15f), style = Stroke(4f * u, cap = StrokeCap.Round))
+        }
     }
 
     /**
@@ -412,7 +424,7 @@ internal object RinconLibretaHeleno {
     }
 
     /** Una madeja de lana teñida de rubia, doblada sobre el canto del banco: cuelga en un lazo blando de muchas hebras. */
-    fun DrawScope.madeja(x: Float, tope: Float, largo: Float, a: AireLibretaHeleno, k: Float, l: Float) {
+    fun DrawScope.madeja(x: Float, tope: Float, largo: Float, a: AireLibretaHeleno, k: Float, l: Float, caida: Offset) {
         val u = density
         val lana = a.luz(mezcla(P.ROJO, P.ARCILLA, 0.25f), k, l)
         val hebras = Path()
@@ -422,6 +434,8 @@ internal object RinconLibretaHeleno {
             hebras.moveTo(x - largo * 0.18f + dx, tope - 1f * u)
             hebras.cubicTo(x - largo * 0.22f + dx, tope + caida * 0.8f, x + largo * 0.12f + dx, tope + caida, x + largo * 0.16f + dx * 0.6f, tope + caida * 0.35f)
         }
+        // Su sombra en el zócalo, corrida hacia donde cae la luz.
+        translate(caida.x, caida.y) { drawPath(hebras, a.sombra(if (a.oscuro) 0.4f else 0.28f), style = Stroke(2.2f * u)) }
         drawPath(hebras, a.sombra(0.3f), style = Stroke(1.6f * u))
         drawPath(hebras, lana, style = Stroke(1.1f * u))
         // El nudo que la recoge arriba, sobre la cara del banco.

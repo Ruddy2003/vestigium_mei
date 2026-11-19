@@ -24,33 +24,43 @@ import io.github.ruddy2003.vestigium.ui.muebles.granoMueble
 import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
+import kotlin.math.cos
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 /**
  * La libreta de momentos de Helénico (la usa `EstanteHeleno`, en `BibliotecaAntiguedad.kt`): el rincón del telar de la misma
  * casa ática del Ideario y del estante. El muro, encalado arriba y con un zócalo alto gris violeta, con el filete rojo y el
- * azul entre los dos. A la izquierda, cortado por el borde, el telar de pesas: el enjulio con lo tejido, la tela de lana cruda
- * con su franja púrpura, la urdimbre en haces y las pesas de barro. En el banco de tablón, de pie contra el muro, las
- * tablillas de momentos: un políptico de boj atado por la izquierda con su cordón (del que cuelga el estilo), con el nombre y
- * la cuenta escritos a tinta en la tapa; por el canto se ven las tablillas, más cuantas más hojas. Al lado, la píxide y el
- * ovillo; arriba, el espejo de bronce colgado; abajo, en el suelo, el brasero de barro. De día el sol entra por la izquierda;
- * de noche alumbra el brasero desde abajo a la derecha y entra un poco de luna por la izquierda. Al abrirse, la tapa gira sobre
- * el cordón y deja ver la cera de la primera tablilla.
+ * azul entre los dos, con sus remiendos y desconchones. A la izquierda, cortado por el borde, el telar de pesas: el enjulio con
+ * lo tejido, la tela de lana cruda con su franja púrpura, la urdimbre en haces y las pesas de barro. En el banco de tablón, de
+ * pie contra el muro, las tablillas de momentos: un políptico de boj. La tapa lleva la cera por fuera, pardo verdosa, con su
+ * brillo rasante, las pasadas de la paleta y lo de antes a medio borrar, y el nombre y la cuenta incisos; el marco de boj, con
+ * su veta, más alto que la cera; por detrás, los cantos escalonados de las demás tablillas (más cuantas más hojas). El cordón
+ * las ata por la izquierda (el estilo cuelga del nudo) y la vuelta de lana púrpura las cierra cruzando la esquina. Al lado, la píxide y el ovillo; arriba, el
+ * espejo de bronce colgado; abajo, la madeja colgada del canto, las pesas de repuesto y el brasero de barro.
+ *
+ * De día el sol entra por la izquierda. De noche alumbra el brasero desde el suelo a la derecha: su charco cálido en el suelo,
+ * las patas, el canto del banco y la parte baja del políptico; el telar queda a la luz fría de la luna y casi a oscuras. Al
+ * abrirse, la tapa sigue girando sobre el cordón (el nombre se desvanece, no se deforma) y deja ver la cera entera.
  */
 internal object MuebleLibretaHeleno {
     private val P = PaletaLibretaHeleno
+    /** La cera de las tablillas: pardo verdosa (cera de abeja con hollín), no negra. */
+    private val CERA_VERDE = Color(0xFF3A3524)
     private val LETRA: FontFamily = Letra.garamond
 
     val ALTO: Dp = 252.dp
 
     // ---------------------------------------------------------------- lo que no cambia de un dibujo a otro
 
-    /** Los caminos que solo dependen del tamaño: la luz que entra, los guijarros del suelo y la veta del boj. */
+    /** Los caminos que solo dependen del tamaño: la luz que entra, los guijarros del suelo y los remiendos del muro. */
     private class Piezas(val w: Float, val h: Float, u: Float) {
         val sol = Path()
         val penumbra = Path()
         val guijarros = Path()
         val guijarrosLuz = Path()
+        val remiendo = Path()
+        val grieta = Path()
 
         init {
             sol.moveTo(0f, 0f); sol.lineTo(w * 0.44f, 0f); sol.lineTo(w * 0.6f, h); sol.lineTo(0f, h); sol.close()
@@ -62,6 +72,18 @@ internal object MuebleLibretaHeleno {
                 guijarros.addOval(Rect(p.x - r + 0.6f * u, p.y - r * 0.4f, p.x + r + 0.6f * u, p.y + r * 0.7f))
                 guijarrosLuz.addOval(Rect(p.x - r, p.y - r * 0.6f, p.x + r, p.y + r * 0.5f))
             }
+            // Un remiendo del revoque, arriba a la derecha, con la orilla de la llana.
+            val c = Offset(w * 0.64f, h * 0.09f)
+            for (k in 0 until 10) {
+                val ang = 6.283f * k / 10
+                val rr = h * (0.06f + 0.035f * azar(764, k))
+                val q = Offset(c.x + rr * cos(ang) * 1.7f, c.y + rr * sin(ang) * 0.8f)
+                if (k == 0) remiendo.moveTo(q.x, q.y) else remiendo.lineTo(q.x, q.y)
+            }
+            remiendo.close()
+            // Una grieta que baja del friso por el zócalo.
+            var g = Offset(w * 0.78f, h * 0.27f); grieta.moveTo(g.x, g.y)
+            for (k in 0 until 7) { g += Offset((azar(765, k) - 0.5f) * h * 0.03f, h * 0.035f); grieta.lineTo(g.x, g.y) }
         }
     }
 
@@ -80,9 +102,9 @@ internal object MuebleLibretaHeleno {
         val friso = h * 0.25f
         val suelo = h * 0.86f
         val tope = h * 0.6f
-        // El brasero, abajo a la derecha: la luz de la noche.
+        // El brasero, abajo a la derecha: la luz de la noche. Su alcance es corto: lo lejano (el telar) queda casi a oscuras.
         val brasa = Offset(w - h * 0.2f, h * 0.83f)
-        fun k(p: Offset): Float = (1f - (p - brasa).getDistance() / (h * 1.35f)).coerceIn(0f, 1f)
+        fun k(p: Offset): Float = (1f - (p - brasa).getDistance() / (h * 1.15f)).coerceIn(0f, 1f)
         fun l(p: Offset): Float = if (!oscuro) 0f else (1f - p.x / (w * 0.55f)).coerceIn(0f, 1f) * (1f - p.y / (h * 1.3f)).coerceIn(0f, 1f)
         fun caida(p: Offset, largo: Float): Offset {
             if (!oscuro) return Offset(largo * 0.95f, largo * 0.55f)
@@ -90,82 +112,60 @@ internal object MuebleLibretaHeleno {
             return v / dd * (largo * 1.5f)
         }
 
-        // ---- el muro: el revoque encalado de arriba, los filetes y el zócalo alto
-        val lejos = Offset(w * 0.3f, h * 0.2f)
-        drawRect(a.luz(P.CAL, k(lejos), l(lejos)), Offset.Zero, Size(w, friso))
-        pinceladas(Rect(0f, 0f, w, friso), a.luz(mezcla(P.CAL, sombraMueble(1f), 0.25f), k(lejos)), 771, 26, u, 0.08f)
-        pinceladas(Rect(0f, 0f, w, friso), a.luz(mezcla(P.CAL, P.ARCILLA, 0.3f), k(lejos)), 772, 12, u, 0.07f)
-        // Un remiendo del revoque y una grieta fina.
-        drawOval(a.luz(mezcla(P.CAL, Color.White, 0.3f), k(lejos)).copy(alpha = 0.4f), Offset(w * 0.62f, h * 0.06f), Size(h * 0.16f, h * 0.07f))
-        drawPath(Path().apply { moveTo(w * 0.7f, 0f); lineTo(w * 0.705f, h * 0.04f); lineTo(w * 0.698f, h * 0.07f); lineTo(w * 0.71f, h * 0.1f) }, a.sombra(0.3f), style = Stroke(0.7f * u))
-        val zoc = Offset(w * 0.5f, h * 0.55f)
-        drawRect(a.luz(P.ZOCALO, k(zoc), l(zoc)), Offset(0f, friso), Size(w, suelo - friso))
-        pinceladas(Rect(0f, friso, w, suelo), a.luz(mezcla(P.ZOCALO, luzMueble(1f), 0.25f), k(zoc)), 773, 22, u, 0.09f)
-        pinceladas(Rect(0f, friso, w, suelo), a.sombra(1f), 774, 14, u, 0.08f)
-        drawRect(a.luz(P.EGEO, k(lejos), l(lejos)), Offset(0f, friso - h * 0.026f), Size(w, h * 0.008f))
-        drawRect(a.luz(P.ROJO, k(lejos), l(lejos)), Offset(0f, friso - h * 0.012f), Size(w, h * 0.016f))
-        // Las orillas de la pintura, a mano.
-        for (j in 0 until 14) {
-            val x = w * j / 13f
-            drawOval(a.luz(P.ZOCALO, k(zoc), l(zoc)), Offset(x - w * 0.04f, friso + h * 0.002f - 1.2f * u * azar(775, j)), Size(w * 0.08f, 2.4f * u))
-        }
-        // El zócalo gastado: dos desconchones donde asoma el revoque.
-        for (j in 0 until 3) {
-            val o = Offset(w * (0.15f + 0.7f * azar(776, j)), friso + (suelo - friso) * (0.5f + 0.4f * azar(777, j)))
-            val r = h * (0.012f + 0.01f * azar(778, j))
-            drawOval(a.luz(mezcla(P.ZOCALO, P.CAL, 0.5f), k(o), l(o)), Offset(o.x - r * 1.5f, o.y - r * 0.7f), Size(r * 3f, r * 1.4f))
-            drawOval(a.sombra(0.4f), Offset(o.x - r * 1.5f, o.y - r * 0.7f), Size(r * 3f, r * 0.5f))
-        }
-        // ---- el suelo de tierra apisonada
-        val cs = Offset(w * 0.5f, h * 0.93f)
-        drawRect(a.luz(P.TIERRA, k(cs), l(cs)), Offset(0f, suelo), Size(w, h - suelo))
-        pinceladas(Rect(0f, suelo, w, h), a.luz(mezcla(P.TIERRA, sombraMueble(1f), 0.4f), k(cs)), 779, 12, u, 0.12f)
-        drawPath(pz.guijarros, a.sombra(0.3f))
-        drawPath(pz.guijarrosLuz, a.luz(mezcla(P.TIERRA, P.CAL, 0.4f), k(cs), l(cs)))
-        drawRect(a.sombra(0.42f), Offset(0f, suelo), Size(w, 1.5f * u))
-        drawRect(a.sombra(0.14f), Offset(0f, suelo + 1.5f * u), Size(w, 4f * u))
+        // ---- dónde va cada cosa (lo que el espejo necesita saber de las tablillas)
+        val xTelar = h * 0.34f
+        val x0b = xTelar + h * 0.02f
+        val lleno = (sqrt(e.hojas.coerceAtLeast(0).toFloat()) / 14f).coerceIn(0f, 1f)
+        val grueso = h * (0.035f + 0.1f * lleno)
+        // En un teléfono angosto el políptico se achica un poco para no salirse por la derecha.
+        val ancho = (w - x0b - h * 0.16f - grueso).coerceIn(h * 0.5f, h * 0.64f); val alto = ancho * 0.66f
+        val cx = (w * 0.5f + h * 0.08f).coerceIn(x0b + ancho * 0.5f + h * 0.05f, maxOf(x0b + ancho * 0.5f + h * 0.05f, w - ancho * 0.5f - grueso - h * 0.07f))
+        val tabla = Rect(cx - ancho / 2, tope + h * 0.012f - alto, cx + ancho / 2, tope + h * 0.012f)
+        val detras = Offset(grueso * 0.62f, -grueso * 0.5f)
 
-        // ---- la luz que entra por la izquierda, en el muro (el sol; de noche, la luna)
+        muro(pz, a, friso, suelo, ::k, ::l)
+
+        // ---- la luz que entra por la izquierda (el sol; de noche, la luna) y el charco del brasero
         if (!oscuro) {
             drawPath(pz.sol, luzMueble(0.16f))
             drawPath(pz.penumbra, luzMueble(0.06f))
         } else {
-            drawPath(pz.sol, P.LUNA.copy(alpha = 0.05f))
-            // El charco de la brasa, que sube por el zócalo desde abajo a la derecha.
-            mancha(brasa, h * 1.5f, P.BRASA.copy(alpha = 0.24f))
-            mancha(brasa, h * 0.6f, P.BRASA.copy(alpha = 0.26f))
+            drawPath(pz.sol, P.LUNA.copy(alpha = 0.06f))
+            drawPath(pz.penumbra, P.LUNA.copy(alpha = 0.03f))
         }
 
         // ---- el telar, a la izquierda
-        val xTelar = h * 0.34f
         with(RinconLibretaHeleno) { telar(xTelar, h, suelo, a, ::k, ::l, caida(Offset(xTelar * 0.5f, h * 0.5f), h * 0.03f)) }
 
-        // ---- el espejo, colgado arriba a la derecha
-        val clavo = Offset(w - h * 0.24f, h * 0.035f)
-        with(RinconLibretaHeleno) { espejo(clavo, h * 0.075f, a, k(clavo + Offset(0f, h * 0.17f)), l(clavo), caida(clavo + Offset(0f, h * 0.17f), h * 0.025f)) }
+        // ---- el espejo, colgado arriba a la derecha: si no cabe al lado del políptico, más arriba y más chico
+        val angosto = w < h * 1.35f
+        val rEsp = h * (if (angosto) 0.06f else 0.075f)
+        val derechaTablas = tabla.right + detras.x + h * 0.01f
+        val xEsp = maxOf(w - h * 0.21f, minOf(derechaTablas + rEsp + h * 0.03f, w - rEsp - h * 0.02f))
+        var yDisco = h * 0.035f + rEsp * 2.25f
+        if (xEsp - rEsp < derechaTablas) yDisco = minOf(yDisco, tabla.top + detras.y - rEsp - h * 0.012f)
+        val clavo = Offset(xEsp, (yDisco - rEsp * 2.25f).coerceAtLeast(h * 0.012f))
+        with(RinconLibretaHeleno) { espejo(clavo, rEsp, a, k(clavo + Offset(0f, h * 0.17f)), l(clavo), caida(clavo + Offset(0f, h * 0.17f), h * 0.025f)) }
 
         // ---- el banco, con las tablillas de pie contra el muro, la píxide y el ovillo
-        val x0b = xTelar + h * 0.02f
         with(RinconLibretaHeleno) { banco(x0b, w + h * 0.05f, tope, h, suelo, a, ::k, ::l) }
-        // Las tablillas: el políptico, grande, en el centro del banco.
-        val lleno = (sqrt(e.hojas.coerceAtLeast(0).toFloat()) / 14f).coerceIn(0f, 1f)
-        val grueso = h * (0.035f + 0.1f * lleno)
-        // En un teléfono angosto el políptico se achica un poco para no salirse por la derecha.
-        val ancho = (w - x0b - h * 0.14f - grueso).coerceIn(h * 0.52f, h * 0.66f); val alto = ancho * 0.64f
-        val cx = (w * 0.5f + h * 0.08f).coerceIn(x0b + ancho * 0.5f + h * 0.04f, maxOf(x0b + ancho * 0.5f + h * 0.04f, w - ancho * 0.5f - grueso - h * 0.06f))
-        val tapa = Rect(cx - ancho / 2, tope + h * 0.012f - alto, cx + ancho / 2, tope + h * 0.012f)
-        tablillas(e, medidor, tapa, grueso, ab, a, k(tapa.center), l(tapa.center), caida(tapa.center, h * 0.045f))
-        // La píxide y el ovillo, a la derecha de las tablillas.
-        val xPix = tapa.right + grueso * 0.6f + h * 0.12f
+        tablillas(e, medidor, tabla, grueso, ab, a, ::k, l(tabla.center), caida(tabla.center, h * 0.045f))
+        val xPix = tabla.right + detras.x + h * 0.12f
         if (xPix < w - h * 0.04f) with(RinconLibretaHeleno) { pixide(Offset(xPix, tope + h * 0.018f), h, a, k(Offset(xPix, tope)), l(Offset(xPix, tope)), caida(Offset(xPix, tope), h * 0.03f)) }
-        val ovC = Offset(tapa.left - h * 0.02f, tope + h * 0.0f)
+        val ovC = Offset(tabla.left - h * 0.025f, tope)
         with(RinconLibretaHeleno) { ovillo(ovC, h * 0.032f, Offset(xTelar - h * 0.01f, h * 0.53f), a, k(ovC), l(ovC)) }
 
         // ---- lo de debajo del banco: la madeja colgada del canto y las pesas de repuesto en el suelo
-        val xMad = tapa.left + tapa.width * 0.3f
-        with(RinconLibretaHeleno) { madeja(xMad, tope + h * 0.024f, h * 0.17f, a, k(Offset(xMad, tope + h * 0.1f)), l(Offset(xMad, tope + h * 0.1f))) }
+        val xMad = tabla.left + tabla.width * 0.32f
+        with(RinconLibretaHeleno) { madeja(xMad, tope + h * 0.024f, h * 0.17f, a, k(Offset(xMad, tope + h * 0.1f)), l(Offset(xMad, tope + h * 0.1f)), caida(Offset(xMad, tope + h * 0.1f), h * 0.02f)) }
         val pPesas = Offset(x0b + h * 0.26f, h * 0.93f)
         with(RinconLibretaHeleno) { pesasSueltas(pPesas, h, a, k(pPesas), l(pPesas)) }
+
+        // ---- de noche, el charco del brasero: en el suelo, las patas y el canto del banco y la parte baja del políptico
+        if (oscuro) {
+            mancha(brasa, h * 0.8f, P.BRASA.copy(alpha = 0.3f))
+            mancha(brasa + Offset(0f, h * 0.05f), h * 0.34f, P.ASCUA.copy(alpha = 0.3f))
+        }
 
         // ---- el brasero, en el suelo a la derecha
         with(RinconLibretaHeleno) { brasero(Offset(brasa.x, h * 0.975f), h, a, maxOf(k(brasa), if (oscuro) 0.9f else 0f), l(brasa), caida(brasa, h * 0.03f)) }
@@ -173,17 +173,74 @@ internal object MuebleLibretaHeleno {
         granoMueble(Rect(0f, 0f, w, h), oscuro)
     }
 
+    /**
+     * El muro: el revoque encalado de arriba, con sus pinceladas, un remiendo y una grieta; los filetes; el zócalo alto con sus
+     * desconchones, la humedad que sube del suelo y el roce del banco; y el suelo de tierra apisonada con sus guijarros.
+     */
+    private fun DrawScope.muro(pz: Piezas, a: AireLibretaHeleno, friso: Float, suelo: Float, k: (Offset) -> Float, l: (Offset) -> Float) {
+        val u = density
+        val w = size.width; val h = size.height
+        val lejos = Offset(w * 0.3f, h * 0.15f)
+        drawRect(a.luz(P.CAL, k(lejos), l(lejos)), Offset.Zero, Size(w, friso))
+        pinceladas(Rect(0f, 0f, w, friso), a.luz(mezcla(P.CAL, sombraMueble(1f), 0.25f), k(lejos)), 771, 30, u, 0.09f)
+        pinceladas(Rect(0f, 0f, w, friso), a.luz(mezcla(P.CAL, P.ARCILLA, 0.3f), k(lejos)), 772, 16, u, 0.08f)
+        pinceladas(Rect(0f, 0f, w, friso), luzMueble(1f), 770, 12, u, if (a.oscuro) 0.02f else 0.1f)
+        drawPath(pz.remiendo, a.luz(mezcla(P.CAL, Color.White, 0.35f), k(lejos), l(lejos)).copy(alpha = 0.5f))
+        drawPath(pz.remiendo, a.sombra(0.12f), style = Stroke(0.8f * u))
+        val zoc = Offset(w * 0.5f, h * 0.55f)
+        drawRect(a.luz(P.ZOCALO, k(zoc), l(zoc)), Offset(0f, friso), Size(w, suelo - friso))
+        pinceladas(Rect(0f, friso, w, suelo), a.luz(mezcla(P.ZOCALO, luzMueble(1f), 0.25f), k(zoc)), 773, 30, u, 0.1f)
+        pinceladas(Rect(0f, friso, w, suelo), a.luz(mezcla(P.ZOCALO, P.ROJO, 0.3f), k(zoc)), 778, 14, u, 0.1f)
+        pinceladas(Rect(0f, friso, w, suelo), a.sombra(1f), 774, 16, u, 0.09f)
+        // La humedad que sube del suelo: el pie del zócalo, más oscuro y manchado.
+        pinceladas(Rect(0f, suelo - h * 0.08f, w, suelo), a.sombra(1f), 779, 18, u, 0.14f)
+        drawRect(a.luz(P.EGEO, k(lejos), l(lejos)), Offset(0f, friso - h * 0.026f), Size(w, h * 0.008f))
+        drawRect(a.luz(P.ROJO, k(lejos), l(lejos)), Offset(0f, friso - h * 0.012f), Size(w, h * 0.016f))
+        // Las orillas de la pintura, a mano.
+        for (j in 0 until 14) {
+            val x = w * j / 13f
+            drawOval(a.luz(P.ZOCALO, k(zoc), l(zoc)), Offset(x - w * 0.04f, friso + h * 0.002f - 1.2f * u * azar(775, j)), Size(w * 0.08f, 2.4f * u))
+        }
+        drawPath(pz.grieta, a.sombra(0.4f), style = Stroke(0.8f * u))
+        drawPath(pz.grieta, luzMueble(if (a.oscuro) 0.04f else 0.2f), style = Stroke(0.5f * u))
+        // El zócalo gastado: desconchones donde asoma el revoque, con su borde roto en sombra.
+        for (j in 0 until 5) {
+            val o = Offset(w * (0.08f + 0.86f * azar(776, j)), friso + (suelo - friso) * (0.2f + 0.7f * azar(777, j)))
+            val r = h * (0.012f + 0.014f * azar(780, j))
+            val forma = Path()
+            for (q in 0 until 7) {
+                val ang = 6.283f * q / 7 + azar(781 + j, q)
+                val v = Offset(o.x + r * (1.1f + 0.6f * azar(782 + j, q)) * cos(ang), o.y + r * 0.6f * sin(ang))
+                if (q == 0) forma.moveTo(v.x, v.y) else forma.lineTo(v.x, v.y)
+            }
+            forma.close()
+            drawPath(forma, a.luz(mezcla(P.ZOCALO, P.CAL, 0.5f), k(o), l(o)))
+            drawPath(forma, a.sombra(0.45f), style = Stroke(0.9f * u))
+        }
+        // ---- el suelo de tierra apisonada
+        val cs = Offset(w * 0.5f, h * 0.93f)
+        drawRect(a.luz(P.TIERRA, k(cs), l(cs)), Offset(0f, suelo), Size(w, h - suelo))
+        pinceladas(Rect(0f, suelo, w, h), a.luz(mezcla(P.TIERRA, sombraMueble(1f), 0.4f), k(cs)), 779, 14, u, 0.12f)
+        drawPath(pz.guijarros, a.sombra(0.3f))
+        drawPath(pz.guijarrosLuz, a.luz(mezcla(P.TIERRA, P.CAL, 0.4f), k(cs), l(cs)))
+        drawRect(a.sombra(0.42f), Offset(0f, suelo), Size(w, 1.5f * u))
+        drawRect(a.sombra(0.14f), Offset(0f, suelo + 1.5f * u), Size(w, 4f * u))
+    }
+
     // ---------------------------------------------------------------- las tablillas
 
     /**
-     * El políptico de tablillas, de pie sobre el banco y apoyado en el muro: el canto con una tablilla por cada tanto de hojas,
-     * la tapa de boj con su marco, el nombre y la cuenta a tinta, el cordón de la izquierda con el estilo colgado. Con [ab] la
-     * tapa gira sobre el cordón y deja ver la cera de la primera tablilla.
+     * El políptico de tablillas, de pie sobre el banco y apoyado en el muro: las tablillas de detrás con sus cantos
+     * escalonados (una por cada tanto de hojas); la de delante, con su cara encerada y el nombre y la cuenta incisos; la vuelta
+     * de lana púrpura que la cruza por la esquina y el cordón de la izquierda con el estilo colgado. Con [ab] la tapa gira sobre
+     * el cordón (el nombre se desvanece, no se deforma) y deja ver la cera de la de dentro.
      */
-    private fun DrawScope.tablillas(e: EstadoLibreta, medidor: TextMeasurer, r: Rect, grueso: Float, ab: Float, a: AireLibretaHeleno, k: Float, l: Float, caida: Offset) {
+    private fun DrawScope.tablillas(e: EstadoLibreta, medidor: TextMeasurer, r: Rect, grueso: Float, ab: Float, a: AireLibretaHeleno,
+                                    k: (Offset) -> Float, l: Float, caida: Offset) {
         val u = density
         val o = Offset(grueso * 0.62f, -grueso * 0.5f)
         val esquina = CornerRadius(2.6f * u)
+        val kc = k(r.center); val kb = k(Offset(r.center.x, r.bottom))
         // Su sombra en el zócalo y en el banco.
         drawPath(Path().apply {
             moveTo(r.left + caida.x, r.top + caida.y); lineTo(r.right + o.x + caida.x, r.top + o.y + caida.y); lineTo(r.right + o.x + caida.x, r.bottom); lineTo(r.left, r.bottom); close()
@@ -191,54 +248,56 @@ internal object MuebleLibretaHeleno {
         drawOval(a.sombra(0.4f), Offset(r.left - r.width * 0.02f, r.bottom - 3f * u), Size(r.width * 1.1f + o.x, 6f * u))
         // Las tablillas de detrás, cada una un poco corrida: se ven sus cantos escalonados, más cuantas más hojas.
         val n = (3 + e.hojas / 5).coerceIn(3, 14)
-        val cera = a.luz(P.CERA, k, l)
+        val cera = a.luz(P.CERA, kc, l)
         for (i in n - 1 downTo 1) {
             val f = i / (n - 1f)
             val off = o * f + Offset((azar(e.semilla, 700 + i) - 0.5f) * 1.8f * u, (azar(e.semilla, 750 + i) - 0.5f) * 1.4f * u)
-            val col = mezcla(a.luz(if (i % 2 == 0) P.BOJ_OSC else mezcla(P.BOJ, P.BOJ_OSC, 0.3f), maxOf(k, 0.35f), l), if (a.oscuro) P.NOCHE else sombraMueble(1f), 0.06f + 0.22f * f)
+            val col = mezcla(a.luz(if (i % 2 == 0) P.BOJ_OSC else mezcla(P.BOJ, P.BOJ_OSC, 0.3f), maxOf(kc, 0.3f), l), if (a.oscuro) P.NOCHE else sombraMueble(1f), 0.06f + 0.22f * f)
             drawRoundRect(col, r.topLeft + off, r.size, esquina)
-            // El canto de la cera entre una tablilla y la otra, y el filo de arriba a la luz.
             drawRoundRect(cera.copy(alpha = 0.7f), r.topLeft + off, r.size, esquina, style = Stroke(1f * u))
-            drawLine(if (a.oscuro) a.filo(0.4f * k) else a.claro(0.35f), r.topLeft + off + Offset(3f * u, 0.6f * u), Offset(r.right, r.top) + off + Offset(-3f * u, 0.6f * u), 0.7f * u)
+            drawLine(if (a.oscuro) a.filo(0.45f * kc) else a.claro(0.35f), r.topLeft + off + Offset(3f * u, 0.6f * u), Offset(r.right, r.top) + off + Offset(-3f * u, 0.6f * u), 0.7f * u)
         }
-        // La primera tablilla por dentro (se ve al abrir): el marco de boj y la cera con renglones incisos.
-        if (ab > 0.01f) {
-            drawRoundRect(a.luz(P.BOJ, k, l), r.topLeft, r.size, esquina)
-            val c = Rect(r.left + r.width * 0.06f, r.top + r.height * 0.1f, r.right - r.width * 0.05f, r.bottom - r.height * 0.1f)
-            drawRect(cera, c.topLeft, c.size)
-            drawRect(a.sombra(0.4f), c.topLeft, Size(c.width, 2f * u))
-            val inciso = a.panel(P.INCISO, k).copy(alpha = 0.6f)
-            var y = c.top + 7f * u; var j = 0
-            while (y < c.bottom - 4f * u) {
-                drawLine(inciso, Offset(c.left + 6f * u, y), Offset(c.left + 6f * u + c.width * (0.55f + 0.35f * azar(e.semilla, 900 + j)), y), 0.9f * u, StrokeCap.Round)
-                y += 6.5f * u; j++
-            }
-        }
-        // La tapa: gira sobre el cordón de la izquierda.
+        // La de dentro (se ve al abrir): su cera, con renglones.
+        if (ab > 0.01f) caraEncerada(e, r, a, kc, kb, l, viejo = 0.5f)
+        // La tapa: gira sobre el cordón de la izquierda. Su cera, con el nombre y la cuenta incisos.
         withTransform({ scale(1f - 0.92f * ab, 1f, Offset(r.left, r.center.y)) }) {
-            tapaTablillas(e, medidor, r, a, k)
+            val campo = caraEncerada(e, r, a, kc, kb, l, viejo = 0.16f)
+            val alfa = (1f - ab * 3f).coerceIn(0f, 1f)
+            if (alfa > 0.01f) {
+                val inciso = a.panel(P.INCISO, kc).copy(alpha = alfa)
+                textoEn(medidor, e.nombre, Rect(campo.left + 6f * u, campo.top + campo.height * 0.1f, campo.right - 6f * u, campo.top + campo.height * 0.56f), LETRA, inciso, 17f, peso = FontWeight.Bold, minimo = 8f)
+                drawLine(inciso.copy(alpha = 0.5f * alfa), Offset(campo.center.x - campo.width * 0.2f, campo.top + campo.height * 0.6f), Offset(campo.center.x + campo.width * 0.2f, campo.top + campo.height * 0.6f), 0.8f * u)
+                textoEn(medidor, e.cuenta, Rect(campo.left + 4f * u, campo.top + campo.height * 0.64f, campo.right - 4f * u, campo.bottom - campo.height * 0.07f), LETRA, inciso.copy(alpha = 0.84f * alfa), 12f, minimo = 6.5f)
+            }
             drawRoundRect(sombraMueble(0.5f * ab), r.topLeft, r.size, esquina)
         }
-        // La vuelta de lana púrpura que las cierra, por la derecha, con su nudo y sus cabos (al abrir, se suelta).
+        // La vuelta de lana púrpura que las ata: rodea las tablillas y cruza por delante la esquina de arriba a la derecha, con
+        // su nudo en el canto y los cabos colgando (al abrir, se suelta).
         if (ab < 0.05f) {
-            val x = r.right - r.width * 0.045f
-            val lana = a.luz(P.PURPURA, k, l)
-            drawLine(a.sombra(0.35f), Offset(x + 1.5f * u, r.top), Offset(x + 1.5f * u, r.bottom), 3.4f * u)
-            drawLine(lana, Offset(x, r.top - 1f * u), Offset(x, r.bottom), 3.4f * u)
-            drawLine(lana, Offset(x, r.top - 1f * u), Offset(x + o.x, r.top + o.y - 1f * u), 3.4f * u)
-            var y = r.top; while (y < r.bottom) { drawLine(a.sombra(0.3f), Offset(x - 1.7f * u, y + 1.6f * u), Offset(x + 1.7f * u, y), 0.6f * u); y += 2.4f * u }
-            drawLine(if (a.oscuro) a.filo(0.5f * k) else a.claro(0.35f), Offset(x - 1f * u, r.top), Offset(x - 1f * u, r.bottom), 0.7f * u)
-            val nudo = Offset(x, r.top + r.height * 0.82f)
-            drawCircle(lana, 3f * u, nudo)
-            drawCircle(a.sombra(0.3f), 3f * u, nudo + Offset(0.8f * u, 0.8f * u), style = Stroke(0.8f * u))
-            drawLine(lana, nudo, nudo + Offset(-4f * u, r.height * 0.2f), 1.6f * u, StrokeCap.Round)
-            drawLine(lana, nudo, nudo + Offset(3f * u, r.height * 0.24f), 1.6f * u, StrokeCap.Round)
+            val lana = a.luz(P.PURPURA, kc, l)
+            val p0 = Offset(r.right - r.width * 0.2f, r.top - 1.5f * u)
+            val p1 = Offset(r.right + 1f * u, r.top + r.height * 0.3f)
+            drawLine(a.sombra(0.4f), p0 + Offset(1.6f * u, 2f * u), p1 + Offset(1.6f * u, 2f * u), 3.6f * u, StrokeCap.Round)
+            drawLine(lana, p0, p1, 3.4f * u, StrokeCap.Round)
+            drawLine(lana, p0, p0 + o, 3f * u, StrokeCap.Round)
+            val v = p1 - p0; val largo = v.getDistance().coerceAtLeast(1f); val dir = v / largo; val nrm = Offset(-dir.y, dir.x)
+            var t = 0f
+            val vueltas = Path()
+            while (t < largo) { val p = p0 + dir * t; vueltas.moveTo((p + nrm * (1.6f * u)).x, (p + nrm * (1.6f * u)).y); vueltas.lineTo((p - nrm * (1.6f * u) + dir * (1.6f * u)).x, (p - nrm * (1.6f * u) + dir * (1.6f * u)).y); t += 2.4f * u }
+            drawPath(vueltas, a.sombra(0.3f), style = Stroke(0.6f * u))
+            drawLine(if (a.oscuro) a.filo(0.4f * kc) else a.claro(0.35f), p0 - nrm * (1f * u), p1 - nrm * (1f * u), 0.7f * u)
+            drawCircle(lana, 3.2f * u, p1)
+            drawCircle(a.sombra(0.3f), 3.2f * u, p1 + Offset(0.8f * u, 0.8f * u), style = Stroke(0.8f * u))
+            drawLine(lana, p1, p1 + Offset(-2f * u, r.height * 0.32f), 1.6f * u, StrokeCap.Round)
+            drawLine(lana, p1, p1 + Offset(3.5f * u, r.height * 0.4f), 1.6f * u, StrokeCap.Round)
         }
+        // De noche, la brasa sube por la parte baja del políptico.
+        if (a.oscuro) drawRect(P.BRASA.copy(alpha = 0.1f * kb), Offset(r.left, r.bottom - r.height * 0.3f), Size(r.width * (1f - 0.92f * ab), r.height * 0.3f))
         // El cordón que las ata por la izquierda, con su nudo, sus cabos y el estilo colgado.
-        val cordon = a.luz(mezcla(P.LANA, P.TIERRA, 0.25f), k, l)
+        val cordon = a.luz(mezcla(P.LANA, P.TIERRA, 0.25f), kc, l)
         val agujeros = listOf(r.top + r.height * 0.24f, r.top + r.height * 0.76f)
         agujeros.forEach { y ->
-            val p = Offset(r.left + r.width * 0.035f, y)
+            val p = Offset(r.left + r.width * 0.04f, y)
             drawCircle(a.sombra(0.6f), 2.2f * u, p)
             val gaza = Path().apply { moveTo(p.x, p.y); cubicTo(p.x - 9f * u, p.y - 4f * u, p.x - 10f * u, p.y + 6f * u, p.x - 1f * u, p.y + 5f * u) }
             drawPath(gaza, a.sombra(0.4f), style = Stroke(2.6f * u))
@@ -249,67 +308,71 @@ internal object MuebleLibretaHeleno {
         val estiloArriba = Offset(nudo.x - 3f * u, nudo.y + r.height * 0.18f)
         drawPath(Path().apply { moveTo(nudo.x, nudo.y); cubicTo(nudo.x - 4f * u, nudo.y + 8f * u, estiloArriba.x + 2f * u, estiloArriba.y - 8f * u, estiloArriba.x, estiloArriba.y) }, cordon, style = Stroke(1.1f * u))
         drawLine(cordon, nudo, nudo + Offset(3f * u, 9f * u), 1.1f * u, StrokeCap.Round)
-        estilo(estiloArriba, r.height * 0.42f, a, k, l)
+        estilo(estiloArriba, r.height * 0.42f, a, kb, l)
     }
 
     /**
-     * La tapa: el marco de boj con las esquinas gastadas y la cera oscura hundida, con lo de antes borrado a medias por la
-     * paleta del estilo; el nombre y la cuenta, incisos (dejan ver la cera clara de abajo, como en las pestañas del índice).
+     * Una cara encerada: el marco de boj ancho, con su veta y sus esquinas gastadas, más alto que la cera (su canto echa sombra
+     * dentro); la cera de color pardo verdoso, no negro, con el brillo rasante de la luz, las pasadas de la paleta que la
+     * alisan y lo escrito antes a medio borrar ([viejo]: cuánto se ve; trazos, no letras). Devuelve dónde quedó la cera.
      */
-    private fun DrawScope.tapaTablillas(e: EstadoLibreta, medidor: TextMeasurer, r: Rect, a: AireLibretaHeleno, k: Float) {
+    private fun DrawScope.caraEncerada(e: EstadoLibreta, r: Rect, a: AireLibretaHeleno, k: Float, kb: Float, l: Float, viejo: Float): Rect {
         val u = density
         val esquina = CornerRadius(2.6f * u)
-        val boj = a.luz(P.BOJ, maxOf(k, 0.45f))
+        val boj = a.luz(P.BOJ, maxOf(k, 0.4f), l)
         drawRoundRect(boj, r.topLeft, r.size, esquina)
-        val m = r.height * 0.1f
-        val cera = Rect(r.left + m * 1.15f, r.top + m, r.right - m, r.bottom - m)
+        val m = r.height * 0.13f
+        val c = Rect(r.left + m * 1.15f, r.top + m, r.right - m, r.bottom - m)
         clipRect(r.left, r.top, r.right, r.bottom) {
-            // La veta fina del boj, en el marco.
-            for (j in 0 until 6) {
-                val y = r.top + r.height * (0.03f + 0.18f * j + 0.04f * azar(e.semilla, 810 + j))
-                drawLine(a.luz(P.BOJ_OSC, maxOf(k, 0.45f)).copy(alpha = 0.45f), Offset(r.left, y), Offset(r.right, y + 1.2f * u * (azar(e.semilla, 820 + j) - 0.5f)), 0.6f * u)
-            }
-        }
-        // Las esquinas, más oscuras de tanto tocarlas.
-        clipRect(r.left, r.top, r.right, r.bottom) {
-            for (p in listOf(r.topLeft, Offset(r.right, r.top), Offset(r.left, r.bottom), r.bottomRight)) drawCircle(a.sombra(0.12f), r.height * 0.09f, p)
+            // La veta del boj, fina, y un nudo; las esquinas, oscuras de tanto tocarlas.
+            for (j in 0 until 7) drawLine(a.luz(P.BOJ_OSC, maxOf(k, 0.4f), l).copy(alpha = 0.5f), Offset(r.left, r.top + r.height * (0.03f + 0.16f * j)), Offset(r.right, r.top + r.height * (0.05f + 0.16f * j + 0.02f * azar(e.semilla, 830 + j))), 0.6f * u)
+            drawOval(a.luz(P.BOJ_OSC, maxOf(k, 0.4f), l).copy(alpha = 0.55f), Offset(r.left + r.width * 0.78f, r.bottom - m * 0.75f), Size(m * 0.7f, m * 0.4f))
+            for (p in listOf(r.topLeft, Offset(r.right, r.top), Offset(r.left, r.bottom), r.bottomRight)) drawCircle(a.sombra(0.14f), r.height * 0.1f, p)
+            if (a.oscuro) drawRect(P.BRASA.copy(alpha = 0.16f * kb), Offset(r.left, r.bottom - r.height * 0.3f), Size(r.width, r.height * 0.3f))
         }
         // El canto del marco: a la luz arriba y a la izquierda, en sombra abajo y a la derecha; de noche, la brasa en el de la derecha.
-        drawRoundRect(a.claro(0.45f), r.topLeft, Size(r.width, 1.4f * u), esquina)
+        drawRoundRect(a.claro(0.5f), r.topLeft, Size(r.width, 1.4f * u), esquina)
         drawRect(a.claro(0.3f), r.topLeft + Offset(0f, 2f * u), Size(1.2f * u, r.height - 4f * u))
         drawRect(a.sombra(0.35f), Offset(r.left + 2f * u, r.bottom - 1.6f * u), Size(r.width - 4f * u, 1.6f * u))
         drawRect(a.sombra(0.3f), Offset(r.right - 1.4f * u, r.top + 2f * u), Size(1.4f * u, r.height - 4f * u))
-        if (a.oscuro) drawRect(a.filo(0.6f * k), Offset(r.right - 1.4f * u, r.top + 2f * u), Size(1.4f * u, r.height - 4f * u))
-        // La cera hundida: la sombra del marco arriba y a la izquierda, el filo de luz abajo y a la derecha.
-        drawRect(a.luz(P.CERA, k), cera.topLeft, cera.size)
-        // Lo escrito antes y alisado con la paleta: renglones fantasma y las pasadas de la paleta, más claras.
-        val borrado = a.panel(P.INCISO, k)
-        val fantasma = Path()
+        if (a.oscuro) drawRect(a.filo(0.6f * kb), Offset(r.right - 1.4f * u, r.top + r.height * 0.4f), Size(1.4f * u, r.height * 0.6f - 2f * u))
+        // La cera.
+        drawRect(a.luz(CERA_VERDE, k, l), c.topLeft, c.size)
+        // El brillo rasante: la luz roza la cera de lado y la aclara en una franja (de día, el sol de la izquierda; de noche, la brasa abajo).
+        if (a.oscuro) drawRect(P.BRASA.copy(alpha = 0.14f * kb), Offset(c.left, c.bottom - c.height * 0.3f), Size(c.width, c.height * 0.22f))
+        else drawPath(Path().apply { moveTo(c.left, c.top + c.height * 0.15f); lineTo(c.left + c.width * 0.35f, c.top); lineTo(c.left + c.width * 0.6f, c.top); lineTo(c.left, c.top + c.height * 0.7f); close() }, luzMueble(0.07f))
+        // Las pasadas de la paleta, más lisas y más claras, y lo escrito antes a medio borrar.
+        val traza = a.panel(P.INCISO, k)
+        for (j in 0 until 3) drawRoundRect(traza.copy(alpha = 0.05f), Offset(c.left + c.width * (0.04f + 0.12f * j), c.top + c.height * (0.08f + 0.3f * j)), Size(c.width * (0.55f + 0.1f * azar(e.semilla, 880 + j)), c.height * 0.16f), CornerRadius(c.height * 0.08f))
+        val trazos = Path()
+        // Lo de antes: trazos quebrados del estilo (subidas y bajadas, como de letra rayada a prisa, sin ser letras), en
+        // renglones que no son del todo rectos y que la paleta cortó a trozos.
         for (j in 0 until 7) {
-            val y = cera.top + cera.height * (0.1f + 0.125f * j)
-            var x = cera.left + cera.width * 0.05f
-            val fin = cera.left + cera.width * (0.45f + 0.5f * azar(e.semilla, 840 + j))
-            var q = 0
+            val y = c.top + c.height * (0.1f + 0.125f * j + 0.03f * (azar(e.semilla, 890 + j) - 0.5f))
+            var x = c.left + c.width * (0.05f + 0.06f * azar(e.semilla, 900 + j)); var q = 0
+            val fin = c.right - c.width * (0.08f + 0.3f * azar(e.semilla, 910 + j))
             while (x < fin) {
-                val largo = cera.width * (0.03f + 0.08f * azar(e.semilla + j, q))
-                fantasma.moveTo(x, y); fantasma.lineTo(minOf(x + largo, fin), y + 0.5f * u * (azar(e.semilla + j, q + 30) - 0.5f))
-                x += largo + cera.width * 0.02f; q++
+                val largo = c.width * (0.04f + 0.08f * azar(e.semilla + j, q))
+                val alto = c.height * 0.035f
+                trazos.moveTo(x, y)
+                var xx = x; var p = 0
+                while (xx < x + largo) {
+                    val paso = c.width * (0.008f + 0.012f * azar(e.semilla + j * 7 + q, p))
+                    xx += paso
+                    trazos.lineTo(xx, y + (if (p % 2 == 0) -alto else alto * 0.3f) * (0.4f + 0.6f * azar(e.semilla + q, p + 30)))
+                    p++
+                }
+                x += largo + c.width * (0.03f + 0.06f * azar(e.semilla + j, q + 60)); q++
             }
         }
-        drawPath(fantasma, borrado.copy(alpha = 0.09f), style = Stroke(0.9f * u))
-        for (j in 0 until 3) {
-            drawOval(borrado.copy(alpha = 0.05f), Offset(cera.left + cera.width * (0.1f + 0.3f * j), cera.top + cera.height * (0.15f + 0.25f * azar(e.semilla, 860 + j))), Size(cera.width * 0.32f, cera.height * 0.12f))
-        }
-        if (!a.oscuro) drawOval(luzMueble(0.05f), Offset(cera.left + cera.width * 0.05f, cera.top + cera.height * 0.05f), Size(cera.width * 0.5f, cera.height * 0.4f))
-        drawRect(a.sombra(0.55f), cera.topLeft, Size(cera.width, 2.2f * u))
-        drawRect(a.sombra(0.35f), cera.topLeft, Size(1.8f * u, cera.height))
-        drawRect(a.claro(0.25f), Offset(cera.left, cera.bottom - 1.2f * u), Size(cera.width, 1.2f * u))
-        // El nombre y la cuenta, incisos, con una raya entre los dos.
-        val inciso = a.panel(P.INCISO, k)
-        val nombre = Rect(cera.left + 6f * u, cera.top + cera.height * 0.1f, cera.right - 6f * u, cera.top + cera.height * 0.56f)
-        textoEn(medidor, e.nombre, nombre, LETRA, inciso, 17f, peso = FontWeight.Bold, minimo = 8f)
-        drawLine(inciso.copy(alpha = 0.5f), Offset(cera.center.x - cera.width * 0.2f, cera.top + cera.height * 0.6f), Offset(cera.center.x + cera.width * 0.2f, cera.top + cera.height * 0.6f), 0.8f * u)
-        textoEn(medidor, e.cuenta, Rect(cera.left + 4f * u, cera.top + cera.height * 0.64f, cera.right - 4f * u, cera.bottom - cera.height * 0.07f), LETRA, inciso.copy(alpha = 0.82f), 12f, minimo = 6.5f)
+        drawPath(trazos, traza.copy(alpha = viejo), style = Stroke(0.8f * u, cap = StrokeCap.Round))
+        // El marco, más alto: su sombra dentro de la cera arriba y a la izquierda, y el canto de la cera a la luz abajo.
+        drawRect(a.sombra(0.65f), c.topLeft, Size(c.width, 3f * u))
+        drawRect(a.sombra(0.3f), c.topLeft + Offset(0f, 3f * u), Size(c.width, 2f * u))
+        drawRect(a.sombra(0.45f), c.topLeft, Size(2.6f * u, c.height))
+        drawRect(a.claro(0.35f), Offset(c.left, c.bottom - 1.2f * u), Size(c.width, 1.2f * u))
+        drawRect(a.claro(0.2f), Offset(c.right - 1f * u, c.top), Size(1f * u, c.height))
+        return c
     }
 
     /** El estilo de bronce, colgado del cordón: la punta abajo y la paleta de borrar arriba. */
