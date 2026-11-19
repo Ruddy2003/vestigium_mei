@@ -2652,6 +2652,8 @@ class Capturas {
         pantalla(t, o, 3000, n + "_obras") { obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaObras(navVacia) }
     }
     @Test fun temaBibliotecas() = porTema("bibliotecas") { t, o, n -> pantalla(t, o, 3000, n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario") } }
+    /** El estante de los Sueños de cada tema (la luna en lugar del sello y su luz propia), con los 14 sueños de ejemplo. */
+    @Test fun temaSuenos() = porTema("suenos") { t, o, n -> pantalla(t, o, 3400, n) { suenosEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "suenos") } }
     /** Ajustes (la apariencia, con sus filas, campos e interruptores) y el selector de «Tus temas», con el tema puesto. */
     @Test fun temaAjustes() = porTema("ajustes") { t, o, n ->
         pantalla(t, o, 3600, n + "_apariencia") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaAjustes(navVacia, "apariencia") }
