@@ -64,8 +64,28 @@ private fun DrawScope.filoAndalus(a: AireAndalus, k: Float, arriba: Float, ancho
  * El color del cuerpo de una entrada: el del ánimo entero (el cuero o la seda teñidos), apenas llevado hacia lo hondo para que
  * tenga cuerpo de cuero sin agrisarse; sin ánimo, el tono [natural] del material.
  */
-private fun cuerpoAndalus(v: Volumen, a: AireAndalus, k: Float, natural: Color): Color =
-    v.tono?.let { a.animo(mezcla(it, TINTA_CUERO_ANDALUS, 0.1f), k) } ?: a.luz(natural, k)
+private fun cuerpoAndalus(v: Volumen, a: AireAndalus, k: Float, natural: Color): Color {
+    // Cada pieza tiñe un poco distinto: los vecinos del mismo ánimo no salen iguales.
+    val s = v.semilla and 0x7fffffff
+    val hacia = if (azar(s, 91) < 0.5f) TINTA_CUERO_ANDALUS else CUERO
+    return v.tono?.let { a.animo(mezcla(it, hacia, 0.05f + 0.16f * azar(s, 92)), k) } ?: a.luz(natural, k)
+}
+
+/** El roce del uso en los cantos de un rectángulo: trechos más claros donde se gasta el cuero, no un filete entero. */
+private fun DrawScope.roceAndalus(r: Rect, a: AireAndalus, semilla: Int) {
+    val u = density
+    val p = Path()
+    for (q in 0 until 4) {
+        val t = azar(semilla, 100 + q); val l = 0.12f + 0.2f * azar(semilla, 110 + q)
+        when (q) {
+            0 -> { p.moveTo(r.left + r.width * t * 0.6f, r.top + 0.6f * u); p.lineTo(r.left + r.width * minOf(1f, t * 0.6f + l), r.top + 0.6f * u) }
+            1 -> { p.moveTo(r.left + 0.6f * u, r.top + r.height * t * 0.7f); p.lineTo(r.left + 0.6f * u, r.top + r.height * minOf(1f, t * 0.7f + l)) }
+            2 -> { p.moveTo(r.left + r.width * t * 0.6f, r.bottom - 0.6f * u); p.lineTo(r.left + r.width * minOf(1f, t * 0.6f + l), r.bottom - 0.6f * u) }
+            else -> { p.moveTo(r.left + 0.6f * u, r.top + r.height * (0.6f + 0.3f * t)); p.lineTo(r.left + 0.6f * u, r.bottom - 1f * u) }
+        }
+    }
+    drawPath(p, a.claro(0.5f), style = Stroke(1.1f * u, cap = StrokeCap.Round))
+}
 
 /** Un hierro gofrado en el cuero: el surco con su sombra arriba a la izquierda y su luz abajo a la derecha. */
 private fun DrawScope.surcoAndalus(desde: Offset, hasta: Offset, a: AireAndalus, fuerza: Float = 1f) {
@@ -108,6 +128,15 @@ internal fun DrawScope.codiceAndalus(v: Volumen, medidor: TextMeasurer, a: AireA
     drawPath(poligono(0f, corte, 3.4f * u, corte, 0f, corte + 3.4f * u), a.claro(0.35f))
     drawPath(poligono(0f, h, 3.4f * u, h, 0f, h - 3.4f * u), a.claro(0.28f))
     lustreAndalus(0f, tapa, corte, h, a, k)
+    roceAndalus(Rect(0f, corte, tapa, h), a, s)
+    // El lomo, a la izquierda: un poco más hondo, redondeado, y la cabezada de seda en zigzag arriba (sin nervios: el lomo
+    // de los códices de entonces era liso).
+    drawRect(a.sombra(0.18f), Offset(0f, corte), Size(1.6f * u, h - corte))
+    val cab = Path()
+    var xz = 0.6f * u; var z = 0
+    while (xz < tapa * 0.4f && z < 20) { cab.moveTo(xz, corte + 0.2f * u); cab.lineTo(xz + 1f * u, corte - 1.4f * u); cab.lineTo(xz + 2f * u, corte + 0.2f * u); xz += 2f * u; z++ }
+    drawRect(a.luz(mezcla(CARMESI, CUERO_OSC, 0.2f), k), Offset(0f, corte - 1.6f * u), Size(tapa * 0.42f, 1.8f * u))
+    drawPath(cab, a.luz(PaletaAndalus.ORO, k + 0.1f), style = Stroke(0.6f * u))
     // El marco gofrado: los hierros en relieve, el de fuera dorado, y entre los dos de fuera una hilera de anillos.
     val hierros = 1 + (v.lleno * 2.2f).toInt()
     val dorado = a.luz(ORO, k + 0.1f)
@@ -189,6 +218,7 @@ internal fun DrawScope.estucheAndalus(v: Volumen, medidor: TextMeasurer, a: Aire
     drawRect(if (a.oscuro) FILO_MUEBLE.copy(alpha = 0.32f * k) else a.claro(0.55f), Offset(cuerpo.left + cuerpo.width * 0.2f, cuerpo.top), Size(0.9f * u, cuerpo.height))
     drawRect(a.sombra(0.16f), Offset(cuerpo.left + cuerpo.width * 0.6f, cuerpo.top), Size(cuerpo.width * 0.4f, cuerpo.height))
     drawRect(a.sombra(0.22f), Offset(cuerpo.right - cuerpo.width * 0.16f, cuerpo.top), Size(cuerpo.width * 0.16f, cuerpo.height))
+    roceAndalus(Rect(cuerpo.left, cuerpo.top + 2f * u, cuerpo.right, cuerpo.bottom - 4f * u), a, s)
     // La costura del forro, a la derecha, con sus puntadas.
     val xc = cuerpo.left + cuerpo.width * 0.8f
     drawLine(mezcla(cuero, a.hondo, 0.4f), Offset(xc, cuerpo.top), Offset(xc, cuerpo.bottom), 0.7f * u)
@@ -230,10 +260,17 @@ internal fun DrawScope.estucheAndalus(v: Volumen, medidor: TextMeasurer, a: Aire
         lineTo(w - m + 1f * u, yTapa + 1f * u)
         close()
     }
-    drawPath(tapa, bronce)
+    // La tapa, de cuero más hondo, abovedada y cosida al borde con su pespunte.
+    val cueroTapa = mezcla(cuero, a.luz(TINTA_CUERO_ANDALUS, k), 0.3f)
+    drawPath(tapa, cueroTapa)
     drawRect(a.sombra(0.3f), Offset(m, yTapa + 1f * u), Size(w - 2 * m, 1.2f * u))
-    drawRect(a.claro(0.45f), Offset(m + (w - 2 * m) * 0.14f, yTapa - 6f * u), Size((w - 2 * m) * 0.12f, 6f * u))
+    drawRect(if (a.oscuro) FILO_MUEBLE.copy(alpha = 0.25f * k) else a.claro(0.4f), Offset(m + (w - 2 * m) * 0.14f, yTapa - 6f * u), Size((w - 2 * m) * 0.12f, 6f * u))
     drawRect(a.sombra(0.24f), Offset(w - m - (w - 2 * m) * 0.3f, yTapa - 5f * u), Size((w - 2 * m) * 0.3f, 6f * u))
+    val pespunte = Path()
+    var xp = m + 1f * u
+    while (xp < w - m - 1f * u) { pespunte.moveTo(xp, yTapa - 1.4f * u); pespunte.lineTo(xp + 1.2f * u, yTapa - 1.4f * u); xp += maxOf(2.4f * u, 1f) }
+    drawPath(pespunte, a.luz(mezcla(PERGAMINO, CUERO, 0.3f), k), style = Stroke(0.6f * u))
+    drawLine(mezcla(cueroTapa, a.hondo, 0.4f), Offset(w * 0.5f + (w - 2 * m) * 0.18f, yTapa - 6.5f * u), Offset(w * 0.5f + (w - 2 * m) * 0.2f, yTapa + 1f * u), 0.6f * u)
     val remate = Offset(w * 0.5f, 3.6f * u)
     if (v.noche) {
         drawCircle(if (a.oscuro) mezcla(LUNA, a.hondo, 0.2f - 0.2f * k) else LUNA, 3.3f * u, remate)
@@ -275,12 +312,17 @@ internal fun DrawScope.legajoAndalus(v: Volumen, medidor: TextMeasurer, a: AireA
     val asoma = minOf(h * 0.16f, 3f * u + hojas * 1.6f * u)
     // Las hojas que asoman, cada una a su altura y de su tono.
     for (j in 0 until hojas) {
-        val dy = asoma * (j.toFloat() / hojas) + asoma * 0.3f * azar(s, 20 + j) - asoma * 0.15f
-        val dx = (azar(s, 30 + j) - 0.5f) * 3f * u
-        val tono = a.luz(mezcla(PERGAMINO, if (j % 3 == 0) CUERO else PINO, 0.08f + 0.14f * azar(s, 40 + j)), k + 0.05f)
-        drawRect(tono, Offset(1.5f * u + dx, dy.coerceAtLeast(0f)), Size(w - 3f * u, asoma + 2f * u))
-        drawRect(a.sombra(0.16f), Offset(1.5f * u + dx, dy.coerceAtLeast(0f)), Size(w - 3f * u, 0.6f * u))
+        val dy = (asoma * (j.toFloat() / hojas) + asoma * 0.5f * azar(s, 20 + j) - asoma * 0.25f).coerceAtLeast(0f)
+        val dx = (azar(s, 30 + j) - 0.5f) * 4f * u
+        val an = (w - 3f * u) * (0.78f + 0.22f * azar(s, 35 + j))
+        val ladeo = (azar(s, 45 + j) - 0.5f) * 2.4f * u
+        val tono = a.luz(mezcla(PERGAMINO, if (j % 3 == 0) CUERO else PINO, 0.06f + 0.2f * azar(s, 40 + j)), k + 0.05f)
+        val x0 = 1.5f * u + dx + (w - 3f * u - an) * azar(s, 50 + j)
+        drawPath(poligono(x0, dy + ladeo, x0 + an, dy - ladeo, x0 + an, h, x0, h), tono)
+        drawLine(a.sombra(0.22f), Offset(x0, dy + ladeo), Offset(x0 + an, dy - ladeo), 0.6f * u)
     }
+    // Una hoja que asoma también por el costado derecho.
+    drawRect(a.luz(mezcla(PERGAMINO, PINO, 0.15f), k), Offset(w - 1.6f * u, asoma + 4f * u), Size(1.6f * u, h * 0.4f))
     // La carpeta de badana: la tapa de delante, con su borde vuelto y su lustre.
     val tapa = Rect(0f, asoma, w, h)
     val badana = cuerpoAndalus(v, a, k, mezcla(CUERO, PINO, 0.35f + 0.2f * azar(s, 3)))
@@ -290,6 +332,7 @@ internal fun DrawScope.legajoAndalus(v: Volumen, medidor: TextMeasurer, a: AireA
         drawOval(mezcla(badana, a.hondo, 0.22f).copy(alpha = 0.3f), Offset(o.x - w * 0.16f, o.y - 1.5f * u), Size(w * 0.32f, 3f * u))
     }
     lustreAndalus(0f, w, tapa.top, h, a, k)
+    roceAndalus(tapa, a, s)
     drawRect(a.claro(0.42f), Offset(1f * u, tapa.top), Size(w - 2f * u, 0.9f * u))
     surcoAndalus(Offset(2.2f * u, tapa.top + 2.2f * u), Offset(w - 2.2f * u, tapa.top + 2.2f * u), a, 0.8f)
     surcoAndalus(Offset(2.2f * u, tapa.top + 2.2f * u), Offset(2.2f * u, h - 2.2f * u), a, 0.8f)

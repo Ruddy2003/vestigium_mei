@@ -136,9 +136,9 @@ internal object MuebleEstanteAndalus {
 
         muroAndalus(a, suelo, cerca)
         ventanaAndalus(a)
-        // El halo del candil: unas pocas manchas, no un velo.
+        // El halo del candil: unas pocas manchas, no un velo (al anochecer de los Sueños, ya con su charco).
         if (a.lumbre) {
-            val f = if (oscuro) 1f else 0.5f
+            val f = if (oscuro) 1f else 0.75f
             mancha(llama, w * 0.8f, FILO_MUEBLE.copy(alpha = 0.13f * f))
             mancha(llama, w * 0.4f, FILO_MUEBLE.copy(alpha = 0.24f * f))
             mancha(llama, w * 0.16f, LLAMA.copy(alpha = 0.3f * f))
@@ -185,7 +185,7 @@ internal object MuebleEstanteAndalus {
         // ---- el rótulo de cada mes: una cartela lobulada de pergamino, clavada con dos clavos de bronce
         d.placas.forEach { p -> cartelaAndalus(p, medidor, a, cerca(p.r.center)) }
 
-        // ---- el coronamiento: el friso de ataurique, los canecillos de rollos y la cornisa que vuela
+        // ---- el coronamiento: el friso de ataurique, la moldura corrida y la cornisa que vuela
         coronaAndalus(Rect(0f, apoyo, w, ch), a, cerca)
 
         // ---- el zócalo del mueble, con su arquería ciega
@@ -204,6 +204,10 @@ internal object MuebleEstanteAndalus {
         // La luz de la celosía también toca lo que hay debajo: la cara de arriba de los códices y el canto de la cornisa.
         tramaAndalus(Rect(w * 0.085f, apoyo - w * 0.068f, w * 0.2f, apoyo - w * 0.061f), a, if (a.lumbre) 0.4f else 0.6f, 0.35f, 0.6f, 0.02f, blando = 0.4f)
         tramaAndalus(Rect(w * 0.1f, apoyo + w * 0.002f, w * 0.31f, apoyo + w * 0.016f), a, if (a.lumbre) 0.34f else 0.5f, 0.5f, 0.7f, 0.024f, blando = 0.5f)
+        // El hollín de tantas noches en el muro, sobre la llama.
+        mancha(llama - Offset(0f, w * 0.045f), w * 0.05f, a.sombra(if (oscuro) 0.36f else 0.34f))
+        mancha(llama - Offset(-w * 0.004f, w * 0.09f), w * 0.045f, a.sombra(if (oscuro) 0.26f else 0.24f))
+        mancha(llama - Offset(-w * 0.01f, w * 0.14f), w * 0.035f, a.sombra(if (oscuro) 0.16f else 0.14f))
         val pieCandil = Offset(w * 0.552f, apoyo)
         candilAndalus(pieCandil, w * 0.14f, a, cerca(pieCandil - Offset(0f, w * 0.04f)), dePie(pieCandil, w * 0.012f))
         val pieLaud = Offset(w * 0.86f, apoyo)
@@ -344,14 +348,14 @@ internal object MuebleEstanteAndalus {
 
     /**
      * El coronamiento, de [r].top (donde pisa lo de arriba) a [r].bottom (la primera repisa): la cornisa que vuela, con su cara
-     * de arriba y su canto; debajo, los canecillos de rollos en hilera, y el friso de ataurique entre dos molduras.
+     * de arriba y su canto; debajo, una moldura corrida (nacela y bocel), y el friso de ataurique entre dos molduras.
      */
     private fun DrawScope.coronaAndalus(r: Rect, a: AireAndalus, cerca: (Offset) -> Float) {
         val u = density; val w = size.width
         val gC = w * 0.03f                 // el canto de la cornisa
         val fC = w * 0.013f                // lo que se ve de su cara de arriba
-        val yCan = r.top + gC              // donde empiezan los canecillos
-        val altoCan = w * 0.046f
+        val yCan = r.top + gC              // donde empieza la moldura corrida
+        val altoCan = w * 0.04f
         val friso = Rect(0f, yCan + altoCan, w, r.bottom)
         val tramos = if (a.lumbre) 24 else 1
         // El friso: el fondo hondo, el tallo que corre y las dos molduras.
@@ -375,15 +379,27 @@ internal object MuebleEstanteAndalus {
             drawRect(a.claro(0.35f), Offset(0f, y), Size(w, 0.9f * u))
             drawRect(a.sombra(0.35f), Offset(0f, y + 3f * u), Size(w, 1f * u))
         }
-        // Los canecillos: el hueco entre ellos, hondo, y cada uno con sus tres rollos.
-        drawRect(a.sombra(if (a.oscuro) 0.5f else 0.3f), Offset(0f, yCan), Size(w, altoCan))
-        val paso = w * 0.09f
-        var x = paso * 0.45f
-        var i = 0
-        while (x < w + paso && i < 40) {
-            canecilloAndalus(Offset(x, yCan), w * 0.05f, altoCan, a, cerca(Offset(x, yCan + altoCan / 2)), 1960 + i)
-            x += paso; i++
+        // La moldura corrida bajo el vuelo de la cornisa: una nacela honda (la sombra del vuelo arriba), un bocel que toma la
+        // luz y un listel; deja su sombra en la moldura de arriba del friso.
+        val nacela = altoCan * 0.56f
+        val yb = yCan + nacela + altoCan * 0.04f; val hb = altoCan * 0.84f - nacela
+        for (t in 0 until tramos) {
+            val xa = w * t / tramos; val xb = w * (t + 1) / tramos + 0.6f
+            val k = cerca(Offset((xa + xb) / 2, yCan + altoCan / 2))
+            drawRect(a.luz(CEDRO, k), Offset(xa, yCan), Size(xb - xa, altoCan))
+            drawRect(a.luz(mezcla(CEDRO, CEDRO_LUZ, 0.35f), k), Offset(xa, yb), Size(xb - xa, hb))
+            drawRect(a.luz(mezcla(CEDRO, CEDRO_LUZ, 0.2f), k), Offset(xa, yCan + altoCan * 0.88f), Size(xb - xa, altoCan * 0.12f))
         }
+        vetas(Rect(0f, yCan, w, yCan + altoCan), CEDRO_OSC.copy(alpha = 0.3f), 1961, densidad = 0.6f, grosor = 0.6f, ondulacion = 0.5f)
+        drawRect(a.sombra(if (a.oscuro) 0.5f else 0.42f), Offset(0f, yCan), Size(w, nacela * 0.35f))
+        drawRect(a.sombra(0.26f), Offset(0f, yCan), Size(w, nacela * 0.7f))
+        drawRect(a.sombra(0.12f), Offset(0f, yCan), Size(w, nacela))
+        drawRect(a.claro(0.3f), Offset(0f, yCan + nacela - 1.2f * u), Size(w, 1.2f * u))
+        drawRect(a.claro(0.42f), Offset(0f, yb + hb * 0.12f), Size(w, hb * 0.25f))
+        drawRect(a.sombra(0.34f), Offset(0f, yb + hb * 0.66f), Size(w, hb * 0.34f))
+        drawRect(a.sombra(0.5f), Offset(0f, yb + hb), Size(w, 0.9f * u))
+        drawRect(a.claro(0.3f), Offset(0f, yCan + altoCan * 0.88f), Size(w, 0.8f * u))
+        drawRect(a.sombra(0.35f), Offset(0f, yCan + altoCan), Size(w, 2.2f * u))
         // La cornisa: la cara de arriba, el canto con su filete y su sombra en los canecillos.
         for (t in 0 until tramos) {
             val xa = -2f * u + (w + 4f * u) * t / tramos; val xb = -2f * u + (w + 4f * u) * (t + 1) / tramos + 0.6f
@@ -406,33 +422,6 @@ internal object MuebleEstanteAndalus {
         tramaAndalus(Rect(w * 0.1f, r.top - fC, w * 0.36f, r.top), a, if (a.lumbre) 0.4f else 0.45f, 0.2f, 1.6f)
         // Bajo el friso, la sombra sobre la primera repisa.
         drawRect(a.sombra(0.4f), Offset(0f, r.bottom), Size(w, 2.5f * u))
-    }
-
-    /**
-     * Un canecillo de rollos (el modillón califal), visto de frente y un poco desde la izquierda: tres rollos que menguan hacia
-     * abajo, cada uno con su luz arriba y su sombra abajo, y a la derecha sus cabezas redondas en el costado; deja su sombra en
-     * el friso, abajo a la derecha.
-     */
-    private fun DrawScope.canecilloAndalus(arriba: Offset, an: Float, alto: Float, a: AireAndalus, cerca: Float, semilla: Int) {
-        val u = density
-        val cara = a.luz(CEDRO, cerca)
-        val costado = a.luz(mezcla(CEDRO, CEDRO_OSC, 0.45f), cerca)
-        val alt = alto / 3f
-        drawPath(poligono(arriba.x - an * 0.4f, arriba.y + 1f * u, arriba.x + an * 0.75f, arriba.y + 1f * u, arriba.x + an * 0.85f, arriba.y + alto + 4f * u, arriba.x - an * 0.2f, arriba.y + alto + 4f * u), a.sombra(if (a.oscuro) 0.5f else 0.34f))
-        for (j in 0 until 3) {
-            val f = 1f - 0.15f * j
-            val rr = Rect(arriba.x - an * 0.5f * f, arriba.y + alt * j, arriba.x + an * 0.5f * f, arriba.y + alt * (j + 1))
-            // La cabeza del rollo en el costado: medio disco que asoma a la derecha, con su espiral.
-            val cab = Rect(rr.right - alt * 0.5f, rr.top, rr.right + alt * 0.5f, rr.bottom)
-            drawOval(costado, cab.topLeft, cab.size)
-            drawArc(a.sombra(0.4f), -60f, 200f, false, cab.topLeft + Offset(alt * 0.22f, alt * 0.22f), Size(alt * 0.56f, alt * 0.56f), style = Stroke(0.6f * u))
-            drawRect(cara, rr.topLeft, rr.size)
-            vetas(rr, CEDRO_OSC.copy(alpha = 0.22f), semilla + j, densidad = 0.5f, grosor = 0.5f)
-            drawRect(a.claro(0.42f), Offset(rr.left, rr.top + alt * 0.1f), Size(rr.width, alt * 0.24f))
-            drawRect(a.sombra(0.36f), Offset(rr.left, rr.bottom - alt * 0.32f), Size(rr.width, alt * 0.32f))
-            drawLine(a.sombra(0.55f), Offset(rr.left, rr.bottom), Offset(cab.right, rr.bottom), 0.8f * u)
-        }
-        if (a.oscuro) drawRect(FILO_MUEBLE.copy(alpha = 0.5f * cerca), Offset(arriba.x - an * 0.5f, arriba.y), Size(an, 1f * u))
     }
 
     /**

@@ -127,7 +127,7 @@ internal class AireAndalus(val oscuro: Boolean, val noche: Boolean) {
 
     fun luz(c: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(mezcla(c, ANOCHECER, 0.4f - 0.18f * k), FILO_MUEBLE, 0.12f * k) else c
+        if (!oscuro) return if (noche) mezcla(mezcla(mezcla(c, ANOCHECER, 0.2f - 0.12f * k), SOMBRA_MUEBLE, 0.1f * (1f - k)), FILO_MUEBLE, 0.26f * k) else c
         return mezcla(mezcla(c, hondo, 0.88f - 0.78f * k.pow(0.95f)), FILO_MUEBLE, 0.2f * k)
     }
     fun sombra(a: Float): Color = if (oscuro) hondo.copy(alpha = (a * 1.15f).coerceIn(0f, 1f)) else sombraMueble(a)
@@ -136,7 +136,7 @@ internal class AireAndalus(val oscuro: Boolean, val noche: Boolean) {
     /** El color del ánimo: de noche se apaga menos que lo demás, para que se siga viendo en la repisa más lejana. */
     fun animo(t: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(t, ANOCHECER, 0.2f) else t
+        if (!oscuro) return if (noche) mezcla(t, ANOCHECER, 0.12f) else t
         return mezcla(mezcla(t, hondo, 0.62f - 0.52f * k), FILO_MUEBLE, 0.1f * k)
     }
     /** El pergamino de las etiquetas: casi no se apaga, para que el día se lea siempre. */
@@ -219,7 +219,7 @@ internal fun DrawScope.muroAndalus(a: AireAndalus, hasta: Float, cerca: (Offset)
     val u = density; val w = size.width
     // Una hilada mide lo que un sillar de alto; el sillar a soga es casi tres veces más largo que el tizón.
     val hc = maxOf(w * 0.105f, 6f * u)
-    val juntas = Path(); val filos = Path(); val bajos = Path(); val mellas = Path()
+    val juntas = Path(); val filos = Path(); val bajos = Path(); val mellas = Path(); val abiertas = Path()
     val ventana = Offset(w * VENTANA_X_ANDALUS, w * VENTANA_Y_ANDALUS)
     val frio = mezcla(FRIO, a.hondo, if (a.oscuro) 0.5f else 0.1f)
     val llama = Offset(w * MuebleEstanteAndalus.LAMP_X, w * MuebleEstanteAndalus.LAMP_Y)
@@ -236,7 +236,7 @@ internal fun DrawScope.muroAndalus(a: AireAndalus, hasta: Float, cerca: (Offset)
             val piedra = mezcla(PIEDRA, if (azar(1904 + f, j) < 0.34f) YESO else PIEDRA_OSC, (if (soga) 0.04f else 0.18f) + 0.3f * azar(1905 + f, j))
             // El charco del candil en el muro: más corto que el de la curva del mueble, para que caiga claro hacia los lados.
             val kl = (1f - (r.center - llama).getDistance() / (w * 0.72f)).coerceIn(0f, 1f).pow(1.5f) * 0.72f
-            var c = a.luz(mezcla(piedra, CAL, 0.58f + 0.12f * azar(1910 + f, j)), kl)
+            var c = a.luz(mezcla(piedra, CAL, 0.46f + 0.24f * azar(1910 + f, j)), kl)
             if (a.lumbre) {
                 val m = (1f - (r.center - ventana).getDistance() / (w * 0.55f)).coerceIn(0f, 1f)
                 c = mezcla(c, frio, (if (a.oscuro) 0.55f else 0.3f) * m)
@@ -246,6 +246,8 @@ internal fun DrawScope.muroAndalus(a: AireAndalus, hasta: Float, cerca: (Offset)
             // Cada sillar: la arista de arriba y la de la izquierda toman la luz; la de abajo se gasta y hace sombra.
             filos.moveTo(x + 1.4f * u, y1 - 2f * u); filos.lineTo(x + 1.4f * u, y + 1.6f * u); filos.lineTo(x + largo - 2f * u, y + 1.6f * u)
             bajos.moveTo(x + 2f * u, y1 - 1.6f * u); bajos.lineTo(x + largo - 1.2f * u, y1 - 1.6f * u); bajos.lineTo(x + largo - 1.2f * u, y + 2f * u)
+            // Alguna junta abierta, donde la cal no llegó.
+            if (azar(1912 + f, j) < 0.22f) { abiertas.moveTo(x, y + hc * 0.15f); abiertas.lineTo(x, y1 - hc * 0.2f) }
             if (azar(1906 + f, j) < 0.35f) {
                 val mx = x + largo * (0.2f + 0.6f * azar(1907 + f, j)); val my = if (azar(1908 + f, j) < 0.5f) y + 1.5f * u else y1 - 1.5f * u
                 val mr = hc * (0.06f + 0.06f * azar(1909 + f, j))
@@ -269,6 +271,30 @@ internal fun DrawScope.muroAndalus(a: AireAndalus, hasta: Float, cerca: (Offset)
     drawPath(filos, a.claro(0.4f), style = Stroke(1.3f * u))
     drawPath(juntas, a.luz(mezcla(CAL, PIEDRA_OSC, 0.3f), 0.1f), style = Stroke(1.6f * u))
     drawPath(juntas, a.sombra(if (a.oscuro) 0.36f else 0.22f), style = Stroke(0.7f * u))
+    drawPath(abiertas, a.sombra(if (a.oscuro) 0.4f else 0.3f), style = Stroke(2f * u, cap = StrokeCap.Round))
+    // Donde la cal saltó: asoma la piedra ocre, con el canto de la cal alrededor.
+    val salto = Path()
+    val os = Offset(w * 0.405f, w * 0.37f)
+    for (z in 0 until 14) {
+        val ang = 6.283f * z / 14
+        val rz = w * (0.026f + 0.018f * azar(1921, z))
+        val pz = Offset(os.x + rz * 1.25f * kotlin.math.cos(ang), os.y + rz * 0.95f * kotlin.math.sin(ang))
+        if (z == 0) salto.moveTo(pz.x, pz.y) else salto.lineTo(pz.x, pz.y)
+    }
+    salto.close()
+    drawPath(salto, a.luz(mezcla(PIEDRA, PIEDRA_OSC, 0.3f), 0.15f))
+    clipPath(salto) {
+        pinceladas(Rect(os.x - w * 0.09f, os.y - w * 0.06f, os.x + w * 0.09f, os.y + w * 0.06f), a.luz(PIEDRA_OSC, 0.15f), 1922, 10, u, 0.2f)
+        drawLine(a.sombra(0.35f), Offset(os.x - w * 0.09f, os.y + w * 0.012f), Offset(os.x + w * 0.09f, os.y + w * 0.01f), 1.4f * u)
+    }
+    drawPath(borde(salto, 1.2f * u, 1.4f * u), a.sombra(0.4f))
+    drawPath(borde(salto, -0.8f * u, -0.9f * u), a.luz(CAL, 0.15f).copy(alpha = 0.9f))
+    // Las chorreras bajo la ventana: el agua que entra por la celosía ha corrido por la cal.
+    for ((x, largo) in listOf(w * 0.052f to w * 0.05f, w * 0.31f to w * 0.045f, w * 0.322f to w * 0.03f)) {
+        val g = Path().apply { moveTo(x, w * 0.405f); cubicTo(x + 1f * u, w * 0.405f + largo * 0.4f, x - 1f * u, w * 0.405f + largo * 0.7f, x + 0.5f * u, w * 0.405f + largo) }
+        drawPath(g, a.luz(mezcla(PIEDRA_OSC, SOMBRA_MUEBLE, 0.3f), 0.15f).copy(alpha = 0.4f), style = Stroke(2.2f * u, cap = StrokeCap.Round))
+        drawPath(corrido(g, -1.2f * u, 0f), a.claro(0.3f), style = Stroke(0.6f * u))
+    }
     val area = Rect(0f, 0f, w, hasta)
     val veces = (hasta / (w * 0.6f)).coerceIn(1f, 14f)
     pinceladas(area, a.luz(mezcla(CAL, SOMBRA_MUEBLE, 0.35f), 0.1f), 1911, (26 * veces).toInt(), u, 0.08f)
@@ -371,7 +397,11 @@ internal fun DrawScope.ventanaAndalus(a: AireAndalus) {
     drawPath(hueco, a.sombra(0.3f), style = Stroke(0.8f * u))
     // El resplandor de la ventana en el muro: cálido de día, frío de noche.
     if (a.lumbre) mancha(celo.center, w * 0.34f, LUZ_LUNA.copy(alpha = if (a.oscuro) 0.14f else 0.1f))
-    else mancha(celo.center, w * 0.2f, SOL.copy(alpha = 0.35f))
+    else {
+        mancha(celo.center, w * 0.2f, SOL.copy(alpha = 0.3f))
+        val halo = arcoHerradura(Rect(arco.left - w * 0.012f, arco.top - w * 0.012f, arco.right + w * 0.012f, arco.bottom))
+        for ((ancho, al) in listOf(12f to 0.08f, 7f to 0.12f, 3f to 0.18f)) drawPath(halo, SOL.copy(alpha = al), style = Stroke(ancho * u))
+    }
 }
 
 /** Dos roleos de ataurique en cada albanega (entre el arco y el alfiz), tallados en el yeso. */

@@ -44,6 +44,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
 import io.github.ruddy2003.vestigium.ui.muebles.FILO_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
+import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -462,56 +463,27 @@ internal fun DrawScope.arconAndalus(pie: Offset, an: Float, alto: Float, a: Aire
     drawRoundRect(bronce, cerr.topLeft, cerr.size, CornerRadius(an * 0.02f))
     drawPath(arcoHerradura(Rect(cerr.center.x - an * 0.012f, cerr.top + cerr.height * 0.3f, cerr.center.x + an * 0.012f, cerr.top + cerr.height * 0.7f)), a.luz(TINTA, cerca))
     drawRect(a.claro(0.3f), cuerpo.topLeft, Size(an * 0.03f, cuerpo.height))
-    // Un paño de seda verde echado encima: se ve su vuelo sobre la tapa y cae por delante en pliegues que se abren en abanico,
-    // con las dos puntas más bajas que el medio, su banda tejida y su fleco.
-    val sedaV = a.luz(SEDA_VERDE, cerca)
-    val x0 = cuerpo.left + an * 0.1f; val x1 = cuerpo.left + an * 0.6f
-    val yT = tapa.top - alto * 0.04f
-    val bajo = cuerpo.top + alto * 0.62f
-    val hem = listOf(Offset(x0 - an * 0.04f, bajo + alto * 0.12f), Offset(x0 + (x1 - x0) * 0.22f, bajo - alto * 0.02f), Offset(x0 + (x1 - x0) * 0.42f, bajo + alto * 0.06f),
-        Offset(x0 + (x1 - x0) * 0.62f, bajo - alto * 0.04f), Offset(x0 + (x1 - x0) * 0.82f, bajo + alto * 0.03f), Offset(x1 + an * 0.05f, bajo + alto * 0.16f))
-    val pano = Path().apply {
-        moveTo(x0 + an * 0.02f, yT)
-        cubicTo(x0 + (x1 - x0) * 0.3f, yT - alto * 0.05f, x0 + (x1 - x0) * 0.7f, yT - alto * 0.04f, x1 - an * 0.01f, yT + alto * 0.01f)
-        cubicTo(x1 + an * 0.04f, tapa.bottom, x1 + an * 0.04f, cuerpo.top + alto * 0.3f, hem.last().x, hem.last().y)
-        for (q in hem.size - 2 downTo 0) {
-            val p0 = hem[q + 1]; val p1 = hem[q]
-            quadraticTo((p0.x + p1.x) / 2, maxOf(p0.y, p1.y) + alto * 0.05f, p1.x, p1.y)
-        }
-        cubicTo(x0 - an * 0.03f, cuerpo.top + alto * 0.3f, x0 - an * 0.02f, tapa.bottom, x0 + an * 0.02f, yT)
-        close()
+    // Un paño de seda verde doblado encima, en tres dobleces que asoman desparejos, con su banda tejida de oro y una punta que
+    // cae por el canto de la tapa, con su borla.
+    val sedaV = SEDA_VERDE
+    val x0 = cuerpo.left + an * 0.12f; val x1 = cuerpo.left + an * 0.6f
+    val capa = alto * 0.11f
+    drawRect(a.sombra(0.3f), Offset(x0 + 2f * u, tapa.top - capa * 3f + 3f * u), Size(x1 - x0, capa * 3f))
+    for (j in 0 until 3) {
+        val dx = an * 0.02f * (if (j % 2 == 0) 1f else -1f) * (j + 1) * 0.5f
+        val r = Rect(x0 + dx, tapa.top - capa * (j + 1), x1 + dx - an * 0.02f * j, tapa.top - capa * j + 0.6f * u)
+        val tela = a.luz(mezcla(sedaV, if (j == 2) LUZ_MUEBLE else SOMBRA_MUEBLE, 0.06f * j), cerca)
+        drawRoundRect(tela, r.topLeft, r.size, CornerRadius(capa * 0.5f))
+        // El doblez: el lomo redondo toma la luz arriba y hace sombra abajo; la banda tejida lo cruza.
+        drawRoundRect(a.claro(0.32f), Offset(r.left + capa * 0.3f, r.top + capa * 0.12f), Size(r.width - capa * 0.6f, capa * 0.22f), CornerRadius(capa * 0.1f))
+        drawRect(a.sombra(0.3f), Offset(r.left + capa * 0.3f, r.bottom - capa * 0.3f), Size(r.width - capa * 0.6f, capa * 0.3f))
+        drawRect(a.luz(mezcla(ORO, SEDA_VERDE, 0.2f), cerca), Offset(r.left + r.width * 0.3f, r.top), Size(r.width * 0.07f, r.height))
+        drawCircle(a.luz(CARMESI, cerca), capa * 0.12f, Offset(r.left + r.width * 0.335f, r.center.y))
     }
-    drawPath(corrido(pano, 3f * u, 2.5f * u), a.sombra(0.3f))
-    drawPath(pano, sedaV)
-    clipPath(pano) {
-        // El vuelo sobre la tapa, más claro, y el quiebro del canto.
-        drawRect(a.luz(mezcla(SEDA_VERDE, LUZ_MUEBLE, 0.28f), cerca), Offset(x0 - an * 0.05f, yT - alto * 0.06f), Size(x1 - x0 + an * 0.15f, tapa.bottom - yT + alto * 0.04f))
-        drawRect(a.sombra(0.28f), Offset(x0 - an * 0.05f, tapa.bottom), Size(x1 - x0 + an * 0.15f, alto * 0.03f))
-        // Los pliegues: cada uno nace junto al canto y se abre hacia su punta del borde, con su valle en sombra y su lomo a la luz.
-        for (q in 0 until hem.size) {
-            val pt = hem[q]
-            val nace = Offset(x0 + (x1 - x0) * (0.12f + 0.76f * q / (hem.size - 1)), tapa.bottom + alto * 0.02f)
-            val valle = Path().apply { moveTo(nace.x, nace.y); cubicTo(nace.x, nace.y + alto * 0.2f, pt.x + an * 0.01f, pt.y - alto * 0.25f, pt.x + an * 0.018f, pt.y) }
-            drawPath(valle, a.sombra(0.32f), style = Stroke(2.6f * u, cap = StrokeCap.Round))
-            drawPath(corrido(valle, -an * 0.03f, 0f), a.claro(0.28f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
-        }
-        // La banda tejida, que sigue la caída.
-        val banda = Path().apply {
-            moveTo(hem.first().x, hem.first().y - alto * 0.16f)
-            for (q in 1 until hem.size) lineTo(hem[q].x, hem[q].y - alto * 0.16f)
-            for (q in hem.size - 1 downTo 0) lineTo(hem[q].x, hem[q].y - alto * 0.09f)
-            close()
-        }
-        drawPath(banda, a.luz(mezcla(ORO, SEDA_VERDE, 0.2f), cerca))
-        for (q in 0 until hem.size - 1) {
-            val m = (hem[q] + hem[q + 1]) / 2f
-            drawCircle(a.luz(CARMESI, cerca), alto * 0.018f, Offset(m.x, m.y - alto * 0.125f))
-        }
-    }
-    // El fleco del borde.
-    for (q in 0 until hem.size - 1) for (z in 0 until 4) {
-        val t = z / 4f
-        val p = hem[q] + (hem[q + 1] - hem[q]) * t
-        drawLine(a.luz(mezcla(ORO, SEDA_VERDE, 0.3f), cerca), Offset(p.x, p.y + 1f * u), Offset(p.x + 0.3f * u, p.y + alto * 0.08f), 0.6f * u)
-    }
+    // La punta que cae por el canto.
+    val punta = poligono(x1 - an * 0.08f, tapa.top, x1 + an * 0.005f, tapa.top, x1 - an * 0.02f, tapa.bottom + alto * 0.18f)
+    drawPath(corrido(punta, 2f * u, 2f * u), a.sombra(0.3f))
+    drawPath(punta, a.luz(sedaV, cerca))
+    drawLine(a.sombra(0.3f), Offset(x1 - an * 0.035f, tapa.top + 1f * u), Offset(x1 - an * 0.022f, tapa.bottom + alto * 0.14f), 1.2f * u)
+    borlaAndalus(Offset(x1 - an * 0.02f, tapa.bottom + alto * 0.18f), alto * 0.16f, a.luz(ORO, cerca), a)
 }
