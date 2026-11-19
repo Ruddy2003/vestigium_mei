@@ -134,10 +134,14 @@ object EstantePsicodelia : DisenoBiblioteca {
     /**
      * Un título decorativo: en la tinta, impreso dos veces (la segunda pasada en magenta, corrida de registro con la
      * intensidad; sin intensidad, la sombra apenas corrida); en la ciudad, una sola vez.
+     *
+     * El corrimiento no pasa del 18 % del alto de la letra (19 nov 2026): en las letras chicas (los títulos de las portadas
+     * de Obras, de unos 8 sp) los 4.3 dp de la intensidad máxima corrían la segunda pasada medio renglón y el título no se
+     * leía. Sin intensidad, y en las letras grandes, queda igual que antes.
      */
     private fun DrawScope.dosTintas(medidor: TextMeasurer, texto: String, r: Rect, letra: FontFamily, color: Color, k: ColoresPsi, tam: Float, minimo: Float = 6f) {
         if (!k.ciudad) {
-            val d = (0.8f + k.m.registroTitulo) * density
+            val d = minOf((0.8f + k.m.registroTitulo) * density, 0.18f * minOf(tam.sp.toPx(), r.height))
             textoEn(medidor, texto, r.translate(d, -d * 0.4f), letra, k.magenta.copy(alpha = 0.75f), tam, minimo = minimo)
         }
         textoEn(medidor, texto, r, letra, color, tam, minimo = minimo)

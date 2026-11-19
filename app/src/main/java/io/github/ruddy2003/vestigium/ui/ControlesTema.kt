@@ -183,7 +183,11 @@ fun CuerpoDialogo(
                     LocalContentColor provides (if (titleContentColor.isSpecified) titleContentColor else e.onSurface),
                     LocalTextStyle provides MaterialTheme.typography.headlineSmall,
                 ) {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = if (piel.centrado || icon != null) Alignment.TopCenter else Alignment.TopStart) { title() }
+                    // Psicodelia, en la tinta: el sol que asoma por la esquina de arriba a la derecha (`marcoDialogo`) va encima
+                    // del contenido, y un título largo («¿Borrar este momento?») le pasaba por debajo. El título deja libre esa
+                    // esquina por los dos lados, para seguir centrado.
+                    val libreSol = if (tema == TemaId.PSICODELIA && caraLocal() == Cara.INTENSA) 28.dp else 0.dp
+                    Box(Modifier.fillMaxWidth().padding(horizontal = libreSol), contentAlignment = if (piel.centrado || icon != null) Alignment.TopCenter else Alignment.TopStart) { title() }
                 }
                 Canvas(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 14.dp).height(10.dp)) { fileteDialogo(tema, e) }
             }
