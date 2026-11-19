@@ -10371,19 +10371,21 @@ object EstanteRuinas : DisenoBiblioteca {
 
 /**
  * Espacio: el módulo de estiba del taller del eje de la nave que va a Alfa Centauri, donde no hay peso y todo se sujeta. La
- * pared es el casco por dentro, acolchado en rombos entre sus cuadernas, con un ojo de buey a un costado (su tapa abierta
- * hacia arriba): de día entra por él la luz fría de los focos que alumbran el anillo; de noche se ven el anillo con sus
- * ventanillas encendidas, la Vía Láctea y la estrella de delante, y manda la lámpara de trabajo, cálida, sujeta a la derecha.
- * El módulo es de chapa remachada pintada de crema, con los fondos acanalados, las tablas de aluminio con su riel de anclajes,
- * una placa remachada con el mes y un cabo elástico por repisa que sujeta lo guardado. Arriba, el ventilador de recambio a
- * medio arreglar (la rejilla flota atada; los tornillos, pegados en una cinta), el trigo de la granja en su tubo, el
- * rotulador al aire, el pasamanos con los auriculares; en los huecos, la cinta gris, el cabo enrollado y el ovillo con su
- * labor; al pie, la rejilla del aire con su cinta que ondea y los estribos. Hay tres tipos de entrada: la bitácora de tela
- * con su goma, el cartucho de datos anodizado con sus topes de goma y la bolsa sellada de lámina; las tres llevan el día y el
- * mes en su etiqueta, el color del ánimo en la tela, el aluminio o la lámina, y una estrella (la luna, en los Sueños). En los
- * Sueños se apaga la lámpara y se enciende el piloto azul de guardia del costado izquierdo. El dibujo del mueble y de las
- * entradas está en [MuebleEstanteEspacio], [PiezasEstanteEspacio] y [VolumenesEstanteEspacio]. Distinto del Ideario, que es
- * el bastidor de racks contra el mamparo claro, con el casco del traje y la lámpara de turno.
+ * pared es el casco por dentro, acolchado de tela gris capitoneada entre sus cuadernas, con un ojo de buey a un costado (su
+ * tapa abierta hacia arriba): de día entra por él la luz fría de los focos que alumbran el anillo; de noche se ven el anillo
+ * con sus ventanillas encendidas, la Vía Láctea y la estrella de delante, y manda la lámpara de trabajo, cálida, sujeta a la
+ * derecha, con el piloto azul de guardia tenue en el costado izquierdo. El módulo es de chapa remachada pintada de crema
+ * cálida, con los fondos de chapa oscura y lisa, las tablas de aluminio con su riel de anclajes, una placa remachada con el
+ * mes y un cabo elástico por repisa que sujeta lo guardado. Arriba manda el ventilador del aire, un tambor azul a medio
+ * arreglar sujeto con correas (su rejilla flota atada; los tornillos, pegados en una cinta); lo acompañan el trigo de la
+ * granja en su tubo, el rotulador al aire y los auriculares en el pasamanos; en los huecos, la cinta gris, el cabo enrollado y
+ * el ovillo con su labor; al pie, la rejilla del aire con su cinta que ondea y los estribos. Hay tres tipos de entrada, cada
+ * uno con su silueta: la bitácora de tela, alta y delgada, con su goma; el cartucho de datos, bajo y ancho, con su asa; y la
+ * bolsa sellada de lámina, blanda, con la esquina doblada y apretada por el cabo. El color del ánimo es su cuerpo entero; el
+ * día y el mes van en una etiqueta chica, y llevan una estrella (la luna, en los Sueños). En los Sueños se apaga la lámpara:
+ * al anochecer violeta (en claro) o en la noche honda, el piloto de guardia hace su charco de luz. El dibujo está en
+ * [MuebleEstanteEspacio] y sus archivos hermanos. Distinto del Ideario, que es el bastidor de racks contra el mamparo claro,
+ * con el casco del traje y la lámpara de turno.
  * La tapa del diario es la celda de memoria de frente, con el visor donde se lee lo escrito y el cristal tumbado en su
  * cuna; al abrirse, el visor se enciende.
  */

@@ -165,7 +165,7 @@ internal object HuecosEstanteEspacio {
         val tramos = if (a.lumbre) 20 else 1
         for (t in 0 until tramos) {
             val xa = w * t / tramos; val xb = w * (t + 1) / tramos + 0.6f
-            drawRect(a.luz(P.CASCO, luz(Offset((xa + xb) / 2, zocalo.center.y))), Offset(xa, zocalo.top), Size(xb - xa, zocalo.height))
+            drawRect(a.luz(P.CREMA, luz(Offset((xa + xb) / 2, zocalo.center.y))), Offset(xa, zocalo.top), Size(xb - xa, zocalo.height))
         }
         drawRect(a.sombra(0.35f), zocalo.topLeft, Size(w, 2.4f * u))
         drawRect(a.claro(0.35f), Offset(0f, zocalo.top + 2.4f * u), Size(w, 0.9f * u))
@@ -174,7 +174,7 @@ internal object HuecosEstanteEspacio {
         var x = w * 0.03f
         var j = 0
         while (x < w) {
-            remacheEspacio(Offset(x, zocalo.top + zocalo.height * 0.3f), 1.2f * u, a.luz(mezcla(P.CASCO, P.ACERO, 0.35f), luz(Offset(x, zocalo.top))), a)
+            remacheEspacio(Offset(x, zocalo.top + zocalo.height * 0.3f), 1.2f * u, a.luz(mezcla(P.CREMA, P.ACERO, 0.35f), luz(Offset(x, zocalo.top))), a)
             if (azar(982, j) < 0.25f) drawOval(a.luz(P.ACERO, luz(Offset(x, zocalo.top))), Offset(x + 6f * u, zocalo.bottom - 6f * u), Size((4f + 6f * azar(983, j)) * u, 2.4f * u))
             x += maxOf(1f, w * 0.07f); j++
         }
