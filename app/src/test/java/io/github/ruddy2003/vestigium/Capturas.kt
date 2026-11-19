@@ -1950,7 +1950,7 @@ class Capturas {
         }
     }
     /** Las superficies por tema donde la intensidad cambia el dibujo: en ellas, la cara intensa sale además con i = 1. */
-    private val CON_INTENSIDAD = setOf("mueble", "bibliotecas", "componentes", "decoracion", "vida", "gatoCuadro")
+    private val CON_INTENSIDAD = setOf("mueble", "bibliotecas", "componentes", "decoracion", "vida", "gatoCuadro", "hoy", "dia", "galerias", "ajustes")
     /** Las variantes de un tema con caras en [superficie]: la cara, la intensidad forzada y el sufijo del nombre. */
     private fun carasDeCaptura(t: TemaId, superficie: String): List<Triple<Cara, Float, String>> =
         listOf(Triple(Cara.BASE, 0f, "ciudad"), Triple(Cara.INTENSA, 0f, "tinta")) +
@@ -2652,6 +2652,11 @@ class Capturas {
         pantalla(t, o, 3000, n + "_obras") { obrasEjemplo(); io.github.ruddy2003.vestigium.ui.pantallas.PantallaObras(navVacia) }
     }
     @Test fun temaBibliotecas() = porTema("bibliotecas") { t, o, n -> pantalla(t, o, 3000, n) { io.github.ruddy2003.vestigium.ui.pantallas.PantallaBibliotecas(navVacia, "diario") } }
+    /** Ajustes (la apariencia, con sus filas, campos e interruptores) y el selector de «Tus temas», con el tema puesto. */
+    @Test fun temaAjustes() = porTema("ajustes") { t, o, n ->
+        pantalla(t, o, 3600, n + "_apariencia") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaAjustes(navVacia, "apariencia") }
+        v73(t, o, 3000, nombre = n + "_temas") { io.github.ruddy2003.vestigium.ui.pantallas.PantallaTusTemas(navVacia) }
+    }
     /** Los widgets en modo discreto (sus títulos), con la forma del tema y el calendario del mes. */
     @Test fun temaWidgets() = porTema("widgets") { t, o, n ->
         Ejemplo.cargar()
