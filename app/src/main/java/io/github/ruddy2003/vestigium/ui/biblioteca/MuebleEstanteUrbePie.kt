@@ -169,7 +169,7 @@ private fun DrawScope.trapo(f: Rect, a: AireUrbe, k: Float) {
         close()
     }
     drawPath(corrido(tela, 2.4f * u, 2.6f * u), a.sombra(0.32f))
-    val c = a.luz(mezcla(YESO, OCRE, 0.18f), k)
+    val c = a.luz(mezcla(mezcla(YESO, TELA, 0.45f), OCRE, 0.12f), k)
     drawPath(tela, c)
     clipPath(tela) {
         // Los pliegues que bajan del canto, con su sombra y su luz.

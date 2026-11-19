@@ -152,12 +152,15 @@ internal object MuebleEstanteUrbe {
 
     /**
      * La luz de la ventana en el frente de los volúmenes, en anchos: cada trozo de [RAYOS] hecho paralelogramo con [sesga], con
-     * las lamas torcidas. Se arma una sola vez y la comparten el mueble (corrida para el fondo y los cantos) y todos los volúmenes.
+     * las lamas torcidas, todos en un solo trazado (no se tocan entre sí, así que se pintan de una vez). Se arma una sola vez y la
+     * comparten el mueble (corrida para el fondo y los cantos) y todos los volúmenes.
      */
-    internal val FORMAS_RAYO: List<Path> by lazy {
-        RAYOS.map { r ->
-            val a = sesga(r.left, r.top); val b = sesga(r.right, r.top); val c = sesga(r.right, r.bottom); val d = sesga(r.left, r.bottom)
-            Path().apply { moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c.x, c.y); lineTo(d.x, d.y); close() }
+    internal val FORMAS_RAYO: Path by lazy {
+        Path().apply {
+            for (r in RAYOS) {
+                val a = sesga(r.left, r.top); val b = sesga(r.right, r.top); val c = sesga(r.right, r.bottom); val d = sesga(r.left, r.bottom)
+                moveTo(a.x, a.y); lineTo(b.x, b.y); lineTo(c.x, c.y); lineTo(d.x, d.y); close()
+            }
         }
     }
 
@@ -166,18 +169,18 @@ internal object MuebleEstanteUrbe {
 
     /**
      * Pinta [FORMAS_RAYO] en modo pantalla, pasadas al lienzo: un punto en anchos (x, y) cae en ((x - [ox]) * [escala],
-     * (y - [oy]) * [escala]). El borde es blando: un trazo tenue alrededor de cada forma, sin desenfoque.
+     * (y - [oy]) * [escala]). Es luz, no una hoja encima: la superposición calienta y sube el color de lo que toca sin lavarlo,
+     * un poco de pantalla le da el brillo, y el borde es blando (dos trazos tenues, de más ancho a más fino, sin desenfoque).
      */
     internal fun DrawScope.pintaRayo(c: Color, escala: Float, ox: Float, oy: Float) {
         if (escala <= 0f) return
-        val fino = Stroke(width = 3.2f * density / escala, join = StrokeJoin.Round)
-        val cerca = c.copy(alpha = c.alpha * 0.2f)
-        val cuerpo = c.copy(alpha = c.alpha * 0.85f)
+        val ancho = Stroke(width = 7f * density / escala, join = StrokeJoin.Round)
+        val fino = Stroke(width = 3.5f * density / escala, join = StrokeJoin.Round)
         withTransform({ scale(escala, escala, Offset.Zero); translate(-ox, -oy) }) {
-            for (p in FORMAS_RAYO) {
-                drawPath(p, cerca, style = fino, blendMode = BlendMode.Screen)
-                drawPath(p, cuerpo, blendMode = BlendMode.Screen)
-            }
+            drawPath(FORMAS_RAYO, c.copy(alpha = c.alpha * 0.07f), style = ancho, blendMode = BlendMode.Screen)
+            drawPath(FORMAS_RAYO, c.copy(alpha = c.alpha * 0.14f), style = fino, blendMode = BlendMode.Screen)
+            drawPath(FORMAS_RAYO, c.copy(alpha = c.alpha * 0.5f), blendMode = BlendMode.Overlay)
+            drawPath(FORMAS_RAYO, c.copy(alpha = c.alpha * 0.2f), blendMode = BlendMode.Screen)
         }
     }
 
@@ -231,7 +234,15 @@ internal object MuebleEstanteUrbe {
         val costado = w * COSTADO
         val lado = w * LADO
 
-        paredUrbe(a, ch, suelo, { p -> cerca(p) })
+        // Dónde se ve el muro: arriba, por los lados, en lo que dejan las baldas al combarse y entre las patas.
+        val muroVisto = Path().apply {
+            addRect(Rect(0f, 0f, w, ch))
+            addRect(Rect(0f, ch, w * COSTADO + 1f, suelo))
+            addRect(Rect(w - w * COSTADO - 1f, ch, w, suelo))
+            for (t in d.tablas) addRect(Rect(0f, t.top - 1f * u, w, t.bottom + 6f * u))
+            addRect(Rect(0f, suelo - w * 0.03f, w, suelo))
+        }
+        paredUrbe(a, ch, suelo, { p -> cerca(p) }, muroVisto)
         ventanaUrbe(a, { p -> cerca(p) })
         cableadoUrbe(a, apoyo, { p -> cerca(p) })
 
@@ -490,7 +501,10 @@ internal object MuebleEstanteUrbe {
             else -> carpetaUrbe(v, medidor, a, k)
         }
         a.rayo?.let { rayoEnVolumen(v, it, cuerpo) }
-        if (a.oscuro && !a.noche) frioEnVolumen(v, cuerpo)
+        if (a.oscuro && !a.noche) {
+            frioEnVolumen(v, cuerpo)
+            calorEnVolumen(v, cuerpo)
+        }
     }
 
     /** La luz de la ventana sobre un volumen: las mismas formas que en el mueble, pasadas a su lienzo y solo sobre su cuerpo. */
@@ -502,6 +516,18 @@ internal object MuebleEstanteUrbe {
         val x1 = x0 + size.width / wn
         if (RAYO_TODO.right <= x0 || RAYO_TODO.left >= x1 || RAYO_TODO.bottom <= y0 || RAYO_TODO.top >= y1) return
         clipRect(cuerpo.left, cuerpo.top, cuerpo.right, cuerpo.bottom) { pintaRayo(color, wn, x0, y0) }
+    }
+
+    /**
+     * De noche, el charco de la lámpara en los lomos que le quedan debajo (la primera repisa, a la derecha): más cálidos y más
+     * claros que los del centro, y nada a la izquierda. Es la misma luz que el charco del mueble, a corta distancia.
+     */
+    private fun DrawScope.calorEnVolumen(v: Volumen, cuerpo: Rect) {
+        val fx = LADO + v.centro * (1f - 2 * LADO)
+        val fy = CORONA + (v.repisa * FILA + ALTO_REPISA.value * 0.55f) / ANCHO_NOMINAL
+        val dx = fx - LAMP_X; val dy = fy - (CORONA + 0.04f)
+        val kc = (1f - sqrt(dx * dx + dy * dy) / 0.46f).coerceIn(0f, 1f).pow(1.4f)
+        if (kc > 0.01f) drawRect(LAMPARA.copy(alpha = 0.5f * kc), cuerpo.topLeft, cuerpo.size, blendMode = BlendMode.Screen)
     }
 
     /** De noche, el frío de la ventana sobre los volúmenes que le quedan cerca (arriba a la izquierda): la otra temperatura. */

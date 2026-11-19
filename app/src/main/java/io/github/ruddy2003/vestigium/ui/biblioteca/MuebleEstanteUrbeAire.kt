@@ -147,10 +147,10 @@ internal class AireUrbe(val oscuro: Boolean, val noche: Boolean) {
      * de lo que toca): el sol de día y la luna en los Sueños en oscuro. Al anochecer, el rosa bajo y tenue; de noche no entra.
      */
     val rayo: Color? get() = when {
-        luna -> Color(0xFF8299D4).copy(alpha = 0.5f)
-        ocaso -> Color(0xFFF4987E).copy(alpha = 0.34f)
+        luna -> Color(0xFF9DB0D8).copy(alpha = 0.48f)
+        ocaso -> Color(0xFFF2906E).copy(alpha = 0.45f)
         oscuro -> null
-        else -> Color(0xFFFFC274).copy(alpha = 0.46f)
+        else -> Color(0xFFFFB24E).copy(alpha = 0.72f)
     }
 }
 

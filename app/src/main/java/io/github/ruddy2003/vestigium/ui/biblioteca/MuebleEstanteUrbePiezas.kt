@@ -63,7 +63,7 @@ import kotlin.math.sin
  * cerca de la ventana y se apaga hacia la derecha; de noche, el abanico de la pantalla y el frío de la ciudad por la
  * ventana; en los Sueños, el frío de la luna junto a la ventana.
  */
-internal fun DrawScope.paredUrbe(a: AireUrbe, ch: Float, suelo: Float, cerca: (Offset) -> Float) {
+internal fun DrawScope.paredUrbe(a: AireUrbe, ch: Float, suelo: Float, cerca: (Offset) -> Float, visto: Path) {
     val u = density; val w = size.width
     val lejos = if (a.lumbre) 0.1f else 1f
     drawRect(a.luz(ALMAGRA, lejos), Offset.Zero, Size(w, suelo))
@@ -107,7 +107,7 @@ internal fun DrawScope.paredUrbe(a: AireUrbe, ch: Float, suelo: Float, cerca: (O
         pinceladas(Rect(0f, w * 0.4f, w, ch), a.luz(mezcla(ALMAGRA, YESO, 0.45f), lejos), 823, 26, u, 0.16f)
     }
     // Los desconchones y la grieta.
-    desconchon(Offset(w * 0.43f, w * 0.06f), w * 0.04f, 826, a, cerca(Offset(w * 0.43f, w * 0.06f)), false)
+    desconchon(Offset(w * 0.43f, w * 0.07f), w * 0.04f, 827, a, cerca(Offset(w * 0.43f, w * 0.07f)), true)
     desconchon(Offset(w * 0.66f, w * 0.31f), w * 0.05f, 824, a, cerca(Offset(w * 0.66f, w * 0.31f)), true)
     desconchon(Offset(w * 0.015f, w * 0.53f), w * 0.04f, 825, a, cerca(Offset(w * 0.015f, w * 0.53f)), false)
     val grieta = Path().apply {
@@ -118,7 +118,12 @@ internal fun DrawScope.paredUrbe(a: AireUrbe, ch: Float, suelo: Float, cerca: (O
     drawPath(corrido(grieta, 0.8f * u, 0.7f * u), a.claro(0.3f), style = Stroke(0.5f * u))
     // El calco en papel de seda de una voluta, pegado con cinta: lo que Giulia se trajo de la obra.
     lucido(Offset(w * 0.555f, w * 0.13f), w * 0.11f, a, cerca(Offset(w * 0.555f, w * 0.13f)))
-    // La luz del cuarto.
+    // La luz del cuarto, solo donde se ve el muro.
+    clipPath(visto) { luzDelCuarto(a, w) }
+}
+
+/** La luz del cuarto en el muro: de día y al anochecer, la de la ventana; de noche, la lámpara y el frío; con la luna, la luna. */
+private fun DrawScope.luzDelCuarto(a: AireUrbe, w: Float) {
     if (!a.oscuro) {
         // De día: la claridad que rebota de la ventana, arriba a la izquierda; a la derecha y abajo, penumbra.
         mancha(Offset(w * 0.2f, w * 0.25f), w * 0.85f, luzMueble(if (a.noche) 0.08f else 0.34f))
@@ -151,16 +156,16 @@ private fun DrawScope.abanicoLampara(a: AireUrbe, w: Float) {
     mancha(l, w * 0.5f, LAMPARA.copy(alpha = 0.24f * f))
     val sup = w * 0.052f; val al = w * 0.098f
     val boca = l.y - al * 0.5f
-    listOf(1.25f to 0.1f, 1.12f to 0.16f, 1f to 0.24f).forEach { (e, alfa) ->
-        val abre = w * 0.13f * e; val alto = w * 0.27f * e
+    listOf(1.45f to 0.05f, 1.3f to 0.08f, 1.15f to 0.12f, 1f to 0.18f).forEach { (e, alfa) ->
+        val abre = w * 0.12f * e; val alto = w * 0.2f * e
         val forma = Path().apply {
             moveTo(l.x - sup * 0.9f, boca)
-            lineTo(l.x - sup - abre, boca - alto * 0.86f)
-            cubicTo(l.x - sup - abre * 0.6f, boca - alto * 1.04f, l.x + sup + abre * 0.6f, boca - alto * 1.04f, l.x + sup + abre, boca - alto * 0.86f)
-            lineTo(l.x + sup * 0.9f, boca)
+            cubicTo(l.x - sup - abre * 0.2f, boca - alto * 0.3f, l.x - sup - abre * 0.85f, boca - alto * 0.55f, l.x - sup - abre, boca - alto * 0.8f)
+            cubicTo(l.x - sup - abre * 0.7f, boca - alto * 1.05f, l.x + sup + abre * 0.7f, boca - alto * 1.05f, l.x + sup + abre, boca - alto * 0.8f)
+            cubicTo(l.x + sup + abre * 0.85f, boca - alto * 0.55f, l.x + sup + abre * 0.2f, boca - alto * 0.3f, l.x + sup * 0.9f, boca)
             close()
         }
-        clipPath(forma) { mancha(Offset(l.x, boca), alto * 1.05f, LAMPARA.copy(alpha = alfa * 1.6f * f)) }
+        clipPath(forma) { mancha(Offset(l.x, boca), alto * 0.95f, LAMPARA.copy(alpha = alfa * 1.7f * f)) }
     }
 }
 
@@ -542,7 +547,7 @@ internal fun DrawScope.rayoUrbe(c: Color, a: AireUrbe, d: DisposicionEstante, ar
     fun toca(r: Rect) = r.right / w > todo.left - 0.04f && r.left / w < todo.right + 0.04f && r.bottom / w > todo.top - 0.04f && r.top / w < todo.bottom + 0.05f
     // En el fondo de los casilleros.
     with(MuebleEstanteUrbe) {
-        for (r in d.repisas) if (toca(r)) clipRect(r.left, r.top, r.right, r.bottom) { pintaRayo(c, w, -FONDO_DX, -FONDO_DY) }
+        d.repisas.forEachIndexed { k, r -> if (toca(r)) clipRect(r.left, r.top, r.right, r.bottom) { pintaRayo(if (k == 0) c else c.copy(alpha = c.alpha * 0.4f), w, -FONDO_DX, -FONDO_DY) } }
         // En los cantos: la cornisa (con su cara de arriba), las baldas y el costado izquierdo.
         clipRect(0f, arriba, w, d.corona.bottom) { pintaRayo(c, w, -CANTO_DX, -CANTO_DY) }
         for (t in d.tablas) if (toca(t)) clipRect(t.left, t.top, t.right, t.bottom + 4f * density) { pintaRayo(c, w, -CANTO_DX, -CANTO_DY) }
