@@ -138,7 +138,7 @@ object EstadoTema {
     /** ¿Hay alguna pantalla en cero en composición? */
     val enCero: Boolean get() = pantallasEnCero > 0
 
-    /** La intensidad que se dibuja, de 0 a 1, ya animada (4 s al subir, 10 s al caer a 0; ver [MedidorIntensidad]). 0 con una pantalla en cero. */
+    /** La intensidad que se dibuja, de 0 a 1, ya animada (4 s al subir, 10 s al caer a 0, en 12 pasos; ver [MedidorIntensidad]). 0 con una pantalla en cero. */
     val intensidad: Float get() = if (enCero) 0f else intensidadForzada ?: animada
 
     /** La intensidad a la que va la animación (la de [Intensidad.de] ahora mismo). 0 con una pantalla en cero. */
@@ -264,7 +264,7 @@ private const val MS_CAE = 10_000
  * - Recalcula cuando cambia `Repo.consumos` (empezar, leer o cerrar un consumo pasa por `Repo.guardarConsumo`, que
  *   reemplaza la lista), al volver a la app (`ON_RESUME`) y, **solo si hay un consumo abierto**, cada 2 minutos. Con nada
  *   abierto no hay ningún temporizador.
- * - Anima hacia el valor nuevo: 4 s al subir o al cambiar, 10 s al caer a 0.
+ * - Anima hacia el valor nuevo: 4 s al subir o al cambiar, 10 s al caer a 0, en 12 pasos ([enPasos]).
  */
 @Composable
 internal fun MedidorIntensidad() {
@@ -291,10 +291,27 @@ internal fun MedidorIntensidad() {
     val anim = remember { Animatable(EstadoTema.intensidad) }
     LaunchedEffect(objetivo) {
         val cae = objetivo <= 0f && anim.value > 0f
-        EstadoTema.poner(objetivo, anim.value)
+        val desde = anim.value
+        EstadoTema.poner(objetivo, desde)
         anim.animateTo(objetivo, tween(if (cae) MS_CAE else MS_SUBE, easing = if (cae) LinearOutSlowInEasing else FastOutSlowInEasing)) {
-            EstadoTema.poner(objetivo, value)
+            EstadoTema.poner(objetivo, enPasos(desde, objetivo, value))
         }
         EstadoTema.poner(objetivo, objetivo)
     }
+}
+
+/**
+ * En cuántos pasos llega a [EstadoTema] la animación de la intensidad (19 nov 2026). Todo lo de Psicodelia lee la
+ * intensidad al dibujar (los muebles, el estante, las piezas comunes, el gato): si cambiara en cada cuadro, durante los 4 s
+ * de subida o los 10 s de bajada se volvería a trazar todo 60 veces por segundo. En 12 pasos se vuelve a trazar 12 veces;
+ * el principio y el final son los mismos.
+ */
+private const val PASOS_ANIMACION = 12
+
+/** El valor [v] de la animación de [desde] a [hasta], llevado al paso más cercano de los [PASOS_ANIMACION] del camino. */
+internal fun enPasos(desde: Float, hasta: Float, v: Float): Float {
+    val tramo = hasta - desde
+    if (kotlin.math.abs(tramo) < 1e-4f || v.isNaN()) return hasta
+    val k = ((v - desde) / tramo * PASOS_ANIMACION).roundToInt().coerceIn(0, PASOS_ANIMACION)
+    return if (k == PASOS_ANIMACION) hasta else desde + tramo * k / PASOS_ANIMACION
 }

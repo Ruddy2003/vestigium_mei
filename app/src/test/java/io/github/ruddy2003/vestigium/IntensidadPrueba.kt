@@ -10,6 +10,7 @@ import io.github.ruddy2003.vestigium.ui.EstadoTema
 import io.github.ruddy2003.vestigium.ui.Intensidad
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.caraSegun
+import io.github.ruddy2003.vestigium.ui.enPasos
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -112,5 +113,21 @@ class IntensidadPrueba {
         assertEquals(0.625f, EstadoTema.escalon(0.62f), 1e-6f)
         assertEquals(0f, EstadoTema.escalon(Float.NaN), 0f)
         assertEquals(1f, EstadoTema.escalon(3f), 0f)
+    }
+
+    /** La animación llega a los dibujos en 12 pasos: empieza y acaba exacta, y entre medias solo toma 13 valores. */
+    @Test fun laAnimacionVaEnPasos() {
+        assertEquals(0f, enPasos(0f, 0.6f, 0f), 0f)
+        assertEquals(0.6f, enPasos(0f, 0.6f, 0.6f), 0f)
+        assertEquals(0.6f, enPasos(0f, 0.6f, 0.599f), 0f)
+        assertEquals(0.05f, enPasos(0f, 0.6f, 0.06f), 1e-6f)
+        // Al caer, igual.
+        assertEquals(0.8f, enPasos(0.8f, 0f, 0.77f), 1e-6f)
+        assertEquals(0.8f - 0.8f / 12, enPasos(0.8f, 0f, 0.74f), 1e-6f)
+        val valores = (0..1000).map { enPasos(0.1f, 0.9f, 0.1f + 0.8f * it / 1000f) }.toSet()
+        assertEquals(13, valores.size)
+        // Sin camino (ya está en el objetivo) o con un valor no numérico, el objetivo.
+        assertEquals(0.4f, enPasos(0.4f, 0.4f, 0.1f), 0f)
+        assertEquals(0.4f, enPasos(0f, 0.4f, Float.NaN), 0f)
     }
 }
