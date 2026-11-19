@@ -30,7 +30,7 @@ internal object PiezasTapaEspacio {
     private val trazo = Path()
 
     /** La cinta americana gris con que se arregló la esquina gastada de abajo, sobre el lomo: con su trama y su brillo. */
-    fun DrawScope.cintaAmericana(g: GeoTapaEspacio, a: AireEstanteEspacio, luz: LuzTapaEspacio) {
+    fun DrawScope.cintaAmericana(g: GeoTapaEspacio, a: AireTapaEspacio, luz: LuzTapaEspacio) {
         val u = density; val h = size.height
         val c = Offset(g.bl + 16f * u, g.bb - 9f * u)
         val l = luz.en(c)
@@ -49,7 +49,7 @@ internal object PiezasTapaEspacio {
     }
 
     /** La cinta de marcar, roja, que sale por arriba y flota en una ese (sin peso no cae). Al abrir, se mece. */
-    fun DrawScope.cintaMarcar(g: GeoTapaEspacio, a: AireEstanteEspacio, luz: LuzTapaEspacio, semilla: Int, ab: Float) {
+    fun DrawScope.cintaMarcar(g: GeoTapaEspacio, a: AireTapaEspacio, luz: LuzTapaEspacio, semilla: Int, ab: Float) {
         val u = density; val w = size.width
         val x0 = w * (0.69f + 0.04f * azar(semilla, 5))
         val y0 = g.bt + 2f * u
@@ -64,27 +64,108 @@ internal object PiezasTapaEspacio {
     }
 
     /**
-     * La goma negra que la mantiene cerrada (sin peso se abriría sola), de arriba abajo cerca del canto: con su brillo, su
-     * sombra en la lona y, de noche, el filo de la luz. Al abrir, se suelta hacia la derecha.
+     * La goma negra que la mantiene cerrada (sin peso se abriría sola), de arriba abajo cerca del canto: aprieta la lona (la
+     * hunde a los dos lados y le saca arrugas de tensión arriba y abajo), da la vuelta por los cantos con su brillo y deja su
+     * sombra; de noche, el filo de la luz. Al abrir, se suelta hacia la derecha.
      */
-    fun DrawScope.goma(g: GeoTapaEspacio, a: AireEstanteEspacio, luz: LuzTapaEspacio, ab: Float) {
+    fun DrawScope.goma(g: GeoTapaEspacio, a: AireTapaEspacio, luz: LuzTapaEspacio, ab: Float) {
         val u = density
         val suelta = (ab / 0.25f).coerceIn(0f, 1f)
         val x = g.goma + suelta * 16f * u
         val an = 4.6f * u
         val l = luz.en(Offset(x, g.libro.center.y))
-        val top = g.bt - 2f * u; val bot = g.bb + g.g + 1.5f * u
-        drawRect(a.sombra(0.4f), Offset(x + an * 0.5f, top + 2f * u), Size(1.6f * u, bot - top - 2f * u))
-        drawRoundRect(a.luz(P.GOMA, l), Offset(x - an / 2, top), Size(an, bot - top), CornerRadius(1.6f * u))
+        val top = g.bt - 2.4f * u; val bot = g.bb + g.fondo.y + 2f * u
+        if (suelta < 0.5f) {
+            // La lona hundida a los lados de la goma y las arrugas que tira hacia los cantos.
+            drawLine(a.sombra(0.28f), Offset(x - an / 2 - 0.8f * u, g.bt + 1f * u), Offset(x - an / 2 - 0.8f * u, g.bb - 1f * u), 1f * u)
+            drawLine(a.claro(0.22f), Offset(x - an / 2 - 2.2f * u, g.bt + 2f * u), Offset(x - an / 2 - 2.2f * u, g.bb - 2f * u), 0.8f * u)
+            trazo.reset()
+            listOf(g.bt to 1f, g.bb to -1f).forEach { (y, s) ->
+                trazo.moveTo(x - an / 2, y + s * 1.5f * u); trazo.lineTo(x - an / 2 - 9f * u, y + s * 7f * u)
+                trazo.moveTo(x - an / 2, y + s * 3f * u); trazo.lineTo(x - an / 2 - 6f * u, y + s * 11f * u)
+                trazo.moveTo(x + an / 2, y + s * 1.5f * u); trazo.lineTo(x + an / 2 + 5f * u, y + s * 6f * u)
+            }
+            drawPath(trazo, a.sombra(0.2f), style = Stroke(1.1f * u, cap = StrokeCap.Round))
+            // La muesca en los cantos, donde la goma los aprieta.
+            listOf(g.bt, g.bb).forEach { y -> drawCircle(a.sombra(0.45f), 3.6f * u, Offset(x, y)) }
+        }
+        // La sombra de la goma en la lona, corrida lejos de la luz.
+        val d = luz.caida(Offset(x, g.libro.center.y), 1.6f * u)
+        drawRect(a.sombra(0.4f), Offset(x - an / 2 + d.x, top + 2f * u + d.y), Size(an, bot - top - 2f * u))
+        drawRoundRect(a.luz(P.GOMA, l), Offset(x - an / 2, top), Size(an, bot - top), CornerRadius(2f * u))
+        // Donde da la vuelta por los cantos: un brillo curvo arriba y abajo.
         drawRect(a.claro(0.3f), Offset(x - an / 2 + 0.8f * u, top + 1f * u), Size(0.8f * u, bot - top - 2f * u))
+        drawRect(a.claro(0.4f), Offset(x - an / 2 + 0.6f * u, g.bt - 1.2f * u), Size(an - 1.2f * u, 1f * u))
+        drawRect(a.sombra(0.35f), Offset(x - an / 2, g.bb + 0.5f * u), Size(an, 1.2f * u))
         if (a.lumbre) drawRect(a.filo(0.6f * l.k), Offset(x + an / 2 - 1f * u, top + 1f * u), Size(1f * u, bot - top - 2f * u))
+    }
+
+    /**
+     * El mazo de cables que cruza arriba, contra el techo, medio cortado por el borde: cuatro cables redondos de grosores
+     * distintos (goma, gris, crudo y uno azul con su raya naranja) que se aprietan en cada brida y se abren un poco entre una y
+     * otra, combados hacia abajo en el medio; las bridas con su rabo cortado, dos abrazaderas atornilladas y su sombra.
+     */
+    fun DrawScope.mazo(a: AireTapaEspacio, luz: LuzTapaEspacio) {
+        val u = density; val w = size.width
+        fun centro(x: Float) = 5.2f * u + 2.4f * u * sin((x / w).coerceIn(0f, 1f) * PI.toFloat())
+        // Dónde van las bridas: a trechos desparejos.
+        var n = 0
+        var xb = w * 0.06f
+        while (xb < w && n < BRIDAS.size) { BRIDAS[n] = xb; xb += (44f + 34f * azar(1311, n)) * u; n++ }
+        val grosores = floatArrayOf(4.4f, 3f, 2.4f, 3.6f)
+        val carriles = floatArrayOf(-3.6f, -0.6f, 1.6f, 4f)
+        val colores = listOf(P.GOMA, mezcla(P.CASCO_OSC, P.CASCO, 0.35f), mezcla(P.TELA, P.PAPEL, 0.3f), mezcla(P.NARANJA, P.TELA, 0.3f))
+        // La sombra del mazo en la pared: una banda baja (más barata que seguir cada cable).
+        drawRect(a.sombra(if (a.lumbre) 0.36f else 0.2f), Offset(0f, 8f * u), Size(w, 7f * u))
+        // Cada cable de un color, con la luz de su mitad del lado de la lámpara.
+        val lc = luz.en(Offset(w * 0.75f, 6f * u))
+        for (i in 0 until 4) {
+            cable(carriles[i], n) { x -> centro(x) }
+            drawPath(trazo, a.luz(colores[i], lc), style = Stroke(grosores[i] * u, cap = StrokeCap.Round))
+            translate(0f, -grosores[i] * u * 0.25f) { drawPath(trazo, a.claro(0.35f), style = Stroke(grosores[i] * u * 0.22f)) }
+        }
+        // Las bridas: la cinta que abraza el mazo y su rabo cortado.
+        for (k in 0 until n) {
+            val x = BRIDAS[k]; val y = centro(x)
+            val l = luz.en(Offset(x, y))
+            drawRect(a.luz(P.PAPEL, l), Offset(x - 1f * u, y - 5.6f * u), Size(2.2f * u, 11.4f * u))
+            drawLine(a.luz(P.PAPEL, l), Offset(x + 0.2f * u, y + 5.6f * u), Offset(x + 3f * u, y + 9f * u), 1.5f * u)
+        }
+        // Las dos abrazaderas, entre bridas: el fleje que da la vuelta y la pestaña atornillada a la pared.
+        listOf(w * 0.31f, w * 0.79f).forEach { xa ->
+            val y = centro(xa)
+            val l = luz.en(Offset(xa, y))
+            drawRoundRect(a.luz(P.ACERO, l), Offset(xa - 3.5f * u, y - 7f * u), Size(7f * u, 14f * u), CornerRadius(3f * u), style = Stroke(1.6f * u))
+            drawRect(a.luz(P.ACERO, l), Offset(xa - 2.5f * u, y + 6f * u), Size(5f * u, 5.5f * u))
+            remacheEspacio(Offset(xa, y + 9f * u), 1.2f * u, a.luz(mezcla(P.ACERO, P.CASCO, 0.4f), l), a.base)
+        }
+    }
+
+    /** Dónde caben las bridas del mazo (se rellena en cada dibujo, sin crear nada). */
+    private val BRIDAS = FloatArray(14)
+
+    /**
+     * El camino de un cable del mazo en [trazo]: corre por su [carril] (en dp desde el centro del mazo), apretado en cada una
+     * de las [n] bridas y abierto entre una y otra.
+     */
+    private inline fun DrawScope.cable(carril: Float, n: Int, centro: (Float) -> Float) {
+        val u = density; val w = size.width
+        trazo.reset()
+        trazo.moveTo(-4f * u, centro(0f) + carril * 1.2f * u)
+        var x0 = -4f * u
+        for (k in 0..n) {
+            val x1 = if (k < n) BRIDAS[k] else w + 4f * u
+            val m = (x0 + x1) / 2
+            trazo.quadraticTo(m, centro(m) + carril * 1.55f * u, x1, centro(x1) + carril * (if (k < n) 0.62f else 1.2f) * u)
+            x0 = x1
+        }
     }
 
     /**
      * El lápiz de la bitácora, con su cordón en espiral atado a la goma (en la nave un lápiz suelto se pierde): en blanco,
      * metido en la goma; escrito, fuera, flotando junto a la pared con el cordón estirado.
      */
-    fun DrawScope.lapiz(g: GeoTapaEspacio, a: AireEstanteEspacio, luz: LuzTapaEspacio, usado: Boolean, ab: Float) {
+    fun DrawScope.lapiz(g: GeoTapaEspacio, a: AireTapaEspacio, luz: LuzTapaEspacio, usado: Boolean, ab: Float) {
         val u = density; val w = size.width; val h = size.height
         val punta: Offset; val cola: Offset
         if (usado) { cola = Offset(w - 12f * u, h * 0.42f); punta = Offset(w - 19f * u + ab * 3f * u, h * 0.8f) }
@@ -122,7 +203,7 @@ internal object PiezasTapaEspacio {
      * La lámpara de lectura de la litera: el cuello de cisne que baja del mazo de cables, la cabeza de goma con su visera y su
      * vidrio. En oscuro (y sin sueño), encendida.
      */
-    fun DrawScope.lampara(a: AireEstanteEspacio, luz: LuzTapaEspacio) {
+    fun DrawScope.lampara(a: AireTapaEspacio, luz: LuzTapaEspacio) {
         val u = density; val w = size.width
         val boca = luz.lampara
         val encendida = a.oscuro && !a.noche
@@ -151,7 +232,7 @@ internal object PiezasTapaEspacio {
      * El piloto de guardia, una tira de luz atornillada a la pared a la izquierda: apagado de día; en oscuro, tenue; en los
      * sueños, encendido, con su charco en la pared y en el canto del libro.
      */
-    fun DrawScope.piloto(a: AireEstanteEspacio, luz: LuzTapaEspacio) {
+    fun DrawScope.piloto(a: AireTapaEspacio, luz: LuzTapaEspacio) {
         val u = density
         val c = luz.guardia
         val r = Rect(c.x - 3.4f * u, c.y - 17f * u, c.x + 3.4f * u, c.y + 17f * u)
@@ -167,7 +248,7 @@ internal object PiezasTapaEspacio {
             drawRoundRect(a.luz(mezcla(P.GUARDIA, P.ACOLCHADO, 0.55f), LuzEstanteEspacio(1f, 0f)), lente.topLeft, lente.size, CornerRadius(2f * u))
             drawRect(a.claro(0.5f), Offset(lente.left + 0.8f * u, lente.top + 2f * u), Size(1f * u, lente.height - 4f * u))
         }
-        remacheEspacio(Offset(c.x, r.top - 2.5f * u), 1f * u, a.luz(P.ACERO, luz.en(c)), a)
-        remacheEspacio(Offset(c.x, r.bottom + 2.5f * u), 1f * u, a.luz(P.ACERO, luz.en(c)), a)
+        remacheEspacio(Offset(c.x, r.top - 2.5f * u), 1f * u, a.luz(P.ACERO, luz.en(c)), a.base)
+        remacheEspacio(Offset(c.x, r.bottom + 2.5f * u), 1f * u, a.luz(P.ACERO, luz.en(c)), a.base)
     }
 }

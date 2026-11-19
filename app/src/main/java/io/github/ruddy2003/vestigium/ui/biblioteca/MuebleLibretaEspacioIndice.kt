@@ -25,7 +25,7 @@ internal object IndiceLibretaEspacio {
     private val P = PaletaEstanteEspacio
     /** El hondo de la noche del índice (en oscuro) y el plástico escarchado de los días sin ánimo. */
     private val NOCHE = Color(0xFF0C1124)
-    private val ESCARCHA = Color(0xFFB8BEC8)
+    private val ESCARCHA_CANTO = Color(0xFF8E96A6)
 
     /**
      * La pestaña de un día: la lengüeta del separador (plástico del color del ánimo; escarchado si no hay) con la tarjetita
@@ -39,28 +39,37 @@ internal object IndiceLibretaEspacio {
         val dy = (azar(e.semilla, 1) - 0.5f) * 2.4f * u
         val lengua = Rect(w * 0.15f, 3f * u + dy, w * 0.85f, h * 0.66f + dy)
         val hombro = Rect(3f * u, h * 0.6f, w - 3f * u, h - 3f * u)
-        val base = e.tono ?: if (oscuro) mezcla(ESCARCHA, NOCHE, 0.62f) else ESCARCHA
-        val plastico = if (oscuro) base else mezcla(base, Color.White, 0.1f)
+        val vacia = e.tono == null
+        // Con ánimo, el plástico entero es de su color (y el hombro, apenas más hondo); sin ánimo, plástico transparente:
+        // escarcha y su canto, sin color, para que no se confunda con un ánimo neutro (que es un color lleno).
+        val base = e.tono ?: if (oscuro) Color.White.copy(alpha = 0.07f) else Color.White.copy(alpha = 0.55f)
+        val plastico = base
         val sombra = if (oscuro) NOCHE.copy(alpha = 0.7f) else P.TINTA.copy(alpha = 0.22f)
-        val hondo = mezcla(base, if (oscuro) NOCHE else P.TINTA, if (oscuro) 0.38f else 0.22f)
-        // Las sombras, abajo a la derecha (la luz viene de arriba a la izquierda).
-        drawRoundRect(sombra, lengua.topLeft + Offset(1.2f * u, 1.6f * u), lengua.size, CornerRadius(5f * u))
-        drawRoundRect(sombra, hombro.topLeft + Offset(1.2f * u, 1.6f * u), hombro.size, CornerRadius(3f * u))
+        val hondo = if (vacia) base else mezcla(base, if (oscuro) NOCHE else P.TINTA, if (oscuro) 0.3f else 0.12f)
+        val canto = if (oscuro) Color.White.copy(alpha = 0.32f) else ESCARCHA_CANTO
+        // Las sombras, abajo a la derecha (la luz viene de arriba a la izquierda); la del plástico transparente, más tenue.
+        val sb = if (vacia) sombra.copy(alpha = sombra.alpha * 0.45f) else sombra
+        drawRoundRect(sb, lengua.topLeft + Offset(1.2f * u, 1.6f * u), lengua.size, CornerRadius(5f * u))
+        drawRoundRect(sb, hombro.topLeft + Offset(1.2f * u, 1.6f * u), hombro.size, CornerRadius(3f * u))
         // La lengüeta, con su luz arriba y su lado de sombra.
         drawRoundRect(plastico, lengua.topLeft, lengua.size, CornerRadius(5f * u))
         drawRect(Color.White.copy(alpha = if (oscuro) 0.12f else 0.4f), Offset(lengua.left + 4f * u, lengua.top + 1f * u), Size(lengua.width - 8f * u, 1f * u))
-        drawRect(sombra.copy(alpha = sombra.alpha * 0.5f), Offset(lengua.right - 3f * u, lengua.top + 4f * u), Size(3f * u, lengua.height - 4f * u))
+        if (!vacia) drawRect(sombra.copy(alpha = sombra.alpha * 0.5f), Offset(lengua.right - 3f * u, lengua.top + 4f * u), Size(3f * u, lengua.height - 4f * u))
         // El hombro del separador, que entra en la carpeta.
         drawRoundRect(hondo, hombro.topLeft, hombro.size, CornerRadius(3f * u))
         drawRect(Color.White.copy(alpha = if (oscuro) 0.08f else 0.25f), Offset(hombro.left + 3f * u, hombro.top), Size(hombro.width - 6f * u, 0.8f * u))
-        // La tarjetita de papel con el día, metida en su ranura (el labio de plástico encima).
-        val tarjeta = Rect(lengua.left + 3.5f * u, lengua.top + 4f * u, lengua.right - 3.5f * u, minOf(lengua.top + 25f * u, lengua.bottom - 6f * u))
+        if (vacia) {
+            drawRoundRect(canto, lengua.topLeft, lengua.size, CornerRadius(5f * u), style = Stroke(1f * u))
+            drawRoundRect(canto, hombro.topLeft, hombro.size, CornerRadius(3f * u), style = Stroke(1f * u))
+        }
+        // La tarjetita de papel con el día, metida en su ranura (el labio de plástico encima): chica, para que mande el color.
+        val tarjeta = Rect(lengua.left + 4.5f * u, lengua.top + 4f * u, lengua.right - 4.5f * u, minOf(lengua.top + 25f * u, lengua.bottom - 6f * u))
         val papel = if (oscuro) mezcla(P.PAPEL, NOCHE, 0.18f) else P.PAPEL
         drawRect(papel, tarjeta.topLeft, tarjeta.size)
         drawRect(mezcla(plastico, Color.White, 0.3f).copy(alpha = 0.7f), tarjeta.topLeft, Size(tarjeta.width, 2.2f * u))
         textoEn(medidor, e.dia, Rect(tarjeta.left, tarjeta.top + 2f * u, tarjeta.right, tarjeta.bottom), LetraExtra.orbita, P.TINTA, 15f, peso = FontWeight.Medium, minimo = 7f)
         // La letra de la semana y el agujero de las anillas, en el hombro.
-        val letra = if (hondo.luminance() > 0.42f) P.TINTA else P.PAPEL
+        val letra = if (vacia) (if (oscuro) P.PAPEL else P.TINTA) else if (hondo.luminance() > 0.42f) P.TINTA else P.PAPEL
         textoEn(medidor, e.semana, Rect(hombro.left + 4f * u, lengua.bottom - 1f * u, hombro.center.x + 4f * u, hombro.bottom - 1f * u), LetraExtra.grotesk, letra, 8.5f, peso = FontWeight.Medium, minimo = 5f)
         val ag = Offset(hombro.right - w * 0.24f, (lengua.bottom + hombro.bottom) / 2f)
         drawCircle(if (oscuro) NOCHE else mezcla(P.TINTA, base, 0.3f), 2.4f * u, ag)
