@@ -193,7 +193,7 @@ private fun juntar(imgs: List<Image>): Image {
  * Las ideas de `Capturas.ideasConTemas(n)`: repartidas en [n] temas, cada uno con más o menos fichas; uno de nombre largo
  * y, con más de uno, el último es el cajón de las ideas sin tema.
  */
-private fun ideasConTemas(n: Int): List<Idea> {
+internal fun ideasConTemas(n: Int): List<Idea> {
     val temas = listOf("filosofia", "dinero", "historia_de_la_ciencia_y_de_la_tecnica", "salud", "aprender", "fisica", "amistad", "escritura", "cocina")
     val hoy = hoy()
     return (0 until n).flatMap { k ->
@@ -232,7 +232,7 @@ private fun Ideario() {
 // ---------------------------------------------------------------- la biblioteca del diario
 
 /** Los días de `Capturas.Ejemplo.cargar()` (solo los días: es lo único que lee el estante), con el mismo azar. */
-private fun diasEjemplo(): Map<String, Dia> {
+internal fun diasEjemplo(): Map<String, Dia> {
     val hoy = hoy()
     val r = java.util.Random(7)
     val fechas = (0..35).map { Fechas.sumar(hoy, -it.toLong()) }

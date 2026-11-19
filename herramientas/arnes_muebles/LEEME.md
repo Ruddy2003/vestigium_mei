@@ -63,6 +63,22 @@ herramientas/arnes_muebles/dibujar.sh hoja galeria <claro|oscuro> <salida.png> h
 
 El mueble de la galería de cuadros de la pestaña Vida (parte 8, `docs/diseno/CUADROS_PLAN.md`), en `arnes/Galeria.kt`: el recuadro de 190 dp con el composable real `ParedDeCuadros` (`ui/vida/MuebleGaleria.kt`), que pone el mueble del tema (`DisenoVida.muebleGaleria`; por omisión, `MuebleGaleriaComun`), las miniaturas en sus huecos y la luz encima. Uno bajo otro con 0, 1 y 5 cuadros; `ARNES_CUADROS=0,1,5` elige cuántos. Las miniaturas son cinco paisajes de relleno pintados en el arnés (las escenas no se compilan aquí): sirven para ver cómo caen en los marcos y con la luz.
 
+## Medir
+
+```
+herramientas/arnes_muebles/medir.sh [grupo,grupo,...] [tema,tema,...]
+```
+
+Mide el «peso» del dibujo (`arnes/Medir.kt`, 19 nov 2026) y saca una tabla separada por tabuladores. Grupos: `biblioteca` (el estante con las 35 entradas, armado con la escena real y un espía que anota cada llamada de `DisenoBiblioteca`), `ideario` (el mueble con 9 temas y sus compartimentos, con la cuenta de lugares de `MuebleIdeas`), `vida` (Social, Mapas y Otras vidas), `comun` (una mezcla de piezas comunes como la de una pantalla), `decoracion` (emblema, banda, subrayado y filete de Psicodelia) y `fondo` (un cuadro del fondo vivo de Psicodelia). Temas: por omisión Psicodelia en sus ocho variantes (las dos caras, claro y oscuro, intensidad 0, 0.5 y 1), Helénico, Laboratorio y los otros cuatro del lote 10.
+
+- `grabar_us`: lo que tarda en correr el código de dibujo y grabarse como lista de operaciones de Skia (en el teléfono, lo que pasa en el hilo de la interfaz cada vez que la pieza se vuelve a dibujar). Mediana de hasta 200 vueltas.
+- `pintar_us`: pintar esa lista en píxeles con Skia en la CPU (en el teléfono lo hace la GPU; sirve para comparar, no como cifra del teléfono).
+- `ops` y `KB`: cuántas operaciones lleva la lista y cuánto ocupa. Es lo que el teléfono vuelve a pintar en cada cuadro mientras algo de la pantalla se mueve (el fondo vivo, el emblema).
+- `primera_ms`: la primera vez, con las cachés vacías.
+- `MEDIR_DETALLE=1`: además, cada llamada por separado (el mueble y cada volumen o compartimento).
+
+Los tiempos varían de una corrida a otra si la máquina está ocupada; `ops` y `KB` no.
+
 ## Cuánto tarda (medido en esta máquina, 4 núcleos)
 
 - Primera vez, desde cero (descarga de dependencias aparte): **~1 min 45 s**. Arranca el daemon de Gradle y compila unas 90 000 líneas.

@@ -37,6 +37,9 @@ val enlazados = listOf(
     "$paquete/ui/CaraTema.kt",
     // Las piezas de Psicodelia v2 (tanda 2) y sus piezas comunes, para la muestra `comun psicodelia`.
     "$paquete/ui/PsicodeliaPiezas.kt", "$paquete/ui/comun/ComunPsicodelia.kt", "$paquete/ui/IconosPestana.kt",
+    // Las piezas comunes de Helénico y Laboratorio (la vara) y de los otros cuatro temas del lote 10, para `medir.sh`.
+    "$paquete/ui/comun/ComunAntiguedad.kt", "$paquete/ui/comun/ComunFuturo.kt", "$paquete/ui/comun/ComunNouveau.kt",
+    "$paquete/ui/comun/ComunGalia.kt", "$paquete/ui/comun/ComunArcontes.kt", "$paquete/ui/comun/ComunFrente.kt",
     // Los logros, los trofeos y las figuras de pantalla de Psicodelia v2 (tanda 4), para la muestra `logros psicodelia`.
     "$paquete/ui/logros/LogrosPsicodelia.kt", "$paquete/ui/PsicodeliaPantallas.kt",
     // Lo que Estilo necesita para nombrar meses y fechas en cada tema.
