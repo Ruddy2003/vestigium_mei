@@ -10370,16 +10370,20 @@ object EstanteRuinas : DisenoBiblioteca {
 }
 
 /**
- * Espacio: la biblioteca de la nave. La pared es curva (más sombra hacia los lados) y está hecha de un panal de celdas
- * hexagonales; los costados son las cuadernas del casco con su filo de luz cian y, en cada nivel, un panelito con tres luces
- * de estado. Arriba, el techo abovedado de paneles y, en el centro, un gran ojo de buey con su aro de pernos por el que se ve
- * la Tierra saliendo (mar, tierras, nubes y el filo de la atmósfera) contra las estrellas; a los lados, dos paneles de
- * servicio. Las tablas son paneles con su línea de luz, y cada mes va en un visor de vidrio oscuro con corchetes cian. Abajo,
- * el zócalo con sus rejillas y el piso de rejilla hexagonal. Cada entrada es un cristal de memoria, un prisma de seis caras
- * que brilla en su celda hexagonal (más alto cuanto más escribiste), con el mes grabado al lado y el día en la placa de la
- * celda; de noche la celda lleva una luna y estrellas en lugar de su emblema. De noche la pared se apaga y deja ver el campo
- * de estrellas, y por el ojo de buey se ven las luces de las ciudades. Distinto del Ideario, que es la sala de control con
- * los racks y la ventana a la nebulosa.
+ * Espacio: el módulo de estiba del taller del eje de la nave que va a Alfa Centauri, donde no hay peso y todo se sujeta. La
+ * pared es el casco por dentro, acolchado en rombos entre sus cuadernas, con un ojo de buey a un costado (su tapa abierta
+ * hacia arriba): de día entra por él la luz fría de los focos que alumbran el anillo; de noche se ven el anillo con sus
+ * ventanillas encendidas, la Vía Láctea y la estrella de delante, y manda la lámpara de trabajo, cálida, sujeta a la derecha.
+ * El módulo es de chapa remachada pintada de crema, con los fondos acanalados, las tablas de aluminio con su riel de anclajes,
+ * una placa remachada con el mes y un cabo elástico por repisa que sujeta lo guardado. Arriba, el ventilador de recambio a
+ * medio arreglar (la rejilla flota atada; los tornillos, pegados en una cinta), el trigo de la granja en su tubo, el
+ * rotulador al aire, el pasamanos con los auriculares; en los huecos, la cinta gris, el cabo enrollado y el ovillo con su
+ * labor; al pie, la rejilla del aire con su cinta que ondea y los estribos. Hay tres tipos de entrada: la bitácora de tela
+ * con su goma, el cartucho de datos anodizado con sus topes de goma y la bolsa sellada de lámina; las tres llevan el día y el
+ * mes en su etiqueta, el color del ánimo en la tela, el aluminio o la lámina, y una estrella (la luna, en los Sueños). En los
+ * Sueños se apaga la lámpara y se enciende el piloto azul de guardia del costado izquierdo. El dibujo del mueble y de las
+ * entradas está en [MuebleEstanteEspacio], [PiezasEstanteEspacio] y [VolumenesEstanteEspacio]. Distinto del Ideario, que es
+ * el bastidor de racks contra el mamparo claro, con el casco del traje y la lámpara de turno.
  * La tapa del diario es la celda de memoria de frente, con el visor donde se lee lo escrito y el cristal tumbado en su
  * cuna; al abrirse, el visor se enciende.
  */
@@ -10420,230 +10424,24 @@ object EstanteEspacio : DisenoBiblioteca {
         lineTo(r.center.x, r.bottom); lineTo(r.left, r.bottom - e); lineTo(r.left, r.top + e); close()
     }
 
-    override val corona = 0.44f
-    override val base = 0.1f
-    override val lado = 0.06f
-    override val altoRepisa: Dp = 104.dp
-    override val tabla: Dp = 14.dp
-    override val separa: Dp = 2.dp
+    override val corona = MuebleEstanteEspacio.CORONA
+    override val base = MuebleEstanteEspacio.BASE
+    override val lado = MuebleEstanteEspacio.LADO
+    override val altoRepisa: Dp = MuebleEstanteEspacio.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteEspacio.TABLA
+    override val separa: Dp = MuebleEstanteEspacio.SEPARA
     override val letra: FontFamily = LetraExtra.orbita
+    /** Estante rehecho: el aura solo sale al tocar (ver [DisenoBiblioteca.auraEnReposo]). */
+    override val auraEnReposo = false
 
-    override fun ancho(palabras: Int): Dp = (34 + (palabras / 80).coerceAtMost(10)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.88f + 0.06f * azar(semilla, 9)
+    override fun ancho(palabras: Int): Dp = MuebleEstanteEspacio.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteEspacio.alto(semilla, palabras)
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // La pared curva de la nave: un panal de celdas hexagonales; de noche se apaga y deja ver el campo de estrellas.
-        val cuerpo = Rect(0f, d.corona.bottom, w, d.base.top)
-        drawRect(if (noche) VACIO else c(PANEL), cuerpo.topLeft, cuerpo.size)
-        if (noche) {
-            val n = (cuerpo.width * cuerpo.height / (900 * u * u)).toInt().coerceIn(40, 900)
-            for (k in 0 until n) {
-                val o = Offset(cuerpo.left + cuerpo.width * azar(k, 5), cuerpo.top + cuerpo.height * azar(k, 6))
-                drawCircle(ESTRELLA.copy(alpha = 0.3f + 0.6f * azar(k, 7)), (0.4f + 0.9f * azar(k, 8) * azar(k, 9)) * u, o)
-            }
-        }
-        val rh = 13 * u
-        val ah = rh * 1.732f
-        clipRect(cuerpo.left, cuerpo.top, cuerpo.right, cuerpo.bottom) {
-            var fila = 0
-            var hy = cuerpo.top
-            while (hy < cuerpo.bottom + rh) {
-                var hx = cuerpo.left + (if (fila % 2 == 0) 0f else ah / 2)
-                while (hx < cuerpo.right + ah) {
-                    drawPath(hexagono(Rect(hx - ah / 2, hy - rh, hx + ah / 2, hy + rh), 0.25f), if (noche) CIAN.copy(alpha = 0.18f) else c(PANEL_OSC).copy(alpha = 0.7f), style = Stroke(1 * u))
-                    hx += ah
-                }
-                hy += rh * 1.5f; fila++
-            }
-        }
-        // La curva de la pared: más sombra hacia los lados.
-        drawRect(Brush.horizontalGradient(listOf(Color.Black.copy(alpha = 0.32f), Color.Transparent, Color.Transparent, Color.Black.copy(alpha = 0.32f)), 0f, w), cuerpo.topLeft, cuerpo.size)
-        // Cada repisa: su sombra y la línea de luz de la tabla de arriba.
-        d.repisas.forEach { r ->
-            drawRect(Color.Black.copy(alpha = if (noche) 0.5f else 0.22f), r.topLeft, Size(r.width, 6 * u))
-            drawLine(CIAN.copy(alpha = if (noche) 0.7f else 0.5f), Offset(r.left + 6 * u, r.top + 6.5f * u), Offset(r.right - 6 * u, r.top + 6.5f * u), 1 * u)
-        }
-        // Los costados: las cuadernas del casco, con su filo de luz, sus pernos y un panelito de estado en cada nivel.
-        listOf(d.izquierda to true, d.derecha to false).forEach { (r, izq) ->
-            drawRect(c(CASCO), r.topLeft, r.size)
-            drawRect(c(CASCO_OSC), Offset(if (izq) r.left else r.right - r.width * 0.3f, r.top), Size(r.width * 0.3f, r.height))
-            val borde = if (izq) r.right - 1.5f * u else r.left + 1.5f * u
-            drawLine(CIAN.copy(alpha = 0.8f), Offset(borde, r.top), Offset(borde, r.bottom), 1.2f * u)
-            d.repisas.forEachIndexed { k, rep ->
-                val pc = Rect(r.left + r.width * 0.3f, rep.top + rep.height * 0.3f, r.right - r.width * 0.25f, rep.top + rep.height * 0.6f)
-                drawRoundRect(c(CASCO_OSC), pc.topLeft, pc.size, CornerRadius(2 * u))
-                for (j in 0 until 3) {
-                    val luz = when ((j + k) % 4) { 0 -> AMBAR; 1 -> CIAN; else -> VERDE }
-                    drawCircle(luz.copy(alpha = 0.9f), 1.2f * u, Offset(pc.center.x, pc.top + pc.height * (0.25f + 0.25f * j)))
-                }
-                listOf(rep.top + 4 * u, rep.bottom - 4 * u).forEach { y -> drawCircle(c(PANEL_OSC), 1 * u, Offset(r.center.x, y)) }
-            }
-        }
-        // Las tablas: paneles con su línea de luz y sus marcas.
-        d.tablas.forEach { r ->
-            drawRect(c(PANEL_LUZ), r.topLeft, r.size)
-            drawRect(c(PANEL_OSC), Offset(r.left, r.top + r.height * 0.6f), Size(r.width, r.height * 0.4f))
-            drawLine(CIAN.copy(alpha = 0.85f), Offset(r.left, r.bottom - 1 * u), Offset(r.right, r.bottom - 1 * u), 1 * u)
-            var mx = r.left + 10 * u
-            while (mx < r.right - 4 * u) { drawLine(c(CASCO).copy(alpha = 0.5f), Offset(mx, r.top + r.height * 0.6f), Offset(mx, r.top + r.height * 0.85f), 0.7f * u); mx += 20 * u }
-            drawRect(Color.Black.copy(alpha = 0.25f), Offset(r.left, r.bottom), Size(r.width, 3 * u))
-        }
-        // El rótulo de cada mes: un visor de vidrio oscuro con sus corchetes cian en las esquinas.
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRoundRect(c(VISOR), r.topLeft, r.size, CornerRadius(2 * u))
-            drawRoundRect(CIAN.copy(alpha = 0.5f), r.topLeft, r.size, CornerRadius(2 * u), style = Stroke(0.7f * u))
-            val e = r.height * 0.4f
-            listOf(r.topLeft to Offset(1f, 1f), Offset(r.right, r.top) to Offset(-1f, 1f), Offset(r.left, r.bottom) to Offset(1f, -1f), r.bottomRight to Offset(-1f, -1f)).forEach { (o, s) ->
-                val a = Offset(o.x + s.x * 1.5f * u, o.y + s.y * 1.5f * u)
-                drawLine(CIAN, a, Offset(a.x + s.x * e, a.y), 1 * u)
-                drawLine(CIAN, a, Offset(a.x, a.y + s.y * e), 1 * u)
-            }
-            textoEn(medidor, p.texto.uppercase(), Rect(r.left + e + 3 * u, r.top, r.right - e - 3 * u, r.bottom), letra, CIAN, 9.5f, espaciado = 1.2f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el zócalo con sus rejillas de ventilación y el piso de rejilla hexagonal.
-        val b = d.base
-        val piso = b.top + b.height * 0.45f
-        drawRect(c(CASCO), b.topLeft, Size(b.width, piso - b.top))
-        drawRect(c(PANEL_OSC), b.topLeft, Size(b.width, 2 * u))
-        listOf(0.18f, 0.62f).forEach { f ->
-            val rej = Rect(b.left + b.width * f, b.top + (piso - b.top) * 0.3f, b.left + b.width * (f + 0.2f), b.top + (piso - b.top) * 0.75f)
-            drawRoundRect(c(CASCO_OSC), rej.topLeft, rej.size, CornerRadius(2 * u))
-            var gx = rej.left + 3 * u
-            while (gx < rej.right - 2 * u) { drawLine(c(CASCO), Offset(gx, rej.top + 1.5f * u), Offset(gx, rej.bottom - 1.5f * u), 1.2f * u); gx += 4 * u }
-        }
-        drawRect(c(CASCO_OSC), Offset(0f, piso), Size(w, h - piso))
-        clipRect(0f, piso, w, h) {
-            val rp = 5 * u; val ap = rp * 1.732f
-            var fy = piso; var ff = 0
-            while (fy < h + rp) {
-                var fx = if (ff % 2 == 0) 0f else ap / 2
-                while (fx < w + ap) {
-                    drawPath(hexagono(Rect(fx - ap / 2, fy - rp, fx + ap / 2, fy + rp), 0.25f), c(CASCO).copy(alpha = 0.8f), style = Stroke(0.8f * u))
-                    fx += ap
-                }
-                fy += rp * 1.5f; ff++
-            }
-        }
-        drawRect(Color.Black.copy(alpha = 0.35f), Offset(0f, piso), Size(w, 2.5f * u))
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteEspacio) { estante(d, medidor, oscuro, noche) }
 
-    /** El techo abovedado, el ojo de buey con la Tierra saliendo y los dos paneles de servicio. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El techo curvo de la nave: paneles con sus juntas, que se cierran hacia los lados.
-        drawRect(c(PANEL), r.topLeft, r.size)
-        val techo = Path().apply {
-            moveTo(r.left, r.top); lineTo(r.right, r.top); lineTo(r.right, r.top + r.height * 0.3f)
-            quadraticTo(r.center.x, r.top - r.height * 0.05f, r.left, r.top + r.height * 0.3f); close()
-        }
-        drawPath(techo, c(CASCO))
-        for (k in 1 until 6) { val x = r.left + r.width * k / 6f; drawLine(c(PANEL_OSC), Offset(x, r.top + r.height * 0.3f), Offset(x, r.bottom), 0.8f * u) }
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(r.left, r.bottom - 4 * u), Size(r.width, 4 * u))
-        // A los lados, dos paneles de servicio con sus luces y una manija.
-        listOf(r.left + r.width * 0.1f, r.right - r.width * 0.26f).forEachIndexed { k, x0 ->
-            val pn = Rect(x0, r.top + r.height * 0.4f, x0 + r.width * 0.16f, r.top + r.height * 0.82f)
-            drawRoundRect(c(PANEL_LUZ), pn.topLeft, pn.size, CornerRadius(3 * u))
-            drawRoundRect(c(PANEL_OSC), pn.topLeft, pn.size, CornerRadius(3 * u), style = Stroke(1 * u))
-            for (j in 0 until 4) drawCircle(listOf(VERDE, CIAN, AMBAR, VERDE)[(j + k) % 4], 1.3f * u, Offset(pn.left + pn.width * (0.2f + 0.2f * j), pn.top + pn.height * 0.18f))
-            drawRoundRect(c(CASCO), Offset(pn.left + pn.width * 0.2f, pn.top + pn.height * 0.4f), Size(pn.width * 0.6f, pn.height * 0.12f), CornerRadius(2 * u))
-            drawRect(c(CASCO_OSC).copy(alpha = 0.5f), Offset(pn.left + pn.width * 0.15f, pn.top + pn.height * 0.66f), Size(pn.width * 0.7f, pn.height * 0.2f))
-        }
-        // El ojo de buey: al otro lado del vidrio, el espacio con sus estrellas y la Tierra que sale.
-        val oc = Offset(r.center.x, r.top + r.height * 0.56f)
-        val orad = minOf(r.height * 0.4f, r.width * 0.26f)
-        val ventana = Path().apply { addOval(Rect(oc, orad)) }
-        drawCircle(c(CASCO_OSC), orad + 9 * u, oc)
-        drawPath(ventana, VACIO)
-        clipPath(ventana) {
-            val n = if (noche) 90 else 34
-            for (k in 0 until n) drawCircle(ESTRELLA.copy(alpha = 0.35f + 0.6f * azar(k, 21)), (0.4f + 0.9f * azar(k, 22) * azar(k, 23)) * u, Offset(oc.x + orad * (azar(k, 24) * 2 - 1), oc.y + orad * (azar(k, 25) * 2 - 1)))
-            // La Tierra asomando por abajo: el halo, el mar, las tierras, las nubes y el filo de la atmósfera.
-            val tc = Offset(oc.x - orad * 0.2f, oc.y + orad * 2.1f)
-            val trad = orad * 1.75f
-            mancha(Offset(tc.x, tc.y - trad), orad * 0.9f, ATMOSFERA.copy(alpha = if (noche) 0.25f else 0.45f))
-            drawCircle(if (noche) mezcla(MAR, VACIO, 0.6f) else MAR, trad, tc)
-            clipPath(Path().apply { addOval(Rect(tc, trad)) }) {
-                listOf(Triple(-0.3f, -0.95f, 0.35f), Triple(0.25f, -0.9f, 0.25f), Triple(0.55f, -0.8f, 0.2f)).forEachIndexed { k, (fx, fy, s) ->
-                    val col = if (k == 1) DESIERTO else TIERRA_FIRME
-                    drawOval(if (noche) mezcla(col, VACIO, 0.65f) else col, Offset(tc.x + trad * fx - trad * s, tc.y + trad * fy - trad * s * 0.35f), Size(trad * s * 2, trad * s * 0.7f))
-                }
-                for (k in 0 until 5) {
-                    val o = Offset(tc.x + trad * (-0.6f + 0.3f * k), tc.y - trad * (0.9f + 0.06f * (k % 2)))
-                    drawOval(NUBE.copy(alpha = if (noche) 0.15f else 0.7f), Offset(o.x - trad * 0.12f, o.y - trad * 0.02f), Size(trad * 0.24f, trad * 0.04f))
-                }
-                // De noche, las luces de las ciudades.
-                if (noche) for (k in 0 until 26) drawCircle(AMBAR.copy(alpha = 0.8f), 0.6f * u, Offset(tc.x + trad * (azar(k, 31) * 1.2f - 0.6f), tc.y - trad * (0.82f + 0.15f * azar(k, 32))))
-            }
-            drawCircle(ATMOSFERA.copy(alpha = 0.8f), trad, tc, style = Stroke(1.6f * u))
-            drawCircle(ATMOSFERA.copy(alpha = 0.25f), trad + 2.5f * u, tc, style = Stroke(3 * u))
-        }
-        // El aro del ojo de buey con sus doce pernos y el reflejo del vidrio.
-        drawCircle(c(CASCO), orad + 5 * u, oc, style = Stroke(7 * u))
-        drawCircle(c(PANEL_OSC), orad + 1.5f * u, oc, style = Stroke(1.2f * u))
-        for (k in 0 until 12) {
-            val a = k * (2 * PI.toFloat() / 12)
-            drawCircle(c(PANEL_LUZ), 1.4f * u, Offset(oc.x + (orad + 5 * u) * cos(a), oc.y + (orad + 5 * u) * sin(a)))
-        }
-        drawArc(Color.White.copy(alpha = 0.12f), 200f, 60f, false, Offset(oc.x - orad * 0.8f, oc.y - orad * 0.8f), Size(orad * 1.6f, orad * 1.6f), style = Stroke(3 * u, cap = StrokeCap.Round))
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val placaAlta = minOf(h * 0.2f, 18 * u)
-        // La celda hexagonal: el marco del casco, el fondo oscuro y su filo de luz.
-        val celdaR = Rect(0.5f * u, 0.5f * u, w - 0.5f * u, h - placaAlta - 1.5f * u)
-        drawPath(hexagono(celdaR, 0.16f), c(CASCO))
-        val dentro = hexagono(celdaR.deflate(2.2f * u), 0.16f)
-        drawPath(dentro, c(CELDA))
-        val base = CRISTALES[(v.semilla and 0x7fffffff) % CRISTALES.size]
-        val luz = if (v.tono != null) mezcla(base, v.tono, 0.22f) else base
-        clipPath(dentro) {
-            // De noche, estrellas en el fondo de la celda.
-            if (v.noche) for (k in 0 until 7) drawCircle(ESTRELLA.copy(alpha = 0.7f), 0.6f * u, Offset(w * (0.15f + 0.7f * azar(v.semilla, 40 + k)), celdaR.top + celdaR.height * (0.2f + 0.6f * azar(v.semilla, 50 + k))))
-            // El cristal de memoria: un prisma de seis caras que crece con lo escrito, con su halo (capas planas, sin degradado).
-            val alto = celdaR.height * (0.42f + 0.36f * v.lleno)
-            val anchoC = w * 0.32f
-            val cc = Offset(w * 0.42f, celdaR.center.y + celdaR.height * 0.04f)
-            val cristal = Rect(cc.x - anchoC / 2, cc.y - alto / 2, cc.x + anchoC / 2, cc.y + alto / 2)
-            listOf(3.5f to 0.08f, 2f to 0.14f).forEach { (crece, a) -> drawPath(hexagono(cristal.inflate(crece * u), 0.2f), luz.copy(alpha = a)) }
-            drawPath(hexagono(cristal, 0.2f), mezcla(luz, Color.Black, if (oscuro) 0.25f else 0.1f))
-            val e = cristal.height * 0.2f
-            val cara = Path().apply {
-                moveTo(cristal.center.x, cristal.top); lineTo(cristal.left, cristal.top + e)
-                lineTo(cristal.left, cristal.bottom - e); lineTo(cristal.center.x, cristal.bottom); close()
-            }
-            drawPath(cara, mezcla(luz, Color.White, 0.35f).copy(alpha = 0.8f))
-            drawLine(Color.White.copy(alpha = 0.8f), Offset(cristal.center.x, cristal.top + 1 * u), Offset(cristal.center.x, cristal.bottom - 1 * u), 0.7f * u)
-            drawLine(Color.White.copy(alpha = 0.6f), Offset(cristal.left + anchoC * 0.2f, cristal.top + e + 2 * u), Offset(cristal.left + anchoC * 0.2f, cristal.top + cristal.height * 0.5f), 0.9f * u)
-            // La luz que el cristal echa sobre el fondo de la celda.
-            drawOval(luz.copy(alpha = 0.18f), Offset(cristal.left - 2 * u, cristal.bottom - 1 * u), Size(anchoC + 4 * u, 4 * u))
-        }
-        drawPath(dentro, CIAN.copy(alpha = 0.35f), style = Stroke(0.7f * u))
-        // El mes grabado al lado del cristal.
-        textoEn(medidor, v.mes.uppercase(), Rect(w * 0.64f, celdaR.top + celdaR.height * 0.22f, w * 0.86f, celdaR.bottom - celdaR.height * 0.22f), letra, CIAN.copy(alpha = 0.75f), 7f, vertical = true, minimo = 4f)
-        // El emblema de la celda (un triángulo ámbar); de noche, una luna.
-        val sc = Offset(w * 0.5f, celdaR.top + celdaR.height * 0.11f)
-        if (v.noche) {
-            drawCircle(ESTRELLA, 2.2f * u, sc)
-            drawCircle(c(CELDA), 1.8f * u, Offset(sc.x + 1 * u, sc.y - 0.6f * u))
-        } else {
-            drawPath(Path().apply { moveTo(sc.x, sc.y - 2 * u); lineTo(sc.x + 2.2f * u, sc.y + 1.6f * u); lineTo(sc.x - 2.2f * u, sc.y + 1.6f * u); close() }, AMBAR.copy(alpha = 0.8f))
-        }
-        // La placa de la celda con el día y su luz de estado.
-        val placa = Rect(w * 0.1f, h - placaAlta, w * 0.9f, h)
-        drawRoundRect(c(VISOR), placa.topLeft, placa.size, CornerRadius(2 * u))
-        drawRoundRect(CIAN.copy(alpha = 0.45f), placa.topLeft, placa.size, CornerRadius(2 * u), style = Stroke(0.7f * u))
-        textoEn(medidor, v.dia, Rect(placa.left + 1 * u, placa.top, placa.right - 5 * u, placa.bottom), letra, CIAN, 11f, peso = FontWeight.Bold)
-        drawCircle(if (v.lleno > 0.5f) VERDE else AMBAR, 1.1f * u, Offset(placa.right - 3 * u, placa.center.y))
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(VolumenesEstanteEspacio) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
