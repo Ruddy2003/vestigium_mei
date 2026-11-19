@@ -4,12 +4,17 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PointMode
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -22,6 +27,10 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.max
@@ -120,32 +129,69 @@ object TrazosCiudad {
 
     /**
      * El grano de película: puntos claros (crema) y oscuros (café) repartidos al azar, pero siempre igual para la misma
-     * [semilla], en celdas de [celda] dp. [fuerza]: [GRANO_DIA] o [GRANO_NOCHE] (la de la lámina). Es caro (un punto
-     * cada 1.4 dp): se dibuja una vez en caché, no en cada cuadro.
+     * [semilla], en celdas de [celda] dp. [fuerza]: [GRANO_DIA] o [GRANO_NOCHE] (la de la lámina). Cada punto es un
+     * cuadrito que llena su celda.
+     *
+     * **Cómo se dibuja (19 nov 2026):** el grano de una zona se pinta una sola vez en una imagen chica, de un píxel por
+     * celda ([imagenGrano], guardada en caché por tamaño, semilla y fuerza), y esa imagen se pega estirada a la zona sin
+     * suavizar (`FilterQuality.None`): cada píxel vuelve a ser el cuadrito de su celda, en el mismo lugar y del mismo color.
+     * Antes se dibujaba punto por punto: en Android, `drawPoints` de Compose hace una operación por punto, así que el
+     * estante del diario llevaba unas 90 000 en el arnés (y varias veces más con medio año de entradas) y cada mueble de
+     * Vida unas 27 000, que el teléfono volvía a pintar en cada cuadro mientras se movía el fondo vivo. Ahora es una sola.
+     * Lo único que cambia es el borde de cada cuadrito cuando cae entre dos píxeles: antes se suavizaba, ahora va entero
+     * a un lado (con la fuerza del grano, menos de un 2 % de diferencia en esos píxeles).
      */
     fun DrawScope.grano(fuerza: Float, semilla: Int = 1, celda: Float = 1.4f, zona: Rect = Rect(Offset.Zero, size)) {
         if (fuerza <= 0f || zona.width <= 0f || zona.height <= 0f || !zona.width.isFinite() || !zona.height.isFinite()) return
         val paso = max(celda * density, 1f)
-        // Cuatro tandas: claro débil y fuerte, oscuro débil y fuerte (así son cuatro llamadas, no una por punto).
-        val tandas = List(4) { ArrayList<Offset>() }
-        var fila = 0
+        // Cuántas columnas y filas: las mismas cuentas (con el mismo paso sumado) que el dibujo punto por punto.
+        var cols = 0
+        var x = zona.left + paso / 2
+        while (x < zona.right) { cols++; x += paso }
+        var filas = 0
         var y = zona.top + paso / 2
-        while (y < zona.bottom) {
-            var col = 0
-            var x = zona.left + paso / 2
-            while (x < zona.right) {
-                val v = azarFijo(col, fila, semilla) * 2f - 1f
-                if (abs(v) > 0.35f) tandas[(if (v > 0) 0 else 2) + (if (abs(v) > 0.75f) 1 else 0)].add(Offset(x, y))
-                x += paso; col++
-            }
-            y += paso; fila++
+        while (y < zona.bottom) { filas++; y += paso }
+        if (cols <= 0 || filas <= 0) return
+        val img = imagenGrano(cols, filas, semilla, fuerza)
+        withTransform({ translate(zona.left, zona.top); scale(paso, paso, Offset.Zero) }) {
+            drawImage(img, srcOffset = IntOffset.Zero, srcSize = IntSize(cols, filas), dstOffset = IntOffset.Zero, dstSize = IntSize(cols, filas),
+                filterQuality = FilterQuality.None)
         }
-        val claro = AL_SOL; val oscuro = SOMBRA
+    }
+
+    /** Las imágenes del grano ya pintadas, de la más vieja a la más nueva, con un tope de píxeles (uno por celda). */
+    private val granos = LinkedHashMap<List<Any>, ImageBitmap>(8, 0.75f, true)
+    private var pixelesGrano = 0L
+    private const val TOPE_GRANO = 3_000_000L
+
+    /**
+     * El grano de [cols] × [filas] celdas con [semilla] y [fuerza], un píxel por celda: transparente o del claro o el oscuro
+     * con su opacidad (las cuatro tandas de siempre: débil y fuerte de cada uno). Se pinta una vez y se guarda.
+     */
+    private fun imagenGrano(cols: Int, filas: Int, semilla: Int, fuerza: Float): ImageBitmap = synchronized(granos) {
+        val clave = listOf<Any>(cols, filas, semilla, fuerza)
+        granos[clave]?.let { return it }
+        val img = ImageBitmap(cols, filas)
+        val tandas = List(4) { ArrayList<Offset>() }
+        for (f in 0 until filas) for (c in 0 until cols) {
+            val v = azarFijo(c, f, semilla) * 2f - 1f
+            if (abs(v) > 0.35f) tandas[(if (v > 0) 0 else 2) + (if (abs(v) > 0.75f) 1 else 0)].add(Offset(c + 0.5f, f + 0.5f))
+        }
         val alfas = floatArrayOf(0.22f, 0.45f, 0.22f, 0.45f)
-        tandas.forEachIndexed { i, puntos ->
-            if (puntos.isNotEmpty()) drawPoints(puntos, PointMode.Points, (if (i < 2) claro else oscuro).copy(alpha = (alfas[i] * fuerza).coerceIn(0f, 1f)),
-                strokeWidth = paso, cap = StrokeCap.Square)
+        CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(img), Size(cols.toFloat(), filas.toFloat())) {
+            tandas.forEachIndexed { i, puntos ->
+                if (puntos.isNotEmpty()) drawPoints(puntos, PointMode.Points, (if (i < 2) AL_SOL else SOMBRA).copy(alpha = (alfas[i] * fuerza).coerceIn(0f, 1f)),
+                    strokeWidth = 1f, cap = StrokeCap.Square)
+            }
         }
+        granos[clave] = img; pixelesGrano += cols.toLong() * filas
+        val it = granos.entries.iterator()
+        while (pixelesGrano > TOPE_GRANO && it.hasNext()) {
+            val e = it.next()
+            if (e.key == clave) continue
+            pixelesGrano -= e.value.width.toLong() * e.value.height; it.remove()
+        }
+        img
     }
 
     /** La viñeta de la foto: el centro limpio y los bordes hacia [color], con [fuerza] ([VINETA_DIA] o [VINETA_NOCHE]). */
@@ -455,6 +501,11 @@ object TrazosTinta {
     /**
      * El grabado fino de líneas: llena [forma] con rayas paralelas de [grosor] px cada [paso] px, giradas [angulo] grados
      * (0 = horizontales). Es la trama de los medios tonos del cartel a una sola tinta.
+     *
+     * Las rayas van en un solo camino, con un solo trazo (19 nov 2026): antes era una línea suelta por raya, y en la tinta
+     * clara el Ideario, el estante y los muebles de Vida llevaban miles de operaciones que el teléfono volvía a pintar en
+     * cada cuadro. Si las rayas se tocan (más gruesas que su paso), van sueltas como antes: en un solo trazo, lo que se
+     * pisa no se oscurecería dos veces.
      */
     fun DrawScope.trama(forma: Path, paso: Float, grosor: Float, color: Color, angulo: Float = 0f) {
         val b = forma.getBounds()
@@ -464,10 +515,20 @@ object TrazosTinta {
         val c = b.center
         clipPath(forma) {
             rotate(angulo, c) {
-                var y = c.y - r
-                while (y <= c.y + r) {
-                    drawLine(color, Offset(c.x - r, y), Offset(c.x + r, y), grosor)
-                    y += p
+                if (grosor < p) {
+                    val rayas = Path()
+                    var y = c.y - r
+                    while (y <= c.y + r) {
+                        rayas.moveTo(c.x - r, y); rayas.lineTo(c.x + r, y)
+                        y += p
+                    }
+                    drawPath(rayas, color, style = Stroke(grosor))
+                } else {
+                    var y = c.y - r
+                    while (y <= c.y + r) {
+                        drawLine(color, Offset(c.x - r, y), Offset(c.x + r, y), grosor)
+                        y += p
+                    }
                 }
             }
         }

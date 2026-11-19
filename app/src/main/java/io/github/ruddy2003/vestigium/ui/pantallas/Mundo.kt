@@ -779,7 +779,9 @@ internal fun MapaRascar(visitados: Set<String>, modifier: Modifier = Modifier, r
     val paleta = remember(lam, oscuro) { paletaRascados(lam, oscuro) }
     val dens = LocalDensity.current.density
     // El motivo grabado del tema, en teselas de 16 dp en pantalla (no crece con el zoom).
-    val tesela = remember(tema, dens) { teselaLamina(tema, lam, (16 * dens).toInt()) }
+    // Con la lámina en la clave: en Psicodelia cambia con la cara (de las 21:00 a las 5:00, o con un consumo), y con ella el
+    // motivo grabado; antes la tesela se quedaba con el de la otra cara.
+    val tesela = remember(tema, dens, lam) { teselaLamina(tema, lam, (16 * dens).toInt()) }
     val pinceles = remember(lam, cs, tesela) {
         object {
             val lamina = Paint(Paint.ANTI_ALIAS_FLAG).apply {

@@ -17,7 +17,7 @@ Lo que pidió el autor el 16 de noviembre de 2026 después de comparar los 39 te
 | 0 | Este plan, las reglas de los muebles rehechos (`MUEBLES.md`, versión 2) y el arnés | hecho |
 | 1 | Arreglos: el aviso que sonaba junto con la música al estrenar tema; las notificaciones que no sonaban; el modo claro de día y oscuro de noche | hecho y compilado en Actions; **falta probarlo en el teléfono** |
 | 2 | Piloto de Idearios (Laboratorio, Helénico y Gótico) | hecho y aprobado por el autor |
-| 3 | Los otros 31 Idearios, y un piloto de tres bibliotecas rehechas | **hecho.** Los 34 Idearios están rehechos, compilados y capturados en Actions (corridas 12, 13 y 14, sin fallas). Bibliotecas piloto hechas: Helénico, Laboratorio y Gótico (`ui/biblioteca/MuebleEstante<Tema>.kt`). **Las otras 36 bibliotecas se rehacen:** el autor lo aprobó el 17 nov 2026, vistos los tres pilotos (con ellas, las libretas de momentos y el tablero de notas); falta hacerlo |
+| 3 | Los otros 31 Idearios, y un piloto de tres bibliotecas rehechas | **hecho.** Los 34 Idearios están rehechos, compilados y capturados en Actions (corridas 12, 13 y 14, sin fallas). Bibliotecas piloto hechas: Helénico, Laboratorio y Gótico (`ui/biblioteca/MuebleEstante<Tema>.kt`). **Las otras 36 bibliotecas se rehacen:** el autor lo aprobó el 17 nov 2026, vistos los tres pilotos (con ellas, las libretas de momentos y el tablero de notas). Hechas: Psicodelia (parte 5) y, el 19 nov 2026, las cinco que el autor pidió primero (Scriptorium, Roma contemporánea, Ruta de la Seda, Al-Ándalus y Espacio); faltan las demás, las libretas y el tablero (`docs/PENDIENTES.md`) |
 | 4 | Los muebles de Vida | **no se hace ahora**: queda escrita abajo |
 | 5 | Psicodelia nueva | **hecho (17 nov 2026).** Compilado y capturado en Actions (corrida 26). Las dos caras (ciudad y tinta), cada una en claro y oscuro, con la intensidad por consumo en curso; componentes, muebles, biblioteca, Ideario, textos, sonidos, gato, widgets y el cuento de David. La versión 1 está borrada entera. Lo que se hizo y lo que cambió respecto del plan: `temas/psicodelia.md`, `temas/psicodelia_plan.md` y `temas/psicodelia_base.md`. **Falta:** el cuadro de David (lo dibuja otro agente; ver «Para quien dibuje los cuadros…») y probar en el teléfono el cambio de cara al anochecer y la intensidad con un consumo abierto |
 | 6 | Fondos de pantalla con las escenas | **hecho (17 nov 2026)** y compilado en Actions (corrida 23); **falta probarlo en el teléfono** (lista abajo) |
@@ -29,7 +29,7 @@ Lo que pidió el autor el 16 de noviembre de 2026 después de comparar los 39 te
 
 ### Muebles (partes 2 a 4)
 
-Están en `MUEBLES.md`, versión 2. En corto: los 34 Idearios se rehacen; solo el mueble y la pared, sin ventanas ni paisajes; objetos y luz; noche como la de Galia y Art nouveau; tres tipos de libro; nivel de los cuadros.
+Están en `MUEBLES.md`, versión 2. En corto: los 34 Idearios se rehacen; el mueble y la pared, sin paisajes (los Idearios, sin ventanas; las bibliotecas pueden tener una con lógica, decisión del 19 nov 2026); objetos y luz; noche como la de Galia y Art nouveau; tres tipos de libro; nivel de los cuadros.
 
 Orden de los Idearios, de los más simples a los que ya tenían carácter:
 1. Laboratorio, Ruinas, Navidad, Prehistoria, Mesoamérica, Mongol, Terminal, Ciudad neón, Refugio, Orden, Distopía.
@@ -121,7 +121,7 @@ La respuesta al tocar; que el fondo y los muebles reaccionen a la hora, el clima
 
 ## Respuestas del autor (16 nov 2026, segunda ronda)
 
-1. **Las ventanas que ya existen se quedan por ahora** (los Idearios de Arcontes, Galia, Art nouveau y Psicodelia; las bibliotecas de Urbe, Pirata, Revolución, Ruinas, Navidad, Espacio y Abismo). La regla de «solo mueble y pared» vale para lo que se rehace.
+1. **Las ventanas que ya existen se quedan por ahora** (los Idearios de Arcontes, Galia, Art nouveau y Psicodelia; las bibliotecas de Urbe, Pirata, Revolución, Ruinas, Navidad, Espacio y Abismo). La regla de «solo mueble y pared» vale para lo que se rehace. **Cambió el 19 nov 2026 para las bibliotecas:** no pierden las ventanas (ver «Las bibliotecas», más abajo).
 2. **Psicodelia se queda en San Francisco a fines de los 60**, con su personaje y su cuento. De las referencias de los 70 se toma solo el estilo.
 3. **Seguir a un personaje avisa también con una notificación del teléfono,** con un sonido nuevo, propio de la historia.
 4. **La galería guarda el cuadro como imagen,** además de sus datos (tema, vida, día y hora), para que no cambie cuando se mejore el dibujo.
@@ -215,12 +215,14 @@ Todo lo de esta sección está sin hacer. Cada punto dice qué decidió el autor
 ### Las bibliotecas (36 por rehacer, aprobado por el autor el 17 nov 2026)
 
 - **Aprobado por el autor el 17 nov 2026,** vistos los tres pilotos (Helénico, Laboratorio, Gótico): se rehacen las demás. Con ellas se rehacen también las libretas de momentos (`DisenoBiblioteca.libreta()`, en el mismo `Estante<Tema>`; la escena es `ui/pantallas/LibretaMomentos.kt`) y el tablero de notas (`DisenoVida.tableroNotas()` y `notaTablero()`, en `ui/vida/Vida<Tema>.kt`), con la misma receta.
-- **Qué es rehacer una:** solo `estante()` y `volumen()` del objeto `Estante<Tema>` (en `ui/biblioteca/Biblioteca<Época>.kt`), que pasan a un archivo nuevo `ui/biblioteca/MuebleEstante<Tema>.kt` al que el objeto delega; más `override val auraEnReposo = false`. La tapa, la libreta, el sobre, el buzón y lo demás no se tocan.
-- **Qué pide el autor:** solo el mueble y la pared, sin ventanas; nivel de los Idearios rehechos; tres tipos de entrada que sean objetos distintos del tema; objetos arriba y en los huecos libres de las repisas; noche de verdad.
+- **Qué es rehacer una:** solo `estante()` y `volumen()` del objeto `Estante<Tema>` (en `ui/biblioteca/Biblioteca<Época>.kt`), que pasan a un archivo nuevo `ui/biblioteca/MuebleEstante<Tema>.kt` al que el objeto delega; más `override val auraEnReposo = false` (sin efecto desde el 19 nov 2026, cuando se quitó el aura en todos los temas; se deja por el contrato). La tapa, la libreta, el sobre, el buzón y lo demás no se tocan.
+- **Qué pide el autor:** el mueble y la pared, sin paisajes (con una ventana donde tenga lógica: ver abajo); nivel de los Idearios rehechos; tres tipos de entrada que sean objetos distintos del tema; objetos arriba y en los huecos libres de las repisas; noche de verdad.
 - **Lo que ya está preparado en el contrato** (`DisenoBiblioteca.kt`, `EstanteBiblioteca.kt`): `Volumen.repisa`, `repisas` y `centro` (para apagar cada volumen con la distancia a la luz), `DisposicionEstante.ocupado` (hasta dónde llegan los volúmenes de cada repisa: de ahí al costado, el hueco está libre para objetos) y `auraEnReposo`.
 - **Lo que cada volumen tiene que seguir diciendo:** el día legible, el mes, el color del ánimo bien visible, lo lleno según las palabras, y la luna en el estante de los Sueños (`v.noche`, que no es el modo oscuro). Son cuatro estados: claro y oscuro, diario y Sueños (`ARNES_SUENOS=1` en el arnés).
-- **Las ventanas que hoy tienen** las bibliotecas de Urbe, Pirata, Revolución, Ruinas, Navidad, Espacio y Abismo desaparecen al rehacerlas (la regla vale para lo que se rehace).
-- **Orden sugerido:** el de los Idearios (arriba), empezando por las más planas.
+- **Las ventanas (decisión del autor del 19 nov 2026): las bibliotecas no las pierden.** Le gustan, pero con lógica y no en todos los temas. Donde la haya, es la fuente de luz de día, cambia de noche y no se come el mueble; las que ya tenían Urbe, Pirata, Revolución, Ruinas, Navidad y Abismo se quedan si cumplen eso. El detalle, en `MUEBLES.md`, «Las ventanas de las bibliotecas».
+- **El peso:** lo fijo no se recalcula por volumen ni por dibujo; el peso, por debajo de 1.5 veces el del piloto de Helénico; y se vigilan las operaciones de la lista de dibujo, que fue lo que más pesó en Psicodelia (`herramientas/arnes_muebles/medir.sh`; `MUEBLES.md`, «El peso del dibujo»).
+- **Lo que más se devolvió en la tanda del 19 nov 2026** (`MUEBLES.md` lo explica): volúmenes chicos y pálidos (deben llenar unos cuatro quintos del alto de la repisa, con el ánimo en todo el cuerpo); las tres clases que se confunden (cada una con su silueta); una sola temperatura en la paleta; el fondo de los casilleros que no deja resaltar los volúmenes; el estante de los Sueños como un filtro parejo; muros de piedras hinchadas o de bloques de regla; pintura decorativa que grita más que los volúmenes; falta de un objeto protagonista arriba.
+- **Orden:** el autor pidió rehacer primero Scriptorium, Roma contemporánea, Ruta de la Seda, Al-Ándalus y Espacio; las demás, como sean. Las cinco están hechas y mezcladas en `ccr-e50e410b-nuv2vd` (19 nov 2026; mezclas `79be8247`, `1ac9562a`, `6a5b656c`, `ba719832` y `fa29b5f7`). El estado al día, en `docs/PENDIENTES.md`.
 
 ### Parte 4 · Los muebles de Vida
 

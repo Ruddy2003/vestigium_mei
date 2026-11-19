@@ -47,18 +47,18 @@ El autor comparó los 39 temas en capturas (los 34 de antes junto a Frente exter
 ## Lo que decidió el autor
 
 - **Los 34 Idearios se rehacen.** Estaban muy por debajo de los nuevos: un mueble de frente, el mismo recipiente repetido y adorno solo arriba.
-- **Las bibliotecas no se rehacen, se completan** con tres cosas: noche de verdad, tres tipos de entrada y objetos del tema en los huecos.
-- **Solo el mueble y la pared de detrás.** Nada de ventanas, paisajes ni exteriores. Sí objetos y sí iluminación.
+- **Las bibliotecas no se rehacen, se completan** con tres cosas: noche de verdad, tres tipos de entrada y objetos del tema en los huecos. **Cambió el 17 nov 2026:** vistos los tres pilotos, el autor decidió rehacerlas todas (`PLAN_MEJORAS.md`, «Las bibliotecas»).
+- **El mueble y la pared de detrás.** Es un interior: nada de paisajes ni exteriores. Sí objetos y sí iluminación. Los Idearios, sin ventanas. **Las bibliotecas pueden tener una ventana** (decisión del autor del 19 nov 2026: le gustan, pero con lógica y no en todos los temas); ver «Las ventanas de las bibliotecas», abajo.
 - **El nivel de detalle y de calidad es el de los cuadros** de «Otras vidas» (`ESCENAS.md`).
 - **La noche, como la de Galia y Art nouveau:** todos los temas llegan a ese nivel.
 - **La noche se enciende con el modo oscuro.** El modo puede ser claro, oscuro, como el teléfono o por hora (claro de día, oscuro de noche).
 
 ## Las reglas de un mueble rehecho
 
-Son las diez de `ESCENAS.md` llevadas a un interior sin ventana. Si una no se puede cumplir al pie de la letra, se cumple su propósito y se anota.
+Son las diez de `ESCENAS.md` llevadas a un interior (sin ventana en los Idearios; en las bibliotecas, con una si el tema la pide). Si una no se puede cumplir al pie de la letra, se cumple su propósito y se anota.
 
-1. **El encuadre.** El mueble de frente contra su pared. La pared se ve arriba (la corona) y asoma a los lados y entre los objetos. No hay ventana, puerta abierta, cielo ni paisaje, ni reflejo de ellos.
-2. **La luz tiene dirección.** De día viene de arriba a la izquierda, de algo que queda fuera del cuadro:
+1. **El encuadre.** El mueble de frente contra su pared. La pared se ve arriba (la corona) y asoma a los lados y entre los objetos. No hay puerta abierta, cielo ni paisaje, ni reflejo de ellos. En los Idearios tampoco hay ventana; en las bibliotecas puede haber una, con las condiciones de «Las ventanas de las bibliotecas».
+2. **La luz tiene dirección.** De día viene de arriba a la izquierda, de algo que queda fuera del cuadro (en una biblioteca con ventana, de la ventana):
    - una mancha de luz en la pared, más clara arriba a la izquierda;
    - cada volumen con su lado de luz y su lado de sombra;
    - el mueble deja su sombra en la pared, a su derecha y debajo de cada saliente;
@@ -94,9 +94,39 @@ Son las diez de `ESCENAS.md` llevadas a un interior sin ventana. Si una no se pu
 - **Noche de verdad** (regla 3).
 - No cambia la silueta del estante, sus medidas ni las cajas de texto.
 
+## Las ventanas de las bibliotecas (19 nov 2026)
+
+El autor cambió la regla: **las bibliotecas no pierden las ventanas.** Le gustan, pero con lógica y no en todos los temas. Donde la haya:
+
+- **Es la fuente de luz de día.** La mancha de luz en la pared, el lado de luz de los volúmenes y las sombras salen de ella (el derrame alumbrado, el rayo, la trama en el suelo), no de un foco cualquiera.
+- **Cambia de noche.** Deja ver la noche de fuera (la luna, las estrellas) y deja de mandar: alumbra la luz del tema dibujada en el cuadro (el candil, la lámpara), como pide la regla 3.
+- **No se come el mueble.** El mueble sigue mandando: la ventana no tapa volúmenes ni el objeto protagonista (en las tres de esta tanda va arriba y a un costado).
+- **Solo donde tiene lógica.** Un interior que no la tendría (un sótano, una cueva) se queda sin ella, con la luz de algo que queda fuera del cuadro.
+
+Así lo hicieron las tres de la tanda del 19 nov 2026: Scriptorium (la ventana abocinada arriba a la izquierda, con su rayo de sol; la luna, en los Sueños), Al-Ándalus (la ventana de herradura con su celosía, que dibuja la trama en el derrame y en el suelo; de noche alumbra el candil) y Espacio (el ojo de buey a un costado: de día, la luz fría de los focos del anillo; de noche, el anillo y la Vía Láctea, y manda la lámpara de trabajo). Después, Roma contemporánea (la ventana honda con su persiana verde arriba a la izquierda: de día, el sol rayado por las lamas en la cornisa y en la primera repisa; de noche, la lámpara de pantalla plisada) y Ruta de la Seda, donde la ventana queda fuera del cuadro: solo se ve el dibujo de su reja de palos en la cal, de sol de día y de luna de noche, junto a la lámpara de barro. Las ventanas que ya tenían las bibliotecas de antes (Pirata, Revolución, Ruinas, Navidad y Abismo) no desaparecen al rehacerlas: se quedan si cumplen esto.
+
+## El peso del dibujo
+
+- **Lo fijo no se recalcula por volumen ni por dibujo.** Los caminos, colores y medidas que no dependen del volumen se arman una vez y se comparten; cada volumen solo calcula lo suyo.
+- **El peso, por debajo de 1.5 veces el del piloto de Helénico,** en claro y en oscuro: `herramientas/arnes_muebles/medir.sh biblioteca heleno,<tema>` (lo que tarda en grabarse y en pintarse el estante con sus 35 entradas).
+- **Vigilar las operaciones** (`ops` y `KB` en la misma tabla), que fue lo que más pesó en Psicodelia: miles de puntos o trazos sueltos que el teléfono vuelve a pintar en cada cuadro mientras se mueve el fondo vivo. Las piezas iguales van en un solo camino con un solo trazo, y el grano en una imagen en caché. Si las operaciones pasan de unas dos veces las de Helénico, se dice qué pieza las gasta.
+- Las cinco de la tanda del 19 nov 2026, frente a Helénico (operaciones, claro y oscuro): Espacio 1.29 y 1.36, Al-Ándalus 0.95 y 0.99, Scriptorium 1.19 y 1.26, Ruta de la Seda 0.97 y 1.01, Roma contemporánea 0.85 y 0.83. En tiempo (grabar y pintar), todas entre 1.0 y 1.35.
+
+## Lo que más se devolvió en las bibliotecas (tanda del 19 nov 2026)
+
+- **Volúmenes chicos y pálidos.** Tienen que llenar unos cuatro quintos del alto de la repisa, con el color del ánimo en todo el cuerpo, no en una franja.
+- **Las tres clases que se confunden.** Cada clase de entrada, con su silueta propia (alta y delgada, baja y ancha, blanda), no la misma forma con otro adorno.
+- **Una sola temperatura en la paleta.** Hace falta lo cálido y lo frío juntos.
+- **El fondo de los casilleros que no deja resaltar los volúmenes.** El fondo, quieto y en otro valor que lo que tiene delante.
+- **El estante de los Sueños como un filtro parejo.** Necesita su propia luz (un anochecer con color, el charco de una luz del tema), no el dibujo de día con un velo.
+- **Muros de piedras hinchadas o de bloques de regla.** Piedras de caras planas, desiguales, con juntas abiertas y desgaste.
+- **Pintura decorativa que grita más que los volúmenes.** Cenefas y pinturas, apagadas y gastadas: lo que manda son las entradas.
+- **Falta de un objeto protagonista arriba.** Sobre el mueble, uno que mande (la prensa, el ventilador a medio arreglar), con uso.
+
 ## Cómo se revisa
 
 - **Arnés de escritorio** en `herramientas/arnes_muebles/` (ver su `LEEME.md`): dibuja el Ideario y la biblioteca de cualquier tema, en claro y en oscuro, con los archivos reales de la app.
+- **Capturas en Actions** de una biblioteca: superficie `bibliotecas` (la del diario) y, desde el 19 nov 2026, `suenos` (el estante de los Sueños con 14 sueños de ejemplo, que en el arnés sale con volúmenes delgados), con `temas=<los de la tanda>`.
 - **La vara son los Idearios rehechos** (noviembre de 2026), no Galia y Art nouveau: un mueble nuevo no puede verse más pobre que ellos.
 - Cada mueble se dibuja, se mira y se corrige al menos tres veces antes de entregarlo, en claro y en oscuro.
 - Se compara al lado del Ideario de Galia y del de Art nouveau, y con el cuadro del tema si lo tiene.

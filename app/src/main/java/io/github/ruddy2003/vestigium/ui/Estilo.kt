@@ -589,12 +589,15 @@ object Estilo {
      * «Mes del tema · mes común» (hallazgo 11), para rotular un mes del calendario común: el nombre que le da el tema y, al
      * lado, «octubre de 2026», salvo que el nombre del tema ya diga el mes (entero o abreviado) y el año con cifras. Así un
      * mes republicano, egipcio o «juliano» nunca queda como la única fecha de lo que se cuenta por meses del calendario común.
+     * Si el nombre del tema es el mismo mes común sin el año (Scriptorium llama «noviembre» a noviembre), el mes va una sola
+     * vez: «noviembre de 2026», no «noviembre · noviembre de 2026» (19 nov 2026).
      */
     fun mesConComun(n: Int, anio: Int): String {
         val i = (n - 1).coerceIn(0, 11)
         val delTema = mes(n, anio)
         val llano = slug(delTema)
         return if (llano.contains(MESES_LARGOS[i].take(3)) && delTema.contains(anio.toString()) && !llano.contains("juliano")) delTema
+        else if (delTema.trim().equals(MESES_LARGOS[i], ignoreCase = true)) delTema.trim() + " de " + anio
         else delTema + " · " + MESES_LARGOS[i] + " de " + anio
     }
 

@@ -871,9 +871,12 @@ object Urbe {
 @Composable
 fun VistaPreviaTema(tema: TemaId, oscuro: Boolean, elegido: Boolean, modifier: androidx.compose.ui.Modifier = androidx.compose.ui.Modifier, onClick: () -> Unit) {
     val o = tema.soloOscuro || oscuro
-    val e = androidx.compose.runtime.remember(tema, o) { esquemaDe(tema, o) }
+    // Con la cara en la clave (Psicodelia): a las 21:00 y a las 5:00, o al empezar un consumo, la muestra cambia de esquema y
+    // de letra junto con su título; antes se quedaba con los de la otra cara.
+    val cara = EstadoTema.caraDe(tema)
+    val e = androidx.compose.runtime.remember(tema, o, cara) { esquemaDe(tema, o, cara) }
     // La letra de cada tema se arma una vez por muestra, no en cada redibujo (abrir Apariencia cargaba decenas de letras).
-    val t = androidx.compose.runtime.remember(tema, o) { tipoDe(tema, o) }
+    val t = androidx.compose.runtime.remember(tema, o, cara) { tipoDe(tema, o, cara) }
     val titulo = when (tema) {
         TemaId.ROMANO -> "DIES"
         TemaId.URBE -> "OGGI"

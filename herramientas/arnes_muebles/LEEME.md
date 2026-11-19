@@ -21,7 +21,7 @@ herramientas/arnes_muebles/dibujar.sh logros psicodelia <claro|oscuro> <salida.p
 - Fondo: el color `background` del esquema del tema, liso (sin la textura de `fondoTema`).
 - `ARNES_HOY=AAAA-MM-DD` fija el «hoy» de los ejemplos (por omisión, el día lógico de hoy). Cambia las fechas de las entradas y, con ellas, cómo se reparten en el estante. Para comparar con una captura de CI, pon el día en que corrió; las de noviembre de 2026 usan `ARNES_HOY=2026-11-15`.
 - `ARNES_TEMAS=0,1,5` dibuja un Ideario por cada número de temas, uno bajo otro (es la captura `temaMueble` «_a»: sin temas, con uno y con cinco); por omisión, 9 (la «_b»). `ARNES_MAX=6` corta el Ideario a ese número de compartimentos y pone la placa «y N más» (la «_c»). **Todo Ideario nuevo se dibuja también así:** un mueble que solo se probó con 9 temas puede colgarse o romperse con 0.
-- `ARNES_SUENOS=1` dibuja la biblioteca como estante de los Sueños: es el `noche` de `EstanteTema`, aparte del claro y el oscuro (la luna en lugar del sello y la luz propia que cada tema enciende ahí). Los volúmenes salen delgados porque los días de ejemplo no traen texto de sueño.
+- `ARNES_SUENOS=1` dibuja la biblioteca como estante de los Sueños: es el `noche` de `EstanteTema`, aparte del claro y el oscuro (la luna en lugar del sello y la luz propia que cada tema enciende ahí). Lleva los 14 sueños de la captura `temaSuenos` (`suenosEjemplo` de `Capturas.kt`, uno cada dos días desde ayer): solo los días con sueño, cada volumen con el ancho de su texto y el color de su valencia. `medir.sh` también la acepta.
 - `ARNES_CARA=base|intensa` y `ARNES_INTENSIDAD=0..1` fijan la cara y la intensidad de los temas que las tienen (hoy, Psicodelia: `base` es la ciudad, `intensa` la psicodelia; ver `ui/CaraTema.kt` y `docs/diseno/temas/psicodelia_base.md`). Llaman a `EstadoTema.forzar` antes de dibujar. **Por omisión, `base` y 0**, así el dibujo no depende de la hora a la que se corre (en la app, la cara la decide la hora). Las cuatro variantes de Psicodelia son `base` y `intensa`, cada una en `claro` y `oscuro`; por ejemplo, `ARNES_CARA=intensa ARNES_INTENSIDAD=1 dibujar.sh ideario psicodelia oscuro salida.png`. Los temas sin caras no cambian con ellas.
 - `trazos`: una hoja de muestra de los trazos de Psicodelia (`ui/PsicodeliaTrazos.kt`, en `arnes/MuestraTrazos.kt`): con `ARNES_CARA=base`, los de la ciudad (`TrazosCiudad`: casas, poste, cables, viñeta, grano, ladrillo, persiana, letrero y los colores); con `intensa`, los de la tinta (`TrazosTinta`: rayos con trama, bandas a tres tintas con su registro, anillos, marco de arco, letras que llenan su forma y los colores), según `ARNES_INTENSIDAD`. No es un mueble: sirve para ver la base antes de usarla.
 - `comun`: una hoja de muestra de las piezas de la tanda 2 de Psicodelia (`arnes/MuestraComun.kt`): todas las de `ui/comun/ComunPsicodelia.kt` a su tamaño de uso (campos en sus cinco estados, separadores, botones de texto, filas, vacío, avisos, cifras, las cuatro tarjetas, la balanza, el mes, los asientos, la hoja rápida, las relaciones, el marco de la cinta), con un texto de ejemplo encima para ver que se lee; las de `ui/PsicodeliaPiezas.kt` (emblema, banda bajo el título, subrayado, esquinas, marca de escala, botón, perilla y riel, diálogo, fondo vivo) y los ocho íconos de pestaña (`ui/IconosPestana.kt`). Según `ARNES_CARA` y `ARNES_INTENSIDAD`.
@@ -62,6 +62,22 @@ herramientas/arnes_muebles/dibujar.sh hoja galeria <claro|oscuro> <salida.png> h
 ```
 
 El mueble de la galería de cuadros de la pestaña Vida (parte 8, `docs/diseno/CUADROS_PLAN.md`), en `arnes/Galeria.kt`: el recuadro de 190 dp con el composable real `ParedDeCuadros` (`ui/vida/MuebleGaleria.kt`), que pone el mueble del tema (`DisenoVida.muebleGaleria`; por omisión, `MuebleGaleriaComun`), las miniaturas en sus huecos y la luz encima. Uno bajo otro con 0, 1 y 5 cuadros; `ARNES_CUADROS=0,1,5` elige cuántos. Las miniaturas son cinco paisajes de relleno pintados en el arnés (las escenas no se compilan aquí): sirven para ver cómo caen en los marcos y con la luz.
+
+## Medir
+
+```
+herramientas/arnes_muebles/medir.sh [grupo,grupo,...] [tema,tema,...]
+```
+
+Mide el «peso» del dibujo (`arnes/Medir.kt`, 19 nov 2026) y saca una tabla separada por tabuladores. Grupos: `biblioteca` (el estante con las 35 entradas, armado con la escena real y un espía que anota cada llamada de `DisenoBiblioteca`), `ideario` (el mueble con 9 temas y sus compartimentos, con la cuenta de lugares de `MuebleIdeas`), `vida` (Social, Mapas y Otras vidas), `comun` (una mezcla de piezas comunes como la de una pantalla), `decoracion` (emblema, banda, subrayado y filete de Psicodelia) y `fondo` (un cuadro del fondo vivo de Psicodelia). Temas: por omisión Psicodelia en sus ocho variantes (las dos caras, claro y oscuro, intensidad 0, 0.5 y 1), Helénico, Laboratorio y los otros cuatro del lote 10.
+
+- `grabar_us`: lo que tarda en correr el código de dibujo y grabarse como lista de operaciones de Skia (en el teléfono, lo que pasa en el hilo de la interfaz cada vez que la pieza se vuelve a dibujar). Mediana de hasta 200 vueltas.
+- `pintar_us`: pintar esa lista en píxeles con Skia en la CPU (en el teléfono lo hace la GPU; sirve para comparar, no como cifra del teléfono).
+- `ops` y `KB`: cuántas operaciones lleva la lista y cuánto ocupa. Es lo que el teléfono vuelve a pintar en cada cuadro mientras algo de la pantalla se mueve (el fondo vivo, el emblema).
+- `primera_ms`: la primera vez, con las cachés vacías.
+- `MEDIR_DETALLE=1`: además, cada llamada por separado (el mueble y cada volumen o compartimento).
+
+Los tiempos varían de una corrida a otra si la máquina está ocupada; `ops` y `KB` no.
 
 ## Cuánto tarda (medido en esta máquina, 4 núcleos)
 

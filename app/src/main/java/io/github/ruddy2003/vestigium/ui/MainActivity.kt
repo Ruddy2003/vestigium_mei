@@ -2346,7 +2346,13 @@ private fun Raiz(pedida: String?, apilar: Boolean, consumir: () -> Unit) {
         // El papel tapiz va en su propia capa, guardada como imagen, en todos los temas (antes solo en Art déco y Edo): así no se
         // vuelve a trazar (cientos de arcos, ladrillos u hojas) cada vez que se mueve el fondo vivo o cambia la pantalla.
         Box(Modifier.padding(pad).fillMaxSize()) {
-            Box(Modifier.fillMaxSize().graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }.fondoTema(tema, esquema))
+            // El modificador se guarda (19 nov 2026): `fondoTema` arma su dibujo en un `drawWithCache`, y un modificador nuevo en
+            // cada recomposición (al cambiar de pestaña o de pantalla) lo obligaba a rehacer el papel tapiz entero y su capa.
+            // Lo que lee del tema (la cara de Psicodelia) lo sigue rehaciendo solo cuando cambia.
+            val papelTapiz = remember(tema, esquema) {
+                Modifier.fillMaxSize().graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }.fondoTema(tema, esquema)
+            }
+            Box(papelTapiz)
             FondoVivo(tema)
             // Cada tema cambia de pantalla a su manera; hacia adentro y hacia atrás se mueven en sentidos opuestos.
             // Ocupa siempre toda la ventana: si se encogiera junto con la pantalla que entra (las que se abren desde una

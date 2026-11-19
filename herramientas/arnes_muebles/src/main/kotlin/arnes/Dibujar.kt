@@ -193,7 +193,7 @@ private fun juntar(imgs: List<Image>): Image {
  * Las ideas de `Capturas.ideasConTemas(n)`: repartidas en [n] temas, cada uno con más o menos fichas; uno de nombre largo
  * y, con más de uno, el último es el cajón de las ideas sin tema.
  */
-private fun ideasConTemas(n: Int): List<Idea> {
+internal fun ideasConTemas(n: Int): List<Idea> {
     val temas = listOf("filosofia", "dinero", "historia_de_la_ciencia_y_de_la_tecnica", "salud", "aprender", "fisica", "amistad", "escritura", "cocina")
     val hoy = hoy()
     return (0 until n).flatMap { k ->
@@ -232,7 +232,7 @@ private fun Ideario() {
 // ---------------------------------------------------------------- la biblioteca del diario
 
 /** Los días de `Capturas.Ejemplo.cargar()` (solo los días: es lo único que lee el estante), con el mismo azar. */
-private fun diasEjemplo(): Map<String, Dia> {
+internal fun diasEjemplo(): Map<String, Dia> {
     val hoy = hoy()
     val r = java.util.Random(7)
     val fechas = (0..35).map { Fechas.sumar(hoy, -it.toLong()) }
@@ -246,6 +246,30 @@ private fun diasEjemplo(): Map<String, Dia> {
         (hoy to Dia(fecha = hoy, sueno_calidad = null, valencia = null))
 }
 
+/** Si se dibuja el estante de los Sueños (ARNES_SUENOS=1). */
+internal val conSuenos: Boolean get() = System.getenv("ARNES_SUENOS") == "1"
+
+/**
+ * Los 14 sueños de `Capturas.suenosEjemplo` (uno cada dos días, desde ayer) sobre [dias]: el texto y la valencia del sueño,
+ * que dan el ancho y el color de cada volumen en el estante de los Sueños, como en la captura `temaSuenos`.
+ */
+internal fun suenosEjemplo(dias: Map<String, Dia>): Map<String, Dia> {
+    val textos = listOf(
+        "Estaba en una estación de tren que también era la casa de mis abuelos. @ana me decía que el tren salía por la ventana y no me sorprendía.",
+        "Volaba bajito sobre un mar verde. Sabía que era un sueño y traté de subir más, pero el cielo era de tela.",
+        "Llegaba tarde a un examen de una materia que nunca había cursado. Las preguntas estaban en un idioma inventado. #escuela",
+        "Una ciudad de noche llena de faroles; caminaba con @luis buscando una librería que cambiaba de calle.",
+        "Un perro enorme me acompañaba por el bosque y me enseñaba un camino de piedras blancas.",
+    )
+    val d = dias.toMutableMap()
+    (0 until 14).forEach { k ->
+        val f = Fechas.sumar(hoy(), -(k * 2L + 1))
+        val base = d[f] ?: Dia(fecha = f)
+        d[f] = base.copy(sueno_recordado = true, sueno_texto = textos[k % textos.size], sueno_valencia = 2 + (k * 3) % 6)
+    }
+    return d
+}
+
 /**
  * La captura `temaBibliotecas`, solo el estante: lo que arma `BibliotecaDiario` y `EstantePorMeses` (ui/pantallas/Bibliotecas.kt)
  * sin búsqueda: las entradas por mes, de la más reciente a la más vieja (hasta 6 meses), cada mes con su rótulo
@@ -253,12 +277,13 @@ private fun diasEjemplo(): Map<String, Dia> {
  */
 @Composable
 private fun Biblioteca() {
-    Repo.dias = diasEjemplo()
-    val todas = Repo.dias.values.filter { it.nota.isNotBlank() }.sortedByDescending { it.fecha }   // LibroDiario.entradas()
+    // ARNES_SUENOS=1: el estante de los Sueños (lo que la app llama «noche»: la luna en lugar del sello, la luz propia del tema),
+    // con los 14 sueños de la captura `temaSuenos`: solo los días con sueño escrito, cada uno con el color de su valencia.
+    Repo.dias = if (conSuenos) suenosEjemplo(diasEjemplo()) else diasEjemplo()
+    val todas = Repo.dias.values.filter { if (conSuenos) it.sueno_texto.isNotBlank() else it.nota.isNotBlank() }.sortedByDescending { it.fecha }
     val porMes = todas.groupBy { it.fecha.take(7) }.toSortedMap(compareByDescending { it })
     val grupos = porMes.entries.take(6).map { (mes, lista) -> GrupoEstante(Estilo.mesConComun(mes.drop(5).toInt(), mes.take(4).toInt()), lista) }
     Box(Modifier.padding(horizontal = 16.dp).padding(top = 18.dp, bottom = 16.dp)) {
-        // ARNES_SUENOS=1: el estante de los Sueños (lo que la app llama «noche»: la luna en lugar del sello, la luz propia del tema).
-        EstanteTema(disenoBiblioteca(Estilo.tema), grupos, System.getenv("ARNES_SUENOS") == "1", {})
+        EstanteTema(disenoBiblioteca(Estilo.tema), grupos, conSuenos, {})
     }
 }

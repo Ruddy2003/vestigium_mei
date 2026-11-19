@@ -4317,6 +4317,16 @@ fun BotonAjustes(modifier: Modifier = Modifier, onClick: () -> Unit) {
                 Box(Modifier.size(18.dp), contentAlignment = Alignment.Center) { IconoPestana("ajustes", nombre = "Más") }
             }
         }
-        androidx.compose.material3.Text(textoMas(tema), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, maxLines = 1, softWrap = false)
+        // La palabra cabe en los 48 dp: si es más ancha (la «Trastienda» de Psicodelia se cortaba en «Trastiend»), la letra
+        // se achica lo justo. Las que ya cabían quedan igual.
+        val texto = textoMas(tema)
+        val estilo = MaterialTheme.typography.labelSmall
+        val medidor = androidx.compose.ui.text.rememberTextMeasurer(cacheSize = 2)
+        val libre = with(androidx.compose.ui.platform.LocalDensity.current) { 46.dp.toPx() }
+        val ajustado = remember(texto, estilo, libre) {
+            val ancho = medidor.measure(texto, estilo, maxLines = 1, softWrap = false).size.width
+            if (ancho <= libre || !estilo.fontSize.isSp) estilo else estilo.copy(fontSize = estilo.fontSize * (libre / ancho), letterSpacing = if (estilo.letterSpacing.isSp) estilo.letterSpacing * (libre / ancho) else estilo.letterSpacing)
+        }
+        androidx.compose.material3.Text(texto, style = ajustado, color = MaterialTheme.colorScheme.primary, maxLines = 1, softWrap = false)
     }
 }

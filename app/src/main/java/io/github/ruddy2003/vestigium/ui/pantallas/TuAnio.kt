@@ -280,7 +280,9 @@ private fun Rascar(v: Vista, contenido: @Composable () -> Unit) {
     val tema = Estilo.tema
     val lam = laminaRascar(tema)
     val dens = LocalDensity.current.density
-    val tesela = remember(tema, dens) { teselaLamina(tema, lam, (26 * dens).toInt()) }
+    // Con la lámina en la clave: en Psicodelia cambia con la cara (de las 21:00 a las 5:00, o con un consumo), y con ella el
+    // motivo grabado; antes la tesela se quedaba con el de la otra cara.
+    val tesela = remember(tema, dens, lam) { teselaLamina(tema, lam, (26 * dens).toInt()) }
     // El «rasca aquí» va grabado en el tono que contrasta con el cuerpo del metal.
     val letra = if (Color(lam.media).luminance() > 0.4f) Color(lam.oscura) else Color(lam.clara)
     Box(Modifier.fillMaxWidth().height(170.dp), contentAlignment = Alignment.Center) {

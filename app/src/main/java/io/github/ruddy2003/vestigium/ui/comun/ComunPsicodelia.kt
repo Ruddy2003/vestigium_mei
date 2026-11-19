@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.lerp
@@ -478,8 +479,12 @@ object ComunPsicodelia : DisenoComun {
             else pase(Rect(8 * u, cy - 7 * u, 32 * u, cy + 7 * u), k, -8f)
         } else {
             if (e.semilla % 2 == 0) {
-                corona(Offset(19 * u, cy), 7 * u, 14 * u, k, n = 14)
-                disco(Offset(19 * u, cy), 7 * u, k, sombra = false)
+                // Dentro de la placa y antes del texto: con la intensidad, el registro corría los rayos hasta tocar la primera
+                // letra y fuera del canto izquierdo (sin intensidad no llegan, y se ve igual).
+                clipRect(r.left, 0f, margenAviso.toPx() - 2 * u, h) {
+                    corona(Offset(19 * u, cy), 7 * u, 14 * u, k, n = 14)
+                    disco(Offset(19 * u, cy), 7 * u, k, sombra = false)
+                }
             } else {
                 val altoB = min(r.height - 8 * u, 26 * u)
                 listOf(k.ultramar, k.magenta, if (k.m.bermellon > 0f) k.bermellon else k.terciario).forEachIndexed { j, c ->
