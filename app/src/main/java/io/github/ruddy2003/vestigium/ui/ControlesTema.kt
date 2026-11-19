@@ -183,11 +183,10 @@ fun CuerpoDialogo(
                     LocalContentColor provides (if (titleContentColor.isSpecified) titleContentColor else e.onSurface),
                     LocalTextStyle provides MaterialTheme.typography.headlineSmall,
                 ) {
-                    // Psicodelia, en la tinta: el sol que asoma por la esquina de arriba a la derecha (`marcoDialogo`) va encima
-                    // del contenido, y un título largo («¿Borrar este momento?») le pasaba por debajo. El título deja libre esa
-                    // esquina por los dos lados, para seguir centrado.
-                    val libreSol = if (tema == TemaId.PSICODELIA && caraLocal() == Cara.INTENSA) 28.dp else 0.dp
-                    Box(Modifier.fillMaxWidth().padding(horizontal = libreSol), contentAlignment = if (piel.centrado || icon != null) Alignment.TopCenter else Alignment.TopStart) { title() }
+                    // Lo que el título deja libre a cada lado en la cara intensa ([PielDialogo.libreIntensa]): en Psicodelia, el sol
+                    // que asoma por la esquina va encima del contenido y un título largo le pasaba por debajo.
+                    val libre = if (caraLocal() == Cara.INTENSA) piel.libreIntensa else 0.dp
+                    Box(Modifier.fillMaxWidth().padding(horizontal = libre), contentAlignment = if (piel.centrado || icon != null) Alignment.TopCenter else Alignment.TopStart) { title() }
                 }
                 Canvas(Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 14.dp).height(10.dp)) { fileteDialogo(tema, e) }
             }
@@ -222,8 +221,12 @@ private class FormaDp(private val trazo: Path.(w: Float, h: Float, d: Float) -> 
         Outline.Generic(Path().apply { trazo(this, size.width, size.height, density.density) })
 }
 
-/** Forma del marco, holgura extra arriba y abajo (para frontones, arcos y dientes), título centrado y grosor del borde. */
-private class PielDialogo(val forma: Shape, val arriba: Dp, val abajo: Dp, val centrado: Boolean, val borde: Dp)
+/**
+ * Forma del marco, holgura extra arriba y abajo (para frontones, arcos y dientes), título centrado y grosor del borde.
+ * [libreIntensa]: lo que el título deja libre a cada lado en la cara intensa de un tema con caras (19 nov 2026: en la tinta
+ * de Psicodelia, el sol de la esquina de arriba va encima del contenido y tapaba el final de un título largo).
+ */
+private class PielDialogo(val forma: Shape, val arriba: Dp, val abajo: Dp, val centrado: Boolean, val borde: Dp, val libreIntensa: Dp = 0.dp)
 
 private val PIELES_DIALOGO: Map<TemaId, PielDialogo> by lazy { TemaId.entries.associateWith { crearPielDialogo(it) } }
 
@@ -274,7 +277,7 @@ private fun crearPielDialogo(t: TemaId): PielDialogo = when (t) {
             Cara.BASE -> addRoundRect(androidx.compose.ui.geometry.RoundRect(0f, 0f, w, h, androidx.compose.ui.geometry.CornerRadius(minOf(11 * d, w / 2, h / 2))))
             Cara.INTENSA -> addPath(TrazosTinta.arco(androidx.compose.ui.geometry.Rect(0f, 0f, w, h), 24 * d, 3 * d))
         }
-    }, 3.dp, 3.dp, true, 1.4.dp)
+    }, 3.dp, 3.dp, true, 1.4.dp, libreIntensa = 28.dp)
     // El cartel enmarcado: el canto de arriba sube en medio en una curva suave, como el letrero de las entradas de metro, la
     // esquina de arriba a la izquierda y la de abajo a la derecha muy redondas, y las otras dos casi rectas.
     TemaId.NOUVEAU -> PielDialogo(FormaDp { w, h, d ->
