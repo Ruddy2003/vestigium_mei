@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaAndalus.ANIL
+import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaAndalus.SEDA_VERDE
+import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaAndalus.SEDA_ANIL
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaAndalus.BARRO
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaAndalus.BRONCE
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaAndalus.CARMESI
@@ -41,6 +43,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
 import io.github.ruddy2003.vestigium.ui.muebles.FILO_MUEBLE
+import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -128,7 +131,7 @@ internal fun DrawScope.laudAndalus(pie: Offset, largo: Float, giro: Float, a: Ai
     val clavijero = poligono(cx - L * 0.036f, pie.y - L * 0.785f, cx + L * 0.036f, pie.y - L * 0.785f, cx + L * 0.05f, pie.y - L * 0.9f, cx + L * 0.005f, pie.y - L * 0.93f)
     rotate(giro, pie) {
         translate(caida.x, caida.y) {
-            val sc = a.sombra(if (a.oscuro) 0.38f else 0.22f)
+            val sc = a.sombra(if (a.oscuro) 0.26f else 0.2f)
             drawPath(caja, sc); drawPath(mastil, sc); drawPath(clavijero, sc)
         }
     }
@@ -203,7 +206,7 @@ internal fun DrawScope.astrolabioAndalus(clavo: Offset, r: Float, a: AireAndalus
     }
     val bronce = a.luz(BRONCE, cerca)
     val hondo = a.luz(mezcla(BRONCE, CEDRO_OSC, 0.6f), cerca)
-    translate(caida.x, caida.y) { drawPath(disco, a.sombra(if (a.oscuro) 0.3f else 0.24f)); drawPath(trono, a.sombra(if (a.oscuro) 0.3f else 0.24f)) }
+    translate(caida.x, caida.y) { drawPath(disco, a.sombra(if (a.oscuro) 0.24f else 0.22f)); drawPath(trono, a.sombra(if (a.oscuro) 0.24f else 0.22f)) }
     // El cordón y la anilla.
     val anilla = Offset(c.x, c.y - r * 1.38f)
     drawLine(a.luz(mezcla(CUERO, CARMESI, 0.4f), cerca), clavo, Offset(anilla.x - r * 0.06f, anilla.y), 1f * u)
@@ -285,7 +288,7 @@ internal fun DrawScope.librosTumbadosAndalus(izq: Offset, an: Float, cuantos: In
 }
 
 /** Una redoma de vidrio verdoso: la panza redonda, el cuello largo y el labio vuelto; se transparenta lo de detrás. */
-internal fun DrawScope.redomaAndalus(pie: Offset, alto: Float, a: AireAndalus, cerca: Float, haciaX: Float, caida: Offset) {
+internal fun DrawScope.redomaAndalus(pie: Offset, alto: Float, a: AireAndalus, cerca: Float, haciaX: Float, caida: Offset, alSol: Boolean = false) {
     val u = density
     val forma = perfil(pie.x, pie.y, alto, floatArrayOf(0.09f, -1f, 0.06f, -0.96f, 0.045f, -0.88f, 0.045f, -0.62f, 0.12f, -0.5f, 0.24f, -0.34f, 0.25f, -0.18f, 0.18f, -0.04f, 0.1f, 0f))
     translate(caida.x, caida.y) { drawPath(forma, a.sombra(if (a.oscuro) 0.3f else 0.14f)) }
@@ -297,44 +300,103 @@ internal fun DrawScope.redomaAndalus(pie: Offset, alto: Float, a: AireAndalus, c
     }
     drawRoundRect(if (a.oscuro) FILO_MUEBLE.copy(alpha = 0.6f * cerca) else a.claro(0.7f), Offset(pie.x - alto * 0.15f, pie.y - alto * 0.38f), Size(alto * 0.04f, alto * 0.18f), CornerRadius(alto * 0.02f))
     drawLine(if (a.oscuro) FILO_MUEBLE.copy(alpha = 0.5f * cerca) else a.claro(0.6f), Offset(pie.x - alto * 0.025f, pie.y - alto * 0.86f), Offset(pie.x - alto * 0.025f, pie.y - alto * 0.66f), 0.8f * u)
+    if (alSol) {
+        // La luz de la celosía la atraviesa: deja una mancha verde y clara en lo que pisa y un destello en el hombro.
+        val luz = if (a.lumbre) PaletaAndalus.LUZ_LUNA else mezcla(VIDRIO, PaletaAndalus.SOL, 0.4f)
+        drawOval(luz.copy(alpha = if (a.lumbre) 0.35f else 0.55f), Offset(pie.x + alto * 0.02f, pie.y - alto * 0.03f), Size(alto * 0.34f, alto * 0.06f))
+        val d = Offset(pie.x - alto * 0.12f, pie.y - alto * 0.44f)
+        val brillo = if (a.lumbre) PaletaAndalus.LUZ_LUNA else Color.White
+        drawLine(brillo.copy(alpha = 0.9f), d - Offset(alto * 0.09f, 0f), d + Offset(alto * 0.09f, 0f), 0.8f * u, StrokeCap.Round)
+        drawLine(brillo.copy(alpha = 0.9f), d - Offset(0f, alto * 0.09f), d + Offset(0f, alto * 0.09f), 0.8f * u, StrokeCap.Round)
+        drawCircle(brillo, 1.3f * u, d)
+    }
 }
 
 /**
- * El atril plegable de madera (dos tablas que se cruzan en tijera), visto de lado, con un códice abierto en la horquilla; cada
- * pata lleva calado un arquillo de herradura. [pie] es el centro entre las dos patas, en el suelo.
+ * El códice abierto sobre un cojín de seda índigo, en el suelo: el cojín mullido con su banda tejida de oro y almagra (rombos
+ * y puntos, sin letra), sus pliegues y una borla en cada esquina; encima, el libro abierto, con las hojas pautadas que se
+ * curvan hacia el lomo, el cuero de la tapa asomando por debajo y el registro colgando. [pie] es el centro de abajo del cojín.
  */
-internal fun DrawScope.atrilAndalus(pie: Offset, an: Float, alto: Float, a: AireAndalus, cerca: Float, haciaX: Float) {
+internal fun DrawScope.cojinCodiceAndalus(pie: Offset, an: Float, a: AireAndalus, cerca: Float, haciaX: Float) {
     val u = density
-    val g = an * 0.05f
-    val cruce = Offset(pie.x, pie.y - alto * 0.42f)
-    fun tabla(l: Float): Path {
-        val p0 = Offset(pie.x - l * an * 0.3f, pie.y); val p1 = Offset(pie.x + l * an * 0.36f, pie.y - alto)
-        return poligono(p0.x - g, p0.y, p0.x + g, p0.y, p1.x + g * 0.6f, p1.y, p1.x - g * 0.6f, p1.y)
+    val hh = an * 0.3f
+    val c = Rect(pie.x - an / 2, pie.y - hh, pie.x + an / 2, pie.y)
+    val forma = Path().apply {
+        moveTo(c.left + an * 0.04f, c.top + hh * 0.3f)
+        cubicTo(c.left + an * 0.25f, c.top - hh * 0.06f, c.right - an * 0.25f, c.top - hh * 0.06f, c.right - an * 0.04f, c.top + hh * 0.3f)
+        cubicTo(c.right + an * 0.02f, c.top + hh * 0.55f, c.right + an * 0.01f, c.bottom - hh * 0.25f, c.right - an * 0.03f, c.bottom - hh * 0.05f)
+        cubicTo(c.right - an * 0.25f, c.bottom + hh * 0.06f, c.left + an * 0.25f, c.bottom + hh * 0.06f, c.left + an * 0.03f, c.bottom - hh * 0.05f)
+        cubicTo(c.left - an * 0.01f, c.bottom - hh * 0.25f, c.left - an * 0.02f, c.top + hh * 0.55f, c.left + an * 0.04f, c.top + hh * 0.3f)
+        close()
     }
-    // La sombra tendida en el suelo, hacia la derecha.
-    drawPath(poligono(pie.x - an * 0.36f, pie.y, pie.x + an * 0.4f, pie.y, pie.x + an * 0.9f, pie.y + an * 0.05f, pie.x - an * 0.1f, pie.y + an * 0.05f), a.sombra(if (a.oscuro) 0.4f else 0.26f))
-    val madera = a.luz(mezcla(CEDRO, CEDRO_LUZ, 0.25f), cerca)
-    for (l in listOf(1f, -1f)) {
-        val t = tabla(l)
-        drawPath(t, if (l > 0) mezcla(madera, a.hondo, 0.25f) else madera)
-        drawPath(borde(t, 1f * u, 0f), a.claro(0.3f))
-        // El arquillo calado de la pata.
-        val pa = Offset(pie.x - l * an * 0.23f, pie.y - alto * 0.1f)
-        drawPath(arcoHerradura(Rect(pa.x - g * 0.55f, pa.y - alto * 0.14f, pa.x + g * 0.55f, pa.y)), a.sombra(0.6f))
+    contacto(Offset(pie.x + an * 0.06f, pie.y), an * 1.1f, hh * 0.22f, a, 0.4f)
+    val seda = a.luz(SEDA_ANIL, cerca)
+    // Las borlas de atrás, que quedan detrás del cojín.
+    for (l in listOf(-1f, 1f)) borlaAndalus(Offset(pie.x + l * (an * 0.46f), c.top + hh * 0.3f), hh * 0.32f, a.luz(ORO, cerca), a)
+    drawPath(forma, seda)
+    clipPath(forma) {
+        // La banda tejida, que sigue la panza del cojín.
+        val y0 = c.top + hh * 0.5f
+        val banda = Path().apply {
+            moveTo(c.left - 2f * u, y0); cubicTo(c.left + an * 0.3f, y0 + hh * 0.08f, c.right - an * 0.3f, y0 + hh * 0.08f, c.right + 2f * u, y0)
+            lineTo(c.right + 2f * u, y0 + hh * 0.2f); cubicTo(c.right - an * 0.3f, y0 + hh * 0.28f, c.left + an * 0.3f, y0 + hh * 0.28f, c.left - 2f * u, y0 + hh * 0.2f); close()
+        }
+        drawPath(banda, a.luz(mezcla(ORO, SEDA_ANIL, 0.15f), cerca))
+        for (q in 0 until 9) {
+            val x = c.left + an * (0.08f + 0.105f * q)
+            val y = y0 + hh * (0.1f + 0.06f * (1f - kotlin.math.abs(q - 4) / 4f))
+            drawPath(poligono(x, y - hh * 0.07f, x + an * 0.03f, y, x, y + hh * 0.07f, x - an * 0.03f, y), a.luz(if (q % 2 == 0) CARMESI else SEDA_ANIL, cerca))
+            drawCircle(a.luz(CARMESI, cerca), hh * 0.02f, Offset(x + an * 0.052f, y))
+        }
+        // Los pliegues que salen de las esquinas, el claro de la panza y la sombra de abajo.
+        for (l in listOf(-1f, 1f)) {
+            drawPath(Path().apply { moveTo(pie.x + l * an * 0.47f, c.bottom - hh * 0.1f); cubicTo(pie.x + l * an * 0.38f, c.bottom - hh * 0.25f, pie.x + l * an * 0.32f, c.bottom - hh * 0.3f, pie.x + l * an * 0.24f, c.bottom - hh * 0.28f) }, a.sombra(0.3f), style = Stroke(1f * u))
+            drawPath(Path().apply { moveTo(pie.x + l * an * 0.46f, c.top + hh * 0.34f); cubicTo(pie.x + l * an * 0.38f, c.top + hh * 0.3f, pie.x + l * an * 0.33f, c.top + hh * 0.36f, pie.x + l * an * 0.26f, c.top + hh * 0.34f) }, a.sombra(0.25f), style = Stroke(0.9f * u))
+        }
+        drawOval(if (a.oscuro) FILO_MUEBLE.copy(alpha = 0.25f * cerca) else a.claro(0.3f), Offset(c.left + an * 0.12f, c.top + hh * 0.02f), Size(an * 0.42f, hh * 0.3f))
+        drawRect(a.sombra(0.3f), Offset(c.left, c.bottom - hh * 0.22f), Size(an, hh * 0.3f))
     }
-    drawCircle(a.luz(mezcla(BRONCE, CEDRO_OSC, 0.3f), cerca), g * 0.5f, cruce)
-    // El códice abierto en la horquilla: las dos mitades del bloque de hojas, abiertas en V, y la tapa debajo.
-    val izq = Offset(pie.x - an * 0.44f, pie.y - alto * 0.98f); val der = Offset(pie.x + an * 0.42f, pie.y - alto * 1.02f)
-    val fondo = Offset(pie.x - an * 0.02f, pie.y - alto * 0.72f)
-    drawPath(poligono(izq.x - 2f * u, izq.y + 3f * u, fondo.x, fondo.y + 3f * u, der.x + 2f * u, der.y + 3f * u, der.x + 2f * u, der.y + 6f * u, fondo.x, fondo.y + 6f * u, izq.x - 2f * u, izq.y + 6f * u), a.luz(mezcla(CARMESI, CUERO_OSC, 0.4f), cerca))
+    for (l in listOf(-1f, 1f)) borlaAndalus(Offset(pie.x + l * (an * 0.47f), c.bottom - hh * 0.06f), hh * 0.4f, a.luz(ORO, cerca), a)
+    // El libro abierto encima: la tapa de cuero que asoma, el bloque de hojas y las dos páginas que se curvan hacia el lomo.
+    val lc = Offset(pie.x + an * 0.02f, c.top + hh * 0.2f)
+    val bw = an * 0.62f; val bh = hh * 0.62f
+    val cuero = a.luz(mezcla(CARMESI, CUERO_OSC, 0.35f), cerca)
+    drawPath(poligono(lc.x - bw * 0.52f, lc.y - bh * 0.42f, lc.x + bw * 0.52f, lc.y - bh * 0.42f, lc.x + bw * 0.54f, lc.y + bh * 0.56f, lc.x - bw * 0.54f, lc.y + bh * 0.56f), cuero)
     val hoja = a.luz(PERGAMINO, cerca + 0.08f)
-    drawPath(poligono(izq.x, izq.y, fondo.x, fondo.y - alto * 0.04f, fondo.x, fondo.y + 2.5f * u, izq.x, izq.y + 3f * u), hoja)
-    drawPath(poligono(der.x, der.y, fondo.x, fondo.y - alto * 0.04f, fondo.x, fondo.y + 2.5f * u, der.x, der.y + 3f * u), mezcla(hoja, a.hondo, 0.12f))
-    drawLine(a.sombra(0.3f), Offset(fondo.x, fondo.y - alto * 0.04f), Offset(fondo.x, fondo.y + 2.5f * u), 0.8f * u)
-    // Una hoja levantada, a medio pasar, y el registro de seda.
-    drawPath(Path().apply { moveTo(fondo.x, fondo.y - alto * 0.04f); cubicTo(fondo.x + an * 0.05f, fondo.y - alto * 0.3f, der.x - an * 0.1f, der.y - alto * 0.32f, der.x - an * 0.04f, der.y - alto * 0.2f) }, hoja, style = Stroke(1.2f * u))
-    drawLine(a.luz(CARMESI, cerca), Offset(fondo.x, fondo.y), Offset(fondo.x + an * 0.04f, fondo.y + alto * 0.28f), 1.2f * u)
-    if (a.oscuro) drawLine(FILO_MUEBLE.copy(alpha = 0.5f * cerca), izq, Offset(fondo.x, fondo.y - alto * 0.04f), 0.8f * u)
+    val canto = a.luz(mezcla(PERGAMINO, CUERO, 0.3f), cerca)
+    drawPath(poligono(lc.x - bw * 0.5f, lc.y + bh * 0.3f, lc.x, lc.y + bh * 0.42f, lc.x + bw * 0.5f, lc.y + bh * 0.3f, lc.x + bw * 0.5f, lc.y + bh * 0.48f, lc.x, lc.y + bh * 0.52f, lc.x - bw * 0.5f, lc.y + bh * 0.48f), canto)
+    for (l in listOf(-1f, 1f)) {
+        val pagina = Path().apply {
+            moveTo(lc.x, lc.y - bh * 0.32f)
+            cubicTo(lc.x + l * bw * 0.1f, lc.y - bh * 0.48f, lc.x + l * bw * 0.35f, lc.y - bh * 0.42f, lc.x + l * bw * 0.5f, lc.y - bh * 0.36f)
+            lineTo(lc.x + l * bw * 0.5f, lc.y + bh * 0.3f)
+            cubicTo(lc.x + l * bw * 0.35f, lc.y + bh * 0.26f, lc.x + l * bw * 0.1f, lc.y + bh * 0.3f, lc.x, lc.y + bh * 0.42f)
+            close()
+        }
+        drawPath(pagina, if (l > 0) mezcla(hoja, a.hondo, 0.08f) else hoja)
+        // Los renglones pautados con la regla de cuerdas: líneas finas, sin letra.
+        clipPath(pagina) {
+            for (j in 0 until 6) {
+                val y = lc.y - bh * 0.24f + j * bh * 0.1f
+                drawLine(a.luz(mezcla(PERGAMINO, TINTA, 0.3f), cerca).copy(alpha = 0.5f), Offset(lc.x + l * bw * 0.07f, y + bh * 0.02f), Offset(lc.x + l * bw * 0.44f, y), 0.5f * u)
+            }
+            drawRect(a.sombra(0.18f), Offset(lc.x - bw * 0.06f, lc.y - bh), Size(bw * 0.12f, bh * 2f))
+        }
+    }
+    drawLine(a.luz(CARMESI, cerca), Offset(lc.x, lc.y + bh * 0.4f), Offset(lc.x + bw * 0.04f, lc.y + bh * 1.05f), 1.4f * u, StrokeCap.Round)
+    if (a.oscuro) drawLine(FILO_MUEBLE.copy(alpha = 0.5f * cerca), Offset(lc.x - bw * 0.5f, lc.y - bh * 0.36f), Offset(lc.x, lc.y - bh * 0.32f), 0.8f * u)
+}
+
+/** Una borla de seda: el nudo redondo, la cabeza y la falda de hilos que se abre, con su luz a la izquierda. */
+internal fun DrawScope.borlaAndalus(arriba: Offset, largo: Float, color: Color, a: AireAndalus) {
+    val u = density
+    val cab = largo * 0.22f
+    drawCircle(mezcla(color, a.hondo, 0.2f), cab * 0.6f, arriba)
+    val falda = poligono(arriba.x - cab * 0.45f, arriba.y + cab * 0.4f, arriba.x + cab * 0.45f, arriba.y + cab * 0.4f, arriba.x + cab * 0.9f, arriba.y + largo, arriba.x - cab * 0.9f, arriba.y + largo)
+    drawPath(falda, color)
+    for (q in -2..2) drawLine(mezcla(color, a.hondo, 0.35f), Offset(arriba.x + q * cab * 0.15f, arriba.y + cab * 0.6f), Offset(arriba.x + q * cab * 0.36f, arriba.y + largo), 0.5f * u)
+    drawRect(mezcla(color, a.hondo, 0.3f), Offset(arriba.x - cab * 0.5f, arriba.y + cab * 0.35f), Size(cab, cab * 0.25f))
+    drawLine(a.claro(0.4f), Offset(arriba.x - cab * 0.3f, arriba.y + cab * 0.7f), Offset(arriba.x - cab * 0.6f, arriba.y + largo * 0.9f), 0.6f * u)
 }
 
 /** La alcarraza de barro claro sobre su posajarra: la panza que suda (las manchas húmedas), el cuello, las dos asas y unos trazos de manganeso. */
@@ -400,138 +462,56 @@ internal fun DrawScope.arconAndalus(pie: Offset, an: Float, alto: Float, a: Aire
     drawRoundRect(bronce, cerr.topLeft, cerr.size, CornerRadius(an * 0.02f))
     drawPath(arcoHerradura(Rect(cerr.center.x - an * 0.012f, cerr.top + cerr.height * 0.3f, cerr.center.x + an * 0.012f, cerr.top + cerr.height * 0.7f)), a.luz(TINTA, cerca))
     drawRect(a.claro(0.3f), cuerpo.topLeft, Size(an * 0.03f, cuerpo.height))
-    // Un cojín de cuero con su borla, encima.
-    val coj = Rect(cuerpo.left + an * 0.14f, tapa.top - alto * 0.22f, cuerpo.left + an * 0.7f, tapa.top + 1f * u)
-    drawRoundRect(a.luz(mezcla(CUERO, CARMESI, 0.3f), cerca), coj.topLeft, coj.size, CornerRadius(coj.height * 0.5f))
-    drawRoundRect(a.claro(0.25f), coj.topLeft + Offset(coj.width * 0.1f, 1f * u), Size(coj.width * 0.5f, coj.height * 0.3f), CornerRadius(coj.height * 0.2f))
-    drawRect(a.sombra(0.25f), Offset(coj.left + coj.width * 0.08f, coj.bottom - coj.height * 0.3f), Size(coj.width * 0.84f, coj.height * 0.3f))
-    for (k in 0 until 6) drawLine(a.luz(ORO, cerca).copy(alpha = 0.7f), Offset(coj.left + coj.width * (0.2f + 0.12f * k), coj.top + coj.height * 0.35f), Offset(coj.left + coj.width * (0.25f + 0.12f * k), coj.top + coj.height * 0.6f), 0.7f * u)
-    drawLine(a.luz(CARMESI, cerca), Offset(coj.left + coj.width * 0.06f, coj.center.y), Offset(coj.left - an * 0.01f, coj.center.y + alto * 0.18f), 1.4f * u, StrokeCap.Round)
-}
-
-// ---------------------------------------------------------------- lo que se deja en los huecos libres de las repisas
-
-/**
- * Lo del tema en lo que queda libre de la repisa [k], a la derecha de [oc] (hasta donde llegan los volúmenes): según cuánto
- * hueco haya, una pila de códices tumbados, un ataifor de loza melada de canto contra el muro, rollos sueltos atados, una
- * redoma. Cada repisa escoge lo suyo, para que no se repita.
- */
-internal fun DrawScope.huecoLibreAndalus(k: Int, r: Rect, oc: Float, a: AireAndalus, cerca: Float, haciaX: Float) {
-    val u = density
-    val libre = (r.right - oc) / u
-    val y = r.bottom - 1.6f * u
-    val sc = Offset(if (a.oscuro) 8f * u else 5f * u, 0f)
-    when {
-        libre >= 150f -> if (k % 2 == 0) {
-            librosTumbadosAndalus(Offset(oc + 8f * u, y), 58f * u, 4, a, cerca, 40 + k, sc)
-            ataiforAndalus(Offset(r.right - 44f * u, y), 35f * u, a, cerca, k)
-            redomaAndalus(Offset(oc + 36f * u, y - 4 * 5.8f * u), 30f * u, a, cerca, haciaX, sc)
-        } else {
-            rollosAndalus(Offset(oc + 6f * u, y), 74f * u, 3, a, cerca, k)
-            ataiforAndalus(Offset(r.right - 42f * u, y), 33f * u, a, cerca, k + 1)
+    // Un paño de seda verde echado encima: se ve su vuelo sobre la tapa y cae por delante en pliegues que se abren en abanico,
+    // con las dos puntas más bajas que el medio, su banda tejida y su fleco.
+    val sedaV = a.luz(SEDA_VERDE, cerca)
+    val x0 = cuerpo.left + an * 0.1f; val x1 = cuerpo.left + an * 0.6f
+    val yT = tapa.top - alto * 0.04f
+    val bajo = cuerpo.top + alto * 0.62f
+    val hem = listOf(Offset(x0 - an * 0.04f, bajo + alto * 0.12f), Offset(x0 + (x1 - x0) * 0.22f, bajo - alto * 0.02f), Offset(x0 + (x1 - x0) * 0.42f, bajo + alto * 0.06f),
+        Offset(x0 + (x1 - x0) * 0.62f, bajo - alto * 0.04f), Offset(x0 + (x1 - x0) * 0.82f, bajo + alto * 0.03f), Offset(x1 + an * 0.05f, bajo + alto * 0.16f))
+    val pano = Path().apply {
+        moveTo(x0 + an * 0.02f, yT)
+        cubicTo(x0 + (x1 - x0) * 0.3f, yT - alto * 0.05f, x0 + (x1 - x0) * 0.7f, yT - alto * 0.04f, x1 - an * 0.01f, yT + alto * 0.01f)
+        cubicTo(x1 + an * 0.04f, tapa.bottom, x1 + an * 0.04f, cuerpo.top + alto * 0.3f, hem.last().x, hem.last().y)
+        for (q in hem.size - 2 downTo 0) {
+            val p0 = hem[q + 1]; val p1 = hem[q]
+            quadraticTo((p0.x + p1.x) / 2, maxOf(p0.y, p1.y) + alto * 0.05f, p1.x, p1.y)
         }
-        libre >= 74f -> when (k % 3) {
-            0 -> { librosTumbadosAndalus(Offset(oc + 7f * u, y), 56f * u, 3, a, cerca, 50 + k, sc); redomaAndalus(Offset(oc + 40f * u, y - 3 * 5.6f * u), 28f * u, a, cerca, haciaX, sc) }
-            1 -> ataiforAndalus(Offset((oc + r.right) / 2 + 2f * u, y), 33f * u, a, cerca, k)
-            else -> rollosAndalus(Offset(oc + 6f * u, y), minOf(64f * u, r.right - oc - 10f * u), 2, a, cerca, k)
-        }
-        libre >= 44f -> when (k % 3) {
-            0 -> ataiforAndalus(Offset((oc + r.right) / 2, y), minOf(22f * u, (r.right - oc) * 0.4f), a, cerca, k)
-            1 -> redomaAndalus(Offset((oc + r.right) / 2, y), 34f * u, a, cerca, haciaX, sc)
-            else -> librosTumbadosAndalus(Offset(oc + 4f * u, y), r.right - oc - 10f * u, 2, a, cerca, 60 + k, sc)
-        }
-        libre >= 24f -> redomaAndalus(Offset((oc + r.right) / 2, y), 30f * u, a, cerca, haciaX, sc)
+        cubicTo(x0 - an * 0.03f, cuerpo.top + alto * 0.3f, x0 - an * 0.02f, tapa.bottom, x0 + an * 0.02f, yT)
+        close()
     }
-}
-
-/**
- * Un ataifor de loza melada puesto de canto contra el muro: el ala con su filete de manganeso, el pocillo hondo (la sombra del
- * borde cae dentro, arriba a la izquierda) con la estrella de ocho o las hojas en aspa, el brillo del vidriado y el canto del
- * plato asomando abajo.
- */
-internal fun DrawScope.ataiforAndalus(pie: Offset, r: Float, a: AireAndalus, cerca: Float, semilla: Int) {
-    val u = density
-    val c = Offset(pie.x, pie.y - r * 0.94f)
-    val plato = ovalo(c, r, r * 0.94f)
-    drawPath(corrido(plato, if (a.oscuro) 7f * u else 4.5f * u, -2.5f * u), a.sombra(if (a.oscuro) 0.36f else 0.22f))
-    contacto(Offset(pie.x + 2f * u, pie.y), r * 1.1f, 3f * u, a)
-    val melado = a.luz(MELADO, cerca)
-    val trazo = a.luz(MANGANESO, cerca)
-    drawPath(corrido(plato, r * 0.035f, r * 0.05f), a.luz(mezcla(MELADO, MANGANESO, 0.55f), cerca))
-    drawPath(plato, melado)
-    // El ala: un filete y una hilera de trazos cortos.
-    drawPath(ovalo(c, r * 0.9f, r * 0.85f), trazo.copy(alpha = 0.85f), style = Stroke(0.8f * u))
-    for (q in 0 until 20) {
-        val ang = 6.283f * q / 20
-        val o = Offset(c.x + r * 0.78f * cos(ang), c.y + r * 0.73f * sin(ang))
-        drawLine(trazo.copy(alpha = 0.8f), o, Offset(c.x + r * 0.7f * cos(ang + 0.12f), c.y + r * 0.66f * sin(ang + 0.12f)), 0.8f * u, StrokeCap.Round)
-    }
-    // El pocillo, hondo: la sombra del borde arriba a la izquierda y la luz abajo a la derecha.
-    val pozo = ovalo(c, r * 0.6f, r * 0.56f)
-    drawPath(pozo, a.luz(mezcla(MELADO, BARRO, 0.22f), cerca))
-    if (semilla % 2 == 0) {
-        for (q in 0..1) rotate(45f * q, c) { drawRect(trazo, Offset(c.x - r * 0.3f, c.y - r * 0.3f), Size(r * 0.6f, r * 0.6f), style = Stroke(1f * u)) }
-        drawCircle(trazo, r * 0.09f, c)
-    } else {
-        for (q in 0 until 4) rotate(45f + 90f * q, c) {
-            drawPath(Path().apply { moveTo(c.x, c.y); cubicTo(c.x + r * 0.18f, c.y - r * 0.12f, c.x + r * 0.17f, c.y - r * 0.38f, c.x, c.y - r * 0.48f); cubicTo(c.x - r * 0.17f, c.y - r * 0.38f, c.x - r * 0.18f, c.y - r * 0.12f, c.x, c.y); close() }, trazo)
+    drawPath(corrido(pano, 3f * u, 2.5f * u), a.sombra(0.3f))
+    drawPath(pano, sedaV)
+    clipPath(pano) {
+        // El vuelo sobre la tapa, más claro, y el quiebro del canto.
+        drawRect(a.luz(mezcla(SEDA_VERDE, LUZ_MUEBLE, 0.28f), cerca), Offset(x0 - an * 0.05f, yT - alto * 0.06f), Size(x1 - x0 + an * 0.15f, tapa.bottom - yT + alto * 0.04f))
+        drawRect(a.sombra(0.28f), Offset(x0 - an * 0.05f, tapa.bottom), Size(x1 - x0 + an * 0.15f, alto * 0.03f))
+        // Los pliegues: cada uno nace junto al canto y se abre hacia su punta del borde, con su valle en sombra y su lomo a la luz.
+        for (q in 0 until hem.size) {
+            val pt = hem[q]
+            val nace = Offset(x0 + (x1 - x0) * (0.12f + 0.76f * q / (hem.size - 1)), tapa.bottom + alto * 0.02f)
+            val valle = Path().apply { moveTo(nace.x, nace.y); cubicTo(nace.x, nace.y + alto * 0.2f, pt.x + an * 0.01f, pt.y - alto * 0.25f, pt.x + an * 0.018f, pt.y) }
+            drawPath(valle, a.sombra(0.32f), style = Stroke(2.6f * u, cap = StrokeCap.Round))
+            drawPath(corrido(valle, -an * 0.03f, 0f), a.claro(0.28f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
+        }
+        // La banda tejida, que sigue la caída.
+        val banda = Path().apply {
+            moveTo(hem.first().x, hem.first().y - alto * 0.16f)
+            for (q in 1 until hem.size) lineTo(hem[q].x, hem[q].y - alto * 0.16f)
+            for (q in hem.size - 1 downTo 0) lineTo(hem[q].x, hem[q].y - alto * 0.09f)
+            close()
+        }
+        drawPath(banda, a.luz(mezcla(ORO, SEDA_VERDE, 0.2f), cerca))
+        for (q in 0 until hem.size - 1) {
+            val m = (hem[q] + hem[q + 1]) / 2f
+            drawCircle(a.luz(CARMESI, cerca), alto * 0.018f, Offset(m.x, m.y - alto * 0.125f))
         }
     }
-    drawPath(borde(pozo, r * 0.12f, r * 0.11f), a.sombra(0.26f))
-    drawPath(borde(pozo, -r * 0.07f, -r * 0.07f), a.claro(0.3f))
-    // El brillo del vidriado.
-    val brillo = if (a.oscuro) FILO_MUEBLE.copy(alpha = 0.7f * cerca) else a.claro(0.75f)
-    drawArc(brillo, 200f, 55f, false, Offset(c.x - r * 0.84f, c.y - r * 0.8f), Size(r * 1.68f, r * 1.6f), style = Stroke(1.3f * u, cap = StrokeCap.Round))
-    drawCircle(brillo, 1.1f * u, Offset(c.x + r * 0.2f, c.y + r * 0.25f))
-}
-
-/**
- * La regla de cuerdas del copista (la mistara), colgada de un clavo: un cartón con hilos tendidos en hileras, que se aprieta
- * bajo la hoja para marcar los renglones. [clavo] es de donde cuelga; [an] su ancho.
- */
-internal fun DrawScope.mistaraAndalus(clavo: Offset, an: Float, a: AireAndalus, cerca: Float, caida: Offset) {
-    val u = density
-    val alto = an * 1.35f
-    val tabla = Rect(clavo.x - an / 2, clavo.y + an * 0.32f, clavo.x + an / 2, clavo.y + an * 0.32f + alto)
-    rotate(-4f, clavo) {
-        drawRect(a.sombra(if (a.oscuro) 0.3f else 0.22f), tabla.topLeft + caida, tabla.size)
-        val cuerda = a.luz(mezcla(CUERO, PERGAMINO, 0.5f), cerca)
-        drawLine(cuerda, clavo, Offset(tabla.left + an * 0.2f, tabla.top), 0.8f * u)
-        drawLine(cuerda, clavo, Offset(tabla.right - an * 0.2f, tabla.top), 0.8f * u)
-        drawRect(a.luz(mezcla(PERGAMINO, CUERO, 0.28f), cerca), tabla.topLeft, tabla.size)
-        drawRect(a.claro(0.35f), tabla.topLeft, Size(an * 0.1f, alto))
-        drawRect(a.sombra(0.18f), Offset(tabla.right - an * 0.12f, tabla.top), Size(an * 0.12f, alto))
-        drawRect(a.sombra(0.3f), Offset(tabla.left, tabla.bottom - 1f * u), Size(an, 1f * u))
-        // Los hilos tendidos, con el relieve que dejan.
-        val n = 11
-        for (j in 1 until n) {
-            val y = tabla.top + alto * j / n
-            drawLine(a.sombra(0.32f), Offset(tabla.left + an * 0.08f, y + 0.6f * u), Offset(tabla.right - an * 0.08f, y + 0.6f * u), 0.6f * u)
-            drawLine(a.luz(mezcla(PERGAMINO, CUERO, 0.6f), cerca), Offset(tabla.left + an * 0.08f, y), Offset(tabla.right - an * 0.08f, y), 0.7f * u)
-        }
-        for (x in listOf(tabla.left + an * 0.08f, tabla.right - an * 0.08f)) drawLine(a.luz(CUERO_OSC, cerca).copy(alpha = 0.6f), Offset(x, tabla.top + alto * 0.06f), Offset(x, tabla.bottom - alto * 0.06f), 0.6f * u)
-    }
-    drawCircle(a.sombra(0.4f), 1.6f * u, clavo + Offset(0.6f * u, 0.7f * u))
-    drawCircle(a.luz(mezcla(BRONCE, CEDRO_OSC, 0.4f), cerca), 1.4f * u, clavo)
-}
-
-/** Rollos de pergamino sueltos, tumbados uno sobre otro y atados con un cordel, con la boca hacia la derecha. */
-internal fun DrawScope.rollosAndalus(izq: Offset, largo: Float, cuantos: Int, a: AireAndalus, cerca: Float, semilla: Int) {
-    val u = density
-    val d = minOf(12f * u, largo * 0.2f)
-    contacto(Offset(izq.x + largo * 0.5f, izq.y), largo * 1.05f, 4f * u, a, 0.36f)
-    for (j in 0 until cuantos) {
-        val l = largo * (0.78f + 0.22f * azar(semilla, j + 5))
-        val x = izq.x + largo * 0.16f * azar(semilla, j)
-        val yy = izq.y - d / 2 - j * d * 0.86f
-        val cuerpo = Rect(x, yy - d / 2, x + l, yy + d / 2)
-        drawRoundRect(a.luz(mezcla(PERGAMINO, CUERO, 0.12f + 0.1f * j), cerca), cuerpo.topLeft, cuerpo.size, CornerRadius(d / 2))
-        drawRect(a.claro(0.35f), Offset(cuerpo.left + d * 0.3f, cuerpo.top + d * 0.12f), Size(l - d * 0.6f, d * 0.16f))
-        drawRect(a.sombra(0.22f), Offset(cuerpo.left + d * 0.3f, cuerpo.bottom - d * 0.3f), Size(l - d * 0.6f, d * 0.3f))
-        // La boca, con sus vueltas, y el cordel.
-        val boca = Offset(cuerpo.right - d / 2, yy)
-        drawCircle(a.luz(PERGAMINO, cerca + 0.05f), d / 2, boca)
-        for (q in 1..2) drawCircle(a.luz(mezcla(PERGAMINO, CUERO, 0.5f), cerca), d / 2 * (1f - 0.3f * q), boca, style = Stroke(0.5f * u))
-        drawLine(a.luz(mezcla(CARMESI, CUERO, 0.3f), cerca), Offset(cuerpo.left + l * 0.4f, cuerpo.top), Offset(cuerpo.left + l * 0.42f, cuerpo.bottom), 1.3f * u)
+    // El fleco del borde.
+    for (q in 0 until hem.size - 1) for (z in 0 until 4) {
+        val t = z / 4f
+        val p = hem[q] + (hem[q + 1] - hem[q]) * t
+        drawLine(a.luz(mezcla(ORO, SEDA_VERDE, 0.3f), cerca), Offset(p.x, p.y + 1f * u), Offset(p.x + 0.3f * u, p.y + alto * 0.08f), 0.6f * u)
     }
 }
