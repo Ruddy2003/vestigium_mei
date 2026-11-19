@@ -103,14 +103,14 @@ El autor cambió la regla: **las bibliotecas no pierden las ventanas.** Le gusta
 - **No se come el mueble.** El mueble sigue mandando: la ventana no tapa volúmenes ni el objeto protagonista (en las tres de esta tanda va arriba y a un costado).
 - **Solo donde tiene lógica.** Un interior que no la tendría (un sótano, una cueva) se queda sin ella, con la luz de algo que queda fuera del cuadro.
 
-Así lo hicieron las tres de la tanda del 19 nov 2026: Scriptorium (la ventana abocinada arriba a la izquierda, con su rayo de sol; la luna, en los Sueños), Al-Ándalus (la ventana de herradura con su celosía, que dibuja la trama en el derrame y en el suelo; de noche alumbra el candil) y Espacio (el ojo de buey a un costado: de día, la luz fría de los focos del anillo; de noche, el anillo y la Vía Láctea, y manda la lámpara de trabajo). Las ventanas que ya tenían las bibliotecas de antes (Urbe, Pirata, Revolución, Ruinas, Navidad y Abismo) no desaparecen al rehacerlas: se quedan si cumplen esto.
+Así lo hicieron las tres de la tanda del 19 nov 2026: Scriptorium (la ventana abocinada arriba a la izquierda, con su rayo de sol; la luna, en los Sueños), Al-Ándalus (la ventana de herradura con su celosía, que dibuja la trama en el derrame y en el suelo; de noche alumbra el candil) y Espacio (el ojo de buey a un costado: de día, la luz fría de los focos del anillo; de noche, el anillo y la Vía Láctea, y manda la lámpara de trabajo). Después, Roma contemporánea (la ventana honda con su persiana verde arriba a la izquierda: de día, el sol rayado por las lamas en la cornisa y en la primera repisa; de noche, la lámpara de pantalla plisada) y Ruta de la Seda, donde la ventana queda fuera del cuadro: solo se ve el dibujo de su reja de palos en la cal, de sol de día y de luna de noche, junto a la lámpara de barro. Las ventanas que ya tenían las bibliotecas de antes (Pirata, Revolución, Ruinas, Navidad y Abismo) no desaparecen al rehacerlas: se quedan si cumplen esto.
 
 ## El peso del dibujo
 
 - **Lo fijo no se recalcula por volumen ni por dibujo.** Los caminos, colores y medidas que no dependen del volumen se arman una vez y se comparten; cada volumen solo calcula lo suyo.
 - **El peso, por debajo de 1.5 veces el del piloto de Helénico,** en claro y en oscuro: `herramientas/arnes_muebles/medir.sh biblioteca heleno,<tema>` (lo que tarda en grabarse y en pintarse el estante con sus 35 entradas).
 - **Vigilar las operaciones** (`ops` y `KB` en la misma tabla), que fue lo que más pesó en Psicodelia: miles de puntos o trazos sueltos que el teléfono vuelve a pintar en cada cuadro mientras se mueve el fondo vivo. Las piezas iguales van en un solo camino con un solo trazo, y el grano en una imagen en caché. Si las operaciones pasan de unas dos veces las de Helénico, se dice qué pieza las gasta.
-- Las tres de la tanda del 19 nov 2026, frente a Helénico (operaciones, claro y oscuro): Espacio 1.29 y 1.36, Al-Ándalus 0.95 y 0.99, Scriptorium 1.19 y 1.26.
+- Las cinco de la tanda del 19 nov 2026, frente a Helénico (operaciones, claro y oscuro): Espacio 1.29 y 1.36, Al-Ándalus 0.95 y 0.99, Scriptorium 1.19 y 1.26, Ruta de la Seda 0.97 y 1.01, Roma contemporánea 0.85 y 0.83. En tiempo (grabar y pintar), todas entre 1.0 y 1.35.
 
 ## Lo que más se devolvió en las bibliotecas (tanda del 19 nov 2026)
 
@@ -126,6 +126,7 @@ Así lo hicieron las tres de la tanda del 19 nov 2026: Scriptorium (la ventana a
 ## Cómo se revisa
 
 - **Arnés de escritorio** en `herramientas/arnes_muebles/` (ver su `LEEME.md`): dibuja el Ideario y la biblioteca de cualquier tema, en claro y en oscuro, con los archivos reales de la app.
+- **Capturas en Actions** de una biblioteca: superficie `bibliotecas` (la del diario) y, desde el 19 nov 2026, `suenos` (el estante de los Sueños con 14 sueños de ejemplo, que en el arnés sale con volúmenes delgados), con `temas=<los de la tanda>`.
 - **La vara son los Idearios rehechos** (noviembre de 2026), no Galia y Art nouveau: un mueble nuevo no puede verse más pobre que ellos.
 - Cada mueble se dibuja, se mira y se corrige al menos tres veces antes de entregarlo, en claro y en oscuro.
 - Se compara al lado del Ideario de Galia y del de Art nouveau, y con el cuadro del tema si lo tiene.
