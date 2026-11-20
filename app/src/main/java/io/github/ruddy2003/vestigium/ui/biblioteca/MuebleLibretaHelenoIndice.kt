@@ -9,7 +9,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import io.github.ruddy2003.vestigium.ui.Letra
@@ -79,6 +81,26 @@ internal object IndiceLibretaHeleno {
     private var cachePestana: Pestana? = null
     private fun pestanaDe(w: Float, h: Float, u: Float): Pestana = cachePestana?.takeIf { it.w == w && it.h == h } ?: Pestana(w, h, u).also { cachePestana = it }
 
+    /**
+     * Los números de los días ya medidos (del 1 al 31; uno para el claro y otro para el oscuro, porque la tinta va en la medida).
+     * El número no cabe a 19 sp en el campo (la Garamond es alta) y [textoEn] lo achicaba en cada dibujo, midiéndolo hasta
+     * cinco veces; con decenas de pestañas y el medidor de la pantalla de 8 medidas, eso era casi todo lo que costaba grabar el
+     * índice. Se vacía si cambian la densidad, la escala de la letra o el tamaño del campo.
+     */
+    private val numeros = List(2) { HashMap<String, TextLayoutResult>() }
+    private val claveNumeros = FloatArray(4)
+
+    /** El número del día, centrado en [caja], igual que lo dibujaría [textoEn], pero medido una sola vez ([capaEn]). */
+    private fun DrawScope.numeroDia(medidor: TextMeasurer, dia: String, caja: Rect, tinta: Color, oscuro: Boolean) {
+        val k = claveNumeros
+        if (k[0] != density || k[1] != fontScale || k[2] != caja.width || k[3] != caja.height) {
+            numeros.forEach { it.clear() }; k[0] = density; k[1] = fontScale; k[2] = caja.width; k[3] = caja.height
+        }
+        val mapa = numeros[if (oscuro) 1 else 0]
+        val capa = mapa[dia] ?: (capaEn(medidor, dia, caja, LETRA, tinta, 19f, peso = FontWeight.Bold, minimo = 10f) ?: return).also { mapa[dia] = it }
+        drawText(capa, topLeft = Offset(caja.center.x - capa.size.width / 2f, caja.center.y - capa.size.height / 2f))
+    }
+
     // ---------------------------------------------------------------- la pestaña de un día
 
     /**
@@ -112,7 +134,7 @@ internal object IndiceLibretaHeleno {
         drawPath(g.ranura, sombraMueble(0.32f), style = Stroke(0.8f * u))
         val c = g.campo
         val tinta = if (oscuro) mezcla(P.TINTA, PENUMBRA, 0.1f) else P.TINTA
-        textoEn(medidor, e.dia, Rect(c.left, c.top + 1.2f * u, c.right, c.top + c.height * 0.7f), LETRA, tinta, 19f, peso = FontWeight.Bold, minimo = 10f)
+        numeroDia(medidor, e.dia, Rect(c.left, c.top + 1.2f * u, c.right, c.top + c.height * 0.7f), tinta, oscuro)
         textoEn(medidor, e.semana, Rect(c.left, c.top + c.height * 0.66f, c.right, c.bottom - 0.6f * u), LETRA, tinta.copy(alpha = 0.72f), 9f, minimo = 7f)
         // La vuelta de lana del color del ánimo, con la luz de sus hebras; sin ánimo, el cordón de lana cruda.
         val l = g.lana

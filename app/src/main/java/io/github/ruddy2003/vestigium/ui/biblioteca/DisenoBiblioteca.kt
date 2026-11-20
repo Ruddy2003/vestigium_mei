@@ -5,6 +5,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -341,7 +342,20 @@ fun disenoBiblioteca(t: TemaId): DisenoBiblioteca = when (t) {
  */
 internal fun DrawScope.textoEn(medidor: TextMeasurer, texto: String, r: Rect, letra: FontFamily, color: Color, tam: Float,
                                vertical: Boolean = false, peso: FontWeight = FontWeight.Normal, espaciado: Float = 0f, minimo: Float = 6f) {
-    if (texto.isBlank() || r.width <= 1f || r.height <= 1f) return
+    val capa = capaEn(medidor, texto, r, letra, color, tam, vertical, peso, espaciado, minimo) ?: return
+    val c = r.center
+    val esquina = Offset(c.x - capa.size.width / 2f, c.y - capa.size.height / 2f)
+    if (vertical) rotate(-90f, c) { drawText(capa, topLeft = esquina) } else drawText(capa, topLeft = esquina)
+}
+
+/**
+ * El texto que [textoEn] dibujaría en [r], ya medido (achicado o cortado si no cabe), o null si no hay nada que dibujar. Sirve
+ * para guardar la medida de un texto que se repite mucho (los números de los días del índice): el medidor de la pantalla
+ * guarda solo 8 medidas y un texto que no cabe se vuelve a medir hasta cinco veces en cada dibujo. Se dibuja centrado en [r].
+ */
+internal fun capaEn(medidor: TextMeasurer, texto: String, r: Rect, letra: FontFamily, color: Color, tam: Float,
+                    vertical: Boolean = false, peso: FontWeight = FontWeight.Normal, espaciado: Float = 0f, minimo: Float = 6f): TextLayoutResult? {
+    if (texto.isBlank() || r.width <= 1f || r.height <= 1f) return null
     val largo = if (vertical) r.height else r.width
     val grueso = if (vertical) r.width else r.height
     var estilo = TextStyle(fontFamily = letra, fontSize = tam.sp, lineHeight = (tam * 1.05f).sp, color = color, fontWeight = peso,
@@ -363,7 +377,5 @@ internal fun DrawScope.textoEn(medidor: TextMeasurer, texto: String, r: Rect, le
         capa = medidor.measure(texto, estilo, maxLines = 1, softWrap = false, overflow = TextOverflow.Ellipsis,
             constraints = Constraints(maxWidth = (kotlin.math.ceil(largo).toInt() + 1).coerceAtLeast(1)))
     }
-    val c = r.center
-    val esquina = Offset(c.x - capa.size.width / 2f, c.y - capa.size.height / 2f)
-    if (vertical) rotate(-90f, c) { drawText(capa, topLeft = esquina) } else drawText(capa, topLeft = esquina)
+    return capa
 }
