@@ -3,8 +3,10 @@
 #
 #   dibujar.sh ideario <tema> <claro|oscuro> <salida.png>
 #   dibujar.sh biblioteca <tema> <claro|oscuro> <salida.png>
-#   dibujar.sh hoja <ideario|biblioteca> <claro|oscuro> <salida.png> <tema1,tema2,...>
+#   dibujar.sh hoja <ideario|biblioteca|galeria|tapa|libreta> <claro|oscuro> <salida.png> <tema1,tema2,...>
 #   dibujar.sh vida <tema> <claro|oscuro> <salida.png>   (los muebles de la pestaña Vida y el tablero de notas)
+#   dibujar.sh tapa <tema> <claro|oscuro|hoja> <salida.png>      (el libro del día, con su texto encima)
+#   dibujar.sh libreta <tema> <claro|oscuro|hoja> <salida.png>   (la libreta de momentos con su índice)
 #
 # Primero compila lo que haya cambiado (Gradle, con su daemon y compilación incremental) bajo un candado, para que varias
 # llamadas a la vez no compilen encima unas de otras; luego suelta el candado y dibuja con una copia fija del jar, así cada
@@ -12,11 +14,12 @@
 #
 # Variables: ARNES_APP=/ruta/a/app/src/main (otro árbol de la app; por omisión el de este repositorio),
 #            ARNES_HOY=AAAA-MM-DD (el «hoy» de los ejemplos), ARNES_SUENOS=1 (la biblioteca de los Sueños), GRADLE=/ruta/a/gradle.
+#            La tapa y la libreta: ARNES_TAPA, ARNES_MOMENTOS, ARNES_MESES, ARNES_ABIERTO, ARNES_LUGAR y ARNES_ANCHO (ver LEEME.md).
 set -euo pipefail
 
 aqui="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 gradle="${GRADLE:-$(command -v gradle || echo /opt/gradle/bin/gradle)}"
-if [[ $# -lt 4 ]]; then sed -n '2,7p' "$0" | sed 's/^# \{0,1\}//'; exit 2; fi
+if [[ $# -lt 4 ]]; then sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 2; fi
 
 # Con otra app, otra carpeta de compilación (así dos árboles de trabajo no se pisan los .class).
 extra=()
@@ -41,4 +44,4 @@ cp=""
   cp="$(cat "$build/instantaneas/classpath.txt")"
 } 9>"$build/.candado"
 
-exec java -Djava.awt.headless=true -Dstdout.encoding=UTF-8 -Dfile.encoding=UTF-8 -Xss8m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -cp "$cp" arnes.DibujarKt "$@" 2> >(grep -v '^Picked up JAVA_TOOL_OPTIONS' >&2)
+exec java -Djava.awt.headless=true -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 -Dfile.encoding=UTF-8 -Xss8m -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -cp "$cp" arnes.DibujarKt "$@" 2> >(grep -v '^Picked up JAVA_TOOL_OPTIONS' >&2)

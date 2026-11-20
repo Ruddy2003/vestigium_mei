@@ -126,8 +126,49 @@ Así lo hicieron las tres de la tanda del 19 nov 2026: Scriptorium (la ventana a
 ## Cómo se revisa
 
 - **Arnés de escritorio** en `herramientas/arnes_muebles/` (ver su `LEEME.md`): dibuja el Ideario y la biblioteca de cualquier tema, en claro y en oscuro, con los archivos reales de la app.
-- **Capturas en Actions** de una biblioteca: superficie `bibliotecas` (la del diario) y, desde el 19 nov 2026, `suenos` (el estante de los Sueños con 14 sueños de ejemplo, que en el arnés sale con volúmenes delgados), con `temas=<los de la tanda>`.
+- **Capturas en Actions** de una biblioteca: superficie `bibliotecas` (la del diario) y, desde el 19 nov 2026, `suenos` (el estante de los Sueños con 14 sueños de ejemplo, que en el arnés sale con volúmenes delgados), con `temas=<los de la tanda>`. El libro del día: superficie `tapa`; la libreta de momentos con su índice: superficie `libreta` (la pestaña Momentos de la biblioteca, con dos días).
 - **La vara son los Idearios rehechos** (noviembre de 2026), no Galia y Art nouveau: un mueble nuevo no puede verse más pobre que ellos.
 - Cada mueble se dibuja, se mira y se corrige al menos tres veces antes de entregarlo, en claro y en oscuro.
 - Se compara al lado del Ideario de Galia y del de Art nouveau, y con el cuadro del tema si lo tiene.
 - El autor ve cada tanda antes de darla por buena. El piloto es Laboratorio, Helénico y Gótico.
+
+---
+
+# El libro del día y la libreta de momentos (20 nov 2026)
+
+La prueba en tres temas (Helénico, Scriptorium y Espacio) quedó aprobada por el autor el 20 nov 2026: «funciona, se ven bien; no es impresionante». Se hace igual en los demás. **La vara siguen siendo los Idearios rehechos**, y los dos muebles se ven de la misma casa que el Ideario y la biblioteca del tema sin repetir sus objetos ni su luz. Lo que queda y en qué van: `docs/PENDIENTES.md`.
+
+## Qué se rehace y dónde
+
+- **Se rehacen** cuatro funciones del objeto `Estante<Tema>` (`ui/biblioteca/Biblioteca<Época>.kt`): `tapa()` (el diario de hoy, cerrado; `EstadoTapa`), `libreta()` (la libreta cerrada en su rincón; `EstadoLibreta`), `pestana()` (cada día del índice; `EstadoPestana`) y `rotuloMes()`. Con la tapa pueden cambiar `tintaTapa()` y `palabrasTapa()` y, si hace falta, `letraTapa` y `tamTapa`.
+- **No se rehace** la página abierta (`encabezado`, `pagina`, `barra`, `botonGuardar`), ni el estante, los volúmenes, el sobre o el buzón, ni las pantallas que los montan (`Libros.kt`, `pantallas/Diarios.kt`, `pantallas/LibretaMomentos.kt`), ni lo que se guarda.
+- **El código** va en `ui/biblioteca/MuebleTapa<Tema>*.kt` y `MuebleLibreta<Tema>*.kt` (partidos cuando pasan de unas 600 líneas: el rincón, el índice, las piezas), con los nombres de primer nivel con el tema; el objeto solo delega (como `EstanteHeleno`). Lo compartido entre los dos muebles del tema va en un archivo con el tema (`MuebleEspacioLuz.kt`).
+- **El arnés:** `dibujar.sh tapa <tema> hoja` (vacío, escrito, larguísimo y el sueño, en claro y oscuro) y `dibujar.sh libreta <tema> hoja` (pocos y muchos días). Los extremos: `ARNES_TAPA=noche_vacio,abierto`, `ARNES_MOMENTOS=0,1,muchos`, `ARNES_ANCHO=320` y `420`, y `ARNES_LUGAR=diario ARNES_ABIERTO=0.55`. El peso: `medir.sh tapa,libreta,indice <tema>`, frente al de antes.
+- **En Actions:** `capturas.yml` con las superficies `tapa` y `libreta` y `temas=<los de la tanda>` (con `solo=true`, la corrida es corta y la rama `capturas` queda solo con esas). Ahí se ve lo que el arnés no trae: la textura de la pared de la escena del Diario y su lámpara de los modos oscuros.
+
+## El contrato (lo que no se mueve)
+
+- **Alto fijo, ancho variable.** `altoTapa` (184 a 188 dp) y `altoLibreta` (252 a 266 dp) no cambian; el ancho sí (unos 355 dp en la escena de Diario, unos 380 suelta, menos en un teléfono chico). El entorno se estira a lo ancho; el objeto no se deforma.
+- **Nada sale del lienzo** (`clipRect`): sombras y luces, dentro.
+- **La caja del extracto (`cajaTapa`) no se achica:** el extracto de la entrada es el dato principal del libro del día. Cae sobre algo claro y quieto (el papiro, una cédula, una tarjeta) que de noche se apaga poco: su tinta se lee con un contraste de 4.5 a 1 o más, en claro y en oscuro.
+- **Las pistas nombran el objeto** («toca para desplegar el rollo», «…abrir el códice», «…abrir la bitácora de vuelo»; viven en `Libros.kt`, compartido): el objeto nuevo es lo que la pista dice o se propone el texto nuevo aparte, sin tocar `Libros.kt` en la rama del tema.
+- **Las pestañas del índice** miden 44×56 dp, van 7 por fila (5 a 320 dp) y salen por decenas: baratas (de 30 a 35 operaciones cada una, no más de unas 45), sin textos nuevos (el día y la letra de la semana) y del mismo material que la libreta.
+- **Con 0 momentos** la app no dibuja la libreta, pero el arnés sí (0 hojas): no se rompe ni se cuelga.
+
+## Lo que salió de las revisiones
+
+- **El color de la tapa no sale del día:** se leería como un ánimo, y `EstadoTapa` no lo lleva. Un color fijo del tema (en Scriptorium, badana carmesí; en el sueño, índigo).
+- **El libro del día es una franja (casi 2:1) donde manda el extracto.** Su entorno es poco y bien puesto: la superficie donde descansa, con su canto y la sombra con color; una franja de pared con la luz de un lado; dos o tres objetos chicos a los lados, que no le quitan sitio a la caja.
+- **La libreta sí lleva un rincón entero** (mueble o soporte, pared con algo que cruce o enmarque, luz con dirección, objetos del tema con uso) y **dice qué objeto es a la primera.** Se devolvieron las tablillas que se leían como caja o pizarra, el códice que era una tabla grande y la carpeta en perspectiva que parecía un cajón. Engorda con las hojas, y el nombre y la cuenta se leen sobre ella sin taparla.
+- **En el índice, el día sin ánimo se distingue de un ánimo neutro por la forma**, no solo por el color: un neutro claro se confunde con el material. Scriptorium quita la lengüeta; Helénico pone un cordón delgado de lana cruda en lugar de la vuelta de lana teñida; Espacio, plástico transparente en lugar de un color lleno.
+- **La noche, con charco y dos temperaturas, no con velo:** una luz del tema dibujada (la lucerna, el brasero, la vela, la lámpara) cuyo charco enciende lo cercano y deja hundirse lo lejano, y una fría opuesta (la luna, el piloto de guardia).
+- **El sueño es el mismo rincón más tarde, no un filtro:** otra luz (la luna manda, la lucerna arde baja, la lámpara se apaga y queda el piloto) y algún detalle del tema (las adormideras de Hipnos, el creciente de oro), no el dibujo de día recoloreado.
+
+## El peso
+
+Lo de siempre (lo fijo se arma una vez por tamaño; ningún `Brush` ni `Path` nuevo por pestaña; ni desenfoques, ni capas, ni animaciones continuas) y cuatro técnicas que salieron en esta prueba:
+
+- **Los números de los días se miden una vez.** El medidor de texto de la pantalla guarda 8 medidas, el índice tiene 31 números y, si el número no cabe en su caja, `textoEn` lo achica midiéndolo hasta cinco veces en cada dibujo. Se guarda la medida ya hecha por número y por modo (`capaEn`, en `DisenoBiblioteca.kt`; `numeroDia` en `MuebleLibretaMedievalIndice.kt` y `MuebleLibretaHelenoIndice.kt`). Grabar el índice queda en 1.4 a 2.9 ms en los dos temas (midiendo en cada dibujo, de 15 a 47 ms), igual al píxel. Ojo: `medir.sh` usa un medidor de 64 medidas, no de 8 como la pantalla, así que no ve las medidas que en la app se pierden por falta de sitio.
+- **El mapa de luz** (Espacio, `MapaLuzEspacio`): las piezas se pintan con la luz entera y encima va una imagen chica (unas decenas de píxeles por lado) con lo que la luz se apaga con la distancia a la lámpara, pintada una vez por tamaño y por modo y estirada en un solo dibujo, en lugar de un degradado por pieza.
+- **Degradados grandes de dos colores, solo donde llega la luz:** la luz de Helénico pasó de capas sobre todo el lienzo a franjas opacas en diagonal (pintar la tapa, de 24–33 a 12–13 ms); Scriptorium dejó los degradados en dos colores y sin grano (de 26–36 a 16–17 ms).
+- **Quitar lo que queda tapado:** sombras solo donde asoman, nada debajo de lo opaco.

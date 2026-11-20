@@ -62,7 +62,11 @@ val piezas = linkedMapOf(
     "$paquete/ui/Escena.kt" to listOf("halo", "luzCalida",
         // La lámpara de la escena en los modos oscuros (modo `vida`: los recuadros de Social y Otras vidas la llevan).
         "luzEnPared", "luzEnMueble"),
-    "$paquete/ui/Libros.kt" to listOf("Rayas", "Pagina"),
+    // La tapa del diario de hoy tal como la monta la app, con el extracto encima y la pista de cuando está vacía (modo `tapa`).
+    "$paquete/ui/Libros.kt" to listOf("Rayas", "Pagina", "TapaDiario", "pistaDia", "pistaNoche"),
+    // La libreta de momentos cerrada como la monta la app, con su nombre y su cuenta (modo `libreta`).
+    "$paquete/ui/pantallas/LibretaMomentos.kt" to listOf("LibretaCerrada", "pluralHoja"),
+    "$paquete/ui/Contenedores.kt" to listOf("Contenedor", "contenedorDe"),
     "$paquete/data/Mundo.kt" to listOf("CiudadVisitada", "SitioMarcado"),
     "$paquete/ui/Decoracion.kt" to listOf("piezasMano", "cruzPatada", "rad", "mas"),
     // Cómo arma FicheroIdeas los cajones del mueble y su rótulo (la llamada a MuebleIdeas se repite en arnes/Dibujar.kt).

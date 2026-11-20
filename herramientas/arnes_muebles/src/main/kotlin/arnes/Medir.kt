@@ -2,7 +2,7 @@
 //
 //   medir.sh [grupo,grupo,...] [tema,tema,...]
 //
-// Para cada grupo (biblioteca, ideario, vida, comun, decoracion) y cada variante (Psicodelia en sus dos caras, claro y oscuro,
+// Para cada grupo (biblioteca, ideario, vida, comun, decoracion, fondo, tapa, libreta, indice) y cada variante (Psicodelia en sus dos caras, claro y oscuro,
 // con intensidad 0, 0.5 y 1; Helénico y Laboratorio, y los otros cuatro temas del lote 10, en claro y oscuro):
 // - **grabar**: lo que tarda en ejecutarse el código de dibujo de la app y grabarse en una lista de operaciones de Skia (un
 //   `Picture`). Es lo que en el teléfono pasa en el hilo de la interfaz cada vez que algo obliga a volver a dibujar la pieza.
@@ -13,7 +13,8 @@
 // (`PiezasPsicodelia.enCache`) se miden ya con la caché llena, como en el uso normal; «1.ª» es la primera vez (con la caché vacía).
 //
 // Los mismos datos de ejemplo que `dibujar.sh`: el estante con las 35 entradas, el Ideario con 9 temas, los tres muebles de
-// Vida y una mezcla de piezas comunes como la de una pantalla de Hoy o de Ajustes. La decoración (emblema, banda bajo el
+// Vida, una mezcla de piezas comunes como la de una pantalla de Hoy o de Ajustes, el libro del día escrito y la libreta con
+// el índice de 150 días (arnes/TapaLibreta.kt). La decoración (emblema, banda bajo el
 // título, subrayado, filete y fondo vivo) es solo de Psicodelia: la de los otros temas vive en archivos que el arnés no compila.
 package arnes
 
@@ -28,6 +29,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.asComposeCanvas
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.createFontFamilyResolver
 import androidx.compose.ui.unit.Density
@@ -36,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.use
 import io.github.ruddy2003.vestigium.data.Config
 import io.github.ruddy2003.vestigium.data.Repo
+import io.github.ruddy2003.vestigium.data.Texto
 import io.github.ruddy2003.vestigium.ui.Cara
 import io.github.ruddy2003.vestigium.ui.EstadoTema
 import io.github.ruddy2003.vestigium.ui.Estilo
@@ -43,6 +46,8 @@ import io.github.ruddy2003.vestigium.ui.PiezasPsicodelia
 import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.biblioteca.DisenoBiblioteca
 import io.github.ruddy2003.vestigium.ui.biblioteca.DisposicionEstante
+import io.github.ruddy2003.vestigium.ui.biblioteca.EstadoLibreta
+import io.github.ruddy2003.vestigium.ui.biblioteca.EstadoTapa
 import io.github.ruddy2003.vestigium.ui.biblioteca.EstanteTema
 import io.github.ruddy2003.vestigium.ui.biblioteca.GrupoEstante
 import io.github.ruddy2003.vestigium.ui.biblioteca.Volumen
@@ -64,6 +69,7 @@ import io.github.ruddy2003.vestigium.ui.comun.EstadoSeparador
 import io.github.ruddy2003.vestigium.ui.comun.EstadoTarjeta
 import io.github.ruddy2003.vestigium.ui.comun.EstadoVacio
 import io.github.ruddy2003.vestigium.ui.comun.TipoTarjeta
+import io.github.ruddy2003.vestigium.ui.contenedorDe
 import io.github.ruddy2003.vestigium.ui.esquemaDe
 import io.github.ruddy2003.vestigium.ui.ideario.Disposicion
 import io.github.ruddy2003.vestigium.ui.ideario.EstadoCajon
@@ -268,8 +274,51 @@ private fun fondo(v: Variante): List<Llamada> {
     return listOf(Llamada(ANCHO_M.toFloat(), 2200f) { with(PiezasPsicodelia) { fondoVivo(0.3f, v.oscuro, 1f) } })
 }
 
+/**
+ * El libro del día (`DisenoBiblioteca.tapa`) como lo dibuja `TapaDiario`: a lo ancho de la escena de la pestaña Diario (24 dp
+ * menos que el estante) o, de noche, de la pantalla, y de alto `altoTapa`, recortado a su lienzo. Solo el dibujo del tema: el
+ * extracto lo pone encima un `Text` de Compose, igual en todos los diseños. El estado es el primero de ARNES_TAPA (por
+ * omisión, `corto`: el escrito de la captura de CI); ARNES_ABIERTO lo abre.
+ */
+private fun tapa(v: Variante): List<Llamada> {
+    val d = disenoBiblioteca(v.tema)
+    val o = v.tema.soloOscuro || v.oscuro
+    val e = estadosTapa(listOf("corto")).first()
+    val fecha = hoy()
+    val est = EstadoTapa(Estilo.fecha(fecha), Texto.palabras(e.texto), vistaTapa(e.texto).isBlank(), e.noche, abiertoArnes() ?: e.abierto, fecha.hashCode())
+    val w = ANCHO_M - dp(32f) - (if (enEscena(e)) dp(24f) else 0f)
+    return listOf(Llamada(w, dp(d.altoTapa.value)) { clipRect { with(d) { tapa(est, medidor, o) } } })
+}
+
+/**
+ * La libreta de momentos (`libreta`, a lo ancho de la pantalla y de alto `altoLibreta`) y, con [conIndice], su índice como en
+ * `BibliotecaMomentosLibreta`: el rótulo de cada mes visible (34 dp) y una pestaña de 44×56 dp por día. Con el primer conjunto
+ * de ARNES_MOMENTOS (por omisión, `muchos`: 150 días con huecos, de los que se ven los de 3 meses; ARNES_MESES cambia cuántos).
+ */
+private fun libretaEIndice(v: Variante, conLibreta: Boolean, conIndice: Boolean): List<Llamada> {
+    val d = disenoBiblioteca(v.tema)
+    val o = v.tema.soloOscuro || v.oscuro
+    val momentos = momentosEjemplo(conjuntosMomentos(listOf("muchos")).first())
+    val todas = diasDe(momentos)
+    val w = ANCHO_M - dp(32f)
+    val l = ArrayList<Llamada>()
+    if (conLibreta) {
+        val est = EstadoLibreta(contenedorDe(v.tema).nombre, cuentaLibreta(todas.size, todas.lastOrNull()), todas.size, abiertoArnes() ?: 0f, todas.size * 31 + 7)
+        l += Llamada(w, dp(d.altoLibreta.value)) { clipRect { with(d) { libreta(est, medidor, o) } } }
+    }
+    if (conIndice) mesesIndice(todas).take(mesesArnes()).forEach { (mes, dias) ->
+        val r = rotuloDe(mes)
+        l += Llamada(w, dp(34f)) { clipRect { with(d) { rotuloMes(r, medidor, o) } } }
+        dias.forEach { f -> val e = estadoPestana(f, momentos, o); l += Llamada(dp(44f), dp(56f)) { with(d) { pestana(e, medidor, o) } } }
+    }
+    return l
+}
+
 private val GRUPOS: Map<String, (Variante) -> List<Llamada>> = linkedMapOf(
     "biblioteca" to ::biblioteca, "ideario" to ::ideario, "vida" to ::vida, "comun" to ::comun, "decoracion" to ::decoracion, "fondo" to ::fondo,
+    // El libro del día y la libreta de momentos (19 nov 2026): `libreta` es la libreta con su índice, como la pantalla;
+    // `indice`, solo los rótulos y las pestañas (con MEDIR_DETALLE=1 sale cada pestaña por separado).
+    "tapa" to ::tapa, "libreta" to { v -> libretaEIndice(v, conLibreta = true, conIndice = true) }, "indice" to { v -> libretaEIndice(v, conLibreta = false, conIndice = true) },
 )
 
 private fun variantes(temas: List<TemaId>): List<Variante> = temas.flatMap { t ->
