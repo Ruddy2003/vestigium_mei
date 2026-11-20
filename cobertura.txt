@@ -1,0 +1,5 @@
+mapOf(
+    "cuadro_banderita" to setOf("colonos", "frente", "arcontes", "galia", "nouveau", "psicodelia"),
+    "cuadro_escena" to setOf("colonos", "frente", "arcontes", "galia", "nouveau", "psicodelia"),
+    "cuadro_gato" to setOf("colonos", "frente", "arcontes", "galia", "nouveau", "psicodelia"),
+)
