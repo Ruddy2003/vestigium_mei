@@ -27,7 +27,6 @@ import io.github.ruddy2003.vestigium.ui.ideario.vetas
 internal object FacistolLibretaMedieval {
     private val P = PaletaMedieval
     private val SEDAS = listOf(P.RUBRICA, Color(0xFF3F5C8C), P.OCRE_PINTURA, P.VERDE, mezcla(P.ALMAGRE, P.NOGAL_OSC, 0.2f))
-    private val LATON = Color(0xFFB8924C)
     /** Dónde van las dos manecillas, en fracción del alto del códice. */
     private val MANECILLAS = listOf(0.17f, 0.83f)
 

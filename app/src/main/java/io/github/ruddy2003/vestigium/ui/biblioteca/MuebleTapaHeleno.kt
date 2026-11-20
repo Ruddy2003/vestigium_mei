@@ -408,8 +408,6 @@ internal object MuebleTapaHeleno {
 
     // ---------------------------------------------------------------- las piezas
 
-    private fun corrido(p: Path, dx: Float, dy: Float) = Path().apply { addPath(p, Offset(dx, dy)) }
-
     /** «1 palabra», «N palabras», como al pie del rollo. */
     private fun palabrasHeleno(n: Int): String = if (n == 1) "1 palabra" else "$n palabras"
 
