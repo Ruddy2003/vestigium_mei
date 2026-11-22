@@ -55,16 +55,25 @@ private fun DrawScope.bultoEgipto(a: AireEgipto, k: Float, f: Float, hacia: Floa
     drawRect(a.sombra(0.2f), Offset(x0 + (if (luzIzq) w * 0.86f else 0f), arriba), Size(w * 0.14f, alto))
     if (a.oscuro) {
         if (k > 0.08f) drawRect(FILO_MUEBLE.copy(alpha = (0.5f * k).coerceAtMost(0.5f)), Offset(if (hacia > 0) x1 - 1.1f * u else x0, arriba), Size(1.1f * u, alto))
-        if (f > 0.08f) drawRect(a.helado(0.45f * f), Offset(if (hacia > 0) x0 else x1 - 1f * u, arriba), Size(1f * u, alto))
+        if (f > 0.08f) drawRect(a.helado(0.5f * f), Offset(if (hacia > 0) x0 else x1 - 1.2f * u, arriba), Size(1.2f * u, alto))
+    }
+    // Lo que cae dentro de la mancha de la puerta se enciende: el sol, el ocaso o la luna, con su filo del lado de la puerta.
+    if (f > 0.02f) {
+        val m = if (a.oscuro) 0.6f else 1f
+        drawRect(a.puerta(0.16f * f * m), Offset(x0, arriba), Size(w, alto))
+        drawRect(a.puerta(0.34f * f * m), Offset(x0, arriba), Size(w * 0.24f, alto))
     }
 }
 
 /** El color del cuerpo: el del ánimo si lo hay; si no, el del material crudo. */
 private fun cuerpoEgipto(v: Volumen, a: AireEgipto, k: Float, f: Float, crudo: Color): Color =
-    v.tono?.let { a.animo(it, k, f) } ?: a.luz(crudo, k, f)
+    v.tono?.let { a.animo(tonoDeDiaEgipto(it, a.oscuro), k, f) } ?: a.luz(crudo, k, f)
+
+/** El mes como cabe en una tira angosta: sin la estación entre paréntesis («Paofi (II Ajet)» queda en «Paofi»). */
+private fun mesEgipto(v: Volumen, angosto: Boolean): String = if (angosto) v.mes.substringBefore(" (").trim().ifEmpty { v.mes } else v.mes
 
 /** Una tira de papiro pegada con el texto dentro: el día (horizontal) o el mes (en rojo, a lo largo). */
-private fun DrawScope.tiraEgipto(r: Rect, texto: String, medidor: TextMeasurer, a: AireEgipto, k: Float, mes: Boolean, semilla: Int) {
+private fun DrawScope.tiraEgipto(r: Rect, texto: String, medidor: TextMeasurer, a: AireEgipto, k: Float, mes: Boolean) {
     val u = density
     if (r.width < 3f || r.height < 3f) return
     drawRect(a.sombra(0.35f), Offset(r.left + 0.8f * u, r.top + 1f * u), r.size)
@@ -147,7 +156,7 @@ private fun DrawScope.rolloEgipto(v: Volumen, medidor: TextMeasurer, a: AireEgip
     // La sombra del tablón de arriba en la cabeza del rollo.
     drawRect(a.sombra(0.16f), Offset.Zero, Size(w, h * 0.05f))
     // El día, en una tira de papiro pegada a la funda.
-    tiraEgipto(Rect(w * 0.08f, h * 0.22f, w * 0.92f, h * 0.22f + minOf(h * 0.2f, 22f * u)), v.dia, medidor, a, k, false, v.semilla)
+    tiraEgipto(Rect(w * 0.08f, h * 0.22f, w * 0.92f, h * 0.22f + minOf(h * 0.2f, 22f * u)), v.dia, medidor, a, k, false)
     // El cordel con su sello (de noche, la luna).
     val yc = h * 0.55f
     drawLine(a.sombra(0.3f), Offset(0f, yc + 1.6f * u), Offset(w, yc + 2.2f * u), 1.4f * u)
@@ -156,7 +165,7 @@ private fun DrawScope.rolloEgipto(v: Volumen, medidor: TextMeasurer, a: AireEgip
     selloEgipto(Offset(w * 0.5f, yc + 1.4f * u), minOf(w * 0.2f, 5f * u), v.noche, a, k)
     // El mes, en rojo, en su tira.
     val mw = minOf(w * 0.44f, 12f * u)
-    tiraEgipto(Rect(w * 0.5f - mw / 2, h * 0.66f, w * 0.5f + mw / 2, h * 0.9f), v.mes, medidor, a, k, true, v.semilla + 3)
+    tiraEgipto(Rect(w * 0.5f - mw / 2, h * 0.66f, w * 0.5f + mw / 2, h * 0.9f), mesEgipto(v, w < 34f * u), medidor, a, k, true)
 }
 
 /**
@@ -199,9 +208,9 @@ private fun DrawScope.tablillaEgipto(v: Volumen, medidor: TextMeasurer, a: AireE
             a.luz(FIBRA, k, f), style = Stroke(1f * u))
         drawCircle(a.luz(EgiptoTinta.TINTA, 0.3f), 1.5f * u, ag)
         // La cara de yeso, un poco teñida por la pintura que asoma.
-        val yeso = Rect(tabla.left + tabla.width * 0.2f, ag.y + 4f * u, tabla.right - tabla.width * 0.18f, tabla.bottom - tabla.height * 0.26f)
+        val yeso = Rect(tabla.left + tabla.width * 0.25f, ag.y + 5f * u, tabla.right - tabla.width * 0.23f, tabla.bottom - tabla.height * 0.3f)
         if (yeso.width > 4f && yeso.height > 10f) {
-            drawRect(a.etiqueta(k, mezcla(YESO, v.tono ?: ACACIA, 0.1f)), yeso.topLeft, yeso.size)
+            drawRect(a.etiqueta(k, mezcla(YESO, v.tono?.let { tonoDeDiaEgipto(it, a.oscuro) } ?: ACACIA, 0.1f)), yeso.topLeft, yeso.size)
             drawRect(a.sombra(0.18f), Offset(yeso.right - 1f * u, yeso.top), Size(1f * u, yeso.height))
             drawRect(a.sombra(0.12f), Offset(yeso.left, yeso.bottom - 1f * u), Size(yeso.width, 1f * u))
             // La cuadrícula roja de las prácticas, borrada a medias.
@@ -217,10 +226,10 @@ private fun DrawScope.tablillaEgipto(v: Volumen, medidor: TextMeasurer, a: AireE
                 val c = Offset(yeso.center.x, dia.bottom + 4f * u)
                 val r = minOf(yeso.width * 0.28f, 4.2f * u)
                 drawCircle(a.luz(EgiptoTinta.FAYENZA, 0.7f), r, c)
-                drawCircle(a.etiqueta(k, mezcla(YESO, v.tono ?: ACACIA, 0.1f)), r * 0.82f, c + Offset(r * 0.42f, -r * 0.18f))
+                drawCircle(a.etiqueta(k, mezcla(YESO, v.tono?.let { tonoDeDiaEgipto(it, a.oscuro) } ?: ACACIA, 0.1f)), r * 0.82f, c + Offset(r * 0.42f, -r * 0.18f))
             }
             val mesY = dia.bottom + (if (v.noche) 9f * u else 2f * u)
-            textoEn(medidor, v.mes, Rect(yeso.left + 0.5f * u, mesY, yeso.right - 0.5f * u, yeso.bottom - 1.5f * u), MuebleEstanteEgipto.LETRA, a.rubrica, 8.5f,
+            textoEn(medidor, mesEgipto(v, w < 34f * u), Rect(yeso.left + 0.5f * u, mesY, yeso.right - 0.5f * u, yeso.bottom - 1.5f * u), MuebleEstanteEgipto.LETRA, a.rubrica, 8.5f,
                 vertical = true, peso = FontWeight.SemiBold, minimo = 4.5f)
         }
         drawRect(a.sombra(0.14f), Offset(tabla.left, tabla.top), Size(tabla.width, h * 0.04f))
@@ -301,7 +310,7 @@ private fun DrawScope.fardoEgipto(v: Volumen, medidor: TextMeasurer, a: AireEgip
     val mw = minOf(w * 0.4f, 11f * u)
     val mt = Rect(cx - mw / 2, tt.bottom + 3f * u, cx + mw / 2, h * 0.9f)
     if (mt.height > 8f * u) {
-        tiraEgipto(mt, v.mes, medidor, a, k, true, v.semilla + 5)
+        tiraEgipto(mt, mesEgipto(v, w < 34f * u), medidor, a, k, true)
         // Las puntadas que la sujetan.
         for (j in 0 until 3) drawLine(a.luz(FIBRA, k, f), Offset(mt.left - 1f * u, mt.top + mt.height * (0.15f + 0.35f * j)), Offset(mt.left + 1f * u, mt.top + mt.height * (0.15f + 0.35f * j) + 1f * u), 0.7f * u)
     }

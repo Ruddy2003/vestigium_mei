@@ -11,6 +11,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import io.github.ruddy2003.vestigium.ui.biblioteca.EgiptoTinta.BARRO
+import io.github.ruddy2003.vestigium.ui.biblioteca.EgiptoTinta.BRONCE
+import io.github.ruddy2003.vestigium.ui.biblioteca.EgiptoTinta.MARGA
+import io.github.ruddy2003.vestigium.ui.biblioteca.EgiptoTinta.ROJO
 import io.github.ruddy2003.vestigium.ui.biblioteca.EgiptoTinta.CEBOLLA
 import io.github.ruddy2003.vestigium.ui.biblioteca.EgiptoTinta.COBRE
 import io.github.ruddy2003.vestigium.ui.biblioteca.EgiptoTinta.FAYENZA
@@ -61,40 +64,6 @@ private fun DrawScope.estacaEgipto(c: Offset, a: AireEgipto, k: Float) {
     drawCircle(a.luz(ACACIA, k), 2f * u, c - Offset(0.5f * u, 0.5f * u))
 }
 
-/**
- * Los manojos de mechas de lino retorcido que se reparten para alumbrar la tumba, colgados de una estaca: cada mecha cae con
- * su torsión, atadas arriba con una vuelta de cordel, las puntas deshilachadas.
- */
-internal fun DrawScope.mechasEgipto(clavo: Offset, w: Float, a: AireEgipto, k: Float, f: Float) {
-    val u = density
-    val largo = w * 0.2f
-    val cuerdas = Path(); val torsion = Path()
-    for (m in 0 until 2) {
-        val ox = clavo.x + (m - 0.5f) * w * 0.026f
-        for (j in 0 until 6) {
-            val x0 = ox + (j - 2.5f) * 0.9f * u
-            val x1 = ox + (j - 2.5f) * 2.3f * u + (m - 0.5f) * w * 0.02f
-            val y1 = clavo.y + largo * (0.84f + 0.16f * azar(m * 7 + j, 5)) - m * w * 0.02f
-            cuerdas.moveTo(x0, clavo.y + 4f * u); cuerdas.quadraticTo((x0 + x1) / 2 + 1.5f * u, (clavo.y + y1) / 2, x1, y1)
-            var y = clavo.y + 8f * u
-            while (y < y1 - 3f * u) {
-                val t = (y - clavo.y) / (y1 - clavo.y)
-                val x = x0 + (x1 - x0) * t * t
-                torsion.moveTo(x - 1f * u, y); torsion.lineTo(x + 1f * u, y + 1.6f * u)
-                y += 3.2f * u
-            }
-        }
-    }
-    drawPath(corridoEgipto(cuerdas, 2.4f * u, 2f * u), a.sombra(0.3f), style = Stroke(2.4f * u, cap = StrokeCap.Round))
-    drawPath(cuerdas, a.luz(LINO, k, f), style = Stroke(2.2f * u, cap = StrokeCap.Round))
-    drawPath(torsion, a.luz(mezcla(LINO, PALMA_OSC, 0.5f), k, f).copy(alpha = 0.6f), style = Stroke(0.6f * u))
-    drawPath(cuerdas, a.claro(0.25f), style = Stroke(0.6f * u))
-    // La vuelta de cordel que los ata y la estaca.
-    drawRoundRect(a.luz(FIBRA, k, f), Offset(clavo.x - w * 0.03f, clavo.y + 3f * u), Size(w * 0.06f, 3.2f * u), CornerRadius(1.5f * u))
-    drawLine(a.sombra(0.3f), Offset(clavo.x - w * 0.03f, clavo.y + 6f * u), Offset(clavo.x + w * 0.03f, clavo.y + 6f * u), 0.7f * u)
-    estacaEgipto(clavo, a, k)
-}
-
 /** La ristra de cebollas de la ración, colgada por sus tallos trenzados de una estaca junto al borde, cortada por él. */
 internal fun DrawScope.cebollasEgipto(clavo: Offset, w: Float, a: AireEgipto, k: Float, f: Float) {
     val u = density
@@ -113,125 +82,191 @@ internal fun DrawScope.cebollasEgipto(clavo: Offset, w: Float, a: AireEgipto, k:
             close()
         }
         drawPath(corridoEgipto(forma, 1.6f * u, 1.8f * u), a.sombra(0.3f))
-        val piel = mezcla(CEBOLLA, PAPIRO, 0.25f * azar(j, 72))
-        drawPath(forma, a.luz(piel, k, f))
-        // Las vetas de la piel.
+        drawPath(forma, a.luz(mezcla(CEBOLLA, PAPIRO, 0.25f * azar(j, 72)), k, f))
         drawPath(Path().apply {
             moveTo(c.x - r * 0.5f, c.y - r * 0.9f); quadraticTo(c.x - r * 0.8f, c.y, c.x - r * 0.4f, c.y + r * 0.8f)
             moveTo(c.x + r * 0.3f, c.y - r * 1f); quadraticTo(c.x + r * 0.6f, c.y, c.x + r * 0.35f, c.y + r * 0.85f)
         }, a.sombra(0.25f), style = Stroke(0.6f * u))
         redondoEgipto(forma, Rect(c.x - r, c.y - r * 1.5f, c.x + r, c.y + r * 1.25f), a, k, -1f)
-        drawLine(a.luz(PAPIRO, k, f).copy(alpha = 0.7f), Offset(c.x, c.y + r * 1.15f), Offset(c.x + 0.6f * u, c.y + r * 1.5f), 0.7f * u)
     }
     estacaEgipto(clavo, a, k)
 }
 
-/**
- * El mazo de madera y los cinceles de cobre que se devolvieron gastados, atados en haz: el cobre con su filo claro y manchas
- * de verdín, tumbados sobre el tablón.
- */
-internal fun DrawScope.cincelesEgipto(pie: Offset, w: Float, a: AireEgipto, k: Float, f: Float) {
+/** La estera de junco enrollada y atada, de pie y apoyada en el muro: los juncos a lo largo, dos ataduras y la espiral arriba. */
+internal fun DrawScope.esteraEgipto(pie: Offset, w: Float, a: AireEgipto, k: Float, f: Float) {
     val u = density
-    contactoEgipto(Offset(pie.x + w * 0.01f, pie.y), w * 0.2f, 4f * u, a)
-    // El mazo: una porra de madera dura, tumbada, con el mango hacia la izquierda.
-    val cabeza = Rect(pie.x + w * 0.02f, pie.y - w * 0.05f, pie.x + w * 0.11f, pie.y)
-    val mazo = Path().apply {
-        moveTo(cabeza.left, cabeza.center.y - cabeza.height * 0.18f)
-        quadraticTo(cabeza.left + cabeza.width * 0.3f, cabeza.top, cabeza.right - cabeza.width * 0.2f, cabeza.top + 1f * u)
-        quadraticTo(cabeza.right + 1f * u, cabeza.center.y, cabeza.right - cabeza.width * 0.2f, cabeza.bottom)
-        lineTo(cabeza.left + cabeza.width * 0.2f, cabeza.bottom)
-        quadraticTo(cabeza.left, cabeza.center.y + cabeza.height * 0.2f, cabeza.left, cabeza.center.y - cabeza.height * 0.18f)
-        close()
+    val r = w * 0.036f; val alto = w * 0.28f
+    contactoEgipto(Offset(pie.x + w * 0.012f, pie.y), r * 3f, 5f * u, a)
+    rotate(-5f, pie) {
+        val cuerpo = Rect(pie.x - r, pie.y - alto, pie.x + r, pie.y)
+        drawRect(a.sombra(0.25f), Offset(cuerpo.right, cuerpo.top + 6f * u), Size(5f * u, alto - 6f * u))
+        drawRect(a.luz(mezcla(FIBRA, PAPIRO, 0.3f), k, f), cuerpo.topLeft, cuerpo.size)
+        val juncos = Path()
+        var x = cuerpo.left + 1.6f * u
+        while (x < cuerpo.right) { juncos.moveTo(x, cuerpo.top + 2f * u); juncos.lineTo(x + 0.4f * u, cuerpo.bottom); x += 2.2f * u }
+        drawPath(juncos, a.luz(PALMA, k, f).copy(alpha = 0.45f), style = Stroke(0.6f * u))
+        drawRect(a.claro(0.3f), Offset(cuerpo.left + r * 0.25f, cuerpo.top), Size(r * 0.35f, alto))
+        drawRect(a.sombra(0.28f), Offset(cuerpo.right - r * 0.7f, cuerpo.top), Size(r * 0.7f, alto))
+        listOf(0.25f, 0.72f).forEach { t ->
+            val y = cuerpo.top + alto * t
+            drawRect(a.luz(mezcla(ROJO, FIBRA, 0.35f), k, f), Offset(cuerpo.left - 0.5f * u, y), Size(r * 2 + 1f * u, 2.6f * u))
+            drawRect(a.sombra(0.3f), Offset(cuerpo.left, y + 2.6f * u), Size(r * 2, 0.8f * u))
+        }
+        val boca = Rect(cuerpo.left, cuerpo.top - r * 0.4f, cuerpo.right, cuerpo.top + r * 0.4f)
+        drawOval(a.luz(mezcla(FIBRA, PALMA_OSC, 0.25f), k, f), boca.topLeft, boca.size)
+        for (j in 1..3) drawOval(a.luz(PAPIRO, k, f).copy(alpha = 0.6f), boca.deflate(r * 0.22f * j).topLeft, boca.deflate(r * 0.22f * j).size, style = Stroke(0.7f * u))
     }
-    drawRoundRect(a.luz(ACACIA_OSC, k, f), Offset(pie.x - w * 0.08f, pie.y - w * 0.03f), Size(w * 0.11f, w * 0.016f), CornerRadius(2f * u))
-    drawPath(mazo, a.luz(mezcla(ACACIA, PALMA_OSC, 0.35f), k, f))
-    redondoEgipto(mazo, cabeza, a, k, -1f)
-    // Los cinceles, en haz, encima, atados con un cordel.
-    for (j in 0 until 5) {
-        val y = pie.y - w * 0.006f - j * 2.6f * u - (if (j > 2) w * 0.01f else 0f)
-        val x0 = pie.x - w * 0.1f + j * 1.5f * u; val x1 = pie.x + w * 0.045f + j * 2f * u
-        drawLine(a.sombra(0.35f), Offset(x0 + 1f * u, y + 1.2f * u), Offset(x1 + 1f * u, y + 1.2f * u), 2.6f * u)
-        drawLine(a.luz(mezcla(COBRE, PALMA_OSC, 0.12f * j), k, f), Offset(x0, y), Offset(x1, y), 2.4f * u, cap = StrokeCap.Square)
-        drawLine(a.claro(0.4f), Offset(x0, y - 0.7f * u), Offset(x1 - 3f * u, y - 0.7f * u), 0.6f * u)
-        drawCircle(a.luz(VERDIN, k, f).copy(alpha = 0.7f), 1f * u, Offset(x0 + (x1 - x0) * azar(j, 33), y))
-        if (a.oscuro) drawLine(a.filo(0.5f * k), Offset(x1 - 2f * u, y), Offset(x1, y), 2.4f * u)
-    }
-    drawLine(a.luz(FIBRA, k, f), Offset(pie.x - w * 0.035f, pie.y - w * 0.038f), Offset(pie.x - w * 0.03f, pie.y + 1f * u), 1.4f * u)
 }
 
 /**
- * La balanza del cobre, que manda sobre el anaquel: el pie de madera con su poste, el astil un poco caído hacia el platillo de
- * los cinceles, los cordeles de los platillos, la plomada que dice si está en fiel, y las pesas de piedra al lado.
+ * Una tinaja de marga crema, pintada con bandas de azul pálido y rojo como la loza de la época: una franja azul en el hombro
+ * con su festón de pétalos colgando y filetes rojos; abajo, rayas ([motivo] 0) o un zigzag azul (1). La boca, tapada con
+ * barro (0) o con un paño de lino atado (1).
+ */
+internal fun DrawScope.tinajaEgipto(pie: Offset, alto: Float, w: Float, a: AireEgipto, k: Float, f: Float, hacia: Float, motivo: Int) {
+    val u = density
+    val r = alto * 0.38f
+    contactoEgipto(Offset(pie.x + r * 0.2f, pie.y), r * 2.4f, 6f * u, a, 0.4f)
+    val cuerpo = Path().apply {
+        moveTo(pie.x - r * 0.42f, pie.y)
+        cubicTo(pie.x - r * 1.15f, pie.y - alto * 0.2f, pie.x - r * 1.1f, pie.y - alto * 0.72f, pie.x - r * 0.5f, pie.y - alto * 0.86f)
+        lineTo(pie.x - r * 0.42f, pie.y - alto * 0.95f)
+        lineTo(pie.x + r * 0.42f, pie.y - alto * 0.95f)
+        lineTo(pie.x + r * 0.5f, pie.y - alto * 0.86f)
+        cubicTo(pie.x + r * 1.1f, pie.y - alto * 0.72f, pie.x + r * 1.15f, pie.y - alto * 0.2f, pie.x + r * 0.42f, pie.y)
+        close()
+    }
+    val caja = Rect(pie.x - r * 1.05f, pie.y - alto * 0.95f, pie.x + r * 1.05f, pie.y)
+    drawPath(cuerpo, a.luz(MARGA, k, f))
+    clipPath(cuerpo) {
+        val azul = a.luz(EgiptoTinta.AZUL, k, f); val rojo = a.luz(ROJO, k, f)
+        val y0 = pie.y - alto * 0.76f; val y1 = pie.y - alto * 0.64f
+        drawRect(azul, Offset(caja.left, y0), Size(caja.width, y1 - y0))
+        // El festón de pétalos que cuelga de la franja.
+        var x = caja.left + r * 0.12f
+        while (x < caja.right) { drawOval(azul, Offset(x - r * 0.1f, y1 - r * 0.1f), Size(r * 0.2f, r * 0.3f)); x += r * 0.25f }
+        drawRect(rojo, Offset(caja.left, y0 - 1.8f * u), Size(caja.width, 1.3f * u))
+        drawRect(rojo, Offset(caja.left, y1 + r * 0.24f), Size(caja.width, 1.1f * u))
+        val y2 = pie.y - alto * 0.4f
+        if (motivo == 0) {
+            drawRect(rojo, Offset(caja.left, y2), Size(caja.width, 1.4f * u))
+            drawRect(azul, Offset(caja.left, y2 + 3f * u), Size(caja.width, 3f * u))
+            drawRect(rojo, Offset(caja.left, y2 + 7.5f * u), Size(caja.width, 1.1f * u))
+        } else {
+            val zig = Path()
+            var zx = caja.left; var arribaZ = true
+            zig.moveTo(zx, y2)
+            while (zx < caja.right) { zx += r * 0.22f; arribaZ = !arribaZ; zig.lineTo(zx, if (arribaZ) y2 else y2 + r * 0.22f) }
+            drawPath(zig, azul, style = Stroke(2f * u))
+            drawRect(rojo, Offset(caja.left, y2 + r * 0.34f), Size(caja.width, 1.1f * u))
+        }
+        // La pintura gastada donde se roza.
+        drawOval(a.luz(MARGA, k, f).copy(alpha = 0.5f), Offset(pie.x - r * 0.9f, y0 - r * 0.05f), Size(r * 0.5f, r * 0.3f))
+    }
+    redondoEgipto(cuerpo, caja, a, k, hacia)
+    // El brillo de la marga alisada, del lado de la luz.
+    if (!a.oscuro) drawArc(a.claro(0.4f), 160f, 60f, false, Offset(caja.left + r * 0.25f, caja.top + alto * 0.18f), Size(r * 1.2f, alto * 0.6f), style = Stroke(1.6f * u))
+    // La boca.
+    val boca = Rect(pie.x - r * 0.48f, pie.y - alto - r * 0.08f, pie.x + r * 0.48f, pie.y - alto * 0.93f)
+    drawOval(a.luz(mezcla(MARGA, PALMA_OSC, 0.15f), k, f), boca.topLeft, boca.size)
+    if (motivo == 0) {
+        drawArc(a.luz(BARRO, k, f), 180f, 180f, true, Offset(boca.left + r * 0.04f, boca.top - r * 0.26f), Size(boca.width - r * 0.08f, r * 0.6f))
+        drawArc(a.claro(0.35f), 200f, 60f, false, Offset(boca.left + r * 0.1f, boca.top - r * 0.2f), Size(boca.width * 0.7f, r * 0.45f), style = Stroke(1f * u))
+    } else {
+        val pano = Path().apply {
+            moveTo(boca.left - r * 0.1f, boca.bottom + r * 0.12f)
+            quadraticTo(pie.x, boca.top - r * 0.35f, boca.right + r * 0.1f, boca.bottom + r * 0.12f)
+            lineTo(boca.right + r * 0.02f, boca.bottom + r * 0.36f); lineTo(boca.left + r * 0.04f, boca.bottom + r * 0.32f); close()
+        }
+        drawPath(pano, a.luz(LINO, k, f))
+        drawLine(a.luz(FIBRA, k, f), Offset(boca.left - r * 0.04f, boca.bottom + r * 0.16f), Offset(boca.right + r * 0.04f, boca.bottom + r * 0.18f), 1.4f * u)
+        drawPath(pano, a.sombra(0.25f), style = Stroke(0.7f * u))
+    }
+}
+
+/**
+ * La balanza del cobre, que manda sobre el anaquel: el pie de madera, el poste con su remate, el astil de madera un poco caído
+ * hacia el platillo de los cinceles, los platillos de bronce con su brillo colgados de tres cordeles, la plomada del fiel y
+ * las pesas de piedra al lado.
  */
 internal fun DrawScope.balanzaEgipto(pie: Offset, w: Float, a: AireEgipto, k: Float, f: Float, hacia: Float) {
     val u = density
     val madera = a.luz(ACACIA, k, f); val maderaOsc = a.luz(ACACIA_OSC, k, f)
-    // El pie y el poste.
-    contactoEgipto(Offset(pie.x + w * 0.01f, pie.y), w * 0.13f, 5f * u, a)
-    val zocalo = Rect(pie.x - w * 0.045f, pie.y - w * 0.026f, pie.x + w * 0.045f, pie.y)
+    contactoEgipto(Offset(pie.x + w * 0.012f, pie.y), w * 0.17f, 6f * u, a, 0.4f)
+    val zocalo = Rect(pie.x - w * 0.06f, pie.y - w * 0.032f, pie.x + w * 0.06f, pie.y)
     drawRect(madera, zocalo.topLeft, zocalo.size)
-    drawRect(a.claro(0.3f), zocalo.topLeft, Size(zocalo.width, 1.4f * u))
-    drawRect(a.sombra(0.3f), Offset(zocalo.right - zocalo.width * 0.25f, zocalo.top), Size(zocalo.width * 0.25f, zocalo.height))
-    val alto = w * 0.29f
-    val poste = Rect(pie.x - w * 0.012f, zocalo.top - alto, pie.x + w * 0.012f, zocalo.top)
-    drawRect(a.sombra(0.25f), Offset(poste.right, poste.top + 6f * u), Size(4f * u, poste.height - 6f * u))
+    drawRect(a.claro(0.35f), zocalo.topLeft, Size(zocalo.width, 1.6f * u))
+    drawRect(a.sombra(0.32f), Offset(zocalo.right - zocalo.width * 0.25f, zocalo.top), Size(zocalo.width * 0.25f, zocalo.height))
+    drawLine(maderaOsc.copy(alpha = 0.4f), Offset(zocalo.left + 3f * u, zocalo.center.y), Offset(zocalo.right - 3f * u, zocalo.center.y + 1f * u), 0.7f * u)
+    val alto = w * 0.34f
+    val poste = Rect(pie.x - w * 0.013f, zocalo.top - alto, pie.x + w * 0.013f, zocalo.top)
     drawRect(madera, poste.topLeft, poste.size)
-    drawRect(a.claro(0.3f), Offset(poste.left + 1f * u, poste.top), Size(1.4f * u, poste.height))
-    drawRect(a.sombra(0.3f), Offset(poste.right - poste.width * 0.35f, poste.top), Size(poste.width * 0.35f, poste.height))
-    // El astil, caído hacia la izquierda (los cinceles pesan más).
-    val eje = Offset(pie.x, poste.top + 3f * u)
-    val brazo = w * 0.16f
+    drawRect(a.claro(0.35f), Offset(poste.left + 1.2f * u, poste.top), Size(2f * u, poste.height))
+    drawRect(a.sombra(0.32f), Offset(poste.right - poste.width * 0.38f, poste.top), Size(poste.width * 0.38f, poste.height))
+    if (a.oscuro && k > 0.1f) drawRect(a.filo(0.5f * k), Offset(poste.right - 1.2f * u, poste.top), Size(1.2f * u, poste.height))
+    // El remate del poste, donde pivota el astil.
+    drawRoundRect(maderaOsc, Offset(poste.left - w * 0.006f, poste.top - w * 0.02f), Size(poste.width + w * 0.012f, w * 0.026f), CornerRadius(2f * u))
+    val eje = Offset(pie.x, poste.top - w * 0.007f)
+    val brazo = w * 0.17f
     val caida = 0.07f
     val pIzq = Offset(eje.x - brazo, eje.y + brazo * caida)
     val pDer = Offset(eje.x + brazo, eje.y - brazo * caida)
-    drawLine(a.sombra(0.3f), pIzq + Offset(1.5f * u, 2f * u), pDer + Offset(1.5f * u, 2f * u), 3.6f * u)
-    drawLine(maderaOsc, pIzq, pDer, 4.4f * u, cap = StrokeCap.Round)
-    drawLine(madera, pIzq + Offset(0f, -0.8f * u), pDer + Offset(0f, -0.8f * u), 1.6f * u, cap = StrokeCap.Round)
-    drawCircle(a.luz(COBRE, k, f), 2.4f * u, eje)
-    // La plomada que cuelga del astil junto al poste.
-    val plomo = Offset(eje.x + 5f * u, eje.y + w * 0.09f)
-    drawLine(a.luz(LINO, k, f), Offset(eje.x + 5f * u + 0.4f * u, eje.y + 1f * u), plomo, 0.6f * u)
-    drawPath(Path().apply { moveTo(plomo.x - 2.2f * u, plomo.y); lineTo(plomo.x + 2.2f * u, plomo.y); lineTo(plomo.x, plomo.y + 6f * u); close() }, a.luz(PIEDRA, k, f))
-    // Los platillos con sus cordeles.
+    // El astil: una barra de madera con cuerpo, sus regatones de bronce y su sombra.
+    val g = w * 0.008f
+    val astil = poligonoEgipto(pIzq.x, pIzq.y - g, pDer.x, pDer.y - g, pDer.x, pDer.y + g, pIzq.x, pIzq.y + g)
+    drawPath(corridoEgipto(astil, 1.6f * u, 2.4f * u), a.sombra(0.3f))
+    drawPath(astil, madera)
+    drawLine(a.claro(0.4f), Offset(pIzq.x, pIzq.y - g * 0.6f), Offset(pDer.x, pDer.y - g * 0.6f), 1f * u)
+    drawLine(a.sombra(0.35f), Offset(pIzq.x, pIzq.y + g * 0.7f), Offset(pDer.x, pDer.y + g * 0.7f), 1f * u)
+    listOf(pIzq, pDer).forEach { p -> drawCircle(a.luz(BRONCE, k, f), g * 1.3f, p); drawCircle(a.claro(0.5f), g * 0.5f, p - Offset(g * 0.4f, g * 0.4f)) }
+    drawCircle(a.luz(BRONCE, k, f), g * 1.1f, eje)
+    // La plomada del fiel.
+    val plomo = Offset(eje.x + w * 0.02f, eje.y + w * 0.1f)
+    drawLine(a.luz(LINO, k, f), Offset(eje.x + w * 0.02f, eje.y + g), plomo, 0.7f * u)
+    drawPath(Path().apply { moveTo(plomo.x - 2.6f * u, plomo.y); lineTo(plomo.x + 2.6f * u, plomo.y); lineTo(plomo.x, plomo.y + 7f * u); close() }, a.luz(PIEDRA, k, f))
     fun platillo(cuelga: Offset, carga: Int) {
-        val hondo = w * 0.12f
-        val c = Offset(cuelga.x, cuelga.y + hondo)
-        val r = w * 0.052f
+        val c = Offset(cuelga.x, cuelga.y + w * 0.13f)
+        val r = w * 0.064f
         val cord = Path().apply {
-            moveTo(cuelga.x, cuelga.y); lineTo(c.x - r, c.y)
-            moveTo(cuelga.x, cuelga.y); lineTo(c.x, c.y - 1f * u)
-            moveTo(cuelga.x, cuelga.y); lineTo(c.x + r, c.y)
+            moveTo(cuelga.x, cuelga.y); lineTo(c.x - r * 0.96f, c.y)
+            moveTo(cuelga.x, cuelga.y); lineTo(c.x + r * 0.15f, c.y - r * 0.12f)
+            moveTo(cuelga.x, cuelga.y); lineTo(c.x + r * 0.96f, c.y)
         }
-        drawPath(cord, a.luz(mezcla(LINO, FIBRA, 0.4f), k, f), style = Stroke(0.7f * u))
+        drawPath(cord, a.luz(mezcla(LINO, FIBRA, 0.4f), k, f), style = Stroke(0.8f * u))
         if (carga == 0) {
-            // Los cinceles que se pesan.
+            // Los cinceles de cobre que se pesan, con su filo claro.
             for (j in 0 until 4) {
-                val y = c.y - 1.6f * u - j * 1.8f * u
-                val x0 = c.x - r * 0.75f + j * 1.2f * u
-                drawLine(a.luz(mezcla(COBRE, PALMA_OSC, 0.1f * j), k, f), Offset(x0, y + (j % 2) * 0.6f * u), Offset(x0 + r * 1.2f, y - (j % 2) * 0.8f * u), 2.2f * u)
+                val y = c.y - 2f * u - j * 2.4f * u
+                val x0 = c.x - r * 0.8f + j * 1.6f * u
+                val x1 = x0 + r * 1.35f
+                drawLine(a.sombra(0.3f), Offset(x0 + 1f * u, y + 1.2f * u), Offset(x1 + 1f * u, y + 1.2f * u), 2.8f * u)
+                drawLine(a.luz(mezcla(COBRE, PALMA_OSC, 0.12f * j), k, f), Offset(x0, y), Offset(x1, y), 2.6f * u, cap = StrokeCap.Square)
+                drawLine(a.luz(mezcla(COBRE, PAPIRO, 0.55f), k, f), Offset(x1 - 3f * u, y - 0.6f * u), Offset(x1 + 1f * u, y - 0.6f * u), 1.2f * u)
+                drawCircle(a.luz(VERDIN, k, f), 1.1f * u, Offset(x0 + r * 0.4f * (j + 1) / 2f, y))
             }
         } else {
-            // Dos pesas de piedra, de cúpula.
-            listOf(-0.4f to 0.75f, 0.35f to 0.55f).forEach { (dx, s) ->
-                val rr = r * 0.42f * s
+            listOf(-0.4f to 0.8f, 0.35f to 0.6f).forEach { (dx, s) ->
+                val rr = r * 0.44f * s
                 val p0 = Offset(c.x + r * dx, c.y - 1f * u)
                 drawArc(a.luz(PIEDRA, k, f), 180f, 180f, true, Offset(p0.x - rr, p0.y - rr), Size(rr * 2, rr * 2))
-                drawArc(a.claro(0.4f), 200f, 60f, false, Offset(p0.x - rr * 0.8f, p0.y - rr * 0.8f), Size(rr * 1.6f, rr * 1.6f), style = Stroke(0.8f * u))
+                drawArc(a.claro(0.45f), 200f, 60f, false, Offset(p0.x - rr * 0.8f, p0.y - rr * 0.8f), Size(rr * 1.6f, rr * 1.6f), style = Stroke(0.9f * u))
             }
         }
-        val plato = Rect(c.x - r, c.y - r * 0.2f, c.x + r, c.y + r * 0.34f)
-        drawArc(a.luz(COBRE, k, f), 0f, 180f, true, plato.topLeft, plato.size)
-        drawArc(a.sombra(0.3f), 0f, 90f, true, plato.topLeft, plato.size)
-        drawOval(a.luz(mezcla(COBRE, VERDIN, 0.35f), k, f), Offset(plato.left, plato.top - r * 0.06f), Size(plato.width, r * 0.26f))
-        drawLine(a.claro(0.45f), Offset(plato.left + r * 0.2f, plato.top + r * 0.04f), Offset(plato.left + r * 0.9f, plato.top + r * 0.02f), 0.8f * u)
-        if (a.oscuro && k > 0.1f) drawArc(a.filo(0.6f * k), -10f, 60f, false, plato.topLeft, plato.size, style = Stroke(1f * u))
+        val plato = Rect(c.x - r, c.y - r * 0.22f, c.x + r, c.y + r * 0.38f)
+        drawArc(a.luz(BRONCE, k, f), 0f, 180f, true, plato.topLeft, plato.size)
+        drawArc(a.sombra(0.32f), 0f, 80f, true, plato.topLeft, plato.size)
+        drawOval(a.luz(mezcla(BRONCE, PAPIRO, 0.25f), k, f), Offset(plato.left, plato.top - r * 0.07f), Size(plato.width, r * 0.3f))
+        drawOval(a.luz(BRONCE, k, f), Offset(plato.left, plato.top - r * 0.07f), Size(plato.width, r * 0.3f), style = Stroke(1f * u))
+        // El brillo del bronce.
+        drawArc(luzMuebleEgipto(a, 0.7f), 110f, 50f, false, Offset(plato.left + r * 0.1f, plato.top - r * 0.2f), Size(plato.width * 0.9f, r * 0.9f), style = Stroke(1.4f * u))
+        if (a.oscuro && k > 0.1f) drawArc(a.filo(0.6f * k), -10f, 60f, false, plato.topLeft, plato.size, style = Stroke(1.2f * u))
     }
     platillo(pIzq, 0)
     platillo(pDer, 1)
     // Las pesas de piedra sobre el tablón, de mayor a menor.
-    var x = pie.x + w * 0.11f
+    var x = pie.x + w * 0.075f
     listOf(1f, 0.72f, 0.5f).forEachIndexed { j, s ->
-        val rr = w * 0.026f * s
+        val rr = w * 0.03f * s
         val p0 = Offset(x + rr, pie.y)
         contactoEgipto(Offset(p0.x + rr * 0.3f, pie.y), rr * 2.4f, 3f * u, a)
         val forma = Path().apply { addArc(Rect(p0.x - rr, p0.y - rr * 1.2f, p0.x + rr, p0.y + rr * 1.2f), 180f, 180f); close() }
@@ -241,42 +276,62 @@ internal fun DrawScope.balanzaEgipto(pie: Offset, w: Float, a: AireEgipto, k: Fl
     }
 }
 
-/** Los panes cónicos de la ración, sobre un plato de hojas de palma trenzadas: la corteza dorada, uno partido. */
-internal fun DrawScope.panesEgipto(pie: Offset, w: Float, a: AireEgipto, k: Float, f: Float, hacia: Float) {
+/** El brillo puntual de un metal: crema de día, la llama de noche. */
+private fun luzMuebleEgipto(a: AireEgipto, alfa: Float) =
+    if (a.oscuro) FILO_MUEBLE.copy(alpha = alfa * 0.6f) else EgiptoTinta.SOL.copy(alpha = alfa)
+
+/** El cesto de palma con dos franjas de palma teñida (roja y verde), lleno de panes cónicos de la ración. */
+internal fun DrawScope.cestoEgipto(pie: Offset, w: Float, a: AireEgipto, k: Float, f: Float, hacia: Float) {
     val u = density
-    val plato = Rect(pie.x - w * 0.085f, pie.y - w * 0.014f, pie.x + w * 0.085f, pie.y + 1f * u)
-    contactoEgipto(Offset(pie.x + w * 0.01f, pie.y), w * 0.2f, 5f * u, a)
-    drawOval(a.luz(FIBRA, k, f), plato.topLeft, plato.size)
-    for (j in 0 until 7) drawLine(a.luz(PALMA, k, f).copy(alpha = 0.5f), Offset(plato.left + plato.width * (0.1f + 0.12f * j), plato.top + 1f * u), Offset(plato.left + plato.width * (0.16f + 0.12f * j), plato.bottom - 1f * u), 0.7f * u)
-    listOf(Triple(-0.045f, 0.1f, 0.025f), Triple(0.002f, 0.125f, 0.027f), Triple(0.048f, 0.09f, 0.023f)).forEachIndexed { j, (dx, alto, r) ->
-        val b = Offset(pie.x + w * dx, plato.center.y)
-        val forma = Path().apply {
+    val an = w * 0.15f; val al = w * 0.1f
+    contactoEgipto(Offset(pie.x + w * 0.012f, pie.y), an * 1.25f, 6f * u, a, 0.4f)
+    // Los panes que asoman.
+    listOf(Triple(-0.035f, 0.07f, 0.02f), Triple(0.005f, 0.09f, 0.022f), Triple(0.04f, 0.065f, 0.019f)).forEachIndexed { j, (dx, alto, r) ->
+        val b = Offset(pie.x + w * dx, pie.y - al + 2f * u)
+        val pan = Path().apply {
             moveTo(b.x - w * r, b.y)
-            quadraticTo(b.x - w * r * 0.6f, b.y - w * alto * 0.7f, b.x + w * 0.004f, b.y - w * alto)
+            quadraticTo(b.x - w * r * 0.6f, b.y - w * alto * 0.7f, b.x + w * 0.003f, b.y - w * alto)
             quadraticTo(b.x + w * r * 0.7f, b.y - w * alto * 0.6f, b.x + w * r, b.y)
             close()
         }
-        drawPath(forma, a.luz(mezcla(PAN, GRANO, 0.2f * j), k, f))
-        redondoEgipto(forma, Rect(b.x - w * r, b.y - w * alto, b.x + w * r, b.y), a, k, hacia)
-        // La harina en la punta y las grietas de la corteza.
-        drawCircle(a.luz(PAPIRO, k, f).copy(alpha = 0.5f), 1.4f * u, Offset(b.x + w * 0.003f, b.y - w * alto * 0.92f))
-        drawLine(a.sombra(0.3f), Offset(b.x - w * r * 0.3f, b.y - w * alto * 0.4f), Offset(b.x + w * r * 0.1f, b.y - w * alto * 0.5f), 0.6f * u)
+        drawPath(pan, a.luz(mezcla(PAN, GRANO, 0.2f * j), k, f))
+        redondoEgipto(pan, Rect(b.x - w * r, b.y - w * alto, b.x + w * r, b.y), a, k, hacia)
+        drawCircle(a.luz(PAPIRO, k, f).copy(alpha = 0.5f), 1.4f * u, Offset(b.x + w * 0.002f, b.y - w * alto * 0.9f))
     }
-    // Un trozo del pan partido, delante.
-    val trozo = Path().apply {
-        moveTo(pie.x + w * 0.06f, plato.bottom); lineTo(pie.x + w * 0.085f, plato.bottom - w * 0.02f); lineTo(pie.x + w * 0.11f, plato.bottom); close()
+    val cuerpo = poligonoEgipto(pie.x - an / 2, pie.y - al, pie.x + an / 2, pie.y - al, pie.x + an * 0.44f, pie.y, pie.x - an * 0.44f, pie.y)
+    val caja = Rect(pie.x - an / 2, pie.y - al, pie.x + an / 2, pie.y)
+    drawPath(cuerpo, a.luz(FIBRA, k, f))
+    clipPath(cuerpo) {
+        // Las vueltas de la espiral cosida.
+        val vueltas = Path()
+        var y = caja.top + 2.6f * u
+        while (y < caja.bottom) { vueltas.moveTo(caja.left, y); vueltas.lineTo(caja.right, y); y += 3f * u }
+        drawPath(vueltas, a.luz(PALMA, k, f).copy(alpha = 0.55f), style = Stroke(0.8f * u))
+        // Las dos franjas de palma teñida, en damero.
+        listOf(0.3f to ROJO, 0.62f to EgiptoTinta.VERDIN).forEach { (t, col) ->
+            val yb = caja.top + al * t
+            var x = caja.left
+            var n = 0
+            while (x < caja.right) {
+                if (n % 2 == 0) drawRect(a.luz(col, k, f), Offset(x, yb), Size(4f * u, 3f * u))
+                else drawRect(a.luz(col, k, f), Offset(x, yb + 3f * u), Size(4f * u, 3f * u))
+                x += 4f * u; n++
+            }
+        }
     }
-    drawPath(trozo, a.luz(mezcla(PAN, PAPIRO, 0.45f), k, f))
+    redondoEgipto(cuerpo, caja, a, k, hacia)
+    drawRoundRect(a.luz(mezcla(FIBRA, PALMA_OSC, 0.3f), k, f), Offset(caja.left - 1f * u, caja.top - 1.6f * u), Size(an + 2f * u, 3.4f * u), CornerRadius(1.6f * u))
+    drawRect(a.claro(0.35f), Offset(caja.left, caja.top - 1.4f * u), Size(an, 0.8f * u))
 }
 
 /**
- * Al pie, a la izquierda: el costal de lino lleno de trigo, vencido contra el poste, atado arriba con sus orejas; delante, la
- * medida de madera colmada y el trigo que se ha caído al suelo.
+ * Al pie, a la izquierda: el costal de lino lleno de trigo, vencido contra el poste, atado arriba con sus orejas, y el trigo
+ * que se ha caído al suelo.
  */
 internal fun DrawScope.costalEgipto(pie: Offset, w: Float, a: AireEgipto, k: Float, f: Float) {
     val u = density
-    val an = w * 0.19f; val al = w * 0.2f
-    contactoEgipto(Offset(pie.x + w * 0.02f, pie.y), an * 1.3f, 8f * u, a, 0.42f)
+    val an = w * 0.23f; val al = w * 0.25f
+    contactoEgipto(Offset(pie.x + w * 0.02f, pie.y), an * 1.3f, 9f * u, a, 0.42f)
     val c = Offset(pie.x - w * 0.02f, pie.y)
     val saco = Path().apply {
         moveTo(c.x - an * 0.52f, c.y)
@@ -288,16 +343,19 @@ internal fun DrawScope.costalEgipto(pie: Offset, w: Float, a: AireEgipto, k: Flo
     }
     drawPath(saco, a.luz(LINO, k, f))
     clipPath(saco) {
-        // La trama del lino y los pliegues del peso.
+        val trama = Path()
         var y = c.y - al
-        while (y < c.y) { drawLine(a.sombra(0.08f), Offset(c.x - an, y), Offset(c.x + an, y + 2f * u), 0.5f * u); y += 3f * u }
+        while (y < c.y) { trama.moveTo(c.x - an, y); trama.lineTo(c.x + an, y + 2f * u); y += 3f * u }
+        drawPath(trama, a.sombra(0.08f), style = Stroke(0.5f * u))
+        // Una franja azul tejida en el lino, y los pliegues del peso.
+        drawRect(a.luz(EgiptoTinta.AZUL, k, f), Offset(c.x - an, c.y - al * 0.42f), Size(an * 2, 2.2f * u))
+        drawRect(a.luz(EgiptoTinta.AZUL, k, f), Offset(c.x - an, c.y - al * 0.42f + 4f * u), Size(an * 2, 1.2f * u))
         drawPath(Path().apply {
             moveTo(c.x - an * 0.2f, c.y - al * 0.8f); quadraticTo(c.x - an * 0.05f, c.y - al * 0.45f, c.x - an * 0.3f, c.y - al * 0.1f)
             moveTo(c.x + an * 0.05f, c.y - al * 0.78f); quadraticTo(c.x + an * 0.25f, c.y - al * 0.5f, c.x + an * 0.18f, c.y - al * 0.15f)
-        }, a.sombra(0.25f), style = Stroke(1.4f * u))
+        }, a.sombra(0.25f), style = Stroke(1.6f * u))
     }
     redondoEgipto(saco, Rect(c.x - an * 0.6f, c.y - al, c.x + an * 0.55f, c.y), a, k, 1f)
-    // El atado: el cuello fruncido y las dos orejas del lino.
     val cuello = Offset(c.x - an * 0.09f, c.y - al * 0.92f)
     drawPath(Path().apply {
         moveTo(cuello.x, cuello.y); quadraticTo(cuello.x - an * 0.2f, cuello.y - al * 0.16f, cuello.x - an * 0.24f, cuello.y - al * 0.08f)
@@ -305,20 +363,69 @@ internal fun DrawScope.costalEgipto(pie: Offset, w: Float, a: AireEgipto, k: Flo
         quadraticTo(cuello.x + an * 0.12f, cuello.y - al * 0.2f, cuello.x + an * 0.2f, cuello.y - al * 0.12f)
         quadraticTo(cuello.x + an * 0.1f, cuello.y - al * 0.02f, cuello.x, cuello.y)
     }, a.luz(mezcla(LINO, PAPIRO, 0.3f), k, f))
-    drawLine(a.luz(FIBRA, k, f), cuello + Offset(-3f * u, 1f * u), cuello + Offset(3f * u, 0f), 1.8f * u)
-    // El trigo caído y la medida de madera colmada.
-    for (j in 0 until 26) {
-        val q = Offset(pie.x + w * (0.02f + 0.2f * azar(j, 91)), pie.y + w * (-0.01f + 0.035f * azar(j, 92)))
+    drawLine(a.luz(FIBRA, k, f), cuello + Offset(-3f * u, 1f * u), cuello + Offset(3f * u, 0f), 2f * u)
+    for (j in 0 until 30) {
+        val q = Offset(pie.x + w * (0.04f + 0.22f * azar(j, 91)), pie.y + w * (-0.01f + 0.035f * azar(j, 92)))
         drawOval(a.luz(GRANO, k, f), Offset(q.x - 1f * u, q.y - 0.6f * u), Size(2f * u, 1.2f * u))
     }
-    val m = Rect(pie.x + w * 0.07f, pie.y - w * 0.075f, pie.x + w * 0.16f, pie.y + w * 0.012f)
-    contactoEgipto(Offset(m.center.x + w * 0.012f, m.bottom), m.width * 1.3f, 5f * u, a)
+}
+
+/** La medida de madera para el grano, colmada, con sus aros y un poco de trigo derramado. */
+internal fun DrawScope.medidaEgipto(pie: Offset, w: Float, a: AireEgipto, k: Float, f: Float) {
+    val u = density
+    val m = Rect(pie.x - w * 0.06f, pie.y - w * 0.105f, pie.x + w * 0.06f, pie.y)
+    contactoEgipto(Offset(m.center.x + w * 0.015f, m.bottom), m.width * 1.4f, 7f * u, a, 0.4f)
     drawRect(a.luz(ACACIA, k, f), m.topLeft, m.size)
-    drawRect(a.claro(0.25f), Offset(m.left + m.width * 0.1f, m.top), Size(m.width * 0.16f, m.height))
-    drawRect(a.sombra(0.3f), Offset(m.right - m.width * 0.28f, m.top), Size(m.width * 0.28f, m.height))
-    listOf(0.2f, 0.78f).forEach { t -> drawRect(a.luz(ACACIA_OSC, k, f), Offset(m.left - 0.6f * u, m.top + m.height * t), Size(m.width + 1.2f * u, 2.2f * u)) }
-    drawArc(a.luz(GRANO, k, f), 180f, 180f, true, Offset(m.left + 0.5f * u, m.top - m.width * 0.22f), Size(m.width - 1f * u, m.width * 0.44f))
-    for (j in 0 until 8) drawOval(a.luz(mezcla(GRANO, PALMA_OSC, 0.25f), k, f), Offset(m.left + m.width * (0.12f + 0.1f * j), m.top - m.width * (0.02f + 0.12f * azar(j, 93))), Size(1.8f * u, 1.1f * u))
+    val duelas = Path()
+    var x = m.left + m.width / 6
+    while (x < m.right - 1f) { duelas.moveTo(x, m.top); duelas.lineTo(x, m.bottom); x += m.width / 6 }
+    drawPath(duelas, a.luz(ACACIA_OSC, k, f).copy(alpha = 0.4f), style = Stroke(0.7f * u))
+    drawRect(a.claro(0.28f), Offset(m.left + m.width * 0.1f, m.top), Size(m.width * 0.16f, m.height))
+    drawRect(a.sombra(0.32f), Offset(m.right - m.width * 0.28f, m.top), Size(m.width * 0.28f, m.height))
+    listOf(0.16f, 0.8f).forEach { t -> drawRect(a.luz(ACACIA_OSC, k, f), Offset(m.left - 0.8f * u, m.top + m.height * t), Size(m.width + 1.6f * u, 2.6f * u)) }
+    drawArc(a.luz(GRANO, k, f), 180f, 180f, true, Offset(m.left + 0.5f * u, m.top - m.width * 0.24f), Size(m.width - 1f * u, m.width * 0.48f))
+    for (j in 0 until 10) drawOval(a.luz(mezcla(GRANO, PALMA_OSC, 0.25f), k, f), Offset(m.left + m.width * (0.1f + 0.08f * j), m.top - m.width * (0.02f + 0.14f * azar(j, 93))), Size(2f * u, 1.2f * u))
+    for (j in 0 until 14) {
+        val q = Offset(m.right + w * 0.04f * azar(j, 94), m.bottom - w * 0.012f * azar(j, 95))
+        drawOval(a.luz(GRANO, k, f), Offset(q.x - 1f * u, q.y - 0.6f * u), Size(2f * u, 1.2f * u))
+    }
+}
+
+/** Una tinaja grande medio enterrada en el suelo (fresca para el agua), tapada con un tiesto; el montón de tierra alrededor. */
+internal fun DrawScope.tinajaEnterradaEgipto(pie: Offset, w: Float, a: AireEgipto, k: Float, f: Float, hacia: Float) {
+    val u = density
+    val r = w * 0.085f
+    val hombro = Path().apply {
+        moveTo(pie.x - r, pie.y)
+        cubicTo(pie.x - r, pie.y - r * 0.7f, pie.x - r * 0.55f, pie.y - r * 0.95f, pie.x - r * 0.42f, pie.y - r * 1.02f)
+        lineTo(pie.x + r * 0.42f, pie.y - r * 1.02f)
+        cubicTo(pie.x + r * 0.55f, pie.y - r * 0.95f, pie.x + r, pie.y - r * 0.7f, pie.x + r, pie.y)
+        close()
+    }
+    val caja = Rect(pie.x - r, pie.y - r * 1.02f, pie.x + r, pie.y)
+    drawPath(hombro, a.luz(MARGA, k, f))
+    clipPath(hombro) {
+        drawRect(a.luz(ROJO, k, f), Offset(caja.left, pie.y - r * 0.62f), Size(caja.width, 1.6f * u))
+        drawRect(a.luz(EgiptoTinta.AZUL, k, f), Offset(caja.left, pie.y - r * 0.55f), Size(caja.width, 3.4f * u))
+    }
+    redondoEgipto(hombro, caja, a, k, hacia)
+    // El cuello con su labio y el tapón de barro.
+    val cuelloT = Rect(pie.x - r * 0.36f, pie.y - r * 1.28f, pie.x + r * 0.36f, pie.y - r * 0.98f)
+    drawRect(a.luz(MARGA, k, f), cuelloT.topLeft, cuelloT.size)
+    drawRect(a.sombra(0.25f), Offset(cuelloT.right - cuelloT.width * 0.3f, cuelloT.top), Size(cuelloT.width * 0.3f, cuelloT.height))
+    drawRoundRect(a.luz(mezcla(MARGA, PALMA_OSC, 0.12f), k, f), Offset(pie.x - r * 0.46f, pie.y - r * 1.36f), Size(r * 0.92f, r * 0.14f), CornerRadius(2f * u))
+    drawArc(a.luz(BARRO, k, f), 180f, 180f, true, Offset(pie.x - r * 0.34f, pie.y - r * 1.52f), Size(r * 0.68f, r * 0.36f))
+    drawArc(a.claro(0.3f), 200f, 60f, false, Offset(pie.x - r * 0.3f, pie.y - r * 1.5f), Size(r * 0.5f, r * 0.3f), style = Stroke(1f * u))
+    // La tierra amontonada alrededor de la boca enterrada.
+    val tierra = Path().apply {
+        moveTo(pie.x - r * 1.5f, pie.y + r * 0.12f)
+        quadraticTo(pie.x - r * 1.1f, pie.y - r * 0.22f, pie.x - r * 0.9f, pie.y - r * 0.05f)
+        lineTo(pie.x + r * 0.9f, pie.y - r * 0.05f)
+        quadraticTo(pie.x + r * 1.1f, pie.y - r * 0.22f, pie.x + r * 1.5f, pie.y + r * 0.12f)
+        close()
+    }
+    drawPath(tierra, a.luz(mezcla(EgiptoTinta.TIERRA, PALMA_OSC, 0.28f), k, f))
+    drawPath(tierra, a.claro(0.2f), style = Stroke(0.8f * u))
 }
 
 /**
@@ -327,31 +434,31 @@ internal fun DrawScope.costalEgipto(pie: Offset, w: Float, a: AireEgipto, k: Flo
  */
 internal fun DrawScope.lamparaEgipto(llama: Offset, piso: Float, w: Float, a: AireEgipto) {
     val u = density
-    val k = if (a.lumbre) 1f else 1f
-    val top = llama.y + w * 0.016f
+    val top = llama.y + w * 0.02f
     if (piso - top < 4f * u) return
-    contactoEgipto(Offset(llama.x + w * 0.012f, piso), w * 0.1f, 5f * u, a)
+    contactoEgipto(Offset(llama.x + w * 0.014f, piso), w * 0.13f, 6f * u, a, 0.4f)
+    val an = w * 0.052f
     val pieB = Path().apply {
-        moveTo(llama.x - w * 0.04f, piso)
-        quadraticTo(llama.x - w * 0.018f, piso - (piso - top) * 0.3f, llama.x - w * 0.016f, piso - (piso - top) * 0.55f)
-        quadraticTo(llama.x - w * 0.02f, top + (piso - top) * 0.15f, llama.x - w * 0.034f, top)
-        lineTo(llama.x + w * 0.034f, top)
-        quadraticTo(llama.x + w * 0.02f, top + (piso - top) * 0.15f, llama.x + w * 0.016f, piso - (piso - top) * 0.55f)
-        quadraticTo(llama.x + w * 0.018f, piso - (piso - top) * 0.3f, llama.x + w * 0.04f, piso)
+        moveTo(llama.x - an, piso)
+        quadraticTo(llama.x - an * 0.45f, piso - (piso - top) * 0.3f, llama.x - an * 0.4f, piso - (piso - top) * 0.55f)
+        quadraticTo(llama.x - an * 0.5f, top + (piso - top) * 0.15f, llama.x - an * 0.85f, top)
+        lineTo(llama.x + an * 0.85f, top)
+        quadraticTo(llama.x + an * 0.5f, top + (piso - top) * 0.15f, llama.x + an * 0.4f, piso - (piso - top) * 0.55f)
+        quadraticTo(llama.x + an * 0.45f, piso - (piso - top) * 0.3f, llama.x + an, piso)
         close()
     }
-    val barro = a.luz(BARRO, if (a.lumbre) 0.75f else k)
-    drawPath(pieB, barro)
-    redondoEgipto(pieB, Rect(llama.x - w * 0.04f, top, llama.x + w * 0.04f, piso), a, 0.8f, -1f)
-    if (a.lumbre) {
-        // La llama alumbra desde arriba: el pie se enciende arriba y se hunde abajo.
-        clipPath(pieB) { drawRect(a.filo(0.35f), Offset(llama.x - w * 0.04f, top), Size(w * 0.08f, (piso - top) * 0.25f)) }
+    drawPath(pieB, a.luz(BARRO, if (a.lumbre) 0.75f else 1f))
+    redondoEgipto(pieB, Rect(llama.x - an, top, llama.x + an, piso), a, 0.8f, -1f)
+    // Dos rayas rojas pintadas en el pie.
+    clipPath(pieB) {
+        drawRect(a.luz(ROJO, if (a.lumbre) 0.75f else 1f), Offset(llama.x - an, top + (piso - top) * 0.2f), Size(an * 2, 1.6f * u))
+        drawRect(a.luz(ROJO, if (a.lumbre) 0.75f else 1f), Offset(llama.x - an, piso - (piso - top) * 0.25f), Size(an * 2, 1.6f * u))
+        if (a.lumbre) drawRect(a.filo(0.35f), Offset(llama.x - an, top), Size(an * 2, (piso - top) * 0.25f))
     }
-    // El cuenco de grasa, con el pico de la mecha.
-    val cuenco = Rect(llama.x - w * 0.042f, llama.y + w * 0.002f, llama.x + w * 0.042f, top + w * 0.004f)
+    val cuenco = Rect(llama.x - w * 0.05f, llama.y + w * 0.002f, llama.x + w * 0.05f, top + w * 0.006f)
     drawArc(a.luz(mezcla(BARRO, PAPIRO, 0.15f), if (a.lumbre) 0.95f else 1f), 0f, 180f, true, Offset(cuenco.left, cuenco.top - cuenco.height), Size(cuenco.width, cuenco.height * 2))
     drawOval(a.luz(mezcla(BARRO, PALMA_OSC, 0.4f), if (a.lumbre) 0.9f else 1f), Offset(cuenco.left, cuenco.top - cuenco.height * 0.3f), Size(cuenco.width, cuenco.height * 0.6f))
-    drawLine(a.luz(if (a.lumbre) LINO else PALMA_OSC, 1f), Offset(llama.x - w * 0.012f, cuenco.top), Offset(llama.x, llama.y - 1f * u), 1.6f * u)
+    drawLine(a.luz(if (a.lumbre) LINO else PALMA_OSC, 1f), Offset(llama.x - w * 0.014f, cuenco.top), Offset(llama.x, llama.y - 1f * u), 1.8f * u)
 }
 
 /** La llama de la mecha, con su halo; encima de todo y con su propio color. */
@@ -402,7 +509,7 @@ internal fun DrawScope.huecoLibreEgipto(k: Int, r: Rect, oc: Float, x1: Float, a
             val boca = Rect(pie.x - rr, pie.y - rr * 0.9f, pie.x + rr, pie.y - rr * 0.6f)
             for (j in 0 until 9) {
                 val q = Offset(boca.left + boca.width * (0.15f + 0.7f * azar(j, 51)), boca.top - 1f * u - 3f * u * azar(j, 52))
-                drawCircle(a.luz(if (j % 3 == 0) FAYENZA else if (j % 3 == 1) EgiptoTinta.ROJO else GRANO, cerca, frio), 1.6f * u, q)
+                drawCircle(a.luz(if (j % 3 == 0) FAYENZA else if (j % 3 == 1) ROJO else GRANO, cerca, frio), 1.6f * u, q)
             }
             val cuenco = Path().apply {
                 moveTo(boca.left, boca.center.y); quadraticTo(pie.x - rr * 0.8f, pie.y, pie.x, pie.y)
@@ -449,9 +556,4 @@ internal fun DrawScope.huecoLibreEgipto(k: Int, r: Rect, oc: Float, x1: Float, a
             }
         }
     }
-}
-
-/** Gira un dibujo alrededor de [c] solo si hace falta. */
-internal inline fun DrawScope.giradoEgipto(grados: Float, c: Offset, crossinline dibujo: DrawScope.() -> Unit) {
-    if (grados == 0f) dibujo() else rotate(grados, c) { dibujo() }
 }

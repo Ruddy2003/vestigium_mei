@@ -4148,9 +4148,10 @@ object EstanteHeleno : DisenoBiblioteca {
 }
 /**
  * Egipto. El estante y sus volúmenes son el almacén de la Tumba en Deir el-Medina (`MuebleEstanteEgipto*.kt`): el anaquel
- * de troncos de palmera y tablones de acacia atados con soga, contra el testero de adobe bajo la bóveda de ladrillo, con la
- * balanza del cobre arriba y la lámpara en el suelo; cada entrada, según la semilla, es un rollo en su funda de lino, una
- * tablilla de escriba o un fardo de lino anudado. La tapa es un papiro tumbado y grande, atado con lino y sellado con barro (de noche, la estrella de
+ * de troncos de palmera y tablones de acacia atados con soga, contra el testero enlucido bajo la bóveda de ladrillo, con la
+ * balanza del cobre y las tinajas pintadas arriba y la lámpara en el suelo; cada entrada, según la semilla, es un rollo en
+ * su funda de lino, una tablilla de escriba o un fardo de lino anudado. La tapa es un papiro tumbado y grande, atado con
+ * lino y sellado con barro (de noche, la estrella de
  * Nut), con la viñeta de signos y la fecha en un cartucho, la paleta del escriba al pie y las palabras en una etiqueta de
  * lino; al abrirse, el atado se suelta y el rollo sube desenrollándose y deja ver el hierático con su rúbrica roja. Distinto
  * del Ideario, que es la Casa de la Vida con el friso jekeru, el disco alado y los cofres de cedro.
