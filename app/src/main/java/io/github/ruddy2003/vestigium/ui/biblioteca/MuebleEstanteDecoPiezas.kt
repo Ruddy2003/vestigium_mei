@@ -115,9 +115,7 @@ private fun DrawScope.gramofonoDeco(r: Rect, a: AireDeco, cerca: (Offset) -> Flo
     val caja = Rect(r.left, r.top + r.height * 0.18f, r.right, r.bottom)
     drawRect(a.luz(GRANATE, k), caja.topLeft, caja.size)
     clipRect(caja.left, caja.top, caja.right, caja.bottom) {
-        val grano = ArrayList<Offset>(120)
-        for (j in 0 until 120) grano.add(Offset(caja.left + caja.width * azar(971, j), caja.top + caja.height * azar(972, j)))
-        drawPoints(grano, PointMode.Points, a.sombra(0.22f), 1.3f * u, StrokeCap.Round)
+        texturaDeco(TexturaDeco.CUERO, caja, a.luz(Color.White, maxOf(k, 0.2f)), 0.9f)
         drawRect(a.claro(0.18f), caja.topLeft, Size(caja.width, caja.height * 0.3f))
         drawRect(a.sombra(0.25f), Offset(caja.left, caja.bottom - caja.height * 0.3f), Size(caja.width, caja.height * 0.3f))
         // El cierre de níquel del frente y la costura.
@@ -256,13 +254,19 @@ internal fun DrawScope.apliqueDeco(c: Offset, a: AireDeco, encendido: Boolean) {
     val radio = w * 0.075f
     val placa = Rect(c.x - w * 0.016f, c.y - w * 0.01f, c.x + w * 0.016f, c.y + w * 0.075f)
     drawRect(a.sombra(0.35f), Offset(placa.left + (if (encendido) -2f else 3f) * u, placa.top + 3f * u), placa.size)
-    drawPath(MuebleEstanteDeco.escalonDeco(placa, w * 0.008f), a.luz(NIQUEL, if (a.lumbre) 0.9f else 1f))
+    drawPath(MuebleEstanteDeco.escalonDeco(placa, w * 0.008f), a.luz(NIQUEL, if (a.luna) 0.35f else if (a.lumbre) 0.9f else 1f))
     val vidrio = Rect(c.x - radio, c.y - radio, c.x + radio, c.y + radio)
-    val claro = if (encendido) mezcla(Color(0xFFFFF4DC), PaletaDeco.APLIQUE, if (a.alba) 0.5f else 0.25f) else a.luz(mezcla(PaletaDeco.PLATA_LUZ, MARFIL, 0.4f), 0.8f)
+    // Apagado: de día, un vidrio lechoso; de noche, gris frío, apenas con el filo de la luz de la calle.
+    val claro = when {
+        encendido -> mezcla(Color(0xFFFFF4DC), PaletaDeco.APLIQUE, if (a.alba) 0.5f else 0.25f)
+        a.oscuro -> mezcla(mezcla(PaletaDeco.PLATA, a.hondo, 0.72f), PaletaDeco.LUNA, 0.1f)
+        else -> a.luz(mezcla(PaletaDeco.PLATA_LUZ, MARFIL, 0.4f), 0.8f)
+    }
     if (!encendido) drawArc(a.sombra(0.3f), 180f, 180f, true, Offset(vidrio.left + 4f * u, vidrio.top + 4f * u), vidrio.size)
     drawArc(claro, 180f, 180f, true, vidrio.topLeft, vidrio.size)
     if (encendido) drawArc(PaletaDeco.APLIQUE.copy(alpha = 0.5f), 180f, 180f, true, vidrio.topLeft, vidrio.size, style = Stroke(radio * 0.18f))
     else drawArc(a.sombra(0.18f), 270f, 90f, true, vidrio.topLeft, vidrio.size)
+    if (!encendido && a.oscuro) drawArc(PaletaDeco.LUNA.copy(alpha = 0.7f), 185f, 55f, false, vidrio.topLeft, vidrio.size, style = Stroke(1.2f * u))
     // Las costillas en abanico y el borde escalonado de níquel.
     val costillas = Path()
     for (j in 1 until 6) {
@@ -270,7 +274,7 @@ internal fun DrawScope.apliqueDeco(c: Offset, a: AireDeco, encendido: Boolean) {
         costillas.moveTo(c.x, c.y)
         costillas.lineTo(c.x + radio * kotlin.math.cos(ang), c.y + radio * kotlin.math.sin(ang))
     }
-    val metal = if (encendido) mezcla(NIQUEL_OSC, PaletaDeco.APLIQUE, 0.2f) else a.luz(NIQUEL, 0.9f)
+    val metal = if (encendido) mezcla(NIQUEL_OSC, PaletaDeco.APLIQUE, 0.2f) else a.luz(NIQUEL, if (a.oscuro) 0.35f else 0.9f)
     drawPath(costillas, metal, style = Stroke(1.3f * u))
     drawArc(metal, 180f, 180f, false, vidrio.topLeft, vidrio.size, style = Stroke(1.6f * u))
     drawArc(metal, 180f, 180f, false, Offset(c.x - radio * 0.4f, c.y - radio * 0.4f), Size(radio * 0.8f, radio * 0.8f), style = Stroke(1f * u))
@@ -284,121 +288,224 @@ internal fun DrawScope.apliqueDeco(c: Offset, a: AireDeco, encendido: Boolean) {
 }
 
 /**
- * Lo de un hueco libre de la repisa [k], de [oc] al costado: según la repisa, los discos en sus fundas (uno parado, otro
- * apoyado), la lata de agujas y el cenicero de níquel con su cigarrillo, o el rollo de partituras atado y las escobillas.
+ * Lo de un hueco libre de la repisa [k], de [oc] al costado, de izquierda a derecha mientras quepa: según la repisa, la pila
+ * de discos de canto, la sordina de la trompeta de pie, la caja de cañas, la lata de agujas, el rollo de partituras atado con
+ * las escobillas de la batería o el cenicero de níquel con su hilo de humo. [frio] es lo que le llega del frío de la escalera.
  */
-internal fun DrawScope.huecoDeco(k: Int, r: Rect, oc: Float, a: AireDeco, cerca: Float, izq: Boolean) {
+internal fun DrawScope.huecoDeco(k: Int, r: Rect, oc: Float, a: AireDeco, cerca: Float, izq: Boolean, frio: Float) {
     val u = density
-    val libre = r.right - 8f * u - oc
-    if (libre < 26f * u || r.height < 10f * u) return
-    val x0 = oc + 6f * u
-    val suelo = r.bottom
+    val fin = r.right - 8f * u
+    if (fin - oc < 22f * u || r.height < 10f * u) return
+    val alto = r.height
+    val orden = when (Math.floorMod(k, 3)) {
+        0 -> listOf(0, 1, 2, 3)
+        1 -> listOf(1, 4, 0, 2)
+        else -> listOf(4, 0, 5, 1)
+    }
     clipRect(r.left, r.top, r.right, r.bottom) {
-        when (Math.floorMod(k * 2 + 1, 3)) {
-            0 -> {
-                val lado = minOf(r.height * 0.64f, libre * 0.7f)
-                for (j in 0 until 2) {
-                    val x = x0 + j * minOf(lado * 0.3f, libre - lado).coerceAtLeast(0f)
-                    rotate(if (j == 0) 0f else -6f, Offset(x + lado, suelo)) {
-                        val rr = Rect(x, suelo - lado, x + lado, suelo)
-                        drawRect(a.sombra(0.32f), Offset(rr.left + (if (izq) 4f else -4f) * u, rr.top + 3f * u), rr.size)
-                        drawRect(a.luz(mezcla(ESTRAZA, MARFIL, 0.2f * j), cerca), rr.topLeft, rr.size)
-                        drawCircle(a.luz(TINTA, cerca), lado * 0.2f, rr.center)
-                        drawCircle(a.luz(ETIQUETAS_DECO[(k + j + 1) % ETIQUETAS_DECO.size], cerca), lado * 0.13f, rr.center)
-                        drawRect(a.sombra(0.25f), rr.topLeft, rr.size, style = Stroke(0.8f * u))
-                        drawLine(a.claro(0.4f), rr.topLeft, rr.topRight, 0.8f * u)
-                    }
-                }
+        var x = oc + 6f * u
+        for (pieza in orden) {
+            val libre = fin - x
+            val pide = when (pieza) {
+                0 -> minOf(libre, alto * 0.75f).takeIf { it >= 16f * u } ?: 0f
+                1 -> alto * 0.62f
+                2 -> alto * 0.42f
+                3 -> alto * 0.3f
+                4 -> alto * 0.95f
+                else -> alto * 0.42f
             }
-            1 -> {
-                // La lata de agujas: baja, redonda, con la tapa pintada (un abanico, sin letras).
-                val la = minOf(libre * 0.4f, r.height * 0.5f)
-                val lata = Rect(x0, suelo - la * 0.6f, x0 + la, suelo)
-                contactoDeco(a, Offset(lata.center.x, suelo), la * 1.3f, la * 0.16f, 0.4f)
-                drawRect(a.luz(Color(0xFF2B4C8C), cerca), lata.topLeft, lata.size)
-                drawOval(a.luz(Color(0xFFC9A24C), cerca), Offset(lata.left, lata.top - la * 0.1f), Size(la, la * 0.2f))
-                drawArc(a.luz(MARFIL, cerca), 180f, 180f, true, Offset(lata.center.x - la * 0.25f, lata.top + la * 0.12f), Size(la * 0.5f, la * 0.5f))
-                drawRect(a.claro(0.3f), Offset(lata.left, lata.top), Size(la * 0.15f, lata.height))
-                drawRect(a.sombra(0.3f), Offset(lata.right - la * 0.2f, lata.top), Size(la * 0.2f, lata.height))
-                // El cenicero de níquel con el cigarrillo y su hilo de humo.
-                if (libre > la * 2.2f) {
-                    val cx = lata.right + (libre - la) * 0.45f
-                    val an = minOf(la * 1.5f, libre - la - 6f * u)
-                    if (an > 6f * u) {
-                        contactoDeco(a, Offset(cx, suelo), an * 1.2f, an * 0.12f, 0.4f)
-                        drawRect(a.niquel(cerca), Offset(cx - an / 2, suelo - an * 0.18f), Size(an, an * 0.18f))
-                        drawRect(a.niquel(cerca), Offset(cx - an * 0.3f, suelo - an * 0.24f), Size(an * 0.6f, an * 0.06f))
-                        drawLine(a.claro(0.6f), Offset(cx - an / 2, suelo - an * 0.17f), Offset(cx + an / 2, suelo - an * 0.17f), 0.8f * u)
-                        drawLine(a.luz(MARFIL, cerca), Offset(cx - an * 0.1f, suelo - an * 0.22f), Offset(cx + an * 0.45f, suelo - an * 0.3f), 2f * u)
-                        drawCircle(Color(0xFFE8763C).copy(alpha = if (a.lumbre) 0.9f else 0.6f), 1.2f * u, Offset(cx + an * 0.46f, suelo - an * 0.3f))
-                        val humo = Path().apply {
-                            moveTo(cx + an * 0.46f, suelo - an * 0.32f)
-                            cubicTo(cx + an * 0.6f, suelo - r.height * 0.4f, cx + an * 0.1f, suelo - r.height * 0.55f, cx + an * 0.35f, suelo - r.height * 0.8f)
-                        }
-                        drawPath(humo, a.claro(0.5f).copy(alpha = if (a.oscuro) 0.12f else 0.35f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
-                    }
-                }
+            if (pide <= 0f || pide > libre) continue
+            val sitio = Rect(x, r.bottom - alto, x + pide, r.bottom)
+            // De noche, el frío de la escalera los deja ver aunque el aplique no llegue.
+            val kp = maxOf(cerca, 0.45f * frio)
+            when (pieza) {
+                0 -> pilaDeCantoDeco(sitio, a, kp, izq, k)
+                1 -> sordinaDeco(sitio, a, kp, izq)
+                2 -> cajaCanasDeco(sitio, a, kp)
+                3 -> lataAgujasDeco(sitio, a, kp)
+                4 -> rolloEscobillasDeco(sitio, a, kp)
+                else -> ceniceroDeco(sitio, a, kp)
             }
-            else -> {
-                // El rollo de partituras, tumbado y atado con cordel rojo.
-                val alto = minOf(r.height * 0.36f, libre * 0.45f)
-                val largo = minOf(libre * 0.92f, r.height * 1.3f)
-                val rollo = Rect(x0, suelo - alto, x0 + largo, suelo)
-                contactoDeco(a, Offset(rollo.center.x, suelo), largo, alto * 0.25f, 0.4f)
-                drawRoundRect(a.luz(mezcla(MARFIL, ESTRAZA, 0.2f), cerca), rollo.topLeft, rollo.size, androidx.compose.ui.geometry.CornerRadius(alto * 0.3f))
-                drawRect(a.claro(0.35f), Offset(rollo.left + alto * 0.3f, rollo.top + alto * 0.12f), Size(largo - alto * 0.6f, alto * 0.16f))
-                drawRect(a.sombra(0.25f), Offset(rollo.left + alto * 0.2f, rollo.bottom - alto * 0.3f), Size(largo - alto * 0.4f, alto * 0.3f))
-                drawOval(a.luz(mezcla(MARFIL, ESTRAZA, 0.4f), cerca), Offset(rollo.right - alto * 0.5f, rollo.top), Size(alto * 0.5f, alto))
-                drawOval(a.sombra(0.3f), Offset(rollo.right - alto * 0.38f, rollo.top + alto * 0.25f), Size(alto * 0.25f, alto * 0.5f), style = Stroke(0.6f * u))
-                for (f in listOf(0.3f, 0.7f)) drawLine(a.luz(Color(0xFF8E2A2E), cerca), Offset(rollo.left + largo * f, rollo.top), Offset(rollo.left + largo * f, rollo.bottom), 1.6f * u)
-                // Las escobillas de la batería, apoyadas detrás, en diagonal.
-                val e0 = Offset(rollo.left + largo * 0.15f, rollo.top)
-                val e1 = Offset(rollo.left + largo * 0.8f, suelo - r.height * 0.82f)
-                drawLine(a.luz(MACASAR_NEGRO, cerca), e0, Offset(e0.x + (e1.x - e0.x) * 0.55f, e0.y + (e1.y - e0.y) * 0.55f), 2.4f * u, StrokeCap.Round)
-                val abanico = Path()
-                val m = Offset(e0.x + (e1.x - e0.x) * 0.55f, e0.y + (e1.y - e0.y) * 0.55f)
-                for (j in 0 until 7) { abanico.moveTo(m.x, m.y); abanico.lineTo(e1.x + (j - 3) * 1.6f * u, e1.y + (j - 3).let { it * it } * 0.4f * u) }
-                drawPath(abanico, a.niquel(cerca), style = Stroke(0.6f * u))
-            }
+            x += pide + 6f * u
         }
     }
 }
 
+/** Los discos de canto, en sus fundas, uno contra otro: el canto de estraza, de marfil o del negro del disco que asoma. */
+private fun DrawScope.pilaDeCantoDeco(s: Rect, a: AireDeco, k: Float, izq: Boolean, semilla: Int) {
+    val u = density
+    val grueso = 2.4f * u
+    val n = (s.width / grueso).toInt().coerceIn(3, 40)
+    val g = s.width / n
+    val alto = s.height * 0.84f
+    contactoDeco(a, Offset(s.center.x + (if (izq) 3f else -3f) * u, s.bottom), s.width * 1.15f, 4f * u, 0.45f)
+    // El perfil de arriba, desparejo: cada funda asoma un poco distinto.
+    val pila = Path().apply {
+        moveTo(s.left, s.bottom)
+        for (i in 0 until n) {
+            val y = s.bottom - alto * (0.93f + 0.07f * azar(1201 + semilla, i))
+            lineTo(s.left + g * i, y); lineTo(s.left + g * (i + 1), y)
+        }
+        lineTo(s.right, s.bottom); close()
+    }
+    drawPath(pila, a.luz(ESTRAZA, k))
+    val claras = Path(); val discos = Path(); val juntas = Path()
+    for (i in 0 until n) {
+        val xi = s.left + g * i
+        val z = azar(1202 + semilla, i)
+        if (z < 0.3f) claras.addRect(Rect(xi, s.bottom - alto * 0.93f, xi + g, s.bottom))
+        else if (z > 0.82f) discos.addRect(Rect(xi + g * 0.2f, s.bottom - alto, xi + g * 0.8f, s.bottom - alto * 0.88f))
+        juntas.moveTo(xi, s.bottom - alto * 0.92f); juntas.lineTo(xi, s.bottom)
+    }
+    drawPath(claras, a.luz(mezcla(MARFIL, ESTRAZA, 0.25f), k))
+    drawPath(discos, a.luz(TINTA, k))
+    drawPath(juntas, a.sombra(0.35f), style = Stroke(0.6f * u))
+    // La luz de un lado de la pila y la sombra del otro.
+    drawRect(a.claro(0.25f), Offset(if (izq) s.left else s.right - s.width * 0.2f, s.bottom - alto * 0.93f), Size(s.width * 0.2f, alto * 0.93f))
+    drawRect(a.sombra(0.25f), Offset(if (izq) s.right - s.width * 0.25f else s.left, s.bottom - alto * 0.93f), Size(s.width * 0.25f, alto * 0.93f))
+}
+
 /**
- * El pie del armario: el faldón de Macasar con su friso de dentellones de marfil, las patas ahusadas con sus zapatas de
- * marfil, el suelo de terrazo con su junta de latón, la sombra del armario en él, la pila de discos y el estuche de la
- * trompeta, cortado por el borde derecho.
+ * La sordina recta de la trompeta, tumbada: el cono de aluminio con el fondo ancho y redondo a la derecha, el aro y, en la
+ * punta angosta de la izquierda, las tiras de corcho. Tumbada para que no se confunda con el metrónomo de arriba.
  */
-internal fun DrawScope.pieDeco(d: DisposicionEstante, lado: Float, suelo: Float, a: AireDeco, cerca: (Offset) -> Float) {
+private fun DrawScope.sordinaDeco(s: Rect, a: AireDeco, k: Float, izq: Boolean) {
+    val u = density
+    val largo = s.width
+    val diam = minOf(s.height * 0.3f, largo * 0.48f)
+    val eje = s.bottom - diam / 2
+    val punta = diam * 0.34f
+    contactoDeco(a, Offset(s.center.x + (if (izq) 2f else -2f) * u, s.bottom), largo * 1.1f, 4f * u, 0.45f)
+    val cono = Path().apply {
+        moveTo(s.left, eje - punta / 2)
+        lineTo(s.right - diam * 0.3f, eje - diam / 2)
+        quadraticBezierTo(s.right, eje - diam / 2, s.right, eje)
+        quadraticBezierTo(s.right, eje + diam / 2, s.right - diam * 0.3f, eje + diam / 2)
+        lineTo(s.left, eje + punta / 2)
+        close()
+    }
+    drawPath(cono, a.luz(NIQUEL, k))
+    clipPath(cono) {
+        drawRect(a.claro(0.55f), Offset(s.left, eje - diam * 0.36f), Size(largo, diam * 0.14f))
+        drawRect(a.sombra(0.32f), Offset(s.left, eje + diam * 0.12f), Size(largo, diam * 0.4f))
+        drawRect(a.luz(NIQUEL_OSC, k), Offset(s.left + largo * 0.66f, eje - diam), Size(1.3f * u, diam * 2f))
+    }
+    // Las tiras de corcho de la punta.
+    val corcho = a.luz(Color(0xFFA8794A), k)
+    drawRect(corcho, Offset(s.left + largo * 0.04f, eje - punta * 0.62f), Size(largo * 0.22f, punta * 0.24f))
+    drawRect(corcho, Offset(s.left + largo * 0.04f, eje + punta * 0.38f), Size(largo * 0.22f, punta * 0.24f))
+}
+
+/** La caja de cañas del clarinete, tumbada: cartón verde con su faja de marfil (sin letras) y dos cañas sueltas encima. */
+private fun DrawScope.cajaCanasDeco(s: Rect, a: AireDeco, k: Float) {
+    val u = density
+    val alto = s.height * 0.15f
+    val caja = Rect(s.left, s.bottom - alto, s.right, s.bottom)
+    contactoDeco(a, Offset(caja.center.x, s.bottom), caja.width * 1.15f, 4f * u, 0.45f)
+    drawRect(a.luz(Color(0xFF2F6A52), k), caja.topLeft, caja.size)
+    drawRect(a.luz(MARFIL, k), Offset(caja.left + caja.width * 0.32f, caja.top), Size(caja.width * 0.2f, caja.height))
+    drawRect(a.claro(0.35f), caja.topLeft, Size(caja.width, 1.2f * u))
+    drawRect(a.sombra(0.3f), Offset(caja.left, caja.bottom - caja.height * 0.3f), Size(caja.width, caja.height * 0.3f))
+    val canas = Path().apply {
+        moveTo(caja.left + caja.width * 0.1f, caja.top - 0.8f * u); lineTo(caja.left + caja.width * 0.62f, caja.top - 1.6f * u)
+        moveTo(caja.left + caja.width * 0.3f, caja.top - 2.4f * u); lineTo(caja.left + caja.width * 0.86f, caja.top - 1.2f * u)
+    }
+    drawPath(canas, a.luz(Color(0xFFD8BE7A), k), style = Stroke(1.8f * u, cap = StrokeCap.Round))
+}
+
+/** La lata de agujas del gramófono: baja y redonda, con la tapa pintada (un abanico, sin letras). */
+private fun DrawScope.lataAgujasDeco(s: Rect, a: AireDeco, k: Float) {
+    val la = s.width
+    val lata = Rect(s.left, s.bottom - la * 0.62f, s.right, s.bottom)
+    contactoDeco(a, Offset(lata.center.x, s.bottom), la * 1.3f, la * 0.16f, 0.45f)
+    drawRect(a.luz(Color(0xFF2B4C8C), k), lata.topLeft, lata.size)
+    drawOval(a.luz(Color(0xFFC9A24C), k), Offset(lata.left, lata.top - la * 0.1f), Size(la, la * 0.2f))
+    drawArc(a.luz(MARFIL, k), 180f, 180f, true, Offset(lata.center.x - la * 0.25f, lata.top + la * 0.14f), Size(la * 0.5f, la * 0.5f))
+    drawRect(a.claro(0.3f), Offset(lata.left, lata.top), Size(la * 0.15f, lata.height))
+    drawRect(a.sombra(0.3f), Offset(lata.right - la * 0.2f, lata.top), Size(la * 0.2f, lata.height))
+}
+
+/** El cenicero de níquel con el cigarrillo apoyado y su hilo de humo (el humo del club). */
+private fun DrawScope.ceniceroDeco(s: Rect, a: AireDeco, k: Float) {
+    val u = density
+    val an = s.width; val cx = s.center.x; val suelo = s.bottom
+    contactoDeco(a, Offset(cx, suelo), an * 1.2f, an * 0.12f, 0.45f)
+    drawRect(a.niquel(k), Offset(cx - an / 2, suelo - an * 0.18f), Size(an, an * 0.18f))
+    drawRect(a.niquel(k), Offset(cx - an * 0.3f, suelo - an * 0.24f), Size(an * 0.6f, an * 0.06f))
+    drawLine(a.claro(0.6f), Offset(cx - an / 2, suelo - an * 0.17f), Offset(cx + an / 2, suelo - an * 0.17f), 0.8f * u)
+    drawLine(a.luz(MARFIL, k), Offset(cx - an * 0.1f, suelo - an * 0.22f), Offset(cx + an * 0.45f, suelo - an * 0.3f), 2f * u)
+    drawCircle(Color(0xFFE8763C).copy(alpha = if (a.lumbre) 0.9f else 0.6f), 1.2f * u, Offset(cx + an * 0.46f, suelo - an * 0.3f))
+    val humo = Path().apply {
+        moveTo(cx + an * 0.46f, suelo - an * 0.32f)
+        cubicTo(cx + an * 0.6f, suelo - s.height * 0.4f, cx + an * 0.1f, suelo - s.height * 0.55f, cx + an * 0.35f, suelo - s.height * 0.8f)
+    }
+    drawPath(humo, a.claro(0.5f).copy(alpha = if (a.oscuro) 0.12f else 0.35f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
+}
+
+/** El rollo de partituras, tumbado y atado con cordel rojo, y las escobillas de la batería apoyadas detrás, en diagonal. */
+private fun DrawScope.rolloEscobillasDeco(s: Rect, a: AireDeco, k: Float) {
+    val u = density
+    val alto = s.height * 0.3f
+    val largo = s.width
+    val suelo = s.bottom
+    // Las escobillas, detrás: el mango negro y el abanico de alambre.
+    val e0 = Offset(s.left + largo * 0.12f, suelo - alto * 0.5f)
+    val e1 = Offset(s.left + largo * 0.85f, suelo - s.height * 0.86f)
+    val m = Offset(e0.x + (e1.x - e0.x) * 0.55f, e0.y + (e1.y - e0.y) * 0.55f)
+    drawLine(a.luz(MACASAR_NEGRO, k), e0, m, 2.6f * u, StrokeCap.Round)
+    val abanico = Path()
+    for (j in 0 until 7) { abanico.moveTo(m.x, m.y); abanico.lineTo(e1.x + (j - 3) * 1.8f * u, e1.y + (j - 3) * (j - 3) * 0.5f * u) }
+    drawPath(abanico, a.niquel(k), style = Stroke(0.7f * u))
+    // El rollo.
+    val rollo = Rect(s.left, suelo - alto, s.left + largo, suelo)
+    contactoDeco(a, Offset(rollo.center.x, suelo), largo, alto * 0.25f, 0.45f)
+    drawRoundRect(a.luz(mezcla(MARFIL, ESTRAZA, 0.2f), k), rollo.topLeft, rollo.size, androidx.compose.ui.geometry.CornerRadius(alto * 0.3f))
+    drawRect(a.claro(0.35f), Offset(rollo.left + alto * 0.3f, rollo.top + alto * 0.12f), Size(largo - alto * 0.6f, alto * 0.16f))
+    drawRect(a.sombra(0.25f), Offset(rollo.left + alto * 0.2f, rollo.bottom - alto * 0.3f), Size(largo - alto * 0.4f, alto * 0.3f))
+    drawOval(a.luz(mezcla(MARFIL, ESTRAZA, 0.4f), k), Offset(rollo.right - alto * 0.5f, rollo.top), Size(alto * 0.5f, alto))
+    drawOval(a.sombra(0.3f), Offset(rollo.right - alto * 0.38f, rollo.top + alto * 0.25f), Size(alto * 0.25f, alto * 0.5f), style = Stroke(0.6f * u))
+    for (f in listOf(0.3f, 0.7f)) drawLine(a.luz(Color(0xFF8E2A2E), k), Offset(rollo.left + largo * f, rollo.top), Offset(rollo.left + largo * f, rollo.bottom), 1.6f * u)
+}
+
+/**
+ * El pie del armario: el suelo de terrazo con su junta de latón, la sombra del armario y de cada pata en él; el faldón de
+ * Macasar con su friso de dentellones de marfil; las patas ahusadas con sus zapatas de marfil; la pila de discos y el estuche
+ * de la trompeta entero, con su campana, su asa y sus cierres. De noche, el frío de la escalera roza las patas y el estuche.
+ */
+internal fun DrawScope.pieDeco(d: DisposicionEstante, lado: Float, suelo: Float, a: AireDeco, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
     val u = density; val w = size.width; val h = size.height
     val pie = d.base.top
     val costado = w * COSTADO
     if (h - pie <= 1f) return
+    val izq = !a.aplique || a.alba
     // El suelo de terrazo: el fondo, las chinas de tres colores y la junta de latón.
     val piso = Rect(0f, suelo, w, h)
     if (piso.height > 1f) {
-        val tramos = if (a.lumbre) 12 else 1
+        val tramos = if (a.lumbre) 10 else 1
         for (t in 0 until tramos) {
             val xa = w * t / tramos; val xb = w * (t + 1) / tramos + 0.6f
             drawRect(a.luz(PaletaDeco.TERRAZO, cerca(Offset((xa + xb) / 2, suelo)) * 0.9f), Offset(xa, suelo), Size(xb - xa, piso.height))
         }
         clipRect(piso.left, piso.top, piso.right, piso.bottom) {
-            for ((j, col) in listOf(Color(0xFF5E5A52), Color(0xFF9E6B4A), Color(0xFFEDE7DA)).withIndex()) {
-                val chinas = ArrayList<Offset>(160)
-                for (i in 0 until 160) chinas.add(Offset(w * azar(981 + j, i), suelo + piso.height * azar(982 + j, i)))
-                drawPoints(chinas, PointMode.Points, a.luz(col, 0.6f).copy(alpha = 0.7f), (1.2f + j * 0.5f) * u, StrokeCap.Round)
+            // Las chinas, en baldosa (una sola operación), apagadas con la luz que le llega al suelo.
+            texturaDeco(TexturaDeco.TERRAZO, piso, a.luz(Color.White, if (a.lumbre) maxOf(cerca(Offset(w * 0.5f, suelo)), 0.1f) else 1f), if (a.oscuro) 0.6f else 0.85f)
+            drawLine(a.luz(Color(0xFFC9A24C), 0.8f), Offset(0f, suelo + piso.height * 0.78f), Offset(w, suelo + piso.height * 0.74f), 1.4f * u)
+            // La sombra del armario en el suelo, bajo el faldón, y la de cada pata, tendida hacia donde no está la luz.
+            drawRect(a.sombra(if (a.lumbre) 0.5f else 0.32f), Offset(costado, suelo), Size(w - 2 * costado, piso.height * 0.16f))
+            val tiende = (if (izq) 1f else -1f) * piso.height * 0.9f
+            for (i in 0 until 2) {
+                val px = if (i == 0) lado * 0.6f else w - lado * 0.6f
+                val ancho = lado * 0.4f
+                drawPath(TrazoDeco.poligono(px - ancho / 2, suelo, px + ancho / 2, suelo, px + ancho / 2 + tiende, suelo + piso.height * 0.6f, px - ancho / 2 + tiende, suelo + piso.height * 0.6f), a.sombra(if (a.lumbre) 0.4f else 0.24f))
             }
-            drawLine(a.luz(Color(0xFFC9A24C), 0.8f), Offset(0f, suelo + piso.height * 0.55f), Offset(w, suelo + piso.height * 0.5f), 1.4f * u)
-            // La sombra del armario en el suelo, bajo el faldón, y el brillo del encerado arriba a la izquierda.
-            drawRect(a.sombra(if (a.lumbre) 0.5f else 0.34f), Offset(costado, suelo), Size(w - 2 * costado, piso.height * 0.32f))
-            if (!a.oscuro) drawRect(Color.White.copy(alpha = 0.08f), Offset(0f, suelo + piso.height * 0.4f), Size(w * 0.4f, piso.height * 0.3f))
+            if (!a.oscuro) drawRect(Color.White.copy(alpha = 0.1f), Offset(0f, suelo + piso.height * 0.3f), Size(w * 0.45f, piso.height * 0.25f))
         }
     }
     // El faldón con su friso de dentellones.
-    val falda = Rect(costado, pie, w - costado, pie + (suelo - pie) * 0.36f)
-    val tramos = if (a.lumbre) 16 else 1
-    for (t in 0 until tramos) {
-        val xa = falda.left + falda.width * t / tramos; val xb = falda.left + falda.width * (t + 1) / tramos + 0.6f
+    val falda = Rect(costado, pie, w - costado, pie + (suelo - pie) * 0.42f)
+    val tramosF = if (a.lumbre) 12 else 1
+    for (t in 0 until tramosF) {
+        val xa = falda.left + falda.width * t / tramosF; val xb = falda.left + falda.width * (t + 1) / tramosF + 0.6f
         drawRect(a.luz(MACASAR, cerca(Offset((xa + xb) / 2, falda.center.y))), Offset(xa, falda.top), Size(xb - xa, falda.height))
     }
     val dientes = Path()
@@ -422,31 +529,74 @@ internal fun DrawScope.pieDeco(d: DisposicionEstante, lado: Float, suelo: Float,
             val zap = (suelo - falda.bottom) * 0.22f
             drawRect(a.luz(MARFIL, cerca(Offset((x0 + x1) / 2, suelo))), Offset(x0, suelo - zap), Size(x1 - x0, zap))
             drawRect(a.sombra(0.2f), Offset(x0, suelo - zap), Size(x1 - x0, 1f * u))
+            val kf = frio(Offset(x0, (falda.bottom + suelo) / 2))
+            if (kf > 0.02f) drawRect(PaletaDeco.LUNA.copy(alpha = 0.6f * kf), Offset(x0, falda.bottom), Size(1.6f * u, suelo - falda.bottom))
         }
     }
-    // La pila de discos en el suelo, entre las patas, a la izquierda.
-    val px = lado * 1.3f; val pa = w * 0.2f
-    for (j in 0 until 5) {
-        val y = suelo + piso.height * 0.15f - j * w * 0.009f
-        val corre = (azar(991, j) - 0.5f) * w * 0.02f
-        drawRect(a.luz(if (j % 2 == 0) ESTRAZA else TINTA, cerca(Offset(px, y))), Offset(px + corre, y - w * 0.008f), Size(pa, w * 0.008f))
-        drawLine(a.claro(0.3f), Offset(px + corre, y - w * 0.008f), Offset(px + corre + pa, y - w * 0.008f), 0.6f * u)
+    val kfFalda = frio(Offset(falda.left, falda.top))
+    if (kfFalda > 0.02f) drawRect(PaletaDeco.LUNA.copy(alpha = 0.5f * kfFalda), falda.topLeft, Size(falda.width * 0.4f, 1.2f * u))
+    // La pila de discos en el suelo, en sus fundas, a la izquierda.
+    val px = lado * 1.4f; val pa = w * 0.21f
+    val py = suelo + piso.height * 0.55f
+    contactoDeco(a, Offset(px + pa / 2, py), pa * 1.1f, w * 0.012f, 0.45f)
+    for (j in 0 until 6) {
+        val y = py - j * w * 0.009f
+        val corre = (azar(991, j) - 0.5f) * w * 0.025f
+        drawRect(a.luz(if (j % 3 == 1) TINTA else mezcla(ESTRAZA, MARFIL, 0.2f * (j % 2)), cerca(Offset(px, y))), Offset(px + corre, y - w * 0.009f), Size(pa, w * 0.009f))
     }
-    contactoDeco(a, Offset(px + pa / 2, suelo + piso.height * 0.17f), pa * 1.1f, w * 0.01f, 0.4f)
-    // El estuche de la trompeta, en el suelo, cortado por el borde: cuero negro, más ancho en la campana, con sus cierres.
-    val ex = w * 0.6f; val ey = suelo + piso.height * 0.42f
-    val ea = minOf(w * 0.075f, piso.height * 0.9f)
-    val estuche = Path().apply {
-        moveTo(ex, ey); lineTo(ex, ey - ea * 0.55f)
-        cubicTo(ex + w * 0.1f, ey - ea * 0.6f, ex + w * 0.2f, ey - ea * 0.5f, ex + w * 0.25f, ey - ea)
-        lineTo(w + 4f * u, ey - ea); lineTo(w + 4f * u, ey); close()
+    drawLine(a.claro(0.4f), Offset(px, py - w * 0.054f), Offset(px + pa, py - w * 0.054f), 0.8f * u)
+    estucheDeco(Rect(w * 0.5f, py - w * 0.095f, w * 0.95f, py + w * 0.01f), a, cerca, frio, izq)
+}
+
+/**
+ * El estuche de la trompeta, tumbado en el suelo: cuero negro de grano, con la campana abombada a la derecha y la punta
+ * angosta a la izquierda, la línea de la tapa, el asa de cuero, los dos cierres y la cerradura de níquel, y sus patitas.
+ */
+private fun DrawScope.estucheDeco(r: Rect, a: AireDeco, cerca: (Offset) -> Float, frio: (Offset) -> Float, izq: Boolean) {
+    val u = density
+    if (r.width <= 4f * u || r.height <= 4f * u) return
+    val k = cerca(r.center)
+    val x0 = r.left; val x1 = r.right; val y1 = r.bottom; val al = r.height; val la = r.width
+    val forma = Path().apply {
+        moveTo(x0 + al * 0.3f, y1)
+        lineTo(x1 - al * 0.55f, y1)
+        cubicTo(x1 - al * 0.1f, y1, x1, y1 - al * 0.25f, x1, y1 - al * 0.5f)
+        cubicTo(x1, y1 - al * 0.85f, x1 - al * 0.2f, y1 - al, x1 - al * 0.6f, y1 - al)
+        cubicTo(x1 - la * 0.3f, y1 - al, x1 - la * 0.42f, y1 - al * 0.58f, x0 + la * 0.28f, y1 - al * 0.56f)
+        lineTo(x0 + al * 0.3f, y1 - al * 0.56f)
+        cubicTo(x0, y1 - al * 0.56f, x0, y1, x0 + al * 0.3f, y1)
+        close()
     }
-    contactoDeco(a, Offset(ex + w * 0.2f, ey), w * 0.45f, ea * 0.25f, 0.45f)
-    drawPath(estuche, a.luz(Color(0xFF221D1F), cerca(Offset(ex + w * 0.2f, ey))))
-    clipPath(estuche) {
-        drawRect(a.claro(0.2f), Offset(ex, ey - ea), Size(w * 0.5f, ea * 0.2f))
-        drawLine(a.sombra(0.4f), Offset(ex, ey - ea * 0.25f), Offset(w, ey - ea * 0.3f), 0.8f * u)
+    contactoDeco(a, Offset(r.center.x + (if (izq) 1f else -1f) * la * 0.04f, y1), la * 1.08f, al * 0.22f, 0.5f)
+    val cuero = Color(0xFF2A2220)
+    drawPath(forma, a.luz(cuero, k))
+    clipPath(forma) {
+        // El grano del cuero, la luz de arriba, la línea de la tapa y la sombra de abajo.
+        texturaDeco(TexturaDeco.CUERO, Rect(x0, y1 - al, x1, y1), a.luz(Color.White, maxOf(k, 0.2f)), 0.9f)
+        drawRect(a.claro(0.3f).copy(alpha = if (a.oscuro) 0.06f else 0.3f), Offset(x0, y1 - al), Size(la, al * 0.14f))
+        val tapa = Path().apply {
+            moveTo(x0, y1 - al * 0.3f); lineTo(x1 - la * 0.4f, y1 - al * 0.3f)
+            cubicTo(x1 - la * 0.25f, y1 - al * 0.3f, x1 - la * 0.15f, y1 - al * 0.45f, x1, y1 - al * 0.45f)
+        }
+        drawPath(tapa, a.sombra(0.6f), style = Stroke(1.2f * u))
+        drawPath(TrazoDeco.corrido(tapa, 0f, 1.2f * u), a.claro(0.3f).copy(alpha = if (a.oscuro) 0.06f else 0.25f), style = Stroke(0.6f * u))
+        drawRect(a.sombra(0.3f), Offset(x0, y1 - al * 0.14f), Size(la, al * 0.14f))
     }
-    for (f in listOf(0.1f, 0.3f)) drawRect(a.niquel(cerca(Offset(ex + w * f, ey))), Offset(ex + w * f, ey - ea * 0.38f), Size(w * 0.018f, ea * 0.18f))
-    drawArc(a.luz(Color(0xFF221D1F), cerca(Offset(ex + w * 0.2f, ey))), 180f, 180f, false, Offset(ex + w * 0.15f, ey - ea * 0.6f - w * 0.02f), Size(w * 0.08f, w * 0.04f), style = Stroke(2.2f * u))
+    // El asa de cuero, arriba de la campana.
+    val asa = Offset(x1 - la * 0.32f, y1 - al * 0.78f)
+    drawArc(a.luz(cuero, k), 180f, 180f, false, Offset(asa.x - la * 0.08f, asa.y - al * 0.32f), Size(la * 0.16f, al * 0.5f), style = Stroke(2.6f * u))
+    drawArc(a.claro(0.3f).copy(alpha = if (a.oscuro) 0.08f else 0.35f), 200f, 60f, false, Offset(asa.x - la * 0.08f, asa.y - al * 0.32f), Size(la * 0.16f, al * 0.5f), style = Stroke(0.8f * u))
+    // Los cierres y la cerradura, de níquel.
+    for (f in listOf(0.22f, 0.5f, 0.78f)) {
+        val c = Offset(x0 + la * f, y1 - al * (if (f > 0.6f) 0.42f else 0.3f))
+        val ancho = la * (if (f == 0.5f) 0.035f else 0.03f)
+        drawRect(a.niquel(maxOf(k, 0.3f)), Offset(c.x - ancho / 2, c.y - al * 0.09f), Size(ancho, al * 0.18f))
+        drawRect(a.claro(0.6f).copy(alpha = if (a.oscuro) 0.15f else 0.6f), Offset(c.x - ancho / 2, c.y - al * 0.09f), Size(ancho, 0.8f * u))
+        val kf = frio(c)
+        if (kf > 0.02f) drawRect(PaletaDeco.LUNA.copy(alpha = 0.8f * kf), Offset(c.x - ancho / 2, c.y - al * 0.09f), Size(1f * u, al * 0.18f))
+    }
+    // Las patitas de níquel.
+    drawPoints(listOf(Offset(x0 + la * 0.12f, y1), Offset(x0 + la * 0.45f, y1), Offset(x1 - la * 0.12f, y1)), PointMode.Points, a.niquel(maxOf(k, 0.3f)), 2.2f * u, StrokeCap.Round)
+    val kf = frio(Offset(x0, y1 - al * 0.3f))
+    if (kf > 0.02f) drawPath(forma, PaletaDeco.LUNA.copy(alpha = 0.45f * kf), style = Stroke(1f * u))
 }

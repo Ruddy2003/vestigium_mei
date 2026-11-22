@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PointMode
@@ -116,15 +117,20 @@ internal class AireDeco(val oscuro: Boolean, val noche: Boolean) {
  * El dibujo del estante del diario de Art déco (lo usa `EstanteDeco`, en `BibliotecaContemporanea.kt`): el armario de partituras
  * del club de sótano de Harlem donde toca Lou, el pianista de su «otra vida», hacia 1926. Es un armario alto de ébano de Macasar
  * chapeado en libro, con los costados forrados de galuchat verde pálido, filetes de marfil, herrajes de níquel y patas
- * ahusadas con sus zapatas de marfil, sobre un suelo de terrazo con su junta de latón. Detrás, la pared de pan de plata, en
- * cuadros con su pátina. Sin ventana: es un sótano; de día la luz baja por la escalera de la calle, fuera del cuadro arriba a
- * la izquierda; de noche alumbra el aplique de abanico de vidrio esmerilado de la pared. Encima, el gramófono portátil abierto
+ * ahusadas con sus zapatas de marfil, sobre un suelo de terrazo con su junta de latón. Detrás, la pared de pan de plata: hojas
+ * montadas, casi de un solo tono, con su brillo en diagonal. Sin ventana: es un sótano; de día la luz baja por la escalera de
+ * la calle, fuera del cuadro arriba a la izquierda; de noche alumbra el aplique de abanico de vidrio esmerilado de la pared.
+ * Encima, el gramófono portátil abierto
  * (el protagonista), los discos en sus fundas apoyados en la pared, el metrónomo y la taza con su plato (en la Ley Seca, lo
- * de la taza no siempre era café); colgando del canto, una hoja pautada. En los huecos, discos, la lata de agujas y el
- * cenicero, las escobillas y el rollo de partituras. Al pie, el estuche de la trompeta y una pila de discos. Las entradas son
- * la caja del rollo de pianola (alta y delgada), el álbum de discos de tela (bajo y ancho, con el disco que asoma) y la
- * carpeta de partituras (blanda, con su cordón). Distinto del Ideario, que es el casillero de laca negra de la recepción
- * de un hotel. Las piezas (los objetos, el pie y las entradas) están en `MuebleEstanteDecoPiezas.kt`.
+ * de la taza no siempre era café); colgando del canto, una hoja pautada. En los huecos, la pila de discos de canto, la
+ * sordina tumbada, la caja de cañas, la lata de agujas, el cenicero, el rollo de partituras y las escobillas. Al pie, sobre
+ * el terrazo, el estuche de la trompeta y una pila de discos. De noche, además del aplique, baja por la izquierda el frío de
+ * la escalera ([frio]) y roza los cantos y el níquel: la otra temperatura. Las entradas son la caja del rollo de pianola
+ * (rígida, alta, con su tapa que monta y la etiqueta redonda), el álbum de discos de tela (bajo, con el disco estampado) y la
+ * carpeta de partituras (blanda, panzona, a veces ladeada, con su cordón); conservan de noche su color de día
+ * ([tonoDeDiaDeco]). Distinto del Ideario, que es el casillero de laca negra de la recepción de un hotel. Los objetos y el
+ * pie están en `MuebleEstanteDecoPiezas.kt`; las entradas, en `MuebleEstanteDecoVolumenes.kt`; las texturas en baldosa
+ * (galuchat, terrazo, cuero), en `MuebleEstanteDecoTeselas.kt`.
  */
 internal object MuebleEstanteDeco {
     internal val LETRA: FontFamily = LetraExtra.pasaje
@@ -132,7 +138,7 @@ internal object MuebleEstanteDeco {
     // ---------------------------------------------------------------- las medidas
 
     const val CORONA = 0.5f
-    const val BASE = 0.24f
+    const val BASE = 0.3f
     const val LADO = 0.075f
     val ALTO_REPISA: Dp = 112.dp
     val TABLA: Dp = 15.dp
@@ -146,11 +152,11 @@ internal object MuebleEstanteDeco {
         return if (k < 3) 0 else if (k < 5) 1 else 2
     }
 
-    /** La caja, alta y derecha; el álbum, bajo y macizo; la carpeta, en medio y blanda (con las hojas que asoman). */
+    /** La caja, alta y derecha; el álbum, bajo y macizo; la carpeta, en medio, blanda y panzona (con las hojas que asoman). */
     fun alto(semilla: Int, palabras: Int): Float = when (clase(semilla)) {
         0 -> 0.88f + 0.06f * azar(semilla, 1)
-        1 -> 0.66f + 0.05f * azar(semilla, 1)
-        else -> 0.8f + 0.05f * azar(semilla, 1)
+        1 -> 0.64f + 0.05f * azar(semilla, 1)
+        else -> 0.74f + 0.05f * azar(semilla, 1)
     }
 
     // ---------------------------------------------------------------- la luz
@@ -167,6 +173,17 @@ internal object MuebleEstanteDeco {
     /** Por dónde baja la luz de la escalera (fuera del cuadro, arriba a la izquierda), en anchos. */
     internal const val PUERTA_X = -0.1f
     internal const val PUERTA_Y = -0.05f
+
+    /** De dónde baja el frío de la escalera de noche (la otra temperatura), en anchos: a la izquierda, abajo. */
+    internal const val FRIO_X = -0.1f
+    internal const val FRIO_Y = CORONA + 0.95f
+
+    /** Cuánto le llega el frío de la escalera a un punto, solo de noche en el diario (con el aplique encendido). */
+    fun frio(a: AireDeco, fx: Float, fy: Float): Float {
+        if (!a.oscuro || a.noche) return 0f
+        val dx = fx - FRIO_X; val dy = fy - FRIO_Y
+        return (1f - sqrt(dx * dx + dy * dy * 0.6f) / 1.05f).coerceIn(0f, 1f).pow(1.1f)
+    }
 
     /** Cuánto alumbra el aplique un punto a [dx], [dy] de él: en un estante corto se acaba antes; desde cinco repisas no crece. */
     fun alcanceAplique(dx: Float, dy: Float, repisas: Int): Float {
@@ -204,19 +221,21 @@ internal object MuebleEstanteDeco {
         val n = d.repisas.size
         val fila = if (n > 0 && d.tablas.isNotEmpty()) d.repisas[0].height + d.tablas[0].height else FILA * u
         fun fy(y: Float): Float = if (y <= ch) y / w else CORONA + (y - ch) / maxOf(1f, fila) * FILA / ANCHO_NOMINAL
+        fun py(f: Float): Float = if (f <= CORONA) f * w else ch + (f - CORONA) * ANCHO_NOMINAL / FILA * fila
         fun cerca(p: Offset): Float = if (!a.lumbre) 1f else cerca(p.x / w, fy(p.y), n, a)
+        fun frio(p: Offset): Float = frio(a, p.x / w, fy(p.y))
         val tapaAlto = w * 0.036f
         val apoyo = ch - tapaAlto
         val pie = d.base.top
-        val suelo = pie + d.base.height * 0.72f
+        val suelo = pie + d.base.height * 0.5f
         val costado = w * COSTADO
         val lado = w * LADO
 
         // ---- la pared de pan de plata: arriba, a los lados y entre las patas
-        paredDeco(a, Rect(0f, 0f, w, apoyo + 2f * u), ::fy, n)
-        paredDeco(a, Rect(0f, pie, w, suelo), ::fy, n)
-        drawRect(a.luz(PaletaDeco.PLATA, cerca(Offset(costado, ch))), Offset(0f, apoyo), Size(costado + 1f, pie - apoyo))
-        drawRect(a.luz(PaletaDeco.PLATA, cerca(Offset(w, ch))), Offset(w - costado - 1f, apoyo), Size(costado + 1f, pie - apoyo))
+        paredDeco(a, Rect(0f, 0f, w, apoyo + 2f * u))
+        paredDeco(a, Rect(0f, pie, w, suelo + 1f))
+        drawRect(a.luz(PaletaDeco.PLATA, cerca(Offset(costado, ch)) * 0.7f), Offset(0f, apoyo), Size(costado + 1f, pie - apoyo))
+        drawRect(a.luz(PaletaDeco.PLATA, cerca(Offset(w, ch)) * 0.7f), Offset(w - costado - 1f, apoyo), Size(costado + 1f, pie - apoyo))
         if (a.aplique) abanicoEnPared(a, Offset(w * APL_X, w * APL_Y))
         // La sombra del armario en la pared: de día a la derecha; de noche a la izquierda, lejos del aplique.
         if (!a.aplique || a.alba) drawRect(a.sombra(0.34f), Offset(w - costado, apoyo), Size(costado, pie - apoyo))
@@ -227,10 +246,11 @@ internal object MuebleEstanteDeco {
 
         // ---- los costados de galuchat, las tablas con su rótulo y lo de los huecos
         costadosDeco(a, apoyo, pie, n, fila, ::fy)
-        d.tablas.forEachIndexed { k, r -> tablaDeco(r, k, a) { p -> cerca(p) } }
+        d.tablas.forEachIndexed { k, r -> tablaDeco(r, k, a, { p -> cerca(p) }, { p -> frio(p) }) }
         d.repisas.forEachIndexed { k, r ->
             val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
-            huecoDeco(k, r, oc, a, cerca(Offset((oc + r.right) / 2, r.center.y)), luzIzquierda(a, ((oc + r.right) / 2) / w))
+            val medio = Offset((oc + r.right) / 2, r.center.y)
+            huecoDeco(k, r, oc, a, cerca(medio), luzIzquierda(a, medio.x / w), frio(Offset(oc, r.center.y)))
         }
         d.placas.forEach { p -> rotuloDeco(p, medidor, a, cerca(p.r.center)) }
 
@@ -241,76 +261,81 @@ internal object MuebleEstanteDeco {
         encimaDeco(apoyo, a) { p -> cerca(p) }
 
         // ---- al pie: el faldón, las patas, el suelo y lo que hay en él
-        pieDeco(d, lado, suelo, a) { p -> cerca(p) }
+        pieDeco(d, lado, suelo, a, { p -> cerca(p) }, { p -> frio(p) })
 
         // ---- de noche, el charco del aplique sobre el armario; al alba, el rosa de la escalera
         if (a.aplique) {
             mancha(Offset(w * APL_X, ch + w * 0.06f), w * 0.5f, PaletaDeco.APLIQUE.copy(alpha = if (a.oscuro) 0.16f else 0.08f))
             apliqueDeco(Offset(w * APL_X, w * APL_Y), a, encendido = true)
         } else apliqueDeco(Offset(w * APL_X, w * APL_Y), a, encendido = false)
+        // ---- la segunda temperatura de la noche: el frío que baja por la escalera, a la izquierda, abajo
+        if (a.oscuro && !a.noche) {
+            mancha(Offset(-w * 0.04f, py(FRIO_Y + 0.2f)), w * 0.95f, PaletaDeco.LUNA.copy(alpha = 0.17f))
+            drawRect(PaletaDeco.LUNA.copy(alpha = 0.3f), Offset(costado, py(FRIO_Y) - w * 0.5f), Size(1.2f * u, w))
+        }
         if (!a.oscuro) mancha(Offset(w * 0.02f, 0f), w * 0.9f, (if (a.alba) PaletaDeco.ALBA else Color(0xFFFFE2B0)).copy(alpha = if (a.alba) 0.22f else 0.2f))
         if (a.luna) mancha(Offset(0f, 0f), w * 0.8f, PaletaDeco.LUNA.copy(alpha = 0.12f))
         granoMueble(Rect(0f, 0f, w, h), oscuro)
     }
 
     /**
-     * La pared de pan de plata en [r]: cuadros de hoja batida, cada uno de otro tono (la pátina dorada o fría que deja el tiempo),
-     * con sus juntas finas y algún golpe. De noche cada cuadro toma la luz que le llega; de día, la de la escalera.
+     * La pared de pan de plata en [r]. Las hojas se pegan montadas unas sobre otras, sin junta: casi un solo tono de plata
+     * envejecida, con alguna hoja más dorada, el sulfuro pardo en la orilla de otras y las líneas de montaje apenas vistas. Lo
+     * que la hace metal es el brillo: dos bandas anchas de reflejo que cruzan la pared en diagonal desde la escalera. De noche,
+     * la plata está apagada y el aplique la enciende en un charco (y en su abanico, aparte); al alba y con el frío de la calle,
+     * la luz baja de la escalera. Todo en pocas llamadas: el fondo, tres trazados y los brillos.
      */
-    private fun DrawScope.paredDeco(a: AireDeco, r: Rect, fy: (Float) -> Float, n: Int) {
+    private fun DrawScope.paredDeco(a: AireDeco, r: Rect) {
         if (r.width <= 1f || r.height <= 1f) return
         val u = density; val w = size.width
-        val lado = maxOf(4f * u, w * 0.066f)
+        val hoja = maxOf(6f * u, w * 0.075f)
         clipRect(r.left, r.top, r.right, r.bottom) {
-            val filas = ((r.height / lado).toInt() + 2).coerceAtMost(60)
-            val cols = ((r.width / lado).toInt() + 2).coerceAtMost(40)
-            val sombraJunta = Path(); val luzJunta = Path()
-            for (i in 0 until filas) {
-                val y = r.top + i * lado - lado * 0.3f
+            if (!a.lumbre) {
+                drawRect(Brush.linearGradient(listOf(PaletaDeco.PLATA_LUZ, PaletaDeco.PLATA, mezcla(PaletaDeco.PLATA, SOMBRA_MUEBLE, 0.3f)),
+                    start = Offset(-w * 0.1f, -w * 0.05f), end = Offset(w, w * 1.1f)), r.topLeft, r.size)
+            } else {
+                drawRect(a.luz(PaletaDeco.PLATA, 0.05f), r.topLeft, r.size)
+                val prendida = a.luz(PaletaDeco.PLATA_LUZ, 1f)
+                if (a.aplique) mancha(Offset(w * APL_X, w * APL_Y), w * (if (a.alba) 0.7f else 0.95f), prendida.copy(alpha = if (a.alba) 0.45f else 0.9f))
+                if (a.alba) mancha(Offset(w * PUERTA_X, w * PUERTA_Y), w * 1.2f, mezcla(prendida, PaletaDeco.ALBA, 0.35f).copy(alpha = 0.85f))
+                if (a.luna) mancha(Offset(w * PUERTA_X, w * PUERTA_Y), w * 1.1f, prendida.copy(alpha = 0.75f))
+            }
+            // Las hojas: las líneas de montaje, el sulfuro en la orilla de algunas y el oro pálido de otras, cada cosa en un trazado.
+            val montaje = Path(); val sulfuro = Path(); val oro = Path()
+            val i0 = (r.top / hoja).toInt() - 1
+            val filas = ((r.height / hoja).toInt() + 3).coerceAtMost(80)
+            val cols = ((w / hoja).toInt() + 3).coerceAtMost(60)
+            for (fi in 0 until filas) {
+                val i = i0 + fi
+                val y = i * hoja
+                // Las hojas van en filas y columnas, montadas: sin trabar como ladrillo, con un leve descuadre de la mano.
+                val corre = (azar(901, i) - 0.5f) * hoja * 0.1f
+                montaje.moveTo(0f, y); montaje.lineTo(w, y + (azar(902, i) - 0.5f) * 2f * u)
                 for (j in 0 until cols) {
-                    val x = j * lado - lado * 0.2f
-                    // La hoja batida: casi toda del mismo gris de plata, con algún cuadro más pasado (la pátina) y otro más vivo.
-                    val z = azar(901 + i, j)
-                    val base = when {
-                        z < 0.14f -> mezcla(PaletaDeco.PLATA, PaletaDeco.PATINA, 0.3f + 0.25f * azar(902 + i, j))
-                        z < 0.24f -> mezcla(PaletaDeco.PLATA, PaletaDeco.PATINA_FRIA, 0.25f)
-                        else -> mezcla(PaletaDeco.PLATA, PaletaDeco.PLATA_LUZ, 0.12f + 0.22f * azar(903 + i, j))
-                    }
-                    val c = Offset(x + lado / 2, y + lado / 2)
-                    val k = if (a.lumbre) cerca(c.x / w, fy(c.y), n, a) else 1f
-                    val col = if (a.lumbre) a.luz(base, k) else mezcla(base, SOMBRA_MUEBLE, 0.5f * (1f - dia(c.x / w, fy(c.y))))
-                    drawRect(col, Offset(x, y), Size(lado + 0.6f, lado + 0.6f))
-                    // Cada hoja monta sobre la de al lado: un filo claro arriba y a la izquierda, una sombra fina abajo.
-                    luzJunta.moveTo(x, y + 0.8f * u); luzJunta.lineTo(x + lado, y + 0.8f * u)
-                    luzJunta.moveTo(x + 0.8f * u, y); luzJunta.lineTo(x + 0.8f * u, y + lado)
-                    sombraJunta.moveTo(x, y); sombraJunta.lineTo(x + lado, y)
-                    sombraJunta.moveTo(x, y); sombraJunta.lineTo(x, y + lado)
-                    // Una arruga de la hoja, en diagonal, en uno de cada tres.
-                    if (azar(904 + i, j) < 0.34f) {
-                        val f = azar(905 + i, j)
-                        sombraJunta.moveTo(x + lado * f, y + lado * 0.1f); sombraJunta.lineTo(x + lado * (f * 0.5f + 0.3f), y + lado * 0.6f)
+                    val x = j * hoja + corre
+                    montaje.moveTo(x, y); montaje.lineTo(x + (azar(903 + i, j) - 0.5f) * 1.5f * u, y + hoja)
+                    val z = azar(904 + i, j)
+                    if (z < 0.14f) oro.addRect(Rect(x, y, x + hoja, y + hoja))
+                    else if (z > 0.8f) {
+                        sulfuro.addRect(Rect(x + hoja * 0.9f, y + hoja * 0.15f * azar(905 + i, j), x + hoja, y + hoja))
                     }
                 }
             }
-            drawPath(sombraJunta, a.sombra(0.2f), style = Stroke(0.6f * u))
-            drawPath(luzJunta, a.claro(0.45f).copy(alpha = if (a.oscuro) 0.06f else 0.4f), style = Stroke(0.6f * u))
-            // La pátina: manchas que bajan de las juntas, cálidas y frías.
-            for (j in 0 until 10) {
-                val x = r.left + r.width * azar(911, j)
-                val y = r.top + r.height * azar(912, j)
-                val col = if (j % 3 == 0) PaletaDeco.PATINA_FRIA else PaletaDeco.PATINA
-                drawOval(a.luz(col, 0.5f).copy(alpha = 0.12f + 0.08f * azar(913, j)), Offset(x, y), Size(lado * (0.25f + 0.4f * azar(914, j)), lado * (0.6f + 1.1f * azar(915, j))))
-            }
-            // El brillo del metal: una franja ancha en diagonal, donde la plata devuelve la luz de la escalera.
+            val vela = if (a.lumbre) 0.6f else 1f
+            drawPath(oro, a.luz(Color(0xFFD9C48A), 0.6f).copy(alpha = 0.15f * vela))
+            drawPath(sulfuro, a.luz(PaletaDeco.PATINA, 0.6f).copy(alpha = 0.12f * vela))
+            drawPath(montaje, a.sombra(0.04f), style = Stroke(0.6f * u))
+            drawPath(TrazoDeco.corrido(montaje, 0.8f * u, 0.8f * u), a.claro(0.3f).copy(alpha = if (a.oscuro) 0.03f else 0.14f), style = Stroke(0.6f * u))
+            // El brillo: dos bandas en diagonal desde la escalera, que se apagan al alejarse de ella.
             if (!a.oscuro) {
-                val brillo = Path().apply {
-                    moveTo(r.left + w * 0.05f, r.top); lineTo(r.left + w * 0.3f, r.top)
-                    lineTo(r.left + w * 0.3f - r.height * 0.7f, r.bottom); lineTo(r.left + w * 0.05f - r.height * 0.7f, r.bottom); close()
+                val fuerza = if (a.noche) 0.5f else 1f
+                for ((x0, ancho, alfa) in listOf(Triple(-w * 0.12f, w * 0.26f, 0.3f), Triple(w * 0.24f, w * 0.09f, 0.34f))) {
+                    val banda = Path().apply {
+                        moveTo(x0, 0f); lineTo(x0 + ancho, 0f); lineTo(x0 + ancho + w * 1.6f, w * 1.3f); lineTo(x0 + w * 1.6f, w * 1.3f); close()
+                    }
+                    drawPath(banda, Brush.linearGradient(listOf(Color.White.copy(alpha = alfa * fuerza), Color.White.copy(alpha = 0f)),
+                        start = Offset(x0, 0f), end = Offset(x0 + w * 0.9f, w * 0.75f)), blendMode = BlendMode.Screen)
                 }
-                drawPath(brillo, Color.White.copy(alpha = if (a.noche) 0.12f else 0.26f), blendMode = BlendMode.Screen)
-                // Y un brillo más angosto al lado, y la franja apagada entre los dos: el metal no es parejo.
-                drawPath(TrazoDeco.corrido(brillo, w * 0.34f), Color.White.copy(alpha = if (a.noche) 0.06f else 0.14f), blendMode = BlendMode.Screen)
-                drawPath(TrazoDeco.corrido(brillo, w * 0.2f), a.sombra(0.07f))
             }
         }
     }
@@ -411,19 +436,11 @@ internal object MuebleEstanteDeco {
                 val ia = maxOf(ya, piel.top); val ib = minOf(yb, piel.bottom)
                 if (ib > ia) drawRect(a.luz(if (a.lumbre) PaletaDeco.GALUCHAT else mezcla(PaletaDeco.GALUCHAT, PaletaDeco.GALUCHAT_OSC, 0.6f * (1f - k)), k), Offset(piel.left, ia), Size(piel.width, ib - ia))
             }
-            // El grano de la piel: perlas chicas por todo el paño, una sola llamada; claras arriba, sombra abajo.
+            // El grano de la piel: las perlas en baldosa (una sola operación), apagadas con la luz del costado.
             clipRect(piel.left, piel.top, piel.right, piel.bottom) {
-                val puntos = ArrayList<Offset>(220)
                 val paso = maxOf(2.2f * u, piel.width / 9f)
-                var y = piel.top + paso * 0.5f
-                var fila2 = 0
-                while (y < piel.bottom && puntos.size < 1400) {
-                    var x = piel.left + (if (fila2 % 2 == 0) 0f else paso * 0.5f)
-                    while (x < piel.right) { puntos.add(Offset(x + (azar(941 + i, puntos.size) - 0.5f) * paso * 0.5f, y)); x += paso }
-                    y += paso * 0.85f; fila2++
-                }
-                drawPoints(puntos, PointMode.Points, a.claro(0.55f).copy(alpha = if (a.oscuro) 0.12f else 0.5f), paso * 0.5f, StrokeCap.Round)
-                drawPoints(puntos.map { Offset(it.x + paso * 0.12f, it.y + paso * 0.14f) }, PointMode.Points, a.sombra(0.16f), paso * 0.3f, StrokeCap.Round)
+                val kc = if (a.lumbre) cerca(fx, fy(piel.center.y), n, a) else 1f
+                texturaDeco(TexturaDeco.GALUCHAT, piel, a.luz(Color.White, maxOf(kc, 0.15f)), if (a.oscuro) 0.55f else 0.9f)
                 // La estrella: perlas gruesas en rombo, cada tanto a lo alto.
                 val paso2 = maxOf(40f * u, fila * 1.2f)
                 var ye = piel.top + paso2 * 0.5f
@@ -441,6 +458,11 @@ internal object MuebleEstanteDeco {
             drawRect(a.claro(0.3f), Offset(if (luzIzq) p.left else p.right - 1.6f * u, p.top), Size(1.6f * u, p.height))
             drawRect(a.sombra(0.3f), Offset(if (luzIzq) p.right - 2f * u else p.left, p.top), Size(2f * u, p.height))
             if (a.aplique && i == 1) drawRect(a.filo(0.35f), Offset(p.left, p.top), Size(1.4f * u, p.height * 0.5f))
+            if (i == 0 && a.oscuro && !a.noche) for (t in 0 until 6) {
+                val ya = p.top + p.height * t / 6f
+                val kf = frio(a, fx, fy(ya + p.height / 12f))
+                if (kf > 0.02f) drawRect(PaletaDeco.LUNA.copy(alpha = 0.55f * kf), Offset(p.left, ya), Size(1.4f * u, p.height / 6f + 0.6f))
+            }
         }
     }
 
@@ -448,7 +470,7 @@ internal object MuebleEstanteDeco {
      * Una tabla vista por su canto: Macasar con la veta a lo largo, un filete de marfil cerca del borde de arriba y su sombra en
      * el casillero de abajo. De noche, por tramos.
      */
-    private fun DrawScope.tablaDeco(r: Rect, k: Int, a: AireDeco, cerca: (Offset) -> Float) {
+    private fun DrawScope.tablaDeco(r: Rect, k: Int, a: AireDeco, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
         val u = density
         drawRect(a.sombra(if (a.lumbre) 0.4f else 0.26f), Offset(r.left, r.bottom), Size(r.width, 3f * u))
         val tramos = if (a.lumbre) 20 else 1
@@ -471,6 +493,12 @@ internal object MuebleEstanteDeco {
         drawRect(a.luz(PaletaDeco.MARFIL, cerca(r.center)).copy(alpha = 0.85f), Offset(r.left, r.top + r.height * 0.22f), Size(r.width, 1.1f * u))
         drawRect(a.claro(0.35f), r.topLeft, Size(r.width, r.height * 0.16f))
         drawRect(a.sombra(0.28f), Offset(r.left, r.bottom - r.height * 0.22f), Size(r.width, r.height * 0.22f))
+        // De noche, el frío de la escalera roza el canto por la izquierda.
+        if (a.oscuro && !a.noche) for (t in 0 until 5) {
+            val xa = r.left + r.width * 0.12f * t
+            val kf = frio(Offset(xa + r.width * 0.06f, r.top))
+            if (kf > 0.02f) drawRect(PaletaDeco.LUNA.copy(alpha = 0.6f * kf), Offset(xa, r.top), Size(r.width * 0.12f + 0.6f, 1.2f * u))
+        }
     }
 
     /** El rótulo de un mes: una placa de marfil con las esquinas cortadas en escalón y un marco de níquel, atornillada al canto. */
@@ -545,10 +573,17 @@ internal object MuebleEstanteDeco {
         val fy = CORONA + (v.repisa * FILA + ALTO_REPISA.value * 0.55f) / ANCHO_NOMINAL
         val k = if (a.lumbre) cerca(fx, fy, v.repisas, a) else dia(fx, fy) * 0.25f + 0.75f
         val izq = luzIzquierda(a, fx)
-        when (clase(v.semilla)) {
-            0 -> rolloDeco(v, medidor, a, k, izq)
-            1 -> albumDeco(v, medidor, a, k, izq)
-            else -> carpetaDeco(v, medidor, a, k, izq)
+        val tono = tonoDeDiaDeco(v.tono, oscuro)
+        val cuerpo = when (clase(v.semilla)) {
+            0 -> rolloDeco(v, tono, medidor, a, k, izq)
+            1 -> albumDeco(v, tono, medidor, a, k, izq)
+            else -> carpetaDeco(v, tono, medidor, a, k, izq)
+        }
+        // De noche, el frío de la escalera roza el canto izquierdo de los que le quedan cerca (abajo a la izquierda).
+        val kf = frio(a, fx, fy)
+        if (kf > 0.02f) {
+            drawRect(PaletaDeco.LUNA.copy(alpha = 0.6f * kf), cuerpo.topLeft, Size(1.3f * density, cuerpo.height))
+            drawRect(PaletaDeco.LUNA.copy(alpha = 0.14f * kf), cuerpo.topLeft, cuerpo.size, blendMode = BlendMode.Screen)
         }
         // De noche, el calor del aplique en los que le quedan cerca (arriba a la derecha).
         if (a.aplique) {
