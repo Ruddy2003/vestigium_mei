@@ -110,11 +110,13 @@ internal fun DrawScope.casilleroDeco(g: GeoDeco, k: Int, r: Rect, oc: Float?) {
     drawPath(if (izq) derPared else izqPared, a.b(0.12f, if (izq) kd else ki))
     drawPath(izqPared, a.s(0.18f))
     drawPath(derPared, a.s(0.18f))
-    // El marco: el filete de latón del borde del costado, doble, con su ranura oscura en medio.
-    fileteVDeco(g, xa - 3.2f * u, r.top, r.bottom, 3.2f * u, 3)
-    drawRect(a.s(0.5f), Offset(xa - 1.4f * u, r.top), Size(0.7f * u, r.height))
-    fileteVDeco(g, xb, r.top, r.bottom, 3.2f * u, 3)
-    drawRect(a.s(0.5f), Offset(xb + 1.6f * u, r.top), Size(0.7f * u, r.height))
+    // El marco: el filete doble de latón del borde del costado: uno grueso, la ranura de laca y otro fino.
+    fileteVDeco(g, xa - 4.4f * u, r.top, r.bottom, 1.2f * u, 3)
+    drawRect(a.c(MACASAR_NEGRO, ki), Offset(xa - 3.2f * u, r.top), Size(0.8f * u, r.height))
+    fileteVDeco(g, xa - 2.4f * u, r.top, r.bottom, 2.4f * u, 3)
+    fileteVDeco(g, xb, r.top, r.bottom, 2.4f * u, 3)
+    drawRect(a.c(MACASAR_NEGRO, kd), Offset(xb + 2.4f * u, r.top), Size(0.8f * u, r.height))
+    fileteVDeco(g, xb + 3.2f * u, r.top, r.bottom, 1.2f * u, 3)
     val fr = g.fr(Offset(xa, r.center.y))
     if (fr > 0.02f) drawRect(LUNA.copy(alpha = 0.55f * fr), Offset(xa - 2.2f * u, r.top), Size(1.2f * u, r.height))
 }
@@ -135,8 +137,8 @@ internal fun DrawScope.costadosDeco(g: GeoDeco) {
         val cara = if (i == 0) Rect(g.costado, arriba, g.lado - prof - 3.2f * u, abajo) else Rect(w - g.lado + prof + 3.2f * u, arriba, w - g.costado, abajo)
         if (cara.width <= 2f) continue
         macasarDeco(g, cara, 1400 + i * 37, vertical = true, k = 1f, espejo = i == 1)
-        val m = cara.width * 0.17f
-        val piel = Rect(cara.left + m, cara.top + w * 0.05f, cara.right - m, cara.bottom - w * 0.04f)
+        val m = cara.width * 0.15f
+        val piel = Rect(cara.left + m, cara.top + w * 0.055f, cara.right - m, cara.bottom - w * 0.045f)
         if (piel.height > 4f && piel.width > 2f) {
             drawRect(GALUCHAT, piel.topLeft, piel.size)
             texturaDeco(TexturaDeco.GALUCHAT, piel, Color.White, 0.95f)
@@ -153,13 +155,17 @@ internal fun DrawScope.costadosDeco(g: GeoDeco) {
                 }
                 ye += paso
             }
-            // El filete de marfil y el rebaje del marco: sombra arriba a la izquierda, luz abajo a la derecha.
-            drawRect(MARFIL, Offset(piel.left - 1.4f * u, piel.top - 1.4f * u), Size(piel.width + 2.8f * u, 1.4f * u))
-            drawRect(MARFIL, Offset(piel.left - 1.4f * u, piel.top), Size(1.4f * u, piel.height))
-            drawRect(MARFIL, Offset(piel.right, piel.top), Size(1.4f * u, piel.height))
-            drawRect(MARFIL, Offset(piel.left - 1.4f * u, piel.bottom), Size(piel.width + 2.8f * u, 1.4f * u))
-            drawRect(a.s(0.3f), piel.topLeft, Size(piel.width, 2f * u))
-            drawRect(a.s(0.22f), piel.topLeft, Size(2f * u, piel.height))
+            // El marco de la piel: un filete de marfil y, por fuera, otro de latón; el rebaje en sombra arriba y a la izquierda.
+            val f1 = 1.2f * u; val f2 = 1.8f * u
+            drawRect(MARFIL, Offset(piel.left - f1, piel.top - f1), Size(piel.width + 2 * f1, f1))
+            drawRect(MARFIL, Offset(piel.left - f1, piel.top), Size(f1, piel.height))
+            drawRect(MARFIL, Offset(piel.right, piel.top), Size(f1, piel.height))
+            drawRect(MARFIL, Offset(piel.left - f1, piel.bottom), Size(piel.width + 2 * f1, f1))
+            val lat = Rect(piel.left - f1 - f2 - 0.8f * u, piel.top - f1 - f2 - 0.8f * u, piel.right + f1 + f2 + 0.8f * u, piel.bottom + f1 + f2 + 0.8f * u)
+            drawRect(LATON, lat.topLeft, lat.size, style = Stroke(f2))
+            drawRect(LATON_LUZ, Offset(lat.left - f2 / 2, lat.top - f2 / 2), Size(lat.width + f2, f2 * 0.4f))
+            drawRect(a.s(0.35f), piel.topLeft, Size(piel.width, 2.4f * u))
+            drawRect(a.s(0.25f), piel.topLeft, Size(2.4f * u, piel.height))
         }
         // El canto de fuera: claro si mira a la luz.
         val luzFuera = (i == 0) == g.izq(cara.center)
@@ -203,12 +209,13 @@ internal fun DrawScope.tablaDeco(g: GeoDeco, k: Int, r: Rect) {
     val a = g.a; val u = g.u; val w = g.w
     val prof = w * PROFUNDO_DECO
     val t = Rect(g.lado - prof - 3.2f * u, r.top, w - g.lado + prof + 3.2f * u, r.bottom)
-    macasarDeco(g, t, 1500 + k * 13, vertical = false, k = 1f)
-    drawRect(a.s(0.3f), Offset(t.left, t.bottom - t.height * 0.25f), Size(t.width, t.height * 0.25f))
+    macasarDeco(g, t, 1500 + k * 13, vertical = false, k = 1f, veta = 0.6f)
     veloDeco(g, t, MACASAR, vertical = false, paso = w / 14f)
-    fileteDeco(g, t.left, t.right, t.top, 2.4f * u, 8)
-    fileteDeco(g, t.left, t.right, t.top + 4f * u, 1f * u, 8, LATON_OSC)
-    fileteDeco(g, t.left, t.right, t.bottom - 2.4f * u, 2.4f * u, 8)
+    // El filete doble de arriba (el marco del casillero de abajo) y el de abajo (el del de arriba), con su ranura.
+    fileteDeco(g, t.left, t.right, t.top, 2.6f * u, 8)
+    fileteDeco(g, t.left, t.right, t.top + 4.2f * u, 1.2f * u, 8)
+    fileteDeco(g, t.left, t.right, t.bottom - 5.4f * u, 1.2f * u, 8)
+    fileteDeco(g, t.left, t.right, t.bottom - 2.6f * u, 2.6f * u, 8)
     val kf = g.fr(Offset(t.left, t.top))
     if (kf > 0.02f) drawRect(LUNA.copy(alpha = 0.55f * kf), Offset(t.left, t.top), Size(t.width * 0.4f, 1.2f * u))
 }
@@ -239,25 +246,27 @@ internal fun DrawScope.rotuloDeco(g: GeoDeco, p: PlacaEstante, medidor: TextMeas
 // ---------------------------------------------------------------- la cornisa
 
 /**
- * La cornisa escalonada: la losa de arriba, que vuela, con su cara de arriba vista y el canto con veta y filete de latón;
- * debajo, una grada más metida con su filete; y el friso del ancho del cuerpo, de Macasar casi negro con una greca
- * escalonada de marfil embutida. Cada grada deja su sombra en la de abajo y la losa, en la primera repisa.
+ * La cornisa escalonada, rotunda: la losa de arriba, que vuela sobre todo el mueble, con su cara de arriba vista, el canto de
+ * laca con su reflejo y su filete doble de latón; debajo, dos gradas, cada una más metida, con su filete y la sombra que le
+ * echa la de encima; y el friso del ancho del cuerpo, de laca casi negra con una greca escalonada de marfil embutida. La
+ * cornisa entera echa su sombra honda en la primera repisa.
  */
 internal fun DrawScope.cornisaDeco(g: GeoDeco) {
     val a = g.a; val u = g.u; val w = g.w
     val y0 = g.cornisaArriba
-    val losa = Rect(w * 0.004f, y0, w * 0.996f, y0 + g.losa)
-    val grada = Rect(w * 0.012f, losa.bottom, w * 0.988f, losa.bottom + g.grada)
-    val friso = Rect(g.costado, grada.bottom, w - g.costado, g.ch)
+    val losa = Rect(0f, y0, w, y0 + g.losa)
+    val grada = Rect(w * 0.007f, losa.bottom, w * 0.993f, losa.bottom + g.grada)
+    val grada2 = Rect(w * 0.012f, grada.bottom, w * 0.988f, grada.bottom + g.grada2)
+    val friso = Rect(g.costado, grada2.bottom, w - g.costado, g.ch)
     // La sombra de la cornisa en la primera repisa.
-    drawRect(a.s(if (a.oscuro) 0.5f else 0.36f), Offset(0f, g.ch), Size(w, 4f * u))
-    drawRect(a.s(0.16f), Offset(0f, g.ch + 4f * u), Size(w, 8f * u))
+    drawRect(a.s(if (a.oscuro) 0.6f else 0.45f), Offset(0f, g.ch), Size(w, 6f * u))
+    drawRect(a.s(0.25f), Offset(0f, g.ch + 6f * u), Size(w, 10f * u))
+    drawRect(a.s(0.1f), Offset(0f, g.ch + 16f * u), Size(w, 18f * u))
     // El friso, con la greca de marfil.
-    macasarDeco(g, friso, 1601, vertical = false, k = 1f, brillo = false)
-    drawRect(a.c(MACASAR_NEGRO, 1f).copy(alpha = 0.55f), friso.topLeft, friso.size)
+    macasarDeco(g, friso, 1601, vertical = false, k = 1f, brillo = false, veta = 0.4f)
     val greca = Path()
-    val alto = friso.height * 0.5f
-    val base = friso.top + friso.height * 0.75f
+    val alto = friso.height * 0.46f
+    val base = friso.top + friso.height * 0.74f
     val motivo = maxOf(6f * u, w * 0.06f)
     var x = friso.left + motivo * 0.3f
     while (x < friso.right - motivo * 0.3f) {
@@ -270,29 +279,34 @@ internal fun DrawScope.cornisaDeco(g: GeoDeco) {
         x += motivo
     }
     clipRect(friso.left, friso.top, friso.right, friso.bottom) {
-        drawPath(TrazoDeco.corrido(greca, 0.8f * u, 0.8f * u), a.s(0.5f), style = Stroke(1.2f * u))
-        drawPath(greca, MARFIL, style = Stroke(1.3f * u))
+        drawPath(TrazoDeco.corrido(greca, 0.8f * u, 0.8f * u), a.s(0.6f), style = Stroke(1.4f * u))
+        drawPath(greca, MARFIL, style = Stroke(1.5f * u))
     }
     veloDeco(g, friso, MACASAR_NEGRO, vertical = false, paso = w / 12f)
-    fileteDeco(g, friso.left, friso.right, friso.bottom - 1.6f * u, 1.6f * u, 8)
-    // La grada, con su filete y su sombra sobre el friso.
-    macasarDeco(g, grada, 1611, vertical = false, k = 1f)
-    veloDeco(g, grada, MACASAR, vertical = false, paso = w / 12f)
-    drawRect(a.s(0.4f), Offset(grada.left, grada.bottom), Size(grada.width, 2.5f * u))
-    fileteDeco(g, grada.left, grada.right, grada.bottom - 2f * u, 2f * u, 8)
-    // La losa: la cara de arriba vista, el canto con su veta, su brillo de laca y su filete; y su sombra en la grada.
-    val cara = Rect(losa.left, losa.top - g.cara, losa.right, losa.top)
-    macasarDeco(g, cara, 1621, vertical = false, k = 1f, brillo = false)
-    drawRect(a.c(mezcla(MACASAR_MIEL, MARFIL, 0.2f), 1f).copy(alpha = 0.3f), cara.topLeft, cara.size)
-    veloDeco(g, cara, MACASAR, vertical = false, paso = w / 12f)
-    macasarDeco(g, losa, 1631, vertical = false, k = 1f)
+    fileteDeco(g, friso.left, friso.right, friso.top + 3f * u, 1.2f * u, 8)
+    fileteDeco(g, friso.left, friso.right, friso.bottom - 2.2f * u, 2.2f * u, 8)
+    // Las dos gradas, de abajo arriba: laca con su reflejo, su filete y la sombra de la de encima.
+    for ((r, sem) in listOf(grada2 to 1611, grada to 1612)) {
+        drawRect(a.s(0.5f), Offset(r.left, r.bottom), Size(r.width, 3f * u))
+        macasarDeco(g, r, sem, vertical = false, k = 1f, veta = 0.5f)
+        veloDeco(g, r, MACASAR, vertical = false, paso = w / 12f)
+        fileteDeco(g, r.left, r.right, r.bottom - 2f * u, 2f * u, 8)
+        drawRect(a.s(0.45f), r.topLeft, Size(r.width, 2.6f * u))
+    }
+    // La losa: el canto de laca, su filete doble y la cara de arriba vista.
+    drawRect(a.s(0.5f), Offset(losa.left, losa.bottom), Size(losa.width, 4f * u))
+    macasarDeco(g, losa, 1631, vertical = false, k = 1f, veta = 0.5f)
     veloDeco(g, losa, MACASAR, vertical = false, paso = w / 12f)
-    drawRect(a.s(0.45f), Offset(losa.left, losa.bottom), Size(losa.width, 3f * u))
-    drawRect(a.b(0.5f), Offset(losa.left, losa.top), Size(losa.width, 1.2f * u))
-    fileteDeco(g, losa.left, losa.right, losa.bottom - 2.4f * u, 2.4f * u, 8)
-    drawRect(a.s(0.35f), Offset(cara.left, cara.top), Size(cara.width, 0.8f * u))
+    drawRect(a.b(0.55f), Offset(losa.left, losa.top), Size(losa.width, 1.4f * u))
+    fileteDeco(g, losa.left, losa.right, losa.bottom - 6f * u, 1.2f * u, 8)
+    fileteDeco(g, losa.left, losa.right, losa.bottom - 3f * u, 3f * u, 8)
+    val cara = Rect(losa.left, losa.top - g.cara, losa.right, losa.top)
+    macasarDeco(g, cara, 1621, vertical = false, k = 1f, brillo = false, veta = 0.5f)
+    drawRect(a.b(0.12f), Offset(cara.left, cara.top + cara.height * 0.3f), Size(cara.width, cara.height * 0.4f))
+    veloDeco(g, cara, MACASAR, vertical = false, paso = w / 12f)
+    drawRect(a.s(0.4f), Offset(cara.left, cara.top), Size(cara.width, 1f * u))
     // Un cerco de vaso en la cara de arriba.
-    drawOval(a.s(0.16f), Offset(w * 0.86f, cara.top + cara.height * 0.15f), Size(w * 0.05f, cara.height * 0.7f), style = Stroke(0.8f * u))
+    drawOval(a.b(0.18f), Offset(w * 0.86f, cara.top + cara.height * 0.15f), Size(w * 0.05f, cara.height * 0.7f), style = Stroke(0.8f * u))
 }
 
 // ---------------------------------------------------------------- el pie
@@ -310,20 +324,21 @@ internal fun DrawScope.pieDeco(g: GeoDeco) {
     sueloDeco(g)
     // El cuerpo de los cajones.
     val cuerpo = Rect(g.costado, pie, w - g.costado, g.cajones - w * 0.03f)
-    macasarDeco(g, cuerpo, 1701, vertical = false, k = 1f)
+    macasarDeco(g, cuerpo, 1701, vertical = false, k = 1f, veta = 0.35f)
     val mitad = cuerpo.center.x
     for (i in 0 until 2) {
         val frente = Rect(if (i == 0) cuerpo.left + w * 0.03f else mitad + w * 0.01f, cuerpo.top + w * 0.025f,
             if (i == 0) mitad - w * 0.01f else cuerpo.right - w * 0.03f, cuerpo.bottom - w * 0.018f)
         if (frente.width <= 2f || frente.height <= 2f) continue
-        // El marco biselado: el rebaje en sombra arriba y a un lado, en luz abajo y al otro.
-        drawRect(a.s(0.45f), Offset(frente.left - 2f * u, frente.top - 2f * u), Size(frente.width + 4f * u, frente.height + 4f * u))
-        macasarDeco(g, frente, 1711 + i, vertical = false, k = 1f, espejo = i == 1)
-        drawRect(a.b(0.4f), Offset(frente.left, frente.top), Size(frente.width, 1.2f * u))
-        drawRect(a.s(0.35f), Offset(frente.left, frente.bottom - 1.6f * u), Size(frente.width, 1.6f * u))
-        drawRect(a.s(0.3f), Offset(frente.right - 1.6f * u, frente.top), Size(1.6f * u, frente.height))
-        drawRect(MARFIL.copy(alpha = 0.85f), Offset(frente.left + 3f * u, frente.top + 3f * u), Size(frente.width - 6f * u, 1f * u))
-        drawRect(MARFIL.copy(alpha = 0.85f), Offset(frente.left + 3f * u, frente.bottom - 4f * u), Size(frente.width - 6f * u, 1f * u))
+        // El marco: el rebaje en sombra, el frente de laca con su reflejo y un filete doble de latón alrededor.
+        drawRect(a.s(0.5f), Offset(frente.left - 2.4f * u, frente.top - 2.4f * u), Size(frente.width + 4.8f * u, frente.height + 4.8f * u))
+        macasarDeco(g, frente, 1711 + i, vertical = false, k = 1f, espejo = i == 1, veta = 0.3f)
+        drawRect(a.b(0.45f), Offset(frente.left, frente.top), Size(frente.width, 1.2f * u))
+        drawRect(a.s(0.35f), Offset(frente.right - 1.6f * u, frente.top), Size(1.6f * u, frente.height))
+        drawRect(LATON, Rect(frente.left + 3f * u, frente.top + 3f * u, frente.right - 3f * u, frente.bottom - 3f * u).topLeft,
+            Size(frente.width - 6f * u, frente.height - 6f * u), style = Stroke(1.6f * u))
+        drawRect(LATON.copy(alpha = 0.75f), Offset(frente.left + 6f * u, frente.top + 6f * u), Size(frente.width - 12f * u, frente.height - 12f * u), style = Stroke(0.8f * u))
+        drawRect(LATON_LUZ, Offset(frente.left + 2.2f * u, frente.top + 2.2f * u), Size(frente.width - 4.4f * u, 0.7f * u))
     }
     drawRect(a.s(0.3f), Offset(cuerpo.left, cuerpo.top), Size(cuerpo.width, 4f * u))
     veloDeco(g, cuerpo, MACASAR, vertical = false, paso = w / 10f)
@@ -334,8 +349,10 @@ internal fun DrawScope.pieDeco(g: GeoDeco) {
         val k = g.k(Offset(cx, cy))
         val largo = w * 0.12f
         drawRect(a.s(0.4f), Offset(cx - largo / 2 + 2f * u, cy + 2f * u), Size(largo, w * 0.012f))
-        drawRoundRectDeco(a.c(LATON, k), Rect(cx - largo / 2, cy - w * 0.006f, cx + largo / 2, cy + w * 0.006f), w * 0.006f)
-        drawRect(a.c(LATON_LUZ, k), Offset(cx - largo / 2 + w * 0.006f, cy - w * 0.004f), Size(largo - w * 0.012f, w * 0.003f))
+        drawRoundRectDeco(a.c(LATON_OSC, k), Rect(cx - largo / 2, cy - w * 0.0075f, cx + largo / 2, cy + w * 0.0075f), w * 0.0075f)
+        drawRoundRectDeco(a.c(LATON, k), Rect(cx - largo / 2, cy - w * 0.0075f, cx + largo / 2, cy + w * 0.003f), w * 0.006f)
+        drawRect(a.c(LATON_LUZ, k), Offset(cx - largo / 2 + w * 0.006f, cy - w * 0.005f), Size(largo - w * 0.012f, w * 0.0035f))
+        destelloDeco(a, Offset(cx - largo * 0.25f, cy - w * 0.0035f), 1.3f * u, k)
         for (s in listOf(-1f, 1f)) {
             val ro = Offset(cx + s * largo / 2, cy)
             drawCircle(a.c(LATON_OSC, k), w * 0.011f, ro)

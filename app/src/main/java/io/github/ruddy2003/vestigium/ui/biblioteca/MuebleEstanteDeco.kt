@@ -28,26 +28,27 @@ import kotlin.math.sqrt
 // =====================================================================
 
 /**
- * La paleta del club. El ébano de Macasar del armario (casi negro, con sus vetas rojizas y de miel), el latón de los filetes y
- * los herrajes, el níquel del brazo del gramófono, el galuchat verde pálido de los costados, el marfil de los filetes y las
- * etiquetas, el papel pintado color champán con sus abanicos, el terciopelo azul petróleo del fondo de los casilleros, el
- * granate del gramófono, el terrazo del suelo y las luces: la llama del aplique, el alba rosa de la escalera y el frío de la
- * calle. Lo cálido (Macasar, latón, champán, granate) y lo frío (petróleo, galuchat, níquel) van juntos.
+ * La paleta del club. El ébano de Macasar del armario, lacado: casi negro cálido, con la veta rojiza que apenas asoma y el
+ * brillo largo de la laca; el latón de los filetes dobles y los herrajes, el níquel del brazo del gramófono, el galuchat
+ * verde celadón de los costados con su grano, el marfil de los filetes y las etiquetas, el papel pintado oro viejo con sus
+ * abanicos, el terciopelo azul petróleo del fondo de los casilleros, el granate del gramófono, el terrazo del suelo y las
+ * luces: la llama del aplique, el alba rosa de la escalera y el frío de la calle. Lo cálido (Macasar, latón, oro viejo,
+ * granate) y lo frío (petróleo, galuchat, níquel) van juntos.
  */
 internal object PaletaDeco {
-    val MACASAR = Color(0xFF5A321D)
-    val MACASAR_NEGRO = Color(0xFF1E100A)
-    val MACASAR_MIEL = Color(0xFFC0803F)
+    val MACASAR = Color(0xFF2B1810)
+    val MACASAR_NEGRO = Color(0xFF110906)
+    val MACASAR_MIEL = Color(0xFF8A3F1F)
     val LATON = Color(0xFFCDA34A)
     val LATON_LUZ = Color(0xFFF4DE98)
     val LATON_OSC = Color(0xFF7C5A1A)
     val NIQUEL = Color(0xFFC6CBCD)
     val NIQUEL_OSC = Color(0xFF5B6366)
-    val GALUCHAT = Color(0xFFB0C7B1)
-    val GALUCHAT_OSC = Color(0xFF6C8B77)
+    val GALUCHAT = Color(0xFF7FAE95)
+    val GALUCHAT_OSC = Color(0xFF4E7A63)
     val MARFIL = Color(0xFFF0E6CB)
-    val PAPEL = Color(0xFFDDB674)
-    val PAPEL_OSC = Color(0xFFA07A3C)
+    val PAPEL = Color(0xFFC6914A)
+    val PAPEL_OSC = Color(0xFF8A5E28)
     val TERCIOPELO = Color(0xFF1D4762)
     val TERCIOPELO_OSC = Color(0xFF0E283A)
     val GRANATE = Color(0xFF7C1F2B)
@@ -147,11 +148,12 @@ internal class GeoDeco(d: DisposicionEstante, val w: Float, val h: Float, val u:
     val lado = w * MuebleEstanteDeco.LADO
     val costado = w * MuebleEstanteDeco.COSTADO
     /** La cornisa escalonada: lo alto de cada grada, de arriba abajo, y dónde apoyan los objetos de encima. */
-    val losa = w * 0.036f
-    val grada = w * 0.02f
-    val friso = w * 0.042f
-    val cara = w * 0.022f
-    val cornisaArriba = ch - friso - grada - losa
+    val losa = w * 0.042f
+    val grada = w * 0.024f
+    val grada2 = w * 0.018f
+    val friso = w * 0.05f
+    val cara = w * 0.024f
+    val cornisaArriba = ch - friso - grada2 - grada - losa
     val apoyo = cornisaArriba - cara * 0.45f
     /** El pie: lo alto de los cajones, de las patas y dónde empieza el suelo. */
     val pie = d.base.top
@@ -175,16 +177,19 @@ internal class GeoDeco(d: DisposicionEstante, val w: Float, val h: Float, val u:
 /**
  * El dibujo del estante del diario de Art déco (lo usa `EstanteDeco`, en `BibliotecaContemporanea.kt`): el armario de partituras
  * del club de sótano de Harlem donde toca Lou, el pianista de su «otra vida», hacia 1926. Es un armario de ebanista, de ébano de
- * Macasar chapeado en libro con su veta rojiza y de miel y su brillo de goma laca: cornisa escalonada con filetes de latón y un
- * friso de greca de marfil, costados forrados de galuchat con su filete de marfil y su capitel de latón, cada casillero con
- * su marco biselado, su filete de latón, el canto interior del costado y el fondo de terciopelo azul petróleo; abajo, dos cajones
- * con tiradores y bocallaves de latón, el zócalo escalonado y las patas con zapata de latón sobre un terrazo con abanico de
- * latón embutido. Detrás, el papel pintado color champán con abanicos y la moldura escalonada del techo. Sin ventana: es un
- * sótano; de día la luz baja por la escalera de la calle, fuera del cuadro arriba a la izquierda; de noche arde el aplique de
- * abanico de vidrio esmerilado y tiñe la pared. Encima, el bodegón: el gramófono portátil abierto (el protagonista), los discos
- * en sus fundas, el metrónomo, la taza (en la Ley Seca, lo de la taza no siempre era café), la hoja pautada que cuelga del canto
- * y la trompeta colgada de su clavija. En los huecos, discos de canto, la sordina, la caja de cañas, la lata de agujas, el
- * cenicero, el rollo de partituras y las escobillas. Al pie, la pila de discos y el estuche de la trompeta, cortado por el borde.
+ * Macasar lacado, casi negro, con la veta rojiza que apenas asoma y el reflejo largo de la laca: cornisa rotunda de tres gradas
+ * con filetes de latón y un friso de greca de marfil, costados de galuchat con su grano, su filete de marfil, su marco y su
+ * capitel de latón, tablas gruesas, cada casillero con su filete doble de latón, el canto interior del costado y el fondo de
+ * terciopelo azul petróleo; abajo, dos cajones de laca con filete doble, tiradores y bocallaves de latón, el zócalo escalonado y
+ * las patas con zapata de latón sobre un terrazo con abanico de latón embutido. Detrás, el papel pintado oro viejo con abanicos
+ * en un entrepaño con su moldura dorada, la moldura escalonada del techo y, entre las patas, el zócalo de laca. Sin ventana: es
+ * un sótano; de día la luz baja por la escalera de la calle, fuera del cuadro arriba a la izquierda; de noche arde el aplique de
+ * abanico de vidrio esmerilado y tiñe la pared; en los Sueños en oscuro, el haz de la calle ([haz]) cruza la pared y el mueble
+ * en diagonal. Encima, el bodegón: el gramófono portátil abierto (el protagonista), los discos en sus fundas, el metrónomo, la
+ * taza (en la Ley Seca, lo de la taza no siempre era café), la hoja pautada que cuelga del canto y la trompeta colgada de su
+ * clavija. En los huecos, de una repisa a otra sin repetirse: discos de pie con sus fundas de color, el sifón, el cenicero de
+ * cristal, las partituras atadas, las baquetas y las escobillas en su lata, el clarinete, la coctelera y la copa. Al pie, el
+ * taburete del piano, la pila de discos y el estuche de la trompeta, cortados por los bordes.
  * De noche, además del aplique, baja por la izquierda el frío de la escalera ([frio]) y roza cantos y metal. Las entradas son la
  * caja del rollo de pianola, el álbum de discos y la carpeta de partituras, con el color de día del ánimo ([tonoDeDiaDeco]).
  * Distinto del Ideario, que es el casillero de laca negra de la recepción de un hotel. El mueble está en
@@ -197,11 +202,11 @@ internal object MuebleEstanteDeco {
 
     // ---------------------------------------------------------------- las medidas
 
-    const val CORONA = 0.64f
+    const val CORONA = 0.7f
     const val BASE = 0.46f
-    const val LADO = 0.088f
+    const val LADO = 0.1f
     val ALTO_REPISA: Dp = 112.dp
-    val TABLA: Dp = 16.dp
+    val TABLA: Dp = 20.dp
     val SEPARA: Dp = 3.dp
 
     fun ancho(palabras: Int): Dp = (26 + (palabras / 34).coerceAtMost(20)).dp
@@ -224,7 +229,7 @@ internal object MuebleEstanteDeco {
     /** El ancho con que un volumen pasa su repisa a anchos del mueble (no sabe cuánto mide el estante): el de un teléfono. */
     internal const val ANCHO_NOMINAL = 380f
     /** Una repisa con su tabla, en dp. */
-    internal const val FILA = 128f
+    internal const val FILA = 132f
     /** Lo que asoma la pared a cada lado del armario, en anchos. */
     internal const val COSTADO = 0.016f
     /** El aplique de abanico, en anchos (el medio del vidrio). */
@@ -246,9 +251,25 @@ internal object MuebleEstanteDeco {
     /** Cuánto alumbra la escalera (el alba o el frío de la calle) un punto a [dx], [dy] de ella. */
     fun alcancePuerta(dx: Float, dy: Float): Float = (1.25f * exp(-2.5f * sqrt(dx * dx + dy * dy * 0.8f))).coerceIn(0.04f, 1f)
 
-    /** La luz que llega a un punto en anchos: el frío de la calle en los Sueños en oscuro; al alba, la mayor; de noche, el aplique. */
+    /**
+     * El haz de la calle en los Sueños en oscuro: la luz del farol entra por la puerta de la escalera, arriba a la izquierda, y
+     * cae en una banda en diagonal hacia abajo a la derecha: cruza la pared, toca el gramófono y la primera repisa y se apaga
+     * con la hondura. Da de 0 a 1 en un punto en anchos; el borde es blando.
+     */
+    fun haz(fx: Float, fy: Float): Float {
+        val medio = HAZ_X + HAZ_SESGO * fy
+        val borde = ((HAZ_MEDIO_ANCHO - kotlin.math.abs(fx - medio)) / 0.07f).coerceIn(0f, 1f)
+        return borde * exp(-0.85f * fy)
+    }
+
+    /** El haz: dónde cruza la línea de arriba, cuánto se corre por cada ancho que baja y la mitad de su ancho, en anchos. */
+    internal const val HAZ_X = 0.08f
+    internal const val HAZ_SESGO = 0.5f
+    internal const val HAZ_MEDIO_ANCHO = 0.17f
+
+    /** La luz que llega a un punto en anchos: el haz de la calle en los Sueños en oscuro; al alba, la mayor; de noche, el aplique. */
     fun cerca(fx: Float, fy: Float, a: AireDeco): Float = when {
-        a.luna -> alcancePuerta(fx - PUERTA_X, fy - PUERTA_Y)
+        a.luna -> maxOf(0.05f, 0.95f * haz(fx, fy))
         a.alba -> maxOf(0.75f * alcanceAplique(fx - APL_X, fy - APL_Y), alcancePuerta(fx - PUERTA_X, fy - PUERTA_Y))
         else -> alcanceAplique(fx - APL_X, fy - APL_Y)
     }
@@ -368,11 +389,11 @@ internal fun DrawScope.fileteVDeco(g: GeoDeco, x: Float, y0: Float, y1: Float, g
 }
 
 /**
- * Un paño de Macasar en [r]: el fondo pardo rojizo, las vetas a rayas de verdad (bandas negras y de miel que ondulan, en
- * espejo de un paño al otro si va chapeado en libro), y el brillo largo de la goma laca. [vertical] dice cómo corre la veta.
- * [k] es la luz que le llega.
+ * Un paño de Macasar lacado en [r]: el fondo casi negro cálido, la veta rojiza que apenas asoma bajo la laca (bandas que
+ * ondulan, en espejo de un paño al otro si va chapeado en libro) y los reflejos largos de la laca: uno ancho y tenue, otro
+ * fino y franco, y el lado que se cierra en sombra. [vertical] dice cómo corre la veta. [k] es la luz que le llega.
  */
-internal fun DrawScope.macasarDeco(g: GeoDeco, r: Rect, semilla: Int, vertical: Boolean, k: Float, espejo: Boolean = false, brillo: Boolean = true) {
+internal fun DrawScope.macasarDeco(g: GeoDeco, r: Rect, semilla: Int, vertical: Boolean, k: Float, espejo: Boolean = false, brillo: Boolean = true, veta: Float = 1f) {
     if (r.width <= 0.5f || r.height <= 0.5f) return
     val a = g.a
     drawRect(a.c(PaletaDeco.MACASAR, k), r.topLeft, r.size)
@@ -395,17 +416,20 @@ internal fun DrawScope.macasarDeco(g: GeoDeco, r: Rect, semilla: Int, vertical: 
         camino.lineTo(b3.x, b3.y); camino.cubicTo(b2.x, b2.y, b1.x, b1.y, b0.x, b0.y); camino.close()
     }
     clipRect(r.left, r.top, r.right, r.bottom) {
-        drawPath(negras, a.c(PaletaDeco.MACASAR_NEGRO, k).copy(alpha = 0.72f))
-        drawPath(miel, a.c(PaletaDeco.MACASAR_MIEL, k).copy(alpha = 0.55f))
+        drawPath(negras, a.c(PaletaDeco.MACASAR_NEGRO, k).copy(alpha = 0.6f * veta))
+        drawPath(miel, a.c(PaletaDeco.MACASAR_MIEL, k).copy(alpha = 0.3f * veta))
         if (brillo) {
-            // El brillo de la goma laca: dos franjas largas, una ancha y tenue, otra fina.
+            // Los reflejos de la laca: una franja ancha y tenue, otra fina y franca, y el lado que se cierra en sombra.
             if (vertical) {
-                val x1 = r.left + r.width * (0.12f + 0.2f * azar(semilla, 1))
-                drawRect(a.b(0.1f, k), Offset(x1, r.top), Size(r.width * 0.18f, r.height))
-                drawRect(a.b(0.14f, k), Offset(x1 + r.width * 0.05f, r.top), Size(r.width * 0.04f, r.height))
+                val x1 = r.left + r.width * (0.1f + 0.16f * azar(semilla, 1))
+                drawRect(a.b(0.09f, k), Offset(x1, r.top), Size(r.width * 0.22f, r.height))
+                drawRect(a.b(0.2f, k), Offset(x1 + r.width * 0.06f, r.top), Size(r.width * 0.05f, r.height))
+                drawRect(a.b(0.06f, k), Offset(r.left + r.width * 0.6f, r.top), Size(r.width * 0.08f, r.height))
+                drawRect(a.s(0.3f), Offset(r.right - r.width * 0.12f, r.top), Size(r.width * 0.12f, r.height))
             } else {
-                drawRect(a.b(0.1f, k), Offset(r.left, r.top + r.height * 0.12f), Size(r.width, r.height * 0.24f))
-                drawRect(a.b(0.16f, k), Offset(r.left, r.top + r.height * 0.18f), Size(r.width, r.height * 0.07f))
+                drawRect(a.b(0.09f, k), Offset(r.left, r.top + r.height * 0.1f), Size(r.width, r.height * 0.3f))
+                drawRect(a.b(0.2f, k), Offset(r.left, r.top + r.height * 0.18f), Size(r.width, r.height * 0.08f))
+                drawRect(a.s(0.3f), Offset(r.left, r.bottom - r.height * 0.2f), Size(r.width, r.height * 0.2f))
             }
         }
     }

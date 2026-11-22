@@ -7,6 +7,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -42,15 +43,24 @@ private fun zonasPared(g: GeoDeco): List<Rect> = listOf(
 )
 
 /**
- * La pared: papel pintado color champán con su dibujo de abanicos en oro viejo (una baldosa repetida), la luz de la escalera
- * arriba a la izquierda, la moldura escalonada de yeso del techo con su filete de latón y su sombra, y el riel de colgar. De
- * noche, la pared se hunde en su propio color con la distancia al aplique (un solo degradado) y el aplique la tiñe de llama;
- * al alba, el rosa baja por la escalera; con la calle, el frío.
+ * La pared: papel pintado oro viejo con su dibujo de abanicos (una baldosa repetida) en un entrepaño con su moldura dorada,
+ * la luz de la escalera arriba a la izquierda, la moldura escalonada de yeso del techo con su filete de latón y su sombra, el
+ * riel de colgar y, abajo, entre las patas, el zócalo de laca oscura con su filete. De noche, la pared se hunde en su propio
+ * color con la distancia al aplique (un solo degradado) y el aplique la tiñe de llama; al alba, el rosa baja por la
+ * escalera; en los Sueños en oscuro, el haz de la calle la cruza en diagonal.
  */
 internal fun DrawScope.paredDeco(g: GeoDeco) {
     val a = g.a; val w = g.w; val u = g.u
-    for (r in zonasPared(g)) {
+    val zonas = zonasPared(g)
+    for ((i, r) in zonas.withIndex()) {
         if (r.width <= 0.5f || r.height <= 0.5f) continue
+        if (i == zonas.size - 1) {
+            // El zócalo de laca, entre las patas.
+            macasarDeco(g, r, 1801, vertical = false, k = 1f, veta = 0.3f)
+            veloDeco(g, r, PaletaDeco.MACASAR, vertical = false, paso = w / 10f)
+            fileteDeco(g, 0f, w, r.top + w * 0.02f, 1.6f * u, 6)
+            continue
+        }
         clipRect(r.left, r.top, r.right, r.bottom) {
             drawRect(Brush.linearGradient(listOf(mezcla(PAPEL, MARFIL, 0.45f), PAPEL, mezcla(PAPEL, PaletaDeco.PAPEL_OSC, 0.55f)),
                 start = Offset(0f, 0f), end = Offset(w, w * 1.1f)), r.topLeft, r.size)
@@ -73,6 +83,14 @@ internal fun DrawScope.paredDeco(g: GeoDeco) {
     drawRect(a.b(0.35f), Offset(0f, m2), Size(w, 1f * u))
     drawRect(a.s(0.2f), Offset(0f, m1 - 1.2f * u), Size(w, 1.2f * u))
     fileteDeco(g, 0f, w, m3, 2f * u, 8)
+    // El entrepaño: una moldura dorada de dos filetes que enmarca el papel, de lado a lado y hasta la cornisa.
+    val ep = Rect(w * 0.03f, w * 0.105f, w * 0.97f, g.cornisaArriba + 2f * u)
+    for ((d, gr) in listOf(0f to 2.2f * u, 5f * u to 1f * u)) {
+        fileteDeco(g, ep.left + d, ep.right - d, ep.top + d, gr, 8, LATON_OSC)
+        fileteVDeco(g, ep.left + d, ep.top + d, ep.bottom, gr, 6, LATON_OSC)
+        fileteVDeco(g, ep.right - d - gr, ep.top + d, ep.bottom, gr, 6, LATON_OSC)
+    }
+    drawRect(a.s(0.25f), Offset(ep.left + 2.2f * u, ep.top + 2.2f * u), Size(ep.width - 4.4f * u, 2f * u))
     drawRect(a.s(0.22f), Offset(0f, m3 + 3f * u), Size(w, w * 0.012f))
     drawRect(a.s(0.1f), Offset(0f, m3 + 3f * u + w * 0.012f), Size(w, w * 0.014f))
     // El riel de colgar, de latón, un poco más abajo.
@@ -94,7 +112,8 @@ private fun DrawScope.veloPared(g: GeoDeco, r: Rect) {
         return
     }
     val hondo = a.hondo(PAPEL)
-    val centro = if (a.luna) Offset(w * PUERTA_X, w * PUERTA_Y) else Offset(w * APL_X, w * APL_Y)
+    if (a.luna) { hazEnPared(g, r, hondo); return }
+    val centro = Offset(w * APL_X, w * APL_Y)
     val radio = w * 1.6f
     // Las paradas del degradado: lo que la luz deja ver a cada distancia, con el mismo alcance que el resto del mueble.
     // En la pared, que tiene el aplique encima, la luz cae más deprisa que en el mueble: el charco junto al vidrio, y lejos, oscuro.
@@ -104,10 +123,32 @@ private fun DrawScope.veloPared(g: GeoDeco, r: Rect) {
         f to hondo.copy(alpha = (1f - (1.05f * k).coerceAtMost(0.95f)).coerceIn(0f, 1f))
     }
     drawRect(Brush.radialGradient(*paradas.toTypedArray(), center = centro, radius = radio), r.topLeft, r.size)
-    if (a.aplique) {
-        mancha(centro, w * 0.45f, LLAMA.copy(alpha = 0.34f))
-        mancha(centro, w * 0.2f, LLAMA.copy(alpha = 0.34f))
-    } else mancha(centro, w * 0.9f, PaletaDeco.LUNA.copy(alpha = 0.12f))
+    mancha(centro, w * 0.45f, LLAMA.copy(alpha = 0.34f))
+    mancha(centro, w * 0.2f, LLAMA.copy(alpha = 0.34f))
+}
+
+/**
+ * Los Sueños en oscuro: la pared en la sombra de la madrugada, salvo el haz de la calle, que entra por la puerta de la
+ * escalera y la cruza en diagonal, frío y con el borde blando, cada vez más débil hacia abajo ([MuebleEstanteDeco.haz]).
+ */
+private fun DrawScope.hazEnPared(g: GeoDeco, r: Rect, hondo: Color) {
+    val w = g.w
+    val oscuro = hondo.copy(alpha = 0.9f)
+    fun banda(medio: Float): Path {
+        val alto = r.bottom
+        return TrazoDeco.poligono(
+            (MuebleEstanteDeco.HAZ_X - medio) * w, 0f, (MuebleEstanteDeco.HAZ_X + medio) * w, 0f,
+            (MuebleEstanteDeco.HAZ_X + MuebleEstanteDeco.HAZ_SESGO * alto / w + medio) * w, alto,
+            (MuebleEstanteDeco.HAZ_X + MuebleEstanteDeco.HAZ_SESGO * alto / w - medio) * w, alto)
+    }
+    val fuera = banda(MuebleEstanteDeco.HAZ_MEDIO_ANCHO)
+    val dentro = banda(MuebleEstanteDeco.HAZ_MEDIO_ANCHO - 0.07f)
+    val todo = Path().apply { addRect(r) }
+    // Fuera del haz, oscuro; en su borde, a medias; dentro, la luz que se apaga al bajar.
+    drawPath(Path().apply { op(todo, fuera, PathOperation.Difference) }, oscuro)
+    drawPath(Path().apply { op(fuera, dentro, PathOperation.Difference) }, hondo.copy(alpha = 0.6f))
+    drawPath(dentro, Brush.verticalGradient(listOf(hondo.copy(alpha = 0.12f), hondo.copy(alpha = 0.45f)), startY = 0f, endY = maxOf(1f, r.bottom)))
+    drawPath(dentro, PaletaDeco.LUNA.copy(alpha = 0.16f))
 }
 
 /** La sombra del armario en la pared: de día, a la derecha; de noche, a la izquierda, lejos del aplique. */
@@ -266,5 +307,14 @@ internal fun DrawScope.luzFinalDeco(g: GeoDeco) {
     }
     if (a.oscuro && !a.noche) {
         mancha(Offset(-w * 0.06f, g.py(MuebleEstanteDeco.FRIO_Y)), w * 0.6f, PaletaDeco.LUNA.copy(alpha = 0.07f))
+    }
+    // En los Sueños en oscuro, el haz de la calle sigue sobre el mueble: la cornisa y las primeras repisas, cada vez más débil.
+    if (a.luna) {
+        val y0 = g.cornisaArriba - g.cara; val y1 = minOf(g.pie, g.py(MuebleEstanteDeco.CORONA + 0.9f))
+        if (y1 > y0) for ((medio, alfa) in listOf(MuebleEstanteDeco.HAZ_MEDIO_ANCHO to 0.05f, MuebleEstanteDeco.HAZ_MEDIO_ANCHO - 0.07f to 0.07f)) {
+            fun x(y: Float, s: Float) = (MuebleEstanteDeco.HAZ_X + MuebleEstanteDeco.HAZ_SESGO * g.fy(y) + s * medio) * w
+            drawPath(TrazoDeco.poligono(x(y0, -1f), y0, x(y0, 1f), y0, x(y1, 1f), y1, x(y1, -1f), y1),
+                Brush.verticalGradient(listOf(PaletaDeco.LUNA.copy(alpha = alfa * 1.6f), PaletaDeco.LUNA.copy(alpha = 0f)), startY = y0, endY = y1))
+        }
     }
 }

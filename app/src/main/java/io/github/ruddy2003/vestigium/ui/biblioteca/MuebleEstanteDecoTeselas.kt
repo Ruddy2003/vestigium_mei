@@ -39,13 +39,13 @@ private fun baldosaDeco(lado: Int, pinta: DrawScope.(Offset) -> Unit): ShaderBru
 private val TESELA_GALUCHAT: ShaderBrush by lazy {
     val r = java.util.Random(31)
     val perlas = buildList {
-        for (i in 0 until 8) for (j in 0 until 8) {
-            val x = j * 6f + (if (i % 2 == 0) 0f else 3f) + (r.nextFloat() - 0.5f) * 1.4f
-            val y = i * 6f + (r.nextFloat() - 0.5f) * 1.4f
-            add(Triple(x, y, 1.3f + r.nextFloat() * 0.9f))
+        for (i in 0 until 6) for (j in 0 until 6) {
+            val x = j * 9f + (if (i % 2 == 0) 0f else 4.5f) + (r.nextFloat() - 0.5f) * 2f
+            val y = i * 9f + (r.nextFloat() - 0.5f) * 2f
+            add(Triple(x, y, 2.2f + r.nextFloat() * 1.3f))
         }
     }
-    baldosaDeco(48) { o ->
+    baldosaDeco(54) { o ->
         for ((x, y, rr) in perlas) {
             drawCircle(Color(0xFF2F4A3A).copy(alpha = 0.55f), rr, Offset(o.x + x + 0.9f, o.y + y + 1f))
             drawCircle(Color(0xFFF7F5EA).copy(alpha = 0.85f), rr * 0.82f, Offset(o.x + x, o.y + y))

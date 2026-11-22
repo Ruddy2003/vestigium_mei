@@ -75,10 +75,13 @@ private fun sq(x: Float) = x * x
 internal fun cuerpoDeco(t: Color, sinAnimo: Boolean): Color {
     if (sinAnimo) return t
     val l = 0.3f * t.red + 0.59f * t.green + 0.11f * t.blue
-    fun f(c: Float) = (l + (c - l) * 1.5f).coerceIn(0f, 1f)
+    fun f(c: Float) = (l + (c - l) * 1.8f).coerceIn(0f, 1f)
     val s = Color(f(t.red), f(t.green), f(t.blue), t.alpha)
-    return if (l > 0.78f) mezcla(s, Color(0xFFCDB07A), 0.2f) else s
+    return if (l > 0.75f) mezcla(s, Color(0xFFC59D62), 0.3f) else mezcla(s, Color.Black, 0.06f)
 }
+
+/** Un color más hondo sin perder su tono (multiplica, no mezcla con un pardo que lo agrisa). */
+private fun hondoDe(c: Color, f: Float) = Color(c.red * f, c.green * f, c.blue * f, c.alpha)
 
 /** Qué tan claro es un color (para escribir encima en tinta o en marfil). */
 private fun claridad(c: Color): Float = 0.3f * c.red + 0.59f * c.green + 0.11f * c.blue
@@ -150,7 +153,7 @@ internal fun DrawScope.rolloDeco(v: Volumen, base: Color, medidor: TextMeasurer,
     clipRect(cuerpo.left, cuerpo.top, cuerpo.right, cuerpo.bottom) {
         val filete = mezcla(tono, MACASAR_NEGRO, 0.4f).copy(alpha = 0.75f)
         for (f in listOf(0.18f, 0.82f)) drawLine(filete, Offset(cuerpo.left + cuerpo.width * f, cuerpo.top), Offset(cuerpo.left + cuerpo.width * f, cuerpo.bottom), 0.9f * u)
-        carasDeco(a, cuerpo, k, izq, 1.1f)
+        carasDeco(a, cuerpo, k, izq, 1.5f)
         // El cartón crudo en los cantos, donde la tela se gastó de sacar y meter la caja.
         val crudo = a.c(CARTON, k)
         drawRect(crudo, Offset(cuerpo.left, cuerpo.top + cuerpo.height * (0.25f + 0.3f * azar(v.semilla, 2))), Size(1.3f * u, cuerpo.height * 0.22f))
@@ -167,14 +170,18 @@ internal fun DrawScope.rolloDeco(v: Volumen, base: Color, medidor: TextMeasurer,
         drawRect(a.c(MACASAR_NEGRO, k), Offset(hueco.right - hueco.width * 0.13f, hueco.top), Size(hueco.width * 0.13f, hueco.height))
         drawRect(a.s(0.3f), Offset(hueco.left, hueco.bottom - hueco.height * 0.4f), Size(hueco.width, hueco.height * 0.4f))
     }
-    // La tapa: más ancha, de tela más oscura, con su labio claro, su sombra en la caja y las cantoneras.
+    // La tapa: más ancha, de la misma tela más honda, con su canto de latón abajo, su sombra en la caja y las cantoneras.
     val tapa = Rect(0f, 0f, w, tapaAlto)
-    drawRect(a.s(0.5f), Offset(cuerpo.left, tapa.bottom), Size(cuerpo.width, 3f * u))
-    drawRect(mezcla(tono, MACASAR_NEGRO, 0.28f), tapa.topLeft, tapa.size)
-    carasDeco(a, tapa, k, izq, 1.1f)
-    drawRect(a.b(0.5f, k), Offset(0f, tapa.bottom - 1.4f * u), Size(w, 1.4f * u))
-    cantoneraDeco(a, 0f, 0f, w * 0.24f, 1f, 1f, k)
-    cantoneraDeco(a, w, 0f, w * 0.24f, -1f, 1f, k)
+    drawRect(a.s(0.55f), Offset(cuerpo.left, tapa.bottom), Size(cuerpo.width, 3.4f * u))
+    drawRect(hondoDe(tono, 0.66f), tapa.topLeft, tapa.size)
+    carasDeco(a, tapa, k, izq, 1.5f)
+    val canto = Rect(0f, tapa.bottom - 2.6f * u, w, tapa.bottom)
+    drawRect(a.c(LATON, maxOf(k, 0.4f)), canto.topLeft, canto.size)
+    drawRect(a.c(LATON_LUZ, maxOf(k, 0.4f)), canto.topLeft, Size(w, 0.9f * u))
+    drawRect(a.c(LATON_OSC, maxOf(k, 0.4f)), Offset(0f, canto.bottom - 0.7f * u), Size(w, 0.7f * u))
+    cantoneraDeco(a, 0f, 0f, w * 0.26f, 1f, 1f, k)
+    cantoneraDeco(a, w, 0f, w * 0.26f, -1f, 1f, k)
+    destelloDeco(a, Offset(w * 0.2f, canto.top + 0.9f * u), 1f * u, k)
     // La etiqueta redonda de papel, con el día.
     val radio = minOf(w * 0.38f, h * 0.12f).coerceAtLeast(5f * u)
     val ce = Offset(w * 0.5f, cuerpo.top + 4f * u + radio)
@@ -209,7 +216,7 @@ internal fun DrawScope.albumDeco(v: Volumen, base: Color, medidor: TextMeasurer,
         drawRect(a.b(0.4f, k), Offset(x, cuerpo.top - alto), Size(w * 0.17f, 0.8f * u))
     }
     contactoDeco(a, Offset(w * 0.5f + (if (izq) 2f else -2f) * u, h - 1f * u), w * 1.05f, 4f * u, 0.45f)
-    drawRoundRect(tono, cuerpo.topLeft, cuerpo.size, CornerRadius(w * 0.16f, w * 0.12f))
+    drawRoundRect(tono, cuerpo.topLeft, cuerpo.size, CornerRadius(w * 0.3f, w * 0.16f))
     clipRect(cuerpo.left, cuerpo.top, cuerpo.right, cuerpo.bottom) {
         // La trama de la tela: hilos de través y a lo alto, cada juego en un trazado.
         val trama = Path(); val urdimbre = Path()
@@ -221,7 +228,7 @@ internal fun DrawScope.albumDeco(v: Volumen, base: Color, medidor: TextMeasurer,
         drawPath(trama, mezcla(tono, MACASAR_NEGRO, 0.5f).copy(alpha = 0.25f), style = Stroke(0.5f * u))
         drawPath(urdimbre, a.b(0.4f, k).copy(alpha = if (a.oscuro) 0.06f * k else 0.14f), style = Stroke(0.4f * u))
         // El lomo redondo y las cofias, un poco más hondas y gastadas.
-        cilindroDeco(a, cuerpo, k, izq, 1.2f)
+        cilindroDeco(a, cuerpo, k, izq, 1.6f)
         drawRect(a.s(0.3f), cuerpo.topLeft, Size(w, h * 0.045f))
         drawRect(a.s(0.34f), Offset(0f, cuerpo.bottom - h * 0.05f), Size(w, h * 0.05f))
         drawRect(a.b(0.3f, k), Offset(0f, cuerpo.top + h * 0.045f), Size(w, 0.8f * u))
@@ -229,6 +236,11 @@ internal fun DrawScope.albumDeco(v: Volumen, base: Color, medidor: TextMeasurer,
         val filetes = Path()
         for (yy in listOf(0.13f, 0.155f, 0.9f, 0.925f)) filetes.addRect(Rect(w * 0.08f, h * yy, w * 0.92f, h * yy + 1f * u))
         drawPath(filetes, a.c(LATON, maxOf(k, 0.45f)))
+        // Los nervios del lomo: dos lomas a lo ancho, cerca de las cofias, con su luz arriba y su sombra abajo.
+        for (yy in listOf(0.085f, 0.965f)) {
+            drawRect(a.b(0.5f, k), Offset(0f, h * yy - 1.6f * u), Size(w, 1.2f * u))
+            drawRect(a.s(0.45f), Offset(0f, h * yy), Size(w, 1.4f * u))
+        }
     }
     val et = Rect(w * 0.12f, h * 0.2f, w * 0.88f, h * 0.2f + maxOf(w * 0.55f, 17f * u).coerceAtMost(h * 0.24f))
     etiquetaDeco(v, medidor, et, a, k)
@@ -306,7 +318,7 @@ internal fun DrawScope.carpetaDeco(v: Volumen, base: Color, medidor: TextMeasure
             val c = Offset((x0 + x1) / 2 + (x1 - x0) * 0.08f, h * 0.99f)
             drawCircle(impreso, (x1 - x0) * 0.44f, c, style = Stroke(1.2f * u))
             drawCircle(impreso, (x1 - x0) * 0.27f, c, style = Stroke(1.2f * u))
-            cilindroDeco(a, Rect(x0 - w * 0.07f, 0f, x1 + w * 0.06f, h), k, izq, 0.9f)
+            cilindroDeco(a, Rect(x0 - w * 0.07f, 0f, x1 + w * 0.06f, h), k, izq, 1.3f)
             drawRect(a.s(0.2f), Offset(0f, tope), Size(w, h * 0.04f))
             drawRect(a.b(0.4f, k), Offset(0f, tope + h * 0.005f), Size(w, 0.8f * u))
         }
