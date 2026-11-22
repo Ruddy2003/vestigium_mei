@@ -3,13 +3,19 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
+import kotlin.math.roundToInt
 import io.github.ruddy2003.vestigium.ui.biblioteca.EdoTinta.HINOKI
 import io.github.ruddy2003.vestigium.ui.biblioteca.EdoTinta.HINOKI_OSC
 import io.github.ruddy2003.vestigium.ui.biblioteca.EdoTinta.HOLLIN
@@ -51,6 +57,9 @@ internal fun DrawScope.paredEdo(a: AireEdo, g: MarcoEdo) {
         val an = w * (0.1f + 0.045f * azar(301, j))
         if (j % 2 == 1) drawRect(a.luz(mezcla(SUGI, SUGI_OSC, 0.3f), lejos, 0.1f).copy(alpha = 0.35f), Offset(x, 0f), Size(an, g.suelo))
         if (azar(302, j) > 0.55f) drawRect(a.luz(mezcla(SUGI, KAMI, 0.3f), lejos, 0.1f).copy(alpha = 0.25f), Offset(x, 0f), Size(an, g.suelo))
+        // El relieve de cada tabla: el canto de la izquierda recibe la luz; el de la derecha se hunde junto a la junta.
+        drawRect(a.claro(0.14f), Offset(x + 1.3f * u, 0f), Size(2.2f * u, g.suelo))
+        drawRect(a.sombra(0.12f), Offset(x + an - 3.4f * u, 0f), Size(3.4f * u, g.suelo))
         x += an; j++
         drawLine(a.sombra(if (a.oscuro) 0.6f else 0.42f), Offset(x, 0f), Offset(x, g.suelo), 1.3f * u)
         drawLine(a.claro(0.22f), Offset(x + 1.3f * u, 0f), Offset(x + 1.3f * u, g.suelo), 0.7f * u)
@@ -68,6 +77,9 @@ internal fun DrawScope.paredEdo(a: AireEdo, g: MarcoEdo) {
         drawOval(a.luz(SUGI_OSC, lejos).copy(alpha = 0.8f), Offset(o.x - r, o.y - r * 1.6f), Size(r * 2, r * 3.2f))
         drawOval(a.sombra(0.4f), Offset(o.x - r * 1.8f, o.y - r * 3f), Size(r * 3.6f, r * 6f), style = Stroke(0.7f * u))
         drawOval(a.claro(0.18f), Offset(o.x - r * 2.6f, o.y - r * 4.4f), Size(r * 5.2f, r * 8.8f), style = Stroke(0.6f * u))
+        // El relieve del nudo: la luz arriba a la izquierda del anillo y la sombra abajo a la derecha.
+        drawArc(a.claro(0.35f), 180f, 90f, false, Offset(o.x - r * 1.3f, o.y - r * 2.2f), Size(r * 2.6f, r * 4.4f), style = Stroke(1f * u))
+        drawArc(a.sombra(0.45f), 0f, 90f, false, Offset(o.x - r * 1.3f, o.y - r * 2.2f), Size(r * 2.6f, r * 4.4f), style = Stroke(1f * u))
     }
     // El hollín: la madera se ennegrece hacia el techo, y más sobre el farol, donde sube su humo.
     drawRect(a.luz(HOLLIN, lejos).copy(alpha = 0.45f), Offset.Zero, Size(w, w * 0.05f))
@@ -79,9 +91,112 @@ internal fun DrawScope.paredEdo(a: AireEdo, g: MarcoEdo) {
         drawRect(sombraMueble(0.08f), Offset(w * 0.75f, 0f), Size(w * 0.25f, g.suelo))
         drawRect(sombraMueble(0.08f), Offset(0f, g.fondo), Size(w, g.suelo - g.fondo))
     }
+    panoRanmaEdo(a, g)
     ranmaEdo(a, g)
     nageshiEdo(a, g)
     pilarEdo(a, g)
+}
+
+/**
+ * El paño de luz que el ranma echa en diagonal sobre las tablas de sugi, hacia la derecha y abajo, con la sombra de los
+ * listones de su cuadrícula: de día, el sol del cuarto de al lado; al anochecer de los Sueños, el ocaso; en su noche, la luna.
+ */
+private fun DrawScope.panoRanmaEdo(a: AireEdo, g: MarcoEdo) {
+    val u = density; val w = g.w
+    val luz = when {
+        a.lunar -> EdoTinta.LUNA.copy(alpha = 0.13f)
+        a.oscuro -> return
+        a.noche -> EdoTinta.OCASO.copy(alpha = 0.2f)
+        else -> luzMueble(0.26f)
+    }
+    val y0 = g.nageshiAbajo + 2f * u
+    val y1 = g.ch - g.gTapa
+    val corre = (y1 - y0) * 0.62f
+    val xa = w * 0.03f; val xb = w * 0.43f
+    drawPath(poligonoEdo(xa - w * 0.02f, y0, xb + w * 0.02f, y0, xb + corre + w * 0.04f, y1, xa + corre - w * 0.01f, y1), luz.copy(alpha = luz.alpha * 0.45f))
+    drawPath(poligonoEdo(xa, y0, xb, y0, xb + corre, y1, xa + corre, y1), luz)
+    // La sombra de los listones: rayas que bajan con la misma inclinación, y la del travesaño, a lo ancho.
+    val raya = if (a.lunar) a.sombra(0.12f) else sombraMueble(0.1f)
+    var x = xa + w * 0.03f
+    while (x < xb - 1f) {
+        drawPath(poligonoEdo(x, y0, x + 1.8f * u, y0, x + 1.8f * u + corre, y1, x + corre, y1), raya)
+        x += w * 0.034f
+    }
+    val yt = y0 + (y1 - y0) * 0.42f
+    val ct = (yt - y0) * 0.62f
+    drawPath(poligonoEdo(xa + ct, yt, xb + ct, yt, xb + ct + 2f * u, yt + 2.4f * u, xa + ct + 2f * u, yt + 2.4f * u), raya)
+}
+
+/** El farol en la pared: el charco cálido con su caída, y el tizne que deja su humo encima (de noche y en los Sueños). */
+internal fun DrawScope.haloFarolEdo(a: AireEdo, g: MarcoEdo) {
+    val w = g.w
+    val farol = Offset(w * MuebleEstanteEdo.LAMP_X, w * MuebleEstanteEdo.LAMP_Y)
+    if (a.lunar) {
+        mancha(farol, w * 0.66f, FILO_MUEBLE.copy(alpha = 0.2f))
+        mancha(farol, w * 0.32f, FILO_MUEBLE.copy(alpha = 0.36f))
+        mancha(farol, w * 0.14f, EdoTinta.LLAMA.copy(alpha = 0.55f))
+    } else if (a.lumbre) {
+        val f = if (a.oscuro) 1f else 0.6f
+        mancha(farol, w * 0.85f, FILO_MUEBLE.copy(alpha = 0.17f * f))
+        mancha(farol, w * 0.42f, FILO_MUEBLE.copy(alpha = 0.32f * f))
+        mancha(farol, w * 0.18f, EdoTinta.LLAMA.copy(alpha = 0.5f * f))
+    }
+    // El tizne sobre el farol, en el nageshi y en las tablas de encima.
+    mancha(Offset(farol.x, g.nageshiAbajo + w * 0.02f), w * 0.07f, HOLLIN.copy(alpha = if (a.lumbre) 0.5f else 0.3f))
+}
+
+/** Todo lo fijo de la pared y del suelo (lo que no cambia de un dibujo a otro): se pinta una vez por tamaño y modo. */
+internal fun DrawScope.capaParedEdo(a: AireEdo, g: MarcoEdo, cerca: (Offset) -> Float) {
+    paredEdo(a, g)
+    luzRanmaEdo(a, g)
+    haloFarolEdo(a, g)
+    sueloEdo(a, g, cerca)
+}
+
+/**
+ * La pared que asoma a los lados del estante, entre la corona y la última tabla (lo demás lo tapan el fondo de los huecos y
+ * los postes): a la izquierda, las tablas de sugi; a la derecha, el pilar, con la sombra del estante de día. De noche, por tramos.
+ */
+internal fun DrawScope.paredCostadosEdo(a: AireEdo, g: MarcoEdo) {
+    val u = density; val w = g.w
+    if (g.fondo - g.ch < 1f) return
+    val tramos = if (a.lumbre) ((g.fondo - g.ch) / (g.fila * 0.25f)).toInt().coerceIn(4, 80) else 1
+    for (t in 0 until tramos) {
+        val ya = g.ch + (g.fondo - g.ch) * t / tramos; val yb = g.ch + (g.fondo - g.ch) * (t + 1) / tramos + 0.6f
+        val pos = ((ya + yb) / 2 - g.ch) / g.fila
+        val ki = if (a.lumbre) cercaCuerpoEdo(pos, g.n, 0.015f, a.lunar) else 1f
+        val kd = if (a.lumbre) cercaCuerpoEdo(pos, g.n, 0.98f, a.lunar) else 1f
+        val fi = frioCuerpoEdo(pos, g.n, 0.015f)
+        drawRect(a.luz(if (a.oscuro) SUGI else mezcla(SUGI, LUZ_MUEBLE, 0.12f), ki * 0.7f, fi), Offset(0f, ya), Size(g.posteIzq + 1f, yb - ya))
+        drawRect(a.luz(mezcla(KURI, SUGI, 0.35f), kd * 0.9f), Offset(g.posteDer - 1f, ya), Size(w - g.posteDer + 1f, yb - ya))
+    }
+    drawLine(a.sombra(0.4f), Offset(g.posteIzq * 0.45f, g.ch), Offset(g.posteIzq * 0.45f, g.fondo), 1f * u)
+    // De día, el estante echa su sombra en el pilar, a su derecha.
+    if (!a.oscuro) drawRect(sombraMueble(if (a.noche) 0.34f else 0.3f), Offset(g.posteDer, g.ch), Size(w * 0.014f, g.fondo - g.ch))
+}
+
+/**
+ * Lo fijo pintado una vez: cuatro imágenes (la franja de arriba y la de abajo, del diario y de los Sueños), cada una con la
+ * clave de su tamaño y su modo; si la clave cambia, se vuelve a pintar. Pegar una imagen cuesta mucho menos que repetir los
+ * degradados grandes y las capas translúcidas de la pared en cada dibujo.
+ */
+internal object CapaEdo {
+    private val claves = arrayOfNulls<String>(4)
+    private val imagenes = arrayOfNulls<ImageBitmap>(4)
+
+    fun DrawScope.pegar(ranura: Int, clave: String, r: Rect, pintar: DrawScope.() -> Unit) {
+        val ancho = r.width.roundToInt(); val alto = r.height.roundToInt()
+        if (ancho < 1 || alto < 1 || ranura !in 0..3) return
+        var img = imagenes[ranura]
+        if (img == null || claves[ranura] != clave) {
+            val nueva = ImageBitmap(ancho, alto)
+            CanvasDrawScope().draw(Density(density, fontScale), layoutDirection, Canvas(nueva), Size(ancho.toFloat(), alto.toFloat())) {
+                translate(-r.left, -r.top) { pintar() }
+            }
+            imagenes[ranura] = nueva; claves[ranura] = clave; img = nueva
+        }
+        drawImage(img, Offset(r.left, r.top))
+    }
 }
 
 /** El ranma: el tragaluz de papel entre el nageshi y el techo, que da al cuarto de al lado; de él viene la luz de día. */
@@ -182,7 +297,10 @@ internal fun DrawScope.sueloEdo(a: AireEdo, g: MarcoEdo, cerca: (Offset) -> Floa
     vetas(Rect(0f, g.suelo, w, h), a.sombra(0.25f), 361, densidad = 0.5f, grosor = 0.6f, ondulacion = 0.4f)
     // El zócalo de la pared y la sombra del estante, que de día cae hacia la derecha.
     drawRect(a.luz(KURI, 0.1f), Offset(0f, g.suelo - 2.6f * u), Size(w, 2.6f * u))
-    drawRect(a.sombra(if (a.oscuro) 0.5f else 0.34f), Offset(g.posteIzq, g.suelo), Size(g.posteDer - g.posteIzq + (if (a.oscuro) 0f else w * 0.03f), w * 0.022f))
+    // La sombra del estante en el suelo: de día corrida hacia la derecha y abajo; de noche, lejos del farol, a la izquierda.
+    val corre = if (a.oscuro) -w * 0.05f else w * 0.08f
+    drawPath(poligonoEdo(g.posteIzq, g.suelo, g.posteDer, g.suelo, g.posteDer + corre, g.suelo + w * 0.05f, g.posteIzq + corre, g.suelo + w * 0.05f), a.sombra(if (a.oscuro) 0.34f else 0.22f))
+    drawRect(a.sombra(if (a.oscuro) 0.5f else 0.34f), Offset(g.posteIzq, g.suelo), Size(g.posteDer - g.posteIzq, w * 0.012f))
     // El brillo del suelo encerado: el reflejo de los postes y una mancha de luz a la izquierda.
     if (!a.oscuro) {
         drawRect(luzMueble(0.1f), Offset(g.posteIzq, g.suelo + w * 0.03f), Size(g.x0 - g.posteIzq, (h - g.suelo) * 0.5f))
@@ -193,43 +311,72 @@ internal fun DrawScope.sueloEdo(a: AireEdo, g: MarcoEdo, cerca: (Offset) -> Floa
 // ---------------------------------------------------------------- el estante
 
 /**
- * El fondo de un hueco: una tabla forrada con papel viejo reaprovechado (hojas de cuentas ya sin uso, pegadas con engrudo y
- * encimadas), en sombra; la sombra de la tabla de arriba, la del poste que le quita la luz y la del último volumen.
+ * El fondo de un hueco: la tabla del fondo forrada con hojas de papel viejo reaprovechado, pegadas con engrudo y encimadas en
+ * dos hileras (de tamaños distintos, alguna con la esquina levantada y su sombra), un parche más nuevo y más claro, manchas de
+ * humedad con su cerco y, en algunas hojas, la aguada gris de unas columnas de cuentas ya lavadas (manchas alargadas, sin forma
+ * de signo). De día la luz del ranma aclara arriba a la izquierda; encima, la sombra de la tabla de arriba, la del poste que le
+ * quita la luz y la del último volumen.
  */
 internal fun DrawScope.fondoHuecoEdo(k: Int, r: Rect, oc: Float, a: AireEdo, g: MarcoEdo, cerca: (Offset) -> Float, frio: (Offset) -> Float) {
     val u = density; val w = g.w
     val x0 = g.x0; val x1 = g.x1
     clipRect(x0, r.top, x1, r.bottom) {
         val an = x1 - x0
-        val tramos = if (a.lumbre) 8 else 1
         val papel = mezcla(mezcla(KAMI, SUGI_OSC, 0.42f), SOMBRA_MUEBLE, if (a.oscuro) 0f else 0.12f)
+        // La tabla del fondo, más honda, que se ve entre hoja y hoja.
+        val tramos = if (a.lumbre) 8 else 1
         for (t in 0 until tramos) {
             val xa = x0 + an * t / tramos; val xb = x0 + an * (t + 1) / tramos + 0.6f
             val p = Offset((xa + xb) / 2, r.center.y)
-            drawRect(a.luz(papel, cerca(p) * 0.85f, frio(p)), Offset(xa, r.top), Size(xb - xa, r.height))
+            drawRect(a.luz(mezcla(papel, SUGI_OSC, 0.45f), cerca(p) * 0.8f, frio(p)), Offset(xa, r.top), Size(xb - xa, r.height))
         }
-        val kc = cerca(r.center); val kf = frio(r.center)
-        // Las hojas encimadas: cada una con su orilla (la sombra fina y el labio claro) y un tono apenas distinto.
-        var x = x0 - w * 0.04f * azar(370 + k, 0); var j = 0
-        while (x < x1) {
-            val ah = w * (0.13f + 0.07f * azar(371 + k, j))
-            val dy = r.height * (0.35f + 0.3f * azar(372 + k, j))
-            if (azar(373 + k, j) > 0.5f) drawRect(a.luz(mezcla(papel, KAMI, 0.5f), kc, kf).copy(alpha = 0.5f), Offset(x, r.top), Size(ah, dy))
-            else drawRect(a.luz(mezcla(papel, SUGI_OSC, 0.2f), kc, kf).copy(alpha = 0.35f), Offset(x, r.top + dy), Size(ah, r.height - dy))
-            drawLine(a.sombra(0.26f), Offset(x + ah, r.top), Offset(x + ah, r.bottom), 0.8f * u)
-            drawLine(a.claro(0.18f), Offset(x + ah - 0.8f * u, r.top), Offset(x + ah - 0.8f * u, r.bottom), 0.6f * u)
-            drawLine(a.sombra(0.2f), Offset(x, r.top + dy), Offset(x + ah, r.top + dy + (azar(374 + k, j) - 0.5f) * 2f * u), 0.7f * u)
-            // Una esquina rota, por donde asoma la tabla.
-            if (azar(375 + k, j) > 0.72f) {
-                val q = Offset(x + ah, r.top + dy)
-                drawPath(poligonoEdo(q.x, q.y, q.x - 7f * u, q.y, q.x - 1f * u, q.y + 6f * u), a.luz(SUGI_OSC, kc * 0.7f, kf))
+        // Las hojas, en dos hileras encimadas: primero la de abajo, luego la de arriba, que monta sobre ella.
+        for (fila in 1 downTo 0) {
+            var x = x0 - w * 0.03f * azar(380 + k, fila); var j = 0
+            while (x < x1 && j < 12) {
+                val sem = 381 + k * 7 + fila
+                val sw = w * (0.11f + 0.15f * azar(sem, j))
+                val sh = r.height * (if (fila == 0) 0.5f + 0.25f * azar(sem + 1, j) else 0.6f + 0.3f * azar(sem + 1, j))
+                val sy = if (fila == 0) r.top - r.height * 0.08f * azar(sem + 2, j) else r.bottom - sh + r.height * 0.06f * azar(sem + 2, j)
+                val sx = x + (azar(sem + 3, j) - 0.5f) * 3f * u
+                val tono = mezcla(papel, if (azar(sem + 4, j) > 0.5f) KAMI else SUGI_OSC, 0.12f * azar(sem + 5, j))
+                val p = Offset(sx + sw / 2, sy + sh / 2)
+                val color = a.luz(tono, cerca(p) * 0.85f, frio(p))
+                drawRect(a.sombra(0.2f), Offset(sx + 1.2f * u, sy + 1.2f * u), Size(sw, sh))
+                drawRect(color, Offset(sx, sy), Size(sw, sh))
+                drawRect(a.claro(0.18f), Offset(sx, sy), Size(sw, 0.8f * u))
+                // La aguada de unas cuentas ya lavadas: columnas de manchas grises, de derecha a izquierda, rotas y desiguales.
+                if ((j + fila + k) % 3 == 1) aguadaCuentasEdo(Rect(sx, sy, sx + sw, sy + sh), color, sem + 6 + j)
+                // Una esquina levantada: el papel despegado, más claro, con su sombra debajo.
+                if (azar(sem + 7, j) > 0.62f) {
+                    val q = Offset(sx + sw, if (fila == 0) sy + sh else sy)
+                    val s = (5f + 4f * azar(sem + 8, j)) * u
+                    val dy = if (fila == 0) -1f else 1f
+                    drawPath(poligonoEdo(q.x - s, q.y, q.x, q.y, q.x, q.y + dy * s), a.luz(mezcla(papel, SUGI_OSC, 0.5f), cerca(q) * 0.7f, frio(q)))
+                    drawPath(poligonoEdo(q.x - s, q.y, q.x - s * 0.2f, q.y + dy * s * 0.15f, q.x, q.y + dy * s), a.sombra(0.3f))
+                    drawPath(poligonoEdo(q.x - s, q.y, q.x - s * 0.45f, q.y + dy * s * 0.7f, q.x, q.y + dy * s), a.luz(mezcla(tono, KAMI, 0.35f), cerca(q), frio(q)))
+                }
+                x += sw * (0.72f + 0.2f * azar(sem + 9, j)); j++
             }
-            x += ah; j++
         }
-        // Las manchas del engrudo y de la humedad.
-        pinceladas(r, a.luz(mezcla(KAMI, VETA, 0.6f), kc, kf), 380 + k, 12, u, 0.14f)
-        // De día, la luz del ranma da en el fondo de la derecha.
-        if (!a.oscuro) drawRect(luzMueble(if (a.noche) 0.05f else 0.09f), Offset(x0 + an * 0.3f, r.top), Size(an * 0.7f, r.height))
+        // El parche más nuevo y más claro, pegado encima.
+        val pw = w * (0.07f + 0.04f * azar(390, k)); val ph = r.height * (0.28f + 0.12f * azar(391, k))
+        val pp = Offset(x0 + an * (0.15f + 0.7f * azar(392, k)), r.top + r.height * (0.2f + 0.4f * azar(393, k)))
+        drawRect(a.sombra(0.22f), Offset(pp.x + 1f * u, pp.y + 1f * u), Size(pw, ph))
+        drawRect(a.luz(mezcla(KAMI, EdoTinta.WASHI, 0.25f), cerca(pp) * 0.85f, frio(pp)), pp, Size(pw, ph))
+        // Las manchas de humedad, con su cerco más oscuro.
+        for (m in 0 until 2) {
+            val c = Offset(x0 + an * azar(394 + k, m), r.top + r.height * (0.3f + 0.6f * azar(395 + k, m)))
+            val rx = w * (0.035f + 0.04f * azar(396 + k, m)); val ry = rx * (0.6f + 0.3f * azar(397 + k, m))
+            drawOval(a.sombra(0.08f), Offset(c.x - rx, c.y - ry), Size(rx * 2, ry * 2))
+            drawOval(a.luz(mezcla(VETA, SUGI_OSC, 0.3f), 0.3f).copy(alpha = 0.22f), Offset(c.x - rx, c.y - ry), Size(rx * 2, ry * 2), style = Stroke(1f * u))
+        }
+        // De día, la luz del ranma: más clara arriba a la izquierda de cada hueco, pasada la sombra del poste.
+        if (!a.oscuro) {
+            val l = x0 + 18f * u
+            drawPath(poligonoEdo(l, r.top, l + an * 0.6f, r.top, l + an * 0.3f, r.bottom, l, r.bottom), luzMueble(if (a.noche) 0.05f else 0.08f))
+            drawPath(poligonoEdo(l, r.top, l + an * 0.36f, r.top, l + an * 0.1f, r.top + r.height * 0.7f, l, r.top + r.height * 0.7f), luzMueble(if (a.noche) 0.05f else 0.08f))
+        }
         // La sombra de la tabla de arriba: honda junto a ella y deshecha hacia abajo.
         val f = if (a.oscuro) 1.2f else 1f
         drawRect(a.sombra(0.36f * f), Offset(x0, r.top), Size(an, 7f * u))
@@ -252,6 +399,29 @@ internal fun DrawScope.fondoHuecoEdo(k: Int, r: Rect, oc: Float, a: AireEdo, g: 
 }
 
 /**
+ * La aguada gris de unas cuentas ya lavadas en una hoja [r]: de cuatro a seis columnas de manchas alargadas, de derecha a
+ * izquierda, cada una rota en dos o tres trozos de largo desigual y muy tenue. No son trazos: no tienen forma de signo.
+ */
+private fun DrawScope.aguadaCuentasEdo(r: Rect, papel: Color, semilla: Int) {
+    val u = density
+    val gris = mezcla(papel, EdoTinta.SUMI, 0.22f).copy(alpha = 0.55f)
+    val columnas = 4 + (azar(semilla, 0) * 3).toInt()
+    val paso = 3.4f * u
+    for (c in 0 until columnas) {
+        val x = r.right - 3f * u - paso * c
+        if (x < r.left + 2f * u) break
+        var y = r.top + r.height * (0.08f + 0.1f * azar(semilla, 10 + c))
+        var t = 0
+        while (y < r.bottom - r.height * 0.12f && t < 3) {
+            val largo = r.height * (0.08f + 0.22f * azar(semilla, 20 + c * 3 + t))
+            val fin = minOf(y + largo, r.bottom - r.height * 0.1f)
+            drawLine(gris, Offset(x + (azar(semilla, 40 + c) - 0.5f) * u, y), Offset(x, fin), (1.4f + 0.8f * azar(semilla, 50 + c * 3 + t)) * u, StrokeCap.Round)
+            y = fin + r.height * (0.04f + 0.08f * azar(semilla, 60 + c * 3 + t)); t++
+        }
+    }
+}
+
+/**
  * Una tabla pasante (nuki) de hinoki: atraviesa los dos postes y sale por fuera, con su testa a la vista y la cuña de madera
  * que la traba. Su cara de arriba apenas se ve; el canto lleva su veta, su arista gastada y su sombra. De noche, por tramos.
  */
@@ -268,6 +438,7 @@ internal fun DrawScope.tablaEdo(cara: Rect, fondo: Float, semilla: Int, a: AireE
         drawRect(a.luz(mezcla(HINOKI, LUZ_MUEBLE, 0.3f), k, f), Offset(xa, cara.top - fondo), Size(xb - xa, fondo))
         drawRect(a.luz(HINOKI, k, f), Offset(xa, cara.top), Size(xb - xa, cara.height))
         if (a.oscuro) drawRect(FILO_MUEBLE.copy(alpha = 0.06f + 0.5f * k), Offset(xa, cara.top), Size(xb - xa, 1.1f * u))
+        if (a.oscuro && f > 0.04f) drawRect(a.helado(0.4f * f), Offset(xa, cara.top + 1.1f * u), Size(xb - xa, 0.8f * u))
     }
     clipRect(cara.left, cara.top - fondo, cara.right, cara.bottom) {
         vetas(cara, a.luz(VETA, 0.5f).copy(alpha = if (a.oscuro) 0.4f else 0.34f), semilla, densidad = 0.75f, grosor = 0.6f, ondulacion = 0.3f)
@@ -291,6 +462,7 @@ internal fun DrawScope.tablaEdo(cara: Rect, fondo: Float, semilla: Int, a: AireE
         drawPath(corridoEdo(cu, 1.2f * u, 1f * u), a.sombra(0.4f))
         drawPath(cu, a.luz(mezcla(HINOKI_OSC, KURI, 0.35f), k, f))
         drawLine(a.claro(0.35f), Offset(xc - 2.2f * u, cara.top - fondo - 3.6f * u), Offset(xc - 1.2f * u, cara.bottom + 3f * u), 0.6f * u)
+        if (a.oscuro && f > 0.03f) drawLine(a.helado(0.7f * f), Offset(xc - 2.4f * u, cara.top - fondo - 3.8f * u), Offset(xc - 1.3f * u, cara.bottom + 3.2f * u), 0.9f * u)
         drawLine(a.sombra(0.4f), Offset(xc - 2.6f * u, cara.top - fondo - 4f * u), Offset(xc + 2.6f * u, cara.top - fondo - 4f * u), 0.7f * u)
     }
 }
@@ -314,6 +486,8 @@ internal fun DrawScope.postesEdo(a: AireEdo, g: MarcoEdo, d: DisposicionEstante)
             if (a.oscuro) {
                 // El chaflán que mira al farol se enciende.
                 drawRect(FILO_MUEBLE.copy(alpha = (0.55f * k).coerceAtMost(0.55f)), Offset(xb - 1.6f * u, ya), Size(1.6f * u, yb - ya))
+                // El chaflán de la izquierda, que mira al ranma, se enfría con la luna.
+                if (f > 0.04f) drawRect(a.helado(0.5f * f), Offset(xa, ya), Size(1.2f * u, yb - ya))
             }
         }
         clipRect(xa, arriba, xb, abajo) {

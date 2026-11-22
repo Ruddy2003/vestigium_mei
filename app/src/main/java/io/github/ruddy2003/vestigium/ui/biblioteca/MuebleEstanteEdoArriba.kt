@@ -40,7 +40,7 @@ internal fun DrawScope.sandaliasEdo(clavo: Offset, w: Float, a: AireEdo, k: Floa
     val u = density
     val paja = a.luz(WARA, k, f)
     val pajaOsc = a.luz(mezcla(WARA, HINOKI_OSC, 0.55f), k, f)
-    val largo = w * 0.13f; val ancho = w * 0.046f
+    val largo = w * 0.17f; val ancho = w * 0.06f
     // El cordel del clavo y el clavo.
     drawLine(pajaOsc, clavo, clavo + Offset(-2f * u, w * 0.02f), 1f * u)
     drawLine(pajaOsc, clavo, clavo + Offset(3f * u, w * 0.022f), 1f * u)
@@ -96,7 +96,10 @@ internal fun DrawScope.shamisenEdo(pie: Offset, w: Float, a: AireEdo, k: Float, 
     }
     val haciaLuz = a.ladoLuz(pie.x, w)
     // La sombra en la pared: de día hacia la derecha; de noche, lejos del farol.
-    rotate(giro, pie) { drawPath(corridoEdo(silueta, -haciaLuz * 6f * u, 3f * u), a.sombra(if (a.oscuro) 0.38f else 0.24f)) }
+    rotate(giro, pie) {
+        drawPath(corridoEdo(silueta, -haciaLuz * 16f * u, 10f * u), a.sombra(if (a.oscuro) 0.16f else 0.12f))
+        drawPath(corridoEdo(silueta, -haciaLuz * 7f * u, 4f * u), a.sombra(if (a.oscuro) 0.3f else 0.2f))
+    }
     drawOval(a.sombra(0.4f), Offset(caja.left - 2f * u, pie.y - 2.5f * u), Size(bw + 8f * u, 5f * u))
     val madera = a.luz(KURI, k, f)
     val maderaLuz = a.luz(mezcla(KURI, COBRE, 0.45f), k, f)
@@ -139,15 +142,6 @@ internal fun DrawScope.shamisenEdo(pie: Offset, w: Float, a: AireEdo, k: Float, 
         drawRect(madera, Offset(pie.x - nw * 0.3f, caja.bottom - 1f * u), Size(nw * 0.6f, 2f * u))
     }
     filoFarolEdo(Offset(caja.right + 1f * u, caja.top + 4f * u), Offset(caja.right + 1f * u, caja.bottom - 3f * u), k, a)
-}
-
-/** La púa del shamisen, de hueso, echada sobre la tabla junto a él. */
-internal fun DrawScope.plectroEdo(o: Offset, w: Float, a: AireEdo, k: Float) {
-    val u = density
-    val p = poligonoEdo(o.x - w * 0.028f, o.y - 1.2f * u, o.x + w * 0.018f, o.y - 3.4f * u, o.x + w * 0.026f, o.y + 0.6f * u, o.x - w * 0.026f, o.y + 1.4f * u)
-    drawPath(corridoEdo(p, 1.4f * u, 1.4f * u), a.sombra(0.35f))
-    drawPath(p, a.luz(mezcla(WASHI, KAMI, 0.4f), k))
-    drawLine(a.claro(0.5f), Offset(o.x - w * 0.02f, o.y - 1.2f * u), Offset(o.x + w * 0.016f, o.y - 2.8f * u), 0.6f * u)
 }
 
 /**
@@ -246,13 +240,18 @@ internal fun DrawScope.cojinesEdo(pie: Offset, w: Float, a: AireEdo, k: Float, f
  */
 internal fun DrawScope.farolEdo(c: Offset, w: Float, a: AireEdo, g: MarcoEdo) {
     val u = density
-    val fw = w * 0.072f; val fh = w * 0.13f; val tapa = w * 0.016f
+    val fw = w * 0.092f; val fh = w * 0.165f; val tapa = w * 0.02f
     val cuerpo = Rect(c.x - fw / 2, c.y - fh / 2, c.x + fw / 2, c.y + fh / 2)
     val gancho = Offset(c.x, g.nageshiAbajo)
     // El gancho de hierro y el cordel.
     drawLine(a.luz(SUMI, 0.4f), gancho, Offset(c.x, cuerpo.top - tapa - 3f * u), 1f * u)
     drawArc(a.luz(SUMI, 0.4f), 0f, 180f, false, Offset(c.x - 2.4f * u, cuerpo.top - tapa - 5f * u), Size(4.8f * u, 4.8f * u), style = Stroke(1f * u))
-    if (!a.lumbre) drawRoundRect(a.sombra(0.22f), Offset(cuerpo.left + 5f * u, cuerpo.top + 3f * u), cuerpo.size, CornerRadius(fw * 0.3f))
+    if (!a.lumbre) {
+        // De día, su sombra alargada en las tablas, hacia la derecha y abajo, con la del cordel.
+        drawLine(a.sombra(0.16f), Offset(c.x + 4f * u, gancho.y + 3f * u), Offset(c.x + 14f * u, cuerpo.top + 8f * u), 1f * u)
+        drawRoundRect(a.sombra(0.12f), Offset(cuerpo.left + 14f * u, cuerpo.top + 10f * u), Size(fw, fh * 1.1f), CornerRadius(fw * 0.3f))
+        drawRoundRect(a.sombra(0.16f), Offset(cuerpo.left + 7f * u, cuerpo.top + 5f * u), cuerpo.size, CornerRadius(fw * 0.3f))
+    }
     val forma = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(cuerpo, CornerRadius(fw * 0.3f))) }
     if (a.lumbre) {
         // Encendido: el papel brilla más en el centro, y los aros quedan en contraluz.
@@ -421,16 +420,22 @@ private fun DrawScope.botellaSakeEdo(pie: Offset, s: Float, a: AireEdo, k: Float
     drawLine(a.luz(AI, k, f), Offset(tc.x - bw * 0.2f, pie.y - bh * 0.13f), Offset(tc.x + bw * 0.2f, pie.y - bh * 0.13f), 0.8f * u)
 }
 
-/** El abanico redondo de papel y varillas de bambú, apoyado en el fondo, y la toalla de algodón doblada delante. */
+/** El abanico redondo de papel y varillas de bambú, recostado contra el fondo, y la toalla de algodón doblada delante. */
 private fun DrawScope.abanicoEdo(pie: Offset, s: Float, a: AireEdo, k: Float, f: Float, semilla: Int) {
     val u = density
-    val rr = s * 0.24f
-    val c = Offset(pie.x + rr * 0.15f, pie.y - s * 0.52f)
-    rotate(-14f, Offset(c.x, pie.y)) {
-        drawLine(a.luz(mezcla(WARA, HINOKI_OSC, 0.3f), k, f), Offset(c.x, c.y + rr * 0.8f), Offset(c.x, pie.y - 1f * u), 2.2f * u)
-        drawCircle(a.sombra(0.3f), rr, c + Offset(3f * u, 2f * u))
+    val rr = s * 0.23f
+    val tw = s * 0.42f; val th = s * 0.12f
+    val tr = Rect(pie.x - tw * 0.55f, pie.y - th, pie.x + tw * 0.45f, pie.y)
+    // El abanico: el mango se apoya en la toalla y la hoja se recuesta contra el papel del fondo, ladeada a la derecha.
+    val base = Offset(tr.left + tw * 0.3f, tr.top + 1f * u)
+    val largo = s * 0.22f
+    rotate(24f, base) {
+        val c = Offset(base.x, base.y - largo - rr * 0.85f)
+        drawCircle(a.sombra(0.28f), rr, c + Offset(5f * u, 3f * u))
+        drawLine(a.sombra(0.25f), base + Offset(4f * u, 2f * u), c + Offset(4f * u, rr * 0.8f + 2f * u), 2.2f * u)
+        drawLine(a.luz(mezcla(WARA, HINOKI_OSC, 0.3f), k, f), base, Offset(c.x, c.y + rr * 0.8f), 2.2f * u, StrokeCap.Round)
         drawCircle(a.luz(if (semilla % 2 == 0) AI else mezcla(WASHI, KAMI, 0.2f), k, f), rr, c)
-        // Las varillas que se abren desde el mango y una franja clara a lo ancho (el papel teñido en reserva).
+        // Las varillas que se abren desde el mango y el brillo del papel del lado de la luz.
         for (j in 0 until 11) {
             val ang = Math.toRadians((200.0 + 140.0 * j / 10.0)).toFloat()
             drawLine(a.sombra(0.22f), Offset(c.x, c.y + rr * 0.7f), Offset(c.x + rr * 0.96f * kotlin.math.cos(ang), c.y + rr * 0.96f * kotlin.math.sin(ang)), 0.5f * u)
@@ -438,9 +443,7 @@ private fun DrawScope.abanicoEdo(pie: Offset, s: Float, a: AireEdo, k: Float, f:
         drawArc(a.claro(0.35f), 190f, 80f, false, Offset(c.x - rr * 0.9f, c.y - rr * 0.9f), Size(rr * 1.8f, rr * 1.8f), style = Stroke(1f * u))
         drawCircle(a.luz(KURI, k, f), rr, c, style = Stroke(1.2f * u))
     }
-    // La toalla doblada: tres dobleces de algodón añil con rayas claras.
-    val tw = s * 0.42f; val th = s * 0.12f
-    val tr = Rect(pie.x - tw * 0.6f, pie.y - th, pie.x + tw * 0.4f, pie.y)
+    // La toalla doblada: tres dobleces de algodón añil con rayas claras, delante del mango.
     drawRect(a.sombra(0.35f), tr.topLeft + Offset(2f * u, 1.4f * u), tr.size)
     drawRoundRect(a.luz(mezcla(AI, KINARI, 0.15f), k, f), tr.topLeft, tr.size, CornerRadius(2f * u))
     for (j in 1..2) drawLine(a.sombra(0.35f), Offset(tr.left + 1f * u, tr.top + th * j / 3f), Offset(tr.right - 1f * u, tr.top + th * j / 3f), 0.7f * u)

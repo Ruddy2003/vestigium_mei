@@ -12,7 +12,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.ui.LetraExtra
 import io.github.ruddy2003.vestigium.ui.ideario.azar
-import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.muebles.FILO_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
@@ -138,17 +137,17 @@ internal object MuebleEstanteEdo {
 
     fun ancho(palabras: Int): Dp = (27 + (palabras / 36).coerceAtMost(18)).dp
 
-    /** Cuál de los tres es una entrada: 0, el estuche de tela (chitsu); 1, la pila de cuadernos cosidos; 2, la bolsa de tela. */
+    /** Cuál de los tres es una entrada: 0, el estuche de tela (chitsu); 1, la pila de cuadernos cosidos; 2, el hatillo de furoshiki. */
     fun clase(semilla: Int): Int {
         val x = azar(semilla, 93)
         return if (x < 0.4f) 0 else if (x < 0.7f) 1 else 2
     }
 
-    /** El estuche, el más alto; la bolsa, mediana; la pila, la más baja (y más alta cuanto más escribiste). */
+    /** El estuche, el más alto; el hatillo, mediano y panzón; la pila, la más baja (y más alta cuanto más escribiste). */
     fun alto(semilla: Int, palabras: Int): Float = when (clase(semilla)) {
         0 -> 0.87f + 0.07f * azar(semilla, 1)
         1 -> 0.56f + 0.12f * (palabras / 800f).coerceIn(0f, 1f) + 0.04f * azar(semilla, 1)
-        else -> 0.74f + 0.06f * azar(semilla, 1)
+        else -> 0.68f + 0.06f * azar(semilla, 1)
     }
 
     // ---------------------------------------------------------------- la luz
@@ -187,21 +186,15 @@ internal object MuebleEstanteEdo {
             if (p.y <= ch) frioEdo(p.x / w - RANMA_X, p.y / w - RANMA_Y) else frioCuerpoEdo((p.y - ch) / fila, n, p.x / w)
         }
 
-        // ---- la pared, el nageshi, el pilar y el ranma; la luz que entra por él; el charco del farol
-        paredEdo(a, g)
-        luzRanmaEdo(a, g)
-        if (a.lunar) {
-            mancha(farol, w * 0.7f, FILO_MUEBLE.copy(alpha = 0.2f))
-            mancha(farol, w * 0.34f, FILO_MUEBLE.copy(alpha = 0.34f))
-            mancha(farol, w * 0.14f, EdoTinta.LLAMA.copy(alpha = 0.5f))
-        } else if (a.lumbre) {
-            val f = if (oscuro) 1f else 0.6f
-            mancha(farol, w * 1.15f, FILO_MUEBLE.copy(alpha = 0.18f * f))
-            mancha(farol, w * 0.5f, FILO_MUEBLE.copy(alpha = 0.3f * f))
-            mancha(farol, w * 0.2f, EdoTinta.LLAMA.copy(alpha = 0.42f * f))
+        // ---- lo fijo (la pared, el nageshi, el pilar, el ranma y su luz, el charco del farol y el suelo), pintado una vez por
+        // tamaño y modo, arriba y abajo; a los lados del estante, lo poco que asoma de la pared
+        val clave = "${w.toInt()}|${h.toInt()}|${ch.toInt()}|${g.fondo.toInt()}|${suelo.toInt()}|${fila.toInt()}|$n|$oscuro|$noche|$u"
+        val ranura = if (noche) 2 else 0
+        with(CapaEdo) {
+            pegar(ranura, "a$clave", Rect(0f, 0f, w, ch)) { capaParedEdo(a, g, cerca) }
+            pegar(ranura + 1, "b$clave", Rect(0f, g.fondo, w, h)) { capaParedEdo(a, g, cerca) }
         }
-        // ---- el suelo de tablas
-        sueloEdo(a, g, cerca)
+        paredCostadosEdo(a, g)
 
         // ---- el estante: el fondo forrado de papel, las tablas pasantes, los postes, la tabla de arriba y el pie
         d.repisas.forEachIndexed { k, r -> fondoHuecoEdo(k, r, d.ocupado.getOrNull(k) ?: r.left, a, g, cerca, frio) }
@@ -228,7 +221,6 @@ internal object MuebleEstanteEdo {
         sorobanEdo(pieSoro, w, a, cerca(pieSoro - Offset(0f, w * 0.05f)), frio(pieSoro - Offset(0f, w * 0.05f)))
         val pieCoj = Offset(w * 0.8f, apoyo)
         cojinesEdo(pieCoj, w, a, cerca(pieCoj - Offset(0f, w * 0.04f)), frio(pieCoj))
-        plectroEdo(Offset(w * 0.39f, apoyo + w * 0.004f), w, a, cerca(Offset(w * 0.39f, apoyo)))
         farolEdo(farol, w, a, g)
 
         // ---- al pie: la cubeta del arroz y la escoba apoyada en el poste

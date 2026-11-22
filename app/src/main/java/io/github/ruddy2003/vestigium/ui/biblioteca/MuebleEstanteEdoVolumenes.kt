@@ -15,7 +15,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
@@ -31,7 +30,9 @@ import io.github.ruddy2003.vestigium.ui.biblioteca.EdoTinta.KAMI
 import io.github.ruddy2003.vestigium.ui.biblioteca.EdoTinta.SHU
 import io.github.ruddy2003.vestigium.ui.biblioteca.EdoTinta.WARA
 import io.github.ruddy2003.vestigium.ui.biblioteca.EdoTinta.WASHI
+import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.ideario.azar
+import io.github.ruddy2003.vestigium.ui.juegoTonos
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.muebles.FILO_MUEBLE
 import kotlin.math.roundToInt
@@ -42,6 +43,35 @@ import kotlin.math.roundToInt
 private val CRUDO_EDO = Color(0xFFC9BD9E)
 private val GRIS_EDO = Color(0xFFB2AA98)
 private val LUNA_EDO = Color(0xFFEDE6C8)
+
+/** Las escalas del ánimo de Edo, la de día y la de noche (bajo, medio, alto), para volver a la de día. */
+private val TONOS_EDO: Pair<List<Color>, List<Color>> by lazy { juegoTonos(TemaId.EDO, false) to juegoTonos(TemaId.EDO, true) }
+
+/**
+ * El color del ánimo tal como es de día. En el modo oscuro la escala del tema cambia de colores (pensada para la interfaz) y
+ * un volumen claro se volvía negro de noche. Aquí el volumen es un objeto del cuarto: conserva su color de día y la luz del
+ * farol lo apaga con la distancia. Se ubica el color en la escala de noche (el tramo y la fracción que más se le acercan) y se
+ * toma el mismo punto en la de día; si no está en la escala, queda igual. Sin ánimo, null.
+ */
+internal fun tonoDeDiaEdo(t: Color?, oscuro: Boolean): Color? {
+    if (t == null || !oscuro) return t
+    val (dia, noche) = TONOS_EDO
+    if (dia.size < 3 || noche.size < 3) return t
+    var mejor: Color = t
+    var error = 0.03f
+    for (seg in 0 until 2) {
+        val a0 = noche[seg]; val a1 = noche[seg + 1]
+        val dr = a1.red - a0.red; val dg = a1.green - a0.green; val db = a1.blue - a0.blue
+        val largo = dr * dr + dg * dg + db * db
+        if (largo < 1e-5f) continue
+        val f = (((t.red - a0.red) * dr + (t.green - a0.green) * dg + (t.blue - a0.blue) * db) / largo).coerceIn(0f, 1f)
+        val er = cuadradoEdo(t.red - a0.red - dr * f) + cuadradoEdo(t.green - a0.green - dg * f) + cuadradoEdo(t.blue - a0.blue - db * f)
+        if (er < error) { error = er; mejor = mezcla(dia[seg], dia[seg + 1], f) }
+    }
+    return mejor
+}
+
+private fun cuadradoEdo(x: Float) = x * x
 
 internal fun DrawScope.volumenEdo(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
     if (size.width < 2f || size.height < 2f) return
@@ -54,7 +84,7 @@ internal fun DrawScope.volumenEdo(v: Volumen, medidor: TextMeasurer, oscuro: Boo
     when (MuebleEstanteEdo.clase(v.semilla)) {
         0 -> estucheEdo(v, medidor, a, k, f, hacia)
         1 -> pilaCuadernosEdo(v, medidor, a, k, f, hacia)
-        else -> bolsaEdo(v, medidor, a, k, f, hacia)
+        else -> hatilloEdo(v, medidor, a, k, f, hacia)
     }
 }
 
@@ -75,14 +105,14 @@ private fun DrawScope.mesEdo(medidor: TextMeasurer, mes: String, r: Rect, color:
 
 /**
  * Las baldosas de las telas, pintadas una sola vez (y otra si cambia la densidad): el estampado menudo de puntos del estuche
- * (komon) y el teñido de nudos de la bolsa (kanoko: cuadritos claros con su punto hondo, al tresbolillo). Se pegan en mosaico.
+ * (komon) y los círculos encadenados del paño del hatillo (shippō). Se pegan en mosaico.
  */
 private object TelasEdo {
     private var densidad = 0f
     private var komon: ImageBitmap? = null
-    private var kanoko: ImageBitmap? = null
+    private var shippo: ImageBitmap? = null
     fun komon(u: Float): ImageBitmap { if (u != densidad || komon == null) rehacer(u); return komon!! }
-    fun kanoko(u: Float): ImageBitmap { if (u != densidad || kanoko == null) rehacer(u); return kanoko!! }
+    fun shippo(u: Float): ImageBitmap { if (u != densidad || shippo == null) rehacer(u); return shippo!! }
     private fun baldosa(lado: Int, pintar: DrawScope.(Float) -> Unit): ImageBitmap {
         val img = ImageBitmap(lado, lado)
         CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(img), Size(lado.toFloat(), lado.toFloat())) { pintar(lado.toFloat()) }
@@ -96,13 +126,15 @@ private object TelasEdo {
             for (c in listOf(Offset(l * 0.25f, l * 0.25f), Offset(l * 0.75f, l * 0.75f))) drawCircle(claro, 0.55f * u, c)
             for (c in listOf(Offset(l * 0.75f, l * 0.25f), Offset(l * 0.25f, l * 0.75f))) drawCircle(hondo, 0.45f * u, c)
         }
-        val l2 = (7f * u).roundToInt().coerceAtLeast(4)
-        kanoko = baldosa(l2) { l ->
-            val claro = Color.White.copy(alpha = 0.26f); val hondo = Color(0xFF1A1426).copy(alpha = 0.34f)
-            for (c in listOf(Offset(l * 0.25f, l * 0.25f), Offset(l * 0.75f, l * 0.75f))) {
-                drawRect(claro, Offset(c.x - l * 0.13f, c.y - l * 0.13f), Size(l * 0.26f, l * 0.26f))
-                drawCircle(hondo, l * 0.06f, c)
+        val l2 = (10f * u).roundToInt().coerceAtLeast(4)
+        shippo = baldosa(l2) { l ->
+            // Los círculos encadenados del estampado (shippō): uno en cada esquina y uno en el centro, del mismo radio.
+            val claro = Color.White.copy(alpha = 0.24f); val g = (0.7f * u).coerceAtLeast(0.7f)
+            for (c in listOf(Offset(0f, 0f), Offset(l, 0f), Offset(0f, l), Offset(l, l), Offset(l / 2, l / 2))) {
+                drawCircle(claro, l * 0.5f, c, style = Stroke(g))
             }
+            drawCircle(Color(0xFF1A1426).copy(alpha = 0.22f), l * 0.06f, Offset(l / 2, 0f))
+            drawCircle(Color(0xFF1A1426).copy(alpha = 0.22f), l * 0.06f, Offset(0f, l / 2))
         }
     }
 }
@@ -153,7 +185,7 @@ private fun DrawScope.estucheEdo(v: Volumen, medidor: TextMeasurer, a: AireEdo, 
     val u = density
     val w = size.width; val h = size.height
     val s = v.semilla and 0x7fffffff
-    val tela = v.tono?.let { a.animo(it, k, f) } ?: a.luz(CRUDO_EDO, k, f)
+    val tela = tonoDeDiaEdo(v.tono, a.oscuro)?.let { a.animo(it, k, f) } ?: a.luz(CRUDO_EDO, k, f)
     val hondo = mezcla(tela, a.hondo, 0.45f)
     val claro = mezcla(tela, if (a.oscuro) FILO_MUEBLE else Color.White, 0.25f)
     val top = 5f * u
@@ -214,7 +246,7 @@ private fun DrawScope.pilaCuadernosEdo(v: Volumen, medidor: TextMeasurer, a: Air
     val u = density
     val w = size.width; val h = size.height
     val s = v.semilla and 0x7fffffff
-    val tela = v.tono?.let { a.animo(it, k, f) } ?: a.luz(GRIS_EDO, k, f)
+    val tela = tonoDeDiaEdo(v.tono, a.oscuro)?.let { a.animo(it, k, f) } ?: a.luz(GRIS_EDO, k, f)
     val n = (3 + (v.lleno * 4).toInt()).coerceIn(3, 7)
     val banda = h / n
     val hojas = a.luz(mezcla(WASHI, KAMI, 0.45f), k, f)
@@ -239,17 +271,17 @@ private fun DrawScope.pilaCuadernosEdo(v: Volumen, medidor: TextMeasurer, a: Air
     // El bulto de la pila.
     bultoEdo(a, k, f, hacia, 0f, w, 0f, h)
     // El cordón de papel torcido que la ata y su nudo encima.
-    val xc = w * 0.56f
+    val xc = w * 0.74f
     val cordon = a.luz(mezcla(WASHI, KAMI, 0.2f), k + 0.1f, f)
     drawLine(a.sombra(0.3f), Offset(xc + 1f * u, 0f), Offset(xc + 1f * u, h), 1.5f * u)
     drawLine(cordon, Offset(xc, 0f), Offset(xc, h), 1.4f * u)
     drawCircle(cordon, 2.2f * u, Offset(xc, 1.6f * u))
     drawLine(cordon, Offset(xc, 1.6f * u), Offset(xc - 4f * u, 5f * u), 1f * u, StrokeCap.Round)
-    // La etiqueta, colgada del nudo y un poco ladeada, que no tapa toda la pila.
-    val tw = minOf(w * 0.56f, 17f * u)
-    val th = minOf(h * 0.7f, 34f * u)
-    val cuelga = Offset(xc, 4f * u)
-    rotate(-4f + 8f * azar(s, 70), cuelga) {
+    // La etiqueta, colgada del nudo a un lado, para que se vean los lomos cosidos.
+    val tw = minOf(w * 0.44f, 15f * u)
+    val th = minOf(h * 0.7f, 32f * u)
+    val cuelga = Offset(minOf(xc, w - tw / 2 - 1.5f * u), 4f * u)
+    rotate(-3f + 5f * azar(s, 70), cuelga) {
         val et = Rect(cuelga.x - tw / 2, cuelga.y + 2f * u, cuelga.x + tw / 2, cuelga.y + 2f * u + th)
         drawRect(a.sombra(0.4f), et.topLeft + Offset(1f * u, 1.2f * u), et.size)
         drawRect(a.etiqueta(k, WASHI), et.topLeft, et.size)
@@ -265,91 +297,84 @@ private fun DrawScope.pilaCuadernosEdo(v: Volumen, medidor: TextMeasurer, a: Air
 }
 
 /**
- * La bolsa de tela de las cartas (la que deja el correo para recoger): de algodón teñido en nudos del color del ánimo, panzona
- * (más cuanto más escribiste), fruncida en el cuello con su cordón, la boca abierta en volantes y, si va llena, las cartas
- * enrolladas que asoman; del cordón cuelga la tablilla de madera con el día y el mes, como las que llevan los bultos en la posta.
+ * El hatillo de furoshiki: el paño cuadrado estampado (círculos encadenados, del color del ánimo) que envuelve el bulto de
+ * las cartas y se anuda arriba con dos puntas en orejas; panzón (más cuanto más escribiste) y bajo, con los pliegues que tiran
+ * hacia el nudo. Atada al nudo, la tablilla de madera de cinco lados de los bultos de la posta, con el día, el mes y el sello.
  */
-private fun DrawScope.bolsaEdo(v: Volumen, medidor: TextMeasurer, a: AireEdo, k: Float, f: Float, hacia: Float) {
+private fun DrawScope.hatilloEdo(v: Volumen, medidor: TextMeasurer, a: AireEdo, k: Float, f: Float, hacia: Float) {
     val u = density
     val w = size.width; val h = size.height
     val s = v.semilla and 0x7fffffff
-    val tela = v.tono?.let { a.animo(it, k, f) } ?: a.luz(CRUDO_EDO, k, f)
+    val tela = tonoDeDiaEdo(v.tono, a.oscuro)?.let { a.animo(it, k, f) } ?: a.luz(CRUDO_EDO, k, f)
     val hondo = mezcla(tela, a.hondo, 0.45f)
     val claro = mezcla(tela, if (a.oscuro) FILO_MUEBLE else Color.White, 0.28f)
-    val cx = w / 2
-    val cuello = h * 0.27f
-    val boca = h * 0.08f
-    val cw = w * 0.42f
-    val panza = w * (0.88f + 0.12f * v.lleno)
-    // Las cartas enrolladas que asoman por la boca, si va llena.
-    if (v.lleno > 0.45f) {
-        for (j in 0 until 2) {
-            val x = cx + (j - 0.5f) * cw * 0.5f
-            val top = boca - (3f + 4f * azar(s, 80 + j)) * u
-            drawRect(a.luz(WASHI, k, f), Offset(x - 2.2f * u, top), Size(4.4f * u, cuello - top))
-            drawOval(a.luz(mezcla(WASHI, KAMI, 0.5f), k, f), Offset(x - 2.2f * u, top - 1.2f * u), Size(4.4f * u, 2.4f * u))
-        }
-    }
-    // Los volantes de la boca: la tela fruncida que se abre por encima del cordón.
-    val volantes = Path().apply {
-        moveTo(cx - cw / 2, cuello)
-        lineTo(cx - cw * 0.85f, boca + 1f * u)
-        val pasos = 5
-        for (j in 0 until pasos) {
-            val xa = cx - cw * 0.85f + cw * 1.7f * j / pasos; val xb = cx - cw * 0.85f + cw * 1.7f * (j + 1) / pasos
-            quadraticTo((xa + xb) / 2, boca - (2f + 2f * azar(s, 90 + j)) * u, xb, boca + (azar(s, 95 + j) * 2f) * u)
-        }
-        lineTo(cx + cw / 2, cuello); close()
-    }
-    drawPath(volantes, mezcla(tela, a.hondo, 0.12f))
-    clipPath(volantes) {
-        for (j in 0 until 5) {
-            val x = cx - cw * 0.7f + cw * 1.4f * j / 4f
-            drawLine(hondo.copy(alpha = 0.6f), Offset(x, boca), Offset(cx + (x - cx) * 0.5f, cuello), 0.7f * u)
-        }
-        drawRect(claro.copy(alpha = 0.3f), Offset(0f, boca - 3f * u), Size(w, 3f * u))
-    }
-    // El cuerpo: del cuello fruncido a la panza redonda.
+    val cx = w * (0.48f + 0.06f * (azar(s, 120) - 0.5f))
+    val nudoY = h * 0.25f
+    val arriba = h * 0.3f
+    val panza = 0.04f + 0.08f * v.lleno
+    // El bulto: de los hombros que tiran hacia el nudo a la panza redonda que se asienta en la tabla.
     val cuerpo = Path().apply {
-        moveTo(cx - cw / 2, cuello)
-        cubicTo(cx - cw * 0.6f, cuello + h * 0.1f, cx - panza / 2, h * 0.42f, cx - panza / 2, h * 0.72f)
-        cubicTo(cx - panza / 2, h * 0.96f, cx - panza * 0.32f, h, cx, h)
-        cubicTo(cx + panza * 0.32f, h, cx + panza / 2, h * 0.96f, cx + panza / 2, h * 0.72f)
-        cubicTo(cx + panza / 2, h * 0.42f, cx + cw * 0.6f, cuello + h * 0.1f, cx + cw / 2, cuello)
+        moveTo(cx - w * 0.16f, nudoY + h * 0.02f)
+        cubicTo(cx - w * 0.36f, arriba, -w * panza, h * 0.4f, -w * panza * 0.5f, h * 0.72f)
+        cubicTo(0f, h * 0.96f, w * 0.12f, h, w * 0.3f, h)
+        lineTo(w * 0.7f, h)
+        cubicTo(w * 0.88f, h, w, h * 0.96f, w * (1f + panza * 0.5f), h * 0.72f)
+        cubicTo(w * (1f + panza), h * 0.4f, cx + w * 0.36f, arriba, cx + w * 0.16f, nudoY + h * 0.02f)
+        close()
+    }
+    // Las dos orejas del nudo: las puntas del paño, una hacia cada lado.
+    val orejaI = Path().apply {
+        moveTo(cx - w * 0.04f, nudoY)
+        quadraticTo(cx - w * 0.3f, nudoY - h * 0.02f, cx - w * 0.36f, h * 0.03f)
+        quadraticTo(cx - w * 0.12f, h * 0.08f, cx + w * 0.02f, nudoY - h * 0.03f)
+        close()
+    }
+    val orejaD = Path().apply {
+        moveTo(cx + w * 0.03f, nudoY)
+        quadraticTo(cx + w * 0.22f, nudoY - h * 0.08f, cx + w * 0.3f, h * 0.06f)
+        quadraticTo(cx + w * 0.1f, h * 0.12f, cx - w * 0.02f, nudoY - h * 0.02f)
         close()
     }
     drawPath(corridoEdo(cuerpo, -hacia * 1.6f * u, 1.2f * u), a.sombra(0.3f))
     drawPath(cuerpo, tela)
     clipPath(cuerpo) {
-        telaEdo(TelasEdo.kanoko(u), Rect(0f, cuello, w, h), if (a.oscuro) 0.5f else 0.85f)
-        // Los pliegues que bajan del frunce, con su lado de luz.
-        for (j in 0 until 4) {
-            val x0 = cx + (j - 1.5f) * cw * 0.28f
-            val x1 = cx + (j - 1.5f) * panza * 0.3f
-            val pl = Path().apply { moveTo(x0, cuello); quadraticTo((x0 + x1) / 2 + (azar(s, 100 + j) - 0.5f) * 4f * u, h * 0.45f, x1, h * (0.62f + 0.1f * azar(s, 104 + j))) }
-            drawPath(pl, hondo.copy(alpha = 0.55f), style = Stroke(1f * u, cap = StrokeCap.Round))
-            drawPath(corridoEdo(pl, -1.1f * u, 0f), claro.copy(alpha = 0.4f), style = Stroke(0.6f * u, cap = StrokeCap.Round))
+        telaEdo(TelasEdo.shippo(u), Rect(0f, nudoY, w, h), if (a.oscuro) 0.5f else 0.85f)
+        // Los pliegues que tiran hacia el nudo, con su lado de luz, y el doblez de abajo, donde el paño da la vuelta.
+        for (j in 0 until 3) {
+            for (lado in listOf(-1f, 1f)) {
+                val x1 = cx + lado * w * (0.22f + 0.15f * j)
+                val y1 = h * (0.55f + 0.14f * j + 0.04f * azar(s, 130 + j))
+                val pl = Path().apply { moveTo(cx + lado * w * 0.08f, nudoY + h * 0.04f); quadraticTo(cx + lado * w * (0.2f + 0.1f * j), h * (0.4f + 0.06f * j), x1, y1) }
+                drawPath(pl, hondo.copy(alpha = 0.5f), style = Stroke(1f * u, cap = StrokeCap.Round))
+                drawPath(corridoEdo(pl, -1.1f * u, 0f), claro.copy(alpha = 0.35f), style = Stroke(0.6f * u, cap = StrokeCap.Round))
+            }
         }
-        // El asiento: la tela que se aplasta contra la tabla.
-        drawRect(hondo.copy(alpha = 0.35f), Offset(0f, h - h * 0.06f), Size(w, h * 0.06f))
-        bultoEdo(a, k, f, hacia, cx - panza / 2, cx + panza / 2, cuello, h)
+        val doblez = Path().apply { moveTo(w * 0.04f, h * 0.8f); quadraticTo(w * 0.5f, h * (0.86f + 0.04f * azar(s, 136)), w * 0.96f, h * 0.78f) }
+        drawPath(doblez, hondo.copy(alpha = 0.45f), style = Stroke(1f * u, cap = StrokeCap.Round))
+        drawRect(hondo.copy(alpha = 0.35f), Offset(0f, h * 0.94f), Size(w, h * 0.06f))
+        bultoEdo(a, k, f, hacia, 0f, w, arriba, h)
     }
-    // El cordón del cuello, dos vueltas, y sus cabos con un nudo.
-    val cordon = a.luz(if (tela.luminance() > 0.35f) AI else mezcla(WARA, WASHI, 0.3f), k, f)
-    drawLine(cordon, Offset(cx - cw * 0.56f, cuello - 1f * u), Offset(cx + cw * 0.56f, cuello + 0.6f * u), 1.4f * u, StrokeCap.Round)
-    drawLine(cordon, Offset(cx - cw * 0.52f, cuello + 1.6f * u), Offset(cx + cw * 0.52f, cuello + 2.2f * u), 1.2f * u, StrokeCap.Round)
-    val nudo = Offset(cx - cw * 0.45f, cuello + 1f * u)
-    drawCircle(cordon, 1.8f * u, nudo)
-    drawLine(cordon, nudo, nudo + Offset(-2f * u, h * 0.12f), 1f * u, StrokeCap.Round)
-    // La tablilla de madera de cinco lados, colgada del cordón, con el día, el mes y el sello (en los Sueños, la luna).
-    val tw = minOf(w * 0.5f, 16f * u)
-    val th = minOf(h * 0.56f, 32f * u)
-    val cuelga = Offset(cx + cw * 0.25f, cuello + 2f * u)
-    rotate(5f - 6f * azar(s, 110), cuelga) {
+    for ((o, i) in listOf(orejaI to 0, orejaD to 1)) {
+        drawPath(o, if (i == 0) mezcla(tela, a.hondo, 0.12f) else tela)
+        clipPath(o) { telaEdo(TelasEdo.shippo(u), Rect(0f, 0f, w, nudoY), if (a.oscuro) 0.45f else 0.8f) }
+        drawPath(o, hondo.copy(alpha = 0.5f), style = Stroke(0.6f * u))
+    }
+    // El nudo: el paño apretado, con su sombra debajo.
+    val nudo = Rect(cx - w * 0.13f, nudoY - h * 0.05f, cx + w * 0.13f, nudoY + h * 0.06f)
+    drawOval(a.sombra(0.3f), nudo.topLeft + Offset(0.8f * u, 1.6f * u), nudo.size)
+    drawOval(mezcla(tela, a.hondo, 0.18f), nudo.topLeft, nudo.size)
+    drawArc(claro.copy(alpha = 0.6f), 190f, 120f, false, nudo.topLeft + Offset(1f * u, 1f * u), Size(nudo.width - 2f * u, nudo.height - 2f * u), style = Stroke(0.8f * u))
+    drawLine(hondo, Offset(cx - w * 0.02f, nudo.top + 1f * u), Offset(cx + w * 0.03f, nudo.bottom - 1f * u), 0.8f * u)
+    // La tablilla de madera de cinco lados, atada al nudo con un cordel, con el día, el mes y el sello (en los Sueños, la luna).
+    val tw = minOf(w * 0.46f, 15f * u)
+    val th = minOf(h * 0.55f, 30f * u)
+    val cuelga = Offset(minOf(cx + w * 0.14f, w - tw / 2 - 1f * u), nudoY + h * 0.03f)
+    val cordel = a.luz(mezcla(WARA, WASHI, 0.3f), k, f)
+    rotate(4f - 6f * azar(s, 110), cuelga) {
         val t0 = cuelga.y + 3f * u
         val pico = tw * 0.32f
         val forma = poligonoEdo(cuelga.x - tw / 2, t0 + pico, cuelga.x, t0, cuelga.x + tw / 2, t0 + pico, cuelga.x + tw / 2, t0 + th, cuelga.x - tw / 2, t0 + th)
-        drawLine(cordon, Offset(cuelga.x, cuelga.y - 1f * u), Offset(cuelga.x, t0 + pico * 0.6f), 0.8f * u)
+        drawLine(cordel, Offset(cuelga.x - 2f * u, cuelga.y - 2f * u), Offset(cuelga.x, t0 + pico * 0.6f), 0.8f * u)
         drawPath(corridoEdo(forma, 1f * u, 1.3f * u), a.sombra(0.42f))
         drawPath(forma, a.etiqueta(k, mezcla(HINOKI, WASHI, 0.5f)))
         drawRect(a.sombra(0.12f), Offset(cuelga.x + tw * 0.3f, t0 + pico * 0.6f), Size(tw * 0.2f, th - pico * 0.6f))
