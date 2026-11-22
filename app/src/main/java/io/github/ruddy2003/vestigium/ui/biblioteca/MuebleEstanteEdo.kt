@@ -136,7 +136,8 @@ internal class AireEdo(val oscuro: Boolean, val noche: Boolean) {
     fun etiqueta(k: Float, base: Color = EdoTinta.WASHI): Color {
         val kk = k.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) mezcla(base, EdoTinta.ATARDECER, 0.08f) else base
-        return mezcla(mezcla(base, hondo, 0.48f - 0.44f * kk), EdoTinta.LLAMA, 0.14f * kk)
+        val ke = maxOf(kk, 0.25f)
+        return mezcla(mezcla(base, hondo, 0.48f - 0.44f * ke), EdoTinta.LLAMA, 0.14f * ke)
     }
     val tinta: Color get() = if (oscuro) mezcla(EdoTinta.SUMI, hondo, 0.3f) else EdoTinta.SUMI
 }
@@ -286,7 +287,7 @@ internal fun farolEdo(fx: Float, fy: Float, corto: Boolean): Float {
 /** El rescoldo de la brasa, en [b]: poco y muy cerca. */
 internal fun brasaEdo(fx: Float, fy: Float, b: Offset): Float {
     val dx = fx - b.x; val dy = fy - b.y
-    return 0.55f * exp(-5.5f * sqrt(dx * dx + dy * dy))
+    return 0.7f * exp(-3.4f * sqrt(dx * dx + dy * dy))
 }
 
 /** Toda la luz cálida que llega a un punto (farol y brasa), de 0 a 1. */

@@ -104,10 +104,24 @@ internal fun DrawScope.volumenEdo(v: Volumen, medidor: TextMeasurer, oscuro: Boo
     // De dónde viene la luz: de día, del ranma (izquierda); de noche, del farol.
     val hacia = if (a.oscuro) (if (MuebleEstanteEdo.LAMP_X >= p.x) 1f else -1f) else -1f
     val tinte = tenidoEdo(tonoDeDiaEdo(v.tono, oscuro))
+    // Lejos del farol, lo guardado se hunde con color pero no desaparece: nunca baja de un poco de luz.
+    val kv = if (a.oscuro) maxOf(k, 0.12f) else k
     when (MuebleEstanteEdo.clase(v.semilla)) {
-        0 -> estucheEdo(v, medidor, a, k, f, hacia, tinte)
-        1 -> pilaCuadernosEdo(v, medidor, a, k, f, hacia, tinte)
-        else -> hatilloEdo(v, medidor, a, k, f, hacia, tinte)
+        0 -> estucheEdo(v, medidor, a, kv, f, hacia, tinte)
+        1 -> pilaCuadernosEdo(v, medidor, a, kv, f, hacia, tinte)
+        else -> hatilloEdo(v, medidor, a, kv, f, hacia, tinte)
+    }
+    // La brasa del pie, de noche, deja un borde cálido desde abajo en lo que tiene cerca.
+    if (a.oscuro) {
+        val b = brasaNominalEdo(v.repisas)
+        val kb = brasaEdo(p.x, p.y, b)
+        if (kb > 0.03f) {
+            val u = density
+            val calor = EdoTinta.BRASA.copy(alpha = (kb * 3.2f).coerceAtMost(0.6f))
+            drawRect(calor, Offset(1f * u, size.height - 1.6f * u), Size(size.width - 2f * u, 1.6f * u))
+            val x = if (b.x < p.x) 0f else size.width - 1.2f * u
+            drawRect(calor.copy(alpha = calor.alpha * 0.7f), Offset(x, size.height * 0.62f), Size(1.2f * u, size.height * 0.36f))
+        }
     }
 }
 
@@ -221,7 +235,7 @@ private fun DrawScope.selloEdo(c: Offset, s: Float, luna: Boolean, a: AireEdo, k
 /** Una etiqueta de papel o de madera con el día grande, el mes en columna y el sello abajo. */
 private fun DrawScope.diaEnEtiquetaEdo(v: Volumen, medidor: TextMeasurer, a: AireEdo, k: Float, r: Rect, fondo: Color, tamDia: Float) {
     val u = density
-    val alturaDia = minOf(r.height * 0.36f, 16f * u)
+    val alturaDia = minOf(r.height * 0.4f, 20f * u)
     textoEn(medidor, v.dia, Rect(r.left, r.top + 1.2f * u, r.right, r.top + 1.2f * u + alturaDia), MuebleEstanteEdo.LETRA, a.tinta, tamDia, peso = FontWeight.Bold, minimo = 6f)
     val ss = minOf(r.width * 0.5f, 6f * u)
     val sello = Offset(r.center.x, r.bottom - ss * 0.8f)
@@ -319,64 +333,93 @@ private fun DrawScope.pilaCuadernosEdo(v: Volumen, medidor: TextMeasurer, a: Air
     val s = v.semilla and 0x7fffffff
     val tela = tinte?.let { a.animo(it, k, f) } ?: a.luz(GRIS_EDO, k, f)
     val n = (3 + (v.lleno * 4).toInt()).coerceIn(3, 7)
-    val arriba = 4f * u
-    val banda = (h - arriba) / n
+    val arriba = 4.5f * u
     sombraArrojadaEdo(a, hacia, arriba)
-    val hojas = a.luz(mezcla(WASHI, KAMI, 0.4f), k, f)
-    val hilo = a.luz(mezcla(WASHI, KAMI, 0.2f), k, f)
+    // La etiqueta cuelga a la derecha: las puntadas se ven a su izquierda.
+    val tw = (w * 0.54f).coerceIn(16f * u, 22f * u).coerceAtMost(w - 3f * u)
+    val th = minOf(h * 0.8f, 42f * u)
+    val cx = w - tw / 2 - 1.5f * u
+    val limite = cx - tw / 2 - 1f * u
+    val hojas = a.luz(mezcla(WASHI, KAMI, 0.35f), k, f)
+    val hojasOsc = a.luz(mezcla(KAMI, KURI_OSC, 0.25f), k, f)
+    val hilo = mezcla(tela, a.luz(mezcla(WASHI, KAMI, 0.3f), k, f), 0.6f)
+    // El grueso de cada cuaderno, desigual, y lo que se corre cada uno: la pila no es un bloque.
+    val gruesos = List(n) { 0.8f + 0.4f * azar(s, 30 + it) }
+    val total = gruesos.sum()
+    var y1 = h
     var izqTop = 0f; var derTop = w
     for (i in 0 until n) {
-        val y1 = h - banda * i; val y0 = y1 - banda
-        val corre = (azar(s, 40 + i) - 0.5f) * w * 0.12f
-        val l = maxOf(0f, corre); val r = w + minOf(0f, corre) - 1f * u
+        val banda = (h - arriba) * gruesos[i] / total
+        val y0 = y1 - banda
+        val corre = (azar(s, 40 + i) - 0.5f) * w * 0.16f
+        val l = maxOf(0f, corre) + 0.5f * u; val r = w + minOf(0f, corre) - 1f * u
         if (i == n - 1) { izqTop = l; derTop = r }
         val tapa = mezcla(tela, if (azar(s, 50 + i) > 0.5f) a.hondo else Color.White, 0.04f + 0.14f * azar(s, 60 + i))
         val hondoT = mezcla(tapa, a.hondo, 0.45f)
-        drawRoundRect(tapa, Offset(l, y0 + 0.5f * u), Size(r - l, banda - 0.5f * u), CornerRadius(2f * u))
-        // El canto de las hojas, entre las dos tapas, con sus rayas finas.
-        drawRect(hojas, Offset(l + 2.4f * u, y0 + banda * 0.38f), Size(r - l - 4.8f * u, banda * 0.24f))
-        drawLine(a.sombra(0.25f), Offset(l + 2.4f * u, y0 + banda * 0.5f), Offset(r - 2.4f * u, y0 + banda * 0.5f), 0.5f * u)
-        // La luz de arriba de cada tapa y la sombra que deja la de encima.
-        drawRect(mezcla(tapa, Color.White, 0.25f).copy(alpha = 0.8f), Offset(l + 1.5f * u, y0 + 0.6f * u), Size(r - l - 3f * u, 0.9f * u))
-        drawRect(a.sombra(0.4f), Offset(l, y1 - 1.2f * u), Size(r - l, 1.2f * u))
-        // Las esquinas gastadas, más claras.
-        drawRect(mezcla(tapa, KAMI, 0.45f), Offset(l, y0 + 0.5f * u), Size(1.6f * u, banda - 0.5f * u))
-        // Las cuatro puntadas del cosido: el hilo que sale por un agujero, da la vuelta al lomo y entra por el siguiente.
-        for (j in 0 until 4) {
-            val x = l + (r - l) * (0.13f + 0.245f * j)
-            drawLine(hondoT, Offset(x, y0 + banda * 0.12f), Offset(x, y0 + banda * 0.88f), 1.4f * u, StrokeCap.Round)
-            drawLine(hilo, Offset(x - 0.3f * u, y0 + banda * 0.12f), Offset(x - 0.3f * u, y0 + banda * 0.88f), 0.8f * u, StrokeCap.Round)
-            drawCircle(hondoT, 0.8f * u, Offset(x, y0 + banda * 0.12f))
+        val claroT = mezcla(tapa, if (a.oscuro) EdoTinta.LLAMA else Color.White, 0.3f)
+        rotate((azar(s, 70 + i) - 0.5f) * 2.6f, Offset((l + r) / 2, (y0 + y1) / 2)) {
+            // Las dos tapas de papel teñido y, entre ellas, el canto de las hojas, un poco remetido, con sus hojas.
+            drawRoundRect(tapa, Offset(l, y0 + 0.4f * u), Size(r - l, banda - 0.4f * u), CornerRadius(2.2f * u))
+            val ha = y0 + banda * 0.36f; val hb = y1 - banda * 0.34f
+            drawRect(hojas, Offset(l + 1.6f * u, ha), Size(r - l - 3.2f * u, hb - ha))
+            val hojitas = ((hb - ha) / (1.3f * u)).toInt().coerceIn(1, 8)
+            for (j in 1..hojitas) {
+                val yy = ha + (hb - ha) * j / (hojitas + 1)
+                drawLine(hojasOsc.copy(alpha = 0.55f), Offset(l + 1.6f * u, yy), Offset(r - 1.6f * u - (azar(s, 80 + i * 9 + j) * 3f * u), yy), 0.5f * u)
+            }
+            drawRect(a.sombra(0.3f), Offset(l + 1.6f * u, ha), Size(r - l - 3.2f * u, 0.9f * u))
+            // La luz en el canto de arriba de cada tapa, la sombra del de encima y las esquinas gastadas.
+            drawRect(claroT.copy(alpha = 0.8f), Offset(l + 1.5f * u, y0 + 0.6f * u), Size(r - l - 3f * u, 0.9f * u))
+            drawRect(claroT.copy(alpha = 0.5f), Offset(l + 1.5f * u, hb + 0.4f * u), Size(r - l - 3f * u, 0.7f * u))
+            drawRect(a.sombra(0.42f), Offset(l, y1 - 1.2f * u), Size(r - l, 1.2f * u))
+            drawRect(mezcla(tapa, KAMI, 0.5f), Offset(l, y0 + 0.8f * u), Size(1.4f * u, banda - 1.6f * u))
+            drawRect(hondoT.copy(alpha = 0.5f), Offset(r - 1.6f * u, y0 + 0.8f * u), Size(1.6f * u, banda - 1.6f * u))
+            // Las fibras del papel de la tapa.
+            for (j in 0 until 3) {
+                val xx = l + (r - l) * azar(s, 90 + i * 3 + j)
+                drawLine(claroT.copy(alpha = 0.4f), Offset(xx, y0 + banda * 0.12f), Offset(xx + 2.4f * u, y0 + banda * 0.14f), 0.5f * u)
+            }
+            // Las cuatro puntadas del cosido, a la izquierda de la etiqueta: el hilo sale por un agujero de la tapa de arriba,
+            // da la vuelta al lomo con su relieve (luz a un lado, sombra al otro) y entra por la de abajo.
+            val lim = minOf(r - 2f * u, limite)
+            for (j in 0 until 4) {
+                val x = l + (lim - l) * (0.14f + 0.24f * j)
+                if (x > lim) continue
+                drawLine(a.sombra(0.4f), Offset(x + 0.9f * u, y0 + banda * 0.1f), Offset(x + 0.9f * u, y1 - banda * 0.1f), 1.2f * u, StrokeCap.Round)
+                drawLine(hilo, Offset(x, y0 + banda * 0.08f), Offset(x, y1 - banda * 0.1f), 1.2f * u, StrokeCap.Round)
+                drawLine(a.brillo(0.6f, maxOf(k, 0.3f)), Offset(x - 0.5f * u, y0 + banda * 0.1f), Offset(x - 0.5f * u, y1 - banda * 0.14f), 0.5f * u)
+                drawCircle(hondoT, 0.9f * u, Offset(x, y0 + banda * 0.08f))
+                drawLine(hilo, Offset(x - 1.4f * u, y0 + 0.8f * u), Offset(x + 1.4f * u, y0 + 0.8f * u), 0.9f * u)
+            }
         }
+        y1 = y0
     }
-    // La tapa del de arriba, vista un poco desde arriba.
-    val tapaArriba = mezcla(tela, Color.White, 0.12f)
+    // La tapa del de arriba, vista un poco desde arriba, con la tira del título (en blanco: el libro es del librero).
+    val tapaArriba = mezcla(tela, Color.White, 0.14f)
     drawRoundRect(tapaArriba, Offset(izqTop + 1f * u, 0.5f * u), Size(derTop - izqTop - 2f * u, arriba), CornerRadius(1.6f * u))
+    drawRect(a.etiqueta(k, WASHI), Offset(izqTop + (derTop - izqTop) * 0.12f, 1.2f * u), Size((derTop - izqTop) * 0.18f, arriba - 1.6f * u))
     drawRect(a.brillo(0.3f, k), Offset(izqTop + 2f * u, 0.8f * u), Size((derTop - izqTop) * 0.5f, 1f * u))
     bultoEdo(a, k, f, hacia, 0f, w, arriba, h)
     // El cordón de papel torcido que la ata, a un lado, y su nudo encima.
-    val xc = w * 0.76f
     val cordon = a.luz(mezcla(WASHI, KAMI, 0.25f), k + 0.1f, f)
-    drawLine(a.sombra(0.35f), Offset(xc + 1.2f * u, 0f), Offset(xc + 1.2f * u, h), 1.8f * u)
-    drawLine(cordon, Offset(xc, 0f), Offset(xc, h), 1.6f * u)
+    drawLine(a.sombra(0.35f), Offset(cx + 1.2f * u, 0f), Offset(cx + 1.2f * u, h), 1.8f * u)
+    drawLine(cordon, Offset(cx, 0f), Offset(cx, h), 1.6f * u)
     var y = 2f * u
-    while (y < h) { drawLine(a.sombra(0.25f), Offset(xc - 0.8f * u, y), Offset(xc + 0.8f * u, y + 1.4f * u), 0.5f * u); y += 2.8f * u }
-    drawCircle(cordon, 2.6f * u, Offset(xc, 2f * u))
-    drawCircle(a.brillo(0.5f, k), 1f * u, Offset(xc - 0.8f * u, 1.2f * u))
-    drawLine(cordon, Offset(xc, 2f * u), Offset(xc - 5f * u, 6f * u), 1.1f * u, StrokeCap.Round)
-    // La etiqueta, colgada del nudo a un lado, para que se vean los lomos cosidos.
-    val tw = minOf(w * 0.44f, 16f * u)
-    val th = minOf(h * 0.72f, 34f * u)
-    val cuelga = Offset(minOf(xc, w - tw / 2 - 1.5f * u), 4f * u)
-    rotate(-3f + 5f * azar(s, 70), cuelga) {
+    while (y < h) { drawLine(a.sombra(0.25f), Offset(cx - 0.8f * u, y), Offset(cx + 0.8f * u, y + 1.4f * u), 0.5f * u); y += 2.8f * u }
+    drawCircle(cordon, 2.6f * u, Offset(cx, 2f * u))
+    drawCircle(a.brillo(0.5f, k), 1f * u, Offset(cx - 0.8f * u, 1.2f * u))
+    drawLine(cordon, Offset(cx, 2f * u), Offset(cx - 5f * u, 6f * u), 1.1f * u, StrokeCap.Round)
+    // La etiqueta, grande, colgada del nudo a la derecha, con el día que se lee de un vistazo.
+    val cuelga = Offset(cx, 4f * u)
+    rotate(-2f + 4f * azar(s, 70), cuelga) {
         val et = Rect(cuelga.x - tw / 2, cuelga.y + 2.4f * u, cuelga.x + tw / 2, cuelga.y + 2.4f * u + th)
         drawRect(a.sombra(0.45f), et.topLeft + Offset(1.2f * u, 1.4f * u), et.size)
         val papel = a.etiqueta(k, WASHI)
         drawRect(papel, et.topLeft, et.size)
-        drawRect(a.sombra(0.12f), Offset(et.right - tw * 0.2f, et.top), Size(tw * 0.2f, th))
+        drawRect(a.sombra(0.12f), Offset(et.right - tw * 0.18f, et.top), Size(tw * 0.18f, th))
         drawRect(a.luz(mezcla(WASHI, KAMI, 0.7f), k, f), et.topLeft, et.size, style = Stroke(0.5f * u))
         drawCircle(a.sombra(0.55f), 1f * u, Offset(cuelga.x, et.top + 2f * u))
-        diaEnEtiquetaEdo(v, medidor, a, k, Rect(et.left, et.top + 2.4f * u, et.right, et.bottom), papel, 12f)
+        diaEnEtiquetaEdo(v, medidor, a, k, Rect(et.left, et.top + 3f * u, et.right, et.bottom), papel, 16f)
     }
 }
 
@@ -467,13 +510,13 @@ private fun DrawScope.hatilloEdo(v: Volumen, medidor: TextMeasurer, a: AireEdo, 
     }
     drawLine(hondo, Offset(cx + w * 0.02f, nudo.top + 1f * u), Offset(cx - w * 0.01f, nudo.bottom - 1f * u), 1f * u)
     // La tablilla de madera de cinco lados, atada al nudo con un cordel, con el día, el mes y el sello (en los Sueños, la luna).
-    val tw = minOf(w * 0.46f, 16f * u)
-    val th = minOf(h * 0.6f, 33f * u)
-    val cuelga = Offset(minOf(cx + w * 0.14f, w - tw / 2 - 1f * u), nudoY + h * 0.04f)
+    val tw = (w * 0.56f).coerceIn(16f * u, 22f * u).coerceAtMost(w - 3f * u)
+    val th = minOf(h * 0.66f, 40f * u)
+    val cuelga = Offset(minOf(cx + w * 0.16f, w - tw / 2 - 1f * u), nudoY + h * 0.06f)
     val cordel = a.luz(mezcla(WARA, WASHI, 0.3f), k, f)
     rotate(4f - 6f * azar(s, 110), cuelga) {
         val t0 = cuelga.y + 3f * u
-        val pico = tw * 0.32f
+        val pico = tw * 0.26f
         val forma = poligonoEdo(cuelga.x - tw / 2, t0 + pico, cuelga.x, t0, cuelga.x + tw / 2, t0 + pico, cuelga.x + tw / 2, t0 + th, cuelga.x - tw / 2, t0 + th)
         drawLine(cordel, Offset(cuelga.x - 2f * u, cuelga.y - 2f * u), Offset(cuelga.x, t0 + pico * 0.6f), 0.9f * u)
         drawPath(corridoEdo(forma, 1.2f * u, 1.5f * u), a.sombra(0.45f))
@@ -483,7 +526,7 @@ private fun DrawScope.hatilloEdo(v: Volumen, medidor: TextMeasurer, a: AireEdo, 
         for (j in 0 until 3) drawLine(a.luz(mezcla(HINOKI, KURI_OSC, 0.4f), k, f).copy(alpha = 0.3f), Offset(cuelga.x - tw * (0.35f - 0.25f * j), t0 + pico + 2f * u), Offset(cuelga.x - tw * (0.33f - 0.25f * j), t0 + th - 1f * u), 0.5f * u)
         drawPath(forma, a.luz(mezcla(HINOKI, KURI_OSC, 0.5f), k, f), style = Stroke(0.6f * u))
         drawCircle(a.sombra(0.55f), 1f * u, Offset(cuelga.x, t0 + pico * 0.6f))
-        diaEnEtiquetaEdo(v, medidor, a, k, Rect(cuelga.x - tw / 2, t0 + pico * 0.85f, cuelga.x + tw / 2, t0 + th), madera, 11.5f)
+        diaEnEtiquetaEdo(v, medidor, a, k, Rect(cuelga.x - tw / 2, t0 + pico * 0.85f, cuelga.x + tw / 2, t0 + th), madera, 16f)
     }
     if (a.oscuro && k > 0.06f) drawLine(a.brillo(0.6f, k), Offset(w * (1f + panza * 0.4f) - 1f * u, h * 0.45f), Offset(w * (1f + panza * 0.4f) - 1f * u, h * 0.85f), 1f * u)
 }

@@ -293,7 +293,7 @@ private fun DrawScope.farolEdo(a: AireEdo, g: MarcoEdo) {
         val viva = if (a.oscuro) 1f else 0.75f
         drawPath(forma, mezcla(LLAMA, Color(0xFFE8833E), 0.42f))
         clipPath(forma) {
-            drawRect(Brush.radialGradient(listOf(Color(0xFFFFF6DC).copy(alpha = viva), LLAMA.copy(alpha = 0.6f * viva), Color.Transparent), Offset(c.x - fw * 0.08f, c.y + fh * 0.06f), fh * 0.62f), cuerpo.topLeft, cuerpo.size)
+            drawRect(Brush.radialGradient(listOf(Color(0xFFFFFBEF).copy(alpha = viva), Color(0xFFFFE6A8).copy(alpha = 0.85f * viva), LLAMA.copy(alpha = 0.5f * viva), Color.Transparent), Offset(c.x - fw * 0.06f, c.y + fh * 0.04f), fh * 0.66f), cuerpo.topLeft, cuerpo.size)
             for (j in 1 until aros) {
                 val y = cuerpo.top + fh * j / aros
                 drawLine(Color(0xFF8A4A22).copy(alpha = 0.5f), Offset(cuerpo.left, y), Offset(cuerpo.right, y), 1f * u)
@@ -301,7 +301,8 @@ private fun DrawScope.farolEdo(a: AireEdo, g: MarcoEdo) {
             drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color(0xFF7A3A18).copy(alpha = 0.4f)), c.x, cuerpo.right), cuerpo.topLeft, cuerpo.size)
             // La vela, que se adivina detrás del papel, con su llama.
             drawRect(Color(0xFF8A4A22).copy(alpha = 0.35f), Offset(c.x - 2.2f * u, c.y + fh * 0.05f), Size(4.4f * u, fh * 0.3f))
-            drawOval(Color.White.copy(alpha = 0.7f * viva), Offset(c.x - 2.4f * u, c.y - fh * 0.04f), Size(4.8f * u, 8f * u))
+            drawOval(Color(0xFFFFF1C6).copy(alpha = 0.8f * viva), Offset(c.x - 4f * u, c.y - fh * 0.08f), Size(8f * u, 13f * u))
+            drawOval(Color.White.copy(alpha = 0.95f * viva), Offset(c.x - 2.2f * u, c.y - fh * 0.05f), Size(4.4f * u, 8f * u))
         }
     } else {
         val k = 1f; val f = g.frio(c)
@@ -325,7 +326,7 @@ private fun DrawScope.farolEdo(a: AireEdo, g: MarcoEdo) {
         drawRect(a.brillo(0.45f, if (a.lumbre) 0.8f else 1f), Offset(t.left + 2f * u, t.top + 1.2f * u), Size(t.width * 0.35f, 1f * u))
     }
     if (a.lumbre) {
-        mancha(c, fw * 1.5f, LLAMA.copy(alpha = if (a.oscuro) 0.34f else 0.18f))
+        mancha(c, fw * 1.8f, LLAMA.copy(alpha = if (a.oscuro) 0.34f else 0.18f))
         mancha(c, fw * 0.8f, Color(0xFFFFF0C8).copy(alpha = if (a.oscuro) 0.3f else 0.14f))
     }
 }

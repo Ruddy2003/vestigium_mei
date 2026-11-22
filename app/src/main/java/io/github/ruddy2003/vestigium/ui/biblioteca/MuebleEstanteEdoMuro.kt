@@ -272,9 +272,9 @@ private fun DrawScope.haloFarolEdo(a: AireEdo, g: MarcoEdo) {
         mancha(f, w * 0.45f, LLAMA.copy(alpha = 0.2f))
         mancha(f, w * 0.2f, LLAMA.copy(alpha = 0.34f))
     } else if (a.oscuro) {
-        mancha(f, w * 0.62f, LLAMA.copy(alpha = 0.18f))
-        mancha(f, w * 0.28f, LLAMA.copy(alpha = 0.34f))
-        mancha(f, w * 0.12f, Color(0xFFFFF0C8).copy(alpha = 0.3f))
+        mancha(f, w * 0.78f, LLAMA.copy(alpha = 0.17f))
+        mancha(f, w * 0.36f, LLAMA.copy(alpha = 0.3f))
+        mancha(f, w * 0.14f, Color(0xFFFFF0C8).copy(alpha = 0.34f))
     } else if (a.noche) {
         mancha(f, w * 0.4f, LLAMA.copy(alpha = 0.16f))
     }
@@ -353,7 +353,12 @@ internal inline fun DrawScope.sombraParedEdo(a: AireEdo, g: MarcoEdo, desde: Off
         val f = Offset(desde.x / w - MuebleEstanteEdo.LAMP_X, desde.y / w - MuebleEstanteEdo.LAMP_Y)
         val d = f.getDistance()
         val k = farolEdo(desde.x / w, desde.y / w, a.lunar)
-        if (k > 0.08f && d > 0.04f) translate(w * 0.06f * f.x / d, w * 0.035f * f.y / d) { silueta(a.hondo.copy(alpha = (2.2f * alfa * k).coerceAtMost(0.55f))) }
+        if (k > 0.08f && d > 0.04f) {
+            val tibia = mezcla(a.hondo, Color(0xFF4A2A1A), 0.5f)
+            val al = (1.6f * alfa * k).coerceAtMost(0.32f)
+            translate(w * 0.024f * f.x / d, w * 0.016f * f.y / d) { silueta(tibia.copy(alpha = al * 0.45f)) }
+            translate(w * 0.013f * f.x / d, w * 0.009f * f.y / d) { silueta(tibia.copy(alpha = al * 0.55f)) }
+        }
     }
 }
 
