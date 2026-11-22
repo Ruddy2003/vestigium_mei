@@ -271,13 +271,13 @@ internal object MuebleEstanteDeco {
         val a = AireDeco(oscuro, noche)
         val g = GeoDeco(d, w, h, density, a)
         // La pared y lo que cuelga de ella.
-        paredDeco(g, d)
+        paredDeco(g)
         trompetaDeco(g)
         apliqueDeco(g)
         // El armario: los casilleros, los costados, las tablas con su rótulo, la cornisa y el pie.
-        sombraArmarioDeco(g, d)
+        sombraArmarioDeco(g)
         d.repisas.forEachIndexed { k, r -> casilleroDeco(g, k, r, d.ocupado.getOrNull(k)) }
-        costadosDeco(g, d)
+        costadosDeco(g)
         d.tablas.forEachIndexed { k, r -> tablaDeco(g, k, r) }
         d.repisas.forEachIndexed { k, r ->
             val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
@@ -285,7 +285,7 @@ internal object MuebleEstanteDeco {
         }
         d.placas.forEach { p -> rotuloDeco(g, p, medidor) }
         cornisaDeco(g)
-        pieDeco(g, d)
+        pieDeco(g)
         // Lo de encima, de atrás adelante.
         encimaDeco(g)
         // La luz del aplique encima de lo que tiene cerca, y la otra temperatura.

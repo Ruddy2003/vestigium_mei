@@ -47,7 +47,7 @@ private fun zonasPared(g: GeoDeco): List<Rect> = listOf(
  * noche, la pared se hunde en su propio color con la distancia al aplique (un solo degradado) y el aplique la tiñe de llama;
  * al alba, el rosa baja por la escalera; con la calle, el frío.
  */
-internal fun DrawScope.paredDeco(g: GeoDeco, d: DisposicionEstante) {
+internal fun DrawScope.paredDeco(g: GeoDeco) {
     val a = g.a; val w = g.w; val u = g.u
     for (r in zonasPared(g)) {
         if (r.width <= 0.5f || r.height <= 0.5f) continue
@@ -111,7 +111,7 @@ private fun DrawScope.veloPared(g: GeoDeco, r: Rect) {
 }
 
 /** La sombra del armario en la pared: de día, a la derecha; de noche, a la izquierda, lejos del aplique. */
-internal fun DrawScope.sombraArmarioDeco(g: GeoDeco, d: DisposicionEstante) {
+internal fun DrawScope.sombraArmarioDeco(g: GeoDeco) {
     val a = g.a
     if (g.izq(Offset(g.w * 0.5f, g.ch))) drawRect(a.s(0.36f), Offset(g.w - g.costado, g.cornisaArriba), Size(g.costado, g.pie - g.cornisaArriba))
     else drawRect(a.s(0.5f), Offset(0f, g.cornisaArriba), Size(g.costado, g.pie - g.cornisaArriba))

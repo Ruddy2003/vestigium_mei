@@ -126,7 +126,7 @@ internal fun DrawScope.casilleroDeco(g: GeoDeco, k: Int, r: Rect, oc: Float?) {
  * filete de marfil, el capitel y la basa escalonados de latón; por fuera, el canto que asoma con su luz o su sombra. De
  * noche se apagan por tramos y el frío de la escalera roza el de la izquierda.
  */
-internal fun DrawScope.costadosDeco(g: GeoDeco, d: DisposicionEstante) {
+internal fun DrawScope.costadosDeco(g: GeoDeco) {
     val a = g.a; val u = g.u; val w = g.w
     val prof = w * PROFUNDO_DECO
     val arriba = g.ch; val abajo = g.pie
@@ -302,7 +302,7 @@ internal fun DrawScope.cornisaDeco(g: GeoDeco) {
  * latón con sus dos rosetas y la bocallave; el zócalo escalonado con sus filetes; las patas ahusadas con su zapata de latón;
  * y el suelo de terrazo con un abanico de latón embutido, la sombra del armario y de las patas, y lo que hay en él.
  */
-internal fun DrawScope.pieDeco(g: GeoDeco, d: DisposicionEstante) {
+internal fun DrawScope.pieDeco(g: GeoDeco) {
     val a = g.a; val u = g.u; val w = g.w; val h = g.h
     val pie = g.pie
     if (h - pie <= 2f) return
