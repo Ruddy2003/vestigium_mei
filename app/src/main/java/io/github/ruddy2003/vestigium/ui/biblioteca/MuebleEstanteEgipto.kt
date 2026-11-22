@@ -1,175 +1,190 @@
 package io.github.ruddy2003.vestigium.ui.biblioteca
 
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.ui.Letra
 import io.github.ruddy2003.vestigium.ui.TemaId
-import io.github.ruddy2003.vestigium.ui.juegoTonos
 import io.github.ruddy2003.vestigium.ui.ideario.azar
-import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
-import io.github.ruddy2003.vestigium.ui.ideario.vetas
-import io.github.ruddy2003.vestigium.ui.muebles.FILO_MUEBLE
-import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
+import io.github.ruddy2003.vestigium.ui.juegoTonos
+import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.granoMueble
 import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
-import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
-import kotlin.math.pow
+import kotlin.math.exp
 import kotlin.math.sqrt
 
 /**
- * La paleta del almacén de la Tumba (Deir el-Medina, hacia 1200 a. C.): el enlucido de barro con paja, ocre tostado, y el
- * adobe de limo que asoma en los desconchones y en las roscas de la bóveda; la palmera de los postes, la acacia de los
- * tablones y la soga de fibra; el papiro, el lino y el yeso; la marga crema de las tinajas con su azul pálido y su rojo; el
- * bronce, la fayenza y el grano.
+ * La paleta del almacén de la Tumba (Deir el-Medina, hacia 1200 a. C.), de la misma casa que el Ideario: el enlucido de
+ * barro dorado con su zócalo ocre y la franja roja, negra y azul; el adobe de las roscas; la palmera de los postes, la
+ * acacia de los tablones y la soga de fibra; el papiro, el lino y el yeso; la marga de las tinajas con su azul; el bronce, la
+ * fayenza y el grano. La sombra es violeta tostado (`sombraMueble`), la luz, crema.
  */
 internal object EgiptoTinta {
-    /** El enlucido de barro con paja (ocre tostado), su luz al sol y el zócalo oscurecido por la humedad. */
-    val ENLUCIDO = Color(0xFFBE8F58)
-    val ENLUCIDO_SOL = Color(0xFFF0CC8E)
-    val ZOCALO = Color(0xFF8A6240)
-    /** El adobe de limo del Nilo, gris pardo, que asoma; la bóveda que se aleja en sombra; la paja. */
-    val ADOBE = Color(0xFF8C7660)
-    val BOVEDA = Color(0xFF8A643E)
-    val PAJA = Color(0xFFE2C58C)
-    /** El tronco de palmera de los postes, su sombra y la soga de fibra de palma. */
-    val PALMA = Color(0xFF94704A)
-    val PALMA_OSC = Color(0xFF4A3424)
-    val FIBRA = Color(0xFFBC965F)
+    /** El enlucido de barro: su luz, su tono y su sombra; el sol que entra por la puerta, casi blanco. */
+    val ENLUCIDO_LUZ = Color(0xFFF4E3BE)
+    val ENLUCIDO = Color(0xFFE2C392)
+    val ENLUCIDO_OSC = Color(0xFFB98F62)
+    val SOL = Color(0xFFFFF6E2)
+    /** El fondo de cada tramo: el mismo barro a la sombra del anaquel, hondo, para que resalte lo guardado. */
+    val HONDO = Color(0xFFA38672)
+    /** El fondo de los tramos: el barro sin enlucir del testero detrás del anaquel, un pardo rojizo hondo que hace resaltar lo guardado. */
+    val TRAMO = Color(0xFF8A5C40)
+    /** El zócalo ocre de la casa y el adobe que asoma. */
+    val OCRE = Color(0xFFC47E3A)
+    val ADOBE = Color(0xFF8C6A48)
+    val PAJA = Color(0xFFE0C38A)
+    /** La franja pintada: rojo, negro carbón y azul egipcio; el verde de la fayenza y el amarillo. */
+    val ROJO = Color(0xFFAE3F28)
+    val CARBON = Color(0xFF2B2422)
+    val AZUL = Color(0xFF2C6CA8)
+    val FAYENZA = Color(0xFF2A9A98)
+    val AMARILLO = Color(0xFFE0B03A)
+    /** El tronco de palmera de los postes: su luz, su tono y su sombra; la soga de fibra de palma. */
+    val PALMA_LUZ = Color(0xFFD2A974)
+    val PALMA = Color(0xFFA67C50)
+    val PALMA_OSC = Color(0xFF4C3424)
+    val FIBRA = Color(0xFFC9A066)
     /** Los tablones de acacia, desbastados a azuela. */
-    val ACACIA = Color(0xFFB88A57)
-    val ACACIA_OSC = Color(0xFF5C3E28)
-    /** El papiro, el lino crudo, el yeso de las tablillas, la tinta negra y el ocre rojo de las rúbricas. */
-    val PAPIRO = Color(0xFFE7D6A6)
-    val PAPIRO_OSC = Color(0xFFB09566)
-    val LINO = Color(0xFFE2D7BA)
-    val YESO = Color(0xFFF2ECDC)
-    val TINTA = Color(0xFF221A14)
-    val ROJO = Color(0xFF93301F)
-    /** El barro de los sellos y de la lámpara; la marga crema de las tinajas y el azul pálido con que se pintan. */
-    val BARRO = Color(0xFF8C5839)
-    val MARGA = Color(0xFFE6D3AE)
-    val AZUL = Color(0xFF6FA9C4)
-    /** El bronce de la balanza, el cobre de los cinceles, su verdín y la fayenza azul verdosa: lo frío de la paleta. */
-    val BRONCE = Color(0xFFC49045)
-    val COBRE = Color(0xFFBF7545)
+    val ACACIA_LUZ = Color(0xFFD6A46A)
+    val ACACIA = Color(0xFFAF7846)
+    val ACACIA_OSC = Color(0xFF6A4428)
+    /** El papiro, el lino crudo, el yeso de las tablillas y la tinta negra; el rojo de las rúbricas es [ROJO]. */
+    val PAPIRO = Color(0xFFEAD8A6)
+    val PAPIRO_OSC = Color(0xFFB59A68)
+    val LINO = Color(0xFFEDE2C6)
+    val YESO = Color(0xFFF7F1E2)
+    val TINTA = Color(0xFF1E160C)
+    /** El barro de los sellos y de la lámpara; la marga crema de las tinajas. */
+    val BARRO = Color(0xFFA65C38)
+    val MARGA = Color(0xFFE6D1A4)
+    /** El bronce de la balanza y su brillo, el cobre de los cinceles y su verdín; la piedra gris de las pesas. */
+    val BRONCE = Color(0xFFC08A3A)
+    val BRONCE_LUZ = Color(0xFFF2D58C)
+    val COBRE = Color(0xFFC06E3C)
     val VERDIN = Color(0xFF5E9C88)
-    val FAYENZA = Color(0xFF3F90A4)
-    /** La piedra gris de las pesas. */
-    val PIEDRA = Color(0xFF8D8A84)
-    /** El trigo de las raciones, el pan cocido y la piel de las cebollas. */
-    val GRANO = Color(0xFFD8B663)
-    val PAN = Color(0xFFC28A4A)
-    val CEBOLLA = Color(0xFFB4664A)
-    /** La tierra apisonada del suelo. */
-    val TIERRA = Color(0xFFA48A69)
+    val PIEDRA = Color(0xFF8F8A82)
+    /** El trigo de las raciones, el pan cocido y la piel de las cebollas; la tierra apisonada del suelo. */
+    val GRANO = Color(0xFFDDB458)
+    val PAN = Color(0xFFC98A45)
+    val CEBOLLA = Color(0xFFB8644A)
+    val TIERRA = Color(0xFFB8946C)
 
-    // Las luces: la noche del almacén, la de los Sueños, la sombra lila del atardecer, la llama, la luna, el sol y el ocaso.
-    val NOCHE = Color(0xFF151A2C)
-    val NOCHE_SUENOS = Color(0xFF0D1636)
-    val ATARDECER = Color(0xFF6A4E7A)
-    val LLAMA = Color(0xFFFFD27E)
-    val LUNA = Color(0xFFBDD0F2)
-    val SOL = Color(0xFFFFE6B0)
+    // Las luces: la noche de la casa (la misma del Ideario), su sombra, la de los Sueños, el atardecer, la llama y la luna.
+    val NOCHE = Color(0xFF17152F)
+    val NOCHE_SOMBRA = Color(0xFF0D0C1E)
+    val NOCHE_SUENOS = Color(0xFF0E1236)
+    val ATARDECER = Color(0xFF6E4E7E)
     val OCASO = Color(0xFFFF9A52)
+    val LLAMA = Color(0xFFFFC56E)
+    val LUNA = Color(0xFFA9C0F2)
 }
 
 /**
- * El aire del momento en el almacén: de día, el sol que entra por la puerta (a la izquierda, fuera del cuadro) y deja su
- * mancha recortada en el enlucido; de noche (el modo oscuro), la lámpara del suelo, a la derecha, alumbra de abajo arriba y
- * la luna entra por la misma puerta y deja su mancha fría donde de día está el sol; en los Sueños ([noche]) en claro, el sol
- * ya bajo (la mancha larga y anaranjada) con el resto en sombra lila y, en oscuro ([lunar]), la lámpara baja y la luna fuerte.
- * [cerca] es cuánto llega de la llama (0 a 1) y [frio], de la luna (o, de día, del sol: ver [puerta]).
+ * El aire del momento en el almacén. De día, el sol que entra por la puerta (a la izquierda, fuera del cuadro) y deja su
+ * mancha recortada; de noche (el modo oscuro), la lámpara del suelo arde y tiñe lo cercano de su color, lo lejano se hunde en
+ * un oscuro del mismo tono (no gris), y la luna entra por la misma puerta y deja su mancha fría donde de día está el sol; en
+ * los Sueños ([noche]) en claro, el sol ya bajo, anaranjado, con el resto en sombra lila; en oscuro ([lunar]), la lámpara arde
+ * baja y la luna manda. [k] es cuánto llega de la llama (de 0 a 1; de día, 1) y [f], de la puerta (el sol o la luna).
  */
 internal class AireEgipto(val oscuro: Boolean, val noche: Boolean) {
     val lumbre: Boolean get() = oscuro || noche
-    val hondo: Color get() = if (oscuro) (if (noche) EgiptoTinta.NOCHE_SUENOS else EgiptoTinta.NOCHE) else SOMBRA_MUEBLE
     val lunar: Boolean get() = oscuro && noche
-    /** El atardecer de los Sueños en claro. */
     val ocaso: Boolean get() = noche && !oscuro
-    private val luna: Float get() = if (lunar) 1.3f else 1f
+    private val noct: Color get() = if (lunar) EgiptoTinta.NOCHE_SUENOS else EgiptoTinta.NOCHE
 
-    private fun lunada(c: Color, f: Float): Color =
-        if (f <= 0f) c else Color(c.red * (1f - 0.28f * f), c.green * (1f - 0.08f * f), (c.blue * (1f + 0.2f * f)).coerceAtMost(1f), c.alpha)
+    /** El color propio de algo, hundido en la noche: oscuro y de su mismo tono, con el aire azul de la casa. */
+    private fun hondo(c: Color) = Color(c.red * 0.1f + noct.red * 0.84f, c.green * 0.1f + noct.green * 0.84f, c.blue * 0.1f + noct.blue * 0.84f, c.alpha)
 
-    fun luz(c: Color, cerca: Float, frio: Float = 0f): Color {
-        val k = cerca.coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(mezcla(c, EgiptoTinta.ATARDECER, 0.26f * (1f - frio)), FILO_MUEBLE, 0.1f * k) else c
-        val f = (frio * luna).coerceIn(0f, 1f) * (1f - k)
-        if (lunar) return lunada(mezcla(mezcla(c, hondo, 0.9f - 0.8f * k.pow(0.9f) - 0.4f * f), FILO_MUEBLE, 0.32f * k), f)
-        val base = mezcla(c, hondo, 0.86f - 0.76f * k.pow(0.9f) - 0.4f * f)
-        return lunada(mezcla(base, FILO_MUEBLE, 0.22f * k), f * 0.8f)
+    /** Lo que alumbra la luna: el color de la cosa, enfriado y apagado, con su tono (no un gris). */
+    private fun lunado(c: Color) = Color(c.red * 0.32f + 0.07f, c.green * 0.4f + 0.1f, c.blue * 0.5f + 0.3f, c.alpha)
+
+    /** El color de algo con la luz que le llega: [k] de la llama, [f] de la puerta. */
+    fun c(col: Color, k: Float, f: Float = 0f): Color {
+        if (!oscuro) {
+            if (!noche) return col
+            // El ocaso: lo que no toca el sol bajo queda en sombra lila; lo que toca, encendido de naranja.
+            return mezcla(mezcla(col, EgiptoTinta.ATARDECER, 0.3f * (1f - f)), EgiptoTinta.OCASO, 0.16f * f + 0.08f * k)
+        }
+        val kk = k.coerceIn(0f, 1f)
+        var v = mezcla(hondo(col), col, (1.05f * kk).coerceAtMost(0.92f))
+        v = mezcla(v, EgiptoTinta.LLAMA, 0.2f * kk)
+        val ff = f.coerceIn(0f, 1f) * (1f - kk) * (if (lunar) 0.88f else 0.74f)
+        return if (ff > 0f) mezcla(v, lunado(col), ff) else v
     }
+    /** La sombra: de día violeta tostado; de noche, la noche de la casa. */
+    fun s(a: Float): Color = when {
+        oscuro -> EgiptoTinta.NOCHE_SOMBRA.copy(alpha = (a * 1.3f).coerceIn(0f, 1f))
+        noche -> sombraMueble((a * 1.2f).coerceIn(0f, 1f))
+        else -> sombraMueble(a)
+    }
+    /** El brillo de lo que mira a la luz: de día crema; de noche, el filo de la llama según [k]. */
+    fun b(a: Float, k: Float = 1f): Color = when {
+        oscuro -> EgiptoTinta.LLAMA.copy(alpha = (a * 0.9f * k).coerceIn(0f, 1f))
+        noche -> luzMueble(a * 0.7f)
+        else -> luzMueble(a)
+    }
+    /** El filo frío de la luna en lo que mira a la puerta (de noche). */
+    fun helado(a: Float, f: Float): Color = EgiptoTinta.LUNA.copy(alpha = if (oscuro) (a * f).coerceIn(0f, 1f) else 0f)
     /** La luz de la puerta sobre lo que toca: el sol (de día), el ocaso (Sueños en claro) o la luna (de noche). */
     fun puerta(a: Float): Color = when {
         !lumbre -> EgiptoTinta.SOL.copy(alpha = a.coerceIn(0f, 1f))
-        !oscuro -> EgiptoTinta.OCASO.copy(alpha = (a * 0.85f).coerceIn(0f, 1f))
-        else -> EgiptoTinta.LUNA.copy(alpha = (a * (if (lunar) 0.75f else 0.6f)).coerceIn(0f, 1f))
+        !oscuro -> EgiptoTinta.OCASO.copy(alpha = (a * 0.8f).coerceIn(0f, 1f))
+        else -> EgiptoTinta.LUNA.copy(alpha = (a * (if (lunar) 0.55f else 0.42f)).coerceIn(0f, 1f))
     }
-    fun sombra(a: Float): Color = if (oscuro) hondo.copy(alpha = (a * 1.15f).coerceIn(0f, 1f)) else sombraMueble(if (noche) a * 1.15f else a)
-    fun claro(a: Float): Color = luzMueble(if (oscuro) a * 0.12f else if (noche) a * 0.55f else a)
-    fun filo(a: Float): Color = FILO_MUEBLE.copy(alpha = if (oscuro) a.coerceIn(0f, 1f) else if (noche) (a * 0.4f).coerceIn(0f, 1f) else 0f)
-    fun helado(a: Float): Color = EgiptoTinta.LUNA.copy(alpha = if (oscuro) (a * luna).coerceIn(0f, 1f) else 0f)
-
-    /** El color del ánimo (ya llevado a su color de día): de noche se apaga con la distancia a la lámpara, sin invertirse. */
-    fun animo(t: Color, cerca: Float, frio: Float = 0f): Color {
-        val k = cerca.coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(mezcla(t, EgiptoTinta.ATARDECER, 0.12f * (1f - frio)), FILO_MUEBLE, 0.06f * k) else t
-        val f = (frio * luna).coerceIn(0f, 1f) * (1f - k)
-        val d = (if (lunar) 0.62f else 0.56f) - (if (lunar) 0.6f else 0.52f) * k - 0.2f * f
-        val s = 1f - 0.7f * d
-        return lunada(mezcla(mezcla(Color(t.red * s, t.green * s, t.blue * s), hondo, 0.36f * d), FILO_MUEBLE, 0.24f * k), f * 0.7f)
+    /** El color del ánimo (ya de día): de noche se apaga con la distancia a la lámpara, sin perder su tono. */
+    fun animo(t: Color, k: Float, f: Float = 0f): Color {
+        if (!oscuro) return c(t, k, f)
+        val kk = k.coerceIn(0f, 1f)
+        var v = mezcla(Color(t.red * 0.38f + noct.red * 0.5f, t.green * 0.38f + noct.green * 0.5f, t.blue * 0.38f + noct.blue * 0.5f), t, (1.1f * kk).coerceAtMost(0.95f))
+        v = mezcla(v, EgiptoTinta.LLAMA, 0.16f * kk)
+        val ff = f.coerceIn(0f, 1f) * (1f - kk) * 0.5f
+        return if (ff > 0f) mezcla(v, lunado(t), ff) else v
     }
-    /** El papiro o el yeso donde va el día: casi no se apaga, para que el número se lea siempre. */
-    fun etiqueta(cerca: Float, base: Color = EgiptoTinta.YESO): Color {
-        val k = cerca.coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(base, EgiptoTinta.ATARDECER, 0.1f) else base
-        if (lunar) return mezcla(mezcla(base, hondo, 0.46f - 0.42f * k), FILO_MUEBLE, 0.2f * k)
-        return mezcla(mezcla(base, hondo, 0.4f - 0.32f * k), FILO_MUEBLE, 0.14f * k)
+    /** El papiro o el yeso donde va el día: casi no se apaga, para que el número se lea siempre (4.5 a 1 o más). */
+    fun etiqueta(k: Float, base: Color = EgiptoTinta.YESO): Color {
+        val kk = k.coerceIn(0f, 1f)
+        if (!oscuro) return if (noche) mezcla(base, EgiptoTinta.ATARDECER, 0.12f) else base
+        val lejos = mezcla(base, Color(0xFF9E98A6), if (lunar) 0.62f else 0.55f)
+        return mezcla(lejos, mezcla(base, EgiptoTinta.LLAMA, 0.14f), (1.3f * kk).coerceAtMost(1f))
     }
-    val tinta: Color get() = if (oscuro) mezcla(EgiptoTinta.TINTA, hondo, 0.35f) else EgiptoTinta.TINTA
-    val rubrica: Color get() = if (oscuro) mezcla(EgiptoTinta.ROJO, hondo, 0.3f) else EgiptoTinta.ROJO
+    val tinta: Color get() = EgiptoTinta.TINTA
+    val rubrica: Color get() = if (oscuro) mezcla(EgiptoTinta.ROJO, EgiptoTinta.TINTA, 0.25f) else EgiptoTinta.ROJO
 }
 
 /**
  * El dibujo del estante del diario de Egipto (lo usa `EstanteEgipto`, en `BibliotecaAntiguedad.kt`): el almacén de la Tumba,
- * donde Pay, escriba de la cuadrilla, guarda sus cuentas junto a lo que reparte. Es una nave de adobe con bóveda de cañón de
- * ladrillos inclinados; contra su testero, un anaquel de dos troncos de palmera hincados en el suelo, con tablones de acacia
- * apoyados en estacas y atados con soga de fibra. Arriba, sobre el último tablón, la balanza del cobre con los cinceles en un
- * platillo y las pesas en el otro; colgados del muro, los manojos de mechas de lino de la tumba y la ristra de cebollas; al
- * pie, el costal de trigo con su medida de madera y la lámpara en su pie de barro. De día manda el sol de la puerta (fuera
- * del cuadro, a la izquierda), que deja su mancha recortada en el testero; de noche, la lámpara del suelo alumbra de abajo
- * arriba y la luna entra por la misma puerta, arriba a la izquierda. Lo de arriba, el pie y los huecos van en
- * `MuebleEstanteEgiptoPiezas.kt`; los volúmenes, en `MuebleEstanteEgiptoVolumenes.kt`.
+ * donde Pay, escriba de la cuadrilla, guarda sus cuentas junto a lo que reparte. Una nave enlucida con bóveda de cañón de
+ * ladrillo (sus roscas a la vista y la franja pintada siguiendo el arco), con el zócalo ocre de la casa; contra el testero, un
+ * anaquel de dos troncos de palmera hincados en el suelo, con tablones gruesos de acacia apoyados en estacas y atados con
+ * soga de fibra. Arriba, el bodegón: la balanza del cobre, las tinajas pintadas, el cesto de los panes; colgadas, la hoz y
+ * las cebollas. Al pie, la estera, el costal, la medida de grano, la tinaja en su soporte y la lámpara. El muro y el suelo van
+ * en `MuebleEstanteEgiptoMuro.kt`; el anaquel, en `MuebleEstanteEgiptoAnaquel.kt`; lo de arriba y del pie, en
+ * `MuebleEstanteEgiptoPiezas.kt` y `MuebleEstanteEgiptoPie.kt`; los volúmenes, en `MuebleEstanteEgiptoVolumenes.kt`.
  */
 internal object MuebleEstanteEgipto {
     val LETRA: FontFamily = Letra.messiri
 
     // ---------------------------------------------------------------- las medidas
 
-    const val CORONA = 0.52f
-    const val BASE = 0.3f
+    const val CORONA = 0.62f
+    const val BASE = 0.36f
     const val LADO = 0.085f
-    val ALTO_REPISA: Dp = 110.dp
-    val TABLA: Dp = 14.dp
+    val ALTO_REPISA: Dp = 112.dp
+    val TABLA: Dp = 16.dp
     val SEPARA: Dp = 3.dp
 
-    fun ancho(palabras: Int): Dp = (24 + (palabras / 36).coerceAtMost(18)).dp
+    fun ancho(palabras: Int): Dp = (26 + (palabras / 30).coerceAtMost(20)).dp
 
     /** Cuál de los tres es una entrada: 0, el rollo en su funda de lino; 1, la tablilla de madera pintada; 2, el fardo de lino. */
     fun clase(semilla: Int): Int {
@@ -177,28 +192,27 @@ internal object MuebleEstanteEgipto {
         return if (x < 0.4f) 0 else if (x < 0.7f) 1 else 2
     }
 
-    /** El rollo, el más alto; la tablilla, mediana; el fardo, el más bajo y blando. */
+    /** El rollo, el más alto; la tablilla, mediana; el fardo, el más bajo y blando. Todos llenan casi el tramo. */
     fun alto(semilla: Int, palabras: Int): Float = when (clase(semilla)) {
-        0 -> 0.86f + 0.08f * azar(semilla, 1)
-        1 -> 0.76f + 0.06f * azar(semilla, 1)
-        else -> 0.74f + 0.06f * azar(semilla, 1)
+        0 -> 0.88f + 0.07f * azar(semilla, 1)
+        1 -> 0.82f + 0.06f * azar(semilla, 1)
+        else -> 0.78f + 0.06f * azar(semilla, 1)
     }
 
     // ---------------------------------------------------------------- la luz
 
     /** Dónde arde la lámpara, en anchos del mueble: [LAMP_X] desde la izquierda y [LAMP_BAJO] por debajo del último tablón. */
-    const val LAMP_X = 0.865f
-    const val LAMP_BAJO = 0.05f
+    const val LAMP_X = 0.7f
+    const val LAMP_BAJO = 0.075f
     const val ANCHO_NOMINAL = 380f
     /** Una repisa con su tabla, en dp. */
-    const val FILA = 124f
+    const val FILA = 128f
     /** En la base: dónde empieza el suelo, en fracción de su alto. */
-    const val SUELO = 0.42f
+    const val SUELO = 0.4f
 
     // ---------------------------------------------------------------- el estante
 
     fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
         val w = size.width; val h = size.height
         if (w < 4f || h < 4f) return
         val a = AireEgipto(oscuro, noche)
@@ -206,433 +220,67 @@ internal object MuebleEstanteEgipto {
         val b = d.base
         val suelo = b.top + b.height * SUELO
         val llama = Offset(w * LAMP_X, b.top + w * LAMP_BAJO)
-        fun cerca(p: Offset): Float = if (a.lumbre) alcanceEgipto((p.x - llama.x) / w, (p.y - llama.y) / w, a.lunar) else 1f
-        fun frio(p: Offset): Float = luzPuertaEgipto(p.x / w, p.y / w, a.ocaso)
-        // Lo de arriba nunca se pierde del todo: un poco de la noche de fuera lo dibuja aunque quede lejos de la lámpara.
-        fun arriba(p: Offset): Float = maxOf(cerca(p), if (a.oscuro) 0.1f else 0f)
-        val poste = w * 0.062f
-        val pI = Rect(w * 0.016f, ch - w * 0.07f, w * 0.016f + poste, suelo + w * 0.012f)
-        val pD = Rect(w - w * 0.016f - poste, ch - w * 0.064f, w - w * 0.016f, suelo + w * 0.016f)
-        val gT = w * 0.034f
-        val apoyo = ch - gT
-        val fondo = if (d.tablas.isNotEmpty()) d.tablas.last().bottom else ch
-        val forma = formaPuertaEgipto(w, a.ocaso)
-        val pieBal = Offset(w * 0.4f, apoyo)
-
-        // ---- el testero de enlucido, con la mancha de la puerta, y la bóveda
-        muroEgipto(a, ch, suelo, llama, forma)
-        bovedaEgipto(a, ch)
-        sombraBalanzaEgipto(pieBal, w, a, forma)
-
-        // ---- la sombra del anaquel en el muro: detrás de cada repisa, la del tablón de arriba y la de los postes
-        d.repisas.forEachIndexed { k, r -> sombraHuecoEgipto(r, pI, pD, a, k) }
-        drawRect(a.sombra(if (oscuro) 0.3f else 0.14f), Offset(pI.right, fondo), Size(pD.left - pI.right, w * 0.022f))
-
-        // ---- el suelo de tierra apisonada
-        sueloEgipto(a, suelo, llama) { p -> cerca(p) }
-
-        // ---- los postes de palmera y los tablones de acacia, atados
-        posteEgipto(pI, a, 41, cerca(pI.center), frio(Offset(pI.center.x, ch)))
-        posteEgipto(pD, a, 47, cerca(pD.center), frio(Offset(pD.center.x, ch)))
-        val tablonA = Rect(w * 0.004f, apoyo, w * 0.996f, ch)
-        tablonEgipto(tablonA, a, 300) { x -> arriba(Offset(x, ch)) to frio(Offset(x, ch)) }
-        ataduraEgipto(Offset(pI.center.x, tablonA.center.y), poste, tablonA.height, a, arriba(Offset(pI.center.x, ch)))
-        ataduraEgipto(Offset(pD.center.x, tablonA.center.y), poste, tablonA.height, a, arriba(Offset(pD.center.x, ch)))
-        d.tablas.forEachIndexed { k, r ->
-            val t = Rect(w * (0.006f + 0.006f * azar(k, 3)), r.top, w * (0.994f - 0.006f * azar(k, 4)), r.bottom)
-            tablonEgipto(t, a, 310 + 7 * k) { x -> cerca(Offset(x, r.center.y)) to frio(Offset(x, r.center.y)) }
-            ataduraEgipto(Offset(pI.center.x, r.center.y), poste, r.height, a, cerca(Offset(pI.center.x, r.center.y)))
-            ataduraEgipto(Offset(pD.center.x, r.center.y), poste, r.height, a, cerca(Offset(pD.center.x, r.center.y)))
-        }
-        // La sombra del tablón de arriba en el primer hueco.
-        if (d.repisas.isNotEmpty()) {
-            val r0 = d.repisas[0]
-            drawRect(a.sombra(if (oscuro) 0.5f else 0.36f), Offset(pI.right, r0.top), Size(pD.left - pI.right, 3.5f * u))
-        }
-
-        // ---- lo que hay en los huecos libres
-        d.repisas.forEachIndexed { k, r ->
-            val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
-            val c = Offset((oc + r.right) / 2, r.center.y)
-            huecoLibreEgipto(k, r, oc, pD.left, a, cerca(c), frio(c))
-        }
-
-        // ---- el rótulo de cada mes: una tablilla de yeso atada al canto del tablón
-        d.placas.forEach { p -> rotuloEgipto(p, medidor, a, cerca(p.r.center), frio(p.r.center)) }
-
-        // ---- lo de arriba, de atrás adelante: la estera, la tinaja grande, la balanza, el cesto, la tinaja chica, las cebollas
-        val hacia = { p: Offset -> if (a.oscuro) (if (llama.x >= p.x) 1f else -1f) else -1f }
-        val pieEst = Offset(w * 0.075f, apoyo)
-        esteraEgipto(pieEst, w, a, arriba(pieEst), frio(pieEst - Offset(0f, w * 0.12f)))
-        val pieT1 = Offset(w * 0.175f, apoyo)
-        tinajaEgipto(pieT1, w * 0.19f, w, a, arriba(pieT1), frio(pieT1 - Offset(0f, w * 0.1f)), hacia(pieT1), 0)
-        balanzaEgipto(pieBal, w, a, arriba(pieBal), frio(pieBal - Offset(0f, w * 0.2f)), hacia(pieBal))
-        val pieCesto = Offset(w * 0.7f, apoyo)
-        cestoEgipto(pieCesto, w, a, arriba(pieCesto), frio(pieCesto - Offset(0f, w * 0.06f)), hacia(pieCesto))
-        val pieT2 = Offset(w * 0.845f, apoyo)
-        tinajaEgipto(pieT2, w * 0.14f, w, a, arriba(pieT2), frio(pieT2 - Offset(0f, w * 0.07f)), hacia(pieT2), 1)
-        val clavoC = Offset(w * 0.958f, ch * 0.3f)
-        cebollasEgipto(clavoC, w, a, arriba(clavoC + Offset(0f, w * 0.08f)), frio(clavoC))
-        // La luz de la puerta también da en lo de arriba que cae dentro de su mancha.
-        clipRect(0f, 0f, w, ch) { drawPath(forma, a.puerta(if (oscuro) 0.16f else 0.14f)) }
-
-        // ---- al pie: el costal de trigo, la medida colmada, la tinaja medio enterrada y la lámpara en su pie de barro
-        val pieCostal = Offset(w * 0.18f, suelo + w * 0.08f)
-        costalEgipto(pieCostal, w, a, maxOf(cerca(pieCostal - Offset(0f, w * 0.06f)), if (a.lumbre) 0.1f else 1f), frio(pieCostal))
-        val pieMedida = Offset(w * 0.38f, suelo + w * 0.1f)
-        medidaEgipto(pieMedida, w, a, maxOf(cerca(pieMedida), if (a.lumbre) 0.12f else 1f), frio(pieMedida))
-        val pieEnterrada = Offset(w * 0.58f, suelo + w * 0.085f)
-        tinajaEnterradaEgipto(pieEnterrada, w, a, maxOf(cerca(pieEnterrada - Offset(0f, w * 0.05f)), if (a.lumbre) 0.12f else 1f), frio(pieEnterrada), hacia(pieEnterrada))
-        lamparaEgipto(llama, suelo + w * 0.075f, w, a)
-        if (a.lumbre) llamaEgipto(llama, w, a)
+        val fondo = d.tablas.lastOrNull()?.bottom ?: ch
+        val m = MesaEgipto(a, w, ch, suelo, llama)
+        // ---- el testero (solo donde se ve: el anaquel tapa el resto), la bóveda, la mancha de la puerta y lo colgado
+        muroEgipto(m, fondo)
+        bovedaEgipto(m)
+        colgadoEgipto(m)
+        // ---- el anaquel: el fondo de cada tramo, el zócalo y el suelo, los postes, los tablones y las ataduras
+        fondosTramosEgipto(m, d.repisas)
+        d.repisas.forEach { r -> fondoTramoEgipto(m, r) }
+        sueloEgipto(m, b)
+        anaquelEgipto(m, d)
+        d.placas.forEach { p -> rotuloEgipto(m, p, medidor) }
+        d.repisas.forEachIndexed { i, r -> d.ocupado.getOrNull(i)?.let { oc -> huecoLibreEgipto(m, i, r, oc) } }
+        // ---- arriba, el bodegón; al pie, lo del suelo y la lámpara
+        bodegonEgipto(m)
+        pieEgipto(m)
+        if (a.lumbre) llamaEgipto(m)
         granoMueble(Rect(0f, 0f, w, h), oscuro)
-    }
-
-    // ---------------------------------------------------------------- el muro y la bóveda
-
-    /**
-     * El testero: enlucido de barro con paja, liso y cálido (ocre tostado), con las pasadas de la mano, la paja, dos grietas y
-     * dos desconchones donde asoma el adobe; abajo, el zócalo oscurecido por la humedad. Encima, la mancha de la puerta: de día
-     * el sol, recortado en diagonal por el dintel y la jamba; en los Sueños claros, el ocaso, más largo y más bajo; de noche, la
-     * luna. De noche, además, la lámpara del suelo lo enciende de abajo arriba.
-     */
-    private fun DrawScope.muroEgipto(a: AireEgipto, ch: Float, suelo: Float, llama: Offset, forma: Path) {
-        val u = density
-        val w = size.width
-        val muro = Rect(0f, 0f, w, suelo)
-        drawRect(a.luz(EgiptoTinta.ENLUCIDO, 0f), muro.topLeft, muro.size)
-        if (a.oscuro) {
-            // De noche: el enlucido hundido y, encima, la luz de la lámpara en tres pasos (no un velo: se enciende el muro).
-            val r = if (a.lunar) 0.95f else 1.35f
-            mancha(llama, w * r, a.luz(EgiptoTinta.ENLUCIDO, 0.55f).copy(alpha = 0.9f))
-            mancha(llama, w * r * 0.55f, a.luz(EgiptoTinta.ENLUCIDO, 0.85f).copy(alpha = 0.8f))
-            mancha(llama, w * r * 0.22f, EgiptoTinta.LLAMA.copy(alpha = 0.32f))
-        } else if (a.noche) {
-            // El ocaso: la lámpara recién encendida, apenas un charco tibio.
-            mancha(llama, w * 0.32f, EgiptoTinta.LLAMA.copy(alpha = 0.32f))
-        }
-        val k0 = if (a.oscuro) 0.2f else 1f
-        // Las pasadas de la mano al alisar el barro: arcos anchos y tenues, claros y oscuros.
-        val pasadas = Path()
-        for (j in 0 until 22) {
-            val c = Offset(w * azar(j, 501), suelo * azar(j, 502))
-            val l = (22f + 30f * azar(j, 503)) * u
-            pasadas.moveTo(c.x - l, c.y + l * 0.1f); pasadas.quadraticTo(c.x, c.y - l * (0.18f + 0.1f * azar(j, 504)), c.x + l, c.y + l * 0.06f)
-        }
-        drawPath(pasadas, a.luz(mezcla(EgiptoTinta.ENLUCIDO, EgiptoTinta.PAJA, 0.45f), k0).copy(alpha = 0.18f), style = Stroke(5f * u, cap = StrokeCap.Round))
-        drawPath(corridoEgipto(pasadas, 2f * u, 4f * u), a.sombra(0.07f), style = Stroke(3f * u, cap = StrokeCap.Round))
-        pinceladas(muro, a.luz(mezcla(EgiptoTinta.ENLUCIDO, EgiptoTinta.ZOCALO, 0.5f), k0), 617, 22, u, 0.12f)
-        // La paja del barro: briznas cortas, en un solo camino.
-        val paja = Path()
-        for (j in 0 until 150) {
-            val q = Offset(w * azar(j, 511), suelo * azar(j, 512))
-            val l = (2f + 3.5f * azar(j, 513)) * u; val g = (azar(j, 514) - 0.5f) * 1.4f
-            paja.moveTo(q.x, q.y); paja.lineTo(q.x + l, q.y + l * g)
-        }
-        drawPath(paja, a.luz(EgiptoTinta.PAJA, k0).copy(alpha = 0.55f), style = Stroke(0.7f * u))
-        // Dos grietas finas del enlucido.
-        val grietas = Path()
-        listOf(Offset(w * 0.86f, ch * 0.62f) to 0.1f, Offset(w * 0.3f, ch * 0.3f) to -0.06f).forEachIndexed { j, (o, d) ->
-            grietas.moveTo(o.x, o.y)
-            var q = o
-            for (i in 1..5) { q = Offset(q.x + (d + (azar(j * 7 + i, 521) - 0.5f) * 0.06f) * w * 0.3f, q.y + w * 0.022f); grietas.lineTo(q.x, q.y) }
-        }
-        drawPath(grietas, a.sombra(0.4f), style = Stroke(0.8f * u))
-        // Los desconchones, donde asoma el adobe.
-        desconchonEgipto(Offset(w * 0.79f, ch * 0.44f), w * 0.075f, a, 3, k0)
-        desconchonEgipto(Offset(w * 0.47f, suelo - w * 0.07f), w * 0.06f, a, 9, k0)
-        // El zócalo oscurecido por la humedad, con su borde desigual y la línea blanquecina del salitre.
-        val zTop = suelo - w * 0.1f
-        val zocalo = Path().apply {
-            moveTo(0f, suelo)
-            var x = 0f
-            lineTo(0f, zTop)
-            while (x < w) { x += w * 0.04f; lineTo(x, zTop + (azar((x / u).toInt(), 531) - 0.5f) * w * 0.025f) }
-            lineTo(w, suelo); close()
-        }
-        drawPath(zocalo, a.luz(EgiptoTinta.ZOCALO, k0).copy(alpha = 0.55f))
-        drawPath(zocalo, a.claro(0.12f), style = Stroke(1f * u))
-        // La mancha de la puerta en el enlucido.
-        when {
-            !a.lumbre -> {
-                drawPath(forma, EgiptoTinta.ENLUCIDO_SOL.copy(alpha = 0.78f))
-                drawPath(forma, a.puerta(0.18f))
-            }
-            a.ocaso -> drawPath(forma, mezcla(EgiptoTinta.OCASO, EgiptoTinta.ENLUCIDO_SOL, 0.35f).copy(alpha = 0.62f))
-            else -> drawPath(forma, a.luz(EgiptoTinta.ENLUCIDO, 0f, 1f).copy(alpha = 0.92f))
-        }
-    }
-
-    /** Un desconchón del enlucido: el adobe gris pardo con sus juntas, el labio del enlucido con su sombra y su luz. */
-    private fun DrawScope.desconchonEgipto(c: Offset, r: Float, a: AireEgipto, semilla: Int, k: Float) {
-        val u = density
-        val forma = Path()
-        for (i in 0 until 9) {
-            val ang = i / 9f * 6.283f
-            val rr = r * (0.65f + 0.45f * azar(semilla, i)) * (if (i % 2 == 0) 1f else 0.8f)
-            val x = c.x + rr * kotlin.math.cos(ang) * 1.3f; val y = c.y + rr * kotlin.math.sin(ang) * 0.75f
-            if (i == 0) forma.moveTo(x, y) else forma.lineTo(x, y)
-        }
-        forma.close()
-        drawPath(forma, a.luz(EgiptoTinta.ADOBE, k))
-        clipPath(forma) {
-            val juntas = Path()
-            var y = c.y - r
-            var f = 0
-            while (y < c.y + r) {
-                juntas.moveTo(c.x - r * 1.4f, y); juntas.lineTo(c.x + r * 1.4f, y)
-                var x = c.x - r * 1.4f + (if (f % 2 == 0) 0f else r * 0.35f)
-                while (x < c.x + r * 1.4f) { juntas.moveTo(x, y); juntas.lineTo(x, y + r * 0.34f); x += r * 0.7f }
-                y += r * 0.34f; f++
-            }
-            drawPath(juntas, a.sombra(0.35f), style = Stroke(0.9f * u))
-            drawPath(corridoEgipto(forma, 1.6f * u, 1.8f * u), a.sombra(0.3f), style = Stroke(2.4f * u))
-        }
-        drawPath(corridoEgipto(forma, -0.6f * u, -0.6f * u), a.claro(0.3f), style = Stroke(0.9f * u))
-    }
-
-    /**
-     * La bóveda de cañón vista desde dentro: sobre el testero, el arco de ladrillos inclinados en dos roscas (con sus juntas
-     * en abanico) y, fuera del arco, el intradós que se viene hacia acá, en sombra.
-     */
-    private fun DrawScope.bovedaEgipto(a: AireEgipto, ch: Float) {
-        val u = density
-        val w = size.width
-        val arranque = ch * 0.86f
-        val clave = ch * 0.09f
-        val rosca = w * 0.05f
-        fun arco(sube: Float, abre: Float) = Path().apply {
-            moveTo(-abre, arranque - sube * 0.25f)
-            quadraticTo(w / 2, 2 * (clave - sube) - (arranque - sube * 0.25f), w + abre, arranque - sube * 0.25f)
-        }
-        // El intradós, fuera de la rosca: honda sombra de barro, con las hiladas que se curvan.
-        val fuera = Path().apply {
-            moveTo(-1f, -1f); lineTo(w + 1f, -1f); lineTo(w + 1f, arranque - rosca * 2 * 0.25f)
-            quadraticTo(w / 2, 2 * (clave - rosca * 2) - (arranque - rosca * 2 * 0.25f), -1f, arranque - rosca * 2 * 0.25f)
-            close()
-        }
-        drawPath(fuera, a.luz(EgiptoTinta.BOVEDA, 0f, 0f))
-        drawPath(fuera, a.sombra(if (a.oscuro) 0.3f else 0.2f))
-        for (j in 1..3) drawPath(arco(rosca * 2 + j * w * 0.035f, w * 0.03f * j), a.sombra(0.22f), style = Stroke(1.1f * u))
-        // Las dos roscas de ladrillo: su cara, más clara, y las juntas que abren en abanico.
-        val banda = Path().apply {
-            moveTo(-1f, arranque); quadraticTo(w / 2, 2 * clave - arranque, w + 1f, arranque)
-            lineTo(w + 1f, arranque - rosca * 2 * 0.25f)
-            quadraticTo(w / 2, 2 * (clave - rosca * 2) - (arranque - rosca * 2 * 0.25f), -1f, arranque - rosca * 2 * 0.25f)
-            close()
-        }
-        drawPath(banda, a.luz(EgiptoTinta.ADOBE, if (a.oscuro) 0.15f else 1f, if (a.oscuro) 0.5f else 0f))
-        drawPath(arco(rosca, 0f), a.sombra(0.32f), style = Stroke(1f * u))
-        drawPath(arco(0f, 0f), a.sombra(0.5f), style = Stroke(1.6f * u))
-        drawPath(arco(rosca * 2, 0f), a.sombra(0.4f), style = Stroke(1.2f * u))
-        val juntas = Path()
-        val y0 = arranque; val yc = 2 * clave - arranque
-        for (anillo in 0..1) {
-            val n = 46 + anillo * 4
-            for (i in 0..n) {
-                val t = i / n.toFloat()
-                val x = (1 - t) * (1 - t) * 0f + 2 * (1 - t) * t * (w / 2) + t * t * w
-                val y = (1 - t) * (1 - t) * y0 + 2 * (1 - t) * t * yc + t * t * y0
-                // La normal del arco (hacia afuera).
-                val dx = 2 * (1 - t) * (w / 2) + 2 * t * (w - w / 2)
-                val dy = 2 * (1 - t) * (yc - y0) + 2 * t * (y0 - yc)
-                val l = sqrt(dx * dx + dy * dy).coerceAtLeast(0.001f)
-                val nx = dy / l; val ny = -dx / l
-                val s = if (ny > 0) -1f else 1f
-                val d0 = rosca * anillo + 0.6f * u; val d1 = rosca * (anillo + 1) - 0.6f * u
-                val desplaza = if (anillo == 1) 0.5f / n else 0f
-                val xx = x + (w * desplaza)
-                juntas.moveTo(xx + nx * s * d0, y + ny * s * d0)
-                juntas.lineTo(xx + nx * s * d1, y + ny * s * d1)
-            }
-        }
-        drawPath(juntas, a.sombra(0.3f), style = Stroke(0.9f * u))
-        // La luz rasante en el canto de abajo de la rosca.
-        drawPath(arco(-1.2f * u, 0f), a.claro(0.16f), style = Stroke(1.2f * u))
-    }
-
-    /**
-     * La sombra de la balanza en el muro, dentro de la mancha de la puerta: el poste y el astil corridos hacia abajo y a la
-     * derecha (la luz viene de arriba a la izquierda). De noche, la de la luna, más tenue.
-     */
-    private fun DrawScope.sombraBalanzaEgipto(pie: Offset, w: Float, a: AireEgipto, forma: Path) {
-        val u = density
-        val dx = w * 0.06f; val dy = w * 0.035f
-        val alto = w * 0.34f
-        val eje = Offset(pie.x + dx, pie.y - alto + dy)
-        val brazo = w * 0.17f
-        val c = a.sombra(if (a.oscuro) 0.3f else 0.26f)
-        clipPath(forma) {
-            drawRect(c, Offset(pie.x - w * 0.013f + dx, eje.y), Size(w * 0.026f, alto - dy - w * 0.03f))
-            drawLine(c, Offset(eje.x - brazo, eje.y + brazo * 0.07f), Offset(eje.x + brazo, eje.y - brazo * 0.07f), 4.4f * u)
-            drawLine(c, Offset(eje.x - brazo, eje.y + brazo * 0.07f), Offset(eje.x - brazo, eje.y + w * 0.13f), 1.2f * u)
-            drawOval(c, Offset(eje.x - brazo - w * 0.06f, eje.y + w * 0.12f), Size(w * 0.12f, w * 0.03f))
-        }
-    }
-
-    /** El fondo de un hueco: el enlucido del testero en la sombra del anaquel (la del tablón de arriba y la de los postes). */
-    private fun DrawScope.sombraHuecoEgipto(r: Rect, pI: Rect, pD: Rect, a: AireEgipto, k: Int) {
-        val u = density
-        val x0 = pI.right; val x1 = pD.left
-        val f = if (a.oscuro) 1.15f else 1f
-        drawRect(a.sombra(0.26f * f), Offset(x0, r.top), Size(x1 - x0, r.height))
-        drawRect(a.sombra(0.34f * f), Offset(x0, r.top), Size(x1 - x0, 9f * u))
-        drawRect(a.sombra(0.16f * f), Offset(x0, r.top + 9f * u), Size(x1 - x0, 10f * u))
-        // La sombra de cada poste en el muro, corrida a la derecha (la luz viene de la izquierda).
-        drawRect(a.sombra(0.22f * f), Offset(pI.right, r.top), Size(7f * u, r.height))
-        drawRect(a.sombra(0.12f * f), Offset(pD.right, r.top), Size(minOf(5f * u, size.width - pD.right), r.height))
-        if (!a.oscuro && !a.noche) drawRect(luzMueble(0.05f + 0.03f * azar(k, 9)), Offset(x0 + (x1 - x0) * 0.5f, r.top + r.height * 0.4f), Size((x1 - x0) * 0.5f, r.height * 0.6f))
-    }
-
-    /** El suelo de tierra apisonada, con su zócalo de barro, las rodadas de la escoba y el trigo que se cae del costal. */
-    private fun DrawScope.sueloEgipto(a: AireEgipto, suelo: Float, llama: Offset, cerca: (Offset) -> Float) {
-        val u = density
-        val w = size.width; val h = size.height
-        if (h - suelo < 1f) return
-        val piso = Rect(0f, suelo, w, h)
-        drawRect(a.luz(EgiptoTinta.TIERRA, if (a.lumbre) 0.15f else 1f), piso.topLeft, piso.size)
-        if (a.lumbre) mancha(Offset(llama.x, suelo + (h - suelo) * 0.6f), w * 0.55f, a.luz(EgiptoTinta.TIERRA, 0.9f).copy(alpha = 0.85f))
-        pinceladas(piso, a.luz(mezcla(EgiptoTinta.TIERRA, EgiptoTinta.PAJA, 0.4f), cerca(piso.center)), 641, 14, u, 0.14f)
-        pinceladas(piso, a.sombra(1f), 647, 10, u, 0.08f)
-        // Las rodadas de la escoba de palma: arcos finos y claros.
-        val escoba = Path()
-        for (j in 0 until 7) {
-            val cx = w * (0.15f + 0.12f * j + 0.05f * azar(j, 61)); val cy = suelo + (h - suelo) * (0.45f + 0.4f * azar(j, 62))
-            escoba.moveTo(cx - 14f * u, cy); escoba.quadraticTo(cx, cy - 4f * u, cx + 14f * u, cy + 1f * u)
-        }
-        drawPath(escoba, a.claro(0.12f), style = Stroke(0.6f * u))
-        // El zócalo de barro donde el muro pisa el suelo, y la sombra del muro.
-        drawRect(a.luz(EgiptoTinta.BOVEDA, cerca(Offset(w / 2, suelo)) * 0.8f), Offset(0f, suelo - 3f * u), Size(w, 3f * u))
-        drawRect(a.sombra(0.3f), Offset(0f, suelo), Size(w, 2.5f * u))
-    }
-
-    // ---------------------------------------------------------------- el anaquel
-
-    /**
-     * Un poste de tronco de palmera: el cilindro con su luz a la izquierda, las cicatrices de las pencas en rombo, la fibra
-     * que asoma y el corte de arriba, astillado.
-     */
-    private fun DrawScope.posteEgipto(r: Rect, a: AireEgipto, semilla: Int, k: Float, f: Float) {
-        val u = density
-        drawRect(a.sombra(0.3f), Offset(r.right, r.top + 4f * u), Size(4f * u, r.height - 4f * u))
-        drawRect(a.luz(EgiptoTinta.PALMA, k, f), r.topLeft, r.size)
-        clipRect(r.left, r.top, r.right, r.bottom) {
-            // Las cicatrices de las pencas: dos tramas en diagonal, en un solo camino.
-            val rombos = Path()
-            val paso = maxOf(2f, r.width * 0.42f)
-            var y = r.top - r.width
-            var fila = 0
-            while (y < r.bottom + r.width) {
-                rombos.moveTo(r.left, y); rombos.lineTo(r.right, y + r.width * 0.45f)
-                rombos.moveTo(r.right, y + (if (fila % 2 == 0) 0f else paso * 0.5f)); rombos.lineTo(r.left, y + r.width * 0.45f + (if (fila % 2 == 0) 0f else paso * 0.5f))
-                y += paso; fila++
-            }
-            drawPath(rombos, a.luz(EgiptoTinta.PALMA_OSC, k, f).copy(alpha = 0.55f), style = Stroke(1.1f * u))
-            drawPath(rombos, a.claro(0.14f), style = Stroke(0.5f * u))
-            // El cilindro: luz a la izquierda, sombra a la derecha (de noche, el filo cálido del lado de la lámpara).
-            drawRect(a.claro(0.22f), Offset(r.left + r.width * 0.14f, r.top), Size(r.width * 0.16f, r.height))
-            drawRect(a.sombra(0.22f), Offset(r.left + r.width * 0.58f, r.top), Size(r.width * 0.42f, r.height))
-            drawRect(a.sombra(0.22f), Offset(r.right - r.width * 0.18f, r.top), Size(r.width * 0.18f, r.height))
-            if (a.oscuro) drawRect(a.filo(0.35f * k), Offset(r.right - 1.4f * u, r.top), Size(1.4f * u, r.height))
-            // La fibra que asoma, en hebras.
-            for (j in 0 until 8) {
-                val yy = r.top + r.height * azar(semilla, j)
-                drawLine(a.luz(EgiptoTinta.FIBRA, k, f).copy(alpha = 0.5f), Offset(r.left + r.width * azar(semilla, j + 20), yy), Offset(r.left + r.width * azar(semilla, j + 40), yy + 6f * u), 0.6f * u)
-            }
-        }
-        // El corte de arriba: la cara del tronco, astillada.
-        val tapa = Rect(r.left - 0.5f * u, r.top - r.width * 0.14f, r.right + 0.5f * u, r.top + r.width * 0.14f)
-        drawOval(a.luz(mezcla(EgiptoTinta.FIBRA, EgiptoTinta.PAPIRO, 0.3f), k, f), tapa.topLeft, tapa.size)
-        drawOval(a.luz(EgiptoTinta.PALMA_OSC, k, f).copy(alpha = 0.5f), tapa.topLeft, tapa.size, style = Stroke(0.8f * u))
-        for (j in 0 until 4) {
-            val x = r.left + r.width * (0.15f + 0.22f * j)
-            drawLine(a.luz(EgiptoTinta.PALMA_OSC, k, f).copy(alpha = 0.4f), Offset(x, tapa.center.y - 1f * u), Offset(x + 2f * u, tapa.center.y + 1.5f * u), 0.6f * u)
-        }
-    }
-
-    /**
-     * Un tablón de acacia desbastado a azuela: la cara de arriba que se ve apenas, el canto con sus vetas y los golpes de la
-     * azuela, la arista gastada, una grieta en una punta y la sombra que echa abajo. De noche se pinta por tramos.
-     */
-    private fun DrawScope.tablonEgipto(t: Rect, a: AireEgipto, semilla: Int, luz: (Float) -> Pair<Float, Float>) {
-        val u = density
-        val tramos = if (a.oscuro) 6 else 1
-        for (j in 0 until tramos) {
-            val xa = t.left + t.width * j / tramos; val xb = t.left + t.width * (j + 1) / tramos + 0.6f
-            val (k, f) = luz((xa + xb) / 2)
-            drawRect(a.luz(EgiptoTinta.ACACIA, k, f), Offset(xa, t.top), Size(xb - xa, t.height))
-        }
-        val (k, f) = luz(t.center.x)
-        vetas(t, a.luz(EgiptoTinta.ACACIA_OSC, k, f).copy(alpha = 0.32f), semilla, densidad = 1.2f, grosor = 0.8f)
-        // Los golpes de la azuela: medias lunas cortas en el canto.
-        val golpes = Path()
-        var x = t.left + 6f * u
-        var i = 0
-        while (x < t.right - 6f * u) {
-            val y = t.top + t.height * (0.3f + 0.4f * azar(semilla, i))
-            golpes.moveTo(x, y); golpes.quadraticTo(x + 4f * u, y - 1.6f * u, x + 8f * u, y)
-            x += (14f + 16f * azar(semilla, i + 50)) * u; i++
-        }
-        drawPath(golpes, a.luz(EgiptoTinta.ACACIA_OSC, k, f).copy(alpha = 0.3f), style = Stroke(0.7f * u))
-        // La cara de arriba (una tira de luz), la arista gastada y la cara de abajo en sombra.
-        drawRect(a.claro(0.3f), t.topLeft, Size(t.width, 1.6f * u))
-        if (a.oscuro) drawRect(a.filo(0.3f * k), t.topLeft, Size(t.width, 1.1f * u))
-        drawRect(a.sombra(0.3f), Offset(t.left, t.bottom - 2.2f * u), Size(t.width, 2.2f * u))
-        // Una grieta en la punta de la derecha y la testa de la izquierda, más oscura.
-        val gy = t.top + t.height * 0.55f
-        drawLine(a.sombra(0.45f), Offset(t.right - 1f, gy), Offset(t.right - t.width * 0.05f, gy + 1.2f * u), 0.8f * u)
-        drawRect(a.sombra(0.22f), t.topLeft, Size(2.5f * u, t.height))
-        drawRect(a.sombra(0.3f), Offset(t.right - 2.5f * u, t.top), Size(2.5f * u, t.height))
-    }
-
-    /** La atadura de soga de fibra que sujeta el tablón al poste: vueltas en aspa, con su luz y su sombra. */
-    private fun DrawScope.ataduraEgipto(c: Offset, ancho: Float, alto: Float, a: AireEgipto, k: Float) {
-        val u = density
-        val hw = ancho * 0.62f; val hh = alto * 0.85f
-        val soga = Path().apply {
-            for (j in 0 until 3) {
-                val dx = (j - 1) * 2.2f * u
-                moveTo(c.x - hw + dx, c.y - hh); lineTo(c.x + hw + dx, c.y + hh)
-                moveTo(c.x + hw + dx, c.y - hh); lineTo(c.x - hw + dx, c.y + hh)
-            }
-        }
-        drawPath(soga, a.sombra(0.5f), style = Stroke(2.2f * u, cap = StrokeCap.Round))
-        drawPath(soga, a.luz(EgiptoTinta.FIBRA, k), style = Stroke(1.5f * u, cap = StrokeCap.Round))
-        drawPath(soga, a.claro(0.3f), style = Stroke(0.5f * u))
-    }
-
-    /** El mes en una tablilla de sicomoro enyesada, atada al canto del tablón con dos vueltas de cordel. */
-    private fun DrawScope.rotuloEgipto(p: PlacaEstante, medidor: TextMeasurer, a: AireEgipto, k: Float, f: Float) {
-        val u = density
-        val r = p.r
-        val t = Rect(r.left, r.top - 0.6f * u, r.right, r.bottom + 0.6f * u)
-        drawRoundRect(a.sombra(0.4f), Offset(t.left + 1.4f * u, t.top + 1.6f * u), t.size, CornerRadius(2f * u))
-        drawRoundRect(a.luz(EgiptoTinta.ACACIA, k, f), t.topLeft, t.size, CornerRadius(2f * u))
-        val cara = t.deflate(1.4f * u)
-        drawRoundRect(a.etiqueta(k, EgiptoTinta.YESO), cara.topLeft, cara.size, CornerRadius(1.4f * u))
-        // El yeso gastado en las esquinas, donde asoma la madera.
-        drawCircle(a.luz(EgiptoTinta.ACACIA, k, f).copy(alpha = 0.5f), 2.2f * u, Offset(cara.right - 2f * u, cara.bottom - 1.5f * u))
-        drawRect(a.claro(0.4f), cara.topLeft, Size(cara.width, 0.8f * u))
-        // Los cordeles que dan la vuelta al tablón.
-        listOf(cara.left + 5f * u, cara.right - 5f * u).forEach { x ->
-            drawLine(a.sombra(0.4f), Offset(x + 0.8f * u, t.top - 1f * u), Offset(x + 0.8f * u, t.bottom + 1f * u), 1.6f * u)
-            drawLine(a.luz(EgiptoTinta.FIBRA, k, f), Offset(x, t.top - 1.5f * u), Offset(x, t.bottom + 1.5f * u), 1.2f * u)
-        }
-        textoEn(medidor, p.texto, Rect(cara.left + 8f * u, cara.top + 0.5f * u, cara.right - 8f * u, cara.bottom - 0.5f * u), LETRA, a.tinta, 10.5f,
-            peso = FontWeight.Medium, minimo = 5f)
     }
 
     fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) = volumenEgipto(v, medidor, oscuro)
 }
 
+/**
+ * Lo que comparten las piezas del estante en un dibujo: el aire, el ancho, dónde acaba la corona, dónde empieza el suelo, la
+ * llama y, ya armados, la forma de la mancha de la puerta y las medidas del anaquel.
+ */
+internal class MesaEgipto(val a: AireEgipto, val w: Float, val ch: Float, val suelo: Float, val llama: Offset) {
+    /** La mancha de la puerta en el muro, en píxeles. */
+    val puerta: Path = formaPuertaEgipto(w, a.ocaso)
+    /** La parte de la mancha de la puerta que cae en [r] (un camino ya cortado: pintarlo es más barato que recortar). */
+    fun puertaEn(r: Rect): Path = Path().apply { op(puerta, Path().apply { addRect(r) }, PathOperation.Intersect) }
+    /** Los postes: el de la izquierda y el de la derecha (el tronco entero, del corte de arriba a donde se hinca). */
+    val posteI = Rect(w * 0.012f, ch - w * 0.13f, w * 0.084f, suelo + w * 0.035f)
+    val posteD = Rect(w * 0.916f, ch - w * 0.122f, w * 0.988f, suelo + w * 0.04f)
+    /** El tablón de arriba: su cara de arriba (vista un poco desde arriba) y su frente. */
+    val caraArriba = Rect(-w * 0.004f, ch - w * 0.105f, w * 1.004f, ch - w * 0.075f)
+    val frenteArriba = Rect(0f, ch - w * 0.075f, w, ch)
+    /** Dónde pisa lo de arriba: el medio de la cara del tablón. */
+    val apoyo: Float get() = caraArriba.center.y + w * 0.004f
+
+    /** Cuánto llega de la llama a un punto (de día, todo). */
+    fun k(p: Offset): Float = if (a.lumbre) lamparaLuzEgipto((p.x - llama.x) / w, (p.y - llama.y) / w, a.lunar) else 1f
+    /** Cuánto llega de la puerta (el sol de día, la luna de noche, el ocaso en los Sueños claros). */
+    fun f(p: Offset): Float = luzPuertaEgipto(p.x / w, p.y / w, a.ocaso)
+    /** Lo de arriba nunca se pierde del todo: un poco del aire de fuera lo dibuja aunque quede lejos de la lámpara. */
+    fun kAlto(p: Offset): Float = maxOf(k(p), if (a.oscuro) 0.08f else 0f)
+    /** De noche, de qué lado le viene la llama a algo en [x]: lo que está a su izquierda la recibe por la derecha. */
+    fun der(x: Float): Boolean = a.oscuro && x < llama.x - w * 0.02f
+}
+
 // ---------------------------------------------------------------- la luz, compartida por el mueble y los volúmenes
 
 /**
- * Cuánta luz de la lámpara del suelo llega (de 1 a 0) a un punto a [dx] y [dy] de la llama, en anchos del mueble. La lámpara
- * está abajo: lo de arriba del anaquel queda lejos y se hunde. Con [corto] (los Sueños de noche), el charco es más chico.
+ * Cuánta luz de la lámpara llega (de 1 a 0) a un punto a [dx] y [dy] anchos de la llama: cae con la distancia, como la del
+ * Ideario. Con [corto] (los Sueños de noche, la llama baja), el charco es más chico.
  */
-internal fun alcanceEgipto(dx: Float, dy: Float, corto: Boolean = false): Float =
-    (1f - sqrt(dx * dx * 0.8f + dy * dy) / (if (corto) 0.95f else 1.3f)).coerceIn(0f, 1f)
+internal fun lamparaLuzEgipto(dx: Float, dy: Float, corto: Boolean = false): Float {
+    val d = sqrt(dx * dx * 0.85f + dy * dy)
+    return (1.5f * exp(-(if (corto) 3.8f else 3.0f) * d)).coerceIn(0.01f, 1f)
+}
 
 /**
  * La mancha de la puerta en el testero, en anchos del mueble desde su esquina de arriba a la izquierda: un cuadrilátero con
@@ -640,12 +288,12 @@ internal fun alcanceEgipto(dx: Float, dy: Float, corto: Boolean = false): Float 
  * sol ya bajo: más larga y más baja.
  */
 private fun puntosPuertaEgipto(ocaso: Boolean): FloatArray =
-    if (ocaso) floatArrayOf(0f, 0.36f, 0.62f, 0.5f, 1.0f, 1.38f, 0f, 1.26f)
-    else floatArrayOf(0f, 0.16f, 0.5f, 0.24f, 0.72f, MuebleEstanteEgipto.CORONA + 0.42f, 0f, MuebleEstanteEgipto.CORONA + 0.5f)
+    if (ocaso) floatArrayOf(0f, 0.42f, 0.66f, 0.58f, 1.02f, 1.5f, 0f, 1.36f)
+    else floatArrayOf(0f, 0.17f, 0.54f, 0.25f, 0.78f, MuebleEstanteEgipto.CORONA + 0.44f, 0f, MuebleEstanteEgipto.CORONA + 0.52f)
 
 internal fun formaPuertaEgipto(w: Float, ocaso: Boolean): Path {
     val q = puntosPuertaEgipto(ocaso)
-    return poligonoEgipto(-1f, q[1] * w, q[2] * w, q[3] * w, q[4] * w, q[5] * w, -1f, q[7] * w)
+    return poligonoEgipto(-2f, q[1] * w, q[2] * w, q[3] * w, q[4] * w, q[5] * w, -2f, q[7] * w)
 }
 
 /** Cuánto da la luz de la puerta (de 0 a 1) en un punto a [x] e [y] anchos de la esquina: 1 dentro, con el borde un poco suave. */
@@ -655,7 +303,7 @@ internal fun luzPuertaEgipto(x: Float, y: Float, ocaso: Boolean): Float {
     val arriba = q[1] + (q[3] - q[1]) * x / q[2]
     val abajo = q[7] + (q[5] - q[7]) * x / q[4]
     val derecha = q[2] + (q[4] - q[2]) * ((y - q[3]) / (q[5] - q[3])).coerceIn(0f, 1f)
-    return minOf((y - arriba) / 0.03f, (abajo - y) / 0.04f, (derecha - x) / 0.035f).coerceIn(0f, 1f)
+    return minOf((y - arriba) / 0.025f, (abajo - y) / 0.035f, (derecha - x) / 0.03f).coerceIn(0f, 1f)
 }
 
 /** La luz de la lámpara ([first]) y de la puerta ([second]) en un volumen: su repisa de cuántas y dónde cae su centro. */
@@ -663,8 +311,7 @@ internal fun luzVolumenEgipto(v: Volumen, oscuro: Boolean): Pair<Float, Float> {
     val m = MuebleEstanteEgipto
     val fx = m.LADO + v.centro * (1f - 2 * m.LADO)
     val desdeAbajo = ((v.repisas - v.repisa - 0.5f) * m.FILA) / m.ANCHO_NOMINAL + m.LAMP_BAJO
-    val lunar = oscuro && v.noche
-    val k = if (oscuro || v.noche) alcanceEgipto(fx - m.LAMP_X, desdeAbajo, lunar) else 1f
+    val k = if (oscuro || v.noche) lamparaLuzEgipto(fx - m.LAMP_X, desdeAbajo, oscuro && v.noche) else 1f
     val y = m.CORONA + (v.repisa + 0.55f) * m.FILA / m.ANCHO_NOMINAL
     return k to luzPuertaEgipto(fx, y, v.noche && !oscuro)
 }
@@ -698,7 +345,7 @@ internal fun tonoDeDiaEgipto(t: Color, oscuro: Boolean): Color {
 
 private fun cuadradoEgipto(x: Float) = x * x
 
-// ---------------------------------------------------------------- ayudantes de forma
+// ---------------------------------------------------------------- ayudantes de forma y de luz
 
 internal fun poligonoEgipto(vararg xy: Float) = Path().apply {
     moveTo(xy[0], xy[1])
@@ -707,3 +354,64 @@ internal fun poligonoEgipto(vararg xy: Float) = Path().apply {
 }
 
 internal fun corridoEgipto(p: Path, dx: Float, dy: Float = 0f) = Path().apply { addPath(p, Offset(dx, dy)) }
+
+/**
+ * El bulto de un cuerpo redondo dentro de [r] (se llama dentro de su recorte), como en el Ideario: el plano de luz, el brillo,
+ * el plano de sombra y la sombra honda del otro lado. Con [der], la luz le llega por la derecha (de noche, de la lámpara).
+ */
+internal fun DrawScope.cilindroEgipto(r: Rect, a: AireEgipto, k: Float, fuerza: Float = 1f, der: Boolean = false, luna: Float = 0f) {
+    fun x(f: Float, ancho: Float) = if (der) r.right - r.width * (f + ancho) else r.left + r.width * f
+    drawRect(a.b(0.22f * fuerza, k), Offset(x(0f, 0.32f), r.top), Size(r.width * 0.32f, r.height))
+    drawRect(a.b(0.34f * fuerza, k), Offset(x(0.13f, 0.09f), r.top), Size(r.width * 0.09f, r.height))
+    drawRect(a.s(0.16f * fuerza), Offset(x(0.56f, 0.44f), r.top), Size(r.width * 0.44f, r.height))
+    drawRect(a.s(0.22f * fuerza), Offset(x(0.8f, 0.2f), r.top), Size(r.width * 0.2f, r.height))
+    // De noche, la luna que entra por la puerta (a la izquierda) le deja un filo frío del otro lado que la llama.
+    if (a.oscuro && luna > 0.08f) {
+        drawRect(a.helado(0.2f, luna), Offset(r.left, r.top), Size(r.width * 0.3f, r.height))
+        drawRect(a.helado(0.34f, luna), Offset(r.left + r.width * 0.06f, r.top), Size(r.width * 0.08f, r.height))
+    }
+}
+
+/** El filo cálido de la llama en el canto de arriba y en el costado que la mira, de noche; de día no pinta nada. */
+internal fun DrawScope.filoEgipto(r: Rect, a: AireEgipto, k: Float, der: Boolean) {
+    if (!a.oscuro || k < 0.06f) return
+    val u = density
+    drawRect(EgiptoTinta.LLAMA.copy(alpha = (0.85f * k).coerceAtMost(0.75f)), r.topLeft, Size(r.width, 1.4f * u))
+    val x = if (der) r.right - 1.3f * u else r.left
+    drawRect(EgiptoTinta.LLAMA.copy(alpha = (0.6f * k).coerceAtMost(0.55f)), Offset(x, r.top), Size(1.3f * u, r.height))
+}
+
+/** Un brillo puntual: de día crema; de noche, el de la llama si llega. */
+internal fun DrawScope.destelloEgipto(c: Offset, r: Float, a: AireEgipto, k: Float) {
+    if (a.oscuro) {
+        if (k > 0.08f) { drawCircle(EgiptoTinta.LLAMA.copy(alpha = (0.3f * k).coerceAtMost(0.28f)), r * 2.2f, c); drawCircle(Color(0xFFFFF0CF).copy(alpha = (1.1f * k).coerceAtMost(0.9f)), r, c) }
+    } else drawCircle(luzMueble(if (a.noche) 0.6f else 0.85f), r, c)
+}
+
+/** La sombra de contacto de lo que pisa algo, corrida a la derecha. */
+internal fun DrawScope.contactoEgipto(c: Offset, ancho: Float, alto: Float, a: AireEgipto, fuerza: Float = 0.4f) =
+    drawOval(a.s(fuerza), Offset(c.x - ancho * 0.42f, c.y - alto / 2), Size(ancho, alto))
+
+/**
+ * La sombra que algo echa en el muro de detrás: de día, corrida a la derecha y abajo (más honda dentro de la mancha del sol);
+ * de noche, hacia fuera de la llama si la lámpara llega. [desde] es el centro de la cosa.
+ */
+internal fun DrawScope.sombraMuroEgipto(m: MesaEgipto, p: Path, desde: Offset, fuerza: Float = 0.2f) {
+    val w = m.w
+    val a = m.a
+    if (!a.oscuro) {
+        val sol = m.f(desde)
+        translate(w * 0.026f, w * 0.013f) { drawPath(p, a.s(fuerza * (1f + 0.6f * sol))) }
+    } else {
+        val k = m.k(desde)
+        if (k > 0.12f) {
+            val dx = ((desde.x - m.llama.x) / w).coerceIn(-0.3f, 0.3f) / 0.3f
+            translate(w * 0.04f * dx, -w * 0.012f) { drawPath(p, EgiptoTinta.NOCHE_SOMBRA.copy(alpha = (0.9f * k).coerceAtMost(0.5f))) }
+        }
+        val f = m.f(desde)
+        if (f > 0.2f) translate(w * 0.022f, w * 0.012f) { drawPath(p, EgiptoTinta.NOCHE_SOMBRA.copy(alpha = 0.35f * f)) }
+    }
+}
+
+/** La luz crema de los cantos de día (o la de la llama, de noche), para lo que no lleva [AireEgipto]. */
+internal fun luzCantoEgipto(a: AireEgipto, alfa: Float, k: Float): Color = if (a.oscuro) a.b(alfa, k) else LUZ_MUEBLE.copy(alpha = alfa)
