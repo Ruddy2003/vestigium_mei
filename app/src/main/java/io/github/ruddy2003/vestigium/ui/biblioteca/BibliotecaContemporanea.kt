@@ -5320,7 +5320,6 @@ object EstanteNapoleon : DisenoBiblioteca {
  */
 object EstanteDeco : DisenoBiblioteca {
     private val ARCE = Color(0xFFD9B97E)
-    private val ARCE_LUZ = Color(0xFFEBD3A0)
     private val ARCE_VETA = Color(0xFFB8935A)
     private val NOGAL = Color(0xFF5A3A22)
     private val CROMO = Color(0xFFC9CED3)
