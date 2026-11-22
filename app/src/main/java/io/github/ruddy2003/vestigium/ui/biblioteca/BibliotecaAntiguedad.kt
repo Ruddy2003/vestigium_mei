@@ -1739,13 +1739,9 @@ object EstanteCueva : DisenoBiblioteca {
     }
 }
 /**
- * Roma: los nichos (loculamenta) hundidos en un muro de mármol de una domus, entre dos pilastras estriadas. Cada repisa es un
- * nicho pintado de rojo pompeyano por dentro, con su filete ocre, y la tabla de mármol lleva su astrágalo de cuentas; el mes
- * va en un titulus de mármol rotulado en minio. Arriba, la cornisa con dentículos y rosetas, un busto sobre su herma, dos
- * guirnaldas de laurel y una lucerna de bronce sobre su candelabro; abajo, el zócalo negro con paneles ocres y el piso de
- * mosaico. Cada entrada es un rollo tumbado, con su umbilicus y sus perillas de hueso o de ébano, que engorda con lo escrito,
- * el mes abreviado en tinta y el sillybos rojo colgando con el día; un sello de plomo en el hilo (de noche, una lunita). De
- * noche la lucerna se enciende. La tapa es ese rollo tumbado y grande, ceñido con su correa de púrpura, con el sillybos
+ * Roma: el estante del diario es la estantería de obra del cuarto del escribiente de un campamento del Danubio (pilares de
+ * ladrillo, tablas y viga de roble, muro encalado, ventana de espejuelo y linterna de cuerno), con el legajo de hojas de
+ * madera, la arqueta herrada y la bolsa de cuero como entradas; su dibujo está en `MuebleEstanteRomano.kt`. La tapa es ese rollo tumbado y grande, ceñido con su correa de púrpura, con el sillybos
  * colgando con la fecha y, al lado, el tintero con su cálamo (de noche, la lucerna encendida); al abrirse, la correa se
  * suelta y el rollo baja desenrollándose y deja ver las columnas escritas. Distinto del Ideario, que es el armarium de nogal
  * con su frontón y las capsae de cuero.
@@ -1784,259 +1780,24 @@ object EstanteRomano : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.3f
-    override val base = 0.11f
-    override val lado = 0.075f
-    override val altoRepisa: Dp = 56.dp
-    override val tabla: Dp = 15.dp
-    override val separa: Dp = 3.dp
+    override val corona = MuebleEstanteRomano.CORONA
+    override val base = MuebleEstanteRomano.BASE
+    override val lado = MuebleEstanteRomano.LADO
+    override val altoRepisa: Dp = MuebleEstanteRomano.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteRomano.TABLA
+    override val separa: Dp = MuebleEstanteRomano.SEPARA
     override val letra: FontFamily = Letra.inscripcion
 
-    /** Los rollos van tumbados: casi todos del mismo largo; lo que crece con las palabras es su grosor ([alto]). */
-    override fun ancho(palabras: Int): Dp = (62 + (palabras / 50).coerceAtMost(18)).dp
-    override fun alto(semilla: Int, palabras: Int): Float =
-        (0.42f + 0.5f * (palabras / 800f).coerceIn(0f, 1f) + 0.06f * azar(semilla, 1)).coerceAtMost(1f)
+    override val auraEnReposo = false
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El muro de mármol, con sus vetas.
-        val cuerpo = Rect(0f, d.corona.bottom, w, d.base.top)
-        drawRect(c(MARMOL), cuerpo.topLeft, cuerpo.size)
-        vetas(cuerpo, c(MARMOL_VETA).copy(alpha = 0.3f), 13, densidad = 0.18f, grosor = 0.7f, ondulacion = 4f)
-        // Cada repisa es un nicho hundido, rojo por dentro, con su filete ocre y su sombra arriba y a la izquierda.
-        d.repisas.forEach { r ->
-            val marco = r.inflate(2 * u)
-            drawRect(c(MARMOL_SOMBRA), marco.topLeft, marco.size)
-            drawRect(c(POMPEYANO), r.topLeft, r.size)
-            val filete = r.deflate(4 * u)
-            drawRect(c(OCRE).copy(alpha = 0.55f), filete.topLeft, filete.size, style = Stroke(0.8f * u))
-            drawRect(Color.Black.copy(alpha = if (noche) 0.45f else 0.35f), r.topLeft, Size(r.width, 6 * u))
-            drawRect(Color.Black.copy(alpha = 0.16f), Offset(r.left, r.top + 6 * u), Size(r.width, 6 * u))
-            drawRect(Color.Black.copy(alpha = 0.2f), r.topLeft, Size(5 * u, r.height))
-        }
-        // Las pilastras: el fuste estriado, el capitel con sus dos rosetas y la basa.
-        listOf(d.izquierda, d.derecha).forEach { r ->
-            val fuste = Rect(r.left + r.width * 0.12f, r.top, r.right - r.width * 0.12f, r.bottom)
-            drawRect(c(MARMOL_SOMBRA), r.topLeft, r.size)
-            drawRect(c(MARMOL), fuste.topLeft, fuste.size)
-            for (j in 1..4) {
-                val x = fuste.left + fuste.width * j / 5f
-                drawLine(c(MARMOL_SOMBRA), Offset(x, fuste.top + 18 * u), Offset(x, fuste.bottom - 14 * u), 1.6f * u, cap = StrokeCap.Round)
-                drawLine(c(MARMOL_LUZ), Offset(x + 1.4f * u, fuste.top + 18 * u), Offset(x + 1.4f * u, fuste.bottom - 14 * u), 0.6f * u)
-            }
-            drawRect(c(MARMOL_LUZ), r.topLeft, Size(r.width, 5 * u))
-            drawRect(c(MARMOL), Offset(r.left + 1 * u, r.top + 5 * u), Size(r.width - 2 * u, 7 * u))
-            listOf(0.3f, 0.7f).forEach { f -> drawCircle(c(MARMOL_SOMBRA), 2.4f * u, Offset(r.left + r.width * f, r.top + 8.5f * u), style = Stroke(0.9f * u)) }
-            drawLine(c(MARMOL_SOMBRA), Offset(fuste.left, r.top + 14 * u), Offset(fuste.right, r.top + 14 * u), 1f * u)
-            drawRoundRect(c(MARMOL_LUZ), Offset(r.left + 1 * u, r.bottom - 10 * u), Size(r.width - 2 * u, 4 * u), CornerRadius(2 * u))
-            drawRect(c(MARMOL), Offset(r.left, r.bottom - 6 * u), Size(r.width, 6 * u))
-            drawRect(Color.Black.copy(alpha = 0.18f), Offset(fuste.right - 2 * u, r.top), Size(2 * u, r.height))
-        }
-        // Las tablas de mármol, con el astrágalo de cuentas bajo el canto.
-        d.tablas.forEach { r ->
-            drawRect(c(MARMOL), r.topLeft, r.size)
-            drawRect(c(MARMOL_LUZ), r.topLeft, Size(r.width, 2.4f * u))
-            drawLine(c(MARMOL_SOMBRA), Offset(r.left, r.top + r.height * 0.7f), Offset(r.right, r.top + r.height * 0.7f), 0.8f * u)
-            var x = r.left + 3 * u
-            while (x < r.right) { drawCircle(c(MARMOL_SOMBRA), 1.1f * u, Offset(x, r.top + r.height * 0.86f)); x += 5 * u }
-            drawRect(Color.Black.copy(alpha = 0.2f), Offset(r.left, r.bottom), Size(r.width, 3 * u))
-        }
-        // El titulus de cada mes: una placa de mármol con doble filete y letras de minio.
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRect(Color.Black.copy(alpha = 0.15f), Offset(r.left + 1.2f * u, r.top + 1.2f * u), r.size)
-            drawRect(c(MARMOL_LUZ), r.topLeft, r.size)
-            drawRect(c(MINIO), r.topLeft, r.size, style = Stroke(1f * u))
-            val dentro = r.deflate(2 * u)
-            drawRect(c(MINIO).copy(alpha = 0.6f), dentro.topLeft, dentro.size, style = Stroke(0.5f * u))
-            textoEn(medidor, p.texto, Rect(r.left + 5 * u, r.top, r.right - 5 * u, r.bottom), letra, c(MINIO), 10f, peso = FontWeight.SemiBold, espaciado = 1f, minimo = 5f)
-        }
-        corona(d.corona, oscuro, noche)
-        // El zócalo negro con sus paneles de filete ocre y un rombo rojo en cada uno.
-        val b = d.base
-        val piso = b.top + b.height * 0.58f
-        drawRect(c(NEGRO), b.topLeft, Size(b.width, piso - b.top))
-        drawRect(c(MARMOL_LUZ), b.topLeft, Size(b.width, 3 * u))
-        drawRect(c(MARMOL_SOMBRA), Offset(b.left, b.top + 3 * u), Size(b.width, 1.2f * u))
-        val paneles = 4
-        for (j in 0 until paneles) {
-            val pr = Rect(b.left + b.width * j / paneles + 6 * u, b.top + 8 * u, b.left + b.width * (j + 1) / paneles - 6 * u, piso - 5 * u)
-            if (pr.height <= 2 * u) continue
-            drawRect(c(OCRE).copy(alpha = 0.75f), pr.topLeft, pr.size, style = Stroke(0.9f * u))
-            val cc = pr.center
-            val rr = minOf(pr.height, pr.width) * 0.3f
-            val rombo = Path().apply { moveTo(cc.x, cc.y - rr); lineTo(cc.x + rr * 1.4f, cc.y); lineTo(cc.x, cc.y + rr); lineTo(cc.x - rr * 1.4f, cc.y); close() }
-            drawPath(rombo, c(POMPEYANO))
-            drawPath(rombo, c(OCRE).copy(alpha = 0.7f), style = Stroke(0.7f * u))
-        }
-        // El piso de mosaico: teselas blancas con su cenefa negra de cuadros.
-        drawRect(c(MARMOL_LUZ), Offset(0f, piso), Size(w, h - piso))
-        drawRect(c(NEGRO), Offset(0f, piso + 2 * u), Size(w, 2.4f * u))
-        val tesela = 5 * u
-        var tx = 0f
-        var k = 0
-        while (tx < w) {
-            if (k % 2 == 0) drawRect(c(NEGRO), Offset(tx, piso + 6 * u), Size(tesela, tesela))
-            tx += tesela; k++
-        }
-        var gy = piso + 6 * u + tesela + 3 * u
-        while (gy < h) { drawLine(c(MARMOL_SOMBRA).copy(alpha = 0.4f), Offset(0f, gy), Offset(w, gy), 0.5f * u); gy += 3.5f * u }
-    }
+    override fun ancho(palabras: Int): Dp = MuebleEstanteRomano.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteRomano.alto(semilla, palabras)
 
-    /** La cornisa, el busto sobre su herma, las guirnaldas y la lucerna (encendida de noche). */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        drawRect(c(MARMOL), r.topLeft, r.size)
-        val cornisa = r.top + r.height * 0.62f
-        // La moldura saliente, los dentículos, el friso con rosetas y el arquitrabe de dos fajas.
-        drawRect(c(MARMOL_LUZ), Offset(r.left, cornisa), Size(r.width, r.height * 0.07f))
-        drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, cornisa + r.height * 0.07f), Size(r.width, 2 * u))
-        val dientes = cornisa + r.height * 0.07f + 2 * u
-        val altoDiente = r.height * 0.06f
-        drawRect(c(MARMOL_SOMBRA), Offset(r.left, dientes), Size(r.width, altoDiente))
-        var x = r.left + 2 * u
-        while (x < r.right) { drawRect(c(MARMOL), Offset(x, dientes), Size(4 * u, altoDiente)); x += 7 * u }
-        val friso = Rect(r.left, dientes + altoDiente, r.right, dientes + altoDiente + r.height * 0.11f)
-        drawRect(c(MARMOL), friso.topLeft, friso.size)
-        var rx = friso.left + 14 * u
-        while (rx < friso.right) {
-            drawCircle(c(MARMOL_SOMBRA), friso.height * 0.28f, Offset(rx, friso.center.y), style = Stroke(0.9f * u))
-            drawCircle(c(MARMOL_SOMBRA), friso.height * 0.1f, Offset(rx, friso.center.y))
-            rx += 28 * u
-        }
-        val arquitrabe = Rect(r.left, friso.bottom, r.right, r.bottom)
-        drawRect(c(MARMOL_LUZ), arquitrabe.topLeft, arquitrabe.size)
-        drawLine(c(MARMOL_SOMBRA), Offset(r.left, arquitrabe.top + 0.6f * u), Offset(r.right, arquitrabe.top + 0.6f * u), 1f * u)
-        drawLine(c(MARMOL_SOMBRA), Offset(r.left, arquitrabe.center.y), Offset(r.right, arquitrabe.center.y), 1f * u)
-        drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, r.bottom - 2 * u), Size(r.width, 2 * u))
-        // Las guirnaldas de laurel colgadas de dos clavos, con sus cintas.
-        listOf(0.05f to 0.27f, 0.8f to 0.97f).forEach { (a, z) ->
-            val g = Rect(r.left + r.width * a, r.top + r.height * 0.1f, r.left + r.width * z, r.top + r.height * 0.42f)
-            drawArc(c(LAUREL), 10f, 160f, false, g.topLeft, g.size, style = Stroke(5 * u, cap = StrokeCap.Round))
-            for (j in 0 until 7) {
-                val ang = Math.toRadians(25.0 + 21.0 * j)
-                drawCircle(c(LAUREL_LUZ), 1.6f * u, Offset(g.center.x + g.width / 2 * cos(ang).toFloat(), g.center.y + g.height / 2 * sin(ang).toFloat()))
-            }
-            listOf(g.left, g.right).forEach { gx ->
-                drawLine(c(MINIO), Offset(gx, g.center.y), Offset(gx - 1.5f * u, g.center.y + 11 * u), 1.2f * u)
-                drawCircle(c(BRONCE_OSC), 1.5f * u, Offset(gx, g.center.y))
-            }
-        }
-        // El busto sobre su herma.
-        val bx = r.left + r.width * 0.42f
-        val pilar = Rect(bx - r.width * 0.035f, cornisa - r.height * 0.2f, bx + r.width * 0.035f, cornisa)
-        drawRect(c(MARMOL), pilar.topLeft, pilar.size)
-        drawRect(Color.Black.copy(alpha = 0.15f), Offset(pilar.right - pilar.width * 0.3f, pilar.top), Size(pilar.width * 0.3f, pilar.height))
-        drawRect(c(MARMOL_LUZ), Offset(pilar.left - 2 * u, pilar.top - 2.4f * u), Size(pilar.width + 4 * u, 2.4f * u))
-        val hombros = pilar.top - 2.4f * u
-        val anchoBusto = r.width * 0.07f
-        val torso = Path().apply {
-            moveTo(bx - anchoBusto, hombros)
-            quadraticTo(bx - anchoBusto, hombros - r.height * 0.1f, bx - anchoBusto * 0.3f, hombros - r.height * 0.12f)
-            lineTo(bx + anchoBusto * 0.3f, hombros - r.height * 0.12f)
-            quadraticTo(bx + anchoBusto, hombros - r.height * 0.1f, bx + anchoBusto, hombros)
-            close()
-        }
-        drawRect(c(MARMOL), Offset(bx - anchoBusto * 0.18f, hombros - r.height * 0.16f), Size(anchoBusto * 0.36f, r.height * 0.06f))
-        drawPath(torso, c(MARMOL))
-        for (j in 0 until 3) {
-            drawLine(c(MARMOL_SOMBRA), Offset(bx - anchoBusto * (0.7f - 0.2f * j), hombros - r.height * (0.09f - 0.02f * j)), Offset(bx + anchoBusto * (0.2f + 0.2f * j), hombros - 1 * u), 0.8f * u)
-        }
-        val cabeza = Rect(bx - anchoBusto * 0.32f, hombros - r.height * 0.31f, bx + anchoBusto * 0.32f, hombros - r.height * 0.14f)
-        drawOval(c(MARMOL_LUZ), cabeza.topLeft, cabeza.size)
-        drawArc(Color.Black.copy(alpha = 0.12f), -90f, 180f, true, cabeza.topLeft, cabeza.size)
-        for (j in 0 until 5) drawCircle(c(MARMOL_SOMBRA), cabeza.width * 0.1f, Offset(cabeza.left + cabeza.width * (0.15f + 0.175f * j), cabeza.top + cabeza.height * 0.14f), style = Stroke(0.7f * u))
-        drawLine(c(MARMOL_SOMBRA), Offset(bx + cabeza.width * 0.05f, cabeza.center.y - cabeza.height * 0.05f), Offset(bx + cabeza.width * 0.12f, cabeza.center.y + cabeza.height * 0.15f), 0.8f * u)
-        // El candelabro de bronce con la lucerna encima.
-        val lx = r.left + r.width * 0.68f
-        val plato = cornisa - r.height * 0.26f
-        drawLine(c(BRONCE_OSC), Offset(lx, cornisa), Offset(lx, plato), 1.8f * u)
-        for (s in listOf(-1f, 1f)) drawLine(c(BRONCE_OSC), Offset(lx, cornisa - 4 * u), Offset(lx + s * 6 * u, cornisa), 1.4f * u)
-        drawOval(c(BRONCE), Offset(lx - 8 * u, plato - 1.6f * u), Size(16 * u, 3.2f * u))
-        val lucerna = Rect(lx - 9 * u, plato - 8 * u, lx + 5 * u, plato - 1 * u)
-        val pico = Path().apply {
-            moveTo(lucerna.right - 2 * u, lucerna.top + 2 * u); lineTo(lucerna.right + 6 * u, lucerna.center.y - 1 * u)
-            lineTo(lucerna.right + 6 * u, lucerna.center.y + 1.6f * u); lineTo(lucerna.right - 2 * u, lucerna.bottom - 1 * u); close()
-        }
-        drawPath(pico, c(BRONCE))
-        drawOval(c(BRONCE), lucerna.topLeft, lucerna.size)
-        drawOval(c(BRONCE_LUZ).copy(alpha = 0.6f), Offset(lucerna.left + lucerna.width * 0.25f, lucerna.top + 1 * u), Size(lucerna.width * 0.4f, lucerna.height * 0.3f))
-        drawCircle(c(BRONCE_OSC), 2f * u, Offset(lucerna.left - 1 * u, lucerna.center.y - 1 * u), style = Stroke(1.1f * u))
-        drawCircle(c(BRONCE_OSC), 1.3f * u, lucerna.center)
-        val boca = Offset(lucerna.right + 5.5f * u, lucerna.center.y - 1 * u)
-        if (noche) {
-            // La lucerna encendida: el único degradado del mueble.
-            mancha(boca, r.height * 0.4f, LLAMA.copy(alpha = 0.45f))
-            val llama = Path().apply {
-                moveTo(boca.x - 2 * u, boca.y)
-                quadraticTo(boca.x - 2.4f * u, boca.y - 4 * u, boca.x + 0.5f * u, boca.y - 9 * u)
-                quadraticTo(boca.x + 2.6f * u, boca.y - 4 * u, boca.x + 2 * u, boca.y)
-                close()
-            }
-            drawPath(llama, LLAMA)
-            drawCircle(Color.White.copy(alpha = 0.8f), 1f * u, Offset(boca.x, boca.y - 2 * u))
-        } else {
-            drawLine(c(NEGRO).copy(alpha = 0.6f), boca, Offset(boca.x + 0.5f * u, boca.y - 2.5f * u), 1f * u)
-        }
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteRomano) { estante(d, medidor, oscuro, noche) }
 
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val base = PAPIROS[(v.semilla and 0x7fffffff) % PAPIROS.size]
-        val papiro = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        val asoma = minOf(w * 0.08f, 5f * u)
-        val cuerpo = Rect(asoma, 0f, w - asoma, h)
-        // La varilla (umbilicus) que atraviesa el rollo y sus perillas en cada punta: de hueso o de ébano.
-        val perilla = c(if (azar(v.semilla, 3) > 0.5f) HUESO else EBANO)
-        drawRect(c(BRONCE_OSC), Offset(0f, h * 0.5f - 1.2f * u), Size(w, 2.4f * u))
-        val altoPerilla = minOf(h * 0.5f, 9f * u)
-        listOf(asoma * 0.5f, w - asoma * 0.5f).forEach { px ->
-            drawOval(perilla, Offset(px - asoma * 0.5f, h * 0.5f - altoPerilla / 2), Size(asoma, altoPerilla))
-            drawOval(Color.White.copy(alpha = 0.25f), Offset(px - asoma * 0.3f, h * 0.5f - altoPerilla * 0.4f), Size(asoma * 0.3f, altoPerilla * 0.35f))
-        }
-        // El rollo tumbado, con su luz arriba y su sombra abajo (planas: en un nicho caben muchos).
-        drawRoundRect(papiro, cuerpo.topLeft, cuerpo.size, CornerRadius(minOf(h * 0.12f, 3 * u)))
-        drawRect(Color.White.copy(alpha = 0.16f), Offset(cuerpo.left, h * 0.12f), Size(cuerpo.width, h * 0.16f))
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(cuerpo.left, h * 0.74f), Size(cuerpo.width, h * 0.26f))
-        // Las fibras y el borde de la última vuelta (dos, si escribiste mucho).
-        var y = 2 * u
-        while (y < h) { drawLine(c(PAPIRO_OSC).copy(alpha = 0.25f), Offset(cuerpo.left + 1 * u, y), Offset(cuerpo.right - 1 * u, y), 0.5f * u); y += 3 * u }
-        val bordes = if (v.lleno > 0.5f) 2 else 1
-        for (j in 0 until bordes) {
-            val ex = cuerpo.left + cuerpo.width * (0.17f + 0.04f * j)
-            drawLine(c(PAPIRO_OSC), Offset(ex, 0f), Offset(ex - 1.5f * u, h), 0.9f * u)
-        }
-        // Algunos llevan su correa (lorum) de color.
-        if (azar(v.semilla, 4) > 0.6f) drawRect(c(PURPURA).copy(alpha = 0.9f), Offset(cuerpo.left + cuerpo.width * 0.08f, 0f), Size(3 * u, h))
-        // El mes en tinta, abreviado como en las fechas romanas («OCT.»).
-        val mes = if (v.mes.length > 5) v.mes.take(3) + "." else v.mes
-        textoEn(medidor, mes, Rect(cuerpo.left + cuerpo.width * 0.22f, h * 0.22f, cuerpo.left + cuerpo.width * 0.58f, h * 0.78f), letra, c(TINTA).copy(alpha = 0.85f), 9f, espaciado = 0.5f, minimo = 4f)
-        // El sillybos: la etiqueta de pergamino rojo que cuelga con el día, un poco ladeada.
-        val etiqueta = Rect(cuerpo.left + cuerpo.width * 0.62f, h * 0.2f, cuerpo.right - cuerpo.width * 0.05f, h * 0.94f)
-        val amarre = Offset(cuerpo.right - 1 * u, h * 0.44f)
-        drawLine(c(TINTA).copy(alpha = 0.7f), amarre, Offset(etiqueta.center.x, etiqueta.top + 1 * u), 0.7f * u)
-        rotate((azar(v.semilla, 5) - 0.5f) * 8f, Offset(etiqueta.center.x, etiqueta.top)) {
-            drawRect(Color.Black.copy(alpha = 0.22f), Offset(etiqueta.left + 1 * u, etiqueta.top + 1 * u), etiqueta.size)
-            drawRect(c(MINIO), etiqueta.topLeft, etiqueta.size)
-            val filete = etiqueta.deflate(1.2f * u)
-            drawRect(c(HUESO).copy(alpha = 0.5f), filete.topLeft, filete.size, style = Stroke(0.5f * u))
-            textoEn(medidor, v.dia, etiqueta.deflate(1.5f * u), letra, c(HUESO), 12f, peso = FontWeight.SemiBold, minimo = 5f)
-        }
-        // El sello de plomo en el hilo; de noche, una lunita.
-        val sello = Offset((amarre.x + etiqueta.center.x) / 2, (amarre.y + etiqueta.top) / 2)
-        if (v.noche) {
-            drawCircle(LUNA, 2.2f * u, sello)
-            drawCircle(papiro, 1.8f * u, Offset(sello.x + 1.1f * u, sello.y - 0.7f * u))
-        } else {
-            drawCircle(c(PLOMO), 1.8f * u, sello)
-            drawCircle(Color.White.copy(alpha = 0.3f), 0.6f * u, Offset(sello.x - 0.5f * u, sello.y - 0.5f * u))
-        }
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteRomano) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
