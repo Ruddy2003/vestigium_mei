@@ -244,7 +244,7 @@ internal object MuebleEstanteDeco {
     }
 
     /** Cuánto alumbra la escalera (el alba o el frío de la calle) un punto a [dx], [dy] de ella. */
-    fun alcancePuerta(dx: Float, dy: Float): Float = (1.2f * exp(-2.0f * sqrt(dx * dx + dy * dy * 0.8f))).coerceIn(0.04f, 1f)
+    fun alcancePuerta(dx: Float, dy: Float): Float = (1.25f * exp(-2.5f * sqrt(dx * dx + dy * dy * 0.8f))).coerceIn(0.04f, 1f)
 
     /** La luz que llega a un punto en anchos: el frío de la calle en los Sueños en oscuro; al alba, la mayor; de noche, el aplique. */
     fun cerca(fx: Float, fy: Float, a: AireDeco): Float = when {

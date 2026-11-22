@@ -100,7 +100,7 @@ private fun DrawScope.veloPared(g: GeoDeco, r: Rect) {
     // En la pared, que tiene el aplique encima, la luz cae más deprisa que en el mueble: el charco junto al vidrio, y lejos, oscuro.
     val paradas = listOf(0f, 0.03f, 0.07f, 0.12f, 0.2f, 0.3f, 0.45f, 0.65f, 1f).map { f ->
         val dist = f * 1.6f
-        val k = if (a.luna) 0.8f * MuebleEstanteDeco.alcancePuerta(dist * 1.2f, 0f) else (1.35f * kotlin.math.exp(-3.6f * dist)).coerceIn(0.03f, 1f)
+        val k = if (a.luna) (1.1f * kotlin.math.exp(-3.0f * dist)).coerceIn(0.04f, 1f) else (1.35f * kotlin.math.exp(-3.6f * dist)).coerceIn(0.03f, 1f)
         f to hondo.copy(alpha = (1f - (1.05f * k).coerceAtMost(0.95f)).coerceIn(0f, 1f))
     }
     drawRect(Brush.radialGradient(*paradas.toTypedArray(), center = centro, radius = radio), r.topLeft, r.size)
