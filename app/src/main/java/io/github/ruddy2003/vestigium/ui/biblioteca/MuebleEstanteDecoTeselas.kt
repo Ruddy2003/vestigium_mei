@@ -101,20 +101,8 @@ private val TESELA_PAPEL: ShaderBrush by lazy {
     }
 }
 
-/** El terciopelo: un pelo fino y desparejo, con su lustre a rayas suaves a lo alto. */
-private val TESELA_TERCIOPELO: ShaderBrush by lazy {
-    val r = java.util.Random(91)
-    val hebras = List(160) { Triple(r.nextFloat() * 48f, r.nextFloat() * 48f, r.nextFloat()) }
-    baldosaDeco(48) { o ->
-        for ((x, y, z) in hebras) {
-            val col = if (z < 0.5f) Color(0xFF000000).copy(alpha = 0.22f) else Color(0xFFFFFFFF).copy(alpha = 0.1f)
-            drawLine(col, Offset(o.x + x, o.y + y), Offset(o.x + x, o.y + y + 2.2f), 0.8f)
-        }
-    }
-}
-
-/** Qué textura: el galuchat, el terrazo, el cuero, el papel pintado o el terciopelo. */
-internal enum class TexturaDeco { GALUCHAT, TERRAZO, CUERO, PAPEL, TERCIOPELO }
+/** Qué textura: el galuchat, el terrazo, el cuero o el papel pintado. */
+internal enum class TexturaDeco { GALUCHAT, TERRAZO, CUERO, PAPEL }
 
 /**
  * Pinta la textura [t] sobre [r], con la luz que le llega: el [tinte] (blanco de día; de noche, apagado) multiplica la baldosa,
@@ -127,7 +115,6 @@ internal fun DrawScope.texturaDeco(t: TexturaDeco, r: Rect, tinte: Color, alfa: 
         TexturaDeco.TERRAZO -> TESELA_TERRAZO
         TexturaDeco.CUERO -> TESELA_CUERO
         TexturaDeco.PAPEL -> TESELA_PAPEL
-        TexturaDeco.TERCIOPELO -> TESELA_TERCIOPELO
     }
     // Con la luz entera (de día) no hace falta el filtro, que cuesta en cada píxel.
     val filtro = if (tinte == Color.White) null else ColorFilter.tint(tinte, BlendMode.Modulate)
