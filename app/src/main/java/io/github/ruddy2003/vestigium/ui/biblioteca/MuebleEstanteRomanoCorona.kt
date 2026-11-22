@@ -15,8 +15,8 @@ import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /**
- * El bodegón de encima del estante de Romano ([MuebleEstanteRomano]): en la pared, el cinturón del legionario (el cingulum
- * con sus placas de bronce y su delantal de correas tachonadas) colgado de una estaca; sobre la cornisa, el sagum de lana
+ * El bodegón de encima del estante de Romano ([MuebleEstanteRomano]): en la pared, el gladio en su vaina colgado en diagonal
+ * de una estaca por su tahalí; sobre la cornisa, el sagum de lana
  * roja doblado con su fíbula y un pliegue que cae por el canto; el modio grande de medir el grano, de duelas con sus aros de
  * bronce y el trigo colmado, con el rasero apoyado; delante, la romana de bronce colgada de la pared que pesa la ración; la
  * jarra de la posca; y la linterna de cuerno colgada de su brazo de hierro, que de noche arde.
@@ -57,73 +57,75 @@ internal object CoronaEstanteRomano {
 
     fun DrawScope.pared(a: AireRomano, apoyo: Float, cerca: (Offset) -> Float) {
         val w = size.width
-        cingulo(a, Offset(w * 0.315f, w * 0.075f), w * 0.2f, cerca)
+        gladio(a, Offset(w * 0.3f, w * 0.07f), w * 0.36f, cerca)
     }
 
     /**
-     * El cingulum colgado de una estaca: el cinturón de cuero doblado sobre ella con sus placas de bronce repujadas, la
-     * hebilla, y el delantal de cuatro correas con sus tachuelas y sus colgantes de bronce; su sombra en el ocre.
+     * El gladio en su vaina, colgado en diagonal de una estaca por su tahalí: la empuñadura de hueso con sus cuatro anillos, el
+     * pomo redondo y la guarda, la vaina de madera forrada de cuero con la boca, las abrazaderas y la contera de bronce, y las
+     * anillas por donde pasa la correa; su sombra en el ocre.
      */
-    private fun DrawScope.cingulo(a: AireRomano, estaca: Offset, largo: Float, cerca: (Offset) -> Float) {
+    private fun DrawScope.gladio(a: AireRomano, estaca: Offset, largo: Float, cerca: (Offset) -> Float) {
         val u = density
-        val k = cerca(estaca + Offset(0f, largo * 0.5f))
-        val an = largo * 0.14f
-        // El cinturón doblado sobre la estaca: el ramal de atrás y el de delante, casi juntos, hasta la hebilla.
-        val der = Path().apply {
-            moveTo(estaca.x + an * 0.3f, estaca.y)
-            quadraticTo(estaca.x + an * 1.3f, estaca.y + largo * 0.3f, estaca.x + an * 0.6f, estaca.y + largo * 0.6f)
+        val k = cerca(estaca + Offset(largo * 0.15f, largo * 0.5f))
+        // El eje del arma: del pomo (arriba a la izquierda) a la contera (abajo a la derecha).
+        val pomo = estaca + Offset(-largo * 0.07f, largo * 0.02f)
+        val punta = estaca + Offset(largo * 0.2f, largo * 0.95f)
+        val dir = (punta - pomo) / (punta - pomo).getDistance().coerceAtLeast(1f)
+        val nor = Offset(-dir.y, dir.x)
+        fun en(f: Float, lado: Float) = pomo + (punta - pomo) * f + nor * lado
+        val anV = largo * 0.07f
+        val cuero = a.luz(mezcla(P.CUERO, P.TINTA, 0.45f), k)
+        // La vaina.
+        val vaina = Path().apply {
+            val a0 = en(0.3f, -anV / 2); val a1 = en(0.3f, anV / 2)
+            val b1 = en(0.93f, anV * 0.38f); val b0 = en(0.93f, -anV * 0.38f)
+            moveTo(a0.x, a0.y); lineTo(a1.x, a1.y); lineTo(b1.x, b1.y)
+            val t = en(1f, 0f); quadraticTo(t.x + nor.x * anV * 0.1f, t.y + nor.y * anV * 0.1f, b0.x, b0.y); close()
         }
-        val izq = Path().apply {
-            moveTo(estaca.x - an * 0.3f, estaca.y)
-            quadraticTo(estaca.x - an * 1.2f, estaca.y + largo * 0.3f, estaca.x - an * 0.5f, estaca.y + largo * 0.6f)
+        val sc = caida(estaca, 3.5f * u, a)
+        translate(sc.x, sc.y) { drawPath(vaina, a.sombra(0.22f)) }
+        // La correa del tahalí: de la estaca a las dos anillas.
+        val anilla1 = en(0.36f, -anV * 0.6f); val anilla2 = en(0.56f, -anV * 0.6f)
+        val correa = Path().apply { moveTo(anilla1.x, anilla1.y); quadraticTo(estaca.x - largo * 0.02f, estaca.y + largo * 0.05f, estaca.x, estaca.y)
+            quadraticTo(estaca.x + largo * 0.1f, estaca.y + largo * 0.2f, anilla2.x, anilla2.y) }
+        translate(sc.x, sc.y) { drawPath(correa, a.sombra(0.18f), style = Stroke(2.6f * u)) }
+        drawPath(correa, a.luz(mezcla(P.CUERO, P.TINTA, 0.2f), k), style = Stroke(2.6f * u))
+        drawPath(correa, a.brillo(0.25f, k), style = Stroke(0.6f * u))
+        drawPath(vaina, cuero)
+        clipPath(vaina) {
+            // Lo redondo de la vaina: un canto claro y el otro hondo.
+            val l0 = en(0.3f, -anV * 0.4f); val l1 = en(0.95f, -anV * 0.3f)
+            drawLine(a.brillo(0.35f, k), l0, l1, anV * 0.18f)
+            val s0 = en(0.3f, anV * 0.38f); val s1 = en(0.95f, anV * 0.3f)
+            drawLine(a.sombra(0.3f), s0, s1, anV * 0.25f)
         }
-        val cuero = a.luz(mezcla(P.CUERO, P.TINTA, 0.35f), k)
-        for (rama in listOf(izq, der)) {
-            val c = caida(estaca, 3.2f * u, a)
-            translate(c.x, c.y) { drawPath(rama, a.sombra(0.22f), style = Stroke(an, cap = StrokeCap.Butt)) }
-            drawPath(rama, cuero, style = Stroke(an, cap = StrokeCap.Butt))
-            drawPath(rama, a.brillo(0.25f, k), style = Stroke(an * 0.15f))
+        // La boca, las abrazaderas y la contera de bronce.
+        for ((f, g) in listOf(0.3f to 0.06f, 0.5f to 0.025f, 0.7f to 0.025f)) {
+            val p0 = en(f, -anV * 0.55f); val p1 = en(f, anV * 0.55f)
+            val q1 = en(f + g, anV * 0.55f); val q0 = en(f + g, -anV * 0.55f)
+            val banda = poligonoRomano(p0.x, p0.y, p1.x, p1.y, q1.x, q1.y, q0.x, q0.y)
+            drawPath(banda, a.luz(P.BRONCE, k))
+            drawLine(a.brillo(0.6f, k), p0, p1, 0.7f * u)
         }
-        // Las placas de bronce a lo largo de cada ramal.
-        for ((j, t) in listOf(0.2f, 0.42f, 0.64f, 0.86f).withIndex()) {
-            val s = -1f
-            val cx = estaca.x + s * an * (0.3f + 1.6f * t * (1f - t)) - an * 0.1f * t
-            val cy = estaca.y + largo * 0.6f * t
-            val pr = Rect(cx - an * 0.55f, cy - an * 0.45f, cx + an * 0.55f, cy + an * 0.45f)
-            drawRect(a.sombra(0.3f), Offset(pr.left + 1f * u, pr.top + 1f * u), pr.size)
-            drawRect(a.luz(P.BRONCE, k), pr.topLeft, pr.size)
-            drawRect(a.brillo(0.45f, k), pr.topLeft, Size(pr.width, pr.height * 0.3f))
-            drawCircle(a.luz(P.BRONCE_OSC, k), an * 0.16f, pr.center, style = Stroke(0.7f * u))
-            if (j == 1) destello(Offset(pr.left + pr.width * 0.3f, pr.top + pr.height * 0.3f), 0.8f * u, a, k)
-        }
-        // La hebilla abajo, donde se juntan.
-        val heb = Offset(estaca.x - largo * 0.01f, estaca.y + largo * 0.6f)
-        drawRect(a.luz(P.BRONCE, k), Offset(heb.x - an * 0.9f, heb.y - an * 0.5f), Size(an * 1.8f, an), style = Stroke(1.4f * u))
-        drawLine(a.luz(P.BRONCE_LUZ, k), Offset(heb.x - an * 0.2f, heb.y - an * 0.5f), Offset(heb.x + an * 0.1f, heb.y + an * 0.5f), 1f * u)
-        // El delantal: cuatro correas con tachuelas y colgantes.
-        for (j in 0 until 4) {
-            val x0 = heb.x + (j - 1.5f) * an * 0.55f
-            val x1 = x0 + (j - 1.5f) * an * 0.3f + (azar(7501, j) - 0.5f) * 2f * u
-            val y1 = heb.y + largo * (0.48f + 0.06f * azar(7502, j))
-            val correa = Path().apply { moveTo(x0, heb.y + an * 0.4f); quadraticTo((x0 + x1) / 2, (heb.y + y1) / 2, x1, y1) }
-            val c = caida(Offset(x0, heb.y), 3f * u, a)
-            translate(c.x, c.y) { drawPath(correa, a.sombra(0.2f), style = Stroke(an * 0.4f)) }
-            drawPath(correa, cuero, style = Stroke(an * 0.4f, cap = StrokeCap.Butt))
-            for (t in 1..4) {
-                val f = t / 5f
-                val p = Offset(x0 + (x1 - x0) * f, heb.y + an * 0.4f + (y1 - heb.y - an * 0.4f) * f)
-                drawCircle(a.luz(P.BRONCE, k), an * 0.17f, p)
-                drawCircle(a.brillo(0.6f, k), an * 0.07f, p - Offset(an * 0.05f, an * 0.05f))
-            }
-            val gota = Path().apply {
-                moveTo(x1 - an * 0.22f, y1); lineTo(x1 + an * 0.22f, y1)
-                quadraticTo(x1 + an * 0.28f, y1 + an * 0.5f, x1, y1 + an * 0.9f)
-                quadraticTo(x1 - an * 0.28f, y1 + an * 0.5f, x1 - an * 0.22f, y1); close()
-            }
-            drawPath(gota, a.luz(P.BRONCE, k))
-            drawPath(gota, a.brillo(0.4f, k), style = Stroke(0.5f * u))
-        }
-        // La estaca de madera, encima de todo.
+        val c0 = en(0.86f, -anV * 0.42f); val c1 = en(0.86f, anV * 0.42f)
+        val cp = en(1.01f, 0f)
+        drawPath(poligonoRomano(c0.x, c0.y, c1.x, c1.y, cp.x, cp.y), a.luz(P.BRONCE, k))
+        drawCircle(a.luz(P.BRONCE_LUZ, k), anV * 0.18f, cp)
+        for (p in listOf(anilla1, anilla2)) drawCircle(a.luz(P.BRONCE, k), 1.8f * u, p, style = Stroke(1f * u))
+        // La empuñadura: la guarda, el puño de hueso con sus anillos y el pomo.
+        val g0 = en(0.25f, -anV * 0.8f); val g1 = en(0.25f, anV * 0.8f); val g2 = en(0.3f, anV * 0.8f); val g3 = en(0.3f, -anV * 0.8f)
+        drawPath(poligonoRomano(g0.x, g0.y, g1.x, g1.y, g2.x, g2.y, g3.x, g3.y), a.luz(P.HUESO, k))
+        drawLine(a.sombra(0.3f), g2, g3, 0.8f * u)
+        val p0 = en(0.08f, 0f); val p1 = en(0.25f, 0f)
+        drawLine(a.luz(mezcla(P.HUESO, P.ALISO_OSC, 0.3f), k), p0, p1, anV * 0.55f, cap = StrokeCap.Round)
+        for (j in 1..4) { val q = en(0.08f + 0.034f * j, 0f); drawLine(a.sombra(0.3f), q + nor * (-anV * 0.27f), q + nor * (anV * 0.27f), 0.8f * u) }
+        drawLine(a.brillo(0.4f, k), en(0.09f, -anV * 0.15f), en(0.24f, -anV * 0.15f), 0.7f * u)
+        val pm = en(0.04f, 0f)
+        drawCircle(a.sombra(0.3f), anV * 0.5f, pm + Offset(1f * u, 1.2f * u))
+        drawCircle(a.luz(P.HUESO, k), anV * 0.5f, pm)
+        drawCircle(a.brillo(0.5f, k), anV * 0.18f, pm - Offset(anV * 0.15f, anV * 0.15f))
+        // La estaca, encima de la correa.
         drawCircle(a.sombra(0.35f), 2.6f * u, estaca + Offset(1.2f * u, 1.4f * u))
         drawCircle(a.luz(P.ROBLE_OSC, k), 2.4f * u, estaca)
         drawCircle(a.brillo(0.35f, k), 0.9f * u, estaca - Offset(0.8f * u, 0.8f * u))
