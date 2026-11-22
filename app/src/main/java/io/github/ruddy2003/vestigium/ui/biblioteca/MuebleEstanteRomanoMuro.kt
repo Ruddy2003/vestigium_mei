@@ -235,9 +235,9 @@ internal object MuroEstanteRomano {
         val w = size.width; val h = size.height
         if (h - suelo < 1f) return
         clipRect(0f, suelo, w, h) {
-            drawRect(Color(0xFF5E4636), Offset(0f, suelo), Size(w, h - suelo))
+            drawRect(Color(0xFF7A5442), Offset(0f, suelo), Size(w, h - suelo))
             // Dos tonos según hacia dónde mira cada ladrillo (el que mira a la ventana, más claro) y, de vez en cuando, uno gastado.
-            val tonos = listOf(mezcla(P.LADRILLO, P.LADRILLO_CLARO, 0.22f), mezcla(P.LADRILLO, P.LADRILLO_OSC, 0.22f), mezcla(P.LADRILLO, P.MORTERO, 0.2f))
+            val tonos = listOf(mezcla(P.LADRILLO, P.LADRILLO_CLARO, 0.1f), mezcla(P.LADRILLO, P.LADRILLO_OSC, 0.1f), mezcla(P.LADRILLO, P.MORTERO, 0.1f))
             val caminos = List(3) { Path() }
             val cantos = Path()
             var y = suelo
@@ -264,8 +264,8 @@ internal object MuroEstanteRomano {
             }
             val kq = if (a.oscuro) 1f else 0.3f
             for (t in 0 until 3) drawPath(caminos[t], a.luz(tonos[t], kq))
-            drawPath(cantos, a.brillo(0.16f, 0.3f), style = Stroke(0.7f * u))
-            drawRect(a.sombra(0.12f), Offset(0f, suelo), Size(w, h - suelo))
+            drawPath(cantos, a.brillo(0.08f, 0.3f), style = Stroke(0.6f * u))
+            drawRect(a.sombra(0.2f), Offset(0f, suelo), Size(w, h - suelo))
             // El paso gastado en medio, más claro, y la sombra que se aleja de la ventana.
             drawOval(a.claro(0.12f), Offset(w * 0.15f, suelo + (h - suelo) * 0.3f), Size(w * 0.6f, (h - suelo) * 0.6f))
             if (!a.oscuro && !a.noche) drawRect(Brush.horizontalGradient(listOf(Color.Transparent, a.frio(0.18f)), w * 0.4f, w), Offset(0f, suelo), Size(w, h - suelo))

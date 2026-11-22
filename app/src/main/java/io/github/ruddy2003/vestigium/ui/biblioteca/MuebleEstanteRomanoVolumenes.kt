@@ -75,14 +75,17 @@ internal object VolumenEstanteRomano {
     private val P = PaletaRomano
 
     /** El día y el mes de las etiquetas, en sp, y su tamaño, en dp. */
-    private const val TAM_DIA = 12f
-    private const val TAM_MES = 5.4f
-    private const val ALTO_ETIQUETA = 18f
-    private const val ANCHO_ETIQUETA = 21f
+    private const val TAM_DIA = 16f
+    private const val TAM_MES = 5.8f
+    private const val ALTO_ETIQUETA = 25f
+    private const val ANCHO_ETIQUETA = 26f
     /** El marfil cálido del hueso y de la madera clara de las etiquetas, y el plomo nuevo del marbete. */
     private val MARFIL = Color(0xFFEBDDBC)
     private val ALISO_TABLILLA = Color(0xFFE3CC9C)
-    private val PLOMO_CLARO = Color(0xFFB9BAB6)
+    private val PLOMO_CLARO = Color(0xFFD5D6D0)
+    /** El aliso de las hojas: claro y rojizo, con la sombra de cada canto. */
+    private val ALISO_ROJIZO = Color(0xFFD6AE86)
+    private val ALISO_CANTO = Color(0xFF9C7350)
 
     /** El color del cuerpo: el tinte del ánimo en su sitio de la escala, o [crudo] si no se marcó, con la luz del momento. */
     private fun cuerpo(v: Volumen, a: AireRomano, k: Float, crudo: Color): Color {
@@ -188,7 +191,7 @@ internal object VolumenEstanteRomano {
         val w = size.width; val h = size.height
         val s = v.semilla and 0x7fffffff
         val x0 = 1.2f * u; val x1 = w - 1.2f * u
-        val boca = h * 0.44f
+        val boca = h * 0.33f
         // El mazo de hojas: la boca desigual arriba, el cuerpo de madera clara y los cantos.
         val hojas = Path().apply {
             moveTo(x0, boca + 2f * u)
@@ -203,15 +206,15 @@ internal object VolumenEstanteRomano {
             lineTo(x1, boca + 2f * u)
             close()
         }
-        val madera = a.etiqueta(P.ALISO, k)
+        val madera = a.luz(ALISO_ROJIZO, k)
         drawPath(hojas, madera)
         clipPath(hojas) {
             val cantos = Path()
             var x = x0 + 1.2f * u
             var i = 0
             while (x < x1 && i < 60) { cantos.moveTo(x, 0f); cantos.lineTo(x, boca + 2f * u); x += 1.5f * u; i++ }
-            drawPath(cantos, a.luz(P.ALISO_OSC, k).copy(alpha = 0.55f), style = Stroke(0.5f * u))
-            drawRect(a.brillo(0.3f, k), Offset(if (luzDe < 0) x0 else x1 - (x1 - x0) * 0.25f, 0f), Size((x1 - x0) * 0.25f, boca))
+            drawPath(cantos, a.luz(ALISO_CANTO, k).copy(alpha = 0.75f), style = Stroke(0.6f * u))
+            drawRect(a.brillo(0.18f, k), Offset(if (luzDe < 0) x0 else x1 - (x1 - x0) * 0.25f, 0f), Size((x1 - x0) * 0.25f, boca))
             drawRect(a.sombra(0.25f), Offset(if (luzDe < 0) x1 - (x1 - x0) * 0.3f else x0, 0f), Size((x1 - x0) * 0.3f, boca + 2f * u))
             drawRect(a.sombra(0.3f), Offset(0f, boca - 3f * u), Size(w, 5f * u))
         }
