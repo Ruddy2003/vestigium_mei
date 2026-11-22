@@ -4147,14 +4147,10 @@ object EstanteHeleno : DisenoBiblioteca {
     }
 }
 /**
- * Egipto: las hornacinas en la pared de arenisca del templo. Cada repisa es una hornacina honda con su marco claro; las tablas
- * de piedra llevan la banda de rectángulos azules, rojos y verdes, y el mes va en una etiqueta de lino con marco de lapislázuli.
- * A los lados, columnas lotiformes: el haz de tallos atado bajo un capitel de loto cerrado con sus sépalos verdes. Arriba,
- * el techo, el friso de uraeus (cobras erguidas con su disco) sobre la gola de hojas pintadas, el toro atado con su cinta y
- * el arquitrabe; abajo, la banda de lotos abiertos y capullos y el piso de losas. Cada entrada es un papiro de pie, con sus
- * vueltas a la vista arriba (más cuanto más escribiste), atado con lino y sellado con barro, el día dentro de un cartucho y
- * el mes debajo; de noche, una estrella de Nut en lugar del sello. De noche el techo se vuelve el cuerpo de Nut, azul con
- * estrellas amarillas. La tapa es ese papiro tumbado y grande, atado con lino y sellado con barro (de noche, la estrella de
+ * Egipto. El estante y sus volúmenes son el almacén de la Tumba en Deir el-Medina (`MuebleEstanteEgipto*.kt`): el anaquel
+ * de troncos de palmera y tablones de acacia atados con soga, contra el testero de adobe bajo la bóveda de ladrillo, con la
+ * balanza del cobre arriba y la lámpara en el suelo; cada entrada, según la semilla, es un rollo en su funda de lino, una
+ * tablilla de escriba o un fardo de lino anudado. La tapa es un papiro tumbado y grande, atado con lino y sellado con barro (de noche, la estrella de
  * Nut), con la viñeta de signos y la fecha en un cartucho, la paleta del escriba al pie y las palabras en una etiqueta de
  * lino; al abrirse, el atado se suelta y el rollo sube desenrollándose y deja ver el hierático con su rúbrica roja. Distinto
  * del Ideario, que es la Casa de la Vida con el friso jekeru, el disco alado y los cofres de cedro.
@@ -4187,16 +4183,18 @@ object EstanteEgipto : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.32f
-    override val base = 0.12f
-    override val lado = 0.075f
-    override val altoRepisa: Dp = 110.dp
-    override val tabla: Dp = 15.dp
-    override val separa: Dp = 3.dp
+    // El estante y sus volúmenes: el almacén de la Tumba, en MuebleEstanteEgipto*.kt.
+    override val corona = MuebleEstanteEgipto.CORONA
+    override val base = MuebleEstanteEgipto.BASE
+    override val lado = MuebleEstanteEgipto.LADO
+    override val altoRepisa: Dp = MuebleEstanteEgipto.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteEgipto.TABLA
+    override val separa: Dp = MuebleEstanteEgipto.SEPARA
     override val letra: FontFamily = Letra.messiri
+    override val auraEnReposo = false
 
-    override fun ancho(palabras: Int): Dp = (20 + (palabras / 40).coerceAtMost(18)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.78f + 0.17f * azar(semilla, 1)
+    override fun ancho(palabras: Int): Dp = MuebleEstanteEgipto.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteEgipto.alto(semilla, palabras)
 
     /** La banda de rectángulos de colores separados por líneas claras, del borde de las pinturas. */
     private fun DrawScope.bandaColores(b: Rect, oscuro: Boolean, noche: Boolean) {
@@ -4213,248 +4211,11 @@ object EstanteEgipto : DisenoBiblioteca {
         drawLine(t(NEGRO, oscuro, noche), Offset(b.left, b.bottom), Offset(b.right, b.bottom), 0.6f * u)
     }
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // La pared del templo: sillares de arenisca.
-        val cuerpo = Rect(0f, d.corona.bottom, w, d.base.top)
-        drawRect(c(ARENISCA), cuerpo.topLeft, cuerpo.size)
-        var y = cuerpo.top
-        var fila = 0
-        while (y < cuerpo.bottom) {
-            drawLine(c(ARENISCA_OSC).copy(alpha = 0.5f), Offset(0f, y), Offset(w, y), 0.8f * u)
-            var x = if (fila % 2 == 0) 0f else 26 * u
-            while (x < w) { drawLine(c(ARENISCA_OSC).copy(alpha = 0.5f), Offset(x, y), Offset(x, minOf(y + 24 * u, cuerpo.bottom)), 0.8f * u); x += 52 * u }
-            y += 24 * u; fila++
-        }
-        // Cada repisa es una hornacina honda, con su marco más claro y sus sombras.
-        d.repisas.forEach { r ->
-            val marco = r.inflate(2.5f * u)
-            drawRect(c(ARENISCA_LUZ), marco.topLeft, marco.size)
-            drawRect(c(HONDO), r.topLeft, r.size)
-            drawRect(Color.Black.copy(alpha = if (noche) 0.42f else 0.3f), r.topLeft, Size(r.width, 8 * u))
-            drawRect(Color.Black.copy(alpha = 0.14f), Offset(r.left, r.top + 8 * u), Size(r.width, 6 * u))
-            drawRect(Color.Black.copy(alpha = 0.2f), r.topLeft, Size(6 * u, r.height))
-            drawRect(Color.Black.copy(alpha = 0.12f), Offset(r.right - 3 * u, r.top), Size(3 * u, r.height))
-        }
-        // Las columnas lotiformes de los costados.
-        listOf(d.izquierda, d.derecha).forEach { r ->
-            val capH = r.width * 1.1f
-            val fuste = Rect(r.left + r.width * 0.2f, r.top + capH, r.right - r.width * 0.2f, r.bottom - r.width * 0.25f)
-            drawRect(c(ARENISCA_LUZ), fuste.topLeft, fuste.size)
-            for (j in 1..3) {
-                val x = fuste.left + fuste.width * j / 4f
-                drawLine(c(ARENISCA_OSC), Offset(x, fuste.top), Offset(x, fuste.bottom), 1f * u)
-            }
-            drawRect(Color.Black.copy(alpha = 0.15f), Offset(fuste.right - fuste.width * 0.22f, fuste.top), Size(fuste.width * 0.22f, fuste.height))
-            // Las ataduras del haz bajo el capitel.
-            for (j in 0 until 5) drawRect(c(if (j % 2 == 0) ROJO else LAPIS), Offset(fuste.left, fuste.top + j * 2.2f * u), Size(fuste.width, 1.4f * u))
-            // El capitel de loto cerrado, con sus sépalos verdes.
-            val capitel = Path().apply {
-                moveTo(fuste.left, fuste.top)
-                cubicTo(r.left - r.width * 0.05f, r.top + capH * 0.6f, r.left + r.width * 0.1f, r.top + capH * 0.15f, r.left + r.width * 0.3f, r.top + capH * 0.1f)
-                lineTo(r.right - r.width * 0.3f, r.top + capH * 0.1f)
-                cubicTo(r.right - r.width * 0.1f, r.top + capH * 0.15f, r.right + r.width * 0.05f, r.top + capH * 0.6f, fuste.right, fuste.top)
-                close()
-            }
-            drawPath(capitel, c(ARENISCA_LUZ))
-            clipPath(capitel) {
-                for (j in 0 until 3) {
-                    val sx = r.left + r.width * (0.3f + 0.2f * j)
-                    val sepalo = Path().apply { moveTo(sx - r.width * 0.12f, fuste.top); lineTo(sx, r.top + capH * 0.2f); lineTo(sx + r.width * 0.12f, fuste.top); close() }
-                    drawPath(sepalo, c(VERDE))
-                }
-            }
-            drawPath(capitel, c(ARENISCA_OSC), style = Stroke(0.8f * u))
-            drawRect(c(ARENISCA), Offset(r.left + r.width * 0.15f, r.top), Size(r.width * 0.7f, capH * 0.1f))
-            // La basa: un disco de piedra.
-            drawRoundRect(c(ARENISCA_LUZ), Offset(r.left, fuste.bottom), Size(r.width, r.bottom - fuste.bottom), CornerRadius(3 * u))
-            drawLine(c(ARENISCA_OSC), Offset(r.left, fuste.bottom), Offset(r.right, fuste.bottom), 0.8f * u)
-        }
-        // Las tablas de piedra con su banda de colores.
-        d.tablas.forEach { r ->
-            drawRect(c(ARENISCA_LUZ), r.topLeft, r.size)
-            drawRect(Color.White.copy(alpha = 0.2f), r.topLeft, Size(r.width, 2 * u))
-            bandaColores(Rect(r.left, r.top + r.height * 0.4f, r.right, r.top + r.height * 0.72f), oscuro, noche)
-            drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, r.bottom), Size(r.width, 3 * u))
-        }
-        // El rótulo de cada mes: una etiqueta de lino con marco de lapislázuli y filete rojo.
-        d.placas.forEach { p ->
-            val r = p.r
-            val marco = r.inflate(1.5f * u)
-            drawRect(c(LAPIS), marco.topLeft, marco.size)
-            drawRect(c(LINO), r.topLeft, r.size)
-            val filete = r.deflate(1.5f * u)
-            drawRect(c(ROJO), filete.topLeft, filete.size, style = Stroke(0.6f * u))
-            textoEn(medidor, p.texto, Rect(r.left + 4 * u, r.top + 1 * u, r.right - 4 * u, r.bottom - 1 * u), letra, c(NEGRO), 10.5f, peso = FontWeight.Medium, minimo = 5f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: la banda de lotos abiertos y capullos sobre su línea de agua, y el piso de losas.
-        val b = d.base
-        val piso = b.top + b.height * 0.7f
-        drawRect(c(ARENISCA_LUZ), b.topLeft, Size(b.width, piso - b.top))
-        bandaColores(Rect(b.left, b.top, b.right, b.top + 3 * u), oscuro, noche)
-        val agua = piso - (piso - b.top) * 0.14f
-        drawRect(c(LAPIS), Offset(b.left, agua), Size(b.width, piso - agua))
-        val altoLoto = agua - (b.top + 6 * u)
-        var lx = b.left + 8 * u
-        var k = 0
-        while (lx < b.right) {
-            val tallo = Offset(lx, agua - altoLoto * 0.42f)
-            drawLine(c(VERDE), Offset(lx, agua), tallo, 1.2f * u)
-            if (k % 2 == 0) {
-                val ab = altoLoto * 0.58f
-                listOf(-1f to VERDE, 1f to VERDE, 0f to LAPIS).forEach { (s, col) ->
-                    val alto0 = if (s == 0f) 1f else 0.8f
-                    val petalo = Path().apply {
-                        moveTo(tallo.x, tallo.y)
-                        lineTo(tallo.x + s * ab * 0.55f - ab * 0.14f, tallo.y - ab * alto0)
-                        lineTo(tallo.x + s * ab * 0.55f + ab * 0.14f, tallo.y - ab * alto0)
-                        close()
-                    }
-                    drawPath(petalo, c(col))
-                }
-                drawCircle(c(ROJO), 1f * u, Offset(tallo.x, tallo.y - ab))
-            } else {
-                val capullo = Path().apply {
-                    moveTo(tallo.x - 3 * u, tallo.y)
-                    quadraticTo(tallo.x - 3.5f * u, tallo.y - altoLoto * 0.3f, tallo.x, tallo.y - altoLoto * 0.5f)
-                    quadraticTo(tallo.x + 3.5f * u, tallo.y - altoLoto * 0.3f, tallo.x + 3 * u, tallo.y)
-                    close()
-                }
-                drawPath(capullo, c(ROJO))
-                val sepalo = Path().apply { moveTo(tallo.x - 3 * u, tallo.y); lineTo(tallo.x, tallo.y - altoLoto * 0.3f); lineTo(tallo.x + 3 * u, tallo.y); close() }
-                drawPath(sepalo, c(VERDE))
-            }
-            lx += 14 * u; k++
-        }
-        drawRect(c(ARENISCA_OSC), Offset(0f, piso), Size(w, h - piso))
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(0f, piso), Size(w, 2.5f * u))
-        var sx = 0f
-        var j2 = 0
-        while (sx < w) { drawLine(Color.Black.copy(alpha = 0.22f), Offset(sx, piso), Offset(sx - 6 * u, h), 0.8f * u); sx += (40 + 12 * azar(j2, 5)) * u; j2++ }
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteEgipto) { estante(d, medidor, oscuro, noche) }
 
-    /** Una cobra erguida (uraeus) con el disco solar sobre la cabeza. */
-    private fun DrawScope.uraeus(pie: Offset, alto: Float, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        val a = alto * 0.9f
-        drawOval(c(ORO), Offset(pie.x - a * 0.2f, pie.y - a * 0.08f), Size(a * 0.4f, a * 0.08f))
-        val capucha = Path().apply {
-            moveTo(pie.x - a * 0.16f, pie.y)
-            quadraticTo(pie.x - a * 0.26f, pie.y - a * 0.45f, pie.x - a * 0.08f, pie.y - a * 0.68f)
-            lineTo(pie.x + a * 0.08f, pie.y - a * 0.68f)
-            quadraticTo(pie.x + a * 0.26f, pie.y - a * 0.45f, pie.x + a * 0.16f, pie.y)
-            close()
-        }
-        drawPath(capucha, c(ORO))
-        drawLine(c(LAPIS), Offset(pie.x, pie.y - a * 0.1f), Offset(pie.x, pie.y - a * 0.6f), 1.2f * u)
-        for (j in 0 until 3) drawLine(c(ROJO), Offset(pie.x - a * 0.1f, pie.y - a * (0.2f + 0.14f * j)), Offset(pie.x + a * 0.1f, pie.y - a * (0.2f + 0.14f * j)), 0.7f * u)
-        drawOval(c(ORO), Offset(pie.x - a * 0.07f, pie.y - a * 0.78f), Size(a * 0.14f, a * 0.12f))
-        drawCircle(c(ROJO), a * 0.1f, Offset(pie.x, pie.y - a * 0.9f))
-        drawCircle(c(ORO), a * 0.1f, Offset(pie.x, pie.y - a * 0.9f), style = Stroke(0.6f * u))
-    }
-
-    /** El techo (de noche, Nut con sus estrellas), el friso de uraeus, la gola, el toro y el arquitrabe. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        val techo = Rect(r.left, r.top, r.right, r.top + r.height * 0.24f)
-        if (noche) {
-            // El cuerpo de Nut: azul, con filas de estrellas amarillas de cinco puntas.
-            drawRect(NUT, techo.topLeft, techo.size)
-            for (f in 0 until 2) {
-                var sx = techo.left + 10 * u + (if (f % 2 == 1) 13 * u else 0f)
-                while (sx < techo.right) {
-                    drawPath(estrella(Offset(sx, techo.top + techo.height * (0.3f + 0.42f * f)), techo.height * 0.16f, 5, 0.42f), AMARILLO)
-                    sx += 26 * u
-                }
-            }
-        } else {
-            drawRect(c(ARENISCA_OSC), techo.topLeft, techo.size)
-            var vx = techo.left + 8 * u
-            while (vx < techo.right) { drawRect(Color.Black.copy(alpha = 0.12f), Offset(vx, techo.top), Size(3 * u, techo.height)); vx += 34 * u }
-        }
-        drawRect(c(ARENISCA_LUZ), Offset(r.left, techo.bottom - 2 * u), Size(r.width, 2 * u))
-        // El friso de uraeus, de pie sobre la gola.
-        val friso = Rect(r.left, techo.bottom, r.right, r.top + r.height * 0.43f)
-        drawRect(c(ARENISCA), friso.topLeft, friso.size)
-        var ux = friso.left + 6 * u
-        while (ux < friso.right) { uraeus(Offset(ux, friso.bottom), friso.height, oscuro, noche); ux += 11 * u }
-        // La gola: hojas pintadas que se abren hacia arriba, con luz arriba y sombra abajo.
-        val gola = Rect(r.left, friso.bottom, r.right, r.top + r.height * 0.76f)
-        drawRect(c(ARENISCA_LUZ), gola.topLeft, gola.size)
-        val colores = listOf(LAPIS, ROJO, VERDE)
-        var gx = gola.left + 2 * u
-        var k = 0
-        while (gx < gola.right) {
-            drawRoundRect(c(colores[k % 3]), Offset(gx, gola.top + gola.height * 0.08f), Size(5 * u, gola.height * 0.84f), CornerRadius(2.5f * u))
-            drawLine(c(ARENISCA_LUZ).copy(alpha = 0.6f), Offset(gx + 2.5f * u, gola.top + gola.height * 0.2f), Offset(gx + 2.5f * u, gola.bottom - gola.height * 0.1f), 0.6f * u)
-            gx += 8 * u; k++
-        }
-        drawRect(Color.White.copy(alpha = 0.12f), gola.topLeft, Size(gola.width, gola.height * 0.25f))
-        drawRect(Color.Black.copy(alpha = 0.18f), Offset(gola.left, gola.bottom - gola.height * 0.35f), Size(gola.width, gola.height * 0.35f))
-        // El toro, atado con su cinta roja y negra.
-        val toro = Rect(r.left, gola.bottom, r.right, gola.bottom + r.height * 0.07f)
-        drawRoundRect(c(ARENISCA_LUZ), toro.topLeft, toro.size, CornerRadius(toro.height / 2))
-        var tx = toro.left
-        var n = 0
-        while (tx < toro.right) { drawLine(c(if (n % 2 == 0) ROJO else NEGRO), Offset(tx, toro.bottom), Offset(tx + 3 * u, toro.top), 1.2f * u); tx += 5 * u; n++ }
-        // El arquitrabe con su banda de colores y la sombra sobre la primera hornacina.
-        val arq = Rect(r.left, toro.bottom, r.right, r.bottom)
-        drawRect(c(ARENISCA), arq.topLeft, arq.size)
-        bandaColores(Rect(arq.left, arq.top + arq.height * 0.3f, arq.right, arq.top + arq.height * 0.7f), oscuro, noche)
-        drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, r.bottom - 2 * u), Size(r.width, 2 * u))
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val base = PAPIROS[(v.semilla and 0x7fffffff) % PAPIROS.size]
-        val papiro = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        // El rollo de pie: el cilindro con su elipse abajo, luz a la izquierda y sombra a la derecha (planas).
-        val e = minOf(w * 0.3f, 5f * u)
-        drawRect(papiro, Offset(0f, e / 2), Size(w, h - e))
-        drawOval(papiro, Offset(0f, h - e), Size(w, e))
-        drawRect(Color.White.copy(alpha = 0.14f), Offset(w * 0.12f, e / 2), Size(w * 0.14f, h - e))
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(w * 0.8f, e / 2), Size(w * 0.2f, h - e * 0.6f))
-        // Las fibras cruzadas del papiro y el borde de la hoja de fuera.
-        var y = e
-        while (y < h - e) { drawLine(c(PAPIRO_OSC).copy(alpha = 0.18f), Offset(0f, y), Offset(w, y), 0.5f * u); y += 3 * u }
-        drawLine(c(PAPIRO_OSC), Offset(w * 0.64f, e / 2), Offset(w * 0.62f, h - e / 2), 0.8f * u)
-        // Arriba, las vueltas del rollo: más cuanto más escribiste.
-        drawOval(c(PAPIRO_OSC), Offset.Zero, Size(w, e))
-        val vueltas = 2 + (v.lleno * 3).toInt()
-        for (j in 1..vueltas) {
-            val f = 1f - j / (vueltas + 1f)
-            drawOval(papiro, Offset(w * (1 - f) / 2, e * (1 - f) / 2), Size(w * f, e * f), style = Stroke(0.6f * u))
-        }
-        // El cartucho con el día.
-        val cartucho = Rect(w * 0.18f, h * 0.1f, w * 0.82f, h * 0.42f)
-        drawRoundRect(c(LINO), cartucho.topLeft, cartucho.size, CornerRadius(cartucho.width / 2))
-        drawRoundRect(c(ROJO), cartucho.topLeft, cartucho.size, CornerRadius(cartucho.width / 2), style = Stroke(1.1f * u))
-        drawLine(c(ROJO), Offset(cartucho.left - 1 * u, cartucho.bottom + 1.2f * u), Offset(cartucho.right + 1 * u, cartucho.bottom + 1.2f * u), 1.4f * u)
-        textoEn(medidor, v.dia, cartucho.deflate(1.6f * u), letra, c(NEGRO), 13f, peso = FontWeight.SemiBold)
-        // El atado de lino, con el sello de barro; de noche, una estrella de Nut en su lugar.
-        val atado = Rect(0f, h * 0.5f, w, h * 0.56f)
-        drawRect(c(LINO), atado.topLeft, atado.size)
-        drawLine(c(LINO_OSC), Offset(0f, atado.center.y), Offset(w, atado.center.y), 0.5f * u)
-        val sc = Offset(w * 0.5f, atado.center.y)
-        val rs = minOf(w * 0.2f, 4f * u)
-        if (v.noche) {
-            drawCircle(c(NUT), rs, sc)
-            drawPath(estrella(sc, rs * 0.85f, 5, 0.42f), AMARILLO)
-        } else {
-            drawOval(c(BARRO), Offset(sc.x - rs, sc.y - rs * 0.8f), Size(rs * 2, rs * 1.6f))
-            drawCircle(Color.Black.copy(alpha = 0.3f), rs * 0.45f, sc, style = Stroke(0.6f * u))
-            drawLine(c(LINO), Offset(sc.x - rs * 0.4f, sc.y + rs * 0.8f), Offset(sc.x - rs * 0.6f, sc.y + rs * 1.8f), 0.8f * u)
-        }
-        // El mes, con tinta negra.
-        textoEn(medidor, v.mes, Rect(w * 0.18f, h * 0.6f, w * 0.82f, h * 0.94f), letra, c(NEGRO).copy(alpha = 0.85f), 8.5f, vertical = true, minimo = 4.5f)
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteEgipto) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
