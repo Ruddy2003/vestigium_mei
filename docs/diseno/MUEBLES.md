@@ -111,6 +111,7 @@ Así lo hicieron las tres de la tanda del 19 nov 2026: Scriptorium (la ventana a
 - **El peso, por debajo de 1.5 veces el del piloto de Helénico,** en claro y en oscuro: `herramientas/arnes_muebles/medir.sh biblioteca heleno,<tema>` (lo que tarda en grabarse y en pintarse el estante con sus 35 entradas).
 - **Vigilar las operaciones** (`ops` y `KB` en la misma tabla), que fue lo que más pesó en Psicodelia: miles de puntos o trazos sueltos que el teléfono vuelve a pintar en cada cuadro mientras se mueve el fondo vivo. Las piezas iguales van en un solo camino con un solo trazo, y el grano en una imagen en caché. Si las operaciones pasan de unas dos veces las de Helénico, se dice qué pieza las gasta.
 - Las cinco de la tanda del 19 nov 2026, frente a Helénico (operaciones, claro y oscuro): Espacio 1.29 y 1.36, Al-Ándalus 0.95 y 0.99, Scriptorium 1.19 y 1.26, Ruta de la Seda 0.97 y 1.01, Roma contemporánea 0.85 y 0.83. En tiempo (grabar y pintar), todas entre 1.0 y 1.35.
+- Las cinco de la tanda del 22 nov 2026 (operaciones, claro y oscuro): Art déco 0.66 y 0.81, Japón Edo 1.19 y 1.21, Renacimiento 0.56 y 0.53, Egipto 0.57 y 0.52, Romano 0.76 y 0.72. En tiempo, todas entre 0.73 y 1.33 (lo más alto, Art déco en oscuro).
 
 ## Lo que más se devolvió en las bibliotecas (tanda del 19 nov 2026)
 
@@ -127,10 +128,45 @@ Así lo hicieron las tres de la tanda del 19 nov 2026: Scriptorium (la ventana a
 
 - **Arnés de escritorio** en `herramientas/arnes_muebles/` (ver su `LEEME.md`): dibuja el Ideario y la biblioteca de cualquier tema, en claro y en oscuro, con los archivos reales de la app.
 - **Capturas en Actions** de una biblioteca: superficie `bibliotecas` (la del diario) y, desde el 19 nov 2026, `suenos` (el estante de los Sueños con 14 sueños de ejemplo, que en el arnés sale con volúmenes delgados), con `temas=<los de la tanda>`. El libro del día: superficie `tapa`; la libreta de momentos con su índice: superficie `libreta` (la pestaña Momentos de la biblioteca, con dos días).
-- **La vara son los Idearios rehechos** (noviembre de 2026), no Galia y Art nouveau: un mueble nuevo no puede verse más pobre que ellos.
+- **La vara son los Idearios rehechos** (noviembre de 2026), no Galia y Art nouveau: un mueble nuevo no puede verse más pobre que ellos. **En una biblioteca, la vara es el Ideario rehecho de su mismo tema**, puesto al lado a la misma escala (ver «La segunda tanda de bibliotecas», abajo).
 - Cada mueble se dibuja, se mira y se corrige al menos tres veces antes de entregarlo, en claro y en oscuro.
-- Se compara al lado del Ideario de Galia y del de Art nouveau, y con el cuadro del tema si lo tiene.
+- Se compara al lado del Ideario de su tema y con el cuadro del tema si lo tiene.
 - El autor ve cada tanda antes de darla por buena. El piloto es Laboratorio, Helénico y Gótico.
+
+---
+
+# La segunda tanda de bibliotecas (22 nov 2026)
+
+Art déco, Japón Edo, Renacimiento, Egipto y Romano. El autor devolvió una primera entrega de cuatro de ellas: «el nivel está muy por debajo del Ideario». Se habían comparado con la biblioteca de Helénico; fue un error. Lo que salió de rehacerlas vale para las que faltan.
+
+## La vara de una biblioteca
+
+**Es el Ideario rehecho de su mismo tema** (no el piloto de Helénico), puesto al lado a la misma escala en cada hoja: Ideario, biblioteca y Sueños, en claro arriba y en oscuro abajo, y recortes a tamaño real de una repisa junto a un casillero del Ideario. La biblioteca es otro mueble del mismo taller y de la misma casa. Se le copia el oficio al Ideario, no los objetos. Se compara en siete puntos:
+
+1. **El mueble, una pieza con oficio y con cuerpo,** no tablas finas entre dos postes: cornisa o remate con sus molduras, friso, costados con grueso, divisiones con moldura, zócalo o patas, herrajes. Se ve su hondura: el canto de dentro de costados y repisas, y la sombra de la tabla de arriba en cada hueco.
+2. **Color decidido** en la pared (con su decoración) y en el interior de los huecos, que contrasta con lo guardado. Paleta corta pero saturada, con claros y oscuros de verdad; nada de grises y pardos con el ánimo en pastel lavado.
+3. **Lo guardado, grande y modelado:** cada entrada llena del 80 al 90 % del alto de su hueco, con tono base, plano de luz, plano de sombra, un brillo, sus detalles finos (costuras, cordeles, clavos, vetas) y su sombra en la repisa y en la vecina. Las tres clases son tres objetos que se entienden de un vistazo, no tres prismas con una etiqueta.
+4. **La corona, un bodegón solapado:** una pieza grande que manda, objetos unos delante de otros, cada uno con su sombra en la pared, algo colgado y la pared decorada alrededor. No cosas chicas en fila sobre un paño vacío.
+5. **El pie:** suelo con dibujo (alfombra, tatami, mosaico) y objetos modelados cortados por el borde.
+6. **La noche con drama:** una llama dibujada que arde y tiñe la pared de su color, lo cercano encendido con su filo de luz y lo lejano hundido en un oscuro con color, nunca en un gris azulado parejo.
+7. **El acabado:** bordes nítidos, filete de luz en cada canto que mira a la luz, línea de sombra bajo cada cosa, grano fino encima. Nada de planos lisos grandes.
+
+Se hacen muchas vueltas (al menos ocho), y no se entrega mientras el Ideario se vea claramente mejor en alguno de los siete puntos.
+
+## Lo que salió
+
+- **El día se lee igual de grande en las tres clases de entrada** (unos 16 sp): la etiqueta crece lo justo. En las entradas angostas, cuidar que no tape el objeto (quedó flojo en Japón Edo y Romano).
+- **De noche el ánimo usa su color de día.** En modo oscuro, `Tonos.valencia` da el color de la escala de noche del tema (`juegoTonos(tema, true)`), pensada para la interfaz: el ánimo de en medio pasa de claro a casi negro y los volúmenes claros salen negros. Aquí la entrada es un objeto del cuarto: `tonoDeDia<Tema>` ubica el color en la escala de noche (el tramo y la fracción que más se le acercan) y toma el mismo punto en la de día; si no está en la escala, lo deja igual. Después, la luz dibujada lo apaga según la distancia. Las bibliotecas rehechas antes no lo hacen (decisión pendiente en `docs/PENDIENTES.md`).
+- **Las texturas, como baldosa pintada una vez** (el grano del galuchat, el ladrillo, las escamas de la palmera, el papel) y repetida, no punto por punto.
+- **Lo fijo, pintado una sola vez:** la corona y el pie se pintan en una imagen guardada por tamaño y modo, y en cada dibujo solo se pega. Ojo con la memoria (Egipto guarda hasta ~12 MB; Renacimiento, ~2.8 MB por modo) y con que no se vea costura entre lo guardado y lo demás: si el borde no cae en un píxel entero, lo guardado y lo que sigue se solapan un píxel, o asoma el fondo en una línea a todo el ancho (pasó en Japón Edo). Se revisa a tamaño real, en el arnés y en las capturas, y en el teléfono.
+- **Las ventanas, según el lugar:** Art déco, sótano sin ventana (de día, el haz de la calle por la escalera; de noche, el aplique); Japón Edo, el ranma (celosía alta); Renacimiento, la impannata (ventana de tela encerada); Egipto, sin ventana (el sol de la puerta y, de noche, dos lámparas); Romano, un ventanuco de espejuelo y la linterna.
+- **Las marcas inventadas se revisan contra símbolos reales:** se quitaron un orbe con cruz y una cifra suelta. Ninguna marca puede leerse como letra, cifra, cruz u otro signo conocido.
+
+## Cómo se itera
+
+- **Gradle entero, solo al final.** Para cada vuelta, se compilan solo los archivos del tema con el compilador de Kotlin suelto (el `kotlin-compiler-embeddable` 2.1.0 que ya está en la caché de Gradle) contra el jar del arnés ya compilado (`herramientas/arnes_muebles/build/instantaneas/classpath.txt`, con `-Xfriend-paths=<el jar>` y `-module-name main`), y se dibuja con `arnes.DibujarKt` poniendo esas clases delante en el classpath. Si el objeto del tema cambia o el archivo del tema usa un `const val` de `Biblioteca<Época>.kt`, ese archivo entra también en la compilación (las constantes se copian en quien las usa). Una vuelta tarda uno o dos minutos.
+- **Con varios agentes a la vez, Gradle se queda sin memoria.** La compilación entera del arnés pide unos 4.5 GB, en proceso (`-Dorg.gradle.jvmargs=-Xmx4608m` y `-Pkotlin.compiler.execution.strategy=in-process`); con 3 GB se ahoga. Nunca `gradlew --stop`, que detiene también los demonios de los demás agentes: el propio se cierra por su número de proceso.
+- **`ARNES_TEMAS` y `ARNES_MAX` no cambian la biblioteca** (son del Ideario). Los casos raros de la biblioteca se prueban moviendo `ARNES_HOY` (por ejemplo, el 1 de un mes y el 2 de diciembre).
 
 ---
 

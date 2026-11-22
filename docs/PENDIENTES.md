@@ -69,7 +69,7 @@ Los cuadros de S9 a S18 tal como están; las acciones de los gatos cambiadas res
 
 ### Del plan de mejoras (`docs/diseno/PLAN_MEJORAS.md`)
 - **Probar en el teléfono:** los arreglos de avisos y el modo según la hora (parte 1), Psicodelia (el cambio de cara y la intensidad), los fondos de pantalla con las escenas (parte 6) y lo nuevo de los cuadros (parte 8).
-- **Decidido el 17 nov 2026:** se rehacen las otras 36 bibliotecas, las libretas de momentos y el tablero de notas (sección 4, al final; cómo van, en «Las bibliotecas: en qué van (19 nov 2026)» y, el libro del día y las libretas, en «El libro del día y las libretas de momentos: en qué van (20 nov 2026)»). Los demás muebles de Vida, como estaba escrito en `PLAN_MEJORAS.md`.
+- **Decidido el 17 nov 2026:** se rehacen las otras 36 bibliotecas, las libretas de momentos y el tablero de notas (sección 4, al final; cómo van, en «Las bibliotecas: en qué van (22 nov 2026)» y, el libro del día y las libretas, en «El libro del día y las libretas de momentos: en qué van (20 nov 2026)»). Los demás muebles de Vida, como estaba escrito en `PLAN_MEJORAS.md`.
 - **Sin hacer:** lo temático nuevo (parte 7) y los logros nuevos (parte 9).
 - **Sus preguntas abiertas** sobre los Idearios.
 
@@ -117,9 +117,13 @@ El autor, con la v292: «sigue súper bugueado y lento el de Psicodelia». Se mi
 - **Las notas:** el tablero de notas y cada nota (`DisenoVida.tableroNotas()` y `notaTablero()`, en `ui/vida/Vida<Tema>.kt`; lo monta `ui/vida/MuebleNotas.kt`).
 - **Cómo:** la receta de `PLAN_MEJORAS.md`, «Cómo se rehace un mueble» (las reglas de `MUEBLES.md`, versión 2; la vara, los 34 Idearios rehechos y las tres bibliotecas piloto; un agente por mueble con su dirección de arte; quien dirige mira cada imagen en claro y en oscuro; no más de cuatro agentes a la vez; la clase de cada recipiente sale de la semilla; los casos de 0, 1 y 5 temas y una corrida de capturas en Actions). El arnés ya dibuja los muebles de Vida y el tablero de notas (`herramientas/arnes_muebles`, modo `vida`) y, desde el 19 nov 2026, el libro del día y la libreta con su índice (modos `tapa` y `libreta`).
 
-### Las bibliotecas: en qué van (19 nov 2026)
+### Las bibliotecas: en qué van (22 nov 2026)
 
 - **El orden lo pidió el autor:** primero Scriptorium, Roma contemporánea, Ruta de la Seda, Al-Ándalus y Espacio; las demás, como sean.
+- **Hechas: 14 de 39** (Básico no cuenta: es sin diseño). Son las que tienen su `ui/biblioteca/MuebleEstante<Tema>*.kt` y cuyo objeto `Estante<Tema>` solo delega: los tres pilotos (Helénico, Laboratorio y Gótico), Psicodelia, las cinco del 19 nov 2026 (abajo) y las cinco del 22 nov 2026 (abajo).
+
+#### Primera tanda (19 nov 2026)
+
 - **Las cinco están hechas y mezcladas** en `ccr-e50e410b-nuv2vd`, tres rondas cada una, aprobadas por quien dirige: Espacio (mezcla `79be8247`), Al-Ándalus (`1ac9562a`), Scriptorium (`6a5b656c`), Ruta de la Seda (`ba719832`) y Roma contemporánea (`fa29b5f7`). En el arnés salen igual al píxel que las hojas aprobadas. Compilan en Actions (APK sin publicar: corrida 299 con las tres primeras, 300 con las cinco y 301 con lo de abajo) y tienen sus capturas, sin fallas en las pruebas: corrida 327 (las tres primeras, superficie `bibliotecas`), 328 (las cinco, superficie `bibliotecas`, claro y oscuro) y 329 (las cinco, superficie `suenos`, claro y oscuro). Antes ya estaban las tres piloto (Helénico, Laboratorio y Gótico) y la de Psicodelia. **Falta que el autor las vea** junto a la de Helénico.
 - **Con ellas, dos cosas chicas:** el estante de los Sueños de cada tema ya se puede pedir en las capturas (superficie `suenos`, con 14 sueños de ejemplo; antes solo salía en el arnés); y el rótulo del mes (`Estilo.mesConComun`) ya no repite el mes cuando el nombre del tema es el común (Scriptorium decía «noviembre · noviembre de 2026»; ahora, «noviembre de 2026»), con su prueba (`MesConComunPrueba`). Visto en las capturas y sin tocar: Roma contemporánea rotula «NOVEMBRE 2026» solo y «OTTOBRE 2026 · octubre de 2026» con el común, porque la regla busca en el nombre del tema las tres primeras letras del mes común y el año («nov» está en «novembre»; «oct» no está en «ottobre»).
 - **Lo que cada agente dejó dicho como flojo en su última ronda:**
@@ -128,9 +132,54 @@ El autor, con la v292: «sigue súper bugueado y lento el de Psicodelia». Se mi
   - Scriptorium: el paño grande de enlucido y, de noche, los volúmenes de abajo a la izquierda casi negros.
   - Ruta de la Seda: la mancha de la reja a tamaño de teléfono y las cinco repisas. El velo azul parejo de los Sueños en oscuro ya se arregló (19 nov): la lámpara arde y hace su charco, la luna enfría sin velar y lo lejano se apaga.
   - Roma contemporánea: el sol que dora mucho la caja crema y el rosa discreto de los Sueños en claro.
-- **Quedan 30** de los 39 temas sin su `ui/biblioteca/MuebleEstante<Tema>.kt` (Básico no cuenta: es sin diseño): Romano, Terminal, Ciudad neón, Egipto, Templario, Distopía, Refugio, Orden, Vapor victoriano, Colonos, Napoleónico, Art déco, Botánico, Ciudad verde, Navidad, Japón Edo, Horror cósmico, Abismo, Mesoamérica, Mongol, Renacimiento, Pirata, Soviético, Revolución francesa, Tierras Antiguas, Prehistoria, Frente exterior, Arcontes, Galia y Art nouveau.
+- **Reglas nuevas de esa tanda** (en `docs/diseno/MUEBLES.md`): las bibliotecas no pierden las ventanas (decisión del autor del 19 nov 2026: con lógica y no en todos los temas; donde la haya, es la luz de día, cambia de noche y no se come el mueble); el peso del dibujo (lo fijo no se recalcula, menos de 1.5 veces Helénico, y vigilar las operaciones: las cinco quedan entre 0.83 y 1.36 veces las operaciones de Helénico); y la lista de lo que más se devolvió.
+
+#### Segunda tanda (22 nov 2026): Art déco, Japón Edo, Renacimiento, Egipto y Romano
+
+- **Cómo fue.** Una primera entrega de cuatro de ellas la devolvió el autor: «el nivel está muy por debajo del Ideario». Quien dirige las había comparado con la biblioteca de Helénico; fue un error. Se rehicieron a fondo con otra vara: **el Ideario rehecho de su mismo tema, puesto al lado a la misma escala en cada hoja** (`docs/diseno/MUEBLES.md`, «La vara de una biblioteca»). Rondas: Art déco 5, Japón Edo 4, Renacimiento 2, Egipto 4 y Romano 5. Aprobadas por quien dirige con esa vara.
+- **Qué es cada una:**
+  - **Art déco:** el armario de partituras de ébano de Macasar del club de jazz del sótano, contra la pared de pan de plata, con el gramófono portátil arriba; las entradas son la caja del rollo de pianola, el álbum de discos y la carpeta de partituras. Sin ventana (es un sótano): de día, el haz de la calle que baja por la escalera; de noche, el aplique.
+  - **Japón Edo:** el estante de castaño de la casa de té de la posta, del mismo carpintero que el tansu del Ideario, con el cuerpo bajo de puertas correderas; las entradas son el estuche de tela, la pila de cuadernos cosidos y el hatillo de furoshiki. La ventana es el ranma (celosía alta) arriba a la izquierda; de noche, el farol de viaje.
+  - **Renacimiento:** el estante de nogal tallado y dorado de la tienda de un cartolaio de Florencia hacia 1490, contra el muro de rojo de tierra; las entradas son el libro nuevo en piel, los pliegos atados con lacre y el librito en vitela floja. La ventana es la impannata (tela encerada); de noche, el farol de mano.
+  - **Egipto:** el almacén de la Tumba en Deir el-Medina: el anaquel de troncos de palmera atados con soga bajo la bóveda de ladrillo; las entradas son el rollo en su funda de lino, la tablilla de escriba y el fardo de lino. Sin ventana: de día, el sol de la puerta; de noche, dos lámparas.
+  - **Romano:** la estantería de obra del cuarto de los oficiales de un campamento del Danubio, con casilleros de negro pompeyano sobre la pared de ocre; las entradas son el legajo de hojas de madera, la arqueta herrada y la bolsa de cuero. La ventana es un ventanuco de espejuelo; de noche, la linterna de cuerno.
+- **Mezcladas** en `ccr-e50e410b-nuv2vd` (mezclas `9f11e1a8`, `95363d53`, `b9cbabad`, `86ed69f1` y `7bdaa829`; cada rama solo tocaba los archivos de su tema; aparte, se quitó un color que ya no usaba nadie en `EstanteDeco`, sin cambio en el dibujo). El arnés compila entero y dibuja las cinco igual que las hojas aprobadas, en claro, oscuro y Sueños; con «hoy» el 1 nov y el 2 dic 2026 no se rompe nada. Compilan en Actions (APK sin publicar, corrida 306) y tienen sus capturas (corrida 335: superficies `bibliotecas` y `suenos`, claro y oscuro). **Falta que el autor las vea**, cada una junto al Ideario de su tema.
+- **El peso** (`medir.sh biblioteca heleno,<tema>`, dos corridas; tiempo de grabar más pintar y operaciones, frente a Helénico, en claro y en oscuro):
+
+  | Tema | Tiempo, claro | Tiempo, oscuro | Operaciones, claro | Operaciones, oscuro |
+  |---|---|---|---|---|
+  | Art déco | 1.06–1.25 | 1.30–1.33 | 0.66 | 0.81 |
+  | Japón Edo | 1.03–1.32 | 0.77–0.79 | 1.19 | 1.21 |
+  | Renacimiento | 0.81–0.85 | 0.73–0.93 | 0.56 | 0.53 |
+  | Egipto | 0.94–0.95 | 0.88–1.02 | 0.57 | 0.52 |
+  | Romano | 1.13–1.23 | 1.06–1.20 | 0.76 | 0.72 |
+
+  Todas por debajo de 1.5. Lo que más sube es pintar: Art déco en oscuro, 1.37 veces. La lista de dibujo de Japón Edo ocupa 1.5 veces la de Helénico (en KB), con 1.2 veces sus operaciones.
+- **Lo que cada agente dejó dicho como flojo:**
+  - Art déco: el diario en oscuro es lo más pesado al pintar (~1.3 veces Helénico); las partituras atadas pueden leerse como una caja con lazo; crema y menta siguen siendo los tonos más pálidos.
+  - Japón Edo: en los volúmenes estrechos la etiqueta tapa casi todo el frente; las cuñas de las tablas se leen como tacos chicos.
+  - Renacimiento: la luna de los Sueños en claro es discreta; el farol es algo chico; la imagen guardada de la corona ocupa ~2.8 MB por modo.
+  - Egipto: de noche los tramos del medio quedan planos; las imágenes guardadas ocupan hasta ~12 MB; la paleta de escriba de un tramo libre se parece a la del Ideario.
+  - Romano: en las entradas angostas la etiqueta tapa buena parte del objeto; pintar, ~1.2–1.3 veces Helénico.
+- **Visto en las capturas, dentro de la app** (corrida 335): las cinco se ven como en el arnés, sin recortes raros y con el rótulo del mes en su tablilla, en claro, oscuro y Sueños. La captura de la biblioteca corta el estante a las cuatro primeras repisas (la pantalla mide 3000 px), así que el pie solo se ve en la de los Sueños, que va dentro del marco del cielo de noche (`CieloNoche`, con sus esquinas redondeadas, igual en todos los temas). **Una costura en Japón Edo** (también en el arnés y en la hoja aprobada): en la junta entre la corona guardada y el cuerpo asoma el fondo en una línea de un píxel a todo el ancho, clara en claro y oscura en oscuro. Sale de `CapaEdo.pegar` (`MuebleEstanteEdo.kt`): la imagen se recorta en el borde de la corona, que no cae en un píxel entero, y el cuerpo empieza en el mismo borde, así que ninguno de los dos cubre del todo esa fila. Se arreglaría pintando la corona un píxel más abajo (que se solapen); no se tocó porque cambia el dibujo. En las otras cuatro, buscando filas así (claras u oscuras a todo el ancho y con el fondo asomando), no salió ninguna.
+- **Pendiente de probar en el teléfono:** la memoria de las imágenes guardadas (lo fijo pintado una vez: Egipto hasta ~12 MB, Renacimiento ~2.8 MB por modo) y que no se vea costura entre lo guardado y lo que se pinta en cada dibujo; si Art déco y Romano van fluidos al desplazar con el fondo vivo; que el día se lea en las entradas angostas de Japón Edo y de Romano a tamaño de teléfono.
+
+#### Lo que queda
+
+- **Quedan 25** de los 39 temas sin su `ui/biblioteca/MuebleEstante<Tema>*.kt`: Terminal, Ciudad neón, Templario, Distopía, Refugio, Orden, Vapor victoriano, Colonos, Napoleónico, Botánico, Ciudad verde, Navidad, Horror cósmico, Abismo, Mesoamérica, Mongol, Pirata, Soviético, Revolución francesa, Tierras Antiguas, Prehistoria, Frente exterior, Arcontes, Galia y Art nouveau.
 - **Siguen pendientes** el tablero de notas (arriba) y, en los demás temas, el libro del día y la libreta de momentos (abajo).
-- **Reglas nuevas de esta tanda** (en `docs/diseno/MUEBLES.md`): las bibliotecas no pierden las ventanas (decisión del autor del 19 nov 2026: con lógica y no en todos los temas; donde la haya, es la luz de día, cambia de noche y no se come el mueble); el peso del dibujo (lo fijo no se recalcula, menos de 1.5 veces Helénico, y vigilar las operaciones: las cinco quedan entre 0.83 y 1.36 veces las operaciones de Helénico); y la lista de lo que más se devolvió.
+- **Decisión pendiente del autor: el color del ánimo de noche en las bibliotecas rehechas antes del 22 nov 2026** (visto en el código; no se tocó). El color de cada entrada sale de `Tonos.valencia(…, oscuro)`, que en modo oscuro usa la escala de noche del tema (`juegoTonos(tema, true)`, en `ui/Disenios.kt`), pensada para la interfaz. En esa escala el ánimo de en medio pasa de un claro (papiro, crema, papel) a un casi negro, y los extremos se aclaran: el orden de claro a oscuro se invierte, y un volumen que de día es claro sale negro de noche, más aún lejos de la luz. Las cinco de la segunda tanda lo resuelven igual: de noche ubican el color en la escala de noche y toman el mismo punto en la de día (`tonoDeDiaDeco`, `tonoDeDiaEdo`, `tonoDeDiaRenacimiento`, `tonoDeDiaEgipto`, `tonoDeDiaRomano`), y la luz dibujada lo apaga según la distancia. Las anteriores toman el color de la escala de noche tal cual y solo lo hunden con la distancia (la función `animo` de cada una):
+  - **Helénico** (`MuebleEstanteHeleno.kt`): tal cual. El de en medio pasa de `E9E3D6` (papiro) a `2A2440` (casi negro violáceo).
+  - **Laboratorio** (`MuebleEstanteLaboratorio.kt`): tal cual. De `E6EDF2` (blanco) a `18222F`; en el arnés, la carpeta blanca de un día neutro sale negra.
+  - **Gótico** (`MuebleEstanteGotico.kt`): tal cual, mezclado con el pelo de la tela. De `E2D9C6` a `1A2356` (azul casi negro).
+  - **Espacio** (`MuebleEstanteEspacioVolumenes.kt`): tal cual. De `E1E6EF` a `121A31`; en el arnés, las bolsas blancas salen negras.
+  - **Al-Ándalus** (`MuebleEstanteAndalusVolumenes.kt`): tal cual, algo llevado hacia el cuero. De `E9DEC6` a `18302D` (verde casi negro).
+  - **Scriptorium** (`MuebleEstanteMedievalVolumen.kt`): tal cual. De `E5D6B4` a `2A2016`; es lo que su agente notó como «los volúmenes de abajo a la izquierda casi negros».
+  - **Ruta de la Seda** (`MuebleEstanteSedaVolumenes.kt`): tal cual. De `EADFC3` a `1F2846`; además, el ánimo alto cambia de tono (del azul `23408E` al turquesa `4FC3C3`).
+  - **Roma contemporánea** (`MuebleEstanteUrbeVolumenes.kt`): tal cual, con más color (`vivoUrbe`). De `E6D9BF` a `2B2420`.
+  - **Psicodelia** (`MuebleEstantePsicodelia.kt`), por si interesa: tal cual, y su escala de noche cambia también los extremos (de magenta y verde a lima y magenta; ver «Rendimiento (19 nov 2026)», arriba).
+
+  Falta decidir si se lleva a estas nueve el color de día (es un cambio de cómo se ven de noche, no de lo que se guarda) o si se deja así.
 
 ### El libro del día y las libretas de momentos: en qué van (20 nov 2026)
 
