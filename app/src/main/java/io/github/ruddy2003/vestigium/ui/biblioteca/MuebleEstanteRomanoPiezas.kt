@@ -16,26 +16,98 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /**
  * Lo que queda en los huecos de las repisas y al pie del estante de Romano ([MuebleEstanteRomano]), todo del cuartel de un
- * campamento del Danubio hacia el 110 d. C.: el pan redondo partido en ocho en su paño; el cuenco de terra sigillata con las
- * pesas de bronce en fila; la sartén de bronce con el rollo de cuerda de la tienda; al pie, la muela de mano del contubernio
- * con su harina y el ánfora de aceite de la Bética, grandes y cortadas por el borde.
+ * campamento del Danubio hacia el 110 d. C.: en cada repisa una cosa distinta (el pan redondo partido en ocho en su paño; el
+ * cuenco de terra sigillata con las pesas de bronce en fila; la lucerna de barro con dos higos; la sartén de bronce con el
+ * rollo de cuerda de la tienda; el tintero de barro con sus cálamos); al pie, la muela de mano del contubernio con su harina
+ * y el ánfora de aceite de la Bética, grandes y cortadas por el borde.
  */
 internal object PiezasEstanteRomano {
     private val P = PaletaRomano
 
     // ---------------------------------------------------------------- los huecos
 
-    /** Lo que queda en el hueco libre de una repisa, según la repisa: el pan, el cuenco con las pesas o la sartén con la cuerda. */
+    /** Lo que queda en el hueco libre de una repisa: una cosa distinta en cada repisa (de cinco). */
     fun DrawScope.hueco(k: Int, r: Rect, ocupado: Float, a: AireRomano, cerca: Float) {
         val w = size.width
         val libre = r.right - w * 0.024f - ocupado
         if (libre < w * 0.14f || r.height < 4f) return
         val pie = Offset(ocupado + libre * 0.52f, r.bottom - r.height * 0.03f)
         val t = minOf(r.height * 0.5f, libre * 0.62f)
-        when (Math.floorMod(k, 3)) {
+        when (Math.floorMod(k, 5)) {
             0 -> pan(a, pie, t, cerca)
             1 -> cuencoYPesas(a, pie, t, cerca)
-            else -> sarten(a, pie, t, cerca)
+            2 -> lucerna(a, pie, t, cerca)
+            3 -> sarten(a, pie, t, cerca)
+            else -> tintero(a, pie, t, cerca)
+        }
+    }
+
+    /**
+     * La lucerna de barro rojo, apagada: el cuerpo redondo con su disco hundido y su agujero de llenar, el pico con la mecha
+     * negra y el asa de anillo; su brillo de barniz y su sombra; a su lado, dos higos secos.
+     */
+    private fun DrawScope.lucerna(a: AireRomano, pie: Offset, t: Float, k: Float) {
+        val u = density
+        val c = Offset(pie.x - t * 0.15f, pie.y - t * 0.26f)
+        val r = t * 0.55f
+        contactoRomano(Offset(pie.x, pie.y), t * 2.4f, 5f * u, a)
+        val barro = a.luz(mezcla(P.SIGILLATA, P.BARRO, 0.4f), k)
+        // El asa de anillo, detrás.
+        drawArc(barro, 140f, 260f, false, Offset(c.x - r * 1.45f, c.y - r * 0.75f), Size(r * 0.7f, r * 0.9f), style = Stroke(r * 0.16f))
+        // El pico, con su mecha.
+        val pico = poligonoRomano(c.x + r * 0.55f, c.y - r * 0.28f, c.x + r * 1.55f, c.y - r * 0.18f, c.x + r * 1.65f, c.y + r * 0.05f, c.x + r * 1.5f, c.y + r * 0.3f, c.x + r * 0.55f, c.y + r * 0.3f)
+        drawPath(pico, barro)
+        drawCircle(a.luz(P.TINTA, k), r * 0.13f, Offset(c.x + r * 1.42f, c.y - r * 0.05f))
+        drawLine(a.luz(P.TINTA, k), Offset(c.x + r * 1.45f, c.y - r * 0.12f), Offset(c.x + r * 1.55f, c.y - r * 0.35f), 1f * u, cap = StrokeCap.Round)
+        // El cuerpo: un disco aplastado con su cara de arriba hundida.
+        val cuerpo = Rect(c.x - r, c.y - r * 0.5f, c.x + r, c.y + r * 0.55f)
+        drawOval(barro, cuerpo.topLeft, cuerpo.size)
+        val disco = Rect(c.x - r * 0.68f, c.y - r * 0.42f, c.x + r * 0.68f, c.y + r * 0.02f)
+        drawOval(a.luz(mezcla(P.SIGILLATA, P.TINTA, 0.3f), k), disco.topLeft, disco.size)
+        drawOval(a.brillo(0.3f, k), Offset(disco.left, disco.top + disco.height * 0.4f), Size(disco.width, disco.height * 0.6f), style = Stroke(0.8f * u))
+        drawCircle(a.luz(P.TINTA, k), r * 0.09f, Offset(c.x - r * 0.05f, c.y - r * 0.2f))
+        // La luz del barniz y la sombra.
+        drawOval(a.brillo(0.45f, k), Offset(c.x - r * 0.85f, c.y + r * 0.05f), Size(r * 0.5f, r * 0.2f))
+        drawOval(a.sombra(0.25f), Offset(c.x + r * 0.1f, c.y + r * 0.15f), Size(r * 0.85f, r * 0.4f))
+        // Dos higos secos.
+        for (j in 0 until 2) {
+            val f = Offset(pie.x + t * (0.85f + 0.32f * j), pie.y - t * 0.16f)
+            drawOval(a.luz(Color(0xFF6E4A3A), k), Offset(f.x - t * 0.16f, f.y - t * 0.15f), Size(t * 0.32f, t * 0.3f))
+            drawOval(a.brillo(0.3f, k), Offset(f.x - t * 0.1f, f.y - t * 0.12f), Size(t * 0.1f, t * 0.08f))
+            drawLine(a.luz(Color(0xFF4A3024), k), Offset(f.x, f.y - t * 0.15f), Offset(f.x + t * 0.04f, f.y - t * 0.24f), 1f * u)
+        }
+    }
+
+    /**
+     * El tintero de barro negro de dos cuerpos, con su boca, y los cálamos de caña apoyados en él, uno con la punta mojada;
+     * delante, una mancha seca de tinta en la tabla.
+     */
+    private fun DrawScope.tintero(a: AireRomano, pie: Offset, t: Float, k: Float) {
+        val u = density
+        contactoRomano(pie, t * 2f, 5f * u, a)
+        drawOval(P.TINTA.copy(alpha = if (a.oscuro) 0.3f else 0.4f), Offset(pie.x + t * 0.3f, pie.y - t * 0.05f), Size(t * 0.6f, t * 0.1f))
+        // Los cálamos, recostados.
+        for (j in 0 until 3) {
+            val b = Offset(pie.x + t * (0.1f + 0.22f * j), pie.y - 1f * u)
+            val tp = Offset(pie.x - t * (0.55f - 0.18f * j), pie.y - t * (1.35f - 0.12f * j))
+            drawLine(a.sombra(0.3f), b + Offset(2f * u, 0f), tp + Offset(2f * u, 1f * u), 2.2f * u)
+            drawLine(a.luz(Color(0xFFC7A66A), k), b, tp, 2.2f * u, cap = StrokeCap.Round)
+            drawLine(a.brillo(0.4f, k), b + Offset(-0.6f * u, 0f), tp + Offset(-0.6f * u, 0f), 0.6f * u)
+            if (j == 1) drawLine(a.luz(P.TINTA, k), tp, tp + (b - tp) * 0.08f, 2.2f * u, cap = StrokeCap.Round)
+        }
+        // El tintero: dos cilindros unidos, negro con brillo.
+        val negro = a.luz(Color(0xFF2A2420), k)
+        for (j in 0 until 2) {
+            val cx = pie.x - t * 0.35f + j * t * 0.48f
+            val an = t * 0.46f
+            val al = t * 0.62f
+            val r = Rect(cx - an / 2, pie.y - al, cx + an / 2, pie.y)
+            drawRect(negro, r.topLeft, r.size)
+            drawRect(a.brillo(0.25f, k), Offset(r.left + r.width * 0.12f, r.top), Size(r.width * 0.12f, r.height))
+            drawRect(a.sombra(0.35f), Offset(r.right - r.width * 0.3f, r.top), Size(r.width * 0.3f, r.height))
+            drawOval(a.luz(Color(0xFF4A3F36), k), Offset(r.left, r.top - an * 0.15f), Size(an, an * 0.3f))
+            drawCircle(a.luz(P.TINTA, k), an * 0.1f, Offset(cx, r.top))
+            drawOval(negro, Offset(r.left, r.bottom - an * 0.15f), Size(an, an * 0.3f))
         }
     }
 
@@ -156,20 +228,21 @@ internal object PiezasEstanteRomano {
     }
 
     /**
-     * La muela de mano: la piedra de abajo y la de encima, de basalto poroso, cada una con su cara de encima, su canto redondo
-     * con luz y sombra y sus poros; la boca con grano, el mango de madera y la harina caída alrededor.
+     * La muela de mano: la piedra de abajo, ancha, con el canal por donde sale la harina, y la de encima, que gira; cada una con
+     * su cara de encima vista desde arriba, su canto picado a mano (luz de un lado, sombra del otro y los golpes del pico); el
+     * ojo hondo de la de encima con grano, el mango de madera en su encaje de hierro y la harina caída alrededor.
      */
     private fun DrawScope.muela(a: AireRomano, pie: Offset, ancho: Float, cerca: (Offset) -> Float) {
         val u = density
         val k = cerca(pie)
-        val gr = ancho * 0.22f
-        drawOval(a.luz(Color(0xFFEDE6D6), k).copy(alpha = 0.85f), Offset(pie.x - ancho * 0.75f, pie.y - ancho * 0.07f), Size(ancho * 1.5f, ancho * 0.16f))
+        val gr = ancho * 0.2f
+        drawOval(a.luz(Color(0xFFEDE6D6), k).copy(alpha = 0.9f), Offset(pie.x - ancho * 0.72f, pie.y - ancho * 0.08f), Size(ancho * 1.4f, ancho * 0.17f))
         contactoRomano(pie + Offset(ancho * 0.12f, -ancho * 0.02f), ancho * 1.2f, ancho * 0.12f, a, 0.45f)
         for (capa in 0..1) {
-            val an = if (capa == 0) ancho else ancho * 0.88f
+            val an = if (capa == 0) ancho else ancho * 0.82f
             val base = pie.y - (if (capa == 0) 0f else gr)
             val r = Rect(pie.x - an / 2, base - gr, pie.x + an / 2, base)
-            val elipse = an * 0.2f
+            val elipse = an * 0.34f
             val canto = Path().apply {
                 moveTo(r.left, r.top); lineTo(r.right, r.top); lineTo(r.right, r.bottom)
                 arcTo(Rect(r.left, r.bottom - elipse / 2, r.right, r.bottom + elipse / 2), 0f, 180f, false)
@@ -178,21 +251,42 @@ internal object PiezasEstanteRomano {
             drawPath(canto, a.luz(P.BASALTO, k))
             clipPath(canto) {
                 drawRect(a.brillo(0.25f, k), Offset(r.left, r.top), Size(r.width * 0.25f, r.height + elipse))
-                drawRect(a.brillo(0.4f, k), Offset(r.left + r.width * 0.12f, r.top), Size(r.width * 0.06f, r.height + elipse))
-                drawRect(a.sombra(0.3f), Offset(r.right - r.width * 0.35f, r.top), Size(r.width * 0.35f, r.height + elipse))
-                for (j in 0 until 14) drawCircle(a.sombra(0.4f), 0.8f * u, Offset(r.left + r.width * azar(200 + capa, j), r.top + r.height * azar(210 + capa, j)))
+                drawRect(a.brillo(0.45f, k), Offset(r.left + r.width * 0.12f, r.top), Size(r.width * 0.05f, r.height + elipse))
+                drawRect(a.sombra(0.35f), Offset(r.right - r.width * 0.35f, r.top), Size(r.width * 0.35f, r.height + elipse))
+                // Los golpes del pico en el canto.
+                val golpes = Path()
+                for (j in 0 until 18) {
+                    val gx = r.left + r.width * azar(200 + capa, j); val gy = r.top + r.height * (0.2f + 0.9f * azar(210 + capa, j))
+                    golpes.moveTo(gx, gy); golpes.lineTo(gx + 1.4f * u, gy + 0.6f * u)
+                }
+                drawPath(golpes, a.sombra(0.45f), style = Stroke(0.8f * u))
             }
-            drawOval(a.luz(mezcla(P.BASALTO, P.CAL, 0.25f), k), Offset(r.left, r.top - elipse / 2), Size(r.width, elipse))
-            drawOval(a.brillo(0.3f, k), Offset(r.left + r.width * 0.1f, r.top - elipse * 0.4f), Size(r.width * 0.4f, elipse * 0.35f))
-            if (a.oscuro) drawRect(a.lunar(0.22f), Offset(r.left, r.top), Size(1f * u, r.height))
+            // La cara de encima, vista desde arriba.
+            val cara = Rect(r.left, r.top - elipse / 2, r.right, r.top + elipse / 2)
+            drawOval(a.luz(mezcla(P.BASALTO, P.CAL, 0.22f), k), cara.topLeft, cara.size)
+            drawOval(a.brillo(0.3f, k), Offset(cara.left + cara.width * 0.08f, cara.top + cara.height * 0.1f), Size(cara.width * 0.45f, cara.height * 0.35f))
+            drawOval(a.sombra(0.25f), cara.topLeft, cara.size, style = Stroke(0.8f * u))
+            if (capa == 0) {
+                // El canal por donde sale la harina, al frente.
+                val canal = poligonoRomano(pie.x - an * 0.05f, r.top + gr * 0.35f, pie.x + an * 0.05f, r.top + gr * 0.35f, pie.x + an * 0.07f, r.bottom + elipse * 0.42f,
+                    pie.x - an * 0.07f, r.bottom + elipse * 0.42f)
+                drawPath(canal, a.luz(mezcla(P.BASALTO, P.TINTA, 0.35f), k))
+                drawLine(a.luz(Color(0xFFE6DDCB), k).copy(alpha = 0.8f), Offset(pie.x, r.top + gr * 0.5f), Offset(pie.x, r.bottom + elipse * 0.4f), an * 0.05f)
+            } else {
+                // El ojo hondo con el grano, y el mango en su encaje.
+                val ojo = Rect(pie.x - an * 0.13f, cara.center.y - elipse * 0.16f, pie.x + an * 0.13f, cara.center.y + elipse * 0.16f)
+                drawOval(a.luz(P.TINTA, k), ojo.topLeft, ojo.size)
+                drawOval(a.luz(P.TRIGO, k), Offset(ojo.left + ojo.width * 0.2f, ojo.top + ojo.height * 0.35f), Size(ojo.width * 0.6f, ojo.height * 0.45f))
+                drawOval(a.brillo(0.35f, k), ojo.topLeft, ojo.size, style = Stroke(0.7f * u))
+                if (a.oscuro) drawRect(a.lunar(0.22f), Offset(r.left, r.top), Size(1f * u, r.height))
+                val mx = pie.x + an * 0.4f
+                val tope = cara.center.y
+                drawRect(a.luz(P.HIERRO, k), Offset(mx - 2.4f * u, tope - 1.6f * u), Size(4.8f * u, 3.2f * u))
+                drawLine(a.sombra(0.3f), Offset(mx + 2.5f * u, tope), Offset(mx + 5f * u, tope - ancho * 0.36f), 3.8f * u)
+                drawLine(a.luz(Color(0xFF8E6A44), k), Offset(mx, tope), Offset(mx + 1.5f * u, tope - ancho * 0.38f), 3.8f * u, cap = StrokeCap.Round)
+                drawLine(a.brillo(0.4f, k), Offset(mx - 1f * u, tope - 1f * u), Offset(mx + 0.4f * u, tope - ancho * 0.36f), 0.9f * u)
+            }
         }
-        val tope = pie.y - 2 * gr
-        drawOval(a.luz(P.TINTA, k).copy(alpha = 0.75f), Offset(pie.x - ancho * 0.08f, tope - ancho * 0.03f), Size(ancho * 0.16f, ancho * 0.06f))
-        drawOval(a.luz(P.TRIGO, k), Offset(pie.x - ancho * 0.05f, tope - ancho * 0.022f), Size(ancho * 0.1f, ancho * 0.035f))
-        val mx = pie.x + ancho * 0.33f
-        drawLine(a.sombra(0.3f), Offset(mx + 2.5f * u, tope + gr * 0.3f), Offset(mx + 5f * u, tope - ancho * 0.3f), 3.6f * u)
-        drawLine(a.luz(Color(0xFF8E6A44), k), Offset(mx, tope + gr * 0.3f), Offset(mx + 1.5f * u, tope - ancho * 0.32f), 3.6f * u, cap = StrokeCap.Round)
-        drawLine(a.brillo(0.35f, k), Offset(mx - 1f * u, tope + gr * 0.2f), Offset(mx + 0.5f * u, tope - ancho * 0.3f), 0.9f * u)
     }
 
     /**

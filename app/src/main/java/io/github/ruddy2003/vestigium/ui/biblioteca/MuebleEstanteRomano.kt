@@ -108,6 +108,8 @@ internal class AireRomano(val oscuro: Boolean, val noche: Boolean) {
     val lumbre: Boolean get() = oscuro || noche
     /** El aire en que se hunde lo que no se alumbra. */
     val hondo: Color get() = if (oscuro) (if (noche) p.NOCHE_SUENOS else p.NOCHE) else sombraMueble(1f)
+    /** El velo de la noche sobre la obra: un pardo violáceo cálido (en los Sueños, más azul), no un gris. */
+    val velo: Color get() = if (noche) mezcla(p.NOCHE_SUENOS, Color(0xFF34284A), 0.5f) else Color(0xFF2E1B26)
 
     /** El color propio de algo, hundido: oscuro, de su mismo tono, con el aire de la noche. */
     fun hundido(c: Color): Color {
@@ -198,11 +200,11 @@ internal object MuebleEstanteRomano {
         return if (k < 3) 0 else if (k < 5) 1 else 2
     }
 
-    /** Llenan de cuatro quintos a nueve décimos del casillero: el legajo, el más alto; la arqueta, con su tapa; la bolsa, más baja. */
+    /** Llenan de cuatro quintos a nueve décimos del casillero: el legajo, el más alto; las arquetas apiladas; la bolsa, más baja. */
     fun alto(semilla: Int, palabras: Int): Float = when (clase(semilla)) {
         0 -> 0.86f + 0.07f * azar(semilla, 1)
-        1 -> 0.82f + 0.05f * azar(semilla, 1)
-        else -> 0.77f + 0.07f * azar(semilla, 1)
+        1 -> 0.84f + 0.06f * azar(semilla, 1)
+        else -> 0.8f + 0.07f * azar(semilla, 1)
     }
 
     // ---------------------------------------------------------------- la luz

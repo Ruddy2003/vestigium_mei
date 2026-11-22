@@ -15,8 +15,8 @@ import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /**
- * El bodegón de encima del estante de Romano ([MuebleEstanteRomano]): en la pared, el gladio en su vaina colgado en diagonal
- * de una estaca por su tahalí; sobre la cornisa, el sagum de lana
+ * El bodegón de encima del estante de Romano ([MuebleEstanteRomano]): en la pared, el gladio en su vaina colgado casi a lo
+ * ancho bajo la ventana y la patera de bronce colgada de un clavo; sobre la cornisa, el sagum de lana
  * roja doblado con su fíbula y un pliegue que cae por el canto; el modio grande de medir el grano, de duelas con sus aros de
  * bronce y el trigo colmado, con el rasero apoyado; delante, la romana de bronce colgada de la pared que pesa la ración; la
  * jarra de la posca; y la linterna de cuerno colgada de su brazo de hierro, que de noche arde.
@@ -57,20 +57,46 @@ internal object CoronaEstanteRomano {
 
     fun DrawScope.pared(a: AireRomano, apoyo: Float, cerca: (Offset) -> Float) {
         val w = size.width
-        gladio(a, Offset(w * 0.3f, w * 0.07f), w * 0.36f, cerca)
+        gladio(a, Offset(w * 0.035f, w * 0.335f), Offset(w * 0.275f, w * 0.352f), cerca)
+        patera(a, Offset(w * 0.765f, w * 0.288f), w * 0.042f, cerca)
     }
 
     /**
-     * El gladio en su vaina, colgado en diagonal de una estaca por su tahalí: la empuñadura de hueso con sus cuatro anillos, el
-     * pomo redondo y la guarda, la vaina de madera forrada de cuero con la boca, las abrazaderas y la contera de bronce, y las
-     * anillas por donde pasa la correa; su sombra en el ocre.
+     * La patera de bronce colgada de un clavo por el agujero de su mango: el plato redondo visto de frente, con su labio, el
+     * hondo, el ombligo y el brillo; su sombra en el ocre.
      */
-    private fun DrawScope.gladio(a: AireRomano, estaca: Offset, largo: Float, cerca: (Offset) -> Float) {
+    private fun DrawScope.patera(a: AireRomano, clavo: Offset, r: Float, cerca: (Offset) -> Float) {
         val u = density
-        val k = cerca(estaca + Offset(largo * 0.15f, largo * 0.5f))
-        // El eje del arma: del pomo (arriba a la izquierda) a la contera (abajo a la derecha).
-        val pomo = estaca + Offset(-largo * 0.07f, largo * 0.02f)
-        val punta = estaca + Offset(largo * 0.2f, largo * 0.95f)
+        val c = clavo + Offset(0f, r * 1.55f)
+        val k = cerca(c)
+        val sc = caida(c, 3f * u, a)
+        drawCircle(a.sombra(0.25f), r, c + sc)
+        drawLine(a.sombra(0.2f), clavo + sc, c + sc, r * 0.32f)
+        // El mango, que sube hasta el clavo.
+        drawLine(a.luz(P.BRONCE, k), clavo + Offset(0f, r * 0.1f), c, r * 0.3f, cap = StrokeCap.Round)
+        drawLine(a.brillo(0.45f, k), clavo + Offset(-r * 0.08f, r * 0.15f), c + Offset(-r * 0.08f, -r * 0.6f), 0.7f * u)
+        drawCircle(a.luz(P.TINTA, k), r * 0.08f, clavo + Offset(0f, r * 0.15f))
+        remacheRomano(clavo, 1.5f * u, a, k)
+        // El plato.
+        drawCircle(a.luz(P.BRONCE, k), r, c)
+        drawCircle(a.luz(mezcla(P.BRONCE, P.TINTA, 0.35f), k), r * 0.8f, c)
+        drawCircle(a.luz(P.BRONCE_LUZ, k), r * 0.86f, c, style = Stroke(0.9f * u))
+        drawArc(a.brillo(0.6f, k), 195f, 80f, false, Offset(c.x - r * 0.72f, c.y - r * 0.72f), Size(r * 1.44f, r * 1.44f), style = Stroke(1.3f * u))
+        drawArc(a.sombra(0.3f), 15f, 120f, false, Offset(c.x - r * 0.95f, c.y - r * 0.95f), Size(r * 1.9f, r * 1.9f), style = Stroke(1.4f * u))
+        drawCircle(a.luz(P.BRONCE, k), r * 0.22f, c)
+        drawCircle(a.brillo(0.55f, k), r * 0.08f, c - Offset(r * 0.07f, r * 0.07f))
+        destello(c + Offset(-r * 0.45f, -r * 0.4f), 1f * u, a, k)
+    }
+
+    /**
+     * El gladio en su vaina, colgado casi a lo ancho de dos estacas por su tahalí, en el paño libre bajo la ventana: la
+     * empuñadura de hueso con sus cuatro anillos, el pomo redondo y la guarda, la vaina de madera forrada de cuero con la boca,
+     * las abrazaderas y la contera de bronce, y las anillas por donde pasa la correa; su sombra en el ocre.
+     */
+    private fun DrawScope.gladio(a: AireRomano, pomo: Offset, punta: Offset, cerca: (Offset) -> Float) {
+        val u = density
+        val largo = (punta - pomo).getDistance()
+        val k = cerca((pomo + punta) / 2f)
         val dir = (punta - pomo) / (punta - pomo).getDistance().coerceAtLeast(1f)
         val nor = Offset(-dir.y, dir.x)
         fun en(f: Float, lado: Float) = pomo + (punta - pomo) * f + nor * lado
@@ -83,12 +109,13 @@ internal object CoronaEstanteRomano {
             moveTo(a0.x, a0.y); lineTo(a1.x, a1.y); lineTo(b1.x, b1.y)
             val t = en(1f, 0f); quadraticTo(t.x + nor.x * anV * 0.1f, t.y + nor.y * anV * 0.1f, b0.x, b0.y); close()
         }
+        val estaca = en(0.42f, -largo * 0.17f); val estaca2 = en(0.6f, -largo * 0.17f)
         val sc = caida(estaca, 3.5f * u, a)
         translate(sc.x, sc.y) { drawPath(vaina, a.sombra(0.22f)) }
-        // La correa del tahalí: de la estaca a las dos anillas.
-        val anilla1 = en(0.36f, -anV * 0.6f); val anilla2 = en(0.56f, -anV * 0.6f)
-        val correa = Path().apply { moveTo(anilla1.x, anilla1.y); quadraticTo(estaca.x - largo * 0.02f, estaca.y + largo * 0.05f, estaca.x, estaca.y)
-            quadraticTo(estaca.x + largo * 0.1f, estaca.y + largo * 0.2f, anilla2.x, anilla2.y) }
+        // La correa del tahalí: de una anilla a la otra, colgada de las dos estacas.
+        val anilla1 = en(0.36f, -anV * 0.6f); val anilla2 = en(0.66f, -anV * 0.6f)
+        val correa = Path().apply { moveTo(anilla1.x, anilla1.y); lineTo(estaca.x, estaca.y); quadraticTo((estaca.x + estaca2.x) / 2, estaca.y + largo * 0.02f, estaca2.x, estaca2.y)
+            lineTo(anilla2.x, anilla2.y) }
         translate(sc.x, sc.y) { drawPath(correa, a.sombra(0.18f), style = Stroke(2.6f * u)) }
         drawPath(correa, a.luz(mezcla(P.CUERO, P.TINTA, 0.2f), k), style = Stroke(2.6f * u))
         drawPath(correa, a.brillo(0.25f, k), style = Stroke(0.6f * u))
@@ -125,10 +152,12 @@ internal object CoronaEstanteRomano {
         drawCircle(a.sombra(0.3f), anV * 0.5f, pm + Offset(1f * u, 1.2f * u))
         drawCircle(a.luz(P.HUESO, k), anV * 0.5f, pm)
         drawCircle(a.brillo(0.5f, k), anV * 0.18f, pm - Offset(anV * 0.15f, anV * 0.15f))
-        // La estaca, encima de la correa.
-        drawCircle(a.sombra(0.35f), 2.6f * u, estaca + Offset(1.2f * u, 1.4f * u))
-        drawCircle(a.luz(P.ROBLE_OSC, k), 2.4f * u, estaca)
-        drawCircle(a.brillo(0.35f, k), 0.9f * u, estaca - Offset(0.8f * u, 0.8f * u))
+        // Las estacas, encima de la correa.
+        for (e in listOf(estaca, estaca2)) {
+            drawCircle(a.sombra(0.35f), 2.6f * u, e + Offset(1.2f * u, 1.4f * u))
+            drawCircle(a.luz(P.ROBLE_OSC, k), 2.4f * u, e)
+            drawCircle(a.brillo(0.35f, k), 0.9f * u, e - Offset(0.8f * u, 0.8f * u))
+        }
     }
 
     // ---------------------------------------------------------------- encima de la cornisa

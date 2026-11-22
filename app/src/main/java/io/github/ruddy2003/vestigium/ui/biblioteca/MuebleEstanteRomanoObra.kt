@@ -18,7 +18,6 @@ import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
-import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 import kotlin.math.pow
 
 /**
@@ -41,7 +40,7 @@ internal object ObraEstanteRomano {
         val paradas = Array(n) { i ->
             val f = i / (n - 1f)
             val p = if (vertical) Offset(r.center.x, r.top + r.height * f) else Offset(r.left + r.width * f, r.center.y)
-            f to a.hondo.copy(alpha = (0.9f * (1f - cerca(p)).pow(1.15f)).coerceIn(0f, 0.9f))
+            f to a.velo.copy(alpha = (0.86f * (1f - cerca(p)).pow(1.15f)).coerceIn(0f, 0.86f))
         }
         val brocha = if (vertical) Brush.verticalGradient(*paradas, startY = r.top, endY = r.bottom) else Brush.horizontalGradient(*paradas, startX = r.left, endX = r.right)
         drawRect(brocha, r.topLeft, r.size)
@@ -64,7 +63,6 @@ internal object ObraEstanteRomano {
         val dB = r.height * 0.06f
         val fondo = Rect(r.left + dW, r.top + dH, r.right - dW, r.bottom - dB)
         drawRect(a.luz(P.NEGRO, kc * 0.7f), r.topLeft, r.size)
-        pinceladas(fondo, a.luz(P.NEGRO_LUZ, kc * 0.7f), 300 + k, 10, u, 0.22f)
         // El filete pintado: cinabrio y, por dentro, una línea fina de ocre.
         val f1 = fondo.deflate(w * 0.022f)
         if (f1.width > 4f * u && f1.height > 4f * u) {
@@ -176,7 +174,13 @@ internal object ObraEstanteRomano {
                     val kf = cercaReal(Offset(r.left, y0 + th / 2))
                     if (kf > 0.08f) drawRect(a.filo(0.55f * kf), Offset(r.left, y0), Size(1.4f * u, th + 1f))
                 }
-            } else drawRect(a.lunar(0.35f), Offset(r.right - 1.4f * u, fuste.top + fuste.height * 0.1f), Size(1.2f * u, fuste.height * 0.9f))
+            } else {
+                // El roce azul de la luna de la ventana en el canto que la mira: fuerte arriba y que se pierde abajo.
+                val l = fuste.height
+                for ((j, al) in listOf(0.65f, 0.45f, 0.28f, 0.14f).withIndex())
+                    drawRect(a.lunar(al), Offset(r.right - 1.8f * u, r.top + l * 0.25f * j), Size(1.6f * u, l * 0.25f + 1f))
+                drawRect(a.lunar(0.12f), Offset(r.right - r.width * 0.3f, r.top), Size(r.width * 0.3f - 1.8f * u, l * 0.45f))
+            }
         }
     }
 
