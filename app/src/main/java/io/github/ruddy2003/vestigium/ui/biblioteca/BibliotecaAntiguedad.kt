@@ -1739,9 +1739,10 @@ object EstanteCueva : DisenoBiblioteca {
     }
 }
 /**
- * Roma: el estante del diario es la estantería de obra del cuarto del escribiente de un campamento del Danubio (pilares de
- * ladrillo, tablas y viga de roble, muro encalado, ventana de espejuelo y linterna de cuerno), con el legajo de hojas de
- * madera, la arqueta herrada y la bolsa de cuero como entradas; su dibujo está en `MuebleEstanteRomano.kt`. La tapa es ese rollo tumbado y grande, ceñido con su correa de púrpura, con el sillybos
+ * Roma: el estante del diario es la estantería de obra del cuarto de los oficiales de un campamento del Danubio (pilastras
+ * estriadas de estuco, cornisa con modillones, tablas de roble, casilleros de negro pompeyano, pared de ocre, ventana de
+ * espejuelo y linterna de cuerno), con el legajo de hojas de madera, la arqueta herrada y la bolsa de cuero como entradas; su
+ * dibujo está en `MuebleEstanteRomano*.kt`. La tapa es ese rollo tumbado y grande, ceñido con su correa de púrpura, con el sillybos
  * colgando con la fecha y, al lado, el tintero con su cálamo (de noche, la lucerna encendida); al abrirse, la correa se
  * suelta y el rollo baja desenrollándose y deja ver las columnas escritas. Distinto del Ideario, que es el armarium de nogal
  * con su frontón y las capsae de cuero.
