@@ -13,6 +13,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -75,7 +76,7 @@ private fun DrawScope.sombraVolumenEgipto(forma: Path?, l: LuzVolumenEgipto, caj
     if (!a.oscuro) sombra(6f * u, 3f * u, a.s(0.2f * (1f + 0.7f * l.f)))
     else {
         if (l.k > 0.12f) sombra(if (l.der) -5f * u else 5f * u, -1.5f * u, EgiptoTinta.NOCHE_SOMBRA.copy(alpha = (0.9f * l.k).coerceAtMost(0.45f)))
-        if (l.f > 0.2f) sombra(5f * u, 3f * u, EgiptoTinta.NOCHE_SOMBRA.copy(alpha = 0.32f * l.f))
+        else if (l.f > 0.2f) sombra(5f * u, 3f * u, EgiptoTinta.NOCHE_SOMBRA.copy(alpha = 0.32f * l.f))
     }
     val w = size.width; val h = size.height
     drawOval(a.s(0.42f), Offset(-1f * u, h - 2.6f * u), Size(w + 5f * u, 4.4f * u))
@@ -141,12 +142,12 @@ private fun DrawScope.rolloEgipto(v: Volumen, medidor: TextMeasurer, l: LuzVolum
     val e = minOf(w * 0.34f, 8f * u)
     sombraVolumenEgipto(null, l, Rect(0f, 0f, w, h), CornerRadius(w * 0.5f, e * 0.5f))
     val papiro = a.c(mezcla(PAPIRO, PAPIRO_OSC, 0.22f + 0.2f * azar(v.semilla, 7)), l.k, l.f)
-    val cuerpo = Rect(0f, e / 2, w, h - e / 2)
-    drawRect(papiro, cuerpo.topLeft, cuerpo.size)
     drawOval(papiro, Offset(0f, h - e), Size(w, e))
     // La funda de lino, con su dobladillo de arriba un poco desigual.
     val ini = h * (0.17f + 0.03f * azar(v.semilla, 8))
     val fin = h - e * 0.35f
+    // El papiro de la cabeza (lo de abajo lo tapa la funda).
+    drawRect(papiro, Offset(0f, e / 2), Size(w, ini + 3f * u - e / 2))
     val funda = Path().apply {
         moveTo(0f, ini + 2f * u)
         quadraticTo(w * 0.3f, ini - 1.6f * u, w * 0.55f, ini + 1f * u)
@@ -319,11 +320,12 @@ private fun DrawScope.fardoEgipto(v: Volumen, medidor: TextMeasurer, l: LuzVolum
     }
     val tela = cuerpoEgipto(l, LINO)
     drawPath(bulto, tela)
-    clipPath(bulto) {
-        tramaEgipto(cuello, a)
+    fun dentro(p: Path) = Path().apply { op(p, bulto, PathOperation.Intersect) }
+    clipRect(w * 0.05f, cuello + h * 0.14f, w * 0.95f, h * 0.97f) { tramaEgipto(cuello, a) }
+    run {
         // Los planos de los pliegues: el de luz del lado de la puerta y el de sombra del otro.
-        drawPath(poligonoEgipto(cx - 1f * u, cuello, w * 0.06f, h * 0.55f, w * 0.12f, h, w * 0.32f, h), a.b(0.2f, l.k))
-        drawPath(poligonoEgipto(cx + 1f * u, cuello, w, h * 0.4f, w, h, w * 0.66f, h), a.s(0.2f))
+        drawPath(dentro(poligonoEgipto(cx - 1f * u, cuello, w * 0.06f, h * 0.55f, w * 0.12f, h, w * 0.32f, h)), a.b(0.2f, l.k))
+        drawPath(dentro(poligonoEgipto(cx + 1f * u, cuello, w, h * 0.4f, w, h, w * 0.66f, h)), a.s(0.2f))
         val pliegues = Path().apply {
             moveTo(cx - 1f * u, cuello); quadraticTo(w * 0.22f, h * 0.5f, w * 0.15f, h * 0.96f)
             moveTo(cx + 1f * u, cuello); quadraticTo(w * 0.7f, h * 0.45f, w * 0.84f, h * 0.9f)
@@ -331,9 +333,8 @@ private fun DrawScope.fardoEgipto(v: Volumen, medidor: TextMeasurer, l: LuzVolum
         }
         drawPath(pliegues, a.s(0.28f), style = Stroke(1.8f * u))
         drawPath(corridoEgipto(pliegues, -1.4f * u), a.b(0.25f, l.k), style = Stroke(0.9f * u))
-        cilindroEgipto(Rect(0f, cuello, w, h), a, l.k, 0.9f, l.der, l.f)
-        puertaEnVolumenEgipto(Rect(0f, 0f, w, h), l)
-        drawRect(a.s(0.22f), Offset(0f, h * 0.9f), Size(w, h * 0.1f))
+        if (l.f > 0.02f) drawPath(dentro(Path().apply { addRect(Rect(0f, 0f, w * 0.22f, h)) }), a.puerta(0.3f * l.f * (if (a.oscuro) 0.7f else 1f)))
+        drawPath(dentro(Path().apply { addRect(Rect(0f, h * 0.9f, w, h)) }), a.s(0.22f))
     }
     // El nudo con sus dos orejas, cada una con su luz arriba y su sombra debajo.
     val orejas = Path().apply {

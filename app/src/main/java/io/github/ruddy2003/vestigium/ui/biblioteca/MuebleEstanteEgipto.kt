@@ -363,8 +363,8 @@ internal fun DrawScope.cilindroEgipto(r: Rect, a: AireEgipto, k: Float, fuerza: 
     fun x(f: Float, ancho: Float) = if (der) r.right - r.width * (f + ancho) else r.left + r.width * f
     drawRect(a.b(0.22f * fuerza, k), Offset(x(0f, 0.32f), r.top), Size(r.width * 0.32f, r.height))
     drawRect(a.b(0.34f * fuerza, k), Offset(x(0.13f, 0.09f), r.top), Size(r.width * 0.09f, r.height))
-    drawRect(a.s(0.16f * fuerza), Offset(x(0.56f, 0.44f), r.top), Size(r.width * 0.44f, r.height))
-    drawRect(a.s(0.22f * fuerza), Offset(x(0.8f, 0.2f), r.top), Size(r.width * 0.2f, r.height))
+    drawRect(a.s(0.2f * fuerza), Offset(x(0.58f, 0.42f), r.top), Size(r.width * 0.42f, r.height))
+    drawRect(a.s(0.16f * fuerza), Offset(x(0.86f, 0.14f), r.top), Size(r.width * 0.14f, r.height))
     // De noche, la luna que entra por la puerta (a la izquierda) le deja un filo frío del otro lado que la llama.
     if (a.oscuro && luna > 0.08f) {
         drawRect(a.helado(0.2f, luna), Offset(r.left, r.top), Size(r.width * 0.3f, r.height))

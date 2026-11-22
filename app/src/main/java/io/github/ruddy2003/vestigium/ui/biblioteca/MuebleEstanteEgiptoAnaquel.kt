@@ -39,9 +39,21 @@ import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 
 // El anaquel del almacén de la Tumba (MuebleEstanteEgipto): los troncos de palmera, los tablones de acacia y las ataduras.
 
-/** Un color que cambia a lo largo de [desde]..[hasta] con la luz de la lámpara (de noche); de día, liso. */
+/**
+ * Un color que cambia a lo largo de [r] con la luz de la lámpara (de noche); de día, liso. Lo que queda fuera del alcance de
+ * la lámpara se pinta liso (un degradado solo donde hace falta: pintarlo pesa).
+ */
 private fun DrawScope.pintarConLuzEgipto(m: MesaEgipto, col: Color, r: Rect, vertical: Boolean, f: Float = 0f) {
     if (!m.a.oscuro) { drawRect(m.a.c(col, 1f, f), r.topLeft, r.size); return }
+    val alcance = m.w * 0.95f
+    val corte = m.llama.y - alcance
+    if (r.bottom <= corte) { drawRect(m.a.c(col, m.k(r.center), m.f(r.center)), r.topLeft, r.size); return }
+    if (vertical && r.top < corte) {
+        val arriba = Rect(r.left, r.top, r.right, corte)
+        drawRect(m.a.c(col, m.k(Offset(r.center.x, corte)), m.f(arriba.center)), arriba.topLeft, arriba.size)
+        pintarConLuzEgipto(m, col, Rect(r.left, corte, r.right, r.bottom), true, f)
+        return
+    }
     val n = 6
     val colores = List(n) { i ->
         val t = i / (n - 1f)
@@ -58,7 +70,7 @@ internal fun DrawScope.fondosTramosEgipto(m: MesaEgipto, repisas: List<Rect>) {
     val x0 = m.posteI.right; val x1 = m.posteD.left
     val zona = repisas.map { r -> Rect(x0, r.top, x1, r.bottom) }
     val col = EgiptoTinta.TRAMO
-    if (m.a.oscuro) zonaNocheEgipto(m, zona, mezcla(col, EgiptoTinta.NOCHE, 0.35f), m.w * 1.15f)
+    if (m.a.oscuro) zonaNocheEgipto(m, zona, mezcla(col, EgiptoTinta.NOCHE, 0.35f), m.w * 0.95f)
     else { val c = m.a.c(col, 1f); zona.forEach { r -> drawRect(c, r.topLeft, r.size) } }
 }
 

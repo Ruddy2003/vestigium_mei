@@ -241,7 +241,7 @@ internal fun DrawScope.llamaEgipto(m: MesaEgipto) {
     val p = m.llama
     val alto = w * (if (a.lunar) 0.032f else 0.046f)
     val fuerza = if (a.oscuro) 1f else 0.6f
-    mancha(p - Offset(0f, alto * 0.4f), w * (if (a.lunar) 0.26f else 0.36f), LLAMA.copy(alpha = 0.3f * fuerza))
+    mancha(p - Offset(0f, alto * 0.4f), w * (if (a.lunar) 0.16f else 0.22f), LLAMA.copy(alpha = 0.34f * fuerza))
     mancha(p - Offset(0f, alto * 0.4f), w * 0.12f, LLAMA.copy(alpha = 0.5f * fuerza))
     drawPath(Path().apply {
         moveTo(p.x, p.y - alto)

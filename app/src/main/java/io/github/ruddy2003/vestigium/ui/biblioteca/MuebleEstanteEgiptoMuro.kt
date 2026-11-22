@@ -76,11 +76,11 @@ internal fun DrawScope.muroEgipto(m: MesaEgipto, fondo: Float) {
         zona.forEach { r -> drawRect(brocha, r.topLeft, r.size) }
         mancha(m.llama, w * 0.34f, LLAMA.copy(alpha = 0.3f))
     } else {
-        zonaNocheEgipto(m, zona, ENLUCIDO, w * 1.15f)
+        zonaNocheEgipto(m, zona, ENLUCIDO, w * 0.95f)
     }
     val kc = if (a.oscuro) 0.25f else 1f
-    pinceladas(Rect(0f, 0f, w, m.ch), if (a.oscuro) EgiptoTinta.NOCHE else ENLUCIDO_OSC, 611, 26, u, if (a.oscuro) 0.06f else 0.12f)
-    if (!a.oscuro) pinceladas(Rect(0f, 0f, w, m.ch), ENLUCIDO_LUZ, 613, 14, u, 0.16f)
+    pinceladas(Rect(0f, 0f, w, m.ch), if (a.oscuro) EgiptoTinta.NOCHE else ENLUCIDO_OSC, 611, 16, u, if (a.oscuro) 0.06f else 0.12f)
+    if (!a.oscuro) pinceladas(Rect(0f, 0f, w, m.ch), ENLUCIDO_LUZ, 613, 8, u, 0.16f)
     // Las pasadas de la mano al alisar el barro: arcos anchos, con su borde de sombra y su borde de luz.
     val pasadas = Path()
     for (j in 0 until 18) {
