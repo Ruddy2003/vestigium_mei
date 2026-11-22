@@ -62,8 +62,10 @@ internal fun DrawScope.paredDeco(g: GeoDeco) {
             continue
         }
         clipRect(r.left, r.top, r.right, r.bottom) {
-            drawRect(Brush.linearGradient(listOf(mezcla(PAPEL, MARFIL, 0.45f), PAPEL, mezcla(PAPEL, PaletaDeco.PAPEL_OSC, 0.55f)),
+            // De día, la luz de la escalera en un degradado; de noche el papel va liso: el velo de la luz ya lo modela.
+            if (!a.lumbre) drawRect(Brush.linearGradient(listOf(mezcla(PAPEL, MARFIL, 0.45f), PAPEL, mezcla(PAPEL, PaletaDeco.PAPEL_OSC, 0.55f)),
                 start = Offset(0f, 0f), end = Offset(w, w * 1.1f)), r.topLeft, r.size)
+            else drawRect(PAPEL, r.topLeft, r.size)
             texturaDeco(TexturaDeco.PAPEL, r, Color.White, 0.6f)
             veloPared(g, r)
         }
@@ -71,10 +73,10 @@ internal fun DrawScope.paredDeco(g: GeoDeco) {
     // La moldura escalonada del techo: tres gradas de yeso con su filete de latón y su sombra en el papel.
     val m1 = w * 0.016f; val m2 = w * 0.03f; val m3 = w * 0.042f
     val yeso = PaletaDeco.MARFIL
-    val tramos = if (a.lumbre) 48 else 1
+    val tramos = if (a.luna) 72 else if (a.lumbre) 48 else 1
     for (i in 0 until tramos) {
         val xa = w * i / tramos; val xb = w * (i + 1) / tramos + 0.6f
-        val k = g.k(Offset((xa + xb) / 2, m2))
+        val k = g.k(Offset((xa + xb) / 2, m2)) * (if (a.luna) 0.5f else 1f)
         drawRect(a.c(yeso, k), Offset(xa, 0f), Size(xb - xa, m1))
         drawRect(a.c(mezcla(yeso, PaletaDeco.PAPEL_OSC, 0.28f), k), Offset(xa, m1), Size(xb - xa, m2 - m1))
         drawRect(a.c(mezcla(yeso, PaletaDeco.PAPEL_OSC, 0.12f), k), Offset(xa, m2), Size(xb - xa, m3 - m2))
@@ -123,32 +125,40 @@ private fun DrawScope.veloPared(g: GeoDeco, r: Rect) {
         f to hondo.copy(alpha = (1f - (1.05f * k).coerceAtMost(0.95f)).coerceIn(0f, 1f))
     }
     drawRect(Brush.radialGradient(*paradas.toTypedArray(), center = centro, radius = radio), r.topLeft, r.size)
-    mancha(centro, w * 0.45f, LLAMA.copy(alpha = 0.34f))
-    mancha(centro, w * 0.2f, LLAMA.copy(alpha = 0.34f))
+    // El charco de la llama, solo en el trozo de pared que tiene cerca (arriba): abajo, entre las patas, no llega.
+    if (r.top < centro.y + w * 0.45f) {
+        mancha(centro, w * 0.45f, LLAMA.copy(alpha = 0.34f))
+        mancha(centro, w * 0.2f, LLAMA.copy(alpha = 0.34f))
+    }
 }
 
 /**
  * Los Sueños en oscuro: la pared en la sombra de la madrugada, salvo el haz de la calle, que entra por la puerta de la
- * escalera y la cruza en diagonal, frío y con el borde blando, cada vez más débil hacia abajo ([MuebleEstanteDeco.haz]).
+ * escalera y la cruza en diagonal, frío, ancho y con el borde blando ([MuebleEstanteDeco.bordeHaz]), cada vez más débil hacia
+ * abajo. Son tres degradados: uno de través al haz (lo que ilumina), uno con su frío, y uno a lo alto que hunde lo de abajo.
  */
 private fun DrawScope.hazEnPared(g: GeoDeco, r: Rect, hondo: Color) {
     val w = g.w
-    val oscuro = hondo.copy(alpha = 0.9f)
-    fun banda(medio: Float): Path {
-        val alto = r.bottom
-        return TrazoDeco.poligono(
-            (MuebleEstanteDeco.HAZ_X - medio) * w, 0f, (MuebleEstanteDeco.HAZ_X + medio) * w, 0f,
-            (MuebleEstanteDeco.HAZ_X + MuebleEstanteDeco.HAZ_SESGO * alto / w + medio) * w, alto,
-            (MuebleEstanteDeco.HAZ_X + MuebleEstanteDeco.HAZ_SESGO * alto / w - medio) * w, alto)
+    val s = MuebleEstanteDeco.HAZ_SESGO
+    val norma = kotlin.math.sqrt(1f + s * s)
+    // El degradado corre de través al haz: a lo largo del haz no cambia. A [dx] anchos del medio (a lo ancho), [dx]/norma de través.
+    val alcance = 0.42f
+    val y0 = w * 0.25f
+    val centro = Offset((MuebleEstanteDeco.HAZ_X + s * y0 / w) * w, y0)
+    val n = Offset(1f / norma, -s / norma)
+    val p = alcance * w / norma
+    val ini = Offset(centro.x - n.x * p, centro.y - n.y * p)
+    val fin = Offset(centro.x + n.x * p, centro.y + n.y * p)
+    val caida = kotlin.math.exp(-0.85f * 0.25f)
+    val fr = List(13) { it / 12f }
+    val luz = fr.map { f ->
+        val k = 0.04f + 0.92f * MuebleEstanteDeco.bordeHaz((2f * f - 1f) * alcance) * caida
+        f to hondo.copy(alpha = (1f - (1.05f * k).coerceAtMost(0.95f)).coerceIn(0f, 1f))
     }
-    val fuera = banda(MuebleEstanteDeco.HAZ_MEDIO_ANCHO)
-    val dentro = banda(MuebleEstanteDeco.HAZ_MEDIO_ANCHO - 0.07f)
-    val todo = Path().apply { addRect(r) }
-    // Fuera del haz, oscuro; en su borde, a medias; dentro, la luz que se apaga al bajar.
-    drawPath(Path().apply { op(todo, fuera, PathOperation.Difference) }, oscuro)
-    drawPath(Path().apply { op(fuera, dentro, PathOperation.Difference) }, hondo.copy(alpha = 0.6f))
-    drawPath(dentro, Brush.verticalGradient(listOf(hondo.copy(alpha = 0.12f), hondo.copy(alpha = 0.45f)), startY = 0f, endY = maxOf(1f, r.bottom)))
-    drawPath(dentro, PaletaDeco.LUNA.copy(alpha = 0.16f))
+    drawRect(Brush.linearGradient(*luz.toTypedArray(), start = ini, end = fin), r.topLeft, r.size)
+    val frio = fr.map { f -> f to PaletaDeco.LUNA.copy(alpha = 0.16f * MuebleEstanteDeco.bordeHaz((2f * f - 1f) * alcance)) }
+    drawRect(Brush.linearGradient(*frio.toTypedArray(), start = ini, end = fin), r.topLeft, r.size)
+    drawRect(Brush.verticalGradient(listOf(hondo.copy(alpha = 0f), hondo.copy(alpha = 0.4f)), startY = 0f, endY = maxOf(1f, g.cornisaArriba)), r.topLeft, r.size)
 }
 
 /** La sombra del armario en la pared: de día, a la derecha; de noche, a la izquierda, lejos del aplique. */
@@ -304,17 +314,5 @@ internal fun DrawScope.luzFinalDeco(g: GeoDeco) {
     if (a.aplique) {
         val f = if (a.alba) 0.5f else 1f
         mancha(c, w * 0.16f, PANTALLA.copy(alpha = 0.35f * f))
-    }
-    if (a.oscuro && !a.noche) {
-        mancha(Offset(-w * 0.06f, g.py(MuebleEstanteDeco.FRIO_Y)), w * 0.6f, PaletaDeco.LUNA.copy(alpha = 0.07f))
-    }
-    // En los Sueños en oscuro, el haz de la calle sigue sobre el mueble: la cornisa y las primeras repisas, cada vez más débil.
-    if (a.luna) {
-        val y0 = g.cornisaArriba - g.cara; val y1 = minOf(g.pie, g.py(MuebleEstanteDeco.CORONA + 0.9f))
-        if (y1 > y0) for ((medio, alfa) in listOf(MuebleEstanteDeco.HAZ_MEDIO_ANCHO to 0.05f, MuebleEstanteDeco.HAZ_MEDIO_ANCHO - 0.07f to 0.07f)) {
-            fun x(y: Float, s: Float) = (MuebleEstanteDeco.HAZ_X + MuebleEstanteDeco.HAZ_SESGO * g.fy(y) + s * medio) * w
-            drawPath(TrazoDeco.poligono(x(y0, -1f), y0, x(y0, 1f), y0, x(y1, 1f), y1, x(y1, -1f), y1),
-                Brush.verticalGradient(listOf(PaletaDeco.LUNA.copy(alpha = alfa * 1.6f), PaletaDeco.LUNA.copy(alpha = 0f)), startY = y0, endY = y1))
-        }
     }
 }

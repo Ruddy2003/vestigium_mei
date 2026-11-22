@@ -41,7 +41,7 @@ internal fun DrawScope.veloDeco(g: GeoDeco, r: Rect, base: Color, vertical: Bool
     val a = g.a
     if (!a.lumbre || r.width <= 0.5f || r.height <= 0.5f) return
     val largo = if (vertical) r.height else r.width
-    val n = (largo / maxOf(1f, paso)).toInt().coerceIn(1, 120)
+    val n = (largo / maxOf(1f, if (a.luna) paso * 0.25f else paso)).toInt().coerceIn(1, 200)
     val hondo = a.hondo(base)
     for (i in 0 until n) {
         val t = if (vertical) Rect(r.left, r.top + largo * i / n, r.right, r.top + largo * (i + 1) / n + 0.6f)
@@ -68,7 +68,7 @@ internal fun DrawScope.casilleroDeco(g: GeoDeco, k: Int, r: Rect, oc: Float?) {
     val xa = g.lado - prof; val xb = w - g.lado + prof
     val izq = g.izq(r.center)
     clipRect(r.left, r.top, r.right, r.bottom) {
-        val tramos = if (a.lumbre) 10 else 1
+        val tramos = if (a.luna) 30 else if (a.lumbre) 10 else 1
         for (t in 0 until tramos) {
             val x0 = r.left + r.width * t / tramos; val x1 = r.left + r.width * (t + 1) / tramos + 0.6f
             drawRect(a.c(TERCIOPELO, g.k(Offset((x0 + x1) / 2, r.center.y)) * 0.9f), Offset(x0, r.top), Size(x1 - x0, r.height))
@@ -283,14 +283,14 @@ internal fun DrawScope.cornisaDeco(g: GeoDeco) {
         drawPath(greca, MARFIL, style = Stroke(1.5f * u))
     }
     veloDeco(g, friso, MACASAR_NEGRO, vertical = false, paso = w / 12f)
-    fileteDeco(g, friso.left, friso.right, friso.top + 3f * u, 1.2f * u, 8)
     fileteDeco(g, friso.left, friso.right, friso.bottom - 2.2f * u, 2.2f * u, 8)
     // Las dos gradas, de abajo arriba: laca con su reflejo, su filete y la sombra de la de encima.
     for ((r, sem) in listOf(grada2 to 1611, grada to 1612)) {
         drawRect(a.s(0.5f), Offset(r.left, r.bottom), Size(r.width, 3f * u))
         macasarDeco(g, r, sem, vertical = false, k = 1f, veta = 0.5f)
         veloDeco(g, r, MACASAR, vertical = false, paso = w / 12f)
-        fileteDeco(g, r.left, r.right, r.bottom - 2f * u, 2f * u, 8)
+        // Solo la grada de arriba lleva filete: la de abajo es un plano de laca limpio.
+        if (r == grada) fileteDeco(g, r.left, r.right, r.bottom - 2f * u, 2f * u, 8)
         drawRect(a.s(0.45f), r.topLeft, Size(r.width, 2.6f * u))
     }
     // La losa: el canto de laca, su filete doble y la cara de arriba vista.
@@ -298,7 +298,6 @@ internal fun DrawScope.cornisaDeco(g: GeoDeco) {
     macasarDeco(g, losa, 1631, vertical = false, k = 1f, veta = 0.5f)
     veloDeco(g, losa, MACASAR, vertical = false, paso = w / 12f)
     drawRect(a.b(0.55f), Offset(losa.left, losa.top), Size(losa.width, 1.4f * u))
-    fileteDeco(g, losa.left, losa.right, losa.bottom - 6f * u, 1.2f * u, 8)
     fileteDeco(g, losa.left, losa.right, losa.bottom - 3f * u, 3f * u, 8)
     val cara = Rect(losa.left, losa.top - g.cara, losa.right, losa.top)
     macasarDeco(g, cara, 1621, vertical = false, k = 1f, brillo = false, veta = 0.5f)

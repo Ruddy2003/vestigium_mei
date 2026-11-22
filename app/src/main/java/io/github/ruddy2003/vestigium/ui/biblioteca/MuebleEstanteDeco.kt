@@ -256,16 +256,19 @@ internal object MuebleEstanteDeco {
      * cae en una banda en diagonal hacia abajo a la derecha: cruza la pared, toca el gramófono y la primera repisa y se apaga
      * con la hondura. Da de 0 a 1 en un punto en anchos; el borde es blando.
      */
-    fun haz(fx: Float, fy: Float): Float {
-        val medio = HAZ_X + HAZ_SESGO * fy
-        val borde = ((HAZ_MEDIO_ANCHO - kotlin.math.abs(fx - medio)) / 0.07f).coerceIn(0f, 1f)
-        return borde * exp(-0.85f * fy)
+    fun haz(fx: Float, fy: Float): Float = bordeHaz(fx - (HAZ_X + HAZ_SESGO * fy)) * exp(-0.85f * fy)
+
+    /** Cuánto del haz hay a [dx] anchos (a lo ancho) de su línea del medio: lleno en el centro y un borde ancho que se deshace en curva suave. */
+    fun bordeHaz(dx: Float): Float {
+        val t = ((HAZ_MEDIO_ANCHO - kotlin.math.abs(dx)) / HAZ_BORDE).coerceIn(0f, 1f)
+        return t * t * (3f - 2f * t)
     }
 
     /** El haz: dónde cruza la línea de arriba, cuánto se corre por cada ancho que baja y la mitad de su ancho, en anchos. */
     internal const val HAZ_X = 0.08f
     internal const val HAZ_SESGO = 0.5f
-    internal const val HAZ_MEDIO_ANCHO = 0.17f
+    internal const val HAZ_MEDIO_ANCHO = 0.21f
+    internal const val HAZ_BORDE = 0.14f
 
     /** La luz que llega a un punto en anchos: el haz de la calle en los Sueños en oscuro; al alba, la mayor; de noche, el aplique. */
     fun cerca(fx: Float, fy: Float, a: AireDeco): Float = when {
@@ -333,7 +336,7 @@ internal object MuebleEstanteDeco {
         val kf = frio(a, fx, fy)
         if (kf > 0.02f) {
             drawRect(PaletaDeco.LUNA.copy(alpha = 0.6f * kf), cuerpo.topLeft, Size(1.3f * density, cuerpo.height))
-            drawRect(PaletaDeco.LUNA.copy(alpha = 0.12f * kf), cuerpo.topLeft, cuerpo.size, blendMode = BlendMode.Screen)
+            drawRect(PaletaDeco.LUNA.copy(alpha = 0.1f * kf), cuerpo.topLeft, cuerpo.size)
         }
     }
 }
@@ -365,7 +368,7 @@ internal object TrazoDeco {
  */
 internal fun DrawScope.fileteDeco(g: GeoDeco, x0: Float, x1: Float, y: Float, gr: Float, tramos: Int = 6, color: Color = PaletaDeco.LATON) {
     if (x1 <= x0 || gr <= 0f) return
-    val n = if (g.a.lumbre) tramos.coerceAtLeast(1) else 1
+    val n = if (g.a.luna) tramos.coerceAtLeast(1) * 3 else if (g.a.lumbre) tramos.coerceAtLeast(1) else 1
     val paso = (x1 - x0) / n
     for (i in 0 until n) {
         val p = Offset(x0 + paso * (i + 0.5f), y)
@@ -379,7 +382,7 @@ internal fun DrawScope.fileteDeco(g: GeoDeco, x0: Float, x1: Float, y: Float, gr
 /** Lo mismo, a lo alto, de [y0] a [y1] en [x]: la luz a la izquierda. */
 internal fun DrawScope.fileteVDeco(g: GeoDeco, x: Float, y0: Float, y1: Float, gr: Float, tramos: Int = 6, color: Color = PaletaDeco.LATON) {
     if (y1 <= y0 || gr <= 0f) return
-    val n = if (g.a.lumbre) tramos.coerceAtLeast(1) else 1
+    val n = if (g.a.luna) tramos.coerceAtLeast(1) * 3 else if (g.a.lumbre) tramos.coerceAtLeast(1) else 1
     val paso = (y1 - y0) / n
     for (i in 0 until n) {
         val k = g.k(Offset(x, y0 + paso * (i + 0.5f)))
