@@ -41,11 +41,13 @@ import io.github.ruddy2003.vestigium.ui.ideario.vetas
 // =====================================================================
 
 /**
- * Japón Edo: el estante del diario es el de la casa de té de la posta (`MuebleEstanteEdo.kt`): un estante abierto de hinoki
- * con tablas pasantes acuñadas, contra la pared de sugi ahumada, con el ranma de papel arriba a la izquierda y, de noche, el
- * farol de viaje colgado del nageshi. Cada entrada es, según la semilla, un estuche de tela (chitsu), una pila de cuadernos
- * cosidos o una bolsa de tela de cartas, con el día, el mes y el sello (de noche, la luna). Distinto del Ideario, que es el
- * tansu de keyaki sobre el tatami.
+ * Japón Edo: el estante del diario es el de la casa de té de la posta (`MuebleEstanteEdo.kt`): un estante de castaño del
+ * mismo carpintero que el tansu del Ideario, con tablas pasantes acuñadas, herrajes de hierro, la hondura de cada hueco con su
+ * fondo de papel de caqui y un cuerpo bajo de puertas correderas; contra la pared de enlucido con su zócalo de tablas
+ * ahumadas, el ranma de papel arriba a la izquierda y, de noche, el farol de viaje colgado del nageshi. Encima, el shamisen, el
+ * ábaco, los cojines y las sandalias; al pie, la cubeta del arroz, la bandeja del tabaco con su brasa y la escoba. Cada
+ * entrada es, según la semilla, un estuche de tela (chitsu), una pila de cuadernos cosidos o un hatillo de furoshiki, con el
+ * día, el mes y el sello (de noche, la luna). Distinto del Ideario, que es el tansu de keyaki sobre el tatami.
  * La tapa es ese estuche tumbado de frente: la tira de papel con la fecha, la placa de washi con olas para lo escrito,
  * el sello y los kohaze en el canto; al abrirse la solapa se va a la izquierda y sale el cuadernillo cosido con su
  * asanoha (de noche, la luna con tres estrellas en lugar del sello).
