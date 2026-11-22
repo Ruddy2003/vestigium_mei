@@ -5312,15 +5312,11 @@ object EstanteNapoleon : DisenoBiblioteca {
 }
 
 /**
- * Art déco: el estante del salón de un transatlántico. Arce claro chapeado en libro, con bandas de cromo en los costados y
- * en el canto de cada tabla. Arriba, el remate escalonado en tres gradas con un sol de marquetería, rayos de arce y nogal
- * que salen del ojo de buey de cromo atornillado: de día se ven el cielo y el mar con su horizonte; de noche, el mar oscuro
- * con la luna y su reflejo. Abajo, el zócalo escalonado con sus filetes de cromo y un piso de linóleo en damero. Los meses
- * van en cartelas de laca negra de esquinas cortadas. Cada entrada es un álbum de viaje con lomo geométrico, bandas de cromo
- * arriba y abajo, la cartela con el día, el mes a lo largo, chevrones dorados que se suman cuanto más escribiste y un sol
- * pequeño; de noche, una luna en lugar del sol. Distinto del Ideario, que es el casillero de laca de la recepción de un hotel.
- * La tapa es ese álbum de frente, con el sol de marquetería (de noche, el mar con la luna), la placa «PASAJE», la
- * cartela escalonada y la fecha del pasaje; al abrirlo, se ve la foto del barco en sus esquineros.
+ * Art déco. El estante del diario es el armario de partituras del club de sótano de Harlem donde toca Lou, hacia 1926: ébano
+ * de Macasar con galuchat, marfil y níquel, sobre la pared de pan de plata, con el gramófono portátil encima; las entradas
+ * son la caja del rollo de pianola, el álbum de discos y la carpeta de partituras (lo dibuja `MuebleEstanteDeco`). La tapa
+ * es el álbum de viaje de frente, con el sol de marquetería (de noche, el mar con la luna), la placa «PASAJE», la cartela
+ * escalonada y la fecha del pasaje; al abrirlo, se ve la foto del barco en sus esquineros.
  */
 object EstanteDeco : DisenoBiblioteca {
     private val ARCE = Color(0xFFD9B97E)
@@ -5353,16 +5349,16 @@ object EstanteDeco : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.32f
-    override val base = 0.1f
-    override val lado = 0.055f
-    override val altoRepisa: Dp = 112.dp
-    override val tabla: Dp = 16.dp
-    override val separa: Dp = 3.dp
+    override val corona = MuebleEstanteDeco.CORONA
+    override val base = MuebleEstanteDeco.BASE
+    override val lado = MuebleEstanteDeco.LADO
+    override val altoRepisa: Dp = MuebleEstanteDeco.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteDeco.TABLA
+    override val separa: Dp = MuebleEstanteDeco.SEPARA
     override val letra: FontFamily = LetraExtra.pasaje
 
-    override fun ancho(palabras: Int): Dp = (22 + (palabras / 45).coerceAtMost(18)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.8f + 0.14f * azar(semilla, 7)
+    override fun ancho(palabras: Int): Dp = MuebleEstanteDeco.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteDeco.alto(semilla, palabras)
 
     /** Una banda de cromo: gris con su brillo arriba y su sombra abajo. */
     private fun DrawScope.cromo(r: Rect, oscuro: Boolean, noche: Boolean) {
@@ -5381,200 +5377,16 @@ object EstanteDeco : DisenoBiblioteca {
         lineTo(r.left, r.top + e); lineTo(r.left + e * 0.5f, r.top + e); lineTo(r.left + e * 0.5f, r.top + e * 0.5f); lineTo(r.left + e, r.top + e * 0.5f); close()
     }
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El fondo de arce chapeado en libro: paños con la veta en espejo.
-        val cuerpo = Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, d.base.top)
-        drawRect(c(ARCE), cuerpo.topLeft, cuerpo.size)
-        val panos = 4
-        for (k in 0 until panos) {
-            val p = Rect(cuerpo.left + cuerpo.width * k / panos, cuerpo.top, cuerpo.left + cuerpo.width * (k + 1) / panos, cuerpo.bottom)
-            if (k % 2 == 1) drawRect(c(ARCE_LUZ).copy(alpha = 0.35f), p.topLeft, p.size)
-            vetas(p, c(ARCE_VETA).copy(alpha = 0.45f), 140 + k / 2, densidad = 0.6f, vertical = true, grosor = 0.6f, ondulacion = 1.6f)
-            drawLine(c(ARCE_VETA), Offset(p.left, p.top), Offset(p.left, p.bottom), 0.6f * u)
-        }
-        // Cada repisa: la sombra de la tabla de arriba.
-        d.repisas.forEach { rep ->
-            drawRect(Color.Black.copy(alpha = if (noche) 0.36f else 0.24f), rep.topLeft, Size(rep.width, 7 * u))
-            drawRect(Color.Black.copy(alpha = 0.1f), rep.topLeft, Size(rep.width, 15 * u))
-            drawRect(Color.Black.copy(alpha = 0.14f), rep.topLeft, Size(6 * u, rep.height))
-            drawRect(Color.Black.copy(alpha = 0.14f), Offset(rep.right - 6 * u, rep.top), Size(6 * u, rep.height))
-        }
-        // Los costados: arce con el canto de cromo y, a trechos, tres líneas de velocidad.
-        listOf(d.izquierda to true, d.derecha to false).forEach { (lad, izq) ->
-            drawRect(c(ARCE), lad.topLeft, lad.size)
-            vetas(lad, c(ARCE_VETA).copy(alpha = 0.5f), if (izq) 150 else 151, densidad = 1f, vertical = true, grosor = 0.6f)
-            val ck = lad.width * 0.22f
-            cromo(Rect(if (izq) lad.left else lad.right - ck, lad.top, if (izq) lad.left + ck else lad.right, lad.bottom), oscuro, noche)
-            var yy = lad.top + 30 * u
-            while (yy < lad.bottom - 20 * u) {
-                for (j in 0 until 3) cromo(Rect(lad.left + lad.width * 0.25f, yy + j * 4 * u, lad.right - lad.width * 0.25f, yy + j * 4 * u + 1.8f * u), oscuro, noche)
-                yy += 130 * u
-            }
-            bisel(lad, Color.White.copy(alpha = 0.15f), Color.Black.copy(alpha = 0.18f), 1.2f * u)
-        }
-        // Las tablas: arce con el canto de cromo.
-        d.tablas.forEachIndexed { k, tb ->
-            drawRect(c(ARCE), tb.topLeft, tb.size)
-            vetas(tb, c(ARCE_VETA).copy(alpha = 0.45f), 160 + k, densidad = 0.6f, grosor = 0.6f)
-            cromo(Rect(tb.left, tb.top, tb.right, tb.top + 3 * u), oscuro, noche)
-            cromo(Rect(tb.left, tb.bottom - 2.4f * u, tb.right, tb.bottom), oscuro, noche)
-            drawRect(Color.Black.copy(alpha = 0.22f), Offset(tb.left, tb.bottom), Size(tb.width, 3 * u))
-        }
-        // La cartela de laca negra de cada mes, de esquinas escalonadas y borde de cromo.
-        d.placas.forEach { p ->
-            val r = p.r
-            val forma = escalonado(r, r.height * 0.36f)
-            drawPath(forma, c(LACA))
-            drawPath(forma, c(CROMO), style = Stroke(1.2f * u))
-            textoEn(medidor, p.texto, Rect(r.left + r.height * 0.5f, r.top + 1 * u, r.right - r.height * 0.5f, r.bottom - 1 * u), letra, c(CREMA), 10f, peso = FontWeight.SemiBold, espaciado = 1.4f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el zócalo escalonado con sus filetes de cromo, sobre el linóleo en damero.
-        val b = d.base
-        val piso = b.top + b.height * 0.6f
-        val cuadro = 14 * u
-        var fy = piso; var fila = 0
-        while (fy < h) {
-            var fx = 0f; var col = 0
-            while (fx < w) {
-                drawRect(c(if ((fila + col) % 2 == 0) LINOLEO_A else LINOLEO_B), Offset(fx, fy), Size(cuadro, cuadro))
-                fx += cuadro; col++
-            }
-            fy += cuadro; fila++
-        }
-        val zocalo = Rect(b.left, b.top, b.right, piso)
-        drawRect(c(LACA), zocalo.topLeft, zocalo.size)
-        val grada = Rect(b.left + b.width * 0.03f, b.top, b.right - b.width * 0.03f, b.top + (piso - b.top) * 0.55f)
-        drawRect(c(ARCE), grada.topLeft, grada.size)
-        vetas(grada, c(ARCE_VETA).copy(alpha = 0.45f), 170, densidad = 0.6f, grosor = 0.6f)
-        cromo(Rect(zocalo.left, grada.bottom, zocalo.right, grada.bottom + 2.4f * u), oscuro, noche)
-        cromo(Rect(zocalo.left, zocalo.bottom - (piso - b.top) * 0.2f, zocalo.right, zocalo.bottom - (piso - b.top) * 0.2f + 1.8f * u), oscuro, noche)
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(zocalo.left, piso), Size(zocalo.width, 3 * u))
-    }
+    /** Estante rehecho: el aura solo sale al tocar (ver [DisenoBiblioteca.auraEnReposo]). */
+    override val auraEnReposo = false
 
-    /** El remate escalonado con el sol de marquetería y el ojo de buey. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        drawRect(c(PARED), r.topLeft, r.size)
-        // Las tres gradas del remate.
-        val gradas = listOf(
-            Rect(r.left, r.top + r.height * 0.42f, r.right, r.bottom),
-            Rect(r.left + r.width * 0.14f, r.top + r.height * 0.2f, r.right - r.width * 0.14f, r.bottom),
-            Rect(r.left + r.width * 0.3f, r.top + r.height * 0.03f, r.right - r.width * 0.3f, r.bottom),
-        )
-        val silueta = Path().apply { gradas.forEach { g -> addRect(g) } }
-        gradas.forEachIndexed { k, g ->
-            drawRect(c(ARCE), g.topLeft, g.size)
-            vetas(g, c(ARCE_VETA).copy(alpha = 0.4f), 180 + k, densidad = 0.5f, grosor = 0.6f)
-        }
-        // El sol de marquetería: rayos de arce claro y nogal que salen del ojo de buey.
-        val co = Offset(r.center.x, r.top + r.height * 0.52f)
-        val ro = r.height * 0.28f
-        clipPath(silueta) {
-            val largo = r.width
-            val n = 18
-            for (k in 0 until n) {
-                val a0 = (Math.PI * (1.0 + k / n.toDouble())).toFloat()
-                val a1 = (Math.PI * (1.0 + (k + 1) / n.toDouble())).toFloat()
-                val rayo = Path().apply {
-                    moveTo(co.x + ro * cos(a0), co.y + ro * sin(a0))
-                    lineTo(co.x + largo * cos(a0), co.y + largo * sin(a0))
-                    lineTo(co.x + largo * cos(a1), co.y + largo * sin(a1))
-                    lineTo(co.x + ro * cos(a1), co.y + ro * sin(a1)); close()
-                }
-                drawPath(rayo, c(if (k % 2 == 0) NOGAL else ARCE_LUZ).copy(alpha = if (k % 2 == 0) 0.85f else 0.7f))
-            }
-        }
-        // Los cantos de cada grada, en cromo.
-        gradas.forEach { g -> cromo(Rect(g.left, g.top, g.right, g.top + 2.4f * u), oscuro, noche) }
-        gradas.drop(1).forEach { g ->
-            drawRect(Color.Black.copy(alpha = 0.2f), Offset(g.left - 2 * u, g.top), Size(2 * u, r.bottom - g.top))
-            drawRect(Color.Black.copy(alpha = 0.2f), Offset(g.right, g.top), Size(2 * u, r.bottom - g.top))
-        }
-        // El ojo de buey: de día, cielo y mar; de noche, el mar oscuro con la luna y su reflejo.
-        val vidrio = Path().apply { addOval(Rect(co, ro)) }
-        drawPath(vidrio, if (noche) CIELO_NOCHE else c(CIELO))
-        clipPath(vidrio) {
-            val horizonte = co.y + ro * 0.15f
-            drawRect(if (noche) MAR_NOCHE else c(MAR), Offset(co.x - ro, horizonte), Size(ro * 2, ro * 2))
-            if (noche) {
-                val lu = Offset(co.x + ro * 0.3f, co.y - ro * 0.4f)
-                mancha(lu, ro * 0.7f, LUNA.copy(alpha = 0.35f))
-                drawCircle(LUNA, ro * 0.16f, lu)
-                for (j in 0 until 6) {
-                    val yy = horizonte + ro * (0.08f + 0.13f * j)
-                    val an = ro * (0.08f + 0.05f * j)
-                    drawLine(LUNA.copy(alpha = 0.6f - 0.08f * j), Offset(lu.x - an, yy), Offset(lu.x + an, yy), 1f * u)
-                }
-                for (j in 0 until 5) drawCircle(LUNA.copy(alpha = 0.7f), 0.7f * u, Offset(co.x - ro * (0.6f - 0.22f * j), co.y - ro * (0.3f + 0.25f * azar(9, j))))
-            } else {
-                for (j in 0 until 5) {
-                    val yy = horizonte + ro * (0.12f + 0.16f * j)
-                    drawLine(Color.White.copy(alpha = 0.3f), Offset(co.x - ro * (0.7f - 0.1f * j), yy), Offset(co.x - ro * (0.2f - 0.1f * j), yy), 0.8f * u)
-                }
-                drawOval(Color.White.copy(alpha = 0.6f), Offset(co.x - ro * 0.55f, co.y - ro * 0.5f), Size(ro * 0.5f, ro * 0.16f))
-            }
-            drawLine(Color.White.copy(alpha = 0.18f), Offset(co.x - ro * 0.8f, co.y + ro * 0.3f), Offset(co.x - ro * 0.1f, co.y - ro * 0.9f), 4 * u)
-        }
-        drawCircle(c(CROMO), ro + 3 * u, co, style = Stroke(6 * u))
-        drawCircle(c(CROMO_LUZ), ro + 4.5f * u, co, style = Stroke(1 * u))
-        drawCircle(c(CROMO_OSC), ro, co, style = Stroke(1 * u))
-        for (k in 0 until 8) {
-            val a = (k * Math.PI / 4).toFloat()
-            drawCircle(c(CROMO_OSC), 1.4f * u, Offset(co.x + (ro + 3 * u) * cos(a), co.y + (ro + 3 * u) * sin(a)))
-        }
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(r.left, r.bottom - 3 * u), Size(r.width, 3 * u))
-    }
+    /** El armario de partituras del club de Lou: lo dibuja [MuebleEstanteDeco]. */
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteDeco) { estante(d, medidor, oscuro, noche) }
 
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val i = (v.semilla and 0x7fffffff) % ALBUMES.size
-        val base = ALBUMES[i]
-        val tapa = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        val claro = i == 4
-        val dorado = c(if (claro) NOGAL else ORO)
-        // El lomo del álbum, con su sombra y su luz.
-        drawRoundRect(tapa, Offset.Zero, size, CornerRadius(1.5f * u))
-        drawRect(Color.Black.copy(alpha = 0.24f), Offset.Zero, Size(w * 0.1f, h))
-        drawRect(Color.White.copy(alpha = 0.1f), Offset(w * 0.86f, 0f), Size(w * 0.06f, h))
-        // Las bandas de cromo arriba y abajo.
-        cromo(Rect(0f, h * 0.05f, w, h * 0.085f), oscuro, v.noche)
-        cromo(Rect(0f, h * 0.915f, w, h * 0.95f), oscuro, v.noche)
-        // La cartela escalonada con el día.
-        val ct = Rect(w * 0.14f, h * 0.12f, w * 0.86f, h * 0.3f)
-        val forma = escalonado(ct, minOf(ct.width, ct.height) * 0.28f)
-        drawPath(forma, c(CREMA))
-        drawPath(forma, dorado, style = Stroke(0.7f * u))
-        textoEn(medidor, v.dia, ct.deflate(2 * u), letra, c(LACA), 13f, peso = FontWeight.SemiBold)
-        // El mes a lo largo del lomo.
-        textoEn(medidor, v.mes, Rect(w * 0.18f, h * 0.33f, w * 0.82f, h * 0.66f), letra, if (claro) c(LACA) else c(CREMA), 8f, vertical = true, minimo = 4f, espaciado = 0.6f)
-        // Los chevrones dorados: más cuanto más escribiste.
-        val chevrones = 1 + (v.lleno * 2.5f).toInt()
-        for (j in 0 until chevrones) {
-            val yy = h * (0.7f + 0.04f * j)
-            val cheuron = Path().apply { moveTo(w * 0.2f, yy + h * 0.025f); lineTo(w * 0.5f, yy); lineTo(w * 0.8f, yy + h * 0.025f) }
-            drawPath(cheuron, dorado, style = Stroke(0.9f * u))
-        }
-        // Un sol pequeño abajo; de noche, una luna.
-        val cs = Offset(w * 0.5f, h * 0.885f)
-        val s = minOf(w * 0.22f, 4.5f * u)
-        if (v.noche) {
-            drawCircle(LUNA, s * 0.7f, cs)
-            drawCircle(tapa, s * 0.6f, Offset(cs.x + s * 0.32f, cs.y - s * 0.18f))
-        } else {
-            drawArc(dorado, 180f, 180f, true, Offset(cs.x - s * 0.45f, cs.y - s * 0.45f), Size(s * 0.9f, s * 0.9f))
-            for (j in 0 until 5) {
-                val a = (Math.PI * (1.1 + 0.2 * j)).toFloat()
-                drawLine(dorado, Offset(cs.x + s * 0.6f * cos(a), cs.y + s * 0.6f * sin(a)), Offset(cs.x + s * cos(a), cs.y + s * sin(a)), 0.6f * u)
-            }
-        }
-    }
+    /** La caja del rollo de pianola, el álbum de discos o la carpeta de partituras: los dibuja [MuebleEstanteDeco]. */
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteDeco) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
