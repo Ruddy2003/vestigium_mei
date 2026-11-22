@@ -28,6 +28,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
 import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
+import kotlin.math.floor
 
 // El estante de castaño de la casa de té (MuebleEstanteEdo): los postes, las tablas pasantes con sus cuñas, la tabla de arriba,
 // la hondura de cada hueco con su fondo de papel de caqui, el cuerpo bajo de puertas correderas, los herrajes y los rótulos.
@@ -101,6 +102,8 @@ internal fun DrawScope.postesEdo(a: AireEdo, g: MarcoEdo, ya: Float, yb: Float, 
  * traba. Su cara de arriba se ve un poco; el canto lleva su veta, su arista gastada y su sombra.
  */
 internal fun DrawScope.tablaPasanteEdo(k: Int, r: Rect, a: AireEdo, g: MarcoEdo) {
+    // Su cara de arriba y su canto se tocan en r.top, que puede caer a medio píxel: debajo, esa fila del castaño del canto.
+    filaJuntaEdo(r.top, g.w * 0.006f, g.w * 0.994f, a.luz(KURI, g.cerca(r.center), g.frio(r.center)))
     tablaEdo(Rect(g.w * 0.006f, r.top, g.w * 0.994f, r.bottom), g.w * 0.012f, 4100 + 7 * k, a, g, true)
 }
 
@@ -196,6 +199,21 @@ internal fun DrawScope.cantoneraEdo(o: Offset, sx: Float, sy: Float, l: Float, g
 // ---------------------------------------------------------------- la hondura de cada hueco
 
 /**
+ * La junta entre una tabla y el hueco de debajo, que empieza en [r].top: si cae a medio píxel, ni la tabla ni el hueco cubren
+ * del todo esa fila y asomaba el fondo (una línea a lo ancho). Debajo de los dos va la fila entera del color de lo de arriba
+ * del hueco (la tabla vista por debajo): solo se ve en esa fila, donde los dos se quedan cortos.
+ */
+internal fun DrawScope.juntaHuecoEdo(r: Rect, a: AireEdo, g: MarcoEdo) =
+    filaJuntaEdo(r.top, g.x0, g.x1, a.luz(KURI_OSC, g.cerca(Offset(r.center.x, r.top)) * 0.5f))
+
+/** La fila de la junta en [y], de [x0] a [x1], de [c], debajo de las dos piezas que se tocan ahí; si [y] es entero, nada. */
+internal fun DrawScope.filaJuntaEdo(y: Float, x0: Float, x1: Float, c: Color) {
+    val f = floor(y)
+    if (f == y) return
+    drawRect(c, Offset(x0, f), Size(x1 - x0, 1f))
+}
+
+/**
  * Un hueco con su hondura: al fondo, la tabla forrada con papel de caqui (shibugami), pardo rojo y lustroso, en hojas
  * encimadas con sus orillas, su brillo y algún roce; arriba, la tabla de encima vista por debajo; a los lados, las caras de
  * dentro de los postes (la de la derecha recibe la luz del ranma de día); y las sombras de la tabla de arriba, del poste y del
@@ -207,6 +225,8 @@ internal fun DrawScope.huecoEdo(k: Int, r: Rect, oc: Float, a: AireEdo, g: Marco
     val dT = w * 0.016f; val dI = w * 0.028f
     val fondo = Rect(x0 + dI, r.top + dT, x1 - dI, r.bottom)
     clipRect(x0, r.top, x1, r.bottom) {
+        // La junta del fondo con la tabla vista por debajo (en fondo.top), que puede caer a medio píxel: debajo, esa fila.
+        filaJuntaEdo(fondo.top, fondo.left, fondo.right, a.luz(KURI_OSC, g.cerca(Offset(r.center.x, r.top)) * 0.5f))
         // El fondo de papel de caqui, por tramos.
         val tramos = if (a.lumbre) 8 else 1
         for (t in 0 until tramos) {

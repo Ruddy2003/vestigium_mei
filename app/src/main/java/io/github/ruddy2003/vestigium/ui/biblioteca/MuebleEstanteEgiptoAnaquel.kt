@@ -1,6 +1,7 @@
 package io.github.ruddy2003.vestigium.ui.biblioteca
 
 import androidx.compose.ui.geometry.CornerRadius
+import kotlin.math.floor
 import kotlin.math.roundToInt
 import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
@@ -54,6 +55,16 @@ private fun DrawScope.pintarConLuzEgipto(m: MesaEgipto, col: Color, r: Rect, ver
     }
     val brocha = if (vertical) Brush.verticalGradient(colores, r.top, r.bottom) else Brush.horizontalGradient(colores, r.left, r.right)
     drawRect(brocha, r.topLeft, r.size)
+}
+
+/**
+ * La fila de la junta en [y] (de [x0] a [x1]), del acacia oscuro, debajo de las dos piezas que se tocan ahí: si [y] cae a medio
+ * píxel, ninguna de las dos cubre del todo esa fila y asomaba el fondo (una línea a lo ancho). Solo se ve en esa fila.
+ */
+internal fun DrawScope.filaJuntaEgipto(m: MesaEgipto, y: Float, x0: Float, x1: Float) {
+    val f = floor(y)
+    if (f == y) return
+    drawRect(m.a.c(ACACIA_OSC, m.k(Offset((x0 + x1) / 2, y))), Offset(x0, f), Size(x1 - x0, 1f))
 }
 
 /** El fondo de todos los tramos de una vez (un solo camino): el enlucido a la sombra del anaquel; de noche, según la lámpara. */

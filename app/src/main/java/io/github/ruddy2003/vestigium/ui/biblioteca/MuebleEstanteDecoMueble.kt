@@ -24,6 +24,7 @@ import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaDeco.MARFIL
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaDeco.TERCIOPELO
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaDeco.TERCIOPELO_OSC
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
+import kotlin.math.floor
 
 // =====================================================================
 //  Art déco: el armario (casilleros, costados, tablas, cornisa y pie)
@@ -56,6 +57,34 @@ internal fun DrawScope.veloDeco(g: GeoDeco, r: Rect, base: Color, vertical: Bool
 }
 
 // ---------------------------------------------------------------- el casillero
+
+/**
+ * La fila de una junta en [y] (de [x0] a [x1]), de laca casi negra, debajo de las dos piezas que se tocan ahí: si [y] cae a
+ * medio píxel, ninguna de las dos cubre del todo esa fila y asomaba el fondo (una línea a lo ancho). Solo se ve en esa fila.
+ */
+internal fun DrawScope.filaJuntaDeco(g: GeoDeco, y: Float, x0: Float, x1: Float) {
+    val f = floor(y)
+    if (f == y) return
+    drawRect(g.c(MACASAR_NEGRO, Offset((x0 + x1) / 2, y)), Offset(x0, f), Size(x1 - x0, 1f))
+}
+
+/**
+ * Las juntas del cuerpo, antes de pintarlo: la de la cornisa con el primer casillero, las de cada tabla con el casillero de
+ * encima y con el de debajo, y la de la última tabla con el pie.
+ */
+internal fun DrawScope.juntasCuerpoDeco(g: GeoDeco, d: DisposicionEstante) {
+    val w = g.w; val prof = w * PROFUNDO_DECO
+    // Lo ancho de las tablas, el del casillero con sus cantos y su marco, y el del friso y el cuerpo de los cajones: cada fila
+    // va solo donde están las dos piezas que se tocan.
+    val t0 = g.lado - prof - 3.2f * g.u; val t1 = w - g.lado + prof + 3.2f * g.u
+    val c0 = g.lado - prof - 4.4f * g.u; val c1 = w - g.lado + prof + 4.4f * g.u
+    filaJuntaDeco(g, g.ch, maxOf(g.costado, c0), minOf(w - g.costado, c1))
+    d.repisas.forEachIndexed { k, r -> if (k > 0) filaJuntaDeco(g, r.top, maxOf(t0, c0), minOf(t1, c1)) }
+    d.tablas.forEach { t -> filaJuntaDeco(g, t.top, maxOf(t0, c0), minOf(t1, c1)) }
+    val ultima = d.tablas.lastOrNull()?.bottom ?: return
+    filaJuntaDeco(g, ultima, maxOf(t0, g.costado), minOf(t1, w - g.costado))
+    if (floor(g.pie) != floor(ultima)) filaJuntaDeco(g, g.pie, maxOf(t0, g.costado), minOf(t1, w - g.costado))
+}
 
 /**
  * Un casillero: el fondo de terciopelo azul petróleo con su pelo y su lustre, la sombra de la tabla de arriba que entra
@@ -258,6 +287,8 @@ internal fun DrawScope.cornisaDeco(g: GeoDeco) {
     val grada = Rect(w * 0.007f, losa.bottom, w * 0.993f, losa.bottom + g.grada)
     val grada2 = Rect(w * 0.012f, grada.bottom, w * 0.988f, grada.bottom + g.grada2)
     val friso = Rect(g.costado, grada2.bottom, w - g.costado, g.ch)
+    // La junta de la grada de abajo con el friso, que puede caer a medio píxel: debajo de las dos, esa fila.
+    filaJuntaDeco(g, friso.top, friso.left, friso.right)
     // La sombra de la cornisa en la primera repisa.
     drawRect(a.s(if (a.oscuro) 0.6f else 0.45f), Offset(0f, g.ch), Size(w, 6f * u))
     drawRect(a.s(0.25f), Offset(0f, g.ch + 6f * u), Size(w, 10f * u))
@@ -323,6 +354,10 @@ internal fun DrawScope.pieDeco(g: GeoDeco) {
     sueloDeco(g)
     // El cuerpo de los cajones.
     val cuerpo = Rect(g.costado, pie, w - g.costado, g.cajones - w * 0.03f)
+    // Las juntas del cuerpo con el zócalo, de las dos gradas del zócalo y de la de abajo con las patas: debajo, esa fila.
+    filaJuntaDeco(g, cuerpo.bottom, cuerpo.left, cuerpo.right)
+    filaJuntaDeco(g, cuerpo.bottom + w * 0.016f, g.costado - w * 0.004f, w - g.costado + w * 0.004f)
+    filaJuntaDeco(g, g.cajones, g.costado - w * 0.008f, w - g.costado + w * 0.008f)
     macasarDeco(g, cuerpo, 1701, vertical = false, k = 1f, veta = 0.35f)
     val mitad = cuerpo.center.x
     for (i in 0 until 2) {

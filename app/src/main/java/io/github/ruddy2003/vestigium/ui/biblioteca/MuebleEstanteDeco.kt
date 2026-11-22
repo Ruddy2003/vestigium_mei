@@ -300,6 +300,7 @@ internal object MuebleEstanteDeco {
         apliqueDeco(g)
         // El armario: los casilleros, los costados, las tablas con su rótulo, la cornisa y el pie.
         sombraArmarioDeco(g)
+        juntasCuerpoDeco(g, d)
         d.repisas.forEachIndexed { k, r -> casilleroDeco(g, k, r, d.ocupado.getOrNull(k)) }
         costadosDeco(g)
         d.tablas.forEachIndexed { k, r -> tablaDeco(g, k, r) }

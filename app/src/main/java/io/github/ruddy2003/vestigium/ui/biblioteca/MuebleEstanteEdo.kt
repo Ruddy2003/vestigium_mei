@@ -228,12 +228,15 @@ internal object MuebleEstanteEdo {
                 { clipRect(0f, chI - 1f, w, chI) { translate(0f, 1f) { coronaEdo(a, g); granoMueble(Rect(0f, 0f, w, ch), oscuro) } } }
             } else null
             pegar(ranura, "a$clave", Rect(0f, 0f, w, ch), debajo = debajo, abajo = chI) { coronaEdo(a, g); granoMueble(Rect(0f, 0f, w, ch), oscuro) }
+            // La junta de la última tabla con el pie, que puede caer a medio píxel: debajo de los dos, esa fila del castaño oscuro.
+            filaJuntaEdo(fondo, g.x0, g.x1, a.luz(EdoTinta.KURI_OSC, g.cerca(Offset(w * 0.5f, fondo)) * 0.5f))
             pegar(ranura + 1, "b$clave", Rect(0f, fondo, w, h)) { pieEdo(a, g); granoMueble(Rect(0f, fondo, w, h), oscuro) }
         }
         if (fondo - ch < 1f) return
 
         // ---- el cuerpo, entre la corona y el pie: la pared de los lados, el fondo de cada hueco, las tablas y los postes
         paredCostadosEdo(a, g)
+        d.repisas.forEachIndexed { k, r -> if (k > 0) juntaHuecoEdo(r, a, g) }
         d.repisas.forEachIndexed { k, r -> huecoEdo(k, r, d.ocupado.getOrNull(k) ?: r.left, a, g) }
         d.tablas.forEachIndexed { k, r -> tablaPasanteEdo(k, r, a, g) }
         postesEdo(a, g, ch, fondo, d.tablas)

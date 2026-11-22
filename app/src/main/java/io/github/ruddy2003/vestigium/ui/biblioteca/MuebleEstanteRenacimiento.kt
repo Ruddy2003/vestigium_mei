@@ -406,6 +406,10 @@ internal object MuebleEstanteRenacimiento {
             if (a.lumbre) with(FarolEstanteRenacimiento) { haloFarol(a) }
             if (noche) with(ObraEstanteRenacimiento) { lunaEnCornisa(Rect(0f, apoyo, w, ch), a) }
         }
+        with(ObraEstanteRenacimiento) {
+            juntasAbajo(a, b, d.tablas.lastOrNull()?.bottom, cerca)
+            juntasRepisas(a, d.repisas, cerca)
+        }
         with(MuroEstanteRenacimiento) { losas(a, b.top + b.height * PISAN, h, cerca) }
         with(ObraEstanteRenacimiento) {
             bajoMueble(a, b)

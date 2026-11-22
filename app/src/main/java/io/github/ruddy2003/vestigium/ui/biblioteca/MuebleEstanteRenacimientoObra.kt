@@ -15,6 +15,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
+import kotlin.math.floor
 
 /**
  * El estante de nogal tallado y dorado de Renacimiento, con oficio de entallador: la cornisa con su cimasa, el junquillo
@@ -41,6 +42,30 @@ internal object ObraEstanteRenacimiento {
         }
         val b = if (vertical) Brush.verticalGradient(cols, r.top, r.bottom) else Brush.horizontalGradient(cols, r.left, r.right)
         drawRect(b, r.topLeft, r.size)
+    }
+
+    /**
+     * Las juntas de abajo, antes de pintarlas: la de la última tabla con el zócalo y la de lo de debajo del zócalo con las losas.
+     * Si caen a medio píxel (o la tabla y el zócalo no llegan a tocarse), ninguna de las dos piezas cubre del todo esa fila y
+     * asomaba el fondo, una línea a todo el ancho. Debajo de las dos va esa fila entera; solo se ve ahí.
+     */
+    fun DrawScope.juntasAbajo(a: AireRenacimiento, b: Rect, ultima: Float?, cerca: (Offset) -> Float) {
+        val w = size.width
+        fun fila(y: Float, c: Color) { val f = floor(y); if (f != y) drawRect(c, Offset(0f, f), Size(w, 1f)) }
+        val nogal = a.luz(P.NOGAL, cerca(Offset(w * 0.5f, b.top)))
+        if (ultima != null) {
+            fila(ultima, nogal)
+            if (floor(b.top) != floor(ultima)) fila(b.top, nogal)
+        }
+        fila(b.top + b.height * M.PISAN, if (a.lumbre) a.luz(P.SERENA_OSC, 0.05f) else mezcla(P.SERENA_OSC, P.NOCHE, 0.3f))
+    }
+
+    /** Lo mismo arriba de cada repisa ([repisas], salvo la primera): la junta de la tabla de encima con la panza del hondo. */
+    fun DrawScope.juntasRepisas(a: AireRenacimiento, repisas: List<Rect>, cerca: (Offset) -> Float) {
+        repisas.forEachIndexed { k, r ->
+            val f = floor(r.top)
+            if (k > 0 && f != r.top) drawRect(a.luz(P.NOGAL_OSC, cerca(Offset(r.center.x, r.top))), Offset(r.left, f), Size(r.width, 1f))
+        }
     }
 
     /** Debajo del zócalo, entre las garras: el suelo que se mete bajo el mueble, a oscuras (de lo hondo a la losa en sombra). */

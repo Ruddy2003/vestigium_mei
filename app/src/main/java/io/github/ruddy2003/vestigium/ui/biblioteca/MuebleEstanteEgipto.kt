@@ -262,10 +262,15 @@ internal object MuebleEstanteEgipto {
         // ---- el cuerpo (cambia con lo guardado): el fondo de cada tramo, los postes, los tablones y lo de los tramos libres
         clipRect(0f, ch, w, fondo) {
             muroEgipto(m, listOf(Rect(0f, ch, m.posteI.right, fondo), Rect(m.posteD.left, ch, w, fondo)))
+            // Las juntas de cada tablón con el tramo de debajo, que pueden caer a medio píxel: debajo de los dos, esa fila.
+            d.repisas.forEachIndexed { i, r -> if (i > 0) filaJuntaEgipto(m, r.top, m.posteI.right, m.posteD.left) }
             fondosTramosEgipto(m, d.repisas)
             d.repisas.forEach { r -> fondoTramoEgipto(m, r) }
             postesEgipto(m)
         }
+        // La junta del último tablón con el pie (que se pega después), a lo ancho del tablón: debajo de los dos, esa fila.
+        val ultima = d.tablas.size - 1
+        if (ultima >= 0) filaJuntaEgipto(m, fondo, w * (0.003f + 0.004f * azar(ultima, 3)), w * (0.997f - 0.004f * azar(ultima, 4)))
         anaquelEgipto(m, d)
         d.placas.forEach { p -> rotuloEgipto(m, p, medidor) }
         d.repisas.forEachIndexed { i, r -> d.ocupado.getOrNull(i)?.let { oc -> huecoLibreEgipto(m, i, r, oc) } }
