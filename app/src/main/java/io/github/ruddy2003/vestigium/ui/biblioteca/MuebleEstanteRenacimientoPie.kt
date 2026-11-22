@@ -66,14 +66,8 @@ internal object PieEstanteRenacimiento {
             drawPath(arrugas, t.s(0.22f), style = Stroke(0.9f * u))
         }
         drawRect(t.b(0.3f), Offset(frente.left, frente.top), Size(frente.width, 1f * u))
-        // La marca del mercader: un redondel con su asta y su banderola (un signo, no una letra).
-        val m = Offset(frente.left + frente.width * 0.3f, frente.top + frente.height * 0.55f)
-        val tinta = t.c(P.IMPRENTA).copy(alpha = 0.6f)
-        val mk = w * 0.02f
-        drawCircle(tinta, mk, m, style = Stroke(1.3f * u))
-        drawLine(tinta, Offset(m.x - mk, m.y), Offset(m.x + mk, m.y), 1.3f * u)
-        drawLine(tinta, Offset(m.x, m.y - mk * 1.9f), Offset(m.x, m.y + mk), 1.3f * u)
-        drawLine(tinta, Offset(m.x, m.y - mk * 1.9f), Offset(m.x + mk * 0.75f, m.y - mk * 1.5f), 1.3f * u)
+        // La marca del mercader, estarcida (inventada: ni letra, ni cifra, ni símbolo conocido).
+        with(FarolEstanteRenacimiento) { marcaMercader(Offset(frente.left + frente.width * 0.3f, frente.top + frente.height * 0.55f), w * 0.022f, t.c(P.IMPRENTA).copy(alpha = 0.6f)) }
         // La soga: una vuelta a lo ancho y otra a lo alto (que sigue por la cara de arriba), el nudo y el cabo.
         val soga = t.c(P.CANAMO)
         val xs = frente.left + frente.width * 0.64f

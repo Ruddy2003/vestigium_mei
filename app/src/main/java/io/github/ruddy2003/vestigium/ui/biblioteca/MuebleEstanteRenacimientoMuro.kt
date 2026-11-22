@@ -45,7 +45,7 @@ internal object MuroEstanteRenacimiento {
             drawRect(Brush.radialGradient(0f to mezcla(P.ROJO_LUZ, P.SOL, 0.3f), 0.28f to P.ROJO_LUZ, 0.6f to P.ROJO_MURO, 1f to mezcla(P.ROJO_MURO, P.ROJO_OSC, 0.55f),
                 center = Offset(w * 0.25f, w * 0.29f), radius = w * 1.05f), Offset.Zero, Size(w, suelo))
         } else {
-            // Con la lucerna: el rojo se vuelve brasa a su alrededor y se hunde, de su mismo color, lejos de ella.
+            // Con el farol: el rojo se vuelve brasa a su alrededor y se hunde, de su mismo color, lejos de ella.
             fun k(d: Float) = a.en(MuebleEstanteRenacimiento.alcanceArriba(d, 0f)).c(P.ROJO_MURO)
             drawRect(Brush.radialGradient(0f to k(0.02f), 0.1f to k(0.1f), 0.24f to k(0.24f), 0.42f to k(0.44f), 0.66f to k(0.7f), 1f to k(1.1f),
                 center = llama, radius = w * 1.15f), Offset.Zero, Size(w, suelo))

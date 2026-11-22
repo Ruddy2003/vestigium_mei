@@ -28,7 +28,7 @@ internal object ObraEstanteRenacimiento {
     private val M = MuebleEstanteRenacimiento
 
     /**
-     * Un tramo de madera (o de pintura) con la luz que le llega a lo largo: de día, liso; con la lucerna, un solo degradado con
+     * Un tramo de madera (o de pintura) con la luz que le llega a lo largo: de día, liso; con el farol, un solo degradado con
      * [n] muestras de la luz (así no se ven escalones entre tramos y es una sola operación).
      */
     fun DrawScope.tramo(r: Rect, c: Color, a: AireRenacimiento, vertical: Boolean, n: Int, k: (Float) -> Float) {
@@ -66,7 +66,7 @@ internal object ObraEstanteRenacimiento {
         val w = size.width
         val luzX: (Float) -> Float = { x -> cerca(Offset(x, r.center.y)) }
         // El verde del fondo, en un solo degradado: de día, la luz de la ventana que entra por la izquierda y se pierde hacia la
-        // derecha; con la lucerna, la luz que le llega. Detrás de los volúmenes (hasta [oc]) queda en su sombra: entre uno y
+        // derecha; con el farol, la luz que le llega. Detrás de los volúmenes (hasta [oc]) queda en su sombra: entre uno y
         // otro se ve el hondo.
         val muestras = 7
         val paradas = ArrayList<Pair<Float, Color>>(muestras + 2)
@@ -111,18 +111,27 @@ internal object ObraEstanteRenacimiento {
             drawPath(izq, a.sombra(0.3f))
             drawPath(der, a.claro(0.14f))
         } else {
-            // De noche lo que mira a la lucerna (el canto izquierdo, que mira a la derecha) coge su luz.
+            // De noche lo que mira al farol (el canto izquierdo, que mira a la derecha) coge su luz.
             drawPath(izq, tL.f(0.35f))
             drawPath(der, a.sombra(0.3f))
         }
         drawRect(a.claro(0.3f), Offset(r.left + dx, r.bottom - dy * 0.7f), Size(r.width - 2 * dx, 0.8f * u))
+        // En los Sueños, la luna de la ventana entra fría por la izquierda en las primeras repisas y da en el canto de la derecha.
+        if (a.noche) {
+            val l = M.lunaEn(0.15f, k + 0.5f, a.oscuro)
+            if (l > 0.02f) {
+                drawRect(Brush.horizontalGradient(listOf(P.LUNA.copy(alpha = 0.3f * l), Color.Transparent), r.left, r.left + r.width * 0.7f),
+                    r.topLeft, Size(r.width * 0.7f, r.height))
+                drawPath(der, P.LUNA.copy(alpha = 0.32f * l))
+            }
+        }
         drawLine(a.sombra(0.4f), Offset(r.left + dx, r.top + dy), Offset(r.left + dx, r.bottom - dy * 0.7f), 0.8f * u)
     }
 
     // ---------------------------------------------------------------- las tablas y sus rótulos
 
     /** Una tabla: el canto de nogal con su bocel de arriba (la luz en su lomo), el filete y la sombra de abajo. */
-    fun DrawScope.tabla(r: Rect, semilla: Int, a: AireRenacimiento, cerca: (Offset) -> Float) {
+    fun DrawScope.tabla(r: Rect, semilla: Int, a: AireRenacimiento, cerca: (Offset) -> Float, fila: Int = 0) {
         val u = density
         val luzX: (Float) -> Float = { x -> cerca(Offset(x, r.center.y)) }
         tramo(r, P.NOGAL, a, false, 6, luzX)
@@ -150,6 +159,11 @@ internal object ObraEstanteRenacimiento {
         if (oroT != null) { drawPath(cuentas, oroT); drawPath(carretes, oroT) } else { drawPath(cuentas, P.ORO); drawPath(carretes, P.ORO_OSC) }
         drawRect(a.claro(0.3f), Offset(r.left, yf - hf * 0.6f), Size(r.width, 0.6f * u))
         drawRect(a.sombra(0.5f), Offset(r.left, r.bottom - 1.8f * u), Size(r.width, 1.8f * u))
+        if (a.noche) {
+            val l = M.lunaEn(0.1f, fila + 0.9f, a.oscuro)
+            if (l > 0.02f) drawRect(Brush.horizontalGradient(listOf(P.LUNA.copy(alpha = 0.6f * l), Color.Transparent), r.left, r.left + r.width * 0.75f),
+                Offset(r.left, r.top + bocel * 0.15f), Size(r.width * 0.75f, 1.3f * u))
+        }
         if (a.lumbre) {
             val lx = size.width * M.LAMP_X
             val kk = luzX(lx)
@@ -239,6 +253,11 @@ internal object ObraEstanteRenacimiento {
         drawRect(tb.c(P.ORO), Offset(bz.left, bz.top + basa * 0.28f), Size(bz.width, 1f * u))
         // El canto: la luz del lado de la ventana y la sombra del otro; por dentro, el junquillo dorado del vano.
         if (!derecho) drawRect(a.claro(0.24f), Offset(r.left, r.top), Size(1.2f * u, r.height))
+        if (a.noche && !derecho) {
+            val l = M.lunaEn(0.04f, 0f, a.oscuro)
+            drawRect(Brush.verticalGradient(listOf(P.LUNA.copy(alpha = 0.55f * l), Color.Transparent), r.top, r.top + fila * 2.4f), Offset(r.left, r.top), Size(1.4f * u, r.height))
+            drawRect(Brush.verticalGradient(listOf(P.LUNA.copy(alpha = 0.22f * l), Color.Transparent), r.top, r.top + fila * 2f), r.topLeft, Size(r.width, minOf(r.height, fila * 2f)))
+        }
         else drawRect(a.sombra(0.35f), Offset(r.right - 1.4f * u, r.top), Size(1.4f * u, r.height))
         val xd = if (derecho) r.left else r.right - 2.2f * u
         tramo(Rect(xd, r.top + cap, xd + 2.2f * u, r.bottom - basa), P.ORO, a, true, nY, luzY)
@@ -440,7 +459,7 @@ internal object ObraEstanteRenacimiento {
         val surcos = Path()
         for (j in 0..1) { val x = cx - pw * 0.11f + j * pw * 0.22f; surcos.addRect(Rect(x - 0.5f * u, r.bottom - r.height * 0.3f, x + 0.5f * u, r.bottom)) }
         drawPath(surcos, a.sombra(0.5f))
-        // La luz a la izquierda, la sombra a la derecha y el filo de la lucerna en la que la mira.
+        // La luz a la izquierda, la sombra a la derecha y el filo del farol en la que lo mira.
         drawRect(a.claro(0.2f), Offset(cx - pw * 0.32f, y0), Size(pw * 0.1f, r.bottom - y0))
         drawRect(a.sombra(0.3f), Offset(cx + pw * 0.16f, y0), Size(pw * 0.2f, r.bottom - y0))
         if (der) drawRect(t.f(0.3f), Offset(cx - pw * 0.3f, y0), Size(1f * u, r.bottom - y0))
@@ -491,7 +510,7 @@ internal object ObraEstanteRenacimiento {
         drawRect(a.sombra(0.3f), Offset(0f, y(0.93f)), Size(w, 1f * u))
         drawRect(a.luz(P.ORO, luzX(w / 2)), Offset(0f, y(1f) - 1.6f * u), Size(w, 1.2f * u))
         drawRect(a.sombra(0.5f), Offset(0f, y(1f)), Size(w, 2.4f * u))
-        // El filo de la lucerna en los cantos que la miran.
+        // El filo del farol en los cantos que lo miran.
         if (a.lumbre) {
             val lx = w * M.LAMP_X
             listOf(0.1f, 0.24f, 0.29f, 0.86f).forEach { f ->
@@ -500,6 +519,17 @@ internal object ObraEstanteRenacimiento {
             }
         }
         pinceladas(Rect(0f, r.top, w, r.bottom), a.sombra(1f), 699, 10, u, 0.05f)
+    }
+
+    /** En los Sueños, la luz fría de la luna que entra por la ventana sobre la cornisa: por la izquierda, en sus cantos. */
+    fun DrawScope.lunaEnCornisa(r: Rect, a: AireRenacimiento) {
+        val u = density
+        val w = size.width
+        val f = if (a.oscuro) 1f else 0.7f
+        drawRect(Brush.horizontalGradient(listOf(P.LUNA.copy(alpha = 0.26f * f), Color.Transparent), 0f, w * 0.7f), r.topLeft, Size(w * 0.7f, r.height))
+        listOf(0.1f, 0.24f, 0.29f, 0.86f).forEach { y ->
+            drawRect(Brush.horizontalGradient(listOf(P.LUNA.copy(alpha = 0.8f * f), Color.Transparent), 0f, w * 0.65f), Offset(0f, r.top + r.height * y - 0.5f * u), Size(w * 0.65f, 1.3f * u))
+        }
     }
 
     /** Las ovas y dardos: cada ova en su cáscara, con la luz arriba a la izquierda y la sombra abajo; los dardos, dorados. */

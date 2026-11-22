@@ -1440,7 +1440,7 @@ object EstanteEdo : DisenoBiblioteca {
  * Renacimiento: el estante de nogal tallado y dorado de la tienda de un cartolaio (papelero, librero y encuadernador) de
  * Florencia hacia 1490, donde acaban de llegar los libros impresos, contra un muro pintado de rojo de tierra con su estarcido,
  * su friso y su cornisa de pietra serena, y la impannata (la ventana de tela encerada) arriba a la izquierda, que de día da la
- * luz; de noche alumbra la lucerna de latón de dos picos. Arriba, el libro impreso abierto en su atril con los anteojos
+ * luz; de noche alumbra el farol de mano con sus hojas de asta. Arriba, el libro impreso abierto en su atril con los anteojos
  * encima, la resma envuelta con las tijeras, el tintero, el reloj de arena y, del muro, el cordel con los pliegos recién
  * impresos, la piel de pergamino y la filza de los recibos; al pie, la alfombra, la bala de papel y los cuadernillos. Cada
  * entrada es, según el día, un libro nuevo en piel teñida con sus nervios, unos pliegos sin encuadernar envueltos en papel de

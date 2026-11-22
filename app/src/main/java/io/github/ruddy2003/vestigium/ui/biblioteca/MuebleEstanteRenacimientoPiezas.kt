@@ -19,12 +19,28 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
  * recién impresos puestos a secar y la filza, el gancho de hierro donde se ensartan los recibos. Sobre la cornisa, de atrás
  * adelante: la cartera de cuero apoyada en el muro, la resma envuelta en papel azul con las tijeras, el protagonista (el libro
  * impreso abierto en su atril, con los anteojos de remaches encima y la cinta de seda que cae por la cornisa), el reloj de
- * arena, la pila de libros con la lucerna de latón encima (de noche, la única luz), el tintero vidriado de verde con su pluma
- * y, en el canto, una carta plegada con su lacre, cortada por el borde.
+ * arena, el tintero vidriado de verde con su pluma y, en el canto, una carta plegada con su lacre, cortada por el borde. La
+ * resma, la pila de libros y el farol (de noche, la única luz) están en [FarolEstanteRenacimiento].
  */
 internal object PiezasEstanteRenacimiento {
     private val P = PaletaRenacimiento
     private val M = MuebleEstanteRenacimiento
+
+    /** La capitular grabada de lo impreso: el cuadro negro con una florecilla de cuatro pétalos y su tallo (no es una letra). */
+    private fun DrawScope.capitular(cap: Rect, t: TonoRenacimiento) {
+        drawRect(t.c(P.IMPRENTA).copy(alpha = 0.85f), cap.topLeft, cap.size)
+        val c = Offset(cap.center.x, cap.top + cap.height * 0.42f)
+        val r = minOf(cap.width, cap.height) * 0.16f
+        val papel = t.c(P.PAPEL).copy(alpha = 0.8f)
+        val flor = Path()
+        listOf(Offset(0f, -1f), Offset(1f, 0f), Offset(0f, 1f), Offset(-1f, 0f)).forEach { d ->
+            val p = c + d * (r * 1.05f)
+            flor.addOval(Rect(p.x - r * 0.62f, p.y - r * 0.62f, p.x + r * 0.62f, p.y + r * 0.62f))
+        }
+        drawPath(flor, papel)
+        drawCircle(t.c(P.RUBRICA), r * 0.42f, c)
+        drawLine(papel, Offset(c.x, c.y + r * 1.6f), Offset(c.x + r * 0.6f, cap.bottom - r * 0.4f), r * 0.35f)
+    }
 
     // ---------------------------------------------------------------- colgado del muro
 
@@ -91,8 +107,7 @@ internal object PiezasEstanteRenacimiento {
                 }
                 drawPath(texto, tinta)
                 val cap = Rect(mx0, y0 + largo * 0.18f - 1.2f * u, mx0 + ancho * 0.16f, y0 + largo * 0.18f + paso * 2.4f)
-                drawRect(t.c(P.IMPRENTA).copy(alpha = 0.85f), cap.topLeft, cap.size)
-                drawCircle(t.c(P.PAPEL).copy(alpha = 0.75f), cap.width * 0.24f, cap.center, style = Stroke(0.6f * u))
+                capitular(cap, t)
                 drawLine(rojo, Offset(mx0, y0 + largo * 0.12f), Offset(mx1, y0 + largo * 0.12f), 0.9f * u)
             }
         }
@@ -132,11 +147,13 @@ internal object PiezasEstanteRenacimiento {
         val w = size.width
         val pie = apoyo + w * 0.006f
         fun t(x: Float, y: Float = pie - w * 0.06f) = a.en(cerca(Offset(x, y)))
-        resma(Offset(w * 0.075f, pie), w * 0.2f, a, t(w * 0.17f))
+        with(FarolEstanteRenacimiento) { resma(Offset(w * 0.07f, pie), w * 0.205f, a, t(w * 0.17f), apoyo) }
         atril(Offset(w * 0.455f, pie), w * 0.35f, a, cerca, apoyo)
         reloj(Offset(w * 0.668f, pie), w * 0.074f, a, t(w * 0.668f), apoyo)
-        val pila = pilaLibros(Offset(w * M.LAMP_X, pie), w * 0.19f, a, t(w * M.LAMP_X, pie - w * 0.03f))
-        lucerna(Offset(w * M.LAMP_X, pila), a, t(w * M.LAMP_X, w * M.LAMP_Y + w * 0.05f), apoyo)
+        with(FarolEstanteRenacimiento) {
+            val pila = pilaLibros(Offset(w * M.LAMP_X, pie), w * 0.19f, a, t(w * M.LAMP_X, pie - w * 0.03f), apoyo)
+            farol(Offset(w * M.LAMP_X, pila), a, t(w * M.LAMP_X, w * M.LAMP_Y + w * 0.02f), apoyo)
+        }
         tintero(Offset(w * 0.27f, pie + w * 0.002f), w * 0.05f, a, t(w * 0.27f), apoyo)
         carta(Offset(w * 0.955f, pie), w, a, t(w * 0.95f))
     }
@@ -173,47 +190,6 @@ internal object PiezasEstanteRenacimiento {
         drawPath(piel, t.c(P.PAPEL_OSC).copy(alpha = 0.8f), style = Stroke(1f * u))
         listOf(p(0.07f, 0.05f), p(0.93f, 0.05f)).forEach { c -> clavo(c, 1.6f * u, a, t) }
         drawRect(t.f(0.4f), Offset(r.right - r.width * 0.1f, r.top + r.height * 0.2f), Size(1f * u, r.height * 0.6f))
-    }
-
-    /** La resma de papel envuelta en papel azul, atada en cruz con bramante, con la marca del papelero; encima, las tijeras. */
-    private fun DrawScope.resma(pie: Offset, an: Float, a: AireRenacimiento, t: TonoRenacimiento) {
-        val u = density
-        val al = an * 0.4f
-        val cara = an * 0.12f
-        val r = Rect(pie.x, pie.y - al, pie.x + an, pie.y)
-        contactoRenacimiento(Offset(r.center.x + an * 0.06f, pie.y), an * 1.15f, 5f * u, a, 0.4f)
-        val azul = t.c(mezcla(P.AZUL, P.PAPEL_OSC, 0.3f))
-        // La cara de arriba (se ve un poco) y el frente; el canto de las hojas por la derecha.
-        drawPath(poligonoRenacimiento(r.left, r.top, r.right - an * 0.1f, r.top, r.right - an * 0.06f, r.top - cara, r.left + an * 0.04f, r.top - cara), mezcla(azul, Color.White, 0.18f))
-        drawRect(t.c(P.PAPEL), Offset(r.right - an * 0.1f, r.top - cara * 0.6f), Size(an * 0.1f, al + cara * 0.6f))
-        val hojas = Path()
-        for (l in 1..7) hojas.addRect(Rect(r.right - an * 0.1f, r.top + al * l / 8f, r.right, r.top + al * l / 8f + 0.5f * u))
-        drawPath(hojas, t.s(0.22f))
-        drawRect(azul, r.topLeft, Size(an * 0.9f, al))
-        drawRect(t.b(0.22f), r.topLeft, Size(an * 0.2f, al))
-        drawRect(t.s(0.2f), Offset(r.left + an * 0.62f, r.top), Size(an * 0.28f, al))
-        drawPath(poligonoRenacimiento(r.left + an * 0.9f, r.top, r.left + an * 0.9f, r.bottom, r.left + an * 0.78f, r.center.y), t.s(0.18f))
-        // El bramante en cruz, con el nudo.
-        val cana = t.c(P.CANAMO)
-        drawLine(cana, Offset(r.left, r.center.y), Offset(r.left + an * 0.9f, r.center.y), 1.3f * u)
-        drawLine(cana, Offset(r.left + an * 0.42f, r.top - cara), Offset(r.left + an * 0.42f, r.bottom), 1.3f * u)
-        drawCircle(mezcla(cana, a.hondo, 0.3f), 2f * u, Offset(r.left + an * 0.42f, r.center.y))
-        // La marca del papelero, estampada: un redondel con su cruz y el asta (un signo, no una letra).
-        val m = Offset(r.left + an * 0.2f, r.center.y + al * 0.06f)
-        val tm = al * 0.22f
-        val tinta = t.c(P.SEPIA).copy(alpha = 0.65f)
-        drawCircle(tinta, tm, m, style = Stroke(0.9f * u))
-        drawLine(tinta, Offset(m.x, m.y - tm * 2.2f), Offset(m.x, m.y + tm), 0.9f * u)
-        drawLine(tinta, Offset(m.x - tm * 0.6f, m.y - tm * 1.6f), Offset(m.x + tm * 0.6f, m.y - tm * 1.6f), 0.9f * u)
-        // Las tijeras de hierro sobre la resma, con su sombra.
-        val c = Offset(r.left + an * 0.6f, r.top - cara * 0.5f)
-        val hierro = t.c(P.HIERRO)
-        drawLine(a.sombra(0.4f), Offset(c.x - an * 0.26f, c.y + 2.4f * u), Offset(c.x + an * 0.24f, c.y + 1.8f * u), 1.8f * u)
-        drawLine(hierro, c, Offset(c.x + an * 0.26f, c.y - 2.8f * u), 1.8f * u, StrokeCap.Round)
-        drawLine(hierro, c, Offset(c.x + an * 0.26f, c.y + 0.6f * u), 1.5f * u, StrokeCap.Round)
-        drawOval(hierro, Offset(c.x - an * 0.24f, c.y - 3.6f * u), Size(an * 0.11f, 4.4f * u), style = Stroke(1.4f * u))
-        drawOval(hierro, Offset(c.x - an * 0.14f, c.y - 2.4f * u), Size(an * 0.11f, 3.8f * u), style = Stroke(1.4f * u))
-        destelloRenacimiento(Offset(c.x + an * 0.1f, c.y - 1.6f * u), 0.9f * u, t)
     }
 
     /**
@@ -300,9 +276,7 @@ internal object PiezasEstanteRenacimiento {
         drawPath(notas, t.c(P.SEPIA).copy(alpha = 0.5f))
         val m0 = izq + (lomo - izq) * 0.13f
         val cap = Rect(m0, gy + al * 0.14f, m0 + (lomo - izq) * 0.14f, gy + al * 0.3f)
-        drawRect(t.c(P.IMPRENTA).copy(alpha = 0.85f), cap.topLeft, cap.size)
-        drawCircle(t.c(P.PAPEL).copy(alpha = 0.7f), cap.width * 0.25f, cap.center, style = Stroke(0.6f * u))
-        drawLine(t.c(P.PAPEL).copy(alpha = 0.6f), Offset(cap.left + 1f * u, cap.bottom - 1f * u), Offset(cap.right - 1f * u, cap.top + 1f * u), 0.5f * u)
+        capitular(cap, t)
         // El listón de delante, que sostiene las hojas.
         drawRect(t.c(P.NOGAL_LUZ), Offset(tab.left, tab.bottom - al * 0.06f), Size(tab.width, al * 0.06f))
         drawRect(t.b(0.4f), Offset(tab.left, tab.bottom - al * 0.06f), Size(tab.width, 0.9f * u))
@@ -363,118 +337,6 @@ internal object PiezasEstanteRenacimiento {
             }
         }
         drawLine(t.f(0.7f), Offset(pie.x + an * 0.44f, y0), Offset(pie.x + an * 0.44f, y1), 0.8f * u)
-    }
-
-    /** La pila de libros tumbados bajo la lucerna, de cueros distintos con su filete dorado; devuelve dónde pisa lo de encima. */
-    private fun DrawScope.pilaLibros(pie: Offset, an: Float, a: AireRenacimiento, t: TonoRenacimiento): Float {
-        val u = density
-        contactoRenacimiento(Offset(pie.x + an * 0.04f, pie.y), an * 1.1f, 5f * u, a, 0.42f)
-        val cueros = listOf(mezcla(P.RUBIA, P.CUERO, 0.4f), mezcla(P.VERDE_FONDO, P.CUERO, 0.2f), P.CUERO)
-        val gruesos = listOf(0.15f, 0.12f, 0.1f)
-        var y = pie.y
-        cueros.forEachIndexed { j, col ->
-            val g = an * gruesos[j]
-            val lw = an * (1f - 0.08f * j)
-            val x = pie.x - lw / 2 + (azar(77, j) - 0.5f) * an * 0.08f
-            drawRect(t.c(col), Offset(x, y - g), Size(lw, g))
-            drawRect(t.c(P.PAPEL_OSC), Offset(x + lw * 0.03f, y - g + g * 0.22f), Size(lw * 0.94f, g * 0.56f))
-            val h = Path()
-            for (l in 1..3) h.addRect(Rect(x + lw * 0.03f, y - g + g * (0.22f + 0.14f * l), x + lw * 0.97f, y - g + g * (0.22f + 0.14f * l) + 0.4f * u))
-            drawPath(h, t.s(0.2f))
-            drawRect(t.c(P.ORO), Offset(x, y - g + g * 0.12f), Size(lw, 0.7f * u))
-            drawRect(t.b(0.35f), Offset(x, y - g), Size(lw, 0.9f * u))
-            drawRect(t.s(0.3f), Offset(x + lw * 0.8f, y - g), Size(lw * 0.2f, g))
-            drawRect(t.f(0.7f), Offset(x, y - g), Size(lw, 0.9f * u))
-            y -= g
-        }
-        return y
-    }
-
-    /**
-     * La lucerna de latón: el pie redondo con su moldura, el fuste alto con sus nudos, el depósito panzudo con sus dos picos
-     * (con la mecha), el remate con la anilla y, de sus cadenillas, el apagavelas y la pinza. De día, apagada; de noche
-     * ([llamaLucerna]) arden los dos picos.
-     */
-    private fun DrawScope.lucerna(pie: Offset, a: AireRenacimiento, t: TonoRenacimiento, hasta: Float) {
-        val u = density
-        val w = size.width
-        val lat = t.c(P.LATON)
-        val latOsc = t.c(mezcla(P.LATON, P.NOGAL_OSC, 0.5f))
-        val latLuz = t.c(P.LATON_LUZ)
-        val dy = w * M.LAMP_Y + w * 0.012f
-        val dep = Offset(pie.x, dy + w * 0.006f)
-        // La sombra en el muro: la del fuste y la del depósito.
-        val silueta = Path().apply {
-            addRect(Rect(pie.x - w * 0.006f, dy - w * 0.09f, pie.x + w * 0.006f, pie.y))
-            addOval(Rect(dep.x - w * 0.035f, dep.y - w * 0.02f, dep.x + w * 0.035f, dep.y + w * 0.018f))
-            addOval(Rect(pie.x - w * 0.018f, dy - w * 0.108f, pie.x + w * 0.018f, dy - w * 0.072f))
-        }
-        sombraEnMuroRenacimiento(silueta, Offset(pie.x, dy), hasta, a, 0.25f, 0.5f)
-        contactoRenacimiento(Offset(pie.x + w * 0.01f, pie.y), w * 0.11f, 4f * u, a)
-        // El pie: el disco con su moldura y el cuello, la luz a la izquierda.
-        drawOval(latOsc, Offset(pie.x - w * 0.044f, pie.y - w * 0.018f), Size(w * 0.088f, w * 0.022f))
-        drawOval(lat, Offset(pie.x - w * 0.04f, pie.y - w * 0.024f), Size(w * 0.08f, w * 0.018f))
-        drawPath(poligonoRenacimiento(pie.x - w * 0.03f, pie.y - w * 0.016f, pie.x + w * 0.03f, pie.y - w * 0.016f, pie.x + w * 0.01f, pie.y - w * 0.04f, pie.x - w * 0.01f, pie.y - w * 0.04f), lat)
-        drawPath(poligonoRenacimiento(pie.x + w * 0.004f, pie.y - w * 0.016f, pie.x + w * 0.03f, pie.y - w * 0.016f, pie.x + w * 0.01f, pie.y - w * 0.04f, pie.x + w * 0.003f, pie.y - w * 0.04f), latOsc)
-        drawRect(latLuz, Offset(pie.x - w * 0.026f, pie.y - w * 0.02f), Size(w * 0.01f, 1.2f * u))
-        // El fuste, con su luz y su sombra, y dos nudos.
-        drawRect(lat, Offset(pie.x - w * 0.006f, dep.y), Size(w * 0.012f, pie.y - w * 0.04f - dep.y))
-        drawRect(latOsc, Offset(pie.x + w * 0.002f, dep.y), Size(w * 0.004f, pie.y - w * 0.04f - dep.y))
-        drawRect(latLuz.copy(alpha = 0.85f), Offset(pie.x - w * 0.004f, dep.y + w * 0.02f), Size(w * 0.002f, pie.y - dep.y - w * 0.07f))
-        listOf(0.42f, 0.74f).forEach { f ->
-            val y = dep.y + (pie.y - dep.y) * f
-            drawOval(lat, Offset(pie.x - w * 0.014f, y - w * 0.008f), Size(w * 0.028f, w * 0.016f))
-            drawOval(latOsc, Offset(pie.x + w * 0.001f, y - w * 0.005f), Size(w * 0.013f, w * 0.012f))
-            drawOval(latLuz, Offset(pie.x - w * 0.01f, y - w * 0.006f), Size(w * 0.006f, w * 0.004f))
-        }
-        // Los dos picos, con su mecha, y el depósito panzudo.
-        listOf(-1f, 1f).forEach { s ->
-            val pico = poligonoRenacimiento(dep.x + s * w * 0.02f, dep.y - w * 0.012f, dep.x + s * w * 0.06f, dep.y - w * 0.02f, dep.x + s * w * 0.062f, dep.y - w * 0.01f,
-                dep.x + s * w * 0.02f, dep.y + w * 0.01f)
-            drawPath(pico, if (s < 0) lat else latOsc)
-            drawLine(if (s < 0) latLuz else lat, Offset(dep.x + s * w * 0.024f, dep.y - w * 0.012f), Offset(dep.x + s * w * 0.058f, dep.y - w * 0.019f), 0.8f * u)
-            drawOval(t.c(P.NOGAL_OSC), Offset(dep.x + s * w * 0.061f - w * 0.004f, dep.y - w * 0.021f), Size(w * 0.008f, w * 0.005f))
-        }
-        val vaso = Rect(dep.x - w * 0.036f, dep.y - w * 0.022f, dep.x + w * 0.036f, dep.y + w * 0.02f)
-        drawOval(lat, vaso.topLeft, vaso.size)
-        drawOval(latOsc, Offset(dep.x + w * 0.004f, dep.y - w * 0.012f), Size(w * 0.03f, w * 0.03f))
-        drawOval(latOsc, Offset(vaso.left, dep.y + w * 0.004f), Size(vaso.width, w * 0.016f))
-        drawOval(latLuz, Offset(dep.x - w * 0.026f, dep.y - w * 0.016f), Size(w * 0.02f, w * 0.009f))
-        drawRect(t.c(P.ORO_OSC), Offset(vaso.left + w * 0.004f, dep.y - w * 0.002f), Size(vaso.width - w * 0.008f, 0.9f * u))
-        destelloRenacimiento(Offset(dep.x - w * 0.018f, dep.y - w * 0.011f), 1.1f * u, t)
-        // El remate: el fuste de arriba, la anilla y las cadenillas con el apagavelas y la pinza.
-        drawRect(lat, Offset(pie.x - w * 0.004f, dy - w * 0.075f), Size(w * 0.008f, w * 0.06f))
-        drawOval(lat, Offset(pie.x - w * 0.01f, dy - w * 0.03f), Size(w * 0.02f, w * 0.012f))
-        drawCircle(lat, w * 0.017f, Offset(pie.x, dy - w * 0.09f), style = Stroke(2f * u))
-        drawArc(latLuz, 160f, 80f, false, Offset(pie.x - w * 0.017f, dy - w * 0.107f), Size(w * 0.034f, w * 0.034f), style = Stroke(0.9f * u))
-        listOf(-1f, 1f).forEach { s ->
-            val a0 = Offset(pie.x + s * w * 0.005f, dy - w * 0.045f)
-            val a1 = Offset(pie.x + s * w * 0.03f, dy + w * 0.05f)
-            drawLine(latOsc, a0, a1, 0.7f * u)
-            if (s < 0) drawPath(poligonoRenacimiento(a1.x - w * 0.007f, a1.y, a1.x + w * 0.007f, a1.y, a1.x, a1.y + w * 0.017f), lat)
-            else { drawLine(lat, a1, a1 + Offset(-w * 0.003f, w * 0.022f), 1.1f * u); drawLine(lat, a1, a1 + Offset(w * 0.004f, w * 0.022f), 1.1f * u) }
-        }
-        drawRect(t.f(0.7f), Offset(pie.x + w * 0.005f, dep.y), Size(1f * u, pie.y - dep.y - w * 0.04f))
-    }
-
-    /** Las dos llamas de la lucerna, con su halo: van al final, encima de todo. */
-    fun DrawScope.llamaLucerna(a: AireRenacimiento) {
-        val w = size.width
-        val dy = w * M.LAMP_Y + w * 0.012f + w * 0.006f
-        val x = w * M.LAMP_X
-        mancha(Offset(x, dy - w * 0.02f), w * 0.14f, P.LLAMA.copy(alpha = if (a.oscuro) 0.32f else 0.22f))
-        listOf(-1f, 1f).forEach { s ->
-            val b = Offset(x + s * w * 0.061f, dy - w * 0.022f)
-            mancha(b, w * 0.05f, P.FUEGO.copy(alpha = if (a.oscuro) 0.5f else 0.35f))
-            val llama = Path().apply {
-                moveTo(b.x - w * 0.007f, b.y)
-                quadraticTo(b.x - w * 0.009f, b.y - w * 0.02f, b.x + s * w * 0.002f, b.y - w * 0.038f)
-                quadraticTo(b.x + w * 0.01f, b.y - w * 0.018f, b.x + w * 0.007f, b.y)
-                close()
-            }
-            drawPath(llama, P.LLAMA)
-            drawOval(P.FUEGO, Offset(b.x - w * 0.0032f, b.y - w * 0.018f), Size(w * 0.0064f, w * 0.015f))
-        }
     }
 
     /** El tintero de barro vidriado de verde (el de la tierra de la ciudad), con la pluma de ganso metida, y su sombra. */

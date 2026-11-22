@@ -67,7 +67,7 @@ internal object PaletaRenacimiento {
     val IMPRENTA = Color(0xFF221A16)
     val SEPIA = Color(0xFF3E2817)
     val RUBRICA = Color(0xFFB0402A)
-    /** El latón de la lucerna y su brillo; el hierro de herrajes, tijeras y clavos. */
+    /** El latón (de la salvadera, los herrajes y las cantoneras) y su brillo; el hierro de herrajes, tijeras y clavos. */
     val LATON = Color(0xFFB68B38)
     val LATON_LUZ = Color(0xFFF4D98C)
     val HIERRO = Color(0xFF2E2F35)
@@ -96,25 +96,30 @@ internal object PaletaRenacimiento {
     val LUNA = Color(0xFFE4E8F4)
     /** Lo hondo del tinte: el ánimo se tiñe un poco hacia aquí para que sea cuero o papel teñido y no pastel. */
     val TINTE_HONDO = Color(0xFF3A2216)
-    /** Lo que no tiene ánimo: el papel de estraza gris de las envolturas. */
-    val SIN_ANIMO = Color(0xFFA39887)
+    /** Lo que no tiene ánimo: el papel de estraza de las envolturas, pardo y sin teñir. */
+    val SIN_ANIMO = Color(0xFFA88F6C)
+    /**
+     * Las pieles y papeles teñidos del ánimo, de lo malo a lo bueno, en el orden de la escala del tema (sienna, crema, azul):
+     * el marroquí rojo hondo, el pardo rojizo, la vitela cálida, el verde y el azul pizarra. Así ningún lomo queda gris.
+     */
+    val PIELES = listOf(0f to Color(0xFF7A2618), 0.25f to Color(0xFFA2532C), 0.5f to Color(0xFFD9BA80), 0.74f to Color(0xFF4F7458), 1f to Color(0xFF2A4772))
 
     val LETRA: FontFamily = LetraExtra.cormorant
 }
 
 /**
- * El aire del momento en el estante de Renacimiento: de día (la luz de la impannata), de noche (el modo oscuro: solo la
- * lucerna) y en los Sueños ([noche]: al anochecer en claro, la noche más azul en oscuro, con la luna tras la tela). Con [en]
- * se pide el tono de algo según cuánta luz de la lucerna le llega.
+ * El aire del momento en el estante de Renacimiento: de día (la luz de la impannata), de noche (el modo oscuro: solo el
+ * farol) y en los Sueños ([noche]: al anochecer en claro, la noche más azul en oscuro, con la luna tras la tela). Con [en]
+ * se pide el tono de algo según cuánta luz del farol le llega.
  */
 internal class AireRenacimiento(val oscuro: Boolean, val noche: Boolean) {
     private val p = PaletaRenacimiento
-    /** Si arde la lucerna. */
+    /** Si arde el farol. */
     val lumbre: Boolean get() = oscuro || noche
     /** El color en que se hunde lo que no se alumbra. */
     val hondo: Color get() = if (oscuro) (if (noche) p.NOCHE_SUENOS else p.NOCHE) else if (noche) p.ANOCHECER else SOMBRA_MUEBLE
 
-    /** El tono de algo al que le llega [k] de la lucerna (de día, la luz de la ventana: [k] no cuenta). */
+    /** El tono de algo al que le llega [k] del farol (de día, la luz de la ventana: [k] no cuenta). */
     fun en(k: Float) = TonoRenacimiento(this, if (lumbre) k.coerceIn(0f, 1f) else 1f)
 
     /** El color propio de algo, hundido: oscuro, de su mismo tono (no gris), con el aire de la noche. */
@@ -131,14 +136,17 @@ internal class AireRenacimiento(val oscuro: Boolean, val noche: Boolean) {
     }
     fun claro(a: Float): Color = luzMueble(if (oscuro) a * 0.1f else if (noche) a * 0.45f else a)
 
-    /** El color del ánimo con cuerpo: más saturado y un poco hacia lo hondo, para que sea cuero o papel teñido y no pastel. */
-    fun animo(t: Color, k: Float): Color {
-        val g = 0.3f * t.red + 0.59f * t.green + 0.11f * t.blue
-        val viva = Color((g + (t.red - g) * 1.6f).coerceIn(0f, 1f), (g + (t.green - g) * 1.6f).coerceIn(0f, 1f), (g + (t.blue - g) * 1.6f).coerceIn(0f, 1f))
+    /**
+     * El color del ánimo hecho piel o papel teñido ([pielDelAnimo]), un poco hacia lo hondo con [tinte], con la luz que le
+     * llega. De noche se apaga algo menos que lo demás y conserva su color, para que en la repisa más lejana los volúmenes se
+     * sigan distinguiendo entre sí.
+     */
+    fun animo(t: Color?, k: Float, tinte: Float = 0f): Color {
+        val base = if (t == null) p.SIN_ANIMO else pielDelAnimo(t)
+        val viva = if (tinte > 0f) mezcla(base, p.TINTE_HONDO, tinte * 0.35f) else base
         val kk = k.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) mezcla(mezcla(viva, p.ANOCHECER, 0.24f - 0.14f * kk), p.LLAMA, 0.1f * kk) else viva
-        // De noche el ánimo se apaga algo menos que lo demás, para que se lea su color aun en la repisa más lejana.
-        return mezcla(mezcla(hundido(viva), viva, (0.22f + 0.85f * kk).coerceAtMost(0.95f)), p.LLAMA, 0.16f * kk)
+        return mezcla(mezcla(hundido(viva), viva, (0.36f + 0.7f * kk).coerceAtMost(0.95f)), p.LLAMA, 0.14f * kk)
     }
     /** El papel donde va el día: casi no se apaga, para que el número se lea siempre. */
     fun etiqueta(k: Float): Color {
@@ -151,7 +159,7 @@ internal class AireRenacimiento(val oscuro: Boolean, val noche: Boolean) {
 
 /**
  * El tono de una cosa en un sitio: su color ([c]) con la luz que le llega, la sombra ([s]), el plano de luz ([b]: crema de
- * día, la llama de noche) y el filo de la lucerna en lo que la mira ([f], solo con la lucerna encendida).
+ * día, la llama de noche) y el filo del farol en lo que lo mira ([f], solo con el farol encendido).
  */
 internal class TonoRenacimiento(val a: AireRenacimiento, val k: Float) {
     private val p = PaletaRenacimiento
@@ -181,8 +189,8 @@ internal fun DrawScope.contactoRenacimiento(centro: Offset, ancho: Float, alto: 
     drawOval(a.sombra(if (a.oscuro) fuerza * 1.25f else fuerza), Offset(centro.x - ancho * (0.5f - 0.08f * hacia), centro.y - alto / 2), Size(ancho, alto))
 
 /**
- * La sombra de una forma en el muro: de día corrida a la derecha y abajo (la ventana está arriba a la izquierda); con la
- * lucerna, hacia fuera de la llama, tanto más marcada cuanto más cerca está. No baja de [hasta] (la cornisa que la corta).
+ * La sombra de una forma en el muro: de día corrida a la derecha y abajo (la ventana está arriba a la izquierda); con el
+ * farol, hacia fuera de la llama, tanto más marcada cuanto más cerca está. No baja de [hasta] (la cornisa que la corta).
  */
 internal fun DrawScope.sombraEnMuroRenacimiento(forma: Path, desde: Offset, hasta: Float, a: AireRenacimiento, fuerza: Float = 0.2f, lejos: Float = 1f) {
     val w = size.width
@@ -215,7 +223,7 @@ private val TONOS_RENACIMIENTO: Pair<List<Color>, List<Color>> by lazy {
 /**
  * El color del ánimo tal como es de día. En el modo oscuro la escala del tema cambia de colores (el ánimo neutro pasa del
  * papel a un casi negro, pensado para la interfaz), y un volumen claro se volvía negro de noche. Aquí el volumen es un objeto
- * de la tienda: conserva su color de día y la lucerna lo apaga con la distancia. Se ubica el color en la escala de noche (el
+ * de la tienda: conserva su color de día y el farol lo apaga con la distancia. Se ubica el color en la escala de noche (el
  * tramo y la fracción que más se le acercan) y se toma el mismo punto en la de día; si no está en la escala, queda igual.
  */
 internal fun tonoDeDiaRenacimiento(t: Color?, oscuro: Boolean): Color? {
@@ -237,6 +245,34 @@ internal fun tonoDeDiaRenacimiento(t: Color?, oscuro: Boolean): Color? {
 }
 
 private fun cuadradoRen(x: Float) = x * x
+
+/**
+ * La piel (o el papel teñido) que corresponde a un color del ánimo: se ubica el color en la escala de día del tema (el tramo y
+ * la fracción que más se le acercan) y se toma el mismo punto en [PaletaRenacimiento.PIELES]. Si el color no está en la
+ * escala, queda igual.
+ */
+internal fun pielDelAnimo(t: Color): Color {
+    val dia = TONOS_RENACIMIENTO.first
+    if (dia.size < 3) return t
+    var mejor = -1f
+    var error = 0.03f
+    for (seg in 0 until 2) {
+        val a0 = dia[seg]; val a1 = dia[seg + 1]
+        val dr = a1.red - a0.red; val dg = a1.green - a0.green; val db = a1.blue - a0.blue
+        val largo = dr * dr + dg * dg + db * db
+        if (largo < 1e-5f) continue
+        val f = (((t.red - a0.red) * dr + (t.green - a0.green) * dg + (t.blue - a0.blue) * db) / largo).coerceIn(0f, 1f)
+        val er = cuadradoRen(t.red - a0.red - dr * f) + cuadradoRen(t.green - a0.green - dg * f) + cuadradoRen(t.blue - a0.blue - db * f)
+        if (er < error) { error = er; mejor = (seg + f) / 2f }
+    }
+    if (mejor < 0f) return t
+    val pieles = PaletaRenacimiento.PIELES
+    for (i in 0 until pieles.size - 1) {
+        val (f0, c0) = pieles[i]; val (f1, c1) = pieles[i + 1]
+        if (mejor <= f1) return mezcla(c0, c1, ((mejor - f0) / maxOf(1e-4f, f1 - f0)).coerceIn(0f, 1f))
+    }
+    return pieles.last().second
+}
 
 /**
  * Lo de arriba del estante, pintado una sola vez por tamaño y modo en una imagen que luego se pega: el muro con su estarcido y
@@ -265,8 +301,8 @@ internal object CoronaRenacimiento {
  * nogal tallado y dorado de la tienda de un cartolaio en Florencia hacia 1490, contra un muro pintado de rojo de tierra con su
  * estarcido, su friso y su cornisa de pietra serena, y la impannata (la ventana de tela encerada, sin vidrio) arriba a la
  * izquierda, que de día derrama una luz tibia y sin rayo. Arriba, el libro impreso abierto en su atril con los anteojos encima,
- * la resma envuelta con las tijeras, el tintero, el reloj de arena, la cartera de cuero y la lucerna de latón sobre su pila de
- * libros, que de noche es la única luz; del muro cuelga el cordel con los pliegos recién impresos y la filza de los recibos.
+ * la resma envuelta con las tijeras, el tintero, el reloj de arena y el farol de hojas de asta sobre su pila de libros, que de
+ * noche es la única luz; del muro cuelgan el cordel con los pliegos recién impresos, la piel de pergamino y la filza.
  * Al pie, sobre la alfombra de Anatolia, la bala de papel atada y la pila de cuadernillos. Todo el dibujo sale de [estante] y
  * de [volumen]; la luz de la noche de los dos sale de la misma curva, [alcance]. El muro, la ventana y el suelo están en
  * [MuroEstanteRenacimiento], el mueble en [ObraEstanteRenacimiento], lo de arriba en [PiezasEstanteRenacimiento], lo del pie y
@@ -301,9 +337,9 @@ internal object MuebleEstanteRenacimiento {
 
     // ---------------------------------------------------------------- la luz
 
-    /** Dónde arde la lucerna (el medio de sus dos llamas), en anchos del mueble desde la esquina de arriba a la izquierda. */
+    /** Dónde arde el farol (el medio de sus hojas de asta), en anchos del mueble desde la esquina de arriba a la izquierda. */
     const val LAMP_X = 0.835f
-    const val LAMP_Y = 0.345f
+    const val LAMP_Y = 0.322f
     /** El ancho con que un volumen pasa su repisa a anchos del mueble (no sabe cuánto mide el estante): el de un teléfono. */
     private const val ANCHO_NOMINAL = 411f
     /** Una repisa con su tabla, en dp. */
@@ -317,8 +353,8 @@ internal object MuebleEstanteRenacimiento {
     const val CORNISA = 0.125f
 
     /**
-     * La curva de la luz de la lucerna, la misma para el mueble y para los volúmenes: cuánta llega (de 1 a 0) a un punto que
-     * está a [dx] y [dy] de la llama, en anchos del mueble. Cae deprisa: la primera repisa encendida cerca de la lucerna, la
+     * La curva de la luz del farol, la misma para el mueble y para los volúmenes: cuánta llega (de 1 a 0) a un punto que
+     * está a [dx] y [dy] de la llama, en anchos del mueble. Cae deprisa: la primera repisa encendida cerca del farol, la
      * segunda a medias, la tercera tenue y las de abajo casi perdidas; en un estante corto, la última siempre en penumbra.
      */
     fun alcance(dx: Float, dy: Float, repisas: Int): Float {
@@ -327,8 +363,15 @@ internal object MuebleEstanteRenacimiento {
         return (1.85f * exp(-2.5f * d * corto)).coerceIn(0f, 1f)
     }
 
-    /** La luz de la lucerna en lo de arriba (el muro, la cornisa y lo que hay en ella). */
+    /** La luz del farol en lo de arriba (el muro, la cornisa y lo que hay en ella). */
     fun alcanceArriba(dx: Float, dy: Float): Float = (1.8f * exp(-3.8f * sqrt(dx * dx + dy * dy))).coerceIn(0f, 1f)
+
+    /**
+     * En los Sueños, cuánta luz de luna entra por la ventana (de 0 a 1) en un punto del cuerpo del mueble: llega por la
+     * izquierda a la cornisa y a las dos primeras repisas y se pierde hacia la derecha y hacia abajo. [pos] cuenta repisas.
+     */
+    fun lunaEn(fx: Float, pos: Float, oscuro: Boolean): Float =
+        ((0.85f - fx) / 0.85f).coerceIn(0f, 1f) * (1f - 0.42f * pos).coerceIn(0f, 1f) * (if (oscuro) 1f else 0.7f)
 
     /** La luz que llega al cuerpo del mueble: [pos] cuenta repisas desde la de arriba (1.5 es media altura de la segunda). */
     fun cercaCuerpo(pos: Float, repisas: Int, fx: Float): Float =
@@ -359,10 +402,9 @@ internal object MuebleEstanteRenacimiento {
             }
             with(PiezasEstanteRenacimiento) { colgado(a, apoyo, cerca) }
             with(ObraEstanteRenacimiento) { cornisa(Rect(0f, apoyo, w, ch), a, cerca) }
-            with(PiezasEstanteRenacimiento) {
-                arriba(a, apoyo, cerca)
-                if (a.lumbre) llamaLucerna(a)
-            }
+            with(PiezasEstanteRenacimiento) { arriba(a, apoyo, cerca) }
+            if (a.lumbre) with(FarolEstanteRenacimiento) { haloFarol(a) }
+            if (noche) with(ObraEstanteRenacimiento) { lunaEnCornisa(Rect(0f, apoyo, w, ch), a) }
         }
         with(MuroEstanteRenacimiento) { losas(a, b.top + b.height * PISAN, h, cerca) }
         with(ObraEstanteRenacimiento) {
@@ -376,14 +418,14 @@ internal object MuebleEstanteRenacimiento {
             }
         }
         with(ObraEstanteRenacimiento) {
-            d.tablas.forEachIndexed { k, r -> tabla(r, 610 + 7 * k, a, cerca) }
+            d.tablas.forEachIndexed { k, r -> tabla(r, 610 + 7 * k, a, cerca, k) }
             d.placas.forEach { p -> placa(p, medidor, a, cerca(p.r.center)) }
             pilastra(d.izquierda, false, a, n, fila)
             pilastra(d.derecha, true, a, n, fila)
             zocalo(b, a, cerca)
         }
         if (a.lumbre) {
-            // La luz de la lucerna sobre lo que tiene cerca: la cornisa y la repisa de arriba.
+            // La luz del farol sobre lo que tiene cerca: la cornisa y la repisa de arriba.
             val f = if (oscuro) 1f else 0.55f
             mancha(llama + Offset(-w * 0.02f, w * 0.12f), w * 0.3f, P.LLAMA.copy(alpha = 0.16f * f))
         }
@@ -396,16 +438,18 @@ internal object MuebleEstanteRenacimiento {
         val a = AireRenacimiento(oscuro, v.noche)
         val fx = LADO + v.centro * (1f - 2 * LADO)
         val k = if (a.lumbre) cercaCuerpo(v.repisa + 0.55f, v.repisas, fx) else 1f
-        // De qué lado le llega la luz: de día, de la impannata (izquierda); de noche, de la lucerna (casi siempre a la derecha).
+        // De qué lado le llega la luz: de día, de la impannata (izquierda); de noche, del farol (casi siempre a la derecha).
         val luzDe = if (a.lumbre && fx < LAMP_X) 1f else -1f
         // De día, lo de la derecha queda algo más lejos de la ventana.
         val dia = if (a.lumbre) 0f else 0.1f * fx + 0.03f * v.repisa
         val tono = tonoDeDiaRenacimiento(v.tono, oscuro)
+        // En los Sueños, la luna de la ventana da en frío por la izquierda en las primeras repisas.
+        val luna = if (v.noche) lunaEn(fx, v.repisa.toFloat(), oscuro) else 0f
         with(VolumenEstanteRenacimiento) {
             when (clase(v.semilla)) {
-                0 -> libroPiel(v, tono, medidor, a, k, luzDe, dia)
-                1 -> pliegos(v, tono, medidor, a, k, luzDe, dia)
-                else -> librito(v, tono, medidor, a, k, luzDe, dia)
+                0 -> libroPiel(v, tono, medidor, a, k, luzDe, dia, luna)
+                1 -> pliegos(v, tono, medidor, a, k, luzDe, dia, luna)
+                else -> librito(v, tono, medidor, a, k, luzDe, dia, luna)
             }
         }
     }

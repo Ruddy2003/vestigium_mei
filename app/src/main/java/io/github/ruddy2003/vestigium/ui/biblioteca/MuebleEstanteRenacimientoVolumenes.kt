@@ -1,6 +1,5 @@
 package io.github.ruddy2003.vestigium.ui.biblioteca
 
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -20,30 +19,33 @@ import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
 /**
  * Las tres entradas del estante de Renacimiento, todas de la tienda del cartolaio, cada una con su silueta y modelada como un
  * objeto (su luz, su sombra, su brillo y sus detalles): el libro nuevo encuadernado en piel teñida, alto y tieso, con el lomo
- * redondo, los nervios que sobresalen con sus filetes dorados, el tejuelo de papel y los registros que asoman arriba; los
- * pliegos impresos sin encuadernar, más bajos, envueltos en papel de color y atados con bramante, con la cédula metida bajo el
- * cordel y el lacre en el nudo; y el librito en vitela floja, vencido, con la cubierta que se dobla en la cabeza y las
- * correíllas de piel blanca que pasan por el lomo. El color del ánimo es la piel, el papel de la envoltura o la vitela.
+ * redondo, la cofia y la cabezada de hilo, los nervios que sobresalen con sus filetes dorados, el tejuelo de papel y los
+ * registros que asoman arriba; los pliegos impresos sin encuadernar, más bajos, envueltos en papel de color y atados con
+ * bramante, con la cédula metida bajo el cordel y el lacre en el nudo; y el librito en vitela floja, vencido, con la cubierta
+ * que se dobla en la cabeza y las correíllas de piel blanca que pasan por el lomo. El color del ánimo es la piel, el papel de
+ * la envoltura o la vitela; el día va siempre en un papel claro y grande, para leerse de un vistazo.
  */
 internal object VolumenEstanteRenacimiento {
     private val P = PaletaRenacimiento
 
+    /** El tamaño del número del día, el mismo en las tres entradas. */
+    private const val DIA_SP = 16.5f
+
     /** Qué tan claro es un color (para escribir encima en tinta o en oro). */
     private fun claridad(c: Color): Float = 0.3f * c.red + 0.59f * c.green + 0.11f * c.blue
 
-    /** El color del ánimo hecho materia (piel, papel teñido): un poco hacia lo hondo, con cuerpo. */
-    private fun materia(tono: Color?, a: AireRenacimiento, k: Float, hondo: Float): Color =
-        a.animo(tono?.let { mezcla(it, P.TINTE_HONDO, hondo) } ?: P.SIN_ANIMO, k)
+    /** El color del ánimo hecho materia (piel, papel teñido, vitela), con la luz que le llega. */
+    private fun materia(tono: Color?, a: AireRenacimiento, k: Float, hondo: Float): Color = a.animo(tono, k, hondo)
 
     /** De día, lo que está más lejos de la ventana ([dia]) se apaga un poco hacia la sombra violeta. */
     private fun lejos(c: Color, dia: Float): Color = if (dia > 0.005f) mezcla(c, SOMBRA_MUEBLE, dia) else c
 
     /**
      * El modelado de un cuerpo de pie entre [x0] y [x1] (ir dentro de su recorte): el plano de luz hacia donde le llega
-     * ([luzDe]: -1, de la izquierda), el brillo, el plano de sombra al otro lado, el canto oscuro y, de noche, el filo de la
-     * lucerna.
+     * ([luzDe]: -1, de la izquierda), el brillo, el plano de sombra al otro lado, el canto oscuro, de noche el filo del
+     * farol y, en los Sueños, la luz fría de la luna que entra por la ventana ([luna], de 0 a 1) en el canto de la izquierda.
      */
-    private fun DrawScope.cilindro(x0: Float, x1: Float, y0: Float, y1: Float, t: TonoRenacimiento, luzDe: Float, brillo: Float = 1f) {
+    private fun DrawScope.cilindro(x0: Float, x1: Float, y0: Float, y1: Float, t: TonoRenacimiento, luzDe: Float, luna: Float, brillo: Float = 1f) {
         val u = density
         val an = x1 - x0
         fun x(f: Float, ancho: Float) = if (luzDe < 0) x0 + an * f else x1 - an * (f + ancho)
@@ -54,22 +56,21 @@ internal object VolumenEstanteRenacimiento {
         drawRect(t.s(0.24f), Offset(x(0.82f, 0.18f), y0), Size(an * 0.18f, alto))
         drawRect(t.s(0.4f), Offset(if (luzDe < 0) x1 - 0.9f * u else x0, y0), Size(0.9f * u, alto))
         if (t.a.lumbre) drawRect(t.f(0.7f), Offset(if (luzDe > 0) x1 - 1.1f * u else x0, y0), Size(1.1f * u, alto))
+        if (luna > 0.02f) {
+            drawRect(P.LUNA.copy(alpha = 0.2f * luna), Offset(x0, y0), Size(an * 0.3f, alto))
+            drawRect(P.LUNA.copy(alpha = 0.7f * luna), Offset(x0, y0), Size(1.1f * u, alto))
+        }
     }
 
-    /** La marca del pie: de día una florecilla de hierro de dorar; en los Sueños, la luna creciente. */
+    /** La marca del pie: de día un rombo de hierro de dorar con su punto; en los Sueños, la luna creciente. */
     private fun DrawScope.marca(c: Offset, r: Float, luna: Boolean, color: Color, fondo: Color) {
         if (luna) {
             drawCircle(color, r, c)
             drawCircle(fondo, r * 0.84f, Offset(c.x + r * 0.42f, c.y - r * 0.24f))
         } else {
-            val p = Path()
-            for (j in 0 until 4) {
-                val an = j * 1.5708f
-                val q = Offset(c.x + r * 0.55f * kotlin.math.cos(an), c.y + r * 0.55f * kotlin.math.sin(an))
-                p.addOval(Rect(q.x - r * 0.38f, q.y - r * 0.38f, q.x + r * 0.38f, q.y + r * 0.38f))
-            }
-            drawPath(p, color)
-            drawCircle(fondo, r * 0.22f, c)
+            drawPath(poligonoRenacimiento(c.x, c.y - r * 1.1f, c.x + r * 0.75f, c.y, c.x, c.y + r * 1.1f, c.x - r * 0.75f, c.y), color)
+            drawPath(poligonoRenacimiento(c.x, c.y - r * 0.6f, c.x + r * 0.38f, c.y, c.x, c.y + r * 0.6f, c.x - r * 0.38f, c.y), fondo)
+            drawCircle(color, r * 0.18f, c)
         }
     }
 
@@ -78,67 +79,90 @@ internal object VolumenEstanteRenacimiento {
         val u = density
         drawRect(a.sombra(0.35f), Offset(r.left + 0.9f * u, r.top + 1.1f * u), r.size)
         drawRect(a.etiqueta(k), r.topLeft, r.size)
-        drawRect(t.s(0.1f), Offset(if (luzDe < 0) r.right - r.width * 0.22f else r.left, r.top), Size(r.width * 0.22f, r.height))
+        drawRect(t.s(0.1f), Offset(if (luzDe < 0) r.right - r.width * 0.2f else r.left, r.top), Size(r.width * 0.2f, r.height))
         drawRect(t.b(0.3f), Offset(if (luzDe < 0) r.left else r.right - 0.8f * u, r.top), Size(0.8f * u, r.height))
     }
 
+    /** El número del día, grande y en tinta, centrado en [r]. */
+    private fun DrawScope.numero(medidor: TextMeasurer, dia: String, r: Rect, a: AireRenacimiento) =
+        textoEn(medidor, dia, r, P.LETRA, a.tinta, DIA_SP, peso = FontWeight.Bold, minimo = 9f)
+
     // ---------------------------------------------------------------- 0: el libro en piel teñida
 
-    fun DrawScope.libroPiel(v: Volumen, tono: Color?, medidor: TextMeasurer, a: AireRenacimiento, k: Float, luzDe: Float, dia: Float) {
+    fun DrawScope.libroPiel(v: Volumen, tono: Color?, medidor: TextMeasurer, a: AireRenacimiento, k: Float, luzDe: Float, dia: Float, luna: Float) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla and 0x7fffffff
         val t = a.en(k)
+        val cabeza = h * 0.045f
+        val cofia = 2.4f * u
+        val x0 = 0.9f * u; val x1 = w - 0.9f * u
         // Los registros: tiras de papel y una cinta de seda que asoman por la cabeza, más cuanto más escribiste.
-        val cabeza = h * 0.05f
         val registros = (v.lleno * 3.2f).toInt()
         for (j in 0 until registros) {
             val x = w * (0.2f + 0.24f * j + 0.08f * azar(s, 20 + j))
-            val alto = cabeza * (0.7f + 0.5f * azar(s, 24 + j))
+            val alto = cabeza * (0.8f + 0.5f * azar(s, 24 + j))
             val col = if (j == 1) t.c(P.VERDE_FONDO) else a.etiqueta(k * 0.9f)
-            drawRect(col, Offset(x, cabeza - alto), Size(2.8f * u, alto + 2f * u))
-            drawRect(t.s(0.3f), Offset(x + 2.1f * u, cabeza - alto), Size(0.7f * u, alto + 2f * u))
+            drawRect(col, Offset(x, cabeza - alto), Size(2.8f * u, alto + 3f * u))
+            drawRect(t.s(0.3f), Offset(x + 2.1f * u, cabeza - alto), Size(0.7f * u, alto + 3f * u))
         }
+        // El corte de las hojas, apenas visto detrás de la cofia, y la cabezada de hilo de dos colores.
+        drawRect(t.c(P.PAPEL_OSC), Offset(w * 0.16f, cabeza - cofia * 0.9f), Size(w * 0.68f, cofia))
+        val hilo = Path()
+        var xh = w * 0.24f
+        var q = 0
+        while (xh < w * 0.76f && q < 30) { hilo.addRect(Rect(xh, cabeza - cofia * 0.55f, xh + 1.2f * u, cabeza + cofia * 0.2f)); xh += 2.4f * u; q++ }
+        drawRect(t.c(P.PAPEL), Offset(w * 0.24f, cabeza - cofia * 0.55f), Size(w * 0.52f, cofia * 0.75f))
+        drawPath(hilo, t.c(P.RUBRICA))
+        // El cuerpo: la piel con la cofia redondeada (la misma piel que se dobla sobre la cabezada), sin tapa aparte.
         val piel = lejos(materia(tono, a, k, 0.26f), dia)
-        val x0 = 0.9f * u; val x1 = w - 0.9f * u
-        val cuerpo = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(Rect(x0, cabeza, x1, h), CornerRadius(2.4f * u))) }
+        val cuerpo = Path().apply {
+            moveTo(x0, h)
+            lineTo(x0, cabeza + cofia)
+            quadraticTo(x0, cabeza, x0 + w * 0.18f, cabeza + cofia * 0.15f)
+            quadraticTo(w / 2, cabeza - cofia * 0.25f, x1 - w * 0.18f, cabeza + cofia * 0.15f)
+            quadraticTo(x1, cabeza, x1, cabeza + cofia)
+            lineTo(x1, h)
+            close()
+        }
         drawPath(cuerpo, piel)
         clipPath(cuerpo) {
-            cilindro(x0, x1, cabeza, h, t, luzDe)
-            // El roce de la piel: la cabeza y el pie gastados, un par de rayas.
-            drawRect(mezcla(piel, P.PAPEL_OSC, 0.3f).copy(alpha = 0.55f), Offset(x0, cabeza), Size(x1 - x0, 1.6f * u))
+            cilindro(x0, x1, cabeza, h, t, luzDe, luna)
+            // La cofia: la luz en su lomo redondo y la sombra justo debajo, donde la piel se dobla.
+            drawArc(t.b(0.45f), 200f, 140f, false, Offset(x0 + w * 0.12f, cabeza + 0.4f * u), Size(w * 0.76f, cofia * 2.6f), style = Stroke(0.9f * u))
+            drawRect(t.s(0.22f), Offset(x0, cabeza + cofia * 1.5f), Size(x1 - x0, 0.9f * u))
+            // El roce del pie y un par de rayas en la piel.
             drawRect(mezcla(piel, P.PAPEL_OSC, 0.3f).copy(alpha = 0.5f), Offset(x0, h - 2.2f * u), Size(x1 - x0, 1.2f * u))
             for (j in 0 until 2) {
-                val y = h * (0.44f + 0.28f * azar(s, 30 + j))
+                val y = h * (0.46f + 0.26f * azar(s, 30 + j))
                 drawLine(t.s(0.2f), Offset(x0 + w * 0.22f, y), Offset(x0 + w * (0.42f + 0.2f * azar(s, 33 + j)), y + 1.2f * u), 0.5f * u)
             }
         }
         // Los nervios, que sobresalen del lomo, con su luz, su sombra y sus filetes dorados.
         val oro = t.c(P.ORO)
-        val nervios = floatArrayOf(0.1f, 0.3f, 0.78f, 0.9f)
+        val nervios = floatArrayOf(0.1f, 0.38f, 0.8f, 0.91f)
         val filetes = Path()
         nervios.forEach { f ->
             val y = cabeza + (h - cabeza) * f
-            drawRoundRect(t.s(0.4f), Offset(0f, y + 1.3f * u), Size(w, 2.8f * u), CornerRadius(1.4f * u))
-            drawRoundRect(mezcla(piel, a.hondo, 0.12f), Offset(0f, y - 1.5f * u), Size(w, 3f * u), CornerRadius(1.5f * u))
+            drawRoundRect(t.s(0.4f), Offset(0f, y + 1.3f * u), Size(w, 2.8f * u), androidx.compose.ui.geometry.CornerRadius(1.4f * u))
+            drawRoundRect(mezcla(piel, a.hondo, 0.12f), Offset(0f, y - 1.5f * u), Size(w, 3f * u), androidx.compose.ui.geometry.CornerRadius(1.5f * u))
             drawRect(t.b(0.45f), Offset(w * 0.1f, y - 1.3f * u), Size(w * 0.7f, 0.8f * u))
             filetes.addRect(Rect(x0 + 1.5f * u, y - 2.9f * u, x1 - 1.5f * u, y - 2.4f * u))
             filetes.addRect(Rect(x0 + 1.5f * u, y + 2.4f * u, x1 - 1.5f * u, y + 2.9f * u))
         }
         drawPath(filetes, oro.copy(alpha = 0.85f))
-        drawRect(t.f(0.8f), Offset(0f, cabeza), Size(w, 1f * u))
         val yn = { j: Int -> cabeza + (h - cabeza) * nervios[j] }
-        // El tejuelo de papel con el día, entre los dos nervios de arriba.
-        val tej = Rect(w * 0.14f, yn(0) + 4.2f * u, w * 0.86f, yn(1) - 4.2f * u)
+        // El tejuelo de papel con el día, grande, entre los dos nervios de arriba.
+        val tej = Rect(w * 0.09f, yn(0) + 3.2f * u, w * 0.91f, yn(1) - 3.2f * u)
         if (tej.height > 4f * u) {
             papelito(tej, t, a, k, luzDe)
-            textoEn(medidor, v.dia, tej, P.LETRA, a.tinta, 15f, peso = FontWeight.Bold, minimo = 7f)
+            numero(medidor, v.dia, tej, a)
         }
         // El mes, a lo largo del lomo, en su cartela de filetes: en oro sobre la piel oscura, en tinta sobre la clara.
         val mesR = Rect(x0 + 2.2f * u, yn(1) + 4.4f * u, x1 - 2.2f * u, yn(2) - 4.4f * u)
         if (mesR.height > 8f * u) {
             drawRect(oro.copy(alpha = 0.6f), mesR.topLeft, mesR.size, style = Stroke(0.5f * u))
-            // De noche el oro del rótulo coge algo de la lucerna aunque esté lejos, para que el mes se siga leyendo.
+            // De noche el oro del rótulo coge algo del farol aunque esté lejos, para que el mes se siga leyendo.
             val sobreClaro = claridad(piel) > 0.42f
             val letraMes = if (sobreClaro) mezcla(P.IMPRENTA, P.SEPIA, 0.5f) else a.en(maxOf(k, 0.5f)).c(mezcla(P.ORO_LUZ, P.ORO, 0.3f))
             textoEn(medidor, v.mes, mesR.deflate(1.2f * u), P.LETRA, letraMes, 10f, vertical = true, peso = FontWeight.SemiBold, minimo = 5f)
@@ -151,7 +175,7 @@ internal object VolumenEstanteRenacimiento {
 
     // ---------------------------------------------------------------- 1: los pliegos atados
 
-    fun DrawScope.pliegos(v: Volumen, tono: Color?, medidor: TextMeasurer, a: AireRenacimiento, k: Float, luzDe: Float, dia: Float) {
+    fun DrawScope.pliegos(v: Volumen, tono: Color?, medidor: TextMeasurer, a: AireRenacimiento, k: Float, luzDe: Float, dia: Float, luna: Float) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla and 0x7fffffff
@@ -190,43 +214,44 @@ internal object VolumenEstanteRenacimiento {
             val fibras = Path()
             for (j in 0 until 4) { val y = asoma + (h - asoma) * (0.2f + 0.2f * j); fibras.addRect(Rect(w * 0.05f, y, w * (0.3f + 0.5f * azar(s, 60 + j)), y + 0.4f * u)) }
             drawPath(fibras, t.s(0.1f))
-            cilindro(0f, w, asoma, h, t, luzDe, 0.7f)
+            cilindro(0f, w, asoma, h, t, luzDe, luna, 0.7f)
         }
-        // La cédula de papel, metida bajo el cordel, con el día y el mes y la esquina doblada.
-        val ced = Rect(w * 0.25f, h * 0.19f, w * 0.75f, h * 0.76f)
-        rotate((azar(s, 5) - 0.5f) * 3f, ced.center) {
+        // La cédula de papel, metida bajo el cordel, con el día grande, el mes y la esquina doblada.
+        val ced = Rect(w * 0.12f, h * 0.17f, w * 0.88f, h * 0.84f)
+        rotate((azar(s, 5) - 0.5f) * 2.5f, ced.center) {
             papelito(ced, t, a, k, luzDe)
-            drawPath(poligonoRenacimiento(ced.right, ced.bottom - ced.width * 0.28f, ced.right, ced.bottom, ced.right - ced.width * 0.28f, ced.bottom), papel)
-            drawPath(poligonoRenacimiento(ced.right, ced.bottom - ced.width * 0.28f, ced.right - ced.width * 0.28f, ced.bottom, ced.right - ced.width * 0.24f, ced.bottom - ced.width * 0.24f), mezcla(a.etiqueta(k), P.PAPEL_OSC, 0.5f))
-            val diaR = Rect(ced.left, ced.top + ced.height * 0.12f, ced.right, ced.top + ced.height * 0.44f)
-            textoEn(medidor, v.dia, diaR, P.LETRA, a.tinta, 14f, peso = FontWeight.Bold, minimo = 7f)
-            drawLine(t.c(P.RUBRICA).copy(alpha = 0.75f), Offset(ced.left + ced.width * 0.2f, diaR.bottom), Offset(ced.right - ced.width * 0.2f, diaR.bottom), 0.7f * u)
-            val mesR = Rect(ced.left + 0.5f * u, diaR.bottom + 1.5f * u, ced.right - 0.5f * u, ced.bottom - ced.width * 0.2f)
+            drawPath(poligonoRenacimiento(ced.right, ced.bottom - ced.width * 0.24f, ced.right, ced.bottom, ced.right - ced.width * 0.24f, ced.bottom), papel)
+            drawPath(poligonoRenacimiento(ced.right, ced.bottom - ced.width * 0.24f, ced.right - ced.width * 0.24f, ced.bottom, ced.right - ced.width * 0.2f, ced.bottom - ced.width * 0.2f), mezcla(a.etiqueta(k), P.PAPEL_OSC, 0.5f))
+            val diaR = Rect(ced.left, ced.top + ced.height * 0.11f, ced.right, ced.top + ced.height * 0.47f)
+            numero(medidor, v.dia, diaR, a)
+            drawLine(t.c(P.RUBRICA).copy(alpha = 0.75f), Offset(ced.left + ced.width * 0.22f, diaR.bottom), Offset(ced.right - ced.width * 0.22f, diaR.bottom), 0.7f * u)
+            val mesR = Rect(ced.left + 0.5f * u, diaR.bottom + 1.5f * u, ced.right - 0.5f * u, ced.bottom - ced.width * 0.18f)
             if (mesR.height > 6f * u) textoEn(medidor, v.mes, mesR, P.LETRA, a.tinta.copy(alpha = 0.9f), 9.5f, vertical = true, minimo = 4.5f)
         }
-        // El bramante: una vuelta a lo ancho, por encima de la cédula, y otra a lo alto cerca del canto; el nudo y su lacre.
+        // El bramante: una vuelta a lo ancho, por encima de la cédula, y otra a lo alto cerca del canto; el nudo en el cruce,
+        // con su lacre.
         val cana = t.c(P.CANAMO)
-        val yc = h * 0.25f
-        val xv = w * 0.88f
+        val yc = h * 0.2f
+        val xv = w * 0.86f
         drawLine(t.s(0.35f), Offset(0f, yc + 1.3f * u), Offset(w, yc + 1.5f * u), 1.4f * u)
         drawLine(cana, Offset(0f, yc), Offset(w, yc + 0.4f * u), 1.4f * u)
         drawLine(t.b(0.4f), Offset(0f, yc - 0.4f * u), Offset(w, yc), 0.5f * u)
         drawLine(cana, Offset(xv, 0f), Offset(xv + 0.4f * u, h), 1.3f * u)
-        val nudo = Offset(w * 0.3f, yc)
-        val rs = minOf(w * 0.16f, h * 0.08f)
-        drawLine(cana, nudo, nudo + Offset(-1.6f * u, rs * 2.6f), 1.1f * u, StrokeCap.Round)
-        drawLine(cana, nudo, nudo + Offset(2.2f * u, rs * 2.2f), 1.1f * u, StrokeCap.Round)
+        val nudo = Offset(xv, yc)
+        val rs = minOf(w * 0.15f, h * 0.075f)
+        drawLine(cana, nudo, nudo + Offset(-2.2f * u, rs * 2.4f), 1.1f * u, StrokeCap.Round)
+        drawLine(cana, nudo, nudo + Offset(1.4f * u, rs * 2.8f), 1.1f * u, StrokeCap.Round)
         val lacre = t.c(P.LACRE)
         drawCircle(t.s(0.45f), rs * 1.05f, nudo + Offset(0.9f * u, 1.1f * u))
         drawCircle(mezcla(lacre, a.hondo, 0.25f), rs * 1.08f, nudo)
         drawCircle(lacre, rs * 0.86f, nudo)
         if (v.noche) marca(nudo, rs * 0.55f, true, mezcla(lacre, P.LUNA, 0.6f), lacre)
         else {
-            val sello = mezcla(lacre, a.hondo, 0.4f)
-            for (j in 0 until 3) {
-                val an = j * 1.047f
-                val d = Offset(rs * 0.55f * kotlin.math.cos(an), rs * 0.55f * kotlin.math.sin(an))
-                drawLine(sello, nudo - d, nudo + d, 0.8f * u)
+            // El sello: cinco puntos en corro, como una florecilla (no es letra ni signo).
+            val sello = mezcla(lacre, a.hondo, 0.45f)
+            for (j in 0 until 5) {
+                val an = j * 1.2566f - 1.5708f
+                drawCircle(sello, rs * 0.14f, Offset(nudo.x + rs * 0.45f * kotlin.math.cos(an), nudo.y + rs * 0.45f * kotlin.math.sin(an)))
             }
         }
         destelloRenacimiento(nudo - Offset(rs * 0.38f, rs * 0.38f), rs * 0.22f, t)
@@ -235,7 +260,7 @@ internal object VolumenEstanteRenacimiento {
 
     // ---------------------------------------------------------------- 2: el librito en vitela floja
 
-    fun DrawScope.librito(v: Volumen, tono: Color?, medidor: TextMeasurer, a: AireRenacimiento, k: Float, luzDe: Float, dia: Float) {
+    fun DrawScope.librito(v: Volumen, tono: Color?, medidor: TextMeasurer, a: AireRenacimiento, k: Float, luzDe: Float, dia: Float, luna: Float) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla and 0x7fffffff
@@ -266,7 +291,7 @@ internal object VolumenEstanteRenacimiento {
         drawPath(Path().apply { addPath(cuerpo, Offset(1.1f * u, 0.7f * u)) }, t.s(0.35f))
         drawPath(cuerpo, vitela)
         clipPath(cuerpo) {
-            cilindro(0f, w, cabeza, h, t, luzDe, 0.8f)
+            cilindro(0f, w, cabeza, h, t, luzDe, luna, 0.8f)
             // Los pliegues blandos de la vitela: cada uno con su luz y su sombra.
             val sombras = Path(); val luces = Path()
             for (j in 0 until 3) {
@@ -280,7 +305,7 @@ internal object VolumenEstanteRenacimiento {
             drawRect(mezcla(vitela, P.PAPEL, 0.32f), Offset(0f, cabeza - 1f * u), Size(w, h * 0.035f))
             drawRect(t.s(0.25f), Offset(0f, cabeza + h * 0.03f), Size(w, 1f * u))
             // Las correíllas de piel blanca que pasan por el lomo, con los ojales por donde entran.
-            listOf(0.38f, 0.62f, 0.86f).forEach { f ->
+            listOf(0.4f, 0.78f, 0.91f).forEach { f ->
                 val y = h * f
                 val corr = t.c(mezcla(P.PAPEL, P.CANAMO, 0.22f))
                 drawRect(t.s(0.4f), Offset(0f, y + 1.5f * u), Size(w, 1f * u))
@@ -290,18 +315,27 @@ internal object VolumenEstanteRenacimiento {
                 drawRect(t.s(0.55f), Offset(w * 0.92f - 1.3f * u, y - 1.8f * u), Size(1.3f * u, 3.5f * u))
             }
         }
-        // El papelito pegado con el día, arriba, y el mes escrito a pluma sobre la vitela.
-        val pap = Rect(w * 0.15f + inc * 0.6f, h * 0.12f, w * 0.85f + inc * 0.6f, h * 0.33f)
+        // El papelito pegado con el día, grande, arriba; el mes escrito a pluma sobre la vitela.
+        val pap = Rect(w * 0.09f + inc * 0.6f, h * 0.11f, w * 0.91f + inc * 0.6f, h * 0.36f)
         papelito(pap, t, a, k, luzDe)
-        textoEn(medidor, v.dia, pap, P.LETRA, a.tinta, 14.5f, peso = FontWeight.Bold, minimo = 7f)
+        numero(medidor, v.dia, pap, a)
         val sobreClaro = claridad(vitela) > 0.42f
         val pluma = if (sobreClaro) mezcla(P.IMPRENTA, P.SEPIA, 0.5f) else a.etiqueta(maxOf(k, 0.3f)).copy(alpha = 0.95f)
-        val franja = Rect(w * 0.1f + inc * 0.4f, h * 0.405f, w * 0.9f + inc * 0.4f, h * 0.595f)
+        val franja = Rect(w * 0.1f + inc * 0.4f, h * 0.425f, w * 0.9f + inc * 0.4f, h * 0.755f)
         if (franja.height > 6f * u) textoEn(medidor, v.mes, franja, P.LETRA, pluma, 9f, vertical = true, minimo = 4.5f)
-        // Entre la segunda y la tercera correílla: la luna de los Sueños o una prueba de pluma.
-        val pc = Offset(w * 0.5f + inc * 0.2f, h * 0.74f)
-        if (v.noche) marca(pc, minOf(w * 0.16f, h * 0.04f), true, pluma, vitela)
-        else drawArc(pluma.copy(alpha = 0.6f), 20f, 290f, false, Offset(pc.x - w * 0.14f, pc.y - h * 0.022f), Size(w * 0.28f, h * 0.044f), style = Stroke(0.7f * u))
+        // Entre la segunda y la tercera correílla: la luna de los Sueños o, de día, una hoja dibujada a pluma.
+        val pc = Offset(w * 0.5f + inc * 0.2f, h * 0.845f)
+        val rr = minOf(w * 0.15f, h * 0.035f)
+        if (v.noche) marca(pc, rr, true, pluma, vitela)
+        else {
+            // Una hoja sola, ladeada, con su nervio y su rabillo (no es letra ni signo).
+            val rama = pluma.copy(alpha = 0.65f)
+            rotate(-35f, pc) {
+                drawOval(rama, Offset(pc.x - rr * 1.1f, pc.y - rr * 0.42f), Size(rr * 2.2f, rr * 0.84f))
+                drawLine(mezcla(vitela, pluma, 0.3f), Offset(pc.x - rr * 0.9f, pc.y), Offset(pc.x + rr * 0.9f, pc.y), 0.5f * u)
+                drawLine(rama, Offset(pc.x + rr * 1.05f, pc.y), Offset(pc.x + rr * 1.55f, pc.y + rr * 0.15f), 0.7f * u)
+            }
+        }
         drawRect(t.s(0.45f), Offset(0f, h - 1.3f * u), Size(w, 1.3f * u))
     }
 }
