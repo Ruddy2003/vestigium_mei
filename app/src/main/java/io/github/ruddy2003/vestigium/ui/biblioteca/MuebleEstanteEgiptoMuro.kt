@@ -35,50 +35,59 @@ import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
 // El testero, la bóveda y el suelo del almacén de la Tumba (MuebleEstanteEgipto).
 
 /**
- * El color del muro (de [col]) en cada punto según la lámpara, como un degradado radial desde la llama: de noche el enlucido
- * se enciende y se tiñe cerca de ella y se hunde lejos, en su mismo tono.
+ * Pinta [zona] (unos rectángulos) de noche: el color hondo (lo que no alcanza ninguna llama) y, encima, el charco de cada
+ * llama: un degradado radial de su color encendido que se desvanece hasta su alcance, pintado solo donde llega. Las dos luces
+ * se juntan como en [juntarLucesEgipto], igual que en lo que se dibuja delante.
  */
-/** Pinta [zona] (unos rectángulos) de noche: lisa con el color de lejos y, donde llega la lámpara, el degradado de [radialNocheEgipto]. */
-internal fun DrawScope.zonaNocheEgipto(m: MesaEgipto, zona: List<Rect>, col: Color, radio: Float) {
-    val lejos = m.a.c(col, m.k(m.llama + Offset(radio, 0f)))
-    val alcance = radio
-    val brocha = radialNocheEgipto(m, col, radio)
-    zona.forEach { r ->
-        val y0 = maxOf(r.top, m.llama.y - alcance)
-        if (y0 > r.top) drawRect(lejos, r.topLeft, Size(r.width, minOf(y0, r.bottom) - r.top))
-        if (y0 < r.bottom) drawRect(brocha, Offset(r.left, y0), Size(r.width, r.bottom - y0))
+internal fun DrawScope.zonaNocheEgipto(m: MesaEgipto, zona: List<Rect>, col: Color) {
+    val hondo = m.a.c(col, 0f)
+    zona.forEach { r -> drawRect(hondo, r.topLeft, r.size) }
+    listOf(false, true).forEach { alta ->
+        val centro = if (alta) m.llamaAlta else m.llama
+        val radio = m.w * alcanceLlamaEgipto(alta, m.a.lunar)
+        val brocha = charcoEgipto(m, col, centro, radio, alta)
+        val caja = Rect(centro.x - radio, centro.y - radio, centro.x + radio, centro.y + radio)
+        zona.forEach { r ->
+            val x = r.intersect(caja)
+            if (x.width > 0f && x.height > 0f) drawRect(brocha, x.topLeft, x.size)
+        }
     }
 }
 
-internal fun radialNocheEgipto(m: MesaEgipto, col: Color, radio: Float): Brush {
-    val pasos = floatArrayOf(0f, 0.06f, 0.14f, 0.26f, 0.42f, 0.62f, 0.85f, 1f)
-    val colores = pasos.map { p -> m.a.c(col, m.k(m.llama + Offset(radio * p, 0f))) }
-    return Brush.radialGradient(*pasos.indices.map { pasos[it] to colores[it] }.toTypedArray(), center = m.llama, radius = radio)
+/** El charco de una llama sobre [col]: su color encendido con la transparencia de lo que llega a cada distancia. */
+internal fun charcoEgipto(m: MesaEgipto, col: Color, centro: Offset, radio: Float, alta: Boolean): Brush {
+    val lleno = m.a.c(col, 1f)
+    val pasos = floatArrayOf(0f, 0.05f, 0.12f, 0.22f, 0.35f, 0.5f, 0.7f, 1f)
+    val colores = pasos.map { q ->
+        val d = radio * q / m.w
+        val k = if (alta) lamparaAltaLuzEgipto(d, 0f, m.a.lunar) else lamparaLuzEgipto(d, 0f, m.a.lunar)
+        lleno.copy(alpha = k)
+    }
+    return Brush.radialGradient(*pasos.indices.map { pasos[it] to colores[it] }.toTypedArray(), center = centro, radius = radio)
 }
 
-/**
- * El testero: enlucido de barro dorado, con las pasadas de la mano, la paja, grietas y dos desconchones donde asoma el adobe.
- * Encima, la mancha de la puerta: de día el sol, casi blanco y recortado en diagonal por el dintel y la jamba; en los Sueños
- * claros, el ocaso, más largo y bajo, con el resto del muro en sombra lila; de noche, la luna en el mismo sitio, fría y con su
- * color, mientras la lámpara del suelo enciende el enlucido de abajo arriba.
- */
-internal fun DrawScope.muroEgipto(m: MesaEgipto, fondo: Float) {
-    val u = density
+/** El color de un trozo de muro de día (el enlucido con su luz de la izquierda) o de noche (las dos llamas). */
+internal fun DrawScope.muroEgipto(m: MesaEgipto, zona: List<Rect>) {
     val w = m.w; val a = m.a
-    val alto = m.suelo
-    // Solo donde se ve: la corona, las orillas de fuera de los troncos y la franja de abajo (los tramos y los tablones lo tapan).
-    val zona = listOf(Rect(0f, 0f, w, m.ch), Rect(0f, m.ch, m.posteI.right, fondo), Rect(m.posteD.left, m.ch, w, fondo), Rect(0f, fondo, w, alto))
     if (!a.lumbre) {
         val brocha = Brush.horizontalGradient(listOf(ENLUCIDO_LUZ, ENLUCIDO, mezcla(ENLUCIDO, ENLUCIDO_OSC, 0.6f)), 0f, w)
         zona.forEach { r -> drawRect(brocha, r.topLeft, r.size) }
     } else if (!a.oscuro) {
         val brocha = Brush.horizontalGradient(listOf(a.c(ENLUCIDO_LUZ, 0f), a.c(ENLUCIDO, 0f), a.c(ENLUCIDO_OSC, 0f)), 0f, w)
         zona.forEach { r -> drawRect(brocha, r.topLeft, r.size) }
-        mancha(m.llama, w * 0.34f, LLAMA.copy(alpha = 0.3f))
-    } else {
-        zonaNocheEgipto(m, zona, ENLUCIDO, w * 0.95f)
-    }
+    } else zonaNocheEgipto(m, zona, ENLUCIDO)
+}
+
+/**
+ * Lo del testero de arriba: las pasadas de la mano, la paja, grietas y dos desconchones donde asoma el adobe; la mancha de la
+ * puerta (de día el sol, casi blanco y recortado en diagonal por el dintel y la jamba; en los Sueños claros, el ocaso, más
+ * largo y bajo), y de noche, en lugar del plano de luz, solo una mancha chica de luna de borde blando, y el halo de las llamas.
+ */
+internal fun DrawScope.muroDetallesEgipto(m: MesaEgipto) {
+    val u = density
+    val w = m.w; val a = m.a
     val kc = if (a.oscuro) 0.25f else 1f
+    if (a.ocaso) mancha(m.llama, w * 0.34f, LLAMA.copy(alpha = 0.3f))
     pinceladas(Rect(0f, 0f, w, m.ch), if (a.oscuro) EgiptoTinta.NOCHE else ENLUCIDO_OSC, 611, 16, u, if (a.oscuro) 0.06f else 0.12f)
     if (!a.oscuro) pinceladas(Rect(0f, 0f, w, m.ch), ENLUCIDO_LUZ, 613, 8, u, 0.16f)
     // Las pasadas de la mano al alisar el barro: arcos anchos, con su borde de sombra y su borde de luz.
@@ -98,13 +107,15 @@ internal fun DrawScope.muroEgipto(m: MesaEgipto, fondo: Float) {
         paja.moveTo(q.x, q.y); paja.lineTo(q.x + l, q.y + l * g)
     }
     drawPath(paja, a.c(mezcla(PAJA, ADOBE, 0.35f), kc).copy(alpha = 0.55f), style = Stroke(0.7f * u))
-    // La mancha de la puerta.
+    // La mancha de la puerta (de noche, la luna: chica y de borde blando) y el halo de la llama de arriba en el enlucido.
     when {
-        !a.lumbre -> {
-            drawPath(m.puerta, SOL.copy(alpha = 0.84f))
-        }
+        !a.lumbre -> drawPath(m.puerta, SOL.copy(alpha = 0.84f))
         a.ocaso -> drawPath(m.puerta, mezcla(EgiptoTinta.OCASO, ENLUCIDO_LUZ, 0.45f).copy(alpha = 0.72f))
-        else -> drawPath(m.puerta, a.c(ENLUCIDO_LUZ, 0f, 1f).copy(alpha = 0.95f))
+        else -> {
+            val c = Offset(w * (MuebleEstanteEgipto.LUNA_X + if (a.lunar) 0.06f else 0f), w * (MuebleEstanteEgipto.LUNA_Y + if (a.lunar) 0.12f else 0f))
+            mancha(c, w * (if (a.lunar) 0.62f else 0.3f), EgiptoTinta.LUNA.copy(alpha = if (a.lunar) 0.3f else 0.17f))
+            mancha(m.llamaAlta, w * 0.42f, LLAMA.copy(alpha = if (a.lunar) 0.12f else 0.2f))
+        }
     }
     // Las grietas del enlucido: la raja con su sombra y su borde de luz.
     listOf(Offset(0.87f, 0.18f), Offset(0.33f, 0.3f), Offset(0.62f, 0.86f)).forEachIndexed { i, fr ->
@@ -237,11 +248,11 @@ internal fun DrawScope.bovedaEgipto(m: MesaEgipto) {
 internal fun DrawScope.sueloEgipto(m: MesaEgipto, b: Rect) {
     val u = density
     val w = m.w; val a = m.a
-    val h = size.height
+    val h = m.alto
     val suelo = m.suelo
     // El zócalo ocre.
     val dado = suelo - w * 0.1f
-    if (a.oscuro) drawRect(radialNocheEgipto(m, OCRE, w * 1.7f), Offset(0f, dado), Size(w, suelo - dado))
+    if (a.oscuro) zonaNocheEgipto(m, listOf(Rect(0f, dado, w, suelo)), OCRE)
     else drawRect(a.c(OCRE, 1f), Offset(0f, dado), Size(w, suelo - dado))
     if (!a.lumbre) drawRect(sombraMueble(0.12f), Offset(w * 0.62f, dado), Size(w * 0.38f, suelo - dado))
     pinceladas(Rect(0f, dado, w, suelo), if (a.oscuro) EgiptoTinta.NOCHE else mezcla(OCRE, ADOBE, 0.4f), 651, 12, u, 0.16f)
@@ -255,7 +266,7 @@ internal fun DrawScope.sueloEgipto(m: MesaEgipto, b: Rect) {
     // El suelo de tierra.
     if (h - suelo < 1f) return
     val piso = Rect(0f, suelo, w, h)
-    if (a.oscuro) drawRect(radialNocheEgipto(m, TIERRA, w * 1.3f), piso.topLeft, piso.size)
+    if (a.oscuro) zonaNocheEgipto(m, listOf(piso), TIERRA)
     else drawRect(a.c(TIERRA, 1f), piso.topLeft, piso.size)
     if (!a.lumbre) drawRect(sombraMueble(0.1f), Offset(w * 0.62f, piso.top), Size(w * 0.38f, piso.height))
     pinceladas(piso, if (a.oscuro) EgiptoTinta.NOCHE else ADOBE, 661, 20, u, 0.16f)

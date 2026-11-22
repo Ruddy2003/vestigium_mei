@@ -47,11 +47,10 @@ private class LuzVolumenEgipto(val a: AireEgipto, val k: Float, val f: Float, va
 internal fun DrawScope.volumenEgipto(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
     if (size.width < 2f || size.height < 2f) return
     val a = AireEgipto(oscuro, v.noche)
-    val (k, f) = luzVolumenEgipto(v, oscuro)
-    val mm = MuebleEstanteEgipto
-    val fx = mm.LADO + v.centro * (1f - 2 * mm.LADO)
-    val l = LuzVolumenEgipto(a, k, f, oscuro && fx < mm.LAMP_X - 0.02f, v.tono?.let { tonoDeDiaEgipto(it, oscuro) })
-    when (mm.clase(v.semilla)) {
+    val lv = luzVolumenEgipto(v, oscuro)
+    // El ánimo, con los colores del mundo (ocre rojo, ocre amarillo, lino crudo, fayenza, azul egipcio), de día también de noche.
+    val l = LuzVolumenEgipto(a, lv.k, lv.f, lv.der, v.tono?.let { animoMundoEgipto(tonoDeDiaEgipto(it, oscuro)) })
+    when (MuebleEstanteEgipto.clase(v.semilla)) {
         0 -> rolloEgipto(v, medidor, l)
         1 -> tablillaEgipto(v, medidor, l)
         else -> fardoEgipto(v, medidor, l)
@@ -141,7 +140,7 @@ private fun DrawScope.rolloEgipto(v: Volumen, medidor: TextMeasurer, l: LuzVolum
     val w = size.width; val h = size.height
     val e = minOf(w * 0.34f, 8f * u)
     sombraVolumenEgipto(null, l, Rect(0f, 0f, w, h), CornerRadius(w * 0.5f, e * 0.5f))
-    val papiro = a.c(mezcla(PAPIRO, PAPIRO_OSC, 0.22f + 0.2f * azar(v.semilla, 7)), l.k, l.f)
+    val papiro = a.c(mezcla(PAPIRO, PAPIRO_OSC, 0.12f + 0.2f * azar(v.semilla, 7)), l.k, l.f)
     drawOval(papiro, Offset(0f, h - e), Size(w, e))
     // La funda de lino, con su dobladillo de arriba un poco desigual.
     val ini = h * (0.17f + 0.03f * azar(v.semilla, 8))
@@ -171,20 +170,38 @@ private fun DrawScope.rolloEgipto(v: Volumen, medidor: TextMeasurer, l: LuzVolum
     val dobladillo = Path().apply { moveTo(0f, ini + 2f * u); quadraticTo(w * 0.3f, ini - 1.6f * u, w * 0.55f, ini + 1f * u); quadraticTo(w * 0.8f, ini + 2.6f * u, w, ini) }
     drawPath(corridoEgipto(dobladillo, 0f, 2.6f * u), a.s(0.25f), style = Stroke(1.4f * u))
     drawPath(corridoEgipto(dobladillo, 0f, 1f * u), mezcla(tela, Color.White, if (a.oscuro) 0.05f else 0.18f), style = Stroke(2.4f * u))
-    // El papiro de arriba: cilindro con su luz, la hoja de fuera y las vueltas.
+    // El papiro de arriba: el rollo con su luz, las fibras a lo alto y el borde de la hoja de fuera, que da la vuelta.
     clipRect(0f, e / 2, w, ini + 2f * u) {
+        val fibras = Path()
+        for (j in 0 until 6) { val x = w * (0.1f + 0.16f * j + 0.04f * azar(v.semilla, j + 70)); fibras.moveTo(x, e / 2); fibras.lineTo(x + 0.4f * u, ini + 2f * u) }
+        drawPath(fibras, a.c(PAPIRO_OSC, l.k, l.f).copy(alpha = 0.45f), style = Stroke(0.6f * u))
         cilindroEgipto(Rect(0f, 0f, w, ini + 2f * u), a, l.k, 1.3f, l.der, l.f)
-        drawLine(a.c(PAPIRO_OSC, l.k, l.f), Offset(w * 0.66f, e / 2), Offset(w * 0.64f, ini + 2f * u), 0.9f * u)
+        val borde = w * (0.62f + 0.1f * azar(v.semilla, 71))
+        drawLine(a.s(0.45f), Offset(borde, e / 2), Offset(borde - 0.6f * u, ini + 2f * u), 1f * u)
+        drawLine(a.b(0.4f, l.k), Offset(borde - 1f * u, e / 2), Offset(borde - 1.6f * u, ini + 2f * u), 0.6f * u)
         puertaEnVolumenEgipto(Rect(0f, 0f, w, ini + 2f * u), l)
     }
-    drawOval(a.c(PAPIRO_OSC, l.k, l.f), Offset.Zero, Size(w, e))
-    val vueltas = 2 + (v.lleno * 4).toInt()
-    for (j in 1..vueltas) {
-        val q = 1f - j / (vueltas + 1f)
-        drawOval(if (j % 2 == 0) papiro else a.c(mezcla(PAPIRO, PAPIRO_OSC, 0.6f), l.k, l.f), Offset(w * (1 - q) / 2, e * (1 - q) / 2), Size(w * q, e * q), style = Stroke(0.7f * u))
+    // El canto del rollo: la boca honda y, encima, la espiral de las vueltas del papiro (más cuanto más escribiste).
+    drawOval(a.c(mezcla(PAPIRO_OSC, EgiptoTinta.TINTA, 0.35f), l.k, l.f), Offset.Zero, Size(w, e))
+    val vueltas = 3f + 3f * v.lleno
+    val espiral = Path()
+    val pasos = 64
+    for (j in 0..pasos) {
+        val t = j / pasos.toFloat()
+        val ang = t * vueltas * 6.2832f
+        val rr = 0.14f + 0.84f * t
+        val x = w / 2 + rr * (w / 2 - 0.6f * u) * kotlin.math.cos(ang)
+        val y = e / 2 + rr * (e / 2 - 0.4f * u) * kotlin.math.sin(ang)
+        if (j == 0) espiral.moveTo(x, y) else espiral.lineTo(x, y)
     }
-    drawArc(a.b(0.6f, l.k), 160f, 120f, false, Offset(w * 0.04f, e * 0.04f), Size(w * 0.92f, e * 0.92f), style = Stroke(0.8f * u))
-    drawRect(a.s(0.16f), Offset.Zero, Size(w, h * 0.04f))
+    val grueso = (e / 2) * 0.84f / vueltas * 0.62f
+    drawPath(espiral, papiro, style = Stroke(grueso.coerceAtLeast(0.6f * u), cap = StrokeCap.Round))
+    drawPath(espiral, a.b(0.35f, l.k), style = Stroke((grueso * 0.35f).coerceAtLeast(0.4f * u)))
+    drawCircle(a.c(EgiptoTinta.TINTA, l.k).copy(alpha = 0.6f), (e * 0.07f).coerceAtLeast(0.6f * u), Offset(w / 2, e / 2))
+    // El labio de la vuelta de fuera, con su luz del lado de la luz.
+    drawOval(a.s(0.35f), Offset.Zero, Size(w, e), style = Stroke(0.8f * u))
+    drawArc(a.b(0.6f, l.k), 150f, 120f, false, Offset(w * 0.02f, e * 0.02f), Size(w * 0.96f, e * 0.96f), style = Stroke(0.9f * u))
+    drawRect(a.s(0.16f), Offset.Zero, Size(w, h * 0.03f))
     // El día, en una tira de papiro pegada a la funda.
     tiraEgipto(Rect(w * 0.08f, h * 0.23f, w * 0.92f, h * 0.23f + minOf(h * 0.2f, 23f * u)), v.dia, medidor, l, false)
     // El cordel en dos vueltas, curvas como el cilindro, y el sello.
@@ -205,10 +222,10 @@ private fun DrawScope.rolloEgipto(v: Volumen, medidor: TextMeasurer, l: LuzVolum
 }
 
 /**
- * La tablilla de escriba: una tabla de madera pintada (el color del ánimo, con su veta bajo la pintura y las esquinas gastadas
- * donde asoma la madera), con su canto a la vista y la cara de yeso donde se escribe; de pie y un poco ladeada, con el cordel
- * que sale del agujero. Con más palabras asoman detrás otras tablillas. En el yeso, el día en negro, el mes en rojo y la
- * cuadrícula roja de las prácticas, borrada a medias; en los Sueños, un creciente pintado bajo el día.
+ * La tablilla de escriba: una tabla de madera pintada (el color del ánimo), con su mango arriba y el agujero por donde pasa el
+ * cordel, de pie y un poco ladeada; el canto a la vista, la veta bajo la pintura, las esquinas gastadas donde asoma la madera
+ * y, en la cara de yeso, la cuadrícula roja de las prácticas, el día en negro y el mes en rojo; en los Sueños, un creciente
+ * pintado bajo el día. Con más palabras asoman detrás otras tablillas.
  */
 private fun DrawScope.tablillaEgipto(v: Volumen, medidor: TextMeasurer, l: LuzVolumenEgipto) {
     val u = density
@@ -216,71 +233,72 @@ private fun DrawScope.tablillaEgipto(v: Volumen, medidor: TextMeasurer, l: LuzVo
     val w = size.width; val h = size.height
     val giro = (azar(v.semilla, 11) - 0.5f) * 4f
     val pintura = cuerpoEgipto(l, ACACIA)
-    val canto = mezcla(pintura, Color.Black, 0.28f)
+    val canto = mezcla(pintura, Color.Black, 0.3f)
     rotate(giro, Offset(w / 2, h)) {
-        val tabla = Rect(w * 0.03f, h * 0.07f, w * 0.86f, h)
-        sombraVolumenEgipto(null, l, Rect(tabla.left, tabla.top, w * 0.96f, h))
-        // Las otras tablillas, detrás (más cuantas más palabras).
+        val tabla = Rect(w * 0.02f, h * 0.14f, w * 0.88f, h)
+        val mango = Rect(tabla.left + tabla.width * 0.3f, h * 0.03f, tabla.right - tabla.width * 0.3f, tabla.top + 2f * u)
+        val silueta = Path().apply {
+            addRoundRect(androidx.compose.ui.geometry.RoundRect(tabla, CornerRadius(2.4f * u)))
+            addRoundRect(androidx.compose.ui.geometry.RoundRect(mango, CornerRadius(mango.width * 0.45f, mango.width * 0.45f)))
+        }
+        sombraVolumenEgipto(silueta, l)
+        // Las otras tablillas, detrás (más cuantas más palabras): sus cantos asoman a la derecha y arriba.
         val detras = (v.lleno * 3).toInt().coerceIn(0, 2)
-        for (j in detras downTo 1) {
-            val dx = j * 2.6f * u
-            val r = Rect(tabla.left + dx, tabla.top - j * 2.4f * u, tabla.right + dx * 0.4f, h)
-            drawRect(mezcla(pintura, a.c(ACACIA_OSC, l.k), 0.3f + 0.15f * j), r.topLeft, r.size)
-            drawRect(a.b(0.3f, l.k), r.topLeft, Size(r.width, 1f * u))
-            drawRect(a.s(0.3f), Offset(r.right - 2f * u, r.top), Size(2f * u, r.height))
+        for (k in detras downTo 1) {
+            val dx = k * 2.6f * u
+            val r = Rect(tabla.left + dx, tabla.top - k * 2.4f * u, tabla.right + dx * 0.4f, h)
+            drawRoundRect(mezcla(pintura, a.c(ACACIA_OSC, l.k), 0.3f + 0.15f * k), r.topLeft, r.size, CornerRadius(2.4f * u))
+            drawRect(a.b(0.3f, l.k), Offset(r.left + 2f * u, r.top), Size(r.width - 4f * u, 1f * u))
+            drawRect(a.s(0.3f), Offset(r.right - 2f * u, r.top + 2f * u), Size(2f * u, r.height - 2f * u))
         }
         // El canto de la tabla, a la derecha, con su grueso.
-        val cantoR = Rect(tabla.right - 0.5f * u, tabla.top + 1.4f * u, w * 0.96f, h)
+        val cantoR = Rect(tabla.right - 1f * u, tabla.top + 1.6f * u, w * 0.97f, h)
         drawRect(canto, cantoR.topLeft, cantoR.size)
         drawRect(a.s(0.25f), Offset(cantoR.right - cantoR.width * 0.4f, cantoR.top), Size(cantoR.width * 0.4f, cantoR.height))
-        drawPath(poligonoEgipto(tabla.right - 0.5f * u, tabla.top, w * 0.96f, tabla.top + 1.4f * u, w * 0.96f, tabla.top + 2.4f * u, tabla.right - 0.5f * u, tabla.top + 1f * u), mezcla(pintura, Color.White, 0.2f))
-        // La cara pintada.
-        drawRoundRect(pintura, tabla.topLeft, tabla.size, CornerRadius(1.8f * u))
-        run {
-            val veta = Path()
-            for (j in 0 until 5) {
-                val x = tabla.left + tabla.width * (0.1f + 0.2f * j + 0.05f * azar(v.semilla, j))
-                veta.moveTo(x, tabla.top); veta.quadraticTo(x + (azar(v.semilla, j + 9) - 0.5f) * 4f * u, tabla.center.y, x + 0.6f * u, tabla.bottom)
-            }
-            drawPath(veta, a.s(0.1f), style = Stroke(1.2f * u))
-            // Lo gastado: las esquinas donde asoma la madera.
-            drawPath(poligonoEgipto(tabla.left, tabla.bottom - h * 0.08f, tabla.left + w * 0.12f, tabla.bottom, tabla.left, tabla.bottom), a.c(ACACIA_LUZ, l.k, l.f))
-            drawPath(poligonoEgipto(tabla.right - w * 0.1f, tabla.top, tabla.right, tabla.top, tabla.right, tabla.top + h * 0.05f), a.c(ACACIA_LUZ, l.k, l.f))
-            cilindroEgipto(tabla, a, l.k, 0.75f, l.der, l.f)
-            puertaEnVolumenEgipto(tabla, l)
+        // La tabla y su mango, pintados.
+        drawPath(silueta, pintura)
+        val veta = Path()
+        for (k in 0 until 5) {
+            val x = tabla.left + tabla.width * (0.1f + 0.2f * k + 0.05f * azar(v.semilla, k))
+            veta.moveTo(x, tabla.top + 2f * u); veta.quadraticTo(x + (azar(v.semilla, k + 9) - 0.5f) * 4f * u, tabla.center.y, x + 0.6f * u, tabla.bottom - 1f * u)
         }
-        drawRect(a.b(0.5f, l.k), Offset(tabla.left + 1.6f * u, tabla.top), Size(tabla.width - 3.2f * u, 1f * u))
-        // El agujero y el cordel que sube.
-        val ag = Offset(tabla.center.x, tabla.top + minOf(h * 0.05f, 5f * u))
-        drawPath(Path().apply { moveTo(ag.x - 1.4f * u, ag.y); quadraticTo(ag.x - 3.4f * u, 0f, ag.x + 1f * u, 0.6f * u); quadraticTo(ag.x + 4.4f * u, 1f * u, ag.x + 1.4f * u, ag.y) },
+        drawPath(veta, a.s(0.12f), style = Stroke(1.2f * u))
+        drawPath(poligonoEgipto(tabla.left, tabla.bottom - h * 0.07f, tabla.left + w * 0.1f, tabla.bottom, tabla.left, tabla.bottom), a.c(ACACIA_LUZ, l.k, l.f))
+        cilindroEgipto(tabla, a, l.k, 0.8f, l.der, l.f)
+        puertaEnVolumenEgipto(tabla, l)
+        drawRect(a.b(0.5f, l.k), Offset(tabla.left + 2.4f * u, tabla.top), Size(tabla.width - 4.8f * u, 1f * u))
+        // El mango con su luz y el agujero; el cordel que sale de él.
+        drawRect(a.b(0.3f, l.k), Offset(mango.left + 1f * u, mango.top + 2f * u), Size(mango.width * 0.3f, mango.height - 3f * u))
+        drawRect(a.s(0.22f), Offset(mango.right - mango.width * 0.3f, mango.top + 2f * u), Size(mango.width * 0.3f - 0.6f * u, mango.height - 3f * u))
+        val ag = Offset(mango.center.x, mango.top + mango.height * 0.42f)
+        drawCircle(a.c(EgiptoTinta.CARBON, 0.3f), minOf(mango.width * 0.2f, 1.8f * u), ag)
+        drawPath(Path().apply { moveTo(ag.x - 1.2f * u, ag.y); quadraticTo(ag.x - 4f * u, 0f, ag.x + 1.4f * u, 0.4f * u); quadraticTo(ag.x + 5f * u, 1f * u, ag.x + 1.2f * u, ag.y) },
             a.c(FIBRA, l.k, l.f), style = Stroke(1.2f * u))
-        drawCircle(a.c(EgiptoTinta.CARBON, 0.3f), 1.6f * u, ag)
-        // La cara de yeso, con su bisel: luz arriba y a la izquierda, sombra abajo y a la derecha.
-        val yeso = Rect(tabla.left + tabla.width * 0.2f, ag.y + 5f * u, tabla.right - tabla.width * 0.18f, tabla.bottom - tabla.height * 0.24f)
+        // La cara de yeso, ancha, con su bisel.
+        val yeso = Rect(tabla.left + tabla.width * 0.14f, tabla.top + 4f * u, tabla.right - tabla.width * 0.14f, tabla.bottom - tabla.height * 0.12f)
         if (yeso.width > 4f && yeso.height > 10f) {
-            drawRect(a.etiqueta(l.k, mezcla(YESO, l.tono ?: ACACIA, 0.08f)), yeso.topLeft, yeso.size)
-            drawRect(a.s(0.22f), Offset(yeso.right - 1.2f * u, yeso.top), Size(1.2f * u, yeso.height))
-            drawRect(a.s(0.16f), Offset(yeso.left, yeso.bottom - 1.2f * u), Size(yeso.width, 1.2f * u))
+            drawRect(a.etiqueta(l.k, mezcla(YESO, l.tono ?: ACACIA, 0.06f)), yeso.topLeft, yeso.size)
+            drawRect(a.s(0.24f), Offset(yeso.right - 1.2f * u, yeso.top), Size(1.2f * u, yeso.height))
+            drawRect(a.s(0.18f), Offset(yeso.left, yeso.bottom - 1.2f * u), Size(yeso.width, 1.2f * u))
             drawRect(a.b(0.5f, l.k), yeso.topLeft, Size(yeso.width, 0.8f * u))
             val rejilla = Path()
-            var gx = yeso.left + 3.2f * u
-            while (gx < yeso.right - 1f) { rejilla.moveTo(gx, yeso.top + yeso.height * 0.5f); rejilla.lineTo(gx, yeso.bottom - 1.2f * u); gx += 4.4f * u }
-            var gy = yeso.top + yeso.height * 0.5f
+            var gx = yeso.left + 3.6f * u
+            while (gx < yeso.right - 1f) { rejilla.moveTo(gx, yeso.top + yeso.height * 0.42f); rejilla.lineTo(gx, yeso.bottom - 1.2f * u); gx += 4.4f * u }
+            var gy = yeso.top + yeso.height * 0.42f
             while (gy < yeso.bottom - 1f) { rejilla.moveTo(yeso.left + 1f * u, gy); rejilla.lineTo(yeso.right - 1.2f * u, gy); gy += 4.4f * u }
-            drawPath(rejilla, a.rubrica.copy(alpha = 0.16f), style = Stroke(0.45f * u))
-            val dia = Rect(yeso.left, yeso.top + 0.5f * u, yeso.right, yeso.top + minOf(yeso.height * 0.32f, 21f * u))
-            textoEn(medidor, v.dia, dia, MuebleEstanteEgipto.LETRA, a.tinta, 13.5f, peso = FontWeight.Bold, minimo = 6f)
+            drawPath(rejilla, a.rubrica.copy(alpha = 0.22f), style = Stroke(0.5f * u))
+            val dia = Rect(yeso.left, yeso.top + 0.5f * u, yeso.right, yeso.top + minOf(yeso.height * 0.3f, 22f * u))
+            textoEn(medidor, v.dia, dia, MuebleEstanteEgipto.LETRA, a.tinta, 14f, peso = FontWeight.Bold, minimo = 6f)
             if (v.noche) {
-                val c = Offset(yeso.center.x, dia.bottom + 4.4f * u)
-                val r = minOf(yeso.width * 0.3f, 4.6f * u)
+                val c = Offset(yeso.center.x, dia.bottom + 4.6f * u)
+                val r = minOf(yeso.width * 0.26f, 4.8f * u)
                 drawCircle(a.c(EgiptoTinta.AZUL, maxOf(l.k, 0.5f)), r, c)
-                drawCircle(a.etiqueta(l.k, mezcla(YESO, l.tono ?: ACACIA, 0.08f)), r * 0.82f, c + Offset(r * 0.42f, -r * 0.18f))
+                drawCircle(a.etiqueta(l.k, mezcla(YESO, l.tono ?: ACACIA, 0.06f)), r * 0.82f, c + Offset(r * 0.42f, -r * 0.18f))
             }
             val mesY = dia.bottom + (if (v.noche) 10f * u else 2f * u)
             textoEn(medidor, mesEgipto(v, w < 36f * u), Rect(yeso.left + 0.5f * u, mesY, yeso.right - 1.2f * u, yeso.bottom - 1.8f * u), MuebleEstanteEgipto.LETRA, a.rubrica, 8.5f,
                 vertical = true, peso = FontWeight.SemiBold, minimo = 4.5f)
         }
-        drawRect(a.s(0.14f), Offset(tabla.left, tabla.top), Size(tabla.width, h * 0.035f))
         filoEgipto(tabla, a, l.k, l.der)
     }
 }
@@ -295,16 +313,16 @@ private fun DrawScope.fardoEgipto(v: Volumen, medidor: TextMeasurer, l: LuzVolum
     val u = density
     val a = l.a
     val w = size.width; val h = size.height
-    val panza = 0.02f + 0.05f * v.lleno
-    val cuello = h * 0.15f
+    val panza = 0.03f + 0.05f * v.lleno
+    val cuello = h * 0.11f
     val cx = w * (0.48f + 0.06f * (azar(v.semilla, 13) - 0.5f))
     val bulto = Path().apply {
         moveTo(cx - w * 0.12f, cuello)
-        quadraticTo(w * (0f - panza), h * 0.24f, w * 0.02f, h * 0.7f)
-        quadraticTo(w * 0.03f, h, w * 0.2f, h)
+        quadraticTo(w * (-0.02f - panza), h * 0.14f, w * 0.01f, h * 0.6f)
+        quadraticTo(w * 0.02f, h, w * 0.2f, h)
         lineTo(w * 0.82f, h)
-        quadraticTo(w * 0.99f, h, w * 0.98f, h * 0.7f)
-        quadraticTo(w * (1f + panza), h * 0.26f, cx + w * 0.12f, cuello)
+        quadraticTo(w * 0.99f, h, w * 0.99f, h * 0.6f)
+        quadraticTo(w * (1.02f + panza), h * 0.16f, cx + w * 0.12f, cuello)
         close()
     }
     sombraVolumenEgipto(bulto, l)

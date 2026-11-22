@@ -76,9 +76,9 @@ private fun DrawScope.costalEgipto(m: MesaEgipto, pie: Offset) {
             drawPath(pl, a.s(0.28f), style = Stroke(2.2f * u, cap = StrokeCap.Round))
             drawPath(corridoEgipto(pl, -2f * u, 0f), a.b(0.3f, k), style = Stroke(1.2f * u, cap = StrokeCap.Round))
         }
-        cilindroEgipto(caja, a, k, 1.25f, m.der(pie.x), f)
+        cilindroEgipto(caja, a, k, 1.25f, m.der(pie.x, pie.y), f)
         drawRect(a.s(0.2f), Offset(caja.left, pie.y - al * 0.1f), Size(caja.width, al * 0.1f))
-        filoEgipto(caja, a, k, m.der(pie.x))
+        filoEgipto(caja, a, k, m.der(pie.x, pie.y))
     }
     // El cuello fruncido con sus orejas y la soga.
     val cuello = Offset(pie.x - an * 0.09f, pie.y - al * 0.92f)
@@ -105,7 +105,7 @@ private fun DrawScope.medidaEgipto(m: MesaEgipto, pie: Offset) {
     val w = m.w; val a = m.a
     val md = Rect(pie.x - w * 0.07f, pie.y - w * 0.13f, pie.x + w * 0.07f, pie.y)
     val k = maxOf(m.k(md.center), if (a.oscuro) 0.06f else 0f); val f = m.f(md.center)
-    val der = m.der(pie.x)
+    val der = m.der(pie.x, pie.y)
     contactoEgipto(Offset(md.center.x + w * 0.02f, md.bottom), md.width * 1.4f, w * 0.022f, a, 0.45f)
     drawRect(a.c(ACACIA, k, f), md.topLeft, md.size)
     clipRect(md.left, md.top, md.right, md.bottom) {
@@ -147,7 +147,7 @@ private fun DrawScope.tinajaGrandeEgipto(m: MesaEgipto, pie: Offset) {
     val alto = w * 0.34f; val r = alto * 0.38f
     val c = Offset(pie.x, pie.y - alto * 0.5f)
     val k = maxOf(m.k(c), if (a.oscuro) 0.06f else 0f); val f = m.f(c)
-    val der = m.der(pie.x)
+    val der = m.der(pie.x, pie.y)
     // El rodete de paja.
     contactoEgipto(Offset(pie.x + r * 0.2f, pie.y + w * 0.004f), r * 2.6f, w * 0.03f, a, 0.45f)
     val rodete = Rect(pie.x - r * 0.9f, pie.y - w * 0.026f, pie.x + r * 0.9f, pie.y + w * 0.008f)
@@ -236,13 +236,18 @@ private fun DrawScope.lamparaEgipto(m: MesaEgipto, piso: Float) {
 }
 
 /** La llama de la mecha: el halo que tiñe lo de alrededor, el cuerpo y el corazón blanco; encima de todo, con su propio color. */
-internal fun DrawScope.llamaEgipto(m: MesaEgipto) {
+internal fun DrawScope.llamaEgipto(m: MesaEgipto) = llamaEnEgipto(m, m.llama, 1f)
+
+/** La llama de la lámpara de la repisa alta, un poco más chica. */
+internal fun DrawScope.llamaAltaEgipto(m: MesaEgipto) = llamaEnEgipto(m, m.llamaAlta, 0.82f)
+
+/** Una llama en [p], de tamaño [escala]: el halo que tiñe, el cuerpo y el corazón casi blanco. */
+private fun DrawScope.llamaEnEgipto(m: MesaEgipto, p: Offset, escala: Float) {
     val w = m.w; val a = m.a
-    val p = m.llama
-    val alto = w * (if (a.lunar) 0.032f else 0.046f)
+    val alto = w * (if (a.lunar) 0.032f else 0.046f) * escala
     val fuerza = if (a.oscuro) 1f else 0.6f
-    mancha(p - Offset(0f, alto * 0.4f), w * (if (a.lunar) 0.16f else 0.22f), LLAMA.copy(alpha = 0.34f * fuerza))
-    mancha(p - Offset(0f, alto * 0.4f), w * 0.12f, LLAMA.copy(alpha = 0.5f * fuerza))
+    mancha(p - Offset(0f, alto * 0.4f), w * (if (a.lunar) 0.16f else 0.22f) * escala, LLAMA.copy(alpha = 0.34f * fuerza))
+    mancha(p - Offset(0f, alto * 0.4f), w * 0.12f * escala, LLAMA.copy(alpha = 0.5f * fuerza))
     drawPath(Path().apply {
         moveTo(p.x, p.y - alto)
         cubicTo(p.x + alto * 0.42f, p.y - alto * 0.3f, p.x + alto * 0.36f, p.y + alto * 0.2f, p.x, p.y + alto * 0.24f)
@@ -250,4 +255,52 @@ internal fun DrawScope.llamaEgipto(m: MesaEgipto) {
         close()
     }, LLAMA)
     drawOval(Color(0xFFFFF4D8), Offset(p.x - alto * 0.14f, p.y - alto * 0.34f), Size(alto * 0.28f, alto * 0.5f))
+}
+
+/**
+ * La lámpara de la repisa alta, junto a la balanza: un pie de barro bajo y, encima, el cuenco de grasa con el pico pellizcado
+ * y la mecha de lino (de día, apagada y negra de hollín; de noche arde y alumbra lo de arriba y la primera repisa).
+ */
+internal fun DrawScope.lamparaAltaEgipto(m: MesaEgipto) {
+    val u = density
+    val w = m.w; val a = m.a
+    val ll = m.llamaAlta
+    val piso = m.apoyo
+    val top = ll.y + w * 0.02f
+    if (piso - top < 3f * u) return
+    val k = if (a.lumbre) 0.9f else 1f
+    contactoEgipto(Offset(ll.x + w * 0.01f, piso), w * 0.09f, w * 0.012f, a, 0.42f)
+    val an = w * 0.03f
+    val pieB = Path().apply {
+        moveTo(ll.x - an, piso)
+        quadraticTo(ll.x - an * 0.45f, piso - (piso - top) * 0.4f, ll.x - an * 0.4f, piso - (piso - top) * 0.6f)
+        quadraticTo(ll.x - an * 0.5f, top + (piso - top) * 0.12f, ll.x - an * 0.85f, top)
+        lineTo(ll.x + an * 0.85f, top)
+        quadraticTo(ll.x + an * 0.5f, top + (piso - top) * 0.12f, ll.x + an * 0.4f, piso - (piso - top) * 0.6f)
+        quadraticTo(ll.x + an * 0.45f, piso - (piso - top) * 0.4f, ll.x + an, piso)
+        close()
+    }
+    val caja = Rect(ll.x - an, top, ll.x + an, piso)
+    drawPath(pieB, a.c(BARRO, k))
+    clipPath(pieB) {
+        drawRect(a.c(ROJO, k), Offset(caja.left, top + (piso - top) * 0.3f), Size(caja.width, 1.4f * u))
+        if (a.lumbre) drawRect(LLAMA.copy(alpha = 0.4f), Offset(caja.left, top), Size(caja.width, (piso - top) * 0.35f))
+        else cilindroEgipto(caja, a, k, 1.3f)
+    }
+    val cy = top + w * 0.003f
+    val ac = w * 0.042f; val al = w * 0.016f
+    val cuenco = Path().apply {
+        moveTo(ll.x - ac - w * 0.01f, cy - al - w * 0.002f)
+        lineTo(ll.x + ac, cy - al)
+        cubicTo(ll.x + ac, cy - al * 0.2f, ll.x + ac * 0.5f, cy, ll.x, cy)
+        cubicTo(ll.x - ac * 0.5f, cy, ll.x - ac, cy - al * 0.3f, ll.x - ac - w * 0.01f, cy - al - w * 0.002f)
+        close()
+    }
+    drawPath(cuenco, a.c(mezcla(BARRO, PAPIRO, 0.12f), k))
+    clipPath(cuenco) { cilindroEgipto(Rect(ll.x - ac, cy - al, ll.x + ac, cy), a, k, 1.3f) }
+    drawOval(a.c(mezcla(BARRO, CARBON, 0.45f), k), Offset(ll.x - ac, cy - al - w * 0.005f), Size(ac * 2, w * 0.01f))
+    drawArc(a.b(0.6f, k), 180f, 120f, false, Offset(ll.x - ac, cy - al - w * 0.005f), Size(ac * 2, w * 0.01f), style = Stroke(1f * u))
+    // El hollín en el muro, encima de la llama, y la mecha.
+    drawLine(a.c(if (a.lumbre) LINO else PALMA_OSC, k), Offset(ll.x + w * 0.005f, cy - al), Offset(ll.x, ll.y + 1f * u), 1.6f * u, cap = StrokeCap.Round)
+    if (!a.lumbre) drawCircle(a.c(CARBON, k), 1.2f * u, ll)
 }

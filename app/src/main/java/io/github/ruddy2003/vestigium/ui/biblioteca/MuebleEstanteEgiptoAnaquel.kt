@@ -40,20 +40,12 @@ import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 // El anaquel del almacén de la Tumba (MuebleEstanteEgipto): los troncos de palmera, los tablones de acacia y las ataduras.
 
 /**
- * Un color que cambia a lo largo de [r] con la luz de la lámpara (de noche); de día, liso. Lo que queda fuera del alcance de
- * la lámpara se pinta liso (un degradado solo donde hace falta: pintarlo pesa).
+ * Un color que cambia a lo largo de [r] con la luz de las llamas (de noche); de día, liso. Lo que queda fuera del alcance de
+ * las dos se pinta liso con su color hondo (un degradado solo donde hace falta: pintarlo pesa).
  */
 private fun DrawScope.pintarConLuzEgipto(m: MesaEgipto, col: Color, r: Rect, vertical: Boolean, f: Float = 0f) {
     if (!m.a.oscuro) { drawRect(m.a.c(col, 1f, f), r.topLeft, r.size); return }
-    val alcance = m.w * 0.95f
-    val corte = m.llama.y - alcance
-    if (r.bottom <= corte) { drawRect(m.a.c(col, m.k(r.center), m.f(r.center)), r.topLeft, r.size); return }
-    if (vertical && r.top < corte) {
-        val arriba = Rect(r.left, r.top, r.right, corte)
-        drawRect(m.a.c(col, m.k(Offset(r.center.x, corte)), m.f(arriba.center)), arriba.topLeft, arriba.size)
-        pintarConLuzEgipto(m, col, Rect(r.left, corte, r.right, r.bottom), true, f)
-        return
-    }
+    if (!alcanzaEgipto(m, r)) { drawRect(m.a.c(col, 0f, m.f(r.center)), r.topLeft, r.size); return }
     val n = 6
     val colores = List(n) { i ->
         val t = i / (n - 1f)
@@ -70,7 +62,7 @@ internal fun DrawScope.fondosTramosEgipto(m: MesaEgipto, repisas: List<Rect>) {
     val x0 = m.posteI.right; val x1 = m.posteD.left
     val zona = repisas.map { r -> Rect(x0, r.top, x1, r.bottom) }
     val col = EgiptoTinta.TRAMO
-    if (m.a.oscuro) zonaNocheEgipto(m, zona, mezcla(col, EgiptoTinta.NOCHE, 0.35f), m.w * 0.95f)
+    if (m.a.oscuro) zonaNocheEgipto(m, zona, mezcla(col, EgiptoTinta.NOCHE, 0.15f))
     else { val c = m.a.c(col, 1f); zona.forEach { r -> drawRect(c, r.topLeft, r.size) } }
 }
 
@@ -88,7 +80,7 @@ internal fun DrawScope.fondoTramoEgipto(m: MesaEgipto, r: Rect) {
     pinceladas(tramo, if (a.oscuro) EgiptoTinta.NOCHE else HONDO, 701 + (r.top / u).toInt(), 8, u, 0.14f)
     // El sol (o la luna) que se cuela entre los troncos y llega al fondo.
     clipRect(x0, r.top, x1, r.bottom) {
-        drawPath(m.puertaEn(tramo), a.puerta(if (a.oscuro) 0.32f else 0.42f))
+        if (!a.oscuro) drawPath(m.puertaEn(tramo), a.puerta(0.42f))
     }
     // Los troncos de atrás, más delgados y en sombra: la hondura del anaquel.
     val g = w * 0.03f
@@ -117,26 +109,38 @@ internal fun DrawScope.fondoTramoEgipto(m: MesaEgipto, r: Rect) {
     drawRect(a.b(0.25f, m.k(cara.center)), Offset(x0, cara.bottom - 1f * u), Size(cara.width, 1f * u))
 }
 
-/** El anaquel: los dos troncos de palmera, los tablones de acacia (el de arriba más grueso, con su cara de arriba) y las ataduras. */
-internal fun DrawScope.anaquelEgipto(m: MesaEgipto, d: DisposicionEstante) {
-    val w = m.w; val a = m.a
-    // La sombra de cada tronco en el muro, corrida a la derecha (la del de la derecha cae fuera del mueble).
-    if (!a.oscuro) drawRect(a.s(0.2f), Offset(m.posteI.right, m.posteI.top + w * 0.02f), Size(w * 0.022f, m.suelo - m.posteI.top - w * 0.02f))
+/** Si alguna de las dos llamas llega a algo de [r] (de noche). */
+private fun alcanzaEgipto(m: MesaEgipto, r: Rect): Boolean = listOf(false, true).any { alta ->
+    val c = if (alta) m.llamaAlta else m.llama
+    val radio = m.w * alcanceLlamaEgipto(alta, m.a.lunar)
+    r.left < c.x + radio && r.right > c.x - radio && r.top < c.y + radio && r.bottom > c.y - radio
+}
+
+/** Los dos troncos de palmera con su sombra en el muro (se pintan en cada franja, dentro de su recorte). */
+internal fun DrawScope.postesEgipto(m: MesaEgipto) {
+    val w = m.w
+    if (!m.a.oscuro) drawRect(m.a.s(0.2f), Offset(m.posteI.right, m.posteI.top + w * 0.02f), Size(w * 0.022f, m.suelo - m.posteI.top - w * 0.02f))
     posteEgipto(m, m.posteI, 41)
     posteEgipto(m, m.posteD, 47)
-    // Las estacas que sostienen cada tablón, hincadas en los troncos.
-    d.tablas.forEach { t -> estacasEgipto(m, t.bottom) }
+}
+
+/** El tablón de arriba, con sus estacas y sus ataduras (en la franja de arriba, que se pinta una vez). */
+internal fun DrawScope.arribaEgipto(m: MesaEgipto) {
     estacasEgipto(m, m.frenteArriba.bottom)
-    // Los tablones.
-    d.tablas.forEachIndexed { i, t -> tablonEgipto(m, Rect(w * (0.003f + 0.004f * azar(i, 3)), t.top, w * (0.997f - 0.004f * azar(i, 4)), t.bottom), 310 + 7 * i, i) }
     tablonArribaEgipto(m)
-    // Las ataduras de soga, en cada cruce de tablón y tronco.
+    ataduraEgipto(m, Offset(m.posteI.center.x, m.frenteArriba.center.y), m.posteI.width, m.frenteArriba.height)
+    ataduraEgipto(m, Offset(m.posteD.center.x, m.frenteArriba.center.y), m.posteD.width, m.frenteArriba.height)
+}
+
+/** El cuerpo del anaquel: los tablones de acacia de cada repisa, con sus estacas y sus ataduras. */
+internal fun DrawScope.anaquelEgipto(m: MesaEgipto, d: DisposicionEstante) {
+    val w = m.w
+    d.tablas.forEach { t -> estacasEgipto(m, t.bottom) }
+    d.tablas.forEachIndexed { i, t -> tablonEgipto(m, Rect(w * (0.003f + 0.004f * azar(i, 3)), t.top, w * (0.997f - 0.004f * azar(i, 4)), t.bottom), 310 + 7 * i, i) }
     d.tablas.forEach { t ->
         ataduraEgipto(m, Offset(m.posteI.center.x, t.center.y), m.posteI.width, t.height)
         ataduraEgipto(m, Offset(m.posteD.center.x, t.center.y), m.posteD.width, t.height)
     }
-    ataduraEgipto(m, Offset(m.posteI.center.x, m.frenteArriba.center.y), m.posteI.width, m.frenteArriba.height)
-    ataduraEgipto(m, Offset(m.posteD.center.x, m.frenteArriba.center.y), m.posteD.width, m.frenteArriba.height)
 }
 
 /**
@@ -148,7 +152,7 @@ private fun DrawScope.posteEgipto(m: MesaEgipto, r: Rect, semilla: Int) {
     val u = density
     val a = m.a
     val kM = m.k(r.center)
-    val der = m.der(r.center.x)
+    val der = m.der(r.center.x, r.center.y)
     pintarConLuzEgipto(m, PALMA, r, vertical = true)
     clipRect(r.left, r.top, r.right, r.bottom) {
         // Las escamas de las pencas cortadas: la baldosa pegada a lo alto del tronco.
@@ -238,7 +242,7 @@ private fun DrawScope.tablonEgipto(m: MesaEgipto, r: Rect, semilla: Int, i: Int)
     drawRect(a.c(ACACIA_OSC, m.k(Offset(r.left, r.center.y))), Offset(r.left, r.top), Size(w * 0.009f, r.height))
     drawRect(a.c(ACACIA_OSC, m.k(Offset(r.right, r.center.y))), Offset(r.right - w * 0.009f, r.top), Size(w * 0.009f, r.height))
     drawRect(a.s(0.2f), Offset(r.right - w * 0.009f, r.top), Size(w * 0.009f, r.height))
-    filoEgipto(r, a, k, m.der(r.center.x))
+    filoEgipto(r, a, k, m.der(r.center.x, r.center.y))
 }
 
 /**
@@ -254,7 +258,7 @@ private fun DrawScope.tablonArribaEgipto(m: MesaEgipto) {
     // La cara de arriba.
     pintarConLuzEgipto(m, ACACIA_LUZ, sup, vertical = false, f = 0f)
     clipRect(sup.left, sup.top, sup.right, sup.bottom) {
-        drawPath(m.puertaEn(sup), a.puerta(if (a.oscuro) 0.3f else 0.4f))
+        if (!a.oscuro) drawPath(m.puertaEn(sup), a.puerta(0.4f))
     }
     vetas(sup, (if (a.oscuro) EgiptoTinta.NOCHE else ACACIA_OSC).copy(alpha = 0.28f), 5200, 0.6f, grosor = 0.6f, ondulacion = 0.6f)
     drawRect(a.s(0.2f), sup.topLeft, Size(sup.width, 1.6f * u))
