@@ -38,11 +38,13 @@ internal object PaletaRomano {
     /** El almagre de las líneas pintadas y del zócalo. */
     val ALMAGRE = Color(0xFF94402A)
     val ALMAGRE_OSC = Color(0xFF6A2A1C)
-    /** El ladrillo cocido de los pilares: el de siempre, el más claro, el requemado; el mortero de cal y arena. */
-    val LADRILLO = Color(0xFFAE5E3E)
-    val LADRILLO_CLARO = Color(0xFFC77D57)
-    val LADRILLO_OSC = Color(0xFF7C3E2A)
-    val MORTERO = Color(0xFFCFC3AA)
+    /** El ladrillo cocido romano, apagado y desigual: el rojo tostado, el ocre, el pasado de horno; el mortero de arena. */
+    val LADRILLO = Color(0xFF9C6A50)
+    val LADRILLO_CLARO = Color(0xFFB48C68)
+    val LADRILLO_OSC = Color(0xFF6E4A3C)
+    val MORTERO = Color(0xFFBFAE8E)
+    /** La terra sigillata: el rojo con brillo de los cuencos de mesa. */
+    val SIGILLATA = Color(0xFFA9452C)
     /** El roble de la viga y de las tablas: su cara, su luz y lo hondo. */
     val ROBLE = Color(0xFF86613F)
     val ROBLE_LUZ = Color(0xFFB08A5E)
@@ -78,6 +80,8 @@ internal object PaletaRomano {
     val LLAMA = Color(0xFFFFB25C)
     val FUEGO = Color(0xFFFFE2A6)
     val LUNA = Color(0xFFE6EAF4)
+    /** El roce de la luna en los cantos, de noche. */
+    val LUNA_RAS = Color(0xFF9FB2D8)
     /** Lo hondo del tinte: el ánimo se tiñe un poco hacia aquí para que sea cuero o pintura y no pastel. */
     val TINTE_HONDO = Color(0xFF22150F)
 
@@ -98,9 +102,11 @@ internal class AireRomano(val oscuro: Boolean, val noche: Boolean) {
 
     fun luz(c: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(mezcla(c, p.ANOCHECER, 0.38f - 0.22f * k), p.LLAMA, 0.12f * k) else c
-        return mezcla(mezcla(c, hondo, 0.82f - 0.84f * k.pow(0.85f)), p.LLAMA, 0.3f * k)
+        if (!oscuro) return if (noche) mezcla(mezcla(c, p.ANOCHECER, 0.44f - 0.34f * k), p.LLAMA, 0.16f * k) else c
+        return mezcla(mezcla(c, hondo, 0.8f - 0.82f * k.pow(0.85f)), p.LLAMA, 0.3f * k)
     }
+    /** La segunda luz de la noche: la luna difusa del espejuelo, fría, que roza los cantos que la miran (la izquierda). */
+    fun lunar(a: Float): Color = if (oscuro) p.LUNA_RAS.copy(alpha = a.coerceIn(0f, 1f)) else Color.Transparent
     fun sombra(a: Float): Color = if (oscuro) hondo.copy(alpha = (a * 1.15f).coerceIn(0f, 1f)) else sombraMueble(a)
     /** La sombra fría: la de la cal y el hierro (de noche, la misma que las demás). */
     fun frio(a: Float): Color = if (oscuro) hondo.copy(alpha = (a * 1.15f).coerceIn(0f, 1f)) else p.FRIO.copy(alpha = a.coerceIn(0f, 1f))
@@ -175,8 +181,9 @@ internal object MuebleEstanteRomano {
     /** Llenan unos cuatro quintos de la repisa: el legajo, el más alto; la bolsa, mediana; la arqueta, baja y ancha. */
     fun alto(semilla: Int, palabras: Int): Float = when (clase(semilla)) {
         0 -> 0.85f + 0.08f * azar(semilla, 1)
-        1 -> 0.66f + 0.07f * azar(semilla, 1)
-        else -> 0.76f + 0.08f * azar(semilla, 1)
+        // La arqueta es más ancha que alta: su caja, de unos cuatro quintos de su ancho, más la tapa abierta encima.
+        1 -> ((ancho(palabras).value * 0.92f).coerceIn(30f, 46f) * 1.5f) / ALTO_REPISA.value
+        else -> 0.62f + 0.1f * azar(semilla, 1)
     }
 
     // ---------------------------------------------------------------- la luz
@@ -236,10 +243,12 @@ internal object MuebleEstanteRomano {
             muro(a, ch, suelo, cercaMuro)
             ventana(a)
         }
-        if (a.lumbre) {
-            val f = if (oscuro) 1f else 0.5f
-            mancha(llama, w * 0.6f, P.LLAMA.copy(alpha = 0.2f * f))
-            mancha(llama, w * 0.2f, P.FUEGO.copy(alpha = 0.28f * f))
+        if (oscuro) {
+            mancha(llama, w * 0.6f, P.LLAMA.copy(alpha = 0.2f))
+            mancha(llama, w * 0.2f, P.FUEGO.copy(alpha = 0.28f))
+        } else if (noche) {
+            // Al anochecer la linterna está recién encendida: un charco chico.
+            mancha(llama, w * 0.22f, P.LLAMA.copy(alpha = 0.34f))
         }
         with(MuroEstanteRomano) { espiga(a, suelo, cerca) }
         with(ObraEstanteRomano) {

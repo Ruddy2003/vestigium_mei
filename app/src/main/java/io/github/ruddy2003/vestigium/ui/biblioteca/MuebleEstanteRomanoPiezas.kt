@@ -16,10 +16,10 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /**
  * Los objetos del estante de Romano ([MuebleEstanteRomano]), todos del cuarto del escribiente de un campamento del Danubio
- * hacia el 110 d. C.: arriba, el modio de medir el grano con su rasero y la romana de bronce colgada que pesa la ración (el
- * punto donde cae el ojo), la dolabra colgada bajo la ventana, la jarra de la posca y la linterna de cuerno; en los huecos de
- * las repisas, el pan partido en ocho, las pesas de piedra y la sartén de bronce; al pie, la muela de mano del contubernio y
- * el ánfora de aceite de la Bética apoyada en el pilar.
+ * hacia el 110 d. C.: arriba, el modio grande de medir el grano con su rasero y, solapada delante, la romana de bronce
+ * colgada que pesa la ración (el punto donde cae el ojo), la jarra de la posca y la linterna de cuerno; en los huecos de las
+ * repisas, el pan partido en ocho, el cuenco de terra sigillata con las pesas de bronce en fila y la sartén de bronce con el
+ * rollo de cuerda de la tienda; al pie, la muela de mano del contubernio y el ánfora de aceite de la Bética.
  */
 internal object PiezasEstanteRomano {
     private val P = PaletaRomano
@@ -36,53 +36,9 @@ internal object PiezasEstanteRomano {
 
     fun DrawScope.arriba(a: AireRomano, apoyo: Float, cerca: (Offset) -> Float) {
         val w = size.width
-        dolabra(a, Offset(w * 0.05f, w * 0.39f), w * 0.235f, cerca)
-        modio(a, Offset(w * 0.36f, apoyo), w * 0.165f, w * 0.125f, cerca)
-        romana(a, Offset(w * 0.565f, w * 0.115f), cerca)
-        jarra(a, Offset(w * 0.69f, apoyo), w * 0.078f, cerca)
-    }
-
-    /**
-     * La dolabra colgada de dos estacas bajo la ventana: el mango de fresno, la cabeza de hierro con el hacha que baja y el pico
-     * que sube, la funda de cuero en el filo; su sombra en la cal.
-     */
-    private fun DrawScope.dolabra(a: AireRomano, desde: Offset, largo: Float, cerca: (Offset) -> Float) {
-        val u = density
-        val k = cerca(desde + Offset(largo / 2, 0f))
-        val g = 3.4f * u
-        val sombra = caida(desde, 3f * u, a)
-        // Las estacas.
-        for (f in listOf(0.3f, 0.82f)) {
-            val p = desde + Offset(largo * f, g * 0.6f)
-            drawCircle(a.sombra(0.3f), 1.8f * u, p + Offset(1f * u, 1f * u))
-            drawCircle(a.luz(P.ROBLE_OSC, k), 1.6f * u, p)
-        }
-        // La sombra del mango y de la cabeza.
-        drawLine(a.sombra(0.25f), desde + sombra, desde + sombra + Offset(largo, -1.2f * u), g, cap = StrokeCap.Round)
-        drawPath(corridoRomano(cabezaDolabra(desde, largo), sombra.x, sombra.y), a.sombra(0.25f))
-        // El mango.
-        drawLine(a.luz(Color(0xFF9C7A52), k), desde, desde + Offset(largo, -1.2f * u), g, cap = StrokeCap.Round)
-        drawLine(a.claro(0.35f), desde + Offset(largo * 0.1f, -g * 0.3f), desde + Offset(largo, -1.2f * u - g * 0.3f), 0.7f * u)
-        // La cabeza de hierro.
-        drawPath(cabezaDolabra(desde, largo), a.luz(P.HIERRO, k))
-        drawLine(a.luz(P.HIERRO_LUZ, k), desde + Offset(largo * 0.012f, -largo * 0.2f), desde + Offset(largo * 0.03f, largo * 0.15f), 0.8f * u)
-        // La funda de cuero del filo, con su correa.
-        val funda = Rect(desde.x - largo * 0.035f, desde.y + largo * 0.06f, desde.x + largo * 0.075f, desde.y + largo * 0.19f)
-        drawRect(a.luz(P.CUERO, k), funda.topLeft, funda.size)
-        drawRect(a.claro(0.25f), funda.topLeft, Size(funda.width * 0.25f, funda.height))
-        drawLine(a.luz(P.ROBLE_OSC, k), Offset(funda.left, funda.top + funda.height * 0.45f), Offset(funda.right, funda.top + funda.height * 0.4f), 0.8f * u)
-    }
-
-    private fun cabezaDolabra(o: Offset, largo: Float) = Path().apply {
-        // El ojo, el hacha que baja (ancha abajo) y el pico curvo que sube.
-        moveTo(o.x - largo * 0.02f, o.y - largo * 0.025f)
-        lineTo(o.x + largo * 0.045f, o.y - largo * 0.025f)
-        lineTo(o.x + largo * 0.06f, o.y + largo * 0.2f)
-        lineTo(o.x - largo * 0.045f, o.y + largo * 0.21f)
-        lineTo(o.x - largo * 0.01f, o.y + largo * 0.02f)
-        quadraticTo(o.x - largo * 0.03f, o.y - largo * 0.15f, o.x + largo * 0.05f, o.y - largo * 0.27f)
-        quadraticTo(o.x + largo * 0.012f, o.y - largo * 0.12f, o.x + largo * 0.03f, o.y - largo * 0.03f)
-        close()
+        modio(a, Offset(w * 0.34f, apoyo), w * 0.25f, w * 0.18f, cerca)
+        romana(a, Offset(w * 0.5f, w * 0.07f), w * 1.55f, cerca)
+        jarra(a, Offset(w * 0.635f, apoyo), w * 0.085f, cerca)
     }
 
     /**
@@ -141,14 +97,14 @@ internal object PiezasEstanteRomano {
      * La romana de bronce colgada de una estaca de hierro en la pared: el brazo con sus marcas, el platillo colgado de tres
      * cadenitas con un puñado de grano y la pesa en forma de bellota, que corre por el brazo. Su sombra en la cal.
      */
-    private fun DrawScope.romana(a: AireRomano, clavo: Offset, cerca: (Offset) -> Float) {
+    private fun DrawScope.romana(a: AireRomano, clavo: Offset, escala: Float, cerca: (Offset) -> Float) {
         val u = density
-        val w = size.width * 1.25f
+        val w = escala
         val k = cerca(clavo + Offset(0f, w * 0.1f))
         val fiel = clavo + Offset(0f, w * 0.045f)
         val corto = fiel + Offset(-w * 0.045f, w * 0.006f)
         val largo = fiel + Offset(w * 0.16f, -w * 0.012f)
-        val plato = Offset(corto.x, w * 0.3f)
+        val plato = corto + Offset(0f, w * 0.13f)
         val pesa = largo + Offset(-w * 0.035f, 0f)
         val s = caida(fiel, 2.6f * u, a)
         for (fase in 0..1) {
@@ -299,7 +255,7 @@ internal object PiezasEstanteRomano {
         val t = minOf(r.height * 0.42f, libre * 0.7f)
         when (Math.floorMod(k, 3)) {
             0 -> pan(a, pie, t, cerca)
-            1 -> pesas(a, pie, t, cerca)
+            1 -> cuencoYPesas(a, pie, t, cerca)
             else -> sarten(a, pie, t, cerca)
         }
     }
@@ -324,26 +280,49 @@ internal object PiezasEstanteRomano {
         if (a.oscuro) drawOval(a.filo(0.5f * k), Offset(hogaza.right - hogaza.width * 0.25f, hogaza.top + 1f * u), Size(hogaza.width * 0.2f, hogaza.height * 0.2f))
     }
 
-    /** Tres pesas de piedra pulida apiladas, de mayor a menor, con su asa de hierro la de arriba. */
-    private fun DrawScope.pesas(a: AireRomano, pie: Offset, t: Float, k: Float) {
+    /**
+     * El cuenco de terra sigillata, rojo y con brillo, con su pie y su labio, y a su lado las pesas de bronce troncocónicas
+     * en fila, de mayor a menor, con la marca del peso hecha a punzón (puntos, no letras).
+     */
+    private fun DrawScope.cuencoYPesas(a: AireRomano, pie: Offset, t: Float, k: Float) {
         val u = density
-        contactoRomano(pie, t * 1.9f, 4f * u, a)
-        var y = pie.y
-        val piedras = listOf(Color(0xFF6E6A63), Color(0xFF8A8478), Color(0xFF4E4C4A))
-        for (j in 0 until 3) {
-            val an = t * (1.4f - 0.3f * j)
-            val al = an * 0.42f
-            val r = Rect(pie.x - an / 2 + j * 1.5f * u, y - al, pie.x + an / 2 + j * 1.5f * u, y)
-            drawOval(a.luz(piedras[j], k), r.topLeft, r.size)
-            drawOval(a.claro(0.3f), Offset(r.left + r.width * 0.12f, r.top + r.height * 0.12f), Size(r.width * 0.4f, r.height * 0.3f))
-            drawOval(a.frio(0.3f), Offset(r.left + r.width * 0.45f, r.top + r.height * 0.45f), Size(r.width * 0.5f, r.height * 0.5f))
-            drawLine(a.luz(P.HIERRO_LUZ, k), Offset(r.center.x - r.width * 0.1f, r.top + r.height * 0.35f), Offset(r.center.x + r.width * 0.1f, r.top + r.height * 0.35f), 0.7f * u)
-            y -= al * 0.88f
+        contactoRomano(pie + Offset(t * 0.2f, 0f), t * 2.6f, 4f * u, a)
+        // El cuenco.
+        val c = Offset(pie.x - t * 0.45f, pie.y)
+        val an = t * 1.3f
+        val alto = t * 0.62f
+        val cuenco = Path().apply {
+            moveTo(c.x - an / 2, c.y - alto)
+            cubicTo(c.x - an * 0.48f, c.y - alto * 0.2f, c.x - an * 0.2f, c.y - alto * 0.12f, c.x - an * 0.16f, c.y - alto * 0.12f)
+            lineTo(c.x - an * 0.18f, c.y)
+            lineTo(c.x + an * 0.18f, c.y)
+            lineTo(c.x + an * 0.16f, c.y - alto * 0.12f)
+            cubicTo(c.x + an * 0.2f, c.y - alto * 0.12f, c.x + an * 0.48f, c.y - alto * 0.2f, c.x + an / 2, c.y - alto)
+            close()
         }
-        drawArc(a.luz(P.HIERRO, k), 180f, 180f, false, Offset(pie.x - t * 0.18f + 3f * u, y - t * 0.2f), Size(t * 0.36f, t * 0.4f), style = Stroke(1.6f * u))
+        drawPath(cuenco, a.luz(P.SIGILLATA, k))
+        drawOval(a.luz(mezcla(P.SIGILLATA, P.TINTA, 0.35f), k), Offset(c.x - an / 2, c.y - alto - an * 0.06f), Size(an, an * 0.12f))
+        drawOval(a.luz(mezcla(P.SIGILLATA, P.HUESO, 0.15f), k), Offset(c.x - an / 2, c.y - alto - an * 0.06f), Size(an, an * 0.12f), style = Stroke(1.1f * u))
+        drawLine(a.luz(mezcla(P.SIGILLATA, P.TINTA, 0.3f), k), Offset(c.x - an * 0.47f, c.y - alto * 0.62f), Offset(c.x + an * 0.47f, c.y - alto * 0.62f), 0.6f * u)
+        // El brillo del barniz, de la ventana o de la linterna.
+        drawOval(Color.White.copy(alpha = if (a.oscuro) 0.25f * k else 0.5f), Offset(c.x - an * 0.36f, c.y - alto * 0.9f), Size(an * 0.1f, alto * 0.45f))
+        drawRect(a.frio(0.25f), Offset(c.x + an * 0.18f, c.y - alto), Size(an * 0.28f, alto * 0.85f))
+        // Las pesas, de mayor a menor.
+        var x = pie.x + t * 0.35f
+        for (j in 0 until 4) {
+            val b = t * (0.5f - 0.09f * j)
+            val al = b * 0.85f
+            val p = poligonoRomano(x - b / 2, pie.y, x + b / 2, pie.y, x + b * 0.32f, pie.y - al, x - b * 0.32f, pie.y - al)
+            drawPath(corridoRomano(p, 1.2f * u, 0f), a.sombra(0.3f))
+            drawPath(p, a.luz(if (j == 2) P.PLOMO else P.BRONCE, k))
+            drawOval(a.luz(if (j == 2) mezcla(P.PLOMO, P.HUESO, 0.2f) else P.BRONCE_LUZ, k), Offset(x - b * 0.32f, pie.y - al - b * 0.06f), Size(b * 0.64f, b * 0.12f))
+            drawLine(a.claro(0.4f), Offset(x - b * 0.4f, pie.y - 1f * u), Offset(x - b * 0.28f, pie.y - al + 1f * u), 0.7f * u)
+            for (d in 0 until (4 - j)) drawCircle(P.TINTA.copy(alpha = 0.45f), 0.45f * u, Offset(x - b * 0.15f + d * 1.6f * u, pie.y - al * 0.5f))
+            x += b * 0.95f + 1.5f * u
+        }
     }
 
-    /** La sartén de bronce de mango largo apoyada de canto contra el fondo, y un ovillo de cordel. */
+    /** La sartén de bronce de mango largo apoyada de canto contra el fondo, y el rollo de cuerda de la tienda. */
     private fun DrawScope.sarten(a: AireRomano, pie: Offset, t: Float, k: Float) {
         val u = density
         val c = Offset(pie.x - t * 0.2f, pie.y - t * 0.62f)
@@ -359,11 +338,14 @@ internal object PiezasEstanteRomano {
         drawCircle(a.luz(P.BRONCE_LUZ, k), r * 0.86f, c, style = Stroke(0.8f * u))
         drawArc(a.claro(0.5f), 200f, 70f, false, Offset(c.x - r * 0.7f, c.y - r * 0.7f), Size(r * 1.4f, r * 1.4f), style = Stroke(1.2f * u))
         if (a.oscuro) drawArc(a.filo(0.6f * k), -60f, 80f, false, Offset(c.x - r, c.y - r), Size(r * 2, r * 2), style = Stroke(1.2f * u))
-        // El ovillo de cáñamo.
-        val o = Offset(pie.x + t * 0.75f, pie.y - t * 0.24f)
-        drawCircle(a.luz(P.CANAMO, k), t * 0.24f, o)
-        for (j in 0 until 4) drawArc(a.luz(Color(0xFF8E7650), k), 20f + 40f * j, 120f, false, Offset(o.x - t * 0.2f, o.y - t * 0.2f), Size(t * 0.4f, t * 0.4f), style = Stroke(0.6f * u))
-        drawLine(a.luz(P.CANAMO, k), o + Offset(-t * 0.1f, t * 0.22f), o + Offset(-t * 0.5f, t * 0.24f), 0.7f * u)
+        // El rollo de cuerda de la tienda, tumbado: vueltas apretadas vistas de canto y un cabo suelto.
+        val o = Offset(pie.x + t * 0.9f, pie.y - t * 0.2f)
+        val ro = t * 0.42f
+        drawOval(a.sombra(0.3f), Offset(o.x - ro, pie.y - 2f * u), Size(ro * 2.1f, 4f * u))
+        drawOval(a.luz(P.CANAMO, k), Offset(o.x - ro, o.y - ro * 0.5f), Size(ro * 2, ro * 0.95f))
+        for (j in 0 until 4) drawOval(a.luz(Color(0xFF8E7650), k), Offset(o.x - ro * (1f - 0.2f * j), o.y - ro * (0.5f - 0.1f * j)), Size(ro * (2f - 0.4f * j), ro * (0.95f - 0.2f * j)), style = Stroke(0.7f * u))
+        drawOval(a.luz(mezcla(P.CANAMO, P.TINTA, 0.5f), k), Offset(o.x - ro * 0.25f, o.y - ro * 0.12f), Size(ro * 0.5f, ro * 0.22f))
+        drawLine(a.luz(P.CANAMO, k), o + Offset(ro * 0.7f, ro * 0.3f), o + Offset(ro * 1.3f, ro * 0.48f), 0.9f * u, cap = StrokeCap.Round)
     }
 
     // ---------------------------------------------------------------- al pie
@@ -393,6 +375,7 @@ internal object PiezasEstanteRomano {
             drawOval(a.luz(P.BASALTO, k), Offset(r.left, r.bottom - elipse / 2), Size(r.width, elipse))
             drawRect(a.claro(0.18f), Offset(r.left, r.top), Size(r.width * 0.2f, r.height))
             drawRect(a.frio(0.3f), Offset(r.right - r.width * 0.3f, r.top), Size(r.width * 0.3f, r.height))
+            if (a.oscuro) drawRect(a.lunar(0.45f), Offset(r.left, r.top), Size(1.3f * u, r.height))
             drawOval(a.luz(mezcla(P.BASALTO, P.CAL, 0.25f), k), Offset(r.left, r.top - elipse / 2), Size(r.width, elipse))
             // Los poros del basalto.
             for (j in 0 until 10) drawCircle(a.frio(0.35f), 0.7f * u, Offset(r.left + r.width * azar(200 + capa, j), r.top + r.height * azar(210 + capa, j)))
@@ -428,7 +411,7 @@ internal object PiezasEstanteRomano {
                 for (j in 0 until 3) drawArc(a.luz(Color(0xFF8E4E36), k).copy(alpha = 0.4f), 200f, 110f, false,
                     Offset(c.x - r * (0.9f - 0.1f * j), c.y - r * (0.6f - 0.25f * j)), Size(r * (1.8f - 0.2f * j), r * 0.9f), style = Stroke(0.6f * u))
                 drawRect(a.luz(Color(0xFF8E4E36), k), Offset(c.x - r * 0.58f, c.y - r * 1.02f), Size(r * 0.18f, r * 0.08f))
-                if (a.oscuro) drawArc(a.filo(0.5f * k), 200f, 70f, false, Offset(c.x - r, c.y - r), Size(r * 2, r * 2), style = Stroke(1.4f * u))
+                if (a.oscuro) drawArc(a.lunar(0.5f), 160f, 80f, false, Offset(c.x - r, c.y - r), Size(r * 2, r * 2), style = Stroke(1.4f * u))
             }
         }
     }

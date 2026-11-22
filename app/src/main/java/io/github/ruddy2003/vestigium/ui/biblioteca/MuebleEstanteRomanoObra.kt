@@ -4,7 +4,9 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -13,7 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
-import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
+import kotlin.math.pow
 
 /**
  * La obra del estante de Romano ([MuebleEstanteRomano]): los dos pilares de ladrillo cocido con su mortero grueso, las tablas
@@ -24,29 +26,35 @@ internal object ObraEstanteRomano {
     private val P = PaletaRomano
 
     /**
-     * El fondo de una repisa: la cal en la sombra de la tabla de arriba (fría, en otro valor que los volúmenes), con la
-     * sombra del pilar izquierdo; de día, la luz de la ventana que entra de lado en las dos de arriba; de noche, el charco de
-     * la linterna solo donde llega.
+     * El fondo de una repisa: la cal en sombra, en otro valor que los volúmenes, más cálida arriba (donde llega el reflejo de
+     * la ventana) y más honda abajo, con la sombra de la tabla de encima y la del pilar izquierdo; de noche, el charco de la
+     * linterna solo donde llega.
      */
     fun DrawScope.fondoRepisa(k: Int, r: Rect, a: AireRomano, cerca: (Offset) -> Float) {
         val u = density
         val w = size.width
         if (r.width <= 0f || r.height <= 0f) return
         val lejos = if (a.lumbre) 0.02f else 1f
-        drawRect(a.luz(P.CAL_SOMBRA, lejos), r.topLeft, r.size)
-        pinceladas(r, a.luz(P.CAL, lejos), 300 + k, 16, u, alfa = if (a.oscuro) 0.05f else 0.1f)
-        pinceladas(r, a.frio(1f), 320 + k, 10, u, alfa = 0.1f)
-        // Una mancha de humedad que baja desde la tabla y el roce más claro donde se apoyan las cosas.
-        val mx = r.left + r.width * (0.2f + 0.6f * azar(k, 340))
-        drawOval(a.luz(P.CAL_SOMBRA, lejos).copy(alpha = 0.5f), Offset(mx, r.top), Size(r.width * 0.12f, r.height * 0.5f))
-        drawRect(a.luz(P.CAL, lejos).copy(alpha = 0.18f), Offset(r.left, r.bottom - r.height * 0.32f), Size(r.width, r.height * 0.2f))
-        // La faja de almagre que sigue por detrás, a media altura, gastada.
-        drawRect(a.luz(P.ALMAGRE, lejos).copy(alpha = 0.3f), Offset(r.left, r.top + r.height * 0.56f), Size(r.width, 1.3f * u))
+        // La cal en sombra, que baja sin saltos de tibia (arriba) a honda (abajo).
+        val tibia = mezcla(mezcla(P.CAL, P.CAL_SOMBRA, 0.45f), Color(0xFFD9B98E), 0.16f)
+        val honda = mezcla(mezcla(P.CAL, P.CAL_SOMBRA, 0.7f), P.FRIO, 0.08f)
+        val franjas = 8
+        for (f in 0 until franjas) {
+            val y0 = r.top + r.height * f / franjas
+            drawRect(a.luz(mezcla(tibia, honda, (f / (franjas - 1f)).pow(1.3f)), lejos), Offset(r.left, y0), Size(r.width, r.height / franjas + 1f))
+        }
+        // La faja de almagre que sigue por detrás, a media altura, gastada, y unas pasadas de brocha a lo ancho.
+        drawRect(a.luz(P.ALMAGRE, lejos).copy(alpha = 0.28f), Offset(r.left, r.top + r.height * 0.56f), Size(r.width, 1.3f * u))
+        for (j in 0 until 5) {
+            val y = r.top + r.height * (0.25f + 0.14f * j)
+            val x = r.left + r.width * azar(300 + k, j) * 0.6f
+            drawLine(a.luz(if (j % 2 == 0) P.CAL else P.CAL_SOMBRA, lejos).copy(alpha = 0.08f), Offset(x, y), Offset(x + r.width * (0.2f + 0.3f * azar(310 + k, j)), y + 1f * u), 3f * u, cap = StrokeCap.Round)
+        }
         if (!a.oscuro && !a.noche && k < 2) {
-            // El sol de la ventana que entra en diagonal por la izquierda.
+            // El reflejo de la ventana, que entra de lado por la izquierda en las dos de arriba.
             val f = if (k == 0) 1f else 0.55f
             drawPath(poligonoRomano(r.left, r.top + r.height * 0.15f, r.left + r.width * 0.42f * f, r.top + r.height * 0.15f,
-                r.left + r.width * 0.2f * f, r.bottom, r.left, r.bottom), P.CAL_CLARA.copy(alpha = 0.3f))
+                r.left + r.width * 0.2f * f, r.bottom, r.left, r.bottom), P.CAL_CLARA.copy(alpha = 0.22f))
         }
         if (a.lumbre) {
             val llama = Offset(w * MuebleEstanteRomano.LAMP_X, w * MuebleEstanteRomano.LAMP_Y)
@@ -79,6 +87,8 @@ internal object ObraEstanteRomano {
             drawRect(a.luz(P.ROBLE, k), Offset(x0, r.top), Size(an + 1f, r.height))
             drawRect(a.luz(P.ROBLE_LUZ, k), Offset(x0, r.top), Size(an + 1f, r.height * 0.2f))
             if (a.oscuro && k > 0.1f) drawRect(a.filo(0.5f * k), Offset(x0, r.top + r.height * 0.2f), Size(an + 1f, 0.9f * u))
+            // El roce de la luna en el canto, más fuerte cerca de la ventana.
+            if (a.oscuro) drawRect(a.lunar(0.45f * (1f - t / tramos.toFloat()) * (1f - k)), Offset(x0, r.top), Size(an + 1f, 1f * u))
         }
         // Las facetas de la azuela y sus golpes.
         for (j in 0 until 9) {
@@ -131,22 +141,23 @@ internal object ObraEstanteRomano {
         if (r.width <= 1f || r.height <= 1f) return
         clipRect(r.left, r.top, r.right, r.bottom) {
             drawRect(P.MORTERO, r.topLeft, r.size)
-            val hilada = maxOf(3f * u, 6.6f * u)
-            val ladrillo = hilada * 0.7f
-            val largo = r.width * 0.64f
+            // Ladrillo romano: largo y delgado, con el tendel de mortero casi tan grueso como él.
+            val hilada = 7.4f * u
+            val ladrillo = hilada * 0.56f
+            val largo = r.width * 0.92f
             val claros = Path(); val medios = Path(); val oscuros = Path()
             var y = r.top
             var f = 0
             while (y < r.bottom && f < 400) {
                 var x = r.left - (if (f % 2 == 0) largo * 0.35f else largo * 0.8f)
                 var j = 0
-                while (x < r.right && j < 8) {
-                    val l = largo * (0.85f + 0.3f * azar(semilla + f, j))
+                while (x < r.right && j < 6) {
+                    val l = largo * (0.8f + 0.35f * azar(semilla + f, j))
                     val t = azar(semilla * 7 + f, j)
-                    val caida = (azar(semilla + 3 * f, j) - 0.5f) * 0.6f * u
-                    val p = poligonoRomano(x + 1.2f * u, y + 0.4f * u + caida, x + l - 1f * u, y + 0.3f * u, x + l - 1.2f * u, y + ladrillo, x + 1f * u, y + ladrillo - caida)
-                    (if (t < 0.28f) claros else if (t < 0.78f) medios else oscuros).addPath(p)
-                    x += l + 1.6f * u
+                    val caida = (azar(semilla + 3 * f, j) - 0.5f) * 0.8f * u
+                    val p = poligonoRomano(x + 1.4f * u, y + 0.5f * u + caida, x + l - 1.2f * u, y + 0.3f * u, x + l - 1.5f * u, y + ladrillo, x + 1.2f * u, y + ladrillo - caida)
+                    (if (t < 0.3f) claros else if (t < 0.85f) medios else oscuros).addPath(p)
+                    x += l + 2.2f * u
                     j++
                 }
                 y += hilada
@@ -162,6 +173,12 @@ internal object ObraEstanteRomano {
             drawRect(P.LADRILLO_CLARO.copy(alpha = 0.6f), Offset(sello.left, sello.bottom - 0.6f * u), Size(sello.width, 0.6f * u))
             for (j in 0 until 4) drawLine(P.LADRILLO_CLARO.copy(alpha = 0.55f), Offset(sello.left + sello.width * (0.18f + 0.2f * j), sello.top + sello.height * 0.3f),
                 Offset(sello.left + sello.width * (0.24f + 0.2f * j), sello.top + sello.height * (0.55f + 0.2f * azar(semilla, 10 + j))), 0.6f * u)
+            // Las salpicaduras de cal de cuando se encaló el muro y el hollín que sube hacia la linterna.
+            for (j in 0 until 5) {
+                val c = Offset(r.left + r.width * azar(semilla, 20 + j), r.top + r.height * azar(semilla, 30 + j))
+                drawOval(P.CAL.copy(alpha = 0.3f), Offset(c.x, c.y), Size(r.width * (0.25f + 0.3f * azar(semilla, 40 + j)), 3f * u + 4f * u * azar(semilla, 50 + j)))
+            }
+            drawRect(P.TINTA.copy(alpha = 0.08f), r.topLeft, Size(r.width, minOf(r.height, size.width * 0.12f)))
             // La luz del día: la cara izquierda clara, la derecha en sombra fría.
             drawRect(a.claro(0.22f), r.topLeft, Size(r.width * 0.16f, r.height))
             drawRect(a.frio(0.22f), Offset(r.right - r.width * 0.22f, r.top), Size(r.width * 0.22f, r.height))
@@ -178,6 +195,8 @@ internal object ObraEstanteRomano {
             if (a.oscuro) {
                 val kf = cerca(Offset(r.center.x, r.top + r.height * 0.1f))
                 if (kf > 0.1f) drawRect(a.filo(0.45f * kf), Offset(r.left, r.top), Size(1.2f * u, r.height * 0.45f))
+                // Y el roce frío de la luna en la arista que mira a la ventana (el pilar izquierdo, donde no llega la linterna).
+                if (r.center.x < size.width / 2) drawRect(a.lunar(0.4f), Offset(r.right - 1.4f * u, r.top + r.height * 0.15f), Size(1.2f * u, r.height * 0.85f))
             }
         }
         // El pie: la sombra en el suelo.

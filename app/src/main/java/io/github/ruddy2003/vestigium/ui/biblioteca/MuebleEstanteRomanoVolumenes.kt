@@ -1,6 +1,5 @@
 package io.github.ruddy2003.vestigium.ui.biblioteca
 
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -10,64 +9,98 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontWeight
+import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
+import io.github.ruddy2003.vestigium.ui.juegoTonos
+
+/** Las escalas del ánimo de Romano, la de día y la de noche (bajo, medio, alto), para volver a la de día. */
+private val TONOS_ROMANO: Pair<List<Color>, List<Color>> by lazy { juegoTonos(TemaId.ROMANO, false) to juegoTonos(TemaId.ROMANO, true) }
+
+private fun cuadrado(x: Float) = x * x
+
+/**
+ * El color del ánimo tal como es de día. En el modo oscuro la escala del tema cambia de colores (el ánimo neutro pasa del
+ * travertino a un casi negro, pensado para la interfaz) y un volumen claro se volvía negro de noche. Aquí el volumen es un
+ * objeto del cuarto: conserva su color de día y la linterna lo apaga con la distancia. Se ubica el color en la escala de noche
+ * (el tramo y la fracción que más se le acercan) y se toma el mismo punto en la de día; si no está en la escala, queda igual.
+ */
+internal fun tonoDeDiaRomano(t: Color, oscuro: Boolean): Color {
+    if (!oscuro) return t
+    val (dia, noche) = TONOS_ROMANO
+    if (dia.size < 3 || noche.size < 3) return t
+    var mejor = t
+    var error = 0.03f
+    for (seg in 0 until 2) {
+        val a0 = noche[seg]; val a1 = noche[seg + 1]
+        val dr = a1.red - a0.red; val dg = a1.green - a0.green; val db = a1.blue - a0.blue
+        val largo = dr * dr + dg * dg + db * db
+        if (largo < 1e-5f) continue
+        val f = (((t.red - a0.red) * dr + (t.green - a0.green) * dg + (t.blue - a0.blue) * db) / largo).coerceIn(0f, 1f)
+        val er = cuadrado(t.red - a0.red - dr * f) + cuadrado(t.green - a0.green - dg * f) + cuadrado(t.blue - a0.blue - db * f)
+        if (er < error) { error = er; mejor = mezcla(dia[seg], dia[seg + 1], f) }
+    }
+    return mejor
+}
 
 /**
  * Las tres clases de entrada del estante de Romano ([MuebleEstanteRomano]), elegidas con la semilla del día, todas de lo que
- * se guardaba en el cuarto del escribiente: el legajo de hojas de madera escritas con tinta (las cartas y partes del
- * campamento), metido en su funda de cuero y atado; la arqueta de madera pintada con cantoneras de hierro y su cerradura de
- * bronce; y la bolsa de cuero cerrada con cordel y sello de plomo. En las tres, el color del ánimo es el cuerpo entero (la
- * funda, la pintura, el cuero) y lo primero que se ve; el día va en una tablilla de aliso o en una placa de hueso; en los
- * Sueños, la luna de plata a la vista. [luzDe] dice de qué lado llega la luz: -1, de la izquierda (la ventana de día); 1, de
- * la derecha (la linterna de noche, para lo que queda a su izquierda).
+ * se guardaba en el cuarto del escribiente, con tres siluetas: el legajo de hojas de madera escritas con tinta, alto y
+ * panzudo en su funda de cuero con solapa cosida, con las hojas que asoman desparejas; la arqueta de tablas herrada, baja y
+ * ancha, con la tapa abierta y las hojas dentro; y la bolsa de cuero, blanda y vencida, atada con cordel y sello de plomo.
+ * En las tres, el color del ánimo es el cuerpo entero; el día y el mes van en una tablilla de aliso o en una placa de hueso,
+ * nunca a lo largo (no son lomos de libro); en los Sueños, la luna de plata a la vista. [luzDe] dice de qué lado llega la luz:
+ * -1, de la izquierda (la ventana de día); 1, de la derecha (la linterna de noche, para lo que queda a su izquierda).
  */
 internal object VolumenEstanteRomano {
     private val P = PaletaRomano
 
-    /** El tamaño del día, en sp, y el alto de su tablilla, en dp. */
-    private const val TAM_DIA = 12.5f
-    private const val ALTO_TABLILLA = 16f
+    /** El día y el mes de la tablilla, en sp, y su alto, en dp. */
+    private const val TAM_DIA = 12f
+    private const val TAM_MES = 6.2f
+    private const val ALTO_TABLILLA = 21f
 
-    /** El color del ánimo del cuerpo, apenas hundido para que sea materia; [crudo] si no se marcó. */
+    /** El color del ánimo del cuerpo, el de día, apenas hundido para que sea materia; [crudo] si no se marcó. */
     private fun cuerpo(v: Volumen, a: AireRomano, k: Float, crudo: Color): Color =
-        v.tono?.let { a.animo(mezcla(it, P.TINTE_HONDO, if (a.oscuro) 0.04f else 0.1f), k) } ?: a.luz(crudo, k)
+        v.tono?.let { a.animo(mezcla(tonoDeDiaRomano(it, a.oscuro), P.TINTE_HONDO, 0.1f), k) } ?: a.luz(crudo, k)
+
+    /** El mes como en las fechas romanas: abreviado («NOV.»). */
+    private fun mesCorto(mes: String): String = if (mes.length > 5) mes.take(3) + "." else mes
 
     /** La luz de un lado y la sombra fría del otro sobre un cuerpo de [x0] a [x1]. */
     private fun DrawScope.bulto(x0: Float, x1: Float, y0: Float, y1: Float, a: AireRomano, luzDe: Float, fuerza: Float = 1f) {
         val an = x1 - x0
         if (an <= 0f || y1 <= y0) return
-        val (claroX, sombraX) = if (luzDe < 0) x0 + an * 0.08f to x1 - an * 0.3f else x1 - an * 0.2f to x0
-        drawRect(a.claro(0.24f * fuerza), Offset(claroX, y0), Size(an * 0.12f, y1 - y0))
+        val (claroX, sombraX) = if (luzDe < 0) x0 + an * 0.1f to x1 - an * 0.3f else x1 - an * 0.22f to x0
+        drawRect(a.claro(0.22f * fuerza), Offset(claroX, y0), Size(an * 0.14f, y1 - y0))
         drawRect(a.frio(0.16f * fuerza), Offset(sombraX, y0), Size(an * 0.3f, y1 - y0))
-        drawRect(a.frio(0.14f * fuerza), Offset(if (luzDe < 0) x1 - an * 0.12f else x0, y0), Size(an * 0.12f, y1 - y0))
     }
 
-    /** El filo de la linterna en el canto que la mira (solo de noche). */
+    /** El filo de la linterna en el canto que la mira y, de noche, el roce frío de la luna en el canto izquierdo. */
     private fun DrawScope.filo(x0: Float, x1: Float, y0: Float, y1: Float, a: AireRomano, k: Float, luzDe: Float) {
-        if (!a.oscuro || k < 0.06f) return
+        if (!a.oscuro) return
         val u = density
-        drawRect(a.filo(0.6f * k), Offset(x0 + 1.5f * u, y0), Size(x1 - x0 - 3f * u, 1f * u))
-        drawRect(a.filo(0.45f * k), Offset(if (luzDe < 0) x0 else x1 - 1f * u, y0 + 1.5f * u), Size(1f * u, maxOf(0f, y1 - y0 - 3f * u)))
+        if (k > 0.06f) {
+            drawRect(a.filo(0.6f * k), Offset(x0 + 1.5f * u, y0), Size(maxOf(0f, x1 - x0 - 3f * u), 1f * u))
+            drawRect(a.filo(0.45f * k), Offset(if (luzDe < 0) x0 else x1 - 1f * u, y0 + 1.5f * u), Size(1f * u, maxOf(0f, y1 - y0 - 3f * u)))
+        }
+        drawRect(a.lunar(0.4f * (1f - k)), Offset(x0 + 0.4f * u, y0 + 2f * u), Size(1f * u, maxOf(0f, y1 - y0 - 4f * u)))
     }
 
     /** La luna de plata: un creciente con su sombra. */
     private fun DrawScope.luna(c: Offset, r: Float, fondo: Color, a: AireRomano, k: Float) {
-        val plata = if (a.oscuro) mezcla(P.LUNA, a.hondo, 0.22f - 0.22f * k) else P.LUNA
+        val plata = if (a.oscuro) mezcla(P.LUNA, a.hondo, 0.2f - 0.2f * k) else P.LUNA
         drawCircle(a.frio(0.35f), r, c + Offset(r * 0.18f, r * 0.22f))
         drawCircle(plata, r, c)
         drawCircle(fondo, r * 0.8f, Offset(c.x + r * 0.42f, c.y - r * 0.26f))
     }
 
-    /** Un texto secundario (el mes) sobre [fondo]: tinta sobre lo claro, hueso sobre lo oscuro. */
-    private fun tintaSobre(fondo: Color, a: AireRomano, k: Float): Color =
-        if (fondo.luminance() > 0.3f) P.TINTA.copy(alpha = 0.85f) else a.etiqueta(P.HUESO, k).copy(alpha = 0.92f)
-
-    /** La tablilla del día: aliso o hueso, con su sombra, el canto algo desigual y el número en tinta. */
-    private fun DrawScope.tablilla(r: Rect, dia: String, medidor: TextMeasurer, a: AireRomano, k: Float, semilla: Int, cara: Color) {
+    /**
+     * La tablilla del día: aliso o hueso, con su sombra, el canto algo desigual, el número grande y, debajo, el mes abreviado.
+     */
+    private fun DrawScope.tablilla(r: Rect, v: Volumen, medidor: TextMeasurer, a: AireRomano, k: Float, semilla: Int, cara: Color) {
         val u = density
         val p = poligonoRomano(r.left, r.top + 0.5f * u * azar(semilla, 61), r.right, r.top, r.right - 0.4f * u * azar(semilla, 62), r.bottom,
             r.left + 0.3f * u, r.bottom - 0.4f * u * azar(semilla, 63))
@@ -75,93 +108,111 @@ internal object VolumenEstanteRomano {
         drawPath(p, a.etiqueta(cara, k))
         drawRect(a.sombra(0.1f), Offset(r.right - r.width * 0.15f, r.top), Size(r.width * 0.15f, r.height))
         drawRect(a.claro(0.4f), r.topLeft, Size(r.width, 0.7f * u))
-        textoEn(medidor, dia, Rect(r.left + 1f * u, r.top + 0.4f * u, r.right - 1f * u, r.bottom), P.LETRA, P.TINTA, TAM_DIA, peso = FontWeight.Bold)
+        val corte = r.top + r.height * 0.66f
+        textoEn(medidor, v.dia, Rect(r.left + 1f * u, r.top + 0.4f * u, r.right - 1f * u, corte), P.LETRA, P.TINTA, TAM_DIA, peso = FontWeight.Bold)
+        drawLine(P.TINTA.copy(alpha = 0.3f), Offset(r.left + r.width * 0.2f, corte), Offset(r.right - r.width * 0.2f, corte), 0.5f * u)
+        textoEn(medidor, mesCorto(v.mes), Rect(r.left + 0.5f * u, corte, r.right - 0.5f * u, r.bottom - 0.3f * u), P.LETRA, P.TINTA.copy(alpha = 0.85f), TAM_MES,
+            peso = FontWeight.SemiBold, minimo = 4f)
     }
 
     // ---------------------------------------------------------------- el legajo de hojas
 
     /**
-     * El legajo, el más alto: un mazo de hojas finas de aliso escritas con tinta, de pie, metido en una funda de cuero teñida del
-     * ánimo (cruda si no se marcó) con el labio doblado arriba; asoman los cantos de las hojas (más y más desparejos cuanto más
-     * escribiste); dos vueltas de cordel, la tablilla del día colgada del de arriba y el mes a lo largo. En los Sueños, la luna.
+     * El legajo, el más alto: un mazo de hojas finas de aliso escritas con tinta, de pie, metido en una funda de cuero teñida
+     * del ánimo (cruda si no se marcó), panzuda y con las esquinas gastadas; la solapa doblada por delante con su costura y la
+     * correa con su botón de hueso; las hojas asoman desparejas (más cuanto más escribiste) y un cordel ciñe la panza, del que
+     * cuelga la tablilla. En los Sueños, la luna bajo la tablilla.
      */
     fun DrawScope.legajo(v: Volumen, medidor: TextMeasurer, a: AireRomano, k: Float, luzDe: Float) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla and 0x7fffffff
-        val asoma = (7f + 4f * v.lleno) * u
-        // Los cantos de las hojas que asoman, cada una a su altura.
-        val hojas = maxOf(4, ((w - 4f * u) / (2.3f * u)).toInt()).coerceAtMost(24)
-        val paso = (w - 4f * u) / hojas
+        val asoma = (9f + 6f * v.lleno) * u
+        // Las hojas que asoman, cada una a su altura y algo ladeadas.
+        val hojas = maxOf(4, ((w - 7f * u) / (2.6f * u)).toInt()).coerceAtMost(20)
+        val paso = (w - 7f * u) / hojas
         val clara = a.etiqueta(P.ALISO, k * 0.9f)
         val oscura = a.luz(P.ALISO_OSC, k)
-        drawRect(oscura, Offset(2f * u, asoma * 0.45f), Size(w - 4f * u, asoma))
+        drawRect(oscura, Offset(3.5f * u, asoma * 0.5f), Size(w - 7f * u, asoma))
         for (j in 0 until hojas) {
-            val x = 2f * u + paso * j
-            val y = asoma * (0.15f + 0.55f * azar(s, 100 + j)) * (0.5f + 0.5f * v.lleno)
-            drawRect(clara, Offset(x, y), Size(paso * 0.72f, asoma + 1f * u - y))
-        }
-        // Una o dos hojas sueltas que sobresalen, ladeadas.
-        val sueltas = if (v.lleno > 0.4f) 2 else 1
-        for (j in 0 until sueltas) {
-            val x = w * (0.3f + 0.35f * azar(s, 120 + j))
-            rotate((azar(s, 130 + j) - 0.5f) * 14f, Offset(x, asoma)) {
-                drawRect(clara, Offset(x - 2f * u, 0.2f * u), Size(4f * u, asoma))
-                drawLine(P.TINTA.copy(alpha = 0.35f), Offset(x - 1f * u, 2f * u), Offset(x - 1f * u, asoma - 2f * u), 0.5f * u)
+            val x = 3.5f * u + paso * j
+            val y = asoma * (0.05f + 0.75f * azar(s, 100 + j)) * (0.4f + 0.6f * v.lleno)
+            rotate((azar(s, 110 + j) - 0.5f) * 10f, Offset(x, asoma)) {
+                drawRect(clara, Offset(x, y), Size(paso * 0.78f, asoma + 1f * u - y))
+                if (j % 3 == 1) drawLine(P.TINTA.copy(alpha = 0.3f), Offset(x + paso * 0.35f, y + 1.5f * u), Offset(x + paso * 0.35f, asoma - 1f * u), 0.4f * u)
             }
         }
-        // La funda de cuero, un poco abombada, con el labio doblado.
+        // La funda, panzuda: más angosta en la boca y abajo, redonda en las esquinas.
         val cuero = cuerpo(v, a, k, mezcla(P.CUERO, P.CANAMO, 0.2f * azar(s, 3)))
         val hondo = mezcla(cuero, a.hondo, 0.3f)
         val top = asoma
         val funda = Path().apply {
-            moveTo(1f * u, top)
-            lineTo(w - 1f * u, top)
-            quadraticTo(w, (top + h) / 2, w - 1f * u, h)
-            lineTo(1f * u, h)
-            quadraticTo(0f, (top + h) / 2, 1f * u, top)
+            moveTo(2.6f * u, top)
+            lineTo(w - 2.6f * u, top)
+            cubicTo(w + 0.4f * u, top + (h - top) * 0.3f, w + 0.2f * u, h - 6f * u, w - 3.5f * u, h - 0.5f * u)
+            lineTo(3.5f * u, h - 0.5f * u)
+            cubicTo(-0.2f * u, h - 6f * u, -0.4f * u, top + (h - top) * 0.3f, 2.6f * u, top)
             close()
         }
         drawPath(funda, cuero)
-        drawRect(mezcla(cuero, P.HUESO, 0.14f), Offset(1f * u, top), Size(w - 2f * u, 3.2f * u))
-        drawRect(hondo, Offset(1f * u, top + 3.2f * u), Size(w - 2f * u, 0.8f * u))
-        bulto(1f * u, w - 1f * u, top, h, a, luzDe)
-        // Las arrugas del cuero y el desgaste.
+        bulto(0.5f * u, w - 0.5f * u, top, h, a, luzDe)
+        // Las arrugas de la panza y el roce de las esquinas.
         for (j in 0 until 3) {
-            val y = top + (h - top) * (0.3f + 0.25f * j + 0.08f * azar(s, 140 + j))
-            drawLine(hondo.copy(alpha = 0.5f), Offset(w * 0.1f, y), Offset(w * (0.35f + 0.3f * azar(s, 150 + j)), y + 1.6f * u), 0.6f * u)
+            val y = top + (h - top) * (0.45f + 0.16f * j + 0.06f * azar(s, 140 + j))
+            val p = Path().apply {
+                moveTo(w * 0.12f, y)
+                quadraticTo(w * 0.35f, y + 2f * u, w * (0.45f + 0.25f * azar(s, 150 + j)), y + 0.5f * u)
+            }
+            drawPath(p, hondo.copy(alpha = 0.55f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
         }
-        drawOval(a.claro(0.12f), Offset(w * 0.2f, h * (0.62f + 0.15f * azar(s, 5))), Size(w * 0.45f, h * 0.06f))
-        // Los dos cordeles.
-        val c1 = top + (h - top) * 0.12f + 2f * u
-        val c2 = h - (h - top) * 0.1f
+        drawOval(a.claro(0.14f), Offset(w * 0.15f, h * (0.62f + 0.12f * azar(s, 5))), Size(w * 0.4f, h * 0.06f))
+        // La solapa doblada por delante, con su costura de punto y la correa con el botón de hueso.
+        val sol = top + (h - top) * 0.2f
+        val solapa = Path().apply {
+            moveTo(2.6f * u, top)
+            lineTo(w - 2.6f * u, top)
+            lineTo(w - 2.4f * u, sol - 3f * u)
+            quadraticTo(w * 0.5f, sol + 4f * u, 2.4f * u, sol - 3f * u)
+            close()
+        }
+        drawPath(corridoRomano(solapa, 0.6f * u, 1.4f * u), a.sombra(0.35f))
+        drawPath(solapa, mezcla(cuero, P.HUESO, 0.08f))
+        drawRect(a.claro(0.3f), Offset(2.6f * u, top), Size(w - 5.2f * u, 0.9f * u))
+        var x = 4f * u; var i = 0
+        while (x < w - 4f * u && i < 30) {
+            val t = (x - 2.4f * u) / maxOf(1f, w - 4.8f * u)
+            val y = sol - 3f * u + 7f * u * t * (1f - t) * 4f * 0.5f - 1.6f * u
+            drawLine(hondo, Offset(x, y), Offset(x + 1.2f * u, y + 0.2f * u), 0.6f * u)
+            x += 2.4f * u; i++
+        }
+        val boton = Offset(w * 0.5f, sol + 2.5f * u)
+        drawCircle(a.frio(0.4f), 1.9f * u, boton + Offset(0.5f * u, 0.6f * u))
+        drawCircle(a.etiqueta(P.HUESO, k), 1.8f * u, boton)
+        // El cordel que ciñe la panza y la tablilla colgada.
+        val c1 = top + (h - top) * 0.36f
         val cordel = a.luz(P.CANAMO, k)
-        for (y in listOf(c1, c2)) {
-            drawLine(a.frio(0.4f), Offset(0f, y + 1f * u), Offset(w, y + 1f * u), 1.1f * u)
-            drawLine(cordel, Offset(0f, y), Offset(w, y - 0.6f * u), 1.3f * u)
-        }
-        // La tablilla del día, colgada del cordel de arriba.
+        drawLine(a.frio(0.4f), Offset(0f, c1 + 1.2f * u), Offset(w, c1 + 0.2f * u), 1.1f * u)
+        drawLine(cordel, Offset(0f, c1), Offset(w, c1 - 1f * u), 1.3f * u)
+        drawCircle(cordel, 1.5f * u, Offset(w * 0.3f, c1 - 0.3f * u))
         val an = minOf(w - 5f * u, 24f * u)
-        val tx = w * (0.48f + 0.06f * (azar(s, 7) - 0.5f))
+        val tx = w * (0.52f + 0.06f * (azar(s, 7) - 0.5f))
         val et = Rect(tx - an / 2, c1 + 3f * u, tx + an / 2, c1 + 3f * u + ALTO_TABLILLA * u)
         drawLine(cordel, Offset(tx, c1), Offset(tx, et.top), 0.8f * u)
-        tablilla(et, v.dia, medidor, a, k, s, P.ALISO)
-        // El mes a lo largo y, en los Sueños, la luna sobre el cordel de abajo.
-        val lunaR = minOf(w * 0.17f, 4.6f * u)
-        val finMes = if (v.noche) c2 - 3f * u - 2.6f * lunaR else c2 - 3f * u
-        val mes = Rect(w * 0.2f, et.bottom + 3f * u, w * 0.8f, finMes)
-        if (mes.height > 10f * u) textoEn(medidor, v.mes, mes, P.LETRA, tintaSobre(cuero, a, k), 8f, vertical = true, minimo = 4.5f)
-        if (v.noche) luna(Offset(w * 0.5f, c2 - 2.5f * u - lunaR), lunaR, cuero, a, k)
-        filo(1f * u, w - 1f * u, top, h, a, k, luzDe)
+        tablilla(et, v, medidor, a, k, s, P.ALISO)
+        if (v.noche) {
+            val r = minOf(w * 0.17f, 4.6f * u)
+            if (et.bottom + 3f * u + 2 * r < h - 3f * u) luna(Offset(w * 0.5f, et.bottom + 3f * u + r), r, cuero, a, k)
+        }
+        filo(0.5f * u, w - 0.5f * u, top, h, a, k, luzDe)
     }
 
     // ---------------------------------------------------------------- la arqueta
 
     /**
-     * La arqueta, la más baja: caja de tablas a lo ancho pintada del ánimo (cruda, si no se marcó), con la tapa gruesa que vuela,
-     * cantoneras y una faja de hierro, la cerradura de bronce con su ojo en escuadra, la placa de hueso del día clavada al
-     * frente y el mes pintado debajo. Cuanto más escribiste, más hojas asoman bajo la tapa entreabierta. En los Sueños, la luna
-     * en el canto de la tapa.
+     * La arqueta, baja y ancha: caja de tablas a lo ancho pintada del ánimo (cruda, si no se marcó), con la tapa abierta de pie
+     * detrás (se ve su cara de dentro, de madera, con el canto pintado), cantoneras y una faja de hierro, el pasador de bronce
+     * y la placa de hueso del día clavada al frente. Dentro asoman las hojas: más cuanto más escribiste. En los Sueños, la
+     * luna de plata en la tapa.
      */
     fun DrawScope.arqueta(v: Volumen, medidor: TextMeasurer, a: AireRomano, k: Float, luzDe: Float) {
         val u = density
@@ -170,84 +221,63 @@ internal object VolumenEstanteRomano {
         val pintura = cuerpo(v, a, k, mezcla(P.ROBLE_LUZ, P.CANAMO, 0.3f))
         val hondo = mezcla(pintura, a.hondo, 0.32f)
         val madera = a.luz(P.ROBLE, k)
-        val altoTapa = minOf(12f * u, h * 0.18f)
-        val entre = 1.5f * u + 3.5f * u * v.lleno
-        val cuerpoR = Rect(1.2f * u, altoTapa + entre, w - 1.2f * u, h)
-        // Lo que asoma entre la caja y la tapa: cantos de hojas.
-        if (entre > 2f * u) {
-            drawRect(a.luz(P.ALISO_OSC, k), Offset(3f * u, altoTapa - 1f * u), Size(w - 6f * u, entre + 2f * u))
-            var x = 3.5f * u; var j = 0
-            while (x < w - 4f * u && j < 30) {
-                drawRect(a.etiqueta(P.ALISO, k * 0.9f), Offset(x, altoTapa - 1f * u + entre * 0.4f * azar(s, 160 + j)), Size(1.4f * u, entre + 2f * u))
-                x += 2.4f * u; j++
-            }
+        val altoCaja = h / 1.5f
+        val boca = h - altoCaja
+        // La tapa abierta, de pie detrás: la cara de dentro (madera) con su canto pintado y sus bisagras.
+        val tapa = Rect(2f * u, 0f, w - 2f * u, boca + 2f * u)
+        drawRect(mezcla(madera, a.hondo, 0.25f), tapa.topLeft, tapa.size)
+        drawRect(pintura, tapa.topLeft, Size(tapa.width, 2.4f * u))
+        drawRect(pintura, tapa.topLeft, Size(2.2f * u, tapa.height))
+        drawRect(pintura, Offset(tapa.right - 2.2f * u, tapa.top), Size(2.2f * u, tapa.height))
+        for (j in 1 until 3) drawLine(a.luz(P.ROBLE_OSC, k).copy(alpha = 0.5f), Offset(tapa.left + 2.2f * u, tapa.height * j / 3f), Offset(tapa.right - 2.2f * u, tapa.height * j / 3f), 0.6f * u)
+        if (v.noche) luna(Offset(w / 2, tapa.height * 0.45f), minOf(tapa.height * 0.3f, w * 0.15f), mezcla(madera, a.hondo, 0.25f), a, k)
+        // Las hojas que asoman de la caja.
+        val asoma = (2f + 7f * v.lleno) * u
+        var x = 3.5f * u; var j = 0
+        while (x < w - 4f * u && j < 30) {
+            val alto = asoma * (0.4f + 0.6f * azar(s, 160 + j))
+            drawRect(a.etiqueta(P.ALISO, k * 0.9f), Offset(x, boca - alto), Size(1.8f * u, alto + 1f * u))
+            drawLine(a.luz(P.ALISO_OSC, k), Offset(x + 1.8f * u, boca - alto), Offset(x + 1.8f * u, boca), 0.5f * u)
+            x += 2.6f * u; j++
         }
         // La caja.
-        drawRect(pintura, cuerpoR.topLeft, cuerpoR.size)
-        // Las tablas de la caja, a lo ancho, con sus juntas y su veta.
-        for (j in 1 until 4) {
-            val y = cuerpoR.top + cuerpoR.height * (j / 4f) + (azar(s, 170 + j) - 0.5f) * 2f * u
-            drawLine(hondo.copy(alpha = 0.55f), Offset(cuerpoR.left, y), Offset(cuerpoR.right, y), 0.7f * u)
-            drawLine(a.claro(0.18f), Offset(cuerpoR.left, y + 0.8f * u), Offset(cuerpoR.right, y + 0.8f * u), 0.5f * u)
-            drawLine(hondo.copy(alpha = 0.2f), Offset(cuerpoR.left + cuerpoR.width * 0.2f, y + cuerpoR.height * 0.1f), Offset(cuerpoR.right - cuerpoR.width * 0.3f, y + cuerpoR.height * 0.11f), 0.5f * u)
+        val caja = Rect(0.8f * u, boca, w - 0.8f * u, h)
+        drawRect(pintura, caja.topLeft, caja.size)
+        for (t in 1 until 3) {
+            val y = caja.top + caja.height * (t / 3f) + (azar(s, 170 + t) - 0.5f) * 1.5f * u
+            drawLine(hondo.copy(alpha = 0.55f), Offset(caja.left, y), Offset(caja.right, y), 0.7f * u)
+            drawLine(a.claro(0.18f), Offset(caja.left, y + 0.8f * u), Offset(caja.right, y + 0.8f * u), 0.5f * u)
         }
-        // El zócalo de la caja, más oscuro, y sus dos patas.
-        drawRect(hondo, Offset(cuerpoR.left, cuerpoR.bottom - 3.4f * u), Size(cuerpoR.width, 3.4f * u))
-        // El desgaste de la pintura en los cantos: asoma la madera.
-        drawPath(poligonoRomano(cuerpoR.left, cuerpoR.bottom - 6f * u, cuerpoR.left + 4f * u, cuerpoR.bottom, cuerpoR.left, cuerpoR.bottom), madera)
-        drawPath(poligonoRomano(cuerpoR.right, cuerpoR.top + 9f * u, cuerpoR.right - 2.4f * u, cuerpoR.top + 13f * u, cuerpoR.right, cuerpoR.top + 16f * u), madera)
-        bulto(cuerpoR.left, cuerpoR.right, cuerpoR.top, cuerpoR.bottom, a, luzDe)
-        drawRect(a.sombra(0.3f), Offset(cuerpoR.left, cuerpoR.top), Size(cuerpoR.width, 2.4f * u))
-        // La tapa: una tabla gruesa que vuela sobre la caja, con su cara de encima a la luz y el canto con su moldura.
-        val encima = altoTapa * 0.32f
-        drawRect(mezcla(pintura, P.HUESO, 0.16f), Offset(0f, 0f), Size(w, encima))
-        drawRect(pintura, Offset(0f, encima), Size(w, altoTapa - encima))
-        drawRect(hondo, Offset(0f, altoTapa - 2f * u), Size(w, 2f * u))
-        drawLine(hondo.copy(alpha = 0.6f), Offset(0f, encima + (altoTapa - encima) * 0.45f), Offset(w, encima + (altoTapa - encima) * 0.45f), 0.6f * u)
-        drawRect(a.claro(0.35f), Offset(0f, encima), Size(w, 0.8f * u))
-        bulto(0f, w, encima, altoTapa, a, luzDe, 0.7f)
-        // Las cantoneras de hierro, con sus clavos.
+        drawRect(a.claro(0.35f), caja.topLeft, Size(caja.width, 1f * u))
+        drawPath(poligonoRomano(caja.left, caja.bottom - 5f * u, caja.left + 3.5f * u, caja.bottom, caja.left, caja.bottom), madera)
+        bulto(caja.left, caja.right, caja.top, caja.bottom, a, luzDe)
+        drawRect(hondo, Offset(caja.left, caja.bottom - 2.4f * u), Size(caja.width, 2.4f * u))
+        // Las cantoneras y la faja de hierro.
         val hierro = a.luz(P.HIERRO, k)
-        val c = minOf(6f * u, cuerpoR.width * 0.25f)
-        for ((x, sx) in listOf(cuerpoR.left to 1f, cuerpoR.right to -1f)) for ((y, sy) in listOf(cuerpoR.top to 1f, cuerpoR.bottom to -1f)) {
-            drawPath(poligonoRomano(x, y, x + sx * c, y, x + sx * c * 0.4f, y + sy * c * 0.4f, x, y + sy * c), hierro)
-            drawCircle(a.claro(0.4f), 0.6f * u, Offset(x + sx * c * 0.3f, y + sy * c * 0.3f))
+        val c = minOf(5f * u, caja.width * 0.2f)
+        for ((cx0, sx) in listOf(caja.left to 1f, caja.right to -1f)) for ((cy0, sy) in listOf(caja.top to 1f, caja.bottom to -1f)) {
+            drawPath(poligonoRomano(cx0, cy0, cx0 + sx * c, cy0, cx0 + sx * c * 0.4f, cy0 + sy * c * 0.4f, cx0, cy0 + sy * c), hierro)
+            drawCircle(a.claro(0.4f), 0.6f * u, Offset(cx0 + sx * c * 0.3f, cy0 + sy * c * 0.3f))
         }
-        // La cerradura de bronce con el ojo en escuadra.
+        // El pasador de bronce que cuelga de la tapa abierta y la placa de hueso del día.
         val cx = w / 2
-        val cerr = Rect(cx - minOf(5f * u, w * 0.2f), cuerpoR.top + 1.5f * u, cx + minOf(5f * u, w * 0.2f), cuerpoR.top + 10f * u)
-        drawRect(a.frio(0.35f), Offset(cerr.left + 0.8f * u, cerr.top + 0.8f * u), cerr.size)
-        drawRect(a.luz(P.BRONCE, k), cerr.topLeft, cerr.size)
-        drawRect(a.luz(P.BRONCE_LUZ, k), cerr.topLeft, Size(cerr.width, 0.8f * u))
-        drawLine(P.TINTA, Offset(cx, cerr.top + 2.4f * u), Offset(cx, cerr.bottom - 2.4f * u), 1.2f * u)
-        drawLine(P.TINTA, Offset(cx, cerr.bottom - 2.4f * u), Offset(cx + 2f * u, cerr.bottom - 2.4f * u), 1.2f * u)
-        // La placa de hueso del día, clavada.
-        val an = minOf(w - 7f * u, 24f * u)
-        val et = Rect(cx - an / 2, cerr.bottom + 3f * u, cx + an / 2, cerr.bottom + 3f * u + ALTO_TABLILLA * u)
-        tablilla(et, v.dia, medidor, a, k, s, P.HUESO)
+        drawRect(a.luz(P.BRONCE, k), Offset(cx - 1.4f * u, boca - 3f * u), Size(2.8f * u, 5f * u))
+        drawRect(a.luz(P.BRONCE_LUZ, k), Offset(cx - 1.4f * u, boca - 3f * u), Size(0.8f * u, 5f * u))
+        val alt = minOf(ALTO_TABLILLA * u, caja.height - 5f * u)
+        val an = minOf(w - 6f * u, 24f * u)
+        val et = Rect(cx - an / 2, caja.top + (caja.height - alt) * 0.45f, cx + an / 2, caja.top + (caja.height - alt) * 0.45f + alt)
+        tablilla(et, v, medidor, a, k, s, P.HUESO)
         clavoRomano(Offset(et.left + 1.6f * u, et.top + 1.6f * u), 0.7f * u, a, k)
-        clavoRomano(Offset(et.right - 1.8f * u, et.bottom - 1.6f * u), 0.7f * u, a, k)
-        // La faja de hierro a lo ancho bajo la placa, el mes pintado debajo (abreviado, como en las fechas romanas) y la luna
-        // en el canto de la tapa en los Sueños.
-        val faja = et.bottom + 3f * u
-        if (faja + 3f * u < cuerpoR.bottom - 4f * u) {
-            drawRect(a.frio(0.35f), Offset(cuerpoR.left, faja + 2.2f * u), Size(cuerpoR.width, 0.8f * u))
-            drawRect(hierro, Offset(cuerpoR.left, faja), Size(cuerpoR.width, 2.2f * u))
-            for (x in listOf(cuerpoR.left + 3f * u, cx, cuerpoR.right - 3f * u)) drawCircle(a.claro(0.4f), 0.6f * u, Offset(x, faja + 1.1f * u))
-        }
-        val corto = if (v.mes.length > 5) v.mes.take(3) + "." else v.mes
-        val mes = Rect(cuerpoR.left + 2f * u, faja + 4f * u, cuerpoR.right - 2f * u, cuerpoR.bottom - 4.5f * u)
-        if (mes.height > 6f * u) textoEn(medidor, corto, mes, P.LETRA, tintaSobre(pintura, a, k), 8f, peso = FontWeight.SemiBold, minimo = 4.5f)
-        if (v.noche) luna(Offset(cx, encima + (altoTapa - encima) * 0.5f), minOf((altoTapa - encima) * 0.42f, w * 0.15f), pintura, a, k)
-        filo(0f, w, 0f, h, a, k, luzDe)
+        clavoRomano(Offset(et.right - 1.8f * u, et.top + 1.6f * u), 0.7f * u, a, k)
+        filo(caja.left, caja.right, caja.top, caja.bottom, a, k, luzDe)
     }
 
     // ---------------------------------------------------------------- la bolsa de cuero
 
     /**
-     * La bolsa de cuero teñido del ánimo (cruda, si no se marcó), blanda: el cuello fruncido arriba con su volante, atado con
-     * dos vueltas de cordel; el vientre que se llena con lo escrito (vacía, se vence y hace más pliegues); de un cabo cuelga el
-     * sello de plomo (en los Sueños, la luna) y del otro la tablilla del día; el mes a lo largo del vientre.
+     * La bolsa de cuero teñido del ánimo (cruda, si no se marcó), blanda y vencida: el cuello atado de lado con dos vueltas de
+     * cordel, el volante de arriba que se dobla y cae hacia un costado; la panza que se aplasta abajo y se llena con lo
+     * escrito (vacía, hace más pliegues); de un cabo cuelga el sello de plomo (en los Sueños, la luna) y del otro la tablilla.
      */
     fun DrawScope.bolsa(v: Volumen, medidor: TextMeasurer, a: AireRomano, k: Float, luzDe: Float) {
         val u = density
@@ -255,77 +285,76 @@ internal object VolumenEstanteRomano {
         val s = v.semilla and 0x7fffffff
         val cuero = cuerpo(v, a, k, mezcla(P.CUERO, P.ROBLE_LUZ, 0.3f * azar(s, 3)))
         val hondo = mezcla(cuero, a.hondo, 0.34f)
-        val cuello = h * 0.24f
-        val panza = 0.86f + 0.14f * v.lleno
-        val anCuello = w * 0.42f
-        val cx = w / 2 + (azar(s, 4) - 0.5f) * 2f * u
-        // El volante de arriba, fruncido.
+        val lado = if (azar(s, 4) > 0.5f) 1f else -1f
+        val nx = w * (0.5f - 0.1f * lado)
+        val ny = h * 0.3f
+        val cu = w * 0.17f
+        val lleno = 0.5f + 0.5f * v.lleno
+        // El volante, que se dobla y cae hacia un lado.
         val volante = Path().apply {
-            moveTo(cx - anCuello * 0.45f, cuello)
-            lineTo(cx - anCuello * 0.75f, cuello * 0.25f)
-            lineTo(cx - anCuello * 0.35f, cuello * 0.45f)
-            lineTo(cx - anCuello * 0.05f, 0.5f * u)
-            lineTo(cx + anCuello * 0.2f, cuello * 0.4f)
-            lineTo(cx + anCuello * 0.7f, cuello * 0.15f)
-            lineTo(cx + anCuello * 0.45f, cuello)
+            moveTo(nx - cu, ny)
+            lineTo(nx - cu * 1.5f, ny - h * 0.1f)
+            lineTo(nx - cu * 0.6f, ny - h * 0.16f)
+            lineTo(nx + cu * 0.2f, ny - h * 0.24f)
+            quadraticTo(nx + lado * cu * 2.4f, ny - h * 0.22f, nx + lado * cu * 2.2f, ny - h * 0.02f)
+            lineTo(nx + lado * cu * 1.4f, ny - h * 0.06f)
+            lineTo(nx + cu, ny)
             close()
         }
-        drawPath(volante, mezcla(cuero, hondo, 0.25f))
-        drawLine(a.claro(0.3f), Offset(cx - anCuello * 0.7f, cuello * 0.3f), Offset(cx - anCuello * 0.4f, cuello * 0.9f), 0.8f * u)
-        drawLine(hondo, Offset(cx - anCuello * 0.05f, 1.5f * u), Offset(cx - anCuello * 0.1f, cuello), 0.6f * u)
-        // El vientre.
-        val ancho = (w - 2f * u) * panza
-        val izq = w / 2 - ancho / 2; val der = w / 2 + ancho / 2
+        drawPath(volante, mezcla(cuero, hondo, 0.2f))
+        drawLine(hondo, Offset(nx - cu * 0.2f, ny - h * 0.2f), Offset(nx - cu * 0.1f, ny), 0.6f * u)
+        drawLine(a.claro(0.3f), Offset(nx - cu * 1.4f, ny - h * 0.09f), Offset(nx - cu * 0.7f, ny - 0.5f * u), 0.8f * u)
+        // La panza, vencida: los hombros caen y abajo se aplasta.
         val vientre = Path().apply {
-            moveTo(cx - anCuello / 2, cuello)
-            cubicTo(izq - 1f * u, cuello + (h - cuello) * 0.25f, izq, h - 1f * u, w * 0.3f, h)
-            lineTo(w * 0.7f, h)
-            cubicTo(der, h - 1f * u, der + 1f * u, cuello + (h - cuello) * 0.25f, cx + anCuello / 2, cuello)
+            moveTo(nx - cu, ny)
+            cubicTo(nx - cu * 2.2f, ny + h * 0.1f * lleno, 0f, h * (0.62f - 0.1f * v.lleno), 0.6f * u, h - 1.5f * u)
+            quadraticTo(w * 0.5f, h + 0.8f * u, w - 0.6f * u, h - 1.5f * u)
+            cubicTo(w, h * (0.6f - 0.1f * v.lleno), nx + cu * 2.2f, ny + h * 0.1f * lleno, nx + cu, ny)
             close()
         }
         drawPath(vientre, cuero)
-        bulto(izq, der, cuello + 3f * u, h, a, luzDe)
-        drawOval(a.claro(0.16f), Offset(w * 0.12f, cuello + (h - cuello) * 0.25f), Size(w * 0.25f, (h - cuello) * 0.5f))
+        bulto(0.6f * u, w - 0.6f * u, ny + 4f * u, h, a, luzDe)
+        drawOval(a.claro(0.16f), Offset(w * 0.1f, ny + (h - ny) * 0.3f), Size(w * 0.25f, (h - ny) * 0.45f))
         // Los pliegues: más cuanto más vacía.
         val pliegues = if (v.lleno > 0.5f) 2 else 4
         for (j in 0 until pliegues) {
-            val x0 = cx + (j - (pliegues - 1) / 2f) * anCuello * 0.3f
-            val x1 = w * (0.15f + 0.7f * (j + 0.5f) / pliegues) + (azar(s, 180 + j) - 0.5f) * 3f * u
+            val x0 = nx + (j - (pliegues - 1) / 2f) * cu * 0.6f
+            val x1 = w * (0.12f + 0.76f * (j + 0.5f) / pliegues) + (azar(s, 180 + j) - 0.5f) * 3f * u
             val p = Path().apply {
-                moveTo(x0, cuello + 1f * u)
-                quadraticTo((x0 + x1) / 2 + (azar(s, 190 + j) - 0.5f) * 4f * u, cuello + (h - cuello) * 0.4f, x1, cuello + (h - cuello) * (0.55f + 0.25f * azar(s, 200 + j)))
+                moveTo(x0, ny + 1f * u)
+                quadraticTo((x0 + x1) / 2 + (azar(s, 190 + j) - 0.5f) * 5f * u, ny + (h - ny) * 0.35f, x1, ny + (h - ny) * (0.45f + 0.3f * azar(s, 200 + j)))
             }
             drawPath(p, hondo.copy(alpha = 0.55f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
             drawPath(corridoRomano(p, -1f * u, 0f), a.claro(0.18f), style = Stroke(0.6f * u, cap = StrokeCap.Round))
         }
-        drawRect(a.sombra(0.25f), Offset(w * 0.22f, h - 1.5f * u), Size(w * 0.56f, 1.5f * u))
+        // Donde se aplasta en la tabla.
+        drawRect(a.sombra(0.3f), Offset(w * 0.08f, h - 2f * u), Size(w * 0.84f, 2f * u))
         // El cordel del cuello, con su nudo y sus dos cabos.
         val cordel = a.luz(P.CANAMO, k)
-        for (d in listOf(-1.3f, 1.3f)) drawLine(cordel, Offset(cx - anCuello * 0.55f, cuello + d * u), Offset(cx + anCuello * 0.55f, cuello + d * u - 0.4f * u), 1.3f * u, cap = StrokeCap.Round)
-        drawCircle(cordel, 1.8f * u, Offset(cx + anCuello * 0.42f, cuello))
-        val cabo = Offset(cx + anCuello * 0.42f, cuello)
+        for (d in listOf(-1.3f, 1.3f)) drawLine(cordel, Offset(nx - cu * 1.1f, ny + d * u), Offset(nx + cu * 1.1f, ny + d * u - 0.6f * u), 1.3f * u, cap = StrokeCap.Round)
+        val nudo = Offset(nx + lado * cu * 0.8f, ny)
+        drawCircle(cordel, 1.8f * u, nudo)
         // El sello de plomo (o la luna) colgado de un cabo.
-        val selloR = minOf(w * 0.15f, 4.4f * u)
-        val sello = Offset(minOf(w - selloR - 1f * u, cabo.x + 3f * u), cuello + 6f * u + selloR)
-        drawLine(cordel, cabo, sello, 0.7f * u)
+        val selloR = minOf(w * 0.14f, 4.2f * u)
+        val sello = Offset((nudo.x + lado * 3f * u).coerceIn(selloR + 1f * u, w - selloR - 1f * u), ny + 5f * u + selloR)
+        drawLine(cordel, nudo, sello, 0.7f * u)
+        val plomo = a.luz(mezcla(P.PLOMO, P.TINTA, 0.3f), k)
         if (v.noche) {
-            drawCircle(a.luz(mezcla(P.PLOMO, P.TINTA, 0.3f), k), selloR * 1.15f, sello)
-            luna(sello, selloR * 0.85f, a.luz(mezcla(P.PLOMO, P.TINTA, 0.3f), k), a, k)
+            drawCircle(plomo, selloR * 1.15f, sello)
+            luna(sello, selloR * 0.85f, plomo, a, k)
         } else {
             drawCircle(a.frio(0.35f), selloR, sello + Offset(0.6f * u, 0.8f * u))
             drawCircle(a.luz(P.PLOMO, k), selloR, sello)
             drawCircle(a.claro(0.35f), selloR * 0.35f, sello - Offset(selloR * 0.3f, selloR * 0.3f))
-            drawCircle(a.luz(mezcla(P.PLOMO, P.TINTA, 0.4f), k), selloR * 0.55f, sello, style = Stroke(0.5f * u))
+            drawCircle(plomo, selloR * 0.55f, sello, style = Stroke(0.5f * u))
         }
-        // La tablilla del día, colgada del otro cabo, sobre el vientre.
+        // La tablilla del día, colgada del otro cabo, sobre la panza.
         val an = minOf(w - 5f * u, 24f * u)
-        val ty = sello.y + selloR + 2f * u
-        val et = Rect(w / 2 - an / 2 - 1.5f * u, ty, w / 2 + an / 2 - 1.5f * u, ty + ALTO_TABLILLA * u)
-        drawLine(cordel, Offset(cx - anCuello * 0.3f, cuello + 1f * u), Offset(et.left + 3f * u, et.top), 0.7f * u)
-        tablilla(et, v.dia, medidor, a, k, s, P.ALISO)
-        // El mes a lo largo del vientre.
-        val mes = Rect(w * 0.24f, et.bottom + 3f * u, w * 0.76f, h - 4f * u)
-        if (mes.height > 10f * u) textoEn(medidor, v.mes, mes, P.LETRA, tintaSobre(cuero, a, k), 8f, vertical = true, minimo = 4.5f)
-        filo(izq, der, cuello + 3f * u, h, a, k, luzDe)
+        val ty = minOf(sello.y + selloR + 2f * u, h - ALTO_TABLILLA * u - 3f * u)
+        val tx = (w / 2 - lado * 1.5f * u)
+        val et = Rect(tx - an / 2, ty, tx + an / 2, ty + ALTO_TABLILLA * u)
+        drawLine(cordel, Offset(nx - lado * cu * 0.6f, ny + 1f * u), Offset(et.center.x, et.top), 0.7f * u)
+        tablilla(et, v, medidor, a, k, s, P.ALISO)
+        filo(0.6f * u, w - 0.6f * u, ny + 4f * u, h, a, k, luzDe)
     }
 }
