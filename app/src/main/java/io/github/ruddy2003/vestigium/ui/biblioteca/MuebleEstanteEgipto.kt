@@ -26,6 +26,7 @@ import io.github.ruddy2003.vestigium.ui.juegoTonos
 import io.github.ruddy2003.vestigium.ui.muebles.granoMueble
 import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
 import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
+import kotlin.math.ceil
 import kotlin.math.exp
 import kotlin.math.sqrt
 
@@ -239,19 +240,25 @@ internal object MuebleEstanteEgipto {
         val clave = "$w|$ch|$suelo|${b.top}|${b.height}|$h|$density|$oscuro|$noche"
         val ranura = if (noche) 2 else 0
         // ---- arriba (pintado una vez por tamaño y modo): el testero, la bóveda, lo colgado, el tablón alto y el bodegón
-        with(CapaEgipto) {
-            pegar(ranura, clave, Rect(0f, 0f, w, ch)) {
-                muroEgipto(m, listOf(Rect(0f, 0f, w, ch)))
-                muroDetallesEgipto(m)
-                bovedaEgipto(m)
-                colgadoEgipto(m)
-                postesEgipto(m)
-                arribaEgipto(m)
-                bodegonEgipto(m)
-                if (a.lumbre) llamaAltaEgipto(m)
-                granoMueble(Rect(0f, 0f, w, ch), oscuro)
-            }
+        val corona: DrawScope.() -> Unit = {
+            muroEgipto(m, listOf(Rect(0f, 0f, w, ch)))
+            muroDetallesEgipto(m)
+            bovedaEgipto(m)
+            colgadoEgipto(m)
+            postesEgipto(m)
+            arribaEgipto(m)
+            bodegonEgipto(m)
+            if (a.lumbre) llamaAltaEgipto(m)
+            granoMueble(Rect(0f, 0f, w, ch), oscuro)
         }
+        // Si el borde de la corona (ch) cae a medio píxel, la última fila de su imagen quedaba a medias y el cuerpo empieza en el
+        // mismo borde: entre los dos asomaba el fondo, una línea a todo el ancho. Por eso la imagen llega hasta el píxel entero
+        // de abajo (chI) y, debajo de esa fila, va la corona corrida un píxel (su fila de encima, entera): queda cubierta.
+        val chI = ceil(ch)
+        val debajo: (DrawScope.() -> Unit)? = if (chI > ch && chI >= 2f) {
+            { clipRect(0f, chI - 1f, w, chI) { translate(0f, 1f) { corona() } } }
+        } else null
+        with(CapaEgipto) { pegar(ranura, clave, Rect(0f, 0f, w, ch), debajo = debajo, abajo = chI, pintar = corona) }
         // ---- el cuerpo (cambia con lo guardado): el fondo de cada tramo, los postes, los tablones y lo de los tramos libres
         clipRect(0f, ch, w, fondo) {
             muroEgipto(m, listOf(Rect(0f, ch, m.posteI.right, fondo), Rect(m.posteD.left, ch, w, fondo)))
@@ -464,14 +471,26 @@ internal object CapaEgipto {
     private val claves = arrayOfNulls<String>(4)
     private val imagenes = arrayOfNulls<ImageBitmap>(4)
 
-    fun DrawScope.pegar(ranura: Int, clave: String, r: Rect, pintar: DrawScope.() -> Unit) {
+    /**
+     * Pega la imagen de [r] (la pinta antes si su clave cambió). [debajo], si va, se pinta en una imagen que sigue hasta
+     * [abajo], debajo de la de [r] tal cual: es lo que cubre la fila de la junta que [r] corta a medio píxel.
+     */
+    fun DrawScope.pegar(ranura: Int, clave: String, r: Rect, debajo: (DrawScope.() -> Unit)? = null, abajo: Float = r.bottom,
+                        pintar: DrawScope.() -> Unit) {
         val ancho = r.width.roundToInt(); val alto = r.height.roundToInt()
         if (ancho < 1 || alto < 1 || ranura !in 0..3) return
         var img = imagenes[ranura]
         if (img == null || claves[ranura] != clave) {
-            val nueva = ImageBitmap(ancho, alto)
-            CanvasDrawScope().draw(Density(density, fontScale), layoutDirection, Canvas(nueva), Size(ancho.toFloat(), alto.toFloat())) {
+            val base = ImageBitmap(ancho, alto)
+            CanvasDrawScope().draw(Density(density, fontScale), layoutDirection, Canvas(base), Size(ancho.toFloat(), alto.toFloat())) {
                 translate(-r.left, -r.top) { clipRect(r.left, r.top, r.right, r.bottom) { pintar() } }
+            }
+            // Con [debajo]: otra imagen, hasta [abajo], con lo de debajo y encima la de arriba tal cual (la misma, píxel a píxel).
+            val nueva = if (debajo == null) base else ImageBitmap(ancho, maxOf(alto, ceil(abajo - r.top).toInt())).also { larga ->
+                CanvasDrawScope().draw(Density(density, fontScale), layoutDirection, Canvas(larga), Size(ancho.toFloat(), alto.toFloat())) {
+                    translate(-r.left, -r.top) { debajo() }
+                    drawImage(base)
+                }
             }
             imagenes[ranura] = nueva; claves[ranura] = clave; img = nueva
         }

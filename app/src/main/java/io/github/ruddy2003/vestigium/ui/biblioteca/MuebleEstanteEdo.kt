@@ -25,6 +25,7 @@ import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
 import io.github.ruddy2003.vestigium.ui.muebles.granoMueble
 import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
 import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
+import kotlin.math.ceil
 import kotlin.math.exp
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
@@ -218,8 +219,15 @@ internal object MuebleEstanteEdo {
         // estante, el suelo y lo que hay al pie), pintados una vez por tamaño y modo
         val clave = "${w.toInt()}|${h.toInt()}|${ch.toInt()}|${fondo.toInt()}|${fila.toInt()}|$n|$oscuro|$noche|$u"
         val ranura = if (noche) 2 else 0
+        // Si el borde de la corona (ch) cae a medio píxel, la última fila de su imagen quedaba a medias y el cuerpo empieza en el
+        // mismo borde: entre los dos asomaba el fondo, una línea a todo el ancho. Por eso la imagen llega hasta el píxel entero
+        // de abajo (chI) y, debajo de esa fila, va la corona corrida un píxel (su fila de encima, entera): queda cubierta.
+        val chI = ceil(ch)
         with(CapaEdo) {
-            pegar(ranura, "a$clave", Rect(0f, 0f, w, ch)) { coronaEdo(a, g); granoMueble(Rect(0f, 0f, w, ch), oscuro) }
+            val debajo: (DrawScope.() -> Unit)? = if (chI > ch && chI >= 2f) {
+                { clipRect(0f, chI - 1f, w, chI) { translate(0f, 1f) { coronaEdo(a, g); granoMueble(Rect(0f, 0f, w, ch), oscuro) } } }
+            } else null
+            pegar(ranura, "a$clave", Rect(0f, 0f, w, ch), debajo = debajo, abajo = chI) { coronaEdo(a, g); granoMueble(Rect(0f, 0f, w, ch), oscuro) }
             pegar(ranura + 1, "b$clave", Rect(0f, fondo, w, h)) { pieEdo(a, g); granoMueble(Rect(0f, fondo, w, h), oscuro) }
         }
         if (fondo - ch < 1f) return
@@ -320,14 +328,26 @@ internal object CapaEdo {
     private val claves = arrayOfNulls<String>(4)
     private val imagenes = arrayOfNulls<ImageBitmap>(4)
 
-    fun DrawScope.pegar(ranura: Int, clave: String, r: Rect, pintar: DrawScope.() -> Unit) {
+    /**
+     * Pega la imagen de [r] (la pinta antes si su clave cambió). [debajo], si va, se pinta primero, sin el recorte de [r], y la
+     * imagen sigue hasta [abajo]: es lo que cubre la fila de la junta que [r] corta a medio píxel.
+     */
+    fun DrawScope.pegar(ranura: Int, clave: String, r: Rect, debajo: (DrawScope.() -> Unit)? = null, abajo: Float = r.bottom,
+                        pintar: DrawScope.() -> Unit) {
         val ancho = r.width.roundToInt(); val alto = r.height.roundToInt()
         if (ancho < 1 || alto < 1 || ranura !in 0..3) return
         var img = imagenes[ranura]
         if (img == null || claves[ranura] != clave) {
-            val nueva = ImageBitmap(ancho, alto)
-            CanvasDrawScope().draw(Density(density, fontScale), layoutDirection, Canvas(nueva), Size(ancho.toFloat(), alto.toFloat())) {
+            val base = ImageBitmap(ancho, alto)
+            CanvasDrawScope().draw(Density(density, fontScale), layoutDirection, Canvas(base), Size(ancho.toFloat(), alto.toFloat())) {
                 translate(-r.left, -r.top) { clipRect(r.left, r.top, r.right, r.bottom) { pintar() } }
+            }
+            // Con [debajo]: otra imagen, hasta [abajo], con lo de debajo y encima la de arriba tal cual (la misma, píxel a píxel).
+            val nueva = if (debajo == null) base else ImageBitmap(ancho, maxOf(alto, ceil(abajo - r.top).toInt())).also { larga ->
+                CanvasDrawScope().draw(Density(density, fontScale), layoutDirection, Canvas(larga), Size(ancho.toFloat(), alto.toFloat())) {
+                    translate(-r.left, -r.top) { debajo() }
+                    drawImage(base)
+                }
             }
             imagenes[ranura] = nueva; claves[ranura] = clave; img = nueva
         }
