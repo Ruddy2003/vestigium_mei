@@ -44,6 +44,7 @@ internal fun DrawScope.coronaNeon(g: MarcoNeon) {
     ventanaNeon(g)
     colgadoNeon(g)
     cornisaNeon(g)
+    sombrasPanoNeon(g, g.apoyoAtras, g.ch)
     acuarioNeon(g)
     revistasNeon(g, Offset(g.w * 0.21f, g.apoyo))
     radioNeon(g, Rect(g.w * 0.255f, g.apoyo - g.w * 0.118f, g.w * 0.45f, g.apoyo))
@@ -55,10 +56,20 @@ internal fun DrawScope.coronaNeon(g: MarcoNeon) {
  * Una banda horizontal de [col] de [x0] a [x1] entre [y0] e [y1], con la luz que le llega a lo largo (un degradado de seis
  * paradas, de un solo trazo).
  */
-internal fun DrawScope.bandaNeon(x0: Float, x1: Float, y0: Float, y1: Float, col: Color, g: MarcoNeon, mas: Float = 1f) {
+internal fun DrawScope.bandaNeon(x0: Float, x1: Float, y0: Float, y1: Float, col: Color, g: MarcoNeon, mas: Float = 1f, velo: Float = 0f) {
     if (x1 <= x0 || y1 <= y0) return
+    // En los Sueños, lo que toca el paño de la farola se pinta dos veces: sin él y, dentro de su recorte, con él entero. Así el
+    // paño pinta la superficie (la laca se va al ocre, el petróleo al oliva) con su borde, y no es una franja encima.
+    if (g.tocaPano(x0, x1, y0, y1)) {
+        bandaSolaNeon(x0, x1, y0, y1, col, g.sinPano, mas, velo)
+        clipPath(g.panoRecorte) { bandaSolaNeon(x0, x1, y0, y1, col, g.conPano, mas, velo) }
+    } else bandaSolaNeon(x0, x1, y0, y1, col, g, mas, velo)
+}
+
+/** La banda de un solo trazo; [velo]: cuánto se hunde hacia la sombra del cuarto (la penumbra, sin otra capa encima). */
+private fun DrawScope.bandaSolaNeon(x0: Float, x1: Float, y0: Float, y1: Float, col: Color, g: MarcoNeon, mas: Float, velo: Float) {
     val ym = (y0 + y1) / 2
-    val paradas = Array(6) { i -> val f = i / 5f; f to g.t(x0 + (x1 - x0) * f, ym).c(col, mas) }
+    val paradas = Array(6) { i -> val f = i / 5f; f to mezcla(g.t(x0 + (x1 - x0) * f, ym).c(col, mas), PaletaNeon.SOMBRA, velo) }
     drawRect(Brush.horizontalGradient(*paradas, startX = x0, endX = x1), Offset(x0, y0), Size(x1 - x0, y1 - y0))
 }
 

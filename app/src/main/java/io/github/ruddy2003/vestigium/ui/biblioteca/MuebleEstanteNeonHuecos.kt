@@ -226,7 +226,10 @@ private fun DrawScope.termoNeon(r: Rect, g: MarcoNeon) {
     drawRect(t.b(0.6f), tapon.topLeft, Size(tapon.width, 1f * u))
 }
 
-/** Una taza de lata esmaltada (blanca con el borde azul, con su desconchón negro); [boca] abajo, una vuelta del revés. */
+/**
+ * Una taza de lata esmaltada (blanca con el borde azul, con el esmalte saltado en el borde, donde se golpea, y un roce a lo largo
+ * del costado: nada en medio de la cara, que se leería como un ojo); [boca] abajo, una vuelta del revés.
+ */
 private fun DrawScope.tazaLataNeon(r: Rect, g: MarcoNeon, boca: Boolean) {
     val u = density
     val t = g.t(r.center)
@@ -241,7 +244,12 @@ private fun DrawScope.tazaLataNeon(r: Rect, g: MarcoNeon, boca: Boolean) {
         planosNeon(r, t)
         val yb = if (boca) r.bottom - r.height * 0.12f else r.top
         drawRect(t.c(AZUL_ESMALTE_NEON), Offset(r.left, yb), Size(r.width, r.height * 0.12f))
-        drawOval(t.c(Color(0xFF16141C)), Offset(r.left + r.width * 0.5f, r.top + r.height * 0.5f), Size(r.width * 0.14f, r.height * 0.12f))
+        // El esmalte saltado en el borde azul (el hierro negro asoma, mordiendo el borde) y el roce largo del costado.
+        val xs = r.left + r.width * (if (boca) 0.18f else 0.56f)
+        val yr = if (boca) r.bottom else r.top
+        val sy = if (boca) -1f else 1f
+        drawPath(poligonoNeon(xs, yr, xs + r.width * 0.2f, yr, xs + r.width * 0.15f, yr + sy * r.height * 0.15f, xs + r.width * 0.06f, yr + sy * r.height * 0.19f, xs - r.width * 0.02f, yr + sy * r.height * 0.08f), t.c(Color(0xFF16141C)))
+        drawLine(t.s(0.3f), Offset(r.left + r.width * 0.12f, r.top + r.height * 0.42f), Offset(r.left + r.width * 0.2f, r.bottom - r.height * 0.16f), 0.9f * u)
     }
     if (!boca) drawOval(t.c(Color(0xFF3A3040), 0.6f), Offset(r.left + 1f * u, r.top - 1.6f * u), Size(r.width * 0.84f - 2f * u, 3.2f * u))
 }

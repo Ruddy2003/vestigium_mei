@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaNeon.ALUMINIO
@@ -41,7 +42,9 @@ private const val FILA_CENEFA_NEON = 8
  * llega, su canto alto encendido y el bajo en sombra, su brillo de vidriado del lado de la luz; la fila de la cenefa, partida en
  * diagonal en granate y hueso; algunos rajados y uno que falta, con el cemento.
  */
-internal fun DrawScope.azulejosNeon(r: Rect, g: MarcoNeon, conCenefa: Boolean) {
+internal fun DrawScope.azulejosNeon(r: Rect, gm: MarcoNeon, conCenefa: Boolean) {
+    // La pared está detrás del mueble: el paño de la farola de los Sueños no la toca.
+    val g = gm.sinPano
     val u = density; val w = g.w
     val lado = w * AZULEJO_NEON
     if (lado < 2f || r.width <= 0f || r.height <= 0f) return
@@ -52,24 +55,52 @@ internal fun DrawScope.azulejosNeon(r: Rect, g: MarcoNeon, conCenefa: Boolean) {
         val c0 = (r.left / lado).toInt(); val c1 = (r.right / lado).toInt()
         val f0 = (r.top / lado).toInt(); val f1 = (r.bottom / lado).toInt()
         val junta = maxOf(1f, 1.1f * u)
+        val cols = (w / lado).toInt()
         for (f in f0..f1) for (c in c0..c1) {
             val x = c * lado; val y = f * lado
             val centro = Offset(x + lado / 2, y + lado / 2)
             val t = g.t(centro)
             val sem = c * 131 + f * 977
-            val cara = Rect(x + junta / 2, y + junta / 2, x + lado - junta / 2, y + lado - junta / 2)
-            // El que falta: el cemento rugoso y el borde roto.
-            if (c == (0.86f / AZULEJO_NEON).toInt() && f == 3) {
-                drawRect(t.c(CEMENTO), cara.topLeft, cara.size)
-                drawRect(t.s(0.45f), cara.topLeft, Size(cara.width, cara.height * 0.18f))
-                for (j in 0 until 6) drawCircle(t.s(0.3f), (0.8f + azar(sem, j) * 1.4f) * u, Offset(cara.left + cara.width * azar(sem, j + 10), cara.top + cara.height * azar(sem, j + 20)))
+            // La junta sucia: el hollín y la grasa que se meten abajo y a un lado, más en unas que en otras.
+            if (azar(sem, 14) > 0.5f) drawRect(t.s(0.16f + 0.26f * azar(sem, 15)), Offset(x - junta, y + lado - junta * 1.3f), Size(lado + junta, junta * 2.4f))
+            if (azar(sem, 16) > 0.68f) drawRect(t.s(0.14f + 0.22f * azar(sem, 17)), Offset(x + lado - junta * 1.3f, y), Size(junta * 2.4f, lado))
+            // Los que se cayeron: el mortero con las estrías de la llana, la sombra de los vecinos y un resto del azulejo roto.
+            val caido = (c == (0.86f / AZULEJO_NEON).toInt() && f == 3) || (c == (0.55f / AZULEJO_NEON).toInt() && f == 4) ||
+                (!conCenefa && c == cols && f == 26)
+            if (caido) {
+                val hueco = Rect(x + junta * 0.3f, y + junta * 0.3f, x + lado - junta * 0.3f, y + lado - junta * 0.3f)
+                drawRect(t.c(CEMENTO, 0.9f), hueco.topLeft, hueco.size)
+                clipRect(hueco.left, hueco.top, hueco.right, hueco.bottom) {
+                    var d = -hueco.width
+                    while (d < hueco.width) {
+                        drawLine(t.s(0.3f), Offset(hueco.left + d, hueco.bottom), Offset(hueco.left + d + hueco.width * 0.7f, hueco.top), 1.4f * u)
+                        drawLine(t.b(0.2f), Offset(hueco.left + d + 1.6f * u, hueco.bottom), Offset(hueco.left + d + hueco.width * 0.7f + 1.6f * u, hueco.top), 0.8f * u)
+                        d += hueco.width * 0.2f
+                    }
+                    for (j in 0 until 6) drawCircle(t.s(0.3f), (0.7f + azar(sem, j) * 1.2f) * u, Offset(hueco.left + hueco.width * azar(sem, j + 10), hueco.top + hueco.height * azar(sem, j + 20)))
+                    drawRect(t.s(0.5f), hueco.topLeft, Size(hueco.width, hueco.height * 0.14f))
+                    drawRect(t.s(0.35f), hueco.topLeft, Size(hueco.width * 0.1f, hueco.height))
+                }
+                val resto = poligonoNeon(hueco.right, hueco.bottom, hueco.right - hueco.width * 0.44f, hueco.bottom, hueco.right - hueco.width * 0.2f, hueco.bottom - hueco.height * 0.18f, hueco.right, hueco.bottom - hueco.height * 0.52f)
+                drawPath(resto, t.c(JADE))
+                drawPath(resto, t.b(0.4f), style = Stroke(0.7f * u))
                 continue
             }
-            // Alguno repuesto de otro color (crema), y el tono de cada uno un poco distinto.
-            val repuesto = azar(sem, 9) > 0.965f
-            val base = if (conCenefa && f == FILA_CENEFA_NEON) JADE_OSC
-                else if (repuesto) mezcla(HUESO, JADE_LUZ, 0.25f)
-                else mezcla(JADE, if (azar(sem, 1) > 0.5f) JADE_LUZ else JADE_OSC, 0.18f * azar(sem, 2))
+            // Cada azulejo, puesto a mano: un pelo corrido y la junta desigual.
+            val jx = (azar(sem, 11) - 0.5f) * 1.5f * u; val jy = (azar(sem, 12) - 0.5f) * 1.5f * u
+            val encoge = azar(sem, 13) * 0.9f * u
+            val cara = Rect(x + junta / 2 + jx + encoge, y + junta / 2 + jy + encoge, x + lado - junta / 2 + jx, y + lado - junta / 2 + jy)
+            // El tono de cada uno un poco distinto; algunos de otra hornada (más azul o más amarillo), alguno repuesto crema y alguno
+            // de otro verde, gris azulado.
+            val z = azar(sem, 9)
+            val base = when {
+                conCenefa && f == FILA_CENEFA_NEON -> JADE_OSC
+                z > 0.972f -> mezcla(HUESO, JADE_LUZ, 0.25f)
+                z > 0.952f -> Color(0xFF7C9EA6)
+                z > 0.86f -> mezcla(JADE, Color(0xFF468F9E), 0.42f)
+                z > 0.78f -> mezcla(JADE, Color(0xFF8AAE74), 0.42f)
+                else -> mezcla(JADE, if (azar(sem, 1) > 0.5f) JADE_LUZ else JADE_OSC, 0.3f * azar(sem, 2))
+            }
             drawRect(t.c(base), cara.topLeft, cara.size)
             if (conCenefa && f == FILA_CENEFA_NEON) {
                 // La cenefa: cada azulejo partido en diagonal, granate abajo y hueso arriba, alternando el sentido.
@@ -88,6 +119,17 @@ internal fun DrawScope.azulejosNeon(r: Rect, g: MarcoNeon, conCenefa: Boolean) {
             if (t.k > 0.42f && azar(sem, 4) > 0.35f) {
                 val rx = cara.left + cara.width * (if (t.izq) 0.18f else 0.58f)
                 drawLine(t.b(0.45f, 1.1f), Offset(rx, cara.top + cara.height * 0.2f), Offset(rx + cara.width * 0.2f, cara.top + cara.height * 0.2f), 1.1f * u, StrokeCap.Round)
+            }
+            // El canto desconchado: una esquina saltada, con el bizcocho claro.
+            if (azar(sem, 18) > 0.9f) {
+                val esq = (azar(sem, 19) * 4).toInt()
+                val s0 = cara.width * (0.16f + 0.14f * azar(sem, 20))
+                val px = if (esq == 0 || esq == 3) cara.left else cara.right
+                val py = if (esq < 2) cara.top else cara.bottom
+                val sx = if (esq == 0 || esq == 3) 1f else -1f; val sy = if (esq < 2) 1f else -1f
+                val tri = poligonoNeon(px, py, px + sx * s0, py, px + sx * s0 * 0.35f, py + sy * s0 * 0.4f, px, py + sy * s0 * 0.85f)
+                drawPath(tri, t.c(mezcla(CEMENTO, HUESO, 0.45f)))
+                drawPath(tri, t.s(0.3f), style = Stroke(0.6f * u))
             }
             // Rajados: una grieta quebrada.
             if (azar(sem, 5) > 0.9f) {
@@ -122,7 +164,8 @@ internal fun DrawScope.paredLadosNeon(g: MarcoNeon) {
 }
 
 /** La pared de arriba, detrás del bodegón: los azulejos, los chorretones bajo la ventana y la sombra de la cornisa. */
-internal fun DrawScope.paredArribaNeon(g: MarcoNeon) {
+internal fun DrawScope.paredArribaNeon(gm: MarcoNeon) {
+    val g = gm.sinPano
     val u = density; val w = g.w
     azulejosNeon(Rect(0f, 0f, w, g.ch), g, true)
     // El hollín y la grasa que suben y bajan por los azulejos: manchas largas y tenues.
@@ -209,6 +252,46 @@ internal fun DrawScope.ventanaNeon(g: MarcoNeon) {
     drawOval(luzFuera.copy(alpha = 0.55f), Offset(v.left + v.width * 0.3f, al0 + 1f * u), Size(v.width * 0.3f, 2.2f * u))
     // El resplandor del vidrio en el cuarto (pegado a la ventana).
     mancha(v.center, v.width * 0.95f, luzFuera.copy(alpha = if (noche) 0.08f else 0.11f))
+}
+
+/**
+ * La sombra de la reja y de la lluvia del vidrio dentro del paño de la farola (en los Sueños), entre [y0] e [y1]: los cuatro
+ * barrotes, oblicuos como cae la luz, y el montante de la hoja, más ancho; los dos travesaños; las gotas y los regueros del
+ * vidrio. Se apaga con el paño, hacia abajo. Un solo trazo.
+ */
+internal fun DrawScope.sombrasPanoNeon(g: MarcoNeon, y0: Float, y1: Float) {
+    val w = g.w; val m = MuebleEstanteNeon
+    if (!g.tocaPano(0f, w, y0, y1)) return
+    val fa = m.PANO_Y0; val fb = m.PANO_Y1
+    fun x(fy: Float, f: Float) = w * (m.panoIzq(fy) + (m.panoDer(fy) - m.panoIzq(fy)) * f)
+    val p = Path()
+    fun barra(f: Float, medio: Float) {
+        p.moveTo(x(fa, f) - w * medio, w * fa); p.lineTo(x(fa, f) + w * medio, w * fa)
+        p.lineTo(x(fb, f) + w * medio * 1.5f, w * fb); p.lineTo(x(fb, f) - w * medio * 1.5f, w * fb); p.close()
+    }
+    m.PANO_BARROTES.forEach { barra(it, 0.0055f) }
+    barra(0.52f, 0.009f)
+    m.PANO_TRAVESANOS.forEach { fy ->
+        val a = fy - 0.009f; val b = fy + 0.009f
+        p.moveTo(x(a, 0f), w * a); p.lineTo(x(a, 1f), w * a); p.lineTo(x(b, 1f), w * b); p.lineTo(x(b, 0f), w * b); p.close()
+    }
+    // Las gotas (redondas, algunas con su reguero que baja).
+    for (j in 0 until 30) {
+        val fy = fa + 0.02f + 0.8f * azar(5141, j)
+        val c = Offset(x(fy, 0.04f + 0.92f * azar(5142, j)), w * fy)
+        val r = w * (0.0035f + 0.005f * azar(5143, j))
+        p.addOval(Rect(c.x - r, c.y - r * 1.1f, c.x + r, c.y + r * 1.1f))
+        if (azar(5144, j) > 0.62f) {
+            val largo = w * (0.02f + 0.05f * azar(5145, j))
+            p.moveTo(c.x - r * 0.35f, c.y); p.lineTo(c.x + r * 0.35f, c.y)
+            p.lineTo(c.x + r * 0.25f + largo * 0.12f, c.y + largo); p.lineTo(c.x - r * 0.25f + largo * 0.12f, c.y + largo); p.close()
+        }
+    }
+    clipRect(0f, maxOf(y0, w * fa), w, minOf(y1, w * fb)) {
+        clipPath(g.panoRecorte) {
+            drawPath(p, Brush.verticalGradient(0f to g.a.sombra(0.6f), 0.45f to g.a.sombra(0.42f), 1f to g.a.sombra(0f), startY = w * fa, endY = w * fb))
+        }
+    }
 }
 
 /** El callejón de detrás del vidrio, dentro de [v]. */

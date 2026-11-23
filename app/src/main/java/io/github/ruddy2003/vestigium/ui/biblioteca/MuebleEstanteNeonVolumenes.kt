@@ -61,22 +61,36 @@ internal fun tenidoNeon(t: Color?): Color? {
     return mezcla(TINTES_NEON[i], TINTES_NEON[i + 1], q - i)
 }
 
+/**
+ * Un color del ánimo en la penumbra: su mismo tono, hondo. Los de color se oscurecen hacia un violeta casi negro (el magenta y la
+ * orquídea, ciruela; el ámbar, pardo); los apagados (el hueso, la hojalata) no se vuelven gris, sino ocre hondo.
+ */
+private fun hundidoNeon(c: Color): Color {
+    val sat = maxOf(c.red, c.green, c.blue) - minOf(c.red, c.green, c.blue)
+    val color = Color(c.red * 0.22f + 0.05f, c.green * 0.22f + 0.016f, c.blue * 0.22f + 0.07f, c.alpha)
+    val ocre = Color(c.red * 0.28f, c.green * 0.21f, c.blue * 0.12f, c.alpha)
+    return mezcla(ocre, color, (sat * 2.6f).coerceIn(0f, 1f))
+}
+
 // ---------------------------------------------------------------- la luz de un volumen
 
 /** La luz que le toca a un volumen: el tono de su centro y el de su parte de arriba, y el aire. */
 private class LuzVolumenNeon(val a: AireNeon, val t: TonoNeon, val arriba: TonoNeon) {
     fun c(col: Color, mas: Float = 1f) = t.c(col, mas)
     fun s(al: Float) = t.s(al)
-    fun b(al: Float, mas: Float = 1f) = t.b(al, mas)
+    /** El filo de luz: lejos de la luz, apenas (que no aclare lo que está en penumbra). */
+    fun b(al: Float, mas: Float = 1f) = t.b(al * (0.4f + 0.6f * (t.k * mas / 0.6f).coerceIn(0f, 1f)), mas)
     val izq: Boolean get() = t.izq
-    /** El ánimo: su color apagado por la distancia a la luz, sin perder el tono (lejos, oscuro pero de su color). */
+    /**
+     * El ánimo: su color hundido por la distancia a la luz sin perder el tono (lejos, el magenta es ciruela y el hueso, ocre
+     * hondo), que solo aclara cerca de una luz.
+     */
     fun animo(col: Color, mas: Float = 1f): Color {
         val k = (t.k * mas).coerceIn(0f, 1.3f)
-        val n = PaletaNeon.HONDO
-        val apagado = saturarNeon(Color(col.red * 0.27f + n.red * 0.34f, col.green * 0.27f + n.green * 0.34f, col.blue * 0.27f + n.blue * 0.34f, col.alpha), 1.5f)
+        val apagado = hundidoNeon(col)
         val lit = t.c(col, mas)
         val vivo = mezcla(col, lit, 0.5f)
-        return mezcla(apagado, vivo, (0.04f + 1.15f * k.pow(1.25f)).coerceAtMost(0.97f))
+        return mezcla(apagado, vivo, (1.3f * k.pow(1.8f)).coerceAtMost(0.97f))
     }
     fun etiqueta(base: Color = PAPEL): Color = a.etiqueta(t.k, t.l, base)
 }
@@ -125,8 +139,9 @@ private fun DrawScope.lunaNeon(c: Offset, r: Float, fondo: Color, l: LuzVolumenN
  *   del día, la ventanita con la bobina (más gruesa cuanto más escribiste), los tornillos y la persiana de metal;
  * - la lata de té: hojalata litografiada del ánimo con un dibujo inventado (ondas, lunares o franjas), los hombros, la tapa
  *   redonda estriada, abolladuras y óxido, y la tarjeta del día atada con cordel al cuello;
- * - el saco de cordón del repartidor: nailon del ánimo, blando y sentado, con el volante de la boca, el cordón con su tanca y los
- *   cabos anudados, y la tira de cinta de carrocero con el día en la panza; engorda con las palabras.
+ * - el saco de cordón del repartidor: tela técnica del ánimo, blanda y sentada, con la boca fruncida caída a un lado, la jareta,
+ *   el cordón con su tanca, la cinta reflectante, el refuerzo de la base y la tira de cinta de carrocero con el día en la panza;
+ *   engorda con las palabras.
  * Sin ánimo: el plástico ahumado, la hojalata sin imprimir y el nailon pardo. En los Sueños, una media luna en cada una.
  */
 internal fun DrawScope.volumenNeon(v: Volumen, medidor: TextMeasurer) {
@@ -364,121 +379,209 @@ private fun Color.luminanciaNeon(): Float = 0.3f * red + 0.59f * green + 0.11f *
 
 // ---------------------------------------------------------------- el saco de cordón
 
+/** Una recta, una curva de segundo y una de tercer grado, como función de t (de 0 a 1). */
+private fun recta(a: Offset, b: Offset): (Float) -> Offset = { t -> a + (b - a) * t }
+private fun curva(a: Offset, c: Offset, b: Offset): (Float) -> Offset = { t -> val m = 1f - t; a * (m * m) + c * (2f * m * t) + b * (t * t) }
+private fun curva3(a: Offset, c1: Offset, c2: Offset, b: Offset): (Float) -> Offset =
+    { t -> val m = 1f - t; a * (m * m * m) + c1 * (3f * m * m * t) + c2 * (3f * m * t * t) + b * (t * t * t) }
+
 /**
- * El saco de cordón del repartidor, de nailon del ánimo, blando y sentado: el volante de la boca, abierto en abanico por encima
- * del frunce, con su borde ondulado y sus pliegues; el cordón que lo cierra, con la tanca de plástico y los cabos anudados que
- * cuelgan por delante; el cuerpo que se abre desde el cuello y se asienta panzudo y aplastado abajo (más cuanto más
- * escribiste), con los frunces que bajan del cuello, las arrugas de asiento, el brillo del nailon y el ribete del fondo; la tira
- * de cinta de carrocero con el día, en la panza. En los Sueños, un parche reflectante en media luna. Alguno, recostado.
+ * Un pespunte a lo largo de [en] (t de 0 a 1): puntadas de unos 1.7 dp con su hueco, en un solo camino de tramos (sin efecto de
+ * trazo, que se recalcula en cada dibujo y pesa).
+ */
+private fun DrawScope.pespunteNeon(color: Color, ancho: Float, en: (Float) -> Offset) {
+    val u = density
+    var largo = 0f; var antes = en(0f)
+    for (i in 1..8) { val p = en(i / 8f); largo += (p - antes).getDistance(); antes = p }
+    val n = (largo / (3f * u)).toInt().coerceIn(1, 60)
+    val camino = Path()
+    for (i in 0 until n) {
+        val a = en(i / n.toFloat()); val b = en((i + 0.57f) / n)
+        camino.moveTo(a.x, a.y); camino.lineTo(b.x, b.y)
+    }
+    drawPath(camino, color, style = Stroke(ancho))
+}
+
+/**
+ * El saco de cordón del repartidor, de tela técnica (ripstop) del ánimo, blando y sentado: la boca fruncida, corta, con el
+ * sobrante de tela doblado y caído hacia un lado (no se abre en abanico) y su dobladillo cosido; la jareta del cuello con sus
+ * pespuntes y su ojal de metal; el cordón que sale del ojal, entra en la tanca de plástico y cae en un solo cabo torcido con su
+ * nudo, sin lazo; el cuerpo que se abre en hombros y se asienta (más panzudo cuanto más escribiste), con la cuadrícula del ripstop, la
+ * costura del costado pespunteada y la arruga de asiento; el refuerzo de la base, de otra tela más oscura, con su costura; la
+ * cinta reflectante a lo ancho; y la tira de cinta de carrocero con el día, en la panza. En los Sueños, una media luna. Alguno,
+ * recostado.
  */
 private fun DrawScope.sacoCordonNeon(v: Volumen, medidor: TextMeasurer, l: LuzVolumenNeon, tinte: Color?) {
     val u = density; val w = size.width; val h = size.height
     val s = v.semilla and 0x7fffffff
-    val x0 = (0.4f + 1.2f * azar(s, 77)) * u; val x1 = w - (1.2f + 1.6f * azar(s, 78)) * u
+    val x0 = (0.8f + 1.2f * azar(s, 77)) * u; val x1 = w - (1.4f + 1.6f * azar(s, 78)) * u
     val ancho = x1 - x0
-    val cx = (x0 + x1) / 2 + ancho * 0.04f * (azar(s, 76) - 0.5f)
+    val cx = (x0 + x1) / 2
     val y1 = h - 1f * u
-    val panza = ancho * (0.02f + 0.06f * v.lleno)
-    val giro = if (azar(s, 79) > 0.68f) (if (l.izq) 3f else -3f) else 0f
-    val nailon = if (tinte != null) l.animo(tinte) else l.c(Color(0xFF6B5E40))
-    val luzN = if (tinte != null) l.animo(mezcla(tinte, Color.White, 0.35f), 1.15f) else l.c(Color(0xFF8C7E5A))
-    val sombraN = if (tinte != null) l.animo(mezcla(tinte, Color(0xFF14101C), 0.5f), 0.8f) else l.c(Color(0xFF3E3424))
-    val cuello = h * (0.21f + 0.03f * azar(s, 81))
-    val cuelloAncho = ancho * 0.3f
-    val boca = h * 0.035f
-    val bocaAncho = ancho * (0.86f + 0.12f * azar(s, 82))
+    val panza = ancho * (0.02f + 0.05f * v.lleno)
+    val lado = if (azar(s, 76) > 0.5f) 1f else -1f
+    val giro = if (azar(s, 79) > 0.7f) (if (l.izq) 2.5f else -2.5f) else 0f
+    val tela = if (tinte != null) l.animo(tinte) else l.c(Color(0xFF5C5A4A))
+    val telaLuz = if (tinte != null) l.animo(mezcla(tinte, Color.White, 0.3f), 1.15f) else l.c(Color(0xFF7A7862))
+    val telaOsc = if (tinte != null) l.animo(mezcla(tinte, Color(0xFF14101C), 0.5f), 0.8f) else l.c(Color(0xFF34322A))
+    val telaArriba = if (tinte != null) mezcla(tela, l.arriba.c(tinte), 0.3f) else l.arriba.c(Color(0xFF66644F))
+    val refuerzo = if (tinte != null) l.animo(mezcla(tinte, Color(0xFF16121C), 0.62f), 0.8f) else l.c(Color(0xFF26252A))
+    val hilo = l.c(Color(0xFFD8D0BC), 0.9f)
+    val cuello = h * (0.165f + 0.02f * azar(s, 81))
+    val cuelloAncho = ancho * 0.46f
+    val hombro = cuello + h * 0.1f
     asientoNeon(l, x0, x1, cuello)
     rotate(giro, Offset(cx, y1)) {
-        // El volante de la boca, por encima del frunce: un abanico con el borde ondulado.
-        val volante = Path().apply {
-            moveTo(cx - cuelloAncho * 0.42f, cuello)
-            cubicTo(cx - cuelloAncho * 0.6f, cuello - h * 0.06f, cx - bocaAncho * 0.55f, boca + h * 0.05f, cx - bocaAncho / 2, boca + h * 0.01f)
-            val ondas = 4
-            for (k in 0 until ondas) {
-                val xa = cx - bocaAncho / 2 + bocaAncho * k / ondas
-                val xb = cx - bocaAncho / 2 + bocaAncho * (k + 1) / ondas
-                quadraticTo((xa + xb) / 2, boca - h * (0.02f + 0.012f * azar(s, 60 + k)), xb, boca + h * (0.005f + 0.012f * azar(s, 64 + k)))
-            }
-            cubicTo(cx + bocaAncho * 0.55f, boca + h * 0.05f, cx + cuelloAncho * 0.6f, cuello - h * 0.06f, cx + cuelloAncho * 0.42f, cuello)
-            close()
-        }
-        drawPath(Path().apply { addPath(volante, Offset(if (l.izq) 1.4f * u else -1.4f * u, 1.6f * u)) }, l.s(0.4f))
-        drawPath(volante, if (tinte != null) mezcla(l.animo(tinte), l.arriba.c(tinte), 0.4f) else l.arriba.c(Color(0xFF7A6C4C)))
-        clipPath(volante) {
-            // El interior que asoma por la boca y los pliegues del volante.
-            drawOval(l.c(Color(0xFF0E0A12)), Offset(cx - bocaAncho * 0.38f, boca - h * 0.004f), Size(bocaAncho * 0.76f, h * 0.035f))
-            for (k in 0 until 5) {
-                val f = (k + 0.5f) / 5f
-                val xa = cx - bocaAncho / 2 + bocaAncho * f
-                val xb = cx - cuelloAncho * 0.4f + cuelloAncho * 0.8f * f
-                drawLine(l.s(0.45f), Offset(xa, boca + h * 0.02f), Offset(xb, cuello), 1.2f * u)
-                drawLine(l.arriba.b(0.4f, 1.15f), Offset(xa - 1.2f * u, boca + h * 0.02f), Offset(xb - 1f * u, cuello), 0.7f * u)
-            }
-        }
-        // El cuerpo: del cuello se abre hasta la panza y se asienta, aplastado abajo.
-        // De saco: se abre enseguida del cuello, sigue abriéndose y es más ancho cerca del suelo, donde se aplasta.
+        // ---- el cuerpo: del cuello se abre en hombros, baja casi recto y se asienta, más ancho y aplastado abajo.
         val cuerpo = Path().apply {
             moveTo(cx - cuelloAncho / 2, cuello)
-            cubicTo(cx - cuelloAncho * 1.3f, cuello + h * 0.03f, x0 + ancho * 0.04f, cuello + h * 0.1f, x0 + ancho * 0.02f, h * 0.5f)
-            cubicTo(x0, h * 0.7f, x0 - panza, y1 - h * 0.12f, x0 - panza, y1 - h * 0.06f)
-            quadraticTo(x0 - panza, y1, x0 + ancho * 0.2f, y1)
-            lineTo(x1 - ancho * 0.2f, y1)
+            cubicTo(x0 + ancho * 0.1f, cuello + h * 0.012f, x0 + ancho * 0.02f, hombro - h * 0.04f, x0 + ancho * 0.015f, hombro + h * 0.02f)
+            cubicTo(x0 - panza * 0.3f, h * 0.55f, x0 - panza, y1 - h * 0.16f, x0 - panza, y1 - h * 0.06f)
+            quadraticTo(x0 - panza, y1, x0 + ancho * 0.12f, y1)
+            lineTo(x1 - ancho * 0.12f, y1)
             quadraticTo(x1 + panza, y1, x1 + panza, y1 - h * 0.06f)
-            cubicTo(x1 + panza, y1 - h * 0.12f, x1, h * 0.7f, x1 - ancho * 0.02f, h * 0.5f)
-            cubicTo(x1 - ancho * 0.04f, cuello + h * 0.1f, cx + cuelloAncho * 1.3f, cuello + h * 0.03f, cx + cuelloAncho / 2, cuello)
+            cubicTo(x1 + panza, y1 - h * 0.16f, x1 + panza * 0.3f, h * 0.55f, x1 - ancho * 0.015f, hombro + h * 0.02f)
+            cubicTo(x1 - ancho * 0.02f, hombro - h * 0.04f, x1 - ancho * 0.1f, cuello + h * 0.012f, cx + cuelloAncho / 2, cuello)
             close()
         }
-        drawPath(cuerpo, nailon)
+        drawPath(cuerpo, tela)
         clipPath(cuerpo) {
-            drawRect(sombraN, Offset(if (l.izq) cx + ancho * 0.16f else x0 - panza, cuello), Size(ancho * 0.36f + panza, y1 - cuello))
-            drawRect(l.s(0.22f), Offset(if (l.izq) x1 - ancho * 0.14f else x0 - panza, cuello), Size(ancho * 0.14f + panza, y1 - cuello))
-            drawOval(luzN, Offset(if (l.izq) x0 + ancho * 0.06f else x1 - ancho * 0.34f, h * 0.42f), Size(ancho * 0.28f, h * 0.44f))
-            // Los frunces que bajan del cuello y se abren.
-            for (j in 0 until 5) {
-                val f = (j + 0.5f) / 5f
+            // El lado de sombra y el de luz.
+            drawRect(telaOsc, Offset(if (l.izq) cx + ancho * 0.18f else x0 - panza, cuello), Size(ancho * 0.34f + panza, y1 - cuello))
+            drawRect(l.s(0.22f), Offset(if (l.izq) x1 - ancho * 0.12f else x0 - panza, cuello), Size(ancho * 0.12f + panza, y1 - cuello))
+            drawOval(telaLuz, Offset(if (l.izq) x0 + ancho * 0.06f else x1 - ancho * 0.34f, h * 0.36f), Size(ancho * 0.28f, h * 0.44f))
+            // La cuadrícula del ripstop, apenas.
+            val rejilla = Path()
+            var gx = x0 + 2f * u
+            while (gx < x1) { rejilla.moveTo(gx, cuello); rejilla.lineTo(gx, y1); gx += 5.6f * u }
+            var gy = cuello + 2f * u
+            while (gy < y1) { rejilla.moveTo(x0 - panza, gy); rejilla.lineTo(x1 + panza, gy); gy += 5.6f * u }
+            drawPath(rejilla, l.s(0.12f), style = Stroke(0.5f * u))
+            // Los frunces cortos que bajan del cuello a los hombros.
+            for (j in 0 until 4) {
+                val f = (j + 0.5f) / 4f
                 val xa = cx - cuelloAncho / 2 + cuelloAncho * f
-                val xb = x0 + ancho * (f + (f - 0.5f) * 0.3f)
-                val p = Path().apply { moveTo(xa, cuello + 1f * u); quadraticTo(xa + (xb - xa) * 0.3f, cuello + h * 0.12f, xb, cuello + h * (0.2f + 0.06f * azar(s, 83 + j))) }
-                drawPath(p, l.s(0.45f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
-                drawPath(Path().apply { addPath(p, Offset(if (l.izq) -1.3f * u else 1.3f * u, 0f)) }, l.b(0.4f, 1.15f), style = Stroke(0.8f * u, cap = StrokeCap.Round))
+                val xb = x0 + ancho * (0.1f + 0.8f * f)
+                val p = Path().apply { moveTo(xa, cuello + 1f * u); quadraticTo((xa + xb) / 2, cuello + h * 0.04f, xb, hombro + h * 0.01f * azar(s, 83 + j)) }
+                drawPath(p, l.s(0.4f), style = Stroke(1.2f * u, cap = StrokeCap.Round))
+                drawPath(Path().apply { addPath(p, Offset(if (l.izq) -1.1f * u else 1.1f * u, 0f)) }, l.b(0.35f, 1.15f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
             }
-            // Las arrugas de asiento, a lo ancho, abajo.
-            for (j in 0 until 2) {
-                val ya = y1 - h * (0.09f + 0.08f * j + 0.03f * azar(s, 88 + j))
-                val ar = Path().apply { moveTo(x0 + ancho * (0.1f + 0.1f * j), ya); quadraticTo(cx, ya + h * 0.03f, x1 - ancho * (0.12f + 0.08f * j), ya - h * 0.012f) }
-                drawPath(ar, l.s(0.4f), style = Stroke(1.2f * u, cap = StrokeCap.Round))
-                drawPath(Path().apply { addPath(ar, Offset(0f, -1.2f * u)) }, l.b(0.3f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
+            // La costura del costado (del lado de la sombra): el pliegue y el pespunte.
+            val xc = if (l.izq) x1 - ancho * 0.14f else x0 + ancho * 0.14f
+            val dc = (if (l.izq) 1f else -1f) * panza * 0.6f
+            drawLine(l.s(0.38f), Offset(xc, hombro), Offset(xc + dc, y1 - h * 0.12f), 1.1f * u)
+            pespunteNeon(hilo.copy(alpha = 0.55f), 0.6f * u, recta(Offset(xc + 1.3f * u, hombro + 1f * u), Offset(xc + 1.3f * u + dc, y1 - h * 0.12f)))
+            // La arruga de asiento, sobre el refuerzo.
+            val ya = y1 - h * (0.16f + 0.03f * azar(s, 88))
+            val ar = Path().apply { moveTo(x0 + ancho * 0.12f, ya); quadraticTo(cx, ya + h * 0.025f, x1 - ancho * 0.14f, ya - h * 0.01f) }
+            drawPath(ar, l.s(0.38f), style = Stroke(1.2f * u, cap = StrokeCap.Round))
+            drawPath(Path().apply { addPath(ar, Offset(0f, -1.2f * u)) }, l.b(0.28f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
+            // El brillo de la tela.
+            drawRect(l.b(0.6f, 1.3f), Offset(if (l.izq) x0 + ancho * 0.12f else x1 - ancho * 0.17f, h * 0.44f), Size(maxOf(1.3f * u, ancho * 0.045f), h * 0.22f))
+            // La cinta reflectante, a lo ancho: el gris plata y, en su canto, la luz que devuelve.
+            val c0 = h * (0.745f + 0.015f * azar(s, 89)); val c1 = c0 + h * 0.038f
+            drawRect(l.c(Color(0xFFA6ACB4), 1.15f), Offset(x0 - panza, c0), Size(ancho + panza * 2, c1 - c0))
+            drawRect(l.b(0.85f, 1.5f), Offset(x0 - panza, c0 + (c1 - c0) * 0.3f), Size(ancho + panza * 2, maxOf(1f, (c1 - c0) * 0.22f)))
+            drawRect(l.s(0.4f), Offset(x0 - panza, c1), Size(ancho + panza * 2, 1f * u))
+            // El refuerzo de la base, de otra tela, que sube un poco por los lados, con su costura.
+            val yr = y1 - h * 0.1f
+            val base = Path().apply {
+                moveTo(x0 - panza * 1.2f, yr - h * 0.02f); quadraticTo(cx, yr + h * 0.012f, x1 + panza * 1.2f, yr - h * 0.02f)
+                lineTo(x1 + panza * 1.2f, y1 + 1f * u); lineTo(x0 - panza * 1.2f, y1 + 1f * u); close()
             }
-            // El brillo del nailon.
-            drawRect(l.b(0.7f, 1.3f), Offset(if (l.izq) x0 + ancho * 0.12f else x1 - ancho * 0.18f, h * 0.45f), Size(maxOf(1.4f * u, ancho * 0.05f), h * 0.26f))
-            // El ribete del fondo.
-            drawRect(l.c(Color(0xFF1E1C24), 1.1f), Offset(x0 - panza, y1 - h * 0.035f), Size(ancho + panza * 2, h * 0.035f))
-            if (v.noche) lunaNeon(Offset(cx - ancho * 0.18f, h * 0.38f), ancho * 0.13f, nailon, l)
+            drawPath(base, refuerzo)
+            val costura = Path().apply { moveTo(x0 - panza, yr - h * 0.012f); quadraticTo(cx, yr + h * 0.02f, x1 + panza, yr - h * 0.012f) }
+            drawPath(costura, l.s(0.45f), style = Stroke(1f * u))
+            pespunteNeon(hilo.copy(alpha = 0.6f), 0.6f * u, curva(Offset(x0 - panza, yr - h * 0.012f + 1.8f * u), Offset(cx, yr + h * 0.02f + 1.8f * u), Offset(x1 + panza, yr - h * 0.012f + 1.8f * u)))
+            if (v.noche) lunaNeon(Offset(cx + lado * ancho * 0.2f, h * 0.35f), ancho * 0.12f, tela, l)
         }
-        drawPath(cuerpo, l.b(0.3f), style = Stroke(0.7f * u))
-        // El cordón: el frunce del cuello, la tanca y los cabos anudados que cuelgan.
+        drawPath(cuerpo, l.b(0.28f), style = Stroke(0.7f * u))
+        // ---- la jareta del cuello, con su frunce y sus dos pespuntes.
+        val jar = Rect(cx - cuelloAncho * 0.6f, cuello - h * 0.012f, cx + cuelloAncho * 0.6f, cuello + h * 0.022f)
+        drawRoundRect(l.s(0.45f), jar.topLeft + Offset(0f, 1.2f * u), jar.size, CornerRadius(2f * u))
+        drawRoundRect(mezcla(telaOsc, tela, 0.5f), jar.topLeft, jar.size, CornerRadius(2f * u))
+        clipRect(jar.left, jar.top, jar.right, jar.bottom) {
+            var fx = jar.left + 1.5f * u
+            while (fx < jar.right) { drawLine(l.s(0.35f), Offset(fx, jar.top), Offset(fx + 0.6f * u, jar.bottom), 0.8f * u); fx += 2.6f * u }
+            listOf(jar.top + 1.2f * u, jar.bottom - 1.4f * u).forEach { yy ->
+                pespunteNeon(hilo.copy(alpha = 0.5f), 0.55f * u, recta(Offset(jar.left + 1f * u, yy), Offset(jar.right - 1f * u, yy)))
+            }
+        }
+        drawRect(l.arriba.b(0.45f, 1.2f), Offset(jar.left + 1.5f * u, jar.top), Size(jar.width - 3f * u, 0.8f * u))
+        // ---- la boca: el sobrante de tela sobre el frunce, corto; sube un poco de un lado y se dobla y cae del otro ([lado]) por
+        // encima de la jareta, hasta el hombro, como tela blanda. Los pliegues siguen la caída; el dobladillo, cosido.
+        val tope = cuello - h * (0.06f + 0.015f * azar(s, 82))
+        val a = cx - lado * cuelloAncho * 0.44f; val b = cx + lado * cuelloAncho * 0.3f
+        val cima = Offset(cx - lado * ancho * 0.04f, tope)
+        val punta = Offset(cx + lado * ancho * 0.47f, cuello + h * 0.045f)
+        val labio = Path().apply {
+            moveTo(cima.x, cima.y)
+            cubicTo(cx + lado * ancho * 0.2f, tope, cx + lado * ancho * 0.43f, cuello - h * 0.03f, punta.x, punta.y)
+        }
+        val boca = Path().apply {
+            moveTo(a, cuello + 1f * u)
+            cubicTo(a - lado * ancho * 0.03f, cuello - h * 0.03f, cx - lado * ancho * 0.18f, tope + h * 0.004f, cima.x, cima.y)
+            cubicTo(cx + lado * ancho * 0.2f, tope, cx + lado * ancho * 0.43f, cuello - h * 0.03f, punta.x, punta.y)
+            quadraticTo(punta.x - lado * ancho * 0.02f, punta.y + h * 0.014f, punta.x - lado * ancho * 0.08f, punta.y + h * 0.006f)
+            cubicTo(cx + lado * ancho * 0.32f, cuello + h * 0.018f, b + lado * ancho * 0.04f, cuello + h * 0.004f, b, cuello)
+            close()
+        }
+        // La sombra que echa lo caído en el hombro.
+        drawOval(l.s(0.4f), Offset(cx + lado * ancho * 0.3f - ancho * 0.19f, cuello + h * 0.035f), Size(ancho * 0.38f, h * 0.04f))
+        drawPath(boca, telaArriba)
+        clipPath(boca) {
+            // Lo de debajo de la caída, en sombra, y dos pliegues blandos que siguen el doblez.
+            drawRect(l.s(0.34f), Offset(if (lado > 0f) cx + ancho * 0.18f else cx - ancho * 0.5f, cuello - h * 0.005f), Size(ancho * 0.32f, h * 0.06f))
+            listOf(0.022f to 0.4f, 0.045f to 0.3f).forEach { (dy, al) ->
+                val pl = Path().apply { addPath(labio, Offset(-lado * ancho * 0.07f, h * dy)) }
+                drawPath(pl, l.s(al), style = Stroke(1.1f * u, cap = StrokeCap.Round))
+                drawPath(Path().apply { addPath(pl, Offset(-lado * 1f * u, -1f * u)) }, l.arriba.b(0.3f, 1.15f), style = Stroke(0.6f * u, cap = StrokeCap.Round))
+            }
+            val dl = Offset(-lado * 0.6f * u, 1.8f * u)
+            pespunteNeon(hilo.copy(alpha = 0.5f), 0.6f * u, curva3(cima + dl, Offset(cx + lado * ancho * 0.2f, tope) + dl, Offset(cx + lado * ancho * 0.43f, cuello - h * 0.03f) + dl, punta + dl))
+        }
+        drawPath(labio, l.arriba.b(0.6f, 1.2f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
+        // ---- el ojal de metal por donde sale el cordón, del lado que no tapa la caída.
+        val ojal = Offset(cx - lado * ancho * 0.1f, jar.center.y)
+        drawCircle(Color(0xFF0E0C12), 1.5f * u, ojal)
+        drawCircle(l.c(ALUMINIO, 1.2f), 1.5f * u, ojal, style = Stroke(0.8f * u))
+        // ---- el cordón: sale del ojal, entra enseguida en la tanca (apretada contra la jareta, ladeada) y sigue en un solo cabo de
+        // dos hebras torcidas que cae en diagonal hacia fuera y acaba en un nudo con el pelo deshilachado. Sin lazo ni dos patas.
         val cord = l.arriba.c(Color(0xFF1E1C24), 1.2f)
-        drawLine(l.s(0.5f), Offset(cx - cuelloAncho * 0.6f, cuello + 1.4f * u), Offset(cx + cuelloAncho * 0.6f, cuello + 1.4f * u), 2.6f * u, StrokeCap.Round)
-        drawLine(cord, Offset(cx - cuelloAncho * 0.6f, cuello), Offset(cx + cuelloAncho * 0.6f, cuello), 2.2f * u, StrokeCap.Round)
-        drawLine(l.arriba.b(0.5f, 1.2f), Offset(cx - cuelloAncho * 0.55f, cuello - 0.8f * u), Offset(cx + cuelloAncho * 0.4f, cuello - 0.8f * u), 0.6f * u)
-        val tanca = Rect(cx - ancho * 0.07f, cuello + h * 0.01f, cx + ancho * 0.07f, cuello + h * 0.055f)
-        // Los dos cabos caen juntos hacia el mismo lado (que no dibujen una letra).
-        val cabos = Path().apply {
-            moveTo(cx - ancho * 0.02f, tanca.bottom); cubicTo(cx - ancho * 0.03f, tanca.bottom + h * 0.04f, cx - ancho * 0.1f, tanca.bottom + h * 0.06f, cx - ancho * 0.12f, tanca.bottom + h * 0.1f)
-            moveTo(cx + ancho * 0.02f, tanca.bottom); cubicTo(cx + ancho * 0.01f, tanca.bottom + h * 0.035f, cx - ancho * 0.04f, tanca.bottom + h * 0.05f, cx - ancho * 0.05f, tanca.bottom + h * 0.075f)
+        val tw = maxOf(5f * u, ancho * 0.15f); val th = maxOf(3.4f * u, h * 0.03f)
+        val tc = Offset(ojal.x - lado * ancho * 0.07f, ojal.y + h * 0.028f)
+        val angulo = -lado * 28f
+        drawLine(l.s(0.4f), ojal + Offset(0.8f * u, 0.8f * u), tc + Offset(0.8f * u, 0.8f * u), 1.6f * u)
+        drawLine(cord, ojal, tc, 1.4f * u, StrokeCap.Round)
+        val salida = Offset(tc.x - lado * tw * 0.45f, tc.y + tw * 0.25f)
+        val nudo = Offset(salida.x - lado * ancho * 0.12f, salida.y + h * 0.075f)
+        val cabo = Path().apply { moveTo(salida.x, salida.y); quadraticTo(salida.x - lado * ancho * 0.02f, (salida.y + nudo.y) / 2, nudo.x, nudo.y) }
+        drawPath(Path().apply { addPath(cabo, Offset(0.9f * u, 0.9f * u)) }, l.s(0.4f), style = Stroke(2f * u, cap = StrokeCap.Round))
+        drawPath(cabo, cord, style = Stroke(1.8f * u, cap = StrokeCap.Round))
+        // La torsión de las dos hebras: rayitas oblicuas a lo largo del cabo.
+        for (j in 1 until 5) {
+            val f = j / 5f
+            val p = Offset(salida.x + (nudo.x - salida.x) * f - lado * ancho * 0.01f * (1f - f), salida.y + (nudo.y - salida.y) * f)
+            drawLine(l.arriba.b(0.45f, 1.2f), Offset(p.x - 0.7f * u, p.y - 0.5f * u), Offset(p.x + 0.7f * u, p.y + 0.5f * u), 0.5f * u)
         }
-        drawPath(cabos, l.s(0.4f), style = Stroke(2f * u))
-        drawPath(cabos, cord, style = Stroke(1.6f * u, cap = StrokeCap.Round))
-        drawCircle(cord, 1.8f * u, Offset(cx - ancho * 0.12f, tanca.bottom + h * 0.1f))
-        drawCircle(cord, 1.8f * u, Offset(cx - ancho * 0.05f, tanca.bottom + h * 0.075f))
-        drawRoundRect(l.s(0.4f), tanca.topLeft + Offset(1f * u, 1f * u), tanca.size, CornerRadius(2f * u))
-        drawRoundRect(l.arriba.c(Color(0xFF2A2830), 1.3f), tanca.topLeft, tanca.size, CornerRadius(2f * u))
-        drawRect(l.arriba.b(0.55f, 1.2f), Offset(tanca.left + 1f * u, tanca.top + 0.6f * u), Size(tanca.width - 2f * u, 0.8f * u))
-        // La tira de cinta de carrocero con el día, en la panza, un poco torcida, con los cabos rasgados.
-        val ty0 = h * (0.43f + 0.04f * azar(s, 93)); val ty1 = ty0 + h * 0.27f
-        val tw = minOf(w - 1f * u, maxOf(ancho * 0.84f, 22f * u))
-        val tx = (cx - tw / 2).coerceIn(0.5f * u, w - tw - 0.5f * u)
-        val cinta = Rect(tx, ty0, tx + tw, ty1)
+        drawCircle(l.s(0.4f), 1.9f * u, nudo + Offset(0.7f * u, 0.7f * u))
+        drawCircle(cord, 1.9f * u, nudo)
+        drawCircle(l.arriba.b(0.5f, 1.2f), 0.7f * u, nudo + Offset(-0.6f * u, -0.6f * u))
+        drawLine(cord, nudo, nudo + Offset(-lado * 1.2f * u, 2.4f * u), 0.7f * u)
+        drawLine(cord, nudo, nudo + Offset(lado * 0.4f * u, 2.6f * u), 0.7f * u)
+        // La tanca: el barril de plástico ladeado, su botón de muelle y la luz en el canto.
+        rotate(angulo, tc) {
+            val tanca = Rect(tc.x - tw / 2, tc.y - th / 2, tc.x + tw / 2, tc.y + th / 2)
+            drawRoundRect(l.s(0.45f), tanca.topLeft + Offset(1f * u, 1.2f * u), tanca.size, CornerRadius(th * 0.45f))
+            drawRoundRect(l.arriba.c(Color(0xFF2A2830), 1.3f), tanca.topLeft, tanca.size, CornerRadius(th * 0.45f))
+            drawRoundRect(l.arriba.c(Color(0xFF55535E), 1.3f), Offset(tanca.left + tw * 0.62f, tanca.top + th * 0.18f), Size(tw * 0.3f, th * 0.64f), CornerRadius(0.8f * u))
+            drawRect(l.arriba.b(0.6f, 1.3f), Offset(tanca.left + th * 0.4f, tanca.top + 0.5f * u), Size(tw - th * 0.8f, 0.7f * u))
+        }
+        // ---- la tira de cinta de carrocero con el día, en la panza, un poco torcida, con los cabos rasgados.
+        val ty0 = h * (0.43f + 0.035f * azar(s, 93)); val ty1 = ty0 + h * 0.27f
+        val cw = minOf(w - 1f * u, maxOf(ancho * 0.84f, 22f * u))
+        val tx = (cx - cw / 2).coerceIn(0.5f * u, w - cw - 0.5f * u)
+        val cinta = Rect(tx, ty0, tx + cw, ty1)
         rotate(if (azar(s, 94) > 0.5f) 3f else -3f, cinta.center) {
             val dientes = 5
             val forma = Path().apply {

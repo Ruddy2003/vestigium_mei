@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
@@ -34,6 +35,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import kotlin.math.floor
+import kotlin.math.pow
 
 /** En qué repisa va la lámpara de pinza (arriba de ella), de [n]. */
 internal fun filaLamparaNeon(n: Int): Int = floor(n * MuebleEstanteNeon.LAMP_F).toInt().coerceIn(0, maxOf(0, n - 1))
@@ -46,8 +48,9 @@ internal fun filaLamparaNeon(n: Int): Int = floor(n * MuebleEstanteNeon.LAMP_F).
 internal fun DrawScope.casilleroNeon(k: Int, r: Rect, g: MarcoNeon) {
     val u = density; val w = g.w
     if (r.width <= 1f || r.height <= 1f) return
-    // El fondo, con la luz a lo ancho (a media altura).
-    bandaNeon(r.left, r.right, r.top, r.bottom, PETROLEO, g)
+    // El fondo, con la luz a lo ancho (a media altura). En el diario, lejos de la lámpara, un velo de penumbra: lo que llega de
+    // las luces vecinas (ver [caidasCasilleroNeon]) entra encima con su caída, y la repisa sigue siendo de noche.
+    bandaNeon(r.left, r.right, r.top, r.bottom, PETROLEO, g, velo = if (!g.a.noche && k != filaLamparaNeon(g.n)) 0.26f else 0f)
     clipRect(r.left, r.top, r.right, r.bottom) {
         // Las juntas de las tablillas del fondo y sus vetas.
         val tablillas = 6
@@ -79,8 +82,9 @@ internal fun DrawScope.casilleroNeon(k: Int, r: Rect, g: MarcoNeon) {
         }
         val cerco = Offset(r.left + r.width * (0.2f + 0.6f * azar(5741, k)), r.top + r.height * 0.55f)
         drawOval(g.t(cerco).s(0.25f), Offset(cerco.x - w * 0.03f, cerco.y - w * 0.02f), Size(w * 0.06f, w * 0.045f), style = Stroke(1.4f * u))
-        // El charco de cada luz cercana en el fondo.
+        // El charco de cada luz cercana en el fondo, y lo que llega de las de fuera del casillero, con su caída.
         charcosCasilleroNeon(r, g)
+        caidasCasilleroNeon(k, r, g)
         // La sombra franca de la tabla de arriba y el degradado que la sigue.
         val sTop = r.height * 0.11f
         drawRect(g.a.sombra(0.55f), r.topLeft, Size(r.width, sTop))
@@ -113,11 +117,120 @@ private fun DrawScope.charcosCasilleroNeon(r: Rect, g: MarcoNeon) {
     )
     for (i in 0 until 4) {
         if (g.a.fuerzas[i] <= 0f) continue
+        // En los Sueños la ventana no deja charco: deja el paño, que pinta lo que toca (ver [bandaNeon]).
+        if (i == 0 && g.a.noche) continue
         val p = donde[i]
         lucesNeon(p.x / w, p.y / w, g.a, g.lampY, g.estufaY, k)
         val ki = k[i]
         if (ki < 0.3f) continue
         mancha(p, r.height * (0.6f + 0.8f * ki), g.a.colores[i].copy(alpha = ((if (i == 0) 0.2f else 0.34f) * ki).coerceAtMost(0.42f)))
+    }
+}
+
+/**
+ * Una luz que llega al cuerpo desde fuera de un casillero: dónde está ([p], en píxeles), su color, su fuerza y hasta dónde llega
+ * ([alcance], en píxeles). [lampara]: la de pinza, que en su propio casillero ya deja su charco.
+ */
+private class FuenteNeon(val p: Offset, val color: Color, val fuerza: Float, val alcance: Float, val lampara: Boolean = false,
+                         val estufa: Boolean = false)
+
+/**
+ * Las luces de fuera de los casilleros: la lámpara de pinza (su ámbar sube a la repisa de arriba y baja a la de abajo), la estufa
+ * (su naranja sube por las repisas de abajo hasta la cuarta) y, en los Sueños, el acuario azul, que cae en la primera repisa.
+ */
+private fun fuentesNeon(g: MarcoNeon): List<FuenteNeon> {
+    val w = g.w; val m = MuebleEstanteNeon; val a = g.a
+    val f = ArrayList<FuenteNeon>(3)
+    if (a.lampara) f += FuenteNeon(Offset(w * m.LAMP_X, w * g.lampY), AMBAR, a.fuerzas[2] / 1.1f, g.fila * 1.85f, lampara = true)
+    if (a.fuerzas[3] > 0f) f += FuenteNeon(Offset(w * m.ESTUFA_X, w * g.estufaY), a.colores[3], a.fuerzas[3], g.fila * 2.9f, estufa = true)
+    if (a.noche) f += FuenteNeon(Offset(w * (m.ACU_X0 + m.ACU_X1) / 2, w * m.ACU_Y1), a.colores[1], a.fuerzas[1], g.fila * 1.7f)
+    return f
+}
+
+/**
+ * Lo que llega a un casillero ([r], la repisa [k]) de las luces de fuera, con su caída visible: el resplandor de cada una, que
+ * entra por el lado que la mira y se apaga hacia el otro; y, en el diario, el rebote tenue del magenta de la ventana y del cian
+ * del acuario que baja desde arriba, cada vez menos repisa a repisa. Tiñe sin subir el valor de lo que queda lejos.
+ */
+private fun DrawScope.caidasCasilleroNeon(k: Int, r: Rect, g: MarcoNeon) {
+    val m = MuebleEstanteNeon
+    fuentesNeon(g).forEach { f ->
+        // La lámpara en su casillero ya deja su charco: aquí, lo que llega a los demás.
+        if (f.lampara && k == filaLamparaNeon(g.n)) return@forEach
+        if (f.estufa) {
+            // La estufa: su calor sube por delante del mueble y entra en cada casillero por abajo, del lado de la estufa, cada
+            // vez más tenue repisa arriba (en la cuarta todavía se ve).
+            if (f.p.y < r.bottom) return@forEach
+            val a = 0.62f * f.fuerza * kotlin.math.exp(-(f.p.y - r.bottom) / (1.3f * g.fila))
+            if (a < 0.06f) return@forEach
+            val c = Offset(f.p.x, r.bottom)
+            val rr = g.fila * 0.95f
+            scale(1.35f, 1f, c) {
+                resplandorNeon(c, rr, f.color, a, 0.45f, r, 1.35f, 1f)
+            }
+            return@forEach
+        }
+        val dx = maxOf(0f, r.left - f.p.x, f.p.x - r.right); val dy = maxOf(0f, r.top - f.p.y, f.p.y - r.bottom)
+        if (dx * dx + dy * dy > f.alcance * f.alcance) return@forEach
+        resplandorNeon(f.p, f.alcance, f.color, 0.26f * f.fuerza, 0.4f, r)
+    }
+    // El rebote de arriba, solo en la segunda repisa: en la primera ya manda la luz de la ventana y del acuario, y más abajo es
+    // tan tenue que no se ve (y cada uno es un degradado del ancho del casillero, que pesa).
+    if (!g.a.noche && k == 1) {
+        val a0 = 0.085f
+        val alto = g.w * 0.5f
+        listOf(PaletaNeon.ROSA to 0.2f, PaletaNeon.CIAN to (m.ACU_X0 + m.ACU_X1) / 2).forEach { (col, fx) ->
+            resplandorNeon(Offset(g.w * fx, r.top - g.w * 0.12f), alto, col, a0, 0.5f, r)
+        }
+    }
+}
+
+/**
+ * Un resplandor redondo de [col] con centro [c] y radio [radio] ([a] en el centro, el 40 % en [medio] y nada en el borde), pintado
+ * solo donde se ve: en el trozo de [r] que cae dentro del 95 % de su radio (más allá queda menos del 1 %, y no se nota el corte).
+ * [sx] y [sy]: la escala con que se dibuja, para llevar [r] a sus coordenadas.
+ */
+private fun DrawScope.resplandorNeon(c: Offset, radio: Float, col: Color, a: Float, medio: Float, r: Rect, sx: Float = 1f, sy: Float = 1f) {
+    val util = radio * 0.95f
+    // [r] en las coordenadas del dibujo escalado alrededor de [c].
+    val l = c.x + (r.left - c.x) / sx; val d = c.x + (r.right - c.x) / sx
+    val t = c.y + (r.top - c.y) / sy; val b = c.y + (r.bottom - c.y) / sy
+    val x0 = maxOf(l, c.x - util); val x1 = minOf(d, c.x + util)
+    val y0 = maxOf(t, c.y - util); val y1 = minOf(b, c.y + util)
+    if (x1 <= x0 || y1 <= y0) return
+    drawRect(Brush.radialGradient(0f to col.copy(alpha = a), medio to col.copy(alpha = a * 0.4f), 1f to col.copy(alpha = 0f), center = c, radius = radio),
+        Offset(x0, y0), Size(x1 - x0, y1 - y0))
+}
+
+/**
+ * Los filos de color de las luces de fuera en los cantos que las miran: el de arriba de cada tabla, si la luz está encima; el de
+ * abajo (el junquillo), si está debajo; y el canto de dentro de cada costado, el izquierdo si la luz queda a su derecha y el
+ * derecho si queda a su izquierda. Cada filo se apaga con la distancia a su luz.
+ */
+internal fun DrawScope.filosLucesNeon(g: MarcoNeon, tablas: List<Rect>) {
+    val u = density
+    val grueso = 1.6f * u
+    fuentesNeon(g).forEach { f ->
+        val col = mezcla(f.color, Color.White, 0.3f)
+        fun alfa(x: Float, y: Float): Float {
+            val ex = (x - f.p.x) / (if (f.estufa) 0.8f else 1f); val ey = (y - f.p.y) / (if (f.estufa) 1.45f else 1f)
+            val d = kotlin.math.sqrt(ex * ex + ey * ey)
+            return 0.6f * f.fuerza * (1f - d / f.alcance).coerceIn(0f, 1f).pow(1.4f)
+        }
+        tablas.forEach { r ->
+            val arriba = f.p.y < r.top
+            val y = if (arriba) r.top else r.bottom - grueso
+            if (!arriba && f.p.y < r.bottom) return@forEach
+            val paradas = Array(7) { i -> val fx = i / 6f; fx to col.copy(alpha = alfa(r.left + r.width * fx, y)) }
+            if (paradas.all { it.second.alpha < 0.01f }) return@forEach
+            drawRect(Brush.horizontalGradient(*paradas, startX = r.left, endX = r.right), Offset(r.left, y), Size(r.width, grueso))
+        }
+        listOf(g.x0 - grueso to (f.p.x > g.x0), g.x1 to (f.p.x < g.x1)).forEach { (x, mira) ->
+            if (!mira || g.fondo - g.ch < 2f) return@forEach
+            val paradas = Array(9) { i -> val fy = i / 8f; fy to col.copy(alpha = 0.8f * alfa(x, g.ch + (g.fondo - g.ch) * fy)) }
+            if (paradas.all { it.second.alpha < 0.01f }) return@forEach
+            drawRect(Brush.verticalGradient(*paradas, startY = g.ch, endY = g.fondo), Offset(x, g.ch), Size(grueso, g.fondo - g.ch))
+        }
     }
 }
 
@@ -136,9 +249,12 @@ internal fun DrawScope.costadosNeon(g: MarcoNeon, tablas: List<Rect>) {
         val xb = if (izq) g.x0 else g.mr
         val ancho = xb - xa
         val xm = (xa + xb) / 2
-        // La cara, con la luz a lo alto (ocho paradas, un solo trazo).
-        val paradas = Array(8) { i -> val f = i / 7f; f to g.t(xm, y0 + (y1 - y0) * f).c(LACA) }
-        drawRect(Brush.verticalGradient(*paradas, startY = y0, endY = y1), Offset(xa, y0), Size(ancho, y1 - y0))
+        // La cara, con la luz a lo alto (ocho paradas, un solo trazo); en los Sueños, el paño de la farola con su borde.
+        fun cara(gg: MarcoNeon) {
+            val paradas = Array(8) { i -> val f = i / 7f; f to gg.t(xm, y0 + (y1 - y0) * f).c(LACA) }
+            drawRect(Brush.verticalGradient(*paradas, startY = y0, endY = y1), Offset(xa, y0), Size(ancho, y1 - y0))
+        }
+        if (g.tocaPano(xa, xb, y0, y1)) { cara(g.sinPano); clipPath(g.panoRecorte) { cara(g.conPano) } } else cara(g)
         // El canto de fuera redondeado y la media caña.
         val n = 8
         for (j in 0 until n) {
@@ -195,7 +311,11 @@ internal fun DrawScope.costadosNeon(g: MarcoNeon, tablas: List<Rect>) {
     pegatinasNeon(g)
 }
 
-/** La regleta de enchufes atornillada al costado izquierdo: el plástico, tres enchufes, el interruptor con su piloto y el cable. */
+/**
+ * La regleta de enchufes atornillada al costado izquierdo: el plástico, tres enchufes llenos (dos clavijas, una blanca y una negra
+ * de cargador, y abajo la que baja al suelo; ninguno vacío, que dos agujeros en un círculo se leen como una cara), el
+ * interruptor con su piloto y los cables, que bajan juntos.
+ */
 private fun DrawScope.regletaNeon(g: MarcoNeon) {
     val u = density; val w = g.w
     if (g.fondo - g.ch < w * 0.6f) return
@@ -206,11 +326,17 @@ private fun DrawScope.regletaNeon(g: MarcoNeon) {
     drawRoundRect(t.s(0.5f), r.topLeft + Offset(2f * u, 2.4f * u), r.size, CornerRadius(2f * u))
     drawRoundRect(t.c(Color(0xFFD9D4CC)), r.topLeft, r.size, CornerRadius(2f * u))
     clipRect(r.left, r.top, r.right, r.bottom) { planosNeon(r, t, 0.8f) }
-    for (j in 0 until 3) {
+    // Las dos clavijas de arriba: el hueco del enchufe, la clavija con sus estrías y su cable, que baja pegado al plástico.
+    listOf(Color(0xFFE4DED2), Color(0xFF1E1C24)).forEachIndexed { j, col ->
         val c = Offset(r.center.x, r.top + r.height * (0.32f + 0.24f * j))
-        drawCircle(t.c(Color(0xFF9A948C)), r.width * 0.32f, c)
-        drawCircle(t.s(0.6f), 0.9f * u, Offset(c.x, c.y - r.width * 0.12f))
-        drawCircle(t.s(0.6f), 0.9f * u, Offset(c.x, c.y + r.width * 0.12f))
+        drawCircle(t.c(Color(0xFF8A847C)), r.width * 0.34f, c)
+        val cl = Rect(c.x - r.width * 0.3f, c.y - r.width * (0.3f + 0.08f * j), c.x + r.width * 0.3f, c.y + r.width * 0.3f)
+        drawRoundRect(t.s(0.5f), cl.topLeft + Offset(1.2f * u, 1.4f * u), cl.size, CornerRadius(1.6f * u))
+        drawRoundRect(t.c(col), cl.topLeft, cl.size, CornerRadius(1.6f * u))
+        clipRect(cl.left, cl.top, cl.right, cl.bottom) { planosNeon(cl, t, 0.9f) }
+        for (e in 0 until 3) drawLine(t.s(0.35f), Offset(cl.left + cl.width * 0.2f, cl.top + cl.height * (0.25f + 0.2f * e)), Offset(cl.right - cl.width * 0.2f, cl.top + cl.height * (0.25f + 0.2f * e)), 0.6f * u)
+        drawRect(t.b(0.45f), cl.topLeft, Size(cl.width, 0.8f * u))
+        drawLine(t.c(col, 0.9f), Offset(cl.right - 1f * u, cl.bottom), Offset(r.right + 0.6f * u, r.bottom), 1.3f * u)
     }
     // El interruptor rojo, con su piloto encendido.
     val sw = Rect(r.left + r.width * 0.2f, r.top + r.height * 0.06f, r.right - r.width * 0.2f, r.top + r.height * 0.17f)
