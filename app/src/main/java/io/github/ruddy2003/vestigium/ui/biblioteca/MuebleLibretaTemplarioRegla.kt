@@ -37,19 +37,24 @@ internal object ReglaLibretaTemplario {
     fun DrawScope.regla(e: EstadoLibreta, s: SitioLibretaTemplario, a: AireTemplario, medidor: TextMeasurer) {
         val U = s.U
         val l = s.libro
+        val v = s.v
         val ab = e.abierto.coerceIn(0f, 1f)
         val kc = k(l.center, s, a)
-        // La sombra de la regla en el atril: de día a la derecha; de noche, lejos de los mecheros (a la izquierda).
-        clipRect(0f, 0f, s.w, s.listonArriba) {
-            val d = if (a.oscuro) Offset(-9f * U, 3f * U) else Offset(8f * U, 5f * U)
-            drawRect(a.sombra(0.42f), l.topLeft + d, Size(l.width + 6f * U, l.height + s.g))
+        // La sombra de la regla en el tablero del atril (solo en él): de día a la derecha; de noche, lejos de los mecheros (a la izquierda).
+        clipRect(s.atrilIzq, s.atrilArriba, s.atrilDer, s.listonArriba) {
+            val d = if (a.oscuro) Offset(-9f * U - s.lomo, 3f * U) else Offset(8f * U, 5f * U)
+            drawRect(a.sombra(0.42f), l.topLeft + d, Size(l.width + v.x + s.lomo, l.height + v.y))
         }
+        // La sombra de contacto en la cara de arriba del listón, donde apoya la tabla de atrás.
+        val dc = if (a.oscuro) -4f * U else 4f * U
+        drawRect(a.sombra(0.5f), Offset(l.left - s.lomo * 0.5f + v.x * 0.5f + dc, s.listonArriba), Size(l.width + s.lomo * 0.5f + v.x * 0.5f, 2.4f * U))
+        bloque(e, s, a)
         cedulas(e, s, a)
-        testa(s, a)
         lomo(s, a)
         if (ab > 0.01f) hoja(e, s, a)
         val sx = 1f - 0.94f * ab
         scale(sx, 1f, Offset(l.left, l.center.y)) {
+            canto(s, a)
             tapa(e, s, a, medidor)
             if (ab > 0f) drawRect(a.sombra(0.5f * ab), l.topLeft, l.size)
         }
@@ -61,67 +66,169 @@ internal object ReglaLibretaTemplario {
         if (a.oscuro && ab < 0.5f) drawRect(a.filo(0.75f * kc), Offset(l.right - 1.6f * U, l.top + 2f * U), Size(1.6f * U, l.height - 4f * U))
     }
 
-    /** Las cédulas que asoman por la cabeza y por el canto de delante: más cuantos más artículos. */
+    /**
+     * Las cédulas que asoman: por la cabeza (por encima de la tapa) y por el canto de delante (de entre las hojas, a media
+     * hondura del bloque). Más cuantos más artículos.
+     */
     private fun DrawScope.cedulas(e: EstadoLibreta, s: SitioLibretaTemplario, a: AireTemplario) {
         val U = s.U
         val l = s.libro
+        val v = s.v
         val n = (e.hojas / 28).coerceIn(0, 6)
         for (j in 0 until n) {
             val arriba = j % 2 == 0
             val f = azar(e.semilla, 40 + j)
             val r = if (arriba) Rect(l.left + l.width * (0.18f + 0.62f * f), l.top - (6f + 6f * azar(e.semilla, 50 + j)) * U, l.left + l.width * (0.18f + 0.62f * f) + (12f + 6f * azar(e.semilla, 60 + j)) * U, l.top + 4f * U)
-                else Rect(l.right - 4f * U, l.top + l.height * (0.2f + 0.6f * f), l.right + (6f + 6f * azar(e.semilla, 50 + j)) * U, l.top + l.height * (0.2f + 0.6f * f) + 11f * U)
+                else {
+                    val t = 0.3f + 0.4f * azar(e.semilla, 90 + j)
+                    val x = l.right - 2.2f * U + v.x * t
+                    val y = l.top + l.height * (0.2f + 0.6f * f) + v.y * t
+                    Rect(x - 1f * U, y, l.right + v.x + (5f + 6f * azar(e.semilla, 50 + j)) * U, y + 11f * U)
+                }
             val kk = k(r.center, s, a)
             drawRect(a.sombra(0.3f), r.topLeft + Offset(1f * U, 1.2f * U), r.size)
             drawRect(a.etiqueta(mezcla(P.PERGAMINO, P.PERG_OSC, 0.25f * f), kk), r.topLeft, r.size)
             drawRect(a.sombra(0.2f), r.topLeft, r.size, style = Stroke(0.6f * U))
+            if (!arriba) drawRect(a.sombra(0.45f), r.topLeft, Size(1.4f * U, r.height))
         }
     }
 
     /**
-     * El grueso de la regla, en escorzo: por debajo (la testa) y por la derecha (el canto de delante), el bloque de las hojas
-     * entre el canto de la tabla de arriba y el de la de abajo. Engorda con los artículos.
+     * El grueso de la regla, en escorzo ([SitioLibretaTemplario.v]: hacia abajo y a la derecha): la tabla de atrás, que vuela
+     * sobre las hojas (su canto de badana y la ceja en sombra), y el bloque de pergamino entre las dos tablas, por debajo (la
+     * testa) y por la derecha (el canto de delante), con las hojas y las líneas de los cuadernillos, más marcadas cada pocas;
+     * la cabezada de abajo, junto al lomo. Engorda con los artículos.
      */
-    private fun DrawScope.testa(s: SitioLibretaTemplario, a: AireTemplario) {
+    private fun DrawScope.bloque(e: EstadoLibreta, s: SitioLibretaTemplario, a: AireTemplario) {
         val U = s.U
         val l = s.libro
-        val vx = 0.32f * s.g; val vy = s.listonArriba + 0.5f * U - l.bottom
-        val abajo = poligonoTemplario(l.left, l.bottom - 1f * U, l.right, l.bottom - 1f * U, l.right + vx, l.bottom + vy, l.left + vx, l.bottom + vy)
-        val lado = poligonoTemplario(l.right - 1f * U, l.top + 1f * U, l.right + vx, l.top + vy * 0.9f, l.right + vx, l.bottom + vy, l.right - 1f * U, l.bottom)
-        val kk = k(Offset(l.right, l.bottom), s, a)
-        val perg = mezcla(P.PERGAMINO, P.PERG_OSC, 0.3f)
-        drawPath(abajo, a.etiqueta(perg, k(Offset(l.center.x, l.bottom), s, a)))
-        drawPath(lado, a.etiqueta(mezcla(perg, P.PERG_OSC, 0.3f), kk))
-        // Las hojas: rayas finas a lo largo de cada cara.
-        val rayas = Path()
-        var f = 0.18f
-        while (f < 0.9f) {
-            rayas.moveTo(l.left + vx * f, l.bottom + vy * f); rayas.lineTo(l.right + vx * f, l.bottom + vy * f)
-            rayas.moveTo(l.right + vx * f, l.top + vy * 0.9f * f + 2f * U); rayas.lineTo(l.right + vx * f, l.bottom + vy * f)
-            f += 1.4f * U / maxOf(vy, 1f)
+        val v = s.v
+        val t0 = (2.6f * U / s.g).coerceAtMost(0.3f)
+        val t1 = 1f - t0
+        val c = 2.2f * U
+        val kk = k(Offset(l.right + v.x, l.bottom), s, a)
+        // La tabla de atrás: su canto (abajo y a la derecha) y su cara de dentro, que asoma como ceja bajo las hojas.
+        drawRect(a.dia(BADANA_HONDA, 0f, kk), l.topLeft + v, l.size)
+        val dentro = Rect(l.left + v.x * t1, l.top + v.y * t1, l.right + v.x * t1, l.bottom + v.y * t1)
+        drawRect(a.dia(BADANA, -0.3f, kk), dentro.topLeft, dentro.size)
+        drawRect(a.dia(BADANA_LUZ, -0.15f, kk), Offset(dentro.left, dentro.bottom - 0.7f * U), Size(dentro.width, 0.7f * U))
+        drawRect(a.dia(BADANA_LUZ, -0.15f, kk), Offset(dentro.right - 0.7f * U, dentro.top), Size(0.7f * U, dentro.height))
+        // El bloque de las hojas: la testa y el canto de delante.
+        val pa = Offset(l.left + 1f * U, l.bottom - c) + v * t0
+        val pb = Offset(l.right - c, l.bottom - c) + v * t0
+        val pe = Offset(l.right - c, l.top + c) + v * t0
+        val d = v * (t1 - t0)
+        val testa = poligonoTemplario(pa.x, pa.y, pb.x, pb.y, pb.x + d.x, pb.y + d.y, pa.x + d.x, pa.y + d.y)
+        val canto = poligonoTemplario(pe.x, pe.y, pe.x + d.x, pe.y + d.y, pb.x + d.x, pb.y + d.y, pb.x, pb.y)
+        // La sombra que echa el bloque en la ceja (la luz viene de arriba a la izquierda).
+        drawPath(Path().apply { addPath(testa, Offset(1.4f * U, 1.8f * U)); addPath(canto, Offset(1.4f * U, 1.8f * U)) }, a.sombra(0.4f))
+        val perg = mezcla(P.PERGAMINO, P.PERG_OSC, 0.22f)
+        drawPath(testa, a.etiqueta(perg, k(Offset(l.center.x, l.bottom), s, a)))
+        drawPath(canto, a.etiqueta(mezcla(perg, P.PERG_OSC, if (a.oscuro) 0.05f else 0.42f), kk))
+        // Las hojas y los cuadernillos: una raya fina por hoja, más honda cada cuatro (el pliego), con su leve desorden.
+        val hojas = Path(); val pliegos = Path()
+        val largo = kotlin.math.sqrt(d.x * d.x + d.y * d.y)
+        val n = (largo / (1.15f * U)).toInt().coerceAtLeast(2)
+        for (i in 1 until n) {
+            val f = (i + (azar(e.semilla + 7, i) - 0.5f) * 0.5f) / n
+            val q = v * (f * (t1 - t0))
+            val dx = (azar(e.semilla + 8, i) - 0.5f) * 0.6f * U
+            val p = if (i % 4 == 0) pliegos else hojas
+            p.moveTo(pa.x + q.x, pa.y + q.y); p.lineTo(pb.x + q.x + dx, pb.y + q.y + dx * 0.3f)
+            p.moveTo(pe.x + q.x + dx * 0.3f, pe.y + q.y + 1f * U); p.lineTo(pb.x + q.x + dx, pb.y + q.y + dx * 0.3f)
         }
-        drawPath(rayas, a.sombra(0.22f), style = Stroke(0.5f * U))
-        // El canto de la tabla de abajo, y la sombra que echa la de arriba en las hojas.
-        val tabla = poligonoTemplario(l.left + vx, l.bottom + vy - 2.4f * U, l.right + vx, l.bottom + vy - 2.4f * U, l.right + vx, l.bottom + vy, l.left + vx, l.bottom + vy)
-        drawPath(tabla, a.dia(BADANA_HONDA, 0f, kk))
-        drawRect(a.dia(BADANA_HONDA, 0f, kk), Offset(l.right + vx - 2.2f * U, l.top + vy * 0.9f), Size(2.2f * U, l.bottom - l.top))
-        drawRect(a.sombra(0.4f), Offset(l.left, l.bottom - 1f * U), Size(l.width, 1.6f * U))
+        drawPath(hojas, a.sombra(0.14f), style = Stroke(0.5f * U))
+        drawPath(pliegos, a.sombra(0.34f), style = Stroke(0.75f * U))
+        // La luz en la arista de las hojas que mira afuera, y la sombra que echa la tabla de delante, que vuela sobre ellas.
+        clipPath(testa) { drawRect(a.sombra(0.4f), Offset(l.left, l.bottom), Size(l.width + v.x, 2.4f * U)) }
+        clipPath(canto) { drawRect(a.sombra(if (a.oscuro) 0.2f else 0.4f), Offset(l.right, l.top), Size(2.4f * U, l.height + v.y)) }
+        drawLine(a.claro(0.35f), Offset(pa.x + d.x, pa.y + d.y), Offset(pb.x + d.x, pb.y + d.y), 0.7f * U)
+        if (a.oscuro) drawLine(a.filo(0.55f * kk), Offset(pe.x + d.x, pe.y + d.y), Offset(pb.x + d.x, pb.y + d.y), 1f * U)
+        // La cabezada de abajo: el cordoncillo de grana y crudo, a lo hondo junto al lomo.
+        val cab = poligonoTemplario(pa.x, pa.y, pa.x + 3.4f * U, pa.y, pa.x + 3.4f * U + d.x, pa.y + d.y, pa.x + d.x, pa.y + d.y)
+        val kc = k(pa, s, a)
+        drawPath(cab, a.dia(P.CRUZ, -0.1f, kc))
+        clipPath(cab) {
+            val hilos = Path()
+            var f = 0f
+            while (f < 1f) { val q = d * f; hilos.moveTo(pa.x + q.x, pa.y + q.y + 1f * U); hilos.lineTo(pa.x + q.x + 3.4f * U, pa.y + q.y - 0.4f * U); f += 1.6f * U / maxOf(largo, 1f) }
+            drawPath(hilos, a.etiqueta(P.PERGAMINO, kc), style = Stroke(0.7f * U))
+            drawRect(a.sombra(0.35f), Offset(pa.x + 2.4f * U, pa.y), Size(1.2f * U, d.y + 2f * U))
+        }
     }
 
-    /** El lomo a la izquierda: la badana redonda con sus nervios y la cofia. */
+    /**
+     * El lomo redondo a la izquierda: la badana que da la vuelta, clara donde mira a la ventana y honda en el cajo, con sus
+     * cuatro nervios en relieve (su luz arriba, su sombra abajo, y el bulto que hacen en el perfil), la cofia de arriba con la
+     * cabezada asomando y la de abajo, que se va hacia la tabla de atrás.
+     */
     private fun DrawScope.lomo(s: SitioLibretaTemplario, a: AireTemplario) {
         val U = s.U
         val l = s.libro
-        val r = Rect(l.left - 7f * U, l.top + 2f * U, l.left + 1f * U, s.listonArriba - 0.5f * U)
-        val kk = k(r.center, s, a)
-        drawRect(a.dia(BADANA, -0.2f, kk), r.topLeft, r.size)
-        drawRect(a.dia(BADANA_LUZ, -0.05f, kk), r.topLeft, Size(r.width * 0.4f, r.height))
-        drawRect(a.sombra(0.35f), Offset(r.right - r.width * 0.3f, r.top), Size(r.width * 0.3f, r.height))
-        listOf(0.22f, 0.42f, 0.62f, 0.82f).forEach { f ->
-            val y = r.top + r.height * f
-            drawRect(a.dia(BADANA_HONDA, 0f, kk), Offset(r.left, y), Size(r.width, 3f * U))
-            drawRect(a.claro(0.3f), Offset(r.left, y - 0.6f * U), Size(r.width, 0.8f * U))
+        val v = s.v
+        val xo = l.left - s.lomo
+        val yb = l.bottom + v.y * 0.5f
+        val kk = k(Offset(xo, l.center.y), s, a)
+        // La cabezada de arriba, que asoma sobre la cofia.
+        val cab = Rect(xo + 1.2f * U, l.top - 2.6f * U, l.left + 2.4f * U, l.top + 2f * U)
+        drawRoundRect(a.dia(P.CRUZ, -0.1f, kk), cab.topLeft, cab.size, androidx.compose.ui.geometry.CornerRadius(2f * U))
+        val hilos = Path()
+        var x = cab.left + 1f * U
+        while (x < cab.right - 0.5f * U) { hilos.moveTo(x, cab.top + 0.4f * U); hilos.lineTo(x + 0.8f * U, cab.top + 2.6f * U); x += 1.7f * U }
+        drawPath(hilos, a.etiqueta(P.PERGAMINO, kk), style = Stroke(0.7f * U))
+        val forma = Path().apply {
+            moveTo(l.left + 1f * U, l.top)
+            quadraticTo(xo + 0.5f * U, l.top - 0.4f * U, xo, l.top + 5f * U)
+            lineTo(xo, yb - 4f * U)
+            quadraticTo(xo + 0.6f * U, yb + v.y * 0.3f, l.left + v.x + 1f * U, l.bottom + v.y)
+            lineTo(l.left + 1f * U, l.bottom)
+            close()
         }
+        val ancho = l.left - xo
+        clipPath(forma) {
+            // Por franjas: el perfil que se va, lo que mira a la ventana, el medio y el cajo.
+            val franjas = if (a.oscuro) listOf(0f to -0.1f, 0.14f to 0f, 0.5f to -0.05f, 0.82f to -0.2f) else listOf(0f to -0.12f, 0.12f to 0.1f, 0.48f to 0f, 0.8f to -0.28f)
+            franjas.forEachIndexed { i, (f, luz) ->
+                val xa = xo + ancho * f; val xb = if (i + 1 < franjas.size) xo + ancho * franjas[i + 1].first + 0.6f else l.left + v.x + 2f * U
+                drawRect(a.dia(if (i == 1) BADANA_LUZ else BADANA, luz, kk), Offset(xa, l.top - 2f * U), Size(xb - xa, l.height + v.y + 4f * U))
+            }
+            drawRect(a.claro(0.3f), Offset(xo + ancho * 0.2f, l.top), Size(0.9f * U, l.height + v.y))
+            // La lanceta en el lomo: la misma luz, quebrada respecto de la tapa porque el lomo mira hacia la ventana.
+            clipPath(s.lanceta(a.oscuro, -1f * U, -14f * U)) {
+                drawRect(a.enLanceta(a.dia(BADANA, 0.08f, kk), 0.9f), Offset(xo, l.top), Size(ancho * 0.8f, l.height))
+                drawRect(a.enLanceta(a.dia(BADANA, -0.12f, kk), 0.8f), Offset(xo + ancho * 0.8f, l.top), Size(ancho * 0.2f + 1f * U, l.height))
+            }
+            // Los nervios: un relieve redondo, con su luz arriba y su sombra abajo, y la que echan en el lomo.
+            listOf(0.2f, 0.4f, 0.6f, 0.8f).forEach { f ->
+                val y = l.top + 6f * U + (l.height - 12f * U) * f
+                drawRect(a.sombra(0.3f), Offset(xo, y + 3.6f * U), Size(ancho + 2f * U, 1.6f * U))
+            }
+            // El cajo: la canal entre el lomo y la tapa.
+            drawRect(a.sombra(0.5f), Offset(l.left - 1.4f * U, l.top), Size(1.6f * U, l.height + v.y))
+        }
+        drawPath(forma, a.sombra(0.35f), style = Stroke(0.8f * U))
+        listOf(0.2f, 0.4f, 0.6f, 0.8f).forEach { f ->
+            val y = l.top + 6f * U + (l.height - 12f * U) * f
+            val r = Rect(xo - 1.3f * U, y, l.left - 1f * U, y + 3.6f * U)
+            drawRoundRect(a.dia(BADANA, 0.02f, kk), r.topLeft, r.size, androidx.compose.ui.geometry.CornerRadius(1.8f * U))
+            drawRect(a.claro(0.45f), Offset(r.left + 1f * U, r.top + 0.3f * U), Size(r.width * 0.6f, 0.9f * U))
+            drawRect(a.sombra(0.45f), Offset(r.left + 1f * U, r.bottom - 1f * U), Size(r.width - 1f * U, 1f * U))
+            if (a.oscuro) drawRect(a.brillo(0.3f, kk), Offset(r.left + 1f * U, r.top + 0.3f * U), Size(r.width * 0.6f, 0.7f * U))
+        }
+    }
+
+    /** El canto de la tabla de delante: la badana que da la vuelta por abajo y por la derecha, en sombra, con su arista de luz. */
+    private fun DrawScope.canto(s: SitioLibretaTemplario, a: AireTemplario) {
+        val U = s.U
+        val l = s.libro
+        val t0 = (2.6f * U / s.g).coerceAtMost(0.3f)
+        val q = s.v * t0
+        val kk = k(Offset(l.right, l.bottom), s, a)
+        val abajo = poligonoTemplario(l.left, l.bottom - 1f, l.right, l.bottom - 1f, l.right + q.x, l.bottom + q.y, l.left + q.x, l.bottom + q.y)
+        val lado = poligonoTemplario(l.right - 1f, l.top, l.right + q.x, l.top + q.y, l.right + q.x, l.bottom + q.y, l.right - 1f, l.bottom)
+        drawPath(abajo, a.dia(BADANA_HONDA, 0.05f, kk))
+        drawPath(lado, a.dia(BADANA, if (a.oscuro) 0.05f else -0.4f, kk))
+        drawLine(a.dia(BADANA_LUZ, 0f, kk).copy(alpha = 0.6f), Offset(l.left + q.x, l.bottom + q.y), Offset(l.right + q.x, l.bottom + q.y), 0.6f * U)
     }
 
     /** La primera hoja, al abrirse: el pergamino con su pauta a dos columnas, las rúbricas rojas y la capital en su cuadro. */
@@ -167,13 +274,15 @@ internal object ReglaLibretaTemplario {
             drawRect(a.dia(BADANA, 0f, kk), Offset(x0, l.top), Size(minOf(x1, l.right) - x0, l.height))
         }
         val kc = k(l.center, s, a)
-        // La lanceta de la ventana en la tapa: la misma badana, alumbrada (el sol de día; la luna, fría, de noche), con su
-        // borde, cortada por los bordes de la tabla. Va antes del gofrado y los herrajes, que quedan encima.
+        // La lanceta de la ventana en la tapa: la badana encendida (de día, bermellón; de noche, la luna, fría), opaca y con su
+        // borde, corrida respecto del fondo, del arco y del lomo porque es otro plano. Va antes del gofrado y los herrajes.
+        val luz = s.lanceta(a.oscuro, 6f * U, -14f * U)
         clipRect(l.left, l.top, l.right, l.bottom) {
-            clipPath(s.lanceta(a.oscuro, -5f * U)) {
+            clipPath(luz) {
                 val base = a.dia(BADANA, 0f, k(Offset(l.left + 20f * U, l.top + 40f * U), s, a))
-                drawRect(a.sol(BADANA, base, if (a.oscuro) 0.55f else 0.85f), l.topLeft, l.size)
+                drawRect(a.enLanceta(base), l.topLeft, l.size)
             }
+            drawPath(luz, a.enLanceta(a.dia(BADANA_LUZ, 0.1f, kc)).copy(alpha = if (a.oscuro) 0.6f else 0.75f), style = Stroke(1.1f * U))
         }
         // El volumen de la tabla: más clara arriba a la izquierda (la luz), más honda abajo a la derecha.
         if (!a.oscuro) {
@@ -215,16 +324,6 @@ internal object ReglaLibretaTemplario {
         if (!a.oscuro) drawRect(a.claro(0.25f), l.topLeft, Size(1.4f * U, l.height))
         drawRect(a.sombra(0.45f), Offset(l.left, l.bottom - 1.8f * U), Size(l.width, 1.8f * U))
         drawRect(a.sombra(0.35f), Offset(l.right - 1.6f * U, l.top), Size(1.6f * U, l.height))
-        // Las cantoneras de latón, con sus clavos.
-        val e0 = 22f * U
-        listOf(Offset(l.left, l.top) to Offset(1f, 1f), Offset(l.right, l.top) to Offset(-1f, 1f), Offset(l.right, l.bottom) to Offset(-1f, -1f), Offset(l.left, l.bottom) to Offset(1f, -1f)).forEach { (o, d) ->
-            val kk = k(o, s, a)
-            val c = Path().apply { moveTo(o.x, o.y); lineTo(o.x + d.x * e0, o.y); quadraticTo(o.x + d.x * e0 * 0.45f, o.y + d.y * e0 * 0.45f, o.x, o.y + d.y * e0); close() }
-            drawPath(Path().apply { addPath(c, Offset(1.2f * U, 1.4f * U)) }, a.sombra(0.35f))
-            drawPath(c, a.dia(P.LATON, 0f, kk))
-            drawPath(c, a.dia(P.LATON_OSC, 0f, kk), style = Stroke(0.8f * U))
-            listOf(0.22f to 0.22f, 0.62f to 0.12f, 0.12f to 0.62f).forEach { (fx, fy) -> clavoTemplario(Offset(o.x + d.x * e0 * fx, o.y + d.y * e0 * fy), 1.2f * U, a, kk, P.LATON_OSC) }
-        }
         // Los cierres: dos correas que vienen de la tabla de abajo por el canto y enganchan en su chapa.
         listOf(0.36f, 0.78f).forEach { f ->
             val yc = l.top + l.height * f
@@ -240,23 +339,51 @@ internal object ReglaLibretaTemplario {
             drawRect(a.brillo(0.5f, kk), chapa.topLeft, Size(chapa.width, 0.8f * U))
             clavoTemplario(Offset(chapa.left + 3f * U, yc), 1.6f * U, a, kk, P.LATON_OSC)
         }
-        // Los cinco bullones: cuatro cerca de las esquinas y uno en medio del rombo.
+        // Las cantoneras y los cinco bullones (cuatro cerca de las esquinas y uno en medio del rombo); los que toca la
+        // lanceta se vuelven a pintar encendidos dentro de ella, así la luz los prende y se corta en su borde.
         val bullones = listOf(Offset(l.left + 27f * U, l.top + 34f * U), Offset(l.right - 27f * U, l.top + 34f * U), Offset(l.left + 30f * U, l.bottom - 30f * U),
             Offset(l.right - 30f * U, l.bottom - 30f * U), Offset(in0.center.x, in0.center.y + 18f * U))
-        bullones.forEach { b ->
-            val kk = k(b, s, a)
-            drawCircle(a.sombra(0.4f), 8.5f * U, b + Offset(1.6f * U, 2f * U))
-            drawCircle(a.dia(P.LATON_OSC, 0f, kk), 8.5f * U, b)
-            drawCircle(a.dia(P.LATON, 0.05f, kk), 6f * U, b)
-            drawCircle(a.dia(P.LATON_LUZ, 0f, kk).copy(alpha = 0.8f), 3.4f * U, b - Offset(1.6f * U, 1.6f * U))
-            destelloTemplario(b - Offset(2.2f * U, 2.2f * U), 1.2f * U, a, kk)
-            if (a.oscuro) drawArc(a.filo(0.9f * kk), -60f, 120f, false, Offset(b.x - 6f * U, b.y - 6f * U), Size(12f * U, 12f * U), style = Stroke(1f * U))
+        herrajes(s, a, bullones, null)
+        val caja = luz.getBounds()
+        clipRect(l.left, l.top, l.right, l.bottom) { clipPath(luz) { herrajes(s, a, bullones, caja) } }
+        tejuelo(e, s, a, medidor, luz)
+    }
+
+    /**
+     * Las cantoneras de latón con sus clavos y los bullones. Con [caja] (el recuadro de la lanceta), solo los que caen en ella
+     * y con el latón encendido (sin volver a echar su sombra, que ya está).
+     */
+    private fun DrawScope.herrajes(s: SitioLibretaTemplario, a: AireTemplario, bullones: List<Offset>, caja: Rect?) {
+        val U = s.U
+        val l = s.libro
+        val lit = caja != null
+        fun c(col: Color, f: Float, kk: Float) = if (lit) a.enLanceta(a.dia(col, f, kk)) else a.dia(col, f, kk)
+        val e0 = 22f * U
+        listOf(Offset(l.left, l.top) to Offset(1f, 1f), Offset(l.right, l.top) to Offset(-1f, 1f), Offset(l.right, l.bottom) to Offset(-1f, -1f), Offset(l.left, l.bottom) to Offset(1f, -1f)).forEach { (o, d) ->
+            if (caja != null && !caja.overlaps(Rect(minOf(o.x, o.x + d.x * e0), minOf(o.y, o.y + d.y * e0), maxOf(o.x, o.x + d.x * e0), maxOf(o.y, o.y + d.y * e0)))) return@forEach
+            val kk = k(o, s, a)
+            val p = Path().apply { moveTo(o.x, o.y); lineTo(o.x + d.x * e0, o.y); quadraticTo(o.x + d.x * e0 * 0.45f, o.y + d.y * e0 * 0.45f, o.x, o.y + d.y * e0); close() }
+            if (!lit) drawPath(Path().apply { addPath(p, Offset(1.2f * U, 1.4f * U)) }, a.sombra(0.35f))
+            drawPath(p, c(P.LATON, 0f, kk))
+            drawPath(p, c(P.LATON_OSC, 0f, kk), style = Stroke(0.8f * U))
+            if (lit) drawPath(p, a.enLanceta(a.dia(P.LATON_LUZ, 0f, kk)).copy(alpha = 0.7f), style = Stroke(0.6f * U))
+            listOf(0.22f to 0.22f, 0.62f to 0.12f, 0.12f to 0.62f).forEach { (fx, fy) -> clavoTemplario(Offset(o.x + d.x * e0 * fx, o.y + d.y * e0 * fy), 1.2f * U, a, kk, if (lit) P.LATON else P.LATON_OSC) }
         }
-        tejuelo(e, s, a, medidor)
+        bullones.forEach { b ->
+            if (caja != null && !caja.overlaps(Rect(b.x - 9f * U, b.y - 9f * U, b.x + 9f * U, b.y + 9f * U))) return@forEach
+            val kk = k(b, s, a)
+            if (!lit) drawCircle(a.sombra(0.4f), 8.5f * U, b + Offset(1.6f * U, 2f * U))
+            drawCircle(c(P.LATON_OSC, 0f, kk), 8.5f * U, b)
+            drawCircle(c(P.LATON, 0.05f, kk), 6f * U, b)
+            drawCircle(c(P.LATON_LUZ, 0f, kk).copy(alpha = 0.8f), 3.4f * U, b - Offset(1.6f * U, 1.6f * U))
+            if (lit) drawCircle(if (a.oscuro) Color(0xFFDCE6F8) else Color(0xFFFFF6DC), 1.6f * U, b - Offset(2.2f * U, 2.2f * U))
+            else destelloTemplario(b - Offset(2.2f * U, 2.2f * U), 1.2f * U, a, kk)
+            if (a.oscuro && !lit) drawArc(a.filo(0.9f * kk), -60f, 120f, false, Offset(b.x - 6f * U, b.y - 6f * U), Size(12f * U, 12f * U), style = Stroke(1f * U))
+        }
     }
 
     /** El tejuelo: el pergamino con el nombre y la cuenta, bajo la lámina de cuerno, en su marco de latón clavado. */
-    private fun DrawScope.tejuelo(e: EstadoLibreta, s: SitioLibretaTemplario, a: AireTemplario, medidor: TextMeasurer) {
+    private fun DrawScope.tejuelo(e: EstadoLibreta, s: SitioLibretaTemplario, a: AireTemplario, medidor: TextMeasurer, luz: Path) {
         val U = s.U
         val l = s.libro
         val r = Rect(l.center.x - l.width * 0.335f, l.top + 18f * U, l.center.x + l.width * 0.335f, l.top + 70f * U)
@@ -265,6 +392,13 @@ internal object ReglaLibretaTemplario {
         drawRect(a.dia(P.LATON, 0f, kk), r.topLeft, r.size)
         val dentro = r.deflate(3f * U)
         drawRect(a.etiqueta(P.PERGAMINO, kk), dentro.topLeft, dentro.size)
+        // Si la lanceta llega al tejuelo, el marco y el pergamino se encienden (el tejuelo vuela un poco: va algo más corrida).
+        if (luz.getBounds().overlaps(r)) clipRect(r.left, r.top, r.right, r.bottom) {
+            clipPath(Path().apply { addPath(luz, Offset(-1.5f * U, -1.5f * U)) }) {
+                drawRect(a.enLanceta(a.dia(P.LATON, 0f, kk)), r.topLeft, r.size)
+                drawRect(a.enLanceta(a.etiqueta(P.PERGAMINO, kk), 0.55f), dentro.topLeft, dentro.size)
+            }
+        }
         drawRect(a.etiqueta(P.PERG_OSC, kk).copy(alpha = 0.35f), Offset(dentro.left, dentro.bottom - dentro.height * 0.18f), Size(dentro.width, dentro.height * 0.18f))
         // La lámina de cuerno: un velo ambarino muy leve y su brillo en diagonal (es lo que la protege).
         drawRect(a.etiqueta(CUERNO_LAMINA, kk).copy(alpha = 0.14f), dentro.topLeft, dentro.size)
@@ -288,19 +422,28 @@ internal object ReglaLibretaTemplario {
         }
     }
 
-    /** Los registros de cinta que cuelgan de la testa sobre el canto y el paño: más con más artículos. */
+    /**
+     * Los registros de cinta: salen de entre las hojas de la testa (cada uno entre dos cuadernillos, a su hondura), pasan por
+     * el canto de la tabla de atrás y el listón y cuelgan sobre el paño. Más con más artículos.
+     */
     private fun DrawScope.registros(e: EstadoLibreta, s: SitioLibretaTemplario, a: AireTemplario) {
         val U = s.U
         val l = s.libro
+        val v = s.v
+        val t0 = (2.6f * U / s.g).coerceAtMost(0.3f)
         val n = 1 + (e.hojas / 60).coerceIn(0, 3)
         val colores = listOf(P.CRUZ, Color(0xFF3E6A44), P.LATON, P.AZUL)
         for (j in 0 until n) {
-            val x = l.left + l.width * (0.3f + 0.13f * j)
+            val t = t0 + (1f - 2f * t0) * (0.3f + 0.4f * azar(e.semilla, 75 + j))
+            val x = l.left + l.width * (0.3f + 0.13f * j) + v.x * t
+            val y0 = l.bottom - 2.2f * U + v.y * t
             val largo = (24f + 14f * azar(e.semilla, 70 + j)) * U
             val y1 = s.listonAbajo + largo
             val kk = k(Offset(x, y1), s, a)
             val col = a.dia(colores[j % colores.size], 0f, kk)
-            val c = Path().apply { moveTo(x, l.bottom); quadraticTo(x + 3f * U, s.listonArriba + 4f * U, x + (azar(e.semilla, 80 + j) - 0.5f) * 6f * U, y1) }
+            // La rendija entre los cuadernillos, de donde sale.
+            drawLine(a.sombra(0.55f), Offset(x - 2.6f * U, y0), Offset(x + 2.6f * U, y0), 0.9f * U)
+            val c = Path().apply { moveTo(x, y0); quadraticTo(x + 2.5f * U, s.listonArriba + 4f * U, x + (azar(e.semilla, 80 + j) - 0.5f) * 6f * U, y1) }
             drawPath(Path().apply { addPath(c, Offset(1.2f * U, 1.2f * U)) }, a.sombra(0.35f), style = Stroke(3.2f * U))
             drawPath(c, col, style = Stroke(3.2f * U))
             // La punta cortada en cola de golondrina.

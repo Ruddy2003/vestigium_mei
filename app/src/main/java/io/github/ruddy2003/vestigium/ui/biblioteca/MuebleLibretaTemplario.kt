@@ -34,18 +34,26 @@ import kotlin.math.sqrt
 internal class SitioLibretaTemplario(val w: Float, val h: Float, u: Float, hojas: Int) {
     val U = u * (h / (MuebleLibretaTemplario.ALTO.value * u)).coerceIn(0.5f, 2f)
     val cx = w * 0.5f
-    /** El ancho de la regla y su grueso (engorda con los artículos: de 5 a 20 dp). */
+    /** El ancho de la regla y su grueso (engorda con los artículos: de 12 a 32 dp). */
     val bw = minOf(232f * U, w * 0.62f)
-    val g = (5f + 15f * sqrt(hojas.coerceIn(0, 240) / 240f)) * U
+    val g = (12f + 20f * sqrt(hojas.coerceIn(0, 240) / 240f)) * U
+    /** El grueso en escorzo: hacia dónde se ve el bloque de las hojas (abajo y a la derecha de la tapa). */
+    val v = Offset(0.45f * g, 0.6f * g)
+    /** El ancho que se ve del lomo redondo, a la izquierda de la tapa. */
+    val lomo = 4f * U + 0.3f * g
     /** El canto del atril (donde apoya la regla) y el pretil del púlpito. */
-    val listonArriba = 200f * U
+    val listonArriba = 198f * U
     val listonAbajo = 208f * U
     val pretilArriba = 208f * U
     val pretilFrente = 216f * U
     val pretilAbajo = 250f * U
     val repisaAbajo = 257f * U
     /** La tapa de la regla, tendida en el atril: su canto de abajo (la testa) se ve debajo, con el grueso de las hojas. */
-    val libro = Rect(cx - bw / 2, listonArriba - 0.55f * g - 166f * U, cx + bw / 2, listonArriba - 0.55f * g)
+    val libro = Rect(cx - (bw + v.x - lomo) / 2, listonArriba - v.y - 0.5f * U - 158f * U, cx + (bw - v.x + lomo) / 2, listonArriba - v.y - 0.5f * U)
+    /** El atril: el tablero inclinado (de su canto de arriba al listón) y sus dos costados de cedro. */
+    val atrilIzq = cx - bw / 2 - 28f * U
+    val atrilDer = cx + bw / 2 + 28f * U
+    val atrilArriba = 44f * U
     /** El arco del púlpito: el hueco por dentro, su arranque y el grueso de las dovelas. */
     val huecoIzq = cx - bw / 2 - 36f * U
     val huecoDer = cx + bw / 2 + 36f * U
@@ -95,9 +103,10 @@ internal class SitioLibretaTemplario(val w: Float, val h: Float, u: Float, hojas
 
     /**
      * La luz de la ventana que queda fuera, a la izquierda: una lanceta proyectada, tendida y alargada hacia abajo a la derecha,
-     * con su cabeza de arco arriba. Cae en el fondo del hueco y en la tapa de la regla. [corrido], el plano de delante.
+     * con su cabeza de arco arriba. Cae en el fondo del hueco, en el arco, en el atril y en la regla: cada plano que está más
+     * adelante la recibe corrida hacia la ventana ([corrido] a lo ancho, [alzado] a lo alto), así se quiebra al pasar de uno a otro.
      */
-    fun lanceta(oscuro: Boolean, corrido: Float = 0f): Path {
+    fun lanceta(oscuro: Boolean, corrido: Float = 0f, alzado: Float = 0f): Path {
         val p = Path()
         // Cae corta: de la cabeza de arco, arriba a la izquierda, baja hasta media tapa (de noche, la luna, algo más alta).
         val (x0, y0, x1, y1, an) = if (!oscuro) floatArrayOf(huecoIzq - 4f * U, 22f * U, huecoIzq + 50f * U, 124f * U, 46f * U).toList()
@@ -107,13 +116,22 @@ internal class SitioLibretaTemplario(val w: Float, val h: Float, u: Float, hojas
             val t = j / n.toFloat()
             val a = Math.PI * (1.0 - t)
             val px = x0 + an / 2 + kotlin.math.cos(a).toFloat() * an / 2 + corrido
-            val py = y0 + an * 0.55f - kotlin.math.sin(a).toFloat() * an * 0.55f
+            val py = y0 + an * 0.55f - kotlin.math.sin(a).toFloat() * an * 0.55f + alzado
             if (j == 0) p.moveTo(px, py) else p.lineTo(px, py)
         }
-        p.lineTo(x1 + an + corrido, y1); p.lineTo(x1 + corrido, y1); p.close()
+        p.lineTo(x1 + an + corrido, y1 + alzado); p.lineTo(x1 + corrido, y1 + alzado); p.close()
         return p
     }
 }
+
+/**
+ * El color de una superficie dentro de la lanceta, a partir de [base] (su color sin esa luz): de día, el sol, más claro, más
+ * cálido y más saturado (la badana pasa a bermellón, el latón a oro); de noche, la luna, fría, que se suma a lo que hay. Es el
+ * color de la superficie, opaco: no un velo encima. [f], cuánta le llega (de 0 a 1).
+ */
+internal fun AireTemplario.enLanceta(base: Color, f: Float = 1f): Color =
+    if (!oscuro) mezcla(base, Color((base.red * 1.5f + 0.07f).coerceAtMost(1f), (base.green * 1.22f + 0.03f).coerceAtMost(1f), (base.blue * 0.95f).coerceAtMost(1f), base.alpha), f)
+    else mezcla(base, Color(0xFF7C90CC), 0.44f * f)
 
 
 /**
@@ -125,7 +143,8 @@ internal class SitioLibretaTemplario(val w: Float, val h: Float, u: Float, hojas
  * registros). Del canto cuelga el paño verde del atril; a la derecha, la lámpara de bronce de dos mecheros; delante a la
  * izquierda, el pan y la escudilla del lector, que come después de leer; fuera del arco, las tablillas de cera colgadas.
  *
- * La luz: de día entra por una ventana que queda a la izquierda y deja su lanceta de sol en el fondo del hueco y en la tapa;
+ * La luz: de día entra por una ventana que queda a la izquierda y deja su lanceta de sol en el fondo del hueco, el arco, el
+ * atril, el lomo y la tapa (quebrada en cada plano; enciende el latón que toca);
  * de noche arden los dos mecheros (su charco enciende el fondo, el canto derecho de la regla, el tejuelo y el pan) y la
  * lanceta es de luna, fría, y cae más alta; lo demás se hunde en el añil de la noche. Lo fijo (el muro, el arco, el pretil, el
  * atril y el paño) se pinta una vez por tamaño y modo; la regla, la lámpara y el pan, en cada dibujo.
@@ -194,8 +213,8 @@ internal object SalaLibretaTemplario {
         if (!a.oscuro) { val sp = Path().apply { addPath(fuera, Offset(9f * s.U, 6f * s.U)) }; clipRect(0f, 0f, w, s.pretilArriba) { drawPath(sp, a.sombra(0.22f)) } }
         arco(s, a, fuera, hueco)
         fondo(s, a, hueco)
-        atril(s, ac)
         pretil(s, a)
+        atril(s, ac)
         pano(s, ac)
         if (s.conTablillas) with(PiezasLibretaTemplario) { tablillas(s, a) }
         // El charco de los mecheros en el muro de fuera (en el hueco lo pinta [fondo]).
@@ -284,6 +303,14 @@ internal object SalaLibretaTemplario {
             } else {
                 drawRect(a.dia(P.CALIZA, 0f, MuebleLibretaTemplario.cerca(Offset(s.huecoDer, s.llama.y), s, a)).copy(alpha = 0.55f), Offset(s.huecoDer, 0f), Size(s.dovela + 2f, s.pretilArriba))
             }
+            // La lanceta en las dovelas de la izquierda: el arco está más adelante que el fondo, así que la recibe corrida
+            // hacia la ventana y se quiebra en la arista del intradós.
+            val l = s.lanceta(a.oscuro, -15f * U, -4f * U)
+            clipPath(l) {
+                val base = s.c(a, mezcla(P.CALIZA, P.CAL, 0.15f), if (a.oscuro) 0f else 0.12f, Offset(s.huecoIzq, 60f * U))
+                drawRect(if (a.oscuro) a.enLanceta(base, 0.9f) else a.sol(P.CALIZA, base, 1f), Offset(s.huecoIzq - s.dovela - 30f * U, 0f), Size(s.dovela + 90f * U, s.pretilArriba))
+            }
+            if (!a.oscuro) drawPath(l, Color(0xFFF6DDA8).copy(alpha = 0.5f), style = Stroke(1f * U))
             // Las juntas: en las jambas, horizontales; en la curva, radiales (hacia el centro de cada mitad del arco).
             val juntas = Path()
             var y = s.arranque + 24f * U
@@ -336,7 +363,7 @@ internal object SalaLibretaTemplario {
             // La lanceta de la ventana: la misma cal, alumbrada (de día, entibiada; de noche, la luna, fría y más tenue).
             val l = s.lanceta(a.oscuro)
             clipPath(l) {
-                if (a.oscuro) drawRect(Color(0xFF6E86C2).copy(alpha = 0.42f), r.topLeft, r.size, blendMode = BlendMode.Screen)
+                if (a.oscuro) drawRect(Color(0xFF7088C6).copy(alpha = 0.56f), r.topLeft, r.size, blendMode = BlendMode.Screen)
                 else {
                     drawRect(a.en(mezcla(P.CAL, P.CAL_SOMBRA, 0.35f), 0f, 1f, 1f, ManchaTemplario(FloatArray(8), P.SOL, 0.95f)), r.topLeft, r.size)
                     despiece(r, 0.6f, U)
@@ -348,30 +375,76 @@ internal object SalaLibretaTemplario {
         }
     }
 
-    /** El atril de cedro: el tablero inclinado (asoma por los lados de la regla) y el canto donde apoya. */
+    /**
+     * El atril de cedro: el tablero inclinado (asoma por arriba y por los lados de la regla, con sus vetas), los dos costados
+     * que lo sostienen (se ve su canto de delante, con el corte inclinado arriba), el listón donde apoya la regla, con su bocel,
+     * y la sombra del listón en el pretil. La lanceta de sol (o de luna) cae también en el costado de la izquierda.
+     */
     private fun DrawScope.atril(s: SitioLibretaTemplario, a: AireTemplario) {
         val U = s.U
-        val l = s.libro
-        val tab = Path().apply {
-            moveTo(l.left - 6f * U, l.top + 26f * U); lineTo(l.right + 6f * U, l.top + 26f * U)
-            lineTo(l.right + 14f * U, s.listonArriba); lineTo(l.left - 14f * U, s.listonArriba); close()
+        val x0 = s.atrilIzq; val x1 = s.atrilDer; val y0 = s.atrilArriba; val y1 = s.listonArriba
+        val k = MuebleLibretaTemplario.cerca(Offset(x1, (y0 + y1) / 2), s, a)
+        // El tablero inclinado.
+        val tab = poligonoTemplario(x0 + 8f * U, y0, x1 - 8f * U, y0, x1, y1, x0, y1)
+        val n = if (a.oscuro) 8 else 1
+        clipPath(tab) {
+            for (t in 0 until n) {
+                val xa = x0 + (x1 - x0) * t / n; val xb = x0 + (x1 - x0) * (t + 1) / n + 1.2f
+                drawRect(a.dia(P.CEDRO_OSC, 0.04f, MuebleLibretaTemplario.cerca(Offset((xa + xb) / 2, (y0 + y1) / 2), s, a)), Offset(xa, y0), Size(xb - xa, y1 - y0))
+            }
+            // La lanceta en el tablero, que está delante del fondo (corrida otra vez).
+            clipPath(s.lanceta(a.oscuro, -7f * U, -8f * U)) {
+                drawRect(a.enLanceta(a.dia(P.CEDRO_OSC, 0.04f, MuebleLibretaTemplario.cerca(Offset(x0, y0), s, a)), 0.85f), Offset(x0, y0), Size(60f * U, y1 - y0))
+            }
+            val vetas = Path()
+            for (j in 0 until 9) {
+                val x = x0 + (x1 - x0) * (j + 0.5f) / 9f
+                vetas.moveTo(x - 2f * U, y0); vetas.cubicTo(x + 3f * U, y0 + 40f * U, x - 3f * U, y0 + 90f * U, x + (azar(8540, j) - 0.5f) * 6f * U, y1)
+            }
+            drawPath(vetas, a.dia(P.CEDRO_HONDO, 0f, k).copy(alpha = 0.45f), style = Stroke(0.8f * U))
+            drawRect(a.sombra(0.25f), Offset(x0, y0), Size(x1 - x0, 6f * U))
         }
-        val k = MuebleLibretaTemplario.cerca(Offset(l.right, l.center.y), s, a)
-        drawPath(tab, a.dia(P.CEDRO_OSC, 0f, k))
-        drawPath(tab, a.sombra(0.3f), style = Stroke(1.2f * U))
-        // El canto de arriba del tablero y sus costados, con luz a la izquierda.
-        drawLine(a.claro(0.3f), Offset(l.left - 6f * U, l.top + 26f * U), Offset(l.left - 14f * U, s.listonArriba), 1.2f * U)
-        // El listón del canto, a lo ancho, con su bocel.
-        val r = Rect(l.left - 18f * U, s.listonArriba, l.right + 18f * U, s.listonAbajo)
-        val n = if (a.oscuro) 10 else 1
-        for (t in 0 until n) {
-            val x0 = r.left + r.width * t / n; val x1 = r.left + r.width * (t + 1) / n + 1.2f
-            val kk = MuebleLibretaTemplario.cerca(Offset((x0 + x1) / 2, r.center.y), s, a)
-            drawRect(a.dia(P.CEDRO, 0.05f, kk), Offset(x0, r.top), Size(minOf(x1, r.right) - x0, r.height))
+        // El canto de arriba del tablero, con su luz.
+        drawLine(a.dia(P.CEDRO_LUZ, 0.1f, k), Offset(x0 + 8f * U, y0), Offset(x1 - 8f * U, y0), 2f * U)
+        // Los dos costados: el canto de delante de cada uno, con el corte inclinado arriba.
+        listOf(true, false).forEach { izq ->
+            val xa = if (izq) x0 - 10f * U else x1; val xb = if (izq) x0 else x1 + 10f * U
+            val yt = y0 + 10f * U
+            val c = if (izq) poligonoTemplario(xa, yt + 14f * U, xb, yt, xb, s.listonAbajo, xa, s.listonAbajo)
+                else poligonoTemplario(xa, yt, xb, yt + 14f * U, xb, s.listonAbajo, xa, s.listonAbajo)
+            val kk = MuebleLibretaTemplario.cerca(Offset(xa, (yt + y1) / 2), s, a)
+            if (!a.oscuro && !izq) drawPath(Path().apply { addPath(c, Offset(6f * U, 4f * U)) }, a.sombra(0.25f))
+            drawPath(c, a.dia(P.CEDRO, if (izq) 0.05f else -0.12f, kk))
+            clipPath(c) {
+                drawRect(if (izq) a.claro(0.3f) else a.sombra(0.3f), Offset(if (izq) xa else xb - 2f * U, yt), Size(2f * U, y1))
+                drawLine(a.dia(P.CEDRO_HONDO, 0f, kk).copy(alpha = 0.5f), Offset((xa + xb) / 2, yt + 20f * U), Offset((xa + xb) / 2 + 1f * U, s.listonAbajo), 0.8f * U)
+            }
+            drawPath(c, a.sombra(0.35f), style = Stroke(0.9f * U))
+            if (a.oscuro && !izq) drawRect(a.filo(0.7f * kk), Offset(xa, yt), Size(1.4f * U, s.listonAbajo - yt))
         }
-        drawRect(a.brillo(0.45f, k), r.topLeft, Size(r.width, 1f * U))
-        drawRect(a.sombra(0.4f), Offset(r.left, r.bottom - 1.6f * U), Size(r.width, 1.6f * U))
-        if (a.oscuro) drawRect(a.filo(0.7f * k), Offset(r.right - 1.4f * U, r.top), Size(1.4f * U, r.height))
+        // La lanceta en el costado de la izquierda (está más adelante que el fondo: va corrida).
+        clipPath(poligonoTemplario(x0 - 10f * U, y0 + 24f * U, x0, y0 + 10f * U, x0, s.listonAbajo, x0 - 10f * U, s.listonAbajo)) {
+            clipPath(s.lanceta(a.oscuro, -12f * U, -10f * U)) {
+                val base = a.dia(P.CEDRO, 0.05f, MuebleLibretaTemplario.cerca(Offset(x0, y0 + 60f * U), s, a))
+                drawRect(a.enLanceta(base, 0.95f), Offset(x0 - 10f * U, y0), Size(10f * U, y1 - y0))
+            }
+        }
+        // El listón donde apoya la regla: la cara de arriba, el bocel y su sombra en el pretil.
+        val r = Rect(x0 - 12f * U, y1, x1 + 12f * U, s.listonAbajo)
+        drawRect(a.sombra(0.4f), Offset(r.left + 3f * U, r.bottom), Size(r.width, 3.4f * U))
+        val m = if (a.oscuro) 10 else 1
+        for (t in 0 until m) {
+            val xa = r.left + r.width * t / m; val xb = r.left + r.width * (t + 1) / m + 1.2f
+            val kk = MuebleLibretaTemplario.cerca(Offset((xa + xb) / 2, r.center.y), s, a)
+            drawRect(a.dia(P.CEDRO_LUZ, 0f, kk), Offset(xa, r.top), Size(minOf(xb, r.right) - xa, 3f * U))
+            drawRect(a.dia(P.CEDRO, 0.05f, kk), Offset(xa, r.top + 3f * U), Size(minOf(xb, r.right) - xa, r.height - 3f * U))
+        }
+        drawRect(a.brillo(0.5f, k), r.topLeft, Size(r.width, 0.9f * U))
+        drawRect(a.sombra(0.3f), Offset(r.left, r.top + 3f * U), Size(r.width, 0.8f * U))
+        drawRect(a.sombra(0.45f), Offset(r.left, r.bottom - 1.6f * U), Size(r.width, 1.6f * U))
+        drawRect(a.claro(0.25f), Offset(r.left, r.top), Size(1.4f * U, r.height))
+        drawRect(a.sombra(0.35f), Offset(r.right - 1.6f * U, r.top), Size(1.6f * U, r.height))
+        if (a.oscuro) drawRect(a.filo(0.75f * k), Offset(r.left, r.top), Size(r.width, 1.2f * U))
     }
 
     /** El pretil de caliza del púlpito, con su moldura de arriba y la de abajo, y la ménsula que lo sostiene. */
@@ -455,9 +528,10 @@ internal object SalaLibretaTemplario {
         val forma = Path().apply {
             moveTo(x0, y0); lineTo(x1, y0)
             cubicTo(x1 + 2f * U, y0 + 10f * U, x1 - 2f * U, y1 - 8f * U, x1 + 1f * U, y1)
+            // El bajo, ondulado donde caen los pliegues (sin dientes iguales).
             var x = x1
             var j = 0
-            while (x > x0) { x -= 14f * U; lineTo(maxOf(x, x0), y1 + (if (j % 2 == 0) 3f else 0f) * U); j++ }
+            while (x > x0) { x -= (7f + 9f * azar(8526, j)) * U; lineTo(maxOf(x, x0), y1 + (3.6f * azar(8527, j) - 0.6f) * U); j++ }
             cubicTo(x0 - 2f * U, y1 - 8f * U, x0 + 2f * U, y0 + 10f * U, x0, y0)
             close()
         }
@@ -468,13 +542,30 @@ internal object SalaLibretaTemplario {
                 val xa = x0 + (x1 - x0) * t / n - 2f * U; val xb = x0 + (x1 - x0) * (t + 1) / n + 2f * U
                 drawRect(a.dia(PANO, 0f, MuebleLibretaTemplario.cerca(Offset((xa + xb) / 2, (y0 + y1) / 2), s, a)), Offset(xa, y0), Size(xb - xa, y1 - y0 + 6f * U))
             }
-            // Los pliegues que caen desde el canto: hondos que se abren hacia abajo, a trechos desiguales, con su cresta de luz.
-            for (j in 0 until 5) {
-                val x = x0 + (x1 - x0) * (0.1f + 0.2f * j + 0.08f * azar(8520, j))
-                val an = (3f + 4f * azar(8521, j)) * U
-                drawPath(poligonoTemplario(x, y0, x + an * 0.4f, y0, x + an, y1 + 6f * U, x - an * 0.3f, y1 + 6f * U), a.sombra(0.22f + 0.1f * azar(8522, j)))
-                drawLine(a.claro(0.2f), Offset(x - 3f * U, y0 + 2f * U), Offset(x - 5f * U, y1), 1.4f * U)
+            // Los pliegues: nacen apretados bajo el listón y se abren hacia abajo, a trechos desiguales, unos largos y otros
+            // que se pierden a media caída, ladeados cada uno a su aire; el hondo curvo y, a su izquierda, la cresta de luz.
+            val hondos = Path(); val crestas = Path(); val nucleos = Path()
+            var xf = x0 + (5f + 9f * azar(8520, 0)) * U
+            var q = 0
+            while (xf < x1 - 6f * U) {
+                val an = (2.5f + 6.5f * azar(8521, q)) * U
+                val largo = (0.45f + 0.6f * azar(8522, q)).coerceAtMost(1f) * (y1 + 5f * U - y0)
+                val ladeo = (azar(8523, q) - 0.5f) * 9f * U
+                val yb = y0 + largo
+                hondos.moveTo(xf, y0)
+                hondos.cubicTo(xf + an * 0.25f, y0 + largo * 0.35f, xf + ladeo + an * 0.75f, yb - largo * 0.3f, xf + ladeo + an, yb)
+                hondos.lineTo(xf + ladeo - an * 0.35f, yb + 1f * U)
+                hondos.cubicTo(xf + ladeo - an * 0.3f, yb - largo * 0.35f, xf - an * 0.1f, y0 + largo * 0.4f, xf, y0)
+                hondos.close()
+                nucleos.moveTo(xf + 0.3f * U, y0 + 1f * U)
+                nucleos.quadraticTo(xf + ladeo * 0.3f + an * 0.2f, y0 + largo * 0.5f, xf + ladeo + an * 0.25f, yb - 1f * U)
+                crestas.moveTo(xf - 2.2f * U, y0 + 1.5f * U)
+                crestas.cubicTo(xf - 2.6f * U, y0 + largo * 0.4f, xf + ladeo - an * 0.5f - 2f * U, yb - largo * 0.3f, xf + ladeo - an * 0.7f - 1.8f * U, yb - 0.5f * U)
+                xf += (11f + 21f * azar(8524, q)) * U; q++
             }
+            drawPath(hondos, a.sombra(0.26f))
+            drawPath(nucleos, a.sombra(0.3f), style = Stroke(1f * U, cap = StrokeCap.Round))
+            drawPath(crestas, if (a.oscuro) a.brillo(0.22f, MuebleLibretaTemplario.cerca(Offset(x1, y0), s, a)) else a.claro(0.26f), style = Stroke(1.5f * U, cap = StrokeCap.Round))
             pinceladasLana(Rect(x0, y0, x1, y1), a)
             // La orla de grana de abajo, con su filete, y el pelo de la lana.
             val kk = MuebleLibretaTemplario.cerca(Offset(s.cx, y1), s, a)
