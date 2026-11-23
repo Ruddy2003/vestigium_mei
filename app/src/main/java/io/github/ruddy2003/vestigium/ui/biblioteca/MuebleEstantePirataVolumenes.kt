@@ -7,10 +7,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontWeight
@@ -22,9 +24,9 @@ import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
 /**
  * Las entradas del estante de Pirata ([MuebleEstantePirata]), tres objetos de la cámara de popa según la semilla: el cuaderno
  * de bitácora (alto y delgado, de lomo redondo con sus nervios, su tejuelo de papel y la cinta que lo ciñe; asoman hojas
- * sueltas por la cabeza), el canuto de cartas (un estuche de cuero cosido con sus aros de latón y su tapa abombada; si va
- * lleno, la tapa cuelga de su cadenilla y asoman las cartas enrolladas; el día en una etiqueta de pergamino atada con
- * bramante) y el paquete de la correspondencia envuelto en hule (blando, con la solapa en pico, atado con bramante y
+ * sueltas por la cabeza), el canuto de cartas (un estuche de cuero cosido con su tapa y su correa con hebilla; si va
+ * lleno, la tapa cuelga de la correa y asoma el rollo de la carta; el día en una etiqueta de pergamino atada con
+ * bramante) y el paquete de la correspondencia envuelto en hule (blando, con la cabeza fruncida, embalado con bramante y
  * lacrado). El ánimo es el material, en todo el cuerpo ([materialPirata]); sin ánimo, lona embreada. Delante de todas pasa la barandilla de mar. En los Sueños, una luna de plata.
  */
 internal object VolumenEstantePirata {
@@ -78,15 +80,40 @@ internal object VolumenEstantePirata {
         textoEn(medidor, v.mes, mes, P.LETRA, tinta.copy(alpha = 0.85f), MES, minimo = 5f)
     }
 
-    /** La luna de plata de los Sueños: un creciente sobre su disco hondo, con su brillo. */
+    /** La media luna de plata, de radio [r], armada una vez por tamaño (un creciente: el disco menos otro corrido). */
+    private var radioLuna = -1f
+    private var caminoLuna = Path()
+
+    private fun creciente(r: Float): Path {
+        if (r != radioLuna) {
+            val fuera = Path().apply { addOval(Rect(-r, -r, r, r)) }
+            val dentro = Path().apply { addOval(Rect(-r * 0.78f + r * 0.5f, -r * 0.82f - r * 0.22f, r * 0.78f + r * 0.5f, r * 0.82f - r * 0.22f)) }
+            caminoLuna = Path().apply { op(fuera, dentro, PathOperation.Difference) }
+            radioLuna = r
+        }
+        return caminoLuna
+    }
+
+    /**
+     * La luna de los Sueños: una media luna de plata recortada, sin disco alrededor (un círculo claro con su hueco oscuro, en
+     * fila, se leía como una hilera de ojos), con su canto oscuro para que se vea sobre lo claro y su sombra.
+     */
     private fun DrawScope.luna(c: Offset, r: Float, a: AirePirata) {
         val u = density
-        val fondo = Color(0xFF151B33)
-        drawCircle(a.sombra(0.45f), r * 1.18f, c + Offset(0.7f * u, 0.9f * u))
-        drawCircle(fondo, r * 1.15f, c)
-        drawCircle(mezcla(P.LATON, P.LUNA, 0.6f), r * 1.15f, c, style = Stroke(0.8f * u))
-        drawCircle(P.LUNA, r * 0.86f, c - Offset(r * 0.1f, 0f))
-        drawCircle(fondo, r * 0.7f, c + Offset(r * 0.25f, -r * 0.16f))
+        val m = creciente(r)
+        translate(c.x + 0.8f * u, c.y + 1.1f * u) { drawPath(m, a.sombra(0.55f)) }
+        translate(c.x, c.y) {
+            drawPath(m, Color(0xFFDDE4F0))
+            drawPath(m, Color(0xFF3A4258), style = Stroke(0.9f * u))
+            drawCircle(Color.White.copy(alpha = 0.85f), r * 0.16f, Offset(-r * 0.62f, -r * 0.18f))
+        }
+    }
+
+    /** El plano de luna de los Sueños oscuros sobre una entrada que cae dentro de él ([f], de 0 a 1): fría, más en su canto. */
+    fun DrawScope.lunaEncima(f: Float) {
+        val u = density
+        drawRect(P.LUNA_RAS.copy(alpha = (0.16f * f).coerceAtMost(0.2f)), Offset.Zero, size)
+        drawRect(P.LUNA_RAS.copy(alpha = (0.5f * f).coerceAtMost(0.5f)), Offset.Zero, Size(1.6f * u, size.height))
     }
 
     /** Lo de todas: la sombra que dejan en el fondo por la rendija con la vecina y la de contacto en la tabla. */
@@ -156,7 +183,7 @@ internal object VolumenEstantePirata {
         drawRect(a.luz(P.TINTA, k).copy(alpha = 0.55f), et.deflate(1.3f * u).topLeft, et.deflate(1.3f * u).size, style = Stroke(0.5f * u))
         diaYMes(v, medidor, et.deflate(1.7f * u), a.luz(P.TINTA, maxOf(k, 0.75f)))
         // La luna de los Sueños, entre el segundo y el tercer nervio.
-        if (v.noche) luna(Offset(w / 2, h * 0.513f), minOf(w * 0.22f, 5.2f * u), a)
+        if (v.noche) luna(Offset(w / 2, h * 0.516f), minOf(w * 0.24f, 6.4f * u), a)
         // La cinta de cuero que ciñe el cuaderno, con su nudo y los cabos que cuelgan.
         val yc = h * 0.665f
         val cinta = a.luz(Color(0xFF4E2A18), k)
@@ -181,85 +208,100 @@ internal object VolumenEstantePirata {
 
     // ---------------------------------------------------------------- el canuto de cartas
 
+    /**
+     * El canuto de cartas: un estuche de cuero cosido a lo largo, con su vira cosida en la boca y otra abajo, y la tapa de cuero
+     * con su correa, que baja por el costado hasta su hebilla de latón. Con pocas palabras, la tapa puesta; con muchas, la tapa
+     * cuelga de la correa y asoma por la boca el rollo de la carta con su cinta. El día, en una etiqueta de pergamino atada.
+     */
     fun DrawScope.canuto(v: Volumen, medidor: TextMeasurer, a: AirePirata, k: Float, f: Float, hacia: Float, tinte: Color?) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla
         val abierto = v.lleno >= 0.4f
-        val an = w * 0.82f
+        val an = w * 0.8f
         val cx = w * 0.5f
-        val boca = h * (if (abierto) 0.2f else 0.15f)
-        alrededor(a, hacia, boca)
+        val boca = h * (if (abierto) 0.2f else 0.17f)
+        alrededor(a, hacia, if (abierto) boca else h * 0.05f)
         val t = tinte(tinte, a, k)
+        val m = tinte ?: P.EMBREADO
+        val oscuroCuero = tinte(mezcla(m, P.BREA, 0.42f), a, k)
         val tubo = Rect(cx - an / 2, boca, cx + an / 2, h)
+        val lado = if (hacia < 0f) -1f else 1f
         if (abierto) {
-            // Las cartas enrolladas que asoman por la boca abierta, más con más palabras.
-            val rollos = 2 + ((v.lleno - 0.4f) * 3.4f).toInt().coerceIn(0, 2)
-            for (j in 0 until rollos) {
-                val rr = an * (0.2f - 0.015f * j)
-                val x = cx + an * (-0.26f + 0.52f * j / (rollos - 1)) * 0.82f
-                val alto = h * (0.07f + 0.11f * azar(s, 70 + j))
-                val r = Rect(x - rr, boca - alto, x + rr, boca + 2f * u)
-                val papel = mezcla(P.PAPEL, P.PAPEL_OSC, 0.3f * azar(s, 74 + j))
+            // El rollo de la carta que asoma por la boca, y otro más delgado detrás.
+            listOf(Triple(-0.12f, 0.17f, 0.36f), Triple(0.14f, 0.12f, 0.27f)).forEachIndexed { j, (dx, alto, gr) ->
+                val rr = an * gr
+                val x = cx + an * dx
+                val r = Rect(x - rr, boca - h * (alto + 0.03f * azar(s, 70 + j)), x + rr, boca + 2f * u)
+                val papel = mezcla(P.PAPEL, P.PAPEL_OSC, 0.12f + 0.25f * j)
                 drawRect(a.etiqueta(papel, k), r.topLeft, r.size)
-                drawRect(a.sombra(0.28f), Offset(if (hacia < 0f) r.right - rr * 0.6f else r.left, r.top), Size(rr * 0.6f, r.height))
-                drawOval(a.etiqueta(mezcla(papel, P.PAPEL_OSC, 0.35f), k), Offset(r.left, r.top - rr * 0.35f), Size(r.width, rr * 0.7f))
-                drawArc(a.sombra(0.45f), 200f, 250f, false, Offset(x - rr * 0.5f, r.top - rr * 0.18f), Size(rr, rr * 0.36f), style = Stroke(0.7f * u))
-                if (j == 0) drawRect(a.luz(P.LACRE, k), Offset(r.left, r.top + r.height * 0.35f), Size(r.width, 2f * u))
+                drawRect(a.sombra(0.3f), Offset(if (hacia < 0f) r.right - rr * 0.7f else r.left, r.top), Size(rr * 0.7f, r.height))
+                drawRect(a.brillo(0.3f, k), Offset(if (hacia < 0f) r.left + rr * 0.25f else r.right - rr * 0.45f, r.top), Size(rr * 0.2f, r.height))
+                drawOval(a.etiqueta(mezcla(papel, P.PAPEL_OSC, 0.4f), k), Offset(r.left, r.top - rr * 0.32f), Size(r.width, rr * 0.64f))
+                drawArc(a.sombra(0.5f), 200f, 250f, false, Offset(x - rr * 0.55f, r.top - rr * 0.18f), Size(rr * 1.1f, rr * 0.36f), style = Stroke(0.8f * u))
+                drawArc(a.sombra(0.35f), 210f, 220f, false, Offset(x - rr * 0.28f, r.top - rr * 0.09f), Size(rr * 0.56f, rr * 0.18f), style = Stroke(0.6f * u))
+                if (j == 0) {
+                    drawRect(a.luz(P.LACRE, k), Offset(r.left, r.top + r.height * 0.42f), Size(r.width, 2.4f * u))
+                    drawLine(a.luz(P.LACRE, k), Offset(x + rr * 0.6f, r.top + r.height * 0.42f + 2f * u), Offset(x + rr * 1.1f, r.top + r.height * 0.42f + h * 0.05f), 1.6f * u, StrokeCap.Round)
+                }
             }
         }
-        // El cuerpo de cuero, redondo.
+        // El cuerpo de cuero, redondo, y la vira cosida de la boca.
         redondo(tubo, t, hacia)
-        // La costura de la piel, a lo largo, con su puntada.
-        val xc = tubo.left + tubo.width * (if (hacia < 0f) 0.68f else 0.32f)
-        drawLine(a.sombra(0.4f), Offset(xc, tubo.top), Offset(xc, tubo.bottom), 1.1f * u)
-        drawLine(a.luz(P.CABO, k).copy(alpha = 0.85f), Offset(xc + 1.3f * u, tubo.top), Offset(xc + 1.3f * u, tubo.bottom), 1f * u,
+        drawRect(oscuroCuero.cara, Offset(tubo.left - 0.8f * u, boca), Size(tubo.width + 1.6f * u, h * 0.035f))
+        drawLine(a.luz(P.CABO, k).copy(alpha = 0.75f), Offset(tubo.left, boca + h * 0.026f), Offset(tubo.right, boca + h * 0.026f), 0.8f * u,
+            pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.8f * u, 1.6f * u)))
+        drawRect(a.brillo(0.3f, k), Offset(tubo.left, boca), Size(tubo.width, 0.8f * u))
+        // La costura a lo largo, con su puntada.
+        val xc = tubo.left + tubo.width * (if (hacia < 0f) 0.7f else 0.3f)
+        drawLine(a.sombra(0.4f), Offset(xc, boca), Offset(xc, h), 1.1f * u)
+        drawLine(a.luz(P.CABO, k).copy(alpha = 0.85f), Offset(xc + 1.3f * u, boca), Offset(xc + 1.3f * u, h), 1f * u,
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.4f * u, 2f * u)))
-        // La correa de cuero que va del aro de arriba al de abajo, por el lado de la luz, con su costura.
-        val xr = tubo.left + tubo.width * (if (hacia < 0f) 0.16f else 0.84f)
-        val correa = Rect(xr - w * 0.06f, boca, xr + w * 0.06f, h * 0.75f)
-        drawRect(a.sombra(0.35f), Offset(correa.left + (if (hacia < 0f) 1.2f else -1.2f) * u, correa.top), correa.size)
-        drawRect(a.luz(Color(0xFF4A2816), k), correa.topLeft, correa.size)
-        drawRect(a.brillo(0.25f, k), Offset(correa.left + correa.width * 0.15f, correa.top), Size(correa.width * 0.2f, correa.height))
+        // La correa, por el lado de la luz, de la tapa a la hebilla.
+        val xr = cx - lado * an * 0.3f
+        val hebillaY = h * 0.7f
+        val correa = Rect(xr - w * 0.065f, if (abierto) boca else h * 0.1f, xr + w * 0.065f, hebillaY + h * 0.06f)
+        drawRect(a.sombra(0.35f), Offset(correa.left - lado * 1.2f * u, correa.top + 1f * u), correa.size)
+        drawRect(oscuroCuero.cara, correa.topLeft, correa.size)
+        drawRect(oscuroCuero.claro, Offset(correa.left, correa.top), Size(correa.width * 0.3f, correa.height))
         drawLine(a.luz(P.CABO, k).copy(alpha = 0.7f), Offset(correa.center.x, correa.top), Offset(correa.center.x, correa.bottom), 0.6f * u,
             pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.6f * u, 1.4f * u)))
-        // Los aros de latón: el cuello de la boca y uno abajo.
-        listOf(boca to h * 0.055f, h * 0.71f to h * 0.045f).forEach { (y, g) ->
-            val r = Rect(tubo.left - 1.2f * u, y, tubo.right + 1.2f * u, y + g)
-            drawRect(a.luz(P.LATON_OSC, k), r.topLeft, r.size)
-            drawRect(a.luz(P.LATON, k), Offset(r.left, r.top), Size(r.width, g * 0.58f))
-            drawRect(a.brillo(0.6f, k), Offset(if (hacia < 0f) r.left + r.width * 0.12f else r.right - r.width * 0.3f, r.top + 0.6f * u), Size(r.width * 0.18f, g * 0.45f))
-            drawRect(a.sombra(0.4f), Offset(r.left, r.bottom), Size(r.width, 1.5f * u))
-            drawLine(a.luz(P.LATON_OSC, k), Offset(r.left, r.top + g * 0.62f), Offset(r.right, r.top + g * 0.62f), 0.7f * u)
-        }
+        val hebilla = Rect(correa.left - 1.2f * u, hebillaY - h * 0.025f, correa.right + 1.2f * u, hebillaY + h * 0.025f)
+        drawRect(a.luz(P.LATON, k), hebilla.topLeft, hebilla.size, style = Stroke(1.6f * u))
+        drawLine(a.luz(P.LATON_OSC, k), Offset(hebilla.center.x, hebilla.top), Offset(hebilla.center.x, hebilla.bottom), 1.2f * u)
+        destelloPirata(Offset(hebilla.left + 1f * u, hebilla.top + 1f * u), 0.9f * u, a, k)
         if (abierto) {
-            drawOval(a.luz(P.LATON_OSC, k), Offset(tubo.left - 1.2f * u, boca - h * 0.014f), Size(tubo.width + 2.4f * u, h * 0.03f), style = Stroke(1.6f * u))
-            // La tapa, colgando de su cadenilla por el lado de la sombra.
-            val lado = if (hacia < 0f) 1f else -1f
-            val tx = cx + lado * an * 0.36f
-            val tapa = Rect(tx - w * 0.15f, h * 0.27f, tx + w * 0.15f, h * 0.35f)
-            val cad = Path().apply { moveTo(cx + lado * an * 0.38f, boca + h * 0.03f); quadraticTo(tx + lado * w * 0.12f, boca + h * 0.05f, tapa.center.x + lado * w * 0.06f, tapa.top) }
-            drawPath(cad, a.luz(P.LATON_OSC, k), style = Stroke(1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.5f * u, 0.9f * u))))
-            drawRoundRect(a.sombra(0.4f), tapa.topLeft + Offset(1f * u, 1.2f * u), tapa.size, CornerRadius(w * 0.06f))
-            drawRoundRect(a.luz(P.LATON_OSC, k), tapa.topLeft, tapa.size, CornerRadius(w * 0.06f))
-            drawRoundRect(a.luz(P.LATON, k), Offset(tapa.left, tapa.top), Size(tapa.width * 0.6f, tapa.height), CornerRadius(w * 0.06f))
-            drawOval(a.luz(mezcla(P.LATON_OSC, P.TINTA, 0.3f), k), Offset(tapa.left + 1f * u, tapa.bottom - tapa.height * 0.4f), Size(tapa.width - 2f * u, tapa.height * 0.45f))
-            destelloPirata(Offset(tapa.left + tapa.width * 0.25f, tapa.top + tapa.height * 0.3f), 1.1f * u, a, k)
-        } else {
-            // La tapa abombada puesta, con su anilla.
-            val tp = Rect(tubo.left - 1.6f * u, h * 0.06f, tubo.right + 1.6f * u, boca + h * 0.03f)
-            drawRoundRect(a.luz(P.LATON_OSC, k), tp.topLeft, tp.size, CornerRadius(tp.width * 0.5f, tp.height * 0.6f))
-            clipPath(Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(tp, CornerRadius(tp.width * 0.5f, tp.height * 0.6f))) }) {
-                drawRect(a.luz(P.LATON, k), Offset(if (hacia < 0f) tp.left else tp.left + tp.width * 0.4f, tp.top), Size(tp.width * 0.6f, tp.height))
-                drawRect(a.brillo(0.6f, k), Offset(if (hacia < 0f) tp.left + tp.width * 0.18f else tp.right - tp.width * 0.3f, tp.top), Size(tp.width * 0.12f, tp.height))
-                drawRect(a.sombra(0.35f), Offset(tp.left, tp.bottom - tp.height * 0.22f), Size(tp.width, tp.height * 0.22f))
+            // La tapa, colgando de su correa por el lado de la sombra, ladeada.
+            val tc = Offset(cx + lado * an * 0.32f, h * 0.27f)
+            rotate(lado * 18f, tc) {
+                val tp = Rect(tc.x - an * 0.34f, tc.y - h * 0.055f, tc.x + an * 0.34f, tc.y + h * 0.055f)
+                drawRoundRect(a.sombra(0.4f), tp.topLeft + Offset(1f * u, 1.4f * u), tp.size, CornerRadius(3f * u))
+                drawRoundRect(oscuroCuero.cara, tp.topLeft, tp.size, CornerRadius(3f * u))
+                drawRect(oscuroCuero.claro, Offset(tp.left + 1f * u, tp.top + 1f * u), Size(tp.width - 2f * u, tp.height * 0.25f))
+                drawOval(a.luz(P.BREA, k), Offset(tp.left + 1.5f * u, tp.bottom - tp.height * 0.32f), Size(tp.width - 3f * u, tp.height * 0.4f))
+                drawLine(a.luz(P.CABO, k).copy(alpha = 0.7f), Offset(tp.left + 2f * u, tp.top + tp.height * 0.55f), Offset(tp.right - 2f * u, tp.top + tp.height * 0.55f), 0.7f * u,
+                    pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.6f * u, 1.4f * u)))
             }
-            drawArc(a.luz(P.LATON_OSC, k), 180f, 180f, false, Offset(cx - w * 0.1f, h * 0.0f + 1f * u), Size(w * 0.2f, h * 0.12f), style = Stroke(1.6f * u))
+        } else {
+            // La tapa de cuero puesta, algo más ancha, con su vira cosida y un remache.
+            val tp = Rect(tubo.left - 1.8f * u, h * 0.05f, tubo.right + 1.8f * u, boca + h * 0.02f)
+            drawRoundRect(oscuroCuero.cara, tp.topLeft, tp.size, CornerRadius(tp.width * 0.22f, tp.height * 0.35f))
+            redondo(Rect(tp.left, tp.top + tp.height * 0.3f, tp.right, tp.bottom), oscuroCuero, hacia)
+            drawOval(oscuroCuero.claro, Offset(tp.left + tp.width * 0.08f, tp.top), Size(tp.width * 0.84f, tp.height * 0.42f))
+            drawLine(a.luz(P.CABO, k).copy(alpha = 0.75f), Offset(tp.left + 1f * u, tp.bottom - h * 0.018f), Offset(tp.right - 1f * u, tp.bottom - h * 0.018f), 0.8f * u,
+                pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.8f * u, 1.6f * u)))
+            drawRect(a.sombra(0.4f), Offset(tp.left, tp.bottom), Size(tp.width, 1.4f * u))
+            remachePirata(Offset(xr, tp.top + tp.height * 0.6f), 1.5f * u, a, k, P.LATON)
+            // La gaza de la correa por encima de la tapa, para colgarlo.
+            val gaza = Path().apply { moveTo(xr, tp.top + tp.height * 0.45f); cubicTo(xr, tp.top - h * 0.055f, cx + lado * an * 0.2f, tp.top - h * 0.055f, cx + lado * an * 0.25f, tp.top + tp.height * 0.3f) }
+            drawPath(gaza, a.sombra(0.35f), style = Stroke(w * 0.11f))
+            drawPath(gaza, oscuroCuero.cara, style = Stroke(w * 0.09f))
+            drawPath(gaza, oscuroCuero.claro, style = Stroke(w * 0.025f))
         }
-        // La etiqueta de pergamino atada con bramante al cuello, con el día y el mes.
+        // La etiqueta de pergamino atada con bramante a la vira, con el día y el mes.
         val et = Rect(w * 0.07f, h * 0.345f, w * 0.93f, h * 0.62f)
-        drawLine(a.luz(P.CABO, k), Offset(cx - w * 0.14f, boca + h * 0.045f), Offset(et.center.x, et.top + h * 0.02f), 1f * u)
-        drawLine(a.luz(P.CABO, k), Offset(cx + w * 0.16f, boca + h * 0.045f), Offset(et.center.x, et.top + h * 0.02f), 1f * u)
+        drawLine(a.luz(P.CABO, k), Offset(cx - w * 0.14f, boca + h * 0.03f), Offset(et.center.x, et.top + h * 0.02f), 1f * u)
+        drawLine(a.luz(P.CABO, k), Offset(cx + w * 0.16f, boca + h * 0.03f), Offset(et.center.x, et.top + h * 0.02f), 1f * u)
         val forma = poligonoPirata(et.left + et.width * 0.16f, et.top, et.right - et.width * 0.16f, et.top, et.right, et.top + et.height * 0.12f,
             et.right, et.bottom, et.left, et.bottom, et.left, et.top + et.height * 0.12f)
         translate(1f * u, 1.3f * u) { drawPath(forma, a.sombra(0.4f)) }
@@ -267,7 +309,7 @@ internal object VolumenEstantePirata {
         drawCircle(a.luz(P.CABO_OSC, k), 1.3f * u, Offset(et.center.x, et.top + h * 0.02f))
         drawRect(a.etiqueta(P.PAPEL_OSC, k).copy(alpha = 0.4f), Offset(et.left, et.bottom - et.height * 0.14f), Size(et.width, et.height * 0.14f))
         diaYMes(v, medidor, Rect(et.left + 1.5f * u, et.top + et.height * 0.12f, et.right - 1.5f * u, et.bottom - 1.6f * u), a.luz(P.TINTA, maxOf(k, 0.75f)))
-        if (v.noche) luna(Offset(cx, h * 0.665f), minOf(w * 0.22f, 5.2f * u), a)
+        if (v.noche) luna(Offset(cx + lado * w * 0.12f, h * 0.68f), minOf(w * 0.24f, 6.4f * u), a)
         filos(tubo, a, k, f, hacia)
         varillaPirata(0f, w, h - MuebleEstantePirata.RIEL * u, a, k)
     }
@@ -275,98 +317,110 @@ internal object VolumenEstantePirata {
     // ---------------------------------------------------------------- el paquete de hule
 
     /**
-     * El paquete de la correspondencia envuelto en hule (la tela encerada que no deja pasar el agua), de pie: blando, con los
-     * costados un poco abombados (más con más palabras), la solapa del envoltorio doblada en pico por arriba, las arrugas y el
-     * lustre del hule, dos ataduras de bramante (la de abajo, con más vueltas cuanto más se escribió) y el lacre en el nudo; el
-     * día en una etiqueta de papel metida bajo el bramante de arriba. En los Sueños, el lacre es una luna de plata.
+     * El paquete de la correspondencia envuelto en hule (la tela encerada que no deja pasar el agua), de pie y blando: los
+     * costados abombados (más con más palabras), la cabeza fruncida e irregular donde el envoltorio se recoge bajo el cordel,
+     * las arrugas y el lustre del hule; el bramante que lo embala (una vuelta a lo alto, corrida de su eje y algo ladeada, y
+     * las vueltas de abajo, más cuanto más se escribió) con el lacre junto al nudo, no en el cruce. El día, en un sobrescrito de
+     * papel metido bajo el bramante. En los Sueños, junto al lacre, la media luna.
      */
     fun DrawScope.paquete(v: Volumen, medidor: TextMeasurer, a: AirePirata, k: Float, f: Float, hacia: Float, tinte: Color?) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla
-        val top = h * 0.05f
+        val top = h * 0.06f
         alrededor(a, hacia, top)
         val t = tinte(tinte, a, k)
         val panza = w * (0.02f + 0.035f * v.lleno)
         val m = 1.2f * u
-        // El cuerpo blando: los costados abombados y las esquinas redondeadas.
+        val xv = w * (0.6f + 0.08f * azar(s, 93))
+        // El cuerpo blando: la cabeza fruncida en lóbulos desiguales, los costados abombados y las esquinas de abajo redondas.
         val cuerpo = Path().apply {
-            moveTo(m + w * 0.06f, top)
-            lineTo(w - m - w * 0.06f, top)
-            quadraticTo(w - m, top, w - m, top + h * 0.05f)
+            moveTo(m, top + h * 0.06f)
+            quadraticTo(w * 0.1f, top - h * 0.01f, w * 0.24f, top + h * 0.02f)
+            quadraticTo(w * 0.36f, top + h * 0.05f, w * 0.44f, top + h * 0.005f)
+            quadraticTo(xv - w * 0.06f, top + h * 0.04f, xv, top + h * 0.045f)
+            quadraticTo(xv + w * 0.12f, top - h * 0.015f, w * 0.84f, top + h * 0.015f)
+            quadraticTo(w - m, top + h * 0.02f, w - m, top + h * 0.07f)
             quadraticTo(w - m + panza, h * 0.55f, w - m, h - h * 0.03f)
             quadraticTo(w - m, h, w - m - w * 0.08f, h)
             lineTo(m + w * 0.08f, h)
             quadraticTo(m, h, m, h - h * 0.03f)
-            quadraticTo(m - panza, h * 0.55f, m, top + h * 0.05f)
-            quadraticTo(m, top, m + w * 0.06f, top)
+            quadraticTo(m - panza, h * 0.55f, m, top + h * 0.06f)
             close()
         }
         drawPath(cuerpo, t.cara)
         clipPath(cuerpo) {
-            redondo(Rect(-panza, top, w + panza, h), t, hacia)
-            // El lustre del hule: una veta de luz que ondula a lo largo y otra más fina.
-            val lz = if (hacia < 0f) 0.26f else 0.7f
-            val lustre = Path().apply {
-                moveTo(w * lz, top); cubicTo(w * (lz + 0.08f), h * 0.35f, w * (lz - 0.07f), h * 0.6f, w * (lz + 0.04f), h)
+            redondo(Rect(-panza, top - h * 0.02f, w + panza, h), t, hacia)
+            // Los frunces que bajan de la cabeza hacia donde la recoge el cordel.
+            val frunces = Path(); val lomos = Path()
+            listOf(0.14f, 0.32f, 0.82f).forEachIndexed { j, fx ->
+                val x0 = w * fx; val y1 = top + h * (0.14f + 0.06f * azar(s, 96 + j))
+                frunces.moveTo(x0, top + h * 0.02f); frunces.quadraticTo((x0 + xv) / 2, top + h * 0.06f, xv + (x0 - xv) * 0.3f, y1)
+                lomos.moveTo(x0 + 1.6f * u, top + h * 0.03f); lomos.quadraticTo((x0 + xv) / 2 + 1.6f * u, top + h * 0.07f, xv + (x0 - xv) * 0.3f + 1.6f * u, y1 - 1.5f * u)
             }
-            drawPath(lustre, a.brillo(0.32f, k), style = Stroke(w * 0.07f, cap = StrokeCap.Round))
-            drawPath(lustre, a.brillo(0.5f, k), style = Stroke(w * 0.018f, cap = StrokeCap.Round))
-            // Las arrugas del hule: pliegues largos y casi rectos, con su lomo de luz.
-            val arrugas = Path(); val lomos = Path()
+            drawPath(frunces, t.hondo, style = Stroke(1.6f * u, cap = StrokeCap.Round))
+            drawPath(lomos, t.claro, style = Stroke(1f * u, cap = StrokeCap.Round))
+            // El lustre del hule: una veta de luz que ondula a lo largo y otra más fina.
+            val lz = if (hacia < 0f) 0.24f else 0.74f
+            val lustre = Path().apply { moveTo(w * lz, top + h * 0.15f); cubicTo(w * (lz + 0.08f), h * 0.4f, w * (lz - 0.07f), h * 0.62f, w * (lz + 0.04f), h) }
+            drawPath(lustre, a.brillo(0.3f, k), style = Stroke(w * 0.08f, cap = StrokeCap.Round))
+            drawPath(lustre, a.brillo(0.5f, k), style = Stroke(w * 0.02f, cap = StrokeCap.Round))
+            // Las arrugas del hule abajo: pliegues largos y casi rectos, con su lomo de luz.
+            val arrugas = Path(); val lomos2 = Path()
             for (j in 0 until 3) {
-                val y0 = h * (0.62f + 0.1f * j + 0.04f * azar(s, 80 + j))
-                val x0 = w * (if (j % 2 == 0) 0.0f else 0.35f) + w * 0.1f * azar(s, 84 + j)
-                val x1 = x0 + w * (0.45f + 0.2f * azar(s, 87 + j))
-                arrugas.moveTo(x0, y0); arrugas.lineTo(x1, y0 + h * 0.025f)
-                lomos.moveTo(x0, y0 + 1.4f * u); lomos.lineTo(x1, y0 + h * 0.025f + 1.4f * u)
+                val y0 = h * (0.64f + 0.1f * j + 0.04f * azar(s, 80 + j))
+                val x0 = w * (if (j % 2 == 0) 0.0f else 0.32f) + w * 0.1f * azar(s, 84 + j)
+                val x1 = x0 + w * (0.42f + 0.2f * azar(s, 87 + j))
+                arrugas.moveTo(x0, y0); arrugas.lineTo(x1, y0 + h * 0.03f)
+                lomos2.moveTo(x0, y0 + 1.4f * u); lomos2.lineTo(x1, y0 + h * 0.03f + 1.4f * u)
             }
             drawPath(arrugas, mezcla(t.cara, t.hondo, 0.6f), style = Stroke(1.2f * u, cap = StrokeCap.Round))
-            drawPath(lomos, mezcla(t.cara, t.claro, 0.6f), style = Stroke(0.8f * u, cap = StrokeCap.Round))
-            // La solapa del envoltorio, doblada en pico desde arriba, con su sombra.
-            val pico = h * (0.27f + 0.03f * azar(s, 88))
-            val solapa = poligonoPirata(-panza, top, w + panza, top, w * 0.55f, pico, w * 0.45f, pico)
-            translate(0f, 2f * u) { drawPath(solapa, a.sombra(0.35f)) }
-            drawPath(solapa, t.cara)
-            drawPath(poligonoPirata(-panza, top, w * 0.5f, top, w * 0.45f, pico), if (hacia < 0f) t.claro else mezcla(t.cara, t.hondo, 0.4f))
-            drawLine(t.claro, Offset(w * 0.03f, top + 1.5f * u), Offset(w * 0.45f, pico - 1f * u), 0.9f * u)
+            drawPath(lomos2, mezcla(t.cara, t.claro, 0.6f), style = Stroke(0.8f * u, cap = StrokeCap.Round))
             drawRect(a.sombra(0.3f), Offset(0f, h * 0.92f), Size(w, h * 0.08f))
         }
         drawPath(cuerpo, a.sombra(0.3f), style = Stroke(0.7f * u))
+        // El bramante a lo alto: corrido del eje y algo ladeado, pasa sobre la cabeza (donde la recoge) y baja por delante.
+        val abajoX = xv + w * 0.05f
+        val alto = Path().apply { moveTo(xv - w * 0.02f, top - h * 0.01f); quadraticTo(xv, top + h * 0.03f, xv + w * 0.004f, top + h * 0.06f); lineTo(abajoX, h) }
+        drawPath(alto, a.sombra(0.35f), style = Stroke(1.6f * u))
+        drawPath(alto, a.luz(P.CABO_OSC, k), style = Stroke(1.8f * u))
+        drawPath(alto, a.luz(P.CABO, k), style = Stroke(1f * u))
         // El sobrescrito: la tira de papel con el día y el mes metida bajo el bramante, con la raya roja del escribano.
-        val et = Rect(w * 0.08f, h * 0.3f, w * 0.92f, h * 0.595f)
+        val et = Rect(w * 0.08f, h * 0.29f, w * 0.92f, h * 0.585f)
         drawRect(a.sombra(0.38f), Offset(et.left + 1f * u, et.top + 1.3f * u), et.size)
         drawRect(a.etiqueta(VIEJO, k), et.topLeft, et.size)
         drawRect(a.etiqueta(P.PAPEL_OSC, k).copy(alpha = 0.45f), Offset(et.left, et.bottom - et.height * 0.1f), Size(et.width, et.height * 0.1f))
         drawLine(a.luz(P.LACRE, maxOf(k, 0.5f)).copy(alpha = 0.75f), Offset(et.left + 2.4f * u, et.bottom - et.height * 0.2f), Offset(et.right - 2.4f * u, et.bottom - et.height * 0.2f), 0.8f * u)
         diaYMes(v, medidor, Rect(et.left + 1.4f * u, et.top + 1f * u, et.right - 1.4f * u, et.bottom - et.height * 0.18f), a.luz(P.TINTA, maxOf(k, 0.75f)))
-        // Las ataduras de bramante: la de arriba, sobre la etiqueta; la de abajo, con su nudo y su lacre.
-        atadura(h * 0.272f, 1, panza, a, k)
+        // El bramante asoma por arriba y por abajo de la tira.
+        drawLine(a.luz(P.CABO, k), Offset(xv + (abajoX - xv) * 0.27f, et.top - 2f * u), Offset(xv + (abajoX - xv) * 0.27f, et.top + 1.5f * u), 1.4f * u)
+        // Las vueltas de abajo (más con más palabras), el nudo y el lacre a su lado.
         val yb = h * 0.7f
-        atadura(yb, 1 + (v.lleno * 2.4f).toInt().coerceIn(0, 2), panza, a, k)
-        val nudo = Offset(w * (0.42f + 0.16f * azar(s, 90)), yb + 1.5f * u)
-        drawLine(a.luz(P.CABO, k), nudo, nudo + Offset(-w * 0.16f, h * 0.07f), 1.3f * u, StrokeCap.Round)
-        drawLine(a.luz(P.CABO, k), nudo, nudo + Offset(w * 0.1f, h * 0.08f), 1.3f * u, StrokeCap.Round)
-        if (v.noche) luna(nudo, minOf(w * 0.22f, 5.2f * u), a)
+        val vueltas = 1 + (v.lleno * 2.4f).toInt().coerceIn(0, 2)
+        for (j in 0 until vueltas) {
+            val yy = yb + j * 2.3f * u + (if (j == 1) 0.6f * u else 0f)
+            drawLine(a.sombra(0.35f), Offset(0f, yy + 1.4f * u), Offset(w, yy + 2.2f * u), 1.4f * u)
+            drawLine(a.luz(P.CABO_OSC, k), Offset(-panza, yy + 0.5f * u), Offset(w + panza, yy + 1.2f * u), 1.8f * u)
+            drawLine(a.luz(P.CABO, k), Offset(-panza, yy), Offset(w + panza, yy + 0.7f * u), 1f * u)
+        }
+        val nudo = Offset(xv + (abajoX - xv) * 0.62f, yb + 1.2f * u)
+        drawCircle(a.luz(P.CABO, k), 2.6f * u, nudo)
+        drawCircle(a.luz(P.CABO_OSC, k), 2.6f * u, nudo, style = Stroke(0.7f * u))
+        val cabos = Path().apply {
+            moveTo(nudo.x, nudo.y); cubicTo(nudo.x + w * 0.06f, nudo.y + h * 0.03f, nudo.x + w * 0.02f, nudo.y + h * 0.07f, nudo.x + w * 0.09f, nudo.y + h * 0.1f)
+            moveTo(nudo.x, nudo.y); quadraticTo(nudo.x - w * 0.08f, nudo.y + h * 0.015f, nudo.x - w * 0.12f, nudo.y + h * 0.045f)
+        }
+        drawPath(cabos, a.luz(P.CABO, k), style = Stroke(1.3f * u, cap = StrokeCap.Round))
+        val sello = Offset(nudo.x - w * 0.26f, yb - h * 0.055f)
+        if (v.noche) luna(sello, minOf(w * 0.24f, 6.4f * u), a)
         else {
             val r = minOf(w * 0.16f, 4.4f * u)
-            drawCircle(a.sombra(0.4f), r * 1.05f, nudo + Offset(0.8f * u, 1f * u))
-            drawCircle(a.luz(P.LACRE, k), r, nudo)
-            drawCircle(a.luz(mezcla(P.LACRE, P.TINTA, 0.45f), k), r * 0.62f, nudo, style = Stroke(0.8f * u))
-            drawCircle(a.brillo(0.45f, k), r * 0.24f, nudo - Offset(r * 0.35f, r * 0.35f))
+            drawCircle(a.sombra(0.4f), r * 1.05f, sello + Offset(0.8f * u, 1f * u))
+            drawCircle(a.luz(P.LACRE, k), r, sello)
+            drawCircle(a.luz(mezcla(P.LACRE, P.TINTA, 0.45f), k), r * 0.62f, sello, style = Stroke(0.8f * u))
+            drawCircle(a.brillo(0.45f, k), r * 0.24f, sello - Offset(r * 0.35f, r * 0.35f))
         }
         filos(Rect(m, top, w - m, h), a, k, f, hacia)
         varillaPirata(0f, w, h - MuebleEstantePirata.RIEL * u, a, k)
-    }
-
-    /** Una atadura de bramante a lo ancho del paquete en [y], con [vueltas] vueltas, su sombra y su luz. */
-    private fun DrawScope.atadura(y: Float, vueltas: Int, panza: Float, a: AirePirata, k: Float) {
-        val u = density; val w = size.width
-        for (j in 0 until vueltas) {
-            val yy = y + j * 2.2f * u
-            drawLine(a.sombra(0.35f), Offset(0f, yy + 1.4f * u), Offset(w, yy + 1.4f * u), 1.4f * u)
-            drawLine(a.luz(P.CABO_OSC, k), Offset(-panza, yy + 0.5f * u), Offset(w + panza, yy + 0.5f * u), 1.8f * u)
-            drawLine(a.luz(P.CABO, k), Offset(-panza, yy), Offset(w + panza, yy), 1f * u)
-        }
     }
 }

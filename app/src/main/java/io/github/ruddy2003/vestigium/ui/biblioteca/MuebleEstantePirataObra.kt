@@ -52,6 +52,7 @@ internal object ObraEstantePirata {
             val k = cerca(Offset((x0 + x1) / 2, r.center.y))
             fun banda(f0: Float, f1: Float, c: Color) = drawRect(c, Offset(x0, y(f0)), Size(x1 - x0, y(f1) - y(f0) + 0.6f))
             banda(0f, 0.07f, a.dia(P.CAOBA_LUZ, 0.22f, k))
+            if (a.lumbre) banda(0f, 0.035f, a.filo(0.75f * k))
             banda(0.07f, 0.34f, a.luz(P.CAOBA, k))
             banda(0.1f, 0.15f, a.dia(P.CAOBA_LUZ, 0.05f, k))
             banda(0.34f, 0.41f, a.dia(P.CAOBA_LUZ, 0f, k))
@@ -332,19 +333,19 @@ internal object ObraEstantePirata {
      * en un solo dibujo encima de todo el cuerpo: de noche, lo que se apaga con la distancia al candelero y al fanal (hacia el
      * azul de mar hondo, con el calor de la llama cerca); de día, lo que oscurece la sombra hacia abajo y hacia la derecha.
      */
-    fun DrawScope.luzCuerpo(arriba: Float, abajo: Float, a: AirePirata, yFanal: Float) {
+    fun DrawScope.luzCuerpo(arriba: Float, abajo: Float, a: AirePirata, yFanal: Float, velas: FloatArray) {
         val w = size.width
         val y0 = ceil(arriba).toInt(); val y1 = floor(abajo).toInt()
         if (y1 <= y0 || w < 2f) return
         val cols = 36
         val filas = ((y1 - y0) / (w / cols)).toInt().coerceIn(2, 400)
-        val clave = "${w.toInt()}:$y0:$y1:${a.oscuro}:${a.noche}:$yFanal"
+        val clave = "${w.toInt()}:$y0:$y1:${a.oscuro}:${a.noche}:$yFanal:${velas.joinToString(",")}"
         val img = mapa.takeIf { clave == claveMapa } ?: ImageBitmap(cols, filas).also { nueva ->
             CanvasDrawScope().draw(Density(1f), layoutDirection, Canvas(nueva), Size(cols.toFloat(), filas.toFloat())) {
                 for (j in 0 until filas) for (i in 0 until cols) {
                     val x = (i + 0.5f) / cols
                     val y = (y0 + (j + 0.5f) / filas * (y1 - y0)) / w
-                    drawRect(mascara(a, x, y, yFanal), Offset(i.toFloat(), j.toFloat()), Size(1f, 1f))
+                    drawRect(mascara(a, x, y, yFanal, velas), Offset(i.toFloat(), j.toFloat()), Size(1f, 1f))
                 }
             }
             mapa = nueva; claveMapa = clave
@@ -353,20 +354,23 @@ internal object ObraEstantePirata {
     }
 
     /** El color (con su alfa) que se pone encima del cuerpo en ([x], [y]), en anchos. */
-    private fun mascara(a: AirePirata, x: Float, y: Float, yFanal: Float): Color {
+    private fun mascara(a: AirePirata, x: Float, y: Float, yFanal: Float, velas: FloatArray): Color {
         if (!a.lumbre) {
             // De día: algo más hondo abajo y a la derecha, lejos de la ventana.
             val f = ((y - 0.6f) * 0.08f + (x - 0.2f).coerceAtLeast(0f) * 0.08f).coerceIn(0f, 0.16f)
             return PaletaPirata.FRIO.copy(alpha = f)
         }
-        val k = MuebleEstantePirata.calor(x, y, yFanal, a.noche)
+        val k = MuebleEstantePirata.calor(x, y, yFanal, a.noche, velas)
         if (!a.oscuro) {
-            // El ocaso de los Sueños: el anochecer violeta, que la vela calienta cerca.
-            val al = (0.42f - 0.3f * k).coerceIn(0f, 1f)
-            return mezcla(PaletaPirata.ANOCHECER, PaletaPirata.LLAMA, (0.3f * k / maxOf(al, 0.05f)).coerceIn(0f, 1f)).copy(alpha = al + 0.08f * k)
+            // El ocaso de los Sueños: la luz rasante viene de la ventana (arriba a la izquierda); lejos de ella, la sombra
+            // violeta crece hacia abajo y hacia la derecha; la vela calienta lo que tiene cerca.
+            val violeta = (0.06f + 0.16f * ((x - 0.15f) * 0.9f + (y - 0.6f) * 0.3f).coerceIn(0f, 1f)) * (1f - k)
+            val calido = 0.2f * k
+            val al = (violeta + calido).coerceIn(0f, 1f)
+            return mezcla(PaletaPirata.SOMBRA_OCASO, PaletaPirata.LLAMA, if (al > 0.001f) calido / al else 0f).copy(alpha = al)
         }
-        val hondo = (1f - k) * 0.94f
-        val calido = 0.24f * k
+        val hondo = (1f - k) * 0.92f
+        val calido = 0.2f * k
         val al = (hondo + calido).coerceIn(0f, 1f)
         val f = if (al > 0.001f) calido / al else 0f
         return mezcla(a.hondo, PaletaPirata.LLAMA, f).copy(alpha = al)

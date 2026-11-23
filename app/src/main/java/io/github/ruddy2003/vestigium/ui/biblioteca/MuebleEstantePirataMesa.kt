@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.scale
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
@@ -198,6 +199,11 @@ internal object MesaEstantePirata {
      * balance, la copa con su contrapeso, la vela de sebo y el guardabrisa de vidrio; de día apagada, de noche con su llama.
      */
     fun DrawScope.candelero(a: AirePirata, w: Float, cerca: (Offset) -> Float) {
+        val l0 = Offset(w * MuebleEstantePirata.LAMP_X, w * MuebleEstantePirata.LAMP_Y)
+        scale(1.28f, l0) { candeleroEnSuSitio(a, w, cerca) }
+    }
+
+    private fun DrawScope.candeleroEnSuSitio(a: AirePirata, w: Float, cerca: (Offset) -> Float) {
         val u = density
         val l = Offset(w * MuebleEstantePirata.LAMP_X, w * MuebleEstantePirata.LAMP_Y)
         val k = if (a.lumbre) 1f else cerca(l)

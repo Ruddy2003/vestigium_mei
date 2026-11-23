@@ -137,7 +137,13 @@ internal object MuroEstantePirata {
         drawPath(poligonoPirata(r.right, r.top, r.right, r.bottom, cara.right, cara.bottom, cara.right, cara.top),
             if (izq) a.luz(mezcla(P.VERDE_OSC, P.VERDE_HONDO, 0.3f), k) else a.dia(P.VERDE_CLARO, 0f, k))
         drawPath(poligonoPirata(r.left, r.bottom, cara.left, cara.bottom, cara.right, cara.bottom, r.right, r.bottom), a.luz(mezcla(P.VERDE_OSC, P.VERDE_HONDO, 0.55f), k))
-        drawRect(a.luz(mezcla(P.VERDE, P.VERDE_CLARO, 0.18f), k), cara.topLeft, cara.size)
+        // La cara del tablero: de noche, por tiras, para que la luz del candelero pase de un tablero a otro sin escalón.
+        val tiras = if (a.lumbre) 8 else 1
+        for (t in 0 until tiras) {
+            val x0 = cara.left + cara.width * t / tiras; val x1 = cara.left + cara.width * (t + 1) / tiras + 0.6f
+            drawRect(a.luz(mezcla(P.VERDE, P.VERDE_CLARO, 0.18f), if (tiras > 1) cerca(Offset((x0 + x1) / 2, cara.center.y)) else k),
+                Offset(x0, cara.top), Size(minOf(x1, cara.right) - x0, cara.height))
+        }
         // Las pinceladas de la pintura, a lo alto, y una mancha de sal abajo.
         clipRect(cara.left, cara.top, cara.right, cara.bottom) {
             val p = Path(); val q = Path()
@@ -351,8 +357,8 @@ internal object MuroEstantePirata {
         val w = size.width
         val l = Offset(w * MuebleEstantePirata.LAMP_X, w * MuebleEstantePirata.LAMP_Y)
         val f = if (a.oscuro) (if (a.noche) 0.75f else 1f) else 0.5f
-        mancha(l, w * 0.36f, Color(0xFFF08A30).copy(alpha = 0.18f * f))
-        mancha(l, w * 0.15f, P.LLAMA.copy(alpha = 0.32f * f))
+        mancha(l, w * 0.42f, Color(0xFFE07E2A).copy(alpha = 0.3f * f))
+        mancha(l, w * 0.17f, P.LLAMA.copy(alpha = 0.4f * f))
     }
 
     /** Lo último de la corona de noche: el resplandor de la vela sobre lo que tiene cerca. */
@@ -362,9 +368,41 @@ internal object MuroEstantePirata {
         val l = Offset(w * MuebleEstantePirata.LAMP_X, w * MuebleEstantePirata.LAMP_Y)
         val f = if (a.oscuro) (if (a.noche) 0.7f else 1f) else 0.55f
         clipRect(0f, 0f, w, ch + 2f) {
-            mancha(l, w * 0.3f, P.LLAMA.copy(alpha = 0.12f * f))
-            mancha(l, w * 0.055f, P.FUEGO.copy(alpha = 0.45f * f))
+            mancha(l, w * 0.3f, P.LLAMA.copy(alpha = 0.14f * f))
+            mancha(l, w * 0.07f, P.FUEGO.copy(alpha = 0.55f * f))
         }
+    }
+
+    /**
+     * El plano de luna de los Sueños oscuros: la franja fría que entra por la ventana y cruza en diagonal el mamparo y lo alto
+     * del mueble, entre [y0] y [y1]; más clara en su eje. En los demás momentos, nada.
+     */
+    fun DrawScope.franjaDeLuna(a: AirePirata, y0: Float, y1: Float) {
+        if (!(a.oscuro && a.noche) || y1 <= y0) return
+        val w = size.width
+        clipRect(0f, y0, w, y1) {
+            listOf(1f to 0.12f, 0.45f to 0.1f).forEach { (ancho, alfa) ->
+                val e = MuebleEstantePirata.esquinasFranja(0.05f, 1.6f)
+                val cx0 = (e[0] + e[6]) / 2; val cy0 = (e[1] + e[7]) / 2; val cx1 = (e[2] + e[4]) / 2; val cy1 = (e[3] + e[5]) / 2
+                fun pt(i: Int, cx: Float, cy: Float) = Offset((cx + (e[i] - cx) * ancho) * w, (cy + (e[i + 1] - cy) * ancho) * w)
+                val p0 = pt(0, cx0, cy0); val p1 = pt(2, cx1, cy1); val p2 = pt(4, cx1, cy1); val p3 = pt(6, cx0, cy0)
+                drawPath(poligonoPirata(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y), P.LUNA_RAS.copy(alpha = alfa))
+            }
+        }
+    }
+
+    /**
+     * El sol del ocaso de los Sueños claros en el montante de la izquierda: la luz rasante de la ventana, naranja, cortada por un
+     * parteluz, en lo alto del montante [r] (bajo la cornisa, en [ch]).
+     */
+    fun DrawScope.solDelOcaso(a: AirePirata, r: Rect, ch: Float) {
+        if (a.oscuro || !a.noche) return
+        val w = size.width
+        val x0 = r.left; val x1 = r.right
+        val y0 = ch + w * 0.02f
+        val c = P.OCASO.copy(alpha = 0.34f)
+        drawPath(poligonoPirata(x0, y0, x1, y0 + w * 0.04f, x1, y0 + w * 0.17f, x0, y0 + w * 0.13f), c)
+        drawPath(poligonoPirata(x0, y0 + w * 0.15f, x1, y0 + w * 0.19f, x1, y0 + w * 0.33f, x0, y0 + w * 0.29f), c)
     }
 
     // ---------------------------------------------------------------- la cubierta (abajo)

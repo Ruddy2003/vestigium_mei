@@ -20,13 +20,13 @@ internal fun DrawScope.caidaPirata(p: Offset, largo: Float, a: AirePirata): Offs
     if (!a.oscuro) return Offset(largo * 1.1f, largo * 0.7f)
     val llama = Offset(size.width * MuebleEstantePirata.LAMP_X, size.width * MuebleEstantePirata.LAMP_Y)
     val v = p - llama
-    return v / v.getDistance().coerceAtLeast(1f) * (largo * 1.8f)
+    return v / v.getDistance().coerceAtLeast(1f) * (largo * 2.4f)
 }
 
 /** La sombra de [forma] en la pared, corrida según la luz y más honda cuanto más cerca está de ella. */
 internal fun DrawScope.sombraEnParedPirata(forma: Path, desde: Offset, largo: Float, a: AirePirata, k: Float, fuerza: Float = 0.26f) {
     val c = caidaPirata(desde, largo, a)
-    val f = if (a.oscuro) (fuerza * 2.4f * k).coerceAtMost(0.6f) else fuerza
+    val f = if (a.oscuro) (fuerza * 3.2f * k).coerceAtMost(0.66f) else fuerza
     if (f < 0.02f) return
     translate(c.x, c.y) { drawPath(forma, a.sombra(f)) }
 }
@@ -50,8 +50,8 @@ internal object CoronaEstantePirata {
 
     fun DrawScope.pared(a: AirePirata, apoyo: Float, cerca: (Offset) -> Float) {
         val w = size.width
-        carta(a, Rect(w * 0.3f, w * 0.082f, w * 0.635f, w * 0.345f), cerca)
-        tricornio(a, Offset(w * 0.255f, w * 0.095f), w * 0.165f, cerca)
+        carta(a, Rect(w * 0.335f, w * 0.082f, w * 0.645f, w * 0.34f), cerca)
+        tricornio(a, Offset(w * 0.25f, w * 0.078f), w * 0.155f, cerca)
         cuerno(a, Offset(w * 0.71f, w * 0.095f), w, cerca)
     }
 
@@ -173,6 +173,14 @@ internal object CoronaEstantePirata {
         // La cabilla: el mango torneado que asoma del mamparo, tras la copa.
         drawRoundRect(a.luz(P.ROBLE_OSC, k), Offset(cabilla.x - ancho * 0.035f, cabilla.y - ancho * 0.04f), Size(ancho * 0.07f, ancho * 0.12f), CornerRadius(ancho * 0.035f))
         drawPath(atras, a.luz(mezcla(P.FIELTRO, Color(0xFF0E0B09), 0.4f), k))
+        // El revés del ala de atrás, que asoma en media luna por encima de la copa y coge algo de luz.
+        val reves = Path().apply {
+            moveTo(izq.x, izq.y)
+            cubicTo(c.x - ancho * 0.4f, c.y - ancho * 0.44f, c.x + ancho * 0.4f, c.y - ancho * 0.44f, der.x, der.y)
+            cubicTo(c.x + ancho * 0.36f, c.y - ancho * 0.34f, c.x - ancho * 0.36f, c.y - ancho * 0.34f, izq.x, izq.y)
+            close()
+        }
+        drawPath(reves, a.luz(mezcla(P.FIELTRO, Color(0xFF6E6256), 0.45f), k))
         drawPath(copa, a.luz(mezcla(P.FIELTRO, Color(0xFF5C5248), 0.3f), k))
         clipPath(copa) {
             val lx = if (ha < 0f) c.x - ancho * 0.24f else c.x + ancho * 0.05f
@@ -182,8 +190,23 @@ internal object CoronaEstantePirata {
         // Las alas, la que mira a la luz más clara; el doblez de abajo en sombra.
         val luzAla = a.luz(mezcla(P.FIELTRO, Color(0xFF8A7C6E), 0.62f), k)
         val sombraAla = a.luz(mezcla(P.FIELTRO, Color(0xFF4A4038), 0.4f), k)
+        // La sombra que echan las alas levantadas sobre la copa, justo encima de su borde.
+        val uve = Path().apply {
+            moveTo(izq.x, izq.y); quadraticTo(c.x - ancho * 0.12f, c.y - ancho * 0.12f, pico.x, pico.y)
+            quadraticTo(c.x + ancho * 0.12f, c.y - ancho * 0.12f, der.x, der.y)
+        }
+        clipPath(copa) { translate(0f, -ancho * 0.03f) { drawPath(uve, a.sombra(0.5f), style = Stroke(ancho * 0.1f)) } }
         drawPath(alaI, if (ha < 0f) luzAla else sombraAla)
         drawPath(alaD, if (ha < 0f) sombraAla else luzAla)
+        // El canto vuelto de cada ala, más claro junto al galón, y su panza más honda hacia el doblez.
+        clipPath(alaI) {
+            drawPath(uve, a.luz(mezcla(P.FIELTRO, Color(0xFF9A8C7C), if (ha < 0f) 0.75f else 0.5f), k), style = Stroke(ancho * 0.09f))
+            translate(0f, ancho * 0.08f) { drawPath(uve, a.sombra(0.25f), style = Stroke(ancho * 0.06f)) }
+        }
+        clipPath(alaD) {
+            drawPath(uve, a.luz(mezcla(P.FIELTRO, Color(0xFF9A8C7C), if (ha < 0f) 0.45f else 0.75f), k), style = Stroke(ancho * 0.09f))
+            translate(0f, ancho * 0.08f) { drawPath(uve, a.sombra(0.25f), style = Stroke(ancho * 0.06f)) }
+        }
         listOf(-1f, 1f).forEach { lado ->
             val punta = if (lado < 0f) izq else der
             val doblez = Path().apply { moveTo(punta.x, punta.y); quadraticTo(c.x + lado * ancho * 0.4f, c.y + ancho * 0.26f, pico.x, pico.y) }
@@ -248,8 +271,8 @@ internal object CoronaEstantePirata {
 
     fun DrawScope.encima(a: AirePirata, apoyo: Float, cerca: (Offset) -> Float) {
         val w = size.width
-        pina(a, Offset(w * 0.285f, apoyo - w * 0.012f), w * 0.1f, cerca)
-        jicara(a, Offset(w * 0.215f, apoyo), w * 0.17f, cerca)
+        pina(a, Offset(w * 0.125f, apoyo - w * 0.012f), w * 0.088f, cerca)
+        jicara(a, Offset(w * 0.205f, apoyo), w * 0.15f, cerca)
         ampolleta(a, Offset(w * 0.47f, apoyo), w * 0.175f, w * 0.335f, cerca)
         with(MesaEstantePirata) {
             libros(a, Offset(w * 0.665f, apoyo), w, cerca)
@@ -278,7 +301,7 @@ internal object CoronaEstantePirata {
         sombraEnParedPirata(silueta, c, ancho * 0.1f, a, k, 0.22f)
         contactoPirata(Offset(pie.x, pie.y - 1f * u), ancho * 1.2f, 6f * u, a, hacia = -ha)
         // Las columnillas de atrás.
-        val col = ancho * 0.085f
+        val col = ancho * 0.12f
         listOf(x0 + ancho * 0.26f, x1 - ancho * 0.26f).forEach { x ->
             drawRect(a.luz(P.ROBLE_OSC, k), Offset(x - col * 0.4f, arriba + tapa), Size(col * 0.8f, alto - 2 * tapa))
         }
