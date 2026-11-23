@@ -112,6 +112,7 @@ Así lo hicieron las tres de la tanda del 19 nov 2026: Scriptorium (la ventana a
 - **Vigilar las operaciones** (`ops` y `KB` en la misma tabla), que fue lo que más pesó en Psicodelia: miles de puntos o trazos sueltos que el teléfono vuelve a pintar en cada cuadro mientras se mueve el fondo vivo. Las piezas iguales van en un solo camino con un solo trazo, y el grano en una imagen en caché. Si las operaciones pasan de unas dos veces las de Helénico, se dice qué pieza las gasta.
 - Las cinco de la tanda del 19 nov 2026, frente a Helénico (operaciones, claro y oscuro): Espacio 1.29 y 1.36, Al-Ándalus 0.95 y 0.99, Scriptorium 1.19 y 1.26, Ruta de la Seda 0.97 y 1.01, Roma contemporánea 0.85 y 0.83. En tiempo (grabar y pintar), todas entre 1.0 y 1.35.
 - Las cinco de la tanda del 22 nov 2026 (operaciones, claro y oscuro): Art déco 0.66 y 0.81, Japón Edo 1.19 y 1.21, Renacimiento 0.56 y 0.53, Egipto 0.57 y 0.52, Romano 0.76 y 0.72. En tiempo, todas entre 0.73 y 1.33 (lo más alto, Art déco en oscuro).
+- Las cinco de la tanda del 23 nov 2026 (operaciones, claro y oscuro): Vapor victoriano 0.57 y 0.53, Pirata 0.52 y 0.49, Mongol 0.89 y 0.84, Mesoamérica 0.78 y 0.74, Colonos 0.66 y 0.68. Grabar, entre 0.35 y 0.84 en mediana; pintar, entre 0.58 y 1.33 (lo más alto, Mesoamérica en oscuro y Colonos en claro; en la peor corrida suelta, 1.45, Vapor victoriano en claro). Como la máquina mete ruido, lo justo se mide con varias corridas y se da la mediana y la peor.
 
 ## Lo que más se devolvió en las bibliotecas (tanda del 19 nov 2026)
 
@@ -167,6 +168,30 @@ Se hacen muchas vueltas (al menos ocho), y no se entrega mientras el Ideario se 
 - **Gradle entero, solo al final.** Para cada vuelta, se compilan solo los archivos del tema con el compilador de Kotlin suelto (el `kotlin-compiler-embeddable` 2.1.0 que ya está en la caché de Gradle) contra el jar del arnés ya compilado (`herramientas/arnes_muebles/build/instantaneas/classpath.txt`, con `-Xfriend-paths=<el jar>` y `-module-name main`), y se dibuja con `arnes.DibujarKt` poniendo esas clases delante en el classpath. Si el objeto del tema cambia o el archivo del tema usa un `const val` de `Biblioteca<Época>.kt`, ese archivo entra también en la compilación (las constantes se copian en quien las usa). Una vuelta tarda uno o dos minutos.
 - **Con varios agentes a la vez, Gradle se queda sin memoria.** La compilación entera del arnés pide unos 4.5 GB, en proceso (`-Dorg.gradle.jvmargs=-Xmx4608m` y `-Pkotlin.compiler.execution.strategy=in-process`); con 3 GB se ahoga. Nunca `gradlew --stop`, que detiene también los demonios de los demás agentes: el propio se cierra por su número de proceso.
 - **`ARNES_TEMAS` y `ARNES_MAX` no cambian la biblioteca** (son del Ideario). Los casos raros de la biblioteca se prueban moviendo `ARNES_HOY` (por ejemplo, el 1 de un mes y el 2 de diciembre).
+
+---
+
+# La tercera tanda de bibliotecas (23 nov 2026)
+
+Vapor victoriano, Pirata, Mongol, Mesoamérica y Colonos, con la misma vara que la segunda tanda (el Ideario de su tema, al lado y a la misma escala) y tres rondas cada una. Lo que se aprendió en las revisiones vale para las que faltan.
+
+## La luz
+
+- **La luz pinta lo que toca; no es una franja encima.** El sol de la ventana, el ocaso de los Sueños en claro y la luna de los Sueños en oscuro no se dibujan como una banda translúcida puesta sobre el dibujo terminado: esa banda se lee como un velo o como un vidrio. Se pinta cada superficie que la luz alcanza (la pared, la cornisa, el canto de una tabla, el frente de un volumen, el suelo) con el color que tendría bajo esa luz, y la mancha se quiebra en cada plano: se corre donde la pared queda más atrás que el mueble, se corta en el canto de cada tabla y no entra en la sombra franca de lo que tiene delante. Fuera de la mancha, lo de siempre; dentro, la misma cosa más encendida y con la temperatura de esa luz. En el aire, a lo sumo, un rastro muy tenue.
+- **La noche: dos o tres charcos cálidos unidos por un degradado, y entre ellos oscuridad con color.** Cada luz del tema (la lámpara, el fogón, una vela en un hueco, la estufa al pie) abre su charco: lo cercano se enciende y echa su filo de luz. De un charco al otro se pasa por un degradado, no por escalones ni por tramos. Lo de en medio se hunde en el oscuro propio del tema (un añil, un verde botella, un rojo de sangre de toro), nunca en gris ni en lila.
+- **Lo claro lejos de la lumbre se hunde como lo demás.** El papel, el crema y las etiquetas que de día son claros no se quedan claros de noche lejos de la luz, ni se vuelven lilas o grises: se apagan hacia el oscuro del tema y se siguen leyendo. Y el mueble no se va a negro: conserva su color, apagado, para que se lea su madera.
+
+## Lo guardado y lo que acompaña
+
+- **Lo que acompaña en los huecos con pocas entradas es grande y va agrupado:** ocupa del 70 al 90 % del alto del hueco, con dos o tres cosas solapadas (una alta detrás y algo bajo delante), no piezas chicas sueltas en fila. En un hueco muy ancho, dos grupos distintos.
+- **Cada volumen dice su día y su mes, legibles, en su etiqueta, y nada más.** Ni textos bordados, pintados o estampados en el cuerpo, ni números o letras inventados en los objetos (en Mongol se quitó un texto bordado; los relojes y manómetros van sin cifras).
+- **Los volúmenes varían dentro de su clase:** el alto, el ancho, un ladeo contra el vecino, la etiqueta o la tablilla a otra altura, el largo del lazo, el desgaste. Si no, la repisa se lee como una valla.
+- **Cuidado con las siluetas que se leen como otra cosa.** Se miran a tamaño de teléfono, preguntándose qué más podrían ser: una luna llena que parece un ojo (va mejor una media luna recortada), un paquete de tejadillo que parece un cartón de leche, dos postes con un brazo que forman una letra, dos agujeros de una hebilla que parecen ojos, los cabos de un nudo que dibujan una letra.
+
+## Lo técnico
+
+- **Gradle del arnés necesita más memoria:** la compilación entera se quedó sin memoria con 3 GB. Se pasa en la orden `-Dorg.gradle.jvmargs=-Xmx5g` (o 6 GB) con `-Pkotlin.compiler.execution.strategy=in-process`, sin cambiar `gradle.properties`, y nunca dos a la vez en la misma máquina.
+- **Lo fijo, en una o dos imágenes guardadas por modo, sin pasar de unos 3 MB por pantalla a 1080 px** (en esta tanda, de 2.1 a 3.0 MB; con 1440 px, casi el doble): lo que crece con el número de repisas (el cuerpo, los cajones del pie) se pinta en cada dibujo. Si el diario y los Sueños guardan cada uno su imagen, al visitar las dos pantallas se suman.
 
 ---
 
