@@ -307,10 +307,13 @@ internal object CoronaEstanteMongol {
             if (!a.oscuro) {
                 // El reflejo cálido del borde de la derecha y de abajo (lo que alumbra el sol del suelo, rebotado).
                 drawPath(bordeMongol(cuerpo, -ancho * 0.07f, -alto * 0.05f), l.c(mezcla(P.COBRE, P.COBRE_LUZ, 0.25f)).copy(alpha = 0.75f))
-                // El brillo duro del toono: la mancha clara arriba a la izquierda y su raya.
+                // El brillo duro del toono: la mancha clara arriba a la izquierda y su raya (al anochecer, rosada y más baja: la
+                // lámpara recién encendida brilla más que el cobre).
+                val dura = if (a.noche) mezcla(Color(0xFFFFF6E2), P.CREPUSCULO, 0.45f) else Color(0xFFFFF6E2)
+                val fuerza = if (a.noche) 0.45f else 0.9f
                 drawOval(l.b(0.5f), Offset(x0 + ancho * 0.14f, boca + alto * 0.12f), Size(ancho * 0.22f, alto * 0.24f))
-                drawRoundRect(luzDuraMongol(0.9f), Offset(x0 + ancho * 0.19f, boca + alto * 0.14f), Size(ancho * 0.05f, alto * 0.36f), androidx.compose.ui.geometry.CornerRadius(ancho * 0.025f))
-                drawCircle(luzDuraMongol(0.95f), ancho * 0.02f, Offset(x0 + ancho * 0.3f, boca + alto * 0.2f))
+                drawRoundRect(dura.copy(alpha = fuerza), Offset(x0 + ancho * 0.19f, boca + alto * 0.14f), Size(ancho * 0.05f, alto * 0.36f), androidx.compose.ui.geometry.CornerRadius(ancho * 0.025f))
+                drawCircle(dura.copy(alpha = fuerza * 1.05f), ancho * 0.02f, Offset(x0 + ancho * 0.3f, boca + alto * 0.2f))
             } else {
                 // De noche: el fuego reflejado en la panza abajo a la derecha (una media luna que sigue la forma) y su punto.
                 // De noche: la lámpara colgada se refleja en el hombro de la derecha (un charco cálido y su brillo duro) y el hogar,
@@ -318,9 +321,10 @@ internal object CoronaEstanteMongol {
                 val fr = a.fuego
                 val brillo = Offset(x1 - ancho * 0.22f, boca + alto * 0.28f)
                 if (a.lampara > 0f) {
-                    drawCircle(Brush.radialGradient(listOf(fr.copy(alpha = 0.6f * a.lampara), fr.copy(alpha = 0f)), brillo, ancho * 0.24f), ancho * 0.24f, brillo)
-                    drawRoundRect(Color(0xFFFFE6B0).copy(alpha = 0.85f * a.lampara), Offset(brillo.x - ancho * 0.018f, brillo.y - alto * 0.16f), Size(ancho * 0.036f, alto * 0.26f),
-                        androidx.compose.ui.geometry.CornerRadius(ancho * 0.018f))
+                    // El reflejo es menos que la llama: cálido, chico y sin blanco.
+                    drawCircle(Brush.radialGradient(listOf(fr.copy(alpha = 0.42f * a.lampara), fr.copy(alpha = 0f)), brillo, ancho * 0.22f), ancho * 0.22f, brillo)
+                    drawRoundRect(mezcla(P.LLAMA, Color(0xFFFFE6B0), 0.4f).copy(alpha = 0.55f * a.lampara), Offset(brillo.x - ancho * 0.013f, brillo.y - alto * 0.12f), Size(ancho * 0.026f, alto * 0.2f),
+                        androidx.compose.ui.geometry.CornerRadius(ancho * 0.013f))
                 }
                 val abajo = Offset(x1 - ancho * 0.12f, pie.y - alto * 0.05f)
                 drawPath(bordeMongol(cuerpo, -ancho * 0.05f, -alto * 0.06f),
@@ -464,46 +468,71 @@ internal object CoronaEstanteMongol {
     }
 
     /**
-     * El vellón doblado, cortado por el borde de la izquierda: el lomo de rizos de lana cruda con su sombra, y encima el huso de
-     * madera con su tortera y el ovillo de hilo.
+     * El vellón de lana cruda amontonado contra el borde de la izquierda: mechones sueltos (cada uno, tres copos redondos con su
+     * luz y su sombra, y la punta enroscada y más sucia). Clavado en el montón, el huso de madera de pie y algo ladeado, con la
+     * tortera de hueso medio hundida en la lana y la husada de hilo ya hilado; al lado, el ovillo teñido y la hebra que baja.
      */
     private fun DrawScope.vellon(g: MarcoMongol, r: Rect) {
         val u = density
         val w = g.w
         val l = g.luz(r.center)
-        val forma = Path().apply {
-            moveTo(r.left, r.bottom)
-            lineTo(r.left, r.top + r.height * 0.25f)
-            cubicTo(r.left + r.width * 0.3f, r.top - r.height * 0.05f, r.right - r.width * 0.2f, r.top + r.height * 0.05f, r.right, r.top + r.height * 0.45f)
-            cubicTo(r.right + r.width * 0.06f, r.top + r.height * 0.75f, r.right, r.bottom, r.right - r.width * 0.08f, r.bottom)
+        val lana = mezcla(P.CREMA, P.CRUDO, 0.18f)
+        val sucia = mezcla(P.CRUDO, P.FIELTRO_GRIS, 0.55f)
+        val sh = caida(g, r.center, w * 0.018f)
+        drawOval(l.s(0.3f), Offset(r.left + sh.x, r.bottom - r.height * 0.4f), Size(r.width * 1.08f, r.height * 0.5f))
+        fun mechon(c: Offset, rr: Float, q: Int) {
+            val ang = (azar(953, q) - 0.5f) * 1.1f
+            val d = Offset(cos(ang) * rr * 0.85f, sin(ang) * rr * 0.45f)
+            val copos = listOf(c - d, c, c + d)
+            copos.forEach { p -> drawCircle(l.s(0.28f), rr * 0.72f, p + Offset(rr * 0.25f, rr * 0.32f)) }
+            copos.forEachIndexed { k, p -> drawCircle(l.c(if (k == 2 && q % 3 == 0) mezcla(lana, sucia, 0.45f) else lana), rr * 0.7f, p) }
+            copos.forEach { p -> drawCircle(l.b(0.5f), rr * 0.34f, p - Offset(rr * 0.24f, rr * 0.28f)) }
+            drawArc(l.s(0.32f), 20f, 140f, false, Offset(c.x - rr * 0.45f, c.y - rr * 0.15f), Size(rr * 0.9f, rr * 0.55f), style = Stroke(0.8f * u))
+            val punta = c + d * 1.9f
+            drawArc(l.c(sucia), 200f, 250f, false, Offset(punta.x - rr * 0.38f, punta.y - rr * 0.38f), Size(rr * 0.76f, rr * 0.76f), style = Stroke(1.3f * u, cap = StrokeCap.Round))
+        }
+        // Los de atrás, más arriba.
+        for (q in 0 until 7) {
+            val c = Offset(r.left + r.width * (0.06f + 0.15f * q + 0.04f * azar(954, q)), r.top + r.height * (0.3f + 0.22f * azar(955, q)))
+            mechon(c, w * (0.016f + 0.006f * azar(956, q)), q)
+        }
+        // El huso, clavado en el montón: la vara, la tortera medio hundida, la husada de hilo y el gancho de arriba.
+        val h0 = Offset(r.left + r.width * 0.58f, r.top + r.height * 0.6f)
+        val h1 = h0 + Offset(w * 0.03f, -w * 0.15f)
+        val eje = h1 - h0
+        drawLine(l.s(0.3f), h0 + Offset(2f * u, 1f * u), h1 + Offset(2f * u, 1f * u), w * 0.0065f)
+        drawLine(l.c(P.ALERCE), h0, h1, w * 0.0062f, StrokeCap.Round)
+        drawLine(l.b(0.45f), h0 + Offset(-w * 0.0015f, 0f), h1 + Offset(-w * 0.0015f, 0f), w * 0.0014f)
+        val tor = h0 + eje * 0.14f
+        drawOval(l.s(0.35f), Offset(tor.x - w * 0.02f, tor.y - w * 0.004f), Size(w * 0.044f, w * 0.016f))
+        drawOval(l.c(P.HUESO), Offset(tor.x - w * 0.022f, tor.y - w * 0.008f), Size(w * 0.044f, w * 0.016f))
+        drawArc(l.s(0.4f), 0f, 180f, false, Offset(tor.x - w * 0.022f, tor.y - w * 0.008f), Size(w * 0.044f, w * 0.016f), style = Stroke(1f * u))
+        val c0 = h0 + eje * 0.3f; val c1 = h0 + eje * 0.66f
+        val mitad = (c0 + c1) / 2f
+        val husada = Path().apply {
+            moveTo(c0.x, c0.y)
+            quadraticTo(mitad.x - w * 0.024f, mitad.y + w * 0.005f, c1.x, c1.y)
+            quadraticTo(mitad.x + w * 0.024f, mitad.y - w * 0.005f, c0.x, c0.y)
             close()
         }
-        val sh = caida(g, r.center, w * 0.018f)
-        drawPath(corridoMongol(forma, sh.x, sh.y * 0.5f), l.s(0.24f))
-        drawPath(forma, l.c(mezcla(P.CREMA, P.CRUDO, 0.25f)))
-        clipPath(forma) {
-            // Los rizos: arquitos de lana con su luz.
-            for (q in 0 until 36) {
-                val x = r.left + r.width * azar(950, q)
-                val y = r.top + r.height * azar(951, q)
-                val rr = w * (0.006f + 0.004f * azar(952, q))
-                drawArc(l.s(0.28f), 20f, 160f, false, Offset(x - rr, y - rr * 0.6f), Size(rr * 2, rr * 1.4f), style = Stroke(1.1f * u))
-                drawArc(l.b(0.45f), 200f, 120f, false, Offset(x - rr, y - rr * 0.9f), Size(rr * 2, rr * 1.4f), style = Stroke(0.9f * u))
+        drawPath(corridoMongol(husada, 1.6f * u, 1.2f * u), l.s(0.3f))
+        drawPath(husada, l.c(mezcla(P.CREMA, P.ORO, 0.12f)))
+        clipPath(husada) {
+            val vueltas = Path()
+            for (q in 0 until 9) {
+                val p = c0 + (c1 - c0) * (q / 8f)
+                vueltas.moveTo(p.x - w * 0.02f, p.y + w * 0.006f); vueltas.lineTo(p.x + w * 0.02f, p.y - w * 0.004f)
             }
-            drawRect(l.s(0.2f), Offset(r.left, r.bottom - r.height * 0.3f), Size(r.width * 1.2f, r.height * 0.3f))
+            drawPath(vueltas, l.s(0.28f), style = Stroke(0.7f * u))
+            drawRect(l.s(0.25f), Offset(mitad.x, c1.y), Size(w * 0.03f, c0.y - c1.y))
         }
-        // El huso: la vara con la tortera de hueso, y el ovillo de hilo.
-        val h0 = Offset(r.left + r.width * 0.15f, r.top + r.height * 0.15f)
-        val h1 = Offset(r.right + r.width * 0.05f, r.top - r.height * 0.25f)
-        drawLine(l.s(0.3f), h0 + Offset(1.6f * u, 1.6f * u), h1 + Offset(1.6f * u, 1.6f * u), w * 0.005f)
-        drawLine(l.c(P.ALERCE), h0, h1, w * 0.005f, StrokeCap.Round)
-        val tor = h0 + (h1 - h0) * 0.3f
-        drawOval(l.c(P.HUESO), Offset(tor.x - w * 0.008f, tor.y - w * 0.014f), Size(w * 0.016f, w * 0.028f))
-        drawOval(l.s(0.3f), Offset(tor.x, tor.y - w * 0.014f), Size(w * 0.008f, w * 0.028f))
-        val cop = h0 + (h1 - h0) * 0.6f
-        drawOval(l.c(mezcla(P.CREMA, P.BERMELLON, 0.55f)), Offset(cop.x - w * 0.018f, cop.y - w * 0.013f), Size(w * 0.036f, w * 0.026f))
-        for (q in 0 until 4) drawLine(l.c(P.BERMELLON_OSC).copy(alpha = 0.6f), Offset(cop.x - w * 0.015f, cop.y - w * 0.01f + q * w * 0.006f), Offset(cop.x + w * 0.015f, cop.y - w * 0.006f + q * w * 0.006f), 0.8f * u)
-        drawOval(l.b(0.35f), Offset(cop.x - w * 0.014f, cop.y - w * 0.011f), Size(w * 0.014f, w * 0.008f))
+        drawArc(l.c(P.ALERCE_OSC), 180f, 200f, false, Offset(h1.x - w * 0.004f, h1.y - w * 0.006f), Size(w * 0.008f, w * 0.008f), style = Stroke(1f * u))
+        // Los de delante, que tapan el pie del huso.
+        for (q in 0 until 6) {
+            val c = Offset(r.left + r.width * (0.02f + 0.18f * q + 0.05f * azar(957, q)), r.top + r.height * (0.66f + 0.2f * azar(958, q)))
+            mechon(c, w * (0.017f + 0.006f * azar(959, q)), q + 7)
+        }
+        drawRect(l.s(0.18f), Offset(r.left, r.bottom - r.height * 0.18f), Size(r.width, r.height * 0.18f))
         val ov = Offset(r.right - r.width * 0.05f, r.top + r.height * 0.32f)
         drawCircle(l.s(0.3f), w * 0.022f, ov + Offset(w * 0.006f, w * 0.004f))
         drawCircle(l.c(mezcla(P.CREMA, P.BERMELLON, 0.55f)), w * 0.022f, ov)

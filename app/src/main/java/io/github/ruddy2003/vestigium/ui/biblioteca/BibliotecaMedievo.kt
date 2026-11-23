@@ -6271,8 +6271,8 @@ object EstanteAndalus : DisenoBiblioteca {
 /**
  * Mongol. El estante del diario (rehecho en noviembre de 2026) es la alacena de alerce del lado de la dueña de la ger, donde
  * se guardan la leche y las cosas de la casa: lo dibuja `MuebleEstanteMongol` (en `MuebleEstanteMongol*.kt`), y aquí solo
- * se delega. Cada entrada es un rollo de fieltro, dos cofres de mimbre forrados de fieltro apilados o una bolsa de fieltro,
- * teñidos del color del ánimo, con su tablilla de abedul.
+ * se delega. Cada entrada es un rollo de fieltro, una pila de dos o tres cofres de mimbre forrados de fieltro o una bolsa
+ * de fieltro, teñidos del color del ánimo, con su tablilla de abedul (el día y el mes corto).
  * La tapa es un pothi tumbado y grande: las puntas de la tabla con el nudo infinito, el paño amarillo con el paño
  * crema cosido (la fecha y lo escrito), la cinta y la etiqueta azul con la cuenta; al abrirse la tela se aparta hacia
  * las puntas y deja ver la hoja larga (de noche, una luna en la etiqueta y las estrellas del toono).

@@ -53,18 +53,25 @@ internal object MuroEstanteMongol {
             mancha(Offset(w * 0.32f, -w * 0.05f), w * 0.75f, luzMueble(0.22f))
             drawRect(Brush.verticalGradient(listOf(Color.Transparent, sombraMueble(0.14f)), ch * 0.45f, ch), Offset(0f, ch * 0.45f), Size(w, ch * 0.55f))
         } else if (a.noche && !a.oscuro) {
-            mancha(Offset(w * 0.5f, -w * 0.1f), w * 0.7f, P.CREPUSCULO.copy(alpha = 0.16f))
-            mancha(g.lampara, w * 0.3f, P.LLAMA.copy(alpha = 0.2f))
+            // El anochecer: lo último del cielo entra rosado por la puerta (a la izquierda) y por el toono; hacia la derecha y
+            // hacia abajo la pared se hunde en el violeta. La lámpara recién encendida es el acento.
+            drawRect(Brush.horizontalGradient(listOf(P.CREPUSCULO.copy(alpha = 0.2f), Color.Transparent), 0f, w * 0.45f), Offset(0f, techo), Size(w * 0.45f, ch - techo))
+            drawRect(Brush.linearGradient(listOf(Color.Transparent, P.ANOCHECER.copy(alpha = 0.34f)), Offset(w * 0.3f, techo), Offset(w, ch)), Offset(0f, 0f), Size(w, ch))
+            mancha(Offset(w * 0.5f, -w * 0.1f), w * 0.55f, P.CREPUSCULO.copy(alpha = 0.14f))
+            mancha(g.lampara, w * 0.4f, P.FUEGO.copy(alpha = 0.14f))
+            mancha(g.lampara, w * 0.16f, P.LLAMA.copy(alpha = 0.3f))
         } else {
-            // La luna que entra por el toono: un haz frío que baja del centro, más fuerte en los Sueños.
-            val luna = if (a.noche) 0.12f else 0.025f
-            val haz = poligonoMongol(w * 0.36f, 0f, w * 0.64f, 0f, w * 0.78f, ch, w * 0.3f, ch)
-            drawPath(haz, Brush.verticalGradient(listOf(P.LUNA.copy(alpha = luna * 1.4f), P.LUNA.copy(alpha = luna * 0.5f), Color.Transparent), 0f, ch))
-            mancha(Offset(w * 0.5f, -w * 0.08f), w * 0.4f, P.LUNA.copy(alpha = luna))
-            // El halo de la lámpara en el tapiz: tiñe el añil de su color.
+            // La luna que entra por el toono: en el diario, un roce frío que baja del centro (en los Sueños la pinta el haz, al
+            // final del estante).
+            if (!a.noche) {
+                val haz = poligonoMongol(w * 0.36f, 0f, w * 0.64f, 0f, w * 0.78f, ch, w * 0.3f, ch)
+                drawPath(haz, Brush.verticalGradient(listOf(P.LUNA.copy(alpha = 0.035f), P.LUNA.copy(alpha = 0.0125f), Color.Transparent), 0f, ch))
+                mancha(Offset(w * 0.5f, -w * 0.08f), w * 0.4f, P.LUNA.copy(alpha = 0.025f))
+            }
+            // El halo de la lámpara en el tapiz: entibia el añil de alrededor (el cobre y el añil toman su color).
             if (a.lampara > 0f) {
-                mancha(g.lampara, w * 0.55f, P.FUEGO.copy(alpha = 0.1f * a.lampara))
-                mancha(g.lampara, w * 0.24f, P.LLAMA.copy(alpha = 0.2f * a.lampara))
+                mancha(g.lampara, w * 0.6f, P.FUEGO.copy(alpha = 0.16f * a.lampara))
+                mancha(g.lampara, w * 0.3f, P.LLAMA.copy(alpha = 0.24f * a.lampara))
                 mancha(g.lampara, w * 0.08f, Color(0xFFFFE7B0).copy(alpha = 0.4f * a.lampara))
             }
         }
@@ -172,16 +179,27 @@ internal object MuroEstanteMongol {
             }
             drawPath(corridoMongol(dientes, 0.8f * u, 0.9f * u), l.s(0.3f))
             drawPath(dientes, l.c(mezcla(P.CREMA, P.BERMELLON, 0.08f)))
-            // Los rombos escalonados del campo, de fieltro crema con su hueco de añil y su punto de bermellón, gastados.
+            // Los rombos escalonados del campo, de fieltro crema con su hueco de añil y su punto de bermellón, cosidos a mano:
+            // ninguno en su sitio exacto ni del mismo tamaño; alguno medio borrado por el roce, otro que se cayó y dejó solo su
+            // pespunte y el añil sin desteñir, y donde iba otro, un remiendo.
             val filas = listOf(0.2f, 0.33f, 0.46f)
             filas.forEachIndexed { i, fy ->
                 var fx = 0.15f + (if (i % 2 == 0) 0f else 0.1f)
+                var j = 0
                 while (fx < 0.88f) {
-                    val c = Offset(w * fx, w * fy)
-                    if (c.y < ch) rombo(c, w * 0.032f, l, 710 + i * 10 + (fx * 10).toInt())
-                    fx += 0.2f
+                    val sem = 710 + i * 10 + j
+                    val c = Offset(w * (fx + (azar(sem, 2) - 0.5f) * 0.026f), w * (fy + (azar(sem, 3) - 0.5f) * 0.022f))
+                    val gasto = if (i == 0 && j == 1) 0.95f else if (i == 0 && j == 2) 0.75f else azar(sem, 5) * 0.6f
+                    if (i == 1 && j == 3) remiendo(c, w, l)
+                    else if (c.y < ch) rombo(c, w * (0.028f + 0.008f * azar(sem, 4)), l, sem, gasto)
+                    fx += 0.2f; j++
                 }
             }
+            // Un pliegue del fieltro colgado, que baja suelto entre dos lazadas: la sombra del lado de dentro y el lomo a la luz.
+            val pliegue = Path().apply { moveTo(w * 0.6f, r.top + w * 0.004f); cubicTo(w * 0.585f, ch * 0.35f, w * 0.625f, ch * 0.6f, w * 0.61f, ch) }
+            drawPath(corridoMongol(pliegue, w * 0.009f, 0f), l.s(0.22f), style = Stroke(w * 0.018f))
+            drawPath(corridoMongol(pliegue, w * 0.004f, 0f), l.s(0.2f), style = Stroke(w * 0.006f))
+            drawPath(corridoMongol(pliegue, -w * 0.004f, 0f), l.c(P.ANIL_LUZ).copy(alpha = 0.55f), style = Stroke(w * 0.005f))
             // El pespunte del borde y el grosor del fieltro (el canto de la izquierda a la luz).
             drawPath(forma, l.c(mezcla(P.CREMA, P.ANIL, 0.4f)).copy(alpha = 0.6f), style = Stroke(1.1f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(3f * u, 2.4f * u), 0f)))
         }
@@ -200,18 +218,42 @@ internal object MuroEstanteMongol {
      * Un rombo escalonado de fieltro crema cosido en el campo: la silueta en tres escalones por lado (sin brazos ni ganchos), el
      * hueco de añil y el punto de bermellón, su sombra corrida y el pespunte. Algo gastado, para que no grite.
      */
-    private fun DrawScope.rombo(c: Offset, r: Float, l: LuzMongol, semilla: Int) {
+    private fun DrawScope.rombo(c: Offset, r: Float, l: LuzMongol, semilla: Int, gasto: Float) {
         val u = density
         val s = r / 3f
         val p = romboEscalonadoMongol(c, r, 4)
-        drawPath(corridoMongol(p, 1.2f * u, 1.4f * u), l.s(0.28f))
-        drawPath(p, l.c(mezcla(P.CREMA, P.ANIL, 0.34f + 0.1f * azar(semilla, 1))))
+        val pespunte = Stroke(0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f * u, 1.6f * u), 0f))
+        if (gasto > 0.9f) {
+            // Se cayó: queda el añil que tapaba, sin desteñir (más hondo que el campo), y los agujeros del pespunte.
+            drawPath(p, l.c(P.ANIL_OSC).copy(alpha = 0.5f))
+            drawPath(p, l.c(mezcla(P.ANIL, P.CREMA, 0.25f)).copy(alpha = 0.55f), style = pespunte)
+            return
+        }
+        // Medio borrado: el roce se llevó el fieltro crema de un lado y deja ver el añil.
+        val viva = if (gasto > 0.7f) 0.5f else 1f
+        drawPath(corridoMongol(p, 1.2f * u, 1.4f * u), l.s(0.28f * viva))
+        drawPath(p, l.c(mezcla(P.CREMA, P.ANIL, 0.34f + 0.1f * azar(semilla, 1) + 0.2f * gasto)).copy(alpha = viva))
         val hueco = poligonoMongol(c.x, c.y - s * 1.1f, c.x + s * 1.1f, c.y, c.x, c.y + s * 1.1f, c.x - s * 1.1f, c.y)
         drawPath(hueco, l.c(P.ANIL))
-        drawCircle(l.c(P.BERMELLON), s * 0.36f, c)
-        drawPath(p, l.c(mezcla(P.ANIL, P.CREMA, 0.3f)).copy(alpha = 0.7f), style = Stroke(0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2f * u, 1.6f * u), 0f)))
+        drawCircle(l.c(P.BERMELLON).copy(alpha = viva), s * 0.36f, c)
+        drawPath(p, l.c(mezcla(P.ANIL, P.CREMA, 0.3f)).copy(alpha = 0.7f), style = pespunte)
         // Lo gastado: el fieltro crema se ensució con el humo de un lado.
         drawCircle(l.s(0.12f), r * 0.7f, c + Offset(r * 0.4f, r * 0.3f))
+    }
+
+    /**
+     * El remiendo donde se gastó un rombo: un pedazo de fieltro pardo sin teñir, cortado a mano (ningún lado derecho), cosido
+     * con un pespunte grueso de crin; su canto alzado con su sombra.
+     */
+    private fun DrawScope.remiendo(c: Offset, w: Float, l: LuzMongol) {
+        val u = density
+        val p = poligonoMongol(c.x - w * 0.034f, c.y - w * 0.022f, c.x + w * 0.03f, c.y - w * 0.026f, c.x + w * 0.035f, c.y + w * 0.02f,
+            c.x + w * 0.004f, c.y + w * 0.026f, c.x - w * 0.031f, c.y + w * 0.019f)
+        drawPath(corridoMongol(p, 1.2f * u, 1.6f * u), l.s(0.32f))
+        drawPath(p, l.c(mezcla(mezcla(P.SIN_ANIMO, P.HOLLIN, 0.3f), P.ANIL_OSC, 0.3f)))
+        clipPath(p) { pinceladas(p.getBounds(), l.c(P.FIELTRO_GRIS), 719, 6, u, 0.16f) }
+        drawPath(p, l.c(mezcla(P.CREMA, P.CRUDO, 0.4f)), style = Stroke(1.2f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.6f * u, 2f * u), 0f)))
+        drawLine(l.b(0.4f), Offset(c.x - w * 0.034f, c.y - w * 0.022f), Offset(c.x + w * 0.03f, c.y - w * 0.026f), 0.9f * u)
     }
 
     /** La cubierta de fieltro del techo y las varas pintadas que suben al toono, sobre la cuerda de crin que ciñe el khana. */
@@ -254,8 +296,8 @@ internal object MuroEstanteMongol {
 
     /**
      * El suelo, desde el pie del cuerpo cerrado hasta abajo: el fieltro gris del suelo y, encima, la estera de fieltro acolchado
-     * (crema, con sus pespuntes de lana parda en líneas escalonadas inventadas y su ribete). De día cruza la franja del sol de la
-     * puerta, de borde neto; de noche, el charco del hogar.
+     * (crema, con sus hileras de pespunte de lana parda en zigzag, dientes de lobo, y su ribete). El sol de la puerta lo pinta
+     * después `solPuerta`; de noche, el charco del hogar.
      */
     fun DrawScope.suelo(g: MarcoMongol) {
         val u = density
@@ -301,12 +343,7 @@ internal object MuroEstanteMongol {
         // La sombra que el cuerpo cerrado deja en el suelo.
         drawRect(lf.s(0.42f), Offset(0f, y0), Size(w, 2.2f * u))
         drawRect(Brush.verticalGradient(listOf(lf.s(0.26f), Color.Transparent), y0, y0 + w * 0.05f), Offset(0f, y0), Size(w, w * 0.05f))
-        // La luz: de día, la franja del sol de la puerta, de borde neto; de noche, el charco del hogar.
-        if (!a.oscuro) {
-            // El sol que cae en el suelo por la puerta (la misma mancha que en el mueble, más viva en el suelo claro).
-            clipRect(0f, y0, w, h) { drawPath(poligonoSolMongol(g), luzMueble(if (a.noche) 0.04f else 0.1f)) }
-        } else {
-            clipRect(0f, y0, w, h) { mancha(g.hogar, w * 0.75f, a.fuego.copy(alpha = if (a.llamas) 0.32f else 0.16f)) }
-        }
+        // De noche, el charco del hogar en el suelo (el sol de la puerta, de día, lo pinta `solPuerta` después del mueble).
+        if (a.oscuro) clipRect(0f, y0, w, h) { mancha(g.hogar, w * 0.75f, a.fuego.copy(alpha = if (a.llamas) 0.32f else 0.16f)) }
     }
 }

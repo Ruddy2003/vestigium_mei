@@ -3,6 +3,7 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -71,10 +72,10 @@ internal object PaletaMongol {
     val BRONCE = Color(0xFFAE8240)
     val BRONCE_LUZ = Color(0xFFF0CB7E)
     val BRONCE_OSC = Color(0xFF5C3D1B)
-    /** La corteza de abedul de las tablillas y sus lenticelas. */
-    val ABEDUL = Color(0xFFE2D6BC)
-    val ABEDUL_OSC = Color(0xFFB4A17E)
-    val LENTICELA = Color(0xFF3B332E)
+    /** La corteza de abedul vieja y tostada de las tablillas, su canto quemado y sus lenticelas. */
+    val ABEDUL = Color(0xFFC9B28A)
+    val ABEDUL_OSC = Color(0xFF8C7150)
+    val LENTICELA = Color(0xFF3B2C24)
     /** El cuero curtido, el cuero crudo, la crin torcida y el mimbre. */
     val CUERO = Color(0xFF79472A)
     val CRUDO = Color(0xFFC7A174)
@@ -159,9 +160,10 @@ internal class LuzMongol(val a: AireMongol, val k: Float, val f: Float, val sol:
             if (f > 0.01f) mezcla(fuego, mezcla(col, p.LUNA, 0.3f), 0.5f * f) else fuego
         }
         a.noche -> {
-            // El anochecer: lo que no alcanza la luz de la puerta se hunde en el violeta; lo que la alcanza, rosado.
-            val anochecer = mezcla(col, p.ANOCHECER, (0.5f - 0.36f * sol - 0.06f * toono).coerceIn(0.1f, 0.55f))
-            mezcla(mezcla(anochecer, p.CREPUSCULO, 0.24f * sol), a.fuego, 0.3f * k)
+            // El anochecer: el violeta se hace hondo hacia abajo y hacia la derecha, lejos del toono y de la puerta; lo que alcanza
+            // la luz baja de la puerta queda rosado, y lo que alcanza la lámpara, cálido.
+            val anochecer = mezcla(col, p.ANOCHECER, (0.12f + 0.75f * (1f - toono) - 0.3f * sol).coerceIn(0.06f, 0.5f))
+            mezcla(mezcla(anochecer, p.CREPUSCULO, 0.3f * sol), a.fuego, 0.34f * k)
         }
         else -> mezcla(mezcla(col, SOMBRA_MUEBLE, 0.2f * (1f - toono)), p.SOL, 0.16f * sol)
     }
@@ -187,14 +189,17 @@ internal class LuzMongol(val a: AireMongol, val k: Float, val f: Float, val sol:
                 val fuego = mezcla(mezcla(a.hundido(base), base, (0.18f + 0.84f * q).coerceAtMost(0.96f)), a.fuego, 0.14f * k)
                 if (f > 0.01f) mezcla(fuego, mezcla(base, p.LUNA, 0.25f), 0.35f * f) else fuego
             }
-            a.noche -> mezcla(mezcla(mezcla(base, p.ANOCHECER, (0.34f - 0.26f * sol).coerceIn(0.06f, 0.4f)), p.CREPUSCULO, 0.14f * sol), a.fuego, 0.2f * k)
+            a.noche -> mezcla(mezcla(mezcla(base, p.ANOCHECER, (0.08f + 0.6f * (1f - toono) - 0.26f * sol).coerceIn(0.04f, 0.38f)), p.CREPUSCULO, 0.18f * sol), a.fuego, 0.22f * k)
             else -> mezcla(mezcla(base, SOMBRA_MUEBLE, 0.12f * (1f - toono)), p.SOL, 0.12f * sol)
         }
     }
 
-    /** La corteza donde va el día: casi no se apaga, para que el número se lea siempre (4.5:1 o más con la tinta). */
+    /**
+     * La corteza donde va el día: un valor medio (no brilla más que el fieltro), teñida de noche por la luz que le toca, el fuego
+     * o la luna; nunca tanto que el número deje de leerse (4.5:1 o más con la tinta).
+     */
     fun etiqueta(): Color = when {
-        a.oscuro -> mezcla(mezcla(p.ABEDUL, a.hondo, (0.5f - 0.42f * maxOf(k, f)).coerceIn(0.06f, 0.5f)), a.fuego, 0.16f * k)
+        a.oscuro -> mezcla(mezcla(mezcla(p.ABEDUL, a.hondo, (0.52f - 0.32f * maxOf(k, f)).coerceIn(0.2f, 0.52f)), a.fuego, 0.3f * k), p.LUNA, 0.16f * f)
         a.noche -> mezcla(p.ABEDUL, p.ANOCHECER, 0.16f - 0.08f * maxOf(sol, k))
         else -> mezcla(p.ABEDUL, p.SOL, 0.1f * sol)
     }
@@ -210,9 +215,12 @@ internal class LuzMongol(val a: AireMongol, val k: Float, val f: Float, val sol:
  * colador y la lámpara de aceite de bronce, que también vino del oeste. Al pie, la estera de fieltro acolchado, el cesto de la
  * boñiga y el hogar. De día manda el sol bajo de la puerta abierta (a la izquierda, fuera del cuadro), que deja su mancha de
  * borde neto abajo, y arriba la luz del toono; de noche arden la lámpara (arriba a la derecha) y el hogar (abajo a la
- * derecha), las repisas de en medio se hunden y la luna roza lo alto; en los Sueños en oscuro la lámpara está apagada, el
- * hogar en brasas y manda la luna. La pared y el suelo están en [MuroEstanteMongol], la alacena en [AlacenaEstanteMongol], lo de arriba en
- * [CoronaEstanteMongol], el pie y los huecos en [PieEstanteMongol] y las entradas en `MuebleEstanteMongolVolumenes.kt`.
+ * derecha), las repisas de en medio se hunden y la luna roza lo alto. En los Sueños en claro es el anochecer: el violeta
+ * se hace hondo hacia abajo y a la derecha, la luz baja de la puerta queda rosada y la lámpara recién encendida es el acento;
+ * en oscuro la lámpara está apagada, el hogar en brasas tiñe lo de abajo y manda el haz de luna, que baja del toono en
+ * diagonal y de borde neto. La pared y el suelo están en [MuroEstanteMongol], la alacena en [AlacenaEstanteMongol], lo de arriba en
+ * [CoronaEstanteMongol], lo que llena los huecos de las repisas en [HuecosEstanteMongol], el pie en [PieEstanteMongol] y las entradas en
+ * `MuebleEstanteMongolVolumenes.kt` y `MuebleEstanteMongolCofres.kt`.
  */
 internal object MuebleEstanteMongol {
     val LETRA: FontFamily = PaletaMongol.LETRA
@@ -227,21 +235,30 @@ internal object MuebleEstanteMongol {
     val TABLA: Dp = 20.dp
     val SEPARA: Dp = 3.dp
 
-    fun ancho(palabras: Int): Dp = (28 + (palabras / 40).coerceAtMost(20)).dp
-
-    /** Cuál de los tres es una entrada: 0, el rollo de fieltro; 1, el cofre de mimbre forrado de fieltro; 2, la bolsa de fieltro. */
-    fun clase(semilla: Int): Int {
-        val x = azar(semilla xor 0x5bd1, 77)
-        return if (x < 0.4f) 0 else if (x < 0.7f) 1 else 2
+    /**
+     * Más ancho cuanto más escribiste: crece rápido en las entradas cortas (con la raíz de la cuenta) y se llena hacia las 130
+     * palabras; unos dp de más o de menos según la cuenta misma, para que la repisa no sea una empalizada. El contrato no pasa la
+     * semilla al ancho, así que cada clase se acomoda en el ancho que le toca: el rollo usa solo una parte, la bolsa se desborda
+     * un poco sobre las vecinas y la pila de cofres lo llena.
+     */
+    fun ancho(palabras: Int): Dp {
+        val crece = (2.6f * kotlin.math.sqrt(palabras.coerceAtLeast(0).toFloat())).coerceAtMost(30f)
+        return (22f + crece + Math.floorMod(palabras * 37 + 11, 7)).dp
     }
 
-    /** El rollo, el más alto; el cofre, el más bajo (y más alto cuanto más escribiste); la bolsa, panzona y más llena con más. */
+    /** Cuál de los tres es una entrada: 0, el rollo de fieltro; 1, la pila de cofres de mimbre forrados de fieltro; 2, la bolsa. */
+    fun clase(semilla: Int): Int {
+        val x = azar(semilla xor 0x5bd1, 77)
+        return if (x < 0.45f) 0 else if (x < 0.7f) 1 else 2
+    }
+
+    /** El rollo, el más alto; la pila de cofres, la más baja; todas más altas cuanto más escribiste, y con algo de azar. */
     fun alto(semilla: Int, palabras: Int): Float {
         val lleno = (palabras / 800f).coerceIn(0f, 1f)
         return when (clase(semilla)) {
-            0 -> 0.88f + 0.06f * azar(semilla, 1)
-            1 -> 0.68f + 0.15f * lleno + 0.03f * azar(semilla, 1)
-            else -> 0.79f + 0.06f * lleno + 0.04f * azar(semilla, 1)
+            0 -> 0.72f + 0.12f * lleno + 0.13f * azar(semilla, 1)
+            1 -> 0.6f + 0.16f * lleno + 0.1f * azar(semilla, 1)
+            else -> 0.62f + 0.12f * lleno + 0.12f * azar(semilla, 1)
         }
     }
 
@@ -282,22 +299,53 @@ internal object MuebleEstanteMongol {
      */
     fun lampara(dx: Float, dy: Float): Float = (1.3f * exp(-2.7f * sqrt(dx * dx * 1.1f + dy * dy))).coerceIn(0f, 1f)
 
-    /** Cuánta luna (de 0 a 1) llega desde el toono a un punto a [x] (en anchos) y [y] por debajo del lienzo de arriba. */
-    fun luna(x: Float, y: Float, suenos: Boolean): Float {
-        // En el diario la luna es un roce frío en lo alto (manda el hogar); en los Sueños es la luz principal, con su charco.
+    /**
+     * Cuánta luna (de 0 a 1) llega desde el toono a un punto a [x] (en anchos) y [y] por debajo del lienzo de arriba. En el
+     * diario es un roce frío en lo alto (manda el hogar). En los Sueños hay un poco de luna en todo lo alto y, con [conHaz] (las
+     * entradas, que el haz pintado no alcanza), la del haz si el punto cae dentro.
+     */
+    fun luna(x: Float, y: Float, suenos: Boolean, conHaz: Boolean = false): Float {
         val dx = kotlin.math.abs(x - TOONO_X)
-        val lado = if (suenos) (1f - 1.8f * dx).coerceIn(0.12f, 1f) else (1f - 2f * dx).coerceIn(0.1f, 1f)
-        val caida = if (suenos) 2.2f else 3f
-        return ((if (suenos) 0.72f else 0.2f) * exp(-caida * (y - 0.2f).coerceAtLeast(0f)) * lado).coerceIn(0f, 1f)
+        if (!suenos) return (0.2f * exp(-3f * (y - 0.2f).coerceAtLeast(0f)) * (1f - 2f * dx).coerceIn(0.1f, 1f)).coerceIn(0f, 1f)
+        val fondo = 0.2f * exp(-1.4f * (y - 0.2f).coerceAtLeast(0f)) * (1f - 1.4f * dx).coerceIn(0.2f, 1f)
+        val enHaz = if (conHaz) 0.6f * haz(x, y) * exp(-0.45f * y.coerceAtLeast(0f)) else 0f
+        return (fondo + enHaz).coerceIn(0f, 1f)
     }
 
+    /** El haz de luna de los Sueños en oscuro: baja del toono en diagonal hacia la izquierda. Su centro a la altura [y] (en anchos). */
+    fun centroHaz(y: Float): Float = HAZ_X - HAZ_CAE * y
+    const val HAZ_X = 0.63f
+    const val HAZ_CAE = 0.36f
+    const val HAZ_MEDIO = 0.14f
+
+    /** Cuánto del haz (de 0 a 1) cae en un punto ([x], [y] en anchos): de borde neto. */
+    fun haz(x: Float, y: Float): Float = ((HAZ_MEDIO - kotlin.math.abs(x - centroHaz(y))) / 0.012f).coerceIn(0f, 1f)
+
+    /** La mancha del sol de la puerta, en anchos: dónde la cortan los dos lados del marco junto al pie del mueble. */
+    const val SOL_X0 = 0.06f
+    const val SOL_X1 = 0.5f
+
+    /** Hasta qué altura sobre el suelo sube el sol por el frente del mueble a la x [x]: la sombra del dintel, que baja a la derecha. */
+    fun dintel(x: Float): Float = 0.42f - 0.26f * (x - SOL_X0)
+
+    /** Lo que se inclinan los lados del marco al subir por el mueble: [sobre] anchos por encima del suelo. */
+    fun inclinaSol(sobre: Float): Float = 0.06f * (sobre / 0.42f)
+
     /**
-     * Cuánto sol de la puerta (de 0 a 1) da en un punto a [x] y [alto] por encima del pie (en anchos): la franja baja, de borde
-     * neto (el marco de la puerta), que sube por la izquierda y baja hacia la derecha.
+     * Cuánto sol de la puerta (de 0 a 1) da en un punto a [x] y [alto] por encima del pie del lienzo (en anchos). Es la forma de la
+     * puerta: en el suelo, una franja que se corre hacia delante; al llegar al mueble se quiebra y sube por su frente entre los
+     * dos lados del marco, hasta la sombra del dintel. Borde neto.
      */
     fun sol(x: Float, alto: Float): Float {
-        val borde = 0.84f - 0.8f * x
-        return ((borde - alto) / 0.035f).coerceIn(0f, 1f)
+        val junta = BASE - CUERPO_BAJO
+        val sobre = alto - junta
+        fun dentro(a0: Float, a1: Float) = ((x - a0) / 0.012f).coerceIn(0f, 1f) * ((a1 - x) / 0.012f).coerceIn(0f, 1f)
+        if (sobre < 0f) {
+            val t = (-sobre / junta).coerceIn(0f, 1f)
+            return dentro(SOL_X0 + 0.16f * t, SOL_X1 + 0.28f * t)
+        }
+        val i = inclinaSol(sobre)
+        return dentro(SOL_X0 + i, SOL_X1 + i) * ((dintel(x - i) - sobre) / 0.012f).coerceIn(0f, 1f)
     }
 
     /** La luz difusa del toono de día: 1 arriba, menos hacia abajo y hacia la derecha. */
@@ -305,15 +353,16 @@ internal object MuebleEstanteMongol {
 
     /**
      * La luz de un punto del lienzo ([x], [y] en anchos desde arriba a la izquierda) en un estante de [alto] anchos: la misma
-     * para el mueble y para las entradas.
+     * para el mueble y para las entradas. Con [entrada] cuentan también el sol de la puerta y el haz de luna, que en el mueble
+     * se pintan aparte con su forma de borde neto.
      */
-    fun luz(a: AireMongol, x: Float, y: Float, alto: Float): LuzMongol {
+    fun luz(a: AireMongol, x: Float, y: Float, alto: Float, entrada: Boolean = true): LuzMongol {
         val sobrePie = alto - y
         val kh = if (a.lumbre) hogar(x - HOGAR_X, sobrePie, !a.llamas) else 0f
         val kl = if (a.lampara > 0f) lampara(x - LAMP_X, y - LAMP_Y) * a.lampara else 0f
         val k = (kh + kl).coerceIn(0f, 1f)
-        val f = if (a.oscuro) luna(x, y, a.noche) else 0f
-        val s = if (!a.oscuro) sol(x, sobrePie) else 0f
+        val f = if (a.oscuro) luna(x, y, a.noche, entrada) else 0f
+        val s = if (!a.oscuro && entrada) sol(x, sobrePie) else 0f
         return a.en(k, f, s, toono(x, y))
     }
 
@@ -341,7 +390,7 @@ internal object MuebleEstanteMongol {
             granoMueble(Rect(0f, 0f, w, ch), oscuro)
         }
         if (n == 0) return
-        with(PieEstanteMongol) {
+        with(HuecosEstanteMongol) {
             d.repisas.forEachIndexed { k, r ->
                 val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
                 hueco(k, r, oc, g)
@@ -355,13 +404,16 @@ internal object MuebleEstanteMongol {
         with(MuroEstanteMongol) { suelo(g) }
         with(AlacenaEstanteMongol) {
             cuerpoBajo(g)
-            // El sol de la puerta, de borde neto: en el costado de la izquierda, la última tabla, el cuerpo bajo y el suelo (el fondo
-            // de los casilleros queda a la sombra del costado). Lo que pisa el suelo va encima.
-            val ultima = d.tablas.last()
-            solPuerta(g, Rect(0f, ultima.top, w, h))
-            solPuerta(g, Rect(0f, ch, g.x0, ultima.top))
+            // El sol de la puerta, de borde neto y con la forma de la puerta: en el suelo y, quebrado, en el frente del mueble (la
+            // tabla de abajo, el cuerpo cerrado y el costado). El fondo de la última repisa queda en la sombra del costado: el sol
+            // bajo de la izquierda no entra tan hondo; sí alumbra las entradas, que están al canto.
+            val tope = d.tablas.last().top
+            solPuerta(g, Rect(0f, tope, w, h))
+            solPuerta(g, Rect(0f, ch, g.x0, tope))
         }
         with(PieEstanteMongol) { alPie(g) }
+        // En los Sueños en oscuro, el haz de luna del toono: pinta lo que toca, de borde neto (por superposición, no un velo).
+        if (oscuro && noche) hazLunaMongol(g)
         // El grano, en la madera y en lo de abajo (en el fondo oscuro de los casilleros no se vería: ahí lo pone el fieltro).
         granoMueble(Rect(0f, ch, g.x0, fondo), oscuro)
         granoMueble(Rect(g.x1, ch, w, fondo), oscuro)
@@ -384,8 +436,8 @@ internal class MarcoMongol(val w: Float, val h: Float, val ch: Float, val x0: Fl
     /** Donde acaba el cuerpo cerrado de abajo y empieza el suelo. */
     val suelo: Float get() = base + w * MuebleEstanteMongol.CUERPO_BAJO
     /** La luz de un punto en píxeles. */
-    fun luz(p: Offset): LuzMongol = MuebleEstanteMongol.luz(a, p.x / w, p.y / w, h / w)
-    fun luz(x: Float, y: Float): LuzMongol = MuebleEstanteMongol.luz(a, x / w, y / w, h / w)
+    fun luz(p: Offset): LuzMongol = MuebleEstanteMongol.luz(a, p.x / w, p.y / w, h / w, entrada = false)
+    fun luz(x: Float, y: Float): LuzMongol = MuebleEstanteMongol.luz(a, x / w, y / w, h / w, entrada = false)
     /**
      * La luz de algo grande y lejano a la lámpara y al hogar (el tapiz, el techo, el khana): les llega [atenua] de la luz de un
      * punto; lo de cerca lo ponen los halos. Así de noche se quedan hondos y con su color.
@@ -425,8 +477,30 @@ internal object CapaMongol {
  * arriba la corta la sombra del dintel, que baja hacia la derecha, y a la derecha la del marco; abajo se abre por el suelo.
  */
 internal fun poligonoSolMongol(g: MarcoMongol): Path {
+    val m = MuebleEstanteMongol
     val w = g.w; val h = g.h
-    return poligonoMongol(-2f, h - w * 0.8f, w * 0.42f, h - w * 0.5f, w * 0.64f, h - w * 0.21f, w * 0.97f, h + 2f, -2f, h + 2f)
+    val j = g.suelo
+    val x0 = m.SOL_X0; val x1 = m.SOL_X1
+    val i0 = m.inclinaSol(m.dintel(x0)); val i1 = m.inclinaSol(m.dintel(x1))
+    return Path().apply {
+        // En el suelo: la franja que se corre hacia delante.
+        addPath(poligonoMongol(w * x0, j, w * x1, j, w * (x1 + 0.28f), h + 2f, w * (x0 + 0.16f), h + 2f))
+        // En el frente del mueble: sube entre los dos lados del marco hasta la sombra del dintel (se solapa un píxel con el suelo).
+        addPath(poligonoMongol(w * x0, j + 1f, w * x1, j + 1f, w * (x1 + i1), j - w * m.dintel(x1), w * (x0 + i0), j - w * m.dintel(x0)))
+    }
+}
+
+/**
+ * El haz de luna de los Sueños en oscuro, que baja del toono en diagonal: aclara y enfría lo que toca (se mezcla por
+ * superposición), sin velo encima.
+ */
+internal fun DrawScope.hazLunaMongol(g: MarcoMongol) {
+    val m = MuebleEstanteMongol
+    val w = g.w; val h = g.h
+    val y1 = h / w
+    val haz = poligonoMongol(w * (m.centroHaz(0f) - m.HAZ_MEDIO), 0f, w * (m.centroHaz(0f) + m.HAZ_MEDIO), 0f,
+        w * (m.centroHaz(y1) + m.HAZ_MEDIO), h, w * (m.centroHaz(y1) - m.HAZ_MEDIO), h)
+    drawPath(haz, PaletaMongol.LUNA.copy(alpha = 0.46f), blendMode = BlendMode.Overlay)
 }
 
 /** Un polígono cerrado por sus puntos (x, y, x, y…). */

@@ -3,9 +3,11 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -15,7 +17,6 @@ import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaMongol as P
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
-import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 import kotlin.math.floor
 
@@ -120,6 +121,11 @@ internal object AlacenaEstanteMongol {
             val ancho = w * (0.012f + 0.02f * azar(661 + k, q))
             drawOval(l.c(mezcla(P.ALERCE, P.ALERCE_LUZ, 0.3f)).copy(alpha = 0.8f), Offset(x, b0 + (b1 - b0) * 0.2f * azar(662 + k, q)), Size(ancho, (b1 - b0) * (0.35f + 0.4f * azar(663 + k, q))))
         }
+        // Y donde se agarra al sacar las cosas, junto a los costados, el bermellón se fue del todo.
+        listOf(t.left + w * 0.004f, t.right - w * 0.07f).forEachIndexed { i, x ->
+            drawOval(l.c(mezcla(P.ALERCE, P.ALERCE_LUZ, 0.35f)).copy(alpha = 0.85f), Offset(x, b0 - 0.6f * u), Size(w * (0.05f + 0.015f * azar(664 + k, i)), (b1 - b0) * 0.9f))
+            drawOval(l.c(P.BERMELLON).copy(alpha = 0.5f), Offset(x + w * 0.012f, b0 + (b1 - b0) * 0.3f), Size(w * 0.02f, (b1 - b0) * 0.4f))
+        }
         // Los clavos de forja, en la banda, cada tanto.
         var x = t.left + w * 0.05f
         while (x < t.right - w * 0.03f) {
@@ -179,16 +185,41 @@ internal object AlacenaEstanteMongol {
         }
     }
 
-    private fun DrawScope.costado(r: Rect, derecho: Boolean, g: MarcoMongol, d: DisposicionEstante) {
+    /**
+     * Un costado de la alacena, que se desarma para la mudanza: el tablón de alerce algo más angosto que su sitio (por fuera asoma
+     * la pared, el fieltro y el khana), con su chaflán a la luz, la entrecalle con su filete de oro, la veta y las huellas de la
+     * azuela; el hollín de años en lo alto; en cada tabla, la espiga que pasa el costado y sale por fuera con su cuña de madera
+     * clavada; dos correas de cuero crudo que lo ciñen; y las cantoneras de hierro arriba y abajo. De noche el de la derecha se
+     * enciende desde abajo.
+     */
+    private fun DrawScope.costado(r0: Rect, derecho: Boolean, g: MarcoMongol, d: DisposicionEstante) {
         val u = density
         val w = g.w
         val a = g.a
-        // Por tramos de color lleno, cada uno con la luz de su altura (de noche cambia mucho de arriba abajo); los tramos se
-        // solapan un píxel. Es mucho más barato de pintar que degradados de todo el alto.
+        val fuera = w * 0.032f
+        val r = if (derecho) Rect(r0.left, r0.top, r0.right - fuera, r0.bottom) else Rect(r0.left + fuera, r0.top, r0.right, r0.bottom)
+        // (se solapa un píxel con el tablón, que va encima: así la junta, que puede caer a medio píxel, no deja ver el fondo)
+        val pared = if (derecho) Rect(r.right - 1f, r0.top, r0.right + 1f, r0.bottom) else Rect(r0.left - 1f, r0.top, r.left + 1f, r0.bottom)
+        // La pared que asoma por fuera: el fieltro con el khana, y la sombra del costado en ella.
+        val lp = g.luz(Offset(pared.center.x, pared.center.y), 0.5f)
+        drawRect(lp.c(mezcla(P.CREMA, P.FIELTRO_GRIS, 0.3f)), pared.topLeft, pared.size)
+        clipRect(pared.left, pared.top, pared.right, pared.bottom) {
+            val listones = Path()
+            var y = pared.top - w * 0.15f
+            while (y < pared.bottom) {
+                listones.moveTo(pared.left - w * 0.1f, y); listones.lineTo(pared.left + w * 0.1f, y + w * 0.2f)
+                listones.moveTo(pared.left - w * 0.1f, y + w * 0.2f); listones.lineTo(pared.left + w * 0.1f, y)
+                y += w * 0.15f
+            }
+            drawPath(listones, lp.c(mezcla(P.KHANA, P.CREMA, 0.2f)), style = Stroke(w * 0.0105f))
+            drawRect(Brush.verticalGradient(listOf(lp.s(0.5f), lp.s(0.25f)), pared.top, pared.bottom), pared.topLeft, pared.size)
+            drawRect(lp.s(0.35f), Offset(if (derecho) pared.left else pared.right - w * 0.012f, pared.top), Size(w * 0.012f, pared.height))
+        }
+        // El tablón, por tramos de color lleno, cada uno con la luz de su altura; los tramos se solapan un píxel.
         val ent = Rect(r.left + r.width * 0.3f, r.top + w * 0.02f, r.right - r.width * 0.3f, r.bottom - w * 0.02f)
-        val ch = r.width * 0.12f
+        val ch = r.width * 0.14f
         val luzIzq = !a.oscuro
-        val tramo = maxOf(8f, w * 0.05f)
+        val tramo = maxOf(10f, w * 0.08f)
         var y = r.top
         while (y < r.bottom) {
             val y1 = minOf(r.bottom, y + tramo)
@@ -206,28 +237,94 @@ internal object AlacenaEstanteMongol {
             if (a.oscuro && derecho) drawRect(l.filo(0.7f), Offset(r.left, y), Size(1.4f * u, alto))
             y = y1
         }
-        vetas(r, g.luz(r.center).c(P.ALERCE_OSC).copy(alpha = 0.5f), if (derecho) 681 else 680, 0.55f, vertical = true, grosor = 0.9f)
+        val lm = g.luz(r.center)
+        vetas(r, lm.c(P.ALERCE_OSC).copy(alpha = 0.5f), if (derecho) 681 else 680, 0.55f, vertical = true, grosor = 0.9f)
         drawRect(g.luz(ent.center).s(0.4f), Offset(if (a.oscuro && derecho) ent.left else ent.right - 1.6f * u, ent.top), Size(1.6f * u, ent.height))
-        // La sombra del costado en la pared de detrás, del lado contrario a la luz (asoma en el borde del lienzo).
-        if (!derecho && !a.oscuro) drawRect(g.luz(r.center).s(0.25f), Offset(r.right, r.top), Size(1.4f * u, r.height))
-        // Las escuadras de hierro forjado en cada tabla, con sus clavos.
-        d.tablas.forEach { t ->
-            val yc = t.center.y
-            val lx = g.luz(Offset(r.center.x, yc))
-            val e = Path().apply {
-                val x0 = if (derecho) r.left + r.width * 0.12f else r.right - r.width * 0.12f
-                val s = if (derecho) 1f else -1f
-                val largo = r.width * 0.7f
-                val g2 = w * 0.012f
-                moveTo(x0, yc - g2); lineTo(x0 + s * largo, yc - g2 * 0.8f); lineTo(x0 + s * (largo + g2 * 0.6f), yc)
-                lineTo(x0 + s * largo, yc + g2 * 0.8f); lineTo(x0, yc + g2); close()
+        // Las huellas de la azuela: hileras de golpes cóncavos en las dos caras planas, cada uno con su sombra y su filo.
+        val hondas = Path(); val filos = Path()
+        val paso = w * 0.034f
+        var yh = r.top + paso * 0.5f; var fila = 0
+        while (yh < r.bottom - paso * 0.3f) {
+            for (xc in listOf(r.left + r.width * 0.15f, r.right - r.width * 0.15f)) {
+                val x = xc + (if (fila % 2 == 0) -1f else 1f) * r.width * 0.03f
+                val an = r.width * 0.2f
+                hondas.moveTo(x - an / 2, yh); hondas.quadraticTo(x, yh + paso * 0.32f, x + an / 2, yh)
+                filos.moveTo(x - an / 2, yh + paso * 0.08f); filos.quadraticTo(x, yh - paso * 0.18f, x + an / 2, yh + paso * 0.08f)
             }
-            drawPath(corridoMongol(e, 1.2f * u, 1.4f * u), lx.s(0.45f))
-            drawPath(e, lx.c(P.HIERRO))
-            drawPath(e, lx.b(0.25f), style = Stroke(0.8f * u))
-            val b = e.getBounds()
-            listOf(0.25f, 0.6f).forEach { f -> clavoMongol(Offset(b.left + b.width * f, yc), 1.5f * u, lx, P.HIERRO_LUZ) }
+            yh += paso; fila++
         }
+        drawPath(hondas, lm.s(0.22f), style = Stroke(0.9f * u))
+        drawPath(filos, lm.b(0.16f), style = Stroke(0.7f * u))
+        // El hollín de años, que sube del hogar y oscurece lo alto.
+        drawRect(Brush.verticalGradient(listOf(P.HOLLIN.copy(alpha = if (a.oscuro) 0.3f else 0.42f), androidx.compose.ui.graphics.Color.Transparent), r.top, r.top + w * 0.5f),
+            Offset(r.left, r.top), Size(r.width, w * 0.5f))
+        // La sombra del costado en lo de dentro, del lado contrario a la luz.
+        if (!derecho && !a.oscuro) drawRect(lm.s(0.25f), Offset(r.right, r.top), Size(1.4f * u, r.height))
+        // En cada tabla, la espiga que pasa el costado y sale por fuera, con su cuña clavada.
+        d.tablas.forEach { t -> espiga(r, t, derecho, g) }
+        // Dos correas de cuero crudo que lo ciñen, en vueltas inclinadas.
+        listOf(0.22f, 0.7f).forEachIndexed { i, f ->
+            val yc = r.top + r.height * f + (azar(683, i) - 0.5f) * w * 0.04f
+            correa(r, yc, g, i)
+        }
+        // Las cantoneras de hierro: arriba, bajo la cornisa, y abajo, sobre el cuerpo bajo.
+        listOf(r.top + 1f * u to 1f, r.bottom - 1f * u to -1f).forEach { (yb, s) ->
+            val lc = g.luz(Offset(r.center.x, yb))
+            val xo = if (derecho) r.right else r.left
+            val sx = if (derecho) -1f else 1f
+            val pl = poligonoMongol(xo, yb, xo + sx * r.width * 0.62f, yb, xo + sx * r.width * 0.62f, yb + s * w * 0.016f,
+                xo + sx * w * 0.016f, yb + s * w * 0.016f, xo + sx * w * 0.016f, yb + s * w * 0.06f, xo, yb + s * w * 0.06f)
+            drawPath(corridoMongol(pl, 1.2f * u, 1.4f * u), lc.s(0.45f))
+            drawPath(pl, lc.c(P.HIERRO))
+            drawPath(pl, lc.b(0.22f), style = Stroke(0.8f * u))
+            clavoMongol(Offset(xo + sx * w * 0.008f, yb + s * w * 0.03f), 1.3f * u, lc, P.HIERRO_LUZ)
+            clavoMongol(Offset(xo + sx * r.width * 0.4f, yb + s * w * 0.008f), 1.3f * u, lc, P.HIERRO_LUZ)
+        }
+    }
+
+    /**
+     * La espiga de una tabla, que atraviesa el costado y sale por fuera: la testa del alerce con sus anillos, y la cuña que la
+     * traba, clavada de arriba abajo, que sobresale por los dos lados; con su sombra en la pared.
+     */
+    private fun DrawScope.espiga(r: Rect, t: Rect, derecho: Boolean, g: MarcoMongol) {
+        val u = density
+        val w = g.w
+        val l = g.luz(Offset(if (derecho) r.right else r.left, t.center.y))
+        val alto = t.height * 0.62f
+        val sale = w * 0.026f
+        val x0 = if (derecho) r.right - 1f else r.left - sale
+        val e = Rect(x0, t.center.y - alto / 2, x0 + sale + 1f, t.center.y + alto / 2)
+        drawRect(l.s(0.45f), Offset(e.left + (if (g.a.oscuro) -1.4f else 1.4f) * u, e.top + 1.6f * u), e.size)
+        drawRect(l.c(mezcla(P.ALERCE, P.ALERCE_LUZ, 0.2f)), e.topLeft, e.size)
+        drawRect(l.b(0.4f), e.topLeft, Size(e.width, 1.2f * u))
+        drawRect(l.s(0.4f), Offset(e.left, e.bottom - 1.2f * u), Size(e.width, 1.2f * u))
+        // La testa del extremo, con sus anillos.
+        val testa = Rect(if (derecho) e.right - 2.4f * u else e.left, e.top, if (derecho) e.right else e.left + 2.4f * u, e.bottom)
+        drawRect(l.c(mezcla(P.ALERCE, P.ALERCE_OSC, 0.25f)), testa.topLeft, testa.size)
+        // La cuña: más ancha arriba, sobresale por arriba y por abajo.
+        val xc = e.left + e.width * (if (derecho) 0.55f else 0.45f)
+        val cuna = poligonoMongol(xc - w * 0.006f, e.top - w * 0.012f, xc + w * 0.006f, e.top - w * 0.012f, xc + w * 0.0035f, e.bottom + w * 0.008f, xc - w * 0.0035f, e.bottom + w * 0.008f)
+        drawPath(corridoMongol(cuna, 1.2f * u, 1.2f * u), l.s(0.5f))
+        drawPath(cuna, l.c(P.ALERCE_OSC))
+        drawLine(l.b(0.4f), Offset(xc - w * 0.004f, e.top - w * 0.01f), Offset(xc - w * 0.0025f, e.bottom + w * 0.006f), 0.8f * u)
+        drawRect(l.c(mezcla(P.ALERCE_OSC, P.ALERCE_LUZ, 0.3f)), Offset(xc - w * 0.006f, e.top - w * 0.012f), Size(w * 0.012f, 1.2f * u))
+    }
+
+    /** Una correa de cuero crudo que ciñe el costado: tres vueltas inclinadas que lo cruzan, con su luz, su sombra y el cabo. */
+    private fun DrawScope.correa(r: Rect, yc: Float, g: MarcoMongol, i: Int) {
+        val u = density
+        val w = g.w
+        val l = g.luz(Offset(r.center.x, yc))
+        val g2 = w * 0.011f
+        for (q in 0 until 3) {
+            val y = yc + (q - 1) * g2 * 1.35f
+            val p0 = Offset(r.left - 1f, y + w * 0.008f); val p1 = Offset(r.right + 1f, y - w * 0.008f)
+            drawLine(l.s(0.45f), p0 + Offset(0f, 1.4f * u), p1 + Offset(0f, 1.4f * u), g2)
+            drawLine(l.c(mezcla(P.CRUDO, P.CUERO, 0.35f + 0.15f * (q % 2))), p0, p1, g2)
+            drawLine(l.b(0.35f), p0 - Offset(0f, g2 * 0.3f), p1 - Offset(0f, g2 * 0.3f), g2 * 0.22f)
+        }
+        val cabo = Offset(if (i % 2 == 0) r.right - r.width * 0.2f else r.left + r.width * 0.25f, yc + g2 * 1.6f)
+        drawLine(l.c(P.CRUDO), cabo, cabo + Offset(w * 0.004f, w * 0.03f), g2 * 0.7f, StrokeCap.Round)
     }
 
     // ---------------------------------------------------------------- la cornisa
@@ -413,11 +510,12 @@ internal object AlacenaEstanteMongol {
      */
     internal fun DrawScope.solPuerta(g: MarcoMongol, r: Rect) {
         if (g.a.oscuro) return
+        // El sol pinta lo que toca (aclara y entibia la madera, el fieltro y la estera, y deja sus vetas y sus sombras): se mezcla
+        // por superposición, no se pone encima como un velo. Lo de fuera queda en su color.
         val luz = poligonoSolMongol(g)
         val col = if (g.a.noche) P.CREPUSCULO else P.SOL
         clipRect(r.left, r.top, r.right, r.bottom) {
-            drawPath(luz, col.copy(alpha = if (g.a.noche) 0.16f else 0.24f))
-            drawPath(luz, luzMueble(if (g.a.noche) 0.03f else 0.07f))
+            drawPath(luz, col.copy(alpha = if (g.a.noche) 0.62f else 0.72f), blendMode = BlendMode.Overlay)
         }
     }
 
