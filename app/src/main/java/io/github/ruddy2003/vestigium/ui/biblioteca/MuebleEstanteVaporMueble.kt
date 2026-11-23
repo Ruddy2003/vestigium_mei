@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.TextMeasurer
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.AZUL
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.AZUL_OSC
@@ -27,6 +26,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.vetas
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
+import kotlin.math.pow
 
 /**
  * El cuerpo de la estantería de pino tea (ver [MuebleEstanteVapor]): la tapa vista desde un poco arriba, la cornisa volada con
@@ -37,9 +37,21 @@ import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
  */
 internal object MuebleCuerpoVapor {
     /** La hondura que se ve de los montantes y de la tabla de arriba dentro de cada hueco, y de la tabla de abajo, en anchos. */
-    private const val HONDO_LADO = 0.026f
-    private const val HONDO_ARRIBA = 0.016f
-    private const val HONDO_ABAJO = 0.013f
+    const val HONDO_LADO = 0.026f
+    const val HONDO_ARRIBA = 0.016f
+    const val HONDO_ABAJO = 0.013f
+
+    /**
+     * La sombra franca en la pared del hueco [r]: la de la tabla de arriba y la del montante del lado de la luz ([izqLuz]: la
+     * ventana, a la izquierda; si no, el gas, a la derecha). La usa también la luz de los Sueños, que no entra donde ella cae.
+     */
+    fun sombraFranca(r: Rect, g: MarcoVapor, izqLuz: Boolean): Path {
+        val w = g.w; val x0 = g.x0; val x1 = g.x1
+        val dL = w * HONDO_LADO; val sh = w * 0.058f; val sv = w * 0.042f
+        val yT = r.top + w * HONDO_ARRIBA
+        return if (izqLuz) poligonoVapor(x0, r.top, x1, r.top, x1, yT + sh * 1.12f, x0 + dL + sv + w * 0.02f, yT + sh, x0 + dL + sv, yT + sh + w * 0.02f, x0 + dL + sv, r.bottom, x0, r.bottom)
+        else poligonoVapor(x1, r.top, x0, r.top, x0, yT + sh * 1.12f, x1 - dL - sv - w * 0.02f, yT + sh, x1 - dL - sv, yT + sh + w * 0.02f, x1 - dL - sv, r.bottom, x1, r.bottom)
+    }
 
     // ---------------------------------------------------------------- arriba (va en la imagen guardada de la corona)
 
@@ -186,10 +198,7 @@ internal object MuebleCuerpoVapor {
         // Las sombras francas en la pared: la de la tabla de arriba y la del montante del lado de la luz (de día y al anochecer,
         // la ventana, a la izquierda; de noche, el gas, a la derecha), con su penumbra.
         val izqLuz = !a.oscuro || a.lunar
-        val sh = w * 0.058f; val sv = w * 0.042f
-        val yT = r.top + dT
-        val sombraL = if (izqLuz) poligonoVapor(x0, r.top, x1, r.top, x1, yT + sh * 1.12f, x0 + dL + sv + w * 0.02f, yT + sh, x0 + dL + sv, yT + sh + w * 0.02f, x0 + dL + sv, r.bottom, x0, r.bottom)
-        else poligonoVapor(x1, r.top, x0, r.top, x0, yT + sh * 1.12f, x1 - dL - sv - w * 0.02f, yT + sh, x1 - dL - sv, yT + sh + w * 0.02f, x1 - dL - sv, r.bottom, x1, r.bottom)
+        val sombraL = sombraFranca(r, g, izqLuz)
         val fuerza = if (a.oscuro) (0.25f + 0.35f * (if (izqLuz) fl else kr)).coerceAtMost(0.5f) else 0.36f
         drawPath(corridoVapor(sombraL, (if (izqLuz) 1f else -1f) * w * 0.008f, w * 0.008f), a.sombra(fuerza * 0.35f))
         drawPath(sombraL, a.sombra(fuerza))
@@ -240,6 +249,9 @@ internal object MuebleCuerpoVapor {
 
     private val BRASA_VAPOR = Color(0xFFFF9A52)
 
+    /** La luz para un filo de noche: la de en medio, levantada (0.3 da 0.4; 0.13, 0.22), y la de los extremos casi igual. */
+    private fun filoVapor(k: Float): Float = k.coerceIn(0f, 1f).pow(0.75f)
+
     /** El canto boleado de una tabla: la luz arriba, la sombra abajo, su veta, los golpes y la sombra que echa en el hueco de debajo. */
     fun DrawScope.tablaVapor(k: Int, r: Rect, a: AireVapor, g: MarcoVapor) {
         val u = density
@@ -263,8 +275,13 @@ internal object MuebleCuerpoVapor {
         }
         drawRect(a.sombra(0.55f), Offset(l, r.bottom - 1.3f * u), Size(rr - l, 1.3f * u))
         if (a.oscuro) {
-            val abajo = listOf(r.left, (r.left + r.right) / 2, r.right).map { x -> val p = Offset(x, r.bottom); BRASA_VAPOR.copy(alpha = (0.9f * g.brasa(p) * g.cerca(p)).coerceIn(0f, 0.7f)) }
-            drawRect(Brush.horizontalGradient(abajo, l, rr), Offset(l, r.bottom - 2.2f * u), Size(rr - l, 1.6f * u))
+            // El filo cálido de las dos luces: arriba, el del gas en el canto que lo mira; abajo, el de la estufa. Con la luz
+            // levantada en lo de en medio ([filoVapor]), para que el paso de una luz a la otra se lea en las repisas de en medio.
+            val xs = listOf(r.left, (r.left + r.right) / 2, r.right)
+            val arriba = xs.map { x -> val p = Offset(x, r.top); a.brillo(0.6f, filoVapor(g.cerca(p)) * (1f - g.brasa(p)), 0f) }
+            drawRect(Brush.horizontalGradient(arriba, l, rr), Offset(l, r.top + 1.1f * u), Size(rr - l, 1f * u))
+            val abajo = xs.map { x -> val p = Offset(x, r.bottom); BRASA_VAPOR.copy(alpha = (1.2f * g.brasa(p) * filoVapor(g.cerca(p))).coerceIn(0f, 0.75f)) }
+            drawRect(Brush.horizontalGradient(abajo, l, rr), Offset(l, r.bottom - 2.4f * u), Size(rr - l, 1.8f * u))
         }
         // La sombra de la tabla en lo de debajo (la pared del hueco siguiente o el zócalo).
         drawRect(a.sombra(0.3f), Offset(l, r.bottom), Size(rr - l, 2.2f * u))
@@ -340,8 +357,8 @@ internal object MuebleCuerpoVapor {
             // De noche, el filo del gas en el canto que lo mira (el de dentro de cada pilastra), que se apaga al bajar.
             if (a.oscuro) {
                 val xf = if (izq) r - 1.6f * u else l
-                val filos = List(6) { i -> val p = Offset(xf, top + (bot - top) * i / 5f); a.brillo(0.85f, g.cerca(p), g.brasa(p)) }
-                drawRect(Brush.verticalGradient(filos, top, bot), Offset(xf, top), Size(1.6f * u, bot - top))
+                val filos = List(8) { i -> val p = Offset(xf, top + (bot - top) * i / 7f); a.brillo(0.9f, filoVapor(g.cerca(p)), g.brasa(p)) }
+                drawRect(Brush.verticalGradient(filos, top, bot), Offset(xf, top), Size(1.9f * u, bot - top))
             }
             // El tizne de las manos donde se agarra, y los cantos: la luz del lado de la ventana, la sombra del otro.
             drawOval(a.grano(TIZNE, 0.14f), Offset(xc - (r - l) * 0.35f, top + (bot - top) * 0.3f), Size((r - l) * 0.7f, w * 0.12f))

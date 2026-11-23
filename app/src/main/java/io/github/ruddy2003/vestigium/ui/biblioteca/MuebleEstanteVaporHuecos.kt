@@ -20,7 +20,6 @@ import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.LATON_LUZ
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.LATON_OSC
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.NEGRO
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.NOGAL
-import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.PAPEL
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.PAPEL_VIEJO
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.VERDE
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
@@ -131,10 +130,24 @@ internal object HuecosEstanteVapor {
         drawPath(corridoVapor(cuerpo, -hacia * bw * 0.2f, -h * 0.02f), a.sombra(0.3f))
         drawRect(a.luz(HIERRO, k, f, br), base.topLeft, base.size)
         drawRect(a.brillo(0.35f, kk, br), base.topLeft, Size(base.width, 0.9f * u))
-        drawPath(cuerpo, a.luz(Color(0xFF1E1C22), k, f, br))
+        // El hierro negro; de noche, un poco más claro que el fondo, para que se lea como cosa y no como hueco.
+        drawPath(cuerpo, a.luz(if (a.oscuro) Color(0xFF2E2A34) else Color(0xFF1E1C22), if (a.oscuro) maxOf(k, 0.3f) else k, f, br))
         clipPath(cuerpo) { drawRect(a.brillo(0.2f, kk, br), Offset(cx - bw * (if (hacia < 0) 0.28f else -0.1f), pie - h), Size(bw * 0.14f, h)) }
         val oro = a.luz(PaletaVapor.FILETE, maxOf(k, 0.2f), f, br)
         drawPath(poligonoVapor(cx - bw * 0.3f, base.top - h * 0.04f, cx - bw * 0.23f, pie - h * 0.8f, cx + bw * 0.17f, pie - h * 0.8f, cx + bw * 0.28f, base.top - h * 0.04f), oro, style = Stroke(0.6f * u))
+        if (a.oscuro) {
+            // De noche, el hierro negro se perdía en el fondo: el canto de latón que lo bordea, y el brillo en el canto del lado de
+            // la luz más cercana (la estufa, si es la que más le llega; si no, el gas).
+            val kf = maxOf(k, 0.28f)
+            drawPath(cuerpo, a.luz(LATON_OSC, kf, f, br), style = Stroke(1.1f * u))
+            drawRect(a.luz(LATON_OSC, kf, f, br), Offset(base.left, base.top), Size(base.width, 1.1f * u))
+            val lado = if (br > 0.45f) -1f else hacia
+            val canto = if (lado > 0) Offset(cx + bw * 0.34f, base.top) to Offset(cx + bw * 0.2f, pie - h * 0.86f)
+            else Offset(cx - bw * 0.36f, base.top) to Offset(cx - bw * 0.26f, pie - h * 0.86f)
+            drawLine(a.brillo(1f, maxOf(k, 0.45f), br), canto.first, canto.second, 1.6f * u, StrokeCap.Round)
+            drawLine(a.brillo(0.8f, maxOf(k, 0.45f), br), Offset(cx - bw * 0.26f, pie - h * 0.86f), Offset(cx + bw * 0.2f, pie - h * 0.86f), 1.1f * u)
+            drawRect(a.brillo(0.7f, maxOf(k, 0.4f), br), Offset(if (lado > 0) base.right - 1.4f * u else base.left, base.top), Size(1.4f * u, base.height))
+        }
         // La boca donde entra el billete.
         drawRect(a.luz(NEGRO, k, f, br), Offset(cx - bw * 0.16f, pie - h * 0.36f), Size(bw * 0.3f, h * 0.06f))
         drawRect(a.luz(LATON, k, f, br), Offset(cx - bw * 0.18f, pie - h * 0.3f), Size(bw * 0.34f, h * 0.025f))

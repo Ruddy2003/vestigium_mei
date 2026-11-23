@@ -1,18 +1,14 @@
 package io.github.ruddy2003.vestigium.ui.biblioteca
 
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.TextMeasurer
 import io.github.ruddy2003.vestigium.ui.TemaId
@@ -114,23 +110,20 @@ internal object VolumenEstanteVapor {
         val tinte = tinteVapor(tonoDeDiaVapor(v.tono, oscuro))
         val clase = MuebleEstanteVapor.clase(v.semilla)
         giroTarjeta = 0f
+        silueta = Path(); cimas = Path()
         when (clase) {
             0 -> libro(v, medidor, a, k, f, br, hacia, tinte)
             1 -> cajas(v, medidor, a, k, f, br, hacia, tinte)
             else -> saca(v, medidor, a, k, f, br, hacia, tinte)
         }
-        // En los Sueños, la luna (o el paño del ocaso) que cruza la pared le pasa también por encima, a la misma altura; el día se
-        // vuelve a entintar encima.
+        // En los Sueños, la luna (o el ocaso) que cruza la pared pinta también la entrada, a su altura y corrida hacia la ventana
+        // lo que la entrada sobresale de la pared: solo dentro de su silueta, sin cambiarle el color. El día se vuelve a entintar.
         if (a.noche) {
             val escala = MuebleEstanteVapor.ANCHO_NOMINAL * density
             val abajo = MuebleEstanteVapor.CORONA + (v.repisa * MuebleEstanteVapor.FILA + MuebleEstanteVapor.ALTO_REPISA.value) / MuebleEstanteVapor.ANCHO_NOMINAL
             val origen = Offset(p.x - size.width / 2f / escala, abajo - size.height / escala)
-            val ancho = size.width / escala; val alto = size.height / escala
-            val toca = listOf(0.1f, 0.5f, 0.9f).any { fx -> listOf(0.1f, 0.5f, 0.9f).any { fy -> (if (a.lunar) lunaVapor(origen.x + ancho * fx, origen.y + alto * fy) else enPanoVapor(origen.x + ancho * fx, origen.y + alto * fy)) > 0.02f } }
-            if (toca) {
-                clipRect(0f, if (clase == 2) size.height * 0.18f else 0f, size.width, size.height) {
-                    with(MuroEstanteVapor) { planoDeLuzEn(a, escala, origen) }
-                }
+            if (LuzSuenosVapor.toca(a, origen, size.width / escala, size.height / escala, LuzSuenosVapor.VOLUMEN)) {
+                with(LuzSuenosVapor) { luzEnVolumen(a, escala, origen, silueta, cimas) }
                 rotate(giroTarjeta, pivoteTarjeta) { textoTarjeta(ultimaTarjeta, v, medidor, a) }
             }
         }
@@ -165,6 +158,9 @@ internal object VolumenEstanteVapor {
     private var ultimaTarjeta = Rect.Zero
     private var giroTarjeta = 0f
     private var pivoteTarjeta = Offset.Zero
+    /** La silueta del volumen que se está pintando y lo de arriba que mira a la luz (para la luz de los Sueños). */
+    private var silueta = Path()
+    private var cimas = Path()
 
     /** La luna creciente de los Sueños, en [c], de radio [r]: un círculo menos otro corrido. */
     private fun DrawScope.luna(c: Offset, r: Float, color: Color) {
@@ -203,6 +199,7 @@ internal object VolumenEstanteVapor {
     private fun DrawScope.libro(v: Volumen, medidor: TextMeasurer, a: AireVapor, k: Float, f: Float, br: Float, hacia: Float, tinte: Color?) {
         val u = density; val w = size.width; val h = size.height
         val arriba = 3.6f * u
+        silueta.addRect(Rect(0.4f * u, 0.3f * u, w - 0.4f * u, h)); cimas.addRect(Rect(0.4f * u, 0.3f * u, w - 0.4f * u, arriba + 1.3f * u))
         sombraArrojada(a, hacia, 0.5f * u)
         val piel = if (tinte != null) a.animo(mezcla(tinte, Color(0xFF1E140E), 0.12f), k, f, br) else a.luz(CUERO, k, f, br)
         val pielOsc = mezcla(piel, Color.Black, 0.32f)
@@ -316,6 +313,8 @@ internal object VolumenEstanteVapor {
         val tp = Rect(r.left, r.top + cima, r.right, r.top + cima + tapa)
         val cuerpo = Rect(r.left + 0.8f * u, tp.bottom, r.right - 0.8f * u, r.bottom)
         val kk = maxOf(k, 0.25f)
+        silueta.addRect(r)
+        if (ultima) cimas.addRect(Rect(r.left, r.top, r.right, r.top + cima + 0.6f * u))
         // Las asas de los costados, que asoman por los lados a media altura.
         listOf(cuerpo.left - 1.4f * u, cuerpo.right).forEach { x -> drawRect(a.luz(LATON_OSC, k, f, br), Offset(x, cuerpo.top + cuerpo.height * 0.3f), Size(1.4f * u, 3f * u)) }
         // El cuerpo lacado.
@@ -407,6 +406,7 @@ internal object VolumenEstanteVapor {
             quadraticTo(w * 0.76f, h * 0.11f, w * 0.62f, cuello + 1f * u)
             close()
         }
+        silueta = Path().apply { op(cuerpo, orejas, PathOperation.Union) }
         drawPath(orejas, mezcla(lona, Color.Black, 0.08f))
         clipPath(orejas) {
             drawRect(a.sombra(0.3f), Offset(if (hacia < 0) w * 0.5f else 0f, 0f), Size(w * 0.5f, cuello))

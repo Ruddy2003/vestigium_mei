@@ -10,7 +10,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
-import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.ALMAGRE
@@ -23,7 +22,6 @@ import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.GAS_CORAZON
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.HIERRO
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.HIERRO_LUZ
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.LATON
-import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.LATON_LUZ
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.LATON_OSC
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.LOZA
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.LUNA
@@ -101,7 +99,7 @@ internal object MuroEstanteVapor {
             mancha(Offset(V_DER * w + w * 0.03f, w * 0.24f), w * 0.22f, luzMueble(0.22f))
             drawRect(Brush.horizontalGradient(listOf(Color.Transparent, a.sombra(0.16f)), w * 0.55f, w), Offset(w * 0.55f, 0f), Size(w * 0.45f, abajo))
         }
-        if (a.ocaso) mancha(Offset(MuebleEstanteVapor.VENTANA_X * w, w * 0.2f), w * 0.4f, OCASO.copy(alpha = 0.18f))
+        if (a.ocaso) mancha(Offset(MuebleEstanteVapor.VENTANA_X * w, w * 0.2f), w * 0.3f, OCASO.copy(alpha = 0.09f))
         // El enlucido no es liso: pinceladas claras y oscuras del mismo azul.
         val r = Rect(0f, MOLDURA * w, w, abajo)
         pinceladas(r, if (a.oscuro) a.hondo else AZUL_CLARO, 3101, 30, u, if (a.oscuro) 0.14f else 0.09f)
@@ -462,62 +460,6 @@ internal object MuroEstanteVapor {
         drawPath(fichas, a.luz(LATON_OSC, k, f, br), style = Stroke(0.6f * u))
         drawPath(brillos, a.brillo(0.8f, maxOf(k, 0.3f), br))
         drawPath(ganchos, a.luz(LATON_OSC, k, f, br))
-    }
-
-    // ---------------------------------------------------------------- la luna y el ocaso de los Sueños
-
-    /**
-     * La luz que entra por la ventana en los Sueños: de noche, el plano de luna que baja en diagonal por la pared y cruza el
-     * mueble, frío, con la sombra de los montantes de la ventana dentro; al anochecer, el paño naranja del ocaso con la forma de
-     * los cuarterones, sobre la cornisa, el montante izquierdo y la primera repisa. Se pinta encima, translúcido; quien lo llama
-     * lo recorta (la corona en su imagen; el cuerpo, en cada dibujo).
-     */
-    fun DrawScope.planoDeLuz(a: AireVapor, g: MarcoVapor) = planoDeLuzEn(a, g.w, Offset.Zero)
-
-    /**
-     * Lo mismo, con otra escala y otro origen: un punto en anchos del mueble ([p]) va al píxel ([p] − [origen]) × [w]. Así lo usa
-     * también cada volumen, para que la luna o el paño del ocaso le pasen por encima a la misma altura que por la pared.
-     */
-    fun DrawScope.planoDeLuzEn(a: AireVapor, w: Float, origen: Offset) {
-        val u = density
-        fun en(p: Offset) = Offset((p.x - origen.x) * w, (p.y - origen.y) * w)
-        if (a.lunar) {
-            val p = PlanoLunaVapor
-            val c0 = en(p.C0); val d = p.D; val n = p.N
-            val l = p.LARGO * w
-            val c1 = Offset(c0.x + d.x * l, c0.y + d.y * l)
-            fun plano(fr: Float) = Path().apply {
-                val h0 = p.ANCHO0 * w * fr; val h1 = (p.ANCHO0 + p.ABRE * p.LARGO) * w * fr
-                moveTo(c0.x + n.x * h0, c0.y + n.y * h0); lineTo(c1.x + n.x * h1, c1.y + n.y * h1)
-                lineTo(c1.x - n.x * h1, c1.y - n.y * h1); lineTo(c0.x - n.x * h0, c0.y - n.y * h0); close()
-            }
-            drawPath(plano(1.3f), Brush.linearGradient(listOf(LUNA.copy(alpha = 0.06f), LUNA.copy(alpha = 0.025f), Color.Transparent), c0, c1))
-            drawPath(plano(1f), Brush.linearGradient(listOf(LUNA.copy(alpha = 0.09f), LUNA.copy(alpha = 0.035f), Color.Transparent), c0, c1))
-            drawPath(plano(0.6f), Brush.linearGradient(listOf(LUNA.copy(alpha = 0.07f), LUNA.copy(alpha = 0.025f), Color.Transparent), c0, c1))
-            // La sombra de los dos montantes de la ventana, dentro del plano.
-            val barras = Path()
-            listOf(-0.33f, 0.33f).forEach { fr ->
-                val h0 = p.ANCHO0 * w * fr; val h1 = (p.ANCHO0 + p.ABRE * p.LARGO) * w * fr
-                barras.moveTo(c0.x + n.x * h0, c0.y + n.y * h0); barras.lineTo(c1.x + n.x * h1, c1.y + n.y * h1)
-            }
-            drawPath(barras, Brush.linearGradient(listOf(a.hondo.copy(alpha = 0.25f), Color.Transparent), c0, c1), style = Stroke(w * 0.008f))
-        } else if (a.ocaso) {
-            fun q(x: Float, y: Float) = en(panoVapor(x, y))
-            val pano = Path().apply {
-                val a0 = q(0.03f, 0.08f); val a1 = q(0.23f, 0.08f); val a2 = q(0.23f, 0.36f); val a3 = q(0.03f, 0.36f)
-                moveTo(a0.x, a0.y); lineTo(a1.x, a1.y); lineTo(a2.x, a2.y); lineTo(a3.x, a3.y); close()
-            }
-            drawPath(corridoVapor(pano, -w * 0.01f, -w * 0.006f), OCASO.copy(alpha = 0.14f))
-            drawPath(pano, OCASO.copy(alpha = 0.42f))
-            drawPath(pano, Color(0xFFFFD9A8).copy(alpha = 0.1f))
-            drawPath(pano, Color(0xFFFFD2A0).copy(alpha = 0.22f), style = Stroke(w * 0.01f))
-            // Los cuarterones: la sombra violeta de los montantes y los peinazos de la ventana, llevada con el paño.
-            val barras = Path()
-            for (i in 1 until 3) { val x = 0.03f + 0.2f * i / 3f; val b0 = q(x, 0.08f); val b1 = q(x, 0.36f); barras.moveTo(b0.x, b0.y); barras.lineTo(b1.x, b1.y) }
-            for (j in 1 until 5) { val y = 0.08f + 0.28f * j / 5f; val b0 = q(0.03f, y); val b1 = q(0.23f, y); barras.moveTo(b0.x, b0.y); barras.lineTo(b1.x, b1.y) }
-            drawPath(barras, PaletaVapor.ATARDECER.copy(alpha = 0.4f), style = Stroke(w * 0.006f))
-            drawPath(pano, PaletaVapor.ATARDECER.copy(alpha = 0.3f), style = Stroke(1f * u))
-        }
     }
 
     // ---------------------------------------------------------------- el gas

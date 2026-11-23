@@ -22,7 +22,6 @@ import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.HIERRO
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.HIERRO_LUZ
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.HOJALATA
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.LATON
-import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.LATON_LUZ
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.NEGRO
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.NOGAL
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.PAPEL

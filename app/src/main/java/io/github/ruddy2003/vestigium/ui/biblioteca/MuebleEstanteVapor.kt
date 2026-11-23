@@ -98,6 +98,8 @@ internal object PaletaVapor {
     val GAS_CORAZON = Color(0xFFFFF3D2)
     val BRASA = Color(0xFFF0692E)
     val LUNA = Color(0xFFC4D3F2)
+    /** Lo que se apaga todo al anochecer (los Sueños en claro): un oscuro sin color, para que no quede un velo violeta parejo. */
+    val PENUMBRA = Color(0xFF221F1D)
 
     val LETRA: FontFamily = LetraExtra.caldera
 }
@@ -109,7 +111,8 @@ internal object PaletaVapor {
  * gas bajo y la luna detrás de un vidrio). Como en el Ideario del tema, de noche cada cosa va de su color hondo (oscuro, de su
  * mismo tono, con el azul de hollín) a su color según lo que le llega de las luces ([k], de 0 a 1), teñida de llama (o de
  * brasa, en la parte [br] que viene de la estufa). De día, [k] es la luz de la ventana: aclara lo cercano y apaga un poco lo
- * lejano, sin velo.
+ * lejano, sin velo. En los Sueños, la luna y el ocaso que entran por la ventana no tiñen cada cosa entera: los pinta
+ * [LuzSuenosVapor] encima, con su borde, donde caen; aquí solo queda su rebote tenue ([f]).
  */
 internal class AireVapor(val oscuro: Boolean, val noche: Boolean) {
     private val p = PaletaVapor
@@ -120,6 +123,8 @@ internal class AireVapor(val oscuro: Boolean, val noche: Boolean) {
     /** Los Sueños en claro: anochece. */
     val ocaso: Boolean get() = noche && !oscuro
     val hondo: Color get() = if (oscuro) (if (noche) p.NOCHE_SUENOS else p.NOCHE) else SOMBRA_MUEBLE
+    /** La sombra del anochecer: la del mueble, ida al violeta del atardecer. */
+    private val SOMBRA_OCASO = mezcla(SOMBRA_MUEBLE, p.ATARDECER, 0.5f)
 
     /** Lo hondo de un color de noche: oscuro, de su mismo tono y con el azul de la noche (no un gris). */
     private fun abismo(c: Color): Color { val n = hondo; return Color(c.red * 0.13f + n.red * 0.78f, c.green * 0.14f + n.green * 0.8f, c.blue * 0.2f + n.blue * 0.85f, c.alpha) }
@@ -129,21 +134,25 @@ internal class AireVapor(val oscuro: Boolean, val noche: Boolean) {
         val kk = k.coerceIn(0f, 1f)
         if (!oscuro) {
             if (noche) {
-                // El anochecer: lo que está lejos de la ventana se va al violeta y se apaga; lo de cerca recibe el ocaso;
-                // cerca del gas, su charco cálido.
-                val ff = f.coerceIn(0f, 1f)
-                val v = mezcla(mezcla(c, p.ATARDECER, 0.1f + 0.18f * (1f - ff)), p.OCASO, 0.38f * ff)
+                // El anochecer: todo un poco más apagado, sin color de velo; el rebote del ocaso cerca de su paño y, cerca del gas,
+                // su charco cálido. El violeta queda solo en las sombras ([sombra]).
+                val v = mezcla(mezcla(c, p.PENUMBRA, 0.16f), p.OCASO, 0.06f * f.coerceIn(0f, 1f))
                 return mezcla(v, p.GAS, 0.26f * kk)
             }
             return if (kk > 0.5f) mezcla(c, LUZ_MUEBLE, 0.24f * (kk - 0.5f) * 2f) else mezcla(c, SOMBRA_MUEBLE, 0.16f * (0.5f - kk) * 2f)
         }
         var v = mezcla(abismo(c), c, (1.05f * kk).coerceAtMost(0.92f))
         v = mezcla(v, calor(br), 0.2f * kk)
-        if (lunar && f > 0.01f) v = mezcla(v, mezcla(v, p.LUNA, 0.5f), (0.6f * f * (1f - kk)).coerceIn(0f, 1f))
+        if (lunar && f > 0.01f) v = mezcla(v, p.LUNA, (0.06f * f * (1f - kk)).coerceIn(0f, 1f))
         return v
     }
 
-    fun sombra(a: Float): Color = if (oscuro) hondo.copy(alpha = (a * 1.3f).coerceIn(0f, 1f)) else sombraMueble(if (noche) a * 1.15f else a)
+    /** La sombra: de noche, el hondo; al anochecer, violeta (solo donde hay sombra); de día, la del mueble. */
+    fun sombra(a: Float): Color = when {
+        oscuro -> hondo.copy(alpha = (a * 1.3f).coerceIn(0f, 1f))
+        noche -> SOMBRA_OCASO.copy(alpha = (a * 1.15f).coerceIn(0f, 1f))
+        else -> sombraMueble(a)
+    }
 
     /** El brillo de lo que mira a la luz: de día, crema; de noche, el filo de la llama (o de la brasa) según lo que le llega. */
     fun brillo(a: Float, k: Float, br: Float = 0f): Color = when {
@@ -158,21 +167,21 @@ internal class AireVapor(val oscuro: Boolean, val noche: Boolean) {
     fun animo(t: Color, k: Float, f: Float = 0f, br: Float = 0f): Color {
         val kk = k.coerceIn(0f, 1f)
         if (!oscuro) {
-            if (noche) { val ff = f.coerceIn(0f, 1f); return mezcla(mezcla(mezcla(t, p.ATARDECER, 0.12f + 0.14f * (1f - ff)), p.OCASO, 0.2f * ff), p.GAS, 0.14f * kk) }
+            if (noche) return mezcla(mezcla(mezcla(t, p.PENUMBRA, 0.12f), p.OCASO, 0.05f * f.coerceIn(0f, 1f)), p.GAS, 0.14f * kk)
             return if (kk > 0.5f) mezcla(t, LUZ_MUEBLE, 0.12f * (kk - 0.5f) * 2f) else mezcla(t, SOMBRA_MUEBLE, 0.1f * (0.5f - kk) * 2f)
         }
         val n = hondo
         val suave = Color(t.red * 0.22f + n.red * 0.7f, t.green * 0.22f + n.green * 0.7f, t.blue * 0.22f + n.blue * 0.7f, t.alpha)
         var v = mezcla(suave, t, (0.06f + 0.98f * kk).coerceAtMost(0.95f))
         v = mezcla(v, calor(br), 0.13f * kk)
-        if (lunar && f > 0.01f) v = mezcla(v, mezcla(v, p.LUNA, 0.42f), (0.7f * f * (1f - kk)).coerceIn(0f, 1f))
+        if (lunar && f > 0.01f) v = mezcla(v, p.LUNA, (0.05f * f * (1f - kk)).coerceIn(0f, 1f))
         return v
     }
 
     /** La cartulina donde va el día: casi no se apaga, para que el número se lea siempre (contraste de 4.5 a 1 o más). */
     fun etiqueta(k: Float, base: Color = p.PAPEL): Color {
         val kk = k.coerceIn(0f, 1f)
-        if (!oscuro) return if (noche) mezcla(base, p.ATARDECER, 0.1f) else base
+        if (!oscuro) return if (noche) mezcla(base, p.PENUMBRA, 0.05f) else base
         // Cerca de las luces, la cartulina se entibia de ámbar; lejos, se hunde hacia el azul de la noche sin perder la lectura.
         val ke = maxOf(kk, 0.26f)
         return mezcla(mezcla(base, hondo, 0.44f - 0.4f * ke), p.GAS, 0.3f * kk)
@@ -198,8 +207,9 @@ internal class AireVapor(val oscuro: Boolean, val noche: Boolean) {
  * estufa de hierro con su mica (la segunda luz de la noche) y el paragüero con los planos y las banderas del guarda. Lo fijo
  * (la corona y el suelo) se pinta una vez por tamaño y modo ([CapaVapor]); lo demás, en cada dibujo. La pared y lo colgado
  * están en `MuebleEstanteVaporMuro.kt`; el mueble, en `MuebleEstanteVaporMueble.kt`; la maqueta, en
- * `MuebleEstanteVaporMaqueta.kt`; lo de encima y del pie, en `MuebleEstanteVaporArriba.kt`; lo de los huecos libres, en
- * `MuebleEstanteVaporHuecos.kt`; las entradas, en `MuebleEstanteVaporVolumenes.kt`. Distinto del Ideario, que es el casillero
+ * `MuebleEstanteVaporMaqueta.kt`; lo de encima, en `MuebleEstanteVaporArriba.kt`; lo del pie, en `MuebleEstanteVaporPie.kt`;
+ * lo de los huecos libres, en `MuebleEstanteVaporHuecos.kt` y `MuebleEstanteVaporCosas.kt`; las entradas, en
+ * `MuebleEstanteVaporVolumenes.kt`; la luz de los Sueños, en `MuebleEstanteVaporLuz.kt`. Distinto del Ideario, que es el casillero
  * de caoba de la caseta de los maquinistas contra el ladrillo y la tabla verde, con el farol de señales.
  */
 internal object MuebleEstanteVapor {
@@ -275,15 +285,20 @@ internal object MuebleEstanteVapor {
                 drawRect(a.luz(PaletaVapor.PINO_OSC, 0.3f), Offset(0f, g.fondoTapa - 2f), Size(w, size.height - g.fondoTapa + 2f))
                 drawRect(a.luz(PaletaVapor.AZUL, 0.3f), Offset.Zero, Size(w, g.fondoTapa))
                 with(MuroEstanteVapor) { coronaVapor(a, g) }
+                // En los Sueños, el tono de la luna o del ocaso en la pared y la cornisa, antes de lo de encima (que lo aclara
+                // la luz sin cambiarle el color).
+                if (a.noche) with(LuzSuenosVapor) { tonoEnCorona(a, g) }
                 with(ArribaEstanteVapor) { bodegonVapor(a, g) }
                 granoMueble(Rect(0f, 0f, w, ch), oscuro)
             }
         }
         if (fondo - ch >= 1f) cuerpo(d, medidor, a, g)
-        // ---- el plano de la luna (los Sueños de noche) o el paño del ocaso (los de claro) sobre la pared y el mueble
-        if (a.noche) clipRect(0f, ch, w, h) { with(MuroEstanteVapor) { planoDeLuz(a, g) } }
+        // ---- la luna (los Sueños de noche) o el ocaso (los de claro), que pinta la pared, los montantes y las tablas donde cae
+        if (a.noche && fondo - ch >= 1f) clipRect(0f, ch, w, fondo) { with(LuzSuenosVapor) { luzEnCuerpo(a, g, d.repisas, d.tablas) } }
         // ---- el pie: el suelo de baldosas, el zócalo, la estufa con la carbonera y el paragüero
-        with(PieEstanteVapor) { pieVivoVapor(a, g); paraguero(a, g) }
+        with(PieEstanteVapor) { pieVivoVapor(a, g) }
+        if (a.lunar) with(LuzSuenosVapor) { luzEnPie(a, g) }
+        with(PieEstanteVapor) { paraguero(a, g) }
         granoMueble(Rect(0f, ch, w, h), oscuro)
         // ---- de noche, el resplandor de la estufa en lo bajo del mueble
         if (oscuro && fondo - ch >= 1f) {
@@ -296,6 +311,8 @@ internal object MuebleEstanteVapor {
     private fun DrawScope.cuerpo(d: DisposicionEstante, medidor: TextMeasurer, a: AireVapor, g: MarcoVapor) {
         with(MuebleCuerpoVapor) {
             d.repisas.forEachIndexed { k, r -> huecoVapor(k, r, a, g) }
+            // En los Sueños, el tono de la luz en la pared de cada hueco, antes de lo que se pone delante.
+            if (a.noche) with(LuzSuenosVapor) { tonoEnHuecos(a, g, d.repisas) }
             d.tablas.forEachIndexed { k, r -> tablaVapor(k, r, a, g) }
             montantesVapor(a, g, d.tablas)
             d.placas.forEach { p -> portaetiquetasVapor(p, medidor, a, g.cerca(p.r.center), g.brasa(p.r.center)) }

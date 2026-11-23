@@ -3,7 +3,6 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -12,18 +11,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.drawscope.translate
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.ALMAGRE
-import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.ANTE
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.AZUL
-import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.BARRO
-import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.BARRO_OSC
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.BERMELLON
-import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.BRASA
-import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.COBRE
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.CUERO
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.GAS
-import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.HIERRO
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.HIERRO_LUZ
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.LATON
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.LATON_LUZ
@@ -35,14 +27,11 @@ import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.NOGAL
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.OCASO
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.PAPEL
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.PAPEL_VIEJO
-import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.TINTA
-import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.TIZNE
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaVapor.VERDE
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
-import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 
 /**
  * Lo de encima del mueble y lo del pie (ver [MuebleEstanteVapor]). Encima, de izquierda a derecha: los manuales de pie, uno
@@ -304,12 +293,12 @@ internal object ArribaEstanteVapor {
                 mancha(gas, w * 0.09f, Color(0xFFFFF0C8).copy(alpha = 0.55f * fuerte))
                 // La luz que sale por la boca del globo y sube por la pared.
                 clipRect(0f, 0f, w, gas.y) { drawPath(poligonoVapor(gas.x - w * 0.02f, gas.y - w * 0.03f, gas.x + w * 0.02f, gas.y - w * 0.03f, gas.x + w * 0.07f, 0f, gas.x - w * 0.07f, 0f), GAS.copy(alpha = 0.08f * fuerte)) }
-                if (a.lunar) { mancha(ven, w * 0.3f, LUNA.copy(alpha = 0.1f)); with(MuroEstanteVapor) { planoDeLuz(a, g) } }
+                if (a.lunar) { mancha(ven, w * 0.24f, LUNA.copy(alpha = 0.06f)); with(LuzSuenosVapor) { luzEnCorona(a, g) } }
             }
             else -> {
-                mancha(ven, w * 0.36f, OCASO.copy(alpha = 0.18f))
+                mancha(ven, w * 0.3f, OCASO.copy(alpha = 0.07f))
                 mancha(gas, w * 0.18f, GAS.copy(alpha = 0.26f))
-                with(MuroEstanteVapor) { planoDeLuz(a, g) }
+                with(LuzSuenosVapor) { luzEnCorona(a, g) }
             }
         }
     }
