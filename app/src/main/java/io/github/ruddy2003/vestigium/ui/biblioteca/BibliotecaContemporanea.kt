@@ -2568,14 +2568,14 @@ object EstanteCiber : DisenoBiblioteca {
 }
 
 /**
- * Vapor: el estante de hierro colado de la sala de máquinas, contra un muro de ladrillo tiznado. Los costados son montantes
- * calados con sus ojos redondos y sus pernos; las tablas, chapa remachada con un fleje de latón, y detrás de cada repisa
- * corre una tubería de cobre con sus bridas. Arriba, la cornisa de hierro con sus dentellones, el tubo de vapor que la
- * cruza, dos engranes que engranan, el manómetro al centro y la válvula de volante rojo que suelta vapor; a la izquierda, la
- * lámpara de gas en su brazo. Abajo, el zócalo de hierro con sus arcos calados y un piso de tablones. Los meses van en
- * placas de latón remachadas. Cada entrada es un libro mayor de lomo de cuero con esquinas de latón, la placa remachada con
- * el día, el mes dorado a lo largo, un engrane estampado y nervios que se suman cuanto más escribiste; de noche, una luna en
- * lugar del engrane. De noche la lámpara de gas se enciende. Distinto del Ideario, que es el gabinete de patentes de caoba.
+ * Vapor: la estantería de pino tea del cuarto del encargado del depósito de máquinas (un pueblo ferroviario del norte de
+ * Inglaterra hacia 1880), donde de noche estudian los fogoneros que quieren ser maquinistas: cornisa volada, friso con
+ * acanaladuras y rosetas incisas, montantes con chaflanes de remate en punta, tablas de canto boleado con el portaetiquetas de
+ * latón del mes, contra la pared de azul de Prusia con su friso de plantilla, la ventana de fundición de vidrios tiznados (la luz
+ * del día) y el mechero de gas (la de la noche), con la estufa de hierro al pie. Encima, la maqueta de locomotora en su tramo de
+ * vía, la lámina de las señales, los manuales y la taza de té. Las entradas son el libro de registro, las cajas de hojalata
+ * lacada y la saca de lona, del color del ánimo. El dibujo del mueble y de las entradas está en [MuebleEstanteVapor]. Distinto
+ * del Ideario, que es el casillero de caoba de la caseta de los maquinistas.
  * La tapa es ese libro mayor tumbado, con la gran placa remachada del «REGISTRO DE PATENTES», su tarjeta crema, la fecha
  * grabada y el engrane junto al canto; al abrirlo, la tapa gira y deja ver las columnas de debe y haber.
  */
@@ -2609,264 +2609,25 @@ object EstanteVapor : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.3f
-    override val base = 0.1f
-    override val lado = 0.065f
-    override val altoRepisa: Dp = 116.dp
-    override val tabla: Dp = 17.dp
-    override val separa: Dp = 2.dp
+    // El estante y sus entradas están en [MuebleEstanteVapor] (MuebleEstanteVapor*.kt).
+    override val corona = MuebleEstanteVapor.CORONA
+    override val base = MuebleEstanteVapor.BASE
+    override val lado = MuebleEstanteVapor.LADO
+    override val altoRepisa: Dp = MuebleEstanteVapor.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteVapor.TABLA
+    override val separa: Dp = MuebleEstanteVapor.SEPARA
     override val letra: FontFamily = LetraExtra.caldera
+    /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoBiblioteca.auraEnReposo]). */
+    override val auraEnReposo = false
 
-    override fun ancho(palabras: Int): Dp = (20 + (palabras / 40).coerceAtMost(22)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.82f + 0.14f * azar(semilla, 5)
+    override fun ancho(palabras: Int): Dp = MuebleEstanteVapor.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteVapor.alto(semilla, palabras)
 
-    /** Un muro de ladrillo en hiladas a soga, con sus juntas. */
-    private fun DrawScope.ladrillos(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        drawRect(t(LADRILLO, oscuro, noche), r.topLeft, r.size)
-        val fila = 9 * u; val pieza = 26 * u
-        var y = r.top; var k = 0
-        while (y < r.bottom) {
-            drawLine(t(LADRILLO_JUNTA, oscuro, noche), Offset(r.left, y), Offset(r.right, y), 1.2f * u)
-            var x = r.left + if (k % 2 == 0) 0f else pieza / 2
-            while (x < r.right) { drawLine(t(LADRILLO_JUNTA, oscuro, noche), Offset(x, y), Offset(x, minOf(y + fila, r.bottom)), 1.2f * u); x += pieza }
-            y += fila; k++
-        }
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteVapor) { estante(d, medidor, oscuro, noche) }
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El muro de ladrillo, tiznado de hollín.
-        val cuerpo = Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, d.base.top)
-        ladrillos(cuerpo, oscuro, noche)
-        for (k in 0 until 5) {
-            val o = Offset(cuerpo.left + cuerpo.width * azar(12, k), cuerpo.top + cuerpo.height * azar(13, k))
-            drawOval(Color.Black.copy(alpha = 0.14f), Offset(o.x - 26 * u, o.y - 16 * u), Size(52 * u, 32 * u))
-        }
-        // Cada repisa: la tubería de cobre que corre por detrás, con sus bridas, y la sombra de la chapa de arriba.
-        d.repisas.forEachIndexed { k, rep ->
-            val ty = rep.top + 16 * u
-            drawRect(c(COBRE), Offset(rep.left, ty - 3 * u), Size(rep.width, 6 * u))
-            drawRect(c(COBRE_LUZ), Offset(rep.left, ty - 2.2f * u), Size(rep.width, 1.2f * u))
-            var bx = rep.left + 30 * u + 20 * u * azar(k, 3)
-            while (bx < rep.right - 10 * u) {
-                drawRect(c(LATON_OSC), Offset(bx - 2.5f * u, ty - 5 * u), Size(5 * u, 10 * u))
-                drawCircle(c(LATON_LUZ), 0.9f * u, Offset(bx, ty - 3.4f * u)); drawCircle(c(LATON_LUZ), 0.9f * u, Offset(bx, ty + 3.4f * u))
-                bx += 90 * u
-            }
-            drawRect(Color.Black.copy(alpha = if (noche) 0.4f else 0.3f), rep.topLeft, Size(rep.width, 7 * u))
-            drawRect(Color.Black.copy(alpha = 0.18f), rep.topLeft, Size(7 * u, rep.height))
-            drawRect(Color.Black.copy(alpha = 0.18f), Offset(rep.right - 7 * u, rep.top), Size(7 * u, rep.height))
-        }
-        // Los montantes de hierro colado, calados con ojos redondos y sujetos con pernos.
-        listOf(d.izquierda, d.derecha).forEach { lad ->
-            drawRect(c(HIERRO), lad.topLeft, lad.size)
-            drawRect(c(HIERRO_LUZ), Offset(lad.left + lad.width * 0.12f, lad.top), Size(lad.width * 0.08f, lad.height))
-            drawRect(c(HIERRO_OSC), Offset(lad.right - lad.width * 0.14f, lad.top), Size(lad.width * 0.14f, lad.height))
-            val cx = lad.center.x
-            var oy = lad.top + 20 * u
-            while (oy < lad.bottom - 14 * u) {
-                val ro = lad.width * 0.26f
-                drawCircle(c(LADRILLO_JUNTA), ro, Offset(cx, oy))
-                drawCircle(c(HIERRO_LUZ), ro, Offset(cx, oy), style = Stroke(1.2f * u))
-                drawCircle(c(HIERRO_OSC), ro * 0.3f, Offset(cx, oy + ro + 6 * u))
-                drawCircle(c(LATON), ro * 0.16f, Offset(cx, oy + ro + 6 * u))
-                oy += 44 * u
-            }
-            bisel(lad, Color.White.copy(alpha = 0.1f), Color.Black.copy(alpha = 0.3f), 1.4f * u)
-        }
-        // Las tablas: chapa con su fleje de latón y una fila de remaches.
-        d.tablas.forEach { tb ->
-            drawRect(c(HIERRO), tb.topLeft, tb.size)
-            drawRect(c(LATON), tb.topLeft, Size(tb.width, 2.2f * u))
-            drawRect(c(HIERRO_OSC), Offset(tb.left, tb.bottom - tb.height * 0.22f), Size(tb.width, tb.height * 0.22f))
-            var rx = tb.left + 6 * u
-            while (rx < tb.right - 4 * u) {
-                drawCircle(c(HIERRO_LUZ), 1.3f * u, Offset(rx, tb.top + tb.height * 0.5f))
-                drawCircle(Color.Black.copy(alpha = 0.4f), 1.3f * u, Offset(rx + 0.5f * u, tb.top + tb.height * 0.5f + 0.5f * u), style = Stroke(0.5f * u))
-                rx += 12 * u
-            }
-            drawRect(Color.Black.copy(alpha = 0.3f), Offset(tb.left, tb.bottom), Size(tb.width, 4 * u))
-        }
-        // La placa de latón de cada mes, con un remache en cada esquina.
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRect(Color.Black.copy(alpha = 0.3f), Offset(r.left + 1.2f * u, r.top + 1.2f * u), r.size)
-            drawRect(c(LATON), r.topLeft, r.size)
-            bisel(r, c(LATON_LUZ), c(LATON_OSC), 1.2f * u)
-            listOf(Offset(r.left + 3 * u, r.top + 3 * u), Offset(r.right - 3 * u, r.top + 3 * u), Offset(r.left + 3 * u, r.bottom - 3 * u), Offset(r.right - 3 * u, r.bottom - 3 * u)).forEach { o ->
-                drawCircle(c(LATON_OSC), 1.3f * u, o); drawCircle(c(LATON_LUZ), 0.5f * u, Offset(o.x - 0.4f * u, o.y - 0.4f * u))
-            }
-            textoEn(medidor, p.texto, Rect(r.left + 7 * u, r.top + 1 * u, r.right - 7 * u, r.bottom - 1 * u), letra, c(HIERRO_OSC), 10f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el zócalo de hierro calado en arcos, con sus pernos, sobre un piso de tablones.
-        val b = d.base
-        val piso = b.top + b.height * 0.66f
-        drawRect(c(TABLON), Offset(0f, piso), Size(w, h - piso))
-        vetas(Rect(0f, piso, w, h), c(TABLON_VETA).copy(alpha = 0.6f), 33, densidad = 0.8f, grosor = 0.6f)
-        var tx = 0f
-        while (tx < w) { drawLine(Color.Black.copy(alpha = 0.3f), Offset(tx, piso), Offset(tx, h), 0.8f * u); tx += 64 * u }
-        val zocalo = Rect(b.left, b.top, b.right, piso)
-        drawRect(c(HIERRO), zocalo.topLeft, zocalo.size)
-        drawRect(c(LATON), zocalo.topLeft, Size(zocalo.width, 2 * u))
-        val n = 7
-        val paso = zocalo.width * 0.84f / n
-        for (k in 0 until n) {
-            val ar = Rect(zocalo.left + zocalo.width * 0.08f + paso * k + paso * 0.15f, zocalo.top + zocalo.height * 0.3f, zocalo.left + zocalo.width * 0.08f + paso * (k + 1) - paso * 0.15f, zocalo.bottom)
-            val calado = Path().apply {
-                moveTo(ar.left, ar.bottom); lineTo(ar.left, ar.top + ar.width / 2)
-                arcTo(Rect(ar.left, ar.top, ar.right, ar.top + ar.width), 180f, 180f, false)
-                lineTo(ar.right, ar.bottom); close()
-            }
-            drawPath(calado, c(HIERRO_OSC))
-            drawPath(calado, c(HIERRO_LUZ), style = Stroke(0.8f * u))
-        }
-        listOf(zocalo.left + 6 * u, zocalo.right - 6 * u).forEach { x -> drawCircle(c(LATON), 2 * u, Offset(x, zocalo.top + zocalo.height * 0.5f)) }
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(zocalo.left, piso), Size(zocalo.width, 3 * u))
-    }
-
-    /** La cornisa, el tubo de vapor, los engranes, el manómetro, la válvula y la lámpara de gas. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        ladrillos(r, oscuro, noche)
-        // La cornisa de hierro con sus molduras y dentellones.
-        val cornisa = Rect(r.left, r.top + r.height * 0.04f, r.right, r.top + r.height * 0.18f)
-        drawRect(c(HIERRO), cornisa.topLeft, cornisa.size)
-        drawRect(c(HIERRO_LUZ), cornisa.topLeft, Size(cornisa.width, 1.6f * u))
-        drawLine(c(LATON), Offset(cornisa.left, cornisa.top + cornisa.height * 0.4f), Offset(cornisa.right, cornisa.top + cornisa.height * 0.4f), 1f * u)
-        var dx = cornisa.left + 2 * u
-        while (dx < cornisa.right) { drawRect(c(HIERRO_OSC), Offset(dx, cornisa.bottom), Size(5 * u, 4 * u)); dx += 9 * u }
-        // La tabla de arriba, de chapa remachada.
-        val tope = r.bottom - r.height * 0.09f
-        drawRect(c(HIERRO), Offset(r.left, tope), Size(r.width, r.bottom - tope))
-        drawRect(c(LATON), Offset(r.left, tope), Size(r.width, 1.8f * u))
-        // El tubo de vapor de cobre, con sus bridas.
-        val ty = r.top + r.height * 0.32f
-        val grueso = r.height * 0.075f
-        drawRect(c(COBRE), Offset(r.left, ty - grueso / 2), Size(r.width, grueso))
-        drawRect(c(COBRE_LUZ), Offset(r.left, ty - grueso * 0.32f), Size(r.width, grueso * 0.2f))
-        drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, ty + grueso * 0.25f), Size(r.width, grueso * 0.25f))
-        listOf(0.14f, 0.38f, 0.62f, 0.9f).forEach { f ->
-            val bx = r.left + r.width * f
-            drawRect(c(LATON_OSC), Offset(bx - 3 * u, ty - grueso * 0.85f), Size(6 * u, grueso * 1.7f))
-            drawRect(c(LATON_LUZ), Offset(bx - 3 * u, ty - grueso * 0.85f), Size(1.4f * u, grueso * 1.7f))
-        }
-        // Dos engranes que engranan, con su cubo y sus rayos.
-        val g1 = Offset(r.left + r.width * 0.26f, r.top + r.height * 0.6f)
-        val r1 = r.height * 0.22f
-        val g2 = Offset(g1.x + r1 * 1.6f, r.top + r.height * 0.5f)
-        val r2 = r.height * 0.14f
-        listOf(Triple(g1, r1, LATON), Triple(g2, r2, COBRE)).forEachIndexed { k, (cg, rg, col) ->
-            drawPath(engrane(cg, rg, if (k == 0) 11 else 7), c(col))
-            drawPath(engrane(cg, rg, if (k == 0) 11 else 7), Color.Black.copy(alpha = 0.35f), style = Stroke(0.8f * u))
-            drawCircle(c(HIERRO_OSC), rg * 0.62f, cg)
-            for (j in 0 until 4) {
-                val a = (Math.PI / 4 + j * Math.PI / 2).toFloat()
-                drawLine(c(col), cg, Offset(cg.x + rg * 0.64f * cos(a), cg.y + rg * 0.64f * sin(a)), rg * 0.14f)
-            }
-            drawCircle(c(col), rg * 0.2f, cg)
-            drawCircle(c(HIERRO_OSC), rg * 0.07f, cg)
-        }
-        // El manómetro al centro, colgado del tubo.
-        val cm = Offset(r.center.x + r.width * 0.04f, r.top + r.height * 0.6f)
-        val rm = r.height * 0.21f
-        drawRect(c(COBRE), Offset(cm.x - 2 * u, ty), Size(4 * u, cm.y - rm - ty))
-        manometro(cm, rm, c(LATON), c(CARA), c(ROJO), if (noche) 0.4f else 0.66f)
-        drawCircle(c(LATON_OSC), rm, cm, style = Stroke(0.8f * u))
-        // La válvula de vapor con su volante rojo, que suelta su nube.
-        val cv = Offset(r.right - r.width * 0.2f, r.top + r.height * 0.62f)
-        val rv = r.height * 0.13f
-        drawRect(c(COBRE), Offset(cv.x - grueso * 0.35f, ty), Size(grueso * 0.7f, cv.y - ty))
-        drawRect(c(LATON_OSC), Offset(cv.x - rv * 0.55f, cv.y - rv * 0.35f), Size(rv * 1.1f, rv * 0.7f))
-        drawCircle(c(ROJO), rv, Offset(cv.x, cv.y - rv * 0.9f), style = Stroke(2.2f * u))
-        for (j in 0 until 3) {
-            val a = (j * Math.PI / 3).toFloat()
-            val cc = Offset(cv.x, cv.y - rv * 0.9f)
-            drawLine(c(ROJO), Offset(cc.x - rv * cos(a), cc.y - rv * sin(a)), Offset(cc.x + rv * cos(a), cc.y + rv * sin(a)), 1.4f * u)
-        }
-        drawCircle(c(LATON), rv * 0.2f, Offset(cv.x, cv.y - rv * 0.9f))
-        val salida = Offset(cv.x + rv * 0.55f, cv.y)
-        drawRect(c(LATON_OSC), Offset(salida.x, salida.y - 2 * u), Size(5 * u, 4 * u))
-        listOf(Triple(0.6f, 0.45f, 0.5f), Triple(1.3f, 0.7f, 0.32f), Triple(2.1f, 1f, 0.18f)).forEach { (dxv, tam, al) ->
-            val o = Offset(salida.x + 5 * u + rv * dxv, salida.y - rv * dxv * 0.8f)
-            drawOval(VAPOR.copy(alpha = al), Offset(o.x - rv * tam, o.y - rv * tam * 0.6f), Size(rv * tam * 2, rv * tam * 1.2f))
-        }
-        // La lámpara de gas en su brazo, a la izquierda: de día apagada, de noche con su llama.
-        val pared = Offset(r.left + r.width * 0.035f, r.top + r.height * 0.42f)
-        val globo = Offset(r.left + r.width * 0.085f, r.top + r.height * 0.56f)
-        val rgl = r.height * 0.1f
-        val brazo = Path().apply { moveTo(pared.x, pared.y); quadraticTo(globo.x, pared.y - rgl * 0.5f, globo.x, globo.y + rgl * 1.1f) }
-        drawPath(brazo, c(LATON_OSC), style = Stroke(1.8f * u))
-        drawRect(c(LATON), Offset(pared.x - 3 * u, pared.y - 5 * u), Size(4 * u, 10 * u))
-        if (noche) mancha(globo, r.height * 0.5f, GAS.copy(alpha = 0.45f))
-        drawOval(if (noche) GAS.copy(alpha = 0.55f) else c(CARA).copy(alpha = 0.45f), Offset(globo.x - rgl * 0.75f, globo.y - rgl), Size(rgl * 1.5f, rgl * 2f))
-        if (noche) {
-            val llama = Path().apply {
-                moveTo(globo.x, globo.y - rgl * 0.55f)
-                quadraticTo(globo.x + rgl * 0.32f, globo.y + rgl * 0.1f, globo.x, globo.y + rgl * 0.4f)
-                quadraticTo(globo.x - rgl * 0.32f, globo.y + rgl * 0.1f, globo.x, globo.y - rgl * 0.55f); close()
-            }
-            drawPath(llama, Color(0xFFFFF2C8))
-        }
-        drawOval(c(LATON_OSC), Offset(globo.x - rgl * 0.75f, globo.y - rgl), Size(rgl * 1.5f, rgl * 2f), style = Stroke(0.8f * u))
-        drawRect(c(LATON), Offset(globo.x - rgl * 0.45f, globo.y + rgl * 0.85f), Size(rgl * 0.9f, rgl * 0.3f))
-        drawRect(Color.Black.copy(alpha = 0.3f), Offset(r.left, r.bottom - 3 * u), Size(r.width, 3 * u))
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val base = CUEROS[(v.semilla and 0x7fffffff) % CUEROS.size]
-        val cuero = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        // El lomo de cuero, redondeado: sombra en los cantos y una banda de luz.
-        drawRoundRect(cuero, Offset.Zero, size, CornerRadius(2 * u))
-        drawRect(Color.Black.copy(alpha = 0.28f), Offset.Zero, Size(w * 0.12f, h))
-        drawRect(Color.Black.copy(alpha = 0.22f), Offset(w * 0.88f, 0f), Size(w * 0.12f, h))
-        drawRect(Color.White.copy(alpha = 0.08f), Offset(w * 0.3f, 0f), Size(w * 0.14f, h))
-        // Las esquinas de latón, cada una con su remache.
-        val k = minOf(w * 0.36f, h * 0.08f)
-        listOf(Offset(0f, 0f) to Offset(1f, 1f), Offset(w, 0f) to Offset(-1f, 1f), Offset(0f, h) to Offset(1f, -1f), Offset(w, h) to Offset(-1f, -1f)).forEach { (o, s) ->
-            val esquina = Path().apply { moveTo(o.x, o.y); lineTo(o.x + s.x * k, o.y); lineTo(o.x, o.y + s.y * k); close() }
-            drawPath(esquina, c(LATON))
-            drawPath(esquina, c(LATON_OSC), style = Stroke(0.6f * u))
-            drawCircle(c(LATON_OSC), 0.8f * u, Offset(o.x + s.x * k * 0.3f, o.y + s.y * k * 0.3f))
-        }
-        // La placa remachada con el día.
-        val placa = Rect(w * 0.12f, h * 0.1f, w * 0.88f, h * 0.28f)
-        drawRect(c(LATON), placa.topLeft, placa.size)
-        drawRect(c(LATON_LUZ), placa.topLeft, Size(placa.width, 1 * u))
-        drawRect(c(LATON_OSC), placa.topLeft, placa.size, style = Stroke(0.7f * u))
-        val rr = minOf(1.1f * u, placa.width * 0.06f)
-        listOf(placa.left + rr * 2, placa.right - rr * 2).forEach { x ->
-            drawCircle(c(LATON_OSC), rr, Offset(x, placa.top + rr * 2)); drawCircle(c(LATON_OSC), rr, Offset(x, placa.bottom - rr * 2))
-        }
-        textoEn(medidor, v.dia, Rect(placa.left + rr * 3.5f, placa.top + 1 * u, placa.right - rr * 3.5f, placa.bottom - 1 * u), letra, c(HIERRO_OSC), 13f, peso = FontWeight.Bold)
-        // Un engrane estampado en dorado; de noche, una luna.
-        val ce = Offset(w * 0.5f, h * 0.33f)
-        val re = minOf(w * 0.2f, 5 * u)
-        if (v.noche) {
-            drawCircle(LUNA, re, ce)
-            drawCircle(cuero, re * 0.85f, Offset(ce.x + re * 0.45f, ce.y - re * 0.25f))
-        } else {
-            drawPath(engrane(ce, re, 6), c(LATON_LUZ).copy(alpha = 0.8f))
-            drawCircle(cuero, re * 0.35f, ce)
-        }
-        // El mes, dorado a lo largo del lomo.
-        textoEn(medidor, v.mes, Rect(w * 0.16f, h * 0.39f, w * 0.84f, h * 0.72f), letra, c(LATON_LUZ), 8.5f, vertical = true, minimo = 4.5f)
-        // Los nervios: más cuanto más escribiste.
-        val nervios = 1 + (v.lleno * 2.5f).toInt()
-        for (j in 0 until nervios) {
-            val ny = h * (0.76f + 0.05f * j)
-            drawRect(Color.Black.copy(alpha = 0.32f), Offset(0f, ny + 1.6f * u), Size(w, 1.2f * u))
-            drawRect(Color.White.copy(alpha = 0.14f), Offset(0f, ny), Size(w, 1.6f * u))
-            drawLine(c(LATON).copy(alpha = 0.7f), Offset(w * 0.14f, ny - 1 * u), Offset(w * 0.86f, ny - 1 * u), 0.5f * u)
-        }
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteVapor) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
