@@ -209,10 +209,15 @@ internal object RinconLibretaAntiguas {
 
     /**
      * De día, el sol de la ventana: en el enlucido azul lo aclara hacia un azul tibio con un halo corto; en el roble del pie
-     * derecho, corrido, lo calienta. De noche, la luna: fría y más tenue, en los mismos planos.
+     * derecho, corrido, lo calienta. De noche no hay paño (sobre el añil se leería como un cristal apoyado): la luna solo deja su
+     * filo frío en los cantos de la izquierda (el pie derecho, aquí; el jalón, el reloj de arena y el canto del libro, en los suyos).
      */
     fun DrawScope.pano(s: SitioLibretaAntiguas, L: LuzLibretaAntiguas) {
         val h = s.h
+        if (L.oscuro) {
+            drawLine(L.am.lunar(0.9f), Offset(h * 0.006f, s.viga + h * 0.07f), Offset(h * 0.006f, s.suelo - h * 0.02f), 1.4f * density)
+            return
+        }
         val pared = panoForma(s, L.oscuro, 0f)
         val poste = panoForma(s, L.oscuro, 1f)
         clipRect(s.poste, s.viga, s.xJamba, s.suelo) {
@@ -546,7 +551,11 @@ internal object RinconLibretaAntiguas {
             drawRect(maderaLuz, Offset(c.x - an / 2, y), Size(an, h * 0.005f))
             drawRect(am.sombra(0.35f), Offset(c.x + an * 0.2f, y), Size(an * 0.3f, h * 0.016f))
         }
-        if (L.oscuro) drawLine(am.filo(0.7f * L.k(c)), Offset(c.x + an / 2, top - h * 0.016f), Offset(c.x + an / 2, pie.y), 1f * u)
+        if (L.oscuro) {
+            drawLine(am.filo(0.7f * L.k(c)), Offset(c.x + an / 2, top - h * 0.016f), Offset(c.x + an / 2, pie.y), 1f * u)
+            drawLine(am.lunar(0.8f), Offset(c.x - an / 2, top - h * 0.016f), Offset(c.x - an / 2, pie.y), 1f * u)
+            drawLine(am.lunar(0.6f), Offset(c.x - ar * 0.7f, top + (cuello - top) * 0.2f), Offset(c.x - ar * 0.55f, cuello - (cuello - top) * 0.3f), 0.9f * u)
+        }
         else drawLine(am.claro(0.5f), Offset(c.x - an / 2, top - h * 0.016f), Offset(c.x - an / 2, pie.y), 1f * u)
     }
 

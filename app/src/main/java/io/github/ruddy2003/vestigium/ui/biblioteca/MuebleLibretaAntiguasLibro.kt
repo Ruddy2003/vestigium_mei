@@ -195,13 +195,12 @@ internal object LibroLibretaAntiguas {
                 drawPath(with(RinconLibretaAntiguas) { panoForma(s, false, 1.6f) }, P.SOL.copy(alpha = 0.3f), blendMode = BlendMode.Screen)
             } else {
                 drawRect(Brush.horizontalGradient(listOf(Color.Transparent, P.LLAMA.copy(alpha = (0.75f * kd).coerceAtMost(0.42f))), r.left + bw * 0.3f, r.right), r.topLeft, r.size)
-                drawPath(with(RinconLibretaAntiguas) { panoForma(s, true, 1.6f) }, P.LUNA.copy(alpha = 0.1f), blendMode = BlendMode.Screen)
             }
         }
         // El lomo: la charnela hundida junto al canto de la izquierda, con su luz.
         val ch = r.left + bw * 0.06f
         drawRect(L.cosa(CORDOBAN_OSC, r.centerLeft), Offset(ch - h * 0.004f, r.top), Size(h * 0.006f, rh))
-        drawRect(if (L.oscuro) am.lunar(0.4f * (0.5f + L.l(r.centerLeft))) else am.claro(0.3f), Offset(r.left, r.top), Size(h * 0.006f, rh))
+        drawRect(if (L.oscuro) am.lunar(0.9f) else am.claro(0.3f), Offset(r.left, r.top), Size(h * 0.006f, rh))
         drawRect(if (L.oscuro) am.lunar(0.3f) else am.claro(0.35f), Offset(ch + h * 0.003f, r.top), Size(1f * u, rh))
         // El marco dorado doble, con un florón en cada esquina de dentro.
         val oro = L.cosa(P.ORO, r.center)
