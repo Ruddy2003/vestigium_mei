@@ -355,7 +355,7 @@ internal object MuroEstanteNouveau {
         val c = Offset(w * MuebleEstanteNouveau.LAMP_X, w * MuebleEstanteNouveau.LAMP_Y)
         val f = if (a.oscuro) (if (a.noche) 0.6f else 1f) else 0.55f
         clipRect(0f, 0f, w, ch) {
-            mancha(c, w * 0.3f, P.LAMPARA.copy(alpha = 0.24f * f))
+            mancha(c, w * 0.32f, P.LAMPARA.copy(alpha = 0.3f * f))
             mancha(c, w * 0.12f, P.FUEGO.copy(alpha = 0.42f * f))
         }
     }

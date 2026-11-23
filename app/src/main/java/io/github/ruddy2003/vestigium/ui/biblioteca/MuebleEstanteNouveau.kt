@@ -367,7 +367,7 @@ internal object MuebleEstanteNouveau {
 
     /** La luz del aplique en la pared y en lo de arriba: más corta, para que lo lejano se hunda. */
     fun apliqueArriba(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 1.0f else 1.5f) * exp(-3.6f * sqrt(dx * dx + dy * dy * 1.1f))).coerceIn(0.03f, 1f)
+        ((if (suenos) 1.0f else 1.65f) * exp(-4.1f * sqrt(dx * dx + dy * dy * 1.1f))).coerceIn(0.03f, 1f)
 
     /** La luz de la palmatoria del pie: corta, para lo de abajo. */
     fun palmatoria(dx: Float, dy: Float, suenos: Boolean): Float =
