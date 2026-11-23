@@ -113,6 +113,17 @@ internal fun DrawScope.ventanaBotellasColonos(g: MarcoColonos, r: Rect) {
     drawRect(g.c(PINO, al.center), al.topLeft, al.size)
     drawRect(g.c(PINO_OSC, al.center), Offset(al.left, al.top + al.height * 0.5f), Size(al.width, al.height * 0.5f))
     drawRect(if (luz != null && !a.oscuro) luz.copy(alpha = 0.5f) else a.brillo(0.45f, g.k(al.center)), al.topLeft, Size(al.width, 1f * u))
+    // Los puntos de color que las botellas dejan en el alféizar y en el derrame de abajo (de sol, de poniente o de luna).
+    if (luz != null) {
+        val fuerte = if (a.oscuro) 0.35f else 0.6f
+        for (i in 0 until 7) {
+            val col = mezcla(VIDRIOS_COLONOS[(i * 2) % VIDRIOS_COLONOS.size], luz, 0.2f).copy(alpha = fuerte)
+            val x = al.left + al.width * (0.12f + 0.76f * azar(7145, i))
+            drawOval(col, Offset(x, al.top + 0.3f * u), Size(w * (0.014f + 0.01f * azar(7146, i)), w * 0.004f))
+            val y = r.bottom + (fuera.bottom - r.bottom) * azar(7147, i)
+            drawOval(col.copy(alpha = fuerte * 0.7f), Offset(r.left + r.width * azar(7148, i), y), Size(w * 0.012f, w * 0.004f))
+        }
+    }
 }
 
 /**

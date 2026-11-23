@@ -3,6 +3,7 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -46,7 +47,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 internal fun DrawScope.sombraParedColonos(g: MarcoColonos, p: Path, desde: Offset, hasta: Float, a0: Float = 0.18f) {
     val w = g.w; val a = g.a
     clipRect(0f, 0f, w, hasta) {
-        if (!a.oscuro) translate(w * 0.02f, w * 0.012f) { drawPath(p, a.sombra(a0)) }
+        if (!a.oscuro) translate(w * 0.028f, w * 0.018f) { drawPath(p, a.sombra(a0 * 1.5f)) }
         else {
             val k = g.k(desde)
             if (k > 0.1f) {
@@ -68,12 +69,13 @@ internal fun DrawScope.coronaColonos(g: MarcoColonos) {
     // La pared llega hasta abajo de la corona: asoma a los lados de la cornisa y no deja nada transparente en la imagen guardada.
     paredColonos(g, g.ch + 1f)
     cenefaColonos(g, w * 0.06f, w * 0.088f)
-    desconchonColonos(g, Offset(w * 0.93f, w * 0.38f), w * 0.034f, 7161, true)
-    desconchonColonos(g, Offset(w * 0.62f, w * 0.36f), w * 0.018f, 7162, false)
+    desconchonColonos(g, Offset(w * 0.875f, w * 0.365f), w * 0.068f, 7161, true)
+    desconchonColonos(g, Offset(w * 0.325f, w * 0.13f), w * 0.042f, 7162, true)
+    desconchonColonos(g, Offset(w * 0.6f, w * 0.38f), w * 0.022f, 7163, false)
     val vent = Rect(w * 0.05f, w * 0.108f, w * 0.23f, w * 0.282f)
     ventanaBotellasColonos(g, vent)
     vigaColonos(g, vb)
-    coladorColonos(g, Offset(w * 0.6f, w * 0.15f), w * 0.03f)
+    coladorColonos(g, Offset(w * 0.595f, w * 0.135f), w * 0.043f)
     sartenColonos(g, Offset(w * 0.69f, w * 0.104f))
     antenaColonos(g, Offset(w * 0.44f, w * 0.27f), Offset(w * 0.575f, w * 0.07f))
     hierbasColonos(g, Offset(w * 0.955f, vb))
@@ -91,6 +93,10 @@ internal fun DrawScope.coronaColonos(g: MarcoColonos) {
     bateriaColonos(g, Rect(w * 0.49f, pie - w * 0.07f, w * 0.585f, pie + w * 0.004f))
     cablesRadioColonos(g, Offset(w * 0.465f, pie - w * 0.03f), Offset(w * 0.505f, pie - w * 0.072f), Offset(w * 0.565f, pie - w * 0.072f))
     calabazaColonos(g, Offset(w * 0.445f, g.apoyo - w * 0.034f), w * 0.064f, w * 0.036f)
+    // Al anochecer, la luz tiene dirección: el poniente tibio entra por la ventana, arriba a la izquierda, y el violeta se
+    // junta abajo a la derecha, lejos de ella.
+    if (!a.oscuro && a.noche) drawRect(Brush.linearGradient(listOf(PaletaColonos.PONIENTE.copy(alpha = 0.16f), Color.Transparent, PaletaColonos.ANOCHECER.copy(alpha = 0.2f)),
+        Offset(0f, 0f), Offset(w, g.ch)), Offset.Zero, Size(w, g.ch))
     // De noche, la bombilla arde encima de todo lo que tiene cerca.
     val l = Offset(w * MuebleEstanteColonos.LAMP_X, w * MuebleEstanteColonos.LAMP_Y)
     if (a.oscuro) {

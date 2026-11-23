@@ -163,27 +163,49 @@ internal fun DrawScope.desconchonColonos(g: MarcoColonos, c: Offset, r: Float, s
     p.close()
     val k = g.k(c)
     val barro = if (a.oscuro) g.c(mezcla(BARRO, CAL_OSC, 0.45f), c) else a.luz(mezcla(BARRO, CAL, 0.4f), k)
-    drawPath(corridoColonos(p, 1f * u, 1.2f * u), a.claro(0.5f))
+    drawPath(corridoColonos(p, 0.8f * u, 1f * u), a.claro(0.28f))
     drawPath(p, barro)
     clipPath(p) {
         if (adobes) {
-            val al = r * 0.62f
-            for (f in 0 until 3) {
-                val y = c.y - r * 0.9f + al * f
-                val corre = if (f % 2 == 0) 0f else r * 0.65f
-                var x = c.x - r * 2.2f - corre
-                var j = 0
-                while (x < c.x + r * 2.2f && j < 10) {
-                    val b = Rect(x + 1f * u, y + 1f * u, x + r * 1.3f - 1f * u, y + al - 1f * u)
-                    drawRect(if (a.oscuro) g.c(mezcla(mezcla(ADOBE, BARRO, 0.4f), CAL_OSC, 0.3f), c) else a.luz(mezcla(mezcla(ADOBE, BARRO, 0.35f + 0.3f * azar(semilla + f, j)), CAL, 0.25f), k), b.topLeft, b.size)
-                    drawRect(a.sombra(0.18f), Offset(b.left, b.bottom - 1f * u), Size(b.width, 1f * u))
-                    x += r * 1.3f; j++
+            // Debajo del enjarre de barro, donde también se cayó: los adobes con su paja y sus juntas de barro más claro.
+            val p2 = Path()
+            for (i in 0 until n) {
+                val ang = (i.toFloat() / n) * 6.283f
+                val rr = r * 0.66f * (0.7f + 0.45f * azar(semilla + 50, i))
+                val x = c.x + r * 0.12f + rr * kotlin.math.cos(ang) * 1.4f
+                val y = c.y + r * 0.06f + rr * kotlin.math.sin(ang) * 0.75f
+                if (i == 0) p2.moveTo(x, y) else p2.lineTo(x, y)
+            }
+            p2.close()
+            drawPath(p2, if (a.oscuro) g.c(mezcla(BARRO, CRUDO, 0.3f), c, 0.8f) else a.luz(mezcla(BARRO, CRUDO, 0.35f), k))
+            clipPath(p2) {
+                val al = r * 0.4f
+                val pajaAdobe = Path()
+                for (f in 0 until 5) {
+                    val y = c.y - r * 1.0f + al * f
+                    val corre = if (f % 2 == 0) 0f else r * 0.42f
+                    var x = c.x - r * 2.4f - corre
+                    var j = 0
+                    while (x < c.x + r * 2.4f && j < 14) {
+                        val b = Rect(x + 1.2f * u, y + 1.2f * u, x + r * 0.84f - 1.2f * u, y + al - 1.2f * u)
+                        val tono = mezcla(ADOBE, BARRO, 0.2f + 0.35f * azar(semilla + f, j))
+                        drawRect(if (a.oscuro) g.c(tono, c, 0.8f) else a.luz(tono, k), b.topLeft, b.size)
+                        drawRect(a.sombra(0.25f), Offset(b.left, b.bottom - 1.2f * u), Size(b.width, 1.2f * u))
+                        drawRect(a.claro(0.2f), Offset(b.left, b.top), Size(b.width, 0.8f * u))
+                        for (q in 0 until 3) {
+                            val px = b.left + b.width * azar(semilla + 70 + f, j * 3 + q); val py = b.top + b.height * azar(semilla + 80 + f, j * 3 + q)
+                            pajaAdobe.moveTo(px, py); pajaAdobe.lineTo(px + r * 0.16f, py + r * 0.04f * (azar(semilla + 90, j + q) - 0.5f))
+                        }
+                        x += r * 0.84f; j++
+                    }
                 }
+                drawPath(pajaAdobe, (if (a.oscuro) g.c(CRUDO, c, 0.5f) else mezcla(CRUDO, BARRO, 0.3f)).copy(alpha = 0.6f), style = Stroke(0.6f * u))
+                drawPath(corridoColonos(p2, 1.6f * u, 1.8f * u), a.sombra(0.3f), style = Stroke(3.4f * u))
             }
         }
         // La paja del enjarre.
         val paja = Path()
-        for (i in 0 until 8) {
+        for (i in 0 until 16) {
             val q = Offset(c.x + r * (azar(semilla + 9, i) - 0.5f) * 2.4f, c.y + r * (azar(semilla + 10, i) - 0.5f) * 1.1f)
             paja.moveTo(q.x, q.y); paja.lineTo(q.x + r * 0.28f, q.y + r * 0.06f * (azar(semilla, 20 + i) - 0.5f))
         }
@@ -251,7 +273,8 @@ internal fun DrawScope.aisladorColonos(g: MarcoColonos, p: Offset) {
 internal fun DrawScope.paredLadosColonos(g: MarcoColonos) {
     val u = density; val w = g.w; val a = g.a
     val b = g.borde
-    val zoc = g.fondo + w * 0.035f
+    // El zócalo de almagre llega hasta media altura de la última repisa: asoma en las franjas de los lados.
+    val zoc = maxOf(g.ch + w * 0.05f, g.fondo - w * 0.36f)
     // Cada franja, un píxel más ancha hacia la alacena (el costado la tapa): sin junta a medio píxel.
     listOf(0f, w - b - 1f).forEach { x ->
         val tramos = maxOf(1, ((g.suelo - g.ch) / (w * 0.15f)).toInt()).coerceAtMost(30)
@@ -259,7 +282,7 @@ internal fun DrawScope.paredLadosColonos(g: MarcoColonos) {
             val y0 = g.ch + (g.suelo - g.ch) * t / tramos; val y1 = g.ch + (g.suelo - g.ch) * (t + 1) / tramos + 0.6f
             val p = Offset(x + b / 2, (y0 + y1) / 2)
             val col = if (y0 >= zoc) ALMAGRE else CAL
-            drawRect(if (a.oscuro || col == ALMAGRE) g.c(col, p) else calEnColonos(g, p), Offset(x, y0), Size(b + 1f, y1 - y0))
+            drawRect(if (col == ALMAGRE) g.c(col, p) else calEnColonos(g, p), Offset(x, y0), Size(b + 1f, y1 - y0))
         }
         if (zoc < g.suelo) {
             val p = Offset(x + b / 2, zoc)
@@ -268,7 +291,7 @@ internal fun DrawScope.paredLadosColonos(g: MarcoColonos) {
         }
     }
     // La sombra de la alacena en la pared: de día a su derecha; de noche, al lado contrario de la bombilla.
-    if (!a.oscuro) drawRect(a.sombra(0.32f), Offset(w - b, g.ch), Size(b * 0.7f, g.suelo - g.ch))
+    if (!a.oscuro) drawRect(a.sombra(0.45f), Offset(w - b - 1f, g.ch), Size(b * 0.85f, g.suelo - g.ch))
     else drawRect(a.sombra(0.4f), Offset(b * 0.3f, g.ch), Size(b * 0.7f, g.suelo - g.ch))
 }
 

@@ -1,6 +1,5 @@
 package io.github.ruddy2003.vestigium.ui.biblioteca
 
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -37,26 +36,6 @@ import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
  * media caña y lo que quedó de la puerta, las tablas de canto redondo, el rótulo de cada mes y el cuerpo bajo de cajones.
  */
 
-/**
- * La pintura gastada de una pieza: rozaduras finas a lo largo de la veta, por donde asoma lo de debajo ([col]); la mitad
- * pegadas a los cantos, que es donde más roza. Un solo camino para todas.
- */
-internal fun DrawScope.gastadoColonos(r: Rect, col: Color, semilla: Int, cuantas: Int, vertical: Boolean, alfa: Float = 0.7f) {
-    val u = density
-    val p = Path()
-    for (k in 0 until cuantas) {
-        val largo = (6f + 26f * azar(semilla, 3 * k)) * u
-        val grosor = (0.8f + 2.2f * azar(semilla, 3 * k + 1)) * u
-        val t = azar(semilla, 3 * k + 2)
-        val b = azar(semilla + 7, k)
-        val orilla = if (k % 2 == 0) (if (b < 0.5f) b * 0.22f else 1f - (1f - b) * 0.22f) else b
-        val rr = if (vertical) Rect(r.left + r.width * orilla - grosor / 2, r.top + r.height * t - largo / 2, r.left + r.width * orilla + grosor / 2, r.top + r.height * t + largo / 2)
-        else Rect(r.left + r.width * t - largo / 2, r.top + r.height * orilla - grosor / 2, r.left + r.width * t + largo / 2, r.top + r.height * orilla + grosor / 2)
-        p.addRoundRect(androidx.compose.ui.geometry.RoundRect(rr, CornerRadius(grosor / 2)))
-    }
-    clipRect(r.left, r.top, r.right, r.bottom) { drawPath(p, col.copy(alpha = alfa)) }
-}
-
 // ---------------------------------------------------------------- la cornisa
 
 /**
@@ -91,6 +70,10 @@ internal fun DrawScope.cornisaColonos(g: MarcoColonos) {
     drawRect(a.claro(0.45f), Offset(tapa.left, ap - 1f * u), Size(tapa.width, 1f * u))
     // El canto de la tabla: el bocel, con su luz arriba y su sombra abajo, la veta y lo gastado.
     gastadoColonos(tapa, g.c(PINO, Offset(w * 0.5f, ap)), 7206, 16, false, 0.55f)
+    // El canto de la tabla, pelado hasta el pino a trechos largos, y dos saltones donde asoma la mano de antes.
+    cantoPeladoColonos(g, Rect(tapa.left, tapa.top, tapa.right, tapa.top + 4f * u), 7211, false, 0.6f)
+    saltadoColonos(g, Offset(w * 0.22f, tapa.center.y + tapa.height * 0.15f), w * 0.06f, tapa.height * 0.4f, 7212, tapa)
+    saltadoColonos(g, Offset(w * 0.8f, (cima.bottom + ch) / 2f + w * 0.01f), w * 0.07f, w * 0.022f, 7213, Rect(g.borde, cima.bottom, w - g.borde, ch))
     vetas(tapa, a.sombra(0.2f), 7202, 0.7f, grosor = 0.5f, ondulacion = 0.4f)
     drawRect(a.claro(0.55f), Offset(tapa.left, tapa.top), Size(tapa.width, 1.3f * u))
     drawRect(a.claro(0.18f), Offset(tapa.left, tapa.top + 1.3f * u), Size(tapa.width, tapa.height * 0.32f))
@@ -179,12 +162,13 @@ internal fun DrawScope.casilleroColonos(k: Int, r: Rect, oc: Float, g: MarcoColo
         // El fondo turquesa: de noche, cada tablilla con la luz que le llega (las juntas esconden el salto de una a otra).
         val paso = w * 0.058f
         val x00 = fondo.left + paso * (0.4f + 0.3f * azar(7300, k))
+        val turquesa = if (a.oscuro) mezcla(TURQUESA, PaletaColonos.BOTELLA, 0.45f) else TURQUESA
         if (!a.lumbre) drawRect(g.c(TURQUESA, r.center, 0.85f), fondo.topLeft, fondo.size)
         else {
             var xa = fondo.left; var xb = x00; var n = 0
             while (xa < fondo.right && n < 40) {
                 val p = Offset((xa + xb) / 2, r.center.y)
-                drawRect(g.c(TURQUESA, p, 0.85f), Offset(xa, fondo.top), Size(minOf(xb, fondo.right) - xa + 0.6f, fondo.height))
+                drawRect(g.cSobre(turquesa, p, PaletaColonos.BOTELLA_HONDO, 0.85f), Offset(xa, fondo.top), Size(minOf(xb, fondo.right) - xa + 0.6f, fondo.height))
                 xa = xb; xb += paso; n++
             }
         }
@@ -232,9 +216,10 @@ internal fun DrawScope.casilleroColonos(k: Int, r: Rect, oc: Float, g: MarcoColo
         drawLine(a.sombra(0.5f), Offset(x0 + dI, r.top + dT), Offset(x1 - dI, r.top + dT), 0.8f * u)
         // La sombra de la tabla de arriba en el fondo: honda junto a ella y deshecha hacia abajo.
         val fz = if (a.oscuro) 1.15f else 1f
-        drawRect(a.sombra(0.42f * fz), Offset(fondo.left, fondo.top), Size(fondo.width, 5f * u))
-        drawRect(a.sombra(0.22f * fz), Offset(fondo.left, fondo.top), Size(fondo.width, 14f * u))
-        drawRect(a.sombra(0.1f * fz), Offset(fondo.left, fondo.top), Size(fondo.width, 26f * u))
+        val hs = if (a.oscuro) 1.5f else 1f
+        drawRect(a.sombra(0.42f * fz * hs), Offset(fondo.left, fondo.top), Size(fondo.width, 5f * u))
+        drawRect(a.sombra(0.22f * fz * hs), Offset(fondo.left, fondo.top), Size(fondo.width, 14f * u * hs))
+        drawRect(a.sombra(0.1f * fz * hs), Offset(fondo.left, fondo.top), Size(fondo.width, 26f * u * hs))
         // El costado de la izquierda le quita la luz a ese lado de día; de noche, la sombra cae del lado contrario a la bombilla.
         if (!a.oscuro) drawRect(a.sombra(0.26f), Offset(fondo.left, fondo.top), Size(10f * u, fondo.height))
         else drawRect(a.sombra(0.2f), Offset(fondo.left, fondo.top), Size(fondo.width * 0.25f, fondo.height))
@@ -277,10 +262,22 @@ internal fun DrawScope.costadosColonos(g: MarcoColonos, tablas: List<Rect>) {
             drawRect(g.c(MAIZ, Offset(r.center.x, (y0 + y1) / 2)), Offset(r.left, y0), Size(r.width, y1 - y0))
         }
         val kc = g.k(r.center)
-        gastadoColonos(r, a.luz(PINO, kc, g.br(r.center)), if (izq) 7401 else 7402, ((bot - top) / (w * 0.035f)).toInt().coerceIn(8, 80), true, 0.7f)
-        vetas(r, a.sombra(0.26f), if (izq) 7403 else 7404, 1.2f, vertical = true, grosor = 0.5f, ondulacion = 0.6f)
-        // Cada costado son dos tablas: la junta, con su sombra y su luz.
+        val alto = bot - top
+        // Cada costado son dos tablas: la de dentro, de otra lata, más desteñida.
         val xj = r.left + r.width * (if (izq) 0.42f else 0.58f)
+        if (izq) drawRect(a.claro(0.22f), Offset(xj, top), Size(r.right - xj, alto)) else drawRect(a.claro(0.22f), Offset(r.left, top), Size(xj - r.left, alto))
+        gastadoColonos(r, a.luz(PINO, kc, g.br(r.center)), if (izq) 7401 else 7402, (alto / (w * 0.035f)).toInt().coerceIn(8, 80), true, 0.7f)
+        vetas(r, a.sombra(0.26f), if (izq) 7403 else 7404, 1.2f, vertical = true, grosor = 0.5f, ondulacion = 0.6f)
+        // Los nudos que se marcan bajo la pintura.
+        listOf(0.22f, 0.66f).forEachIndexed { j, f -> nudoColonos(g, Offset(r.left + r.width * (if (izq) 0.22f else 0.78f) + j * r.width * 0.06f, top + alto * f), w * 0.006f, true) }
+        // Los cantos pelados hasta el pino: el de fuera, mucho; el de dentro, menos.
+        val peladoFuera = if (izq) Rect(r.left, top, r.left + 4.5f * u, bot) else Rect(r.right - 4.5f * u, top, r.right, bot)
+        val peladoDentro = if (izq) Rect(r.right - 3.5f * u, top, r.right, bot) else Rect(r.left, top, r.left + 3.5f * u, bot)
+        cantoPeladoColonos(g, peladoFuera, if (izq) 7405 else 7406, true, 0.62f)
+        cantoPeladoColonos(g, peladoDentro, if (izq) 7407 else 7408, true, 0.32f)
+        // Un saltón grande, donde asoma la mano de antes.
+        if (alto > w * 0.3f) saltadoColonos(g, Offset(r.center.x + r.width * (if (izq) 0.05f else -0.05f), top + alto * (if (izq) 0.3f else 0.74f)),
+            r.width * 0.46f, minOf(w * 0.055f, alto * 0.08f), if (izq) 7409 else 7410, r)
         drawLine(a.sombra(0.35f), Offset(xj, top), Offset(xj, bot), 0.9f * u)
         drawLine(a.claro(0.25f), Offset(xj + 0.9f * u, top), Offset(xj + 0.9f * u, bot), 0.6f * u)
         // La media caña del canto de dentro: su sombra y su luz.
@@ -310,7 +307,7 @@ internal fun DrawScope.costadosColonos(g: MarcoColonos, tablas: List<Rect>) {
     }
     // El remiendo de lata clavado en el costado izquierdo, abajo, y el trapo colgado de un clavo en el derecho.
     if (alto > w * 0.4f) {
-        remiendoCostadoColonos(g, Rect(g.borde + w * 0.006f, bot - minOf(alto * 0.34f, w * 0.34f), g.x0 + w * 0.003f, bot - minOf(alto * 0.34f, w * 0.34f) + w * 0.075f))
+        remiendoCostadoColonos(g, Rect(g.borde - w * 0.004f, bot - minOf(alto * 0.36f, w * 0.36f), g.x0 + w * 0.006f, bot - minOf(alto * 0.36f, w * 0.36f) + w * 0.11f))
         trapoColonos(g, Offset(g.x1 + (w - g.borde - g.x1) * 0.5f, top + minOf(alto * 0.2f, w * 0.26f)))
     }
     // Los clavos que sujetan cada tabla, dos por lado.
@@ -425,19 +422,27 @@ internal fun DrawScope.tablaColonos(k: Int, r: Rect, ultima: Boolean, g: MarcoCo
     val tramos = if (a.lumbre) 18 else 1
     for (i in 0 until tramos) {
         val xa = t.left + t.width * i / tramos; val xb = t.left + t.width * (i + 1) / tramos + 0.6f
-        drawRect(g.c(if (repuesta) PINO else MAIZ, Offset((xa + xb) / 2, t.center.y)), Offset(xa, t.top), Size(xb - xa, t.height))
+        drawRect(g.c(if (repuesta) PaletaColonos.PINO_NUEVO else MAIZ, Offset((xa + xb) / 2, t.center.y)), Offset(xa, t.top), Size(xb - xa, t.height))
     }
     val kc = g.k(t.center)
     if (repuesta) {
-        vetas(t, g.c(PINO_OSC, t.center).copy(alpha = 0.6f), 7560, 1.4f, grosor = 0.6f, ondulacion = 0.8f)
-        // Un nudo de la madera y la pintura que alguien probó y no siguió.
-        drawOval(g.c(PINO_OSC, t.center), Offset(t.left + t.width * 0.63f, t.top + t.height * 0.3f), Size(t.height * 0.5f, t.height * 0.32f))
-        drawRect(g.c(MAIZ, t.center).copy(alpha = 0.75f), Offset(t.left, t.top), Size(t.width * 0.08f, t.height))
-    }
-    // Lo gastado: el centro del canto, de tanto apoyar la mano, y alguna esquina.
-    if (!repuesta) {
-        gastadoColonos(Rect(t.left + t.width * 0.3f, t.top, t.right - t.width * 0.3f, t.bottom), a.luz(PINO, kc, g.br(t.center)), 7500 + k, 10, false, 0.65f)
+        vetas(t, g.c(PINO_OSC, t.center).copy(alpha = 0.75f), 7560, 1.6f, grosor = 0.7f, ondulacion = 1.1f)
+        // Dos nudos de la madera nueva, la pintura que alguien probó en una punta y no siguió, y la sombra que deja: es más
+        // delgada que las otras y no llega al fondo.
+        drawOval(g.c(PINO_OSC, t.center), Offset(t.left + t.width * 0.63f, t.top + t.height * 0.3f), Size(t.height * 0.55f, t.height * 0.36f))
+        drawOval(g.c(PINO_OSC, t.center).copy(alpha = 0.7f), Offset(t.left + t.width * 0.24f, t.top + t.height * 0.5f), Size(t.height * 0.4f, t.height * 0.26f))
+        drawRect(g.c(MAIZ, t.center).copy(alpha = 0.8f), Offset(t.left, t.top), Size(t.width * 0.07f, t.height))
+        listOf(t.left + t.width * 0.09f, t.right - t.width * 0.04f).forEach { x ->
+            clavoColonos(Offset(x, t.top + t.height * 0.35f), 1.1f * u, g); clavoColonos(Offset(x, t.top + t.height * 0.7f), 1.1f * u, g)
+        }
+    } else {
+        // Lo gastado: el canto de arriba pelado a trechos largos, el centro (de tanto apoyar la mano), alguna esquina y, en
+        // algunas tablas, un saltón donde asoma la mano de antes.
+        cantoPeladoColonos(g, Rect(t.left, t.top, t.right, t.top + 3.5f * u), 7500 + k, false, 0.5f)
+        gastadoColonos(Rect(t.left + t.width * 0.3f, t.top, t.right - t.width * 0.3f, t.bottom), a.luz(PINO, kc, g.br(t.center)), 7510 + k, 10, false, 0.65f)
         gastadoColonos(t, a.luz(PINO, kc, g.br(t.center)), 7520 + k, 6, false, 0.5f)
+        if (k % 2 == 0 || ultima) saltadoColonos(g, Offset(t.left + t.width * (0.15f + 0.6f * azar(7530, k)), t.center.y + t.height * 0.1f), w * 0.05f, t.height * 0.42f, 7531 + k, t)
+        nudoColonos(g, Offset(t.left + t.width * (0.35f + 0.4f * azar(7532, k)), t.center.y), t.height * 0.16f, false)
     }
     vetas(t, a.sombra(0.2f), 7540 + k, 0.6f, grosor = 0.5f, ondulacion = 0.4f)
     // El bocel: luz arriba y sombra abajo; el filo de la bombilla de noche, donde le llega.
@@ -492,7 +497,7 @@ internal fun DrawScope.cuerpoBajoColonos(g: MarcoColonos) {
     if (cj - top < 3f * u) return
     val x0 = g.borde; val x1 = w - g.borde
     // El oscuro bajo el mueble, entre las patas, y su sombra en el piso.
-    drawRect(a.sombra(0.55f), Offset(x0, fd), Size(x1 - x0, ps - fd))
+    drawRect(a.sombra(0.38f), Offset(x0, fd), Size(x1 - x0, ps - fd))
     drawRect(a.sombra(0.3f), Offset(x0 - w * 0.01f, ps - 1.5f * u), Size(x1 - x0 + w * 0.03f, w * 0.014f))
     // La caja de los cajones y el faldón.
     val tramos = if (a.lumbre) 16 else 1
@@ -526,6 +531,8 @@ internal fun DrawScope.cuerpoBajoColonos(g: MarcoColonos) {
         drawRect(a.claro(0.4f), f.topLeft, Size(f.width, 1f * u))
         drawRect(a.sombra(0.25f), Offset(f.left, f.bottom - 1.4f * u), Size(f.width, 1.4f * u))
         gastadoColonos(f, g.c(PINO, f.center), 7610 + i, 7, false, 0.6f)
+        if (i == 0) saltadoColonos(g, Offset(f.left + f.width * 0.25f, f.center.y + f.height * 0.1f), f.width * 0.17f, f.height * 0.32f, 7612, f)
+        cantoPeladoColonos(g, Rect(f.left, f.top, f.right, f.top + 3f * u), 7614 + i, false, 0.55f)
         // La perilla de madera torneada, con la mugre de la mano alrededor.
         val tc = Offset(f.center.x, f.center.y)
         mancha(tc, f.height * 0.5f, a.sombra(0.18f))

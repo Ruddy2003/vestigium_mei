@@ -6,16 +6,10 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.ImageShader
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.ShaderBrush
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.TileMode
-import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -23,9 +17,6 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
-import io.github.ruddy2003.vestigium.ui.TemaId
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaColonos.CORDEL
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaColonos.CRUDO
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaColonos.ELOTE
@@ -43,89 +34,9 @@ import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaColonos.PINO_OSC
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaColonos.VERDE
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
-import io.github.ruddy2003.vestigium.ui.juegoTonos
-import kotlin.math.roundToInt
 
-/** Las escalas del ánimo de Colonos, la de día y la de noche (bajo, medio, alto). */
-private val TONOS_COLONOS: Pair<List<Color>, List<Color>> by lazy { juegoTonos(TemaId.COLONOS, false) to juegoTonos(TemaId.COLONOS, true) }
-
-private fun cuadradoColonos(x: Float) = x * x
-
-/** Dónde cae un color en una escala (de 0, bajo, a 1, alto): el tramo y la fracción que más se le acercan; si no está, null. */
-private fun enEscalaColonos(t: Color, e: List<Color>): Float? {
-    if (e.size < 3) return null
-    var mejor: Float? = null
-    var error = 0.03f
-    for (seg in 0 until 2) {
-        val a0 = e[seg]; val a1 = e[seg + 1]
-        val dr = a1.red - a0.red; val dg = a1.green - a0.green; val db = a1.blue - a0.blue
-        val largo = dr * dr + dg * dg + db * db
-        if (largo < 1e-5f) continue
-        val f = (((t.red - a0.red) * dr + (t.green - a0.green) * dg + (t.blue - a0.blue) * db) / largo).coerceIn(0f, 1f)
-        val er = cuadradoColonos(t.red - a0.red - dr * f) + cuadradoColonos(t.green - a0.green - dg * f) + cuadradoColonos(t.blue - a0.blue - db * f)
-        if (er < error) { error = er; mejor = (seg + f) / 2f }
-    }
-    return mejor
-}
-
-private fun puntoEscalaColonos(e: List<Color>, x: Float): Color = if (x < 0.5f) mezcla(e[0], e[1], x * 2) else mezcla(e[1], e[2], (x - 0.5f) * 2)
-
-/**
- * El color del ánimo tal como es de día. En el modo oscuro la escala del tema cambia de colores (el de en medio pasa del crema
- * a un casi negro): aquí la entrada es un objeto del cuarto, así que se ubica el color en la escala de noche y se toma el mismo
- * punto en la de día. Si no está en la escala, queda igual.
- */
-internal fun tonoDeDiaColonos(t: Color?, oscuro: Boolean): Color? {
-    if (t == null || !oscuro) return t
-    val (dia, noche) = TONOS_COLONOS
-    val x = enEscalaColonos(t, noche) ?: return t
-    return puntoEscalaColonos(dia, x)
-}
-
-/**
- * Las tintas, pinturas y tintes del pueblo con que se dice el ánimo, en el orden de la escala del tema (de lo peor a lo mejor):
- * ladrillo, calabaza, el crema de en medio, añil y marino. Así los puntos de en medio son un color con cuerpo (la calabaza, el
- * añil) y no un rosa o un gris lavados; los extremos y el crema son los del tema.
- */
-private val TINTES_COLONOS = listOf(Color(0xFF9E2B25), Color(0xFFC9662C), Color(0xFFE7DDC8), Color(0xFF3F6EA6), Color(0xFF1F3A5F))
-
-/** El tinte que corresponde a un color del ánimo (ya de día): su punto en la escala del tema, llevado a [TINTES_COLONOS]. */
-internal fun tenidoColonos(t: Color?): Color? {
-    if (t == null) return null
-    val x = enEscalaColonos(t, TONOS_COLONOS.first) ?: return t
-    val q = x.coerceIn(0f, 1f) * (TINTES_COLONOS.size - 1)
-    val i = q.toInt().coerceAtMost(TINTES_COLONOS.size - 2)
-    return mezcla(TINTES_COLONOS[i], TINTES_COLONOS[i + 1], q - i)
-}
-
-/** La tela de costal floreada: florecitas de cinco puntos en tresbolillo, en blanco (se tiñen al pintarlas). Una baldosa por densidad. */
-private object TelaColonos {
-    private var densidad = 0f
-    private var pincel: ShaderBrush? = null
-    fun pincel(u: Float): ShaderBrush {
-        val p = pincel
-        if (p != null && u == densidad) return p
-        densidad = u
-        val lado = (9f * u).roundToInt().coerceAtLeast(6)
-        val l = lado.toFloat()
-        val img = ImageBitmap(lado, lado)
-        CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(img), Size(l, l)) {
-            val rp = 0.55f * u
-            for (c in listOf(Offset(l * 0.25f, l * 0.25f), Offset(l * 0.75f, l * 0.75f))) {
-                for (j in 0 until 5) {
-                    val ang = j * 1.2566f - 1.5708f
-                    drawCircle(Color.White, rp, Offset(c.x + rp * 1.5f * kotlin.math.cos(ang), c.y + rp * 1.5f * kotlin.math.sin(ang)))
-                }
-            }
-            // El hilo de la trama, fino.
-            drawLine(Color.White.copy(alpha = 0.12f), Offset(0f, l * 0.5f), Offset(l, l * 0.5f), 0.5f * u)
-            drawLine(Color.White.copy(alpha = 0.08f), Offset(l * 0.5f, 0f), Offset(l * 0.5f, l), 0.5f * u)
-        }
-        val nuevo = ShaderBrush(ImageShader(img, TileMode.Repeated, TileMode.Repeated))
-        pincel = nuevo
-        return nuevo
-    }
-}
+/** El amarillo de imprenta de las cajas. */
+private val MAIZ_CAJA = Color(0xFFE0A62E)
 
 /**
  * Las tres clases de entrada de la alacena de Colonos, elegidas con la semilla del día: tres cosas de la cocina que se
@@ -143,11 +54,12 @@ internal fun DrawScope.volumenColonos(v: Volumen, medidor: TextMeasurer, oscuro:
     val a = AireColonos(oscuro, v.noche)
     val p = lugarVolumenColonos(v.repisa, v.centro)
     val brasa = brasaNominalColonos(v.repisas)
-    val k = luzColonos(p.x, p.y, a, brasa)
-    val br = parteBrasaColonos(p.x, p.y, a, brasa)
+    val candil = candilNominalColonos(v.repisas)
+    val k = luzColonos(p.x, p.y, a, brasa, candil)
+    val br = parteBrasaColonos(p.x, p.y, a, brasa, candil)
     val f = if (a.noche) rayoVentanaColonos(p.x, p.y) else 0f
-    // De dónde viene la luz: de día, de la ventana (izquierda); de noche, de la bombilla (o de la brasa, abajo a la izquierda).
-    val hacia = if (!a.oscuro) -1f else if (br > 0.5f) -1f else if (p.x < MuebleEstanteColonos.LAMP_X) 1f else -1f
+    // De dónde viene la luz: de día, de la ventana (izquierda); de noche, de la que más le llega (bombilla, brasa o candil).
+    val hacia = haciaColonos(p.x, p.y, a, brasa, candil)
     val t = tenidoColonos(tonoDeDiaColonos(v.tono, oscuro))
     val l = LuzVolumenColonos(a, k, br, f, hacia)
     when (MuebleEstanteColonos.clase(v.semilla)) {
@@ -183,8 +95,8 @@ private fun DrawScope.asientoColonos(l: LuzVolumenColonos, x0: Float, x1: Float)
     val u = density; val w = size.width; val h = size.height
     val ancho = x1 - x0
     // La sombra que echa en el fondo del casillero, en la rendija con el vecino (del lado contrario a la luz).
-    if (l.izq) drawRect(l.sombra(0.3f), Offset(x1, h * 0.16f), Size(w - x1, h * 0.84f))
-    else drawRect(l.sombra(0.3f), Offset(0f, h * 0.16f), Size(x0, h * 0.84f))
+    if (l.izq) { drawRect(l.sombra(0.42f), Offset(x1, h * 0.14f), Size(w - x1, h * 0.86f)); drawRect(l.sombra(0.2f), Offset(x1 - 1.6f * u, h * 0.2f), Size(1.6f * u, h * 0.8f)) }
+    else { drawRect(l.sombra(0.42f), Offset(0f, h * 0.14f), Size(x0, h * 0.86f)); drawRect(l.sombra(0.2f), Offset(x0, h * 0.2f), Size(1.6f * u, h * 0.8f)) }
     drawOval(l.sombra(0.45f), Offset(x0 + (if (l.izq) ancho * 0.08f else -ancho * 0.06f), h - 2.6f * u), Size(ancho, 3.6f * u))
 }
 
@@ -208,7 +120,7 @@ private fun DrawScope.cajaCerealColonos(v: Volumen, medidor: TextMeasurer, l: Lu
     val u = density; val w = size.width; val h = size.height
     val s = v.semilla and 0x7fffffff
     val a = l.a
-    val x0 = 1.2f * u; val x1 = w - 2.4f * u
+    val x0 = (1.2f + 1.4f * azar(s, 78)) * u; val x1 = w - (2.4f + 2.8f * azar(s, 77)) * u
     val frente = (x1 - x0) * 0.17f
     val xf = x1 - frente
     val bajo = h * 0.36f; val alto = h * 0.035f
@@ -240,14 +152,17 @@ private fun DrawScope.cajaCerealColonos(v: Volumen, medidor: TextMeasurer, l: Lu
     clipPath(cara) {
         // El filete impreso y la franja de abajo.
         drawRect(claroImpreso.copy(alpha = if (sinAnimo) 0.2f else 0.7f), Offset(x0 + 1.6f * u, h * 0.5f), Size(xf - x0 - 3.2f * u, 0.8f * u))
-        drawRect(mezcla(cuerpo, a.hondo, 0.35f), Offset(x0, h * 0.89f), Size(xf - x0, h * 0.11f))
+        // La franja de abajo y la cinta: de otro color según la caja.
+        val tintas = listOf(mezcla(cuerpo, a.hondo, 0.35f), l.c(MAIZ_CAJA), l.c(LADRILLO), l.c(CRUDO), l.c(VERDE))
+        drawRect(tintas[(azar(s, 79) * tintas.size).toInt().coerceIn(0, tintas.size - 1)], Offset(x0, h * 0.89f), Size(xf - x0, h * 0.11f))
         // La cinta ondulada del impreso, debajo de la tarjeta.
         if (!sinAnimo) {
             val cinta = Path().apply {
                 moveTo(x0, h * 0.47f); quadraticTo(x0 + (xf - x0) * 0.5f, h * 0.43f, xf, h * 0.47f)
                 lineTo(xf, h * 0.51f); quadraticTo(x0 + (xf - x0) * 0.5f, h * 0.47f, x0, h * 0.51f); close()
             }
-            drawPath(cinta, l.c(mezcla(GIRASOL, CRUDO, 0.4f)).copy(alpha = 0.85f))
+            val cintas = listOf(mezcla(GIRASOL, CRUDO, 0.4f), CRUDO, LADRILLO, MAIZ_CAJA)
+            drawPath(cinta, l.c(cintas[(azar(s, 84) * cintas.size).toInt().coerceIn(0, cintas.size - 1)]).copy(alpha = 0.85f))
         }
         // El recuadro con el dibujo: un medio sol saliendo (o la luna) sobre dos franjas de campo.
         if (!sinAnimo) {
@@ -280,7 +195,7 @@ private fun DrawScope.cajaCerealColonos(v: Volumen, medidor: TextMeasurer, l: Lu
     val giro = -3f + 6f * azar(s, 61)
     rotate(giro, Offset(cx, tarjeta.top)) {
         drawRect(l.sombra(0.4f), Offset(tarjeta.left + 1f * u, tarjeta.top + 1.4f * u), tarjeta.size)
-        drawRect(a.etiqueta(l.k, PAPEL, l.br), tarjeta.topLeft, tarjeta.size)
+        drawRect(a.etiqueta(l.k, if (azar(s, 80) > 0.5f) PAPEL else mezcla(PAPEL, ELOTE, 0.3f), l.br), tarjeta.topLeft, tarjeta.size)
         drawRect(l.c(LADRILLO, 2f).copy(alpha = 0.6f), Offset(tarjeta.left, tarjeta.top + tarjeta.height * 0.24f), Size(tarjeta.width, 0.7f * u))
         drawRect(l.sombra(0.12f), Offset(tarjeta.left, tarjeta.bottom - 1.2f * u), Size(tarjeta.width, 1.2f * u))
         fechaColonos(Rect(tarjeta.left, tarjeta.top + tarjeta.height * 0.27f, tarjeta.right, tarjeta.bottom), v, medidor, a.tinta)
@@ -376,7 +291,7 @@ private fun DrawScope.cuadernoLataColonos(v: Volumen, medidor: TextMeasurer, l: 
     val u = density; val w = size.width; val h = size.height
     val s = v.semilla and 0x7fffffff
     val a = l.a
-    val x0 = 1.2f * u; val x1 = w - 2.4f * u
+    val x0 = (1.2f + 1.4f * azar(s, 78)) * u; val x1 = w - (2.4f + 2.8f * azar(s, 77)) * u
     val hojas = (2.2f + v.lleno * 3.4f) * u
     val top = h * 0.075f
     val tapa = Rect(x0, top, x1 - hojas, h - 0.6f * u)
@@ -463,11 +378,36 @@ private fun DrawScope.cuadernoLataColonos(v: Volumen, medidor: TextMeasurer, l: 
     drawRoundRect(a.etiqueta(l.k, PAPEL, l.br), et.topLeft, et.size, CornerRadius(1.6f * u))
     drawRoundRect(l.c(MARINO, 1.6f).copy(alpha = 0.55f), Offset(et.left + 1.2f * u, et.top + 1.2f * u), Size(et.width - 2.4f * u, et.height - 2.4f * u), CornerRadius(1f * u), style = Stroke(0.5f * u))
     fechaColonos(Rect(et.left + 1f * u, et.top + 1.2f * u, et.right - 1f * u, et.bottom - 0.8f * u), v, medidor, a.tinta)
-    // La liga de cámara de llanta, negra, que lo cierra.
+    // La esquina de abajo doblada (canto doblado), en unos: se ve el revés de la lata y la sombra del doblez.
+    if (azar(s, 82) > 0.55f) {
+        val d = minOf(tapa.width * 0.3f, 7f * u)
+        drawPath(poligonoColonos(tapa.right, tapa.bottom - d, tapa.right, tapa.bottom, tapa.right - d, tapa.bottom), l.c(mezcla(PAPEL, CRUDO, 0.4f)))
+        drawPath(poligonoColonos(tapa.right, tapa.bottom - d, tapa.right - d, tapa.bottom, tapa.right - d * 0.92f, tapa.bottom - d * 0.92f), l.c(LATA))
+        drawLine(l.sombra(0.45f), Offset(tapa.right, tapa.bottom - d), Offset(tapa.right - d, tapa.bottom), 0.8f * u)
+    }
+    // La esquina remendada con cinta de tela, en otros.
+    if (azar(s, 83) > 0.62f) {
+        rotate(-40f, Offset(tapa.left + 3f * u, tapa.top + 5f * u)) {
+            drawRect(l.sombra(0.25f), Offset(tapa.left - 3f * u + 0.6f * u, tapa.top + 3f * u + 0.8f * u), Size(12f * u, 4f * u))
+            drawRect(l.c(mezcla(CRUDO, ELOTE, 0.35f)).copy(alpha = 0.92f), Offset(tapa.left - 3f * u, tapa.top + 3f * u), Size(12f * u, 4f * u))
+        }
+    }
+    // Lo que lo cierra: la liga de cámara de llanta (negra o roja) o un cordel con su nudo.
     val ly = tapa.top + tapa.height * 0.72f
-    drawRect(l.sombra(0.35f), Offset(x0 - 0.4f * u, ly + 1.2f * u), Size(x1 - x0 + 0.8f * u, 2.2f * u))
-    drawRect(l.c(Color(0xFF232227)), Offset(x0 - 0.4f * u, ly), Size(x1 - x0 + 0.8f * u, 2.4f * u))
-    drawRect(l.brillo(0.3f), Offset(x0, ly + 0.3f * u), Size(x1 - x0, 0.5f * u))
+    val cierre = azar(s, 81)
+    if (cierre < 0.72f) {
+        val goma = if (cierre < 0.42f) Color(0xFF232227) else Color(0xFF7A2A22)
+        drawRect(l.sombra(0.35f), Offset(x0 - 0.4f * u, ly + 1.2f * u), Size(x1 - x0 + 0.8f * u, 2.2f * u))
+        drawRect(l.c(goma), Offset(x0 - 0.4f * u, ly), Size(x1 - x0 + 0.8f * u, 2.4f * u))
+        drawRect(l.brillo(0.3f), Offset(x0, ly + 0.3f * u), Size(x1 - x0, 0.5f * u))
+    } else {
+        drawRect(l.sombra(0.3f), Offset(x0 - 0.4f * u, ly + 1f * u), Size(x1 - x0 + 0.8f * u, 1.3f * u))
+        drawRect(l.c(CORDEL), Offset(x0 - 0.4f * u, ly), Size(x1 - x0 + 0.8f * u, 1.3f * u))
+        val nx = x0 + (x1 - x0) * 0.62f
+        drawCircle(l.c(CORDEL), 1.6f * u, Offset(nx, ly + 0.6f * u))
+        drawLine(l.c(CORDEL), Offset(nx, ly + 0.6f * u), Offset(nx - 1.6f * u, ly + 5f * u), 0.9f * u)
+        drawLine(l.c(CORDEL), Offset(nx, ly + 0.6f * u), Offset(nx + 1.8f * u, ly + 4.4f * u), 0.9f * u)
+    }
     if (a.oscuro && l.k > 0.06f) drawRect(a.brillo(0.6f * l.k, l.k, l.br), Offset(if (l.izq) tapa.left else tapa.right - 1.3f * u, tapa.top + 2f * u), Size(1.3f * u, tapa.height - 4f * u))
 }
 
@@ -482,7 +422,7 @@ private fun DrawScope.fardoColonos(v: Volumen, medidor: TextMeasurer, l: LuzVolu
     val u = density; val w = size.width; val h = size.height
     val s = v.semilla and 0x7fffffff
     val a = l.a
-    val x0 = 1.2f * u; val x1 = w - 2.4f * u
+    val x0 = (1.2f + 1.4f * azar(s, 78)) * u; val x1 = w - (2.4f + 2.8f * azar(s, 77)) * u
     val cx = (x0 + x1) / 2
     val top = h * 0.1f
     val arpillera = Color(0xFFA88A5E)
@@ -501,7 +441,7 @@ private fun DrawScope.fardoColonos(v: Volumen, medidor: TextMeasurer, l: LuzVolu
         // El estampado de florecitas (o la trama de la arpillera), teñido de la luz.
         if (t != null) {
             val crudo = l.c(mezcla(CRUDO, Color.White, 0.2f), 1.1f)
-            drawRect(TelaColonos.pincel(u), Offset.Zero, Size(w, h), alpha = if (t.luminance3() > 0.6f) 0.5f else 0.75f,
+            drawRect(TelaColonos.pincel(Math.floorMod(s xor (s ushr 4), 4), u), Offset.Zero, Size(w, h), alpha = if (t.luminance3() > 0.6f) 0.5f else 0.75f,
                 colorFilter = ColorFilter.tint(if (t.luminance3() > 0.6f) l.c(LADRILLO) else crudo, BlendMode.Modulate))
         } else {
             val trama = Path()

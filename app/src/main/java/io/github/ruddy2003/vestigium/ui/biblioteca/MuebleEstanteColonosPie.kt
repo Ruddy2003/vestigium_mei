@@ -10,6 +10,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaColonos.BRASA
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaColonos.CRUDO
@@ -122,14 +123,23 @@ internal fun DrawScope.estufaColonos(g: MarcoColonos, pie: Offset) {
     for (i in 0 until 4) {
         val y = puerta.top + puerta.height * (0.2f + 0.18f * i)
         val ranura = Rect(puerta.left + puerta.width * 0.14f, y, puerta.right - puerta.width * 0.22f, y + puerta.height * 0.08f)
-        val fuego = if (a.oscuro) mezcla(Color(0xFFFFD27A), BRASA, 0.25f + 0.2f * i) else if (a.noche) mezcla(BRASA, HIERRO, 0.35f) else mezcla(BRASA, HIERRO, 0.65f)
+        val fuego = if (a.oscuro) mezcla(Color(0xFFFFF0B0), BRASA, 0.1f + 0.22f * i) else if (a.noche) mezcla(BRASA, HIERRO, 0.3f) else mezcla(BRASA, HIERRO, 0.6f)
         drawRect(fuego, ranura.topLeft, ranura.size)
+        if (a.oscuro) drawRect(Color.White.copy(alpha = 0.5f - 0.1f * i), Offset(ranura.left + ranura.width * 0.25f, ranura.top), Size(ranura.width * 0.4f, ranura.height * 0.5f))
     }
     drawCircle(a.luz(LATA, k, br), w * 0.006f, Offset(puerta.right - puerta.width * 0.1f, puerta.center.y))
     if (arde && a.oscuro) {
-        mancha(puerta.center, w * 0.3f, BRASA.copy(alpha = 0.22f))
-        mancha(puerta.center, w * 0.08f, Color(0xFFFFC77A).copy(alpha = 0.35f))
-        mancha(Offset(puerta.center.x + w * 0.1f, pie.y + w * 0.01f), w * 0.2f, BRASA.copy(alpha = 0.14f))
+        // El abanico de la brasa en el piso, que se abre desde la puertita hacia quien mira y a la derecha, en tres capas.
+        clipRect(0f, g.suelo, w, g.h) {
+            for (j in 0 until 3) {
+                val e = w * 0.05f * j
+                drawPath(poligonoColonos(puerta.left - w * 0.01f, puerta.bottom, puerta.right + w * 0.02f, puerta.bottom,
+                    puerta.right + w * 0.42f - e, g.h + 2f, puerta.left - w * 0.08f + e * 0.5f, g.h + 2f), BRASA.copy(alpha = 0.08f))
+            }
+        }
+        mancha(puerta.center, w * 0.34f, BRASA.copy(alpha = 0.24f))
+        mancha(puerta.center, w * 0.09f, Color(0xFFFFC77A).copy(alpha = 0.45f))
+        mancha(Offset(puerta.center.x + w * 0.14f, pie.y + w * 0.01f), w * 0.24f, BRASA.copy(alpha = 0.16f))
     }
     teteraColonos(g, Offset(pie.x + r * 0.22f, plancha.center.y + w * 0.004f))
 }

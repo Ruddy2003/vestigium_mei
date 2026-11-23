@@ -27,6 +27,7 @@ import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
 import kotlin.math.ceil
 import kotlin.math.exp
 import kotlin.math.floor
+import kotlin.math.pow
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
@@ -52,10 +53,16 @@ internal object PaletaColonos {
     val MAIZ_OSC = Color(0xFF85601B)
     val PINO = Color(0xFFCDA673)
     val PINO_OSC = Color(0xFF7C5833)
+    /** El pino nuevo de la tabla repuesta, sin pintar, y el verde botica de la mano de pintura de antes. */
+    val PINO_NUEVO = Color(0xFFE4C995)
+    val VERDE_BOTICA = Color(0xFF4F7F62)
     /** El turquesa de dentro de la alacena, su luz y su hondo. */
     val TURQUESA = Color(0xFF368A80)
     val TURQUESA_LUZ = Color(0xFF62B3A6)
     val TURQUESA_OSC = Color(0xFF1C5751)
+    /** De noche, el turquesa se vuelve verde botella, y lo que no alumbra la luz se hunde en un verde botella hondo. */
+    val BOTELLA = Color(0xFF2B6E58)
+    val BOTELLA_HONDO = Color(0xFF0B241E)
     /** El nogal de la radio, la viga, el hierro, la lata, su óxido y el peltre azul. */
     val NOGAL = Color(0xFF6C4128)
     val NOGAL_LUZ = Color(0xFFA06E45)
@@ -99,11 +106,13 @@ internal object PaletaColonos {
 
 /**
  * El aire del momento en la cocina: de día (el sol de la ventana de botellas, arriba a la izquierda), de noche (el modo oscuro:
- * arde la bombilla del generador, a la derecha, y la brasa de la estufa, al pie a la izquierda) y en los Sueños ([noche]: al
- * anochecer en claro; en oscuro, el generador al mínimo, la bombilla baja, la luna por las botellas y la brasa). Como en el
- * Ideario del tema, de noche cada color va de su hondo (oscuro, de su mismo tono, con el azul marino de la noche) a su color
- * según lo que le llega de las luces ([k], de 0 a 1), teñido de la luz de la bombilla o de la brasa (la parte [br] que viene de
- * ella); en los Sueños de noche, lo que mira a la ventana se enfría con la luna ([f]).
+ * arde la bombilla del generador arriba a la derecha, con su cono hacia abajo; la brasa de la estufa al pie, a la izquierda; y
+ * el candil de frasco colgado a media altura del costado izquierdo) y en los Sueños ([noche]: al anochecer en claro, con el
+ * poniente por las botellas y la bombilla recién prendida; en oscuro, el generador al mínimo, la bombilla baja, la luna por
+ * las botellas, el candil y la brasa). De noche cada color va de su hondo (oscuro, hacia el añil de la noche) a su color según lo
+ * que le llega de las luces ([k], de 0 a 1), pasando por un oliva hondo en lo que queda a medias, y cerca de la luz se tiñe de
+ * ámbar (o de naranja, en la parte [br] que viene de la brasa); en los Sueños de noche, lo que mira a la ventana se enfría con
+ * la luna ([f]); al anochecer, [f] es el poniente.
  */
 internal class AireColonos(val oscuro: Boolean, val noche: Boolean) {
     private val p = PaletaColonos
@@ -113,24 +122,36 @@ internal class AireColonos(val oscuro: Boolean, val noche: Boolean) {
     val lunar: Boolean get() = oscuro && noche
     val hondo: Color get() = if (oscuro) (if (noche) p.NOCHE_SUENOS else p.NOCHE) else SOMBRA_MUEBLE
 
-    private fun abismo(c: Color): Color { val n = hondo; return Color(c.red * 0.14f + n.red * 0.8f, c.green * 0.14f + n.green * 0.8f, c.blue * 0.14f + n.blue * 0.8f, c.alpha) }
+    private fun abismo(c: Color, n: Color = hondo): Color = Color(c.red * 0.11f + n.red * 0.84f, c.green * 0.11f + n.green * 0.84f, c.blue * 0.11f + n.blue * 0.84f, c.alpha)
     fun calor(br: Float): Color = if (br > 0.02f) mezcla(p.BOMBILLA, p.BRASA, br) else p.BOMBILLA
 
+    /** Cuánto de su propio color conserva algo de noche con [k] de luz: sube deprisa cerca de la luz y cae a casi nada lejos. */
+    private fun cuanto(k: Float): Float = (1.15f * k.coerceIn(0f, 1f).pow(1.12f)).coerceAtMost(0.95f)
+
     /** Un color con la luz que le llega. */
-    fun luz(c: Color, k: Float, br: Float = 0f, f: Float = 0f): Color {
+    fun luz(c: Color, k: Float, br: Float = 0f, f: Float = 0f): Color = luzSobre(c, k, br, f, hondo)
+
+    /**
+     * Como [luz], pero lo que no alumbra la luz se hunde hacia [fondo] y no hacia el añil de la noche (el turquesa de dentro de la
+     * alacena, que de noche es un verde botella hondo).
+     */
+    fun luzSobre(c: Color, k: Float, br: Float, f: Float, fondo: Color): Color {
         val kk = k.coerceIn(0f, 1f)
         if (!oscuro) {
             if (!noche) return c
-            // Al anochecer: el violeta del cielo en lo que no alumbra la bombilla; el poniente entra por la ventana.
-            val v = mezcla(mezcla(c, p.ANOCHECER, 0.46f - 0.3f * kk), p.BOMBILLA, 0.16f * kk)
-            return if (f > 0.01f) mezcla(v, mezcla(v, p.PONIENTE, 0.55f), (0.5f * f * (1f - kk)).coerceIn(0f, 1f)) else v
+            // Al anochecer: lo que no alumbra ninguna luz, hacia el violeta del cielo; lo que alumbra la bombilla, tibio; lo que
+            // mira a la ventana, del naranja del poniente.
+            val alumbrado = maxOf(kk, f * 0.8f)
+            var v = mezcla(c, p.ANOCHECER, 0.24f - 0.16f * alumbrado)
+            v = mezcla(v, p.BOMBILLA, 0.18f * kk)
+            return if (f > 0.01f) mezcla(v, mezcla(v, p.PONIENTE, 0.6f), (0.55f * f * (1f - kk)).coerceIn(0f, 1f)) else v
         }
-        var v = mezcla(abismo(c), c, (1.05f * kk).coerceAtMost(0.92f))
-        v = mezcla(v, calor(br), 0.16f * kk)
+        var v = mezcla(abismo(c, fondo), c, cuanto(kk))
+        v = mezcla(v, calor(br), 0.1f * kk + 0.22f * kk * kk)
         if (lunar && f > 0.01f) v = mezcla(v, mezcla(v, p.LUNA, 0.5f), (0.85f * f * (1f - kk)).coerceIn(0f, 1f))
         return v
     }
-    fun sombra(a: Float): Color = if (oscuro) hondo.copy(alpha = (a * 1.3f).coerceIn(0f, 1f)) else sombraMueble(if (noche) a * 1.1f else a)
+    fun sombra(a: Float): Color = if (oscuro) hondo.copy(alpha = (a * 1.3f).coerceIn(0f, 1f)) else sombraMueble(if (noche) a * 1.15f else a)
     /** El brillo de lo que mira a la luz: de día, crema; de noche, el filo de la luz según lo que le llega. */
     fun brillo(a: Float, k: Float, br: Float = 0f): Color =
         if (!oscuro) luzMueble(if (noche) a * 0.6f else a) else calor(br).copy(alpha = (a * 0.95f * k).coerceIn(0f, 1f))
@@ -139,49 +160,72 @@ internal class AireColonos(val oscuro: Boolean, val noche: Boolean) {
     /** El roce de la luna en lo que mira a la ventana (solo en los Sueños de noche). */
     fun helado(a: Float): Color = p.LUNA.copy(alpha = if (lunar) a.coerceIn(0f, 1f) else 0f)
 
-    /** El color del ánimo: de noche se hunde menos que lo demás, para que el cuerpo se siga viendo lejos de la luz. */
+    /**
+     * El color del ánimo: de noche es su color de día apagado por la distancia a la luz (oscuro de su mismo tono, apenas hacia
+     * la noche), no un azul gris; cerca de la luz, tibio.
+     */
     fun animo(t: Color, k: Float, br: Float = 0f, f: Float = 0f): Color {
         val kk = k.coerceIn(0f, 1f)
         if (!oscuro) {
             if (!noche) return t
-            val v = mezcla(mezcla(t, p.ANOCHECER, 0.2f), p.BOMBILLA, 0.06f * kk)
-            return if (f > 0.01f) mezcla(v, mezcla(v, p.PONIENTE, 0.4f), (0.4f * f * (1f - kk)).coerceIn(0f, 1f)) else v
+            var v = mezcla(t, p.ANOCHECER, 0.18f - 0.1f * maxOf(kk, f))
+            v = mezcla(v, p.BOMBILLA, 0.08f * kk)
+            return if (f > 0.01f) mezcla(v, mezcla(v, p.PONIENTE, 0.45f), (0.45f * f * (1f - kk)).coerceIn(0f, 1f)) else v
         }
         val n = hondo
-        val suave = Color(t.red * 0.24f + n.red * 0.7f, t.green * 0.24f + n.green * 0.7f, t.blue * 0.24f + n.blue * 0.7f, t.alpha)
-        var v = mezcla(suave, t, (0.12f + 0.95f * kk).coerceAtMost(0.95f))
-        v = mezcla(v, calor(br), 0.12f * kk)
+        val apagado = Color(t.red * 0.3f + n.red * 0.38f, t.green * 0.3f + n.green * 0.38f, t.blue * 0.3f + n.blue * 0.38f, t.alpha)
+        var v = mezcla(apagado, t, (0.1f + 1.0f * kk).coerceAtMost(0.95f))
+        v = mezcla(v, calor(br), 0.08f * kk + 0.12f * kk * kk)
         if (lunar && f > 0.01f) v = mezcla(v, mezcla(v, p.LUNA, 0.4f), (0.7f * f * (1f - kk)).coerceIn(0f, 1f))
         return v
     }
-    /** El papel donde va el día: casi no se apaga, para que el número se lea siempre. */
+    /**
+     * El papel donde va el día: de noche, teñido de la luz que le llega (ámbar cerca, azulado y hundido lejos), pero nunca tan
+     * oscuro que la tinta baje de 4.5 a 1.
+     */
     fun etiqueta(k: Float, base: Color = p.PAPEL, br: Float = 0f): Color {
         if (!oscuro) return if (noche) mezcla(base, p.ANOCHECER, 0.1f) else base
-        val ke = maxOf(k.coerceIn(0f, 1f), 0.25f)
-        return mezcla(mezcla(base, hondo, 0.5f - 0.46f * ke), calor(br), 0.14f * ke)
+        val ke = k.coerceIn(0f, 1f).pow(0.7f)
+        val lejos = mezcla(base, if (noche) Color(0xFF2A3463) else Color(0xFF2C3656), 0.48f)
+        val cerca = mezcla(base, calor(br), 0.22f)
+        return mezcla(lejos, cerca, ke)
     }
-    val tinta: Color get() = if (oscuro) mezcla(p.TINTA, hondo, 0.25f) else p.TINTA
+    val tinta: Color get() = if (oscuro) mezcla(p.TINTA, Color.Black, 0.2f) else p.TINTA
 }
 
 // ---------------------------------------------------------------- la luz, compartida por el mueble y los volúmenes
 
-/** Lo que llega de la bombilla a un punto ([fx], [fy] en anchos del mueble). La pantalla de lata tapa lo de arriba. */
+/**
+ * Lo que llega de la bombilla a un punto ([fx], [fy] en anchos del mueble): cae con la distancia, más despacio hacia abajo, y
+ * más dentro del cono que abre la pantalla (por la cornisa, el costado derecho y las repisas de arriba); la pantalla de lata
+ * tapa lo de arriba.
+ */
 internal fun bombillaColonos(fx: Float, fy: Float, baja: Boolean): Float {
     val dx = fx - MuebleEstanteColonos.LAMP_X
     val dy0 = fy - MuebleEstanteColonos.LAMP_Y
-    val dy = dy0 * (if (dy0 > 0f) 0.74f else 1.3f)
-    var k = (if (baja) 1.1f else 1.6f) * exp(-(if (baja) 3.6f else 2.9f) * sqrt(dx * dx + dy * dy))
-    if (dy0 < -0.02f) k *= 0.55f
+    val dy = dy0 * (if (dy0 > 0f) 0.72f else 1.3f)
+    var k = (if (baja) 1.1f else 1.6f) * exp(-(if (baja) 3.6f else 3.1f) * sqrt(dx * dx + dy * dy))
+    if (dy0 > 0f) {
+        val ancho = maxOf(0.06f, dy0 * 0.32f)
+        val cono = exp(-(dx / ancho) * (dx / ancho))
+        k *= 0.45f + 0.85f * cono
+    } else if (dy0 < -0.02f) k *= 0.55f
     return k
 }
 
-/** Lo que llega de la brasa de la estufa, en [e]: poco y cerca. */
+/** Lo que llega de la brasa de la estufa, en [e]: cálido y cerca, y más hacia arriba que hacia los lados. */
 internal fun brasaColonos(fx: Float, fy: Float, e: Offset): Float {
-    val dx = fx - e.x; val dy = (fy - e.y) * 0.9f
-    return 0.9f * exp(-3.2f * sqrt(dx * dx + dy * dy))
+    val dx = fx - e.x; val dy = (fy - e.y) * 0.78f
+    return 1.0f * exp(-3.4f * sqrt(dx * dx + dy * dy))
 }
 
-/** Lo que entra de la ventana de botellas (de día, el sol; en los Sueños de noche, la luna). */
+/** Lo que llega del candil de frasco, en [c]: una luz chica que tiñe a sus vecinos. */
+internal fun candilColonos(fx: Float, fy: Float, c: Offset): Float {
+    val dx = fx - c.x; val dy = fy - c.y
+    return 0.55f * exp(-5.5f * sqrt(dx * dx + dy * dy))
+}
+
+/** Lo que entra de la ventana de botellas (de día, el sol; al anochecer, el poniente; en los Sueños de noche, la luna). */
 internal fun rayoVentanaColonos(fx: Float, fy: Float): Float {
     val dx = fx - MuebleEstanteColonos.VENT_X; val dy = fy - MuebleEstanteColonos.VENT_Y
     return (1.15f * exp(-2.2f * sqrt(dx * dx * 0.8f + dy * dy))).coerceIn(0f, 1f)
@@ -190,13 +234,13 @@ internal fun rayoVentanaColonos(fx: Float, fy: Float): Float {
 /**
  * Las medidas de la cocina que comparten las piezas, en píxeles: el ancho [w] y el alto [h] del lienzo, el pie de la corona
  * [ch], el borde de dentro de los costados ([x0], [x1]), el pie de la última tabla ([fondo]), una repisa con su tabla
- * ([fila]) y cuántas repisas hay ([n]). Y la luz que llega a cada punto ([k]), la parte que viene de la brasa ([br]) y la de la
- * luna ([f]).
+ * ([fila]) y cuántas repisas hay ([n]). Y la luz que llega a cada punto ([k]), la parte que viene de la brasa ([br]) y la del
+ * poniente o la luna ([f]).
  */
 internal class MarcoColonos(val w: Float, val h: Float, val ch: Float, val x0: Float, val x1: Float, val fondo: Float, val fila: Float,
                             val n: Int, val a: AireColonos) {
     /** La franja de pared que asoma a cada lado de la alacena. */
-    val borde: Float get() = w * 0.018f
+    val borde: Float get() = w * MuebleEstanteColonos.BORDE
     /** Donde se apoya lo de encima: la cara de arriba de la cornisa, de atrás a adelante. */
     val apoyo: Float get() = ch - w * MuebleEstanteColonos.CORNISA
     val apoyoAtras: Float get() = apoyo - w * 0.024f
@@ -205,28 +249,41 @@ internal class MarcoColonos(val w: Float, val h: Float, val ch: Float, val x0: F
     val faldon: Float get() = fondo + w * 0.14f
     val suelo: Float get() = fondo + w * 0.16f
     val pisan: Float get() = fondo + w * 0.19f
-    /** La brasa de la estufa, en anchos. */
+    /** La brasa de la estufa y el candil, en anchos. */
     val brasa: Offset get() = Offset(MuebleEstanteColonos.BRASA_X, fondo / w + MuebleEstanteColonos.BRASA_DY)
+    val candil: Offset get() = Offset(MuebleEstanteColonos.CANDIL_X, (ch + (fondo - ch) * 0.5f) / w)
 
-    fun k(p: Offset): Float = luzColonos(p.x / w, p.y / w, a, brasa)
-    fun br(p: Offset): Float = parteBrasaColonos(p.x / w, p.y / w, a, brasa)
+    fun k(p: Offset): Float = luzColonos(p.x / w, p.y / w, a, brasa, candil)
+    fun br(p: Offset): Float = parteBrasaColonos(p.x / w, p.y / w, a, brasa, candil)
     fun f(p: Offset): Float = if (a.noche) rayoVentanaColonos(p.x / w, p.y / w) else 0f
     fun c(col: Color, p: Offset, mas: Float = 1f): Color { val kk = k(p) * mas; return a.luz(col, kk, br(p), f(p)) }
+    /** Como [c], pero lo que no alumbra la luz se hunde hacia [fondo] (el verde botella de dentro de la alacena). */
+    fun cSobre(col: Color, p: Offset, fondo: Color, mas: Float = 1f): Color = a.luzSobre(col, k(p) * mas, br(p), f(p), fondo)
+    /** Hacia dónde mira la luz que más le llega a [p]: 1, desde la derecha; -1, desde la izquierda. */
+    fun hacia(p: Offset): Float = haciaColonos(p.x / w, p.y / w, a, brasa, candil)
 }
 
-/** Toda la luz cálida que llega a un punto: la bombilla y la brasa (en los Sueños de día, solo la bombilla). */
-internal fun luzColonos(fx: Float, fy: Float, a: AireColonos, brasa: Offset): Float {
+/** Toda la luz cálida que llega a un punto: la bombilla, la brasa y el candil (al anochecer, solo la bombilla). */
+internal fun luzColonos(fx: Float, fy: Float, a: AireColonos, brasa: Offset, candil: Offset): Float {
     if (!a.lumbre) return 1f
     val b = bombillaColonos(fx, fy, a.lunar)
-    val e = if (a.oscuro) brasaColonos(fx, fy, brasa) else 0f
-    return (b + e).coerceIn(0.02f, 1f)
+    if (!a.oscuro) return b.coerceIn(0.02f, 1f)
+    return (b + brasaColonos(fx, fy, brasa) + candilColonos(fx, fy, candil)).coerceIn(0.02f, 1f)
 }
 
 /** Qué parte de esa luz viene de la brasa (para teñirla de naranja). */
-internal fun parteBrasaColonos(fx: Float, fy: Float, a: AireColonos, brasa: Offset): Float {
+internal fun parteBrasaColonos(fx: Float, fy: Float, a: AireColonos, brasa: Offset, candil: Offset): Float {
     if (!a.oscuro) return 0f
-    val b = bombillaColonos(fx, fy, a.lunar); val e = brasaColonos(fx, fy, brasa)
-    return (e / (b + e + 0.001f)).coerceIn(0f, 1f)
+    val b = bombillaColonos(fx, fy, a.lunar); val e = brasaColonos(fx, fy, brasa); val c = candilColonos(fx, fy, candil)
+    return (e / (b + e + c + 0.001f)).coerceIn(0f, 1f)
+}
+
+/** De qué lado viene la luz que más le llega a un punto: de día, de la ventana (izquierda); de noche, la suma de las tres. */
+internal fun haciaColonos(fx: Float, fy: Float, a: AireColonos, brasa: Offset, candil: Offset): Float {
+    if (!a.oscuro) return -1f
+    val b = bombillaColonos(fx, fy, a.lunar); val e = brasaColonos(fx, fy, brasa); val c = candilColonos(fx, fy, candil)
+    fun lado(x: Float) = if (x > fx) 1f else -1f
+    return if (b * lado(MuebleEstanteColonos.LAMP_X) + e * lado(brasa.x) + c * lado(candil.x) >= 0f) 1f else -1f
 }
 
 /** Para un volumen: dónde cae en anchos del mueble ([repisa] desde arriba y su centro [centro] de 0 a 1). */
@@ -239,6 +296,12 @@ internal fun lugarVolumenColonos(repisa: Int, centro: Float): Offset {
 internal fun brasaNominalColonos(repisas: Int): Offset {
     val m = MuebleEstanteColonos
     return Offset(m.BRASA_X, m.CORONA + repisas * m.FILA / m.ANCHO_NOMINAL + m.BRASA_DY)
+}
+
+/** Dónde arde el candil, para un volumen: a media altura del cuerpo, en el costado izquierdo. */
+internal fun candilNominalColonos(repisas: Int): Offset {
+    val m = MuebleEstanteColonos
+    return Offset(m.CANDIL_X, m.CORONA + repisas * m.FILA / m.ANCHO_NOMINAL * 0.5f)
 }
 
 // ---------------------------------------------------------------- lo fijo pintado una vez
@@ -328,7 +391,9 @@ internal object MuebleEstanteColonos {
 
     val CORONA = 0.6f
     val BASE = 0.36f
-    val LADO = 0.075f
+    val LADO = 0.085f
+    /** La franja de pared que asoma a cada lado de la alacena, en anchos. */
+    val BORDE = 0.03f
     val ALTO_REPISA: Dp = 110.dp
     val TABLA: Dp = 18.dp
     val SEPARA: Dp = 3.dp
@@ -359,6 +424,8 @@ internal object MuebleEstanteColonos {
     /** La brasa de la estufa: su x y su altura bajo la última tabla, en anchos. */
     const val BRASA_X = 0.1f
     const val BRASA_DY = 0.24f
+    /** El candil de frasco: colgado a media altura del costado izquierdo. */
+    const val CANDIL_X = 0.058f
     /** El ancho con que un volumen pasa su repisa a anchos del mueble: el de un teléfono. */
     const val ANCHO_NOMINAL = 380f
     /** Una repisa con su tabla, en dp. */
@@ -406,9 +473,11 @@ internal object MuebleEstanteColonos {
             huecoLibreColonos(k, r, oc, g)
         }
         // De día, la luz de la ventana baja de arriba a la izquierda: el cuerpo se apaga un poco hacia abajo a la derecha.
-        if (!oscuro) drawRect(Brush.linearGradient(listOf(Color.Transparent, sombraMueble(if (noche) 0.2f else 0.16f)), Offset(0f, ch), Offset(w, fondo)),
+        if (!oscuro) drawRect(Brush.linearGradient(if (noche) listOf(PaletaColonos.PONIENTE.copy(alpha = 0.12f), Color.Transparent, PaletaColonos.ANOCHECER.copy(alpha = 0.26f))
+            else listOf(Color.Transparent, sombraMueble(0.16f)), Offset(0f, ch), Offset(w, fondo)),
             Offset(0f, ch), Size(w, fondo - ch))
         d.placas.forEach { p -> rotuloColonos(p, medidor, g) }
+        if (fondo - ch > w * 0.25f) candilFrascoColonos(g)
 
         // ---- el pie: el cuerpo bajo, el piso y lo que hay en él
         pieColonos(g)
