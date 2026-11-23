@@ -28,38 +28,55 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Lo que hay en los huecos libres de las repisas de Vapor (ver [MuebleEstanteVapor]), según la repisa: el silbato de locomotora
- * de latón, de pie sobre su válvula; la rueda de maqueta con su manivela, apoyada contra la pared, y una caja de cerillas; la pila
- * de cuadernos tumbados con el compás encima; el secante de balancín con el tintero; y la prensa de fechar billetes de la
- * taquilla. Si el hueco es ancho, van dos.
+ * Lo que hay en los huecos libres de las repisas de Vapor (ver [MuebleEstanteVapor]), según la repisa y en grupos que llenan de
+ * 70 a 90 % del alto del hueco: el silbato de locomotora de latón, de pie sobre su válvula; la rueda de maqueta con su manivela,
+ * apoyada contra la pared, y una caja de cerillas; la pila de cuadernos tumbados con el compás encima; el secante de balancín con
+ * el tintero; la prensa de fechar billetes de la taquilla; y las de [CosasEstanteVapor]. Si el hueco es ancho, van dos grupos.
  */
 internal object HuecosEstanteVapor {
 
-    fun DrawScope.huecoLibreVapor(k: Int, r: Rect, oc: Float, a: AireVapor, g: MarcoVapor, kk: Float, f: Float, br: Float) {
+    fun DrawScope.huecoLibreVapor(k: Int, r: Rect, oc: Float, a: AireVapor, g: MarcoVapor, f: Float) {
         val w = g.w
         val x0 = oc + w * 0.02f
         val x1 = g.x1 - w * 0.035f
         val libre = x1 - x0
-        if (libre < w * 0.1f) return
+        if (libre < w * 0.08f) return
         val pie = r.bottom - w * 0.006f
         val hacia = if (a.oscuro && (x0 + x1) / 2 < MuebleEstanteVapor.GAS_X * w) 1f else -1f
         val tipo = Math.floorMod(k * 3 + 1, 5)
-        if (libre < w * 0.24f) { pieza(tipo, x0 + libre * 0.5f, pie, libre, r.height, a, kk, f, br, hacia); return }
-        // Dos cosas: la primera a la izquierda y la otra a la derecha, cada una con la luz de su sitio.
-        val cA = x0 + libre * 0.3f; val cB = x0 + libre * 0.74f
-        val ancho = minOf(libre * 0.48f, w * 0.22f)
-        val pA = Offset(cA, r.center.y); val pB = Offset(cB, r.center.y)
-        pieza(tipo, cA, pie, ancho, r.height, a, g.cerca(pA), f, g.brasa(pA), hacia)
-        pieza(Math.floorMod(tipo + 2, 5), cB, pie, ancho, r.height, a, g.cerca(pB), f, g.brasa(pB), hacia)
+        fun luz(x: Float) = Offset(x, r.center.y)
+        if (libre < w * 0.17f) {
+            // Un hueco chico: una sola cosa alta.
+            val c = x0 + libre * 0.5f
+            if (tipo % 2 == 0) with(CosasEstanteVapor) { rollos(c, pie, r.height, a, g.cerca(luz(c)), f, g.brasa(luz(c)), hacia) }
+            else silbato(c, pie, r.height, a, g.cerca(luz(c)), f, g.brasa(luz(c)), hacia)
+            return
+        }
+        if (libre < w * 0.5f) { grupo(tipo, x0 + libre * 0.5f, pie, minOf(libre, w * 0.3f), r.height, a, g, f, hacia); return }
+        grupo(tipo, x0 + libre * 0.28f, pie, minOf(libre * 0.48f, w * 0.3f), r.height, a, g, f, hacia)
+        grupo(Math.floorMod(tipo + 2, 5), x0 + libre * 0.76f, pie, minOf(libre * 0.44f, w * 0.28f), r.height, a, g, f, hacia)
     }
 
-    private fun DrawScope.pieza(tipo: Int, cx: Float, pie: Float, ancho: Float, alto: Float, a: AireVapor, k: Float, f: Float, br: Float, hacia: Float) {
-        when (tipo) {
-            0 -> silbato(cx, pie, alto, a, k, f, br, hacia)
-            1 -> rueda(cx, pie, alto, a, k, f, br, hacia)
-            2 -> cuadernos(cx, pie, ancho, a, k, f, br, hacia)
-            3 -> secante(cx, pie, ancho, a, k, f, br, hacia)
-            else -> fechadora(cx, pie, alto, a, k, f, br, hacia)
+    /**
+     * Un grupo de cosas juntas, de 70 a 90 % del alto del hueco, una delante de otra: los planos enrollados y el manómetro en su
+     * caja; la rueda de maqueta y la aceitera; la pila de guías con el silbato encima; la prensa de fechar con el secante; los
+     * cuadernos con el compás y la aceitera detrás.
+     */
+    private fun DrawScope.grupo(tipo: Int, cx: Float, pie: Float, ancho: Float, alto: Float, a: AireVapor, g: MarcoVapor, f: Float, hacia: Float) {
+        fun k(x: Float) = g.cerca(Offset(x, pie - alto * 0.4f))
+        fun br(x: Float) = g.brasa(Offset(x, pie - alto * 0.4f))
+        val izq = cx - ancho * 0.22f; val der = cx + ancho * 0.24f
+        with(CosasEstanteVapor) {
+            when (tipo) {
+                0 -> { rollos(izq, pie, alto, a, k(izq), f, br(izq), hacia); manometro(der, pie, alto, a, k(der), f, br(der), hacia) }
+                1 -> { rueda(izq, pie, alto, a, k(izq), f, br(izq), hacia); aceitera(der + ancho * 0.06f, pie, alto, a, k(der), f, br(der), hacia) }
+                2 -> {
+                    val arriba = guias(cx, pie, ancho, alto, a, k(cx), f, br(cx), hacia)
+                    silbato(cx + ancho * 0.08f, arriba, alto * 0.75f, a, k(cx), f, br(cx), hacia)
+                }
+                3 -> { fechadora(izq + ancho * 0.05f, pie, alto, a, k(izq), f, br(izq), hacia); secante(der, pie, ancho * 0.55f, a, k(der), f, br(der), hacia) }
+                else -> { aceitera(der, pie, alto, a, k(der), f, br(der), hacia); cuadernos(izq + ancho * 0.05f, pie, ancho * 0.75f, a, k(izq), f, br(izq), hacia) }
+            }
         }
     }
 
@@ -69,7 +86,7 @@ internal object HuecosEstanteVapor {
      */
     private fun DrawScope.silbato(cx: Float, pie: Float, alto: Float, a: AireVapor, k: Float, f: Float, br: Float, hacia: Float) {
         val u = density
-        val h = alto * 0.62f
+        val h = alto * 0.72f
         val rw = h * 0.22f
         val kk = maxOf(k, 0.3f)
         contactoVapor(Offset(cx, pie), rw * 3.2f, rw * 0.45f, a, 0.42f, -hacia)
@@ -105,7 +122,7 @@ internal object HuecosEstanteVapor {
      */
     private fun DrawScope.fechadora(cx: Float, pie: Float, alto: Float, a: AireVapor, k: Float, f: Float, br: Float, hacia: Float) {
         val u = density
-        val h = alto * 0.5f
+        val h = alto * 0.62f
         val bw = h * 0.9f
         val kk = maxOf(k, 0.3f)
         contactoVapor(Offset(cx, pie), bw * 1.4f, h * 0.08f, a, 0.42f, -hacia)
@@ -133,7 +150,7 @@ internal object HuecosEstanteVapor {
     /** La rueda de maqueta, de radios, apoyada de canto contra la pared, con su manivela; y la caja de cerillas delante. */
     private fun DrawScope.rueda(cx: Float, pie: Float, alto: Float, a: AireVapor, k: Float, f: Float, br: Float, hacia: Float) {
         val u = density
-        val r = alto * 0.3f
+        val r = alto * 0.4f
         val c = Offset(cx, pie - r)
         rotate(-8f * hacia, Offset(cx, pie)) {
             // Su sombra en la pared, corrida.

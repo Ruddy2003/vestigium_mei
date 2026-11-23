@@ -49,18 +49,17 @@ import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
  * vencido, delante de la ventana; dos libros tumbados con la taza de té en su plato; el tintero de vidrio con su pluma; la
  * maqueta de locomotora en su tramo de vía ([MaquetaVapor]); y la campana de mano bajo el mechero. Cada cosa con su sombra en la
  * pared (de día a la derecha; de noche, lejos del gas). Encima de todo, la luz: de día el haz de la ventana en el aire con
- * humo; de noche el resplandor del gas; en los Sueños, la luna o el ocaso. Al pie: el zócalo, el suelo de baldosas geométricas
- * en perspectiva, la estufa de hierro con la mica de su puerta y la tetera, y el paragüero con los planos enrollados y las
- * banderas del guarda.
+ * humo; de noche el resplandor del gas; en los Sueños, la luna o el ocaso. Lo del pie está en [PieEstanteVapor].
  */
 internal object ArribaEstanteVapor {
 
     /** Hacia dónde cae la sombra de algo en la pared, en píxeles: de día abajo a la derecha; de noche, lejos del gas. */
     private fun corrimiento(a: AireVapor, g: MarcoVapor, x: Float): Offset {
         val w = g.w
-        if (!a.lumbre) return Offset(w * 0.018f, w * 0.008f)
-        val d = ((x / w - MuebleEstanteVapor.GAS_X) / 0.45f).coerceIn(-1f, 1f)
-        return Offset(w * 0.04f * d, w * 0.006f)
+        // De día y al anochecer, la luz viene de la ventana; de noche, del gas (la sombra se va lejos de él, más cuanto más cerca).
+        if (!a.oscuro) return Offset(w * (if (a.ocaso) 0.026f else 0.018f), w * 0.008f)
+        val d = ((x / w - MuebleEstanteVapor.GAS_X) / 0.4f).coerceIn(-1f, 1f)
+        return Offset(w * 0.055f * d, w * 0.008f)
     }
 
     /** La sombra de [p] en la pared, recortada donde empieza la tapa del mueble. */
@@ -68,7 +67,7 @@ internal object ArribaEstanteVapor {
         val k = if (a.oscuro) g.cerca(Offset(x, g.apoyo)) else 1f
         if (a.oscuro && k < 0.1f) return
         val o = corrimiento(a, g, x)
-        clipRect(0f, 0f, g.w, g.fondoTapa + 1f) { drawPath(corridoVapor(p, o.x, o.y), a.sombra(if (a.oscuro) minOf(0.45f, fuerza * 1.6f * k) else fuerza)) }
+        clipRect(0f, 0f, g.w, g.fondoTapa + 1f) { drawPath(corridoVapor(p, o.x, o.y), a.sombra(if (a.oscuro) minOf(0.55f, fuerza * 2f * k) else fuerza)) }
     }
 
     // ---------------------------------------------------------------- encima del mueble
@@ -299,257 +298,19 @@ internal object ArribaEstanteVapor {
             }
             a.oscuro -> {
                 val fuerte = if (a.noche) 0.55f else 1f
-                mancha(gas + Offset(-w * 0.06f, w * 0.06f), w * 0.62f, GAS.copy(alpha = 0.14f * fuerte))
-                mancha(gas, w * 0.26f, GAS.copy(alpha = 0.32f * fuerte))
-                mancha(gas, w * 0.07f, Color(0xFFFFF0C8).copy(alpha = 0.5f * fuerte))
+                // El halo ámbar ancho del gas, que tiñe la pared, la maqueta, la cornisa y lo de encima.
+                mancha(gas + Offset(-w * 0.1f, w * 0.08f), w * 0.78f, GAS.copy(alpha = 0.17f * fuerte))
+                mancha(gas, w * 0.32f, GAS.copy(alpha = 0.34f * fuerte))
+                mancha(gas, w * 0.09f, Color(0xFFFFF0C8).copy(alpha = 0.55f * fuerte))
                 // La luz que sale por la boca del globo y sube por la pared.
                 clipRect(0f, 0f, w, gas.y) { drawPath(poligonoVapor(gas.x - w * 0.02f, gas.y - w * 0.03f, gas.x + w * 0.02f, gas.y - w * 0.03f, gas.x + w * 0.07f, 0f, gas.x - w * 0.07f, 0f), GAS.copy(alpha = 0.08f * fuerte)) }
-                if (a.lunar) mancha(ven, w * 0.32f, LUNA.copy(alpha = 0.1f))
+                if (a.lunar) { mancha(ven, w * 0.3f, LUNA.copy(alpha = 0.1f)); with(MuroEstanteVapor) { planoDeLuz(a, g) } }
             }
             else -> {
-                mancha(ven, w * 0.36f, OCASO.copy(alpha = 0.16f))
-                mancha(gas, w * 0.16f, GAS.copy(alpha = 0.22f))
+                mancha(ven, w * 0.36f, OCASO.copy(alpha = 0.18f))
+                mancha(gas, w * 0.18f, GAS.copy(alpha = 0.26f))
+                with(MuroEstanteVapor) { planoDeLuz(a, g) }
             }
         }
     }
-
-    // ---------------------------------------------------------------- al pie
-
-    /** El suelo de baldosas, la sombra del mueble en él y, de noche, su penumbra hacia el borde (va en la imagen guardada). */
-    fun DrawScope.sueloVapor(a: AireVapor, g: MarcoVapor) {
-        val w = g.w
-        suelo(a, g)
-        if (a.oscuro) drawRect(Brush.verticalGradient(listOf(Color.Transparent, a.hondo.copy(alpha = 0.5f)), g.zocalo, g.h), Offset(0f, g.zocalo), Size(w, g.h - g.zocalo))
-        drawRect(Brush.verticalGradient(listOf(a.sombra(0.5f), Color.Transparent), g.zocalo, g.zocalo + w * 0.035f), Offset(g.xa, g.zocalo), Size(g.xb - g.xa, w * 0.035f))
-    }
-
-    /** Lo del pie que se pinta en cada dibujo, encima del suelo guardado: la pared de los lados, el zócalo y la estufa. */
-    fun DrawScope.pieVivoVapor(a: AireVapor, g: MarcoVapor) {
-        val w = g.w
-        // Debajo, opaco y en píxeles enteros: las franjas del zócalo se tocan a medio píxel y no deben dejar ver el fondo.
-        val y0 = kotlin.math.floor(g.fondo); val y1 = minOf(g.h, kotlin.math.ceil(g.zocalo) + 1f)
-        if (y1 > y0) drawRect(a.luz(mezcla(PaletaVapor.PINO_OSC, PaletaVapor.VETA, 0.4f), g.cerca(Offset(w * 0.5f, g.zocalo))), Offset(0f, y0), Size(w, y1 - y0))
-        listOf(0f to g.xa, g.xb to w).forEach { (l, r) ->
-            val p = Offset((l + r) / 2, (g.fondo + g.zocalo) / 2)
-            drawRect(a.luz(AZUL, g.cerca(p), g.frio(p), g.brasa(p)), Offset(l, g.fondo - 1f), Size(r - l, g.zocalo - g.fondo + 1f))
-        }
-        with(MuebleCuerpoVapor) { zocaloVapor(a, g) }
-        estufa(a, g)
-    }
-
-    /**
-     * El suelo de baldosas geométricas en perspectiva: un damero de ante y almagre con un taco negro en cada cruce, una cenefa
-     * negra junto al zócalo; las juntas, las baldosas gastadas y una partida, y la ceniza junto a la estufa.
-     */
-    private fun DrawScope.suelo(a: AireVapor, g: MarcoVapor) {
-        val u = density; val w = g.w
-        val y0 = g.zocalo; val y1 = g.h
-        if (y1 - y0 < 2f) return
-        val cx = w * 0.5f
-        val filas = 7; val q = 1.2f
-        val tot = (Math.pow(q.toDouble(), filas.toDouble()) - 1).toFloat()
-        // La cenefa negra junto al zócalo.
-        val cen = y0 + (y1 - y0) * 0.09f
-        fun y(i: Int) = cen + (y1 - cen) * ((Math.pow(q.toDouble(), i.toDouble()) - 1).toFloat() / tot)
-        fun esc(yy: Float) = 0.78f + 0.5f * (yy - y0) / (y1 - y0)
-        fun xx(col: Float, yy: Float) = cx + (col * w * 0.075f) * esc(yy)
-        drawRect(a.luz(BARRO_OSC, g.cerca(Offset(cx, y0))), Offset(0f, y0), Size(w, cen - y0))
-        drawRect(a.luz(ANTE, g.cerca(Offset(cx, cen))), Offset(0f, cen - 1.2f * u), Size(w, 1.2f * u))
-        for (i in 0 until filas) {
-            val ya = y(i); val yb = y(i + 1)
-            var c = -10
-            while (c < 10) {
-                val q0 = Offset(xx(c.toFloat(), ya), ya); val q1 = Offset(xx(c + 1f, ya), ya)
-                val q2 = Offset(xx(c + 1f, yb), yb); val q3 = Offset(xx(c.toFloat(), yb), yb)
-                if (q2.x > -w * 0.2f && q3.x < w * 1.2f) {
-                    val centro = Offset((q0.x + q2.x) / 2, (ya + yb) / 2)
-                    val k = g.cerca(centro); val f = g.frio(centro); val br = g.brasa(centro)
-                    val base = if ((c + i) % 2 == 0) ANTE else BARRO
-                    val gasto = azar(3700 + i, c + 20)
-                    val col = if (gasto < 0.25f) mezcla(base, PAPEL, 0.12f) else if (gasto > 0.85f) mezcla(base, TIZNE, 0.12f) else base
-                    drawPath(poligonoVapor(q0.x, q0.y, q1.x, q1.y, q2.x, q2.y, q3.x, q3.y), a.luz(col, k, f, br))
-                    if (gasto < 0.18f) drawOval(luzMueble(if (a.oscuro) 0.03f else 0.1f), Offset(centro.x - (q1.x - q0.x) * 0.3f, centro.y - (yb - ya) * 0.2f), Size((q1.x - q0.x) * 0.6f, (yb - ya) * 0.4f))
-                    if (i == 3 && c == 1) drawLine(a.sombra(0.5f), Offset(q0.x + (q1.x - q0.x) * 0.2f, ya), Offset(q0.x + (q1.x - q0.x) * 0.7f, yb), 0.8f * u)
-                }
-                c++
-            }
-        }
-        // Las juntas: las de lo ancho y las que se abren hacia quien mira; y el taco negro en cada cruce.
-        val juntas = Path(); val tacos = Path()
-        for (i in 0..filas) { val yy = y(i); juntas.moveTo(0f, yy); juntas.lineTo(w, yy) }
-        for (c in -10..10) {
-            juntas.moveTo(xx(c.toFloat(), cen), cen); juntas.lineTo(xx(c.toFloat(), y1), y1)
-            for (i in 0..filas) {
-                val yy = y(i); val xc = xx(c.toFloat(), yy)
-                val s = w * 0.0095f * esc(yy); val sy = s * (0.45f + 0.35f * (yy - y0) / (y1 - y0))
-                if (xc > -s && xc < w + s) { tacos.moveTo(xc, yy - sy); tacos.lineTo(xc + s, yy); tacos.lineTo(xc, yy + sy); tacos.lineTo(xc - s, yy); tacos.close() }
-            }
-        }
-        drawPath(juntas, a.sombra(0.35f), style = Stroke(0.9f * u))
-        drawPath(tacos, a.luz(BARRO_OSC, g.cerca(Offset(cx, (y0 + y1) / 2)) * 0.8f))
-        pinceladas(Rect(0f, y0, w, y1), a.grano(TIZNE, 1f), 3710, 14, u, 0.1f)
-        // La ceniza y el carbón que caen junto a la estufa.
-        for (j in 0 until 16) {
-            val p = Offset(w * (0.12f + 0.2f * azar(3711, j)), y0 + (y1 - y0) * (0.4f + 0.55f * azar(3712, j)))
-            drawCircle(a.luz(if (j % 3 == 0) Color(0xFF8C8A84) else NEGRO, g.cerca(p), 0f, g.brasa(p)), (0.7f + 1.2f * azar(3713, j)) * u, p)
-        }
-        // La penumbra del frente (lo más cerca de quien mira) y, de día, la luz de la ventana que llega a la izquierda.
-        if (!a.lumbre) drawRect(Brush.horizontalGradient(listOf(luzMueble(0.1f), Color.Transparent, a.sombra(0.18f)), 0f, w), Offset(0f, y0), Size(w, y1 - y0))
-    }
-
-    /**
-     * La estufa de hierro fundido, redonda, cortada por el borde izquierdo: sus patas, el cuerpo con sus aros, la puerta de mica en
-     * cuarterones (que de noche arde y es la segunda luz del cuarto), el tiro con su llave, la tapa abombada con el pomo, el caño
-     * que sale por la izquierda y la tetera de cobre encima.
-     */
-    fun DrawScope.estufa(a: AireVapor, g: MarcoVapor) {
-        val u = density; val w = g.w
-        val mica = Offset(g.estufa.x * w, g.estufa.y * w)
-        val cx = mica.x - w * 0.012f
-        val suelo = g.h - w * 0.02f
-        val r = w * 0.1f
-        val y0 = suelo - w * 0.024f; val y1 = y0 - w * 0.14f
-        val k = if (a.oscuro) 0.55f else g.cerca(mica)
-        val f = g.frio(mica)
-        val fuego = when { a.oscuro && a.noche -> 0.65f; a.oscuro -> 1f; a.noche -> 0.7f; else -> 0.35f }
-        // La sombra en el suelo y el resplandor del fuego delante.
-        drawOval(a.sombra(0.45f), Offset(cx - r * 0.8f, suelo - w * 0.012f), Size(r * 2.4f, w * 0.03f))
-        if (a.lumbre) mancha(Offset(mica.x, suelo), w * 0.25f, BRASA.copy(alpha = 0.32f * fuego))
-        // Las patas.
-        listOf(-0.7f, 0.55f).forEach { s ->
-            val px = cx + r * s
-            drawPath(poligonoVapor(px - w * 0.008f, y0, px + w * 0.008f, y0, px + w * 0.012f * (if (s < 0) -1f else 1f), suelo, px + w * 0.002f, suelo), a.luz(HIERRO, k, f))
-        }
-        // El cuerpo redondo, un poco panzón: el claro del lado de la ventana de día; de noche, el rojo del fuego en lo bajo.
-        val cuerpo = Rect(cx - r, y1, cx + r, y0)
-        val barril = Path().apply {
-            moveTo(cx - r, y1); quadraticTo(cx - r * 1.1f, (y0 + y1) / 2, cx - r, y0); lineTo(cx + r, y0)
-            quadraticTo(cx + r * 1.1f, (y0 + y1) / 2, cx + r, y1); close()
-        }
-        val hierro = a.luz(HIERRO, k, f)
-        val claro = if (a.oscuro) a.luz(mezcla(HIERRO, BRASA, 0.35f), 0.6f) else a.luz(mezcla(HIERRO, HIERRO_LUZ, 0.75f), k, f)
-        val osc = a.luz(mezcla(HIERRO, NEGRO, 0.6f), k, f)
-        drawPath(barril, Brush.horizontalGradient(if (a.oscuro) listOf(osc, hierro, claro, hierro, osc) else listOf(osc, claro, hierro, osc, osc), cx - r * 1.1f, cx + r * 1.1f))
-        if (a.lumbre) clipPath(barril) { drawRect(Brush.verticalGradient(listOf(Color.Transparent, BRASA.copy(alpha = 0.3f * fuego)), y1, y0), cuerpo.topLeft, cuerpo.size) }
-        // Los aros fundidos, curvos como el cuerpo.
-        listOf(0.04f, 0.5f, 0.96f).forEach { fy ->
-            val y = cuerpo.top + cuerpo.height * fy
-            val aro = Rect(cx - r * 1.08f, y - w * 0.012f, cx + r * 1.08f, y + w * 0.012f)
-            drawArc(a.luz(mezcla(HIERRO, HIERRO_LUZ, 0.35f), k, f), 0f, 180f, false, aro.topLeft, aro.size, style = Stroke(w * 0.009f))
-            drawArc(a.brillo(0.35f, maxOf(k, 0.4f), if (a.oscuro) 0.8f else 0f), 30f, 80f, false, aro.topLeft - Offset(0f, w * 0.003f), aro.size, style = Stroke(0.8f * u))
-        }
-        // El atizador y las tenazas, apoyados en el costado derecho.
-        val pieH = Offset(cx + r * 1.02f, suelo - w * 0.004f)
-        listOf(Offset(cx + r * 1.32f, y1 - w * 0.03f), Offset(cx + r * 1.42f, y1 - w * 0.012f)).forEachIndexed { j, punta ->
-            val base = pieH + Offset(j * w * 0.012f, 0f)
-            drawLine(a.sombra(0.35f), base + Offset(w * 0.004f, 0f), punta + Offset(w * 0.006f, w * 0.004f), w * 0.005f)
-            drawLine(a.luz(HIERRO, k, f, 0.6f), base, punta, w * (if (j == 0) 0.0045f else 0.006f), StrokeCap.Round)
-            drawLine(a.brillo(0.4f, maxOf(k, 0.3f), 0.6f), base - Offset(w * 0.002f, 0f), punta - Offset(w * 0.002f, 0f), 0.7f * u)
-            drawCircle(a.luz(LATON, k, f, 0.6f), w * 0.0075f, punta)
-            drawCircle(a.brillo(0.6f, maxOf(k, 0.3f), 0.6f), w * 0.0025f, punta - Offset(w * 0.002f, w * 0.002f))
-        }
-        // La puerta de mica en cuatro cuarterones.
-        val pu = Rect(mica.x - w * 0.036f, mica.y - w * 0.032f, mica.x + w * 0.036f, mica.y + w * 0.032f)
-        drawRect(a.luz(NEGRO, k, f), pu.inflate(w * 0.006f).topLeft, pu.inflate(w * 0.006f).size)
-        val brilloMica = mezcla(Color(0xFF5A2A16), Color(0xFFFFB050), fuego)
-        drawRect(brilloMica, pu.topLeft, pu.size)
-        if (a.lumbre || fuego > 0.3f) {
-            drawRect(Color(0xFFFFE2A0).copy(alpha = 0.6f * fuego), Offset(pu.left + pu.width * 0.15f, pu.top + pu.height * 0.45f), Size(pu.width * 0.7f, pu.height * 0.4f))
-            listOf(0.3f, 0.55f, 0.75f).forEach { fx -> drawOval(Color(0xFFFFF0C0).copy(alpha = 0.7f * fuego), Offset(pu.left + pu.width * fx - w * 0.004f, pu.top + pu.height * 0.55f), Size(w * 0.008f, w * 0.014f)) }
-        }
-        val barras = Path().apply { moveTo(pu.center.x, pu.top); lineTo(pu.center.x, pu.bottom); moveTo(pu.left, pu.center.y); lineTo(pu.right, pu.center.y) }
-        drawPath(barras, a.luz(NEGRO, k, f), style = Stroke(w * 0.005f))
-        drawRect(a.luz(LATON, k, f, 0.8f), Offset(pu.right + w * 0.004f, pu.center.y - w * 0.003f), Size(w * 0.012f, w * 0.006f))
-        // El tiro de abajo: una rueda con sus ventanillas.
-        val tiro = Offset(mica.x, y0 - w * 0.016f)
-        drawCircle(a.luz(HIERRO_LUZ, k, f), w * 0.011f, tiro)
-        for (j in 0 until 6) { val t = j * Math.PI / 3; drawCircle(a.luz(NEGRO, k, f), w * 0.002f, Offset(tiro.x + w * 0.007f * kotlin.math.cos(t).toFloat(), tiro.y + w * 0.007f * kotlin.math.sin(t).toFloat())) }
-        // La tapa abombada con su pomo, y el caño que sale hacia la izquierda.
-        val tapa = Path().apply {
-            moveTo(cx - r * 1.05f, y1); quadraticTo(cx - r * 0.9f, y1 - w * 0.035f, cx, y1 - w * 0.038f); quadraticTo(cx + r * 0.9f, y1 - w * 0.035f, cx + r * 1.05f, y1); close()
-        }
-        drawPath(tapa, a.luz(mezcla(HIERRO, HIERRO_LUZ, 0.15f), k, f))
-        drawPath(tapa, a.brillo(0.3f, maxOf(k, 0.3f)), style = Stroke(0.8f * u))
-        val canio = Rect(-w * 0.01f, y1 - w * 0.07f, cx - r * 0.3f, y1 - w * 0.05f)
-        drawRect(a.luz(HIERRO, k, f), Offset(cx - r * 0.45f, canio.top), Size(w * 0.02f, y1 - w * 0.02f - canio.top))
-        drawRect(a.luz(HIERRO, k, f), canio.topLeft, canio.size)
-        drawRect(a.brillo(0.3f, maxOf(k, 0.3f)), canio.topLeft, Size(canio.width, 0.8f * u))
-        // La tetera de cobre sobre la tapa, con su pico y su asa.
-        val tc = Offset(cx + r * 0.3f, y1 - w * 0.03f)
-        val kt = if (a.oscuro) 0.7f else k
-        val tet = Path().apply {
-            moveTo(tc.x - w * 0.034f, tc.y); quadraticTo(tc.x - w * 0.036f, tc.y - w * 0.034f, tc.x, tc.y - w * 0.036f)
-            quadraticTo(tc.x + w * 0.036f, tc.y - w * 0.034f, tc.x + w * 0.034f, tc.y); close()
-        }
-        drawLine(a.luz(COBRE, kt, f, 0.7f), Offset(tc.x + w * 0.028f, tc.y - w * 0.012f), Offset(tc.x + w * 0.055f, tc.y - w * 0.032f), w * 0.007f, StrokeCap.Round)
-        drawPath(tet, a.luz(COBRE, kt, f, 0.7f))
-        clipPath(tet) {
-            drawRect(a.brillo(0.45f, kt, 0.7f), Offset(tc.x - w * 0.022f, tc.y - w * 0.04f), Size(w * 0.008f, w * 0.04f))
-            drawRect(a.sombra(0.3f), Offset(tc.x + w * 0.012f, tc.y - w * 0.04f), Size(w * 0.025f, w * 0.04f))
-        }
-        drawArc(a.luz(HIERRO, kt, f), 180f, 180f, false, Offset(tc.x - w * 0.02f, tc.y - w * 0.058f), Size(w * 0.04f, w * 0.04f), style = Stroke(w * 0.004f))
-        drawCircle(a.luz(COBRE, kt, f, 0.7f), w * 0.005f, Offset(tc.x, tc.y - w * 0.038f))
-    }
-
-    // ---------------------------------------------------------------- el paragüero (se pinta en cada dibujo)
-
-    /** El paragüero de hierro con los planos enrollados y las dos banderas del guarda, que suben por delante del montante. */
-    fun DrawScope.paraguero(a: AireVapor, g: MarcoVapor) {
-        val u = density; val w = g.w
-        val suelo = g.h - w * 0.022f
-        val cx = w * 0.915f
-        val top = suelo - w * 0.13f
-        val p = Offset(cx, top)
-        val k = g.cerca(p); val f = g.frio(p); val br = g.brasa(p)
-        // Lo de dentro, que asoma: dos planos enrollados y las banderas (roja y verde) en sus palos, inclinados.
-        val cosas = listOf(Triple(-0.026f, 0.22f, PAPEL), Triple(0.0f, 0.36f, BERMELLON), Triple(0.02f, 0.33f, VERDE), Triple(-0.008f, 0.19f, Color(0xFF3F6E9A)))
-        cosas.forEachIndexed { i, (dx, alto, col) ->
-            val base = Offset(cx + w * dx, top + w * 0.02f)
-            val punta = Offset(base.x + w * (0.02f + 0.012f * i), base.y - w * alto)
-            val q = Offset((base.x + punta.x) / 2, (base.y + punta.y) / 2)
-            val kq = g.cerca(q); val fq = g.frio(q); val bq = g.brasa(q)
-            if (col == PAPEL || i == 3) {
-                drawLine(a.luz(col, kq, fq, bq), base, punta, w * 0.016f, StrokeCap.Round)
-                drawLine(a.brillo(0.4f, kq, bq), base - Offset(w * 0.004f, 0f), punta - Offset(w * 0.004f, 0f), 0.8f * u)
-                drawOval(a.luz(mezcla(col, NEGRO, 0.25f), kq, fq, bq), Offset(punta.x - w * 0.008f, punta.y - w * 0.004f), Size(w * 0.016f, w * 0.008f))
-            } else {
-                // El palo y, enrollada en él, la bandera: un rollo que adelgaza hacia arriba, con sus vueltas, su atadura y su pliegue.
-                drawLine(a.luz(NOGAL, kq, fq, bq), base, punta, w * 0.005f, StrokeCap.Round)
-                drawCircle(a.luz(NOGAL, kq, fq, bq), w * 0.005f, punta)
-                val t0 = Offset(base.x + (punta.x - base.x) * 0.3f, base.y + (punta.y - base.y) * 0.3f)
-                val t1 = Offset(base.x + (punta.x - base.x) * 0.86f, base.y + (punta.y - base.y) * 0.86f)
-                val dx = (t1.x - t0.x); val dy = (t1.y - t0.y)
-                val largo = kotlin.math.sqrt(dx * dx + dy * dy).coerceAtLeast(1f)
-                val nx = -dy / largo; val ny = dx / largo
-                val g0 = w * 0.012f; val g1 = w * 0.007f
-                val rollo = poligonoVapor(t0.x + nx * g0, t0.y + ny * g0, t1.x + nx * g1, t1.y + ny * g1, t1.x - nx * g1, t1.y - ny * g1, t0.x - nx * g0, t0.y - ny * g0)
-                drawPath(rollo, a.luz(col, kq, fq, bq))
-                clipPath(rollo) {
-                    drawLine(a.sombra(0.35f), t0 - Offset(nx * g0 * 0.6f, ny * g0 * 0.6f), t1 - Offset(nx * g1 * 0.6f, ny * g1 * 0.6f), w * 0.006f)
-                    drawLine(a.brillo(0.35f, kq, bq), t0 + Offset(nx * g0 * 0.5f, ny * g0 * 0.5f), t1 + Offset(nx * g1 * 0.5f, ny * g1 * 0.5f), 0.9f * u)
-                    val vueltas = Path()
-                    for (j in 1 until 5) {
-                        val q0 = Offset(t0.x + dx * j / 5f, t0.y + dy * j / 5f)
-                        val gg = g0 + (g1 - g0) * j / 5f
-                        vueltas.moveTo(q0.x + nx * gg, q0.y + ny * gg); vueltas.lineTo(q0.x - nx * gg + dx * 0.06f, q0.y - ny * gg + dy * 0.06f)
-                    }
-                    drawPath(vueltas, a.sombra(0.4f), style = Stroke(0.8f * u))
-                }
-                val at = Offset(base.x + (punta.x - base.x) * 0.78f, base.y + (punta.y - base.y) * 0.78f)
-                drawLine(a.luz(PAPEL_VIEJO, kq, fq, bq), at + Offset(nx * w * 0.009f, ny * w * 0.009f), at - Offset(nx * w * 0.009f, ny * w * 0.009f), 1.1f * u)
-            }
-        }
-        // El vaso de hierro, con sus aros y su boca.
-        drawOval(a.sombra(0.4f), Offset(cx - w * 0.058f, suelo - w * 0.009f), Size(w * 0.13f, w * 0.02f))
-        val vaso = poligonoVapor(cx - w * 0.05f, top, cx + w * 0.05f, top, cx + w * 0.043f, suelo, cx - w * 0.043f, suelo)
-        drawPath(vaso, a.luz(HIERRO, k, f, br))
-        clipPath(vaso) {
-            drawRect(a.brillo(0.25f, maxOf(k, 0.3f), br), Offset(cx - w * 0.028f, top), Size(w * 0.012f, w * 0.12f))
-            drawRect(a.sombra(0.3f), Offset(cx + w * 0.01f, top), Size(w * 0.04f, w * 0.12f))
-            listOf(0.2f, 0.85f).forEach { fy -> drawRect(a.luz(LATON, k, f, br), Offset(cx - w * 0.05f, top + (suelo - top) * fy), Size(w * 0.1f, w * 0.006f)) }
-        }
-        drawOval(a.luz(NEGRO, k, f, br), Offset(cx - w * 0.05f, top - w * 0.007f), Size(w * 0.1f, w * 0.014f))
-        drawOval(a.brillo(0.4f, maxOf(k, 0.3f), br), Offset(cx - w * 0.05f, top - w * 0.007f), Size(w * 0.1f, w * 0.014f), style = Stroke(0.8f * u))
-    }
-
 }

@@ -208,6 +208,17 @@ internal object MaquetaVapor {
         }
         drawPath(carbon, c(Color(0xFF15141A)))
         listOf(0.2f to 0.6f, 0.45f to 0.85f, 0.7f to 0.6f).forEach { (fx, fy) -> drawCircle(a.brillo(0.6f, k, br), 0.9f * u, Offset(car.left + car.width * fx, car.top - L * 0.035f * fy)) }
+        // De noche, el filo del gas en lo que lo mira (a la derecha): los cantos de la cabina, de la carbonera y del tanque, el
+        // techo, lo alto de la caldera y el aro de las ruedas.
+        if (a.oscuro && k > 0.1f) {
+            val filo = a.brillo(0.95f, k, br)
+            drawRect(filo, Offset(cab.right - 1.5f * u, cab.top + L * 0.02f), Size(1.5f * u, cab.height - L * 0.02f))
+            drawRect(filo, Offset(car.right - 1.5f * u, car.top - L * 0.02f), Size(1.5f * u, car.height + L * 0.02f))
+            drawRect(filo, Offset(tq.right - 1.5f * u, tq.top), Size(1.5f * u, tq.height))
+            drawRect(filo, Offset(cal.left, cal.top), Size(cal.width, 1.2f * u))
+            drawPath(techo, filo, style = Stroke(1.1f * u))
+            ruedas.forEach { (cr, rr) -> drawArc(filo, -75f, 150f, false, Offset(cr.x - rr, cr.y - rr), Size(rr * 2f, rr * 2f), style = Stroke(1.3f * u)) }
+        }
         // La sombra de la caldera en el tanque y de la plataforma en las ruedas.
         drawRect(a.sombra(0.25f), Offset(tq.left, tq.top), Size(tq.width, L * 0.012f))
         clipRect(x(0.1f), plat, x(0.92f), plat + L * 0.06f) { drawRect(Brush.verticalGradient(listOf(a.sombra(0.4f), Color.Transparent), plat, plat + L * 0.06f), Offset(x(0.1f), plat), Size(L * 0.82f, L * 0.06f)) }

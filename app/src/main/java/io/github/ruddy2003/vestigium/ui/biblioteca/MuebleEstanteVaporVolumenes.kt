@@ -12,6 +12,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.text.TextMeasurer
 import io.github.ruddy2003.vestigium.ui.TemaId
@@ -37,7 +38,7 @@ private val TONOS_VAPOR: Pair<List<Color>, List<Color>> by lazy { juegoTonos(Tem
  * Los tintes del cuero, la laca y la lona con que se dice el ánimo, en el orden de la escala del tema (de lo peor a lo mejor):
  * granate, teja, crema, cardenillo y verde hondo. Así los puntos de en medio son un color con cuerpo y no un pastel lavado.
  */
-private val TINTES_VAPOR = listOf(Color(0xFF86281F), Color(0xFFB4532C), Color(0xFFD9BB7E), Color(0xFF4C8268), Color(0xFF245E55))
+private val TINTES_VAPOR = listOf(Color(0xFF86281F), Color(0xFFB4532C), Color(0xFFC9A262), Color(0xFF4C8268), Color(0xFF245E55))
 
 private fun cuadradoVapor(x: Float) = x * x
 
@@ -101,7 +102,7 @@ internal object VolumenEstanteVapor {
         val p = lugarVolumenVapor(v.repisa, v.centro)
         val e = estufaNominalVapor(v.repisas)
         val k0 = cercaVapor(p.x, p.y, a, e)
-        val f = if (a.lunar) lunaVapor(p.x, p.y) else if (a.ocaso) ventanaVapor(p.x, p.y) else 0f
+        val f = frioVapor(p.x, p.y, a)
         val br = brasaVapor(p.x, p.y, a, e)
         // De dónde viene la luz: de día y al anochecer, de la ventana (izquierda); de noche, del gas o de la estufa.
         val hacia = when {
@@ -111,10 +112,27 @@ internal object VolumenEstanteVapor {
         }
         val k = if (a.oscuro) maxOf(k0, 0.035f) else k0
         val tinte = tinteVapor(tonoDeDiaVapor(v.tono, oscuro))
-        when (MuebleEstanteVapor.clase(v.semilla)) {
+        val clase = MuebleEstanteVapor.clase(v.semilla)
+        giroTarjeta = 0f
+        when (clase) {
             0 -> libro(v, medidor, a, k, f, br, hacia, tinte)
             1 -> cajas(v, medidor, a, k, f, br, hacia, tinte)
             else -> saca(v, medidor, a, k, f, br, hacia, tinte)
+        }
+        // En los Sueños, la luna (o el paño del ocaso) que cruza la pared le pasa también por encima, a la misma altura; el día se
+        // vuelve a entintar encima.
+        if (a.noche) {
+            val escala = MuebleEstanteVapor.ANCHO_NOMINAL * density
+            val abajo = MuebleEstanteVapor.CORONA + (v.repisa * MuebleEstanteVapor.FILA + MuebleEstanteVapor.ALTO_REPISA.value) / MuebleEstanteVapor.ANCHO_NOMINAL
+            val origen = Offset(p.x - size.width / 2f / escala, abajo - size.height / escala)
+            val ancho = size.width / escala; val alto = size.height / escala
+            val toca = listOf(0.1f, 0.5f, 0.9f).any { fx -> listOf(0.1f, 0.5f, 0.9f).any { fy -> (if (a.lunar) lunaVapor(origen.x + ancho * fx, origen.y + alto * fy) else enPanoVapor(origen.x + ancho * fx, origen.y + alto * fy)) > 0.02f } }
+            if (toca) {
+                clipRect(0f, if (clase == 2) size.height * 0.18f else 0f, size.width, size.height) {
+                    with(MuroEstanteVapor) { planoDeLuzEn(a, escala, origen) }
+                }
+                rotate(giroTarjeta, pivoteTarjeta) { textoTarjeta(ultimaTarjeta, v, medidor, a) }
+            }
         }
     }
 
@@ -128,10 +146,25 @@ internal object VolumenEstanteVapor {
         val u = density
         drawRect(a.etiqueta(k, base), r.topLeft, r.size)
         drawRect(a.sombra(0.22f), Offset(r.left, r.bottom - 1f * u), Size(r.width, 1f * u))
+        textoTarjeta(r, v, medidor, a)
+        ultimaTarjeta = r
+    }
+
+    /** El día y el mes de la tarjeta [r], en tinta. */
+    private fun DrawScope.textoTarjeta(r: Rect, v: Volumen, medidor: TextMeasurer, a: AireVapor) {
+        val u = density
         val corte = r.top + r.height * 0.72f
         textoEn(medidor, v.dia, Rect(r.left, r.top + 0.5f * u, r.right, corte), PaletaVapor.LETRA, a.tinta, TAM_DIA)
         textoEn(medidor, mesCorto(v.mes), Rect(r.left, corte - r.height * 0.06f, r.right, r.bottom - 0.6f * u), PaletaVapor.LETRA, a.tinta.copy(alpha = 0.85f), TAM_MES, minimo = 4.5f)
     }
+
+    /**
+     * Dónde quedó la tarjeta del volumen que se está pintando (y, en la saca, cuánto gira y sobre qué punto): la luz de los Sueños
+     * que le pasa por encima la tiñe, y el día se vuelve a entintar encima para que se siga leyendo.
+     */
+    private var ultimaTarjeta = Rect.Zero
+    private var giroTarjeta = 0f
+    private var pivoteTarjeta = Offset.Zero
 
     /** La luna creciente de los Sueños, en [c], de radio [r]: un círculo menos otro corrido. */
     private fun DrawScope.luna(c: Offset, r: Float, color: Color) {
@@ -147,8 +180,10 @@ internal object VolumenEstanteVapor {
         val u = density; val w = size.width; val h = size.height
         val lado = -hacia
         val x = if (lado > 0) w else 0f
-        val largo = (if (a.oscuro) 8f else 6f) * u
-        drawPath(poligonoVapor(x, h, x, arriba + (h - arriba) * 0.1f, x + lado * largo, arriba + (h - arriba) * 0.22f, x + lado * largo, h), a.sombra(if (a.oscuro) 0.42f else 0.32f))
+        val largo = (if (a.oscuro) 12f else 11f) * u
+        val baja = 3.5f * u
+        drawPath(poligonoVapor(x, h, x, arriba + baja, x + lado * largo, arriba + baja + largo * 0.4f, x + lado * largo, h), a.sombra(if (a.oscuro) 0.45f else 0.36f))
+        drawPath(poligonoVapor(x, h, x, arriba + baja * 2f, x + lado * largo * 1.35f, arriba + baja * 2f + largo * 0.5f, x + lado * largo * 1.35f, h), a.sombra(0.12f))
         drawRect(a.sombra(0.5f), Offset(if (lado > 0) 0f else -largo * 0.6f, h - 1.6f * u), Size(w + largo * 0.6f, 1.6f * u))
     }
 
@@ -433,6 +468,7 @@ internal object VolumenEstanteVapor {
         val ojal = Offset(w * 0.5f, h * 0.36f)
         val giro = (azar(v.semilla, 91) - 0.5f) * 8f
         drawLine(cuerda, nudo, ojal, 0.8f * u)
+        giroTarjeta = giro; pivoteTarjeta = ojal
         rotate(giro, ojal) {
             val tg = Rect(ojal.x - cw / 2, ojal.y - 3.5f * u, ojal.x + cw / 2, ojal.y - 3.5f * u + chh)
             val corte = 3f * u

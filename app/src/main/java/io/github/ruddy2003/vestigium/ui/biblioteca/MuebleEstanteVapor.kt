@@ -42,6 +42,8 @@ internal object PaletaVapor {
     val AZUL = Color(0xFF34506B)
     val AZUL_CLARO = Color(0xFF557796)
     val AZUL_OSC = Color(0xFF1C2D41)
+    /** El zócalo de la pared, por debajo de la moldura de silla: chocolate, como se pintaban entonces. */
+    val DADO = Color(0xFF4A2E22)
     /** La plantilla del friso: ocre y almagre. */
     val OCRE = Color(0xFFC79440)
     val ALMAGRE = Color(0xFF8E3626)
@@ -130,14 +132,14 @@ internal class AireVapor(val oscuro: Boolean, val noche: Boolean) {
                 // El anochecer: lo que está lejos de la ventana se va al violeta y se apaga; lo de cerca recibe el ocaso;
                 // cerca del gas, su charco cálido.
                 val ff = f.coerceIn(0f, 1f)
-                val v = mezcla(mezcla(c, p.ATARDECER, 0.16f + 0.3f * (1f - ff)), p.OCASO, 0.18f * ff)
+                val v = mezcla(mezcla(c, p.ATARDECER, 0.1f + 0.18f * (1f - ff)), p.OCASO, 0.38f * ff)
                 return mezcla(v, p.GAS, 0.26f * kk)
             }
             return if (kk > 0.5f) mezcla(c, LUZ_MUEBLE, 0.24f * (kk - 0.5f) * 2f) else mezcla(c, SOMBRA_MUEBLE, 0.16f * (0.5f - kk) * 2f)
         }
         var v = mezcla(abismo(c), c, (1.05f * kk).coerceAtMost(0.92f))
         v = mezcla(v, calor(br), 0.2f * kk)
-        if (lunar && f > 0.01f) v = mezcla(v, mezcla(v, p.LUNA, 0.35f), (0.3f * f * (1f - kk)).coerceIn(0f, 1f))
+        if (lunar && f > 0.01f) v = mezcla(v, mezcla(v, p.LUNA, 0.5f), (0.6f * f * (1f - kk)).coerceIn(0f, 1f))
         return v
     }
 
@@ -156,7 +158,7 @@ internal class AireVapor(val oscuro: Boolean, val noche: Boolean) {
     fun animo(t: Color, k: Float, f: Float = 0f, br: Float = 0f): Color {
         val kk = k.coerceIn(0f, 1f)
         if (!oscuro) {
-            if (noche) { val ff = f.coerceIn(0f, 1f); return mezcla(mezcla(mezcla(t, p.ATARDECER, 0.1f + 0.18f * (1f - ff)), p.OCASO, 0.1f * ff), p.GAS, 0.14f * kk) }
+            if (noche) { val ff = f.coerceIn(0f, 1f); return mezcla(mezcla(mezcla(t, p.ATARDECER, 0.12f + 0.14f * (1f - ff)), p.OCASO, 0.2f * ff), p.GAS, 0.14f * kk) }
             return if (kk > 0.5f) mezcla(t, LUZ_MUEBLE, 0.12f * (kk - 0.5f) * 2f) else mezcla(t, SOMBRA_MUEBLE, 0.1f * (0.5f - kk) * 2f)
         }
         val n = hondo
@@ -171,8 +173,9 @@ internal class AireVapor(val oscuro: Boolean, val noche: Boolean) {
     fun etiqueta(k: Float, base: Color = p.PAPEL): Color {
         val kk = k.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) mezcla(base, p.ATARDECER, 0.1f) else base
+        // Cerca de las luces, la cartulina se entibia de ámbar; lejos, se hunde hacia el azul de la noche sin perder la lectura.
         val ke = maxOf(kk, 0.26f)
-        return mezcla(mezcla(base, hondo, 0.46f - 0.42f * ke), p.GAS, 0.14f * ke)
+        return mezcla(mezcla(base, hondo, 0.44f - 0.4f * ke), p.GAS, 0.3f * kk)
     }
 
     val tinta: Color get() = if (oscuro) mezcla(p.TINTA, hondo, 0.25f) else p.TINTA
@@ -206,7 +209,7 @@ internal object MuebleEstanteVapor {
     // propósito: así `EstanteVapor` las lee al dibujar)
 
     val CORONA = 0.56f
-    val BASE = 0.28f
+    val BASE = 0.36f
     val LADO = 0.075f
     val ALTO_REPISA: Dp = 110.dp
     val TABLA: Dp = 20.dp
@@ -236,8 +239,8 @@ internal object MuebleEstanteVapor {
     const val GAS_X = 0.87f
     const val GAS_Y = 0.3f
     /** La mica de la estufa: su x y lo que baja desde el pie de la última tabla. */
-    const val ESTUFA_X = 0.085f
-    const val ESTUFA_DY = 0.18f
+    const val ESTUFA_X = 0.125f
+    const val ESTUFA_DY = 0.215f
     /** El ancho con que un volumen pasa su repisa a anchos del mueble (no sabe cuánto mide el estante): el de un teléfono. */
     const val ANCHO_NOMINAL = 380f
     /** Una repisa con su tabla, en dp. */
@@ -262,10 +265,8 @@ internal object MuebleEstanteVapor {
         val y0 = floor(ch); val y1 = minOf(h, ceil(fondo) + 1f)
         if (y1 > y0) drawRect(a.luz(mezcla(PaletaVapor.AZUL_OSC, PaletaVapor.NOCHE, 0.3f), 0.2f), Offset(0f, y0), Size(w, y1 - y0))
 
-        // ---- lo fijo de arriba (la pared, la ventana, lo colgado, la cornisa y el bodegón) y el suelo de baldosas, pintados una
-        // vez por tamaño y modo, en píxeles enteros: la corona desde arriba hasta el píxel entero de debajo de su borde; el suelo
-        // desde el píxel entero de encima del zócalo (lo que sobra lo tapa el zócalo, que va después). La corona no cambia con las
-        // repisas; el suelo, sí.
+        // ---- lo fijo de arriba (la pared, la ventana, lo colgado, la cornisa y el bodegón), pintado una vez por tamaño y modo,
+        // en píxeles enteros: desde arriba hasta el píxel entero de debajo del borde de la corona. No cambia con las repisas.
         val modo = "${w.toInt()}|$oscuro|$noche|$u"
         val ranura = if (noche) 2 else 0
         with(CapaVapor) {
@@ -277,21 +278,17 @@ internal object MuebleEstanteVapor {
                 with(ArribaEstanteVapor) { bodegonVapor(a, g) }
                 granoMueble(Rect(0f, 0f, w, ch), oscuro)
             }
-            val arriba = floor(g.zocalo)
-            if (h - arriba >= 1f) pegar(ranura + 1, "b$modo|$fondo|$h", arriba, h) {
-                drawRect(a.luz(PaletaVapor.BARRO_OSC, 0.2f), Offset(0f, arriba), Size(w, h - arriba))
-                with(ArribaEstanteVapor) { sueloVapor(a, g) }
-                granoMueble(Rect(0f, arriba, w, h), oscuro)
-            }
         }
         if (fondo - ch >= 1f) cuerpo(d, medidor, a, g)
-        // ---- el zócalo, la estufa y el paragüero, que se pintan en cada dibujo encima del suelo guardado
-        with(ArribaEstanteVapor) { pieVivoVapor(a, g); paraguero(a, g) }
-        granoMueble(Rect(0f, ch, w, g.zocalo), oscuro)
+        // ---- el plano de la luna (los Sueños de noche) o el paño del ocaso (los de claro) sobre la pared y el mueble
+        if (a.noche) clipRect(0f, ch, w, h) { with(MuroEstanteVapor) { planoDeLuz(a, g) } }
+        // ---- el pie: el suelo de baldosas, el zócalo, la estufa con la carbonera y el paragüero
+        with(PieEstanteVapor) { pieVivoVapor(a, g); paraguero(a, g) }
+        granoMueble(Rect(0f, ch, w, h), oscuro)
         // ---- de noche, el resplandor de la estufa en lo bajo del mueble
         if (oscuro && fondo - ch >= 1f) {
             val e = Offset(g.estufa.x * w, g.estufa.y * w)
-            clipRect(0f, ch, w, fondo) { mancha(e, w * 0.55f, PaletaVapor.BRASA.copy(alpha = if (noche) 0.1f else 0.16f)) }
+            clipRect(0f, ch, w, fondo) { mancha(e, w * 0.6f, PaletaVapor.BRASA.copy(alpha = if (noche) 0.12f else 0.2f)) }
         }
     }
 
@@ -308,7 +305,7 @@ internal object MuebleEstanteVapor {
             d.repisas.forEachIndexed { k, r ->
                 val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
                 val c = Offset((oc + r.right) / 2, r.center.y)
-                huecoLibreVapor(k, r, oc, a, g, g.cerca(c), g.frio(c), g.brasa(c))
+                huecoLibreVapor(k, r, oc, a, g, g.frio(c))
             }
         }
     }
@@ -337,7 +334,7 @@ internal class MarcoVapor(val w: Float, val h: Float, val ch: Float, val x0: Flo
 
     fun cerca(p: Offset): Float = cercaVapor(p.x / w, p.y / w, a, estufa)
     fun brasa(p: Offset): Float = brasaVapor(p.x / w, p.y / w, a, estufa)
-    fun frio(p: Offset): Float = if (a.lunar) lunaVapor(p.x / w, p.y / w) else if (a.ocaso) ventanaVapor(p.x / w, p.y / w) else 0f
+    fun frio(p: Offset): Float = frioVapor(p.x / w, p.y / w, a)
 }
 
 // ---------------------------------------------------------------- la luz, compartida por el mueble y los volúmenes
@@ -351,7 +348,7 @@ internal class MarcoVapor(val w: Float, val h: Float, val ch: Float, val x0: Flo
 internal fun gasVapor(fx: Float, fy: Float, bajo: Boolean): Float {
     val dx = fx - MuebleEstanteVapor.GAS_X
     val dy = (fy - MuebleEstanteVapor.GAS_Y) * (if (fy > MuebleEstanteVapor.GAS_Y) 0.85f else 1.1f)
-    val radial = (if (bajo) 1f else 1.5f) * exp(-(if (bajo) 3.9f else 2.9f) * sqrt(dx * dx + dy * dy))
+    val radial = (if (bajo) 1f else 1.75f) * exp(-(if (bajo) 3.9f else 2.6f) * sqrt(dx * dx + dy * dy))
     val y = fy - MuebleEstanteVapor.CORONA
     var cuerpo = 0f
     if (y >= 0f) {
@@ -360,19 +357,19 @@ internal fun gasVapor(fx: Float, fy: Float, bajo: Boolean): Float {
             val (y0, k0) = CAIDA_VAPOR[i]; val (y1, k1) = CAIDA_VAPOR[i + 1]
             if (y in y0..y1) { cuerpo = k0 + (k1 - k0) * (y - y0) / (y1 - y0); break }
         }
-        cuerpo *= (1f - 0.45f * (kotlin.math.abs(dx) - 0.1f).coerceAtLeast(0f)).coerceIn(0.66f, 1f)
+        cuerpo *= (1f - 0.8f * (kotlin.math.abs(dx) - 0.08f).coerceAtLeast(0f)).coerceIn(0.42f, 1f)
         if (bajo) cuerpo *= 0.45f
     }
     return maxOf(radial, cuerpo).coerceIn(0f, 1f)
 }
 
 /** La caída del gas sobre el frente del mueble: (anchos por debajo de la corona, luz). Los centros de las repisas, a 0.19, 0.53… */
-private val CAIDA_VAPOR = listOf(0f to 0.97f, 0.19f to 0.88f, 0.53f to 0.56f, 0.87f to 0.25f, 1.21f to 0.085f, 1.55f to 0.035f, 2.3f to 0.02f)
+private val CAIDA_VAPOR = listOf(0f to 0.97f, 0.19f to 0.88f, 0.53f to 0.58f, 0.87f to 0.3f, 1.21f to 0.13f, 1.55f to 0.05f, 2.3f to 0.02f)
 
 /** El rescoldo de la estufa en [e]: rojo y cerca. */
 internal fun estufaVapor(fx: Float, fy: Float, e: Offset, bajo: Boolean): Float {
     val dx = fx - e.x; val dy = (fy - e.y) * 0.9f
-    return ((if (bajo) 0.6f else 0.95f) * exp(-5f * sqrt(dx * dx + dy * dy))).coerceIn(0f, 1f)
+    return ((if (bajo) 0.65f else 1f) * exp(-3.6f * sqrt(dx * dx + dy * dy))).coerceIn(0f, 1f)
 }
 
 /** La luz lechosa de la ventana (de día; en los Sueños, el ocaso o la luna). */
@@ -381,10 +378,49 @@ internal fun ventanaVapor(fx: Float, fy: Float): Float {
     return (1.3f * exp(-1.8f * sqrt(dx * dx * 0.9f + dy * dy))).coerceIn(0f, 1f)
 }
 
-/** La luna que entra por la ventana en los Sueños de noche: fría y corta, solo cerca de ella. */
+/** El plano de luna de los Sueños de noche: sale de la ventana y baja en diagonal hacia la derecha, ensanchándose. */
+internal object PlanoLunaVapor {
+    val C0 = Offset(0.13f, 0.22f)
+    val D = Offset(0.387f, 0.922f)
+    val N = Offset(-0.922f, 0.387f)
+    const val ANCHO0 = 0.09f
+    const val ABRE = 0.05f
+    const val LARGO = 2.8f
+}
+
+/** Cuánta luna le llega a un punto ([fx], [fy] en anchos): dentro del plano, más cerca del eje y de la ventana. */
 internal fun lunaVapor(fx: Float, fy: Float): Float {
-    val dx = fx - MuebleEstanteVapor.VENTANA_X; val dy = fy - MuebleEstanteVapor.VENTANA_Y
-    return (1.1f * exp(-3.2f * sqrt(dx * dx + dy * dy))).coerceIn(0f, 1f)
+    val p = PlanoLunaVapor
+    val vx = fx - p.C0.x; val vy = fy - p.C0.y
+    val t = vx * p.D.x + vy * p.D.y
+    if (t < -0.05f) return 0f
+    val s = vx * p.N.x + vy * p.N.y
+    val hw = p.ANCHO0 + p.ABRE * maxOf(t, 0f)
+    val dentro = (1f - kotlin.math.abs(s) / hw).coerceIn(0f, 1f)
+    if (dentro <= 0f) return 0f
+    return (sqrt(dentro) * 1.05f * exp(-0.45f * maxOf(t, 0f))).coerceIn(0f, 1f)
+}
+
+/**
+ * El paño del ocaso en los Sueños en claro: la ventana (de 0.03 a 0.23 de ancho y de 0.08 a 0.36 de alto, en anchos) llevada
+ * hacia abajo y a la derecha y estirada: cae sobre la pared bajo la ventana, lo de encima del mueble, la cornisa, el montante
+ * izquierdo y la primera repisa, con sus cuarterones.
+ */
+internal fun panoVapor(x: Float, y: Float): Offset = Offset(0.035f + (x - 0.03f) * 1.3f + 0.36f * (y - 0.08f), 0.37f + (y - 0.08f) * 1.75f)
+
+/** Cuánto ocaso del paño le llega a un punto ([fx], [fy] en anchos): 1 dentro, con un borde suave. */
+internal fun enPanoVapor(fx: Float, fy: Float): Float {
+    val y = 0.08f + (fy - 0.37f) / 1.75f
+    val x = 0.03f + (fx - 0.035f - 0.36f * (y - 0.08f)) / 1.3f
+    val dx = minOf(x - 0.03f, 0.23f - x); val dy = minOf(y - 0.08f, 0.36f - y)
+    return (minOf(dx, dy) / 0.02f + 0.5f).coerceIn(0f, 1f)
+}
+
+/** La luz fría o del ocaso que le llega a un punto: la luna en los Sueños de noche; en los de claro, la ventana y su paño. */
+internal fun frioVapor(fx: Float, fy: Float, a: AireVapor): Float = when {
+    a.lunar -> lunaVapor(fx, fy)
+    a.ocaso -> (0.4f * ventanaVapor(fx, fy) + enPanoVapor(fx, fy)).coerceIn(0f, 1f)
+    else -> 0f
 }
 
 /** Lo que alumbra un punto: de día, la ventana; de noche, el gas y la estufa; al anochecer (los Sueños en claro), el gas bajo. */
@@ -415,10 +451,9 @@ internal fun estufaNominalVapor(repisas: Int): Offset =
 // ---------------------------------------------------------------- lo fijo pintado una vez
 
 /**
- * Lo fijo pintado una vez: cuatro imágenes (la corona y el suelo, del diario y de los Sueños), cada una con la clave de su
- * tamaño y su modo; si la clave cambia, se vuelve a pintar. Cada franja va de una fila entera de píxeles a otra ([desde],
- * [hasta]) y se pega sin correrla, así no se remuestrea ni deja costura. Con un teléfono de 1080 px, unos 3 MB por modo (la
- * corona, ~2.2 MB; el suelo, ~0.8 MB).
+ * Lo fijo pintado una vez: la corona del diario y la de los Sueños, cada una con la clave de su tamaño y su modo; si la clave
+ * cambia, se vuelve a pintar. Cada franja va de una fila entera de píxeles a otra ([desde], [hasta]) y se pega sin correrla, así
+ * no se remuestrea ni deja costura. Con un teléfono de 1080 px, unos 2.2 MB por modo.
  */
 internal object CapaVapor {
     private val claves = arrayOfNulls<String>(4)

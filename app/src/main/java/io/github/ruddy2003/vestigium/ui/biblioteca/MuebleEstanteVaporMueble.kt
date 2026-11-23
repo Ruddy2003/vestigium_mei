@@ -155,24 +155,44 @@ internal object MuebleCuerpoVapor {
         val kl = g.cerca(Offset(x0, yc)); val kc = g.cerca(Offset((x0 + x1) / 2, yc)); val kr = g.cerca(Offset(x1, yc))
         val fl = g.frio(Offset(x0, yc)); val fr = g.frio(Offset(x1, yc))
         val bl = g.brasa(Offset(x0, yc)); val brr = g.brasa(Offset(x1, yc))
-        // El fondo: la pared, que de noche se enciende cerca del gas y de la estufa.
+        // El fondo es la pared (la estantería no tiene trasera): arriba, el enlucido azul; por debajo de la moldura de silla, el
+        // zócalo de la pared pintado de chocolate, con su cenefa de plantilla encima. De noche se enciende cerca del gas y de la
+        // estufa.
         val pared = mezcla(AZUL, AZUL_OSC, 0.45f)
-        drawRect(Brush.horizontalGradient(listOf(a.luz(pared, kl * 0.8f, fl, bl), a.luz(pared, kc * 0.8f, (fl + fr) / 2, (bl + brr) / 2), a.luz(pared, kr * 0.8f, fr, brr)), x0, x1),
-            Offset(x0, r.top), Size(x1 - x0, r.height))
+        val silla = g.zocalo - w * 0.62f
+        val corte = silla.coerceIn(r.top, r.bottom)
+        fun franjaPared(c: Color, y0: Float, y1: Float) {
+            if (y1 - y0 < 0.5f) return
+            drawRect(Brush.horizontalGradient(listOf(a.luz(c, kl * 0.8f, fl, bl), a.luz(c, kc * 0.8f, (fl + fr) / 2, (bl + brr) / 2), a.luz(c, kr * 0.8f, fr, brr)), x0, x1),
+                Offset(x0, y0), Size(x1 - x0, y1 - y0))
+        }
+        franjaPared(pared, r.top, corte + 0.5f)
+        franjaPared(PaletaVapor.DADO, corte, r.bottom)
         pinceladas(Rect(x0, r.top, x1, r.bottom), a.hondo, 3300 + k, 6, u, 0.16f)
-        if (!a.oscuro) pinceladas(Rect(x0, r.top, x1, r.bottom), PaletaVapor.AZUL_CLARO, 3320 + k, 5, u, 0.12f)
-        if (!a.lumbre) mancha(Offset(x0 + dL, r.top + dT), w * 0.42f, luzMueble(0.1f * kl))
+        if (!a.oscuro) pinceladas(Rect(x0, r.top, x1, corte), PaletaVapor.AZUL_CLARO, 3320 + k, 5, u, 0.12f)
+        if (silla > r.top - w * 0.03f && silla < r.bottom + w * 0.01f) cenefaSilla(silla, x0, x1, a, g)
+        // Un tizne de hollín en la pared y una grieta.
+        if (azar(3330, k) < 0.7f) {
+            val hx = x0 + (x1 - x0) * (0.15f + 0.7f * azar(3331, k))
+            drawOval(a.grano(PaletaVapor.TIZNE, 0.16f), Offset(hx, r.top + r.height * 0.15f), Size(w * 0.09f, r.height * 0.6f))
+            drawOval(a.grano(PaletaVapor.TIZNE, 0.1f), Offset(hx + w * 0.02f, r.top + r.height * 0.1f), Size(w * 0.05f, r.height * 0.4f))
+        }
         val grieta = Path().apply {
             val gx = x0 + (x1 - x0) * (0.3f + 0.4f * azar(3310, k)); val gy = r.top + r.height * 0.35f
             moveTo(gx, gy); lineTo(gx + w * 0.012f, gy + r.height * 0.12f); lineTo(gx + w * 0.006f, gy + r.height * 0.22f); lineTo(gx + w * 0.02f, gy + r.height * 0.34f)
         }
         drawPath(grieta, a.sombra(0.4f), style = Stroke(0.8f * u))
-        // La sombra de la tabla de arriba en la pared (más honda junto a ella) y la del montante izquierdo.
-        drawRect(Brush.verticalGradient(listOf(a.sombra(0.62f), a.sombra(0.2f), Color.Transparent), r.top + dT, r.top + r.height * 0.55f),
-            Offset(x0, r.top + dT), Size(x1 - x0, r.height * 0.55f - dT))
-        val ladoSombra = if (a.oscuro) x1 - dL - w * 0.05f else x0 + dL
-        drawRect(Brush.horizontalGradient(if (a.oscuro) listOf(Color.Transparent, a.sombra(0.4f)) else listOf(a.sombra(0.4f), Color.Transparent), ladoSombra, ladoSombra + w * 0.05f),
-            Offset(ladoSombra, r.top), Size(w * 0.05f, r.height))
+        if (!a.lumbre) mancha(Offset(x0 + dL, r.top + dT), w * 0.42f, luzMueble(0.1f * kl))
+        // Las sombras francas en la pared: la de la tabla de arriba y la del montante del lado de la luz (de día y al anochecer,
+        // la ventana, a la izquierda; de noche, el gas, a la derecha), con su penumbra.
+        val izqLuz = !a.oscuro || a.lunar
+        val sh = w * 0.058f; val sv = w * 0.042f
+        val yT = r.top + dT
+        val sombraL = if (izqLuz) poligonoVapor(x0, r.top, x1, r.top, x1, yT + sh * 1.12f, x0 + dL + sv + w * 0.02f, yT + sh, x0 + dL + sv, yT + sh + w * 0.02f, x0 + dL + sv, r.bottom, x0, r.bottom)
+        else poligonoVapor(x1, r.top, x0, r.top, x0, yT + sh * 1.12f, x1 - dL - sv - w * 0.02f, yT + sh, x1 - dL - sv, yT + sh + w * 0.02f, x1 - dL - sv, r.bottom, x1, r.bottom)
+        val fuerza = if (a.oscuro) (0.25f + 0.35f * (if (izqLuz) fl else kr)).coerceAtMost(0.5f) else 0.36f
+        drawPath(corridoVapor(sombraL, (if (izqLuz) 1f else -1f) * w * 0.008f, w * 0.008f), a.sombra(fuerza * 0.35f))
+        drawPath(sombraL, a.sombra(fuerza))
         // La tabla de arriba vista por debajo.
         drawRect(a.luz(mezcla(PINO_OSC, VETA, 0.35f), kc * 0.7f, 0f, (bl + brr) / 2), Offset(x0, r.top), Size(x1 - x0, dT))
         drawRect(a.sombra(0.4f), Offset(x0, r.top + dT - 1.2f * u), Size(x1 - x0, 1.2f * u))
@@ -191,6 +211,34 @@ internal object MuebleCuerpoVapor {
         drawRect(a.luz(PINO_OSC, kl, fl, bl), Offset(x0, r.bottom - dB - w * 0.008f), Size(dL, w * 0.008f))
         drawRect(a.luz(PINO, kr, fr, brr), Offset(x1 - dL, r.bottom - dB - w * 0.008f), Size(dL, w * 0.008f))
     }
+
+    /**
+     * La moldura de silla de la pared a la altura [y], que asoma por detrás de la estantería: encima, una cenefa de plantilla
+     * (rombos de ocre y puntos de almagre sobre azul oscuro, como el friso de arriba); la moldura de madera oscura con su luz.
+     */
+    private fun DrawScope.cenefaSilla(y: Float, x0: Float, x1: Float, a: AireVapor, g: MarcoVapor) {
+        val u = density; val w = g.w
+        val c = Offset((x0 + x1) / 2, y)
+        val k = g.cerca(c) * 0.8f; val f = g.frio(c); val br = g.brasa(c)
+        val alto = w * 0.026f
+        drawRect(a.luz(mezcla(PaletaVapor.AZUL_OSC, PaletaVapor.NEGRO, 0.2f), k, f, br), Offset(x0, y - alto), Size(x1 - x0, alto))
+        val rombos = Path(); val puntos = Path()
+        var x = x0 + w * 0.02f
+        val cy = y - alto * 0.5f; val rx = w * 0.012f; val ry = alto * 0.3f
+        while (x < x1) {
+            rombos.moveTo(x, cy - ry); rombos.lineTo(x + rx, cy); rombos.lineTo(x, cy + ry); rombos.lineTo(x - rx, cy); rombos.close()
+            puntos.addOval(Rect(x + w * 0.0225f - w * 0.003f, cy - w * 0.003f, x + w * 0.0225f + w * 0.003f, cy + w * 0.003f))
+            x += w * 0.045f
+        }
+        drawPath(rombos, a.luz(PaletaVapor.OCRE, k, f, br).copy(alpha = 0.8f))
+        drawPath(puntos, a.luz(PaletaVapor.ALMAGRE, k, f, br))
+        drawRect(a.luz(PaletaVapor.OCRE, k, f, br), Offset(x0, y - alto), Size(x1 - x0, 0.8f * u))
+        drawRect(a.luz(PaletaVapor.NOGAL, k, f, br), Offset(x0, y - w * 0.004f), Size(x1 - x0, w * 0.012f))
+        drawRect(a.brillo(0.45f, maxOf(k, 0.2f), br), Offset(x0, y - w * 0.004f), Size(x1 - x0, 0.8f * u))
+        drawRect(a.sombra(0.4f), Offset(x0, y + w * 0.008f), Size(x1 - x0, w * 0.006f))
+    }
+
+    private val BRASA_VAPOR = Color(0xFFFF9A52)
 
     /** El canto boleado de una tabla: la luz arriba, la sombra abajo, su veta, los golpes y la sombra que echa en el hueco de debajo. */
     fun DrawScope.tablaVapor(k: Int, r: Rect, a: AireVapor, g: MarcoVapor) {
@@ -214,6 +262,10 @@ internal object MuebleCuerpoVapor {
             drawRect(a.luz(mezcla(PINO_LUZ, PAPEL, 0.3f), g.cerca(Offset(x, r.top))), Offset(x, r.top + hh * 0.05f), Size((rr - l) * 0.012f, 1.3f * u))
         }
         drawRect(a.sombra(0.55f), Offset(l, r.bottom - 1.3f * u), Size(rr - l, 1.3f * u))
+        if (a.oscuro) {
+            val abajo = listOf(r.left, (r.left + r.right) / 2, r.right).map { x -> val p = Offset(x, r.bottom); BRASA_VAPOR.copy(alpha = (0.9f * g.brasa(p) * g.cerca(p)).coerceIn(0f, 0.7f)) }
+            drawRect(Brush.horizontalGradient(abajo, l, rr), Offset(l, r.bottom - 2.2f * u), Size(rr - l, 1.6f * u))
+        }
         // La sombra de la tabla en lo de debajo (la pared del hueco siguiente o el zócalo).
         drawRect(a.sombra(0.3f), Offset(l, r.bottom), Size(rr - l, 2.2f * u))
     }
@@ -285,9 +337,15 @@ internal object MuebleCuerpoVapor {
                 drawCircle(a.brillo(0.3f, maxOf(k, 0.2f), br), rc, p + Offset(0.7f * u, 0.7f * u), style = Stroke(0.6f * u))
                 drawCircle(a.luz(PINO_OSC, k, f, br), rc * 0.32f, p)
             }
+            // De noche, el filo del gas en el canto que lo mira (el de dentro de cada pilastra), que se apaga al bajar.
+            if (a.oscuro) {
+                val xf = if (izq) r - 1.6f * u else l
+                val filos = List(6) { i -> val p = Offset(xf, top + (bot - top) * i / 5f); a.brillo(0.85f, g.cerca(p), g.brasa(p)) }
+                drawRect(Brush.verticalGradient(filos, top, bot), Offset(xf, top), Size(1.6f * u, bot - top))
+            }
             // El tizne de las manos donde se agarra, y los cantos: la luz del lado de la ventana, la sombra del otro.
             drawOval(a.grano(TIZNE, 0.14f), Offset(xc - (r - l) * 0.35f, top + (bot - top) * 0.3f), Size((r - l) * 0.7f, w * 0.12f))
-            drawRect(a.brillo(0.5f, g.cerca(Offset(l, ym))), Offset(l, top), Size(1f * u, bot - top))
+            if (!a.oscuro) drawRect(a.brillo(0.5f, g.cerca(Offset(l, ym))), Offset(l, top), Size(1f * u, bot - top))
             drawRect(a.sombra(0.45f), Offset(r - 1.2f * u, top), Size(1.2f * u, bot - top))
         }
     }
