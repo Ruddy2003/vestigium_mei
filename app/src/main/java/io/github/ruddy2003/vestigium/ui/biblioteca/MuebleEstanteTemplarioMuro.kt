@@ -88,7 +88,7 @@ internal object MuroEstanteTemplario {
             val col = radios.map { rr -> a.luz(mezcla(P.CAL, P.CAL_SOMBRA, 0.2f), MuebleEstanteTemplario.lamparaArriba(rr, 0f, a.noche)) }
             drawRect(Brush.radialGradient(*Array(radios.size) { i -> radios[i] / 0.9f to col[i] }, center = c, radius = w * 0.9f), r.topLeft, r.size)
             // La luna se suma a la cal que ya alumbra la lámpara: un plata frío, solo dentro de la mancha.
-            if (m != null) drawRect(Color(0xFF8EA4D6).copy(alpha = (0.62f * m.fuerza).coerceAtMost(1f)), r.topLeft, r.size, blendMode = BlendMode.Screen)
+            if (m != null) drawRect(Color(0xFF7890C8).copy(alpha = (0.5f * m.fuerza).coerceAtMost(1f)), r.topLeft, r.size, blendMode = BlendMode.Screen)
             return
         }
         // De día (y al ocaso): la cal a la sombra del cuarto, más viva junto al ajimez y más honda arriba bajo la viga.
@@ -115,14 +115,14 @@ internal object MuroEstanteTemplario {
         }
         drawPath(motas, Color(0xFFF0E6D4).copy(alpha = 0.3f), blendMode = BlendMode.Multiply)
         val brochazos = Path()
-        for (j in 0 until 22) {
+        for (j in 0 until 36) {
             val bx = r.left + r.width * azar(9060, j); val by = w * (CENEFA + 0.02f) + (r.bottom - w * CENEFA) * azar(9061, j)
             val bl = w * (0.08f + 0.12f * azar(9062, j))
             brochazos.moveTo(bx, by); brochazos.quadraticTo(bx + bl * 0.5f, by - w * 0.006f, bx + bl, by + w * 0.002f)
         }
-        drawPath(brochazos, Color(0xFFEAE0CC).copy(alpha = 0.4f), style = Stroke(w * 0.005f, cap = StrokeCap.Round), blendMode = BlendMode.Multiply)
+        drawPath(brochazos, Color(0xFFE6DAC4).copy(alpha = 0.5f), style = Stroke(w * 0.005f, cap = StrokeCap.Round), blendMode = BlendMode.Multiply)
         // El despiece: hiladas de 0.072 anchos desde la cenefa, juntas verticales al tresbolillo.
-        val lineas = Path()
+        val lineas = Path(); val pardos = Path(); val dorados = Path()
         val hc = w * 0.074f
         var y = w * CENEFA + w * 0.012f
         var fila = 0
@@ -143,15 +143,23 @@ internal object MuroEstanteTemplario {
             val y1 = minOf(y + hc, r.bottom)
             var xv = r.left + (if (fila % 2 == 0) w * 0.08f else w * 0.19f)
             var q = 0
+            var xa = r.left
             while (xv < r.right) {
                 val inc = (azar(9400 + fila, q) - 0.5f) * 1.2f * u
                 lineas.moveTo(xv, y + 2.4f * u); lineas.lineTo(xv + inc, y1)
                 lineas.moveTo(xv + 2.4f * u, y + 2.4f * u); lineas.lineTo(xv + 2.4f * u + inc, y1)
+                // Cada sillar fingido, de su tono: la mano de cal no es pareja (unos más pardos, otros más dorados).
+                val z = azar(9450 + fila, q)
+                val sillar = Rect(xa + 2.4f * u, y + 3.6f * u, xv - 1f * u, y1 - 1f * u)
+                if (z < 0.3f) pardos.addRect(sillar) else if (z > 0.72f) dorados.addRect(sillar)
+                xa = xv
                 xv += w * (0.2f + 0.04f * azar(9500 + fila, q)); q++
             }
             y += hc; fila++
         }
         clipRect(r.left, w * CENEFA, r.right, r.bottom) {
+            drawPath(pardos, Color(0xFFE4D6C2).copy(alpha = 0.75f), blendMode = BlendMode.Multiply)
+            drawPath(dorados, Color(0xFFF0DDB8).copy(alpha = 0.7f), blendMode = BlendMode.Multiply)
             drawPath(lineas, ocre.copy(alpha = 0.78f), style = Stroke(1.1f * u), blendMode = BlendMode.Multiply)
         }
         // La cenefa: una banda de almagra con dientes de sierra en cal, entre dos filetes negros.
@@ -184,9 +192,16 @@ internal object MuroEstanteTemplario {
         }
         drawPath(hollin, Color(0xFF8A7A6E).copy(alpha = 0.16f), blendMode = BlendMode.Multiply)
         drawPath(Path().apply { addPath(hollin, Offset(0f, -w * 0.02f)) }, Color(0xFF8A7A6E).copy(alpha = 0.12f), blendMode = BlendMode.Multiply)
-        // La mancha de humedad, abajo a la derecha: dos cercos pardos, sin borde.
-        drawOval(Color(0xFFCDBA98).copy(alpha = 0.5f), Offset(w * 0.86f, w * 0.36f), Size(w * 0.13f, w * 0.1f), blendMode = BlendMode.Multiply)
-        drawOval(Color(0xFFC0AC88).copy(alpha = 0.45f), Offset(w * 0.9f, w * 0.39f), Size(w * 0.09f, w * 0.08f), blendMode = BlendMode.Multiply)
+        // La mancha de humedad, abajo a la derecha, que sube desde la cornisa: el paño pardo y su cerco más oscuro, que marca
+        // hasta dónde llegó el agua.
+        val humedad = Path().apply {
+            moveTo(w * 0.8f, r.bottom)
+            cubicTo(w * 0.79f, w * 0.4f, w * 0.84f, w * 0.33f, w * 0.88f, w * 0.355f)
+            cubicTo(w * 0.91f, w * 0.31f, w * 0.97f, w * 0.33f, w * 1.0f, w * 0.36f)
+            lineTo(w * 1.0f, r.bottom); close()
+        }
+        drawPath(humedad, Color(0xFFE2D2B4).copy(alpha = 0.6f), blendMode = BlendMode.Multiply)
+        drawPath(humedad, Color(0xFFBCA47E).copy(alpha = 0.45f), style = Stroke(1.3f * u), blendMode = BlendMode.Multiply)
         // Las grietas finas.
         val grietas = Path()
         listOf(Triple(0.47f, 0.1f, 9800), Triple(0.9f, 0.13f, 9810), Triple(0.62f, 0.3f, 9820)).forEach { (gx, gy, s) ->
@@ -201,6 +216,8 @@ internal object MuroEstanteTemplario {
         // Los desconchones: donde se cayó la cal asoma la caliza de la torre.
         desconchon(Rect(w * 0.43f, w * 0.12f, w * 0.495f, w * 0.155f), 9900, a, cerca, m)
         desconchon(Rect(w * 0.905f, w * 0.215f, w * 0.96f, w * 0.248f), 9910, a, cerca, m)
+        desconchon(Rect(w * 0.255f, w * 0.1f, w * 0.3f, w * 0.13f), 9920, a, cerca, m)
+        desconchon(Rect(w * 0.62f, w * 0.345f, w * 0.665f, w * 0.372f), 9930, a, cerca, m)
     }
 
     /** Un desconchón: el hueco con la caliza y su junta, la sombra que echa el borde de la cal y el canto alumbrado del otro lado. */

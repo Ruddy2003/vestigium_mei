@@ -29,6 +29,9 @@ import kotlin.math.floor
 internal object ObraEstanteTemplario {
     private val P = PaletaTemplario
 
+    /** A qué alto arde el brasero, en anchos (lo apunta [tabla] para el filo de abajo de cada tabla). */
+    private var abajo = 0f
+
     /** Cuántos tramos lleva lo que se pinta a lo ancho: de noche la luz cambia de un tramo a otro sin escalón. */
     private fun tramos(a: AireTemplario, ancho: Float, w: Float) = if (a.lumbre) (ancho / (w * 0.035f)).toInt().coerceIn(2, 40) else 1
 
@@ -210,6 +213,7 @@ internal object ObraEstanteTemplario {
 
     /** La tabla [r]: su canto grueso con el bocel, las vetas, los golpes y las escuadras de hierro de las puntas. */
     fun DrawScope.tabla(k: Int, r: Rect, d: DisposicionEstante, a: AireTemplario, cerca: (Offset) -> Float, m: ManchaTemplario?) {
+        abajo = (d.base.top + d.base.height * MuebleEstanteTemplario.BRASERO_Y) / size.width
         val w = size.width
         // Debajo, la fila entera de la junta con la repisa de arriba (de píxel entero), para que no asome el fondo.
         val fy = floor(r.top)
@@ -237,6 +241,18 @@ internal object ObraEstanteTemplario {
         }
         val km = cerca(r.center)
         drawRect(a.brillo(0.55f, km), r.topLeft, Size(r.width, 1.1f * u))
+        if (a.oscuro && m == null) {
+            // De noche, el filo cálido de los cantos que miran a la lumbre: arriba, el del candil y la lámpara; abajo, el
+            // del brasero, que alumbra desde el pie.
+            for (t in 0 until n) {
+                val x0 = r.left + r.width * t / n; val x1 = r.left + r.width * (t + 1) / n + 1.2f
+                val ww = minOf(x1, r.right) - x0
+                val kk = cerca(Offset((x0 + x1) / 2, r.top))
+                drawRect(a.filo((0.9f * kk).coerceAtMost(0.75f)), Offset(x0, r.top), Size(ww, 1.4f * u))
+                val kb = MuebleEstanteTemplario.brasero((x0 + x1) / 2 / w - MuebleEstanteTemplario.BRASERO_X, r.bottom / w - abajo, a.noche)
+                if (kb > 0.05f) drawRect(a.filo((1.1f * kb).coerceAtMost(0.7f)), Offset(x0, r.bottom - 2.2f * u), Size(ww, 1.4f * u))
+            }
+        }
         drawRect(a.sombra(0.3f), Offset(r.left, r.top + h * 0.16f), Size(r.width, 0.8f * u))
         drawRect(a.brillo(0.3f, km), Offset(r.left, r.top + h * 0.66f), Size(r.width, 0.8f * u))
         drawRect(a.sombra(0.35f), Offset(r.left, r.top + h * 0.78f), Size(r.width, 0.9f * u))
@@ -356,9 +372,19 @@ internal object ObraEstanteTemplario {
             drawRect(a.brillo(0.35f, kk), f.topLeft, Size(f.width, 0.9f * u))
             listOf(0.3f, 0.7f).forEach { fx -> clavoTemplario(Offset(f.left + f.width * fx, f.center.y), 1.6f * u, a, kk, P.HIERRO_LUZ) }
         }
-        // La sombra que el costado echa hacia dentro y el filo de su canto que mira al hueco.
+        // La sombra que el costado echa hacia dentro y el filo de su canto que mira al hueco; de noche, ese canto se enciende
+        // con la lumbre que tiene enfrente (por tramos, más donde le llega más).
         if (izq) drawRect(a.sombra(0.25f), Offset(r.right - 1.4f * u, r.top), Size(1.4f * u, r.height))
         else drawRect(a.claro(0.18f), Offset(r.left, r.top), Size(1.2f * u, r.height))
+        if (a.oscuro && m == null) {
+            val n = maxOf(2, (r.height / (w * 0.06f)).toInt())
+            val xf = if (izq) r.right - 1.8f * u else r.left
+            for (t in 0 until n) {
+                val y0 = r.top + r.height * t / n; val y1 = r.top + r.height * (t + 1) / n + 1.2f
+                val kk = cerca(Offset(if (izq) r.right + w * 0.05f else r.left - w * 0.05f, (y0 + y1) / 2))
+                drawRect(a.filo((0.9f * kk).coerceAtMost(0.7f)), Offset(xf, y0), Size(1.8f * u, minOf(y1, r.bottom) - y0))
+            }
+        }
     }
 
     // ---------------------------------------------------------------- las cédulas de los meses

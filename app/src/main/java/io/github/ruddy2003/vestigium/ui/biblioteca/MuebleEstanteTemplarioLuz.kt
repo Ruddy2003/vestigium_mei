@@ -174,12 +174,15 @@ internal class AireTemplario(val oscuro: Boolean, val noche: Boolean, val cuerpo
                 // La luna se suma a lo que ya hay (la lumbre sigue alumbrando debajo): el material en un plata frío.
                 val l = c.red * 0.3f + c.green * 0.59f + c.blue * 0.11f
                 val g = mezcla(c, Color(l, l, l), 0.55f)
-                val q = 0.5f * k
+                val q = 0.36f * k
                 Color((base.red + g.red * 0.42f * q).coerceAtMost(1f), (base.green + g.green * 0.58f * q).coerceAtMost(1f), (base.blue + (g.blue * 0.95f + 0.1f) * q).coerceAtMost(1f), c.alpha)
             }
             noche -> mezcla(base, Color((base.red * 1.3f + 0.12f).coerceAtMost(1f), (base.green * 1.0f + 0.04f).coerceAtMost(1f), base.blue * 0.72f, c.alpha), k)
-            // El sol del mediodía: el mismo color, más claro y algo más cálido (sin irse al blanco, que lo lavaría).
-            else -> mezcla(base, Color((base.red * 1.42f + 0.06f).coerceAtMost(1f), (base.green * 1.36f + 0.04f).coerceAtMost(1f), (base.blue * 1.22f + 0.02f).coerceAtMost(1f), c.alpha), k)
+            // El sol del mediodía: el mismo color, más claro y entibiado (sin irse al blanco, que lo lavaría).
+            else -> {
+                val l = Color((base.red * 1.36f + 0.04f).coerceAtMost(1f), (base.green * 1.28f + 0.02f).coerceAtMost(1f), (base.blue * 1.08f).coerceAtMost(1f), c.alpha)
+                mezcla(base, mezcla(l, Color(0xFFF0D29C), 0.32f), k)
+            }
         }
     }
 
@@ -224,9 +227,10 @@ internal class AireTemplario(val oscuro: Boolean, val noche: Boolean, val cuerpo
     fun etiqueta(c: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) alOcaso(c) else c
-        val lejos = Color(c.red * 0.45f, c.green * 0.37f, c.blue * 0.29f, c.alpha)
+        // Lejos, pergamino tostado en sombra (más pardo y más hondo), no gris.
+        val lejos = Color(c.red * 0.39f, c.green * 0.27f, c.blue * 0.16f, c.alpha)
         val alumbrado = Color((c.red * 1.04f).coerceAtMost(1f), c.green * 0.92f, c.blue * 0.7f, c.alpha)
-        return mezcla(lejos, alumbrado, Math.pow(k.toDouble(), 0.8).toFloat())
+        return mezcla(lejos, alumbrado, Math.pow(k.toDouble(), 1.6).toFloat().coerceAtMost(1f))
     }
 }
 

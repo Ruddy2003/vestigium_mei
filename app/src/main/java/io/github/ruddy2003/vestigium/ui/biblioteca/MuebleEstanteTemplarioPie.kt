@@ -19,8 +19,9 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 /**
  * El pie del estante de Templario ([MuebleEstanteTemplario]): las losas de caliza con la estera de palma tejida en espiga y su
  * orilla de almagra y negro; a la izquierda, el brasero de bronce de tres patas con sus ascuas y la badila (de noche, la
- * segunda luz), y la espuerta del carbón cortada por el borde; a la derecha, la tinaja del agua en su pie de madera con el
- * jarrillo encima, cortada por el borde.
+ * segunda luz), y la espuerta del carbón cortada por el borde; en medio, el hato de viaje (el fardo de lona atado y la
+ * manta enrollada con sus correas); a la derecha, la tinaja del agua en su pie de madera con el jarrillo encima, cortada por
+ * el borde. Se pinta en vivo (no en una imagen guardada).
  */
 internal object PieEstanteTemplario {
     private val P = PaletaTemplario
@@ -34,6 +35,7 @@ internal object PieEstanteTemplario {
         espuerta(a, Offset(w * 0.06f, h - w * 0.03f), cerca)
         // La tinaja, algo más chica, para que el jarrillo de encima no pase del zócalo.
         Offset(w * 0.95f, h - w * 0.02f).let { p -> scale(0.8f, p) { tinaja(a, p, cerca) } }
+        hato(a, Offset(w * 0.6f, h - w * 0.03f), cerca)
         brasero(a, Offset(w * MuebleEstanteTemplario.BRASERO_X, h - w * 0.03f), b, cerca)
     }
 
@@ -180,6 +182,92 @@ internal object PieEstanteTemplario {
             val c = Offset(x, taza - w * 0.012f)
             drawCircle(Brush.radialGradient(listOf(P.BRASA.copy(alpha = 0.2f), Color.Transparent), c, w * 0.08f), w * 0.08f, c)
         }
+    }
+
+    /**
+     * El hato de viaje del sargento, en medio de la estera: detrás, el fardo de lona atado en cruz con soga y su nudo; delante y
+     * solapada, la manta de lana enrollada (listas de almagra, crudo y añil que dan la vuelta al rollo) con sus dos correas de
+     * hebilla. Con su sombra en la estera.
+     */
+    private fun DrawScope.hato(a: AireTemplario, pie: Offset, cerca: (Offset) -> Float) {
+        val w = size.width; val u = density
+        val x = pie.x; val y = pie.y
+        val k = cerca(Offset(x, y - w * 0.06f))
+        val hacia = if (a.oscuro) -1f else 1f
+        // La sombra de los dos en la estera (de día, corrida a la derecha; de noche, lejos del brasero, también a la derecha).
+        drawOval(a.sombra(0.35f), Offset(x - w * 0.12f, y - w * 0.016f), Size(w * 0.36f, w * 0.032f))
+        // El fardo de lona, detrás a la derecha: un bulto blando, más ancho abajo, atado en cruz.
+        val fx = x + w * 0.07f; val fy = y - w * 0.012f
+        val fw = w * 0.16f; val fh = w * 0.13f
+        val bulto = Path().apply {
+            moveTo(fx - fw * 0.5f, fy)
+            cubicTo(fx - fw * 0.56f, fy - fh * 0.5f, fx - fw * 0.42f, fy - fh * 0.96f, fx - fw * 0.1f, fy - fh)
+            cubicTo(fx + fw * 0.06f, fy - fh * 0.9f, fx + fw * 0.2f, fy - fh * 1.02f, fx + fw * 0.36f, fy - fh * 0.92f)
+            cubicTo(fx + fw * 0.56f, fy - fh * 0.7f, fx + fw * 0.56f, fy - fh * 0.3f, fx + fw * 0.5f, fy)
+            close()
+        }
+        drawPath(bulto, a.dia(P.LINO_OSC, -0.08f, k))
+        clipPath(bulto) {
+            cilindroTemplario(Rect(fx - fw * 0.56f, fy - fh, fx + fw * 0.56f, fy), a, k, hacia, 1.3f)
+            // Las arrugas de la lona, que tira hacia la soga.
+            val arrugas = Path()
+            for (j in 0 until 5) {
+                val ax = fx - fw * 0.4f + fw * 0.2f * j
+                arrugas.moveTo(ax, fy - fh * 0.85f); arrugas.quadraticTo(ax + fw * 0.05f, fy - fh * 0.5f, ax - fw * 0.03f, fy - fh * 0.1f)
+            }
+            drawPath(arrugas, a.sombra(0.25f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
+            // La trama de la lona.
+            val trama = Path()
+            var yy = fy - fh
+            while (yy < fy) { trama.moveTo(fx - fw * 0.6f, yy); trama.lineTo(fx + fw * 0.6f, yy + w * 0.004f); yy += 2.4f * u }
+            drawPath(trama, a.dia(P.PALMA_OSC, 0f, k).copy(alpha = 0.25f), style = Stroke(0.6f * u))
+        }
+        // La soga en cruz y el nudo de arriba, con los cabos.
+        val soga = a.dia(P.PALMA, 0.05f, k)
+        drawLine(soga, Offset(fx - fw * 0.02f, fy - fh * 0.98f), Offset(fx - fw * 0.06f, fy), 2.4f * u)
+        drawLine(soga, Offset(fx - fw * 0.53f, fy - fh * 0.45f), Offset(fx + fw * 0.53f, fy - fh * 0.5f), 2.4f * u)
+        drawCircle(soga, 3f * u, Offset(fx - fw * 0.03f, fy - fh * 0.97f))
+        drawLine(soga, Offset(fx - fw * 0.03f, fy - fh * 0.97f), Offset(fx + fw * 0.12f, fy - fh * 1.08f), 1.6f * u, StrokeCap.Round)
+        drawLine(soga, Offset(fx - fw * 0.03f, fy - fh * 0.97f), Offset(fx + fw * 0.1f, fy - fh * 0.8f), 1.6f * u, StrokeCap.Round)
+        // La manta enrollada, delante a la izquierda, tumbada: el rollo con sus listas y la testa con su espiral.
+        val mx0 = x - w * 0.11f; val ml = w * 0.24f; val md = w * 0.072f
+        val rollo = Rect(mx0, y - md, mx0 + ml, y)
+        // La lana de las ovejas sin teñir (crudo, pardo y negro de oveja) con alguna lista de almagra desvaída, de anchos
+        // desiguales.
+        val pardo = Color(0xFF7A5A3C); val negro = Color(0xFF3E3028); val crudo = mezcla(P.LINO, P.LINO_OSC, 0.35f)
+        val franjas = listOf(pardo to 0.16f, crudo to 0.1f, negro to 0.05f, crudo to 0.18f, mezcla(P.ALMAGRA, pardo, 0.35f) to 0.07f, crudo to 0.12f, pardo to 0.2f, negro to 0.04f, pardo to 0.08f)
+        var fx0 = rollo.left
+        franjas.forEach { (col, f) ->
+            val x1 = fx0 + ml * f
+            drawRect(a.dia(col, -0.05f, k), Offset(fx0, rollo.top), Size(minOf(x1 + 1.2f, rollo.right) - fx0, md))
+            fx0 = x1
+        }
+        // El pelo de la lana: trazos cortos de través.
+        val pelo = Path()
+        for (j in 0 until 40) {
+            val px = rollo.left + ml * azar(9090, j); val py = rollo.top + md * (0.1f + 0.8f * azar(9091, j))
+            pelo.moveTo(px, py); pelo.lineTo(px + 1.6f * u, py + 1.2f * u)
+        }
+        drawPath(pelo, a.sombra(0.25f), style = Stroke(0.7f * u))
+        // El volumen del cilindro tumbado: luz arriba, sombra abajo.
+        drawRect(a.brillo(0.3f, k), Offset(rollo.left, rollo.top + md * 0.12f), Size(ml, md * 0.18f))
+        drawRect(a.sombra(0.3f), Offset(rollo.left, rollo.bottom - md * 0.36f), Size(ml, md * 0.36f))
+        drawRect(a.sombra(0.2f), Offset(rollo.left, rollo.bottom - md * 0.6f), Size(ml, md * 0.24f))
+        // La testa, a la izquierda: las vueltas de la manta.
+        val testa = Rect(rollo.left - md * 0.22f, rollo.top, rollo.left + md * 0.22f, rollo.bottom)
+        drawOval(a.dia(P.LINO_OSC, 0.05f, k), testa.topLeft, testa.size)
+        for (j in 1..3) drawOval(a.dia(P.ALMAGRA, -0.2f, k), testa.deflate(md * 0.06f * j).topLeft, testa.deflate(md * 0.06f * j).size, style = Stroke(0.9f * u))
+        drawOval(a.sombra(0.5f), testa.deflate(md * 0.3f).topLeft, testa.deflate(md * 0.3f).size)
+        // Las dos correas de cuero con su hebilla.
+        listOf(0.28f, 0.74f).forEach { f ->
+            val cx = rollo.left + ml * f
+            drawRect(a.dia(P.CUERO_OSC, 0f, k), Offset(cx - w * 0.006f, rollo.top - 0.8f * u), Size(w * 0.012f, md + 1.6f * u))
+            drawRect(a.brillo(0.25f, k), Offset(cx - w * 0.006f, rollo.top - 0.8f * u), Size(w * 0.003f, md + 1.6f * u))
+            val hb = Rect(cx - w * 0.009f, rollo.top + md * 0.22f, cx + w * 0.009f, rollo.top + md * 0.5f)
+            drawRect(a.dia(P.LATON, 0f, k), hb.topLeft, hb.size, style = Stroke(1.2f * u))
+            drawLine(a.dia(P.LATON_OSC, 0f, k), Offset(hb.center.x, hb.top), Offset(hb.center.x, hb.bottom), 0.8f * u)
+        }
+        drawLine(a.sombra(0.5f), Offset(rollo.left, rollo.bottom), Offset(rollo.right, rollo.bottom), 1.4f * u)
     }
 
     /** La espuerta de palma llena de carbón, cortada por el borde de la izquierda. */

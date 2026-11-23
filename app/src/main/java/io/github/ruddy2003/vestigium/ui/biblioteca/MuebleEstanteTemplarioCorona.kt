@@ -50,8 +50,6 @@ internal object CoronaEstanteTemplario {
         }
     }
 
-    /** Cuánto le da la mancha del sol a un objeto delante de la pared (para su lado de luz), en [p]. */
-    private fun sol(m: ManchaTemplario?, p: Offset, w: Float): Float = m?.toca(p.x / w, p.y / w, ManchaTemplario.FRENTE * 0.6f) ?: 0f
 
     // ---------------------------------------------------------------- en la pared
 
@@ -83,18 +81,17 @@ internal object CoronaEstanteTemplario {
         val rx = w * 0.112f; val ry = w * 0.104f
         val c = Offset(pie.x, pie.y - ry)
         val k = cerca(c)
-        val s = sol(m, Offset(c.x - rx * 0.4f, c.y - ry * 0.4f), w)
         val disco = Path().apply { addOval(Rect(c.x - rx, c.y - ry, c.x + rx, c.y + ry)) }
         sombraPared(disco, c, apoyo, a, m, 0.28f)
-        val laton = a.en(P.COBRE, 0f, k, s, m)
+        val laton = a.dia(P.COBRE, 0f, k)
         drawPath(disco, laton)
         // El ala: un anillo claro arriba a la izquierda y en sombra abajo a la derecha.
         val ala = Rect(c.x - rx * 0.8f, c.y - ry * 0.8f, c.x + rx * 0.8f, c.y + ry * 0.8f)
-        drawOval(a.en(P.COBRE_OSC, 0f, k, s, m), ala.topLeft, ala.size)
+        drawOval(a.dia(P.COBRE_OSC, 0f, k), ala.topLeft, ala.size)
         clipPath(Path().apply { addOval(ala) }) {
             // El cuenco por dentro: la luz entra por arriba a la izquierda y se refleja abajo a la derecha.
-            drawOval(a.en(P.COBRE, -0.05f, k, s, m), Offset(ala.left + ala.width * 0.12f, ala.top + ala.height * 0.12f), Size(ala.width * 0.95f, ala.height * 0.95f))
-            drawOval(a.en(P.COBRE_LUZ, 0f, k, s, m).copy(alpha = 0.6f), Offset(ala.left + ala.width * 0.45f, ala.top + ala.height * 0.5f), Size(ala.width * 0.45f, ala.height * 0.42f))
+            drawOval(a.dia(P.COBRE, -0.05f, k), Offset(ala.left + ala.width * 0.12f, ala.top + ala.height * 0.12f), Size(ala.width * 0.95f, ala.height * 0.95f))
+            drawOval(a.dia(P.COBRE_LUZ, 0f, k).copy(alpha = 0.6f), Offset(ala.left + ala.width * 0.45f, ala.top + ala.height * 0.5f), Size(ala.width * 0.45f, ala.height * 0.42f))
             drawRect(a.sombra(0.25f), ala.topLeft, Size(ala.width, ala.height * 0.22f))
         }
         // Las bandas labradas: un anillo de zigzag en el ala y otro de puntos en el fondo.
@@ -106,20 +103,21 @@ internal object CoronaEstanteTemplario {
             val p = Offset(c.x + kotlin.math.cos(t) * rx * rr, c.y + kotlin.math.sin(t) * ry * rr)
             if (j == 0) zig.moveTo(p.x, p.y) else zig.lineTo(p.x, p.y)
         }
-        drawPath(zig, a.en(P.COBRE_OSC, -0.1f, k, s, m).copy(alpha = 0.8f), style = Stroke(0.9f * u))
+        drawPath(zig, a.dia(P.COBRE_OSC, -0.1f, k).copy(alpha = 0.8f), style = Stroke(0.9f * u))
         for (j in 0 until 18) {
             val t = j / 18f * 6.2832f
-            drawCircle(a.en(P.COBRE_OSC, -0.1f, k, s, m), 0.9f * u, Offset(c.x + kotlin.math.cos(t) * rx * 0.55f, c.y + kotlin.math.sin(t) * ry * 0.55f))
+            drawCircle(a.dia(P.COBRE_OSC, -0.1f, k), 0.9f * u, Offset(c.x + kotlin.math.cos(t) * rx * 0.55f, c.y + kotlin.math.sin(t) * ry * 0.55f))
         }
-        drawOval(a.en(P.COBRE_OSC, -0.1f, k, s, m), Offset(c.x - rx * 0.36f, c.y - ry * 0.36f), Size(rx * 0.72f, ry * 0.72f), style = Stroke(0.9f * u))
+        drawOval(a.dia(P.COBRE_OSC, -0.1f, k), Offset(c.x - rx * 0.36f, c.y - ry * 0.36f), Size(rx * 0.72f, ry * 0.72f), style = Stroke(0.9f * u))
         // El ombligo del centro.
-        drawCircle(a.en(P.COBRE, 0.1f, k, s, m), rx * 0.12f, c)
+        drawCircle(a.dia(P.COBRE, 0.1f, k), rx * 0.12f, c)
         drawCircle(a.sombra(0.3f), rx * 0.12f, c + Offset(rx * 0.03f, ry * 0.03f), style = Stroke(1f * u))
         // El borde: luz arriba a la izquierda (el sol del ajimez), sombra abajo a la derecha.
         drawArc(a.brillo(0.7f, k), 150f, 120f, false, Offset(c.x - rx, c.y - ry), Size(rx * 2, ry * 2), style = Stroke(1.6f * u))
         drawArc(a.sombra(0.4f), -30f, 120f, false, Offset(c.x - rx, c.y - ry), Size(rx * 2, ry * 2), style = Stroke(2f * u))
         destelloTemplario(Offset(c.x - rx * 0.6f, c.y - ry * 0.55f), 1.8f * u, a, k)
         contactoTemplario(Offset(pie.x + w * 0.01f, pie.y), rx * 0.9f, w * 0.008f, a, 0.4f)
+        luzDelAjimez(disco, a, m)
     }
 
     /** La jarra vidriada de la costa: el cuerpo panzudo en amarillo con chorreones verdes y la labor a punzón, el cuello, el pico y el asa. */
@@ -170,6 +168,7 @@ internal object CoronaEstanteTemplario {
             drawRoundRect(a.claro(0.75f), Offset(x - w * 0.032f, y - alto * 0.66f), Size(w * 0.005f, alto * 0.24f), CornerRadius(w * 0.003f))
         }
         drawOval(a.dia(P.BARRO_OSC, -0.2f, k), Offset(x - w * 0.026f, y - alto - w * 0.004f), Size(w * 0.05f, w * 0.008f))
+        luzDelAjimez(cuerpo, a, m)
         contactoTemplario(Offset(x + w * 0.006f, y), w * 0.08f, w * 0.009f, a, 0.42f)
     }
 
@@ -177,25 +176,24 @@ internal object CoronaEstanteTemplario {
     private fun DrawScope.cuenco(a: AireTemplario, pie: Offset, apoyo: Float, cerca: (Offset) -> Float, m: ManchaTemplario?) {
         val w = size.width; val u = density
         val k = cerca(pie)
-        val s = sol(m, Offset(pie.x, pie.y - w * 0.03f), w)
         val bw = w * 0.085f; val bh = w * 0.03f
         // Las granadas y los dátiles, encima del borde.
         listOf(Triple(-0.018f, 0.036f, 0), Triple(0.016f, 0.032f, 1)).forEach { (dx, r, i) ->
             val c = Offset(pie.x + w * dx, pie.y - bh - w * r * 0.5f + w * 0.006f)
             val rr = w * r * 0.55f
-            drawCircle(a.en(P.GRANADA, 0f, k, s, m), rr, c)
-            drawCircle(a.en(mezcla(P.GRANADA, P.LACRE, 0.5f), -0.25f, k, s, m), rr * 0.7f, c + Offset(rr * 0.3f, rr * 0.25f))
+            drawCircle(a.dia(P.GRANADA, 0f, k), rr, c)
+            drawCircle(a.dia(mezcla(P.GRANADA, P.LACRE, 0.5f), -0.25f, k), rr * 0.7f, c + Offset(rr * 0.3f, rr * 0.25f))
             drawCircle(a.brillo(0.5f, k), rr * 0.2f, c - Offset(rr * 0.42f, rr * 0.4f))
             // La corona de la granada.
             val co = Offset(c.x + rr * 0.1f, c.y - rr * 0.95f)
             drawPath(poligonoTemplario(co.x - rr * 0.25f, co.y + rr * 0.2f, co.x - rr * 0.3f, co.y - rr * 0.25f, co.x - rr * 0.08f, co.y,
                 co.x, co.y - rr * 0.32f, co.x + rr * 0.08f, co.y, co.x + rr * 0.3f, co.y - rr * 0.25f, co.x + rr * 0.25f, co.y + rr * 0.2f),
-                a.en(mezcla(P.GRANADA, P.CUERO_OSC, 0.4f), 0f, k, s, m))
+                a.dia(mezcla(P.GRANADA, P.CUERO_OSC, 0.4f), 0f, k))
         }
         for (j in 0 until 5) {
             val c = Offset(pie.x + w * (-0.036f + 0.018f * j), pie.y - bh + w * (0.002f - 0.004f * (j % 2)))
             rotate(-20f + 15f * j, c) {
-                drawOval(a.en(P.DATIL, 0f, k, s, m), Offset(c.x - w * 0.011f, c.y - w * 0.006f), Size(w * 0.022f, w * 0.012f))
+                drawOval(a.dia(P.DATIL, 0f, k), Offset(c.x - w * 0.011f, c.y - w * 0.006f), Size(w * 0.022f, w * 0.012f))
                 drawOval(a.brillo(0.4f, k), Offset(c.x - w * 0.007f, c.y - w * 0.004f), Size(w * 0.008f, w * 0.003f))
             }
         }
@@ -206,9 +204,10 @@ internal object CoronaEstanteTemplario {
             lineTo(pie.x + bw * 0.15f, pie.y)
             cubicTo(pie.x + bw * 0.25f, pie.y, pie.x + bw * 0.48f, pie.y - bh * 0.2f, pie.x + bw / 2, pie.y - bh); close()
         }
-        drawPath(cuenco, a.en(P.VIDRIADO_VERDE, 0f, k, s, m))
+        drawPath(cuenco, a.dia(P.VIDRIADO_VERDE, 0f, k))
         clipPath(cuenco) { cilindroTemplario(Rect(pie.x - bw / 2, pie.y - bh, pie.x + bw / 2, pie.y), a, k, -1f, 1.2f) }
-        drawLine(a.en(P.VIDRIADO_VERDE, 0.25f, k, s, m), Offset(pie.x - bw / 2, pie.y - bh), Offset(pie.x + bw / 2, pie.y - bh), 1.6f * u)
+        drawLine(a.dia(P.VIDRIADO_VERDE, 0.25f, k), Offset(pie.x - bw / 2, pie.y - bh), Offset(pie.x + bw / 2, pie.y - bh), 1.6f * u)
+        luzDelAjimez(cuenco, a, m)
         contactoTemplario(Offset(pie.x + w * 0.006f, pie.y), bw * 0.9f, w * 0.007f, a, 0.4f)
     }
 
@@ -218,8 +217,7 @@ internal object CoronaEstanteTemplario {
         val x = pie.x; val y = pie.y
         val alto = w * 0.25f
         val k = cerca(Offset(x, y - alto * 0.5f))
-        val s = sol(m, Offset(x - w * 0.02f, y - alto * 0.6f), w)
-        fun c(col: Color, f: Float = 0f) = a.en(col, f, k, s, m)
+        fun c(col: Color, f: Float = 0f) = a.dia(col, f, k)
         val cuerpo = Path().apply {
             // El pie.
             moveTo(x - w * 0.028f, y); lineTo(x + w * 0.028f, y); lineTo(x + w * 0.018f, y - w * 0.012f)
@@ -282,6 +280,7 @@ internal object CoronaEstanteTemplario {
         drawCircle(a.brillo(0.6f, k), w * 0.002f, Offset(x - w * 0.002f, y - alto * 0.98f))
         drawLine(c(P.LATON_OSC), Offset(x - w * 0.022f, y - alto * 0.86f), Offset(x + w * 0.022f, y - alto * 0.86f), 1.2f * u)
         destelloTemplario(Offset(x - w * 0.034f, y - alto * 0.36f), 2f * u, a, k)
+        luzDelAjimez(Path().apply { addPath(todo); addPath(tapa) }, a, m)
         contactoTemplario(Offset(x + w * 0.008f, y), w * 0.08f, w * 0.009f, a, 0.45f)
     }
 
@@ -290,7 +289,6 @@ internal object CoronaEstanteTemplario {
         val w = size.width; val u = density
         val ancho = w * 0.07f
         val k = cerca(Offset(x0 + ancho / 2, apoyo + w * 0.04f))
-        val s = sol(m, Offset(x0 + ancho / 2, apoyo + w * 0.02f), w)
         val baja = ch - w * 0.004f
         val forma = Path().apply {
             moveTo(x0 + w * 0.006f, apoyo - w * 0.004f); lineTo(x0 + ancho + w * 0.004f, apoyo - w * 0.006f)
@@ -301,14 +299,14 @@ internal object CoronaEstanteTemplario {
             close()
         }
         translate(w * 0.008f, w * 0.004f) { clipRect(0f, apoyo + w * 0.012f, w, ch) { drawPath(forma, a.sombra(0.45f)) } }
-        drawPath(forma, a.en(P.LINO, 0f, k, s, m))
+        drawPath(forma, a.dia(P.LINO, 0f, k))
         clipPath(forma) {
             // Lo de arriba, tendido sobre el tablero, más claro; el pliegue del canto.
-            drawRect(a.en(P.LINO, 0.15f, k, s, m), Offset(x0 - w * 0.01f, apoyo - w * 0.01f), Size(ancho + w * 0.03f, w * 0.022f))
+            drawRect(a.dia(P.LINO, 0.15f, k), Offset(x0 - w * 0.01f, apoyo - w * 0.01f), Size(ancho + w * 0.03f, w * 0.022f))
             drawRect(a.sombra(0.3f), Offset(x0 - w * 0.01f, apoyo + w * 0.012f), Size(ancho + w * 0.03f, w * 0.006f))
             // Las listas de grana, a lo largo.
-            listOf(0.16f, 0.24f, 0.76f, 0.84f).forEach { fx -> drawRect(a.en(P.CRUZ, -0.05f, k, s, m), Offset(x0 + ancho * fx, apoyo - w * 0.01f), Size(ancho * 0.045f, ch)) }
-            listOf(0.5f).forEach { fx -> drawRect(a.en(P.AZUL, -0.05f, k, s, m), Offset(x0 + ancho * fx - ancho * 0.02f, apoyo - w * 0.01f), Size(ancho * 0.04f, ch)) }
+            listOf(0.16f, 0.24f, 0.76f, 0.84f).forEach { fx -> drawRect(a.dia(P.CRUZ, -0.05f, k), Offset(x0 + ancho * fx, apoyo - w * 0.01f), Size(ancho * 0.045f, ch)) }
+            listOf(0.5f).forEach { fx -> drawRect(a.dia(P.CUERO_OSC, -0.05f, k), Offset(x0 + ancho * fx - ancho * 0.02f, apoyo - w * 0.01f), Size(ancho * 0.04f, ch)) }
             // Los pliegues de la caída: hondos que se abren hacia abajo y sus crestas de luz.
             listOf(0.22f, 0.55f, 0.86f).forEachIndexed { i, fx ->
                 val xt = x0 + ancho * fx
@@ -328,7 +326,8 @@ internal object CoronaEstanteTemplario {
             val y0 = baja - w * 0.006f * (1f - j / 12f)
             flecos.moveTo(fx, y0); flecos.lineTo(fx + (azar(9030, j) - 0.5f) * 1.5f * u, y0 + w * (0.008f + 0.006f * azar(9031, j)))
         }
-        drawPath(flecos, a.en(P.LINO_OSC, 0f, k, s, m), style = Stroke(0.8f * u))
+        drawPath(flecos, a.dia(P.LINO_OSC, 0f, k), style = Stroke(0.8f * u))
+        luzDelAjimez(forma, a, m, ManchaTemplario.FRENTE)
     }
 
     /** Dos códices tumbados, uno sobre otro, con la sobreveste blanca doblada encima (asoma un trozo de la cruz). */
@@ -378,6 +377,7 @@ internal object CoronaEstanteTemplario {
             drawRect(a.sombra(0.18f), Offset(sx1 - w * 0.02f, sy0), Size(w * 0.02f, sy1 - sy0))
         }
         drawLine(a.brillo(0.35f, k), Offset(sx0 + w * 0.01f, sy0 + 0.6f * u), Offset(sx1 - w * 0.01f, sy0 - w * 0.002f), 0.9f * u)
+        luzDelAjimez(sil, a, m)
         contactoTemplario(Offset(pie.x + w * 0.09f, pie.y), w * 0.19f, w * 0.009f, a, 0.42f)
     }
 
@@ -401,6 +401,7 @@ internal object CoronaEstanteTemplario {
         drawPath(cuerno, a.dia(P.CUERNO, 0f, k))
         clipPath(cuerno) { cilindroTemplario(Rect(pie.x - w * 0.012f, taco.top - w * 0.04f, pie.x + w * 0.012f, taco.top), a, k, -1f, 1.2f) }
         drawOval(a.dia(P.TINTA, 0f, k), Offset(pie.x - w * 0.009f, taco.top - w * 0.034f), Size(w * 0.018f, w * 0.005f))
+        luzDelAjimez(Path().apply { addPath(cuerno); addRect(taco) }, a, m)
         contactoTemplario(Offset(pie.x + w * 0.004f, pie.y), w * 0.04f, w * 0.006f, a, 0.42f)
     }
 
@@ -427,6 +428,7 @@ internal object CoronaEstanteTemplario {
             // El cordel de grana.
             drawRect(a.dia(P.CRUZ, -0.05f, k), Offset(r.left + r.width * 0.55f, r.top), Size(w * 0.005f, d))
         }
+        luzDelAjimez(sil, a, m)
         // El sello que cuelga del rollo de abajo, por delante de la cornisa.
         val cuelga = Offset(pie.x + w * 0.11f, pie.y)
         val sello = Offset(cuelga.x + w * 0.006f, apoyo + w * 0.05f)

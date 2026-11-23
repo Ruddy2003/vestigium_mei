@@ -126,6 +126,7 @@ internal object ColgadoEstanteTemplario {
         drawPath(tiracol, a.dia(P.CUERO_OSC, 0f, k), style = Stroke(w * 0.007f, cap = StrokeCap.Round))
         drawPath(tiracol, a.brillo(0.22f, k), style = Stroke(w * 0.0015f))
         listOf(v1, v2).forEach { drawCircle(a.dia(P.LATON_OSC, 0f, k), w * 0.005f, it, style = Stroke(1.3f * u)) }
+        luzDelAjimez(cuerno, a, m, 0f)
         // La estaquilla de madera en la cal.
         drawCircle(a.sombra(0.35f), w * 0.007f, est + Offset(1.2f * u, 1.4f * u))
         drawCircle(a.dia(P.CEDRO, 0f, k), w * 0.007f, est)

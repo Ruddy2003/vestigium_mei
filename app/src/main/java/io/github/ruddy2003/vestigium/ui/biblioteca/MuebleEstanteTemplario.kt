@@ -3,12 +3,14 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
@@ -23,18 +25,19 @@ import kotlin.math.floor
 import kotlin.math.sqrt
 
 /**
- * Lo fijo del estante (la corona con su bodegón y el pie con el zócalo), pintado una vez por tamaño y modo en dos imágenes
- * guardadas que luego se pegan. Cada imagen va de fila entera a fila entera, con lo pintado hasta ahí, así la junta con el
- * cuerpo no deja asomar el fondo. Se guarda solo la última de cada una (cambian de tamaño o de modo muy pocas veces).
+ * Lo fijo de arriba del estante (la pared, el ajimez, la cornisa y el bodegón), pintado una vez por tamaño y modo en una
+ * imagen guardada que luego se pega. Va de la fila 0 a la fila entera de debajo de la corona, sobre un fondo opaco, así la
+ * junta con el cuerpo no deja asomar el fondo. Se guarda solo la última (cambia de tamaño o de modo muy pocas veces). El
+ * pie se pinta en vivo.
  */
 internal object CapaTemplario {
-    private val claves = arrayOfNulls<String>(2)
-    private val imagenes = arrayOfNulls<ImageBitmap>(2)
+    private val claves = arrayOfNulls<String>(1)
+    private val imagenes = arrayOfNulls<ImageBitmap>(1)
 
     /** Pega la imagen de las filas [arriba] a [abajo] (enteras) de todo el ancho; la pinta antes con [pintar] si cambió. */
     fun DrawScope.pegar(ranura: Int, clave: String, arriba: Int, abajo: Int, pintar: DrawScope.() -> Unit) {
         val ancho = ceil(size.width).toInt(); val alto = abajo - arriba
-        if (ancho < 1 || alto < 1 || ranura !in 0..1) return
+        if (ancho < 1 || alto < 1 || ranura !in imagenes.indices) return
         var img = imagenes[ranura]
         if (img == null || claves[ranura] != clave) {
             val nueva = ImageBitmap(ancho, alto)
@@ -65,8 +68,8 @@ internal class ManchaTemplario(val q: FloatArray, val color: Color, val fuerza: 
     fun forma(w: Float, corrido: Float = 0f, crece: Float = 0f): Path {
         val p = Path()
         for (i in 0 until 2) {
-            val x0 = (if (i == 0) 0f else 0.56f) - crece; val x1 = (if (i == 0) 0.44f else 1f) + crece
-            val arco = 0.2f
+            val x0 = (if (i == 0) 0f else 0.53f) - crece; val x1 = (if (i == 0) 0.47f else 1f) + crece
+            val arco = 0.17f
             val n = 7
             var primero = true
             for (j in 0..n) {
@@ -94,7 +97,7 @@ internal class ManchaTemplario(val q: FloatArray, val color: Color, val fuerza: 
         val fx = (px * vy - py * vx) / det
         val fy = (ux * py - uy * px) / det
         if (fx < 0f || fx > 1f || fy < 0f || fy > 1f) return 0f
-        if (fx > 0.44f && fx < 0.56f) return 0f
+        if (fx > 0.47f && fx < 0.53f) return 0f
         return 1f
     }
 
@@ -106,10 +109,28 @@ internal class ManchaTemplario(val q: FloatArray, val color: Color, val fuerza: 
 
 /** La mancha del ajimez en este momento, o null (de noche manda la lumbre y el ajimez solo enseña el cielo). */
 internal fun manchaTemplario(a: AireTemplario): ManchaTemplario? = when {
-    a.oscuro && a.noche -> ManchaTemplario(floatArrayOf(0.3f, 0.12f, 0.55f, 0.2f, 0.72f, 1.02f, 0.46f, 0.94f), PaletaTemplario.LUNA, 1f)
+    // Las luces proyectadas van tendidas y alargadas por el ángulo de la luz: la cabeza de arco arriba, junto al ajimez, y el
+    // cuerpo corrido abajo a la derecha. La luna, más alta en el cielo y más tenue, cae más abajo y más empinada.
+    a.oscuro && a.noche -> ManchaTemplario(floatArrayOf(0.36f, 0.2f, 0.5f, 0.24f, 0.78f, 0.96f, 0.64f, 0.92f), PaletaTemplario.LUNA, 0.6f)
     a.oscuro -> null
-    a.noche -> ManchaTemplario(floatArrayOf(0.2f, 0.12f, 0.66f, 0.2f, 0.7f, 0.33f, 0.22f, 0.28f), PaletaTemplario.OCASO, 1f)
-    else -> ManchaTemplario(floatArrayOf(0.2f, 0.13f, 0.45f, 0.19f, 0.53f, 0.57f, 0.28f, 0.52f), PaletaTemplario.SOL, 0.9f)
+    // Al ocaso, el sol bajo: las luces se tienden casi horizontales y muy largas.
+    a.noche -> ManchaTemplario(floatArrayOf(0.17f, 0.09f, 0.31f, 0.17f, 0.78f, 0.36f, 0.64f, 0.28f), PaletaTemplario.OCASO, 1f)
+    else -> ManchaTemplario(floatArrayOf(0.165f, 0.115f, 0.385f, 0.16f, 0.6f, 0.6f, 0.38f, 0.555f), PaletaTemplario.SOL, 0.9f)
+}
+
+/**
+ * La luz del ajimez sobre un objeto de silueta [sil] (lo de encima del armario, lo colgado): solo donde la mancha lo alcanza,
+ * con el borde de la mancha cortándolo, en el plano corrido [corrido]. Se suma a lo que ya está pintado (de día, la cal
+ * entibiada; al ocaso, el naranja; con la luna, un plata frío).
+ */
+internal fun DrawScope.luzDelAjimez(sil: Path, a: AireTemplario, m: ManchaTemplario?, corrido: Float = ManchaTemplario.FRENTE * 0.6f) {
+    if (m == null) return
+    val (col, alfa) = when {
+        a.oscuro -> Color(0xFF6A82BE) to 0.3f
+        a.noche -> PaletaTemplario.OCASO to 0.42f
+        else -> Color(0xFFFFC978) to 0.34f
+    }
+    clipPath(sil) { clipPath(m.forma(size.width, corrido)) { drawRect(col.copy(alpha = alfa * m.fuerza), Offset.Zero, size, blendMode = BlendMode.Screen) } }
 }
 
 /**
@@ -179,7 +200,7 @@ internal object MuebleEstanteTemplario {
 
     /** La luz del brasero del pie: roja y baja, para las repisas de abajo. */
     fun brasero(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.85f else 1.3f) * exp(-2.5f * sqrt(dx * dx * 1.15f + dy * dy))).coerceIn(0f, 1f)
+        ((if (suenos) 0.9f else 1.45f) * exp(-2.15f * sqrt(dx * dx * 1.15f + dy * dy))).coerceIn(0f, 1f)
 
     /** La luz del candil de un hueco: corta, para sus vecinos, el fondo y el canto de la tabla de arriba. */
     fun candil(dx: Float, dy: Float): Float = (1.05f * exp(-4.4f * sqrt(dx * dx + dy * dy * 1.4f))).coerceIn(0f, 1f)
@@ -279,19 +300,16 @@ internal object MuebleEstanteTemplario {
             d.placas.forEach { p -> placa(p, medidor, ac, cerca(p.r.center)) }
         }
         with(HuecosEstanteTemplario) { d.repisas.forEachIndexed { k, r -> if (xs[k] >= 0f) llamaHueco(xs[k], r, ac) } }
-        if (d.repisas.isNotEmpty()) granoMueble(Rect(0f, ch, w, b.top), oscuro, 0.8f)
-        // Lo de abajo: el zócalo y el suelo con lo que hay en él, en una imagen desde el píxel entero de encima del zócalo.
-        with(CapaTemplario) {
-            val arriba = floor(minOf(b.top, d.tablas.lastOrNull()?.bottom ?: b.top)).toInt()
-            pegar(1, "p:$clave:$arriba", arriba, ceil(h).toInt()) {
-                drawRect(ac.luz(PaletaTemplario.CEDRO_OSC, cerca(Offset(w / 2, b.top))), Offset(0f, arriba.toFloat()), Size(w, ceil(h) - arriba + 1f))
-                val suelo = b.top + b.height * SUELO
-                val cercaPie: (Offset) -> Float = { p -> if (!a.lumbre) 1f else calor(p.x / w, p.y / w, yB, noche, FloatArray(0)) }
-                with(ObraEstanteTemplario) { zocalo(Rect(0f, arriba.toFloat(), w, suelo), ac, cercaPie) }
-                with(PieEstanteTemplario) { alPie(ac, b, suelo, h, cercaPie) }
-                granoMueble(Rect(0f, arriba.toFloat(), w, h), oscuro)
-            }
-        }
+        // Lo de abajo, en vivo (así lo guardado queda en unos 2 MB por modo): el zócalo y el suelo con lo que hay en él, desde
+        // el píxel entero de encima del zócalo y sobre un fondo opaco, para que la junta con la última tabla no deje asomar
+        // nada.
+        val arriba = floor(minOf(b.top, d.tablas.lastOrNull()?.bottom ?: b.top))
+        drawRect(ac.luz(PaletaTemplario.CEDRO_OSC, cerca(Offset(w / 2, b.top))), Offset(0f, arriba), Size(w, ceil(h) - arriba + 1f))
+        val suelo = b.top + b.height * SUELO
+        val cercaPie: (Offset) -> Float = { p -> if (!a.lumbre) 1f else calor(p.x / w, p.y / w, yB, noche, FloatArray(0)) }
+        with(ObraEstanteTemplario) { zocalo(Rect(0f, arriba, w, suelo), ac, cercaPie) }
+        with(PieEstanteTemplario) { alPie(ac, b, suelo, h, cercaPie) }
+        granoMueble(Rect(0f, ch, w, h), oscuro, 0.8f)
     }
 
     fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {

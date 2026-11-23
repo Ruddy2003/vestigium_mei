@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
@@ -24,8 +25,8 @@ import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
  * Las entradas del estante de Templario ([MuebleEstanteTemplario]), tres objetos de la cámara alta según la semilla: el libro de
  * la casa (un códice de tablas forradas de piel teñida, de pie, con sus nervios dobles, las lengüetas de las cabezadas, los
  * bullones que asoman por el canto de las tablas y el tejuelo de pergamino), el estuche de cuero hervido para un rollo (alto,
- * con la tapa honda de hombros redondos, las orejas por donde pasa la correa, la labor incisa y la etiqueta colgada de un
- * cabo) y la escarcela de las cartas (blanda, fruncida por su cordón, con las cartas dobladas que asoman). El ánimo es la piel,
+ * con la tapa honda de hombros redondos, la correa de delante con su hebilla, la costura a lo largo, el pie reforzado y
+ * bandas de dientes chicos; uno de cada tres, abierto, con la tapa colgando de la correa y el rollo asomando) y la escarcela de las cartas (blanda, fruncida por su cordón, con las cartas dobladas que asoman). El ánimo es la piel,
  * en todo el cuerpo ([cueroTemplario]); sin ánimo, cuero sin teñir. En los Sueños, una media luna de plata con su disco apagado.
  */
 internal object VolumenEstanteTemplario {
@@ -231,85 +232,122 @@ internal object VolumenEstanteTemplario {
 
     // ---------------------------------------------------------------- el estuche de cuero hervido
 
+    /** Una banda de dientes chicos de lado a lado entre dos filetes, en [y] (alto [alto]), de [x0] a [x1]. */
+    private fun DrawScope.dientes(y: Float, alto: Float, x0: Float, x1: Float, t: Tinte) {
+        val u = density
+        val p = Path()
+        var x = x0
+        val paso = 2.4f * u
+        while (x < x1) { p.moveTo(x, y + alto); p.lineTo(x + paso / 2, y + 0.6f * u); p.lineTo(x + paso, y + alto); p.close(); x += paso }
+        drawRect(t.hondo, Offset(x0, y - 0.4f * u), Size(x1 - x0, 0.8f * u))
+        drawRect(t.hondo, Offset(x0, y + alto + 0.4f * u), Size(x1 - x0, 0.8f * u))
+        drawPath(p, t.hondo)
+        drawRect(t.claro.copy(alpha = 0.45f), Offset(x0, y + alto + 1.2f * u), Size(x1 - x0, 0.6f * u))
+    }
+
     fun DrawScope.estuche(v: Volumen, medidor: TextMeasurer, a: AireTemplario, k: Float, hacia: Float, piel: Color?, luna: Float) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla
         val l = Luz(a, k, luna)
         val t = tinte(piel, l)
-        // La tapa honda que se encaja por fuera del cuerpo, de hombros redondos; el cuerpo, algo más ancho abajo.
-        val tapa = h * (0.27f + 0.05f * azar(s, 9))
+        // Abierto (la tapa colgando de la correa y el rollo asomando) en uno de cada tres, más si va lleno.
+        val abierto = azar(s, 15) + 0.3f * v.lleno > 0.6f
+        val tapa = h * (0.25f + 0.05f * azar(s, 9))
         val hombro = w * 0.2f
-        alrededor(a, hacia, 1f * u)
+        alrededor(a, hacia, if (abierto) tapa * 0.3f else 1f * u)
         val ent = w * 0.07f
-        val cuerpo = Path().apply { moveTo(ent, tapa - 2f * u); lineTo(w - ent, tapa - 2f * u); lineTo(w - 1f * u, h); lineTo(1f * u, h); close() }
-        clipPath(cuerpo) { redondo(Rect(0f, tapa, w, h), t, hacia) }
-        // La labor incisa del cuerpo: dos bandas de filetes, una con zigzag y otra con puntos, y la costura de arriba abajo.
-        val labor = Path()
-        val bandas = listOf(0.72f + 0.04f * azar(s, 13), 0.9f)
-        bandas.forEachIndexed { i, fy ->
-            val y = h * fy
-            labor.moveTo(0f, y); labor.lineTo(w, y)
-            labor.moveTo(0f, y + 5f * u); labor.lineTo(w, y + 5f * u)
-            if ((i + (s and 1)) % 2 == 0) {
-                var x = 0f; var alto = true
-                labor.moveTo(x, y + 4.4f * u)
-                while (x < w) { x += 3f * u; labor.lineTo(x, y + (if (alto) 0.6f else 4.4f) * u); alto = !alto }
-            }
+        // El rollo que asoma por la boca, si va abierto: un cilindro de pergamino con su espiral arriba y su cordón.
+        if (abierto) {
+            val rw = w * 0.56f
+            val rr = Rect(w / 2 - rw / 2, h * 0.05f, w / 2 + rw / 2, tapa + 4f * u)
+            drawRect(l.etiqueta(mezcla(VIEJO, P.PERG_OSC, 0.15f)), rr.topLeft, rr.size)
+            drawRect(a.sombra(0.3f), Offset(if (hacia < 0f) rr.right - rw * 0.3f else rr.left, rr.top), Size(rw * 0.3f, rr.height))
+            drawRect(a.brillo(0.35f, k), Offset(if (hacia < 0f) rr.left + rw * 0.12f else rr.right - rw * 0.2f, rr.top), Size(rw * 0.08f, rr.height))
+            drawOval(l.etiqueta(VIEJO), Offset(rr.left, rr.top - 2.2f * u), Size(rw, 4.4f * u))
+            drawOval(l.etiqueta(P.PERG_OSC), Offset(rr.left + rw * 0.25f, rr.top - 1.1f * u), Size(rw * 0.5f, 2.2f * u), style = Stroke(0.8f * u))
+            drawRect(l.c(P.CRUZ, -0.05f), Offset(rr.left, rr.top + rr.height * 0.35f), Size(rw, 1.6f * u))
         }
+        // El cuerpo: un cilindro de cuero algo más ancho abajo.
+        val y0 = if (abierto) tapa else tapa - 2f * u
+        val cuerpo = Path().apply { moveTo(ent, y0); lineTo(w - ent, y0); lineTo(w - 1f * u, h); lineTo(1f * u, h); close() }
         clipPath(cuerpo) {
-            drawPath(labor, t.hondo, style = Stroke(0.8f * u))
-            translate(0.5f * u, 0.6f * u) { drawPath(labor, t.claro.copy(alpha = 0.5f), style = Stroke(0.5f * u)) }
-            if ((s and 1) == 1) { var x = 3f * u; while (x < w) { drawCircle(t.hondo, 0.8f * u, Offset(x, h * bandas[0] + 2.5f * u)); x += 4.2f * u } }
-            val cx = if (hacia < 0f) w * 0.72f else w * 0.28f
-            var y = tapa + 2f * u
-            while (y < h - 2f * u) { drawLine(t.hondo, Offset(cx, y), Offset(cx, y + 1.6f * u), 0.9f * u); y += 3.6f * u }
-            drawRect(a.sombra(0.25f), Offset(0f, h - 3f * u), Size(w, 3f * u))
+            redondo(Rect(0f, y0, w, h), t, hacia)
+            // Una banda de dientes chicos a media altura y el pie reforzado: una vuelta de cuero más oscuro, cosida y con
+            // remaches.
+            dientes(h * (0.66f + 0.04f * azar(s, 13)), 2.2f * u, 0f, w, t)
+            val pie = h - h * 0.09f
+            drawRect(t.hondo, Offset(0f, pie), Size(w, h - pie))
+            drawRect(t.claro.copy(alpha = 0.6f), Offset(0f, pie), Size(w, 0.8f * u))
+            var x = 3f * u
+            while (x < w - 2f * u) { drawCircle(l.c(P.LATON, -0.1f), 0.9f * u, Offset(x, pie + (h - pie) * 0.5f)); x += 5f * u }
+            // La costura a lo largo, del lado de la sombra: la línea y sus puntadas de través.
+            val cx = if (hacia < 0f) w * 0.76f else w * 0.24f
+            drawLine(t.hondo, Offset(cx, y0), Offset(cx, pie), 1.1f * u)
+            var yy = y0 + 2f * u
+            while (yy < pie - 1f * u) { drawLine(l.c(P.LINO_OSC, -0.1f).copy(alpha = 0.8f), Offset(cx - 1.3f * u, yy), Offset(cx + 1.3f * u, yy + 1f * u), 0.7f * u); yy += 3.2f * u }
+            // El roce del uso.
             for (j in 0 until 3) drawLine(a.claro(0.18f), Offset(w * azar(s, 80 + j), h * (0.45f + 0.2f * azar(s, 83 + j))), Offset(w * azar(s, 86 + j), h * (0.47f + 0.2f * azar(s, 83 + j))), 0.8f * u)
         }
-        // La tapa: un cilindro más ancho con hombros redondos y el reborde de abajo, más oscura.
-        val tp = Path().apply {
-            moveTo(0.4f * u, tapa)
-            lineTo(0.4f * u, hombro * 0.9f)
-            quadraticTo(0.4f * u, 1.2f * u, hombro, 0.6f * u)
-            lineTo(w - hombro, 0.6f * u)
-            quadraticTo(w - 0.4f * u, 1.2f * u, w - 0.4f * u, hombro * 0.9f)
-            lineTo(w - 0.4f * u, tapa); close()
-        }
-        clipPath(tp) {
-            redondo(Rect(0f, 0f, w, tapa), Tinte(mezcla(t.cara, t.hondo, 0.22f), t.claro, t.hondo), hacia)
-            drawRect(t.claro.copy(alpha = 0.55f), Offset(hombro * 0.6f, 0.6f * u), Size(w - hombro * 1.2f, 1.4f * u))
-            // Una banda de zigzag en la tapa.
-            val z = Path()
-            var x = 0f; var alto = true
-            val yz = tapa * 0.48f
-            z.moveTo(0f, yz); z.lineTo(w, yz); z.moveTo(0f, yz + 5f * u); z.lineTo(w, yz + 5f * u)
-            z.moveTo(0f, yz + 4.4f * u)
-            while (x < w) { x += 3f * u; z.lineTo(x, yz + (if (alto) 0.6f else 4.4f) * u); alto = !alto }
-            drawPath(z, t.hondo, style = Stroke(0.8f * u))
-        }
-        drawRect(t.claro, Offset(0f, tapa - 3.4f * u), Size(w, 1.2f * u))
-        drawRect(t.hondo, Offset(0f, tapa - 2.2f * u), Size(w, 2.2f * u))
-        drawRect(a.sombra(0.45f), Offset(ent, tapa), Size(w - 2 * ent, 2f * u))
-        // Las orejas de los lados (en la tapa y en el cuerpo) y la correa que pasa por ellas, de arriba abajo.
-        val correa = l.c(if ((s shr 2) and 1 == 0) Color(0xFF3A2414) else Color(0xFFCDB47C), -0.05f)
-        listOf(1.4f * u, w - 1.4f * u).forEach { ox ->
-            drawLine(a.sombra(0.4f), Offset(ox + 0.8f * u, tapa * 0.3f), Offset(ox + 0.8f * u, h * 0.86f), 2.2f * u)
-            drawLine(correa, Offset(ox, tapa * 0.28f), Offset(ox, h * 0.86f), 1.8f * u)
-            listOf(tapa * 0.3f, tapa + h * 0.08f, h * 0.84f).forEach { oy ->
-                drawRoundRect(t.hondo, Offset(ox - 2.2f * u, oy - 3f * u), Size(4.4f * u, 6f * u), CornerRadius(1.6f * u))
-                drawRect(t.claro.copy(alpha = 0.6f), Offset(ox - 2.2f * u, oy - 3f * u), Size(4.4f * u, 0.8f * u))
+        if (abierto) {
+            // La boca abierta, con el canto del cuero.
+            drawOval(t.claro, Offset(ent - 0.4f * u, y0 - 2f * u), Size(w - 2 * ent + 0.8f * u, 4f * u))
+            drawOval(a.sombra(0.6f), Offset(ent + 1f * u, y0 - 1.2f * u), Size(w - 2 * ent - 2f * u, 2.4f * u))
+        } else {
+            // La tapa honda que se encaja por fuera, de hombros redondos, con su banda de dientes y el reborde.
+            val tp = Path().apply {
+                moveTo(0.4f * u, tapa)
+                lineTo(0.4f * u, hombro * 0.9f)
+                quadraticTo(0.4f * u, 1.2f * u, hombro, 0.6f * u)
+                lineTo(w - hombro, 0.6f * u)
+                quadraticTo(w - 0.4f * u, 1.2f * u, w - 0.4f * u, hombro * 0.9f)
+                lineTo(w - 0.4f * u, tapa); close()
             }
+            clipPath(tp) {
+                redondo(Rect(0f, 0f, w, tapa), Tinte(mezcla(t.cara, t.hondo, 0.22f), t.claro, t.hondo), hacia)
+                drawRect(t.claro.copy(alpha = 0.55f), Offset(hombro * 0.6f, 0.6f * u), Size(w - hombro * 1.2f, 1.4f * u))
+                dientes(tapa * 0.42f, 2.2f * u, 0f, w, t)
+            }
+            drawRect(t.claro, Offset(0f, tapa - 3.4f * u), Size(w, 1.2f * u))
+            drawRect(t.hondo, Offset(0f, tapa - 2.2f * u), Size(w, 2.2f * u))
+            drawRect(a.sombra(0.45f), Offset(ent, tapa), Size(w - 2 * ent, 2f * u))
         }
-        // La etiqueta, colgada de un cabo que sale de la oreja de la tapa, algo ladeada.
-        val et = Rect(2.6f * u, tapa + h * 0.06f, w - 2.6f * u, tapa + h * 0.06f + 30f * u)
+        // La correa de delante, de cuero más oscuro: baja por el cuerpo y, cerrado, sube por la tapa con su hebilla de latón
+        // en la junta; abierto, la tapa cuelga de ella por delante.
+        val correa = l.c(if ((s shr 2) and 1 == 0) Color(0xFF3A2414) else Color(0xFF6E4424), 0f)
+        val cxr = w * (if (hacia < 0f) 0.36f else 0.64f)
+        val cw = 3.4f * u
+        val tope = if (abierto) y0 + 1f * u else 1.6f * u
+        drawRect(a.sombra(0.35f), Offset(cxr - cw / 2 + 0.8f * u, tope), Size(cw, h * 0.91f - tope))
+        drawRect(correa, Offset(cxr - cw / 2, tope), Size(cw, h * 0.91f - tope))
+        drawRect(a.brillo(0.25f, k), Offset(cxr - cw / 2, tope), Size(0.7f * u, h * 0.91f - tope))
+        if (!abierto) {
+            val hb = Rect(cxr - cw / 2 - 1.4f * u, tapa - 5f * u, cxr + cw / 2 + 1.4f * u, tapa + 1.2f * u)
+            drawRect(a.sombra(0.4f), Offset(hb.left + 0.7f * u, hb.top + 0.8f * u), hb.size)
+            drawRect(l.c(P.LATON), hb.topLeft, hb.size, style = Stroke(1.2f * u))
+            drawLine(l.c(P.LATON_OSC), Offset(hb.center.x, hb.top), Offset(hb.center.x, hb.bottom), 0.9f * u)
+            drawRect(a.brillo(0.5f, k), Offset(hb.left, hb.top), Size(hb.width, 0.6f * u))
+        }
+        // La etiqueta, colgada de la correa, algo ladeada.
+        val et = Rect(2.6f * u, tapa + h * 0.05f, w - 2.6f * u, tapa + h * 0.05f + 30f * u)
         val giro = (azar(s, 11) - 0.5f) * 6f
-        val oreja = Offset(if (hacia < 0f) w - 1.4f * u else 1.4f * u, tapa * 0.3f)
-        drawLine(correa, oreja, Offset(w * 0.5f, et.top + 2f * u), 1f * u)
+        drawLine(correa, Offset(cxr, tapa + 1f * u), Offset(w * 0.5f, et.top + 2f * u), 1f * u)
         etiqueta(v, medidor, et, l, a, giro)
         drawCircle(a.sombra(0.5f), 1f * u, Offset(w * 0.5f, et.top + 2.6f * u))
-        // La luna de los Sueños, en la tapa.
-        if (v.noche) luna(Offset(w / 2, tapa * 0.5f + 1f * u), minOf(w * 0.2f, 4.8f * u), a)
+        if (abierto) {
+            // La tapa, colgando ladeada de la correa por delante del cuerpo, debajo de la etiqueta: se ve su fondo hondo.
+            val tc = Offset(cxr, et.bottom + h * 0.09f)
+            rotate(if (hacia < 0f) 24f else -24f, tc) {
+                val tr = Rect(tc.x - w * 0.42f, tc.y - h * 0.07f, tc.x + w * 0.42f, tc.y + h * 0.07f)
+                drawRoundRect(a.sombra(0.4f), Offset(tr.left + 1f * u, tr.top + 1.4f * u), tr.size, CornerRadius(2f * u))
+                drawRoundRect(mezcla(t.cara, t.hondo, 0.2f), tr.topLeft, tr.size, CornerRadius(2f * u))
+                drawRect(t.claro, tr.topLeft, Size(tr.width, 1.2f * u))
+                drawOval(t.hondo, Offset(tr.left + tr.width * 0.12f, tr.bottom - 3.4f * u), Size(tr.width * 0.76f, 2.6f * u))
+                clipRect(tr.left, tr.top, tr.right, tr.bottom) { dientes(tr.top + tr.height * 0.35f, 2f * u, tr.left, tr.right, t) }
+            }
+        }
+        // La luna de los Sueños: en la tapa o, si va abierto, en el cuerpo.
+        if (v.noche) luna(Offset(w / 2, if (abierto) h * 0.86f - 3f * u else tapa * 0.62f + 1f * u), minOf(w * 0.2f, 4.8f * u), a)
         filos(Rect(0f, 0f, w, h), a, k, hacia, luna)
     }
 

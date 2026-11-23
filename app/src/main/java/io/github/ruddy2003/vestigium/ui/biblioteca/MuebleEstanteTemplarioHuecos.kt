@@ -104,12 +104,17 @@ internal object HuecosEstanteTemplario {
         clipPath(alb) {
             // Las bandas de la decoración en azul oscuro y el blanco del barro donde salta el vidriado.
             listOf(0.18f, 0.3f, 0.72f, 0.8f).forEach { fy -> drawRect(a.dia(mezcla(P.AZUL, Color(0xFF101830), 0.5f), 0f, k), Offset(ax - w * 0.04f, y - alto * fy), Size(w * 0.08f, alto * 0.02f)) }
-            val ondas = Path()
+            // La cenefa de la panza: una hilera de dientes chicos de lado a lado entre dos filetes, y puntos (nada que se lea
+            // como letra).
+            val dientes = Path()
             var xx = ax - w * 0.04f
-            var arriba = true
-            ondas.moveTo(xx, y - alto * 0.5f)
-            while (xx < ax + w * 0.04f) { xx += w * 0.01f; ondas.lineTo(xx, y - alto * (if (arriba) 0.58f else 0.44f)); arriba = !arriba }
-            drawPath(ondas, a.dia(mezcla(P.AZUL, Color(0xFF101830), 0.5f), 0f, k), style = Stroke(1.4f * u))
+            val yb = y - alto * 0.47f; val ya = y - alto * 0.53f
+            while (xx < ax + w * 0.04f) { dientes.moveTo(xx, yb); dientes.lineTo(xx + w * 0.0035f, ya); dientes.lineTo(xx + w * 0.007f, yb); dientes.close(); xx += w * 0.007f }
+            val oscuroAzul = a.dia(mezcla(P.AZUL, Color(0xFF101830), 0.5f), 0f, k)
+            drawPath(dientes, oscuroAzul)
+            drawRect(oscuroAzul, Offset(ax - w * 0.04f, ya - alto * 0.02f), Size(w * 0.08f, alto * 0.008f))
+            drawRect(oscuroAzul, Offset(ax - w * 0.04f, yb + alto * 0.012f), Size(w * 0.08f, alto * 0.008f))
+            for (j in 0 until 6) drawCircle(oscuroAzul, w * 0.0022f, Offset(ax - w * 0.028f + w * 0.011f * j, y - alto * 0.62f))
             drawRect(a.dia(P.BARRO, 0.1f, k), Offset(ax - w * 0.04f, y - alto * 0.06f), Size(w * 0.08f, alto * 0.06f))
             cilindroTemplario(Rect(ax - w * 0.032f, y - alto, ax + w * 0.032f, y), a, k, hacia, 1.4f)
             drawRoundRect(a.claro(0.7f), Offset(ax - w * 0.018f, y - alto * 0.7f), Size(w * 0.004f, alto * 0.25f), CornerRadius(w * 0.002f))
@@ -220,15 +225,16 @@ internal object HuecosEstanteTemplario {
         drawLine(a.dia(P.PALMA, 0.15f, k), Offset(cx - cw / 2, boca), Offset(cx + cw / 2, boca), 2.2f * u)
         drawLine(a.sombra(0.35f), Offset(cx - cw / 2, boca + 1.6f * u), Offset(cx + cw / 2, boca + 1.6f * u), 1f * u)
         // La manga que cae por el borde de la derecha, ahusada, con su puño de cuero.
+        // La manga, que cuelga por el borde del cesto casi hasta la tabla, ahusada, con el puño de cuero.
         val manga = Path().apply {
-            moveTo(cx + cw * 0.26f, boca - w * 0.01f)
-            cubicTo(cx + cw * 0.5f, boca - w * 0.016f, cx + cw * 0.58f, boca + chh * 0.2f, cx + cw * 0.56f, boca + chh * 0.62f)
-            lineTo(cx + cw * 0.42f, boca + chh * 0.66f)
-            cubicTo(cx + cw * 0.44f, boca + chh * 0.3f, cx + cw * 0.38f, boca + w * 0.01f, cx + cw * 0.22f, boca + w * 0.008f); close()
+            moveTo(cx + cw * 0.24f, boca - w * 0.012f)
+            cubicTo(cx + cw * 0.52f, boca - w * 0.02f, cx + cw * 0.64f, boca + chh * 0.25f, cx + cw * 0.62f, boca + chh * 0.86f)
+            lineTo(cx + cw * 0.44f, boca + chh * 0.9f)
+            cubicTo(cx + cw * 0.46f, boca + chh * 0.35f, cx + cw * 0.38f, boca + w * 0.012f, cx + cw * 0.2f, boca + w * 0.01f); close()
         }
-        mallaEn(manga, Rect(cx + cw * 0.2f, boca - w * 0.02f, cx + cw * 0.6f, boca + chh * 0.7f), a, k, hacia)
-        drawPath(manga, a.sombra(0.4f), style = Stroke(1.1f * u))
-        drawLine(a.dia(P.CUERO, 0f, k), Offset(cx + cw * 0.42f, boca + chh * 0.64f), Offset(cx + cw * 0.56f, boca + chh * 0.6f), 2.4f * u)
+        mallaEn(manga, Rect(cx + cw * 0.18f, boca - w * 0.025f, cx + cw * 0.66f, boca + chh * 0.95f), a, k, hacia)
+        drawPath(manga, a.sombra(0.45f), style = Stroke(1.1f * u))
+        drawLine(a.dia(P.CUERO, 0f, k), Offset(cx + cw * 0.44f, boca + chh * 0.88f), Offset(cx + cw * 0.62f, boca + chh * 0.84f), 3f * u)
         // Un puñado de arena en la tabla.
         drawOval(a.dia(P.CALIZA, 0.05f, k), Offset(cx + cw * 0.56f, y - w * 0.006f), Size(w * 0.03f, w * 0.007f))
     }
@@ -236,17 +242,24 @@ internal object HuecosEstanteTemplario {
     /** Las anillas de una malla dentro de [p]: hileras al tresbolillo, cada anilla con su luz y su sombra (en dos caminos). */
     private fun DrawScope.mallaEn(p: Path, r: Rect, a: AireTemplario, k: Float, hacia: Float) {
         val u = density
-        drawPath(p, a.dia(mezcla(P.HIERRO, P.HIERRO_LUZ, 0.25f), -0.1f, k))
+        drawPath(p, a.dia(mezcla(P.HIERRO, P.HIERRO_LUZ, 0.2f), -0.12f, k))
         clipPath(p) {
-            val paso = 2.6f * u
-            val anillas = Path()
+            // Las anillas, como escamas chicas al tresbolillo: el borde de abajo de cada una, en sombra, y un punto de brillo
+            // en hilera arriba (la malla brilla por filas, no de una pieza).
+            val paso = 2.5f * u
+            val escamas = Path(); val brillos = Path()
             var y = r.top; var fila = 0
-            while (y < r.bottom) {
+            while (y < r.bottom + paso) {
                 var x = r.left + (if (fila % 2 == 0) 0f else paso / 2)
-                while (x < r.right) { anillas.addOval(Rect(x - paso * 0.42f, y - paso * 0.42f, x + paso * 0.42f, y + paso * 0.42f)); x += paso }
-                y += paso * 0.78f; fila++
+                while (x < r.right + paso) {
+                    escamas.addArc(Rect(x - paso * 0.5f, y - paso * 0.5f, x + paso * 0.5f, y + paso * 0.5f), 0f, 180f)
+                    brillos.addOval(Rect(x - paso * 0.28f, y - paso * 0.36f, x + paso * 0.04f, y - paso * 0.16f))
+                    x += paso
+                }
+                y += paso * 0.62f; fila++
             }
-            drawPath(anillas, a.dia(P.HIERRO_LUZ, 0f, k).copy(alpha = 0.75f), style = Stroke(0.6f * u))
+            drawPath(escamas, a.sombra(0.55f), style = Stroke(0.7f * u))
+            drawPath(brillos, a.dia(P.HIERRO_LUZ, 0.15f, k).copy(alpha = 0.85f))
             val izq = hacia < 0f
             drawRect(a.sombra(0.35f), Offset(if (izq) r.right - r.width * 0.4f else r.left, r.top), Size(r.width * 0.4f, r.height))
             drawRect(a.brillo(0.2f, k), Offset(if (izq) r.left else r.right - r.width * 0.3f, r.top), Size(r.width * 0.3f, r.height))
