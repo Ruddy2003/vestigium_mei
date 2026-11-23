@@ -195,6 +195,29 @@ Vapor victoriano, Pirata, Mongol, Mesoamérica y Colonos, con la misma vara que 
 
 ---
 
+# La cuarta tanda de bibliotecas (23 nov 2026)
+
+Art nouveau, Tierras Antiguas, Templario, Ciudad neón y Prehistoria, con la misma vara que las dos tandas anteriores (el Ideario de su tema, al lado y a la misma escala) y dos rondas de revisión cada una, después de las vueltas propias de cada agente. En cuatro de ellas el mismo agente hizo después la libreta de momentos nueva y las mejoras simples de la tapa (abajo, «Decisión del 23 nov 2026 y segunda vuelta»).
+
+## Qué es cada mueble
+
+- **Art nouveau:** la biblioteca abierta de caoba del despacho de la tienda del taller, con papel-cuero dorado en los casilleros, el ramo en el jarrón arriba y, de noche, el aplique, el quinqué y la palmatoria; las entradas son el tomo de la revista, el rollo de carteles y el legajo de cartas.
+- **Tierras Antiguas:** el armario de la crónica, de roble ahumado, en la sala de arriba de la posada del paso, contra el enlucido de lapislázuli sembrado de oro y con la ventana de vidrios en rombo en escorzo; arriba manda la drusa de amatista; las entradas son el tomo de la crónica, el rollo de varillas y el envoltorio de cartas en paño de lana.
+- **Templario:** el armario-estante de cedro de la cámara alta, contra la cal con despiece fingido a la almagra y con el ajimez en el costado; las entradas son el libro de la casa, el estuche de cuero hervido y la escarcela de las cartas.
+- **Ciudad neón** (solo oscuro): la alacena de laca roja del cuarto de arriba del puesto, contra el azulejo jade, con la ventana al callejón y el acuario encima; las entradas son el cartucho de datos, la lata de té y el saco de cordón de repartidor.
+- **Prehistoria:** el andamio de varas de la boca de la cueva (postes de pino con su horqueta y zarzos atados con cuero crudo), con la piel tensada en su bastidor arriba y el hogar de lajas al pie; las entradas son el hueso de cuenta con sus muescas, la bolsa de piel y la piel enrollada.
+
+## Lo que salió de las revisiones
+
+- **Siluetas que se leían como otra cosa** (se miran a tamaño de teléfono): el hueso de cuenta, como un muslo de pollo (quedó de marfil viejo y mate, hincado en un pie de barro, con una sola cabeza); unos rollos, como botes; el saco de cordón, como una bolsa de regalo (ahora es de repartidor, con la boca caída a un lado y el cordón en un solo cabo con nudo, sin lazo); el globo de una lámpara, como una cara (ahora lleva una cenefa grabada continua).
+- **Los signos se leen como letras:** un zigzag en el cuero se leía como letra; quedó una banda de dientes chicos.
+- **Ni objetos de otra época:** un sobre se leía como de correo de hoy.
+- **Lo que llena una superficie, sin rayarla:** un legajo rayado no se leía como papel; quedó como un fajo de sobres de un solo tinte.
+- **El fondo de las repisas sale del lugar:** un fondo de un color ajeno al tema (azul marino en una cueva) se cambió por la pared de la cueva en sombra, parda, con su relieve y su humedad.
+- **La luz de una ventana no puede parecer gente:** las dos luces de un ajimez, como dos manchas pálidas de pie, se leían como dos figuras. Se tienden y alargan con el ángulo del sol, unidas por la sombra del parteluz, y pintan lo que tocan (la regla de la tercera tanda).
+
+---
+
 # El libro del día y la libreta de momentos (20 nov 2026)
 
 La prueba en tres temas (Helénico, Scriptorium y Espacio) quedó aprobada por el autor el 20 nov 2026: «funciona, se ven bien; no es impresionante». Se hace igual en los demás. **La vara siguen siendo los Idearios rehechos**, y los dos muebles se ven de la misma casa que el Ideario y la biblioteca del tema sin repetir sus objetos ni su luz. Lo que queda y en qué van: `docs/PENDIENTES.md`.
@@ -233,3 +256,36 @@ Lo de siempre (lo fijo se arma una vez por tamaño; ningún `Brush` ni `Path` nu
 - **El mapa de luz** (Espacio, `MapaLuzEspacio`): las piezas se pintan con la luz entera y encima va una imagen chica (unas decenas de píxeles por lado) con lo que la luz se apaga con la distancia a la lámpara, pintada una vez por tamaño y por modo y estirada en un solo dibujo, en lugar de un degradado por pieza.
 - **Degradados grandes de dos colores, solo donde llega la luz:** la luz de Helénico pasó de capas sobre todo el lienzo a franjas opacas en diagonal (pintar la tapa, de 24–33 a 12–13 ms); Scriptorium dejó los degradados en dos colores y sin grano (de 26–36 a 16–17 ms).
 - **Quitar lo que queda tapado:** sombras solo donde asoman, nada debajo de lo opaco.
+
+## Decisión del 23 nov 2026 y segunda vuelta
+
+Tras una prueba de editar sin redibujar (en Pirata y Vapor victoriano), el autor decidió el 23 nov 2026: **la libreta de momentos se hace de nuevo en todos los temas; la portada del libro del día se queda como está, con mejoras simples** (editar, no redibujar). La segunda vuelta la hicieron los agentes de Art nouveau, Tierras Antiguas, Templario y Ciudad neón, cada uno encima de su biblioteca aprobada y sin tocarla; la de Prehistoria está en curso.
+
+### La libreta, nueva
+
+- **Qué se rehace:** `libreta()` y `pestana()` del objeto (y `rotuloMes()` solo si desentona con lo nuevo), en `ui/biblioteca/MuebleLibreta<Tema>*.kt`; el objeto solo delega. El contrato de arriba no cambia.
+- **La vara:** la biblioteca recién aprobada del tema y su Ideario. La libreta es un mueble de la misma casa (mismos materiales, misma luz, misma mano) que no repite sus objetos ni su encuadre, y tiene que quedar por encima de las tres de la prueba del 20 nov.
+- **Qué es:** un rincón entero con un solo objeto que se entiende a la primera como el sitio donde se apuntan los momentos del día en ese mundo, y que es lo que dice la pista de `Libros.kt`. Grande (ocupa lo más del alto), modelado, con su soporte, una pared con algo que cruce o enmarque, luz con dirección y dos o tres objetos del tema con uso. Engorda con las hojas; el nombre y la cuenta se leen sobre él sin taparlo.
+- **El índice:** del mismo material que la libreta; el día sin ánimo se distingue por la forma; de 30 a 45 operaciones por pestaña, sin `Brush` ni `Path` nuevos por pestaña y con los números medidos una vez (`capaEn`).
+- **La noche:** una llama o lámpara del tema dibujada, con su charco, y una luz fría opuesta; lo lejano se hunde en un oscuro con color.
+- **Peso y extremos:** por debajo de 1.5 veces Helénico (`medir.sh tapa,libreta,indice`); lo fijo, en una imagen guardada de no más de unos 3 MB por modo; `ARNES_MOMENTOS=0,1,muchos`, `ARNES_ANCHO=320` y `420`, `ARNES_LUGAR=diario ARNES_ABIERTO=0.55`.
+
+### La tapa, con mejoras simples
+
+- **Se edita `tapa()` donde está.** Mismo objeto, misma silueta, misma composición, mismos textos y la misma `cajaTapa`. Tres cosas, que fueron las que funcionaron en la prueba:
+  1. **Donde descansa:** el canto de la superficie donde se apoya y la sombra arrojada con color, debajo y al lado contrario a la luz.
+  2. **La noche con lado:** cálida del lado de una llama del tema (si no hay ninguna dibujada, una chica, como la vela en su palmatoria), fría del otro, y lo lejano hundido en un oscuro con color.
+  3. **El sueño:** la misma pieza con la luna mandando, no un filtro.
+- **De día, poco:** filete de luz en los cantos que miran a la luz y sombra propia teñida. No se rehacen texturas.
+- **Nunca se cambian degradados por bandas planas** para ahorrar peso: en la prueba quedaron escalones a la vista. Si un degradado pesa, se queda como estaba.
+- **Se conservan todos los textos, marcas y dibujos que la tapa ya tiene** (son del autor), aunque sean escritura real o un emblema: la regla de «sin escritura ni marcas» vale solo para lo que se dibuja nuevo. Una tapa que los había quitado los tuvo que devolver tal cual.
+- **De noche nada se lee peor que antes** (la fecha, el título): se mide. Sin velos de color sobre la pieza: el lado frío va en los cantos y en la sombra.
+- **Límite:** dos vueltas, menos de unas 200 líneas cambiadas, peso no mayor de 1.3 veces el de antes y la tinta del extracto a 4.5 a 1 o más. Si la tapa pide rehacerse para verse bien, no se rehace: se dice.
+
+### Lo que devolvieron las revisiones de las libretas
+
+- **El objeto se lee a la primera y ocupa lo más del alto.** Se devolvieron: un códice frontal y plano que parecía la tapa de un arcón (le faltaban el grueso de las hojas, el lomo con volumen y el atril donde descansa); un ticket ancho colgado alto que parecía un cartel en un palo (tenía que verse ensartado en el pincho, ladeado y combado); un objeto chico con una franja lisa debajo.
+- **Las superficies grandes, calmadas.** Un jaspeado menudo y saturado se comía el rótulo y parecía un cojín estampado: formas grandes, pocos valores, la paleta apagada del tema; mandan el rótulo y la silueta.
+- **La luz de ventana o de luna pinta el material:** su mismo color, virado y un paso más claro, con un borde que se quiebra en cada plano. Se devolvieron un paño de luz como dos arcos pálidos gemelos (parecían dos figuras), un paño de luna translúcido (parecía un cristal apoyado en la pared) y un parche de luna gris blanquecino sobre cuero (parecía una chapa pegada). Si no se lee como luz, se quita y queda el filo frío en los cantos.
+- **Objetos que parecen otra cosa:** una vara de tramos rojos y blancos parecía un bastón de caramelo (quedó de fresno a la vista con bandas gastadas).
+- **El charco de la lámpara tiñe sin matar el color local:** el azulejo verde bajo la luz cálida va a coral con la junta todavía verde, no a pardo.
