@@ -7,10 +7,13 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.ClipOp
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -22,7 +25,11 @@ import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import io.github.ruddy2003.vestigium.ui.Letra
 import io.github.ruddy2003.vestigium.ui.LetraExtra
@@ -161,9 +168,17 @@ object EstanteCueva : DisenoBiblioteca {
     private fun DrawScope.dibujarTapa(e: EstadoTapa, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, e.noche)
+        // En el sueño no se vela todo de azul: se hunde poco y lo ordena la luna, que entra por la derecha.
+        fun c(x: Color): Color { var r = x; if (oscuro) r = mezcla(r, Color(0xFF0F0B08), 0.36f); if (e.noche) r = mezcla(r, NOCHE, 0.36f); return r }
         val a = e.abierto.coerceIn(0f, 1f)
         val laja = Rect(w * 0.02f, h * 0.04f, w * 0.98f, h * 0.96f)
+        // De día la luz entra por la izquierda (la boca) y de noche la da la lamparilla de la izquierda; en el sueño, la luna, por
+        // la derecha. La sombra cae del otro lado.
+        val lado = if (e.noche) -1f else 1f
+        // Donde descansa: la laja, de canto contra la pared, pisa el suelo de la cueva; el canto del suelo con su filo de luz.
+        val sueloY = h * 0.9f
+        drawRect(c(ROCA_OSC), Offset(0f, sueloY), Size(w, h - sueloY))
+        drawRect(c(ROCA_LUZ).copy(alpha = 0.55f), Offset(0f, sueloY), Size(w, 1.2f * u))
         val pintura = mezcla(OCRE_AMARILLO, FUEGO, 0.35f)
         // Detrás, el hueco de la pared que la laja tapaba (se ve al apartarla): la roca honda con sus capas, una mano en
         // negativo soplada con ocre, hileras de puntos y las rayas de cuenta de otros días.
@@ -202,13 +217,26 @@ object EstanteCueva : DisenoBiblioteca {
             val sem = e.semilla and 0x7fffffff
             val piedra = c(CALIZAS[1 + sem % (CALIZAS.size - 1)])
             val contorno = contornoIrregular(laja, e.semilla, 44, 0.035f)
-            translate(3 * u, 4 * u) { drawPath(contorno, Color.Black.copy(alpha = 0.3f)) }
+            // La sombra arrojada, con color, del lado contrario a la luz, y la de contacto en el suelo.
+            translate(lado * 5 * u, 4 * u) { drawPath(contorno, SOMBRA_TAPA.copy(alpha = if (oscuro) 0.6f else 0.38f)) }
+            drawOval(SOMBRA_TAPA.copy(alpha = if (oscuro) 0.55f else 0.4f), Offset(laja.left + lado * w * 0.01f, laja.bottom - h * 0.03f), Size(laja.width, h * 0.07f))
             drawPath(contorno, piedra)
             clipPath(contorno) {
-                // Luz a la izquierda, sombra a la derecha y abajo (planas), las capas de la caliza, los poros y una grieta.
-                drawRect(Color.White.copy(alpha = 0.12f), laja.topLeft, Size(laja.width * 0.1f, laja.height))
-                drawRect(Color.Black.copy(alpha = 0.18f), Offset(laja.right - laja.width * 0.07f, laja.top), Size(laja.width * 0.07f, laja.height))
-                drawRect(Color.Black.copy(alpha = 0.12f), Offset(laja.left, laja.bottom - laja.height * 0.1f), Size(laja.width, laja.height * 0.1f))
+                // De noche, con lado: la luz cálida de la lamparilla a la izquierda y, lejos, a la derecha, lo hundido en un pardo
+                // violáceo; en el sueño, el rescoldo a la izquierda y la luna fría a la derecha. Es un mapa de luz chico, hecho una
+                // vez, estirado sobre la laja (un degradado del tamaño de la laja, recortado, pesaba el doble que la tapa entera).
+                if (oscuro || e.noche) {
+                    val mapa = mapaLuzTapa(oscuro, e.noche)
+                    drawImage(mapa, IntOffset.Zero, IntSize(mapa.width, mapa.height), IntOffset(laja.left.toInt(), laja.top.toInt()),
+                        IntSize(laja.width.toInt() + 1, laja.height.toInt() + 1), filterQuality = FilterQuality.Low)
+                }
+                // La luz del lado de la luz y la sombra propia, teñida, del otro y abajo; las capas de la caliza, los poros y una grieta.
+                // (De noche, el lado lo da el mapa de luz.)
+                if (!oscuro && !e.noche) {
+                    drawRect(LUZ_TAPA.copy(alpha = 0.14f), laja.topLeft, Size(laja.width * 0.1f, laja.height))
+                    drawRect(SOMBRA_TAPA.copy(alpha = 0.24f), Offset(laja.right - laja.width * 0.07f, laja.top), Size(laja.width * 0.07f, laja.height))
+                }
+                drawRect(SOMBRA_TAPA.copy(alpha = 0.16f), Offset(laja.left, laja.bottom - laja.height * 0.1f), Size(laja.width, laja.height * 0.1f))
                 for (j in 0 until 5) {
                     val yy = laja.top + laja.height * (0.1f + 0.2f * j + 0.05f * azar(e.semilla, 10 + j))
                     drawLine(c(LAJA_OSC).copy(alpha = 0.35f), Offset(laja.left, yy), Offset(laja.right, yy + (azar(e.semilla, 20 + j) - 0.5f) * 10 * u), 0.8f * u)
@@ -222,8 +250,10 @@ object EstanteCueva : DisenoBiblioteca {
                     for (s in 1..5) lineTo(w * 0.27f + (azar(e.semilla, 180 + s) - 0.5f) * 10 * u, laja.bottom - h * 0.045f * s)
                 }
                 drawPath(grieta, Color.Black.copy(alpha = 0.35f), style = Stroke(0.9f * u))
-                // De noche, la luz de las brasas que cae sobre la piedra (el único degradado de la laja).
-                if (e.noche) mancha(Offset(laja.left, laja.bottom), h * 0.95f, BRASA.copy(alpha = 0.22f))
+                // De noche, con lado: cálida junto a la lamparilla y, lejos, hundida en un pardo violáceo; en el sueño manda la luna,
+                // fría desde arriba a la derecha, y la lamparilla, baja, deja un rescoldo abajo a la izquierda.
+                // De día, el filete de luz en los cantos que miran a la boca: el contorno corrido hacia dentro, recortado.
+                if (!oscuro && !e.noche) translate(1.3f * u, 1.3f * u) { drawPath(contorno, LUZ_TAPA.copy(alpha = 0.6f), style = Stroke(1.6f * u)) }
             }
             drawPath(contorno, c(ROCA_OSC), style = Stroke(1f * u))
             // La cara alisada a mano, donde va el extracto.
@@ -281,6 +311,54 @@ object EstanteCueva : DisenoBiblioteca {
                     legibleAnt(piedra, c(CARBON), CALIZAS[0]).copy(alpha = 0.85f), 11f, minimo = 7f)
             }
         }
+        lamparillaTapa(Offset(w * 0.045f, h * 0.935f), h, oscuro, e.noche, ::c)
+    }
+
+    /** Los mapas de luz de la noche de la tapa (oscuro, sueño en claro, sueño en oscuro): 32 × 2 píxeles, hechos una vez. */
+    private val mapasTapa = arrayOfNulls<ImageBitmap>(3)
+
+    private fun mapaLuzTapa(oscuro: Boolean, noche: Boolean): ImageBitmap {
+        val i = if (!noche) 0 else if (oscuro) 2 else 1
+        return mapasTapa[i] ?: ImageBitmap(32, 2).also { img ->
+            val izq = if (noche) BRASA.copy(alpha = 0.18f) else LLAMA_TAPA.copy(alpha = 0.34f)
+            val der = if (noche) LUNA_TAPA.copy(alpha = if (oscuro) 0.24f else 0.18f) else HONDO_TAPA.copy(alpha = 0.5f)
+            CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, androidx.compose.ui.graphics.Canvas(img), Size(32f, 2f)) {
+                drawRect(Brush.horizontalGradient(0f to izq, 0.4f to izq.copy(alpha = 0f), 0.45f to der.copy(alpha = 0f), 1f to der, startX = 0f, endX = 32f))
+            }
+            mapasTapa[i] = img
+        }
+    }
+
+    /** La sombra con color de la tapa, la luz de día, la llama, la luna y el oscuro lejano de la noche. */
+    private val SOMBRA_TAPA = Color(0xFF2E1A24)
+    private val LUZ_TAPA = Color(0xFFFFF1D2)
+    private val LLAMA_TAPA = Color(0xFFFFC768)
+    private val LUNA_TAPA = Color(0xFFBFD0F0)
+    private val HONDO_TAPA = Color(0xFF1E1016)
+
+    /**
+     * La lamparilla de grasa en el suelo, abajo a la izquierda de la laja: un cuenco de piedra con su mecha. De día, apagada; de
+     * noche, encendida (la luz que le da lado a la laja); en el sueño, baja.
+     */
+    private fun DrawScope.lamparillaTapa(p: Offset, h: Float, oscuro: Boolean, noche: Boolean, c: (Color) -> Color) {
+        val u = density
+        val r = h * 0.07f
+        drawOval(SOMBRA_TAPA.copy(alpha = 0.45f), Offset(p.x - r * 1.1f, p.y - r * 0.1f), Size(r * 2.4f, r * 0.5f))
+        val cuenco = Path().apply {
+            moveTo(p.x - r, p.y - r * 0.42f); quadraticTo(p.x - r * 0.95f, p.y + r * 0.2f, p.x - r * 0.4f, p.y + r * 0.22f)
+            lineTo(p.x + r * 0.4f, p.y + r * 0.22f); quadraticTo(p.x + r * 0.95f, p.y + r * 0.2f, p.x + r, p.y - r * 0.42f); close()
+        }
+        drawPath(cuenco, c(ROCA))
+        drawOval(SOMBRA_TAPA.copy(alpha = 0.3f), Offset(p.x - r * 0.1f, p.y - r * 0.35f), Size(r * 0.9f, r * 0.55f))
+        drawOval(c(Color(0xFFE6D6A6)), Offset(p.x - r * 0.9f, p.y - r * 0.56f), Size(r * 1.8f, r * 0.3f))
+        drawLine(c(CARBON), Offset(p.x + r * 0.1f, p.y - r * 0.45f), Offset(p.x + r * 0.22f, p.y - r * 0.68f), 1.4f * u, StrokeCap.Round)
+        if (!oscuro && !noche) return
+        // La llama: el cuerpo naranja y el corazón claro.
+        val alto = if (noche) r * 0.7f else r * 1.25f
+        val f = Offset(p.x + r * 0.2f, p.y - r * 0.6f)
+        // (El resplandor lo pone el mapa de luz de la laja: un degradado más aquí pesaba.)
+        drawOval(PaletaCueva.FUEGO, Offset(f.x - r * 0.24f, f.y - alto), Size(r * 0.48f, alto * 1.05f))
+        drawOval(LLAMA_TAPA, Offset(f.x - r * 0.13f, f.y - alto * 0.62f), Size(r * 0.26f, alto * 0.62f))
     }
 
     // ---------------------------------------------------------------- la página y el escritor
