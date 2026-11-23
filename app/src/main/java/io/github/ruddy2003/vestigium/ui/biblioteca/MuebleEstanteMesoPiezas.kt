@@ -107,25 +107,92 @@ internal fun DrawScope.cacaoMeso(m: MesaMeso, c: Offset, largo: Float, ancho: Fl
 
 // ---------------------------------------------------------------- el bodegón sobre el remate
 
-/** El bodegón de arriba, de atrás hacia delante: el ocote apoyado, el carey con su asta, las mantas, el canasto, el copal. */
+/**
+ * El bodegón de arriba, de atrás hacia delante: el ocote apoyado, el carey con su asta, las mantas, el canasto, el vaso
+ * pintado (delante, entre el canasto y las mantas), el copal.
+ */
 internal fun DrawScope.bodegonMeso(m: MesaMeso) {
     val w = m.w
     ocoteMeso(m, Offset(w * 0.935f, m.apoyo))
     careyMeso(m, Offset(w * 0.672f, m.apoyo))
     mantasMeso(m, Rect(w * 0.44f, m.apoyo - w * 0.1f, w * 0.65f, m.apoyo))
     canastoMeso(m, Offset(w * 0.3f, m.apoyo))
+    vasoPintadoMeso(m, Offset(w * 0.478f, m.apoyo + w * 0.002f), w * 0.122f)
     copalMeso(m, Offset(w * 0.81f, m.apoyo))
     // Dos mazorcas caídas delante, en el remate.
     cacaoMeso(m, Offset(w * 0.075f, m.apoyo - w * 0.016f), w * 0.085f, w * 0.042f, -6f, CACAO_AMARILLO, 811)
     contactoMeso(Offset(w * 0.08f, m.apoyo + w * 0.004f), w * 0.08f, w * 0.01f, m.a, 0.35f)
-    cacaoMeso(m, Offset(w * 0.5f, m.apoyo - w * 0.015f), w * 0.075f, w * 0.038f, 172f, CACAO_GRANATE, 812)
-    contactoMeso(Offset(w * 0.5f, m.apoyo + w * 0.004f), w * 0.07f, w * 0.009f, m.a, 0.35f)
+    cacaoMeso(m, Offset(w * 0.728f, m.apoyo - w * 0.015f), w * 0.075f, w * 0.038f, 172f, CACAO_GRANATE, 812)
+    contactoMeso(Offset(w * 0.728f, m.apoyo + w * 0.004f), w * 0.07f, w * 0.009f, m.a, 0.35f)
 }
 
 /**
- * El canasto grande de bejuco, colmado de cacao: el cuerpo tejido en hileras (los tramos que pasan por encima y los que pasan
- * por debajo), una franja teñida de achiote, el borde grueso enrollado con su amarre en espiral, el volumen redondo con su
- * luz y su sombra, su sombra en el testero; encima, el montón de mazorcas solapadas (amarillas, rojas, granates), una abierta.
+ * El vaso pintado para el cacao, la pieza más fina del cuarto: un cilindro de barro fino, apenas abierto de boca, con engobe
+ * crema bruñido; arriba, la banda roja entre filetes negros con una hilera de dientes crema; en medio, el campo de achiote con
+ * franjas en diagonal (sin ningún signo); abajo, la banda negra del pie con su filete rojo; su luz de cilindro, el lustre, la
+ * boca con lo hondo de dentro y su sombra corrida en lo de atrás.
+ */
+private fun DrawScope.vasoPintadoMeso(m: MesaMeso, pie: Offset, alto: Float) {
+    val u = density
+    val w = m.w; val a = m.a
+    val an = alto * 0.56f
+    val top = pie.y - alto
+    val c = Offset(pie.x, top + alto * 0.5f)
+    val k = m.k(c); val f = m.f(c)
+    val der = m.der(c.x, c.y)
+    val forma = Path().apply {
+        moveTo(pie.x - an * 0.56f, top)
+        lineTo(pie.x + an * 0.56f, top)
+        cubicTo(pie.x + an * 0.5f, top + alto * 0.3f, pie.x + an * 0.5f, top + alto * 0.8f, pie.x + an * 0.47f, pie.y - alto * 0.02f)
+        quadraticTo(pie.x, pie.y + alto * 0.03f, pie.x - an * 0.47f, pie.y - alto * 0.02f)
+        cubicTo(pie.x - an * 0.5f, top + alto * 0.8f, pie.x - an * 0.5f, top + alto * 0.3f, pie.x - an * 0.56f, top)
+        close()
+    }
+    // Su sombra en lo de atrás: de día, corrida a la derecha; de noche, contraria a la lumbre.
+    if (!a.oscuro) drawPath(corridoMeso(forma, w * 0.014f, w * 0.004f), a.s(0.3f))
+    else if (k > 0.1f) {
+        val ll = m.lumbreDe(c)
+        drawPath(corridoMeso(forma, if (ll.x > c.x) -w * 0.012f else w * 0.012f, w * 0.004f), MesoTinta.NOCHE_SOMBRA.copy(alpha = (0.8f * k).coerceAtMost(0.4f)))
+    }
+    contactoMeso(Offset(pie.x, pie.y), an * 1.2f, w * 0.01f, a, 0.5f)
+    val crema = mezcla(ESTUCO, MesoTinta.AMATE, 0.4f)
+    drawPath(forma, a.c(crema, k, f))
+    clipPath(forma) {
+        val x0 = pie.x - an; val x1 = pie.x + an
+        // La banda roja de arriba, entre sus filetes, con los dientes crema.
+        drawRect(a.c(CINABRIO, k, f), Offset(x0, top + alto * 0.07f), Size(an * 2, alto * 0.2f))
+        drawRect(a.c(TINTA, k * 0.6f, f), Offset(x0, top + alto * 0.05f), Size(an * 2, alto * 0.025f))
+        drawRect(a.c(TINTA, k * 0.6f, f), Offset(x0, top + alto * 0.27f), Size(an * 2, alto * 0.025f))
+        val dientes = Path()
+        var x = x0; var n = 0
+        val paso = an * 0.2f
+        while (x < x1 && n < 20) { dientes.moveTo(x, top + alto * 0.27f); dientes.lineTo(x + paso * 0.5f, top + alto * 0.12f); dientes.lineTo(x + paso, top + alto * 0.27f); dientes.close(); x += paso; n++ }
+        drawPath(dientes, a.c(crema, k, f))
+        // El campo de achiote con sus franjas en diagonal.
+        drawRect(a.c(mezcla(ACHIOTE, MesoTinta.BARRO, 0.3f), k, f), Offset(x0, top + alto * 0.33f), Size(an * 2, alto * 0.43f))
+        val diag = Path()
+        for (q in 0 until 5) { val xx = x0 + an * 0.45f * q; diag.moveTo(xx, top + alto * 0.76f); diag.lineTo(xx + an * 0.42f, top + alto * 0.33f) }
+        drawPath(diag, a.c(MesoTinta.CINABRIO_OSC, k, f), style = Stroke(an * 0.09f))
+        // La banda negra del pie con su filete rojo.
+        drawRect(a.c(CINABRIO, k, f), Offset(x0, top + alto * 0.76f), Size(an * 2, alto * 0.025f))
+        drawRect(a.c(TINTA, k * 0.6f, f), Offset(x0, top + alto * 0.785f), Size(an * 2, alto * 0.25f))
+        cilindroMeso(Rect(pie.x - an * 0.5f, top, pie.x + an * 0.5f, pie.y), a, k, 1.3f, der, f)
+        // El lustre del bruñido.
+        drawRoundRect(a.b(0.55f, k), Offset(if (der) pie.x + an * 0.16f else pie.x - an * 0.3f, top + alto * 0.1f), Size(an * 0.08f, alto * 0.74f), CornerRadius(an * 0.04f))
+    }
+    drawPath(forma, a.s(0.35f), style = Stroke(0.7f * u))
+    // La boca: lo hondo de dentro y el canto con su luz.
+    val boca = Rect(pie.x - an * 0.56f, top - alto * 0.05f, pie.x + an * 0.56f, top + alto * 0.05f)
+    drawOval(a.c(mezcla(MesoTinta.BARRO_OSC, TINTA, 0.5f), k * 0.5f), boca.topLeft, boca.size)
+    drawOval(a.c(crema, k, f), boca.topLeft, boca.size, style = Stroke(1.2f * u))
+    drawArc(a.b(0.5f, k), 150f, 120f, false, boca.topLeft, boca.size, style = Stroke(0.8f * u))
+}
+
+/**
+ * El canasto grande de bejuco, colmado de cacao: el cuerpo cosido en espiral (las vueltas de bejuco, cada una abrazada por
+ * sus puntadas en diagonal, dos teñidas y una franja de dientes de puntadas oscuras), el borde grueso enrollado con su amarre
+ * en espiral, el volumen redondo con su luz y su sombra, su sombra en el testero; encima, el montón de mazorcas solapadas
+ * (amarillas, rojas, granates), una abierta.
  */
 private fun DrawScope.canastoMeso(m: MesaMeso, pie: Offset) {
     val u = density
@@ -157,32 +224,43 @@ private fun DrawScope.canastoMeso(m: MesaMeso, pie: Offset) {
         val atras = i < 4
         cacaoMeso(m, c, w * (if (atras) 0.09f else 0.1f), w * (if (atras) 0.046f else 0.05f), g, if (atras) mezcla(col, TINTA, 0.12f) else col, 820 + i, abierta = i == 2)
     }
-    // El cuerpo tejido.
-    drawPath(cuerpo, a.c(BEJUCO, k, f))
+    // El cuerpo cosido en espiral: el fondo honda entre las vueltas, cada vuelta de bejuco con su lomo de luz y su sombra
+    // debajo, y las puntadas que la abrazan en diagonal; dos vueltas teñidas (achiote y añil) y una franja de dientes hecha con
+    // puntadas oscuras.
+    drawPath(cuerpo, a.c(BEJUCO_OSC, k, f))
     clipPath(cuerpo) {
-        // El tejido en sarga: tiras en diagonal que pasan por encima de dos y por debajo de dos; las de un sentido a la luz.
-        val celda = w * 0.013f
-        val luz = Path(); val sombra = Path()
-        val y0 = boca; val y1 = pie.y
-        var fila = 0
-        var y = y0
-        while (y < y1 && fila < 30) {
-            var x = pie.x - ancho * 0.55f + (fila % 4) * celda * 0.5f
-            var n = 0
-            while (x < pie.x + ancho * 0.55f && n < 60) {
-                val p = if ((n + fila / 2) % 2 == 0) luz else sombra
-                p.moveTo(x, y + celda); p.lineTo(x + celda, y)
-                x += celda; n++
+        val vueltas = 10
+        val v = alto / vueltas
+        val comba = alto * 0.07f
+        val claras = Path(); val achiote = Path(); val anil = Path()
+        val lomos = Path(); val bajos = Path(); val puntadas = Path(); val dientes = Path()
+        val x0 = pie.x - ancho * 0.56f; val x1 = pie.x + ancho * 0.56f
+        for (r in 0 until vueltas) {
+            val yc = boca + v * (r + 0.55f)
+            val curva = Path().apply { moveTo(x0, yc); quadraticTo(pie.x, yc + comba * 2f, x1, yc) }
+            (when (r) { 3 -> achiote; 7 -> anil; else -> claras }).addPath(curva)
+            lomos.addPath(curva, Offset(0f, -v * 0.24f))
+            bajos.addPath(curva, Offset(0f, v * 0.4f))
+            // Las puntadas: cada una abraza la vuelta en diagonal; en las vueltas 4 a 6 forman dientes oscuros.
+            val paso = v * 1.25f
+            val cuantas = ((x1 - x0) / paso).toInt().coerceAtMost(80)
+            for (q in 0..cuantas) {
+                val t = q / cuantas.toFloat()
+                val px = x0 + (x1 - x0) * t + (if (r % 2 == 0) 0f else paso * 0.5f)
+                val py = yc + 4f * comba * t * (1f - t)
+                val oscura = r in 4..6 && (q % 8) in (6 - r)..r
+                (if (oscura) dientes else puntadas).apply { moveTo(px - v * 0.22f, py + v * 0.42f); lineTo(px + v * 0.22f, py - v * 0.42f) }
             }
-            y += celda; fila++
         }
-        drawPath(luz, a.c(mezcla(BEJUCO, ESTUCO, 0.35f), k, f), style = Stroke(celda * 0.62f))
-        drawPath(sombra, a.c(BEJUCO_OSC, k, f).copy(alpha = 0.55f), style = Stroke(celda * 0.4f))
-        // La franja teñida.
-        drawRect(a.c(ACHIOTE, k, f).copy(alpha = 0.75f), Offset(pie.x - ancho, boca + alto * 0.4f), Size(ancho * 2, alto * 0.13f))
-        drawRect(a.c(TINTA, 0.3f).copy(alpha = 0.4f), Offset(pie.x - ancho, boca + alto * 0.53f), Size(ancho * 2, 1f * u))
+        drawPath(claras, a.c(mezcla(BEJUCO, ESTUCO, 0.18f), k, f), style = Stroke(v * 0.86f))
+        drawPath(achiote, a.c(mezcla(BEJUCO, ACHIOTE, 0.7f), k, f), style = Stroke(v * 0.86f))
+        drawPath(anil, a.c(mezcla(BEJUCO, ANIL, 0.65f), k, f), style = Stroke(v * 0.86f))
+        drawPath(lomos, a.b(0.3f, k), style = Stroke(v * 0.2f))
+        drawPath(bajos, a.s(0.3f), style = Stroke(v * 0.14f))
+        drawPath(puntadas, a.c(mezcla(BEJUCO, BEJUCO_OSC, 0.55f), k, f), style = Stroke(v * 0.2f))
+        drawPath(dientes, a.c(mezcla(TINTA, BEJUCO_OSC, 0.4f), k, f), style = Stroke(v * 0.34f))
         // El volumen redondo.
-        cilindroMeso(Rect(pie.x - ancho * 0.5f, boca, pie.x + ancho * 0.5f, pie.y), a, k, 0.9f, m.der(pie.x, boca), f)
+        cilindroMeso(Rect(pie.x - ancho * 0.5f, boca, pie.x + ancho * 0.5f, pie.y), a, k, 1.1f, m.der(pie.x, boca), f)
         drawRect(a.s(0.25f), Offset(pie.x - ancho, pie.y - alto * 0.2f), Size(ancho * 2, alto * 0.2f))
     }
     drawPath(cuerpo, a.c(BEJUCO_OSC, k, f), style = Stroke(1f * u))
@@ -201,8 +279,9 @@ private fun DrawScope.canastoMeso(m: MesaMeso, pie: Offset) {
 
 /**
  * La pila de mantas de algodón dobladas: tres, una encima de otra y no del todo parejas (añil abajo, cruda en medio, roja de
- * achiote arriba), cada una con el doblez redondo de frente, sus franjas tejidas a lo largo, su luz arriba y su sombra debajo;
- * de la de en medio cuelgan los flecos de la orilla.
+ * achiote arriba). Cada una es un paño plano doblado: a la izquierda, el doblez redondo con el lomo de luz y el pliegue; a la
+ * derecha, el canto de las capas (las orillas, una sobre otra); sus franjas tejidas a lo largo; su luz arriba y su sombra en la
+ * de abajo. De la de arriba cae por delante una punta con sus flecos; de la de en medio cuelgan los flecos de la orilla.
  */
 internal fun DrawScope.mantasMeso(m: MesaMeso, r: Rect, enMuro: Boolean = true) {
     val u = density
@@ -213,35 +292,81 @@ internal fun DrawScope.mantasMeso(m: MesaMeso, r: Rect, enMuro: Boolean = true) 
     val silueta = Path().apply { addRect(Rect(r.left, r.top + alto * 0.1f, r.right, r.bottom)) }
     if (enMuro) clipRect(0f, 0f, w, m.apoyo - w * 0.012f) { sombraMuroMeso(m, silueta, r.center, 0.26f) }
     contactoMeso(Offset(r.center.x, r.bottom + w * 0.003f), r.width * 1.05f, w * 0.014f, a, 0.45f)
-    for (i in 0 until 3) {
-        val j = 2 - i
+    val der = m.der(r.center.x, r.center.y)
+    // De abajo (j = 0) hacia arriba: cada una echa su sombra en la de abajo, ya pintada.
+    for (j in 0 until 3) {
+        val i = 2 - j
         val dx = (azar(i, 831) - 0.5f) * w * 0.02f
         val c = Rect(r.left + dx + w * 0.004f * i, r.bottom - alto * (j + 1) - alto * 0.04f * j, r.right + dx - w * 0.004f * (2 - i), r.bottom - alto * j)
         val k = m.k(c.center); val f = m.f(c.center)
-        val capa = Path().apply { addRoundRect(androidx.compose.ui.geometry.RoundRect(c, CornerRadius(alto * 0.45f, alto * 0.5f))) }
+        val h = c.height
+        val dob = h * 0.5f
+        // El paño: el doblez redondo a la izquierda, el canto de las orillas a la derecha, arriba apenas combado.
+        val capa = Path().apply {
+            moveTo(c.left + dob, c.top)
+            quadraticTo(c.center.x, c.top - h * 0.08f, c.right - h * 0.1f, c.top + h * 0.02f)
+            lineTo(c.right, c.top + h * 0.14f)
+            lineTo(c.right + h * 0.03f, c.bottom - h * 0.08f)
+            lineTo(c.right - h * 0.06f, c.bottom)
+            lineTo(c.left + dob, c.bottom)
+            cubicTo(c.left - dob * 0.12f, c.bottom, c.left - dob * 0.12f, c.top, c.left + dob, c.top)
+            close()
+        }
+        // Su sombra en la de abajo (que ya está pintada).
+        if (j > 0) drawPath(corridoMeso(capa, w * 0.006f, h * 0.2f), a.s(0.3f))
         drawPath(capa, a.c(capas[j], k, f))
         clipPath(capa) {
-            // Las franjas tejidas a lo largo del doblez.
-            drawRect(a.c(franjas[j][0], k, f), Offset(c.left, c.top + alto * 0.36f), Size(c.width, alto * 0.12f))
-            drawRect(a.c(franjas[j][1], k, f), Offset(c.left, c.top + alto * 0.56f), Size(c.width, alto * 0.06f))
+            // Las franjas tejidas a lo largo.
+            drawRect(a.c(franjas[j][0], k, f), Offset(c.left, c.top + h * 0.36f), Size(c.width, h * 0.14f))
+            drawRect(a.c(franjas[j][1], k, f), Offset(c.left, c.top + h * 0.58f), Size(c.width, h * 0.07f))
             if (j == 1) {
-                // Una franja de rombos chicos, tejida (sin ningún signo): dientes que se alternan.
+                // Una franja de dientes chicos, tejida (sin ningún signo).
                 val dientes = Path()
                 var x = c.left; var n = 0
-                while (x < c.right && n < 60) { dientes.moveTo(x, c.top + alto * 0.24f); dientes.lineTo(x + alto * 0.08f, c.top + alto * 0.18f); dientes.lineTo(x + alto * 0.16f, c.top + alto * 0.24f); x += alto * 0.16f; n++ }
+                while (x < c.right && n < 60) { dientes.moveTo(x, c.top + h * 0.26f); dientes.lineTo(x + h * 0.08f, c.top + h * 0.17f); dientes.lineTo(x + h * 0.16f, c.top + h * 0.26f); x += h * 0.16f; n++ }
                 drawPath(dientes, a.c(CINABRIO, k, f), style = Stroke(0.9f * u))
             }
-            // La trama y el volumen del doblez: luz arriba, sombra abajo; el lado de la luz.
-            drawRect(a.b(0.25f, k), c.topLeft, Size(c.width, alto * 0.22f))
-            drawRect(a.s(0.28f), Offset(c.left, c.bottom - alto * 0.3f), Size(c.width, alto * 0.3f))
-            drawRect(a.s(0.18f), Offset(c.right - c.width * 0.18f, c.top), Size(c.width * 0.18f, c.height))
+            // El canto de la derecha: las orillas de las capas dobladas, una sobre otra.
+            val canto = Path()
+            for (q in 1..3) { val y = c.top + h * q / 4f; canto.moveTo(c.right - h * (0.7f - 0.08f * q), y); canto.lineTo(c.right + 2f * u, y + h * 0.03f) }
+            drawPath(canto, a.s(0.32f), style = Stroke(0.8f * u))
+            drawPath(corridoMeso(canto, 0f, -0.9f * u), a.b(0.25f, k), style = Stroke(0.5f * u))
+            // El doblez: el lomo de luz por fuera y el pliegue de sombra por dentro.
+            drawArc(a.b(0.4f, k), 110f, 140f, false, Offset(c.left + 1f * u, c.top + 1f * u), Size(dob * 1.3f, h - 2f * u), style = Stroke(1.4f * u))
+            drawArc(a.s(0.3f), 115f, 130f, false, Offset(c.left + dob * 0.45f, c.top + h * 0.2f), Size(dob * 0.9f, h * 0.6f), style = Stroke(1f * u))
+            // La luz de arriba, la sombra de abajo y el costado contrario a la luz.
+            drawRect(a.b(0.2f, k), c.topLeft, Size(c.width, h * 0.16f))
+            drawRect(a.s(0.24f), Offset(c.left, c.bottom - h * 0.22f), Size(c.width, h * 0.22f))
+            drawRect(a.s(0.14f), Offset(if (der) c.left else c.right - c.width * 0.22f, c.top), Size(c.width * 0.22f, h))
         }
-        drawPath(capa, a.s(0.3f), style = Stroke(0.7f * u))
+        drawPath(capa, a.s(0.32f), style = Stroke(0.7f * u))
         if (j == 1) {
             // Los flecos de la orilla, a la derecha, que cuelgan sobre la de abajo.
             val flecos = Path()
-            for (q in 0 until 7) { val y = c.top + alto * (0.2f + 0.1f * q); flecos.moveTo(c.right - 1f * u, y); flecos.lineTo(c.right + w * (0.006f + 0.004f * azar(q, 832)), y + alto * (0.5f + 0.3f * azar(q, 833))) }
+            for (q in 0 until 7) { val y = c.top + h * (0.2f + 0.1f * q); flecos.moveTo(c.right - 1f * u, y); flecos.lineTo(c.right + w * (0.006f + 0.004f * azar(q, 832)), y + h * (0.5f + 0.3f * azar(q, 833))) }
             drawPath(flecos, a.c(ALGODON, k, f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
+        }
+        if (j == 2) {
+            // La punta de la de arriba, que cae por delante de las otras con sus flecos.
+            val px = c.left + c.width * 0.66f
+            val baja = r.bottom - alto * 0.55f
+            val punta = poligonoMeso(px - c.width * 0.12f, c.top + h * 0.4f, px + c.width * 0.14f, c.top + h * 0.4f, px + c.width * 0.05f, baja, px - c.width * 0.06f, baja - h * 0.2f)
+            drawPath(corridoMeso(punta, 1.6f * u, 1.8f * u), a.s(0.32f))
+            drawPath(punta, a.c(capas[2], k, f))
+            clipPath(punta) {
+                drawRect(a.c(franjas[2][0], k, f), Offset(px - c.width * 0.2f, baja - h * 0.75f), Size(c.width * 0.4f, h * 0.14f))
+                drawRect(a.c(franjas[2][1], k, f), Offset(px - c.width * 0.2f, baja - h * 0.5f), Size(c.width * 0.4f, h * 0.07f))
+                drawRect(a.s(0.2f), Offset(px + c.width * 0.02f, c.top), Size(c.width * 0.2f, baja - c.top))
+                drawRect(a.s(0.3f), Offset(px - c.width * 0.2f, c.top + h * 0.4f), Size(c.width * 0.4f, h * 0.25f))
+            }
+            drawPath(punta, a.s(0.3f), style = Stroke(0.7f * u))
+            val flecos = Path()
+            for (q in 0 until 6) {
+                val t = q / 5f
+                val p0 = Offset(px - c.width * 0.06f + c.width * 0.11f * t, baja - h * 0.2f * (1f - t))
+                flecos.moveTo(p0.x, p0.y); flecos.lineTo(p0.x + w * 0.002f * (azar(q, 834) - 0.5f), p0.y + h * (0.32f + 0.18f * azar(q, 835)))
+            }
+            drawPath(flecos, a.c(mezcla(capas[2], ALGODON, 0.3f), k, f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
         }
     }
 }
@@ -454,7 +579,7 @@ private fun DrawScope.madejaMeso(m: MesaMeso, gancho: Offset, col: Color, largo:
     val n = 6
     val paso = largo / n
     // La silueta, para su sombra en el testero.
-    val silueta = Path().apply { addRoundRect(RoundRect(top.x - g * 0.5f, top.y - g * 0.2f, top.x + g * 0.5f, top.y + largo + g * 0.5f, g * 0.5f, g * 0.5f)) }
+    val silueta = Path().apply { addRoundRect(RoundRect(top.x - g * 0.36f, top.y, top.x + g * 0.36f, top.y + largo + g * 0.4f, g * 0.36f, g * 0.36f)) }
     sombraMuroMeso(m, silueta, Offset(top.x, top.y + largo * 0.5f), 0.24f)
     // Las dos puntas que pasan por encima de la viga.
     drawArc(a.c(mezcla(col, TINTA, 0.15f), k, f), 180f, 180f, false, Offset(top.x - g * 0.42f, gancho.y - w * 0.026f), Size(g * 0.84f, w * 0.05f), style = Stroke(g * 0.32f))

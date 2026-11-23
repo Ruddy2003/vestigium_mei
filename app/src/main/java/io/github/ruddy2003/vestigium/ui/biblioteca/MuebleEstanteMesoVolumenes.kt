@@ -69,12 +69,16 @@ private fun mesCortoMeso(v: Volumen): String {
 private fun DrawScope.sombraVolumenMeso(forma: Path, l: LuzVolumenMeso) {
     val u = density
     val a = l.a
-    if (!a.oscuro) translate(6f * u, 3f * u) { drawPath(forma, a.s(0.22f * (1f + 0.6f * l.f))) }
-    else {
-        if (l.k > 0.12f) translate(if (l.der) -5f * u else 5f * u, -1.5f * u) { drawPath(forma, MesoTinta.NOCHE_SOMBRA.copy(alpha = (0.9f * l.k).coerceAtMost(0.45f))) }
-        else if (l.f > 0.2f) translate(5f * u, 3f * u) { drawPath(forma, MesoTinta.NOCHE_SOMBRA.copy(alpha = 0.32f * l.f)) }
-    }
     val w = size.width; val h = size.height
+    // La sombra se ve solo por el lado contrario a la luz (lo demás lo tapa el volumen): se pinta solo esa mitad.
+    val derecha = Rect(w * 0.5f, -4f * u, w + 10f * u, h + 6f * u)
+    val izquierda = Rect(-10f * u, -4f * u, w * 0.5f, h + 6f * u)
+    if (!a.oscuro) clipRect(derecha.left, derecha.top, derecha.right, derecha.bottom) { translate(6f * u, 3f * u) { drawPath(forma, a.s(0.22f * (1f + 0.6f * l.f))) } }
+    else {
+        val lado = if (l.der) izquierda else derecha
+        if (l.k > 0.12f) clipRect(lado.left, lado.top, lado.right, lado.bottom) { translate(if (l.der) -5f * u else 5f * u, -1.5f * u) { drawPath(forma, MesoTinta.NOCHE_SOMBRA.copy(alpha = (0.9f * l.k).coerceAtMost(0.45f))) } }
+        else if (l.f > 0.2f) clipRect(derecha.left, derecha.top, derecha.right, derecha.bottom) { translate(5f * u, 3f * u) { drawPath(forma, MesoTinta.NOCHE_SOMBRA.copy(alpha = 0.32f * l.f)) } }
+    }
     drawOval(a.s(0.45f), Offset(-1f * u, h - 2.6f * u), Size(w + 5f * u, 4.6f * u))
 }
 
@@ -96,7 +100,7 @@ private fun DrawScope.cartelaMeso(r: Rect, v: Volumen, medidor: TextMeasurer, l:
     val a = l.a
     val forma = if (irregular) contornoMeso(r.inflate(0.4f * u), v.semilla and 0xffff, 0.04f) else Path().apply { addRoundRect(RoundRect(r, CornerRadius(2f * u))) }
     drawPath(corridoMeso(forma, 1.2f * u, 1.4f * u), a.s(0.4f))
-    drawPath(forma, a.etiqueta(l.k, base))
+    drawPath(forma, a.etiqueta(l.k, base, l.f))
     clipPath(forma) {
         if (irregular) {
             val fibras = Path()
@@ -125,93 +129,110 @@ private fun DrawScope.lunaConchaMeso(c: Offset, r: Float, l: LuzVolumenMeso, fon
     drawArc(a.b(0.6f, l.k), 120f, 120f, false, Offset(c.x - r * 0.8f, c.y - r * 0.8f), Size(r * 1.6f, r * 1.6f), style = Stroke(0.6f * u))
 }
 
-// ---------------------------------------------------------------- el códice cerrado
+// ---------------------------------------------------------------- el códice plegado
 
 /**
- * El códice cerrado, de pie: las tapas de madera estucadas y pintadas del color del ánimo, con su filete pintado, una franja de
- * dientes abajo y las esquinas gastadas donde asoma el chicozapote; en el canto, los pliegues del biombo (más cuanto más
- * escribiste) entre las dos tapas; el cordón de henequén que lo ciñe con su cuenta de jade (en los Sueños, la media luna de
- * concha); la cartela de estuco con el día y el mes.
+ * El códice plegado en biombo, de pie y visto por el canto de los pliegues: a los lados, las dos tapas de madera estucadas y
+ * pintadas del color del ánimo (la de delante a la luz, la de atrás en sombra), y entre ellas el fuelle de las hojas de amate,
+ * cara de luz y cara de sombra, con el filete rojo de cada página arriba y abajo y algún pliegue salido (más pliegues cuanto
+ * más escribiste); una faja ancha del color del ánimo que lo ciñe, con su nudo y su cuenta de jade (en los Sueños, la media
+ * luna de concha); arriba, la etiqueta de estuco con el día y el mes, atada con un cordel.
  */
 private fun DrawScope.codiceMeso(v: Volumen, medidor: TextMeasurer, l: LuzVolumenMeso) {
     val u = density
     val a = l.a
     val w = size.width; val h = size.height
-    val canto = minOf(maxOf(w * 0.17f, 4.5f * u), 7.5f * u)
-    val tapa = Rect(0f, 0f, w - canto, h)
-    val silueta = Path().apply { addRoundRect(RoundRect(Rect(0f, 0f, w, h), CornerRadius(1.6f * u))) }
+    val silueta = Path().apply { addRoundRect(RoundRect(Rect(0f, 0f, w, h), CornerRadius(1.4f * u))) }
     sombraVolumenMeso(silueta, l)
-    // El canto: la tapa de atrás (una raya), las hojas plegadas en zigzag y el borde de la tapa de delante.
-    val hojas = Rect(tapa.right, h * 0.012f, w - 1.2f * u, h * 0.988f)
-    drawRect(a.c(ZAPOTE_OSC, l.k, l.f), Offset(w - 1.6f * u, 0f), Size(1.6f * u, h))
-    drawRect(a.c(mezcla(AMATE, ESTUCO, 0.5f), l.k, l.f), hojas.topLeft, hojas.size)
-    val pliegues = 4 + (v.lleno * 7f).toInt()
-    val zig = Path()
-    for (j in 0 until pliegues) {
-        val x = hojas.left + hojas.width * (j + 0.5f) / pliegues
-        zig.moveTo(x, hojas.top); zig.lineTo(x, hojas.bottom)
-    }
-    drawPath(zig, a.s(0.32f), style = Stroke(0.6f * u))
-    drawRect(a.s(0.18f), Offset(hojas.left, hojas.top), Size(hojas.width * 0.4f, hojas.height))
-    drawRect(a.c(CINABRIO, l.k, l.f).copy(alpha = 0.5f), Offset(hojas.left, hojas.top), Size(hojas.width, 1.2f * u))
-    drawRect(a.c(CINABRIO, l.k, l.f).copy(alpha = 0.5f), Offset(hojas.left, hojas.bottom - 1.2f * u), Size(hojas.width, 1.2f * u))
-    // La tapa de delante, con su grueso de madera a la derecha.
-    val forma = Path().apply { addRoundRect(RoundRect(tapa, CornerRadius(1.6f * u))) }
     val pintura = cuerpoMeso(l, ESTUCO)
-    drawPath(forma, pintura)
-    clipPath(forma) {
-        // El grano del estuco pintado y las pasadas del pincel.
-        val pasadas = Path()
-        for (j in 0 until 6) { val y = h * (0.1f + 0.15f * j + 0.04f * azar(v.semilla, j)); pasadas.moveTo(0f, y); pasadas.quadraticTo(tapa.width * 0.5f, y + (azar(v.semilla, j + 7) - 0.5f) * 4f * u, tapa.width, y + 1f * u) }
-        drawPath(pasadas, a.s(0.08f), style = Stroke(2.2f * u))
-        // El filete pintado a todo alrededor y la franja de dientes de abajo.
-        val tinta = if (luminanciaMeso(pintura) > 0.35f) a.c(TINTA, l.k, l.f) else a.c(ESTUCO, l.k, l.f)
-        drawRect(tinta.copy(alpha = 0.75f), Offset(2.4f * u, 2.4f * u), Size(tapa.width - 4.8f * u, h - 4.8f * u), style = Stroke(0.8f * u))
-        val fy = h * 0.87f
-        drawLine(tinta.copy(alpha = 0.75f), Offset(2.4f * u, fy), Offset(tapa.width - 2.4f * u, fy), 0.8f * u)
-        val dientes = Path()
-        var x = 3.6f * u; var n = 0
-        val paso = maxOf(3.4f * u, (tapa.width - 7.2f * u) / 6f)
-        while (x + paso <= tapa.width - 3f * u && n < 12) { dientes.moveTo(x, fy + 4.6f * u); dientes.lineTo(x + paso * 0.5f, fy + 1.2f * u); dientes.lineTo(x + paso, fy + 4.6f * u); dientes.close(); x += paso; n++ }
-        drawPath(dientes, a.c(CINABRIO, l.k, l.f).copy(alpha = if (l.tono != null && luminanciaMeso(pintura) < 0.2f) 0.6f else 0.85f))
-        // El volumen de la tabla: el plano de luz de la puerta, la sombra del otro lado.
-        drawRect(a.b(0.16f, l.k), Offset(if (l.der) tapa.width * 0.75f else 0f, 0f), Size(tapa.width * 0.25f, h))
-        drawRect(a.s(0.18f), Offset(if (l.der) 0f else tapa.width * 0.78f, 0f), Size(tapa.width * 0.22f, h))
-        puertaEnVolumenMeso(tapa, l)
-        // Las esquinas gastadas: asoma el estuco blanco y, debajo, la madera.
-        for ((cx, cy) in listOf(0f to 0f, tapa.width to h, 0f to h)) {
-            val p = poligonoMeso(cx, cy, cx + (if (cx > 0f) -4f else 4f) * u, cy, cx, cy + (if (cy > 0f) -5f else 5f) * u)
-            drawPath(p, a.c(ESTUCO, l.k, l.f))
-            drawPath(poligonoMeso(cx, cy, cx + (if (cx > 0f) -2f else 2f) * u, cy, cx, cy + (if (cy > 0f) -2.6f else 2.6f) * u), a.c(ZAPOTE, l.k, l.f))
-        }
-        // El grueso de la tabla, a la derecha, en madera.
-        drawRect(a.c(mezcla(ZAPOTE, ESTUCO, 0.2f), l.k, l.f), Offset(tapa.width - 1.4f * u, 0f), Size(1.4f * u, h))
+    val tapaI = minOf(maxOf(w * 0.17f, 3.6f * u), 6.4f * u)
+    val tapaD = tapaI * 0.7f
+    val fuelle = Rect(tapaI, h * 0.012f, w - tapaD, h * 0.988f)
+    // El fuelle de amate: caras alternas de luz y de sombra, con su filete rojo arriba y abajo.
+    val caras = 2 * (3 + (v.lleno * 5f).toInt())
+    val paso = fuelle.width / caras
+    val luz = Path(); val sombra = Path(); val filetes = Path(); val pliegues = Path()
+    val salido = (azar(v.semilla, 31) * caras).toInt()
+    for (i in 0 until caras) {
+        val x0 = fuelle.left + paso * i
+        val alza = (if (i % 2 == 0) 0f else 1.2f * u) + (if (i == salido) -2.6f * u else 0f)
+        val cara = Rect(x0, fuelle.top + alza, x0 + paso + 0.4f, fuelle.bottom - (if (i % 2 == 0) 0f else 0.8f * u))
+        (if (i % 2 == 0) luz else sombra).addRect(cara)
+        filetes.moveTo(cara.left, cara.top + 2.2f * u); filetes.lineTo(cara.right, cara.top + 2.2f * u)
+        filetes.moveTo(cara.left, cara.bottom - 2.2f * u); filetes.lineTo(cara.right, cara.bottom - 2.2f * u)
+        pliegues.moveTo(x0, cara.top); pliegues.lineTo(x0, cara.bottom)
     }
-    drawRect(a.b(0.55f, l.k), Offset(1.6f * u, 0f), Size(tapa.width - 3.2f * u, 1f * u))
-    // La cartela con el día.
-    val cw = tapa.width - 4f * u
-    val cartela = Rect(2f * u, h * 0.065f, 2f * u + cw, h * 0.065f + minOf(h * 0.3f, 27f * u))
-    cartelaMeso(cartela, v, medidor, l, mezcla(ESTUCO, AMATE, 0.35f), filete = true, irregular = false)
-    // El cordón que ciñe el códice: dos vueltas, que se hunden en el canto, y el nudo con su cuenta.
-    val yc = h * 0.63f
-    val cordon = Path().apply { moveTo(-1f, yc); lineTo(w + 1f, yc + 0.4f * u); moveTo(-1f, yc + 2.6f * u); lineTo(w + 1f, yc + 3f * u) }
-    drawPath(corridoMeso(cordon, 0f, 1.2f * u), a.s(0.35f), style = Stroke(1.6f * u))
-    drawPath(cordon, a.c(HENEQUEN, l.k, l.f), style = Stroke(1.4f * u))
-    drawPath(corridoMeso(cordon, 0f, -0.5f * u), a.b(0.4f, l.k), style = Stroke(0.4f * u))
-    val nudo = Offset(tapa.width * 0.32f, yc + 1.3f * u)
-    drawCircle(a.c(HENEQUEN_OSC, l.k, l.f), 2.2f * u, nudo)
-    drawCircle(a.b(0.45f, l.k), 0.8f * u, nudo - Offset(0.7f * u, 0.7f * u))
-    val cuelga = Offset(nudo.x + 1.2f * u, nudo.y + minOf(h * 0.1f, 9f * u))
+    val amate = mezcla(AMATE, ESTUCO, 0.55f)
+    drawPath(luz, a.c(amate, l.k, l.f))
+    drawPath(sombra, a.c(mezcla(amate, AMATE_OSC, 0.45f), l.k, l.f))
+    drawPath(filetes, a.c(CINABRIO, l.k, l.f).copy(alpha = 0.75f), style = Stroke(0.7f * u))
+    drawPath(pliegues, a.s(0.35f), style = Stroke(0.6f * u))
+    clipRect(fuelle.left, fuelle.top - 4f * u, fuelle.right, fuelle.bottom) {
+        drawRect(a.s(0.14f), Offset(fuelle.left, fuelle.top), Size(fuelle.width, fuelle.height * 0.06f))
+        if (a.oscuro && l.k > 0.06f) drawPath(luz, a.b(0.25f, l.k))
+    }
+    // Las dos tapas, de canto y un poco vueltas: la de delante a la luz, la de atrás en sombra; su grueso de madera.
+    val tI = Path().apply { addRoundRect(RoundRect(Rect(0f, 0f, tapaI, h), CornerRadius(1.4f * u))) }
+    val tD = Path().apply { addRoundRect(RoundRect(Rect(w - tapaD, h * 0.006f, w, h), CornerRadius(1.2f * u))) }
+    drawPath(tI, pintura)
+    drawPath(tD, mezcla(pintura, Color.Black, 0.22f))
+    clipPath(tI) {
+        drawRect(a.b(if (l.der) 0.06f else 0.24f, l.k), Offset(0f, 0f), Size(tapaI * 0.45f, h))
+        drawRect(a.s(if (l.der) 0.2f else 0.1f), Offset(tapaI * 0.7f, 0f), Size(tapaI * 0.3f, h))
+        drawRect(a.c(mezcla(ZAPOTE, ESTUCO, 0.2f), l.k, l.f), Offset(tapaI - 1.2f * u, 0f), Size(1.2f * u, h))
+        puertaEnVolumenMeso(Rect(0f, 0f, tapaI, h), l)
+        // El gasto del estuco en las esquinas.
+        drawPath(poligonoMeso(0f, 0f, 3f * u, 0f, 0f, 4f * u), a.c(ESTUCO, l.k, l.f))
+        drawPath(poligonoMeso(0f, h, 3f * u, h, 0f, h - 4f * u), a.c(ZAPOTE, l.k, l.f))
+    }
+    clipPath(tD) { drawRect(a.s(0.2f), Offset(w - tapaD, 0f), Size(tapaD * 0.5f, h)) }
+    drawRect(a.b(0.5f, l.k), Offset(1.4f * u, 0f), Size(tapaI - 2f * u, 0.9f * u))
+    // La faja ancha del color del ánimo que lo ciñe, con su doblez y su nudo; de él cuelga la cuenta.
+    val fy = h * 0.56f; val fa = minOf(h * 0.12f, 11f * u)
+    val faja = Path().apply { moveTo(-0.5f, fy); quadraticTo(w * 0.5f, fy + fa * 0.18f, w + 0.5f, fy); lineTo(w + 0.5f, fy + fa); quadraticTo(w * 0.5f, fy + fa * 1.18f, -0.5f, fy + fa); close() }
+    drawPath(corridoMeso(faja, 0f, 1.6f * u), a.s(0.35f))
+    val tela = mezcla(pintura, Color.Black, 0.12f)
+    drawPath(faja, tela)
+    clipPath(faja) {
+        drawRect(a.b(0.3f, l.k), Offset(0f, fy), Size(w, fa * 0.26f))
+        drawRect(a.s(0.25f), Offset(0f, fy + fa * 0.7f), Size(w, fa * 0.4f))
+        drawLine(a.c(if (luminanciaMeso(tela) > 0.3f) TINTA else ESTUCO, l.k, l.f).copy(alpha = 0.5f), Offset(0f, fy + fa * 0.5f), Offset(w, fy + fa * 0.55f), 0.6f * u)
+    }
+    val nudo = Offset(w * 0.36f, fy + fa * 0.55f)
+    drawOval(mezcla(tela, Color.Black, 0.18f), Offset(nudo.x - 2.6f * u, nudo.y - 2.2f * u), Size(5.2f * u, 4.4f * u))
+    drawArc(a.b(0.45f, l.k), 190f, 120f, false, Offset(nudo.x - 2.6f * u, nudo.y - 2.2f * u), Size(5.2f * u, 4.4f * u), style = Stroke(0.7f * u))
+    val cuelga = Offset(nudo.x + 1.2f * u, nudo.y + minOf(h * 0.12f, 11f * u))
     drawLine(a.c(HENEQUEN, l.k, l.f), nudo, cuelga, 0.9f * u)
-    if (v.noche) lunaConchaMeso(cuelga + Offset(0f, 2.6f * u), minOf(w * 0.15f, 4f * u), l, pintura)
+    if (v.noche) lunaConchaMeso(cuelga + Offset(0f, 2.6f * u), minOf(w * 0.15f, 4f * u), l, a.c(AMATE_OSC, l.k))
     else {
         val rc = minOf(w * 0.11f, 2.8f * u)
         drawCircle(a.s(0.35f), rc, cuelga + Offset(0.9f * u, 1.6f * u))
         drawCircle(a.c(JADE, l.k, l.f), rc, cuelga + Offset(0f, rc * 0.7f))
         drawCircle(a.c(JADE_LUZ, l.k, l.f).copy(alpha = 0.7f), rc * 0.36f, cuelga + Offset(-rc * 0.3f, rc * 0.4f))
     }
+    // La etiqueta con el día, atada arriba con un cordel que da la vuelta.
+    val et = Rect(1.4f * u, h * 0.065f, w - 1.4f * u, h * 0.065f + minOf(h * 0.3f, 27f * u))
+    drawLine(a.c(HENEQUEN, l.k, l.f), Offset(0f, et.top + 2f * u), Offset(w, et.top + 1.4f * u), 0.9f * u)
+    cartelaMeso(et, v, medidor, l, mezcla(ESTUCO, AMATE, 0.35f), filete = true, irregular = false)
+    // La sombra de la vecina de la luz y el filo de la lumbre.
+    sombraVecinaMeso(silueta, l)
     filoMeso(Rect(0f, 0f, w, h), a, l.k, l.der)
     if (a.oscuro && l.f > 0.1f) drawRect(a.helado(0.5f, l.f), Offset(if (l.der) w - 1.2f * u else 0f, 0f), Size(1.2f * u, h))
+}
+
+/**
+ * La sombra que echa la vecina del lado de la luz (o el poste) sobre el volumen: una franja honda en su costado de ese lado,
+ * dentro de su [silueta]. De día la luz viene de la izquierda; de noche, de la lumbre.
+ */
+private fun DrawScope.sombraVecinaMeso(silueta: Path, l: LuzVolumenMeso) {
+    val w = size.width; val h = size.height
+    if (l.a.oscuro && l.k < 0.1f) return
+    val fuerza = if (l.a.oscuro) 0.3f * l.k.coerceAtMost(1f) else 0.22f
+    clipPath(silueta) {
+        val x = if (l.der) w * 0.84f else 0f
+        drawRect(l.a.s(fuerza), Offset(x, 0f), Size(w * 0.16f, h))
+        drawRect(l.a.s(fuerza * 0.6f), Offset(if (l.der) w * 0.74f else w * 0.16f, 0f), Size(w * 0.1f, h))
+    }
 }
 
 /** La luminancia aproximada de un color (para elegir la tinta del filete). */
@@ -291,7 +312,7 @@ private fun DrawScope.bolsaMeso(v: Volumen, medidor: TextMeasurer, l: LuzVolumen
         drawPath(arrugas, a.s(0.25f), style = Stroke(1.3f * u, cap = StrokeCap.Round))
         drawPath(corridoMeso(arrugas, -1f * u), a.b(0.18f, l.k), style = Stroke(0.7f * u, cap = StrokeCap.Round))
         // La piel: unas manchas del curtido.
-        for (j in 0 until 5) drawOval(a.s(0.06f), Offset(w * azar(v.semilla, j + 30), h * (0.3f + 0.6f * azar(v.semilla, j + 31))), Size(w * 0.3f, h * 0.06f))
+        for (j in 0 until 3) drawOval(a.s(0.07f), Offset(w * azar(v.semilla, j + 30), h * (0.3f + 0.6f * azar(v.semilla, j + 31))), Size(w * 0.3f, h * 0.06f))
         // El volumen: la panza redonda con su luz, su brillo y su sombra.
         cilindroMeso(Rect(0f, 0f, w, h), a, l.k, 1.25f, l.der, l.f)
         drawOval(a.b(0.28f, l.k), Offset(if (l.der) w * 0.6f else w * 0.14f, h * 0.48f), Size(w * 0.18f, h * 0.22f))
@@ -332,6 +353,7 @@ private fun DrawScope.bolsaMeso(v: Volumen, medidor: TextMeasurer, l: LuzVolumen
         drawLine(a.c(HENEQUEN, l.k, l.f), nudo, c, 0.7f * u)
         lunaConchaMeso(c, minOf(w * 0.15f, 4f * u), l, piel)
     }
+    sombraVecinaMeso(cuerpo, l)
     filoMeso(Rect(w * 0.1f, cuello, w * 0.9f, h), a, l.k, l.der)
     if (a.oscuro && l.f > 0.1f) drawRect(a.helado(0.45f, l.f), Offset(if (l.der) w * 0.88f else w * 0.06f, h * 0.3f), Size(1.2f * u, h * 0.55f))
 }
@@ -339,105 +361,128 @@ private fun DrawScope.bolsaMeso(v: Volumen, medidor: TextMeasurer, l: LuzVolumen
 // ---------------------------------------------------------------- el rollo de manta
 
 /**
- * El rollo de manta: un lienzo de algodón tejido y teñido del color del ánimo, enrollado y de pie: arriba, la espiral de sus
- * vueltas (más cuanto más escribiste) con la tela cruda de dentro; el cuerpo con sus franjas tejidas y una franja cruda ancha
- * donde va escrito el día, la orilla de fuera con sus flecos, dos amarres que siguen el cilindro (de uno cuelga, en los Sueños,
- * la media luna de concha) y su luz y su sombra de cilindro.
+ * El rollo de manta: un lienzo de algodón tejido y teñido del color del ánimo, enrollado y de pie. Arriba, la boca con la
+ * espiral de sus vueltas (más cuanto más escribiste) y la tela cruda de dentro; la orilla de fuera, que se suelta y deja una
+ * punta doblada con sus hilos; el cuerpo blando, que se hace cintura donde aprietan los dos amarres y se hincha entre ellos,
+ * con sus pliegues, sus franjas tejidas y la franja cruda donde va escrito el día; los flecos de abajo; la luz de un lado y la
+ * sombra del otro.
  */
 private fun DrawScope.rolloMeso(v: Volumen, medidor: TextMeasurer, l: LuzVolumenMeso) {
     val u = density
     val a = l.a
     val w = size.width; val h = size.height
-    val e = minOf(w * 0.36f, 9f * u)
-    val silueta = Path().apply { addRoundRect(RoundRect(Rect(0f, 0f, w, h), CornerRadius(w * 0.5f, e * 0.5f))) }
-    sombraVolumenMeso(silueta, l)
+    val e = minOf(w * 0.42f, 11f * u)
     val tela = cuerpoMeso(l, ALGODON)
     val crudo = mezcla(ALGODON, AMATE, 0.35f)
     val cruda = a.c(crudo, l.k, l.f)
-    val cuerpo = Path().apply {
-        moveTo(0f, e / 2); lineTo(0f, h - e / 2)
-        quadraticTo(w / 2, h + e * 0.5f, w, h - e / 2)
-        lineTo(w, e / 2); close()
+    // Las cinturas de los amarres y la panza entre ellas.
+    val y1 = h * 0.6f; val y2 = h * 0.8f
+    val cin = w * 0.055f
+    fun borde(izq: Boolean): List<Offset> {
+        val s = if (izq) 1f else -1f
+        val x = if (izq) 0f else w
+        return listOf(Offset(x, e / 2), Offset(x + s * w * 0.01f, h * 0.35f), Offset(x + s * cin, y1), Offset(x - s * w * 0.008f, (y1 + y2) / 2),
+            Offset(x + s * cin, y2), Offset(x + s * w * 0.004f, h - e * 0.5f))
     }
+    val izq = borde(true); val der = borde(false)
+    val cuerpo = Path().apply {
+        moveTo(izq[0].x, izq[0].y)
+        for (i in 1 until izq.size) { val p = izq[i - 1]; val q = izq[i]; quadraticTo(p.x, (p.y + q.y) / 2, q.x, q.y) }
+        quadraticTo(w / 2, h + e * 0.5f, der.last().x, der.last().y)
+        for (i in der.size - 2 downTo 0) { val p = der[i + 1]; val q = der[i]; quadraticTo(p.x, (p.y + q.y) / 2, q.x, q.y) }
+        close()
+    }
+    sombraVolumenMeso(cuerpo, l)
     drawPath(cuerpo, tela)
+    val ox = w * (0.66f + 0.1f * azar(v.semilla, 21))
     clipPath(cuerpo) {
-        // Las franjas tejidas: dos finas oscuras arriba, la cruda ancha del día, una de dientes, y otra abajo.
+        // Las franjas tejidas: dos finas oscuras arriba, la cruda ancha del día, una de dientes y otra abajo.
         val oscura = a.c(mezcla(TINTA, l.tono ?: ALGODON, 0.25f), l.k, l.f)
         val y0 = h * 0.14f
+        val alto = minOf(h * 0.3f, 27f * u)
         drawRect(oscura.copy(alpha = 0.7f), Offset(0f, y0 - 3.4f * u), Size(w, 1.2f * u))
-        drawRect(cruda, Offset(0f, y0), Size(w, minOf(h * 0.3f, 27f * u)))
-        val y1 = y0 + minOf(h * 0.3f, 27f * u)
-        drawRect(oscura.copy(alpha = 0.7f), Offset(0f, y1), Size(w, 1.2f * u))
+        drawRect(if (a.oscuro) a.etiqueta(l.k, crudo, l.f) else cruda, Offset(0f, y0), Size(w, alto))
+        val y3 = y0 + alto
+        drawRect(oscura.copy(alpha = 0.7f), Offset(0f, y3), Size(w, 1.2f * u))
         val dientes = Path()
         var x = 0f; var n = 0
-        val paso = 4f * u
-        while (x < w && n < 20) { dientes.moveTo(x, y1 + 5.6f * u); dientes.lineTo(x + paso * 0.5f, y1 + 2.6f * u); dientes.lineTo(x + paso, y1 + 5.6f * u); x += paso; n++ }
+        val pasoD = 4f * u
+        while (x < w && n < 20) { dientes.moveTo(x, y3 + 5.6f * u); dientes.lineTo(x + pasoD * 0.5f, y3 + 2.6f * u); dientes.lineTo(x + pasoD, y3 + 5.6f * u); x += pasoD; n++ }
         drawPath(dientes, a.c(if (l.tono == null) CINABRIO else ALGODON, l.k, l.f).copy(alpha = 0.85f), style = Stroke(0.9f * u))
-        drawRect(cruda.copy(alpha = 0.8f), Offset(0f, h * 0.86f), Size(w, 1.6f * u))
-        drawRect(oscura.copy(alpha = 0.6f), Offset(0f, h * 0.86f + 2.6f * u), Size(w, 1f * u))
-        // La trama del tejido, tenue.
-        val trama = Path()
-        var y = e / 2; var m = 0
-        while (y < h && m < 70) { trama.moveTo(0f, y); trama.quadraticTo(w / 2, y + e * 0.2f, w, y); y += 2.2f * u; m++ }
-        drawPath(trama, a.s(0.07f), style = Stroke(0.5f * u))
-        // La orilla de fuera: la vuelta de la tela, con su borde alzado y su sombra.
-        val ox = w * (0.66f + 0.1f * azar(v.semilla, 21))
-        drawLine(a.s(0.35f), Offset(ox + 1f * u, e / 2), Offset(ox + 1f * u, h), 1.4f * u)
-        drawLine(a.b(0.35f, l.k), Offset(ox - 0.4f * u, e / 2), Offset(ox - 0.4f * u, h), 0.7f * u)
-        // El cilindro.
-        cilindroMeso(Rect(0f, 0f, w, h), a, l.k, 1.3f, l.der, l.f)
+        drawRect(cruda.copy(alpha = 0.8f), Offset(0f, h * 0.88f), Size(w, 1.6f * u))
+        drawRect(oscura.copy(alpha = 0.6f), Offset(0f, h * 0.88f + 2.6f * u), Size(w, 1f * u))
+        // Los pliegues blandos que bajan en diagonal.
+        val pl = Path().apply {
+            moveTo(w * 0.22f, y3 + 6f * u); quadraticTo(w * 0.3f, (y3 + y1) / 2, w * 0.18f, y1 - 1f * u)
+            moveTo(w * 0.5f, y1 + 2f * u); quadraticTo(w * 0.58f, (y1 + y2) / 2, w * 0.46f, y2 - 1f * u)
+        }
+        drawPath(pl, a.s(0.25f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+        drawPath(corridoMeso(pl, -1f * u), a.b(0.2f, l.k), style = Stroke(0.7f * u, cap = StrokeCap.Round))
+        // La orilla de fuera, que se suelta: su borde alzado y su sombra.
+        drawLine(a.s(0.38f), Offset(ox + 1.2f * u, e / 2), Offset(ox + 1.6f * u, h), 1.6f * u)
+        drawLine(a.b(0.35f, l.k), Offset(ox - 0.4f * u, e / 2), Offset(ox, h), 0.7f * u)
+        // El cilindro: la luz de un lado, la sombra del otro, y la panza entre los amarres un poco más clara.
+        cilindroMeso(Rect(0f, 0f, w, h), a, l.k, 1.35f, l.der, l.f)
+        drawOval(a.b(0.12f, l.k), Offset(w * 0.1f, y1 + 2f * u), Size(w * 0.5f, y2 - y1 - 4f * u))
         puertaEnVolumenMeso(Rect(0f, 0f, w, h), l)
     }
-    // Los flecos de la orilla de fuera, que salen por el borde de abajo.
-    val ox = w * (0.66f + 0.1f * azar(v.semilla, 21))
+    drawPath(cuerpo, a.s(0.3f), style = Stroke(0.7f * u))
+    // Los flecos de abajo, que salen bajo la orilla.
     val flecos = Path()
-    for (j in 0 until 4) { val x = ox + j * 1.4f * u; flecos.moveTo(x, h - e * 0.2f); flecos.lineTo(x + 0.6f * u, h + 1.4f * u) }
+    for (j in 0 until 5) { val x = ox - 2f * u + j * 1.4f * u; flecos.moveTo(x, h - e * 0.25f); flecos.lineTo(x + 0.5f * u * (j - 2), h + 1.6f * u) }
     drawPath(flecos, tela, style = Stroke(0.9f * u, cap = StrokeCap.Round))
     // Arriba: la boca del rollo con la espiral de sus vueltas.
     drawOval(a.c(mezcla(ALGODON, TINTA, 0.3f), l.k, l.f), Offset.Zero, Size(w, e))
     val vueltas = 2.5f + 3.5f * v.lleno
     val espiral = Path()
-    val pasos = 64
+    val pasos = 54
     for (j in 0..pasos) {
         val t = j / pasos.toFloat()
         val ang = t * vueltas * 6.2832f
-        val rr = 0.12f + 0.86f * t
+        val rr = 0.1f + 0.88f * t
         val px = w / 2 + rr * (w / 2 - 0.6f * u) * kotlin.math.cos(ang)
         val py = e / 2 + rr * (e / 2 - 0.4f * u) * kotlin.math.sin(ang)
         if (j == 0) espiral.moveTo(px, py) else espiral.lineTo(px, py)
     }
-    val grueso = (e / 2) * 0.86f / vueltas * 0.6f
-    drawPath(espiral, tela, style = Stroke(grueso.coerceAtLeast(0.6f * u), cap = StrokeCap.Round))
-    drawPath(espiral, mezcla(cruda, tela, 0.3f), style = Stroke((grueso * 0.4f).coerceAtLeast(0.4f * u)))
+    val grueso = (e / 2) * 0.88f / vueltas * 0.62f
+    drawPath(espiral, tela, style = Stroke(grueso.coerceAtLeast(0.7f * u), cap = StrokeCap.Round))
+    drawPath(espiral, mezcla(cruda, tela, 0.25f), style = Stroke((grueso * 0.42f).coerceAtLeast(0.45f * u)))
     drawCircle(a.c(TINTA, l.k).copy(alpha = 0.6f), (e * 0.07f).coerceAtLeast(0.6f * u), Offset(w / 2, e / 2))
     drawOval(a.s(0.35f), Offset.Zero, Size(w, e), style = Stroke(0.8f * u))
     drawArc(a.b(0.55f, l.k), 150f, 120f, false, Offset(w * 0.02f, e * 0.02f), Size(w * 0.96f, e * 0.96f), style = Stroke(0.9f * u))
+    // La esquina de la orilla, que se suelta y se dobla hacia fuera bajo la boca: el revés crudo, con sus hilos en la punta.
+    val py0 = e * 0.85f; val py1 = py0 + minOf(h * 0.14f, 12f * u)
+    val punta = poligonoMeso(ox, py0, w + w * 0.04f, py0 + (py1 - py0) * 0.25f, ox + w * 0.04f, py1)
+    drawPath(corridoMeso(punta, 1f * u, 1.2f * u), a.s(0.32f))
+    drawPath(punta, mezcla(tela, cruda, 0.45f))
+    drawPath(bordeMeso(punta, -w * 0.04f, 0f), a.s(0.2f))
+    val hilos = Path()
+    for (j in 0 until 3) { val p = Offset(w + w * 0.03f, py0 + (py1 - py0) * (0.2f + 0.06f * j)); hilos.moveTo(p.x, p.y); hilos.lineTo(p.x + w * 0.05f, p.y + (py1 - py0) * 0.2f) }
+    drawPath(hilos, mezcla(tela, cruda, 0.5f), style = Stroke(0.6f * u, cap = StrokeCap.Round))
     // El día, escrito en la franja cruda (con la tinta del escriba; no lleva cartela).
     val y0 = h * 0.14f
     val alto = minOf(h * 0.3f, 27f * u)
     val dia = Rect(1.2f * u, y0 + 0.6f * u, w - 1.2f * u, y0 + 0.6f * u + minOf(alto * 0.68f, 18f * u))
-    val tintaDia = a.tinta
-    // De noche, la franja se alumbra para que el día se lea (4.5 a 1 o más).
-    if (a.oscuro) drawRect(a.etiqueta(l.k, crudo), Offset(0f, y0), Size(w, alto))
-    if (a.oscuro) cilindroMeso(Rect(0f, y0, w, y0 + alto), a, l.k, 0.5f, l.der, l.f)
-    textoEn(medidor, v.dia, dia, MuebleEstanteMeso.LETRA, tintaDia, 16f, peso = FontWeight.Bold, minimo = 8f)
+    textoEn(medidor, v.dia, dia, MuebleEstanteMeso.LETRA, a.tinta, 16f, peso = FontWeight.Bold, minimo = 8f)
     textoEn(medidor, mesCortoMeso(v), Rect(1.6f * u, dia.bottom - 1.4f * u, w - 1.6f * u, y0 + alto - 1f * u), MuebleEstanteMeso.LETRA, a.rubrica, 8.5f, peso = FontWeight.SemiBold, minimo = 5f)
-    // Los dos amarres, curvos como el cilindro.
-    listOf(h * 0.6f, h * 0.78f).forEachIndexed { i, ya ->
-        val am = Path().apply { moveTo(-0.5f * u, ya); quadraticTo(w / 2, ya + e * 0.32f, w + 0.5f * u, ya) }
-        drawPath(corridoMeso(am, 0f, 1.2f * u), a.s(0.35f), style = Stroke(1.8f * u))
-        drawPath(am, a.c(HENEQUEN, l.k, l.f), style = Stroke(1.6f * u))
-        drawPath(corridoMeso(am, 0f, -0.6f * u), a.b(0.4f, l.k), style = Stroke(0.5f * u))
+    // Los dos amarres, que aprietan y hacen cintura.
+    listOf(y1, y2).forEachIndexed { i, ya ->
+        val am = Path().apply { moveTo(cin - 0.5f * u, ya); quadraticTo(w / 2, ya + e * 0.3f, w - cin + 0.5f * u, ya) }
+        drawPath(corridoMeso(am, 0f, 1.2f * u), a.s(0.38f), style = Stroke(2f * u))
+        drawPath(am, a.c(HENEQUEN, l.k, l.f), style = Stroke(1.8f * u))
+        drawPath(corridoMeso(am, 0f, -0.6f * u), a.b(0.45f, l.k), style = Stroke(0.5f * u))
         if (i == 0) {
             val nudo = Offset(w * 0.3f, ya + e * 0.22f)
-            drawCircle(a.c(HENEQUEN_OSC, l.k, l.f), 1.8f * u, nudo)
+            drawCircle(a.c(HENEQUEN_OSC, l.k, l.f), 2f * u, nudo)
+            drawLine(a.c(HENEQUEN, l.k, l.f), nudo, nudo + Offset(-1.4f * u, 4.4f * u), 1f * u, StrokeCap.Round)
             if (v.noche) {
-                val c = Offset(nudo.x, nudo.y + 6.4f * u)
+                val c = Offset(nudo.x + 1.4f * u, nudo.y + 6.4f * u)
                 drawLine(a.c(HENEQUEN, l.k, l.f), nudo, c, 0.7f * u)
                 lunaConchaMeso(c, minOf(w * 0.14f, 3.8f * u), l, tela)
             }
         }
     }
+    sombraVecinaMeso(cuerpo, l)
     filoMeso(Rect(0f, e / 2, w, h - e / 2), a, l.k, l.der)
     if (a.oscuro && l.f > 0.1f) drawRect(a.helado(0.5f, l.f), Offset(if (l.der) w - 1.2f * u else 0f, e / 2), Size(1.2f * u, h - e))
 }

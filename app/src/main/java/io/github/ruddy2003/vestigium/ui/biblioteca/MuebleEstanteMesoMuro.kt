@@ -6,11 +6,13 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.AZUL
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.AZUL_LUZ
@@ -37,40 +39,73 @@ private const val TAPA_X_MESO = 0.33f
 private const val HILADAS_MESO = 7
 
 /**
- * Pinta [zona] (unos rectángulos) de noche: el color hondo (lo que no alcanza ninguna lumbre) y, encima, el charco de cada
- * lumbre: un degradado radial de su color encendido que se desvanece hasta su alcance, pintado solo donde llega.
+ * Pinta [zona] (unos rectángulos) de noche: el color hondo (lo que no alcanza ninguna lumbre: el mismo color oscurecido,
+ * hacia el añil, nunca gris) y, encima, el charco de cada lumbre: un degradado radial de su color encendido que se desvanece
+ * hasta su alcance, con el resplandor de la llama (ámbar el del nicho y el de la tea, ámbar rojizo el del fogón) ya juntado
+ * en el mismo degradado. Se pinta solo en [luz] (lo que de [zona] queda a la vista: lo que tapan los volúmenes no se alumbra,
+ * que es lo caro) y, en cada rectángulo, solo con las lumbres que de veras le llegan (la que más y las que llegan casi igual).
  */
-internal fun DrawScope.zonaNocheMeso(m: MesaMeso, zona: List<Rect>, col: Color) {
+internal fun DrawScope.zonaNocheMeso(m: MesaMeso, zona: List<Rect>, col: Color, resplandor: Float = 1f, luz: List<Rect> = zona) {
     val hondo = m.a.c(col, 0f)
     zona.forEach { r -> drawRect(hondo, r.topLeft, r.size) }
-    listOf(true, false).forEach { esNicho ->
-        val centro = if (esNicho) m.nicho else m.fogon
-        val radio = m.w * alcanceLumbreMeso(esNicho, m.a.lunar)
-        val caja = Rect(centro.x - radio, centro.y - radio, centro.x + radio, centro.y + radio)
-        val tocadas = zona.map { it.intersect(caja) }.filter { it.width > 0f && it.height > 0f }
-        if (tocadas.isNotEmpty()) {
-            val brocha = charcoMeso(m, col, centro, radio, esNicho)
-            tocadas.forEach { x -> drawRect(brocha, x.topLeft, x.size) }
+    // El color encendido sin calentar (el azul sigue azul); el resplandor, que solo tiñe cerca.
+    val lleno = m.a.c(col, 1f, calor = 0f)
+    val fuerza = 0.5f * resplandor * (if (m.a.lunar) 0.6f else 1f)
+    val brochas = arrayOfNulls<Brush>(m.lumbres.size)
+    luz.forEach { r ->
+        // Lo que llega de cada lumbre al punto del rectángulo más cercano a ella.
+        val llega = m.lumbres.map { l ->
+            val p = Offset(l.centro.x.coerceIn(r.left, r.right), l.centro.y.coerceIn(r.top, r.bottom))
+            val d = (p - l.centro).getDistance() / m.w
+            luzLumbreMeso(l.clase, d, m.a.lunar)
+        }
+        val mayor = llega.maxOrNull() ?: 0f
+        if (mayor < 0.03f) return@forEach
+        m.lumbres.forEachIndexed { i, l ->
+            if (llega[i] < 0.03f || llega[i] < mayor * 0.6f) return@forEachIndexed
+            val radio = m.w * alcanceLumbreMeso(l.clase, m.a.lunar)
+            val x = r.intersect(Rect(l.centro.x - radio, l.centro.y - radio, l.centro.x + radio, l.centro.y + radio))
+            if (x.width <= 0f || x.height <= 0f) return@forEachIndexed
+            val brocha = brochas[i] ?: charcoMeso(m, lleno, if (l.clase == 1) MesoTinta.BRASA_ROJA else MesoTinta.BRASA, l.centro, radio, l.clase, fuerza).also { brochas[i] = it }
+            drawRect(brocha, x.topLeft, x.size)
         }
     }
 }
 
-/** El charco de una lumbre sobre [col]: su color encendido con la transparencia de lo que llega a cada distancia. */
-internal fun charcoMeso(m: MesaMeso, col: Color, centro: Offset, radio: Float, esNicho: Boolean): Brush {
-    val lleno = m.a.c(col, 1f)
+/**
+ * El charco de una lumbre de [clase]: [lleno] con la transparencia de lo que llega a cada distancia y, encima, [llama] con la
+ * luz al cuadrado por [fuerza] (un resplandor que se queda junto a la llama). Las dos capas van juntas en un solo degradado
+ * (lo mismo que pintarlas una sobre otra, a la mitad del costo).
+ */
+internal fun charcoMeso(m: MesaMeso, lleno: Color, llama: Color, centro: Offset, radio: Float, clase: Int, fuerza: Float): Brush {
     val pasos = floatArrayOf(0f, 0.05f, 0.12f, 0.22f, 0.35f, 0.5f, 0.7f, 1f)
     val colores = pasos.map { q ->
-        val d = radio * q / m.w
-        val k = if (esNicho) nichoLuzMeso(d, 0f, m.a.lunar) else fogonLuzMeso(d, 0f, m.a.lunar)
-        lleno.copy(alpha = k)
+        val k = luzLumbreMeso(clase, radio * q / m.w, m.a.lunar)
+        val a1 = k.coerceIn(0f, 1f)
+        val a2 = (k * k * fuerza).coerceIn(0f, 1f)
+        val al = 1f - (1f - a1) * (1f - a2)
+        if (al <= 0.001f) lleno.copy(alpha = 0f)
+        else {
+            val p1 = a1 * (1f - a2) / al; val p2 = a2 / al
+            Color(lleno.red * p1 + llama.red * p2, lleno.green * p1 + llama.green * p2, lleno.blue * p1 + llama.blue * p2, al)
+        }
     }
     return Brush.radialGradient(*pasos.indices.map { pasos[it] to colores[it] }.toTypedArray(), center = centro, radius = radio)
 }
 
 /** Un paño de [col] en [zona]: de día, liso; en los Sueños claros, con el atardecer; de noche, con los charcos de las lumbres. */
-internal fun DrawScope.panoMeso(m: MesaMeso, zona: List<Rect>, col: Color) {
-    if (m.a.oscuro) zonaNocheMeso(m, zona, col)
+internal fun DrawScope.panoMeso(m: MesaMeso, zona: List<Rect>, col: Color, resplandor: Float = 1f) {
+    if (m.a.oscuro) zonaNocheMeso(m, zona, col, resplandor)
     else { val c = m.a.c(col, 0f); zona.forEach { r -> drawRect(c, r.topLeft, r.size) } }
+}
+
+/** El plano de luna de los Sueños de noche sobre lo que ya está pintado en [r]: plata fría, de borde decidido. */
+internal fun DrawScope.planoLunaMeso(m: MesaMeso, r: Rect, fuerza: Float = 1f) {
+    val luna = m.luna ?: return
+    clipRect(r.left, r.top, r.right, r.bottom) {
+        drawPath(luna, MesoTinta.PLATA.copy(alpha = 0.1f * fuerza), style = Stroke(m.w * 0.012f))
+        drawPath(luna, MesoTinta.PLATA.copy(alpha = 0.25f * fuerza))
+    }
 }
 
 /** El testero con la bóveda: hasta el arranque, en escalones de lajas que se cierran hacia la tapa. */
@@ -93,8 +128,9 @@ internal fun testeroFormaMeso(w: Float, alto: Float): Path = Path().apply {
 
 /**
  * El testero: el azul maya gastado (dos azules de repaso, pinceladas, grietas, desconchones con el estuco y la caliza), la
- * banda de cinabrio del arranque entre su filete crema y su filete negro, la mancha de la puerta (el sol recortado, con el
- * borde ondulado de la cortina; en los Sueños claros, el ocaso) y, de noche, la luna chica arriba a la izquierda.
+ * banda de cinabrio del arranque entre su filete crema y su filete negro, la mancha de la puerta (la forma de la puerta
+ * proyectada, recortada, que entibia el azul; en los Sueños claros, el ocaso) y, de noche, el azul hondo con el halo ámbar de
+ * la lumbre del nicho, la luna chica arriba a la izquierda o, en los Sueños, el plano de plata.
  */
 internal fun DrawScope.testeroMeso(m: MesaMeso) {
     val u = density
@@ -112,16 +148,20 @@ internal fun DrawScope.testeroMeso(m: MesaMeso) {
             val p = contornoMeso(Rect(c.x - w * 0.1f, c.y - w * 0.04f, c.x + w * 0.1f, c.y + w * 0.04f), 610 + i, 0.25f)
             drawPath(p, a.c(if (i == 1) AZUL_REPASO else mezcla(AZUL, ESTUCO, 0.12f), m.k(c), m.f(c)).copy(alpha = 0.55f))
         }
-        pinceladas(todo, if (a.oscuro) MesoTinta.NOCHE else mezcla(AZUL, MesoTinta.AZUL_HONDO, 0.5f), 611, 46, u, if (a.oscuro) 0.08f else 0.13f)
-        if (!a.oscuro) pinceladas(todo, mezcla(AZUL_LUZ, ESTUCO, 0.3f), 612, 30, u, 0.12f)
+        pinceladas(todo, if (a.oscuro) MesoTinta.ANIL_HONDO else mezcla(AZUL, MesoTinta.AZUL_HONDO, 0.5f), 611, 46, u, if (a.oscuro) 0.12f else 0.13f)
+        pinceladas(todo, if (a.oscuro) mezcla(AZUL, MesoTinta.NOCHE, 0.4f) else mezcla(AZUL_LUZ, ESTUCO, 0.3f), 612, 30, u, 0.12f)
         // La banda de cinabrio del arranque, con sus filetes y el borde de la brocha.
         panoMeso(m, listOf(banda), CINABRIO)
-        pinceladas(banda, if (a.oscuro) MesoTinta.NOCHE else CINABRIO_OSC, 613, 14, u, 0.16f)
+        pinceladas(banda, CINABRIO_OSC, 613, 14, u, 0.16f)
         drawRect(a.c(ESTUCO, m.k(Offset(w * 0.5f, banda.top))), Offset(0f, banda.top - w * 0.005f), Size(w, w * 0.005f))
         drawRect(a.c(TINTA, 0.3f).copy(alpha = 0.85f), Offset(0f, banda.bottom), Size(w, w * 0.0032f))
         drawRect(a.s(0.2f), Offset(0f, banda.bottom + w * 0.0032f), Size(w, w * 0.006f))
-        // La mancha de la puerta: el muro repintado con la luz, dentro de su forma.
-        if (!a.lumbre || a.ocaso) clipPath(m.puerta) { solMeso(m, todo, banda) }
+        // La mancha de la puerta: el muro repintado con la luz, dentro de su forma, con una penumbra estrecha alrededor.
+        if (!a.lumbre || a.ocaso) {
+            val centro = Offset(w * 0.2f, w * 0.6f)
+            scale(1.018f, 1.018f, centro) { clipPath(m.puerta) { drawRect(solColorMeso(a).copy(alpha = 0.32f), todo.topLeft, todo.size) } }
+            clipPath(m.puerta) { solMeso(m, todo, banda) }
+        }
         // Las grietas del estuco: la raja con su sombra y su borde de luz.
         listOf(Offset(0.47f, 0.06f), Offset(0.97f, 0.27f), Offset(0.2f, 0.29f)).forEachIndexed { i, fr ->
             val p0 = Offset(w * fr.x, w * fr.y)
@@ -136,37 +176,42 @@ internal fun DrawScope.testeroMeso(m: MesaMeso) {
         desconchonMeso(m, Rect(w * 0.585f, w * 0.115f, w * 0.655f, w * 0.15f), 640)
         desconchonMeso(m, Rect(w * 0.9f, w * 0.31f, w * 0.97f, w * 0.355f), 641)
         desconchonMeso(m, Rect(w * 0.3f, y0 + w * 0.004f, w * 0.36f, y0 + w * 0.04f), 642)
-        // De noche, la luna chica que entra por la puerta (en los Sueños, grande) y el halo de la lumbre del nicho.
+        // De noche: la luna chica (o el plano de plata de los Sueños) y el halo ámbar de la lumbre del nicho.
         if (a.oscuro) {
-            val c = Offset(w * (MuebleEstanteMeso.LUNA_X + if (a.lunar) 0.06f else 0f), w * (MuebleEstanteMeso.LUNA_Y + if (a.lunar) 0.16f else 0f))
-            mancha(c, w * (if (a.lunar) 0.62f else 0.3f), MesoTinta.LUNA.copy(alpha = if (a.lunar) 0.26f else 0.15f))
-            // El halo de la lumbre del nicho, que tiñe el azul de naranja (en los Sueños, más chico).
+            if (a.lunar) planoLunaMeso(m, todo)
+            else mancha(Offset(w * MuebleEstanteMeso.LUNA_X, w * MuebleEstanteMeso.LUNA_Y), w * 0.3f, MesoTinta.LUNA.copy(alpha = 0.14f))
             val q = if (a.lunar) 0.55f else 1f
-            mancha(m.nicho, w * 0.9f * q, MesoTinta.BRASA.copy(alpha = 0.2f * q))
-            mancha(m.nicho, w * 0.42f * q, Color(0xFFFF7A3A).copy(alpha = 0.26f * q))
-            mancha(m.nicho, w * 0.14f * q, MesoTinta.LLAMA_VIVA.copy(alpha = 0.3f * q))
+            mancha(m.nicho, w * 0.55f * q, MesoTinta.BRASA.copy(alpha = 0.26f * q))
+            mancha(m.nicho, w * 0.28f * q, Color(0xFFFF9A48).copy(alpha = 0.34f * q))
+            mancha(m.nicho, w * 0.12f * q, MesoTinta.LLAMA_VIVA.copy(alpha = 0.42f * q))
         }
     }
 }
+
+/** El color del sol en el azul: lo entibia hacia un turquesa claro; en el ocaso, naranja. */
+private fun solColorMeso(a: AireMeso): Color = if (a.ocaso) mezcla(MesoTinta.OCASO, AZUL_LUZ, 0.45f) else MesoTinta.SOL_AZUL
 
 /** El muro de [todo] con la luz de la puerta (se llama dentro de su recorte): el azul al sol, la banda encendida, sus filetes. */
 private fun DrawScope.solMeso(m: MesaMeso, todo: Rect, banda: Rect) {
     val u = density
     val w = m.w; val a = m.a
-    val luz = if (a.ocaso) mezcla(MesoTinta.OCASO, AZUL_LUZ, 0.45f) else mezcla(AZUL_LUZ, MesoTinta.SOL, 0.3f)
-    drawRect(luz.copy(alpha = if (a.ocaso) 0.6f else 0.9f), todo.topLeft, todo.size)
-    pinceladas(todo, mezcla(luz, ESTUCO, 0.5f), 614, 30, u, 0.16f)
-    pinceladas(todo, mezcla(luz, AZUL, 0.6f), 615, 22, u, 0.12f)
-    drawRect(mezcla(CINABRIO, MesoTinta.ACHIOTE, 0.35f).copy(alpha = if (a.ocaso) 0.6f else 0.95f), banda.topLeft, banda.size)
+    val luz = solColorMeso(a)
+    drawRect(luz.copy(alpha = if (a.ocaso) 0.6f else 0.92f), todo.topLeft, todo.size)
+    pinceladas(todo, mezcla(luz, MesoTinta.SOL, 0.5f), 614, 30, u, 0.18f)
+    pinceladas(todo, mezcla(luz, AZUL, 0.5f), 615, 22, u, 0.14f)
+    drawRect(mezcla(CINABRIO, MesoTinta.ACHIOTE, 0.4f).copy(alpha = if (a.ocaso) 0.6f else 0.95f), banda.topLeft, banda.size)
     pinceladas(banda, CINABRIO, 616, 10, u, 0.2f)
     drawRect(ESTUCO, Offset(0f, banda.top - w * 0.005f), Size(w, w * 0.005f))
     drawRect(TINTA.copy(alpha = 0.8f), Offset(0f, banda.bottom), Size(w, w * 0.0032f))
 }
 
 /**
- * La bóveda falsa: las hiladas de lajas de cada lado, en escalones que se cierran hacia la tapa, vistas desde abajo (las caras
- * que miran al medio, más claras; las de abajo, en sombra; de día, el lado derecho recibe la luz de la puerta), la tapa de
- * lajas con sus juntas, el filete de estuco que sigue los escalones, la sombra de cada laja en el testero y la viga de amarre.
+ * La bóveda falsa: las hiladas de lajas de cada lado, cada una volada sobre la de abajo, en escalones que se cierran hacia la
+ * tapa. Cada laja es una piedra plana de caliza, más larga que alta, de canto mellado y de su tono (crema, ocre, gris
+ * verdoso), muchas partidas en dos o tres lajas delgadas y corridas; entre ellas, la mezcla y alguna cuña de piedra chica.
+ * Arriba de cada hilada, la sombra de la que vuela encima; abajo, su canto de luz. Encima, las placas que quedan del estuco
+ * crema que las cubría (con restos del azul y del rojo), con su canto y su sombra en la piedra. En el testero, la sombra de
+ * cada escalón. Arriba, la tapa de lajas; al final, la viga de amarre.
  */
 internal fun DrawScope.bovedaMeso(m: MesaMeso) {
     val u = density
@@ -177,57 +222,124 @@ internal fun DrawScope.bovedaMeso(m: MesaMeso) {
     val n = HILADAS_MESO
     fun y(j: Int) = y0 - (y0 - yt) * j / n
     fun x(j: Int) = xi * j / n
-    // La tapa de lajas, arriba, a todo lo ancho: honda, con sus juntas.
+    val junta = mezcla(mezcla(CALIZA_OSC, MesoTinta.BARRO_OSC, 0.3f), TINTA, 0.15f)
+    // La tapa, arriba, a todo lo ancho: la mezcla y las lajas atravesadas.
     val tapaR = Rect(-1f, -1f, w + 1f, yt + 1f)
-    drawRect(a.c(mezcla(CALIZA_OSC, CALIZA, 0.35f), m.k(Offset(w * 0.5f, 0f)) * 0.7f), tapaR.topLeft, tapaR.size)
-    val juntasTapa = Path()
-    for (j in 0 until 7) { val x = w * (0.06f + 0.15f * j + 0.04f * azar(j, 655)); juntasTapa.moveTo(x, 0f); juntasTapa.lineTo(x, yt) }
-    drawPath(juntasTapa, a.s(0.35f), style = Stroke(0.9f * u))
-    drawRect(a.s(0.35f), Offset(0f, yt - w * 0.006f), Size(w, w * 0.006f))
-    // Las dos alas: cada hilada de lajas sale un poco más que la de abajo (la bóveda falsa); se ve su cara, con sus juntas y su
-    // desgaste, y debajo, la sombra de la hilada que sale. El ala de la derecha mira a la puerta y de día recibe su luz.
+    drawRect(a.c(junta, m.k(Offset(w * 0.5f, 0f)) * 0.6f), tapaR.topLeft, tapaR.size)
+    lajasMeso(m, Rect(-1f, 0f, w + 1f, yt), 650, 0.3f)
+    val caras = ArrayList<Rect>(2 * n)
     for (lado in 0..1) {
         for (j in 1..n) {
-            val alto = y(j - 1) - y(j)
             val hasta = x(j - 1)
             val cara = if (lado == 0) Rect(-1f, y(j), hasta, y(j - 1)) else Rect(w - hasta, y(j), w + 1f, y(j - 1))
-            // La fila de la junta con la hilada de arriba (que se pinta después) puede caer a medio píxel: esta sube un píxel.
-            val bajo = Rect(cara.left, cara.top - 1f, cara.right, cara.bottom)
             if (cara.width < 1f) continue
-            val pc = cara.center
-            val tono = mezcla(mezcla(CALIZA, ESTUCO, 0.45f), CALIZA_OSC, if (lado == 0) 0.38f else 0.12f) .let { mezcla(it, CALIZA_OSC, 0.12f * azar(j + lado * 9, 656)) }
-            drawRect(a.c(tono, m.k(pc), m.f(pc) * 0.6f), bajo.topLeft, bajo.size)
-            // Las lajas de la hilada, cada una con su tono, su junta y una esquina comida.
-            val juntas = Path(); val claras = Path(); val oscuras = Path()
-            var xj = cara.left - w * 0.03f * azar(j + lado * 7, 657); var q = 0
-            while (xj < cara.right && q < 24) {
-                val largo = w * (0.04f + 0.045f * azar(j * 5 + q + lado * 3, 658))
-                val bloque = Rect(xj, cara.top, xj + largo, cara.bottom)
-                val t = azar(j * 7 + q + lado * 13, 659)
-                if (t > 0.62f) claras.addRect(bloque) else if (t < 0.3f) oscuras.addRect(bloque)
-                juntas.moveTo(bloque.right, cara.top); juntas.lineTo(bloque.right + w * 0.001f, cara.bottom)
-                if (t > 0.5f) juntas.addPath(poligonoMeso(bloque.right - alto * 0.3f, cara.bottom, bloque.right, cara.bottom - alto * 0.25f, bloque.right, cara.bottom))
-                xj += largo; q++
-            }
-            drawPath(claras, a.b(0.12f, m.k(pc)))
-            drawPath(oscuras, a.s(0.1f))
-            drawPath(juntas, a.s(0.32f), style = Stroke(0.9f * u))
-            // Arriba, la sombra de la hilada que sale encima; abajo, el canto de la laja con su luz.
-            drawRect(a.s(if (lado == 0) 0.36f else 0.26f), cara.topLeft, Size(cara.width, alto * 0.26f))
-            drawRect(a.b(0.35f, m.k(pc)), Offset(cara.left, cara.bottom - 1.2f * u), Size(cara.width, 1.2f * u))
-            pinceladas(cara, if (a.oscuro) MesoTinta.NOCHE else CALIZA_OSC, 659 + j + lado * 11, 3, u, 0.2f)
+            caras.add(cara)
+            // La fila de la junta con la hilada de arriba (que se pinta después) puede caer a medio píxel: esta sube un píxel.
+            drawRect(a.c(junta, m.k(cara.center) * 0.7f), Offset(cara.left, cara.top - 1f), Size(cara.width, cara.height + 1f))
+            lajasMeso(m, cara, 660 + j * 7 + lado * 31, if (lado == 0) 0.3f else 0.08f)
         }
     }
-    // El filete de estuco que sigue los escalones y, debajo, la sombra de cada laja en el testero.
+    // Arriba de cada hilada, la sombra de la que vuela encima; abajo, el canto de las lajas con su luz.
+    for (c in caras) {
+        drawRect(a.s(0.34f), c.topLeft, Size(c.width, c.height * 0.16f))
+        drawRect(a.b(0.3f, m.k(c.center)), Offset(c.left, c.bottom - 1.2f * u), Size(c.width, 1.2f * u))
+    }
+    drawRect(a.s(0.4f), Offset(0f, yt - w * 0.005f), Size(w, w * 0.005f))
+    // Lo que queda del estuco, sólo en las alas (no en el hueco de la bóveda).
+    val alas = Path().apply { op(Path().apply { addRect(Rect(-1f, -1f, w + 1f, y0)) }, testeroFormaMeso(w, m.ch), PathOperation.Difference) }
+    clipPath(alas) { estucoBovedaMeso(m) }
+    // El filete de estuco que sigue los escalones y, debajo, la sombra de cada escalón en el testero.
     val perfil = Path()
     perfil.moveTo(0f, y0)
     for (j in 1..n) { perfil.lineTo(x(j - 1), y(j)); perfil.lineTo(x(j), y(j)) }
     perfil.lineTo(w - xi, yt)
     for (j in n downTo 1) { perfil.lineTo(w - x(j - 1), y(j)); perfil.lineTo(w - x(j - 1), y(j - 1)) }
-    translate(w * 0.004f, w * 0.006f) { drawPath(perfil, a.s(0.3f), style = Stroke(w * 0.008f)) }
+    clipPath(testeroFormaMeso(w, m.ch)) { translate(w * 0.006f, w * 0.01f) { drawPath(perfil, a.s(0.34f), style = Stroke(w * 0.014f)) } }
     drawPath(perfil, a.c(ESTUCO, m.k(Offset(w * 0.5f, yt)), 0.5f), style = Stroke(w * 0.005f))
     drawPath(perfil, a.c(CINABRIO, m.k(Offset(w * 0.5f, yt))).copy(alpha = 0.6f), style = Stroke(0.8f * u))
     vigaMeso(m)
+}
+
+/**
+ * Las placas de estuco que quedan sobre las lajas de la bóveda: crema, gastadas, con su canto de luz arriba, su sombra corrida
+ * en la piedra, y en dos de ellas lo que queda de la pintura (la orilla del azul del testero y un filete rojo).
+ */
+private fun DrawScope.estucoBovedaMeso(m: MesaMeso) {
+    val u = density
+    val w = m.w; val a = m.a
+    val placas = listOf(
+        Rect(w * -0.02f, w * 0.1f, w * 0.085f, w * 0.152f), Rect(w * 0.15f, w * 0.044f, w * 0.225f, w * 0.074f),
+        Rect(w * 0.875f, w * 0.058f, w * 0.965f, w * 0.1f),
+    )
+    placas.forEachIndexed { i, r ->
+        val p = contornoMeso(r, 700 + i, 0.2f)
+        val k = m.k(r.center); val f = m.f(r.center)
+        drawPath(corridoMeso(p, 1.2f * u, 1.8f * u), a.s(0.4f))
+        drawPath(p, a.c(mezcla(ESTUCO, CALIZA, 0.45f), k, f))
+        clipPath(p) {
+            pinceladas(r, a.c(ESTUCO_OSC, k, f), 710 + i, 5, u, 0.3f)
+            when (i) {
+                // La orilla del azul del testero, que subía por la bóveda; en otra, un filete rojo.
+                0 -> drawRect(a.c(AZUL, k, f).copy(alpha = 0.85f), Offset(r.left, r.bottom - r.height * 0.32f), Size(r.width, r.height * 0.4f))
+                2 -> drawRect(a.c(CINABRIO, k, f).copy(alpha = 0.8f), Offset(r.left, r.top + r.height * 0.55f), Size(r.width, w * 0.005f))
+                else -> {}
+            }
+        }
+        drawPath(bordeMeso(p, 0.9f * u, 1.1f * u), a.b(0.4f, k))
+        drawPath(bordeMeso(p, -1f * u, -1.2f * u), a.s(0.3f))
+    }
+}
+
+/**
+ * Las lajas de una hilada en [r]: piedras planas de caliza, más largas que altas, con el canto mellado, cada una de su tono
+ * (más honda con [sombra]), muchas partidas en dos o tres más delgadas y corridas; su luz arriba, su sombra abajo, y entre
+ * dos, a veces, una cuña de piedra chica.
+ */
+private fun DrawScope.lajasMeso(m: MesaMeso, r: Rect, semilla: Int, sombra: Float) {
+    val u = density
+    val w = m.w; val a = m.a
+    val k = m.k(r.center) * (if (a.oscuro) 0.6f else 0.85f); val f = m.f(r.center) * 0.6f
+    val alto = r.height
+    val tonos = List(4) { Path() }
+    val luces = Path(); val bajos = Path(); val cunas = Path()
+    var x = r.left - w * 0.05f * azar(semilla, 1)
+    var q = 0
+    while (x < r.right && q < 30) {
+        val largo = w * (0.045f + 0.085f * azar(semilla, q + 2))
+        val t = azar(semilla, q + 40)
+        val capas = when {
+            t > 0.78f -> listOf(0.05f to 0.36f, 0.4f to 0.66f, 0.7f to 0.95f)
+            t > 0.45f -> listOf(0.05f to 0.5f, 0.55f to 0.95f)
+            else -> listOf(0.06f to 0.94f)
+        }
+        capas.forEachIndexed { c, (t0, t1) ->
+            val top = r.top + alto * (t0 + 0.04f * azar(semilla, q * 3 + c + 80))
+            val bot = r.top + alto * (t1 - 0.04f * azar(semilla, q * 3 + c + 90))
+            val h = bot - top
+            val corre = if (c == 0) 0f else w * 0.014f * (azar(semilla, q * 3 + c + 60) - 0.5f)
+            val x0 = x + w * 0.0025f + corre
+            val x1 = x + largo - w * 0.0025f - w * 0.008f * azar(semilla, q + c + 100) + corre
+            val medio = (x0 + x1) * 0.5f + w * 0.01f * (azar(semilla, q + c + 110) - 0.5f)
+            tonos[(azar(semilla, q * 5 + c + 120) * 3.99f).toInt()].addPath(poligonoMeso(
+                x0 + h * 0.35f, top, medio, top - h * 0.05f, x1 - h * 0.3f, top + h * 0.04f, x1, top + h * 0.45f,
+                x1 - h * 0.2f, bot, medio, bot + h * 0.04f, x0 + h * 0.25f, bot - h * 0.03f, x0, top + h * 0.55f))
+            luces.moveTo(x0 + h * 0.35f, top + 0.6f * u); luces.lineTo(medio, top - h * 0.05f + 0.6f * u); luces.lineTo(x1 - h * 0.3f, top + h * 0.04f + 0.6f * u)
+            bajos.moveTo(x0 + h * 0.25f, bot - h * 0.03f - 0.5f * u); bajos.lineTo(medio, bot + h * 0.04f - 0.5f * u); bajos.lineTo(x1 - h * 0.2f, bot - 0.5f * u)
+        }
+        if (azar(semilla, q + 200) > 0.55f) {
+            val cy = r.top + alto * (0.2f + 0.45f * azar(semilla, q + 210))
+            cunas.addOval(Rect(x + largo - w * 0.006f, cy, x + largo + w * 0.005f, cy + alto * 0.22f))
+        }
+        x += largo; q++
+    }
+    // De noche la piedra de la bóveda se hunde hacia el añil del cuarto (no a un gris).
+    val base = mezcla(mezcla(CALIZA, MesoTinta.AMATE, 0.35f), CALIZA_OSC, sombra)
+    val piedra = if (a.oscuro) mezcla(base, MesoTinta.ANIL_HONDO, 0.3f) else base
+    val cols = listOf(mezcla(piedra, ESTUCO, 0.3f), piedra, mezcla(piedra, MesoTinta.HENEQUEN_OSC, 0.32f), mezcla(piedra, mezcla(CALIZA_OSC, MesoTinta.JADE, 0.15f), 0.42f))
+    tonos.forEachIndexed { i, p -> drawPath(p, a.c(cols[i], k, f)) }
+    drawPath(cunas, a.c(mezcla(piedra, CALIZA_OSC, 0.55f), k, f))
+    drawPath(bajos, a.s(0.32f), style = Stroke(1f * u))
+    drawPath(luces, a.b(0.38f, k), style = Stroke(0.8f * u))
 }
 
 /**
@@ -243,13 +355,12 @@ private fun DrawScope.vigaMeso(m: MesaMeso) {
     // Su sombra en el testero: de día, abajo y a la derecha (honda dentro del sol); de noche, lejos de la lumbre del nicho.
     val sombra = Path().apply { addRect(viga) }
     clipPath(testeroFormaMeso(w, m.ch)) { sombraMuroMeso(m, sombra, Offset(w * 0.3f, cy), 0.26f) }
-    // El rollizo, con la luz que le llega a lo largo.
-    val n = 6
-    for (i in 0 until n) {
-        val x0 = w * i / n; val x1 = w * (i + 1) / n
-        val p = Offset((x0 + x1) / 2, cy)
-        drawRect(a.c(MesoTinta.ZAPOTE, m.k(p), m.f(Offset(p.x, cy + w * 0.03f)) * 0.6f), Offset(x0 - 1f, viga.top), Size(x1 - x0 + 2f, viga.height))
+    // El rollizo, con la luz que le llega a lo largo (un degradado: sin tramos que se noten).
+    val colores = List(9) { i ->
+        val p = Offset(w * i / 8f, cy)
+        a.c(MesoTinta.ZAPOTE, m.k(p), m.f(Offset(p.x, cy + w * 0.03f)) * 0.6f)
     }
+    drawRect(Brush.horizontalGradient(colores, 0f, w), viga.topLeft, viga.size)
     clipRect(viga.left, viga.top, viga.right, viga.bottom) {
         drawRect(a.b(0.3f, m.k(Offset(w * 0.8f, cy))), Offset(0f, viga.top), Size(w, r * 0.45f))
         drawRect(a.b(0.4f, m.k(Offset(w * 0.8f, cy))), Offset(0f, viga.top + r * 0.18f), Size(w, r * 0.12f))
@@ -396,12 +507,16 @@ internal fun DrawScope.pisoMeso(m: MesaMeso, fondo: Float) {
     val piso = m.piso
     // El zócalo del testero, entre las zapatas.
     val zocalo = Rect(0f, fondo - 1f, w, piso + 1f)
-    panoMeso(m, listOf(zocalo), CINABRIO_OSC)
+    // De noche, la luz del fogón a lo largo del zócalo, en un degradado (una franja angosta: no le hace falta el charco).
+    if (a.oscuro) drawRect(Brush.horizontalGradient(List(7) { i -> val p = Offset(w * i / 6f, zocalo.center.y); a.c(CINABRIO_OSC, m.k(p), m.f(p)) }, 0f, w), zocalo.topLeft, zocalo.size)
+    else panoMeso(m, listOf(zocalo), CINABRIO_OSC)
     drawRect(a.s(0.35f), zocalo.topLeft, Size(w, (piso - fondo) * 0.5f))
     // Las lajas.
     val suelo = Rect(0f, piso, w, h)
     val laja = mezcla(CALIZA, CALIZA_OSC, 0.18f)
-    panoMeso(m, listOf(suelo), laja)
+    // De noche, la luz del fogón a lo ancho del suelo, en un degradado (el charco redondo lo pone la lumbre encima).
+    if (a.oscuro) drawRect(Brush.horizontalGradient(List(7) { i -> val p = Offset(w * i / 6f, (piso + h) / 2); a.c(laja, m.k(p), m.f(p)) }, 0f, w), suelo.topLeft, suelo.size)
+    else panoMeso(m, listOf(suelo), laja)
     val fuga = Offset(w * 0.5f, piso - w * 0.9f)
     val filas = 5
     fun yFila(i: Int): Float { val t = i / filas.toFloat(); return piso + (h - piso) * (t * (0.55f + 0.45f * t)) }

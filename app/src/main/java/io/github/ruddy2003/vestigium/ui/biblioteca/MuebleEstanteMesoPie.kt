@@ -3,6 +3,7 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -11,8 +12,8 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.drawscope.translate
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.BRASA
+import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.BRASA_ROJA
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.CALIZA
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.CALIZA_OSC
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.CENIZA
@@ -58,29 +59,47 @@ private fun cantoMeso(r: Rect, semilla: Int, irregular: Float = 0.1f): Path {
 }
 
 /**
- * Una piedra del fogón en [r]: un canto rodado de caliza, con su plano de luz arriba, la media luna de sombra abajo, el hollín
- * que sube del lado del fuego (blando, no de regla) y su sombra en el piso; de noche, el filo de la lumbre del lado del fuego.
+ * Una piedra del fogón en [r]: un bloque de caliza partido, de caras planas y aristas (no un canto rodado): la cara de arriba
+ * a la luz, la del costado del fuego y la de abajo en sombra; el hollín que la cubre del lado del fuego y por arriba, negro y
+ * de borde roto; sus picaduras y su sombra en el piso; de noche, el filo de la lumbre en las aristas que miran al fuego.
  */
 private fun DrawScope.piedraFogonMeso(m: MesaMeso, r: Rect, semilla: Int, fuegoDer: Boolean) {
     val u = density
     val a = m.a
     val k = m.k(r.center); val f = m.f(r.center)
-    val p = cantoMeso(r, semilla)
-    contactoMeso(Offset(r.center.x + r.width * 0.06f, r.bottom - r.height * 0.05f), r.width * 1.15f, r.height * 0.24f, a, 0.45f)
-    drawPath(p, a.c(mezcla(CALIZA, CALIZA_OSC, 0.3f), k, f))
+    fun px(t: Float) = if (fuegoDer) r.left + r.width * t else r.right - r.width * t
+    fun az(i: Int) = azar(semilla, i)
+    // El contorno: siete vértices; la arista de la cara de arriba y la del costado que mira al fuego.
+    val v = listOf(
+        Offset(px(0.03f + 0.05f * az(0)), r.bottom - r.height * 0.2f), Offset(px(0.08f), r.top + r.height * (0.3f + 0.1f * az(1))),
+        Offset(px(0.34f + 0.08f * az(2)), r.top + r.height * 0.05f * az(3)), Offset(px(0.72f), r.top + r.height * (0.06f + 0.08f * az(4))),
+        Offset(px(0.97f - 0.04f * az(5)), r.top + r.height * 0.42f), Offset(px(0.93f), r.bottom - r.height * 0.1f), Offset(px(0.52f), r.bottom),
+    )
+    val centro = Offset(px(0.6f), r.top + r.height * 0.46f)
+    val p = Path().apply { moveTo(v[0].x, v[0].y); for (i in 1 until v.size) lineTo(v[i].x, v[i].y); close() }
+    val arriba = Path().apply { moveTo(v[1].x, v[1].y); lineTo(v[2].x, v[2].y); lineTo(v[3].x, v[3].y); lineTo(centro.x, centro.y); lineTo(px(0.16f), r.top + r.height * 0.5f); close() }
+    val costado = Path().apply { moveTo(v[3].x, v[3].y); lineTo(v[4].x, v[4].y); lineTo(v[5].x, v[5].y); lineTo(centro.x + (if (fuegoDer) 1f else -1f) * r.width * 0.02f, r.bottom - r.height * 0.15f); lineTo(centro.x, centro.y); close() }
+    contactoMeso(Offset(r.center.x + r.width * 0.06f, r.bottom - r.height * 0.05f), r.width * 1.15f, r.height * 0.24f, a, 0.5f)
+    drawPath(p, a.c(mezcla(CALIZA, CALIZA_OSC, 0.38f), k, f))
     clipPath(p) {
-        drawOval(a.b(0.3f, k), Offset(r.left + r.width * 0.08f, r.top), Size(r.width * 0.6f, r.height * 0.42f))
-        // El hollín del lado del fuego, en dos manchas que suben.
-        val sx = if (fuegoDer) r.right else r.left
-        drawOval(TINTA.copy(alpha = 0.32f), Offset(sx - r.width * 0.5f, r.top - r.height * 0.1f), Size(r.width, r.height * 1.2f))
-        drawOval(TINTA.copy(alpha = 0.45f), Offset(sx - r.width * 0.3f, r.top + r.height * 0.15f), Size(r.width * 0.6f, r.height * 0.95f))
-        drawPath(bordeMeso(p, -r.width * 0.14f, -r.height * 0.14f), a.s(0.32f))
+        drawPath(arriba, a.c(mezcla(CALIZA, ESTUCO, 0.15f), k, f))
+        drawPath(costado, if (a.oscuro) MesoTinta.BRASA.copy(alpha = (0.45f * k).coerceAtMost(0.4f)) else a.s(0.22f))
+        drawRect(a.s(0.3f), Offset(r.left, r.bottom - r.height * 0.22f), Size(r.width, r.height * 0.22f))
+        // El hollín: negro, de borde roto, del lado del fuego y por arriba.
+        val hollin = contornoMeso(Rect(minOf(px(0.45f), px(1.1f)), r.top - r.height * 0.1f, maxOf(px(0.45f), px(1.1f)), r.bottom - r.height * 0.25f), semilla + 5, 0.35f)
+        drawPath(hollin, TINTA.copy(alpha = 0.5f))
+        drawPath(contornoMeso(Rect(minOf(px(0.65f), px(1.05f)), r.top + r.height * 0.1f, maxOf(px(0.65f), px(1.05f)), r.bottom - r.height * 0.35f), semilla + 6, 0.3f), TINTA.copy(alpha = 0.5f))
+        drawPath(contornoMeso(Rect(minOf(px(0.2f), px(0.55f)), r.top - r.height * 0.05f, maxOf(px(0.2f), px(0.55f)), r.top + r.height * 0.25f), semilla + 7, 0.4f), TINTA.copy(alpha = 0.3f))
         val pic = Path()
-        for (j in 0 until 7) { val q = Offset(r.left + r.width * azar(semilla, j), r.top + r.height * azar(semilla, j + 9)); pic.moveTo(q.x, q.y); pic.lineTo(q.x + 1.6f * u, q.y + 0.8f * u) }
-        drawPath(pic, a.s(0.25f), style = Stroke(0.8f * u))
-        if (a.oscuro) drawPath(bordeMeso(p, if (fuegoDer) -r.width * 0.06f else r.width * 0.06f, r.height * 0.04f), MesoTinta.LLAMA.copy(alpha = (0.7f * k).coerceAtMost(0.65f)))
+        for (j in 0 until 7) { val q = Offset(r.left + r.width * az(j + 10), r.top + r.height * az(j + 20)); pic.moveTo(q.x, q.y); pic.lineTo(q.x + 1.6f * u, q.y + 0.8f * u) }
+        drawPath(pic, a.s(0.28f), style = Stroke(0.8f * u))
     }
-    drawPath(p, a.s(0.3f), style = Stroke(0.6f * u))
+    // Las aristas: la de arriba con su luz; de noche, el filo de la lumbre del lado del fuego.
+    val arista = Path().apply { moveTo(v[1].x, v[1].y); lineTo(v[2].x, v[2].y); lineTo(v[3].x, v[3].y) }
+    drawPath(arista, a.b(0.4f, k), style = Stroke(1f * u))
+    drawPath(Path().apply { moveTo(v[3].x, v[3].y); lineTo(centro.x, centro.y); lineTo(px(0.16f), r.top + r.height * 0.5f) }, a.s(0.25f), style = Stroke(0.8f * u))
+    if (a.oscuro) drawPath(Path().apply { moveTo(v[3].x, v[3].y); lineTo(v[4].x, v[4].y); lineTo(v[5].x, v[5].y) }, MesoTinta.LLAMA.copy(alpha = (0.8f * k).coerceAtMost(0.75f)), style = Stroke(1.6f * u))
+    drawPath(p, a.s(0.35f), style = Stroke(0.7f * u))
 }
 
 /**
@@ -107,10 +126,14 @@ private fun DrawScope.lenoMeso(m: MesaMeso, p0: Offset, p1: Offset, gr: Float, s
             drawRect(a.s(0.3f), Offset(r.left, r.bottom - gr * 0.32f), Size(r.width, gr * 0.32f))
             // La punta carbonizada.
             val q = Rect(r.right - largo * 0.3f, r.top, r.right, r.bottom)
-            drawRect(a.c(TINTA, k * 0.5f), q.topLeft, q.size)
+            drawPath(poligonoMeso(q.left + q.width * 0.12f, q.top, q.right, q.top, q.right, q.bottom, q.left - q.width * 0.05f, q.bottom, q.left + q.width * 0.2f, q.top + gr * 0.55f), a.c(TINTA, k * 0.5f))
+            // Las grietas del carbón, cortas, a lo largo de la veta y sin cruzarse: de día, ceniza; de noche, encendidas.
             val grietas = Path()
-            for (j in 0 until 4) { val x = q.left + q.width * (0.15f + 0.22f * j + 0.05f * azar(semilla, j)); grietas.moveTo(x, q.top + gr * 0.1f); grietas.lineTo(x + gr * 0.18f, q.bottom - gr * 0.1f) }
-            drawPath(grietas, (if (a.lumbre) MesoTinta.LLAMA else MesoTinta.BRASA).copy(alpha = if (a.oscuro) 0.95f else 0.5f), style = Stroke(0.9f * u))
+            for (j in 0 until 6) {
+                val x = q.left + q.width * (0.22f + 0.13f * j + 0.04f * azar(semilla, j)); val y = q.top + gr * (0.18f + 0.6f * azar(semilla, j + 5))
+                grietas.moveTo(x, y); grietas.quadraticTo(x + gr * 0.12f, y - gr * 0.05f, x + gr * 0.26f, y + gr * 0.03f)
+            }
+            drawPath(grietas, if (a.oscuro) MesoTinta.LLAMA.copy(alpha = 0.95f) else CENIZA.copy(alpha = 0.55f), style = Stroke(0.8f * u))
         }
         // La testa con sus anillos.
         drawOval(a.c(mezcla(OCOTE, ESTUCO, 0.3f), k, f), Offset(r.left - gr * 0.22f, r.top), Size(gr * 0.44f, gr))
@@ -183,7 +206,10 @@ private fun DrawScope.petateMeso(m: MesaMeso) {
     drawPath(corridoMeso(forma, w * 0.006f, w * 0.006f), a.s(0.3f))
     val palma = mezcla(MesoTinta.BEJUCO, ESTUCO, 0.35f)
     clipPath(forma) {
-        panoMeso(m, listOf(Rect(w * 0.3f, atras, w * 1.2f, h + 2f)), palma)
+        // De noche, la luz del fogón (a la izquierda) en un degradado a lo largo: más barato que su charco y casi igual aquí.
+        val fondo = Rect(w * 0.3f, atras, w * 1.2f, h + 2f)
+        if (a.oscuro) drawRect(Brush.horizontalGradient(List(6) { i -> val p = Offset(w * (0.36f + 0.152f * i), c.y); a.c(palma, m.k(p), m.f(p)) }, w * 0.36f, w * 1.12f), fondo.topLeft, fondo.size)
+        else panoMeso(m, listOf(fondo), palma)
         // El tejido en espiga.
         val luz = Path(); val sombra = Path()
         var y = atras; var fila = 0
@@ -192,8 +218,10 @@ private fun DrawScope.petateMeso(m: MesaMeso) {
             val alto = w * (0.016f + 0.02f * t)
             val paso = w * (0.014f + 0.012f * t)
             val dir = if (fila % 2 == 0) 1f else -1f
-            var x = w * 0.3f; var n = 0
-            while (x < w * 1.15f && n < 80) {
+            // Solo a lo ancho del petate en esa hilera (y no más allá del borde del lienzo).
+            var x = w * (0.47f - 0.11f * t) - paso; var n = 0
+            val hasta = minOf(w * (1.05f + 0.07f * t), w) + paso
+            while (x < hasta && n < 80) {
                 val p = if (dir > 0) luz else sombra
                 p.moveTo(x, y); p.lineTo(x + dir * paso * 0.8f, y + alto)
                 x += paso; n++
@@ -302,9 +330,17 @@ private fun lenguaMeso(c: Offset, alto: Float, ancho: Float, giro: Float): Path 
     close()
 }
 
-/** Las lenguas de una lumbre en [c]: tres gotas en cuatro capas (rojo de brasa, naranja, oro y el corazón claro), de [escala] de ancho y [alta]. */
-private fun DrawScope.llamasMeso(c: Offset, escala: Float, alta: Float, semilla: Int) {
-    val lenguas = listOf(Triple(-0.3f, 0.62f, -14f), Triple(0.28f, 0.7f, 16f), Triple(0f, 1f, 5f))
+/** Tres lenguas: la del medio, alta, y dos más bajas que se abren a los lados (dónde, qué tan alta y cuánto se ladea). */
+private val TRES_LENGUAS_MESO = listOf(Triple(-0.3f, 0.62f, -14f), Triple(0.28f, 0.7f, 16f), Triple(0f, 1f, 5f))
+
+/** Cinco lenguas desparejas, para la lumbre grande del fogón. */
+private val CINCO_LENGUAS_MESO = listOf(Triple(-0.46f, 0.46f, -24f), Triple(0.46f, 0.4f, 26f), Triple(-0.2f, 0.8f, -10f), Triple(0.24f, 0.68f, 14f), Triple(0.02f, 1f, 4f))
+
+/**
+ * Las [lenguas] de una lumbre en [c], de [escala] de ancho y [alta]: cada una en cuatro capas (el rojo de brasa de la orilla,
+ * el naranja, el oro y el corazón claro).
+ */
+private fun DrawScope.llamasMeso(c: Offset, escala: Float, alta: Float, semilla: Int, lenguas: List<Triple<Float, Float, Float>> = TRES_LENGUAS_MESO) {
     listOf(Color(0xFFD9542A).copy(alpha = 0.85f) to 1f, BRASA to 0.78f, LLAMA to 0.56f, LLAMA_VIVA to 0.34f).forEach { (col, s) ->
         lenguas.forEachIndexed { i, (dx, h, g) ->
             val base = Offset(c.x + dx * escala * 0.5f, c.y - (1f - s) * alta * 0.08f)
@@ -328,15 +364,51 @@ internal fun DrawScope.lumbreFogonMeso(m: MesaMeso) {
             llamasMeso(c, w * 0.08f, w * 0.06f, 921)
         }
         else -> {
-            mancha(Offset(c.x, c.y - w * 0.04f), w * 0.45f, BRASA.copy(alpha = 0.2f))
+            mancha(Offset(c.x, c.y - w * 0.04f), w * 0.34f, BRASA.copy(alpha = 0.24f))
             mancha(Offset(c.x, c.y - w * 0.05f), w * 0.16f, LLAMA.copy(alpha = 0.45f))
-            llamasMeso(c, w * 0.12f, w * 0.13f, 922)
+            llamasMeso(c, w * 0.15f, w * 0.14f, 922, CINCO_LENGUAS_MESO)
+            // Un jirón de llama que se suelta arriba y el corazón blanco en la raíz, sobre las brasas.
+            drawPath(lenguaMeso(Offset(c.x + w * 0.014f, c.y - w * 0.128f), w * 0.03f, w * 0.012f, 12f), LLAMA.copy(alpha = 0.75f))
+            drawOval(Color(0xFFFFF6DE).copy(alpha = 0.9f), Offset(c.x - w * 0.03f, c.y - w * 0.035f), Size(w * 0.06f, w * 0.03f))
             for (j in 0 until 6) {
                 val q = Offset(c.x + w * (azar(j, 923) - 0.5f) * 0.12f, c.y - w * (0.14f + 0.1f * azar(j, 924)))
                 drawCircle(LLAMA_VIVA.copy(alpha = 0.85f), (0.8f + 0.7f * azar(j, 925)) * u, q)
             }
         }
     }
+}
+
+/**
+ * La tea del poste de la izquierda, en [p] (la punta), a media altura: una raja de ocote metida en un amarre de henequén que
+ * abraza el poste, ladeada hacia fuera, con su sombra en el poste. Si arde ([MesaMeso.tea]: de noche, fuera de los Sueños),
+ * el resplandor, la llama chica con su corazón claro y el hilo de humo; si no, apagada, con la punta tiznada.
+ */
+internal fun DrawScope.teaMeso(m: MesaMeso, p: Offset) {
+    val u = density
+    val w = m.w; val a = m.a
+    val k = m.k(p); val f = m.f(p)
+    val pie = Offset(p.x - w * 0.012f, p.y + w * 0.08f)
+    // La raja: su sombra en el poste, el palo con su filo de luz y la punta tiznada.
+    drawLine(a.s(0.35f), pie + Offset(w * 0.007f, w * 0.004f), p + Offset(w * 0.009f, w * 0.006f), w * 0.012f, StrokeCap.Round)
+    drawLine(a.c(OCOTE, k, f), pie, p, w * 0.011f, StrokeCap.Round)
+    drawLine(a.c(mezcla(OCOTE, ESTUCO, 0.35f), k, f), pie + Offset(-w * 0.003f, 0f), p + Offset(-w * 0.003f, 0f), w * 0.003f)
+    drawLine(a.c(TINTA, k * 0.5f), p, p + (pie - p) * 0.2f, w * 0.012f, StrokeCap.Round)
+    // El amarre que la sujeta al poste: tres vueltas de henequén con su nudo.
+    val am = pie + (p - pie) * 0.25f
+    val poste = m.posteI
+    for (j in 0 until 3) {
+        val y = am.y + w * 0.007f * (j - 1)
+        drawLine(a.s(0.3f), Offset(poste.left, y + 1.2f * u), Offset(poste.right, y + 1.4f * u), 1.8f * u)
+        drawLine(a.c(MesoTinta.HENEQUEN, k, f), Offset(poste.left, y), Offset(poste.right, y + 0.6f * u), 1.6f * u)
+    }
+    drawCircle(a.c(MesoTinta.HENEQUEN_OSC, k, f), 2.2f * u, am)
+    if (m.tea == null) return
+    // Encendida: el resplandor en el poste y el hueco, la llama con su corazón y el hilo de humo.
+    mancha(p, w * 0.09f, LLAMA.copy(alpha = 0.42f))
+    llamasMeso(p + Offset(0f, w * 0.004f), w * 0.05f, w * 0.065f, 941)
+    drawOval(Color(0xFFFFF6DE).copy(alpha = 0.9f), Offset(p.x - w * 0.008f, p.y - w * 0.018f), Size(w * 0.016f, w * 0.018f))
+    val humo = Path().apply { moveTo(p.x, p.y - w * 0.06f); cubicTo(p.x - w * 0.012f, p.y - w * 0.08f, p.x + w * 0.014f, p.y - w * 0.1f, p.x + w * 0.002f, p.y - w * 0.13f) }
+    drawPath(humo, Color(0xFF1A1210).copy(alpha = 0.3f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
 }
 
 /**
@@ -365,9 +437,16 @@ internal fun DrawScope.lumbreNichoMeso(m: MesaMeso) {
             p = q
         }
     }
-    llamasMeso(c, r.width * 0.42f * fuerza, r.height * 0.5f * fuerza, 931)
-    drawCircle(Color(0xFFFFF4D8).copy(alpha = 0.9f * fuerza), 1.4f * u, Offset(c.x, c.y - 2f * u))
-    if (!a.ocaso && !a.lunar) for (j in 0 until 3) {
-        drawCircle(LLAMA_VIVA.copy(alpha = 0.8f), (0.7f + 0.5f * azar(j, 932)) * u, Offset(c.x + r.width * (azar(j, 933) - 0.5f) * 0.6f, r.top - r.height * (0.05f + 0.2f * azar(j, 934))))
+    // La brasa: las puntas de las rajas encendidas en el tiesto, rojas y con su corazón claro.
+    for (j in 0 until 5) {
+        val q = Offset(c.x + r.width * (azar(j, 935) - 0.5f) * 0.5f, c.y + r.height * 0.04f * azar(j, 936))
+        drawOval(BRASA_ROJA.copy(alpha = 0.95f * fuerza), Offset(q.x - r.width * 0.05f, q.y - r.width * 0.02f), Size(r.width * 0.1f, r.width * 0.04f))
+        drawOval(LLAMA_VIVA.copy(alpha = 0.8f * fuerza), Offset(q.x - r.width * 0.025f, q.y - r.width * 0.01f), Size(r.width * 0.05f, r.width * 0.02f))
+    }
+    // La llama: lenguas grandes, el núcleo claro y blanco en su raíz.
+    llamasMeso(c, r.width * 0.58f * fuerza, r.height * 0.74f * fuerza, 931)
+    drawOval(Color(0xFFFFF6DE).copy(alpha = 0.95f * fuerza), Offset(c.x - r.width * 0.07f, c.y - r.height * 0.2f * fuerza), Size(r.width * 0.14f, r.height * 0.2f * fuerza))
+    if (!a.ocaso && !a.lunar) for (j in 0 until 4) {
+        drawCircle(LLAMA_VIVA.copy(alpha = 0.8f), (0.7f + 0.5f * azar(j, 932)) * u, Offset(c.x + r.width * (azar(j, 933) - 0.5f) * 0.6f, r.top - r.height * (0.05f + 0.25f * azar(j, 934))))
     }
 }

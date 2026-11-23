@@ -1,5 +1,6 @@
 package io.github.ruddy2003.vestigium.ui.biblioteca
 
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -22,6 +23,8 @@ import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.CALIZA
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.CALIZA_OSC
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.CINABRIO
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.ESTUCO
+import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.ESTUCO_OSC
+import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.TINTA
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.HENEQUEN
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.HENEQUEN_OSC
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.ZAPOTE
@@ -48,10 +51,10 @@ private fun DrawScope.conLuzMeso(m: MesaMeso, col: Color, r: Rect, vertical: Boo
     drawRect(brocha, r.topLeft, r.size)
 }
 
-/** Si alguna de las dos lumbres llega a algo de [r] (de noche). */
-private fun alcanzaMeso(m: MesaMeso, r: Rect): Boolean = listOf(true, false).any { esNicho ->
-    val c = if (esNicho) m.nicho else m.fogon
-    val radio = m.w * alcanceLumbreMeso(esNicho, m.a.lunar)
+/** Si alguna de las lumbres llega a algo de [r] (de noche). */
+private fun alcanzaMeso(m: MesaMeso, r: Rect): Boolean = m.lumbres.any { l ->
+    val c = l.centro
+    val radio = m.w * alcanceLumbreMeso(l.clase, m.a.lunar)
     r.left < c.x + radio && r.right > c.x - radio && r.top < c.y + radio && r.bottom > c.y - radio
 }
 
@@ -145,33 +148,73 @@ private fun DrawScope.vetasMeso(r: Rect, col: Color, semilla: Int) {
 // ---------------------------------------------------------------- el cuerpo (cada dibujo)
 
 /**
- * El fondo de cada hueco: el testero de azul maya en la sombra del anaquel (un azul verde hondo y quieto, contra el que resalta
- * lo guardado), el sol de la puerta que se cuela hasta el fondo en los de arriba a la izquierda, la sombra de la tabla de
- * arriba en dos tonos, el costado de dentro de cada poste (el izquierdo en sombra, el derecho con luz) y la cara de arriba de
- * la tabla donde pisan los volúmenes.
+ * El fondo de cada hueco: el testero de azul maya en la sombra del anaquel (de día, un azul verde hondo; de noche, añil violeta,
+ * con el resplandor de cada lumbre donde llega), con sus manchas de repaso y algún desconchón; la sombra que arroja la tabla de
+ * arriba (en escalones, franca arriba y más honda en los rincones), el costado de dentro de cada poste (el que da a la luz,
+ * encendido; el otro, en sombra) y la cara de arriba de la tabla donde pisan los volúmenes. En los Sueños de noche, el plano de
+ * luna cruza los huecos.
  */
-internal fun DrawScope.fondosHuecosMeso(m: MesaMeso, repisas: List<Rect>) {
+internal fun DrawScope.fondosHuecosMeso(m: MesaMeso, repisas: List<Rect>, ocupado: List<Float>) {
     val u = density
     val w = m.w; val a = m.a
     val x0 = m.posteI.right - 1f; val x1 = m.posteD.left + 1f
     val zona = repisas.map { r -> Rect(x0, r.top - 1f, x1, r.bottom + 1f) }
-    if (a.oscuro) zonaNocheMeso(m, zona, AZUL_HONDO)
+    // De noche, la luz de las lumbres en el fondo se pinta solo donde se ve: arriba de los volúmenes (que llenan del 80 al
+    // 95 % del hueco) y de donde acaban hasta el poste; entre uno y otro queda el fondo hondo, como en una rendija.
+    val luz = if (!a.oscuro) zona else zona.flatMapIndexed { i, z ->
+        val corte = z.top + (z.bottom - z.top) * 0.3f
+        val oc = ocupado.getOrNull(i) ?: x0
+        listOf(Rect(z.left, z.top, z.right, corte), Rect(maxOf(z.left, oc - w * 0.01f), corte, z.right, z.bottom)).filter { it.width > 0f }
+    }
+    if (a.oscuro) zonaNocheMeso(m, zona, mezcla(AZUL_HONDO, MesoTinta.ANIL_HONDO, 0.55f), 1.3f, luz)
     else { val c = a.c(AZUL_HONDO, 1f); zona.forEach { r -> drawRect(c, r.topLeft, r.size) } }
     // Los lados del muro, fuera de los postes: el mismo testero, sin la sombra del anaquel.
-    val lados = listOf(Rect(-1f, m.ch - 1f, m.posteI.left + 1f, repisas.lastOrNull()?.bottom?.plus(w) ?: m.ch), Rect(m.posteD.right - 1f, m.ch - 1f, w + 1f, repisas.lastOrNull()?.bottom?.plus(w) ?: m.ch))
-    panoMeso(m, lados, AZUL)
+    val fin = repisas.lastOrNull()?.bottom?.plus(w) ?: m.ch
+    val lados = listOf(Rect(-1f, m.ch - 1f, m.posteI.left + 1f, fin), Rect(m.posteD.right - 1f, m.ch - 1f, w + 1f, fin))
+    // Son dos franjas angostas: de noche les basta un degradado de arriba abajo con la luz que les llega.
+    if (a.oscuro) lados.forEach { r -> conLuzMeso(m, AZUL, r, vertical = true, f = m.f(r.center)) }
+    else panoMeso(m, lados, AZUL)
     if (!a.oscuro) drawRect(a.s(0.3f), Offset(m.posteD.right, m.ch), Size(w * 0.016f, lados[1].height))
+    val claro = if (a.oscuro) mezcla(AZUL, MesoTinta.NOCHE, 0.35f) else mezcla(AZUL_HONDO, AZUL, 0.55f)
+    val hondo = if (a.oscuro) MesoTinta.NOCHE_SOMBRA else mezcla(AZUL_HONDO, TINTA, 0.35f)
+    // Las capas de la sombra de la tabla (hasta 0.36, 0.2, 0.1 y 0.04 del alto del hueco): en cada franja, las que la cubren.
+    val capas = listOf(a.s(0.1f), a.s(0.12f), a.s(0.16f), a.s(0.22f))
+    val sombraTabla = (4 downTo 1).map { n -> var t = 1f; for (q in 0 until n) t *= 1f - capas[q].alpha; capas[0].copy(alpha = 1f - t) }
     repisas.forEachIndexed { i, r ->
         val tramo = Rect(x0, r.top, x1, r.bottom)
-        pinceladas(tramo, if (a.oscuro) MesoTinta.NOCHE else mezcla(AZUL_HONDO, AZUL, 0.5f), 721 + i * 3, 9, u, 0.2f)
-        // La sombra de la tabla de arriba, en dos tonos, más honda a la derecha (la luz viene de la izquierda).
-        drawPath(poligonoMeso(x0, r.top, x1, r.top, x1, r.top + r.height * 0.3f, x0, r.top + r.height * 0.16f), a.s(0.22f))
-        drawPath(poligonoMeso(x0, r.top, x1, r.top, x1, r.top + r.height * 0.11f, x0, r.top + r.height * 0.06f), a.s(0.3f))
-        // Los costados de dentro: el del poste izquierdo en sombra, el del derecho con su luz.
-        val g = w * 0.016f
-        drawPath(poligonoMeso(x0, r.top, x0 + g, r.top + g * 0.8f, x0 + g, r.bottom - g * 0.4f, x0, r.bottom), a.c(mezcla(ZAPOTE, ZAPOTE_OSC, 0.6f), m.k(Offset(x0, r.center.y))))
-        drawPath(poligonoMeso(x1, r.top, x1 - g, r.top + g * 0.8f, x1 - g, r.bottom - g * 0.4f, x1, r.bottom), a.c(ZAPOTE_LUZ, m.k(Offset(x1, r.center.y)), m.f(Offset(x1, r.center.y))))
+        // Las manchas del repaso, claras y hondas, y un desconchón cada dos repisas.
+        pinceladas(tramo, claro, 721 + i * 3, 7, u, 0.24f)
+        pinceladas(tramo, hondo, 722 + i * 3, 5, u, 0.18f)
+        if (i % 2 == 1) {
+            val c = Offset(x0 + (x1 - x0) * (0.2f + 0.6f * azar(i, 723)), r.top + r.height * (0.4f + 0.2f * azar(i, 724)))
+            val hoyo = contornoMeso(Rect(c.x - w * 0.03f, c.y - w * 0.014f, c.x + w * 0.03f, c.y + w * 0.014f), 725 + i, 0.3f)
+            drawPath(hoyo, a.c(mezcla(AZUL_HONDO, ESTUCO_OSC, 0.45f), m.k(c), m.f(c)))
+            drawPath(bordeMeso(hoyo, -1f * u, -1.2f * u), a.s(0.35f))
+        }
+        // La sombra de la tabla de arriba, en escalones (franca arriba): cuatro franjas que no se pisan, cada una con las capas
+        // que le tocan ya juntas (igual que encimarlas, con menos pintura); y la de los rincones.
+        var arriba = 0f
+        listOf(0.04f, 0.1f, 0.2f, 0.36f).forEachIndexed { n, abajo ->
+            drawRect(sombraTabla[n], Offset(x0, r.top + r.height * arriba), Size(x1 - x0, r.height * (abajo - arriba)))
+            arriba = abajo
+        }
+        listOf(0.06f to 0.12f, 0.025f to 0.16f).forEach { (ancho, al) ->
+            drawRect(a.s(al), Offset(x0, r.top), Size(w * ancho, r.height))
+            drawRect(a.s(al * 0.8f), Offset(x1 - w * ancho, r.top), Size(w * ancho, r.height))
+        }
+        // Los costados de dentro: el que mira a la luz, encendido; el otro, en sombra.
+        val g = w * 0.022f
+        val kI = m.k(Offset(x0, r.center.y)); val kD = m.k(Offset(x1, r.center.y))
+        val izqLuz = a.oscuro && m.der(x0, r.center.y)
+        drawPath(poligonoMeso(x0, r.top, x0 + g, r.top + g * 0.8f, x0 + g, r.bottom - g * 0.4f, x0, r.bottom),
+            a.c(if (izqLuz) ZAPOTE else mezcla(ZAPOTE, ZAPOTE_OSC, 0.6f), kI))
+        drawPath(poligonoMeso(x1, r.top, x1 - g, r.top + g * 0.8f, x1 - g, r.bottom - g * 0.4f, x1, r.bottom),
+            a.c(if (a.oscuro && !m.der(x1, r.center.y)) ZAPOTE else ZAPOTE_LUZ, kD, m.f(Offset(x1, r.center.y))))
         drawRect(a.s(0.25f), Offset(x1 - g, r.top), Size(g * 0.3f, r.height))
+        if (a.oscuro) {
+            if (izqLuz && kI > 0.06f) drawRect(a.b(0.4f, kI), Offset(x0 + g - 1.2f * u, r.top + g * 0.8f), Size(1.2f * u, r.height - g * 1.2f))
+            if (!m.der(x1, r.center.y) && kD > 0.06f) drawRect(a.b(0.4f, kD), Offset(x1 - g, r.top + g * 0.8f), Size(1.2f * u, r.height - g * 1.2f))
+        }
         // La cara de arriba de la tabla: vista un poco desde arriba, con la sombra del rincón del fondo.
         val cara = Rect(x0, r.bottom - w * 0.022f, x1, r.bottom + 1f)
         drawRect(a.c(mezcla(ZAPOTE, ZAPOTE_LUZ, 0.6f), m.k(cara.center), m.f(cara.center)), cara.topLeft, cara.size)
@@ -180,6 +223,7 @@ internal fun DrawScope.fondosHuecosMeso(m: MesaMeso, repisas: List<Rect>) {
         for (j in 0 until 2) { val y = cara.top + cara.height * (0.4f + 0.3f * j); vetaCara.moveTo(x0, y); vetaCara.quadraticTo((x0 + x1) / 2, y + (azar(i * 2 + j, 722) - 0.5f) * 2.4f * u, x1, y) }
         drawPath(vetaCara, a.c(ZAPOTE_OSC, m.k(cara.center)).copy(alpha = 0.3f), style = Stroke(0.6f * u))
     }
+    if (a.lunar) planoLunaMeso(m, Rect(0f, m.ch, w, fin))
 }
 
 /**
@@ -229,32 +273,45 @@ private fun DrawScope.posteMeso(m: MesaMeso, r: Rect, semilla: Int) {
     val w = m.w; val a = m.a
     if (r.height < 1f) return
     val der = m.der(r.center.x, r.center.y)
+    val k = m.k(r.center)
     conLuzMeso(m, ZAPOTE, r, vertical = true, f = m.f(r.center))
     clipRect(r.left, r.top, r.right, r.bottom) {
-        // Los planos del hacha: el de la luz, el del medio y el de la sombra.
-        val pl = r.width * 0.3f
-        drawRect(if (der) a.s(0.2f) else a.b(0.18f, m.k(r.center)), r.topLeft, Size(pl, r.height))
-        drawRect(if (der) a.b(0.18f, m.k(r.center)) else a.s(0.22f), Offset(r.right - pl, r.top), Size(pl, r.height))
+        // El grueso: el chaflán que mira a la luz (claro) y el del otro canto (hondo), y los planos del hacha en la cara.
+        val ch = w * 0.008f
+        val pl = r.width * 0.36f
+        drawRect(if (der) a.s(0.24f) else a.b(0.24f, k), Offset(r.left + ch, r.top), Size(pl, r.height))
+        drawRect(if (der) a.b(0.22f, k) else a.s(0.3f), Offset(r.right - ch - pl * 0.8f, r.top), Size(pl * 0.8f, r.height))
+        drawRect(a.c(if (der) ZAPOTE_OSC else ZAPOTE_LUZ, k, m.f(r.center)), Offset(r.left, r.top), Size(ch, r.height))
+        drawRect(a.c(if (der) ZAPOTE_LUZ else ZAPOTE_OSC, k), Offset(r.right - ch, r.top), Size(ch, r.height))
+        // La veta, con dos nudos.
         val vetas = Path()
-        for (j in 0 until 5) {
-            val x = r.left + r.width * (0.12f + 0.18f * j + 0.05f * azar(semilla, j))
-            vetas.moveTo(x, r.top); vetas.cubicTo(x + 2f * u, r.top + r.height * 0.3f, x - 2f * u, r.top + r.height * 0.6f, x + 1f * u, r.bottom)
+        for (j in 0 until 7) {
+            val x = r.left + r.width * (0.1f + 0.13f * j + 0.04f * azar(semilla, j))
+            vetas.moveTo(x, r.top); vetas.cubicTo(x + 2.4f * u, r.top + r.height * 0.3f, x - 2.4f * u, r.top + r.height * 0.6f, x + 1f * u, r.bottom)
         }
-        drawPath(vetas, a.c(ZAPOTE_OSC, 0.4f).copy(alpha = 0.3f), style = Stroke(0.7f * u))
-        // Las cucharadas de la azuela, alternadas.
+        drawPath(vetas, a.c(ZAPOTE_OSC, 0.4f).copy(alpha = 0.38f), style = Stroke(0.8f * u))
+        var yn = r.top + w * (0.12f + 0.2f * azar(semilla, 9)); var n = 0
+        while (yn < r.bottom - w * 0.04f && n < 12) {
+            val c = Offset(r.left + r.width * (0.35f + 0.3f * azar(semilla, n + 10)), yn)
+            drawOval(a.c(ZAPOTE_OSC, k), Offset(c.x - w * 0.007f, c.y - w * 0.012f), Size(w * 0.014f, w * 0.024f))
+            drawOval(a.c(mezcla(ZAPOTE_OSC, TINTA, 0.4f), k), Offset(c.x - w * 0.003f, c.y - w * 0.006f), Size(w * 0.006f, w * 0.012f))
+            drawOval(a.b(0.2f, k), Offset(c.x - w * 0.007f, c.y - w * 0.012f), Size(w * 0.014f, w * 0.024f), style = Stroke(0.6f * u))
+            yn += w * (0.45f + 0.3f * azar(semilla, n + 20)); n++
+        }
+        // Las huellas del hacha: tajos cortos en diagonal, cada uno con su sombra y su borde de luz.
         val huellas = Path()
         var y = r.top + w * 0.01f; var j = 0
         while (y < r.bottom && j < 80) {
-            val x = r.left + r.width * (if (j % 2 == 0) 0.1f else 0.45f) + r.width * 0.1f * azar(semilla, j)
-            huellas.moveTo(x, y); huellas.quadraticTo(x + r.width * 0.22f, y + w * 0.006f, x + r.width * 0.42f, y - w * 0.002f)
-            y += w * (0.022f + 0.012f * azar(semilla, j + 40)); j++
+            val x = r.left + r.width * (if (j % 2 == 0) 0.14f else 0.5f) + r.width * 0.08f * azar(semilla, j)
+            huellas.moveTo(x, y); huellas.lineTo(x + r.width * 0.3f, y + w * 0.012f)
+            y += w * (0.02f + 0.012f * azar(semilla, j + 40)); j++
         }
-        drawPath(huellas, a.s(0.22f), style = Stroke(0.8f * u))
-        translate(0f, -0.9f * u) { drawPath(huellas, a.b(0.14f, m.k(r.center)), style = Stroke(0.5f * u)) }
+        drawPath(huellas, a.s(0.3f), style = Stroke(1f * u))
+        translate(0f, -1f * u) { drawPath(huellas, a.b(0.2f, k), style = Stroke(0.6f * u)) }
     }
-    // El filo de luz del lado de la puerta y la sombra del otro.
-    drawRect(a.b(0.45f, m.k(r.center)), Offset(if (der) r.right - 1.4f * u else r.left, r.top), Size(1.4f * u, r.height))
-    drawRect(a.s(0.35f), Offset(if (der) r.left else r.right - 1.6f * u, r.top), Size(1.6f * u, r.height))
+    // El filo de luz del lado de la puerta (de noche, de la lumbre) y la sombra del otro.
+    drawRect(a.b(if (a.oscuro) 0.7f else 0.45f, k), Offset(if (der) r.right - 1.6f * u else r.left, r.top), Size(1.6f * u, r.height))
+    drawRect(a.s(0.38f), Offset(if (der) r.left else r.right - 1.6f * u, r.top), Size(1.6f * u, r.height))
     if (!a.oscuro && m.f(r.center) > 0.05f) drawRect(a.puerta(0.25f * m.f(r.center)), r.topLeft, r.size)
 }
 
@@ -285,23 +342,33 @@ internal fun DrawScope.amarresMeso(m: MesaMeso, d: DisposicionEstante) {
             drawPath(bordeMeso(cuna, w * 0.003f, 0f), a.b(0.3f, k))
             drawRect(a.s(0.35f), Offset(cx - w * 0.006f, esp.top), Size(w * 0.011f, 1.2f * u))
             drawArc(a.s(0.3f), 100f, 160f, false, Offset(esp.left + esp.width * 0.15f, esp.top + esp.height * 0.55f), Size(esp.width * 0.5f, esp.height * 0.4f), style = Stroke(0.6f * u))
-            // El amarre de henequén encima de la tabla.
-            val am = Rect(p.left - w * 0.004f, t.top - w * 0.03f, p.right + w * 0.004f, t.top - w * 0.004f)
-            drawRect(a.s(0.35f), Offset(am.left + 1.6f * u, am.top + 1.6f * u), am.size)
-            drawRect(a.c(HENEQUEN, k, f), am.topLeft, am.size)
-            val vueltas = Path()
-            var x = am.left - am.height; var n = 0
-            while (x < am.right && n < 30) { vueltas.moveTo(x, am.bottom); vueltas.lineTo(x + am.height * 0.7f, am.top); x += w * 0.0065f; n++ }
-            clipRect(am.left, am.top, am.right, am.bottom) {
-                drawPath(vueltas, a.c(HENEQUEN_OSC, k, f), style = Stroke(0.9f * u))
-                drawRect(a.b(0.3f, k), am.topLeft, Size(am.width, am.height * 0.3f))
-                drawRect(a.s(0.25f), Offset(am.left, am.bottom - am.height * 0.3f), Size(am.width, am.height * 0.3f))
+            // El amarre de henequén encima de la tabla: cinco vueltas gruesas que abultan más que el poste, cada una con su luz
+            // arriba y su sombra abajo, un poco ladeadas; el nudo de un lado y la punta que cuelga.
+            val vueltas = 5
+            val gr = w * 0.0095f
+            val am = Rect(p.left - w * 0.008f, t.top - w * 0.006f - gr * vueltas, p.right + w * 0.008f, t.top - w * 0.006f)
+            drawRoundRect(a.s(0.4f), Offset(am.left + 1.6f * u, am.top + 2f * u), am.size, CornerRadius(gr / 2))
+            for (v in 0 until vueltas) {
+                val y = am.top + gr * v
+                val ladeo = (if (v % 2 == 0) 1f else -1f) * w * 0.002f
+                val vuelta = Rect(am.left + ladeo, y, am.right + ladeo, y + gr * 1.08f)
+                drawRoundRect(a.c(HENEQUEN, k, f), vuelta.topLeft, vuelta.size, CornerRadius(gr / 2))
+                drawRoundRect(a.b(0.4f, k), Offset(vuelta.left + gr * 0.4f, y + gr * 0.12f), Size(vuelta.width - gr * 0.8f, gr * 0.25f), CornerRadius(gr * 0.12f))
+                drawRoundRect(a.s(0.3f), Offset(vuelta.left, y + gr * 0.62f), Size(vuelta.width, gr * 0.42f), CornerRadius(gr * 0.2f))
+                // La torsión de la fibra: rayitas en diagonal.
+                val fibra = Path()
+                var x = vuelta.left + gr * 0.3f; var q = 0
+                while (x < vuelta.right - gr * 0.3f && q < 20) { fibra.moveTo(x, y + gr * 0.15f); fibra.lineTo(x + gr * 0.5f, y + gr * 0.9f); x += gr * 0.9f; q++ }
+                drawPath(fibra, a.c(HENEQUEN_OSC, k, f).copy(alpha = 0.6f), style = Stroke(0.6f * u))
             }
-            drawLine(a.c(HENEQUEN_OSC, k, f), Offset(am.left, am.top), Offset(am.right, am.top), 0.8f * u)
-            drawLine(a.c(HENEQUEN_OSC, k, f), Offset(am.left, am.bottom), Offset(am.right, am.bottom), 0.8f * u)
-            // La punta suelta del amarre, que cuelga.
-            val pu = Offset(if (izq) am.right - w * 0.01f else am.left + w * 0.01f, am.bottom)
-            drawLine(a.c(HENEQUEN, k, f), pu, pu + Offset(if (izq) w * 0.006f else -w * 0.006f, w * 0.022f), 1.2f * u, StrokeCap.Round)
+            // El nudo de un lado y la punta suelta que cuelga.
+            val nudo = Offset(if (izq) am.right - gr * 0.2f else am.left + gr * 0.2f, am.top + gr * 2.5f)
+            drawCircle(a.s(0.35f), gr * 0.95f, nudo + Offset(1.2f * u, 1.4f * u))
+            drawCircle(a.c(mezcla(HENEQUEN, HENEQUEN_OSC, 0.3f), k, f), gr * 0.9f, nudo)
+            drawCircle(a.b(0.45f, k), gr * 0.3f, nudo - Offset(gr * 0.3f, gr * 0.3f))
+            val pu = nudo + Offset(0f, gr * 0.6f)
+            drawLine(a.c(HENEQUEN, k, f), pu, pu + Offset(if (izq) w * 0.008f else -w * 0.008f, w * 0.03f), 1.6f * u, StrokeCap.Round)
+            drawLine(a.c(HENEQUEN_OSC, k, f), pu + Offset(if (izq) w * 0.002f else -w * 0.002f, 0f), pu + Offset(if (izq) w * 0.012f else -w * 0.012f, w * 0.024f), 1.2f * u, StrokeCap.Round)
         }
     }
 }

@@ -11,9 +11,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
-import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.ALGODON
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.BARRO
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.BARRO_OSC
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.CACAO_AMARILLO
@@ -22,75 +22,89 @@ import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.CALIZA
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.CALIZA_OSC
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.CINABRIO
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.ESTUCO
-import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.JADE
-import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.JADE_LUZ
+import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.HENEQUEN
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.SEMILLA
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.TINTA
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.VENADO
 import io.github.ruddy2003.vestigium.ui.biblioteca.MesoTinta.ZAPOTE_LUZ
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
+import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 
-// Lo que hay en los huecos libres de las repisas del cuarto de guardar (MuebleEstanteMeso): cosas del escriba y de la casa,
-// distintas según la repisa y el sitio que queda (de [DisposicionEstante.ocupado] al poste de la derecha).
-
-/** Cuánto se agranda lo de los huecos (se dibuja a la medida de lo de arriba y se escala desde su pie). */
-private const val ESCALA_HUECO_MESO = 1.5f
+// Lo que hay en los huecos libres de las repisas del cuarto de guardar (MuebleEstanteMeso): cosas de la casa, grandes (del
+// 80 al 90 % del alto del hueco), agrupadas y solapadas, distintas según la repisa y el sitio que queda (de
+// [DisposicionEstante.ocupado] al poste de la derecha).
 
 /**
- * El hueco libre de la repisa [i] ([r]), de [oc] (donde acaba el último volumen) al poste: hasta tres cosas, acomodadas desde el
- * poste mientras quepan y luego corridas hacia el medio del hueco, en otro orden en cada repisa y sin repetir las de otra
- * mientras quepa otra cosa ([usados]): el tambor de piel, la pila de mantas, el cajete trípode con granos de cacao y dos
- * mazorcas, el hacha del carpintero enmangada, la laja de moler con el azul maya, el huso con su malacate y el algodón, las
- * navajas de obsidiana en su piel.
+ * Los grupos de un hueco, con su ancho (en anchos del mueble): 0, el del agua (el petate enrollado de pie detrás, la tinaja
+ * con su tapa de jícara y la laja del azul delante); 1, el del fuego (el haz de ocote apoyado, la caja tejida y el cajete con
+ * cacao delante); 2, el de la música (el tambor, la pila de mantas y una jícara pintada delante).
+ */
+private val ANCHO_GRUPO_MESO = floatArrayOf(0.37f, 0.35f, 0.34f)
+
+/**
+ * El hueco libre de la repisa [i] ([r]), de [oc] (donde acaba el último volumen) al poste: si cabe, un grupo de tres cosas
+ * solapadas (sin repetir el de otra repisa mientras quepa otro, [usados]), puesto hacia el poste; si sobra mucho sitio, una
+ * cosa alta más, suelta, del otro lado (una que no esté en el grupo); si no cabe un grupo, una sola cosa alta (la tinaja, el
+ * tambor, el haz de ocote o el petate), la primera que quepa y que no haya salido ya.
  */
 internal fun DrawScope.huecoLibreMeso(m: MesaMeso, i: Int, r: Rect, oc: Float, usados: MutableSet<Int>) {
     val w = m.w
-    val e = ESCALA_HUECO_MESO
     val pie = r.bottom - w * 0.008f
     val tope = oc + w * 0.02f
-    var x = m.posteD.left - w * 0.025f
-    // Qué cosas van, en qué orden (de la del poste hacia dentro), según la repisa; cada una con su ancho y dónde va su pie.
-    // Primero una alta (el tambor, las mantas, el cajete con cacao o el hacha enmangada) y luego una baja, alternadas.
-    val altas = listOf(5, 6, 0, 3); val bajas = listOf(1, 2, 4)
-    val a0 = (i * i + i / 2) % 4
-    val propuesta = listOf(altas[a0], bajas[i % 3], altas[(a0 + 1) % 4], bajas[(i + 1) % 3], altas[(a0 + 2) % 4], bajas[(i + 2) % 3], altas[(a0 + 3) % 4])
-    // Lo que todavía no salió en otra repisa va primero, y de eso, lo alto (no se repite mientras haya otra cosa que quepa).
-    val orden = propuesta.filter { it !in usados && it in altas } + propuesta.filter { it !in usados && it !in altas } +
-        propuesta.filter { it in usados }
-    // Primero se acomodan (de la del poste hacia dentro) y luego se corren hacia dentro la mitad de lo que sobra.
-    val puestas = ArrayList<Triple<Int, Float, Float>>(3)
-    for (cual in orden) {
-        if (puestas.size >= 3) break
-        val (ancho, centro) = when (cual) {
-            0 -> w * 0.27f * e to 0.62f
-            1 -> w * 0.17f * e to 0.5f
-            2 -> w * 0.17f * e to 0.68f
-            3 -> w * 0.11f to 0.3f
-            4 -> w * 0.15f * e to 0.5f
-            5 -> w * 0.16f to 0.5f
-            else -> w * 0.2f to 0.5f
+    val fin = m.posteD.left - w * 0.022f
+    val libre = fin - tope
+    if (libre < w * 0.07f) return
+    val alto = r.height
+    val primero = (i * 2 + i / 2) % 3
+    val orden = List(3) { (primero + it) % 3 }.let { l -> l.filter { it !in usados } + l.filter { it in usados } }
+    val grupo = orden.firstOrNull { ANCHO_GRUPO_MESO[it] * w <= libre }
+    if (grupo != null) {
+        usados.add(grupo)
+        val gw = ANCHO_GRUPO_MESO[grupo] * w
+        val gx = fin - gw - (libre - gw) * 0.3f
+        grupoMeso(m, grupo, gx, pie, alto)
+        // Con mucho sitio, una cosa alta más, suelta, del lado de los volúmenes (no la que ya está en el grupo).
+        val resto = gx - w * 0.03f - tope
+        if (resto > w * 0.1f) {
+            val c = Offset(tope + resto * 0.5f, pie)
+            val petate = when (grupo) { 0 -> false; 1 -> true; else -> i % 2 == 0 }
+            if (petate) petateEnrolladoMeso(m, c, alto * 0.86f, -5f, 1980 + i) else ocoteHuecoMeso(m, c, alto * 0.84f, 1990 + i)
         }
-        if (x - ancho < tope) continue
-        puestas.add(Triple(cual, x - ancho * (1f - centro), ancho))
-        x -= ancho + w * (0.03f + 0.03f * azar(i * 7 + cual, 940))
-        usados.add(cual)
+        return
     }
-    val corre = ((x + w * 0.03f - tope) * 0.5f).coerceAtLeast(0f)
-    for ((cual, cx, _) in puestas) {
-        val c = Offset(cx - corre, pie)
-        when (cual) {
-            3 -> hachaMeso(m, c, r.height * 0.66f)
-            5 -> tamborMeso(m, c, r.height * 0.62f)
-            6 -> mantasMeso(m, Rect(c.x - w * 0.09f, pie - r.height * 0.42f, c.x + w * 0.09f, pie), enMuro = false)
-            else -> scale(e, e, c) {
-                when (cual) {
-                    0 -> cajeteCacaoMeso(m, c)
-                    1 -> lajaAzulMeso(m, c)
-                    2 -> husoMeso(m, c)
-                    else -> navajasMeso(m, c)
-                }
-            }
+    // Sin sitio para un grupo: una sola cosa alta, la primera que quepa y no haya salido (o, si ya salieron, la que quepa).
+    val c = Offset(tope + libre * 0.5f, pie)
+    val anchos = floatArrayOf(0.22f, 0.13f, 0.1f, 0f)
+    val caben = (0..3).filter { libre >= w * anchos[it] }
+    val sola = caben.firstOrNull { 10 + it !in usados } ?: caben.first()
+    usados.add(10 + sola)
+    when (sola) {
+        0 -> tinajaMeso(m, c, alto * 0.84f, 2000 + i)
+        1 -> tamborMeso(m, c, alto * 0.8f)
+        2 -> ocoteHuecoMeso(m, c, alto * 0.84f, 2010 + i)
+        else -> petateEnrolladoMeso(m, c, alto * 0.84f, -4f, 2020 + i)
+    }
+}
+
+/** Un grupo de tres cosas solapadas desde [gx] (su borde izquierdo), de atrás hacia delante. */
+private fun DrawScope.grupoMeso(m: MesaMeso, grupo: Int, gx: Float, pie: Float, alto: Float) {
+    val w = m.w
+    when (grupo) {
+        0 -> {
+            petateEnrolladoMeso(m, Offset(gx + w * 0.05f, pie), alto * 0.9f, 6f, 1960)
+            tinajaMeso(m, Offset(gx + w * 0.235f, pie), alto * 0.86f, 1961)
+            lajaAzulMeso(m, Offset(gx + w * 0.11f, pie + w * 0.002f))
+        }
+        1 -> {
+            ocoteHuecoMeso(m, Offset(gx + w * 0.07f, pie), alto * 0.88f, 1962)
+            cajaTejidaMeso(m, Offset(gx + w * 0.235f, pie), alto * 0.62f, 1963)
+            scale(1.25f, 1.25f, Offset(gx + w * 0.13f, pie)) { cajeteCacaoMeso(m, Offset(gx + w * 0.13f, pie)) }
+        }
+        else -> {
+            tamborMeso(m, Offset(gx + w * 0.065f, pie), alto * 0.84f)
+            mantasMeso(m, Rect(gx + w * 0.14f, pie - alto * 0.54f, gx + w * 0.335f, pie), enMuro = false)
+            jicaraPintadaMeso(m, Offset(gx + w * 0.15f, pie + w * 0.002f), w * 0.11f)
         }
     }
 }
@@ -228,110 +242,236 @@ private fun DrawScope.lajaAzulMeso(m: MesaMeso, pie: Offset) {
     }
 }
 
-/** El huso con su malacate de barro, girando en un cajete chico, con el hilo devanado y un copo de algodón al lado. */
-private fun DrawScope.husoMeso(m: MesaMeso, pie: Offset) {
-    val u = density
-    val w = m.w; val a = m.a
-    val k = m.k(pie); val f = m.f(pie)
-    val an = w * 0.065f; val al = w * 0.03f
-    val boca = pie.y - al
-    val cuenco = Path().apply {
-        moveTo(pie.x - an * 0.5f, boca)
-        cubicTo(pie.x - an * 0.48f, pie.y, pie.x + an * 0.48f, pie.y, pie.x + an * 0.5f, boca)
-        close()
+/** El contorno de algo torneado: pares (medio ancho, altura) en fracciones de [alto], desde arriba, alrededor de [cx]. */
+private fun perfilMeso(cx: Float, top: Float, alto: Float, p: FloatArray): Path {
+    val der = List(p.size / 2) { Offset(cx + p[2 * it] * alto, top + p[2 * it + 1] * alto) }
+    val izq = der.reversed().map { Offset(2 * cx - it.x, it.y) }
+    fun suave(path: Path, q: List<Offset>) {
+        for (i in 0 until q.size - 1) {
+            val a = q[maxOf(i - 1, 0)]; val b = q[i]; val c = q[i + 1]; val d = q[minOf(i + 2, q.size - 1)]
+            val c1 = b + (c - a) / 6f; val c2 = c - (d - b) / 6f
+            path.cubicTo(c1.x, c1.y, c2.x, c2.y, c.x, c.y)
+        }
     }
-    val copo = contornoMeso(Rect(pie.x - an * 1.6f, pie.y - w * 0.028f, pie.x - an * 0.55f, pie.y + 0.5f * u), 951, 0.3f)
-    val p0 = Offset(pie.x + an * 0.05f, boca + al * 0.3f); val p1 = Offset(pie.x + an * 0.5f, boca - w * 0.1f)
-    sombraHuecoMeso(m, Path().apply { addPath(cuenco); addPath(copo); addPath(poligonoMeso(p0.x - 1f, p0.y, p1.x - 1f, p1.y, p1.x + 2f, p1.y, p0.x + 2f, p0.y)) }, pie)
-    contactoMeso(Offset(pie.x - an * 0.4f, pie.y), an * 2.4f, w * 0.009f, a, 0.4f)
-    // El copo de algodón, esponjado.
-    drawPath(copo, a.c(ALGODON, k, f))
-    drawPath(bordeMeso(copo, -w * 0.006f, -w * 0.005f), a.s(0.2f))
-    drawPath(bordeMeso(copo, w * 0.004f, w * 0.004f), a.b(0.5f, k))
-    // El huso: la vara con el hilo devanado y el malacate abajo.
-    drawLine(a.c(mezcla(ZAPOTE_LUZ, ESTUCO, 0.2f), k, f), p0, p1, 1.4f * u, StrokeCap.Round)
-    val hilo = Path()
-    for (j in 0 until 7) { val t = 0.25f + 0.07f * j; val q = p0 + (p1 - p0) * t; hilo.moveTo(q.x - 2.4f * u, q.y + 0.6f * u); hilo.lineTo(q.x + 2.4f * u, q.y - 0.6f * u) }
-    drawPath(hilo, a.c(ALGODON, k, f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
-    drawLine(a.c(ALGODON, k, f), p0 + (p1 - p0) * 0.7f, Offset(pie.x - an * 0.9f, pie.y - w * 0.02f), 0.6f * u)
-    val mal = p0 + (p1 - p0) * 0.12f
-    drawOval(a.c(BARRO, k, f), Offset(mal.x - w * 0.012f, mal.y - w * 0.005f), Size(w * 0.024f, w * 0.01f))
-    drawOval(a.b(0.4f, k), Offset(mal.x - w * 0.009f, mal.y - w * 0.004f), Size(w * 0.012f, w * 0.003f))
-    // El cajete chico.
-    drawPath(cuenco, a.c(BARRO, k, f))
-    clipPath(cuenco) { cilindroMeso(Rect(pie.x - an * 0.5f, boca, pie.x + an * 0.5f, pie.y), a, k, 1.2f, m.der(pie.x, boca), f) }
-    drawLine(a.c(CINABRIO, k, f), Offset(pie.x - an * 0.5f, boca), Offset(pie.x + an * 0.5f, boca), 1.6f * u)
+    return Path().apply { moveTo(der[0].x, der[0].y); suave(this, der); lineTo(izq[0].x, izq[0].y); suave(this, izq); close() }
+}
+
+/** El bulto de algo redondo ya pintado: la media luna de sombra del lado contrario a la luz, el claro y el lustre. */
+private fun DrawScope.bultoMeso(m: MesaMeso, forma: Path, k: Float, der: Boolean, lustre: Float) {
+    val a = m.a
+    val r = forma.getBounds()
+    val s = if (der) 1f else -1f
+    drawPath(bordeMeso(forma, s * r.width * 0.24f, -r.height * 0.02f), a.s(0.22f))
+    drawPath(bordeMeso(forma, s * r.width * 0.09f, -r.height * 0.01f), a.s(0.18f))
+    clipPath(forma) {
+        drawOval(a.b(0.2f, k), Offset(if (der) r.right - r.width * 0.34f else r.left + r.width * 0.1f, r.top + r.height * 0.1f), Size(r.width * 0.24f, r.height * 0.66f))
+        if (lustre > 0f) drawRoundRect(a.b(lustre, k), Offset(if (der) r.right - r.width * 0.26f else r.left + r.width * 0.2f, r.top + r.height * 0.18f),
+            Size(r.width * 0.05f, r.height * 0.32f), CornerRadius(r.width * 0.03f))
+    }
+    if (a.oscuro && k > 0.06f) drawPath(bordeMeso(forma, -s * r.width * 0.045f, r.height * 0.03f), MesoTinta.LLAMA.copy(alpha = (0.65f * k).coerceAtMost(0.6f)))
 }
 
 /**
- * El hacha del carpintero que labró el anaquel, recostada contra el fondo: el mango de madera, la hoja de piedra verde pulida
- * que lo atraviesa arriba (el filo ancho y curvo, con su lustre) y el amarre de cuero cruzado que la sujeta; su sombra.
+ * La tinaja grande del agua, con una jícara boca abajo por tapa: el barro con su engobe rojo en el hombro, las franjas negras y
+ * crudas con una hilera de dientes, el bulto redondo con su lustre; la jícara, ocre, con su franja roja; su sombra.
  */
-private fun DrawScope.hachaMeso(m: MesaMeso, pie: Offset, alto: Float) {
+private fun DrawScope.tinajaMeso(m: MesaMeso, pie: Offset, alto: Float, semilla: Int) {
     val u = density
-    val w = m.w; val a = m.a
-    val k = m.k(pie); val f = m.f(pie)
-    val top = Offset(pie.x + w * 0.04f, pie.y - alto)
-    val dir = (top - pie) / (top - pie).getDistance().coerceAtLeast(1f)
-    val nor = Offset(-dir.y, dir.x)
-    val gr = w * 0.014f
-    val cabeza = top - dir * (alto * 0.12f)
-    // La hoja: sale a la izquierda del mango, el filo ancho y curvo.
-    val filo = cabeza - nor * (w * 0.065f)
-    val hoja = Path().apply {
-        val a0 = cabeza + dir * (w * 0.012f) + nor * (w * 0.01f)
-        val a1 = cabeza - dir * (w * 0.012f) + nor * (w * 0.01f)
-        val b0 = filo + dir * (w * 0.026f)
-        val b1 = filo - dir * (w * 0.026f)
-        moveTo(a0.x, a0.y); lineTo(b0.x, b0.y)
-        quadraticTo(filo.x - nor.x * w * 0.012f, filo.y - nor.y * w * 0.012f, b1.x, b1.y)
-        lineTo(a1.x, a1.y); close()
+    val a = m.a
+    val top = pie.y - alto
+    val k = m.k(Offset(pie.x, top + alto * 0.5f)); val f = m.f(Offset(pie.x, top + alto * 0.5f))
+    val cuerpo = perfilMeso(pie.x, top + alto * 0.1f, alto * 0.9f, floatArrayOf(0.15f, 0f, 0.15f, 0.06f, 0.24f, 0.2f, 0.42f, 0.42f, 0.44f, 0.55f, 0.36f, 0.82f, 0.2f, 0.98f, 0.16f, 1f))
+    sombraHuecoMeso(m, cuerpo, pie)
+    contactoMeso(Offset(pie.x, pie.y), alto * 0.5f, m.w * 0.012f, a, 0.45f)
+    drawPath(cuerpo, a.c(BARRO, k, f))
+    val b = cuerpo.getBounds()
+    clipPath(cuerpo) {
+        // El engobe rojo del hombro, con las franjas y los dientes.
+        val y1 = top + alto * 0.3f; val y2 = top + alto * 0.46f
+        drawRect(a.c(CINABRIO, k, f), Offset(b.left, top), Size(b.width, y1 - top))
+        drawRect(a.c(TINTA, k * 0.6f, f), Offset(b.left, y1), Size(b.width, 1.6f * u))
+        drawRect(a.c(mezcla(ESTUCO, BARRO, 0.25f), k, f), Offset(b.left, y1 + 1.6f * u), Size(b.width, y2 - y1 - 1.6f * u))
+        val dientes = Path()
+        var x = b.left; var n = 0
+        val paso = alto * 0.07f
+        while (x < b.right && n < 30) { dientes.moveTo(x, y2); dientes.lineTo(x + paso * 0.5f, y1 + 2.6f * u); dientes.lineTo(x + paso, y2); dientes.close(); x += paso; n++ }
+        drawPath(dientes, a.c(CINABRIO, k, f))
+        drawRect(a.c(TINTA, k * 0.6f, f), Offset(b.left, y2), Size(b.width, 1.6f * u))
+        drawRect(a.c(TINTA, k * 0.6f, f).copy(alpha = 0.7f), Offset(b.left, top + alto * 0.86f), Size(b.width, 1.2f * u))
+        pinceladas(b, a.c(BARRO_OSC, k, f), semilla, 6, u, 0.22f)
     }
-    val mango = Path().apply {
-        val p0 = pie + nor * (gr * 0.5f); val p1 = top + nor * (gr * 0.42f); val p2 = top - nor * (gr * 0.42f); val p3 = pie - nor * (gr * 0.5f)
-        moveTo(p0.x, p0.y); lineTo(p1.x, p1.y); quadraticTo(top.x + dir.x * gr * 0.5f, top.y + dir.y * gr * 0.5f, p2.x, p2.y); lineTo(p3.x, p3.y); close()
+    bultoMeso(m, cuerpo, k, m.der(pie.x, top), 0.35f)
+    drawPath(cuerpo, a.s(0.3f), style = Stroke(0.7f * u))
+    // La jícara boca abajo, por tapa.
+    val jw = alto * 0.36f; val jh = alto * 0.16f
+    val jicara = Path().apply {
+        moveTo(pie.x - jw / 2, top + alto * 0.12f)
+        cubicTo(pie.x - jw / 2, top - jh * 0.3f, pie.x + jw / 2, top - jh * 0.3f, pie.x + jw / 2, top + alto * 0.12f)
+        close()
     }
-    sombraHuecoMeso(m, Path().apply { addPath(mango); addPath(hoja) }, Offset(pie.x, pie.y - alto * 0.5f))
-    contactoMeso(pie, w * 0.04f, w * 0.008f, a, 0.4f)
-    // El mango, con su luz y su veta.
-    drawPath(mango, a.c(MesoTinta.ZAPOTE_LUZ, k, f))
-    drawLine(a.b(0.35f, k), pie + nor * (gr * 0.3f), top + nor * (gr * 0.25f), 0.8f * u)
-    drawLine(a.s(0.3f), pie - nor * (gr * 0.3f), top - nor * (gr * 0.25f), 1.2f * u)
-    // La hoja, pulida.
-    drawPath(hoja, a.c(JADE, k, f))
-    clipPath(hoja) {
-        drawPath(corridoMeso(hoja, -dir.x * w * 0.01f, -dir.y * w * 0.01f), a.c(JADE_LUZ, k, f).copy(alpha = 0.4f))
-        drawPath(corridoMeso(hoja, dir.x * w * 0.012f, dir.y * w * 0.012f), a.s(0.25f))
-        drawLine(a.c(mezcla(JADE, TINTA, 0.4f), k, f).copy(alpha = 0.5f), cabeza - nor * (w * 0.02f), filo + nor * (w * 0.01f) + dir * (w * 0.01f), 0.6f * u)
-    }
-    drawPath(hoja, a.s(0.3f), style = Stroke(0.6f * u))
-    destelloMeso(filo + nor * (w * 0.012f) + dir * (w * 0.012f), 1f * u, a, k)
-    // El amarre de cuero cruzado sobre el mango.
-    val amarre = Path()
-    for (j in -2..2) {
-        val c = cabeza + dir * (j * w * 0.006f)
-        amarre.moveTo(c.x - nor.x * gr * 0.8f, c.y - nor.y * gr * 0.8f); amarre.lineTo(c.x + nor.x * gr * 0.8f + dir.x * w * 0.004f, c.y + nor.y * gr * 0.8f + dir.y * w * 0.004f)
-    }
-    drawPath(amarre, a.c(mezcla(VENADO, ZAPOTE_LUZ, 0.3f), k, f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
-    drawPath(amarre, a.s(0.3f), style = Stroke(0.5f * u))
+    drawPath(corridoMeso(jicara, 1.4f * u, 1.4f * u), a.s(0.3f))
+    drawPath(jicara, a.c(mezcla(CACAO_AMARILLO, BARRO_OSC, 0.35f), k, f))
+    clipPath(jicara) { drawRect(a.c(CINABRIO, k, f), Offset(pie.x - jw, top + alto * 0.07f), Size(jw * 2, alto * 0.025f)) }
+    bultoMeso(m, jicara, k, m.der(pie.x, top), 0.45f)
 }
 
-/** Las navajas de obsidiana, cuatro, en su envoltorio de piel de venado abierto: negras, con su filo de luz. */
-private fun DrawScope.navajasMeso(m: MesaMeso, pie: Offset) {
+/**
+ * El petate enrollado, de pie y un poco ladeado contra el fondo: el cilindro de palma tejida en espiga, dos amarres, la boca de
+ * arriba con la espiral del rollo y la punta que se suelta; su luz y su sombra.
+ */
+private fun DrawScope.petateEnrolladoMeso(m: MesaMeso, pie: Offset, alto: Float, giro: Float, semilla: Int) {
+    val u = density
+    val a = m.a
+    val an = m.w * 0.078f
+    val k = m.k(Offset(pie.x, pie.y - alto * 0.5f)); val f = m.f(Offset(pie.x, pie.y - alto * 0.5f))
+    val e = an * 0.42f
+    rotate(giro, pie) {
+        val r = Rect(pie.x - an / 2, pie.y - alto, pie.x + an / 2, pie.y)
+        val cuerpo = Path().apply { addRoundRect(RoundRect(r, CornerRadius(an / 2, e / 2))) }
+        sombraHuecoMeso(m, cuerpo, Offset(pie.x, pie.y - alto * 0.5f))
+        val palma = mezcla(MesoTinta.BEJUCO, ESTUCO, 0.3f)
+        drawPath(cuerpo, a.c(palma, k, f))
+        clipPath(cuerpo) {
+            // La espiga: hileras de tiras cortas inclinadas a un lado y al otro.
+            val luz = Path(); val sombra = Path()
+            val paso = an * 0.16f
+            var y = r.top + e / 2 - paso * 1.3f * azar(semilla, 1); var fila = 0
+            while (y < r.bottom && fila < 40) {
+                val dir = if (fila % 2 == 0) 1f else -1f
+                var x = r.left; var n = 0
+                while (x < r.right && n < 12) { (if (dir > 0) luz else sombra).apply { moveTo(x, y); lineTo(x + dir * paso * 0.8f, y + paso * 1.3f) }; x += paso; n++ }
+                y += paso * 1.3f; fila++
+            }
+            drawPath(luz, a.c(mezcla(palma, ESTUCO, 0.4f), k, f).copy(alpha = 0.6f), style = Stroke(paso * 0.45f))
+            drawPath(sombra, a.c(MesoTinta.BEJUCO_OSC, k, f).copy(alpha = 0.45f), style = Stroke(paso * 0.35f))
+            cilindroMeso(r, a, k, 1.3f, m.der(pie.x, r.top), f)
+        }
+        listOf(0.3f, 0.75f).forEach { t ->
+            val y = r.top + alto * t
+            drawLine(a.s(0.35f), Offset(r.left, y + 1.4f * u), Offset(r.right, y + 1.4f * u), 2f * u)
+            drawLine(a.c(HENEQUEN, k, f), Offset(r.left, y), Offset(r.right, y), 1.8f * u)
+        }
+        // La boca de arriba, con la espiral del rollo.
+        drawOval(a.c(mezcla(palma, MesoTinta.BEJUCO_OSC, 0.4f), k, f), Offset(r.left, r.top), Size(an, e))
+        for (q in 1..3) {
+            val fq = q / 4f
+            drawArc(a.c(MesoTinta.BEJUCO_OSC, k, f), -60f + q * 40f, 280f, false, Offset(r.center.x - an * fq / 2, r.top + e / 2 - e * fq / 2), Size(an * fq, e * fq), style = Stroke(0.8f * u))
+        }
+        drawArc(a.b(0.45f, k), 150f, 120f, false, Offset(r.left, r.top), Size(an, e), style = Stroke(0.8f * u))
+        val punta = poligonoMeso(r.right - an * 0.1f, r.top + e * 0.6f, r.right + an * 0.3f, r.top - e * 0.2f, r.right + an * 0.36f, r.top + e * 0.5f)
+        drawPath(punta, a.c(palma, k, f))
+        drawPath(bordeMeso(punta, 0f, 1f * u), a.s(0.3f))
+    }
+    contactoMeso(Offset(pie.x, pie.y), an * 1.2f, m.w * 0.01f, a, 0.42f)
+}
+
+/**
+ * La caja tejida de palma, con su tapa: el cuerpo en petatillo (las tiras que pasan por encima, a lo ancho a la luz y a lo alto
+ * en sombra, con lo hondo entre ellas) con una franja teñida, la tapa un poco más ancha, el cordel de henequén que la cruza
+ * de arriba abajo con su nudo; su luz y su sombra.
+ */
+private fun DrawScope.cajaTejidaMeso(m: MesaMeso, pie: Offset, alto: Float, semilla: Int) {
     val u = density
     val w = m.w; val a = m.a
-    val k = m.k(pie); val f = m.f(pie)
-    val piel = contornoMeso(Rect(pie.x - w * 0.07f, pie.y - w * 0.016f, pie.x + w * 0.07f, pie.y + 0.4f * u), 961, 0.12f)
-    sombraHuecoMeso(m, piel, pie)
-    drawPath(piel, a.c(VENADO, k, f))
-    drawPath(bordeMeso(piel, 0f, -1.4f * u), a.s(0.3f))
-    for (j in 0 until 4) {
-        val x = pie.x - w * 0.045f + w * 0.026f * j
-        val navaja = poligonoMeso(x, pie.y - w * 0.006f, x + w * 0.004f, pie.y - w * 0.014f, x + w * 0.05f, pie.y - w * (0.016f + 0.004f * azar(j, 962)), x + w * 0.044f, pie.y - w * 0.006f)
-        rotate(-8f + 6f * azar(j, 963), Offset(x, pie.y)) {
-            drawPath(navaja, a.c(Color(0xFF1C1A22), k, f))
-            drawLine(a.b(0.6f, k), Offset(x + w * 0.006f, pie.y - w * 0.013f), Offset(x + w * 0.046f, pie.y - w * 0.015f), 0.6f * u)
-            drawLine(Color(0xFF4A5A6E).copy(alpha = 0.6f), Offset(x + w * 0.004f, pie.y - w * 0.009f), Offset(x + w * 0.04f, pie.y - w * 0.01f), 0.6f * u)
+    val an = w * 0.17f
+    val k = m.k(Offset(pie.x, pie.y - alto * 0.5f)); val f = m.f(Offset(pie.x, pie.y - alto * 0.5f))
+    val tapaAl = alto * 0.22f
+    val cuerpo = Rect(pie.x - an / 2, pie.y - alto + tapaAl * 0.8f, pie.x + an / 2, pie.y)
+    val tapa = Rect(pie.x - an / 2 - w * 0.006f, pie.y - alto, pie.x + an / 2 + w * 0.006f, pie.y - alto + tapaAl)
+    val silueta = Path().apply { addRect(cuerpo); addRect(tapa) }
+    sombraHuecoMeso(m, silueta, Offset(pie.x, pie.y - alto * 0.5f))
+    contactoMeso(Offset(pie.x, pie.y), an * 1.1f, w * 0.012f, a, 0.45f)
+    val palma = mezcla(MesoTinta.BEJUCO, ESTUCO, 0.3f)
+    val tinte = if (azar(semilla, 2) < 0.5f) MesoTinta.ACHIOTE else MesoTinta.AZUL
+    listOf(cuerpo, tapa).forEachIndexed { j, r ->
+        drawRect(a.c(MesoTinta.BEJUCO_OSC, k, f), r.topLeft, r.size)
+        clipRect(r.left, r.top, r.right, r.bottom) {
+            // El petatillo: una celda con la tira a lo ancho, la siguiente con la tira a lo alto; en la franja, teñidas.
+            val c = w * 0.0105f
+            val anchas = Path(); val altas = Path(); val tenidas = Path(); val bajos = Path()
+            val f0 = r.top + r.height * 0.3f; val f1 = f0 + r.height * 0.16f
+            var y = r.top; var fila = 0
+            while (y < r.bottom && fila < 30) {
+                var x = r.left; var n = 0
+                while (x < r.right && n < 40) {
+                    val ancha = (n + fila) % 2 == 0
+                    val celda = if (ancha) Rect(x + c * 0.04f, y + c * 0.14f, x + c * 0.96f, y + c * 0.86f) else Rect(x + c * 0.14f, y + c * 0.04f, x + c * 0.86f, y + c * 0.96f)
+                    (if (j == 0 && y + c * 0.5f in f0..f1 && !ancha) tenidas else if (ancha) anchas else altas).addRect(celda)
+                    if (ancha) { bajos.moveTo(celda.left, celda.bottom); bajos.lineTo(celda.right, celda.bottom) }
+                    x += c; n++
+                }
+                y += c; fila++
+            }
+            drawPath(anchas, a.c(mezcla(palma, ESTUCO, 0.3f), k, f))
+            drawPath(altas, a.c(mezcla(palma, MesoTinta.BEJUCO_OSC, 0.25f), k, f))
+            drawPath(tenidas, a.c(mezcla(tinte, palma, 0.2f), k, f))
+            drawPath(bajos, a.s(0.25f), style = Stroke(0.6f * u))
+            val der = m.der(r.center.x, r.center.y)
+            drawRect(if (der) a.s(0.22f) else a.b(0.18f, k), r.topLeft, Size(r.width * 0.2f, r.height))
+            drawRect(if (der) a.b(0.18f, k) else a.s(0.26f), Offset(r.right - r.width * 0.24f, r.top), Size(r.width * 0.24f, r.height))
         }
+        drawRect(a.s(0.35f), r.topLeft, r.size, style = Stroke(0.8f * u))
     }
+    drawRect(a.s(0.35f), Offset(cuerpo.left, tapa.bottom), Size(cuerpo.width, 2f * u))
+    drawRect(a.b(0.4f, k), tapa.topLeft, Size(tapa.width, 1.2f * u))
+    // El cordel que la cruza y su nudo.
+    val cx = pie.x + an * 0.1f
+    drawLine(a.s(0.35f), Offset(cx + 1.4f * u, tapa.top), Offset(cx + 1.4f * u, cuerpo.bottom), 1.8f * u)
+    drawLine(a.c(HENEQUEN, k, f), Offset(cx, tapa.top), Offset(cx, cuerpo.bottom), 1.6f * u)
+    drawCircle(a.c(MesoTinta.HENEQUEN_OSC, k, f), 2.4f * u, Offset(cx, tapa.center.y))
+    drawLine(a.c(HENEQUEN, k, f), Offset(cx, tapa.center.y), Offset(cx + 3f * u, tapa.center.y + alto * 0.16f), 1.2f * u, StrokeCap.Round)
+}
+
+/** La jícara pintada, sobre su rodete: la boca abierta con lo hondo de dentro, la franja roja con sus dientes crudos y el lustre. */
+private fun DrawScope.jicaraPintadaMeso(m: MesaMeso, pie: Offset, ancho: Float) {
+    val u = density
+    val a = m.a
+    val k = m.k(pie); val f = m.f(pie)
+    val alto = ancho * 0.5f
+    val boca = pie.y - alto
+    val cuenco = Path().apply {
+        moveTo(pie.x - ancho / 2, boca)
+        cubicTo(pie.x - ancho / 2, boca + alto * 0.9f, pie.x + ancho / 2, boca + alto * 0.9f, pie.x + ancho / 2, boca)
+        close()
+    }
+    contactoMeso(Offset(pie.x, pie.y), ancho * 0.9f, m.w * 0.01f, a, 0.45f)
+    // El rodete de fibra.
+    drawOval(a.c(HENEQUEN, k, f), Offset(pie.x - ancho * 0.3f, pie.y - alto * 0.22f), Size(ancho * 0.6f, alto * 0.26f))
+    drawPath(cuenco, a.c(mezcla(CACAO_AMARILLO, BARRO_OSC, 0.45f), k, f))
+    clipPath(cuenco) {
+        drawRect(a.c(CINABRIO, k, f), Offset(pie.x - ancho, boca + alto * 0.08f), Size(ancho * 2, alto * 0.26f))
+        val dientes = Path()
+        var x = pie.x - ancho / 2; var n = 0
+        val paso = ancho * 0.12f
+        while (x < pie.x + ancho / 2 && n < 20) { dientes.moveTo(x, boca + alto * 0.34f); dientes.lineTo(x + paso * 0.5f, boca + alto * 0.12f); dientes.lineTo(x + paso, boca + alto * 0.34f); dientes.close(); x += paso; n++ }
+        drawPath(dientes, a.c(ESTUCO, k, f).copy(alpha = 0.85f))
+    }
+    bultoMeso(m, cuenco, k, m.der(pie.x, boca), 0.45f)
+    drawOval(a.c(mezcla(BARRO_OSC, TINTA, 0.5f), k * 0.6f), Offset(pie.x - ancho / 2, boca - alto * 0.12f), Size(ancho, alto * 0.24f))
+    drawArc(a.b(0.5f, k), 160f, 120f, false, Offset(pie.x - ancho / 2, boca - alto * 0.12f), Size(ancho, alto * 0.24f), style = Stroke(0.8f * u))
+}
+
+/** El haz de rajas de ocote, de pie y apoyado contra el fondo, atado con dos amarres; su sombra. */
+private fun DrawScope.ocoteHuecoMeso(m: MesaMeso, pie: Offset, alto: Float, semilla: Int) {
+    val u = density
+    val w = m.w; val a = m.a
+    val tope = Offset(pie.x + w * 0.035f, pie.y - alto)
+    val k = m.k(Offset(pie.x, pie.y - alto * 0.5f)); val f = m.f(pie)
+    val silueta = poligonoMeso(pie.x - w * 0.03f, pie.y, pie.x + w * 0.03f, pie.y, tope.x + w * 0.035f, tope.y, tope.x - w * 0.03f, tope.y)
+    sombraHuecoMeso(m, silueta, Offset(pie.x, pie.y - alto * 0.5f))
+    for (i in 0 until 6) {
+        val t = i / 5f - 0.5f
+        val p0 = Offset(pie.x + t * w * 0.05f, pie.y - w * 0.002f)
+        val p1 = Offset(tope.x + t * w * 0.06f, tope.y + w * 0.012f * azar(semilla, i))
+        val col = mezcla(MesoTinta.OCOTE, if (i % 2 == 0) ESTUCO else BARRO_OSC, 0.18f + 0.1f * azar(semilla, i + 6))
+        drawLine(a.c(col, k, f), p0, p1, w * 0.011f, StrokeCap.Butt)
+        drawLine(a.c(mezcla(MesoTinta.OCOTE, BARRO_OSC, 0.6f), k, f).copy(alpha = 0.7f), p0 + Offset(w * 0.003f, 0f), p1 + Offset(w * 0.003f, 0f), w * 0.0025f)
+        drawLine(a.b(0.3f, k), p0 - Offset(w * 0.0035f, 0f), p1 - Offset(w * 0.0035f, 0f), w * 0.002f)
+    }
+    listOf(0.3f, 0.7f).forEach { fr ->
+        val c = Offset(pie.x + (tope.x - pie.x) * fr, pie.y + (tope.y - pie.y) * fr)
+        drawLine(a.s(0.35f), c + Offset(-w * 0.03f, w * 0.004f), c + Offset(w * 0.032f, -w * 0.002f), 3.2f * u)
+        drawLine(a.c(HENEQUEN, k, f), c + Offset(-w * 0.032f, w * 0.002f), c + Offset(w * 0.032f, -w * 0.004f), 2.4f * u)
+    }
+    contactoMeso(Offset(pie.x + w * 0.01f, pie.y), w * 0.08f, w * 0.01f, a, 0.4f)
 }
