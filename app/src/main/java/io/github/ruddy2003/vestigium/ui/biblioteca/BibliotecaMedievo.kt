@@ -1068,8 +1068,11 @@ object EstanteTemplario : DisenoBiblioteca {
         val libro = Rect(w * 0.025f, h * 0.05f, w * 0.965f, h * 0.92f)
         val lomo = Rect(libro.left, libro.top, libro.left + minOf(w * 0.07f, 28 * u), libro.bottom)
         val tapa = Rect(lomo.right, libro.top, libro.right, libro.bottom)
-        // La sombra sobre la mesa y el canto de las hojas.
-        drawRoundRect(Color.Black.copy(alpha = 0.3f), Offset(libro.left + 3 * u, libro.top + 5 * u), libro.size, CornerRadius(3 * u))
+        // La mesa de cedro donde descansa: su tablero y el canto de delante, con su filete de luz.
+        mesaTapa(libro, oscuro, n)
+        // La sombra en la mesa, con color: a la derecha y abajo de día; de noche, lejos de la vela (a la izquierda).
+        val ds = if (oscuro || n) Offset(-4 * u, 5 * u) else Offset(4 * u, 5 * u)
+        drawRoundRect(SOMBRA_TAPA.copy(alpha = if (oscuro) 0.55f else 0.36f), libro.topLeft + ds, libro.size, CornerRadius(3 * u))
         val bloque = Rect(tapa.left, tapa.top + 3 * u, tapa.right + 2.5f * u, tapa.bottom + 3 * u)
         drawRect(c(CREMA), bloque.topLeft, bloque.size)
         var cy = bloque.top + 2 * u
@@ -1097,8 +1100,20 @@ object EstanteTemplario : DisenoBiblioteca {
         // La tapa de piel blanca curtida al alumbre, que gira sobre el lomo al abrirse.
         val sx = 1f - 0.9f * a
         scale(sx, 1f, Offset(tapa.left, tapa.center.y)) {
-            drawRoundRect(Brush.verticalGradient(listOf(mezcla(piel, Color.White, 0.18f), piel, mezcla(piel, c(HOJA), 0.3f)), tapa.top, tapa.bottom),
-                tapa.topLeft, tapa.size, CornerRadius(2.5f * u))
+            // La piel, con la luz del momento en su mismo degradado (sin capas encima, que pesan): de día, de arriba abajo; de
+            // noche, fría y hundida lejos de la vela y cálida a su lado; en el sueño, la luna fría arriba a la izquierda.
+            val brocha = when {
+                oscuro && !n -> Brush.horizontalGradient(listOf(mezcla(piel, Color(0xFF141A36), 0.5f), piel, mezcla(piel, LLAMA, 0.32f)), tapa.left, tapa.right)
+                n -> Brush.linearGradient(listOf(mezcla(piel, Color(0xFFB8C8EA), 0.3f), piel, mezcla(piel, Color(0xFF26284A), 0.35f)), tapa.topLeft, tapa.bottomRight)
+                else -> Brush.verticalGradient(listOf(mezcla(piel, Color.White, 0.18f), piel, mezcla(piel, c(HOJA), 0.3f)), tapa.top, tapa.bottom)
+            }
+            drawRoundRect(brocha, tapa.topLeft, tapa.size, CornerRadius(2.5f * u))
+            // El filete de luz en los cantos que miran a la luz (arriba y a la izquierda) y la sombra propia, teñida, en los otros.
+            if (!oscuro && !n) {
+                drawRect(LUZ_TAPA.copy(alpha = 0.55f), Offset(tapa.left + 2 * u, tapa.top + 0.6f * u), Size(tapa.width - 4 * u, 1.2f * u))
+                drawRect(SOMBRA_TAPA.copy(alpha = 0.22f), Offset(tapa.left + 2 * u, tapa.bottom - 2.4f * u), Size(tapa.width - 4 * u, 2.4f * u))
+                drawRect(SOMBRA_TAPA.copy(alpha = 0.16f), Offset(tapa.right - 2.4f * u, tapa.top + 2 * u), Size(2.4f * u, tapa.height - 4 * u))
+            }
             // El roce del uso: los cantos más oscuros y algunas arrugas de la piel.
             drawRect(c(HOJA).copy(alpha = 0.22f), tapa.topLeft, tapa.size, style = Stroke(3 * u))
             for (j in 0 until 10) {
@@ -1178,8 +1193,58 @@ object EstanteTemplario : DisenoBiblioteca {
         }
         listOf(0.2f, 0.86f).forEach { f -> drawRect(c(CUERO), Offset(lomo.left, lomo.top + lomo.height * f - 4.5f * u), Size(lomo.width, 9 * u)) }
         drawPath(cruzPatada(Offset(lomo.center.x - 1 * u, lomo.top + lomo.height * 0.4f), minOf(lomo.width * 0.3f, 6 * u)), c(ROJO))
-        // De noche, la antorcha alumbra desde arriba a la derecha.
-        if (n) clipRect(0f, 0f, w, h) { mancha(Offset(w * 0.96f, h * 0.02f), h * 1.2f, LLAMA.copy(alpha = 0.22f)) }
+        // La vela chica en su palmatoria, junto a la esquina de la derecha; de noche arde y la luz tiene lado.
+        velaTapa(libro, oscuro, n)
+    }
+
+    /** La sombra con color (violeta hondo) y la luz crema del día de la tapa. */
+    private val SOMBRA_TAPA = Color(0xFF2A2436)
+    private val LUZ_TAPA = Color(0xFFFFF1D2)
+
+    /** La mesa de cedro bajo el libro del día: el tablero que asoma debajo y su canto, que coge la luz por arriba. */
+    private fun DrawScope.mesaTapa(libro: Rect, oscuro: Boolean, noche: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val cedro = t(Color(0xFF8A4529), oscuro, noche)
+        val canto = h - minOf(7 * u, (h - libro.bottom) * 0.55f)
+        drawRect(mezcla(cedro, Color.White, 0.12f), Offset(0f, libro.bottom - 6 * u), Size(w, canto - libro.bottom + 6 * u))
+        drawRect(mezcla(cedro, Color.Black, 0.25f), Offset(0f, canto), Size(w, h - canto))
+        drawRect(LUZ_TAPA.copy(alpha = if (oscuro) 0.12f else 0.4f), Offset(0f, canto), Size(w, 1 * u))
+        drawRect(SOMBRA_TAPA.copy(alpha = 0.3f), Offset(0f, h - 1.6f * u), Size(w, 1.6f * u))
+    }
+
+    /**
+     * La vela de sebo en su palmatoria de hierro, chica, en la mesa junto a la esquina de abajo a la derecha (la corta el borde).
+     * De noche arde: el lado de la vela se calienta y el otro se enfría y se hunde. En el sueño arde baja y manda la luna, que
+     * entra fría por arriba a la izquierda.
+     */
+    private fun DrawScope.velaTapa(libro: Rect, oscuro: Boolean, noche: Boolean) {
+        val u = density; val w = size.width; val h = size.height
+        val x = w - 7 * u; val base = h - 3 * u
+        val vela = Rect(x - 3.5f * u, base - 26 * u, x + 3.5f * u, base - 4 * u)
+        drawOval(SOMBRA_TAPA.copy(alpha = 0.35f), Offset(x - 12 * u, base - 3 * u), Size(18 * u, 4 * u))
+        drawOval(t(HIERRO, oscuro, noche), Offset(x - 9 * u, base - 6 * u), Size(18 * u, 5 * u))
+        drawRect(t(Color(0xFFE4D3A0), oscuro, noche), vela.topLeft, vela.size)
+        drawRect(SOMBRA_TAPA.copy(alpha = 0.25f), Offset(vela.right - 2.4f * u, vela.top), Size(2.4f * u, vela.height))
+        drawLine(Color(0xFF1C1612), Offset(x, vela.top), Offset(x + 0.6f * u, vela.top - 2.4f * u), 0.9f * u)
+        val llama = Offset(x + 0.3f * u, vela.top - 2 * u)
+        clipRect(0f, 0f, w, h) {
+            if (oscuro || noche) {
+                // El halo de la vela, chico (el lado cálido y el frío van en el degradado de la piel).
+                val f = if (noche) 0.55f else 1f
+                val r = minOf(w * 0.16f, h * 0.5f)
+                drawCircle(Brush.radialGradient(listOf(LLAMA.copy(alpha = 0.4f * f), Color.Transparent), llama, r), r, llama)
+                val s = (if (noche) 4.5f else 6f) * u
+                drawCircle(LLAMA.copy(alpha = 0.45f), s * 1.4f, llama - Offset(0f, s * 0.5f))
+                drawPath(Path().apply {
+                    moveTo(llama.x, llama.y - s * 1.8f)
+                    cubicTo(llama.x + s * 0.55f, llama.y - s, llama.x + s * 0.5f, llama.y, llama.x, llama.y + s * 0.15f)
+                    cubicTo(llama.x - s * 0.5f, llama.y, llama.x - s * 0.55f, llama.y - s, llama.x, llama.y - s * 1.8f); close()
+                }, Color(0xFFFFA248))
+                drawOval(Color(0xFFFFF0C8), Offset(llama.x - s * 0.2f, llama.y - s * 0.9f), Size(s * 0.4f, s * 0.8f))
+                // El canto de la tapa que mira a la vela, encendido.
+                drawRect(LLAMA.copy(alpha = 0.55f * f), Offset(libro.right - 1.6f * u, libro.top + 4 * u), Size(1.6f * u, libro.height - 8 * u))
+            }
+        }
     }
 
     // ---------------------------------------------------------------- la página y el escritor
