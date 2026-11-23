@@ -3,6 +3,7 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -359,4 +360,44 @@ internal object MuroEstanteMongol {
         // De noche, el charco del hogar en el suelo (el sol de la puerta, de día, lo pinta `solPuerta` después del mueble).
         if (a.oscuro) clipRect(0f, y0, w, h) { mancha(g.hogar, w * 0.75f, a.fuego.copy(alpha = if (a.llamas) 0.32f else 0.16f)) }
     }
+}
+
+/**
+ * El haz de luna de los Sueños en oscuro, que baja del toono en diagonal. En el aire, apenas un rastro tenue de borde blando, solo
+ * en lo alto. Donde cae, un paño frío de borde neto que sigue cada superficie y se quiebra en cada cambio de plano: el fondo (la
+ * pared, el fondo de los casilleros) y los frentes (la cornisa, los cantos de las tablas, el cuerpo bajo), corridos entre sí;
+ * en el suelo, que se tiende hacia delante, se abre más inclinado. Aclara y enfría lo que toca sin cubrirlo: un sobreexpuesto
+ * frío (cada cosa conserva su color, más clara) y un levantado leve de lo oscuro hacia el azul de la luna.
+ */
+internal fun DrawScope.hazLunaMongol(g: MarcoMongol, d: DisposicionEstante) {
+    val m = MuebleEstanteMongol
+    val w = g.w; val h = g.h
+    val medio = w * m.HAZ_MEDIO
+    val delante = w * m.HAZ_DELANTE
+    fun centro(y: Float) = w * m.centroHaz(y / w)
+    // El rastro en el aire: tres capas cada vez más angostas que se apagan antes de la cornisa (el borde queda blando).
+    val alto = g.apoyo * 0.8f
+    listOf(1.3f, 1f, 0.7f).forEach { k ->
+        val p = poligonoMongol(centro(0f) - medio * k, 0f, centro(0f) + medio * k, 0f, centro(alto) + medio * k, alto, centro(alto) - medio * k, alto)
+        drawPath(p, Brush.verticalGradient(listOf(P.LUNA.copy(alpha = 0.035f), Color.Transparent), 0f, alto))
+    }
+    // El paño, por planos: (arriba, abajo, corrimiento, inclinación extra).
+    val planos = ArrayList<FloatArray>()
+    planos.add(floatArrayOf(0f, g.apoyo, 0f, 0f))
+    planos.add(floatArrayOf(g.apoyo, g.ch, delante, 0f))
+    d.repisas.forEachIndexed { k, r ->
+        planos.add(floatArrayOf(r.top, r.bottom, 0f, 0f))
+        d.tablas.getOrNull(k)?.let { t -> planos.add(floatArrayOf(t.top, t.bottom, delante, 0f)) }
+    }
+    planos.add(floatArrayOf(g.fondo, g.suelo, delante, 0f))
+    planos.add(floatArrayOf(g.suelo, h, delante, 0.8f))
+    val pano = Path()
+    planos.forEach { (y0, y1, dx, extra) ->
+        if (y1 <= y0) return@forEach
+        val c0 = centro(y0) + dx
+        val c1 = centro(y1) + dx - (y1 - y0) * m.HAZ_CAE * extra
+        pano.addPath(poligonoMongol(c0 - medio, y0, c0 + medio, y0, c1 + medio, y1 + 0.5f, c1 - medio, y1 + 0.5f))
+    }
+    drawPath(pano, Color(0xFF38404D), blendMode = BlendMode.ColorDodge)
+    drawPath(pano, Color(0xFF080A12), blendMode = BlendMode.Screen)
 }
