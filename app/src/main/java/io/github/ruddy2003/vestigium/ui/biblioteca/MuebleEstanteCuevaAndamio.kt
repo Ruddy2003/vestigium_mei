@@ -103,8 +103,12 @@ internal object AndamioEstanteCueva {
         drawRect(Brush.verticalGradient(muro, y0, y1), Offset(0f, y0), Size(xi, y1 - y0))
         drawRect(Brush.verticalGradient(muro, y0, y1), Offset(xd, y0), Size(g.w - xd, y1 - y0))
         conManchaCueva(g, DELANTE, Rect(0f, y0, g.w, y1)) { s ->
-            poste(g, g.posteI, y0, y1, 0, s)
-            poste(g, g.posteD, y0, y1, 1, s)
+            // La pasada de la mancha, solo en el tramo que ella alcanza (el poste es largo y pintarlo entero dos veces cuesta).
+            val b = if (s != null && s > 0f) g.mancha(DELANTE)?.getBounds() else null
+            val ya = if (b != null) maxOf(y0, floor(b.top) - 1f) else y0
+            val yb = if (b != null) minOf(y1, kotlin.math.ceil(b.bottom) + 1f) else y1
+            poste(g, g.posteI, ya, yb, 0, s)
+            poste(g, g.posteD, ya, yb, 1, s)
         }
     }
 

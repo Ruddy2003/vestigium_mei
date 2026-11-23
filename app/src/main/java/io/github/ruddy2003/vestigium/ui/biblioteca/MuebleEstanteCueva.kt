@@ -38,11 +38,11 @@ import kotlin.math.sqrt
  * azulada), el negro de manganeso, el sílex, la corteza de abedul, el enebro y la luna.
  */
 internal object PaletaCueva {
-    /** La caliza de la pared: su cara, al sol, a la sombra del cielo y honda (el fondo de los huecos). */
+    /** La caliza de la pared: su cara, al sol, a la sombra del cielo y honda (el fondo de los huecos: parda, en sombra). */
     val CALIZA = Color(0xFFC9B192)
     val CALIZA_SOL = Color(0xFFF8DDAE)
     val CALIZA_FRIA = Color(0xFF8E96A4)
-    val CALIZA_HONDA = Color(0xFF5E5C66)
+    val CALIZA_HONDA = Color(0xFF75644F)
     /** El techo de la boca, ennegrecido por los fuegos, y el hollín. */
     val TECHO = Color(0xFF5A4C4A)
     val HOLLIN = Color(0xFF241B1C)
@@ -108,11 +108,11 @@ internal object PaletaCueva {
 internal class AireCueva(val oscuro: Boolean, val noche: Boolean) {
     private val p = PaletaCueva
     /** Cuánto arde la lámpara de grasa de arriba (de 0 a 1). */
-    val lampara: Float get() = if (oscuro && !noche) 1f else if (noche && !oscuro) 0.5f else if (noche) 0.3f else 0f
+    val lampara: Float get() = if (oscuro && !noche) 1f else if (noche && !oscuro) 0.5f else if (noche) 0.4f else 0f
     /** Cuánto arde la tea del poste. */
     val tea: Float get() = if (oscuro && !noche) 1f else 0f
     /** Cuánto arde el hogar: de noche en llamas; en los Sueños, en brasas. */
-    val hogar: Float get() = if (oscuro && !noche) 1f else if (noche) (if (oscuro) 0.62f else 0.3f) else 0f
+    val hogar: Float get() = if (oscuro && !noche) 1f else if (noche) (if (oscuro) 1f else 0.3f) else 0f
     /** Si el hogar está en llamas (o solo en brasas). */
     val llamas: Boolean get() = !noche
     /** El color en que se hunde lo que no se alumbra. */
@@ -124,7 +124,7 @@ internal class AireCueva(val oscuro: Boolean, val noche: Boolean) {
     /** El color propio de algo, hundido: oscuro, de su mismo tono (no gris), con el aire de la noche. */
     fun hundido(c: Color): Color {
         val n = hondo
-        return Color(c.red * 0.15f + n.red * 0.85f, c.green * 0.15f + n.green * 0.85f, c.blue * 0.15f + n.blue * 0.85f, c.alpha)
+        return Color(c.red * 0.11f + n.red * 0.89f, c.green * 0.11f + n.green * 0.89f, c.blue * 0.11f + n.blue * 0.89f, c.alpha)
     }
 
     fun sombra(a: Float): Color = when {
@@ -150,8 +150,11 @@ internal class LuzCueva(val a: AireCueva, val k: Float, val tinte: Color, val so
         !a.oscuro -> LuzCueva(a, k, tinte, v.coerceIn(0f, 1f), luna, amb)
         else -> this
     }
-    /** Cuánto enciende el fuego lo que toca: poco lejos y de golpe cerca (la mezcla de color va en Oklab, que ya aclara). */
-    private val q: Float get() = (1.1f * k * sqrt(k)).coerceAtMost(0.94f)
+    /**
+     * Cuánto enciende el fuego lo que toca: casi nada lejos y de golpe cerca (la mezcla de color va en Oklab, que ya aclara), para
+     * que manden los charcos.
+     */
+    private val q: Float get() = (1.08f * k * k).coerceAtMost(0.94f)
 
     fun c(col: Color): Color = when {
         a.oscuro -> {
@@ -197,7 +200,7 @@ internal class LuzCueva(val a: AireCueva, val k: Float, val tinte: Color, val so
     fun animo(base: Color): Color = when {
         a.oscuro -> {
             val qq = maxOf(q, luna * 0.6f)
-            val fuego = mezcla(mezcla(a.hundido(base), base, (0.14f + 0.86f * qq).coerceAtMost(0.96f)), tinte, 0.14f * k)
+            val fuego = mezcla(mezcla(a.hundido(base), base, (0.07f + 0.93f * qq).coerceAtMost(0.96f)), tinte, 0.18f * k)
             if (luna > 0.01f) mezcla(fuego, lunaFria(base), 0.5f * luna) else fuego
         }
         a.noche -> mezcla(mezcla(anochecer(base, (0.08f + 0.4f * (1f - amb) - 0.25f * sol).coerceIn(0.03f, 0.36f)), p.CREPUSCULO, 0.2f * sol), tinte, 0.22f * k)
@@ -210,10 +213,11 @@ internal class LuzCueva(val a: AireCueva, val k: Float, val tinte: Color, val so
 
     /**
      * El cuero crudo de la etiqueta donde va el día: un valor medio (no brilla más que el objeto), teñido de noche por la luz que
-     * le toca; nunca tanto que el número deje de leerse (4.5:1 o más con el carbón).
+     * le toca: cálido junto al fuego, frío bajo la luna y hundido en el aire de la noche lejos de las dos; nunca tanto que el
+     * número deje de leerse (3:1 o más con el carbón, para un número grande y grueso).
      */
     fun etiqueta(): Color = when {
-        a.oscuro -> mezcla(mezcla(mezcla(ETIQUETA_CUEVA, a.hondo, (0.66f - 0.5f * maxOf(q, luna * 0.7f)).coerceIn(0.2f, 0.66f)), tinte, 0.34f * k), p.LUNA, 0.14f * luna)
+        a.oscuro -> mezcla(mezcla(mezcla(ETIQUETA_CUEVA, a.hondo, 0.42f * (1f - maxOf(q * 1.3f, luna)).coerceIn(0f, 1f)), tinte, 0.36f * k), p.LUNA, 0.3f * luna)
         a.noche -> mezcla(mezcla(ETIQUETA_CUEVA, p.ANOCHECER, 0.2f - 0.12f * maxOf(sol, k)), p.CREPUSCULO, 0.14f * sol)
         else -> c(ETIQUETA_CUEVA)
     }
@@ -227,15 +231,17 @@ internal val ETIQUETA_CUEVA = Color(0xFFB98955)
  * el grupo levantó contra la pared de la boca de la cueva para guardar en seco lo que no debe mojarse. Dos postes de pino
  * descortezado con su horqueta, clavados en el suelo y acuñados con piedras; la viga de arriba descansa en las horquetas; cada
  * repisa es un zarzo de varas puestas de delante atrás sobre un travesaño, todo atado con correas de cuero crudo. Contra
- * la caliza de la boca, decorada con lavados y puntos de ocre, trazos de dedos y dos manos sopladas con manganeso. Arriba, el
- * bodegón de la casa: la piel de reno tensada en su bastidor, la lámpara de grasa, el cesto de corteza colmado de ocres, el rollo
- * de cuerda, el haz de azagayas y lo que se seca colgado de la viga. Al pie, el hogar de lajas de canto, el enlosado, el tocón del
+ * la caliza de la boca, con una hilera de puntos de ocre y una mano soplada con manganeso. Arriba, el bodegón de la casa en tres
+ * grupos: en medio, la piel de reno tensada en su bastidor, a medio raspar, con el raspador apoyado; a la izquierda, la carne que
+ * se seca colgada de la viga y la lámpara de grasa; a la derecha, el haz de azagayas, el cesto de corteza colmado de ocres y las
+ * hierbas. Dentro de los huecos, la pared parda en sombra, con su relieve y su humedad. Al pie, el hogar de lajas de canto, el enlosado, el tocón del
  * tallador, los cantos de calentar y los haces de astillas y de enebro.
  *
  * De día manda el sol que entra por la boca (arriba a la izquierda, fuera del cuadro): una mancha de borde neto con la forma de
  * la boca, que en lo que está delante se corre hacia ella. De noche arden la lámpara de grasa (arriba a la izquierda), la tea
- * del poste derecho (a media altura) y el hogar (al pie), y entre ellas todo se hunde en un pardo violáceo. En los Sueños en
- * claro entra el ocaso, bajo y largo; en oscuro manda la luna que entra por la boca y el fuego arde bajo.
+ * del poste derecho (a media altura) y el hogar (al pie); sus charcos caen de golpe y entre ellos todo se hunde en un pardo
+ * violáceo. En los Sueños en claro entra el ocaso, bajo y largo; en oscuro, la luna entra por la boca (una mancha fría en lo de
+ * arriba), el hogar en brasas hace su charco cálido y lo demás se hunde en un violeta hondo.
  *
  * La pared y el techo están en `MuebleEstanteCuevaPared.kt`, el andamio en `MuebleEstanteCuevaAndamio.kt`, lo de arriba en
  * `MuebleEstanteCuevaCorona.kt`, lo que llena los huecos en `MuebleEstanteCuevaHuecos.kt`, el pie en `MuebleEstanteCuevaPie.kt`
@@ -313,13 +319,15 @@ internal object MuebleEstanteCueva {
      */
     fun luz(a: AireCueva, x: Float, y: Float, alto: Float, repisas: Int, delante: Float = 0f): LuzCueva {
         val sobrePie = alto - y
+        // De noche (el modo oscuro) los charcos caen más de golpe que en los Sueños en claro, donde el fuego solo tiñe.
+        val o = a.oscuro
         // La lámpara de grasa: alumbra lo de arriba; poco a poco hacia la segunda repisa.
-        val kl = if (a.lampara > 0f) a.lampara * (1.5f * exp(-4.1f * dist(x - LAMP_X, y - LAMP_Y))).coerceAtMost(1f) else 0f
-        // La tea: un charco a media altura, más ancho a lo alto que a lo ancho.
-        val kt = if (a.tea > 0f) a.tea * (1.45f * exp(-4.4f * dist((x - TEA_X) * 1.05f, (y - teaY(repisas)) * 0.85f))).coerceAtMost(1f) else 0f
+        val kl = if (a.lampara > 0f) a.lampara * ((if (o) 1.7f else 1.5f) * exp((if (o) -4.8f else -4.1f) * dist(x - LAMP_X, y - LAMP_Y))).coerceAtMost(1f) else 0f
+        // La tea: un charco a media altura, más ancho a lo alto que a lo ancho; enciende su poste y las entradas vecinas.
+        val kt = if (a.tea > 0f) a.tea * (1.9f * exp(-5.2f * dist((x - TEA_X) * 1.05f, (y - teaY(repisas)) * 0.8f))).coerceAtMost(1f) else 0f
         // El hogar: encendido abajo, se apaga hacia arriba.
         val dyH = (sobrePie - HOGAR_Y).coerceAtLeast(0f)
-        val kh = if (a.hogar > 0f) a.hogar * (2f * exp(-3.3f * dist((x - HOGAR_X) * 1.1f, dyH))).coerceAtMost(1f) else 0f
+        val kh = if (a.hogar > 0f) a.hogar * ((if (o) 2.3f else 2f) * exp((if (o) -4.1f else -3.3f) * dist((x - HOGAR_X) * 1.1f, dyH))).coerceAtMost(1f) else 0f
         val k = (kl + kt + kh).coerceIn(0f, 1f)
         val tinte = if (k < 0.001f) PaletaCueva.LLAMA else mezcla(PaletaCueva.LLAMA, mezcla(PaletaCueva.FUEGO, PaletaCueva.BRASA, if (a.llamas) 0.2f else 0.6f), kh / (kl + kt + kh + 0.0001f))
         val sol = when {

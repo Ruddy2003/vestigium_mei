@@ -20,12 +20,13 @@ import kotlin.math.sin
 
 /**
  * Las entradas del estante de Prehistoria, tres objetos de la cueva (la clase sale de la semilla, nunca del sitio):
- * - **el hueso de cuenta**: un hueso largo de pie, con sus cabezas, untado del pigmento del ánimo y con su fila de muescas, más
- *   cuantas más palabras; alto y delgado;
+ * - **el hueso de cuenta**: un hueso largo de marfil viejo, hincado de pie en un pie de barro, con una sola cabeza arriba, una
+ *   banda de pigmento frotado (el ánimo) en la caña y su fila de muescas, más cuantas más palabras; alto y delgado;
  * - **la bolsa de piel**: un zurrón blando y panzudo, curtido con el pigmento del ánimo, fruncido con su correa, con el pelo que
  *   asoma en la boca y su costura de tendón; alguna recostada;
  * - **la piel enrollada**: una piel curtida con el pigmento del ánimo, enrollada con el pelo hacia dentro (la espiral se ve
- *   arriba) y atada con dos tientos; más gruesa cuantas más palabras; un cilindro recto.
+ *   arriba) y atada con un tiento que la aprieta; blanda, de contorno desigual, con el pelo que asoma; más gruesa cuantas más
+ *   palabras; alguna inclinada contra la vecina.
  * Cada una lleva su etiqueta de cuero crudo atada con un tiento, con el día y el mes corto pintados con carbón; en los Sueños, una
  * media luna pintada con caolín en el objeto.
  */
@@ -75,74 +76,109 @@ private fun DrawScope.contactoVol(x0: Float, x1: Float, l: LuzCueva, hacia: Floa
 
 // ---------------------------------------------------------------- el hueso de cuenta
 
+/** El hueso viejo: marfil apagado, mate; su sombra y la pátina parda de los años. */
+private val HUESO_VIEJO = Color(0xFFE0CBA0)
+private val HUESO_SOMBRA = Color(0xFF9C8868)
+private val PATINA = Color(0xFF8A6A45)
+/** El barro del pie donde se hinca el hueso. */
+private val BARRO = Color(0xFF8C735A)
+
+/**
+ * El hueso de cuenta: un hueso largo de pie, hincado en un pie de barro (el otro extremo, cortado, queda dentro). Arriba, una sola
+ * cabeza, la del hueso, ladeada sobre su cuello, con el bulto menor del otro lado; la caña, del color del hueso, se estrecha y se
+ * curva apenas. El ánimo es una banda de pigmento frotado a mano en la caña (se ve el hueso a través); las muescas, en el canto.
+ */
 private fun DrawScope.huesoCueva(v: Volumen, tono: Color?, medidor: TextMeasurer, l: LuzCueva, hacia: Float) {
     val u = density
     val w = size.width; val h = size.height
     val s = v.semilla
-    val bw = (w * (0.56f + 0.12f * azar(s, 3))).coerceIn(16f * u, 27f * u)
-    val cx = w * 0.5f + (w - bw) * 0.3f * (azar(s, 4) - 0.5f)
-    val giro = if (w > bw * 1.5f) (azar(s, 5) - 0.5f) * 8f else 0f
+    val cab = (w * (0.6f + 0.12f * azar(s, 3))).coerceIn(17f * u, 28f * u)
+    val cx = w * 0.5f + (w - cab) * 0.3f * (azar(s, 4) - 0.5f)
+    val giro = if (w > cab * 1.4f) (azar(s, 5) - 0.5f) * 7f else 0f
     val top = h * 0.01f
-    val cab = bw
-    val cana = bw * (0.4f + 0.06f * azar(s, 7))
-    val curva = bw * 0.14f * (azar(s, 8) - 0.5f)
+    val cana = cab * (0.38f + 0.06f * azar(s, 7))
+    val curva = cab * 0.14f * (azar(s, 8) - 0.5f)
     val espejo = if (azar(s, 2) < 0.5f) 1f else -1f
     val pig = pigmento(tono)
     val etiquetaIzq = azar(s, 59) < 0.5f
+    // El pie de barro: bajo y ancho, de canto plano (no una bola), con la cara de arriba algo hundida.
+    val altoPie = minOf(h * 0.1f, cab * 0.5f)
+    val anchoPie = cab * (0.62f + 0.08f * azar(s, 9))
+    val yPie = h - altoPie
     rotate(giro, Offset(cx, h)) {
-        // Un fémur de pie sobre sus dos cóndilos: arriba la cabeza redonda en su cuello y, del otro lado, el trocánter; la caña
-        // que se estrecha y se curva apenas; abajo los dos cóndilos con la garganta entre ellos.
         fun q(x: Float, y: Float) = Offset(cx + espejo * x, y)
+        val y1 = yPie + altoPie * 0.3f
         val f = cerradaCueva(listOf(
-            q(-cab * 0.5f, top + cab * 0.3f), q(-cab * 0.44f, top + cab * 0.07f), q(-cab * 0.22f, top), q(-cab * 0.02f, top + cab * 0.1f),
-            q(cab * 0.1f, top + cab * 0.26f), q(cab * 0.28f, top + cab * 0.05f), q(cab * 0.48f, top + cab * 0.14f), q(cab * 0.44f, top + cab * 0.5f),
-            q(cana * 0.5f + curva, top + cab * 1.0f), q(cana * 0.46f + curva, h * 0.55f), q(cana * 0.56f, h - cab * 0.92f),
-            q(cab * 0.5f, h - cab * 0.4f), q(cab * 0.42f, h - cab * 0.02f), q(cab * 0.14f, h - cab * 0.04f), q(0f, h - cab * 0.2f),
-            q(-cab * 0.14f, h - cab * 0.04f), q(-cab * 0.42f, h - cab * 0.02f), q(-cab * 0.5f, h - cab * 0.4f),
-            q(-cana * 0.56f, h - cab * 0.92f), q(-cana * 0.46f + curva, h * 0.55f), q(-cana * 0.5f + curva, top + cab * 0.95f), q(-cab * 0.26f, top + cab * 0.56f)))
+            // La cabeza, ladeada hacia un lado sobre su cuello; del otro, el bulto menor más abajo.
+            q(-cab * 0.5f, top + cab * 0.36f), q(-cab * 0.46f, top + cab * 0.1f), q(-cab * 0.24f, top), q(-cab * 0.02f, top + cab * 0.08f),
+            q(cab * 0.08f, top + cab * 0.28f), q(cab * 0.24f, top + cab * 0.3f), q(cab * 0.4f, top + cab * 0.4f), q(cab * 0.42f, top + cab * 0.6f),
+            q(cana * 0.5f + curva, top + cab * 1.05f), q(cana * 0.45f + curva * 0.6f, (top + y1) * 0.55f), q(cana * 0.42f, y1),
+            q(-cana * 0.42f, y1), q(-cana * 0.45f + curva * 0.6f, (top + y1) * 0.55f), q(-cana * 0.48f + curva, top + cab * 0.98f),
+            q(-cab * 0.22f, top + cab * 0.66f)))
         sombraDetras(f, l, hacia)
-        contactoVol(cx - cab * 0.5f, cx + cab * 0.5f, l, hacia)
-        // El hueso y el pigmento untado en la caña (lo que dice el ánimo; las cabezas quedan en hueso), en un solo relleno.
-        val y0 = top + cab * (0.66f + 0.12f * azar(s, 9)); val y1 = h - cab * (0.78f + 0.14f * azar(s, 10))
-        val hueso = l.c(P.HUESO)
-        val color = if (pig != null) l.animo(pig) else l.c(mezcla(P.HUESO, P.HUESO_OSC, 0.4f))
-        val t0 = ((y0 - top) / (h - top)).coerceIn(0f, 1f); val t1 = ((y1 - top) / (h - top)).coerceIn(t0, 1f)
-        drawPath(f, Brush.verticalGradient(colorStops = arrayOf(0f to hueso, t0 to hueso, t0 to color, t1 to color, t1 to hueso, 1f to hueso), startY = top, endY = h))
-        // El borde comido del untado: unas manchas del pigmento que se pasan, dentro de la caña.
-        for (k in 0 until 3) {
-            val dx = cana * (-0.3f + 0.3f * k)
-            drawOval(color, Offset(cx + dx + curva * 0.3f - cana * 0.12f, y0 - cana * (0.1f + 0.22f * azar(s, 11 + k))), Size(cana * 0.24f, cana * 0.4f))
-            drawOval(color, Offset(cx + dx - cana * 0.12f, y1 - cana * (0.3f - 0.22f * azar(s, 14 + k))), Size(cana * 0.24f, cana * 0.4f))
-        }
-        sombreadoCueva(f, l, hacia, 1.2f, 0.45f)
-        // La garganta entre los cóndilos y el brillo de la cabeza; los poros del hueso.
-        drawLine(l.s(0.5f), Offset(cx, h - cab * 0.2f), Offset(cx + curva * 0.2f, h - cab * 0.6f), 1.2f * u)
-        drawCircle(l.b(0.5f), cab * 0.1f, q(-cab * 0.28f, top + cab * 0.16f))
-        for (k in 0 until 4) drawCircle(l.c(P.HUESO_OSC).copy(alpha = 0.55f), (0.5f + 0.6f * azar(s, 20 + k)) * u, Offset(cx + cab * (azar(s, 30 + k) - 0.5f) * 0.6f, h - cab * (0.2f + 0.3f * azar(s, 40 + k))))
+        // El hueso y la banda de pigmento frotado (lo que dice el ánimo), en un solo relleno de franjas: el hueso se ve a través.
+        val hueso = l.c(HUESO_VIEJO)
+        // La banda va debajo de donde cuelga la etiqueta, para que se vea.
+        val b0 = top + cab * 0.74f + 33f * u + (yPie - top) * 0.04f * azar(s, 10); val b1 = b0 + (yPie - b0) * (0.5f + 0.16f * azar(s, 11))
+        if (pig != null) {
+            val frotado = mezcla(hueso, l.animo(pig), 0.72f)
+            val t0 = ((b0 - top) / (h - top)).coerceIn(0f, 1f); val t1 = ((b1 - top) / (h - top)).coerceIn(t0, 1f)
+            drawPath(f, Brush.verticalGradient(colorStops = arrayOf(0f to hueso, t0 to hueso, t0 to frotado, t1 to frotado, t1 to hueso, 1f to hueso), startY = top, endY = h))
+            // El borde comido del frotado y una pasada más clara donde el dedo no cargó.
+            for (k in 0 until 2) {
+                val dx = cana * (-0.2f + 0.4f * k) + curva * 0.4f
+                drawOval(frotado, Offset(cx + dx - cana * 0.14f, b0 - cana * (0.12f + 0.3f * azar(s, 12 + k))), Size(cana * 0.28f, cana * 0.4f))
+                drawOval(frotado, Offset(cx + dx - cana * 0.14f, b1 - cana * (0.3f - 0.3f * azar(s, 15 + k))), Size(cana * 0.28f, cana * 0.4f))
+            }
+            val y = b0 + (b1 - b0) * (0.35f + 0.3f * azar(s, 18))
+            drawLine(hueso.copy(alpha = 0.4f), Offset(cx - cana * 0.3f + curva * 0.4f, y), Offset(cx + cana * 0.32f + curva * 0.4f, y - cana * 0.3f), 1.1f * u, StrokeCap.Round)
+        } else drawPath(f, hueso)
+        // La pátina parda de los años; mate (el claro es poco).
+        drawOval(l.c(PATINA).copy(alpha = 0.14f), Offset(cx - cab * 0.38f * espejo - cab * 0.12f, top + cab * 0.18f), Size(cab * 0.3f, cab * 0.24f))
+        // La redondez, con trazos rectos (más baratos que otro relleno del hueso entero): la sombra a lo largo de la caña, del lado
+        // contrario a la luz, y el claro, poco (es mate).
+        val lado = -hacia
+        drawLine(l.s(0.36f), Offset(cx + lado * cana * 0.24f + curva * 0.8f, top + cab * 0.95f), Offset(cx + lado * cana * 0.22f, yPie), cana * 0.42f, StrokeCap.Round)
+        drawLine(l.b(0.24f), Offset(cx - lado * cana * 0.26f + curva * 0.8f, top + cab * 0.95f), Offset(cx - lado * cana * 0.24f, yPie), cana * 0.16f, StrokeCap.Round)
+        // El cuello de la cabeza y los poros del extremo.
+        drawLine(l.c(HUESO_SOMBRA).copy(alpha = 0.6f), q(cab * 0.06f, top + cab * 0.3f), q(-cab * 0.12f, top + cab * 0.56f), 1.1f * u, StrokeCap.Round)
+        for (k in 0 until 4) drawCircle(l.c(HUESO_SOMBRA).copy(alpha = 0.6f), (0.5f + 0.5f * azar(s, 30 + k)) * u, q(cab * (azar(s, 34 + k) - 0.6f) * 0.6f, top + cab * (0.15f + 0.3f * azar(s, 38 + k))))
         // Las muescas: una fila en el canto de la caña (del lado contrario a la etiqueta), más cuantas más palabras.
-        val y0m = top + cab * 1.0f; val y1m = h - cab * 1.0f
+        val y0m = top + cab * 1.05f; val y1m = yPie - cab * 0.12f
         if (y1m > y0m + 4f * u) {
             val n = (3 + (v.lleno * 15f).toInt()).coerceAtMost(18)
             val paso = (y1m - y0m) / n
             val cortes = Path(); val labios = Path()
             for (k in 0 until n) {
                 val yy = y0m + paso * (k + 0.5f)
-                val largo = cana * (0.38f + 0.16f * azar(s, 60 + k))
-                val xl = if (!etiquetaIzq) cx - cana * 0.5f + curva * 0.5f else cx + cana * 0.5f + curva * 0.5f - largo
+                val largo = cana * (0.34f + 0.14f * azar(s, 60 + k))
+                val xl = if (!etiquetaIzq) cx - cana * 0.47f + curva * 0.5f else cx + cana * 0.47f + curva * 0.5f - largo
                 cortes.moveTo(xl, yy); cortes.lineTo(xl + largo, yy + 0.7f * u)
                 labios.moveTo(xl + 0.3f * u, yy + 1.1f * u); labios.lineTo(xl + largo * 0.9f, yy + 1.7f * u)
             }
-            drawPath(cortes, l.c(P.CARBON).copy(alpha = 0.85f), style = Stroke(1.5f * u, cap = StrokeCap.Round))
-            drawPath(labios, l.b(0.6f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
+            drawPath(cortes, l.c(P.CARBON).copy(alpha = 0.8f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+            drawPath(labios, l.b(0.4f), style = Stroke(0.7f * u, cap = StrokeCap.Round))
         }
-        if (v.noche) mediaLuna(Offset(cx - cana * 0.04f, h - cab * 1.5f), minOf(cana * 0.4f, 4.6f * u), l)
+        // El pie de barro: el canto de abajo plano, los lados en talud, la cara de arriba hundida alrededor del hueso, las huellas
+        // de los dedos que lo apretaron.
+        val pie = cerradaCueva(listOf(Offset(cx - anchoPie, h), Offset(cx - anchoPie * 0.94f, yPie + altoPie * 0.45f), Offset(cx - anchoPie * 0.7f, yPie + altoPie * 0.08f),
+            Offset(cx - cana * 0.5f, yPie + altoPie * 0.16f), Offset(cx + cana * 0.5f, yPie + altoPie * 0.14f), Offset(cx + anchoPie * 0.72f, yPie + altoPie * 0.06f),
+            Offset(cx + anchoPie * 0.96f, yPie + altoPie * 0.5f), Offset(cx + anchoPie, h)))
+        contactoVol(cx - anchoPie, cx + anchoPie, l, hacia)
+        drawOval(l.s(0.4f), Offset(cx - anchoPie - hacia * 3f * u, yPie + altoPie * 0.2f), Size(anchoPie * 2f, altoPie * 0.95f))
+        bultoRapidoCueva(pie, l.c(BARRO), l, hacia, 1.2f, 0.3f)
+        drawLine(l.s(0.4f), Offset(cx - cana * 0.6f, yPie + altoPie * 0.2f), Offset(cx + cana * 0.6f, yPie + altoPie * 0.2f), 1.4f * u, StrokeCap.Round)
+        listOf(-0.5f, 0.42f).forEachIndexed { k, fx ->
+            drawOval(l.s(0.3f), Offset(cx + anchoPie * fx - cab * 0.1f, yPie + altoPie * (0.4f + 0.12f * k)), Size(cab * 0.2f, altoPie * 0.3f))
+        }
+        if (v.noche) mediaLuna(Offset(cx + curva * 0.3f, b1 - cana * 0.1f), minOf(cana * 0.42f, 4.6f * u), l)
     }
     // La etiqueta, atada al cuello del hueso con un tiento y caída hacia un lado: el hueso se sigue leyendo.
     val lw = (w * 0.8f).coerceIn(minOf(w, 20f * u), 24f * u)
-    val yt = top + cab * 0.78f
-    val xc = if (etiquetaIzq) cx - bw * 0.34f else cx + bw * 0.34f
+    val yt = top + cab * 0.74f
+    val xc = if (etiquetaIzq) cx - cab * 0.36f else cx + cab * 0.36f
     val x0 = (xc - lw * 0.5f).coerceIn(-w * 0.15f, maxOf(-w * 0.15f, w - lw))
-    etiquetaCueva(v, medidor, l, Rect(x0, yt + 3f * u, x0 + lw, yt + 30f * u), Offset(cx, yt), hacia)
+    etiquetaCueva(v, medidor, l, Rect(x0, yt + 3f * u, x0 + lw, yt + 30f * u), giradoCueva(Offset(cx, yt), Offset(cx, h), giro), hacia)
 }
 
 // ---------------------------------------------------------------- la bolsa de piel
@@ -221,75 +257,117 @@ private fun DrawScope.bolsaCueva(v: Volumen, tono: Color?, medidor: TextMeasurer
 
 // ---------------------------------------------------------------- la piel enrollada
 
+/** El gris pardo con que se apaga la cara de la carne de la piel enrollada (mate, no un cartucho de color). */
+private val APAGADO = Color(0xFF85725E)
+
+/**
+ * La piel enrollada: una piel curtida enrollada con el pelo hacia dentro y atada con un tiento de dos vueltas que la aprieta (el
+ * contorno se hunde en la atadura). Es blanda: el contorno es desigual; la cara de la carne, mate y apagada, curtida con el
+ * pigmento del ánimo; el pelo asoma en la espiral de arriba y por el canto de la última vuelta. Alguna se inclina contra la vecina.
+ */
 private fun DrawScope.rolloCueva(v: Volumen, tono: Color?, medidor: TextMeasurer, l: LuzCueva, hacia: Float) {
     val u = density
     val w = size.width; val h = size.height
     val s = v.semilla
     val cx = w * 0.5f
     // Más gruesa cuanto más escribiste: la piel enrollada da más vueltas.
-    val a = w * (0.4f + 0.06f * v.lleno + 0.03f * azar(s, 250))
+    val a = w * (0.38f + 0.06f * v.lleno + 0.03f * azar(s, 250))
     val ry = minOf(a * 0.42f, 6.5f * u)
-    val top = ry + 1.5f * u
+    val top = ry + 3f * u
     val pig = pigmento(tono)
-    val giro = if (azar(s, 251) < 0.25f) (azar(s, 252) - 0.5f) * 8f else 0f
-    rotate(giro, Offset(cx, h)) {
-        // El cuerpo: un cilindro de piel, un poco más gordo en medio, con la base redonda.
-        val panza = a * (0.04f + 0.06f * azar(s, 254))
-        val f = Path().apply {
-            moveTo(cx - a, top)
-            cubicTo(cx - a - panza, top + (h - top) * 0.3f, cx - a + panza * 0.4f, top + (h - top) * 0.7f, cx - a - panza * 0.5f, h - ry)
-            quadraticTo(cx, h + ry * 0.95f, cx + a + panza * 0.4f, h - ry)
-            cubicTo(cx + a + panza * 0.2f, top + (h - top) * 0.7f, cx + a + panza, top + (h - top) * 0.3f, cx + a, top)
-            close()
-        }
+    val inclinada = azar(s, 251) < 0.34f
+    val giro = if (inclinada) (if (azar(s, 252) < 0.5f) -1f else 1f) * (6f + 5f * azar(s, 255)) else (azar(s, 252) - 0.5f) * 3f
+    val yA = top + (h - top) * (0.34f + 0.06f * azar(s, 256))
+    val apriete = a * 0.09f
+    val pivote = Offset(cx, h)
+    rotate(giro, pivote) {
+        // El cuerpo: el contorno desigual de una piel blanda, hundido en la atadura, con la base que se asienta.
+        fun lado(d: Float, k0: Int) = listOf(
+            Offset(cx + d * a * (1f + 0.03f * azar(s, k0)), top),
+            Offset(cx + d * a * (1.02f + 0.05f * (azar(s, k0 + 1) - 0.5f)), top + (yA - top) * 0.5f),
+            Offset(cx + d * (a - apriete), yA + 1.6f * u),
+            Offset(cx + d * a * (1.05f + 0.04f * (azar(s, k0 + 2) - 0.5f)), yA + (h - yA) * 0.32f),
+            Offset(cx + d * a * (1.02f + 0.06f * (azar(s, k0 + 3) - 0.5f)), yA + (h - yA) * 0.72f),
+            Offset(cx + d * a * 0.9f, h - ry * 0.25f))
+        val izq = lado(-1f, 257); val der = lado(1f, 262)
+        val f = cerradaCueva(izq + listOf(Offset(cx, h + ry * 0.12f)) + der.asReversed() + listOf(Offset(cx, top - ry * 0.4f)))
         sombraDetras(f, l, hacia)
         contactoVol(cx - a, cx + a, l, hacia)
-        val cuero = if (pig != null) l.animo(mezcla(pig, P.PIEL, 0.14f)) else l.c(mezcla(P.PIEL, P.CUERO, 0.3f))
-        bultoRapidoCueva(f, cuero, l, hacia, 1.15f, 0.4f)
-        run {
-            // La carne raspada: pasadas del raspador, oblicuas.
-            val raspa = Path()
-            for (k in 0 until 9) {
-                val x = cx - a * 0.65f + a * 1.1f * azar(s, 260 + k); val y = top + (h - top) * (0.05f + 0.85f * azar(s, 270 + k))
-                raspa.moveTo(x, y); raspa.lineTo(x + a * 0.25f, y + a * 0.12f)
-            }
-            drawPath(raspa, l.c(P.PIEL_OSC).copy(alpha = 0.3f), style = Stroke(1f * u, cap = StrokeCap.Round))
-            // El canto de la última vuelta, que baja por el frente ondulando, con su sombra y su filo.
-            val xb = cx + a * (0.15f + 0.4f * (azar(s, 280) - 0.5f))
-            val canto = abiertaCueva(List(6) { k -> Offset(xb + a * 0.12f * sin(k * 1.6f + s), top + (h - top) * k / 5f) })
-            drawPath(corridoCueva(canto, a * 0.06f, 0f), l.s(0.45f), style = Stroke(2f * u))
-            drawPath(canto, l.b(0.5f), style = Stroke(1f * u, cap = StrokeCap.Round))
+        val carne = if (pig != null) l.animo(mezcla(mezcla(pig, P.PIEL, 0.4f), APAGADO, 0.16f)) else l.c(mezcla(P.PIEL, APAGADO, 0.3f))
+        bultoRapidoCueva(f, carne, l, hacia, 1.15f, 0.2f)
+        // La carne raspada: unas pasadas oblicuas, apenas más oscuras.
+        val raspa = Path()
+        for (k in 0 until 7) {
+            val x = cx - a * 0.6f + a * 1.05f * azar(s, 260 + k); val y = top + (h - top) * (0.06f + 0.86f * azar(s, 270 + k))
+            raspa.moveTo(x, y); raspa.lineTo(x + a * 0.22f, y + a * 0.1f)
         }
-        // La boca de arriba: la espiral de la piel enrollada, con el pelo pardo hacia dentro, y unos pelos que asoman.
+        drawPath(raspa, l.c(P.PIEL_OSC).copy(alpha = 0.24f), style = Stroke(1f * u, cap = StrokeCap.Round))
+        // Los pliegues que la atadura le hace al apretar: arriba y abajo de ella.
+        val pliegues = Path()
+        for (k in 0 until 3) {
+            val dx = a * (-0.5f + 0.5f * k)
+            pliegues.moveTo(cx + dx * 0.8f, yA - 2f * u); pliegues.lineTo(cx + dx, yA - (yA - top) * 0.3f); pliegues.lineTo(cx + dx * 1.15f, yA - (yA - top) * 0.55f)
+            pliegues.moveTo(cx + dx * 0.8f, yA + 5f * u); pliegues.lineTo(cx + dx, yA + (h - yA) * 0.16f); pliegues.lineTo(cx + dx * 1.2f, yA + (h - yA) * 0.3f)
+        }
+        drawPath(pliegues, l.s(0.3f), style = Stroke(1.3f * u, cap = StrokeCap.Round))
+        // El canto de la última vuelta, que baja por el frente ondulando, con su sombra y el pelo que asoma por debajo.
+        val xb = cx + a * (0.12f + 0.4f * (azar(s, 280) - 0.5f))
+        val puntos = List(6) { k -> Offset(xb + a * 0.1f * sin(k * 1.6f + s), top + (h - top) * k / 5f) }
+        val canto = abiertaCueva(puntos)
+        drawPath(corridoCueva(canto, a * 0.07f, 0f), l.s(0.42f), style = Stroke(2.2f * u))
+        // El pelo que asoma por el canto: unos mechones sueltos, a trechos desiguales (en fila parejos se leían como una cremallera).
+        val pelo = Path()
+        for (k in 0 until 3) {
+            val t = 0.12f + 0.28f * k + 0.14f * azar(s, 290 + k)
+            val p = puntos[0] + (puntos[5] - puntos[0]) * t + Offset(a * 0.1f * sin(t * 5f * 1.6f + s) + 0.8f * u, 0f)
+            for (j in 0 until 3) {
+                val lg = (3f + 2.2f * azar(s, 300 + k * 3 + j)) * u
+                val y = p.y + (j - 1) * 1.6f * u
+                pelo.moveTo(p.x, y); pelo.lineTo(p.x + lg * 0.6f, y - 0.2f * u); pelo.lineTo(p.x + lg, y + (0.8f + 0.6f * j) * u)
+            }
+        }
+        // La boca de arriba: la espiral de la piel enrollada, con el pelo hacia dentro, y los mechones que asoman del borde.
         val boca = Rect(cx - a, top - ry, cx + a, top + ry)
         drawOval(l.c(P.PELO), boca.topLeft, boca.size)
-        drawOval(cuero, boca.topLeft, boca.size, style = Stroke(1.8f * u))
-        drawArc(l.c(mezcla(P.PIEL, P.CUERO, 0.2f)), 180f, 300f, false, Offset(boca.left + boca.width * 0.17f, boca.top + boca.height * 0.17f), Size(boca.width * 0.66f, boca.height * 0.66f), style = Stroke(1.5f * u))
-        drawArc(l.c(mezcla(P.PIEL, P.CUERO, 0.2f)), 0f, 270f, false, Offset(boca.left + boca.width * 0.34f, boca.top + boca.height * 0.34f), Size(boca.width * 0.32f, boca.height * 0.32f), style = Stroke(1.2f * u))
-        val pelo = Path()
-        for (k in 0 until 9) {
-            val t = 3.4f + 2.6f * k / 8f
-            val p = Offset(cx + a * 0.92f * kotlin.math.cos(t), top + ry * 0.92f * kotlin.math.sin(t))
-            pelo.moveTo(p.x, p.y); pelo.lineTo(p.x + 1f * u * sin(k * 2f), p.y - 2.6f * u)
+        drawArc(l.c(mezcla(P.PIEL, APAGADO, 0.2f)), 180f, 300f, false, Offset(boca.left + boca.width * 0.17f, boca.top + boca.height * 0.17f), Size(boca.width * 0.66f, boca.height * 0.66f), style = Stroke(1.5f * u))
+        drawArc(l.c(mezcla(P.PIEL, APAGADO, 0.2f)), 0f, 270f, false, Offset(boca.left + boca.width * 0.36f, boca.top + boca.height * 0.36f), Size(boca.width * 0.28f, boca.height * 0.28f), style = Stroke(1.2f * u))
+        drawOval(carne, boca.topLeft, boca.size, style = Stroke(1.6f * u))
+        for (k in 0 until 10) {
+            val ang = 3.2f + 3.3f * k / 9f + 0.18f * azar(s, 310 + k)
+            val p = Offset(cx + a * 0.97f * kotlin.math.cos(ang), top + ry * 0.97f * sin(ang))
+            val lg = (1.6f + 2.4f * azar(s, 330 + k)) * u
+            pelo.moveTo(p.x, p.y); pelo.lineTo(p.x + kotlin.math.cos(ang) * lg * 0.7f + (azar(s, 350 + k) - 0.5f) * 1.5f * u, p.y + sin(ang) * lg - 0.6f * u)
         }
-        drawPath(pelo, l.c(P.PELO), style = Stroke(1.1f * u, cap = StrokeCap.Round))
-        // La atadura: un tiento de dos vueltas juntas, con su nudo y su cabo que cuelga.
-        val yA = top + (h - top) * 0.34f
+        // Unos mechones en el pie, donde acaba el canto.
+        for (k in 0 until 3) {
+            val p = Offset(xb + (k - 1) * 2.2f * u, h - ry * 0.1f)
+            pelo.moveTo(p.x, p.y); pelo.lineTo(p.x + (k - 1) * 1.6f * u, p.y + 2.2f * u)
+        }
+        drawPath(pelo, l.c(P.PELO), style = Stroke(1.3f * u, cap = StrokeCap.Round))
+        drawPath(canto, l.b(0.34f), style = Stroke(1f * u, cap = StrokeCap.Round))
+        // La atadura: un tiento de dos vueltas juntas, que aprieta.
         listOf(0f, 3.2f * u).forEach { dy ->
-            val atadura = Path().apply { moveTo(cx - a * 1.04f, yA + dy); quadraticTo(cx, yA + dy + ry * 0.9f, cx + a * 1.04f, yA + dy) }
+            val atadura = Path().apply { moveTo(cx - (a - apriete) - 1.5f * u, yA + dy); quadraticTo(cx, yA + dy + ry * 0.8f, cx + (a - apriete) + 1.5f * u, yA + dy) }
             drawPath(corridoCueva(atadura, 0f, 1.4f * u), l.s(0.42f), style = Stroke(2.4f * u))
             drawPath(atadura, l.c(P.CUERO_OSC), style = Stroke(2.2f * u, cap = StrokeCap.Round))
-            drawPath(corridoCueva(atadura, 0f, -0.6f * u), l.b(0.45f), style = Stroke(0.6f * u))
+            drawPath(corridoCueva(atadura, 0f, -0.6f * u), l.b(0.4f), style = Stroke(0.6f * u))
         }
-        if (v.noche) mediaLuna(Offset(cx - a * 0.35f * hacia, top + (h - top) * 0.86f), minOf(a * 0.3f, 5f * u), l)
+        if (v.noche) mediaLuna(Offset(cx - a * 0.35f * hacia, top + (h - top) * 0.84f), minOf(a * 0.3f, 5f * u), l)
     }
-    // La etiqueta cuelga del nudo de la atadura.
-    val yA = top + (h - top) * 0.34f
-    val nudo = Offset(cx + a * 0.45f * (if (azar(s, 253) < 0.5f) -1f else 1f), yA + ry * 0.7f)
+    // La etiqueta cuelga del nudo de la atadura (el nudo, girado con la piel).
+    val nudo = giradoCueva(Offset(cx + (a - apriete) * 0.5f * (if (azar(s, 253) < 0.5f) -1f else 1f), yA + ry * 0.6f), pivote, giro)
     drawCircle(l.c(mezcla(P.CUERO_OSC, P.CUERO, 0.3f)), 2f * u, nudo)
     val lw = (w * 0.74f).coerceIn(minOf(w, 20f * u), 24f * u)
     val x0 = (nudo.x - lw * 0.5f).coerceIn(0f, maxOf(0f, w - lw))
     etiquetaCueva(v, medidor, l, Rect(x0, nudo.y + 4f * u, x0 + lw, nudo.y + 31f * u), nudo, hacia)
+}
+
+/** [p] girado [grados] alrededor de [c], como lo gira `rotate` en el lienzo. */
+private fun giradoCueva(p: Offset, c: Offset, grados: Float): Offset {
+    val r = Math.toRadians(grados.toDouble())
+    val cs = kotlin.math.cos(r).toFloat(); val sn = kotlin.math.sin(r).toFloat()
+    val d = p - c
+    return Offset(c.x + d.x * cs - d.y * sn, c.y + d.x * sn + d.y * cs)
 }
 
 // ---------------------------------------------------------------- la etiqueta y la luna

@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -16,14 +17,15 @@ import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
 import kotlin.math.cos
+import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sin
 
 /**
  * La pared de la boca de la cueva detrás del andamio: caliza que a la sombra se ve gris azulada (la alumbra el cielo) y al sol
- * crema cálida, con sus abultamientos, sus grietas y el techo ennegrecido por los fuegos. El grupo la decoró: un lavado de ocre
- * rojo, hileras de puntos rojos y negros, trazos de dedos en la arcilla blanda y dos manos en negativo sopladas con negro de
- * manganeso. Dentro de cada hueco, la misma roca en la sombra de la repisa de arriba.
+ * crema cálida, con sus abultamientos, sus grietas y el techo ennegrecido por los fuegos. El grupo la decoró poco: una hilera
+ * de puntos rojos y una mano en negativo soplada con negro de manganeso. Fuera de la mancha de la boca, más oscura y pareja, para
+ * que mande la piel tensada. Dentro de cada hueco, la misma roca, parda, en la sombra de la repisa de arriba.
  */
 internal object ParedEstanteCueva {
 
@@ -42,8 +44,10 @@ internal object ParedEstanteCueva {
         val w = g.w; val ch = g.ch
         val u = density
         fun l(x: Float, y: Float) = g.luz(x, y, 0f, sol)
-        // ---- la roca: de la boca (arriba a la izquierda) hacia dentro, cada vez más honda.
-        val c0 = l(0f, 0f).atenuada(0.4f).c(P.CALIZA); val c1 = l(w, ch).atenuada(0.4f).c(P.CALIZA)
+        // ---- la roca: de la boca (arriba a la izquierda) hacia dentro, cada vez más honda. Fuera de la mancha de la boca, más
+        // oscura y pareja (manda la piel tensada); dentro, la caliza encendida.
+        val roca = if (sol > 0f) P.CALIZA else mezcla(P.CALIZA, P.TECHO, 0.34f)
+        val c0 = l(0f, 0f).atenuada(0.4f).c(roca); val c1 = l(w, ch).atenuada(0.4f).c(roca)
         drawRect(Brush.linearGradient(listOf(c0, mezcla(c0, c1, 0.5f), c1), Offset(0f, 0f), Offset(w, ch)), Offset.Zero, Size(w, ch))
         // De noche, el charco de la lámpara en la roca (debajo de todo lo demás).
         if (g.a.lampara > 0f) {
@@ -58,47 +62,23 @@ internal object ParedEstanteCueva {
             if (c.y - w * r * 0.6f > ch) return@forEachIndexed
             val ll = l(c.x, c.y)
             val f = piedraCueva(c, w * r * 1.6f, w * r * 0.62f, 3100 + i, 10, 0.2f)
-            drawPath(f, ll.c(mezcla(P.CALIZA, P.CALIZA_SOL, 0.22f)).copy(alpha = 0.7f))
-            drawPath(bordeCueva(f, -w * 0.012f, -w * 0.01f), ll.s(0.16f))
-            drawPath(bordeCueva(f, w * 0.006f, w * 0.007f), ll.b(0.4f))
+            drawPath(f, ll.c(mezcla(roca, P.CALIZA_SOL, 0.16f)).copy(alpha = 0.5f))
+            drawPath(bordeCueva(f, -w * 0.012f, -w * 0.01f), ll.s(0.12f))
+            drawPath(bordeCueva(f, w * 0.006f, w * 0.007f), ll.b(0.28f))
         }
-        // Los lavados de ocre rojo: la roca untada a manos llenas, a manchas desiguales.
-        LAVADOS.forEachIndexed { i, (x, y, r) ->
-            val c = Offset(w * x, w * y)
-            val ll = l(c.x, c.y)
-            drawPath(piedraCueva(c, w * r * 1.4f, w * r, 3200 + i, 11, 0.32f), ll.c(P.OCRE_ROJO).copy(alpha = 0.38f))
-            drawPath(piedraCueva(c + Offset(w * r * 0.3f, -w * r * 0.2f), w * r * 0.8f, w * r * 0.6f, 3210 + i, 9, 0.35f), ll.c(mezcla(P.OCRE_ROJO, P.CARBON, 0.2f)).copy(alpha = 0.3f))
-            for (k in 0 until 9) {
-                val q = c + Offset(w * r * 1.3f * (azar(3220 + i, k) - 0.5f) * 2f, w * r * (azar(3230 + i, k) - 0.5f) * 1.8f)
-                drawCircle(ll.c(P.OCRE_ROJO).copy(alpha = 0.3f), w * (0.004f + 0.006f * azar(3240 + i, k)), q)
-            }
-        }
-        pinceladas(Rect(0f, 0f, w, ch), l(w * 0.3f, ch * 0.4f).c(P.CALIZA_SOL), 3301, 30, u, 0.12f)
+        pinceladas(Rect(0f, 0f, w, ch), l(w * 0.3f, ch * 0.4f).c(P.CALIZA_SOL), 3301, 30, u, 0.1f)
         pinceladas(Rect(0f, 0f, w, ch), l(w * 0.6f, ch * 0.6f).c(P.CALIZA_HONDA), 3302, 26, u, 0.12f)
         // Las grietas: quebradas, con su labio de luz a la izquierda.
         grieta(listOf(Offset(w * 0.6f, w * 0.05f), Offset(w * 0.585f, w * 0.1f), Offset(w * 0.6f, w * 0.14f), Offset(w * 0.582f, w * 0.19f)), l(w * 0.6f, w * 0.12f))
         grieta(listOf(Offset(w * 0.97f, w * 0.2f), Offset(w * 0.955f, w * 0.26f), Offset(w * 0.968f, w * 0.31f), Offset(w * 0.95f, w * 0.37f), Offset(w * 0.962f, w * 0.44f)), l(w * 0.96f, w * 0.3f))
-        // ---- lo pintado: la hilera de puntos rojos bajo el techo, en arco, y otra de puntos negros más corta.
+        // ---- lo pintado (poco, para que mande la piel): la hilera de puntos rojos bajo el techo, en arco, y una mano soplada.
         for (i in 0 until 15) {
             val t = i / 14f
             val q = Offset(w * (0.06f + 0.5f * t), w * (0.088f + 0.024f * sin(t * 3.1416f) + 0.004f * azar(3401, i)))
             drawCircle(l(q.x, q.y).c(P.OCRE_ROJO).copy(alpha = 0.85f), w * (0.0062f + 0.0018f * azar(3402, i)), q)
         }
-        for (i in 0 until 6) {
-            val q = Offset(w * (0.74f + 0.028f * i), w * (0.4f + 0.012f * (i % 2)))
-            drawCircle(l(q.x, q.y).c(P.MANGANESO).copy(alpha = 0.8f), w * (0.0058f + 0.0015f * azar(3403, i)), q)
-        }
-        // Las manos en negativo, sopladas con manganeso (las del Ideario son rojas).
-        manoSoplada(Offset(w * 0.275f, w * 0.235f), w * 0.034f, -14f, l(w * 0.275f, w * 0.235f), 3501)
-        manoSoplada(Offset(w * 0.79f, w * 0.215f), w * 0.03f, 18f, l(w * 0.79f, w * 0.215f), 3502)
-        // Los trazos de dedos en la arcilla blanda: surcos paralelos que ondulan.
-        for (k in 0 until 4) {
-            val x = w * (0.745f + 0.016f * k)
-            val tr = abiertaCueva(List(6) { j -> Offset(x + w * 0.012f * sin(j * 1.2f + k * 0.5f), w * (0.27f + 0.022f * j)) })
-            val ll = l(x, w * 0.33f)
-            drawPath(tr, ll.s(0.32f), style = Stroke(w * 0.007f, cap = StrokeCap.Round))
-            drawPath(corridoCueva(tr, -w * 0.0025f, 0f), ll.b(0.42f), style = Stroke(w * 0.0025f, cap = StrokeCap.Round))
-        }
+        // La mano en negativo, soplada con manganeso (las del Ideario son rojas).
+        manoSoplada(Offset(w * 0.285f, w * 0.235f), w * 0.034f, -14f, l(w * 0.285f, w * 0.235f), 3501)
         // ---- el hollín que la lámpara deja en la pared, encima de la llama, y el techo de la boca.
         val lp = g.lampara
         for (k in 0 until 6) {
@@ -110,8 +90,6 @@ internal object ParedEstanteCueva {
 
     /** Los abultamientos de la pared de arriba: (x, y, radio), en anchos. */
     private val BULTOS = listOf(Triple(0.1f, 0.2f, 0.11f), Triple(0.45f, 0.08f, 0.14f), Triple(0.86f, 0.3f, 0.1f), Triple(0.3f, 0.42f, 0.12f), Triple(0.66f, 0.46f, 0.13f))
-    /** Los lavados de ocre: (x, y, radio). */
-    private val LAVADOS = listOf(Triple(0.87f, 0.11f, 0.05f))
 
     /** El techo de la boca que se cierra arriba: la roca más honda y ennegrecida, con su borde quebrado y su labio de luz. */
     private fun DrawScope.techo(g: MarcoCueva, sol: Float) {
@@ -166,29 +144,31 @@ internal object ParedEstanteCueva {
     // ---------------------------------------------------------------- el fondo de cada hueco
 
     /**
-     * El fondo de un hueco: la caliza con la luz de su sitio, lisa abajo (la tapan las entradas) y, arriba, la sombra franca de la
-     * plataforma en un degradado de colores llenos, con su borde ondulado; donde llega, la mancha de la boca; su textura (estratos y
-     * manchas, con primitivas sueltas), la sombra del poste del lado de la luz y algo suyo según la repisa: puntos de ocre, una
-     * mancha de ocre soplado o una de hollín.
+     * El fondo de un hueco: la pared de la cueva en sombra, parda (no gris ni azul), con la luz de su sitio. Arriba, la sombra franca
+     * de la plataforma, con su borde ondulado; en medio, la roca; abajo, hundida otra vez hacia el zarzo. Donde llega, la mancha de la
+     * boca, que empieza donde acaba la sombra de arriba. Encima, el relieve (abultamientos con su luz y su sombra), los estratos, las
+     * manchas de humedad que bajan, el hollín, la sombra del poste del lado de la luz y algo suyo según la repisa: puntos de ocre, una
+     * mancha de ocre soplado o una de hollín. Todo con primitivas sueltas.
      */
     fun DrawScope.fondoHueco(k: Int, r: Rect, g: MarcoCueva) {
         val w = g.w
-        val y = r.center.y
-        // La roca, con la sombra de la plataforma de arriba (franca junto al canto y abierta hacia abajo) en el mismo degradado, y,
-        // donde la alcanza, la mancha de la boca, que empieza donde acaba esa sombra (la luz entra en diagonal).
-        val l = g.luz(r.center.x, r.top)
+        val hondo = honduraCueva(g)
         conManchaCueva(g, 0f, r) { s ->
-            val c = g.luz(r.center.x, y, 0f, s).c(P.CALIZA_HONDA)
-            fun sobre(a: Float) = mezcla(c, l.s(1f).copy(alpha = 1f), l.s(a).alpha)
-            // Colores llenos: lo de abajo, liso (lo tapan las entradas); la sombra de arriba, en un degradado solo donde está.
-            val y0 = if (s != null && s > 0f) r.top + r.height * 0.34f else r.top
-            // La junta entre el degradado y lo liso cae en un píxel entero, y lo liso empieza un píxel antes (sin costura).
-            val ys = kotlin.math.floor(r.top + r.height * 0.5f)
-            drawRect(c, Offset(r.left, ys - 1f), Size(r.width, r.bottom + 2f - ys))
-            if (s != null && s > 0f) drawRect(Brush.verticalGradient(listOf(sobre(0.2f), c), y0, ys), Offset(r.left, y0), Size(r.width, ys - y0))
-            else drawRect(Brush.verticalGradient(colorStops = arrayOf(0f to sobre(0.8f), 0.4f to sobre(0.5f), 0.8f to sobre(0.16f), 1f to c), startY = r.top, endY = ys),
-                r.topLeft, Size(r.width, ys - r.top))
+            val c = g.luz(r.center.x, r.top + r.height * 0.45f, 0f, s).c(P.CALIZA_HONDA)
+            val pie = mezcla(g.luz(r.center.x, r.bottom, 0f, s).c(P.CALIZA_HONDA), hondo, 0.34f)
+            // Colores llenos y degradados solo donde hacen falta (un degradado cuesta mucho más de pintar que un color liso): la
+            // sombra de arriba (al sol, desde donde acaba esa sombra: la luz entra en diagonal), la roca lisa en medio y, abajo, la
+            // roca que se hunde hacia el zarzo. Las juntas caen en píxel entero y lo de abajo empieza un píxel antes.
+            val sol = s != null && s > 0f
+            val y0 = if (sol) r.top + r.height * 0.34f else r.top
+            val ys = floor(r.top + r.height * 0.56f); val yb = floor(r.top + r.height * 0.84f)
+            if (sol) drawRect(Brush.verticalGradient(listOf(mezcla(c, hondo, 0.1f), c), y0, ys), Offset(r.left, y0), Size(r.width, ys - y0))
+            else drawRect(Brush.verticalGradient(colorStops = arrayOf(0f to mezcla(c, hondo, 0.74f), 0.23f to mezcla(c, hondo, 0.52f), 0.6f to mezcla(c, hondo, 0.14f), 1f to c),
+                startY = r.top, endY = ys), r.topLeft, Size(r.width, ys - r.top))
+            drawRect(c, Offset(r.left, ys - 1f), Size(r.width, yb - ys + 1f))
+            drawRect(Brush.verticalGradient(listOf(c, pie), yb, r.bottom), Offset(r.left, yb - 1f), Size(r.width, r.bottom + 3f - yb))
         }
+        relieve(k, r, g, hondo)
         textura(k, r, g)
         val ola = Path().apply {
             moveTo(r.left, r.top + r.height * 0.1f)
@@ -200,10 +180,10 @@ internal object ParedEstanteCueva {
             }
             lineTo(r.right, r.top + r.height * 0.1f); close()
         }
-        drawPath(ola, l.s(0.3f))
+        drawPath(ola, hondo.copy(alpha = 0.3f))
         // La sombra del poste: de día cae a la derecha del izquierdo; de noche, lejos de la tea (a la izquierda del derecho).
-        if (!g.a.oscuro) drawRect(l.s(0.26f), Offset(r.left, r.top), Size(w * 0.035f, r.height))
-        else drawRect(l.s(0.34f), Offset(r.right - w * 0.03f, r.top), Size(w * 0.03f, r.height))
+        if (!g.a.oscuro) drawRect(hondo.copy(alpha = 0.26f), Offset(r.left, r.top), Size(w * 0.035f, r.height))
+        else drawRect(hondo.copy(alpha = 0.4f), Offset(r.right - w * 0.03f, r.top), Size(w * 0.03f, r.height))
         // Algo de la roca, distinto en cada hueco.
         val s = 4200 + k * 13
         when (Math.floorMod(k, 3)) {
@@ -226,6 +206,38 @@ internal object ParedEstanteCueva {
                 drawOval(P.HOLLIN.copy(alpha = 0.22f), Offset(q.x - w * 0.05f, q.y - w * 0.03f), Size(w * 0.1f, w * 0.07f))
                 drawOval(P.HOLLIN.copy(alpha = 0.18f), Offset(q.x - w * 0.03f, q.y - w * 0.06f), Size(w * 0.06f, w * 0.06f))
             }
+        }
+    }
+
+    /** El oscuro en que se hunde la roca de los huecos: un pardo de hollín de día, violáceo en los Sueños, el aire de la noche de noche. */
+    private fun honduraCueva(g: MarcoCueva): Color = when {
+        g.a.oscuro -> g.a.hondo
+        g.a.noche -> mezcla(P.ANOCHECER, P.HOLLIN, 0.35f)
+        else -> Color(0xFF2E2119)
+    }
+
+    /**
+     * El relieve de la roca en un hueco: unos abultamientos anchos y bajos (la sombra abajo a la derecha, la luz arriba a la
+     * izquierda; de noche, del lado del fuego) y las manchas de humedad que bajan de los estratos.
+     */
+    private fun DrawScope.relieve(k: Int, r: Rect, g: MarcoCueva, hondo: Color) {
+        val w = g.w
+        val lado = if (g.a.oscuro && !g.a.noche && r.center.x > g.tea.x - w * 0.5f) -1f else 1f
+        for (i in 0 until 3) {
+            val c = Offset(r.left + r.width * (0.08f + 0.84f * azar(4600 + k, i)), r.top + r.height * (0.36f + 0.5f * azar(4610 + k, i)))
+            val rx = w * (0.07f + 0.05f * azar(4620 + k, i)); val ry = rx * (0.42f + 0.16f * azar(4630 + k, i))
+            val l = g.luz(c)
+            drawOval(hondo.copy(alpha = 0.26f), Offset(c.x - rx + lado * rx * 0.16f, c.y - ry + ry * 0.34f), Size(rx * 2f, ry * 2f))
+            drawOval(l.c(P.CALIZA).copy(alpha = 0.16f), Offset(c.x - rx * 0.9f - lado * rx * 0.12f, c.y - ry * 0.9f - ry * 0.26f), Size(rx * 1.8f, ry * 1.6f))
+        }
+        val humedad = mezcla(hondo, P.ENEBRO, 0.25f)
+        for (i in 0 until 2) {
+            val x = r.left + r.width * (0.12f + 0.76f * azar(4640 + k, i))
+            val y0 = r.top + r.height * (0.3f + 0.2f * azar(4650 + k, i))
+            val an = w * (0.012f + 0.014f * azar(4660 + k, i)); val lg = r.height * (0.3f + 0.25f * azar(4670 + k, i))
+            // Óvalos largos y lisos, uno dentro de otro (más baratos que un degradado): la humedad, más cargada arriba.
+            drawOval(humedad.copy(alpha = 0.2f), Offset(x, y0), Size(an, lg))
+            drawOval(humedad.copy(alpha = 0.2f), Offset(x + an * 0.15f, y0), Size(an * 0.7f, lg * 0.5f))
         }
     }
 
