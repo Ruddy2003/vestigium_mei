@@ -12,13 +12,11 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
-import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * El índice de la libreta de momentos de Art nouveau: cada día es un carnet chico de los mismos (el cartón jaspeado de piedras,
+ * El índice de la libreta de momentos de Art nouveau: cada día es un carnet chico de los mismos (el cartón jaspeado al peine,
  * el lomo y las puntas de tela verde, el canto de las hojas y el rótulo de papel con el día y la letra de la semana a tinta),
  * con la cinta de seda que le sale de entre las hojas, del color del ánimo de ese día. Sin ánimo, no lleva cinta: el carnet
  * queda cerrado y liso por abajo (se distingue por la forma, no solo por el color). Las pestañas son decenas: todo lo que no
@@ -34,10 +32,10 @@ internal object IndiceLibretaNouveau {
 
     /** Los caminos de una pestaña de [w] × [h], que comparten todas. */
     private class Pestana(val w: Float, val h: Float, u: Float) {
-        val tapa = Rect(w * 0.08f, h * 0.08f, w * 0.84f, h * 0.78f)
+        val tapa = Rect(w * 0.08f, h * 0.07f, w * 0.84f, h * 0.68f)
         val o = Offset(2.8f * u, -2.4f * u)
-        val lomo = Rect(tapa.left, tapa.top, tapa.left + tapa.width * 0.2f, tapa.bottom)
-        val etiqueta = Rect(lomo.right + (tapa.right - lomo.right) * 0.12f, tapa.top + tapa.height * 0.15f, tapa.right - (tapa.right - lomo.right) * 0.12f, tapa.bottom - tapa.height * 0.15f)
+        val lomo = Rect(tapa.left, tapa.top, tapa.left + tapa.width * 0.18f, tapa.bottom)
+        val etiqueta = Rect(lomo.right + (tapa.right - lomo.right) * 0.1f, tapa.top + tapa.height * 0.11f, tapa.right - (tapa.right - lomo.right) * 0.1f, tapa.bottom - tapa.height * 0.11f)
         /** El canto: la tapa de atrás que asoma, la cara de arriba y la de la derecha de las hojas, y sus líneas. */
         val atras = poligonoNouveau(tapa.left + o.x, tapa.top + o.y - 0.8f * u, tapa.right + o.x + 0.8f * u, tapa.top + o.y - 0.8f * u, tapa.right + o.x + 0.8f * u, tapa.bottom + o.y, tapa.right, tapa.bottom, tapa.left, tapa.top)
         val hojas = Path().apply {
@@ -50,8 +48,9 @@ internal object IndiceLibretaNouveau {
                 moveTo(tapa.left + o.x * f + lomo.width * 0.4f, tapa.top + o.y * f); lineTo(tapa.right + o.x * f, tapa.top + o.y * f); lineTo(tapa.right + o.x * f, tapa.bottom + o.y * f)
             }
         }
-        /** Tres jaspeados: en cada uno, las piedras de los tres grupos de color (violeta; salvia y ocre; rosa y crema). */
-        val piedras = List(3) { List(3) { Path() } }
+        /** Tres jaspeados peinados (se turnan con la semilla): en cada uno, dos vetas de látigo y la vena de ciruela. */
+        val vetas = List(3) { List(2) { Path() } }
+        val venas = List(3) { Path() }
         val puntas = Path().apply {
             val p = tapa.width * 0.2f
             addPath(poligonoNouveau(tapa.right - p, tapa.top, tapa.right, tapa.top, tapa.right, tapa.top + p))
@@ -61,46 +60,36 @@ internal object IndiceLibretaNouveau {
             var y = lomo.top + 1f * u
             while (y < lomo.bottom) { moveTo(lomo.left, y); lineTo(lomo.right, y + lomo.width * 0.4f); y += 1.8f * u }
         }
-        /** La cinta de seda: sale de entre las hojas, por abajo, y cuelga con su corte en cola de golondrina. */
+        /** La cinta de seda: sale de entre las hojas, por abajo, y cuelga larga con su corte en cola de golondrina. */
         val cinta = Path()
         val cintaLuz = Path()
 
         init {
             val zona = Rect(lomo.right, tapa.top, tapa.right, tapa.bottom)
-            // Solo se ve el jaspeado alrededor del rótulo: las piedras van ahí, recortadas al cartón y sin lo que tapa el rótulo.
+            // Solo se ve el jaspeado alrededor del rótulo: las vetas se recortan al cartón y sin lo que tapa el rótulo.
             val borde = Path().apply { addRect(zona) }
             val tapado = Path().apply { addRect(Rect(etiqueta.left + 1.5f * u, etiqueta.top + 1.5f * u, etiqueta.right - 1.5f * u, etiqueta.bottom - 1.5f * u)) }
             val visible = Path().apply { op(borde, tapado, PathOperation.Difference) }
-            val r0 = 2.2f * u
             for (v in 0 until 3) {
-                val n = 64
-                val crudas = List(3) { Path() }
-                for (i in 0 until n) {
-                    val c = Offset(zona.left - r0 + (zona.width + 2f * r0) * azar(611 + v, i), zona.top - r0 + (zona.height + 2f * r0) * azar(621 + v, i))
-                    if (etiqueta.deflate(r0 * 1.4f).contains(c)) continue
-                    val rr = r0 * (0.7f + 0.7f * azar(631 + v, i))
-                    val g = (azar(641 + v, i) * 3f).toInt().coerceIn(0, 2)
-                    val p = Path()
-                    for (j in 0..8) {
-                        val ang = 6.2832f * j / 8f
-                        val rad = rr * (0.85f + 0.3f * azar(651 + v * 31 + i, j % 8))
-                        val q = Offset(c.x + rad * cos(ang) * 1.1f, c.y + rad * sin(ang) * 0.9f)
-                        if (j == 0) p.moveTo(q.x, q.y) else p.lineTo(q.x, q.y)
-                    }
-                    p.close()
-                    crudas[g].addPath(p)
+                val fase = 1.3f * v
+                fun y(x: Float, base: Float) = zona.top + zona.height * base + zona.height * 0.1f * sin((x - zona.left) / zona.width * 4.4f + fase)
+                fun banda(b0: Float, b1: Float): Path = Path().apply {
+                    for (s in 0..12) { val x = zona.left + zona.width * s / 12f; if (s == 0) moveTo(x, y(x, b0)) else lineTo(x, y(x, b0)) }
+                    for (s in 12 downTo 0) { val x = zona.left + zona.width * s / 12f; lineTo(x, y(x, b1)) }
+                    close()
                 }
-                // Recortadas al cartón: ninguna piedra se sale de la tapa.
-                for (g in 0 until 3) piedras[v][g].op(crudas[g], visible, PathOperation.Intersect)
+                vetas[v][0].op(banda(0.02f + 0.06f * v, 0.36f + 0.05f * v), visible, PathOperation.Intersect)
+                vetas[v][1].op(banda(0.62f - 0.04f * v, 0.92f), visible, PathOperation.Intersect)
+                venas[v].op(banda(0.5f, 0.535f), visible, PathOperation.Intersect)
             }
             val x = tapa.left + tapa.width * 0.62f
-            val ancho = 4.6f * u
-            val fin = h * 0.985f
+            val ancho = 4.8f * u
+            val fin = h * 0.99f
             cinta.moveTo(x, tapa.bottom - 1f * u); cinta.lineTo(x + ancho, tapa.bottom - 1f * u)
-            cinta.quadraticTo(x + ancho + 0.8f * u, (tapa.bottom + fin) / 2f, x + ancho + 1.4f * u, fin)
-            cinta.lineTo(x + ancho * 0.5f + 1f * u, fin - 2.6f * u); cinta.lineTo(x + 0.6f * u, fin)
-            cinta.quadraticTo(x + 0.4f * u, (tapa.bottom + fin) / 2f, x, tapa.bottom - 1f * u); cinta.close()
-            cintaLuz.moveTo(x + ancho * 0.3f, tapa.bottom); cintaLuz.quadraticTo(x + ancho * 0.4f, (tapa.bottom + fin) / 2f, x + ancho * 0.45f + 0.6f * u, fin - 2.4f * u)
+            cinta.quadraticTo(x + ancho + 1f * u, (tapa.bottom + fin) / 2f, x + ancho + 1.8f * u, fin)
+            cinta.lineTo(x + ancho * 0.5f + 1.2f * u, fin - 3f * u); cinta.lineTo(x + 0.8f * u, fin)
+            cinta.quadraticTo(x + 0.5f * u, (tapa.bottom + fin) / 2f, x, tapa.bottom - 1f * u); cinta.close()
+            cintaLuz.moveTo(x + ancho * 0.3f, tapa.bottom); cintaLuz.quadraticTo(x + ancho * 0.4f, (tapa.bottom + fin) / 2f, x + ancho * 0.45f + 0.8f * u, fin - 2.8f * u)
         }
     }
 
@@ -123,15 +112,16 @@ internal object IndiceLibretaNouveau {
             medidas[2 * n].clear(); medidas[2 * n + 1].clear(); k[0] = density; k[1] = fontScale; k[2] = caja.width; k[3] = caja.height
         }
         val mapa = medidas[2 * n + if (oscuro) 1 else 0]
-        val capa = mapa[texto] ?: (if (numero) capaEn(medidor, texto, caja, P.TITULO, tinta, 17f, minimo = 9f)
+        val capa = mapa[texto] ?: (if (numero) capaEn(medidor, texto, caja, P.TITULO, tinta, 20f, minimo = 10f)
             else capaEn(medidor, texto, caja, P.TEXTO, tinta, 8.5f, peso = FontWeight.SemiBold, minimo = 6f))
             ?.also { mapa[texto] = it } ?: return
         drawText(capa, topLeft = Offset(caja.center.x - capa.size.width / 2f, caja.center.y - capa.size.height / 2f))
     }
 
     /**
-     * La pestaña de un día: un carnet chico con su canto, su tapa de jaspeado (uno de tres, según la semilla), el lomo y las
-     * puntas de tela, el rótulo con el día y la letra de la semana, y la cinta del color del ánimo (sin ánimo, sin cinta).
+     * La pestaña de un día: un carnet chico con su canto, su tapa de jaspeado peinado (uno de tres, según la semilla), el lomo y
+     * las puntas de tela, el rótulo con el día (lo primero que se lee) y la letra de la semana, y la cinta larga del color del
+     * ánimo (sin ánimo, sin cinta).
      */
     fun DrawScope.pestana(e: EstadoPestana, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
@@ -142,37 +132,36 @@ internal object IndiceLibretaNouveau {
         val s = e.semilla and 0x7fffffff
         val v = s % 3
         // La sombra en la página, el canto y la tapa de atrás.
-        drawRect(if (oscuro) Color.Black.copy(alpha = 0.5f) else P.VENA.copy(alpha = 0.22f), Offset(r.left + 1.4f * u, r.top + 1.8f * u), Size(r.width + g.o.x, r.height))
+        drawRect(if (oscuro) Color.Black.copy(alpha = 0.5f) else P.CIRUELA.copy(alpha = 0.2f), Offset(r.left + 1.4f * u, r.top + 1.8f * u), Size(r.width + g.o.x, r.height))
         drawPath(g.atras, t(P.TELA, oscuro, 0.5f))
         drawPath(g.hojas, t(P.CANTO, oscuro, 0.3f))
-        drawPath(g.lineas, P.VENA.copy(alpha = 0.25f), style = Stroke(0.5f * u))
-        // La tapa: el jaspeado de piedras.
-        val vena = t(P.VENA, oscuro, 0.2f)
-        drawRect(vena, r.topLeft, r.size)
-        drawPath(g.piedras[v][0], t(P.PIEDRAS[(s / 3) % 2 * 5], oscuro))
-        drawPath(g.piedras[v][1], t(P.PIEDRAS[1 + (s / 7) % 2], oscuro))
-        drawPath(g.piedras[v][2], t(P.PIEDRAS[3 + (s / 11) % 2], oscuro))
+        drawPath(g.lineas, P.CIRUELA.copy(alpha = 0.25f), style = Stroke(0.5f * u))
+        // La tapa: el jaspeado peinado, de fondo salvia, con dos vetas y la vena de ciruela.
+        drawRect(t(P.VETAS[0], oscuro, 0.3f), r.topLeft, r.size)
+        drawPath(g.vetas[v][0], t(P.VETAS[if (s / 3 % 2 == 0) 1 else 4], oscuro, 0.3f))
+        drawPath(g.vetas[v][1], t(P.VETAS[if (s / 7 % 2 == 0) 2 else 5], oscuro, 0.3f))
+        drawPath(g.venas[v], t(P.CIRUELA, oscuro, 0.2f))
         // Las puntas y el lomo de tela, con su trama y la canal.
         val tela = t(P.TELA, oscuro, 0.35f)
         drawPath(g.puntas, tela)
         drawRect(tela, g.lomo.topLeft, g.lomo.size)
         drawPath(g.trama, t(P.TELA_LUZ, oscuro, 0.35f).copy(alpha = 0.3f), style = Stroke(0.5f * u))
-        drawLine(P.VENA.copy(alpha = 0.5f), Offset(g.lomo.left + g.lomo.width * 0.35f, r.top + 1f * u), Offset(g.lomo.left + g.lomo.width * 0.35f, r.bottom - 1f * u), 0.9f * u)
+        drawLine(P.CIRUELA.copy(alpha = 0.5f), Offset(g.lomo.left + g.lomo.width * 0.35f, r.top + 1f * u), Offset(g.lomo.left + g.lomo.width * 0.35f, r.bottom - 1f * u), 0.9f * u)
         // Los cantos del cartón: la luz arriba, la sombra abajo.
         drawLine(Color.White.copy(alpha = if (oscuro) 0.08f else 0.35f), Offset(r.left, r.top + 0.4f * u), Offset(r.right, r.top + 0.4f * u), 0.8f * u)
-        drawLine(P.VENA.copy(alpha = 0.5f), Offset(r.left, r.bottom - 0.4f * u), Offset(r.right, r.bottom - 0.4f * u), 0.8f * u)
-        // El rótulo de papel con su filete, el día y la letra de la semana.
+        drawLine(P.CIRUELA.copy(alpha = 0.5f), Offset(r.left, r.bottom - 0.4f * u), Offset(r.right, r.bottom - 0.4f * u), 0.8f * u)
+        // El rótulo de papel con su filete, el día (grande) y la letra de la semana.
         val et = g.etiqueta
-        drawRect(P.VENA.copy(alpha = 0.4f), Offset(et.left - 0.6f * u, et.top + 0.8f * u), et.size)
+        drawRect(P.CIRUELA.copy(alpha = 0.35f), Offset(et.left - 0.6f * u, et.top + 0.8f * u), et.size)
         drawRect(t(P.PAPEL, oscuro, 0.16f), et.topLeft, et.size)
-        drawRect(t(P.FILETE, oscuro, 0.2f).copy(alpha = 0.7f), Offset(et.left + 1.6f * u, et.top + 1.6f * u), Size(et.width - 3.2f * u, et.height - 3.2f * u), style = Stroke(0.6f * u))
+        drawRect(t(P.FILETE, oscuro, 0.2f).copy(alpha = 0.7f), Offset(et.left + 1.4f * u, et.top + 1.4f * u), Size(et.width - 2.8f * u, et.height - 2.8f * u), style = Stroke(0.6f * u))
         val tinta = if (oscuro) mezcla(P.TINTA, PENUMBRA, 0.15f) else P.TINTA
-        medido(medidor, e.dia, Rect(et.left + 2f * u, et.top + 2f * u, et.right - 2f * u, et.top + et.height * 0.68f), tinta, oscuro, true)
-        medido(medidor, e.semana, Rect(et.left + 2f * u, et.top + et.height * 0.64f, et.right - 2f * u, et.bottom - 1.2f * u), tinta.copy(alpha = 0.75f), oscuro, false)
+        medido(medidor, e.dia, Rect(et.left + 1.6f * u, et.top + 1.6f * u, et.right - 1.6f * u, et.top + et.height * 0.72f), tinta, oscuro, true)
+        medido(medidor, e.semana, Rect(et.left + 2f * u, et.top + et.height * 0.68f, et.right - 2f * u, et.bottom - 1f * u), tinta.copy(alpha = 0.7f), oscuro, false)
         // La cinta del ánimo: sale de entre las hojas y cuelga.
         val tono = tonoDeDiaNouveau(e.tono, oscuro) ?: return
         val cinta = t(tono, oscuro, 0.08f)
-        drawPath(g.cinta, P.VENA.copy(alpha = 0.35f), style = Stroke(1.2f * u))
+        drawPath(g.cinta, P.CIRUELA.copy(alpha = 0.35f), style = Stroke(1.2f * u))
         drawPath(g.cinta, cinta)
         drawPath(g.cintaLuz, mezcla(cinta, Color.White, if (oscuro) 0.45f else 0.38f).copy(alpha = 0.75f), style = Stroke(0.9f * u))
     }

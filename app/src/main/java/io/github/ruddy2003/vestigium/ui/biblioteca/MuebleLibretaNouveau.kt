@@ -3,6 +3,7 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -28,7 +29,6 @@ import io.github.ruddy2003.vestigium.ui.muebles.granoMueble
 import io.github.ruddy2003.vestigium.ui.muebles.luzMueble
 import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
 import kotlin.math.ceil
-import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -60,8 +60,17 @@ internal object PaletaLibretaNouveau {
     val CINTA = Color(0xFF7E5FA6)
     val CINTA_LUZ = Color(0xFFB79CD8)
     /** El jaspeado de las tapas: el fondo de las venas y los colores de las piedras. */
-    val VENA = Color(0xFF2E2742)
-    val PIEDRAS = listOf(Color(0xFF8A6FAE), Color(0xFF94A684), Color(0xFFC89B58), Color(0xFFC48F86), Color(0xFFE3D3AA), Color(0xFF5D5A8A))
+    /**
+     * El jaspeado peinado de las tapas: vetas largas en látigo, de pocos valores y apagadas (salvia, rosa viejo, ocre, crema),
+     * con la vena de ciruela que corre entre algunas.
+     */
+    val VETAS = listOf(Color(0xFF9DA98A), Color(0xFFC29C8E), Color(0xFFD2B987), Color(0xFF8A9A7C), Color(0xFFCDAE9F), Color(0xFFC4A16C), Color(0xFF9DA98A))
+    val CREMA = Color(0xFFE6D8B6)
+    val CIRUELA = Color(0xFF5E3D57)
+    /** El lápiz de laca ocre del carnet, la madera de su punta y el tafilete de su presilla. */
+    val LAPIZ = Color(0xFFCFA04A)
+    val CEDRO = Color(0xFFDDBE8E)
+    val TAFILETE = Color(0xFF7C3A24)
     /** El bronce, el vidrio de la pantalla y del florero, el charol de la caja de colores y su esmalte, el oro de los filetes. */
     val BRONCE = Color(0xFF8C6B3A)
     val BRONCE_LUZ = Color(0xFFDDBD7C)
@@ -163,6 +172,8 @@ internal class AireLibretaNouveau(val oscuro: Boolean) {
  */
 internal object MuebleLibretaNouveau {
     private val P = PaletaLibretaNouveau
+    /** Los papeles de los cuadernillos: crema, ante y gris perla, como en un carnet de dibujo. */
+    private val PAPELES = listOf(Color(0xFFE3D6B8), Color(0xFFD8C7A2), Color(0xFFE9DFC8), Color(0xFFD3CBB8))
     private val CLARO = AireLibretaNouveau(false)
     private val OSCURO = AireLibretaNouveau(true)
 
@@ -202,6 +213,7 @@ internal object MuebleLibretaNouveau {
         val g = h * 0.014f + (pl.gruesoMax - h * 0.014f) * lleno
         canto(pl, a, g, e.hojas)
         sueltas(pl, a, g, e)
+        lapiz(pl, a)
         if (ab > 0.01f) abierto(pl, a, img, ab, e, medidor) else {
             lazo(pl, a, g)
             rotulo(pl, a, e, medidor, 1f)
@@ -235,8 +247,8 @@ internal object MuebleLibretaNouveau {
     // ---------------------------------------------------------------- la tapa del carnet (fija)
 
     /**
-     * La tapa del carnet: el cartón jaspeado de piedras (violeta de iris, salvia, ocre, rosa y crema sobre las venas oscuras),
-     * el lomo de tela verde con la canal de la bisagra, las dos puntas de tela, los cantos del cartón con su luz y el rótulo de
+     * La tapa del carnet: el cartón jaspeado al peine, en vetas largas de látigo (salvia, rosa viejo, ocre y crema, con su vena
+     * de ciruela), el lomo de tela verde con la canal de la bisagra, las dos puntas de tela, los cantos del cartón con su luz y el rótulo de
      * papel pegado, con su filete verde impreso y sus hojitas en las esquinas (el nombre y la cuenta van encima, cada vez).
      */
     private fun DrawScope.tapaCarnet(pl: PlanoLibretaNouveau, a: AireLibretaNouveau) {
@@ -266,7 +278,7 @@ internal object MuebleLibretaNouveau {
         drawLine(if (a.oscuro) a.filo(0.5f, kl) else a.claro(0.4f), Offset(canal + 1.4f * u, lomo.top + 1f * u), Offset(canal + 1.4f * u, lomo.bottom - 1f * u), 0.8f * u)
         // El borde del papel jaspeado, montado sobre la tela: su sombrita.
         drawLine(a.sombra(0.4f), Offset(lomo.right, t.top), Offset(lomo.right, t.bottom), 1.2f * u)
-        drawLine(a.luz(P.PIEDRAS[4], kl, fl).copy(alpha = 0.5f), Offset(lomo.right + 1f * u, t.top), Offset(lomo.right + 1f * u, t.bottom), 0.6f * u)
+        drawLine(a.luz(P.CREMA, kl, fl).copy(alpha = 0.5f), Offset(lomo.right + 1f * u, t.top), Offset(lomo.right + 1f * u, t.bottom), 0.6f * u)
         // Los cantos del cartón: de día, la luz arriba y a la derecha; de noche, la lámpara en el de la izquierda y la luna en el de la derecha.
         drawLine(a.claro(0.55f), Offset(t.left + 2f * u, t.top + 0.6f * u), Offset(t.right - 1f * u, t.top + 0.6f * u), 1.2f * u)
         drawLine(a.claro(0.45f), Offset(t.right - 0.6f * u, t.top + 1f * u), Offset(t.right - 0.6f * u, t.bottom - 1f * u), 1.2f * u)
@@ -278,47 +290,47 @@ internal object MuebleLibretaNouveau {
     }
 
     /**
-     * El jaspeado de piedras en [r]: sobre el fondo de las venas, piedras redondeadas que se empujan unas a otras, cada una con
-     * su anillo más hondo, su centro y su vena fina; las primeras grandes y las últimas chicas, entre las otras. Cada piedra toma
-     * la luz del sitio donde está.
+     * El jaspeado peinado en [r]: vetas anchas que cruzan la tapa en una ola larga de látigo (más honda hacia la derecha), cada
+     * una de un color apagado y con dos hilos del peine que la siguen; entre algunas, la vena fina de ciruela y un hilo de
+     * crema. Cada veta toma, a lo ancho, la luz que le llega.
      */
     private fun DrawScope.jaspeado(r: Rect, pl: PlanoLibretaNouveau, a: AireLibretaNouveau, semilla: Int) {
         val u = pl.u
-        clipRect(r.left, r.top, r.right, r.bottom) {
-            val vena = a.luz(P.VENA, pl.k(r.center), pl.f(r.center), pl.d(r.center))
-            drawRect(vena, r.topLeft, r.size)
-            val r0 = pl.h * 0.027f
-            val n = ((r.width + 2f * r0) * (r.height + 2f * r0) / (r0 * r0) * 0.85f).toInt().coerceIn(20, 700)
-            for (i in 0 until n) {
-                val c = Offset(r.left - r0 + (r.width + 2f * r0) * azar(semilla, i), r.top - r0 + (r.height + 2f * r0) * azar(semilla + 1, i))
-                val rr = r0 * (0.6f + 0.75f * azar(semilla + 2, i)) * (1f - 0.4f * i / n)
-                val q = (azar(semilla + 3, i) * 10f).toInt()
-                val tono = P.PIEDRAS[when (q) { 0, 1, 2 -> 0; 3, 4 -> 1; 5 -> 2; 6, 7 -> 3; 8 -> 4; else -> 5 }]
-                val col = a.luz(tono, pl.k(c), pl.f(c), pl.d(c))
-                val piedra = blando(c, rr, 1f, semilla + i * 3)
-                drawPath(piedra, mezcla(col, vena, 0.32f))
-                drawPath(blando(c + Offset(0f, -rr * 0.06f), rr, 0.72f, semilla + i * 3), col)
-                drawPath(piedra, vena, style = Stroke(0.75f * u))
-                // Las motas de la piedra.
-                if (azar(semilla + 4, i) > 0.6f) drawCircle(mezcla(col, vena, 0.4f), rr * 0.1f, c + Offset(rr * 0.25f, rr * 0.12f))
+        val n = P.VETAS.size
+        val lam = r.width * 1.2f
+        val amp = r.height * 0.11f
+        val dosPi = 6.2832f
+        val pasos = 36
+        fun borde(j: Int, x: Float): Float {
+            val t = (x - r.left) / r.width
+            val base = r.top - r.height * 0.1f + r.height * 1.2f * j / n
+            return base + amp * sin(dosPi * (x - r.left) / lam + 0.7f + 0.32f * j) * (0.55f + 0.7f * t) +
+                amp * 0.22f * sin(dosPi * (x - r.left) / (lam * 0.36f) + dosPi * azar(semilla, j))
+        }
+        fun ola(j: Int, f: Float): Path = Path().apply {
+            for (s in 0..pasos) {
+                val x = r.left + r.width * s / pasos
+                val y = borde(j, x) + (borde(j + 1, x) - borde(j, x)) * f
+                if (s == 0) moveTo(x, y) else lineTo(x, y)
             }
         }
-    }
-
-    /** Una piedra del jaspeado: un contorno redondeado e irregular (curvas por los puntos medios), escalado por [f]. */
-    private fun blando(c: Offset, rr: Float, f: Float, semilla: Int): Path {
-        val m = 9
-        val xs = FloatArray(m); val ys = FloatArray(m)
-        val giro = azar(semilla, 97) * 6.2832f
-        for (j in 0 until m) {
-            val ang = 6.2832f * j / m + giro
-            val rad = rr * f * (0.82f + 0.36f * azar(semilla, j))
-            xs[j] = c.x + rad * cos(ang) * 1.12f; ys[j] = c.y + rad * sin(ang) * 0.9f
-        }
-        return Path().apply {
-            moveTo((xs[m - 1] + xs[0]) / 2f, (ys[m - 1] + ys[0]) / 2f)
-            for (j in 0 until m) { val n = (j + 1) % m; quadraticTo(xs[j], ys[j], (xs[j] + xs[n]) / 2f, (ys[j] + ys[n]) / 2f) }
-            close()
+        clipRect(r.left, r.top, r.right, r.bottom) {
+            for (j in 0 until n) {
+                val veta = Path()
+                for (s in 0..pasos) { val x = r.left + r.width * s / pasos; if (s == 0) veta.moveTo(x, borde(j, x)) else veta.lineTo(x, borde(j, x)) }
+                for (s in pasos downTo 0) { val x = r.left + r.width * s / pasos; veta.lineTo(x, borde(j + 1, x)) }
+                veta.close()
+                val yc = (borde(j, r.center.x) + borde(j + 1, r.center.x)) / 2f
+                val cols = listOf(r.left, r.center.x, r.right).map { x -> val q = Offset(x, yc); a.luz(P.VETAS[j], pl.k(q), pl.f(q), pl.d(q)) }
+                drawPath(veta, Brush.horizontalGradient(cols, r.left, r.right))
+                // El peine: dos hilos que siguen la veta, uno más claro y otro más hondo.
+                drawPath(ola(j, 0.35f), cols[1].let { mezcla(it, Color.White, 0.3f) }.copy(alpha = 0.5f), style = Stroke(0.8f * u))
+                drawPath(ola(j, 0.68f), mezcla(cols[1], P.CIRUELA, 0.35f).copy(alpha = 0.4f), style = Stroke(0.7f * u))
+            }
+            // La vena de ciruela y el hilo de crema, en los bordes de algunas vetas.
+            val kc = pl.k(r.center); val fc = pl.f(r.center); val dc = pl.d(r.center)
+            for (j in intArrayOf(2, 5)) drawPath(ola(j, 0f), a.luz(P.CIRUELA, kc, fc, dc), style = Stroke(1.5f * u))
+            drawPath(ola(3, 0f), a.luz(P.CREMA, kc, fc, dc).copy(alpha = 0.8f), style = Stroke(1f * u))
         }
     }
 
@@ -357,20 +369,28 @@ internal object MuebleLibretaNouveau {
         val atras = a.luz(P.TELA, kD, fD, 0.4f)
         drawPath(poligonoNouveau(t.left + o.x, t.top + o.y - 1.2f * u, t.right + o.x + 1.2f * u, t.top + o.y - 1.2f * u, t.right + o.x + 1.2f * u, t.bottom + o.y,
             t.right + o.x, t.bottom + o.y, t.right + o.x, t.top + o.y, t.left + o.x, t.top + o.y), atras)
-        // Las hojas: arriba, de día la luz de la ventana; de noche, lo que alcanza la lámpara. A la derecha, el canto de cara a la ventana.
-        val arriba = a.papel(P.CANTO, kA * 0.85f, 0.85f)
-        val derecha = if (a.oscuro) a.luz(P.CANTO, kD, fD) else a.luz(P.CANTO, 0f, 0f, 0.74f)
-        drawPath(poligonoNouveau(t.left, t.top, t.right, t.top, t.right + o.x, t.top + o.y, t.left + o.x, t.top + o.y), arriba)
-        drawPath(poligonoNouveau(t.right, t.top, t.right + o.x, t.top + o.y, t.right + o.x, t.bottom + o.y, t.right, t.bottom), derecha)
-        // Las líneas de las hojas.
-        val n = (hojas / 3).coerceIn(2, 16)
+        // Las hojas, de papel de dibujo grueso, en cuadernillos de tonos un poco distintos (crema, ante, gris perla) y de canto
+        // desigual: cada cuadernillo asoma un poco más o un poco menos. Arriba, de día la luz de la ventana; de noche, lo que
+        // alcanza la lámpara. A la derecha, el canto de cara a la ventana.
+        val n = (hojas / 4).coerceIn(2, 12)
+        val x0 = t.left + pl.lomo.width * 0.4f
         val lineas = Path()
-        for (i in 1..n) {
-            val fi = i / (n + 1f) + (azar(hojas, i) - 0.5f) * 0.3f / (n + 1f)
-            lineas.moveTo(t.left + pl.lomo.width * 0.4f + o.x * fi, t.top + o.y * fi); lineas.lineTo(t.right + o.x * fi, t.top + o.y * fi)
-            lineas.lineTo(t.right + o.x * fi, t.bottom + o.y * fi)
+        for (i in 0 until n) {
+            val f0 = i / n.toFloat(); val f1 = (i + 1) / n.toFloat()
+            val sx = (azar(hojas + 3, i) - 0.3f) * 2.2f * u
+            val sy = (azar(hojas + 5, i) - 0.3f) * 1.8f * u
+            val tono = PAPELES[(i + hojas) % PAPELES.size]
+            val arriba = a.papel(tono, kA * 0.85f, 0.85f)
+            val derecha = if (a.oscuro) a.luz(tono, kD, fD) else a.luz(tono, 0f, 0f, 0.74f)
+            drawPath(poligonoNouveau(x0 + o.x * f0, t.top + o.y * f0, t.right + o.x * f0, t.top + o.y * f0, t.right + o.x * f1 + sx, t.top + o.y * f1 - sy,
+                x0 + o.x * f1, t.top + o.y * f1 - sy), arriba)
+            drawPath(poligonoNouveau(t.right + o.x * f0, t.top + o.y * f0, t.right + o.x * f1 + sx, t.top + o.y * f1 - sy, t.right + o.x * f1 + sx, t.bottom + o.y * f1,
+                t.right + o.x * f0, t.bottom + o.y * f0), derecha)
+            if (i > 0) {
+                lineas.moveTo(x0 + o.x * f0, t.top + o.y * f0); lineas.lineTo(t.right + o.x * f0, t.top + o.y * f0); lineas.lineTo(t.right + o.x * f0, t.bottom + o.y * f0)
+            }
         }
-        drawPath(lineas, a.sombra(0.22f), style = Stroke(0.5f * u))
+        drawPath(lineas, a.sombra(0.3f), style = Stroke(0.6f * u))
         // La cabeza del lomo: la tela que envuelve las hojas a la izquierda.
         val kl = pl.k(pl.lomo.topCenter)
         drawPath(poligonoNouveau(t.left, t.top, t.left + pl.lomo.width * 0.4f, t.top, t.left + pl.lomo.width * 0.4f + o.x, t.top + o.y, t.left + o.x, t.top + o.y),
@@ -378,6 +398,43 @@ internal object MuebleLibretaNouveau {
         drawLine(a.filo(0.5f, kl), Offset(t.left, t.top), Offset(t.left + o.x, t.top + o.y), 1f * u)
         drawLine(a.fria(0.45f, fD), Offset(t.right + o.x, t.top + o.y), Offset(t.right + o.x, t.bottom + o.y), 1f * u)
         drawLine(a.sombra(0.3f), Offset(t.right, t.top), Offset(t.right, t.bottom), 0.8f * u)
+    }
+
+    /**
+     * El lápiz del carnet, metido en sus dos presillas de tafilete cosidas al lomo: la laca ocre con su arista de luz, la punta
+     * afilada a navaja que sobresale por arriba y su sombra en la tela.
+     */
+    private fun DrawScope.lapiz(pl: PlanoLibretaNouveau, a: AireLibretaNouveau) {
+        val u = pl.u; val h = pl.h
+        val t = pl.tapa; val lomo = pl.lomo
+        val x = lomo.left + lomo.width * 0.6f
+        val ancho = h * 0.017f
+        val fin = t.top + pl.ch * 0.8f
+        val cuerpo = t.top - h * 0.045f
+        val punta = t.top - h * 0.082f
+        val q = Offset(x, t.top + pl.ch * 0.3f)
+        val k = pl.k(q); val f = pl.f(q); val d = pl.d(q)
+        val lado = if (a.oscuro) 1f else -1f
+        // La sombra en el lomo.
+        drawLine(a.sombra(0.4f), Offset(x + lado * ancho * 0.5f, cuerpo + h * 0.01f), Offset(x + lado * ancho * 0.5f, fin + h * 0.006f), ancho)
+        // La madera afilada y la mina.
+        drawPath(poligonoNouveau(x - ancho / 2f, cuerpo, x + ancho / 2f, cuerpo, x + ancho * 0.12f, punta + h * 0.012f, x - ancho * 0.12f, punta + h * 0.012f), a.luz(P.CEDRO, k, f, d))
+        drawPath(poligonoNouveau(x - ancho * 0.12f, punta + h * 0.012f, x + ancho * 0.12f, punta + h * 0.012f, x, punta), a.luz(Color(0xFF3A3638), k, f, d))
+        // El cuerpo de laca, con la arista de luz (de día, la de la ventana; de noche, la de la lámpara) y la de sombra.
+        drawRect(a.luz(P.LAPIZ, k, f, d), Offset(x - ancho / 2f, cuerpo), Size(ancho, fin - cuerpo))
+        drawLine(if (a.oscuro) a.filo(0.6f, k) else a.claro(0.55f), Offset(x - lado * ancho * 0.22f, cuerpo + 1f * u), Offset(x - lado * ancho * 0.22f, fin - 1f * u), ancho * 0.22f)
+        drawLine(a.sombra(0.3f), Offset(x + lado * ancho * 0.3f, cuerpo), Offset(x + lado * ancho * 0.3f, fin), ancho * 0.18f)
+        drawLine(a.sombra(0.4f), Offset(x - ancho / 2f, fin), Offset(x + ancho / 2f, fin), 1f * u)
+        // Las dos presillas de tafilete, con su pespunte.
+        for (fy in floatArrayOf(0.24f, 0.62f)) {
+            val y = t.top + pl.ch * fy
+            val r = Rect(lomo.left + 1f * u, y, lomo.right - 1f * u, y + h * 0.022f)
+            val qq = r.center
+            drawRect(a.sombra(0.35f), r.topLeft + Offset(0f, 1.4f * u), r.size)
+            drawRect(a.luz(P.TAFILETE, pl.k(qq), pl.f(qq), pl.d(qq)), r.topLeft, r.size)
+            drawLine(if (a.oscuro) a.filo(0.45f, pl.k(qq)) else a.claro(0.4f), Offset(r.left, r.top + 0.6f * u), Offset(r.right, r.top + 0.6f * u), 1f * u)
+            drawLine(mezcla(a.luz(P.TAFILETE, pl.k(qq), pl.f(qq)), a.luz(P.CANTO, pl.k(qq), pl.f(qq)), 0.45f), Offset(r.left + 2f * u, r.center.y), Offset(r.right - 2f * u, r.center.y), 0.6f * u)
+        }
     }
 
     /**
@@ -397,7 +454,7 @@ internal object MuebleLibretaNouveau {
             val col = a.papel(P.PAPEL, pl.k(t.topCenter) * 0.9f, 0.8f)
             val aguada = a.luz(P.PASTILLAS[(i * 2 + e.hojas) % 4], pl.k(t.topCenter), pl.f(t.topRight)).copy(alpha = 0.55f)
             if (arriba) {
-                val x0 = t.left + pl.cw * ((if (i == 0) 0.6f else 0.18f) + 0.1f * azar(s + 1, i)) + o.x * fi
+                val x0 = t.left + pl.cw * ((if (i == 0) 0.66f else 0.17f) + 0.08f * azar(s + 1, i)) + o.x * fi
                 val y0 = t.top + o.y * fi
                 val ancho = pl.cw * (0.16f + 0.12f * azar(s + 2, i)); val alto = pl.h * (0.022f + 0.02f * azar(s + 3, i)) + g * 0.3f
                 val inc = (azar(s + 4, i) - 0.5f) * alto * 0.6f

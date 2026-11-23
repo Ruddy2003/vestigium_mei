@@ -41,10 +41,10 @@ internal class PlanoLibretaNouveau(val w: Float, val h: Float, val u: Float) {
     val anchoBiombo = minOf(h * 0.28f, w * 0.2f)
     val xBiombo = w - anchoBiombo
     /** El carnet: su tapa (apaisada, de 7 a 10), el lomo de tela y el rótulo de papel. */
-    val cw = (w - anchoBiombo - h * 0.42f).coerceIn(h * 0.56f, h * 0.74f)
+    val cw = (w - anchoBiombo - h * 0.42f).coerceIn(h * 0.56f, h * 0.72f)
     val ch = cw * 0.7f
     val gruesoMax = h * 0.075f
-    val apoyo = h * 0.665f
+    val apoyo = h * 0.672f
     val cx = xBiombo - h * 0.012f - gruesoMax * 0.72f - cw / 2f
     val tapa = Rect(cx - cw / 2f, apoyo - ch, cx + cw / 2f, apoyo)
     val lomo = Rect(tapa.left, tapa.top, tapa.left + cw * 0.14f, tapa.bottom)
@@ -68,7 +68,7 @@ internal class PlanoLibretaNouveau(val w: Float, val h: Float, val u: Float) {
     val mesaIzq = w * 0.025f
     val mesaDer = xBiombo + h * 0.075f
     /** El atril: la cima de las patas, la repisa donde se apoya el carnet y el borde de arriba de su listón. */
-    val cima = Offset(cx, tapa.top - h * 0.095f)
+    val cima = Offset(cx, maxOf(tapa.top - h * 0.1f, h * 0.068f))
     val repisa = Rect(tapa.left - h * 0.024f, apoyo - h * 0.006f, tapa.right + h * 0.022f, apoyo + h * 0.017f)
     val labio = apoyo - h * 0.012f
     /** La caja de acuarelas (bajo la lámpara), el vaso del agua (si cabe) y el pie del florero. */

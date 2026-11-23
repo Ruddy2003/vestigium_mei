@@ -36,28 +36,36 @@ internal object PiezasLibretaNouveau {
         val c = pl.cima
         val abre = pl.cw / 2f + h * 0.02f
         val pie = pl.mesaFondo + h * 0.016f
-        val g = h * 0.016f
+        val g = h * 0.021f
+        val lado = if (a.oscuro) -1f else 1f
         for (s in floatArrayOf(-1f, 1f)) {
             val fin = Offset(c.x + s * abre, pie)
             val q = Offset(c.x + s * abre * 0.6f, (c.y + pie) / 2f)
             val col = a.luz(P.NOGAL, pl.k(q), pl.f(q), pl.d(q))
             drawLine(a.sombra(0.3f), c + Offset(-h * 0.02f, h * 0.014f), fin + Offset(-h * 0.02f, h * 0.002f), g)
             drawLine(col, c, fin, g, StrokeCap.Round)
-            val lado = if (a.oscuro) -1f else 1f
-            drawLine(if (a.oscuro) a.filo(0.45f, pl.k(q)) else a.claro(0.35f), c + Offset(lado * g * 0.3f, g * 0.6f), fin + Offset(lado * g * 0.3f, -g * 0.5f), 0.8f * u)
+            drawLine(if (a.oscuro) a.filo(0.5f, pl.k(q)) else a.claro(0.4f), c + Offset(lado * g * 0.3f, g * 0.6f), fin + Offset(lado * g * 0.3f, -g * 0.5f), 1f * u)
+            drawLine(a.sombra(0.3f), c + Offset(-lado * g * 0.32f, g * 0.6f), fin + Offset(-lado * g * 0.32f, -g * 0.5f), 0.8f * u)
             drawOval(a.sombra(0.35f), Offset(fin.x - h * 0.02f, fin.y - h * 0.002f), Size(h * 0.04f, h * 0.008f))
         }
-        // El capullo de la cima, con su collarín y sus dos hojas que bajan.
+        // La cima: el taco tallado donde se juntan las patas, el collarín, el capullo y sus dos hojas que bajan.
         val kc = pl.k(c); val fc = pl.f(c)
         val madera = a.luz(P.NOGAL, kc, fc, pl.d(c))
         val claro = a.luz(P.NOGAL_LUZ, kc, fc, pl.d(c) + 0.1f)
-        drawPath(TrazosNouveau.hojaLanza(c + Offset(0f, -h * 0.004f), c + Offset(-h * 0.034f, h * 0.014f), h * 0.009f, -0.25f), madera)
-        drawPath(TrazosNouveau.hojaLanza(c + Offset(0f, -h * 0.004f), c + Offset(h * 0.034f, h * 0.014f), h * 0.009f, 0.25f), madera)
-        drawRect(mezcla(madera, a.sombra(1f), 0.2f), Offset(c.x - h * 0.012f, c.y - h * 0.012f), Size(h * 0.024f, h * 0.008f))
-        drawOval(madera, Offset(c.x - h * 0.011f, c.y - h * 0.05f), Size(h * 0.022f, h * 0.042f))
-        val lado = if (a.oscuro) -1f else 1f
-        drawOval(if (a.oscuro) mezcla(claro, P.LLAMA, 0.3f * kc) else claro, Offset(c.x - h * 0.004f + lado * h * 0.003f, c.y - h * 0.045f), Size(h * 0.008f, h * 0.026f))
-        drawLine(a.sombra(0.35f), Offset(c.x, c.y - h * 0.048f), Offset(c.x, c.y - h * 0.012f), 0.6f * u)
+        val taco = Rect(c.x - h * 0.03f, c.y - h * 0.008f, c.x + h * 0.03f, c.y + h * 0.02f)
+        drawRect(a.sombra(0.3f), taco.topLeft + Offset(-h * 0.012f, h * 0.008f), taco.size)
+        drawRect(madera, taco.topLeft, taco.size)
+        drawLine(if (a.oscuro) a.filo(0.55f, kc) else a.claro(0.5f), Offset(taco.left, taco.top + 0.7f * u), Offset(taco.right, taco.top + 0.7f * u), 1.2f * u)
+        drawLine(a.sombra(0.4f), Offset(taco.left, taco.bottom - 0.6f * u), Offset(taco.right, taco.bottom - 0.6f * u), 1.2f * u)
+        drawCircle(a.sombra(0.35f), h * 0.0045f, taco.center + Offset(0.6f * u, 0.8f * u))
+        drawCircle(a.luz(P.BRONCE, kc, fc, pl.d(c)), h * 0.0045f, taco.center)
+        val top = taco.top
+        drawPath(TrazosNouveau.hojaLanza(Offset(c.x, top - h * 0.006f), Offset(c.x - h * 0.048f, top + h * 0.012f), h * 0.012f, -0.28f), madera)
+        drawPath(TrazosNouveau.hojaLanza(Offset(c.x, top - h * 0.006f), Offset(c.x + h * 0.048f, top + h * 0.012f), h * 0.012f, 0.28f), madera)
+        drawRect(mezcla(madera, a.sombra(1f), 0.2f), Offset(c.x - h * 0.014f, top - h * 0.012f), Size(h * 0.028f, h * 0.01f))
+        drawOval(madera, Offset(c.x - h * 0.014f, top - h * 0.06f), Size(h * 0.028f, h * 0.052f))
+        drawOval(if (a.oscuro) mezcla(claro, P.LLAMA, 0.3f * kc) else claro, Offset(c.x - h * 0.005f + lado * h * 0.004f, top - h * 0.054f), Size(h * 0.01f, h * 0.032f))
+        drawLine(a.sombra(0.35f), Offset(c.x - lado * h * 0.004f, top - h * 0.056f), Offset(c.x - lado * h * 0.004f, top - h * 0.014f), 0.7f * u)
     }
 
     /** La sombra que el carnet echa en la pared: de día, a la izquierda y abajo; de noche, lejos de la lámpara. */
