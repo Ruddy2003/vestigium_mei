@@ -299,8 +299,9 @@ internal object ArribaEstanteVapor {
             }
             a.oscuro -> {
                 val fuerte = if (a.noche) 0.55f else 1f
-                mancha(gas + Offset(-w * 0.04f, w * 0.06f), w * 0.55f, GAS.copy(alpha = 0.12f * fuerte))
-                mancha(gas, w * 0.2f, GAS.copy(alpha = 0.26f * fuerte))
+                mancha(gas + Offset(-w * 0.06f, w * 0.06f), w * 0.62f, GAS.copy(alpha = 0.14f * fuerte))
+                mancha(gas, w * 0.26f, GAS.copy(alpha = 0.32f * fuerte))
+                mancha(gas, w * 0.07f, Color(0xFFFFF0C8).copy(alpha = 0.5f * fuerte))
                 // La luz que sale por la boca del globo y sube por la pared.
                 clipRect(0f, 0f, w, gas.y) { drawPath(poligonoVapor(gas.x - w * 0.02f, gas.y - w * 0.03f, gas.x + w * 0.02f, gas.y - w * 0.03f, gas.x + w * 0.07f, 0f, gas.x - w * 0.07f, 0f), GAS.copy(alpha = 0.08f * fuerte)) }
                 if (a.lunar) mancha(ven, w * 0.32f, LUNA.copy(alpha = 0.1f))
@@ -314,20 +315,25 @@ internal object ArribaEstanteVapor {
 
     // ---------------------------------------------------------------- al pie
 
-    /** El pie: la pared de los lados, el zócalo, el suelo de baldosas y la estufa (va en la imagen guardada). */
-    fun DrawScope.pieVapor(a: AireVapor, g: MarcoVapor) {
+    /** El suelo de baldosas, la sombra del mueble en él y, de noche, su penumbra hacia el borde (va en la imagen guardada). */
+    fun DrawScope.sueloVapor(a: AireVapor, g: MarcoVapor) {
         val w = g.w
-        // La pared que asoma a los lados del zócalo, hasta el suelo.
+        suelo(a, g)
+        if (a.oscuro) drawRect(Brush.verticalGradient(listOf(Color.Transparent, a.hondo.copy(alpha = 0.5f)), g.zocalo, g.h), Offset(0f, g.zocalo), Size(w, g.h - g.zocalo))
+        drawRect(Brush.verticalGradient(listOf(a.sombra(0.5f), Color.Transparent), g.zocalo, g.zocalo + w * 0.035f), Offset(g.xa, g.zocalo), Size(g.xb - g.xa, w * 0.035f))
+    }
+
+    /** Lo del pie que se pinta en cada dibujo, encima del suelo guardado: la pared de los lados, el zócalo y la estufa. */
+    fun DrawScope.pieVivoVapor(a: AireVapor, g: MarcoVapor) {
+        val w = g.w
+        // Debajo, opaco y en píxeles enteros: las franjas del zócalo se tocan a medio píxel y no deben dejar ver el fondo.
+        val y0 = kotlin.math.floor(g.fondo); val y1 = minOf(g.h, kotlin.math.ceil(g.zocalo) + 1f)
+        if (y1 > y0) drawRect(a.luz(mezcla(PaletaVapor.PINO_OSC, PaletaVapor.VETA, 0.4f), g.cerca(Offset(w * 0.5f, g.zocalo))), Offset(0f, y0), Size(w, y1 - y0))
         listOf(0f to g.xa, g.xb to w).forEach { (l, r) ->
             val p = Offset((l + r) / 2, (g.fondo + g.zocalo) / 2)
             drawRect(a.luz(AZUL, g.cerca(p), g.frio(p), g.brasa(p)), Offset(l, g.fondo - 1f), Size(r - l, g.zocalo - g.fondo + 1f))
         }
-        suelo(a, g)
-        // De noche, lo bajo del suelo se hunde hacia el borde (la estufa, que va después, pone su charco encima).
-        if (a.oscuro) drawRect(Brush.verticalGradient(listOf(Color.Transparent, a.hondo.copy(alpha = 0.5f)), g.zocalo, g.h), Offset(0f, g.zocalo), Size(w, g.h - g.zocalo))
         with(MuebleCuerpoVapor) { zocaloVapor(a, g) }
-        // La sombra del mueble en el suelo, pegada al zócalo.
-        drawRect(Brush.verticalGradient(listOf(a.sombra(0.5f), Color.Transparent), g.zocalo, g.zocalo + w * 0.035f), Offset(g.xa, g.zocalo), Size(g.xb - g.xa, w * 0.035f))
         estufa(a, g)
     }
 
@@ -396,7 +402,7 @@ internal object ArribaEstanteVapor {
      * cuarterones (que de noche arde y es la segunda luz del cuarto), el tiro con su llave, la tapa abombada con el pomo, el caño
      * que sale por la izquierda y la tetera de cobre encima.
      */
-    private fun DrawScope.estufa(a: AireVapor, g: MarcoVapor) {
+    fun DrawScope.estufa(a: AireVapor, g: MarcoVapor) {
         val u = density; val w = g.w
         val mica = Offset(g.estufa.x * w, g.estufa.y * w)
         val cx = mica.x - w * 0.012f

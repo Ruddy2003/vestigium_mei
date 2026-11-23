@@ -37,7 +37,7 @@ private val TONOS_VAPOR: Pair<List<Color>, List<Color>> by lazy { juegoTonos(Tem
  * Los tintes del cuero, la laca y la lona con que se dice el ánimo, en el orden de la escala del tema (de lo peor a lo mejor):
  * granate, teja, crema, cardenillo y verde hondo. Así los puntos de en medio son un color con cuerpo y no un pastel lavado.
  */
-private val TINTES_VAPOR = listOf(Color(0xFF86281F), Color(0xFFB4532C), Color(0xFFE0C893), Color(0xFF4C8268), Color(0xFF245E55))
+private val TINTES_VAPOR = listOf(Color(0xFF86281F), Color(0xFFB4532C), Color(0xFFD9BB7E), Color(0xFF4C8268), Color(0xFF245E55))
 
 private fun cuadradoVapor(x: Float) = x * x
 

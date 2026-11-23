@@ -188,14 +188,16 @@ internal class AireVapor(val oscuro: Boolean, val noche: Boolean) {
  * gusto de esos años: la cornisa volada con su moldura, el friso con acanaladuras y rosetas incisas, los montantes gruesos con
  * chaflanes de remate en punta, las tablas gruesas de canto boleado con el portaetiquetas de latón del mes y el zócalo con sus
  * golpes. Es abierta por detrás: el fondo de cada hueco es la pared, el enlucido azul de Prusia en sombra. Arriba, la pared con
- * su friso de plantilla y la moldura de colgar, la ventana de fundición de vidrios tiznados (la luz del día), la lámina de las
- * señales colgada de su cordón, el caño y el mechero de gas (la luz de la noche) y, encima del mueble, un bodegón: la maqueta
- * de locomotora sobre su tramo de vía, los manuales, la taza de té sobre los libros y la campana de mano. Al pie, el suelo de
- * baldosas geométricas, la estufa de hierro con su mica (la segunda luz de la noche) y el paragüero con los planos y las
- * banderas del guarda. La pared y lo colgado están en `MuebleEstanteVaporMuro.kt`; el mueble, en `MuebleEstanteVaporMueble.kt`;
- * lo de encima y del pie, en `MuebleEstanteVaporArriba.kt`; lo de los huecos libres, en `MuebleEstanteVaporHuecos.kt`; las
- * entradas, en `MuebleEstanteVaporVolumenes.kt`. Distinto del Ideario, que es el casillero de caoba de la caseta de los
- * maquinistas contra el ladrillo y la tabla verde, con el farol de señales.
+ * su friso de plantilla y la moldura de colgar, la ventana de fundición de vidrios tiznados con su persiana (la luz del día), la
+ * lámina de las señales colgada de su cordón, el tablero de las fichas de latón, el caño y el mechero de gas (la luz de la
+ * noche) y, encima del mueble, un bodegón: la maqueta de locomotora sobre su tramo de vía, los manuales, el tintero, el atril
+ * con el manual abierto, la taza de té sobre los libros y la campana de mano. Al pie, el suelo de baldosas geométricas, la
+ * estufa de hierro con su mica (la segunda luz de la noche) y el paragüero con los planos y las banderas del guarda. Lo fijo
+ * (la corona y el suelo) se pinta una vez por tamaño y modo ([CapaVapor]); lo demás, en cada dibujo. La pared y lo colgado
+ * están en `MuebleEstanteVaporMuro.kt`; el mueble, en `MuebleEstanteVaporMueble.kt`; la maqueta, en
+ * `MuebleEstanteVaporMaqueta.kt`; lo de encima y del pie, en `MuebleEstanteVaporArriba.kt`; lo de los huecos libres, en
+ * `MuebleEstanteVaporHuecos.kt`; las entradas, en `MuebleEstanteVaporVolumenes.kt`. Distinto del Ideario, que es el casillero
+ * de caoba de la caseta de los maquinistas contra el ladrillo y la tabla verde, con el farol de señales.
  */
 internal object MuebleEstanteVapor {
     val LETRA: FontFamily get() = PaletaVapor.LETRA
@@ -260,13 +262,14 @@ internal object MuebleEstanteVapor {
         val y0 = floor(ch); val y1 = minOf(h, ceil(fondo) + 1f)
         if (y1 > y0) drawRect(a.luz(mezcla(PaletaVapor.AZUL_OSC, PaletaVapor.NOCHE, 0.3f), 0.2f), Offset(0f, y0), Size(w, y1 - y0))
 
-        // ---- lo fijo de arriba (la pared, la ventana, lo colgado, la cornisa y el bodegón) y de abajo (el zócalo, el suelo y la
-        // estufa), pintados una vez por tamaño y modo, en píxeles enteros: la corona desde arriba hasta el píxel entero de debajo
-        // de su borde; el pie desde el píxel entero de encima del suyo (lo que sobra lo tapa la última tabla, que va después).
-        val clave = "${w.toInt()}|${ch}|${fondo}|${h.toInt()}|$n|$oscuro|$noche|$u"
+        // ---- lo fijo de arriba (la pared, la ventana, lo colgado, la cornisa y el bodegón) y el suelo de baldosas, pintados una
+        // vez por tamaño y modo, en píxeles enteros: la corona desde arriba hasta el píxel entero de debajo de su borde; el suelo
+        // desde el píxel entero de encima del zócalo (lo que sobra lo tapa el zócalo, que va después). La corona no cambia con las
+        // repisas; el suelo, sí.
+        val modo = "${w.toInt()}|$oscuro|$noche|$u"
         val ranura = if (noche) 2 else 0
         with(CapaVapor) {
-            pegar(ranura, "a$clave", 0f, minOf(h, ceil(ch))) {
+            pegar(ranura, "a$modo|$ch", 0f, minOf(h, ceil(ch))) {
                 // Debajo de todo, opaco: lo que dos franjas dejen a medio píxel no deja ver el fondo de la pantalla.
                 drawRect(a.luz(PaletaVapor.PINO_OSC, 0.3f), Offset(0f, g.fondoTapa - 2f), Size(w, size.height - g.fondoTapa + 2f))
                 drawRect(a.luz(PaletaVapor.AZUL, 0.3f), Offset.Zero, Size(w, g.fondoTapa))
@@ -274,16 +277,26 @@ internal object MuebleEstanteVapor {
                 with(ArribaEstanteVapor) { bodegonVapor(a, g) }
                 granoMueble(Rect(0f, 0f, w, ch), oscuro)
             }
-            val arriba = floor(fondo)
-            if (h - arriba >= 1f) pegar(ranura + 1, "b$clave", arriba, h) {
-                drawRect(a.luz(PaletaVapor.PINO_OSC, 0.2f), Offset(0f, arriba), Size(w, h - arriba))
-                with(ArribaEstanteVapor) { pieVapor(a, g) }
-                granoMueble(Rect(0f, fondo, w, h), oscuro)
+            val arriba = floor(g.zocalo)
+            if (h - arriba >= 1f) pegar(ranura + 1, "b$modo|$fondo|$h", arriba, h) {
+                drawRect(a.luz(PaletaVapor.BARRO_OSC, 0.2f), Offset(0f, arriba), Size(w, h - arriba))
+                with(ArribaEstanteVapor) { sueloVapor(a, g) }
+                granoMueble(Rect(0f, arriba, w, h), oscuro)
             }
         }
-        if (fondo - ch < 1f) return
+        if (fondo - ch >= 1f) cuerpo(d, medidor, a, g)
+        // ---- el zócalo, la estufa y el paragüero, que se pintan en cada dibujo encima del suelo guardado
+        with(ArribaEstanteVapor) { pieVivoVapor(a, g); paraguero(a, g) }
+        granoMueble(Rect(0f, ch, w, g.zocalo), oscuro)
+        // ---- de noche, el resplandor de la estufa en lo bajo del mueble
+        if (oscuro && fondo - ch >= 1f) {
+            val e = Offset(g.estufa.x * w, g.estufa.y * w)
+            clipRect(0f, ch, w, fondo) { mancha(e, w * 0.55f, PaletaVapor.BRASA.copy(alpha = if (noche) 0.1f else 0.16f)) }
+        }
+    }
 
-        // ---- el cuerpo: el fondo de cada hueco, las tablas, los montantes y los portaetiquetas
+    /** El cuerpo, entre la corona y el zócalo: el fondo de cada hueco, las tablas, los montantes, los portaetiquetas y los huecos. */
+    private fun DrawScope.cuerpo(d: DisposicionEstante, medidor: TextMeasurer, a: AireVapor, g: MarcoVapor) {
         with(MuebleCuerpoVapor) {
             d.repisas.forEachIndexed { k, r -> huecoVapor(k, r, a, g) }
             d.tablas.forEachIndexed { k, r -> tablaVapor(k, r, a, g) }
@@ -297,14 +310,6 @@ internal object MuebleEstanteVapor {
                 val c = Offset((oc + r.right) / 2, r.center.y)
                 huecoLibreVapor(k, r, oc, a, g, g.cerca(c), g.frio(c), g.brasa(c))
             }
-        }
-        // ---- el paragüero del pie, que sube por delante del montante derecho
-        with(ArribaEstanteVapor) { paraguero(a, g) }
-        granoMueble(Rect(0f, ch, w, fondo), oscuro)
-        // ---- de noche, el resplandor de la estufa en lo bajo del mueble
-        if (oscuro) {
-            val e = Offset(g.estufa.x * w, g.estufa.y * w)
-            clipRect(0f, ch, w, fondo) { mancha(e, w * 0.55f, PaletaVapor.BRASA.copy(alpha = if (noche) 0.1f else 0.16f)) }
         }
     }
 
@@ -346,7 +351,7 @@ internal class MarcoVapor(val w: Float, val h: Float, val ch: Float, val x0: Flo
 internal fun gasVapor(fx: Float, fy: Float, bajo: Boolean): Float {
     val dx = fx - MuebleEstanteVapor.GAS_X
     val dy = (fy - MuebleEstanteVapor.GAS_Y) * (if (fy > MuebleEstanteVapor.GAS_Y) 0.85f else 1.1f)
-    val radial = (if (bajo) 1.15f else 1.5f) * exp(-(if (bajo) 3.6f else 2.9f) * sqrt(dx * dx + dy * dy))
+    val radial = (if (bajo) 1f else 1.5f) * exp(-(if (bajo) 3.9f else 2.9f) * sqrt(dx * dx + dy * dy))
     val y = fy - MuebleEstanteVapor.CORONA
     var cuerpo = 0f
     if (y >= 0f) {
@@ -356,7 +361,7 @@ internal fun gasVapor(fx: Float, fy: Float, bajo: Boolean): Float {
             if (y in y0..y1) { cuerpo = k0 + (k1 - k0) * (y - y0) / (y1 - y0); break }
         }
         cuerpo *= (1f - 0.45f * (kotlin.math.abs(dx) - 0.1f).coerceAtLeast(0f)).coerceIn(0.66f, 1f)
-        if (bajo) cuerpo *= 0.6f
+        if (bajo) cuerpo *= 0.45f
     }
     return maxOf(radial, cuerpo).coerceIn(0f, 1f)
 }
@@ -410,9 +415,10 @@ internal fun estufaNominalVapor(repisas: Int): Offset =
 // ---------------------------------------------------------------- lo fijo pintado una vez
 
 /**
- * Lo fijo pintado una vez: cuatro imágenes (la franja de arriba y la de abajo, del diario y de los Sueños), cada una con la
- * clave de su tamaño y su modo; si la clave cambia, se vuelve a pintar. Cada franja va de una fila entera de píxeles a otra
- * ([desde], [hasta]) y se pega sin correrla, así no se remuestrea ni deja costura.
+ * Lo fijo pintado una vez: cuatro imágenes (la corona y el suelo, del diario y de los Sueños), cada una con la clave de su
+ * tamaño y su modo; si la clave cambia, se vuelve a pintar. Cada franja va de una fila entera de píxeles a otra ([desde],
+ * [hasta]) y se pega sin correrla, así no se remuestrea ni deja costura. Con un teléfono de 1080 px, unos 3 MB por modo (la
+ * corona, ~2.2 MB; el suelo, ~0.8 MB).
  */
 internal object CapaVapor {
     private val claves = arrayOfNulls<String>(4)

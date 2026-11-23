@@ -29,61 +29,105 @@ import kotlin.math.sin
 
 /**
  * Lo que hay en los huecos libres de las repisas de Vapor (ver [MuebleEstanteVapor]), según la repisa: el silbato de locomotora
- * de latón, tumbado; la rueda de maqueta con su manivela, apoyada contra la pared, y una caja de cerillas; la pila de cuadernos
- * tumbados con el compás encima; y el secante de balancín con el tintero. Si el hueco es muy ancho, van dos.
+ * de latón, de pie sobre su válvula; la rueda de maqueta con su manivela, apoyada contra la pared, y una caja de cerillas; la pila
+ * de cuadernos tumbados con el compás encima; el secante de balancín con el tintero; y la prensa de fechar billetes de la
+ * taquilla. Si el hueco es ancho, van dos.
  */
 internal object HuecosEstanteVapor {
 
     fun DrawScope.huecoLibreVapor(k: Int, r: Rect, oc: Float, a: AireVapor, g: MarcoVapor, kk: Float, f: Float, br: Float) {
         val w = g.w
         val x0 = oc + w * 0.02f
-        val x1 = g.x1 - w * 0.03f
+        val x1 = g.x1 - w * 0.035f
         val libre = x1 - x0
         if (libre < w * 0.1f) return
         val pie = r.bottom - w * 0.006f
         val hacia = if (a.oscuro && (x0 + x1) / 2 < MuebleEstanteVapor.GAS_X * w) 1f else -1f
-        val tipo = Math.floorMod(k * 3 + 1, 4)
-        val ancho = minOf(libre, w * 0.2f)
-        val c1 = if (libre > w * 0.42f) x0 + libre * 0.25f else x0 + libre * 0.5f
-        pieza(tipo, c1, pie, ancho, r.height, a, kk, f, br, hacia)
-        if (libre > w * 0.42f) pieza(Math.floorMod(tipo + 2, 4), x0 + libre * 0.72f, pie, ancho, r.height, a, g.cerca(Offset(x0 + libre * 0.72f, r.center.y)), f, br, hacia)
+        val tipo = Math.floorMod(k * 3 + 1, 5)
+        if (libre < w * 0.24f) { pieza(tipo, x0 + libre * 0.5f, pie, libre, r.height, a, kk, f, br, hacia); return }
+        // Dos cosas: la primera a la izquierda y la otra a la derecha, cada una con la luz de su sitio.
+        val cA = x0 + libre * 0.3f; val cB = x0 + libre * 0.74f
+        val ancho = minOf(libre * 0.48f, w * 0.22f)
+        val pA = Offset(cA, r.center.y); val pB = Offset(cB, r.center.y)
+        pieza(tipo, cA, pie, ancho, r.height, a, g.cerca(pA), f, g.brasa(pA), hacia)
+        pieza(Math.floorMod(tipo + 2, 5), cB, pie, ancho, r.height, a, g.cerca(pB), f, g.brasa(pB), hacia)
     }
 
     private fun DrawScope.pieza(tipo: Int, cx: Float, pie: Float, ancho: Float, alto: Float, a: AireVapor, k: Float, f: Float, br: Float, hacia: Float) {
         when (tipo) {
-            0 -> silbato(cx, pie, ancho, a, k, f, br, hacia)
+            0 -> silbato(cx, pie, alto, a, k, f, br, hacia)
             1 -> rueda(cx, pie, alto, a, k, f, br, hacia)
             2 -> cuadernos(cx, pie, ancho, a, k, f, br, hacia)
-            else -> secante(cx, pie, ancho, a, k, f, br, hacia)
+            3 -> secante(cx, pie, ancho, a, k, f, br, hacia)
+            else -> fechadora(cx, pie, alto, a, k, f, br, hacia)
         }
     }
 
-    /** El silbato de locomotora, de latón, tumbado: la campana con su boca, el vástago, la válvula y la palanca. */
-    private fun DrawScope.silbato(cx: Float, pie: Float, ancho: Float, a: AireVapor, k: Float, f: Float, br: Float, hacia: Float) {
+    /**
+     * El silbato de locomotora, de latón, de pie sobre su válvula: el cuerpo de la válvula, la palanca con su bola, el vástago y
+     * la campana con su aro y la boca por donde silba; el brillo del latón pulido.
+     */
+    private fun DrawScope.silbato(cx: Float, pie: Float, alto: Float, a: AireVapor, k: Float, f: Float, br: Float, hacia: Float) {
         val u = density
-        val l = ancho * 0.85f
-        val x0 = cx - l / 2
-        val rr = l * 0.15f
-        val yc = pie - rr
-        contactoVapor(Offset(cx, pie), l * 1.05f, rr * 0.45f, a, 0.4f, -hacia)
-        // La válvula (un cuerpo de latón) y la palanca con su bola.
-        val val0 = Rect(x0 + l * 0.58f, yc - rr * 0.55f, x0 + l * 0.9f, yc + rr * 0.55f)
+        val h = alto * 0.62f
+        val rw = h * 0.22f
+        val kk = maxOf(k, 0.3f)
+        contactoVapor(Offset(cx, pie), rw * 3.2f, rw * 0.45f, a, 0.42f, -hacia)
+        // Su sombra en la pared del fondo.
+        drawRect(a.sombra(0.3f), Offset(cx - rw * 0.6f - hacia * rw * 0.5f, pie - h * 0.98f), Size(rw * 1.2f, h * 0.7f))
+        // La válvula, con su tuerca abajo.
+        val val0 = Rect(cx - rw * 0.75f, pie - h * 0.26f, cx + rw * 0.75f, pie)
         drawRect(a.luz(LATON_OSC, k, f, br), val0.topLeft, val0.size)
-        drawRect(a.brillo(0.4f, k, br), Offset(val0.left, val0.top + val0.height * 0.15f), Size(val0.width, val0.height * 0.15f))
-        drawLine(a.luz(LATON, k, f, br), Offset(val0.right, yc - rr * 0.3f), Offset(x0 + l, yc - rr * 1.3f), 1.6f * u, StrokeCap.Round)
-        drawCircle(a.luz(LATON_LUZ, k, f, br), rr * 0.22f, Offset(x0 + l, yc - rr * 1.3f))
+        drawRect(a.luz(LATON, k, f, br), Offset(val0.left + val0.width * 0.2f, val0.top), Size(val0.width * 0.35f, val0.height))
+        drawRect(a.brillo(0.5f, kk, br), Offset(val0.left + val0.width * 0.28f, val0.top), Size(val0.width * 0.08f, val0.height))
+        drawRect(a.sombra(0.35f), Offset(val0.left, val0.top), Size(val0.width, 1.2f * u))
+        // La palanca, de lado, con su bola.
+        drawLine(a.luz(LATON, k, f, br), Offset(val0.right, val0.top + val0.height * 0.3f), Offset(val0.right + rw * 1.2f, val0.top - h * 0.12f), 1.8f * u, StrokeCap.Round)
+        drawCircle(a.luz(LATON_LUZ, k, f, br), rw * 0.22f, Offset(val0.right + rw * 1.2f, val0.top - h * 0.12f))
         // El vástago y la campana.
-        drawRect(a.luz(LATON, k, f, br), Offset(x0 + l * 0.42f, yc - rr * 0.25f), Size(l * 0.18f, rr * 0.5f))
-        val camp = Rect(x0, yc - rr, x0 + l * 0.44f, yc + rr)
+        drawRect(a.luz(LATON, k, f, br), Offset(cx - rw * 0.2f, pie - h * 0.38f), Size(rw * 0.4f, h * 0.14f))
+        val camp = Rect(cx - rw * 0.62f, pie - h, cx + rw * 0.62f, pie - h * 0.36f)
         drawRect(a.luz(LATON, k, f, br), camp.topLeft, camp.size)
-        drawRect(a.luz(LATON_LUZ, k, f, br), Offset(camp.left, camp.top + camp.height * 0.15f), Size(camp.width, camp.height * 0.16f))
-        drawRect(a.luz(LATON_OSC, k, f, br), Offset(camp.left, camp.top + camp.height * 0.65f), Size(camp.width, camp.height * 0.35f))
-        drawRect(Color.White.copy(alpha = if (a.oscuro) 0.5f * k else 0.6f), Offset(camp.left + camp.width * 0.2f, camp.top + camp.height * 0.2f), Size(camp.width * 0.5f, 1f * u))
-        // La boca de la campana y la ranura por donde silba.
-        drawOval(a.luz(NEGRO, k, f, br), Offset(camp.left - rr * 0.2f, camp.top), Size(rr * 0.4f, camp.height))
-        drawOval(a.luz(LATON, k, f, br), Offset(camp.left - rr * 0.2f, camp.top), Size(rr * 0.4f, camp.height), style = Stroke(1.2f * u))
-        drawRect(a.luz(NEGRO, k, f, br), Offset(camp.right - l * 0.02f, yc - rr * 0.6f), Size(l * 0.025f, rr * 1.2f))
-        if (a.oscuro && k > 0.08f) drawRect(a.brillo(0.6f, k, br), Offset(camp.left, camp.top), Size(camp.width, 1f * u))
+        val claro = if (hacia < 0) camp.left + camp.width * 0.15f else camp.right - camp.width * 0.4f
+        drawRect(a.luz(LATON_LUZ, k, f, br), Offset(claro, camp.top), Size(camp.width * 0.22f, camp.height))
+        drawRect(Color.White.copy(alpha = if (a.oscuro) 0.55f * k else 0.65f), Offset(claro + camp.width * 0.06f, camp.top + 1f * u), Size(1.2f * u, camp.height * 0.8f))
+        drawRect(a.luz(LATON_OSC, k, f, br), Offset(if (hacia < 0) camp.right - camp.width * 0.3f else camp.left, camp.top), Size(camp.width * 0.3f, camp.height))
+        drawRect(a.luz(LATON_OSC, k, f, br), Offset(camp.left - 0.8f * u, camp.top), Size(camp.width + 1.6f * u, h * 0.06f))
+        drawRect(a.brillo(0.6f, kk, br), Offset(camp.left - 0.8f * u, camp.top), Size(camp.width + 1.6f * u, 0.8f * u))
+        // La boca: la ranura oscura abajo de la campana.
+        drawRect(a.luz(NEGRO, k, f, br), Offset(camp.left, camp.bottom - h * 0.05f), Size(camp.width, h * 0.05f))
+        if (a.oscuro && k > 0.08f) drawRect(a.brillo(0.7f, k, br), Offset(if (hacia > 0) camp.right - 1.2f * u else camp.left, camp.top), Size(1.2f * u, camp.height))
+    }
+
+    /**
+     * La prensa de fechar billetes de la taquilla, de hierro fundido pintado de negro con su filete dorado: la base, el cuerpo con
+     * la boca por donde entra el billete, la palanca de latón con su pomo de madera. Sin letras.
+     */
+    private fun DrawScope.fechadora(cx: Float, pie: Float, alto: Float, a: AireVapor, k: Float, f: Float, br: Float, hacia: Float) {
+        val u = density
+        val h = alto * 0.5f
+        val bw = h * 0.9f
+        val kk = maxOf(k, 0.3f)
+        contactoVapor(Offset(cx, pie), bw * 1.4f, h * 0.08f, a, 0.42f, -hacia)
+        val base = Rect(cx - bw / 2, pie - h * 0.16f, cx + bw / 2, pie)
+        val cuerpo = poligonoVapor(cx - bw * 0.36f, base.top, cx - bw * 0.26f, pie - h * 0.86f, cx + bw * 0.2f, pie - h * 0.86f, cx + bw * 0.34f, base.top)
+        drawPath(corridoVapor(cuerpo, -hacia * bw * 0.2f, -h * 0.02f), a.sombra(0.3f))
+        drawRect(a.luz(HIERRO, k, f, br), base.topLeft, base.size)
+        drawRect(a.brillo(0.35f, kk, br), base.topLeft, Size(base.width, 0.9f * u))
+        drawPath(cuerpo, a.luz(Color(0xFF1E1C22), k, f, br))
+        clipPath(cuerpo) { drawRect(a.brillo(0.2f, kk, br), Offset(cx - bw * (if (hacia < 0) 0.28f else -0.1f), pie - h), Size(bw * 0.14f, h)) }
+        val oro = a.luz(PaletaVapor.FILETE, maxOf(k, 0.2f), f, br)
+        drawPath(poligonoVapor(cx - bw * 0.3f, base.top - h * 0.04f, cx - bw * 0.23f, pie - h * 0.8f, cx + bw * 0.17f, pie - h * 0.8f, cx + bw * 0.28f, base.top - h * 0.04f), oro, style = Stroke(0.6f * u))
+        // La boca donde entra el billete.
+        drawRect(a.luz(NEGRO, k, f, br), Offset(cx - bw * 0.16f, pie - h * 0.36f), Size(bw * 0.3f, h * 0.06f))
+        drawRect(a.luz(LATON, k, f, br), Offset(cx - bw * 0.18f, pie - h * 0.3f), Size(bw * 0.34f, h * 0.025f))
+        // La palanca de latón que sube y su pomo de madera.
+        val eje = Offset(cx + bw * 0.12f, pie - h * 0.8f)
+        val pomo = Offset(cx + bw * 0.55f, pie - h * 1.05f)
+        drawLine(a.luz(LATON_OSC, k, f, br), eje, pomo, 2.2f * u, StrokeCap.Round)
+        drawLine(a.brillo(0.5f, kk, br), eje - Offset(0f, 0.8f * u), pomo - Offset(0f, 0.8f * u), 0.7f * u)
+        drawOval(a.luz(NOGAL, k, f, br), Offset(pomo.x - h * 0.06f, pomo.y - h * 0.1f), Size(h * 0.12f, h * 0.2f))
+        drawCircle(a.luz(LATON, k, f, br), h * 0.05f, eje)
     }
 
     /** La rueda de maqueta, de radios, apoyada de canto contra la pared, con su manivela; y la caja de cerillas delante. */
@@ -93,7 +137,7 @@ internal object HuecosEstanteVapor {
         val c = Offset(cx, pie - r)
         rotate(-8f * hacia, Offset(cx, pie)) {
             // Su sombra en la pared, corrida.
-            drawCircle(a.sombra(0.35f), r, c + Offset(-hacia * r * 0.3f, -r * 0.05f))
+            drawCircle(a.sombra(0.22f), r, c + Offset(-hacia * r * 0.3f, -r * 0.05f))
             drawCircle(a.luz(Color(0xFF1A1618), k, f, br), r * 0.86f, c)
             val ray = Path()
             for (i in 0 until 10) {

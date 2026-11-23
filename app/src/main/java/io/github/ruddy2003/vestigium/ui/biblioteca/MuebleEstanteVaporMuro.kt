@@ -203,7 +203,12 @@ internal object MuroEstanteVapor {
             }
             // La luna detrás de un vidrio tiznado, o el sol de la tarde, o la claridad del día arriba.
             when {
-                a.lunar -> { mancha(Offset(vb.left + cw * 2.2f, vb.top + fh * 1.1f), cw * 1.6f, LUNA.copy(alpha = 0.55f)); drawCircle(LUNA.copy(alpha = 0.7f), cw * 0.26f, Offset(vb.left + cw * 2.2f, vb.top + fh * 1.1f)) }
+                a.lunar -> {
+                    val lc = Offset(vb.left + cw * 2.1f, vb.top + fh * 0.9f)
+                    mancha(lc, cw * 1.8f, LUNA.copy(alpha = 0.6f))
+                    drawCircle(Color(0xFFEFF3FF).copy(alpha = 0.85f), cw * 0.3f, lc)
+                    drawCircle(LUNA.copy(alpha = 0.5f), cw * 0.42f, lc, style = Stroke(1f * u))
+                }
                 a.ocaso -> mancha(Offset(vb.left + cw * 0.6f, vb.top + fh * 1.6f), cw * 1.9f, Color(0xFFFFD3A0).copy(alpha = 0.6f))
                 !a.lumbre -> mancha(Offset(vb.left + cw * 1.2f, vb.top + fh * 0.6f), cw * 2.2f, luzMueble(0.45f))
                 else -> {}
