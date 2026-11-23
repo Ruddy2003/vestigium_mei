@@ -182,79 +182,96 @@ internal object RinconLibretaAntiguas {
 
     // ---------------------------------------------------------------- el paño de luz de la ventana
 
-    /** La forma de la luz de la ventana de dos arcos con su parteluz, tendida en la pared: corrida hacia abajo a la derecha. */
-    fun panoForma(s: SitioLibretaAntiguas, luna: Boolean): Path {
+    /**
+     * El paño de luz de la ventana de la izquierda: uno solo, sesgado, partido a lo largo por la sombra fina del parteluz. Cae en
+     * la pared y se quiebra en lo que está delante de ella: en un plano más cercano ([plano]: 0 la pared, 1 el pie derecho, 1.6 la
+     * tapa del libro) la luz llega antes y el paño se corre hacia la ventana (arriba a la izquierda). La luna está más alta:
+     * su paño cae más abajo.
+     */
+    fun panoForma(s: SitioLibretaAntiguas, luna: Boolean, plano: Float): Path {
         val h = s.h
-        val c = s.pano + (if (luna) Offset(h * 0.03f, h * 0.05f) else Offset.Zero)
-        val an = h * 0.105f; val al = h * 0.3f; val pt = h * 0.024f
-        val top = c.y - al / 2
-        val sesgo = 0.42f
-        fun p(x: Float, y: Float) = Offset(x + (y - top) * sesgo, y)
+        val x0 = h * 0.07f + (if (luna) h * 0.03f else 0f) - h * 0.028f * plano
+        val y0 = h * 0.11f + (if (luna) h * 0.06f else 0f) - h * 0.022f * plano
+        val ancho = h * 0.2f; val alto = h * 0.34f
+        val sesgo = 0.6f
+        val raya = h * 0.009f / (2f * ancho)
+        fun p(fx: Float, fy: Float): Offset {
+            val y = y0 + alto * fy
+            return Offset(x0 + (y - y0) * sesgo + ancho * (1f + 0.12f * fy) * fx, y)
+        }
         val forma = Path()
-        listOf(c.x - pt / 2 - an - al * sesgo * 0.5f, c.x + pt / 2 - al * sesgo * 0.5f).forEach { x0 ->
-            val r = an / 2
-            val arranque = top + r
-            val q0 = p(x0, top + al); forma.moveTo(q0.x, q0.y)
-            val q1 = p(x0, arranque); forma.lineTo(q1.x, q1.y)
-            for (j in 1..8) {
-                val ang = Math.PI * (1.0 - j / 8.0)
-                val q = p(x0 + r + r * kotlin.math.cos(ang).toFloat(), arranque - r * kotlin.math.sin(ang).toFloat() * 0.9f)
-                forma.lineTo(q.x, q.y)
-            }
-            val q2 = p(x0 + an, top + al); forma.lineTo(q2.x, q2.y)
-            forma.close()
+        listOf(0f to 0.5f - raya, 0.5f + raya to 1f).forEach { (fa, fb) ->
+            val q0 = p(fa, 0f); val q1 = p(fb, 0f); val q2 = p(fb, 1f); val q3 = p(fa, 1f)
+            forma.moveTo(q0.x, q0.y); forma.lineTo(q1.x, q1.y); forma.lineTo(q2.x, q2.y); forma.lineTo(q3.x, q3.y); forma.close()
         }
         return forma
     }
 
-    /** De día, el sol de la ventana en la pared, con su borde decidido; de noche, la luna, fría y más baja. */
+    /**
+     * De día, el sol de la ventana: en el enlucido azul lo aclara hacia un azul tibio con un halo corto; en el roble del pie
+     * derecho, corrido, lo calienta. De noche, la luna: fría y más tenue, en los mismos planos.
+     */
     fun DrawScope.pano(s: SitioLibretaAntiguas, L: LuzLibretaAntiguas) {
-        val forma = panoForma(s, L.oscuro)
+        val h = s.h
+        val pared = panoForma(s, L.oscuro, 0f)
+        val poste = panoForma(s, L.oscuro, 1f)
         clipRect(s.poste, s.viga, s.xJamba, s.suelo) {
             if (!L.oscuro) {
-                // El sol en el azul: lo aclara hacia un azul tibio, con un halo corto fuera del borde.
-                drawPath(forma, P.SOL.copy(alpha = 0.14f), style = Stroke(s.h * 0.016f), blendMode = BlendMode.Screen)
-                drawPath(forma, SOL_EN_AZUL.copy(alpha = 0.9f))
-                drawPath(forma, P.SOL.copy(alpha = 0.14f), blendMode = BlendMode.Screen)
+                drawPath(pared, P.SOL.copy(alpha = 0.14f), style = Stroke(h * 0.014f), blendMode = BlendMode.Screen)
+                drawPath(pared, SOL_EN_AZUL.copy(alpha = 0.9f))
+                drawPath(pared, P.SOL.copy(alpha = 0.14f), blendMode = BlendMode.Screen)
             } else {
-                drawPath(forma, P.LUNA.copy(alpha = 0.1f), style = Stroke(s.h * 0.022f), blendMode = BlendMode.Screen)
-                drawPath(forma, P.LUNA.copy(alpha = 0.32f), blendMode = BlendMode.Screen)
+                drawPath(pared, P.LUNA.copy(alpha = 0.08f), style = Stroke(h * 0.018f), blendMode = BlendMode.Screen)
+                drawPath(pared, P.LUNA.copy(alpha = 0.24f), blendMode = BlendMode.Screen)
             }
+        }
+        clipRect(h * 0.004f, s.viga + h * 0.062f, s.poste, s.suelo) {
+            if (!L.oscuro) {
+                drawPath(poste, P.SOL.copy(alpha = 0.42f), blendMode = BlendMode.Screen)
+                drawPath(poste, P.SOL.copy(alpha = 0.1f))
+            } else drawPath(poste, P.LUNA.copy(alpha = 0.16f), blendMode = BlendMode.Screen)
         }
     }
 
     // ---------------------------------------------------------------- el jalón
 
-    /** El jalón del agrimensor, pintado a tramos de rojo y crudo, apoyado en la pared detrás de la mesa, con su regatón de hierro. */
+    /**
+     * El jalón del agrimensor: una vara de fresno a la vista, con tres bandas pintadas cerca de la punta (negro, ocre y negro,
+     * desgastadas), apoyada en la pared detrás de la mesa, con su regatón de hierro abajo.
+     */
     fun DrawScope.jalon(s: SitioLibretaAntiguas, L: LuzLibretaAntiguas) {
         val h = s.h; val u = density
         val b = Offset(s.poste + h * 0.035f, s.suelo - h * 0.004f)
         val t = Offset(s.poste + h * 0.098f, h * 0.125f)
         val mid = (b + t) / 2f
-        val g = h * 0.0135f
+        val g = h * 0.0125f
         val dir = (t - b) / (t - b).getDistance()
         val nrm = Offset(-dir.y, dir.x)
+        val largo = (t - b).getDistance()
         // Su sombra en la pared: de día, a la derecha; de noche, la de la luna, tenue.
         val sombraD = if (!L.oscuro) Offset(h * 0.03f, h * 0.004f) else Offset(h * 0.022f, h * 0.008f)
-        drawLine(L.a.sombra(if (L.oscuro) 0.3f else 0.3f), b + sombraD, t + sombraD, g, StrokeCap.Round)
-        // Los tramos.
-        val largo = (t - b).getDistance()
-        val tramo = h * 0.052f
-        var d = 0f; var i = 0
-        while (d < largo) {
-            val d1 = minOf(largo, d + tramo)
-            val p0 = b + dir * d; val p1 = b + dir * d1
-            val c = if (i % 2 == 0) P.RUBIA else P.CRUDO
-            drawLine(L.cosa(c, (p0 + p1) / 2f), p0, p1, g)
-            d = d1; i++
+        drawLine(L.a.sombra(0.3f), b + sombraD, t + sombraD, g, StrokeCap.Round)
+        // La vara de fresno, con su veta.
+        val fresno = Color(0xFFAE8A5C)
+        drawLine(L.cosa(fresno, mid), b, t, g)
+        drawLine(L.cosa(mezcla(fresno, P.ROBLE_OSC, 0.45f), mid).copy(alpha = 0.55f), b - nrm * (g * 0.12f), t - nrm * (g * 0.12f), 0.6f * u)
+        // Las bandas pintadas, gastadas: el negro y el ocre, con rozaduras donde asoma la madera.
+        val negro = Color(0xFF241C16)
+        listOf(Triple(0.66f, 0.035f, negro), Triple(0.715f, 0.05f, P.OCRE), Triple(0.785f, 0.035f, negro)).forEachIndexed { i, (f, l, col) ->
+            val p0 = b + dir * (largo * f); val p1 = p0 + dir * (h * l)
+            drawLine(L.cosa(col, p0).copy(alpha = 0.92f), p0, p1, g)
+            for (j in 0 until 2) {
+                val q = p0 + dir * (h * l * (0.25f + 0.45f * j + 0.1f * azar(7560 + i, j)))
+                drawLine(L.cosa(fresno, q).copy(alpha = 0.6f), q - nrm * (g * 0.45f), q + dir * (h * 0.004f) - nrm * (g * 0.05f), 0.8f * u)
+            }
         }
         // El canto a la luz (a la izquierda) y el de la sombra; de noche, la luna en el de la izquierda.
         drawLine(if (L.oscuro) L.a.lunar(0.5f * (1f + L.l(mid))) else L.a.claro(0.4f), b + nrm * (g * 0.32f), t + nrm * (g * 0.32f), 0.8f * u)
         drawLine(L.am.sombra(0.35f), b - nrm * (g * 0.34f), t - nrm * (g * 0.34f), 1f * u)
-        // El regatón de hierro, abajo, y el casquillo de latón, arriba.
-        drawLine(L.cosa(P.HIERRO, b), b, b + dir * (h * 0.035f), g * 1.1f)
-        drawLine(L.cosa(P.LATON, t), t - dir * (h * 0.018f), t, g * 1.15f, StrokeCap.Round)
-        drawCircle(L.am.brillo(0.6f, L.k(t)), g * 0.25f, t - dir * (h * 0.01f) + nrm * (g * 0.25f))
+        // La punta, la madera de testa más honda; abajo, el regatón de hierro con su punta.
+        drawLine(L.cosa(mezcla(fresno, P.ROBLE_OSC, 0.5f), t), t - dir * (h * 0.006f), t, g)
+        drawLine(L.cosa(P.HIERRO, b), b, b + dir * (h * 0.04f), g * 1.15f)
+        drawLine(L.cosa(P.HIERRO_LUZ, b), b + dir * (h * 0.004f) + nrm * (g * 0.3f), b + dir * (h * 0.04f) + nrm * (g * 0.3f), 0.7f * u)
     }
 
     // ---------------------------------------------------------------- la mesa

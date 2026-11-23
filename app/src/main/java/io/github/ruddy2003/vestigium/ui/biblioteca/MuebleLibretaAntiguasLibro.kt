@@ -12,7 +12,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
-import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontWeight
@@ -192,12 +191,11 @@ internal object LibroLibretaAntiguas {
             }
             if (!L.oscuro) {
                 drawRect(Brush.linearGradient(listOf(Color.White.copy(alpha = 0.12f), Color.Transparent, P.FRIO.copy(alpha = 0.22f)), r.topLeft, r.bottomRight), r.topLeft, r.size)
-                val pano = with(RinconLibretaAntiguas) { panoForma(s, false) }
-                translate(-h * 0.035f, -h * 0.03f) { drawPath(pano, P.SOL.copy(alpha = 0.26f), blendMode = BlendMode.Screen) }
+                // El paño de la ventana, corrido en el plano de la tapa.
+                drawPath(with(RinconLibretaAntiguas) { panoForma(s, false, 1.6f) }, P.SOL.copy(alpha = 0.3f), blendMode = BlendMode.Screen)
             } else {
                 drawRect(Brush.horizontalGradient(listOf(Color.Transparent, P.LLAMA.copy(alpha = (0.75f * kd).coerceAtMost(0.42f))), r.left + bw * 0.3f, r.right), r.topLeft, r.size)
-                val pano = with(RinconLibretaAntiguas) { panoForma(s, true) }
-                translate(-h * 0.035f, -h * 0.03f) { drawPath(pano, P.LUNA.copy(alpha = 0.1f), blendMode = BlendMode.Screen) }
+                drawPath(with(RinconLibretaAntiguas) { panoForma(s, true, 1.6f) }, P.LUNA.copy(alpha = 0.1f), blendMode = BlendMode.Screen)
             }
         }
         // El lomo: la charnela hundida junto al canto de la izquierda, con su luz.
