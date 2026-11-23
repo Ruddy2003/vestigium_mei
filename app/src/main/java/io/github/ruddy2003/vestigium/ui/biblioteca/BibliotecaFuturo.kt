@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.StrokeCap
@@ -1636,17 +1637,13 @@ object EstanteDistopia : DisenoBiblioteca {
 }
 
 /**
- * Ciudad neón: la máquina expendedora de un callejón de los niveles bajos, pensada para la noche cerrada (el tema solo existe
- * en oscuro). La carcasa es de chapa violeta casi negra, con un tubo de neón magenta que enmarca el vidrio y calcomanías
- * gastadas en un costado. Arriba, el letrero luminoso de acrílico con sus tubos (una lata, un rayo, una estrella y una onda:
- * formas, no letras) y, debajo, el panel con la rejilla del altavoz, la pantallita de anuncios, el teclado con su visor ámbar,
- * la ranura de monedas y el lector de tarjetas. Detrás del vidrio, cada repisa es una bandeja con sus rieles y su luz cian, y
- * cada mes va en una tira de cristal líquido verde de sodio. Abajo, la boca de salida con su tapa y el asfalto mojado que
- * refleja las luces. Cada entrada es un producto (bolsa, lata o barra) metido en su espiral de alambre, con la etiqueta de
- * precio que es el día; detrás asoman más productos cuanto más escribiste. De noche llueve sobre el vidrio. Distinto del
- * Ideario, que es la barra del puesto de comida con su riel de comandas.
+ * Ciudad neón: el estante del diario es la alacena de laca roja del cuarto de arriba del puesto, contra la pared de azulejo
+ * jade con la ventana al callejón y el acuario encima (`MuebleEstanteNeon*.kt`; el tema solo existe en oscuro). Cada entrada es
+ * un cartucho de datos, una lata de té o un saco de cordón de repartidor. Distinto del Ideario, que es la barra del puesto de
+ * comida con su riel de comandas.
  * La tapa del diario es una bolsa grande en su espiral, con el ticket en su banda oscura y la etiqueta de precio con la
- * fecha; al abrirse, se rasga el sello.
+ * fecha; al abrirse, se rasga el sello. La libreta de momentos es el pincho de tickets del pasaplatos del reparto, abajo, en el
+ * puesto (`MuebleLibretaNeon*.kt`).
  */
 object EstanteNeon : DisenoBiblioteca {
     private val CARCASA = Color(0xFF221C33)
@@ -1665,6 +1662,9 @@ object EstanteNeon : DisenoBiblioteca {
     private val ENVOLTORIOS = listOf(Color(0xFFD23A5A), Color(0xFF2F7FD0), Color(0xFFE0A030), Color(0xFF3FAF6A), Color(0xFF8A4FD6), Color(0xFFE2642E))
     private val NOCHE = Color(0xFF0A1030)
     private val LLUVIA = Color(0xFFB4CCFF)
+    /** La luna del sueño, fría y clara, y la sombra violeta que echa la bolsa en el fondo de la máquina. */
+    private val LUNA = Color(0xFFD6E2FF)
+    private val SOMBRA_TAPA = Color(0xFF140A26)
 
     /** El color bajo la luz del callejón: hundido en oscuro (el tema siempre lo es) y, de noche, más azul. Los neones no pasan por aquí. */
     private fun t(c: Color, oscuro: Boolean, noche: Boolean): Color {
@@ -1674,16 +1674,20 @@ object EstanteNeon : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.36f
-    override val base = 0.15f
-    override val lado = 0.06f
-    override val altoRepisa: Dp = 112.dp
-    override val tabla: Dp = 16.dp
-    override val separa: Dp = 4.dp
-    override val letra: FontFamily = Letra.letrero
+    // ---------------------------------------------------------------- el estante y cada entrada (MuebleEstanteNeon*.kt)
 
-    override fun ancho(palabras: Int): Dp = (26 + (palabras / 50).coerceAtMost(16)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.74f + 0.16f * azar(semilla, 3)
+    override val corona = MuebleEstanteNeon.CORONA
+    override val base = MuebleEstanteNeon.BASE
+    override val lado = MuebleEstanteNeon.LADO
+    override val altoRepisa: Dp = MuebleEstanteNeon.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteNeon.TABLA
+    override val separa: Dp = MuebleEstanteNeon.SEPARA
+    override val letra: FontFamily = Letra.letrero
+    /** Mueble rehecho: sin aura en reposo (ver [DisenoBiblioteca.auraEnReposo]). */
+    override val auraEnReposo = false
+
+    override fun ancho(palabras: Int): Dp = MuebleEstanteNeon.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteNeon.alto(semilla, palabras)
 
     /** Un tubo de neón: el halo ancho y tenue, el brillo y el alma casi blanca (capas planas, sin degradado). */
     private fun DrawScope.tubo(p: Path, color: Color, grosor: Float) {
@@ -1692,290 +1696,12 @@ object EstanteNeon : DisenoBiblioteca {
         drawPath(p, mezcla(color, Color.White, 0.5f), style = Stroke(grosor, cap = StrokeCap.Round, join = StrokeJoin.Round))
     }
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El callejón detrás y la carcasa entera de la máquina.
-        drawRect(c(ASFALTO), Offset.Zero, size)
-        val piso = d.base.top + d.base.height * 0.74f
-        val tope = d.corona.top + d.corona.height * 0.03f
-        drawRoundRect(c(CARCASA), Offset(0f, tope), Size(w, piso - tope), CornerRadius(7 * u))
-        // El vidrio: el interior oscuro de la máquina.
-        val vidrio = Rect(d.izquierda.right, d.corona.bottom - 4 * u, d.derecha.left, d.base.top + 3 * u)
-        drawRect(c(INTERIOR), vidrio.topLeft, vidrio.size)
-        // Cada repisa: la luz cian de la bandeja de arriba, su sombra y los rieles que separan las columnas.
-        d.repisas.forEach { r ->
-            drawRect(CIAN.copy(alpha = 0.05f), r.topLeft, Size(r.width, r.height * 0.35f))
-            drawRect(Color.Black.copy(alpha = 0.4f), r.topLeft, Size(r.width, 7 * u))
-            drawLine(CIAN.copy(alpha = 0.55f), Offset(r.left + 4 * u, r.top + 7.5f * u), Offset(r.right - 4 * u, r.top + 7.5f * u), 1.2f * u)
-            val paso = r.width / 6f
-            for (j in 1 until 6) drawLine(c(CARCASA_LUZ).copy(alpha = 0.4f), Offset(r.left + paso * j, r.top + 9 * u), Offset(r.left + paso * j, r.bottom), 1f * u)
-        }
-        // Los reflejos del vidrio: dos franjas en diagonal.
-        clipRect(vidrio.left, vidrio.top, vidrio.right, vidrio.bottom) {
-            listOf(0.18f to 0.1f, 0.62f to 0.05f).forEach { (fx, an) ->
-                val x0 = vidrio.left + vidrio.width * fx
-                val franja = Path().apply {
-                    moveTo(x0, vidrio.top); lineTo(x0 + vidrio.width * an, vidrio.top)
-                    lineTo(x0 + vidrio.width * (an - 0.3f), vidrio.bottom); lineTo(x0 - vidrio.width * 0.3f, vidrio.bottom); close()
-                }
-                drawPath(franja, Color.White.copy(alpha = 0.035f))
-            }
-        }
-        // Las bandejas: chapa con su canal de precios y los botoncitos ámbar de cada columna.
-        d.tablas.forEach { r ->
-            drawRect(c(CARCASA_LUZ), r.topLeft, r.size)
-            drawRect(Color.White.copy(alpha = 0.14f), r.topLeft, Size(r.width, 1.2f * u))
-            drawRect(c(CARCASA_OSC), Offset(r.left, r.top + r.height * 0.2f), Size(r.width, r.height * 0.6f))
-            val paso = r.width / 6f
-            for (j in 0 until 6) drawCircle(AMBAR.copy(alpha = 0.6f), 1.2f * u, Offset(r.left + paso * (j + 0.5f), r.center.y))
-            drawRect(Color.Black.copy(alpha = 0.45f), Offset(r.left, r.bottom), Size(r.width, 3 * u))
-        }
-        // El rótulo de cada mes: una tira de cristal líquido verde de sodio, con su halo.
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRoundRect(SODIO.copy(alpha = 0.12f), r.inflate(2.5f * u).topLeft, r.inflate(2.5f * u).size, CornerRadius(3 * u))
-            drawRoundRect(c(Color(0xFF0C1A0E)), r.topLeft, r.size, CornerRadius(2 * u))
-            drawRoundRect(SODIO.copy(alpha = 0.7f), r.topLeft, r.size, CornerRadius(2 * u), style = Stroke(0.8f * u))
-            textoEn(medidor, p.texto.uppercase(), Rect(r.left + 3 * u, r.top + 0.5f * u, r.right - 3 * u, r.bottom - 0.5f * u), letra, SODIO, 10f, peso = FontWeight.SemiBold, espaciado = 1f)
-        }
-        // Los costados de la carcasa, con sus tornillos y el tubo magenta que enmarca el vidrio.
-        listOf(d.izquierda to true, d.derecha to false).forEach { (r, izq) ->
-            drawRect(c(CARCASA), r.topLeft, r.size)
-            drawRect(c(if (izq) CARCASA_LUZ else CARCASA_OSC), Offset(if (izq) r.left else r.right - r.width * 0.22f, r.top), Size(r.width * 0.22f, r.height))
-            var yy = r.top + 10 * u
-            while (yy < r.bottom - 6 * u) { drawCircle(c(CARCASA_OSC), 1.3f * u, Offset(r.center.x, yy)); yy += 34 * u }
-            val x = if (izq) r.right - 1.5f * u else r.left + 1.5f * u
-            tubo(Path().apply { moveTo(x, vidrio.top + 3 * u); lineTo(x, vidrio.bottom - 3 * u) }, MAGENTA, 1.3f * u)
-        }
-        // Las calcomanías del costado izquierdo, despegándose.
-        val izqC = d.izquierda
-        listOf(Triple(0.2f, -9f, CIAN), Triple(0.45f, 7f, AMBAR), Triple(0.7f, -4f, MAGENTA)).forEach { (fy, giro, col) ->
-            val o = Offset(izqC.center.x - izqC.width * 0.1f, izqC.top + izqC.height * fy)
-            val s = izqC.width * 0.5f
-            rotate(giro, o) {
-                drawRect(c(col).copy(alpha = 0.7f), Offset(o.x - s / 2, o.y - s * 0.7f), Size(s, s * 1.4f))
-                drawRect(c(TINTA).copy(alpha = 0.5f), Offset(o.x - s * 0.3f, o.y - s * 0.2f), Size(s * 0.6f, s * 0.4f))
-            }
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: la boca de salida con su tapa basculante y su flecha, la rejilla de ventilación y las patas.
-        val b = d.base
-        val boca = Rect(b.left + b.width * 0.16f, b.top + b.height * 0.1f, b.right - b.width * 0.34f, b.top + b.height * 0.52f)
-        drawRoundRect(c(CARCASA_OSC), boca.inflate(2.5f * u).topLeft, boca.inflate(2.5f * u).size, CornerRadius(3 * u))
-        drawRoundRect(c(Color(0xFF05050A)), boca.topLeft, boca.size, CornerRadius(2 * u))
-        drawRect(c(CARCASA_LUZ).copy(alpha = 0.85f), boca.topLeft, Size(boca.width, boca.height * 0.55f))
-        drawLine(Color.White.copy(alpha = 0.18f), Offset(boca.left + 2 * u, boca.top + 1.5f * u), Offset(boca.right - 2 * u, boca.top + 1.5f * u), 1f * u)
-        val fx = boca.center.x; val fy = boca.top + boca.height * 0.28f
-        drawPath(Path().apply { moveTo(fx - 5 * u, fy - 2.5f * u); lineTo(fx + 5 * u, fy - 2.5f * u); lineTo(fx, fy + 3 * u); close() }, AMBAR.copy(alpha = 0.75f))
-        val rejilla = Rect(b.right - b.width * 0.28f, b.top + b.height * 0.14f, b.right - b.width * 0.1f, b.top + b.height * 0.5f)
-        var ry = rejilla.top
-        while (ry < rejilla.bottom) { drawLine(c(CARCASA_OSC), Offset(rejilla.left, ry), Offset(rejilla.right, ry), 1.4f * u); ry += 3.2f * u }
-        drawRect(c(CARCASA_OSC), Offset(b.left, piso - 4 * u), Size(b.width, 4 * u))
-        listOf(b.left + b.width * 0.06f, b.right - b.width * 0.1f).forEach { x -> drawRect(c(CARCASA_OSC), Offset(x, piso), Size(b.width * 0.04f, 3 * u)) }
-        // El asfalto mojado: el charco de luz magenta y los reflejos de los neones.
-        mancha(Offset(w * 0.5f, piso + (h - piso) * 0.5f), w * 0.32f, MAGENTA.copy(alpha = 0.14f))
-        listOf(0.2f to MAGENTA, 0.5f to CIAN, 0.78f to SODIO).forEach { (fr, col) ->
-            for (j in 0 until 4) drawLine(col.copy(alpha = 0.22f - 0.04f * j), Offset(w * fr - 6 * u + j * 4 * u, piso + 2 * u + j * 1.5f * u), Offset(w * fr + 6 * u + j * 4 * u, piso + 2 * u + j * 1.5f * u), 1.2f * u)
-        }
-        // De noche, la lluvia: el agua que cae delante, las gotas que escurren por el vidrio y las ondas del charco.
-        if (noche) {
-            val gotas = (h / (6 * u)).toInt().coerceIn(40, 400)
-            for (k in 0 until gotas) {
-                val x = w * azar(k, 11); val y = h * azar(k, 12)
-                val largo = (4 + 10 * azar(k, 13)) * u
-                drawLine(LLUVIA.copy(alpha = 0.18f), Offset(x, y), Offset(x - largo * 0.18f, y + largo), 0.8f * u)
-            }
-            clipRect(vidrio.left, vidrio.top, vidrio.right, vidrio.bottom) {
-                for (k in 0 until gotas / 2) {
-                    val o = Offset(vidrio.left + vidrio.width * azar(k, 21), vidrio.top + vidrio.height * azar(k, 22))
-                    val rg = (1 + 1.6f * azar(k, 23)) * u
-                    drawCircle(LLUVIA.copy(alpha = 0.22f), rg, o)
-                    drawCircle(Color.White.copy(alpha = 0.5f), rg * 0.35f, Offset(o.x - rg * 0.3f, o.y - rg * 0.3f))
-                    if (azar(k, 24) > 0.6f) drawLine(LLUVIA.copy(alpha = 0.16f), Offset(o.x, o.y + rg), Offset(o.x + 1 * u, o.y + rg + 18 * u * azar(k, 25)), 0.8f * u)
-                }
-            }
-            listOf(0.3f, 0.66f).forEach { fr -> drawOval(LLUVIA.copy(alpha = 0.25f), Offset(w * fr - 8 * u, piso + (h - piso) * 0.4f), Size(16 * u, 4 * u), style = Stroke(0.7f * u)) }
-        }
-    }
+    /** El tema es solo oscuro: el estante es el mismo con [oscuro] o sin él. */
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteNeon) { estante(d, medidor, noche) }
 
-    /** El letrero luminoso de arriba y el panel del teclado. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        // La caja del letrero, con su halo magenta y los focos que corren por los bordes.
-        val caja = Rect(r.left + r.width * 0.05f, r.top + r.height * 0.1f, r.right - r.width * 0.05f, r.top + r.height * 0.5f)
-        mancha(caja.center, caja.width * 0.6f, MAGENTA.copy(alpha = 0.2f))
-        drawRoundRect(c(Color(0xFF140B20)), caja.topLeft, caja.size, CornerRadius(5 * u))
-        drawRoundRect(c(CARCASA_LUZ), caja.topLeft, caja.size, CornerRadius(5 * u), style = Stroke(2 * u))
-        val focos = 22
-        for (k in 0 until focos) {
-            val x = caja.left + 4 * u + (caja.width - 8 * u) * k / (focos - 1).toFloat()
-            drawCircle(if (k % 2 == 0) AMBAR else MAGENTA, 1.2f * u, Offset(x, caja.top + 3.5f * u))
-            drawCircle(if (k % 2 == 0) MAGENTA else AMBAR, 1.2f * u, Offset(x, caja.bottom - 3.5f * u))
-        }
-        // Los cuatro tubos: una lata, un rayo, una estrella y una onda (formas, no letras).
-        val ins = Rect(caja.left + 8 * u, caja.top + 8 * u, caja.right - 8 * u, caja.bottom - 8 * u)
-        val hueco = ins.width / 4f
-        val g = 1.3f * u
-        val s = minOf(ins.height, hueco) * 0.42f
-        fun centro(k: Int) = Offset(ins.left + hueco * (k + 0.5f), ins.center.y)
-        val c0 = centro(0)
-        tubo(Path().apply {
-            moveTo(c0.x - s * 0.5f, c0.y - s * 0.8f); lineTo(c0.x + s * 0.5f, c0.y - s * 0.8f)
-            lineTo(c0.x + s * 0.55f, c0.y + s * 0.8f); lineTo(c0.x - s * 0.55f, c0.y + s * 0.8f); close()
-            moveTo(c0.x - s * 0.5f, c0.y - s * 0.45f); lineTo(c0.x + s * 0.5f, c0.y - s * 0.45f)
-        }, CIAN, g)
-        val c1 = centro(1)
-        tubo(Path().apply {
-            moveTo(c1.x + s * 0.3f, c1.y - s); lineTo(c1.x - s * 0.35f, c1.y + s * 0.1f)
-            lineTo(c1.x + s * 0.15f, c1.y + s * 0.1f); lineTo(c1.x - s * 0.3f, c1.y + s)
-        }, MAGENTA, g)
-        tubo(estrella(centro(2), s, 5, 0.45f), AMBAR, g)
-        val c3 = centro(3)
-        tubo(Path().apply {
-            for (fila in 0..1) {
-                val y0 = c3.y - s * 0.35f + fila * s * 0.7f
-                moveTo(c3.x - s, y0)
-                quadraticTo(c3.x - s * 0.5f, y0 - s * 0.4f, c3.x, y0)
-                quadraticTo(c3.x + s * 0.5f, y0 + s * 0.4f, c3.x + s, y0)
-            }
-        }, SODIO, g)
-        // El panel de abajo: la rejilla del altavoz, la pantallita de anuncios, el teclado, el monedero y el lector.
-        val panel = Rect(r.left + r.width * 0.05f, r.top + r.height * 0.56f, r.right - r.width * 0.05f, r.bottom - r.height * 0.06f)
-        drawRoundRect(c(CARCASA_OSC), panel.topLeft, panel.size, CornerRadius(3 * u))
-        val altavoz = Rect(panel.left + 6 * u, panel.top + 6 * u, panel.left + panel.width * 0.18f, panel.bottom - 6 * u)
-        var ay = altavoz.top
-        while (ay < altavoz.bottom) { drawRoundRect(c(CARCASA_LUZ), Offset(altavoz.left, ay), Size(altavoz.width, 1.6f * u), CornerRadius(0.8f * u)); ay += 3.6f * u }
-        val pantalla = Rect(panel.left + panel.width * 0.24f, panel.top + 6 * u, panel.left + panel.width * 0.56f, panel.bottom - 6 * u)
-        drawRect(c(Color(0xFF05070F)), pantalla.topLeft, pantalla.size)
-        listOf(MAGENTA, CIAN, AMBAR).forEachIndexed { j, col ->
-            drawRect(col.copy(alpha = 0.55f), Offset(pantalla.left + 3 * u, pantalla.top + 3 * u + j * pantalla.height * 0.28f), Size((pantalla.width - 6 * u) * (0.9f - 0.22f * j), pantalla.height * 0.16f))
-        }
-        drawRect(c(CARCASA_LUZ), pantalla.topLeft, pantalla.size, style = Stroke(1.2f * u))
-        // El teclado: el visor ámbar con sus tres casillas y las teclas, tres por cuatro.
-        val teclado = Rect(panel.left + panel.width * 0.62f, panel.top + 5 * u, panel.left + panel.width * 0.84f, panel.bottom - 5 * u)
-        val visor = Rect(teclado.left, teclado.top, teclado.right, teclado.top + teclado.height * 0.24f)
-        drawRect(c(Color(0xFF1A0F02)), visor.topLeft, visor.size)
-        for (j in 0 until 3) drawRect(AMBAR.copy(alpha = 0.85f), Offset(visor.left + visor.width * (0.12f + j * 0.28f), visor.top + visor.height * 0.25f), Size(visor.width * 0.18f, visor.height * 0.5f), style = Stroke(1f * u))
-        val filaT = teclado.height * 0.72f / 4f; val colT = teclado.width / 3f
-        for (fi in 0 until 4) for (co in 0 until 3) {
-            val k0 = Offset(teclado.left + colT * co + colT * 0.12f, teclado.top + teclado.height * 0.28f + filaT * fi + filaT * 0.1f)
-            val tecla = Size(colT * 0.76f, filaT * 0.78f)
-            drawRoundRect(c(CARCASA_LUZ), k0, tecla, CornerRadius(1.2f * u))
-            drawCircle(if (fi == 3 && co == 2) SODIO else c(ALAMBRE).copy(alpha = 0.6f), 0.8f * u, Offset(k0.x + tecla.width / 2, k0.y + tecla.height / 2))
-        }
-        val mx = panel.left + panel.width * 0.92f
-        drawRoundRect(c(ALAMBRE), Offset(mx - 3 * u, panel.top + 6 * u), Size(6 * u, panel.height * 0.36f), CornerRadius(1.5f * u))
-        drawRect(Color.Black, Offset(mx - 0.6f * u, panel.top + 8 * u), Size(1.2f * u, panel.height * 0.36f - 4 * u))
-        drawRoundRect(c(CARCASA_LUZ), Offset(mx - 4 * u, panel.top + panel.height * 0.56f), Size(8 * u, panel.height * 0.3f), CornerRadius(1.5f * u))
-        drawCircle(SODIO, 1.1f * u, Offset(mx, panel.top + panel.height * 0.62f))
-        // El borde de arriba del vidrio.
-        drawRect(c(CARCASA_LUZ), Offset(r.left, r.bottom - 3 * u), Size(r.width, 3 * u))
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val base = ENVOLTORIOS[(v.semilla and 0x7fffffff) % ENVOLTORIOS.size]
-        val color = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        val forma = (v.semilla ushr 5) % 3
-        val etiquetaAlta = minOf(h * 0.15f, 15 * u)
-        val suelo = h - etiquetaAlta - 1 * u
-        // La espiral de alambre: la mitad de atrás va detrás del producto.
-        val espiral = Rect(w * 0.03f, suelo - h * 0.26f, w * 0.97f, suelo)
-        drawArc(c(ALAMBRE).copy(alpha = 0.45f), 180f, 180f, false, espiral.topLeft, espiral.size, style = Stroke(1.3f * u))
-        // Los que esperan detrás en la espiral: más cuanto más escribiste.
-        val paso = 1.8f * u
-        val detras = (v.lleno * 3).toInt()
-        val frente = Rect(w * 0.08f, h * 0.03f + detras * paso, w * 0.92f - detras * paso, suelo - h * 0.04f)
-        for (j in detras downTo 1) {
-            val atras = frente.translate(j * paso, -j * paso)
-            drawRoundRect(mezcla(color, Color.Black, 0.35f + 0.12f * j), atras.topLeft, atras.size, CornerRadius(2 * u))
-        }
-        when (forma) {
-            0 -> {
-                // Una bolsa de papas, con sus bordes sellados en zigzag y su ventanita.
-                drawRoundRect(color, frente.topLeft, frente.size, CornerRadius(frente.width * 0.18f))
-                val sello = frente.height * 0.07f
-                listOf(true, false).forEach { arriba ->
-                    val y0 = if (arriba) frente.top else frente.bottom - sello
-                    drawRect(mezcla(color, Color.White, 0.25f), Offset(frente.left, y0), Size(frente.width, sello))
-                    val borde = if (arriba) y0 + sello else y0
-                    val dientes = Path().apply {
-                        moveTo(frente.left, borde)
-                        for (k in 0 until 6) {
-                            lineTo(frente.left + frente.width * (k + 0.5f) / 6f, if (arriba) borde - sello * 0.5f else borde + sello * 0.5f)
-                            lineTo(frente.left + frente.width * (k + 1f) / 6f, borde)
-                        }
-                    }
-                    drawPath(dientes, Color.Black.copy(alpha = 0.3f), style = Stroke(0.6f * u))
-                }
-                val ventana = Rect(frente.left + frente.width * 0.2f, frente.top + frente.height * 0.64f, frente.right - frente.width * 0.2f, frente.bottom - frente.height * 0.12f)
-                drawOval(c(ETIQUETA).copy(alpha = 0.85f), ventana.topLeft, ventana.size)
-                for (k in 0 until 4) drawCircle(c(AMBAR), ventana.height * 0.16f, Offset(ventana.left + ventana.width * (0.2f + 0.2f * k), ventana.center.y + ventana.height * (if (k % 2 == 0) -0.1f else 0.12f)))
-            }
-            1 -> {
-                // Una lata, con su tapa y su fondo de aluminio y el brillo a lo largo.
-                drawRect(color, frente.topLeft, frente.size)
-                val tapa = frente.height * 0.06f
-                drawRect(c(ALAMBRE), frente.topLeft, Size(frente.width, tapa))
-                drawRect(c(ALAMBRE), Offset(frente.left, frente.bottom - tapa), Size(frente.width, tapa))
-                drawRect(Color.Black.copy(alpha = 0.2f), Offset(frente.left, frente.top + tapa), Size(frente.width, 1 * u))
-                drawRect(Color.White.copy(alpha = 0.22f), Offset(frente.left + frente.width * 0.18f, frente.top + tapa), Size(frente.width * 0.1f, frente.height - tapa * 2))
-                drawRect(c(TINTA).copy(alpha = 0.35f), Offset(frente.left, frente.top + frente.height * 0.66f), Size(frente.width, frente.height * 0.08f))
-            }
-            else -> {
-                // Una barra en su caja, con la banda en diagonal y una estrella de oferta.
-                drawRect(color, frente.topLeft, frente.size)
-                clipRect(frente.left, frente.top, frente.right, frente.bottom) {
-                    val banda = Path().apply {
-                        moveTo(frente.left, frente.top + frente.height * 0.55f); lineTo(frente.right, frente.top + frente.height * 0.4f)
-                        lineTo(frente.right, frente.top + frente.height * 0.52f); lineTo(frente.left, frente.top + frente.height * 0.67f); close()
-                    }
-                    drawPath(banda, c(ETIQUETA).copy(alpha = 0.8f))
-                }
-                drawPath(estrella(Offset(frente.right - frente.width * 0.3f, frente.top + frente.height * 0.8f), frente.width * 0.2f, 8, 0.65f), c(AMBAR))
-                drawRect(Color.Black.copy(alpha = 0.22f), Offset(frente.right - frente.width * 0.12f, frente.top), Size(frente.width * 0.12f, frente.height))
-            }
-        }
-        // El nombre del mes a lo largo del envoltorio, en una banda oscura.
-        val banda = Rect(frente.center.x - frente.width * 0.2f, frente.top + frente.height * 0.2f, frente.center.x + frente.width * 0.2f, frente.top + frente.height * 0.64f)
-        drawRect(c(TINTA).copy(alpha = 0.55f), banda.topLeft, banda.size)
-        textoEn(medidor, v.mes.uppercase(), banda.deflate(0.5f * u), letra, ETIQUETA, 8f, vertical = true, peso = FontWeight.SemiBold, minimo = 4f)
-        // La marca de arriba (un círculo con su rayo); de noche, una luna y dos estrellitas.
-        val m = Offset(frente.center.x, frente.top + frente.height * 0.12f)
-        val rm = minOf(frente.width * 0.2f, 5 * u)
-        drawCircle(c(ETIQUETA), rm, m)
-        if (v.noche) {
-            drawCircle(color, rm * 0.8f, Offset(m.x + rm * 0.45f, m.y - rm * 0.25f))
-            drawCircle(c(ETIQUETA), 0.7f * u, Offset(m.x - rm * 1.6f, m.y + rm * 0.6f))
-            drawCircle(c(ETIQUETA), 0.6f * u, Offset(m.x + rm * 1.5f, m.y + rm * 0.9f))
-        } else {
-            drawPath(Path().apply {
-                moveTo(m.x + rm * 0.2f, m.y - rm * 0.7f); lineTo(m.x - rm * 0.35f, m.y + rm * 0.1f)
-                lineTo(m.x + rm * 0.1f, m.y + rm * 0.1f); lineTo(m.x - rm * 0.2f, m.y + rm * 0.7f)
-            }, color, style = Stroke(1f * u))
-        }
-        // La mitad de delante de la espiral, por encima del producto, y la punta del alambre.
-        drawArc(c(ALAMBRE), 0f, 180f, false, espiral.topLeft, espiral.size, style = Stroke(1.5f * u))
-        drawLine(c(ALAMBRE), Offset(espiral.center.x, espiral.bottom - 0.75f * u), Offset(espiral.center.x + w * 0.2f, espiral.bottom - 0.75f * u), 1.5f * u, cap = StrokeCap.Round)
-        // El reflejo del vidrio que hay delante y, de noche, las gotas de lluvia sobre él.
-        drawPath(Path().apply { moveTo(w * 0.55f, 0f); lineTo(w * 0.8f, 0f); lineTo(w * 0.3f, h); lineTo(w * 0.05f, h); close() }, Color.White.copy(alpha = 0.05f))
-        if (v.noche) for (k in 0 until 3) {
-            val o = Offset(w * (0.2f + 0.6f * azar(v.semilla, 30 + k)), h * (0.1f + 0.6f * azar(v.semilla, 40 + k)))
-            drawCircle(LLUVIA.copy(alpha = 0.3f), 1.4f * u, o)
-            drawCircle(Color.White.copy(alpha = 0.6f), 0.5f * u, Offset(o.x - 0.4f * u, o.y - 0.4f * u))
-            drawLine(LLUVIA.copy(alpha = 0.2f), Offset(o.x, o.y + 1.4f * u), Offset(o.x, o.y + 7 * u), 0.7f * u)
-        }
-        // La etiqueta de precio en el canto de la bandeja: el día.
-        val precio = Rect(w * 0.1f, h - etiquetaAlta, w * 0.9f, h)
-        drawRect(c(ETIQUETA), precio.topLeft, precio.size)
-        drawRect(MAGENTA, precio.topLeft, Size(precio.width * 0.14f, precio.height))
-        textoEn(medidor, v.dia, Rect(precio.left + precio.width * 0.14f, precio.top, precio.right, precio.bottom), letra, c(TINTA), 11f, peso = FontWeight.SemiBold)
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteNeon) { volumen(v, medidor) }
 
     // ---------------------------------------------------------------- la tapa
 
@@ -1998,9 +1724,14 @@ object EstanteNeon : DisenoBiblioteca {
     override fun DrawScope.tapa(e: EstadoTapa, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, e.noche)
+        // El sueño no es un filtro: la misma pieza, con la luna mandando (su reflejo en el vidrio y su luz fría en los cantos)
+        // y la luz cálida de la máquina baja.
+        fun c(x: Color) = t(x, oscuro, false)
         val a = e.abierto.coerceIn(0f, 1f)
-        val color = c(ENVOLTORIOS[(e.semilla and 0x7fffffff) % ENVOLTORIOS.size])
+        val color = c(ENVOLTORIOS[(e.semilla and 0x7fffffff) % ENVOLTORIOS.size]).let { if (e.noche) mezcla(it, NOCHE, 0.4f) else it }
+        /** La luz de la izquierda (la bombilla de la máquina; en el sueño, la luna) y la fría de la derecha (la bandeja). */
+        val calida = if (e.noche) LUNA else AMBAR
+        val fria = CIAN
         clipRect(0f, 0f, w, h) {
             // La carcasa y, dentro, el vidrio con el fondo oscuro de la máquina.
             drawRoundRect(c(CARCASA), Offset.Zero, size, CornerRadius(8 * u))
@@ -2012,6 +1743,18 @@ object EstanteNeon : DisenoBiblioteca {
             drawRect(c(CARCASA_OSC), Offset(vidrio.left, vidrio.top + h * 0.045f), Size(vidrio.width, 2 * u))
             drawRect(CIAN.copy(alpha = 0.05f + 0.08f * a), Offset(vidrio.left, vidrio.top + h * 0.045f), Size(vidrio.width, vidrio.height * 0.3f))
             drawLine(CIAN.copy(alpha = 0.7f), Offset(vidrio.left + 6 * u, vidrio.top + h * 0.045f + 2.5f * u), Offset(vidrio.right - 6 * u, vidrio.top + h * 0.045f + 2.5f * u), 1.3f * u)
+            // La luz cálida de la máquina: un tubito ámbar en el costado izquierdo, con su halo (en el sueño, bajo).
+            val foco = Offset(vidrio.left + 4 * u, vidrio.top + vidrio.height * 0.42f)
+            clipRect(vidrio.left, vidrio.top, vidrio.right, vidrio.bottom) { mancha(foco, w * 0.09f, AMBAR.copy(alpha = if (e.noche) 0.12f else 0.4f)) }
+            drawRoundRect(mezcla(AMBAR, Color.White, if (e.noche) 0f else 0.45f).copy(alpha = if (e.noche) 0.5f else 1f), Offset(foco.x - 1.5f * u, foco.y - h * 0.12f), Size(3 * u, h * 0.24f), CornerRadius(1.5f * u))
+            // Donde descansa: el piso de la bandeja bajo la espiral, con su canto de delante, y la sombra de la bolsa (violeta, del
+            // lado contrario a la luz) en el fondo de la máquina (solo donde asoma, a la derecha) y en la bandeja.
+            val piso = Rect(vidrio.left, h * 0.755f, vidrio.right, vidrio.bottom)
+            drawRect(c(CARCASA_OSC), piso.topLeft, piso.size)
+            drawRect(c(CARCASA_LUZ), Offset(piso.left, piso.bottom - 2.2f * u), Size(piso.width, 2.2f * u))
+            drawLine(mezcla(calida, Color.White, 0.3f).copy(alpha = 0.5f), Offset(piso.left, piso.bottom - 2.2f * u), Offset(piso.left + piso.width * 0.45f, piso.bottom - 2.2f * u), 0.8f * u)
+            drawRect(SOMBRA_TAPA.copy(alpha = 0.6f), Offset(w * 0.91f, h * 0.18f), Size(vidrio.right - w * 0.91f, h * 0.595f))
+            drawOval(SOMBRA_TAPA.copy(alpha = 0.7f), Offset(w * 0.12f, h * 0.745f), Size(w * 0.86f, h * 0.05f))
             // La espiral de alambre: la mitad de atrás, detrás de la bolsa.
             val espiral = Rect(w * 0.05f, h * 0.6f, w * 0.95f, h * 0.86f)
             drawArc(c(ALAMBRE).copy(alpha = 0.4f), 180f, 180f, false, espiral.topLeft, espiral.size, style = Stroke(1.6f * u))
@@ -2030,7 +1773,11 @@ object EstanteNeon : DisenoBiblioteca {
                 quadraticTo(der + w * 0.014f, (corte + fondo) / 2, der, fondo); lineTo(izq, fondo)
                 quadraticTo(izq - w * 0.014f, (corte + fondo) / 2, izq, corte); close()
             }
-            drawPath(cuerpo, Brush.horizontalGradient(listOf(mezcla(color, Color.Black, 0.3f), mezcla(color, Color.White, 0.18f), color, mezcla(color, Color.Black, 0.35f)), izq, der))
+            drawPath(cuerpo, Brush.horizontalGradient(listOf(mezcla(mezcla(color, calida, 0.3f), Color.White, 0.12f), mezcla(color, Color.White, 0.1f), color, mezcla(mezcla(color, Color.Black, 0.4f), fria, 0.12f)), izq, der))
+            // Los filetes: el de la izquierda, de la luz cálida (o de la luna); el de la derecha, cian; y la sombra propia, violeta.
+            drawLine(mezcla(calida, Color.White, 0.35f).copy(alpha = 0.75f), Offset(izq - w * 0.006f, corte + 3 * u), Offset(izq - w * 0.006f, fondo - 3 * u), 1.3f * u)
+            drawLine(fria.copy(alpha = 0.55f), Offset(der + w * 0.006f, corte + 3 * u), Offset(der + w * 0.006f, fondo - 3 * u), 1.1f * u)
+            drawRect(SOMBRA_TAPA.copy(alpha = 0.3f), Offset(izq, fondo - (fondo - corte) * 0.2f), Size(der - izq, (fondo - corte) * 0.2f))
             // El sello de abajo, con su prensado y su borde en zigzag.
             val sAbajo = Rect(izq, fondo - sello * 0.7f, der, fondo)
             drawRect(mezcla(color, Color.White, 0.22f), sAbajo.topLeft, sAbajo.size)
@@ -2103,8 +1850,16 @@ object EstanteNeon : DisenoBiblioteca {
             clipRect(vidrio.left, vidrio.top, vidrio.right, vidrio.bottom) {
                 drawPath(Path().apply { moveTo(w * 0.86f, vidrio.top); lineTo(w * 0.93f, vidrio.top); lineTo(w * 0.83f, vidrio.bottom); lineTo(w * 0.76f, vidrio.bottom); close() }, Color.White.copy(alpha = 0.05f))
             }
-            // De noche, las gotas de lluvia en el vidrio (ninguna sobre lo escrito) y sus regueros.
+            // De noche, la luna reflejada en el vidrio, arriba a la derecha, con su halo; las gotas de lluvia en el vidrio
+            // (ninguna sobre lo escrito) y sus regueros.
             if (e.noche) {
+                val lu = Offset(vidrio.right - w * 0.075f, vidrio.top + h * 0.15f)
+                mancha(lu, w * 0.12f, LUNA.copy(alpha = 0.32f))
+                val rl = h * 0.055f
+                drawPath(Path().apply {
+                    op(Path().apply { addOval(Rect(lu.x - rl, lu.y - rl, lu.x + rl, lu.y + rl)) },
+                        Path().apply { addOval(Rect(lu.x - rl * 0.45f, lu.y - rl * 1.2f, lu.x + rl * 1.5f, lu.y + rl * 0.7f)) }, PathOperation.Difference)
+                }, LUNA)
                 val caja = Rect(w * cajaTapa.left, h * cajaTapa.top, w * cajaTapa.right, h * cajaTapa.bottom).inflate(3 * u)
                 for (k in 0 until 46) {
                     val o = Offset(vidrio.left + vidrio.width * azar(e.semilla, 700 + k), vidrio.top + vidrio.height * azar(e.semilla, 800 + k))
@@ -2293,266 +2048,17 @@ object EstanteNeon : DisenoBiblioteca {
 
     override fun tintaBoton(p: Pagina, oscuro: Boolean, noche: Boolean): Color = Color(0xFFFFF2F8)
 
-    // ---------------------------------------------------------------- la libreta de momentos
+    // ---------------------------------------------------------------- la libreta de momentos (MuebleLibretaNeon*.kt)
 
-    override val altoLibreta: Dp = 266.dp
+    override val altoLibreta: Dp = MuebleLibretaNeon.ALTO
 
-    /** La madera lacada del mostrador del puesto y el papel de los tickets, que se hunde poco para que se lea. */
-    private val LACA = Color(0xFF3A2420)
-    private val FAROLILLO = Color(0xFFE0402A)
+    /** El pasaplatos del reparto con el pincho de tickets. El tema es solo de noche: igual con [oscuro] o sin él. */
+    override fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleLibretaNeon) { libreta(e, medidor) }
 
-    /**
-     * El mostrador del puesto callejero, de noche: arriba, la cortinilla de tela partida con sus emblemas; detrás, el muro del
-     * callejón con el letrero de neón (un cuenco humeante y unos palillos: formas, no letras), las botellas y la lluvia; a la
-     * izquierda cuelga el farolillo de papel rojo. Sobre la madera lacada y mojada, que refleja los neones, el pincho de tickets
-     * en su base de metal: los tickets ensartados, cada uno un poco girado, en una pila que crece con las hojas; arriba, el
-     * último ticket, ensartado por su agujero y caído hacia delante, con el nombre, la cuenta, los renglones y el código de
-     * barras. Al lado, el cuenco de fideos con los palillos y su vapor, la impresora de tickets con el papel que sale y unas
-     * monedas. Al abrirse, el ticket de arriba sube por la púa, se suelta y se desenrolla, y los de abajo se abren en abanico.
-     */
-    override fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, false)
-        val a = e.abierto.coerceIn(0f, 1f)
-        val papel = mezcla(ETIQUETA, Color(0xFF06050B), if (oscuro) 0.1f else 0f)
-        val fondoY = h * 0.56f
-        val frenteY = h * 0.86f
-        // ---- El muro del callejón: bloques oscuros con sus juntas y la lluvia.
-        drawRect(c(CARCASA_OSC), Offset.Zero, Size(w, fondoY))
-        var fy = h * 0.2f; var fila = 0
-        while (fy < fondoY) {
-            drawLine(Color.Black.copy(alpha = 0.5f), Offset(0f, fy), Offset(w, fy), 1 * u)
-            var fx = if (fila % 2 == 0) 0f else 22 * u
-            while (fx < w) { drawLine(Color.Black.copy(alpha = 0.5f), Offset(fx, fy), Offset(fx, fy + 16 * u), 1 * u); fx += 44 * u }
-            fy += 16 * u; fila++
-        }
-        // El letrero de neón: el cuenco con su vapor y los palillos, en su placa.
-        val ln = Rect(w * 0.6f, h * 0.2f, w * 0.95f, h * 0.44f)
-        drawRoundRect(c(Color(0xFF0C0A12)), ln.topLeft, ln.size, CornerRadius(4 * u))
-        listOf(ln.left + 6 * u, ln.right - 6 * u).forEach { x -> listOf(ln.top + 6 * u, ln.bottom - 6 * u).forEach { y -> drawCircle(c(ALAMBRE), 1.4f * u, Offset(x, y)) } }
-        val cc = Offset(ln.center.x - ln.width * 0.08f, ln.top + ln.height * 0.62f); val rc = ln.height * 0.3f
-        tubo(Path().apply { moveTo(cc.x - rc * 1.3f, cc.y); quadraticTo(cc.x - rc * 1.2f, cc.y + rc * 1.1f, cc.x, cc.y + rc * 1.05f); quadraticTo(cc.x + rc * 1.2f, cc.y + rc * 1.1f, cc.x + rc * 1.3f, cc.y); close() }, MAGENTA, 1.6f * u)
-        for (k in 0 until 3) {
-            val x = cc.x - rc * 0.6f + k * rc * 0.6f
-            tubo(Path().apply { moveTo(x, cc.y - rc * 0.25f); cubicTo(x - rc * 0.3f, cc.y - rc * 0.6f, x + rc * 0.3f, cc.y - rc * 0.8f, x, cc.y - rc * 1.15f) }, CIAN, 1.3f * u)
-        }
-        tubo(Path().apply { moveTo(cc.x + rc * 0.6f, cc.y + rc * 0.2f); lineTo(cc.x + rc * 2.4f, cc.y - rc * 1.2f); moveTo(cc.x + rc * 0.95f, cc.y + rc * 0.3f); lineTo(cc.x + rc * 2.6f, cc.y - rc * 0.95f) }, AMBAR, 1.3f * u)
-        // Las botellas en la repisa de atrás.
-        val repisa = fondoY - 8 * u
-        drawRect(c(Color(0xFF2A1A16)), Offset(w * 0.18f, repisa), Size(w * 0.36f, 3 * u))
-        listOf(Triple(0.22f, Color(0xFF3A1E14), 34f), Triple(0.28f, Color(0xFF1E3A2A), 42f), Triple(0.34f, Color(0xFF2A2A3A), 30f), Triple(0.44f, Color(0xFF4A3018), 38f), Triple(0.5f, Color(0xFF203040), 28f)).forEach { (f, col, alto) ->
-            val x = w * f; val bw = 9 * u
-            drawRoundRect(c(col), Offset(x - bw / 2, repisa - alto * u), Size(bw, alto * u), CornerRadius(2.5f * u))
-            drawRect(c(col), Offset(x - 1.8f * u, repisa - (alto + 9) * u), Size(3.6f * u, 10 * u))
-            drawRect(c(ETIQUETA).copy(alpha = 0.6f), Offset(x - bw / 2 + 1 * u, repisa - alto * u * 0.6f), Size(bw - 2 * u, alto * u * 0.28f))
-            drawLine(MAGENTA.copy(alpha = 0.35f), Offset(x + bw * 0.25f, repisa - alto * u + 3 * u), Offset(x + bw * 0.25f, repisa - 3 * u), 1 * u)
-        }
-        // La lluvia que cae por delante del muro.
-        for (k in 0 until 40) {
-            val x = w * azar(13, k); val y = fondoY * azar(17, k)
-            drawLine(LLUVIA.copy(alpha = 0.12f + 0.12f * azar(19, k)), Offset(x, y), Offset(x - 2 * u, y + (8 + 8 * azar(23, k)) * u), 0.7f * u)
-        }
-        // ---- La cortinilla de tela, con sus cortes y un emblema de olas en cada paño.
-        val tela = c(Color(0xFF1E2448))
-        drawRect(c(Color(0xFF5A3A24)), Offset(0f, 0f), Size(w, 4 * u))
-        val panos = 5
-        for (k in 0 until panos) {
-            val x0 = w * k / panos + 1.5f * u; val x1 = w * (k + 1) / panos - 1.5f * u
-            val largo = h * 0.17f + 3 * u * azar(29, k)
-            drawPath(Path().apply { moveTo(x0, 4 * u); lineTo(x1, 4 * u); lineTo(x1 + 1 * u, largo); quadraticTo((x0 + x1) / 2, largo + 3 * u, x0 - 1 * u, largo); close() }, tela)
-            drawLine(Color.White.copy(alpha = 0.06f), Offset(x0 + 3 * u, 6 * u), Offset(x0 + 4 * u, largo - 2 * u), 1 * u)
-            val m = Offset((x0 + x1) / 2, h * 0.1f)
-            drawCircle(c(ETIQUETA).copy(alpha = 0.85f), 8 * u, m, style = Stroke(1.6f * u))
-            for (j in 0 until 2) drawArc(c(ETIQUETA).copy(alpha = 0.85f), 200f, 140f, false, Offset(m.x - (5 - j * 2) * u, m.y - (2 - j * 2) * u), Size((10 - j * 4) * u, (8 - j * 2) * u), style = Stroke(1.2f * u))
-        }
-        // ---- El farolillo de papel rojo, que cuelga a la izquierda, con su luz (el primer degradado).
-        val fa = Offset(w * 0.09f, h * 0.36f)
-        drawCircle(Brush.radialGradient(listOf(FAROLILLO.copy(alpha = 0.42f), FAROLILLO.copy(alpha = 0f)), fa, w * 0.3f), w * 0.3f, fa)
-        drawLine(c(Color(0xFF1A1414)), Offset(fa.x, 4 * u), Offset(fa.x, fa.y - 26 * u), 1 * u)
-        drawRect(c(Color(0xFF1A1414)), Offset(fa.x - 9 * u, fa.y - 27 * u), Size(18 * u, 4 * u))
-        drawRect(c(Color(0xFF1A1414)), Offset(fa.x - 9 * u, fa.y + 23 * u), Size(18 * u, 4 * u))
-        drawOval(mezcla(FAROLILLO, Color(0xFFFFB070), 0.25f), Offset(fa.x - 17 * u, fa.y - 24 * u), Size(34 * u, 48 * u))
-        for (k in 1..5) drawLine(Color(0xFF7A1A10).copy(alpha = 0.5f), Offset(fa.x - 17 * u * sin(PI.toFloat() * k / 6), fa.y - 24 * u + 48 * u * k / 6), Offset(fa.x + 17 * u * sin(PI.toFloat() * k / 6), fa.y - 24 * u + 48 * u * k / 6), 0.8f * u)
-        drawOval(Color(0xFFFFE0A0).copy(alpha = 0.45f), Offset(fa.x - 7 * u, fa.y - 14 * u), Size(14 * u, 26 * u))
-        drawLine(c(Color(0xFF1A1414)), Offset(fa.x, fa.y + 27 * u), Offset(fa.x, fa.y + 36 * u), 1.4f * u)
-
-        // ---- El mostrador: la madera lacada y mojada, el canto y el frente de tablas.
-        drawRect(c(LACA), Offset(0f, fondoY), Size(w, frenteY - fondoY))
-        for (k in 0 until 26) {
-            val y = fondoY + (frenteY - fondoY) * azar(31, k)
-            drawLine(Color.Black.copy(alpha = 0.18f), Offset(0f, y), Offset(w, y + 2 * u * (azar(37, k) - 0.5f)), (0.5f + azar(41, k)) * u)
-        }
-        // Los reflejos de los neones y del farolillo en la laca mojada.
-        drawRect(MAGENTA.copy(alpha = 0.12f), Offset(cc.x - rc * 1.4f, fondoY), Size(rc * 2.8f, frenteY - fondoY))
-        drawRect(CIAN.copy(alpha = 0.08f), Offset(cc.x - rc * 0.7f, fondoY), Size(rc * 1.4f, frenteY - fondoY))
-        drawRect(FAROLILLO.copy(alpha = 0.14f), Offset(fa.x - 12 * u, fondoY), Size(24 * u, frenteY - fondoY))
-        drawLine(Color.White.copy(alpha = 0.25f), Offset(0f, fondoY + 1 * u), Offset(w, fondoY + 1 * u), 1 * u)
-        drawRect(c(mezcla(LACA, Color.Black, 0.35f)), Offset(0f, frenteY), Size(w, h - frenteY))
-        drawRect(c(mezcla(LACA, Color.White, 0.15f)), Offset(0f, frenteY), Size(w, 2 * u))
-        var tx = 0f
-        while (tx < w) { drawLine(Color.Black.copy(alpha = 0.45f), Offset(tx, frenteY + 2 * u), Offset(tx, h), 1.2f * u); tx += 30 * u }
-        // La luz de los neones sobre la pila (el segundo degradado).
-        val cx = w * 0.5f
-        val by = frenteY - 20 * u
-        drawOval(Brush.radialGradient(listOf(MAGENTA.copy(alpha = 0.2f), CIAN.copy(alpha = 0.06f), Color.Transparent), Offset(cx, by - 30 * u), w * 0.36f),
-            Offset(cx - w * 0.36f, by - 30 * u - w * 0.36f), Size(w * 0.72f, w * 0.72f))
-
-        // ---- El cuenco de fideos con los palillos y su vapor, a la izquierda.
-        val cu = Offset(w * 0.17f, frenteY - 26 * u)
-        drawOval(Color.Black.copy(alpha = 0.4f), Offset(cu.x - 30 * u, cu.y + 10 * u), Size(60 * u, 10 * u))
-        drawPath(Path().apply { moveTo(cu.x - 30 * u, cu.y - 6 * u); cubicTo(cu.x - 28 * u, cu.y + 16 * u, cu.x + 28 * u, cu.y + 16 * u, cu.x + 30 * u, cu.y - 6 * u); close() }, c(Color(0xFF1B1B22)))
-        for (k in 0 until 6) drawCircle(c(FAROLILLO), 1.6f * u, Offset(cu.x - 20 * u + k * 8 * u, cu.y + 4 * u + (if (k in 1..4) 3 else 0) * u))
-        drawOval(c(Color(0xFFE8E2D6)), Offset(cu.x - 30 * u, cu.y - 11 * u), Size(60 * u, 10 * u))
-        drawOval(c(Color(0xFFB8762E)), Offset(cu.x - 27 * u, cu.y - 10 * u), Size(54 * u, 8 * u))
-        for (k in 0 until 5) drawArc(c(Color(0xFFF0D890)), 0f, 180f, false, Offset(cu.x - 20 * u + k * 6 * u, cu.y - 9 * u), Size(10 * u, 4 * u), style = Stroke(1 * u))
-        drawCircle(c(Color(0xFFF2EDE0)), 4 * u, Offset(cu.x + 10 * u, cu.y - 6.5f * u)); drawCircle(c(Color(0xFFE8A030)), 2 * u, Offset(cu.x + 10 * u, cu.y - 6.5f * u))
-        drawLine(c(Color(0xFFC8A070)), Offset(cu.x - 34 * u, cu.y - 16 * u), Offset(cu.x + 30 * u, cu.y - 7 * u), 2 * u, cap = StrokeCap.Round)
-        drawLine(c(Color(0xFFC8A070)), Offset(cu.x - 32 * u, cu.y - 20 * u), Offset(cu.x + 31 * u, cu.y - 10 * u), 2 * u, cap = StrokeCap.Round)
-        for (k in 0 until 3) {
-            val x = cu.x - 12 * u + k * 12 * u
-            drawPath(Path().apply { moveTo(x, cu.y - 14 * u); cubicTo(x - 8 * u, cu.y - 26 * u, x + 8 * u, cu.y - 36 * u, x - 2 * u, cu.y - 50 * u) }, Color.White.copy(alpha = 0.16f), style = Stroke(3 * u, cap = StrokeCap.Round))
-        }
-        // ---- La impresora de tickets, a la derecha, con el papel que sale, y las monedas.
-        val im = Rect(w * 0.76f, frenteY - 52 * u, w * 0.76f + 50 * u, frenteY - 14 * u)
-        drawRect(Color.Black.copy(alpha = 0.4f), Offset(im.left + 2 * u, im.bottom - 2 * u), Size(im.width, 6 * u))
-        drawRoundRect(c(Color(0xFF2E2A36)), im.topLeft, im.size, CornerRadius(5 * u))
-        drawRoundRect(c(Color(0xFF45404F)), im.topLeft, Size(im.width, im.height * 0.42f), CornerRadius(5 * u))
-        drawRect(c(Color(0xFF0E0C12)), Offset(im.left + 8 * u, im.top + im.height * 0.38f), Size(im.width - 16 * u, 2.4f * u))
-        drawCircle(SODIO, 1.6f * u, Offset(im.right - 8 * u, im.bottom - 8 * u))
-        drawCircle(SODIO.copy(alpha = 0.25f), 4 * u, Offset(im.right - 8 * u, im.bottom - 8 * u))
-        drawPath(Path().apply {
-            moveTo(im.left + 10 * u, im.top + im.height * 0.39f); lineTo(im.right - 10 * u, im.top + im.height * 0.39f)
-            cubicTo(im.right - 6 * u, im.top - 18 * u, im.right + 2 * u, im.top - 26 * u, im.right + 10 * u, im.top - 20 * u)
-            lineTo(im.left + 22 * u, im.top - 26 * u); cubicTo(im.left + 14 * u, im.top - 22 * u, im.left + 8 * u, im.top - 10 * u, im.left + 10 * u, im.top + im.height * 0.39f); close()
-        }, papel)
-        for (k in 0 until 3) drawLine(TINTA.copy(alpha = 0.35f), Offset(im.left + 16 * u + k * 2 * u, im.top - (4 + 6 * k) * u), Offset(im.right - 6 * u + k * 2 * u, im.top - (6 + 6 * k) * u), 0.8f * u)
-        listOf(Offset(w * 0.7f, frenteY - 9 * u), Offset(w * 0.73f, frenteY - 7 * u), Offset(w * 0.715f, frenteY - 11 * u)).forEach { m ->
-            drawOval(c(Color(0xFF8A6A2A)), Offset(m.x - 6 * u, m.y - 2 * u), Size(12 * u, 4.6f * u))
-            drawOval(c(Color(0xFFC8A04A)), Offset(m.x - 6 * u, m.y - 2.8f * u), Size(12 * u, 4.6f * u))
-            drawCircle(c(Color(0xFF6A501A)), 1 * u, Offset(m.x, m.y - 0.5f * u))
-        }
-
-        // ---- El pincho: la base, la pila de tickets ensartados y la púa.
-        val metal = c(ALAMBRE)
-        drawOval(Color.Black.copy(alpha = 0.45f), Offset(cx - 34 * u, by - 2 * u), Size(70 * u, 14 * u))
-        drawOval(mezcla(metal, Color.Black, 0.45f), Offset(cx - 30 * u, by - 7 * u), Size(60 * u, 14 * u))
-        drawRect(mezcla(metal, Color.Black, 0.45f), Offset(cx - 30 * u, by - 9 * u), Size(60 * u, 9 * u))
-        drawOval(metal, Offset(cx - 30 * u, by - 16 * u), Size(60 * u, 14 * u))
-        drawOval(Color.White.copy(alpha = 0.3f), Offset(cx - 24 * u, by - 14.5f * u), Size(30 * u, 6 * u), style = Stroke(1 * u))
-        drawOval(MAGENTA.copy(alpha = 0.3f), Offset(cx + 4 * u, by - 13 * u), Size(16 * u, 5 * u))
-        val n = (2 + e.hojas / 3).coerceIn(2, 60)
-        val pila = ((5 + 5.2f * sqrt(e.hojas.coerceAtLeast(1).toFloat())).coerceAtMost(78f)) * u
-        val paso = pila / n
-        val base = by - 10 * u
-        val colores = listOf(papel, mezcla(papel, Color(0xFFFFE08A), 0.35f), papel, mezcla(papel, Color(0xFFFFB8D8), 0.3f), papel, mezcla(papel, Color(0xFFB8E0FF), 0.3f))
-        for (k in 0 until n) {
-            val y = base - k * paso
-            val giro = ((azar(e.semilla, 50 + k) - 0.5f) * 0.6f) * (1f - a * 0.4f) + a * ((k + 0.5f) / n - 0.5f) * 2.2f
-            val co = cos(giro); val si = sin(giro)
-            val lx = 46 * u; val ly = 26 * u; val kd = 0.36f
-            fun p(x: Float, z: Float) = Offset(cx + x * co - z * si, y - (x * si + z * co) * kd)
-            val q = listOf(p(-lx, -ly), p(lx, -ly), p(lx, ly), p(-lx, ly))
-            val cuerpo = Path().apply { moveTo(q[0].x, q[0].y); q.drop(1).forEach { lineTo(it.x, it.y) }; close() }
-            drawPath(cuerpo, colores[(k + (e.semilla and 3)) % colores.size])
-            drawPath(cuerpo, Color.Black.copy(alpha = 0.22f), style = Stroke(0.6f * u))
-            // Los renglones impresos del ticket, apenas.
-            if (k == n - 1 || k % 3 == 0) for (j in 0 until 3) {
-                val z = -ly * 0.5f + j * ly * 0.45f
-                drawLine(TINTA.copy(alpha = 0.18f), p(-lx * 0.7f, z), p(lx * (0.2f + 0.4f * azar(e.semilla, 90 + k + j)), z), 0.8f * u)
-            }
-        }
-        val cima = base - pila
-        // La púa, con su punta.
-        val punta = Offset(cx, frenteY - 178 * u)
-        val sube = a * 30 * u
-        drawLine(mezcla(metal, Color.Black, 0.3f), Offset(cx + 0.6f * u, base), Offset(cx + 0.6f * u, punta.y), 2.6f * u)
-        drawLine(metal, Offset(cx - 0.4f * u, base), Offset(cx - 0.4f * u, punta.y), 1.2f * u)
-        drawLine(Color.White.copy(alpha = 0.7f), Offset(cx - 0.6f * u, cima - 4 * u), Offset(cx - 0.6f * u, punta.y + 8 * u), 0.5f * u)
-
-        // ---- El último ticket: ensartado por su agujero y caído hacia delante; al abrirse sube, se suelta y se desenrolla.
-        val tw = w * 0.36f
-        val agujero = Offset(cx, punta.y + 12 * u - sube)
-        val largoT = (cima - agujero.y - 14 * u).coerceAtLeast(64 * u) + a * 46 * u
-        rotate(-11f * a, agujero) {
-            val r = Rect(cx - tw / 2, agujero.y - 9 * u, cx + tw / 2, agujero.y - 9 * u + largoT)
-            drawRect(Color.Black.copy(alpha = 0.3f), Offset(r.left + 3 * u, r.top + 4 * u), r.size)
-            // El borde de arriba, rasgado en dientes, y el de abajo, enrollado.
-            drawPath(Path().apply {
-                moveTo(r.left, r.top + 3 * u)
-                var x = r.left; var arribaD = true
-                while (x < r.right) { x += 5 * u; lineTo(minOf(x, r.right), if (arribaD) r.top else r.top + 3 * u); arribaD = !arribaD }
-                lineTo(r.right, r.bottom); lineTo(r.left, r.bottom); close()
-            }, papel)
-            drawRect(mezcla(papel, Color.Black, 0.22f), Offset(r.left, r.bottom - 5 * u), Size(r.width, 5 * u))
-            drawRect(Color.White.copy(alpha = 0.35f), Offset(r.left, r.bottom - 5 * u), Size(r.width, 1 * u))
-            // El agujero por donde pasa la púa.
-            drawCircle(Color.Black.copy(alpha = 0.55f), 2.2f * u, agujero)
-            drawCircle(TINTA.copy(alpha = 0.25f), 3.4f * u, agujero, style = Stroke(0.6f * u))
-            // El nombre y la cuenta, con sus filetes.
-            val m = 8 * u
-            textoEn(medidor, e.nombre, Rect(r.left + m, agujero.y + 4 * u, r.right - m, agujero.y + 21 * u), letra, TINTA, 13f, peso = FontWeight.Bold, minimo = 6f)
-            drawLine(TINTA.copy(alpha = 0.55f), Offset(r.left + m, agujero.y + 23 * u), Offset(r.right - m, agujero.y + 23 * u), 0.7f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2 * u, 1.6f * u)))
-            textoEn(medidor, e.cuenta, Rect(r.left + m, agujero.y + 25 * u, r.right - m, agujero.y + 37 * u), Letra.terminal, TINTA.copy(alpha = 0.85f), 9.5f, minimo = 5f)
-            // Los renglones de lo pedido, con su precio, hasta el pie; y el código de barras.
-            var y = agujero.y + 44 * u; var k = 0
-            while (y < r.bottom - 22 * u) {
-                drawLine(TINTA.copy(alpha = 0.4f), Offset(r.left + m, y), Offset(r.left + m + (r.width * 0.3f) * (0.5f + 0.5f * azar(e.semilla, 130 + k)), y), 1 * u)
-                drawLine(TINTA.copy(alpha = 0.4f), Offset(r.right - m - r.width * 0.14f, y), Offset(r.right - m, y), 1 * u)
-                y += 6 * u; k++
-            }
-            if (r.bottom - 20 * u > agujero.y + 42 * u) {
-                var bx = r.left + r.width * 0.25f; var j = 0
-                while (bx < r.right - r.width * 0.25f) {
-                    val gr = (if (azar(e.semilla, 300 + j) > 0.5f) 1.6f else 0.8f) * u
-                    drawRect(TINTA.copy(alpha = 0.8f), Offset(bx, r.bottom - 18 * u), Size(gr, 9 * u))
-                    bx += gr + (0.9f + azar(e.semilla, 400 + j)) * u; j++
-                }
-            }
-            // El sello del puesto, en magenta.
-            drawCircle(MAGENTA.copy(alpha = 0.55f), 7 * u, Offset(r.right - 14 * u, agujero.y + 4 * u), style = Stroke(1.2f * u))
-            drawCircle(MAGENTA.copy(alpha = 0.5f), 2.4f * u, Offset(r.right - 14 * u, agujero.y + 4 * u))
-            // El reflejo magenta del letrero en el papel.
-            drawRect(MAGENTA.copy(alpha = 0.06f), r.topLeft, r.size)
-        }
-        // La punta de la púa asoma por el agujero mientras el ticket sigue ensartado.
-        if (sube < 10 * u) {
-            drawLine(metal, Offset(cx, agujero.y), Offset(cx, punta.y), 1.4f * u)
-            drawCircle(Color.White.copy(alpha = 0.8f), 0.9f * u, punta)
-        }
-    }
-
-    /**
-     * La pestaña de un día: un tiquete del puesto, con su agujero de la púa arriba, el borde de abajo rasgado en dientes, el
-     * día grande, la letra de la semana y el sello de neón del color del ánimo (con su halo, sin degradados).
-     */
-    override fun DrawScope.pestana(e: EstadoPestana, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        val papel = mezcla(ETIQUETA, Color(0xFF06050B), if (oscuro) 0.12f else 0f)
-        rotate(-4f + 8f * azar(e.semilla, 1), Offset(w / 2, h / 2)) {
-            val r = Rect(4 * u, 3 * u, w - 4 * u, h - 4 * u)
-            val dientes = Path().apply {
-                moveTo(r.left, r.top); lineTo(r.right, r.top); lineTo(r.right, r.bottom - 3 * u)
-                var x = r.right; var abajo = true
-                while (x > r.left) { x -= 4 * u; lineTo(maxOf(x, r.left), if (abajo) r.bottom else r.bottom - 3 * u); abajo = !abajo }
-                close()
-            }
-            drawRect(Color.Black.copy(alpha = 0.35f), Offset(r.left + 1.5f * u, r.top + 2 * u), Size(r.width, r.height - 2 * u))
-            drawPath(dientes, papel)
-            drawCircle(Color.Black.copy(alpha = 0.7f), 1.8f * u, Offset(w / 2, r.top + 5 * u))
-            textoEn(medidor, e.semana, Rect(r.left + 2 * u, r.top + 1 * u, r.left + 10 * u, r.top + 10 * u), Letra.terminal, TINTA.copy(alpha = 0.8f), 8f, minimo = 5f)
-            drawLine(TINTA.copy(alpha = 0.5f), Offset(r.left + 3 * u, r.top + 11 * u), Offset(r.right - 3 * u, r.top + 11 * u), 0.6f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.6f * u, 1.2f * u)))
-            textoEn(medidor, e.dia, Rect(r.left + 1 * u, r.top + 12 * u, r.right - 1 * u, r.top + 32 * u), letra, TINTA, 19f, peso = FontWeight.Bold, minimo = 8f)
-            val s = Offset(w / 2, r.top + 40 * u)
-            if (e.tono != null) {
-                drawCircle(e.tono.copy(alpha = 0.18f), 7 * u, s)
-                drawCircle(e.tono.copy(alpha = 0.35f), 5.4f * u, s)
-                drawCircle(e.tono, 4 * u, s)
-                drawCircle(mezcla(e.tono, Color.White, 0.55f), 1.6f * u, s)
-            } else drawCircle(TINTA.copy(alpha = 0.35f), 4 * u, s, style = Stroke(0.8f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(1.4f * u, 1.2f * u))))
-        }
-    }
+    /** Cada día del índice, un ticket chico del pincho (ver [IndiceLibretaNeon]). */
+    override fun DrawScope.pestana(e: EstadoPestana, medidor: TextMeasurer, oscuro: Boolean) =
+        with(IndiceLibretaNeon) { pestana(e, medidor) }
 
     /**
      * El rótulo de un mes: un letrero de neón sobre su placa negra atornillada, con el mes escrito en tubo magenta (el halo
