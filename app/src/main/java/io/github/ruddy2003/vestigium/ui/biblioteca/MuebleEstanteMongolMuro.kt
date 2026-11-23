@@ -53,11 +53,12 @@ internal object MuroEstanteMongol {
             mancha(Offset(w * 0.32f, -w * 0.05f), w * 0.75f, luzMueble(0.22f))
             drawRect(Brush.verticalGradient(listOf(Color.Transparent, sombraMueble(0.14f)), ch * 0.45f, ch), Offset(0f, ch * 0.45f), Size(w, ch * 0.55f))
         } else if (a.noche && !a.oscuro) {
-            // El anochecer: lo último del cielo entra rosado por la puerta (a la izquierda) y por el toono; hacia la derecha y
-            // hacia abajo la pared se hunde en el violeta. La lámpara recién encendida es el acento.
+            // El anochecer: lo último del cielo entra rosado por la puerta (a la izquierda); hacia la derecha y hacia abajo la
+            // pared se hace más honda en su propio color (el añil, más añil; el violeta queda para las sombras). La lámpara recién
+            // encendida es el acento.
             drawRect(Brush.horizontalGradient(listOf(P.CREPUSCULO.copy(alpha = 0.2f), Color.Transparent), 0f, w * 0.45f), Offset(0f, techo), Size(w * 0.45f, ch - techo))
-            drawRect(Brush.linearGradient(listOf(Color.Transparent, P.ANOCHECER.copy(alpha = 0.34f)), Offset(w * 0.3f, techo), Offset(w, ch)), Offset(0f, 0f), Size(w, ch))
-            mancha(Offset(w * 0.5f, -w * 0.1f), w * 0.55f, P.CREPUSCULO.copy(alpha = 0.14f))
+            drawRect(Brush.linearGradient(listOf(Color.Transparent, Color(0xFF121726).copy(alpha = 0.3f)), Offset(w * 0.3f, techo), Offset(w, ch)), Offset(0f, 0f), Size(w, ch))
+            mancha(Offset(w * 0.5f, -w * 0.1f), w * 0.5f, P.CREPUSCULO.copy(alpha = 0.07f))
             mancha(g.lampara, w * 0.4f, P.FUEGO.copy(alpha = 0.14f))
             mancha(g.lampara, w * 0.16f, P.LLAMA.copy(alpha = 0.3f))
         } else {
@@ -242,18 +243,30 @@ internal object MuroEstanteMongol {
     }
 
     /**
-     * El remiendo donde se gastó un rombo: un pedazo de fieltro pardo sin teñir, cortado a mano (ningún lado derecho), cosido
-     * con un pespunte grueso de crin; su canto alzado con su sombra.
+     * El remiendo donde se gastó un rombo: un pedazo de fieltro pardo sin teñir, cortado a mano en una forma sin lados derechos
+     * ni boca, cosido al tapiz por todo el borde con un pespunte desigual (puntadas y huecos de largos distintos) que corre un
+     * poco hacia dentro del canto; apenas su sombra, sin brillo en ningún borde.
      */
     private fun DrawScope.remiendo(c: Offset, w: Float, l: LuzMongol) {
         val u = density
-        val p = poligonoMongol(c.x - w * 0.034f, c.y - w * 0.022f, c.x + w * 0.03f, c.y - w * 0.026f, c.x + w * 0.035f, c.y + w * 0.02f,
-            c.x + w * 0.004f, c.y + w * 0.026f, c.x - w * 0.031f, c.y + w * 0.019f)
-        drawPath(corridoMongol(p, 1.2f * u, 1.6f * u), l.s(0.32f))
-        drawPath(p, l.c(mezcla(mezcla(P.SIN_ANIMO, P.HOLLIN, 0.3f), P.ANIL_OSC, 0.3f)))
-        clipPath(p) { pinceladas(p.getBounds(), l.c(P.FIELTRO_GRIS), 719, 6, u, 0.16f) }
-        drawPath(p, l.c(mezcla(P.CREMA, P.CRUDO, 0.4f)), style = Stroke(1.2f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.6f * u, 2f * u), 0f)))
-        drawLine(l.b(0.4f), Offset(c.x - w * 0.034f, c.y - w * 0.022f), Offset(c.x + w * 0.03f, c.y - w * 0.026f), 0.9f * u)
+        val n = 10
+        val puntos = List(n) { i ->
+            val ang = (i + 0.35f * (azar(721, i) - 0.5f)) / n * 6.2832f
+            val r = w * (0.022f + 0.017f * azar(722, i))
+            Offset(c.x + kotlin.math.cos(ang) * r * 1.25f, c.y + kotlin.math.sin(ang) * r * 0.85f)
+        }
+        fun contorno(k: Float) = Path().apply {
+            val q = puntos.map { c + (it - c) * k }
+            moveTo((q[n - 1].x + q[0].x) / 2, (q[n - 1].y + q[0].y) / 2)
+            for (i in 0 until n) { val sig = q[(i + 1) % n]; quadraticTo(q[i].x, q[i].y, (q[i].x + sig.x) / 2, (q[i].y + sig.y) / 2) }
+            close()
+        }
+        val p = contorno(1f)
+        drawPath(corridoMongol(p, 0.9f * u, 1.1f * u), l.s(0.26f))
+        drawPath(p, l.c(mezcla(mezcla(P.SIN_ANIMO, P.HOLLIN, 0.25f), P.ANIL_OSC, 0.35f)))
+        clipPath(p) { pinceladas(p.getBounds(), l.c(P.FIELTRO_GRIS), 719, 6, u, 0.14f) }
+        val desigual = PathEffect.dashPathEffect(floatArrayOf(2.6f * u, 1.5f * u, 1.7f * u, 2.1f * u, 3f * u, 1.3f * u, 2f * u, 1.9f * u), 0f)
+        drawPath(contorno(0.8f), l.c(mezcla(mezcla(P.CREMA, P.CRUDO, 0.45f), P.ANIL, 0.15f)), style = Stroke(1.1f * u, cap = StrokeCap.Round, pathEffect = desigual))
     }
 
     /** La cubierta de fieltro del techo y las varas pintadas que suben al toono, sobre la cuerda de crin que ciñe el khana. */

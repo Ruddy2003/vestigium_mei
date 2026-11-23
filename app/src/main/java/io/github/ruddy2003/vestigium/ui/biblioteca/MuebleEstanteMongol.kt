@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -157,13 +158,14 @@ internal class LuzMongol(val a: AireMongol, val k: Float, val f: Float, val sol:
     fun c(col: Color): Color = when {
         a.oscuro -> {
             val fuego = mezcla(mezcla(a.hundido(col), col, (1.05f * k).coerceAtMost(0.93f)), a.fuego, 0.2f * k)
-            if (f > 0.01f) mezcla(fuego, mezcla(col, p.LUNA, 0.3f), 0.5f * f) else fuego
+            // La luna: en el diario, un roce que platea; en los Sueños deja ver el color propio, enfriado (no agrisado).
+            if (f > 0.01f) { if (a.noche) mezcla(fuego, lunaFria(col), 0.62f * f) else mezcla(fuego, mezcla(col, p.LUNA, 0.3f), 0.5f * f) } else fuego
         }
         a.noche -> {
-            // El anochecer: el violeta se hace hondo hacia abajo y hacia la derecha, lejos del toono y de la puerta; lo que alcanza
-            // la luz baja de la puerta queda rosado, y lo que alcanza la lámpara, cálido.
-            val anochecer = mezcla(col, p.ANOCHECER, (0.12f + 0.75f * (1f - toono) - 0.3f * sol).coerceIn(0.06f, 0.5f))
-            mezcla(mezcla(anochecer, p.CREPUSCULO, 0.3f * sol), a.fuego, 0.34f * k)
+            // El anochecer: cada cosa conserva su color, más hondo hacia abajo y hacia la derecha, lejos del toono y de la puerta
+            // (el violeta queda solo en las sombras); lo que alcanza la luz baja de la puerta queda rosado, y lo que alcanza la
+            // lámpara, cálido.
+            mezcla(mezcla(anochecer(col, (0.12f + 0.55f * (1f - toono) - 0.25f * sol).coerceIn(0.04f, 0.4f)), p.CREPUSCULO, 0.3f * sol), a.fuego, 0.34f * k)
         }
         else -> mezcla(mezcla(col, SOMBRA_MUEBLE, 0.2f * (1f - toono)), p.SOL, 0.16f * sol)
     }
@@ -177,6 +179,14 @@ internal class LuzMongol(val a: AireMongol, val k: Float, val f: Float, val sol:
         else a.fuego.copy(alpha = (alfa * k * (if (a.oscuro) 1.15f else 0.7f)).coerceIn(0f, 0.9f))
     fun frio(alfa: Float): Color = if (!a.oscuro || f < 0.03f) Color.Transparent else p.LUNA.copy(alpha = (alfa * f).coerceIn(0f, 0.8f))
 
+    /** Un color con la luz que se va: más hondo en [hondo], y algo más frío, sin echarle violeta. */
+    private fun anochecer(c: Color, hondo: Float): Color =
+        Color(c.red * (1f - hondo), c.green * (1f - hondo * 0.95f), c.blue * (1f - hondo * 0.75f), c.alpha)
+
+    /** Un color bajo la luna de los Sueños: el suyo, enfriado y un poco levantado, sin perder su saturación. */
+    private fun lunaFria(c: Color): Color =
+        Color((c.red * 0.86f + 0.03f).coerceAtMost(1f), (c.green * 0.93f + 0.05f).coerceAtMost(1f), (c.blue * 1.0f + 0.06f).coerceAtMost(1f), c.alpha)
+
     /**
      * El color del ánimo hecho fieltro teñido ([fieltroDelAnimo]), con la luz que le llega. De noche se apaga algo menos que lo
      * demás y conserva su color, para que en la repisa más lejana las entradas se sigan distinguiendo entre sí.
@@ -187,9 +197,9 @@ internal class LuzMongol(val a: AireMongol, val k: Float, val f: Float, val sol:
             a.oscuro -> {
                 val q = maxOf(k, f * 0.55f)
                 val fuego = mezcla(mezcla(a.hundido(base), base, (0.18f + 0.84f * q).coerceAtMost(0.96f)), a.fuego, 0.14f * k)
-                if (f > 0.01f) mezcla(fuego, mezcla(base, p.LUNA, 0.25f), 0.35f * f) else fuego
+                if (f > 0.01f) { if (a.noche) mezcla(fuego, lunaFria(base), 0.45f * f) else mezcla(fuego, mezcla(base, p.LUNA, 0.25f), 0.35f * f) } else fuego
             }
-            a.noche -> mezcla(mezcla(mezcla(base, p.ANOCHECER, (0.08f + 0.6f * (1f - toono) - 0.26f * sol).coerceIn(0.04f, 0.38f)), p.CREPUSCULO, 0.18f * sol), a.fuego, 0.22f * k)
+            a.noche -> mezcla(mezcla(anochecer(base, (0.08f + 0.45f * (1f - toono) - 0.22f * sol).coerceIn(0.03f, 0.34f)), p.CREPUSCULO, 0.18f * sol), a.fuego, 0.22f * k)
             else -> mezcla(mezcla(base, SOMBRA_MUEBLE, 0.12f * (1f - toono)), p.SOL, 0.12f * sol)
         }
     }
@@ -308,7 +318,8 @@ internal object MuebleEstanteMongol {
         val dx = kotlin.math.abs(x - TOONO_X)
         if (!suenos) return (0.2f * exp(-3f * (y - 0.2f).coerceAtLeast(0f)) * (1f - 2f * dx).coerceIn(0.1f, 1f)).coerceIn(0f, 1f)
         val fondo = 0.2f * exp(-1.4f * (y - 0.2f).coerceAtLeast(0f)) * (1f - 1.4f * dx).coerceIn(0.2f, 1f)
-        val enHaz = if (conHaz) 0.6f * haz(x, y) * exp(-0.45f * y.coerceAtLeast(0f)) else 0f
+        // Las entradas están al canto, delante: el haz les cae donde cae en los frentes.
+        val enHaz = if (conHaz) 0.6f * haz(x - HAZ_DELANTE, y) * exp(-0.45f * y.coerceAtLeast(0f)) else 0f
         return (fondo + enHaz).coerceIn(0f, 1f)
     }
 
@@ -317,6 +328,8 @@ internal object MuebleEstanteMongol {
     const val HAZ_X = 0.63f
     const val HAZ_CAE = 0.36f
     const val HAZ_MEDIO = 0.14f
+    /** Lo que se corre el paño del haz en lo que está delante (los frentes) respecto de lo que está al fondo: ahí se quiebra. */
+    const val HAZ_DELANTE = 0.035f
 
     /** Cuánto del haz (de 0 a 1) cae en un punto ([x], [y] en anchos): de borde neto. */
     fun haz(x: Float, y: Float): Float = ((HAZ_MEDIO - kotlin.math.abs(x - centroHaz(y))) / 0.012f).coerceIn(0f, 1f)
@@ -413,7 +426,7 @@ internal object MuebleEstanteMongol {
         }
         with(PieEstanteMongol) { alPie(g) }
         // En los Sueños en oscuro, el haz de luna del toono: pinta lo que toca, de borde neto (por superposición, no un velo).
-        if (oscuro && noche) hazLunaMongol(g)
+        if (oscuro && noche) hazLunaMongol(g, d)
         // El grano, en la madera y en lo de abajo (en el fondo oscuro de los casilleros no se vería: ahí lo pone el fieltro).
         granoMueble(Rect(0f, ch, g.x0, fondo), oscuro)
         granoMueble(Rect(g.x1, ch, w, fondo), oscuro)
@@ -491,16 +504,43 @@ internal fun poligonoSolMongol(g: MarcoMongol): Path {
 }
 
 /**
- * El haz de luna de los Sueños en oscuro, que baja del toono en diagonal: aclara y enfría lo que toca (se mezcla por
- * superposición), sin velo encima.
+ * El haz de luna de los Sueños en oscuro, que baja del toono en diagonal. En el aire, apenas un rastro tenue de borde blando, solo
+ * en lo alto. Donde cae, un paño frío de borde neto que sigue cada superficie y se quiebra en cada cambio de plano: el fondo (la
+ * pared, el fondo de los casilleros) y los frentes (la cornisa, los cantos de las tablas, el cuerpo bajo), corridos entre sí;
+ * en el suelo, que se tiende hacia delante, se abre más inclinado. Aclara y enfría lo que toca sin cubrirlo: un sobreexpuesto
+ * frío (cada cosa conserva su color, más clara) y un levantado leve de lo oscuro hacia el azul de la luna.
  */
-internal fun DrawScope.hazLunaMongol(g: MarcoMongol) {
+internal fun DrawScope.hazLunaMongol(g: MarcoMongol, d: DisposicionEstante) {
     val m = MuebleEstanteMongol
     val w = g.w; val h = g.h
-    val y1 = h / w
-    val haz = poligonoMongol(w * (m.centroHaz(0f) - m.HAZ_MEDIO), 0f, w * (m.centroHaz(0f) + m.HAZ_MEDIO), 0f,
-        w * (m.centroHaz(y1) + m.HAZ_MEDIO), h, w * (m.centroHaz(y1) - m.HAZ_MEDIO), h)
-    drawPath(haz, PaletaMongol.LUNA.copy(alpha = 0.46f), blendMode = BlendMode.Overlay)
+    val medio = w * m.HAZ_MEDIO
+    val delante = w * m.HAZ_DELANTE
+    fun centro(y: Float) = w * m.centroHaz(y / w)
+    // El rastro en el aire: tres capas cada vez más angostas que se apagan antes de la cornisa (el borde queda blando).
+    val alto = g.apoyo * 0.8f
+    listOf(1.3f, 1f, 0.7f).forEach { k ->
+        val p = poligonoMongol(centro(0f) - medio * k, 0f, centro(0f) + medio * k, 0f, centro(alto) + medio * k, alto, centro(alto) - medio * k, alto)
+        drawPath(p, Brush.verticalGradient(listOf(PaletaMongol.LUNA.copy(alpha = 0.035f), Color.Transparent), 0f, alto))
+    }
+    // El paño, por planos: (arriba, abajo, corrimiento, inclinación extra).
+    val planos = ArrayList<FloatArray>()
+    planos.add(floatArrayOf(0f, g.apoyo, 0f, 0f))
+    planos.add(floatArrayOf(g.apoyo, g.ch, delante, 0f))
+    d.repisas.forEachIndexed { k, r ->
+        planos.add(floatArrayOf(r.top, r.bottom, 0f, 0f))
+        d.tablas.getOrNull(k)?.let { t -> planos.add(floatArrayOf(t.top, t.bottom, delante, 0f)) }
+    }
+    planos.add(floatArrayOf(g.fondo, g.suelo, delante, 0f))
+    planos.add(floatArrayOf(g.suelo, h, delante, 0.8f))
+    val pano = Path()
+    planos.forEach { (y0, y1, dx, extra) ->
+        if (y1 <= y0) return@forEach
+        val c0 = centro(y0) + dx
+        val c1 = centro(y1) + dx - (y1 - y0) * m.HAZ_CAE * extra
+        pano.addPath(poligonoMongol(c0 - medio, y0, c0 + medio, y0, c1 + medio, y1 + 0.5f, c1 - medio, y1 + 0.5f))
+    }
+    drawPath(pano, Color(0xFF38404D), blendMode = BlendMode.ColorDodge)
+    drawPath(pano, Color(0xFF080A12), blendMode = BlendMode.Screen)
 }
 
 /** Un polígono cerrado por sus puntos (x, y, x, y…). */

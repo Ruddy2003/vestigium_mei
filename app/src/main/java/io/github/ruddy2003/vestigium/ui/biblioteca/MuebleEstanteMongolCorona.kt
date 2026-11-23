@@ -277,8 +277,11 @@ internal object CoronaEstanteMongol {
         val claro = if (!a.oscuro) Offset(x0 + ancho * 0.3f, boca + alto * 0.3f) else Offset(x1 - ancho * 0.2f, boca + alto * 0.25f)
         val metal = if (!a.oscuro) listOf(P.COBRE_LUZ, P.COBRE, mezcla(P.COBRE, P.COBRE_OSC, 0.55f), P.COBRE_OSC, mezcla(P.COBRE_OSC, P.COBRE, 0.55f))
             else listOf(P.COBRE, mezcla(P.COBRE, P.COBRE_OSC, 0.6f), P.COBRE_OSC, mezcla(P.COBRE_OSC, P.HOLLIN, 0.55f), mezcla(P.COBRE_OSC, P.HOLLIN, 0.65f))
-        val lm = if (!a.oscuro) l else a.en(l.k * 0.55f, l.f)
-        drawPath(cuerpo, Brush.radialGradient(metal.map { lm.c(it) }, claro, ancho * 0.85f))
+        // En los Sueños en oscuro el caldero, junto al toono, lo toca la luna: sigue siendo cobre, frío, no una sombra parda.
+        val lm = if (!a.oscuro) l else a.en(l.k * 0.55f, if (a.noche) maxOf(l.f, 0.7f) else l.f)
+        // (en los Sueños en oscuro, un poco del cobre propio vuelve: la luna no lo apaga a pardo)
+        val suenos = a.oscuro && a.noche
+        drawPath(cuerpo, Brush.radialGradient(metal.map { if (suenos) mezcla(lm.c(it), mezcla(it, P.LUNA, 0.12f), 0.3f) else lm.c(it) }, claro, ancho * 0.85f))
         clipPath(cuerpo) {
             // Las facetas del martillo: hileras de huellas chicas y tenues que siguen la panza.
             for (fila in 0 until 7) {
