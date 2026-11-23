@@ -5088,18 +5088,12 @@ object EstanteEgipto : DisenoBiblioteca {
     }
 }
 /**
- * Mesoamérica: el anaquel de códices de una cámara de piedra, hecho de vigas rollizas atadas con cuerda en cada cruce, contra
- * un muro de sillares de caliza. Arriba, la fachada con su banda de columnillas, el mascarón geométrico (frente roja, ojos
- * cuadrados, nariz ganchuda, boca con colmillos y orejeras de jade) y la bóveda falsa: el vano escalonado que se cierra hacia
- * arriba y deja ver el cielo y la selva. Abajo, la plataforma de tres gradas estucadas de rojo y un incensario de tres patas.
- * El mes va en una tira de amate colgada de la viga. Cada entrada es un códice plegado (amoxtli) de pie, con su tapa de piel
- * de jaguar y sus rosetas, los pliegues del biombo por el canto (más cuanto más escribiste), el día en cifras y en barras y
- * puntos mayas sobre una etiqueta de estuco con filete rojo, el mes en una tira y el cordón con su cuenta de jade; de noche,
- * una lunita en lugar del jade. De noche sale la luna en el vano y sube el humo del copal. La tapa es ese códice grande y de
- * frente: la piel de jaguar con sus rosetas y cuentas de jade, la etiqueta de estuco con la fecha, el día en barras y puntos
- * y las palabras, el cordón con su cuenta (de noche, la luna) y los pliegues por el canto; al abrirse, la tapa gira y deja
- * ver las páginas del biombo con sus signos de días. Distinto del Ideario, que es el muro pintado con la greca escalonada,
- * el talud-tablero y las petacas de palma.
+ * Mesoamérica. El estante del diario es el anaquel de chicozapote del cuarto de guardar de la casa del escriba, bajo la bóveda
+ * falsa, contra el testero de azul maya (en `MuebleEstanteMeso*.kt`, al que este objeto delega): las entradas son el códice
+ * cerrado, la bolsa de piel de venado y el rollo de manta. La tapa es un códice grande y de frente: la piel de jaguar con sus
+ * rosetas y cuentas de jade, la etiqueta de estuco con la fecha, el día en barras y puntos y las palabras, el cordón con su
+ * cuenta (de noche, la luna) y los pliegues por el canto; al abrirse, la tapa gira y deja ver las páginas del biombo con sus
+ * signos de días.
  */
 object EstanteMeso : DisenoBiblioteca {
     private val CALIZA = Color(0xFFD8CDB4)
@@ -5108,7 +5102,6 @@ object EstanteMeso : DisenoBiblioteca {
     private val ESTUCO = Color(0xFFF2E8D2)
     private val CINABRIO = Color(0xFFA3301E)
     private val JADE = Color(0xFF2F7D57)
-    private val SELVA = Color(0xFF3F6B45)
     private val VIGA = Color(0xFF7A5634)
     private val VIGA_OSC = Color(0xFF4C3420)
     private val VIGA_LUZ = Color(0xFFA27A50)
@@ -5122,7 +5115,6 @@ object EstanteMeso : DisenoBiblioteca {
     private val BRASA = Color(0xFFE8804F)
     private val COPAL = Color(0xFFE8E4DA)
     private val LUNA = Color(0xFFF0EAD0)
-    private val CIELO = Color(0xFFB9CEC8)
     private val CIELO_NOCHE = Color(0xFF141C3A)
     /** Los tonos de la piel de jaguar de las tapas. */
     private val JAGUARES = listOf(Color(0xFFC98E3A), Color(0xFFD4A04E), Color(0xFFB97C30), Color(0xFFC2964F), Color(0xFFCB8A44))
@@ -5137,251 +5129,24 @@ object EstanteMeso : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.36f
-    override val base = 0.14f
-    override val lado = 0.065f
-    override val altoRepisa: Dp = 108.dp
-    override val tabla: Dp = 16.dp
-    override val separa: Dp = 3.dp
+    // El estante y sus volúmenes: el cuarto de guardar de la casa del escriba, en MuebleEstanteMeso*.kt.
+    override val corona = MuebleEstanteMeso.CORONA
+    override val base = MuebleEstanteMeso.BASE
+    override val lado = MuebleEstanteMeso.LADO
+    override val altoRepisa: Dp = MuebleEstanteMeso.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteMeso.TABLA
+    override val separa: Dp = MuebleEstanteMeso.SEPARA
     override val letra: FontFamily = LetraExtra.codice
+    override val auraEnReposo = false
 
-    override fun ancho(palabras: Int): Dp = (22 + (palabras / 40).coerceAtMost(18)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.74f + 0.2f * azar(semilla, 1)
+    override fun ancho(palabras: Int): Dp = MuebleEstanteMeso.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteMeso.alto(semilla, palabras)
 
-    /** Una atadura de cuerda en [r]: la banda con sus vueltas cruzadas. */
-    private fun DrawScope.atadura(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        drawRect(t(CUERDA, oscuro, noche), r.topLeft, r.size)
-        var x = r.left
-        while (x < r.right) {
-            drawLine(t(CUERDA_OSC, oscuro, noche), Offset(x, r.bottom), Offset(minOf(x + 3 * u, r.right), r.top), 0.8f * u)
-            x += 2.4f * u
-        }
-        drawLine(t(CUERDA_OSC, oscuro, noche), Offset(r.left, r.top), Offset(r.right, r.bottom), 1f * u)
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteMeso) { estante(d, medidor, oscuro, noche) }
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El muro de sillares de caliza.
-        val cuerpo = Rect(0f, d.corona.bottom, w, d.base.top)
-        drawRect(c(CALIZA), cuerpo.topLeft, cuerpo.size)
-        var y = cuerpo.top
-        var fila = 0
-        while (y < cuerpo.bottom) {
-            drawLine(c(CALIZA_OSC).copy(alpha = 0.6f), Offset(0f, y), Offset(w, y), 0.9f * u)
-            var x = if (fila % 2 == 0) 0f else 20 * u
-            while (x < w) { drawLine(c(CALIZA_OSC).copy(alpha = 0.6f), Offset(x, y), Offset(x, minOf(y + 18 * u, cuerpo.bottom)), 0.9f * u); x += 40 * u }
-            y += 18 * u; fila++
-        }
-        // Cada repisa: la sombra de la viga de arriba.
-        d.repisas.forEach { r ->
-            drawRect(Color.Black.copy(alpha = 0.1f), r.topLeft, r.size)
-            drawRect(Color.Black.copy(alpha = if (noche) 0.4f else 0.3f), r.topLeft, Size(r.width, 7 * u))
-            drawRect(Color.Black.copy(alpha = 0.14f), Offset(r.left, r.top + 7 * u), Size(r.width, 6 * u))
-        }
-        // Los costados: postes rollizos con su corteza y sus nudos.
-        listOf(d.izquierda, d.derecha).forEachIndexed { s, r ->
-            val poste = Rect(r.left + r.width * 0.12f, r.top - 6 * u, r.right - r.width * 0.12f, r.bottom + d.base.height * 0.3f)
-            drawRoundRect(c(VIGA), poste.topLeft, poste.size, CornerRadius(poste.width / 2))
-            drawRect(c(VIGA_LUZ).copy(alpha = 0.6f), Offset(poste.left + poste.width * 0.18f, poste.top + 3 * u), Size(poste.width * 0.16f, poste.height - 6 * u))
-            drawRect(c(VIGA_OSC).copy(alpha = 0.8f), Offset(poste.right - poste.width * 0.28f, poste.top + 3 * u), Size(poste.width * 0.28f, poste.height - 6 * u))
-            vetas(poste, c(VIGA_OSC).copy(alpha = 0.4f), 120 + s, densidad = 0.8f, vertical = true, grosor = 0.6f)
-            for (j in 0 until 3) {
-                val o = Offset(poste.center.x, poste.top + poste.height * (0.2f + 0.3f * j + 0.08f * azar(s * 7 + j, 2)))
-                drawOval(c(VIGA_OSC), Offset(o.x - 2 * u, o.y - 3 * u), Size(4 * u, 6 * u))
-            }
-        }
-        // Las tablas: vigas rollizas tendidas, con luz arriba y sombra abajo.
-        d.tablas.forEachIndexed { q, r ->
-            drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, r.bottom), Size(r.width, 3 * u))
-            drawRoundRect(c(VIGA), Offset(r.left - 6 * u, r.top), Size(r.width + 12 * u, r.height), CornerRadius(r.height / 2))
-            vetas(r, c(VIGA_OSC).copy(alpha = 0.45f), 130 + q, densidad = 0.7f, grosor = 0.6f)
-            drawRect(c(VIGA_LUZ).copy(alpha = 0.7f), Offset(r.left, r.top + r.height * 0.14f), Size(r.width, r.height * 0.14f))
-            drawRect(c(VIGA_OSC).copy(alpha = 0.7f), Offset(r.left, r.bottom - r.height * 0.3f), Size(r.width, r.height * 0.24f))
-        }
-        // Las ataduras de cuerda en cada cruce de poste y viga.
-        d.tablas.forEach { r ->
-            atadura(Rect(d.izquierda.left + d.izquierda.width * 0.08f, r.top - 2 * u, d.izquierda.right + 6 * u, r.bottom + 2 * u), oscuro, noche)
-            atadura(Rect(d.derecha.left - 6 * u, r.top - 2 * u, d.derecha.right - d.derecha.width * 0.08f, r.bottom + 2 * u), oscuro, noche)
-        }
-        // El rótulo de cada mes: una tira de amate colgada de la viga con dos cordeles.
-        d.placas.forEach { p ->
-            val r = p.r
-            listOf(0.15f, 0.85f).forEach { f -> drawLine(c(CUERDA), Offset(r.left + r.width * f, r.top - 3 * u), Offset(r.left + r.width * f, r.top + 2 * u), 1.2f * u) }
-            drawRect(Color.Black.copy(alpha = 0.18f), Offset(r.left + 1.2f * u, r.top + 1.2f * u), r.size)
-            drawRect(c(AMATE), r.topLeft, r.size)
-            drawRect(c(CINABRIO), r.topLeft, r.size, style = Stroke(1f * u))
-            val filete = r.deflate(2 * u)
-            drawRect(c(CINABRIO).copy(alpha = 0.5f), filete.topLeft, filete.size, style = Stroke(0.5f * u))
-            textoEn(medidor, p.texto, Rect(r.left + 4 * u, r.top + 1 * u, r.right - 4 * u, r.bottom - 1 * u), letra, c(NEGRO), 10f, peso = FontWeight.SemiBold, minimo = 5f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: la plataforma de tres gradas, estucadas de rojo, sobre la tierra.
-        val b = d.base
-        drawRect(c(CALIZA), b.topLeft, b.size)
-        val gradas = 3
-        val altoGrada = b.height * 0.26f
-        for (j in 0 until gradas) {
-            val y0 = b.top + altoGrada * j
-            val sangria = (gradas - 1 - j) * b.width * 0.03f
-            val g = Rect(b.left + sangria, y0, b.right - sangria, y0 + altoGrada)
-            drawRect(c(CINABRIO), g.topLeft, g.size)
-            drawRect(c(ESTUCO), g.topLeft, Size(g.width, 2.4f * u))
-            drawRect(Color.Black.copy(alpha = 0.18f), Offset(g.left, g.bottom - 2 * u), Size(g.width, 2 * u))
-            for (k in 0 until 3) {
-                val gx = g.left + g.width * azar(j * 5 + k, 9)
-                drawLine(c(ESTUCO).copy(alpha = 0.35f), Offset(gx, g.top + 3 * u), Offset(gx + 3 * u, g.bottom - 2 * u), 0.6f * u)
-            }
-        }
-        val piso = b.top + altoGrada * gradas
-        drawRect(c(TIERRA), Offset(0f, piso), Size(w, h - piso))
-        incensario(Offset(w * 0.82f, h - 1.5f * u), b.height * 0.55f, oscuro, noche)
-    }
-
-    /** El incensario de barro de tres patas; de noche, con las brasas encendidas y el humo del copal subiendo. */
-    private fun DrawScope.incensario(pie: Offset, alto: Float, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        val boca = pie.y - alto * 0.7f
-        if (noche) {
-            // Las brasas: el segundo y último degradado del mueble (el primero es la luz de la luna).
-            mancha(Offset(pie.x, boca), alto * 0.6f, BRASA.copy(alpha = 0.5f))
-            for (j in 0 until 3) {
-                val x0 = pie.x + (j - 1) * alto * 0.12f
-                val humo = Path().apply {
-                    moveTo(x0, boca - 2 * u)
-                    cubicTo(x0 - alto * 0.5f, boca - alto * 1.2f, pie.x + alto * 0.6f, boca - alto * 2.0f, pie.x - alto * 0.1f + j * alto * 0.2f, boca - alto * (3.2f + 0.5f * j))
-                    cubicTo(pie.x - alto * 0.7f, boca - alto * 4.0f, pie.x + alto * 0.3f, boca - alto * 4.4f, pie.x - alto * 0.2f, boca - alto * (5f + 0.4f * j))
-                }
-                drawPath(humo, COPAL.copy(alpha = 0.22f - 0.05f * j), style = Stroke((5 - j) * u, cap = StrokeCap.Round))
-            }
-        }
-        for (s in listOf(-1f, 0f, 1f)) {
-            drawLine(c(BARRO_OSC), Offset(pie.x + s * alto * 0.22f, pie.y), Offset(pie.x + s * alto * 0.15f, pie.y - alto * 0.3f), 2.2f * u, cap = StrokeCap.Round)
-        }
-        val cuenco = Path().apply {
-            moveTo(pie.x - alto * 0.42f, boca); lineTo(pie.x + alto * 0.42f, boca)
-            quadraticTo(pie.x + alto * 0.38f, pie.y - alto * 0.25f, pie.x, pie.y - alto * 0.25f)
-            quadraticTo(pie.x - alto * 0.38f, pie.y - alto * 0.25f, pie.x - alto * 0.42f, boca)
-            close()
-        }
-        drawPath(cuenco, c(BARRO))
-        drawLine(c(CINABRIO), Offset(pie.x - alto * 0.38f, boca + alto * 0.08f), Offset(pie.x + alto * 0.38f, boca + alto * 0.08f), 1.2f * u)
-        for (j in -1..1) drawCircle(c(NEGRO).copy(alpha = 0.6f), 1.1f * u, Offset(pie.x + j * alto * 0.16f, boca + alto * 0.2f))
-        drawRect(c(BARRO_OSC), Offset(pie.x - alto * 0.45f, boca - 1.6f * u), Size(alto * 0.9f, 1.6f * u))
-        if (noche) for (j in 0 until 4) drawCircle(BRASA, 1.2f * u, Offset(pie.x + (j - 1.5f) * alto * 0.12f, boca - 0.8f * u))
-    }
-
-    /** El mascarón de piedra, todo de formas geométricas: frente, ojos cuadrados, nariz ganchuda, boca con colmillos, orejeras. */
-    private fun DrawScope.mascaron(m: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        val cara = Rect(m.left + m.width * 0.16f, m.top, m.right - m.width * 0.16f, m.bottom)
-        drawRect(c(CALIZA_LUZ), cara.topLeft, cara.size)
-        drawRect(c(CALIZA_OSC), cara.topLeft, cara.size, style = Stroke(1f * u))
-        val frente = Rect(cara.left, cara.top, cara.right, cara.top + cara.height * 0.22f)
-        drawRect(c(CINABRIO).copy(alpha = 0.85f), frente.topLeft, frente.size)
-        for (j in 0 until 3) {
-            val q = frente.height * 0.6f
-            drawRect(c(CALIZA_LUZ), Offset(frente.left + frente.width * (0.2f + 0.3f * j) - q / 2, frente.center.y - q / 2), Size(q, q), style = Stroke(1f * u))
-        }
-        for (s in listOf(-1f, 1f)) {
-            val oc = Offset(cara.center.x + s * cara.width * 0.25f, cara.top + cara.height * 0.42f)
-            val lo = cara.height * 0.15f
-            drawRect(c(CALIZA_OSC), Offset(oc.x - lo, oc.y - lo * 0.8f), Size(lo * 2, lo * 1.6f))
-            drawRect(c(CALIZA_LUZ), Offset(oc.x - lo * 0.6f, oc.y - lo * 0.45f), Size(lo * 1.2f, lo * 0.9f))
-            drawRect(c(NEGRO), Offset(oc.x - lo * 0.25f, oc.y - lo * 0.2f), Size(lo * 0.5f, lo * 0.4f))
-        }
-        val nariz = Path().apply {
-            moveTo(cara.center.x - cara.width * 0.07f, cara.top + cara.height * 0.28f)
-            lineTo(cara.center.x + cara.width * 0.07f, cara.top + cara.height * 0.28f)
-            lineTo(cara.center.x + cara.width * 0.07f, cara.top + cara.height * 0.6f)
-            quadraticTo(cara.center.x + cara.width * 0.16f, cara.top + cara.height * 0.68f, cara.center.x + cara.width * 0.06f, cara.top + cara.height * 0.74f)
-            lineTo(cara.center.x - cara.width * 0.07f, cara.top + cara.height * 0.66f)
-            close()
-        }
-        drawPath(nariz, c(CALIZA))
-        drawPath(nariz, c(CALIZA_OSC), style = Stroke(0.8f * u))
-        val boca = Rect(cara.left + cara.width * 0.22f, cara.top + cara.height * 0.78f, cara.right - cara.width * 0.22f, cara.bottom - cara.height * 0.04f)
-        drawRect(c(NEGRO).copy(alpha = 0.85f), boca.topLeft, boca.size)
-        for (f in listOf(0.18f, 0.82f)) {
-            val cx = boca.left + boca.width * f
-            val colmillo = Path().apply { moveTo(cx - boca.height * 0.3f, boca.top); lineTo(cx + boca.height * 0.3f, boca.top); lineTo(cx, boca.bottom - boca.height * 0.1f); close() }
-            drawPath(colmillo, c(CALIZA_LUZ))
-        }
-        for (s in listOf(-1f, 1f)) {
-            val oc = Offset(if (s < 0) m.left + m.width * 0.08f else m.right - m.width * 0.08f, cara.top + cara.height * 0.45f)
-            val ro = m.width * 0.07f
-            drawCircle(c(JADE), ro, oc)
-            drawCircle(c(CALIZA_LUZ), ro * 0.45f, oc)
-            drawRect(c(JADE), Offset(oc.x - ro * 0.15f, oc.y - ro * 0.15f), Size(ro * 0.3f, ro * 0.3f))
-        }
-    }
-
-    /** La fachada con sus columnillas, el mascarón y la bóveda falsa (de noche, con la luna en el vano). */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        drawRect(c(CALIZA), r.topLeft, r.size)
-        var y = r.top + r.height * 0.12f
-        while (y < r.bottom) { drawLine(c(CALIZA_OSC).copy(alpha = 0.5f), Offset(r.left, y), Offset(r.right, y), 0.8f * u); y += 16 * u }
-        // La banda de columnillas arriba, con su moldura.
-        val banda = Rect(r.left, r.top, r.right, r.top + r.height * 0.07f)
-        drawRect(c(CALIZA_OSC), banda.topLeft, banda.size)
-        var bx = banda.left + 1.5f * u
-        while (bx < banda.right) {
-            drawRoundRect(c(CALIZA_LUZ), Offset(bx, banda.top + 1 * u), Size(4 * u, banda.height - 2 * u), CornerRadius(2 * u))
-            drawLine(c(CALIZA_OSC), Offset(bx, banda.center.y), Offset(bx + 4 * u, banda.center.y), 0.8f * u)
-            bx += 6 * u
-        }
-        drawRect(c(CALIZA_LUZ), Offset(r.left, banda.bottom), Size(r.width, 2.4f * u))
-        // La bóveda falsa: el vano escalonado que se cierra hacia arriba.
-        val cx = r.center.x
-        val cima = r.top + r.height * 0.42f
-        val izq = r.left + r.width * 0.08f
-        val der = r.right - r.width * 0.08f
-        val largo = cx - r.width * 0.05f - izq
-        val gradas = 6
-        val vano = Path().apply {
-            moveTo(izq, r.bottom)
-            for (j in 0 until gradas) {
-                val f0 = j.toFloat() / gradas; val f1 = (j + 1f) / gradas
-                val y1 = r.bottom - (r.bottom - cima) * f1
-                lineTo(izq + largo * f0, y1)
-                lineTo(izq + largo * f1, y1)
-            }
-            lineTo(der - largo, cima)
-            for (j in gradas - 1 downTo 0) {
-                val f0 = j.toFloat() / gradas; val f1 = (j + 1f) / gradas
-                val y0 = r.bottom - (r.bottom - cima) * f0
-                val y1 = r.bottom - (r.bottom - cima) * f1
-                lineTo(der - largo * f0, y1)
-                lineTo(der - largo * f0, y0)
-            }
-            close()
-        }
-        drawPath(vano, if (noche) CIELO_NOCHE else c(CIELO))
-        clipPath(vano) {
-            if (noche) {
-                // La luna en el vano: el primer degradado del mueble.
-                val luna = Offset(cx + r.width * 0.1f, cima + (r.bottom - cima) * 0.32f)
-                mancha(luna, r.height * 0.3f, LUNA.copy(alpha = 0.35f))
-                drawCircle(LUNA, r.height * 0.07f, luna)
-                drawCircle(mezcla(LUNA, CIELO_NOCHE, 0.25f), r.height * 0.018f, Offset(luna.x - r.height * 0.02f, luna.y + r.height * 0.015f))
-                for (j in 0 until 8) drawCircle(LUNA.copy(alpha = 0.7f), (0.6f + 0.6f * azar(j, 81)) * u, Offset(izq + (der - izq) * azar(j, 82), cima + (r.bottom - cima) * azar(j, 83)))
-            } else {
-                // La selva a lo lejos.
-                for (j in 0 until 12) {
-                    drawCircle(c(SELVA).copy(alpha = 0.8f), (10 + 7 * azar(j, 84)) * u, Offset(izq + (der - izq) * j / 11f, r.bottom + 3 * u))
-                }
-            }
-        }
-        drawPath(vano, c(CALIZA_OSC), style = Stroke(1.6f * u))
-        mascaron(Rect(cx - r.width * 0.15f, banda.bottom + r.height * 0.03f, cx + r.width * 0.15f, cima - r.height * 0.04f), oscuro, noche)
-        drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, r.bottom - 2 * u), Size(r.width, 2 * u))
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteMeso) { volumen(v, medidor, oscuro) }
 
     /** El número [n] en la cuenta maya: barras de cinco y puntos de uno, en niveles de veinte; el cero es la concha. */
     private fun DrawScope.numeroMaya(n: Int, r: Rect, tinta: Color, concha: Color) {
@@ -5410,65 +5175,6 @@ object EstanteMeso : DisenoBiblioteca {
                 }
             }
         }
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val base = JAGUARES[(v.semilla and 0x7fffffff) % JAGUARES.size]
-        val piel = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        // Las páginas plegadas en biombo, por el canto: más pliegues cuanto más escribiste.
-        val pliegues = 3 + (v.lleno * 6).toInt()
-        val canto = minOf(w * 0.28f, 2.2f * pliegues * u)
-        drawRect(c(ESTUCO), Offset(w - canto, h * 0.02f), Size(canto, h * 0.96f))
-        for (j in 0 until pliegues) {
-            val x = w - canto + canto * (j + 0.5f) / pliegues
-            drawLine(c(CINABRIO).copy(alpha = 0.55f), Offset(x, h * 0.02f), Offset(x, h * 0.98f), 0.6f * u)
-        }
-        val zigzag = Path().apply {
-            moveTo(w - canto, h * 0.02f)
-            for (j in 0 until pliegues) lineTo(w - canto + canto * (j + 0.5f) / pliegues, h * 0.02f + (if (j % 2 == 0) 1.6f else 0f) * u)
-        }
-        drawPath(zigzag, c(CALIZA_OSC), style = Stroke(0.6f * u))
-        // La tapa de piel de jaguar con sus rosetas.
-        val tapa = Rect(0f, 0f, w - canto, h)
-        drawRoundRect(piel, tapa.topLeft, tapa.size, CornerRadius(1.5f * u))
-        drawRect(Color.White.copy(alpha = 0.1f), Offset.Zero, Size(tapa.width * 0.14f, h))
-        drawRect(Color.Black.copy(alpha = 0.2f), Offset(tapa.right - tapa.width * 0.12f, 0f), Size(tapa.width * 0.12f, h))
-        for (j in 0 until 9) {
-            val rc = Offset(tapa.width * (0.1f + 0.8f * azar(v.semilla, 10 + j)), h * (0.03f + 0.94f * azar(v.semilla, 20 + j)))
-            val rr = (1.3f + 1.2f * azar(v.semilla, 30 + j)) * u
-            val giro = 360f * azar(v.semilla, 40 + j)
-            for (s in 0 until 3) {
-                drawArc(c(ROSETA).copy(alpha = 0.75f), giro + s * 120f, 80f, false, Offset(rc.x - rr, rc.y - rr), Size(rr * 2, rr * 2), style = Stroke(0.9f * u))
-            }
-            drawCircle(c(ROSETA).copy(alpha = 0.5f), rr * 0.35f, rc)
-        }
-        // La etiqueta de estuco con filete rojo: el día en cifras y en barras y puntos.
-        val etiqueta = Rect(tapa.width * 0.12f, h * 0.07f, tapa.width * 0.88f, h * 0.54f)
-        drawRect(c(ESTUCO), etiqueta.topLeft, etiqueta.size)
-        drawRect(c(CINABRIO), etiqueta.topLeft, etiqueta.size, style = Stroke(1f * u))
-        textoEn(medidor, v.dia, Rect(etiqueta.left, etiqueta.top + 1 * u, etiqueta.right, etiqueta.top + etiqueta.height * 0.34f), letra, c(NEGRO), 13f, peso = FontWeight.SemiBold)
-        drawLine(c(CINABRIO).copy(alpha = 0.6f), Offset(etiqueta.left + 2 * u, etiqueta.top + etiqueta.height * 0.36f), Offset(etiqueta.right - 2 * u, etiqueta.top + etiqueta.height * 0.36f), 0.6f * u)
-        numeroMaya(v.dia.toIntOrNull() ?: 0, Rect(etiqueta.left + 2 * u, etiqueta.top + etiqueta.height * 0.4f, etiqueta.right - 2 * u, etiqueta.bottom - 2 * u), c(NEGRO), c(CINABRIO))
-        // El cordón que ciñe el códice, con su cuenta de jade; de noche, una lunita en su lugar.
-        val cy = h * 0.575f
-        drawLine(c(CUERDA), Offset(0f, cy), Offset(w, cy), 1.2f * u)
-        val cuenta = Offset(tapa.right - minOf(tapa.width * 0.16f, 4 * u), cy)
-        val rcuenta = minOf(tapa.width * 0.12f, 2.6f * u)
-        if (v.noche) {
-            drawCircle(LUNA, rcuenta, cuenta)
-            drawCircle(piel, rcuenta * 0.8f, Offset(cuenta.x + rcuenta * 0.45f, cuenta.y - rcuenta * 0.3f))
-        } else {
-            drawCircle(c(JADE), rcuenta, cuenta)
-            drawCircle(Color.White.copy(alpha = 0.35f), rcuenta * 0.35f, Offset(cuenta.x - rcuenta * 0.3f, cuenta.y - rcuenta * 0.3f))
-        }
-        // El mes, en una tira de amate.
-        val tira = Rect(tapa.width * 0.2f, h * 0.61f, tapa.width * 0.8f, h * 0.93f)
-        drawRect(c(AMATE), tira.topLeft, tira.size)
-        drawRect(c(CINABRIO).copy(alpha = 0.7f), tira.topLeft, tira.size, style = Stroke(0.6f * u))
-        textoEn(medidor, v.mes, tira.deflate(1 * u), letra, c(NEGRO), 8.5f, vertical = true, minimo = 4.5f)
     }
 
     // ---------------------------------------------------------------- la tapa
