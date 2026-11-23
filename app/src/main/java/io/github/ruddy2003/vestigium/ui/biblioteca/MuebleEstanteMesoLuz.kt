@@ -21,17 +21,17 @@ private fun caidaMeso(d: Float, a: Float, e: Float, alcance: Float): Float {
 /** Cuánta luz de la lumbre del nicho llega a un punto a [dx] y [dy] anchos de ella. Con [baja] (los Sueños de noche), menos. */
 internal fun nichoLuzMeso(dx: Float, dy: Float, baja: Boolean = false): Float {
     val d = sqrt(dx * dx + dy * dy)
-    return if (baja) caidaMeso(d, 1.0f, 4.4f, 0.6f) else caidaMeso(d, 1.6f, 2.5f, 1.15f)
+    return if (baja) caidaMeso(d, 1.0f, 4.4f, 0.6f) else caidaMeso(d, 2.6f, 2.6f, 1.1f)
 }
 
 /** Lo mismo para el fogón, que arde más grande. */
 internal fun fogonLuzMeso(dx: Float, dy: Float, baja: Boolean = false): Float {
     val d = sqrt(dx * dx + dy * dy)
-    return if (baja) caidaMeso(d, 1.0f, 4.0f, 0.7f) else caidaMeso(d, 1.7f, 2.4f, 1.2f)
+    return if (baja) caidaMeso(d, 1.0f, 4.0f, 0.7f) else caidaMeso(d, 2.6f, 2.6f, 1.15f)
 }
 
-/** La de la tea del poste, chica: alumbra el hueco de en medio y algo de los de al lado. */
-internal fun teaLuzMeso(dx: Float, dy: Float): Float = caidaMeso(sqrt(dx * dx + dy * dy), 1.2f, 3.4f, 0.55f)
+/** La de la tea del poste: alumbra el tercio izquierdo del hueco de en medio y de los de arriba y abajo. */
+internal fun teaLuzMeso(dx: Float, dy: Float): Float = caidaMeso(sqrt(dx * dx + dy * dy), 2.2f, 3.4f, 0.75f)
 
 /** Cuánta luz de una lumbre de [clase] (0, el nicho; 1, el fogón; 2, la tea) llega a [d] anchos de ella. */
 internal fun luzLumbreMeso(clase: Int, d: Float, baja: Boolean): Float = when (clase) {
@@ -42,10 +42,26 @@ internal fun luzLumbreMeso(clase: Int, d: Float, baja: Boolean): Float = when (c
 
 /** El alcance de cada lumbre, en anchos (donde su luz ya es cero). */
 internal fun alcanceLumbreMeso(clase: Int, baja: Boolean): Float = when (clase) {
-    0 -> if (baja) 0.6f else 1.15f
-    1 -> if (baja) 0.7f else 1.2f
-    else -> 0.55f
+    0 -> if (baja) 0.6f else 1.1f
+    1 -> if (baja) 0.7f else 1.15f
+    else -> 0.75f
 }
+
+/**
+ * Hasta dónde se ve la luz de una lumbre de [clase] en los charcos (en anchos): donde lo que llega, a la 1.5 (como cae de
+ * noche), baja de 0.03. Se busca una vez por clase.
+ */
+internal fun vistoLumbreMeso(clase: Int, baja: Boolean): Float = VISTO_MESO.getOrPut(clase * 2 + (if (baja) 1 else 0)) {
+    var d = 0f
+    while (d < alcanceLumbreMeso(clase, baja)) {
+        val k = luzLumbreMeso(clase, d, baja)
+        if (k * sqrt(k) < 0.03f) break
+        d += 0.01f
+    }
+    d
+}
+
+private val VISTO_MESO = HashMap<Int, Float>()
 
 /** Dos luces juntas: lo que no deja pasar ninguna de las dos. */
 internal fun juntarLucesMeso(k1: Float, k2: Float): Float = 1f - (1f - k1) * (1f - k2)

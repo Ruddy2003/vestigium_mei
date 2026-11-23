@@ -99,6 +99,7 @@ internal fun DrawScope.cacaoMeso(m: MesaMeso, c: Offset, largo: Float, ancho: Fl
                 }
             }
             drawPath(forma, a.s(0.35f), style = Stroke(0.7f * u))
+            filoNichoMeso(m, forma, c, ancho * 0.12f, giro)
             // El pezón del tallo.
             drawRoundRect(a.c(BEJUCO_OSC, k, f), Offset(-ancho * 0.16f, -ancho * 0.07f), Size(ancho * 0.2f, ancho * 0.14f), CornerRadius(ancho * 0.05f))
         }
@@ -181,6 +182,7 @@ private fun DrawScope.vasoPintadoMeso(m: MesaMeso, pie: Offset, alto: Float) {
         drawRoundRect(a.b(0.55f, k), Offset(if (der) pie.x + an * 0.16f else pie.x - an * 0.3f, top + alto * 0.1f), Size(an * 0.08f, alto * 0.74f), CornerRadius(an * 0.04f))
     }
     drawPath(forma, a.s(0.35f), style = Stroke(0.7f * u))
+    filoNichoMeso(m, forma, c, an * 0.1f)
     // La boca: lo hondo de dentro y el canto con su luz.
     val boca = Rect(pie.x - an * 0.56f, top - alto * 0.05f, pie.x + an * 0.56f, top + alto * 0.05f)
     drawOval(a.c(mezcla(MesoTinta.BARRO_OSC, TINTA, 0.5f), k * 0.5f), boca.topLeft, boca.size)
@@ -275,6 +277,9 @@ private fun DrawScope.canastoMeso(m: MesaMeso, pie: Offset) {
         drawPath(espiral, a.c(BEJUCO_OSC, k, f), style = Stroke(0.9f * u))
         drawRect(a.b(0.35f, k), borde.topLeft, Size(borde.width, borde.height * 0.35f))
     }
+    // De noche, el filo de la lumbre del nicho en el costado del canasto y en el borde que la miran.
+    filoNichoMeso(m, cuerpo, Offset(pie.x, boca + alto * 0.5f), w * 0.01f)
+    filoNichoMeso(m, Path().apply { addRoundRect(RoundRect(borde, CornerRadius(borde.height / 2))) }, Offset(pie.x + ancho * 0.3f, boca), w * 0.005f)
 }
 
 /**
@@ -340,6 +345,7 @@ internal fun DrawScope.mantasMeso(m: MesaMeso, r: Rect, enMuro: Boolean = true) 
             drawRect(a.s(0.14f), Offset(if (der) c.left else c.right - c.width * 0.22f, c.top), Size(c.width * 0.22f, h))
         }
         drawPath(capa, a.s(0.32f), style = Stroke(0.7f * u))
+        filoNichoMeso(m, capa, c.center, h * 0.14f)
         if (j == 1) {
             // Los flecos de la orilla, a la derecha, que cuelgan sobre la de abajo.
             val flecos = Path()
@@ -407,13 +413,16 @@ private fun DrawScope.careyMeso(m: MesaMeso, pie: Offset) {
                 juntas.moveTo(c.x + s * an * 0.17f, y + al * 0.1f); juntas.lineTo(c.x + s * an * 0.45f, y + al * 0.12f)
             }
             drawPath(juntas, a.c(mezcla(CAREY, TINTA, 0.55f), k, f), style = Stroke(1.1f * u))
-            // El domo: la luz arriba a la izquierda, la sombra abajo a la derecha y el lustre.
-            drawPath(bordeMeso(domo, -an * 0.16f, -al * 0.1f), a.s(0.35f))
-            drawPath(bordeMeso(domo, -an * 0.05f, -al * 0.03f), a.s(0.2f))
-            drawOval(a.b(0.3f, k), Offset(c.x - an * 0.36f, c.y - al * 0.4f), Size(an * 0.3f, al * 0.45f))
-            drawOval(a.b(0.5f, k), Offset(c.x - an * 0.26f, c.y - al * 0.32f), Size(an * 0.08f, al * 0.18f))
+            // El domo: la luz arriba a la izquierda (de noche, a la derecha, de la lumbre del nicho), la sombra del otro lado y
+            // el lustre.
+            val s = if (a.oscuro) -1f else 1f
+            drawPath(bordeMeso(domo, -s * an * 0.16f, -al * 0.1f), a.s(0.35f))
+            drawPath(bordeMeso(domo, -s * an * 0.05f, -al * 0.03f), a.s(0.2f))
+            drawOval(a.b(0.3f, k), Offset(c.x - s * an * 0.21f - an * 0.15f, c.y - al * 0.4f), Size(an * 0.3f, al * 0.45f))
+            drawOval(a.b(0.5f, k), Offset(c.x - s * an * 0.22f - an * 0.04f, c.y - al * 0.32f), Size(an * 0.08f, al * 0.18f))
         }
         drawPath(domo, a.s(0.4f), style = Stroke(0.8f * u))
+        filoNichoMeso(m, domo, c, an * 0.07f, -9f)
     }
     contactoMeso(Offset(pie.x + an * 0.05f, pie.y + w * 0.003f), an * 0.9f, w * 0.012f, a, 0.4f)
     // El asta de venado, apoyada delante y cruzada: el tronco curvo y una punta.
@@ -555,6 +564,7 @@ private fun DrawScope.mazorcasMeso(m: MesaMeso, gancho: Offset, colores: List<Co
                 cilindroMeso(r, a, k, 1.2f, m.der(r.center.x, r.center.y), f)
             }
             drawPath(forma, a.s(0.35f), style = Stroke(0.6f * u))
+            filoNichoMeso(m, forma, Offset(top.x, top.y + l * 0.5f), grueso * 0.16f, g)
         }
     }
     // El amarre que da la vuelta a la viga.
@@ -600,6 +610,7 @@ private fun DrawScope.madejaMeso(m: MesaMeso, gancho: Offset, col: Color, largo:
                 drawRect(a.s(0.28f), Offset(r.right - r.width * 0.32f, r.top), Size(r.width * 0.32f, r.height))
             }
             drawPath(tramo, a.s(0.35f), style = Stroke(0.6f * u))
+            filoNichoMeso(m, tramo, c, g * 0.1f, giro)
         }
     }
     // El ojo de abajo, donde se juntan las vueltas.

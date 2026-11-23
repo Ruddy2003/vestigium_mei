@@ -26,6 +26,7 @@ import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 /**
  * La paleta del cuarto de guardar de K'an (una ciudad maya de las tierras bajas, hacia el 750), de la misma casa que el
@@ -98,6 +99,8 @@ internal object MesoTinta {
     val NOCHE_SUENOS = Color(0xFF1C2A5E)
     /** El fondo de los huecos de noche: el azul del testero en la sombra hondísima, hacia el añil violeta. */
     val ANIL_HONDO = Color(0xFF262468)
+    /** El ciruela tibio de la media luz de noche (entre el añil y el ámbar). */
+    val CIRUELA = Color(0xFF8A4A5E)
     val ATARDECER = Color(0xFF6C5A8C)
     val OCASO = Color(0xFFFF9A5A)
     val SOL = Color(0xFFFFF3DA)
@@ -134,22 +137,32 @@ internal class AireMeso(val oscuro: Boolean, val noche: Boolean) {
      * sigue azul, el cinabrio rojo hondo) y llevado al añil del cuarto, para que lo claro y neutro (el amate, la caliza, el
      * algodón) se hunda en añil y no en gris.
      */
-    private fun hondo(c: Color) = Color(c.red * 0.24f + noct.red * 0.4f, c.green * 0.24f + noct.green * 0.4f, c.blue * 0.24f + noct.blue * 0.62f, c.alpha)
+    private fun hondo(c: Color) = Color(c.red * 0.13f + noct.red * 0.48f, c.green * 0.13f + noct.green * 0.48f, c.blue * 0.13f + noct.blue * 0.74f, c.alpha)
 
     /** Lo que toca la luna: el color de la cosa, apagado y enfriado hacia la plata (con su tono, no un gris). */
-    private fun lunado(c: Color) = Color(c.red * 0.4f + 0.1f, c.green * 0.46f + 0.14f, c.blue * 0.5f + 0.3f, c.alpha)
+    private fun lunado(c: Color) = Color(c.red * 0.34f + 0.08f, c.green * 0.4f + 0.12f, c.blue * 0.46f + 0.3f, c.alpha)
 
-    /** El color de algo con la luz que le llega: [k] de las lumbres, [f] de la puerta. */
+    /** El medio camino entre lo hondo y lo alumbrado: un ciruela tibio, para que lo claro no pase por un lila ni por un gris. */
+    private fun ciruela(c: Color) = mezcla(mezcla(hondo(c), c, 0.3f), MesoTinta.CIRUELA, 0.34f)
+
+    /**
+     * El color de algo con la luz que le llega: [k] de las lumbres, [f] de la puerta. De noche la luz cae pronto (se usa
+     * k^1.5): lo lejano se queda en su hondo, a media luz pasa por el ciruela y solo junto a la lumbre llega a su color,
+     * calentado hacia la llama. Con [calor] 0 (los muros), sin ciruela ni llama: el azul sigue azul.
+     */
     fun c(col: Color, k: Float, f: Float = 0f, calor: Float = 1f): Color {
         if (!oscuro) {
             if (!noche) return col
             return mezcla(mezcla(col, MesoTinta.ATARDECER, 0.32f * (1f - f)), MesoTinta.OCASO, 0.2f * f + 0.08f * k)
         }
         val kk = k.coerceIn(0f, 1f)
-        var v = mezcla(hondo(col), col, (1.05f * kk).coerceAtMost(0.94f))
-        // Cerca de la lumbre se calienta (sin volver gris el azul: poco y solo muy cerca).
-        v = mezcla(v, MesoTinta.LLAMA, (0.1f * kk + 0.22f * kk * kk) * calor)
-        val ff = f.coerceIn(0f, 1f) * (1f - 0.7f * kk) * (if (lunar) 0.75f else 0.36f)
+        val t = kk * sqrt(kk)
+        val cal = calor.coerceIn(0f, 1f)
+        val h = hondo(col)
+        val medio = mezcla(mezcla(h, col, 0.4f), ciruela(col), cal)
+        val alumbrado = mezcla(col, MesoTinta.LLAMA, (0.06f + 0.22f * kk) * cal)
+        val v = if (t < 0.5f) mezcla(h, medio, t * 2f) else mezcla(medio, alumbrado, ((t - 0.5f) * 2f).coerceAtMost(0.96f))
+        val ff = f.coerceIn(0f, 1f) * (1f - 0.7f * kk) * (if (lunar) 0.75f else 0.14f)
         return if (ff > 0f) mezcla(v, lunado(col), ff) else v
     }
     /** La sombra: de día violeta; de noche, la noche del cuarto. */
@@ -176,9 +189,14 @@ internal class AireMeso(val oscuro: Boolean, val noche: Boolean) {
     fun animo(t: Color, k: Float, f: Float = 0f): Color {
         if (!oscuro) return c(t, k, f)
         val kk = k.coerceIn(0f, 1f)
-        var v = mezcla(Color(t.red * 0.42f + noct.red * 0.18f, t.green * 0.42f + noct.green * 0.18f, t.blue * 0.42f + noct.blue * 0.26f), t, (1.1f * kk).coerceAtMost(0.96f))
-        v = mezcla(v, MesoTinta.LLAMA, 0.12f * kk)
-        val ff = f.coerceIn(0f, 1f) * (1f - 0.7f * kk) * (if (lunar) 0.5f else 0.3f)
+        val q = kk * sqrt(sqrt(kk))
+        var v = mezcla(Color(t.red * 0.3f + noct.red * 0.3f, t.green * 0.3f + noct.green * 0.3f, t.blue * 0.3f + noct.blue * 0.46f), t, (1.1f * q).coerceAtMost(0.96f))
+        // Lo pálido (el amate, el crudo) no pasa por el lila: a media luz se entibia hacia el ciruela.
+        val mx = maxOf(t.red, t.green, t.blue); val mn = minOf(t.red, t.green, t.blue)
+        val palido = if (mx < 1e-3f) 1f else 1f - (mx - mn) / mx
+        v = mezcla(v, MesoTinta.CIRUELA, palido * 1.2f * q * (1f - q))
+        v = mezcla(v, MesoTinta.LLAMA, 0.14f * kk * kk)
+        val ff = f.coerceIn(0f, 1f) * (1f - 0.7f * kk) * (if (lunar) 0.5f else 0.12f)
         return if (ff > 0f) mezcla(v, lunado(t), ff) else v
     }
     /**
@@ -459,6 +477,23 @@ internal fun DrawScope.filoMeso(r: Rect, a: AireMeso, k: Float, der: Boolean) {
     drawRect(MesoTinta.LLAMA.copy(alpha = (0.85f * k).coerceAtMost(0.75f)), r.topLeft, Size(r.width, 1.4f * u))
     val x = if (der) r.right - 1.3f * u else r.left
     drawRect(MesoTinta.LLAMA.copy(alpha = (0.6f * k).coerceAtMost(0.55f)), Offset(x, r.top), Size(1.3f * u, r.height))
+}
+
+/**
+ * De noche, el filo ámbar de la lumbre del nicho en el borde de [forma] que la mira ([c], su centro; [grueso], el ancho del
+ * filo): una media luna de llama, franca cerca y todavía visible lejos (lo lejano se hunde en añil pero guarda su filo).
+ * [giro] es el giro (en grados) con que está dibujada la forma, para llevar la dirección de la luz a sus ejes.
+ */
+internal fun DrawScope.filoNichoMeso(m: MesaMeso, forma: Path, c: Offset, grueso: Float, giro: Float = 0f) {
+    if (!m.a.oscuro) return
+    val k = m.k1(c)
+    if (k < 0.04f) return
+    val d = m.nicho - c
+    val n = d.getDistance().coerceAtLeast(1f)
+    val ang = Math.toRadians(-giro.toDouble())
+    val cs = kotlin.math.cos(ang).toFloat(); val sn = kotlin.math.sin(ang).toFloat()
+    val lx = (d.x * cs - d.y * sn) / n; val ly = (d.x * sn + d.y * cs) / n
+    drawPath(bordeMeso(forma, -lx * grueso, -ly * grueso), MesoTinta.LLAMA.copy(alpha = (0.4f + 0.55f * k).coerceAtMost(0.9f)))
 }
 
 /** Un brillo puntual: de día crema; de noche, el de la lumbre si llega. */

@@ -162,7 +162,7 @@ internal fun DrawScope.fondosHuecosMeso(m: MesaMeso, repisas: List<Rect>, ocupad
     // De noche, la luz de las lumbres en el fondo se pinta solo donde se ve: arriba de los volúmenes (que llenan del 80 al
     // 95 % del hueco) y de donde acaban hasta el poste; entre uno y otro queda el fondo hondo, como en una rendija.
     val luz = if (!a.oscuro) zona else zona.flatMapIndexed { i, z ->
-        val corte = z.top + (z.bottom - z.top) * 0.3f
+        val corte = z.top + (z.bottom - z.top) * 0.24f
         val oc = ocupado.getOrNull(i) ?: x0
         listOf(Rect(z.left, z.top, z.right, corte), Rect(maxOf(z.left, oc - w * 0.01f), corte, z.right, z.bottom)).filter { it.width > 0f }
     }
@@ -171,8 +171,14 @@ internal fun DrawScope.fondosHuecosMeso(m: MesaMeso, repisas: List<Rect>, ocupad
     // Los lados del muro, fuera de los postes: el mismo testero, sin la sombra del anaquel.
     val fin = repisas.lastOrNull()?.bottom?.plus(w) ?: m.ch
     val lados = listOf(Rect(-1f, m.ch - 1f, m.posteI.left + 1f, fin), Rect(m.posteD.right - 1f, m.ch - 1f, w + 1f, fin))
-    // Son dos franjas angostas: de noche les basta un degradado de arriba abajo con la luz que les llega.
-    if (a.oscuro) lados.forEach { r -> conLuzMeso(m, AZUL, r, vertical = true, f = m.f(r.center)) }
+    // Son dos franjas angostas (casi todo lo tapan los postes): de noche, en tres tramos lisos con la luz que les llega.
+    if (a.oscuro) lados.forEach { r ->
+        val alto = (minOf(r.bottom, m.base) - r.top) / 3f
+        for (j in 0 until 3) {
+            val t = Rect(r.left, r.top + alto * j - 1f, r.right, r.top + alto * (j + 1) + (if (j == 2) r.bottom - m.base else 0f).coerceAtLeast(0f))
+            drawRect(a.c(AZUL, m.k(t.center), m.f(t.center), calor = 0f), t.topLeft, t.size)
+        }
+    }
     else panoMeso(m, lados, AZUL)
     if (!a.oscuro) drawRect(a.s(0.3f), Offset(m.posteD.right, m.ch), Size(w * 0.016f, lados[1].height))
     val claro = if (a.oscuro) mezcla(AZUL, MesoTinta.NOCHE, 0.35f) else mezcla(AZUL_HONDO, AZUL, 0.55f)

@@ -364,7 +364,7 @@ internal fun DrawScope.lumbreFogonMeso(m: MesaMeso) {
             llamasMeso(c, w * 0.08f, w * 0.06f, 921)
         }
         else -> {
-            mancha(Offset(c.x, c.y - w * 0.04f), w * 0.34f, BRASA.copy(alpha = 0.24f))
+            mancha(Offset(c.x, c.y - w * 0.04f), w * 0.3f, BRASA.copy(alpha = 0.26f))
             mancha(Offset(c.x, c.y - w * 0.05f), w * 0.16f, LLAMA.copy(alpha = 0.45f))
             llamasMeso(c, w * 0.15f, w * 0.14f, 922, CINCO_LENGUAS_MESO)
             // Un jirón de llama que se suelta arriba y el corazón blanco en la raíz, sobre las brasas.
@@ -379,36 +379,42 @@ internal fun DrawScope.lumbreFogonMeso(m: MesaMeso) {
 }
 
 /**
- * La tea del poste de la izquierda, en [p] (la punta), a media altura: una raja de ocote metida en un amarre de henequén que
- * abraza el poste, ladeada hacia fuera, con su sombra en el poste. Si arde ([MesaMeso.tea]: de noche, fuera de los Sueños),
- * el resplandor, la llama chica con su corazón claro y el hilo de humo; si no, apagada, con la punta tiznada.
+ * La tea del poste de la izquierda, en [p] (la punta), a media altura: una raja larga de ocote metida en un amarre de henequén
+ * que abraza el poste, ladeada hacia fuera, con su sombra en el poste y su veta de resina. Si arde ([MesaMeso.tea]: de noche,
+ * fuera de los Sueños), el resplandor ámbar en el poste, la llama de cinco lenguas con su corazón claro, las brasas de la punta
+ * y el humo que sube; si no, apagada, con la punta tiznada.
  */
 internal fun DrawScope.teaMeso(m: MesaMeso, p: Offset) {
     val u = density
     val w = m.w; val a = m.a
     val k = m.k(p); val f = m.f(p)
-    val pie = Offset(p.x - w * 0.012f, p.y + w * 0.08f)
-    // La raja: su sombra en el poste, el palo con su filo de luz y la punta tiznada.
-    drawLine(a.s(0.35f), pie + Offset(w * 0.007f, w * 0.004f), p + Offset(w * 0.009f, w * 0.006f), w * 0.012f, StrokeCap.Round)
-    drawLine(a.c(OCOTE, k, f), pie, p, w * 0.011f, StrokeCap.Round)
-    drawLine(a.c(mezcla(OCOTE, ESTUCO, 0.35f), k, f), pie + Offset(-w * 0.003f, 0f), p + Offset(-w * 0.003f, 0f), w * 0.003f)
-    drawLine(a.c(TINTA, k * 0.5f), p, p + (pie - p) * 0.2f, w * 0.012f, StrokeCap.Round)
-    // El amarre que la sujeta al poste: tres vueltas de henequén con su nudo.
-    val am = pie + (p - pie) * 0.25f
+    val pie = Offset(p.x + w * 0.016f, p.y + w * 0.115f)
+    val g = w * 0.015f
+    // La raja: su sombra en el poste, el palo con su veta y su filo de luz, la punta tiznada.
+    drawLine(a.s(0.4f), pie + Offset(w * 0.008f, w * 0.004f), p + Offset(w * 0.01f, w * 0.008f), g, StrokeCap.Round)
+    drawLine(a.c(OCOTE, k, f), pie, p, g, StrokeCap.Round)
+    drawLine(a.c(mezcla(OCOTE, MesoTinta.ZAPOTE_OSC, 0.5f), k, f), pie + Offset(w * 0.003f, 0f), p + Offset(w * 0.003f, 0f), g * 0.3f)
+    drawLine(a.c(mezcla(OCOTE, ESTUCO, 0.4f), k, f), pie + Offset(-w * 0.004f, 0f), p + Offset(-w * 0.004f, 0f), g * 0.22f)
+    drawLine(a.c(TINTA, k * 0.5f), p, p + (pie - p) * 0.18f, g * 1.05f, StrokeCap.Round)
+    // El amarre que la sujeta al poste: cuatro vueltas de henequén con su nudo y la punta que cuelga.
+    val am = pie + (p - pie) * 0.22f
     val poste = m.posteI
-    for (j in 0 until 3) {
-        val y = am.y + w * 0.007f * (j - 1)
-        drawLine(a.s(0.3f), Offset(poste.left, y + 1.2f * u), Offset(poste.right, y + 1.4f * u), 1.8f * u)
-        drawLine(a.c(MesoTinta.HENEQUEN, k, f), Offset(poste.left, y), Offset(poste.right, y + 0.6f * u), 1.6f * u)
+    for (j in 0 until 4) {
+        val y = am.y + w * 0.007f * (j - 1.5f)
+        drawLine(a.s(0.35f), Offset(poste.left, y + 1.3f * u), Offset(poste.right, y + 1.6f * u), 2f * u)
+        drawLine(a.c(MesoTinta.HENEQUEN, k, f), Offset(poste.left, y), Offset(poste.right, y + 0.7f * u), 1.8f * u)
     }
-    drawCircle(a.c(MesoTinta.HENEQUEN_OSC, k, f), 2.2f * u, am)
+    drawCircle(a.c(MesoTinta.HENEQUEN_OSC, k, f), 2.6f * u, am)
+    drawLine(a.c(MesoTinta.HENEQUEN, k, f), am, am + Offset(-w * 0.006f, w * 0.03f), 1.2f * u, StrokeCap.Round)
     if (m.tea == null) return
-    // Encendida: el resplandor en el poste y el hueco, la llama con su corazón y el hilo de humo.
-    mancha(p, w * 0.09f, LLAMA.copy(alpha = 0.42f))
-    llamasMeso(p + Offset(0f, w * 0.004f), w * 0.05f, w * 0.065f, 941)
-    drawOval(Color(0xFFFFF6DE).copy(alpha = 0.9f), Offset(p.x - w * 0.008f, p.y - w * 0.018f), Size(w * 0.016f, w * 0.018f))
-    val humo = Path().apply { moveTo(p.x, p.y - w * 0.06f); cubicTo(p.x - w * 0.012f, p.y - w * 0.08f, p.x + w * 0.014f, p.y - w * 0.1f, p.x + w * 0.002f, p.y - w * 0.13f) }
-    drawPath(humo, Color(0xFF1A1210).copy(alpha = 0.3f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+    // Encendida: el resplandor en el poste y lo de junto, la llama con su corazón, las brasas de la punta y el humo.
+    mancha(p, w * 0.1f, MesoTinta.BRASA.copy(alpha = 0.4f))
+    drawOval(MesoTinta.BRASA_ROJA.copy(alpha = 0.95f), Offset(p.x - g * 0.7f, p.y - g * 0.4f), Size(g * 1.4f, g * 0.8f))
+    llamasMeso(p + Offset(0f, w * 0.002f), w * 0.065f, w * 0.1f, 941)
+    drawOval(Color(0xFFFFF6DE).copy(alpha = 0.92f), Offset(p.x - w * 0.011f, p.y - w * 0.026f), Size(w * 0.022f, w * 0.026f))
+    val humo = Path().apply { moveTo(p.x, p.y - w * 0.09f); cubicTo(p.x - w * 0.016f, p.y - w * 0.11f, p.x + w * 0.018f, p.y - w * 0.14f, p.x + w * 0.002f, p.y - w * 0.18f) }
+    drawPath(humo, Color(0xFF1A1210).copy(alpha = 0.32f), style = Stroke(2f * u, cap = StrokeCap.Round))
+    for (j in 0 until 3) drawCircle(MesoTinta.LLAMA_VIVA.copy(alpha = 0.85f), (0.8f + 0.6f * azar(j, 942)) * u, Offset(p.x + w * (azar(j, 943) - 0.5f) * 0.05f, p.y - w * (0.1f + 0.05f * azar(j, 944))))
 }
 
 /**
