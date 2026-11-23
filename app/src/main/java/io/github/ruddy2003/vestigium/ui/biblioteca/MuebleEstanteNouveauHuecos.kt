@@ -145,7 +145,7 @@ internal object HuecosEstanteNouveau {
         drawCircle(a.luz(Color(0xFF3E6A6A), k), rp * 0.94f, cp, style = Stroke(rp * 0.06f))
         drawCircle(a.luz(Color(0xFFE6DCC2), k), rp * 0.62f, cp)
         with(FloresNouveau) {
-            deColor(1, cp + Offset(rp * 0.04f, rp * 0.12f), rp * 0.5f, a.luz(Color(0xFF4E6E8E), k), a.luz(Color(0xFF5E7A55), k), a.luz(P.TINTA, k), a.luz(Color(0xFF2E3E4E), k), 8f)
+            deColor(0, cp + Offset(-rp * 0.08f, rp * 0.08f), rp * 0.52f, a.luz(Color(0xFF4E6E8E), k), a.luz(Color(0xFF5E7A55), k), a.luz(Color(0xFF2E3E4E), k), a.luz(Color(0xFF2E3E4E), k), -24f)
         }
         drawArc(a.sombra(0.25f), if (ha < 0) -60f else 120f, 180f, false, Offset(cp.x - rp, cp.y - rp), Size(rp * 2, rp * 2), style = Stroke(rp * 0.12f))
         drawArc(a.brillo(0.45f, k), if (ha < 0) 150f else -30f, 60f, false, Offset(cp.x - rp * 0.9f, cp.y - rp * 0.9f), Size(rp * 1.8f, rp * 1.8f), style = Stroke(1f * u))
@@ -320,33 +320,40 @@ internal object HuecosEstanteNouveau {
         // El globo esmerilado, apagado (de noche lo enciende [llamaHueco]).
         if (!a.lumbre) {
             val g = Rect(pie.x - rg, yg - rg, pie.x + rg, yg + rg * 0.86f)
-            drawOval(a.luz(Color(0xFFEEE8DA), k), g.topLeft, g.size)
+            // El esmerilado: claro arriba a la izquierda, donde le da la luz, y hondo abajo a la derecha.
+            drawOval(Brush.radialGradient(listOf(a.luz(Color(0xFFF6F1E4), k), a.luz(Color(0xFFE6DECB), k), a.luz(Color(0xFFC9BFA8), k)),
+                Offset(pie.x - rg * 0.35f, yg - rg * 0.4f), rg * 1.6f), g.topLeft, g.size)
             clipPath(Path().apply { addOval(g) }) {
-                guirnalda(pie.x, yg, rg, Color(0xFFB8A886).copy(alpha = 0.7f))
-                drawRect(a.sombra(0.22f), Offset(pie.x + rg * 0.2f, g.top), Size(rg, g.height))
-                drawRect(a.sombra(0.12f), Offset(pie.x - rg * 0.1f, g.top), Size(rg * 0.3f, g.height))
-                drawOval(a.claro(0.7f), Offset(pie.x - rg * 0.66f, yg - rg * 0.62f), Size(rg * 0.3f, rg * 0.5f))
+                cenefaGlobo(pie.x, yg, rg, Color(0xFFA89A78).copy(alpha = 0.6f))
+                drawRect(a.sombra(0.14f), Offset(pie.x + rg * 0.4f, g.top), Size(rg, g.height))
             }
             drawOval(a.sombra(0.3f), g.topLeft, g.size, style = Stroke(0.6f * u))
             drawOval(a.luz(Color(0xFFD8D0C0), k), Offset(pie.x - rg * 0.34f, g.top - rg * 0.04f), Size(rg * 0.68f, rg * 0.16f))
         }
     }
 
-    /** La guirnalda grabada del globo: una rama que lo rodea con hojas y flores de cinco pétalos, en [c] (esmerilado más hondo). */
-    private fun DrawScope.guirnalda(x: Float, y: Float, rg: Float, c: Color) {
+    /**
+     * La cenefa grabada del globo: dos filetes que lo rodean por debajo del ecuador (combados como su vientre) y, entre ellos, una
+     * onda continua, en [c] (el esmerilado más hondo). Nada suelto: es vidrio.
+     */
+    private fun DrawScope.cenefaGlobo(x: Float, y: Float, rg: Float, c: Color) {
         val u = density
-        val rama = Path().apply {
-            moveTo(x - rg * 1.1f, y + rg * 0.1f)
-            cubicTo(x - rg * 0.6f, y - rg * 0.25f, x - rg * 0.2f, y + rg * 0.35f, x + rg * 0.2f, y + rg * 0.05f)
-            cubicTo(x + rg * 0.5f, y - rg * 0.15f, x + rg * 0.8f, y + rg * 0.25f, x + rg * 1.1f, y)
+        val y0 = y + rg * 0.12f; val y1 = y + rg * 0.36f
+        val filetes = Path().apply {
+            moveTo(x - rg * 1.1f, y0); quadraticTo(x, y0 + rg * 0.2f, x + rg * 1.1f, y0)
+            moveTo(x - rg * 1.1f, y1); quadraticTo(x, y1 + rg * 0.2f, x + rg * 1.1f, y1)
         }
-        drawPath(rama, c, style = Stroke(1f * u))
-        listOf(-0.6f to -0.08f, 0.05f to 0.16f, 0.62f to 0.06f).forEach { (fx, fy) ->
-            for (j in 0 until 5) {
-                val ang = (2 * Math.PI * j / 5).toFloat()
-                drawCircle(c, rg * 0.07f, Offset(x + rg * fx + rg * 0.09f * kotlin.math.cos(ang), y + rg * fy + rg * 0.09f * kotlin.math.sin(ang)))
-            }
+        drawPath(filetes, c, style = Stroke(0.9f * u))
+        val onda = Path()
+        val n = 24
+        for (i in 0..n) {
+            val f = i / n.toFloat()
+            val xx = x - rg * 1.1f + rg * 2.2f * f
+            val comba = rg * 0.2f * (1f - (2f * f - 1f) * (2f * f - 1f))
+            val yy = (y0 + y1) / 2 + comba * 0.5f + rg * 0.06f * kotlin.math.sin(f * 6.283f * 3f)
+            if (i == 0) onda.moveTo(xx, yy) else onda.lineTo(xx, yy)
         }
+        drawPath(onda, c, style = Stroke(1.1f * u))
     }
 
     /** El globo encendido del quinqué del hueco y su resplandor (de noche; va encima de la luz del cuerpo). */
@@ -364,7 +371,7 @@ internal object HuecosEstanteNouveau {
         val g = Rect(xq - rg, c.y - rg, xq + rg, c.y + rg * 0.86f)
         drawOval(androidx.compose.ui.graphics.Brush.radialGradient(listOf(P.FUEGO, mezcla(P.LLAMA, P.FUEGO, 0.5f), mezcla(P.AMBAR, P.LLAMA, 0.5f), mezcla(P.AMBAR, P.CAOBA, 0.25f)),
             Offset(xq, c.y + rg * 0.1f), rg * 1.15f), g.topLeft, g.size)
-        clipPath(Path().apply { addOval(g) }) { guirnalda(xq, c.y, rg, Color(0xFFC0742E).copy(alpha = 0.5f)) }
+        clipPath(Path().apply { addOval(g) }) { cenefaGlobo(xq, c.y, rg, Color(0xFFC0742E).copy(alpha = 0.45f)) }
         drawOval(P.LATON_OSC.copy(alpha = 0.5f), g.topLeft, g.size, style = Stroke(0.6f * u))
         // La llama que se ve por el tubo, por encima del globo.
         val ll = Path().apply {

@@ -30,10 +30,10 @@ internal object FloresNouveau {
     fun tipo(semilla: Int): Int = Math.floorMod(semilla * 7 + (semilla ushr 11) + (semilla ushr 3), TIPOS)
 
     /**
-     * Las partes de una flor: el tallo (trazo), las hojas, la flor, lo de dentro (el corazón, los puntos) y lo que va delante de él
-     * (los pétalos de delante de la copa de la amapola), en un cuadro de medio alto 1.
+     * Las partes de una flor: el tallo (trazo), las hojas, la flor, lo de dentro (el corazón, los puntos), lo que va delante de él
+     * (los pétalos de delante de la copa de la amapola) y los pliegues de los pétalos (trazo fino), en un cuadro de medio alto 1.
      */
-    class Partes(val tallo: Path, val hojas: Path, val flor: Path, val dentro: Path, val pelos: Path, val frente: Path)
+    class Partes(val tallo: Path, val hojas: Path, val flor: Path, val dentro: Path, val pelos: Path, val frente: Path, val pliegues: Path)
 
     /** Una hoja de lanza de [b] a [t] con su ancho [an] (fracción del largo) y su comba. */
     private fun Path.hoja(bx: Float, by: Float, tx: Float, ty: Float, an: Float, comba: Float = 0.15f) {
@@ -57,7 +57,7 @@ internal object FloresNouveau {
     }
 
     private fun armar(tipo: Int): Partes {
-        val tallo = Path(); val hojas = Path(); val flor = Path(); val dentro = Path(); val pelos = Path(); val frente = Path()
+        val tallo = Path(); val hojas = Path(); val flor = Path(); val dentro = Path(); val pelos = Path(); val frente = Path(); val pliegues = Path()
         when (tipo) {
             0 -> { // La campanilla: el tallo se arquea a la derecha y cuelgan dos campanas.
                 tallo.moveTo(-0.3f, 1f); tallo.cubicTo(-0.46f, 0.1f, -0.2f, -0.95f, 0.3f, -0.86f)
@@ -69,20 +69,46 @@ internal object FloresNouveau {
                 hojas.hoja(-0.33f, 0.2f, 0.2f, 0.12f, 0.16f, -0.03f)
                 dentro.addOval(Rect(0.47f, -0.1f, 0.57f, 0.02f))
             }
-            1 -> { // La amapola: la copa abierta vista algo desde arriba (el pétalo de atrás, el corazón y los dos de delante), y su capullo que cuelga.
-                tallo.moveTo(0.12f, 1f); tallo.cubicTo(0.38f, 0.45f, -0.32f, 0.12f, -0.02f, -0.36f)
+            1 -> { // La amapola, de tres cuartos y ladeada: dos pétalos de atrás que suben, el corazón chico con sus estambres y dos de
+                // delante que se solapan, cada uno con sus pliegues; y su capullo que cuelga.
+                tallo.moveTo(0.12f, 1f); tallo.cubicTo(0.38f, 0.45f, -0.32f, 0.12f, -0.02f, -0.38f)
                 tallo.moveTo(0.02f, 0.22f); tallo.cubicTo(0.3f, 0.12f, 0.52f, 0.0f, 0.56f, -0.1f)
-                flor.addOval(Rect(-0.5f, -1.0f, 0.46f, -0.5f))
-                flor.addOval(Rect(0.47f, -0.14f, 0.67f, 0.14f))
-                dentro.addOval(Rect(-0.26f, -0.72f, 0.22f, -0.56f))
-                frente.moveTo(-0.04f, -0.34f)
-                frente.cubicTo(-0.56f, -0.36f, -0.66f, -0.66f, -0.36f, -0.7f)
-                frente.cubicTo(-0.24f, -0.6f, -0.1f, -0.58f, -0.02f, -0.62f)
+                // Los dos pétalos de atrás, de borde ondulado.
+                flor.moveTo(-0.06f, -0.5f)
+                flor.cubicTo(-0.52f, -0.5f, -0.7f, -0.84f, -0.46f, -0.98f)
+                flor.quadraticTo(-0.36f, -0.9f, -0.28f, -1.0f)
+                flor.cubicTo(-0.14f, -1.04f, -0.06f, -0.9f, -0.02f, -0.74f)
+                flor.close()
+                flor.moveTo(0.0f, -0.52f)
+                flor.cubicTo(0.44f, -0.54f, 0.62f, -0.8f, 0.46f, -0.96f)
+                flor.quadraticTo(0.34f, -0.9f, 0.24f, -1.02f)
+                flor.cubicTo(0.1f, -1.04f, 0.02f, -0.92f, -0.02f, -0.74f)
+                flor.close()
+                // El capullo que cuelga, con sus dos sépalos.
+                flor.moveTo(0.57f, -0.14f)
+                flor.cubicTo(0.7f, -0.12f, 0.72f, 0.08f, 0.6f, 0.16f)
+                flor.cubicTo(0.48f, 0.1f, 0.46f, -0.1f, 0.57f, -0.14f)
+                flor.close()
+                // El corazón: el ovario chico y el anillo de estambres, medio tapados por los pétalos de delante.
+                dentro.addOval(Rect(-0.15f, -0.74f, 0.13f, -0.6f))
+                pelos.moveTo(-0.18f, -0.66f); pelos.lineTo(-0.24f, -0.76f)
+                pelos.moveTo(0.14f, -0.66f); pelos.lineTo(0.22f, -0.77f)
+                pelos.moveTo(-0.06f, -0.72f); pelos.lineTo(-0.07f, -0.82f)
+                pelos.moveTo(0.05f, -0.72f); pelos.lineTo(0.07f, -0.82f)
+                // Los dos pétalos de delante, que se solapan.
+                frente.moveTo(-0.02f, -0.36f)
+                frente.cubicTo(-0.46f, -0.3f, -0.7f, -0.5f, -0.56f, -0.66f)
+                frente.quadraticTo(-0.46f, -0.64f, -0.4f, -0.72f)
+                frente.cubicTo(-0.26f, -0.76f, -0.12f, -0.68f, 0.02f, -0.64f)
                 frente.close()
-                frente.moveTo(-0.02f, -0.34f)
-                frente.cubicTo(0.5f, -0.34f, 0.6f, -0.64f, 0.34f, -0.72f)
-                frente.cubicTo(0.2f, -0.6f, 0.06f, -0.58f, -0.04f, -0.62f)
+                frente.moveTo(0.06f, -0.34f)
+                frente.cubicTo(0.44f, -0.3f, 0.64f, -0.46f, 0.54f, -0.62f)
+                frente.quadraticTo(0.44f, -0.62f, 0.38f, -0.7f)
+                frente.cubicTo(0.24f, -0.74f, 0.1f, -0.66f, -0.06f, -0.6f)
                 frente.close()
+                // Los pliegues: rayas finas del arranque al borde de cada pétalo.
+                listOf(-0.42f to -0.9f, -0.22f to -0.94f, 0.3f to -0.92f, 0.14f to -0.96f).forEach { (x, y) -> pliegues.moveTo(-0.02f, -0.6f); pliegues.quadraticTo(x * 0.6f, (y - 0.6f) * 0.5f, x, y) }
+                listOf(-0.5f to -0.6f, -0.32f to -0.68f, 0.46f to -0.56f, 0.28f to -0.66f).forEach { (x, y) -> pliegues.moveTo(0f, -0.4f); pliegues.quadraticTo(x * 0.5f, -0.4f + (y + 0.4f) * 0.4f, x, y) }
                 hojas.hoja(0.2f, 0.66f, -0.52f, 0.78f, 0.2f, 0.06f)
                 hojas.hoja(0.14f, 0.5f, 0.74f, 0.4f, 0.14f, -0.05f)
             }
@@ -157,7 +183,7 @@ internal object FloresNouveau {
                 dentro.addOval(Rect(cx - 0.11f, cy - 0.1f, cx + 0.11f, cy + 0.1f))
             }
         }
-        return Partes(tallo, hojas, flor, dentro, pelos, frente)
+        return Partes(tallo, hojas, flor, dentro, pelos, frente, pliegues)
     }
 
     private val PARTES: Array<Partes> by lazy { Array(TIPOS) { armar(it) } }
@@ -177,8 +203,9 @@ internal object FloresNouveau {
             drawPath(p.hojas, c)
             drawPath(p.flor, c)
             if (hueco != null) drawPath(p.dentro, hueco)
-            if (hueco != null) drawPath(p.frente, hueco, style = Stroke(0.12f))
+            if (hueco != null) drawPath(p.frente, hueco, style = Stroke(0.1f))
             drawPath(p.frente, c)
+            if (hueco != null) drawPath(p.pliegues, hueco.copy(alpha = 0.6f * hueco.alpha), style = Stroke(0.04f, cap = StrokeCap.Round))
         }
     }
 
@@ -194,13 +221,14 @@ internal object FloresNouveau {
             drawPath(p.tallo, mezcla(hoja, contorno, 0.25f), style = Stroke(0.07f, cap = StrokeCap.Round, join = StrokeJoin.Round))
             drawPath(p.hojas, hoja)
             drawPath(p.hojas, contorno.copy(alpha = 0.5f * contorno.alpha), style = Stroke(0.03f))
-            drawPath(p.pelos, flor, style = Stroke(0.06f, cap = StrokeCap.Round))
             drawPath(p.flor, flor)
             if (luz.alpha > 0f) withTransform({ translate(-0.05f, -0.05f); scale(0.82f, 0.82f, Offset(0.1f, -0.5f)) }) { drawPath(p.flor, luz) }
             drawPath(p.flor, contorno.copy(alpha = 0.7f * contorno.alpha), style = Stroke(0.035f))
+            drawPath(p.pelos, centro, style = Stroke(0.05f, cap = StrokeCap.Round))
             drawPath(p.dentro, centro)
-            drawPath(p.frente, mezcla(flor, contorno, 0.12f))
+            drawPath(p.frente, mezcla(flor, luz.copy(alpha = 1f), 0.12f * luz.alpha))
             drawPath(p.frente, contorno.copy(alpha = 0.7f * contorno.alpha), style = Stroke(0.035f))
+            drawPath(p.pliegues, mezcla(flor, contorno, 0.5f).copy(alpha = 0.7f * flor.alpha), style = Stroke(0.025f, cap = StrokeCap.Round))
         }
     }
 }

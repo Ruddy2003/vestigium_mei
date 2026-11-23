@@ -500,7 +500,7 @@ internal object ObraEstanteNouveau {
         if (!a.oscuro) {
             // El ocaso de los Sueños: la luz rasante viene del escaparate (arriba a la izquierda); lejos de él, la sombra violeta
             // crece hacia abajo y hacia la derecha; las lámparas calientan lo que tienen cerca.
-            val violeta = (0.08f + 0.2f * ((x - 0.1f) * 0.9f + (y - 0.7f) * 0.35f).coerceIn(0f, 1f)) * (1f - k)
+            val violeta = (0.03f + 0.11f * ((x - 0.1f) * 0.9f + (y - 0.7f) * 0.35f).coerceIn(0f, 1f)) * (1f - k)
             val calido = 0.2f * k
             val al = (violeta + calido).coerceIn(0f, 1f)
             return mezcla(P.SOMBRA_OCASO, P.LLAMA, if (al > 0.001f) calido / al else 0f).copy(alpha = al)

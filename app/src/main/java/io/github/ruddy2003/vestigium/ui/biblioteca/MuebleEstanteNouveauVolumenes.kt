@@ -32,6 +32,9 @@ import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
 internal object VolumenEstanteNouveau {
     private val P = PaletaNouveau
 
+    /** A qué alto corre la vuelta de abajo del bramante de los rollos, de la que cuelga la etiqueta. */
+    private const val BRAMANTE_ABAJO = 0.64f
+
     /** El tamaño del día, el mismo en las tres (unos 16 sp), y el del mes. */
     private const val DIA = 16f
     private const val MES = 8.5f
@@ -76,15 +79,15 @@ internal object VolumenEstanteNouveau {
      * El día y el mes, centrados en [r]: el día en una franja de 17.5 dp (cabe a 16 sp sin achicarse) y el mes debajo, en una de
      * 9.5 dp; así el día sale del mismo tamaño en las tres entradas.
      */
-    private fun DrawScope.diaYMes(v: Volumen, medidor: TextMeasurer, r: Rect, tinta: Color, sombra: Color? = null) {
+    private fun DrawScope.diaYMes(v: Volumen, medidor: TextMeasurer, r: Rect, tinta: Color, sombra: Color? = null, compacto: Boolean = false) {
         val u = density
-        val hd = 17.5f * u; val hm = 9.5f * u
+        val hd = (if (compacto) 16.6f else 17.5f) * u; val hm = (if (compacto) 7.6f else 9.5f) * u
         val y0 = r.center.y - (hd + hm) / 2
         val dia = Rect(r.left - 2f * u, y0, r.right + 2f * u, y0 + hd)
         val mes = Rect(r.left - 1f * u, y0 + hd - 1.2f * u, r.right + 1f * u, y0 + hd + hm)
         if (sombra != null) textoEn(medidor, v.dia, dia.translate(0.4f * u, 0.6f * u), P.LETRA, sombra, DIA, peso = FontWeight.Bold)
         textoEn(medidor, v.dia, dia, P.LETRA, tinta, DIA, peso = FontWeight.Bold)
-        textoEn(medidor, mesCorto(v.mes), mes, P.TEXTO, tinta.copy(alpha = 0.9f), MES, peso = FontWeight.SemiBold, minimo = 5f)
+        textoEn(medidor, mesCorto(v.mes), mes, P.TEXTO, tinta.copy(alpha = 0.9f), if (compacto) 7f else MES, peso = FontWeight.SemiBold, minimo = 5f)
     }
 
     /** La media luna de plata, de radio [r], armada una vez por tamaño (un creciente: el disco menos otro corrido). */
@@ -230,23 +233,24 @@ internal object VolumenEstanteNouveau {
         }
         // El bramante: dos vueltas que abrazan los rollos, con su nudo delante.
         val bram = a.luz(Color(0xFFB89A68), k)
-        listOf(0.3f, 0.74f).forEach { fy ->
+        listOf(0.3f, BRAMANTE_ABAJO).forEach { fy ->
             val y = h * fy
             val p = Path().apply { moveTo(w * 0.04f, y); quadraticTo(w / 2, y + 2.6f * u, w * 0.96f, y) }
             drawPath(p, a.sombra(0.4f), style = Stroke(1.5f * u))
             translate(0f, -0.8f * u) { drawPath(p, bram, style = Stroke(1.2f * u)) }
         }
-        val nudo = Offset(w * (0.4f + 0.2f * azar(s, 30)), h * 0.3f + 0.8f * u)
+        // La etiqueta de cartulina, chica, colgada del nudo del cordel de abajo por su ojal de la esquina: deja ver las espirales
+        // de arriba y el tramo del rollo con su flor impresa.
+        val ew = minOf(w * 0.74f, 24f * u)
+        val eh = 27f * u
+        val izq = azar(s, 32) < 0.5f
+        val nudo = Offset(w * (if (izq) 0.34f else 0.66f), h * BRAMANTE_ABAJO + 1f * u)
         drawCircle(bram, 1.8f * u, nudo)
-        drawLine(bram, nudo, nudo + Offset(-2.4f * u, 5.4f * u), 1f * u, StrokeCap.Round)
-        // La etiqueta de cartulina colgada del bramante, con su ojal reforzado.
-        val ew = minOf(w * 0.84f, 31f * u)
-        val eh = 30f * u
-        val giro = (azar(s, 31) - 0.5f) * 7f
-        val ec = Offset(w / 2 + (azar(s, 32) - 0.5f) * (w - ew) * 0.6f, h * 0.36f + eh / 2)
-        rotate(giro, Offset(ec.x, ec.y - eh / 2)) {
-            val et = Rect(ec.x - ew / 2, ec.y - eh / 2, ec.x + ew / 2, ec.y + eh / 2)
-            drawLine(bram, Offset(et.center.x, et.top + 3f * u), nudo, 0.9f * u)
+        val giro = (if (izq) 1f else -1f) * (3f + 4f * azar(s, 31))
+        val et = Rect(w / 2 - ew / 2 + (if (izq) -1f else 1f) * (w - ew) * 0.12f, nudo.y + 3.2f * u, w / 2 + ew / 2 + (if (izq) -1f else 1f) * (w - ew) * 0.12f, nudo.y + 3.2f * u + eh)
+        rotate(giro, Offset(nudo.x, nudo.y)) {
+            val ojal = Offset(if (izq) et.left + 3.2f * u else et.right - 3.2f * u, et.top + 3f * u)
+            drawLine(bram, ojal, nudo, 0.9f * u)
             val forma = Path().apply {
                 moveTo(et.left + 3f * u, et.top); lineTo(et.right - 3f * u, et.top); lineTo(et.right, et.top + 3f * u)
                 lineTo(et.right, et.bottom); lineTo(et.left, et.bottom); lineTo(et.left, et.top + 3f * u); close()
@@ -255,11 +259,11 @@ internal object VolumenEstanteNouveau {
             val cart = a.etiqueta(P.CARTULINA, k)
             drawPath(forma, cart)
             drawRect(mezcla(cart, Color.White, 0.15f), Offset(et.left, et.top + 3f * u), Size(1f * u, et.height - 3f * u))
-            drawCircle(a.etiqueta(Color(0xFF9A8058), k), 2.3f * u, Offset(et.center.x, et.top + 3.3f * u))
-            drawCircle(a.luz(P.TINTA, k).copy(alpha = 0.7f), 1f * u, Offset(et.center.x, et.top + 3.3f * u))
-            diaYMes(v, medidor, Rect(et.left + 1f * u, et.top + 5f * u, et.right - 1f * u, et.bottom - 0.5f * u), a.luz(P.TINTA, maxOf(k, 0.85f)))
+            drawCircle(a.etiqueta(Color(0xFF9A8058), k), 1.8f * u, ojal)
+            drawCircle(a.luz(P.TINTA, k).copy(alpha = 0.7f), 0.8f * u, ojal)
+            diaYMes(v, medidor, Rect(et.left + 1f * u, et.top + 2.6f * u, et.right - 1f * u, et.bottom - 0.6f * u), a.luz(P.TINTA, maxOf(k, 0.85f)), compacto = true)
         }
-        if (v.noche) luna(Offset(w * 0.5f, h * 0.8f), minOf(w * 0.18f, 5.2f * u), a)
+        if (v.noche) luna(Offset(w * 0.56f, h * 0.235f), minOf(w * 0.16f, 4.6f * u), a)
         filos(Rect(0f, h * 0.08f, w, h), a, k, f, hacia)
     }
 
@@ -324,8 +328,8 @@ internal object VolumenEstanteNouveau {
             }
             // La flor del día impresa en el papel, abajo, en el tono hondo del tinte.
             if (frente) with(FloresNouveau) {
-                val rf = minOf(ancho * 0.42f, h * 0.1f) * (if (suenos) 0.75f else 1f)
-                estampa(FloresNouveau.tipo(s), Offset(cx + ancho * 0.04f, if (suenos) h * 0.915f else h * 0.87f), rf, t.hondo.copy(alpha = 0.8f), espejo = s % 2 == 1)
+                val rf = minOf(ancho * 0.44f, h * 0.12f)
+                estampa(FloresNouveau.tipo(s), Offset(cx + ancho * 0.04f, h * 0.465f), rf, t.hondo.copy(alpha = 0.85f), espejo = s % 2 == 1)
             }
         }
         drawPath(env, a.sombra(0.32f), style = Stroke(0.5f * u))
@@ -333,64 +337,86 @@ internal object VolumenEstanteNouveau {
 
     // ---------------------------------------------------------------- el legajo de cartas
 
+    /**
+     * El legajo: un fajo de sobres de papel teñido (el ánimo, todo de un tinte) de canto, con la luz de un lado al otro; los cantos
+     * de los sobres en rayas finas de sombra, a trechos desiguales; arriba, las solapas y una carta que asoma con su esquina
+     * doblada; la cinta de seda que lo ciñe, con el lazo chico caído a un lado; la tarjeta del día metida bajo la cinta; y la flor
+     * seca del día, grande y con contraste, con el tallo bajo la cinta y la cabeza abajo.
+     */
     fun DrawScope.legajo(v: Volumen, medidor: TextMeasurer, a: AireNouveau, k: Float, f: Float, hacia: Float, tinte: Color?) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla
-        val top = h * 0.06f
+        val top = h * 0.07f
         alrededor(a, hacia, top + h * 0.05f)
         val t = tinte(tinte, P.ESTRAZA, a, k)
-        val yc = h * (0.6f + 0.06f * azar(s, 4))
-        val ladeo = (azar(s, 5) - 0.5f) * 4f
+        val yc = h * (0.58f + 0.05f * azar(s, 4))
+        val ladeo = (azar(s, 5) - 0.5f) * 3f
+        // El lazo y la flor, a lados opuestos según la semilla.
+        val lazoIzq = azar(s, 6) < 0.5f
         rotate(ladeo, Offset(w / 2, h)) {
-            // La silueta blanda: los costados se abomban entre la cinta y los cantos, y la cinta frunce el mazo.
+            // La silueta blanda: los costados se abomban entre la cinta y los cantos.
             val bulto = Path().apply {
-                moveTo(1.6f * u, top + 2f * u)
-                lineTo(w - 1.6f * u, top + 2f * u)
-                quadraticTo(w + 0.8f * u, (top + yc) / 2, w - 1.4f * u, yc)
+                moveTo(1.4f * u, top + 2f * u)
+                lineTo(w - 1.4f * u, top + 2f * u)
+                quadraticTo(w + 0.8f * u, (top + yc) / 2, w - 1.2f * u, yc)
                 quadraticTo(w + 0.8f * u, (yc + h) / 2, w - 0.4f * u, h)
                 lineTo(0.4f * u, h)
-                quadraticTo(-0.8f * u, (yc + h) / 2, 1.4f * u, yc)
-                quadraticTo(-0.8f * u, (top + yc) / 2, 1.6f * u, top + 2f * u)
+                quadraticTo(-0.8f * u, (yc + h) / 2, 1.2f * u, yc)
+                quadraticTo(-0.8f * u, (top + yc) / 2, 1.4f * u, top + 2f * u)
                 close()
             }
-            clipPath(bulto) { redondo(Rect(0f, 0f, w, h), t, hacia) }
-            // Los pliegos y los sobres de canto, de gruesos y altos desiguales; alguna carta crema; la solapa de algún sobre.
-            var x = 0.6f * u; var i = 0
-            val lineas = Path(); val claros = Path()
-            while (x < w - 1f * u && i < 30) {
-                val sobre = azar(s, 500 + i) < 0.6f
-                val g = (if (sobre) 3.4f + 1.8f * azar(s, 510 + i) else 1.4f + 0.8f * azar(s, 520 + i)) * u
-                val crema = azar(s, 100 + i) < 0.1f
-                val sube = (azar(s, 200 + i) - 0.35f) * 8f * u
-                val col = if (crema) mezcla(a.etiqueta(P.PAPEL, k * 0.9f), t.cara, 0.25f) else mezcla(t.cara, if (i % 2 == 0) t.claro else t.hondo, 0.04f + 0.12f * azar(s, 300 + i))
-                val y0 = top + 3f * u - sube
-                val g2 = minOf(g, w - 0.6f * u - x)
-                if (g2 <= 0.2f * u) break
-                drawRect(col, Offset(x, y0), Size(g2, h - y0))
-                if (sobre && azar(s, 400 + i) < 0.7f) {
-                    // La solapa del sobre, algo levantada, con su canto.
-                    val solapa = poligonoNouveau(x, y0 + 0.2f * u, x + g2, y0 + 0.2f * u, x + g2 * 0.55f, y0 - 3.4f * u)
-                    drawPath(solapa, mezcla(col, t.claro, 0.25f))
-                    drawPath(solapa, a.sombra(0.3f), style = Stroke(0.4f * u))
-                }
-                if (!sobre && azar(s, 410 + i) < 0.4f) drawPath(poligonoNouveau(x, y0, x + g2, y0, x + g2, y0 + 2.4f * u), a.sombra(0.25f))
-                lineas.moveTo(x + g2, y0); lineas.lineTo(x + g2, h)
-                if (sobre) { claros.moveTo(x + 0.6f * u, y0 + 1f * u); claros.lineTo(x + 0.6f * u, h) }
-                x += g; i++
+            // Arriba, antes que el cuerpo: las solapas y los cantos de los sobres, de altos desiguales, y la carta que asoma.
+            val asoma = w * (0.2f + 0.5f * azar(s, 7))
+            val carta = Path().apply {
+                moveTo(asoma, top + 3f * u); lineTo(asoma, top - 4.5f * u); lineTo(asoma + w * 0.16f, top - 5.5f * u)
+                lineTo(asoma + w * 0.22f, top - 2.5f * u); lineTo(asoma + w * 0.22f, top + 3f * u); close()
             }
+            drawPath(carta, mezcla(a.etiqueta(P.PAPEL, k), t.cara, 0.3f))
+            drawPath(poligonoNouveau(asoma + w * 0.16f, top - 5.5f * u, asoma + w * 0.22f, top - 2.5f * u, asoma + w * 0.15f, top - 2.2f * u), mezcla(a.etiqueta(P.PAPEL_OSC, k), t.cara, 0.3f))
+            drawPath(carta, a.sombra(0.3f), style = Stroke(0.4f * u))
+            var x = 0.8f * u; var i = 0
+            val solapas = Path(); val cantosArriba = Path()
+            while (x < w - 2f * u && i < 16) {
+                val g = (3.2f + 2.4f * azar(s, 510 + i)) * u
+                val x1 = minOf(w - 1.2f * u, x + g)
+                val y0 = top + 2f * u - (azar(s, 200 + i) * 3.4f) * u
+                solapas.moveTo(x, top + 3f * u); solapas.lineTo(x, y0); solapas.lineTo(x1, y0 + 0.6f * u); solapas.lineTo(x1, top + 3f * u); solapas.close()
+                cantosArriba.moveTo(x1, y0 + 0.6f * u); cantosArriba.lineTo(x1, top + 3f * u)
+                x = x1; i++
+            }
+            drawPath(solapas, mezcla(t.cara, t.claro, 0.35f))
+            drawPath(solapas, a.sombra(0.28f), style = Stroke(0.4f * u))
+            // El cuerpo del fajo: un solo tinte con su luz, y los cantos de los sobres en rayas finas a trechos desiguales.
             clipPath(bulto) {
-                drawPath(lineas, a.sombra(0.22f), style = Stroke(0.5f * u))
-                drawPath(claros, a.claro(0.12f), style = Stroke(0.5f * u))
-                // La luz del costado que mira a la lámpara o al escaparate, y la sombra del otro.
-                drawRect(a.brillo(0.16f, k), Offset(if (hacia < 0f) 0f else w * 0.8f, 0f), Size(w * 0.2f, h))
-                drawRect(a.sombra(0.2f), Offset(if (hacia < 0f) w * 0.78f else 0f, 0f), Size(w * 0.22f, h))
+                redondo(Rect(0f, 0f, w, h), t, hacia)
+                val cantos = Path()
+                var xx = 1.6f * u; var j = 0
+                while (xx < w - 1f * u && j < 24) {
+                    cantos.moveTo(xx, top + 3f * u); cantos.lineTo(xx + 0.4f * u, h)
+                    xx += (1.8f + 2.8f * azar(s, 600 + j)) * u; j++
+                }
+                drawPath(cantos, t.hondo.copy(alpha = 0.32f), style = Stroke(0.45f * u))
+                drawPath(cantosArriba, a.sombra(0.3f), style = Stroke(0.45f * u))
+                // El borde de arriba del fajo, en sombra bajo las solapas, y el gastado del canto de abajo.
+                drawRect(a.sombra(0.22f), Offset(0f, top + 2.4f * u), Size(w, 1.4f * u))
+                drawRect(t.claro.copy(alpha = 0.5f), Offset(0f, h - 2.6f * u), Size(w, 1f * u))
             }
             drawPath(bulto, a.sombra(0.4f), style = Stroke(0.6f * u))
+            // La flor seca bajo la cinta: el tallo sube por debajo de la cinta y la cabeza cuelga abajo, del lado contrario al lazo.
+            val rf = minOf(w * 0.38f, 13.5f * u)
+            val claroFondo = t.cara.red * 0.3f + t.cara.green * 0.59f + t.cara.blue * 0.11f > 0.5f
+            val fx = if (lazoIzq) w * 0.66f else w * 0.34f
+            with(FloresNouveau) {
+                deColor(FloresNouveau.tipo(s), Offset(fx, yc + rf - 2.4f * u), rf,
+                    a.animo(if (claroFondo) Color(0xFF8A2E44) else Color(0xFFF0DCCB), k),
+                    a.animo(if (claroFondo) Color(0xFF4E5A2E) else Color(0xFFA8B07A), k),
+                    a.animo(Color(0xFFD9A23A), k), a.luz(Color(0xFF2A1E18), k), if (lazoIzq) 196f else 164f, lazoIzq)
+            }
             // La tarjeta del día, metida bajo la cinta.
-            val ew = minOf(w * 0.84f, 30f * u)
-            val eh = 31f * u
-            val ex = w / 2 + (azar(s, 33) - 0.5f) * (w - ew) * 0.5f
+            val ew = minOf(w * 0.82f, 28f * u)
+            val eh = 30f * u
+            val ex = w / 2 + (azar(s, 33) - 0.5f) * (w - ew) * 0.4f
             val et = Rect(ex - ew / 2, yc - eh + 3.4f * u, ex + ew / 2, yc + 3.4f * u)
             val giro = (azar(s, 34) - 0.5f) * 5f
             rotate(giro, Offset(et.center.x, et.bottom)) {
@@ -401,37 +427,30 @@ internal object VolumenEstanteNouveau {
                 drawRect(a.luz(P.TINTA, k).copy(alpha = 0.4f), et.deflate(1.4f * u).topLeft, et.deflate(1.4f * u).size, style = Stroke(0.45f * u))
                 diaYMes(v, medidor, Rect(et.left + 1f * u, et.top + 0.5f * u, et.right - 1f * u, et.bottom - 4.4f * u), a.luz(P.TINTA, maxOf(k, 0.85f)))
             }
-            // La flor seca bajo la cinta: el tallo sube por debajo y la cabeza asoma abajo, de lado.
-            val izq = ex > w / 2
-            with(FloresNouveau) {
-                val fc = Offset(if (izq) w * 0.28f else w * 0.72f, yc + minOf(w * 0.32f, 12f * u) * 0.6f)
-                deColor(FloresNouveau.tipo(s), fc, minOf(w * 0.32f, 12f * u), a.animo(Color(0xFFC48E8C), k), a.animo(Color(0xFF8E8C5A), k), a.animo(Color(0xFFD9B35C), k),
-                    a.luz(Color(0xFF4A3A2A), k), if (izq) 168f else 192f, izq)
-            }
-            // La cinta de seda que da la vuelta, con su lazo y sus dos cabos.
+            // La cinta de seda que da la vuelta, delgada, con el lazo chico caído a un lado y sus dos cabos.
             val seda = a.luz(Color(0xFFD4A84A), k)
             val sedaH = a.luz(Color(0xFF8E6A24), k)
-            drawRect(a.sombra(0.42f), Offset(0f, yc + 2.8f * u), Size(w, 1.4f * u))
-            drawRect(seda, Offset(-0.5f * u, yc - 2f * u), Size(w + 1f * u, 4.4f * u))
-            drawRect(a.brillo(0.5f, k), Offset(0f, yc - 1.5f * u), Size(w, 0.8f * u))
-            drawRect(sedaH, Offset(0f, yc + 1.6f * u), Size(w, 0.7f * u))
-            val lc = Offset(ex + ew * (if (izq) -0.22f else 0.22f), yc)
+            drawRect(a.sombra(0.42f), Offset(0f, yc + 1.8f * u), Size(w, 1.2f * u))
+            drawRect(seda, Offset(-0.5f * u, yc - 1.4f * u), Size(w + 1f * u, 3f * u))
+            drawRect(a.brillo(0.5f, k), Offset(0f, yc - 1.1f * u), Size(w, 0.6f * u))
+            drawRect(sedaH, Offset(0f, yc + 1f * u), Size(w, 0.5f * u))
+            val lc = Offset(if (lazoIzq) w * 0.18f else w * 0.82f, yc + 0.5f * u)
+            val sl = if (lazoIzq) -1f else 1f
             val lazo = Path().apply {
-                moveTo(lc.x, lc.y); cubicTo(lc.x - 8f * u, lc.y - 8f * u, lc.x - 10f * u, lc.y + 1.4f * u, lc.x, lc.y)
-                moveTo(lc.x, lc.y); cubicTo(lc.x + 8f * u, lc.y - 8f * u, lc.x + 10f * u, lc.y + 1.4f * u, lc.x, lc.y)
+                moveTo(lc.x, lc.y); cubicTo(lc.x - 5f * u, lc.y - 4.5f * u, lc.x - 6.5f * u, lc.y + 1.5f * u, lc.x, lc.y)
+                moveTo(lc.x, lc.y); cubicTo(lc.x + sl * 4f * u, lc.y + 2f * u, lc.x + sl * 5f * u, lc.y + 6.5f * u, lc.x, lc.y)
             }
-            translate(0.8f * u, 1.1f * u) { drawPath(lazo, a.sombra(0.42f)) }
+            translate(0.7f * u, 0.9f * u) { drawPath(lazo, a.sombra(0.4f)) }
             drawPath(lazo, seda)
-            drawPath(lazo, sedaH, style = Stroke(0.6f * u))
+            drawPath(lazo, sedaH, style = Stroke(0.5f * u))
             val cabos = Path().apply {
-                moveTo(lc.x - 0.6f * u, lc.y); quadraticTo(lc.x - 3f * u, lc.y + 6f * u, lc.x - 4.6f * u, lc.y + 12f * u)
-                moveTo(lc.x + 0.6f * u, lc.y); quadraticTo(lc.x + 2.6f * u, lc.y + 7f * u, lc.x + 2.4f * u, lc.y + 13f * u)
+                moveTo(lc.x - 0.4f * u, lc.y); quadraticTo(lc.x - 1.6f * u, lc.y + 6f * u, lc.x - 2.6f * u, lc.y + 11f * u)
+                moveTo(lc.x + 0.4f * u, lc.y); quadraticTo(lc.x + sl * 2.2f * u, lc.y + 6f * u, lc.x + sl * 1.6f * u, lc.y + 9.5f * u)
             }
-            translate(0.6f * u, 0.8f * u) { drawPath(cabos, a.sombra(0.35f), style = Stroke(2.6f * u)) }
-            drawPath(cabos, seda, style = Stroke(2.6f * u, cap = StrokeCap.Butt))
-            drawCircle(sedaH, 1.9f * u, lc)
-            drawCircle(seda, 1.4f * u, lc)
-            if (v.noche) luna(Offset(if (izq) w * 0.7f else w * 0.3f, h * 0.88f), minOf(w * 0.2f, 5.6f * u), a)
+            drawPath(cabos, seda, style = Stroke(2f * u, cap = StrokeCap.Butt))
+            drawCircle(sedaH, 1.4f * u, lc)
+            drawCircle(seda, 1f * u, lc)
+            if (v.noche) luna(Offset(lc.x - sl * w * 0.02f, h * 0.88f), minOf(w * 0.18f, 5.2f * u), a)
             filos(Rect(0f, top, w, h), a, k, f, hacia)
         }
     }

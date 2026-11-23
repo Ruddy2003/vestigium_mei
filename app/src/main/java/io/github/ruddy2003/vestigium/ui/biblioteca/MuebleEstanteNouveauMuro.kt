@@ -153,14 +153,14 @@ internal object MuroEstanteNouveau {
         val fondo = Path()
         d.repisas.forEach { r -> fondo.addRect(Rect(d.izquierda.right + dI, r.top + dT, d.derecha.left - dI, r.bottom)) }
         val ocaso = !a.oscuro
-        panoSobre(a, q, w, fondo, 0f, 0f, if (ocaso) 0.62f else 0.8f, 1)
+        panoSobre(a, q, w, fondo, 0f, 0f, if (ocaso) 0.78f else 0.8f, 1)
         val frente = Path()
         d.tablas.forEach { r -> frente.addRect(r) }
         if (!ocaso) {
             frente.addRect(Rect(d.izquierda.left, ch, d.izquierda.right, abajo))
             frente.addRect(Rect(d.derecha.left, ch, d.derecha.right, abajo))
         }
-        panoSobre(a, q, w, frente, -0.03f, -0.02f, if (ocaso) 0.6f else 0.9f, 2)
+        panoSobre(a, q, w, frente, -0.03f, -0.02f, if (ocaso) 0.8f else 0.9f, 2)
     }
 
     // ---------------------------------------------------------------- la pared entera (arriba)
@@ -328,7 +328,7 @@ internal object MuroEstanteNouveau {
                         val al = (osc + cal).coerceIn(0f, 1f)
                         mezcla(hondo, P.LAMPARA, if (al > 0.001f) cal / al else 0f).copy(alpha = al)
                     } else {
-                        val violeta = (0.1f + 0.22f * ((x - 0.15f) * 0.9f).coerceIn(0f, 1f)) * (1f - k)
+                        val violeta = (0.04f + 0.12f * ((x - 0.15f) * 0.9f).coerceIn(0f, 1f)) * (1f - k)
                         val cal = 0.22f * k
                         val al = (violeta + cal).coerceIn(0f, 1f)
                         mezcla(P.SOMBRA_OCASO, P.LLAMA, if (al > 0.001f) cal / al else 0f).copy(alpha = al)

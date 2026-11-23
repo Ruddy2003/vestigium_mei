@@ -547,9 +547,11 @@ internal object MuebleEstanteNouveau {
         val x0 = fx - size.width / wN / 2
         val y0 = CORONA + (v.repisa * FILA + ALTO_REPISA.value) / ANCHO_NOMINAL - size.height / wN
         if (x0 > maxOf(q[2], q[4]) || y0 > maxOf(q[5], q[7]) || y0 + size.height / wN < minOf(q[1], q[3])) return
-        val arriba = size.height * (if (c == 0) 0.02f else if (c == 1) 0.06f else 0.08f)
-        clipRect(0f, arriba, size.width, size.height) {
-            translate(-x0 * wN, -y0 * wN) { with(MuroEstanteNouveau) { panoSobre(a, q, wN, null, -0.03f, -0.02f, if (a.oscuro) 0.72f else 0.42f, 3) } }
+        val arriba = size.height * (if (c == 0) 0.0f else if (c == 1) 0.03f else 0.04f)
+        // Con la luna, todo el frente; al ocaso (rasante), solo los cantos de arriba, con borde decidido.
+        val abajo = if (a.oscuro) size.height else arriba + size.height * 0.13f
+        clipRect(0f, arriba, size.width, abajo) {
+            translate(-x0 * wN, -y0 * wN) { with(MuroEstanteNouveau) { panoSobre(a, q, wN, null, -0.03f, -0.02f, if (a.oscuro) 0.72f else 0.85f, 3) } }
         }
     }
 }

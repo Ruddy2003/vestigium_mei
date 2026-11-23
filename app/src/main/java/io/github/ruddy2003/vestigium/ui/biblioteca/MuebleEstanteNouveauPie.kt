@@ -231,12 +231,12 @@ internal object PieEstanteNouveau {
                 }
                 juntas.moveTo(0f, ya); juntas.lineTo(w, ya)
             }
-            drawPath(esquinas, a.luz(mezcla(P.BALDOSA_SALVIA, P.BALDOSA, 0.2f), 1f))
-            drawPath(flores, a.luz(P.BALDOSA_OCRE, 1f))
-            drawPath(corazones, a.luz(P.BALDOSA_VIOLETA, 1f))
-            drawPath(juntas, a.sombra(0.34f), style = Stroke(0.8f * u))
+            drawPath(esquinas, a.luz(mezcla(P.BALDOSA_SALVIA, P.BALDOSA, 0.45f), 1f))
+            drawPath(flores, a.luz(mezcla(P.BALDOSA_OCRE, P.BALDOSA, 0.35f), 1f))
+            drawPath(corazones, a.luz(mezcla(P.BALDOSA_VIOLETA, P.BALDOSA, 0.3f), 1f))
+            drawPath(juntas, a.sombra(0.26f), style = Stroke(0.8f * u))
             // El suelo algo más hondo que las baldosas nuevas: el polvo y el uso.
-            drawRect(a.sombra(0.12f), Offset(0f, r.top), Size(w, r.height))
+            drawRect(a.sombra(0.17f), Offset(0f, r.top), Size(w, r.height))
             // El gastado: más claro por donde se pisa, y una mancha de tinta.
             drawOval(a.claro(0.16f), Offset(w * 0.25f, r.bottom - r.height * 0.42f), Size(w * 0.5f, r.height * 0.5f))
             drawOval(a.luz(P.TINTA, 1f).copy(alpha = 0.4f), Offset(w * 0.6f, r.top + r.height * 0.6f), Size(w * 0.04f, w * 0.014f))

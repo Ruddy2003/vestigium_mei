@@ -395,8 +395,8 @@ internal object CoronaEstanteNouveau {
         FlorRamo(0, 0.25f, 0.27f, 0.088f, PaletaNouveau.MALVA, -30f, true),
         FlorRamo(4, 0.585f, 0.25f, 0.072f, Color(0xFFF2E6C2), 24f, false),
         FlorRamo(3, 0.525f, 0.18f, 0.072f, Color(0xFF8E6AAE), 14f, false),
-        FlorRamo(2, 0.34f, 0.17f, 0.1f, PaletaNouveau.LIRIO, -14f, true),
-        FlorRamo(1, 0.445f, 0.165f, 0.09f, Color(0xFFD27A5C), 2f, false),
+        FlorRamo(2, 0.34f, 0.18f, 0.1f, PaletaNouveau.LIRIO, -14f, true),
+        FlorRamo(1, 0.445f, 0.182f, 0.09f, Color(0xFFD27A5C), 2f, false),
         FlorRamo(5, 0.33f, 0.335f, 0.062f, Color(0xFFE7B8A8), -14f, false),
         FlorRamo(2, 0.56f, 0.335f, 0.078f, PaletaNouveau.LIRIO, 36f, false),
         FlorRamo(5, 0.49f, 0.275f, 0.055f, Color(0xFFF3E0D6), 8f, false),
@@ -490,7 +490,7 @@ internal object CoronaEstanteNouveau {
     private fun DrawScope.hojasLargas(boca: Offset, w: Float, a: AireNouveau, k: Float, atras: Boolean) {
         val u = density
         val hojas = if (atras) listOf(
-            Triple(-0.17f, -0.2f, 0.016f), Triple(0.15f, -0.24f, 0.014f), Triple(-0.06f, -0.3f, 0.012f), Triple(0.22f, -0.1f, 0.014f),
+            Triple(-0.17f, -0.16f, 0.016f), Triple(0.15f, -0.18f, 0.014f), Triple(-0.06f, -0.19f, 0.012f), Triple(0.22f, -0.1f, 0.014f),
         ) else listOf(
             Triple(-0.13f, 0.085f, 0.016f), Triple(0.11f, 0.12f, 0.014f), Triple(0.17f, 0.05f, 0.012f),
         )
