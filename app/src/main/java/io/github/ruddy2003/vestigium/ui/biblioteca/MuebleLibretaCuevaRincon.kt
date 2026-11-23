@@ -210,16 +210,32 @@ internal object RinconLibretaCueva {
         }
         drawPath(canto, Brush.horizontalGradient(xs.map { l(it, g.canto).c(mezcla(P.CALIZA, P.TECHO, 0.45f)) }, x0, w))
         drawRect(Brush.verticalGradient(listOf(Color.Transparent, l(w * 0.6f, g.suelo).s(0.36f)), g.canto, g.suelo), Offset(x0, g.canto), Size(w - x0, g.suelo - g.canto))
-        // La roca del canto no es lisa: bultos redondeados, uno junto a otro, cada uno con su luz arriba y su sombra abajo.
+        // La roca del canto no es lisa: bultos de tamaños desiguales, uno junto a otro; alguno roto, de aristas vivas, y alguno
+        // chico montado encima de su vecino; cada uno con su luz arriba y su sombra abajo.
+        val alto = g.suelo - g.canto
         var xb = x0 + h * 0.04f; var k = 0
         while (xb < w + h * 0.1f) {
-            val rx = h * (0.07f + 0.05f * azar(7520, k)); val ry = (g.suelo - g.canto) * (0.42f + 0.12f * azar(7521, k))
-            val c = Offset(xb, (g.canto + g.suelo) / 2f + (g.suelo - g.canto) * 0.08f * (azar(7522, k) - 0.5f))
+            val grande = azar(7525, k)
+            val rx = h * (0.045f + 0.11f * grande); val ry = alto * (0.3f + 0.28f * grande)
+            val c = Offset(xb, g.suelo - ry * 0.95f - alto * 0.06f * azar(7522, k))
             val ll = l(c.x, c.y)
-            val f = piedraCueva(c, rx, ry, 7530 + k, 9, 0.16f)
-            bultoCueva(f, ll.c(mezcla(P.CALIZA, P.TECHO, 0.32f + 0.12f * azar(7523, k))), ll, g.hacia(c.x), 0.9f, 0.3f)
+            val roto = k % 5 == 3
+            val f = if (roto) poligonoCueva(c, rx, ry, 7530 + k, 6) else piedraCueva(c, rx, ry, 7530 + k, 9, 0.16f)
+            bultoCueva(f, ll.c(mezcla(P.CALIZA, P.TECHO, 0.28f + 0.18f * azar(7523, k))), ll, g.hacia(c.x), 0.9f, 0.3f)
             drawPath(bordeCueva(f, 0f, ry * 0.35f), ll.b(0.32f))
-            xb += rx * (1.5f + 0.3f * azar(7524, k)); k++
+            if (roto) {
+                val grieta = Path().apply { moveTo(c.x - rx * 0.1f, c.y - ry * 0.7f); lineTo(c.x + rx * 0.08f, c.y - ry * 0.1f); lineTo(c.x - rx * 0.05f, c.y + ry * 0.6f) }
+                drawPath(grieta, ll.s(0.55f), style = Stroke(1.4f * u, cap = StrokeCap.Round))
+            }
+            if (k % 4 == 1) {
+                // Una piedra chica montada sobre el hombro de esta.
+                val cm = Offset(c.x + rx * 0.45f, c.y - ry * 0.75f)
+                val fm = piedraCueva(cm, rx * 0.5f, ry * 0.42f, 7560 + k, 8, 0.2f)
+                val lm = l(cm.x, cm.y)
+                drawOval(lm.s(0.4f), Offset(cm.x - rx * 0.45f, cm.y + ry * 0.2f), Size(rx * 0.95f, ry * 0.3f))
+                bultoCueva(fm, lm.c(mezcla(P.CALIZA, P.TECHO, 0.24f)), lm, g.hacia(cm.x), 0.9f, 0.34f)
+            }
+            xb += rx * (1.35f + 0.4f * azar(7524, k)); k++
         }
         // La cara de arriba, donde pisa la bolsa: una franja clara de roca gastada, con el filo de luz en el borde.
         val cara = Path().apply {

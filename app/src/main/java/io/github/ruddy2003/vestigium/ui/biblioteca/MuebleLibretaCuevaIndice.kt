@@ -13,7 +13,6 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
-import io.github.ruddy2003.vestigium.ui.LetraExtra
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaCueva as P
 import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
@@ -61,8 +60,8 @@ internal object IndiceLibretaCueva {
             }
         }
         val agujero = Offset(w * 0.5f, r.top + h * 0.075f)
-        val dia = Rect(r.left, r.top + h * 0.13f, r.right, r.top + h * 0.5f)
-        val semana = Rect(r.left, r.top + h * 0.48f, r.right, r.top + h * 0.64f)
+        val dia = Rect(r.left - w * 0.02f, r.top + h * 0.11f, r.right + w * 0.02f, r.top + h * 0.53f)
+        val semana = Rect(r.left, r.top + h * 0.5f, r.right, r.top + h * 0.65f)
 
         private fun forma(r: Rect, s: Int): Path = cerradaCueva(listOf(
             Offset(r.left + r.width * (0.06f + 0.06f * azar(s, 1)), r.top + r.height * 0.06f), Offset(r.center.x, r.top - r.height * 0.02f * azar(s, 2)),
@@ -84,7 +83,8 @@ internal object IndiceLibretaCueva {
             numeros.forEach { it.clear() }; k[0] = density; k[1] = fontScale; k[2] = caja.width; k[3] = caja.height
         }
         val mapa = numeros[if (oscuro) 1 else 0]
-        val capa = mapa[dia] ?: (capaEn(medidor, dia, caja, LetraExtra.trazo, tinta, 20f, peso = FontWeight.Bold, minimo = 10f) ?: return).also { mapa[dia] = it }
+        // La letra de las etiquetas del estante (la del trazo a mano es demasiado fina para un número que se busca de un vistazo).
+        val capa = mapa[dia] ?: (capaEn(medidor, dia, caja, P.LETRA, tinta, 20f, peso = FontWeight.Bold, minimo = 11f) ?: return).also { mapa[dia] = it }
         drawText(capa, topLeft = Offset(caja.center.x - capa.size.width / 2f, caja.center.y - capa.size.height / 2f))
     }
 
@@ -123,9 +123,10 @@ internal object IndiceLibretaCueva {
             // El agujero y el tiento de colgar.
             drawLine(if (oscuro) mezcla(TIENTO, PENUMBRA, 0.2f) else TIENTO, Offset(g.agujero.x, -h * 0.05f), g.agujero, 1.5f * u)
             drawCircle(Color(0xFF2A1C14), 1.8f * u, g.agujero)
-            val ocre = if (oscuro) mezcla(P.OCRE_AMAR, P.CAOLIN, 0.25f) else Color(0xFF8E2A16)
+            // El día, por donde se navega, con 4.5 a 1 o más sobre la piel: rojo pardo hondo de día, crema cálida de noche.
+            val ocre = if (oscuro) Color(0xFFF4E2BC) else Color(0xFF5A1A0E)
             numeroDia(medidor, e.dia, g.dia, ocre, oscuro)
-            textoEn(medidor, e.semana, g.semana, P.LETRA, if (oscuro) P.CAOLIN.copy(alpha = 0.85f) else P.CARBON, 10f, minimo = 7f)
+            textoEn(medidor, e.semana, g.semana, P.LETRA, if (oscuro) P.CAOLIN.copy(alpha = 0.7f) else P.CARBON.copy(alpha = 0.75f), 10f, minimo = 7f)
         }
     }
 }

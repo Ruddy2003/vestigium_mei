@@ -36,7 +36,7 @@ internal object BolsaLibretaCueva {
     private val RENO = Color(0xFF8A7A66)
     private val RENO_PUNTA = Color(0xFFD8CCB6)
     /** La piel raspada del parche y de las pieles enrolladas. */
-    private val RASPADA = Color(0xFFD9BF92)
+    private val RASPADA = Color(0xFFCDAE80)
 
     fun DrawScope.bolsa(g: MarcoLibretaCueva, e: EstadoLibreta, medidor: TextMeasurer) {
         val h = g.h; val u = density
@@ -231,17 +231,21 @@ internal object BolsaLibretaCueva {
         val forma = cerradaCueva(listOf(Offset(r.left, r.top + ph * 0.08f), Offset(r.center.x, r.top - ph * 0.02f), Offset(r.right, r.top + ph * 0.05f),
             Offset(r.right + pw * 0.015f, r.center.y), Offset(r.right - pw * 0.01f, r.bottom), Offset(r.center.x, r.bottom + ph * 0.03f),
             Offset(r.left + pw * 0.01f, r.bottom - ph * 0.02f), Offset(r.left - pw * 0.012f, r.center.y)))
-        val l = g.luz(r.center, DELANTE + 0.005f)
-        drawPath(corridoCueva(forma, 1.2f * u, 1.6f * u), l.s(0.35f))
-        val raspada = l.c(RASPADA)
-        drawPath(forma, raspada)
-        drawPath(bordeCueva(forma, -g.hacia(cx) * h * 0.012f, h * 0.008f), l.s(0.16f))
-        // Las puntadas de tendón, de un solo trazo, a lo largo de la orilla.
         val dentro = cerradaCueva(listOf(Offset(r.left + 3f * u, r.top + 3f * u), Offset(r.right - 3f * u, r.top + 2.6f * u), Offset(r.right - 2.6f * u, r.bottom - 3f * u), Offset(r.left + 3.2f * u, r.bottom - 3f * u)))
-        drawPath(dentro, l.c(mezcla(P.CUERO, P.CUERO_OSC, 0.5f)), style = Stroke(1.2f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.4f * u, 3f * u))))
-        // El nombre y la cuenta; la tinta, la que más se lee sobre la piel con la luz que le toca.
-        val ocre = legibleCueva(raspada, l.c(P.OCRE_ROJO), mezcla(P.OCRE_AMAR, P.CAOLIN, 0.4f))
-        val carbon = legibleCueva(raspada, l.c(P.CARBON), P.CAOLIN)
+        // La piel raspada, cosida a la bolsa: la mancha de la boca la cruza igual que al cuero de alrededor.
+        conManchaLibretaCueva(g, DELANTE) { s ->
+            val ls = g.luz(r.center, DELANTE, s)
+            drawPath(corridoCueva(forma, 1.2f * u, 1.6f * u), ls.s(0.35f))
+            drawPath(forma, ls.c(RASPADA))
+            drawPath(bordeCueva(forma, -g.hacia(cx) * h * 0.012f, h * 0.008f), ls.s(0.16f))
+            // Las puntadas de tendón, de un solo trazo, a lo largo de la orilla.
+            drawPath(dentro, ls.c(mezcla(P.CUERO, P.CUERO_OSC, 0.5f)), style = Stroke(1.2f * u, pathEffect = PathEffect.dashPathEffect(floatArrayOf(2.4f * u, 3f * u))))
+        }
+        // El nombre y la cuenta: de día, ocre hondo y carbón sobre la piel (en su sombra y al sol); de noche, la piel se apaga y la
+        // tinta va clara, la que más se lea.
+        val raspada = g.luz(r.center, DELANTE, 0f).c(RASPADA)
+        val ocre = if (!g.a.oscuro) mezcla(P.OCRE_ROJO, P.CARBON, 0.45f) else legibleCueva(raspada, P.OCRE_ROJO, mezcla(P.OCRE_AMAR, P.CAOLIN, 0.62f))
+        val carbon = if (!g.a.oscuro) P.CARBON else legibleCueva(raspada, P.CARBON, P.CAOLIN)
         texto(medidor, e.nombre, Rect(r.left + 6f * u, r.top + ph * 0.06f, r.right - 6f * u, r.top + ph * 0.48f), ocre, 15f, LetraExtra.trazo, FontWeight.Bold, 8f)
         val partes = e.cuenta.split(" · ", limit = 2)
         if (partes.size == 2) {
