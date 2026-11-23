@@ -64,7 +64,7 @@ internal object HuecosEstantePirata {
         val f = if (a.oscuro) 1f else 0.6f
         val l = Offset(xl, r.bottom - r.height * MuebleEstantePirata.VELA_Y)
         clipRect(d.izquierda.right, r.top - r.height * 0.15f, d.derecha.left, r.bottom) {
-            mancha(l + Offset(0f, r.height * 0.06f), w * 0.2f, Color(0xFFE07E2A).copy(alpha = 0.26f * f))
+            mancha(l + Offset(0f, r.height * 0.06f), w * 0.2f, P.BRASA.copy(alpha = 0.26f * f))
             mancha(l, w * 0.06f, P.FUEGO.copy(alpha = 0.5f * f))
         }
         val s = r.height / 300f / u * 2.625f
@@ -137,11 +137,13 @@ internal object HuecosEstantePirata {
         for (j in 0 until 5) {
             val dx = (j - 2f) * an * 0.045f; val dy = j * al * 0.03f
             val hoja = Rect(pie.x - an / 2 + dx, pie.y - al + dy, pie.x + an / 2 + dx, pie.y)
-            drawRect(a.dia(mezcla(P.PAPEL, P.PAPEL_OSC, 0.12f + 0.22f * azar(551, j)), 0f, k), hoja.topLeft, hoja.size)
+            drawRect(a.dia(mezcla(Color(0xFFD9BF8E), P.PAPEL_OSC, 0.1f + 0.25f * azar(551, j)), 0f, k), hoja.topLeft, hoja.size)
             drawRect(a.sombra(0.25f), hoja.topLeft, hoja.size, style = Stroke(0.7f * u))
         }
         val f = Rect(pie.x - an / 2 + an * 0.09f, pie.y - al + al * 0.12f, pie.x + an / 2 + an * 0.09f, pie.y)
         drawRect(a.sombra(0.2f), Offset(f.left, f.top), Size(f.width * 0.25f, f.height))
+        drawRect(a.sombra(0.3f), Offset(f.right - f.width * 0.14f, f.top), Size(f.width * 0.14f, f.height))
+        drawRect(a.sombra(0.18f), Offset(f.left, f.top), Size(f.width, f.height * 0.08f))
         drawLine(a.sombra(0.25f), Offset(f.left, f.top + f.height * 0.36f), Offset(f.right, f.top + f.height * 0.36f), 0.9f * u)
         for (j in 0 until 4) drawLine(a.luz(P.TINTA, k).copy(alpha = 0.2f), Offset(f.left + f.width * 0.15f, f.top + f.height * (0.5f + 0.09f * j)), Offset(f.left + f.width * (0.45f + 0.35f * azar(552, j)), f.top + f.height * (0.5f + 0.09f * j)), 0.8f * u)
         // La cinta, una vuelta a lo ancho, y el lacre algo corrido del centro.
@@ -216,11 +218,11 @@ internal object HuecosEstantePirata {
         // La pipa, tumbada sobre la tapa: la cazoleta apoyada en ella y la caña que sale ladeada por encima del canto.
         val barro = Color(0xFFE8E0D0)
         val cz = Offset(caja.left + an * 0.2f, caja.top - h * 0.012f)
-        val tope = Offset(caja.right + an * 0.22f, caja.top - h * 0.1f)
+        val tope = Offset(caja.right - an * 0.04f, caja.top - h * 0.075f)
         drawLine(a.sombra(0.3f), cz + Offset(2f * u, 2.5f * u), tope + Offset(3f * u, 2f * u), h * 0.028f, StrokeCap.Round)
         drawLine(a.dia(barro, 0f, k), cz, tope, h * 0.024f, StrokeCap.Round)
         drawLine(a.brillo(0.4f, k), cz + Offset(-0.8f * u, -0.6f * u), tope + Offset(-0.8f * u, -0.6f * u), h * 0.007f)
-        val cazoleta = poligonoPirata(cz.x - h * 0.045f, cz.y - h * 0.12f, cz.x + h * 0.045f, cz.y - h * 0.12f, cz.x + h * 0.03f, cz.y + h * 0.015f, cz.x - h * 0.025f, cz.y + h * 0.015f)
+        val cazoleta = poligonoPirata(cz.x - h * 0.05f, cz.y - h * 0.13f, cz.x + h * 0.05f, cz.y - h * 0.13f, cz.x + h * 0.034f, cz.y + h * 0.012f, cz.x - h * 0.03f, cz.y + h * 0.012f)
         drawPath(cazoleta, a.dia(barro, 0f, k))
         drawRect(a.sombra(0.26f), Offset(cz.x + h * 0.008f, cz.y - h * 0.12f), Size(h * 0.035f, h * 0.135f))
         drawOval(a.luz(Color(0xFF3A2A20), k), Offset(cz.x - h * 0.042f, cz.y - h * 0.13f), Size(h * 0.084f, h * 0.026f))

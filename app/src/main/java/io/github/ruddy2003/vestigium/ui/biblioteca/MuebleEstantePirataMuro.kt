@@ -106,6 +106,11 @@ internal object MuroEstantePirata {
         drawPath(gastado, a.luz(P.ROBLE, cerca(Offset(w * 0.5f, w * 0.25f))).copy(alpha = 0.55f), style = Stroke(1.2f * u, cap = StrokeCap.Round))
         costado(a, ab, cerca, frio)
         luzDeVentana(a)
+        // El haz de los Sueños, donde cae en la pared (el mamparo y el costado bajo la ventana).
+        hazPirata(a)?.let { hz ->
+            val pared = Path().apply { addRect(Rect(w * ESQUINA, w * BAO, w, ab)); addRect(Rect(0f, w * 0.43f, w * ESQUINA, ab)) }
+            panoHazPirata(hz, pared, 0f, 0.75f)
+        }
         bao(a, cerca)
         reflejos(a)
         // La sombra del bao en el mamparo.
@@ -289,7 +294,9 @@ internal object MuroEstantePirata {
      * frío y tenue; en los Sueños claros, el del ocaso, naranja, más bajo y más largo. Y de día, el reflejo del agua en el bao.
      */
     private fun DrawScope.luzDeVentana(a: AirePirata) {
-        val w = size.width; val u = density
+        // En los Sueños oscuros la luna entra en un haz que pinta la pared él mismo ([panoHazPirata]).
+        if (a.oscuro && a.noche) return
+        val w = size.width
         val q = panoLuz(a)
         val (color, fuerza) = colorPano(a)
         val todo = Path().apply { val p0 = enPano(q, w, 0f, 0f); val p1 = enPano(q, w, 1f, 0f); val p2 = enPano(q, w, 1f, 1f); val p3 = enPano(q, w, 0f, 1f); moveTo(p0.x, p0.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y); lineTo(p3.x, p3.y); close() }
@@ -371,38 +378,6 @@ internal object MuroEstantePirata {
             mancha(l, w * 0.3f, P.LLAMA.copy(alpha = 0.14f * f))
             mancha(l, w * 0.07f, P.FUEGO.copy(alpha = 0.55f * f))
         }
-    }
-
-    /**
-     * El plano de luna de los Sueños oscuros: la franja fría que entra por la ventana y cruza en diagonal el mamparo y lo alto
-     * del mueble, entre [y0] y [y1]; más clara en su eje. En los demás momentos, nada.
-     */
-    fun DrawScope.franjaDeLuna(a: AirePirata, y0: Float, y1: Float) {
-        if (!(a.oscuro && a.noche) || y1 <= y0) return
-        val w = size.width
-        clipRect(0f, y0, w, y1) {
-            listOf(1f to 0.12f, 0.45f to 0.1f).forEach { (ancho, alfa) ->
-                val e = MuebleEstantePirata.esquinasFranja(0.05f, 1.6f)
-                val cx0 = (e[0] + e[6]) / 2; val cy0 = (e[1] + e[7]) / 2; val cx1 = (e[2] + e[4]) / 2; val cy1 = (e[3] + e[5]) / 2
-                fun pt(i: Int, cx: Float, cy: Float) = Offset((cx + (e[i] - cx) * ancho) * w, (cy + (e[i + 1] - cy) * ancho) * w)
-                val p0 = pt(0, cx0, cy0); val p1 = pt(2, cx1, cy1); val p2 = pt(4, cx1, cy1); val p3 = pt(6, cx0, cy0)
-                drawPath(poligonoPirata(p0.x, p0.y, p1.x, p1.y, p2.x, p2.y, p3.x, p3.y), P.LUNA_RAS.copy(alpha = alfa))
-            }
-        }
-    }
-
-    /**
-     * El sol del ocaso de los Sueños claros en el montante de la izquierda: la luz rasante de la ventana, naranja, cortada por un
-     * parteluz, en lo alto del montante [r] (bajo la cornisa, en [ch]).
-     */
-    fun DrawScope.solDelOcaso(a: AirePirata, r: Rect, ch: Float) {
-        if (a.oscuro || !a.noche) return
-        val w = size.width
-        val x0 = r.left; val x1 = r.right
-        val y0 = ch + w * 0.02f
-        val c = P.OCASO.copy(alpha = 0.34f)
-        drawPath(poligonoPirata(x0, y0, x1, y0 + w * 0.04f, x1, y0 + w * 0.17f, x0, y0 + w * 0.13f), c)
-        drawPath(poligonoPirata(x0, y0 + w * 0.15f, x1, y0 + w * 0.19f, x1, y0 + w * 0.33f, x0, y0 + w * 0.29f), c)
     }
 
     // ---------------------------------------------------------------- la cubierta (abajo)

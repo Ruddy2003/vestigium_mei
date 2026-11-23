@@ -95,7 +95,7 @@ internal object PaletaPirata {
     val NOCHE = Color(0xFF0A1830)
     val NOCHE_SUENOS = Color(0xFF120F38)
     /** Lo hondo del cuerpo del mueble de noche: sangre de toro (el minio y la caoba siguen rojos); en los Sueños, ciruela. */
-    val SANGRE = Color(0xFF1C0806)
+    val SANGRE = Color(0xFF260B09)
     val HONDO_SUENOS = Color(0xFF221030)
     /** La sombra del ocaso de los Sueños claros (violeta, con dirección) y su luz naranja. */
     val SOMBRA_OCASO = Color(0xFF3E2A62)
@@ -103,6 +103,8 @@ internal object PaletaPirata {
     /** La llama, su corazón, la luna y el roce de la luna en los cantos. */
     val LLAMA = Color(0xFFFFB45A)
     val FUEGO = Color(0xFFFFE6AE)
+    /** La luz de la vela sobre el minio y la caoba: un rojo cálido, menos amarillo que la llama. */
+    val BRASA = Color(0xFFDC5C34)
     val LUNA = Color(0xFFE9EFF7)
     val LUNA_RAS = Color(0xFF9CB8DA)
     /** La sombra fría del día (la del verde, el vidrio y el hierro). */
@@ -141,7 +143,9 @@ internal class AirePirata(val oscuro: Boolean, val noche: Boolean, val cuerpo: B
      * El color de algo a la luz de la vela: el sebo alumbra en naranja, así que el azul y el verde bajan más que el rojo (no
      * es el color con un velo naranja encima, que lo lavaría).
      */
-    private fun aLaVela(c: Color): Color = Color((c.red * 1.12f).coerceAtMost(1f), c.green * 0.9f, c.blue * 0.62f, c.alpha)
+    private fun aLaVela(c: Color): Color =
+        if (cuerpo) Color((c.red * 1.1f).coerceAtMost(1f), c.green * 0.8f, c.blue * 0.62f, c.alpha)
+        else Color((c.red * 1.12f).coerceAtMost(1f), c.green * 0.9f, c.blue * 0.62f, c.alpha)
 
     /** El color al ocaso de los Sueños claros: algo más bajo y más tibio (la luz es naranja y rasante; no hay velo). */
     private fun alOcaso(c: Color): Color = Color(c.red * 0.95f, c.green * 0.86f, c.blue * 0.8f, c.alpha)
@@ -161,7 +165,7 @@ internal class AirePirata(val oscuro: Boolean, val noche: Boolean, val cuerpo: B
     fun luz(c: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) mezcla(alOcaso(c), p.LLAMA, 0.12f * k) else c
-        return mezcla(mezcla(hundido(c), ambar(c, k), (1.05f * k).coerceAtMost(0.93f)), p.LLAMA, 0.14f * k)
+        return mezcla(mezcla(hundido(c), ambar(c, k), (1.05f * k).coerceAtMost(0.93f)), if (cuerpo) p.BRASA else p.LLAMA, 0.14f * k)
     }
     /** De día, más claro (positivo) o más hondo (negativo); de noche, como [luz]. */
     fun dia(c: Color, f: Float, cerca: Float = 1f): Color {
@@ -418,28 +422,6 @@ internal object MuebleEstantePirata {
         return (0.9f * exp(-2.6f * sqrt(dx * dx + dy * dy * 0.7f))).coerceIn(0f, 1f)
     }
 
-    /**
-     * El plano de luna de los Sueños oscuros: la franja fría que entra por la ventana y cruza en diagonal el mamparo y lo alto
-     * del mueble. Cuánto le toca a ([x], [y]) (anchos): 1 en su eje, 0 fuera; se apaga hacia abajo.
-     */
-    fun franjaLuna(x: Float, y: Float): Float {
-        val ex = 0.62f; val ey = 0.785f
-        val px = x - 0.1f; val py = y - 0.2f
-        val dist = kotlin.math.abs(px * ey - py * ex)
-        val largo = px * ex + py * ey
-        if (largo < 0f) return 0f
-        val ancho = (1f - dist / 0.12f).coerceIn(0f, 1f)
-        val caida = (1.25f - largo * 0.75f).coerceIn(0f, 1f)
-        return ancho * caida
-    }
-
-    /** Las cuatro esquinas de la franja de luna, en anchos, de [desde] a [hasta] a lo largo de su eje. */
-    fun esquinasFranja(desde: Float, hasta: Float): FloatArray {
-        val ex = 0.62f; val ey = 0.785f; val nx = -ey; val ny = ex; val m = 0.12f
-        val ax = 0.1f + ex * desde; val ay = 0.2f + ey * desde; val bx = 0.1f + ex * hasta; val by = 0.2f + ey * hasta
-        return floatArrayOf(ax + nx * m, ay + ny * m, bx + nx * m, by + ny * m, bx - nx * m, by - ny * m, ax - nx * m, ay - ny * m)
-    }
-
     /** Dónde arde el fanal, a lo alto y en anchos, en un estante de [repisas] repisas (lo usa cada volumen). */
     fun yFanalNominal(repisas: Int): Float = CORONA + repisas * FILA / ANCHO_NOMINAL + BASE * FANAL_Y
 
@@ -482,6 +464,7 @@ internal object MuebleEstantePirata {
         }
         val frio: (Offset) -> Float = { p -> if (a.oscuro) luna(p.x / w, p.y / w) else 0f }
         val clave = "${w.toInt()}:${ch}:${b.top}:${h}:$oscuro:$noche:$density"
+        val hz = hazPirata(a)
 
         // Lo de arriba: la pared, la ventana, el bodegón y la cornisa, en una imagen que llega al píxel entero de debajo.
         with(CapaPirata) {
@@ -491,8 +474,10 @@ internal object MuebleEstantePirata {
                 with(MuroEstantePirata) { mamparo(a, apoyo, ch, cerca, frio) }
                 with(CoronaEstantePirata) { pared(a, apoyo, cerca) }
                 with(ObraEstantePirata) { cornisa(Rect(0f, apoyo, w, ch + 2f), a, cerca) }
+                hz?.let { panoHazPirata(it, Path().apply { addRect(Rect(0f, apoyo, w, ch + 2f)) }, HazPirata.FRENTE) }
                 with(CoronaEstantePirata) { encima(a, apoyo, cerca) }
-                with(MuroEstantePirata) { luzDeNoche(a, ch); franjaDeLuna(a, 0f, ch + 2f) }
+                hz?.let { rastroHazPirata(it, w * 0.04f, apoyo) }
+                with(MuroEstantePirata) { luzDeNoche(a, ch) }
                 granoMueble(Rect(0f, 0f, w, ch + 2f), oscuro)
             }
         }
@@ -513,7 +498,7 @@ internal object MuebleEstantePirata {
             d.repisas.forEach { r -> barandilla(r, d, ac, cerca) }
             luzCuerpo(ch, b.top, ac, yF, velas)
         }
-        with(MuroEstantePirata) { solDelOcaso(a, d.izquierda, ch); franjaDeLuna(a, ch, b.top) }
+        hz?.let { hazEnElCuerpoPirata(it, d, ch, b.top) }
         with(HuecosEstantePirata) { d.repisas.forEachIndexed { k, r -> llamaHueco(k, r, d, ac) } }
         with(ObraEstantePirata) { d.placas.forEach { p -> placa(p, medidor, ac, cerca(p.r.center)) } }
         // El cuerpo de los cajones. La última tabla acaba en un borde exacto y la base empieza en el alto redondeado del lienzo
@@ -546,7 +531,11 @@ internal object MuebleEstantePirata {
         val velas = if (a.lumbre) LucesHuecoPirata.velas(v.repisas, oscuro, v.noche) else FloatArray(0)
         val yFn = yFanalNominal(v.repisas)
         val k = if (a.lumbre) calor(fx, fy, yFn, v.noche, velas) else 1f
-        val f = if (a.oscuro) maxOf(luna(fx, fy), if (v.noche) franjaLuna(fx, fy) else 0f) else 0f
+        // El haz de los Sueños: cuánto roza su canto de la izquierda y cuánto le da en el canto de arriba.
+        val hz = hazPirata(a)
+        val f = if (a.oscuro) maxOf(luna(fx, fy), hz?.en(fx, fy, HazPirata.FRENTE) ?: 0f) else 0f
+        val fz = hz?.en(fx, CORONA + (v.repisa * FILA + ALTO_REPISA.value * 0.12f) / ANCHO_NOMINAL, HazPirata.FRENTE) ?: 0f
+        val cz = hz?.color ?: P.LUNA
         // De qué lado le llega la luz: de día, de la ventana (izquierda); de noche, de la luz que más alumbra.
         val kl = lampara(fx - LAMP_X, fy - LAMP_Y, v.noche)
         val kf = fanal(fx - FANAL_X, fy - yFn)
@@ -564,11 +553,10 @@ internal object MuebleEstantePirata {
         val tinte = materialPirata(v.tono, oscuro)
         with(VolumenEstantePirata) {
             when (clase(v.semilla)) {
-                0 -> cuaderno(v, medidor, a, kd, f, hacia, tinte)
-                1 -> canuto(v, medidor, a, kd, f, hacia, tinte)
-                else -> paquete(v, medidor, a, kd, f, hacia, tinte)
+                0 -> cuaderno(v, medidor, a, kd, f, hacia, tinte, fz, cz)
+                1 -> canuto(v, medidor, a, kd, f, hacia, tinte, fz, cz)
+                else -> paquete(v, medidor, a, kd, f, hacia, tinte, fz, cz)
             }
-            if (a.oscuro && v.noche && f > 0.05f) lunaEncima(f)
         }
     }
 }

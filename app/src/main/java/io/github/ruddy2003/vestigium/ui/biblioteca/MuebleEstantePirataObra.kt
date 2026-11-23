@@ -369,11 +369,11 @@ internal object ObraEstantePirata {
             val al = (violeta + calido).coerceIn(0f, 1f)
             return mezcla(PaletaPirata.SOMBRA_OCASO, PaletaPirata.LLAMA, if (al > 0.001f) calido / al else 0f).copy(alpha = al)
         }
-        val hondo = (1f - k) * 0.92f
-        val calido = 0.2f * k
+        val hondo = (1f - k) * 0.86f
+        val calido = 0.18f * k
         val al = (hondo + calido).coerceIn(0f, 1f)
         val f = if (al > 0.001f) calido / al else 0f
-        return mezcla(a.hondo, PaletaPirata.LLAMA, f).copy(alpha = al)
+        return mezcla(a.hondo, PaletaPirata.BRASA, f).copy(alpha = al)
     }
 
     // ---------------------------------------------------------------- el cuerpo de los cajones (en la imagen de abajo)

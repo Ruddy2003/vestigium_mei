@@ -3,7 +3,9 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
@@ -12,6 +14,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
@@ -109,11 +112,15 @@ internal object VolumenEstantePirata {
         }
     }
 
-    /** El plano de luna de los Sueños oscuros sobre una entrada que cae dentro de él ([f], de 0 a 1): fría, más en su canto. */
-    fun DrawScope.lunaEncima(f: Float) {
-        val u = density
-        drawRect(P.LUNA_RAS.copy(alpha = (0.16f * f).coerceAtMost(0.2f)), Offset.Zero, size)
-        drawRect(P.LUNA_RAS.copy(alpha = (0.5f * f).coerceAtMost(0.5f)), Offset.Zero, Size(1.6f * u, size.height))
+    /**
+     * El haz de los Sueños en el canto de arriba de una entrada ([fz], de 0 a 1): un paño con borde decidido, solo dentro de
+     * [forma] y entre [y0] y [y1], que aclara y tiñe sin velar (las etiquetas quedan fuera).
+     */
+    private fun DrawScope.cantoHaz(forma: Path, y0: Float, y1: Float, color: Color, fz: Float) {
+        if (fz <= 0.02f) return
+        clipRect(0f, y0, size.width, y1) {
+            clipPath(forma) { drawRect(color.copy(alpha = (0.62f * fz).coerceAtMost(0.55f)), Offset.Zero, size, blendMode = BlendMode.Screen) }
+        }
     }
 
     /** Lo de todas: la sombra que dejan en el fondo por la rendija con la vecina y la de contacto en la tabla. */
@@ -137,7 +144,8 @@ internal object VolumenEstantePirata {
 
     // ---------------------------------------------------------------- el cuaderno de bitácora
 
-    fun DrawScope.cuaderno(v: Volumen, medidor: TextMeasurer, a: AirePirata, k: Float, f: Float, hacia: Float, tinte: Color?) {
+    fun DrawScope.cuaderno(v: Volumen, medidor: TextMeasurer, a: AirePirata, k: Float, f: Float, hacia: Float, tinte: Color?,
+                           fz: Float = 0f, cz: Color = PaletaPirata.LUNA) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla
@@ -202,6 +210,7 @@ internal object VolumenEstantePirata {
         val yf = h * 0.79f
         drawLine(t.hondo, Offset(lomo.left + w * 0.12f, yf), Offset(lomo.right - w * 0.12f, yf), 0.9f * u)
         drawLine(t.claro, Offset(lomo.left + w * 0.12f, yf + 1.3f * u), Offset(lomo.right - w * 0.12f, yf + 1.3f * u), 0.7f * u)
+        cantoHaz(Path().apply { addRoundRect(RoundRect(lomo, CornerRadius(w * 0.12f, w * 0.05f))) }, lomo.top - 1f * u, lomo.top + h * 0.035f, cz, fz)
         filos(lomo, a, k, f, hacia)
         varillaPirata(0f, w, h - MuebleEstantePirata.RIEL * u, a, k)
     }
@@ -213,7 +222,8 @@ internal object VolumenEstantePirata {
      * con su correa, que baja por el costado hasta su hebilla de latón. Con pocas palabras, la tapa puesta; con muchas, la tapa
      * cuelga de la correa y asoma por la boca el rollo de la carta con su cinta. El día, en una etiqueta de pergamino atada.
      */
-    fun DrawScope.canuto(v: Volumen, medidor: TextMeasurer, a: AirePirata, k: Float, f: Float, hacia: Float, tinte: Color?) {
+    fun DrawScope.canuto(v: Volumen, medidor: TextMeasurer, a: AirePirata, k: Float, f: Float, hacia: Float, tinte: Color?,
+                           fz: Float = 0f, cz: Color = PaletaPirata.LUNA) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla
@@ -310,6 +320,8 @@ internal object VolumenEstantePirata {
         drawRect(a.etiqueta(P.PAPEL_OSC, k).copy(alpha = 0.4f), Offset(et.left, et.bottom - et.height * 0.14f), Size(et.width, et.height * 0.14f))
         diaYMes(v, medidor, Rect(et.left + 1.5f * u, et.top + et.height * 0.12f, et.right - 1.5f * u, et.bottom - 1.6f * u), a.luz(P.TINTA, maxOf(k, 0.75f)))
         if (v.noche) luna(Offset(cx + lado * w * 0.12f, h * 0.68f), minOf(w * 0.24f, 6.4f * u), a)
+        if (abierto) cantoHaz(Path().apply { addRect(Rect(tubo.left - 1.2f * u, boca - h * 0.016f, tubo.right + 1.2f * u, boca + h * 0.06f)) }, boca - h * 0.016f, boca + h * 0.06f, cz, fz)
+        else cantoHaz(Path().apply { addRoundRect(RoundRect(Rect(tubo.left - 1.8f * u, h * 0.05f, tubo.right + 1.8f * u, boca + h * 0.02f), CornerRadius(tubo.width * 0.22f, h * 0.04f))) }, h * 0.05f, h * 0.1f, cz, fz)
         filos(tubo, a, k, f, hacia)
         varillaPirata(0f, w, h - MuebleEstantePirata.RIEL * u, a, k)
     }
@@ -323,7 +335,8 @@ internal object VolumenEstantePirata {
      * las vueltas de abajo, más cuanto más se escribió) con el lacre junto al nudo, no en el cruce. El día, en un sobrescrito de
      * papel metido bajo el bramante. En los Sueños, junto al lacre, la media luna.
      */
-    fun DrawScope.paquete(v: Volumen, medidor: TextMeasurer, a: AirePirata, k: Float, f: Float, hacia: Float, tinte: Color?) {
+    fun DrawScope.paquete(v: Volumen, medidor: TextMeasurer, a: AirePirata, k: Float, f: Float, hacia: Float, tinte: Color?,
+                           fz: Float = 0f, cz: Color = PaletaPirata.LUNA) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla
@@ -420,6 +433,7 @@ internal object VolumenEstantePirata {
             drawCircle(a.luz(mezcla(P.LACRE, P.TINTA, 0.45f), k), r * 0.62f, sello, style = Stroke(0.8f * u))
             drawCircle(a.brillo(0.45f, k), r * 0.24f, sello - Offset(r * 0.35f, r * 0.35f))
         }
+        cantoHaz(cuerpo, top - h * 0.03f, top + h * 0.09f, cz, fz)
         filos(Rect(m, top, w - m, h), a, k, f, hacia)
         varillaPirata(0f, w, h - MuebleEstantePirata.RIEL * u, a, k)
     }
