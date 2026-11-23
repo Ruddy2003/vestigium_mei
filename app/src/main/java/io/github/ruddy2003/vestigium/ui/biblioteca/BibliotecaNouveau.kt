@@ -32,6 +32,8 @@ import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
+import io.github.ruddy2003.vestigium.ui.muebles.LUZ_MUEBLE
+import io.github.ruddy2003.vestigium.ui.muebles.SOMBRA_MUEBLE
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -495,12 +497,15 @@ object EstanteNouveau : DisenoBiblioteca {
      * la tapa de tela verde salvia con el marco de tallos dorado que se enroscan en las esquinas, la fecha del almanaque en oro
      * arriba (el día y, debajo, la flor con lo que significa), el látigo dorado que la subraya, la viñeta de papel crema pegada
      * donde se lee lo escrito y, a la derecha, el iris de oro. Al abrirse, la tapa gira sobre el lomo y deja ver la portadilla
-     * de la revista.
+     * de la revista. Descansa en la mesa de nogal del dibujante (la de la libreta), con la vela en su palmatoria al lado. De
+     * día la luz viene de la ventana, arriba a la izquierda; de noche, de la vela de la derecha (la luna fría entra por la
+     * izquierda); en el sueño manda la luna: la vela arde baja y la ventana deja su paño frío sobre el tomo.
      */
     override fun DrawScope.tapa(e: EstadoTapa, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         val w = size.width; val h = size.height
-        fun c(x: Color) = luz(x, oscuro, e.noche, 0.55f)
+        // El sueño en claro: la misma pieza al anochecer, apenas más fría (la luna hace lo demás, no un filtro).
+        fun c(x: Color) = if (!oscuro && e.noche) mezcla(x, ANOCHECER, 0.14f) else luz(x, oscuro, e.noche, if (oscuro && !e.noche) 0.72f else 0.55f)
         val a = e.abierto.coerceIn(0f, 1f)
         val cuerpo = Rect(w * 0.02f, h * 0.05f, w * 0.95f, h * 0.92f)
         val lomoAncho = w * 0.065f
@@ -508,8 +513,17 @@ object EstanteNouveau : DisenoBiblioteca {
         val cara = Rect(x0, cuerpo.top, cuerpo.right, cuerpo.bottom)
         val telaC = c(TELAS[0])
         val oroC = luz(ORO, oscuro, e.noche, 0.75f)
-        // La sombra sobre la mesa y el canto de las hojas, que asoma abajo y a la derecha.
-        drawRoundRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.25f), Offset(cuerpo.left + 3 * u, cuerpo.top + 6 * u), cuerpo.size, CornerRadius(4 * u))
+        // La mesa donde descansa: el tablero de nogal que asoma alrededor, más hondo lejos, y su canto abajo.
+        mesaTapa(cuerpo, oscuro, e.noche, ::c)
+        // La sombra que echa en la mesa, con color, al lado contrario de la luz (de noche, de la vela de la derecha).
+        val haciaX = if (oscuro && !e.noche) -1f else 1f
+        val sombraT = when { oscuro -> PaletaLibretaNouveau.HONDO; e.noche -> ANOCHECER; else -> SOMBRA_MUEBLE }
+        // Solo donde asoma: una tira abajo y otra al costado, en dos tonos (la de más cerca, más honda).
+        for ((d, al) in listOf(Offset(6f, 8f) to (if (oscuro) 0.5f else 0.22f), Offset(2.5f, 4f) to (if (oscuro) 0.4f else 0.2f))) {
+            val dx = haciaX * d.x * u; val dy = d.y * u
+            drawRect(sombraT.copy(alpha = al), Offset(cuerpo.left + dx + 3 * u, cuerpo.bottom - 4 * u), Size(cuerpo.width - 6 * u, dy + 4 * u))
+            drawRect(sombraT.copy(alpha = al), Offset(if (haciaX > 0) cuerpo.right - 4 * u else cuerpo.left + dx, cuerpo.top + dy + 3 * u), Size(abs(dx) + 4 * u, cuerpo.height - 7 * u))
+        }
         val hojas = Rect(x0, cuerpo.top + 3 * u, cuerpo.right + 3.5f * u, cuerpo.bottom + 3.5f * u)
         drawRect(c(mezcla(PAPEL, Color(0xFFC9B48A), 0.3f)), hojas.topLeft, hojas.size)
         var yy = hojas.top + 2 * u
@@ -526,10 +540,15 @@ object EstanteNouveau : DisenoBiblioteca {
             clipPath(forma) {
                 tela(cara, telaC, e.semilla)
                 // Las esquinas gastadas y la luz de la ventana sobre la tela.
-                drawRect(Brush.linearGradient(listOf(Color.White.copy(alpha = if (oscuro) 0.04f else 0.14f), Color.Transparent, Color.Black.copy(alpha = 0.2f)), cara.topLeft, cara.bottomRight), cara.topLeft, cara.size)
+                drawRect(Brush.linearGradient(listOf(Color.White.copy(alpha = if (oscuro) 0.04f else 0.14f), Color.Transparent, sombraT.copy(alpha = 0.26f)), cara.topLeft, cara.bottomRight), cara.topLeft, cara.size)
                 listOf(cara.topRight, cara.bottomRight).forEach { mancha(it, 12 * u, mezcla(telaC, Color.White, 0.3f).copy(alpha = 0.4f)) }
             }
             drawPath(forma, Color.Black.copy(alpha = 0.35f), style = Stroke(0.7f * u))
+            // El filete de luz en el canto de arriba: de día, el de la ventana; de noche, el de la vela, hacia la derecha.
+            val filete = when { !oscuro && !e.noche -> LUZ_MUEBLE.copy(alpha = 0.55f); oscuro && !e.noche -> PaletaLibretaNouveau.LLAMA.copy(alpha = 0.55f); else -> PaletaLibretaNouveau.LUNA.copy(alpha = 0.45f) }
+            val desdeX = if (oscuro && !e.noche) cara.left + cara.width * 0.4f else cara.left + 2 * u
+            val hastaX = if (oscuro && !e.noche) cara.right - 3 * u else cara.left + cara.width * 0.75f
+            drawLine(filete, Offset(desdeX, cara.top + 0.8f * u), Offset(hastaX, cara.top + 0.8f * u), 1.2f * u)
             // El marco de tallos dorado, con los látigos en las esquinas.
             val m = cara.deflate(9 * u)
             drawRect(oroC.copy(alpha = 0.85f), m.topLeft, m.size, style = Stroke(0.9f * u))
@@ -555,7 +574,8 @@ object EstanteNouveau : DisenoBiblioteca {
             // La viñeta de papel pegada, donde se lee lo escrito.
             val vi = Rect(w * cajaTapa.left - 7 * u, h * cajaTapa.top - 6 * u, w * cajaTapa.right + 7 * u, h * cajaTapa.bottom + 5 * u)
             drawRect(Color.Black.copy(alpha = 0.3f), vi.topLeft + Offset(1 * u, 1.6f * u), vi.size)
-            drawRect(papel(oscuro, e.noche, 0.6f), vi.topLeft, vi.size)
+            // De noche el papel queda en la penumbra de la vela (la tinta del extracto es clara: se lee a más de 4.5 a 1).
+            drawRect(papel(oscuro, e.noche, if (oscuro) 0.42f else 0.6f), vi.topLeft, vi.size)
             drawRect(Brush.verticalGradient(listOf(Color.Transparent, Color(0xFFC9B48A).copy(alpha = 0.18f)), vi.top, vi.bottom), vi.topLeft, vi.size)
             val fi = vi.deflate(3 * u)
             drawRect(c(TALLO_SOMBRA).copy(alpha = 0.55f), fi.topLeft, fi.size, style = Stroke(0.6f * u))
@@ -586,8 +606,84 @@ object EstanteNouveau : DisenoBiblioteca {
         }
         floron(Offset(lomoR.center.x, lomoR.top + lomoR.height * 0.5f), minOf(lomoR.width * 0.3f, 5 * u), oroC, e.noche)
         drawLine(Color.Black.copy(alpha = 0.4f), Offset(x0 + 2 * u, cuerpo.top), Offset(x0 + 2 * u, cuerpo.bottom), 1.2f * u)
-        // De noche, la lámpara alumbra el tomo desde la esquina de arriba.
-        if (e.noche || oscuro) clipRect(cuerpo.left, cuerpo.top, cuerpo.right + 4 * u, cuerpo.bottom + 4 * u) { mancha(Offset(cuerpo.right, cuerpo.top), w * 0.55f, LUZ_HALO.copy(alpha = if (oscuro) 0.16f else 0.1f)) }
+        // El canto del lomo que mira a la ventana: de día, la luz; de noche y en el sueño, la luna fría.
+        drawLine(if (!oscuro && !e.noche) LUZ_MUEBLE.copy(alpha = 0.4f) else PaletaLibretaNouveau.LUNA_RAS.copy(alpha = if (oscuro) 0.4f else 0.5f),
+            Offset(lomoR.left + 0.8f * u, lomoR.top + 2 * u), Offset(lomoR.left + 0.8f * u, lomoR.bottom - 2 * u), 1.1f * u)
+        luzTapa(cuerpo, oscuro, e.noche)
+    }
+
+    /** Dónde arde la vela de la tapa: a la derecha, detrás de la esquina de arriba del tomo. */
+    private fun velaTapa(w: Float, h: Float) = Offset(w * 0.975f, h * 0.1f)
+
+    /**
+     * La mesa de la tapa: el tablero de nogal del dibujante que asoma alrededor del tomo (más hondo arriba, lejos) y su canto
+     * abajo, con el filete de luz y el bocel; a la derecha, la vela en su palmatoria de latón (de día, apagada; en el sueño,
+     * gastada y baja).
+     */
+    private fun DrawScope.mesaTapa(cuerpo: Rect, oscuro: Boolean, noche: Boolean, c: (Color) -> Color) {
+        val u = density
+        val w = size.width; val h = size.height
+        val canto = h * 0.945f
+        // Lejos, arriba, el tablero se pierde en el fondo de la escena; cerca, abajo, es nogal lleno.
+        val lejos = c(mezcla(NOGAL, NOGAL_OSC, 0.55f))
+        val tablero = Brush.verticalGradient(0f to lejos.copy(alpha = 0f), 0.4f to lejos.copy(alpha = 0.55f), 1f to c(NOGAL), startY = 0f, endY = canto)
+        drawRect(tablero, Offset(0f, cuerpo.top), Size(cuerpo.left + 3 * u, canto - cuerpo.top))
+        drawRect(tablero, Offset(cuerpo.right, cuerpo.top), Size(w - cuerpo.right, canto - cuerpo.top))
+        drawRect(tablero, Offset(0f, cuerpo.bottom - 4 * u), Size(w, canto - cuerpo.bottom + 4 * u))
+        // El canto del tablero, con su filete de luz y el bocel.
+        drawRect(c(NOGAL_OSC), Offset(0f, canto), Size(w, h - canto))
+        val filo = when { !oscuro && !noche -> LUZ_MUEBLE.copy(alpha = 0.5f); noche -> PaletaLibretaNouveau.LUNA_RAS.copy(alpha = 0.35f); else -> PaletaLibretaNouveau.LLAMA.copy(alpha = 0.4f) }
+        drawLine(filo, Offset(0f, canto + 0.7f * u), Offset(w, canto + 0.7f * u), 1.4f * u)
+        drawLine(Color.Black.copy(alpha = 0.3f), Offset(0f, canto + (h - canto) * 0.55f), Offset(w, canto + (h - canto) * 0.55f), 0.8f * u)
+        // La palmatoria de latón y la vela.
+        val v = velaTapa(w, h)
+        val pie = Offset(v.x, h * 0.34f)
+        val alto = if (noche) h * 0.1f else h * 0.19f
+        val laton = c(LATON)
+        drawOval(SOMBRA_MUEBLE.copy(alpha = if (oscuro) 0.5f else 0.25f), Offset(pie.x - 9 * u, pie.y - 1 * u), Size(16 * u, 5 * u))
+        drawOval(laton, Offset(pie.x - 7 * u, pie.y - 3.5f * u), Size(14 * u, 6 * u))
+        drawOval(mezcla(laton, Color.White, 0.35f).copy(alpha = 0.6f), Offset(pie.x - 5 * u, pie.y - 3 * u), Size(8 * u, 2 * u))
+        val cera = if (oscuro) mezcla(c(PAPEL_CLARO), PaletaLibretaNouveau.LLAMA, if (noche) 0.15f else 0.35f) else c(PAPEL_CLARO)
+        drawRect(cera, Offset(pie.x - 2.2f * u, pie.y - alto), Size(4.4f * u, alto - 1.5f * u))
+        drawRect(Color.Black.copy(alpha = 0.15f), Offset(pie.x + 0.8f * u, pie.y - alto), Size(1.4f * u, alto - 1.5f * u))
+        drawLine(Color(0xFF2A2420), Offset(pie.x, pie.y - alto), Offset(pie.x, pie.y - alto - 2 * u), 0.7f * u)
+        // La llama: encendida de noche (en el sueño, chica y baja); de día, la mecha apagada.
+        if (oscuro || noche) {
+            val tam = if (noche) 0.6f else 1f
+            val base = Offset(pie.x, pie.y - alto - 1.5f * u)
+            mancha(base + Offset(0f, -4 * u * tam), 14 * u * tam, PaletaLibretaNouveau.LAMPARA.copy(alpha = 0.45f))
+            val llama = Path().apply {
+                moveTo(base.x, base.y - 9 * u * tam)
+                cubicTo(base.x + 3.2f * u * tam, base.y - 4 * u * tam, base.x + 2.6f * u * tam, base.y, base.x, base.y)
+                cubicTo(base.x - 2.6f * u * tam, base.y, base.x - 3.2f * u * tam, base.y - 4 * u * tam, base.x, base.y - 9 * u * tam)
+                close()
+            }
+            drawPath(llama, PaletaLibretaNouveau.LLAMA)
+            drawOval(PaletaLibretaNouveau.FUEGO, Offset(base.x - 1.2f * u * tam, base.y - 5 * u * tam), Size(2.4f * u * tam, 4.4f * u * tam))
+        }
+    }
+
+    /**
+     * La luz de la tapa, encima de todo. De día nada más (la luz ya está en cada pieza). De noche, la vela de la derecha: lo que
+     * tiene cerca queda cálido y lo lejano se hunde en el ciruela del cuarto, y del lado de la ventana entra la luna, fría. En
+     * el sueño manda la luna: el paño frío de la ventana, con su travesaño, cae sobre la mitad del tomo, y lo de la derecha se
+     * hunde.
+     */
+    private fun DrawScope.luzTapa(cuerpo: Rect, oscuro: Boolean, noche: Boolean) {
+        if (!oscuro && !noche) return
+        val w = size.width; val h = size.height
+        val hondo = if (oscuro) PaletaLibretaNouveau.HONDO else ANOCHECER
+        if (!noche) {
+            val v = velaTapa(w, h)
+            drawRect(Brush.radialGradient(0f to PaletaLibretaNouveau.LLAMA.copy(alpha = 0.26f), 0.4f to PaletaLibretaNouveau.LLAMA.copy(alpha = 0.04f), 1f to hondo.copy(alpha = 0.55f),
+                center = v, radius = w * 1.05f), Offset.Zero, size)
+            drawRect(Brush.horizontalGradient(listOf(PaletaLibretaNouveau.LUNA_RAS.copy(alpha = 0.14f), Color.Transparent), 0f, w * 0.3f), Offset.Zero, Size(w * 0.3f, h))
+            return
+        }
+        // El sueño: la luna entra por la ventana de arriba a la izquierda, fuera del cuadro; lo de la derecha se hunde.
+        val ventana = Offset(-w * 0.1f, -h * 0.4f)
+        drawRect(Brush.radialGradient(0f to Color.Transparent, 0.35f to Color.Transparent, 1f to hondo.copy(alpha = if (oscuro) 0.6f else 0.3f), center = ventana, radius = w * 1.1f), Offset.Zero, size)
+        drawRect(Brush.horizontalGradient(listOf(PaletaLibretaNouveau.LUNA.copy(alpha = if (oscuro) 0.16f else 0.22f), Color.Transparent), 0f, w * 0.6f), Offset.Zero, Size(w * 0.6f, h))
     }
 
     /**
