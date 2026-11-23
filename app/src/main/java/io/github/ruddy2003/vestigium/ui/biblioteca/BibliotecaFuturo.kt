@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Matrix
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.StrokeCap
@@ -1661,6 +1662,9 @@ object EstanteNeon : DisenoBiblioteca {
     private val ENVOLTORIOS = listOf(Color(0xFFD23A5A), Color(0xFF2F7FD0), Color(0xFFE0A030), Color(0xFF3FAF6A), Color(0xFF8A4FD6), Color(0xFFE2642E))
     private val NOCHE = Color(0xFF0A1030)
     private val LLUVIA = Color(0xFFB4CCFF)
+    /** La luna del sueño, fría y clara, y la sombra violeta que echa la bolsa en el fondo de la máquina. */
+    private val LUNA = Color(0xFFD6E2FF)
+    private val SOMBRA_TAPA = Color(0xFF140A26)
 
     /** El color bajo la luz del callejón: hundido en oscuro (el tema siempre lo es) y, de noche, más azul. Los neones no pasan por aquí. */
     private fun t(c: Color, oscuro: Boolean, noche: Boolean): Color {
@@ -1720,9 +1724,14 @@ object EstanteNeon : DisenoBiblioteca {
     override fun DrawScope.tapa(e: EstadoTapa, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
         val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, e.noche)
+        // El sueño no es un filtro: la misma pieza, con la luna mandando (su reflejo en el vidrio y su luz fría en los cantos)
+        // y la luz cálida de la máquina baja.
+        fun c(x: Color) = t(x, oscuro, false)
         val a = e.abierto.coerceIn(0f, 1f)
-        val color = c(ENVOLTORIOS[(e.semilla and 0x7fffffff) % ENVOLTORIOS.size])
+        val color = c(ENVOLTORIOS[(e.semilla and 0x7fffffff) % ENVOLTORIOS.size]).let { if (e.noche) mezcla(it, NOCHE, 0.4f) else it }
+        /** La luz de la izquierda (la bombilla de la máquina; en el sueño, la luna) y la fría de la derecha (la bandeja). */
+        val calida = if (e.noche) LUNA else AMBAR
+        val fria = CIAN
         clipRect(0f, 0f, w, h) {
             // La carcasa y, dentro, el vidrio con el fondo oscuro de la máquina.
             drawRoundRect(c(CARCASA), Offset.Zero, size, CornerRadius(8 * u))
@@ -1734,6 +1743,19 @@ object EstanteNeon : DisenoBiblioteca {
             drawRect(c(CARCASA_OSC), Offset(vidrio.left, vidrio.top + h * 0.045f), Size(vidrio.width, 2 * u))
             drawRect(CIAN.copy(alpha = 0.05f + 0.08f * a), Offset(vidrio.left, vidrio.top + h * 0.045f), Size(vidrio.width, vidrio.height * 0.3f))
             drawLine(CIAN.copy(alpha = 0.7f), Offset(vidrio.left + 6 * u, vidrio.top + h * 0.045f + 2.5f * u), Offset(vidrio.right - 6 * u, vidrio.top + h * 0.045f + 2.5f * u), 1.3f * u)
+            // La luz cálida de la máquina: un tubito ámbar en el costado izquierdo, con su charco en el fondo (en el sueño, bajo).
+            val foco = Offset(vidrio.left + 4 * u, vidrio.top + vidrio.height * 0.42f)
+            clipRect(vidrio.left, vidrio.top, vidrio.right, vidrio.bottom) { mancha(foco, w * 0.09f, AMBAR.copy(alpha = if (e.noche) 0.12f else 0.4f)) }
+            drawRoundRect(mezcla(AMBAR, Color.White, if (e.noche) 0f else 0.45f).copy(alpha = if (e.noche) 0.5f else 1f), Offset(foco.x - 1.5f * u, foco.y - h * 0.12f), Size(3 * u, h * 0.24f), CornerRadius(1.5f * u))
+            // Donde descansa: el piso de la bandeja bajo la espiral, con su canto de delante, y la sombra de la bolsa (violeta, del
+            // lado contrario a la luz) en el fondo de la máquina y en la bandeja.
+            val piso = Rect(vidrio.left, h * 0.755f, vidrio.right, vidrio.bottom)
+            drawRect(c(CARCASA_OSC), piso.topLeft, piso.size)
+            drawRect(c(CARCASA_LUZ), Offset(piso.left, piso.bottom - 2.2f * u), Size(piso.width, 2.2f * u))
+            drawLine(mezcla(calida, Color.White, 0.3f).copy(alpha = 0.5f), Offset(piso.left, piso.bottom - 2.2f * u), Offset(piso.left + piso.width * 0.45f, piso.bottom - 2.2f * u), 0.8f * u)
+            // (solo donde asoma: a la derecha de la bolsa)
+            drawRect(SOMBRA_TAPA.copy(alpha = 0.6f), Offset(w * 0.91f, h * 0.18f), Size(vidrio.right - w * 0.91f, h * 0.595f))
+            drawOval(SOMBRA_TAPA.copy(alpha = 0.7f), Offset(w * 0.12f, h * 0.745f), Size(w * 0.86f, h * 0.05f))
             // La espiral de alambre: la mitad de atrás, detrás de la bolsa.
             val espiral = Rect(w * 0.05f, h * 0.6f, w * 0.95f, h * 0.86f)
             drawArc(c(ALAMBRE).copy(alpha = 0.4f), 180f, 180f, false, espiral.topLeft, espiral.size, style = Stroke(1.6f * u))
@@ -1752,7 +1774,11 @@ object EstanteNeon : DisenoBiblioteca {
                 quadraticTo(der + w * 0.014f, (corte + fondo) / 2, der, fondo); lineTo(izq, fondo)
                 quadraticTo(izq - w * 0.014f, (corte + fondo) / 2, izq, corte); close()
             }
-            drawPath(cuerpo, Brush.horizontalGradient(listOf(mezcla(color, Color.Black, 0.3f), mezcla(color, Color.White, 0.18f), color, mezcla(color, Color.Black, 0.35f)), izq, der))
+            drawPath(cuerpo, Brush.horizontalGradient(listOf(mezcla(mezcla(color, calida, 0.3f), Color.White, 0.12f), mezcla(color, Color.White, 0.1f), color, mezcla(mezcla(color, Color.Black, 0.4f), fria, 0.12f)), izq, der))
+            // Los filetes: el de la izquierda, de la luz cálida (o de la luna); el de la derecha, cian; y la sombra propia, violeta.
+            drawLine(mezcla(calida, Color.White, 0.35f).copy(alpha = 0.75f), Offset(izq - w * 0.006f, corte + 3 * u), Offset(izq - w * 0.006f, fondo - 3 * u), 1.3f * u)
+            drawLine(fria.copy(alpha = 0.55f), Offset(der + w * 0.006f, corte + 3 * u), Offset(der + w * 0.006f, fondo - 3 * u), 1.1f * u)
+            drawRect(SOMBRA_TAPA.copy(alpha = 0.3f), Offset(izq, fondo - (fondo - corte) * 0.2f), Size(der - izq, (fondo - corte) * 0.2f))
             // El sello de abajo, con su prensado y su borde en zigzag.
             val sAbajo = Rect(izq, fondo - sello * 0.7f, der, fondo)
             drawRect(mezcla(color, Color.White, 0.22f), sAbajo.topLeft, sAbajo.size)
@@ -1762,31 +1788,26 @@ object EstanteNeon : DisenoBiblioteca {
                 moveTo(izq, fondo); val n = 28
                 for (k in 0 until n) { lineTo(izq + (der - izq) * (k + 0.5f) / n, fondo + 2.5f * u); lineTo(izq + (der - izq) * (k + 1f) / n, fondo) }
             }, mezcla(color, Color.White, 0.22f))
-            // La marca (un círculo con su rayo; de noche, una luna con dos estrellas) y la estrella de oferta.
+            // La ventanita transparente de la bolsa, con las galletas de arroz que se ven dentro, y la estrella de oferta.
             val marca = Offset(w * 0.155f, h * 0.36f)
             val rm = minOf(w * 0.045f, 15 * u)
-            drawCircle(c(ETIQUETA), rm, marca)
-            drawCircle(c(TINTA).copy(alpha = 0.5f), rm, marca, style = Stroke(1 * u))
-            if (e.noche) {
-                drawCircle(c(ETIQUETA), rm * 0.5f, marca)
-                drawCircle(color, rm * 0.42f, Offset(marca.x + rm * 0.22f, marca.y - rm * 0.14f))
-                drawPath(estrella(Offset(marca.x - rm * 0.5f, marca.y + rm * 0.45f), rm * 0.16f, 4, 0.4f), color)
-                drawPath(estrella(Offset(marca.x + rm * 0.5f, marca.y + rm * 0.5f), rm * 0.12f, 4, 0.4f), color)
-            } else {
-                drawPath(Path().apply {
-                    moveTo(marca.x + rm * 0.25f, marca.y - rm * 0.7f); lineTo(marca.x - rm * 0.35f, marca.y + rm * 0.08f)
-                    lineTo(marca.x + rm * 0.1f, marca.y + rm * 0.08f); lineTo(marca.x - rm * 0.25f, marca.y + rm * 0.7f)
-                }, color, style = Stroke(2 * u, cap = StrokeCap.Round, join = StrokeJoin.Round))
+            val ven = Rect(marca.x - rm * 1.05f, marca.y - rm * 1.15f, marca.x + rm * 1.05f, marca.y + rm * 1.15f)
+            drawRoundRect(mezcla(c(INTERIOR), color, 0.25f), ven.topLeft, ven.size, CornerRadius(rm * 0.6f))
+            listOf(Offset(-0.35f, 0.45f), Offset(0.4f, 0.2f), Offset(-0.15f, -0.45f)).forEach { (dx, dy) ->
+                val g0 = Offset(marca.x + dx * rm, marca.y + dy * rm)
+                drawOval(c(Color(0xFFD9B878)), Offset(g0.x - rm * 0.55f, g0.y - rm * 0.4f), Size(rm * 1.1f, rm * 0.8f))
+                drawRect(c(Color(0xFF1E3A2A)), Offset(g0.x - rm * 0.55f, g0.y - rm * 0.08f), Size(rm * 1.1f, rm * 0.2f))
             }
+            drawRoundRect(Color.White.copy(alpha = 0.22f), Offset(ven.left + rm * 0.2f, ven.top + rm * 0.2f), Size(rm * 0.35f, ven.height - rm * 0.5f), CornerRadius(rm * 0.2f))
+            drawRoundRect(mezcla(color, Color.White, 0.3f), ven.topLeft, ven.size, CornerRadius(rm * 0.6f), style = Stroke(1.2f * u))
             val oferta = Offset(w * 0.155f, h * 0.575f)
             drawPath(estrella(oferta, rm * 0.95f, 10, 0.72f), c(AMBAR))
-            drawCircle(c(TINTA).copy(alpha = 0.6f), rm * 0.32f, oferta, style = Stroke(1 * u))
-            drawCircle(c(TINTA).copy(alpha = 0.6f), rm * 0.1f, oferta)
+            drawPath(estrella(oferta, rm * 0.55f, 10, 0.72f), c(mezcla(AMBAR, Color.White, 0.35f)))
             // La banda oscura del ticket: la cabecera del puesto, el filete magenta y, debajo, el extracto.
             val banda = Rect(w * 0.215f, h * 0.235f, w * 0.855f, h * 0.685f)
             drawRoundRect(mezcla(c(TINTA), color, 0.12f), banda.topLeft, banda.size, CornerRadius(3 * u))
             drawRoundRect(c(ETIQUETA).copy(alpha = 0.18f), banda.topLeft, banda.size, CornerRadius(3 * u), style = Stroke(1 * u))
-            textoEn(medidor, if (e.noche) "夢 · TICKET DE LA NOCHE" else "屋台 · TICKET DEL DÍA", Rect(banda.left + 6 * u, banda.top + 2 * u, banda.right - 6 * u, banda.top + h * 0.075f),
+            textoEn(medidor, if (e.noche) "TICKET DE LA NOCHE" else "TICKET DEL DÍA", Rect(banda.left + 6 * u, banda.top + 2 * u, banda.right - 6 * u, banda.top + h * 0.075f),
                 letra, AMBAR, 10.5f, peso = FontWeight.SemiBold, minimo = 6f)
             drawLine(MAGENTA.copy(alpha = 0.85f), Offset(banda.left + 6 * u, banda.top + h * 0.083f), Offset(banda.right - 6 * u, banda.top + h * 0.083f), 1.2f * u)
             drawLine(MAGENTA.copy(alpha = 0.25f), Offset(banda.left + 6 * u, banda.top + h * 0.083f), Offset(banda.right - 6 * u, banda.top + h * 0.083f), 3.5f * u)
@@ -1825,8 +1846,16 @@ object EstanteNeon : DisenoBiblioteca {
             clipRect(vidrio.left, vidrio.top, vidrio.right, vidrio.bottom) {
                 drawPath(Path().apply { moveTo(w * 0.86f, vidrio.top); lineTo(w * 0.93f, vidrio.top); lineTo(w * 0.83f, vidrio.bottom); lineTo(w * 0.76f, vidrio.bottom); close() }, Color.White.copy(alpha = 0.05f))
             }
-            // De noche, las gotas de lluvia en el vidrio (ninguna sobre lo escrito) y sus regueros.
+            // De noche, la luna reflejada en el vidrio, arriba a la derecha, con su halo; las gotas de lluvia en el vidrio
+            // (ninguna sobre lo escrito) y sus regueros.
             if (e.noche) {
+                val lu = Offset(vidrio.right - w * 0.075f, vidrio.top + h * 0.15f)
+                mancha(lu, w * 0.12f, LUNA.copy(alpha = 0.32f))
+                val rl = h * 0.055f
+                drawPath(Path().apply {
+                    op(Path().apply { addOval(Rect(lu.x - rl, lu.y - rl, lu.x + rl, lu.y + rl)) },
+                        Path().apply { addOval(Rect(lu.x - rl * 0.45f, lu.y - rl * 1.2f, lu.x + rl * 1.5f, lu.y + rl * 0.7f)) }, PathOperation.Difference)
+                }, LUNA)
                 val caja = Rect(w * cajaTapa.left, h * cajaTapa.top, w * cajaTapa.right, h * cajaTapa.bottom).inflate(3 * u)
                 for (k in 0 until 46) {
                     val o = Offset(vidrio.left + vidrio.width * azar(e.semilla, 700 + k), vidrio.top + vidrio.height * azar(e.semilla, 800 + k))
@@ -1848,7 +1877,9 @@ object EstanteNeon : DisenoBiblioteca {
             drawRect(mezcla(ETIQUETA, Color(0xFF06050B), (if (oscuro) 0.1f else 0f) + (if (e.noche) 0.08f else 0f)), precio.topLeft, precio.size)
             val bloque = Rect(precio.left, precio.top, precio.left + precio.width * 0.12f, precio.bottom)
             drawRect(MAGENTA, bloque.topLeft, bloque.size)
-            textoEn(medidor, if (e.noche) "夢" else "屋台", bloque.deflate(1.5f * u), letra, ETIQUETA, 11f, peso = FontWeight.Bold)
+            // La ranura de colgar de la etiqueta (sin letra).
+            drawRoundRect(c(CARCASA_OSC), Offset(bloque.center.x - bloque.width * 0.3f, bloque.center.y - 2.2f * u), Size(bloque.width * 0.6f, 4.4f * u), CornerRadius(2.2f * u))
+            drawLine(mezcla(MAGENTA, Color.White, 0.5f), Offset(bloque.center.x - bloque.width * 0.26f, bloque.center.y + 2.6f * u), Offset(bloque.center.x + bloque.width * 0.26f, bloque.center.y + 2.6f * u), 0.8f * u)
             textoEn(medidor, e.fecha, Rect(bloque.right + 4 * u, precio.top, precio.left + precio.width * 0.52f, precio.bottom), letra, c(TINTA), 12f, peso = FontWeight.SemiBold, minimo = 7f)
             drawLine(c(TINTA).copy(alpha = 0.3f), Offset(precio.left + precio.width * 0.53f, precio.top + 3 * u), Offset(precio.left + precio.width * 0.53f, precio.bottom - 3 * u), 0.8f * u)
             if (!e.vacio && e.palabras > 0)
