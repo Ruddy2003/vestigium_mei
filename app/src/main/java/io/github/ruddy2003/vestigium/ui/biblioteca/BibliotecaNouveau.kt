@@ -83,18 +83,12 @@ internal fun DrawScope.vinetaNouveau(c: Offset, r: Float, papel: Color, tinta: C
 }
 
 /**
- * Art nouveau: la biblioteca del salón del taller de litografía, un mueble de la época de nogal tallado como los de Nancy.
- * Arriba, la pared con su papel pintado de tallos; el copete del mueble se curva en látigo y se enrosca a los lados, con un
- * iris de bronce dorado en medio; debajo, el vitral de casa (no de catedral): un iris y una libélula de vidrio de colores que pasa del
- * ámbar al violeta, emplomado con curvas de látigo; sobre el copete, un jarrón de vidrio de Nancy y la lámpara de hongo de
- * vidrio de colores. Los costados son dos tallos tallados que suben desde los pies, echan hojas y rematan en un capullo.
- * Las tablas llevan el canto moldurado y cada mes va en su portaetiquetas de latón, con la tarjeta impresa. En las repisas, lo
- * del taller: el jarrón de vidrio grabado con su flor, las pruebas de color enrolladas y atadas, el frasco de perfume con el
- * peine de carey. Abajo, el zócalo tallado con sus tiradores en forma de hoja, los pies que echan raíces y el parqué del
- * salón con la orilla de la alfombra. Cada entrada es un tomo de la revista ilustrada: encuadernado en tela con su tejuelo y
- * sus nervios dorados, el cuaderno suelto con su cubierta impresa o el álbum de lomo verde con el látigo de oro; la cinta de
- * seda del registro es del color del ánimo. De día entra la luz difusa de la ventana del taller, por la izquierda; de noche
- * es el mismo mueble en el azul negro de la calle, y la luz cálida de la lámpara de vidrio solo alcanza lo que tiene cerca.
+ * Art nouveau: el estante del diario es la biblioteca abierta de caoba del despacho de la tienda del taller de litografía
+ * (hecha en un taller del faubourg Saint-Antoine a la moda de 1900), con el papel-cuero dorado en el fondo de los casilleros,
+ * contra la pared de papel pintado verde gris, con el ramo grande en el jarrón camafeo arriba; las entradas son el tomo de la
+ * revista ilustrada, el rollo de carteles y el legajo de cartas, cada una con la flor de su día. De día, el sol del escaparate;
+ * de noche, el aplique eléctrico, el quinqué de un hueco y la palmatoria del pie. Su dibujo está en `MuebleEstanteNouveau.kt`.
+ * Distinto del Ideario, que es la cajonera de planos de peral del taller, bajo la ventana a los tejados.
  * La tapa del diario es el tomo del día: tela verde salvia, el marco de tallos dorado, la fecha en el cartucho, la viñeta
  * pegada donde se lee lo escrito y el iris de oro; al abrirse, la tapa gira sobre el lomo y deja ver la portadilla.
  */

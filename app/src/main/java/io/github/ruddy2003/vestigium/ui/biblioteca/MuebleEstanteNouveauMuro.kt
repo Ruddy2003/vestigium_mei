@@ -63,7 +63,7 @@ internal object MuroEstanteNouveau {
     /** El color de la luz del escaparate y su fuerza: el sol, el café, el ocaso o la luna. */
     fun colorPano(a: AireNouveau): Pair<Color, Float> = when {
         a.oscuro && a.noche -> Color(0xFFB8CAEA) to 0.62f
-        a.oscuro -> P.CAFE to 0.32f
+        a.oscuro -> P.CAFE to 0.26f
         a.noche -> Color(0xFFF59A48) to 0.95f
         else -> P.SOL to 0.5f
     }
@@ -175,16 +175,37 @@ internal object MuroEstanteNouveau {
         papel(a, Rect(0f, ys, w, ab))
         // La cenefa de ocre con su rama corrida, y la moldura de colgar cuadros.
         cenefa(a, Rect(0f, 0f, w, w * CENEFA))
-        val m = Rect(0f, w * CENEFA, w, ys)
-        drawRect(a.luz(P.CAOBA, 1f), m.topLeft, m.size)
-        drawRect(a.dia(P.CAOBA_LUZ, 0.2f), m.topLeft, Size(w, m.height * 0.3f))
-        drawRect(a.luz(P.CAOBA_HONDA, 1f), Offset(0f, m.bottom - m.height * 0.22f), Size(w, m.height * 0.22f))
+        moldura(a)
         drawRect(a.sombra(0.32f), Offset(0f, ys), Size(w, 2.2f * u))
         drawRect(a.sombra(0.12f), Offset(0f, ys + 2.2f * u), Size(w, 5f * u))
         // La luz de la noche en la pared: el mapa de lo que se apaga lejos del aplique.
         if (a.lumbre) mapaPared(a, 0f, ab)
         // El paño del escaparate: el sol, el café, el ocaso o la luna, en la pared (y, encima, la cenefa).
         panoEn(a, Path().apply { addRect(Rect(0f, 0f, w, ab)) }, 0f, 0f)
+    }
+
+    /** La moldura de caoba de colgar cuadros, bajo la cenefa. */
+    private fun DrawScope.moldura(a: AireNouveau) {
+        val w = size.width
+        val m = Rect(0f, w * CENEFA, w, w * MOLDURA)
+        drawRect(a.luz(P.CAOBA, 1f), m.topLeft, m.size)
+        drawRect(a.dia(P.CAOBA_LUZ, 0.2f), m.topLeft, Size(w, m.height * 0.3f))
+        drawRect(a.luz(P.CAOBA_HONDA, 1f), Offset(0f, m.bottom - m.height * 0.22f), Size(w, m.height * 0.22f))
+    }
+
+    /**
+     * Lo de más arriba (la cenefa y la moldura), que se pinta en cada dibujo encima de la imagen guardada de la corona (que
+     * empieza en la fila entera de [arriba]): así la imagen es más baja. Llega una fila por debajo de [arriba], que la imagen
+     * tapa. De noche, la misma luz que la pared (la parte de arriba del mapa de [mapaPared]).
+     */
+    fun DrawScope.cenefaArriba(a: AireNouveau, apoyo: Float, arriba: Int) {
+        val w = size.width
+        val hasta = arriba + 1f
+        clipRect(0f, 0f, w, hasta) {
+            cenefa(a, Rect(0f, 0f, w, w * CENEFA))
+            moldura(a)
+            if (a.lumbre) mapaPared(a, 0f, apoyo + w * 0.02f, hasta)
+        }
     }
 
     /**
@@ -254,7 +275,8 @@ internal object MuroEstanteNouveau {
     /** La cenefa de ocre dentro de [r]: el fondo, una rama corrida con sus hojas y bayas, y los filetes. */
     private fun DrawScope.cenefa(a: AireNouveau, r: Rect) {
         val w = size.width; val u = density
-        drawRect(a.luz(P.CENEFA, 1f), r.topLeft, r.size)
+        // Un píxel de más abajo: la moldura empieza en un borde que puede caer a medio píxel y la tapa encima.
+        drawRect(a.luz(P.CENEFA, 1f), r.topLeft, Size(r.width, r.height + 1f))
         val rama = Path(); val hojas = Path(); val bayas = Path()
         val cy = r.center.y; val hh = r.height
         val paso = w * 0.12f
@@ -286,7 +308,7 @@ internal object MuroEstanteNouveau {
      * por tamaño y modo y estirada encima: lo que se apaga con la distancia al aplique (hacia el verde botella de la calle) y, cerca
      * de él, el oro de la luz eléctrica. En los Sueños claros, el violeta del ocaso que crece hacia la derecha.
      */
-    private fun DrawScope.mapaPared(a: AireNouveau, arriba: Float, abajo: Float) {
+    private fun DrawScope.mapaPared(a: AireNouveau, arriba: Float, abajo: Float, hasta: Float = Float.MAX_VALUE) {
         val w = size.width
         val y0 = arriba.toInt(); val y1 = ceil(abajo).toInt()
         if (y1 <= y0 || w < 2f) return
@@ -301,8 +323,8 @@ internal object MuroEstanteNouveau {
                     val k = MuebleEstanteNouveau.apliqueArriba(x - MuebleEstanteNouveau.LAMP_X, y - MuebleEstanteNouveau.LAMP_Y, a.noche)
                     val c = if (a.oscuro) {
                         val fr = MuebleEstanteNouveau.fria(x, y, a.noche)
-                        val hondo = mezcla(a.hondo, if (a.noche) Color(0xFF223258) else Color(0xFF15402F), (fr * 1.2f).coerceAtMost(0.7f))
-                        val osc = (1f - k) * 0.88f; val cal = 0.2f * k
+                        val hondo = mezcla(a.hondo, if (a.noche) Color(0xFF223258) else Color(0xFF15402F), (fr * 1.1f).coerceAtMost(0.55f))
+                        val osc = (1f - k) * 0.93f; val cal = 0.22f * k
                         val al = (osc + cal).coerceIn(0f, 1f)
                         mezcla(hondo, P.LAMPARA, if (al > 0.001f) cal / al else 0f).copy(alpha = al)
                     } else {
@@ -316,7 +338,14 @@ internal object MuroEstanteNouveau {
             }
             mapa = nueva; claveMapa = clave
         }
-        drawImage(img, IntOffset.Zero, IntSize(img.width, img.height), IntOffset(0, y0), IntSize(ceil(w).toInt(), y1 - y0))
+        if (hasta >= y1) {
+            drawImage(img, IntOffset.Zero, IntSize(img.width, img.height), IntOffset(0, y0), IntSize(ceil(w).toInt(), y1 - y0))
+        } else {
+            // Solo las filas de arriba, hasta [hasta] (para la cenefa, que se pinta aparte), a la misma escala.
+            val alto = (y1 - y0).toFloat() / img.height
+            val n = ceil((hasta - y0) / alto).toInt().coerceIn(1, img.height)
+            drawImage(img, IntOffset.Zero, IntSize(img.width, n), IntOffset(0, y0), IntSize(ceil(w).toInt(), ceil(n * alto).toInt()))
+        }
     }
 
     /** Lo último de arriba, de noche: el resplandor de la tulipa encendida en la pared y en lo que tiene cerca. */
@@ -326,8 +355,8 @@ internal object MuroEstanteNouveau {
         val c = Offset(w * MuebleEstanteNouveau.LAMP_X, w * MuebleEstanteNouveau.LAMP_Y)
         val f = if (a.oscuro) (if (a.noche) 0.6f else 1f) else 0.55f
         clipRect(0f, 0f, w, ch) {
-            mancha(c, w * 0.34f, P.LAMPARA.copy(alpha = 0.2f * f))
-            mancha(c, w * 0.12f, P.FUEGO.copy(alpha = 0.35f * f))
+            mancha(c, w * 0.3f, P.LAMPARA.copy(alpha = 0.24f * f))
+            mancha(c, w * 0.12f, P.FUEGO.copy(alpha = 0.42f * f))
         }
     }
 }

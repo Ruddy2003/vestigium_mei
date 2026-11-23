@@ -367,7 +367,7 @@ internal object MuebleEstanteNouveau {
 
     /** La luz del aplique en la pared y en lo de arriba: más corta, para que lo lejano se hunda. */
     fun apliqueArriba(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 1.0f else 1.45f) * exp(-2.9f * sqrt(dx * dx + dy * dy * 1.1f))).coerceIn(0.03f, 1f)
+        ((if (suenos) 1.0f else 1.5f) * exp(-3.6f * sqrt(dx * dx + dy * dy * 1.1f))).coerceIn(0.03f, 1f)
 
     /** La luz de la palmatoria del pie: corta, para lo de abajo. */
     fun palmatoria(dx: Float, dy: Float, suenos: Boolean): Float =
@@ -403,8 +403,9 @@ internal object MuebleEstanteNouveau {
     fun yVelaNominal(repisas: Int): Float = CORONA + repisas * FILA / ANCHO_NOMINAL + BASE * VELA_Y
 
     /**
-     * En qué repisas va el quinqué (una, la de más sitio libre de las de en medio; si hay muchas repisas, otra abajo) y en qué x
-     * del lienzo; -1 donde no va. La usan el hueco (para dibujarlo) y el estante (para alumbrar con él).
+     * En qué repisas va el quinqué y en qué x del lienzo; -1 donde no va. El primero, en la repisa de más sitio libre; si el
+     * estante tiene cuatro repisas o más, otro en la de más sitio de las que quedan a dos repisas o más de la primera (así
+     * alumbran tramos distintos). La usan el hueco (para dibujarlo) y el estante (para alumbrar con él).
      */
     fun quinques(d: DisposicionEstante, w: Float): FloatArray {
         val n = d.repisas.size
@@ -413,19 +414,14 @@ internal object MuebleEstanteNouveau {
         val xDer = d.derecha.left
         fun libre(k: Int) = xDer - (d.ocupado.getOrNull(k) ?: xDer)
         val minimo = w * 0.17f
-        // La primera, la de más sitio de la mitad de arriba (sin contar la de arriba del todo si hay otra); la segunda, de la
-        // mitad de abajo, si el estante tiene cuatro repisas o más.
-        val arriba = (if (n >= 3) 1 else 0) until maxOf(1, (n + 1) / 2)
-        val abajo = ((n + 1) / 2) until n
-        listOf(arriba, abajo).forEachIndexed { j, rango ->
-            if (j == 1 && n < 4) return@forEachIndexed
-            var mejor = -1; var m = 0f
-            for (k in rango) if (libre(k) > m) { m = libre(k); mejor = k }
-            if (mejor < 0 && j == 0) for (k in 0 until n) if (libre(k) > m) { m = libre(k); mejor = k }
-            if (mejor >= 0 && m >= minimo) {
-                val oc = d.ocupado.getOrNull(mejor) ?: return@forEachIndexed
-                res[mejor] = oc + minOf(m * 0.3f, w * 0.085f)
-            }
+        var primera = -1; var m = 0f
+        for (k in 0 until n) if (libre(k) > m) { m = libre(k); primera = k }
+        if (primera < 0 || m < minimo) return res
+        res[primera] = (d.ocupado.getOrNull(primera) ?: return res) + minOf(m * 0.3f, w * 0.085f)
+        if (n >= 4) {
+            var segunda = -1; var m2 = 0f
+            for (k in 0 until n) if (kotlin.math.abs(k - primera) >= 2 && libre(k) > m2) { m2 = libre(k); segunda = k }
+            if (segunda >= 0 && m2 >= minimo) res[segunda] = (d.ocupado.getOrNull(segunda) ?: return res) + minOf(m2 * 0.3f, w * 0.085f)
         }
         return res
     }
@@ -460,9 +456,12 @@ internal object MuebleEstanteNouveau {
         }
         val clave = "${w.toInt()}:${ch}:${b.top}:${h}:$oscuro:$noche:$density"
 
-        // Lo de arriba: la pared, el bodegón y la cornisa, en una imagen que llega al píxel entero de debajo.
+        // Lo de arriba: la cenefa y la moldura en cada dibujo (son bandas baratas) y, desde la fila entera de la moldura, la pared,
+        // el bodegón y la cornisa, en una imagen que llega al píxel entero de debajo de la corona.
+        val arribaCor = floor(w * MuroEstanteNouveau.MOLDURA).toInt()
+        with(MuroEstanteNouveau) { cenefaArriba(a, apoyo, arribaCor) }
         with(CapaNouveau) {
-            pegar(0, "c:$clave", 0, ceil(ch).toInt()) {
+            pegar(0, "c:$clave", arribaCor, ceil(ch).toInt()) {
                 drawRect(a.luz(P.CAOBA_OSC, 0.5f), Offset.Zero, Size(w, ceil(ch) + 1f))
                 with(MuroEstanteNouveau) { pared(a, apoyo, cerca) }
                 with(CoronaEstanteNouveau) { colgado(a, apoyo, cerca) }
@@ -487,20 +486,25 @@ internal object MuebleEstanteNouveau {
             d.tablas.forEachIndexed { k, r -> tabla(k, r, ac) }
             montante(Rect(d.izquierda.left, ch, d.izquierda.right, b.top), true, ac)
             montante(Rect(d.derecha.left, ch, d.derecha.right, b.top), false, ac)
-            luzCuerpo(ch, b.top, ac, yV, quinq)
         }
+        // La moldura y la cara del zócalo en cada dibujo, desde el píxel entero de encima de la última tabla o de la base (la que
+        // acabe antes) hasta la fila entera de debajo de la cara, donde empieza la imagen guardada del pie.
+        val junta = floor(minOf(b.top, d.tablas.lastOrNull()?.bottom ?: b.top))
+        val arriba = floor(b.top + w * PieEstanteNouveau.CARA).toInt().coerceAtLeast(junta.toInt() + 1)
+        with(PieEstanteNouveau) { zocaloArriba(ac, b, junta, arriba + 1f) }
+        // La luz del cuerpo; de noche también en el zócalo, con la misma luz que la imagen del pie.
+        with(ObraEstanteNouveau) { luzCuerpo(ch, if (a.lumbre) arriba + 1f else b.top, ac, yV, quinq) }
         with(MuroEstanteNouveau) { panoEnElCuerpo(a, d, ch, b.top) }
         with(HuecosEstanteNouveau) { d.repisas.forEachIndexed { k, r -> llamaHueco(r, d, xq[k], ac) } }
-        with(ObraEstanteNouveau) { d.placas.forEach { p -> placa(p, medidor, ac, cerca(p.r.center)) } }
-        if (d.repisas.isNotEmpty()) granoMueble(Rect(0f, ch, w, b.top), oscuro, 0.8f)
-        // Lo de abajo: el cuerpo de las puertas, el suelo y lo que hay en él, en una imagen desde el píxel entero de encima de la
-        // última tabla o de la base (la que acabe antes), con debajo un fondo opaco del color del canto de arriba.
+        with(ObraEstanteNouveau) { d.placas.forEach { p -> placa(p, medidor, ac, cerca(p.r.center), (d.derecha.left - d.izquierda.right) * 0.86f) } }
+        granoMueble(Rect(0f, ch, w, arriba + 1f), oscuro, 0.8f)
+        // Lo de abajo: desde la fila entera de debajo de la cara del zócalo, el faldón, el suelo y lo que hay en él, en una imagen
+        // con debajo un fondo opaco del color de la caoba.
         with(CapaNouveau) {
-            val arriba = floor(minOf(b.top, d.tablas.lastOrNull()?.bottom ?: b.top)).toInt()
-            pegar(1, "p:$clave:$arriba", arriba, ceil(h).toInt()) {
+            pegar(1, "p:$clave:$arriba:${quinq.joinToString(",")}", arriba, ceil(h).toInt()) {
                 drawRect(ac.luz(P.CAOBA_OSC, cerca(Offset(w / 2, b.top))), Offset(0f, arriba.toFloat()), Size(w, ceil(h) - arriba + 1f))
-                val cercaPie: (Offset) -> Float = { p -> if (!a.lumbre) 1f else calor(p.x / w, p.y / w, yV, noche, FloatArray(0)) }
-                with(PieEstanteNouveau) { pie(ac, Rect(0f, arriba.toFloat(), w, h), b, cercaPie) }
+                val cercaPie: (Offset) -> Float = { p -> if (!a.lumbre) 1f else calor(p.x / w, p.y / w, yV, noche, quinq) }
+                with(PieEstanteNouveau) { pie(ac, Rect(0f, arriba.toFloat(), w, h), b, cercaPie, quinq) }
                 granoMueble(Rect(0f, arriba.toFloat(), w, h), oscuro)
             }
         }

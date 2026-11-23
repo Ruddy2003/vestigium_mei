@@ -41,10 +41,10 @@ internal object PieEstanteNouveau {
 
     /** El zócalo, en anchos desde el borde de arriba del pie: su moldura, su cara y dónde acaba el faldón en las esquinas. */
     private const val MOLDURA = 0.026f
-    private const val CARA = 0.074f
+    const val CARA = 0.074f
     private const val FALDON = 0.098f
 
-    fun DrawScope.pie(a: AireNouveau, r: Rect, b: Rect, cerca: (Offset) -> Float) {
+    fun DrawScope.pie(a: AireNouveau, r: Rect, b: Rect, cerca: (Offset) -> Float, quinques: FloatArray) {
         val w = size.width
         val alto = r.bottom
         val piso = b.top + b.height * MuebleEstanteNouveau.PISA
@@ -54,22 +54,30 @@ internal object PieEstanteNouveau {
         papelera(a, b, alto, cerca)
         paraguero(a, b, alto, cerca)
         albumes(a, b, alto, cerca)
-        if (a.lumbre) mapaPie(a, r, b)
+        if (a.lumbre) mapaPie(a, r, b, quinques)
         if (a.lumbre) llama(a, b)
     }
 
     // ---------------------------------------------------------------- el zócalo
 
-    private fun DrawScope.zocalo(a: AireNouveau, r: Rect, b: Rect, piso: Float) {
+    /**
+     * La moldura y la cara del zócalo, de [desde] hasta [hasta] (la fila entera de debajo de la cara): se pintan en cada dibujo,
+     * sobre la imagen guardada del pie, que empieza más abajo. De noche las apaga la luz del cuerpo
+     * ([ObraEstanteNouveau.luzCuerpo]), la misma que el pie ([colorNoche]).
+     */
+    fun DrawScope.zocaloArriba(a: AireNouveau, b: Rect, desde: Float, hasta: Float) {
+        clipRect(0f, desde, size.width, hasta) { caraZocalo(a, b, desde) }
+    }
+
+    /** La moldura y la cara del zócalo (desde [desde], la fila de la junta con la última tabla), con su veta y su marquetería. */
+    private fun DrawScope.caraZocalo(a: AireNouveau, b: Rect, desde: Float) {
         val w = size.width; val u = density
         val lado = w * MuebleEstanteNouveau.LADO
         val top = b.top
         val k = 1f
         val yc = top + w * CARA
-        val yf = top + w * FALDON
-        // Lo de encima del zócalo (la junta con la última tabla va debajo, del color del canto) y la moldura.
-        drawRect(a.luz(P.CAOBA, k), Offset(0f, r.top), Size(w, yc - r.top))
         val mo = w * MOLDURA
+        drawRect(a.luz(P.CAOBA, k), Offset(0f, desde), Size(w, yc - desde + 1f))
         drawRect(a.dia(P.CAOBA_LUZ, 0.22f), Offset(0f, top), Size(w, mo * 0.22f))
         drawRect(a.luz(P.CAOBA, k), Offset(0f, top + mo * 0.22f), Size(w, mo * 0.38f))
         drawRect(a.dia(P.CAOBA_LUZ, 0.06f), Offset(0f, top + mo * 0.52f), Size(w, 0.8f * u))
@@ -107,6 +115,17 @@ internal object PieEstanteNouveau {
         drawPath(rama, a.luz(P.TENIDA, k), style = Stroke(1.2f * u, cap = StrokeCap.Round))
         drawPath(hojas, a.luz(P.TENIDA, k))
         drawPath(flores, a.luz(P.LIMONCILLO, k))
+    }
+
+    private fun DrawScope.zocalo(a: AireNouveau, r: Rect, b: Rect, piso: Float) {
+        val w = size.width; val u = density
+        val lado = w * MuebleEstanteNouveau.LADO
+        val top = b.top
+        val k = 1f
+        val yc = top + w * CARA
+        val yf = top + w * FALDON
+        val mo = w * MOLDURA
+        caraZocalo(a, b, r.top)
         // El faldón festoneado: baja en las esquinas, sube en medio y deja colgar un capullo tallado.
         val falda = Path().apply {
             moveTo(lado, yc - 1f); lineTo(w - lado, yc - 1f); lineTo(w - lado, yf)
@@ -408,9 +427,9 @@ internal object PieEstanteNouveau {
         val w = size.width; val u = density
         val x0 = w * 0.8f; val x1 = w * 1.04f
         val base = alto - w * 0.022f
-        val top = base - w * 0.21f
+        val top = base - w * 0.17f
         val k = cerca(Offset(w * 0.9f, top))
-        val arriba = b.top + w * 0.012f
+        val arriba = b.top + w * (CARA + 0.012f)
         // El bastón y el paraguas, detrás de la boca.
         drawLine(a.sombra(0.4f), Offset(w * 0.858f, top + w * 0.02f), Offset(w * 0.838f + 2f * u, arriba + w * 0.01f + 2f * u), 3f * u)
         drawLine(a.luz(Color(0xFF4A2E1E), k), Offset(w * 0.858f, top + w * 0.02f), Offset(w * 0.838f, arriba + w * 0.01f), 3f * u, StrokeCap.Round)
@@ -457,8 +476,8 @@ internal object PieEstanteNouveau {
 
     // ---------------------------------------------------------------- la noche del pie
 
-    /** Lo que se apaga lejos de la palmatoria y del aplique, en una imagen chica estirada sobre todo el pie. */
-    private fun DrawScope.mapaPie(a: AireNouveau, r: Rect, b: Rect) {
+    /** Lo que se apaga lejos de la palmatoria, del aplique y de los quinqués, en una imagen chica estirada sobre todo el pie. */
+    private fun DrawScope.mapaPie(a: AireNouveau, r: Rect, b: Rect, quinques: FloatArray) {
         val w = size.width
         val y0 = r.top.toInt(); val y1 = ceil(r.bottom).toInt()
         if (y1 <= y0) return
@@ -470,18 +489,7 @@ internal object PieEstanteNouveau {
             for (j in 0 until filas) for (i in 0 until cols) {
                 val x = (i + 0.5f) / cols
                 val y = (y0 + (j + 0.5f) / filas * (y1 - y0)) / w
-                val k = MuebleEstanteNouveau.calor(x, y, yV, a.noche, FloatArray(0))
-                val c = if (a.oscuro) {
-                    val osc = (1f - k) * 0.84f; val cal = 0.18f * k
-                    val al = (osc + cal).coerceIn(0f, 1f)
-                    mezcla(a.hondo, P.LLAMA, if (al > 0.001f) cal / al else 0f).copy(alpha = al)
-                } else {
-                    val violeta = (0.14f + 0.18f * x) * (1f - k)
-                    val cal = 0.2f * k
-                    val al = (violeta + cal).coerceIn(0f, 1f)
-                    mezcla(P.SOMBRA_OCASO, P.LLAMA, if (al > 0.001f) cal / al else 0f).copy(alpha = al)
-                }
-                drawRect(c, Offset(i.toFloat(), j.toFloat()), Size(1f, 1f))
+                drawRect(ObraEstanteNouveau.mascara(a, x, y, yV, quinques), Offset(i.toFloat(), j.toFloat()), Size(1f, 1f))
             }
         }
         drawImage(img, IntOffset.Zero, IntSize(img.width, img.height), IntOffset(0, y0), IntSize(ceil(w).toInt(), y1 - y0))

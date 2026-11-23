@@ -15,7 +15,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
@@ -420,9 +422,12 @@ internal object ObraEstanteNouveau {
      * El rótulo del mes: la cartela de marquetería de limoncillo embutida en el canto de la tabla, con sus puntas enroscadas en
      * látigo de madera teñida, el filete de ébano y el mes en tinta.
      */
-    fun DrawScope.placa(p: PlacaEstante, medidor: TextMeasurer, a: AireNouveau, k: Float) {
+    fun DrawScope.placa(p: PlacaEstante, medidor: TextMeasurer, a: AireNouveau, k: Float, maximo: Float) {
         val u = density
-        val r = p.r
+        // La cartela crece con el texto (el mes con el común es largo), hasta [maximo].
+        val tw = medidor.measure(p.texto, TextStyle(fontFamily = P.LETRA, fontSize = 10.sp), maxLines = 1, softWrap = false).size.width.toFloat()
+        val ancho = (tw + p.r.height + 10f * u).coerceIn(p.r.width, maxOf(p.r.width, maximo))
+        val r = Rect(p.r.center.x - ancho / 2, p.r.top, p.r.center.x + ancho / 2, p.r.bottom)
         val kk = maxOf(k, 0.4f)
         val cart = Path().apply {
             val e = r.height * 0.5f
@@ -484,8 +489,8 @@ internal object ObraEstanteNouveau {
         drawImage(img, IntOffset.Zero, IntSize(img.width, img.height), IntOffset(0, y0), IntSize(ceil(w).toInt(), y1 - y0))
     }
 
-    /** El color (con su alfa) que se pone encima del cuerpo en ([x], [y]), en anchos. */
-    private fun mascara(a: AireNouveau, x: Float, y: Float, yVela: Float, quinques: FloatArray): Color {
+    /** El color (con su alfa) que se pone encima del cuerpo en ([x], [y]), en anchos (también el pie, con la misma luz). */
+    fun mascara(a: AireNouveau, x: Float, y: Float, yVela: Float, quinques: FloatArray): Color {
         if (!a.lumbre) {
             // De día: algo más hondo abajo y a la derecha, lejos del escaparate.
             val f = ((y - 0.7f) * 0.07f + (x - 0.2f).coerceAtLeast(0f) * 0.1f).coerceIn(0f, 0.16f)
