@@ -140,6 +140,11 @@ internal fun DrawScope.estufaColonos(g: MarcoColonos, pie: Offset) {
         mancha(puerta.center, w * 0.34f, BRASA.copy(alpha = 0.24f))
         mancha(puerta.center, w * 0.09f, Color(0xFFFFC77A).copy(alpha = 0.45f))
         mancha(Offset(puerta.center.x + w * 0.14f, pie.y + w * 0.01f), w * 0.24f, BRASA.copy(alpha = 0.16f))
+        // El resplandor sube por los cajones y la encimera hasta la última repisa (por detrás de la estufa, a su derecha).
+        clipRect(0f, g.fondo - w * 0.02f, w, g.suelo) {
+            mancha(Offset(puerta.center.x + w * 0.12f, g.cajones), w * 0.42f, BRASA.copy(alpha = 0.2f))
+            mancha(Offset(puerta.center.x + w * 0.05f, g.fondo + w * 0.02f), w * 0.22f, Color(0xFFFFB86A).copy(alpha = 0.16f))
+        }
     }
     teteraColonos(g, Offset(pie.x + r * 0.22f, plancha.center.y + w * 0.004f))
 }

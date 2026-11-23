@@ -228,15 +228,17 @@ internal fun DrawScope.casilleroColonos(k: Int, r: Rect, oc: Float, g: MarcoColo
             val largo = 12f * u
             drawPath(poligonoColonos(oc - 2f * u, r.bottom - dB, oc - 2f * u, r.top + r.height * 0.24f, oc + largo, r.top + r.height * 0.34f, oc + largo, r.bottom - dB), a.sombra(0.24f))
         }
-        // De noche, el charco de la bombilla donde llega (de la brasa, en los de abajo).
+        // De noche, el charco de cada luz donde llega: el cono de la bombilla desde arriba a la derecha (con la sombra que la
+        // cornisa echa en lo alto de la primera repisa), el candil desde el costado izquierdo y la brasa desde abajo.
         if (a.oscuro) {
-            val kc = g.k(r.center)
-            if (kc > 0.12f) {
-                val l = Offset(w * MuebleEstanteColonos.LAMP_X, w * MuebleEstanteColonos.LAMP_Y)
-                val haciaL = Offset(fondo.right, fondo.top)
-                mancha(if (g.br(r.center) > 0.5f) Offset(w * g.brasa.x, w * g.brasa.y) else Offset(minOf(haciaL.x, l.x), fondo.top), w * 0.45f,
-                    a.calor(g.br(r.center)).copy(alpha = 0.16f * kc))
-            }
+            val l = g.luces(Offset(fondo.center.x, fondo.center.y))
+            val bomb = Offset(w * MuebleEstanteColonos.LAMP_X, r.top)
+            val cand = Offset(x0, w * g.candil.y)
+            val bras = Offset(w * g.brasa.x, r.bottom + w * 0.1f)
+            if (l[0] > 0.08f) mancha(bomb + Offset(0f, r.height * 0.45f), w * 0.42f, PaletaColonos.BOMBILLA.copy(alpha = (0.26f * l[0]).coerceAtMost(0.3f)))
+            if (l[2] > 0.06f) mancha(Offset(cand.x, cand.y.coerceIn(r.top, r.bottom)), w * 0.4f, a.calor(0.15f).copy(alpha = (0.3f * l[2]).coerceAtMost(0.3f)))
+            if (l[1] > 0.06f) mancha(bras, w * 0.55f, a.calor(0.85f).copy(alpha = (0.3f * l[1]).coerceAtMost(0.3f)))
+            if (k == 0) drawPath(poligonoColonos(fondo.left, fondo.top, fondo.right, fondo.top, fondo.right, fondo.top + w * 0.035f, fondo.left, fondo.top + w * 0.1f), a.sombra(0.35f))
         }
     }
 }

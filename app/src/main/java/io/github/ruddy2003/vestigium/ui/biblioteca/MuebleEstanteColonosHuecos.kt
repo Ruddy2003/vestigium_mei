@@ -338,47 +338,52 @@ private fun DrawScope.jarroColonos(g: MarcoColonos, pie: Offset, al: Float) {
  * vecinos); de día y al anochecer está apagado.
  */
 internal fun DrawScope.candilFrascoColonos(g: MarcoColonos) {
-    val u = density; val w = g.w; val a = g.a
-    val llama = Offset(w * g.candil.x, w * g.candil.y)
+    val u = density; val a = g.a
+    val w = g.w * 1.55f
+    val llama = Offset(g.w * g.candil.x, g.w * g.candil.y)
     val tapa = llama.y + w * 0.012f
     val an = w * 0.019f; val al = w * 0.05f
     val frasco = Rect(llama.x - an, tapa, llama.x + an, tapa + al)
-    val clavo = Offset(llama.x, llama.y - w * 0.05f)
+    val clavo = Offset(llama.x, llama.y - w * 0.045f)
     val k = g.k(frasco.center); val br = g.br(frasco.center)
     val arde = a.oscuro
-    // La sombra del frasco en el costado (de día, a la derecha y abajo).
+    // El halo de la llama en el costado y en lo que tiene cerca, debajo del frasco.
+    if (arde) {
+        mancha(llama + Offset(0f, w * 0.03f), g.w * 0.34f, PaletaColonos.BOMBILLA.copy(alpha = if (a.lunar) 0.16f else 0.26f))
+        mancha(llama, g.w * 0.12f, Color(0xFFFFD58A).copy(alpha = 0.4f))
+    }
+    // La sombra del frasco en el costado: de día, a la derecha y abajo; de noche no hay (la luz es él).
     if (!a.oscuro) drawRoundRect(a.sombra(0.3f), Offset(frasco.left + w * 0.008f, frasco.top + w * 0.006f), frasco.size, CornerRadius(an * 0.35f))
     // El asa de alambre, del clavo a los dos lados de la tapa.
     val asa = Path().apply { moveTo(frasco.left - 0.5f * u, tapa + 1f * u); lineTo(clavo.x, clavo.y); lineTo(frasco.right + 0.5f * u, tapa + 1f * u) }
-    drawPath(asa, a.luz(LATA, maxOf(k, if (arde) 0.6f else 0f), br), style = Stroke(0.9f * u))
+    drawPath(asa, a.luz(LATA, maxOf(k, if (arde) 0.7f else 0f), br), style = Stroke(1.2f * u))
     // El frasco: el vidrio, el aceite ámbar hasta la mitad y su brillo.
     val forma = RoundRect(frasco, CornerRadius(an * 0.35f))
-    val vidrio = mezcla(Color(0xFFCFE2DA), a.hondo, if (a.oscuro) 0.4f else 0f)
-    drawRoundRect(vidrio.copy(alpha = 0.55f), frasco.topLeft, frasco.size, CornerRadius(an * 0.35f))
+    val vidrio = mezcla(Color(0xFFCFE2DA), a.hondo, if (a.oscuro) 0.25f else 0f)
+    drawRoundRect(vidrio.copy(alpha = 0.6f), frasco.topLeft, frasco.size, CornerRadius(an * 0.35f))
     clipPath(Path().apply { addRoundRect(forma) }) {
-        val aceite = if (arde) Color(0xFFF0A23A) else a.luz(Color(0xFFC98A2E), k, br)
+        val aceite = if (arde) Color(0xFFF4A83C) else a.luz(Color(0xFFC98A2E), k, br)
         drawRect(aceite, Offset(frasco.left, frasco.top + al * 0.45f), Size(frasco.width, al * 0.55f))
-        drawRect(Color.White.copy(alpha = if (arde) 0.5f else 0.35f), Offset(frasco.left, frasco.top + al * 0.45f), Size(frasco.width, 0.8f * u))
+        drawRect(Color.White.copy(alpha = if (arde) 0.55f else 0.35f), Offset(frasco.left, frasco.top + al * 0.45f), Size(frasco.width, 1f * u))
         // La mecha que baja al aceite.
-        drawLine(Color(0xFF6A5A44), Offset(llama.x, tapa), Offset(llama.x + an * 0.2f, frasco.bottom - al * 0.12f), 0.9f * u)
-        drawRect(Color.White.copy(alpha = 0.45f), Offset(frasco.left + an * 0.25f, frasco.top + 2f * u), Size(an * 0.22f, al - 4f * u))
+        drawLine(Color(0xFF6A5A44), Offset(llama.x, tapa), Offset(llama.x + an * 0.2f, frasco.bottom - al * 0.12f), 1.1f * u)
+        drawRect(Color.White.copy(alpha = 0.5f), Offset(frasco.left + an * 0.25f, frasco.top + 2f * u), Size(an * 0.22f, al - 4f * u))
     }
-    drawRoundRect(a.sombra(0.4f), frasco.topLeft, frasco.size, CornerRadius(an * 0.35f), style = Stroke(0.7f * u))
+    drawRoundRect(a.sombra(0.45f), frasco.topLeft, frasco.size, CornerRadius(an * 0.35f), style = Stroke(0.9f * u))
     // La tapa de lata con el portamecha.
-    drawRect(a.luz(LATA, maxOf(k, if (arde) 0.7f else 0f), br), Offset(frasco.left - 0.6f * u, tapa - w * 0.006f), Size(frasco.width + 1.2f * u, w * 0.007f))
-    drawRect(a.luz(LATA_OSC, maxOf(k, if (arde) 0.7f else 0f), br), Offset(llama.x - w * 0.003f, tapa - w * 0.011f), Size(w * 0.006f, w * 0.006f))
+    drawRect(a.luz(LATA, maxOf(k, if (arde) 0.75f else 0f), br), Offset(frasco.left - 0.8f * u, tapa - w * 0.006f), Size(frasco.width + 1.6f * u, w * 0.007f))
+    drawRect(a.luz(LATA_OSC, maxOf(k, if (arde) 0.75f else 0f), br), Offset(llama.x - w * 0.003f, tapa - w * 0.011f), Size(w * 0.006f, w * 0.006f))
     if (arde) {
-        mancha(llama, w * 0.16f, PaletaColonos.BOMBILLA.copy(alpha = 0.3f))
-        mancha(llama, w * 0.04f, Color(0xFFFFE2A8).copy(alpha = 0.7f))
         val lla = Path().apply {
-            moveTo(llama.x, llama.y - w * 0.014f)
-            quadraticTo(llama.x + w * 0.006f, llama.y - w * 0.002f, llama.x, llama.y + w * 0.004f)
-            quadraticTo(llama.x - w * 0.006f, llama.y - w * 0.002f, llama.x, llama.y - w * 0.014f); close()
+            moveTo(llama.x, llama.y - w * 0.016f)
+            quadraticTo(llama.x + w * 0.007f, llama.y - w * 0.002f, llama.x, llama.y + w * 0.004f)
+            quadraticTo(llama.x - w * 0.007f, llama.y - w * 0.002f, llama.x, llama.y - w * 0.016f); close()
         }
-        drawPath(lla, Color(0xFFFFC560))
-        drawCircle(Color.White.copy(alpha = 0.9f), w * 0.0022f, Offset(llama.x, llama.y))
+        drawPath(lla, Color(0xFFFFB648))
+        drawPath(Path().apply { addPath(lla) }, Color(0xFFFFE9B0).copy(alpha = 0.7f), style = Stroke(0.8f * u))
+        drawCircle(Color.White.copy(alpha = 0.95f), w * 0.0026f, Offset(llama.x, llama.y))
     } else {
-        drawLine(a.luz(Color(0xFF3A3028), k), Offset(llama.x, tapa - w * 0.011f), Offset(llama.x, tapa - w * 0.016f), 1f * u)
+        drawLine(a.luz(Color(0xFF3A3028), k), Offset(llama.x, tapa - w * 0.011f), Offset(llama.x, tapa - w * 0.017f), 1.2f * u)
     }
-    clavoColonos(clavo, 1.3f * u, g)
+    clavoColonos(clavo, 1.5f * u, g)
 }

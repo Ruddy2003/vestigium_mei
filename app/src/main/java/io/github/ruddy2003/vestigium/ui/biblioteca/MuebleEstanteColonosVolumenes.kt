@@ -51,7 +51,7 @@ private val MAIZ_CAJA = Color(0xFFE0A62E)
  */
 internal fun DrawScope.volumenColonos(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
     if (size.width < 4f || size.height < 4f) return
-    val a = AireColonos(oscuro, v.noche)
+    val a = AireColonos(oscuro, v.noche, true)
     val p = lugarVolumenColonos(v.repisa, v.centro)
     val brasa = brasaNominalColonos(v.repisas)
     val candil = candilNominalColonos(v.repisas)
