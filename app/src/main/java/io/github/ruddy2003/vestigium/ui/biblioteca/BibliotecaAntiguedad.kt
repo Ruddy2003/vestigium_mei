@@ -49,15 +49,11 @@ import kotlin.math.sin
 // =====================================================================
 
 /**
- * Prehistoria: el abrigo bajo la roca, a la entrada de la cueva. Las repisas son lajas de caliza apoyadas en pilas de
- * piedras; arriba, la visera de roca con sus capas, unos signos pintados con ocre, las estalactitas que gotean y un manojo de
- * hierbas colgado; detrás, el cielo de afuera. Al pie, el fogón con su cerco de piedras y la leña cruzada. Cada entrada es
- * una laja de pie, de contorno desportillado, con el día pintado en ocre, una mano en positivo (apoyada untada de ocre) y el
- * mes con carbón; las rayas de cuenta crecen con lo escrito y la laja se ensancha. De noche el fuego se vuelve brasas y en la
- * boca del abrigo salen las estrellas; en la laja, la luna en lugar de la mano. La tapa es esa laja tumbada y grande, con
- * la fecha en ocre, la mano, el ciervo de carbón y la cara alisada para el extracto; al abrirse se aparta rodando y deja ver
- * el hueco de la pared con una mano en negativo. Distinto del Ideario, que es la pared honda de la cueva con sus nichos
- * tallados, las manos en negativo y el bisonte.
+ * Prehistoria: la boca de una cueva habitada. El estante (`estante()` y `volumen()`) es el andamio de varas atadas con cuero
+ * contra la pared de la boca, con sus tres clases de entrada (el hueso de cuenta, la bolsa de piel y la piel enrollada), en
+ * `MuebleEstanteCueva*.kt`; este objeto solo le delega. La tapa es una laja tumbada y grande, con la fecha en ocre, la mano, el
+ * ciervo de carbón y la cara alisada para el extracto; al abrirse se aparta rodando y deja ver el hueco de la pared con una mano
+ * en negativo. Distinto del Ideario, que es la pared honda de la cueva con sus nichos tallados, las manos en negativo y el bisonte.
  */
 object EstanteCueva : DisenoBiblioteca {
     private val ROCA = Color(0xFFB09A7C)
@@ -69,8 +65,6 @@ object EstanteCueva : DisenoBiblioteca {
     private val OCRE = Color(0xFFA2401F)
     private val OCRE_AMARILLO = Color(0xFFC98A2E)
     private val CARBON = Color(0xFF221A15)
-    private val CIELO = Color(0xFFC9D3D0)
-    private val LOMA = Color(0xFF8E9A86)
     private val PASTO = Color(0xFF8C8550)
     private val TIERRA = Color(0xFF6B5541)
     private val BRASA = Color(0xFFE8804F)
@@ -79,8 +73,6 @@ object EstanteCueva : DisenoBiblioteca {
     /** Las calizas de las lajas: de la más clara a la más tostada. */
     private val CALIZAS = listOf(Color(0xFFE6DAC2), Color(0xFFD9C8A8), Color(0xFFCDB998), Color(0xFFE0CDB0), Color(0xFFC9B9A0))
     private val NOCHE = Color(0xFF10142A)
-    private val CIELO_NOCHE = Color(0xFF131A38)
-    private val ESTRELLA = Color(0xFFF1EBD0)
 
     /** El color con la luz del momento: en modo oscuro, más hundido; de noche, en la sombra azul de afuera. */
     private fun t(c: Color, oscuro: Boolean, noche: Boolean): Color {
@@ -90,245 +82,21 @@ object EstanteCueva : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.3f
-    override val base = 0.13f
-    override val lado = 0.06f
-    override val altoRepisa: Dp = 108.dp
-    override val tabla: Dp = 16.dp
-    override val separa: Dp = 4.dp
-    override val letra: FontFamily = LetraExtra.abrigo
+    override val corona = MuebleEstanteCueva.CORONA
+    override val base = MuebleEstanteCueva.BASE
+    override val lado = MuebleEstanteCueva.LADO
+    override val altoRepisa: Dp = MuebleEstanteCueva.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteCueva.TABLA
+    override val separa: Dp = MuebleEstanteCueva.SEPARA
+    override val letra: FontFamily = MuebleEstanteCueva.LETRA
 
-    override fun ancho(palabras: Int): Dp = (22 + (palabras / 35).coerceAtMost(22)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.72f + 0.2f * azar(semilla, 1)
+    override val auraEnReposo = false
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El fondo del abrigo: la roca honda, con sus capas onduladas, sus grietas y el hollín del fogón.
-        val cuerpo = Rect(0f, d.corona.bottom - d.corona.height * 0.12f, w, d.base.top + d.base.height * 0.35f)
-        drawRect(c(ROCA_HONDA), cuerpo.topLeft, cuerpo.size)
-        var y = cuerpo.top + 12 * u
-        var k = 0
-        while (y < cuerpo.bottom) {
-            val capa = Path()
-            capa.moveTo(0f, y)
-            var x = 0f
-            var j = 0
-            while (x < w) {
-                val dy = (azar(k * 37 + j, 5) - 0.5f) * 7 * u
-                capa.quadraticTo(x + 16 * u, y + dy, x + 32 * u, y)
-                x += 32 * u; j++
-            }
-            drawPath(capa, c(ROCA_OSC).copy(alpha = 0.4f), style = Stroke(1f * u))
-            y += (20 + 10 * azar(k, 3)) * u; k++
-        }
-        for (j in 0 until 4) {
-            val x0 = w * (0.15f + 0.22f * j + 0.05f * azar(j, 7))
-            val grieta = Path().apply {
-                moveTo(x0, cuerpo.top + cuerpo.height * 0.05f * j)
-                for (s in 1..6) lineTo(x0 + (azar(j * 11 + s, 8) - 0.5f) * 14 * u, cuerpo.top + cuerpo.height * (0.05f * j + 0.08f * s))
-            }
-            drawPath(grieta, Color.Black.copy(alpha = 0.3f), style = Stroke(0.9f * u))
-        }
-        listOf(0.5f to 0.02f, 0.42f to 0.08f, 0.58f to 0.13f).forEach { (fx, fy) ->
-            drawOval(Color.Black.copy(alpha = 0.12f), Offset(w * fx - w * 0.16f, cuerpo.top + cuerpo.height * fy), Size(w * 0.32f, cuerpo.height * 0.1f))
-        }
-        // Cada repisa: la sombra de la laja de arriba.
-        d.repisas.forEach { r ->
-            drawRect(Color.Black.copy(alpha = if (noche) 0.42f else 0.32f), r.topLeft, Size(r.width, 7 * u))
-            drawRect(Color.Black.copy(alpha = 0.15f), Offset(r.left, r.top + 7 * u), Size(r.width, 7 * u))
-        }
-        // Los costados: pilas de piedras donde se apoyan las lajas.
-        listOf(d.izquierda, d.derecha).forEachIndexed { s, r ->
-            var yy = r.top
-            var n = 0
-            while (yy < r.bottom) {
-                val q = s * 50 + n
-                val altoPiedra = (12 + 9 * azar(q, 11)) * u
-                val piedra = Rect(r.left - 2 * u + 3 * u * azar(q, 12), yy, r.right + 2 * u - 3 * u * azar(q, 13), minOf(yy + altoPiedra, r.bottom + 2 * u))
-                val forma = contornoIrregular(piedra, q, 14, 0.12f)
-                drawPath(forma, c(if (n % 2 == 0) ROCA else LAJA_OSC))
-                clipPath(forma) {
-                    drawRect(Color.White.copy(alpha = 0.14f), piedra.topLeft, Size(piedra.width, piedra.height * 0.3f))
-                    drawRect(Color.Black.copy(alpha = 0.2f), Offset(piedra.left, piedra.bottom - piedra.height * 0.3f), Size(piedra.width, piedra.height * 0.3f))
-                }
-                drawPath(forma, c(ROCA_OSC), style = Stroke(0.8f * u))
-                yy += altoPiedra - 1.5f * u; n++
-            }
-        }
-        // Las tablas: lajas de caliza, desportilladas, con su capa más clara arriba.
-        d.tablas.forEachIndexed { q, r ->
-            val laja = Rect(r.left - 5 * u, r.top - 1.5f * u, r.right + 5 * u, r.bottom + 1 * u)
-            val forma = contornoIrregular(laja, 70 + q, 48, 0.16f)
-            drawRect(Color.Black.copy(alpha = 0.28f), Offset(r.left, r.bottom), Size(r.width, 4 * u))
-            drawPath(forma, c(LAJA))
-            clipPath(forma) {
-                drawRect(c(ROCA_LUZ).copy(alpha = 0.7f), laja.topLeft, Size(laja.width, laja.height * 0.22f))
-                drawLine(c(LAJA_OSC).copy(alpha = 0.6f), Offset(laja.left, laja.top + laja.height * 0.55f), Offset(laja.right, laja.top + laja.height * 0.6f), 0.7f * u)
-                drawRect(Color.Black.copy(alpha = 0.18f), Offset(laja.left, laja.bottom - laja.height * 0.25f), Size(laja.width, laja.height * 0.25f))
-            }
-            drawPath(forma, c(ROCA_OSC), style = Stroke(0.8f * u))
-        }
-        // El rótulo de cada mes: una piedra plana y clara apoyada en la laja, pintada con ocre y con sus puntos.
-        d.placas.forEach { p ->
-            val r = p.r
-            val canto = contornoIrregular(r.inflate(1.5f * u), p.texto.hashCode(), 20, 0.1f)
-            drawPath(canto, c(CALIZAS[0]))
-            drawPath(canto, c(OCRE).copy(alpha = 0.7f), style = Stroke(1.1f * u))
-            for (j in 0 until 3) {
-                drawCircle(c(OCRE), 1.1f * u, Offset(r.left + 4 * u, r.top + r.height * (0.25f + 0.25f * j)))
-                drawCircle(c(OCRE), 1.1f * u, Offset(r.right - 4 * u, r.top + r.height * (0.25f + 0.25f * j)))
-            }
-            textoEn(medidor, p.texto, Rect(r.left + 7 * u, r.top, r.right - 7 * u, r.bottom), letra, c(OCRE), 11f, peso = FontWeight.Bold, minimo = 5f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el suelo de tierra con sus guijarros, las piedras planas al pie de las pilas y el fogón.
-        val b = d.base
-        val piso = b.top + b.height * 0.35f
-        drawRect(c(TIERRA), Offset(0f, piso), Size(w, h - piso))
-        for (j in 0 until 18) {
-            drawOval(c(ROCA_OSC).copy(alpha = 0.6f), Offset(w * azar(j, 21), piso + (h - piso) * (0.3f + 0.6f * azar(j, 22))),
-                Size((2 + 3 * azar(j, 23)) * u, (1.2f + 1.5f * azar(j, 24)) * u))
-        }
-        listOf(0f to 0.2f, 0.8f to 1f).forEachIndexed { j, (a, z) ->
-            val p0 = Rect(w * a - 4 * u, b.top - 2 * u, w * z + 4 * u, piso + b.height * 0.2f)
-            val forma = contornoIrregular(p0, 90 + j, 24, 0.14f)
-            drawPath(forma, c(ROCA))
-            drawPath(forma, c(ROCA_OSC), style = Stroke(0.8f * u))
-        }
-        fogon(Offset(w * 0.5f, b.top + b.height * 0.66f), b.height, oscuro, noche)
-    }
+    override fun ancho(palabras: Int): Dp = MuebleEstanteCueva.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteCueva.alto(semilla, palabras)
 
-    /** La boca del abrigo: el cielo de afuera (de noche, con estrellas), la visera de roca con sus estalactitas y el manojo colgado. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El cielo, con la loma lejana de día; de noche, las estrellas.
-        val cielo = Rect(r.left, r.top, r.right, r.top + r.height * 0.45f)
-        drawRect(if (noche) CIELO_NOCHE else c(CIELO), cielo.topLeft, cielo.size)
-        if (noche) {
-            for (j in 0 until 22) {
-                val p = Offset(r.left + r.width * azar(j, 41), cielo.top + cielo.height * 0.9f * azar(j, 42))
-                val e = (0.6f + 1.1f * azar(j, 43)) * u
-                drawCircle(ESTRELLA.copy(alpha = 0.55f + 0.45f * azar(j, 44)), e, p)
-                if (j % 5 == 0) {
-                    drawLine(ESTRELLA.copy(alpha = 0.6f), Offset(p.x - e * 3, p.y), Offset(p.x + e * 3, p.y), 0.5f * u)
-                    drawLine(ESTRELLA.copy(alpha = 0.6f), Offset(p.x, p.y - e * 3), Offset(p.x, p.y + e * 3), 0.5f * u)
-                }
-            }
-        } else {
-            val loma = Path().apply {
-                moveTo(r.left, cielo.bottom)
-                lineTo(r.left, cielo.top + cielo.height * 0.62f)
-                cubicTo(r.left + r.width * 0.25f, cielo.top + cielo.height * 0.4f, r.left + r.width * 0.5f, cielo.top + cielo.height * 0.75f, r.left + r.width * 0.72f, cielo.top + cielo.height * 0.5f)
-                cubicTo(r.left + r.width * 0.85f, cielo.top + cielo.height * 0.38f, r.right, cielo.top + cielo.height * 0.55f, r.right, cielo.top + cielo.height * 0.55f)
-                lineTo(r.right, cielo.bottom); close()
-            }
-            drawPath(loma, c(LOMA).copy(alpha = 0.7f))
-        }
-        // Bajo la visera, la sombra honda del abrigo.
-        drawRect(c(ROCA_HONDA), Offset(r.left, r.top + r.height * 0.4f), Size(r.width, r.height * 0.6f))
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(r.left, r.top + r.height * 0.62f), Size(r.width, r.height * 0.18f))
-        // La visera de roca: arriba ondulada, abajo desportillada.
-        val borde = r.top + r.height * 0.64f
-        val pasos = 18
-        val visera = Path().apply {
-            moveTo(r.left, r.top + r.height * 0.22f)
-            cubicTo(r.left + r.width * 0.18f, r.top + r.height * 0.1f, r.left + r.width * 0.4f, r.top + r.height * 0.32f, r.left + r.width * 0.6f, r.top + r.height * 0.22f)
-            cubicTo(r.left + r.width * 0.76f, r.top + r.height * 0.14f, r.right - r.width * 0.1f, r.top + r.height * 0.08f, r.right, r.top + r.height * 0.15f)
-            for (j in pasos downTo 0) {
-                val x = r.left + r.width * j / pasos
-                val caida = if (j == 0 || j == pasos) r.height * 0.12f else 0f
-                lineTo(x, borde + caida + (azar(j, 45) - 0.5f) * r.height * 0.07f)
-            }
-            close()
-        }
-        drawPath(visera, c(ROCA))
-        clipPath(visera) {
-            for (j in 0 until 6) {
-                val yy = r.top + r.height * (0.18f + 0.08f * j)
-                drawLine(c(ROCA_OSC).copy(alpha = 0.45f), Offset(r.left, yy + (azar(j, 46) - 0.5f) * 6 * u), Offset(r.right, yy + (azar(j, 47) - 0.5f) * 6 * u), 1f * u)
-            }
-            drawRect(c(ROCA_LUZ).copy(alpha = 0.5f), Offset(r.left, r.top), Size(r.width, r.height * 0.26f))
-            drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, borde - r.height * 0.1f), Size(r.width, r.height * 0.3f))
-            // Signos pintados con ocre en la cara de la roca: una hilera de puntos y unas barras (formas, no figuras).
-            for (j in 0 until 7) drawCircle(c(OCRE).copy(alpha = 0.75f), 1.6f * u, Offset(r.left + r.width * (0.2f + 0.035f * j), r.top + r.height * 0.42f + (j % 2) * 1.5f * u))
-            for (j in 0 until 4) {
-                drawLine(c(OCRE).copy(alpha = 0.7f), Offset(r.left + r.width * (0.66f + 0.03f * j), r.top + r.height * 0.36f),
-                    Offset(r.left + r.width * (0.665f + 0.03f * j), r.top + r.height * 0.5f), 2.2f * u, cap = StrokeCap.Round)
-            }
-            drawLine(c(OCRE_AMARILLO).copy(alpha = 0.7f), Offset(r.left + r.width * 0.64f, r.top + r.height * 0.54f), Offset(r.left + r.width * 0.78f, r.top + r.height * 0.54f), 2f * u, cap = StrokeCap.Round)
-        }
-        drawPath(visera, c(ROCA_OSC), style = Stroke(1.2f * u))
-        // Las estalactitas que cuelgan del borde, alguna con su gota.
-        val n = 13
-        for (j in 0 until n) {
-            val x = r.left + r.width * (0.04f + 0.92f * j / (n - 1)) + (azar(j, 48) - 0.5f) * 8 * u
-            val y0 = borde - r.height * 0.02f
-            val largo = r.height * (0.07f + 0.2f * azar(j, 49))
-            val grueso = (3 + 4 * azar(j, 50)) * u
-            val punta = Path().apply {
-                moveTo(x - grueso, y0); lineTo(x + grueso, y0); lineTo(x + grueso * 0.15f, y0 + largo); lineTo(x - grueso * 0.15f, y0 + largo); close()
-            }
-            drawPath(punta, c(if (j % 2 == 0) ROCA_LUZ else ROCA))
-            drawLine(c(ROCA_OSC).copy(alpha = 0.6f), Offset(x + grueso * 0.5f, y0), Offset(x + grueso * 0.1f, y0 + largo), 0.8f * u)
-            if (azar(j, 51) > 0.7f) drawCircle(c(CIELO).copy(alpha = 0.8f), 1.1f * u, Offset(x, y0 + largo + 2.5f * u))
-        }
-        // Un manojo de hierbas secas colgado de la roca con una fibra.
-        val mx = r.left + r.width * 0.88f
-        val atado = borde + r.height * 0.14f
-        drawLine(c(LAJA_OSC), Offset(mx, borde), Offset(mx, atado), 1f * u)
-        for (j in -3..3) drawLine(c(PASTO), Offset(mx, atado), Offset(mx + j * 2.2f * u, atado + r.height * (0.16f - 0.01f * kotlin.math.abs(j))), 1.1f * u, cap = StrokeCap.Round)
-        drawRect(c(OCRE), Offset(mx - 2.4f * u, atado - 1 * u), Size(4.8f * u, 2.4f * u))
-    }
-
-    /** El fogón al pie del abrigo: el cerco de piedras, la leña cruzada y el fuego (de noche, las brasas que brillan). */
-    private fun DrawScope.fogon(o: Offset, alto: Float, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        val ra = alto * 0.75f
-        // El resplandor: el único degradado del mueble.
-        mancha(Offset(o.x, o.y - alto * 0.2f), ra * (if (noche) 2.6f else 1.8f), (if (noche) BRASA else FUEGO).copy(alpha = if (noche) 0.4f else 0.3f))
-        drawLine(c(LENA), Offset(o.x - ra * 0.7f, o.y + alto * 0.08f), Offset(o.x + ra * 0.55f, o.y - alto * 0.12f), 4 * u, cap = StrokeCap.Round)
-        drawLine(c(LENA), Offset(o.x + ra * 0.7f, o.y + alto * 0.08f), Offset(o.x - ra * 0.55f, o.y - alto * 0.12f), 4 * u, cap = StrokeCap.Round)
-        if (noche) {
-            // Las brasas sobre la leña y alguna chispa que sube.
-            for (j in 0 until 9) {
-                val p = Offset(o.x + (azar(j, 31) - 0.5f) * ra * 1.2f, o.y - alto * 0.02f + (azar(j, 32) - 0.5f) * alto * 0.16f)
-                drawCircle(if (j % 3 == 0) FUEGO else BRASA, (1.2f + 1.6f * azar(j, 33)) * u, p)
-            }
-            drawCircle(FUEGO.copy(alpha = 0.8f), 0.9f * u, Offset(o.x + ra * 0.2f, o.y - alto * 0.55f))
-            drawCircle(FUEGO.copy(alpha = 0.6f), 0.7f * u, Offset(o.x - ra * 0.15f, o.y - alto * 0.75f))
-        } else {
-            // Las llamas: tres lenguas, la de en medio más alta.
-            listOf(-0.3f to 0.45f, 0f to 0.7f, 0.28f to 0.5f).forEach { (fx, fy) ->
-                val bx = o.x + fx * ra
-                val llama = Path().apply {
-                    moveTo(bx - ra * 0.22f, o.y)
-                    quadraticTo(bx - ra * 0.24f, o.y - alto * fy * 0.5f, bx, o.y - alto * fy)
-                    quadraticTo(bx + ra * 0.24f, o.y - alto * fy * 0.5f, bx + ra * 0.22f, o.y)
-                    close()
-                }
-                drawPath(llama, c(BRASA))
-                val dentro = Path().apply {
-                    moveTo(bx - ra * 0.1f, o.y)
-                    quadraticTo(bx - ra * 0.1f, o.y - alto * fy * 0.35f, bx, o.y - alto * fy * 0.6f)
-                    quadraticTo(bx + ra * 0.1f, o.y - alto * fy * 0.35f, bx + ra * 0.1f, o.y)
-                    close()
-                }
-                drawPath(dentro, c(FUEGO))
-            }
-        }
-        // El cerco de piedras.
-        for (j in 0 until 7) {
-            val f = j / 6f
-            val p = Offset(o.x - ra + 2 * ra * f, o.y + alto * 0.12f + sin(f * 3.1416f) * alto * 0.08f)
-            val pr = Rect(p.x - ra * 0.17f, p.y - alto * 0.07f, p.x + ra * 0.17f, p.y + alto * 0.07f)
-            drawOval(c(ROCA), pr.topLeft, pr.size)
-            drawOval(c(ROCA_OSC), pr.topLeft, pr.size, style = Stroke(0.7f * u))
-        }
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteCueva) { estante(d, medidor, oscuro, noche) }
 
     /** Una mano en positivo: la palma y los cinco dedos, como si la hubieran apoyado untada de ocre. */
     private fun DrawScope.mano(c0: Offset, m: Float, color: Color, semilla: Int) {
@@ -343,49 +111,7 @@ object EstanteCueva : DisenoBiblioteca {
         drawRect(color, Offset(pc.x - m * 0.32f, pc.y + m * 0.3f), Size(m * 0.64f, m * 0.45f))
     }
 
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val base = CALIZAS[(v.semilla and 0x7fffffff) % CALIZAS.size]
-        val piedra = c(if (v.tono != null) mezcla(base, v.tono, 0.22f) else base)
-        // La laja de pie, desportillada, con luz a la izquierda y sombra a la derecha (planas, sin degradados).
-        val contorno = contornoIrregular(Rect(0f, 0f, w, h), v.semilla, 22, 0.05f)
-        drawPath(contorno, piedra)
-        clipPath(contorno) {
-            drawRect(Color.White.copy(alpha = 0.12f), Offset.Zero, Size(w * 0.18f, h))
-            drawRect(Color.Black.copy(alpha = 0.2f), Offset(w * 0.82f, 0f), Size(w * 0.18f, h))
-            drawRect(Color.Black.copy(alpha = 0.12f), Offset(0f, h * 0.9f), Size(w, h * 0.1f))
-            // Las capas de la caliza y algún poro.
-            for (j in 0 until 4) {
-                val yy = h * (0.15f + 0.22f * j + 0.06f * azar(v.semilla, 10 + j))
-                drawLine(c(LAJA_OSC).copy(alpha = 0.35f), Offset(0f, yy), Offset(w, yy + (azar(v.semilla, 20 + j) - 0.5f) * 6 * u), 0.7f * u)
-            }
-            for (j in 0 until 5) drawCircle(c(LAJA_OSC).copy(alpha = 0.4f), (0.6f + 0.8f * azar(v.semilla, 30 + j)) * u, Offset(w * azar(v.semilla, 40 + j), h * azar(v.semilla, 50 + j)))
-        }
-        drawPath(contorno, c(ROCA_OSC), style = Stroke(0.8f * u))
-        // El día, pintado con ocre arriba.
-        textoEn(medidor, v.dia, Rect(w * 0.08f, h * 0.05f, w * 0.92f, h * 0.24f), letra, c(OCRE), 15f, peso = FontWeight.Bold)
-        // La mano en positivo; de noche, la luna y tres estrellas en ocre amarillo.
-        val cm = Offset(w * 0.5f, h * 0.36f)
-        val m = minOf(w * 0.3f, h * 0.1f)
-        if (v.noche) {
-            drawCircle(c(OCRE_AMARILLO), m * 0.8f, Offset(cm.x, cm.y + m * 0.4f))
-            drawCircle(piedra, m * 0.68f, Offset(cm.x + m * 0.35f, cm.y + m * 0.2f))
-            for (j in 0 until 3) drawCircle(c(OCRE_AMARILLO), 1f * u, Offset(w * (0.25f + 0.25f * j), cm.y - m * (0.6f + 0.3f * (j % 2))))
-        } else {
-            mano(cm, m, c(OCRE).copy(alpha = 0.85f), v.semilla)
-        }
-        // El mes, con carbón.
-        textoEn(medidor, v.mes, Rect(w * 0.16f, h * 0.52f, w * 0.84f, h * 0.85f), letra, c(CARBON).copy(alpha = 0.85f), 9f, vertical = true, minimo = 4.5f)
-        // Las rayas de cuenta: más cuanto más escribiste.
-        val rayas = 1 + (v.lleno * 6).toInt()
-        val paso = w * 0.7f / 7f
-        for (j in 0 until rayas) {
-            val x = w * 0.15f + paso * j
-            drawLine(c(OCRE).copy(alpha = 0.8f), Offset(x, h * 0.87f), Offset(x + 0.6f * u, h * 0.95f), 1.4f * u, cap = StrokeCap.Round)
-        }
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) = with(MuebleEstanteCueva) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
