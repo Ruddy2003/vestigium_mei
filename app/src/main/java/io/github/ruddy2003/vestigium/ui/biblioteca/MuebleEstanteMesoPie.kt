@@ -292,21 +292,23 @@ private fun DrawScope.mazorcasSecasMeso(m: MesaMeso, c: Offset) {
 
 /** Una lengua de llama en [c] (su base), de [alto] y [ancho], inclinada [giro] grados. */
 private fun lenguaMeso(c: Offset, alto: Float, ancho: Float, giro: Float): Path = Path().apply {
+    // Una gota: la panza redonda abajo y la punta que se afina y se ladea arriba.
     val dx = alto * giro / 60f
-    moveTo(c.x - ancho * 0.5f, c.y)
-    cubicTo(c.x - ancho * 0.66f, c.y - alto * 0.32f, c.x - ancho * 0.08f + dx * 0.3f, c.y - alto * 0.55f, c.x + dx * 0.7f, c.y - alto * 0.8f)
-    quadraticTo(c.x + dx * 0.95f - ancho * 0.08f, c.y - alto * 0.9f, c.x + dx, c.y - alto)
-    cubicTo(c.x + dx * 0.5f + ancho * 0.3f, c.y - alto * 0.64f, c.x + ancho * 0.66f, c.y - alto * 0.3f, c.x + ancho * 0.5f, c.y)
+    moveTo(c.x, c.y + ancho * 0.2f)
+    cubicTo(c.x - ancho * 0.62f, c.y + ancho * 0.18f, c.x - ancho * 0.6f, c.y - alto * 0.32f, c.x - ancho * 0.16f + dx * 0.4f, c.y - alto * 0.6f)
+    quadraticTo(c.x + dx * 0.85f - ancho * 0.04f, c.y - alto * 0.86f, c.x + dx, c.y - alto)
+    quadraticTo(c.x + dx * 0.55f + ancho * 0.3f, c.y - alto * 0.62f, c.x + ancho * 0.52f, c.y - alto * 0.25f)
+    cubicTo(c.x + ancho * 0.66f, c.y - alto * 0.02f, c.x + ancho * 0.45f, c.y + ancho * 0.2f, c.x, c.y + ancho * 0.2f)
     close()
 }
 
-/** Las lenguas de una lumbre en [c]: cuatro capas (rojo de brasa, naranja, oro y el corazón claro), de [escala] de ancho y [alta]. */
+/** Las lenguas de una lumbre en [c]: tres gotas en cuatro capas (rojo de brasa, naranja, oro y el corazón claro), de [escala] de ancho y [alta]. */
 private fun DrawScope.llamasMeso(c: Offset, escala: Float, alta: Float, semilla: Int) {
-    val lenguas = listOf(Triple(-0.34f, 0.62f, -16f), Triple(0.3f, 0.72f, 18f), Triple(-0.06f, 1f, 6f), Triple(0.1f, 0.5f, -8f))
-    listOf(Color(0xFFD9542A) to 1f, BRASA to 0.78f, LLAMA to 0.55f, LLAMA_VIVA to 0.32f).forEach { (col, s) ->
+    val lenguas = listOf(Triple(-0.3f, 0.62f, -14f), Triple(0.28f, 0.7f, 16f), Triple(0f, 1f, 5f))
+    listOf(Color(0xFFD9542A).copy(alpha = 0.85f) to 1f, BRASA to 0.78f, LLAMA to 0.56f, LLAMA_VIVA to 0.34f).forEach { (col, s) ->
         lenguas.forEachIndexed { i, (dx, h, g) ->
-            val base = Offset(c.x + dx * escala * 0.5f, c.y)
-            drawPath(lenguaMeso(base, alta * h * (0.35f + 0.65f * s) * (0.9f + 0.2f * azar(semilla, i)), escala * 0.36f * s, g), col)
+            val base = Offset(c.x + dx * escala * 0.5f, c.y - (1f - s) * alta * 0.08f)
+            drawPath(lenguaMeso(base, alta * h * (0.3f + 0.7f * s) * (0.92f + 0.16f * azar(semilla, i)), escala * 0.5f * (0.4f + 0.6f * s), g), col)
         }
     }
 }

@@ -276,13 +276,15 @@ internal fun DrawScope.amarresMeso(m: MesaMeso, d: DisposicionEstante) {
             drawRect(a.c(mezcla(ZAPOTE, ZAPOTE_LUZ, 0.3f), k, f), esp.topLeft, esp.size)
             drawRect(a.b(0.4f, k), esp.topLeft, Size(esp.width, 1.2f * u))
             drawRect(a.s(0.3f), Offset(esp.left, esp.bottom - 1.4f * u), Size(esp.width, 1.4f * u))
-            // La cuña, de arriba abajo, que sale por los dos lados de la espiga.
-            val cx = esp.center.x
-            val cuna = poligonoMeso(cx - w * 0.006f, esp.top - w * 0.012f, cx + w * 0.006f, esp.top - w * 0.012f, cx + w * 0.0035f, esp.bottom + w * 0.008f, cx - w * 0.0035f, esp.bottom + w * 0.008f)
-            drawPath(corridoMeso(cuna, 1.4f * u, 1.4f * u), a.s(0.35f))
-            drawPath(cuna, a.c(ZAPOTE_LUZ, k, f))
+            // La cabeza de la cuña, metida de arriba en la espiga (no asoma por debajo), algo ladeada; y la testa de la
+            // espiga con dos anillos de la madera.
+            val cx = esp.center.x + (if (izq) -1f else 1f) * w * 0.002f
+            val cuna = poligonoMeso(cx - w * 0.0065f, esp.top - w * 0.011f, cx + w * 0.004f, esp.top - w * 0.013f, cx + w * 0.003f, esp.top + esp.height * 0.45f, cx - w * 0.0035f, esp.top + esp.height * 0.45f)
+            drawPath(corridoMeso(cuna, 1.4f * u, 1.2f * u), a.s(0.35f))
+            drawPath(cuna, a.c(mezcla(ZAPOTE_LUZ, MesoTinta.ESTUCO, 0.2f), k, f))
             drawPath(bordeMeso(cuna, w * 0.003f, 0f), a.b(0.3f, k))
-            drawRect(a.s(0.3f), Offset(cx + w * 0.002f, esp.top - w * 0.012f), Size(w * 0.004f, esp.height + w * 0.02f))
+            drawRect(a.s(0.35f), Offset(cx - w * 0.006f, esp.top), Size(w * 0.011f, 1.2f * u))
+            drawArc(a.s(0.3f), 100f, 160f, false, Offset(esp.left + esp.width * 0.15f, esp.top + esp.height * 0.55f), Size(esp.width * 0.5f, esp.height * 0.4f), style = Stroke(0.6f * u))
             // El amarre de henequén encima de la tabla.
             val am = Rect(p.left - w * 0.004f, t.top - w * 0.03f, p.right + w * 0.004f, t.top - w * 0.004f)
             drawRect(a.s(0.35f), Offset(am.left + 1.6f * u, am.top + 1.6f * u), am.size)

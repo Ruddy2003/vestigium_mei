@@ -103,8 +103,9 @@ internal fun DrawScope.testeroMeso(m: MesaMeso) {
     val forma = testeroFormaMeso(w, ch)
     val y0 = w * MuebleEstanteMeso.ARRANQUE
     val banda = Rect(0f, y0 - w * 0.002f, w, y0 + w * 0.03f)
+    // El azul va también bajo la bóveda (que lo tapa): así no asoma el fondo en la junta de los escalones.
+    panoMeso(m, listOf(todo), AZUL)
     clipPath(forma) {
-        panoMeso(m, listOf(todo), AZUL)
         // El repaso: dos parches de otro azul, con el borde de la brocha.
         listOf(Offset(0.3f, 0.16f), Offset(0.62f, 0.38f), Offset(0.9f, 0.13f)).forEachIndexed { i, o ->
             val c = Offset(w * o.x, w * o.y)
@@ -141,8 +142,8 @@ internal fun DrawScope.testeroMeso(m: MesaMeso) {
             mancha(c, w * (if (a.lunar) 0.62f else 0.3f), MesoTinta.LUNA.copy(alpha = if (a.lunar) 0.26f else 0.15f))
             // El halo de la lumbre del nicho, que tiñe el azul de naranja (en los Sueños, más chico).
             val q = if (a.lunar) 0.55f else 1f
-            mancha(m.nicho, w * 0.75f * q, MesoTinta.BRASA.copy(alpha = 0.16f * q))
-            mancha(m.nicho, w * 0.36f * q, Color(0xFFFF7A3A).copy(alpha = 0.22f * q))
+            mancha(m.nicho, w * 0.9f * q, MesoTinta.BRASA.copy(alpha = 0.2f * q))
+            mancha(m.nicho, w * 0.42f * q, Color(0xFFFF7A3A).copy(alpha = 0.26f * q))
             mancha(m.nicho, w * 0.14f * q, MesoTinta.LLAMA_VIVA.copy(alpha = 0.3f * q))
         }
     }
@@ -190,15 +191,27 @@ internal fun DrawScope.bovedaMeso(m: MesaMeso) {
             val alto = y(j - 1) - y(j)
             val hasta = x(j - 1)
             val cara = if (lado == 0) Rect(-1f, y(j), hasta, y(j - 1)) else Rect(w - hasta, y(j), w + 1f, y(j - 1))
+            // La fila de la junta con la hilada de arriba (que se pinta después) puede caer a medio píxel: esta sube un píxel.
+            val bajo = Rect(cara.left, cara.top - 1f, cara.right, cara.bottom)
             if (cara.width < 1f) continue
             val pc = cara.center
             val tono = mezcla(mezcla(CALIZA, ESTUCO, 0.45f), CALIZA_OSC, if (lado == 0) 0.38f else 0.12f) .let { mezcla(it, CALIZA_OSC, 0.12f * azar(j + lado * 9, 656)) }
-            drawRect(a.c(tono, m.k(pc), m.f(pc) * 0.6f), cara.topLeft, cara.size)
-            // Las juntas de las lajas de la hilada, a trechos.
-            val juntas = Path()
-            var xj = cara.left + w * (0.03f + 0.05f * azar(j + lado * 7, 657)); var q = 0
-            while (xj < cara.right - w * 0.02f && q < 12) { juntas.moveTo(xj, cara.top); juntas.lineTo(xj + w * 0.002f, cara.bottom); xj += w * (0.07f + 0.06f * azar(j * 3 + q + lado, 658)); q++ }
-            drawPath(juntas, a.s(0.3f), style = Stroke(0.8f * u))
+            drawRect(a.c(tono, m.k(pc), m.f(pc) * 0.6f), bajo.topLeft, bajo.size)
+            // Las lajas de la hilada, cada una con su tono, su junta y una esquina comida.
+            val juntas = Path(); val claras = Path(); val oscuras = Path()
+            var xj = cara.left - w * 0.03f * azar(j + lado * 7, 657); var q = 0
+            while (xj < cara.right && q < 24) {
+                val largo = w * (0.04f + 0.045f * azar(j * 5 + q + lado * 3, 658))
+                val bloque = Rect(xj, cara.top, xj + largo, cara.bottom)
+                val t = azar(j * 7 + q + lado * 13, 659)
+                if (t > 0.62f) claras.addRect(bloque) else if (t < 0.3f) oscuras.addRect(bloque)
+                juntas.moveTo(bloque.right, cara.top); juntas.lineTo(bloque.right + w * 0.001f, cara.bottom)
+                if (t > 0.5f) juntas.addPath(poligonoMeso(bloque.right - alto * 0.3f, cara.bottom, bloque.right, cara.bottom - alto * 0.25f, bloque.right, cara.bottom))
+                xj += largo; q++
+            }
+            drawPath(claras, a.b(0.12f, m.k(pc)))
+            drawPath(oscuras, a.s(0.1f))
+            drawPath(juntas, a.s(0.32f), style = Stroke(0.9f * u))
             // Arriba, la sombra de la hilada que sale encima; abajo, el canto de la laja con su luz.
             drawRect(a.s(if (lado == 0) 0.36f else 0.26f), cara.topLeft, Size(cara.width, alto * 0.26f))
             drawRect(a.b(0.35f, m.k(pc)), Offset(cara.left, cara.bottom - 1.2f * u), Size(cara.width, 1.2f * u))
@@ -265,16 +278,19 @@ private fun DrawScope.desconchonMeso(m: MesaMeso, r: Rect, semilla: Int) {
     val u = density
     val a = m.a
     val k = m.k(r.center); val f = m.f(r.center)
+    // Alrededor, el azul que se levantó en escamas (más claro); dentro, el estuco crema gastado y, en el medio, la caliza.
+    val aureola = contornoMeso(r.inflate(minOf(r.width, r.height) * 0.3f), semilla + 2, 0.25f)
+    drawPath(aureola, a.c(mezcla(MesoTinta.AZUL, ESTUCO, 0.3f), k, f).copy(alpha = 0.45f))
     val hoyo = contornoMeso(r, semilla, 0.3f)
-    val piedra = contornoMeso(r.deflate(minOf(r.width, r.height) * 0.22f), semilla + 1, 0.35f)
-    drawPath(hoyo, a.c(mezcla(ESTUCO, ESTUCO_OSC, 0.4f), k, f))
-    drawPath(piedra, a.c(CALIZA, k, f))
+    val piedra = contornoMeso(r.deflate(minOf(r.width, r.height) * 0.24f), semilla + 1, 0.35f)
+    drawPath(hoyo, a.c(mezcla(ESTUCO_OSC, CALIZA, 0.45f), k, f))
+    drawPath(piedra, a.c(mezcla(CALIZA, CALIZA_OSC, 0.45f), k, f))
     clipPath(piedra) {
         for (j in 0 until 4) drawCircle(a.c(CALIZA_OSC, k, f), minOf(r.width, r.height) * (0.04f + 0.04f * azar(semilla, j)),
             Offset(r.left + r.width * azar(semilla, j + 10), r.top + r.height * azar(semilla, j + 20)))
     }
-    drawPath(bordeMeso(hoyo, -1.6f * u, -1.8f * u), a.s(0.45f))
-    drawPath(bordeMeso(hoyo, 1.2f * u, 1.4f * u), a.b(0.5f, k))
+    drawPath(bordeMeso(hoyo, -1.2f * u, -1.4f * u), a.s(0.38f))
+    drawPath(bordeMeso(hoyo, 0.9f * u, 1f * u), a.b(0.3f, k))
 }
 
 /** Un contorno irregular dentro de [r], de dieciséis puntos. */
@@ -304,9 +320,12 @@ internal fun DrawScope.nichoMeso(m: MesaMeso) {
     val hueco = huecoNichoMeso(r)
     val k = m.k(Offset(r.center.x, r.bottom))
     // El hollín: sube del hueco y se abre en el azul (de noche lo dora la lumbre).
-    val hollin = contornoMeso(Rect(r.left - w * 0.03f, r.top - w * 0.12f, r.right + w * 0.035f, r.top + w * 0.03f), 660, 0.22f)
-    drawPath(hollin, (if (a.oscuro) mezcla(TINTA, MesoTinta.BRASA, 0.25f) else TINTA).copy(alpha = if (a.oscuro) 0.3f else 0.2f))
-    drawPath(contornoMeso(Rect(r.left + w * 0.005f, r.top - w * 0.06f, r.right + w * 0.01f, r.top + w * 0.02f), 661, 0.2f), TINTA.copy(alpha = if (a.oscuro) 0.22f else 0.18f))
+    val tizne = if (a.oscuro) mezcla(TINTA, MesoTinta.BRASA, 0.25f) else TINTA
+    for (j in 0 until 4) {
+        val ancho = r.width * (1.25f - 0.22f * j)
+        val alto = w * (0.13f - 0.022f * j)
+        drawOval(tizne.copy(alpha = if (a.oscuro) 0.09f else 0.07f), Offset(r.center.x - ancho / 2 + w * 0.006f * j, r.top - alto + w * 0.025f), Size(ancho, alto))
+    }
     // El marco de estuco, con su sombra en el muro y su filete rojo.
     val marco = huecoNichoMeso(Rect(r.left - w * 0.011f, r.top - w * 0.011f, r.right + w * 0.011f, r.bottom + w * 0.004f))
     sombraMuroMeso(m, marco, r.center, 0.22f)

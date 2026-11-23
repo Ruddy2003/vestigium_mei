@@ -160,24 +160,29 @@ private fun DrawScope.canastoMeso(m: MesaMeso, pie: Offset) {
     // El cuerpo tejido.
     drawPath(cuerpo, a.c(BEJUCO, k, f))
     clipPath(cuerpo) {
-        val filas = 7
-        val tramosLuz = Path(); val tramosSombra = Path()
-        for (fi in 0 until filas) {
-            val y0 = boca + alto * (0.12f + 0.88f * fi / filas); val y1 = boca + alto * (0.12f + 0.88f * (fi + 1) / filas)
-            var x = pie.x - ancho * 0.52f + (if (fi % 2 == 0) 0f else ancho * 0.025f)
-            while (x < pie.x + ancho * 0.52f) {
-                tramosLuz.addRoundRect(androidx.compose.ui.geometry.RoundRect(x, y0 + 0.6f * u, x + ancho * 0.042f, y1 - 0.6f * u, 2f * u, 2f * u))
-                tramosSombra.moveTo(x + ancho * 0.046f, y0); tramosSombra.lineTo(x + ancho * 0.046f, y1)
-                x += ancho * 0.05f
+        // El tejido en sarga: tiras en diagonal que pasan por encima de dos y por debajo de dos; las de un sentido a la luz.
+        val celda = w * 0.013f
+        val luz = Path(); val sombra = Path()
+        val y0 = boca; val y1 = pie.y
+        var fila = 0
+        var y = y0
+        while (y < y1 && fila < 30) {
+            var x = pie.x - ancho * 0.55f + (fila % 4) * celda * 0.5f
+            var n = 0
+            while (x < pie.x + ancho * 0.55f && n < 60) {
+                val p = if ((n + fila / 2) % 2 == 0) luz else sombra
+                p.moveTo(x, y + celda); p.lineTo(x + celda, y)
+                x += celda; n++
             }
+            y += celda; fila++
         }
-        drawPath(tramosLuz, a.c(mezcla(BEJUCO, ESTUCO, 0.25f), k, f))
-        drawPath(tramosSombra, a.c(BEJUCO_OSC, k, f), style = Stroke(1.2f * u))
+        drawPath(luz, a.c(mezcla(BEJUCO, ESTUCO, 0.35f), k, f), style = Stroke(celda * 0.62f))
+        drawPath(sombra, a.c(BEJUCO_OSC, k, f).copy(alpha = 0.55f), style = Stroke(celda * 0.4f))
         // La franja teñida.
         drawRect(a.c(ACHIOTE, k, f).copy(alpha = 0.75f), Offset(pie.x - ancho, boca + alto * 0.4f), Size(ancho * 2, alto * 0.13f))
         drawRect(a.c(TINTA, 0.3f).copy(alpha = 0.4f), Offset(pie.x - ancho, boca + alto * 0.53f), Size(ancho * 2, 1f * u))
         // El volumen redondo.
-        cilindroMeso(Rect(pie.x - ancho * 0.5f, boca, pie.x + ancho * 0.5f, pie.y), a, k, 1.3f, m.der(pie.x, boca), f)
+        cilindroMeso(Rect(pie.x - ancho * 0.5f, boca, pie.x + ancho * 0.5f, pie.y), a, k, 0.9f, m.der(pie.x, boca), f)
         drawRect(a.s(0.25f), Offset(pie.x - ancho, pie.y - alto * 0.2f), Size(ancho * 2, alto * 0.2f))
     }
     drawPath(cuerpo, a.c(BEJUCO_OSC, k, f), style = Stroke(1f * u))

@@ -167,7 +167,7 @@ internal class AireMeso(val oscuro: Boolean, val noche: Boolean) {
     fun animo(t: Color, k: Float, f: Float = 0f): Color {
         if (!oscuro) return c(t, k, f)
         val kk = k.coerceIn(0f, 1f)
-        var v = mezcla(Color(t.red * 0.46f + noct.red * 0.4f, t.green * 0.46f + noct.green * 0.4f, t.blue * 0.46f + noct.blue * 0.4f), t, (1.08f * kk).coerceAtMost(0.96f))
+        var v = mezcla(Color(t.red * 0.36f + noct.red * 0.46f, t.green * 0.36f + noct.green * 0.46f, t.blue * 0.36f + noct.blue * 0.46f), t, (1.08f * kk).coerceAtMost(0.96f))
         v = mezcla(v, MesoTinta.LLAMA, 0.16f * kk)
         val ff = f.coerceIn(0f, 1f) * (1f - kk) * (if (lunar) 0.45f else 0.3f)
         return if (ff > 0f) mezcla(v, lunado(t), ff) else v
@@ -181,7 +181,8 @@ internal class AireMeso(val oscuro: Boolean, val noche: Boolean) {
         return mezcla(lejos, mezcla(base, MesoTinta.LLAMA, 0.18f), (1.3f * kk).coerceAtMost(1f))
     }
     val tinta: Color get() = MesoTinta.TINTA
-    val rubrica: Color get() = if (oscuro) mezcla(MesoTinta.CINABRIO, MesoTinta.TINTA, 0.2f) else MesoTinta.CINABRIO
+    // De noche, más honda: el mes sigue leyéndose (4.5 a 1 o más) sobre el estuco apagado.
+    val rubrica: Color get() = if (oscuro) mezcla(MesoTinta.CINABRIO, MesoTinta.TINTA, 0.45f) else MesoTinta.CINABRIO
 }
 
 /**
@@ -253,7 +254,7 @@ internal object MuebleEstanteMeso {
         val fondo = d.tablas.lastOrNull()?.bottom ?: ch
         val m = MesaMeso(a, w, ch, b.top, h)
         val clave = "$w|$ch|${b.top}|$fondo|$h|$density|$oscuro|$noche"
-        val ranura = if (noche) 2 else 0
+        val ranura = if (noche) 1 else 0
         // ---- arriba (pintado una vez por tamaño y modo): el testero, la bóveda, la viga, lo colgado, el remate y el bodegón
         val corona: DrawScope.() -> Unit = {
             testeroMeso(m)
@@ -279,17 +280,17 @@ internal object MuebleEstanteMeso {
         clipRect(0f, ch, w, fondo) { postesMeso(m, ch, fondo) }
         amarresMeso(m, d)
         d.placas.forEach { p -> rotuloMeso(m, p, medidor) }
-        d.repisas.forEachIndexed { i, r -> d.ocupado.getOrNull(i)?.let { oc -> huecoLibreMeso(m, i, r, oc) } }
+        val usados = HashSet<Int>()
+        d.repisas.forEachIndexed { i, r -> d.ocupado.getOrNull(i)?.let { oc -> huecoLibreMeso(m, i, r, oc, usados) } }
         granoMueble(Rect(0f, ch, w, fondo), oscuro)
-        // ---- abajo (pintado una vez): el zócalo, las zapatas, el piso de lajas, el fogón y el metate
-        with(CapaMeso) {
-            pegar(ranura + 1, clave, Rect(0f, fondo, w, h)) {
-                pisoMeso(m, fondo)
-                patasMeso(m, fondo)
-                pieMeso(m)
-                if (a.lumbre) lumbreFogonMeso(m)
-                granoMueble(Rect(0f, fondo, w, h), oscuro)
-            }
+        // ---- abajo: el zócalo, las zapatas, el piso de lajas, el fogón y el metate. Se pinta en cada dibujo (unas 370
+        // operaciones): guardarlo también en una imagen pasaría de unos 3 MB por modo, con la corona.
+        clipRect(0f, fondo, w, h) {
+            pisoMeso(m, fondo)
+            patasMeso(m, fondo)
+            pieMeso(m)
+            if (a.lumbre) lumbreFogonMeso(m)
+            granoMueble(Rect(0f, fondo, w, h), oscuro)
         }
     }
 
@@ -485,13 +486,13 @@ internal fun animoMundoMeso(t: Color): Color {
 // ---------------------------------------------------------------- lo fijo pintado una vez
 
 /**
- * Lo fijo pintado una vez: cuatro imágenes (la franja de arriba y la de abajo, del diario y de los Sueños), cada una con la
- * clave de su tamaño y su modo; si la clave cambia, se vuelve a pintar. Pegar una imagen cuesta mucho menos que repetir el
- * muro, la bóveda y el bodegón en cada dibujo. Las franjas no crecen con las repisas.
+ * Lo fijo pintado una vez: dos imágenes (la corona del diario y la de los Sueños), cada una con la clave de su tamaño y su
+ * modo; si la clave cambia, se vuelve a pintar. Pegar una imagen cuesta mucho menos que repetir el muro, la bóveda y el
+ * bodegón en cada dibujo. La corona no crece con las repisas (unos 2.5 MB a 1080 px de pantalla).
  */
 internal object CapaMeso {
-    private val claves = arrayOfNulls<String>(4)
-    private val imagenes = arrayOfNulls<ImageBitmap>(4)
+    private val claves = arrayOfNulls<String>(2)
+    private val imagenes = arrayOfNulls<ImageBitmap>(2)
 
     /**
      * Pega la imagen de [r] (la pinta antes si su clave cambió). [debajo], si va, se pinta en una imagen que sigue hasta
@@ -500,7 +501,7 @@ internal object CapaMeso {
     fun DrawScope.pegar(ranura: Int, clave: String, r: Rect, debajo: (DrawScope.() -> Unit)? = null, abajo: Float = r.bottom,
                         pintar: DrawScope.() -> Unit) {
         val ancho = r.width.roundToInt(); val alto = r.height.roundToInt()
-        if (ancho < 1 || alto < 1 || ranura !in 0..3) return
+        if (ancho < 1 || alto < 1 || ranura !in 0..1) return
         var img = imagenes[ranura]
         if (img == null || claves[ranura] != clave) {
             val base = ImageBitmap(ancho, alto)
@@ -594,7 +595,7 @@ internal fun DrawScope.sombraMuroMeso(m: MesaMeso, p: Path, desde: Offset, fuerz
             val ll = m.lumbreDe(desde)
             val dx = ((desde.x - ll.x) / w).coerceIn(-0.3f, 0.3f) / 0.3f
             val dy = if (ll.y > desde.y) -w * 0.016f else w * 0.012f
-            translate(w * 0.045f * dx, dy) { drawPath(p, MesoTinta.NOCHE_SOMBRA.copy(alpha = (0.95f * k).coerceAtMost(0.55f))) }
+            translate(w * 0.045f * dx, dy) { drawPath(p, MesoTinta.NOCHE_SOMBRA.copy(alpha = (0.5f * k).coerceAtMost(0.32f))) }
         }
     }
 }
