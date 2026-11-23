@@ -6269,17 +6269,11 @@ object EstanteAndalus : DisenoBiblioteca {
 }
 
 /**
- * Mongol: el casillero pintado de la ger. Un mueble de casillas bajas, rojo y naranja, con los divisores pintados y
- * filetes de oro, costados naranjas con un recuadro azul y lunares de oro, tablas rojas con la greca del martillo en oro y
- * cada mes en un cartucho crema de borde azul. Arriba, contra el fieltro blanco: el toono (la corona de madera por donde
- * entra la luz) con sus varas que bajan hasta el khana (la celosía de listones cruzados de la pared) y, sobre el mueble, el
- * copete pintado con el nudo infinito en oro sobre azul y nubes de oro en paneles verdes. De noche, por el toono se ven las
- * estrellas. Abajo, una alfombra roja con su cenefa. Cada entrada es un pothi tumbado en su casilla: las hojas largas entre
- * dos tablas, envuelto en tela amarilla con sus pliegues, el mes escrito sobre la tela, la cinta que lo ata (una vuelta más
- * cuanto más escribiste) y la etiqueta de tela colgando con el día; en ella, un sello rojo y, de noche, una luna. Como van
- * tumbados, todos son igual de anchos (cada uno cabe en su casilla) y lo que crece con las palabras es el grosor. Distinto
- * del Ideario, que es el interior de la ger con sus arcones pintados.
- * La tapa es ese pothi tumbado y grande: las puntas de la tabla con el nudo infinito, el paño amarillo con el paño
+ * Mongol. El estante del diario (rehecho en noviembre de 2026) es la alacena de alerce del lado de la dueña de la ger, donde
+ * se guardan la leche y las cosas de la casa: lo dibuja `MuebleEstanteMongol` (en `MuebleEstanteMongol*.kt`), y aquí solo
+ * se delega. Cada entrada es un rollo de fieltro, dos cofres de mimbre forrados de fieltro apilados o una bolsa de fieltro,
+ * teñidos del color del ánimo, con su tablilla de abedul.
+ * La tapa es un pothi tumbado y grande: las puntas de la tabla con el nudo infinito, el paño amarillo con el paño
  * crema cosido (la fecha y lo escrito), la cinta y la etiqueta azul con la cuenta; al abrirse la tela se aparta hacia
  * las puntas y deja ver la hoja larga (de noche, una luna en la etiqueta y las estrellas del toono).
  */
@@ -6307,8 +6301,6 @@ object EstanteMongol : DisenoBiblioteca {
     /** Las tablas de madera pintada que encierran las hojas. */
     private val TAPAS = listOf(Color(0xFF7A3A22), Color(0xFF8A5A30), Color(0xFF5E2A1E))
     private val NOCHE = Color(0xFF141A30)
-    /** El ancho fijo de cada pothi, en dp: así cada uno cae en su casilla. */
-    private val ANCHO_POTHI = 80
 
     /** El color con la luz del momento: en modo oscuro, más hundido; de noche, bajo las estrellas del toono. */
     private fun t(c: Color, oscuro: Boolean, noche: Boolean): Color {
@@ -6318,17 +6310,18 @@ object EstanteMongol : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.36f
-    override val base = 0.1f
-    override val lado = 0.06f
-    override val altoRepisa: Dp = 64.dp
-    override val tabla: Dp = 14.dp
-    override val separa: Dp = 8.dp
-    override val letra: FontFamily = LetraExtra.filosofo
+    override val corona = MuebleEstanteMongol.CORONA
+    override val base = MuebleEstanteMongol.BASE
+    override val lado = MuebleEstanteMongol.LADO
+    override val altoRepisa: Dp = MuebleEstanteMongol.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteMongol.TABLA
+    override val separa: Dp = MuebleEstanteMongol.SEPARA
+    override val letra: FontFamily = MuebleEstanteMongol.LETRA
 
-    override fun ancho(palabras: Int): Dp = ANCHO_POTHI.dp
-    override fun alto(semilla: Int, palabras: Int): Float =
-        (0.58f + 0.36f * (palabras / 800f).coerceIn(0f, 1f) + 0.05f * azar(semilla, 1)).coerceAtMost(1f)
+    override val auraEnReposo = false
+
+    override fun ancho(palabras: Int): Dp = MuebleEstanteMongol.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteMongol.alto(semilla, palabras)
 
     /** El nudo infinito: una trama en rombo con un lazo en cada punta. */
     private fun DrawScope.nudo(c0: Offset, s: Float, color: Color, grosor: Float) {
@@ -6346,248 +6339,16 @@ object EstanteMongol : DisenoBiblioteca {
         }
     }
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El fondo de las casillas, pintado de rojo hondo.
-        val cuerpo = Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, d.base.top)
-        drawRect(c(ROJO_OSC), cuerpo.topLeft, cuerpo.size)
-        // Los divisores caen entre pothi y pothi: todos tienen el mismo ancho y la misma separación.
-        val pw = ANCHO_POTHI.dp.toPx()
-        val sp = separa.toPx()
-        d.repisas.forEach { r ->
-            drawRect(Color.Black.copy(alpha = if (noche) 0.4f else 0.3f), r.topLeft, Size(r.width, 7 * u))
-            drawRect(Color.Black.copy(alpha = 0.2f), r.topLeft, Size(5 * u, r.height))
-            val cuantos = (((r.width - 2 * sp - pw) / (pw + sp)).toInt() + 1).coerceAtLeast(1)
-            for (k in 1 until cuantos) {
-                val gx = r.left + sp + k * (pw + sp) - sp / 2
-                val div = Rect(gx - sp * 0.38f, r.top, gx + sp * 0.38f, r.bottom)
-                drawRect(Color.Black.copy(alpha = 0.22f), Offset(div.right, div.top), Size(4 * u, div.height))
-                drawRect(c(NARANJA), div.topLeft, div.size)
-                drawLine(c(ORO), Offset(div.left + 0.6f * u, div.top), Offset(div.left + 0.6f * u, div.bottom), 0.6f * u)
-                drawLine(c(ORO), Offset(div.right - 0.6f * u, div.top), Offset(div.right - 0.6f * u, div.bottom), 0.6f * u)
-                drawCircle(c(AZUL), div.width * 0.28f, div.center)
-            }
-        }
-        // Los costados: naranja con un recuadro azul y lunares de oro.
-        listOf(d.izquierda, d.derecha).forEach { r ->
-            drawRect(c(NARANJA), r.topLeft, r.size)
-            val recuadro = Rect(r.left + r.width * 0.2f, r.top + 6 * u, r.right - r.width * 0.2f, r.bottom - 6 * u)
-            drawRect(c(AZUL), recuadro.topLeft, recuadro.size)
-            drawRect(c(ORO), recuadro.topLeft, recuadro.size, style = Stroke(0.8f * u))
-            var yy = recuadro.top + 8 * u
-            while (yy < recuadro.bottom - 4 * u) { drawCircle(c(ORO), 1.4f * u, Offset(recuadro.center.x, yy)); yy += 12 * u }
-            drawRect(c(ROJO), r.topLeft, Size(r.width, 3 * u))
-            drawRect(Color.Black.copy(alpha = 0.25f), Offset(r.right - 1.6f * u, r.top), Size(1.6f * u, r.height))
-        }
-        // Las tablas rojas con la greca del martillo en oro.
-        d.tablas.forEach { r ->
-            drawRect(c(ROJO), r.topLeft, r.size)
-            drawRect(Color.White.copy(alpha = 0.12f), r.topLeft, Size(r.width, 1.6f * u))
-            val g = Rect(r.left, r.top + r.height * 0.25f, r.right, r.bottom - r.height * 0.25f)
-            val paso = g.height * 1.6f
-            val greca = Path().apply {
-                moveTo(g.left, g.bottom)
-                var x = g.left
-                while (x < g.right) {
-                    lineTo(x, g.top); lineTo(x + paso * 0.5f, g.top); lineTo(x + paso * 0.5f, g.bottom); lineTo(x + paso, g.bottom)
-                    x += paso
-                }
-            }
-            drawPath(greca, c(ORO), style = Stroke(0.9f * u))
-            drawRect(Color.Black.copy(alpha = 0.25f), Offset(r.left, r.bottom - 1.4f * u), Size(r.width, 1.4f * u))
-            drawRect(Color.Black.copy(alpha = 0.22f), Offset(r.left, r.bottom), Size(r.width, 3 * u))
-        }
-        // El rótulo de cada mes: un cartucho crema de borde azul.
-        d.placas.forEach { p ->
-            val r = p.r
-            drawRoundRect(Color.Black.copy(alpha = 0.2f), Offset(r.left + 1.2f * u, r.top + 1.2f * u), r.size, CornerRadius(r.height / 2))
-            drawRoundRect(c(AZUL), r.topLeft, r.size, CornerRadius(r.height / 2))
-            val dentro = r.deflate(1.4f * u)
-            drawRoundRect(c(CREMA), dentro.topLeft, dentro.size, CornerRadius(dentro.height / 2))
-            textoEn(medidor, p.texto, Rect(dentro.left + dentro.height * 0.4f, dentro.top, dentro.right - dentro.height * 0.4f, dentro.bottom), letra, c(TINTA), 10.5f, minimo = 5f)
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el zócalo pintado y la alfombra roja con su cenefa.
-        val b = d.base
-        val piso = b.top + b.height * 0.55f
-        drawRect(c(FIELTRO_OSC), Offset(0f, piso), Size(w, h - piso))
-        val alfombra = Rect(w * 0.04f, piso + 2 * u, w * 0.96f, h)
-        drawRect(c(ALFOMBRA), alfombra.topLeft, alfombra.size)
-        drawRect(c(ORO), alfombra.deflate(2.4f * u).topLeft, alfombra.deflate(2.4f * u).size, style = Stroke(1f * u))
-        var ax = alfombra.left + 8 * u
-        while (ax < alfombra.right - 6 * u) {
-            drawPath(estrellaRombo(Offset(ax, alfombra.top + (alfombra.height) * 0.5f), 2.6f * u), c(AZUL))
-            ax += 14 * u
-        }
-        val zocalo = Rect(b.left, b.top, b.right, piso)
-        drawRect(c(NARANJA), zocalo.topLeft, zocalo.size)
-        drawRect(c(ROJO), zocalo.topLeft, Size(zocalo.width, 3 * u))
-        var nx = zocalo.left + 14 * u
-        while (nx < zocalo.right - 10 * u) {
-            drawArc(c(ROJO), 180f, 180f, false, Offset(nx - 6 * u, zocalo.top + 5 * u), Size(12 * u, 8 * u), style = Stroke(1.2f * u))
-            drawCircle(c(ORO), 1.2f * u, Offset(nx, zocalo.top + 9 * u))
-            nx += 22 * u
-        }
-        drawRect(Color.Black.copy(alpha = 0.28f), Offset(zocalo.left, piso), Size(zocalo.width, 2.4f * u))
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteMongol) { estante(d, medidor, oscuro, noche) }
 
     /** Un rombo pequeño, para la cenefa de la alfombra. */
     private fun estrellaRombo(c0: Offset, s: Float): Path = Path().apply {
         moveTo(c0.x, c0.y - s); lineTo(c0.x + s, c0.y); lineTo(c0.x, c0.y + s); lineTo(c0.x - s, c0.y); close()
     }
 
-    /** El fieltro, el toono con sus varas, el khana y el copete pintado con el nudo infinito. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El fieltro blanco, con sus pespuntes.
-        drawRect(c(FIELTRO), r.topLeft, r.size)
-        var py = r.top + 10 * u
-        while (py < r.top + r.height * 0.5f) {
-            var px = r.left + 4 * u
-            while (px < r.right) { drawLine(c(FIELTRO_OSC), Offset(px, py), Offset(px + 3 * u, py), 0.6f * u); px += 7 * u }
-            py += 12 * u
-        }
-        // El khana: la celosía de listones cruzados de la pared.
-        val khana = Rect(r.left, r.top + r.height * 0.46f, r.right, r.top + r.height * 0.62f)
-        drawRect(c(FIELTRO_OSC), khana.topLeft, khana.size)
-        clipRect(khana.left, khana.top, khana.right, khana.bottom) {
-            var kx = khana.left - khana.height
-            while (kx < khana.right) {
-                drawLine(c(KHANA), Offset(kx, khana.bottom), Offset(kx + khana.height, khana.top), 1.6f * u)
-                drawLine(c(KHANA), Offset(kx, khana.top), Offset(kx + khana.height, khana.bottom), 1.6f * u)
-                kx += 10 * u
-            }
-        }
-        // Las varas del techo (uni), del toono hasta lo alto del khana.
-        val cv = Offset(r.center.x, r.top + r.height * 0.2f)
-        val rt = r.height * 0.17f
-        for (k in 0..12) {
-            val fin = Offset(r.left + r.width * k / 12f, khana.top)
-            val dx = fin.x - cv.x; val dy = fin.y - cv.y
-            val largo = kotlin.math.sqrt(dx * dx + dy * dy).coerceAtLeast(1f)
-            val ini = Offset(cv.x + dx / largo * rt, cv.y + dy / largo * rt)
-            drawLine(c(ROJO_OSC), Offset(ini.x + 0.8f * u, ini.y + 0.8f * u), Offset(fin.x + 0.8f * u, fin.y), 2.6f * u)
-            drawLine(c(NARANJA), ini, fin, 2.2f * u)
-        }
-        // El toono: la abertura del techo con su cruz, el cielo de día y las estrellas de noche.
-        val ra = rt * 0.82f
-        val abertura = Path().apply { addOval(Rect(cv, ra)) }
-        drawPath(abertura, if (noche) CIELO_NOCHE else c(CIELO))
-        clipPath(abertura) {
-            if (noche) {
-                mancha(cv, ra * 1.2f, Color(0xFF3A4A80).copy(alpha = 0.5f))
-                for (k in 0 until 14) {
-                    val o = Offset(cv.x - ra + 2 * ra * azar(k, 61), cv.y - ra + 2 * ra * azar(k, 62))
-                    drawCircle(ESTRELLA.copy(alpha = 0.6f + 0.4f * azar(k, 63)), (0.5f + 0.8f * azar(k, 64)) * u, o)
-                }
-            } else {
-                drawCircle(Color.White.copy(alpha = 0.25f), ra * 0.5f, Offset(cv.x - ra * 0.3f, cv.y - ra * 0.3f))
-            }
-            drawLine(c(NARANJA), Offset(cv.x - ra, cv.y), Offset(cv.x + ra, cv.y), 2 * u)
-            drawLine(c(NARANJA), Offset(cv.x, cv.y - ra), Offset(cv.x, cv.y + ra), 2 * u)
-            drawCircle(c(NARANJA), ra * 0.35f, cv, style = Stroke(1.6f * u))
-        }
-        drawCircle(c(NARANJA), rt, cv, style = Stroke(rt * 0.22f))
-        drawCircle(c(ROJO), rt + rt * 0.11f, cv, style = Stroke(0.8f * u))
-        drawCircle(c(ROJO), ra, cv, style = Stroke(0.8f * u))
-        // El copete pintado del casillero.
-        val copete = Rect(r.left, r.top + r.height * 0.6f, r.right, r.bottom)
-        drawRect(c(ROJO), copete.topLeft, Size(copete.width, copete.height * 0.16f))
-        drawLine(c(ORO), Offset(copete.left, copete.top + copete.height * 0.1f), Offset(copete.right, copete.top + copete.height * 0.1f), 0.8f * u)
-        val panel = Rect(copete.left, copete.top + copete.height * 0.16f, copete.right, copete.bottom - copete.height * 0.12f)
-        drawRect(c(NARANJA), panel.topLeft, panel.size)
-        val centro = Rect(panel.center.x - panel.height * 0.9f, panel.top + 3 * u, panel.center.x + panel.height * 0.9f, panel.bottom - 3 * u)
-        drawRect(c(AZUL), centro.topLeft, centro.size)
-        drawRect(c(ORO), centro.topLeft, centro.size, style = Stroke(0.8f * u))
-        nudo(centro.center, centro.height * 0.5f, c(ORO), 1.3f * u)
-        listOf(panel.left + panel.width * 0.18f, panel.right - panel.width * 0.18f).forEach { x ->
-            val lateral = Rect(x - panel.width * 0.12f, panel.top + 3 * u, x + panel.width * 0.12f, panel.bottom - 3 * u)
-            drawRect(c(VERDE), lateral.topLeft, lateral.size)
-            drawRect(c(ORO), lateral.topLeft, lateral.size, style = Stroke(0.8f * u))
-            // Una nube de oro en espiral.
-            val s = lateral.height * 0.22f
-            drawArc(c(ORO), 90f, 270f, false, Offset(x - s * 1.4f, lateral.center.y - s), Size(s * 2, s * 2), style = Stroke(1.1f * u))
-            drawArc(c(ORO), 180f, 270f, false, Offset(x - s * 0.6f, lateral.center.y - s), Size(s * 2, s * 2), style = Stroke(1.1f * u))
-            drawCircle(c(ORO), s * 0.3f, Offset(x, lateral.center.y + s * 0.2f))
-        }
-        drawRect(c(ROJO), Offset(copete.left, panel.bottom), Size(copete.width, copete.bottom - panel.bottom))
-        drawRect(Color.Black.copy(alpha = 0.25f), Offset(copete.left, copete.bottom - 2 * u), Size(copete.width, 2 * u))
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val tinte = TELAS[(v.semilla and 0x7fffffff) % TELAS.size]
-        val tela = c(if (v.tono != null) mezcla(tinte, v.tono, 0.22f) else tinte)
-        val tapa = c(TAPAS[(azar(v.semilla, 4) * TAPAS.size).toInt().coerceIn(0, TAPAS.size - 1)])
-        // Las dos puntas descubiertas: las tablas arriba y abajo, las hojas largas en medio.
-        val grueso = minOf(h * 0.18f, 4.5f * u)
-        val extremo = w * 0.07f
-        listOf(0f, w - extremo).forEach { x0 ->
-            drawRect(c(HOJAS), Offset(x0, grueso), Size(extremo, h - 2 * grueso))
-            var y = grueso + 1.6f * u
-            while (y < h - grueso) { drawLine(Color.Black.copy(alpha = 0.18f), Offset(x0, y), Offset(x0 + extremo, y), 0.5f * u); y += 1.8f * u }
-            drawRect(tapa, Offset(x0, 0f), Size(extremo, grueso))
-            drawRect(tapa, Offset(x0, h - grueso), Size(extremo, grueso))
-        }
-        drawRect(Color.Black.copy(alpha = 0.18f), Offset.Zero, Size(1.2f * u, h))
-        drawRect(Color.Black.copy(alpha = 0.18f), Offset(w - 1.2f * u, 0f), Size(1.2f * u, h))
-        // El paño amarillo que envuelve el centro, con sus pliegues.
-        val pano = Rect(extremo * 0.8f, 0f, w - extremo * 0.8f, h)
-        drawRoundRect(tela, pano.topLeft, pano.size, CornerRadius(1.6f * u))
-        for (j in 0 until 4) {
-            val x = pano.left + pano.width * (0.12f + 0.24f * j + 0.06f * azar(v.semilla, 10 + j))
-            drawLine(Color.Black.copy(alpha = 0.1f), Offset(x, 0f), Offset(x + 2 * u, h), 1f * u)
-        }
-        drawRect(Color.White.copy(alpha = 0.14f), pano.topLeft, Size(pano.width, h * 0.16f))
-        drawRect(Color.Black.copy(alpha = 0.16f), Offset(pano.left, h * 0.84f), Size(pano.width, h * 0.16f))
-        // La cinta que lo ata: una vuelta más cuanto más escribiste.
-        val vueltas = 1 + (v.lleno * 2).toInt()
-        for (j in 0 until vueltas) {
-            val x = w * 0.64f + j * 2.6f * u
-            drawRect(c(CINTA), Offset(x, 0f), Size(1.8f * u, h))
-            drawRect(Color.White.copy(alpha = 0.15f), Offset(x, 0f), Size(0.5f * u, h))
-        }
-        // La etiqueta de tela colgando de arriba, con el día y su sello (de noche, una luna; si el pothi es tan delgado que
-        // no cabe en la etiqueta, la luna va sobre la tela, al principio).
-        val et = Rect(w * 0.76f, 0f, w * 0.9f, h * 0.92f)
-        val punta = minOf(et.width * 0.5f, h * 0.14f)
-        val dentro = Rect(et.left + 1.2f * u, et.top + 1.2f * u, et.right - 1.2f * u, et.bottom - punta)
-        val rs = minOf(dentro.width * 0.24f, h * 0.08f)
-        val conSello = dentro.height > 14 * u
-        val lunaFuera = v.noche && !conSello
-        if (lunaFuera) {
-            val cl = Offset(pano.left + 4 * u, h * 0.5f)
-            val rl = minOf(2.2f * u, h * 0.16f)
-            drawCircle(LUNA, rl, cl)
-            drawCircle(tela, rl * 0.8f, Offset(cl.x + rl * 0.4f, cl.y - rl * 0.2f))
-        }
-        // El mes, escrito sobre la tela.
-        textoEn(medidor, v.mes, Rect(pano.left + (if (lunaFuera) 8f else 2f) * u, h * 0.16f, w * 0.62f, h * 0.84f), letra, c(TINTA), 8f, minimo = 4f)
-        val etiqueta = Path().apply {
-            moveTo(et.left, et.top); lineTo(et.right, et.top); lineTo(et.right, et.bottom - punta)
-            lineTo(et.center.x, et.bottom); lineTo(et.left, et.bottom - punta); close()
-        }
-        drawPath(etiqueta, Color.Black.copy(alpha = 0.2f))
-        drawPath(etiqueta, c(AZUL))
-        drawRect(c(CREMA), dentro.topLeft, dentro.size)
-        val zonaDia = if (conSello) Rect(dentro.left, dentro.top, dentro.right, dentro.bottom - rs * 2.6f) else dentro
-        textoEn(medidor, v.dia, zonaDia, letra, c(TINTA), 11f, peso = FontWeight.Bold, minimo = 5f)
-        if (conSello) {
-            val cs = Offset(dentro.center.x, dentro.bottom - rs * 1.4f)
-            if (v.noche) {
-                drawCircle(LUNA, rs, cs)
-                drawCircle(c(CREMA), rs * 0.8f, Offset(cs.x + rs * 0.4f, cs.y - rs * 0.2f))
-                drawCircle(c(TINTA).copy(alpha = 0.3f), rs, cs, style = Stroke(0.4f * u))
-            } else {
-                drawRect(c(ROJO), Offset(cs.x - rs, cs.y - rs), Size(rs * 2, rs * 2))
-            }
-        }
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteMongol) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
