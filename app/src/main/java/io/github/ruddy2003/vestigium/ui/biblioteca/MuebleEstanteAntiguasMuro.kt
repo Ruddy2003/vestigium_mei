@@ -44,7 +44,7 @@ internal object MuroEstanteAntiguas {
     const val CENEFA1 = 0.112f
 
     /** El color de la pared con la luz de noche del momento (de día, tal cual): lo que se pinta debajo del mapa de luz. */
-    private fun pc(a: AireAntiguas, c: Color): Color = if (a.oscuro) c else a.dia(c, 0f)
+    private fun pc(a: AireAntiguas, c: Color): Color = colorParedAntiguas(a, c)
 
     // ---------------------------------------------------------------- la pared de arriba
 
@@ -318,8 +318,18 @@ internal fun romboEscalonadoAntiguas(c: Offset, r: Float, n: Int = 3): Path {
     }
 }
 
-/** El corazón cálido de cada charco de luz, de noche, en el mapa de luz. */
+/** El corazón cálido de cada charco de luz, de noche, en el mapa de luz (en el roble). */
 private val CALIDO_NOCHE = Color(0xFFC0702A)
+
+/**
+ * El color de la pared (el enlucido, su estarcido, el fondo de los casilleros) bajo el mapa de luz: de día, tal cual; al ocaso,
+ * más hondo y tibio; de noche, apagado hacia el lapislázuli de la vela (menos azul real) y después lo hunde el mapa de luz.
+ */
+internal fun colorParedAntiguas(a: AireAntiguas, c: Color): Color = when {
+    a.oscuro -> mezcla(c, Color(0xFF2A2840), 0.48f)
+    a.noche -> Color(c.red * 0.8f, c.green * 0.8f, c.blue * 0.86f, c.alpha)
+    else -> c
+}
 
 /**
  * Lo que se pone encima de lo que se pintó con la luz entera, en ([x], [y]) (anchos), con [k] de luz cálida: de noche, el oscuro
@@ -333,14 +343,25 @@ internal fun mascaraAntiguas(a: AireAntiguas, x: Float, y: Float, k: Float): Col
         return P.FRIO.copy(alpha = f)
     }
     if (!a.oscuro) {
-        // El ocaso: la luz baja de la ventana deja lo de la izquierda tibio; la sombra violeta solo crece lejos, abajo a la derecha.
-        val violeta = (0.16f * ((x - 0.3f) * 0.8f + (y - 0.6f) * 0.25f).coerceIn(0f, 1f)) * (1f - k)
-        val calido = 0.14f * k + 0.06f * (1f - x).coerceIn(0f, 1f)
-        val al = (violeta + calido).coerceIn(0f, 1f)
-        return mezcla(P.SOMBRA_OCASO, P.LLAMA, if (al > 0.001f) calido / al else 0f).copy(alpha = al)
+        // El ocaso: la tarde baja el azul de la pared hacia un azul hondo (el violeta queda en las sombras, no en un velo) y el roble
+        // hacia un pardo; más hondo hacia la derecha y abajo, lejos de la ventana; la vela calienta lo que tiene cerca.
+        val tarde = (0.3f + 0.3f * ((x - 0.25f) * 0.8f + (y - 0.5f) * 0.3f).coerceIn(0f, 1f)) * (1f - k)
+        val calido = 0.14f * k
+        val al = (tarde + calido).coerceIn(0f, 1f)
+        val fondo = if (a.mueble) Color(0xFF2A160E) else P.AZUL_TARDE
+        return mezcla(fondo, P.LLAMA, if (al > 0.001f) calido / al else 0f).copy(alpha = al)
     }
-    // De noche: lejos de la luz, el oscuro con color tapa casi todo; cerca, la luz deja ver el color propio (el azul sigue azul,
-    // no se agrisa) y, junto a la llama, un corazón cálido.
+    if (!a.mueble) {
+        // De noche, la pared: la luz se apaga más deprisa que en el roble (kk); lejos, añil casi negro; cerca de cada llama, el
+        // azul cálido violáceo con su halo. Así se leen los charcos y no un fondo azul parejo.
+        val kk = Math.pow(k.toDouble(), 1.5).toFloat()
+        val hondo = Math.pow((1f - kk).toDouble(), 0.65).toFloat() * 0.97f
+        val nucleo = ((kk - 0.18f) / 0.7f).coerceIn(0f, 1f)
+        val f = nucleo * nucleo * (3f - 2f * nucleo)
+        return mezcla(a.hondo, P.CALIDO_PARED, f).copy(alpha = maxOf(hondo, 0.45f * f))
+    }
+    // De noche, el roble: lejos de la luz, el pardo rojizo tapa casi todo; cerca, la luz deja ver su color y, junto a la llama, un
+    // corazón cálido.
     val hondo = Math.pow((1f - k).toDouble(), 0.75).toFloat() * 0.93f
     val nucleo = ((k - 0.58f) / 0.4f).coerceIn(0f, 1f)
     val f = nucleo * nucleo * (3f - 2f * nucleo)

@@ -176,16 +176,18 @@ internal object ObraEstanteAntiguas {
         val x0 = g.x0; val x1 = g.x1
         val dT = w * 0.02f; val dI = w * 0.026f
         // El fondo es la pared: de noche se pinta con su color y lo hunde el mapa de luz (no se le echa el ámbar de la llama).
-        fun cp(col: Color, f: Float = 0f) = if (a.oscuro) col else a.dia(col, f, 1f)
+        fun cp(col: Color, f: Float = 0f) = if (a.lumbre) colorParedAntiguas(a, col) else a.dia(col, f, 1f)
         fun cm(col: Color, f: Float = 0f) = am.dia(col, f, 1f)
         drawRect(cm(P.ROBLE_OSC), Offset(x0 - 1f, r.top - 1f), Size(x1 - x0 + 2f, r.height + 2f))
         val fondo = Rect(x0 + dI, r.top + dT, x1 - dI, r.bottom)
         drawRect(cp(mezcla(P.LAPIS, P.LAPIS_OSC, 0.35f)), fondo.topLeft, fondo.size)
         FondoCasilleroAntiguas.pintar(this, fondo, r.height, cp(P.LAPIS_LUZ), cp(P.LAPIS_HONDO), cp(P.ORO))
-        // Un desconchón en algunos: si la repisa tiene hueco libre, en el hueco (donde se ve); si no, detrás de lo guardado.
+        // Un desconchón en algunos, siempre detrás de lo guardado (en el hueco libre, donde van los grupos, se leería como una
+        // piedra suelta).
         val libre = (d.ocupado.getOrNull(k) ?: fondo.right).coerceIn(fondo.left, fondo.right)
-        if (Math.floorMod(k, 3) == 1 || fondo.right - libre > w * 0.25f) {
-            val x0 = if (fondo.right - libre > w * 0.14f) libre + (fondo.right - libre) * (0.25f + 0.4f * azar(7700, k)) else fondo.left + fondo.width * (0.55f + 0.2f * azar(7700, k))
+        val tras = libre - fondo.left - w * 0.03f
+        if (Math.floorMod(k, 3) == 1 && tras > w * 0.16f) {
+            val x0 = fondo.left + w * 0.03f + (tras - w * 0.07f) * (0.35f + 0.5f * azar(7700, k))
             desconchonChico(Rect(x0, fondo.top + fondo.height * 0.2f, x0 + w * 0.07f, fondo.top + fondo.height * 0.4f), g, k)
         }
         // La sombra de la tabla de arriba, en escalones, y la del costado de la izquierda (la luz viene de la ventana).
@@ -214,7 +216,7 @@ internal object ObraEstanteAntiguas {
     private fun DrawScope.desconchonChico(r: Rect, g: MarcoAntiguas, k: Int) {
         val u = density
         val a = g.a
-        fun cp(col: Color) = if (a.oscuro) col else a.dia(col, 0f, 1f)
+        fun cp(col: Color) = colorParedAntiguas(a, col)
         val forma = Path().apply {
             // Borde irregular pero sin puntas alternas (eso se leería como una estrella).
             val n = 13

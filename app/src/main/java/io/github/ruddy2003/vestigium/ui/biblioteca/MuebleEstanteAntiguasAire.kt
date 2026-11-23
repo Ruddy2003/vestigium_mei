@@ -84,11 +84,20 @@ internal object PaletaAntiguas {
     val OCASO = Color(0xFFF59A5C)
     val SOMBRA_OCASO = Color(0xFF402C66)
     val LUNA = Color(0xFFC6D4F4)
-    /** La noche: el añil hondo en que se hunde la pared, el pardo rojizo del roble y lo hondo de los Sueños. */
-    val NOCHE_PARED = Color(0xFF0A1031)
+    /** La noche: el añil casi negro en que se hunde la pared, el pardo rojizo del roble y lo hondo de los Sueños. */
+    val NOCHE_PARED = Color(0xFF0B0B1F)
     val NOCHE_MUEBLE = Color(0xFF26110A)
     val NOCHE_SUENOS = Color(0xFF131036)
     val HONDO_SUENOS = Color(0xFF1E0F2A)
+    /**
+     * El lapislázuli de noche, a la luz de las llamas (menos saturado y más bajo que de día: la vela no lo deja azul real), el azul
+     * cálido violáceo junto a cada llama y el azul hondo de la tarde en los Sueños claros.
+     */
+    val LAPIS_NOCHE = Color(0xFF353B66)
+    val CALIDO_PARED = Color(0xFF6A4C86)
+    val AZUL_TARDE = Color(0xFF0F1846)
+    /** La tinta de noche, lejos de la luz: casi negra, para que el pergamino en sombra se siga leyendo. */
+    val TINTA_NOCHE = Color(0xFF0D0806)
     /** La sombra fría del día, la que deja la luz de la ventana. */
     val FRIO = Color(0xFF1E2A4E)
 
@@ -177,7 +186,9 @@ internal class AireAntiguas(val oscuro: Boolean, val noche: Boolean, val mueble:
     fun animo(t: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) alOcaso(t) else t
-        val apagado = mezcla(Color(t.red * 0.19f, t.green * 0.155f, t.blue * 0.14f, t.alpha), hondo, 0.3f)
+        // Lejos, hondo pero con su color: lo claro (la vitela, el paño crudo) queda en un crema hundido, más oscuro y más cálido,
+        // no en un pardo gris.
+        val apagado = mezcla(Color(t.red * 0.3f, t.green * 0.25f, t.blue * 0.16f, t.alpha), hondo, 0.15f)
         val encendido = mezcla(t, aLaLlama(t), 0.85f)
         return mezcla(apagado, encendido, (1.08f * k).coerceAtMost(1f))
     }
@@ -189,8 +200,9 @@ internal class AireAntiguas(val oscuro: Boolean, val noche: Boolean, val mueble:
     fun etiqueta(c: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) alOcaso(c) else c
-        val lejos = Color(c.red * 0.5f, c.green * 0.42f, c.blue * 0.34f, c.alpha)
-        val alumbrado = Color((c.red * 1.04f).coerceAtMost(1f), c.green * 0.93f, c.blue * 0.74f, c.alpha)
-        return mezcla(lejos, alumbrado, Math.pow(k.toDouble(), 0.8).toFloat())
+        // Lejos, pergamino en sombra (hundido y teñido del oscuro de la noche); cerca, ámbar.
+        val lejos = mezcla(Color(c.red * 0.43f, c.green * 0.35f, c.blue * 0.28f, c.alpha), hondo, 0.1f)
+        val alumbrado = Color((c.red * 1.06f).coerceAtMost(1f), c.green * 0.94f, c.blue * 0.7f, c.alpha)
+        return mezcla(lejos, alumbrado, k)
     }
 }

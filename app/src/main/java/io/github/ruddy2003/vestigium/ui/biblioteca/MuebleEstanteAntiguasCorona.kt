@@ -24,7 +24,8 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
  * Manda la drusa de amatista de la mina, en su peana de roble, con el sol de la ventana en las caras; delante, el plato de latón
  * con las gemas talladas; a la izquierda, el mortero de piedra con el polvo de lapislázuli y su mano; a la derecha, el tomo grande
  * de la compañía recostado contra la pared, dos tomos tumbados con la vela de las lunas en su candelero de pincho, el cuerno de
- * tinta con la pluma y, al final, el laúd apoyado. Colgado de su clavo, el aro de llaves de la posada.
+ * tinta con la pluma y, al final, el laúd apoyado. Colgado de su clavo, el aro de llaves de la posada. Detrás, el tapiz enrollado
+ * y la bota de vino ([TrasfondoCoronaAntiguas]).
  */
 internal object CoronaEstanteAntiguas {
     private val P = PaletaAntiguas
@@ -49,6 +50,7 @@ internal object CoronaEstanteAntiguas {
 
     fun DrawScope.colgado(g: MarcoAntiguas) {
         llaves(Offset(g.w * 0.79f, g.w * 0.142f), g)
+        with(TrasfondoCoronaAntiguas) { bota(Offset(g.w * 0.588f, g.w * 0.118f), g) }
     }
 
     /** Un clavo de forja hincado en la pared: la cabeza cuadrada con su luz. */
@@ -116,6 +118,7 @@ internal object CoronaEstanteAntiguas {
 
     fun DrawScope.encima(g: MarcoAntiguas, pano: PanoAntiguas?) {
         laud(Offset(g.w * 0.925f, g.apoyo), g, pano)
+        with(TrasfondoCoronaAntiguas) { tapiz(Offset(g.w * 0.43f, g.apoyo - g.w * 0.004f), g) }
         tomoApoyado(Offset(g.w * 0.47f, g.apoyo), g, pano)
         mortero(Offset(g.w * 0.172f, g.apoyo), g, pano)
         drusaAmatista(Offset(g.w * 0.325f, g.apoyo), g, pano)

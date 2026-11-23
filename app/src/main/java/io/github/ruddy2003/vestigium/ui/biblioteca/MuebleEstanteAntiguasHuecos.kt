@@ -3,6 +3,7 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
@@ -20,9 +21,9 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 /**
  * Lo que acompaña a las entradas en los huecos libres de las repisas del estante de Tierras Antiguas ([MuebleEstanteAntiguas]):
  * grupos de dos o tres cosas solapadas que llenan del 70 al 90 % del hueco y cambian de uno a otro. Donde hay sitio, primero la
- * candil de hierro colgado bajo la tabla de arriba, sobre dos tomos tumbados y otro de pie apoyado detrás (de noche arde); después, según la
- * repisa, la balanza de joyero con sus pesas y unas monedas, la jarra de peltre con su copa, o el pico de minero apoyado con
- * un trozo de mena con cristales verdes.
+ * candil de cobre colgado bajo la tabla de arriba, sobre dos tomos tumbados y otro de pie apoyado detrás, con la aceitera
+ * delante (de noche arde); después, según la repisa, la balanza de joyero con sus pesas y unas monedas, la jarra de peltre con
+ * su copa y la tabla de cortar detrás, o el pico de minero apoyado tras el cubo de mena con cristales verdes.
  */
 internal object HuecosEstanteAntiguas {
     private val P = PaletaAntiguas
@@ -43,14 +44,29 @@ internal object HuecosEstanteAntiguas {
         var i = 0
         while (fin - x >= w * 0.08f && i < 3) {
             val sitio = fin - x
-            val cual = Math.floorMod(k * 2 + i + (if (xl != null) 0 else 1), 3)
+            val primero = Math.floorMod(k * 2 + i + (if (xl != null) 0 else 1), 3)
+            // Lo que no cabe entero se cambia por lo siguiente que sí cabe (la balanza abre los platillos y las monedas más allá
+            // de su caja; la cabeza del pico sale de su ancho): nada se mete en el costado del casillero.
+            val cual = (0 until 3).map { Math.floorMod(primero + it, 3) }.firstOrNull { anchoDe(it, sitio, w) > 0f } ?: break
+            val an = anchoDe(cual, sitio, w)
             val usado = when (cual) {
-                0 -> balanza(x, minOf(sitio, w * 0.17f), piso, alto, g)
-                1 -> jarra(x, minOf(sitio, w * 0.15f), piso, alto, g)
-                else -> pico(x, minOf(sitio, w * 0.17f), piso, alto, g)
+                0 -> balanza(x, an, piso, alto, g)
+                1 -> jarra(x, an, piso, alto, g)
+                else -> pico(x, an, piso, alto, g)
             }
             x += usado + w * 0.02f; i++
         }
+    }
+
+    /** El ancho con que se dibuja cada grupo en el sitio que queda, o 0 si no cabe entero. */
+    private fun anchoDe(cual: Int, sitio: Float, w: Float): Float {
+        val an = when (cual) {
+            0 -> minOf(sitio - w * 0.025f, w * 0.17f)
+            1 -> minOf(sitio, w * 0.15f)
+            else -> minOf(sitio / 1.15f, w * 0.17f)
+        }
+        val minimo = when (cual) { 0 -> w * 0.15f; 1 -> w * 0.09f; else -> w * 0.1f }
+        return if (an >= minimo) an else 0f
     }
 
     /** La sombra que algo deja en el fondo del casillero: de día a la derecha (la ventana está a la izquierda); de noche, hacia fuera de la luz. */
@@ -67,8 +83,8 @@ internal object HuecosEstanteAntiguas {
     // ---------------------------------------------------------------- el candil sobre los tomos
 
     /**
-     * El candil de hierro colgado de un clavo bajo la tabla de arriba, sobre dos tomos tumbados, con otro de pie apoyado detrás
-     * contra el fondo.
+     * El candil de cobre colgado de un clavo bajo la tabla de arriba, sobre dos tomos tumbados, con otro de pie apoyado detrás
+     * contra el fondo y la aceitera de barro vidriado delante.
      */
     private fun DrawScope.candilConTomos(xl: Float, piso: Float, alto: Float, k0: Int, g: MarcoAntiguas) {
         val w = g.w; val u = density
@@ -107,10 +123,12 @@ internal object HuecosEstanteAntiguas {
             drawRect(am.luz(P.ORO, k), Offset(r.left + r.width * 0.18f, r.center.y), Size(r.width * 0.64f, 0.8f * u))
             if (am.oscuro) drawRect(P.LLAMA.copy(alpha = (0.55f * k).coerceAtMost(0.5f)), r.topLeft, Size(r.width, 1.2f * u))
         }
-        // El candil de hierro, colgado de un clavo bajo la tabla de arriba: el gancho, la varilla, la cazoleta con su pico (donde
-        // arde la torcida) y el platillo de abajo, que recoge el aceite que gotea.
+        // El candil de cobre, colgado de un clavo bajo la tabla de arriba por su varilla de hierro: el gancho, la varilla, la
+        // cazoleta con su pico (donde arde la torcida) y el platillo de abajo, que recoge el aceite que gotea.
         val hierro = am.luz(P.HIERRO, k)
         val hierroL = am.brillo(0.5f, k)
+        val cobre = am.luz(mezcla(P.COBRE, P.COBRE_OSC, 0.3f), k)
+        val cobreL = am.luz(P.COBRE_LUZ, k)
         val techo = piso + w * 0.006f - alto + w * 0.022f
         val llamaY = piso - alto * MuebleEstanteAntiguas.CANDIL_Y
         val pico = Offset(xl + w * 0.045f, llamaY + w * 0.006f)
@@ -141,11 +159,12 @@ internal object HuecosEstanteAntiguas {
                 quadraticTo(xl - w * 0.026f * e, y + w * 0.016f * e, xl - w * 0.032f * e, y)
                 close()
             }
-            drawPath(cuenco, hierro)
-            // El canto vuelto del cuenco, con su luz, y el reflejo en la panza.
-            drawLine(am.luz(P.HIERRO_LUZ, k), Offset(xl - w * 0.032f * e, y), Offset(p.x, p.y), 1.6f * u)
-            drawLine(hierroL, Offset(xl - w * 0.03f * e, y + 0.4f * u), Offset(p.x - w * 0.004f, p.y + 0.6f * u), 0.9f * u)
-            drawLine(am.brillo(0.35f, k), Offset(xl - w * 0.02f * e, y + w * 0.008f * e), Offset(xl + w * 0.004f * e, y + w * 0.011f * e), 1.2f * u, StrokeCap.Round)
+            drawPath(cuenco, cobre)
+            clipPath(cuenco) { drawRect(am.sombra(0.3f), Offset(xl + w * 0.004f * e, y - w * 0.01f), Size(w * 0.05f, w * 0.03f)) }
+            // El canto vuelto del cuenco, de latón, con su luz, y el reflejo en la panza.
+            drawLine(am.luz(P.LATON, k), Offset(xl - w * 0.032f * e, y), Offset(p.x, p.y), 1.8f * u)
+            drawLine(am.luz(P.LATON_LUZ, k), Offset(xl - w * 0.03f * e, y - 0.4f * u), Offset(p.x - w * 0.004f, p.y - 0.2f * u), 0.7f * u)
+            drawLine(cobreL, Offset(xl - w * 0.02f * e, y + w * 0.008f * e), Offset(xl + w * 0.004f * e, y + w * 0.011f * e), 1.4f * u, StrokeCap.Round)
             drawOval(am.luz(Color(0xFF16100C), k), Offset(xl - w * 0.026f * e, y - w * 0.004f), Size(w * 0.052f * e, w * 0.008f))
         }
         // El asa de atrás de la cazoleta, que sube hasta la varilla.
@@ -153,6 +172,8 @@ internal object HuecosEstanteAntiguas {
         // La torcida en el pico.
         drawLine(Color(0xFF221810), Offset(pico.x - w * 0.004f, pico.y + w * 0.002f), Offset(pico.x + w * 0.001f, pico.y - w * 0.004f), 1.6f * u, StrokeCap.Round)
         if (am.oscuro && k > 0.1f) drawLine(P.LLAMA.copy(alpha = (0.7f * k).coerceAtMost(0.7f)), Offset(xl - w * 0.032f, yCaz - 0.6f * u), pico, 1f * u)
+        // La aceitera de barro vidriado, delante de los tomos, con la que se rellena el candil.
+        aceitera(Offset(xl + w * 0.07f, piso), alto * 0.3f, g)
     }
 
     /** La llama del candil y su charco en el hueco (de noche; en los Sueños claros, recién encendida y chica). */
@@ -255,13 +276,17 @@ internal object HuecosEstanteAntiguas {
         if (am.oscuro) destelloAntiguas(Offset(pie.x + w * 0.05f, pie.y - w * 0.03f), 0.9f * u, am, k)
     }
 
-    /** La jarra de peltre con su tapa de bisagra y el asa, y una copa de peltre delante. Devuelve el ancho que ocupa. */
+    /**
+     * La jarra de peltre con su tapa de bisagra y el asa, la tabla de cortar con su mango apoyada detrás y una copa de peltre
+     * delante. Devuelve el ancho que ocupa.
+     */
     private fun DrawScope.jarra(x: Float, sitio: Float, piso: Float, alto: Float, g: MarcoAntiguas): Float {
         val w = g.w; val u = density
         val am = g.am
         val an = sitio
         val k = g.cerca(Offset(x + an * 0.5f, piso - alto * 0.4f))
-        val cuerpo = Rect(x + an * 0.12f, piso - alto * 0.66f, x + an * 0.62f, piso)
+        tablaDeCortar(Offset(x + an * 0.58f, piso), an * 0.62f, alto * 0.86f, g, k)
+        val cuerpo = Rect(x + an * 0.06f, piso - alto * 0.7f, x + an * 0.58f, piso)
         val forma = Path().apply {
             moveTo(cuerpo.left + cuerpo.width * 0.12f, cuerpo.top)
             lineTo(cuerpo.right - cuerpo.width * 0.12f, cuerpo.top)
@@ -289,8 +314,8 @@ internal object HuecosEstanteAntiguas {
         drawCircle(am.luz(P.PELTRE, k), w * 0.005f, Offset(tapa.right + w * 0.006f, tapa.top - w * 0.004f))
         if (am.oscuro) destelloAntiguas(Offset(cuerpo.left + cuerpo.width * 0.3f, cuerpo.top + cuerpo.height * 0.35f), 1.1f * u, am, k)
         // La copa, delante a la derecha.
-        val c0 = x + an * 0.62f
-        val copa = Rect(c0, piso - alto * 0.38f, c0 + an * 0.34f, piso)
+        val c0 = x + an * 0.6f
+        val copa = Rect(c0, piso - alto * 0.42f, c0 + an * 0.36f, piso)
         contactoAntiguas(Offset(copa.center.x + w * 0.006f, piso), copa.width * 1.1f, w * 0.01f, am, 0.45f)
         val vaso = Path().apply {
             moveTo(copa.left, copa.top); lineTo(copa.right, copa.top)
@@ -308,8 +333,8 @@ internal object HuecosEstanteAntiguas {
     }
 
     /**
-     * El pico de minero apoyado en diagonal contra el fondo (el mango de fresno, la cabeza de hierro con su pico y su azuela) y, a
-     * su pie, un trozo de mena gris con cristales verdes. Devuelve el ancho que ocupa.
+     * El pico de minero apoyado en diagonal contra el fondo (el mango de fresno, la cabeza de hierro con su pico y su azuela), el
+     * cubo de duelas lleno de mena y un trozo suelto delante, gris con cristales verdes. Devuelve el ancho que ocupa.
      */
     private fun DrawScope.pico(x: Float, sitio: Float, piso: Float, alto: Float, g: MarcoAntiguas): Float {
         val w = g.w; val u = density
@@ -331,33 +356,122 @@ internal object HuecosEstanteAntiguas {
         sombraFondo(Path().apply { addPath(cabeza); addRect(Rect(minOf(p0.x, p1.x), p1.y, maxOf(p0.x, p1.x), p0.y)) }, Offset(x + an * 0.5f, piso - alto * 0.5f), g, 0.18f)
         drawPath(mango, am.luz(Color(0xFFB08A5A), k), style = Stroke(w * 0.011f, cap = StrokeCap.Round))
         drawPath(mango, am.claro(0.3f), style = Stroke(w * 0.003f))
-        drawPath(mango, am.sombra(0.25f), style = Stroke(w * 0.011f, cap = StrokeCap.Round, pathEffect = null))
         drawLine(am.luz(Color(0xFFB08A5A), k), p0, p1, w * 0.008f, StrokeCap.Round)
         drawPath(cabeza, am.luz(P.HIERRO, k))
         drawPath(cabeza, am.brillo(0.45f, k), style = Stroke(0.7f * u))
         drawRect(am.luz(P.HIERRO, k), Offset(p1.x - w * 0.008f, p1.y - alto * 0.03f), Size(w * 0.016f, alto * 0.08f))
-        // La mena: piedra gris de caras planas con cristales verdes.
-        val m = Rect(x + an * 0.3f, piso - alto * 0.3f, x + an * 0.95f, piso)
-        val roca = poligonoAntiguas(m.left, m.bottom, m.left + m.width * 0.05f, m.top + m.height * 0.45f, m.left + m.width * 0.3f, m.top + m.height * 0.1f,
-            m.left + m.width * 0.62f, m.top, m.right - m.width * 0.08f, m.top + m.height * 0.3f, m.right, m.bottom)
-        contactoAntiguas(Offset(m.center.x + w * 0.008f, piso), m.width * 1.1f, w * 0.012f, am, 0.45f)
+        // El cubo de duelas con la mena y, delante, un trozo suelto.
+        cubo(Offset(x + an * 0.5f, piso), an * 0.5f, alto * 0.42f, g, k)
+        mena(Rect(x + an * 0.62f, piso - alto * 0.2f, x + an * 1.0f, piso), g, k, 8301)
+        return an
+    }
+
+    /** La tabla de cortar de roble, con su mango y su agujero de colgar, apoyada contra el fondo y algo ladeada. */
+    private fun DrawScope.tablaDeCortar(pie: Offset, an: Float, alto: Float, g: MarcoAntiguas, k: Float) {
+        val u = density
+        val am = g.am
+        val r = Rect(pie.x - an / 2, pie.y - alto, pie.x + an / 2, pie.y)
+        rotate(7f, Offset(r.center.x, pie.y)) {
+            val forma = Path().apply {
+                addRoundRect(RoundRect(Rect(r.left, r.top + alto * 0.24f, r.right, r.bottom), CornerRadius(an * 0.3f)))
+                addRoundRect(RoundRect(Rect(r.center.x - an * 0.14f, r.top, r.center.x + an * 0.14f, r.top + alto * 0.3f), CornerRadius(an * 0.1f)))
+            }
+            sombraFondo(forma, r.center, g, 0.3f)
+            drawPath(forma, am.luz(P.ROBLE_LUZ, k))
+            clipPath(forma) {
+                for (i in 0 until 6) drawLine(am.luz(P.ROBLE, k).copy(alpha = 0.6f), Offset(r.left + an * (0.1f + 0.16f * i), r.top), Offset(r.left + an * (0.14f + 0.16f * i), r.bottom), 0.8f * u)
+                drawRect(am.claro(0.2f), Offset(r.left, r.top), Size(an * 0.25f, alto))
+                drawRect(am.sombra(0.3f), Offset(r.right - an * 0.22f, r.top), Size(an * 0.22f, alto))
+                // Los cortes del cuchillo.
+                for (i in 0 until 5) drawLine(am.sombra(0.3f), Offset(r.left + an * (0.2f + 0.12f * i), r.top + alto * (0.45f + 0.08f * (i % 3))), Offset(r.left + an * (0.4f + 0.1f * i), r.top + alto * (0.5f + 0.07f * (i % 2))), 0.7f * u)
+            }
+            drawCircle(am.sombra(0.7f), an * 0.06f, Offset(r.center.x, r.top + alto * 0.09f))
+            drawPath(forma, am.sombra(0.35f), style = Stroke(0.8f * u))
+        }
+    }
+
+    /** La aceitera de barro vidriado de verde, con su pico y su asa, para rellenar el candil. */
+    private fun DrawScope.aceitera(pie: Offset, alto: Float, g: MarcoAntiguas) {
+        val w = g.w; val u = density
+        val am = g.am
+        val k = g.cerca(pie - Offset(0f, alto / 2))
+        val an = alto * 0.75f
+        val cuerpo = Path().apply {
+            moveTo(pie.x - an * 0.18f, pie.y - alto)
+            lineTo(pie.x + an * 0.18f, pie.y - alto)
+            cubicTo(pie.x + an * 0.2f, pie.y - alto * 0.65f, pie.x + an * 0.55f, pie.y - alto * 0.5f, pie.x + an * 0.42f, pie.y - alto * 0.1f)
+            quadraticTo(pie.x + an * 0.35f, pie.y, pie.x, pie.y)
+            quadraticTo(pie.x - an * 0.35f, pie.y, pie.x - an * 0.42f, pie.y - alto * 0.1f)
+            cubicTo(pie.x - an * 0.55f, pie.y - alto * 0.5f, pie.x - an * 0.2f, pie.y - alto * 0.65f, pie.x - an * 0.18f, pie.y - alto)
+            close()
+        }
+        val vidriado = Color(0xFF4E7A3C)
+        contactoAntiguas(Offset(pie.x + w * 0.006f, pie.y), an * 1.1f, w * 0.01f, am, 0.45f)
+        // El asa por detrás y el pico.
+        drawArc(am.luz(mezcla(vidriado, Color.Black, 0.25f), k), -90f, 180f, false, Offset(pie.x + an * 0.05f, pie.y - alto * 0.95f), Size(an * 0.6f, alto * 0.5f), style = Stroke(2f * u))
+        drawPath(poligonoAntiguas(pie.x - an * 0.16f, pie.y - alto * 0.98f, pie.x - an * 0.45f, pie.y - alto * 1.06f, pie.x - an * 0.18f, pie.y - alto * 0.86f), am.luz(vidriado, k))
+        drawPath(cuerpo, am.luz(vidriado, k))
+        clipPath(cuerpo) {
+            drawRect(am.claro(0.3f), Offset(pie.x - an * 0.45f, pie.y - alto), Size(an * 0.28f, alto))
+            drawRect(am.sombra(0.3f), Offset(pie.x + an * 0.15f, pie.y - alto), Size(an * 0.3f, alto))
+            // El barro sin vidriar del pie.
+            drawRect(am.luz(Color(0xFFB0703E), k), Offset(pie.x - an, pie.y - alto * 0.12f), Size(an * 2, alto * 0.12f))
+        }
+        drawCircle(am.claro(0.85f), 1.1f * u, Offset(pie.x - an * 0.22f, pie.y - alto * 0.55f))
+        if (am.oscuro) destelloAntiguas(Offset(pie.x - an * 0.22f, pie.y - alto * 0.55f), 1f * u, am, k)
+    }
+
+    /** El cubo de duelas de la mina, con sus aros de hierro y el asa, lleno de mena. */
+    private fun DrawScope.cubo(pie: Offset, an: Float, alto: Float, g: MarcoAntiguas, k: Float) {
+        val w = g.w; val u = density
+        val am = g.am
+        val r = Rect(pie.x - an / 2, pie.y - alto, pie.x + an / 2, pie.y)
+        val forma = poligonoAntiguas(r.left, r.top, r.right, r.top, r.right - an * 0.08f, r.bottom, r.left + an * 0.08f, r.bottom)
+        sombraFondo(forma, r.center, g, 0.28f)
+        contactoAntiguas(Offset(r.center.x + w * 0.008f, pie.y), an * 1.1f, w * 0.012f, am, 0.45f)
+        // El asa, por detrás, y la mena que asoma por arriba (va detrás del canto del cubo).
+        drawArc(am.luz(P.HIERRO, k), 180f, 180f, false, Offset(r.left + an * 0.05f, r.top - alto * 0.5f), Size(an * 0.9f, alto), style = Stroke(1.6f * u))
+        mena(Rect(r.left + an * 0.04f, r.top - alto * 0.32f, r.right - an * 0.04f, r.top + alto * 0.12f), g, k, 8321)
+        drawPath(forma, am.luz(P.ROBLE, k))
+        clipPath(forma) {
+            var x = r.left + an * 0.18f
+            while (x < r.right) { drawLine(am.sombra(0.35f), Offset(x, r.top), Offset(x + an * 0.02f, r.bottom), 0.8f * u); x += an * 0.18f }
+            drawRect(am.claro(0.22f), r.topLeft, Size(an * 0.25f, alto))
+            drawRect(am.sombra(0.3f), Offset(r.right - an * 0.25f, r.top), Size(an * 0.25f, alto))
+        }
+        listOf(0.18f, 0.78f).forEach { f ->
+            val y = r.top + alto * f
+            drawRect(am.luz(P.HIERRO, k), Offset(r.left + an * 0.08f * f, y - 1.4f * u), Size(an - an * 0.16f * f, 2.8f * u))
+            drawRect(am.brillo(0.35f, k), Offset(r.left + an * 0.08f * f, y - 1.4f * u), Size(an - an * 0.16f * f, 0.7f * u))
+        }
+        drawRect(am.luz(P.ROBLE_LUZ, k), Offset(r.left, r.top - 0.6f * u), Size(an, 1.4f * u))
+    }
+
+    /** Un trozo de mena: piedra gris de caras planas con un racimo de cristales verdes de pie, cada uno con su cara clara, su cara honda y su punta. */
+    private fun DrawScope.mena(m: Rect, g: MarcoAntiguas, k: Float, s: Int) {
+        val w = g.w; val u = density
+        val am = g.am
+        val roca = poligonoAntiguas(m.left, m.bottom, m.left + m.width * 0.05f, m.top + m.height * 0.45f, m.left + m.width * 0.3f, m.top + m.height * 0.12f,
+            m.left + m.width * 0.62f, m.top + m.height * 0.05f, m.right - m.width * 0.08f, m.top + m.height * 0.32f, m.right, m.bottom)
+        contactoAntiguas(Offset(m.center.x + w * 0.006f, m.bottom), m.width * 1.05f, w * 0.01f, am, 0.4f)
         drawPath(roca, am.luz(P.PIEDRA, k))
         clipPath(roca) {
-            drawPath(poligonoAntiguas(m.left, m.bottom, m.left + m.width * 0.05f, m.top + m.height * 0.45f, m.left + m.width * 0.3f, m.top + m.height * 0.1f, m.left + m.width * 0.42f, m.bottom), am.claro(0.25f))
-            drawPath(poligonoAntiguas(m.left + m.width * 0.62f, m.top, m.right - m.width * 0.08f, m.top + m.height * 0.3f, m.right, m.bottom, m.left + m.width * 0.66f, m.bottom), am.sombra(0.32f))
-            // Los cristales verdes metidos en la piedra: prismas cortos, cada uno con su giro, su cara clara y su cara honda.
-            for (i in 0 until 5) {
-                val q = Offset(m.left + m.width * (0.3f + 0.5f * azar(8301, i)), m.top + m.height * (0.25f + 0.55f * azar(8302, i)))
-                val s = w * (0.008f + 0.005f * azar(8303, i))
-                rotate(-60f + 120f * azar(8304, i), q) {
-                    drawRect(am.luz(mezcla(P.ESMERALDA, Color.Black, 0.3f), k), Offset(q.x - s * 1.4f, q.y - s * 0.5f), Size(s * 2.8f, s))
-                    drawRect(am.luz(mezcla(P.ESMERALDA, Color.White, 0.25f), k), Offset(q.x - s * 1.4f, q.y - s * 0.5f), Size(s * 2.8f, s * 0.45f))
-                    drawPath(poligonoAntiguas(q.x + s * 1.4f, q.y - s * 0.5f, q.x + s * 2f, q.y, q.x + s * 1.4f, q.y + s * 0.5f), am.luz(P.ESMERALDA, k))
-                    drawLine(am.claro(0.7f), Offset(q.x - s * 1.2f, q.y - s * 0.4f), Offset(q.x + s * 0.6f, q.y - s * 0.4f), 0.7f * u)
-                }
-            }
+            drawPath(poligonoAntiguas(m.left, m.bottom, m.left + m.width * 0.05f, m.top + m.height * 0.45f, m.left + m.width * 0.3f, m.top + m.height * 0.12f, m.left + m.width * 0.42f, m.bottom), am.claro(0.25f))
+            drawPath(poligonoAntiguas(m.left + m.width * 0.62f, m.top, m.right - m.width * 0.08f, m.top + m.height * 0.32f, m.right, m.bottom, m.left + m.width * 0.66f, m.bottom), am.sombra(0.32f))
         }
         drawPath(roca, am.sombra(0.35f), style = Stroke(0.8f * u))
-        return an
+        for (i in 0 until 4) {
+            val bx = m.left + m.width * (0.3f + 0.13f * i + 0.04f * azar(s, i))
+            val by = m.top + m.height * (0.42f + 0.12f * azar(s + 1, i))
+            val alto = m.height * (0.5f + 0.4f * azar(s + 2, i))
+            val g2 = w * (0.0045f + 0.002f * azar(s + 3, i))
+            rotate(-16f + 32f * azar(s + 4, i), Offset(bx, by)) {
+                drawRect(am.luz(mezcla(P.ESMERALDA, Color.White, 0.22f), k), Offset(bx - g2, by - alto * 0.78f), Size(g2, alto * 0.78f))
+                drawRect(am.luz(mezcla(P.ESMERALDA, Color.Black, 0.32f), k), Offset(bx, by - alto * 0.78f), Size(g2, alto * 0.78f))
+                drawPath(poligonoAntiguas(bx - g2, by - alto * 0.78f, bx, by - alto * 0.86f, bx, by - alto), am.luz(mezcla(P.ESMERALDA, Color.White, 0.4f), k))
+                drawPath(poligonoAntiguas(bx, by - alto * 0.86f, bx + g2, by - alto * 0.78f, bx, by - alto), am.luz(P.ESMERALDA, k))
+                drawLine(am.claro(0.7f), Offset(bx - g2 * 0.55f, by - alto * 0.72f), Offset(bx - g2 * 0.55f, by - alto * 0.2f), 0.6f * u)
+            }
+        }
     }
 }

@@ -98,7 +98,7 @@ internal object VolumenEstanteAntiguas {
         drawRect(a.etiqueta(P.VITELA_OSC, k).copy(alpha = 0.4f), r.topLeft, Size(r.width * 0.08f, r.height))
         val dentro = r.deflate(1.2f * u)
         drawRect(a.luz(P.TINTA, k).copy(alpha = 0.45f), dentro.topLeft, dentro.size, style = Stroke(0.5f * u))
-        diaYMes(v, medidor, r.deflate(1.6f * u), a.luz(P.TINTA, maxOf(k, 0.75f)))
+        diaYMes(v, medidor, r.deflate(1.6f * u), if (a.oscuro) mezcla(P.TINTA_NOCHE, P.TINTA, k) else a.luz(P.TINTA, maxOf(k, 0.75f)))
         if (a.oscuro && k > 0.2f) drawRect(P.LLAMA.copy(alpha = (0.3f * k).coerceAtMost(0.25f)), r.topLeft, Size(r.width, 1f * u))
     }
 
@@ -237,7 +237,8 @@ internal object VolumenEstanteAntiguas {
         val elip = minOf(cil.width * 0.17f, h * 0.045f)
         alrededor(a, hacia, arriba, w)
         val t = tinte(tinte, a, k)
-        val vit = Tinte(a.luz(P.VITELA, k), a.luz(mezcla(P.VITELA, Color.White, 0.4f), k), a.luz(P.VITELA_OSC, k))
+        // La vitela se apaga como lo demás claro: crema hundido lejos de la luz, no pardo gris.
+        val vit = Tinte(a.animo(P.VITELA, k), a.animo(mezcla(P.VITELA, Color.White, 0.4f), k), a.animo(P.VITELA_OSC, k))
         val madera = a.luz(P.ROBLE_LUZ, k)
         val maderaO = a.luz(P.ROBLE, k)
         // La perilla de abajo: el rollo se apoya en ella y no toca la tabla con la vitela.
@@ -265,7 +266,7 @@ internal object VolumenEstanteAntiguas {
         drawLine(vit.hondo, Offset(borde, cil.top), Offset(borde, cam0), 1f * u)
         // La boca de arriba: la espiral de la vitela, bien marcada, y la hoja de fuera que se levanta.
         val boca = Rect(cil.left, cil.top - elip, cil.right, cil.top + elip)
-        drawOval(a.luz(P.VITELA, k), boca.topLeft, boca.size)
+        drawOval(a.animo(P.VITELA, k), boca.topLeft, boca.size)
         val espiral = Path()
         val vueltas = 3
         val pasos = 60
@@ -286,7 +287,7 @@ internal object VolumenEstanteAntiguas {
             lineTo(x0 + d * boca.width * 0.2f, boca.center.y + elip * 0.3f)
             close()
         }
-        drawPath(labio, a.luz(mezcla(P.VITELA, Color.White, 0.25f), k))
+        drawPath(labio, a.animo(mezcla(P.VITELA, Color.White, 0.25f), k))
         drawPath(labio, vit.hondo, style = Stroke(0.6f * u))
         // La varilla y su perilla torneada, con el aro de latón.
         val vx = boca.center.x
@@ -326,94 +327,143 @@ internal object VolumenEstanteAntiguas {
     // ---------------------------------------------------------------- el envoltorio de cartas
 
     /**
-     * Las cartas de la compañía envueltas en un paño de lana teñido y atadas: un bulto blando de pie, con las esquinas de arriba
-     * vencidas, la solapa de paño doblada por delante en pico con su botón de madera, dos vueltas de cordel con el nudo y los
-     * cabos, y la tablilla de pergamino metida bajo el cordel.
+     * Las cartas de la compañía envueltas en un paño de lana teñido: un bulto blando de pie, sin talle (el paño envuelve el fajo de
+     * cartas), con el paño doblado y vencido arriba, por donde asoman las cartas por un lado; la solapa blanda que cruza el frente
+     * desde un costado, con su dobladillo y un botón de hueso en la punta; el cordón que da dos vueltas y apenas frunce el paño; los
+     * pliegues de la caída, el paño que se derrama sobre la tabla y la tablilla de pergamino metida bajo el cordón.
      */
     fun DrawScope.envoltorio(v: Volumen, medidor: TextMeasurer, a: AireAntiguas, k: Float, f: Float, hacia: Float, tinte: Color?, fz: Float, pano: PanoAntiguas?) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla
-        val top = h * 0.05f
-        alrededor(a, hacia, top + h * 0.04f, w)
+        val lado = if (Math.floorMod(s, 2) == 0) 1f else -1f
+        fun x(f0: Float) = if (lado > 0f) w * f0 else w * (1f - f0)
+        val top = h * (0.1f + 0.03f * azar(s, 20))
+        alrededor(a, hacia, top, w)
         val t = tinte(tinte, a, k)
-        val iz = top + h * (0.01f + 0.03f * azar(s, 20)); val de = top + h * (0.02f + 0.03f * azar(s, 21))
+        // Las cartas que asoman por arriba, del lado de la abertura: hojas plegadas, una más alta que otra.
+        for (i in 0 until 3) {
+            val bx = x(0.5f + 0.13f * i); val alto = h * (0.07f + 0.035f * i) * (0.8f + 0.4f * azar(s, 40 + i))
+            val gir = (-6f + 6f * i) * lado
+            rotate(gir, Offset(bx, top + h * 0.04f)) {
+                val hoja = Rect(bx - w * 0.14f, top - alto, bx + w * 0.14f, top + h * 0.05f)
+                drawRect(a.sombra(0.3f), Offset(hoja.left + 1f * u, hoja.top + 1.2f * u), hoja.size)
+                drawRect(a.etiqueta(if (i == 1) P.VITELA else mezcla(P.VITELA, P.PERGAMINO, 0.55f), k), hoja.topLeft, hoja.size)
+                drawLine(a.luz(P.TINTA, k).copy(alpha = 0.35f), Offset(hoja.left + hoja.width * 0.2f, hoja.top + alto * 0.35f), Offset(hoja.right - hoja.width * 0.2f, hoja.top + alto * 0.35f), 0.6f * u)
+                if (i == 2) drawCircle(a.luz(P.RUBIA, k), 1.6f * u, Offset(hoja.center.x, hoja.top + alto * 0.62f))
+            }
+        }
+        // El cuerpo: un bloque blando, de costados apenas abombados (sin talle); el paño se derrama abajo.
+        val yc = h * (0.58f + 0.05f * azar(s, 24))
         val cuerpo = Path().apply {
-            moveTo(w * 0.04f, iz + h * 0.02f)
-            quadraticTo(w * 0.06f, iz - h * 0.01f, w * 0.16f, iz)
-            quadraticTo(w * 0.5f, top + h * 0.07f, w * 0.84f, de)
-            quadraticTo(w * 0.95f, de - h * 0.01f, w * 0.96f, de + h * 0.03f)
-            cubicTo(w * 1.01f, h * 0.4f, w * 0.99f, h * 0.8f, w * 0.97f, h - h * 0.03f)
-            quadraticTo(w * 0.96f, h, w * 0.88f, h)
-            lineTo(w * 0.12f, h)
-            quadraticTo(w * 0.04f, h, w * 0.03f, h - h * 0.03f)
-            cubicTo(w * 0.01f, h * 0.8f, -w * 0.01f, h * 0.4f, w * 0.04f, iz + h * 0.02f)
+            moveTo(x(0.06f), top + h * 0.03f)
+            cubicTo(x(0.25f), top - h * 0.01f, x(0.6f), top + h * 0.02f, x(0.95f), top + h * 0.005f)
+            cubicTo(x(1.0f), h * 0.35f, x(0.97f), yc, x(0.97f), yc + h * 0.04f)
+            cubicTo(x(0.98f), h * 0.8f, x(1.04f), h * 0.92f, x(1.02f), h - h * 0.01f)
+            lineTo(x(-0.02f), h - h * 0.01f)
+            cubicTo(x(-0.04f), h * 0.92f, x(0.03f), h * 0.8f, x(0.03f), yc + h * 0.04f)
+            cubicTo(x(0.02f), yc, x(-0.01f), h * 0.35f, x(0.06f), top + h * 0.03f)
             close()
         }
         drawPath(cuerpo, t.cara)
         clipPath(cuerpo) {
-            redondo(Rect(0f, top, w, h), Tinte(t.cara, mezcla(t.cara, t.claro, 0.6f), mezcla(t.cara, t.hondo, 0.7f)), hacia)
-            // El tejido de la lana y las arrugas del paño junto al cordel y en las esquinas.
+            redondo(Rect(0f, top, w, h), Tinte(t.cara, mezcla(t.cara, t.claro, 0.55f), mezcla(t.cara, t.hondo, 0.7f)), hacia)
+            // El paño doblado arriba: una vuelta blanda que cae sobre el frente.
+            val doblez = Path().apply {
+                moveTo(0f, top); lineTo(w, top)
+                lineTo(w, top + h * 0.07f)
+                cubicTo(w * 0.7f, top + h * 0.1f, w * 0.35f, top + h * 0.055f, 0f, top + h * 0.09f)
+                close()
+            }
+            drawPath(doblez, t.claro.copy(alpha = 0.55f))
+            drawPath(Path().apply { moveTo(0f, top + h * 0.09f); cubicTo(w * 0.35f, top + h * 0.055f, w * 0.7f, top + h * 0.1f, w, top + h * 0.07f) }, t.hondo, style = Stroke(1.6f * u))
+            // Los pliegues de la caída, bajo el cordón: blandos, que se abren hacia abajo.
+            for (i in 0 until 4) {
+                val fx = 0.15f + 0.24f * i + 0.05f * (azar(s, 30 + i) - 0.5f)
+                val pl = Path().apply {
+                    moveTo(w * fx, yc + h * 0.04f)
+                    quadraticTo(w * (fx + 0.04f * (azar(s, 34 + i) - 0.5f)), h * 0.8f, w * (fx + (fx - 0.5f) * 0.15f), h)
+                }
+                drawPath(pl, t.hondo, style = Stroke(2f * u))
+                translate(-1.4f * u * hacia, 0f) { drawPath(pl, t.claro.copy(alpha = 0.6f), style = Stroke(1.1f * u)) }
+            }
+            // Las arrugas de arriba: cortas, en abanico desde el cordón.
+            for (i in 0 until 3) {
+                val q = Offset(w * (0.25f + 0.25f * i), yc - h * 0.02f)
+                drawLine(t.hondo, q, q + Offset(w * (0.06f * (i - 1)), -h * (0.08f + 0.03f * azar(s, 50 + i))), 1.2f * u)
+            }
+            // La lana: una trama fina, y la sombra del bulto donde pesa sobre la tabla.
             val trama = Path()
             var y = top
             while (y < h) { trama.moveTo(0f, y); trama.lineTo(w, y + 1f * u); y += 2.4f * u }
             drawPath(trama, a.sombra(0.07f), style = Stroke(0.5f * u))
-            val arrugas = Path()
-            listOf(0.2f, 0.42f, 0.66f, 0.84f).forEachIndexed { i, fx ->
-                arrugas.moveTo(w * fx, h * 0.62f); arrugas.quadraticTo(w * (fx + 0.04f), h * 0.74f, w * (fx - 0.02f + 0.06f * azar(s, 30 + i)), h * 0.9f)
-            }
-            drawPath(arrugas, t.hondo, style = Stroke(1.2f * u))
-            drawPath(arrugas, t.claro.copy(alpha = 0.5f), style = Stroke(0.6f * u))
-            drawOval(a.sombra(0.2f), Offset(w * 0.06f, h * 0.88f), Size(w * 0.88f, h * 0.16f))
+            drawOval(a.sombra(0.22f), Offset(w * 0.04f, h * 0.9f), Size(w * 0.92f, h * 0.14f))
         }
-        // La solapa doblada por delante, en pico, con su dobladillo pespunteado y su sombra.
-        val pico = Offset(w * (0.42f + 0.16f * azar(s, 22)), h * (0.4f + 0.05f * azar(s, 23)))
-        val solapa = Path().apply {
-            moveTo(w * 0.05f, iz + h * 0.025f)
-            quadraticTo(w * 0.5f, top + h * 0.08f, w * 0.95f, de + h * 0.035f)
-            quadraticTo(w * 0.8f, h * 0.24f, pico.x + w * 0.04f, pico.y - h * 0.01f)
-            quadraticTo(pico.x, pico.y + h * 0.012f, pico.x - w * 0.04f, pico.y - h * 0.01f)
-            quadraticTo(w * 0.2f, h * 0.24f, w * 0.05f, iz + h * 0.025f)
+        drawPath(cuerpo, t.hondo, style = Stroke(0.9f * u))
+        // El paño que se derrama sobre la tabla, por delante.
+        val vuelo = Path().apply {
+            moveTo(x(0.2f), h - h * 0.05f)
+            quadraticTo(x(0.6f), h - h * 0.08f, x(1.05f), h - h * 0.015f)
+            lineTo(x(1.05f), h + h * 0.012f)
+            quadraticTo(x(0.6f), h + h * 0.02f, x(0.15f), h + h * 0.008f)
             close()
         }
-        translate(1.2f * u, 2.2f * u) { drawPath(solapa, a.sombra(0.4f)) }
-        drawPath(solapa, if (hacia < 0f) t.claro else t.cara)
+        drawPath(vuelo, t.hondo)
+        drawPath(vuelo, t.claro.copy(alpha = 0.45f), style = Stroke(0.8f * u))
+        // La solapa blanda que cruza el frente desde un costado, con el borde ondeado y su dobladillo.
+        val punta = Offset(x(0.68f + 0.1f * azar(s, 22)), top + h * (0.3f + 0.06f * azar(s, 23)))
+        val solapa = Path().apply {
+            moveTo(x(0.01f), top + h * 0.06f)
+            cubicTo(x(0.25f), top + h * 0.08f, x(0.5f), punta.y - h * 0.12f, punta.x, punta.y - h * 0.02f)
+            quadraticTo(punta.x + w * 0.04f * lado, punta.y + h * 0.03f, punta.x - w * 0.05f * lado, punta.y + h * 0.05f)
+            cubicTo(x(0.4f), punta.y + h * 0.1f, x(0.18f), punta.y + h * 0.16f, x(0.01f), punta.y + h * 0.2f)
+            close()
+        }
+        translate(1.4f * u * lado, 2.2f * u) { drawPath(solapa, a.sombra(0.4f)) }
+        drawPath(solapa, mezcla(t.cara, t.claro, if (hacia < 0f) 0.35f else 0.15f))
         clipPath(solapa) {
-            drawRect(t.hondo.copy(alpha = 0.45f), Offset(if (hacia < 0f) w * 0.6f else 0f, 0f), Size(w * 0.4f, h))
+            listOf(0.2f, 0.42f).forEach { fx ->
+                val pl = Path().apply { moveTo(x(0.02f), top + h * (0.1f + fx * 0.3f)); quadraticTo(x(fx + 0.15f), punta.y - h * 0.02f + h * fx * 0.1f, punta.x - w * 0.1f * lado, punta.y + h * 0.03f) }
+                drawPath(pl, t.hondo.copy(alpha = 0.8f), style = Stroke(1.4f * u))
+            }
             val trama = Path()
             var y = top
-            while (y < h * 0.5f) { trama.moveTo(0f, y); trama.lineTo(w, y + 1f * u); y += 2.4f * u }
+            while (y < h * 0.7f) { trama.moveTo(0f, y); trama.lineTo(w, y + 1f * u); y += 2.4f * u }
             drawPath(trama, a.sombra(0.07f), style = Stroke(0.5f * u))
         }
-        drawPath(solapa, t.hondo, style = Stroke(0.8f * u))
-        // El botón de madera de la punta (en los Sueños, la media luna de plata).
-        if (v.noche) luna(pico + Offset(0f, h * 0.035f), minOf(w * 0.2f, 5.2f * u), a)
-        else {
-            val br = minOf(w * 0.1f, 3f * u)
-            drawCircle(a.sombra(0.4f), br, pico + Offset(br * 0.3f, br * 0.5f))
-            drawCircle(a.luz(P.ROBLE_LUZ, k), br, pico)
-            drawCircle(a.brillo(0.5f, k), br * 0.35f, pico - Offset(br * 0.3f, br * 0.3f))
-        }
-        // Las dos vueltas de cordel, el nudo y los cabos.
+        drawPath(solapa, t.hondo, style = Stroke(1.3f * u))
+        // El cordón: dos vueltas algo sesgadas, que apenas fruncen el paño.
         val cord = a.luz(P.CUERDA, k)
-        val yc = h * (0.56f + 0.06f * azar(s, 24))
-        listOf(yc, yc + 2.6f * u).forEach { y ->
-            drawRect(a.sombra(0.35f), Offset(w * 0.02f, y + 1.6f * u), Size(w * 0.96f, 1f * u))
-            drawRect(cord, Offset(w * 0.02f, y - 0.9f * u), Size(w * 0.96f, 1.8f * u))
-            drawRect(a.brillo(0.3f, k), Offset(w * 0.02f, y - 0.9f * u), Size(w * 0.96f, 0.5f * u))
+        listOf(yc - h * 0.02f to yc + h * 0.01f, yc + h * 0.035f to yc + h * 0.02f).forEach { (y0, y1) ->
+            val v0 = Offset(x(-0.02f), y0); val v1 = Offset(x(1.02f), y1)
+            drawLine(a.sombra(0.4f), v0 + Offset(0f, 1.8f * u), v1 + Offset(0f, 1.8f * u), 1.2f * u)
+            drawLine(cord, v0, v1, 1.9f * u)
+            drawLine(a.brillo(0.3f, k), v0 - Offset(0f, 0.6f * u), v1 - Offset(0f, 0.6f * u), 0.5f * u)
         }
-        // La tablilla de pergamino con el día, metida bajo el cordel.
+        // La tablilla de pergamino con el día, metida bajo el cordón.
         val altoEt = minOf(27f * u + 3.2f * u, h * 0.32f)
         val ancho = minOf(w * 0.78f, maxOf(w * 0.6f, 24f * u))
-        val ey = yc - 2.2f * u
+        val ey = yc - h * 0.02f - 2.2f * u
         val dx = w * 0.04f * (azar(s, 27) - 0.5f)
         val et = Rect(w / 2 - ancho / 2 + dx, ey, w / 2 + ancho / 2 + dx, ey + altoEt)
         etiqueta(v, medidor, et, a, k)
-        drawRect(cord, Offset(et.left - 0.5f * u, yc - 0.9f * u), Size(et.width + 1f * u, 1.8f * u))
-        val nx = if (Math.floorMod(s, 2) == 0) et.left - w * 0.02f else et.right + w * 0.02f
-        drawCircle(cord, 2f * u, Offset(nx, yc + 1f * u))
-        drawLine(cord, Offset(nx, yc + 1f * u), Offset(nx - 1.5f * u, yc + 9f * u + 5f * u * azar(s, 25)), 1.1f * u, StrokeCap.Round)
-        drawLine(cord, Offset(nx, yc + 1f * u), Offset(nx + 2f * u, yc + 7f * u), 1.1f * u, StrokeCap.Round)
+        val yIz = if (lado > 0f) yc - h * 0.02f else yc + h * 0.01f
+        val yDe = if (lado > 0f) yc + h * 0.01f else yc - h * 0.02f
+        drawLine(cord, Offset(et.left - 0.5f * u, yIz + (yDe - yIz) * (et.left / w)), Offset(et.right + 0.5f * u, yIz + (yDe - yIz) * (et.right / w)), 1.9f * u)
+        // El botón de hueso en la punta de la solapa (en los Sueños, una media luna de plata) y el cordón que baja de él.
+        if (v.noche) luna(punta + Offset(-w * 0.03f * lado, h * 0.01f), minOf(w * 0.2f, 5.2f * u), a)
+        else {
+            val bl = minOf(w * 0.16f, 4.4f * u); val bg = bl * 0.42f
+            val b = punta + Offset(-w * 0.03f * lado, h * 0.012f)
+            drawLine(cord, b, Offset(b.x + w * 0.02f * lado, yc - h * 0.02f), 1.3f * u)
+            rotate(-30f * lado, b) {
+                drawRoundRect(a.sombra(0.45f), Offset(b.x - bl + 0.8f * u, b.y - bg + 1.2f * u), Size(bl * 2, bg * 2), CornerRadius(bg))
+                drawRoundRect(a.animo(Color(0xFFE8DEC6), k), Offset(b.x - bl, b.y - bg), Size(bl * 2, bg * 2), CornerRadius(bg))
+                drawRect(a.brillo(0.5f, k), Offset(b.x - bl * 0.7f, b.y - bg * 0.6f), Size(bl * 1.2f, 0.8f * u))
+                drawLine(a.sombra(0.35f), Offset(b.x - bl * 0.3f, b.y - bg), Offset(b.x - bl * 0.3f, b.y + bg), 0.7f * u)
+                drawLine(a.sombra(0.35f), Offset(b.x + bl * 0.3f, b.y - bg), Offset(b.x + bl * 0.3f, b.y + bg), 0.7f * u)
+            }
+        }
         cantoPano(cuerpo, 0f, top + h * 0.12f, pano, fz)
         filos(Rect(w * 0.03f, top + h * 0.05f, w * 0.97f, h), a, k, f, hacia)
     }

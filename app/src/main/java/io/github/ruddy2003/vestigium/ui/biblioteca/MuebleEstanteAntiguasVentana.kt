@@ -163,7 +163,7 @@ internal class PanoAntiguas(
 /** El paño de la ventana según el momento: el sol de día, el ocaso de los Sueños en claro, la luna de los Sueños en oscuro. */
 internal fun panoAntiguas(a: AireAntiguas): PanoAntiguas? = when {
     !a.oscuro && !a.noche -> PanoAntiguas(0.15f, 0.27f, 0.13f, 0.4f, 0.3f, 0.07f, PaletaAntiguas.SOL, 0.42f)
-    !a.oscuro && a.noche -> PanoAntiguas(0.17f, 0.44f, 0.16f, 0.28f, 0.09f, 0.06f, Color(0xFFF6A848), 0.3f, tinte = 0.62f)
+    !a.oscuro && a.noche -> PanoAntiguas(0.18f, 0.3f, 0.31f, 0.19f, 0.06f, 0.035f, Color(0xFFF2B040), 0.22f, tinte = 0.74f)
     a.oscuro && a.noche -> PanoAntiguas(0.155f, 0.3f, 0.2f, 0.46f, 0.52f, 0.07f, Color(0xFFA8BCE8), 0.3f)
     else -> null
 }
