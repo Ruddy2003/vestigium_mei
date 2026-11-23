@@ -282,7 +282,9 @@ internal object ReglaLibretaTemplario {
                 val base = a.dia(BADANA, 0f, k(Offset(l.left + 20f * U, l.top + 40f * U), s, a))
                 drawRect(a.enLanceta(base), l.topLeft, l.size)
             }
-            drawPath(luz, a.enLanceta(a.dia(BADANA_LUZ, 0.1f, kc)).copy(alpha = if (a.oscuro) 0.6f else 0.75f), style = Stroke(1.1f * U))
+            // El borde: de día, un filo más claro; de noche, blando (medio paso entre la luna y lo que la rodea).
+            if (a.oscuro) drawPath(luz, a.enLanceta(a.dia(BADANA, 0f, k(Offset(l.left + 20f * U, l.top + 40f * U), s, a)), 0.5f), style = Stroke(3.2f * U))
+            else drawPath(luz, a.enLanceta(a.dia(BADANA_LUZ, 0.1f, kc)).copy(alpha = 0.75f), style = Stroke(1.1f * U))
         }
         // El volumen de la tabla: más clara arriba a la izquierda (la luz), más honda abajo a la derecha.
         if (!a.oscuro) {
@@ -351,18 +353,22 @@ internal object ReglaLibretaTemplario {
 
     /**
      * Las cantoneras de latón con sus clavos y los bullones. Con [caja] (el recuadro de la lanceta), solo los que caen en ella
-     * y con el latón encendido (sin volver a echar su sombra, que ya está).
+     * y con el latón encendido (sin volver a echar su sombra, que ya está). De noche no se repintan: la luna solo les deja un
+     * brillo frío chico en el filo que la mira (no blanco).
      */
     private fun DrawScope.herrajes(s: SitioLibretaTemplario, a: AireTemplario, bullones: List<Offset>, caja: Rect?) {
         val U = s.U
         val l = s.libro
         val lit = caja != null
+        val luna = lit && a.oscuro
+        val frio = Color(0xFF9AAAD2)
         fun c(col: Color, f: Float, kk: Float) = if (lit) a.enLanceta(a.dia(col, f, kk)) else a.dia(col, f, kk)
         val e0 = 22f * U
         listOf(Offset(l.left, l.top) to Offset(1f, 1f), Offset(l.right, l.top) to Offset(-1f, 1f), Offset(l.right, l.bottom) to Offset(-1f, -1f), Offset(l.left, l.bottom) to Offset(1f, -1f)).forEach { (o, d) ->
             if (caja != null && !caja.overlaps(Rect(minOf(o.x, o.x + d.x * e0), minOf(o.y, o.y + d.y * e0), maxOf(o.x, o.x + d.x * e0), maxOf(o.y, o.y + d.y * e0)))) return@forEach
             val kk = k(o, s, a)
             val p = Path().apply { moveTo(o.x, o.y); lineTo(o.x + d.x * e0, o.y); quadraticTo(o.x + d.x * e0 * 0.45f, o.y + d.y * e0 * 0.45f, o.x, o.y + d.y * e0); close() }
+            if (luna) { drawPath(p, frio.copy(alpha = 0.4f), style = Stroke(0.6f * U)); return@forEach }
             if (!lit) drawPath(Path().apply { addPath(p, Offset(1.2f * U, 1.4f * U)) }, a.sombra(0.35f))
             drawPath(p, c(P.LATON, 0f, kk))
             drawPath(p, c(P.LATON_OSC, 0f, kk), style = Stroke(0.8f * U))
@@ -372,11 +378,16 @@ internal object ReglaLibretaTemplario {
         bullones.forEach { b ->
             if (caja != null && !caja.overlaps(Rect(b.x - 9f * U, b.y - 9f * U, b.x + 9f * U, b.y + 9f * U))) return@forEach
             val kk = k(b, s, a)
+            if (luna) {
+                drawArc(frio.copy(alpha = 0.45f), 165f, 100f, false, Offset(b.x - 7.2f * U, b.y - 7.2f * U), Size(14.4f * U, 14.4f * U), style = Stroke(0.9f * U))
+                drawCircle(frio.copy(alpha = 0.7f), 1f * U, b - Offset(2.4f * U, 2.4f * U))
+                return@forEach
+            }
             if (!lit) drawCircle(a.sombra(0.4f), 8.5f * U, b + Offset(1.6f * U, 2f * U))
             drawCircle(c(P.LATON_OSC, 0f, kk), 8.5f * U, b)
             drawCircle(c(P.LATON, 0.05f, kk), 6f * U, b)
             drawCircle(c(P.LATON_LUZ, 0f, kk).copy(alpha = 0.8f), 3.4f * U, b - Offset(1.6f * U, 1.6f * U))
-            if (lit) drawCircle(if (a.oscuro) Color(0xFFDCE6F8) else Color(0xFFFFF6DC), 1.6f * U, b - Offset(2.2f * U, 2.2f * U))
+            if (lit) drawCircle(Color(0xFFFFF6DC), 1.6f * U, b - Offset(2.2f * U, 2.2f * U))
             else destelloTemplario(b - Offset(2.2f * U, 2.2f * U), 1.2f * U, a, kk)
             if (a.oscuro && !lit) drawArc(a.filo(0.9f * kk), -60f, 120f, false, Offset(b.x - 6f * U, b.y - 6f * U), Size(12f * U, 12f * U), style = Stroke(1f * U))
         }
@@ -395,7 +406,7 @@ internal object ReglaLibretaTemplario {
         // Si la lanceta llega al tejuelo, el marco y el pergamino se encienden (el tejuelo vuela un poco: va algo más corrida).
         if (luz.getBounds().overlaps(r)) clipRect(r.left, r.top, r.right, r.bottom) {
             clipPath(Path().apply { addPath(luz, Offset(-1.5f * U, -1.5f * U)) }) {
-                drawRect(a.enLanceta(a.dia(P.LATON, 0f, kk)), r.topLeft, r.size)
+                if (!a.oscuro) drawRect(a.enLanceta(a.dia(P.LATON, 0f, kk)), r.topLeft, r.size)
                 drawRect(a.enLanceta(a.etiqueta(P.PERGAMINO, kk), 0.55f), dentro.topLeft, dentro.size)
             }
         }

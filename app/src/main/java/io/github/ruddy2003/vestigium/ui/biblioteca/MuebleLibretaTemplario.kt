@@ -126,12 +126,13 @@ internal class SitioLibretaTemplario(val w: Float, val h: Float, u: Float, hojas
 
 /**
  * El color de una superficie dentro de la lanceta, a partir de [base] (su color sin esa luz): de día, el sol, más claro, más
- * cálido y más saturado (la badana pasa a bermellón, el latón a oro); de noche, la luna, fría, que se suma a lo que hay. Es el
- * color de la superficie, opaco: no un velo encima. [f], cuánta le llega (de 0 a 1).
+ * cálido y más saturado (la badana pasa a bermellón, el latón a oro); de noche, la luna: el mismo color virado al frío (el
+ * rojo del cuero, a ciruela azulado) y apenas un paso más claro, nunca gris. Es el color de la superficie, opaco: no un velo
+ * encima. [f], cuánta le llega (de 0 a 1).
  */
 internal fun AireTemplario.enLanceta(base: Color, f: Float = 1f): Color =
     if (!oscuro) mezcla(base, Color((base.red * 1.5f + 0.07f).coerceAtMost(1f), (base.green * 1.22f + 0.03f).coerceAtMost(1f), (base.blue * 0.95f).coerceAtMost(1f), base.alpha), f)
-    else mezcla(base, Color(0xFF7C90CC), 0.44f * f)
+    else mezcla(base, Color((base.red * 1.04f + 0.02f).coerceAtMost(1f), (base.green * 1.05f + 0.025f).coerceAtMost(1f), (base.blue * 1.25f + 0.075f).coerceAtMost(1f), base.alpha), f)
 
 
 /**
@@ -308,7 +309,7 @@ internal object SalaLibretaTemplario {
             val l = s.lanceta(a.oscuro, -15f * U, -4f * U)
             clipPath(l) {
                 val base = s.c(a, mezcla(P.CALIZA, P.CAL, 0.15f), if (a.oscuro) 0f else 0.12f, Offset(s.huecoIzq, 60f * U))
-                drawRect(if (a.oscuro) a.enLanceta(base, 0.9f) else a.sol(P.CALIZA, base, 1f), Offset(s.huecoIzq - s.dovela - 30f * U, 0f), Size(s.dovela + 90f * U, s.pretilArriba))
+                drawRect(if (a.oscuro) mezcla(base, Color(0xFF7C90CC), 0.4f) else a.sol(P.CALIZA, base, 1f), Offset(s.huecoIzq - s.dovela - 30f * U, 0f), Size(s.dovela + 90f * U, s.pretilArriba))
             }
             if (!a.oscuro) drawPath(l, Color(0xFFF6DDA8).copy(alpha = 0.5f), style = Stroke(1f * U))
             // Las juntas: en las jambas, horizontales; en la curva, radiales (hacia el centro de cada mitad del arco).
