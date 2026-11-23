@@ -26,6 +26,12 @@ internal object RinconLibretaNeon {
     private val Q = PaletaNeon
     private val COBRE = Color(0xFFB8703A)
     private val KRAFT = Color(0xFFA88C68)
+    /** El vidriado jade bajo la lámpara de calor: naranja coral. */
+    private val CORAL = Color(0xFFF26A4A)
+    /** La junta del azulejo: verde oscuro, también bajo la lámpara. */
+    private val JUNTA_VERDE = Color(0xFF223D35)
+    /** El letrero de la calle, que se refleja en el acero del frente. */
+    private val NEON_CALLE = Color(0xFFFF3D9A)
 
     fun DrawScope.rincon(g: EscenaLibretaNeon) {
         pared(g)
@@ -50,11 +56,13 @@ internal object RinconLibretaNeon {
     private fun DrawScope.pared(g: EscenaLibretaNeon) {
         val u = g.u; val w = g.w; val h = g.h
         val alto = g.atras
-        drawRect(g.luz.t(w * 0.6f, alto * 0.5f).c(Q.JUNTA), Offset.Zero, Size(w, alto))
+        // La junta, verdosa (con la luz de la nevera): el charco de la lámpara tiñe las caras, no la junta.
+        drawRect(JUNTA_VERDE, Offset.Zero, Size(w, alto))
         val lado = h * 0.082f
         val junta = maxOf(1f, 1.1f * u)
         var f = 0
         var y = alto - lado
+        var brillos = 0
         // De abajo arriba, para que la fila de la encimera quede entera.
         while (y > -lado) {
             var c = 0; var x = 0f
@@ -71,7 +79,19 @@ internal object RinconLibretaNeon {
                     z > 0.86f -> mezcla(Q.JADE, Color(0xFF468F9E), 0.4f)
                     else -> mezcla(Q.JADE, if (azar(sem, 1) > 0.5f) Q.JADE_LUZ else Q.JADE_OSC, 0.3f * azar(sem, 2))
                 }
-                drawRect(t.c(base), cara.topLeft, cara.size)
+                // Fuera del charco, el jade profundo (con la luz fría de la nevera); bajo la lámpara, la cara se tiñe de coral sin
+                // perder el cuerpo, y en las dos o tres piezas más cerca de la bombilla, el brillo especular del vidriado.
+                val kc = g.luz.kCalor(centro)
+                val jade = mezcla(g.luz.tFrio(centro).c(base, 1.15f), mezcla(base, Q.HONDO, 0.55f), 0.3f)
+                // El paso de uno a otro es corto (mezclar jade y coral a medias daría un pardo): o jade, o coral.
+                val q = ((kc - 0.38f) / 0.5f).coerceIn(0f, 1f)
+                val tinte = q * q * (3f - 2f * q) * 0.88f
+                drawRect(saturarNeon(mezcla(jade, CORAL, tinte), 1f + 0.35f * tinte), cara.topLeft, cara.size)
+                if (kc > 0.82f && brillos < 3 && azar(sem, 21) > 0.4f) {
+                    brillos++
+                    drawOval(P.CALOR_ALMA.copy(alpha = 0.85f), Offset(cara.left + cara.width * 0.18f, cara.top + cara.height * 0.14f), Size(cara.width * 0.34f, cara.height * 0.16f))
+                    drawCircle(Color.White.copy(alpha = 0.9f), cara.width * 0.05f, Offset(cara.left + cara.width * 0.3f, cara.top + cara.height * 0.21f))
+                }
                 drawRect(t.b(0.4f), cara.topLeft, Size(cara.width, maxOf(1f, 0.9f * u)))
                 drawRect(t.s(0.32f), Offset(cara.left, cara.bottom - 1.2f * u), Size(cara.width, 1.2f * u))
                 drawRect(t.b(0.22f), Offset(if (t.izq) cara.left else cara.right - 1.1f * u, cara.top), Size(1.1f * u, cara.height))
@@ -190,20 +210,42 @@ internal object RinconLibretaNeon {
         tiraAcero(g, x0, w, e0, e1, 1f, P.ACERO_OSC)
         tiraAcero(g, x0, w, e0 + (e1 - e0) * 0.18f, e0 + (e1 - e0) * 0.42f, 1.3f, P.ACERO_LUZ)
         drawRect(g.luz.t(w * 0.5f, e1).s(0.45f), Offset(x0, e1 - 1.4f * u), Size(w - x0, 1.4f * u))
-        // El frente: dos puertas de acero cepillado a lo alto, con el tirador hundido, y su junta.
+        // Los brillos del canto: el de la lámpara, largo y caliente, y el frío de la nevera a la izquierda.
+        val yb = e0 + (e1 - e0) * 0.3f
+        drawLine(P.CALOR_ALMA.copy(alpha = 0.85f), Offset(g.lampara.x - h * 0.16f, yb), Offset(g.lampara.x + h * 0.1f, yb), 1.2f * u, StrokeCap.Round)
+        drawLine(Color.White.copy(alpha = 0.9f), Offset(g.lampara.x - h * 0.05f, yb), Offset(g.lampara.x + h * 0.01f, yb), 1.2f * u, StrokeCap.Round)
+        drawLine(P.FRIO.copy(alpha = 0.6f), Offset(x0, yb), Offset(x0 + h * 0.14f, yb), 1f * u, StrokeCap.Round)
+        // El frente, corto: el acero cepillado a lo alto, el reflejo del letrero de la calle y el cajón entreabierto bajo el pincho.
         tiraAcero(g, x0, w, e1, h, 0.75f, P.ACERO_OSC)
-        drawRect(Q.SOMBRA.copy(alpha = 0.3f), Offset(x0, e1), Size(w - x0, h - e1))
+        drawRect(Q.SOMBRA.copy(alpha = 0.25f), Offset(x0, e1), Size(w - x0, h - e1))
         clipRect(x0, e1, w, h) {
             var x = x0 + 2f * u
-            while (x < w) { drawLine(g.luz.t(x, e1 + h * 0.08f).b(0.1f), Offset(x, e1), Offset(x, h), 0.5f * u); x += 3.4f * u * (0.7f + 0.6f * azar(6571, (x / u).toInt())) }
-            val medio = x0 + (w - x0) * 0.5f
-            listOf(x0 + h * 0.04f, medio + h * 0.04f).forEach { px ->
-                val t = g.luz.t(px, e1 + h * 0.06f)
-                drawRoundRect(Q.SOMBRA.copy(alpha = 0.7f), Offset(px, e1 + h * 0.045f), Size(h * 0.16f, h * 0.022f), CornerRadius(2f * u))
-                drawRect(t.b(0.35f), Offset(px, e1 + h * 0.045f + h * 0.022f), Size(h * 0.16f, 0.8f * u))
+            while (x < w) { drawLine(g.luz.t(x, e1 + h * 0.05f).b(0.1f), Offset(x, e1), Offset(x, h), 0.5f * u); x += 3.4f * u * (0.7f + 0.6f * azar(6571, (x / u).toInt())) }
+            // El neón de enfrente, reflejado: una franja magenta que se deshace en el cepillado, con su línea viva.
+            val rx0 = x0 + (w - x0) * 0.45f
+            val ry = e1 + (h - e1) * 0.5f
+            drawRect(Brush.horizontalGradient(0f to NEON_CALLE.copy(alpha = 0f), 0.45f to NEON_CALLE.copy(alpha = 0.3f), 1f to NEON_CALLE.copy(alpha = 0.08f), startX = rx0, endX = w),
+                Offset(rx0, ry - h * 0.022f), Size(w - rx0, h * 0.044f))
+            drawLine(mezcla(NEON_CALLE, Color.White, 0.5f).copy(alpha = 0.6f), Offset(rx0 + (w - rx0) * 0.25f, ry), Offset(w - (w - rx0) * 0.2f, ry), 0.8f * u)
+            // El cajón entreabierto: la rendija oscura con los cantos de los tickets viejos que asoman, y el frente salido con su
+            // tirador de barra.
+            val c0 = maxOf(x0 + h * 0.02f, g.xPincho - h * 0.27f); val c1 = g.xPincho + h * 0.15f
+            val ab = e1 + h * 0.012f
+            drawRect(Q.SOMBRA.copy(alpha = 0.92f), Offset(c0, e1 + 1.6f * u), Size(c1 - c0, ab - e1))
+            for (j in 0 until 5) {
+                val px = c0 + (c1 - c0) * (0.08f + 0.18f * j + 0.05f * azar(6581, j))
+                drawRect(mezcla(P.COPIAS[j % P.COPIAS.size], Q.SOMBRA, 0.35f), Offset(px, e1 + 1.8f * u), Size(h * 0.035f, ab - e1 - 1.6f * u))
             }
-            drawLine(Q.SOMBRA.copy(alpha = 0.7f), Offset(medio, e1), Offset(medio, h), 1.2f * u)
-            drawLine(g.luz.t(medio, e1).b(0.3f), Offset(medio + 1.2f * u, e1), Offset(medio + 1.2f * u, h), 0.6f * u)
+            val tc = g.luz.t((c0 + c1) / 2, ab + h * 0.04f)
+            drawRect(Q.SOMBRA.copy(alpha = 0.5f), Offset(c0 + 2f * u, ab + 2f * u), Size(c1 - c0, h - ab))
+            drawRect(tc.c(P.ACERO, 0.9f), Offset(c0, ab), Size(c1 - c0, h - ab))
+            drawRect(tc.b(0.6f), Offset(c0, ab), Size(c1 - c0, 1f * u))
+            drawRect(tc.s(0.35f), Offset(c1 - 1.4f * u, ab), Size(1.4f * u, h - ab))
+            val ty = ab + (h - ab) * 0.45f
+            listOf(c0 + (c1 - c0) * 0.3f, c0 + (c1 - c0) * 0.7f).forEach { px -> drawRect(tc.c(P.ACERO_OSC), Offset(px - 1.2f * u, ty - 1.5f * u), Size(2.4f * u, 3f * u)) }
+            drawLine(tc.s(0.4f), Offset(c0 + (c1 - c0) * 0.28f, ty + 1.4f * u), Offset(c0 + (c1 - c0) * 0.72f, ty + 1.4f * u), 2.2f * u)
+            drawLine(tc.c(P.ACERO_LUZ, 1.3f), Offset(c0 + (c1 - c0) * 0.28f, ty), Offset(c0 + (c1 - c0) * 0.72f, ty), 2.2f * u, StrokeCap.Round)
+            drawLine(tc.b(0.8f, 1.3f), Offset(c0 + (c1 - c0) * 0.3f, ty - 0.7f * u), Offset(c0 + (c1 - c0) * 0.55f, ty - 0.7f * u), 0.6f * u)
         }
     }
 

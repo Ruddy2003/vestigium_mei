@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
@@ -59,12 +60,22 @@ internal object PaletaLibretaNeon {
 internal class LuzLibretaNeon(val h: Float, val lampara: Offset, val xNevera: Float, val suelo: Float) {
     val aire = AireNeon(false)
 
-    fun t(p: Offset): TonoNeon {
+    /** Lo que llega de la lámpara de calor a [p]. */
+    fun kCalor(p: Offset): Float {
         val dx = p.x - lampara.x; val dy = p.y - lampara.y
         val dyE = if (dy < 0f) dy * 2.6f else dy * 0.8f
-        val kc = 1.3f * exp(-sqrt(dx * dx + dyE * dyE) / (0.34f * h))
-        val dn = max(0f, p.x - xNevera)
-        val kf = 0.75f * exp(-dn / (0.24f * h)) * (if (p.y > suelo) 0.5f else 1f)
+        return 1.3f * exp(-sqrt(dx * dx + dyE * dyE) / (0.34f * h))
+    }
+
+    /** Lo que llega de la nevera a [p]. */
+    fun kFrio(p: Offset): Float = 0.75f * exp(-max(0f, p.x - xNevera) / (0.24f * h)) * (if (p.y > suelo) 0.5f else 1f)
+
+    /** El tono con solo la luz de la nevera (el jade de la pared lo tiñe la lámpara aparte, sin apagarlo). */
+    fun tFrio(p: Offset): TonoNeon = TonoNeon(aire, kFrio(p), PaletaLibretaNeon.FRIO, -1f)
+
+    fun t(p: Offset): TonoNeon {
+        val kc = kCalor(p)
+        val kf = kFrio(p)
         val k = kc + kf
         if (k < 1e-4f) return TonoNeon(aire, 0f, PaletaLibretaNeon.CALOR, 1f)
         val c = PaletaLibretaNeon.CALOR; val f = PaletaLibretaNeon.FRIO
@@ -82,13 +93,13 @@ internal class LuzLibretaNeon(val h: Float, val lampara: Offset, val xNevera: Fl
  * nevera, el pincho, la lámpara, el timbre y la bolsa.
  */
 internal class EscenaLibretaNeon(val w: Float, val h: Float, val u: Float) {
-    val atras = h * 0.64f
-    val canto = h * 0.735f
-    val frente = h * 0.775f
+    val atras = h * 0.755f
+    val canto = h * 0.84f
+    val frente = h * 0.872f
     val xNevera = h * 0.27f
     val xPincho = maxOf(w * 0.47f, xNevera + h * 0.3f)
-    val yPincho = h * 0.705f
-    val lampara = Offset(minOf(xPincho + h * 0.42f, w - h * 0.25f), h * 0.33f)
+    val yPincho = h * 0.808f
+    val lampara = Offset(minOf(xPincho + h * 0.42f, w - h * 0.25f), h * 0.37f)
     val xTimbre = minOf(lampara.x + h * 0.06f, w - h * 0.26f)
     val xBolsa = w - h * 0.11f
     val luz = LuzLibretaNeon(h, lampara, xNevera, frente)
@@ -150,17 +161,17 @@ internal object MuebleLibretaNeon {
         val ab = e.abierto.coerceIn(0f, 1f)
         val cx = g.xPincho
         val pie = g.yPincho
-        val rx = h * 0.125f; val ry = h * 0.038f; val canto = h * 0.042f
+        val rx = h * 0.15f; val ry = h * 0.045f; val canto = h * 0.055f
         val tb = g.luz.t(cx, pie - h * 0.02f)
         // La sombra en la encimera, hacia donde no da la lámpara (a la izquierda y un poco hacia delante).
         drawOval(tb.s(0.4f), Offset(cx - rx * 1.45f, pie - ry * 0.5f), Size(rx * 2.3f, ry * 1.8f))
         // La de la pila y la púa en la pared, hacia arriba a la izquierda (la lámpara queda a la derecha, más baja que la punta).
         val hojas = e.hojas.coerceAtLeast(0)
-        val pila = ((0.018f + 0.02f * sqrt(hojas.toFloat())).coerceAtMost(0.36f)) * h
+        val pila = ((0.02f + 0.022f * sqrt(hojas.toFloat())).coerceAtMost(0.39f)) * h
         val base = pie - canto
         drawPath(poligonoNeon(cx - h * 0.02f, g.atras, cx - h * 0.09f - pila * 0.2f, g.atras - pila * 0.6f - h * 0.05f,
             cx - h * 0.15f - pila * 0.25f, g.atras - pila * 0.55f - h * 0.04f, cx - h * 0.09f, g.atras), tb.s(0.3f))
-        drawLine(tb.s(0.25f), Offset(cx - h * 0.04f, g.atras), Offset(cx - h * 0.25f, h * 0.1f), 2f * u)
+        drawLine(tb.s(0.25f), Offset(cx - h * 0.04f, g.atras), Offset(cx - h * 0.3f, h * 0.08f), 2f * u)
         fajos(hojas, e.semilla, g)
         // La base de hierro colado: el canto (un cilindro bajo, con la luz de la lámpara a la derecha y la fría a la izquierda),
         // la cara de arriba con su moldura y el filo encendido.
@@ -171,6 +182,7 @@ internal object MuebleLibretaNeon {
         drawRect(g.luz.t(cx + rx, base).b(0.5f, 1.2f), Offset(cx + rx * 0.5f, base), Size(rx * 0.32f, canto))
         drawRect(g.luz.t(cx - rx, base).b(0.35f), Offset(cx - rx, base), Size(rx * 0.12f, canto))
         drawRect(tb.s(0.3f), Offset(cx - rx * 0.6f, base), Size(rx * 0.7f, canto))
+        drawLine(tb.s(0.4f), Offset(cx - rx, base + canto * 0.55f), Offset(cx + rx, base + canto * 0.55f), 1f * u)
         drawOval(hierro, Offset(cx - rx, base - ry), Size(rx * 2, ry * 2))
         drawArc(P.CALOR_ALMA.copy(alpha = 0.7f), -70f, 140f, false, Offset(cx - rx, base - ry), Size(rx * 2, ry * 2), style = Stroke(1.4f * u))
         drawArc(P.FRIO.copy(alpha = 0.45f), 150f, 60f, false, Offset(cx - rx, base - ry), Size(rx * 2, ry * 2), style = Stroke(1f * u))
@@ -180,7 +192,7 @@ internal object MuebleLibretaNeon {
         // La pila de tickets ensartados: tiras de papel térmico (blancas, alguna copia rosa o amarilla), cada una apenas girada.
         val n = if (hojas <= 6) hojas else (6 + (hojas - 6) / 3).coerceAtMost(60)
         val paso = if (n > 0) pila / n else 0f
-        val lx = h * 0.135f; val ly = h * 0.06f; val kd = 0.4f
+        val lx = h * 0.165f; val ly = h * 0.07f; val kd = 0.4f
         for (k in 0 until n) {
             val y = base - k * paso
             val suelto = azar(e.semilla, 60 + k) > 0.85f
@@ -206,25 +218,17 @@ internal object MuebleLibretaNeon {
             }
         }
         val cima = base - pila
-        // La púa: de acero, con su filo de luz del lado de la lámpara y la punta.
-        val punta = Offset(cx, h * 0.07f)
+        // La púa entera, de acero, con su filo de luz del lado de la lámpara: el último ticket la tapa desde su agujero hasta su
+        // borde de arriba, y la punta asoma por encima.
+        val punta = Offset(cx, h * 0.03f)
         val tp = g.luz.t(cx, h * 0.35f)
         drawLine(tp.s(0.45f), Offset(cx + 1.8f * u, cima), Offset(cx + 1.8f * u, punta.y + h * 0.02f), 2f * u)
         drawLine(tp.c(P.ACERO, 1.2f), Offset(cx, base), Offset(cx, punta.y), 2.6f * u, StrokeCap.Round)
         drawLine(tp.b(0.85f, 1.4f), Offset(cx + 0.7f * u, cima - 2f * u), Offset(cx + 0.7f * u, punta.y + 3f * u), 0.8f * u)
         drawLine(g.luz.t(cx - h * 0.1f, h * 0.35f).b(0.4f), Offset(cx - 0.8f * u, cima - 2f * u), Offset(cx - 0.8f * u, punta.y + 3f * u), 0.5f * u)
-        ultimoTicket(e, medidor, g, ab, cx)
-        // La punta asoma por encima del ticket mientras sigue ensartado.
-        val sube = ab * h * 0.12f
-        if (sube < h * 0.04f) {
-            drawLine(tp.c(P.ACERO, 1.3f), Offset(cx, ALTO_AGUJERO * h - sube), punta, 2.4f * u, StrokeCap.Round)
-            drawLine(tp.b(0.85f, 1.4f), Offset(cx + 0.7f * u, ALTO_AGUJERO * h - sube), punta + Offset(0.7f * u, 2f * u), 0.8f * u)
-            drawCircle(tp.b(0.9f, 1.4f), 1f * u, punta + Offset(0.3f * u, 0.8f * u))
-        }
+        drawCircle(tp.b(0.9f, 1.4f), 1f * u, punta + Offset(0.3f * u, 0.8f * u))
+        ultimoTicket(e, medidor, g, ab, cx, cima, tp)
     }
-
-    /** Dónde queda el agujero del último ticket (en altos del lienzo): baja lo justo para que la púa asome entera encima. */
-    private const val ALTO_AGUJERO = 0.235f
 
     /** Los fajos de tickets viejos, con su goma, echados en la encimera a la derecha del pincho: uno por cada tanto de hojas. */
     private fun DrawScope.fajos(hojas: Int, semilla: Int, g: EscenaLibretaNeon) {
@@ -261,69 +265,100 @@ internal object MuebleLibretaNeon {
         }
     }
 
+    /** [texto] en una o dos líneas: si es largo, partido en el espacio más cerca de la mitad (o en « · », si lo tiene). */
+    private fun partir(texto: String): List<String> {
+        val punto = texto.indexOf(" · ")
+        if (punto > 0) return listOf(texto.substring(0, punto), texto.substring(punto + 3))
+        if (texto.length <= 11) return listOf(texto)
+        val medio = texto.length / 2
+        val c = texto.indices.filter { texto[it] == ' ' }.minByOrNull { kotlin.math.abs(it - medio) } ?: return listOf(texto)
+        return listOf(texto.substring(0, c), texto.substring(c + 1))
+    }
+
     /**
-     * El último ticket, ensartado por su agujero y caído hacia delante: el borde de arriba rasgado en dientes, el de abajo
-     * enrollado; el nombre y la cuenta impresos con su filete; los renglones de lo pedido con su precio; el código de barras.
-     * Con [ab] sube por la púa, se suelta y se ladea.
+     * El último ticket, ENSARTADO: una tira de papel térmico estrecha y alta, atravesada por la púa a dos tercios de su alto (la
+     * punta asoma por encima de su borde y el hierro pasa por delante del tercio de abajo), combada (más clara en el lomo, en
+     * sombra y fría en un canto, encendida por la lámpara en el otro) y ladeada, con la rasgadura donde entra el hierro y su sombra
+     * en la pila. Queda encima de la pila: con pocos tickets baja hacia la base. Lleva impresos el nombre y la cuenta (en dos
+     * líneas si no caben), los renglones de lo pedido y el código de barras. Con [ab] sube por la púa y se ladea más.
      */
-    private fun DrawScope.ultimoTicket(e: EstadoLibreta, medidor: TextMeasurer, g: EscenaLibretaNeon, ab: Float, cx: Float) {
+    private fun DrawScope.ultimoTicket(e: EstadoLibreta, medidor: TextMeasurer, g: EscenaLibretaNeon, ab: Float, cx: Float, cima: Float, tp: TonoNeon) {
         val u = g.u; val h = g.h
         val P = PaletaLibretaNeon
-        val tw = h * 0.42f
-        val sube = ab * h * 0.12f
-        val agujero = Offset(cx, ALTO_AGUJERO * h - sube)
-        val largo = h * 0.3f + ab * h * 0.12f
-        val t = g.luz.t(cx, h * 0.4f)
-        rotate(-10f * ab + 2.5f * (azar(e.semilla, 7) - 0.5f), agujero) {
-            val r = Rect(cx - tw / 2, agujero.y - h * 0.032f, cx + tw / 2, agujero.y - h * 0.032f + largo)
-            // Su sombra en la pila y en la pared.
-            drawRect(t.s(0.38f), Offset(r.left - 3f * u, r.top + 4f * u), r.size)
-            val dientes = Path().apply {
-                moveTo(r.left, r.top + 2.6f * u)
+        val tw = h * 0.3f; val alto = h * 0.45f
+        val sube = ab * h * 0.14f
+        val agujero = Offset(cx, maxOf(cima - h * 0.012f, alto * 2f / 3f + h * 0.075f) - sube)
+        val r = Rect(cx - tw / 2, agujero.y - alto * 2f / 3f, cx + tw / 2, agujero.y + alto / 3f)
+        val t = g.luz.t(cx + h * 0.04f, r.center.y)
+        val ladeo = -6f - 9f * ab + 4f * (azar(e.semilla, 7) - 0.5f)
+        val comba = 2.6f * u
+        rotate(ladeo, agujero) {
+            // La tira: el borde de arriba rasgado en dientes y combado, los cantos rectos, el de abajo enrollado.
+            val tira = Path().apply {
+                moveTo(r.left, r.bottom); lineTo(r.left, r.top + 2.6f * u)
                 var x = r.left; var arriba = true
-                while (x < r.right) { x += 4.6f * u; lineTo(minOf(x, r.right), if (arriba) r.top else r.top + 2.6f * u); arriba = !arriba }
-                lineTo(r.right, r.bottom); lineTo(r.left, r.bottom); close()
+                while (x < r.right) {
+                    x = minOf(x + 4f * u, r.right)
+                    val f = (x - r.left) / tw
+                    lineTo(x, r.top - comba * sin(f * 3.1416f) + (if (arriba) 0f else 2.6f * u)); arriba = !arriba
+                }
+                lineTo(r.right, r.bottom); quadraticTo(cx, r.bottom + comba, r.left, r.bottom); close()
             }
-            // El papel térmico, blanco: la lámpara lo calienta sin volverlo pardo.
-            val papel = mezcla(P.PAPEL, t.c(P.PAPEL, 1.3f), 0.38f)
-            drawPath(dientes, papel)
-            // El papel curvado: el canto de la derecha encendido por la lámpara, el de la izquierda frío y en sombra, y lo
-            // enrollado abajo.
-            drawRect(P.CALOR.copy(alpha = 0.16f), Offset(r.right - r.width * 0.16f, r.top + 3f * u), Size(r.width * 0.16f, r.height - 3f * u))
-            drawRect(t.b(0.45f), Offset(r.right - 1.8f * u, r.top + 3f * u), Size(1.8f * u, r.height - 3f * u))
-            drawRect(PaletaNeon.SOMBRA.copy(alpha = 0.12f), Offset(r.left, r.top + 3f * u), Size(r.width * 0.12f, r.height - 3f * u))
-            drawRect(P.FRIO.copy(alpha = 0.22f), Offset(r.left, r.top + 3f * u), Size(1.6f * u, r.height - 3f * u))
-            drawRect(mezcla(papel, PaletaNeon.SOMBRA, 0.3f), Offset(r.left, r.bottom - 5f * u), Size(r.width, 5f * u))
-            drawRect(t.b(0.5f), Offset(r.left, r.bottom - 5f * u), Size(r.width, 0.9f * u))
-            // El agujero por donde pasa la púa, con el papel rasgado alrededor.
-            drawCircle(PaletaNeon.SOMBRA.copy(alpha = 0.7f), 2.2f * u, agujero)
-            drawCircle(t.s(0.3f), 3.6f * u, agujero, style = Stroke(0.6f * u))
-            // El nombre y la cuenta, con sus filetes.
-            val m = 7f * u
+            drawPath(Path().apply { addPath(tira, Offset(-5f * u, 5f * u)) }, t.s(0.42f))
+            val papel = mezcla(P.PAPEL, t.c(P.PAPEL, 1.3f), 0.35f)
+            drawPath(tira, Brush.horizontalGradient(
+                0f to mezcla(mezcla(papel, P.FRIO, 0.15f), PaletaNeon.SOMBRA, 0.28f), 0.3f to papel, 0.55f to mezcla(papel, Color.White, 0.12f),
+                0.85f to mezcla(papel, P.CALOR, 0.12f), 1f to mezcla(mezcla(papel, P.CALOR, 0.3f), PaletaNeon.SOMBRA, 0.15f), startX = r.left, endX = r.right))
+            drawRect(t.b(0.55f), Offset(r.right - 1.4f * u, r.top + 3f * u), Size(1.4f * u, r.height - 3f * u))
+            // Lo enrollado abajo.
+            drawRect(mezcla(papel, PaletaNeon.SOMBRA, 0.3f), Offset(r.left, r.bottom - 6f * u), Size(r.width, 6f * u))
+            drawRect(t.b(0.5f), Offset(r.left, r.bottom - 6f * u), Size(r.width, 0.9f * u))
+            // Lo impreso: el nombre y la cuenta (en dos líneas si no caben), el filete, los renglones y el código de barras.
+            val m = 5f * u
             val tinta = P.IMPRESO
-            textoEn(medidor, e.nombre, Rect(r.left + m, agujero.y + 4f * u, r.right - m, agujero.y + 22f * u), Letra.letrero, tinta, 14f, peso = FontWeight.SemiBold, minimo = 7f)
+            var y = r.top + 4f * u
+            partir(e.nombre).forEach { linea ->
+                textoEn(medidor, linea, Rect(r.left + m, y, r.right - m, y + 14f * u), Letra.letrero, tinta, 12.5f, peso = FontWeight.SemiBold, minimo = 7f); y += 13.5f * u
+            }
             val filete = Path()
             var fx = r.left + m
-            while (fx < r.right - m) { filete.moveTo(fx, agujero.y + 24f * u); filete.lineTo(minOf(fx + 2f * u, r.right - m), agujero.y + 24f * u); fx += 3.6f * u }
+            while (fx < r.right - m) { filete.moveTo(fx, y + 1.5f * u); filete.lineTo(minOf(fx + 2f * u, r.right - m), y + 1.5f * u); fx += 3.6f * u }
             drawPath(filete, tinta.copy(alpha = 0.6f), style = Stroke(0.7f * u))
-            textoEn(medidor, e.cuenta, Rect(r.left + 4f * u, agujero.y + 26f * u, r.right - 4f * u, agujero.y + 37f * u), Letra.terminal, tinta.copy(alpha = 0.88f), 9.5f, minimo = 5f)
-            // Los renglones de lo pedido, con su precio, hasta el pie; y el código de barras.
-            var y = agujero.y + 44f * u; var k = 0
-            while (y < r.bottom - 24f * u) {
-                drawLine(tinta.copy(alpha = 0.42f), Offset(r.left + m, y), Offset(r.left + m + r.width * 0.32f * (0.5f + 0.5f * azar(e.semilla, 130 + k)), y), 1f * u)
-                drawLine(tinta.copy(alpha = 0.42f), Offset(r.right - m - r.width * 0.13f, y), Offset(r.right - m, y), 1f * u)
-                y += 6f * u; k++
+            y += 3.5f * u
+            partir(e.cuenta).forEach { linea ->
+                textoEn(medidor, linea, Rect(r.left + 3f * u, y, r.right - 3f * u, y + 10f * u), Letra.terminal, tinta.copy(alpha = 0.88f), 8.5f, minimo = 5f); y += 9.5f * u
             }
-            if (r.bottom - 20f * u > agujero.y + 42f * u) {
-                var bx = r.left + r.width * 0.24f; var j = 0
-                while (bx < r.right - r.width * 0.24f) {
-                    val gr = (if (azar(e.semilla, 300 + j) > 0.5f) 1.6f else 0.8f) * u
-                    drawRect(tinta.copy(alpha = 0.85f), Offset(bx, r.bottom - 19f * u), Size(gr, 9f * u))
-                    bx += gr + (0.9f + azar(e.semilla, 400 + j)) * u; j++
-                }
+            y += 3f * u
+            var k = 0
+            while (y < agujero.y - 16f * u) {
+                drawLine(tinta.copy(alpha = 0.42f), Offset(r.left + m, y), Offset(r.left + m + tw * 0.38f * (0.5f + 0.5f * azar(e.semilla, 130 + k)), y), 1f * u)
+                drawLine(tinta.copy(alpha = 0.42f), Offset(r.right - m - tw * 0.16f, y), Offset(r.right - m, y), 1f * u)
+                y += 5.5f * u; k++
             }
-            // La marca del rotulador fluorescente con que se repasó el total (una franja corta, sin letra).
-            drawRoundRect(Color(0xFFFF4FA0).copy(alpha = 0.32f), Offset(r.right - m - r.width * 0.2f, agujero.y + 41f * u), Size(r.width * 0.22f, 5f * u), CornerRadius(2f * u))
+            var bx = r.left + tw * 0.18f; var j = 0
+            val by = agujero.y - 13f * u
+            while (bx < r.right - tw * 0.18f) {
+                val gr = (if (azar(e.semilla, 300 + j) > 0.5f) 1.5f else 0.8f) * u
+                drawRect(tinta.copy(alpha = 0.85f), Offset(bx, by), Size(gr, 8f * u))
+                bx += gr + (0.9f + azar(e.semilla, 400 + j)) * u; j++
+            }
+            // Debajo del agujero: el total repasado con el rotulador fluorescente (una franja corta, sin letra).
+            drawRoundRect(Color(0xFFFF4FA0).copy(alpha = 0.3f), Offset(r.right - m - tw * 0.3f, agujero.y + 6f * u), Size(tw * 0.3f, 5f * u), CornerRadius(2f * u))
+            drawLine(tinta.copy(alpha = 0.42f), Offset(r.left + m, agujero.y + 8.5f * u), Offset(r.left + m + tw * 0.3f, agujero.y + 8.5f * u), 1f * u)
+            // La rasgadura donde entra el hierro: el agujero oscuro y las lengüetas de papel levantadas alrededor.
+            for (q in 0 until 5) {
+                val an = q * 1.2566f + 0.4f
+                val p0 = agujero + Offset(cos(an) * 2.4f * u, sin(an) * 2.4f * u)
+                val p1 = agujero + Offset(cos(an + 0.3f) * 4.6f * u, sin(an + 0.3f) * 4.6f * u)
+                drawLine(t.s(0.45f), p0, p1, 0.8f * u)
+            }
+            drawCircle(PaletaNeon.SOMBRA.copy(alpha = 0.8f), 2.4f * u, agujero)
+            drawCircle(Color.White.copy(alpha = 0.35f), 3.4f * u, agujero + Offset(0.6f * u, 0.6f * u), style = Stroke(0.6f * u))
         }
+        // El hierro pasa por delante del tercio de abajo, desde el agujero, y se mete en la pila.
+        val abajo = agujero.y + alto / 3f - 5f * u
+        drawLine(tp.s(0.4f), Offset(cx + 1.8f * u, agujero.y + 2f * u), Offset(cx + 1.8f * u, abajo), 2f * u)
+        drawLine(tp.c(P.ACERO, 1.2f), agujero, Offset(cx, abajo), 2.6f * u)
+        drawLine(tp.b(0.85f, 1.4f), Offset(cx + 0.7f * u, agujero.y), Offset(cx + 0.7f * u, abajo), 0.8f * u)
     }
 }
