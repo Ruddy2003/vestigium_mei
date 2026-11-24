@@ -319,7 +319,7 @@ internal fun manchaNapoleon(a: AireNapoleon): ManchaNapoleon? = when {
     a.oscuro && a.noche -> ManchaNapoleon(floatArrayOf(0.35f, 0.12f, 0.49f, 0.145f, 0.545f, 0.37f, 0.405f, 0.35f), PaletaNapoleon.LUNA, 0.62f)
     a.oscuro -> null
     // Al ocaso, el sol bajo: los cuarterones se tienden y se alargan a lo ancho.
-    a.noche -> ManchaNapoleon(floatArrayOf(0.34f, 0.13f, 0.74f, 0.18f, 0.79f, 0.37f, 0.4f, 0.32f), PaletaNapoleon.OCASO, 0.6f)
+    a.noche -> ManchaNapoleon(floatArrayOf(0.34f, 0.13f, 0.74f, 0.18f, 0.79f, 0.37f, 0.4f, 0.32f), PaletaNapoleon.OCASO, 0.75f)
     else -> ManchaNapoleon(floatArrayOf(0.3f, 0.08f, 0.56f, 0.11f, 0.69f, 0.51f, 0.44f, 0.48f), PaletaNapoleon.SOL, 0.9f)
 }
 
