@@ -41,6 +41,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.ideario.sombraSuave
 import io.github.ruddy2003.vestigium.ui.ideario.vetas
+import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -8098,12 +8099,20 @@ object EstanteRuinas : DisenoBiblioteca {
     override fun tintaTapa(oscuro: Boolean, noche: Boolean): Color = TINTA
     override fun palabrasTapa(n: Int): String = if (n == 1) "1 palabra" else "$n palabras"
 
+    /** La llama de la vela de la mesa, la luna de la noche y el verde botella en que se hunde la sombra. */
+    private val LLAMA_TAPA = Color(0xFFFFC66C)
+    private val LUNA_TAPA = Color(0xFFC8DCE8)
+    private val NOCHE_TAPA = Color(0xFF0C1912)
+
     /**
      * El libro del día rescatado de la ruina, de frente: hinchado de humedad (los cantos se abomban y las hojas ondulan), con
      * cercos de agua y moho, el musgo que le crece al pie y trepa por el lomo, la hiedra que le cuelga por el canto, el
      * marbete redondo de la biblioteca, la etiqueta desteñida (la fecha, lo escrito y las palabras) y las notas atadas con
      * cordel. Al abrirse, la tapa gira sobre el lomo y deja ver la hoja ondulada con una hoja seca prensada. De día lo cruza un
-     * rayo de sol; de noche, luciérnagas, y el marbete lleva una luna.
+     * rayo de sol; de noche, luciérnagas, y el marbete lleva una luna. Descansa en la mesa de roble de la sala, con su sombra
+     * de color: de día, el filete de luz arriba y la sombra propia a la derecha; de noche, la vela de la mesa enciende el canto
+     * que la mira y el otro lado se hunde en el verde botella, con el filo frío de la luna en el lomo; en el sueño, la vela
+     * está apagada y manda la luna.
      */
     override fun DrawScope.tapa(e: EstadoTapa, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
@@ -8127,8 +8136,14 @@ object EstanteRuinas : DisenoBiblioteca {
             quadraticTo(r.left + r.width * 0.2f, r.bottom - 3 * u, r.left, r.bottom)
             close()
         }
-        // La sombra y las hojas hinchadas que asoman por el canto, onduladas.
-        drawPath(hinchado(libro.translate(4 * u, 5 * u)), Color.Black.copy(alpha = if (oscuro) 0.45f else 0.2f))
+        // Donde descansa: la mesa de roble de la sala, con su canto a la luz, y la sombra del libro con color (de día, abajo y a
+        // la derecha; de noche, lejos de la vela, a la izquierda).
+        val mesa = h * 0.935f
+        drawRect(c(MADERA_OSC), Offset(0f, mesa), Size(w, h - mesa))
+        drawRect(c(if (oscuro) MADERA else mezcla(MADERA, Color.White, 0.14f)), Offset(0f, mesa), Size(w, (h - mesa) * 0.45f))
+        drawLine(if (oscuro) LLAMA_TAPA.copy(alpha = 0.35f) else Color.White.copy(alpha = 0.3f), Offset(0f, mesa + 0.6f * u), Offset(w, mesa + 0.6f * u), 1.2f * u)
+        val sombraLibro = if (oscuro) NOCHE_TAPA.copy(alpha = 0.6f) else sombraMueble(0.32f)
+        drawPath(hinchado(libro.translate(if (oscuro && !e.noche) -6 * u else 6 * u, 5 * u)), sombraLibro)
         val hojas = Rect(libro.left + w * 0.02f, libro.top + h * 0.02f, libro.right + 4 * u, libro.bottom + 4 * u)
         drawPath(hinchado(hojas), mezcla(hojaP, Color(0xFF6A5A40), 0.25f))
         for (j in 1..5) {
@@ -8172,7 +8187,19 @@ object EstanteRuinas : DisenoBiblioteca {
                     drawCircle(c(Color(0xFF8A9A70)).copy(alpha = 0.18f), (1 + 2.5f * azar(e.semilla, 160 + k)) * u, o)
                 }
                 drawRect(Color.White.copy(alpha = 0.07f), Offset(cara.left, cara.top), Size(cara.width, 3 * u))
+                // La sombra propia, teñida, del lado contrario a la luz (de día y en el sueño, a la derecha; de noche, a la izquierda).
+                val propia = if (oscuro) NOCHE_TAPA.copy(alpha = 0.45f) else sombraMueble(0.22f)
+                val izquierda = oscuro && !e.noche
+                val x0 = if (izquierda) cara.left else cara.left + cara.width * 0.55f
+                val x1 = if (izquierda) cara.left + cara.width * 0.45f else cara.right + panza * 2
+                drawRect(Brush.horizontalGradient(if (izquierda) listOf(propia, propia.copy(alpha = 0f)) else listOf(propia.copy(alpha = 0f), propia), x0, x1),
+                    Offset(x0, cara.top - 3 * u), Size(x1 - x0, cara.height + 6 * u))
             }
+            // Los filos: de día, la luz en los cantos que la miran (arriba y a la izquierda); de noche, la vela en el de la derecha.
+            if (!oscuro && !e.noche) drawLine(Color.White.copy(alpha = 0.35f), Offset(cara.left + 2 * u, cara.top + 1.2f * u), Offset(cara.right - 6 * u, cara.top + 1.2f * u), 1.4f * u)
+            if (oscuro && !e.noche) drawPath(Path().apply { moveTo(cara.right - 10 * u, cara.top + 2 * u); lineTo(cara.right, cara.top); quadraticTo(cara.right + panza * 2, cara.center.y, cara.right, cara.bottom) },
+                LLAMA_TAPA.copy(alpha = 0.6f), style = Stroke(1.6f * u))
+            if (e.noche) drawLine(LUNA_TAPA.copy(alpha = 0.6f), Offset(cara.left + 2 * u, cara.top + 1.2f * u), Offset(cara.right - 6 * u, cara.top + 1.2f * u), 1.4f * u)
             // El marbete redondo de la biblioteca; de noche, una luna y una luciérnaga.
             val mc = Offset(cara.left + w * 0.06f, h * 0.2f)
             val mr = 11 * u
@@ -8224,11 +8251,28 @@ object EstanteRuinas : DisenoBiblioteca {
         if (a > 0.01f) drawRect(Color.Black.copy(alpha = 0.3f * sin(a * PI.toFloat())), Offset(cara.left + cara.width * giro, cara.top), Size(10 * u, cara.height))
         // El lomo, con sus nervios abombados y el musgo que trepa.
         drawRect(mezcla(cuero, Color.Black, 0.22f), lomo.topLeft, lomo.size)
+        if (oscuro && !e.noche) drawRect(NOCHE_TAPA.copy(alpha = 0.35f), lomo.topLeft, lomo.size)
+        // El filo del lomo: la luz del día; de noche, la luna fría (del lado contrario a la vela); en el sueño, la luna, más.
+        drawLine(if (oscuro || e.noche) LUNA_TAPA.copy(alpha = if (e.noche) 0.7f else 0.45f) else Color.White.copy(alpha = 0.3f), Offset(lomo.left + 1 * u, lomo.top + 3 * u), Offset(lomo.left + 1 * u, lomo.bottom - 3 * u), 1.4f * u)
         drawRect(Color.White.copy(alpha = 0.07f), Offset(lomo.left + lomo.width * 0.2f, lomo.top), Size(lomo.width * 0.25f, lomo.height))
         listOf(0.12f, 0.88f).forEach { f -> drawLine(Color.Black.copy(alpha = 0.3f), Offset(lomo.left, lomo.top + lomo.height * f), Offset(lomo.right, lomo.top + lomo.height * f), 1.6f * u) }
         drawLine(Color.Black.copy(alpha = 0.45f), Offset(lomo.right, lomo.top), Offset(lomo.right, lomo.bottom), 1.2f * u)
         for (k in 0 until 10) drawCircle(c(if (k % 3 == 0) MUSGO_LUZ else MUSGO), (1.2f + 1.4f * azar(e.semilla, 500 + k)) * u, Offset(lomo.left + lomo.width * (0.2f + 0.6f * azar(e.semilla, 520 + k)), lomo.bottom - lomo.height * 0.4f * azar(e.semilla, 540 + k)))
         musgo(Offset(lomo.center.x, lomo.bottom - 1 * u), 8 * u, e.semilla + 31, oscuro, e.noche)
+        // La vela de la mesa, a la derecha, en su lata: de noche arde, enciende la mesa y el canto de las hojas que la miran; en el
+        // sueño se apagó (manda la luna).
+        val vela = Offset(w * 0.968f, mesa + 1 * u)
+        if (oscuro && !e.noche) {
+            mancha(Offset(vela.x, vela.y - 14 * u), 46 * u, LLAMA_TAPA.copy(alpha = 0.32f))
+            drawLine(LLAMA_TAPA.copy(alpha = 0.7f), Offset(libro.right + 2 * u, libro.top + 10 * u), Offset(libro.right + 4 * u, libro.bottom), 1.6f * u)
+        }
+        drawRect(c(Color(0xFF8E928C)), Offset(vela.x - 5 * u, vela.y - 7 * u), Size(10 * u, 7 * u))
+        drawRect(papel(Color(0xFFEDE2C4), oscuro, e.noche), Offset(vela.x - 3 * u, vela.y - 15 * u), Size(6 * u, 8 * u))
+        drawLine(Color(0xFF2A2420), Offset(vela.x, vela.y - 15 * u), Offset(vela.x, vela.y - 17 * u), 0.9f * u)
+        if (oscuro && !e.noche) {
+            drawPath(Path().apply { moveTo(vela.x, vela.y - 27 * u); quadraticTo(vela.x + 3.4f * u, vela.y - 19 * u, vela.x, vela.y - 16 * u); quadraticTo(vela.x - 3.4f * u, vela.y - 19 * u, vela.x, vela.y - 27 * u) }, Color(0xFFF28C34))
+            drawCircle(Color(0xFFFFF4C8), 1.4f * u, Offset(vela.x, vela.y - 19 * u))
+        }
         // De día, un rayo de sol en diagonal; de noche, luciérnagas (ninguna sobre lo escrito).
         if (e.noche) {
             val caja = Rect(w * cajaTapa.left, h * cajaTapa.top, w * cajaTapa.right, h * cajaTapa.bottom).inflate(4 * u)
