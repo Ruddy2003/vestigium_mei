@@ -246,8 +246,8 @@ internal fun mascaraArcano(a: AireArcano, x: Float, y: Float, k: Float, kf: Floa
     }
     if (!a.oscuro) {
         // El ocaso: la luz rosa de la ventana tiñe lo que tiene cerca; lejos (a la derecha y abajo) crece la sombra violeta.
-        val tarde = (0.18f + 0.5f * ((x - 0.15f) * 0.8f + (y - 0.4f) * 0.3f).coerceIn(0f, 1f)) * (1f - k) * (1f - 0.8f * kf)
-        val calido = 0.14f * k + 0.36f * kf
+        val tarde = (0.26f + 0.46f * ((x - 0.15f) * 0.8f + (y - 0.4f) * 0.3f).coerceIn(0f, 1f)) * (1f - k) * (1f - 0.85f * kf)
+        val calido = 0.2f * k + 0.46f * kf
         val al = (tarde + calido).coerceIn(0f, 1f)
         val tibio = mezcla(P.LLAMA, P.OCASO, (kf / maxOf(0.01f, kf + k)).coerceIn(0f, 1f))
         return mezcla(P.SOMBRA_OCASO, tibio, if (al > 0.001f) calido / al else 0f).copy(alpha = al)

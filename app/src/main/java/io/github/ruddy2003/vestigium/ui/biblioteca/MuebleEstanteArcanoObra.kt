@@ -331,7 +331,7 @@ internal object ObraEstanteArcano {
             val x = w * (0.05f + 0.18f * j + 0.06f * azar(7970, j))
             drawPath(irregularArcano(Offset(x, y(0.97f)), w * (0.02f + 0.02f * azar(7971, j)), z * 0.05f, 7972 + j, 8, 0.5f), c(P.YESO).copy(alpha = 0.3f))
         }
-        // El cajón de en medio: la holgura oscura alrededor, el frente con su tablero en relieve y la anilla de bronce.
+        // El cajón de en medio: la holgura oscura alrededor y el frente con su tablero en relieve.
         val cj = Rect(w * 0.355f, y(0.2f), w * 0.645f, y(0.81f))
         drawRect(am.sombra(0.75f), Offset(cj.left - 2f * u, cj.top - 2f * u), Size(cj.width + 4f * u, cj.height + 4f * u))
         drawRect(c(mezcla(P.TECA, P.TECA_LUZ, 0.35f)), cj.topLeft, cj.size)
@@ -355,11 +355,12 @@ internal object ObraEstanteArcano {
         drawPath(mancha, am.sombra(0.55f))
         drawPath(mancha, c(mezcla(P.TECA_HONDA, P.SALOBRE, 0.3f)).copy(alpha = 0.6f), style = Stroke(1.2f * u))
         drawRect(c(P.TECA_HONDA).copy(alpha = 0.75f), Offset(cj.left + cj.width * 0.3f, cj.bottom - 1f * u), Size(cj.width * 0.42f, 2.8f * u))
-        val anilla = Offset(cj.center.x, cj.top + cj.height * 0.36f)
-        drawArc(am.sombra(0.45f), 15f, 150f, false, Offset(anilla.x - 7f * u + 1.4f * u, anilla.y - 1f * u + 2f * u), Size(14f * u, 15f * u), style = Stroke(2.2f * u))
-        drawArc(c(P.BRONCE), 15f, 150f, false, Offset(anilla.x - 7f * u, anilla.y - 1f * u), Size(14f * u, 15f * u), style = Stroke(2.2f * u))
-        drawArc(am.brillo(0.5f, 0.9f), 120f, 40f, false, Offset(anilla.x - 7f * u, anilla.y - 1f * u), Size(14f * u, 15f * u), style = Stroke(0.8f * u))
-        clavoArcano(anilla, 3f * u, am, 0.9f, P.BRONCE)
+        // El tirador: un pomo de madera torneado, con su sombra.
+        val pomo = Offset(cj.center.x, cj.top + cj.height * 0.46f)
+        drawCircle(am.sombra(0.5f), 5.2f * u, pomo + Offset(1.8f * u, 2.2f * u))
+        drawCircle(c(P.TECA_OSC), 5f * u, pomo)
+        drawCircle(c(P.TECA, 0.1f), 3.6f * u, pomo - Offset(0.6f * u, 0.6f * u))
+        drawCircle(am.brillo(0.55f, 0.9f), 1.2f * u, pomo - Offset(1.8f * u, 1.8f * u))
         // Los dos listones clavados de través, toscos, de punta astillada, con sus clavos de hierro y la chorrera de óxido.
         listOf(0.04f, 0.66f).forEachIndexed { i, f ->
             val ly = cj.top + cj.height * f

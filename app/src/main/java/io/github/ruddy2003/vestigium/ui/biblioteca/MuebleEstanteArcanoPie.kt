@@ -111,7 +111,7 @@ internal object PieEstanteArcano {
         drawOval(a.luz(P.CINC_OSC, k), boca.topLeft, boca.size)
         val agua = Rect(boca.left + w * 0.006f, boca.top + w * 0.004f, boca.right - w * 0.006f, boca.bottom - w * 0.002f)
         drawOval(a.luz(mezcla(P.MAR_OSC, P.HIERRO, 0.4f), k), agua.topLeft, agua.size)
-        val anillo = Rect(cx - w * 0.026f, agua.center.y - w * 0.006f, cx + w * 0.022f, agua.center.y + w * 0.008f)
+        val anillo = Rect(cx - w * 0.04f, agua.center.y - w * 0.004f, cx + w * 0.006f, agua.center.y + w * 0.007f)
         drawOval(a.luz(P.CINC_LUZ, k).copy(alpha = 0.55f), anillo.topLeft, anillo.size, style = Stroke(1f * u))
         drawOval(a.luz(P.CINC_LUZ, k).copy(alpha = 0.3f), anillo.topLeft - Offset(w * 0.012f, w * 0.004f), Size(anillo.width + w * 0.024f, anillo.height + w * 0.008f), style = Stroke(0.8f * u))
         if (a.oscuro && k > 0.15f) drawOval(P.LLAMA.copy(alpha = (0.4f * k).coerceAtMost(0.35f)), Offset(cx + w * 0.01f, agua.top + agua.height * 0.2f), Size(w * 0.03f, agua.height * 0.3f))

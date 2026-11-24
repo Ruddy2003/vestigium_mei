@@ -439,7 +439,8 @@ internal object CoronaEstanteArcano {
             val x = caja.left + caja.width * f
             drawLine(piola, Offset(x, caja.top - 1f * u), Offset(x + 0.6f * u, caja.bottom), 1.4f * u)
         }
-        listOf(Offset(0.3f, 0.32f), Offset(0.68f, 0.32f), Offset(0.49f, 0.7f)).forEach { o ->
+        // En diagonal, sobre las vueltas y entre ellas (tres en triángulo se leerían como una cara).
+        listOf(Offset(0.3f, 0.74f), Offset(0.68f, 0.3f), Offset(0.88f, 0.62f)).forEach { o ->
             val p = Offset(caja.left + caja.width * o.x, caja.top + caja.height * o.y)
             val lacre = irregularArcano(p, w * 0.011f, w * 0.009f, (o.x * 100).toInt(), 9, 0.25f)
             translate(1f * u, 1.2f * u) { drawPath(lacre, a.sombra(0.4f)) }

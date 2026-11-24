@@ -75,9 +75,9 @@ internal object MuroEstanteArcano {
             y += r * 0.92f; fila++
         }
         clipRect(0f, y0, w, y1) {
-            drawPath(hondos, a.pleno(P.ESCAMA).copy(alpha = 0.75f), style = Stroke(1.5f * u))
-            drawPath(labios, a.pleno(P.MAR_LUZ).copy(alpha = 0.34f), style = Stroke(1f * u))
-            drawPath(puntos, a.pleno(P.ORO).copy(alpha = 0.6f))
+            drawPath(hondos, a.pleno(P.ESCAMA).copy(alpha = 0.55f), style = Stroke(1.4f * u))
+            drawPath(labios, a.pleno(P.MAR_LUZ).copy(alpha = 0.26f), style = Stroke(1f * u))
+            drawPath(puntos, a.pleno(P.ORO).copy(alpha = 0.42f))
         }
     }
 
