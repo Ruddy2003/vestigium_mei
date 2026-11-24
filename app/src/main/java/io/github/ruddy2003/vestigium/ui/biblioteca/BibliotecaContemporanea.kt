@@ -3806,11 +3806,11 @@ object EstanteNapoleon : DisenoBiblioteca {
     override fun tintaTapa(oscuro: Boolean, noche: Boolean): Color = TINTA
     override fun palabrasTapa(n: Int): String = if (n == 1) "1 palabra" else "$n palabras"
 
-    /** El pergamino de la cartela de la tapa: hundido en oscuro y entibiado de noche, pero claro para el extracto. */
+    /** El pergamino de la cartela de la tapa: hundido en oscuro y entibiado de noche, pero claro para el extracto (4.5 a 1 o más). */
     private fun pergaminoTapa(oscuro: Boolean, noche: Boolean): Color {
         var r = PERGAMINO
         if (oscuro) r = mezcla(r, Color(0xFF0E0B08), 0.28f)
-        if (noche) r = mezcla(r, NOCHE, 0.14f)
+        if (noche) r = mezcla(r, NOCHE, if (oscuro) 0.04f else 0.14f)
         return r
     }
 
@@ -3828,12 +3828,27 @@ object EstanteNapoleon : DisenoBiblioteca {
         val a = e.abierto.coerceIn(0f, 1f)
         fun c(x: Color) = t(x, oscuro, e.noche)
         val tafilete = c(TAFILETES[(e.semilla and 0x7fffffff) % TAFILETES.size])
-        val oro = c(ORO)
+        // En el sueño el dorado recoge la luna: más pálido y frío (se lee mejor que apagado).
+        val oro = if (e.noche) mezcla(c(ORO), PaletaNapoleon.LUNA, 0.3f) else c(ORO)
         val cu = Rect(w * 0.02f, h * 0.05f, w * 0.97f, h * 0.94f)
         val bisagra = cu.left + w * 0.07f
-        // De noche, el farol de campaña alumbra desde lo alto del mástil (el único degradado).
-        if (e.noche) mancha(Offset(w * 0.96f, 0f), w * 0.5f, FAROL.copy(alpha = 0.26f))
-        drawRoundRect(Color.Black.copy(alpha = 0.22f), cu.topLeft + Offset(3 * u, 5 * u), cu.size, CornerRadius(2.5f * u))
+        // En el sueño manda la luna, que entra por la ventana de arriba a la izquierda (el único degradado de detrás).
+        if (e.noche) mancha(Offset(w * 0.04f, 0f), w * 0.5f, PaletaNapoleon.LUNA.copy(alpha = 0.2f))
+        // Donde descansa: la mesa de caoba (el tablero y el canto con su baqueta de latón) y la sombra arrojada, con color, del
+        // lado contrario a la luz: de día y en el sueño, la ventana (a la izquierda); de noche, la vela (a la derecha).
+        val vela = oscuro && !e.noche
+        val mesa = cu.bottom - 2f * u
+        drawRect(c(CAOBA_LUZ), Offset(0f, mesa), Size(w, 4f * u))
+        drawRect(c(CAOBA), Offset(0f, mesa + 4f * u), Size(w, h - mesa - 4f * u))
+        drawRect(c(LATON), Offset(0f, mesa + 4f * u), Size(w, 1.2f * u))
+        drawRect(c(CAOBA_VETA), Offset(0f, h - 1.6f * u), Size(w, 1.6f * u))
+        val tinte = if (oscuro || e.noche) Color(0xFF0E0A1E) else Color(0xFF3C1A12)
+        val lado = if (vela) -1f else 1f
+        // Solo donde asoma (lo de debajo del libro queda tapado): la franja del costado y la de abajo, una suave y otra más cerca.
+        listOf(Triple(7f, 5f, 0.16f), Triple(3f, 3f, 0.26f)).forEach { (dx, dy, al) ->
+            drawRect(tinte.copy(alpha = al), Offset(if (lado > 0f) cu.right else cu.left - dx * u, cu.top + dy * u), Size(dx * u, cu.height))
+            drawRect(tinte.copy(alpha = al), Offset(cu.left + lado * dx * u, cu.bottom), Size(cu.width, dy * u))
+        }
         // El canto de las hojas, dorado.
         drawRect(c(PERGAMINO), Offset(cu.left + 3 * u, cu.top + 3 * u), cu.size)
         drawRect(oro.copy(alpha = 0.55f), Offset(cu.right, cu.top + 4 * u), Size(3 * u, cu.height - 1 * u))
@@ -3859,8 +3874,11 @@ object EstanteNapoleon : DisenoBiblioteca {
         if (sx > 0.02f) scale(sx, 1f, Offset(bisagra, cu.center.y)) {
             drawRoundRect(tafilete, cu.topLeft, cu.size, CornerRadius(2.5f * u))
             for (j in 0 until 160) drawCircle(Color.Black.copy(alpha = 0.1f), 0.55f * u, Offset(cu.left + cu.width * azar(e.semilla, 60 + j), cu.top + cu.height * azar(e.semilla, 260 + j)))
-            drawRect(Color.Black.copy(alpha = 0.18f), Offset(cu.right - 4 * u, cu.top), Size(4 * u, cu.height))
+            // La sombra propia, teñida, en los cantos que no miran a la luz; de día, el filete de luz en el de arriba.
+            drawRect(Color(0xFF2A0A14).copy(alpha = 0.32f), Offset(cu.right - 4 * u, cu.top), Size(4 * u, cu.height))
+            drawRect(Color(0xFF2A0A14).copy(alpha = 0.22f), Offset(bisagra, cu.bottom - 3 * u), Size(cu.right - bisagra, 3 * u))
             drawRect(Color.White.copy(alpha = 0.06f), Offset(bisagra, cu.top), Size(cu.width - (bisagra - cu.left), 2.5f * u))
+            if (!oscuro && !e.noche) drawRect(Color(0xFFFFF0D0).copy(alpha = 0.4f), Offset(bisagra, cu.top), Size(cu.width - (bisagra - cu.left), 1 * u))
             // El doble filete dorado, con un florón en cada esquina.
             val marco = Rect(bisagra + 7 * u, cu.top + 7 * u, cu.right - 7 * u, cu.bottom - 7 * u)
             drawRect(oro, marco.topLeft, marco.size, style = Stroke(1.1f * u))
@@ -3946,6 +3964,35 @@ object EstanteNapoleon : DisenoBiblioteca {
         }
         listOf(0.19f, 0.6f, 0.81f).forEach { f -> drawPath(estrella(Offset((cu.left + bisagra) / 2, cu.top + cu.height * f + 0.9f * u), 2.4f * u, 5, 0.42f), oro) }
         drawLine(Color.Black.copy(alpha = 0.4f), Offset(bisagra, cu.top), Offset(bisagra, cu.bottom), 1 * u)
+        // La luz en los cantos: de día, el filete del lomo que mira a la ventana; de noche y en el sueño, el roce frío de la luna
+        // (en el sueño la luna manda: su filo es más largo y el dorado la recoge, pálido).
+        if (!oscuro && !e.noche) drawRect(Color(0xFFFFF0D0).copy(alpha = 0.35f), cu.topLeft, Size(1 * u, cu.height))
+        else {
+            val luna = PaletaNapoleon.LUNA_RAS.copy(alpha = if (e.noche) 0.7f else 0.45f)
+            drawRect(luna, cu.topLeft, Size(1.2f * u, cu.height))
+            val largo = cu.width * (if (e.noche) 0.75f else 0.5f)
+            drawRect(Brush.horizontalGradient(listOf(luna, luna.copy(alpha = 0f)), cu.left + largo * 0.4f, cu.left + largo), cu.topLeft, Size(largo, 1.2f * u))
+        }
+        // De noche, la vela chica en su palmatoria, de pie en la mesa junto a la esquina: su charco enciende ese lado.
+        if (vela) {
+            val x = w - 9f * u; val pie = mesa + 3f * u
+            val llama = Offset(x, pie - 33f * u)
+            // El charco aclara multiplicando (sobreexpone lo claro y deja lo negro negro), así la letra no pierde contraste.
+            val ambar = Color(0xFF5E522C)
+            drawCircle(Brush.radialGradient(listOf(ambar.copy(alpha = 0.75f), ambar.copy(alpha = 0.3f), ambar.copy(alpha = 0f)), llama, w * 0.38f),
+                w * 0.38f, llama, blendMode = androidx.compose.ui.graphics.BlendMode.ColorDodge)
+            drawOval(tinte.copy(alpha = 0.5f), Offset(x - 9f * u, pie - 2.5f * u), Size(18f * u, 5f * u))
+            drawOval(PaletaNapoleon.LATON_OSC, Offset(x - 8f * u, pie - 4f * u), Size(16f * u, 5f * u))
+            drawOval(PaletaNapoleon.LATON, Offset(x - 8f * u, pie - 4.8f * u), Size(16f * u, 4f * u))
+            drawRect(PaletaNapoleon.LATON, Offset(x - 3f * u, pie - 10f * u), Size(6f * u, 6f * u))
+            drawRect(mezcla(PaletaNapoleon.PORCELANA, PaletaNapoleon.LLAMA, 0.3f), Offset(x - 2.2f * u, pie - 28f * u), Size(4.4f * u, 18f * u))
+            drawRect(Color(0xFF6E4A2A).copy(alpha = 0.5f), Offset(x + 0.6f * u, pie - 28f * u), Size(1.6f * u, 18f * u))
+            drawLine(Color(0xFF1A120C), Offset(x, pie - 28f * u), Offset(x, pie - 30f * u), 0.8f * u)
+            drawCircle(Brush.radialGradient(listOf(PaletaNapoleon.LLAMA.copy(alpha = 0.5f), PaletaNapoleon.LLAMA.copy(alpha = 0f)), llama, 11f * u), 11f * u, llama)
+            drawOval(PaletaNapoleon.LLAMA, Offset(llama.x - 2.2f * u, llama.y - 4.6f * u), Size(4.4f * u, 8f * u))
+            drawOval(PaletaNapoleon.FUEGO, Offset(llama.x - 1.1f * u, llama.y - 2f * u), Size(2.2f * u, 4.4f * u))
+            drawRect(PaletaNapoleon.LLAMA.copy(alpha = 0.55f), Offset(cu.right - 1.4f * u, llama.y - 30f * u), Size(1.4f * u, cu.bottom - llama.y + 30f * u))
+        }
     }
 
     // ---------------------------------------------------------------- la página y el escritor
