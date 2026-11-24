@@ -329,8 +329,19 @@ internal object VolumenEstanteGalia {
         // El pie: un trenzado más grueso.
         drawRect(tn.hondo, Offset(0f, h - 3.2f * u), Size(w - lado, 3.2f * u))
         drawRect(tn.claro.copy(alpha = 0.6f), Offset(0f, h - 3.2f * u), Size(w - lado, 0.8f * u))
+        // Lleno, la tapa no cierra del todo: entre ella y el cuerpo asoman los cantos de las tablillas.
+        val alza = if (v.lleno > 0.45f) 2.6f * u else 0f
+        if (alza > 0f) {
+            val yb = tope + tapa - alza
+            drawRect(a.sombra(0.6f), Offset(0f, yb), Size(w - lado, alza + 1f * u))
+            var x = 2f * u; var q = 0
+            while (x < w - lado - 2f * u) {
+                drawRect(l.etiqueta(if (q % 2 == 0) P.HAYA else P.HAYA_OSC), Offset(x, yb + 0.4f * u), Size(2.2f * u, alza))
+                x += 3.4f * u + 1.2f * u * azar(s, 60 + q); q++
+            }
+        }
         // La tapa: un poco más ancha, con su canto de arriba en escorzo y el borde trenzado.
-        val tp = Rect(-0.8f * u, tope, w - lado + 0.8f * u, tope + tapa)
+        val tp = Rect(-0.8f * u, tope - alza, w - lado + 0.8f * u, tope + tapa - alza)
         drawRect(a.sombra(0.4f), Offset(0f, tp.bottom), Size(w - lado, 2.4f * u))
         drawRect(mezcla(tn.cara, tn.hondo, 0.15f), tp.topLeft, tp.size)
         drawPath(poligonoGalia(tp.left, tp.top, tp.left + lado, tp.top - lado * 0.4f, w + 0.8f * u, tp.top - lado * 0.4f, tp.right, tp.top), tn.claro)
@@ -388,8 +399,10 @@ internal object VolumenEstanteGalia {
                 drawCircle(correa, 1.6f * u, p)
             }
             // La bolsa: llena de tablillas, ancha y blanda, con el fondo que se aplasta en la tabla y se cae hacia un lado.
-            val ld = if (caida > 0f) 1.6f * u else -0.6f * u
-            val li = if (caida < 0f) -1.6f * u else 0.6f * u
+            // Cuanto más llena, más se le sale la panza.
+            val panza = 0.5f + 0.9f * v.lleno
+            val ld = (if (caida > 0f) 1.6f * u else -0.6f * u) * panza
+            val li = (if (caida < 0f) -1.6f * u else 0.6f * u) * panza
             val bolsa = Path().apply {
                 moveTo(w * 0.1f, boca + 1.2f * u)
                 quadraticTo(w * 0.3f, boca - 1.6f * u, w * 0.5f, boca + 0.8f * u)
