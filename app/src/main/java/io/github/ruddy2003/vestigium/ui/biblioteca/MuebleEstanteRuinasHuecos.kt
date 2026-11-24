@@ -28,13 +28,15 @@ internal object HuecosEstanteRuinas {
         val x0 = ocupado + w * 0.012f
         val libre = r.right - x0 - w * 0.02f
         if (libre < w * 0.11f) return
-        // El grupo de cada hueco sale de su repisa (es lo que acompaña, no una entrada): nido, vela, maceta, tetera, calabaza.
-        val orden = intArrayOf(0, 3, 2, 1, 4)
-        val base = orden[Math.floorMod(k, 5)]
+        // El grupo de cada hueco sale de su repisa (es lo que acompaña, no una entrada): nido, maceta, vela, calabaza, tetera.
+        // (La primera repisa y la sexta no repiten grupo: el paso salta uno cada cinco repisas.)
+        val orden = intArrayOf(0, 2, 3, 4, 1)
+        val i = Math.floorMod(2 * k + k / 5, 5)
+        val base = orden[i]
         if (libre > w * 0.48f) {
             val mitad = libre * 0.5f
             grupo(base, Rect(x0, r.top, x0 + mitad, r.bottom), g)
-            grupo(orden[Math.floorMod(k + 2, 5)], Rect(x0 + mitad + w * 0.01f, r.top, r.right - w * 0.02f, r.bottom), g)
+            grupo(orden[Math.floorMod(i + 2, 5)], Rect(x0 + mitad + w * 0.01f, r.top, r.right - w * 0.02f, r.bottom), g)
         } else grupo(base, Rect(x0, r.top, x0 + libre, r.bottom), g)
     }
 

@@ -204,18 +204,20 @@ internal object PieEstanteRuinas {
         modeladoRapidoRuinas(cuerpo, l.c(P.BARRO), l, hc, 1.1f, 0.3f)
         drawRect(l.c(P.BARRO_OSC), Offset(r.left + an * 0.12f, r.bottom - al * 0.1f), Size(an * 0.76f, al * 0.1f))
         // El hollín que sube de la boca y el salitre.
-        val boca = Path().apply {
-            moveTo(cx - an * 0.18f, r.bottom - al * 0.1f); lineTo(cx - an * 0.18f, r.bottom - al * 0.42f)
-            quadraticTo(cx, r.bottom - al * 0.72f, cx + an * 0.18f, r.bottom - al * 0.42f); lineTo(cx + an * 0.18f, r.bottom - al * 0.1f); close()
-        }
-        drawOval(l.c(P.HIERRO).copy(alpha = 0.3f), Offset(cx - an * 0.2f, r.top + al * 0.15f), Size(an * 0.4f, al * 0.45f))
-        drawPath(boca, if (arde > 0f) mezcla(P.BRASA, P.FUEGO, 0.25f) else l.c(Color(0xFF3A302A)))
+        // La boca: una ventanilla baja y ancha con su rejilla de tres barrotes (no un arco: con las brasas parecería una sonrisa).
+        val boca = Path().apply { addRect(Rect(cx - an * 0.26f, r.bottom - al * 0.42f, cx + an * 0.22f, r.bottom - al * 0.12f)) }
+        val bb = boca.getBounds()
+        drawPath(boca, if (arde > 0f) P.BRASA else l.c(Color(0xFF3A302A)))
         if (arde > 0f) {
-            for (k in 0 until 6) drawCircle(if (k % 2 == 0) P.LLAMA.copy(alpha = arde) else P.BRASA, al * (0.07f + 0.04f * azar(2501, k)),
-                Offset(cx - an * 0.13f + an * 0.052f * k, r.bottom - al * (0.18f + 0.1f * azar(2502, k))))
+            // Las brasas: un montón desigual, más claro abajo en medio, con el aire encendido delante.
+            val monton = cerradaRuinas(listOf(Offset(bb.left, bb.bottom), Offset(bb.left + bb.width * 0.15f, bb.bottom - bb.height * 0.55f), Offset(bb.left + bb.width * 0.45f, bb.bottom - bb.height * 0.75f),
+                Offset(bb.left + bb.width * 0.7f, bb.bottom - bb.height * 0.5f), Offset(bb.right, bb.bottom - bb.height * 0.65f), Offset(bb.right, bb.bottom)))
+            drawPath(monton, Brush.verticalGradient(listOf(P.FUEGO, P.LLAMA, Color(0xFFFFE9A8)), bb.top, bb.bottom))
             mancha(Offset(cx, r.bottom - al * 0.3f), an * 0.7f, P.FUEGO.copy(alpha = 0.35f * arde))
-        } else for (k in 0 until 4) drawCircle(l.c(Color(0xFF8A847C)), al * 0.07f, Offset(cx - an * 0.1f + an * 0.065f * k, r.bottom - al * 0.17f))
-        drawPath(bordeRuinas(boca, 0f, al * 0.08f), l.s(0.5f))
+        } else drawRect(l.c(Color(0xFF8A847C)), Offset(bb.left, bb.bottom - bb.height * 0.3f), Size(bb.width, bb.height * 0.3f))
+        for (k in 1..3) drawLine(l.c(mezcla(P.HIERRO, P.BARRO_OSC, 0.3f)), Offset(bb.left + bb.width * k / 4f, bb.top), Offset(bb.left + bb.width * k / 4f, bb.bottom), 2f * u)
+        drawLine(l.c(mezcla(P.HIERRO, P.BARRO_OSC, 0.3f)), Offset(bb.left, bb.center.y), Offset(bb.right, bb.center.y), 1.4f * u)
+        drawRect(l.s(0.5f), bb.topLeft, Size(bb.width, al * 0.06f))
         val labio = Rect(r.left - an * 0.03f, r.top - al * 0.04f, r.right + an * 0.03f, r.top + al * 0.16f)
         drawRoundRect(Brush.verticalGradient(listOf(l.c(mezcla(P.BARRO, P.OCRE, 0.3f)), l.c(P.BARRO_OSC)), labio.top, labio.bottom), labio.topLeft, labio.size, CornerRadius(labio.height * 0.4f))
         drawLine(l.b(0.4f), Offset(labio.left + 2f * u, labio.top + 0.8f * u), Offset(labio.right - 2f * u, labio.top + 0.8f * u), 1f * u)

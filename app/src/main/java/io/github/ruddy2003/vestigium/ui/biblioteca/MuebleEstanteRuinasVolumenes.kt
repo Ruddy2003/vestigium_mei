@@ -263,12 +263,12 @@ private fun DrawScope.fardoRuinas(v: Volumen, tono: Color?, medidor: TextMeasure
     val top = h * (0.02f + 0.06f * azar(s, 52))
     val panza = an * (0.025f + 0.035f * v.lleno)
     val caida = (azar(s, 53) - 0.5f) * h * 0.04f
-    // El cuaderno envuelto: un bulto de lados casi rectos (se nota el cuaderno dentro), blando en las esquinas, con las dos orejas
-    // de la lona que asoman arriba donde se dobló.
+    // El cuaderno envuelto: un bulto de lados casi rectos (se nota el cuaderno dentro), blando en las esquinas, con la lona doblada
+    // por arriba en un pliegue redondo.
     val forma = cerradaRuinas(listOf(
-        Offset(x0 - an * 0.03f, top - caida), Offset(x0 + an * 0.16f, top + h * 0.04f), Offset(x0 + an * 0.5f, top + h * 0.03f), Offset(x0 + an * 0.84f, top + h * 0.04f),
-        Offset(x0 + an * 1.03f, top + caida), Offset(x0 + an + panza * 0.2f, top + h * 0.12f), Offset(x0 + an + panza, h * 0.55f), Offset(x0 + an, h - 3f * u),
-        Offset(x0 + an * 0.5f, h - 1.5f * u), Offset(x0, h - 3f * u), Offset(x0 - panza, h * 0.55f), Offset(x0 - panza * 0.2f, top + h * 0.12f)))
+        Offset(x0 + an * 0.06f, top + h * 0.03f - caida), Offset(x0 + an * 0.5f, top), Offset(x0 + an * 0.94f, top + h * 0.03f + caida),
+        Offset(x0 + an + panza * 0.3f, top + h * 0.12f), Offset(x0 + an + panza, h * 0.55f), Offset(x0 + an, h - 3f * u),
+        Offset(x0 + an * 0.5f, h - 1.5f * u), Offset(x0, h - 3f * u), Offset(x0 - panza, h * 0.55f), Offset(x0 - panza * 0.3f, top + h * 0.12f)))
     val lonaBase = tono?.let { materialDelAnimoRuinas(it, P.LONAS) } ?: SIN_ANIMO_LONA
     val lona = if (tono != null) l.animo(lonaBase) else l.c(lonaBase)
     sombraDetras(forma, l, hacia)
@@ -296,8 +296,13 @@ private fun DrawScope.fardoRuinas(v: Volumen, tono: Color?, medidor: TextMeasure
         drawPath(pl, l.s(0.3f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
         // El brillo de la cera: dos manchas alargadas del lado de la luz.
         val bx = if (hacia < 0f) x0 + an * 0.18f else x0 + an * 0.68f
-        drawOval(l.b(0.4f), Offset(bx, y1 + h * 0.04f), Size(an * 0.14f, (y2 - y1) * 0.6f))
+        drawOval(l.b(0.55f), Offset(bx, y1 + h * 0.04f), Size(an * 0.14f, (y2 - y1) * 0.6f))
+        drawOval(l.b(0.7f), Offset(bx + an * 0.03f, y1 + h * 0.08f), Size(an * 0.05f, (y2 - y1) * 0.35f))
         drawOval(l.b(0.25f), Offset(bx + an * 0.05f, y2 + h * 0.03f), Size(an * 0.1f, h * 0.1f))
+        // El pespunte de la lona (la costura de cuando era un toldo), a lo largo de un lado.
+        val xp = x0 + an * (if (azar(s, 59) < 0.5f) 0.12f else 0.86f)
+        var yp = top + h * 0.26f
+        while (yp < h - 6f * u) { drawLine(l.c(mezcla(lonaBase, P.BRAMANTE, 0.5f)).copy(alpha = 0.7f), Offset(xp, yp), Offset(xp, yp + 2.2f * u), 0.8f * u); yp += 4.4f * u }
         // El roce de las esquinas: la lona gastada, más clara.
         drawOval(l.c(P.GASTADO).copy(alpha = 0.3f), Offset(x0 - panza, h - h * 0.12f), Size(an * 0.3f, h * 0.1f))
     }

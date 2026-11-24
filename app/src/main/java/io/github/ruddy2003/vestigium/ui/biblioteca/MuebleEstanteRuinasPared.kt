@@ -391,14 +391,16 @@ internal object ParedEstanteRuinas {
             drawLine(g.luz(x, r.center.y, 0f).b(0.12f), Offset(x + 1.2f * u, r.top), Offset(x + 1.2f * u, r.bottom), 0.7f * u)
             x += tabla * (0.9f + 0.2f * azar(952, k * 13 + j)); j++
         }
-        // Las vetas y los cercos de agua: anchos, ondulados, más claros (el barniz lavado).
+        // Los cercos del agua que bajó por la trasera: una línea ondulada más clara (el barniz lavado) con sus chorreras debajo.
         val s = 960 + k * 17
-        for (i in 0 until 2) {
-            val c = Offset(r.left + r.width * (0.2f + 0.6f * azar(s, i)), r.top + r.height * (0.35f + 0.3f * azar(s, i + 5)))
-            val rr = w * (0.06f + 0.05f * azar(s, i + 9))
-            val cerco = g.luz(c.x, c.y, 0f).c(P.GASTADO)
-            drawOval(cerco.copy(alpha = 0.16f), Offset(c.x - rr, c.y - rr * 0.7f), Size(rr * 2, rr * 1.4f))
-            drawArc(cerco.copy(alpha = 0.32f), 160f, 200f, false, Offset(c.x - rr, c.y - rr * 0.7f), Size(rr * 2, rr * 1.4f), style = Stroke(1f * u))
+        val ycc = r.top + r.height * (0.42f + 0.2f * azar(s, 1))
+        val x0c = r.left + r.width * (0.1f + 0.4f * azar(s, 2)); val x1c = x0c + r.width * (0.25f + 0.2f * azar(s, 3))
+        val cerco = g.luz((x0c + x1c) / 2, ycc, 0f).c(P.GASTADO).copy(alpha = 0.3f)
+        val linea = abiertaRuinas(List(5) { j -> Offset(x0c + (x1c - x0c) * j / 4f, ycc + r.height * 0.04f * (if (j % 2 == 0) 1f else -1f) * azar(s, 10 + j)) })
+        drawPath(linea, cerco, style = Stroke(1.2f * u))
+        for (j in 0 until 3) {
+            val xx = x0c + (x1c - x0c) * (0.2f + 0.3f * j)
+            drawLine(cerco.copy(alpha = 0.18f), Offset(xx, ycc), Offset(xx + 0.6f * u, ycc + r.height * (0.15f + 0.2f * azar(s, 20 + j))), 2.4f * u, StrokeCap.Round)
         }
         // La sombra de la tabla de arriba: franca arriba y en diagonal (la luz baja desde la izquierda).
         val ys = r.top + r.height * 0.26f

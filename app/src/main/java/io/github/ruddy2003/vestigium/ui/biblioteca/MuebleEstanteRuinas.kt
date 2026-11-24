@@ -109,7 +109,7 @@ internal object PaletaRuinas {
     /** El ánimo en vidrio: ámbar oscuro, vidrio claro, vidrio verde. */
     val VIDRIOS = listOf(Color(0xFF8E4614), Color(0xFFC9DACF), Color(0xFF2E6C38))
     /** El ánimo en lona encerada: herrumbre, lona cruda, verde de toldo. */
-    val LONAS = listOf(Color(0xFFA8462A), Color(0xFFCDB37A), Color(0xFF486F32))
+    val LONAS = listOf(Color(0xFFA44A2E), Color(0xFFBDAF86), Color(0xFF4A6F34))
 
     val LETRA: FontFamily = LetraExtra.letrero
     val LETRA_MES: FontFamily = LetraExtra.overpass
