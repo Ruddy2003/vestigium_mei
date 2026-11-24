@@ -317,60 +317,97 @@ internal object CoronaEstanteArcano {
             drawRect(a.sombra(0.35f), Offset(cx + w * 0.015f, yA(0.06f)), Size(w * 0.06f, w * 0.06f))
         }
         drawRect(a.brillo(0.45f, k), Offset(cx - w * 0.055f, yA(0.017f)), Size(w * 0.11f, 1.2f * u))
-        // El cuerpo: lo hondo de dentro (la pared a través del vidrio, verdosa y oscura) y el mechero apagado.
-        val dentro = if (a.oscuro) mezcla(P.NOCHE_PARED, P.VIDRIO_OSC, 0.35f) else mezcla(P.VIDRIO_OSC, P.MAR_OSC, 0.5f)
-        drawPath(sil, a.luz(dentro, k))
+        ocasoEn(a, poligonoArcano(cx - w * 0.075f, ap, cx - w * 0.05f, ap, cx - w * 0.03f, yA(0.058f), cx - w * 0.036f, yA(0.058f), cx - w * 0.04f, yA(0.024f), cx - w * 0.055f, yA(0.016f)), 0.8f)
+        // El cuerpo: lo de detrás visto a través del vidrio (la pared, más clara, agrandada y corrida) y el mechero apagado.
+        val fondoV = if (a.oscuro) mezcla(P.NOCHE_PARED, P.VIDRIO_OSC, 0.45f) else mezcla(P.VIDRIO, P.MAR, 0.5f)
+        drawPath(sil, a.luz(fondoV, k))
         clipPath(sil) {
+            // Las escamas del papel de detrás, grandes y borrosas por el vidrio.
+            val esc = Path()
+            var ye = yA(0.33f); var fila = 0
+            while (ye < yA(0.05f)) {
+                var xe = cx - w * 0.15f + (if (fila % 2 == 0) 0f else w * 0.045f)
+                while (xe < cx + w * 0.15f) { esc.addArc(Rect(xe - w * 0.045f, ye - w * 0.045f, xe + w * 0.045f, ye + w * 0.045f), 10f, 160f); xe += w * 0.09f }
+                ye += w * 0.042f; fila++
+            }
+            drawPath(esc, a.luz(P.ESCAMA, k).copy(alpha = 0.3f), style = Stroke(2.6f * u))
             // El mechero: el tubo de vidrio y el depósito, desenfocados detrás de los prismas.
-            drawRect(a.luz(mezcla(P.HIERRO, P.LATON_OSC, 0.4f), k).copy(alpha = 0.7f), Offset(cx - w * 0.03f, yA(0.15f)), Size(w * 0.06f, w * 0.05f))
-            drawRect(a.luz(mezcla(P.VIDRIO_LUZ, P.VIDRIO_OSC, 0.5f), k).copy(alpha = 0.5f), Offset(cx - w * 0.012f, yA(0.24f)), Size(w * 0.024f, w * 0.09f))
-            // Los anillos de prismas de abajo y de arriba: cada uno con su cara de luz y su cara de sombra.
+            drawRect(a.luz(mezcla(P.HIERRO, P.LATON_OSC, 0.4f), k).copy(alpha = 0.6f), Offset(cx - w * 0.03f, yA(0.15f)), Size(w * 0.06f, w * 0.05f))
+            drawRect(a.luz(mezcla(P.VIDRIO_LUZ, P.VIDRIO_OSC, 0.4f), k).copy(alpha = 0.45f), Offset(cx - w * 0.012f, yA(0.24f)), Size(w * 0.024f, w * 0.09f))
+            // Los anillos de prismas: vidrio claro y transparente, con su arista viva, su cara de luz y su cara de sombra. De noche la
+            // arista se enciende del lado del guardabrisas (cálida) y del de la ventana (fría).
             val anillos = bajos.map { it to true } + altos.map { it to false }
             anillos.forEach { (r, abajo) ->
                 val y0 = yA(r[0]); val y1 = yA(r[1])
                 val rr = w * maxOf(r[2], r[3])
-                val medio = (y0 + y1) / 2
-                drawRect(a.luz(mezcla(P.VIDRIO, P.VIDRIO_OSC, 0.3f), k).copy(alpha = 0.72f), Offset(cx - rr, y1), Size(rr * 2, y0 - y1))
-                // La cara que mira arriba (luz) y la que mira abajo (sombra), según hacia dónde abre el prisma.
-                val clara = if (abajo) Rect(cx - rr, y1, cx + rr, medio) else Rect(cx - rr, medio, cx + rr, y0)
-                val honda = if (abajo) Rect(cx - rr, medio, cx + rr, y0) else Rect(cx - rr, y1, cx + rr, medio)
-                drawRect(a.luz(P.VIDRIO_LUZ, k).copy(alpha = if (a.oscuro) 0.18f else 0.42f), clara.topLeft, clara.size)
-                drawRect(a.sombra(0.28f), honda.topLeft, honda.size)
-                drawLine(a.luz(P.VIDRIO_LUZ, k).copy(alpha = if (a.oscuro) 0.3f else 0.8f), Offset(cx - rr, if (abajo) y1 + 0.6f * u else y0 - 0.6f * u),
-                    Offset(cx + rr, if (abajo) y1 + 0.6f * u else y0 - 0.6f * u), 1f * u)
+                val alto = y0 - y1
+                drawRect(a.luz(P.VIDRIO, k).copy(alpha = 0.42f), Offset(cx - rr, y1), Size(rr * 2, alto))
+                val clara = if (abajo) Rect(cx - rr, y1, cx + rr, y1 + alto * 0.36f) else Rect(cx - rr, y0 - alto * 0.36f, cx + rr, y0)
+                val honda = if (abajo) Rect(cx - rr, y0 - alto * 0.22f, cx + rr, y0) else Rect(cx - rr, y1, cx + rr, y1 + alto * 0.22f)
+                drawRect(a.luz(P.VIDRIO_LUZ, k).copy(alpha = if (a.oscuro) 0.14f else 0.4f), clara.topLeft, clara.size)
+                drawRect(a.sombra(0.32f), honda.topLeft, honda.size)
+                val ya = if (abajo) y1 + 0.7f * u else y0 - 0.7f * u
+                if (!a.oscuro) drawLine(Color.White.copy(alpha = if (a.noche) 0.6f else 0.85f), Offset(cx - rr, ya), Offset(cx + rr, ya), 1.1f * u)
+                else {
+                    drawLine(P.LLAMA.copy(alpha = (0.75f * k).coerceIn(0.12f, 0.7f)), Offset(cx, ya), Offset(cx + rr, ya), 1.1f * u)
+                    drawLine(P.HAZ.copy(alpha = (0.6f * kf).coerceIn(0.08f, 0.45f)), Offset(cx - rr, ya), Offset(cx, ya), 1f * u)
+                }
             }
-            // El cinturón de prismas finos.
+            // El cinturón de prismas finos y los dos montantes de latón de la montura, que lo sujetan.
             val f0 = yA(faja[0]); val f1 = yA(faja[1])
-            drawRect(a.luz(mezcla(P.VIDRIO, P.VIDRIO_OSC, 0.2f), k).copy(alpha = 0.62f), Offset(cx - w * faja[2], f1), Size(w * faja[2] * 2, f0 - f1))
+            drawRect(a.luz(P.VIDRIO, k).copy(alpha = 0.5f), Offset(cx - w * faja[2], f1), Size(w * faja[2] * 2, f0 - f1))
             var y = f1 + w * 0.004f
             while (y < f0 - w * 0.004f) {
-                drawLine(a.luz(P.VIDRIO_LUZ, k).copy(alpha = if (a.oscuro) 0.2f else 0.55f), Offset(cx - w * faja[2], y), Offset(cx + w * faja[2], y), 1f * u)
+                if (!a.oscuro) drawLine(a.luz(P.VIDRIO_LUZ, k).copy(alpha = 0.6f), Offset(cx - w * faja[2], y), Offset(cx + w * faja[2], y), 1f * u)
+                else {
+                    drawLine(P.LLAMA.copy(alpha = (0.5f * k).coerceIn(0.1f, 0.5f)), Offset(cx, y), Offset(cx + w * faja[2], y), 0.9f * u)
+                    drawLine(P.HAZ.copy(alpha = (0.4f * kf).coerceIn(0.06f, 0.35f)), Offset(cx - w * faja[2], y), Offset(cx, y), 0.9f * u)
+                }
                 drawLine(a.sombra(0.25f), Offset(cx - w * faja[2], y + 1.4f * u), Offset(cx + w * faja[2], y + 1.4f * u), 1.2f * u)
                 y += w * 0.0105f
             }
+            listOf(-0.52f, 0.52f).forEach { s ->
+                val x = cx + w * faja[2] * s
+                drawRect(a.sombra(0.35f), Offset(x + 1f * u, f1), Size(2.4f * u, f0 - f1))
+                drawRect(a.luz(P.LATON, k), Offset(x - 1.2f * u, f1), Size(2.4f * u, f0 - f1))
+                drawRect(a.brillo(0.5f, k), Offset(x - 1.2f * u, f1), Size(0.8f * u, f0 - f1))
+            }
             // El redondo del vidrio: los lados se oscurecen (se ve el vidrio de canto).
-            drawRect(a.sombra(0.3f), Offset(cx - w * 0.12f, yA(0.32f)), Size(w * 0.025f, w * 0.26f))
-            drawRect(a.sombra(0.4f), Offset(cx + w * 0.095f, yA(0.32f)), Size(w * 0.025f, w * 0.26f))
-            // La columna de reflejos: la ventana de día (por la izquierda), la llama de noche (por la derecha) y el faro, frío.
+            drawRect(a.sombra(0.3f), Offset(cx - w * 0.12f, yA(0.32f)), Size(w * 0.022f, w * 0.26f))
+            drawRect(a.sombra(0.4f), Offset(cx + w * 0.098f, yA(0.32f)), Size(w * 0.022f, w * 0.26f))
+            // La columna de reflejos: la ventana de día (por la izquierda), la llama de noche (por la derecha) y la ventana, fría.
             if (!a.oscuro) {
                 val luz = if (a.noche) mezcla(P.OCASO, Color.White, 0.35f) else Color.White
-                drawRect(luz.copy(alpha = 0.45f), Offset(cx - w * 0.072f, yA(0.31f)), Size(w * 0.026f, w * 0.245f))
-                drawRect(luz.copy(alpha = 0.22f), Offset(cx - w * 0.04f, yA(0.31f)), Size(w * 0.01f, w * 0.245f))
-                drawRect(luz.copy(alpha = 0.18f), Offset(cx + w * 0.05f, yA(0.31f)), Size(w * 0.008f, w * 0.245f))
+                drawRect(luz.copy(alpha = 0.42f), Offset(cx - w * 0.072f, yA(0.31f)), Size(w * 0.024f, w * 0.245f))
+                drawRect(luz.copy(alpha = 0.2f), Offset(cx - w * 0.04f, yA(0.31f)), Size(w * 0.01f, w * 0.245f))
+                drawRect(luz.copy(alpha = 0.16f), Offset(cx + w * 0.05f, yA(0.31f)), Size(w * 0.008f, w * 0.245f))
             } else {
-                drawRect(P.LLAMA.copy(alpha = (0.6f * k + 0.06f).coerceAtMost(0.55f)), Offset(cx + w * 0.052f, yA(0.31f)), Size(w * 0.03f, w * 0.245f))
-                drawRect(P.HAZ.copy(alpha = (0.4f * kf).coerceAtMost(0.32f)), Offset(cx - w * 0.088f, yA(0.31f)), Size(w * 0.02f, w * 0.245f))
+                drawRect(P.LLAMA.copy(alpha = (0.45f * k + 0.06f).coerceAtMost(0.42f)), Offset(cx + w * 0.055f, yA(0.31f)), Size(w * 0.026f, w * 0.245f))
+                drawRect(P.HAZ.copy(alpha = (0.35f * kf).coerceAtMost(0.28f)), Offset(cx - w * 0.088f, yA(0.31f)), Size(w * 0.018f, w * 0.245f))
             }
         }
-        // Los destellos de los prismas: un punto vivo en cada anillo, en la columna de la luz.
-        (bajos + altos).forEach { r ->
+        // Los destellos: de día, uno vivo en cada anillo y, junto a los más claros, el borde de colores del vidrio tallado; de
+        // noche, tres puntos de la llama del guardabrisas por la derecha y uno frío de la ventana por la izquierda.
+        (bajos + altos).forEachIndexed { i, r ->
             val y = yA((r[0] + r[1]) / 2)
             val rr = w * maxOf(r[2], r[3])
-            if (!a.oscuro) drawLine(Color.White.copy(alpha = if (a.noche) 0.7f else 0.95f), Offset(cx - rr * 0.6f, y), Offset(cx - rr * 0.42f, y), 2f * u, StrokeCap.Round)
-            else {
-                drawLine(P.FUEGO.copy(alpha = (1.1f * k).coerceAtMost(0.92f)), Offset(cx + rr * 0.45f, y), Offset(cx + rr * 0.66f, y), 1.8f * u, StrokeCap.Round)
-                if (kf > 0.1f) drawLine(P.HAZ.copy(alpha = (0.9f * kf).coerceAtMost(0.6f)), Offset(cx - rr * 0.78f, y), Offset(cx - rr * 0.66f, y), 1.4f * u, StrokeCap.Round)
+            if (!a.oscuro) {
+                drawLine(Color.White.copy(alpha = if (a.noche) 0.7f else 0.95f), Offset(cx - rr * 0.6f, y), Offset(cx - rr * 0.42f, y), 2f * u, StrokeCap.Round)
+                if (i % 3 == 1) {
+                    drawLine(Color(0xFFE88A5A).copy(alpha = 0.55f), Offset(cx - rr * 0.41f, y - 1.2f * u), Offset(cx - rr * 0.33f, y - 1.2f * u), 1.1f * u, StrokeCap.Round)
+                    drawLine(Color(0xFF6A9AD8).copy(alpha = 0.55f), Offset(cx - rr * 0.41f, y + 1.2f * u), Offset(cx - rr * 0.33f, y + 1.2f * u), 1.1f * u, StrokeCap.Round)
+                }
             }
+        }
+        if (a.oscuro) {
+            listOf(Offset(0.07f, 0.095f), Offset(0.085f, 0.2f), Offset(0.06f, 0.285f)).forEach { o ->
+                val p = Offset(cx + w * o.x, yA(o.y))
+                drawCircle(P.LLAMA.copy(alpha = (0.4f * k).coerceIn(0.1f, 0.35f)), w * 0.011f, p)
+                drawCircle(P.FUEGO.copy(alpha = (1.2f * k).coerceIn(0.35f, 0.95f)), w * 0.0035f, p)
+            }
+            val pf = Offset(cx - w * 0.088f, yA(0.17f))
+            drawCircle(P.HAZ.copy(alpha = (0.35f * kf).coerceIn(0.08f, 0.3f)), w * 0.01f, pf)
+            drawCircle(P.HAZ.copy(alpha = (1.1f * kf).coerceIn(0.3f, 0.85f)), w * 0.003f, pf)
         }
         // Los aros de latón: abajo, a los lados del cinturón y arriba.
         val laton = a.luz(P.LATON, k)
@@ -424,6 +461,8 @@ internal object CoronaEstanteArcano {
                 val et = Rect(r.left + r.width * 0.42f, r.top + r.height * 0.22f, r.left + r.width * 0.58f, r.bottom - r.height * 0.22f)
                 drawRect(a.luz(P.MANILA, k), et.topLeft, et.size)
             }
+            // El ocaso de los Sueños claros en el canto de la izquierda, el que mira a la ventana.
+            ocasoEn(a, Path().apply { addRect(Rect(r.left, r.top, r.left + r.width * 0.16f, r.bottom)) }, 0.8f)
             y -= w * gr
         }
         // La caja envuelta en hule: su cuerpo, el pliegue del hule en la esquina, las dos vueltas de piola y los tres lacres.
@@ -434,6 +473,8 @@ internal object CoronaEstanteArcano {
         drawRect(a.brillo(0.45f, k), Offset(caja.left + caja.width * 0.05f, caja.top + caja.height * 0.3f), Size(caja.width * 0.4f, 1.2f * u))
         drawRect(a.sombra(0.35f), Offset(caja.right - caja.width * 0.15f, caja.top), Size(caja.width * 0.15f, caja.height))
         drawPath(poligonoArcano(caja.left, caja.top + caja.height * 0.2f, caja.left + caja.width * 0.18f, caja.bottom, caja.left, caja.bottom), a.luz(mezcla(P.HULE, P.MAR_LUZ, 0.15f), k))
+        ocasoEn(a, Path().apply { addRect(Rect(caja.left, caja.top, caja.right, caja.top + caja.height * 0.18f)) }, 0.7f)
+        ocasoEn(a, Path().apply { addRect(Rect(caja.left, caja.top, caja.left + caja.width * 0.12f, caja.bottom)) }, 0.6f)
         val piola = a.luz(P.PIOLA, k)
         listOf(0.3f, 0.68f).forEach { f ->
             val x = caja.left + caja.width * f
@@ -537,6 +578,7 @@ internal object CoronaEstanteArcano {
         drawRect(a.brillo(0.35f, k), r.topLeft, Size(r.width, 1.4f * u))
         listOf(0.36f, 0.7f).forEach { f -> drawLine(a.sombra(0.4f), Offset(r.left, r.top + r.height * f), Offset(r.right, r.top + r.height * f), 1.1f * u) }
         drawRect(a.brillo(0.25f, k), r.topLeft, Size(1.6f * u, r.height))
+        ocasoEn(a, Path().apply { addRect(Rect(r.left, r.top, r.left + w * 0.014f, r.bottom)) }, 0.45f)
         clavoArcano(Offset(r.left + w * 0.008f, r.top + r.height * 0.18f), 1.3f * u, a, k, P.HIERRO_LUZ)
         clavoArcano(Offset(r.left + w * 0.008f, r.top + r.height * 0.82f), 1.3f * u, a, k, P.HIERRO_LUZ)
         // El asa de cabo, en el frente.

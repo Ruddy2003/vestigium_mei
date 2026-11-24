@@ -278,6 +278,13 @@ internal object ObraEstanteArcano {
         }
     }
 
+    /** El ocaso de los Sueños claros en el primer tramo del costado de la izquierda, el que mira a la ventana, con su borde. */
+    fun DrawScope.ocasoCostado(g: MarcoArcano) {
+        val w = g.w
+        val x1 = g.x0
+        ocasoEn(g.am, poligonoArcano(0f, g.ch, x1, g.ch, x1, g.ch + w * 0.2f, 0f, g.ch + w * 0.34f), 0.75f)
+    }
+
     // ---------------------------------------------------------------- la luz del cuerpo
 
     /** La noche (y la sombra del día) del cuerpo: un mapa de luz estirado sobre los casilleros, las tablas y los costados. */

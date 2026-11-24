@@ -222,7 +222,7 @@ internal object MuebleEstanteArcano {
                 drawRect(am.pleno(PaletaArcano.TECA_OSC), Offset.Zero, Size(w, ceil(ch) + 1f))
                 with(MuroEstanteArcano) { pared(g); ventanaHueco(g) }
                 with(ObraEstanteArcano) { cornisa(g) }
-                with(MuroEstanteArcano) { nocheArriba(g); vidrios(g) }
+                with(MuroEstanteArcano) { nocheArriba(g); ocasoArriba(g); vidrios(g) }
                 with(CoronaEstanteArcano) { colgado(g); encima(g) }
                 granoMueble(Rect(0f, 0f, w, ch + 2f), oscuro)
             }
@@ -238,6 +238,7 @@ internal object MuebleEstanteArcano {
             costado(Rect(d.derecha.left, ch, d.derecha.right, fondo), false, g)
             curvas(d, g)
             luzCuerpo(d, g, velas)
+            ocasoCostado(g)
         }
         with(HuecosEstanteArcano) {
             d.repisas.forEachIndexed { k, r ->

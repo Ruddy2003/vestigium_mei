@@ -190,7 +190,7 @@ internal object HuecosEstanteArcano {
 
     /**
      * El aro salvavidas del barco, de corcho forrado de lona, apoyado en el paño y algo ladeado, con su guirnalda de cabo cogida
-     * en cuatro ligadas; delante, un rollo de piola alquitranada con su chicote.
+     * en tres ligadas desiguales; delante, tapándolo en parte, un rollo de piola alquitranada con su chicote.
      */
     private fun DrawScope.salvavidas(x0: Float, x1: Float, piso: Float, r: Rect, g: MarcoArcano) {
         val w = g.w; val u = density
@@ -219,7 +219,8 @@ internal object HuecosEstanteArcano {
             drawPath(fuera, a.luz(mezcla(P.LONA_OSC, P.TECA_OSC, 0.3f), k), style = Stroke(1f * u))
             // Las cuatro ligadas y la guirnalda de cabo que cuelga entre ellas, por fuera del aro.
             val cabo = a.luz(mezcla(P.LONA_OSC, P.CORCHO, 0.4f), k)
-            val angs = listOf(-2.36f, -0.79f, 0.79f, 2.36f)
+            // Tres ligadas desiguales (cuatro en aspa harían una cruz dentro de un círculo).
+            val angs = listOf(-2.55f, -0.35f, 1.75f)
             val pts = angs.map { t -> Offset(c.x + rr * kotlin.math.cos(t), c.y + rr * 0.96f * kotlin.math.sin(t)) }
             for (i in pts.indices) {
                 val p0 = pts[i]; val p1 = pts[(i + 1) % pts.size]
@@ -241,7 +242,7 @@ internal object HuecosEstanteArcano {
             }
         }
         // El rollo de piola, delante y a la derecha.
-        rolloPiola(Offset(minOf(x1 - w * 0.06f, c.x + rr * 0.85f), piso - w * 0.014f), piso, g)
+        rolloPiola(Offset(minOf(x1 - w * 0.06f, c.x + rr * 0.5f), piso - w * 0.014f), piso, g)
     }
 
     /** Un rollo de piola alquitranada: vueltas apiladas, con el chicote suelto sobre la tabla. */

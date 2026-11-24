@@ -99,13 +99,15 @@ internal object PaletaArcano {
     val HAZ = Color(0xFFD6EEDF)
     val OCASO = Color(0xFFF4A072)
     val OCASO_ALTO = Color(0xFFB878A0)
+    /** El rosa del ocaso donde la ventana alumbra, en los Sueños claros. */
+    val ROSA_OCASO = Color(0xFFE87A6E)
     val NIEBLA_SUENOS = Color(0xFF1E2446)
     /** La noche: lo hondo de la pared (verde), del mueble (violeta), del paño y del suelo; y los de los Sueños oscuros. */
     val NOCHE_PARED = Color(0xFF0B2220)
     val NOCHE_MUEBLE = Color(0xFF22143A)
     val NOCHE_FONDO = Color(0xFF1E1244)
     val NOCHE_SUELO = Color(0xFF0E1A1E)
-    val SUENOS_PARED = Color(0xFF101A38)
+    val SUENOS_PARED = Color(0xFF09201F)
     val SUENOS_MUEBLE = Color(0xFF1A1030)
     val SUENOS_FONDO = Color(0xFF160E34)
     /** El calor de la pared junto a la llama (el verde mar a la luz de la vela) y el del mueble. */
@@ -116,9 +118,10 @@ internal object PaletaArcano {
     val LUNA = Color(0xFFE6EEEA)
     val LUNA_RAS = Color(0xFFA6CEC6)
     /** La luna de los Sueños oscuros en lo que alumbra por la ventana: un azul de pizarra con algo de verde. */
-    val LUNA_NOCHE = Color(0xFF41628A)
+    val LUNA_NOCHE = Color(0xFF3A5A58)
     /** La sombra del ocaso (violeta) y la fría del día. */
     val SOMBRA_OCASO = Color(0xFF3E2A5C)
+    val HONDO_OCASO = Color(0xFF22183E)
     val FRIO = Color(0xFF24323C)
 
     val LETRA: FontFamily = Letra.castoro
@@ -152,7 +155,8 @@ internal class AireArcano(val oscuro: Boolean, val noche: Boolean, val parte: In
     private fun aLaLlama(c: Color): Color = Color((c.red * 1.12f).coerceAtMost(1f), c.green * 0.88f, c.blue * 0.62f, c.alpha)
 
     /** Al ocaso de los Sueños claros: algo más bajo y más tibio. */
-    private fun alOcaso(c: Color): Color = Color(c.red * 0.95f, c.green * 0.85f, c.blue * 0.84f, c.alpha)
+    /** Al anochecer el color se queda (la pared sigue verde, la teca teca): solo baja, algo hacia el frío. */
+    private fun alOcaso(c: Color): Color = Color(c.red * 0.82f, c.green * 0.82f, c.blue * 0.87f, c.alpha)
 
     /** Cerca de la llama lo claro se vuelve miel, sin perder del todo su color. */
     private fun ambar(c: Color, k: Float): Color {
@@ -245,12 +249,12 @@ internal fun mascaraArcano(a: AireArcano, x: Float, y: Float, k: Float, kf: Floa
         return P.FRIO.copy(alpha = lejos * (1f - 0.6f * kf))
     }
     if (!a.oscuro) {
-        // El ocaso: la luz rosa de la ventana tiñe lo que tiene cerca; lejos (a la derecha y abajo) crece la sombra violeta.
-        val tarde = (0.26f + 0.46f * ((x - 0.15f) * 0.8f + (y - 0.4f) * 0.3f).coerceIn(0f, 1f)) * (1f - k) * (1f - 0.85f * kf)
-        val calido = 0.2f * k + 0.46f * kf
+        // El anochecer: lo lejos de la ventana (a la derecha y abajo) se hunde en un violeta hondo, poco, sin tapar su color; la
+        // luz rosa del ocaso no va aquí (sería un velo): se pinta, con borde, solo donde la ventana alumbra (ver [ocasoEn]).
+        val tarde = (0.08f + 0.3f * ((x - 0.15f) * 0.8f + (y - 0.4f) * 0.3f).coerceIn(0f, 1f)) * (1f - k) * (1f - 0.6f * kf)
+        val calido = 0.14f * k
         val al = (tarde + calido).coerceIn(0f, 1f)
-        val tibio = mezcla(P.LLAMA, P.OCASO, (kf / maxOf(0.01f, kf + k)).coerceIn(0f, 1f))
-        return mezcla(P.SOMBRA_OCASO, tibio, if (al > 0.001f) calido / al else 0f).copy(alpha = al)
+        return mezcla(P.HONDO_OCASO, P.LLAMA, if (al > 0.001f) calido / al else 0f).copy(alpha = al)
     }
     val pared = a.parte == AireArcano.PARED
     val kk = if (pared) Math.pow(k.toDouble(), 1.35).toFloat() else k
@@ -259,9 +263,20 @@ internal fun mascaraArcano(a: AireArcano, x: Float, y: Float, k: Float, kf: Floa
     val f = nucleo * nucleo * (3f - 2f * nucleo)
     // La ventana: lo lejano de la llama, junto a ella, se hunde menos y en un verde frío (la niebla alumbrada).
     val q = (kf * (1f - kk)).coerceIn(0f, 1f)
-    val base = mezcla(a.hondo, if (a.noche) P.LUNA_NOCHE else P.FRIO_NOCHE, (if (a.noche) 0.65f else 0.45f) * q)
-    val al = maxOf(hondo * (1f - (if (a.noche) 0.5f else 0.35f) * q), (if (pared) 0.5f else 0.5f) * f)
+    val base = mezcla(a.hondo, if (a.noche) P.LUNA_NOCHE else P.FRIO_NOCHE, 0.45f * q)
+    val al = maxOf(hondo * (1f - 0.35f * q), (if (pared) 0.5f else 0.5f) * f)
     return mezcla(base, if (pared) P.CALIDO_PARED else P.CALIDO_MUEBLE, f).copy(alpha = al)
+}
+
+/**
+ * La luz del ocaso de los Sueños claros donde la ventana alumbra de verdad (el alféizar, el canto de la cornisa, el flanco de lo
+ * de encima, el primer tramo del costado): el rosa del ocaso sobre la superficie, dentro de [donde] y con su borde. Con otro
+ * aire no pinta nada.
+ */
+internal fun DrawScope.ocasoEn(a: AireArcano, donde: androidx.compose.ui.graphics.Path, fuerza: Float = 1f) {
+    if (a.oscuro || !a.noche) return
+    // En pantalla: aclara y tiñe de rosa lo que toca sin taparlo (la veta, las juntas y el color siguen debajo).
+    drawPath(donde, PaletaArcano.ROSA_OCASO.copy(alpha = (0.62f * fuerza).coerceIn(0f, 1f)), blendMode = androidx.compose.ui.graphics.BlendMode.Screen)
 }
 
 /** Un polígono cerrado por sus puntos (x, y, x, y…). */

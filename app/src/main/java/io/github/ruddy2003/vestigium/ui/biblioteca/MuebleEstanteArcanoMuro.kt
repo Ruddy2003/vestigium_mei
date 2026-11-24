@@ -337,6 +337,24 @@ internal object MuroEstanteArcano {
         }
     }
 
+    /**
+     * El ocaso de los Sueños claros donde la ventana alumbra: la jamba de la derecha, el alféizar y, delante, el canto de la
+     * cornisa hasta media pared, cada uno con su borde (la mancha termina en diagonal, por donde ya no llega la ventana).
+     */
+    fun DrawScope.ocasoArriba(g: MarcoArcano) {
+        val a = g.a
+        if (a.oscuro || !a.noche) return
+        val w = g.w
+        val x0 = w * M.VEN_X0; val x1 = w * M.VEN_X1; val y0 = w * M.VEN_Y0; val y1 = w * M.VEN_Y1
+        val m = w * 0.014f; val hondo = w * 0.026f
+        ocasoEn(a, poligonoArcano(x1, y0 + hondo * 0.55f, x1, y1, x1 - hondo * 0.6f, y1 - hondo * 0.1f, x1 - hondo * 0.6f, y0 + hondo * 0.9f), 0.8f)
+        ocasoEn(a, Path().apply { addRect(Rect(x0 - m * 1.6f, y1 + m * 0.3f, x1 + m * 1.6f, y1 + m * 0.8f)) }, 1.1f)
+        val ap = g.apoyo
+        ocasoEn(a, poligonoArcano(0f, ap, w * 0.56f, ap, w * 0.5f, ap + w * 0.012f, 0f, ap + w * 0.012f), 0.9f)
+        val r0 = ap + w * 0.012f; val r1 = ap + w * 0.048f
+        ocasoEn(a, poligonoArcano(0f, r0, w * 0.46f, r0, w * 0.42f, r0 + (r1 - r0) * 0.45f, 0f, r0 + (r1 - r0) * 0.45f), 0.65f)
+    }
+
     // ---------------------------------------------------------------- la noche de arriba
 
     /** La noche (y la sombra del día) de la pared y la cornisa: un mapa chico de luz estirado encima. */
