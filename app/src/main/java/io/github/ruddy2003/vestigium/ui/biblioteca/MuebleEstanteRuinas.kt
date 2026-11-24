@@ -248,7 +248,7 @@ internal class LuzRuinas(val a: AireRuinas, val k: Float, val tinte: Color, val 
      * llama, frío bajo la luna, hundido lejos de las dos); nunca tanto que el número deje de leerse.
      */
     fun etiqueta(): Color = when {
-        a.oscuro -> mezcla(mezcla(mezcla(p.KRAFT, a.hondo, 0.56f), alFuego(mezcla(p.KRAFT, Color.White, 0.15f)), (q * 1.4f).coerceAtMost(1f)), p.LUNA, 0.24f * luna)
+        a.oscuro -> mezcla(mezcla(mezcla(p.KRAFT, a.hondo, 0.4f), alFuego(mezcla(p.KRAFT, Color.White, 0.15f)), (q * 1.4f).coerceAtMost(1f)), p.LUNA, 0.24f * luna)
         a.noche -> mezcla(mezcla(p.KRAFT, p.ANOCHECER, 0.2f - 0.12f * maxOf(sol, k)), p.CREPUSCULO, 0.14f * sol)
         else -> c(p.KRAFT)
     }
