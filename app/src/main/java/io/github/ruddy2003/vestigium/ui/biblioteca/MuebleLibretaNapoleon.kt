@@ -85,13 +85,14 @@ internal class SitioLibretaNapoleon(val w: Float, val h: Float, u: Float, hojas:
 /**
  * La libreta de momentos de Napoleónico: el legajo de despachos en el atril del ayudante de campo, en otro rincón del mismo cuarto
  * requisado que la biblioteca y el Ideario. Sobre la mesa de escribir de caoba con su cuero verde, el atril de sobremesa,
- * empinado, con su marco, su puntal y su cremallera de latón; en él, apoyado en el listón, el legajo: los pliegos doblados entre
- * dos tapas de cartón forradas de papel pizarra, con lomo y puntas de becerro, atados con la cinta carmesí que pasa por dos ojales
- * de latón y se anuda en lazo (la misma de la hoja abierta), y el rótulo de cartulina con el nombre y la cuenta. Engorda con los
- * despachos (más canto, más pliegos que asoman con su lacre). A la izquierda, la cortina de damasco recogida, por donde entra la
- * luz, y el tintero de bronce con su salvadera y la pluma; a la derecha, la palmatoria de lacrar con su vela y la barra de lacre.
+ * empinado, con su remate en arco, su puntal y su cremallera de latón; en él, apoyado en el listón, el legajo: los pliegos
+ * doblados en su carpeta de vitela flexible (con la esquina doblada y la cartela rayada a tinta con el nombre y la cuenta), ceñidos
+ * con la cinta de balduque carmesí, anudada, cuyos cabos cuelgan por delante del listón; bajo la cinta, el último despacho, todavía
+ * cerrado con su lacre. Engorda con los despachos (más canto abajo y a la derecha, más pliegos que asoman con su lacre). A la
+ * izquierda, la cortina de seda verde recogida, por donde entra la luz, y el tintero de bronce con su salvadera y la pluma; a la
+ * derecha, el portapliegos del correo colgado de su clavo y, en la mesa, la palmatoria de lacrar con su vela y la barra de lacre.
  *
- * De día, el sol de la ventana deja la trama de sus cuarterones en la pared, quebrada en el atril y en la tapa; de noche arde la
+ * De día, el sol de la ventana deja la trama de sus cuarterones en la pared, quebrada en el atril y en la vitela; de noche arde la
  * vela de la palmatoria (su charco enciende el canto del legajo, la mesa y la pared de ese lado) y por la izquierda entra la luna,
  * fría, que deja su trama en la pared y un filo en los cantos que la miran; lo demás se hunde en el azul de la noche (la pared) y
  * en la caoba honda (la mesa). Lo fijo (la pared, la cortina, la mesa, el atril y lo de encima) se pinta una vez por tamaño y

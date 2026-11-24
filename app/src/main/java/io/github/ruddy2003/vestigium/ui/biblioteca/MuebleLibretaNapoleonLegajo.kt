@@ -23,9 +23,9 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
  * El legajo de despachos de la libreta de Napoleónico ([MuebleLibretaNapoleon]), en vivo: su sombra en el atril; la cubierta de
  * atrás y el bloque de los pliegos doblados (su canto de abajo, que pisa el listón, y el de la derecha, con una raya por despacho
  * y los pliegos que asoman con su lacre); la cubierta de delante, de vitela flexible con su doblez junto al lomo, con la cartela
- * rayada a tinta donde van el nombre y la cuenta; los ojales de latón y la cinta carmesí con su lazo, cuyos cabos cuelgan por
- * delante del listón. Al abrirse, el lazo se suelta y la cubierta gira sobre el lomo: dentro, el despacho de encima con su
- * membrete, como la hoja de la app.
+ * rayada a tinta donde van el nombre y la cuenta, y el último despacho metido bajo la cinta; la cinta de balduque carmesí con su
+ * nudo, cuyos cabos cuelgan por delante del listón. Al abrirse, el nudo se suelta y la cubierta gira sobre el lomo: dentro, el
+ * despacho de encima con su membrete, como la hoja de la app.
  */
 internal object LegajoLibretaNapoleon {
     private val P = PaletaNapoleon
@@ -36,7 +36,7 @@ internal object LegajoLibretaNapoleon {
     val CINTA = Color(0xFFB0233A)
     val CINTA_LUZ = Color(0xFFE0606A)
     val CINTA_OSC = Color(0xFF5E0E1C)
-    /** El papel pizarra (el de la cabecera de las tarjetas del índice). */
+    /** El papel pizarra de las carpetas del archivo (el de la cabecera de las tarjetas del índice). */
     val PIZARRA = Color(0xFF52707A)
     /** Los papeles de los despachos: el de hilo, el azulado, el ahuesado y el crudo. */
     private val PAPELES = listOf(Color(0xFFF1E6CC), Color(0xFFDCDCD0), Color(0xFFE2CD9E), Color(0xFFF6EEDA))
@@ -77,6 +77,7 @@ internal object LegajoLibretaNapoleon {
             cubierta(s, a, null)
             if (!a.oscuro) clipPath(m.forma(1f, -14f * U)) { cubierta(s, a, m) }
             rotulo(e, s, a, medidor)
+            pliego(e, s, a)
             if (abre > 0f) drawPath(silueta(t, U), a.sombra(0.5f * abre))
         }
         if (abre > 0.01f) {
@@ -203,13 +204,7 @@ internal object LegajoLibretaNapoleon {
         if (m != null) drawPath(forma, a.en(VITELA, 0.04f, 1f, 1f, m))
         else if (a.oscuro) drawPath(forma, pincel(VITELA, 0f, t, s, a))
         else drawPath(forma, Brush.linearGradient(listOf(a.dia(VITELA, 0.08f), a.dia(mezcla(VITELA, VITELA_OSC, 0.3f), 0f)), t.topLeft, t.bottomRight))
-        // Las ondas de la vitela, grandes y suaves, y el doblez del lomo.
-        val ondas = Path()
-        listOf(0.3f to 0.25f, 0.62f to 0.7f, 0.85f to 0.35f).forEach { (fx, fy) ->
-            val c = Offset(t.left + t.width * fx, t.top + t.height * fy)
-            ondas.addOval(Rect(c.x - 34f * U, c.y - 12f * U, c.x + 34f * U, c.y + 12f * U))
-        }
-        drawPath(ondas, VITELA_OSC.copy(alpha = 0.08f), blendMode = BlendMode.Multiply)
+        // El doblez del lomo.
         drawRect(VITELA_OSC.copy(alpha = 0.5f), Offset(t.left, t.top + 2f * U), Size(4f * U, t.height - 4f * U), blendMode = BlendMode.Multiply)
         drawLine(VITELA_OSC.copy(alpha = 0.7f), Offset(t.left + s.lomo, t.top + 2f * U), Offset(t.left + s.lomo, t.bottom - 2f * U), 1f * U, blendMode = BlendMode.Multiply)
         drawLine(a.claro(0.5f), Offset(t.left + s.lomo + 1f * U, t.top + 3f * U), Offset(t.left + s.lomo + 1f * U, t.bottom - 3f * U), 0.8f * U)
@@ -227,6 +222,32 @@ internal object LegajoLibretaNapoleon {
             val q = r.deflate(d * U); val c = 5f * U
             drawPath(poligonoNapoleon(q.left + c, q.top, q.right - c, q.top, q.right, q.top + c, q.right, q.bottom - c, q.right - c, q.bottom, q.left + c, q.bottom, q.left, q.bottom - c, q.left, q.top + c),
                 tinta.copy(alpha = 0.75f), style = Stroke(g * U), blendMode = BlendMode.Multiply)
+        }
+    }
+
+    /**
+     * El último despacho, todavía sin coser: un pliego doblado y cerrado con su lacre, metido bajo la cinta a la derecha (la cinta
+     * le pasa por encima). Con su sombra en la vitela.
+     */
+    private fun DrawScope.pliego(e: EstadoLibreta, s: SitioLibretaNapoleon, a: AireNapoleon) {
+        val U = s.U
+        val t = s.tapa
+        val r = Rect(t.right - 64f * U, s.cintaY - 17f * U, t.right - 20f * U, s.cintaY + 10f * U)
+        val k = k(r.center, s, a)
+        rotate(-6f + 3f * azar(e.semilla, 7), r.center) {
+            drawRect(a.sombra(if (a.oscuro) 0.4f else 0.22f), r.topLeft + Offset(1.6f * U, 2f * U), r.size)
+            drawRect(a.dia(PAPELES[1], 0.04f, k), r.topLeft, r.size)
+            // Los dobleces: la solapa en pico que baja hasta el lacre, y su sombra.
+            val pico = Offset(r.center.x, r.top + r.height * 0.62f)
+            drawPath(poligonoNapoleon(r.left, r.top, r.right, r.top, pico.x, pico.y), a.dia(PAPELES[1], -0.06f, k))
+            drawLine(a.sombra(0.35f), Offset(r.left, r.top), pico, 0.6f * U)
+            drawLine(a.sombra(0.35f), Offset(r.right, r.top), pico, 0.6f * U)
+            drawRect(a.sombra(0.25f), r.topLeft, r.size, style = Stroke(0.6f * U))
+            // El lacre: la gota aplastada, su borde y el brillo.
+            drawCircle(a.dia(CINTA_OSC, 0f, k), 4.2f * U, pico + Offset(0.4f * U, 0.6f * U))
+            drawCircle(a.dia(P.LACRE, 0f, k), 3.8f * U, pico)
+            drawCircle(a.dia(CINTA_OSC, 0f, k), 2.4f * U, pico, style = Stroke(0.7f * U))
+            drawCircle(a.brillo(0.5f, k), 0.9f * U, pico - Offset(1.4f * U, 1.4f * U))
         }
     }
 

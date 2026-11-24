@@ -17,16 +17,16 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /**
  * Lo fijo del rincón de la libreta de Napoleónico ([MuebleLibretaNapoleon]), pintado una vez por tamaño y modo: la pared amarilla
- * con sus manos de pintura, el recuadro de filetes verdes y la trama de la ventana (el sol o la luna); la cortina de damasco
- * recogida; la mesa de escribir con su cuero y su faldón de caoba; el atril con su marco, su puntal y su listón; el tintero con
- * la pluma y la palmatoria con su vela (de noche, encendida) y la barra de lacre.
+ * con sus manos de pintura, el recuadro de filetes verdes y la trama de la ventana (el sol o la luna); la cortina de seda
+ * recogida; el portapliegos colgado; la mesa de escribir con su cuero y su faldón de caoba; el atril con su remate en arco, su
+ * puntal y su listón; el tintero con la pluma y la palmatoria con su vela (de noche, encendida) y la barra de lacre.
  */
 internal object RinconLibretaNapoleon {
     private val P = PaletaNapoleon
     /** La seda verde Imperio de la cortina: su cara, su luz y lo hondo de los pliegues. */
-    private val DAMASCO = Color(0xFF2E6046)
-    private val DAMASCO_LUZ = Color(0xFF6E9E72)
-    private val DAMASCO_OSC = Color(0xFF10281C)
+    private val SEDA = Color(0xFF2E6046)
+    private val SEDA_LUZ = Color(0xFF6E9E72)
+    private val SEDA_OSC = Color(0xFF10281C)
     /** El cuero verde del tablero y del atril. */
     private val CUERO_VERDE = Color(0xFF2E5C40)
     /** La cera de la vela. */
@@ -179,10 +179,10 @@ internal object RinconLibretaNapoleon {
         }
         // La sombra en la pared.
         // De noche, dentro del charco de la vela, la sombra es la pared sin esa luz: un pardo hondo que oscurece sin agrisar.
-        val d = if (a.oscuro) Offset(4f * U, -9f * U) else Offset(9f * U, 7f * U)
+        val d = if (a.oscuro) Offset(5f * U, -5f * U) else Offset(9f * U, 7f * U)
         if (a.oscuro) {
-            drawPath(Path().apply { addPath(cuerpo, d) }, Color(0xFF9A6A48), blendMode = BlendMode.Multiply)
-            drawLine(Color(0xFFB08060), clavo + d * 0.4f, Offset(x + mitad - 3f * U, arriba) + d, 3f * U, blendMode = BlendMode.Multiply)
+            drawPath(Path().apply { addPath(cuerpo, d) }, Color(0xFFC09070), blendMode = BlendMode.Multiply)
+            drawLine(Color(0xFFC8987A), clavo + d * 0.4f, Offset(x + mitad - 3f * U, arriba) + d, 3f * U, blendMode = BlendMode.Multiply)
         } else {
             drawPath(Path().apply { addPath(cuerpo, d) }, a.sombra(0.2f))
             drawLine(a.sombra(0.16f), clavo + d * 0.4f, Offset(x + mitad - 3f * U, arriba) + d, 3f * U)
@@ -217,7 +217,7 @@ internal object RinconLibretaNapoleon {
     // ---------------------------------------------------------------- la cortina
 
     /**
-     * La cortina de damasco granate, a la izquierda, recogida con su alzapaño de cordón dorado y su borla: de la barra de latón
+     * La cortina de seda verde Imperio, a la izquierda, recogida con su alzapaño de cordón dorado y su borla: de la barra de latón
      * baja ancha, se estrecha en el alzapaño y se abre otra vez hasta perderse detrás de la mesa. Los pliegues, en tiras que
      * convergen en el alzapaño; de día los alumbra la ventana (está a su lado); de noche, la luna le pone un filo frío.
      */
@@ -248,8 +248,8 @@ internal object RinconLibretaNapoleon {
             // El valor de cada tira: el coseno de los pliegues, con la luz que viene de la ventana (la izquierda).
             fun v(u: Float) = 0.5f + 0.5f * kotlin.math.cos(2f * Math.PI.toFloat() * pliegues * u + 0.6f)
             val luz = if (a.oscuro) 0.25f else 0.85f - 0.3f * u0
-            val c0 = mezcla(DAMASCO_OSC, mezcla(DAMASCO, DAMASCO_LUZ, v(u0) * luz), 0.35f + 0.65f * v(u0))
-            val c1 = mezcla(DAMASCO_OSC, mezcla(DAMASCO, DAMASCO_LUZ, v(u1) * luz), 0.35f + 0.65f * v(u1))
+            val c0 = mezcla(SEDA_OSC, mezcla(SEDA, SEDA_LUZ, v(u0) * luz), 0.35f + 0.65f * v(u0))
+            val c1 = mezcla(SEDA_OSC, mezcla(SEDA, SEDA_LUZ, v(u1) * luz), 0.35f + 0.65f * v(u1))
             val y0 = filas[2]
             val x0 = -2f * U + (borde(y0) + 2f * U) * u0; val x1 = -2f * U + (borde(y0) + 2f * U) * u1
             val k0 = s.k(a, Offset(x0, y0))

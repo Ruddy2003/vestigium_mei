@@ -4130,7 +4130,7 @@ object EstanteNapoleon : DisenoBiblioteca {
     override fun DrawScope.libreta(e: EstadoLibreta, medidor: TextMeasurer, oscuro: Boolean) =
         with(MuebleLibretaNapoleon) { libreta(e, medidor, oscuro) }
 
-    /** Cada día, una tarjeta de la cartulina del rótulo con su cabecera de papel pizarra y su sello o su cinta ([IndiceLibretaNapoleon]). */
+    /** Cada día, una tarjeta de cartulina con su cabecera de papel pizarra y su sello o su cinta ([IndiceLibretaNapoleon]). */
     override fun DrawScope.pestana(e: EstadoPestana, medidor: TextMeasurer, oscuro: Boolean) =
         with(IndiceLibretaNapoleon) { pestana(e, medidor, oscuro) }
 

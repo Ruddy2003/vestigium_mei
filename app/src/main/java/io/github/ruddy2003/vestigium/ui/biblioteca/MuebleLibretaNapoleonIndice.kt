@@ -13,7 +13,7 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
-/** Los caminos de una pestaña, armados una vez por tamaño: el cabo de cinta que cuelga del ojal (sin ánimo). */
+/** Los caminos de una pestaña, armados una vez por tamaño: el cabo de cinta que sale del ojal (sin ánimo). */
 private class FormasPestanaNapoleon(val w: Float, val h: Float, u: Float) {
     val tarjeta = Rect(3f * u, 3f * u, w - 3f * u, h - 6f * u)
     val banda = Rect(tarjeta.left, tarjeta.top, tarjeta.right, tarjeta.top + 12f * u)
@@ -21,18 +21,18 @@ private class FormasPestanaNapoleon(val w: Float, val h: Float, u: Float) {
     val cajaDia = Rect(tarjeta.left + 1f * u, banda.bottom + 1f * u, tarjeta.right - 1f * u, tarjeta.bottom - 12f * u)
     val sello = Offset(tarjeta.right - 9f * u, tarjeta.bottom - 5f * u)
     val ojal = Offset(tarjeta.left + 8f * u, tarjeta.bottom - 7f * u)
+    /** El cabo de cinta que sale del ojal hacia la izquierda y asoma por el canto de la tarjeta, cortado en cola de golondrina. */
     val cabo = Path().apply {
-        val o = ojal
-        moveTo(o.x - 1.6f * u, o.y); lineTo(o.x + 1.6f * u, o.y)
-        lineTo(o.x - 1.4f * u, h - 0.5f * u); lineTo(o.x - 3.2f * u, h - 2.4f * u); lineTo(o.x - 5.2f * u, h - 1.4f * u); close()
+        val o = ojal; val g = 1.5f * u
+        moveTo(o.x, o.y - g); lineTo(1f * u, o.y - g); lineTo(2.6f * u, o.y); lineTo(1f * u, o.y + g); lineTo(o.x, o.y + g); close()
     }
 }
 
 /**
- * El índice de la libreta de Napoleónico: cada día, una tarjeta de la misma cartulina del rótulo del legajo, con su cabecera de
- * papel pizarra (la de las tapas) y la letra de la semana; el día, en la letra de la casa. Con ánimo, el sello de lacre del color
+ * El índice de la libreta de Napoleónico: cada día, una tarjeta de cartulina del color de la vitela del legajo, con su cabecera de
+ * papel pizarra (el de las carpetas del archivo) y la letra de la semana; el día, en la letra de la casa. Con ánimo, el sello de lacre del color
  * del ánimo (los mismos tintes que las entradas de la biblioteca), abajo a la derecha, montado en el borde; sin ánimo no lleva
- * sello sino un ojal de latón con un cabo de la cinta carmesí que cuelga por la izquierda (la silueta lo dice, no solo el
+ * sello sino un ojal de latón con un cabo de la cinta carmesí que asoma por la izquierda (la silueta lo dice, no solo el
  * color). El rótulo de cada mes, una tira de papel pizarra con sus puntas de becerro y, en medio, la cartulina con el mes.
  */
 internal object IndiceLibretaNapoleon {
@@ -94,13 +94,12 @@ internal object IndiceLibretaNapoleon {
             drawCircle(mezcla(c, Color.Black, 0.3f), 3.2f * u, s, style = Stroke(0.8f * u))
             drawCircle(mezcla(c, Color.White, 0.45f), 1.1f * u, s - Offset(2.6f * u, 2.6f * u))
         } else {
-            // Sin ánimo: el ojal de latón y el cabo de cinta carmesí que cuelga por la izquierda.
+            // Sin ánimo: el ojal de latón y el cabo de cinta carmesí que asoma por la izquierda.
             val cinta = if (oscuro) mezcla(L.CINTA, Color.Black, 0.2f) else L.CINTA
             drawPath(f.cabo, cinta)
             drawCircle(P.LATON, 3f * u, f.ojal)
             drawCircle(P.LATON_OSC, 3f * u, f.ojal, style = Stroke(0.6f * u))
             drawCircle(Color(0xFF1A0E08), 1.3f * u, f.ojal)
-            drawLine(cinta, f.ojal + Offset(-1f * u, -0.4f * u), f.ojal + Offset(-5.5f * u, -1.2f * u), 2.6f * u)
         }
     }
 
