@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
@@ -29,20 +30,21 @@ import kotlin.math.sqrt
 
 /**
  * La libreta de momentos de Galia (la usa `EstanteGalia`, en `BibliotecaGalia.kt`): la mesa de las cuentas, en un rincón de la
- * misma casa grande del estante y del Ideario. Sobre el tablero de roble ahumado descansa el haz de tablillas enceradas: las
- * tablillas de haya apiladas (más cuantas más hojas), cada una con su canto, atadas por delante con dos tientos de cuero
- * crudo que pasan por los agujeros del marco y acaban en su nudo; la de arriba muestra la cera de miel con el nombre y la cuenta
- * rayados, lo de antes a medio alisar y el estilo de bronce tendido encima. A la izquierda, el cuenco de madera con el pan de
- * cera y la espátula para volver a alisar; a la derecha, la lámpara de piedra con su mecha de junco; en el poste, la madeja de
- * tientos de repuesto colgada de su clavija. Detrás, el barro blanqueado con el zócalo de almagra, el poste, la tornapunta que
- * cruza hasta la viga, el hollín de la lámpara y una grieta.
+ * misma casa grande del estante y del Ideario. Sobre el tablero de roble ahumado descansa el haz de tablillas enceradas
+ * ([HazLibretaGalia]): tablillas gruesas de haya apiladas, desiguales y algo giradas (más cuantas más hojas), atadas por un
+ * tiento de cuero crudo que da dos vueltas por encima; en la de arriba, la cera rehundida en su marco con el nombre y la cuenta
+ * rayados y el estilo metido bajo el tiento. Alrededor, lo que se usa ([MesaLibretaGalia]): dos tablillas sueltas apoyadas
+ * contra el zócalo, el cuenco con el pan de cera y la espátula, unas avellanas, la lámpara de piedra, el vaso de madera y el
+ * ovillo de lana teñida. Detrás, el barro blanqueado con la cenefa del friso bajo la viga y el zócalo de almagra; el poste con
+ * sus cuñas y la madeja de tientos; la tornapunta que cruza hasta la viga; el manojo de hierbas a secar y, a la derecha, la
+ * manta a cuadros colgada de su vara.
  *
- * La luz: de día entra el sol por la puerta (a la izquierda, fuera del cuadro) y deja su mancha en el barro, en la mesa y en la
- * tablilla de arriba, corrida en cada plano (cuanto más alto el plano, más hacia la puerta). De noche arde la lámpara de sebo:
- * su charco enciende la pared, el tablero, el canto derecho del haz y la cera; lo lejano (la viga, el poste, el cuenco) se
- * hunde en el pardo rojizo de la casa, y por la puerta entra un parche chico de luna, frío, en la esquina de la mesa. Lo fijo
- * (pared, poste, mesa, cuenco, lámpara y madeja) se pinta una vez por tamaño y modo; el haz, que cambia con las hojas y al
- * abrirse, en cada dibujo ([HazLibretaGalia]).
+ * La luz: de día entra el sol por la puerta (a la izquierda, fuera del cuadro) y pinta cada plano por separado, con su propio
+ * sesgo y el borde quebrado: la cal, el tablero (más bajo y más a la izquierda) y, en lo alto del haz, el marco, mientras la
+ * cera solo brilla; las cosas echan su sombra dentro de la mancha. De noche arde la lámpara de sebo: su charco enciende la
+ * pared, la manta, el tablero, el canto derecho del haz y la cera; lo lejano (la viga, el poste, el cuenco) se hunde en el
+ * pardo rojizo de la casa, y por la puerta entra un parche chico de luna, frío, en la esquina de la mesa. Lo fijo se pinta una
+ * vez por tamaño y modo; el haz, que cambia con las hojas y al abrirse, en cada dibujo.
  */
 internal object MuebleLibretaGalia {
     val ALTO: Dp = 268.dp
@@ -86,29 +88,34 @@ internal class SitioLibretaGalia(val w: Float, val h: Float, val n: Int) {
     val U = h / 268f
     val enU = w / U
     val viga = 16f * U
-    val zocalo = 90f * U
+    /** La cenefa pintada bajo la viga (la misma del friso del estante). */
+    val friso0 = 19f * U
+    val friso1 = 31f * U
+    val zocalo = 92f * U
     val mesaFondo = 118f * U
-    val mesaFrente = 232f * U
-    val canto = 243f * U
-    val mesaIzq = 14f * U
-    val poste = Rect(0f, 0f, 28f * U, 240f * U)
+    val mesaFrente = 236f * U
+    val canto = 248f * U
+    val mesaIzq = 12f * U
+    val poste = Rect(0f, 0f, 28f * U, 250f * U)
 
-    /** El haz: el largo y el fondo de cada tablilla (el fondo, sin escorzar) y el grueso escorzado de cada una. */
-    val largo = (enU * 0.58f).coerceIn(180f, 224f) * U
-    val fondo = 124f * U
-    val grueso = 6.3f * U
-    val ex = Offset(0.99756f, 0.05232f)
-    val ez = Offset(0.06976f, -0.74817f)
-    /** La esquina de abajo, delante a la izquierda, de la tablilla de abajo. */
-    val origen = Offset(maxOf(w * 0.5f - largo * 0.5f + 4f * U, 72f * U), 218f * U)
+    /** El haz: el largo y el fondo de cada tablilla (sin escorzar), el grueso escorzado de cada una y el centro de su pie. */
+    val largo = (enU * 0.5f).coerceIn(160f, 196f) * U
+    val fondo = 136f * U
+    val grueso = 11.5f * U
+    val centro = Offset(w * 0.5f + 6f * U, 180f * U)
     /** Lo que levanta el haz entero. */
     val alto = n * grueso
+    /** El borde izquierdo y el derecho del haz en la pantalla (para poner lo de los lados). */
+    val izqHaz = centro.x - largo * 0.52f
+    val derHaz = centro.x + largo * 0.56f
 
-    /** La lámpara de piedra (el centro de su asiento) y su llama; el cuenco; la clavija de la madeja. */
-    val lampara = Offset(w - 40f * U, 152f * U)
-    val llama = Offset(lampara.x - 26f * U, 131f * U)
-    val cuenco = Offset(maxOf(origen.x - 37f * U, 40f * U), 198f * U)
-    val clavija = Offset(poste.right + 1f * U, 46f * U)
+    /** La lámpara de piedra (el centro de su asiento) y su llama, en el pico; lo de la mesa; la clavija de la madeja. */
+    val lampara = Offset(maxOf(w - 40f * U, derHaz + 30f * U), 156f * U)
+    val llama = Offset(lampara.x - 26f * U, 133f * U)
+    val cuenco = Offset(maxOf(izqHaz - 34f * U, 38f * U), 206f * U)
+    val vaso = Offset(w - 22f * U, 202f * U)
+    val ovillo = Offset(derHaz + 14f * U, 226f * U)
+    val clavija = Offset(poste.right + 1f * U, 48f * U)
 
     /** Cuánta luz de la lámpara le llega a [p] de noche (1 junto a la llama); de día, toda. */
     fun cerca(p: Offset, oscuro: Boolean): Float {
@@ -117,33 +124,36 @@ internal class SitioLibretaGalia(val w: Float, val h: Float, val n: Int) {
         return (1.3f * exp(-sqrt(dx * dx + dy * dy) / 125f)).coerceIn(0.03f, 1f)
     }
 
-    /** La mancha del sol en la pared (en su plano). */
-    val solPared: Path = poligonoGalia(31f * U, 24f * U, w * 0.38f, 36f * U, w * 0.52f, mesaFondo, 31f * U, mesaFondo)
-
-    /** La mancha del sol en un plano horizontal que levanta [hs] sobre el tablero: corrida hacia la puerta y hacia arriba. */
-    fun solMesa(hs: Float): Path {
-        val dx = -0.8f * hs; val dy = -hs
-        return poligonoGalia(mesaIzq - 20f * U + dx, mesaFondo + dy, w * 0.52f + 7f * U + dx, mesaFondo + dy, w * 0.63f + dx, mesaFrente + dy, mesaIzq - 20f * U + dx, mesaFrente + dy)
-    }
-
-    /** El parche de la luna, de noche: chico, en la esquina de la mesa junto a la puerta, con el borde quebrado. */
-    val luna: Path = Path().apply {
-        val q = floatArrayOf(mesaIzq - 4f * U, 205f * U, 42f * U, 201f * U, 60f * U, mesaFrente, mesaIzq - 4f * U, mesaFrente)
+    /** Un cuadrilátero de luz (x, y de sus cuatro esquinas) con los bordes quebrados: la luz entra por las rendijas del zarzo. */
+    private fun quebrado(q: FloatArray, sem: Int, amp: Float): Path = Path().apply {
         moveTo(q[0], q[1])
         for (lado in 0 until 4) {
             val x0 = q[2 * lado]; val y0 = q[2 * lado + 1]; val x1 = q[(2 * lado + 2) % 8]; val y1 = q[(2 * lado + 3) % 8]
-            for (i in 1 until 6) {
-                val t = i / 6f
-                lineTo(x0 + (x1 - x0) * t + (azar(9010 + lado, i) - 0.5f) * 3f * U, y0 + (y1 - y0) * t + (azar(9020 + lado, i) - 0.5f) * 3f * U)
+            for (i in 1 until 7) {
+                val t = i / 7f
+                lineTo(x0 + (x1 - x0) * t + (azar(sem + lado, i) - 0.5f) * amp, y0 + (y1 - y0) * t + (azar(sem + 10 + lado, i) - 0.5f) * amp)
             }
             lineTo(x1, y1)
         }
         close()
     }
 
+    /**
+     * La mancha del sol en cada plano, por separado: en la pared (la cal y el zócalo), corrida hacia arriba y a la derecha; en el
+     * tablero, más baja y más a la izquierda, con otro sesgo (el borde de arriba es la sombra del dintel; el de la derecha, la de
+     * la jamba). En lo alto del haz solo prende el marco y deja un brillo en la cera.
+     */
+    val solPared: Path = quebrado(floatArrayOf(31f * U, 40f * U, w * 0.31f, 50f * U, w * 0.45f, mesaFondo, 31f * U, mesaFondo), 9600, 2.6f * U)
+    val solMesa: Path = quebrado(floatArrayOf(mesaIzq - 12f * U, 134f * U, w * 0.32f, mesaFondo + 2f * U, w * 0.42f, mesaFrente, mesaIzq - 12f * U, mesaFrente), 9620, 2.6f * U)
+    /** La mancha en un plano que levanta [hs] sobre el tablero (la cara del haz): corrida hacia la puerta y hacia arriba. */
+    fun solAlto(hs: Float): Path = Path().apply { addPath(solMesa, Offset(-0.55f * hs, -hs)) }
+
+    /** El parche de la luna, de noche: chico, en la esquina de la mesa junto a la puerta, con el borde quebrado. */
+    val luna: Path = quebrado(floatArrayOf(mesaIzq - 4f * U, 210f * U, 40f * U, 206f * U, 58f * U, mesaFrente, mesaIzq - 4f * U, mesaFrente), 9010, 3f * U)
+
     companion object {
-        /** Cuántas tablillas hay en el haz: una sola si no hay nada; con la primera hoja, tres (el haz se ve haz), y luego crecen despacio (al año, diez). */
-        fun tablillas(hojas: Int): Int = if (hojas <= 0) 1 else (2f + 2.4f * kotlin.math.ln(1f + hojas / 2f)).toInt().coerceIn(3, 10)
+        /** Cuántas tablillas hay en el haz: dos gruesas si no hay nada; tres con la primera hoja, y luego crecen despacio (siete al año). */
+        fun tablillas(hojas: Int): Int = if (hojas <= 0) 2 else (3f + 1.5f * kotlin.math.ln(1f + hojas / 4f)).toInt().coerceIn(3, 7)
     }
 }
 
@@ -156,11 +166,11 @@ internal object RinconLibretaGalia {
 
     fun DrawScope.rincon(s: SitioLibretaGalia, a: AireGalia, ac: AireGalia) {
         pared(s, a)
+        manta(s, a)
         poste(s, a)
         suelo(s, ac)
         mesa(s, ac)
-        cuenco(s, ac)
-        lampara(s, ac)
+        with(MesaLibretaGalia) { objetos(s, ac) }
     }
 
     private fun SitioLibretaGalia.k(p: Offset, a: AireGalia) = cerca(p, a.oscuro)
@@ -233,8 +243,10 @@ internal object RinconLibretaGalia {
         val l = s.llama
         drawPath(parcheGalia(Rect(l.x - 11f * U, l.y - 44f * U, l.x + 9f * U, l.y - 12f * U), 9055),
             Brush.verticalGradient(listOf(Color(0xFF6A5A4C).copy(alpha = 0f), Color(0xFF6A5A4C).copy(alpha = if (a.oscuro) 0.25f else 0.4f)), l.y - 44f * U, l.y - 12f * U), blendMode = BlendMode.Multiply)
+        friso(s, a)
         viga(s, a)
         tornapunta(s, a)
+        hierbas(s, a)
     }
 
     /** La viga de arriba, labrada a azuela, con la sombra que echa en el barro. */
@@ -291,6 +303,7 @@ internal object RinconLibretaGalia {
         }
         drawPath(veta, a.sombra(0.28f), style = Stroke(0.7f * U))
         drawRect(a.sombra(0.4f), Offset(r.right - 1.4f * U, r.top), Size(1.4f * U, r.height))
+        cunas(s, a)
         madeja(s, a)
     }
 
@@ -320,6 +333,137 @@ internal object RinconLibretaGalia {
         drawOval(a.sombra(0.35f), Offset(c.x - 1f * U, c.y + 2f * U), Size(6f * U, 4.4f * U), style = Stroke(0.6f * U))
     }
 
+    // ---------------------------------------------------------------- lo pintado y lo colgado
+
+    /**
+     * La cenefa bajo la viga, la misma del friso del estante: dos filetes de hollín y dos de glasto, la hilera de rombos de
+     * almagra apartados con un punto de hollín entre cada dos, alguno gastado (con mezcla de multiplicar: sigue la luz de debajo).
+     */
+    private fun DrawScope.friso(s: SitioLibretaGalia, a: AireGalia) {
+        val w = s.w; val U = s.U
+        val y0 = s.friso0; val y1 = s.friso1
+        val hollin = Color(0xFF5A4E44); val glasto = Color(0xFF8AA0BC); val almagra = Color(0xFFC0705A)
+        drawRect(hollin, Offset(0f, y0), Size(w, 1.6f * U), blendMode = BlendMode.Multiply)
+        drawRect(hollin, Offset(0f, y1 - 1.6f * U), Size(w, 1.6f * U), blendMode = BlendMode.Multiply)
+        drawRect(glasto, Offset(0f, y0 + 2.4f * U), Size(w, 1f * U), blendMode = BlendMode.Multiply)
+        drawRect(glasto, Offset(0f, y1 - 3.4f * U), Size(w, 1f * U), blendMode = BlendMode.Multiply)
+        val rombos = Path(); val puntos = Path()
+        val paso = 19f * U; val ym = (y0 + y1) / 2; val ra = (y1 - y0) * 0.26f
+        var x = 4f * U; var j = 0
+        while (x < w) {
+            val gasto = azar(9640, j)
+            if (gasto > 0.1f) {
+                val e = if (gasto < 0.3f) 0.6f else 1f
+                val cx = x + paso * 0.5f
+                rombos.moveTo(cx - paso * 0.3f * e, ym); rombos.lineTo(cx, ym - ra * e); rombos.lineTo(cx + paso * 0.3f * e, ym); rombos.lineTo(cx, ym + ra * e); rombos.close()
+            }
+            puntos.addOval(Rect(x - 1.1f * U, ym - 1.1f * U, x + 1.1f * U, ym + 1.1f * U))
+            x += paso; j++
+        }
+        drawPath(rombos, almagra, blendMode = BlendMode.Multiply)
+        drawPath(puntos, hollin, blendMode = BlendMode.Multiply)
+        for (q in 0 until 5) {
+            val xq = w * azar(9641, q)
+            drawLine(Color(0xFFE8DCC0).copy(alpha = if (a.oscuro) 0.08f else 0.5f), Offset(xq, y0 + 1.2f * U), Offset(xq + 7f * U, y1 - 1.6f * U), 1.1f * U)
+        }
+    }
+
+    /**
+     * El manojo de hierbas puesto a secar, colgado cabeza abajo de un clavo del friso: el cordel, los tallos que se abren y las
+     * hojitas y las flores de milenrama. De día echa su sombra en la cal, a la derecha.
+     */
+    private fun DrawScope.hierbas(s: SitioLibretaGalia, a: AireGalia) {
+        val U = s.U
+        val clavo = Offset(maxOf(s.w * 0.33f, 120f * U), s.friso1 + 2f * U)
+        val k = s.k(clavo, a)
+        val tallos = Path(); val hojas = Path(); val flores = Path()
+        val atado = clavo + Offset(0f, 9f * U)
+        for (j in 0 until 7) {
+            val ang = (-0.55f + 1.1f * j / 6f) + (azar(9650, j) - 0.5f) * 0.15f
+            val largo = (30f + 10f * azar(9651, j)) * U
+            val fin = atado + Offset(kotlin.math.sin(ang) * largo, kotlin.math.cos(ang) * largo)
+            tallos.moveTo(atado.x, atado.y); tallos.quadraticTo(atado.x + (fin.x - atado.x) * 0.3f, atado.y + largo * 0.5f, fin.x, fin.y)
+            for (q in 1 until 5) {
+                val t = q / 5f
+                val p = Offset(atado.x + (fin.x - atado.x) * t * t, atado.y + (fin.y - atado.y) * t)
+                val lado = if (q % 2 == 0) 1f else -1f
+                hojas.addOval(Rect(p.x + lado * 0.5f * U - 2.2f * U, p.y - 1f * U, p.x + lado * 0.5f * U + 2.2f * U, p.y + 1.4f * U))
+            }
+            if (j % 2 == 0) for (q in 0 until 3) { val c = fin + Offset((q - 1) * 1.8f * U, 1f * U + (q % 2) * 1.2f * U); flores.addOval(Rect(c.x - 1.3f * U, c.y - 1.3f * U, c.x + 1.3f * U, c.y + 1.3f * U)) }
+        }
+        if (!a.oscuro) translate(7f * U, 4f * U) { drawPath(hojas, a.sombra(0.28f)); drawPath(tallos, a.sombra(0.28f), style = Stroke(1f * U)) }
+        drawLine(a.dia(P.LANA_CRUDA, -0.2f, k), clavo, atado, 1f * U)
+        drawCircle(a.dia(P.HIERRO, 0f, k), 1.4f * U, clavo)
+        drawPath(tallos, a.dia(P.JUNCO_OSC, 0f, k), style = Stroke(1f * U, cap = StrokeCap.Round))
+        drawPath(hojas, a.dia(mezcla(P.LANA_VERDE, P.JUNCO, 0.45f), 0f, k))
+        drawPath(hojas, a.brillo(0.25f, k), style = Stroke(0.5f * U))
+        drawPath(flores, a.dia(Color(0xFFE4DAB8), 0f, k))
+        drawOval(a.dia(P.LANA_CRUDA, -0.1f, k), Offset(atado.x - 3f * U, atado.y - 2f * U), Size(6f * U, 4f * U))
+    }
+
+    /**
+     * La manta de lana a cuadros, colgada a la derecha de una vara sobre dos clavijas: la vuelta de arriba, los cuadros (el rojo
+     * de rubia con las listas de verde y de gualda), los pliegues y los flecos. Enmarca el rincón por ese lado; de noche la alumbra
+     * la lámpara.
+     */
+    private fun DrawScope.manta(s: SitioLibretaGalia, a: AireGalia) {
+        val U = s.U
+        val x0 = s.w - 84f * U; val x1 = s.w + 2f * U
+        val yv = 40f * U; val yb = 106f * U
+        val k = s.k(Offset((x0 + x1) / 2, (yv + yb) / 2), a)
+        // La vara y sus clavijas.
+        listOf(x0 + 8f * U, x1 - 12f * U).forEach { x -> drawRect(a.dia(P.ROBLE_OSC, 0f, k), Offset(x - 2f * U, yv - 1f * U), Size(4f * U, 6f * U)) }
+        // La sombra de la manta en la pared (de noche, hacia la izquierda, lejos de la lámpara).
+        val cuerpo = Path().apply {
+            moveTo(x0, yv + 3f * U); lineTo(x1, yv + 3f * U); lineTo(x1, yb + 2f * U)
+            var x = x1; var j = 0
+            while (x > x0) { x -= 7f * U; lineTo(maxOf(x, x0), yb + (azar(9660, j) - 0.3f) * 3f * U); j++ }
+            close()
+        }
+        drawPath(Path().apply { addPath(cuerpo, if (a.oscuro) Offset(-6f * U, 3f * U) else Offset(5f * U, 3f * U)) }, a.sombra(0.3f))
+        drawPath(cuerpo, a.dia(P.LANA_ROJA, 0f, k))
+        clipPath(cuerpo) {
+            val listas = Path(); val claras = Path()
+            var x = x0 + 6f * U
+            while (x < x1) { listas.addRect(Rect(x, yv, x + 5f * U, yb + 6f * U)); claras.addRect(Rect(x + 9f * U, yv, x + 10.4f * U, yb + 6f * U)); x += 22f * U }
+            var y = yv + 10f * U
+            while (y < yb) { listas.addRect(Rect(x0, y, x1, y + 5f * U)); claras.addRect(Rect(x0, y + 9f * U, x1, y + 10.4f * U)); y += 22f * U }
+            drawPath(listas, a.dia(P.LANA_VERDE, 0f, k).copy(alpha = 0.75f))
+            drawPath(claras, a.dia(P.LANA_OCRE, 0f, k).copy(alpha = 0.85f))
+            // Los pliegues: la caída de la lana, más honda en cada valle y con su loma de luz.
+            var xp = x0 + 12f * U; var q = 0
+            while (xp < x1) {
+                drawRect(a.sombra(0.22f), Offset(xp, yv), Size(5f * U, yb - yv + 6f * U))
+                drawRect(if (a.oscuro) a.filo(0.25f * k) else a.claro(0.18f), Offset(xp - 5f * U, yv), Size(2f * U, yb - yv + 6f * U))
+                xp += (17f + 5f * azar(9661, q)) * U; q++
+            }
+            if (!a.oscuro) drawRect(a.claro(0.12f), Offset(x0, yv), Size(12f * U, yb - yv + 6f * U))
+        }
+        // La vuelta de arriba, sobre la vara, y los flecos.
+        val vuelta = Rect(x0 - 1f * U, yv - 2f * U, x1, yv + 7f * U)
+        drawRect(a.dia(P.LANA_ROJA, -0.15f, k), vuelta.topLeft, vuelta.size)
+        drawRect(a.dia(P.LANA_VERDE, -0.1f, k).copy(alpha = 0.7f), Offset(vuelta.left, vuelta.top + 3f * U), Size(vuelta.width, 2f * U))
+        drawRect(a.sombra(0.35f), Offset(vuelta.left, vuelta.bottom - 1.2f * U), Size(vuelta.width, 1.2f * U))
+        val flecos = Path()
+        var xf = x0 + 2f * U
+        while (xf < x1) { flecos.moveTo(xf, yb); flecos.lineTo(xf + 0.6f * U, yb + (4f + 2f * azar(9662, xf.toInt())) * U); xf += 2.6f * U }
+        drawPath(flecos, a.dia(P.LANA_ROJA, -0.1f, k), style = Stroke(0.9f * U, cap = StrokeCap.Round))
+    }
+
+    /** Las cuñas del poste: la que aprieta la viga sobre su espiga y la del pie de la tornapunta, de roble más claro. */
+    private fun DrawScope.cunas(s: SitioLibretaGalia, a: AireGalia) {
+        val U = s.U; val r = s.poste
+        val k = s.k(r.center, a)
+        listOf(Offset(r.right, s.viga + 1f * U), Offset(r.right, 92f * U)).forEachIndexed { i, o ->
+            val cuna = poligonoGalia(o.x - 1f * U, o.y, o.x + 7f * U, o.y + 1.5f * U, o.x + 7f * U, o.y + 4f * U, o.x - 1f * U, o.y + 7f * U)
+            drawPath(Path().apply { addPath(cuna, Offset(1.5f * U, 1.5f * U)) }, a.sombra(0.4f))
+            drawPath(cuna, a.dia(P.ROBLE_LUZ, -0.05f, k))
+            drawLine(a.brillo(0.4f, k), Offset(o.x, o.y + 0.5f * U), Offset(o.x + 6.5f * U, o.y + 1.8f * U), 0.7f * U)
+            drawLine(a.sombra(0.5f), Offset(o.x + 7f * U, o.y + 1.5f * U), Offset(o.x + 7f * U, o.y + 4f * U), 0.8f * U)
+            if (i == 1) { drawCircle(a.dia(P.ROBLE_OSC, 0f, k), 1.8f * U, Offset(r.right - 8f * U, o.y + 3.5f * U)); drawCircle(a.brillo(0.3f, k), 0.7f * U, Offset(r.right - 8.6f * U, o.y + 2.9f * U)) }
+        }
+    }
+
     // ---------------------------------------------------------------- la mesa y el suelo
 
     /** El suelo de tierra pisada bajo la mesa, en su sombra, con alguna paja; las dos patas que se ven. */
@@ -339,7 +483,7 @@ internal object RinconLibretaGalia {
             drawPath(pata, a.dia(P.ROBLE_OSC, 0f, kk))
             drawRect(a.dia(P.ROBLE, 0f, kk).copy(alpha = 0.7f), Offset(x + (if (i == 0) 0f else 9f) * U, s.canto), Size(2.4f * U, h - s.canto))
         }
-        if (!a.oscuro) clipRect(0f, s.canto, w, h) { clipPath(s.solMesa(0f).let { p -> Path().apply { addPath(p, Offset(-10f * U, 36f * U)) } }) { drawRect(a.sol(P.TIERRA, a.dia(P.TIERRA, -0.2f), 0.6f), Offset(0f, s.canto), Size(w, h - s.canto)) } }
+        if (!a.oscuro) clipRect(0f, s.canto, w, h) { clipPath(s.solMesa.let { p -> Path().apply { addPath(p, Offset(-10f * U, 36f * U)) } }) { drawRect(a.sol(P.TIERRA, a.dia(P.TIERRA, -0.2f), 0.6f), Offset(0f, s.canto), Size(w, h - s.canto)) } }
     }
 
     /** El tablero de roble ahumado (tres tablas con sus juntas, su veta, gotas de cera) y su canto, con la mancha del sol. */
@@ -357,7 +501,7 @@ internal object RinconLibretaGalia {
             drawRect(Brush.verticalGradient(listOf(if (sol > 0f) a.sol(P.ROBLE, c0, sol) else c0, if (sol > 0f) a.sol(P.ROBLE, c1, sol) else c1), top.top, top.bottom), top.topLeft, top.size)
         }
         tablero(0f)
-        if (!a.oscuro) clipRect(top.left, top.top, top.right, top.bottom) { clipPath(s.solMesa(0f)) { tablero(0.8f) } }
+        if (!a.oscuro) clipRect(top.left, top.top, top.right, top.bottom) { clipPath(s.solMesa) { tablero(0.8f) } }
         else clipRect(top.left, top.top, top.right, top.bottom) {
             // La luna: el roble virado a un azul hondo, un paso más claro que lo que lo rodea.
             drawPath(s.luna, mezcla(a.luz(P.ROBLE, 0.05f), Color(0xFF34486E), 0.45f))
@@ -398,100 +542,4 @@ internal object RinconLibretaGalia {
     }
 
     // ---------------------------------------------------------------- lo que hay en la mesa
-
-    /** El cuenco de madera torneada con el pan de cera de abeja y la espátula de bronce para alisar las tablillas (visto de arriba, como el haz). */
-    private fun DrawScope.cuenco(s: SitioLibretaGalia, a: AireGalia) {
-        val U = s.U; val c = s.cuenco
-        val k = s.k(c, a)
-        val lit = if (a.oscuro) 0f else 0.85f
-        fun col(x: Color, f: Float = 0f) = if (lit > 0f) a.sol(x, a.dia(x, f), lit) else a.dia(x, f, k)
-        contactoGalia(c + Offset(5f * U, 14f * U), 52f * U, 14f * U, a, 0.4f, if (a.oscuro) -1f else 1f)
-        val boca = Rect(c.x - 23f * U, c.y - 14f * U, c.x + 23f * U, c.y + 14f * U)
-        val panza = Path().apply {
-            moveTo(boca.left, c.y); cubicTo(boca.left + 1f * U, c.y + 22f * U, boca.right - 1f * U, c.y + 22f * U, boca.right, c.y); close()
-        }
-        drawPath(panza, Brush.horizontalGradient(listOf(col(P.ROBLE, 0.15f), col(P.ROBLE_OSC), col(P.ROBLE_HONDO)), boca.left, boca.right))
-        if (a.oscuro) drawArc(a.lunar(0.45f), 100f, 80f, false, boca.topLeft, Size(boca.width, boca.height + 8f * U), style = Stroke(1.2f * U))
-        ovaloGalia(col(P.ROBLE_OSC, -0.1f), boca)
-        val dentro = boca.deflate(3f * U)
-        ovaloGalia(col(P.ROBLE_HONDO), dentro)
-        // La sombra del borde dentro del cuenco, del lado de la luz.
-        drawArc(a.sombra(0.45f), 180f, 140f, false, dentro.topLeft + Offset(2f * U, 2.5f * U), Size(dentro.width - 3f * U, dentro.height - 2f * U), style = Stroke(3f * U))
-        // El pan de cera: redondo, con las pasadas de la espátula.
-        val pan = Rect(c.x - 15f * U, c.y - 9f * U, c.x + 11f * U, c.y + 8f * U)
-        ovaloGalia(col(P.CERA_OSC), pan.translate(0.8f * U, 1.6f * U))
-        ovaloGalia(col(P.CERA, 0.08f), pan)
-        drawArc(col(P.CERA, 0.45f).copy(alpha = 0.85f), 195f, 80f, false, pan.topLeft + Offset(3f * U, 2f * U), Size(pan.width * 0.62f, pan.height * 0.7f), style = Stroke(1.3f * U, cap = StrokeCap.Round))
-        drawLine(col(P.CERA_OSC).copy(alpha = 0.8f), Offset(pan.left + 5f * U, pan.center.y + 2f * U), Offset(pan.right - 4f * U, pan.center.y - 0.5f * U), 0.9f * U)
-        drawLine(col(P.CERA_OSC).copy(alpha = 0.6f), Offset(pan.left + 8f * U, pan.center.y + 4.5f * U), Offset(pan.right - 6f * U, pan.center.y + 2.5f * U), 0.8f * U)
-        // La espátula de bronce, apoyada en el borde, con la hoja en la cera.
-        val e0 = Offset(c.x + 4f * U, c.y - 2f * U); val e1 = Offset(c.x + 31f * U, c.y - 19f * U)
-        drawLine(a.sombra(0.35f), e0 + Offset(2f * U, 3f * U), e1 + Offset(4f * U, 7f * U), 1.6f * U, StrokeCap.Round)
-        drawLine(col(P.BRONCE_OSC), e0, e1, 2f * U, StrokeCap.Round)
-        drawLine(col(P.BRONCE_LUZ).copy(alpha = 0.8f), e0 + Offset(-0.4f * U, -0.6f * U), e1 + Offset(-0.4f * U, -0.6f * U), 0.7f * U, StrokeCap.Round)
-        drawPath(poligonoGalia(e0.x - 8f * U, e0.y + 3f * U, e0.x + 1f * U, e0.y - 2.4f * U, e0.x + 2f * U, e0.y + 1.2f * U, e0.x - 7f * U, e0.y + 5f * U), col(P.BRONCE))
-        drawCircle(col(P.BRONCE_OSC), 1.8f * U, e1)
-        destelloGalia(e1 - Offset(0.6f * U, 0.6f * U), 0.7f * U, a, k)
-        // El labio del cuenco: la luz en el canto de enfrente y el brillo del lado de la puerta.
-        drawArc(col(P.ROBLE_LUZ).copy(alpha = 0.75f), 200f, 120f, false, dentro.topLeft, dentro.size, style = Stroke(1.2f * U))
-        drawArc(a.brillo(0.45f, k), 120f, 80f, false, boca.topLeft, boca.size, style = Stroke(1.1f * U))
-    }
-
-    /**
-     * La lámpara: una piedra baja y ancha, picada a cincel, con su pocillo de sebo y el pico a la izquierda, donde descansa la
-     * mecha de junco. De noche arde en el pico: la llama con su corazón, el halo y el charco en el tablero; de día, la mecha
-     * negra, apagada.
-     */
-    private fun DrawScope.lampara(s: SitioLibretaGalia, a: AireGalia) {
-        val U = s.U; val c = s.lampara
-        val k = s.k(c, a)
-        if (a.oscuro) drawOval(Brush.radialGradient(listOf(P.LLAMA.copy(alpha = 0.32f), P.LLAMA.copy(alpha = 0f)), s.llama + Offset(0f, 20f * U), 64f * U),
-            Offset(s.llama.x - 68f * U, s.llama.y - 8f * U), Size(136f * U, 56f * U))
-        contactoGalia(c + Offset(0f, 1f * U), 48f * U, 9f * U, a, 0.45f, if (a.oscuro) -1f else 1f)
-        val piedra = mezcla(P.PIEDRA, P.TIERRA_LUZ, 0.35f); val honda = mezcla(P.PIEDRA_OSC, P.TIERRA, 0.3f)
-        fun col(x: Color, f: Float, kk: Float) = if (a.oscuro) a.luz(x, kk) else a.dia(x, f)
-        val cuerpo = Path().apply {
-            moveTo(c.x - 21f * U, c.y - 14f * U); lineTo(c.x - 20f * U, c.y - 3f * U); quadraticTo(c.x, c.y + 5f * U, c.x + 20f * U, c.y - 3f * U); lineTo(c.x + 21f * U, c.y - 14f * U); close()
-        }
-        drawPath(cuerpo, Brush.horizontalGradient(listOf(col(piedra, 0.12f, (k * 1.2f).coerceAtMost(1f)), col(piedra, 0f, k), col(honda, 0f, k * 0.7f)), c.x - 21f * U, c.x + 21f * U))
-        // El pico, a la izquierda, un poco más bajo que el borde.
-        val pico = poligonoGalia(c.x - 18f * U, c.y - 19f * U, c.x - 29f * U, c.y - 17.5f * U, c.x - 28f * U, c.y - 12f * U, c.x - 18f * U, c.y - 9f * U)
-        drawPath(pico, col(piedra, 0.18f, 1f))
-        drawPath(pico, a.sombra(0.3f), style = Stroke(0.6f * U))
-        // Las picaduras del cincel.
-        val picos = Path()
-        for (j in 0 until 10) { val p = Offset(c.x + (azar(9110, j) - 0.5f) * 34f * U, c.y - (2f + 9f * azar(9111, j)) * U); picos.addOval(Rect(p.x - 0.8f * U, p.y - 0.5f * U, p.x + 0.8f * U, p.y + 0.5f * U)) }
-        drawPath(picos, a.sombra(0.35f))
-        // La cara de arriba, el pocillo y el sebo.
-        val cara = Rect(c.x - 21f * U, c.y - 26f * U, c.x + 21f * U, c.y - 3f * U)
-        ovaloGalia(col(piedra, 0.25f, (k * 1.1f).coerceAtMost(1f)), cara)
-        val pocillo = Rect(cara.left + 5f * U, cara.top + 3.5f * U, cara.right - 4.5f * U, cara.bottom - 4f * U)
-        ovaloGalia(a.sombra(0.6f), pocillo)
-        ovaloGalia(col(P.GRASA, -0.12f, k), Rect(pocillo.left + 1.2f * U, pocillo.top + 2.4f * U, pocillo.right - 0.6f * U, pocillo.bottom))
-        // La mecha de junco, del sebo al pico.
-        val punta = Offset(c.x - 25.5f * U, c.y - 14.6f * U)
-        drawPath(poligonoGalia(c.x - 28f * U, c.y - 16f * U, c.x - 22f * U, c.y - 16.8f * U, c.x - 21.5f * U, c.y - 12f * U, c.x - 27f * U, c.y - 12.5f * U), col(P.HOLLIN, 0f, k).copy(alpha = 0.75f))
-        drawLine(col(P.JUNCO_OSC, 0f, k), Offset(c.x - 12f * U, c.y - 14f * U), punta, 1.6f * U, StrokeCap.Round)
-        drawCircle(col(P.HOLLIN, 0f, k), 1.2f * U, punta)
-        if (!a.oscuro) {
-            drawArc(a.brillo(0.5f, 1f), 160f, 80f, false, cara.topLeft, cara.size, style = Stroke(1.2f * U))
-            drawRect(a.claro(0.25f), Offset(c.x - 20f * U, c.y - 13f * U), Size(2.4f * U, 10f * U))
-            return
-        }
-        // La llama, en el pico: el halo, el cuerpo y el corazón blanco.
-        val f = s.llama
-        drawCircle(Brush.radialGradient(listOf(P.LLAMA.copy(alpha = 0.45f), P.LLAMA.copy(alpha = 0f)), f, 26f * U), 26f * U, f)
-        val llama = Path().apply {
-            moveTo(f.x + 1f * U, f.y - 13f * U); cubicTo(f.x + 5.5f * U, f.y - 4f * U, f.x + 5f * U, f.y + 5f * U, f.x, f.y + 6f * U)
-            cubicTo(f.x - 5f * U, f.y + 5f * U, f.x - 5f * U, f.y - 4f * U, f.x + 1f * U, f.y - 13f * U); close()
-        }
-        drawPath(llama, P.LLAMA)
-        drawPath(Path().apply {
-            moveTo(f.x, f.y - 6f * U); cubicTo(f.x + 2.6f * U, f.y - 1f * U, f.x + 2.4f * U, f.y + 4f * U, f.x, f.y + 4.4f * U)
-            cubicTo(f.x - 2.4f * U, f.y + 4f * U, f.x - 2.6f * U, f.y - 1f * U, f.x, f.y - 6f * U); close()
-        }, P.FUEGO)
-        drawCircle(P.BRASA.copy(alpha = 0.8f), 1.2f * U, Offset(f.x, f.y + 5.4f * U))
-        // El filo cálido en el borde de la piedra que mira a la llama.
-        drawArc(a.filo(0.75f), 150f, 110f, false, cara.topLeft, cara.size, style = Stroke(1.3f * U))
-    }
 }
