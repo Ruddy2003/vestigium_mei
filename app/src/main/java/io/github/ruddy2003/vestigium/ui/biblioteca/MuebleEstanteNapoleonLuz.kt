@@ -91,7 +91,7 @@ internal object PaletaNapoleon {
     /** La noche de arriba (azul) y la de los Sueños; lo hondo del cuerpo de noche (caoba sangre de toro) y en los Sueños. */
     val NOCHE = Color(0xFF0C1432)
     val NOCHE_SUENOS = Color(0xFF15103A)
-    val SANGRE = Color(0xFF26100B)
+    val SANGRE = Color(0xFF1D0C08)
     val HONDO_SUENOS = Color(0xFF22102E)
     /** Lo hondo del paño de los casilleros de noche: verde botella (en los Sueños, azul pizarra). */
     val FONDO_NOCHE = Color(0xFF071A10)
@@ -136,7 +136,7 @@ internal class AireNapoleon(val oscuro: Boolean, val noche: Boolean, val cuerpo:
     /** El color propio de algo, hundido: oscuro, algo de su tono, con el aire de la noche. */
     fun hundido(c: Color): Color {
         val n = hondo
-        val f = if (cuerpo) 0.12f else 0.1f
+        val f = if (cuerpo) 0.09f else 0.1f
         return Color(c.red * f + n.red * 0.85f, c.green * f + n.green * 0.85f, c.blue * f + n.blue * 0.85f, c.alpha)
     }
 
@@ -160,7 +160,7 @@ internal class AireNapoleon(val oscuro: Boolean, val noche: Boolean, val cuerpo:
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) mezcla(alOcaso(c), p.LLAMA, 0.1f * k) else c
         // En el cuerpo la luz cae más deprisa: lo de en medio, entre una llama y otra, se hunde de verdad.
-        val e = if (cuerpo) 1.7 else 1.3
+        val e = if (cuerpo) 2.1 else 1.3
         return mezcla(mezcla(hundido(c), ambar(c, k), (1.1f * Math.pow(k.toDouble(), e).toFloat()).coerceAtMost(0.94f)), p.LLAMA, 0.12f * k)
     }
 

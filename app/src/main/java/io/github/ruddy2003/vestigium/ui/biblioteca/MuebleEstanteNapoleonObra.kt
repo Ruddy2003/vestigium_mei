@@ -237,13 +237,14 @@ internal object ObraEstanteNapoleon {
         val ultima = k == d.tablas.lastIndex
         val junta = r.top + r.height * (if (ultima) 0.9f else 0.6f)
         val n = tramos(a, r.width, w)
-        // Una fila de más arriba y abajo, del color del larguero.
+        // Una fila de más arriba y abajo, del color del larguero; el de arriba se mete una fila en el de abajo (la junta cae a
+        // medio píxel y, si no, asomaría el fondo).
         for (t in 0 until n) {
             val x0 = r.left + r.width * t / n - 1f; val x1 = r.left + r.width * (t + 1) / n + 1f
             val kk = cerca(Offset((x0 + x1) / 2, r.center.y))
             val luna = lunaCuerpoNapoleon(a, (x0 + x1) / 2 / w, r.center.y / w) * 0.6f
             fun c(col: Color, f: Float) = a.dia(col, f, kk).let { if (luna > 0f) a.sol(col, it, luna) else it }
-            drawRect(c(P.CAOBA, 0f), Offset(x0, r.top - 1f), Size(x1 - x0, junta - r.top + 1f))
+            drawRect(c(P.CAOBA, 0f), Offset(x0, r.top - 1f), Size(x1 - x0, junta - r.top + 2f))
             drawRect(c(P.CAOBA, -0.12f), Offset(x0, junta), Size(x1 - x0, r.bottom - junta + 1f))
         }
         val kc = cerca(r.center)
@@ -372,7 +373,10 @@ internal object ObraEstanteNapoleon {
     fun DrawScope.placa(p: PlacaEstante, medidor: TextMeasurer, a: AireNapoleon, k: Float) {
         val u = density
         val r0 = p.r
-        val r = Rect(r0.left + r0.width * 0.04f, r0.top - 1f * u, r0.right - r0.width * 0.04f, r0.bottom + 1f * u)
+        // Con un rótulo largo (el mes del tema y el común), el portaetiquetas se alarga lo que haga falta, hasta media tabla más.
+        val largo = (p.texto.length - 14).coerceIn(0, 22) / 22f
+        val mas = r0.width * 0.32f * largo
+        val r = Rect(r0.left - mas + r0.width * 0.04f, r0.top - 1f * u, r0.right + mas - r0.width * 0.04f, r0.bottom + 1f * u)
         val ore = r.height * 0.55f
         // Las orejas con su tornillo, la sombra del marco en la madera y el marco con su bisel.
         listOf(r.left - ore, r.right).forEach { x ->
@@ -392,7 +396,7 @@ internal object ObraEstanteNapoleon {
         drawRect(a.sombra(0.22f), t.topLeft, Size(t.width, t.height * 0.2f))
         drawRect(a.etiqueta(P.CARTULINA_OSC, k).copy(alpha = 0.35f), Offset(t.left, t.bottom - t.height * 0.15f), Size(t.width, t.height * 0.15f))
         val tinta = if (a.oscuro) Color(0xFF140C06) else P.TINTA
-        textoEn(medidor, p.texto, Rect(t.left + 3f * u, t.top + 0.6f * u, t.right - 3f * u, t.bottom), P.LETRA_TITULO, tinta, 11f, espaciado = 0.8f)
+        textoEn(medidor, p.texto, Rect(t.left + 3f * u, t.top + 0.6f * u, t.right - 3f * u, t.bottom), P.LETRA_TITULO, tinta, 11f, espaciado = 0.8f - 0.6f * largo, minimo = 7f)
     }
 
     // ---------------------------------------------------------------- la caja-zócalo
