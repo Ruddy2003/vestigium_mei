@@ -3690,24 +3690,20 @@ object EstantePirata : DisenoBiblioteca {
 }
 
 /**
- * Revolución: las cajas verdes de los libreros del muelle, sobre el pretil del río. El mueble es la caja por dentro:
- * listones verdes oscuros, costados con escuadras de hierro y el candado, tablas con el canto de hierro y la pintura
- * saltada, y cada mes en una etiqueta de papel pegada un poco torcida. Arriba, las dos tapas abiertas con los carteles
- * pegados por dentro (bandas tricolores, la escarapela, renglones: formas, no letras) y su tirante de hierro; detrás, la
- * otra orilla con sus casas de tejado de pizarra y el río; en medio, el farol de la calle en su poste de fundición. De
- * noche el farol se enciende, su reflejo tiembla en el río y se encienden algunas ventanas. Abajo, el pretil de sillares
- * con su albardilla y los adoquines del muelle. Cada entrada es un folleto cosido o un libro de lance (papel azul, gris,
- * becerro, jaspeado, ocre, verde) con la escarapela tricolor y sus cintas, la etiqueta de papel con el día, el mes en una
- * tira de papel y el sello del librero abajo; de noche, una luna en su lugar. Las hojas asoman más cuanto más escribiste.
- * Distinto del Ideario, que es el estante de la sección con sus colgaduras.
+ * Revolución: la librería de la trastienda de una imprenta de un faubourg de París en el otoño de 1790, de roble pintado de
+ * rojo sangre de toro con el interior de verde cardenillo, al gusto Luis XVI de un carpintero del barrio: cornisa con
+ * dentellones y friso de canales, costados como pilastras acanaladas, tablas molduradas con la etiqueta impresa del mes y el
+ * cuerpo bajo con dos cajones y patas de peonza. Contra el yeso ocre rosado con su cenefa de plantilla, junto a la ventana del
+ * cajista y bajo el tendedero de los pliegos; arriba manda la caja de tipos, con la vela de sebo en su candelero, y al pie
+ * están la estufa, las resmas y la tina de remojar el papel. Cada entrada es, según el día, el tomo en cartoné, el fajo de
+ * folletos o el rollo de carteles, con el ánimo en el papel. El estante y las entradas están en [MuebleEstanteRevolucion].
+ * Distinto del Ideario, que es la sala de la sección del barrio con su estantería de pino y sus carteles pegados.
  * La tapa es ese folleto o libro de lance de frente: la cinta tricolor con la escarapela, la etiqueta con la fecha y
  * lo escrito, el sello del librero y la divisa; al abrirse gira y deja ver la portada impresa (de noche, una luna y la
  * luz del farol).
  */
 object EstanteRevolucion : DisenoBiblioteca {
     private val VERDE = Color(0xFF2F4A34)
-    private val VERDE_LUZ = Color(0xFF4A6A4E)
-    private val VERDE_OSC = Color(0xFF1A2A1E)
     private val HIERRO = Color(0xFF26282A)
     private val HIERRO_LUZ = Color(0xFF5E6266)
     private val PIEDRA = Color(0xFFC8BFA8)
@@ -3719,14 +3715,6 @@ object EstanteRevolucion : DisenoBiblioteca {
     private val AZUL = Color(0xFF2B3F8C)
     private val BLANCO = Color(0xFFF2EEE4)
     private val ROJO = Color(0xFFB0282A)
-    private val CIELO = Color(0xFFC9D3D6)
-    private val ORILLA = Color(0xFF9E9A8E)
-    private val TEJADO = Color(0xFF6E7378)
-    private val RIO = Color(0xFF6F8A8A)
-    private val CIELO_NOCHE = Color(0xFF141A2A)
-    private val ORILLA_NOCHE = Color(0xFF232838)
-    private val RIO_NOCHE = Color(0xFF0F1A22)
-    private val VENTANA_NOCHE = Color(0xFFE8C66A)
     private val VIDRIO = Color(0xFFDCE2DC)
     private val FAROL = Color(0xFFF3D27A)
     private val LUNA = Color(0xFFEDE6C8)
@@ -3742,304 +3730,25 @@ object EstanteRevolucion : DisenoBiblioteca {
         return r
     }
 
-    override val corona = 0.4f
-    override val base = 0.12f
-    override val lado = 0.05f
-    override val altoRepisa: Dp = 110.dp
-    override val tabla: Dp = 15.dp
-    override val separa: Dp = 2.dp
+    override val corona = MuebleEstanteRevolucion.CORONA
+    override val base = MuebleEstanteRevolucion.BASE
+    override val lado = MuebleEstanteRevolucion.LADO
+    override val altoRepisa: Dp = MuebleEstanteRevolucion.ALTO_REPISA
+    override val tabla: Dp = MuebleEstanteRevolucion.TABLA
+    override val separa: Dp = MuebleEstanteRevolucion.SEPARA
     override val letra: FontFamily = LetraExtra.convencion
 
-    override fun ancho(palabras: Int): Dp = (20 + (palabras / 40).coerceAtMost(20)).dp
-    override fun alto(semilla: Int, palabras: Int): Float = 0.72f + 0.22f * azar(semilla, 1)
+    /** Mueble rehecho: el aura solo sale al tocar (ver [DisenoBiblioteca.auraEnReposo]). */
+    override val auraEnReposo = false
 
-    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, noche)
-        // El fondo de la caja: listones verdes a lo largo.
-        val cuerpo = Rect(d.izquierda.right, d.corona.bottom, d.derecha.left, d.base.top)
-        drawRect(c(VERDE_OSC), cuerpo.topLeft, cuerpo.size)
-        var y = cuerpo.top + 14 * u
-        while (y < cuerpo.bottom) {
-            drawLine(Color.Black.copy(alpha = 0.3f), Offset(cuerpo.left, y), Offset(cuerpo.right, y), 1f * u)
-            drawLine(Color.White.copy(alpha = 0.05f), Offset(cuerpo.left, y + 1 * u), Offset(cuerpo.right, y + 1 * u), 0.6f * u)
-            y += 14 * u
-        }
-        d.repisas.forEach { r ->
-            drawRect(Color.Black.copy(alpha = if (noche) 0.42f else 0.3f), r.topLeft, Size(r.width, 9 * u))
-            drawRect(Color.Black.copy(alpha = 0.15f), r.topLeft, Size(5 * u, r.height))
-            drawRect(Color.Black.copy(alpha = 0.15f), Offset(r.right - 5 * u, r.top), Size(5 * u, r.height))
-        }
-        // Los costados: la pared verde de la caja, con escuadras de hierro y, a la derecha, el candado.
-        listOf(d.izquierda, d.derecha).forEachIndexed { k, r ->
-            drawRect(c(VERDE), r.topLeft, r.size)
-            drawRect(c(VERDE_LUZ).copy(alpha = 0.5f), r.topLeft, Size(r.width * 0.25f, r.height))
-            d.tablas.forEach { tb ->
-                drawRect(c(HIERRO), Offset(r.left, tb.top - 6 * u), Size(r.width, 3 * u))
-                drawCircle(c(HIERRO_LUZ), 0.9f * u, Offset(r.left + r.width * 0.3f, tb.top - 4.5f * u))
-                drawCircle(c(HIERRO_LUZ), 0.9f * u, Offset(r.right - r.width * 0.3f, tb.top - 4.5f * u))
-            }
-            if (k == 1) d.repisas.firstOrNull()?.let { rp ->
-                val cx = r.center.x
-                val cy = rp.top + 18 * u
-                drawRect(c(HIERRO), Offset(cx - 2.5f * u, cy - 9 * u), Size(5 * u, 12 * u))
-                drawArc(c(HIERRO_LUZ), 180f, 180f, false, Offset(cx - 3 * u, cy - 1 * u), Size(6 * u, 6 * u), style = Stroke(1.2f * u))
-                drawRoundRect(c(HIERRO_LUZ), Offset(cx - 4 * u, cy + 2 * u), Size(8 * u, 7 * u), CornerRadius(1.5f * u))
-                drawCircle(Color.Black, 0.9f * u, Offset(cx, cy + 5 * u))
-            }
-            bisel(r, Color.White.copy(alpha = 0.1f), Color.Black.copy(alpha = 0.3f), 1.2f * u)
-        }
-        // Las tablas: el canto de la caja, con su fleje de hierro y la pintura saltada.
-        d.tablas.forEachIndexed { k, r ->
-            drawRect(c(VERDE), r.topLeft, r.size)
-            drawRect(c(VERDE_LUZ), r.topLeft, Size(r.width, 2 * u))
-            drawRect(c(HIERRO), Offset(r.left, r.bottom - 2.4f * u), Size(r.width, 2.4f * u))
-            for (j in 0 until 5) {
-                val x = r.left + r.width * azar(k * 11 + j, 17)
-                drawRect(c(PIEDRA_JUNTA).copy(alpha = 0.5f), Offset(x, r.top + r.height * (0.25f + 0.4f * azar(k * 11 + j, 18))), Size((2 + 4 * azar(k * 11 + j, 19)) * u, 1.6f * u))
-            }
-            drawRect(Color.Black.copy(alpha = 0.25f), Offset(r.left, r.bottom), Size(r.width, 3 * u))
-        }
-        // El rótulo de cada mes: una etiqueta de papel pegada, un poco torcida, con su doble filete.
-        d.placas.forEachIndexed { k, p ->
-            val r = p.r
-            rotate(if (k % 2 == 0) -1.5f else 1.2f, r.center) {
-                drawRect(Color.Black.copy(alpha = 0.2f), Offset(r.left + 1.2f * u, r.top + 1.2f * u), r.size)
-                drawRect(c(PAPEL), r.topLeft, r.size)
-                drawRect(c(PAPEL_VIEJO).copy(alpha = 0.6f), r.topLeft, Size(r.width * 0.18f, r.height))
-                val f1 = r.deflate(1.2f * u)
-                drawRect(c(TINTA).copy(alpha = 0.7f), f1.topLeft, f1.size, style = Stroke(0.6f * u))
-                val f2 = r.deflate(2.2f * u)
-                drawRect(c(TINTA).copy(alpha = 0.4f), f2.topLeft, f2.size, style = Stroke(0.4f * u))
-                textoEn(medidor, p.texto, r.deflate(2.6f * u), letra, c(TINTA), 10.5f, peso = FontWeight.Bold)
-            }
-        }
-        corona(d.corona, oscuro, noche)
-        // La base: el pretil de sillares con su albardilla y los adoquines del muelle.
-        val b = d.base
-        val piso = b.top + b.height * 0.72f
-        drawRect(c(ADOQUIN), Offset(0f, piso), Size(w, h - piso))
-        var ay = piso + 1 * u; var fila = 0
-        while (ay < h) {
-            var ax = if (fila % 2 == 0) 0f else 5 * u
-            while (ax < w) {
-                drawRoundRect(Color.Black.copy(alpha = 0.18f), Offset(ax + 0.6f * u, ay), Size(9 * u, 4.4f * u), CornerRadius(1.6f * u), style = Stroke(0.6f * u))
-                ax += 10 * u
-            }
-            ay += 5 * u; fila++
-        }
-        val pretil = Rect(b.left, b.top, b.right, piso)
-        drawRect(c(PIEDRA), pretil.topLeft, pretil.size)
-        val albardilla = pretil.top + pretil.height * 0.3f
-        drawRect(Color.White.copy(alpha = 0.12f), pretil.topLeft, Size(pretil.width, albardilla - pretil.top))
-        drawRect(Color.Black.copy(alpha = 0.22f), Offset(pretil.left, albardilla), Size(pretil.width, 2 * u))
-        var sx = pretil.left + 18 * u; var sk = 0
-        while (sx < pretil.right) {
-            drawLine(c(PIEDRA_JUNTA), Offset(sx, albardilla + 2 * u), Offset(sx, piso), 1f * u)
-            sx += 40 * u + 8 * u * azar(sk, 23); sk++
-        }
-        var jx = pretil.left + 30 * u
-        while (jx < pretil.right) { drawLine(c(PIEDRA_JUNTA), Offset(jx, pretil.top), Offset(jx, albardilla), 0.8f * u); jx += 60 * u }
-        drawRect(Color.Black.copy(alpha = 0.35f), Offset(pretil.left, pretil.top), Size(pretil.width, 2.4f * u))
-        drawRect(Color.Black.copy(alpha = 0.28f), Offset(pretil.left, piso), Size(pretil.width, 2.4f * u))
-    }
+    override fun ancho(palabras: Int): Dp = MuebleEstanteRevolucion.ancho(palabras)
+    override fun alto(semilla: Int, palabras: Int): Float = MuebleEstanteRevolucion.alto(semilla, palabras)
 
-    /** El cielo, la otra orilla, el río, el farol y las dos tapas abiertas con sus carteles. */
-    private fun DrawScope.corona(r: Rect, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        val horizonte = r.top + r.height * 0.3f
-        val agua = r.top + r.height * 0.42f
-        drawRect(if (noche) CIELO_NOCHE else c(CIELO), r.topLeft, Size(r.width, agua - r.top))
-        // La otra orilla: casas de tejado de pizarra, con ventanas (de noche, alguna encendida).
-        var bx = r.left; var bk = 0
-        while (bx < r.right) {
-            val bw = (26 + 18 * azar(bk, 41)) * u
-            val bh = r.height * (0.1f + 0.08f * azar(bk, 42))
-            val casa = Rect(bx, horizonte - bh, bx + bw, agua)
-            drawRect(if (noche) ORILLA_NOCHE else c(ORILLA), casa.topLeft, casa.size)
-            val techo = Path().apply {
-                moveTo(casa.left, casa.top); lineTo(casa.left + 3 * u, casa.top - 5 * u); lineTo(casa.right - 3 * u, casa.top - 5 * u); lineTo(casa.right, casa.top); close()
-            }
-            drawPath(techo, if (noche) ORILLA_NOCHE else c(TEJADO))
-            drawRect(Color.Black.copy(alpha = 0.15f), Offset(casa.right - 1 * u, casa.top), Size(1 * u, casa.height))
-            var wy = casa.top + 3 * u; var fj = 0
-            while (wy < horizonte - 2 * u) {
-                var wx = casa.left + 3 * u; var cj = 0
-                while (wx < casa.right - 4 * u) {
-                    val encendida = noche && azar(bk * 37 + fj * 7 + cj, 44) > 0.7f
-                    drawRect(if (encendida) VENTANA_NOCHE.copy(alpha = 0.8f) else Color.Black.copy(alpha = 0.18f), Offset(wx, wy), Size(2 * u, 3 * u))
-                    wx += 5 * u; cj++
-                }
-                wy += 6 * u; fj++
-            }
-            bx += bw + 1 * u; bk++
-        }
-        drawRect(if (noche) ORILLA_NOCHE else c(PIEDRA_JUNTA), Offset(r.left, agua - 4 * u), Size(r.width, 4 * u))
-        // El río, con sus rizos.
-        drawRect(if (noche) RIO_NOCHE else c(RIO), Offset(r.left, agua), Size(r.width, r.bottom - agua))
-        var ry = agua + 3 * u; var rf = 0
-        while (ry < r.bottom) {
-            var rx = r.left + (if (rf % 2 == 0) 4f else 12f) * u
-            while (rx < r.right) {
-                drawLine(Color.White.copy(alpha = if (noche) 0.06f else 0.18f), Offset(rx, ry), Offset(rx + 5 * u, ry), 0.7f * u)
-                rx += 16 * u
-            }
-            ry += 4 * u; rf++
-        }
-        // El farol de la calle en su poste de fundición; de noche, encendido y reflejado en el río.
-        val lx = r.center.x
-        val cabeza = Rect(lx - 7 * u, r.top + r.height * 0.1f, lx + 7 * u, r.top + r.height * 0.1f + 16 * u)
-        if (noche) {
-            mancha(cabeza.center, r.height * 0.5f, FAROL.copy(alpha = 0.45f))
-            for (j in 0 until 7) {
-                val ancho0 = (4f - (j % 3)) * u
-                drawLine(FAROL.copy(alpha = 0.5f - j * 0.05f), Offset(lx - ancho0, agua + 4 * u + j * 5 * u), Offset(lx + ancho0, agua + 4 * u + j * 5 * u), 1.2f * u)
-            }
-        }
-        drawLine(c(HIERRO), Offset(lx, r.bottom), Offset(lx, cabeza.bottom + 2 * u), 3 * u)
-        drawRect(c(HIERRO), Offset(lx - 3 * u, cabeza.bottom + 2 * u), Size(6 * u, 4 * u))
-        drawRect(c(HIERRO), Offset(lx - 4 * u, agua + 10 * u), Size(8 * u, 3 * u))
-        drawArc(c(HIERRO), 180f, 90f, false, Offset(lx - 8 * u, cabeza.bottom + 4 * u), Size(8 * u, 8 * u), style = Stroke(1f * u))
-        drawArc(c(HIERRO), 270f, 90f, false, Offset(lx, cabeza.bottom + 4 * u), Size(8 * u, 8 * u), style = Stroke(1f * u))
-        val vidrio = Path().apply {
-            moveTo(cabeza.left, cabeza.top + 3 * u); lineTo(cabeza.right, cabeza.top + 3 * u)
-            lineTo(cabeza.right - 3 * u, cabeza.bottom); lineTo(cabeza.left + 3 * u, cabeza.bottom); close()
-        }
-        drawPath(vidrio, if (noche) FAROL else c(VIDRIO).copy(alpha = 0.85f))
-        drawPath(vidrio, c(HIERRO), style = Stroke(1.2f * u))
-        drawLine(c(HIERRO), Offset(lx, cabeza.top + 3 * u), Offset(lx, cabeza.bottom), 0.8f * u)
-        val capuchon = Path().apply { moveTo(cabeza.left - 2 * u, cabeza.top + 3 * u); lineTo(lx, cabeza.top - 5 * u); lineTo(cabeza.right + 2 * u, cabeza.top + 3 * u); close() }
-        drawPath(capuchon, c(HIERRO))
-        drawCircle(c(HIERRO), 1.6f * u, Offset(lx, cabeza.top - 6 * u))
-        // Las dos tapas abiertas, con sus carteles pegados por dentro y su tirante.
-        val bisagra = r.bottom - r.height * 0.05f
-        val arriba = r.top + r.height * 0.5f
-        listOf(0.06f to 0.44f, 0.56f to 0.94f).forEachIndexed { k, (fa, fb) ->
-            val x0 = r.left + r.width * fa; val x1 = r.left + r.width * fb
-            val tapa = Path().apply {
-                moveTo(x0, bisagra); lineTo(x0 + r.width * 0.02f, arriba); lineTo(x1 - r.width * 0.02f, arriba); lineTo(x1, bisagra); close()
-            }
-            drawPath(tapa, c(VERDE))
-            drawPath(tapa, c(VERDE_OSC), style = Stroke(3 * u))
-            drawRect(c(VERDE_LUZ), Offset(x0 + r.width * 0.02f, arriba - 2 * u), Size(x1 - x0 - r.width * 0.04f, 2.5f * u))
-            carteles(Rect(x0 + r.width * 0.04f, arriba + 5 * u, x1 - r.width * 0.04f, bisagra - 5 * u), k, oscuro, noche)
-            val tx = if (k == 0) x1 - 4 * u else x0 + 4 * u
-            val tz = if (k == 0) x1 - r.width * 0.035f else x0 + r.width * 0.035f
-            drawLine(c(HIERRO), Offset(tx, bisagra), Offset(tz, arriba + (bisagra - arriba) * 0.3f), 1.2f * u)
-        }
-        // El canto de la caja con sus bisagras.
-        drawRect(c(VERDE), Offset(r.left, bisagra), Size(r.width, r.bottom - bisagra))
-        drawRect(c(HIERRO), Offset(r.left, bisagra), Size(r.width, 1.6f * u))
-        listOf(0.12f, 0.38f, 0.62f, 0.88f).forEach { f -> drawRect(c(HIERRO_LUZ), Offset(r.left + r.width * f - 4 * u, bisagra - 1 * u), Size(8 * u, 3.6f * u)) }
-    }
+    override fun DrawScope.estante(d: DisposicionEstante, medidor: TextMeasurer, oscuro: Boolean, noche: Boolean) =
+        with(MuebleEstanteRevolucion) { estante(d, medidor, oscuro, noche) }
 
-    /** Los carteles pegados en una tapa: bandas tricolores, la escarapela y renglones (formas, no letras). */
-    private fun DrawScope.carteles(z: Rect, k: Int, oscuro: Boolean, noche: Boolean) {
-        val u = density
-        fun c(x: Color) = t(x, oscuro, noche)
-        val zonas = listOf(
-            Rect(z.left, z.top, z.left + z.width * 0.3f, z.top + z.height * 0.82f),
-            Rect(z.left + z.width * 0.35f, z.top + z.height * 0.08f, z.left + z.width * 0.66f, z.bottom),
-            Rect(z.left + z.width * 0.71f, z.top, z.right, z.top + z.height * 0.7f),
-        )
-        zonas.forEachIndexed { j, cr ->
-            drawRect(Color.Black.copy(alpha = 0.2f), Offset(cr.left + 1 * u, cr.top + 1 * u), cr.size)
-            drawRect(c(PAPEL), cr.topLeft, cr.size)
-            val tipo = (j + k) % 3
-            if (tipo == 0) {
-                // Bandas tricolores.
-                val tercio = cr.width / 3
-                drawRect(c(AZUL), Offset(cr.left, cr.top), Size(tercio, cr.height))
-                drawRect(c(BLANCO), Offset(cr.left + tercio, cr.top), Size(tercio, cr.height))
-                drawRect(c(ROJO), Offset(cr.left + tercio * 2, cr.top), Size(tercio, cr.height))
-            } else if (tipo == 1) {
-                // La escarapela y unos renglones debajo.
-                val ce = Offset(cr.center.x, cr.top + cr.height * 0.32f)
-                val re = minOf(cr.width, cr.height) * 0.26f
-                drawCircle(c(ROJO), re, ce); drawCircle(c(BLANCO), re * 0.66f, ce); drawCircle(c(AZUL), re * 0.33f, ce)
-                for (l in 0 until 3) {
-                    val ly = cr.top + cr.height * (0.66f + 0.1f * l)
-                    drawLine(c(TINTA).copy(alpha = 0.5f), Offset(cr.left + cr.width * 0.15f, ly), Offset(cr.right - cr.width * (0.15f + 0.1f * l), ly), 0.8f * u)
-                }
-            } else {
-                // Un pasquín: una barra gruesa arriba y renglones.
-                drawRect(c(TINTA).copy(alpha = 0.8f), Offset(cr.left + cr.width * 0.12f, cr.top + cr.height * 0.1f), Size(cr.width * 0.76f, cr.height * 0.12f))
-                drawLine(c(ROJO), Offset(cr.left + cr.width * 0.12f, cr.top + cr.height * 0.27f), Offset(cr.right - cr.width * 0.12f, cr.top + cr.height * 0.27f), 0.8f * u)
-                var ly = cr.top + cr.height * 0.36f
-                while (ly < cr.bottom - cr.height * 0.08f) {
-                    drawLine(c(TINTA).copy(alpha = 0.45f), Offset(cr.left + cr.width * 0.12f, ly), Offset(cr.right - cr.width * 0.12f, ly), 0.7f * u)
-                    ly += 3 * u
-                }
-            }
-            drawRect(c(PAPEL_VIEJO).copy(alpha = 0.35f), Offset(cr.left, cr.bottom - cr.height * 0.12f), Size(cr.width, cr.height * 0.12f))
-        }
-    }
-
-    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) {
-        val u = density
-        val w = size.width; val h = size.height
-        fun c(x: Color) = t(x, oscuro, v.noche)
-        val tinte = CUBIERTAS[(v.semilla and 0x7fffffff) % CUBIERTAS.size]
-        val tapa = c(if (v.tono != null) mezcla(tinte, v.tono, 0.22f) else tinte)
-        val folleto = azar(v.semilla, 3) > 0.5f
-        drawRoundRect(tapa, Offset.Zero, size, CornerRadius((if (folleto) 0.6f else 1.6f) * u))
-        if (folleto) {
-            // El folleto cosido: las puntadas a la izquierda y el doblez claro a la derecha.
-            var py = h * 0.06f
-            while (py < h * 0.94f) { drawLine(c(PAPEL).copy(alpha = 0.55f), Offset(w * 0.1f, py), Offset(w * 0.1f, py + 2 * u), 0.6f * u); py += 4 * u }
-            drawRect(Color.White.copy(alpha = 0.12f), Offset(w * 0.9f, 0f), Size(w * 0.1f, h))
-        } else {
-            // El libro de lance: luz, sombra y las bandas del lomo con su filete.
-            drawRect(Color.White.copy(alpha = 0.1f), Offset(w * 0.06f, 0f), Size(w * 0.12f, h))
-            drawRect(Color.Black.copy(alpha = 0.25f), Offset(w * 0.86f, 0f), Size(w * 0.14f, h))
-            listOf(0.06f, 0.94f).forEach { f ->
-                drawRect(Color.Black.copy(alpha = 0.3f), Offset(0f, h * f - 1.4f * u), Size(w, 2.8f * u))
-                drawLine(Color(0xFFC9A24E).copy(alpha = 0.6f), Offset(0f, h * f - 2 * u), Offset(w, h * f - 2 * u), 0.5f * u)
-            }
-        }
-        // Las hojas que asoman por arriba: más cuanto más escribiste.
-        val hojas = 1 + (v.lleno * 3).toInt()
-        for (j in 0 until hojas) {
-            val y = (0.8f + j * 1.3f) * u
-            drawLine(c(PAPEL).copy(alpha = 0.7f), Offset(w * 0.14f, y), Offset(w * 0.86f, y), 0.5f * u)
-        }
-        // La escarapela tricolor con sus cintas.
-        val ce = Offset(w * 0.5f, h * 0.17f)
-        val re = minOf(w * 0.3f, h * 0.07f)
-        drawLine(c(ROJO), Offset(ce.x - re * 0.3f, ce.y), Offset(ce.x - re * 0.6f, ce.y + re * 1.8f), re * 0.4f)
-        drawLine(c(AZUL), Offset(ce.x + re * 0.3f, ce.y), Offset(ce.x + re * 0.6f, ce.y + re * 1.8f), re * 0.4f)
-        drawCircle(c(ROJO), re, ce)
-        drawCircle(c(BLANCO), re * 0.66f, ce)
-        drawCircle(c(AZUL), re * 0.33f, ce)
-        for (j in 0 until 8) {
-            val a = Math.toRadians(j * 45.0)
-            drawLine(Color.Black.copy(alpha = 0.15f), Offset(ce.x + kotlin.math.cos(a).toFloat() * re * 0.4f, ce.y + kotlin.math.sin(a).toFloat() * re * 0.4f), Offset(ce.x + kotlin.math.cos(a).toFloat() * re, ce.y + kotlin.math.sin(a).toFloat() * re), 0.5f * u)
-        }
-        // La etiqueta de papel con el día.
-        val etiqueta = Rect(w * 0.12f, h * 0.32f, w * 0.88f, h * 0.47f)
-        drawRect(c(PAPEL), etiqueta.topLeft, etiqueta.size)
-        drawRect(c(TINTA), etiqueta.topLeft, etiqueta.size, style = Stroke(0.6f * u))
-        val filete = etiqueta.deflate(1.2f * u)
-        drawRect(c(TINTA).copy(alpha = 0.5f), filete.topLeft, filete.size, style = Stroke(0.4f * u))
-        textoEn(medidor, v.dia, etiqueta.deflate(1.6f * u), letra, c(TINTA), 14f, peso = FontWeight.Bold)
-        // El mes en una tira de papel, a lo largo.
-        val tira = Rect(w * 0.24f, h * 0.51f, w * 0.76f, h * 0.84f)
-        drawRect(c(PAPEL_VIEJO), tira.topLeft, tira.size)
-        drawRect(c(TINTA).copy(alpha = 0.4f), tira.topLeft, tira.size, style = Stroke(0.4f * u))
-        textoEn(medidor, v.mes, tira.deflate(0.8f * u), letra, c(TINTA), 8.5f, vertical = true, minimo = 4f)
-        // El sello del librero abajo; de noche, una luna.
-        val cs = Offset(w * 0.5f, h * 0.91f)
-        val rs = minOf(w * 0.2f, 4 * u)
-        if (v.noche) {
-            drawCircle(LUNA, rs, cs)
-            drawCircle(tapa, rs * 0.8f, Offset(cs.x + rs * 0.4f, cs.y - rs * 0.2f))
-        } else {
-            drawCircle(c(TINTA).copy(alpha = 0.55f), rs, cs, style = Stroke(0.8f * u))
-            drawCircle(c(TINTA).copy(alpha = 0.55f), rs * 0.4f, cs)
-        }
-    }
+    override fun DrawScope.volumen(v: Volumen, medidor: TextMeasurer, oscuro: Boolean) =
+        with(MuebleEstanteRevolucion) { volumen(v, medidor, oscuro) }
 
     // ---------------------------------------------------------------- la tapa
 
