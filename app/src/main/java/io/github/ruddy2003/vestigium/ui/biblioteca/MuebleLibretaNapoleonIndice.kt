@@ -10,7 +10,9 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.drawText
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import io.github.ruddy2003.vestigium.ui.LetraExtra
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /** Los caminos de una pestaña, armados una vez por tamaño: el cabo de cinta que sale del ojal (sin ánimo). */
@@ -18,7 +20,7 @@ private class FormasPestanaNapoleon(val w: Float, val h: Float, u: Float) {
     val tarjeta = Rect(3f * u, 3f * u, w - 3f * u, h - 6f * u)
     val banda = Rect(tarjeta.left, tarjeta.top, tarjeta.right, tarjeta.top + 12f * u)
     val cajaSemana = Rect(banda.left + 2f * u, banda.top + 1.5f * u, banda.right - 2f * u, banda.bottom - 1f * u)
-    val cajaDia = Rect(tarjeta.left + 1f * u, banda.bottom + 1f * u, tarjeta.right - 1f * u, tarjeta.bottom - 12f * u)
+    val cajaDia = Rect(tarjeta.left + 1f * u, banda.bottom + 3.5f * u, tarjeta.right - 1f * u, tarjeta.bottom - 10f * u)
     val sello = Offset(tarjeta.right - 9f * u, tarjeta.bottom - 5f * u)
     val ojal = Offset(tarjeta.left + 8f * u, tarjeta.bottom - 7f * u)
     /** El cabo de cinta que sale del ojal hacia la izquierda y asoma por el canto de la tarjeta, cortado en cola de golondrina. */
@@ -30,7 +32,7 @@ private class FormasPestanaNapoleon(val w: Float, val h: Float, u: Float) {
 
 /**
  * El índice de la libreta de Napoleónico: cada día, una tarjeta de cartulina del color de la vitela del legajo, con su cabecera de
- * papel pizarra (el de las carpetas del archivo) y la letra de la semana; el día, en la letra de la casa. Con ánimo, el sello de lacre del color
+ * papel pizarra (el de las carpetas del archivo) y la letra de la semana; el día, en una letra de trazo firme (la Gaceta en negrita), que se lea de un vistazo. Con ánimo, el sello de lacre del color
  * del ánimo (los mismos tintes que las entradas de la biblioteca), abajo a la derecha, montado en el borde; sin ánimo no lleva
  * sello sino un ojal de latón con un cabo de la cinta carmesí que asoma por la izquierda (la silueta lo dice, no solo el
  * color). El rótulo de cada mes, una tira de papel pizarra con sus puntas de becerro y, en medio, la cartulina con el mes.
@@ -50,13 +52,13 @@ internal object IndiceLibretaNapoleon {
     private val medidas = arrayOf(HashMap<String, TextLayoutResult>(), HashMap<String, TextLayoutResult>())
     private val claveMedidas = FloatArray(3)
 
-    private fun DrawScope.texto(medidor: TextMeasurer, texto: String, caja: Rect, tinta: Color, tam: Float, peso: FontWeight, oscuro: Boolean) {
+    private fun DrawScope.texto(medidor: TextMeasurer, texto: String, caja: Rect, letra: FontFamily, tinta: Color, tam: Float, peso: FontWeight, oscuro: Boolean) {
         val k = claveMedidas
         val ancho = formas?.w ?: 0f
         if (k[0] != density || k[1] != fontScale || k[2] != ancho) { medidas.forEach { it.clear() }; k[0] = density; k[1] = fontScale; k[2] = ancho }
         val mapa = medidas[if (oscuro) 1 else 0]
         val clave = "$tam:$texto"
-        val capa = mapa[clave] ?: (capaEn(medidor, texto, caja, P.LETRA, tinta, tam, peso = peso, minimo = tam * 0.55f) ?: return).also { mapa[clave] = it }
+        val capa = mapa[clave] ?: (capaEn(medidor, texto, caja, letra, tinta, tam, peso = peso, minimo = tam * 0.55f) ?: return).also { mapa[clave] = it }
         drawText(capa, topLeft = Offset(caja.center.x - capa.size.width / 2f, caja.center.y - capa.size.height / 2f))
     }
 
@@ -81,8 +83,9 @@ internal object IndiceLibretaNapoleon {
         drawRect(mezcla(pz, Color.White, 0.22f), f.banda.topLeft, Size(f.banda.width, 1f * u))
         drawRect(mezcla(pz, Color.Black, 0.35f), Offset(f.banda.left, f.banda.bottom - 1f * u), Size(f.banda.width, 1f * u))
         drawRect(P.TINTA.copy(alpha = 0.4f), Offset(t.left + 2.5f * u, f.banda.bottom + 2f * u), Size(t.width - 5f * u, t.bottom - f.banda.bottom - 4.5f * u), style = Stroke(0.6f * u))
-        texto(medidor, e.semana, f.cajaSemana, mezcla(P.PAPEL, pz, 0.12f), 8.5f, FontWeight.Bold, oscuro)
-        texto(medidor, e.dia, f.cajaDia, P.TINTA, 18f, FontWeight.SemiBold, oscuro)
+        texto(medidor, e.semana, f.cajaSemana, P.LETRA, mezcla(P.PAPEL, pz, 0.12f), 8.5f, FontWeight.Bold, oscuro)
+        // El día, en la letra de la Gaceta en negrita: la Bodoni de la casa tiene los trazos finos tan finos que el «1» y el «4» se pierden.
+        texto(medidor, e.dia, f.cajaDia, LetraExtra.gaceta, P.TINTA, 18f, FontWeight.Bold, oscuro)
         val tinte = tonoDeDiaNapoleon(e.tono, oscuro)
         if (tinte != null) {
             // El sello de lacre del color del ánimo, montado en el borde: el charco de cera, el disco estampado y su filo claro.

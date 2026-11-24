@@ -38,13 +38,13 @@ internal class SitioLibretaNapoleon(val w: Float, val h: Float, u: Float, hojas:
 
     // ---------------------------------------------------------------- el atril
 
-    /** La tabla empinada del atril (arriba, su remate en arco rebajado). */
+    /** La tabla empinada del atril (arriba, su remate recto con su moldura). */
     val atrilIzq = cx - 100f * U
     val atrilDer = cx + 100f * U
-    val atrilArriba = 30f * U
+    val atrilArriba = 46f * U
     /** El listón de abajo: su cara de arriba (donde apoya el legajo) y su borde de abajo; y donde pisa el atril en el tablero. */
-    val liston = 184f * U
-    val listonAbajo = 196f * U
+    val liston = 182f * U
+    val listonAbajo = 197f * U
     val pie = 206f * U
     /** El grueso de la tabla, que se ve por la derecha (se mira un poco desde ese lado). */
     val tabla = 6f * U
@@ -57,19 +57,22 @@ internal class SitioLibretaNapoleon(val w: Float, val h: Float, u: Float, hojas:
      * El grueso del legajo y adónde corre de la cubierta de delante a la de atrás: hacia abajo (el atril está empinado y se mira
      * un poco desde arriba: se ve el canto de abajo, el que pisa el listón) y a la derecha (se mira un poco desde ese lado).
      */
-    val grueso = (10f + 24f * lleno) * U
-    val atras = Offset(grueso * 0.42f, grueso * 0.52f)
-    /** La cubierta de delante: el legajo pisa el listón con la de atrás, así que cuanto más grueso, más arriba queda esta. */
-    val tapa = Rect(cx - 104f * U, liston - atras.y - 124f * U, cx + 82f * U, liston - atras.y)
+    val grueso = (15f + 22f * lleno) * U
+    val atras = Offset(grueso * 0.5f, grueso * 0.55f)
+    /** La carpeta de vitela, por delante: el legajo pisa el listón con la de atrás, así que cuanto más grueso, más arriba queda esta. */
+    val tapa = Rect(cx - 106f * U, liston - atras.y - 122f * U, cx + 78f * U, liston - atras.y)
     /** Los pliegos, que sobresalen de la vitela por la derecha y por arriba (su cara de delante, antes de correr hacia atrás). */
-    val pliegos = Rect(tapa.left + 3f * U, tapa.top - 4f * U, tapa.right + 10f * U, tapa.bottom - 1.5f * U)
+    val pliegos = Rect(tapa.left + 3f * U, tapa.top - 5f * U, tapa.right + 12f * U, tapa.bottom - 1.5f * U)
     /** El doblez de la vitela junto al lomo, a la izquierda. */
     val lomo = 12f * U
-    /** La cinta de balduque que ciñe el legajo a lo ancho (sale del lomo y da la vuelta por el canto) y su nudo. */
-    val cintaY = tapa.top + 94f * U
-    val lazo = Offset(tapa.left + 36f * U, cintaY)
-    /** La cartela rayada a tinta en la vitela, con el nombre y la cuenta (encima de la cinta). */
-    val rotulo = Rect(tapa.left + lomo + 14f * U, tapa.top + 14f * U, tapa.right - 10f * U, tapa.top + 72f * U)
+    /** La cinta de balduque que ciñe el legajo a lo ancho (sale del lomo y da la vuelta por el canto) y su lazo. */
+    val cintaY = tapa.top + 92f * U
+    val lazo = Offset(tapa.left + 40f * U, cintaY)
+    /** Las dos cintas de atar de la vitela, en el canto de la derecha (a qué alto). */
+    val atadura1 = tapa.top + 30f * U
+    val atadura2 = tapa.top + 64f * U
+    /** La cartela rayada a tinta en la vitela, con el nombre y la cuenta en dos renglones (encima de la cinta, más chica que la cara). */
+    val rotulo = Rect(tapa.center.x - 58f * U, tapa.top + 16f * U, tapa.center.x + 62f * U, tapa.top + 70f * U)
 
     // ---------------------------------------------------------------- lo de la mesa
 
@@ -85,10 +88,10 @@ internal class SitioLibretaNapoleon(val w: Float, val h: Float, u: Float, hojas:
 /**
  * La libreta de momentos de Napoleónico: el legajo de despachos en el atril del ayudante de campo, en otro rincón del mismo cuarto
  * requisado que la biblioteca y el Ideario. Sobre la mesa de escribir de caoba con su cuero verde, el atril de sobremesa,
- * empinado, con su remate en arco, su puntal y su cremallera de latón; en él, apoyado en el listón, el legajo: los pliegos
- * doblados en su carpeta de vitela flexible (con la esquina doblada y la cartela rayada a tinta con el nombre y la cuenta), ceñidos
- * con la cinta de balduque carmesí, anudada, cuyos cabos cuelgan por delante del listón; bajo la cinta, el último despacho, todavía
- * cerrado con su lacre. Engorda con los despachos (más canto abajo y a la derecha, más pliegos que asoman con su lacre). A la
+ * empinado y bajo, con su remate recto de moldura, su puntal y su cremallera de latón; en él, apoyado en el listón, el legajo: los
+ * pliegos doblados en su carpeta de vitela flexible (alabeada y manchada, con dos esquinas dobladas, sus cintas de atar en el
+ * canto y la cartela rayada a tinta con el nombre y la cuenta), ceñidos con la cinta de balduque carmesí con su lazo, cuyos cabos
+ * cuelgan por delante del listón; bajo la cinta, el último despacho, una carta doblada en tres y cerrada con su lacre. Engorda con los despachos (más canto abajo y a la derecha, más pliegos que asoman con su lacre). A la
  * izquierda, la cortina de seda verde recogida, por donde entra la luz, y el tintero de bronce con su salvadera y la pluma; a la
  * derecha, el portapliegos del correo colgado de su clavo y, en la mesa, la palmatoria de lacrar con su vela y la barra de lacre.
  *
@@ -107,6 +110,9 @@ internal object MuebleLibretaNapoleon {
         val dx = (p.x - s.llama.x) / s.U; val dy = (p.y - s.llama.y) / s.U
         return (1.8f * exp(-sqrt(dx * dx + dy * dy * 1.15f) / 150f)).coerceIn(0.02f, 1f)
     }
+
+    /** Cuánta luz de la vela le llega a la pared a [d] dp de la llama (de noche): cae más deprisa que en lo de la mesa. */
+    fun cercaPared(d: Float): Float = (1.3f * exp(-d / 105f)).coerceIn(0.02f, 1f)
 
     /**
      * La mancha de la ventana en el plano de la pared, en píxeles: de día, el sol, alto y empinado, que baja hacia el atril; de

@@ -18,7 +18,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 /**
  * Lo fijo del rincón de la libreta de Napoleónico ([MuebleLibretaNapoleon]), pintado una vez por tamaño y modo: la pared amarilla
  * con sus manos de pintura, el recuadro de filetes verdes y la trama de la ventana (el sol o la luna); la cortina de seda
- * recogida; el portapliegos colgado; la mesa de escribir con su cuero y su faldón de caoba; el atril con su remate en arco, su
+ * recogida; el portapliegos colgado; la mesa de escribir con su cuero y su faldón de caoba; el atril con su remate recto, su
  * puntal y su listón; el tintero con la pluma y la palmatoria con su vela (de noche, encendida) y la barra de lacre.
  */
 internal object RinconLibretaNapoleon {
@@ -74,11 +74,11 @@ internal object RinconLibretaNapoleon {
     private fun DrawScope.amarillo(s: SitioLibretaNapoleon, a: AireNapoleon, r: Rect, m: ManchaNapoleon?) {
         val U = s.U
         if (a.oscuro) {
-            val radios = floatArrayOf(0f, 30f, 70f, 120f, 180f, 260f, 360f, 480f)
+            // La pared cae deprisa desde la vela (más que lo que está cerca de ella en la mesa): el charco se ve redondo y no parejo.
+            val radios = floatArrayOf(0f, 10f, 22f, 38f, 60f, 90f, 130f, 180f, 250f, 340f, 480f)
             val tope = 480f * U
             drawRect(Brush.radialGradient(*Array(radios.size) { i ->
-                val p = Offset(s.llama.x - radios[i] * U, s.llama.y)
-                val base = a.luz(P.AMARILLO, s.k(a, p))
+                val base = a.luz(P.AMARILLO, MuebleLibretaNapoleon.cercaPared(radios[i]))
                 (radios[i] / 480f) to (if (m != null) a.sol(P.AMARILLO, base, m.fuerza) else base)
             }, center = s.llama, radius = tope), r.topLeft, r.size)
             return
@@ -137,7 +137,7 @@ internal object RinconLibretaNapoleon {
     private fun siluetaAtril(s: SitioLibretaNapoleon, d: Offset): Path {
         val U = s.U
         return poligonoNapoleon(
-            s.atrilIzq - 3f * U + d.x, s.atrilArriba - 4f * U + d.y, s.atrilDer + 3f * U + d.x, s.atrilArriba - 4f * U + d.y,
+            s.atrilIzq - 3f * U + d.x, s.atrilArriba - 9f * U + d.y, s.atrilDer + 3f * U + d.x, s.atrilArriba - 9f * U + d.y,
             s.atrilDer + 30f * U + d.x, s.pie + d.y, s.atrilIzq + d.x, s.pie + d.y,
         )
     }
@@ -365,39 +365,46 @@ internal object RinconLibretaNapoleon {
     // ---------------------------------------------------------------- el atril
 
     /**
-     * El atril de sobremesa: detrás, a la derecha, el puntal en la cremallera de latón; la tabla de caoba con su remate en arco
-     * rebajado y su junquillo de latón, que asoma por encima del legajo; el grueso de la tabla por la derecha; abajo, el listón con
-     * su labio de latón (donde apoya el legajo) y el zócalo con sus patas de bollo. La trama de la ventana cae en su lado
-     * izquierdo, corrida.
+     * El atril de sobremesa: detrás, a la derecha, el puntal en la cremallera de latón; la tabla de caoba, baja, con su remate
+     * recto de moldura (la cara de arriba clara, la gola en sombra y el filete de latón), que asoma por encima del legajo; el grueso
+     * de la tabla por la derecha; abajo, el listón que vuela a los dos lados, con su labio de latón (donde descansa el legajo), su
+     * cara con el bocel y sus cabezas, y el zócalo con sus patas de bollo. La trama de la ventana cae en su lado izquierdo, corrida.
      */
     private fun DrawScope.atril(s: SitioLibretaNapoleon, a: AireNapoleon, m: ManchaNapoleon) {
         val U = s.U
         val kd = s.k(a, Offset(s.atrilDer + 20f * U, 150f * U))
         // El puntal y la cremallera.
-        drawPath(poligonoNapoleon(s.atrilDer - 10f * U, 66f * U, s.atrilDer - 2f * U, 64f * U, s.atrilDer + 27f * U, s.pie - 1f * U, s.atrilDer + 18f * U, s.pie),
+        drawPath(poligonoNapoleon(s.atrilDer - 10f * U, 72f * U, s.atrilDer - 2f * U, 70f * U, s.atrilDer + 27f * U, s.pie - 1f * U, s.atrilDer + 18f * U, s.pie),
             a.dia(P.CAOBA_OSC, 0f, kd))
-        drawLine(a.dia(P.CAOBA, 0f, kd), Offset(s.atrilDer - 2f * U, 65f * U), Offset(s.atrilDer + 27f * U, s.pie - 1f * U), 1.2f * U)
+        drawLine(a.dia(P.CAOBA, 0f, kd), Offset(s.atrilDer - 2f * U, 71f * U), Offset(s.atrilDer + 27f * U, s.pie - 1f * U), 1.2f * U)
         drawRect(a.dia(P.LATON_OSC, 0f, kd), Offset(s.atrilDer - 4f * U, s.pie - 3f * U), Size(38f * U, 3f * U))
         for (j in 0 until 6) drawLine(a.dia(P.LATON, 0f, kd), Offset(s.atrilDer + (j * 6f - 2f) * U, s.pie - 3f * U), Offset(s.atrilDer + (j * 6f + 1f) * U, s.pie - 5.4f * U), 1f * U)
         // El grueso de la tabla por la derecha.
-        drawPath(poligonoNapoleon(s.atrilDer, s.atrilArriba + 8f * U, s.atrilDer + s.tabla, s.atrilArriba + 12f * U, s.atrilDer + s.tabla, s.listonAbajo + 2f * U, s.atrilDer, s.listonAbajo),
+        drawPath(poligonoNapoleon(s.atrilDer, s.atrilArriba - 2f * U, s.atrilDer + s.tabla, s.atrilArriba + 1f * U, s.atrilDer + s.tabla, s.listonAbajo + 2f * U, s.atrilDer, s.listonAbajo),
             a.dia(P.CAOBA_OSC, -0.1f, kd))
         tabla(s, a, null)
         clipPath(m.forma(1f, -10f * U, 0.014f)) { tabla(s, a, ManchaNapoleon(m.q, m.color, m.fuerza * 0.42f)) }
         clipPath(m.forma(1f, -10f * U)) { tabla(s, a, m) }
         if (a.oscuro) {
-            drawLine(a.lunar(0.3f), Offset(s.atrilIzq + 0.6f * U, s.atrilArriba + 12f * U), Offset(s.atrilIzq + 0.6f * U, s.liston - 4f * U), 1f * U)
+            drawLine(a.lunar(0.3f), Offset(s.atrilIzq - 3.4f * U, s.atrilArriba - 6f * U), Offset(s.atrilIzq - 3.4f * U, s.atrilArriba + 1f * U), 1f * U)
+            drawLine(a.lunar(0.3f), Offset(s.atrilIzq + 0.6f * U, s.atrilArriba + 2f * U), Offset(s.atrilIzq + 0.6f * U, s.liston - 4f * U), 1f * U)
             drawLine(a.filo(0.6f * kd), Offset(s.atrilDer + s.tabla - 0.6f * U, s.atrilArriba + 30f * U), Offset(s.atrilDer + s.tabla - 0.6f * U, s.listonAbajo), 1.2f * U)
         }
-        // El listón: el labio de latón arriba y la cara de caoba con su filete.
-        val l = Rect(s.atrilIzq - 6f * U, s.liston - 3f * U, s.atrilDer + 6f * U, s.listonAbajo)
-        drawRect(a.sombra(0.4f), Offset(l.left, l.bottom), Size(l.width, 2f * U))
+        // El listón: vuela a los dos lados; el labio de latón arriba, la cara de caoba con su bocel y sus cabezas.
+        val l = Rect(s.atrilIzq - 10f * U, s.liston - 3.4f * U, s.atrilDer + 10f * U, s.listonAbajo)
+        drawRect(a.sombra(0.45f), Offset(l.left + 1f * U, l.bottom), Size(l.width, 2.4f * U))
         drawRect(s.aLoAncho(a, P.CAOBA, -0.05f, l.left, l.right, l.center.y), Offset(l.left, l.top + 3.4f * U), Size(l.width, l.height - 3.4f * U))
+        drawRect(s.aLoAncho(a, P.CAOBA_LUZ, 0f, l.left, l.right, l.center.y), Offset(l.left, l.top + 6.6f * U), Size(l.width, 2.2f * U))
+        drawRect(a.sombra(0.3f), Offset(l.left, l.top + 8.8f * U), Size(l.width, 1.2f * U))
         drawRect(s.aLoAncho(a, P.LATON, 0f, l.left, l.right, l.top), l.topLeft, Size(l.width, 3.4f * U))
-        drawRect(if (a.oscuro) s.aLoAncho(a, P.LATON_LUZ, 0f, l.left, l.right, l.top) else Brush.horizontalGradient(listOf(a.brillo(0.7f, 1f), a.brillo(0.2f, 1f)), l.left, l.right),
-            l.topLeft, Size(l.width, 1.1f * U))
-        drawRect(s.aLoAncho(a, P.LATON_OSC, 0f, l.left, l.right, l.bottom), Offset(l.left + 3f * U, l.bottom - 4f * U), Size(l.width - 6f * U, 0.8f * U))
-        drawPath(poligonoNapoleon(l.right, l.top, l.right + 3f * U, l.top + 1.6f * U, l.right + 3f * U, l.bottom + 1f * U, l.right, l.bottom), a.dia(P.CAOBA_OSC, 0f, kd))
+        drawRect(if (a.oscuro) s.aLoAncho(a, P.LATON_LUZ, 0f, l.left, l.right, l.top) else Brush.horizontalGradient(listOf(a.brillo(0.8f, 1f), a.brillo(0.25f, 1f)), l.left, l.right),
+            l.topLeft, Size(l.width, 1.2f * U))
+        drawRect(s.aLoAncho(a, P.LATON_OSC, 0f, l.left, l.right, l.bottom), Offset(l.left + 3f * U, l.bottom - 3.4f * U), Size(l.width - 6f * U, 0.8f * U))
+        listOf(l.left, l.right - 7f * U).forEach { x ->
+            drawRect(a.dia(P.CAOBA_OSC, 0f, s.k(a, Offset(x, l.center.y))), Offset(x, l.top + 3.4f * U), Size(7f * U, l.height - 3.4f * U))
+            drawCircle(a.luz(P.LATON, s.k(a, Offset(x, l.center.y))), 1.6f * U, Offset(x + 3.5f * U, l.center.y + 1.6f * U))
+        }
+        drawPath(poligonoNapoleon(l.right, l.top, l.right + 3f * U, l.top + 1.6f * U, l.right + 3f * U, l.bottom + 1f * U, l.right, l.bottom), a.dia(P.CAOBA_HONDO, 0f, kd))
         // El zócalo y las patas de bollo.
         val z = Rect(s.atrilIzq + 8f * U, s.listonAbajo, s.atrilDer - 8f * U, s.pie - 4f * U)
         drawRect(s.aLoAncho(a, P.CAOBA_OSC, 0f, z.left, z.right, z.center.y), z.topLeft, z.size)
@@ -408,19 +415,7 @@ internal object RinconLibretaNapoleon {
         }
     }
 
-    /** La silueta de la tabla del atril: los costados rectos y arriba el arco rebajado, desplazada [d] hacia dentro. */
-    private fun tablaSilueta(s: SitioLibretaNapoleon, d: Float): Path {
-        val U = s.U
-        return Path().apply {
-            moveTo(s.atrilIzq + d, s.liston + 2f * U)
-            lineTo(s.atrilIzq + d, s.atrilArriba + 12f * U + d)
-            quadraticTo(s.cx, s.atrilArriba - 12f * U + d, s.atrilDer - d, s.atrilArriba + 12f * U + d)
-            lineTo(s.atrilDer - d, s.liston + 2f * U)
-            close()
-        }
-    }
-
-    /** La tabla del atril (la caoba con su veta de pluma y su junquillo de latón), con la luz del momento; con [m], dentro de la trama de la ventana. */
+    /** La tabla del atril (la caoba con su veta y el remate recto de moldura), con la luz del momento; con [m], dentro de la trama de la ventana. */
     private fun DrawScope.tabla(s: SitioLibretaNapoleon, a: AireNapoleon, m: ManchaNapoleon?) {
         val U = s.U
         val y = (s.atrilArriba + s.liston) / 2
@@ -429,21 +424,23 @@ internal object RinconLibretaNapoleon {
             val c = a.en(col, f, 1f, 1f, m)
             return Brush.horizontalGradient(listOf(c, c), s.atrilIzq, s.atrilDer)
         }
-        val silueta = tablaSilueta(s, 0f)
-        drawPath(silueta, pincel(P.CAOBA, 0f))
-        // La veta de pluma de la chapa, que sube por el medio y se abre en el arco.
-        val pluma = Path()
-        for (j in 0 until 6) {
-            val d = (14f + 15f * j) * U
-            pluma.moveTo(s.cx - d, s.atrilArriba + (26f + 6f * j) * U)
-            pluma.quadraticTo(s.cx - d * 0.3f, s.atrilArriba + (2f + 2f * j) * U, s.cx, s.atrilArriba + (12f + 4f * j) * U)
-            pluma.quadraticTo(s.cx + d * 0.3f, s.atrilArriba + (2f + 2f * j) * U, s.cx + d, s.atrilArriba + (26f + 6f * j) * U)
+        val t = Rect(s.atrilIzq, s.atrilArriba, s.atrilDer, s.liston + 2f * U)
+        drawRect(pincel(P.CAOBA, 0f), t.topLeft, t.size)
+        // La veta, a lo alto, apenas.
+        val veta = Path()
+        for (j in 0 until 9) {
+            val x = t.left + (j + 0.5f) * t.width / 9f
+            veta.moveTo(x, t.top + 4f * U); veta.quadraticTo(x + 3f * U, t.center.y, x - 1f * U, t.bottom)
         }
-        clipPath(silueta) { drawPath(pluma, Color(0xFFC88A78).copy(alpha = 0.55f), style = Stroke(1.4f * U), blendMode = BlendMode.Multiply) }
-        // El canto del arco: la cara de arriba clara (mira a la luz) y el junquillo de latón por dentro.
-        drawPath(silueta, pincel(P.CAOBA_LUZ, 0.05f), style = Stroke(2f * U))
-        drawPath(tablaSilueta(s, 4f * U), pincel(P.LATON, 0f), style = Stroke(1f * U))
-        if (m == null && !a.oscuro) drawRect(a.claro(0.2f), Offset(s.atrilIzq, s.atrilArriba + 12f * U), Size(1.4f * U, s.liston - s.atrilArriba - 12f * U))
+        drawPath(veta, Color(0xFFC88A78).copy(alpha = 0.45f), style = Stroke(1.1f * U), blendMode = BlendMode.Multiply)
+        if (m == null && !a.oscuro) drawRect(a.claro(0.2f), Offset(t.left, t.top), Size(1.4f * U, t.height))
+        // El remate: la moldura recta que vuela un poco, con la cara de arriba clara (mira a la luz), la gola en sombra y el filete de latón.
+        val rem = Rect(t.left - 4f * U, t.top - 7f * U, t.right + 4f * U, t.top + 1f * U)
+        drawRect(a.sombra(0.35f), Offset(rem.left, rem.bottom), Size(rem.width, 2.4f * U))
+        drawRect(pincel(P.CAOBA, 0.02f), rem.topLeft, rem.size)
+        drawRect(pincel(P.CAOBA_LUZ, 0.08f), rem.topLeft, Size(rem.width, 2.2f * U))
+        drawRect(pincel(P.CAOBA_OSC, 0f), Offset(rem.left, rem.top + 4.4f * U), Size(rem.width, 1.6f * U))
+        drawRect(pincel(P.LATON, 0f), Offset(rem.left + 2f * U, rem.bottom - 1.2f * U), Size(rem.width - 4f * U, 0.9f * U))
     }
 
     // ---------------------------------------------------------------- el tintero y la palmatoria
