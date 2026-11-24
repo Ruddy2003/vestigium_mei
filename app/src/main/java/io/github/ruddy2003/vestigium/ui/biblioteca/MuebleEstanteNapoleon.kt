@@ -109,7 +109,7 @@ internal object MuebleEstanteNapoleon {
      * de chapa echa la luz hacia abajo: por encima de su borde llega mucho menos.
      */
     fun lampara(dx: Float, dy: Float, suenos: Boolean): Float {
-        val base = (if (suenos) 0.85f else 1.6f) * exp(-2.8f * sqrt(dx * dx * 1.1f + dy * dy * (if (dy > 0f) 0.48f else 1f)))
+        val base = (if (suenos) 0.85f else 1.7f) * exp(-3.4f * sqrt(dx * dx * 1.1f + dy * dy * (if (dy > 0f) 0.48f else 1f)))
         return (base * pantalla(dx, dy)).coerceIn(0f, 1f)
     }
 
@@ -137,10 +137,10 @@ internal object MuebleEstanteNapoleon {
 
     /** La luz del farol del pie: baja y a puntos, para las repisas de abajo. */
     fun farol(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.85f else 1.4f) * exp(-2.2f * sqrt(dx * dx * 1.15f + dy * dy))).coerceIn(0f, 1f)
+        ((if (suenos) 0.85f else 1.5f) * exp(-2.9f * sqrt(dx * dx * 1.15f + dy * dy))).coerceIn(0f, 1f)
 
     /** La luz del candelero de un hueco: corta, para sus vecinos, el fondo y el canto de la tabla de arriba. */
-    fun candil(dx: Float, dy: Float): Float = (1.25f * exp(-3.7f * sqrt(dx * dx + dy * dy * 1.4f))).coerceIn(0f, 1f)
+    fun candil(dx: Float, dy: Float): Float = (1.4f * exp(-4.6f * sqrt(dx * dx + dy * dy * 1.4f))).coerceIn(0f, 1f)
 
     /** El candelero que más alumbra ([x], [y]) entre [candiles] (x, y, x, y… en anchos). */
     private fun candilMayor(x: Float, y: Float, candiles: FloatArray): Float {

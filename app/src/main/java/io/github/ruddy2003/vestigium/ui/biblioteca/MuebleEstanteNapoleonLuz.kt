@@ -98,7 +98,7 @@ internal object PaletaNapoleon {
     val FONDO_SUENOS = Color(0xFF0E1534)
     /** La sombra del ocaso de los Sueños claros (violeta), su luz naranja y el sol del mediodía. */
     val SOMBRA_OCASO = Color(0xFF402A62)
-    val OCASO = Color(0xFFF4A25C)
+    val OCASO = Color(0xFFF2B286)
     val SOL = Color(0xFFFFF0C8)
     /** La llama de la vela, su corazón, la luna y su roce. */
     val LLAMA = Color(0xFFFFB65C)
@@ -143,10 +143,13 @@ internal class AireNapoleon(val oscuro: Boolean, val noche: Boolean, val cuerpo:
     /** El color de algo a la luz de la vela: alumbra en naranja, así que el azul y el verde bajan más que el rojo. */
     private fun aLaLlama(c: Color): Color = Color((c.red * 1.1f).coerceAtMost(1f), c.green * 0.87f, c.blue * 0.62f, c.alpha)
 
-    /** El color al ocaso de los Sueños claros: el cuarto ya en penumbra, más bajo, tibio y con algo del violeta de la sombra. */
+    /**
+     * El color al anochecer de los Sueños claros: el mismo cuarto ya en penumbra, cada cosa con su color (el amarillo más hondo,
+     * la caoba y el paño con el suyo), solo más bajo y apenas entibiado; el violeta va en las sombras ([sombra]), no aquí.
+     */
     private fun alOcaso(c: Color): Color =
-        if (cuerpo) mezcla(Color(c.red * 0.8f, c.green * 0.64f, c.blue * 0.68f, c.alpha), p.SOMBRA_OCASO, 0.2f)
-        else mezcla(Color(c.red * 0.9f, c.green * 0.76f, c.blue * 0.76f, c.alpha), p.SOMBRA_OCASO, 0.12f)
+        if (cuerpo) Color(c.red * 0.78f, c.green * 0.74f, c.blue * 0.74f, c.alpha)
+        else Color(c.red * 0.84f, c.green * 0.76f, c.blue * 0.7f, c.alpha)
 
     /** Cerca de la llama, lo claro se vuelve ámbar (el amarillo pasa a miel, no a pardo). */
     private fun ambar(c: Color, k: Float): Color {
@@ -185,7 +188,11 @@ internal class AireNapoleon(val oscuro: Boolean, val noche: Boolean, val cuerpo:
                 val q = 0.38f * k
                 Color((base.red + g.red * 0.42f * q).coerceAtMost(1f), (base.green + g.green * 0.58f * q).coerceAtMost(1f), (base.blue + (g.blue * 0.95f + 0.1f) * q).coerceAtMost(1f), c.alpha)
             }
-            noche -> mezcla(base, Color((base.red * 1.3f + 0.12f).coerceAtMost(1f), (base.green * 1.0f + 0.05f).coerceAtMost(1f), base.blue * 0.7f, c.alpha), k)
+            // El último sol, bajo: un melocotón suave sobre el color de cada cosa, no un naranja que se la coma.
+            noche -> {
+                val l = Color((base.red * 1.2f + 0.06f).coerceAtMost(1f), (base.green * 1.1f + 0.05f).coerceAtMost(1f), (base.blue * 1.02f + 0.04f).coerceAtMost(1f), c.alpha)
+                mezcla(base, mezcla(l, Color(0xFFF6C29C), 0.3f), k)
+            }
             else -> {
                 // El mismo color, más claro y entibiado, sin irse al blanco (que lo lavaría).
                 val l = Color((base.red * 1.32f + 0.04f).coerceAtMost(1f), (base.green * 1.22f + 0.03f).coerceAtMost(1f), (base.blue * 1.05f + 0.01f).coerceAtMost(1f), c.alpha)
@@ -235,9 +242,10 @@ internal class AireNapoleon(val oscuro: Boolean, val noche: Boolean, val cuerpo:
     fun etiqueta(c: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) alOcaso(c) else c
-        val lejos = Color(c.red * 0.42f, c.green * 0.3f, c.blue * 0.19f, c.alpha)
+        // Lejos, cartulina tostada en sombra (parda, no gris), que aún deja leer la tinta (unos 3 a 1, letra grande).
+        val lejos = Color(c.red * 0.54f, c.green * 0.41f, c.blue * 0.26f, c.alpha)
         val alumbrado = Color((c.red * 1.04f).coerceAtMost(1f), c.green * 0.92f, c.blue * 0.7f, c.alpha)
-        return mezcla(lejos, alumbrado, Math.pow(k.toDouble(), 1.5).toFloat().coerceAtMost(1f))
+        return mezcla(lejos, alumbrado, Math.pow(k.toDouble(), 2.0).toFloat().coerceAtMost(1f))
     }
 }
 
@@ -308,10 +316,10 @@ internal class ManchaNapoleon(val q: FloatArray, val color: Color, val fuerza: F
  */
 internal fun manchaNapoleon(a: AireNapoleon): ManchaNapoleon? = when {
     // La luna, más alta y más tenue: los cuarterones caen más empinados.
-    a.oscuro && a.noche -> ManchaNapoleon(floatArrayOf(0.3f, 0.1f, 0.5f, 0.13f, 0.59f, 0.5f, 0.4f, 0.48f), PaletaNapoleon.LUNA, 0.62f)
+    a.oscuro && a.noche -> ManchaNapoleon(floatArrayOf(0.35f, 0.12f, 0.49f, 0.145f, 0.545f, 0.37f, 0.405f, 0.35f), PaletaNapoleon.LUNA, 0.62f)
     a.oscuro -> null
     // Al ocaso, el sol bajo: los cuarterones se tienden y se alargan a lo ancho.
-    a.noche -> ManchaNapoleon(floatArrayOf(0.34f, 0.08f, 0.78f, 0.13f, 0.83f, 0.33f, 0.41f, 0.27f), PaletaNapoleon.OCASO, 1f)
+    a.noche -> ManchaNapoleon(floatArrayOf(0.34f, 0.13f, 0.74f, 0.18f, 0.79f, 0.37f, 0.4f, 0.32f), PaletaNapoleon.OCASO, 0.6f)
     else -> ManchaNapoleon(floatArrayOf(0.3f, 0.08f, 0.56f, 0.11f, 0.69f, 0.51f, 0.44f, 0.48f), PaletaNapoleon.SOL, 0.9f)
 }
 

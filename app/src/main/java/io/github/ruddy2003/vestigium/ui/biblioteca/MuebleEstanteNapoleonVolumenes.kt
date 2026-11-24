@@ -63,6 +63,8 @@ internal object VolumenEstanteNapoleon {
         }
         /** El dorado: de día, oro; de noche, se enciende cerca de la llama y se apaga lejos (sin perder el contraste). */
         fun oro(col: Color = ORO): Color = if (a.oscuro) mezcla(a.luz(col, k), Color(0xFFFFD98A), 0.35f * k) else c(col)
+        /** El dorado de las letras: como [oro], pero lejos de la luz no baja de un ámbar apagado, para que el día se siga leyendo. */
+        fun oroTexto(): Color = if (!a.oscuro) c(ORO) else mezcla(mezcla(a.luz(ORO, k), Color(ORO.red * 0.6f, ORO.green * 0.47f, ORO.blue * 0.3f), (0.6f - k).coerceIn(0f, 0.6f)), Color(0xFFFFD98A), 0.35f * k)
     }
 
     /** Los colores de un tinte con la luz del momento: su cara, su claro y su hondo. */
@@ -310,7 +312,7 @@ internal object VolumenEstanteNapoleon {
         drawRect(tjc, tj.topLeft, tj.size)
         drawRect(mezcla(tjc, luzMueble(1f), if (a.oscuro) 0.05f else 0.16f), tj.topLeft, Size(tj.width * 0.3f, tj.height))
         drawRect(oro.copy(alpha = 0.85f), tj.deflate(1.2f * u).topLeft, tj.deflate(1.2f * u).size, style = Stroke(0.5f * u))
-        diaYMes(v, medidor, tj.deflate(1.4f * u), oro)
+        diaYMes(v, medidor, tj.deflate(1.4f * u), l.oroTexto())
         // Los registros de cinta que cuelgan por el pie, más con más palabras.
         val cintas = (v.lleno * 2.6f).toInt().coerceIn(0, 2)
         val colores = listOf(P.LACRE, P.VERDE)
@@ -418,6 +420,11 @@ internal object VolumenEstanteNapoleon {
 
     // ---------------------------------------------------------------- el ridículo de seda
 
+    /**
+     * El ridículo: una bolsa blanda de seda, fruncida arriba por su cordón en un volante ancho que se vence hacia un lado, la
+     * panza caída y asentada en la tabla, el galón de abajo y la borla dorada en la esquina, que cae a la tabla. El cordón no
+     * sube en asa: cae por el hombro de la bolsa y le cuelga a un lado, con la tarjeta chica del día atada a su cabo.
+     */
     fun DrawScope.ridiculo(v: Volumen, medidor: TextMeasurer, a: AireNapoleon, k: Float, hacia: Float, ti: Color?, luna: Float) {
         val u = density
         val w = size.width; val h = size.height
@@ -425,59 +432,50 @@ internal object VolumenEstanteNapoleon {
         val l = Luz(a, k, luna)
         val t = tinte(ti, l, 0.45f)
         val lado = if (azar(s, 5) > 0.5f) 1f else -1f
-        val cuello = h * (0.25f + 0.04f * azar(s, 3))
-        val volante = cuello - h * (0.07f + 0.02f * azar(s, 4))
-        val hombro = h * (0.5f + 0.05f * azar(s, 6))
+        fun x(f: Float) = if (lado > 0f) w * f else w * (1f - f)
+        val cuello = h * (0.27f + 0.04f * azar(s, 3))
+        val volante = cuello - h * (0.1f + 0.025f * azar(s, 4))
+        val fondo = h - 0.4f * u
         alrededor(a, hacia, volante)
-        // El asa: la vuelta del cordón que sube del frunce y se apoya, ladeada, en el paño de atrás.
-        val oroCordon = l.oro(mezcla(ORO, P.LATON, 0.4f))
-        val asa = Path().apply {
-            moveTo(w * 0.36f, cuello)
-            cubicTo(w * (0.3f + 0.12f * lado), h * 0.02f, w * (0.62f + 0.12f * lado), -h * 0.01f, w * (0.64f + 0.06f * lado), cuello)
-        }
-        drawPath(Path().apply { addPath(asa, Offset(1.4f * u, 1.6f * u)) }, a.sombra(0.35f), style = Stroke(1.6f * u))
-        drawPath(asa, oroCordon, style = Stroke(1.6f * u, cap = StrokeCap.Round))
-        drawPath(asa, a.brillo(0.4f, k), style = Stroke(0.5f * u))
         // Las cartas plegadas que asoman por la boca, más cuanto más se escribió.
         val cartas = (v.lleno * 2.6f).toInt().coerceIn(0, 2)
         for (q in 0 until cartas) {
-            val x0 = w * (if (q == 0) 0.26f else 0.46f)
-            rotate(if (q == 0) -10f else 9f, Offset(x0 + w * 0.14f, cuello)) {
-                drawRect(l.etiqueta(mezcla(P.PAPEL, P.CARTULINA, 0.35f * q)), Offset(x0, volante - h * 0.05f), Size(w * 0.28f, h * 0.1f))
-                drawRect(a.sombra(0.22f), Offset(x0 + w * 0.19f, volante - h * 0.05f), Size(w * 0.09f, h * 0.1f))
+            val x0 = x(if (q == 0) 0.3f else 0.5f) - w * 0.14f
+            rotate((if (q == 0) -10f else 9f) * lado, Offset(x0 + w * 0.14f, cuello)) {
+                drawRect(l.etiqueta(mezcla(P.PAPEL, P.CARTULINA, 0.35f * q)), Offset(x0, volante - h * 0.04f), Size(w * 0.28f, h * 0.1f))
+                drawRect(a.sombra(0.22f), Offset(x0 + w * 0.19f, volante - h * 0.04f), Size(w * 0.09f, h * 0.1f))
             }
         }
-        // El cuerpo: una bolsa blanda que se asienta en la tabla, ancha abajo y con la panza caída hacia un lado.
-        val ix = 0.6f * u
-        val fondo = h - 0.4f * u
+        // El cuerpo: blando, con la panza vencida hacia [lado] y asentada en la tabla.
         val bolsa = Path().apply {
-            moveTo(w * 0.3f, cuello)
-            cubicTo(w * (0.12f - 0.04f * lado), cuello + h * 0.08f, ix, hombro - h * 0.06f, ix, hombro + h * 0.12f)
-            cubicTo(ix - 0.4f * u, fondo - h * 0.08f, w * 0.06f, fondo, w * 0.3f, fondo)
-            lineTo(w * 0.7f, fondo)
-            cubicTo(w * 0.94f, fondo, w - ix + 0.4f * u, fondo - h * 0.08f, w - ix, hombro + h * 0.12f)
-            cubicTo(w - ix, hombro - h * 0.06f, w * (0.88f - 0.04f * lado), cuello + h * 0.08f, w * 0.7f, cuello)
+            moveTo(x(0.24f), cuello)
+            cubicTo(x(0.12f), cuello + h * 0.1f, x(0.1f), h * 0.55f, x(0.07f), h * 0.74f)
+            cubicTo(x(0.05f), fondo - h * 0.06f, x(0.14f), fondo, x(0.32f), fondo)
+            lineTo(x(0.78f), fondo)
+            cubicTo(x(0.97f), fondo, x(1f) - 0.6f * u * lado, fondo - h * 0.1f, x(1f) - 0.6f * u * lado, h * 0.64f)
+            cubicTo(x(0.99f), h * 0.46f, x(0.9f), cuello + h * 0.06f, x(0.74f), cuello)
             close()
         }
         drawPath(Path().apply { addPath(bolsa, Offset(if (hacia < 0f) 2f * u else -2f * u, 1.4f * u)) }, a.sombra(0.3f))
         clipPath(bolsa) {
             redondo(Rect(0f, cuello, w, h), t, hacia)
-            // El brillo de la seda: una veta clara y viva a lo largo, del lado de la luz, y otra más débil.
-            val bx = if (hacia < 0f) w * 0.24f else w * 0.66f
-            drawRect(a.brillo(if (a.oscuro) 0.5f else 0.45f, k), Offset(bx, cuello), Size(w * 0.07f, h))
-            drawRect(a.brillo(0.18f, k), Offset(bx + (if (hacia < 0f) w * 0.13f else -w * 0.14f), cuello), Size(w * 0.05f, h))
-            // Los pliegues que bajan del frunce y se abren, cada uno con su luz y su sombra.
-            for (j in 0 until 5) {
-                val x = w * (0.32f + 0.09f * j)
-                val bajo = cuello + h * (0.2f + 0.16f * azar(s, 20 + j))
-                val dx = (j - 2f) * 4f * u
-                val p = Path().apply { moveTo(x, cuello); cubicTo(x + dx * 0.3f, cuello + h * 0.06f, x + lado * 2f * u + dx * 0.7f, bajo - h * 0.05f, x + dx, bajo) }
-                drawPath(p, a.sombra(0.32f), style = Stroke(2.2f * u, cap = StrokeCap.Round))
+            // El brillo de la seda: una veta clara y viva, curva como la panza, y otra más débil.
+            val bx = if (hacia < 0f) w * 0.26f else w * 0.64f
+            val veta = Path().apply { moveTo(bx, cuello + h * 0.04f); quadraticTo(bx - w * 0.06f * lado, h * 0.6f, bx + w * 0.02f, fondo) }
+            drawPath(veta, a.brillo(if (a.oscuro) 0.55f else 0.5f, k), style = Stroke(w * 0.07f, cap = StrokeCap.Round))
+            drawPath(Path().apply { addPath(veta, Offset(if (hacia < 0f) w * 0.13f else -w * 0.13f, 0f)) }, a.brillo(0.18f, k), style = Stroke(w * 0.05f))
+            // Los frunces que bajan del cordón y se abren por la panza, cada uno con su luz y su sombra.
+            for (j in 0 until 6) {
+                val f0 = 0.28f + 0.09f * j
+                val bajo = cuello + h * (0.2f + 0.2f * azar(s, 20 + j))
+                val abre = (j - 2.5f) * 4f * u * lado
+                val p = Path().apply { moveTo(x(f0), cuello); cubicTo(x(f0) + abre * 0.2f, cuello + h * 0.07f, x(f0) + abre * 0.6f + 2f * u * lado, bajo - h * 0.06f, x(f0) + abre, bajo) }
+                drawPath(p, a.sombra(0.34f), style = Stroke(2.2f * u, cap = StrokeCap.Round))
                 drawPath(Path().apply { addPath(p, Offset(1.8f * u, 0f)) }, t.claro.copy(alpha = 0.6f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
             }
-            // La panza que se asienta: una arruga de través abajo.
-            val arr = Path().apply { moveTo(w * 0.08f, fondo - h * 0.12f); quadraticTo(w * 0.5f, fondo - h * (0.16f + 0.03f * azar(s, 31)), w * 0.92f, fondo - h * 0.11f) }
-            drawPath(arr, a.sombra(0.28f), style = Stroke(1.8f * u, cap = StrokeCap.Round))
+            // La panza que se asienta: una arruga de través abajo y la sombra del asiento.
+            val arr = Path().apply { moveTo(x(0.1f), fondo - h * 0.13f); quadraticTo(x(0.5f), fondo - h * (0.17f + 0.03f * azar(s, 31)), x(0.95f), fondo - h * 0.1f) }
+            drawPath(arr, a.sombra(0.3f), style = Stroke(1.8f * u, cap = StrokeCap.Round))
             drawPath(Path().apply { addPath(arr, Offset(0f, -1.6f * u)) }, t.claro.copy(alpha = 0.5f), style = Stroke(0.8f * u))
             // El galón tejido de abajo: una banda dorada con su labor de puntos, entre dos filetes.
             val gy = fondo - h * 0.09f
@@ -489,52 +487,69 @@ internal object VolumenEstanteNapoleon {
             while (xg < w) { drawCircle(l.oro(ORO_OSC), 0.6f * u, Offset(xg, gy + 2.1f * u)); xg += 3f * u }
             drawRect(a.sombra(0.35f), Offset(0f, fondo - h * 0.04f), Size(w, h * 0.04f))
         }
-        // El volante del frunce: la seda recogida en ondas por encima del cordón, con su sombra dentro.
+        // El volante del frunce: la seda recogida en ondas por encima del cordón, ancha y vencida hacia [lado].
         val vol = Path().apply {
-            moveTo(w * 0.24f, cuello + 2.4f * u)
-            var xv = w * 0.24f; var j = 0
-            val paso = w * 0.075f
-            while (xv < w * 0.76f) {
-                val alto = if (j % 2 == 0) volante else volante + h * 0.025f
-                quadraticTo(xv + paso * 0.5f, alto - h * 0.012f, xv + paso, if (j % 2 == 0) volante + h * 0.022f else volante + 0.5f * u)
-                xv += paso; j++
+            moveTo(x(0.16f), cuello + 2.4f * u)
+            val n = 7
+            for (j in 0 until n) {
+                val f0 = 0.16f + 0.7f * j / n; val f1 = 0.16f + 0.7f * (j + 1) / n
+                val cae = (f1 - 0.16f) * h * 0.05f
+                val alto = volante + cae + (if (j % 2 == 0) 0f else h * 0.025f)
+                val cx = x((f0 + f1) / 2); val ex = x(f1)
+                quadraticTo(cx, alto - h * 0.014f, ex, volante + cae + (if (j % 2 == 0) h * 0.022f else 0.5f * u))
             }
-            lineTo(w * 0.76f, cuello + 2.4f * u); close()
+            lineTo(x(0.88f), cuello + 2.4f * u); close()
         }
         drawPath(vol, t.cara)
         clipPath(vol) {
-            drawRect(t.hondo.copy(alpha = 0.5f), Offset(0f, volante), Size(w, h * 0.03f))
-            for (j in 0 until 6) {
-                val xx = w * (0.27f + 0.09f * j)
-                drawLine(if (j % 2 == 0) a.sombra(0.35f) else t.claro.copy(alpha = 0.7f), Offset(xx, volante), Offset(xx + (j - 2.5f) * 0.6f * u, cuello + 2f * u), 1.4f * u)
+            drawRect(t.hondo.copy(alpha = 0.5f), Offset(0f, volante), Size(w, h * 0.035f))
+            for (j in 0 until 7) {
+                val xx = x(0.2f + 0.095f * j)
+                drawLine(if (j % 2 == 0) a.sombra(0.35f) else t.claro.copy(alpha = 0.7f), Offset(xx, volante - h * 0.02f), Offset(xx + (j - 3f) * 0.6f * u, cuello + 2f * u), 1.4f * u)
             }
         }
         drawPath(vol, t.hondo, style = Stroke(0.7f * u))
-        // El cordón que frunce, con sus dos cabos que caen por delante con una borlita cada uno.
-        drawRect(a.sombra(0.35f), Offset(w * 0.25f, cuello + 2.2f * u), Size(w * 0.5f, 1.4f * u))
-        drawRect(oroCordon, Offset(w * 0.24f, cuello), Size(w * 0.52f, 2.2f * u))
-        drawRect(a.brillo(0.35f, k), Offset(w * 0.24f, cuello), Size(w * 0.52f, 0.6f * u))
-        val nudo = Offset(w * (0.5f + 0.2f * lado), cuello + 1.1f * u)
-        listOf(-1f, 1f).forEach { q ->
-            val fin = Offset(nudo.x + q * 2.6f * u + lado * 1.5f * u, cuello + h * (0.17f + 0.04f * q))
-            drawLine(a.sombra(0.3f), nudo + Offset(1f * u, 1f * u), fin + Offset(1f * u, 1f * u), 1f * u)
-            drawLine(oroCordon, nudo, fin, 1f * u, StrokeCap.Round)
-            val bl = Path()
-            for (j in 0 until 5) { val f = (j - 2f) / 2f; bl.moveTo(fin.x + f * 0.8f * u, fin.y + 1f * u); bl.lineTo(fin.x + f * 1.6f * u, fin.y + 5f * u) }
-            drawPath(bl, oroCordon, style = Stroke(0.7f * u))
-            drawCircle(l.oro(ORO_OSC), 1.5f * u, fin)
+        // El cordón que frunce y su vuelta, que cae por el hombro de la bolsa y le cuelga al costado.
+        val oroCordon = l.oro(mezcla(ORO, P.LATON, 0.4f))
+        drawRect(a.sombra(0.35f), Offset(minOf(x(0.2f), x(0.8f)), cuello + 2.2f * u), Size(w * 0.6f, 1.4f * u))
+        drawRect(oroCordon, Offset(minOf(x(0.19f), x(0.81f)), cuello), Size(w * 0.62f, 2.2f * u))
+        drawRect(a.brillo(0.35f, k), Offset(minOf(x(0.19f), x(0.81f)), cuello), Size(w * 0.62f, 0.6f * u))
+        val nudo = Offset(x(0.74f), cuello + 1.1f * u)
+        // La vuelta del cordón, floja: cae del nudo por delante de la panza, en diagonal, y vuelve a subir un poco al otro lado
+        // (no hace asa).
+        val vuelta = Path().apply {
+            moveTo(nudo.x, nudo.y)
+            cubicTo(x(0.86f), cuello + h * 0.14f, x(0.62f), cuello + h * 0.42f, x(0.34f), cuello + h * 0.46f)
+            cubicTo(x(0.16f), cuello + h * 0.48f, x(0.12f), cuello + h * 0.36f, x(0.2f), cuello + h * 0.3f)
         }
+        drawPath(Path().apply { addPath(vuelta, Offset(1.2f * u, 1.4f * u)) }, a.sombra(0.35f), style = Stroke(1.5f * u))
+        drawPath(vuelta, oroCordon, style = Stroke(1.5f * u, cap = StrokeCap.Round))
+        drawPath(vuelta, a.brillo(0.4f, k), style = Stroke(0.5f * u))
         drawCircle(a.sombra(0.4f), 2.4f * u, nudo + Offset(0.6f * u, 0.8f * u))
         drawCircle(l.oro(ORO_OSC), 2.4f * u, nudo)
         drawCircle(l.oro(), 1.7f * u, nudo - Offset(0.3f * u, 0.3f * u))
-        // La tarjeta del día, atada al cordón con un hilo y colgando por delante, algo ladeada.
-        val et = Rect(2f * u, hombro - 13f * u, w - 2f * u, hombro + 17f * u)
-        val giro = (azar(s, 11) - 0.5f) * 7f
+        // La borla dorada de la esquina de abajo, que cae y se abre en la tabla.
+        val bt = Offset(x(0.86f), fondo - h * 0.05f)
+        val hilos = Path()
+        for (j in 0 until 9) {
+            val f = (j - 4f) / 4f
+            hilos.moveTo(bt.x + f * 1.6f * u, bt.y + 2f * u); hilos.lineTo(bt.x + f * 4.4f * u + lado * 2f * u, h - 0.3f * u)
+        }
+        drawPath(hilos, a.sombra(0.35f), style = Stroke(1f * u))
+        drawPath(Path().apply { addPath(hilos, Offset(-0.5f * u, 0f)) }, l.oro(mezcla(ORO, P.LATON, 0.4f)), style = Stroke(0.8f * u))
+        ovaloNapoleon(l.oro(ORO_OSC), Rect(bt.x - 3f * u, bt.y - 1.6f * u, bt.x + 3f * u, bt.y + 3f * u))
+        ovaloNapoleon(l.oro(), Rect(bt.x - 2.4f * u, bt.y - 1.4f * u, bt.x + 2f * u, bt.y + 2f * u))
+        drawCircle(a.brillo(0.6f, k), 0.8f * u, bt + Offset(-0.8f * u, -0.6f * u))
+        // La tarjeta del día, chica, atada con un hilo al nudo y colgando por el lado de la panza, algo ladeada: la bolsa se ve.
+        val cw = (w * 0.6f).coerceIn(21f * u, 27f * u).coerceAtMost(w - 2f * u)
+        val ccx = x(0.36f)
+        val et = Rect(ccx - cw / 2, h * 0.5f, ccx + cw / 2, h * 0.5f + 28f * u)
+        val giro = (azar(s, 11) - 0.5f) * 8f - 3f * lado
         drawLine(l.c(P.TINTA, 0f).copy(alpha = 0.7f), nudo, Offset(et.center.x, et.top + 2.4f * u), 0.7f * u)
         tarjeta(v, medidor, et, l, a, giro)
         drawCircle(a.sombra(0.55f), 1f * u, Offset(et.center.x, et.top + 2.8f * u))
-        // La luna de los Sueños: bordada en la panza, bajo la tarjeta.
-        if (v.noche) luna(Offset(w * 0.5f, minOf(et.bottom + 9f * u, fondo - h * 0.12f)), minOf(w * 0.2f, 4.8f * u), a)
-        filos(Rect(ix, cuello, w - ix, fondo), a, k, hacia, luna)
+        // La luna de los Sueños: bordada arriba en la panza, del otro lado de la tarjeta.
+        if (v.noche) luna(Offset(x(0.66f), cuello + h * 0.12f), minOf(w * 0.17f, 4.6f * u), a)
+        filos(Rect(minOf(x(0.07f), x(1f)), cuello, maxOf(x(0.07f), x(1f)), fondo), a, k, hacia, luna)
     }
 }

@@ -189,17 +189,20 @@ internal object ObraEstanteNapoleon {
             drawRect(c(P.PANO_OSC, 0f, kk).copy(alpha = 0.55f), Offset(x0, fr.top), Size(x1 - x0, r.height * 0.45f))
             drawRect(c(P.PANO_LUZ, 0f, kk).copy(alpha = if (a.oscuro) 0.25f else 0.35f), Offset(x0, r.top + r.height * 0.58f), Size(x1 - x0, r.height * 0.3f))
         }
-        // El pelo del paño: rayitas a lo alto, más claras y más oscuras, y las motas del uso.
+        // El pelo del paño: motas cortas y ralas, cada una hacia un lado (el fieltro no tiene hilo), unas más claras y otras más
+        // hondas.
         val pelo = Path(); val pelo2 = Path()
-        for (j in 0 until (r.width / (5f * u)).toInt().coerceIn(4, 120)) {
+        for (j in 0 until (r.width / (11f * u)).toInt().coerceIn(3, 60)) {
             val x = r.left + r.width * azar(7200 + k, j)
-            val y = r.top + r.height * (0.2f + 0.75f * azar(7300 + k, j))
-            val l = r.height * (0.05f + 0.12f * azar(7400 + k, j))
-            if (j % 2 == 0) { pelo.moveTo(x, y); pelo.lineTo(x + 0.6f * u, y + l) } else { pelo2.moveTo(x, y); pelo2.lineTo(x - 0.5f * u, y + l) }
+            val y = r.top + r.height * (0.25f + 0.7f * azar(7300 + k, j))
+            val l = (1.2f + 1.6f * azar(7400 + k, j)) * u
+            val an = azar(7450 + k, j) * 6.283f
+            val dx = l * kotlin.math.cos(an); val dy = l * kotlin.math.sin(an)
+            if (j % 2 == 0) { pelo.moveTo(x, y); pelo.lineTo(x + dx, y + dy) } else { pelo2.moveTo(x, y); pelo2.lineTo(x + dx, y + dy) }
         }
         val kc = cerca(r.center)
-        drawPath(pelo, c(P.PANO_LUZ, 0.08f, kc).copy(alpha = 0.22f), style = Stroke(0.8f * u))
-        drawPath(pelo2, c(P.PANO_HONDO, 0f, kc).copy(alpha = 0.22f), style = Stroke(0.8f * u))
+        drawPath(pelo, c(P.PANO_LUZ, 0.08f, kc).copy(alpha = 0.3f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
+        drawPath(pelo2, c(P.PANO_HONDO, 0f, kc).copy(alpha = 0.3f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
         // Lo gastado: una rozadura clara donde roza lo que se saca y se mete, y alguna mancha.
         val rx = r.left + r.width * (0.15f + 0.6f * azar(7500, k))
         drawOval(c(P.PANO_LUZ, 0.15f, cerca(Offset(rx, r.bottom))).copy(alpha = 0.3f), Offset(rx, r.top + r.height * 0.55f), Size(w * 0.16f, r.height * 0.3f))

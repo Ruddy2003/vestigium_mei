@@ -245,6 +245,8 @@ internal object CoronaEstanteNapoleon {
             val pen = w * (0.025f + 0.24f * (MuebleEstanteNapoleon.LAMP_X - GX))
             drawRect(Brush.verticalGradient(0f to a.hondo.copy(alpha = 0.72f), 1f to a.hondo.copy(alpha = 0f), startY = linea - pen, endY = linea + pen * 0.2f), Offset(c.x - r, c.y - r), Size(2 * r, linea + pen - (c.y - r)))
         }
+        // En los Sueños oscuros, el filo frío de la luna que entra por la ventana, en el canto de la izquierda.
+        if (noche && a.noche) clipPath(esfera) { drawArc(P.LUNA_RAS.copy(alpha = 0.6f), 150f, 90f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(2.4f * u)) }
         if (noche) clipPath(esfera) { drawArc(a.filo(0.75f * kd), -70f, 120f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(1.6f * u)) }
         // El eje: el pivote de arriba con su casquete, inclinado como el de la tierra.
         val eje = Offset(c.x + r * 0.42f * 0.55f, c.y - r * 1.12f)

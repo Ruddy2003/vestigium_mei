@@ -88,7 +88,12 @@ internal object MuroEstanteNapoleon {
                 val cols = ys.map { y -> a.luz(P.AMARILLO, MuebleEstanteNapoleon.lamparaArriba(dx, y / w - MuebleEstanteNapoleon.LAMP_Y, a.noche)) }
                 drawRect(Brush.verticalGradient(*Array(ys.size) { i -> (i / 39f) to cols[i] }, startY = r.top, endY = r.bottom), Offset(x0, r.top), Size(x1 - x0, r.height))
             }
-            if (m != null) drawRect(Color(0xFF7890C8).copy(alpha = (0.5f * m.fuerza).coerceAtMost(1f)), r.topLeft, r.size, blendMode = BlendMode.Screen)
+            // La luna en los cuarterones: el amarillo virado a un azul verdoso hondo, un paso más claro que la noche de al lado
+            // (opaco dentro de la trama; en la penumbra, a medias).
+            if (m != null) {
+                val f = (m.fuerza / 0.62f).coerceIn(0f, 1f)
+                drawRect(Brush.verticalGradient(listOf(Color(0xFF46706E).copy(alpha = f), Color(0xFF2E4C50).copy(alpha = f)), m.en(0f, 0f).y * w, m.en(1f, 1f).y * w), r.topLeft, r.size)
+            }
             return
         }
         // De día (y al ocaso): el amarillo a la sombra del cuarto, más vivo junto a la ventana y más hondo arriba bajo el techo.
