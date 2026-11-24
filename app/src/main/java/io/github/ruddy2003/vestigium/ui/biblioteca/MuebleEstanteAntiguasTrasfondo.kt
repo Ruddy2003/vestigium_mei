@@ -63,7 +63,11 @@ internal object TrasfondoCoronaAntiguas {
                 val col = BANDAS[Math.floorMod(i, BANDAS.size)]
                 drawRect(am.luz(col, k), Offset(cuerpo.left, y0), Size(cuerpo.width, y - y0 + 0.6f))
                 if (i % 2 == 0 && y - y0 > w * 0.03f) {
-                    drawPath(romboEscalonadoAntiguas(Offset(cuerpo.center.x, (y0 + y) / 2), w * 0.014f, 2), am.luz(if (col == P.CRUDO) P.ANIL else P.CRUDO, k))
+                    // Un rombo partido en dos colores, crema y ocre (no una cruz).
+                    val c = Offset(cuerpo.center.x, (y0 + y) / 2)
+                    val rx = w * 0.013f; val ry = w * 0.017f
+                    drawPath(poligonoAntiguas(c.x, c.y - ry, c.x, c.y + ry, c.x - rx, c.y), am.luz(P.CRUDO, k))
+                    drawPath(poligonoAntiguas(c.x, c.y - ry, c.x + rx, c.y, c.x, c.y + ry), am.luz(P.OCRE, k))
                 }
                 y = y0; i++
             }
