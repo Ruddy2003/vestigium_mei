@@ -113,12 +113,22 @@ internal object MuebleEstanteNapoleon {
         return (base * pantalla(dx, dy)).coerceIn(0f, 1f)
     }
 
-    /** Lo que deja pasar la pantalla de la bouillotte: arriba de su borde y cerca del eje, poco. */
-    private fun pantalla(dx: Float, dy: Float): Float {
-        if (dy > -0.025f) return 1f
-        val lado = (kotlin.math.abs(dx) / 0.16f).coerceIn(0f, 1f)
-        val alto = ((-dy - 0.025f) / 0.05f).coerceIn(0f, 1f)
-        return 1f - alto * (0.68f - 0.5f * lado)
+    /** Cuánto sube el borde de la pantalla sobre las llamas y cuánto mide su radio, en anchos. */
+    const val PANTALLA_ALTO = 0.03f
+    const val PANTALLA_RADIO = 0.088f
+
+    /**
+     * Lo que deja pasar la pantalla de chapa de la bouillotte: nada por encima de la recta que va de las llamas al borde de la
+     * pantalla (la luz solo sale hacia abajo y rasante a los lados), con una penumbra que se abre con la distancia; lo de la
+     * sombra recibe un poco, del rebote del cuarto.
+     */
+    fun pantalla(dx: Float, dy: Float): Float {
+        val m = PANTALLA_ALTO / PANTALLA_RADIO
+        val sobre = -dy - m * kotlin.math.abs(dx)
+        if (sobre <= 0f) return 1f
+        val pen = 0.012f + 0.14f * kotlin.math.abs(dx)
+        val t = (sobre / pen).coerceIn(0f, 1f)
+        return 1f - 0.8f * t * t * (3f - 2f * t)
     }
 
     /** La luz de la bouillotte en la pared y en lo de arriba: más corta que en el cuerpo, para que lo lejano se hunda. */
@@ -130,7 +140,7 @@ internal object MuebleEstanteNapoleon {
         ((if (suenos) 0.85f else 1.4f) * exp(-2.2f * sqrt(dx * dx * 1.15f + dy * dy))).coerceIn(0f, 1f)
 
     /** La luz del candelero de un hueco: corta, para sus vecinos, el fondo y el canto de la tabla de arriba. */
-    fun candil(dx: Float, dy: Float): Float = (1.05f * exp(-4.3f * sqrt(dx * dx + dy * dy * 1.4f))).coerceIn(0f, 1f)
+    fun candil(dx: Float, dy: Float): Float = (1.25f * exp(-3.7f * sqrt(dx * dx + dy * dy * 1.4f))).coerceIn(0f, 1f)
 
     /** El candelero que más alumbra ([x], [y]) entre [candiles] (x, y, x, y… en anchos). */
     private fun candilMayor(x: Float, y: Float, candiles: FloatArray): Float {
@@ -260,7 +270,7 @@ internal object MuebleEstanteNapoleon {
             else -> if (fx < FAROL_X) 1f else -1f
         }
         // La luna de los Sueños: cuánto le toca a su frente.
-        val luna = lunaCuerpoNapoleon(a, fx, fy) * 0.8f
+        val luna = lunaCuerpoNapoleon(a, fx, fy)
         val kd = if (a.oscuro) maxOf(k, 0.06f) else k
         val tinte = tonoDeDiaNapoleon(v.tono, oscuro)
         with(VolumenEstanteNapoleon) {

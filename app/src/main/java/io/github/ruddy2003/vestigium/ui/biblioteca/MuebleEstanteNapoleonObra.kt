@@ -164,8 +164,8 @@ internal object ObraEstanteNapoleon {
         val af = AireNapoleon(a.oscuro, a.noche, cuerpo = true, fondo = true)
         // La luna de los Sueños oscuros roza las cajas de arriba a la izquierda.
         val luna = lunaCuerpoNapoleon(a, r.left / w + 0.2f, r.center.y / w)
-        fun c(col: Color, f: Float, kk: Float) = af.dia(col, f, kk).let { if (luna > 0f) af.sol(col, it, luna * 0.5f) else it }
-        fun cm(col: Color, f: Float, kk: Float) = a.dia(col, f, kk).let { if (luna > 0f) a.sol(col, it, luna * 0.5f) else it }
+        fun c(col: Color, f: Float, kk: Float) = af.dia(col, f, kk).let { if (luna > 0f) af.sol(col, it, luna * 0.7f) else it }
+        fun cm(col: Color, f: Float, kk: Float) = a.dia(col, f, kk).let { if (luna > 0f) a.sol(col, it, luna * 0.7f) else it }
         // Una fila de más arriba y abajo: así las juntas con las tablas no dejan asomar el fondo.
         val fr = Rect(r.left - 1f, r.top - 1f, r.right + 1f, r.bottom + 1f)
         val n = tramos(a, r.width, w)

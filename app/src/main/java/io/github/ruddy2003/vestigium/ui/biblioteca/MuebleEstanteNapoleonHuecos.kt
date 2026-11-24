@@ -142,12 +142,12 @@ internal object HuecosEstanteNapoleon {
         if (a.oscuro) drawLine(a.filo(0.7f), Offset(fuste.left, fuste.top), Offset(fuste.left, fuste.bottom), 1f * u)
     }
 
-    /** La llama del candelero del hueco [r] (en [x]), de noche: su halo y su lengua. */
+    /** La llama del candelero del hueco [r] (en [x]), de noche y, recién prendida, al ocaso de los Sueños: su halo y su lengua. */
     fun DrawScope.llamaHueco(x: Float, r: Rect, a: AireNapoleon) {
-        if (!a.oscuro) return
+        if (!a.lumbre) return
         val w = size.width
         val c = Offset(x, r.bottom - r.height * 0.76f - r.height * 0.06f)
-        val f = if (a.noche) 0.6f else 1f
+        val f = if (!a.oscuro) 0.5f else if (a.noche) 0.6f else 1f
         mancha(c, w * 0.16f, P.LLAMA.copy(alpha = 0.2f * f))
         mancha(c, w * 0.05f, P.LLAMA.copy(alpha = 0.45f * f))
         ovaloNapoleon(P.LLAMA.copy(alpha = f), Rect(c.x - w * 0.006f, c.y - w * 0.018f, c.x + w * 0.006f, c.y + w * 0.012f))

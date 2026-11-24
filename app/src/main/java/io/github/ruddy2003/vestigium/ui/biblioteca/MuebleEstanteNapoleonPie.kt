@@ -244,7 +244,7 @@ internal object PieEstanteNapoleon {
     private fun DrawScope.silla(a: AireNapoleon, b: Rect, suelo: Float, h: Float, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
         val piso = h - w * 0.014f
-        fun x(f: Float) = w * f
+        fun x(f: Float) = w * (f + 0.035f)
         fun y(f: Float) = piso - w * f
         val k = cerca(Offset(x(0.2f), y(0.12f)))
         val kr = cerca(Offset(x(0.34f), y(0.08f)))
@@ -305,8 +305,8 @@ internal object PieEstanteNapoleon {
         // La silla: el borrén alto de atrás, el asiento hondo y el arzón de delante, en un solo cuerpo de cuero con su canto.
         val asiento = Path().apply {
             moveTo(x(-0.03f), y(0.14f))
-            lineTo(x(0.0f), y(0.215f))
-            cubicTo(x(0.015f), y(0.245f), x(0.05f), y(0.245f), x(0.062f), y(0.22f))
+            lineTo(x(-0.012f), y(0.24f))
+            cubicTo(x(0.0f), y(0.272f), x(0.04f), y(0.27f), x(0.058f), y(0.232f))
             cubicTo(x(0.09f), y(0.175f), x(0.2f), y(0.16f), x(0.27f), y(0.185f))
             cubicTo(x(0.295f), y(0.195f), x(0.315f), y(0.215f), x(0.33f), y(0.205f))
             cubicTo(x(0.35f), y(0.19f), x(0.35f), y(0.16f), x(0.33f), y(0.145f))
@@ -324,10 +324,10 @@ internal object PieEstanteNapoleon {
         }
         drawPath(asiento, a.dia(P.CUERO_OSC, 0f, k), style = Stroke(1.2f * u))
         // El filo de luz del canto del asiento y del borrén.
-        drawPath(Path().apply { moveTo(x(0.0f), y(0.213f)); cubicTo(x(0.015f), y(0.242f), x(0.05f), y(0.242f), x(0.062f), y(0.217f)); cubicTo(x(0.09f), y(0.172f), x(0.2f), y(0.157f), x(0.27f), y(0.182f)) },
+        drawPath(Path().apply { moveTo(x(-0.012f), y(0.238f)); cubicTo(x(0.0f), y(0.268f), x(0.04f), y(0.266f), x(0.058f), y(0.229f)); cubicTo(x(0.09f), y(0.172f), x(0.2f), y(0.157f), x(0.27f), y(0.182f)) },
             a.brillo(0.5f, k), style = Stroke(1.1f * u))
         clavoNapoleon(Offset(x(0.325f), y(0.19f)), w * 0.006f, a, kr)
-        clavoNapoleon(Offset(x(0.03f), y(0.22f)), w * 0.005f, a, k)
+        clavoNapoleon(Offset(x(0.02f), y(0.245f)), w * 0.005f, a, k)
         // La ación y el estribo de hierro, que llega al suelo delante de la mantilla.
         val acion0 = Offset(x(0.165f), y(0.15f)); val est = Offset(x(0.31f), piso - w * 0.008f)
         drawLine(a.sombra(0.35f), acion0 + Offset(w * 0.006f, w * 0.004f), est + Offset(w * 0.006f, -w * 0.02f), w * 0.012f)
@@ -354,9 +354,11 @@ internal object PieEstanteNapoleon {
         val w = size.width; val u = density
         val cx = w * MuebleEstanteNapoleon.FAROL_X
         val pie = h - w * 0.026f
-        val cuerpo = Rect(cx - w * 0.036f, pie - w * 0.13f, cx + w * 0.036f, pie - w * 0.012f)
+        val cuerpo = Rect(cx - w * 0.045f, pie - w * 0.165f, cx + w * 0.045f, pie - w * 0.014f)
+        // De noche arde; al ocaso de los Sueños, recién prendido (sus agujeros brillan poco y sin puntos en el suelo).
         val noche = a.oscuro
-        val f = if (a.noche) 0.7f else 1f
+        val prendido = a.lumbre
+        val f = if (!noche) 0.6f else if (a.noche) 0.7f else 1f
         val k = if (noche) 0.75f else cerca(cuerpo.center)
         // Los puntos de luz que echan los agujeros en el suelo y en el zócalo (de noche).
         if (noche) {
@@ -394,25 +396,25 @@ internal object PieEstanteNapoleon {
                 val fx = (j + 0.5f) / n
                 val x = cuerpo.left + cuerpo.width * (0.5f - 0.5f * cos(fx * 3.1416f))
                 val yy = y + (if (fila % 2 == 0) 0f else w * 0.004f * sin(fx * 3.1416f * 2f))
-                val rr = w * 0.0028f * (0.5f + 0.5f * sin(fx * 3.1416f))
+                val rr = w * 0.0034f * (0.5f + 0.5f * sin(fx * 3.1416f))
                 agujeros.addOval(Rect(x - rr, yy - rr, x + rr, yy + rr))
             }
         }
-        drawPath(agujeros, if (noche) mezcla(P.FUEGO, P.LLAMA, 0.3f).copy(alpha = f) else a.dia(Color(0xFF2A2A2A), 0f, k))
-        if (noche) mancha(cuerpo.center, w * 0.05f, P.LLAMA.copy(alpha = 0.3f * f))
+        drawPath(agujeros, if (prendido) mezcla(P.FUEGO, P.LLAMA, 0.3f).copy(alpha = f) else a.dia(Color(0xFF2A2A2A), 0f, k))
+        if (prendido) mancha(cuerpo.center, w * 0.05f, P.LLAMA.copy(alpha = 0.3f * f))
         // La puerta: su marco y la bisagra.
         drawRect(lataOsc, Offset(cuerpo.left + cuerpo.width * 0.2f, cuerpo.top + cuerpo.height * 0.05f), Size(cuerpo.width * 0.6f, cuerpo.height * 0.9f), style = Stroke(0.9f * u))
         drawRect(lataOsc, Offset(cuerpo.right - cuerpo.width * 0.24f, cuerpo.center.y - w * 0.004f), Size(w * 0.006f, w * 0.008f))
         // El techo cónico con su chimenea calada y la argolla.
-        val techo = poligonoNapoleon(cuerpo.left - w * 0.006f, cuerpo.top, cuerpo.right + w * 0.006f, cuerpo.top, cx + w * 0.008f, cuerpo.top - w * 0.05f, cx - w * 0.008f, cuerpo.top - w * 0.05f)
+        val techo = poligonoNapoleon(cuerpo.left - w * 0.006f, cuerpo.top, cuerpo.right + w * 0.006f, cuerpo.top, cx + w * 0.008f, cuerpo.top - w * 0.062f, cx - w * 0.008f, cuerpo.top - w * 0.062f)
         drawPath(techo, lata)
-        clipPath(techo) { cilindroNapoleon(Rect(cuerpo.left - w * 0.006f, cuerpo.top - w * 0.05f, cuerpo.right + w * 0.006f, cuerpo.top), a, k, -1f, 1.3f) }
+        clipPath(techo) { cilindroNapoleon(Rect(cuerpo.left - w * 0.006f, cuerpo.top - w * 0.062f, cuerpo.right + w * 0.006f, cuerpo.top), a, k, -1f, 1.3f) }
         for (j in 0 until 4) {
             val y = cuerpo.top - w * (0.01f + 0.01f * j)
             drawCircle(if (noche) P.FUEGO.copy(alpha = 0.8f * f) else a.dia(Color(0xFF2A2A2A), 0f, k), w * 0.002f, Offset(cx - w * 0.008f + w * 0.0055f * (j % 3), y))
         }
         drawRect(lataOsc, Offset(cuerpo.left - w * 0.006f, cuerpo.top - w * 0.003f), Size(cuerpo.width + w * 0.012f, w * 0.004f))
-        val arg = Rect(cx - w * 0.016f, cuerpo.top - w * 0.085f, cx + w * 0.016f, cuerpo.top - w * 0.045f)
+        val arg = Rect(cx - w * 0.02f, cuerpo.top - w * 0.105f, cx + w * 0.02f, cuerpo.top - w * 0.056f)
         drawArc(lataOsc, 180f, 180f, false, arg.topLeft, arg.size, style = Stroke(w * 0.004f))
         drawArc(a.brillo(0.4f, k), 200f, 70f, false, arg.topLeft, arg.size, style = Stroke(0.8f * u))
     }

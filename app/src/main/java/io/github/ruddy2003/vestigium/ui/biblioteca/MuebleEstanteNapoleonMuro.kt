@@ -78,13 +78,16 @@ internal object MuroEstanteNapoleon {
             return
         }
         if (a.lumbre && a.oscuro) {
-            // El charco de la bouillotte: el color del amarillo a cada distancia de las velas (un solo degradado, en la imagen
-            // guardada); la sombra de la pantalla, encima, en [sombraPantalla].
-            val c = Offset(w * MuebleEstanteNapoleon.LAMP_X, w * (MuebleEstanteNapoleon.LAMP_Y + 0.02f))
-            val radios = floatArrayOf(0f, 0.05f, 0.1f, 0.17f, 0.26f, 0.37f, 0.5f, 0.68f, 0.9f)
-            val col = radios.map { rr -> a.luz(P.AMARILLO, MuebleEstanteNapoleon.lamparaArriba(rr, 0.02f, a.noche)) }
-            drawRect(Brush.radialGradient(*Array(radios.size) { i -> radios[i] / 0.9f to col[i] }, center = c, radius = w * 0.9f), r.topLeft, r.size)
-            sombraPantalla(r, a)
+            // El charco de la bouillotte, con la sombra de su pantalla: franjas a lo alto, cada una con su degradado de arriba
+            // abajo según la luz que llega a cada punto (en la imagen guardada; se pinta una vez).
+            val n = 96
+            val ys = FloatArray(40) { i -> r.top + r.height * i / 39f }
+            for (t in 0 until n) {
+                val x0 = r.left + r.width * t / n; val x1 = r.left + r.width * (t + 1) / n + 1f
+                val dx = ((x0 + x1) / 2) / w - MuebleEstanteNapoleon.LAMP_X
+                val cols = ys.map { y -> a.luz(P.AMARILLO, MuebleEstanteNapoleon.lamparaArriba(dx, y / w - MuebleEstanteNapoleon.LAMP_Y, a.noche)) }
+                drawRect(Brush.verticalGradient(*Array(ys.size) { i -> (i / 39f) to cols[i] }, startY = r.top, endY = r.bottom), Offset(x0, r.top), Size(x1 - x0, r.height))
+            }
             if (m != null) drawRect(Color(0xFF7890C8).copy(alpha = (0.5f * m.fuerza).coerceAtMost(1f)), r.topLeft, r.size, blendMode = BlendMode.Screen)
             return
         }
@@ -93,34 +96,6 @@ internal object MuroEstanteNapoleon {
         val hondo = a.dia(mezcla(P.AMARILLO, P.AMARILLO_SOMBRA, 0.62f), 0f)
         drawRect(Brush.horizontalGradient(listOf(claro, mezcla(claro, hondo, 0.45f), hondo), r.left, r.right), r.topLeft, r.size)
         drawRect(Brush.verticalGradient(listOf(a.sombra(0.16f), a.sombra(0f)), r.top + w * FRISO1, r.top + w * 0.2f), Offset(r.left, r.top + w * FRISO1), Size(r.width, w * 0.13f))
-    }
-
-    /**
-     * La sombra de la pantalla de la bouillotte en la pared, de noche: la chapa no deja subir la luz de las velas, así que encima
-     * de su borde la pared queda en un cono oscuro que se abre hacia arriba, de borde algo blando.
-     */
-    private fun DrawScope.sombraPantalla(r: Rect, a: AireNapoleon) {
-        val w = size.width
-        val cx = w * MuebleEstanteNapoleon.LAMP_X
-        val borde = w * (MuebleEstanteNapoleon.LAMP_Y - 0.012f)
-        val ancho = w * 0.088f
-        clipRect(r.left, r.top, r.right, r.bottom) {
-            // El borde de la sombra sube despacio desde el canto de la pantalla (la luz que pasa rasante bajo él), blando: cuatro
-            // capas, cada una algo más arriba y más abierta.
-            for (i in 0 until 4) {
-                val e = w * 0.02f * i
-                val cono = Path().apply {
-                    moveTo(cx - ancho, borde - e * 0.5f)
-                    lineTo(cx - ancho - w * 0.6f, borde - w * 0.26f - e)
-                    lineTo(cx - ancho - w * 0.6f, -w * 0.05f)
-                    lineTo(cx + ancho + w * 0.6f, -w * 0.05f)
-                    lineTo(cx + ancho + w * 0.6f, borde - w * 0.26f - e)
-                    lineTo(cx + ancho, borde - e * 0.5f)
-                    close()
-                }
-                drawPath(cono, a.hondo.copy(alpha = 0.2f))
-            }
-        }
     }
 
     /**
@@ -162,7 +137,7 @@ internal object MuroEstanteNapoleon {
         }
         // El rectángulo del cuadro que quitaron: el amarillo sin sol, más vivo, con su cerco de polvo y el clavo.
         val cuadro = Rect(w * 0.47f, w * 0.115f, w * 0.585f, w * 0.215f)
-        drawRect(Color(0xFFF6D9A6).copy(alpha = 0.8f), cuadro.topLeft, cuadro.size, blendMode = BlendMode.Multiply)
+        drawRect(Color(0xFFF6D9A6).copy(alpha = 0.5f), cuadro.topLeft, cuadro.size, blendMode = BlendMode.Multiply)
         drawRect(Color(0xFFC8AE84).copy(alpha = 0.6f), cuadro.topLeft, cuadro.size, style = Stroke(1.4f * u), blendMode = BlendMode.Multiply)
         val clavo = Offset(cuadro.center.x, cuadro.top - w * 0.018f)
         drawLine(Color(0xFFCDB895).copy(alpha = 0.5f), clavo, Offset(cuadro.left + cuadro.width * 0.2f, cuadro.top), 0.8f * u, blendMode = BlendMode.Multiply)
@@ -175,8 +150,8 @@ internal object MuroEstanteNapoleon {
             lineTo(lx + w * 0.07f, w * 0.075f)
             cubicTo(lx + w * 0.07f, w * 0.13f, lx + w * 0.035f, w * 0.18f, lx + w * 0.01f, w * 0.23f); close()
         }
-        drawPath(humo, Color(0xFF8A7A66).copy(alpha = 0.18f), blendMode = BlendMode.Multiply)
-        drawPath(Path().apply { addPath(humo, Offset(0f, -w * 0.02f)) }, Color(0xFF8A7A66).copy(alpha = 0.12f), blendMode = BlendMode.Multiply)
+        drawPath(humo, Color(0xFF8A7A66).copy(alpha = 0.1f), blendMode = BlendMode.Multiply)
+        drawPath(Path().apply { addPath(humo, Offset(0f, -w * 0.02f)) }, Color(0xFF8A7A66).copy(alpha = 0.07f), blendMode = BlendMode.Multiply)
         // Las grietas.
         val grietas = Path()
         listOf(Offset(0.31f, 0.075f) to 0.6f, Offset(0.82f, 0.32f) to -0.4f, Offset(0.92f, 0.08f) to 0.3f).forEachIndexed { i, (o, s) ->

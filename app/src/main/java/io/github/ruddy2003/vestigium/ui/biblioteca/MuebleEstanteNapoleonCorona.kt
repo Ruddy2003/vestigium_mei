@@ -44,9 +44,25 @@ internal object CoronaEstanteNapoleon {
             else {
                 val dx = (desde.x / w - MuebleEstanteNapoleon.LAMP_X).coerceIn(-0.3f, 0.3f) / 0.3f
                 val k = MuebleEstanteNapoleon.lamparaArriba(desde.x / w - MuebleEstanteNapoleon.LAMP_X, desde.y / w - MuebleEstanteNapoleon.LAMP_Y, a.noche)
-                translate(w * 0.04f * dx, w * 0.008f) { drawPath(p, a.hondo.copy(alpha = (0.75f * k + 0.1f).coerceAtMost(0.55f))) }
+                // En la pared encendida, la sombra es parda (la luz de la vela no deja azul en lo que tapa).
+                translate(w * 0.04f * dx, w * 0.008f) { drawPath(p, mezcla(a.hondo, Color(0xFF2A160C), 0.7f).copy(alpha = (0.75f * k + 0.1f).coerceAtMost(0.55f))) }
             }
         }
+    }
+
+    /**
+     * La sombra franca de algo de silueta [sil] dentro de la mancha de la ventana: le quita el sol a la pared, corrida en la
+     * dirección de la luz (de día, a la derecha y algo abajo; al ocaso, casi tendida; con la luna, más abajo).
+     */
+    private fun DrawScope.sombraEnMancha(sil: Path, a: AireNapoleon, m: ManchaNapoleon?, fuerza: Float = 1f) {
+        if (m == null) return
+        val w = size.width
+        val (dx, dy) = when {
+            a.oscuro -> 0.045f to 0.04f
+            a.noche -> 0.11f to 0.012f
+            else -> 0.07f to 0.022f
+        }
+        clipPath(m.forma(w, 0f, 0.012f)) { translate(w * dx, w * dy) { drawPath(sil, a.sombra((if (a.oscuro) 0.3f else 0.36f) * fuerza)) } }
     }
 
     // ---------------------------------------------------------------- lo colgado (antes de la cornisa)
@@ -166,13 +182,8 @@ internal object CoronaEstanteNapoleon {
         }
         val siluetaGlobo = Path().apply { addOval(Rect(c.x - r, c.y - r, c.x + r, c.y + r)); addOval(Rect(c.x - hzA, hz - hzB, c.x + hzA, hz + hzB)) }
         sombraEnPared(siluetaGlobo, c, a, apoyo + 2f, 0.22f)
-        // Dentro de la mancha de la ventana, el globo corta la luz: su sombra franca en la pared, corrida en la dirección del sol.
-        if (m != null) clipPath(m.forma(w)) {
-            translate(w * 0.03f, w * 0.055f) {
-                drawPath(siluetaGlobo, a.sombra(if (a.oscuro) 0.3f else 0.34f))
-                drawPath(sombraPie, a.sombra(0.3f), style = Stroke(w * 0.012f))
-            }
-        }
+        // Dentro de la mancha de la ventana, el globo corta la luz: su sombra franca en la pared, con la de sus patas.
+        sombraEnMancha(Path().apply { addPath(siluetaGlobo); addRect(Rect(c.x - hzA * 0.9f, hz, c.x - hzA * 0.85f, apoyo)); addRect(Rect(c.x + hzA * 0.85f, hz, c.x + hzA * 0.9f, apoyo)) }, a, m)
         if (!a.oscuro) translate(w * 0.022f, w * 0.012f) { drawPath(sombraPie, a.sombra(0.18f), style = Stroke(w * 0.012f)) }
         patas.forEachIndexed { i, (fx, fz) ->
             val top = Offset(c.x + hzA * fx, hz + hzB * fz * 0.6f)
@@ -228,6 +239,12 @@ internal object CoronaEstanteNapoleon {
             // El barniz amarillento del papel del globo y su borde más oscuro.
             drawCircle(a.sombra(0.25f), r, c, style = Stroke(1.6f * u))
         }
+        if (noche) clipPath(esfera) {
+            // La sombra de la pantalla de la bouillotte: la mitad de arriba del globo queda por encima de su borde, a oscuras.
+            val linea = w * (MuebleEstanteNapoleon.LAMP_Y - MuebleEstanteNapoleon.PANTALLA_ALTO / MuebleEstanteNapoleon.PANTALLA_RADIO * (MuebleEstanteNapoleon.LAMP_X - GX))
+            val pen = w * (0.012f + 0.14f * (MuebleEstanteNapoleon.LAMP_X - GX))
+            drawRect(Brush.verticalGradient(0f to a.hondo.copy(alpha = 0.72f), 1f to a.hondo.copy(alpha = 0f), startY = linea - pen, endY = linea + pen * 0.2f), Offset(c.x - r, c.y - r), Size(2 * r, linea + pen - (c.y - r)))
+        }
         if (noche) clipPath(esfera) { drawArc(a.filo(0.75f * kd), -70f, 120f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(1.6f * u)) }
         // El eje: el pivote de arriba con su casquete, inclinado como el de la tierra.
         val eje = Offset(c.x + r * 0.42f * 0.55f, c.y - r * 1.12f)
@@ -268,6 +285,7 @@ internal object CoronaEstanteNapoleon {
         libros.forEachIndexed { i, (r, col) ->
             val k = cerca(r.center)
             sombraEnPared(Path().apply { addRect(r) }, r.center, a, apoyo, 0.16f)
+            sombraEnMancha(Path().apply { addRect(r) }, a, m, 0.8f)
             // El lomo (de cara a quien mira) con sus nervios y el canto de las hojas a la derecha.
             drawRect(a.sombra(0.4f), Offset(r.left + 1.2f * u, r.bottom - 1f * u), Size(r.width, 1.6f * u))
             drawRect(a.dia(col, 0f, k), r.topLeft, r.size)
@@ -325,9 +343,9 @@ internal object CoronaEstanteNapoleon {
     }
 
     /**
-     * La lámpara bouillotte: el plato con su galería, el fuste de latón, los dos brazos con sus velas, la pantalla de chapa verde
-     * con sus filetes dorados (sube y baja por el fuste) y el remate. De noche, las velas arden bajo la pantalla y su cara de
-     * dentro se enciende.
+     * La lámpara bouillotte: el plato con su galería calada sobre tres patitas, el fuste de latón torneado, los dos brazos en ese
+     * con sus arandelas y sus velas, la pantalla de chapa verde (sube y baja por el fuste) con la cenefa dorada de puntos y su
+     * collar, y el remate. De noche, las velas arden bajo la pantalla y su boca se enciende por dentro.
      */
     private fun DrawScope.lampara(a: AireNapoleon, apoyo: Float, cerca: (Offset) -> Float, m: ManchaNapoleon?) {
         val w = size.width; val u = density
@@ -337,79 +355,110 @@ internal object CoronaEstanteNapoleon {
         val k = if (noche) 1f else cerca(Offset(cx, apoyo))
         val laton = a.dia(P.LATON, 0f, k)
         val latonOsc = a.dia(P.LATON_OSC, 0f, k)
-        val plato = Rect(cx - w * 0.075f, apoyo - w * 0.02f, cx + w * 0.075f, apoyo + w * 0.004f)
-        val pant0 = llama - w * 0.012f
-        val pant1 = pant0 - w * 0.06f
-        val rem = pant1 - w * 0.055f
+        val latonLuz = a.dia(P.LATON_LUZ, 0f, k)
+        val hacia = if (noche) 1f else -1f
+        val plato = Rect(cx - w * 0.078f, apoyo - w * 0.024f, cx + w * 0.078f, apoyo - w * 0.004f)
+        val pant0 = llama - w * MuebleEstanteNapoleon.PANTALLA_ALTO
+        val radio = w * MuebleEstanteNapoleon.PANTALLA_RADIO
+        val pant1 = pant0 - w * 0.058f
+        val rem = pant1 - w * 0.05f
+        val pantalla = poligonoNapoleon(cx - radio, pant0, cx + radio, pant0, cx + radio * 0.55f, pant1, cx - radio * 0.55f, pant1)
         val sil = Path().apply {
             addOval(plato)
             addRect(Rect(cx - w * 0.006f, rem, cx + w * 0.006f, apoyo))
-            addPath(poligonoNapoleon(cx - w * 0.088f, pant0, cx + w * 0.088f, pant0, cx + w * 0.048f, pant1, cx - w * 0.048f, pant1))
+            addPath(pantalla)
         }
         sombraEnPared(sil, Offset(cx, apoyo - w * 0.08f), a, apoyo, 0.2f)
-        // El plato con su galería calada y su sombra.
-        contactoNapoleon(Offset(cx, apoyo), w * 0.17f, w * 0.01f, a, 0.4f)
+        sombraEnMancha(sil, a, m)
+        // Las tres patitas y el plato con su galería calada.
+        contactoNapoleon(Offset(cx, apoyo), w * 0.18f, w * 0.012f, a, 0.42f)
+        listOf(-0.06f, 0f, 0.06f).forEach { f -> ovaloNapoleon(latonOsc, Rect(cx + w * f - w * 0.008f, apoyo - w * 0.008f, cx + w * f + w * 0.008f, apoyo + w * 0.002f)) }
         ovaloNapoleon(latonOsc, plato)
-        ovaloNapoleon(laton, Rect(plato.left + w * 0.004f, plato.top, plato.right - w * 0.004f, plato.bottom - w * 0.006f))
-        ovaloNapoleon(a.dia(P.LATON_LUZ, 0f, k), Rect(plato.left + w * 0.02f, plato.top + w * 0.002f, plato.right - w * 0.03f, plato.top + w * 0.008f))
-        val gal = Rect(plato.left, plato.top - w * 0.012f, plato.right, plato.top + w * 0.006f)
-        drawRect(latonOsc, Offset(gal.left + w * 0.006f, gal.top + w * 0.006f), Size(gal.width - w * 0.012f, w * 0.002f))
-        var gx = gal.left + w * 0.01f
-        while (gx < gal.right - w * 0.008f) { drawLine(latonOsc, Offset(gx, gal.top + w * 0.006f), Offset(gx, plato.top + w * 0.006f), 0.8f * u); gx += w * 0.01f }
-        // El fuste de latón, acanalado, del plato al remate.
-        drawRect(latonOsc, Offset(cx - w * 0.006f, rem), Size(w * 0.012f, apoyo - rem - w * 0.01f))
-        drawRect(laton, Offset(cx - w * 0.006f, rem), Size(w * 0.007f, apoyo - rem - w * 0.01f))
-        drawRect(a.brillo(0.6f, k), Offset(cx - w * 0.004f, rem), Size(0.9f * u, apoyo - rem - w * 0.01f))
-        ovaloNapoleon(laton, Rect(cx - w * 0.014f, apoyo - w * 0.05f, cx + w * 0.014f, apoyo - w * 0.03f))
+        ovaloNapoleon(laton, Rect(plato.left + w * 0.003f, plato.top, plato.right - w * 0.003f, plato.bottom - w * 0.005f))
+        clipPath(Path().apply { addOval(plato) }) { cilindroNapoleon(plato, a, k, hacia, 1.2f) }
+        val gal = Rect(plato.left + w * 0.004f, plato.top - w * 0.014f, plato.right - w * 0.004f, plato.top + w * 0.004f)
+        val calado = Path()
+        var gx = gal.left + w * 0.006f
+        while (gx < gal.right - w * 0.004f) { calado.addOval(Rect(gx, gal.top + w * 0.005f, gx + w * 0.006f, gal.top + w * 0.013f)); gx += w * 0.01f }
+        drawRect(laton, Offset(gal.left, gal.top + w * 0.003f), Size(gal.width, w * 0.013f))
+        drawPath(calado, a.dia(P.CAOBA_HONDO, 0f, k).copy(alpha = 0.7f))
+        drawRect(latonLuz, Offset(gal.left, gal.top + w * 0.003f), Size(gal.width, w * 0.0025f))
+        drawRect(latonOsc, Offset(gal.left, gal.top + w * 0.014f), Size(gal.width, w * 0.002f))
+        // El fuste torneado: el balaústre de abajo, la caña acanalada, el collar de los brazos.
+        val bal = Path().apply {
+            moveTo(cx - w * 0.008f, gal.top + w * 0.004f)
+            cubicTo(cx - w * 0.024f, gal.top - w * 0.01f, cx - w * 0.016f, gal.top - w * 0.03f, cx - w * 0.006f, gal.top - w * 0.04f)
+            lineTo(cx + w * 0.006f, gal.top - w * 0.04f)
+            cubicTo(cx + w * 0.016f, gal.top - w * 0.03f, cx + w * 0.024f, gal.top - w * 0.01f, cx + w * 0.008f, gal.top + w * 0.004f)
+            close()
+        }
+        drawPath(bal, laton)
+        clipPath(bal) { cilindroNapoleon(Rect(cx - w * 0.024f, gal.top - w * 0.04f, cx + w * 0.024f, gal.top), a, k, hacia, 1.5f) }
+        val cana = Rect(cx - w * 0.005f, rem, cx + w * 0.005f, gal.top - w * 0.04f)
+        drawRect(laton, cana.topLeft, cana.size)
+        clipRect(cana.left, cana.top, cana.right, cana.bottom) { cilindroNapoleon(cana, a, k, hacia, 1.6f) }
+        val collar = apoyo - w * 0.075f
+        ovaloNapoleon(latonOsc, Rect(cx - w * 0.014f, collar - w * 0.008f, cx + w * 0.014f, collar + w * 0.008f))
+        ovaloNapoleon(laton, Rect(cx - w * 0.012f, collar - w * 0.008f, cx + w * 0.012f, collar + w * 0.004f))
         // Los dos brazos en ese, con su arandela y su vela.
         listOf(-1f, 1f).forEach { s ->
-            val vx = cx + s * w * 0.048f
+            val vx = cx + s * w * 0.05f
+            val baja = llama + w * 0.07f
             val brazo = Path().apply {
-                moveTo(cx, apoyo - w * 0.045f)
-                cubicTo(cx + s * w * 0.03f, apoyo - w * 0.06f, vx - s * w * 0.01f, apoyo - w * 0.03f, vx, llama + w * 0.072f)
+                moveTo(cx, collar)
+                cubicTo(cx + s * w * 0.028f, collar + w * 0.012f, vx - s * w * 0.004f, collar + w * 0.02f, vx, baja + w * 0.012f)
             }
+            drawPath(brazo, a.sombra(0.3f), style = Stroke(w * 0.007f, cap = StrokeCap.Round))
             drawPath(brazo, latonOsc, style = Stroke(w * 0.006f, cap = StrokeCap.Round))
-            drawPath(brazo, laton, style = Stroke(w * 0.0035f, cap = StrokeCap.Round))
-            val vela = Rect(vx - w * 0.008f, llama + w * 0.006f, vx + w * 0.008f, llama + w * 0.07f)
+            drawPath(brazo, laton, style = Stroke(w * 0.0032f, cap = StrokeCap.Round))
+            val vela = Rect(vx - w * 0.0085f, llama + w * 0.004f, vx + w * 0.0085f, baja)
             val cera = if (noche) a.luz(Color(0xFFF4ECD8), 0.95f) else a.dia(Color(0xFFF2EAD6), 0f, k)
             drawRect(cera, vela.topLeft, vela.size)
-            drawRect(a.sombra(0.25f), Offset(vela.right - vela.width * 0.35f, vela.top), Size(vela.width * 0.35f, vela.height))
-            ovaloNapoleon(cera, Rect(vela.left - w * 0.002f, vela.top + w * 0.01f, vela.left + w * 0.004f, vela.top + w * 0.03f))
-            ovaloNapoleon(latonOsc, Rect(vx - w * 0.016f, vela.bottom - w * 0.004f, vx + w * 0.016f, vela.bottom + w * 0.006f))
-            ovaloNapoleon(laton, Rect(vx - w * 0.014f, vela.bottom - w * 0.005f, vx + w * 0.014f, vela.bottom + w * 0.002f))
-            drawLine(Color(0xFF2A1A10), Offset(vx, vela.top), Offset(vx, vela.top - w * 0.006f), 0.8f * u)
-            if (noche) {
-                // La llama, viva, y su halo.
-                val f = if (a.noche) 0.7f else 1f
-                mancha(Offset(vx, vela.top - w * 0.012f), w * 0.03f, P.LLAMA.copy(alpha = 0.5f * f))
-                ovaloNapoleon(P.LLAMA.copy(alpha = f), Rect(vx - w * 0.005f, vela.top - w * 0.026f, vx + w * 0.005f, vela.top - w * 0.002f))
-                ovaloNapoleon(P.FUEGO.copy(alpha = f), Rect(vx - w * 0.0025f, vela.top - w * 0.018f, vx + w * 0.0025f, vela.top - w * 0.004f))
+            drawRect(a.sombra(0.22f), Offset(if (s < 0f && noche) vela.left else vela.right - vela.width * 0.35f, vela.top), Size(vela.width * 0.35f, vela.height))
+            ovaloNapoleon(cera, Rect(vela.left - w * 0.002f, vela.top + w * 0.008f, vela.left + w * 0.004f, vela.top + w * 0.026f))
+            ovaloNapoleon(latonOsc, Rect(vx - w * 0.017f, vela.bottom - w * 0.004f, vx + w * 0.017f, vela.bottom + w * 0.007f))
+            ovaloNapoleon(laton, Rect(vx - w * 0.015f, vela.bottom - w * 0.005f, vx + w * 0.015f, vela.bottom + w * 0.002f))
+            drawRect(laton, Offset(vx - w * 0.007f, vela.bottom), Size(w * 0.014f, w * 0.01f))
+            drawLine(Color(0xFF2A1A10), Offset(vx, vela.top), Offset(vx, vela.top - w * 0.005f), 0.8f * u)
+            if (noche || a.noche) {
+                // De noche, viva; al ocaso de los Sueños, recién prendida y chica.
+                val f = if (!noche) 0.55f else if (a.noche) 0.7f else 1f
+                mancha(Offset(vx, vela.top - w * 0.012f), w * 0.035f, P.LLAMA.copy(alpha = 0.55f * f))
+                ovaloNapoleon(P.LLAMA.copy(alpha = f), Rect(vx - w * 0.0055f, vela.top - w * 0.027f, vx + w * 0.0055f, vela.top - w * 0.002f))
+                ovaloNapoleon(P.FUEGO.copy(alpha = f), Rect(vx - w * 0.0028f, vela.top - w * 0.019f, vx + w * 0.0028f, vela.top - w * 0.004f))
             }
         }
-        // La pantalla de chapa: un tronco de cono, verde, con sus filetes dorados; de noche, su cara de dentro encendida.
-        val pantalla = poligonoNapoleon(cx - w * 0.088f, pant0, cx + w * 0.088f, pant0, cx + w * 0.048f, pant1, cx - w * 0.048f, pant1)
-        val kp = if (noche) 0.35f else k
+        // La pantalla de chapa: un tronco de cono, verde, con su luz redonda, la cenefa dorada de puntos abajo y el filete de arriba.
+        val kp = if (noche) 0.3f else k
         drawPath(pantalla, a.dia(P.CHAPA, 0f, kp))
         clipPath(pantalla) {
-            val luzDia = if (noche) 1f else -1f
-            cilindroNapoleon(Rect(cx - w * 0.088f, pant1, cx + w * 0.088f, pant0), a, if (noche) 0.4f else k, luzDia, 1.2f)
-            drawRect(a.dia(P.LATON, 0f, kp), Offset(cx - w * 0.09f, pant0 - w * 0.008f), Size(w * 0.18f, w * 0.005f))
-            drawRect(a.dia(P.LATON, 0f, kp), Offset(cx - w * 0.09f, pant1 + w * 0.004f), Size(w * 0.18f, w * 0.0025f))
-            drawRect(a.dia(P.LATON_OSC, 0f, kp), Offset(cx - w * 0.09f, pant0 - w * 0.016f), Size(w * 0.18f, w * 0.0015f))
+            cilindroNapoleon(Rect(cx - radio, pant1, cx + radio, pant0), a, if (noche) 0.35f else k, hacia, 1.3f)
+            val cen = pant0 - w * 0.014f
+            drawRect(a.dia(P.LATON, 0f, kp), Offset(cx - radio, cen), Size(radio * 2, w * 0.009f))
+            drawRect(a.dia(P.LATON_OSC, 0f, kp), Offset(cx - radio, cen + w * 0.009f), Size(radio * 2, w * 0.0015f))
+            val puntos = Path()
+            var px = cx - radio + w * 0.006f
+            while (px < cx + radio) { puntos.addOval(Rect(px - w * 0.002f, cen + w * 0.0025f, px + w * 0.002f, cen + w * 0.0065f)); px += w * 0.009f }
+            drawPath(puntos, a.dia(P.CHAPA, 0f, kp))
+            drawRect(a.dia(P.LATON, 0f, kp), Offset(cx - radio, pant1 + w * 0.004f), Size(radio * 2, w * 0.003f))
+            drawRect(a.brillo(0.3f, kp), Offset(cx - radio, pant1), Size(radio * 2, w * 0.002f))
         }
-        // La boca de la pantalla vista por debajo (el borde de abajo, en óvalo) y, de noche, encendida por dentro.
-        val bocaP = Rect(cx - w * 0.088f, pant0 - w * 0.008f, cx + w * 0.088f, pant0 + w * 0.008f)
-        ovaloNapoleon(if (noche) mezcla(P.LLAMA, P.FUEGO, 0.3f).copy(alpha = if (a.noche) 0.6f else 0.85f) else a.dia(mezcla(P.CHAPA, P.PAPEL, 0.6f), 0.1f, k), bocaP)
-        ovaloNapoleon(a.dia(P.LATON, 0f, if (noche) 1f else k), bocaP, style = Stroke(1.2f * u))
-        // El remate: la bola y el pináculo, con el tornillo que sujeta la pantalla.
-        drawCircle(latonOsc, w * 0.009f, Offset(cx, rem + w * 0.004f))
-        drawCircle(laton, w * 0.007f, Offset(cx - w * 0.001f, rem + w * 0.003f))
-        drawLine(laton, Offset(cx, rem), Offset(cx, rem - w * 0.018f), w * 0.004f, StrokeCap.Round)
-        drawCircle(a.brillo(0.6f, k), w * 0.0025f, Offset(cx - w * 0.003f, rem))
-        drawCircle(latonOsc, w * 0.005f, Offset(cx + w * 0.008f, pant1 - w * 0.006f))
+        // El canto de abajo de la pantalla y su boca vista por debajo: de día, la chapa clara por dentro; de noche, encendida.
+        val bocaP = Rect(cx - radio, pant0 - w * 0.009f, cx + radio, pant0 + w * 0.009f)
+        ovaloNapoleon(if (noche) mezcla(P.LLAMA, P.FUEGO, 0.35f).copy(alpha = if (a.noche) 0.65f else 0.9f) else a.dia(Color(0xFFE6E0C8), -0.1f, k), bocaP)
+        ovaloNapoleon(a.dia(P.LATON, 0f, if (noche) 1f else k), bocaP, style = Stroke(1.4f * u))
+        // El collar de arriba de la pantalla, el tornillo que la sujeta y el remate en bellota.
+        ovaloNapoleon(latonOsc, Rect(cx - radio * 0.58f, pant1 - w * 0.006f, cx + radio * 0.58f, pant1 + w * 0.006f))
+        ovaloNapoleon(laton, Rect(cx - radio * 0.55f, pant1 - w * 0.006f, cx + radio * 0.55f, pant1 + w * 0.003f))
+        drawCircle(latonOsc, w * 0.005f, Offset(cx + w * 0.012f, pant1 - w * 0.012f))
+        drawCircle(latonOsc, w * 0.01f, Offset(cx, rem + w * 0.004f))
+        drawCircle(laton, w * 0.008f, Offset(cx - w * 0.0012f, rem + w * 0.0028f))
+        ovaloNapoleon(laton, Rect(cx - w * 0.005f, rem - w * 0.022f, cx + w * 0.005f, rem - w * 0.004f))
+        drawCircle(a.brillo(0.65f, k), w * 0.0028f, Offset(cx - w * 0.003f, rem))
         if (noche) {
-            // El filo de la llama en el plato y el brillo de dentro de la pantalla.
-            drawArc(P.LLAMA.copy(alpha = 0.7f), 180f, 180f, false, plato.topLeft, plato.size, style = Stroke(1.2f * u))
+            // El filo de la llama en la galería del plato y en el canto de abajo de la pantalla.
+            drawRect(P.LLAMA.copy(alpha = 0.75f), Offset(gal.left, gal.top + w * 0.003f), Size(gal.width, w * 0.004f))
+            drawArc(P.FUEGO.copy(alpha = 0.6f), 0f, 180f, false, bocaP.topLeft, bocaP.size, style = Stroke(1.2f * u))
         }
     }
 

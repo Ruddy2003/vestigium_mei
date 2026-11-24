@@ -136,7 +136,7 @@ internal class AireNapoleon(val oscuro: Boolean, val noche: Boolean, val cuerpo:
     /** El color propio de algo, hundido: oscuro, algo de su tono, con el aire de la noche. */
     fun hundido(c: Color): Color {
         val n = hondo
-        val f = if (cuerpo) 0.15f else 0.1f
+        val f = if (cuerpo) 0.12f else 0.1f
         return Color(c.red * f + n.red * 0.85f, c.green * f + n.green * 0.85f, c.blue * f + n.blue * 0.85f, c.alpha)
     }
 
@@ -144,7 +144,9 @@ internal class AireNapoleon(val oscuro: Boolean, val noche: Boolean, val cuerpo:
     private fun aLaLlama(c: Color): Color = Color((c.red * 1.1f).coerceAtMost(1f), c.green * 0.87f, c.blue * 0.62f, c.alpha)
 
     /** El color al ocaso de los Sueños claros: el cuarto ya en penumbra, más bajo, tibio y con algo del violeta de la sombra. */
-    private fun alOcaso(c: Color): Color = mezcla(Color(c.red * 0.9f, c.green * 0.76f, c.blue * 0.76f, c.alpha), p.SOMBRA_OCASO, 0.12f)
+    private fun alOcaso(c: Color): Color =
+        if (cuerpo) mezcla(Color(c.red * 0.8f, c.green * 0.64f, c.blue * 0.68f, c.alpha), p.SOMBRA_OCASO, 0.2f)
+        else mezcla(Color(c.red * 0.9f, c.green * 0.76f, c.blue * 0.76f, c.alpha), p.SOMBRA_OCASO, 0.12f)
 
     /** Cerca de la llama, lo claro se vuelve ámbar (el amarillo pasa a miel, no a pardo). */
     private fun ambar(c: Color, k: Float): Color {
@@ -158,7 +160,7 @@ internal class AireNapoleon(val oscuro: Boolean, val noche: Boolean, val cuerpo:
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) mezcla(alOcaso(c), p.LLAMA, 0.1f * k) else c
         // En el cuerpo la luz cae más deprisa: lo de en medio, entre una llama y otra, se hunde de verdad.
-        val e = if (cuerpo) 1.6 else 1.3
+        val e = if (cuerpo) 1.7 else 1.3
         return mezcla(mezcla(hundido(c), ambar(c, k), (1.1f * Math.pow(k.toDouble(), e).toFloat()).coerceAtMost(0.94f)), p.LLAMA, 0.12f * k)
     }
 
@@ -305,11 +307,11 @@ internal class ManchaNapoleon(val q: FloatArray, val color: Color, val fuerza: F
  */
 internal fun manchaNapoleon(a: AireNapoleon): ManchaNapoleon? = when {
     // La luna, más alta y más tenue: los cuarterones caen más empinados.
-    a.oscuro && a.noche -> ManchaNapoleon(floatArrayOf(0.15f, 0.12f, 0.32f, 0.16f, 0.47f, 0.44f, 0.3f, 0.41f), PaletaNapoleon.LUNA, 0.62f)
+    a.oscuro && a.noche -> ManchaNapoleon(floatArrayOf(0.3f, 0.1f, 0.5f, 0.13f, 0.57f, 0.42f, 0.38f, 0.4f), PaletaNapoleon.LUNA, 0.62f)
     a.oscuro -> null
     // Al ocaso, el sol bajo: los cuarterones se tienden y se alargan a lo ancho.
-    a.noche -> ManchaNapoleon(floatArrayOf(0.13f, 0.1f, 0.5f, 0.16f, 0.6f, 0.36f, 0.24f, 0.3f), PaletaNapoleon.OCASO, 1f)
-    else -> ManchaNapoleon(floatArrayOf(0.14f, 0.085f, 0.34f, 0.125f, 0.5f, 0.43f, 0.31f, 0.4f), PaletaNapoleon.SOL, 0.9f)
+    a.noche -> ManchaNapoleon(floatArrayOf(0.34f, 0.08f, 0.78f, 0.13f, 0.83f, 0.33f, 0.41f, 0.27f), PaletaNapoleon.OCASO, 1f)
+    else -> ManchaNapoleon(floatArrayOf(0.3f, 0.08f, 0.56f, 0.11f, 0.66f, 0.41f, 0.41f, 0.38f), PaletaNapoleon.SOL, 0.9f)
 }
 
 /**
@@ -318,8 +320,8 @@ internal fun manchaNapoleon(a: AireNapoleon): ManchaNapoleon? = when {
  */
 internal fun lunaCuerpoNapoleon(a: AireNapoleon, fx: Float, fy: Float): Float {
     if (!(a.oscuro && a.noche)) return 0f
-    val dx = fx - 0.12f; val dy = (fy - 0.5f) * 0.8f
-    return (1f - kotlin.math.sqrt(dx * dx + dy * dy) / 0.85f).coerceIn(0f, 1f)
+    val dx = fx - 0.12f; val dy = (fy - 0.5f) * 0.75f
+    return (1.15f - kotlin.math.sqrt(dx * dx + dy * dy) / 0.95f).coerceIn(0f, 1f)
 }
 
 /** Un óvalo inscrito en [r] (para no repetir esquina y tamaño). */
