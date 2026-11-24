@@ -41,14 +41,10 @@ import kotlin.math.sin
 // =====================================================================
 
 /**
- * Horror cósmico: la librería de la casa antigua, de roble oscuro, contra un papel tapiz de rombos. Las puertas de vidrio
- * están abiertas junto a los costados: la izquierda entreabierta, la derecha con un vidrio roto y su cerradura. Arriba, la
- * cornisa de molduras con el friso de paneles y una concha tallada; encima, un reloj de arena, una vela en su palmatoria de
- * latón y una telaraña en la esquina. Abajo, el zócalo con sus patas de bola y el hueco oscuro debajo. El mes va en un papel
- * clavado con dos tachuelas. Cada entrada es un libro de tela o de cuero con nervios y filetes dorados, el día en una
- * etiqueta de papel, el mes en dorado y un florón (de noche, una luna); asoman papelitos de notas, más cuanto más escribiste,
- * y algunos van atados con cordel. De noche se enciende la vela y, en el hueco bajo el mueble, se abren dos ojos. La tapa es
- * ese libro grande y de frente: la tela gastada con su filete dorado, el florón (de noche, la luna), la etiqueta con la fecha,
+ * Horror cósmico: el estante del diario es la librería de la sala de lectura del archivo del pueblo, hecha con las maderas de
+ * un barco, contra el papel de escamas y con la ventana de guillotina empañada; sus entradas son el libro de registro, la
+ * botella lacrada y el fardo en un trozo de vela (el dibujo, en [MuebleEstanteArcano]). La tapa es un libro grande de tela,
+ * de frente: la tela gastada con su filete dorado, el florón (de noche, la luna), la etiqueta con la fecha,
  * el cerco de una taza, el recorte que asoma, las notas por arriba y la correa con su hebilla; al abrirse, la tapa gira y
  * deja ver la primera hoja, garabateada. Distinto del Ideario, que es el archivo de un pueblo de la costa con su quinqué y
  * sus cajas de cartón.
