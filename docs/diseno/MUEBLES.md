@@ -218,6 +218,29 @@ Art nouveau, Tierras Antiguas, Templario, Ciudad neón y Prehistoria, con la mis
 
 ---
 
+# La quinta tanda de bibliotecas (24 nov 2026)
+
+Napoleónico, Horror cósmico, Galia, Revolución francesa y Ciudad verde, con la misma vara (el Ideario de su tema, al lado y a la misma escala) y dos rondas de revisión cada una, después de las vueltas propias de cada agente. En las cinco, el mismo agente hizo después la libreta de momentos nueva y las mejoras simples de la tapa (abajo, «Decisión del 23 nov 2026 y segunda vuelta»).
+
+## Qué es cada mueble
+
+- **Napoleónico:** la librería de campaña del oficial de estado mayor (cajas de caoba con cantoneras de latón, forradas de paño verde por dentro, apiladas para hacer el estante) en el cuarto de una casa requisada, contra el enlucido amarillo Imperio, con el globo, la lámpara bouillotte y la trompa arriba; las entradas son el tomo de tafilete, la caja de archivo jaspeada y el ridículo de seda.
+- **Horror cósmico:** la librería que un carpintero de ribera hizo con la teca de un barco, en la sala de lectura de arriba del archivo del pueblo de pescadores, contra el papel pintado de escamas verde mar, con la ventana de guillotina empañada y la lente del faro arriba; las entradas son el libro de registro hinchado por la humedad, la botella lacrada y el fardo en un trozo de vela.
+- **Galia:** el estante de las cuentas de la casa grande, un bastidor de roble labrado a azuela contra el barro bañado de almagra, bajo el alero por dentro, con la tinaja, el ánfora, el cuerno y las mantas a cuadros arriba y el hogar al pie; sin ventana (la luz es la de la puerta); las entradas son la funda de lana a cuadros con tablillas, el cofre de mimbre y el zurrón de cuero.
+- **Revolución francesa:** la librería pintada de sangre de toro, con los casilleros verde cardenillo, de la trastienda de la imprenta del barrio, contra el yeso con los pliegos tendidos a secar, con la caja de tipos arriba, la ventana del cajista y la estufa al pie; las entradas son el tomo en cartoné, el fajo de folletos atado con cinta y el rollo de carteles.
+- **Ciudad verde:** la librería de roble de la biblioteca municipal, subida al cuarto de lectura bajo el lucernario roto, contra el yeso verde agua desconchado con el herbario tendido, con la máquina de escribir y la damajuana con un helecho arriba y el anafre al pie; las entradas son el libro salvado, la botella de las hojas enrolladas y el fardo de tela encerada.
+
+## Lo que salió de las revisiones
+
+- **La luz de ventana no es una franja encima:** en tres de las cinco, el sol entraba como franjas diagonales translúcidas puestas sobre el dibujo. Se rehízo como parches que pintan cada plano con su quiebre (la regla de la tercera tanda), y la luz de la puerta de Galia, que caía como una banda sobre la tinaja, pinta ahora el material de cada objeto.
+- **Las tres clases de entrada se distinguen por la silueta:** unas se leían «libros, libros, libros»; la segunda y la tercera clase tienen que ser otra cosa a la primera (una botella con hombros y cuello, un fardo blando con su cordel).
+- **La noche no es pareja:** un bastidor que de noche quedaba de un solo tono se partió en el oscuro con color del tema y la luz cálida junto a la lumbre.
+- **Los Sueños, sin velo:** un velo rosa (el ocaso) o azul pizarra (la luna) sobre todo el estante se devolvió; el ocaso, bajo y melocotón, no naranja saturado, con el violeta solo en las sombras, y la luna en un parche chico de azul hondo con su filo.
+- **Siluetas que se leían como otra cosa:** un salvavidas con cuatro ligadas iguales hacía una cruz en un círculo (quedaron tres ligadas desiguales); un cuerno colgado parecía un arco (ahora cuelga de un clavo por la boca); un fardo de tela parecía un pan (quedó como paquete, con sus esquinas y su cordel); un farolillo de lata agujereada parecía un rallador (lleva su puertecilla).
+- **La tarjeta no tapa la entrada:** la tarjeta del día tapaba casi entera la bolsa de seda; quedó chica, colgada del cordón.
+
+---
+
 # El libro del día y la libreta de momentos (20 nov 2026)
 
 La prueba en tres temas (Helénico, Scriptorium y Espacio) quedó aprobada por el autor el 20 nov 2026: «funciona, se ven bien; no es impresionante». Se hace igual en los demás. **La vara siguen siendo los Idearios rehechos**, y los dos muebles se ven de la misma casa que el Ideario y la biblioteca del tema sin repetir sus objetos ni su luz. Lo que queda y en qué van: `docs/PENDIENTES.md`.
@@ -259,7 +282,7 @@ Lo de siempre (lo fijo se arma una vez por tamaño; ningún `Brush` ni `Path` nu
 
 ## Decisión del 23 nov 2026 y segunda vuelta
 
-Tras una prueba de editar sin redibujar (en Pirata y Vapor victoriano), el autor decidió el 23 nov 2026: **la libreta de momentos se hace de nuevo en todos los temas; la portada del libro del día se queda como está, con mejoras simples** (editar, no redibujar). La segunda vuelta la hicieron los agentes de Art nouveau, Tierras Antiguas, Templario, Ciudad neón y Prehistoria, cada uno encima de su biblioteca aprobada y sin tocarla.
+Tras una prueba de editar sin redibujar (en Pirata y Vapor victoriano), el autor decidió el 23 nov 2026: **la libreta de momentos se hace de nuevo en todos los temas; la portada del libro del día se queda como está, con mejoras simples** (editar, no redibujar). La segunda vuelta la hicieron los agentes de Art nouveau, Tierras Antiguas, Templario, Ciudad neón y Prehistoria y, después, los de Napoleónico, Horror cósmico, Galia, Revolución francesa y Ciudad verde, cada uno encima de su biblioteca aprobada y sin tocarla.
 
 ### La libreta, nueva
 
@@ -289,3 +312,11 @@ Tras una prueba de editar sin redibujar (en Pirata y Vapor victoriano), el autor
 - **La luz de ventana o de luna pinta el material:** su mismo color, virado y un paso más claro, con un borde que se quiebra en cada plano. Se devolvieron un paño de luz como dos arcos pálidos gemelos (parecían dos figuras), un paño de luna translúcido (parecía un cristal apoyado en la pared) y un parche de luna gris blanquecino sobre cuero (parecía una chapa pegada). Si no se lee como luz, se quita y queda el filo frío en los cantos.
 - **Objetos que parecen otra cosa:** una vara de tramos rojos y blancos parecía un bastón de caramelo (quedó de fresno a la vista con bandas gastadas).
 - **El charco de la lámpara tiñe sin matar el color local:** el azulejo verde bajo la luz cálida va a coral con la junta todavía verde, no a pardo.
+- **De la quinta tanda** (Napoleónico, Horror cósmico, Galia, Revolución francesa y Ciudad verde):
+  - **El objeto no es un letrero:** un haz de tablillas de frente, con el nombre grande en la de arriba, se leía como un letrero, y su rincón era pobre. Quedó un haz de tablillas gruesas, desiguales y algo giradas, atado por encima con su nudo, y el rincón con lo de la casa (la cenefa, el poste, las hierbas, la manta, el cuenco de cera, el vaso, el ovillo). Un legajo frontal y plano también se leía como un cartel: ahora es una carpeta de vitela alabeada, con el grueso de los pliegos a la vista también con pocos despachos.
+  - **La noche alumbra el objeto:** un registro quedaba apagado de noche porque la vela estaba lejos; la vela bajó al listón, junto a él, y su charco enciende media tapa sin quitarle su color. El pupitre que se leía como un cajón se dibujó en escorzo, con el tablero más ancho abajo, sus cantos, el listón de apoyo y las patas torneadas.
+  - **Siluetas que hacen cara:** un tazón con dos saltaduras a la misma altura y el asa de lado hacía una cara; quedó una saltadura en el borde y el asa girada hacia atrás.
+  - **Un roto no es un parche:** el roto de un papel pintado, dibujado como un parche plano, quedó con el borde irregular, el filo blanco de la fibra, dos lenguas de papel abarquilladas con su revés y su sombra, y dentro el yeso y el ladrillo; la luz pasa por encima del papel y del yeso con el mismo borde.
+  - **Ni objetos de otra época:** un despacho se leía como un sobre de hoy; quedó una carta doblada en tres con el lacre en el borde del doblez.
+  - **El día del índice se lee:** el número de cada pestaña va en un peso que se lea a tamaño de teléfono (una letra de trazo fino perdía el 1 y el 4), con un contraste de 4.5 a 1 o más sobre su pestaña, en claro y en oscuro.
+  - **Las tapas conservan todos sus textos y emblemas:** las cinco tapas de mejoras simples guardan lo que ya tenían (títulos, divisas, escarapelas, monogramas, ojos, sellos), aunque sean escritura real o un emblema.
