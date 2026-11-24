@@ -197,7 +197,7 @@ Vapor victoriano, Pirata, Mongol, Mesoamérica y Colonos, con la misma vara que 
 
 # La cuarta tanda de bibliotecas (23 nov 2026)
 
-Art nouveau, Tierras Antiguas, Templario, Ciudad neón y Prehistoria, con la misma vara que las dos tandas anteriores (el Ideario de su tema, al lado y a la misma escala) y dos rondas de revisión cada una, después de las vueltas propias de cada agente. En cuatro de ellas el mismo agente hizo después la libreta de momentos nueva y las mejoras simples de la tapa (abajo, «Decisión del 23 nov 2026 y segunda vuelta»).
+Art nouveau, Tierras Antiguas, Templario, Ciudad neón y Prehistoria, con la misma vara que las dos tandas anteriores (el Ideario de su tema, al lado y a la misma escala) y dos rondas de revisión cada una, después de las vueltas propias de cada agente. En las cinco, el mismo agente hizo después la libreta de momentos nueva y las mejoras simples de la tapa (abajo, «Decisión del 23 nov 2026 y segunda vuelta»).
 
 ## Qué es cada mueble
 
@@ -259,7 +259,7 @@ Lo de siempre (lo fijo se arma una vez por tamaño; ningún `Brush` ni `Path` nu
 
 ## Decisión del 23 nov 2026 y segunda vuelta
 
-Tras una prueba de editar sin redibujar (en Pirata y Vapor victoriano), el autor decidió el 23 nov 2026: **la libreta de momentos se hace de nuevo en todos los temas; la portada del libro del día se queda como está, con mejoras simples** (editar, no redibujar). La segunda vuelta la hicieron los agentes de Art nouveau, Tierras Antiguas, Templario y Ciudad neón, cada uno encima de su biblioteca aprobada y sin tocarla; la de Prehistoria está en curso.
+Tras una prueba de editar sin redibujar (en Pirata y Vapor victoriano), el autor decidió el 23 nov 2026: **la libreta de momentos se hace de nuevo en todos los temas; la portada del libro del día se queda como está, con mejoras simples** (editar, no redibujar). La segunda vuelta la hicieron los agentes de Art nouveau, Tierras Antiguas, Templario, Ciudad neón y Prehistoria, cada uno encima de su biblioteca aprobada y sin tocarla.
 
 ### La libreta, nueva
 
