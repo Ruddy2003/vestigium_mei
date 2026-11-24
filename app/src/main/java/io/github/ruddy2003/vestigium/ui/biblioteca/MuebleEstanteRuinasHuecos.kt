@@ -140,8 +140,8 @@ internal object HuecosEstanteRuinas {
         drawPath(pico, l.c(P.ESMALTE_BLANCO))
         modeladoRapidoRuinas(cuerpo, l.c(P.ESMALTE_BLANCO), l, hacia, 1f, 0.4f)
         drawRect(l.c(P.ESMALTE), Offset(cx - an * 0.34f, pie - al * 0.97f), Size(an * 0.68f, al * 0.07f))
-        for (i in 0 until 3) drawPath(bultoRuinas(Offset(cx + an * (-0.25f + 0.25f * i), pie - al * (0.3f + 0.2f * (i % 2))), an * 0.05f, al * 0.04f, 2110 + i, 7, 0.3f), l.c(P.HIERRO))
-        drawCircle(l.c(P.ESMALTE), an * 0.08f, Offset(cx, pie - al * 0.55f), style = Stroke(1f * u))
+        // Una saltadura del esmalte, junto al pico (una sola, para que la tetera no tenga cara).
+        drawPath(bultoRuinas(Offset(cx + an * 0.3f, pie - al * 0.72f), an * 0.06f, al * 0.05f, 2110, 7, 0.3f), l.c(P.HIERRO))
         // La lupa apoyada contra la tetera: el aro de latón, el vidrio con su reflejo y el mango de madera.
         val lc = Offset(z.left + an * 1.18f, pie - z.height * 0.18f)
         if (lc.x + an * 0.2f < z.right + w * 0.04f) {

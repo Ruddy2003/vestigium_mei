@@ -72,6 +72,14 @@ internal object MaquinaRuinas {
     fun DrawScope.maquina(g: MarcoRuinas) {
         val w = g.w
         val zona = Rect(w * (IZQ - 0.04f), w * 0.22f, w * (DER + 0.04f), w * PIE)
+        // La sombra de la máquina en la pared: de día, corrida a la derecha y abajo; de noche, lejos de la vela (a la derecha y
+        // arriba). Primero la del cuerpo y el carro; la del pliego la pone él.
+        val silueta = Path().apply {
+            addRect(Rect(w * (IZQ + 0.012f), w * 0.348f, w * (DER - 0.012f), w * PIE))
+            addRect(Rect(w * (IZQ - 0.047f), w * 0.317f, w * (DER + 0.047f), w * 0.349f))
+        }
+        val corre = if (g.a.oscuro && !g.a.noche) Offset(w * 0.04f, -w * 0.014f) else Offset(w * 0.03f, w * 0.014f)
+        drawPath(corridoRuinas(silueta, corre.x, corre.y), g.a.sombra(if (g.a.oscuro) 0.32f else 0.24f))
         conManchaRuinas(g, 0.08f, zona) { s -> cuerpo(g, s) }
         pliego(g)
     }

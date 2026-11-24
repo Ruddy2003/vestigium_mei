@@ -101,7 +101,7 @@ internal object PieEstanteRuinas {
         if (g.a.oscuro) {
             // De noche: la baldosa hundida y, encima, el charco de las brasas que la pinta con su color encendido.
             drawRect(g.luz(w * 0.95f, y0, 0f).c(loseta), Offset(0f, y0), Size(w, fondoAlto))
-            clipRect(0f, y0, w, h) { with(ParedEstanteRuinas) { charcoRuinas(g, Offset(g.anafre.x, h - w * 0.04f), w * 0.75f, loseta) } }
+            clipRect(0f, y0, w, h) { with(ParedEstanteRuinas) { charcoRuinas(g, Offset(g.anafre.x, h - w * 0.04f), w * 0.62f, loseta) } }
         } else drawRect(fila(y0 + fondoAlto * 0.5f, loseta), Offset(0f, y0), Size(w, fondoAlto))
         // Las filas: el borde de cada una, en fracción del alto (crecen hacia delante).
         val filas = listOf(0f, 0.22f, 0.5f, 0.86f, 1.3f)
@@ -109,8 +109,22 @@ internal object PieEstanteRuinas {
         fun ancho(t: Float) = w * (0.13f + 0.07f * t)
         fun xEn(i: Float, t: Float): Float = cx + i * ancho(t)
         fun yEn(t: Float) = y0 + fondoAlto * t * 0.78f
+        // Las juntas van debajo de los círculos: así ninguna junta cruza un círculo (se leería como un signo).
         val juntas = Path()
+        for (f in filas.indices) {
+            val t = filas[f]
+            val y = yEn(t)
+            val an = ancho(t)
+            val i0 = -((cx + an) / an).toInt() - 1
+            for (i in i0..-i0) {
+                val x = xEn(i.toFloat(), t)
+                if ((x < -an || x > w + an) || f + 1 >= filas.size) continue
+                juntas.moveTo(x, y); juntas.lineTo(xEn(i.toFloat(), filas[f + 1]), yEn(filas[f + 1]))
+            }
+            juntas.moveTo(0f, y); juntas.lineTo(w, y)
+        }
         clipRect(0f, y0, w, h) {
+            drawPath(juntas, fila(y0 + fondoAlto * 0.5f, P.TIERRA), style = Stroke(1.2f * u))
             for (f in filas.indices) {
                 val t = filas[f]
                 val y = yEn(t)
@@ -124,13 +138,10 @@ internal object PieEstanteRuinas {
                     if (x < -an || x > w + an) continue
                     cruces.addOval(Rect(x - an * 0.3f, y - al * 0.3f, x + an * 0.3f, y + al * 0.3f))
                     puntos.addOval(Rect(x - an * 0.07f, y - al * 0.07f, x + an * 0.07f, y + al * 0.07f))
-                    if (f + 1 < filas.size) { juntas.moveTo(x, y); juntas.lineTo(xEn(i.toFloat(), filas[f + 1]), yEn(filas[f + 1])) }
                 }
-                juntas.moveTo(0f, y); juntas.lineTo(w, y)
                 drawPath(cruces, fila(y, P.BARRO))
                 drawPath(puntos, fila(y, P.BALDOSA_GRIS))
             }
-            drawPath(juntas, fila(y0 + fondoAlto * 0.5f, P.TIERRA), style = Stroke(1.2f * u))
             // La tierra que se metió en las juntas y algo de musgo: manchas pardas sueltas.
             for (k in 0 until 6) {
                 val p = Offset(w * azar(2430, k), y0 + fondoAlto * (0.25f + 0.7f * azar(2431, k)))

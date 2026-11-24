@@ -215,11 +215,8 @@ internal object CoronaEstanteRuinas {
         drawPath(corridoRuinas(forma, -h * w * 0.018f, w * 0.006f), l.s(0.3f))
         contactoRuinas(cx, pie, an * 0.6f, w * 0.01f, l, h)
         modeladoRuinas(forma, l.c(P.ESMALTE), l, h, 1f, 0.4f)
-        // Dos saltaduras del esmalte que dejan ver el hierro.
-        for (k in 0 until 2) {
-            val c = Offset(r.left + an * (0.3f + 0.35f * k), r.top + al * (0.45f + 0.15f * k))
-            drawPath(bultoRuinas(c, an * 0.05f, al * 0.12f, 1701 + k, 7, 0.3f), l.c(P.HIERRO))
-        }
+        // Una saltadura del esmalte junto al borde, que deja ver el hierro (una sola: dos iguales se leerían como ojos).
+        drawPath(bultoRuinas(Offset(r.left + an * 0.66f, r.top + al * 0.22f), an * 0.06f, al * 0.14f, 1701, 7, 0.3f), l.c(P.HIERRO))
         // La boca: el borde blanco y el agua con sus ondas.
         val boca = Rect(r.left, r.top - al * 0.22f, r.right, r.top + al * 0.22f)
         drawOval(l.c(P.ESMALTE_BLANCO), boca.topLeft, boca.size)
