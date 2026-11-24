@@ -281,9 +281,11 @@ internal object MuebleEstanteRevolucion {
         with(HuecosEstanteRevolucion) {
             // Cada hueco sabe cuántos hubo antes, para no repetir lo que acompaña de una repisa a otra.
             var n = if (noche) 1 else 0
+            var g = if (noche) 1 else 0
             d.repisas.forEachIndexed { k, r ->
                 val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
-                if (hueco(n, r, oc, d.derecha.left, xs[k], ac, cerca)) n++
+                val puestos = hueco(n, g, r, oc, d.derecha.left, xs[k], ac, cerca)
+                if (puestos >= 0) { n++; g += puestos }
             }
         }
         with(ObraEstanteRevolucion) {

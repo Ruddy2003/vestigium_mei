@@ -34,20 +34,21 @@ internal object HuecosEstanteRevolucion {
 
     /**
      * Lo que acompaña en el hueco de la repisa [r] (de [oc] al costado [xDer]), con la vela en [xc] si la lleva. [k] es cuántos
-     * huecos hubo antes: con él cambian la compañía de la vela y el primer grupo, para que dos huecos seguidos no repitan.
-     * Devuelve si había sitio.
+     * huecos hubo antes (con él cambia la compañía de la vela) y [g0], cuántos grupos se pusieron antes: los grupos siguen una
+     * sola rueda por todo el estante, así no se repite uno hasta que salieron los otros. Devuelve cuántos grupos puso, o -1 si
+     * no había sitio.
      */
-    fun DrawScope.hueco(k: Int, r: Rect, oc: Float, xDer: Float, xc: Float, a: AireRevolucion, cerca: (Offset) -> Float): Boolean {
+    fun DrawScope.hueco(k: Int, g0: Int, r: Rect, oc: Float, xDer: Float, xc: Float, a: AireRevolucion, cerca: (Offset) -> Float): Int {
         val w = size.width
         var x = oc + w * 0.024f
         val fin = xDer - w * 0.03f
-        if (fin - x < w * 0.1f) return false
+        if (fin - x < w * 0.1f) return -1
         val piso = r.bottom - w * 0.006f
         if (xc >= 0f) {
             vela(a, Offset(xc, piso), r, cerca, k % 2 == 0)
             x = xc + w * 0.14f
         }
-        var g = Math.floorMod(k * 2 + 1, 3)
+        var g = Math.floorMod(g0 + 1, 3)
         var n = 0
         while (n < 3) {
             val an = w * anchoGrupo(g)
@@ -65,7 +66,7 @@ internal object HuecosEstanteRevolucion {
             g = (g + 1) % 3
             n++
         }
-        return true
+        return n
     }
 
     /** La llama de la vela que está en [xc] en el hueco [r] (de noche y al ocaso), con su charco chico, después de las tablas. */

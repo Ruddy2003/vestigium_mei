@@ -304,7 +304,7 @@ internal object VolumenEstanteRevolucion {
         drawRect(cinta, Offset(lx - cg / 2, alto0 - 0.5f * u), Size(cg, h - alto0 + 0.5f * u))
         drawRect(a.brillo(0.3f, k), Offset(lx - cg / 2, alto0), Size(0.7f * u, h - alto0))
         // La etiqueta, metida bajo la cinta de lado a lado y algo ladeada: sube desde ella.
-        val et = Rect(2.2f * u, lazoY - 31f * u + 3f * u, w - 2.2f * u, lazoY + 3f * u)
+        val et = Rect(2.2f * u, lazoY - 31f * u + 1.5f * u, w - 2.2f * u, lazoY + 1.5f * u)
         etiqueta(v, medidor, et, l, a, (azar(s, 12) - 0.5f) * 5f)
         drawRect(a.sombra(0.4f), Offset(0f, lazoY + cg - 0.4f * u), Size(w, 1.6f * u))
         drawRect(cinta, Offset(-0.5f * u, lazoY), Size(w + 1f * u, cg))
@@ -312,8 +312,8 @@ internal object VolumenEstanteRevolucion {
         // El lazo en el cruce, con los cabos caídos.
         val ly = lazoY + cg / 2
         val lazo = Path().apply {
-            moveTo(lx, ly); cubicTo(lx - 9f * u, ly - 7f * u, lx - 11f * u, ly + 4f * u, lx, ly)
-            moveTo(lx, ly); cubicTo(lx + 9f * u, ly - 6f * u, lx + 10f * u, ly + 5f * u, lx, ly)
+            moveTo(lx, ly); cubicTo(lx - 10f * u, ly + 2f * u, lx - 9f * u, ly + 10f * u, lx, ly)
+            moveTo(lx, ly); cubicTo(lx + 10f * u, ly + 2f * u, lx + 9f * u, ly + 10f * u, lx, ly)
         }
         drawPath(Path().apply { addPath(lazo, Offset(0.8f * u, 1.2f * u)) }, a.sombra(0.4f), style = Stroke(2.4f * u))
         drawPath(lazo, cinta, style = Stroke(2.6f * u))
