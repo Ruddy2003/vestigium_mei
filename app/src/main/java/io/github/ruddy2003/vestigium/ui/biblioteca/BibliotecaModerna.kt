@@ -3814,13 +3814,23 @@ object EstanteRevolucion : DisenoBiblioteca {
             else Brush.horizontalGradient(listOf(mezcla(roble, Color.White, 0.12f), mezcla(roble, Color.Black, 0.06f)), 0f, w)
         drawRect(pinMesa, mesa.topLeft, mesa.size)
         drawRect(pinMesa, frente.topLeft, frente.size)
+        // La sombra del libro se pinta solo donde se ve: el libro es opaco salvo en sus bordes suavizados (los de fuera, la junta
+        // del lomo con la cubierta y el pie). Los cortes, en píxeles enteros y sin pisarse.
+        val izqLibro = kotlin.math.ceil(libro.left) + 1f; val derLibro = kotlin.math.floor(libro.right) - 1f; val pieLibro = kotlin.math.floor(libro.bottom) - 1f
+        val junta0 = kotlin.math.floor(lomo.right) - 1f; val junta1 = kotlin.math.ceil(lomo.right) + 1f
         drawRect(Color(0xFF2A1810).copy(alpha = 0.4f), frente.topLeft, frente.size)
         drawRect(Brush.horizontalGradient(if (oscuro && !n) listOf(LUNA_RAS.copy(alpha = 0.2f), FAROL.copy(alpha = 0.35f)) else List(2) { if (n) LUNA_RAS.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.4f) }, 0f, w),
             frente.topLeft, Size(w, 1 * u))
         drawRect(Color(0xFF2A1810).copy(alpha = 0.5f), Offset(0f, frente.bottom - 1.4f * u), Size(w, 1.4f * u))
         // La sombra del libro, con color: al lado contrario de la luz (de día y en el sueño, abajo a la derecha; con la vela, a la izquierda).
         val sombra = if (oscuro && !n) Color(0xFF140C1E).copy(alpha = 0.5f) else if (n) Color(0xFF141A36).copy(alpha = 0.42f) else Color(0xFF3A2236).copy(alpha = 0.32f)
-        drawRoundRect(sombra, Offset(libro.left + (if (oscuro && !n) -5f else 4f) * u, libro.top + 5 * u), libro.size, CornerRadius(2 * u))
+        val caida = Offset(libro.left + (if (oscuro && !n) -5f else 4f) * u, libro.top + 5 * u)
+        // Con la vela la sombra cae a la izquierda: el borde de fuera y la junta caben en una franja (debajo del lomo no se ve).
+        val franjas = if (oscuro && !n) listOf(Rect(0f, 0f, junta1, pieLibro), Rect(0f, pieLibro, w, h))
+            else listOf(Rect(derLibro, 0f, w, pieLibro), Rect(junta0, 0f, junta1, pieLibro), Rect(0f, pieLibro, w, h))
+        franjas.forEach { f ->
+            clipRect(f.left, f.top, f.right, f.bottom) { drawRoundRect(sombra, caida, libro.size, CornerRadius(2 * u)) }
+        }
         drawRect(sombra, Offset(libro.left, libro.bottom + 2 * u), Size(libro.width + 3 * u, 2.4f * u))
         // El canto de las hojas, de papel de trapo, desparejo.
         val bloque = Rect(tapa.left, tapa.top + 3 * u, tapa.right + 2.5f * u, tapa.bottom + 3 * u)
@@ -3850,8 +3860,21 @@ object EstanteRevolucion : DisenoBiblioteca {
             drawRoundRect(Brush.verticalGradient(listOf(mezcla(cubierta, Color.White, 0.12f), cubierta, mezcla(cubierta, Color.Black, 0.3f)), tapa.top, tapa.bottom),
                 tapa.topLeft, tapa.size, CornerRadius((if (folleto) 1f else 2.5f) * u))
             // Con la vela, lo de la izquierda (lejos de ella) se hunde en ciruela: solo oscurece, así la divisa se lee igual o mejor.
-            if (oscuro && !n) drawRoundRect(Brush.horizontalGradient(listOf(Color(0xFFB4A6CC), Color.White), tapa.left, tapa.left + tapa.width * 0.62f),
-                tapa.topLeft, tapa.size, CornerRadius((if (folleto) 1f else 2.5f) * u), blendMode = androidx.compose.ui.graphics.BlendMode.Multiply)
+            // Se pinta solo donde se ve, de una vez: la cubierta en forma de C alrededor de la etiqueta (opaca), hasta donde el
+            // degradado ya es blanco; los cortes de dentro, en píxeles enteros.
+            if (oscuro && !n) {
+                val hasta = kotlin.math.ceil(tapa.left + tapa.width * 0.62f)
+                val hx = kotlin.math.ceil(w * 0.27f) + 1f; val ht = kotlin.math.ceil(h * 0.14f) + 1f; val hb = kotlin.math.floor(h * 0.785f) - 1f
+                val r = (if (folleto) 1f else 2.5f) * u
+                val ce = Path().apply {
+                    moveTo(hasta, tapa.top); lineTo(tapa.left + r, tapa.top)
+                    arcTo(Rect(tapa.left, tapa.top, tapa.left + 2 * r, tapa.top + 2 * r), 270f, -90f, false)
+                    lineTo(tapa.left, tapa.bottom - r)
+                    arcTo(Rect(tapa.left, tapa.bottom - 2 * r, tapa.left + 2 * r, tapa.bottom), 180f, -90f, false)
+                    lineTo(hasta, tapa.bottom); lineTo(hasta, hb); lineTo(hx, hb); lineTo(hx, ht); lineTo(hasta, ht); close()
+                }
+                drawPath(ce, Brush.horizontalGradient(listOf(Color(0xFFB4A6CC), Color.White), tapa.left, tapa.left + tapa.width * 0.62f), blendMode = androidx.compose.ui.graphics.BlendMode.Multiply)
+            }
             clipRect(tapa.left, tapa.top, tapa.right, tapa.bottom) {
                 if (k == 3) {
                     // El jaspeado: vetas de color corridas por el peine.
