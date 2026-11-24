@@ -91,7 +91,7 @@ internal object CoronaEstanteGalia {
             drawPath(Path().apply { moveTo(arriba[2].x, arriba[2].y); for (i in 3..n) lineTo(arriba[i].x, arriba[i].y) }, a.brillo(0.6f, k), style = Stroke(1.6f * u))
             drawPath(Path().apply { moveTo(abajo[3].x, abajo[3].y); for (i in 4..n) lineTo(abajo[i].x, abajo[i].y) }, a.sombra(0.4f), style = Stroke(3f * u))
         }
-        luzDeLaPuertaGalia(forma, a, m, 0f)
+        luzDeLaPuertaGalia(forma, a, m, ManchaGalia.FRENTE * 0.15f)
         // El bocal de bronce, una banda que sigue la boca, y la contera.
         val nb = (abajo[n] - arriba[n])
         val b0 = arriba[n - 1]; val b1 = abajo[n - 1]
@@ -135,7 +135,7 @@ internal object CoronaEstanteGalia {
                 for (q in -1..1) drawLine(a.luz(P.ROJO_OSC, k).copy(alpha = 0.35f), Offset(c.x + q * r * 0.45f, c.y - r * 0.9f), Offset(c.x + q * r * 0.55f, c.y + r * 0.8f), 0.6f * u)
             }
             drawCircle(a.brillo(0.6f, k), r * 0.16f, c - Offset(r * 0.42f, r * 0.3f))
-            luzDeLaPuertaGalia(sil, a, m, 0f)
+            luzDeLaPuertaGalia(sil, a, m, ManchaGalia.FRENTE * 0.15f)
         }
     }
 
@@ -168,7 +168,7 @@ internal object CoronaEstanteGalia {
             drawCircle(a.dia(P.GRASA, 0.1f, k), w * 0.004f, corte.center + Offset(w * 0.006f, 0f))
             drawLine(a.brillo(0.5f, k), Offset(cx - w * 0.02f, top + w * 0.05f), Offset(cx - w * 0.026f, bot - w * 0.04f), 1.4f * u, StrokeCap.Round)
         }
-        luzDeLaPuertaGalia(sil, a, m, 0f)
+        luzDeLaPuertaGalia(sil, a, m, ManchaGalia.FRENTE * 0.15f)
         // El cordel atado a la caña, con su nudo.
         drawLine(a.dia(P.JUNCO, -0.1f, k), Offset(cx - w * 0.008f, top + w * 0.006f), Offset(cx + w * 0.009f, top + w * 0.008f), 1.6f * u)
         drawCircle(a.dia(P.JUNCO, -0.15f, k), 1.8f * u, Offset(cx, top + w * 0.007f))
@@ -190,7 +190,7 @@ internal object CoronaEstanteGalia {
             for (j in 0 until 4) drawRect(a.dia(if (j % 2 == 0) P.GRASA else P.CARNE, 0f, k), Offset(r.left, r.bottom - w * (0.006f + 0.0055f * j)), Size(r.width, w * 0.0055f))
             drawLine(a.brillo(0.45f, k), Offset(r.left + w * 0.006f, r.top + w * 0.012f), Offset(r.left + w * 0.006f, r.bottom - w * 0.03f), 1.2f * u)
         }
-        luzDeLaPuertaGalia(sil, a, m, 0f)
+        luzDeLaPuertaGalia(sil, a, m, ManchaGalia.FRENTE * 0.15f)
         // El agujero con el gancho que lo pasa.
         val ag = Offset(gancho.x + w * 0.006f, top + w * 0.008f)
         drawCircle(a.luz(P.ROBLE_HONDO, k), w * 0.0045f, ag)
@@ -267,7 +267,7 @@ internal object CoronaEstanteGalia {
             val t0 = q(-0.2f, 1.02f); val t1 = q(0.2f, 1.02f)
             ovaloGalia(a.dia(P.CENIZA, 0.15f, k), Rect(t0.x, t0.y - an * 0.06f, t1.x, t1.y + an * 0.06f))
             ovaloGalia(a.brillo(0.4f, k), Rect(t0.x + an * 0.06f, t0.y - an * 0.05f, t1.x - an * 0.12f, t1.y))
-            luzDeLaPuertaGalia(cuerpo, a, m, 0f)
+            luzDeLaPuertaGalia(cuerpo, a, m, ManchaGalia.FRENTE * 0.5f)
         }
     }
 
@@ -333,7 +333,7 @@ internal object CoronaEstanteGalia {
             drawRect(a.sombra(0.45f), Offset(caja.left, pie.y - al * 0.97f), Size(caja.width, al * 0.05f))
             drawRect(a.sombra(0.4f), Offset(caja.left, pie.y - al * 0.05f), Size(caja.width, al * 0.05f))
         }
-        luzDeLaPuertaGalia(cuerpo, a, m, 0f)
+        luzDeLaPuertaGalia(cuerpo, a, m, ManchaGalia.FRENTE * 0.5f)
         // La tapa de tablas, en escorzo, con sus juntas, y el asa de cuerda.
         val tapa = Rect(pie.x - an * 0.34f, pie.y - al - w * 0.014f, pie.x + an * 0.34f, pie.y - al + w * 0.012f)
         drawOval(a.sombra(0.4f), tapa.topLeft + Offset(w * 0.004f, w * 0.005f), tapa.size)
@@ -388,7 +388,7 @@ internal object CoronaEstanteGalia {
                 listOf(-0.3f, 0.05f, 0.38f).forEach { fx -> drawCircle(a.dia(P.BRONCE_LUZ, 0f, k), 1.1f * u, Offset(pie.x + an * fx, y)) }
             }
         }
-        luzDeLaPuertaGalia(cuerpo, a, m, 0f)
+        luzDeLaPuertaGalia(cuerpo, a, m, ManchaGalia.FRENTE * 0.5f)
         // La boca, con el agua oscura dentro y el canto de las duelas.
         ovaloGalia(a.dia(P.ROBLE_LUZ, 0f, k), boca)
         ovaloGalia(a.dia(mezcla(P.NEGRO, P.FRIO, 0.3f), 0f, k), boca.deflate(w * 0.004f))
@@ -411,7 +411,6 @@ internal object CoronaEstanteGalia {
         val alto = w * 0.044f
         val lanas = listOf(Triple(P.LANA_VERDE, P.LANA_ROJA, P.LANA_OCRE), Triple(P.GLASTO, P.LANA_OCRE, P.LANA_CRUDA), Triple(P.LANA_ROJA, P.LANA_VERDE, P.LANA_OCRE))
         // La sombra de la pila en el barro.
-        translate(w * (if (a.oscuro) 0.005f else 0.02f), 0f) { drawRect(a.sombra(0.28f), Offset(x0 + w * 0.01f, apoyo - alto * 3.1f), Size(x1 - x0, alto * 3.1f)) }
         contactoGalia(Offset((x0 + x1) / 2, apoyo), x1 - x0, w * 0.012f, a, 0.4f)
         for (i in 0 until 3) {
             val y1 = apoyo - alto * i; val y0 = y1 - alto
@@ -424,6 +423,7 @@ internal object CoronaEstanteGalia {
                 lineTo(r.left + alto * 0.3f, r.bottom)
                 quadraticTo(r.left - alto * 0.35f, r.center.y, r.left + alto * 0.4f, r.top); close()
             }
+            translate(w * (if (a.oscuro) 0.005f else 0.018f), -w * 0.004f) { drawPath(sil, a.sombra(0.22f)) }
             drawPath(sil, a.dia(fondo, 0f, k))
             clipPath(sil) { cuadros(r, raya, hilo, a, k, 6f * u) }
             clipPath(sil) {
@@ -437,7 +437,7 @@ internal object CoronaEstanteGalia {
                     drawLine(a.dia(fondo, 0.15f, k).copy(alpha = 0.6f), Offset(r.right - alto * 0.75f, yq - 1.2f * u), Offset(r.right + alto, yq - 1.2f * u), 0.7f * u)
                 }
             }
-            luzDeLaPuertaGalia(sil, a, m, 0f)
+            luzDeLaPuertaGalia(sil, a, m, ManchaGalia.FRENTE * 0.5f)
         }
         // La de arriba, caída por el canto del dintel: un paño colgado con sus pliegues y sus flecos.
         val c0 = x0 + w * 0.045f; val c1 = x0 + w * 0.15f

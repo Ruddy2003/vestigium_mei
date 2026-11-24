@@ -137,7 +137,7 @@ internal object MuroEstanteGalia {
             drawOval(Brush.verticalGradient(listOf(Color(0xFF6A5A4C).copy(alpha = 0.7f), Color(0xFF8A7A66).copy(alpha = 0f)), yh, w * 0.215f),
                 Offset(tx - w * 0.026f, yh - w * 0.03f), Size(w * 0.06f, w * 0.25f - yh), blendMode = BlendMode.Multiply)
             // Una mancha de humedad abajo a la izquierda y las grietas del barro seco.
-            drawOval(Color(0xFFC8B494).copy(alpha = 0.55f), Offset(w * 0.02f, r.bottom - w * 0.09f), Size(w * 0.16f, w * 0.1f), blendMode = BlendMode.Multiply)
+            drawOval(Color(0xFFD8C8AA).copy(alpha = 0.4f), Offset(-w * 0.02f, r.bottom - w * 0.1f), Size(w * 0.2f, w * 0.12f), blendMode = BlendMode.Multiply)
             val grietas = Path()
             for (g in 0 until 5) {
                 var q = Offset(w * (0.08f + 0.84f * azar(8130, g)), w * (0.21f + 0.2f * azar(8131, g)))
@@ -151,7 +151,6 @@ internal object MuroEstanteGalia {
         }
         // Los desconchones: donde se cayó la lechada asoma el barro; en uno, se cayó también el barro y asoma el zarzo.
         desconchon(Rect(w * 0.44f, w * 0.2f, w * 0.56f, w * 0.272f), 8150, true, a, cerca, m)
-        desconchon(Rect(w * 0.0f, w * 0.36f, w * 0.09f, w * 0.43f), 8160, false, a, cerca, m)
     }
 
     /** Un desconchón en [r]: el borde roto de la lechada con su canto de luz, el barro de debajo y, si [zarzo], las varas. */

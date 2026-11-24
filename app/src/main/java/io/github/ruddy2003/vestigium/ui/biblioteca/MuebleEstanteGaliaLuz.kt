@@ -304,7 +304,7 @@ internal fun DrawScope.luzDeLaPuertaGalia(sil: Path, a: AireGalia, m: ManchaGali
     val (col, alfa) = when {
         a.oscuro -> Color(0xFF6A86B8) to 0.32f
         a.noche -> PaletaGalia.OCASO to 0.42f
-        else -> Color(0xFFFFC47A) to 0.34f
+        else -> Color(0xFFFFC47A) to 0.26f
     }
     clipPath(sil) { clipPath(m.forma(size.width, corrido)) { drawRect(col.copy(alpha = alfa * m.fuerza), Offset.Zero, size, blendMode = BlendMode.Screen) } }
 }

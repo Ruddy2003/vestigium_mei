@@ -197,9 +197,9 @@ internal object ObraEstanteGalia {
             // Un desconchón donde se cayó la almagra y asoma el barro (en una repisa de cada dos), con su canto de luz.
             if (k % 2 == 0) {
                 val dx = r.left + r.width * (0.3f + 0.4f * azar(9150, k)); val dy = r.top + r.height * (0.32f + 0.2f * azar(9151, k))
-                val dr = Rect(dx, dy, dx + w * 0.07f, dy + w * 0.045f)
-                val forma = contornoIrregular(dr, 9152 + k, 12, 0.2f)
-                drawPath(forma, cf(P.BARRO, -0.1f, cerca(dr.center)))
+                val dr = Rect(dx, dy, dx + w * 0.06f, dy + w * 0.05f)
+                val forma = contornoIrregular(dr, 9152 + k, 18, 0.32f)
+                drawPath(forma, cf(mezcla(P.ALMAGRA_LUZ, P.BARRO, 0.5f), -0.05f, cerca(dr.center)))
                 drawPath(Path().apply { addPath(forma, Offset(0.9f * u, 0.9f * u)) }, a.claro(0.3f), style = Stroke(0.9f * u))
                 drawPath(forma, a.sombra(0.45f), style = Stroke(0.8f * u))
             }

@@ -142,8 +142,12 @@ internal object PieEstanteGalia {
             val dentro = r * 0.82f
             drawCircle(a.dia(mezcla(P.HAYA, P.ROBLE_LUZ, 0.4f), 0f, k), dentro, c)
             for (q in 1..3) drawCircle(a.dia(P.ROBLE, 0f, k).copy(alpha = 0.45f), dentro * q / 4f, c + Offset(dentro * 0.04f * q, 0f), style = Stroke(0.7f * u))
-            val ang = azar(9821, i) * 6.283f
-            drawLine(a.luz(P.ROBLE_HONDO, k), c, c + Offset(dentro * cos(ang), dentro * sin(ang)), 1.2f * u)
+            // Las grietas de secado: cortas, desde el borde hacia dentro, sin llegar al corazón.
+            for (q in 0 until 3) {
+                val ang = (azar(9821, i * 3 + q) * 6.283f)
+                val d0 = dentro * (0.95f - 0.05f * q); val d1 = dentro * (0.45f + 0.25f * azar(9822, i * 3 + q))
+                drawLine(a.luz(P.ROBLE_HONDO, k).copy(alpha = 0.8f), c + Offset(d0 * cos(ang), d0 * sin(ang)), c + Offset(d1 * cos(ang + 0.1f), d1 * sin(ang + 0.1f)), 1f * u)
+            }
             drawArc(a.claro(0.35f), 160f, 110f, false, Offset(c.x - dentro, c.y - dentro), Size(dentro * 2, dentro * 2), style = Stroke(1f * u))
             drawArc(a.sombra(0.3f), -20f, 120f, false, Offset(c.x - dentro, c.y - dentro), Size(dentro * 2, dentro * 2), style = Stroke(1.6f * u))
         }
@@ -166,7 +170,7 @@ internal object PieEstanteGalia {
         // Las piedras de atrás (más chicas), los tizones y luego las de delante.
         fun piedra(t: Float, delante: Boolean, i: Int) {
             val p = Offset(c.x + rx * cos(t), c.y + ry * sin(t))
-            val pw = w * (0.034f + 0.012f * azar(9830, i)) * (if (delante) 1f else 0.85f)
+            val pw = w * (0.046f + 0.016f * azar(9830, i)) * (if (delante) 1f else 0.8f)
             val ph = pw * 0.62f
             val k = if (lumbre) 1f else cerca(p)
             val sil = Path().apply { addOval(Rect(p.x - pw / 2, p.y - ph / 2, p.x + pw / 2, p.y + ph / 2)) }
@@ -184,9 +188,9 @@ internal object PieEstanteGalia {
             }
         }
         for (i in 0 until 7) piedra(3.4f + i * 0.45f, false, i)
-        // Los tizones: dos leños cruzados, negros, con la punta encendida de noche.
-        listOf(Triple(-0.5f, 0.4f, 0.12f), Triple(0.45f, -0.35f, -0.1f)).forEachIndexed { i, (x0, x1, dy) ->
-            val p0 = Offset(c.x + rx * x0, c.y + ry * 0.2f + ry * dy); val p1 = Offset(c.x + rx * x1, c.y - ry * 0.45f)
+        // Los tizones: tres leños echados casi en paralelo (sin cruzarse), negros, con la punta encendida de noche.
+        listOf(Triple(-0.62f, 0.1f, 0.35f), Triple(-0.3f, 0.42f, 0.0f), Triple(0.05f, 0.66f, -0.3f)).forEachIndexed { i, (x0, x1, dy) ->
+            val p0 = Offset(c.x + rx * x0, c.y + ry * (0.5f + dy * 0.3f)); val p1 = Offset(c.x + rx * x1, c.y - ry * (0.2f - dy * 0.5f))
             drawLine(a.sombra(0.4f), p0 + Offset(0f, w * 0.005f), p1 + Offset(0f, w * 0.005f), w * 0.016f, StrokeCap.Round)
             drawLine(if (lumbre) mezcla(P.HOLLIN, P.BRASA, 0.25f) else a.dia(P.HOLLIN, 0f), p0, p1, w * 0.015f, StrokeCap.Round)
             drawLine(if (lumbre) P.BRASA.copy(alpha = 0.8f * f) else a.dia(P.CENIZA, 0.1f).copy(alpha = 0.5f), p0 - Offset(0f, w * 0.004f), p1 - Offset(0f, w * 0.004f), 1.4f * u, StrokeCap.Round)
@@ -240,7 +244,6 @@ internal object PieEstanteGalia {
             cilindroGalia(Rect(pie.x - an * 0.6f, pie.y - al, pie.x + an * 0.6f, pie.y), a, k, if (a.oscuro) -1f else -1f, 1.3f)
             drawRect(a.sombra(0.35f), Offset(pie.x - an * 0.6f, pie.y - al * 0.86f), Size(an * 1.2f, al * 0.04f))
             for (j in 0 until 4) drawLine(a.sombra(0.15f), Offset(pie.x - an * 0.6f, pie.y - al * (0.5f + 0.06f * j)), Offset(pie.x + an * 0.6f, pie.y - al * (0.5f + 0.06f * j)), 0.8f * u)
-            ovaloGalia(a.dia(P.ROJO_OSC, 0f, k).copy(alpha = 0.3f), Rect(pie.x - an * 0.1f, pie.y - al * 0.4f, pie.x + an * 0.3f, pie.y - al * 0.1f))
         }
         ovaloGalia(a.luz(P.HOLLIN, k), Rect(pie.x - an * 0.24f, pie.y - al - an * 0.04f, pie.x + an * 0.24f, pie.y - al + an * 0.04f))
         // El cazo, colgado del labio por su mango ganchudo.

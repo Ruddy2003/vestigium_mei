@@ -19,7 +19,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 /**
  * Lo que la casa guarda en los huecos de las repisas del estante de Galia ([MuebleEstanteGalia]), de donde acaban las entradas
  * hasta el poste: grupos de dos o tres cosas solapadas, del 70 al 90 % del alto del hueco, distintos de un hueco a otro. El
- * tonelillo de duelas con aros de mimbre y la escudilla de barro negro; la rueca con su copo de lana, el ovillo y el huso con
+ * tonelillo de duelas con aros de mimbre y la escudilla de barro negro con avellanas; la rueca con su copo de lana, el ovillo y el huso con
  * su fusayola; la botella de barro pintado a franjas y el pan redondo; el haz de leña menuda con el hacha de mano. En los huecos
  * con sitio (nunca dos repisas seguidas), la lamparilla de sebo en su cuenco, sobre una laja, junto a la botella: de noche arde.
  */
@@ -35,41 +35,58 @@ internal object HuecosEstanteGalia {
         val suelo = r.bottom - w * 0.009f
         val h = r.height
         clipRect(r.left, r.top, r.right, r.bottom + w * 0.01f) {
+            var desde = x0
+            // El grupo de cada repisa cambia de una a la siguiente (y nunca repite lo que ya tiene al lado la lamparilla).
+            var v = Math.floorMod(k * 5 + 2, 4)
             if (xLamp >= 0f) {
-                // El grupo de la lamparilla y, si sobra mucho sitio, otro detrás.
+                // La lamparilla y, a su lado, algo alto que recoge su luz: el tonelillo, la botella o el haz de leña.
                 lamparilla(Offset(xLamp, suelo), a, cerca)
-                tonel(Offset(xLamp + w * 0.115f, suelo), h * 0.7f, 9701 + k, a, cerca)
-                if (libre > w * 0.42f) grupo((k + 2) % 4, x0 + w * 0.2f, x1, suelo, h, k, a, cerca)
-            } else {
-                if (libre > w * 0.45f) {
-                    grupo(k % 4, x0, x0 + libre * 0.48f, suelo, h, k, a, cerca)
-                    grupo((k + 1) % 4, x0 + libre * 0.52f, x1, suelo, h, k + 7, a, cerca)
-                } else grupo(k % 4, x0, x1, suelo, h, k, a, cerca)
+                val compa = k % 3
+                when (compa) {
+                    0 -> tonel(Offset(xLamp + w * 0.115f, suelo), h * 0.7f, 9701 + k, a, cerca)
+                    1 -> botella(Offset(xLamp + w * 0.11f, suelo), h * 0.78f, 9702 + k, a, cerca)
+                    else -> lena(Offset(xLamp + w * 0.115f, suelo), h * 0.8f, 9703 + k, a, cerca)
+                }
+                desde = xLamp + w * 0.2f
+                if (v == intArrayOf(0, 2, 3)[compa]) v = (v + 1) % 4
             }
+            // Lo que sobra, en uno o dos grupos distintos, cada uno centrado en su tramo.
+            val resto = x1 - desde
+            if (resto > w * 0.4f) {
+                var v2 = (v + 1 + k % 2) % 4
+                if (xLamp >= 0f && v2 == intArrayOf(0, 2, 3)[k % 3]) v2 = (v2 + 1) % 4
+                if (v2 == v) v2 = (v2 + 1) % 4
+                grupo(v % 4, desde, desde + resto * 0.5f, suelo, h, k, a, cerca)
+                grupo(v2, desde + resto * 0.5f, x1, suelo, h, k + 7, a, cerca)
+            } else if (resto > w * 0.12f) grupo(v % 4, desde, x1, suelo, h, k, a, cerca)
         }
     }
+
+    /** Lo que ocupa cada grupo a lo ancho, en anchos del mueble: si el tramo es más ancho, el grupo va centrado en él. */
+    private val NATURAL = floatArrayOf(0.21f, 0.2f, 0.19f, 0.18f)
 
     /** Uno de los cuatro grupos, en el tramo de [x0] a [x1], de pie en [suelo], en un hueco de alto [h]. */
     private fun DrawScope.grupo(v: Int, x0: Float, x1: Float, suelo: Float, h: Float, s: Int, a: AireGalia, cerca: (Offset) -> Float) {
         val w = size.width
-        val ancho = x1 - x0
+        val nat = w * NATURAL[v]
+        val ancho = minOf(x1 - x0, nat)
+        val xa = x0 + maxOf(0f, (x1 - x0 - nat) / 2f)
         when (v) {
             0 -> {
-                tonel(Offset(x0 + minOf(ancho * 0.36f, w * 0.07f), suelo), h * 0.74f, 9710 + s, a, cerca)
-                if (ancho > w * 0.13f) escudilla(Offset(x0 + minOf(ancho * 0.72f, w * 0.15f), suelo), w * 0.075f, a, cerca)
+                tonel(Offset(xa + minOf(ancho * 0.36f, w * 0.07f), suelo), h * 0.74f, 9710 + s, a, cerca)
+                if (ancho > w * 0.13f) escudilla(Offset(xa + minOf(ancho * 0.72f, w * 0.15f), suelo), w * 0.075f, a, cerca)
             }
             1 -> {
-                rueca(Offset(x0 + minOf(ancho * 0.42f, w * 0.08f), suelo), h * 0.9f, a, cerca)
-                if (ancho > w * 0.11f) ovillo(Offset(x0 + minOf(ancho * 0.7f, w * 0.13f), suelo), w * 0.034f, P.LANA_ROJA, a, cerca)
-                if (ancho > w * 0.18f) huso(Offset(x0 + minOf(ancho * 0.6f, w * 0.17f), suelo), a, cerca)
+                rueca(Offset(xa + minOf(ancho * 0.36f, w * 0.07f), suelo), h * 0.9f, a, cerca)
+                if (ancho > w * 0.11f) ovillo(Offset(xa + minOf(ancho * 0.78f, w * 0.16f), suelo), w * 0.034f, P.LANA_ROJA, a, cerca)
             }
             2 -> {
-                botella(Offset(x0 + minOf(ancho * 0.34f, w * 0.055f), suelo), h * 0.8f, 9720 + s, a, cerca)
-                if (ancho > w * 0.12f) pan(Offset(x0 + minOf(ancho * 0.72f, w * 0.13f), suelo), w * 0.085f, a, cerca)
+                botella(Offset(xa + minOf(ancho * 0.34f, w * 0.055f), suelo), h * 0.8f, 9720 + s, a, cerca)
+                if (ancho > w * 0.12f) pan(Offset(xa + minOf(ancho * 0.72f, w * 0.13f), suelo), w * 0.085f, a, cerca)
             }
             else -> {
-                lena(Offset(x0 + minOf(ancho * 0.38f, w * 0.065f), suelo), h * 0.82f, 9730 + s, a, cerca)
-                if (ancho > w * 0.12f) hacha(Offset(x0 + minOf(ancho * 0.66f, w * 0.13f), suelo), h * 0.62f, a, cerca)
+                lena(Offset(xa + minOf(ancho * 0.38f, w * 0.065f), suelo), h * 0.82f, 9730 + s, a, cerca)
+                if (ancho > w * 0.12f) hacha(Offset(xa + minOf(ancho * 0.66f, w * 0.13f), suelo), h * 0.62f, a, cerca)
             }
         }
     }
@@ -145,13 +162,11 @@ internal object HuecosEstanteGalia {
         }
         ovaloGalia(a.dia(mezcla(P.NEGRO, P.NEGRO_LUZ, 0.35f), 0f, k), Rect(pie.x - ancho * 0.5f, pie.y - alto - ancho * 0.07f, pie.x + ancho * 0.5f, pie.y - alto + ancho * 0.07f))
         ovaloGalia(a.luz(P.HOLLIN, k), Rect(pie.x - ancho * 0.44f, pie.y - alto - ancho * 0.05f, pie.x + ancho * 0.44f, pie.y - alto + ancho * 0.05f))
-        // Dentro, unos brazaletes de vidrio azul que asoman de canto, con su brillo.
-        listOf(-0.16f to -14f, 0.12f to 18f).forEach { (dx, g) ->
-            val c = Offset(pie.x + ancho * dx, pie.y - alto - ancho * 0.08f)
-            rotate(g, c) {
-                ovaloGalia(a.dia(P.VIDRIO, 0f, k), Rect(c.x - ancho * 0.14f, c.y - ancho * 0.15f, c.x + ancho * 0.14f, c.y + ancho * 0.15f), Stroke(ancho * 0.05f))
-                drawArc(a.brillo(0.7f, k), 200f, 70f, false, Offset(c.x - ancho * 0.14f, c.y - ancho * 0.15f), Size(ancho * 0.28f, ancho * 0.3f), style = Stroke(1f * u))
-            }
+        // Dentro, un colmo de avellanas, cada una con su luz.
+        for (q in 0 until 7) {
+            val c = Offset(pie.x + ancho * (-0.3f + 0.1f * q), pie.y - alto - ancho * (0.02f + 0.07f * (1f - kotlin.math.abs(q - 3f) / 3f)))
+            drawCircle(a.dia(P.ROBLE, 0.05f, k), ancho * 0.07f, c)
+            drawCircle(a.brillo(0.45f, k), ancho * 0.022f, c - Offset(ancho * 0.025f, ancho * 0.025f))
         }
         // Lo que tapa el borde de delante de la escudilla.
         drawPath(Path().apply { moveTo(pie.x - ancho * 0.5f, pie.y - alto); quadraticTo(pie.x, pie.y - alto + ancho * 0.12f, pie.x + ancho * 0.5f, pie.y - alto); lineTo(pie.x + ancho * 0.5f, pie.y - alto + ancho * 0.04f); quadraticTo(pie.x, pie.y - alto + ancho * 0.16f, pie.x - ancho * 0.5f, pie.y - alto + ancho * 0.04f); close() }, a.dia(mezcla(P.NEGRO, P.NEGRO_LUZ, 0.3f), 0f, k))
@@ -194,6 +209,27 @@ internal object HuecosEstanteGalia {
             drawLine(a.dia(P.LANA_ROJA, 0f, k), Offset(cc.x - rx * 0.95f, cc.y + ry * 0.35f), Offset(cc.x + rx * 0.95f, cc.y + ry * 0.2f), w * 0.006f)
             drawLine(a.dia(P.LANA_ROJA, 0f, k), Offset(cc.x - rx * 0.9f, cc.y - ry * 0.35f), Offset(cc.x + rx * 0.9f, cc.y - ry * 0.45f), w * 0.005f)
         }
+        // El huso, colgado del copo por la hebra que se está hilando: la husada de hilo y la fusayola de barro abajo.
+        val ang = Math.toRadians(8.0)
+        val dy = -alto * 0.8f + alto * 0.12f
+        val desde = Offset(pie.x - dy * kotlin.math.sin(ang).toFloat() + w * 0.02f, pie.y + dy * kotlin.math.cos(ang).toFloat())
+        val hx = pie.x + w * 0.06f
+        val h0 = pie.y - alto * 0.42f; val h1 = pie.y - w * 0.012f
+        drawLine(a.dia(P.LANA_CRUDA, 0f, k).copy(alpha = 0.9f), desde, Offset(hx, h0), 0.8f * u)
+        drawLine(a.sombra(0.3f), Offset(hx + w * 0.012f, h0), Offset(hx + w * 0.012f, h1), w * 0.006f, StrokeCap.Round)
+        drawLine(a.dia(P.HAYA, 0f, k), Offset(hx, h0), Offset(hx, h1), w * 0.0045f, StrokeCap.Round)
+        val husada = Path().apply {
+            moveTo(hx, h0 + (h1 - h0) * 0.08f)
+            quadraticTo(hx - w * 0.016f, h0 + (h1 - h0) * 0.35f, hx, h0 + (h1 - h0) * 0.62f)
+            quadraticTo(hx + w * 0.016f, h0 + (h1 - h0) * 0.35f, hx, h0 + (h1 - h0) * 0.08f)
+            close()
+        }
+        drawPath(husada, a.dia(P.LANA_CRUDA, -0.05f, k))
+        clipPath(husada) { drawRect(a.sombra(0.3f), Offset(hx, h0), Size(w * 0.02f, h1 - h0)) }
+        val fy = h0 + (h1 - h0) * 0.78f
+        ovaloGalia(a.sombra(0.3f), Rect(hx - w * 0.016f + w * 0.003f, fy - w * 0.004f + w * 0.003f, hx + w * 0.016f + w * 0.003f, fy + w * 0.006f + w * 0.003f))
+        ovaloGalia(a.dia(P.PARDO, 0f, k), Rect(hx - w * 0.016f, fy - w * 0.004f, hx + w * 0.016f, fy + w * 0.006f))
+        ovaloGalia(a.dia(P.ROJO_LUZ, -0.1f, k), Rect(hx - w * 0.016f, fy - w * 0.004f, hx + w * 0.016f, fy + w * 0.002f))
     }
 
     /** Un ovillo de lana teñida, con sus vueltas cruzadas y su cabo suelto. */
@@ -217,20 +253,6 @@ internal object HuecosEstanteGalia {
         }
         val cabo = Path().apply { moveTo(c.x + r * 0.6f, c.y + r * 0.7f); quadraticTo(c.x + r * 1.4f, pie.y + r * 0.1f, c.x + r * 2.2f, pie.y - r * 0.02f) }
         drawPath(cabo, a.dia(lana, 0f, k), style = Stroke(1f * u, cap = StrokeCap.Round))
-    }
-
-    /** El huso acostado: la varilla con la husada de hilo crudo y la fusayola de barro. */
-    private fun DrawScope.huso(pie: Offset, a: AireGalia, cerca: (Offset) -> Float) {
-        val w = size.width; val u = density
-        val k = cerca(pie)
-        val y = pie.y - w * 0.008f
-        drawLine(a.sombra(0.35f), Offset(pie.x - w * 0.05f, pie.y), Offset(pie.x + w * 0.05f, pie.y), w * 0.006f)
-        drawLine(a.dia(P.HAYA, 0f, k), Offset(pie.x - w * 0.055f, y), Offset(pie.x + w * 0.055f, y - w * 0.003f), w * 0.004f, StrokeCap.Round)
-        ovaloGalia(a.dia(P.LANA_CRUDA, -0.05f, k), Rect(pie.x - w * 0.03f, y - w * 0.011f, pie.x + w * 0.016f, y + w * 0.007f))
-        ovaloGalia(a.sombra(0.3f), Rect(pie.x - w * 0.03f, y - w * 0.002f, pie.x + w * 0.016f, y + w * 0.007f))
-        ovaloGalia(a.dia(P.PARDO, 0f, k), Rect(pie.x + w * 0.022f, y - w * 0.012f, pie.x + w * 0.032f, y + w * 0.006f))
-        ovaloGalia(a.brillo(0.35f, k), Rect(pie.x + w * 0.023f, y - w * 0.011f, pie.x + w * 0.027f, y - w * 0.002f))
-        drawLine(a.sombra(0.4f), Offset(pie.x + w * 0.033f, y - w * 0.01f), Offset(pie.x + w * 0.033f, y + w * 0.005f), 0.8f * u)
     }
 
     /**

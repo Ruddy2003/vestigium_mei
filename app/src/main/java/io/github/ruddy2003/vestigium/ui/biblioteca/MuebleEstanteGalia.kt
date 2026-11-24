@@ -105,7 +105,7 @@ internal object MuebleEstanteGalia {
 
     /** La luz de la tea: cuánta llega (de 1 a 0) a un punto a [dx] y [dy] de la llama, en anchos del mueble. */
     fun tea(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.8f else 1.4f) * exp(-3.4f * sqrt(dx * dx * 1.15f + dy * dy * (if (dy > 0f) 0.6f else 1f)))).coerceIn(0f, 1f)
+        ((if (suenos) 0.8f else 1.4f) * exp(-3.4f * sqrt(dx * dx * 1.15f + dy * dy * (if (dy > 0f) 0.42f else 1f)))).coerceIn(0f, 1f)
 
     /** La luz de la tea en la pared y en lo de arriba: más corta que en el cuerpo, para que lo lejano se hunda. */
     fun teaArriba(dx: Float, dy: Float, suenos: Boolean): Float =
@@ -113,7 +113,7 @@ internal object MuebleEstanteGalia {
 
     /** La luz del hogar del pie: roja y baja, para las repisas de abajo. */
     fun hogar(dx: Float, dy: Float, suenos: Boolean): Float =
-        ((if (suenos) 0.85f else 1.4f) * exp(-2.9f * sqrt(dx * dx * 1.1f + dy * dy))).coerceIn(0f, 1f)
+        ((if (suenos) 0.85f else 1.45f) * exp(-2.7f * sqrt(dx * dx * 1.1f + dy * dy * (if (dy < 0f) 0.75f else 1f)))).coerceIn(0f, 1f)
 
     /** La luz de la lamparilla de un hueco: corta, para sus vecinos, el fondo y el canto de la tabla de arriba. */
     fun lamparilla(dx: Float, dy: Float): Float = (1.0f * exp(-5.6f * sqrt(dx * dx + dy * dy * 1.4f))).coerceIn(0f, 1f)
