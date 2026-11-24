@@ -628,6 +628,12 @@ object EstanteGalia : DisenoBiblioteca {
      * correas de las bisagras; a la derecha, la correa que ciñe el haz de arriba abajo, cerrada con una fíbula de bronce, y el
      * estátero de oro con el caballo, metido en la cera. Al abrirse, la fíbula suelta la aguja y la correa se va; luego la
      * tablilla gira sobre sus bisagras y deja ver la de adentro.
+     *
+     * Descansa en la mesa de roble (su tablero detrás y su canto abajo), con la sombra con color del lado contrario a la luz. De
+     * día la luz viene de la puerta, arriba a la izquierda: filete en los cantos que la miran y sombra propia teñida. De noche
+     * arde la lamparilla de piedra a la derecha: ese lado cálido, el otro con el filo frío de la luna y la mesa lejos de la
+     * llama hundida en el pardo de la casa. En el sueño manda la luna: la lamparilla arde baja y la sombra se va, azul, abajo a
+     * la derecha.
      */
     override fun DrawScope.tapa(e: EstadoTapa, medidor: TextMeasurer, oscuro: Boolean) {
         val u = density
@@ -642,8 +648,14 @@ object EstanteGalia : DisenoBiblioteca {
         val rad = 3 * u
         val marco = c(mezcla(TABLA, VETA, 0.12f))
         val fondo = cera(oscuro, e.noche, 0.55f)
-        // La sombra sobre la mesa y los cantos de las otras tablillas.
-        drawRoundRect(Color.Black.copy(alpha = if (oscuro) 0.45f else 0.25f), Offset(cara.left + 3 * u, cara.top + 5 * u), cara.size, CornerRadius(rad))
+        val lumbre = oscuro && !e.noche
+        mesaTapa(w, h, oscuro, e.noche)
+        // La sombra arrojada, con color: de día y en el sueño, abajo a la derecha (violeta; azul con la luna); de noche, a la
+        // izquierda, lejos de la lamparilla.
+        val sombraTapa = when { e.noche -> Color(0xFF16203A).copy(alpha = if (oscuro) 0.6f else 0.42f); lumbre -> Color(0xFF140805).copy(alpha = 0.62f); else -> Color(0xFF3A2438).copy(alpha = 0.32f) }
+        val corrida = if (lumbre) Offset(-7 * u, 4 * u) else Offset(5 * u, 6 * u)
+        drawRoundRect(sombraTapa, cara.topLeft + corrida, cara.size, CornerRadius(rad))
+
         for (j in 3 downTo 1) {
             val col = c(mezcla(TABLA, VETA, 0.15f + 0.1f * j))
             drawRoundRect(col, Offset(cara.left + j * 1.1f * u, cara.top + j * 1.4f * u), cara.size, CornerRadius(rad))
@@ -683,6 +695,7 @@ object EstanteGalia : DisenoBiblioteca {
                 drawPath(lazo, mezcla(c(CORREA), Color.White, 0.3f).copy(alpha = 0.5f), style = Stroke(0.5f * u, cap = StrokeCap.Round))
             }
             if (aTapa > 0f) drawRoundRect(Color.Black.copy(alpha = 0.45f * (1f - co)), cara.topLeft, cara.size, CornerRadius(rad))
+            if (aTapa < 0.05f) cantosTapa(cara, oscuro, e.noche)
         }
         // La correa que ciñe el haz de arriba abajo, con la fíbula; al soltarse, se va hacia la derecha.
         if (aTapa < 0.05f) {
@@ -701,8 +714,84 @@ object EstanteGalia : DisenoBiblioteca {
                 rotate(-32f, fc) { fibula(fc, 34 * u, c(BRONCE).copy(alpha = alfa), aSol) }
             }
         }
-        // De noche, el fuego alumbra la tablilla desde la esquina de arriba.
-        if (e.noche || oscuro) clipPath(Path().apply { addRoundRect(RoundRect(cuerpo, CornerRadius(rad))) }) { mancha(Offset(cuerpo.left, cuerpo.top), w * 0.55f, FUEGO_HALO.copy(alpha = 0.2f)) }
+        // La lamparilla de piedra en la mesa, a la derecha: de día apagada; de noche, encendida; en el sueño, ardiendo baja.
+        lamparillaTapa(Offset(w * 0.958f, h * 0.9f), h * 0.055f, oscuro, e.noche)
+    }
+
+    /**
+     * La mesa donde descansa la tablilla: la franja del tablero de roble que asoma abajo y el canto de delante con su arista, que
+     * se pierden hacia los lados. De día, más vivo del lado de la puerta; de noche, encendido junto a la lamparilla y hundido
+     * lejos; con la luna, frío.
+     */
+    private fun DrawScope.mesaTapa(w: Float, h: Float, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val top = Rect(0f, h * 0.82f, w, h * 0.96f)
+        val roble = mezcla(TABLA, VETA, 0.45f)
+        val (izq, der) = when {
+            oscuro && !noche -> luz(roble, true, false, 0.08f) to luz(roble, true, false, 0.95f)
+            noche -> mezcla(t(roble, oscuro, true), Color(0xFF2A3A5C), if (oscuro) 0.3f else 0.22f) to t(roble, oscuro, true)
+            else -> mezcla(roble, Color(0xFFF0D29C), 0.18f) to mezcla(roble, Color(0xFF3A2438), 0.18f)
+        }
+        // Los dos extremos se pierden (el tablero sigue fuera del cuadro, en la sombra del cuarto).
+        fun tramo(a: Color, b: Color) = Brush.horizontalGradient(0f to a.copy(alpha = 0f), 0.07f to a, 0.93f to b, 1f to b.copy(alpha = 0f), startX = 0f, endX = w)
+        drawRect(tramo(izq, der), top.topLeft, top.size)
+        drawRect(tramo(Color.Black.copy(alpha = if (oscuro) 0.35f else 0.2f), Color.Black.copy(alpha = if (oscuro) 0.35f else 0.2f)), top.topLeft, Size(w, 4 * u))
+        val canto = Rect(0f, h * 0.96f, w, h)
+        drawRect(tramo(mezcla(izq, Color.Black, 0.35f), mezcla(der, Color.Black, 0.35f)), canto.topLeft, canto.size)
+        val arista = when { oscuro && !noche -> FUEGO.copy(alpha = 0.5f); noche -> LUNA.copy(alpha = 0.4f); else -> Color(0xFFFFF0C8).copy(alpha = 0.55f) }
+        drawRect(if (oscuro && !noche) tramo(arista.copy(alpha = 0.05f), arista) else tramo(arista, arista.copy(alpha = 0.1f)), canto.topLeft, Size(w, 1.2f * u))
+    }
+
+    /**
+     * Los cantos de la tablilla según la luz: de día, el filete claro arriba y a la izquierda y la sombra propia teñida abajo y a
+     * la derecha; de noche, el filo de la lamparilla a la derecha y el de la luna, frío, a la izquierda; en el sueño, la luna
+     * arriba y a la izquierda.
+     */
+    private fun DrawScope.cantosTapa(r: Rect, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val g = 1.3f * u
+        when {
+            oscuro && !noche -> {
+                drawRect(Brush.verticalGradient(listOf(FUEGO.copy(alpha = 0.25f), FUEGO.copy(alpha = 0.7f)), r.top, r.bottom), Offset(r.right - g, r.top + 2 * u), Size(g, r.height - 4 * u))
+                drawRect(Brush.horizontalGradient(listOf(FUEGO.copy(alpha = 0f), FUEGO.copy(alpha = 0.5f)), r.left + r.width * 0.5f, r.right), Offset(r.left + r.width * 0.5f, r.bottom - g), Size(r.width * 0.5f, g))
+                drawRect(LUNA.copy(alpha = 0.3f), Offset(r.left, r.top + 3 * u), Size(1f * u, r.height - 6 * u))
+            }
+            noche -> {
+                val fria = LUNA.copy(alpha = if (oscuro) 0.6f else 0.5f)
+                drawRect(fria, Offset(r.left + 2 * u, r.top), Size(r.width - 4 * u, g))
+                drawRect(fria, Offset(r.left, r.top + 2 * u), Size(g, r.height - 4 * u))
+                drawRect(Color(0xFF16203A).copy(alpha = 0.35f), Offset(r.right - 2.2f * u, r.top + 2 * u), Size(2.2f * u, r.height - 4 * u))
+            }
+            else -> {
+                drawRect(Color(0xFFFFF0C8).copy(alpha = 0.55f), Offset(r.left + 2 * u, r.top), Size(r.width - 4 * u, g))
+                drawRect(Color(0xFFFFF0C8).copy(alpha = 0.4f), Offset(r.left, r.top + 2 * u), Size(g, r.height - 4 * u))
+                drawRect(Color(0xFF3A2438).copy(alpha = 0.3f), Offset(r.right - 2.2f * u, r.top + 2 * u), Size(2.2f * u, r.height - 4 * u))
+                drawRect(Color(0xFF3A2438).copy(alpha = 0.26f), Offset(r.left + 2 * u, r.bottom - 2.2f * u), Size(r.width - 4 * u, 2.2f * u))
+            }
+        }
+    }
+
+    /** La lamparilla de piedra con su pocillo de sebo y la mecha en el pico; [noche] (el sueño), ardiendo baja. */
+    private fun DrawScope.lamparillaTapa(c: Offset, r: Float, oscuro: Boolean, noche: Boolean) {
+        val u = density
+        val arde = oscuro || noche
+        val piedra = if (oscuro && !noche) luz(Color(0xFF8E8070), true, false, 0.85f) else t(Color(0xFF8E8070), oscuro, noche)
+        if (arde) mancha(c + Offset(-r * 0.6f, -r * 0.6f), r * (if (noche) 3.2f else 5f), FUEGO_HALO.copy(alpha = if (noche) 0.16f else 0.26f))
+        drawOval(Color.Black.copy(alpha = 0.3f), Offset(c.x - r * 1.05f + (if (arde) -1.5f else 1.5f) * u, c.y - r * 0.05f), Size(r * 2.1f, r * 0.7f))
+        drawOval(mezcla(piedra, Color.Black, 0.3f), Offset(c.x - r, c.y - r * 0.55f), Size(r * 2f, r * 0.95f))
+        drawOval(piedra, Offset(c.x - r, c.y - r * 0.8f), Size(r * 2f, r * 0.8f))
+        drawOval(mezcla(piedra, Color.Black, 0.45f), Offset(c.x - r * 0.72f, c.y - r * 0.66f), Size(r * 1.44f, r * 0.52f))
+        drawOval(if (arde) mezcla(Color(0xFFE6D4AE), FUEGO, 0.4f) else Color(0xFFCFC0A0), Offset(c.x - r * 0.62f, c.y - r * 0.56f), Size(r * 1.24f, r * 0.4f))
+        val pico = Offset(c.x - r * 1.05f, c.y - r * 0.45f)
+        drawLine(Color(0xFF3A2E22), Offset(c.x - r * 0.4f, c.y - r * 0.4f), pico, 1.2f * u, StrokeCap.Round)
+        if (!arde) return
+        val alto = r * (if (noche) 0.8f else 1.4f)
+        val llama = Path().apply {
+            moveTo(pico.x, pico.y - alto); cubicTo(pico.x + r * 0.35f, pico.y - alto * 0.35f, pico.x + r * 0.3f, pico.y, pico.x, pico.y + 0.5f * u)
+            cubicTo(pico.x - r * 0.3f, pico.y, pico.x - r * 0.35f, pico.y - alto * 0.35f, pico.x, pico.y - alto); close()
+        }
+        drawPath(llama, Color(0xFFFFB04A))
+        drawCircle(FUEGO, r * 0.16f, Offset(pico.x, pico.y - alto * 0.25f))
     }
 
     /**
