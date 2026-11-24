@@ -154,6 +154,20 @@ Art déco, Japón Edo, Renacimiento, Egipto y Romano. El autor devolvió una pri
 
 Se hacen muchas vueltas (al menos ocho), y no se entrega mientras el Ideario se vea claramente mejor en alguno de los siete puntos.
 
+### La cohesión con el Ideario (decisión del autor, 24 nov 2026)
+
+Tras ver las cinco tandas, el autor pidió más cohesión entre la biblioteca y el Ideario de cada tema: «no deben verse iguales, pero sí que tengan más cohesión». Lo hecho hasta la quinta tanda se queda como está; rige para las bibliotecas y las libretas que faltan. Los dos casos que señaló: el Ideario de Galia está afuera (bajo el techo de paja, con el campo al pie) y su biblioteca quedó dentro de la casa; y hay temas con la pared gris en el Ideario y azul o verde en la biblioteca (Tierras Antiguas, Ciudad verde, Horror cósmico).
+
+Puestos uno al lado del otro, los dos muebles se leen como del **mismo sitio**:
+
+- **El mismo lugar.** Si el Ideario está al aire libre, la biblioteca también, o es el mismo espacio visto desde otro lado (el mismo alero, el mismo paisaje al fondo). Si es un interior, el mismo cuarto o su continuación.
+- **La misma pared o fondo:** el mismo material y la misma familia de color. Puede cambiar el matiz, la decoración o lo que cuelga; no el material y el color a la vez.
+- **La misma luz:** entra del mismo lado de día y de noche arde la misma clase de llama o lámpara, con la misma temperatura.
+- **Las mismas maderas, metales y telas,** y el suelo del mismo material.
+- **Algo del Ideario, citado y no copiado:** uno o dos objetos suyos reaparecen en otra postura o en otro uso.
+
+Sigue valiendo lo de antes: es otro mueble, con otros objetos y otro encuadre. Se comprueba en la hoja de entrega, entrecerrando los ojos: las dos columnas tienen que parecer la misma casa a la misma hora. La dirección de cada tema empieza por una lista de lo que comparte con su Ideario (lugar, pared, luz, materiales, objeto citado) y otra de lo que cambia.
+
 ## Lo que salió
 
 - **El día se lee igual de grande en las tres clases de entrada** (unos 16 sp): la etiqueta crece lo justo. En las entradas angostas, cuidar que no tape el objeto (quedó flojo en Japón Edo y Romano).

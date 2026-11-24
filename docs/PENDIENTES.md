@@ -120,6 +120,7 @@ El autor, con la v292: «sigue súper bugueado y lento el de Psicodelia». Se mi
 ### Las bibliotecas: en qué van (24 nov 2026)
 
 - **El orden lo pidió el autor:** primero Scriptorium, Roma contemporánea, Ruta de la Seda, Al-Ándalus y Espacio; las demás, como sean.
+- **Para las que faltan, más cohesión con el Ideario (pedido del autor, 24 nov 2026):** la biblioteca y la libreta de cada tema se leen como del mismo sitio que su Ideario (mismo lugar, afuera o adentro; misma pared o fondo; misma luz; mismos materiales), sin verse iguales. La regla está en `docs/diseno/MUEBLES.md`, «La cohesión con el Ideario». Lo hecho hasta la quinta tanda se queda como está; los casos que señaló fueron Galia (Ideario afuera, biblioteca adentro) y los temas con la pared gris en el Ideario y azul o verde en la biblioteca.
 - **Hechas: 29 de 39** (Básico no cuenta: es sin diseño). Son las que tienen su `ui/biblioteca/MuebleEstante<Tema>*.kt` y cuyo objeto `Estante<Tema>` solo delega: los tres pilotos (Helénico, Laboratorio y Gótico), Psicodelia, las cinco del 19 nov 2026, las cinco del 22 nov 2026, las diez del 23 nov 2026, en dos tandas, y las cinco del 24 nov 2026 (abajo).
 
 #### Primera tanda (19 nov 2026)
