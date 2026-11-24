@@ -99,8 +99,9 @@ internal object HuecosEstanteRevolucion {
             drawRect(a.dia(P.GRES_OSC, 0f, k), Offset(bx - w * 0.05f, y - alto), Size(w * 0.1f, alto * 0.52f))
             drawPath(poligonoRevolucion(bx - w * 0.01f, y - alto * 0.49f, bx + w * 0.004f, y - alto * 0.49f, bx - w * 0.002f, y - alto * 0.36f), a.dia(P.GRES_OSC, 0f, k))
             cilindroRevolucion(Rect(bx - w * 0.036f, y - alto, bx + w * 0.036f, y), a, k, -1f, 1.4f)
-            // El sello del alfarero, un óvalo hundido sin letras.
-            drawOval(a.sombra(0.25f), Offset(bx - w * 0.012f, y - alto * 0.3f), Size(w * 0.02f, w * 0.012f), style = Stroke(1f * u))
+            // El sello del alfarero: una pella de barro aplastada, lisa y sin marca.
+            drawOval(a.dia(P.GRES, -0.12f, k), Offset(bx - w * 0.012f, y - alto * 0.3f), Size(w * 0.022f, w * 0.013f))
+            drawOval(a.claro(0.25f), Offset(bx - w * 0.01f, y - alto * 0.3f), Size(w * 0.014f, w * 0.004f))
         }
         drawRect(a.dia(Color(0xFFB08A5A), 0f, k), Offset(bx - w * 0.009f, y - alto), Size(w * 0.018f, alto * 0.06f))
         destelloRevolucion(Offset(bx - w * 0.02f, y - alto * 0.62f), 1.6f * u, a, k)
@@ -212,17 +213,11 @@ internal object HuecosEstanteRevolucion {
         drawPath(cuerpo, a.dia(P.LOZA, 0f, k))
         clipPath(cuerpo) {
             cilindroRevolucion(Rect(x - an * 0.6f, pie.y - al, x + an * 0.6f, pie.y), a, k, -1f, 1.4f)
-            // La cenefa azul: un filete ancho, una hilera de hojitas sueltas (tres trazos en abanico) y el filete del pie.
+            // La cenefa azul: un filete ancho, una onda doble seguida (sin trazos sueltos que se lean) y el filete del pie.
             val azul = a.dia(P.AZUL_LOZA, 0f, k)
             drawRect(azul, Offset(x - an, pie.y - al * 0.66f), Size(an * 2, w * 0.004f))
-            var hx = x - an * 0.5f
-            while (hx < x + an * 0.55f) {
-                val hy = pie.y - al * 0.5f
-                drawLine(azul, Offset(hx, hy), Offset(hx - w * 0.006f, hy - w * 0.012f), w * 0.0025f, StrokeCap.Round)
-                drawLine(azul, Offset(hx, hy), Offset(hx + w * 0.007f, hy - w * 0.01f), w * 0.0025f, StrokeCap.Round)
-                drawCircle(azul, w * 0.002f, Offset(hx + w * 0.012f, hy - w * 0.003f))
-                hx += an * 0.32f
-            }
+            ondaRevolucion(x - an * 0.62f, x + an * 0.62f, pie.y - al * 0.52f, al * 0.025f, an * 0.22f, azul, w * 0.003f)
+            ondaRevolucion(x - an * 0.62f - an * 0.11f, x + an * 0.62f, pie.y - al * 0.46f, al * 0.02f, an * 0.22f, azul.copy(alpha = 0.7f), w * 0.0022f)
             drawRect(azul, Offset(x - an, pie.y - al * 0.1f), Size(an * 2, w * 0.004f))
             drawPath(poligonoRevolucion(x + an * 0.04f, pie.y - al * 0.99f, x + an * 0.2f, pie.y - al * 0.985f, x + an * 0.11f, pie.y - al * 0.93f), a.dia(Color(0xFFC07A4E), 0f, k))
         }

@@ -206,7 +206,11 @@ internal object PieEstanteRevolucion {
             if (a.oscuro) drawCircle(Brush.radialGradient(listOf(P.LLAMA.copy(alpha = 0.32f * f), Color.Transparent), boca.center, w * 0.15f), w * 0.15f, boca.center)
         } else {
             drawPath(arco, a.dia(P.HIERRO, -0.1f, ki))
-            for (j in 0 until 4) drawRect(a.sombra(0.7f), Offset(boca.left + boca.width * (0.14f + 0.2f * j), boca.top + boca.height * 0.62f), Size(boca.width * 0.1f, boca.height * 0.24f))
+            // El registro del tiro: una ranura a lo ancho con su tapa corrediza medio abierta y su botón.
+            val ranura = Rect(boca.left + boca.width * 0.14f, boca.top + boca.height * 0.66f, boca.right - boca.width * 0.14f, boca.top + boca.height * 0.78f)
+            drawRect(a.sombra(0.75f), ranura.topLeft, ranura.size)
+            drawRect(a.dia(P.HIERRO_LUZ, -0.25f, ki), Offset(ranura.left, ranura.top - w * 0.002f), Size(ranura.width * 0.55f, ranura.height + w * 0.004f))
+            drawCircle(a.dia(P.HIERRO_LUZ, 0f, ki), w * 0.0035f, Offset(ranura.left + ranura.width * 0.5f, ranura.center.y))
             drawCircle(a.dia(P.LATON, -0.2f, k), w * 0.006f, Offset(boca.right - boca.width * 0.14f, boca.center.y))
             drawPath(arco, a.claro(0.2f), style = Stroke(1f * u))
         }

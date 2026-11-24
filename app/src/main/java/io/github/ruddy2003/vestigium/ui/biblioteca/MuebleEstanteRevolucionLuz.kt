@@ -277,6 +277,20 @@ internal fun DrawScope.cilindroRevolucion(r: Rect, a: AireRevolucion, k: Float, 
     drawRect(a.sombra(0.24f * fuerza), Offset(x(0.8f, 0.2f), r.top), Size(r.width * 0.2f, r.height))
 }
 
+/** Una onda seguida de [x0] a [x1] en [y] (alto [alto], paso [paso]): la cenefa de la loza, sin trazos sueltos que se lean. */
+internal fun DrawScope.ondaRevolucion(x0: Float, x1: Float, y: Float, alto: Float, paso: Float, color: Color, grueso: Float) {
+    if (paso <= 0.5f || x1 <= x0) return
+    val p = Path()
+    val d = paso / 12f
+    var x = x0
+    p.moveTo(x, y)
+    while (x < x1) {
+        x += d
+        p.lineTo(x, y - alto * kotlin.math.sin((x - x0) / paso * 6.2832f))
+    }
+    drawPath(p, color, style = androidx.compose.ui.graphics.drawscope.Stroke(grueso, cap = androidx.compose.ui.graphics.StrokeCap.Round))
+}
+
 /** La llama de una vela de sebo en [p] (la base de la llama), de tamaño [s]: la lengua, su corazón y su aura. */
 internal fun DrawScope.llamaRevolucion(p: Offset, s: Float, f: Float = 1f) {
     val pal = PaletaRevolucion

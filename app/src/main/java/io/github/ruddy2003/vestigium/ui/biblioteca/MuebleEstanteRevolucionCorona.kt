@@ -397,17 +397,11 @@ internal object CoronaEstanteRevolucion {
         drawPath(cuerpo, cc(P.LOZA))
         clipPath(cuerpo) {
             cilindroRevolucion(Rect(p.x - an * 0.62f, p.y - al, p.x + an * 0.62f, p.y), a, k, hc, 1.5f)
-            // La cenefa azul pintada a mano: dos filetes y, entre ellos, una hilera de puntos y rayas cortas.
+            // La cenefa azul pintada a mano: dos filetes y, entre ellos, una onda seguida (sin trazos sueltos que se lean).
             val azul = cc(P.AZUL_LOZA)
             drawRect(azul, Offset(p.x - an, p.y - al * 0.69f), Size(an * 2, w * 0.0038f))
             drawRect(azul, Offset(p.x - an, p.y - al * 0.56f), Size(an * 2, w * 0.0028f))
-            var x = p.x - an * 0.56f
-            var j = 0
-            while (x < p.x + an * 0.6f) {
-                if (j % 2 == 0) drawCircle(azul, w * 0.003f, Offset(x, p.y - al * 0.625f))
-                else drawLine(azul, Offset(x - w * 0.0045f, p.y - al * 0.6f), Offset(x + w * 0.0045f, p.y - al * 0.65f), w * 0.0028f, StrokeCap.Round)
-                x += an * 0.13f; j++
-            }
+            ondaRevolucion(p.x - an * 0.62f, p.x + an * 0.62f, p.y - al * 0.625f, al * 0.03f, an * 0.16f, azul, w * 0.0028f)
             drawRect(azul.copy(alpha = 0.85f), Offset(p.x - an, p.y - al * 0.12f), Size(an * 2, w * 0.0045f))
             // El borde desportillado: el barro rojizo que asoma bajo el esmalte.
             drawPath(poligonoRevolucion(p.x + an * 0.05f, p.y - al * 0.99f, p.x + an * 0.2f, p.y - al * 0.985f, p.x + an * 0.12f, p.y - al * 0.94f), cc(Color(0xFFC07A4E)))
