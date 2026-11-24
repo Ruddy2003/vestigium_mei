@@ -45,6 +45,7 @@ internal object RinconLibretaNapoleon {
         val m = MuebleLibretaNapoleon.mancha(s, a)
         pared(s, a, m)
         sombraDelAtril(s, a)
+        portapliegos(s, a)
         cortina(s, a)
         mesa(s, ac)
         atril(s, ac, m)
@@ -152,6 +153,65 @@ internal object RinconLibretaNapoleon {
                 drawPath(siluetaAtril(s, Offset(-30f * U, -14f * U)), a.sombra(0.28f))
             }
         }
+    }
+
+    // ---------------------------------------------------------------- el portapliegos
+
+    /**
+     * El portapliegos del correo, colgado de un clavo de latón a la derecha: la bolsa de becerro con su fuelle, la tapa redonda con
+     * su pespunte, la correa de cierre con su hebilla y la bandolera que sube al clavo. Trae los despachos que van al legajo. De día,
+     * su sombra a la derecha; de noche lo alumbra la vela desde abajo (el filo en su canto de abajo) y su sombra sube.
+     */
+    private fun DrawScope.portapliegos(s: SitioLibretaNapoleon, a: AireNapoleon) {
+        val U = s.U
+        val x = minOf(s.cx + 156f * U, s.w - 30f * U)
+        val arriba = 70f * U; val abajo = 108f * U; val mitad = 23f * U
+        val clavo = Offset(x - 3f * U, 30f * U)
+        val k = s.k(a, Offset(x, abajo))
+        val cuerpo = Path().apply {
+            moveTo(x - mitad, arriba); lineTo(x + mitad, arriba); lineTo(x + mitad, abajo - 9f * U)
+            quadraticTo(x + mitad, abajo, x + mitad - 9f * U, abajo); lineTo(x - mitad + 9f * U, abajo)
+            quadraticTo(x - mitad, abajo, x - mitad, abajo - 9f * U); close()
+        }
+        val tapa = Path().apply {
+            moveTo(x - mitad - 1f * U, arriba - 1f * U); lineTo(x + mitad + 1f * U, arriba - 1f * U); lineTo(x + mitad + 1f * U, arriba + 16f * U)
+            quadraticTo(x + mitad, arriba + 28f * U, x, arriba + 29f * U); quadraticTo(x - mitad, arriba + 28f * U, x - mitad - 1f * U, arriba + 16f * U); close()
+        }
+        // La sombra en la pared.
+        // De noche, dentro del charco de la vela, la sombra es la pared sin esa luz: un pardo hondo que oscurece sin agrisar.
+        val d = if (a.oscuro) Offset(4f * U, -9f * U) else Offset(9f * U, 7f * U)
+        if (a.oscuro) {
+            drawPath(Path().apply { addPath(cuerpo, d) }, Color(0xFF9A6A48), blendMode = BlendMode.Multiply)
+            drawLine(Color(0xFFB08060), clavo + d * 0.4f, Offset(x + mitad - 3f * U, arriba) + d, 3f * U, blendMode = BlendMode.Multiply)
+        } else {
+            drawPath(Path().apply { addPath(cuerpo, d) }, a.sombra(0.2f))
+            drawLine(a.sombra(0.16f), clavo + d * 0.4f, Offset(x + mitad - 3f * U, arriba) + d, 3f * U)
+        }
+        // La bandolera, del clavo a las dos esquinas.
+        val correa = a.luz(P.CUERO_OSC, k)
+        drawLine(correa, clavo, Offset(x - mitad + 3f * U, arriba + 1f * U), 3.4f * U)
+        drawLine(correa, clavo, Offset(x + mitad - 3f * U, arriba + 1f * U), 3.4f * U)
+        drawLine(a.luz(P.CUERO, k), clavo + Offset(-0.8f * U, 0f), Offset(x - mitad + 2.2f * U, arriba + 1f * U), 1f * U)
+        clavoNapoleon(clavo, 2.6f * U, a, k)
+        // El fuelle (el canto de la derecha) y la bolsa, con la luz de la ventana a la izquierda o la de la vela abajo.
+        drawRect(a.luz(P.CUERO_OSC, k), Offset(x + mitad - 1f * U, arriba + 3f * U), Size(4f * U, abajo - arriba - 8f * U))
+        val izq = if (a.oscuro) a.luz(P.CUERO, k * 0.8f) else a.dia(P.CUERO, 0.12f)
+        val der = if (a.oscuro) a.luz(P.CUERO, k) else a.dia(P.CUERO, -0.12f)
+        drawPath(cuerpo, Brush.horizontalGradient(listOf(izq, der), x - mitad, x + mitad))
+        drawPath(tapa, Brush.horizontalGradient(listOf(mezcla(izq, Color.White, if (a.oscuro) 0f else 0.06f), der), x - mitad, x + mitad))
+        drawPath(tapa, a.sombra(0.35f), style = Stroke(0.8f * U))
+        // El pespunte de la tapa y la correa de cierre con su hebilla.
+        val pespunte = Path().apply {
+            moveTo(x - mitad + 3f * U, arriba + 2f * U); lineTo(x - mitad + 3f * U, arriba + 15f * U)
+            quadraticTo(x - mitad + 3f * U, arriba + 25f * U, x, arriba + 26f * U)
+            quadraticTo(x + mitad - 3f * U, arriba + 25f * U, x + mitad - 3f * U, arriba + 15f * U); lineTo(x + mitad - 3f * U, arriba + 2f * U)
+        }
+        drawPath(pespunte, a.luz(P.CARTULINA, k).copy(alpha = 0.55f), style = Stroke(0.7f * U, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2f * U, 1.6f * U))))
+        drawRect(a.luz(P.CUERO_OSC, k), Offset(x - 2.6f * U, arriba + 22f * U), Size(5.2f * U, abajo - arriba - 26f * U))
+        drawRect(a.luz(P.LATON, k), Offset(x - 4.2f * U, arriba + 25f * U), Size(8.4f * U, 6f * U), style = Stroke(1.3f * U))
+        drawLine(a.luz(P.LATON_OSC, k), Offset(x, arriba + 25f * U), Offset(x, arriba + 31f * U), 0.9f * U)
+        if (!a.oscuro) drawLine(a.claro(0.4f), Offset(x - mitad - 0.4f * U, arriba), Offset(x - mitad - 0.4f * U, arriba + 15f * U), 1f * U)
+        else drawLine(a.filo(0.7f * k), Offset(x - mitad + 9f * U, abajo - 0.6f * U), Offset(x + mitad - 9f * U, abajo - 0.6f * U), 1.2f * U)
     }
 
     // ---------------------------------------------------------------- la cortina
