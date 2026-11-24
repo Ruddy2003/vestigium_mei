@@ -19,9 +19,9 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 /**
  * El rincón de la libreta de Revolución ([MuebleLibretaRevolucion]), lo fijo: el yeso ocre rosado con la luz de la ventana y el
  * zócalo pintado de sangre de toro, la viga que cruza arriba, el pie derecho de la prensa con sus pernos y el ovillo de
- * bramante, el suelo de liais, y el pupitre de roble del regente: el tablero inclinado (con la luz de la ventana y la prueba
- * que se está corrigiendo), el reborde que sujeta el registro, el faldón con su cajón, las patas, el travesaño con los
- * registros viejos y la repisa de arriba con el cuerno de tinta, la salvadera y la palmatoria. La llama se pinta en vivo.
+ * bramante, el suelo de liais, y el pupitre de roble del regente: el tablero inclinado en escorzo (con la luz de la ventana y la
+ * prueba que se está corrigiendo), el listón de apoyo con la palmatoria, el faldón con su cajón, las patas torneadas, el
+ * travesaño con los registros viejos y la repisa de arriba con la salvadera y el cuerno de tinta. La llama se pinta en vivo.
  */
 internal object RinconLibretaRevolucion {
     private val P = PaletaRevolucion
@@ -174,80 +174,108 @@ internal object RinconLibretaRevolucion {
 
     // ---------------------------------------------------------------- el pupitre
 
-    /** El tablero inclinado del pupitre, de la repisa al reborde, algo más angosto arriba (está más lejos). */
-    fun tablero(s: SitioLibretaRevolucion) = poligonoRevolucion(s.izq + 4f * s.U, s.galeriaAbajo, s.der - 4f * s.U, s.galeriaAbajo, s.der, s.reborde, s.izq, s.reborde)
+    /** El tablero inclinado del pupitre, en escorzo: más ancho abajo (está más cerca) y más angosto arriba, de la repisa al listón. */
+    fun tablero(s: SitioLibretaRevolucion) = poligonoRevolucion(s.izq + s.escorzo, s.galeriaAbajo, s.der - s.escorzo, s.galeriaAbajo, s.der, s.reborde, s.izq, s.reborde)
 
-    /** El pupitre de roble: el tablero con la luz y la prueba, sus cantos, el reborde, el faldón con su cajón, las patas y el travesaño. */
+    /**
+     * El pupitre de roble: el tablero inclinado (con la luz de la ventana y la prueba), sus cantos, el listón de apoyo donde está
+     * de pie el registro, el faldón con su cajón, las patas torneadas, las de atrás con el travesaño y la palmatoria en el listón.
+     */
     private fun DrawScope.pupitre(s: SitioLibretaRevolucion, a: AireRevolucion) {
         val U = s.U
-        val k0 = s.k(a, Offset(s.izq + s.pw / 2, 120f * U))
-        // La sombra del pupitre en la pared: de día a la derecha y abajo; de noche, a la izquierda (la vela está a la derecha).
-        val sx = if (a.oscuro) -16f * U else 12f * U
-        val sombra = poligonoRevolucion(s.izq + 6f * U + sx, s.galeria - 4f * U, s.der - 6f * U + sx, s.galeria - 4f * U, s.der + sx, s.suelo, s.izq + sx, s.suelo)
+        val k0 = s.k(a, Offset(s.izq + s.pw / 2, 236f * U))
+        // La sombra del pupitre en la pared: de día a la derecha; de noche, la vela está abajo a la derecha: arriba a la izquierda.
+        val sx = if (a.oscuro) -14f * U else 12f * U
+        val sy = if (a.oscuro) -6f * U else 0f
+        val sombra = poligonoRevolucion(s.izq + s.escorzo + sx, s.galeria - 8f * U + sy, s.der - s.escorzo + sx, s.galeria - 8f * U + sy, s.der + 8f * U + sx, s.suelo, s.izq - 8f * U + sx, s.suelo)
         clipRect(0f, 0f, s.prensaIzq, s.suelo) { drawPath(sombra, a.sombra(if (a.oscuro) 0.35f else 0.22f)) }
-        // Las patas de atrás (asoman bajo el faldón, más oscuras) y el travesaño con los registros viejos.
-        listOf(s.izq + 22f * U, s.der - 32f * U).forEach { x -> drawRect(a.dia(P.ROBLE_OSC, -0.3f, k0), Offset(x, s.faldonAbajo), Size(9f * U, s.suelo + 6f * U - s.faldonAbajo)) }
-        val trav = Rect(s.izq + 12f * U, 240f * U, s.der - 12f * U, 246f * U)
+        // Las patas de atrás (asoman bajo el faldón, más oscuras), el travesaño y los registros viejos.
+        listOf(s.izq + 26f * U, s.der - 36f * U).forEach { x ->
+            drawPath(poligonoRevolucion(x, s.faldonAbajo, x + 9f * U, s.faldonAbajo, x + 7.5f * U, s.suelo + 8f * U, x + 1.5f * U, s.suelo + 8f * U), a.dia(P.ROBLE_OSC, -0.3f, k0))
+        }
+        val trav = Rect(s.izq + 14f * U, 244f * U, s.der - 14f * U, 249f * U)
         drawRect(a.sombra(0.35f), Offset(s.izq, s.faldonAbajo), Size(s.pw, trav.top - s.faldonAbajo))
         viejos(s, a, trav)
         drawRect(a.dia(P.ROBLE_OSC, -0.1f, k0), trav.topLeft, trav.size)
         drawRect(a.claro(0.25f), trav.topLeft, Size(trav.width, 1f * U))
-        // El tablero: el roble con su luz, los paños de la ventana corridos hacia delante, las vetas y la junta de las tablas.
+        // El tablero: el roble con su luz, la sombra de la repisa arriba (lo más lejos), los paños de la ventana corridos hacia
+        // delante, unas pocas vetas largas y la prueba.
         val tab = tablero(s)
-        val fz = s.pano.fuerza(a)
         clipPath(tab) {
-            drawRect(s.pincel(a, P.ROBLE, -0.05f), Offset(s.izq, s.galeriaAbajo), Size(s.pw, s.reborde - s.galeriaAbajo))
+            drawRect(s.pincel(a, P.ROBLE, -0.04f), Offset(s.izq, s.galeriaAbajo), Size(s.pw, s.reborde - s.galeriaAbajo))
             if (!a.oscuro) {
                 val d = s.pano.tablero
-                drawPath(s.pano.forma(d.x, d.y, 0.022f), s.pincel(a, P.ROBLE, -0.05f, fz * 0.45f))
-                drawPath(s.pano.forma(d.x, d.y), s.pincel(a, P.ROBLE, -0.05f, fz))
+                drawPath(s.pano.forma(d.x, d.y, 0.025f), s.pincel(a, P.ROBLE, -0.04f, s.pano.madera * 0.45f))
+                drawPath(s.pano.forma(d.x, d.y), s.pincel(a, P.ROBLE, -0.04f, s.pano.madera))
             }
+            drawRect(Brush.verticalGradient(listOf(a.sombra(0.3f), a.sombra(0f)), s.galeriaAbajo, s.galeriaAbajo + 46f * U), Offset(s.izq, s.galeriaAbajo), Size(s.pw, 46f * U))
             val vetas = Path()
-            for (j in 0 until 8) { val y = s.galeriaAbajo + (9f + 19f * j) * U; vetas.moveTo(s.izq, y); vetas.quadraticTo(s.izq + s.pw * 0.5f, y + (azar(9640, j) - 0.5f) * 8f * U, s.der, y + 2f * U) }
-            drawPath(vetas, a.sombra(0.16f), style = Stroke(1f * U))
-            drawLine(a.sombra(0.35f), Offset(s.izq, s.reborde - 64f * U), Offset(s.der, s.reborde - 64f * U), 1f * U)
-            drawLine(a.claro(0.2f), Offset(s.izq, s.reborde - 63f * U), Offset(s.der, s.reborde - 63f * U), 0.8f * U)
-            // El roce oscuro donde se apoyan los antebrazos, abajo.
-            drawRect(a.sombra(0.1f), Offset(s.izq, s.reborde - 16f * U), Size(s.pw, 16f * U))
+            for (j in 0 until 4) {
+                val y = s.galeriaAbajo + (24f + 38f * j) * U
+                vetas.moveTo(s.izq, y); vetas.cubicTo(s.izq + s.pw * 0.3f, y - 3f * U, s.izq + s.pw * 0.6f, y + 4f * U, s.der, y + (azar(9640, j) - 0.5f) * 4f * U)
+            }
+            drawPath(vetas, a.sombra(0.1f), style = Stroke(1.2f * U))
             prueba(s, a)
+            // La sombra del listón en lo más bajo del tablero.
+            drawRect(a.sombra(0.3f), Offset(s.izq, s.reborde - 4f * U), Size(s.pw, 4f * U))
         }
-        // Los cantos del tablero: el de la izquierda mira a la ventana; el de la derecha, a la vela.
-        drawPath(poligonoRevolucion(s.izq - 2f * U, s.galeriaAbajo + 2f * U, s.izq + 4f * U, s.galeriaAbajo, s.izq, s.reborde, s.izq - 5f * U, s.reborde + 1f * U), s.c(a, P.ROBLE, 0.12f, Offset(s.izq, 110f * U)))
-        drawPath(poligonoRevolucion(s.der - 4f * U, s.galeriaAbajo, s.der + 2f * U, s.galeriaAbajo + 2f * U, s.der + 5f * U, s.reborde + 1f * U, s.der, s.reborde), s.c(a, P.ROBLE_OSC, -0.1f, Offset(s.der, 110f * U)))
-        if (a.oscuro) drawLine(a.filo(0.6f * s.k(a, Offset(s.der, 80f * U))), Offset(s.der - 4f * U, s.galeriaAbajo), Offset(s.der, s.reborde), 1.4f * U)
-        // El reborde que sujeta el registro: su cara de arriba (con luz) y la de delante.
-        val reb = Rect(s.izq - 6f * U, s.reborde, s.der + 6f * U, s.faldon)
-        drawRect(s.pincel(a, P.ROBLE, 0.04f), reb.topLeft, reb.size)
-        drawRect(s.pincel(a, P.ROBLE, 0.2f), reb.topLeft, Size(reb.width, 2.4f * U))
-        if (a.oscuro) drawRect(Brush.horizontalGradient(listOf(a.filo(0f), a.filo(0.5f), a.filo(0.1f)), reb.left, reb.right), reb.topLeft, Size(reb.width, 1.2f * U))
-        drawRect(a.sombra(0.4f), Offset(reb.left, reb.bottom - 1.6f * U), Size(reb.width, 1.6f * U))
-        // El faldón con su moldura y el cajón con su tirador de latón.
-        val fal = Rect(s.izq - 4f * U, s.faldon, s.der + 4f * U, s.faldonAbajo)
-        drawRect(s.pincel(a, P.ROBLE, -0.02f), fal.topLeft, fal.size)
-        drawRect(a.sombra(0.3f), fal.topLeft, Size(fal.width, 1.6f * U))
+        // Los cantos del tablero, que bajan abriéndose: el de la izquierda mira a la ventana; el de la derecha, a la vela.
+        drawPath(poligonoRevolucion(s.izq + s.escorzo - 5f * U, s.galeriaAbajo + 1f * U, s.izq + s.escorzo, s.galeriaAbajo, s.izq, s.reborde, s.izq - 7f * U, s.reborde + 1f * U),
+            s.c(a, P.ROBLE, 0.14f, Offset(s.izq, 120f * U)))
+        drawPath(poligonoRevolucion(s.der - s.escorzo, s.galeriaAbajo, s.der - s.escorzo + 5f * U, s.galeriaAbajo + 1f * U, s.der + 7f * U, s.reborde + 1f * U, s.der, s.reborde),
+            s.c(a, P.ROBLE_OSC, -0.08f, Offset(s.der, 160f * U)))
+        if (a.oscuro) drawLine(a.filo(0.75f * s.k(a, Offset(s.der, 170f * U))), Offset(s.der - s.escorzo + 5f * U, s.galeriaAbajo + 1f * U), Offset(s.der + 7f * U, s.reborde + 1f * U), 1.4f * U)
+        else drawLine(a.claro(0.45f), Offset(s.izq + s.escorzo - 5f * U, s.galeriaAbajo + 1f * U), Offset(s.izq - 7f * U, s.reborde + 1f * U), 1f * U)
+        // El listón de apoyo: su cara de encima (donde se apoyan el registro y la palmatoria) y su canto.
+        val encima = Rect(s.izq - 9f * U, s.reborde - 1f * U, s.der + 9f * U, s.liston)
+        val canto = Rect(s.izq - 9f * U, s.liston, s.der + 9f * U, s.faldon)
+        drawRect(s.pincel(a, P.ROBLE, 0.16f), encima.topLeft, encima.size)
+        drawRect(s.pincel(a, P.ROBLE, -0.02f), canto.topLeft, canto.size)
+        drawRect(a.claro(0.45f), canto.topLeft, Size(canto.width, 1f * U))
+        if (a.oscuro) drawRect(Brush.radialGradient(listOf(a.filo(0.7f), a.filo(0f)), s.llama, 140f * U), canto.topLeft, Size(canto.width, 1.2f * U))
+        drawRect(a.sombra(0.45f), Offset(canto.left, canto.bottom - 1.4f * U), Size(canto.width, 1.4f * U))
+        // El faldón con el cajón y su tirador de latón (en sombra bajo el listón).
+        val fal = Rect(s.izq - 3f * U, s.faldon, s.der + 3f * U, s.faldonAbajo)
+        drawRect(s.pincel(a, P.ROBLE, -0.06f), fal.topLeft, fal.size)
+        drawRect(a.sombra(0.35f), fal.topLeft, Size(fal.width, 2.4f * U))
         drawRect(a.sombra(0.45f), Offset(fal.left, fal.bottom - 2f * U), Size(fal.width, 2f * U))
         val cx = s.izq + s.pw / 2
-        val caj = Rect(cx - 50f * U, fal.top + 3f * U, cx + 50f * U, fal.bottom - 4f * U)
+        val caj = Rect(cx - 46f * U, fal.top + 4f * U, cx + 46f * U, fal.bottom - 4f * U)
         drawRect(a.sombra(0.5f), caj.topLeft, caj.size, style = Stroke(1.2f * U))
         drawRect(a.claro(0.25f), Offset(caj.left, caj.bottom), Size(caj.width, 0.8f * U))
         val tir = caj.center
-        drawCircle(a.sombra(0.4f), 3.4f * U, tir + Offset(0.8f * U, 1f * U))
-        drawCircle(s.c(a, P.LATON, 0f, tir), 3f * U, tir)
-        destelloRevolucion(tir - Offset(1f * U, 1f * U), 1f * U, a, s.k(a, tir))
-        // Las patas de delante, afiladas, con su anillo.
-        listOf(s.izq + 2f * U, s.der - 14f * U).forEach { x ->
-            val k = s.k(a, Offset(x, 236f * U))
-            val pata = poligonoRevolucion(x, s.faldonAbajo, x + 12f * U, s.faldonAbajo, x + 9f * U, s.pata, x + 3f * U, s.pata)
-            drawPath(pata, a.dia(P.ROBLE, 0f, k))
-            clipPath(pata) {
-                drawRect(a.claro(0.3f), Offset(x, s.faldonAbajo), Size(3f * U, s.pata - s.faldonAbajo))
-                drawRect(a.sombra(0.35f), Offset(x + 8f * U, s.faldonAbajo), Size(4f * U, s.pata - s.faldonAbajo))
-                drawRect(a.dia(P.ROBLE_OSC, 0f, k), Offset(x, s.faldonAbajo + 6f * U), Size(12f * U, 2.4f * U))
-            }
-        }
+        drawCircle(a.sombra(0.4f), 3f * U, tir + Offset(0.8f * U, 1f * U))
+        drawCircle(s.c(a, P.LATON, 0f, tir), 2.6f * U, tir)
+        destelloRevolucion(tir - Offset(0.8f * U, 0.8f * U), 0.9f * U, a, s.k(a, tir))
+        // Las patas de delante, torneadas.
+        pata(s, a, s.izq + 6f * U)
+        pata(s, a, s.der - 6f * U)
+        palmatoria(s, a)
     }
 
-    /** La prueba que se está corrigiendo, suelta en el tablero a la derecha del registro (el registro la tapa en parte). */
+    /** Una pata torneada de centro [x]: el dado de arriba, el anillo, el jarrón, el cuello y el pie que se afila. */
+    private fun DrawScope.pata(s: SitioLibretaRevolucion, a: AireRevolucion, x: Float) {
+        val U = s.U
+        val y0 = s.faldonAbajo; val y1 = s.pata
+        val k = s.k(a, Offset(x, (y0 + y1) / 2))
+        // El perfil de la mitad derecha, de arriba abajo, en (medio ancho, alto desde y0).
+        val perfil = floatArrayOf(6f, 0f, 6f, 5f, 7f, 5.6f, 7f, 7.4f, 4f, 8.4f, 6.2f, 12f, 5.4f, 16f, 3f, 18.4f, 4.6f, 19.4f, 4.6f, 21f, 3.4f, 22f, 2.2f, y1 / U - y0 / U)
+        val p = Path()
+        p.moveTo(x - perfil[0] * U, y0)
+        for (i in 0 until perfil.size / 2) p.lineTo(x + perfil[2 * i] * U, y0 + perfil[2 * i + 1] * U)
+        for (i in perfil.size / 2 - 1 downTo 0) p.lineTo(x - perfil[2 * i] * U, y0 + perfil[2 * i + 1] * U)
+        p.close()
+        drawPath(p, a.dia(P.ROBLE, 0f, k))
+        clipPath(p) {
+            val luz = if (a.oscuro) 1f else -1f
+            cilindroRevolucion(Rect(x - 7f * U, y0, x + 7f * U, y1), a, k, luz, 1.2f)
+            drawRect(a.sombra(0.4f), Offset(x - 8f * U, y0 + 5f * U), Size(16f * U, 0.8f * U))
+            drawRect(a.sombra(0.35f), Offset(x - 8f * U, y0 + 18.4f * U), Size(16f * U, 0.8f * U))
+        }
+        if (a.oscuro) drawLine(a.filo(0.6f * k), Offset(x + 6f * U, y0), Offset(x + 2.2f * U, y1), 1f * U)
+    }
+
+    /** La prueba que se está corrigiendo, clavada con una tachuela en el tablero a la derecha del registro. */
     private fun DrawScope.prueba(s: SitioLibretaRevolucion, a: AireRevolucion) {
         val U = s.U
         val c = Offset(s.registro.right + 32f * U, 138f * U)
@@ -255,7 +283,7 @@ internal object RinconLibretaRevolucion {
         rotate(7f, c) {
             val pr = Rect(c.x - 25f * U, c.y - 34f * U, c.x + 25f * U, c.y + 34f * U)
             val k = s.k(a, pr.center)
-            drawRect(a.sombra(0.28f), Offset(pr.left + (if (a.oscuro) -3f else 3f) * U, pr.top + 3f * U), pr.size)
+            drawRect(a.sombra(0.28f), Offset(pr.left + (if (a.oscuro) -3f else 3f) * U, pr.top + (if (a.oscuro) -2f else 3f) * U), pr.size)
             drawRect(a.dia(mezcla(P.PAPEL, P.TOSTADO, 0.2f), 0f, k), pr.topLeft, pr.size)
             drawRect(a.dia(P.TINTA, 0f, k).copy(alpha = 0.7f), Offset(pr.left + 7f * U, pr.top + 7f * U), Size(26f * U, 3.4f * U))
             val renglones = Path()
@@ -275,6 +303,7 @@ internal object RinconLibretaRevolucion {
             drawLine(rojo, Offset(pr.left + 14f * U, pr.top + pr.height * 0.52f + 1.5f * U), Offset(pr.left + 24f * U, pr.top + pr.height * 0.52f + 1.5f * U), 0.9f * U)
             drawRect(a.claro(0.3f), pr.topLeft, Size(pr.width, 1f * U))
             drawRect(a.sombra(0.12f), Offset(pr.left, pr.bottom - 10f * U), Size(pr.width, 10f * U))
+            clavoRevolucion(Offset(pr.center.x, pr.top + 3.4f * U), 1.6f * U, a, k, P.LATON)
         }
     }
 
@@ -296,21 +325,19 @@ internal object RinconLibretaRevolucion {
 
     // ---------------------------------------------------------------- la repisa
 
-    /** La repisa de arriba del tablero: el respaldo y la repisa, el cuerno de tinta con su pluma, la salvadera y la palmatoria. */
+    /** La repisa de arriba del tablero (tan angosta como el tablero arriba): su respaldo, su cara de encima y su canto; el cuerno y la salvadera. */
     private fun DrawScope.galeria(s: SitioLibretaRevolucion, a: AireRevolucion) {
         val U = s.U
-        val resp = Rect(s.izq + 4f * U, s.galeria - 8f * U, s.der - 4f * U, s.galeria)
-        drawRect(s.pincel(a, P.ROBLE_OSC, 0f), resp.topLeft, resp.size)
-        drawRect(a.claro(0.3f), resp.topLeft, Size(resp.width, 1f * U))
-        drawRect(s.pincel(a, P.ROBLE, 0.06f), Offset(resp.left, s.galeria), Size(resp.width, s.galeriaAbajo - s.galeria))
-        drawRect(a.claro(0.4f), Offset(resp.left, s.galeria), Size(resp.width, 1f * U))
-        if (a.oscuro) drawRect(Brush.horizontalGradient(listOf(a.filo(0f), a.filo(0.75f), a.filo(0f)), s.vela.x - 150f * U, s.vela.x + 60f * U), Offset(resp.left, s.galeria), Size(resp.width, 1.2f * U))
-        drawRect(a.sombra(0.45f), Offset(resp.left, s.galeriaAbajo - 1.6f * U), Size(resp.width, 1.6f * U))
-        // La sombra de la repisa en el tablero.
-        drawRect(a.sombra(0.25f), Offset(resp.left, s.galeriaAbajo), Size(resp.width, 3f * U))
+        val x0 = s.izq + s.escorzo - 7f * U; val x1 = s.der - s.escorzo + 7f * U
+        // El respaldo, la cara de encima (vista desde arriba, clara) y el canto de delante.
+        drawRect(s.pincel(a, P.ROBLE_OSC, 0f), Offset(x0 + 3f * U, s.galeria - 14f * U), Size(x1 - x0 - 6f * U, 8f * U))
+        drawRect(a.claro(0.3f), Offset(x0 + 3f * U, s.galeria - 14f * U), Size(x1 - x0 - 6f * U, 1f * U))
+        drawRect(s.pincel(a, P.ROBLE, 0.18f), Offset(x0, s.galeria - 6f * U), Size(x1 - x0, 6f * U))
+        drawRect(s.pincel(a, P.ROBLE, -0.02f), Offset(x0, s.galeria), Size(x1 - x0, s.galeriaAbajo - s.galeria))
+        drawRect(a.claro(0.45f), Offset(x0, s.galeria), Size(x1 - x0, 1f * U))
+        drawRect(a.sombra(0.45f), Offset(x0, s.galeriaAbajo - 1.4f * U), Size(x1 - x0, 1.4f * U))
         cuerno(s, a)
         salvadera(s, a)
-        palmatoria(s, a)
     }
 
     /** El cuerno de tinta (un cuerno de buey cortado, con su anilla de cuero), con la pluma de ganso metida. */

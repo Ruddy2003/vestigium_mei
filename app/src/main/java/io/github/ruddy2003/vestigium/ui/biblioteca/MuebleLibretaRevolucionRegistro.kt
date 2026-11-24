@@ -19,7 +19,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /**
- * El registro del regente ([MuebleLibretaRevolucion]), en vivo: de pie en el tablero, apoyado en el reborde. Media
+ * El registro del regente ([MuebleLibretaRevolucion]), en vivo: de pie en el listón, recostado en el tablero. Media
  * encuadernación: las tapas forradas de papel verde cardenillo (liso, con su roce), el lomo redondo y las puntas de becerro, los
  * nervios del lomo; el grueso de las hojas asoma a la derecha (el corte delantero) y abajo (el pie), salpicado de ocre rojo y
  * entre el canto de las dos tapas; le salen papeles por la cabeza (uno cada 30 páginas) y la cinta de seda cuelga por el
@@ -42,9 +42,10 @@ internal object RegistroLibretaRevolucion {
         val gx = s.gx; val gy = s.gy
         // La sombra del registro en el tablero: de día a la derecha (la ventana está a la izquierda); de noche, a la izquierda.
         val sx = if (a.oscuro) -10f * U else 11f * U
+        val sy = if (a.oscuro) -3f * U else 5f * U
         clipRect(s.izq, s.galeriaAbajo, s.der, s.reborde) {
-            drawRect(a.sombra(0.12f), Offset(r.left + sx - 3f * U, r.top + 2f * U), Size(r.width + gx + 6f * U, s.reborde - r.top))
-            drawRect(a.sombra(0.22f), Offset(r.left + sx, r.top + 5f * U), Size(r.width + gx, s.reborde - r.top))
+            drawRect(a.sombra(0.12f), Offset(r.left + sx - 3f * U, r.top + sy - 3f * U), Size(r.width + gx + 6f * U, s.reborde - r.top))
+            drawRect(a.sombra(0.22f), Offset(r.left + sx, r.top + sy), Size(r.width + gx, s.reborde - r.top))
         }
         // Los papeles que asoman por la cabeza (salen del bloque de las hojas, detrás de la tapa): uno cada 30 páginas.
         val papeles = (e.hojas / 30).coerceIn(0, 6)
@@ -81,46 +82,65 @@ internal object RegistroLibretaRevolucion {
         cinta(s, a, r)
     }
 
-    /** El grueso del registro: el corte delantero a la derecha y el pie abajo, con el canto de las dos tapas y el lomo redondo. */
+    /**
+     * El grueso del registro: el corte delantero a la derecha y el pie abajo. Las tapas vuelan sobre el bloque: las hojas quedan
+     * metidas, con la sombra del canto de la tapa encima, y el canto de las dos tapas asoma por delante y por detrás (papel verde,
+     * con el becerro en las puntas y en el lomo).
+     */
     private fun DrawScope.grueso(s: SitioLibretaRevolucion, a: AireRevolucion, r: Rect) {
         val U = s.U
         val gx = s.gx; val gy = s.gy
-        val kd = MuebleLibretaRevolucion.cerca(Offset(r.right + gx, r.center.y), s, a)
-        val kp = MuebleLibretaRevolucion.cerca(Offset(r.center.x, r.bottom), s, a)
-        // La tapa de atrás, entera detrás (asoma su canto al fondo de las dos caras).
-        drawPath(poligonoRevolucion(r.right, r.top, r.right + gx, r.top + gy, r.right + gx, r.bottom + gy, r.left + gx, r.bottom + gy, r.left, r.bottom),
-            a.dia(mezcla(CARTON, BECERRO_OSC, 0.5f), -0.15f, (kd + kp) / 2))
-        // Las hojas, entre las dos tapas (el corte salpicado de ocre rojo): la cara de la derecha mira lejos de la ventana (de
-        // noche, a la vela); la de abajo, de frente.
-        val t0 = 0.16f; val t1 = 0.84f
-        val hojasDer = poligonoRevolucion(r.right + gx * t0, r.top + gy * t0 + 2f * U, r.right + gx * t1, r.top + gy * t1 + 2f * U,
-            r.right + gx * t1, r.bottom + gy * t1 - 1f * U, r.right + gx * t0, r.bottom + gy * t0 - 1f * U)
-        val hojasPie = poligonoRevolucion(r.left + 4f * U + gx * t0, r.bottom + gy * t0, r.right - 1f * U + gx * t0, r.bottom + gy * t0,
-            r.right - 1f * U + gx * t1, r.bottom + gy * t1, r.left + 4f * U + gx * t1, r.bottom + gy * t1)
-        val corte = mezcla(P.PAPEL, SALPICADO, 0.22f)
-        drawPath(hojasDer, a.dia(corte, if (a.oscuro) 0f else -0.16f, kd))
+        val kd = MuebleLibretaRevolucion.cerca(Offset(r.right + gx, r.bottom - r.height * 0.3f), s, a)
+        val kp = MuebleLibretaRevolucion.cerca(Offset(r.center.x + r.width * 0.25f, r.bottom), s, a)
+        fun en(x: Float, y: Float, t: Float) = Offset(x + gx * t, y + gy * t)
+        fun cara(p0: Offset, p1: Offset, p2: Offset, p3: Offset, p4: Offset = p3) =
+            Path().apply { moveTo(p0.x, p0.y); lineTo(p1.x, p1.y); lineTo(p2.x, p2.y); lineTo(p3.x, p3.y); lineTo(p4.x, p4.y); close() }
+        // La tapa de atrás, entera detrás: su canto asoma al fondo de las dos caras.
+        drawPath(cara(Offset(r.right, r.top), en(r.right, r.top, 1f), en(r.right, r.bottom, 1f), en(r.left, r.bottom, 1f), Offset(r.left, r.bottom)),
+            a.dia(mezcla(CARTON, BECERRO_OSC, 0.45f), -0.12f, (kd + kp) / 2))
+        // Las hojas, metidas entre las tapas (el corte salpicado de ocre rojo): la cara de la derecha mira lejos de la ventana y,
+        // de noche, a la vela; la de abajo, de frente.
+        val tb = (2.6f * U / s.g).coerceAtMost(0.3f)
+        val t0 = tb; val t1 = 1f - tb
+        val mete = 2.4f * U
+        val hojasDer = cara(en(r.right - mete, r.top + 3f * U, t0), en(r.right - mete, r.top + 3f * U, t1), en(r.right - mete, r.bottom - 1f * U, t1), en(r.right - mete, r.bottom - 1f * U, t0))
+        val hojasPie = cara(en(r.left + 5f * U, r.bottom - mete * 0.5f, t0), en(r.right - mete, r.bottom - mete * 0.5f, t0), en(r.right - mete, r.bottom - mete * 0.5f, t1), en(r.left + 5f * U, r.bottom - mete * 0.5f, t1))
+        val corte = mezcla(P.PAPEL, SALPICADO, 0.2f)
+        drawPath(hojasDer, a.dia(corte, if (a.oscuro) 0.05f else -0.14f, kd))
         drawPath(hojasPie, a.dia(corte, -0.06f, kp))
-        // Las capas de las hojas: rayas finas paralelas al canto, y el salpicado, en puntos sueltos.
+        // Las capas de las hojas y el salpicado.
         val capas = Path()
-        val n = (s.g / (1.7f * U)).toInt().coerceIn(2, 14)
+        val n = (s.g / (1.7f * U)).toInt().coerceIn(3, 15)
         for (i in 1 until n) {
             val t = t0 + (t1 - t0) * i / n
-            capas.moveTo(r.right + gx * t, r.top + gy * t + 2f * U); capas.lineTo(r.right + gx * t, r.bottom + gy * t - 1f * U)
-            capas.moveTo(r.left + 4f * U + gx * t, r.bottom + gy * t); capas.lineTo(r.right - 1f * U + gx * t, r.bottom + gy * t)
+            val a0 = en(r.right - mete, r.top + 3f * U, t); val a1 = en(r.right - mete, r.bottom - 1f * U, t)
+            capas.moveTo(a0.x, a0.y); capas.lineTo(a1.x, a1.y)
+            val b0 = en(r.left + 5f * U, r.bottom - mete * 0.5f, t); val b1 = en(r.right - mete, r.bottom - mete * 0.5f, t)
+            capas.moveTo(b0.x, b0.y); capas.lineTo(b1.x, b1.y)
         }
-        drawPath(capas, a.sombra(0.16f), style = Stroke(0.5f * U))
+        drawPath(capas, a.sombra(0.15f), style = Stroke(0.5f * U))
         val motas = Path()
-        for (j in 0 until 26) {
+        for (j in 0 until 30) {
             val t = t0 + (t1 - t0) * azar(9700, j)
-            val p = if (j % 2 == 0) Offset(r.right + gx * t, r.top + (r.height - 4f * U) * azar(9701, j) + gy * t + 2f * U)
-            else Offset(r.left + 6f * U + (r.width - 8f * U) * azar(9701, j) + gx * t, r.bottom + gy * t)
+            val p = if (j % 2 == 0) en(r.right - mete, r.top + 4f * U + (r.height - 6f * U) * azar(9701, j), t)
+            else en(r.left + 7f * U + (r.width - 10f * U) * azar(9701, j), r.bottom - mete * 0.5f, t)
             motas.addOval(Rect(p.x - 0.5f * U, p.y - 0.5f * U, p.x + 0.5f * U, p.y + 0.5f * U))
         }
         drawPath(motas, a.dia(SALPICADO, -0.2f, (kd + kp) / 2).copy(alpha = 0.7f))
-        // El canto de la tapa de delante (el primer trecho del grueso): becerro en las puntas y el lomo, papel verde en medio.
-        val tb = 0.14f
-        drawPath(poligonoRevolucion(r.right, r.top, r.right + gx * tb, r.top + gy * tb, r.right + gx * tb, r.bottom + gy * tb, r.right, r.bottom), a.dia(BECERRO, -0.1f, kd))
-        drawPath(poligonoRevolucion(r.left, r.bottom, r.right, r.bottom, r.right + gx * tb, r.bottom + gy * tb, r.left + gx * tb, r.bottom + gy * tb), a.dia(BECERRO, -0.2f, kp))
+        // La sombra que echa el canto de la tapa de delante sobre las hojas (vuela sobre ellas).
+        drawPath(cara(Offset(r.right - mete, r.top + 3f * U), en(r.right - mete, r.top + 3f * U, t0 + 0.12f), en(r.right - mete, r.bottom - 1f * U, t0 + 0.12f), Offset(r.right - mete, r.bottom - 1f * U)), a.sombra(0.3f))
+        if (a.oscuro) {
+            // El corte brilla a la vela: el filo de las hojas que la miran.
+            val f0 = en(r.right - mete, r.top + 3f * U, t1); val f1 = en(r.right - mete, r.bottom - 1f * U, t1)
+            drawLine(a.filo((0.9f * kd).coerceAtMost(0.75f)), f0, f1, 1.4f * U)
+        }
+        // El canto de la tapa de delante: papel verde en medio, becerro en las puntas.
+        val p = 30f * U
+        drawPath(cara(Offset(r.right, r.top), en(r.right, r.top, t0), en(r.right, r.bottom, t0), Offset(r.right, r.bottom)), a.dia(CARTON, -0.18f, kd))
+        drawPath(cara(Offset(r.right, r.top), en(r.right, r.top, t0), en(r.right, r.top + p, t0), Offset(r.right, r.top + p)), a.dia(BECERRO, -0.1f, kd))
+        drawPath(cara(Offset(r.right, r.bottom - p), en(r.right, r.bottom - p, t0), en(r.right, r.bottom, t0), Offset(r.right, r.bottom)), a.dia(BECERRO, -0.1f, kd))
+        drawPath(cara(Offset(r.left, r.bottom), Offset(r.right, r.bottom), en(r.right, r.bottom, t0), en(r.left, r.bottom, t0)), a.dia(CARTON, -0.25f, kp))
+        drawPath(cara(Offset(r.right - p, r.bottom), Offset(r.right, r.bottom), en(r.right, r.bottom, t0), en(r.right - p, r.bottom, t0)), a.dia(BECERRO, -0.2f, kp))
         // El lomo redondo al pie: la cofia de becerro que da la vuelta de la tapa de delante a la de atrás.
         val cofia = Path().apply {
             moveTo(r.left + 2f * U, r.bottom); lineTo(r.left + 17f * U, r.bottom)
@@ -129,9 +149,8 @@ internal object RegistroLibretaRevolucion {
         }
         drawPath(cofia, a.dia(BECERRO, -0.15f, kp))
         drawPath(cofia, a.sombra(0.3f), style = Stroke(0.6f * U))
-        // El filo de la vela en el corte (de noche, la vela está arriba a la derecha) y la sombra del registro en el reborde.
-        if (a.oscuro) drawLine(a.filo((0.7f * kd).coerceAtMost(0.6f)), Offset(r.right + gx, r.top + gy), Offset(r.right + gx, r.bottom + gy), 1.2f * U)
-        drawRect(a.sombra(0.45f), Offset(r.left - 3f * U, s.reborde), Size(r.width + gx + 5f * U, 1.8f * U))
+        // La sombra del registro en el listón, donde se apoya.
+        drawRect(a.sombra(0.45f), Offset(r.left - 3f * U, r.bottom + gy), Size(r.width + gx + 5f * U, 2f * U))
     }
 
     /** La tapa en [r]: con [luz] mayor que 0, la misma tapa bajo los paños de la ventana (se pinta dentro de su recorte). */
@@ -168,7 +187,7 @@ internal object RegistroLibretaRevolucion {
             drawPath(Path().apply { addPath(filos, Offset(-1.4f * U, 0f)) }, a.claro(0.3f), style = Stroke(0.8f * U))
             // El lomo de becerro, redondo: la luz de la ventana en la curva de la izquierda, la sombra junto a la charnela.
             drawRect(pincel(BECERRO, 0f), Offset(r.left - 5f * U, r.top), Size(lomo + 5f * U, alto))
-            drawRect(a.claro(0.28f), Offset(r.left - 2.6f * U, r.top), Size(3.4f * U, alto))
+            drawRect(a.claro(0.36f), Offset(r.left - 2.6f * U, r.top), Size(3.4f * U, alto))
             drawRect(a.sombra(0.22f), Offset(r.left + lomo - 6f * U, r.top), Size(6f * U, alto))
             // La charnela: el surco donde el lomo se dobla hacia la tapa.
             drawRect(a.sombra(0.5f), Offset(r.left + lomo, r.top), Size(1.4f * U, alto))
@@ -182,7 +201,8 @@ internal object RegistroLibretaRevolucion {
                 sombras.addRect(Rect(r.left - 5f * U, y + 1.8f * U, r.left + lomo - 2f * U, y + 3.2f * U))
             }
             drawPath(nervios, pincel(BECERRO, 0.08f))
-            drawPath(luces, a.claro(0.4f)); drawPath(sombras, a.sombra(0.35f))
+            // De noche, la luna fría en el filo de cada nervio (el lomo se hunde, los nervios se ven).
+            drawPath(luces, if (a.oscuro) a.lunar(0.6f) else a.claro(0.45f)); drawPath(sombras, a.sombra(0.35f))
         }
         // Los cantos: la luz de la ventana arriba; la sombra abajo y a la derecha.
         drawLine(a.claro(0.5f), Offset(r.left + 4f * U, r.top + 0.5f * U), Offset(r.right - 2f * U, r.top + 0.5f * U), 1f * U)
@@ -219,24 +239,24 @@ internal object RegistroLibretaRevolucion {
         textoEn(medidor, e.cuenta, Rect(et.left + 7f * U, corte + 1f * U, et.right - 7f * U, et.bottom - 5f * U), P.LETRA, tinta.copy(alpha = 0.85f), 9.5f, minimo = 6f)
     }
 
-    /** La cinta de seda del registro: sale del pie entre las hojas y cuelga por delante del reborde, con la punta en cola de golondrina. */
+    /** La cinta de seda del registro: sale del pie entre las hojas y cuelga por delante del listón y del faldón, con la punta en cola de golondrina. */
     private fun DrawScope.cinta(s: SitioLibretaRevolucion, a: AireRevolucion, r: Rect) {
         val U = s.U
         val x = r.left + r.width * 0.7f + s.gx * 0.5f
         val y0 = r.bottom + s.gy * 0.5f
-        val fin = s.faldon + 9f * U
-        val k = MuebleLibretaRevolucion.cerca(Offset(x, s.reborde), s, a)
+        val fin = s.faldonAbajo - 2f * U
+        val k = MuebleLibretaRevolucion.cerca(Offset(x, s.liston), s, a)
         val col = a.dia(CINTA, 0f, k)
         val cinta = Path().apply {
-            moveTo(x - 1.6f * U, y0); lineTo(x + 1.6f * U, y0)
-            quadraticTo(x + 2.6f * U, s.reborde + 2f * U, x + 2.4f * U, s.reborde + 4f * U)
-            lineTo(x + 3.2f * U, fin); lineTo(x + 1.6f * U, fin - 2.6f * U); lineTo(x, fin)
-            lineTo(x - 0.8f * U, s.reborde + 4f * U)
-            quadraticTo(x - 1f * U, s.reborde + 2f * U, x - 1.6f * U, y0); close()
+            moveTo(x - 2.2f * U, y0); lineTo(x + 2.2f * U, y0)
+            quadraticTo(x + 3.4f * U, s.liston, x + 3.2f * U, s.liston + 3f * U)
+            lineTo(x + 4.4f * U, fin); lineTo(x + 2.2f * U, fin - 3.4f * U); lineTo(x, fin)
+            lineTo(x - 1f * U, s.liston + 3f * U)
+            quadraticTo(x - 1.4f * U, s.liston, x - 2.2f * U, y0); close()
         }
         drawPath(Path().apply { addPath(cinta, Offset(if (a.oscuro) -1.4f * U else 1.4f * U, 1f * U)) }, a.sombra(0.35f))
         drawPath(cinta, col)
-        drawLine(a.claro(0.35f), Offset(x - 0.4f * U, s.reborde + 0.5f * U), Offset(x - 0.2f * U, s.reborde + 2.6f * U), 0.8f * U, StrokeCap.Round)
+        drawLine(if (a.oscuro) a.filo(0.5f * k) else a.claro(0.4f), Offset(x + 2.6f * U, s.liston + 0.5f * U), Offset(x + 3.6f * U, fin - 5f * U), 0.8f * U, StrokeCap.Round)
     }
 
     /** La primera página: el papel rayado, el margen rojo y los renglones a pluma (rayas, sin letras). */

@@ -30,45 +30,50 @@ internal class SitioLibretaRevolucion(val w: Float, val h: Float, u: Float, hoja
     val U = u * (h / (MuebleLibretaRevolucion.ALTO.value * u)).coerceIn(0.5f, 2f)
     /** El pie derecho de la prensa, a la derecha. */
     val prensaIzq = w - 40f * U
-    /** El pupitre: sus lados y sus alturas (la viga, la repisa de atrás, el reborde que sujeta el registro, el faldón, las patas). */
+    /** El pupitre: sus lados abajo (el tablero, en escorzo, se angosta [escorzo] por lado arriba) y sus alturas. */
     val der = prensaIzq - 14f * U
-    val pw = minOf(278f * U, der - 10f * U)
+    val pw = minOf(254f * U, der - 10f * U)
     val izq = der - pw
+    val escorzo = 20f * U
     val viga = 9f * U
+    /** La repisa de arriba: su cara de encima (donde se apoyan las cosas) y su canto. */
     val galeria = 38f * U
-    val galeriaAbajo = 45f * U
-    val reborde = 203f * U
-    val faldon = 210f * U
-    val faldonAbajo = 226f * U
-    val suelo = 230f * U
-    val pata = 257f * U
-    val zocalo = 182f * U
-    /** El registro: la tapa, de pie en el tablero, y su grueso (de 6 a 24 dp), que asoma corrido abajo a la derecha. */
-    val g = (6f + 18f * sqrt(hojas.coerceIn(0, 240) / 240f)) * U
+    val galeriaAbajo = 44f * U
+    /** El canto de abajo del tablero, el listón de apoyo (su cara de encima y su canto), el faldón y las patas. */
+    val reborde = 199f * U
+    val liston = 206f * U
+    val faldon = 212f * U
+    val faldonAbajo = 228f * U
+    val suelo = 232f * U
+    val pata = 258f * U
+    val zocalo = 184f * U
+    /** El registro: la tapa, de pie en el listón y apoyada en el tablero, y su grueso (de 11 a 27 dp), corrido abajo a la derecha. */
+    val g = (11f + 16f * sqrt(hojas.coerceIn(0, 240) / 240f)) * U
     val gx = g * 0.62f
     val gy = g * 0.4f
-    val bw = minOf(146f * U, pw - 80f * U)
-    val registro = Rect(izq + maxOf(24f * U, pw * 0.2f), 50f * U, izq + maxOf(24f * U, pw * 0.2f) + bw, reborde - gy)
-    /** La vela de sebo en su palmatoria, en la repisa a la derecha, y su llama (de aquí sale la luz de la noche). */
-    val vela = Offset(der - 30f * U, galeria)
-    val llama = Offset(vela.x, galeria - 19f * U)
-    /** El cuerno de tinta con su pluma y la salvadera, en la repisa a la izquierda. */
-    val cuerno = Offset(izq + 30f * U, galeria)
-    val salvadera = Offset(izq + 56f * U, galeria)
+    val bw = minOf(150f * U, pw - 76f * U)
+    private val bl = izq + maxOf(22f * U, pw * 0.12f)
+    val registro = Rect(bl, 22f * U, bl + bw, 203f * U - gy)
+    /** La vela de sebo en su palmatoria, en el listón a la derecha del registro, y su llama (de aquí sale la luz de la noche). */
+    val vela = Offset(minOf(bl + bw + 30f * U + 27f * 0.62f * U, der - 16f * U), 203f * U)
+    val llama = Offset(vela.x, vela.y - 22f * U)
+    /** La salvadera y el cuerno de tinta con su pluma, en la repisa, a la derecha del registro (que tapa el medio de la repisa). */
+    val salvadera = Offset(minOf(bl + bw + 20f * U, der - escorzo - 26f * U), galeria)
+    val cuerno = Offset(minOf(bl + bw + 42f * U, der - escorzo - 6f * U), galeria)
     /** La luz de la ventana de la izquierda (de día, el sol; de noche, la luna): en la pared, en el tablero y en el registro. */
     val pano = PanoLibretaRevolucion(this)
 }
 
 /**
- * La luz de la ventana de la izquierda, que entra por una ventana de dos hojas con su travesaño: cuatro paños separados por la
- * sombra del parteluz y del travesaño. Cae en la pared, y en lo que está delante de la pared (el tablero, el registro) cae
- * corrida hacia arriba a la izquierda, tanto más cuanto más adelante está: el borde se quiebra en cada plano.
+ * La luz de la ventana de la izquierda, que entra por una ventana de dos hojas: dos paños separados por la sombra del parteluz.
+ * Cae en la pared, y en lo que está delante de la pared (el tablero, el registro) cae corrida hacia arriba a la izquierda,
+ * tanto más cuanto más adelante está: el borde se quiebra en cada plano.
  */
 internal class PanoLibretaRevolucion(s: SitioLibretaRevolucion) {
     private val U = s.U
     /** Las esquinas en la pared: arriba a la izquierda, arriba a la derecha, abajo a la derecha y abajo a la izquierda. */
-    private val x0 = s.izq - 46f * U
-    private val q = floatArrayOf(x0, 56f * U, x0 + 132f * U, 78f * U, x0 + 132f * U, 176f * U, x0, 154f * U)
+    private val x0 = s.izq - 52f * U
+    private val q = floatArrayOf(x0, 52f * U, x0 + 118f * U, 84f * U, x0 + 118f * U, 178f * U, x0, 146f * U)
 
     private fun punto(fx: Float, fy: Float, dx: Float, dy: Float): Offset {
         val tx = q[0] + (q[2] - q[0]) * fx; val ty = q[1] + (q[3] - q[1]) * fx
@@ -76,16 +81,13 @@ internal class PanoLibretaRevolucion(s: SitioLibretaRevolucion) {
         return Offset(tx + (bx - tx) * fy + dx, ty + (by - ty) * fy + dy)
     }
 
-    /** Los cuatro paños, corridos ([dx], [dy]) y crecidos [crece] (en fracción: la penumbra). */
+    /** Los dos paños, corridos ([dx], [dy]) y crecidos [crece] (en fracción: la penumbra). */
     fun forma(dx: Float, dy: Float, crece: Float = 0f): Path {
         val p = Path()
-        val barra = 0.035f
-        val cortes = floatArrayOf(0f, 0.5f - barra, 0.5f + barra, 1f)
-        val cortesY = floatArrayOf(0f, 0.4f - barra, 0.4f + barra, 1f)
-        for (c in 0 until 2) for (f in 0 until 2) {
+        val cortes = floatArrayOf(0f, 0.46f, 0.54f, 1f)
+        for (c in 0 until 2) {
             val fx0 = cortes[c * 2] - crece; val fx1 = cortes[c * 2 + 1] + crece
-            val fy0 = cortesY[f * 2] - crece; val fy1 = cortesY[f * 2 + 1] + crece
-            val a = punto(fx0, fy0, dx, dy); val b = punto(fx1, fy0, dx, dy); val d = punto(fx1, fy1, dx, dy); val e = punto(fx0, fy1, dx, dy)
+            val a = punto(fx0, -crece, dx, dy); val b = punto(fx1, -crece, dx, dy); val d = punto(fx1, 1f + crece, dx, dy); val e = punto(fx0, 1f + crece, dx, dy)
             p.moveTo(a.x, a.y); p.lineTo(b.x, b.y); p.lineTo(d.x, d.y); p.lineTo(e.x, e.y); p.close()
         }
         return p
@@ -93,28 +95,31 @@ internal class PanoLibretaRevolucion(s: SitioLibretaRevolucion) {
 
     /** Lo corrido de la luz en el tablero (más adelante que la pared) y en la tapa del registro (más adelante todavía). */
     val tablero = Offset(-16f * U, -7f * U)
-    fun tapa(g: Float) = Offset(-20f * U - g * 0.5f, -9f * U - g * 0.2f)
+    fun tapa(g: Float) = Offset(-22f * U - g * 0.5f, -10f * U - g * 0.2f)
 
-    /** Cuánta luz da: de día, el sol de noviembre; de noche, la luna, menos. */
-    fun fuerza(a: AireRevolucion) = if (a.oscuro) 0.5f else 0.85f
+    /** Cuánta luz da: de día, el sol de noviembre (en la madera y el cuero, menos: no se vuelve naranja); de noche, la luna. */
+    fun fuerza(a: AireRevolucion) = if (a.oscuro) 0.5f else 0.8f
+    val madera = 0.5f
 }
 
 /**
  * La libreta de momentos de Revolución: el registro del regente en su pupitre, en la imprenta del barrio (la misma casa que el
- * Ideario y la biblioteca). El regente apunta ahí el trabajo de cada día: un registro grueso, de pie en el tablero inclinado del
- * pupitre, con las tapas forradas de papel verde cardenillo, el lomo redondo y las puntas de becerro, los nervios del lomo, los
- * cantos de las hojas salpicados de ocre rojo y una etiqueta de papel impresa con el nombre y la cuenta. Engorda con las
- * páginas (el grueso que asoma a la derecha y abajo, y los papeles que le salen por la cabeza). Arriba, en la repisa del
- * pupitre, el cuerno de tinta con su pluma, la salvadera y la vela de sebo en su palmatoria; detrás, el yeso ocre rosado con el
- * zócalo sangre de toro, la viga que cruza arriba y, a la derecha, el pie derecho de la prensa con la prueba colgada y el
- * ovillo de bramante. Debajo, los registros viejos atados; al pie, las losas de liais. Sin emblemas: lo que dice que es de la
- * Revolución es el mundo de la imprenta.
+ * Ideario y la biblioteca). El regente apunta ahí el trabajo de cada día: un registro grueso y alto, de pie en el listón de
+ * apoyo del pupitre y recostado en el tablero inclinado, con las tapas forradas de papel verde cardenillo que vuelan sobre el
+ * bloque, el lomo redondo y las puntas de becerro, los nervios del lomo, los cantos de las hojas salpicados de ocre rojo, la
+ * cinta del registro y una etiqueta de papel impresa con el nombre y la cuenta. Engorda con las páginas (el grueso que asoma a
+ * la derecha y abajo, y los papeles que le salen por la cabeza). El pupitre, en escorzo: el tablero más ancho abajo, sus
+ * cantos, el listón, el faldón con su cajón y las patas torneadas; arriba, en la repisa, la salvadera y el cuerno de tinta con
+ * su pluma; en el listón, a la derecha del registro, la vela de sebo en su palmatoria; en el tablero, la prueba clavada. Detrás,
+ * el yeso ocre rosado con el zócalo sangre de toro, la viga que cruza arriba y, a la derecha, el pie derecho de la prensa con
+ * el ovillo de bramante. Debajo, los registros viejos atados; al pie, las losas de liais. Sin emblemas: lo que dice que es de
+ * la Revolución es el mundo de la imprenta.
  *
- * La luz: de día, la ventana de la izquierda (sus cuatro paños en la pared, el tablero y el registro, corridos en cada plano;
- * el lado claro de cada cosa a la izquierda y las sombras a la derecha). De noche, la vela de la repisa: su charco enciende la
- * prensa, la derecha del registro y la repisa, y lo lejano (la izquierda, el suelo) se hunde en el añil y en el sangre de toro
- * hondo de la casa; por la ventana entra la luna, fría, en la pared y en los cantos de la izquierda. Lo fijo se pinta una vez
- * por tamaño y modo; el registro, en cada dibujo.
+ * La luz: de día, la ventana de la izquierda (sus dos paños en la pared, el tablero y el lomo, corridos en cada plano; el lado
+ * claro de cada cosa a la izquierda y las sombras a la derecha). De noche, la vela del listón: su charco enciende media tapa
+ * en su verde, el corte de las hojas, la prueba, el tablero y la prensa, y lo lejano (el lomo, la izquierda, el suelo) se
+ * hunde en el añil y la ciruela de la casa; por la ventana entra la luna, fría, en la pared y en el filo de los nervios. Lo
+ * fijo se pinta una vez por tamaño y modo; el registro, en cada dibujo.
  */
 internal object MuebleLibretaRevolucion {
     val ALTO: Dp = 262.dp
@@ -127,7 +132,7 @@ internal object MuebleLibretaRevolucion {
     }
 
     /** La caída de la luz de la vela con la distancia [d] (en dp). */
-    private fun caida(d: Float) = (1.45f * exp(-0.0115f * d)).coerceIn(0.03f, 1f)
+    private fun caida(d: Float) = (1.55f * exp(-0.0088f * d)).coerceIn(0.03f, 1f)
 
     private val RADIOS = floatArrayOf(0f, 16f, 36f, 64f, 100f, 146f, 204f, 280f, 380f)
 
@@ -162,8 +167,9 @@ internal object MuebleLibretaRevolucion {
     fun tinte(col: Color, f: Float, k: Float, a: AireRevolucion, local: Float = 0f): Color {
         val base = a.dia(col, f, k)
         if (!a.oscuro || local <= 0f) return base
-        val m = 0.2f + 0.5f * k
-        return mezcla(base, Color(col.red * m, col.green * m, col.blue * m, col.alpha), local)
+        // Cerca de la llama, su propio color, encendido y tibio (más rojo, menos azul); lejos, hundido.
+        val m = 0.16f + 1.0f * k
+        return mezcla(base, Color((col.red * m * 1.14f).coerceAtMost(1f), (col.green * m * 1.02f).coerceAtMost(1f), (col.blue * m * 0.78f).coerceAtMost(1f), col.alpha), local)
     }
 
     private var clave = ""
