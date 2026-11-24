@@ -3717,6 +3717,7 @@ object EstanteRevolucion : DisenoBiblioteca {
     private val VIDRIO = Color(0xFFDCE2DC)
     private val FAROL = Color(0xFFF3D27A)
     private val LUNA = Color(0xFFEDE6C8)
+    private val LUNA_RAS = Color(0xFFA2BCE0)
     /** Las cubiertas: papel azul, papel gris, becerro, jaspeado rojizo, ocre y verde. */
     private val CUBIERTAS = listOf(Color(0xFF5A6E8A), Color(0xFF7A8A9A), Color(0xFF7A4E2E), Color(0xFF8A4A3A), Color(0xFFB08A4A), Color(0xFF4E6A4A))
     private val NOCHE = Color(0xFF141A2C)
@@ -3792,12 +3793,35 @@ object EstanteRevolucion : DisenoBiblioteca {
         val k = (e.semilla and 0x7fffffff) % CUBIERTAS.size
         val cubierta = c(CUBIERTAS[k])
         val folleto = azar(e.semilla, 3) > 0.5f
-        val hoja = papel(PAPEL, oscuro, n)
+        // En el sueño, la luna aclara el papel (frío): la etiqueta se lee igual o mejor que con el farol de antes.
+        val hoja = papel(PAPEL, oscuro, n).let { if (n) mezcla(it, Color(0xFFE6ECF4), 0.12f) else it }
         val oro = Color(0xFFC9A24E)
         val libro = Rect(w * 0.025f, h * 0.045f, w * 0.965f, h * 0.9f)
         val lomo = Rect(libro.left, libro.top, libro.left + minOf(w * (if (folleto) 0.035f else 0.065f), 26 * u), libro.bottom)
         val tapa = Rect(lomo.right, libro.top, libro.right, libro.bottom)
-        drawRoundRect(Color.Black.copy(alpha = 0.3f), Offset(libro.left + 3 * u, libro.top + 5 * u), libro.size, CornerRadius(2 * u))
+        // Donde descansa: el pupitre de roble del regente, con su canto. La luz: de día, la ventana de arriba a la izquierda; en
+        // modo oscuro, la vela de la palmatoria, abajo a la derecha (lo de la izquierda se hunde en ciruela; la luna, fría, en los
+        // cantos de la izquierda); en el sueño manda la luna, de arriba a la izquierda, y la vela arde baja.
+        val vela = n || oscuro
+        val llama = Offset(w * 0.94f, libro.bottom - 15 * u)
+        fun calido(x: Color, f: Float) = Color((x.red * (1 + 0.55f * f) + 0.07f * f).coerceAtMost(1f), (x.green * (1 + 0.2f * f) + 0.025f * f).coerceAtMost(1f), x.blue * (1 - 0.25f * f), x.alpha)
+        fun hundido(x: Color, f: Float) = mezcla(x, Color(0xFF1E1428), f)
+        val fv = if (oscuro && !n) 0.75f else if (vela) 0.4f else 0f
+        val roble = c(PaletaRevolucion.ROBLE)
+        val mesa = Rect(0f, libro.bottom - 10 * u, w, libro.bottom + 6 * u)
+        val frente = Rect(0f, mesa.bottom, w, minOf(h, mesa.bottom + 10 * u))
+        val pinMesa = if (vela) Brush.horizontalGradient(listOf(hundido(roble, if (n) 0.25f else 0.45f), roble, calido(roble, fv)), 0f, w)
+            else Brush.horizontalGradient(listOf(mezcla(roble, Color.White, 0.12f), mezcla(roble, Color.Black, 0.06f)), 0f, w)
+        drawRect(pinMesa, mesa.topLeft, mesa.size)
+        drawRect(pinMesa, frente.topLeft, frente.size)
+        drawRect(Color(0xFF2A1810).copy(alpha = 0.4f), frente.topLeft, frente.size)
+        drawRect(Brush.horizontalGradient(if (oscuro && !n) listOf(LUNA_RAS.copy(alpha = 0.2f), FAROL.copy(alpha = 0.35f)) else List(2) { if (n) LUNA_RAS.copy(alpha = 0.3f) else Color.White.copy(alpha = 0.4f) }, 0f, w),
+            frente.topLeft, Size(w, 1 * u))
+        drawRect(Color(0xFF2A1810).copy(alpha = 0.5f), Offset(0f, frente.bottom - 1.4f * u), Size(w, 1.4f * u))
+        // La sombra del libro, con color: al lado contrario de la luz (de día y en el sueño, abajo a la derecha; con la vela, a la izquierda).
+        val sombra = if (oscuro && !n) Color(0xFF140C1E).copy(alpha = 0.5f) else if (n) Color(0xFF141A36).copy(alpha = 0.42f) else Color(0xFF3A2236).copy(alpha = 0.32f)
+        drawRoundRect(sombra, Offset(libro.left + (if (oscuro && !n) -5f else 4f) * u, libro.top + 5 * u), libro.size, CornerRadius(2 * u))
+        drawRect(sombra, Offset(libro.left, libro.bottom + 2 * u), Size(libro.width + 3 * u, 2.4f * u))
         // El canto de las hojas, de papel de trapo, desparejo.
         val bloque = Rect(tapa.left, tapa.top + 3 * u, tapa.right + 2.5f * u, tapa.bottom + 3 * u)
         drawRect(c(PAPEL_VIEJO), bloque.topLeft, bloque.size)
@@ -3825,6 +3849,9 @@ object EstanteRevolucion : DisenoBiblioteca {
         scale(sx, 1f, Offset(tapa.left, tapa.center.y)) {
             drawRoundRect(Brush.verticalGradient(listOf(mezcla(cubierta, Color.White, 0.12f), cubierta, mezcla(cubierta, Color.Black, 0.3f)), tapa.top, tapa.bottom),
                 tapa.topLeft, tapa.size, CornerRadius((if (folleto) 1f else 2.5f) * u))
+            // Con la vela, lo de la izquierda (lejos de ella) se hunde en ciruela: solo oscurece, así la divisa se lee igual o mejor.
+            if (oscuro && !n) drawRoundRect(Brush.horizontalGradient(listOf(Color(0xFFB4A6CC), Color.White), tapa.left, tapa.left + tapa.width * 0.62f),
+                tapa.topLeft, tapa.size, CornerRadius((if (folleto) 1f else 2.5f) * u), blendMode = androidx.compose.ui.graphics.BlendMode.Multiply)
             clipRect(tapa.left, tapa.top, tapa.right, tapa.bottom) {
                 if (k == 3) {
                     // El jaspeado: vetas de color corridas por el peine.
@@ -3914,8 +3941,29 @@ object EstanteRevolucion : DisenoBiblioteca {
             drawRect(c(TINTA).copy(alpha = 0.4f), tejuelo.topLeft, tejuelo.size, style = Stroke(0.5f * u))
             for (q in 0 until 3) drawLine(c(TINTA).copy(alpha = 0.5f), Offset(tejuelo.center.x + (q - 1) * 3 * u, tejuelo.top + 6 * u), Offset(tejuelo.center.x + (q - 1) * 3 * u, tejuelo.bottom - 6 * u), 1 * u)
         }
-        // De noche, el farol de la calle alumbra desde un lado.
-        if (n) clipRect(0f, 0f, w, h) { mancha(Offset(w * 1.02f, h * 0.1f), h * 1.2f, FAROL.copy(alpha = 0.22f)) }
+        // Los filetes de luz en los cantos que miran a la luz: de día, crema arriba y en el lomo; con la vela, cálido en el corte
+        // de la derecha y frío (la luna) en el lomo y arriba a la izquierda; en el sueño, la luna en los cantos de arriba y del lomo.
+        val frio = LUNA_RAS.copy(alpha = if (n) 0.6f else 0.32f)
+        val luzArriba = if (vela) Brush.horizontalGradient(listOf(frio, frio.copy(alpha = if (n) 0.25f else 0f)), libro.left, libro.right)
+            else Brush.horizontalGradient(listOf(Color.White.copy(alpha = 0.45f), Color.White.copy(alpha = 0.15f)), libro.left, libro.right)
+        drawRect(luzArriba, Offset(libro.left, libro.top), Size(libro.width, 1 * u))
+        drawRect(if (vela) frio else Color.White.copy(alpha = 0.35f), Offset(libro.left, libro.top), Size(1.2f * u, libro.height))
+        if (vela) {
+            val filo = Brush.radialGradient(listOf(FAROL.copy(alpha = 0.6f * fv + 0.15f), FAROL.copy(alpha = 0f)), llama, w * 0.5f)
+            drawRect(filo, Offset(tapa.right + 1.4f * u, libro.top + 3 * u), Size(1.1f * u, libro.height))
+            drawRect(filo, Offset(tapa.left, libro.bottom - 1 * u), Size(tapa.width, 1 * u))
+        }
+        // La palmatoria de hojalata en el pupitre, delante del libro, con su vela de sebo (de día, apagada; en el sueño, baja).
+        val base = Offset(llama.x, mesa.bottom - 2.4f * u)
+        val alto = if (n) 8 * u else 14 * u
+        drawOval(sombra, Offset(base.x - (if (oscuro && !n) 13f else 7f) * u, base.y - 1 * u), Size(20 * u, 4 * u))
+        drawOval(c(HIERRO_LUZ), Offset(base.x - 9 * u, base.y - 2.6f * u), Size(18 * u, 4.4f * u))
+        drawOval(c(HIERRO_LUZ).copy(alpha = 0.5f), Offset(base.x + 7 * u, base.y - 3.4f * u), Size(5 * u, 3.6f * u), style = Stroke(1 * u))
+        val cera = Rect(base.x - 2.6f * u, base.y - 1.6f * u - alto, base.x + 2.6f * u, base.y - 1 * u)
+        drawRect(if (vela) calido(c(PaletaRevolucion.SEBO), fv) else PaletaRevolucion.SEBO, cera.topLeft, cera.size)
+        drawRect(Color.Black.copy(alpha = 0.2f), Offset(cera.right - 1.6f * u, cera.top), Size(1.6f * u, cera.height))
+        if (vela) llamaRevolucion(Offset(base.x, cera.top - 0.4f * u), (if (n) 2.4f else 3.4f) * u, if (n) 0.6f else 1f)
+        else drawLine(TINTA, Offset(base.x, cera.top), Offset(base.x + 0.5f * u, cera.top - 2.4f * u), 0.8f * u, StrokeCap.Round)
     }
 
     // ---------------------------------------------------------------- la página y el escritor
