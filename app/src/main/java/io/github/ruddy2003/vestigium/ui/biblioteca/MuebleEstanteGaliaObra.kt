@@ -16,7 +16,6 @@ import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontWeight
 import io.github.ruddy2003.vestigium.ui.ideario.azar
-import io.github.ruddy2003.vestigium.ui.ideario.contornoIrregular
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import kotlin.math.ceil
 import kotlin.math.floor
@@ -197,9 +196,9 @@ internal object ObraEstanteGalia {
             // Un desconchón donde se cayó la almagra y asoma el barro (en una repisa de cada dos), con su canto de luz.
             if (k % 2 == 0) {
                 val dx = r.left + r.width * (0.3f + 0.4f * azar(9150, k)); val dy = r.top + r.height * (0.32f + 0.2f * azar(9151, k))
-                val dr = Rect(dx, dy, dx + w * 0.06f, dy + w * 0.05f)
-                val forma = contornoIrregular(dr, 9152 + k, 18, 0.32f)
-                drawPath(forma, cf(mezcla(P.ALMAGRA_LUZ, P.BARRO, 0.5f), -0.05f, cerca(dr.center)))
+                val dr = Rect(dx, dy, dx + w * 0.1f, dy + w * 0.04f)
+                val forma = parcheGalia(dr, 9152 + k)
+                drawPath(forma, cf(mezcla(P.ALMAGRA, P.BARRO, 0.38f), -0.05f, cerca(dr.center)))
                 drawPath(Path().apply { addPath(forma, Offset(0.9f * u, 0.9f * u)) }, a.claro(0.3f), style = Stroke(0.9f * u))
                 drawPath(forma, a.sombra(0.45f), style = Stroke(0.8f * u))
             }

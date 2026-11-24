@@ -269,18 +269,36 @@ internal object PieEstanteGalia {
             for (q in 1..3) ovaloGalia(a.luz(P.ROBLE_OSC, k).copy(alpha = 0.35f), Rect(asiento.center.x - asiento.width * q / 8f, asiento.center.y - asiento.height * q / 8f, asiento.center.x + asiento.width * q / 8f, asiento.center.y + asiento.height * q / 8f), style = Stroke(0.7f * u))
             ovaloGalia(a.claro(0.3f), Rect(asiento.left, asiento.top, asiento.center.x, asiento.center.y))
         }
-        // Un vellón de lana cruda echado encima, que cae por un lado.
+        // Un vellón de oveja echado encima, que cae por un lado: el borde hecho de mechones y la lana en rizos.
+        val vx0 = asiento.left + w * 0.01f; val vx1 = asiento.right + w * 0.012f
+        val vy0 = asiento.top - w * 0.012f
         val v = Path().apply {
-            moveTo(asiento.left + w * 0.02f, asiento.center.y)
-            cubicTo(asiento.left + w * 0.03f, asiento.top - w * 0.02f, asiento.right - w * 0.01f, asiento.top - w * 0.016f, asiento.right + w * 0.01f, asiento.center.y + w * 0.01f)
-            lineTo(asiento.right + w * 0.004f, asiento.bottom + w * 0.03f)
-            cubicTo(asiento.right - w * 0.02f, asiento.bottom + w * 0.04f, asiento.center.x, asiento.bottom + w * 0.01f, asiento.left + w * 0.02f, asiento.center.y)
+            moveTo(vx0, asiento.center.y + w * 0.004f)
+            // Arriba, de mechón en mechón.
+            var x = vx0; var q = 0
+            while (x < vx1 - w * 0.01f) {
+                val nx = minOf(vx1 - w * 0.01f, x + w * 0.018f)
+                quadraticTo((x + nx) / 2f, vy0 - w * (0.006f + 0.004f * azar(9850, q)), nx, vy0 + w * 0.002f)
+                x = nx; q++
+            }
+            // La caída por la derecha, hasta más abajo del asiento.
+            quadraticTo(vx1 + w * 0.008f, asiento.center.y, vx1 - w * 0.002f, asiento.bottom + w * 0.03f)
+            quadraticTo(vx1 - w * 0.012f, asiento.bottom + w * 0.042f, vx1 - w * 0.022f, asiento.bottom + w * 0.03f)
+            quadraticTo(vx1 - w * 0.03f, asiento.bottom + w * 0.008f, asiento.center.x, asiento.bottom + w * 0.004f)
+            quadraticTo(asiento.left + w * 0.02f, asiento.bottom + w * 0.002f, vx0, asiento.center.y + w * 0.004f)
             close()
         }
+        drawPath(Path().apply { addPath(v, Offset(w * 0.006f, w * 0.006f)) }, a.sombra(0.3f))
         drawPath(v, a.dia(P.LANA_CRUDA, 0f, k))
         clipPath(v) {
-            for (q in 0 until 9) drawCircle(a.dia(P.BLANCO_SOMBRA, 0f, k).copy(alpha = 0.5f), w * 0.008f, Offset(asiento.left + w * (0.02f + 0.015f * q), asiento.center.y - w * 0.008f + w * 0.006f * azar(9850, q)), style = Stroke(0.7f * u))
-            drawRect(a.sombra(0.3f), Offset(asiento.right - w * 0.01f, asiento.top - w * 0.02f), Size(w * 0.03f, w * 0.08f))
+            val rizos = Path()
+            for (q in 0 until 16) {
+                val cx = vx0 + (vx1 - vx0) * azar(9851, q); val cy = vy0 + w * 0.05f * azar(9852, q)
+                rizos.moveTo(cx - w * 0.006f, cy); rizos.quadraticTo(cx, cy - w * 0.006f, cx + w * 0.006f, cy + w * 0.002f)
+            }
+            drawPath(rizos, a.dia(P.BLANCO_SOMBRA, -0.1f, k).copy(alpha = 0.7f), style = Stroke(0.9f * u, cap = StrokeCap.Round))
+            drawRect(a.claro(0.3f), Offset(vx0, vy0 - w * 0.01f), Size(vx1 - vx0, w * 0.012f))
+            drawRect(a.sombra(0.32f), Offset(vx1 - w * 0.026f, vy0), Size(w * 0.04f, w * 0.09f))
         }
     }
 }

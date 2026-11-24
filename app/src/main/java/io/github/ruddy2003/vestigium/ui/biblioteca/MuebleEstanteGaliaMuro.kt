@@ -14,14 +14,13 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
 import io.github.ruddy2003.vestigium.ui.ideario.azar
-import io.github.ruddy2003.vestigium.ui.ideario.contornoIrregular
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /**
  * La pared de arriba del estante de Galia ([MuebleEstanteGalia]), en la imagen guardada: el alero por dentro (la paja
  * ennegrecida de humo entre los cabrios y las varas de avellano que la sujetan), la viga de la pared con sus ganchos, y el barro
  * alisado con su lechada de arcilla blanca, la cenefa pintada a la almagra y al hollín bajo la viga, las pasadas de la mano,
- * las grietas, la mancha de hollín sobre la tea y los desconchones donde asoma el barro o el zarzo. De día, la mancha de sol
+ * las grietas, la mancha de hollín sobre la tea y el desconchón donde asoma el barro. De día, la mancha de sol
  * de la puerta pinta el barro (la misma pared, alumbrada); de noche, el barro toma el color de la tea según la distancia. La tea
  * en su soporte de hierro, apagada de día y encendida de noche.
  */
@@ -149,35 +148,19 @@ internal object MuroEstanteGalia {
             }
             drawPath(grietas, Color(0xFF6E5E4C), style = Stroke(0.9f * u, cap = StrokeCap.Round, join = StrokeJoin.Round), blendMode = BlendMode.Multiply)
         }
-        // Los desconchones: donde se cayó la lechada asoma el barro; en uno, se cayó también el barro y asoma el zarzo.
-        desconchon(Rect(w * 0.44f, w * 0.2f, w * 0.56f, w * 0.272f), 8150, true, a, cerca, m)
+        // Un desconchón: donde se cayó la lechada asoma el barro.
+        desconchon(Rect(w * 0.43f, w * 0.215f, w * 0.545f, w * 0.262f), 8150, a, cerca, m)
     }
 
-    /** Un desconchón en [r]: el borde roto de la lechada con su canto de luz, el barro de debajo y, si [zarzo], las varas. */
-    private fun DrawScope.desconchon(r: Rect, s: Int, zarzo: Boolean, a: AireGalia, cerca: (Offset) -> Float, m: ManchaGalia?) {
+    /** Un desconchón en [r]: el borde roto de la lechada con su canto de luz y el barro de debajo. */
+    private fun DrawScope.desconchon(r: Rect, s: Int, a: AireGalia, cerca: (Offset) -> Float, m: ManchaGalia?) {
         val u = density
         val k = cerca(r.center)
         fun c(col: Color) = if (m != null) a.sol(col, a.dia(col, 0f, k), m.fuerza) else a.dia(col, 0f, k)
-        val fuera = contornoIrregular(r, s, 18, 0.3f)
+        val fuera = parcheGalia(r, s)
         drawPath(fuera, c(mezcla(P.BLANCO_SOMBRA, P.BARRO, 0.55f)))
         clipPath(fuera) {
             drawRect(a.sombra(0.25f), r.topLeft, Size(r.width, r.height * 0.3f))
-            if (zarzo) {
-                val dentro = contornoIrregular(r.deflate(minOf(r.width, r.height) * 0.22f), s + 3, 12, 0.2f)
-                drawPath(dentro, c(mezcla(P.ZARZO, P.ROBLE_HONDO, 0.45f)))
-                clipPath(dentro) {
-                    val fila = r.height * 0.16f
-                    var y = r.top; var j = 0
-                    while (y < r.bottom) {
-                        drawLine(c(P.ZARZO_LUZ), Offset(r.left, y + fila / 2), Offset(r.right, y + fila / 2), fila * 0.7f, StrokeCap.Round)
-                        drawLine(a.claro(0.3f), Offset(r.left, y + fila * 0.3f), Offset(r.right, y + fila * 0.3f), 0.6f * u)
-                        var x = r.left + (if (j % 2 == 0) 0f else r.width * 0.12f)
-                        while (x < r.right) { drawRect(c(P.ZARZO), Offset(x, y), Size(r.width * 0.05f, fila)); x += r.width * 0.24f }
-                        y += fila; j++
-                    }
-                    drawPath(dentro, a.sombra(0.45f), style = Stroke(2.4f * u))
-                }
-            }
         }
         // El canto de la lechada: su luz abajo a la derecha (el canto que mira a la puerta) y su sombra arriba.
         drawPath(Path().apply { addPath(fuera, Offset(0.7f * u, 0.7f * u)) }, a.claro(0.3f), style = Stroke(0.9f * u))

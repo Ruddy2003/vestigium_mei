@@ -28,9 +28,8 @@ import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
  * el hierro, el humo y la noche del robledal.
  */
 internal object PaletaGalia {
-    /** El barro de la pared con su lechada de arcilla blanca: su cara, su luz (al sol), su sombra y el barro desnudo. */
+    /** El barro de la pared con su lechada de arcilla blanca: su cara, su sombra y el barro desnudo. */
     val BLANCO = Color(0xFFE6D9BC)
-    val BLANCO_LUZ = Color(0xFFF8EFD8)
     val BLANCO_SOMBRA = Color(0xFFBFAC88)
     val BARRO = Color(0xFFB0905E)
     /** La almagra del barro de detrás del estante: su cara, su luz, su sombra y lo hondo. */
@@ -40,9 +39,8 @@ internal object PaletaGalia {
     val ALMAGRA_HONDA = Color(0xFF34120B)
     /** El hollín de la cenefa y de los cabrios. */
     val HOLLIN = Color(0xFF29231E)
-    /** El zarzo de avellano que asoma donde se cayó el barro. */
+    /** Las varas de avellano que sujetan la paja del alero. */
     val ZARZO = Color(0xFF6A4E30)
-    val ZARZO_LUZ = Color(0xFF9E7E52)
     /** El roble del estante: su cara, su luz, su sombra y lo hondo. */
     val ROBLE = Color(0xFF7E5836)
     val ROBLE_LUZ = Color(0xFFAE8456)
@@ -90,12 +88,11 @@ internal object PaletaGalia {
     val MIMBRE_OSC = Color(0xFF8A6836)
     val CUERNO = Color(0xFFE2CC98)
     val CUERNO_OSC = Color(0xFF8A6A3E)
-    /** La carne curada, su grasa, las cebollas y su piel; el vidrio azul de los brazaletes. */
+    /** La carne curada, su grasa y las cebollas, con su luz. */
     val CARNE = Color(0xFF9A4632)
     val GRASA = Color(0xFFE6D4AE)
     val CEBOLLA = Color(0xFFC48446)
     val CEBOLLA_LUZ = Color(0xFFE8B678)
-    val VIDRIO = Color(0xFF2F62A8)
     /** El suelo de tierra apisonada, los juncos y la piedra del hogar. */
     val TIERRA = Color(0xFF6C573C)
     val TIERRA_LUZ = Color(0xFF94805E)
@@ -314,6 +311,26 @@ internal fun DrawScope.ovaloGalia(c: Color, r: Rect, style: DrawStyle = Fill) = 
 
 /** Un óvalo inscrito en [r], con el pincel [b]. */
 internal fun DrawScope.ovaloGalia(b: Brush, r: Rect) = drawOval(b, r.topLeft, r.size)
+
+/**
+ * Un parche blando dentro de [r] (el barro caído, una mancha): un óvalo de borde suave, un poco irregular, sin picos (con
+ * picos se lee como un bicho o una flecha).
+ */
+internal fun parcheGalia(r: Rect, s: Int): Path = Path().apply {
+    val n = 10
+    val pts = List(n) { i ->
+        val t = i / n.toFloat() * 6.2832f
+        val k = 0.82f + 0.22f * io.github.ruddy2003.vestigium.ui.ideario.azar(s, i)
+        Offset(r.center.x + r.width * 0.5f * k * kotlin.math.cos(t), r.center.y + r.height * 0.5f * k * kotlin.math.sin(t))
+    }
+    val m0 = (pts[n - 1] + pts[0]) / 2f
+    moveTo(m0.x, m0.y)
+    for (i in 0 until n) {
+        val p = pts[i]; val q = (pts[i] + pts[(i + 1) % n]) / 2f
+        quadraticTo(p.x, p.y, q.x, q.y)
+    }
+    close()
+}
 
 /** Un polígono cerrado por sus puntos (x, y, x, y…). */
 internal fun poligonoGalia(vararg xy: Float) = Path().apply {
