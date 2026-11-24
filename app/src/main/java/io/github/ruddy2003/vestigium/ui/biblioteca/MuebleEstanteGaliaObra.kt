@@ -47,7 +47,9 @@ internal object ObraEstanteGalia {
     /** El dintel de [r] (de donde pisan las cosas hasta el arranque de las repisas, y un poco más). */
     fun DrawScope.dintel(r: Rect, a: AireGalia, cerca: (Offset) -> Float, m: ManchaGalia?) {
         dintelCon(r, a, cerca, null)
-        if (m != null) clipPath(m.forma(size.width, ManchaGalia.FRENTE)) { dintelCon(r, a, cerca, m) }
+        // La luz de la puerta solo enciende el tablero de arriba y su canto (lo que mira a la luz), no la cara del madero.
+        val w = size.width
+        if (m != null) clipPath(m.forma(w, ManchaGalia.FRENTE)) { clipRect(0f, r.top - w * 0.01f, w, r.top + w * 0.026f) { dintelCon(r, a, cerca, m) } }
     }
 
     private fun DrawScope.dintelCon(r: Rect, a: AireGalia, cerca: (Offset) -> Float, m: ManchaGalia?) {
@@ -248,7 +250,8 @@ internal object ObraEstanteGalia {
         val fy = floor(r.top)
         drawRect(a.luz(P.ROBLE, cerca(r.center)), Offset(r.left, fy), Size(r.width, ceil(r.top + 1f) - fy))
         tablaCon(k, r, a, cerca, null)
-        if (m != null) clipPath(m.forma(w, ManchaGalia.FRENTE)) { tablaCon(k, r, a, cerca, m) }
+        // La luz de la puerta solo enciende la arista de arriba de la tabla.
+        if (m != null) clipPath(m.forma(w, ManchaGalia.FRENTE)) { clipRect(r.left, r.top, r.right, r.top + r.height * 0.2f) { tablaCon(k, r, a, cerca, m) } }
     }
 
     private fun DrawScope.tablaCon(k: Int, r: Rect, a: AireGalia, cerca: (Offset) -> Float, m: ManchaGalia?) {

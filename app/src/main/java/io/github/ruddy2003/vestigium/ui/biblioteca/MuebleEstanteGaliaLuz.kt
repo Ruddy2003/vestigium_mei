@@ -3,14 +3,15 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.text.font.FontFamily
 import io.github.ruddy2003.vestigium.ui.LetraExtra
 import io.github.ruddy2003.vestigium.ui.TemaId
@@ -107,8 +108,11 @@ internal object PaletaGalia {
     val SOL = Color(0xFFFFF0C8)
     val OCASO = Color(0xFFF4A05A)
     val SOMBRA_OCASO = Color(0xFF3E2A5E)
-    /** La noche: arriba, el verde negro del robledal; en el cuerpo, el roble ahumado; en el fondo, la almagra hecha vino. */
-    val NOCHE = Color(0xFF09170F)
+    /**
+     * La noche: arriba, el barro y la paja lejos de la tea se hunden en un pardo rojizo hondo (el de la almagra y el humo); en
+     * el cuerpo, el roble ahumado; en el fondo, la almagra hecha vino.
+     */
+    val NOCHE = Color(0xFF210E0A)
     val CUERPO = Color(0xFF1D150B)
     val FONDO_NOCHE = Color(0xFF2A0D0A)
     /** La noche de los Sueños: un azul verdoso de luna, más hondo en el cuerpo y en el fondo. */
@@ -151,7 +155,8 @@ internal class AireGalia(val oscuro: Boolean, val noche: Boolean, val cuerpo: Bo
     /** El color propio de algo, hundido: oscuro, algo de su tono, con el aire de la noche. */
     fun hundido(c: Color): Color {
         val n = hondo
-        val f = if (cuerpo) 0.14f else 0.1f
+        // Lo claro lejos de la luz aporta poco de su color, para que no se quede gris: se hunde en el aire hondo.
+        val f = if (cuerpo) 0.14f else 0.065f
         return Color((c.red * f + n.red * 0.86f).coerceAtMost(1f), (c.green * f + n.green * 0.86f).coerceAtMost(1f), (c.blue * f + n.blue * 0.86f).coerceAtMost(1f), c.alpha)
     }
 
@@ -235,7 +240,8 @@ internal class AireGalia(val oscuro: Boolean, val noche: Boolean, val cuerpo: Bo
                 val q = 0.38f * k
                 Color((base.red + g.red * 0.42f * q).coerceAtMost(1f), (base.green + g.green * 0.58f * q).coerceAtMost(1f), (base.blue + (g.blue * 0.95f + 0.1f) * q).coerceAtMost(1f), c.alpha)
             }
-            noche -> mezcla(base, Color((base.red * 1.3f + 0.12f).coerceAtMost(1f), (base.green * 1.0f + 0.04f).coerceAtMost(1f), base.blue * 0.72f, c.alpha), k)
+            // El ocaso de los Sueños: un melocotón bajo, más rosado que el sol del mediodía.
+            noche -> mezcla(base, Color((base.red * 1.26f + 0.14f).coerceAtMost(1f), (base.green * 1.04f + 0.07f).coerceAtMost(1f), (base.blue * 0.86f + 0.03f).coerceAtMost(1f), c.alpha), k)
             else -> {
                 val l = Color((base.red * 1.32f + 0.04f).coerceAtMost(1f), (base.green * 1.25f + 0.02f).coerceAtMost(1f), (base.blue * 1.06f).coerceAtMost(1f), c.alpha)
                 mezcla(base, mezcla(l, Color(0xFFF0D29C), 0.3f), k)
@@ -251,29 +257,47 @@ internal class AireGalia(val oscuro: Boolean, val noche: Boolean, val cuerpo: Bo
  * aclara. La mancha se tiende con el ángulo del sol: el borde de arriba es la sombra del dintel de la puerta y el de la
  * derecha, la de la jamba.
  */
-internal class ManchaGalia(val q: FloatArray, val color: Color, val fuerza: Float) {
-    /** El camino de la mancha en un lienzo de ancho [w], corrido [corrido] anchos; [crece], su penumbra. */
+internal class ManchaGalia(val q: FloatArray, val color: Color, val fuerza: Float, val quiebre: Float = 0f) {
+    /**
+     * El camino de la mancha en un lienzo de ancho [w], corrido [corrido] anchos; [crece], su penumbra. Con [quiebre], el borde
+     * va quebrado (la luz de la luna entra por las rendijas de la puerta de zarzo, no por un vano limpio).
+     */
     fun forma(w: Float, corrido: Float = 0f, crece: Float = 0f): Path = Path().apply {
-        moveTo((q[0] + corrido - crece) * w, (q[1] - crece) * w)
-        lineTo((q[2] + corrido + crece) * w, (q[3] - crece) * w)
-        lineTo((q[4] + corrido + crece) * w, (q[5] + crece) * w)
-        lineTo((q[6] + corrido - crece) * w, (q[7] + crece) * w)
+        val xs = floatArrayOf(q[0] + corrido - crece, q[2] + corrido + crece, q[4] + corrido + crece, q[6] + corrido - crece)
+        val ys = floatArrayOf(q[1] - crece, q[3] - crece, q[5] + crece, q[7] + crece)
+        moveTo(xs[0] * w, ys[0] * w)
+        for (lado in 0 until 4) {
+            val x0 = xs[lado]; val y0 = ys[lado]; val x1 = xs[(lado + 1) % 4]; val y1 = ys[(lado + 1) % 4]
+            if (quiebre > 0f) {
+                val dx = x1 - x0; val dy = y1 - y0
+                val l = kotlin.math.sqrt(dx * dx + dy * dy).coerceAtLeast(1e-4f)
+                for (i in 1 until 7) {
+                    val t = i / 7f
+                    val e = quiebre * (io.github.ruddy2003.vestigium.ui.ideario.azar(8900 + lado, i) - 0.5f) * 2f
+                    lineTo((x0 + dx * t - dy / l * e) * w, (y0 + dy * t + dx / l * e) * w)
+                }
+            }
+            lineTo(x1 * w, y1 * w)
+        }
         close()
     }
 
-    /** Cuánto le toca a ([x], [y]) (anchos) del plano corrido [corrido]: 1 dentro, 0 fuera, con un borde corto. */
+    /**
+     * Cuánto le toca a ([x], [y]) (anchos) del plano corrido [corrido]: 1 dentro, 0 fuera, con un borde corto. Se mide la
+     * distancia con signo a cada uno de los cuatro lados (positiva hacia dentro) y manda la menor.
+     */
     fun toca(x: Float, y: Float, corrido: Float = 0f): Float {
-        val ax = q[0] + corrido; val ay = q[1]
-        val ux = q[2] - q[0]; val uy = q[3] - q[1]
-        val vx = q[6] - q[0]; val vy = q[7] - q[1]
-        val det = ux * vy - uy * vx
-        if (kotlin.math.abs(det) < 1e-6f) return 0f
-        val px = x - ax; val py = y - ay
-        val fx = (px * vy - py * vx) / det
-        val fy = (ux * py - uy * px) / det
-        if (fx < -0.04f || fx > 1.04f || fy < -0.04f || fy > 1.04f) return 0f
-        val borde = minOf(fx + 0.04f, 1.04f - fx, fy + 0.04f, 1.04f - fy) / 0.08f
-        return borde.coerceIn(0f, 1f)
+        var menor = Float.MAX_VALUE
+        for (i in 0 until 4) {
+            val x0 = q[2 * i] + corrido; val y0 = q[2 * i + 1]
+            val x1 = q[(2 * i + 2) % 8] + corrido; val y1 = q[(2 * i + 3) % 8]
+            val ex = x1 - x0; val ey = y1 - y0
+            val l = kotlin.math.sqrt(ex * ex + ey * ey)
+            if (l < 1e-6f) continue
+            menor = minOf(menor, (ex * (y - y0) - ey * (x - x0)) / l)
+        }
+        if (menor == Float.MAX_VALUE) return 0f
+        return ((menor + 0.015f) / 0.03f).coerceIn(0f, 1f)
     }
 
     companion object {
@@ -282,28 +306,48 @@ internal class ManchaGalia(val q: FloatArray, val color: Color, val fuerza: Floa
     }
 }
 
-/** La mancha de la puerta en este momento, o null (de noche manda la lumbre; la puerta no se ve). */
-internal fun manchaGalia(a: AireGalia): ManchaGalia? = when {
-    // La luna, alta y fría, entra empinada y cae más abajo, sobre la primera repisa.
-    a.oscuro && a.noche -> ManchaGalia(floatArrayOf(-0.02f, 0.3f, 0.3f, 0.4f, 0.5f, 0.98f, 0.12f, 0.86f), PaletaGalia.LUNA, 0.72f)
-    a.oscuro -> null
-    // Al ocaso, el sol bajo: la mancha se tiende casi horizontal y muy larga.
-    a.noche -> ManchaGalia(floatArrayOf(-0.02f, 0.12f, 0.5f, 0.22f, 0.92f, 0.46f, 0.1f, 0.34f), PaletaGalia.OCASO, 1f)
-    else -> ManchaGalia(floatArrayOf(-0.02f, 0.1f, 0.34f, 0.16f, 0.62f, 0.66f, 0.06f, 0.6f), PaletaGalia.SOL, 0.9f)
+/**
+ * La luz que le toca a un objeto del bodegón: la del momento ([k]) y, si cae dentro de la mancha de la puerta, el sol (o el
+ * ocaso) pintado en su propio material, entero y opaco ([lit], de 0 a 1 con la fuerza de la mancha): la lana se aclara, el
+ * barro bruñido enciende su lado claro y su brillo. Nunca una franja por encima. La luna no entra aquí: solo deja un filo.
+ */
+internal class LuzObjetoGalia(val a: AireGalia, val k: Float, val lit: Float) {
+    fun c(col: Color, f: Float = 0f): Color {
+        val base = a.dia(col, f, k)
+        return if (lit > 0f) a.sol(col, base, lit) else base
+    }
+    fun b(al: Float): Color = a.brillo((al * (1f + 0.9f * lit)).coerceAtMost(1f), k)
 }
 
-/**
- * La luz de la puerta sobre un objeto de silueta [sil] (lo de encima del estante, lo colgado): solo donde la mancha lo
- * alcanza, con el borde de la mancha cortándolo, en el plano corrido [corrido]. Se suma a lo que ya está pintado.
- */
-internal fun DrawScope.luzDeLaPuertaGalia(sil: Path, a: AireGalia, m: ManchaGalia?, corrido: Float = ManchaGalia.FRENTE * 0.6f) {
-    if (m == null) return
-    val (col, alfa) = when {
-        a.oscuro -> Color(0xFF6A86B8) to 0.32f
-        a.noche -> PaletaGalia.OCASO to 0.42f
-        else -> Color(0xFFFFC47A) to 0.26f
+/** La luz de un objeto del bodegón cuyo centro está en [p] (píxeles), en el plano corrido [corrido] respecto de la pared. */
+internal fun DrawScope.luzObjetoGalia(a: AireGalia, k: Float, m: ManchaGalia?, p: Offset, corrido: Float): LuzObjetoGalia {
+    val w = size.width
+    val lit = if (m == null || a.oscuro) 0f else m.toca(p.x / w, p.y / w, corrido) * m.fuerza
+    return LuzObjetoGalia(a, k, lit)
+}
+
+/** El filo frío de la luna de los Sueños en el lado de [sil] que mira a la puerta (la izquierda), si la mancha lo alcanza. */
+internal fun DrawScope.filoDeLunaGalia(sil: Path, caja: Rect, a: AireGalia, m: ManchaGalia?, corrido: Float) {
+    if (m == null || !a.oscuro) return
+    val w = size.width
+    val t = maxOf(m.toca(caja.left / w, caja.center.y / w, corrido), m.toca(caja.center.x / w, caja.top / w, corrido))
+    if (t <= 0f) return
+    val u = density
+    clipPath(sil) {
+        clipRect(caja.left - 4f * u, caja.top - 4f * u, caja.left + caja.width * 0.34f, caja.bottom - caja.height * 0.1f) {
+            drawPath(sil, PaletaGalia.LUNA_RAS.copy(alpha = (0.38f * t).coerceAtMost(0.38f)), style = Stroke(3f * u))
+        }
     }
-    clipPath(sil) { clipPath(m.forma(size.width, corrido)) { drawRect(col.copy(alpha = alfa * m.fuerza), Offset.Zero, size, blendMode = BlendMode.Screen) } }
+}
+
+/** La mancha de la puerta en este momento, o null (de noche manda la lumbre; la puerta no se ve). */
+internal fun manchaGalia(a: AireGalia): ManchaGalia? = when {
+    // La luna: un parche chico y frío en el barro, arriba a la izquierda, que alcanza el canto del ánfora y de la tinaja.
+    a.oscuro && a.noche -> ManchaGalia(floatArrayOf(0.02f, 0.19f, 0.22f, 0.22f, 0.4f, 0.45f, 0.1f, 0.43f), PaletaGalia.LUNA, 0.8f, 0.009f)
+    a.oscuro -> null
+    // Al ocaso, el sol bajo: la mancha cae baja, en el barro de detrás de la despensa y en el canto del dintel.
+    a.noche -> ManchaGalia(floatArrayOf(-0.02f, 0.25f, 0.44f, 0.31f, 0.7f, 0.5f, 0.02f, 0.5f), PaletaGalia.OCASO, 0.9f)
+    else -> ManchaGalia(floatArrayOf(-0.02f, 0.1f, 0.34f, 0.16f, 0.62f, 0.66f, 0.06f, 0.6f), PaletaGalia.SOL, 0.9f)
 }
 
 /** Un óvalo inscrito en [r], del color [c] (lleno o con el trazo [style]). */

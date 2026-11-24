@@ -20,7 +20,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
  * La pared de arriba del estante de Galia ([MuebleEstanteGalia]), en la imagen guardada: el alero por dentro (la paja
  * ennegrecida de humo entre los cabrios y las varas de avellano que la sujetan), la viga de la pared con sus ganchos, y el barro
  * alisado con su lechada de arcilla blanca, la cenefa pintada a la almagra y al hollín bajo la viga, las pasadas de la mano,
- * las grietas, la mancha de hollín sobre la tea y el desconchón donde asoma el barro. De día, la mancha de sol
+ * las grietas y la mancha de hollín sobre la tea. De día, la mancha de sol
  * de la puerta pinta el barro (la misma pared, alumbrada); de noche, el barro toma el color de la tea según la distancia. La tea
  * en su soporte de hierro, apagada de día y encendida de noche.
  */
@@ -68,8 +68,8 @@ internal object MuroEstanteGalia {
             val radios = floatArrayOf(0f, 0.04f, 0.09f, 0.15f, 0.23f, 0.33f, 0.46f, 0.64f, 0.95f)
             val col = radios.map { rr -> a.luz(cara, MuebleEstanteGalia.teaArriba(rr, 0f, a.noche)) }
             drawRect(Brush.radialGradient(*Array(radios.size) { i -> radios[i] / 0.95f to col[i] }, center = c, radius = w * 0.95f), r.topLeft, r.size)
-            // La luna se suma a lo que ya alumbra la tea: un plata frío, solo dentro de la mancha.
-            if (m != null) drawRect(Color(0xFF7890C8).copy(alpha = (0.5f * m.fuerza).coerceAtMost(1f)), r.topLeft, r.size, blendMode = BlendMode.Screen)
+            // La luna, dentro de su parche: la cal virada a un azul hondo, un paso más clara que lo que la rodea (no un velo pálido).
+            if (m != null) drawRect(Color(0xFF283A5C).copy(alpha = (0.72f * m.fuerza).coerceAtMost(1f)), r.topLeft, r.size)
             return
         }
         // De día (y al ocaso): el barro a la sombra del cuarto, más vivo junto a la puerta y más hondo a la derecha y bajo la viga.
@@ -81,8 +81,8 @@ internal object MuroEstanteGalia {
 
     /**
      * Lo pintado y lo gastado del barro (con mezcla de multiplicar, así sigue la luz que tenga debajo): las pasadas de la mano,
-     * la cenefa de la viga (dos filetes de hollín, una hilera de dientes de almagra que cuelgan y unos puntos de hollín entre
-     * sus puntas), el hollín de la tea, una mancha de humedad, las grietas; y los desconchones, donde asoma el barro o el zarzo.
+     * la cenefa de la viga (dos filetes de hollín y dos de glasto, una hilera de rombos de almagra apartados y un punto de
+     * hollín entre cada dos), el hollín de la tea, una mancha de humedad y las grietas.
      */
     private fun DrawScope.pintura(r: Rect, a: AireGalia, cerca: (Offset) -> Float, m: ManchaGalia?) {
         val w = size.width; val u = density
@@ -148,23 +148,6 @@ internal object MuroEstanteGalia {
             }
             drawPath(grietas, Color(0xFF6E5E4C), style = Stroke(0.9f * u, cap = StrokeCap.Round, join = StrokeJoin.Round), blendMode = BlendMode.Multiply)
         }
-        // Un desconchón: donde se cayó la lechada asoma el barro.
-        desconchon(Rect(w * 0.43f, w * 0.215f, w * 0.545f, w * 0.262f), 8150, a, cerca, m)
-    }
-
-    /** Un desconchón en [r]: el borde roto de la lechada con su canto de luz y el barro de debajo. */
-    private fun DrawScope.desconchon(r: Rect, s: Int, a: AireGalia, cerca: (Offset) -> Float, m: ManchaGalia?) {
-        val u = density
-        val k = cerca(r.center)
-        fun c(col: Color) = if (m != null) a.sol(col, a.dia(col, 0f, k), m.fuerza) else a.dia(col, 0f, k)
-        val fuera = parcheGalia(r, s)
-        drawPath(fuera, c(mezcla(P.BLANCO_SOMBRA, P.BARRO, 0.55f)))
-        clipPath(fuera) {
-            drawRect(a.sombra(0.25f), r.topLeft, Size(r.width, r.height * 0.3f))
-        }
-        // El canto de la lechada: su luz abajo a la derecha (el canto que mira a la puerta) y su sombra arriba.
-        drawPath(Path().apply { addPath(fuera, Offset(0.7f * u, 0.7f * u)) }, a.claro(0.3f), style = Stroke(0.9f * u))
-        drawPath(fuera, a.sombra(0.22f), style = Stroke(0.7f * u))
     }
 
     // ---------------------------------------------------------------- el alero por dentro
