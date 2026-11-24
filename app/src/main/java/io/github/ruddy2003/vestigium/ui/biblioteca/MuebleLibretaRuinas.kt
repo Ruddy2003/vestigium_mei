@@ -4,6 +4,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Canvas
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
@@ -56,17 +57,24 @@ internal class SitioLibretaRuinas(val w: Float, val h: Float, u: Float, hojas: I
     /** Cuánto alumbra la mecha del candil un punto [p] (de noche): de golpe cerca, poco lejos. */
     fun kCandil(p: Offset): Float = (1.75f * exp(-dist(p, llama) / 70f)).coerceIn(0f, 1f)
 
-    /** Cuánta luna le llega a [p] (de noche): un lado frío, arriba a la derecha, que se apaga hacia la mesa y hacia el candil. */
+    /** Cuánta luna le llega a [p] (de noche, de 0 a 1): un lado frío, arriba a la derecha, que se apaga hacia la mesa y el candil. */
     fun lunaEn(p: Offset): Float {
         val x = ((p.x - cx) / (w * 0.5f)).coerceIn(-1f, 1f)
         val y = (1f - p.y / mesa).coerceIn(0f, 1f)
-        return (0.42f * (0.5f + 0.5f * x) * (0.35f + 0.65f * y)).coerceIn(0f, 1f)
+        return ((0.5f + 0.5f * x) * (0.35f + 0.65f * y)).coerceIn(0f, 1f)
     }
 
-    /** La luz de un punto: la del candil y la de la luna de noche; de día, la del cuarto (con [sol], la del lucernario). */
+    /**
+     * El filo frío de la luna en un canto que mira a la derecha, en [p] (de noche; de día, nada). La luna no pinta paños ni tiñe
+     * los colores: solo deja este filo en los cantos (el cuaderno, el sombrero, el cuenco) y lo lejos del candil se hunde.
+     */
+    fun frio(a: AireRuinas, p: Offset, alfa: Float): Color =
+        if (!a.oscuro) Color.Transparent else PaletaRuinas.LUNA.copy(alpha = (alfa * lunaEn(p)).coerceIn(0f, 0.85f))
+
+    /** La luz de un punto: la del candil de noche (lo demás, hundido en el verde botella); de día, la del cuarto (con [sol], la del lucernario). */
     fun luz(a: AireRuinas, p: Offset, sol: Float = 0f): LuzRuinas {
         val amb = (1f - 0.0011f * p.y / U - 0.0005f * (p.x - cx) / U).coerceIn(0.55f, 1f)
-        return if (a.oscuro) a.en(kCandil(p), PaletaRuinas.LLAMA, 0f, lunaEn(p), amb) else a.en(0f, PaletaRuinas.LLAMA, sol, 0f, amb)
+        return if (a.oscuro) a.en(kCandil(p), PaletaRuinas.LLAMA, 0f, 0f, amb) else a.en(0f, PaletaRuinas.LLAMA, sol, 0f, amb)
     }
 
     /** El lado de donde viene la luz a [p]: -1 si de la izquierda (el lucernario de día; el candil de noche, para lo que está a su derecha). */
@@ -74,9 +82,6 @@ internal class SitioLibretaRuinas(val w: Float, val h: Float, u: Float, hojas: I
 
     /** La mancha del lucernario (de día) en unidades de [U]: dos paños de luz con su barra, que entran altos por la izquierda. */
     val sol: EnrejadoRuinas = EnrejadoRuinas(-40f, -20f, 118f, 18f, 44f, 128f, 2, 1, 0.14f, floatArrayOf(1f, 0.62f))
-
-    /** La mancha de la luna (de noche) que entra por una grieta del techo, arriba a la derecha, en unidades de [U]. */
-    val luna: EnrejadoRuinas = EnrejadoRuinas((w / U) - 130f, -14f, 92f, 12f, -22f, 86f, 2, 1, 0.14f, floatArrayOf(1f, 0.62f))
 
     /** Cuánto sol del lucernario le da a [p] (en píxeles), corrida [delante] (en U) hacia la luz para lo que está delante. */
     fun solEn(p: Offset, delante: Float = 0f): Float = sol.en(p.x / U + delante * 0.7f, p.y / U + delante * 0.8f)
@@ -92,8 +97,8 @@ internal class SitioLibretaRuinas(val w: Float, val h: Float, u: Float, hojas: I
  * hecho con una botella; a la derecha, el cuenco de barro con las pipas que se están secando, el lápiz y sus virutas.
  *
  * La luz: de día entra alta por la izquierda, del lucernario de la sala (dos paños con su barra, que pintan el papel y la mesa);
- * de noche arde el candil (su charco enciende el papel, la mesa y el lado izquierdo del cuaderno) y por la derecha entra la luna
- * de una grieta del techo, fría; lo demás se hunde en el verde botella. Lo fijo (la pared, la tubería, el sombrero, la mesa, el
+ * de noche arde el candil (su charco enciende el papel, la mesa y el lado izquierdo del cuaderno) y la luna, por la derecha, deja
+ * solo un filo frío en los cantos que la miran (el cuaderno, el sombrero, el cuenco); lo demás se hunde en el verde botella. Lo fijo (la pared, la tubería, el sombrero, la mesa, el
  * candil y el cuenco) se pinta una vez por tamaño y modo; el cuaderno, que engorda y se abre, en cada dibujo.
  */
 internal object MuebleLibretaRuinas {

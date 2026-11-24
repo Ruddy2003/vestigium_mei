@@ -19,10 +19,13 @@ import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
+import kotlin.math.PI
+import kotlin.math.cos
+import kotlin.math.sin
 
 /**
  * Lo fijo del rincón de la libreta de la Ciudad verde (se pinta una vez por tamaño y modo): el papel pintado viejo con su
- * desgarro, la mancha del lucernario (de día) o la de la luna (de noche) y el charco del candil, la tubería de hierro con la
+ * roto, la mancha del lucernario (de día) o el charco del candil (de noche), la tubería de hierro con la
  * hiedra y la gotera, el sombrero de paja colgado, la mesa de roble con su cajón, el candil de botella y el cuenco de las pipas
  * con el lápiz y sus virutas.
  */
@@ -31,6 +34,8 @@ internal object RinconLibretaRuinas {
     private val PAPEL_A = Color(0xFF9CAE8A)
     private val PAPEL_B = Color(0xFF889C7A)
     private val PAPEL_REVES = Color(0xFFD9D2BC)
+    /** El yeso que asoma por el roto: el verde agua de la casa, más blanqueado por la cal (para que no sea un parche azul). */
+    private val YESO_ROTO = mezcla(P.YESO, P.YESO_BLANCO, 0.3f)
     /** El hierro de la tubería y el ámbar del vidrio del candil. */
     private val TUBO = Color(0xFF4A4C48)
     private val AMBAR = Color(0xFF8A4E1C)
@@ -50,33 +55,23 @@ internal object RinconLibretaRuinas {
 
     private fun DrawScope.pared(s: SitioLibretaRuinas, a: AireRuinas) {
         val U = s.U
-        papelPintado(s, a, null, null)
-        if (!a.oscuro) {
-            // La mancha del lucernario pinta el papel (más claro y cálido; el paño del vidrio con verdín, más verde), con borde neto.
-            for ((v, minimo, maximo) in listOf(Triple(0.62f, 0.3f, 0.9f), Triple(1f, 0.9f, 2f))) {
-                val m = s.sol.camino(U, minimo, maximo)
-                clipPath(m) { papelPintado(s, a, v, null) }
-            }
-        } else {
-            // De noche, la luna de la grieta pinta el papel de la derecha: verde virado a azul hondo, un paso más claro.
-            for ((v, minimo, maximo) in listOf(Triple(0.55f, 0.3f, 0.9f), Triple(0.85f, 0.9f, 2f))) {
-                val m = s.luna.camino(U, minimo, maximo)
-                clipPath(m) { papelPintado(s, a, null, v) }
-            }
+        papelPintado(s, a, null)
+        // De día, la mancha del lucernario pinta el papel (más claro y cálido; el paño del vidrio con verdín, más verde), con
+        // borde neto. De noche no hay paño de luna: el papel lejos del candil se hunde en el verde botella.
+        if (!a.oscuro) for ((v, minimo, maximo) in listOf(Triple(0.62f, 0.3f, 0.9f), Triple(1f, 0.9f, 2f))) {
+            val m = s.sol.camino(U, minimo, maximo)
+            clipPath(m) { papelPintado(s, a, v) }
         }
         desgarro(s, a)
         humedad(s, a)
     }
 
-    /** El papel pintado entero, con la luz que le toca: [sol] (de día) o [luna] (de noche) forzados para pintar su mancha. */
-    private fun DrawScope.papelPintado(s: SitioLibretaRuinas, a: AireRuinas, sol: Float?, luna: Float?) {
+    /** El papel pintado entero, con la luz que le toca: [sol] (de día) forzado para pintar su mancha. */
+    private fun DrawScope.papelPintado(s: SitioLibretaRuinas, a: AireRuinas, sol: Float?) {
         val U = s.U; val w = s.w
-        fun l(p: Offset): LuzRuinas {
-            val base = s.luz(a, p, sol ?: 0f)
-            return if (luna != null) a.en(base.k, base.tinte, 0f, luna, base.amb) else base
-        }
+        fun l(p: Offset): LuzRuinas = s.luz(a, p, sol ?: 0f)
         val alto = s.suelo
-        if (a.oscuro && luna == null) {
+        if (a.oscuro) {
             // De noche: el papel hundido en el verde botella y, encima, el charco del candil que lo pinta con su color encendido.
             drawRect(l(Offset(w, 0f)).c(PAPEL_A), Offset.Zero, Size(w, alto))
             charco(s, a, PAPEL_A, 150f * U, alto)
@@ -128,40 +123,97 @@ internal object RinconLibretaRuinas {
     }
 
     /**
-     * El desgarro del papel pintado arriba a la izquierda: asoma el yeso verde agua (con un trozo de ladrillo en lo hondo), con el
-     * canto del papel roto y unas escamas levantadas con su revés claro.
+     * El roto del papel pintado, arriba a la izquierda: de borde irregular, con el filo blanco y desparejo de la fibra rota; dentro,
+     * el yeso verde agua con sus poros, una grieta y el ladrillo donde se cayó; y dos lenguas del papel despegadas que se
+     * abarquillan hacia fuera (el revés claro, el rulo de la punta con la cara pintada y su sombra en el yeso). Se pinta entero con
+     * la luz del cuarto y otra vez, recortado por la mancha del lucernario, con la del sol: la mancha pasa por encima del papel y
+     * del yeso con el mismo borde. De noche es el mismo roto, hundido, con el charco del candil encima.
      */
     private fun DrawScope.desgarro(s: SitioLibretaRuinas, a: AireRuinas) {
         val U = s.U
-        val x1 = s.cx - 150f * U
-        if (x1 < 0f) return
-        val l = s.luz(a, Offset(x1 - 40f * U, 100f * U), s.solEn(Offset(x1 - 40f * U, 100f * U)))
-        val roto = Path().apply {
-            moveTo(-2f, 52f * U); lineTo(x1 - 60f * U, 46f * U); lineTo(x1 - 40f * U, 54f * U); lineTo(x1 - 18f * U, 48f * U); lineTo(x1, 60f * U)
-            lineTo(x1 - 6f * U, 86f * U); lineTo(x1 + 4f * U, 104f * U); lineTo(x1 - 10f * U, 128f * U); lineTo(x1 - 34f * U, 136f * U)
-            lineTo(x1 - 60f * U, 128f * U); lineTo(x1 - 90f * U, 150f * U); lineTo(-2f, 146f * U); close()
+        val c = Offset(s.cx - 162f * U, 86f * U)
+        if (c.x < -20f * U) return
+        val rx = 27f * U; val ry = 31f * U
+        // El borde: un óvalo torcido (dos ondas largas) con dientes chicos y desparejos, como se rompe el papel.
+        val n = 44
+        val roto = Path()
+        for (i in 0 until n) {
+            val t = i / n.toFloat() * 2f * PI.toFloat()
+            val r = 1f + 0.14f * sin(2f * t + 1.3f) + 0.07f * sin(5f * t + 0.4f) + (if (i % 2 == 0) 0.06f else -0.04f) * azar(1520, i)
+            val p = Offset(c.x + cos(t) * rx * r, c.y + sin(t) * ry * r)
+            if (i == 0) roto.moveTo(p.x, p.y) else roto.lineTo(p.x, p.y)
         }
-        drawPath(roto, l.c(P.YESO))
-        // De día, el sol del lucernario sigue sobre el yeso (no se corta en el borde del papel).
-        if (!a.oscuro) clipPath(roto) {
-            val p = Offset(x1 - 40f * U, 100f * U)
-            for ((v, minimo, maximo) in listOf(Triple(0.62f, 0.3f, 0.9f), Triple(1f, 0.9f, 2f)))
-                clipPath(s.sol.camino(U, minimo, maximo)) { drawRect(s.luz(a, p, v).c(P.YESO), Offset.Zero, Size(x1 + 10f * U, 160f * U)) }
+        roto.close()
+        // Hacia dónde caen las sombras: de día, el lucernario está arriba a la izquierda; de noche, el candil, abajo a la derecha.
+        val sombra = if (a.oscuro) Offset(-1f, -0.35f) else Offset(1f, 1f)
+        rotoCon(s, a, c, rx, ry, roto, s.luz(a, c), sombra)
+        if (!a.oscuro) for ((v, minimo, maximo) in listOf(Triple(0.62f, 0.3f, 0.9f), Triple(1f, 0.9f, 2f)))
+            clipPath(s.sol.camino(U, minimo, maximo)) { rotoCon(s, a, c, rx, ry, roto, s.luz(a, c, v), sombra) }
+    }
+
+    /** El roto entero con la luz [l] y las sombras corridas hacia [sombra]: el yeso, la grieta, el ladrillo, el canto, la fibra y las lenguas. */
+    private fun DrawScope.rotoCon(s: SitioLibretaRuinas, a: AireRuinas, c: Offset, rx: Float, ry: Float, roto: Path, l: LuzRuinas, sombra: Offset) {
+        val U = s.U
+        clipPath(roto) {
+            // El yeso con su luz (de noche, el charco del candil encima), las manchas de cal y los poros.
+            drawRect(l.c(YESO_ROTO), Offset(c.x - 2f * rx, c.y - 2f * ry), Size(4f * rx, 4f * ry))
+            if (a.oscuro) charco(s, a, YESO_ROTO, 150f * U, s.suelo)
+            pinceladas(Rect(c.x - rx, c.y - ry, c.x + rx, c.y + ry), l.c(P.YESO_SOMBRA), 1521, 16, U, 0.3f)
+            for (k in 0 until 16) drawCircle(l.c(P.YESO_SOMBRA).copy(alpha = 0.6f), (0.5f + 0.8f * azar(1523, k)) * U,
+                Offset(c.x + (azar(1524, k) - 0.5f) * 1.8f * rx, c.y + (azar(1525, k) - 0.5f) * 1.8f * ry))
+            // Abajo se cayó el yeso: el ladrillo, hundido, con la llaga de mortero y el canto del yeso que lo rodea.
+            val lad = desconchonRuinas(Offset(c.x + 5f * U, c.y + 15f * U), 13f * U, 9f * U, 1522, 11)
+            drawPath(lad, l.c(mezcla(P.LADRILLO, P.YESO_SOMBRA, 0.3f)))
+            drawLine(l.c(P.YESO_BLANCO).copy(alpha = 0.6f), Offset(c.x - 8f * U, c.y + 16f * U), Offset(c.x + 18f * U, c.y + 16f * U), 1f * U)
+            drawPath(bordeRuinas(lad, sombra.x * 1.6f * U, sombra.y * 1.6f * U), l.s(0.55f))
+            // La grieta del yeso, con su labio de luz del lado contrario a la sombra.
+            val grieta = Path().apply {
+                moveTo(c.x - 22f * U, c.y - 14f * U); lineTo(c.x - 17f * U, c.y - 12f * U); lineTo(c.x - 13f * U, c.y - 6f * U); lineTo(c.x - 10f * U, c.y - 5f * U)
+                lineTo(c.x - 8f * U, c.y + 1f * U); lineTo(c.x - 3f * U, c.y + 2f * U); lineTo(c.x + 3f * U, c.y + 6f * U)
+                moveTo(c.x - 8f * U, c.y + 1f * U); lineTo(c.x - 11f * U, c.y + 6f * U); lineTo(c.x - 10f * U, c.y + 11f * U)
+            }
+            translate(-sombra.x * 0.7f * U, -sombra.y * 0.7f * U) { drawPath(grieta, l.b(0.45f), style = Stroke(0.6f * U)) }
+            drawPath(grieta, l.s(0.42f), style = Stroke(0.75f * U, cap = StrokeCap.Round))
+            // El canto del papel hace sombra en el yeso del lado de la luz.
+            drawPath(bordeRuinas(roto, sombra.x * 3f * U, sombra.y * 3f * U), l.s(0.5f))
         }
-        pinceladas(roto.getBounds(), l.c(P.YESO_SOMBRA), 1521, 14, U, 0.25f)
-        val lad = desconchonRuinas(Offset(x1 - 70f * U, 108f * U), 22f * U, 14f * U, 1522, 13)
-        drawPath(lad, l.c(P.LADRILLO))
-        drawLine(l.c(P.YESO_BLANCO), Offset(x1 - 92f * U, 108f * U), Offset(x1 - 48f * U, 108f * U), 1.2f * U)
-        // El canto del papel roto: su sombra dentro (abajo y a la derecha) y el filo claro del papel.
-        drawPath(bordeRuinas(roto, -2.4f * U, -2.4f * U), l.s(0.45f))
-        drawPath(roto, l.c(PAPEL_REVES).copy(alpha = 0.7f), style = Stroke(1.2f * U))
-        // Unas escamas del papel que todavía cuelgan del borde de arriba, levantadas (su revés claro y su sombra).
-        for (i in 0 until 3) {
-            val p = Offset(x1 - (20f + 34f * i) * U, (48f + 3f * (i % 2)) * U)
-            val esc = poligonoRuinas(p, p + Offset(14f * U, 1f * U), p + Offset(10f * U, 9f * U), p + Offset(1f * U, 7f * U))
-            drawPath(corridoRuinas(esc, 2f * U, 2f * U), l.s(0.3f))
-            drawPath(esc, l.c(PAPEL_REVES))
+        // El filo de la fibra rota, blanco y desparejo.
+        drawPath(roto, l.c(PAPEL_REVES).copy(alpha = 0.85f), style = Stroke(1.3f * U))
+        // Las dos lenguas despegadas: una cuelga del borde de arriba, la otra se dobla desde el de la izquierda.
+        lengua(c + Offset(-11f * U, -0.97f * ry), c + Offset(9f * U, -0.95f * ry), c + Offset(2f * U, -0.4f * ry), l, sombra, U)
+        lengua(c + Offset(-1.14f * rx, 1f * U), c + Offset(-1f * rx, 16f * U), c + Offset(-0.48f * rx, 12f * U), l, sombra, U)
+    }
+
+    /**
+     * Una lengua del papel despegada de la pared y abarquillada hacia fuera: nace en el borde del roto entre [raiz0] y [raiz1] y
+     * cae hacia [punta], afinándose en una punta rota. Se le ve el revés (claro), el doblez de la raíz más hondo y, a lo largo de
+     * un costado, el canto que se enrolla hacia fuera y deja ver una tira de la cara pintada; como está separada de la pared, su
+     * sombra cae corrida en el yeso.
+     */
+    private fun DrawScope.lengua(raiz0: Offset, raiz1: Offset, punta: Offset, l: LuzRuinas, sombra: Offset, U: Float) {
+        val medio = (raiz0 + raiz1) / 2f
+        val baja = punta - medio
+        val ancho = raiz1 - raiz0
+        val pico = punta + ancho * 0.18f
+        val c1 = raiz1 + baja * 0.55f + ancho * 0.08f
+        val c0 = raiz0 + baja * 0.8f + ancho * 0.1f
+        val muesca = punta - ancho * 0.12f - baja * 0.12f
+        val cuerpo = Path().apply {
+            moveTo(raiz0.x, raiz0.y); lineTo(raiz1.x, raiz1.y)
+            quadraticTo(c1.x, c1.y, pico.x, pico.y)
+            lineTo(muesca.x, muesca.y)
+            quadraticTo(c0.x, c0.y, raiz0.x, raiz0.y)
+            close()
         }
+        translate(sombra.x * 3.5f * U, sombra.y * 4f * U) { drawPath(cuerpo, l.s(0.45f)) }
+        drawPath(cuerpo, l.c(PAPEL_REVES))
+        // El doblez de la raíz, donde el papel se despega de la pared.
+        drawLine(l.s(0.28f), raiz0 + baja * 0.1f, raiz1 + baja * 0.1f, 2.2f * U)
+        // El canto que se enrolla hacia fuera, a lo largo del costado: una tira de la cara pintada, con su sombrita por dentro.
+        val canto = Path().apply { val p = raiz1 + baja * 0.12f; moveTo(p.x, p.y); quadraticTo(c1.x, c1.y, pico.x, pico.y) }
+        val dentro = ancho * (-1.6f * U / ancho.getDistance().coerceAtLeast(1f))
+        translate(dentro.x, dentro.y) { drawPath(canto, l.s(0.3f), style = Stroke(0.9f * U)) }
+        drawPath(canto, l.c(PAPEL_A), style = Stroke(2.2f * U, cap = StrokeCap.Round))
     }
 
     /** Las manchas de humedad que bajan de la junta de la tubería, con su cerco. */
@@ -250,7 +302,11 @@ internal object RinconLibretaRuinas {
             // La cinta de tela gastada en la base de la copa, y el lazo que cuelga del clavo.
             drawRect(l.c(mezcla(P.LADRILLO, P.GASTADO, 0.35f)), Offset(c.x - 27f * U, ala.center.y - 9f * U), Size(54f * U, 6f * U))
             drawLine(l.c(mezcla(P.LADRILLO, P.GASTADO, 0.35f)), Offset(c.x - 4f * U, c.y + 5f * U), c, 1.4f * U)
-            if (l.luna > 0.05f) drawPath(bordeRuinas(copa, 2f * U, 2f * U), l.frio(0.6f))
+            // De noche, el filo frío de la luna en los cantos de la derecha de la copa y del ala.
+            if (a.oscuro) {
+                drawPath(bordeRuinas(copa, -2f * U, 1.4f * U), s.frio(a, c + Offset(26f * U, 14f * U), 0.6f))
+                drawPath(bordeRuinas(Path().apply { addOval(ala) }, -2.4f * U, 0f), s.frio(a, Offset(ala.right, ala.center.y), 0.6f))
+            }
         }
         with(ParedEstanteRuinas) { clavo(c, s.luz(a, c)) }
     }
@@ -388,6 +444,11 @@ internal object RinconLibretaRuinas {
                 Offset(c.x - an * 0.2f, c.y - 1f * U), Offset(c.x - an * 0.4f, c.y - al * 0.3f)))
             modeladoRuinas(cuerpo, l.c(P.BARRO), l, hacia, 1f, 0.35f)
             drawOval(l.c(mezcla(P.BARRO, P.OCRE, 0.3f)), Offset(c.x - an / 2, c.y - al - 2.5f * U), Size(an, 5f * U), style = Stroke(1.6f * U))
+            // De noche, el filo frío de la luna en el costado derecho del cuenco y en el montón.
+            if (a.oscuro) {
+                drawPath(bordeRuinas(cuerpo, -2f * U, 0f), s.frio(a, Offset(c.x + an / 2, c.y - al), 0.7f))
+                drawPath(bordeRuinas(monton, -1.6f * U, 1.2f * U), s.frio(a, Offset(c.x + an * 0.3f, c.y - al - 8f * U), 0.45f))
+            }
             for (k in 0 until 4) {
                 val p = Offset(c.x - an * 0.7f + 10f * U * k, c.y + 3f * U + 2f * U * (k % 2))
                 drawOval(l.c(Color(0xFF2E2A26)), Offset(p.x - 2.6f * U, p.y - 1.4f * U), Size(5.2f * U, 2.8f * U))

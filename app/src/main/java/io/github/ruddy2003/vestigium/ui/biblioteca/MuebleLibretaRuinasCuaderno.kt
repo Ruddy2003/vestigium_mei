@@ -58,6 +58,9 @@ internal object CuadernoLibretaRuinas {
         val papel = mezcla(P.PAPEL, P.KRAFT, 0.28f)
         drawPath(cantoDer, ld.c(mezcla(papel, P.KRAFT_OSC, 0.18f)))
         drawPath(cantoArr, s.luz(a, Offset(t.center.x, t.top), s.solEn(Offset(t.center.x, t.top), 12f)).c(papel))
+        // De noche, la luna deja su filo frío en el canto de la derecha y en el de arriba (no pinta paños).
+        drawPath(bordeRuinas(cantoDer, -2.2f * U, 0f), s.frio(a, Offset(atras.right, t.center.y), 0.9f))
+        drawPath(bordeRuinas(cantoArr, 0f, 1.6f * U), s.frio(a, Offset(t.right, t.top), 0.6f))
         // Las hojas en el canto: líneas a lo largo, más cuantas más hojas, y alguna hoja más oscura (una planta dentro).
         val lineas = Path()
         val n = (4 + e.hojas / 6).coerceAtMost(16)
@@ -136,7 +139,7 @@ internal object CuadernoLibretaRuinas {
         }
         // Los filos: la luz en el canto que la mira, la luna fría en el otro.
         if (lc.k > 0.06f || li.k > 0.06f) drawPath(bordeRuinas(forma, -hacia * 1.8f * U, 0f), li.filo(0.8f))
-        if (ld.luna > 0.04f) drawPath(bordeRuinas(forma, -2f * U, 2f * U), ld.frio(0.7f))
+        if (a.oscuro) drawPath(bordeRuinas(forma, -1.6f * U, 0f), s.frio(a, Offset(t.right, t.center.y), 0.6f))
         if (!a.oscuro) drawLine(li.b(0.6f), Offset(t.left + 3f * U, t.top + 1f * U), Offset(t.right - 3f * U, t.top + 1f * U), 1.2f * U)
         // La hoja de hiedra prensada, pegada abajo con una tira de papel engomado.
         val hc = Offset(t.left + t.width * 0.36f, t.top + t.height * 0.8f)
