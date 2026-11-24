@@ -67,6 +67,8 @@ internal object PaletaRuinas {
     /** El cartón kraft de las etiquetas (un valor medio), el de la tarjeta del mes y el papel del herbario. */
     val KRAFT = Color(0xFFB58E58)
     val KRAFT_OSC = Color(0xFF7C5A32)
+    /** El tejuelo sobre una tela clara: un kraft más hondo, para que contraste. */
+    val KRAFT_TEJUELO_OSC = Color(0xFF9A6E3C)
     val CARTON = Color(0xFFCDB485)
     val PAPEL = Color(0xFFE8DFC8)
     /** El bramante, el corcho y el lápiz. */
@@ -100,16 +102,18 @@ internal object PaletaRuinas {
     val LUNA = Color(0xFFD4E4F0)
     /** El aire de la noche (verde botella hondo), el de los Sueños, el anochecer y su crepúsculo. */
     val NOCHE = Color(0xFF0C1912)
-    val NOCHE_SUENOS = Color(0xFF0B1222)
+    val NOCHE_SUENOS = Color(0xFF09161A)
     val ANOCHECER = Color(0xFF3B2E52)
     val CREPUSCULO = Color(0xFFF2A070)
+    /** El melocotón del ocaso donde pinta. */
+    val MELOCOTON = Color(0xFFF6C49C)
 
     /** El ánimo en tela de encuadernar (de lo malo a lo bueno): óxido, lino crudo, hiedra. */
-    val TELAS = listOf(Color(0xFFB04C26), Color(0xFFD6BF88), Color(0xFF3F7A2E))
+    val TELAS = listOf(Color(0xFFB4381E), Color(0xFFDCC088), Color(0xFF2E7A2C))
     /** El ánimo en vidrio: ámbar oscuro, vidrio claro, vidrio verde. */
-    val VIDRIOS = listOf(Color(0xFF8E4614), Color(0xFFC9DACF), Color(0xFF2E6C38))
+    val VIDRIOS = listOf(Color(0xFFA0500E), Color(0xFFA6DCCB), Color(0xFF237A44))
     /** El ánimo en lona encerada: herrumbre, lona cruda, verde de toldo. */
-    val LONAS = listOf(Color(0xFFA44A2E), Color(0xFFBDAF86), Color(0xFF4A6F34))
+    val LONAS = listOf(Color(0xFFAC3E26), Color(0xFFC8B07A), Color(0xFF3E7236))
 
     val LETRA: FontFamily = LetraExtra.letrero
     val LETRA_MES: FontFamily = LetraExtra.overpass
@@ -192,11 +196,11 @@ internal class LuzRuinas(val a: AireRuinas, val k: Float, val tinte: Color, val 
     /** Un color bajo el sol del lucernario: más claro y más cálido; donde el sol es parcial (el vidrio con verdín), más verde. */
     private fun alSol(c: Color): Color {
         val luz = mezcla(p.SOL_VERDIN, p.SOL, ((sol - 0.5f) * 2f).coerceIn(0f, 1f))
-        return mezcla(Color((c.red * 1.1f + 0.05f).coerceAtMost(1f), (c.green * 1.07f + 0.04f).coerceAtMost(1f), c.blue * 0.92f, c.alpha), luz, 0.16f)
+        return mezcla(Color((c.red * 1.26f + 0.08f).coerceAtMost(1f), (c.green * 1.14f + 0.05f).coerceAtMost(1f), (c.blue * 0.92f).coerceAtMost(1f), c.alpha), luz, 0.2f)
     }
 
-    /** Un color bajo el sol bajo del ocaso: dorado y rosado, más saturado. */
-    private fun alOcaso(c: Color): Color = mezcla(Color((c.red * 1.08f + 0.06f).coerceAtMost(1f), (c.green * 0.94f + 0.03f).coerceAtMost(1f), c.blue * 0.8f, c.alpha), p.CREPUSCULO, 0.3f)
+    /** Un color bajo el sol bajo del ocaso: melocotón, más claro, sin lavar el color propio. */
+    private fun alOcaso(c: Color): Color = mezcla(Color((c.red * 1.16f + 0.08f).coerceAtMost(1f), (c.green * 1.0f + 0.05f).coerceAtMost(1f), (c.blue * 0.86f + 0.02f).coerceAtMost(1f), c.alpha), p.MELOCOTON, 0.26f)
 
     private fun anochecer(c: Color, hondo: Float): Color =
         Color(c.red * (1f - hondo), c.green * (1f - hondo * 0.95f), c.blue * (1f - hondo * 0.72f), c.alpha)
@@ -208,8 +212,9 @@ internal class LuzRuinas(val a: AireRuinas, val k: Float, val tinte: Color, val 
     private fun alFuego(c: Color): Color =
         Color((c.red * tinte.red * 1.5f + 0.05f).coerceAtMost(1f), (c.green * tinte.green * 1.24f + 0.02f).coerceAtMost(1f), (c.blue * tinte.blue * 1.3f).coerceAtMost(1f), c.alpha)
 
+    /** Un color bajo la luna: virado a azul hondo, solo un paso más claro que la noche (no un azul pálido). */
     private fun lunaFria(c: Color): Color =
-        Color((c.red * 0.6f + 0.04f).coerceAtMost(1f), (c.green * 0.7f + 0.07f).coerceAtMost(1f), (c.blue * 0.8f + 0.15f).coerceAtMost(1f), c.alpha)
+        Color((c.red * 0.22f + 0.03f).coerceAtMost(1f), (c.green * 0.42f + 0.06f).coerceAtMost(1f), (c.blue * 0.58f + 0.11f).coerceAtMost(1f), c.alpha)
 
     /** La sombra: más franca donde da el sol (de borde más duro), más floja en la penumbra. */
     fun s(alfa: Float): Color = a.sombra(if (!a.oscuro) alfa * (1f + 0.45f * sol) else alfa * (1f + 0.4f * luna))
@@ -247,10 +252,27 @@ internal class LuzRuinas(val a: AireRuinas, val k: Float, val tinte: Color, val 
      * El cartón kraft de la etiqueta donde va el día: un valor medio, teñido de noche por la luz que le toca (cálido junto a la
      * llama, frío bajo la luna, hundido lejos de las dos); nunca tanto que el número deje de leerse.
      */
-    fun etiqueta(): Color = when {
-        a.oscuro -> mezcla(mezcla(mezcla(p.KRAFT, a.hondo, 0.4f), alFuego(mezcla(p.KRAFT, Color.White, 0.15f)), (q * 1.4f).coerceAtMost(1f)), p.LUNA, 0.24f * luna)
-        a.noche -> mezcla(mezcla(p.KRAFT, p.ANOCHECER, 0.2f - 0.12f * maxOf(sol, k)), p.CREPUSCULO, 0.14f * sol)
-        else -> c(p.KRAFT)
+    fun etiqueta(oscura: Boolean = false): Color {
+        val kraft = if (oscura) p.KRAFT_TEJUELO_OSC else p.KRAFT
+        return when {
+            a.oscuro -> mezcla(mezcla(mezcla(kraft, a.hondo, 0.7f), alFuego(mezcla(kraft, Color.White, 0.15f)), (q * 1.4f).coerceAtMost(1f)), lunaFria(kraft), 0.5f * luna)
+            a.noche -> mezcla(mezcla(kraft, p.ANOCHECER, 0.2f - 0.12f * maxOf(sol, k)), p.CREPUSCULO, 0.14f * sol)
+            else -> c(kraft)
+        }
+    }
+
+    /**
+     * La tinta del número sobre un cartón de color [fondo]: lápiz oscuro donde el cartón tiene luz; donde se hundió en la noche, el
+     * grafito brilla un poco más claro que el cartón (así se sigue leyendo sin que el cartón tenga que quedar claro).
+     */
+    fun tinta(fondo: Color): Color {
+        if (!a.oscuro) return p.LAPIZ
+        return if (luminancia(fondo) < 0.085f) mezcla(Color(0xFF8E8670), tinte, 0.12f * k) else Color(0xFF0C0A08)
+    }
+
+    private fun luminancia(c: Color): Float {
+        fun ch(v: Float) = if (v <= 0.04045f) v / 12.92f else Math.pow(((v + 0.055f) / 1.055f).toDouble(), 2.4).toFloat()
+        return 0.2126f * ch(c.red) + 0.7152f * ch(c.green) + 0.0722f * ch(c.blue)
     }
 }
 
@@ -304,9 +326,14 @@ internal object MuebleEstanteRuinas {
     fun alto(semilla: Int, palabras: Int): Float {
         val lleno = (palabras / 800f).coerceIn(0f, 1f)
         return when (clase(semilla)) {
-            0 -> 0.8f + 0.05f * lleno + 0.1f * azar(semilla, 1)
-            1 -> 0.82f + 0.04f * lleno + 0.08f * azar(semilla, 1)
-            else -> 0.74f + 0.08f * lleno + 0.08f * azar(semilla, 1)
+            0 -> 0.76f + 0.04f * lleno + 0.16f * azar(semilla, 1)
+            // La botella según su hechura (la misma que dibuja el volumen): de vino, la más alta; de borgoña; de botica, la baja.
+            1 -> when ((azar(semilla, 21) * 3).toInt()) {
+                0 -> 0.86f + 0.03f * lleno + 0.06f * azar(semilla, 1)
+                1 -> 0.8f + 0.04f * lleno + 0.08f * azar(semilla, 1)
+                else -> 0.72f + 0.04f * lleno + 0.06f * azar(semilla, 1)
+            }
+            else -> 0.7f + 0.06f * lleno + 0.14f * azar(semilla, 1)
         }
     }
 
@@ -346,11 +373,11 @@ internal object MuebleEstanteRuinas {
         // El farolillo: un charco a media altura, más alto que ancho; enciende su costado y las entradas vecinas.
         val kf = if (a.farolillo > 0f) a.farolillo * (1.95f * exp(-5.8f * dist((x - FAROLILLO_X) * 1.0f, (y - farolilloY(repisas)) * 0.72f))).coerceAtMost(1f) else 0f
         // El anafre: encendido abajo, se apaga hacia arriba.
-        val dyA = (alto - y - ANAFRE_Y).coerceAtLeast(0f)
-        val ka = if (a.anafre > 0f) a.anafre * ((if (o) 2.1f else 1.9f) * exp((if (o) -5.8f else -3.8f) * dist((x - ANAFRE_X) * 1.1f, dyA))).coerceAtMost(1f) else 0f
+        val ka = if (a.anafre > 0f) a.anafre * kAnafre(x, y, alto, o) else 0f
         val k = (kt + kf + ka).coerceIn(0f, 1f)
-        val tinte = if (k < 0.001f) PaletaRuinas.LLAMA
-            else mezcla(mezcla(PaletaRuinas.LLAMA, PaletaRuinas.FUEGO, kf / (kt + kf + ka + 0.0001f) * 0.45f), PaletaRuinas.BRASA, ka / (kt + kf + ka + 0.0001f) * 0.7f)
+        // El color de la luz: la vela, amarilla; el farolillo, algo más naranja; las brasas, ámbar anaranjado (el rojo, solo en la boca).
+        val suma = kt + kf + ka + 0.0001f
+        val tinte = if (k < 0.001f) PaletaRuinas.LLAMA else mezcla(PaletaRuinas.LLAMA, PaletaRuinas.FUEGO, (kf * 0.4f + ka * 0.62f) / suma)
         val sol = when {
             a.oscuro -> 0f
             a.noche -> ocasoRuinas(x + delante * 0.95f, y + delante * 0.3f)
@@ -363,6 +390,12 @@ internal object MuebleEstanteRuinas {
 
     private fun dist(dx: Float, dy: Float) = sqrt(dx * dx + dy * dy)
 
+    /** Cuánto alumbran las brasas del anafre un punto (sin contar si arden): un charco que sube por el zócalo y la última repisa. */
+    fun kAnafre(x: Float, y: Float, alto: Float, oscuro: Boolean = true): Float {
+        val dyA = (alto - y - ANAFRE_Y).coerceAtLeast(0f)
+        return ((if (oscuro) 2.1f else 1.9f) * exp((if (oscuro) -5.6f else -3.8f) * dist((x - ANAFRE_X) * 1.1f, dyA * 0.62f))).coerceAtMost(1f)
+    }
+
     /**
      * De qué lado le llega la luz a un punto: -1 si de la izquierda, 1 si de la derecha. De día y en los Sueños, del lucernario
      * (izquierda); de noche, de la luz de la casa que más lo alumbra (el farolillo está a la derecha; la vela y el anafre, a la
@@ -372,7 +405,7 @@ internal object MuebleEstanteRuinas {
         if (!a.oscuro || a.noche) return -1f
         val kt = 1.95f * exp(-6.2f * dist(x - TARRO_X, (y - TARRO_Y) * 0.9f))
         val kf = 1.95f * exp(-5.8f * dist(x - FAROLILLO_X, (y - farolilloY(repisas)) * 0.72f))
-        val ka = 2.1f * exp(-5.8f * dist((x - ANAFRE_X) * 1.1f, (alto - y - ANAFRE_Y).coerceAtLeast(0f)))
+        val ka = kAnafre(x, y, alto) * 1.1f
         return when {
             kf > kt && kf > ka -> 1f
             kt >= ka -> if (x < TARRO_X) 1f else -1f
@@ -465,16 +498,16 @@ internal class EnrejadoRuinas(val ox: Float, val oy: Float, val ux: Float, val u
 }
 
 /** El sol del lucernario: alto, de arriba a la izquierda; dos paños sin vidrio, tres con su verdín y uno roto a medias. */
-internal val SOL_RUINAS = EnrejadoRuinas(-0.07f, -0.05f, 0.54f, 0.13f, 0.27f, 0.62f, 3, 2, 0.05f,
-    floatArrayOf(1f, 0.6f, 1f, 0.6f, 1f, 0.6f))
+internal val SOL_RUINAS = EnrejadoRuinas(-0.07f, -0.05f, 0.56f, 0.13f, 0.27f, 0.62f, 3, 1, 0.13f,
+    floatArrayOf(1f, 0.62f, 1f))
 
 /** El ocaso de los Sueños en claro: entra bajo y largo, casi tendido. */
-internal val OCASO_RUINAS = EnrejadoRuinas(-0.1f, 0.3f, 1.02f, 0.22f, 0.06f, 0.26f, 3, 2, 0.06f,
-    floatArrayOf(1f, 0.6f, 1f, 0.6f, 1f, 0.6f))
+internal val OCASO_RUINAS = EnrejadoRuinas(-0.08f, 0.33f, 0.96f, 0.2f, 0.05f, 0.17f, 3, 1, 0.1f,
+    floatArrayOf(1f, 0.62f, 1f))
 
 /** La luna de los Sueños en oscuro: más chica y empinada. */
-internal val LUNA_RUINAS = EnrejadoRuinas(-0.02f, -0.04f, 0.5f, 0.1f, 0.3f, 0.98f, 3, 2, 0.045f,
-    floatArrayOf(1f, 0.6f, 1f, 0.6f, 1f, 0.6f))
+internal val LUNA_RUINAS = EnrejadoRuinas(0.14f, -0.04f, 0.3f, 0.07f, 0.13f, 0.44f, 3, 1, 0.14f,
+    floatArrayOf(1f, 0.62f, 1f))
 
 internal fun solRuinas(x: Float, y: Float): Float = SOL_RUINAS.en(x, y)
 internal fun ocasoRuinas(x: Float, y: Float): Float = OCASO_RUINAS.en(x, y)
@@ -595,7 +628,14 @@ internal fun tonoDeDiaRuinas(t: Color?, oscuro: Boolean): Color? {
  * El material del ánimo: se ubica el color (de día) en la escala del tema y se toma el mismo punto en [materiales] (tela, vidrio o
  * lona, de lo malo a lo bueno). Si el color no está en la escala, queda igual.
  */
-internal fun materialDelAnimoRuinas(t: Color, materiales: List<Color>): Color {
+internal fun materialDelAnimoRuinas(t: Color, materiales: List<Color>, viveza: Float = 1.3f): Color {
     val x = enEscalaRuinas(t, TONOS_RUINAS.first) ?: return t
-    return if (x < 0.5f) mezcla(materiales[0], materiales[1], x * 2) else mezcla(materiales[1], materiales[2], (x - 0.5f) * 2)
+    val c = if (x < 0.5f) mezcla(materiales[0], materiales[1], x * 2) else mezcla(materiales[1], materiales[2], (x - 0.5f) * 2)
+    return vivoRuinas(c, viveza)
+}
+
+/** [c] con más color: se aleja de su gris (del mismo valor) en [f]; así los tonos de en medio no se lavan. */
+internal fun vivoRuinas(c: Color, f: Float): Color {
+    val g = 0.3f * c.red + 0.59f * c.green + 0.11f * c.blue
+    return Color((g + (c.red - g) * f).coerceIn(0f, 1f), (g + (c.green - g) * f).coerceIn(0f, 1f), (g + (c.blue - g) * f).coerceIn(0f, 1f), c.alpha)
 }

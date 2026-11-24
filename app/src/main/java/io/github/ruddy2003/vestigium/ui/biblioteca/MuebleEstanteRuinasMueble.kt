@@ -41,8 +41,8 @@ internal object MuebleRuinas {
         val y0 = g.apoyo; val ch = g.ch
         val alto = ch - y0
         fun y(f: Float) = y0 + alto * f
-        conManchaRuinas(g, 0.03f, Rect(0f, y0, w, ch)) { s ->
-            fun l(x: Float, yy: Float) = g.luz(x, yy, 0.03f, s)
+        conManchaRuinas(g, 0.06f, Rect(0f, y0, w, ch)) { s ->
+            fun l(x: Float, yy: Float) = g.luz(x, yy, 0.06f, s)
             // Debajo de todas las molduras, el roble entero: las juntas entre una moldura y otra caen a medio píxel y así no dejan
             // asomar el fondo.
             drawRect(Brush.horizontalGradient(MUESTRAS.map { l(w * it, y0 + alto * 0.5f).c(P.ROBLE_OSC) }, 0f, w), Offset(0f, y0), Size(w, ch - y0))
@@ -165,8 +165,8 @@ internal object MuebleRuinas {
         val w = g.w; val u = density
         fun l(x: Float) = g.luz(x, r.center.y, 0.03f)
         val cols = List(7) { r.left + r.width * it / 6f }
-        conManchaRuinas(g, 0.03f, r) { s ->
-            fun ls(x: Float) = g.luz(x, r.center.y, 0.03f, s)
+        conManchaRuinas(g, 0.05f, r) { s ->
+            fun ls(x: Float) = g.luz(x, r.center.y, 0.05f, s)
             drawRect(Brush.horizontalGradient(cols.map { ls(it).c(P.ROBLE) }, r.left, r.right), r.topLeft, r.size)
             // El bocel de arriba: la luz en lo alto, la sombra debajo.
             val b1 = r.top + r.height * 0.3f
@@ -182,6 +182,12 @@ internal object MuebleRuinas {
         for (i in 0 until 2) {
             val c = Offset(r.left + r.width * azar(s, i), r.center.y)
             drawOval(l(c.x).c(P.GASTADO).copy(alpha = 0.3f), Offset(c.x - w * 0.05f, c.y - r.height * 0.18f), Size(w * 0.1f, r.height * 0.36f))
+        }
+        // De noche, el filo de las brasas del anafre en el canto de abajo, que mira al suelo: más fuerte cuanto más cerca.
+        if (g.a.oscuro && g.a.anafre > 0f) {
+            val xs = List(7) { r.left + r.width * it / 6f }
+            val filos = xs.map { x -> P.FUEGO.copy(alpha = (0.9f * g.a.anafre * MuebleEstanteRuinas.kAnafre(x / w, r.bottom / w, g.h / w)).coerceIn(0f, 0.9f)) }
+            if (filos.any { it.alpha > 0.04f }) drawRect(Brush.horizontalGradient(filos, r.left, r.right), Offset(r.left, r.bottom - 1.8f * u), Size(r.width, 1.6f * u))
         }
         // Los filos de la luz de la llama en el canto.
         val lmax = cols.maxByOrNull { l(it).k } ?: r.center.x
@@ -346,59 +352,75 @@ internal object MuebleRuinas {
     // ---------------------------------------------------------------- el farolillo
 
     /**
-     * El farolillo de lata agujereada colgado de un gancho del costado derecho: un bote de hojalata vieja (mate, con óxido) con
-     * su dibujo de agujeros punzados en arcos, la puertecilla con su bisagra, el sombrerete cónico y la anilla. De noche la vela de
-     * dentro asoma por cada agujero, enciende su halo en la madera y siembra puntos de luz alrededor.
+     * El farolillo de lata colgado de un gancho del costado derecho, con cuerpo de farol: el pie con su borde, el cuerpo de
+     * hojalata vieja agujereado en arcos, la puertecilla abierta que deja ver la vela, el sombrerete cónico con su chimenea y la
+     * anilla de donde cuelga. De noche la vela arde: asoma por la puertecilla y por cada agujero, enciende su halo en la madera y
+     * siembra puntos de luz alrededor.
      */
     fun DrawScope.farolillo(g: MarcoRuinas) {
         val w = g.w; val u = density
         if (g.n == 0) return
         val c = g.farolillo
-        val an = w * 0.05f; val al = w * 0.075f
-        val cuerpo = Rect(c.x - an / 2, c.y - al * 0.42f, c.x + an / 2, c.y + al * 0.5f)
-        val tope = cuerpo.top - al * 0.36f
-        val gancho = Offset(c.x, tope - w * 0.028f)
+        val an = w * 0.058f; val al = w * 0.078f
+        val cuerpo = Rect(c.x - an / 2, c.y - al * 0.45f, c.x + an / 2, c.y + al * 0.45f)
+        val tope = cuerpo.top - al * 0.42f
+        val anilla = Offset(c.x, tope - 3.6f * u)
+        val gancho = Offset(c.x, anilla.y - 3.4f * u)
         val l = g.luz(c.x, c.y, 0.06f)
         val arde = g.a.farolillo
+        val hondo = honda(g)
         // El halo en la madera y los puntos de luz que siembra.
         if (arde > 0f) {
             mancha(c, w * 0.16f, P.LLAMA.copy(alpha = 0.32f * arde))
-            for (i in 0 until 26) {
-                val ang = 6.2832f * azar(1301, i); val d = w * (0.045f + 0.1f * azar(1302, i))
+            for (i in 0 until 22) {
+                val ang = 6.2832f * azar(1301, i); val d = w * (0.05f + 0.1f * azar(1302, i))
                 val p = c + Offset(kotlin.math.cos(ang) * d, kotlin.math.sin(ang) * d * 1.3f)
                 drawCircle(P.LLAMA.copy(alpha = (0.75f - d / (w * 0.17f)).coerceIn(0.12f, 0.7f) * arde), (0.8f + 1f * azar(1303, i)) * u, p)
             }
-        } else drawRoundRect(l.s(0.35f), cuerpo.topLeft + Offset(w * 0.012f, w * 0.01f), cuerpo.size, CornerRadius(an * 0.15f))
-        // El gancho del costado y la anilla.
-        drawLine(l.s(0.4f), gancho + Offset(1.5f * u, 1.5f * u), gancho + Offset(1.5f * u, 5f * u), 1.6f * u)
-        drawLine(l.c(P.HIERRO), gancho - Offset(2.4f * u, 0f), gancho, 1.8f * u, StrokeCap.Round)
-        drawCircle(l.c(P.HIERRO_LUZ), 3f * u, Offset(c.x, gancho.y + 3.4f * u), style = Stroke(1.2f * u))
-        // El cuerpo cilíndrico de hojalata vieja: mate, con su luz y su sombra, el óxido del fondo y las costuras.
-        val lata = mezcla(P.NIQUEL, P.HIERRO_LUZ, 0.45f)
-        val ci = if (arde > 0f) mezcla(l.c(lata), P.LLAMA, 0.15f) else l.c(lata)
-        drawRect(Brush.horizontalGradient(listOf(mezcla(ci, Color.White, 0.18f), ci, mezcla(ci, honda(g), 0.5f)), cuerpo.left, cuerpo.right), cuerpo.topLeft, cuerpo.size)
-        drawRect(l.c(P.BARRO_OSC).copy(alpha = 0.55f), Offset(cuerpo.left, cuerpo.bottom - al * 0.16f), Size(an, al * 0.16f))
-        mancha(Offset(cuerpo.right - an * 0.2f, cuerpo.bottom - al * 0.25f), an * 0.35f, l.c(P.BARRO).copy(alpha = 0.5f))
-        drawLine(l.s(0.35f), Offset(cuerpo.left, cuerpo.top + 1f * u), Offset(cuerpo.right, cuerpo.top + 1f * u), 1.2f * u)
-        drawLine(l.s(0.35f), Offset(cuerpo.left, cuerpo.bottom - 1f * u), Offset(cuerpo.right, cuerpo.bottom - 1f * u), 1.2f * u)
-        // Los agujeros punzados: arcos de puntos (un dibujo, sin signo), más juntos en el centro.
-        val claro = if (arde > 0f) Color(0xFFFFE9A8) else mezcla(P.HIERRO, honda(g), 0.4f)
-        val rr = maxOf(0.75f * u, an * 0.04f)
-        for (fila in 0 until 4) for (col in 0 until 5) {
-            val fx = (col - 2) / 2.6f
-            val x = c.x + an * 0.4f * fx
-            val y = cuerpo.top + al * (0.2f + 0.17f * fila) + al * 0.05f * fx * fx
-            if (arde > 0f) drawCircle(P.LLAMA.copy(alpha = 0.4f * arde), rr * 2.4f, Offset(x, y))
-            drawCircle(claro, rr * (1f - 0.25f * kotlin.math.abs(fx)), Offset(x, y))
+        } else {
+            // De día, su sombra en la pilastra, corrida a la derecha y abajo.
+            drawRoundRect(l.s(0.35f), Offset(cuerpo.left + w * 0.012f, tope + w * 0.01f), Size(an, cuerpo.bottom - tope + al * 0.08f), CornerRadius(an * 0.2f))
         }
-        // La puertecilla (su raja y la bisagra) a un lado.
-        drawLine(l.s(0.45f), Offset(cuerpo.left + an * 0.12f, cuerpo.top + al * 0.1f), Offset(cuerpo.left + an * 0.12f, cuerpo.bottom - al * 0.2f), 0.8f * u)
-        // El sombrerete cónico, con su luz y el aro de arriba.
-        val tapa = poligonoRuinas(Offset(cuerpo.left - an * 0.08f, cuerpo.top), Offset(c.x - an * 0.1f, tope), Offset(c.x + an * 0.1f, tope), Offset(cuerpo.right + an * 0.08f, cuerpo.top))
-        drawPath(tapa, Brush.horizontalGradient(listOf(mezcla(ci, Color.White, 0.12f), ci, mezcla(ci, honda(g), 0.55f)), cuerpo.left, cuerpo.right))
-        for (k in 0 until 3) drawCircle(claro, rr * 0.8f, Offset(c.x + an * (k - 1) * 0.2f, cuerpo.top - al * 0.14f))
-        drawRect(l.c(P.HIERRO_LUZ), Offset(c.x - an * 0.12f, tope - 1.6f * u), Size(an * 0.24f, 2f * u))
-        if (arde > 0f) drawRect(P.LLAMA.copy(alpha = 0.18f * arde), cuerpo.topLeft, cuerpo.size)
+        // El gancho clavado en la pilastra y la anilla.
+        drawLine(l.c(P.HIERRO), gancho - Offset(2.6f * u, 0f), gancho, 1.8f * u, StrokeCap.Round)
+        drawLine(l.c(P.HIERRO), gancho, gancho + Offset(0f, 1.8f * u), 1.6f * u, StrokeCap.Round)
+        drawCircle(l.c(P.HIERRO_LUZ), 2.6f * u, anilla, style = Stroke(1.3f * u))
+        // El cuerpo de hojalata vieja (mate, con óxido), cilíndrico: su luz, su sombra y las costuras.
+        val lata = mezcla(P.NIQUEL, P.HIERRO_LUZ, 0.4f)
+        val ci = if (arde > 0f) mezcla(l.c(lata), P.LLAMA, 0.12f) else l.c(lata)
+        val borde = { r: Rect -> drawRect(Brush.horizontalGradient(listOf(mezcla(ci, Color.White, 0.2f), ci, mezcla(ci, hondo, 0.55f)), r.left, r.right), r.topLeft, r.size) }
+        borde(cuerpo)
+        drawRect(l.c(P.BARRO_OSC).copy(alpha = 0.5f), Offset(cuerpo.left, cuerpo.bottom - al * 0.14f), Size(an, al * 0.14f))
+        // Los agujeros en arcos, a un lado de la puertecilla.
+        val claro = if (arde > 0f) Color(0xFFFFE9A8) else mezcla(P.HIERRO, hondo, 0.4f)
+        val rr = maxOf(0.75f * u, an * 0.045f)
+        for (fila in 0 until 4) for (col in 0 until 2) {
+            val x = cuerpo.left + an * (0.16f + 0.16f * col)
+            val y = cuerpo.top + al * (0.16f + 0.2f * fila) + al * 0.04f * col
+            if (arde > 0f) drawCircle(P.LLAMA.copy(alpha = 0.4f * arde), rr * 2.3f, Offset(x, y))
+            drawCircle(claro, rr, Offset(x, y))
+        }
+        // La puertecilla abierta: el hueco con la vela dentro, y la hoja de lata girada hacia fuera sobre su bisagra.
+        val hueco = Rect(cuerpo.left + an * 0.48f, cuerpo.top + al * 0.14f, cuerpo.right - an * 0.08f, cuerpo.bottom - al * 0.16f)
+        drawRect(if (arde > 0f) mezcla(P.FUEGO, P.LLAMA, 0.5f) else mezcla(l.c(P.HIERRO), hondo, 0.3f), hueco.topLeft, hueco.size)
+        val vela = Rect(hueco.center.x - hueco.width * 0.22f, hueco.bottom - hueco.height * 0.5f, hueco.center.x + hueco.width * 0.22f, hueco.bottom)
+        drawRect(if (arde > 0f) Color(0xFFFFE6B0) else l.c(Color(0xFFE6DAB8)), vela.topLeft, vela.size)
+        drawLine(l.c(P.HIERRO), Offset(vela.center.x, vela.top), Offset(vela.center.x, vela.top - 1.6f * u), 0.8f * u)
+        if (arde > 0f) {
+            val f = Offset(vela.center.x, vela.top - hueco.height * 0.16f)
+            drawPath(cerradaRuinas(listOf(Offset(f.x, f.y - hueco.height * 0.16f), Offset(f.x + hueco.width * 0.18f, f.y + hueco.height * 0.04f), Offset(f.x, f.y + hueco.height * 0.1f), Offset(f.x - hueco.width * 0.18f, f.y + hueco.height * 0.04f))), Color(0xFFFFF4C8))
+        }
+        val hoja = poligonoRuinas(Offset(hueco.right, hueco.top), Offset(hueco.right + an * 0.42f, hueco.top + al * 0.05f), Offset(hueco.right + an * 0.42f, hueco.bottom + al * 0.05f), Offset(hueco.right, hueco.bottom))
+        drawPath(hoja, mezcla(ci, hondo, 0.3f))
+        drawPath(hoja, l.s(0.3f), style = Stroke(0.8f * u))
+        drawLine(l.c(P.HIERRO_LUZ), Offset(hueco.right, hueco.top), Offset(hueco.right, hueco.bottom), 1.2f * u)
+        // El pie: un borde más ancho, y el sombrerete cónico con su chimenea, con la luz del lado de la luz.
+        borde(Rect(cuerpo.left - an * 0.08f, cuerpo.bottom - al * 0.04f, cuerpo.right + an * 0.08f, cuerpo.bottom + al * 0.06f))
+        val tapa = poligonoRuinas(Offset(cuerpo.left - an * 0.1f, cuerpo.top), Offset(c.x - an * 0.12f, tope + al * 0.1f), Offset(c.x + an * 0.12f, tope + al * 0.1f), Offset(cuerpo.right + an * 0.1f, cuerpo.top))
+        drawPath(tapa, Brush.horizontalGradient(listOf(mezcla(ci, Color.White, 0.15f), ci, mezcla(ci, hondo, 0.6f)), cuerpo.left, cuerpo.right))
+        borde(Rect(c.x - an * 0.12f, tope, c.x + an * 0.12f, tope + al * 0.12f))
+        drawRect(l.c(P.HIERRO_LUZ), Offset(cuerpo.left - an * 0.1f, cuerpo.top - 0.8f * u), Size(an * 1.2f, 1.6f * u))
+        if (arde > 0f) drawRect(P.LLAMA.copy(alpha = 0.16f * arde), cuerpo.topLeft, cuerpo.size)
         if (l.k > 0.1f) drawLine(l.filo(0.7f), Offset(cuerpo.left + 0.8f * u, cuerpo.top), Offset(cuerpo.left + 0.8f * u, cuerpo.bottom), 1f * u)
     }
 }

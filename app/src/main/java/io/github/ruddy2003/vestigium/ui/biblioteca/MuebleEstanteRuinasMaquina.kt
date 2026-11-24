@@ -169,6 +169,11 @@ internal object MaquinaRuinas {
         if (l.k > 0.06f) drawLine(l.filo(0.8f), Offset(rod.left, rod.top + 1f), Offset(rod.right, rod.top + 1f), 1.2f * u)
         // El modelado del lado contrario a la luz y el brillo en el canto que la mira.
         drawPath(bordeRuinas(cuerpo, hacia * w * 0.012f, 0f), l.s(0.3f))
+        // En los Sueños de noche, el filo frío de la luna en lo alto del carro y en el canto de la izquierda.
+        if (g.a.oscuro && g.a.noche) {
+            drawLine(P.LUNA.copy(alpha = 0.55f), Offset(rod.left + w * 0.01f, rod.top + 0.8f * u), Offset(rod.right - w * 0.01f, rod.top + 0.8f * u), 1.2f * u)
+            drawPath(bordeRuinas(cuerpo, w * 0.006f, w * 0.004f), P.LUNA.copy(alpha = 0.4f))
+        }
     }
 
     /** El pliego en el rodillo: papel en blanco, un poco amarillo, combado hacia atrás, con su sombra en la pared. */

@@ -98,6 +98,8 @@ internal object CoronaEstanteRuinas {
             drawLine(l.b(0.6f), Offset(labio.left + 1f * u, labio.top + 1f * u), Offset(labio.right - 1f * u, labio.top + 1f * u), 1f * u)
             frondaRuinas(Offset(cx, boca + w * 0.01f), w * 0.07f, 28f, 0.4f, P.HELECHO, l, h, 1530, 7)
             if (l.k > 0.05f) drawPath(bordeRuinas(forma, -h * w * 0.008f, 0f), l.filo(0.6f))
+            // En los Sueños de noche, el filo frío de la luna en el hombro de la izquierda.
+            if (g.a.oscuro && g.a.noche) drawPath(bordeRuinas(forma, w * 0.008f, w * 0.006f), P.LUNA.copy(alpha = 0.45f))
         }
     }
 

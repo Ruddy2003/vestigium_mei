@@ -13,6 +13,7 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
+import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.font.FontWeight
 import io.github.ruddy2003.vestigium.ui.biblioteca.PaletaRuinas as P
@@ -59,6 +60,28 @@ internal fun DrawScope.volumenRuinas(v: Volumen, medidor: TextMeasurer, oscuro: 
     }
 }
 
+/**
+ * El volumen de una entrada en planos de gouache, de un solo relleno: el plano de luz (el mismo color, más claro), el tono entero y
+ * el plano de sombra (el mismo color, más hondo, con la sombra de color), con los bordes nítidos entre ellos. Así el color del
+ * ánimo queda con cuerpo, sin lavarse hacia el crema ni hacia el gris.
+ */
+private fun DrawScope.planosRuinas(f: Path, base: Color, l: LuzRuinas, hacia: Float, luzAncho: Float, sombraAncho: Float) {
+    val r = f.getBounds()
+    if (r.width < 1f) { drawPath(f, base); return }
+    val claro = Color((base.red * 1.2f + 0.06f).coerceAtMost(1f), (base.green * 1.17f + 0.05f).coerceAtMost(1f), (base.blue * 1.12f + 0.04f).coerceAtMost(1f), base.alpha)
+    val luz = if (l.a.oscuro) mezcla(base, mezcla(claro, l.tinte, 0.25f), (0.15f + 1.4f * l.k).coerceAtMost(1f)) else claro
+    val honda = if (l.a.oscuro) mezcla(base, l.a.hondo, 0.5f)
+        else mezcla(Color(base.red * 0.7f, base.green * 0.7f, base.blue * 0.74f, base.alpha), l.a.sombra(1f).copy(alpha = 1f), 0.14f)
+    val media = mezcla(base, honda, 0.55f)
+    val izq = if (hacia < 0f) luz else honda
+    val der = if (hacia < 0f) honda else luz
+    val a1 = if (hacia < 0f) luzAncho else sombraAncho
+    val a2 = 1f - (if (hacia < 0f) sombraAncho else luzAncho)
+    val stops = if (hacia < 0f) arrayOf(0f to izq, a1 to izq, a1 to base, a2 to base, a2 to media, 1f to der)
+        else arrayOf(0f to izq, a1 to media, a1 to base, a2 to base, a2 to der, 1f to der)
+    drawPath(f, Brush.horizontalGradient(colorStops = stops, startX = r.left, endX = r.right))
+}
+
 /** La sombra que la entrada echa detrás (en la trasera y en la vecina), lejos de la luz. */
 private fun DrawScope.sombraDetras(forma: Path, l: LuzRuinas, hacia: Float) {
     val u = density
@@ -81,10 +104,10 @@ private fun DrawScope.libroRuinas(v: Volumen, tono: Color?, medidor: TextMeasure
     val w = size.width; val h = size.height
     val s = v.semilla
     // Algo más estrecho que su sitio (le queda aire con el vecino), y alguno ladeado contra él.
-    val an = w * (0.84f + 0.1f * azar(s, 3))
-    val x0 = (w - an) * (0.3f + 0.4f * azar(s, 4))
+    val giro = if (azar(s, 6) < 0.32f) (if (azar(s, 7) < 0.5f) -4f else 4f) * (0.6f + 0.4f * azar(s, 8)) else 0f
+    val an = w * (if (giro != 0f) 0.8f else 0.84f + 0.1f * azar(s, 3))
+    val x0 = (w - an) * (if (giro > 0f) 0.12f else if (giro < 0f) 0.88f else 0.3f + 0.4f * azar(s, 4))
     val top = h * (0.03f + 0.05f * azar(s, 5))
-    val giro = if (azar(s, 6) < 0.3f) (if (azar(s, 7) < 0.5f) -2.2f else 2.2f) else 0f
     val telaBase = tono?.let { materialDelAnimoRuinas(it, P.TELAS) } ?: SIN_ANIMO_TELA
     val tela = if (tono != null) l.animo(telaBase) else l.c(telaBase)
     rotate(giro, Offset(if (giro > 0f) x0 + an else x0, h)) {
@@ -98,10 +121,10 @@ private fun DrawScope.libroRuinas(v: Volumen, tono: Color?, medidor: TextMeasure
         }
         sombraDetras(lomo, l, hacia)
         contactoVol(x0, x0 + an, l, hacia)
-        modeladoRapidoRuinas(lomo, tela, l, hacia, 1.1f, 0.42f)
+        planosRuinas(lomo, tela, l, hacia, 0.24f, 0.3f)
         clipPath(lomo) {
-            // La cabeza comida por el sol: la tela se aclara y se agrisa arriba.
-            drawRect(Brush.verticalGradient(listOf(l.c(P.GASTADO).copy(alpha = 0.55f), l.c(P.GASTADO).copy(alpha = 0f)), top, top + h * 0.22f), Offset(x0 - panza, top), Size(an + 2 * panza, h * 0.22f))
+            // La cabeza comida por el sol: la tela se aclara un poco arriba.
+            drawRect(Brush.verticalGradient(listOf(l.c(P.GASTADO).copy(alpha = 0.3f), l.c(P.GASTADO).copy(alpha = 0f)), top, top + h * 0.14f), Offset(x0 - panza, top), Size(an + 2 * panza, h * 0.14f))
             // El cerco del agua al pie: la tela más oscura hasta una línea ondulada.
             val nivel = h * (0.8f + 0.08f * azar(s, 8))
             val cerco = Path().apply {
@@ -148,7 +171,8 @@ private fun DrawScope.libroRuinas(v: Volumen, tono: Color?, medidor: TextMeasure
         }
         // El tejuelo de la biblioteca, pegado en el lomo: la semillera escribió encima el día y el mes.
         val eti = rectEtiqueta(x0, an, h * (0.42f + 0.12f * azar(s, 12)))
-        tejueloRuinas(v, medidor, l, eti.deflate(0.6f * u), hacia)
+        val telaClara = 0.3f * telaBase.red + 0.59f * telaBase.green + 0.11f * telaBase.blue > 0.55f
+        tejueloRuinas(v, medidor, l, eti.deflate(0.6f * u), hacia, telaClara)
         if (v.noche) mediaLunaRuinas(Offset(x0 + an * 0.5f, top + h * 0.2f), minOf(an * 0.28f, 6f * u), l, hacia)
     }
 }
@@ -201,11 +225,11 @@ private fun DrawScope.botellaRuinas(v: Volumen, tono: Color?, medidor: TextMeasu
     sombraDetras(forma, l, hacia)
     contactoVol(x0, x0 + an, l, hacia)
     // El vidrio: lo de detrás se ve a través, oscurecido y teñido; los bordes más hondos (el vidrio es más grueso de canto).
-    modeladoRapidoRuinas(forma, vidrio, l, hacia, 0.9f, 0.3f)
+    planosRuinas(forma, vidrio, l, hacia, 0.2f, 0.3f)
     clipPath(forma) {
         // Las hojas del día enrolladas dentro, de pie, teñidas por el vidrio: más cuanto más escribiste.
         val rollos = 1 + (v.lleno * 3.2f).toInt()
-        val papel = mezcla(l.c(P.PAPEL), vidrio, 0.42f)
+        val papel = mezcla(l.c(P.PAPEL), vidrio, 0.55f)
         val sombraPapel = mezcla(papel, vidrio, 0.5f)
         for (k in 0 until rollos) {
             val rw = an * (0.62f / rollos.coerceAtLeast(2) + 0.12f)
@@ -218,7 +242,7 @@ private fun DrawScope.botellaRuinas(v: Volumen, tono: Color?, medidor: TextMeasu
             drawArc(papel, 180f, 270f, false, Offset(rr.left + rw * 0.2f, rr.top - rw * 0.1f), Size(rw * 0.6f, rw * 0.2f), style = Stroke(0.7f * u))
         }
         // El vidrio otra vez encima de lo de dentro: la panza deja pasar menos donde es más gruesa.
-        drawRect(vidrio.copy(alpha = 0.3f), Offset(x0, top), Size(an, h))
+        drawRect(vidrio.copy(alpha = 0.36f), Offset(x0, top), Size(an, h))
         // El culo grueso del vidrio, más hondo, con su filo de luz.
         drawRect(mezcla(vidrio, l.a.hondo, 0.35f), Offset(x0, h - h * 0.07f), Size(an, h * 0.07f))
         drawLine(l.b(0.45f), Offset(x0 + an * 0.15f, h - h * 0.07f), Offset(x0 + an * 0.85f, h - h * 0.07f), 0.8f * u)
@@ -227,7 +251,8 @@ private fun DrawScope.botellaRuinas(v: Volumen, tono: Color?, medidor: TextMeasu
     }
     // Los reflejos del vidrio: la ventana larga del lado de la luz, el filo del otro lado y el brillo del hombro.
     val lado = if (hacia < 0f) x0 + an * 0.18f else x0 + an * 0.72f
-    drawRoundRect(l.b(0.7f), Offset(lado, hombro + h * 0.1f), Size(an * 0.1f, (h - hombro) * 0.66f), CornerRadius(an * 0.05f))
+    drawRoundRect(l.b(0.85f), Offset(lado, hombro + h * 0.1f), Size(an * 0.1f, (h - hombro) * 0.66f), CornerRadius(an * 0.05f))
+    drawCircle(l.b(0.95f), an * 0.05f, Offset(lado + an * 0.05f, hombro + h * 0.06f))
     drawLine(l.b(0.35f), Offset(if (hacia < 0f) x0 + an - 1.4f * u else x0 + 1.4f * u, hombro + h * 0.14f), Offset(if (hacia < 0f) x0 + an - 1.4f * u else x0 + 1.4f * u, h - h * 0.1f), 1f * u)
     drawLine(l.b(0.6f), Offset(cx + (if (hacia < 0f) -1f else 1f) * cuello * 0.25f, boca + h * 0.03f), Offset(cx + (if (hacia < 0f) -1f else 1f) * cuello * 0.25f, hombro - h * 0.12f), 1.2f * u)
     if (l.k > 0.06f) drawPath(bordeRuinas(forma, -hacia * 1.4f * u, 0f), l.filo(0.8f))
@@ -258,80 +283,88 @@ private fun DrawScope.fardoRuinas(v: Volumen, tono: Color?, medidor: TextMeasure
     val u = density
     val w = size.width; val h = size.height
     val s = v.semilla
-    val an = w * (0.9f + 0.08f * azar(s, 51))
-    val x0 = (w - an) * 0.5f
-    val top = h * (0.02f + 0.06f * azar(s, 52))
-    val panza = an * (0.025f + 0.035f * v.lleno)
-    val caida = (azar(s, 53) - 0.5f) * h * 0.04f
-    // El cuaderno envuelto: un bulto de lados casi rectos (se nota el cuaderno dentro), blando en las esquinas, con la lona doblada
-    // por arriba en un pliegue redondo.
-    val forma = cerradaRuinas(listOf(
-        Offset(x0 + an * 0.06f, top + h * 0.03f - caida), Offset(x0 + an * 0.5f, top), Offset(x0 + an * 0.94f, top + h * 0.03f + caida),
-        Offset(x0 + an + panza * 0.3f, top + h * 0.12f), Offset(x0 + an + panza, h * 0.55f), Offset(x0 + an, h - 3f * u),
-        Offset(x0 + an * 0.5f, h - 1.5f * u), Offset(x0, h - 3f * u), Offset(x0 - panza, h * 0.55f), Offset(x0 - panza * 0.3f, top + h * 0.12f)))
+    // Alguno recostado contra el vecino (más angosto, para no salirse de su sitio).
+    val giro = if (azar(s, 50) < 0.3f) (if (azar(s, 49) < 0.5f) -4f else 4f) else 0f
+    val an = w * (if (giro != 0f) 0.8f else 0.88f + 0.08f * azar(s, 51))
+    val x0 = (w - an) * (if (giro > 0f) 0.15f else if (giro < 0f) 0.85f else 0.5f)
+    val top = h * (0.02f + 0.04f * azar(s, 52))
+    val panza = an * (0.02f + 0.03f * v.lleno)
     val lonaBase = tono?.let { materialDelAnimoRuinas(it, P.LONAS) } ?: SIN_ANIMO_LONA
     val lona = if (tono != null) l.animo(lonaBase) else l.c(lonaBase)
-    sombraDetras(forma, l, hacia)
-    contactoVol(x0 - panza * 0.5f, x0 + an + panza * 0.5f, l, hacia)
-    modeladoRapidoRuinas(forma, lona, l, hacia, 1.15f, 0.4f)
-    val y1 = h * (0.4f + 0.06f * azar(s, 54)); val y2 = h * (0.74f + 0.05f * azar(s, 55))
-    clipPath(forma) {
-        // La solapa doblada de arriba: otra cara de la lona (más clara, con su sombra debajo) y su borde blando.
+    rotate(giro, Offset(if (giro > 0f) x0 + an else x0, h)) {
+        // El paquete: un bloque de esquinas blandas (se nota el cuaderno dentro), un poco abombado.
+        val r0 = an * 0.14f
+        val forma = cerradaRuinas(listOf(
+            Offset(x0 + r0, top), Offset(x0 + an * 0.5f, top - h * 0.006f), Offset(x0 + an - r0, top), Offset(x0 + an + panza * 0.2f, top + r0),
+            Offset(x0 + an + panza, h * 0.55f), Offset(x0 + an, h - 3f * u), Offset(x0 + an * 0.5f, h - 1.5f * u), Offset(x0, h - 3f * u),
+            Offset(x0 - panza, h * 0.55f), Offset(x0 - panza * 0.2f, top + r0)))
+        sombraDetras(forma, l, hacia)
+        contactoVol(x0 - panza * 0.5f, x0 + an + panza * 0.5f, l, hacia)
+        // El canto de los papeles que asoma por un lado, del lado de la sombra (la lona no lo tapa entero).
+        val xpap = if (hacia < 0f) x0 + an - an * 0.02f else x0 - an * 0.06f
+        val papel = Rect(xpap, h * 0.36f, xpap + an * 0.08f, h * 0.86f)
+        drawRect(l.c(mezcla(P.PAPEL, P.KRAFT, 0.25f)), papel.topLeft, papel.size)
+        var yh = papel.top + 1.6f * u
+        while (yh < papel.bottom) { drawLine(l.s(0.25f), Offset(papel.left, yh), Offset(papel.right, yh), 0.6f * u); yh += 2.2f * u }
+        planosRuinas(forma, lona, l, hacia, 0.24f, 0.3f)
+        // Los cordeles en cruz, corridos del centro, y los pliegues de paquete que tiran hacia el nudo.
+        val cx = x0 + an * (0.34f + 0.3f * azar(s, 53))
+        val cy = h * (0.5f + 0.14f * azar(s, 54))
         val sol = top + h * (0.2f + 0.04f * azar(s, 56))
-        val solapa = Path().apply {
-            moveTo(x0 - panza, top - 2f); lineTo(x0 + an + panza, top - 2f); lineTo(x0 + an + panza, sol - h * 0.02f)
-            quadraticTo(x0 + an * 0.7f, sol + h * 0.03f, x0 + an * 0.45f, sol)
-            quadraticTo(x0 + an * 0.2f, sol - h * 0.03f, x0 - panza, sol + h * 0.01f); close()
+        clipPath(forma) {
+            // La solapa de arriba: la punta del envoltorio doblada hacia delante (un trapecio, con sus dos pliegues de lado).
+            val solapa = poligonoRuinas(Offset(x0 - panza, top - 2f), Offset(x0 + an + panza, top - 2f), Offset(x0 + an * 0.82f, sol), Offset(x0 + an * 0.2f, sol + h * 0.01f))
+            drawPath(corridoRuinas(solapa, 0f, 2.4f * u), l.s(0.42f))
+            drawPath(solapa, mezcla(lona, Color.White, if (l.a.oscuro) 0.04f else 0.1f))
+            drawPath(bordeRuinas(solapa, 0f, -1.6f * u), l.b(0.4f))
+            // Las orejas de los lados de la solapa, en sombra.
+            drawPath(poligonoRuinas(Offset(x0 - panza, top), Offset(x0 + an * 0.2f, sol + h * 0.01f), Offset(x0 - panza, sol + h * 0.06f)), l.s(0.28f))
+            drawPath(poligonoRuinas(Offset(x0 + an + panza, top), Offset(x0 + an * 0.82f, sol), Offset(x0 + an + panza, sol + h * 0.05f)), l.s(0.28f))
+            // Los pliegues que tira el cordel hacia el nudo.
+            val pl = Path()
+            for ((ex, ey) in listOf(x0 to sol + h * 0.08f, x0 + an to sol + h * 0.12f, x0 + an * 0.05f to h - 4f * u, x0 + an * 0.95f to h - 6f * u)) {
+                val m = Offset((ex + cx) / 2 + (if (ex < cx) 2f else -2f) * u, (ey + cy) / 2)
+                pl.moveTo(cx + (ex - cx) * 0.18f, cy + (ey - cy) * 0.18f); pl.quadraticTo(m.x, m.y, cx + (ex - cx) * 0.75f, cy + (ey - cy) * 0.75f)
+            }
+            drawPath(pl, l.s(0.32f), style = Stroke(1.5f * u, cap = StrokeCap.Round))
+            translate(-hacia * 1.2f * u, -1f * u) { drawPath(pl, l.b(0.3f), style = Stroke(0.8f * u, cap = StrokeCap.Round)) }
+            // El brillo de la cera, del lado de la luz.
+            val bx = if (hacia < 0f) x0 + an * 0.1f else x0 + an * 0.74f
+            drawOval(l.b(0.6f), Offset(bx, sol + h * 0.06f), Size(an * 0.12f, h * 0.2f))
+            drawOval(l.b(0.75f), Offset(bx + an * 0.03f, sol + h * 0.09f), Size(an * 0.04f, h * 0.1f))
+            // El pespunte de cuando era toldo, a lo largo del otro lado.
+            val xp = x0 + an * (if (hacia < 0f) 0.84f else 0.14f)
+            var yp = sol + h * 0.04f
+            while (yp < h - 6f * u) { drawLine(l.c(mezcla(lonaBase, P.BRAMANTE, 0.5f)).copy(alpha = 0.7f), Offset(xp, yp), Offset(xp, yp + 2.2f * u), 0.8f * u); yp += 4.4f * u }
+            drawOval(l.c(P.GASTADO).copy(alpha = 0.28f), Offset(x0 - panza, h - h * 0.12f), Size(an * 0.3f, h * 0.1f))
         }
-        drawPath(corridoRuinas(solapa, 0f, 2.6f * u), l.s(0.4f))
-        drawPath(solapa, mezcla(lona, l.b(1f).copy(alpha = 1f), 0.12f))
-        drawPath(bordeRuinas(solapa, 0f, -2f * u), l.b(0.35f))
-        // Los pliegues que tira el bramante: sombras en diagonal hacia los nudos y la luz del bulto entre ellos.
-        val pl = Path()
-        for (k in 0 until 3) {
-            val xa = x0 + an * (0.15f + 0.35f * k)
-            pl.moveTo(xa, y1 + 2f * u); pl.quadraticTo(xa + an * 0.08f, (y1 + y2) / 2, xa - an * 0.04f, y2 - 2f * u)
-            pl.moveTo(xa + an * 0.1f, y2 + 2f * u); pl.lineTo(xa + an * 0.04f, h - 4f * u)
+        if (l.k > 0.06f) drawPath(bordeRuinas(forma, -hacia * 1.4f * u, 0f), l.filo(0.7f))
+        // El cordel en cruz, con su sombra; el de arriba abajo pasa por encima de la solapa.
+        val vertical = Path().apply { moveTo(cx + an * 0.03f, top - 1f); quadraticTo(cx - an * 0.02f, cy, cx + an * 0.02f, h - 2f * u) }
+        val horizontal = Path().apply { moveTo(x0 - panza, cy + 1.2f * u); quadraticTo(x0 + an * 0.5f, cy + 3f * u, x0 + an + panza, cy) }
+        for (c in listOf(vertical, horizontal)) {
+            drawPath(corridoRuinas(c, -hacia * 1f * u, 1.4f * u), l.s(0.42f), style = Stroke(1.6f * u))
+            drawPath(c, l.c(P.BRAMANTE), style = Stroke(1.7f * u))
         }
-        drawPath(pl, l.s(0.3f), style = Stroke(1.6f * u, cap = StrokeCap.Round))
-        // El brillo de la cera: dos manchas alargadas del lado de la luz.
-        val bx = if (hacia < 0f) x0 + an * 0.18f else x0 + an * 0.68f
-        drawOval(l.b(0.55f), Offset(bx, y1 + h * 0.04f), Size(an * 0.14f, (y2 - y1) * 0.6f))
-        drawOval(l.b(0.7f), Offset(bx + an * 0.03f, y1 + h * 0.08f), Size(an * 0.05f, (y2 - y1) * 0.35f))
-        drawOval(l.b(0.25f), Offset(bx + an * 0.05f, y2 + h * 0.03f), Size(an * 0.1f, h * 0.1f))
-        // El pespunte de la lona (la costura de cuando era un toldo), a lo largo de un lado.
-        val xp = x0 + an * (if (azar(s, 59) < 0.5f) 0.12f else 0.86f)
-        var yp = top + h * 0.26f
-        while (yp < h - 6f * u) { drawLine(l.c(mezcla(lonaBase, P.BRAMANTE, 0.5f)).copy(alpha = 0.7f), Offset(xp, yp), Offset(xp, yp + 2.2f * u), 0.8f * u); yp += 4.4f * u }
-        // El roce de las esquinas: la lona gastada, más clara.
-        drawOval(l.c(P.GASTADO).copy(alpha = 0.3f), Offset(x0 - panza, h - h * 0.12f), Size(an * 0.3f, h * 0.1f))
+        // El nudo en el cruce y su cabo suelto (sin lazo).
+        val nudo = Offset(cx, cy + 1.4f * u)
+        drawCircle(l.c(mezcla(P.BRAMANTE, P.KRAFT_OSC, 0.35f)), 2.6f * u, nudo)
+        drawCircle(l.b(0.5f), 1f * u, nudo - Offset(0.8f * u, 0.8f * u))
+        drawLine(l.c(P.BRAMANTE), nudo, nudo + Offset(-hacia * 4.5f * u, -3.5f * u), 1.2f * u, StrokeCap.Round)
+        // La ramita de romero metida bajo el cordel de arriba abajo.
+        val pie = Offset(cx - an * 0.04f, cy - h * 0.06f)
+        val tope = Offset(cx + an * 0.16f, top - h * 0.05f)
+        drawLine(l.c(mezcla(P.HIEDRA_OSC, P.KRAFT, 0.3f)), pie, tope, 1.1f * u)
+        for (k in 0 until 6) {
+            val p = pie + (tope - pie) * (0.2f + k * 0.14f)
+            drawLine(l.c(if (azar(s, 60 + k) < 0.5f) Color(0xFF6E8A6A) else Color(0xFF8AA284)), p, p + Offset((if (k % 2 == 0) -1f else 1f) * 3f * u, -2.2f * u), 1.1f * u, StrokeCap.Round)
+        }
+        // La etiqueta, atada al cordel junto al nudo y colgando delante.
+        val eti = rectEtiqueta(x0, an, cy + h * 0.05f)
+        val etiAjustada = if (eti.bottom > h - 2f * u) eti.translate(0f, h - 2f * u - eti.bottom) else eti
+        etiquetaRuinas(v, medidor, l, etiAjustada, nudo, hacia)
+        if (v.noche) mediaLunaRuinas(Offset(x0 + an * (if (cx > x0 + an * 0.5f) 0.25f else 0.75f), top + h * 0.13f), minOf(an * 0.26f, 5.5f * u), l, hacia)
     }
-    if (l.k > 0.06f) drawPath(bordeRuinas(forma, -hacia * 1.4f * u, 0f), l.filo(0.7f))
-    // Las dos vueltas de bramante, cada una con su sombra.
-    for (yy in listOf(y1, y2)) {
-        val vuelta = Path().apply { moveTo(x0 - panza, yy + 1f * u); quadraticTo(x0 + an * 0.5f, yy + 3f * u, x0 + an + panza, yy) }
-        drawPath(corridoRuinas(vuelta, 0f, 1.6f * u), l.s(0.4f), style = Stroke(1.6f * u))
-        drawPath(vuelta, l.c(P.BRAMANTE), style = Stroke(1.7f * u))
-    }
-    // El nudo con sus dos cabos (sin lazo), a un lado de la vuelta de abajo.
-    val nx = x0 + an * (0.25f + 0.5f * azar(s, 57))
-    drawCircle(l.c(mezcla(P.BRAMANTE, P.KRAFT_OSC, 0.3f)), 2.3f * u, Offset(nx, y2 + 1.6f * u))
-    drawLine(l.c(P.BRAMANTE), Offset(nx, y2 + 2f * u), Offset(nx - 2.6f * u, y2 + h * 0.1f), 1.2f * u, StrokeCap.Round)
-    drawLine(l.c(P.BRAMANTE), Offset(nx, y2 + 2f * u), Offset(nx + 1.6f * u, y2 + h * 0.08f), 1.2f * u, StrokeCap.Round)
-    // La ramita metida bajo el cordel de arriba: romero (un tallo con hojitas finas) o una espiga.
-    val rx = x0 + an * (if (azar(s, 58) < 0.5f) 0.25f else 0.7f)
-    val tope = Offset(rx + an * 0.2f, top - h * 0.06f)
-    val pie = Offset(rx - an * 0.08f, y1 + h * 0.14f)
-    drawLine(l.c(mezcla(P.HIEDRA_OSC, P.KRAFT, 0.3f)), pie, tope, 1.1f * u)
-    for (k in 0 until 7) {
-        val p = pie + (tope - pie) * (0.15f + k * 0.12f)
-        val lado = if (k % 2 == 0) -1f else 1f
-        drawLine(l.c(if (azar(s, 60 + k) < 0.5f) Color(0xFF6E8A6A) else Color(0xFF8AA284)), p, p + Offset(lado * 3.2f * u, -2.4f * u), 1.1f * u, StrokeCap.Round)
-    }
-    // La etiqueta, metida bajo la vuelta de arriba.
-    val eti = rectEtiqueta(x0, an, y1 + h * 0.06f)
-    etiquetaRuinas(v, medidor, l, eti, null, hacia)
-    if (v.noche) mediaLunaRuinas(Offset(x0 + an * 0.5f, top + h * 0.12f), minOf(an * 0.26f, 5.5f * u), l, hacia)
 }
 
 // ---------------------------------------------------------------- la etiqueta, el tejuelo y la luna
@@ -340,11 +373,11 @@ private fun DrawScope.fardoRuinas(v: Volumen, tono: Color?, medidor: TextMeasure
  * El tejuelo del libro: la etiqueta de papel kraft que la biblioteca pegó en el lomo, con su filete impreso alrededor y una esquina
  * despegada; encima, el día a lápiz grueso (unos 16 sp) y el mes corto.
  */
-private fun DrawScope.tejueloRuinas(v: Volumen, medidor: TextMeasurer, l: LuzRuinas, r: Rect, hacia: Float) {
+private fun DrawScope.tejueloRuinas(v: Volumen, medidor: TextMeasurer, l: LuzRuinas, r: Rect, hacia: Float, sobreClaro: Boolean) {
     val u = density
     val giro = (azar(v.semilla, 83) - 0.5f) * 3f
     rotate(giro, r.center) {
-        val carton = l.etiqueta()
+        val carton = l.etiqueta(oscura = sobreClaro)
         drawRoundRect(carton, r.topLeft, r.size, CornerRadius(1.6f * u))
         // El filete impreso y el papel gastado en el borde de abajo.
         drawRoundRect(mezcla(carton, P.KRAFT_OSC, 0.55f), r.topLeft + Offset(1.6f * u, 1.6f * u), Size(r.width - 3.2f * u, r.height - 3.2f * u), CornerRadius(1f * u), style = Stroke(0.7f * u))
@@ -355,7 +388,7 @@ private fun DrawScope.tejueloRuinas(v: Volumen, medidor: TextMeasurer, l: LuzRui
         val esquina = poligonoRuinas(e, e + Offset(lado * 6f * u, 0f), e + Offset(0f, 6f * u))
         drawPath(esquina, l.s(0.45f))
         drawPath(poligonoRuinas(e + Offset(lado * 6f * u, 0f), e + Offset(0f, 6f * u), e + Offset(lado * 4.6f * u, 4.6f * u)), mezcla(carton, Color.White, 0.25f))
-        val tinta = if (l.a.oscuro) Color(0xFF0C0A08) else P.LAPIZ
+        val tinta = l.tinta(carton)
         val zonaDia = Rect(r.left - 0.4f * u, r.top + 3.4f * u, r.right + 0.4f * u, r.top + 19.4f * u)
         textoEn(medidor, v.dia, zonaDia, P.LETRA, tinta, 16f, peso = FontWeight.Normal, minimo = 9f)
         val zonaMes = Rect(r.left + 0.4f * u, zonaDia.bottom - 1.2f * u, r.right - 0.4f * u, r.bottom - 1.6f * u)
@@ -390,7 +423,7 @@ private fun DrawScope.etiquetaRuinas(v: Volumen, medidor: TextMeasurer, l: LuzRu
         // El ojal: el refuerzo redondo y el agujero.
         drawCircle(mezcla(carton, P.KRAFT_OSC, 0.3f), 2.4f * u, ojal)
         drawCircle(l.a.hondo.copy(alpha = 0.85f), 1f * u, ojal)
-        val tinta = if (l.a.oscuro) Color(0xFF0C0A08) else P.LAPIZ
+        val tinta = l.tinta(carton)
         val zonaDia = Rect(r.left - 0.4f * u, r.top + 5.6f * u, r.right + 0.4f * u, r.top + 21.4f * u)
         textoEn(medidor, v.dia, zonaDia, P.LETRA, tinta, 16f, peso = FontWeight.Normal, minimo = 9f)
         val zonaMes = Rect(r.left + 0.4f * u, zonaDia.bottom - 1.2f * u, r.right - 0.4f * u, r.bottom - 0.4f * u)
