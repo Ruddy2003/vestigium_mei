@@ -214,7 +214,7 @@ internal object MuebleEstanteNapoleon {
                 drawRect(a.luz(PaletaNapoleon.CAOBA_OSC, 0.5f), Offset.Zero, Size(w, ceil(ch) + 1f))
                 with(MuroEstanteNapoleon) { pared(a, apoyo, cerca, m) }
                 with(CoronaEstanteNapoleon) { colgado(a, apoyo, cerca, m) }
-                with(ObraEstanteNapoleon) { cornisa(Rect(0f, apoyo, w, ch + 2f), a, cerca) }
+                with(ObraEstanteNapoleon) { cornisa(Rect(0f, apoyo, w, ch + 2f), a, cerca, m) }
                 with(CoronaEstanteNapoleon) { encima(a, apoyo, ch, cerca, m) }
                 with(MuroEstanteNapoleon) { luzDeNoche(a, ch) }
                 granoMueble(Rect(0f, 0f, w, ch + 2f), oscuro)

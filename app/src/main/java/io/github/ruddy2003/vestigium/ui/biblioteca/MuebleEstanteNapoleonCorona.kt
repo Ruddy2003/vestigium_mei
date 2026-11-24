@@ -9,6 +9,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.clipRect
@@ -37,15 +39,15 @@ internal object CoronaEstanteNapoleon {
     private const val GR = 0.118f
 
     /** La sombra de algo en la pared: de día, corrida a la derecha y abajo (la ventana está a la izquierda); de noche, hacia fuera de la lámpara. */
-    private fun DrawScope.sombraEnPared(p: Path, desde: Offset, a: AireNapoleon, hasta: Float, fuerza: Float = 0.2f) {
+    private fun DrawScope.sombraEnPared(p: Path, desde: Offset, a: AireNapoleon, hasta: Float, fuerza: Float = 0.2f, estilo: DrawStyle = Fill) {
         val w = size.width
         clipRect(0f, 0f, w, hasta) {
-            if (!a.oscuro) translate(w * 0.022f, w * 0.012f) { drawPath(p, a.sombra(fuerza)) }
+            if (!a.oscuro) translate(w * 0.022f, w * 0.012f) { drawPath(p, a.sombra(fuerza), style = estilo) }
             else {
                 val dx = (desde.x / w - MuebleEstanteNapoleon.LAMP_X).coerceIn(-0.3f, 0.3f) / 0.3f
                 val k = MuebleEstanteNapoleon.lamparaArriba(desde.x / w - MuebleEstanteNapoleon.LAMP_X, desde.y / w - MuebleEstanteNapoleon.LAMP_Y, a.noche)
                 // En la pared encendida, la sombra es parda (la luz de la vela no deja azul en lo que tapa).
-                translate(w * 0.04f * dx, w * 0.008f) { drawPath(p, mezcla(a.hondo, Color(0xFF2A160C), 0.7f).copy(alpha = (0.75f * k + 0.1f).coerceAtMost(0.55f))) }
+                translate(w * 0.04f * dx, w * 0.008f) { drawPath(p, mezcla(a.hondo, Color(0xFF2A160C), 0.7f).copy(alpha = (0.75f * k + 0.1f).coerceAtMost(0.55f)), style = estilo) }
             }
         }
     }
@@ -98,12 +100,10 @@ internal object CoronaEstanteNapoleon {
             moveTo(clavo.x, clavo.y)
             quadraticTo(der + w * 0.012f, w * 0.15f, der, arr + w * 0.025f)
         }
-        val silueta = Path().apply { addPath(campana); addOval(boca) }
-        sombraEnPared(Path().apply { addPath(ovalo); addPath(silueta) }, Offset(w * 0.9f, w * 0.28f), a, apoyo + 2f, 0.2f)
-        sombraEnPared(Path().apply { addPath(cordon) }, clavo, a, apoyo + 2f, 0f)
-        translate(if (a.oscuro) 0f else w * 0.02f, if (a.oscuro) 0f else w * 0.011f) {
-            if (!a.oscuro) drawPath(cordon, a.sombra(0.18f), style = Stroke(2f * u))
-        }
+        // Su sombra en la pared: la del tubo (un trazo, no un óvalo lleno), la de la campana y la del cordón.
+        sombraEnPared(ovalo, Offset(w * 0.9f, w * 0.25f), a, apoyo + 2f, 0.2f, Stroke(tubo))
+        sombraEnPared(campana, Offset(w * 0.9f, w * 0.3f), a, apoyo + 2f, 0.2f)
+        sombraEnPared(cordon, clavo, a, apoyo + 2f, 0.16f, Stroke(2f * u))
         // El clavo.
         clavoNapoleon(clavo, 1.8f * u, a, k, Color(0xFF55504A))
         // El cordón de lana carmesí que sube al clavo.
@@ -305,40 +305,56 @@ internal object CoronaEstanteNapoleon {
             drawRect(a.brillo(0.4f, k), r.topLeft, Size(r.width, 0.9f * u))
             sil.addRect(r)
         }
-        // El mapa plegado y entelado, dejado en el canto de la cornisa delante de los atlas: el paño de encima, tendido, y el
-        // que cuelga por delante del friso, con sus pliegues.
+        // El mapa plegado y entelado, dejado en el canto de la cornisa delante de los atlas: el paño de encima, tendido, y los dos
+        // que cuelgan por delante del friso, combados, con sus dobleces y el canto de la tela.
         val k = cerca(Offset(w * 0.45f, apoyo))
-        val encima = poligonoNapoleon(w * 0.418f, apoyo - w * 0.012f, w * 0.522f, apoyo - w * 0.014f, w * 0.528f, apoyo, w * 0.41f, apoyo)
+        val x0 = w * 0.405f; val x1 = w * 0.535f
+        val encima = poligonoNapoleon(x0 + w * 0.008f, apoyo - w * 0.01f, x1 - w * 0.004f, apoyo - w * 0.012f, x1, apoyo, x0, apoyo)
         drawPath(Path().apply { addPath(encima, Offset(w * 0.006f, -w * 0.002f)) }, a.sombra(0.3f))
-        drawPath(encima, a.dia(P.PAPEL, -0.06f, k))
-        drawLine(a.dia(P.CARTULINA_OSC, 0f, k), Offset(w * 0.46f, apoyo - w * 0.013f), Offset(w * 0.462f, apoyo), 0.8f * u)
+        drawPath(encima, a.dia(P.PAPEL, -0.04f, k))
+        drawLine(a.dia(P.CARTULINA_OSC, 0f, k), Offset((x0 + x1) / 2, apoyo - w * 0.011f), Offset((x0 + x1) / 2 + w * 0.002f, apoyo), 0.8f * u)
+        val baja = w * 0.088f
         val cuelga = Path().apply {
-            moveTo(w * 0.41f, apoyo - 0.5f * u)
-            lineTo(w * 0.528f, apoyo - 0.5f * u)
-            lineTo(w * 0.532f, apoyo + w * 0.056f)
-            lineTo(w * 0.416f, apoyo + w * 0.06f)
+            moveTo(x0, apoyo - 0.5f * u)
+            lineTo(x1, apoyo - 0.5f * u)
+            cubicTo(x1 + w * 0.004f, apoyo + baja * 0.4f, x1 + w * 0.002f, apoyo + baja * 0.7f, x1 + w * 0.006f, apoyo + baja)
+            cubicTo(x1 - w * 0.04f, apoyo + baja * 1.04f, x0 + w * 0.05f, apoyo + baja * 0.94f, x0 + w * 0.004f, apoyo + baja * 1.02f)
+            cubicTo(x0 - w * 0.002f, apoyo + baja * 0.7f, x0 + w * 0.002f, apoyo + baja * 0.3f, x0, apoyo - 0.5f * u)
             close()
         }
-        drawPath(Path().apply { addPath(cuelga, Offset(w * 0.006f, w * 0.006f)) }, a.sombra(0.4f))
+        drawPath(Path().apply { addPath(cuelga, Offset(w * 0.008f, w * 0.006f)) }, a.sombra(0.45f))
         drawPath(cuelga, a.dia(P.PAPEL, 0f, k))
         clipPath(cuelga) {
-            // Lo dibujado: un río, cerros a plumadas, una costa, el camino en rojo (sin letra), y los paños del entelado.
-            val r0 = Rect(w * 0.41f, apoyo, w * 0.532f, apoyo + w * 0.06f)
-            drawPath(Path().apply { moveTo(r0.left, r0.top + r0.height * 0.6f); cubicTo(r0.left + r0.width * 0.3f, r0.top + r0.height * 0.2f, r0.left + r0.width * 0.6f, r0.bottom, r0.right, r0.top + r0.height * 0.4f) },
-                a.dia(Color(0xFF5E8AA0), 0f, k), style = Stroke(1.6f * u))
-            drawPath(Path().apply { moveTo(r0.left + r0.width * 0.1f, r0.bottom); lineTo(r0.left + r0.width * 0.4f, r0.top + r0.height * 0.35f); lineTo(r0.right - r0.width * 0.1f, r0.top + r0.height * 0.2f) },
-                a.dia(P.LACRE, 0f, k), style = Stroke(1f * u))
-            for (j in 0 until 6) {
-                val cc = Offset(r0.left + r0.width * azar(8301, j), r0.top + r0.height * (0.2f + 0.6f * azar(8302, j)))
+            // Lo dibujado: un río con su afluente, la costa con su aguada, cerros a plumadas, un bosque a puntos y el camino en rojo
+            // (sin letra); y los paños del entelado, cada uno algo de otro tono.
+            val r0 = Rect(x0, apoyo, x1 + w * 0.006f, apoyo + baja)
+            drawRect(a.dia(Color(0xFFB9D0C8), 0f, k).copy(alpha = 0.55f), Offset(r0.left, r0.bottom - r0.height * 0.22f), Size(r0.width, r0.height * 0.22f))
+            drawPath(Path().apply { moveTo(r0.left, r0.bottom - r0.height * 0.22f); cubicTo(r0.left + r0.width * 0.3f, r0.bottom - r0.height * 0.3f, r0.left + r0.width * 0.6f, r0.bottom - r0.height * 0.16f, r0.right, r0.bottom - r0.height * 0.26f) },
+                a.dia(Color(0xFF5E8AA0), 0f, k), style = Stroke(0.9f * u))
+            val rio = Path().apply { moveTo(r0.left, r0.top + r0.height * 0.35f); cubicTo(r0.left + r0.width * 0.3f, r0.top + r0.height * 0.1f, r0.left + r0.width * 0.55f, r0.top + r0.height * 0.65f, r0.right, r0.top + r0.height * 0.3f) }
+            drawPath(rio, a.dia(Color(0xFF5E8AA0), 0f, k), style = Stroke(1.8f * u))
+            drawPath(Path().apply { moveTo(r0.left + r0.width * 0.45f, r0.top + r0.height * 0.42f); quadraticTo(r0.left + r0.width * 0.5f, r0.top + r0.height * 0.6f, r0.left + r0.width * 0.42f, r0.bottom - r0.height * 0.24f) },
+                a.dia(Color(0xFF5E8AA0), 0f, k), style = Stroke(1f * u))
+            drawPath(Path().apply { moveTo(r0.left + r0.width * 0.05f, r0.bottom - r0.height * 0.3f); lineTo(r0.left + r0.width * 0.35f, r0.top + r0.height * 0.5f); lineTo(r0.right - r0.width * 0.1f, r0.top + r0.height * 0.15f) },
+                a.dia(P.LACRE, 0f, k), style = Stroke(1f * u, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2.6f * u, 1.6f * u))))
+            for (j in 0 until 5) {
+                val cc = Offset(r0.left + r0.width * azar(8301, j), r0.top + r0.height * (0.1f + 0.5f * azar(8302, j)))
                 for (q in 0 until 5) { val an = q * 0.6f + 3.4f; drawLine(a.dia(P.TINTA, 0f, k).copy(alpha = 0.5f), cc, cc + Offset(w * 0.006f * cos(an), w * 0.006f * sin(an)), 0.5f * u) }
             }
+            val bosque = Path()
+            for (j in 0 until 14) { val bx = r0.left + r0.width * (0.6f + 0.3f * azar(8303, j)); val by = r0.top + r0.height * (0.45f + 0.25f * azar(8304, j)); bosque.addOval(Rect(bx, by, bx + w * 0.004f, by + w * 0.004f)) }
+            drawPath(bosque, a.dia(Color(0xFF6E8A4E), 0f, k))
             listOf(0.33f, 0.66f).forEach { f ->
-                drawRect(a.sombra(0.22f), Offset(r0.left + r0.width * f, r0.top), Size(1.2f * u, r0.height))
-                drawRect(a.claro(0.4f), Offset(r0.left + r0.width * f + 1.2f * u, r0.top), Size(0.8f * u, r0.height))
+                drawRect(a.sombra(0.2f), Offset(r0.left + r0.width * f, r0.top), Size(1.4f * u, r0.height + w * 0.01f))
+                drawRect(a.claro(0.45f), Offset(r0.left + r0.width * f + 1.4f * u, r0.top), Size(0.8f * u, r0.height + w * 0.01f))
             }
-            drawRect(a.sombra(0.18f), Offset(r0.left, r0.top), Size(r0.width, r0.height * 0.2f))
+            drawRect(a.sombra(0.12f), Offset(r0.left + r0.width * 0.66f, r0.top), Size(r0.width * 0.34f, r0.height + w * 0.01f))
+            drawRect(a.sombra(0.25f), Offset(r0.left, r0.top), Size(r0.width, r0.height * 0.14f))
         }
-        drawLine(a.dia(Color(0xFFBCAE8C), 0f, k), Offset(w * 0.416f, apoyo + w * 0.06f), Offset(w * 0.532f, apoyo + w * 0.056f), 1.6f * u)
+        // El canto de la tela de abajo (el entelado asoma) y el borde de arriba, doblado sobre el canto de la cornisa.
+        drawPath(Path().apply { moveTo(x1 + w * 0.006f, apoyo + baja); cubicTo(x1 - w * 0.04f, apoyo + baja * 1.04f, x0 + w * 0.05f, apoyo + baja * 0.94f, x0 + w * 0.004f, apoyo + baja * 1.02f) },
+            a.dia(Color(0xFFBCAE8C), 0f, k), style = Stroke(1.6f * u))
+        drawLine(a.claro(0.6f), Offset(x0, apoyo), Offset(x1, apoyo), 1f * u)
         sil.addPath(encima)
     }
 

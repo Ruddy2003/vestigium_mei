@@ -165,18 +165,23 @@ internal object MuroEstanteNapoleon {
         drawPath(grietas, Color(0xFF7A5A2C).copy(alpha = 0.6f), style = Stroke(0.8f * u), blendMode = BlendMode.Multiply)
         // El friso: la banda verde entre dos filetes oscuros, con las palmetas y rosetas en ocre (gastadas).
         friso(r, a, cerca, m)
-        // El desconchón, abajo a la derecha: el amarillo se ha caído y asoma el enlucido pardo, con el canto claro de la pintura.
+        // El desconchón, bajo el friso a la derecha: una tira de pintura caída a lo largo de su filete, irregular, donde asoma
+        // el enlucido pardo con el canto claro de la pintura.
         val des = Path().apply {
-            moveTo(w * 0.86f, w * 0.27f)
-            cubicTo(w * 0.9f, w * 0.255f, w * 0.94f, w * 0.27f, w * 0.935f, w * 0.3f)
-            cubicTo(w * 0.95f, w * 0.33f, w * 0.91f, w * 0.345f, w * 0.89f, w * 0.335f)
-            cubicTo(w * 0.86f, w * 0.34f, w * 0.845f, w * 0.3f, w * 0.86f, w * 0.27f); close()
+            moveTo(w * 0.73f, w * 0.074f)
+            lineTo(w * 0.86f, w * 0.074f)
+            cubicTo(w * 0.85f, w * 0.085f, w * 0.83f, w * 0.082f, w * 0.815f, w * 0.095f)
+            cubicTo(w * 0.8f, w * 0.106f, w * 0.785f, w * 0.09f, w * 0.77f, w * 0.098f)
+            cubicTo(w * 0.755f, w * 0.104f, w * 0.745f, w * 0.088f, w * 0.73f, w * 0.074f); close()
         }
-        val kd = cerca(Offset(w * 0.9f, w * 0.3f)); val lit = if (m != null) 1f else 0f
+        val kd = cerca(Offset(w * 0.8f, w * 0.085f)); val lit = if (m != null) 1f else 0f
         drawPath(des, a.en(P.ENLUCIDO, 0f, kd, lit, m))
         clipPath(des) {
-            for (j in 0 until 6) drawCircle(a.en(P.ENLUCIDO_OSC, 0f, kd, lit, m), w * (0.003f + 0.004f * azar(8080, j)), Offset(w * (0.865f + 0.07f * azar(8081, j)), w * (0.27f + 0.06f * azar(8082, j))))
-            drawPath(Path().apply { addPath(des, Offset(w * 0.004f, w * 0.005f)) }, a.sombra(0.3f), style = Stroke(w * 0.006f))
+            for (j in 0 until 9) {
+                val p0 = Offset(w * (0.735f + 0.12f * azar(8081, j)), w * (0.076f + 0.022f * azar(8082, j)))
+                drawLine(a.en(P.ENLUCIDO_OSC, 0f, kd, lit, m), p0, p0 + Offset(w * (0.004f + 0.006f * azar(8080, j)), w * 0.001f), 1.1f * u)
+            }
+            drawPath(Path().apply { addPath(des, Offset(w * 0.003f, w * 0.004f)) }, a.sombra(0.3f), style = Stroke(w * 0.005f))
         }
         drawPath(des, a.en(P.AMARILLO_LUZ, 0f, kd, lit, m), style = Stroke(1f * u))
     }

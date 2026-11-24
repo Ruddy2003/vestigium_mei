@@ -90,9 +90,18 @@ internal object ObraEstanteNapoleon {
     // ---------------------------------------------------------------- la caja-cornisa (en la imagen guardada de arriba)
 
     /** La cornisa de [r] (de donde pisan las cosas hasta el arranque de las repisas, y un poco más). */
-    fun DrawScope.cornisa(r: Rect, a: AireNapoleon, cerca: (Offset) -> Float) {
+    fun DrawScope.cornisa(r: Rect, a: AireNapoleon, cerca: (Offset) -> Float, m: ManchaNapoleon?) {
+        cornisaCon(r, a, cerca, null)
+        // La trama de la ventana alcanza el tablero y el friso: la misma cornisa, pintada con esa luz, corrida porque está más
+        // adelante que la pared.
+        // Con la luna no: en la caoba se leería como un vidrio apoyado.
+        if (m != null && !a.oscuro) clipPath(m.forma(size.width, ManchaNapoleon.FRENTE)) { cornisaCon(r, a, cerca, ManchaNapoleon(m.q, m.color, m.fuerza * 0.6f)) }
+    }
+
+    private fun DrawScope.cornisaCon(r: Rect, a: AireNapoleon, cerca: (Offset) -> Float, m: ManchaNapoleon?) {
         val w = size.width; val u = density
-        fun c(col: Color, f: Float, k: Float) = a.dia(col, f, k)
+        val lit = if (m != null) 1f else 0f
+        fun c(col: Color, f: Float, k: Float) = a.en(col, f, k, lit, m)
         val y0 = r.top
         val sup0 = y0 - w * 0.009f; val sup1 = y0 + w * 0.006f
         val canto1 = y0 + w * 0.02f
@@ -189,8 +198,8 @@ internal object ObraEstanteNapoleon {
             if (j % 2 == 0) { pelo.moveTo(x, y); pelo.lineTo(x + 0.6f * u, y + l) } else { pelo2.moveTo(x, y); pelo2.lineTo(x - 0.5f * u, y + l) }
         }
         val kc = cerca(r.center)
-        drawPath(pelo, c(P.PANO_LUZ, 0.08f, kc).copy(alpha = 0.35f), style = Stroke(0.8f * u))
-        drawPath(pelo2, c(P.PANO_HONDO, 0f, kc).copy(alpha = 0.3f), style = Stroke(0.8f * u))
+        drawPath(pelo, c(P.PANO_LUZ, 0.08f, kc).copy(alpha = 0.22f), style = Stroke(0.8f * u))
+        drawPath(pelo2, c(P.PANO_HONDO, 0f, kc).copy(alpha = 0.22f), style = Stroke(0.8f * u))
         // Lo gastado: una rozadura clara donde roza lo que se saca y se mete, y alguna mancha.
         val rx = r.left + r.width * (0.15f + 0.6f * azar(7500, k))
         drawOval(c(P.PANO_LUZ, 0.15f, cerca(Offset(rx, r.bottom))).copy(alpha = 0.3f), Offset(rx, r.top + r.height * 0.55f), Size(w * 0.16f, r.height * 0.3f))
