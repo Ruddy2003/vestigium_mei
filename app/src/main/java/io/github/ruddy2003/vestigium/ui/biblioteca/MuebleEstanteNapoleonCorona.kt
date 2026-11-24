@@ -242,7 +242,7 @@ internal object CoronaEstanteNapoleon {
         if (noche) clipPath(esfera) {
             // La sombra de la pantalla de la bouillotte: la mitad de arriba del globo queda por encima de su borde, a oscuras.
             val linea = w * (MuebleEstanteNapoleon.LAMP_Y - MuebleEstanteNapoleon.PANTALLA_ALTO / MuebleEstanteNapoleon.PANTALLA_RADIO * (MuebleEstanteNapoleon.LAMP_X - GX))
-            val pen = w * (0.012f + 0.14f * (MuebleEstanteNapoleon.LAMP_X - GX))
+            val pen = w * (0.025f + 0.24f * (MuebleEstanteNapoleon.LAMP_X - GX))
             drawRect(Brush.verticalGradient(0f to a.hondo.copy(alpha = 0.72f), 1f to a.hondo.copy(alpha = 0f), startY = linea - pen, endY = linea + pen * 0.2f), Offset(c.x - r, c.y - r), Size(2 * r, linea + pen - (c.y - r)))
         }
         if (noche) clipPath(esfera) { drawArc(a.filo(0.75f * kd), -70f, 120f, false, Offset(c.x - r, c.y - r), Size(2 * r, 2 * r), style = Stroke(1.6f * u)) }
@@ -305,25 +305,25 @@ internal object CoronaEstanteNapoleon {
             drawRect(a.brillo(0.4f, k), r.topLeft, Size(r.width, 0.9f * u))
             sil.addRect(r)
         }
-        // El mapa plegado y entelado: el paño de encima, y la tira que cuelga por el canto de la cornisa, con sus pliegues.
+        // El mapa plegado y entelado, dejado en el canto de la cornisa delante de los atlas: el paño de encima, tendido, y el
+        // que cuelga por delante del friso, con sus pliegues.
         val k = cerca(Offset(w * 0.45f, apoyo))
-        val encima = poligonoNapoleon(w * 0.39f, apoyo - w * 0.066f, w * 0.53f, apoyo - w * 0.07f, w * 0.545f, apoyo - w * 0.06f, w * 0.38f, apoyo - w * 0.058f)
-        drawPath(encima, a.dia(P.PAPEL, -0.08f, k))
+        val encima = poligonoNapoleon(w * 0.418f, apoyo - w * 0.012f, w * 0.522f, apoyo - w * 0.014f, w * 0.528f, apoyo, w * 0.41f, apoyo)
+        drawPath(Path().apply { addPath(encima, Offset(w * 0.006f, -w * 0.002f)) }, a.sombra(0.3f))
+        drawPath(encima, a.dia(P.PAPEL, -0.06f, k))
+        drawLine(a.dia(P.CARTULINA_OSC, 0f, k), Offset(w * 0.46f, apoyo - w * 0.013f), Offset(w * 0.462f, apoyo), 0.8f * u)
         val cuelga = Path().apply {
-            moveTo(w * 0.425f, apoyo - w * 0.002f)
-            lineTo(w * 0.515f, apoyo - w * 0.002f)
-            lineTo(w * 0.52f, apoyo + w * 0.055f)
-            lineTo(w * 0.43f, apoyo + w * 0.06f)
+            moveTo(w * 0.41f, apoyo - 0.5f * u)
+            lineTo(w * 0.528f, apoyo - 0.5f * u)
+            lineTo(w * 0.532f, apoyo + w * 0.056f)
+            lineTo(w * 0.416f, apoyo + w * 0.06f)
             close()
         }
-        // La tira cuelga desde lo alto de los atlas por su costado y cae por delante de la cornisa.
-        val bajada = poligonoNapoleon(w * 0.53f, apoyo - w * 0.064f, w * 0.555f, apoyo - w * 0.06f, w * 0.52f, apoyo, w * 0.505f, apoyo)
-        drawPath(bajada, a.dia(P.PAPEL, -0.15f, k))
         drawPath(Path().apply { addPath(cuelga, Offset(w * 0.006f, w * 0.006f)) }, a.sombra(0.4f))
         drawPath(cuelga, a.dia(P.PAPEL, 0f, k))
         clipPath(cuelga) {
             // Lo dibujado: un río, cerros a plumadas, una costa, el camino en rojo (sin letra), y los paños del entelado.
-            val r0 = Rect(w * 0.425f, apoyo, w * 0.52f, apoyo + w * 0.06f)
+            val r0 = Rect(w * 0.41f, apoyo, w * 0.532f, apoyo + w * 0.06f)
             drawPath(Path().apply { moveTo(r0.left, r0.top + r0.height * 0.6f); cubicTo(r0.left + r0.width * 0.3f, r0.top + r0.height * 0.2f, r0.left + r0.width * 0.6f, r0.bottom, r0.right, r0.top + r0.height * 0.4f) },
                 a.dia(Color(0xFF5E8AA0), 0f, k), style = Stroke(1.6f * u))
             drawPath(Path().apply { moveTo(r0.left + r0.width * 0.1f, r0.bottom); lineTo(r0.left + r0.width * 0.4f, r0.top + r0.height * 0.35f); lineTo(r0.right - r0.width * 0.1f, r0.top + r0.height * 0.2f) },
@@ -338,7 +338,7 @@ internal object CoronaEstanteNapoleon {
             }
             drawRect(a.sombra(0.18f), Offset(r0.left, r0.top), Size(r0.width, r0.height * 0.2f))
         }
-        drawLine(a.dia(Color(0xFFBCAE8C), 0f, k), Offset(w * 0.43f, apoyo + w * 0.06f), Offset(w * 0.52f, apoyo + w * 0.055f), 1.6f * u)
+        drawLine(a.dia(Color(0xFFBCAE8C), 0f, k), Offset(w * 0.416f, apoyo + w * 0.06f), Offset(w * 0.532f, apoyo + w * 0.056f), 1.6f * u)
         sil.addPath(encima)
     }
 

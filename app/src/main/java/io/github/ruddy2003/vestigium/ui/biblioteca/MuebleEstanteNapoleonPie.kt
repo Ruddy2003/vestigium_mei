@@ -237,42 +237,51 @@ internal object PieEstanteNapoleon {
     }
 
     /**
-     * La silla de montar del oficial, de lado y asentada en el suelo, cortada por el borde de la izquierda: el borrén alto de
-     * atrás y el arzón de delante con su clavo, el asiento hondo, el faldón con su costura y su rodillera, la cincha que cae al
-     * suelo con su hebilla, la ación con el estribo y, debajo, la mantilla de paño azul con su galón.
+     * La silla de montar del oficial, de lado y asentada en el suelo sobre su mantilla: el borrén alto de atrás, el asiento
+     * hondo con su costura, el arzón de delante con su clavo, el sudadero acolchado debajo, el faldón con su costura y su
+     * rodillera, la cincha que cae al suelo con su hebilla, la ación con el estribo y la mantilla de paño azul con su galón.
      */
     private fun DrawScope.silla(a: AireNapoleon, b: Rect, suelo: Float, h: Float, cerca: (Offset) -> Float) {
         val w = size.width; val u = density
         val piso = h - w * 0.014f
-        fun x(f: Float) = w * (f + 0.035f)
+        fun x(f: Float) = w * (f + 0.03f)
         fun y(f: Float) = piso - w * f
         val k = cerca(Offset(x(0.2f), y(0.12f)))
         val kr = cerca(Offset(x(0.34f), y(0.08f)))
         val hacia = if (a.oscuro) 1f else -1f
-        contactoNapoleon(Offset(x(0.17f), piso), w * 0.5f, w * 0.04f, a, 0.5f)
+        contactoNapoleon(Offset(x(0.17f), piso), w * 0.52f, w * 0.04f, a, 0.5f)
         // La mantilla de paño azul, bajo la silla, que cae hasta el suelo; su punta de atrás se esconde por el borde.
         val mant = Path().apply {
-            moveTo(x(-0.05f), y(0.115f))
-            lineTo(x(0.37f), y(0.12f))
+            moveTo(x(-0.08f), y(0.115f))
+            lineTo(x(0.37f), y(0.122f))
             cubicTo(x(0.41f), y(0.11f), x(0.415f), y(0.04f), x(0.4f), y(0f))
-            lineTo(x(-0.05f), y(0f))
+            lineTo(x(-0.08f), y(0f))
             close()
         }
         drawPath(mant, a.dia(P.AZUL, 0f, k))
         clipPath(mant) {
-            cilindroNapoleon(Rect(x(-0.05f), y(0.12f), x(0.42f), piso), a, kr, hacia, 0.5f)
-            // Los pliegues del paño que se asienta en el suelo.
-            listOf(0.05f, 0.16f, 0.29f).forEach { f ->
+            cilindroNapoleon(Rect(x(-0.08f), y(0.12f), x(0.42f), piso), a, kr, hacia, 0.5f)
+            listOf(0.04f, 0.15f, 0.28f).forEach { f ->
                 drawLine(a.sombra(0.3f), Offset(x(f), y(0.09f)), Offset(x(f + 0.02f), piso), 2.4f * u)
                 drawLine(a.claro(0.18f), Offset(x(f) + 2.4f * u, y(0.09f)), Offset(x(f + 0.02f) + 2.4f * u, piso), 1f * u)
             }
-            drawRect(a.sombra(0.3f), Offset(x(-0.05f), y(0.03f)), Size(w * 0.5f, w * 0.03f))
+            drawRect(a.sombra(0.3f), Offset(x(-0.08f), y(0.03f)), Size(w * 0.52f, w * 0.03f))
         }
-        // El galón dorado del borde de la mantilla, ancho, con su filete de dentro.
-        val galon = Path().apply { moveTo(x(-0.05f), y(0.022f)); lineTo(x(0.36f), y(0.024f)); cubicTo(x(0.392f), y(0.03f), x(0.395f), y(0.08f), x(0.37f), y(0.11f)) }
+        val galon = Path().apply { moveTo(x(-0.08f), y(0.022f)); lineTo(x(0.36f), y(0.024f)); cubicTo(x(0.392f), y(0.03f), x(0.395f), y(0.08f), x(0.37f), y(0.112f)) }
         drawPath(galon, a.dia(P.GALON, 0f, kr), style = Stroke(w * 0.01f))
         drawPath(Path().apply { addPath(galon, Offset(-w * 0.006f, -w * 0.016f)) }, a.dia(P.GALON, -0.1f, kr), style = Stroke(w * 0.003f))
         drawPath(galon, a.brillo(0.45f, kr), style = Stroke(w * 0.002f))
+        // El sudadero: el cojín acolchado de debajo del asiento, de cuero más claro, con su costura.
+        val sud = Path().apply {
+            moveTo(x(-0.01f), y(0.12f)); lineTo(x(0.33f), y(0.125f))
+            quadraticTo(x(0.345f), y(0.15f), x(0.33f), y(0.17f)); lineTo(x(0.0f), y(0.17f))
+            quadraticTo(x(-0.02f), y(0.145f), x(-0.01f), y(0.12f)); close()
+        }
+        drawPath(Path().apply { addPath(sud, Offset(w * 0.005f, w * 0.005f)) }, a.sombra(0.35f))
+        drawPath(sud, a.dia(mezcla(P.CUERO, P.CARTULINA_OSC, 0.3f), 0f, k))
+        clipPath(sud) { drawRect(a.sombra(0.3f), Offset(x(-0.02f), y(0.14f)), Size(w * 0.4f, w * 0.03f)) }
+        drawLine(a.dia(Color(0xFFD9C49A), 0f, k).copy(alpha = 0.5f), Offset(x(0.0f), y(0.155f)), Offset(x(0.32f), y(0.158f)), 0.7f * u,
+            pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2f * u, 1.6f * u)))
         // La cincha de tela a rayas que cae del faldón hasta el suelo, con su hebilla.
         val cin = Rect(x(0.2f), y(0.09f), x(0.235f), piso)
         drawRect(a.dia(Color(0xFFC9B48A), 0f, k), cin.topLeft, cin.size)
@@ -280,56 +289,55 @@ internal object PieEstanteNapoleon {
         drawRect(a.sombra(0.3f), Offset(cin.right - cin.width * 0.3f, cin.top), Size(cin.width * 0.3f, cin.height))
         val heb = Rect(cin.left - w * 0.004f, y(0.05f), cin.right + w * 0.004f, y(0.03f))
         drawRect(a.dia(Color(0xFF5E5A56), 0f, k), heb.topLeft, heb.size, style = Stroke(1.6f * u))
-        // El faldón: el ala de cuero que cuelga de la silla, con la rodillera abultada delante y la costura al borde.
-        val faldon = Path().apply {
-            moveTo(x(0.085f), y(0.16f))
-            lineTo(x(0.29f), y(0.165f))
-            cubicTo(x(0.31f), y(0.12f), x(0.3f), y(0.07f), x(0.275f), y(0.045f))
-            lineTo(x(0.12f), y(0.04f))
-            cubicTo(x(0.09f), y(0.05f), x(0.075f), y(0.12f), x(0.085f), y(0.16f))
-            close()
-        }
-        drawPath(Path().apply { addPath(faldon, Offset(w * 0.006f, w * 0.006f)) }, a.sombra(0.4f))
-        drawPath(faldon, a.dia(P.CUERO, -0.05f, k))
-        clipPath(faldon) {
-            cilindroNapoleon(Rect(x(0.07f), y(0.17f), x(0.31f), y(0.04f)), a, kr, hacia, 0.7f)
-            // La rodillera: un rollo acolchado a lo alto, cerca del borde de delante.
-            val rod = Path().apply { moveTo(x(0.255f), y(0.155f)); cubicTo(x(0.285f), y(0.12f), x(0.28f), y(0.08f), x(0.258f), y(0.055f)) }
-            drawPath(rod, a.sombra(0.35f), style = Stroke(w * 0.016f))
-            drawPath(rod, a.dia(P.CUERO, 0.08f, kr), style = Stroke(w * 0.011f))
-            drawPath(Path().apply { addPath(rod, Offset(-w * 0.003f, 0f)) }, a.brillo(0.35f, kr), style = Stroke(w * 0.002f))
-            drawPath(faldon, a.dia(P.CUERO_OSC, 0f, k).copy(alpha = 0.7f), style = Stroke(w * 0.01f))
-        }
-        val costura = Path().apply { moveTo(x(0.095f), y(0.15f)); cubicTo(x(0.085f), y(0.11f), x(0.1f), y(0.06f), x(0.125f), y(0.05f)); lineTo(x(0.268f), y(0.054f)) }
-        drawPath(costura, a.dia(Color(0xFFD9C49A), 0f, k).copy(alpha = 0.65f), style = Stroke(0.7f * u, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2f * u, 1.6f * u))))
-        // La silla: el borrén alto de atrás, el asiento hondo y el arzón de delante, en un solo cuerpo de cuero con su canto.
+        // El asiento: el borrén alto de atrás, la curva honda y el arzón de delante, en un solo cuerpo de cuero con su canto.
         val asiento = Path().apply {
-            moveTo(x(-0.03f), y(0.14f))
-            lineTo(x(-0.012f), y(0.24f))
-            cubicTo(x(0.0f), y(0.272f), x(0.04f), y(0.27f), x(0.058f), y(0.232f))
-            cubicTo(x(0.09f), y(0.175f), x(0.2f), y(0.16f), x(0.27f), y(0.185f))
-            cubicTo(x(0.295f), y(0.195f), x(0.315f), y(0.215f), x(0.33f), y(0.205f))
-            cubicTo(x(0.35f), y(0.19f), x(0.35f), y(0.16f), x(0.33f), y(0.145f))
-            lineTo(x(0.3f), y(0.15f))
-            cubicTo(x(0.2f), y(0.145f), x(0.1f), y(0.14f), x(-0.03f), y(0.12f))
+            moveTo(x(-0.012f), y(0.165f))
+            cubicTo(x(-0.014f), y(0.22f), x(-0.006f), y(0.265f), x(0.025f), y(0.278f))
+            cubicTo(x(0.05f), y(0.284f), x(0.068f), y(0.262f), x(0.075f), y(0.24f))
+            cubicTo(x(0.1f), y(0.19f), x(0.2f), y(0.18f), x(0.265f), y(0.2f))
+            cubicTo(x(0.29f), y(0.21f), x(0.305f), y(0.24f), x(0.325f), y(0.24f))
+            cubicTo(x(0.35f), y(0.24f), x(0.358f), y(0.205f), x(0.345f), y(0.17f))
+            lineTo(x(-0.012f), y(0.165f))
             close()
         }
         drawPath(Path().apply { addPath(asiento, Offset(w * 0.008f, w * 0.008f)) }, a.sombra(0.4f))
         drawPath(asiento, a.dia(P.CUERO, 0.04f, k))
         clipPath(asiento) {
-            // El cuero del asiento: la luz arriba, el canto hondo abajo.
-            drawRect(a.dia(mezcla(P.CUERO, P.CUERO_OSC, 0.55f), 0f, k), Offset(x(-0.05f), y(0.165f)), Size(w * 0.45f, w * 0.05f))
-            drawRect(a.dia(P.CUERO_OSC, 0f, k), Offset(x(-0.05f), y(0.145f)), Size(w * 0.45f, w * 0.03f))
-            drawRect(a.brillo(0.3f, k), Offset(x(0.07f), y(0.2f)), Size(w * 0.18f, w * 0.009f))
+            // El canto hondo de abajo, la cara del borrén en sombra y el brillo del cuero del asiento.
+            drawRect(a.dia(P.CUERO_OSC, 0f, k), Offset(x(-0.05f), y(0.19f)), Size(w * 0.45f, w * 0.025f))
+            drawPath(poligonoNapoleon(x(-0.02f), y(0.29f), x(0.03f), y(0.29f), x(0.02f), y(0.17f), x(-0.02f), y(0.17f)), a.dia(P.CUERO, -0.25f, k))
+            drawRect(a.brillo(0.32f, k), Offset(x(0.09f), y(0.208f)), Size(w * 0.16f, w * 0.008f))
         }
         drawPath(asiento, a.dia(P.CUERO_OSC, 0f, k), style = Stroke(1.2f * u))
-        // El filo de luz del canto del asiento y del borrén.
-        drawPath(Path().apply { moveTo(x(-0.012f), y(0.238f)); cubicTo(x(0.0f), y(0.268f), x(0.04f), y(0.266f), x(0.058f), y(0.229f)); cubicTo(x(0.09f), y(0.172f), x(0.2f), y(0.157f), x(0.27f), y(0.182f)) },
+        drawPath(Path().apply { moveTo(x(-0.012f), y(0.22f)); cubicTo(x(-0.006f), y(0.262f), x(0.05f), y(0.28f), x(0.073f), y(0.238f)); cubicTo(x(0.1f), y(0.188f), x(0.2f), y(0.178f), x(0.263f), y(0.198f)) },
             a.brillo(0.5f, k), style = Stroke(1.1f * u))
-        clavoNapoleon(Offset(x(0.325f), y(0.19f)), w * 0.006f, a, kr)
-        clavoNapoleon(Offset(x(0.02f), y(0.245f)), w * 0.005f, a, k)
+        val costuraS = Path().apply { moveTo(x(0.085f), y(0.212f)); cubicTo(x(0.12f), y(0.19f), x(0.2f), y(0.186f), x(0.255f), y(0.204f)) }
+        drawPath(costuraS, a.dia(Color(0xFFD9C49A), 0f, k).copy(alpha = 0.55f), style = Stroke(0.7f * u, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2f * u, 1.6f * u))))
+        clavoNapoleon(Offset(x(0.33f), y(0.225f)), w * 0.006f, a, kr)
+        clavoNapoleon(Offset(x(0.025f), y(0.262f)), w * 0.005f, a, k)
+        // El faldón: el ala de cuero que cuelga a un lado, con la rodillera abultada delante y la costura al borde.
+        val faldon = Path().apply {
+            moveTo(x(0.1f), y(0.175f))
+            lineTo(x(0.3f), y(0.18f))
+            cubicTo(x(0.325f), y(0.13f), x(0.315f), y(0.075f), x(0.285f), y(0.045f))
+            lineTo(x(0.13f), y(0.04f))
+            cubicTo(x(0.1f), y(0.05f), x(0.088f), y(0.12f), x(0.1f), y(0.175f))
+            close()
+        }
+        drawPath(Path().apply { addPath(faldon, Offset(w * 0.006f, w * 0.006f)) }, a.sombra(0.4f))
+        drawPath(faldon, a.dia(P.CUERO, -0.05f, k))
+        clipPath(faldon) {
+            cilindroNapoleon(Rect(x(0.08f), y(0.18f), x(0.33f), y(0.04f)), a, kr, hacia, 0.7f)
+            val rod = Path().apply { moveTo(x(0.265f), y(0.17f)); cubicTo(x(0.298f), y(0.13f), x(0.292f), y(0.085f), x(0.268f), y(0.055f)) }
+            drawPath(rod, a.sombra(0.35f), style = Stroke(w * 0.016f))
+            drawPath(rod, a.dia(P.CUERO, 0.08f, kr), style = Stroke(w * 0.011f))
+            drawPath(Path().apply { addPath(rod, Offset(-w * 0.003f, 0f)) }, a.brillo(0.35f, kr), style = Stroke(w * 0.002f))
+            drawPath(faldon, a.dia(P.CUERO_OSC, 0f, k).copy(alpha = 0.7f), style = Stroke(w * 0.01f))
+        }
+        val costura = Path().apply { moveTo(x(0.11f), y(0.165f)); cubicTo(x(0.1f), y(0.12f), x(0.11f), y(0.065f), x(0.135f), y(0.052f)); lineTo(x(0.278f), y(0.055f)) }
+        drawPath(costura, a.dia(Color(0xFFD9C49A), 0f, k).copy(alpha = 0.65f), style = Stroke(0.7f * u, pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(2f * u, 1.6f * u))))
         // La ación y el estribo de hierro, que llega al suelo delante de la mantilla.
-        val acion0 = Offset(x(0.165f), y(0.15f)); val est = Offset(x(0.31f), piso - w * 0.008f)
+        val acion0 = Offset(x(0.175f), y(0.172f)); val est = Offset(x(0.315f), piso - w * 0.008f)
         drawLine(a.sombra(0.35f), acion0 + Offset(w * 0.006f, w * 0.004f), est + Offset(w * 0.006f, -w * 0.02f), w * 0.012f)
         drawLine(a.dia(P.CUERO_OSC, 0f, kr), acion0, est - Offset(0f, w * 0.022f), w * 0.012f, StrokeCap.Round)
         drawLine(a.brillo(0.3f, kr), acion0 - Offset(w * 0.003f, 0f), est - Offset(w * 0.003f, w * 0.022f), 0.8f * u)
@@ -340,9 +348,9 @@ internal object PieEstanteNapoleon {
         drawLine(hierro, Offset(estribo.left, estribo.center.y), Offset(estribo.right, estribo.center.y), w * 0.01f)
         drawArc(a.brillo(0.5f, kr), 200f, 80f, false, estribo.topLeft, estribo.size, style = Stroke(1f * u))
         if (a.oscuro) {
-            drawPath(Path().apply { moveTo(x(0.3f), y(0.2f)); cubicTo(x(0.33f), y(0.215f), x(0.35f), y(0.19f), x(0.35f), y(0.165f)) }, a.filo(0.75f * kr), style = Stroke(1.6f * u))
-            drawPath(Path().apply { moveTo(x(0.37f), y(0.12f)); cubicTo(x(0.41f), y(0.11f), x(0.415f), y(0.04f), x(0.4f), y(0f)) }, a.filo(0.6f * kr), style = Stroke(1.4f * u))
-            drawPath(Path().apply { moveTo(x(0.29f), y(0.165f)); cubicTo(x(0.31f), y(0.12f), x(0.3f), y(0.07f), x(0.275f), y(0.045f)) }, a.filo(0.55f * kr), style = Stroke(1.2f * u))
+            drawPath(Path().apply { moveTo(x(0.29f), y(0.215f)); cubicTo(x(0.31f), y(0.24f), x(0.35f), y(0.24f), x(0.355f), y(0.2f)) }, a.filo(0.75f * kr), style = Stroke(1.6f * u))
+            drawPath(Path().apply { moveTo(x(0.37f), y(0.122f)); cubicTo(x(0.41f), y(0.11f), x(0.415f), y(0.04f), x(0.4f), y(0f)) }, a.filo(0.6f * kr), style = Stroke(1.4f * u))
+            drawPath(Path().apply { moveTo(x(0.3f), y(0.18f)); cubicTo(x(0.325f), y(0.13f), x(0.315f), y(0.075f), x(0.285f), y(0.045f)) }, a.filo(0.55f * kr), style = Stroke(1.2f * u))
         }
     }
 

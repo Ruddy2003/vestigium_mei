@@ -357,13 +357,14 @@ internal object VolumenEstanteNapoleon {
         drawRect(mezcla(becerro, luzMueble(1f), if (a.oscuro) 0.05f else 0.18f), Offset(cuerpo.left, ya), Size(cuerpo.width, cara))
         drawRect(a.brillo(0.4f, k), Offset(cuerpo.left, ya), Size(cuerpo.width, 0.8f * u))
         // El frente: el papel jaspeado del color del ánimo (el fondo, más hondo, hace de vena entre las piedras).
-        drawRect(t.hondo, cuerpo.topLeft, cuerpo.size)
+        drawRect(mezcla(t.cara, t.hondo, 0.55f), cuerpo.topLeft, cuerpo.size)
         jaspe(u)
         val acento = l.c(if (ti != null && ti.red > ti.blue) Color(0xFFD8B060) else Color(0xFFB8463A), 0f)
         clipRect(cuerpo.left, cuerpo.top, cuerpo.right, cuerpo.bottom) {
             translate(-70f * u * 0.5f * azar(s, 4), -150f * u * 0.4f * azar(s, 5)) {
-                drawPath(piedras, mezcla(t.cara, t.claro, 0.35f))
-                drawPath(piedras2, acento.copy(alpha = 0.75f))
+                drawPath(piedras, mezcla(t.cara, t.claro, 0.2f))
+                drawPath(piedras2, mezcla(acento, t.cara, 0.35f).copy(alpha = 0.8f))
+                drawPath(piedras, t.hondo.copy(alpha = 0.6f), style = Stroke(0.6f * u))
                 drawPath(venas, mezcla(t.hondo, l.c(P.TINTA), 0.4f).copy(alpha = 0.55f), style = Stroke(0.5f * u))
             }
             // La luz de un lado y la sombra del otro, en franjas francas.

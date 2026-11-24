@@ -21,7 +21,7 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
  * solapadas, del 70 al 90 % del alto del hueco y distintos de un hueco a otro: el candelero de latón con su vela (que de noche
  * arde: la luz de en medio) junto a dos libros tumbados; la cafetera de plata con su mango de ébano y la taza de porcelana
  * con su filete de oro; la jarra de estaño con la hogaza de pan de munición y el cuchillo; la caja de las pistolas con el frasco
- * de pólvora de latón encima.
+ * de pólvora de latón encima; el reloj de viaje con la caja de rapé y el pañuelo.
  */
 internal object HuecosEstanteNapoleon {
     private val P = PaletaNapoleon
@@ -41,18 +41,19 @@ internal object HuecosEstanteNapoleon {
             x = xc + w * 0.06f
         }
         // Los grupos, uno tras otro mientras quepan; cuál toca sale de la repisa, así cambian de un hueco a otro.
-        var g = k * 3 + 1
+        var g = k * 2 + 1
         while (x1 - x > w * 0.1f) {
-            val ancho = when (g % 3) { 0 -> 0.19f; 1 -> 0.17f; else -> 0.2f } * w
+            val ancho = when (g % 4) { 0 -> 0.19f; 1 -> 0.17f; 2 -> 0.2f; else -> 0.17f } * w
             if (x + ancho > x1 + w * 0.02f) {
                 // No cabe el grupo entero: va lo más alto de él solo.
-                if (x1 - x > w * 0.08f) solo(g % 3, Offset(x + (x1 - x) / 2, r.bottom), r, a, cerca)
+                if (x1 - x > w * 0.08f) solo(g % 4, Offset(x + (x1 - x) / 2, r.bottom), r, a, cerca)
                 break
             }
-            when (g % 3) {
+            when (g % 4) {
                 0 -> cafe(Offset(x, r.bottom), r, a, cerca)
                 1 -> jarra(Offset(x, r.bottom), r, a, cerca)
-                else -> pistolas(Offset(x, r.bottom), r, a, cerca)
+                2 -> pistolas(Offset(x, r.bottom), r, a, cerca)
+                else -> relojYRape(Offset(x, r.bottom), r, a, cerca)
             }
             x += ancho + w * 0.02f; g++
         }
@@ -64,6 +65,7 @@ internal object HuecosEstanteNapoleon {
         when (g) {
             0 -> cafetera(Offset(c.x, c.y), r, a, cerca)
             1 -> jarraSola(Offset(c.x, c.y), r, a, cerca)
+            3 -> reloj(Offset(c.x, c.y), r, a, cerca)
             else -> frasco(Offset(c.x, c.y - r.height * 0.02f), r.height * 0.62f, a, cerca(Offset(c.x, c.y - r.height * 0.3f)))
         }
     }
@@ -304,6 +306,86 @@ internal object HuecosEstanteNapoleon {
             drawRect(a.brillo(0.6f, k), Offset(c.x - w * 0.02f, y), Size(w * 0.1f, 0.7f * u))
             drawRect(a.dia(Color(0xFF3A2A1E), 0f, k), Offset(c.x - w * 0.06f, y - w * 0.001f), Size(w * 0.045f, w * 0.01f))
         }
+    }
+
+    // ---------------------------------------------------------------- el reloj de viaje y la caja de rapé
+
+    /**
+     * El reloj de viaje de latón (la pendule de voyage de la época): la caja de cristales con sus cuatro columnillas, el asa
+     * abatible arriba, la esfera de esmalte blanco con sus rayitas (sin cifras) y sus dos agujas, y el péndulo que se ve por el
+     * cristal del costado.
+     */
+    private fun DrawScope.reloj(pie: Offset, r: Rect, a: AireNapoleon, cerca: (Offset) -> Float) {
+        val w = size.width; val u = density
+        val hh = r.height
+        val k = cerca(Offset(pie.x, pie.y - hh * 0.35f))
+        val laton = a.dia(P.LATON, 0f, k); val latonOsc = a.dia(P.LATON_OSC, 0f, k)
+        val caja = Rect(pie.x - w * 0.045f, pie.y - hh * 0.6f, pie.x + w * 0.045f, pie.y - hh * 0.04f)
+        sombraDetras(Path().apply { addRect(caja) }, a, 1f)
+        contactoNapoleon(Offset(pie.x, pie.y), w * 0.11f, hh * 0.04f, a, 0.45f)
+        // El zócalo y la cornisa de la caja, de latón moldurado.
+        drawRect(latonOsc, Offset(caja.left - w * 0.006f, caja.bottom), Size(caja.width + w * 0.012f, pie.y - caja.bottom))
+        drawRect(laton, Offset(caja.left - w * 0.006f, caja.bottom), Size(caja.width + w * 0.012f, (pie.y - caja.bottom) * 0.45f))
+        drawRect(latonOsc, Offset(caja.left - w * 0.006f, caja.top - hh * 0.04f), Size(caja.width + w * 0.012f, hh * 0.04f))
+        drawRect(laton, Offset(caja.left - w * 0.006f, caja.top - hh * 0.04f), Size(caja.width + w * 0.012f, hh * 0.018f))
+        // El cristal de delante: lo de dentro, en sombra, con el péndulo; las columnillas de las esquinas.
+        drawRect(a.dia(Color(0xFF2E2A26), 0f, k), caja.topLeft, caja.size)
+        val pend = Offset(pie.x + w * 0.012f, caja.bottom - hh * 0.12f)
+        drawLine(latonOsc, Offset(pend.x, caja.top + hh * 0.2f), pend, 1f * u)
+        drawCircle(laton, w * 0.01f, pend)
+        listOf(caja.left, caja.right - w * 0.008f).forEach { x ->
+            drawRect(laton, Offset(x, caja.top), Size(w * 0.008f, caja.height))
+            drawRect(a.brillo(0.5f, k), Offset(x + w * 0.001f, caja.top), Size(w * 0.002f, caja.height))
+            drawRect(a.sombra(0.3f), Offset(x + w * 0.006f, caja.top), Size(w * 0.002f, caja.height))
+        }
+        // La esfera de esmalte, arriba, con sus rayitas de horas y las dos agujas.
+        val esf = Offset(pie.x, caja.top + hh * 0.17f)
+        val re = w * 0.03f
+        drawCircle(latonOsc, re * 1.12f, esf)
+        drawCircle(a.dia(P.PORCELANA, 0f, k), re, esf)
+        for (j in 0 until 12) {
+            val an = j * 0.5236f
+            drawLine(a.dia(P.TINTA, 0f, k), Offset(esf.x + re * 0.78f * kotlin.math.cos(an), esf.y + re * 0.78f * kotlin.math.sin(an)),
+                Offset(esf.x + re * 0.92f * kotlin.math.cos(an), esf.y + re * 0.92f * kotlin.math.sin(an)), 0.7f * u)
+        }
+        drawLine(a.dia(P.TINTA, 0f, k), esf, esf + Offset(re * 0.45f, -re * 0.3f), 1.1f * u, StrokeCap.Round)
+        drawLine(a.dia(P.TINTA, 0f, k), esf, esf + Offset(-re * 0.15f, -re * 0.7f), 0.8f * u, StrokeCap.Round)
+        drawCircle(a.brillo(0.6f, k), re * 0.25f, esf + Offset(-re * 0.45f, -re * 0.45f))
+        // El reflejo del cristal, en diagonal, y el asa abatible de arriba.
+        drawLine(a.claro(0.35f), Offset(caja.left + w * 0.012f, caja.bottom - hh * 0.05f), Offset(caja.left + w * 0.03f, caja.top + hh * 0.35f), 1.6f * u)
+        val asa = Rect(pie.x - w * 0.03f, caja.top - hh * 0.17f, pie.x + w * 0.03f, caja.top - hh * 0.02f)
+        drawArc(a.sombra(0.35f), 180f, 180f, false, asa.topLeft + Offset(w * 0.004f, w * 0.004f), asa.size, style = Stroke(w * 0.005f))
+        drawArc(laton, 180f, 180f, false, asa.topLeft, asa.size, style = Stroke(w * 0.005f))
+        drawArc(a.brillo(0.5f, k), 200f, 60f, false, asa.topLeft, asa.size, style = Stroke(0.8f * u))
+        if (a.oscuro) drawRect(a.filo(0.5f * k), Offset(caja.left - w * 0.006f, caja.top - hh * 0.04f), Size(caja.width + w * 0.012f, 1.2f * u))
+    }
+
+    /** El reloj de viaje y, delante, la caja de rapé de carey con su tapa y un pañuelo doblado. */
+    private fun DrawScope.relojYRape(pie: Offset, r: Rect, a: AireNapoleon, cerca: (Offset) -> Float) {
+        val w = size.width; val u = density
+        val hh = r.height
+        reloj(Offset(pie.x + w * 0.055f, pie.y), r, a, cerca)
+        // El pañuelo de batista doblado, tendido junto al reloj.
+        val c = Offset(pie.x + w * 0.125f, pie.y)
+        val k = cerca(c)
+        val pan = poligonoNapoleon(c.x - w * 0.045f, c.y, c.x - w * 0.036f, c.y - hh * 0.07f, c.x + w * 0.05f, c.y - hh * 0.075f, c.x + w * 0.06f, c.y)
+        contactoNapoleon(c, w * 0.12f, hh * 0.035f, a, 0.4f)
+        drawPath(pan, a.dia(Color(0xFFE8E2D4), -0.04f, k))
+        drawLine(a.sombra(0.3f), Offset(c.x - w * 0.04f, c.y - hh * 0.035f), Offset(c.x + w * 0.055f, c.y - hh * 0.038f), 1f * u)
+        drawLine(a.dia(Color(0xFF3A5A8A), 0f, k), Offset(c.x - w * 0.036f, c.y - hh * 0.06f), Offset(c.x + w * 0.05f, c.y - hh * 0.064f), 1.2f * u)
+        // La caja de rapé de carey: ovalada, con su tapa de bisagra y el filo de oro, encima del pañuelo.
+        val cr = Rect(c.x - w * 0.03f, c.y - hh * 0.13f, c.x + w * 0.035f, c.y - hh * 0.07f)
+        ovaloNapoleon(a.sombra(0.35f), cr.translate(w * 0.004f, w * 0.003f))
+        ovaloNapoleon(a.dia(Color(0xFF6A3A1C), 0f, k), cr)
+        clipPath(Path().apply { addOval(cr) }) {
+            for (j in 0 until 6) {
+                val m0 = Offset(cr.left + cr.width * azar(9701, j), cr.top + cr.height * azar(9702, j))
+                ovaloNapoleon(a.dia(if (j % 2 == 0) Color(0xFFB0702E) else Color(0xFF2E1A0E), 0f, k).copy(alpha = 0.7f), Rect(m0.x - w * 0.006f, m0.y - w * 0.003f, m0.x + w * 0.008f, m0.y + w * 0.004f))
+            }
+            drawRect(a.sombra(0.3f), Offset(cr.left, cr.center.y + cr.height * 0.1f), Size(cr.width, cr.height * 0.4f))
+        }
+        drawLine(a.dia(P.GALON, 0f, k), Offset(cr.left + w * 0.004f, cr.center.y), Offset(cr.right - w * 0.004f, cr.center.y), 1f * u)
+        ovaloNapoleon(a.brillo(0.5f, k), Rect(cr.left + w * 0.01f, cr.top + w * 0.003f, cr.center.x, cr.top + w * 0.008f))
     }
 
     // ---------------------------------------------------------------- las pistolas y el frasco de pólvora

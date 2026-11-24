@@ -126,7 +126,7 @@ internal object MuebleEstanteNapoleon {
         val m = PANTALLA_ALTO / PANTALLA_RADIO
         val sobre = -dy - m * kotlin.math.abs(dx)
         if (sobre <= 0f) return 1f
-        val pen = 0.012f + 0.14f * kotlin.math.abs(dx)
+        val pen = 0.025f + 0.24f * kotlin.math.abs(dx)
         val t = (sobre / pen).coerceIn(0f, 1f)
         return 1f - 0.8f * t * t * (3f - 2f * t)
     }
