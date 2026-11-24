@@ -216,7 +216,6 @@ internal object PieEstanteRuinas {
             mancha(Offset(cx, r.bottom - al * 0.3f), an * 0.7f, P.FUEGO.copy(alpha = 0.35f * arde))
         } else drawRect(l.c(Color(0xFF8A847C)), Offset(bb.left, bb.bottom - bb.height * 0.3f), Size(bb.width, bb.height * 0.3f))
         for (k in 1..3) drawLine(l.c(mezcla(P.HIERRO, P.BARRO_OSC, 0.3f)), Offset(bb.left + bb.width * k / 4f, bb.top), Offset(bb.left + bb.width * k / 4f, bb.bottom), 2f * u)
-        drawLine(l.c(mezcla(P.HIERRO, P.BARRO_OSC, 0.3f)), Offset(bb.left, bb.center.y), Offset(bb.right, bb.center.y), 1.4f * u)
         drawRect(l.s(0.5f), bb.topLeft, Size(bb.width, al * 0.06f))
         val labio = Rect(r.left - an * 0.03f, r.top - al * 0.04f, r.right + an * 0.03f, r.top + al * 0.16f)
         drawRoundRect(Brush.verticalGradient(listOf(l.c(mezcla(P.BARRO, P.OCRE, 0.3f)), l.c(P.BARRO_OSC)), labio.top, labio.bottom), labio.topLeft, labio.size, CornerRadius(labio.height * 0.4f))

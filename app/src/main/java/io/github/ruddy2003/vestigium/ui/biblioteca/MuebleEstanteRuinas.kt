@@ -506,7 +506,7 @@ internal val OCASO_RUINAS = EnrejadoRuinas(-0.08f, 0.33f, 0.96f, 0.2f, 0.05f, 0.
     floatArrayOf(1f, 0.62f, 1f))
 
 /** La luna de los Sueños en oscuro: más chica y empinada. */
-internal val LUNA_RUINAS = EnrejadoRuinas(0.14f, -0.04f, 0.3f, 0.07f, 0.13f, 0.44f, 3, 1, 0.14f,
+internal val LUNA_RUINAS = EnrejadoRuinas(0.16f, -0.04f, 0.27f, 0.06f, 0.1f, 0.36f, 3, 1, 0.14f,
     floatArrayOf(1f, 0.62f, 1f))
 
 internal fun solRuinas(x: Float, y: Float): Float = SOL_RUINAS.en(x, y)

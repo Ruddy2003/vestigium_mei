@@ -3,15 +3,10 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipPath
@@ -23,8 +18,6 @@ import io.github.ruddy2003.vestigium.ui.ideario.azar
 import io.github.ruddy2003.vestigium.ui.ideario.mancha
 import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 import io.github.ruddy2003.vestigium.ui.muebles.pinceladas
-import androidx.compose.ui.unit.Density
-import androidx.compose.ui.unit.LayoutDirection
 import kotlin.math.floor
 
 /**
@@ -389,11 +382,12 @@ internal object ParedEstanteRuinas {
                 drawRect(hondo.copy(alpha = 0.4f), Offset(x0 + an - 2f * u, r.top), Size(2f * u, rota - r.top))
             }
         }
-        // La veta del roble de la trasera (baldosa pintada una vez): las vetas hondas en el oscuro del hueco y las claras en el color
-        // del roble con la luz que le toca. Así el oscuro de la noche tiene forma.
+        // La veta del roble de la trasera: un solo camino de líneas onduladas a lo alto, trazado dos veces (la veta honda y su
+        // filo claro, del color del roble con la luz que le toca). Así el oscuro de la noche tiene forma.
         val lv = g.luz(r.center.x, r.center.y, 0f)
-        vetaRuinas(r, mezcla(hondo, Color.Black, 0.2f), if (g.a.oscuro) 0.55f else 0.4f, oscuras = true)
-        vetaRuinas(r, lv.c(P.ROBLE), if (g.a.oscuro) 0.42f else 0.32f, oscuras = false)
+        val veta = vetaHueco(k, r, g.w)
+        drawPath(veta, mezcla(hondo, Color.Black, 0.25f).copy(alpha = if (g.a.oscuro) 0.6f else 0.45f), style = Stroke(1.3f * u))
+        translate(1.1f * u, 0f) { drawPath(veta, lv.c(P.ROBLE).copy(alpha = if (g.a.oscuro) 0.5f else 0.35f), style = Stroke(0.7f * u)) }
         // Las juntas de las tablas de la trasera, con su luz.
         val tabla = w * 0.088f
         var x = r.left + tabla * (0.4f + 0.5f * azar(951, k))
@@ -444,50 +438,22 @@ internal object ParedEstanteRuinas {
             Offset(r.left, yc), Size(r.width, r.bottom - yc + 1f))
     }
 
-    /** La veta de la trasera, en baldosa sobre [r]: las líneas de [color], hondas o claras, con [alfa]. */
-    private fun DrawScope.vetaRuinas(r: Rect, color: Color, alfa: Float, oscuras: Boolean) {
-        val b = if (oscuras) VETA_HONDA else VETA_CLARA
-        val filtro = ColorFilter.tint(color, BlendMode.SrcIn)
-        clipRect(r.left, r.top, r.right, r.bottom) {
-            var y = r.top
-            while (y < r.bottom) {
-                var x = r.left
-                while (x < r.right) { drawImage(b, Offset(x, y), alpha = alfa, colorFilter = filtro); x += b.width }
-                y += b.height
+    /** Las vetas de la trasera de un hueco: líneas onduladas a lo alto, más juntas o más separadas según el hueco, con algún nudo. */
+    private fun vetaHueco(k: Int, r: Rect, w: Float): Path = Path().apply {
+        val paso = maxOf(4f, w * 0.032f)
+        var x = r.left + paso * azar(970, k)
+        var i = 0
+        while (x < r.right) {
+            val amp = paso * (0.12f + 0.22f * azar(971 + k, i))
+            val fase = 6.28f * azar(972 + k, i)
+            for (j in 0..8) {
+                val y = r.top + r.height * j / 8f
+                val xx = x + amp * kotlin.math.sin(fase + 3.1f * j / 8f)
+                if (j == 0) moveTo(xx, y) else lineTo(xx, y)
             }
+            if (azar(973 + k, i) < 0.18f) addOval(Rect(x - paso * 0.3f, r.top + r.height * 0.45f, x + paso * 0.3f, r.top + r.height * 0.62f))
+            x += paso * (0.8f + 0.5f * azar(974 + k, i)); i++
         }
-    }
-
-    /** Las vetas del roble, a lo alto, pintadas una sola vez: unas hondas y otras claras, en dos baldosas para teñirlas aparte. */
-    private val VETA_HONDA: ImageBitmap by lazy { baldosaVeta(true) }
-    private val VETA_CLARA: ImageBitmap by lazy { baldosaVeta(false) }
-
-    private fun baldosaVeta(hondas: Boolean): ImageBitmap {
-        val an = 240; val al = 320
-        val img = ImageBitmap(an, al)
-        CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(img), Size(an.toFloat(), al.toFloat())) {
-            val n = 13
-            for (k in 0 until n) {
-                if ((k % 2 == 0) != hondas) continue
-                val x0 = an * (k + azar(990, k)) / n
-                val amp = 1.5f + 3f * azar(991, k)
-                val fase = 6.28f * azar(992, k)
-                val p = Path()
-                for (i in 0..16) {
-                    val y = al * i / 16f
-                    // La veta baja a lo largo y vuelve al mismo sitio arriba y abajo, para que la baldosa no deje costura.
-                    val x = x0 + amp * kotlin.math.sin(fase + 6.2832f * i / 16f)
-                    if (i == 0) p.moveTo(x, y) else p.lineTo(x, y)
-                }
-                drawPath(p, Color.White.copy(alpha = 0.4f + 0.5f * azar(993, k)), style = Stroke(0.8f + 1.8f * azar(994, k)))
-            }
-            if (hondas) {
-                // Un nudo, cerrado sobre sí mismo.
-                drawOval(Color.White.copy(alpha = 0.6f), Offset(an * 0.62f, al * 0.4f), Size(14f, 30f), style = Stroke(1.6f))
-                drawOval(Color.White.copy(alpha = 0.4f), Offset(an * 0.62f - 4f, al * 0.4f - 8f), Size(22f, 46f), style = Stroke(1.2f))
-            }
-        }
-        return img
     }
 
     /** El oscuro en que se hunde lo de dentro de los huecos: un pardo de roble de día, violáceo en los Sueños, el aire de la noche de noche. */
