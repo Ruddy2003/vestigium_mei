@@ -315,24 +315,22 @@ internal object RinconLibretaArcano {
 
     // ---------------------------------------------------------------- lo de encima de la mesa
 
-    /** El tazón de lata esmaltado del café, con su filete azul, sus saltaduras y el asa. */
+    /** El tazón de lata esmaltado del café, con su filete azul, una saltadura en el borde y el asa girada hacia atrás. */
     private fun DrawScope.tazon(s: SitioLibretaArcano, am: AireArcano) {
         val U = s.U
         val p = s.tazon
         val r = Rect(p.x - 13f * U, p.y - 24f * U, p.x + 13f * U, p.y)
         val k = MuebleLibretaArcano.cerca(r.center, s, am)
         contactoArcano(Offset(p.x, p.y), 34f * U, 5f * U, am, 0.5f, if (am.oscuro) 1f else -1f)
-        // El asa, a la derecha.
-        drawArc(s.c(am, ESMALTE, r.center, -0.05f), -80f, 160f, false, Offset(r.right - 6f * U, r.top + 5f * U), Size(12f * U, 12f * U), style = Stroke(2.6f * U))
+        // El asa, girada hacia atrás: asoma de canto, angosta, por la derecha.
+        drawArc(s.c(am, ESMALTE, r.center, -0.1f), -80f, 160f, false, Offset(r.right - 3f * U, r.top + 5f * U), Size(6f * U, 12f * U), style = Stroke(2.2f * U))
         drawRect(s.c(am, ESMALTE, r.center), r.topLeft, r.size)
         cilindroArcano(r, am, k, if (am.oscuro) 1f else -1f, 1.2f)
         drawRect(s.c(am, ESMALTE_AZUL, r.center), Offset(r.left, r.top), Size(r.width, 2.4f * U))
         drawOval(s.c(am, Color(0xFF2A1E14), r.center), Offset(r.left + 1f * U, r.top - 2f * U), Size(r.width - 2f * U, 4f * U))
         drawOval(s.c(am, ESMALTE_AZUL, r.center), Offset(r.left, r.top - 2.4f * U), Size(r.width, 4.8f * U), style = Stroke(1.2f * U))
-        // Las saltaduras del esmalte, negras.
-        listOf(Offset(0.3f, 0.55f), Offset(0.7f, 0.8f), Offset(0.15f, 0.25f)).forEachIndexed { i, o ->
-            drawPath(irregularArcano(Offset(r.left + r.width * o.x, r.top + r.height * o.y), (1.6f + 1f * i) * U, 1.4f * U, 8720 + i, 7, 0.4f), s.c(am, Color(0xFF1A1A1E), r.center))
-        }
+        // Una saltadura del esmalte, negra, en el borde.
+        drawPath(irregularArcano(Offset(r.left + r.width * 0.74f, r.top + 3.4f * U), 1.8f * U, 1.2f * U, 8720, 7, 0.4f), s.c(am, Color(0xFF1A1A1E), r.center))
         if (am.oscuro) drawRect(P.LLAMA.copy(alpha = 0.5f * k), Offset(r.right - 1.4f * U, r.top), Size(1.4f * U, r.height))
     }
 
