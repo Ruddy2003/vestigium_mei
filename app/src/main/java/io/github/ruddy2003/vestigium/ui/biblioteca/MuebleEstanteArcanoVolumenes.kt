@@ -407,10 +407,10 @@ internal object VolumenEstanteArcano {
         listOf(-1f, 1f).forEach { q -> drawLine(piola, nudo, Offset(nudo.x + q * 2.6f * u, nudo.y + h * (0.1f + 0.03f * q)), 1.4f * u, StrokeCap.Round) }
         // La tarjeta del día, metida bajo la vuelta de arriba, un poco ladeada.
         val etH = minOf(30f * u, h * 0.36f)
-        val et = Rect(w * 0.1f, h * vueltas.first() - etH * 0.3f, w * 0.9f, h * vueltas.first() + etH * 0.7f)
+        val et = Rect(w * 0.1f, h * vueltas.first() - etH * 0.12f, w * 0.9f, h * vueltas.first() + etH * 0.88f)
         etiqueta(v, medidor, et, l, (azar(s, 12) - 0.5f) * 5f)
         val p = Path().apply { moveTo(-panza, h * vueltas.first() + 1.5f * u); quadraticTo(w * 0.5f, h * vueltas.first() - 2.5f * u, w + panza, h * vueltas.first() + 1.5f * u) }
-        clipRect(et.left, et.top, et.right, et.top + etH * 0.32f) { drawPath(p, piola, style = Stroke(1.8f * u)) }
+        clipRect(et.left, et.top - 2f * u, et.right, et.top + etH * 0.16f) { drawPath(p, piola, style = Stroke(1.8f * u)) }
         if (v.noche) luna(Offset(w * 0.5f, h * 0.88f - 3f * u), minOf(w * 0.18f, 4.8f * u), a)
         filos(Rect(0f, h * 0.08f, w, h), l)
     }

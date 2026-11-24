@@ -49,8 +49,66 @@ internal object CoronaEstanteArcano {
     // ---------------------------------------------------------------- lo colgado
 
     fun DrawScope.colgado(g: MarcoArcano) {
+        cuadro(g)
         boyas(g)
         barometro(g)
+    }
+
+    /**
+     * El cuadro del barco: un óleo chico y oscurecido de una goleta escorada en la tormenta (el barco de cuyas maderas salió la
+     * librería), en su marco de madera con el filete dorado gastado, colgado de un clavo por su cordón. Sin nombre ni letrero.
+     */
+    private fun DrawScope.cuadro(g: MarcoArcano) {
+        val w = g.w; val u = density
+        val a = g.a
+        val m = Rect(w * 0.742f, w * 0.095f, w * 0.878f, w * 0.205f)
+        val c = m.center
+        val k = g.cerca(c)
+        val clavo = Offset(c.x, w * 0.058f)
+        // El cordón, en triángulo hasta el clavo, y la sombra del cuadro en la pared (un poco separado por arriba).
+        val cordon = a.luz(P.LONA_OSC, k)
+        drawLine(cordon, Offset(m.left + m.width * 0.2f, m.top + 2f * u), clavo, 1f * u)
+        drawLine(cordon, Offset(m.right - m.width * 0.2f, m.top + 2f * u), clavo, 1f * u)
+        sombraPared(Path().apply { addRect(m) }, c, g, 0.34f, 0.8f)
+        rotate(-1.5f, c) {
+            // El marco: la moldura de madera oscura, el filete dorado de dentro y el canto con luz arriba.
+            val marco = mezcla(P.TECA_OSC, P.TECA_HONDA, 0.4f)
+            drawRect(a.luz(marco, k), m.topLeft, m.size)
+            drawRect(a.brillo(0.35f, k), m.topLeft, Size(m.width, 1.2f * u))
+            drawRect(a.brillo(0.25f, k), m.topLeft, Size(1.2f * u, m.height))
+            drawRect(a.sombra(0.4f), Offset(m.left, m.bottom - 1.6f * u), Size(m.width, 1.6f * u))
+            val dentro = m.deflate(w * 0.011f)
+            drawRect(a.luz(P.ORO, k), Offset(dentro.left - 1.4f * u, dentro.top - 1.4f * u), Size(dentro.width + 2.8f * u, dentro.height + 2.8f * u))
+            // El lienzo: el cielo de tormenta con su claro, el mar verde negro con las crestas, la goleta escorada.
+            val cielo = Rect(dentro.left, dentro.top, dentro.right, dentro.top + dentro.height * 0.55f)
+            drawRect(a.luz(mezcla(P.SALOBRE, P.MAR_OSC, 0.35f), k), dentro.topLeft, dentro.size)
+            drawOval(a.luz(mezcla(P.PAPEL, P.SALOBRE, 0.35f), k).copy(alpha = 0.8f), Offset(cielo.left + cielo.width * 0.45f, cielo.top + cielo.height * 0.2f), Size(cielo.width * 0.45f, cielo.height * 0.42f))
+            drawOval(a.luz(mezcla(P.HIERRO, P.SALOBRE, 0.4f), k).copy(alpha = 0.7f), Offset(cielo.left - cielo.width * 0.1f, cielo.top - cielo.height * 0.1f), Size(cielo.width * 0.6f, cielo.height * 0.6f))
+            val mar = Path().apply {
+                moveTo(dentro.left, dentro.top + dentro.height * 0.6f)
+                quadraticTo(dentro.left + dentro.width * 0.25f, dentro.top + dentro.height * 0.48f, dentro.left + dentro.width * 0.5f, dentro.top + dentro.height * 0.62f)
+                quadraticTo(dentro.left + dentro.width * 0.75f, dentro.top + dentro.height * 0.72f, dentro.right, dentro.top + dentro.height * 0.55f)
+                lineTo(dentro.right, dentro.bottom); lineTo(dentro.left, dentro.bottom); close()
+            }
+            drawPath(mar, a.luz(mezcla(P.MAR_OSC, P.HIERRO, 0.4f), k))
+            listOf(Offset(0.18f, 0.6f), Offset(0.62f, 0.7f), Offset(0.85f, 0.62f)).forEach { o ->
+                val p = Offset(dentro.left + dentro.width * o.x, dentro.top + dentro.height * o.y)
+                drawLine(a.luz(P.PAPEL, k).copy(alpha = 0.7f), p, p + Offset(dentro.width * 0.1f, -dentro.height * 0.03f), 1.1f * u, StrokeCap.Round)
+            }
+            // La goleta: el casco oscuro escorado y dos velas pálidas.
+            val bx = dentro.left + dentro.width * 0.36f; val by = dentro.top + dentro.height * 0.58f
+            rotate(-14f, Offset(bx, by)) {
+                drawPath(poligonoArcano(bx - dentro.width * 0.16f, by - dentro.height * 0.04f, bx + dentro.width * 0.2f, by - dentro.height * 0.05f, bx + dentro.width * 0.12f, by + dentro.height * 0.05f, bx - dentro.width * 0.12f, by + dentro.height * 0.05f), a.luz(P.HIERRO, k))
+                drawPath(poligonoArcano(bx - dentro.width * 0.07f, by - dentro.height * 0.06f, bx - dentro.width * 0.07f, by - dentro.height * 0.42f, bx + dentro.width * 0.05f, by - dentro.height * 0.07f), a.luz(mezcla(P.PAPEL, P.SALOBRE, 0.25f), k))
+                drawPath(poligonoArcano(bx + dentro.width * 0.07f, by - dentro.height * 0.06f, bx + dentro.width * 0.07f, by - dentro.height * 0.34f, bx + dentro.width * 0.17f, by - dentro.height * 0.07f), a.luz(mezcla(P.PAPEL, P.SALOBRE, 0.35f), k))
+                drawLine(a.luz(P.HIERRO, k), Offset(bx - dentro.width * 0.07f, by - dentro.height * 0.05f), Offset(bx - dentro.width * 0.07f, by - dentro.height * 0.45f), 0.8f * u)
+                drawLine(a.luz(P.HIERRO, k), Offset(bx + dentro.width * 0.07f, by - dentro.height * 0.05f), Offset(bx + dentro.width * 0.07f, by - dentro.height * 0.37f), 0.8f * u)
+            }
+            // El barniz amarillento y una grieta del óleo.
+            drawRect(a.luz(P.LATON_OSC, k).copy(alpha = 0.18f), dentro.topLeft, dentro.size)
+            drawLine(a.sombra(0.35f), Offset(dentro.left + dentro.width * 0.7f, dentro.top), Offset(dentro.left + dentro.width * 0.62f, dentro.top + dentro.height * 0.45f), 0.7f * u)
+        }
+        clavoArcano(clavo, 1.6f * u, a, k, P.HIERRO_LUZ)
     }
 
     /**

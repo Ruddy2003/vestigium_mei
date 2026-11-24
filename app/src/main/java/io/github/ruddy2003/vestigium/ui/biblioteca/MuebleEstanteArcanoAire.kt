@@ -109,7 +109,7 @@ internal object PaletaArcano {
     val SUENOS_MUEBLE = Color(0xFF1A1030)
     val SUENOS_FONDO = Color(0xFF160E34)
     /** El calor de la pared junto a la llama (el verde mar a la luz de la vela) y el del mueble. */
-    val CALIDO_PARED = Color(0xFFC07A40)
+    val CALIDO_PARED = Color(0xFFD8843C)
     val CALIDO_MUEBLE = Color(0xFFB0642A)
     /** El frío de la ventana de noche (la niebla alumbrada por el faro) y de la luna. */
     val FRIO_NOCHE = Color(0xFF3E7468)
@@ -260,7 +260,7 @@ internal fun mascaraArcano(a: AireArcano, x: Float, y: Float, k: Float, kf: Floa
     // La ventana: lo lejano de la llama, junto a ella, se hunde menos y en un verde frío (la niebla alumbrada).
     val q = (kf * (1f - kk)).coerceIn(0f, 1f)
     val base = mezcla(a.hondo, if (a.noche) P.LUNA_NOCHE else P.FRIO_NOCHE, (if (a.noche) 0.65f else 0.45f) * q)
-    val al = maxOf(hondo * (1f - (if (a.noche) 0.5f else 0.35f) * q), (if (pared) 0.42f else 0.5f) * f)
+    val al = maxOf(hondo * (1f - (if (a.noche) 0.5f else 0.35f) * q), (if (pared) 0.5f else 0.5f) * f)
     return mezcla(base, if (pared) P.CALIDO_PARED else P.CALIDO_MUEBLE, f).copy(alpha = al)
 }
 
