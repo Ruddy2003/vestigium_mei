@@ -96,7 +96,7 @@ internal object PaletaRevolucion {
     /** La noche de arriba (añil de tinta) y la de los Sueños; lo hondo del cuerpo de noche y en los Sueños. */
     val NOCHE = Color(0xFF10142E)
     val NOCHE_SUENOS = Color(0xFF181036)
-    val HONDO = Color(0xFF280B09)
+    val HONDO = Color(0xFF2A0C1C)
     val HONDO_SUENOS = Color(0xFF22102C)
     /** Lo hondo del fondo de los casilleros: el cardenillo se hunde en verde botella (en los Sueños, en pizarra azul). */
     val FONDO_NOCHE = Color(0xFF08201B)
@@ -159,10 +159,21 @@ internal class AireRevolucion(val oscuro: Boolean, val noche: Boolean, val cuerp
         return mezcla(mezcla(c, v, 0.8f), tono, (if (cuerpo) 0.3f else 0.55f) * k)
     }
 
+    /**
+     * Lo del cuerpo de la librería junto a la lumbre: más encendido que de día y hacia el naranja (el rojo sube mucho, el verde
+     * algo, el azul casi nada), así la pintura sangre de toro arde cerca de la llama. Solo lo rojo: el pino, el gres y el papel
+     * apenas cambian (se volverían naranjas de cartel).
+     */
+    private fun calido(c: Color, k0: Float): Color {
+        val k = k0 * ((c.red - c.green) / maxOf(c.red, 0.01f)).coerceIn(0f, 1f)
+        return Color((c.red * (1f + 1.1f * k) + 0.1f * k).coerceAtMost(1f), (c.green * (1f + 0.55f * k) + 0.02f * k).coerceAtMost(1f), (c.blue * (1f + 0.1f * k)).coerceAtMost(1f), c.alpha)
+    }
+
     fun luz(c: Color, cerca: Float): Color {
         val k = cerca.coerceIn(0f, 1f)
         if (!oscuro) return if (noche) mezcla(alOcaso(c), p.LLAMA, 0.1f * k) else c
-        return mezcla(mezcla(hundido(c), ambar(c, k), (1.1f * Math.pow(k.toDouble(), 1.5).toFloat()).coerceAtMost(0.94f)), if (cuerpo) p.BRASA else p.LLAMA, 0.12f * k)
+        val encendido = if (cuerpo) calido(ambar(c, k), k) else ambar(c, k)
+        return mezcla(mezcla(hundido(c), encendido, (1.1f * Math.pow(k.toDouble(), 1.5).toFloat()).coerceAtMost(0.94f)), if (cuerpo) p.BRASA else p.LLAMA, (if (cuerpo) 0.2f else 0.12f) * k)
     }
 
     /** De día, más claro (positivo) o más hondo (negativo); de noche, como [luz]. */
@@ -186,10 +197,10 @@ internal class AireRevolucion(val oscuro: Boolean, val noche: Boolean, val cuerp
                 val q = 0.36f * k
                 Color((base.red + g.red * 0.42f * q).coerceAtMost(1f), (base.green + g.green * 0.58f * q).coerceAtMost(1f), (base.blue + (g.blue * 0.95f + 0.1f) * q).coerceAtMost(1f), c.alpha)
             }
-            noche -> mezcla(base, Color((base.red * 1.24f + 0.1f).coerceAtMost(1f), (base.green * 1.02f + 0.05f).coerceAtMost(1f), base.blue * 0.8f + 0.02f, c.alpha), k)
+            noche -> mezcla(base, mezcla(Color((base.red * 1.2f + 0.1f).coerceAtMost(1f), (base.green * 1.08f + 0.07f).coerceAtMost(1f), (base.blue * 0.95f + 0.05f).coerceAtMost(1f), c.alpha), Color(0xFFF3C6A6), 0.3f), k)
             else -> {
                 val l = Color((base.red * 1.42f + 0.06f).coerceAtMost(1f), (base.green * 1.36f + 0.05f).coerceAtMost(1f), (base.blue * 1.18f + 0.03f).coerceAtMost(1f), c.alpha)
-                mezcla(base, mezcla(l, Color(0xFFF6E2BC), 0.3f), k)
+                mezcla(base, mezcla(l, Color(0xFFFFD8A0), 0.3f), k)
             }
         }
     }

@@ -3,14 +3,12 @@ package io.github.ruddy2003.vestigium.ui.biblioteca
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Canvas
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.CanvasDrawScope
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.text.TextMeasurer
@@ -99,37 +97,26 @@ internal class ManchaRevolucion(val q: FloatArray, val color: Color, val fuerza:
         /** Los cuarterones de la vidriera (a lo ancho y a lo alto) y lo que ocupa medio listón en cada uno. */
         const val COLS = 3
         const val FILAS = 4
-        const val LISTON = 0.07f
-        /** Cuánto se corre el plano del frente del mueble respecto de la pared, en anchos (la luz entra desde la izquierda). */
-        const val FRENTE = -0.035f
+        const val LISTON = 0.15f
+        /**
+         * Cuánto se corre la mancha en el plano del frente del mueble respecto de la pared, en anchos (la luz entra desde la
+         * izquierda y de arriba): así los cuarterones se quiebran al pasar de un plano a otro.
+         */
+        const val FRENTE = -0.08f
     }
-}
-
-/** La mancha de la ventana en este momento, o null (de noche manda la lumbre y la ventana solo enseña la calle). */
-internal fun manchaRevolucion(a: AireRevolucion): ManchaRevolucion? = when {
-    // La luna, alta y fría: la mancha baja empinada por la pared, la cornisa y la primera repisa.
-    a.oscuro && a.noche -> ManchaRevolucion(floatArrayOf(0.24f, 0.19f, 0.42f, 0.23f, 0.54f, 0.52f, 0.36f, 0.48f), PaletaRevolucion.LUNA, 0.95f)
-    a.oscuro -> null
-    // Al ocaso, el sol bajo: los cuarterones se tienden casi horizontales y muy largos.
-    a.noche -> ManchaRevolucion(floatArrayOf(0.24f, 0.1f, 0.74f, 0.19f, 0.86f, 0.39f, 0.36f, 0.3f), PaletaRevolucion.OCASO, 1f)
-    else -> ManchaRevolucion(floatArrayOf(0.25f, 0.13f, 0.47f, 0.17f, 0.6f, 0.5f, 0.38f, 0.46f), PaletaRevolucion.SOL, 1f)
 }
 
 /**
- * La luz de la ventana sobre un objeto de silueta [sil] (lo de encima de la cornisa, lo colgado): solo donde la mancha lo
- * alcanza, con el borde de la mancha cortándolo, en el plano corrido [corrido]. Se suma a lo que ya está pintado.
+ * La mancha de la ventana en este momento, o null (de noche manda la lumbre y la ventana solo enseña la calle). Los listones
+ * de a lo alto caen a plomo y los de a lo ancho bajan hacia la derecha: cada cuarterón es un parche aparte.
  */
-internal fun DrawScope.luzDeVentana(sil: Path, a: AireRevolucion, m: ManchaRevolucion?, corrido: Float = ManchaRevolucion.FRENTE * 0.6f) {
-    if (m == null) return
-    val (col, alfa) = when {
-        a.oscuro -> Color(0xFF6A82BE) to 0.32f
-        a.noche -> PaletaRevolucion.OCASO to 0.42f
-        else -> Color(0xFFFFD08A) to 0.34f
-    }
-    clipPath(sil) {
-        clipPath(m.forma(size.width, corrido)) { drawRect(col.copy(alpha = alfa * m.fuerza), Offset.Zero, size, blendMode = BlendMode.Screen) }
-        clipPath(m.forma(size.width, corrido, papel = true)) { drawRect(col.copy(alpha = alfa * m.fuerza * 0.5f), Offset.Zero, size, blendMode = BlendMode.Screen) }
-    }
+internal fun manchaRevolucion(a: AireRevolucion): ManchaRevolucion? = when {
+    // La luna, alta y fría: parches discretos en la pared y en la caja de tipos, hasta la cornisa.
+    a.oscuro && a.noche -> ManchaRevolucion(floatArrayOf(0.3f, 0.21f, 0.48f, 0.28f, 0.48f, 0.49f, 0.3f, 0.42f), PaletaRevolucion.LUNA, 0.6f)
+    a.oscuro -> null
+    // Al ocaso, el sol bajo: los cuarterones se tienden y se alargan por la pared.
+    a.noche -> ManchaRevolucion(floatArrayOf(0.24f, 0.1f, 0.8f, 0.22f, 0.8f, 0.4f, 0.24f, 0.28f), PaletaRevolucion.OCASO, 0.85f)
+    else -> ManchaRevolucion(floatArrayOf(0.4f, 0.13f, 0.7f, 0.24f, 0.7f, 0.52f, 0.4f, 0.41f), PaletaRevolucion.SOL, 1f)
 }
 
 /**
@@ -163,11 +150,14 @@ internal object MuebleEstanteRevolucion {
         return if (k < 3) 0 else if (k < 5) 1 else 2
     }
 
-    /** Llenan de cuatro quintos a nueve décimos del casillero: el tomo, el más alto; el rollo; el fajo, más bajo. */
+    /**
+     * Qué alto tiene cada una, en fracción del casillero: el tomo, el más alto; los rollos, más bajos; el fajo, el más bajo. Así
+     * la línea de alturas de cada repisa sube y baja.
+     */
     fun alto(semilla: Int, palabras: Int): Float = when (clase(semilla)) {
         0 -> 0.85f + 0.06f * azar(semilla, 1)
-        1 -> 0.78f + 0.06f * azar(semilla, 1)
-        else -> 0.82f + 0.07f * azar(semilla, 1)
+        1 -> 0.66f + 0.1f * azar(semilla, 1)
+        else -> 0.74f + 0.1f * azar(semilla, 1)
     }
 
     // ---------------------------------------------------------------- la luz
@@ -289,9 +279,11 @@ internal object MuebleEstanteRevolucion {
             d.repisas.forEachIndexed { k, r -> casillero(k, r, d, ac, cerca, m) }
         }
         with(HuecosEstanteRevolucion) {
+            // Cada hueco sabe cuántos hubo antes, para no repetir lo que acompaña de una repisa a otra.
+            var n = if (noche) 1 else 0
             d.repisas.forEachIndexed { k, r ->
                 val oc = d.ocupado.getOrNull(k) ?: return@forEachIndexed
-                hueco(k, r, oc, d.derecha.left, xs[k], ac, cerca)
+                if (hueco(n, r, oc, d.derecha.left, xs[k], ac, cerca)) n++
             }
         }
         with(ObraEstanteRevolucion) {
@@ -342,7 +334,9 @@ internal object MuebleEstanteRevolucion {
                 0 -> if (azar(v.semilla, 21) > 0.82f) rotate(-3f, Offset(0f, size.height)) { tomo(v, medidor, a, kd, hacia, papel, luna) }
                     else tomo(v, medidor, a, kd, hacia, papel, luna)
                 1 -> fajo(v, medidor, a, kd, hacia, papel, luna)
-                else -> rollo(v, medidor, a, kd, hacia, papel, luna)
+                // Alguno, inclinado contra el vecino de la izquierda.
+                else -> if (azar(v.semilla, 22) > 0.62f) rotate(-6f, Offset(0f, size.height)) { rollo(v, medidor, a, kd, hacia, papel, luna) }
+                    else rollo(v, medidor, a, kd, hacia, papel, luna)
             }
         }
     }

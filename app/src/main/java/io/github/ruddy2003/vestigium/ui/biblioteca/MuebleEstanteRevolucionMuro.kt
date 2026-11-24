@@ -342,14 +342,23 @@ internal object MuroEstanteRevolucion {
 
     /**
      * Los pliegos del tendedero, en el orden en que se pintan (de atrás adelante): centro, ancho y largo en anchos, qué llevan
-     * impreso (0, el revés en blanco; 1, dos columnas; 2, con el filete rojo; 3, con el filete azul), el giro y si la mitad de
-     * atrás asoma por debajo de la de delante.
+     * impreso (0, el revés en blanco; 1, dos columnas; 2, con el filete rojo; 3, con el filete azul), el giro, si va doblado
+     * sobre el cordel (la mitad de atrás asoma por debajo de la de delante) y si cuelga de una sola pinza por la esquina (torcido).
      */
     private val PLIEGOS = listOf(
-        floatArrayOf(0.565f, 0.1f, 0.105f, 0f, 2f, 0f), floatArrayOf(0.315f, 0.11f, 0.125f, 1f, -2f, 0f),
-        floatArrayOf(0.44f, 0.135f, 0.165f, 2f, 1.5f, 1f), floatArrayOf(0.875f, 0.12f, 0.12f, 1f, -1f, 1f),
-        floatArrayOf(0.71f, 0.13f, 0.15f, 3f, 2.5f, 0f),
+        floatArrayOf(0.315f, 0.11f, 0.125f, 1f, -2f, 0f, 0f),
+        floatArrayOf(0.445f, 0.135f, 0.165f, 2f, 1.5f, 1f, 0f),
+        floatArrayOf(0.71f, 0.13f, 0.15f, 3f, 2.5f, 0f, 0f),
+        floatArrayOf(0.875f, 0.115f, 0.13f, 1f, 17f, 0f, 1f),
     )
+
+    /** Dónde van las pinzas de madera, a lo ancho (la de [PINZA_VACIA] no sujeta nada). */
+    private val PINZAS = floatArrayOf(0.265f, 0.365f, 0.65f, 0.77f, 0.822f)
+    private const val PINZA_VACIA = 0.575f
+
+    /** El punto del que gira un pliego: el medio de su borde de arriba o, si cuelga torcido, su esquina de la izquierda. */
+    private fun pivote(w: Float, p: FloatArray): Offset =
+        if (p[6] > 0f) Offset(w * (p[0] - p[1] / 2), w * cordel(p[0] - p[1] / 2)) else Offset(w * p[0], w * cordel(p[0]))
 
     /**
      * El tendedero de la imprenta: el cordel de cáñamo atado a un clavo junto a la ventana y, a caballo de él, los pliegos
@@ -367,15 +376,31 @@ internal object MuroEstanteRevolucion {
             sombraPliego(p, a, cerca)
             pliego(j, p, a, cerca, null)
             if (m != null) {
-                clipPath(m.forma(w, -0.008f)) { pliego(j, p, a, cerca, m) }
-                clipPath(m.forma(w, -0.008f, papel = true)) { pliego(j, p, a, cerca, ManchaRevolucion(m.q, m.color, m.fuerza * 0.5f)) }
+                clipPath(m.forma(w, -0.018f)) { pliego(j, p, a, cerca, m) }
+                clipPath(m.forma(w, -0.018f, papel = true)) { pliego(j, p, a, cerca, ManchaRevolucion(m.q, m.color, m.fuerza * 0.5f)) }
             }
         }
         drawPath(cuerda, a.dia(P.BRAMANTE, -0.1f, cerca(Offset(w * 0.6f, w * 0.1f))), style = Stroke(1.5f * u))
+        PINZAS.forEach { pinza(it, a, cerca) }
+        pinza(PINZA_VACIA, a, cerca)
         val c = Offset(w * 0.235f, w * cordel(0.235f))
         clavoRevolucion(c, 2.2f * u, a, cerca(c))
         drawCircle(a.dia(P.BRAMANTE, 0f, cerca(c)), 2f * u, c + Offset(2.4f * u, 0.6f * u))
         drawLine(a.dia(P.BRAMANTE, 0f, cerca(c)), c + Offset(2f * u, 1f * u), c + Offset(0.5f * u, 9f * u), 1.1f * u)
+    }
+
+    /** Una pinza de madera de una pieza, a caballo del cordel en [x] (anchos): la cabeza redonda, el cuerpo y su raja. */
+    private fun DrawScope.pinza(x: Float, a: AireRevolucion, cerca: (Offset) -> Float) {
+        val w = size.width; val u = density
+        val c = Offset(w * x, w * cordel(x))
+        val k = cerca(c)
+        val r = Rect(c.x - w * 0.0035f, c.y - w * 0.008f, c.x + w * 0.0035f, c.y + w * 0.024f)
+        drawRect(a.sombra(0.3f), Offset(r.left + w * 0.004f, r.top + w * 0.005f), r.size)
+        drawRoundRect(a.dia(P.PINO_LUZ, -0.05f, k), r.topLeft, r.size, androidx.compose.ui.geometry.CornerRadius(w * 0.003f))
+        drawRect(a.sombra(0.25f), Offset(r.right - w * 0.0025f, r.top), Size(w * 0.0025f, r.height))
+        drawLine(a.dia(P.PINO_OSC, 0f, k), Offset(c.x, c.y + w * 0.004f), Offset(c.x, r.bottom), 1f * u)
+        drawCircle(a.dia(P.PINO_LUZ, 0f, k), w * 0.0045f, Offset(c.x, r.top))
+        drawCircle(a.claro(0.4f), w * 0.0018f, Offset(c.x - w * 0.0012f, r.top - w * 0.0012f))
     }
 
     /** La forma de la mitad de delante de un pliego (o, con [atras], la de atrás, más larga y corrida). */
@@ -402,7 +427,7 @@ internal object MuroEstanteRevolucion {
         val k = cerca(Offset(w * p[0], w * (cordel(p[0]) + p[2] / 2)))
         val dx = if (a.oscuro) (if (p[0] < MuebleEstanteRevolucion.VELA_X) -1f else 1f) * w * 0.016f * k else w * 0.018f
         val forma = Path().apply { addPath(formaPliego(w, p, p[5] > 0f)); addPath(formaPliego(w, p, false)) }
-        rotate(p[4], Offset(w * p[0], w * cordel(p[0]))) {
+        rotate(p[4], pivote(w, p)) {
             translate(dx, w * 0.014f) { drawPath(forma, a.sombra(if (a.oscuro) 0.38f * k else 0.2f)) }
         }
     }
@@ -418,7 +443,7 @@ internal object MuroEstanteRevolucion {
         val k = cerca(Offset((x0 + x1) / 2, top + caida / 2))
         val lit = if (m != null) 1f else 0f
         fun c(col: Color, f: Float = 0f) = a.en(col, f, k, lit, m)
-        rotate(p[4], Offset(w * cx, w * cordel(cx))) {
+        rotate(p[4], pivote(w, p)) {
             if (p[5] > 0f) {
                 // La mitad de atrás, más larga, asoma por debajo: el revés, algo más a la sombra.
                 val atras = formaPliego(w, p, true)

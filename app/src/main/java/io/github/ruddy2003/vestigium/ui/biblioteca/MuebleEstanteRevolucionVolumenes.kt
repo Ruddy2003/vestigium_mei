@@ -25,9 +25,10 @@ import io.github.ruddy2003.vestigium.ui.muebles.sombraMueble
  * Las entradas del estante de Revolución ([MuebleEstanteRevolucion]), tres cosas de la trastienda de la imprenta según la
  * semilla: el tomo en cartoné a la Bradel (alto, cubierto de papel teñido a la brocha, con las ranuras de las bisagras, las
  * cabezas rozadas donde asoma el cartón gris, la etiqueta impresa en el lomo y, si va lleno, su registro de cinta), el fajo de
- * folletos cosidos (de alturas desparejas, atados con una cinta de seda y su lazo, la etiqueta metida bajo la cinta) y el
- * rollo de carteles (la hoja de fuera que se abre arriba y deja ver el impreso, la espiral de la boca, dos vueltas de bramante
- * y la etiqueta colgada; a veces, con un rollo flaco al lado). El ánimo es el papel, en todo el cuerpo ([papelRevolucion]);
+ * folletos cosidos (más bajo, de cuadernillos desiguales y sueltos, con la cinta de seda cruzada y su lazo, alguna esquina
+ * doblada y la etiqueta metida bajo la cinta) y los
+ * rollos de carteles (dos o tres, más bajos, abiertos en abanico y atados por el medio con bramante, con la espiral de la boca,
+ * el borde de la hoja de fuera despegado y la etiqueta colgada del nudo). El ánimo es el papel, en todo el cuerpo ([papelRevolucion]);
  * sin ánimo, papel gris de estraza. En los Sueños, una media luna de papel de plata con su disco apagado.
  */
 internal object VolumenEstanteRevolucion {
@@ -248,165 +249,184 @@ internal object VolumenEstanteRevolucion {
 
     // ---------------------------------------------------------------- el fajo de folletos
 
+    /**
+     * El fajo de folletos: de tres a cinco cuadernillos cosidos, desiguales de alto y de grueso, cada uno algo ladeado a su
+     * aire (sueltos dentro del atado), con el lomo doblado y sus puntadas de hilo, alguna esquina doblada; atados con una cinta de
+     * seda cruzada (a lo ancho y a lo alto) con su lazo, y la etiqueta metida bajo la cinta.
+     */
     fun DrawScope.fajo(v: Volumen, medidor: TextMeasurer, a: AireRevolucion, k: Float, hacia: Float, papel: Color?, luna: Float) {
         val u = density
         val w = size.width; val h = size.height
         val s = v.semilla
         val l = Luz(a, k, luna)
-        // Cuántos folletos: de tres a cinco, más con más palabras; cada uno con su lomo, su alto y su tinte.
         val n = (3 + (v.lleno * 2.4f).toInt() + (if (azar(s, 2) > 0.6f) 1 else 0)).coerceIn(3, 5)
-        val anchos = FloatArray(n) { 0.7f + 0.6f * azar(s, 70 + it) }
+        val anchos = FloatArray(n) { 0.45f + 1f * azar(s, 70 + it) }
         val suma = anchos.sum()
-        val altos = FloatArray(n) { h * (0.84f + 0.16f * azar(s, 80 + it)) }
-        val lazoY = h * (0.58f + 0.05f * azar(s, 3))
+        val altos = FloatArray(n) { h * (0.78f + 0.22f * azar(s, 80 + it)) }
+        val lazoY = h * (0.56f + 0.06f * azar(s, 3))
+        val oreja = Math.floorMod(s ushr 3, n)
         alrededor(a, hacia, h - altos.max())
-        // Atados por la cinta, los folletos se abren en abanico por arriba: cada uno gira un poco sobre la cinta.
         var x = 0f
         for (i in 0 until n) {
             val an = w * anchos[i] / suma
             val top = h - altos[i]
             val r = Rect(x, top, x + an + 0.6f * u, h)
-            val giro = (i - (n - 1) / 2f) * 2.2f
-            val t = tinte(papel, l, (azar(s, 90 + i) - 0.5f) * 0.26f)
-            rotate(giro, Offset(r.center.x, lazoY)) {
-                clipRect(-w, -h, w * 2, h) {
-                    // El lomo del folleto: la cubierta de papel doblada, algo redonda, con la costura que asoma.
-                    redondo(r, t, hacia, 0.6f)
-                    drawRect(t.claro, Offset(r.left, r.top), Size(r.width, 1.2f * u))
-                    drawRect(l.c(P.PAPEL, -0.05f), Offset(r.left + r.width * 0.15f, r.top - 1.6f * u), Size(r.width * 0.7f, 1.8f * u))
-                    if (an > 7f * u) {
-                        var py = top + 6f * u
-                        while (py < h - 4f * u) { drawLine(t.hondo, Offset(r.center.x, py), Offset(r.center.x, py + 1.6f * u), 0.7f * u); py += 6f * u }
-                    }
-                    // La rendija con el vecino.
-                    drawRect(a.sombra(0.5f), Offset(r.right - 0.9f * u, top + 1f * u), Size(1.3f * u, h - top))
+            val giro = (azar(s, 60 + i) - 0.5f) * 7f
+            val t = tinte(papel, l, (azar(s, 90 + i) - 0.5f) * 0.3f)
+            rotate(giro, Offset(r.center.x, h)) {
+                // El lomo doblado del cuadernillo, algo redondo, con el corte de las hojas arriba.
+                redondo(r, t, hacia, 0.65f)
+                drawRect(l.c(P.PAPEL, -0.04f), Offset(r.left + r.width * 0.12f, r.top - 1.8f * u), Size(r.width * 0.76f, 2f * u))
+                drawRect(t.claro, Offset(r.left, r.top), Size(r.width, 1.1f * u))
+                // Las puntadas: el hilo que sale del doblez y vuelve a entrar, en tres sitios, con su nudo.
+                if (an > 5f * u) listOf(0.22f, 0.5f, 0.8f).forEach { f ->
+                    val py = top + (h - top) * f
+                    drawLine(l.c(P.PAPEL_LUZ, -0.1f), Offset(r.center.x, py - 2.2f * u), Offset(r.center.x, py + 2.2f * u), 0.9f * u)
+                    drawCircle(t.hondo, 0.8f * u, Offset(r.center.x, py))
                 }
+                // Una esquina de arriba doblada: el revés del papel y su sombra.
+                if (i == oreja) {
+                    val e = minOf(an * 0.7f, 7f * u)
+                    drawPath(poligonoRevolucion(r.right - e, top, r.right, top, r.right, top + e), a.sombra(0.35f))
+                    drawPath(poligonoRevolucion(r.right - e, top, r.right - e * 0.1f, top + e * 0.9f, r.right - e, top + e * 0.75f), l.c(P.PAPEL, 0.05f))
+                }
+                drawRect(a.sombra(0.5f), Offset(r.right - 0.9f * u, top + 1f * u), Size(1.3f * u, h - top))
             }
             x += an
         }
-        // La cinta de seda que los ata, con su lazo delante y los cabos caídos (negra, verde o de oro: nunca roja ni azul).
+        // La cinta de seda cruzada (negra, verde o de oro: nunca roja ni azul): la que sube y baja por delante, y la de lado a lado.
         val cintaCol = when (Math.floorMod(s, 3)) { 0 -> Color(0xFF1E1C22); 1 -> Color(0xFF3E6A44); else -> Color(0xFFB08A3A) }
         val cinta = l.c(cintaCol)
-        val cg = 3.6f * u
-        // La etiqueta, metida bajo la cinta y algo ladeada: sube desde la cinta.
-        val et = Rect(2.4f * u, lazoY - 31f * u - h * 0.05f, w - 2.4f * u, lazoY - h * 0.05f + 3f * u)
-        etiqueta(v, medidor, et, l, a, (azar(s, 12) - 0.5f) * 4f)
+        val cg = 3.2f * u
+        val lx = w * (if (azar(s, 13) > 0.5f) 0.26f else 0.74f)
+        val alto0 = h - altos.max()
+        drawRect(a.sombra(0.35f), Offset(lx - cg / 2 + 1f * u, alto0), Size(cg, h - alto0))
+        drawRect(cinta, Offset(lx - cg / 2, alto0 - 0.5f * u), Size(cg, h - alto0 + 0.5f * u))
+        drawRect(a.brillo(0.3f, k), Offset(lx - cg / 2, alto0), Size(0.7f * u, h - alto0))
+        // La etiqueta, metida bajo la cinta de lado a lado y algo ladeada: sube desde ella.
+        val et = Rect(2.2f * u, lazoY - 31f * u + 3f * u, w - 2.2f * u, lazoY + 3f * u)
+        etiqueta(v, medidor, et, l, a, (azar(s, 12) - 0.5f) * 5f)
         drawRect(a.sombra(0.4f), Offset(0f, lazoY + cg - 0.4f * u), Size(w, 1.6f * u))
         drawRect(cinta, Offset(-0.5f * u, lazoY), Size(w + 1f * u, cg))
         drawRect(a.brillo(0.35f, k), Offset(0f, lazoY), Size(w, 0.8f * u))
-        val lx = w * (0.35f + 0.3f * azar(s, 13)); val ly = lazoY + cg / 2
+        // El lazo en el cruce, con los cabos caídos.
+        val ly = lazoY + cg / 2
         val lazo = Path().apply {
-            moveTo(lx, ly); cubicTo(lx - 10f * u, ly - 8f * u, lx - 12f * u, ly + 4f * u, lx, ly)
-            moveTo(lx, ly); cubicTo(lx + 10f * u, ly - 7f * u, lx + 11f * u, ly + 5f * u, lx, ly)
+            moveTo(lx, ly); cubicTo(lx - 9f * u, ly - 7f * u, lx - 11f * u, ly + 4f * u, lx, ly)
+            moveTo(lx, ly); cubicTo(lx + 9f * u, ly - 6f * u, lx + 10f * u, ly + 5f * u, lx, ly)
         }
         drawPath(Path().apply { addPath(lazo, Offset(0.8f * u, 1.2f * u)) }, a.sombra(0.4f), style = Stroke(2.4f * u))
         drawPath(lazo, cinta, style = Stroke(2.6f * u))
         drawPath(lazo, a.brillo(0.3f, k), style = Stroke(0.7f * u))
-        drawLine(cinta, Offset(lx, ly), Offset(lx - 4f * u, ly + h * 0.15f), 2.4f * u)
-        drawLine(cinta, Offset(lx, ly), Offset(lx + 3.4f * u, ly + h * 0.13f), 2.4f * u)
+        drawLine(cinta, Offset(lx, ly), Offset(lx - 3.4f * u, ly + h * 0.2f), 2.2f * u)
+        drawLine(cinta, Offset(lx, ly), Offset(lx + 3f * u, ly + h * 0.17f), 2.2f * u)
         drawCircle(cinta, 2.2f * u, Offset(lx, ly))
-        if (v.noche) luna(Offset(w / 2, h * 0.88f), minOf(w * 0.18f, 5.4f * u), a)
-        filos(Rect(0f, h - altos.max(), w, h), a, k, hacia, luna)
+        if (v.noche) luna(Offset(if (lx < w / 2) w * 0.66f else w * 0.34f, h * 0.84f), minOf(w * 0.17f, 5f * u), a)
+        filos(Rect(0f, alto0, w, h), a, k, hacia, luna)
     }
 
-    // ---------------------------------------------------------------- el rollo de carteles
+    // ---------------------------------------------------------------- los rollos de carteles
 
-    fun DrawScope.rollo(v: Volumen, medidor: TextMeasurer, a: AireRevolucion, k: Float, hacia: Float, papel: Color?, luna: Float) {
+    /** Un rollo de pie en [r] (el cuerpo y la boca), del tinte [t], con la boca de alto [elip]; [catalejo]: los pliegos de dentro asoman. */
+    private fun DrawScope.unRollo(r: Rect, elip: Float, t: Tinte, l: Luz, a: AireRevolucion, hacia: Float, catalejo: Float, s: Int) {
         val u = density
-        val w = size.width; val h = size.height
-        val s = v.semilla
-        val l = Luz(a, k, luna)
-        val t = tinte(papel, l)
-        // Con un rollo flaco detrás (en uno de cada tres): el gordo va delante, del lado de la luz.
-        val flaco = azar(s, 14) > 0.66f
-        val rw = if (flaco) w * 0.76f else w * 0.9f
-        val rx = if (hacia < 0f) 0f else w - rw
-        val elip = rw * 0.3f
-        alrededor(a, hacia, elip * 0.5f)
-        if (flaco) {
-            val fw = w * 0.36f
-            val fx = if (hacia < 0f) w - fw else 0f
-            val ft = h * (0.02f + 0.04f * azar(s, 15))
-            val tf = tinte(mezcla(P.PAPEL, P.TOSTADO, 0.4f), l)
-            redondo(Rect(fx, ft + fw * 0.15f, fx + fw, h), tf, hacia)
-            drawOval(l.c(P.PAPEL, 0.05f), Offset(fx, ft), Size(fw, fw * 0.3f))
-            drawOval(l.c(P.PAPEL_OSC), Offset(fx + fw * 0.3f, ft + fw * 0.08f), Size(fw * 0.4f, fw * 0.14f), style = Stroke(0.7f * u))
-            drawLine(l.c(P.BRAMANTE), Offset(fx, h * 0.3f), Offset(fx + fw, h * 0.31f), 1.4f * u)
-        }
-        // El cuerpo: la hoja de fuera, del papel teñido, que muerden las dos vueltas de bramante.
-        val y1 = h * (0.25f + 0.04f * azar(s, 17)); val y2 = h * (0.84f + 0.04f * azar(s, 18))
-        val top = elip * 0.5f
-        val muerde = 1.2f * u
-        val cuerpo = Path().apply {
-            moveTo(rx, top)
-            lineTo(rx + rw, top)
-            lineTo(rx + rw, y1 - 2f * u); lineTo(rx + rw - muerde, y1); lineTo(rx + rw, y1 + 2f * u)
-            lineTo(rx + rw, y2 - 2f * u); lineTo(rx + rw - muerde, y2); lineTo(rx + rw, y2 + 2f * u)
-            lineTo(rx + rw, h); lineTo(rx, h)
-            lineTo(rx, y2 + 2f * u); lineTo(rx + muerde, y2); lineTo(rx, y2 - 2f * u)
-            lineTo(rx, y1 + 2f * u); lineTo(rx + muerde, y1); lineTo(rx, y1 - 2f * u)
-            close()
-        }
-        clipPath(cuerpo) {
-            redondo(Rect(rx, top, rx + rw, h), t, hacia)
-            // Las arrugas del papel enrollado a mano.
-            for (j in 0 until 4) {
-                val y = h * (0.15f + 0.75f * azar(s, 20 + j))
-                drawLine(t.hondo.copy(alpha = 0.35f), Offset(rx + rw * 0.1f, y), Offset(rx + rw * (0.4f + 0.4f * azar(s, 24 + j)), y + 2f * u), 0.9f * u)
+        // El cuerpo: la hoja de fuera, del papel teñido, con sus arrugas y el borde de la hoja que baja casi a plomo.
+        val cuerpo = Rect(r.left, r.top + elip / 2, r.right, r.bottom)
+        redondo(cuerpo, t, hacia)
+        clipRect(cuerpo.left, cuerpo.top, cuerpo.right, cuerpo.bottom) {
+            for (j in 0 until 3) {
+                val y = cuerpo.top + cuerpo.height * (0.15f + 0.75f * azar(s, 20 + j))
+                drawLine(t.hondo.copy(alpha = 0.35f), Offset(r.left + r.width * 0.1f, y), Offset(r.left + r.width * (0.4f + 0.4f * azar(s, 24 + j)), y + 1.6f * u), 0.9f * u)
             }
-            // El borde de la hoja de fuera, que baja casi a plomo, con su canto y su sombra.
-            val bx0 = rx + rw * (if (hacia < 0f) 0.7f else 0.3f)
-            val dx = rw * 0.06f * (if (hacia < 0f) 1f else -1f)
-            drawLine(t.hondo, Offset(bx0, top), Offset(bx0 + dx, h), 1.6f * u)
-            drawLine(t.claro, Offset(bx0 - 1.3f * u, top), Offset(bx0 + dx - 1.3f * u, h), 0.9f * u)
+            val bx = r.left + r.width * (if (hacia < 0f) 0.72f else 0.28f)
+            drawLine(t.hondo, Offset(bx, cuerpo.top), Offset(bx + r.width * 0.05f, cuerpo.bottom), 1.4f * u)
+            drawLine(t.claro, Offset(bx - 1.2f * u, cuerpo.top), Offset(bx + r.width * 0.05f - 1.2f * u, cuerpo.bottom), 0.8f * u)
         }
-        // La boca: el canto de la hoja de fuera (del papel teñido) y, dentro, la espiral de los pliegos impresos, que asoman un
-        // poco más, como un catalejo.
-        val boca = Rect(rx, 0f, rx + rw, elip)
+        // La boca: el canto de la hoja de fuera y, dentro, la espiral de los pliegos (que asoman un poco, como un catalejo).
+        val boca = Rect(r.left, r.top, r.right, r.top + elip)
         drawOval(t.hondo, boca.topLeft, boca.size)
-        val dentro = boca.deflate(rw * 0.06f)
-        val sube = (1.5f + 2.5f * azar(s, 16)) * u
-        drawRect(l.c(P.PAPEL, -0.1f), Offset(dentro.left, dentro.center.y - sube), Size(dentro.width, sube))
-        drawOval(l.c(P.PAPEL, 0.06f), Offset(dentro.left, dentro.top - sube), dentro.size)
+        val dentro = boca.deflate(r.width * 0.07f)
+        if (catalejo > 0f) drawRect(l.c(P.PAPEL, -0.12f), Offset(dentro.left, dentro.center.y - catalejo), Size(dentro.width, catalejo))
+        drawOval(l.c(P.PAPEL, 0.06f), Offset(dentro.left, dentro.top - catalejo), dentro.size)
+        val c0 = Offset(dentro.center.x, dentro.center.y - catalejo)
         val espiral = Path()
-        val c0 = Offset(dentro.center.x, dentro.center.y - sube)
         var ang = 0.0
         espiral.moveTo(c0.x, c0.y)
         while (ang < 6.28 * 3) {
             val f = (ang / (6.28 * 3)).toFloat()
             espiral.lineTo(c0.x + kotlin.math.cos(ang).toFloat() * dentro.width / 2 * f, c0.y + kotlin.math.sin(ang).toFloat() * dentro.height / 2 * f)
-            ang += 0.35
+            ang += 0.3
         }
-        drawPath(espiral, l.c(P.PAPEL_OSC, -0.1f), style = Stroke(0.8f * u))
-        drawOval(a.sombra(0.4f), Offset(c0.x - dentro.width * 0.08f, c0.y - dentro.height * 0.08f), Size(dentro.width * 0.16f, dentro.height * 0.16f))
-        // La punta de la hoja de fuera, que se despega arriba y deja ver el impreso por dentro.
+        drawPath(espiral, l.c(P.PAPEL_OSC, -0.15f), style = Stroke(0.9f * u))
+        drawOval(a.sombra(0.45f), Offset(c0.x - dentro.width * 0.09f, c0.y - dentro.height * 0.09f), Size(dentro.width * 0.18f, dentro.height * 0.18f))
+    }
+
+    /**
+     * Los rollos de carteles: dos o tres rollos de pie, más bajos que el tomo y de altos distintos, abiertos en abanico y atados
+     * por el medio con dos vueltas de bramante; cada uno con la espiral de la boca, y el de delante con el borde de la hoja de
+     * fuera despegado (se ve el impreso por dentro). La etiqueta cuelga del nudo.
+     */
+    fun DrawScope.rollo(v: Volumen, medidor: TextMeasurer, a: AireRevolucion, k: Float, hacia: Float, papel: Color?, luna: Float) {
+        val u = density
+        val w = size.width; val h = size.height
+        val s = v.semilla
+        val l = Luz(a, k, luna)
+        val n = if (w > 38f * u && azar(s, 14) > 0.45f) 3 else 2
+        val atado = h * (0.4f + 0.06f * azar(s, 17))
+        alrededor(a, hacia, h * 0.1f)
+        // Los rollos, de atrás adelante: el de en medio más alto; cada uno con su diámetro, su alto y su giro sobre el atado.
+        val pesos = if (n == 3) floatArrayOf(0.36f, 0.4f, 0.34f) else floatArrayOf(0.54f, 0.5f)
+        val suma = pesos.sum() - (n - 1) * 0.06f
+        val orden = if (n == 3) intArrayOf(1, 0, 2) else intArrayOf(0, 1)
+        val xs = FloatArray(n); var x = 0f
+        for (i in 0 until n) { xs[i] = x; x += w * (pesos[i] - 0.06f) / suma }
+        orden.forEach { i ->
+            val d = w * pesos[i] / suma
+            val alto = h * (if (i == 1 && n == 3) 1f else 0.8f + 0.16f * azar(s, 30 + i))
+            val r = Rect(xs[i], h - alto, xs[i] + d, h)
+            val giro = (i - (n - 1) / 2f) * 5f + (azar(s, 40 + i) - 0.5f) * 3f
+            val t = tinte(papel, l, (azar(s, 50 + i) - 0.5f) * 0.22f)
+            rotate(giro, Offset(r.center.x, atado)) {
+                unRollo(r, d * 0.42f, t, l, a, hacia, if (azar(s, 60 + i) > 0.5f) (1.5f + 2f * azar(s, 61 + i)) * u else 0f, s + i)
+                drawRect(a.sombra(0.4f), Offset(r.right - 1f * u, r.top + d * 0.2f), Size(1.4f * u, r.height - d * 0.2f))
+            }
+        }
+        // El borde de la hoja de fuera del rollo de delante, despegado arriba: se levanta y deja ver el impreso por dentro.
+        val delante = orden.last()
+        val dd = w * pesos[delante] / suma
+        val bx = xs[delante] + dd * (if (hacia < 0f) 0.95f else 0.05f)
         val lado = if (hacia < 0f) 1f else -1f
-        val bx = rx + rw * (if (hacia < 0f) 0.7f else 0.3f)
-        val oreja = poligonoRevolucion(bx, top + 1f * u, bx + lado * rw * 0.32f, top - 0.5f * u, bx + lado * rw * 0.24f, top + h * 0.1f, bx + lado * 1.5f * u, top + h * 0.07f)
-        drawPath(Path().apply { addPath(oreja, Offset(lado * 1f * u, 1.4f * u)) }, a.sombra(0.35f))
+        val yb = h * 0.22f
+        val oreja = poligonoRevolucion(bx, yb, bx + lado * dd * 0.34f, yb - h * 0.05f, bx + lado * dd * 0.28f, yb + h * 0.12f, bx, yb + h * 0.16f)
+        drawPath(Path().apply { addPath(oreja, Offset(lado * 1f * u, 1.3f * u)) }, a.sombra(0.35f))
         drawPath(oreja, l.c(P.PAPEL, 0.04f))
         clipPath(oreja) {
-            drawRect(l.c(P.TINTA).copy(alpha = 0.7f), Offset(minOf(bx, bx + lado * rw * 0.3f), top + h * 0.02f), Size(rw * 0.3f, h * 0.012f))
-            for (j in 0 until 2) drawRect(l.c(P.TINTA).copy(alpha = 0.35f), Offset(minOf(bx, bx + lado * rw * 0.3f), top + h * (0.045f + 0.02f * j)), Size(rw * 0.3f, 0.8f * u))
+            val x0 = minOf(bx, bx + lado * dd * 0.3f)
+            drawRect(l.c(P.TINTA).copy(alpha = 0.7f), Offset(x0, yb + h * 0.0f), Size(dd * 0.3f, h * 0.02f))
+            for (j in 0 until 3) drawRect(l.c(P.TINTA).copy(alpha = 0.35f), Offset(x0, yb + h * (0.04f + 0.025f * j)), Size(dd * 0.3f, 0.8f * u))
         }
         drawPath(oreja, a.sombra(0.3f), style = Stroke(0.6f * u))
-        // Las dos vueltas de bramante.
-        listOf(y1, y2).forEach { y ->
-            val cuerda = Path().apply { moveTo(rx, y); quadraticTo(rx + rw / 2, y + 2.4f * u, rx + rw, y) }
+        // Las dos vueltas de bramante del atado, que muerden el papel, con el nudo y los cabos.
+        listOf(atado - 1.6f * u, atado + 1.6f * u).forEach { y ->
+            val cuerda = Path().apply { moveTo(-0.5f * u, y); quadraticTo(w / 2, y + 2.6f * u, w + 0.5f * u, y) }
             drawPath(Path().apply { addPath(cuerda, Offset(0f, 1.3f * u)) }, a.sombra(0.4f), style = Stroke(1.5f * u))
             drawPath(cuerda, l.c(P.BRAMANTE), style = Stroke(1.8f * u))
             drawPath(cuerda, l.c(P.BRAMANTE_OSC), style = Stroke(0.5f * u))
         }
-        // La etiqueta, colgada de la vuelta de arriba por un lazo de bramante, algo ladeada.
-        val et = Rect(rx + 2f * u, y1 + h * 0.06f, rx + rw - 2f * u, y1 + h * 0.06f + 31f * u)
-        val nudo = Offset(rx + rw * 0.5f, y1 + 1.4f * u)
+        val nudo = Offset(w * 0.5f, atado + 2.4f * u)
+        drawLine(l.c(P.BRAMANTE), nudo, Offset(nudo.x - 4f * u, nudo.y + h * 0.1f), 1.2f * u, StrokeCap.Round)
+        // La etiqueta, colgada del nudo, algo ladeada.
+        val et = Rect(2f * u, atado + h * 0.08f, w - 2f * u, atado + h * 0.08f + 31f * u)
         drawLine(l.c(P.BRAMANTE), nudo, Offset(et.center.x - 3f * u, et.top + 2f * u), 0.9f * u)
         drawLine(l.c(P.BRAMANTE), nudo, Offset(et.center.x + 3f * u, et.top + 2f * u), 0.9f * u)
         etiqueta(v, medidor, et, l, a, (azar(s, 19) - 0.5f) * 5f)
         drawCircle(a.sombra(0.5f), 1.1f * u, Offset(et.center.x, et.top + 2.6f * u))
-        drawCircle(l.c(P.BRAMANTE), 1.9f * u, nudo)
-        // La luna de los Sueños, entre la etiqueta y la vuelta de abajo.
-        if (v.noche) luna(Offset(rx + rw / 2, (et.bottom + y2) / 2), minOf(rw * 0.22f, 5.6f * u), a)
-        filos(Rect(rx, top, rx + rw, h), a, k, hacia, luna)
+        drawCircle(l.c(P.BRAMANTE), 2f * u, nudo)
+        // La luna de los Sueños, en el rollo de delante, bajo la etiqueta (o encima si no cabe).
+        if (v.noche) {
+            val ly = if (et.bottom + 7f * u < h) (et.bottom + h) / 2 else atado - h * 0.12f
+            luna(Offset(xs[delante] + dd / 2, ly), minOf(dd * 0.24f, 5f * u), a)
+        }
+        filos(Rect(0f, h * 0.1f, w, h), a, k, hacia, luna)
     }
 }

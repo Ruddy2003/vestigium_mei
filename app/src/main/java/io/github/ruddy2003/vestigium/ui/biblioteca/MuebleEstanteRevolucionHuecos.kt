@@ -16,9 +16,10 @@ import io.github.ruddy2003.vestigium.ui.ideario.mezcla
 
 /**
  * Lo que acompaña en los huecos libres de las repisas de Revolución ([MuebleEstanteRevolucion]): grupos de dos o tres cosas de
- * la imprenta, altas y solapadas, distintos de una repisa a otra. La vela de sebo en su palmatoria de loza con la botella de
- * gres del aceite de linaza detrás (de noche, la luz de en medio); las resmas apiladas con el ovillo de bramante; la jarra de
- * loza alta con el cuenco y su cuchara; y el tarro de tinta con la bala de entintar tumbada sobre una prueba doblada.
+ * la imprenta, altas y solapadas, distintos de un hueco a otro (cada uno sabe cuántos hubo antes). La vela de sebo en su
+ * palmatoria de loza (de noche, la luz de en medio), con la botella de gres del aceite de linaza detrás o, en el hueco
+ * siguiente, con la galera apoyada y su página compuesta atada con cordel; las resmas apiladas con el ovillo de bramante; la
+ * jarra de loza alta con el cuenco y su cuchara; y el tarro de tinta con la bala de entintar tumbada sobre una prueba doblada.
  */
 internal object HuecosEstanteRevolucion {
     private val P = PaletaRevolucion
@@ -31,14 +32,19 @@ internal object HuecosEstanteRevolucion {
     /** El ancho de cada grupo, en anchos. */
     private fun anchoGrupo(g: Int) = when (g) { RESMAS -> 0.19f; LOZA -> 0.15f; else -> 0.19f }
 
-    fun DrawScope.hueco(k: Int, r: Rect, oc: Float, xDer: Float, xc: Float, a: AireRevolucion, cerca: (Offset) -> Float) {
+    /**
+     * Lo que acompaña en el hueco de la repisa [r] (de [oc] al costado [xDer]), con la vela en [xc] si la lleva. [k] es cuántos
+     * huecos hubo antes: con él cambian la compañía de la vela y el primer grupo, para que dos huecos seguidos no repitan.
+     * Devuelve si había sitio.
+     */
+    fun DrawScope.hueco(k: Int, r: Rect, oc: Float, xDer: Float, xc: Float, a: AireRevolucion, cerca: (Offset) -> Float): Boolean {
         val w = size.width
         var x = oc + w * 0.024f
         val fin = xDer - w * 0.03f
-        if (fin - x < w * 0.1f) return
+        if (fin - x < w * 0.1f) return false
         val piso = r.bottom - w * 0.006f
         if (xc >= 0f) {
-            vela(a, Offset(xc, piso), r, cerca)
+            vela(a, Offset(xc, piso), r, cerca, k % 2 == 0)
             x = xc + w * 0.14f
         }
         var g = Math.floorMod(k * 2 + 1, 3)
@@ -59,6 +65,7 @@ internal object HuecosEstanteRevolucion {
             g = (g + 1) % 3
             n++
         }
+        return true
     }
 
     /** La llama de la vela que está en [xc] en el hueco [r] (de noche y al ocaso), con su charco chico, después de las tablas. */
@@ -73,38 +80,15 @@ internal object HuecosEstanteRevolucion {
 
     // ---------------------------------------------------------------- la vela en su palmatoria, con la botella de gres
 
-    private fun DrawScope.vela(a: AireRevolucion, pie: Offset, r: Rect, cerca: (Offset) -> Float) {
+    private fun DrawScope.vela(a: AireRevolucion, pie: Offset, r: Rect, cerca: (Offset) -> Float, botella: Boolean) {
         val w = size.width; val u = density
         val x = pie.x; val y = pie.y
         val llama = r.bottom - r.height * MuebleEstanteRevolucion.VELITA_Y
         val k = cerca(Offset(x, llama))
-        // La botella de gres del aceite de linaza, detrás a la derecha: el cuerpo, el hombro, el cuello y su tapón de corcho.
         val bx = x + w * 0.075f
         val alto = r.height * 0.78f
-        val bot = Path().apply {
-            moveTo(bx - w * 0.034f, y)
-            lineTo(bx - w * 0.036f, y - alto * 0.56f)
-            cubicTo(bx - w * 0.036f, y - alto * 0.72f, bx - w * 0.014f, y - alto * 0.74f, bx - w * 0.01f, y - alto * 0.82f)
-            lineTo(bx - w * 0.011f, y - alto * 0.95f)
-            lineTo(bx + w * 0.011f, y - alto * 0.95f)
-            lineTo(bx + w * 0.01f, y - alto * 0.82f)
-            cubicTo(bx + w * 0.014f, y - alto * 0.74f, bx + w * 0.036f, y - alto * 0.72f, bx + w * 0.036f, y - alto * 0.56f)
-            lineTo(bx + w * 0.034f, y); close()
-        }
         val hb = -1f
-        contactoRevolucion(Offset(bx + w * 0.006f, y), w * 0.08f, w * 0.008f, a, 0.4f, hb)
-        drawPath(bot, a.dia(P.GRES, 0f, k))
-        clipPath(bot) {
-            // La mitad de arriba bañada en vidriado pardo (la botella se mete de boca en el baño), con su chorreón.
-            drawRect(a.dia(P.GRES_OSC, 0f, k), Offset(bx - w * 0.05f, y - alto), Size(w * 0.1f, alto * 0.52f))
-            drawPath(poligonoRevolucion(bx - w * 0.01f, y - alto * 0.49f, bx + w * 0.004f, y - alto * 0.49f, bx - w * 0.002f, y - alto * 0.36f), a.dia(P.GRES_OSC, 0f, k))
-            cilindroRevolucion(Rect(bx - w * 0.036f, y - alto, bx + w * 0.036f, y), a, k, -1f, 1.4f)
-            // El sello del alfarero: una pella de barro aplastada, lisa y sin marca.
-            drawOval(a.dia(P.GRES, -0.12f, k), Offset(bx - w * 0.012f, y - alto * 0.3f), Size(w * 0.022f, w * 0.013f))
-            drawOval(a.claro(0.25f), Offset(bx - w * 0.01f, y - alto * 0.3f), Size(w * 0.014f, w * 0.004f))
-        }
-        drawRect(a.dia(Color(0xFFB08A5A), 0f, k), Offset(bx - w * 0.009f, y - alto), Size(w * 0.018f, alto * 0.06f))
-        destelloRevolucion(Offset(bx - w * 0.02f, y - alto * 0.62f), 1.6f * u, a, k)
+        if (botella) botella(a, bx, y, alto, k) else galera(a, Offset(bx + w * 0.01f, y), r, k * 0.7f)
         // La palmatoria de loza: el platillo, el cubo y el asa de anillo; la vela de sebo con sus chorreras.
         val plato = w * 0.075f
         contactoRevolucion(Offset(x, y), plato * 1.1f, w * 0.008f, a, 0.38f, hb)
@@ -127,9 +111,71 @@ internal object HuecosEstanteRevolucion {
         drawOval(a.dia(P.LOZA_OSC, 0f, k), Offset(x - plato * 0.72f, y - w * 0.022f), Size(w * 0.022f, w * 0.016f), style = Stroke(w * 0.004f))
         destelloRevolucion(Offset(x - plato * 0.25f, y - w * 0.009f), 1.2f * u, a, k)
         if (a.oscuro) {
-            // De noche la vela alumbra el fondo del casillero y el canto de la tabla de arriba.
+            // De noche la vela alumbra el canto de lo que tiene al lado.
             drawRect(a.filo((0.6f * k).coerceAtMost(0.55f)), Offset(bx - w * 0.036f, y - alto * 0.56f), Size(1.4f * u, alto * 0.5f))
         }
+    }
+
+    /**
+     * La galera apoyada en el fondo del casillero: la bandeja de pino de cantos altos, ladeada, con la página compuesta abajo
+     * (el plomo en renglones, sin letras) atada con su cordel de página, y la cuña de madera.
+     */
+    private fun DrawScope.galera(a: AireRevolucion, pie: Offset, r: Rect, k: Float) {
+        val w = size.width; val u = density
+        val alto = r.height * 0.86f; val an = w * 0.07f
+        contactoRevolucion(Offset(pie.x + w * 0.01f, pie.y), an * 1.2f, w * 0.008f, a, 0.4f, -1f)
+        rotate(7f, Offset(pie.x, pie.y)) {
+            val g = Rect(pie.x - an / 2, pie.y - alto, pie.x + an / 2, pie.y)
+            drawRect(a.sombra(0.35f), Offset(g.left + w * 0.012f, g.top + w * 0.006f), g.size)
+            drawRect(a.dia(P.PINO, 0f, k), g.topLeft, g.size)
+            val c = w * 0.008f
+            val fondo = Rect(g.left + c, g.top, g.right - c, g.bottom - c)
+            drawRect(a.dia(P.PINO_OSC, -0.1f, k), fondo.topLeft, fondo.size)
+            drawRect(a.dia(P.PINO_LUZ, -0.1f, k), Offset(g.left, g.top), Size(g.width, 1f * u))
+            drawRect(a.sombra(0.45f), Offset(fondo.left, fondo.top), Size(fondo.width, 1f * u))
+            drawRect(a.claro(0.35f), g.topLeft, Size(1.1f * u, g.height))
+            drawRect(a.sombra(0.35f), Offset(g.right - 1.4f * u, g.top), Size(1.4f * u, g.height))
+            // La página compuesta: el plomo en renglones con sus blancos, y el cordel que la rodea.
+            val pg = Rect(fondo.left + w * 0.004f, fondo.bottom - fondo.height * 0.48f, fondo.right - w * 0.004f, fondo.bottom - w * 0.003f)
+            drawRect(a.dia(P.PLOMO, 0f, k), pg.topLeft, pg.size)
+            val renglones = Path()
+            var y = pg.top + w * 0.005f
+            while (y < pg.bottom - w * 0.003f) { renglones.addRect(Rect(pg.left + w * 0.003f, y, pg.right - w * 0.003f, y + w * 0.0018f)); y += w * 0.0055f }
+            drawPath(renglones, a.dia(P.PLOMO_LUZ, 0f, k).copy(alpha = 0.7f))
+            drawRect(a.dia(P.BRAMANTE, 0f, k), pg.topLeft, pg.size, style = Stroke(1.3f * u))
+            drawLine(a.dia(P.BRAMANTE, 0f, k), Offset(pg.right - w * 0.006f, pg.top), Offset(pg.right + w * 0.004f, pg.top - w * 0.012f), 1.1f * u)
+            // La cuña de madera encima de la página.
+            drawPath(poligonoRevolucion(pg.left + w * 0.01f, pg.top - w * 0.012f, pg.right - w * 0.02f, pg.top - w * 0.004f, pg.right - w * 0.02f, pg.top, pg.left + w * 0.01f, pg.top), a.dia(P.PINO_LUZ, 0f, k))
+            destelloRevolucion(Offset(pg.left + pg.width * 0.3f, pg.top + w * 0.006f), 1.3f * u, a, k)
+        }
+    }
+
+    /** La botella de gres del aceite de linaza en [bx]: el cuerpo, el hombro, el cuello y su tapón de corcho. */
+    private fun DrawScope.botella(a: AireRevolucion, bx: Float, y: Float, alto: Float, k: Float) {
+        val w = size.width; val u = density
+        val bot = Path().apply {
+            moveTo(bx - w * 0.034f, y)
+            lineTo(bx - w * 0.036f, y - alto * 0.56f)
+            cubicTo(bx - w * 0.036f, y - alto * 0.72f, bx - w * 0.014f, y - alto * 0.74f, bx - w * 0.01f, y - alto * 0.82f)
+            lineTo(bx - w * 0.011f, y - alto * 0.95f)
+            lineTo(bx + w * 0.011f, y - alto * 0.95f)
+            lineTo(bx + w * 0.01f, y - alto * 0.82f)
+            cubicTo(bx + w * 0.014f, y - alto * 0.74f, bx + w * 0.036f, y - alto * 0.72f, bx + w * 0.036f, y - alto * 0.56f)
+            lineTo(bx + w * 0.034f, y); close()
+        }
+        contactoRevolucion(Offset(bx + w * 0.006f, y), w * 0.08f, w * 0.008f, a, 0.4f, -1f)
+        drawPath(bot, a.dia(P.GRES, 0f, k))
+        clipPath(bot) {
+            // La mitad de arriba bañada en vidriado pardo (la botella se mete de boca en el baño), con su chorreón.
+            drawRect(a.dia(P.GRES_OSC, 0f, k), Offset(bx - w * 0.05f, y - alto), Size(w * 0.1f, alto * 0.52f))
+            drawPath(poligonoRevolucion(bx - w * 0.01f, y - alto * 0.49f, bx + w * 0.004f, y - alto * 0.49f, bx - w * 0.002f, y - alto * 0.36f), a.dia(P.GRES_OSC, 0f, k))
+            cilindroRevolucion(Rect(bx - w * 0.036f, y - alto, bx + w * 0.036f, y), a, k, -1f, 1.4f)
+            // El sello del alfarero: una pella de barro aplastada, lisa y sin marca.
+            drawOval(a.dia(P.GRES, -0.12f, k), Offset(bx - w * 0.012f, y - alto * 0.3f), Size(w * 0.022f, w * 0.013f))
+            drawOval(a.claro(0.25f), Offset(bx - w * 0.01f, y - alto * 0.3f), Size(w * 0.014f, w * 0.004f))
+        }
+        drawRect(a.dia(Color(0xFFB08A5A), 0f, k), Offset(bx - w * 0.009f, y - alto), Size(w * 0.018f, alto * 0.06f))
+        destelloRevolucion(Offset(bx - w * 0.02f, y - alto * 0.62f), 1.6f * u, a, k)
     }
 
     // ---------------------------------------------------------------- las resmas con el ovillo

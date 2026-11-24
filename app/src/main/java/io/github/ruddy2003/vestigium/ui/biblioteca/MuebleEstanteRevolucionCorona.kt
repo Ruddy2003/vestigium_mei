@@ -30,7 +30,7 @@ internal object CoronaEstanteRevolucion {
     /** Lo colgado en la pared, antes de la cornisa: el mazo de velas de sebo. */
     fun DrawScope.atras(a: AireRevolucion, apoyo: Float, cerca: (Offset) -> Float, m: ManchaRevolucion?) {
         val w = size.width
-        conLuz(m, -0.006f) { mm -> mazoDeVelas(Offset(w * 0.905f, w * 0.205f), a, cerca, mm) }
+        conLuz(m, -0.012f) { mm -> mazoDeVelas(Offset(w * 0.905f, w * 0.205f), a, cerca, mm) }
     }
 
     /** Lo que está de pie sobre la cornisa, de atrás adelante. */
@@ -38,13 +38,13 @@ internal object CoronaEstanteRevolucion {
         val w = size.width
         val pieA = apoyo - w * 0.003f; val pieF = apoyo + w * 0.004f
         sombras(a, apoyo, pieA, pieF, cerca)
-        conLuz(m, -0.012f) { mm -> cajaDeTipos(a, pieA, cerca, mm) }
-        conLuz(m, -0.02f) { mm -> resmas(Offset(w * 0.935f, pieA + w * 0.002f), a, cerca, mm) }
-        conLuz(m, -0.025f) { mm -> pliegos(Offset(w * 0.14f, pieF), a, cerca, mm) }
-        conLuz(m, -0.025f) { mm -> boteDeTinta(Offset(w * 0.335f, pieF), a, cerca, mm) }
-        conLuz(m, -0.025f) { mm -> boteDeCola(Offset(w * 0.535f, pieF), a, cerca, mm) }
+        conLuz(m, -0.035f) { mm -> cajaDeTipos(a, pieA, cerca, mm) }
+        conLuz(m, -0.05f) { mm -> resmas(Offset(w * 0.935f, pieA + w * 0.002f), a, cerca, mm) }
+        conLuz(m, -0.065f) { mm -> pliegos(Offset(w * 0.14f, pieF), a, cerca, mm) }
+        conLuz(m, -0.065f) { mm -> boteDeTinta(Offset(w * 0.335f, pieF), a, cerca, mm) }
+        conLuz(m, -0.065f) { mm -> boteDeCola(Offset(w * 0.535f, pieF), a, cerca, mm) }
         candelero(Offset(w * MuebleEstanteRevolucion.VELA_X, pieA + w * 0.002f), a, cerca)
-        conLuz(m, -0.025f) { mm -> jarra(Offset(w * 0.79f, pieF), a, cerca, mm) }
+        conLuz(m, -0.065f) { mm -> jarra(Offset(w * 0.79f, pieF), a, cerca, mm) }
     }
 
     /**
