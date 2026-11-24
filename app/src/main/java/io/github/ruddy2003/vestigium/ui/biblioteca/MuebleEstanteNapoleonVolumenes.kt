@@ -127,7 +127,7 @@ internal object VolumenEstanteNapoleon {
     private fun grano(u: Float): Path {
         if (u != densidadGrano) {
             val p = Path()
-            for (j in 0 until 260) {
+            for (j in 0 until 170) {
                 val x = 60f * u * azar(8101, j); val y = 120f * u * azar(8102, j)
                 val an = azar(8103, j) * 3.1416f
                 val l = (1.2f + 1.6f * azar(8104, j)) * u
@@ -162,9 +162,9 @@ internal object VolumenEstanteNapoleon {
             }
         }
         val pi = Path(); val p2 = Path(); val ve = Path()
-        for (j in 0 until 150) {
+        for (j in 0 until 100) {
             val cx = 70f * u * azar(8201, j); val cy = 150f * u * azar(8202, j)
-            val rx = (2.4f + 3.2f * azar(8203, j)) * u; val ry = rx * (0.6f + 0.45f * azar(8204, j))
+            val rx = (3f + 3.6f * azar(8203, j)) * u; val ry = rx * (0.6f + 0.45f * azar(8204, j))
             if (j % 5 == 0) p2.addPath(piedra(cx, cy, rx * 0.8f, ry * 0.8f, j)) else pi.addPath(piedra(cx, cy, rx, ry, j))
         }
         for (j in 0 until 16) {
@@ -364,7 +364,6 @@ internal object VolumenEstanteNapoleon {
             translate(-70f * u * 0.5f * azar(s, 4), -150f * u * 0.4f * azar(s, 5)) {
                 drawPath(piedras, mezcla(t.cara, t.claro, 0.2f))
                 drawPath(piedras2, mezcla(acento, t.cara, 0.35f).copy(alpha = 0.8f))
-                drawPath(piedras, t.hondo.copy(alpha = 0.6f), style = Stroke(0.6f * u))
                 drawPath(venas, mezcla(t.hondo, l.c(P.TINTA), 0.4f).copy(alpha = 0.55f), style = Stroke(0.5f * u))
             }
             // La luz de un lado y la sombra del otro, en franjas francas.
