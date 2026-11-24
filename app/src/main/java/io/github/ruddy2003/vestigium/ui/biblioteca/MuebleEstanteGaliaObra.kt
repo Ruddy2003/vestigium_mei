@@ -198,9 +198,9 @@ internal object ObraEstanteGalia {
                 val dx = r.left + r.width * (0.3f + 0.4f * azar(9150, k)); val dy = r.top + r.height * (0.32f + 0.2f * azar(9151, k))
                 val dr = Rect(dx, dy, dx + w * 0.1f, dy + w * 0.04f)
                 val forma = parcheGalia(dr, 9152 + k)
-                drawPath(forma, cf(mezcla(P.ALMAGRA, P.BARRO, 0.38f), -0.05f, cerca(dr.center)))
-                drawPath(Path().apply { addPath(forma, Offset(0.9f * u, 0.9f * u)) }, a.claro(0.3f), style = Stroke(0.9f * u))
-                drawPath(forma, a.sombra(0.45f), style = Stroke(0.8f * u))
+                // Sin canto marcado: con él, el parche se lee como una cosa colgada (un plato) y no como el barro gastado.
+                drawPath(forma, cf(mezcla(P.ALMAGRA, P.BARRO, 0.26f), -0.05f, cerca(dr.center)).copy(alpha = 0.85f))
+                drawPath(forma, a.sombra(0.16f), style = Stroke(0.7f * u))
             }
             // La sombra franca de la tabla de arriba (y de lo que ella guarda) y la del poste izquierdo (la luz viene de ahí).
             val franca = w * 0.05f
