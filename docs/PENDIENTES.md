@@ -209,7 +209,7 @@ El autor pidió repartir lo pendiente, sin las escenas, los cuentos, las bibliot
 
 | # | Tanda | Estado |
 |---|---|---|
-| 1 | Lo que se guarda, antes del 1 de enero: «con quién», días de uso y gato, YouTube, fechas «solo para mí», visitas quitadas | **Hecha** el 25 nov 2026 en `ccr-3b4fd67f-5vlhkz` (esquema 29, D.201 a D.203). YouTube queda pendiente y la casilla «solo para mí» se descartó |
+| 1 | Lo que se guarda, antes del 1 de enero: «con quién», días de uso y gato, YouTube, fechas «solo para mí», visitas quitadas | **Hecha** el 25 nov 2026 en `ccr-3b4fd67f-5vlhkz` (esquema 29, D.201 a D.203): compila (APK 313, sin publicar) y pasan todas las pruebas (capturas 343). Falta pasarla a `main` y probarla en el teléfono. YouTube queda pendiente y la casilla «solo para mí» se descartó |
 | 2 | El paper al día: D.200 y los capítulos del esquema 28 («llamada»), y volver a armar el ensamblado y la versión corta | Pendiente |
 | 3 | La noche en Hoy: el botón grande de la noche y el «cómo estás al despertar» (sección 4, «Lo que queda») | Pendiente |
 | 4 | Privacidad y rescate: la pantalla de rescate, las cartas selladas en el JSON, los reportes en carpetas públicas, qué copia de Drive se restaura, los nulos al leer (H-1-4) | Pendiente |
